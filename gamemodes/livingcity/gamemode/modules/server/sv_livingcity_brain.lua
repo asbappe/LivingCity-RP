@@ -437,8 +437,9 @@ LC.BrainSpeak = Speak
 
 -- A recorded line (and an opener before it), said and shown. Returns the words, or nil if it is not one of theirs.
 local function SpeakLine(npc, st, id, lead)
-    if not (LC.LineValid and LC.LineValid(st.role, id)) then return nil end
-    if not (lead and st.role ~= "cop" and LC.LineValid("citizen", lead, true)) then lead = nil end
+    local key = LC.LineKey and LC.LineKey(npc, st) or st.role
+    if not (LC.LineValid and LC.LineValid(key, id)) then return nil end
+    if not (lead and key == "citizen" and LC.LineValid("citizen", lead, true)) then lead = nil end
     local words = LC.LineSay(npc, st, id, lead)
     if words == "" then return nil end
     Speak(npc, st, words, true)
@@ -489,7 +490,9 @@ function LC.DirectorApply(d, now)
         if ply:GetPos():DistToSqr(npc:GetPos()) > 3000 * 3000 then return false, "too far from that player" end
         LC.MindsErrand(npc, st, ply, function(n, s, target)
             if LC.Face then LC.Face(n, target:GetPos()) end
-            if not (rec and SpeakLine(n, s, rec, d.opener)) then Speak(n, s, line) end
+            local theirs = rec
+            if rec and LC.LineKey and LC.LineKey(n, s) == "hl2" then theirs = LC.HL2Instead and LC.HL2Instead[rec] end
+            if not (theirs and SpeakLine(n, s, theirs, d.opener)) then Speak(n, s, Clean(d.line, 140) ~= "" and Clean(d.line, 140) or line) end
             s.untilT = math.max(s.untilT or 0, CurTime() + 12)
         end)
         B.moved[p.id] = now
@@ -676,14 +679,14 @@ local function TalkAsk(role)
     if not B.talkAsk[key] then
         local ids, openers = { "" }, { "" }
         for _, id in ipairs(LC.LineIds(role, false)) do ids[#ids + 1] = id end
-        if role ~= "cop" then for _, id in ipairs(LC.LineIds("citizen", true)) do openers[#openers + 1] = id end end
+        if role == "citizen" then for _, id in ipairs(LC.LineIds("citizen", true)) do openers[#openers + 1] = id end end
         local schema = { type = "object", additionalProperties = false, required = { "line", "opener", "say", "feeling", "act" },
             properties = { line = { type = "string", enum = ids }, opener = { type = "string", enum = openers }, say = TALK_SCHEMA.properties.say,
                 feeling = TALK_SCHEMA.properties.feeling, act = TALK_SCHEMA.properties.act } }
         local system = TALK_SYSTEM .. "\n\nRecorded lines. You have the lines below recorded in your own voice. "
             .. (mode >= 2 and "You can ONLY answer with one of them: set \"line\" to the id of the one closest to what you would say, and leave \"say\" empty."
                 or "Whenever one of them says what you would say, even roughly, set \"line\" to its id and leave \"say\" empty: a line in your voice is better than perfect words nobody hears. Only when none of them comes close, leave \"line\" empty and write \"say\".")
-            .. (role ~= "cop" and (" \"opener\" may add one of these before the line: " .. table.concat(LC.LineIds("citizen", true), ", ") .. ". Leave it empty unless it adds something.") or " Leave \"opener\" empty.")
+            .. (role == "citizen" and (" \"opener\" may add one of these before the line: " .. table.concat(LC.LineIds("citizen", true), ", ") .. ". Leave it empty unless it adds something.") or " Leave \"opener\" empty.")
             .. "\nPick by what the line does (refuses, warns, thanks, admits) and by your mood, not by its topic.\n" .. LC.LineList(role)
         B.talkAsk[key] = { system, schema }
     end
@@ -732,7 +735,7 @@ function LC.BrainHeard(ply, kind, text)
     -- they stop and turn to whoever spoke
     if LC.Face then LC.Face(npc, ply:GetPos()) end
     if st.state == "idle" then st.untilT = math.max(st.untilT or 0, now + 12) end
-    local talkSystem, talkSchema = TalkAsk(st.role)
+    local talkSystem, talkSchema = TalkAsk(LC.LineKey and LC.LineKey(npc, st) or st.role)
     local sent = LC.BrainAsk(talkSystem, prompt, talkSchema, 1000, function(res)
         if not IsValid(npc) or LC.NPCs[npc] ~= st then return end
         st.brainBusy = nil
@@ -740,7 +743,7 @@ function LC.BrainHeard(ply, kind, text)
         -- a recorded line when it picked one; its own words otherwise (never, with lc_brain_lines 2)
         local say = LinesOn() and SpeakLine(npc, st, res.line, res.opener) or nil
         if not say and LinesOn() and cvLines:GetInt() >= 2 then
-            say = SpeakLine(npc, st, st.role == "cop" and "unit_dunno" or "say_dunno")
+            say = SpeakLine(npc, st, st.role == "cop" and "unit_dunno" or ((LC.LineKey and LC.LineKey(npc, st) == "hl2") and "hl_answer24" or "say_dunno"))
         end
         if not say then
             say = Clean(res.say, 220)

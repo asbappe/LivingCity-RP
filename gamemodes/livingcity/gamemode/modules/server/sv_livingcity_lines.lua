@@ -119,23 +119,153 @@ LC.StreetLines = {
 -- exist in HL2").
 LC.UnitLines = {
     unit_greet = { "Citizen.", "Spoken to", "[flat, clipped, cold] Citizen.", { "citizen" } },
-    unit_greet_cp = { "Unit. Sector is quiet.", "Spoken to by another unit", "[flat, clipped] Unit. Sector is quiet." },
-    unit_move = { "Move along.", "Wants them gone", "[curt, bored] Move along.", { "movealong", "movealong3", "keepmoving" } },
-    unit_papers = { "Identification. Now.", "Suspicious of them", "[cold, commanding] Identification. Now." },
-    unit_yes = { "Affirmative.", "Agreeing", "[flat] Affirmative.", { "affirmative", "affirmative2" } },
-    unit_no = { "Negative.", "Refusing", "[flat] Negative.", { "negative" } },
-    unit_dunno = { "That information is restricted.", "Asked anything he won't answer", "[flat, dismissive] That information is restricted." },
-    unit_busy = { "Now get out of here.", "Ending it", "[curt] Now get out of here.", { "nowgetoutofhere", "getoutofhere" } },
-    unit_curfew = { "Get indoors.", "Curfew, a lockdown or a sweep", "[sharp, commanding] Get indoors." },
-    unit_warn = { "Final warning.", "Pushed too far", "[cold, slow, threatening] Final warning.", { "finalwarning" } },
-    unit_threat = { "Hold it right there.", "Threatened or crowded", "[hard, loud] Hold it right there.", { "holditrightthere", "holdit" } },
-    unit_insulted = { "Looking for trouble?", "Insulted", "[low, dangerous] Looking for trouble?", { "lookingfortrouble" } },
-    unit_noted = { "Noted. It will go on your record.", "Heard something he will report", "[flat, ominous] Noted. It will go on your record." },
-    unit_thanks = { "Your cooperation is noted.", "Told something useful, or obeyed", "[flat, faintly approving] Your cooperation is noted." },
-    unit_soft = { "Keep your head down today. That is advice.", "A unit with some kindness in him, to someone he doesn't mind", "[low, off the record] Keep your head down today. [pause] That is advice." },
-    unit_brutal = { "You want some too?", "Brutality: to whoever is watching", "[breathing hard, vicious] You want some too?" },
-    unit_drink = { "You saw nothing.", "Caught drinking on duty", "[low, threatening, slightly slurred] You saw nothing." },
+    unit_greet_cp = { "Copy.", "Spoken to by another unit", "[flat, clipped, cold] Copy.", { "copy" } },
+    unit_move = { "Move along.", "Wants them gone", "[flat, clipped, cold] Move along.", { "movealong", "keepmoving" } },
+    unit_move_hard = { "Move it.", "Wants them gone, losing patience", "[flat, clipped, cold] Move it.", { "moveit", "moveit2" } },
+    unit_papers = { "Don't move.", "Suspicious of them", "[flat, clipped, cold] Don't move.", { "dontmove", "holdit" } },
+    unit_yes = { "Affirmative.", "Agreeing", "[flat, clipped, cold] Affirmative.", { "affirmative", "affirmative2" } },
+    unit_no = { "Get out of here.", "Refusing", "[flat, clipped, cold] Get out of here.", { "getoutofhere" } },
+    unit_dunno = { "Keep moving.", "Asked anything he won't answer", "[flat, clipped, cold] Keep moving.", { "keepmoving", "movealong" } },
+    unit_busy = { "Now get out of here.", "Ending it", "[flat, clipped, cold] Now get out of here.", { "nowgetoutofhere" } },
+    unit_curfew = { "Vacate, citizen.", "Curfew, a lockdown or a sweep", "[flat, clipped, cold] Vacate, citizen.", { "vacatecitizen" } },
+    unit_warn_first = { "First warning: move away.", "A first warning", "[flat, clipped, cold] First warning: move away.", { "firstwarningmove" } },
+    unit_warn_second = { "This is your second warning.", "A second warning", "[flat, clipped, cold] This is your second warning.", { "thisisyoursecondwarning", "secondwarning" } },
+    unit_warn = { "Final warning.", "Pushed too far", "[flat, clipped, cold] Final warning.", { "finalwarning" } },
+    unit_threat = { "Move back, right now.", "Threatened or crowded", "[flat, clipped, cold] Move back, right now.", { "movebackrightnow", "holditrightthere" } },
+    unit_insulted = { "Looking for trouble?", "Insulted", "[flat, clipped, cold] Looking for trouble?", { "lookingfortrouble" } },
+    unit_verdict = { "You want a malcompliance verdict?", "Insulted again, or defied", "[flat, clipped, cold] You want a malcompliance verdict?", { "youwantamalcomplianceverdict" } },
+    unit_noted = { "Issuing malcompliant citation.", "Heard something he will report", "[flat, clipped, cold] Issuing malcompliant citation.", { "issuingmalcompliantcitation" } },
+    unit_thanks = { "Roger that.", "Told something useful, or obeyed", "[flat, clipped, cold] Roger that.", { "rodgerthat", "ten4" } },
+    unit_soft = { "All right, you can go.", "A unit with some kindness in him, to someone he doesn't mind", "[flat, clipped, cold] All right, you can go.", { "allrightyoucango" } },
+    unit_brutal = { "Prepare for judgment.", "Brutality: to whoever is watching", "[flat, clipped, cold] Prepare for judgment.", { "prepareforjudgement" } },
+    unit_drink = { "Watch it.", "Caught drinking on duty", "[flat, clipped, cold] Watch it.", { "watchit" } },
 }
+
+
+-- Half-Life 2's own citizens (the owner, 11 November: "if the NPCs personality lines up with the available default HL2
+-- voice lines, then they could be used, and then save other NPCs for the custom voice lines"). The clips a named
+-- person who keeps Half-Life 2's voice can say: id = { words, when, the clip's name in sound/vo/npc/male01 and
+-- female01 }. The words are the game's own captions, from the owner's server (_dev/tools/hl2_lines.txt). Nothing
+-- here needs recording. Left out: everything about Freeman, fighting, medkits by name, vortigaunts.
+LC.HL2Lines = {
+    hl_hi01 = { "Hi.", "Greeting anyone", "hi01" },
+    hl_hi02 = { "Hi.", "Greeting anyone, brighter", "hi02" },
+    hl_waitingsomebody = { "You waiting for somebody?", "Greeting a stranger, wary", "waitingsomebody" },
+    hl_busy02 = { "Can't you see I'm busy?", "Greeting someone they dislike, or brushed off", "busy02" },
+    hl_excuseme01 = { "Excuse me.", "Getting someone's attention, or getting past", "excuseme01" },
+    hl_pardonme01 = { "Pardon me.", "Polite, backing off", "pardonme01" },
+    hl_illstayhere01 = { "I'll stay here.", "Ending it: they are not going anywhere", "illstayhere01" },
+    hl_littlecorner01 = { "I've got my little corner and I'm sticking to it.", "Refusing to get involved", "littlecorner01" },
+    hl_outofyourway02 = { "Let me get out of your way.", "Parting, or giving way", "outofyourway02" },
+    hl_leadtheway02 = { "Lead the way.", "Agreeing to follow", "leadtheway02" },
+    hl_ok01 = { "Okay.", "Agreeing", "ok01" },
+    hl_ok02 = { "Okay!", "Agreeing gladly", "ok02" },
+    hl_yougotit02 = { "You got it.", "Agreeing to do something", "yougotit02" },
+    hl_squad_affirm03 = { "Whatever you say.", "Agreeing without liking it", "squad_affirm03" },
+    hl_answer32 = { "Right on.", "Approving", "answer32" },
+    hl_answer13 = { "I'm with you.", "Taking their side", "answer13" },
+    hl_readywhenyouare01 = { "Ready when you are.", "Willing", "readywhenyouare01" },
+    hl_fantastic01 = { "Fantastic!", "Delighted", "fantastic01" },
+    hl_finally = { "Finally!", "Relief at something long awaited", "finally" },
+    hl_yeah02 = { "Yeah!", "Cheering", "yeah02" },
+    hl_thislldonicely01 = { "This'll do nicely.", "Given something", "thislldonicely01" },
+    hl_no01 = { "No!", "Refusing, or denying it", "no01" },
+    hl_no02 = { "No!", "Refusing loudly; a shout of protest", "no02" },
+    hl_answer38 = { "Leave it alone.", "Refusing to talk about it", "answer38" },
+    hl_answer39 = { "That's enough outta you.", "Shutting someone up", "answer39" },
+    hl_answer05 = { "Could we talk about this later?", "Putting it off: the wrong time or place", "answer05" },
+    hl_answer22 = { "You never know.", "Not sure", "answer22" },
+    hl_answer23 = { "Never can tell.", "Not sure, a shrug", "answer23" },
+    hl_answer24 = { "Why are you telling me?", "Asked or told something that is not their business", "answer24" },
+    hl_answer29 = { "What am I supposed to do about it?", "Asked for something they can't give", "answer29" },
+    hl_answer26 = { "That's more information than I require.", "Told too much", "answer26" },
+    hl_answer37 = { "You sure about that?", "Doubting", "answer37" },
+    hl_answer21 = { "Don't be so sure of that.", "Disagreeing", "answer21" },
+    hl_answer15 = { "That's one way of looking at it.", "Disagreeing politely", "answer15" },
+    hl_answer25 = { "How about that?", "Mild surprise", "answer25" },
+    hl_answer27 = { "Wanna bet?", "Defiant doubt", "answer27" },
+    hl_answer07 = { "Same here.", "Agreeing with how they feel", "answer07" },
+    hl_answer08 = { "Know what you mean.", "Sympathy", "answer08" },
+    hl_answer14 = { "You and me both.", "Sharing a complaint", "answer14" },
+    hl_answer33 = { "No argument there.", "Agreeing with an opinion", "answer33" },
+    hl_answer03 = { "Figures.", "Unsurprised by bad news", "answer03" },
+    hl_answer36 = { "Wouldn't be the first time.", "Unsurprised", "answer36" },
+    hl_answer40 = { "There's a first time for everything.", "Wry", "answer40" },
+    hl_answer04 = { "Try not to dwell on it.", "Comforting", "answer04" },
+    hl_answer35 = { "Try not to let it get to you.", "Comforting, steadying", "answer35" },
+    hl_answer02 = { "I won't hold it against you.", "Forgiving", "answer02" },
+    hl_answer12 = { "Doesn't bear thinking about.", "Something terrible was mentioned", "answer12" },
+    hl_answer10 = { "I wouldn't say that too loud.", "Warning someone who is talking too freely", "answer10" },
+    hl_answer31 = { "You should nip that kind of talk in the bud.", "Hearing sedition, and not liking it", "answer31" },
+    hl_answer19 = { "Keep your mind on your work.", "A loyal citizen's advice", "answer19" },
+    hl_answer18 = { "Let's concentrate on the task at hand.", "Changing the subject", "answer18" },
+    hl_answer16 = { "Have you ever had an original thought?", "Insulting back", "answer16" },
+    hl_answer30 = { "You talking to me?", "Bristling", "answer30" },
+    hl_answer09 = { "You're talking to yourself again.", "Teasing", "answer09" },
+    hl_answer17 = { "I'm not even gonna tell you to shut up.", "Exasperated", "answer17" },
+    hl_answer01 = { "That's you all over.", "Teasing a friend", "answer01" },
+    hl_answer28 = { "I wish I had a dime for every time somebody said that.", "Heard it all before", "answer28" },
+    hl_watchwhat = { "Watch what you're doing.", "Jostled or threatened", "watchwhat" },
+    hl_vquestion01 = { "Stop looking at me like that.", "Uneasy at being stared at", "vquestion01" },
+    hl_notthemanithought01 = { "You're not the man I thought you were.", "Let down by someone", "notthemanithought01" },
+    hl_wetrustedyou01 = { "We trusted you.", "Betrayed, quietly", "wetrustedyou01" },
+    hl_wetrustedyou02 = { "We trusted you!", "Betrayed, accusing out loud", "wetrustedyou02" },
+    hl_heretohelp01 = { "We thought you were here to help.", "Let down, reproachful", "heretohelp01" },
+    hl_sorry01 = { "Sorry.", "Backing down", "sorry01" },
+    hl_whoops01 = { "Whoops.", "A small mistake", "whoops01" },
+    hl_question28 = { "God I'm hungry.", "How they are: hungry", "question28" },
+    hl_question09 = { "I could eat a horse, hooves and all.", "How they are: hungry, joking", "question09" },
+    hl_question19 = { "I can't remember the last time I had a shower.", "How they are: worn and dirty", "question19" },
+    hl_question31 = { "I can't remember the last time I had, well, anything.", "How they are: going without", "question31" },
+    hl_question27 = { "I think I ate something bad.", "How they are: unwell", "question27" },
+    hl_question25 = { "I just knew it was gonna be one of those days.", "How they are: a bad day", "question25" },
+    hl_question12 = { "Looks to me like things are getting worse, not better.", "Asked how things are", "question12" },
+    hl_question21 = { "I'm not a betting man, but the odds are not good.", "Asked how things will go", "question21" },
+    hl_question01 = { "I don't think this war's ever gonna end.", "Gloom about the occupation", "question01" },
+    hl_question18 = { "I don't feel anything anymore.", "How they are: numb", "question18" },
+    hl_question03 = { "I don't dream anymore.", "How they are: worn down", "question03" },
+    hl_question22 = { "Doesn't anyone care what I think?", "Ignored, aggrieved", "question22" },
+    hl_question20 = { "Some day this will all be a bad memory.", "How they are: hopeful", "question20" },
+    hl_question16 = { "Finally, change is in the air!", "Hope, to someone they trust", "question16" },
+    hl_question17 = { "Do you feel it? I feel it!", "Excited hope", "question17" },
+    hl_question15 = { "They're never gonna make a stalker out of me.", "Defiance", "question15" },
+    hl_question26 = { "This is bullshit!", "Losing their temper", "question26" },
+    hl_doingsomething = { "Shouldn't we be doing something?", "Restless, wanting to act", "doingsomething" },
+    hl_gordead_ans11 = { "What's the use?", "Despair", "gordead_ans11" },
+    hl_gordead_ans12 = { "What's the point?", "Despair", "gordead_ans12" },
+    hl_gordead_ans13 = { "Why go on?", "Despair", "gordead_ans13" },
+    hl_gordead_ans14 = { "We're done for.", "Despair, or fear", "gordead_ans14" },
+    hl_gordead_ques10 = { "This is bad.", "Seeing trouble", "gordead_ques10" },
+    hl_gordead_ques06 = { "This can't be!", "Shock", "gordead_ques06" },
+    hl_gordead_ques14 = { "It's not supposed to end like this.", "Grief", "gordead_ques14" },
+    hl_gordead_ans04 = { "Oh, God!", "Horror", "gordead_ans04" },
+    hl_goodgod = { "Good god!", "Horror at what they see", "goodgod" },
+    hl_ohno = { "Oh no!", "Dismay", "ohno" },
+    hl_uhoh = { "Uh-oh.", "Trouble coming", "uhoh" },
+    hl_gordead_ans10 = { "Spread the word.", "Passing on news or a warning", "gordead_ans10" },
+    hl_civilprotection01 = { "Civil Protection!", "Warning that units are coming", "civilprotection01" },
+    hl_cps01 = { "CPs!", "Warning that units are coming, hissed", "cps01" },
+    hl_scanners01 = { "Scanners!", "Warning of a scanner", "scanners01" },
+    hl_watchout = { "Watch out!", "A warning", "watchout" },
+    hl_headsup01 = { "Heads up!", "A warning", "headsup01" },
+    hl_gethellout = { "Get the hell out of here!", "A warning: get away", "gethellout" },
+    hl_runforyourlife01 = { "Run for your life!", "Panic", "runforyourlife01" },
+    hl_help01 = { "Help!", "Crying for help", "help01" },
+    hl_overhere01 = { "Hey, over here!", "Calling someone over", "overhere01" },
+    hl_squad_away03 = { "Follow me.", "Leading someone", "squad_away03" },
+    hl_health05 = { "Here, patch yourself up.", "Giving something to someone hurt", "health05" },
+    hl_squad_reinforce_single04 = { "Wait for me.", "Catching up with a friend", "squad_reinforce_single04" },
+}
+
+-- What someone with Half-Life 2's voice says in place of a line of the recorded bank (the minds' breaks, mostly).
+LC.HL2Instead = { say_break_tantrum = "hl_question26", say_break_despair = "hl_gordead_ans12", say_break_defy = "hl_question15",
+    say_break_accuse = "hl_wetrustedyou02", say_break_accused = "hl_no01", say_break_binge = "hl_answer38", say_break_seek = "hl_finally",
+    say_break_share = "hl_health05", say_break_steady = "hl_answer35", say_break_inform = "hl_excuseme01", say_break_beaten = "hl_help01",
+    say_saw_beating = "hl_answer12", say_saw_death = "hl_goodgod", say_grief = "hl_gordead_ques14", say_dunno = "hl_answer24",
+    say_warn_asked = "hl_gordead_ans10", say_warn_watched = "hl_cps01", say_warn_go = "hl_gethellout", say_warn_informer = "hl_answer10",
+    say_careful = "hl_answer10", say_greet_plain = "hl_hi01", say_greet_warm = "hl_hi02", say_greet_guarded = "hl_waitingsomebody",
+    say_greet_cold = "hl_busy02", say_state_hungry = "hl_question28", say_state_low = "hl_gordead_ans11", say_state_hopeful = "hl_question20",
+    say_tip_trouble = "hl_gordead_ques10", say_thanks = "hl_thislldonicely01", say_sorry = "hl_sorry01", say_no = "hl_no01", say_yes = "hl_ok01" }
 
 LC.UnitVoiceRoot = "livingcity/units/"
 
@@ -178,7 +308,34 @@ function LC.UnitLineClip(id, ownOnly)
     return LC.UnitLineStock(id)
 end
 
-local function Bank(role) return role == "cop" and LC.UnitLines or LC.StreetLines end
+-- Three banks: "cop" a unit's, "hl2" Half-Life 2's own citizen clips, anything else the recorded bank.
+local function Bank(role) return (role == "cop" and LC.UnitLines) or (role == "hl2" and LC.HL2Lines) or LC.StreetLines end
+
+-- Two voices by personality. A named citizen keeps Half-Life 2's voice ("hl2") or has the recorded one ("own"),
+-- for life, from who they are: the lively, sociable, hopeful and bold sound like Half-Life 2's citizens; the
+-- despairing, timid, withdrawn do not. Until the recorded bank exists for their sex everyone has Half-Life 2's.
+-- lc_voice_split 0: no split (every named citizen takes the recorded voice once it exists, as before).
+local cvSplit = CreateConVar("lc_voice_split", "1", FCVAR_ARCHIVE, "Named citizens keep Half-Life 2's voice or get the recorded one by personality (0: all of them the recorded one, once it is recorded)")
+function LC.VoiceOf(npc, st)
+    if LC.VoiceForce then return LC.VoiceForce end -- (the tests)
+    if not IsValid(npc) or not st or st.role ~= "citizen" then return "hl2" end
+    local p = npc.lcProfile
+    if not p or not p.name then return "hl2" end
+    if not (LC.AdviceHasAny and LC.AdviceHasAny("say_", st.gender)) then return "hl2" end
+    if not cvSplit:GetBool() then return "own" end
+    if p.lcVoice == nil then
+        local m = LC.Psy and LC.MindOf and LC.MindOf(p)
+        local tr = m and LC.Psy.Traits(m)
+        p.lcVoice = (not tr or (tr.social + tr.hope + 0.5 * tr.brave) >= 0) and "hl2" or "own"
+    end
+    return p.lcVoice
+end
+
+-- Which bank a person speaks from: "cop", "hl2" or "citizen" (the recorded one).
+function LC.LineKey(npc, st)
+    if st and st.role == "cop" then return "cop" end
+    return LC.VoiceOf(npc, st) == "own" and "citizen" or "hl2"
+end
 
 -- Is this a line this kind of person has? opener: only an opener counts.
 function LC.LineValid(role, id, opener)
@@ -221,6 +378,8 @@ end
 
 local function Clip(st, id)
     if st.role == "cop" then return LC.UnitLineClip(id) end
+    local h = LC.HL2Lines[id]
+    if h then return "vo/npc/" .. (st.gender == "female" and "female01" or "male01") .. "/" .. h[3] .. ".wav" end
     return LC.AdviceClip and LC.AdviceClip(id, st.gender) or nil
 end
 
@@ -242,13 +401,16 @@ function LC.OwnVoice(npc, st, path)
     if path and LC.VoiceReplacement and LC.VoiceReplacement(path) then return false end -- (that very clip has been re-recorded: it is their voice)
     local p = npc.lcProfile
     if not p or not p.name then return false end
-    return LC.AdviceHasAny ~= nil and LC.AdviceHasAny("say_", st.gender) == true
+    return LC.VoiceOf(npc, st) == "own" -- (those who keep Half-Life 2's voice go on using it)
 end
 
 -- They say it out loud (the sound only: whoever calls shows the words). lead: an opener first.
 -- Returns the words.
 function LC.LineSay(npc, st, id, lead)
-    if not IsValid(npc) or not st or not Bank(st.role)[id] then return "" end
+    if not IsValid(npc) or not st then return "" end
+    local key = LC.LineKey(npc, st)
+    if key == "hl2" and not LC.HL2Lines[id] then id, lead = LC.HL2Instead[id], nil end -- (their own way of saying it, or nothing)
+    if not id or not Bank(key)[id] then return "" end
     if lead and st.role ~= "cop" and LC.StreetLines[lead] then
         local secs = Emit(npc, st, lead)
         timer.Simple((secs > 0 and secs or 0.8) + 0.15, function()
@@ -258,7 +420,7 @@ function LC.LineSay(npc, st, id, lead)
         lead = nil
         Emit(npc, st, id)
     end
-    return LC.LineWords(st.role, id, lead)
+    return LC.LineWords(key, id, lead)
 end
 
 -- For lc_voice_missing (sv_livingcity_announcer.lua): the recordings not there yet.
@@ -376,6 +538,12 @@ hook.Add("EntityEmitSound", "LivingCityVoiceReplace", function(data)
     if not name then return end
     local mine = LC.VoiceReplacement(name)
     if not mine then return end
+    -- a citizen's clip is swapped only for a named citizen with the recorded voice: the others keep Half-Life 2's
+    if string.find(mine, "/vo/npc/", 1, true) then
+        local ent = data.Entity
+        local st = IsValid(ent) and LC.NPCs and LC.NPCs[ent]
+        if not st or LC.VoiceOf(ent, st) ~= "own" then return end
+    end
     data.SoundName = mine
     return true
 end)

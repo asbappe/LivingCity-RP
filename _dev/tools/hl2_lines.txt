@@ -1,0 +1,1453 @@
+## A citizen, a man (sound/vo/npc/male01/)
+abouttime01.wav	Well, Gordon Freeman! And about time, too. 
+abouttime02.wav	Well, Gordon Freeman! And about time, too. 
+ahgordon01.wav	Ah, Gordon Freeman. 
+ahgordon02.wav	Ah, Gordon Freeman. 
+ammo01.wav	Freeman, ammo! 
+ammo02.wav	Freeman, ammo! 
+ammo03.wav	Here, ammo! 
+ammo04.wav	Take some ammo! 
+ammo05.wav	Take some ammo! 
+answer01.wav	That's you all over. 
+answer02.wav	I won't hold it against you. 
+answer03.wav	Figures. 
+answer04.wav	Try not to dwell on it. 
+answer05.wav	Could we talk about this later? 
+answer07.wav	Same here. 
+answer08.wav	Know what you mean. 
+answer09.wav	You're talking to yourself again. 
+answer10.wav	I wouldn't say that too loud. 
+answer11.wav	I'll put it on your tombstone. 
+answer12.wav	Doesn't bear thinking about. 
+answer13.wav	I'm with you. 
+answer14.wav	You and me both. 
+answer15.wav	That's one way of looking at it. 
+answer16.wav	Have you ever had an original thought? 
+answer17.wav	I'm not even gonna tell you to shut up. 
+answer18.wav	Let's concentrate on the task at hand. 
+answer19.wav	Keep your mind on your work. 
+answer20.wav	Your mind is in the gutter. 
+answer21.wav	Don't be so sure of that. 
+answer22.wav	You never know. 
+answer23.wav	Never can tell. 
+answer24.wav	Why are you telling me? 
+answer25.wav	How about that? 
+answer26.wav	That's more information than I require. 
+answer27.wav	Wanna bet? 
+answer28.wav	I wish I had a dime for every time somebody said that. 
+answer29.wav	What am I supposed to do about it? 
+answer30.wav	You talking to me? 
+answer31.wav	You should nip that kind of talk in the bud. 
+answer32.wav	Right on. 
+answer33.wav	No argument there. 
+answer34.wav	Don't forget Hawaii. 
+answer35.wav	Try not to let it get to you. 
+answer36.wav	Wouldn't be the first time. 
+answer37.wav	You sure about that? 
+answer38.wav	Leave it alone. 
+answer39.wav	That's enough outta you. 
+answer40.wav	There's a first time for everything. 
+behindyou01.wav	Behind you!
+behindyou02.wav	Behind you!
+busy02.wav	Can't you see I'm busy? 
+cit_dropper01.wav	Hey down there!  Supplies! 
+cit_dropper04.wav	Look out below! 
+civilprotection01.wav	Civil Protection!
+civilprotection02.wav	Civil Protection! 
+combine01.wav	Combine!
+combine02.wav	Combine!
+coverwhilereload01.wav	Cover me while I reload!
+coverwhilereload02.wav	Cover me while I reload!
+cps01.wav	CPs!
+cps02.wav	CPs! 
+docfreeman01.wav	Dr. Freeman. 
+docfreeman02.wav	Dr. Freeman. 
+doingsomething.wav	Shouldn't we be doing something?
+dontforgetreload01.wav	Don't forget to reload, Dr. Freeman 
+evenodds.wav	Let's even the odds a little 
+excuseme01.wav	Excuse me. 
+excuseme02.wav	Excuse me. 
+fantastic01.wav	Fantastic! 
+fantastic02.wav	Fantastic! 
+finally.wav	Finally!
+freeman.wav	Freeman.
+getdown02.wav	Get down!
+getgoingsoon.wav	Are we gonna get going soon?
+gethellout.wav	Get the hell out of here!
+goodgod.wav	Good god!
+gordead_ans01.wav	Now what?
+gordead_ans02.wav	And things were going so well.
+gordead_ans03.wav	Don't tell me.
+gordead_ans04.wav	Oh, God!
+gordead_ans05.wav	Oh no!
+gordead_ans06.wav	Please no!
+gordead_ans07.wav	If you dare say 'That's gotta hurt,' I'll kill you.
+gordead_ans08.wav	Should we bury him here?
+gordead_ans09.wav	I had a feeling even he couldn't help us.
+gordead_ans10.wav	Spread the word.
+gordead_ans11.wav	What's the use?
+gordead_ans12.wav	What's the point?
+gordead_ans13.wav	Why go on?
+gordead_ans14.wav	We're done for. 
+gordead_ans15.wav	Well, now what? 
+gordead_ans16.wav	Dibs on the suit.
+gordead_ans17.wav	Wait a second that's not Gordon Freeman! 
+gordead_ans18.wav	He's done this before.  He'll be okay.
+gordead_ans19.wav	I'm gonna be sick.
+gordead_ans20.wav	Somebody take his crowbar.
+gordead_ques01.wav	He's dead.
+gordead_ques02.wav	What a way to go. 
+gordead_ques03a.wav	Oh my God, it's Freeman! 
+gordead_ques03b.wav	Oh my God, it's Freeman!
+gordead_ques04.wav	Freeman is...dead...
+gordead_ques05.wav	That's not Freeman is it?
+gordead_ques06.wav	This can't be!
+gordead_ques07.wav	Look, he's dead!
+gordead_ques08.wav	He came a long way from Black Mesa.
+gordead_ques10.wav	This is bad.
+gordead_ques11.wav	I thought he was invincible!
+gordead_ques12.wav	So much for Doctor Freeman.
+gordead_ques13.wav	So much for our last hope.
+gordead_ques14.wav	It's not supposed to end like this.
+gordead_ques15.wav	Dr. Freeman? Can you hear me? Do not go into the light!
+gordead_ques16.wav	What now?
+gordead_ques17.wav	Any last words, Doc? 
+gotone01.wav	Got one!
+gotone02.wav	I got one! 
+gottareload01.wav	Gotta reload!
+gunship02.wav	Gunship!
+hacks01.wav	Hacks!
+hacks02.wav	Hacks! 
+headcrabs01.wav	Headcrabs!
+headcrabs02.wav	Headcrabs! 
+headsup01.wav	Heads up! 
+headsup02.wav	Heads up!
+health01.wav	Take this medkit. 
+health02.wav	Take this medkit. 
+health03.wav	Take this medkit. 
+health04.wav	Here, have a medkit. 
+health05.wav	Here, patch yourself up. 
+hellodrfm01.wav	Hello, Dr. Freeman. 
+hellodrfm02.wav	Hello, Dr. Freeman. 
+help01.wav	Help!
+herecomehacks01.wav	Here come the hacks!
+herecomehacks02.wav	Here come the hacks!
+heretheycome01.wav	Here they come! 
+heretohelp01.wav	We thought you were here to help. 
+heretohelp02.wav	We thought you were here to help. 
+heydoc01.wav	Hey, Doc. 
+heydoc02.wav	Hey, Doc. 
+hi01.wav	Hi. 
+hi02.wav	Hi. 
+hitingut01.wav	Hit in the gut!
+hitingut02.wav	Hit in the gut!
+holddownspot01.wav	I'm gonna stay and hold down this spot. 
+holddownspot02.wav	I'm gonna stay and hold down this spot. 
+illstayhere01.wav	I'll stay here. 
+imhurt01.wav	I'm hurt! 
+imhurt02.wav	I'm hurt!
+imstickinghere01.wav	I'm sticking here.
+incoming02.wav	Incoming!
+itsamanhack01.wav	It's a manhack!
+itsamanhack02.wav	It's a manhack!
+leadon01.wav	Lead on, Freeman! 
+leadon02.wav	Lead on, Freeman! 
+leadtheway01.wav	You lead the way. 
+leadtheway02.wav	Lead the way.
+letsgo01.wav	Let's go! 
+letsgo02.wav	Let's go! 
+likethat.wav	Ha ha! Like that? 
+littlecorner01.wav	I've got my little corner and I'm sticking to it 
+lookoutfm01.wav	Look out, Freeman 
+lookoutfm02.wav	Look out, Freeman 
+moan01.wav	*moan*
+moan02.wav	*moan*
+moan03.wav	*moan*
+moan04.wav	*moan*
+moan05.wav	*moan*
+myarm01.wav	My arm!
+myarm02.wav	My arm!
+mygut02.wav	My gut!
+myleg01.wav	My leg!
+myleg02.wav	My leg!
+nice.wav	Nice!
+no01.wav	No!
+no02.wav	No!
+notthemanithought01.wav	You're not the man I thought you were. 
+notthemanithought02.wav	You're not the man I thought you were. 
+ohno.wav	Oh no! 
+ok01.wav	Okay. 
+ok02.wav	Okay! 
+okimready01.wav	Okay, I'm ready. 
+okimready02.wav	Okay, I'm ready. 
+okimready03.wav	Okay, I'm ready.
+oneforme.wav	One for me and one for me.
+onyourside.wav	Freeman, we're on your side! 
+outofyourway02.wav	Let me get out of your way 
+overhere01.wav	Hey, over here! 
+overthere01.wav	Over there!
+overthere02.wav	Over there!
+ow01.wav	Ow!
+ow02.wav	Ow!
+pain01.wav	*pain!*
+pain02.wav	*pain!*
+pain03.wav	*pain!*
+pain04.wav	*pain!*
+pain05.wav	*pain!*
+pain06.wav	*pain!*
+pain07.wav	*pain!*
+pain08.wav	*pain!*
+pain09.wav	*pain!*
+pardonme01.wav	Pardon me.
+pardonme02.wav	Pardon me.
+question01.wav	I don't think this war's ever gonna end. 
+question02.wav	 
+question03.wav	I don't dream anymore. 
+question04.wav	When this is all over I'm...aw, who am I kidding? 
+question05.wav	Whoa...deja vu!
+question06.wav	 
+question07.wav	You smell that? It's freedom. 
+question08.wav	If I ever get my hands on Dr. Breen...
+question09.wav	I could eat a horse, hooves and all. 
+question10.wav	I can't believe this day has finally come. 
+question11.wav	I'm pretty sure this isn't part of the plan. 
+question12.wav	Looks to me like things are getting worse, not better. 
+question13.wav	If I could live my life over again 
+question14.wav	I'm not even gonna tell you what that reminds me of. 
+question15.wav	They're never gonna make a stalker out of me. 
+question16.wav	Finally, change is in the air! 
+question17.wav	Do you feel it? I feel it! 
+question18.wav	I don't feel anything anymore. 
+question19.wav	I can't remember the last time I had a shower. 
+question20.wav	Some day this will all be a bad memory. 
+question21.wav	I'm not a betting man, but the odds are not good. 
+question22.wav	Doesn't anyone care what I think? 
+question23.wav	I can't get this tune out of my head.  [whistles]
+question25.wav	I just knew it was gonna be one of those days. 
+question26.wav	This is bullshit!
+question27.wav	I think I ate something bad.
+question28.wav	God I'm hungry.
+question29.wav	When this is all over, I'm gonna mate. 
+question30.wav	I'm glad there's no kids around to see this 
+question31.wav	I can't remember the last time I had, well, anything. 
+readywhenyouare01.wav	Ready when you are. 
+readywhenyouare02.wav	Ready when you are! 
+reloadfm01.wav	Reload, Dr. Freeman!
+reloadfm02.wav	Reload, Dr. Freeman!
+runforyourlife01.wav	Run for your life! 
+runforyourlife02.wav	Run for your life! 
+runforyourlife03.wav	Run for your life! 
+scanners01.wav	Scanners! 
+scanners02.wav	Scanners! 
+sorry01.wav	Sorry.
+sorry02.wav	Sorry. 
+sorry03.wav	Sorry. 
+sorrydoc01.wav	Sorry, Doc. 
+sorrydoc02.wav	Sorry, Doc. 
+sorrydoc04.wav	Sorry, Doc. 
+sorryfm01.wav	Sorry, Freeman. 
+sorryfm02.wav	Sorry, Freeman. 
+squad_affirm01.wav	You got it, Doc. 
+squad_affirm02.wav	Anything you say, Doc. 
+squad_affirm03.wav	Whatever you say. 
+squad_affirm04.wav	Okay I'm going. 
+squad_affirm05.wav	Here goes. 
+squad_affirm06.wav	Here goes nothing. 
+squad_affirm07.wav	Good call, Doc. 
+squad_affirm08.wav	Good idea, Doctor Freeman. 
+squad_affirm09.wav	Sure thing, Gordon. 
+squad_approach01.wav	Head back to Freeman. 
+squad_approach02.wav	Here we come. 
+squad_approach03.wav	On our way. 
+squad_approach04.wav	Coming. 
+squad_away01.wav	This way, gang.
+squad_away02.wav	Over here. 
+squad_away03.wav	Follow me. 
+squad_follow01.wav	Follow Freeman! 
+squad_follow02.wav	Come on, everybody! 
+squad_follow03.wav	Let's get moving!
+squad_follow04.wav	Hey, everybody, follow Freeman!
+squad_greet01.wav	Gordon Freeman, you're here! 
+squad_greet02.wav	Doctor Freeman? We're coming with you. 
+squad_greet04.wav	With you here, Dr. Freeman, we can finally make some headway.
+squad_reinforce_group01.wav	Doctor Freeman, wait.  We'll come with you. 
+squad_reinforce_group02.wav	Hey, it's Freeman!  Let's follow him! 
+squad_reinforce_group03.wav	We were looking to join you, Doctor Freeman.
+squad_reinforce_group04.wav	Wait for us!
+squad_reinforce_single01.wav	Wait for me, Dr. Freeman.  I'll come with you. 
+squad_reinforce_single02.wav	Dr. Freeman, I'm coming with you. 
+squad_reinforce_single03.wav	Hey. it's Freeman! You're not leaving without me. 
+squad_reinforce_single04.wav	Wait for me. 
+squad_train01.wav	We'll help however we can, Doc. 
+squad_train02.wav	Let us know where you want us, Dr. Freeman.
+squad_train03.wav	Okay, Doc, you're in charge. 
+squad_train04.wav	We're with you, Dr. Freeman. Let us know if we can do anything extra to help.
+startle01.wav	 
+startle02.wav	 
+stopitfm.wav	Stop it, Freeman! 
+strider.wav	Strider!
+strider_run.wav	Run!
+takecover02.wav	Take cover!
+thehacks01.wav	The Hacks!
+thehacks02.wav	The Hacks!
+thislldonicely01.wav	This'll do nicely. 
+uhoh.wav	Uh-oh.
+upthere01.wav	Up there!
+upthere02.wav	Up there! 
+vanswer01.wav	Enough of your mumbo jumbo. 
+vanswer02.wav	Damn vorts. 
+vanswer03.wav	I'm not sure how to take that. 
+vanswer04.wav	Should I take that personally?
+vanswer05.wav	Speak English.
+vanswer06.wav	You got that from me.
+vanswer07.wav	That's why we put up with you.
+vanswer08.wav	Couldn't have put it better myself. 
+vanswer09.wav	That almost made sense.
+vanswer10.wav	Something must be wrong with me, I almost understood that.
+vanswer11.wav	I guess I'm getting used to you vorts.
+vanswer12.wav	None of your vort philosophy.
+vanswer13.wav	Stop, you're killing me!
+vanswer14.wav	What did I do to deserve this?
+vquestion01.wav	Stop looking at me like that.
+vquestion02.wav	Some things I just never get used to.
+vquestion03.wav	I don't know how you things have survived as long as you have. 
+vquestion04.wav	Sometimes I wonder how I ended up with you. 
+vquestion05.wav	You're all right vorty. 
+vquestion06.wav	You vorts aren't half bad.
+vquestion07.wav	If anyone would have told me I'd be pals with a vortigaunt...
+waitingsomebody.wav	You waiting for somebody?
+watchout.wav	Watch out! 
+watchwhat.wav	Watch what you're doing. 
+wetrustedyou01.wav	We trusted you. 
+wetrustedyou02.wav	We trusted you! 
+whoops01.wav	Whoops.
+yeah02.wav	Yeah!
+youdbetterreload01.wav	You'd better reload!
+yougotit02.wav	You got it 
+zombies01.wav	Zombies!
+zombies02.wav	Zombies!
+
+## A citizen, a woman (sound/vo/npc/female01/)
+abouttime01.wav	Well, Gordon Freeman! And about time, too. 
+abouttime02.wav	Well, Gordon Freeman! And about time, too. 
+ahgordon01.wav	Ah, Gordon Freeman. 
+ahgordon02.wav	Ah, Gordon Freeman. 
+ammo01.wav	Freeman, ammo! 
+ammo02.wav	Freeman, ammo! 
+ammo03.wav	Here, ammo! 
+ammo04.wav	Take some ammo! 
+ammo05.wav	Take some ammo! 
+answer01.wav	That's you all over. 
+answer02.wav	I won't hold it against you. 
+answer03.wav	Figures. 
+answer04.wav	Try not to dwell on it. 
+answer05.wav	Could we talk about this later? 
+answer07.wav	Same here. 
+answer08.wav	Know what you mean. 
+answer09.wav	You're talking to yourself again. 
+answer10.wav	I wouldn't say that too loud. 
+answer11.wav	I'll put it on your tombstone. 
+answer12.wav	Doesn't bear thinking about. 
+answer13.wav	I'm with you. 
+answer14.wav	You and me both. 
+answer15.wav	That's one way of looking at it. 
+answer16.wav	Have you ever had an original thought? 
+answer17.wav	I'm not even gonna tell you to shut up. 
+answer18.wav	Let's concentrate on the task at hand. 
+answer19.wav	Keep your mind on your work. 
+answer20.wav	Your mind is in the gutter. 
+answer21.wav	Don't be so sure of that. 
+answer22.wav	You never know. 
+answer23.wav	Never can tell. 
+answer24.wav	Why are you telling me? 
+answer25.wav	How about that? 
+answer26.wav	That's more information than I require. 
+answer27.wav	Wanna bet? 
+answer28.wav	I wish I had a dime for every time somebody said that. 
+answer29.wav	What am I supposed to do about it? 
+answer30.wav	You talking to me? 
+answer31.wav	You should nip that kind of talk in the bud. 
+answer32.wav	Right on. 
+answer33.wav	No argument there. 
+answer34.wav	Don't forget Hawaii. 
+answer35.wav	Try not to let it get to you. 
+answer36.wav	Wouldn't be the first time. 
+answer37.wav	You sure about that? 
+answer38.wav	Leave it alone. 
+answer39.wav	That's enough outta you. 
+answer40.wav	There's a first time for everything. 
+behindyou01.wav	Behind you!
+behindyou02.wav	Behind you!
+busy02.wav	Can't you see I'm busy? 
+cit_dropper01.wav	Hey down there!  Supplies! 
+cit_dropper04.wav	Look out below! 
+civilprotection01.wav	Civil Protection!
+civilprotection02.wav	Civil Protection! 
+combine01.wav	Combine!
+combine02.wav	Combine!
+coverwhilereload01.wav	Cover me while I reload!
+coverwhilereload02.wav	Cover me while I reload!
+cps01.wav	CPs!
+cps02.wav	CPs! 
+docfreeman01.wav	Dr. Freeman. 
+docfreeman02.wav	Dr. Freeman. 
+doingsomething.wav	Shouldn't we be doing something?
+dontforgetreload01.wav	Don't forget to reload, Dr. Freeman 
+excuseme01.wav	Excuse me. 
+excuseme02.wav	Excuse me. 
+fantastic01.wav	Fantastic! 
+fantastic02.wav	Fantastic! 
+finally.wav	Finally!
+freeman.wav	Freeman.
+getdown02.wav	Get down!
+getgoingsoon.wav	Are we gonna get going soon?
+gethellout.wav	Get the hell out of here!
+goodgod.wav	Good god!
+gordead_ans01.wav	Now what?
+gordead_ans02.wav	And things were going so well.
+gordead_ans03.wav	Don't tell me.
+gordead_ans04.wav	Oh, God!
+gordead_ans05.wav	Oh no!
+gordead_ans06.wav	Please no!
+gordead_ans07.wav	If you dare say 'That's gotta hurt,' I'll kill you.
+gordead_ans08.wav	Should we bury him here?
+gordead_ans09.wav	I had a feeling even he couldn't help us.
+gordead_ans10.wav	Spread the word.
+gordead_ans11.wav	What's the use?
+gordead_ans12.wav	What's the point?
+gordead_ans13.wav	Why go on?
+gordead_ans14.wav	We're done for. 
+gordead_ans15.wav	Well, now what? 
+gordead_ans16.wav	Dibs on the suit.
+gordead_ans17.wav	Wait a second that's not Gordon Freeman! 
+gordead_ans18.wav	He's done this before.  He'll be okay.
+gordead_ans19.wav	I'm gonna be sick.
+gordead_ans20.wav	Somebody take his crowbar.
+gordead_ques01.wav	He's dead.
+gordead_ques02.wav	What a way to go. 
+gordead_ques04.wav	Freeman is...dead...
+gordead_ques05.wav	That's not Freeman is it?
+gordead_ques06.wav	This can't be!
+gordead_ques07.wav	Look, he's dead!
+gordead_ques08.wav	He came a long way from Black Mesa.
+gordead_ques10.wav	This is bad.
+gordead_ques11.wav	I thought he was invincible!
+gordead_ques12.wav	So much for Doctor Freeman.
+gordead_ques13.wav	So much for our last hope.
+gordead_ques14.wav	It's not supposed to end like this.
+gordead_ques15.wav	Dr. Freeman? Can you hear me? Do not go into the light!
+gordead_ques16.wav	What now?
+gordead_ques17.wav	Any last words, Doc? 
+gotone01.wav	Got one!
+gotone02.wav	I got one! 
+gottareload01.wav	Gotta reload!
+gunship02.wav	Gunship!
+hacks01.wav	Hacks!
+hacks02.wav	Hacks! 
+headcrabs01.wav	Headcrabs!
+headcrabs02.wav	Headcrabs! 
+headsup01.wav	Heads up! 
+headsup02.wav	Heads up!
+health01.wav	Take this medkit. 
+health02.wav	Take this medkit. 
+health03.wav	Take this medkit. 
+health04.wav	Here, have a medkit. 
+health05.wav	Here, patch yourself up. 
+hellodrfm01.wav	Hello, Dr. Freeman. 
+hellodrfm02.wav	Hello, Dr. Freeman. 
+help01.wav	Help!
+herecomehacks01.wav	Here come the hacks!
+herecomehacks02.wav	Here come the hacks!
+heretheycome01.wav	Here they come! 
+heretohelp01.wav	We thought you were here to help. 
+heretohelp02.wav	We thought you were here to help. 
+heydoc01.wav	Hey, Doc. 
+heydoc02.wav	Hey, Doc. 
+hi01.wav	Hi. 
+hi02.wav	Hi. 
+hitingut01.wav	Hit in the gut!
+hitingut02.wav	Hit in the gut!
+holddownspot01.wav	I'm gonna stay and hold down this spot. 
+holddownspot02.wav	I'm gonna stay and hold down this spot. 
+illstayhere01.wav	I'll stay here. 
+imhurt01.wav	I'm hurt! 
+imhurt02.wav	I'm hurt!
+imstickinghere01.wav	I'm sticking here.
+incoming02.wav	Incoming!
+itsamanhack01.wav	It's a manhack!
+itsamanhack02.wav	It's a manhack!
+leadon01.wav	Lead on, Freeman! 
+leadon02.wav	Lead on, Freeman! 
+leadtheway01.wav	You lead the way. 
+leadtheway02.wav	Lead the way.
+letsgo01.wav	Let's go! 
+letsgo02.wav	Let's go! 
+likethat.wav	Ha ha! Like that? 
+littlecorner01.wav	I've got my little corner and I'm sticking to it 
+lookoutfm01.wav	Look out, Freeman 
+lookoutfm02.wav	Look out, Freeman 
+moan01.wav	*moan*
+moan02.wav	*moan*
+moan03.wav	*moan*
+moan04.wav	*moan*
+moan05.wav	*moan*
+myarm01.wav	My arm!
+myarm02.wav	My arm!
+mygut02.wav	My gut!
+myleg01.wav	My leg!
+myleg02.wav	My leg!
+nice01.wav	Nice!
+nice02.wav	Nice!
+no01.wav	No!
+no02.wav	No!
+notthemanithought01.wav	You're not the man I thought you were. 
+notthemanithought02.wav	You're not the man I thought you were. 
+ohno.wav	Oh no! 
+ok01.wav	Okay. 
+ok02.wav	Okay! 
+okimready01.wav	Okay, I'm ready. 
+okimready02.wav	Okay, I'm ready. 
+okimready03.wav	Okay, I'm ready.
+onyourside.wav	Freeman, we're on your side! 
+outofyourway02.wav	Let me get out of your way 
+overhere01.wav	Hey, over here! 
+overthere01.wav	Over there!
+overthere02.wav	Over there!
+ow01.wav	Ow!
+ow02.wav	Ow!
+pain01.wav	*pain!*
+pain02.wav	*pain!*
+pain03.wav	*pain!*
+pain04.wav	*pain!*
+pain05.wav	*pain!*
+pain06.wav	*pain!*
+pain07.wav	*pain!*
+pain08.wav	*pain!*
+pain09.wav	*pain!*
+pardonme01.wav	Pardon me.
+pardonme02.wav	Pardon me.
+question01.wav	I don't think this war's ever gonna end. 
+question02.wav	 
+question03.wav	I don't dream anymore. 
+question04.wav	When this is all over I'm...aw, who am I kidding? 
+question05.wav	Whoa...deja vu!
+question06.wav	 
+question07.wav	You smell that? It's freedom. 
+question08.wav	If I ever get my hands on Dr. Breen...
+question09.wav	I could eat a horse, hooves and all. 
+question10.wav	I can't believe this day has finally come. 
+question11.wav	I'm pretty sure this isn't part of the plan. 
+question12.wav	Looks to me like things are getting worse, not better. 
+question13.wav	If I could live my life over again 
+question14.wav	I'm not even gonna tell you what that reminds me of. 
+question15.wav	They're never gonna make a stalker out of me. 
+question16.wav	Finally, change is in the air! 
+question17.wav	Do you feel it? I feel it! 
+question18.wav	I don't feel anything anymore. 
+question19.wav	I can't remember the last time I had a shower. 
+question20.wav	Some day this will all be a bad memory. 
+question21.wav	I'm not a betting man, but the odds are not good. 
+question22.wav	Doesn't anyone care what I think? 
+question23.wav	I can't get this tune out of my head.  [whistles]
+question25.wav	I just knew it was gonna be one of those days. 
+question26.wav	This is bullshit!
+question27.wav	I think I ate something bad.
+question28.wav	God I'm hungry.
+question29.wav	When this is all over, I'm gonna mate. 
+question30.wav	I'm glad there's no kids around to see this 
+question31.wav	I can't remember the last time I had, well, anything. 
+readywhenyouare01.wav	Ready when you are. 
+readywhenyouare02.wav	Ready when you are! 
+reloadfm01.wav	Reload, Dr. Freeman!
+reloadfm02.wav	Reload, Dr. Freeman!
+runforyourlife01.wav	Run for your life! 
+runforyourlife02.wav	Run for your life! 
+scanners01.wav	Scanners! 
+scanners02.wav	Scanners! 
+sorry01.wav	Sorry.
+sorry02.wav	Sorry. 
+sorry03.wav	Sorry. 
+sorrydoc01.wav	Sorry, Doc. 
+sorrydoc02.wav	Sorry, Doc. 
+sorrydoc04.wav	Sorry, Doc. 
+sorryfm01.wav	Sorry, Freeman. 
+sorryfm02.wav	Sorry, Freeman. 
+squad_affirm01.wav	You got it, Doc. 
+squad_affirm02.wav	Anything you say, Doc. 
+squad_affirm03.wav	Whatever you say. 
+squad_affirm04.wav	Okay I'm going. 
+squad_affirm05.wav	Here goes. 
+squad_affirm06.wav	Here goes nothing. 
+squad_affirm07.wav	Good call, Doc. 
+squad_affirm08.wav	Good idea, Doctor Freeman. 
+squad_affirm09.wav	Sure thing, Gordon. 
+squad_approach01.wav	Head back to Freeman. 
+squad_approach02.wav	Here we come. 
+squad_approach03.wav	On our way. 
+squad_approach04.wav	Coming. 
+squad_away01.wav	This way, gang.
+squad_away02.wav	Over here. 
+squad_away03.wav	Follow me. 
+squad_follow01.wav	Follow Freeman! 
+squad_follow02.wav	Come on, everybody! 
+squad_follow03.wav	Let's get moving!
+squad_follow04.wav	Hey, everybody, follow Freeman!
+squad_greet01.wav	Gordon Freeman, you're here! 
+squad_greet02.wav	Doctor Freeman? We're coming with you. 
+squad_greet04.wav	With you here, Dr. Freeman, we can finally make some headway.
+squad_reinforce_group01.wav	Doctor Freeman, wait.  We'll come with you. 
+squad_reinforce_group02.wav	Hey, it's Freeman!  Let's follow him! 
+squad_reinforce_group03.wav	We were looking to join you, Doctor Freeman.
+squad_reinforce_group04.wav	Wait for us!
+squad_reinforce_single01.wav	Wait for me, Dr. Freeman.  I'll come with you. 
+squad_reinforce_single02.wav	Dr. Freeman, I'm coming with you. 
+squad_reinforce_single03.wav	Hey. it's Freeman! You're not leaving without me. 
+squad_reinforce_single04.wav	Wait for me. 
+squad_train01.wav	We'll help however we can, Doc. 
+squad_train02.wav	Let us know where you want us, Dr. Freeman.
+squad_train03.wav	Okay, Doc, you're in charge. 
+squad_train04.wav	We're with you, Dr. Freeman. Let us know if we can do anything extra to help.
+startle01.wav	 
+startle02.wav	 
+stopitfm.wav	Stop it, Freeman! 
+strider.wav	Strider!
+strider_run.wav	Run!
+takecover02.wav	Take cover!
+thehacks01.wav	The Hacks!
+thehacks02.wav	The Hacks!
+thislldonicely01.wav	This'll do nicely. 
+uhoh.wav	Uh-oh.
+upthere01.wav	Up there!
+upthere02.wav	Up there! 
+vanswer01.wav	Enough of your mumbo jumbo. 
+vanswer02.wav	Damn vorts. 
+vanswer03.wav	I'm not sure how to take that. 
+vanswer04.wav	Should I take that personally?
+vanswer05.wav	Speak English.
+vanswer06.wav	You got that from me.
+vanswer07.wav	That's why we put up with you.
+vanswer08.wav	Couldn't have put it better myself. 
+vanswer09.wav	That almost made sense.
+vanswer10.wav	Something must be wrong with me, I almost understood that.
+vanswer11.wav	I guess I'm getting used to you vorts.
+vanswer12.wav	None of your vort philosophy.
+vanswer13.wav	Stop, you're killing me!
+vanswer14.wav	What did I do to deserve this?
+vquestion01.wav	Stop looking at me like that.
+vquestion02.wav	Some things I just never get used to.
+vquestion03.wav	I don't know how you things have survived as long as you have. 
+vquestion04.wav	Sometimes I wonder how I ended up with you. 
+vquestion05.wav	You're all right vorty. 
+vquestion06.wav	You vorts aren't half bad.
+vquestion07.wav	If anyone would have told me I'd be pals with a vortigaunt...
+waitingsomebody.wav	You waiting for somebody?
+watchout.wav	Watch out! 
+watchwhat.wav	Watch what you're doing. 
+wetrustedyou01.wav	We trusted you. 
+wetrustedyou02.wav	We trusted you! 
+whoops01.wav	Whoops.
+yeah02.wav	Yeah!
+youdbetterreload01.wav	You'd better reload!
+yougotit02.wav	You got it 
+zombies01.wav	Zombies!
+zombies02.wav	Zombies!
+
+## Civil Protection (sound/npc/metropolice/vo/)
+11-99officerneedsassistance.wav	
+404zone.wav	
+_comma.wav	
+acquiringonvisual.wav	
+administer.wav	
+affirmative.wav	
+affirmative2.wav	
+airwatchsubjectis505.wav	
+allrightyoucango.wav	
+allunitsbol34sat.wav	
+allunitscloseonsuspect.wav	
+allunitscode2.wav	
+allunitsmaintainthiscp.wav	
+allunitsmovein.wav	
+allunitsreportlocationsuspect.wav	
+allunitsrespondcode3.wav	
+amputate.wav	
+anticitizen.wav	
+anyonepickup647e.wav	
+apply.wav	
+assaultpointsecureadvance.wav	
+atcheckpoint.wav	
+backmeupimout.wav	
+backup.wav	
+block.wav	
+blockisholdingcohesive.wav	
+breakhiscover.wav	
+bugs.wav	
+bugsontheloose.wav	
+canal.wav	
+canalblock.wav	
+catchthatbliponstabilization.wav	
+cauterize.wav	
+checkformiscount.wav	
+chuckle.wav	
+citizen.wav	
+citizensummoned.wav	
+classifyasdbthisblockready.wav	
+clearandcode100.wav	
+clearno647no10-107.wav	
+code100.wav	
+code7.wav	
+condemnedzone.wav	
+confirmadw.wav	
+confirmpriority1sighted.wav	
+contactwith243suspect.wav	
+contactwithpriority2.wav	
+control100percent.wav	
+controlsection.wav	
+converging.wav	
+copy.wav	
+covermegoingin.wav	
+cpbolforthat243.wav	
+cpiscompromised.wav	
+cpisoverrunwehavenocontainment.wav	
+cprequestsallunitsreportin.wav	
+cpweneedtoestablishaperimeterat.wav	
+criminaltrespass63.wav	
+dbcountis.wav	
+defender.wav	
+deservicedarea.wav	
+designatesuspectas.wav	
+destroythatcover.wav	
+dismountinghardpoint.wav	
+dispatchineed10-78.wav	
+dispreportssuspectincursion.wav	
+dispupdatingapb.wav	
+distributionblock.wav	
+document.wav	
+dontmove.wav	
+eight.wav	
+eighteen.wav	
+eighty.wav	
+eleven.wav	
+establishnewcp.wav	
+examine.wav	
+expired.wav	
+externaljurisdiction.wav	
+fifteen.wav	
+fifty.wav	
+finalverdictadministered.wav	
+finalwarning.wav	
+firetodislocateinterpose.wav	
+firingtoexposetarget.wav	
+firstwarningmove.wav	
+five.wav	
+four.wav	
+fourteen.wav	
+fourty.wav	
+freeman.wav	
+freenecrotics.wav	
+get11-44inboundcleaningup.wav	
+getdown.wav	
+getoutofhere.wav	
+goingtotakealook.wav	
+gota10-107sendairwatch.wav	
+gothimagainsuspect10-20at.wav	
+gotoneaccomplicehere.wav	
+gotsuspect1here.wav	
+grenade.wav	
+hardpointscanning.wav	
+help.wav	
+hero.wav	
+hesgone148.wav	
+hesrunning.wav	
+hesupthere.wav	
+hidinglastseenatrange.wav	
+highpriorityregion.wav	
+holdingon10-14duty.wav	
+holdit.wav	
+holditrightthere.wav	
+holdthisposition.wav	
+ihave10-30my10-20responding.wav	
+industrialzone.wav	
+infection.wav	
+infestedzone.wav	
+inject.wav	
+innoculate.wav	
+inposition.wav	
+inpositionathardpoint.wav	
+inpositiononeready.wav	
+intercede.wav	
+interlock.wav	
+investigate.wav	
+investigating10-103.wav	
+is10-108.wav	
+is415b.wav	
+isaidmovealong.wav	
+isathardpointreadytoprosecute.wav	
+isclosingonsuspect.wav	
+isdown.wav	
+isgo.wav	
+ismovingin.wav	
+isolate.wav	
+ispassive.wav	
+isreadytogo.wav	
+issuingmalcompliantcitation.wav	
+ivegot408hereatlocation.wav	
+jury.wav	
+keepmoving.wav	
+king.wav	
+level3civilprivacyviolator.wav	
+line.wav	
+localcptreportstatus.wav	
+location.wav	
+lock.wav	
+lockyourposition.wav	
+lookingfortrouble.wav	
+lookout.wav	
+lookoutrogueviscerator.wav	
+looseparasitics.wav	
+loyaltycheckfailure.wav	
+malcompliant10107my1020.wav	
+malignant.wav	
+matchonapblikeness.wav	
+meters.wav	
+minorhitscontinuing.wav	
+move.wav	
+movealong.wav	
+movealong3.wav	Prepare for judgment!
+movebackrightnow.wav	
+moveit.wav	
+moveit2.wav	
+movetoarrestpositions.wav	
+movingtocover.wav	
+movingtohardpoint.wav	
+movingtohardpoint2.wav	
+necrotics.wav	
+needanyhelpwiththisone.wav	
+nine.wav	
+nineteen.wav	
+ninety.wav	
+nocontact.wav	
+non-taggedviromeshere.wav	
+noncitizen.wav	
+nonpatrolregion.wav	
+novisualonupi.wav	
+nowgetoutofhere.wav	
+off1.wav	
+off2.wav	
+off3.wav	
+off4.wav	
+officerdowncode3tomy10-20.wav	
+officerdowniam10-99.wav	
+officerneedsassistance.wav	
+officerneedshelp.wav	
+officerunderfiretakingcover.wav	
+on1.wav	
+on2.wav	
+one.wav	
+onehundred.wav	
+outbreak.wav	
+outlandbioticinhere.wav	
+outlandzone.wav	
+pacifying.wav	
+patrol.wav	
+pickingupnoncorplexindy.wav	
+pickupthecan1.wav	
+pickupthecan2.wav	
+pickupthecan3.wav	
+positiontocontain.wav	
+possible10-103alerttagunits.wav	
+possible404here.wav	
+possible647erequestairwatch.wav	
+possiblelevel3civilprivacyviolator.wav	
+preparefor1015.wav	
+prepareforjudgement.wav	
+preparingtojudge10-107.wav	
+preserve.wav	
+pressure.wav	
+priority2anticitizenhere.wav	
+proceedtocheckpoints.wav	
+productionblock.wav	
+prosecute.wav	
+protectioncomplete.wav	
+ptatlocationreport.wav	
+ptgoagain.wav	
+putitinthetrash1.wav	
+putitinthetrash2.wav	
+quick.wav	
+readytoamputate.wav	
+readytojudge.wav	
+readytoprosecute.wav	
+readytoprosecutefinalwarning.wav	
+reinforcementteamscode3.wav	
+reportsightingsaccomplices.wav	
+repurposedarea.wav	
+requestsecondaryviscerator.wav	
+residentialblock.wav	
+responding2.wav	
+restrict.wav	
+restrictedblock.wav	
+rodgerthat.wav	
+roller.wav	
+runninglowonverdicts.wav	
+sacrificecode1maintaincp.wav	
+search.wav	
+searchingforsuspect.wav	
+secondwarning.wav	
+sector.wav	
+sentencedelivered.wav	
+serve.wav	
+seven.wav	
+seventeen.wav	
+seventy.wav	
+shit.wav	
+shotsfiredhostilemalignants.wav	
+six.wav	
+sixteen.wav	
+sixty.wav	
+sociocide.wav	
+stabilizationjurisdiction.wav	
+standardloyaltycheck.wav	
+stationblock.wav	
+sterilize.wav	
+stick.wav	
+stillgetting647e.wav	
+stormsystem.wav	
+subject.wav	
+subjectis505.wav	
+subjectisnowhighspeed.wav	
+supsecthasmovednowto.wav	
+suspect11-6my1020is.wav	
+suspectinstormrunoff.wav	
+suspectisbleeding.wav	
+suspectlocationunknown.wav	
+suspectusingrestrictedcanals.wav	
+suspend.wav	
+sweepingforsuspect.wav	
+tag10-91d.wav	
+tagonebug.wav	
+tagonenecrotic.wav	
+tagoneparasitic.wav	
+takecover.wav	
+tap.wav	
+teaminpositionadvance.wav	
+ten.wav	
+ten2.wav	
+ten4.wav	
+ten8standingby.wav	
+ten91dcountis.wav	
+ten97.wav	
+ten97suspectisgoa.wav	
+tenzerovisceratorishunting.wav	
+terminalrestrictionzone.wav	
+thatsagrenade.wav	
+therehegoeshesat.wav	
+thereheis.wav	
+thirteen.wav	
+thirty.wav	
+thisisyoursecondwarning.wav	
+three.wav	
+threehundred.wav	
+transitblock.wav	
+twelve.wav	
+twenty.wav	
+two.wav	
+twohundred.wav	
+union.wav	
+unitis10-65.wav	
+unitis10-8standingby.wav	
+unitisonduty10-8.wav	
+unitreportinwith10-25suspect.wav	
+unlawfulentry603.wav	
+upi.wav	
+utlsuspect.wav	
+utlthatsuspect.wav	
+vacatecitizen.wav	
+vice.wav	
+victor.wav	
+visceratordeployed.wav	
+visceratorisoc.wav	
+visceratorisoffgrid.wav	
+wasteriver.wav	
+watchit.wav	
+wearesociostablethislocation.wav	
+wegotadbherecancel10-102.wav	
+wehavea10-108.wav	
+workforceintake.wav	
+xray.wav	
+yellow.wav	
+youknockeditover.wav	
+youwantamalcomplianceverdict.wav	
+zero.wav	
+zone.wav	
+
+## Overwatch soldiers (sound/npc/combine_soldier/vo/)
+_comma.wav	
+_period.wav	
+administer.wav	
+affirmative.wav	
+affirmative2.wav	
+affirmativewegothimnow.wav	
+alert1.wav	
+anticitizenone.wav	
+antiseptic.wav	
+apex.wav	
+bearing.wav	
+blade.wav	
+block31mace.wav	
+block64jet.wav	
+bodypackholding.wav	
+boomer.wav	
+bouncerbouncer.wav	
+callcontactparasitics.wav	
+callcontacttarget1.wav	
+callhotpoint.wav	
+cleaned.wav	
+closing.wav	
+closing2.wav	
+confirmsectornotsterile.wav	
+contact.wav	
+contactconfim.wav	
+contactconfirmprosecuting.wav	
+contained.wav	
+containmentproceeding.wav	
+copy.wav	
+copythat.wav	
+cover.wav	
+coverhurt.wav	
+coverme.wav	
+dagger.wav	
+dash.wav	
+degrees.wav	
+delivered.wav	
+designatetargetas.wav	
+displace.wav	
+displace2.wav	
+echo.wav	
+eight.wav	
+eighteen.wav	
+eighty.wav	
+eleven.wav	
+engagedincleanup.wav	
+engaging.wav	
+executingfullresponse.wav	
+extractoraway.wav	
+extractorislive.wav	
+fifteen.wav	
+fifty.wav	
+fist.wav	
+five.wav	
+fixsightlinesmovein.wav	
+flaredown.wav	
+flash.wav	
+flatline.wav	
+flush.wav	
+four.wav	
+fourteen.wav	
+fourty.wav	
+freeman3.wav	
+fullactive.wav	
+ghost.wav	
+ghost2.wav	
+goactiveintercept.wav	
+gosharp.wav	
+gosharpgosharp.wav	
+grid.wav	
+gridsundown46.wav	
+hammer.wav	
+hardenthatposition.wav	
+hasnegativemovement.wav	
+heavyresistance.wav	
+helix.wav	
+hunter.wav	
+hurricane.wav	
+ice.wav	
+inbound.wav	
+infected.wav	
+ion.wav	
+isatcode.wav	
+isfieldpromoted.wav	
+isfinalteamunitbackup.wav	
+isholdingatcode.wav	
+jet.wav	
+judge.wav	
+kilo.wav	
+leader.wav	
+lostcontact.wav	
+mace.wav	
+meters.wav	
+motioncheckallradials.wav	
+movein.wav	
+necrotics.wav	
+necroticsinbound.wav	
+niner.wav	
+nineteen.wav	
+ninety.wav	
+nomad.wav	
+nova.wav	
+noviscon.wav	
+off1.wav	
+off1_episodic.wav	
+off2.wav	
+off2_episodic.wav	
+off3.wav	
+off3_episodic.wav	
+on1.wav	
+on1_episodic.wav	
+on2.wav	
+on2_episodic.wav	
+one.wav	
+onecontained.wav	
+onedown.wav	
+onedutyvacated.wav	
+onehundred.wav	
+outbreak.wav	
+outbreakstatusiscode.wav	
+overwatch.wav	
+overwatchconfirmhvtcontained.wav	
+overwatchreportspossiblehostiles.wav	
+overwatchrequestreinforcement.wav	
+overwatchrequestreserveactivation.wav	
+overwatchrequestskyshield.wav	
+overwatchrequestwinder.wav	
+overwatchsectoroverrun.wav	
+overwatchtarget1sterilized.wav	
+overwatchtargetcontained.wav	
+overwatchteamisdown.wav	
+ovewatchorders3ccstimboost.wav	
+payback.wav	
+phantom.wav	
+prepforcontact.wav	
+priority1objective.wav	
+prioritytwoescapee.wav	
+prison_soldier_activatecentral.wav	
+prison_soldier_boomersinbound.wav	
+prison_soldier_bunker1.wav	
+prison_soldier_bunker2.wav	
+prison_soldier_bunker3.wav	
+prison_soldier_containd8.wav	
+prison_soldier_fallback_b4.wav	
+prison_soldier_freeman_antlions.wav	
+prison_soldier_fullbioticoverrun.wav	
+prison_soldier_leader9dead.wav	
+prison_soldier_negativecontainment.wav	
+prison_soldier_prosecuted7.wav	
+prison_soldier_sundown3dead.wav	
+prison_soldier_tohighpoints.wav	
+prison_soldier_visceratorsa5.wav	
+prosecuting.wav	
+quicksand.wav	
+range.wav	
+ranger.wav	
+razor.wav	
+readycharges.wav	
+readyextractors.wav	
+readyweapons.wav	
+readyweaponshostilesinbound.wav	
+reaper.wav	
+reportallpositionsclear.wav	
+reportallradialsfree.wav	
+reportingclear.wav	
+requestmedical.wav	
+requeststimdose.wav	
+ripcord.wav	
+ripcordripcord.wav	
+savage.wav	
+scar.wav	
+sectionlockupdash4.wav	
+sector.wav	
+sectorisnotsecure.wav	
+sectorissecurenovison.wav	
+secure.wav	
+seven.wav	
+seventeen.wav	
+seventy.wav	
+shadow.wav	
+sharpzone.wav	
+sightlineisclear.wav	
+six.wav	
+sixteen.wav	
+sixty.wav	
+skyshieldreportslostcontact.wav	
+slam.wav	
+slash.wav	
+spear.wav	
+stab.wav	
+stabilizationteamhassector.wav	
+stabilizationteamholding.wav	
+standingby].wav	
+star.wav	
+stayalert.wav	
+stayalertreportsightlines.wav	
+stinger.wav	
+storm.wav	
+striker.wav	
+sundown.wav	
+suppressing.wav	
+swarmoutbreakinsector.wav	
+sweeper.wav	
+sweepingin.wav	
+swift.wav	
+sword.wav	
+target.wav	
+targetblackout.wav	
+targetcompromisedmovein.wav	
+targetcontactat.wav	
+targetineffective.wav	
+targetisat.wav	
+targetmyradial.wav	
+targetone.wav	
+teamdeployedandscanning.wav	
+ten.wav	
+thatsitwrapitup.wav	
+thirteen.wav	
+thirty.wav	
+three.wav	
+threehundred.wav	
+tracker.wav	
+twelve.wav	
+twenty.wav	
+two.wav	
+twohundred.wav	
+uniform.wav	
+unitisclosing.wav	
+unitisinbound.wav	
+unitismovingin.wav	
+vamp.wav	
+viscon.wav	
+visualonexogens.wav	
+weaponsoffsafeprepforcontact.wav	
+weareinaninfestationzone.wav	
+wehavefreeparasites.wav	
+wehavenontaggedviromes.wav	
+winder.wav	
+zero.wav	
+
+## Overwatch, the city's voice (sound/npc/overwatch/cityvoice/)
+f_anticitizenreport_spkr.wav	
+f_anticivil1_5_spkr.wav	
+f_anticivilevidence_3_spkr.wav	
+f_capitalmalcompliance_spkr.wav	
+f_ceaseevasionlevelfive_spkr.wav	
+f_citizenshiprevoked_6_spkr.wav	
+f_confirmcivilstatus_1_spkr.wav	
+f_evasionbehavior_2_spkr.wav	
+f_innactionisconspiracy_spkr.wav	
+f_localunrest_spkr.wav	
+f_protectionresponse_1_spkr.wav	
+f_protectionresponse_4_spkr.wav	
+f_protectionresponse_5_spkr.wav	
+f_rationunitsdeduct_3_spkr.wav	
+f_sociolevel1_4_spkr.wav	
+f_trainstation_assemble_spkr.wav	
+f_trainstation_assumepositions_spkr.wav	
+f_trainstation_cooperation_spkr.wav	
+f_trainstation_inform_spkr.wav	
+f_trainstation_offworldrelocation_spkr.wav	
+f_unrestprocedure1_spkr.wav	
+fcitadel_10sectosingularity.wav	
+fcitadel_15sectosingularity.wav	
+fcitadel_1minutetosingularity.wav	
+fcitadel_2minutestosingularity.wav	
+fcitadel_30sectosingularity.wav	
+fcitadel_3minutestosingularity.wav	
+fcitadel_45sectosingularity.wav	
+fcitadel_confiscating.wav	
+fcitadel_confiscationfailure.wav	
+fcitadel_deploy.wav	
+fcitadel_transportsequence.wav	
+fprison_airwatchdispatched.wav	
+fprison_contactlostlandsea.wav	
+fprison_containexogens.wav	
+fprison_deployinb4.wav	
+fprison_deservicepoliticalconscripts.wav	
+fprison_detectionsystemsout.wav	
+fprison_dropforcesixandeight.wav	
+fprison_exogenbreach.wav	
+fprison_freemanlocated.wav	
+fprison_interfacebypass.wav	
+fprison_missionfailurereminder.wav	
+fprison_nonstandardexogen.wav	
+fprison_perimeterrestrictors.wav	
+fprison_restrictorsdisengaged.wav	
+
+## Overwatch, on the radio (sound/npc/overwatch/radiovoice/)
+404zone.wav	
+_comma.wav	
+accomplicesoperating.wav	
+administer.wav	
+airwatchcopiesnoactivity.wav	
+airwatchreportspossiblemiscount.wav	
+alarms62.wav	
+allteamsrespondcode3.wav	
+allunitsapplyforwardpressure.wav	
+allunitsat.wav	
+allunitsbeginwhitnesssterilization.wav	
+allunitsbolfor243suspect.wav	
+allunitsdeliverterminalverdict.wav	
+allunitsreturntocode12.wav	
+allunitsverdictcodeis.wav	
+allunitsverdictcodeonsuspect.wav	
+amputate.wav	
+anticitizen.wav	
+antifatigueration3mg.wav	
+apply.wav	
+assault243.wav	
+attemptedcrime27.wav	
+attention.wav	
+attentionyouhavebeenchargedwith.wav	
+beginscanning10-0.wav	
+block.wav	
+canalblock.wav	
+capitalmalcompliance.wav	
+cauterize.wav	
+citizen.wav	
+completesentencingatwill.wav	
+condemnedzone.wav	
+confirmupialert.wav	
+controlsection.wav	
+criminaltrespass63.wav	
+defender.wav	
+deservicedarea.wav	
+destrutionofcpt.wav	
+devisivesociocidal.wav	
+die1.wav	
+die2.wav	
+die3.wav	
+disassociationfromcivic.wav	
+disengaged647e.wav	
+distributionblock.wav	
+disturbancemental10-103m.wav	
+disturbingunity415.wav	
+document.wav	
+eight.wav	
+engagingteamisnoncohesive.wav	
+examine.wav	
+externaljurisdiction.wav	
+failuretocomply.wav	
+failuretotreatoutbreak.wav	
+finalverdictadministered.wav	
+five.wav	
+fmil_region 073.wav	
+four.wav	
+freeman.wav	
+fugitive17f.wav	
+halfrankpoints.wav	
+halfreproductioncredits.wav	
+hero.wav	
+highpriorityregion.wav	
+illegalcarrying95.wav	
+illegalinoperation63s.wav	
+immediateamputation.wav	
+incitingpopucide.wav	
+industrialzone.wav	
+infection.wav	
+infestedzone.wav	
+inject.wav	
+innoculate.wav	
+inprogress.wav	
+intercede.wav	
+interlock.wav	
+investigate.wav	
+investigateandreport.wav	
+isnow.wav	
+isolate.wav	
+jury.wav	
+king.wav	
+leadersreportratios.wav	
+level5anticivilactivity.wav	
+line.wav	
+lock.wav	
+lockdownlocationsacrificecode.wav	
+lostbiosignalforunit.wav	
+nine.wav	
+noncitizen.wav	
+nonpatrolregion.wav	
+nonsanctionedarson51.wav	
+off2.wav	
+off4.wav	
+officerat.wav	
+officerclosingonsuspect.wav	
+on1.wav	
+on3.wav	
+one.wav	
+outlandzone.wav	
+patrol.wav	
+permanentoffworld.wav	
+politistablizationmarginal.wav	
+posession69.wav	
+prematuremissiontermination.wav	
+prepareforfinalsentencing.wav	
+preparetoinnoculate.wav	
+preparetoreceiveverdict.wav	
+preparevisualdownload.wav	
+preserve.wav	
+pressure.wav	
+productionblock.wav	
+promotingcommunalunrest.wav	
+prosecute.wav	
+publicnoncompliance507.wav	
+quick.wav	
+recalibratesocioscan.wav	
+recievingconflictingdata.wav	
+recklessoperation99.wav	
+reinforcementteamscode3.wav	
+remainingunitscontain.wav	
+reminder100credits.wav	
+remindermemoryreplacement.wav	
+reporton.wav	
+reportplease.wav	
+repurposedarea.wav	
+residentialblock.wav	
+resistingpacification148.wav	
+respond.wav	
+restrict.wav	
+restrictedblock.wav	
+restrictedincursioninprogress.wav	
+rewardnotice.wav	
+riot404.wav	
+roller.wav	
+search.wav	
+sector.wav	
+serve.wav	
+seven.wav	
+six.wav	
+socialfractureinprogress.wav	
+sociocide.wav	
+sociostabilizationrestored.wav	
+stabilizationjurisdiction.wav	
+stationblock.wav	
+statuson243suspect.wav	
+sterilize.wav	
+stick.wav	
+stormsystem.wav	
+subject.wav	
+suspectisnow187.wav	
+suspectmalignantverdictcodeis.wav	
+suspend.wav	
+suspendnegotiations.wav	
+switchcomtotac3.wav	
+switchtotac5reporttocp.wav	
+tap.wav	
+teamsreportstatus.wav	
+terminalprosecution.wav	
+terminalrestrictionzone.wav	
+threattoproperty51b.wav	
+three.wav	
+transitblock.wav	
+two.wav	
+union.wav	
+unitdeserviced.wav	
+unitdownat.wav	
+unlawfulentry603.wav	
+upi.wav	
+vice.wav	
+victor.wav	
+violationofcivictrust.wav	
+wasteriver.wav	
+weapon94.wav	
+workforceintake.wav	
+xray.wav	
+yellow.wav	
+youarechargedwithterminal.wav	
+youarejudgedguilty.wav	
+zero.wav	
+zone.wav	

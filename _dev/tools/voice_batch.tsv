@@ -193,15 +193,6 @@ man	livingcity/citizens/say_saw_beating_male1	[under their breath, tense] Don't 
 woman	livingcity/citizens/say_saw_beating_female1	[under their breath, tense] Don't look. Just keep walking.
 man	livingcity/citizens/say_saw_death_male1	[horrified, gasping] Oh God. Oh God, no.
 woman	livingcity/citizens/say_saw_death_female1	[horrified, gasping] Oh God. Oh God, no.
-unit	livingcity/units/unit_brutal1	[breathing hard, vicious] You want some too?
-unit	livingcity/units/unit_curfew1	[sharp, commanding] Get indoors.
-unit	livingcity/units/unit_drink1	[low, threatening, slightly slurred] You saw nothing.
-unit	livingcity/units/unit_dunno1	[flat, dismissive] That information is restricted.
-unit	livingcity/units/unit_greet_cp1	[flat, clipped] Unit. Sector is quiet.
-unit	livingcity/units/unit_noted1	[flat, ominous] Noted. It will go on your record.
-unit	livingcity/units/unit_papers1	[cold, commanding] Identification. Now.
-unit	livingcity/units/unit_soft1	[low, off the record] Keep your head down today. [pause] That is advice.
-unit	livingcity/units/unit_thanks1	[flat, faintly approving] Your cooperation is noted.
 gman	livingcity/gman/black_gman_choose	[slow, breathy, unsettling calm, odd pauses and emphasis] Step aside. Or end it ... yourself. Choose.
 gman	livingcity/gman/black_gman_press	[slow, breathy, unsettling calm, odd pauses and emphasis] Time is a luxury you no longer have, Administrator.
 gman	livingcity/gman/black_gman_lastcall	[slow, breathy, unsettling calm, odd pauses and emphasis] Choose. Or I will ... choose for you.

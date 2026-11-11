@@ -234,17 +234,8 @@ Folder: `units/`. Record clean, then give them the radio sound (above). Half-Lif
 
 | Done | File | Paste |
 |---|---|---|
-| [ ] | `unit_brutal1` | [breathing hard, vicious] You want some too? |
-| [ ] | `unit_curfew1` | [sharp, commanding] Get indoors. |
-| [ ] | `unit_drink1` | [low, threatening, slightly slurred] You saw nothing. |
-| [ ] | `unit_dunno1` | [flat, dismissive] That information is restricted. |
-| [ ] | `unit_greet_cp1` | [flat, clipped] Unit. Sector is quiet. |
-| [ ] | `unit_noted1` | [flat, ominous] Noted. It will go on your record. |
-| [ ] | `unit_papers1` | [cold, commanding] Identification. Now. |
-| [ ] | `unit_soft1` | [low, off the record] Keep your head down today. [pause] That is advice. |
-| [ ] | `unit_thanks1` | [flat, faintly approving] Your cooperation is noted. |
 
-**Nothing to record for these:** Half-Life 2's own Civil Protection voice says them, and the game uses its clip (`npc/metropolice/vo/`): "Now get out of here." (`nowgetoutofhere`); "Citizen." (`citizen`); "Looking for trouble?" (`lookingfortrouble`); "Move along." (`movealong`); "Negative." (`negative`); "Hold it right there." (`holditrightthere`); "Final warning." (`finalwarning`); "Affirmative." (`affirmative`). The clip names are from memory: `lc_voice_missing` on your server lists any unit line that has neither a recording nor a clip, and those can then be recorded.
+**Nothing to record for these:** Half-Life 2's own Civil Protection voice says them, and the game uses its clip (`npc/metropolice/vo/`): "Prepare for judgment." (`prepareforjudgement`); "Now get out of here." (`nowgetoutofhere`); "Vacate, citizen." (`vacatecitizen`); "Watch it." (`watchit`); "Keep moving." (`keepmoving`); "Citizen." (`citizen`); "Copy." (`copy`); "Looking for trouble?" (`lookingfortrouble`); "Move along." (`movealong`); "Move it." (`moveit`); "Get out of here." (`getoutofhere`); "Issuing malcompliant citation." (`issuingmalcompliantcitation`); "Don't move." (`dontmove`); "All right, you can go." (`allrightyoucango`); "Roger that." (`rodgerthat`); "Move back, right now." (`movebackrightnow`); "You want a malcompliance verdict?" (`youwantamalcomplianceverdict`); "Final warning." (`finalwarning`); "First warning: move away." (`firstwarningmove`); "This is your second warning." (`thisisyoursecondwarning`); "Affirmative." (`affirmative`). The clip names are from memory: `lc_voice_missing` on your server lists any unit line that has neither a recording nor a clip, and those can then be recorded.
 
 ## The G-Man: the lines that are not real clips
 

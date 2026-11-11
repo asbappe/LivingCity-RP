@@ -722,20 +722,24 @@ The named Civil Protection units' answers in free talk, and what they say when t
 
 | Done | File | When | Says |
 |---|---|---|---|
-| [ ] | `unit_brutal1.wav` | Brutality: to whoever is watching | You want some too? |
+| n/a | `unit_brutal1.wav` (optional) | Brutality: to whoever is watching | Prepare for judgment. (Half-Life 2 has it: `npc/metropolice/vo/prepareforjudgement.wav`, used by itself) |
 | n/a | `unit_busy1.wav` (optional) | Ending it | Now get out of here. (Half-Life 2 has it: `npc/metropolice/vo/nowgetoutofhere.wav`, used by itself) |
-| [ ] | `unit_curfew1.wav` | Curfew, a lockdown or a sweep | Get indoors. |
-| [ ] | `unit_drink1.wav` | Caught drinking on duty | You saw nothing. |
-| [ ] | `unit_dunno1.wav` | Asked anything he won't answer | That information is restricted. |
+| n/a | `unit_curfew1.wav` (optional) | Curfew, a lockdown or a sweep | Vacate, citizen. (Half-Life 2 has it: `npc/metropolice/vo/vacatecitizen.wav`, used by itself) |
+| n/a | `unit_drink1.wav` (optional) | Caught drinking on duty | Watch it. (Half-Life 2 has it: `npc/metropolice/vo/watchit.wav`, used by itself) |
+| n/a | `unit_dunno1.wav` (optional) | Asked anything he won't answer | Keep moving. (Half-Life 2 has it: `npc/metropolice/vo/keepmoving.wav`, used by itself) |
 | n/a | `unit_greet1.wav` (optional) | Spoken to | Citizen. (Half-Life 2 has it: `npc/metropolice/vo/citizen.wav`, used by itself) |
-| [ ] | `unit_greet_cp1.wav` | Spoken to by another unit | Unit. Sector is quiet. |
+| n/a | `unit_greet_cp1.wav` (optional) | Spoken to by another unit | Copy. (Half-Life 2 has it: `npc/metropolice/vo/copy.wav`, used by itself) |
 | n/a | `unit_insulted1.wav` (optional) | Insulted | Looking for trouble? (Half-Life 2 has it: `npc/metropolice/vo/lookingfortrouble.wav`, used by itself) |
 | n/a | `unit_move1.wav` (optional) | Wants them gone | Move along. (Half-Life 2 has it: `npc/metropolice/vo/movealong.wav`, used by itself) |
-| n/a | `unit_no1.wav` (optional) | Refusing | Negative. (Half-Life 2 has it: `npc/metropolice/vo/negative.wav`, used by itself) |
-| [ ] | `unit_noted1.wav` | Heard something he will report | Noted. It will go on your record. |
-| [ ] | `unit_papers1.wav` | Suspicious of them | Identification. Now. |
-| [ ] | `unit_soft1.wav` | A unit with some kindness in him, to someone he doesn't mind | Keep your head down today. That is advice. |
-| [ ] | `unit_thanks1.wav` | Told something useful, or obeyed | Your cooperation is noted. |
-| n/a | `unit_threat1.wav` (optional) | Threatened or crowded | Hold it right there. (Half-Life 2 has it: `npc/metropolice/vo/holditrightthere.wav`, used by itself) |
+| n/a | `unit_move_hard1.wav` (optional) | Wants them gone, losing patience | Move it. (Half-Life 2 has it: `npc/metropolice/vo/moveit.wav`, used by itself) |
+| n/a | `unit_no1.wav` (optional) | Refusing | Get out of here. (Half-Life 2 has it: `npc/metropolice/vo/getoutofhere.wav`, used by itself) |
+| n/a | `unit_noted1.wav` (optional) | Heard something he will report | Issuing malcompliant citation. (Half-Life 2 has it: `npc/metropolice/vo/issuingmalcompliantcitation.wav`, used by itself) |
+| n/a | `unit_papers1.wav` (optional) | Suspicious of them | Don't move. (Half-Life 2 has it: `npc/metropolice/vo/dontmove.wav`, used by itself) |
+| n/a | `unit_soft1.wav` (optional) | A unit with some kindness in him, to someone he doesn't mind | All right, you can go. (Half-Life 2 has it: `npc/metropolice/vo/allrightyoucango.wav`, used by itself) |
+| n/a | `unit_thanks1.wav` (optional) | Told something useful, or obeyed | Roger that. (Half-Life 2 has it: `npc/metropolice/vo/rodgerthat.wav`, used by itself) |
+| n/a | `unit_threat1.wav` (optional) | Threatened or crowded | Move back, right now. (Half-Life 2 has it: `npc/metropolice/vo/movebackrightnow.wav`, used by itself) |
+| n/a | `unit_verdict1.wav` (optional) | Insulted again, or defied | You want a malcompliance verdict? (Half-Life 2 has it: `npc/metropolice/vo/youwantamalcomplianceverdict.wav`, used by itself) |
 | n/a | `unit_warn1.wav` (optional) | Pushed too far | Final warning. (Half-Life 2 has it: `npc/metropolice/vo/finalwarning.wav`, used by itself) |
+| n/a | `unit_warn_first1.wav` (optional) | A first warning | First warning: move away. (Half-Life 2 has it: `npc/metropolice/vo/firstwarningmove.wav`, used by itself) |
+| n/a | `unit_warn_second1.wav` (optional) | A second warning | This is your second warning. (Half-Life 2 has it: `npc/metropolice/vo/thisisyoursecondwarning.wav`, used by itself) |
 | n/a | `unit_yes1.wav` (optional) | Agreeing | Affirmative. (Half-Life 2 has it: `npc/metropolice/vo/affirmative.wav`, used by itself) |

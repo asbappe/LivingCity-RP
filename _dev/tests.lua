@@ -11429,6 +11429,7 @@ VoiceTests()
 
 function LinesTests()
 section("What named people say, recorded: a small bank for free talk, the director and the minds' breaks")
+LC.VoiceForce = "own" -- (the recorded voice first; who gets which voice is further down)
 local nCit, nOpen, bad = 0, 0, nil
 for id, l in pairs(LC.StreetLines) do
     nCit = nCit + 1
@@ -11439,6 +11440,9 @@ ok(nCit >= 60 and nCit <= 90 and nOpen == 6 and not bad, "a citizen's bank: unde
 local nUnit = 0
 for id, l in pairs(LC.UnitLines) do nUnit = nUnit + 1 if string.sub(id, 1, 5) ~= "unit_" or #l[1] > 60 then bad = id end end
 ok(nUnit >= 12 and nUnit <= 24 and not bad, "a unit's bank: a couple of dozen at most", nUnit)
+local noClip
+for id, l in pairs(LC.UnitLines) do if type(l[4]) ~= "table" or #l[4] == 0 then noClip = id end end
+ok(noClip == nil, "every one of a unit's lines is one of Half-Life 2's own Civil Protection clips: nothing to record", tostring(noClip))
 ok(LC.LineValid("citizen", "say_dunno") and not LC.LineValid("citizen", "unit_move") and LC.LineValid("cop", "unit_move") and not LC.LineValid("cop", "say_dunno")
     and not LC.LineValid("citizen", "say_open_listen") and LC.LineValid("citizen", "say_open_listen", true) and not LC.LineValid("citizen", ""),
     "each kind of person has their own lines, and an opener only counts as an opener")
@@ -11457,14 +11461,43 @@ LC.AdviceClip = function() return nil end
 ok(LC.LineSay(n, st, "say_no") == "No. Sorry." and #heardSounds == 0, "no recording: the words only, never Half-Life 2's voice in its place", heardSounds[1])
 -- one voice for each named person
 local realAny = LC.AdviceHasAny
+LC.VoiceForce = nil
+_setcvar("lc_voice_split", 0)
 LC.AdviceHasAny = function() return false end
-ok(LC.OwnVoice(n, st) == false, "nothing recorded yet: a named citizen still has Half-Life 2's voice for everything else")
+ok(LC.OwnVoice(n, st) == false and LC.LineKey(n, st) == "hl2", "nothing recorded yet: a named citizen has Half-Life 2's voice, and its lines")
 LC.AdviceHasAny = function(prefix, gender) return prefix == "say_" and gender == st.gender end
-ok(LC.OwnVoice(n, st) == true, "once the bank is recorded for their sex, a named citizen has a voice of their own")
+ok(LC.OwnVoice(n, st) == true and LC.LineKey(n, st) == "citizen", "lc_voice_split 0: once the bank is recorded for their sex, every named citizen has the recorded voice")
+-- two voices by personality
+_setcvar("lc_voice_split", 1)
+_setcvar("lc_minds", 1)
+local realTraits = LC.Psy.Traits
+LC.Psy.Traits = function() return { social = 0.6, hope = 0.4, brave = 0.2 } end
+n.lcProfile.lcVoice = nil
+ok(LC.VoiceOf(n, st) == "hl2" and LC.OwnVoice(n, st) == false, "the lively, sociable and hopeful keep Half-Life 2's voice")
+LC.Psy.Traits = function() return { social = -0.6, hope = -0.5, brave = -0.2 } end
+ok(LC.VoiceOf(n, st) == "hl2", "and keep it for life, whatever happens to them")
+n.lcProfile.lcVoice = nil
+ok(LC.VoiceOf(n, st) == "own" and LC.OwnVoice(n, st) == true and LC.LineKey(n, st) == "citizen", "the withdrawn and despairing get the recorded voice")
+LC.Psy.Traits = realTraits
+_setcvar("lc_minds", 0)
+-- someone with Half-Life 2's voice: its own clips, and its own way of saying a break
+LC.VoiceForce = "hl2"
+heardSounds = {}
+ok(LC.LineSay(n, st, "hl_answer10") == "I wouldn't say that too loud." and heardSounds[1] == "vo/npc/" .. (st.gender == "female" and "female01" or "male01") .. "/answer10.wav",
+    "Half-Life 2's voice: one of its real clips, in its own words", heardSounds[1])
+heardSounds = {}
+ok(LC.LineSay(n, st, "say_break_tantrum") == "This is bullshit!" and string.find(heardSounds[1] or "", "question26.wav", 1, true) ~= nil, "asked for a line of the recorded bank, they say it their own way", heardSounds[1])
+ok(LC.LineSay(n, st, "say_res_side") == "", "or nothing, where Half-Life 2 has nothing like it")
+ok(LC.LineValid("hl2", "hl_answer24") and not LC.LineValid("hl2", "say_dunno") and string.find(LC.LineList("hl2"), "hl_question28: God I'm hungry.", 1, true) ~= nil, "the model is shown that bank for them")
+local nHL = 0 for _ in pairs(LC.HL2Lines) do nHL = nHL + 1 end
+ok(nHL >= 80, "about a hundred of Half-Life 2's citizen lines fit the city", nHL)
+LC.VoiceForce = "own"
 local plain, pst = LC.SpawnCitizen(T0 + Vector(0, 300, 0))
 plain.lcProfile = nil
 pst.gender = st.gender
+LC.VoiceForce = nil
 ok(LC.OwnVoice(plain, pst) == false, "an unnamed citizen keeps Half-Life 2's voice")
+LC.VoiceForce = "own"
 local sounds2 = {}
 plain.EmitSound = function(self, path) sounds2[#sounds2 + 1] = path end
 local thief2 = newPlayer("LinesGreeter", "citizen")
@@ -11473,7 +11506,9 @@ heardSounds = {}
 local advClip = LC.AdviceClip
 LC.AdviceClip = function() return nil end -- (this advice line is not recorded)
 LC.AdviceSay(n, st, "advice_bins", thief2)
+LC.VoiceForce = nil
 LC.AdviceSay(plain, pst, "advice_bins", thief2)
+LC.VoiceForce = "own"
 LC.AdviceClip = advClip
 local hl2 = false
 for _, s in ipairs(heardSounds) do if string.find(s, "vo/npc/", 1, true) then hl2 = true end end
@@ -11573,14 +11608,18 @@ ok(LC.VoiceReplaceRescan() == 2, "recordings in sound/livingcity/hl2/, under the
 ok(LC.VoiceReplacement("vo/npc/male01/hi01.wav") == "livingcity/hl2/vo/npc/male01/hi01.mp3" and LC.VoiceReplacement(")vo/npc/male01/HI01.wav") ~= nil
     and LC.VoiceReplacement("npc/metropolice/vo/movealong.wav") == "livingcity/hl2/npc/metropolice/vo/movealong.wav", "a clip with a recording is swapped for it, whatever marks the game put on its name")
 ok(LC.VoiceReplacement("vo/gman_misc/gman_03.wav") == nil and LC.VoiceReplacement("vo/npc/male01/hi02.wav") == nil, "never the G-Man's, and never a clip without one")
-local data = { SoundName = "vo/npc/male01/hi01.wav" }
+local data = { SoundName = "vo/npc/male01/hi01.wav", Entity = n }
 local res = hook.Run("EntityEmitSound", data)
 ok(res == true and data.SoundName == "livingcity/hl2/vo/npc/male01/hi01.mp3", "every sound an entity makes passes the swap: the game's own lines too", data.SoundName)
+LC.VoiceForce = "hl2"
+local dataH = { SoundName = "vo/npc/male01/hi01.wav", Entity = n }
+ok(hook.Run("EntityEmitSound", dataH) == nil and dataH.SoundName == "vo/npc/male01/hi01.wav", "a citizen who keeps Half-Life 2's voice keeps its clips: no swap for them")
+local dataU = { SoundName = "npc/metropolice/vo/movealong.wav" }
+ok(hook.Run("EntityEmitSound", dataU) == true, "a unit's clip is swapped whoever says it")
+LC.VoiceForce = "own"
 local data2 = { SoundName = "vo/npc/male01/hi02.wav" }
 ok(hook.Run("EntityEmitSound", data2) == nil and data2.SoundName == "vo/npc/male01/hi02.wav", "anything else is left alone")
-LC.AdviceHasAny = function() return true end
 ok(LC.OwnVoice(n, st) == true and LC.OwnVoice(n, st, "vo/npc/male01/hi01.wav") == false, "a named citizen is not silenced on a clip that has been re-recorded: it is their voice now")
-LC.AdviceHasAny = realAny
 _setcvar("lc_voice_replace", 0)
 ok(LC.VoiceReplacement("vo/npc/male01/hi01.wav") == nil, "lc_voice_replace 0: Half-Life 2's clips as they are")
 _setcvar("lc_voice_replace", 1)
@@ -11588,6 +11627,7 @@ _files["sound/livingcity/hl2/vo/npc/male01/hi01.mp3"], _files["sound/livingcity/
 LC.VoiceReplaceRescan()
 LC.BrainSetKey("")
 LC.BrainHTTP, LC.AdviceClip = realHTTP, realClip
+LC.VoiceForce = nil
 n.EmitSound = realEmit
 LC.MindsActs.errands = {}
 for _, e in ipairs({ n, ply }) do if IsValid(e) then e:Remove() end end

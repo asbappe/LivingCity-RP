@@ -1641,3 +1641,5 @@ Type them in the server console on the host panel, or in your own game console (
   Notes:
 - [ ] **Pictures loose in garrysmod/ (11 November):** unzip `livingcity_content.zip` in `garrysmod/`, FastDL sync (it should upload the posters, `ui/`, `pamphlet/` and `lcrebelhand.ttf`, and delete nothing), change the map, join from a clean client: posters show pictures, window backs are textured, the Resistance pamphlet is handwritten.
   Notes:
+- [ ] **Two voices (11 November):** with a key set, talk to several named citizens. Do they answer with real Half-Life 2 lines, spoken, that fit what you said ("I would not say that too loud", "Know what you mean")? Do units answer with their own clips ("Move along", "Final warning") and do the words on screen match what is said? Note any unit line whose words are wrong.
+  Notes:

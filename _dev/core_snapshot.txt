@@ -1195,6 +1195,7 @@ setting lc_voice_daily = 200
 setting lc_voice_model = eleven_v4_turbo
 setting lc_voice_range = 900
 setting lc_voice_replace = 1
+setting lc_voice_split = 1
 setting lc_vort_call_minutes = 10
 setting lc_vort_charge_minutes = 10
 setting lc_vort_commune_minutes = 15
