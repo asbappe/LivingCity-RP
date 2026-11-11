@@ -687,11 +687,13 @@ function LC.MingeCarry(p, m, secs)
     p.lcMingeCarried = { by = m, t0 = now, turnAt = now + (secs or LC.MingeCarrySecs) }
     p:SetHealth(1)
     if p.SetNotSolid then p:SetNotSolid(true) end
+    -- (the owner, 11 November: no kidnapping is interrupted, a unit's or a citizen's either ("yes please"): whatever it
+    -- has grabbed, nothing brings this one down from now on)
+    s.invincible = true
     if isPlayer then
         -- (the owner, 11 November: "if a mingebag grabs a player, then the mingebag and player become invincible for the
         -- rest of the dream so the kidnapping is not interrupted": nothing brings this one down from now on, and
         -- nothing touches them)
-        s.invincible = true
         if p.GodEnable then p:GodEnable() end
         p.lcMingeGod = true
         p:SetNW2Bool("lc_minge_carried", true)
@@ -912,10 +914,10 @@ end
 function LC.MingeHurt(m, dmg)
     local s = m.lcMinge
     if not s or not E or not E.vulnerable then return false end
-    if s.invincible then return false end -- (it has, or had, a player over its head: nothing stops it for the rest of it)
+    if s.invincible then return false end -- (it has, or had, someone over its head: nothing stops it for the rest of it)
     s.hp = s.hp - (dmg and dmg.GetDamage and dmg:GetDamage() or 25)
     if s.hp > 0 then return false end
-    if s.carry then Drop(s.carry, 40) s.carry = nil end -- (shot down with one of the Combine's units or the city's people over its head: it drops them, alive. A player's is never shot down.)
+    if s.carry then Drop(s.carry, 40) s.carry = nil end -- (a safeguard only: one carrying anyone can't be shot down)
     Body(m:GetModel(), m:GetPos(), m:GetAngles().y, 120)
     m:Remove()
     return true

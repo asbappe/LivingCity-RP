@@ -14702,7 +14702,13 @@ do
         mg2.lcMinge.hp = 1
         ok(LC.MingeHurt(mg2, nil) == false and IsValid(mg2), "(the one that took the player stays unstoppable after it has set them down)")
         mg3.lcMinge.hp = 1
-        ok(not mg3.lcMinge.invincible and LC.MingeHurt(mg3, nil) == true, "(one that only ever took a unit can still be shot down)")
+        ok(mg3.lcMinge.invincible and LC.MingeHurt(mg3, nil) == false and IsValid(mg3), "(and so does one that took a unit or a citizen: no kidnapping is interrupted)")
+        local fresh
+        for _, m in ipairs(E.minges) do if IsValid(m) and not m.lcMinge.carry and not m.lcMinge.invincible and not m.lcMinge.was then fresh = m break end end
+        if fresh then
+            fresh.lcMinge.hp = 1
+            ok(LC.MingeHurt(fresh, nil) == true, "(one that has grabbed nobody can still be shot down)")
+        end
         E.vulnerable = wasV2
     end
 end
