@@ -195,3 +195,12 @@ No new settings or commands.
 - **Shalom:** a player lifted on the chair is sat in a real seat that is carried up, round the ring and down with the chair; they can look about freely from up there. Before, they stood in the air with their legs bent by hand. The chair drawn under them, the arms waving and the bounce are as they were. The city's own people (not players) are lifted the old way: the game can't seat them.
 - **To tune after a look in game:** `LC.ChairsSeatUp` (22: how high on the chair you sit in Musical Chairs), `LC.ShalomSeatUp` (28) and `LC.DreamSeatYaw` (-90: which way a sitter faces).
 
+## The close, for dreams nobody can win (11 November; the owner: "What about dreams that can't be won? Like the harpies or plane or fire")
+
+The staging above (the opening card, the figures' acting, the finish) is for the dreams you play. The eleven secret endings dreamt as dreams have no winner: they already open with their own title and have their own choreography, but they used to simply stop. Now:
+
+- **As each dreamer wakes at the end of one**, their screen has "The dream is over" ("The nightmare is over" for a Nightmare) between the two black bars for five seconds, over their bed, with a line of that dream's own (`LC.DreamCloseLines`): the harpies "They took everyone they came for. You wake before they come back for you.", the plane "The plane flew on over the city. Your arms are still doing the dance.", the fire "The fire went out. You check, to be sure.", and one each for the bus, the rope, party hard, the hora, the bomb, the skeletons, the dance that won't stop and the flood.
+- **A dream you play, for whoever didn't win it:** the same card, with "Someone made it through. Not you, this time." when someone did, or "Nobody made it through. It will be back." (a Nightmare), "She is not pleased. Sleep on it." (propaganda) or "It was only a dream..." otherwise. A winner gets nothing more: they had their finish.
+- Only when the dream itself ends: not for someone who woke early, an Enforcer, or a test from the editor.
+- Not done for the endings: the figures' acting and the dreamers' flinch and cheer. Those endings move everyone themselves (the dances, the rope, the harpies), and the two would fight.
+

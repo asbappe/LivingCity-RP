@@ -16816,6 +16816,25 @@ do
     g.pl[b].how = how0
     LC.DreamStageTick(CurTime())
     LC.DreamActSet(b, nil)
+    -- the close (the owner, 11 November): the dreams nobody can win, and whoever didn't win one you play
+    for _, id in ipairs(LC.EndingOrder) do
+        ok(LC.DreamCloseLines[id] ~= nil, "every secret ending has a closing line of its own as a dream: " .. id)
+    end
+    local cH = LC.DreamCloseFor(a, { ending = "harpies", mood = "nightmare" })
+    ok(cH and cH.title == "The nightmare is over" and cH.sub == LC.DreamCloseLines.harpies, "waking at the end of the harpies: the nightmare is over, in its own words")
+    ok(LC.DreamCloseFor(a, { ending = "harpies", mood = "nightmare", test = true }) == nil, "(not for a test from the editor)")
+    local fake = { ending = "maze", mood = "nightmare", game = { id = "maze", pl = { [a] = { how = "out" }, [b] = { how = "won" } }, won = { b } } }
+    ok(LC.DreamCloseFor(b, fake) == nil and string.find(LC.DreamCloseFor(a, fake).sub, "Not you", 1, true), "a dream you play: nothing more for the winner, and the rest are told someone made it")
+    fake.game.won, fake.game.pl[b].how = {}, "time"
+    ok(string.find(LC.DreamCloseFor(a, fake).sub, "Nobody made it through", 1, true), "nobody won it: said so")
+    local sentC = #net.sent
+    hook.Run("LivingCityDreamWoke", a, true, "optout", { ending = "fire", mood = "neutral" })
+    local early = false
+    for i = sentC + 1, #net.sent do if net.sent[i].name == "lc_dream_stage" then early = true end end
+    hook.Run("LivingCityDreamWoke", a, true, "end", { ending = "fire", mood = "neutral" })
+    local closed
+    for i = sentC + 1, #net.sent do local m = net.sent[i] if m.name == "lc_dream_stage" and m.to == a and type(m.data[1]) == "table" and m.data[1].k == "close" then closed = m.data[1] end end
+    ok(not early and closed and closed.sub == LC.DreamCloseLines.fire and closed.title == "The dream is over", "the close goes to a dreamer as the dream ends, not to one who left it early")
 end
 -- bad dreamers: marked, and the baton
 _run(4) -- (past the start's safety)

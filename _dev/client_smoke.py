@@ -2000,6 +2000,10 @@ local ok, e = pcall(function()
     _me:SetNW2Bool("lc_dreaming", false)
     hook.t.HUDPaint.LivingCityDreamStage()
     assert(LC_CL.DreamStageCard() == nil, "awake, the card lingers")
+    net._q = { { k = "close", title = "The nightmare is over", sub = "They took everyone they came for.", mood = "nightmare", secs = 5 } }
+    net["recv_lc_dream_stage"]()
+    hook.t.HUDPaint.LivingCityDreamStage()
+    assert(LC_CL.DreamStageCard() and LC_CL.DreamStageCard().title == "The nightmare is over", "the close isn't shown to someone who has just woken")
     -- The Midnight Rally: the view from behind your buggy
     assert(hook.t.CalcView.LivingCityDreamRally(_me, Vector(0, 0, 0), Angle(0, 0, 0), 90) == nil, "a chase view for someone not driving")
     _me:SetNW2Bool("lc_kart", true)
