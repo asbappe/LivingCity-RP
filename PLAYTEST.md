@@ -1570,7 +1570,7 @@ Needs Workshop items 2090972521 (and 3329322225) in the server collection, then 
   Notes:
 - [ ] **Turned:** about six seconds later, are you watching from a mingebag of your own as it goes after the others? Do the others see the two chat lines (carried off; comes back, one of them)?
   Notes:
-- [ ] **Not interrupted (changed 11 November):** have someone shoot the mingebag carrying a player. Nothing should stop it: it keeps going, and the player is turned.
+- [ ] **Not interrupted (changed 11 November):** have someone shoot a mingebag carrying a player, a unit or a citizen. Nothing should stop it: it keeps going, and whoever it has is turned.
   Notes:
 - [ ] **The harpies, all of it (11 November):** watch the Combine's units and the citizens: are they carried off too, with no bodies left? At the very end, is the last player snatched up and turned, not killed? Does it still feel like a slaughter is coming, or too slow?
   Notes:
