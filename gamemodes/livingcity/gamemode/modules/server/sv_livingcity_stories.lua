@@ -842,9 +842,9 @@ LC.Chain{
                     Goto(pos, "Go to the marked spot as ordered", 300),
                     Choice("A technician in a coat that has never been white. 'Transhuman conditioning. It will make you Overwatch. " ..
                         "You won't remember your name, Civil Protection unit. You won't need to.'", {
-                        { text = "Accept. (You become Overwatch: the Prison Guard, Soldier and Elite ranks open to you. There's no undoing it.)", pick = function(q, p)
+                        { text = "Accept. (You become Overwatch, a Combine Prison Guard at once: the Soldier and Elite ranks open to you. There's no undoing it.)", pick = function(q, p)
                             q.chainEnd = "transhuman"
-                            timer.Simple(1.5, function() if IsValid(p) and LC.Condition then LC.Condition(p) end end)
+                            if LC.ConditioningScene then LC.ConditioningScene(p) end -- (black screen, machines, and out of it Overwatch)
                         end },
                         { text = "Decline. You like your name. (You'll rise no higher than Division Leader.)", pick = function(q)
                             q.bonus = 50

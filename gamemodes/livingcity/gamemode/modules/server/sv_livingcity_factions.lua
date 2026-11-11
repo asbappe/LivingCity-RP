@@ -162,6 +162,17 @@ local function RecomputeRank(ply)
     if not f then return false end
     local old = ply:GetNW2Int("lcf_rank", 1)
     ply:SetNW2Bool("lcf_transhuman", Conditioned(ply))
+    -- Conditioned means Overwatch: nobody who took it is left a Division Leader for want of
+    -- experience (the owner, 11 November: "Why let me condition when I don't have enough XP?").
+    -- This also puts right anyone conditioned before that day.
+    if f.id == "cp" and Conditioned(ply) then
+        for _, r in ipairs(f.ranks or {}) do
+            if r.overwatch then
+                if (tonumber(ply:GetPData("lcf_xp_cp", 0)) or 0) < r.xp then ply:SetPData("lcf_xp_cp", r.xp) end
+                break
+            end
+        end
+    end
     local new = RankFor(ply, f)
     ply:SetNW2Int("lcf_rank", new)
     Publish(ply)
@@ -692,6 +703,63 @@ function LC.Condition(ply)
     ply:SetPData("lcf_transhuman", "1")
     ply:SetNW2Bool("lcf_transhuman", true)
     if ply:GetNW2String("lcf_faction", "") == "cp" then LC.AddXP(ply, 0, "the conditioning") end
+    return true
+end
+
+-- The conditioning as it happens to you (the owner, 11 November: "nothing happened... Can we
+-- get a fade to black and some machine whirring or something? Can I be a combine soldier when
+-- I undergo the conditioning?"). The screen goes black, the machines run, and you come out of
+-- it Overwatch: at least the first Overwatch rank, whatever experience you had.
+LC.ConditioningSounds = {
+    { 0.3, "ambient/machines/spinup.wav" },
+    { 2.2, "ambient/machines/thumper_hit.wav" },
+    { 3.2, "ambient/energy/zap7.wav" },
+    { 4.0, "ambient/machines/thumper_hit.wav" },
+    { 4.8, "ambient/levels/labs/electric_explosion1.wav" },
+    { 6.0, "npc/combine_soldier/vo/on1.wav" },
+}
+LC.ConditioningSecs = 6.5
+
+function LC.ConditionPromote(ply)
+    if not IsValid(ply) then return false end
+    LC.Condition(ply)
+    local f = LCF and LCF.Get and LCF.Get("cp")
+    if f and ply:GetNW2String("lcf_faction", "") == "cp" then
+        for _, r in ipairs(f.ranks or {}) do
+            if r.overwatch then
+                if (tonumber(ply:GetPData("lcf_xp_cp", 0)) or 0) < r.xp then ply:SetPData("lcf_xp_cp", r.xp) end
+                break
+            end
+        end
+        LC.AddXP(ply, 0, "the conditioning")
+    end
+    return true
+end
+
+function LC.ConditioningScene(ply)
+    if not IsValid(ply) then return false end
+    local secs = LC.ConditioningSecs
+    if ply.ScreenFade and SCREENFADE then ply:ScreenFade(SCREENFADE.OUT, Color(0, 0, 0, 255), 1, secs) end
+    if ply.Freeze then ply:Freeze(true) end
+    ply.lcConditioning = true
+    for _, c in ipairs(LC.ConditioningSounds) do
+        timer.Simple(c[1], function()
+            if IsValid(ply) and ply.lcConditioning and ply.EmitSound then ply:EmitSound(c[2], 70, 100, 0.8) end
+        end)
+    end
+    -- (under the black: the rank, the uniform and the weapons change unseen)
+    timer.Simple(1.5, function() if IsValid(ply) then LC.ConditionPromote(ply) end end)
+    timer.Simple(secs, function()
+        if not IsValid(ply) then return end
+        ply.lcConditioning = nil
+        if ply.Freeze then ply:Freeze(false) end
+        if ply.ScreenFade and SCREENFADE then ply:ScreenFade(SCREENFADE.IN, Color(0, 0, 0, 255), 2, 0) end
+        local rank = LCF and LCF.RankOf and LCF.RankOf(ply)
+        local name = type(rank) == "table" and rank.name or "Overwatch"
+        if LC.Notice then
+            LC.Notice(ply, "warn", "Conditioning complete", "You are Overwatch now: " .. name .. ". Your new uniform and weapons are on you. The higher Overwatch ranks come with experience.", 12)
+        end
+    end)
     return true
 end
 
