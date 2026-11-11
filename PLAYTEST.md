@@ -1598,6 +1598,8 @@ Type them in the server console on the host panel, or in your own game console (
   Notes:
 - [ ] **`lc_voice_replaced`**: how many Half-Life 2 clips have a recording of yours in `sound/livingcity/hl2/`.
   Notes:
+- [ ] **Do this one first: `lc_hl2_lines`** (needed for the two-voices-by-personality plan in `TODO.md`): run it once in the server console, then download `data/livingcity/hl2_lines.txt` from the host panel's file manager and give it to Claude. Open it first: does each clip have its words after its name, or only names? Say which.
+  Notes:
 - [ ] **`lc_hl2_lines`**: writes `data/livingcity/hl2_lines.txt`, every Half-Life 2 citizen, unit, soldier and Overwatch clip the server has, with its words. Needed once, before making your own versions of them.
   Notes:
 - [ ] **`lc_sound_check`**: the folders it reads sounds from and what is in them (the older, general check).
