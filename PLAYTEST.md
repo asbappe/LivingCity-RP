@@ -1577,3 +1577,5 @@ Needs Workshop items 2090972521 (and 3329322225) in the server collection, then 
   Notes:
 - [ ] **The harpies, the finale (11 November):** stay alive to the last five seconds: are you killed (a body), then three seconds from the end do you rise out of the ground as a mingebag where you fell, and do all of them run off into the night just before the song ends? Are there enough of them that the scene fills the whole song? Does the server cope with 90?
   Notes:
+- [ ] **Recorded lines (11 November):** record a handful first (`say_dunno`, `say_greet_plain`, `say_no`, `say_warn_go`, `say_open_listen`, a man and a woman), FastDL sync, change map. Talk to named citizens: do they answer with those lines in that voice, and does an opener run on into the line? Do the words in chat match what is heard?
+  Notes:

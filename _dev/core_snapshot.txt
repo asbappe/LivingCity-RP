@@ -534,6 +534,7 @@ setting lc_brain = 1
 setting lc_brain_admin = 1
 setting lc_brain_admin_minutes = 12
 setting lc_brain_daily = 1500
+setting lc_brain_lines = 1
 setting lc_brain_model = claude-haiku-5-5
 setting lc_brain_talk = 1
 setting lc_brandish = 1

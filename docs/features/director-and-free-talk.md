@@ -55,6 +55,8 @@ Say something in character (ordinary chat, `/y` or `/w`) while looking at a name
 - **a feeling** from -2 to 2: how what you said changed what they think of you. It is remembered the way the talk window's choices are (`LC.Remember`), and in their mind.
 - **an act:** none; **walk away**; or **report**: an informant sets off to give a unit your name, and a unit names you on the spot (outlined for Civil Protection for 60 seconds, no crime on the record).
 
+**Recorded lines** (`recorded-lines.md`): with `lc_brain_lines` 1 (the default) the model picks one of the person's recorded lines when one fits and only writes its own words when none does; 2: recorded lines only; 0: never.
+
 One answered line per player every 4 seconds, one answer at a time per person. `/me`, `/it` and out-of-character chat are not sent. The talk window (E) works as it always did.
 
 **What leaves the server:** what the player said, their character's name and description, and the account of the city above. Never a Steam name or id. Players should be told that what they say to named people is read by an outside service.
