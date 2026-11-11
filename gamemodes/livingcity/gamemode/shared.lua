@@ -217,6 +217,7 @@ LC_MODULES = {
         "sv_livingcity_stalkerwork",
         "sv_livingcity_combineground", -- (soldiers stay in Combine zones, citizens stay out)
         "sv_livingcity_zonestalkers", -- (each Combine zone's stalkers: its terminals, its cleaning and repairs)
+        "sv_livingcity_combat", -- (fighters stop to fight, look for a line of fire, take cover)
         "sv_livingcity_patrolcompany", -- (a loiterer or a tail for a unit on the night shift or a patrol)
         "sv_livingcity_cremator", -- (the Cremator: walks the streets, burns the dead where they lie, and any enemy)
         "sv_livingcity_rebelpamphlet", -- (the Resistance pamphlet: read it, hand it over, leave it lying about)

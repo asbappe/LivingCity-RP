@@ -790,12 +790,13 @@ net.Receive("lce_shop", function()
     local tier = LCS.TierFor(t.standing or 0)
     shopFrame.Paint = function(self, w, h)
         draw.RoundedBox(4, 0, 0, w, h, PANEL)
-        draw.SimpleText(t.cp and "CIVIL PROTECTION COMMISSARY" or "UNION COMMISSARY", "DermaLarge", 16, 14, ACCENT)
-        draw.SimpleText(string.format("%d credits   |   %s (%d)", t.credits or 0, tier.name, t.standing or 0), "DermaDefault", w - 40, 24, tier.color, TEXT_ALIGN_RIGHT)
+        -- (under the window's title strip: cl_livingcity_theme.lua)
+        draw.SimpleText(t.cp and "CIVIL PROTECTION COMMISSARY" or "UNION COMMISSARY", "DermaLarge", 16, 28, ACCENT)
+        draw.SimpleText(string.format("%d credits   |   %s (%d)", t.credits or 0, tier.name, t.standing or 0), "DermaDefault", w - 16, 38, tier.color, TEXT_ALIGN_RIGHT)
     end
     local scroll = vgui.Create("DScrollPanel", shopFrame)
     scroll:Dock(FILL)
-    scroll:DockMargin(6, 26, 6, 6)
+    scroll:DockMargin(6, 40, 6, 6)
     shopFrame.lcScroll = scroll
     for _, g in ipairs(t.goods or {}) do
         local row = vgui.Create("DPanel", scroll)
@@ -863,12 +864,12 @@ net.Receive("lcu_market", function()
     marketFrame:MakePopup()
     marketFrame.Paint = function(self, w, h)
         draw.RoundedBox(4, 0, 0, w, h, Color(14, 12, 12, 245))
-        draw.SimpleText(t.quartermaster and "THE QUARTERMASTER" or "BLACK MARKET", "DermaLarge", 16, 14, ILLEGAL)
-        draw.SimpleText(string.format("%d credits", t.credits or 0), "DermaDefault", w - 40, 24, ACCENT, TEXT_ALIGN_RIGHT)
+        draw.SimpleText(t.quartermaster and "THE QUARTERMASTER" or "BLACK MARKET", "DermaLarge", 16, 28, ILLEGAL)
+        draw.SimpleText(string.format("%d credits", t.credits or 0), "DermaDefault", w - 16, 38, ACCENT, TEXT_ALIGN_RIGHT)
     end
     local scroll = vgui.Create("DScrollPanel", marketFrame)
     scroll:Dock(FILL)
-    scroll:DockMargin(6, 26, 6, 6)
+    scroll:DockMargin(6, 40, 6, 6)
     marketFrame.lcScroll = scroll
 
     -- note: what's wrong with buying it ("Not enough credits, 25 short"), beside the name

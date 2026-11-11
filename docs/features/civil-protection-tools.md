@@ -95,3 +95,26 @@ The jobs to secure a landing zone (`cp_securelz`) and to guard a supply drop (`c
 ## The housing block inspection (11 November)
 
 The trail leads to a door of the block itself (the one nearest its middle), not the block's middle. The door is shut and locked until the breaching charge (E on it) or a kick (G, or F2 > Kick) opens it; any door of the block within 900 units will do. The stash furniture is set down on the room's floor, out from the middle only as far as the walls allow.
+
+## Searching what they carry, and papers on the street (11 November)
+
+- **A fifth spot.** When the person searched carries a suitcase, a parcel, a box or a crate, the search window has a fifth spot named for it ("Suitcase", "Parcel"), beside the legs. For an NPC, half the time what they hide is in it. A clipboard is not searched.
+- **Papers.** "Done searching: check their papers" in the search window (a citizen NPC), or F2 > "Check their papers" with a citizen in front of you (within 160 units): the papers window from the station job, against today's rules (the same for every unit, for an hour). "In order: wave them on", "Out of order: cite them", "Forged: take them in". About one in five is out of order and about one in sixteen forged (`LC.StreetPapersWrong` 0.2, `LC.StreetPapersForged` 0.06). Out of order (or forged) and cited: 1 credit and +5 Civil Standing (3 credits for a forgery taken in). In order and cited: -2 Civil Standing. Waved on: nothing, and nobody tells you what you missed. The same citizen can be asked again after five minutes.
+
+## Company on a patrol (11 November)
+
+On the night shift (`cp_nightshift`) or a patrol job (`cp_patrol`), 40 seconds in and then at most once in two and a half minutes (a one in two chance each half minute), a unit meets somebody (`sv_livingcity_patrolcompany.lua`, `lc_patrol_company` 1):
+
+- **A loiterer:** standing about out of sight 500 to 1600 units off, near where the patrol is going. A notice says so and it is marked on the unit's screen. Seen from within 350 units, half of them bolt and half stay with an excuse.
+- **A tail:** walks after the unit, 280 to 480 units behind. After 25 seconds: "You have the feeling of being followed." Looked at for a moment (within 700 units), or walked up to (200), they run.
+- **Running:** get within 110 units and they give up (3 experience); 2200 units away or 45 seconds on, they are lost.
+- **Caught, or stayed:** a citizen to stop, search or ask for papers. They carry something 85% of the time, and their papers are out of order 60% of the time (forged 20%). Searching them or seeing their papers is 2 more experience, and they go on their way. One lasts five minutes at most.
+
+## Fighters that fight (11 November)
+
+`sv_livingcity_combat.lua`, `lc_combat_ai` (1; 0 is as before). For Civil Protection, Overwatch and Resistance NPCs:
+
+- **Stopping to fight.** One being walked somewhere by the city who can see an enemy within 2200 units, with a gun in hand, is no longer marched on: it fights, for up to a minute a journey, then goes on. (Being given the next step of its way again and again is why they fired a round or two at each other and walked past; against a player they had been left alone to fight.) One with a stick still closes in.
+- **A line of fire.** One that knows of an enemy within 3000 units but can't see them goes for a line of fire or closes in, every four seconds, instead of standing facing a wall.
+- **Cover.** Hurt by an enemy, it takes cover from them three times in ten (seven in ten below half health), at most once in seven seconds.
+- **Better shots.** Each is given very good weapon handling once, may duck, and fires on the move.

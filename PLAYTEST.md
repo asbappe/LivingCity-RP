@@ -79,13 +79,26 @@ Tick a box when you've tried it, and write what you saw after **Notes:** (works,
 - [ ] **Stalkers:** a body they drag is on a rope from the hand; a pile of dropped junk in their zone gets cleared (and anything dropped goes after 5 minutes anyway).
   Notes:
 
-## Not done yet (kept in `TODO.md`)
+## 11 November, part 3: the rest of your list, please try
 
-- Searching a suitcase or parcel in the search window; a "Check papers" button after a search.
-- NPC combat: cover, crouching, firing at each other as they do at you; backup that stands and doesn't shoot.
-- No dream as a unit asleep in the Nexus: after a night with no dream, please send the debug report.
-- Somebody to meet on the night shift and on patrol jobs.
-- "Guns lowered: hold R": only on rebel ground, and for recruits and metrocops on the Combine's ground. You said you would test it there.
+- [ ] **Searching a suitcase or parcel:** search an NPC carrying one: a fifth spot ("Suitcase", "Parcel") beside the legs.
+  Notes:
+- [ ] **Checking papers:** in the search window, "Done searching: check their papers"; or F2 > Check their papers with a citizen in front of you. The papers window against today's rules: wave on, cite, or take in a forgery. A catch is 1 credit and +5 Civil Standing; citing papers that were in order costs 2.
+  Notes:
+- [ ] **Company on a patrol:** take the night shift (18:00 to 21:00) or a patrol job. Within a few minutes: a loiterer marked on your screen (may bolt when you come near), or somebody following you (a notice, look behind you, they run). Run them down, then search them or check their papers. Too often, too rare, too easy to lose?
+  Notes:
+- [ ] **NPCs fighting each other:** watch units and rebels meet. They should stop and shoot it out instead of firing a round and walking on, come round a corner for a shot instead of facing a wall, and duck into cover when hurt. `lc_combat_ai 0` in the server console is the old way, to compare.
+  Notes:
+- [ ] **A dream after a late night:** alone on the server, go to bed after 21:15 on a Happy or Neutral night: the dream should come about twenty seconds after you fall asleep. (As a unit you only watch over Nightmares and propaganda dreams as an Enforcer, and a Nightmare never reaches a sleeper in a Combine-only zone.)
+  Notes:
+
+- [ ] **Window titles (11 November):** the guide (C > Guide), the Commissary window, the black market and quartermaster windows and Father Grigori: their own big title, counters and the guide's search box sit under the title strip now, nothing running through them. The guide shows keys as [F1], not {gm_showhelp}.
+  Notes:
+
+## Still open
+
+- "Guns lowered: hold R" only applies on rebel ground, and for recruits and metrocops on the Combine's ground. You said you would test it there.
+- Your first person hands as a unit, and the clipboard's new hold: waiting on what you see.
 
 # Part 1: new since your 1 November playtest
 

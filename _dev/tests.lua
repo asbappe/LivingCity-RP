@@ -13854,6 +13854,48 @@ do -- tonight's dream waits for the first sleeper when every bed was empty as it
     DS.at, DS.queued, DS.missedNight, LC.DreamActive = keep.at, keep.queued, keep.missed, keep.active
     late:SetPos(Vector(-150000, 150000, 0))
 end
+do -- fighters that fight (the owner, 11 November)
+    local F0 = Vector(-175000, 175000, 0)
+    local cop, cst = LC.Spawners.cop(F0)
+    cst = cst or LC.NPCs[cop]
+    local foe = ents.Create("npc_citizen") foe:SetPos(F0 + Vector(600, 0, 0)) foe:Spawn()
+    local enemy, sees, gun = nil, true, "weapon_pistol"
+    cop.GetEnemy = function() return enemy end
+    cop.Visible = function() return sees end
+    cop.GetActiveWeapon = function() local w = ents.Create(gun) return w end
+    local sched
+    local realSched = cop.SetSchedule
+    cop.SetSchedule = function(self, s) sched = s end
+    local now = CurTime()
+    ok(LC.CombatHolds(cop, cst, now) == false and LC.CombatStep(cop, cst, now) == nil, "nobody to fight: a unit goes where it's sent")
+    enemy = foe
+    ok(LC.CombatHolds(cop, cst, now) == true and LC.CombatStep(cop, cst, now) == "fighting" and cst.cmbTuned == true,
+        "an enemy in plain sight, gun in hand: it stops being marched and fights (and is a better shot from now on)")
+    gun = "weapon_stunstick"
+    ok(LC.CombatHolds(cop, cst, now) == false, "with a stick in hand it has to close in: still walked there")
+    gun = "weapon_pistol"
+    sees = false
+    cst.state = "wander"
+    ok(LC.CombatHolds(cop, cst, now) == false and LC.CombatStep(cop, cst, now + 10) == "closing" and sched ~= nil,
+        "knows of them but can't see them: it goes for a line of fire instead of staring at the wall")
+    ok(LC.CombatStep(cop, cst, now + 11) == "waiting", "(not ordered again every second)")
+    sees = true
+    cst.cmbHeldTotal = 100
+    ok(LC.CombatHolds(cop, cst, now) == false, "a journey is held up a minute at most")
+    cst.cmbHeldTotal = nil
+    local wasRand = math.random
+    math.random = function(a, b) if a then return wasRand(a, b) end return 0 end
+    sched = nil
+    SCHED_TAKE_COVER_FROM_ENEMY = SCHED_TAKE_COVER_FROM_ENEMY or 27 -- (the game's own number, where the stand-in has none)
+    ok(LC.CombatHurt(cop, cst, foe, 5, now + 20) == true and sched == SCHED_TAKE_COVER_FROM_ENEMY and LC.CombatHurt(cop, cst, foe, 5, now + 21) == false,
+        "hurt by an enemy: into cover, and not again straight away")
+    math.random = wasRand
+    _setcvar("lc_combat_ai", 0)
+    ok(LC.CombatHolds(cop, cst, now) == false, "lc_combat_ai 0: as before")
+    _setcvar("lc_combat_ai", 1)
+    cop.SetSchedule = realSched
+    foe:Remove() cop:Remove()
+end
 do -- papers on the street, and what's carried in a search (the owner, 11 November)
     local P0 = Vector(-171000, 171000, 0)
     local unit = newPlayer("PapersUnit", "cp")

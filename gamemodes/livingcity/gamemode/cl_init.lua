@@ -404,28 +404,33 @@ local function OpenGuide(admin)
     local f = vgui.Create("DFrame")
     guide = f
     f:SetTitle("")
-    f:SetSize(math.min(ScrW() - 60, 900), math.min(ScrH() - 60, 600))
+    f:SetSize(math.min(ScrW() - 60, 900), math.min(ScrH() - 60, 620))
     f:Center()
     f:MakePopup()
+    -- (its own title, line and search box sit under the window's title strip, 24 tall: they ran into the
+    -- strip's line, its words and the close button, the owner's screenshot of 11 November)
     f.Paint = function(self, w, h)
         draw.RoundedBox(4, 0, 0, w, h, Color(16, 15, 13, 245))
-        draw.SimpleText("LIVING CITY: A GUIDE", "DermaLarge", 16, 12, ACCENT)
-        draw.SimpleText("C > Guide opens this guide. Tips also pop up the first time something happens (C > Tips I've seen lists them all).", "DermaDefault", 16, 44, Color(150, 145, 130))
+        draw.SimpleText("LIVING CITY: A GUIDE", "DermaLarge", 16, 28, ACCENT)
+        draw.SimpleText("C > Guide opens this guide. Tips also pop up the first time something happens (C > Tips I've seen lists them all).", "DermaDefault", 16, 60, Color(150, 145, 130))
     end
     local search = vgui.Create("DTextEntry", f)
-    search:SetPos(f:GetWide() - 276, 14)
-    search:SetSize(260, 24)
+    search:SetPos(f:GetWide() - 276, 32)
+    search:SetSize(260, 22)
     search:SetPlaceholderText("Search the guide")
 
     local list = vgui.Create("DScrollPanel", f)
     list:Dock(LEFT)
     list:SetWide(230)
-    list:DockMargin(8, 46, 4, 8)
+    list:DockMargin(8, 54, 4, 8)
     local body = vgui.Create("DScrollPanel", f)
     body:Dock(FILL)
-    body:DockMargin(4, 46, 8, 8)
+    body:DockMargin(4, 54, 8, 8)
 
+    -- (a key written as {gm_showhelp} in the guide's text is shown as the key it is on this player's game)
+    local function Keys(text) return (LC_CL and LC_CL.HintKeys and LC_CL.HintKeys(text)) or text end
     local function Line(text, col, font, indent)
+        text = Keys(text)
         local l = vgui.Create("DLabel", body)
         l:Dock(TOP)
         l:DockMargin(indent or 4, font and 10 or 0, 4, 4)
@@ -450,6 +455,7 @@ local function OpenGuide(admin)
         for _, sec in ipairs(sections) do
             local head
             for _, line in ipairs(sec[2]) do
+                line = Keys(line)
                 if string.find(string.lower(line), q, 1, true) or string.find(string.lower(sec[1]), q, 1, true) then
                     if not head then head = Line(string.upper(sec[1]), ACCENT, "DermaDefaultBold") end
                     Line(line, INK, nil, 12)

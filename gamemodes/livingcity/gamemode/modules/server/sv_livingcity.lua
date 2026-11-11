@@ -636,6 +636,7 @@ function LC.GoTo(npc, st, pos, run, poi)
         return false
     end
     st.dest, st.poi, st.run = pos, poi, run
+    st.cmbHold, st.cmbHeldTotal = nil, nil
     st.replans = 0
     st.route = route or { pos }
     st.hop = 1
@@ -656,6 +657,23 @@ local function NextHop(npc, st)
 end
 
 local function HandleMoving(npc, st, now)
+    -- A fighter on the way somewhere who can see an enemy stops to fight (sv_livingcity_combat.lua): being
+    -- marched on, hop after hop, they fired a round or two and walked past. On again when it's over.
+    if LC.CombatHolds then
+        if LC.CombatHolds(npc, st, now) then
+            if not st.cmbHold then
+                st.cmbHold = now
+                if npc.ClearSchedule then npc:ClearSchedule() end
+            end
+            st.giveUp = (st.giveUp or now) + 1
+            st.lastPos, st.lastMoved = npc:GetPos(), now
+            return
+        elseif st.cmbHold then
+            st.cmbHold, st.cmbHeldTotal = nil, (st.cmbHeldTotal or 0) + (now - st.cmbHold)
+            st.hopTries = 0
+            IssueHop(npc, st)
+        end
+    end
     local target = st.route[st.hop]
     -- at the foot (or the top) of a ladder the route goes up: climb it (sv_livingcity_navgraph.lua)
     if LC.LadderHop and target and LC.LadderHop(npc, target) then

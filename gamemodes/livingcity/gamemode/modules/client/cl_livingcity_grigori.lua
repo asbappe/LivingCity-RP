@@ -27,13 +27,13 @@ net.Receive("lc_grigori", function()
     if IsValid(frame) then frame:Remove() end
     frame = vgui.Create("DFrame")
     frame:SetTitle("")
-    frame:SetSize(math.min(ScrW() - 40, 440), 230)
+    frame:SetSize(math.min(ScrW() - 40, 440), 244)
     frame:Center()
     frame:MakePopup()
     frame.Paint = function(s, w, h)
         draw.RoundedBox(6, 0, 0, w, h, Color(24, 20, 16, 245))
-        draw.SimpleText("FATHER GRIGORI", "DermaLarge", 16, 10, GOLD)
-        draw.SimpleText(rebel and "\"What do you need, child?\"" or "\"Go with God. But go.\"", "DermaDefault", 16, 46, DIM)
+        draw.SimpleText("FATHER GRIGORI", "DermaLarge", 16, 26, GOLD) -- (under the window's title strip)
+        draw.SimpleText(rebel and "\"What do you need, child?\"" or "\"Go with God. But go.\"", "DermaDefault", 16, 56, DIM)
     end
     local function Btn(y, label, sub, what, enabled)
         local b = vgui.Create("DButton", frame)
@@ -48,9 +48,9 @@ net.Receive("lc_grigori", function()
         end
         b.DoClick = function() Ask(what) end
     end
-    Btn(70, "Ask for his blessing", blessIn > 0 and string.format("Again in %d s", math.ceil(blessIn)) or "25 health, and five minutes of taking less harm", "bless", rebel and blessIn <= 0)
-    Btn(118, "Ask him to preach", sermonIn > 0 and string.format("Again in %d s", math.ceil(sermonIn)) or "Everyone of ours nearby is emboldened for ten minutes", "sermon", rebel and sermonIn <= 0)
-    Btn(166, "Talk to him", "A word from the old man", "talk", true)
+    Btn(82, "Ask for his blessing", blessIn > 0 and string.format("Again in %d s", math.ceil(blessIn)) or "25 health, and five minutes of taking less harm", "bless", rebel and blessIn <= 0)
+    Btn(130, "Ask him to preach", sermonIn > 0 and string.format("Again in %d s", math.ceil(sermonIn)) or "Everyone of ours nearby is emboldened for ten minutes", "sermon", rebel and sermonIn <= 0)
+    Btn(178, "Talk to him", "A word from the old man", "talk", true)
 end)
 
 ------------------------------------------------------------------------

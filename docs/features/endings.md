@@ -206,3 +206,5 @@ The staging above (the opening card, the figures' acting, the finish) is for the
 
 
 **Changes from the 11 November playtest.** **Bubbles:** 30 bubbles at a time (it was 18), about 37% of them lift bubbles (it was 15%: about four times as many); a lift bubble throws you up harder (640) and leaves you floating at very low gravity for 12 seconds. **Strange dreams' music:** each lurch lasts 3 to 6 seconds (twice as long), 13 to 23 seconds apart.
+
+**A dream that found every bed empty waits (11 November).** When the night's dream comes and nobody is asleep to dream it, it is not lost for the night: the first to fall asleep later that night (a dreamer, not only an Enforcer) has it twenty seconds after they do. By morning it is forgotten.
