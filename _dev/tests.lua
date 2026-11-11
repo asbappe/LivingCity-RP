@@ -17973,6 +17973,25 @@ g, d = Start("chairs")
 net.sent = {}
 _run(5.2)
 ok(g.phase == "music" and #g.chairs == 1 and g.round == 1 and Sent(a, "music", function(t) return t.song ~= nil end), "Musical Chairs: the music plays, one chair for two")
+-- (the owner, 11 November) sitting while the music still plays costs a life
+ok(g.def.lives == 3 and g.pl[b].lives == 3, "three lives each")
+g.pl[b].safe = 0
+b:SetPos(g.chairs[1].pos + Vector(10, 0, 0))
+b.keys = { [IN_USE] = true }
+_run(0.1)
+ok(g.pl[b].lives == 2 and not g.pl[b].chair and not b.lcDreamSeat and b:GetPos():Distance(g.pl[b].start) < 1, "press Use at a chair while the music plays: a life gone, back to the start, not sat")
+g.pl[b].safe = 0
+_run(0.3)
+ok(g.pl[b].lives == 2, "(holding the key down doesn't cost another)", g.pl[b].lives)
+b.keys = {}
+_run(0.1)
+g.pl[b].safe = 0
+b:SetPos(g.chairs[1].pos + Vector(600, 0, 0))
+b.keys = { [IN_USE] = true }
+_run(0.1)
+ok(g.pl[b].lives == 2, "(pressing Use nowhere near a chair costs nothing)")
+b.keys = {}
+_run(0.1)
 g.at = CurTime()
 net.sent = {}
 _run(0.1)
@@ -17981,20 +18000,24 @@ a:SetPos(g.chairs[1].pos + Vector(10, 0, 0))
 b:SetPos(g.chairs[1].pos + Vector(400, 0, 0))
 a.crouch = true
 _run(0.1)
-ok(g.pl[a].chair == 1 and g.chairs[1].by == a, "crouch beside a free chair: it's yours")
+ok(not g.pl[a].chair, "crouching at a chair doesn't sit you down any more (the owner, 11 November)")
+a.crouch = nil
+a.keys = { [IN_USE] = true }
+_run(0.1)
+ok(g.pl[a].chair == 1 and g.chairs[1].by == a, "press Use at a free chair: it's yours")
 local seatA = a.lcDreamSeat
 ok(IsValid(seatA) and seatA.lcDreamSeat and a:GetNW2Bool("lc_real_seat", false) and seatA:GetPos():Distance(g.chairs[1].pos + Vector(0, 0, LC.ChairsSeatUp)) < 1,
     "and they're really sat in it: a seat of the game's own, on the chair (the owner, 10 November)")
 ok(hook.Run("CanExitVehicle", seatA, a) == false and hook.Run("CanPlayerEnterVehicle", b, seatA) == false, "nobody climbs out of a dream's seat, or into someone else's")
 b:SetPos(g.chairs[1].pos + Vector(10, 0, 0))
-b.crouch = true
+b.keys = { [IN_USE] = true }
 _run(0.1)
 ok(not g.pl[b].chair, "a taken chair can't be had")
 _run(LC.ChairsSit)
 ok(g.pl[b].how == "out" and not g.pl[a].done, "no chair when the time's up: out")
 _run(2.6)
 ok(g.pl[a].how == "won", "the last one sitting wins")
-a.crouch, b.crouch = nil, nil
+a.crouch, b.crouch, a.keys, b.keys = nil, nil, nil, nil
 Stop(d)
 ok(a.lcDreamSeat == nil and not a:GetNW2Bool("lc_real_seat", false) and not IsValid(seatA), "awake: out of the seat, and the seat is gone")
 

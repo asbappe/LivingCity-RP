@@ -415,9 +415,10 @@ do
     LC.ChairsSoloRounds = 3 -- (alone in it: rounds to sit through to win)
     LC.ChairsReach = 60
     LC.ChairsSeatUp = 22 -- (how high above a chair's foot its seat is, for the real seat: tune it if people sit too high or low)
-    local def = { id = "chairs", name = "Musical Chairs", mood = "neutral", secs = 240, lives = 1, ownMusic = true,
+    -- (three lives since 11 November: the owner, "if they sit while the music is still playing they lose a life". Before, one.)
+    local def = { id = "chairs", name = "Musical Chairs", mood = "neutral", secs = 240, lives = 3, ownMusic = true,
         leave = function(g, p) if LC.DreamUnseat then LC.DreamUnseat(p) end end,
-        goal = "Walk round the chairs while the music plays. When it stops, get to a free chair and crouch (or press Use) to sit in it. No chair, you're out.",
+        goal = "Walk round the chairs while the music plays. When it stops, get to a free chair and press Use to sit in it. No chair, you're out. Try to sit while the music is still playing and you lose a life.",
         timeUp = { "The music never stops", "The chairs keep drifting round and round, and you drift awake." },
         woke = Woke({ name = "Musical Chairs",
             won = { "The last one sitting", "You wake up sitting bolt upright in bed, and nobody can take it from you." },
@@ -488,11 +489,34 @@ do
     end
     LC.ChairsNextRound = NextRound
 
+    -- Use, just pressed (looked at every tick for everyone in play).
+    local function UsePressed(s, p)
+        local down = IN_USE ~= nil and p.KeyDown ~= nil and p:KeyDown(IN_USE) == true
+        local was = s.useWas
+        s.useWas = down
+        return down and not was
+    end
     function def.tick(g, dt, players)
         local now = CurTime()
         local t = now - g.t0
         if g.phase == "music" then g.turn = g.turn + dt * 0.6 end
         PlaceChairs(g, t)
+        -- (the owner, 11 November: only the Use key sits you down, and trying it while the music still plays costs a life)
+        local pressed = {}
+        for _, p in ipairs(players) do pressed[p] = UsePressed(g.pl[p], p) end
+        if g.phase == "music" then
+            for _, p in ipairs(players) do
+                if pressed[p] then
+                    local pp = p:GetPos()
+                    for _, ch in ipairs(g.chairs) do
+                        if Dist2(pp, ch.pos) < LC.ChairsReach then
+                            Hit(g, p, "Too soon!", "You tried to sit while the music was still playing.")
+                            break
+                        end
+                    end
+                end
+            end
+        end
         if g.phase == "ready" then
             if now >= g.at then NextRound(g, players) end
         elseif g.phase == "music" then
@@ -505,8 +529,7 @@ do
         elseif g.phase == "sit" then
             for _, p in ipairs(players) do
                 local s = g.pl[p]
-                local asks = (p.Crouching ~= nil and p:Crouching() == true) or (IN_USE ~= nil and p.KeyDown ~= nil and p:KeyDown(IN_USE) == true)
-                if not s.chair and asks then
+                if not s.chair and pressed[p] then
                     local pp = p:GetPos()
                     for i, ch in ipairs(g.chairs) do
                         if not ch.by and Dist2(pp, ch.pos) < LC.ChairsReach then
@@ -551,9 +574,9 @@ do
         end
         local big, tone
         if g.phase == "ready" then big = "Get ready: the music's about to start."
-        elseif g.phase == "music" then big = "Keep walking round the chairs..."
+        elseif g.phase == "music" then big = "Keep walking round the chairs... (don't sit yet!)"
         elseif g.phase == "sit" then
-            if s.chair then big = "You've got a chair." else big, tone = "SIT! Crouch (or press Use) at a free chair!", "warn" end
+            if s.chair then big = "You've got a chair." else big, tone = "SIT! Press Use at a free chair!", "warn" end
         elseif g.phase == "result" and not s.done then big = "Safe! One chair fewer..." end
         return { glows = glows, big = big, tone = tone, phase2 = g.phase,
             meterName = string.format("Round %d     Chairs: %d", g.round, #g.chairs) }
