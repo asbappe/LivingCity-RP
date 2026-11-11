@@ -3838,6 +3838,15 @@ _guide = open(os.path.join(GMDIR, "gamemode", "cl_init.lua")).read()
 _notes = open(os.path.join(GMDIR, "gamemode", "modules", "client", "cl_livingcity_notices.lua")).read()
 if "garrysmod/sound/livingcity/" not in _guide or "livingcity_sound" in _guide or "livingcity_sound folder" in _notes:
     problems = (problems + "\n" if problems else "") + "the guide or the sound check points somewhere other than garrysmod/sound/livingcity/"
+# the editor's "by what it's for" view: every thing to place is in at least one folder (the owner,
+# 11 November: the dream point was missing from it); workplaces get the jobs' folders by themselves
+import re as _re
+_tool = open(os.path.join(GMDIR, "..", "..", "lua", "weapons", "gmod_tool", "stools", "livingcity_editor.lua")).read()
+_lb = open(os.path.join(GMDIR, "gamemode", "modules", "client", "cl_livingcity_layoutbrowser.lua")).read()
+_uses = set(_re.findall(r'"([a-z_0-9]+)"', _lb[_lb.index("local USES"):_lb.index("local cvArrange")]))
+_lost = [i for i in _re.findall(r'^\s*\{ id = "([^"]+)",', _tool, _re.M) if i not in _uses and not i.startswith("work_")]
+if _lost:
+    problems = (problems + "\n" if problems else "") + "editor modes in no 'what it's for' folder: " + ", ".join(_lost)
 print(problems or "no client errors")
 print("zone fills drawn:", filled, "thick edges drawn:", beams)
 ok = not problems and filled >= 2 and beams > 0

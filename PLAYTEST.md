@@ -1606,3 +1606,5 @@ Type them in the server console on the host panel, or in your own game console (
   Notes:
 - [ ] **The Cremator's pace (11 November):** watch one walk the streets. It should move about twice as fast as before and its feet should roughly keep up with the ground. Too fast or still too slow: set `lc_cremator_speed` in the server console (2 now; try 2.5 or 1.5) and say which number looked right.
   Notes:
+- [ ] **Editor, "Arrange by what it's for" (11 November):** a "Dreams" folder now holds Point: dream and Zone: dream. Check it is there and that clicking each picks it.
+  Notes:
