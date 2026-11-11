@@ -79,8 +79,8 @@ function LC.OfferJob(owner, target)
     if owner:GetPos():DistToSqr(target:GetPos()) > 250 * 250 then return false, "Ask them face to face." end
     if LC.EmployerOf(target) then return false, Name(target) .. " works for someone already." end
     target.lcJobOffer = { from = owner, at = CurTime() }
-    target:ChatPrint(string.format("[Living City] %s offers you a job at their stall: %d credits every %d minutes you're there. F2 > Me (More) > My stall business to accept.", Name(owner), cvWage:GetInt(), cvWageM:GetInt()))
-    owner:ChatPrint("[Living City] You've offered " .. Name(target) .. " a job.")
+    target:ChatPrint(string.format("[Miscount] %s offers you a job at their stall: %d credits every %d minutes you're there. F2 > Me (More) > My stall business to accept.", Name(owner), cvWage:GetInt(), cvWageM:GetInt()))
+    owner:ChatPrint("[Miscount] You've offered " .. Name(target) .. " a job.")
     Sync(target)
     return true
 end
@@ -90,15 +90,15 @@ function LC.AcceptJob(ply, yes)
     ply.lcJobOffer = nil
     if not o or CurTime() - o.at > OFFER_SECS or not IsValid(o.from) then Sync(ply) return false, "There's no offer waiting." end
     if not yes then
-        o.from:ChatPrint("[Living City] " .. Name(ply) .. " turned your job down.")
+        o.from:ChatPrint("[Miscount] " .. Name(ply) .. " turned your job down.")
         Sync(ply)
         return true
     end
     ply:SetPData("lc_employer", CID(o.from))
     ply:SetPData("lc_employer_name", Name(o.from))
     ply.lcWorkedAt = nil
-    o.from:ChatPrint("[Living City] " .. Name(ply) .. " works your stall now.")
-    ply:ChatPrint("[Living City] You work " .. Name(o.from) .. "'s stall now. Stock it, sell from it; your wages come from the till.")
+    o.from:ChatPrint("[Miscount] " .. Name(ply) .. " works your stall now.")
+    ply:ChatPrint("[Miscount] You work " .. Name(o.from) .. "'s stall now. Stock it, sell from it; your wages come from the till.")
     Sync(ply) Sync(o.from)
     hook.Run("LivingCityHired", o.from, ply)
     return true
@@ -110,8 +110,8 @@ function LC.QuitJob(ply)
     ply:RemovePData("lc_employer")
     ply:RemovePData("lc_employer_name")
     local owner = ByCID(emp)
-    if IsValid(owner) then owner:ChatPrint("[Living City] " .. Name(ply) .. " has quit working your stall.") Sync(owner) end
-    ply:ChatPrint("[Living City] You've left the job.")
+    if IsValid(owner) then owner:ChatPrint("[Miscount] " .. Name(ply) .. " has quit working your stall.") Sync(owner) end
+    ply:ChatPrint("[Miscount] You've left the job.")
     Sync(ply)
     return true
 end
@@ -121,8 +121,8 @@ function LC.LetGo(owner, name)
         if LC.EmployerOf(p) == CID(owner) and string.lower(Name(p)) == string.lower(tostring(name or "")) then
             p:RemovePData("lc_employer")
             p:RemovePData("lc_employer_name")
-            p:ChatPrint("[Living City] " .. Name(owner) .. " has let you go from their stall.")
-            owner:ChatPrint("[Living City] You've let " .. Name(p) .. " go.")
+            p:ChatPrint("[Miscount] " .. Name(owner) .. " has let you go from their stall.")
+            owner:ChatPrint("[Miscount] You've let " .. Name(p) .. " go.")
             Sync(p) Sync(owner)
             return true
         end
@@ -162,7 +162,7 @@ local function PayDay()
                 LC.AddCredits(p, wage, "wages from the stall")
                 if IsValid(owner) then owner:ChatPrint(string.format("[Stall] Paid %s %d credits in wages.", Name(p), wage)) end
             else
-                p:ChatPrint("[Living City] Your employer couldn't pay you this time: the till's empty.")
+                p:ChatPrint("[Miscount] Your employer couldn't pay you this time: the till's empty.")
             end
         end
     end
@@ -242,6 +242,6 @@ hook.Add("PlayerSay", "LivingCityEmployment", function(ply, text)
     elseif cmd == "jobquit" then ok, why = LC.QuitJob(ply)
     elseif cmd == "joblet" then ok, why = LC.LetGo(ply, rest)
     else return end
-    if not ok and why then ply:ChatPrint("[Living City] " .. why) end
+    if not ok and why then ply:ChatPrint("[Miscount] " .. why) end
     return ""
 end)

@@ -8,7 +8,7 @@ AddCSLuaFile()
 ENT.Type = "anim"
 ENT.Base = "base_anim"
 ENT.PrintName = "Combine dropship"
-ENT.Author = "Living City"
+ENT.Author = "Miscount"
 ENT.Spawnable = false
 ENT.AutomaticFrameAdvance = true -- (the engines and the claws animate)
 

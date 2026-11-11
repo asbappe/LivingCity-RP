@@ -606,8 +606,8 @@ hook.Add("InitPostEntity", "LivingCityAnnounceBadFiles", function()
     local bad = LC.AnnounceBadFiles()
     badCount = #bad
     if badCount > 0 then
-        print("[Living City] " .. badCount .. " sound file(s) the game can't play (nobody hears them):")
-        for _, why in ipairs(bad) do print("[Living City]   " .. why) end
+        print("[Miscount] " .. badCount .. " sound file(s) the game can't play (nobody hears them):")
+        for _, why in ipairs(bad) do print("[Miscount]   " .. why) end
     end
 end)
 hook.Add("PlayerInitialSpawn", "LivingCityAnnounceBadFiles", function(ply)
@@ -640,11 +640,11 @@ concommand.Add("lc_announce_clips", function(ply)
                 if n > 0 then parts[#parts + 1] = t .. " " .. n end
             end
         end
-        Reply(ply, "[Living City] " .. v .. ": " .. (#parts > 0 and table.concat(parts, ", ") or "nothing yet"))
-        for _, why in ipairs(LC.AnnounceUnused(v)) do Reply(ply, "[Living City]   check " .. v .. "/" .. why) end
+        Reply(ply, "[Miscount] " .. v .. ": " .. (#parts > 0 and table.concat(parts, ", ") or "nothing yet"))
+        for _, why in ipairs(LC.AnnounceUnused(v)) do Reply(ply, "[Miscount]   check " .. v .. "/" .. why) end
     end
     local bad = LC.AnnounceBadFiles()
-    for _, why in ipairs(bad) do Reply(ply, "[Living City]   CAN'T PLAY " .. why) end
+    for _, why in ipairs(bad) do Reply(ply, "[Miscount]   CAN'T PLAY " .. why) end
     for v, trigs in pairs(LC.AnnounceExtra) do
         local parts = {}
         for _, t in ipairs(trigs) do
@@ -652,14 +652,14 @@ concommand.Add("lc_announce_clips", function(ply)
             total = total + n
             parts[#parts + 1] = t .. " " .. n
         end
-        Reply(ply, "[Living City] " .. v .. ": " .. table.concat(parts, ", "))
+        Reply(ply, "[Miscount] " .. v .. ": " .. table.concat(parts, ", "))
     end
     local dl, url = GetConVar("sv_allowdownload"), GetConVar("sv_downloadurl")
-    Reply(ply, "[Living City] Players' computers play these, so each needs the files: " ..
+    Reply(ply, "[Miscount] Players' computers play these, so each needs the files: " ..
         (game.IsDedicated and game.IsDedicated() and "this is a dedicated server; " or "") ..
         "sv_allowdownload " .. (dl and dl:GetString() or "?") .. ", sv_downloadurl \"" .. (url and url:GetString() or "") .. "\"" ..
         " (a Workshop addon is the reliable way). Each player can type lc_sound_check to test their own.")
-    Reply(ply, "[Living City] " .. total .. " custom announcements found. Folders: sound/livingcity/overwatch/, administrator/, radio/ (or the same under sound/" .. ROOT .. "), flat: a file's name starts with its trigger (curfew1.wav), and the Administrator's tone is in it (curfew_firm1.wav); lc_announce_rescan after adding files.")
+    Reply(ply, "[Miscount] " .. total .. " custom announcements found. Folders: sound/livingcity/overwatch/, administrator/, radio/ (or the same under sound/" .. ROOT .. "), flat: a file's name starts with its trigger (curfew1.wav), and the Administrator's tone is in it (curfew_firm1.wav); lc_announce_rescan after adding files.")
 end)
 
 -- Every voice line the gamemode looks for that has no recording yet (the owner, 8 November: "an
@@ -749,28 +749,28 @@ concommand.Add("lc_voice_missing", function(ply)
     end
     if file.CreateDir then file.CreateDir("livingcity") end
     file.Write("livingcity/voice_missing.txt", table.concat(lines, "\n") .. "\n")
-    Reply(ply, "[Living City] The whole list is also in data/livingcity/voice_missing.txt (" .. #lines .. " lines).")
+    Reply(ply, "[Miscount] The whole list is also in data/livingcity/voice_missing.txt (" .. #lines .. " lines).")
     for _, r in ipairs(LC.VoiceMissing()) do
         total = total + #r.missing
-        Reply(ply, "[Living City] " .. r.name .. " (sound/livingcity/" .. r.folder .. "), " ..
+        Reply(ply, "[Miscount] " .. r.name .. " (sound/livingcity/" .. r.folder .. "), " ..
             (#r.missing == 0 and "nothing missing" or (#r.missing .. " missing: " .. table.concat(r.missing, ", "))))
     end
-    Reply(ply, "[Living City] " .. total .. " voice lines with no recording yet. Without one, the words still show (Half-Life 2's own Overwatch lines only with lc_announce_stock 1). " ..
+    Reply(ply, "[Miscount] " .. total .. " voice lines with no recording yet. Without one, the words still show (Half-Life 2's own Overwatch lines only with lc_announce_stock 1). " ..
         "Name a file for its line (curfew1.wav, ravenholm_defeat1.wav); a .txt with the same name is its subtitle. Everything to record, with suggested words: VOICE_LINES.md, in the gamemode's folder.")
 end)
 
 concommand.Add("lc_announce_rescan", function(ply)
     if IsValid(ply) and not ply:IsSuperAdmin() then return end
-    Reply(ply, "[Living City] " .. LC.AnnounceRescan() .. " custom announcements found.")
+    Reply(ply, "[Miscount] " .. LC.AnnounceRescan() .. " custom announcements found.")
 end)
 
 concommand.Add("lc_announce_say", function(ply, _, args)
     if IsValid(ply) and not ply:IsSuperAdmin() then return end
     local voice, trig = VoiceName(args[1]), string.lower(tostring(args[2] or ""))
-    if voice ~= "overwatch" and voice ~= "administrator" then Reply(ply, "[Living City] lc_announce_say <overwatch|administrator> <trigger> [warm|firm|stern|furious]") return end
+    if voice ~= "overwatch" and voice ~= "administrator" then Reply(ply, "[Miscount] lc_announce_say <overwatch|administrator> <trigger> [warm|firm|stern|furious]") return end
     local tier
     for k, nm in ipairs(TIERS) do if string.lower(tostring(args[3] or "")) == nm then tier = k end end
-    if not Say(voice, trig, nil, true, tier) then Reply(ply, "[Living City] Nothing in sound/" .. ROOT .. voice .. "/" .. trig .. "/ to say (or it's off).") end
+    if not Say(voice, trig, nil, true, tier) then Reply(ply, "[Miscount] Nothing in sound/" .. ROOT .. voice .. "/" .. trig .. "/ to say (or it's off).") end
 end)
 
 concommand.Add("lc_announce_tier", function(ply, _, args)
@@ -778,6 +778,6 @@ concommand.Add("lc_announce_tier", function(ply, _, args)
     local trig = string.lower(tostring(args[1] or ""))
     local t = LC.AnnounceTier(trig)
     local used = ResolveTier(trig, t)
-    Reply(ply, "[Living City] " .. trig .. ": she would be " .. TierName(t) .. " about it now (sociostability " .. tostring(LC.Socio or "green") .. ", " .. Heat() .. " violent things in ten minutes)" ..
+    Reply(ply, "[Miscount] " .. trig .. ": she would be " .. TierName(t) .. " about it now (sociostability " .. tostring(LC.Socio or "green") .. ", " .. Heat() .. " violent things in ten minutes)" ..
         (used and used ~= t and (", using her " .. TierName(used) .. " recordings") or (used and "" or ", but there are no recordings for it")) .. ".")
 end)

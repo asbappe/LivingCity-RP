@@ -70,5 +70,5 @@ hook.Add("PreDrawPlayerHands", "LivingCityOwnHands", function(hands, vm, ply, we
     for i = 0, n - 1 do
         hands:ManipulateBoneScale(i, keep[i] and Vector(1, 1, 1) or Vector(0, 0, 0))
     end
-    print(string.format("[Living City] own hands: %d arm bones of %d kept on %s", #arms, n, tostring(m)))
+    print(string.format("[Miscount] own hands: %d arm bones of %d kept on %s", #arms, n, tostring(m)))
 end)

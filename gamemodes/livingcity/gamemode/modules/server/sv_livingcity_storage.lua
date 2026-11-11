@@ -249,7 +249,7 @@ function LC.ContainerPut(ply, id)
     c.touched = CurTime()
     if c.kind == "locker" and not c.owner then
         c.owner, c.ownerName = OwnerKey(ply), OwnerName(ply)
-        ply:ChatPrint("[Living City] The locker is yours now. Only you can open it.")
+        ply:ChatPrint("[Miscount] The locker is yours now. Only you can open it.")
     end
     if c.kind ~= "bin" then dirty = true end
     if c.kind == "bin" and LCS.Items[id] and LCS.Items[id].contraband then c.contraband = true end

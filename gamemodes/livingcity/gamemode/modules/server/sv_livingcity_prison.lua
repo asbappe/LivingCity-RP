@@ -40,7 +40,7 @@ local cvStreetMax = CreateConVar("lc_street_detention_max", "60", FLAGS, "The mo
 local cvFine    = CreateConVar("lc_street_fine", "25", FLAGS, "Credits fined on a street detention")
 
 local function Say(ply, msg)
-    if IsValid(ply) then ply:ChatPrint("[Living City] " .. msg) else print("[Living City] " .. msg) end
+    if IsValid(ply) then ply:ChatPrint("[Miscount] " .. msg) else print("[Miscount] " .. msg) end
 end
 
 local function NotifyCP(msg)
@@ -291,7 +291,7 @@ function LC.DetainOnTheSpot(ply, cop, reason)
     local fine = math.min(cvFine:GetInt(), LC.Credits and LC.Credits(ply) or 0)
     if fine > 0 then LC.AddCredits(ply, -fine, "fined") end
     if LC.CanEdit(ply) and #LC.PointsOfKind("cell") == 0 then
-        ply:ChatPrint("[Living City] This map has no prison cells yet, so arrests happen on the street. Place cells (and a release spot) with the Living City Editor for real ones.")
+        ply:ChatPrint("[Miscount] This map has no prison cells yet, so arrests happen on the street. Place cells (and a release spot) with the Miscount Editor for real ones.")
     end
     LC.Log("info", string.format("Detained %s on the street for %ds: %s", ply:Nick(), secs, tostring(reason)))
     hook.Run("LivingCityIncarcerated", ply, secs, reason, cop) -- searched and processed like any arrest

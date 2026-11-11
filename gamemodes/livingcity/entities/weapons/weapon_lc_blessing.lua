@@ -12,8 +12,8 @@
 AddCSLuaFile()
 
 SWEP.PrintName    = "The Blessing"
-SWEP.Author       = "Living City"
-SWEP.Category     = "Living City"
+SWEP.Author       = "Miscount"
+SWEP.Category     = "Miscount"
 SWEP.Instructions = "Primary: heal one. Secondary: prayer for all nearby. Reload: preach."
 SWEP.Spawnable    = true
 SWEP.AdminOnly    = false

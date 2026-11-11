@@ -392,7 +392,7 @@ local function Named(npc, m, ply)
             p:ChatPrint("[CP net] A citizen names a troublemaker" .. (where ~= "" and (", " .. where) or "") .. ": " .. who .. ". Outlined for 60 seconds.")
         end
     end
-    ply:ChatPrint("[Living City] Somebody gave Civil Protection your name.")
+    ply:ChatPrint("[Miscount] Somebody gave Civil Protection your name.")
     hook.Run("LivingCitySnitched", npc, ply, "named as a troublemaker")
 end
 

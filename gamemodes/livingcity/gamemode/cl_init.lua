@@ -357,13 +357,13 @@ local GUIDE = {
 -- or the console command lc_help. A list of topics on the left, the topic on the
 -- right, and a search box that looks through all of it.
 local ADMIN_GUIDE = { "Admin", {
-    "C > Help > Build mode (or !build) turns build mode on and off: spawn menu, context menu, physgun, toolgun (Living City Editor) and noclip.",
+    "C > Help > Build mode (or !build) turns build mode on and off: spawn menu, context menu, physgun, toolgun (Miscount Editor) and noclip.",
     "Civil Intake: place \"Fixture: Civil Intake (registration)\", \"Fixture: Housing Allocation\" and \"Point: arrival\". Settings: lc_intake, lc_intake_secs (8), lc_intake_grace (10 minutes), lc_papers_fee (10), lc_card_fee (15). Commands: lc_register <name>, lc_unregister <name> (sends them back through all of it, room included). With no desk on the map, people are registered and housed automatically as they arrive.",
     "Labor Assignment: place \"Fixture: Labor Assignment\". Settings: lc_labor_min_minutes (30), lc_labor_min_shifts (4), lc_labor_cleanup_standing (25), lc_labor_porter_standing (50). Without one, the Union assigns work and the board (F4) changes it, as before.",
     "Shared dreams: place \"Point: dream\" in an out-of-map area (and \"Zone: dream\" round it, tall and open for the flying endings). Endings set off in play then come at night as a dream for sleepers only, with no reload. C > Help > Dreams: status, dream it now, wake everyone, put back a player's things. Settings: lc_dreams (1), lc_dream_delay (60), lc_dream_radius (1500), lc_dream_every_night (0), lc_dream_combine (6). Without a dream point, the endings are as before.",
     "Nightmare dreams you play (the Administrator's tablet, under Nightmare; or C > Help > Dreams: dream it now): The Patrol Maze, The Barrel Tower, The Crumbling Floor, Freeze, Citizen. Each builds its own arena at the dream point and removes it afterwards; it fits inside the dream zone (or lc_dream_radius), so give it about 1500 units each way and some headroom for the tower.",
     "Propaganda dreams (her tablet, under Happy, as Propaganda; or C > Help > Dreams): Kneel Before Her, Roses for Her, Mirror, Mirror, The Saviour, The Loyalty Quiz, and ten more (Record Harvest, The Stakhanov Shift, Careless Talk, The Newsreel, Two Minutes of Hate, The Mass Games, On-the-Spot Guidance, The Scrap Drive, Flowers for the Liberators, Duck and Cover, Ravenholm). Asleep for one with someone else, the Administrator stars herself (tablet > Tonight's dream > Star in propaganda dreams yourself: on or off); otherwise a giant figure of her does. Music goes flat in garrysmod/sound/livingcity/dreams/, named admire, saviour_horde, saviour or quiz (admire1.mp3), or for the ten more their codeword (harvest, shift, spy, newsreel, hate, massgames, guidance, scrap, flowers, duck, ravenholm) or propaganda; her voice lines in dreams/voice/ (saviour_stop1.wav, a .txt beside it for the subtitle). Upload, FastDL sync, map change.",
-    "Testing a dream: the Living City Editor's panel, Dreams: test one. Pick any dream and Test it now (just me): you play it at once, awake and alone (the city's people stand in), and Stop the test whenever you like. Nobody asleep is pulled in, it isn't tonight's dream, and nothing you win or lose counts.",
+    "Testing a dream: the Miscount Editor's panel, Dreams: test one. Pick any dream and Test it now (just me): you play it at once, awake and alone (the city's people stand in), and Stop the test whenever you like. Nobody asleep is pulled in, it isn't tonight's dream, and nothing you win or lose counts.",
     "Civil Protection Commissary (editor fixture): Civil Protection units get grenades, ammunition, armour, bandages and a ration there. lc_cpsupply_cooldown (120), lc_cpsupply_ration (600). If none is placed, the Union Commissary terminal issues them instead.",
     "Resistance lab (editor fixture, formerly the workbench): a lab bench and a scientist who makes the Resistance's guns. Place one in every rebel base. lc_lab_price (0.6 of the dealer's price), lc_lab_shutdown (600 seconds closed after a Civil Protection unit finds it).",
     "How it feels (editor panel, How it feels): lc_fov (75, the widest view anyone gets; 0 leaves it to each player), lc_eye_height (61; GMod's default is 64), lc_view_bob (with lc_view_bob_amount, 100%, for how strong), lc_quiet_hud, lc_respawn_secs (12, how long the death card shows), lc_word_gets_around.",
@@ -388,7 +388,7 @@ local ADMIN_GUIDE = { "Admin", {
     "Bunk (editor point): a bed rebels sleep on. Mattresses, beds, couches, chairs, workbenches and crates inside rebel territory are found automatically.",
     "lc_rebel_errand sends a scavenging run out of the nearest rebel zone now; lc_rebel_react is how often the fighters go for supply drops and Overwatch landings.",
     "Tag the Combine's doors with Door: Civil Protection only and Civil Protection units are routed through them, even where the map's navigation was cut off by the door.",
-    "The Living City Editor places everything: street furniture (bins, streetlights, loudspeakers, big screens, TVs), an incinerator for bodies, and a workplace for each Union job, plus loading docks, graffiti walls, rubble piles and leaky pipes for the jobs that use them.",
+    "The Miscount Editor places everything: street furniture (bins, streetlights, loudspeakers, big screens, TVs), an incinerator for bodies, and a workplace for each Union job, plus loading docks, graffiti walls, rubble piles and leaky pipes for the jobs that use them.",
 } }
 
 local guide
@@ -411,7 +411,7 @@ local function OpenGuide(admin)
     -- strip's line, its words and the close button, the owner's screenshot of 11 November)
     f.Paint = function(self, w, h)
         draw.RoundedBox(4, 0, 0, w, h, Color(16, 15, 13, 245))
-        draw.SimpleText("LIVING CITY: A GUIDE", "DermaLarge", 16, 28, ACCENT)
+        draw.SimpleText("MISCOUNT: A GUIDE", "DermaLarge", 16, 28, ACCENT)
         draw.SimpleText("C > Guide opens this guide. Tips also pop up the first time something happens (C > Tips I've seen lists them all).", "DermaDefault", 16, 60, Color(150, 145, 130))
     end
     local search = vgui.Create("DTextEntry", f)

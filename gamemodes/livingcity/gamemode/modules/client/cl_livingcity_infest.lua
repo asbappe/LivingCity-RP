@@ -204,7 +204,7 @@ timer.Create("LivingCityInfestStains", 2, 0, function()
             if not stained[key] then
                 stained[key] = true
                 local ok, err = pcall(LC_CL.StainZone, z)
-                if not ok then print("[Living City] infestation stains: " .. tostring(err)) end
+                if not ok then print("[Miscount] infestation stains: " .. tostring(err)) end
             end
         end
     end

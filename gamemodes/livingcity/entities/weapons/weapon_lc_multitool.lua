@@ -13,8 +13,8 @@
 AddCSLuaFile()
 
 SWEP.PrintName    = "Multitool"
-SWEP.Author       = "Living City"
-SWEP.Category     = "Living City"
+SWEP.Author       = "Miscount"
+SWEP.Category     = "Miscount"
 SWEP.Purpose      = "Combine locks, screens and terminals, opened the Resistance's way."
 SWEP.Instructions = "Point at a Combine door, a city screen, a data terminal or a shackled vortigaunt, and left click."
 SWEP.Spawnable    = true

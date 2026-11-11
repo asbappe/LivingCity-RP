@@ -482,7 +482,7 @@ concommand.Add("lc_hl2_lines", function(ply)
     if IsValid(ply) and not (LC.CanEdit and LC.CanEdit(ply)) then return end
     local ok, n = pcall(LC.HL2LinesDump)
     local msg = ok and ("wrote data/livingcity/hl2_lines.txt: " .. tostring(n) .. " clips. Bring it back to Claude.") or ("could not list them: " .. tostring(n))
-    if IsValid(ply) then ply:ChatPrint("[Living City] " .. msg) else print("[Living City] " .. msg) end
+    if IsValid(ply) then ply:ChatPrint("[Miscount] " .. msg) else print("[Miscount] " .. msg) end
 end)
 
 ------------------------------------------------------------------------
@@ -552,5 +552,5 @@ concommand.Add("lc_voice_replaced", function(ply)
     if IsValid(ply) and not (LC.CanEdit and LC.CanEdit(ply)) then return end
     local n = ScanReplaced()
     local msg = "Half-Life 2 clips replaced by your recordings (sound/" .. LC.VoiceReplaceRoot .. "): " .. n
-    if IsValid(ply) then ply:ChatPrint("[Living City] " .. msg) else print("[Living City] " .. msg) end
+    if IsValid(ply) then ply:ChatPrint("[Miscount] " .. msg) else print("[Miscount] " .. msg) end
 end)

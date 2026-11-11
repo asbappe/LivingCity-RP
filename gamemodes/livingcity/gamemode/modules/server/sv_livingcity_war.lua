@@ -767,8 +767,8 @@ concommand.Add("lc_city", function(ply) CityReport(ply) end)
 concommand.Add("lc_outbreak", function(ply)
     if IsValid(ply) and not ply:IsAdmin() then return end
     local seed = LC.TerritorySeeds and LC.TerritorySeeds("infest")[1]
-    if not seed then return Say(ply, "[Living City] No infestation zones placed.") end
-    Say(ply, LC.Outbreak(seed) and "[Living City] Outbreak started." or "[Living City] Nowhere for them to break out to.")
+    if not seed then return Say(ply, "[Miscount] No infestation zones placed.") end
+    Say(ply, LC.Outbreak(seed) and "[Miscount] Outbreak started." or "[Miscount] Nowhere for them to break out to.")
 end)
 
 ------------------------------------------------------------------------

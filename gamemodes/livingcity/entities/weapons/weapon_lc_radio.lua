@@ -15,8 +15,8 @@
 AddCSLuaFile()
 
 SWEP.PrintName    = "Radio transmitter"
-SWEP.Author       = "Living City"
-SWEP.Category     = "Living City"
+SWEP.Author       = "Miscount"
+SWEP.Category     = "Miscount"
 SWEP.Purpose      = "Talk over your radio."
 SWEP.Instructions = "While it's up, your chat and voice go over your radio's band. Only people right beside you hear you directly. Left click calls for backup. R puts it away."
 SWEP.Spawnable    = false

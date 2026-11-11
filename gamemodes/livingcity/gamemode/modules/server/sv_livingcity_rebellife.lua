@@ -1118,16 +1118,16 @@ end)
 
 concommand.Add("lc_rebel_errand", function(ply)
     if IsValid(ply) and not ply:IsAdmin() then return end
-    if not LC.Running then return Say(ply, "[Living City] Start the city first.") end
+    if not LC.Running then return Say(ply, "[Miscount] Start the city first.") end
     local from = IsValid(ply) and ply:GetPos() or Vector(0, 0, 0)
     local best, bd
     for _, z in ipairs(LC.ZonesOfKind and LC.ZonesOfKind("rebel") or {}) do
         local d = z.pos:DistToSqr(from)
         if not bd or d < bd then best, bd = z, d end
     end
-    if not best then return Say(ply, "[Living City] No rebel territory on this map.") end
+    if not best then return Say(ply, "[Miscount] No rebel territory on this map.") end
     local ok, why = StartErrand(best)
-    Say(ply, ok and "[Living City] A scavenging run is heading out of the nearest rebel zone." or ("[Living City] Couldn't send one: " .. tostring(why)))
+    Say(ply, ok and "[Miscount] A scavenging run is heading out of the nearest rebel zone." or ("[Miscount] Couldn't send one: " .. tostring(why)))
 end)
 
 hook.Add("LivingCityStopped", "LivingCityRebelLife", function()

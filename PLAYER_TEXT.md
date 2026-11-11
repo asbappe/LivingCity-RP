@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version c13b6bc. Admin-only console messages and log lines are left out.
+Made from version 66317a2. Admin-only console messages and log lines are left out.
 
-11438 lines, from 301 files.
+11429 lines, from 300 files.
 
 ## Contents
 
@@ -62,14 +62,14 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 - [weapon_lc_vort.lua](#weaponlcvortlua-weaponlcvortlua) (10)
 - [cl_init.lua](#clinitlua-clinitlua) (336)
 - [init.lua](#initlua-initlua) (5)
-- [cl_livingcity.lua](#cllivingcitylua-cllivingcitylua) (21)
+- [cl_livingcity.lua](#cllivingcitylua-cllivingcitylua) (20)
 - [cl_livingcity_actions.lua](#cllivingcityactionslua-cllivingcityactionslua) (58)
 - [cl_livingcity_admintools.lua](#cllivingcityadmintoolslua-cllivingcityadmintoolslua) (29)
 - [cl_livingcity_arrest.lua](#cllivingcityarrestlua-cllivingcityarrestlua) (4)
 - [cl_livingcity_atmos.lua](#cllivingcityatmoslua-cllivingcityatmoslua) (5)
 - [cl_livingcity_bodysigns.lua](#cllivingcitybodysignslua-cllivingcitybodysignslua) (9)
 - [cl_livingcity_career.lua](#cllivingcitycareerlua-cllivingcitycareerlua) (6)
-- [cl_livingcity_character.lua](#cllivingcitycharacterlua-cllivingcitycharacterlua) (14)
+- [cl_livingcity_character.lua](#cllivingcitycharacterlua-cllivingcitycharacterlua) (13)
 - [cl_livingcity_cityadmin.lua](#cllivingcitycityadminlua-cllivingcitycityadminlua) (44)
 - [the collapse on screen (sv_livingcity_collapse.lua)](#the-collapse-on-screen-svlivingcitycollapselua-cllivingcitycollapselua) (16)
 - [cl_livingcity_colonel.lua](#cllivingcitycolonellua-cllivingcitycolonellua) (1)
@@ -122,10 +122,10 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 - [the strange dreams, your side (sv_livingcity_strangedreams.lua, sv_livingcity_strangedreams2.lua)](#the-strange-dreams-your-side-svlivingcitystrangedreamslua-svlivingcitystrangedreams2lua-cllivingcitystrangedreamslua) (9)
 - [cl_livingcity_suit.lua](#cllivingcitysuitlua-cllivingcitysuitlua) (1)
 - [cl_livingcity_talk.lua](#cllivingcitytalklua-cllivingcitytalklua) (9)
-- [cl_livingcity_theme.lua](#cllivingcitythemelua-cllivingcitythemelua) (2)
+- [cl_livingcity_theme.lua](#cllivingcitythemelua-cllivingcitythemelua) (1)
 - [cl_livingcity_unittools.lua](#cllivingcityunittoolslua-cllivingcityunittoolslua) (65)
 - [cigarettes, alcohol, stimulants and the shakes, your side (sv_livingcity_vices.lua)](#cigarettes-alcohol-stimulants-and-the-shakes-your-side-svlivingcityviceslua-cllivingcityviceslua) (9)
-- [cl_livingcity_view.lua](#cllivingcityviewlua-cllivingcityviewlua) (13)
+- [cl_livingcity_view.lua](#cllivingcityviewlua-cllivingcityviewlua) (12)
 - [vortigaunt dream warfare, your side (sv_livingcity_vortwar.lua)](#vortigaunt-dream-warfare-your-side-svlivingcityvortwarlua-cllivingcityvortwarlua) (11)
 - [cl_livingcity_war.lua](#cllivingcitywarlua-cllivingcitywarlua) (14)
 - [cl_livingcity_ways.lua](#cllivingcitywayslua-cllivingcitywayslua) (2)
@@ -172,7 +172,7 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 - [the dream plan (who chooses tonight's dream, and how)](#the-dream-plan-who-chooses-tonights-dream-and-how-svlivingcitydreamplanlua) (58)
 - [The Midnight Rally (a Happy dream you play)](#the-midnight-rally-a-happy-dream-you-play-svlivingcitydreamrallylua) (20)
 - [which dream tonight (the rules, and the city's own pick)](#which-dream-tonight-the-rules-and-the-citys-own-pick-svlivingcitydreamruleslua) (13)
-- [shared dreams](#shared-dreams-svlivingcitydreamslua) (72)
+- [shared dreams](#shared-dreams-svlivingcitydreamslua) (71)
 - [sitting out a kind of dream, earned (the owner, 10 November)](#sitting-out-a-kind-of-dream-earned-the-owner-10-november-svlivingcitydreamskiplua) (6)
 - [staging the dreams you play](#staging-the-dreams-you-play-svlivingcitydreamstagelua) (19)
 - [stand-ins, so no dream is ever thin](#stand-ins-so-no-dream-is-ever-thin-svlivingcitydreamstandinslua) (67)
@@ -180,11 +180,11 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 - [the Combine's dropship](#the-combines-dropship-svlivingcitydropshiplua) (7)
 - [economy and social credit](#economy-and-social-credit-svlivingcityeconomylua) (36)
 - [a business of your own (the owner, 10 November: "real](#a-business-of-your-own-the-owner-10-november-real-svlivingcityemploymentlua) (23)
-- [secret endings](#secret-endings-svlivingcityendingslua) (85)
+- [secret endings](#secret-endings-svlivingcityendingslua) (84)
 - [escorts through Combine doors](#escorts-through-combine-doors-svlivingcityescortlua) (74)
 - [city events](#city-events-svlivingcityeventslua) (80)
 - [burning the confiscated contraband (the owner, 7 November)](#burning-the-confiscated-contraband-the-owner-7-november-svlivingcityevidencelua) (45)
-- [morning exercise (mandatory for citizens)](#morning-exercise-mandatory-for-citizens-svlivingcityexerciselua) (61)
+- [morning exercise (mandatory for citizens)](#morning-exercise-mandatory-for-citizens-svlivingcityexerciselua) (60)
 - [sv_livingcity_factions.lua](#svlivingcityfactionslua-svlivingcityfactionslua) (54)
 - [field operations (the owner's 7 November playtest)](#field-operations-the-owners-7-november-playtest-svlivingcityfieldopslua) (27)
 - [Freq 7, the Resistance's pirate broadcast](#freq-7-the-resistances-pirate-broadcast-svlivingcityfreq7lua) (6)
@@ -287,7 +287,7 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 - [survival](#survival-svlivingcitysurvivallua) (71)
 - [Realistic or Relaxed survival, chosen per character](#realistic-or-relaxed-survival-chosen-per-character-svlivingcitysurvivalmodelua) (9)
 - [talking to people](#talking-to-people-svlivingcitytalklua) (42)
-- [territory that spreads, and is pushed back](#territory-that-spreads-and-is-pushed-back-svlivingcityterritorylua) (38)
+- [territory that spreads, and is pushed back](#territory-that-spreads-and-is-pushed-back-svlivingcityterritorylua) (37)
 - [territory grows along the path nodes](#territory-grows-along-the-path-nodes-svlivingcityterritorypathslua) (14)
 - [the trains](#the-trains-svlivingcitytrainslua) (9)
 - [the underground](#the-underground-svlivingcityundergroundlua) (198)
@@ -310,7 +310,6 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 - [guns carried lowered (the owner, 1 November: one of the lost v2.7 pieces)](#guns-carried-lowered-the-owner-1-november-one-of-the-lost-v27-pieces-shlivingcityloweredlua) (2)
 - [the performance debugger (server and client)](#the-performance-debugger-server-and-client-shlivingcityperfdebuglua) (57)
 - [sh_livingcity_shop.lua](#shlivingcityshoplua-shlivingcityshoplua) (315)
-- [shared.lua](#sharedlua-sharedlua) (1)
 
 ## lc_adminglass.lua (lc_adminglass.lua)
 
@@ -668,7 +667,7 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: tell
 
-- "[Living City] {msg}"  (chat message, line 48)
+- "[Miscount] {msg}"  (chat message, line 48)
 
 > Note for you (not shown in game): part of: secondary attack
 
@@ -1159,13 +1158,13 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): The guide: the full menu's first item (C, cl_livingcity_actions.lua), !help, or the console command lc_help. A list of topics on the left, the topic on the right, and a search box that looks through all of it.
 
-- "C > Help > Build mode (or !build) turns build mode on and off: spawn menu, context menu, physgun, toolgun (Living City Editor) and noclip."  (text, line 360)
+- "C > Help > Build mode (or !build) turns build mode on and off: spawn menu, context menu, physgun, toolgun (Miscount Editor) and noclip."  (text, line 360)
 - "Civil Intake: place "Fixture: Civil Intake (registration)", "Fixture: Housing Allocation" and "Point: arrival". Settings: lc_intake, lc_intake_secs (8), lc_intake_grace (10 minutes), lc_papers_fee (10), lc_card_fee (15). Commands: lc_register <name>, lc_unregister <name> (sends them back through all of it, room included). With no desk on the map, people are registered and housed automatically as they arrive."  (text, line 361)
 - "Labor Assignment: place "Fixture: Labor Assignment". Settings: lc_labor_min_minutes (30), lc_labor_min_shifts (4), lc_labor_cleanup_standing (25), lc_labor_porter_standing (50). Without one, the Union assigns work and the board (F4) changes it, as before."  (text, line 362)
 - "Shared dreams: place "Point: dream" in an out-of-map area (and "Zone: dream" round it, tall and open for the flying endings). Endings set off in play then come at night as a dream for sleepers only, with no reload. C > Help > Dreams: status, dream it now, wake everyone, put back a player's things. Settings: lc_dreams (1), lc_dream_delay (60), lc_dream_radius (1500), lc_dream_every_night (0), lc_dream_combine (6). Without a dream point, the endings are as before."  (text, line 363)
 - "Nightmare dreams you play (the Administrator's tablet, under Nightmare; or C > Help > Dreams: dream it now): The Patrol Maze, The Barrel Tower, The Crumbling Floor, Freeze, Citizen. Each builds its own arena at the dream point and removes it afterwards; it fits inside the dream zone (or lc_dream_radius), so give it about 1500 units each way and some headroom for the tower."  (text, line 364)
 - "Propaganda dreams (her tablet, under Happy, as Propaganda; or C > Help > Dreams): Kneel Before Her, Roses for Her, Mirror, Mirror, The Saviour, The Loyalty Quiz, and ten more (Record Harvest, The Stakhanov Shift, Careless Talk, The Newsreel, Two Minutes of Hate, The Mass Games, On-the-Spot Guidance, The Scrap Drive, Flowers for the Liberators, Duck and Cover, Ravenholm). Asleep for one with someone else, the Administrator stars herself (tablet > Tonight's dream > Star in propaganda dreams yourself: on or off); otherwise a giant figure of her does. Music goes flat in garrysmod/sound/livingcity/dreams/, named admire, saviour_horde, saviour or quiz (admire1.mp3), or for the ten more their codeword (harvest, shift, spy, newsreel, hate, massgames, guidance, scrap, flowers, duck, ravenholm) or propaganda; her voice lines in dreams/voice/ (saviour_stop1.wav, a .txt beside it for the subtitle). Upload, FastDL sync, map change."  (text, line 365)
-- "Testing a dream: the Living City Editor's panel, Dreams: test one. Pick any dream and Test it now (just me): you play it at once, awake and alone (the city's people stand in), and Stop the test whenever you like. Nobody asleep is pulled in, it isn't tonight's dream, and nothing you win or lose counts."  (text, line 366)
+- "Testing a dream: the Miscount Editor's panel, Dreams: test one. Pick any dream and Test it now (just me): you play it at once, awake and alone (the city's people stand in), and Stop the test whenever you like. Nobody asleep is pulled in, it isn't tonight's dream, and nothing you win or lose counts."  (text, line 366)
 - "Civil Protection Commissary (editor fixture): Civil Protection units get grenades, ammunition, armour, bandages and a ration there. lc_cpsupply_cooldown (120), lc_cpsupply_ration (600). If none is placed, the Union Commissary terminal issues them instead."  (text, line 367)
 - "Resistance lab (editor fixture, formerly the workbench): a lab bench and a scientist who makes the Resistance's guns. Place one in every rebel base. lc_lab_price (0.6 of the dealer's price), lc_lab_shutdown (600 seconds closed after a Civil Protection unit finds it)."  (text, line 368)
 - "How it feels (editor panel, How it feels): lc_fov (75, the widest view anyone gets; 0 leaves it to each player), lc_eye_height (61; GMod's default is 64), lc_view_bob (with lc_view_bob_amount, 100%, for how strong), lc_quiet_hud, lc_respawn_secs (12, how long the death card shows), lc_word_gets_around."  (text, line 369)
@@ -1187,7 +1186,7 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 - "Rebel lookout post (editor point): an armed fighter guards that spot. Place it from the side the Combine would come from, so he faces that way."  (text, line 387)
 - "Bunk (editor point): a bed rebels sleep on. Mattresses, beds, couches, chairs, workbenches and crates inside rebel territory are found automatically."  (text, line 388)
 - "Tag the Combine's doors with Door: Civil Protection only and Civil Protection units are routed through them, even where the map's navigation was cut off by the door."  (text, line 390)
-- "The Living City Editor places everything: street furniture (bins, streetlights, loudspeakers, big screens, TVs), an incinerator for bodies, and a workplace for each Union job, plus loading docks, graffiti walls, rubble piles and leaky pipes for the jobs that use them."  (text, line 391)
+- "The Miscount Editor places everything: street furniture (bins, streetlights, loudspeakers, big screens, TVs), an incinerator for bodies, and a workplace for each Union job, plus loading docks, graffiti walls, rubble piles and leaky pipes for the jobs that use them."  (text, line 391)
 
 > Note for you (not shown in game): (its own title, line and search box sit under the window's title strip, 24 tall: they ran into the strip's line, its words and the close button, the owner's screenshot of 11 November)
 
@@ -1208,20 +1207,20 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): Build mode
 
-- "[Living City] Build mode ON: spawn menu (Q), context menu (C), physgun, toolgun and noclip. The Living City Editor is under Q > Tools > Living City. Type !build again to go back to playing."  (chat message, line 131)
+- "[Miscount] Build mode ON: spawn menu (Q), context menu (C), physgun, toolgun and noclip. The Miscount Editor is under Q > Tools > Miscount. Type !build again to go back to playing."  (chat message, line 131)
 
 > Note for you (not shown in game): part of: lcset build
 
-- "[Living City] Build mode OFF. You're just a person in the city now."  (chat message, line 136)
+- "[Miscount] Build mode OFF. You're just a person in the city now."  (chat message, line 136)
 
 > Note for you (not shown in game): typing in chat
 
-- "[Living City] Build mode is for admins."  (chat message, line 158)
+- "[Miscount] Build mode is for admins."  (chat message, line 158)
 
 > Note for you (not shown in game): Arriving
 
-- "[Living City] Welcome to the city. F1: what you can do (and the guide). F2: what your side and job can do. F3 pockets, F4 your jobs, career and factions."  (chat message, line 175)
-- "[Living City] You're an admin: !build switches to build mode for the editor, physgun and noclip."  (chat message, line 177)
+- "[Miscount] Welcome to the city. F1: what you can do (and the guide). F2: what your side and job can do. F3 pockets, F4 your jobs, career and factions."  (chat message, line 175)
+- "[Miscount] You're an admin: !build switches to build mode for the editor, physgun and noclip."  (chat message, line 177)
 
 ## cl_livingcity.lua (cl_livingcity.lua)
 
@@ -1267,12 +1266,11 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): Debug report viewer
 
-- "[Living City]"  (chat message, line 989)
 - "Debug report copied to your clipboard. Paste it to Claude. Also saved to {file}"  (chat message, line 989)
 
 > Note for you (not shown in game): the game answering something done in a window (lc_report)
 
-- "Living City debug report"  (window title, line 993)
+- "Miscount debug report"  (window title, line 993)
 - "Copy to clipboard again"  (label or button, line 1006)
 
 > Note for you (not shown in game): Path mapping (sv_livingcity_pathmap.lua): say so on screen while it's on (made once here, not every frame)
@@ -1592,7 +1590,6 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): The server says yes, or why not.
 
-- "[Living City]"  (chat message, line 309)
 - "You are {msg}."  (chat message, line 309)
 
 ## cl_livingcity_cityadmin.lua (cl_livingcity_cityadmin.lua)
@@ -1788,9 +1785,9 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 - "{+attack2}: the office"  (text, line 159)
 - "{+use} on junk (a wreck, pipes, a crate): pry out scrap. It's loud"  (text, line 161)
 - "A unit who sees it out makes you wanted (not on rebel ground)"  (text, line 162)
-- "Living City Editor"  (text, line 163)
+- "Miscount Editor"  (text, line 163)
 - "{+reload}: the next mode"  (text, line 164)
-- "Every mode and setting: hold {+menu}, Tools > Living City Editor"  (text, line 165)
+- "Every mode and setting: hold {+menu}, Tools > Miscount Editor"  (text, line 165)
 - "Rebel territory"  (text, line 168)
 - "The black market is open ({+menu_context} > Getting by), and the bins have better finds"  (text, line 169)
 - "Make guns and ammunition here ({gm_showspare1})"  (text, line 170)
@@ -2060,7 +2057,7 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: open
 
-- "No dream point on this map, so the secret endings are as they always were (the whole city, then the map reloads). To make them dreams: the Living City Editor, Point: dream, somewhere out of the map nobody can walk to (and Zone: dream round it, for its edge)."  (text, line 210)
+- "No dream point on this map, so the secret endings are as they always were (the whole city, then the map reloads). To make them dreams: the Miscount Editor, Point: dream, somewhere out of the map nobody can walk to (and Zone: dream round it, for its edge)."  (text, line 210)
 - "Dreams are switched off (lc_dreams 0): the endings are as they always were."  (text, line 213)
 - "Dreams are on: a secret ending waits for the night, and everyone asleep dreams it together about {or} seconds after the Administrator says good night.{or}"  (text, line 215)
 - "Dreaming now: %s%s, %d asleep in it."  (message, line 222)
@@ -2259,7 +2256,7 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: changes
 
-- "Living City: ending tuning, from the Endings menu"  (text, line 386)
+- "Miscount: ending tuning, from the Endings menu"  (text, line 386)
 - "Settings changed from their default:"  (text, line 392)
 - "Shared settings (the same on everyone's screen):"  (text, line 399)
 - "Dance tuning (added to the code's own turn of the bone; pitch yaw roll):"  (text, line 403)
@@ -4370,7 +4367,7 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): the game's pre draw player hands moment
 
-- "[Living City] own hands: %d arm bones of %d kept on %s"  (message, line 73)
+- "[Miscount] own hands: %d arm bones of %d kept on %s"  (message, line 73)
 
 ## cl_livingcity_talk.lua (cl_livingcity_talk.lua)
 
@@ -4400,13 +4397,9 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 `gamemodes/livingcity/gamemode/modules/client/cl_livingcity_theme.lua`
 
 
-> Note for you (not shown in game): The Derma skin: the default one, with windows, buttons, combo boxes, scroll bars and menus repainted
-
-- "Living City"  (name, line 305)
-
 > Note for you (not shown in game): part of: define skin
 
-- "Living City: windows in your faction's style"  (text, line 338)
+- "Miscount: windows in your faction's style"  (text, line 338)
 
 ## cl_livingcity_unittools.lua (cl_livingcity_unittools.lua)
 
@@ -4523,13 +4516,12 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): the console command lc_bob_toggle
 
-- "[Living City]"  (chat message, line 38)
 - "The camera sways with your steps again. (!bob keeps it still.)"  (chat message, line 38)
 - "The camera holds still now. (!bob brings the sway back.)"  (chat message, line 39)
 
 > Note for you (not shown in game): part of: calc view
 
-- "[Living City] camera: '{name}' failed and is off until you rejoin: {err} /"  (text, line 74)
+- "[Miscount] camera: '{name}' failed and is off until you rejoin: {err} /"  (text, line 74)
 
 > Note for you (not shown in game): Colour grading (the v2.7 look): the city a touch drained and cold, Half-Life 2's grey-green. Each player's own: lc_my_color_grade 0 turns it off; the server's lc_color_grade 0 for everyone.
 
@@ -4668,11 +4660,11 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: error
 
-- "[Living City] {where}: {err} /"  (text, line 99)
+- "[Miscount] {where}: {err} /"  (text, line 99)
 
 > Note for you (not shown in game): part of: say
 
-- "[Living City] {msg}"  (chat message, line 196)
+- "[Miscount] {msg}"  (chat message, line 196)
 
 > Note for you (not shown in game): only trust the zones if the main area is a real share of the map
 
@@ -4752,12 +4744,12 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: start
 
-- "This map has no AI nodes or navmesh and nothing placed yet. Lay some path nodes or points with the Living City Editor, then start again."  (chat message, line 2635)
+- "This map has no AI nodes or navmesh and nothing placed yet. Lay some path nodes or points with the Miscount Editor, then start again."  (chat message, line 2635)
 - "Started. Map nav: %d spots (%s). Your layout: %d points, %d path nodes."  (message, line 2642)
 
 > Note for you (not shown in game): part of: stop
 
-- "Stopped and removed all Living City NPCs."  (chat message, line 2659)
+- "Stopped and removed all Miscount NPCs."  (chat message, line 2659)
 
 > Note for you (not shown in game): part of: spawn test walker
 
@@ -5048,12 +5040,12 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): the console command lc_announce_clips
 
-- "[Living City] {v}: {or}"  (text, line 643)
-- "[Living City]   check {v}/{why}"  (text, line 644)
-- "[Living City]   CAN'T PLAY {why}"  (text, line 647)
-- "[Living City] {v}: {parts}"  (text, line 655)
-- "[Living City] Players' computers play these, so each needs the files: {or}sv_allowdownload {or}, sv_downloadurl "{or}" (a Workshop addon is the reliable way). Each player can type lc_sound_check to test their own."  (text, line 658)
-- "[Living City] {total} custom announcements found. Folders: sound/livingcity/overwatch/, administrator/, radio/ (or the same under sound/{ROOT}), flat: a file's name starts with its trigger (curfew1.wav), and the Administrator's tone is in it (curfew_firm1.wav); lc_announce_rescan after adding files."  (text, line 662)
+- "[Miscount] {v}: {or}"  (text, line 643)
+- "[Miscount]   check {v}/{why}"  (text, line 644)
+- "[Miscount]   CAN'T PLAY {why}"  (text, line 647)
+- "[Miscount] {v}: {parts}"  (text, line 655)
+- "[Miscount] Players' computers play these, so each needs the files: {or}sv_allowdownload {or}, sv_downloadurl "{or}" (a Workshop addon is the reliable way). Each player can type lc_sound_check to test their own."  (text, line 658)
+- "[Miscount] {total} custom announcements found. Folders: sound/livingcity/overwatch/, administrator/, radio/ (or the same under sound/{ROOT}), flat: a file's name starts with its trigger (curfew1.wav), and the Administrator's tone is in it (curfew_firm1.wav); lc_announce_rescan after adding files."  (text, line 662)
 
 > Note for you (not shown in game): part of: voice missing
 
@@ -5072,25 +5064,25 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): also as a file, one missing recording to a line (folder/name), for _dev/tools/elevenlabs_batch.py --missing: it then makes only what the server lacks (the owner, 11 November: "I already have loads of these")
 
-- "[Living City] The whole list is also in data/livingcity/voice_missing.txt ({lines} lines)."  (text, line 752)
+- "[Miscount] The whole list is also in data/livingcity/voice_missing.txt ({lines} lines)."  (text, line 752)
 
 > Note for you (not shown in game): the console command lc_voice_missing
 
-- "[Living City] {name} (sound/livingcity/{folder}), {missing}"  (text, line 755)
-- "[Living City] {total} voice lines with no recording yet. Without one, the words still show (Half-Life 2's own Overwatch lines only with lc_announce_stock 1). Name a file for its line (curfew1.wav, ravenholm_defeat1.wav); a .txt with the same name is its subtitle. Everything to record, with suggested words: VOICE_LINES.md, in the gamemode's folder."  (text, line 758)
+- "[Miscount] {name} (sound/livingcity/{folder}), {missing}"  (text, line 755)
+- "[Miscount] {total} voice lines with no recording yet. Without one, the words still show (Half-Life 2's own Overwatch lines only with lc_announce_stock 1). Name a file for its line (curfew1.wav, ravenholm_defeat1.wav); a .txt with the same name is its subtitle. Everything to record, with suggested words: VOICE_LINES.md, in the gamemode's folder."  (text, line 758)
 
 > Note for you (not shown in game): the console command lc_announce_rescan
 
-- "[Living City] {AnnounceRescan} custom announcements found."  (text, line 764)
+- "[Miscount] {AnnounceRescan} custom announcements found."  (text, line 764)
 
 > Note for you (not shown in game): the console command lc_announce_say
 
-- "[Living City] lc_announce_say <overwatch\|administrator> <trigger> [warm\|firm\|stern\|furious]"  (text, line 770)
-- "[Living City] Nothing in sound/{ROOT}{voice}/{trig}/ to say (or it's off)."  (text, line 773)
+- "[Miscount] lc_announce_say <overwatch\|administrator> <trigger> [warm\|firm\|stern\|furious]"  (text, line 770)
+- "[Miscount] Nothing in sound/{ROOT}{voice}/{trig}/ to say (or it's off)."  (text, line 773)
 
 > Note for you (not shown in game): the console command lc_announce_tier
 
-- "[Living City] {trig}: she would be {t} about it now (sociostability {or}, {Heat} violent things in ten minutes){or}."  (text, line 781)
+- "[Miscount] {trig}: she would be {t} about it now (sociostability {or}, {Heat} violent things in ten minutes){or}."  (text, line 781)
 
 ## arrests in the open (the owner's playtest, 7 November) (sv_livingcity_arrest.lua)
 
@@ -5104,11 +5096,11 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: tell
 
-- "[Living City] {msg}"  (chat message, line 71)
+- "[Miscount] {msg}"  (chat message, line 71)
 
 > Note for you (not shown in game): part of: notice
 
-- "[Living City] {text}"  (chat message, line 74)
+- "[Miscount] {text}"  (chat message, line 74)
 
 > Note for you (not shown in game): part of: custody tick
 
@@ -5154,7 +5146,7 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 > Note for you (not shown in game): held: cuffed
 
 - "is cuffed. Drag them to the cells yourself (F1 > Drag them along), or leave them: a unit is called to walk them in."  (chat message, line 615)
-- "[Living City] They hold you down and get the cuffs on."  (chat message, line 616)
+- "[Miscount] They hold you down and get the cuffs on."  (chat message, line 616)
 
 > Note for you (not shown in game): part of: resolve
 
@@ -5560,7 +5552,7 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 > Note for you (not shown in game): The editor panel: the key, and a test
 
 - "The director"  (on-screen notice, line 804)
-- "[Living City] {text}"  (chat message, line 804)
+- "[Miscount] {text}"  (chat message, line 804)
 - "No key is set yet. Paste one in the editor panel and press Save."  (chat message, line 808)
 - "It is switched off (lc_brain 0)."  (chat message, line 809)
 
@@ -5649,8 +5641,8 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: give key
 
-- "[Living City] {OwnerName} gave you a key to their apartment."  (chat message, line 241)
-- "[Living City] {OwnerName} took back the key to their apartment."  (chat message, line 244)
+- "[Miscount] {OwnerName} gave you a key to their apartment."  (chat message, line 241)
+- "[Miscount] {OwnerName} took back the key to their apartment."  (chat message, line 244)
 - "You gave {target} a key."  (text, line 247)
 - "You took {target}'s key back."  (text, line 247)
 
@@ -5663,7 +5655,7 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): locked is locked, for the one with the key too: the handle rattles. Unlock it first (right click it with your hands out, or !unlock)
 
-- "[Living City] It's locked. Unlock it first: right click it with your hands out (or !unlock)."  (chat message, line 295)
+- "[Miscount] It's locked. Unlock it first: right click it with your hands out (or !unlock)."  (chat message, line 295)
 
 > Note for you (not shown in game): part of: rent door use
 
@@ -5672,7 +5664,7 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: done
 
-- "[Living City] Civil Protection forced the door of {or}'s apartment."  (chat message, line 312)
+- "[Miscount] Civil Protection forced the door of {or}'s apartment."  (chat message, line 312)
 
 > Note for you (not shown in game): part of: rent door use
 
@@ -5680,8 +5672,8 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): a timer (regularly)
 
-- "[Living City] Your rent ran out. The apartment isn't yours any more."  (chat message, line 336)
-- "[Living City] Your rent runs out in 10 minutes. Look at the door, F1 > Rent / lock this door to pay more."  (chat message, line 342)
+- "[Miscount] Your rent ran out. The apartment isn't yours any more."  (chat message, line 336)
+- "[Miscount] Your rent runs out in 10 minutes. Look at the door, F1 > Rent / lock this door to pay more."  (chat message, line 342)
 
 > Note for you (not shown in game): part of: hands right click
 
@@ -5764,26 +5756,26 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: assign
 
-- "[Living City] You are %s, citizen %s."  (message, line 127)
+- "[Miscount] You are %s, citizen %s."  (message, line 127)
 
 > Note for you (not shown in game): a character who hasn't been chosen yet gets to choose
 
-- "[Living City] You are %s, citizen %s. If you die, that person is gone."  (message, line 151)
+- "[Miscount] You are %s, citizen %s. If you die, that person is gone."  (message, line 151)
 
 > Note for you (not shown in game): Told once they're back on their feet.
 
-- "[Living City] %s is dead. You are %s, citizen %s. You start over with nothing."  (message, line 217)
+- "[Miscount] %s is dead. You are %s, citizen %s. You start over with nothing."  (message, line 217)
 
 > Note for you (not shown in game): (lcEndOfLife: an ending that is final whatever the setting, like a stalker stepping into the light)
 
 - "Permanent death is off here: you come back as yourself."  (text, line 229)
-- "[Living City] You died in build mode, so you keep this character. C > Help > Build mode to leave build mode and play for real."  (chat message, line 233)
+- "[Miscount] You died in build mode, so you keep this character. C > Help > Build mode to leave build mode and play for real."  (chat message, line 233)
 - "Build mode: you keep this character."  (text, line 234)
 
 > Note for you (not shown in game): someone dying
 
 - "The infestation doesn't let go. You come back as you were."  (text, line 238)
-- "[Living City] You died in custody. That doesn't change who you are, or how long you're in for."  (chat message, line 242)
+- "[Miscount] You died in custody. That doesn't change who you are, or how long you're in for."  (chat message, line 242)
 - "Died in custody: you're still you, and still serving your time."  (text, line 243)
 
 > Note for you (not shown in game): a close call, unless this one is the end of them (sv_livingcity_progress.lua)
@@ -5826,11 +5818,11 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 - "Choose one of the faces shown."  (text, line 405)
 - "Someone in the city already has that name."  (text, line 408)
 - "That person can't come back. Choose another name."  (text, line 409)
-- "[Living City] You are %s, citizen %s."  (message, line 422)
+- "[Miscount] You are %s, citizen %s."  (message, line 422)
 
 > Note for you (not shown in game): the console command lc_setname
 
-- "[Living City] Staff changed your name to {name}."  (chat message, line 462)
+- "[Miscount] Staff changed your name to {name}."  (chat message, line 462)
 
 ## checkpoints, turrets, and holding the infestation back (sv_livingcity_checkpoints.lua)
 
@@ -6683,7 +6675,7 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: set hands up
 
-- "[Living City] Hands up. (F1 > Lower my hands.)"  (chat message, line 442)
+- "[Miscount] Hands up. (F1 > Lower my hands.)"  (chat message, line 442)
 
 > Note for you (not shown in game): Can this person tie that one up? ok, or false and why.
 
@@ -6702,12 +6694,12 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: tie player
 
-- "[Living City] Your hands are cuffed, so you can't use anything. To try to get free: F1 > Work at the cuffs, when nobody's looking."  (chat message, line 493)
+- "[Miscount] Your hands are cuffed, so you can't use anything. To try to get free: F1 > Work at the cuffs, when nobody's looking."  (chat message, line 493)
 - "Cuffed. Look at them and press F1 to drag them along or take the cuffs off."  (chat message, line 494)
 
 > Note for you (not shown in game): part of: start tie
 
-- "[Living City] Someone is putting cuffs on you."  (chat message, line 528)
+- "[Miscount] Someone is putting cuffs on you."  (chat message, line 528)
 - "Cuffing them..."  (progress bar, line 529)
 - "You let go."  (text, line 530)
 
@@ -6719,13 +6711,13 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 
 - "Look at someone whose hands are cuffed, up close."  (text, line 543)
 - "Your own hands are cuffed."  (text, line 544)
-- "[Living City] A Civil Protection unit takes your cuffs off."  (chat message, line 547)
+- "[Miscount] A Civil Protection unit takes your cuffs off."  (chat message, line 547)
 - "Uncuffing them..."  (progress bar, line 550)
 - "You stop."  (text, line 551)
 
 > Note for you (not shown in game): part of: done
 
-- "[Living City] Someone gets your cuffs off. You're free."  (chat message, line 555)
+- "[Miscount] Someone gets your cuffs off. You're free."  (chat message, line 555)
 
 > Note for you (not shown in game): part of: start struggle
 
@@ -6736,8 +6728,8 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: done
 
-- "[Living City] They see you working at the cuffs, and tighten them."  (chat message, line 581)
-- "[Living City] The cuffs give. Your hands are free."  (chat message, line 585)
+- "[Miscount] They see you working at the cuffs, and tighten them."  (chat message, line 581)
+- "[Miscount] The cuffs give. Your hands are free."  (chat message, line 585)
 
 > Note for you (not shown in game): a cuffed NPC: walked to the cells (sv_livingcity_arrest.lua)
 
@@ -6747,7 +6739,7 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 
 - "Your hands are cuffed."  (text, line 606)
 - "You take them by the arm. (F1 > Drag them along again to let go.)"  (chat message, line 608)
-- "[Living City] You're being walked along."  (chat message, line 609)
+- "[Miscount] You're being walked along."  (chat message, line 609)
 - "Things are back to normal. Ordinary stops, ordinary days."  (text, line 694)
 - "Back to ordinary patrols."  (text, line 694)
 - "More stop-and-searches on the street. Keep your papers ready and nothing on you you'd want found."  (text, line 695)
@@ -7255,7 +7247,7 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 > Note for you (not shown in game): (superadmin) let someone off being a stalker: lc_unstalker <part of a name>
 
 - "[City] An administrator has let you off being a stalker."  (text, line 353)
-- "[Living City] {Nick} is no longer a stalker."  (chat message, line 354)
+- "[Miscount] {Nick} is no longer a stalker."  (chat message, line 354)
 
 > Note for you (not shown in game): nor talk to anyone (E on a person does nothing: a stalker's work is the only thing it does) (asked first by every E-on-someone handler: sv_livingcity.lua, the rebels', Grigori's, the lab's)
 
@@ -7277,32 +7269,32 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): the console command lc_reload
 
-- "[Living City] Reloaded layout: %d points, %d path nodes, %d zones, %d tagged doors."  (message, line 504)
+- "[Miscount] Reloaded layout: %d points, %d path nodes, %d zones, %d tagged doors."  (message, line 504)
 
 > Note for you (not shown in game): the console command lc_backup
 
-- "[Living City] Backed up the layout as {name}."  (text, line 514)
-- "[Living City] Nothing to back up yet."  (text, line 514)
+- "[Miscount] Backed up the layout as {name}."  (text, line 514)
+- "[Miscount] Nothing to back up yet."  (text, line 514)
 
 > Note for you (not shown in game): the console command lc_backups
 
-- "[Living City] Layout: data/%s. %d backups in data/%s/:"  (message, line 520)
+- "[Miscount] Layout: data/%s. %d backups in data/%s/:"  (message, line 520)
 - "Restore one with lc_restore <number>. What's there now is backed up first."  (text, line 522)
 
 > Note for you (not shown in game): the console command lc_restore
 
-- "[Living City] Restored {what}."  (text, line 528)
-- "[Living City] {what}"  (text, line 528)
+- "[Miscount] Restored {what}."  (text, line 528)
+- "[Miscount] {what}"  (text, line 528)
 
 > Note for you (not shown in game): the console command lc_autolink
 
-- "[Living City] Made %d new links.%s"  (message, line 543)
+- "[Miscount] Made %d new links.%s"  (message, line 543)
 - "%d nodes still have no links (shown in red)."  (message, line 544)
 
 > Note for you (not shown in game): the console command lc_goto_layout
 
-- "[Living City] None of those on this map."  (chat message, line 578)
-- "[Living City] %s %d of %d. (You're in noclip; it's easy to land inside things.)"  (message, line 583)
+- "[Miscount] None of those on this map."  (chat message, line 578)
+- "[Miscount] %s %d of %d. (You're in noclip; it's easy to land inside things.)"  (message, line 583)
 
 > Note for you (not shown in game): the game answering something done in a window (lc_setting)
 
@@ -7367,7 +7359,7 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 - "server tick interval %.4f, entity count %d"  (message, line 266)
 - "whole server frame (engine AI, physics, networking): avg %.2f ms, worst %.2f ms, %d of %d ticks late (%.1f%%), a tick should take %.1f ms"  (message, line 269)
 - "entities by class: {top}"  (text, line 282)
-- "NPCs on the map (all of them, Living City's and not): %d"  (message, line 285)
+- "NPCs on the map (all of them, Miscount's and not): %d"  (message, line 285)
 - "asleep (far from everyone, engine AI off; lc_npc_sleep %s): %d now; %d times put to sleep, %d woken, %d route stops walked out of sight"  (message, line 288)
 - "%s [%s] step %d/%d (%s) %ds left: %s"  (message, line 299)
 - "active %d \| violent cap %d"  (message, line 304)
@@ -7573,7 +7565,7 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: say
 
-- "[Living City] {msg}"  (chat message, line 42)
+- "[Miscount] {msg}"  (chat message, line 42)
 
 > Note for you (not shown in game): pressing E on something
 
@@ -7972,7 +7964,7 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 > Note for you (not shown in game): Starting one Dream an ending now, with everyone asleep (also: an admin testing it, awake). vote: the G-Man's vote first (among the dreamers). True, or false and why not.
 
 - "Dreams are off (lc_dreams 0)."  (text, line 1007)
-- "There's no dream point on this map: place one with the Living City Editor (Point: dream)."  (text, line 1009)
+- "There's no dream point on this map: place one with the Miscount Editor (Point: dream)."  (text, line 1009)
 - "No such ending."  (text, line 1011)
 - "An ending is already under way."  (text, line 1012)
 - "A dream is already under way."  (text, line 1013)
@@ -8101,10 +8093,6 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 > Note for you (not shown in game): the game answering something done in a window (lc_dream_act)
 
 - "[Dreams] {why}"  (chat message, line 1604)
-
-> Note for you (not shown in game): part of: reply
-
-- "[Living City] {m}"  (chat message, line 1628)
 
 > Note for you (not shown in game): the console command lc_dream_now
 
@@ -8279,7 +8267,7 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): Into a dream now, alone and awake. True and the dream, or false and why not.
 
-- "Only those who may use the Living City Editor can test dreams."  (text, line 59)
+- "Only those who may use the Miscount Editor can test dreams."  (text, line 59)
 - "No such dream."  (text, line 61)
 - "A dream is already under way. Wait for it to end, or wake everyone (C > Help > Dreams)."  (text, line 62)
 - "You're already dreaming."  (text, line 63)
@@ -8300,7 +8288,7 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 
 - "Dream test"  (on-screen notice, line 105)
 - "Dream test"  (on-screen notice, line 108)
-- "Only those who may use the Living City Editor can test dreams."  (on-screen notice, line 108)
+- "Only those who may use the Miscount Editor can test dreams."  (on-screen notice, line 108)
 - "Dream test"  (on-screen notice, line 113)
 - "Testing "{arg}". Stop whenever you like: the editor's Stop the test, or C > Settings > Shared dreams. Nothing you win or lose counts."  (on-screen notice, line 113)
 - "Dream test"  (on-screen notice, line 115)
@@ -8436,26 +8424,26 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 - "You need a stall of your own first (a business license and a vendor stall, from the Commissary)."  (text, line 78)
 - "Ask them face to face."  (text, line 79)
 - "works for someone already."  (text, line 80)
-- "[Living City] %s offers you a job at their stall: %d credits every %d minutes you're there. F2 > Me (More) > My stall business to accept."  (message, line 82)
-- "[Living City] You've offered {target} a job."  (chat message, line 83)
+- "[Miscount] %s offers you a job at their stall: %d credits every %d minutes you're there. F2 > Me (More) > My stall business to accept."  (message, line 82)
+- "[Miscount] You've offered {target} a job."  (chat message, line 83)
 
 > Note for you (not shown in game): part of: accept job
 
 - "There's no offer waiting."  (text, line 91)
-- "[Living City] {Name} turned your job down."  (chat message, line 93)
-- "[Living City] {Name} works your stall now."  (chat message, line 100)
-- "[Living City] You work {from}'s stall now. Stock it, sell from it; your wages come from the till."  (chat message, line 101)
+- "[Miscount] {Name} turned your job down."  (chat message, line 93)
+- "[Miscount] {Name} works your stall now."  (chat message, line 100)
+- "[Miscount] You work {from}'s stall now. Stock it, sell from it; your wages come from the till."  (chat message, line 101)
 
 > Note for you (not shown in game): part of: quit job
 
 - "You don't work anyone's stall."  (text, line 109)
-- "[Living City] {Name} has quit working your stall."  (chat message, line 113)
-- "[Living City] You've left the job."  (chat message, line 114)
+- "[Miscount] {Name} has quit working your stall."  (chat message, line 113)
+- "[Miscount] You've left the job."  (chat message, line 114)
 
 > Note for you (not shown in game): part of: let go
 
-- "[Living City] {owner} has let you go from their stall."  (chat message, line 124)
-- "[Living City] You've let {p} go."  (chat message, line 125)
+- "[Miscount] {owner} has let you go from their stall."  (chat message, line 124)
+- "[Miscount] You've let {p} go."  (chat message, line 125)
 - "Nobody by that name works for you."  (text, line 130)
 
 > Note for you (not shown in game): part of: pay day
@@ -8463,7 +8451,7 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 - "a worker's wage"  (text, line 158)
 - "wages from the stall"  (text, line 162)
 - "[Stall] Paid %s %d credits in wages."  (message, line 163)
-- "[Living City] Your employer couldn't pay you this time: the till's empty."  (chat message, line 165)
+- "[Miscount] Your employer couldn't pay you this time: the till's empty."  (chat message, line 165)
 
 > Note for you (not shown in game): part of: stall customer
 
@@ -8471,7 +8459,7 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): typing in chat
 
-- "[Living City] {why}"  (chat message, line 245)
+- "[Miscount] {why}"  (chat message, line 245)
 
 ## secret endings (sv_livingcity_endings.lua)
 
@@ -8636,10 +8624,6 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 > Note for you (not shown in game): part of: eat chip
 
 - "** Father Grigori swallows a Combine data core whole. His eyes light up."  (chat message, line 4230)
-
-> Note for you (not shown in game): For the admin
-
-- "[Living City] {m}"  (chat message, line 4244)
 
 > Note for you (not shown in game): the console command lc_endings
 
@@ -9005,9 +8989,9 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): Commands
 
-- "[Living City] Start the city first."  (chat message, line 712)
-- "[Living City] Events: rations, sweep, curfew, lockdown, raid, supply, jog, drill, parade (those three need their points placed). Usage: lc_event curfew 5"  (chat message, line 714)
-- "[Living City] Event started: {name}"  (chat message, line 716)
+- "[Miscount] Start the city first."  (chat message, line 712)
+- "[Miscount] Events: rations, sweep, curfew, lockdown, raid, supply, jog, drill, parade (those three need their points placed). Usage: lc_event curfew 5"  (chat message, line 714)
+- "[Miscount] Event started: {name}"  (chat message, line 716)
 
 > Note for you (not shown in game): a unit sets off after someone causing a disturbance
 
@@ -9266,7 +9250,6 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): For the admin
 
-- "[Living City] {m}"  (chat message, line 1507)
 - "Exercise stopped."  (text, line 1510)
 - "No exercise on."  (text, line 1510)
 
@@ -9506,7 +9489,7 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): the console command lc_freq7_status
 
-- "[Living City] Freq 7: %s %.1f; on now: %s (%s); found in %d s%s"  (message, line 244)
+- "[Miscount] Freq 7: %s %.1f; on now: %s (%s); found in %d s%s"  (message, line 244)
 - "on air at"  (message, line 245)
 - "jammed at"  (message, line 245)
 - "nothing (no recordings)"  (message, line 245)
@@ -10050,27 +10033,27 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 - "is in a household already."  (text, line 107)
 - "Only the head of your household takes people in."  (text, line 109)
 - "Your household is full."  (text, line 113)
-- "[Living City] {head} asks you to join their household. F2 > Me (More) > My household to accept."  (chat message, line 117)
+- "[Miscount] {head} asks you to join their household. F2 > Me (More) > My household to accept."  (chat message, line 117)
 - "asks you to join their household: the same block, shared crates, keys. F2 > Me (More) > My household to accept."  (on-screen notice, line 118)
-- "[Living City] You've asked {target} to join your household."  (chat message, line 119)
+- "[Miscount] You've asked {target} to join your household."  (chat message, line 119)
 
 > Note for you (not shown in game): part of: household accept
 
 - "There's no invitation waiting."  (text, line 127)
-- "[Living City] {Name} declined your invitation."  (chat message, line 130)
+- "[Miscount] {Name} declined your invitation."  (chat message, line 130)
 - "You're in a household already."  (text, line 133)
-- "[Living City] {Name} has joined {name}."  (chat message, line 146)
+- "[Miscount] {Name} has joined {name}."  (chat message, line 146)
 
 > Note for you (not shown in game): part of: household leave
 
 - "You're not in a household."  (text, line 165)
-- "[Living City] You've left {name}."  (chat message, line 171)
+- "[Miscount] You've left {name}."  (chat message, line 171)
 
 > Note for you (not shown in game): part of: household send away
 
 - "Only the head of a household sends anyone away."  (text, line 177)
-- "[Living City] You're no longer part of {name}."  (chat message, line 184)
-- "[Living City] {n} is no longer part of the household."  (chat message, line 185)
+- "[Miscount] You're no longer part of {name}."  (chat message, line 184)
+- "[Miscount] {n} is no longer part of the household."  (chat message, line 185)
 - "No one by that name in your household."  (text, line 189)
 
 > Note for you (not shown in game): part of: household rename
@@ -10080,7 +10063,7 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): typing in chat
 
-- "[Living City] {why}"  (chat message, line 232)
+- "[Miscount] {why}"  (chat message, line 232)
 
 ## housing blocks (sv_livingcity_housing.lua)
 
@@ -10089,17 +10072,17 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: assign block
 
-- "[Living City] You have been assigned to {n}."  (chat message, line 97)
+- "[Miscount] You have been assigned to {n}."  (chat message, line 97)
 
 > Note for you (not shown in game): typing in chat
 
-- "[Living City] You live in {n}."  (text, line 149)
-- "[Living City] You have no room yet. Ask Housing Allocation for one."  (text, line 150)
-- "[Living City] This map has no housing blocks yet."  (chat message, line 151)
+- "[Miscount] You live in {n}."  (text, line 149)
+- "[Miscount] You have no room yet. Ask Housing Allocation for one."  (text, line 150)
+- "[Miscount] This map has no housing blocks yet."  (chat message, line 151)
 
 > Note for you (not shown in game): the console command lc_setblock
 
-- "[Living City] You have been reassigned to {n}."  (chat message, line 168)
+- "[Miscount] You have been reassigned to {n}."  (chat message, line 168)
 
 ## toilets, baths and what happens without them (sv_livingcity_hygiene.lua)
 
@@ -10129,7 +10112,7 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: soil
 
-- "[Living City] Someone nearby has soiled themselves. The smell reaches you a moment later."  (chat message, line 201)
+- "[Miscount] Someone nearby has soiled themselves. The smell reaches you a moment later."  (chat message, line 201)
 
 > Note for you (not shown in game): Toilets, baths, clean clothes
 
@@ -10148,7 +10131,7 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 - "It drained you, though: drink something."  (on-screen notice, line 245)
 - "That's better"  (on-screen notice, line 247)
 - "Nothing much to it."  (on-screen notice, line 247)
-- "[Living City] Still to do: {left}."  (chat message, line 251)
+- "[Miscount] Still to do: {left}."  (chat message, line 251)
 
 > Note for you (not shown in game): part of: use bath
 
@@ -10187,7 +10170,7 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): people nearby smell it, and may catch it
 
-- "[Living City] Someone near you reeks. Flies, and worse. You'd step back if you were sensible."  (chat message, line 358)
+- "[Miscount] Someone near you reeks. Flies, and worse. You'd step back if you were sensible."  (chat message, line 358)
 
 > Note for you (not shown in game): part of: hygiene tick
 
@@ -10684,12 +10667,12 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): the console command lc_register
 
-- "[Living City] Usage: lc_register <name>"  (text, line 954)
+- "[Miscount] Usage: lc_register <name>"  (text, line 954)
 
 > Note for you (not shown in game): the console command lc_unregister
 
-- "[Living City] Usage: lc_unregister <name> (sends them back through Civil Intake)"  (text, line 961)
-- "[Living City] Staff have unregistered you. Register again at Civil Intake, then ask Housing Allocation for a room."  (chat message, line 977)
+- "[Miscount] Usage: lc_unregister <name> (sends them back through Civil Intake)"  (text, line 961)
+- "[Miscount] Staff have unregistered you. Register again at Civil Intake, then ask Housing Allocation for a room."  (chat message, line 977)
 
 ## the arrival search (the owner, 10 November) (sv_livingcity_intaketutor.lua)
 
@@ -11132,8 +11115,8 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 > Note for you (not shown in game): part of: kick door
 
 - "It doesn't give."  (chat message, line 216)
-- "[Living City] The Overwatch kicked the door of {or}'s apartment off its hinges."  (chat message, line 230)
-- "[Living City] Civil Protection kicked in the door of {or}'s apartment."  (chat message, line 266)
+- "[Miscount] The Overwatch kicked the door of {or}'s apartment off its hinges."  (chat message, line 230)
+- "[Miscount] Civil Protection kicked in the door of {or}'s apartment."  (chat message, line 266)
 
 > Note for you (not shown in game): the chat command /kick
 
@@ -11419,7 +11402,7 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 > Note for you (not shown in game): A map without the terminal: superadmins are told, once
 
 - "Labor Assignment"  (on-screen notice, line 354)
-- "This map has no Labor Assignment terminal, so new citizens are given Union work automatically and change jobs on their board (F4). To make them walk to one, place "Fixture: Labor Assignment" with the Living City Editor."  (on-screen notice, line 354)
+- "This map has no Labor Assignment terminal, so new citizens are given Union work automatically and change jobs on their board (F4). To make them walk to one, place "Fixture: Labor Assignment" with the Miscount Editor."  (on-screen notice, line 354)
 
 ## learning the city by living in it (sv_livingcity_learning.lua)
 
@@ -11530,7 +11513,7 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 > Note for you (not shown in game): part of: go to speech stand
 
 - "Only the City Administrator speaks from the stand."  (text, line 346)
-- "There's no speech stand in this city. (Staff: Living City Editor > Point: speech stand.)"  (text, line 348)
+- "There's no speech stand in this city. (Staff: Miscount Editor > Point: speech stand.)"  (text, line 348)
 - "[The office] You're at the speech stand. F2 > Me > The city's levers > Give a speech, when you're ready."  (chat message, line 351)
 
 > Note for you (not shown in game): her guards come with her (sv_livingcity_admguard.lua or wherever they follow her)
@@ -11649,7 +11632,7 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): !bob
 
-- "[Living City] The camera sway is off for everyone on this server."  (chat message, line 475)
+- "[Miscount] The camera sway is off for everyone on this server."  (chat message, line 475)
 
 ## what named people say, recorded (the owner, 11 November: "architect and design natural (sv_livingcity_lines.lua)
 
@@ -12135,11 +12118,11 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 
 - "wrote data/livingcity/hl2_lines.txt: {n} clips. Bring it back to Claude."  (text, line 484)
 - "could not list them: {n}"  (text, line 484)
-- "[Living City] {msg}"  (chat message, line 485)
+- "[Miscount] {msg}"  (chat message, line 485)
 
 > Note for you (not shown in game): the console command lc_voice_replaced
 
-- "[Living City] {msg}"  (chat message, line 555)
+- "[Miscount] {msg}"  (chat message, line 555)
 
 ## Resistance lookouts (sv_livingcity_lookouts.lua)
 
@@ -12553,7 +12536,7 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 > Note for you (not shown in game): part of: named
 
 - "[CP net] A citizen names a troublemaker{or}: {who}. Outlined for 60 seconds."  (chat message, line 392)
-- "[Living City] Somebody gave Civil Protection your name."  (chat message, line 395)
+- "[Miscount] Somebody gave Civil Protection your name."  (chat message, line 395)
 
 > Note for you (not shown in game): part of: inform
 
@@ -13189,7 +13172,7 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 
 - "Civil Protection Commissary"  (text, line 140)
 - "Commissary (Civil Protection units are issued supplies here)"  (text, line 142)
-- "There's no Civil Protection Commissary in this city yet. Your grenades are topped up when you go on duty. (Staff: Living City Editor > Fixture: Civil Protection Commissary.)"  (text, line 143)
+- "There's no Civil Protection Commissary in this city yet. Your grenades are topped up when you go on duty. (Staff: Miscount Editor > Fixture: Civil Protection Commissary.)"  (text, line 143)
 
 > Note for you (not shown in game): part of: intake
 
@@ -13214,11 +13197,11 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 > Note for you (not shown in game): part of: lab
 
 - "The lab"  (text, line 168)
-- "No cell has a lab yet. (Staff: Living City Editor > Fixture: Resistance lab.)"  (text, line 169)
+- "No cell has a lab yet. (Staff: Miscount Editor > Fixture: Resistance lab.)"  (text, line 169)
 
 > Note for you (not shown in game): Point them at a place by kind. True, or false and why not.
 
-- "[Living City] {label}"  (chat message, line 181)
+- "[Miscount] {label}"  (chat message, line 181)
 
 > Note for you (not shown in game): a block's middle can be in mid air or between wings: being inside the block is arriving
 
@@ -13273,7 +13256,7 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: done
 
-- "[Living City] {or}, a Union medic, patches you up enough to stand."  (chat message, line 678)
+- "[Miscount] {or}, a Union medic, patches you up enough to stand."  (chat message, line 678)
 
 > Note for you (not shown in game): A wounded citizen.
 
@@ -13290,7 +13273,7 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: tick
 
-- "[Living City] The clinic medic sees to you. (+10 health while you stay close)"  (chat message, line 718)
+- "[Miscount] The clinic medic sees to you. (+10 health while you stay close)"  (chat message, line 718)
 
 > Note for you (not shown in game): Ration Production
 
@@ -13519,7 +13502,7 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 - "There's a price on them already."  (text, line 251)
 - "You posted one just now. (%ds)"  (message, line 252)
 - "[CP net] BOUNTY: %d credits for bringing in %s (%s). Posted by %s."  (message, line 256)
-- "[Living City] There's a price on your head: %d credits to the unit who brings you in."  (message, line 257)
+- "[Miscount] There's a price on your head: %d credits to the unit who brings you in."  (message, line 257)
 - "A price on your head"  (on-screen notice, line 258)
 - "credits to the unit who brings you in."  (on-screen notice, line 258)
 
@@ -13531,7 +13514,7 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): typing in chat
 
-- "[Living City] {why}"  (chat message, line 322)
+- "[Miscount] {why}"  (chat message, line 322)
 
 ## clothes that show the job (sv_livingcity_outfits.lua)
 
@@ -13715,11 +13698,11 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): the console command lc_people
 
-- "[Living City] %d citizens and %d Civil Protection units alive (%d out now), %d sympathizers, %d with jobs, %d dead remembered"  (message, line 371)
+- "[Miscount] %d citizens and %d Civil Protection units alive (%d out now), %d sympathizers, %d with jobs, %d dead remembered"  (message, line 371)
 
 > Note for you (not shown in game): the console command lc_resetpeople
 
-- "[Living City] The city's people have been replaced. People already on the streets keep their old faces until they leave."  (chat message, line 390)
+- "[Miscount] The city's people have been replaced. People already on the streets keep their old faces until they leave."  (chat message, line 390)
 
 ## server timing (sv_livingcity_perf.lua)
 
@@ -13728,8 +13711,8 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): the console command lc_profile
 
-- "[Living City] Timer timings cleared."  (chat message, line 71)
-- "[Living City] Costliest timers (total ms, per call average, worst, calls):"  (chat message, line 76)
+- "[Miscount] Timer timings cleared."  (chat message, line 71)
+- "[Miscount] Costliest timers (total ms, per call average, worst, calls):"  (chat message, line 76)
 - "%-34s %8.1f total  %6.2f avg  %6.2f worst  %d calls"  (message, line 79)
 - "NPC loop: %.2f ms average, %.2f worst, over %d runs"  (message, line 84)
 
@@ -13769,10 +13752,10 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): the console command lc_perfdebug
 
-- "[Living City] Performance report printed to your console."  (chat message, line 214)
-- "[Living City] Report saved: {lastFile}"  (chat message, line 222)
-- "[Living City] The performance debugger is already {a}."  (chat message, line 223)
-- "[Living City] Performance debugger: {or}. lc_perfdebug on \| off \| reset \| save \| report (or C > Help > Performance debugger)."  (chat message, line 226)
+- "[Miscount] Performance report printed to your console."  (chat message, line 214)
+- "[Miscount] Report saved: {lastFile}"  (chat message, line 222)
+- "[Miscount] The performance debugger is already {a}."  (chat message, line 223)
+- "[Miscount] Performance debugger: {or}. lc_perfdebug on \| off \| reset \| save \| report (or C > Help > Performance debugger)."  (chat message, line 226)
 
 ## the power grid (sv_livingcity_power.lua)
 
@@ -13847,7 +13830,7 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: say
 
-- "[Living City] {msg}"  (chat message, line 43)
+- "[Miscount] {msg}"  (chat message, line 43)
 
 > Note for you (not shown in game): part of: notify cp
 
@@ -13888,7 +13871,7 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 > Note for you (not shown in game): part of: detain on the spot
 
 - "[Civil Protection] Detained: %s. You're cuffed and made to kneel."  (message, line 290)
-- "[Living City] This map has no prison cells yet, so arrests happen on the street. Place cells (and a release spot) with the Living City Editor for real ones."  (chat message, line 294)
+- "[Miscount] This map has no prison cells yet, so arrests happen on the street. Place cells (and a release spot) with the Miscount Editor for real ones."  (chat message, line 294)
 - "Detained %s on the street for %ds: %s"  (message, line 296)
 
 > Note for you (not shown in game): Giving yourself up: walk up to a unit and press E (or !surrender). A shorter sentence, the search called off, and serving it pays back more of your Civil Standing.
@@ -14096,7 +14079,7 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): the console command lc_breencast
 
-- "[Living City] {why}"  (text, line 676)
+- "[Miscount] {why}"  (text, line 676)
 
 ## propaganda dreams (dreams you play) (sv_livingcity_propagandadreams.lua)
 
@@ -14922,7 +14905,7 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: tell
 
-- "[Living City] {msg}"  (chat message, line 30)
+- "[Miscount] {msg}"  (chat message, line 30)
 
 > Note for you (not shown in game): Make a prop persistent (or, if it already is, save it as it is now).
 
@@ -15693,7 +15676,7 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: protect wait tick
 
-- "[Living City] You have %d seconds to get there before it arrives."  (message, line 3177)
+- "[Miscount] You have %d seconds to get there before it arrives."  (message, line 3177)
 
 > Note for you (not shown in game): part of: post directive
 
@@ -15710,22 +15693,22 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: send board
 
-- "[Living City] Quests are turned off on this server."  (chat message, line 3295)
+- "[Miscount] Quests are turned off on this server."  (chat message, line 3295)
 
 > Note for you (not shown in game): part of: accept posting
 
-- "[Living City] Finish or abandon your current job first."  (chat message, line 3341)
-- "[Living City] You have to wait before taking another job. Next job in {CurTime}s."  (chat message, line 3343)
-- "[Living City] That job is no longer available."  (chat message, line 3352)
+- "[Miscount] Finish or abandon your current job first."  (chat message, line 3341)
+- "[Miscount] You have to wait before taking another job. Next job in {CurTime}s."  (chat message, line 3343)
+- "[Miscount] That job is no longer available."  (chat message, line 3352)
 
 > Note for you (not shown in game): (a job for a certain hour, still on the board after it: the night shift at midday, the owner, 11 November)
 
-- "[Living City] {or}"  (chat message, line 3356)
-- "[Living City] Stalkers can only do stalker work. You can't take this job."  (chat message, line 3360)
+- "[Miscount] {or}"  (chat message, line 3356)
+- "[Miscount] Stalkers can only do stalker work. You can't take this job."  (chat message, line 3360)
 
 > Note for you (not shown in game): part of: accept posting
 
-- "[Living City] That job has enough people."  (chat message, line 3367)
+- "[Miscount] That job has enough people."  (chat message, line 3367)
 - "has joined the job."  (quest narration, line 3370)
 - "[{board}] {title}. {or}"  (chat message, line 3392)
 - "Quest accepted: %s [%s] by %s"  (message, line 3394)
@@ -16104,10 +16087,10 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): the console command lc_rebel_errand
 
-- "[Living City] Start the city first."  (chat message, line 1121)
-- "[Living City] No rebel territory on this map."  (chat message, line 1128)
-- "[Living City] A scavenging run is heading out of the nearest rebel zone."  (chat message, line 1130)
-- "[Living City] Couldn't send one: {why}"  (text, line 1130)
+- "[Miscount] Start the city first."  (chat message, line 1121)
+- "[Miscount] No rebel territory on this map."  (chat message, line 1128)
+- "[Miscount] A scavenging run is heading out of the nearest rebel zone."  (chat message, line 1130)
+- "[Miscount] Couldn't send one: {why}"  (text, line 1130)
 
 ## the Resistance pamphlet (sv_livingcity_rebelpamphlet.lua)
 
@@ -16333,12 +16316,12 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): the console command lc_skirmish
 
-- "[Living City] Start the city first."  (chat message, line 1762)
+- "[Miscount] Start the city first."  (chat message, line 1762)
 - "called off"  (text, line 1763)
-- "[Living City] Skirmish called off."  (chat message, line 1768)
-- "[Living City] Usage: lc_skirmish raid\|sweep\|end"  (chat message, line 1769)
-- "[Living City] {kind} started."  (text, line 1770)
-- "[Living City] Couldn't start a {kind}: {why}"  (text, line 1770)
+- "[Miscount] Skirmish called off."  (chat message, line 1768)
+- "[Miscount] Usage: lc_skirmish raid\|sweep\|end"  (chat message, line 1769)
+- "[Miscount] {kind} started."  (text, line 1770)
+- "[Miscount] Couldn't start a {kind}: {why}"  (text, line 1770)
 
 > Note for you (not shown in game): part of: dismiss follower
 
@@ -16627,7 +16610,7 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 
 - "Freed vortigaunt"  (text, line 1026)
 - "heading for rebel ground"  (text, line 1027)
-- "[Living City] The collar falls. The vortigaunt looks at you a long moment, then heads for rebel ground."  (chat message, line 1031)
+- "[Miscount] The collar falls. The vortigaunt looks at you a long moment, then heads for rebel ground."  (chat message, line 1031)
 - "freeing a vortigaunt"  (text, line 1032)
 - "A vortigaunt has been freed from the street crews. It's on its way to us. Welcome it."  (text, line 1034)
 
@@ -16823,16 +16806,16 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: go down
 
-- "[Living City] You're down, bleeding out. Someone can help you up (E on you). Hold on, or F1 > Give up."  (chat message, line 439)
+- "[Miscount] You're down, bleeding out. Someone can help you up (E on you). Hold on, or F1 > Give up."  (chat message, line 439)
 
 > Note for you (not shown in game): part of: revive
 
-- "[Living City] {by} gets you back on your feet."  (text, line 480)
-- "[Living City] You get back on your feet."  (chat message, line 480)
+- "[Miscount] {by} gets you back on your feet."  (text, line 480)
+- "[Miscount] You get back on your feet."  (chat message, line 480)
 
 > Note for you (not shown in game): credited to whoever put them down (the conduct system judges that kill)
 
-- "[Living City] {why}"  (chat message, line 499)
+- "[Miscount] {why}"  (chat message, line 499)
 
 > Note for you (not shown in game): A unit cuffs a wanted person where they lie.
 
@@ -17341,8 +17324,8 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: stuck command
 
-- "[Living City] You pull yourself out and brush yourself off."  (chat message, line 102)
-- "[Living City] {why}"  (chat message, line 103)
+- "[Miscount] You pull yourself out and brush yourself off."  (chat message, line 102)
+- "[Miscount] {why}"  (chat message, line 103)
 
 ## sentences that fit the crimes, the work detail, probation (sv_livingcity_sentence.lua)
 
@@ -17656,8 +17639,8 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 
 - "No such slot."  (text, line 157)
 - "You're already playing them."  (text, line 159)
-- "[Living City] You are someone new: %s, citizen %s."  (message, line 184)
-- "[Living City] You are %s, citizen %s."  (message, line 187)
+- "[Miscount] You are someone new: %s, citizen %s."  (message, line 184)
+- "[Miscount] You are %s, citizen %s."  (message, line 187)
 - "%s switched to slot %d (%s)"  (message, line 189)
 
 > Note for you (not shown in game): part of: delete character slot
@@ -17681,8 +17664,8 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): a timer (regularly)
 
-- "[Living City] A quiet night in the city: with so few about, the city's own people carry more of it. Events and rebel operations come more often."  (chat message, line 44)
-- "[Living City] The city's busy again: back to its usual pace."  (chat message, line 45)
+- "[Miscount] A quiet night in the city: with so few about, the city's own people carry more of it. Events and rebel operations come more often."  (chat message, line 44)
+- "[Miscount] The city's busy again: back to its usual pace."  (chat message, line 45)
 
 ## snitches among the citizens, and burning an informant (sv_livingcity_snitches.lua)
 
@@ -17697,7 +17680,7 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 > Note for you (not shown in game): part of: report
 
 - "[CP net] A citizen reports someone {what}{or}: {who}. Outlined for 60 seconds."  (chat message, line 115)
-- "[Living City] Somebody told Civil Protection about you."  (chat message, line 117)
+- "[Miscount] Somebody told Civil Protection about you."  (chat message, line 117)
 
 > Note for you (not shown in game): What a snitch can see: a gun out in the open.
 
@@ -17718,11 +17701,11 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 - "They're burned already."  (text, line 223)
 - "You burned someone not long ago. (%s)"  (message, line 224)
 - "is burned: an informant. Don't deal with them."  (text, line 231)
-- "[Living City] The Resistance has burned you as an informant. Their people will know you."  (chat message, line 232)
+- "[Miscount] The Resistance has burned you as an informant. Their people will know you."  (chat message, line 232)
 - "burned an informant"  (text, line 234)
 - "[Resistance] You were right about them."  (chat message, line 235)
 - "burned an innocent citizen"  (text, line 237)
-- "[Living City] Word spreads: the Resistance burned an innocent citizen as an informant."  (chat message, line 242)
+- "[Miscount] Word spreads: the Resistance burned an innocent citizen as an informant."  (chat message, line 242)
 - "[Resistance] Word comes back: they were never an informant. The city won't forget it."  (chat message, line 245)
 
 > Note for you (not shown in game): part of: scar
@@ -17732,18 +17715,18 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 - "Get right up to them."  (text, line 254)
 - "They'd fight you off. Only when they're cuffed, down, or have their hands up."  (text, line 256)
 - "They carry the mark already."  (text, line 257)
-- "[Living City] Someone grabs your face. A blade."  (chat message, line 259)
+- "[Miscount] Someone grabs your face. A blade."  (chat message, line 259)
 - "Marking them..."  (progress bar, line 260)
 - "You let them go."  (text, line 260)
 
 > Note for you (not shown in game): part of: done
 
-- "[Living City] They've carved a crude rat into your cheek. Everyone who sees you will see it, and the Resistance will never take you in."  (chat message, line 276)
+- "[Miscount] They've carved a crude rat into your cheek. Everyone who sees you will see it, and the Resistance will never take you in."  (chat message, line 276)
 - "[Resistance] Marked. Anyone who looks at them will know."  (chat message, line 277)
 
 > Note for you (not shown in game): part of: beat tick
 
-- "[Living City] A rebel slams you against the wall. "Rat. Get out of here.""  (chat message, line 293)
+- "[Miscount] A rebel slams you against the wall. "Rat. Get out of here.""  (chat message, line 293)
 
 ## squad sizes and backup by radio (sv_livingcity_squads.lua) (sv_livingcity_squads.lua)
 
@@ -18151,8 +18134,8 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): the console command lc_scanprops
 
-- "[Living City] Static props: {or}"  (text, line 232)
-- "[Living City] Couldn't read the map's props: {StaticScanNote}"  (text, line 233)
+- "[Miscount] Static props: {or}"  (text, line 232)
+- "[Miscount] Couldn't read the map's props: {StaticScanNote}"  (text, line 233)
 
 ## things other people can see (the owner, 10 November: (sv_livingcity_status.lua)
 
@@ -18162,9 +18145,9 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 > Note for you (not shown in game): part of: finery
 
 - "Not over a uniform."  (text, line 62)
-- "[Living City] You take off the fine clothes and fold them away."  (chat message, line 68)
+- "[Miscount] You take off the fine clothes and fold them away."  (chat message, line 68)
 - "They don't fit you."  (text, line 72)
-- "[Living City] You put on the fine clothes. People will notice."  (chat message, line 77)
+- "[Miscount] You put on the fine clothes. People will notice."  (chat message, line 77)
 
 > Note for you (not shown in game): "Well dressed" with their title.
 
@@ -18173,8 +18156,8 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): A pet bird
 
-- "[Living City] Your bird hops onto your shoulder."  (chat message, line 105)
-- "[Living City] Your bird hops back into your coat."  (chat message, line 105)
+- "[Miscount] Your bird hops onto your shoulder."  (chat message, line 105)
+- "[Miscount] Your bird hops back into your coat."  (chat message, line 105)
 
 > Note for you (not shown in game): part of: decor
 
@@ -18215,7 +18198,7 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): the console command lc_stock
 
-- "[Living City] City stores: %d of %d rations (%s)."  (message, line 170)
+- "[Miscount] City stores: %d of %d rations (%s)."  (message, line 170)
 
 ## places to keep things (sv_livingcity_storage.lua)
 
@@ -18249,7 +18232,7 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: container put
 
-- "[Living City] The locker is yours now. Only you can open it."  (chat message, line 252)
+- "[Miscount] The locker is yours now. Only you can open it."  (chat message, line 252)
 
 > Note for you (not shown in game): part of: container take
 
@@ -19981,31 +19964,31 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 > Note for you (not shown in game): part of: done
 
 - "picking a pocket"  (text, line 81)
-- "[Living City] A hand in your pocket! {who}."  (chat message, line 85)
+- "[Miscount] A hand in your pocket! {who}."  (chat message, line 85)
 - "Someone tried your pockets: {who}."  (on-screen notice, line 86)
-- "[Living City] They felt it. You come away with nothing."  (chat message, line 87)
+- "[Miscount] They felt it. You come away with nothing."  (chat message, line 87)
 - "a lifted wallet"  (text, line 98)
-- "[Living City] %d credits, and they never felt a thing."  (message, line 99)
-- "[Living City] You come away with: {id}. They never felt a thing."  (chat message, line 104)
-- "[Living City] Empty pockets."  (chat message, line 107)
+- "[Miscount] %d credits, and they never felt a thing."  (message, line 99)
+- "[Miscount] You come away with: {id}. They never felt a thing."  (chat message, line 104)
+- "[Miscount] Empty pockets."  (chat message, line 107)
 
 > Note for you (not shown in game): part of: offer loan
 
 - "Look at who you want to lend to."  (text, line 139)
 - "Face to face."  (text, line 140)
 - "You haven't that much."  (text, line 141)
-- "[Living City] %s offers to lend you %d credits, %d back within %d hours. F2 > Me (More) > My debts."  (message, line 143)
-- "[Living City] You've offered {borrower} a loan of {n}."  (chat message, line 144)
+- "[Miscount] %s offers to lend you %d credits, %d back within %d hours. F2 > Me (More) > My debts."  (message, line 143)
+- "[Miscount] You've offered {borrower} a loan of {n}."  (chat message, line 144)
 
 > Note for you (not shown in game): part of: accept loan
 
 - "No loan is on offer."  (text, line 152)
-- "[Living City] {p} turned the loan down."  (chat message, line 153)
+- "[Miscount] {p} turned the loan down."  (chat message, line 153)
 - "They haven't the money any more."  (text, line 154)
 - "a loan to {p}"  (text, line 155)
 - "a loan from {from}"  (text, line 156)
-- "[Living City] %s took your loan: %d owed back."  (message, line 160)
-- "[Living City] You owe %s %d credits, due in %d hours."  (message, line 161)
+- "[Miscount] %s took your loan: %d owed back."  (message, line 160)
+- "[Miscount] You owe %s %d credits, due in %d hours."  (message, line 161)
 
 > Note for you (not shown in game): part of: repay debt
 
@@ -20013,8 +19996,8 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 - "You need %d credits."  (message, line 170)
 - "repaying {lenderName}"  (text, line 171)
 - "a debt repaid"  (text, line 175)
-- "[Living City] %s repaid you %d credits."  (message, line 179)
-- "[Living City] Debt repaid: %d credits to %s."  (message, line 188)
+- "[Miscount] %s repaid you %d credits."  (message, line 179)
+- "[Miscount] Debt repaid: %d credits to %s."  (message, line 188)
 
 > Note for you (not shown in game): part of: report debt
 
@@ -20024,13 +20007,13 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 - "Debt default"  (text, line 203)
 - "a debt left unpaid"  (text, line 204)
 - "[Civil Protection] {lenderName} reports an unpaid debt. Pay it."  (chat message, line 205)
-- "[Living City] They aren't about. It's on record for when they are."  (chat message, line 207)
-- "[Living City] Reported to Civil Protection."  (chat message, line 212)
+- "[Miscount] They aren't about. It's on record for when they are."  (chat message, line 207)
+- "[Miscount] Reported to Civil Protection."  (chat message, line 212)
 
 > Note for you (not shown in game): a timer (regularly)
 
 - "debts repaid while you were away"  (text, line 224)
-- "[Living City] Debts repaid while you were away: %d credits."  (message, line 225)
+- "[Miscount] Debts repaid while you were away: %d credits."  (message, line 225)
 - "Debt default"  (text, line 235)
 - "a debt left unpaid"  (text, line 236)
 
@@ -20042,7 +20025,7 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): typing in chat
 
-- "[Living City] {why}"  (chat message, line 307)
+- "[Miscount] {why}"  (chat message, line 307)
 
 ## sv_livingcity_streetlife.lua (sv_livingcity_streetlife.lua)
 
@@ -20164,7 +20147,7 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): the game's physgun drop moment
 
-- "[Living City] Moved: the {kind} is saved where you put it."  (chat message, line 1112)
+- "[Miscount] Moved: the {kind} is saved where you put it."  (chat message, line 1112)
 
 > Note for you (not shown in game): part of: use vending
 
@@ -20427,18 +20410,17 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): Commands
 
-- "[Living City] No rebel or infestation zones placed."  (chat message, line 756)
-- "[Living City] {l}"  (chat message, line 757)
+- "[Miscount] No rebel or infestation zones placed."  (chat message, line 756)
 
 > Note for you (not shown in game): the console command lc_territory_grow
 
-- "[Living City] Usage: lc_territory_grow rebel\|infest"  (chat message, line 763)
-- "[Living City] Grew {kind} territory {or}{or}"  (text, line 765)
-- "[Living City] Couldn't grow: {why}"  (text, line 767)
+- "[Miscount] Usage: lc_territory_grow rebel\|infest"  (chat message, line 763)
+- "[Miscount] Grew {kind} territory {or}{or}"  (text, line 765)
+- "[Miscount] Couldn't grow: {why}"  (text, line 767)
 
 > Note for you (not shown in game): the console command lc_territory_reset
 
-- "[Living City] Took back {n} grown patch{or}. Only the zones you placed are left."  (chat message, line 778)
+- "[Miscount] Took back {n} grown patch{or}. Only the zones you placed are left."  (chat message, line 778)
 
 ## territory grows along the path nodes (sv_livingcity_territorypaths.lua)
 
@@ -21049,7 +21031,7 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 > Note for you (not shown in game): The editor panel
 
 - "Her voice"  (on-screen notice, line 166)
-- "[Living City] {text}"  (chat message, line 166)
+- "[Miscount] {text}"  (chat message, line 166)
 
 > Note for you (not shown in game): Speaks a line to the one who asked, whether lc_voice is on or not.
 
@@ -21080,7 +21062,7 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 - "Only the Resistance (Member and up) knows how to cut a vortigaunt's shackles."  (text, line 38)
 - "Look at a shackled vortigaunt, up close."  (text, line 42)
 - "Not with a Civil Protection unit watching."  (text, line 43)
-- "[Living City] Someone is working at your shackles."  (chat message, line 44)
+- "[Miscount] Someone is working at your shackles."  (chat message, line 44)
 - "Cutting the shackles..."  (progress bar, line 45)
 - "You stop."  (text, line 46)
 
@@ -21091,7 +21073,7 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: done
 
-- "[Living City] The shackles fall away. The vortessence is yours again: left click strikes, right click charges a vest (yours or a comrade's). The Combine will want you back."  (chat message, line 59)
+- "[Miscount] The shackles fall away. The vortessence is yours again: left click strikes, right click charges a vest (yours or a comrade's). The Combine will want you back."  (chat message, line 59)
 - "The shackles fall. The vortigaunt is free."  (chat message, line 60)
 - "freeing a vortigaunt"  (text, line 61)
 - "A vortigaunt has been freed. Welcome it."  (text, line 62)
@@ -21349,9 +21331,9 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): the console command lc_outbreak
 
-- "[Living City] No infestation zones placed."  (chat message, line 770)
-- "[Living City] Outbreak started."  (chat message, line 771)
-- "[Living City] Nowhere for them to break out to."  (chat message, line 771)
+- "[Miscount] No infestation zones placed."  (chat message, line 770)
+- "[Miscount] Outbreak started."  (chat message, line 771)
+- "[Miscount] Nowhere for them to break out to."  (chat message, line 771)
 
 > Note for you (not shown in game): Talk on the street What's happened in the city lately, as people heard it. Press E on a citizen and now and then they'll pass something on. Units mostly get nervous silence.
 
@@ -22441,7 +22423,7 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: report text
 
-- "Living City performance report (%s), %s"  (message, line 724)
+- "Miscount performance report (%s), %s"  (message, line 724)
 - "Measured for %d s%s. %d hooks timed. Hitch = a frame of %d ms or more."  (message, line 725)
 - "(still on)"  (message, line 725)
 - "Map {map}, {or} players, tick rate {or}"  (text, line 726)
@@ -22887,10 +22869,4 @@ Made from version c13b6bc. Admin-only console messages and log lines are left ou
 > Note for you (not shown in game): (only once you've lived through lc_chip_dreams of the city's dreams: sv_livingcity_bedtime.lua)
 
 - "A foil hat: sleep in it and it keeps the dream out about one night in three. "The physics is... complicated." Contraband"  (description, line 583)
-
-## shared.lua (shared.lua)
-
-`gamemodes/livingcity/gamemode/shared.lua`
-
-- "Living City"  (text, line 17)
 

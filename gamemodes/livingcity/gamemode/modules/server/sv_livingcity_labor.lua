@@ -352,7 +352,7 @@ local function TellStaff(ply)
     ply.lcLaborTold = true
     if LC.Notice then
         LC.Notice(ply, "info", "Labor Assignment", "This map has no Labor Assignment terminal, so new citizens are given Union work automatically and change jobs on their board (F4)."
-            .. " To make them walk to one, place \"Fixture: Labor Assignment\" with the Living City Editor.", 14)
+            .. " To make them walk to one, place \"Fixture: Labor Assignment\" with the Miscount Editor.", 14)
     end
 end
 LC.LaborTellStaff = TellStaff

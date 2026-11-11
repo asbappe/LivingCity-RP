@@ -800,8 +800,8 @@ end)
 -- The editor panel: the key, and a test
 ------------------------------------------------------------------------
 local function Tell(ply, kind, text)
-    if not IsValid(ply) then print("[Living City] " .. text) return end
-    if LC.Notice then LC.Notice(ply, kind, "The director", text, 8) else ply:ChatPrint("[Living City] " .. text) end
+    if not IsValid(ply) then print("[Miscount] " .. text) return end
+    if LC.Notice then LC.Notice(ply, kind, "The director", text, 8) else ply:ChatPrint("[Miscount] " .. text) end
 end
 
 function LC.BrainTest(ply)

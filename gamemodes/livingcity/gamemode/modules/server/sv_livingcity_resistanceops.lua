@@ -1028,7 +1028,7 @@ function LC.FreeStreetVort(v, by)
     if LC.QuestVortPeaceful then LC.QuestVortPeaceful(v, false) end
     v:EmitSound("npc/vort/vort_foot" .. math.random(1, 4) .. ".wav", 70)
     if IsValid(by) then
-        by:ChatPrint("[Living City] The collar falls. The vortigaunt looks at you a long moment, then heads for rebel ground.")
+        by:ChatPrint("[Miscount] The collar falls. The vortigaunt looks at you a long moment, then heads for rebel ground.")
         if LC.AddXP then LC.AddXP(by, 30, "freeing a vortigaunt") end
     end
     Radio("resistance", "A vortigaunt has been freed from the street crews. It's on its way to us. Welcome it.")

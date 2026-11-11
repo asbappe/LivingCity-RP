@@ -8,8 +8,8 @@
 AddCSLuaFile()
 
 SWEP.PrintName    = "Administrator's tablet"
-SWEP.Author       = "Living City"
-SWEP.Category     = "Living City"
+SWEP.Author       = "Miscount"
+SWEP.Category     = "Miscount"
 SWEP.Instructions = "Left click at someone: your bodyguard kills them. Right click: the office."
 SWEP.Spawnable    = false
 SWEP.AdminOnly    = true

@@ -3174,7 +3174,7 @@ function LC.ProtectWaitTick(now)
                 if IsValid(ply) and q and not q.done and q.tmpl and w.ids[q.tmpl.id] then
                     w.takenAt = now
                     for _, p in ipairs(Members(q)) do
-                        p:ChatPrint(string.format("[Living City] You have %d seconds to get there before it arrives.", LC.ProtectTakenSecs))
+                        p:ChatPrint(string.format("[Miscount] You have %d seconds to get there before it arrives.", LC.ProtectTakenSecs))
                     end
                     break
                 end
@@ -3292,7 +3292,7 @@ hook.Add("LivingCityOutbreak", "LivingCityDirectives", function()
 end)
 
 function LC.SendBoard(ply)
-    if not cvOn:GetBool() then return ply:ChatPrint("[Living City] Quests are turned off on this server.") end
+    if not cvOn:GetBool() then return ply:ChatPrint("[Miscount] Quests are turned off on this server.") end
     local list, f = LC.RefreshBoard(ply)
     local out = {}
     local mine = LC.QuestOf[ply]
@@ -3338,9 +3338,9 @@ end
 
 function LC.AcceptPosting(ply, pid)
     if not cvOn:GetBool() then return false end
-    if LC.QuestOf[ply] then ply:ChatPrint("[Living City] Finish or abandon your current job first.") return false end
+    if LC.QuestOf[ply] then ply:ChatPrint("[Miscount] Finish or abandon your current job first.") return false end
     if (ply.lcqNext or 0) > CurTime() then
-        ply:ChatPrint("[Living City] You have to wait before taking another job. Next job in " .. math.ceil(ply.lcqNext - CurTime()) .. "s.")
+        ply:ChatPrint("[Miscount] You have to wait before taking another job. Next job in " .. math.ceil(ply.lcqNext - CurTime()) .. "s.")
         return false
     end
     local f = LC.QuestFaction(ply)
@@ -3349,22 +3349,22 @@ function LC.AcceptPosting(ply, pid)
     if not posting and ply.lcStoryPostings then
         for _, p in pairs(ply.lcStoryPostings) do if p.id == pid then posting = p end end
     end
-    if not posting or posting.dead then ply:ChatPrint("[Living City] That job is no longer available.") return false end
+    if not posting or posting.dead then ply:ChatPrint("[Miscount] That job is no longer available.") return false end
     if posting.story and posting.owner ~= ply then return false end
     -- (a job for a certain hour, still on the board after it: the night shift at midday, the owner, 11 November)
     if posting.tmpl and posting.tmpl.recheck and posting.tmpl.available and not posting.q and not posting.tmpl.available(ply) then
-        ply:ChatPrint("[Living City] " .. (posting.tmpl.recheckWhy or "That job is no longer available."))
+        ply:ChatPrint("[Miscount] " .. (posting.tmpl.recheckWhy or "That job is no longer available."))
         return false
     end
     if LC.PlayerIsStalker and LC.PlayerIsStalker(ply) and posting.chain ~= "stalker" then
-        ply:ChatPrint("[Living City] Stalkers can only do stalker work. You can't take this job.")
+        ply:ChatPrint("[Miscount] Stalkers can only do stalker work. You can't take this job.")
         return false
     end
 
     if posting.q then
         if posting.story then return false end
         local q = posting.q
-        if #Members(q) >= math.max(cvSquad:GetInt(), posting.squad or 0) then ply:ChatPrint("[Living City] That job has enough people.") return false end
+        if #Members(q) >= math.max(cvSquad:GetInt(), posting.squad or 0) then ply:ChatPrint("[Miscount] That job has enough people.") return false end
         table.insert(q.members, ply)
         LC.QuestOf[ply] = q
         Narrate(q, ply:Nick() .. " has joined the job.")

@@ -41,7 +41,7 @@ local SF = LC.SafeFiles
 SF.noted = SF.noted or {} -- (each warning once: some files are read often)
 
 local function Log(level, msg)
-    if LC.Log then LC.Log(level, msg) else print("[Living City] " .. level .. ": " .. msg) end
+    if LC.Log then LC.Log(level, msg) else print("[Miscount] " .. level .. ": " .. msg) end
 end
 
 function LC.SafeTmpPath(path) return path .. ".tmp.txt" end

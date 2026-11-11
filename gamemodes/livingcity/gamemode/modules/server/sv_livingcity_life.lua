@@ -472,7 +472,7 @@ end
 local function Bob(ply)
     local sv = GetConVar("lc_view_bob")
     if sv and not sv:GetBool() then
-        ply:ChatPrint("[Living City] The camera sway is off for everyone on this server.")
+        ply:ChatPrint("[Miscount] The camera sway is off for everyone on this server.")
         return
     end
     ply:ConCommand("lc_bob_toggle")

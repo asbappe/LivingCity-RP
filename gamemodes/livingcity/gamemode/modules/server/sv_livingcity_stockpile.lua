@@ -167,6 +167,6 @@ concommand.Add("lc_stock", function(ply, _, args)
     if IsValid(ply) and not ply:IsAdmin() then return end
     local n = tonumber(args[1])
     if n then LC.StockAdd(n - LC.Stock(), "admin") end
-    local msg = string.format("[Living City] City stores: %d of %d rations (%s).", LC.Stock(), Max(), LC.StockLevel())
+    local msg = string.format("[Miscount] City stores: %d of %d rations (%s).", LC.Stock(), Max(), LC.StockLevel())
     if IsValid(ply) then ply:ChatPrint(msg) else print(msg) end
 end)

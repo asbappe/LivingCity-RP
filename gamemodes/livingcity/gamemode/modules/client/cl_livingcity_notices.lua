@@ -109,7 +109,7 @@ function LC_CL.SoundTrouble(path, why)
         if not file.Exists("sound/" .. path, "GAME") then why = "it isn't on this computer" else return end
     end
     soundWarned[path] = true
-    print("[Living City] Can't play sound/" .. path .. ": " .. why)
+    print("[Miscount] Can't play sound/" .. path .. ": " .. why)
     LC_CL.AddNotice("warn", "Sound missing", "Can't play " .. (string.match(path, "([^/]+)$") or path) .. ": " .. why ..
         ". Type lc_sound_check in the console to see why.", 12)
 end
@@ -124,7 +124,7 @@ local STOCK_LINES = {
 local SOUND_DIRS = { "livingcity/announce/overwatch", "livingcity/announce/administrator", "livingcity/announce/radio",
     "livingcity/overwatch", "livingcity/administrator", "livingcity/radio", "livingcity/endings" }
 concommand.Add("lc_sound_check", function()
-    local function Say(s) print("[Living City] " .. s) end
+    local function Say(s) print("[Miscount] " .. s) end
     local first, total = nil, 0
     for _, d in ipairs(SOUND_DIRS) do
         local n = 0

@@ -4241,7 +4241,7 @@ end
 -- For the admin
 ------------------------------------------------------------------------
 
-local function Reply(ply, m) if IsValid(ply) then ply:ChatPrint("[Living City] " .. m) else print("[Living City] " .. m) end end
+local function Reply(ply, m) if IsValid(ply) then ply:ChatPrint("[Miscount] " .. m) else print("[Miscount] " .. m) end end
 
 concommand.Add("lc_endings", function(ply)
     if IsValid(ply) and not ply:IsSuperAdmin() then return end

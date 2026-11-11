@@ -154,7 +154,7 @@ if SERVER then
 
     local function Enqueue(p, s, msg, data)
         if s.bytes + #data > N.QUEUE_MAX then
-            print("[Living City] Not sending " .. msg .. " to " .. tostring(p) .. ": too much is already waiting for them.")
+            print("[Miscount] Not sending " .. msg .. " to " .. tostring(p) .. ": too much is already waiting for them.")
             return
         end
         s.q[#s.q + 1] = { msg = msg, data = data }
@@ -259,7 +259,7 @@ if SERVER then
     timer.Create("LivingCityNetPump", 0.1, 0, function()
         if next(N.busy) == nil then return end
         local ok, err = pcall(N.PumpAll)
-        if not ok then print("[Living City] net pump: " .. tostring(err)) end
+        if not ok then print("[Miscount] net pump: " .. tostring(err)) end
     end)
 
     -- joining: big sends wait until the game has loaded (its receivers exist and it reads what it's sent)
@@ -295,7 +295,7 @@ if CLIENT then
         net.ReadData = function() return data end
         local ok, err = pcall(fn, #data * 8, nil)
         net.ReadUInt, net.ReadData = rU, rD
-        if not ok then print("[Living City] " .. msg .. ": " .. tostring(err)) end
+        if not ok then print("[Miscount] " .. msg .. ": " .. tostring(err)) end
         return ok
     end
 

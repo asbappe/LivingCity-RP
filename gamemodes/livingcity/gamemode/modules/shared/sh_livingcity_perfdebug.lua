@@ -721,7 +721,7 @@ end
 
 function P.ReportText(snap)
     local L = {}
-    L[#L + 1] = string.format("Living City performance report (%s), %s", snap.side or "?", os.date("%Y-%m-%d %H:%M:%S"))
+    L[#L + 1] = string.format("Miscount performance report (%s), %s", snap.side or "?", os.date("%Y-%m-%d %H:%M:%S"))
     L[#L + 1] = string.format("Measured for %d s%s. %d hooks timed. Hitch = a frame of %d ms or more.", snap.secs or 0, snap.on and " (still on)" or "", snap.hooksWrapped or 0, snap.spikeMs or 0)
     if snap.map then L[#L + 1] = "Map " .. snap.map .. ", " .. tostring(snap.playerCount or 0) .. " players, tick rate " .. tostring(snap.tickRate or "?") end
     L[#L + 1] = ""

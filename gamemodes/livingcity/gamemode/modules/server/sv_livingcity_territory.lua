@@ -753,18 +753,18 @@ local function Admin(ply) return not IsValid(ply) or ply:IsAdmin() end
 concommand.Add("lc_territory", function(ply)
     if not Admin(ply) then return end
     local lines = LC.TerritoryStatus()
-    if #lines == 0 then return Say(ply, "[Living City] No rebel or infestation zones placed.") end
-    for _, l in ipairs(lines) do Say(ply, "[Living City] " .. l) end
+    if #lines == 0 then return Say(ply, "[Miscount] No rebel or infestation zones placed.") end
+    for _, l in ipairs(lines) do Say(ply, "[Miscount] " .. l) end
 end)
 
 concommand.Add("lc_territory_grow", function(ply, _, args)
     if not Admin(ply) then return end
     local kind = string.lower(args[1] or "")
-    if not KINDS[kind] then return Say(ply, "[Living City] Usage: lc_territory_grow rebel|infest") end
+    if not KINDS[kind] then return Say(ply, "[Miscount] Usage: lc_territory_grow rebel|infest") end
     local z, why = LC.TerritoryGrowNow(kind)
-    Say(ply, z and ("[Living City] Grew " .. kind .. " territory " .. (z.where or "")
+    Say(ply, z and ("[Miscount] Grew " .. kind .. " territory " .. (z.where or "")
         .. (z.cells and " (along the path nodes)" or " (a round patch: no path nodes near it)"))
-        or ("[Living City] Couldn't grow: " .. tostring(why)))
+        or ("[Miscount] Couldn't grow: " .. tostring(why)))
 end)
 
 concommand.Add("lc_territory_reset", function(ply)
@@ -775,5 +775,5 @@ concommand.Add("lc_territory_reset", function(ply)
     end
     LC.TerritoryState = {}
     Changed()
-    Say(ply, "[Living City] Took back " .. n .. " grown patch" .. (n == 1 and "" or "es") .. ". Only the zones you placed are left.")
+    Say(ply, "[Miscount] Took back " .. n .. " grown patch" .. (n == 1 and "" or "es") .. ". Only the zones you placed are left.")
 end)

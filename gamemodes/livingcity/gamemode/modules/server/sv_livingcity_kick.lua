@@ -227,7 +227,7 @@ function LC.KickDoor(ply, door)
         if LC.BlowDoor(ply, door, power, dir) then
             if rental and rental.locked and LC.HasRentKey then
                 for _, p in ipairs(player.GetAll()) do
-                    if LC.HasRentKey(p, rental) then p:ChatPrint("[Living City] The Overwatch kicked the door of " .. (rental.ownerName or "the") .. "'s apartment off its hinges.") end
+                    if LC.HasRentKey(p, rental) then p:ChatPrint("[Miscount] The Overwatch kicked the door of " .. (rental.ownerName or "the") .. "'s apartment off its hinges.") end
                 end
             end
             return true
@@ -263,7 +263,7 @@ function LC.KickDoor(ply, door)
     if rental and rental.locked then
         for _, p in ipairs(player.GetAll()) do
             if LC.HasRentKey and LC.HasRentKey(p, rental) then
-                p:ChatPrint("[Living City] Civil Protection kicked in the door of " .. (rental.ownerName or "the") .. "'s apartment.")
+                p:ChatPrint("[Miscount] Civil Protection kicked in the door of " .. (rental.ownerName or "the") .. "'s apartment.")
             end
         end
     end

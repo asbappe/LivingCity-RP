@@ -1006,7 +1006,7 @@ end
 function LC.DreamStart(id, by, vote, also, force)
     if not cvOn:GetBool() then return false, "Dreams are off (lc_dreams 0)." end
     local pt = LC.DreamPoint()
-    if not pt then return false, "There's no dream point on this map: place one with the Living City Editor (Point: dream)." end
+    if not pt then return false, "There's no dream point on this map: place one with the Miscount Editor (Point: dream)." end
     local game = IsGame(id)
     if not (LC.Endings and LC.Endings[id]) and not game then return false, "No such ending." end
     if LC.EndingBusy and LC.EndingBusy() then return false, "An ending is already under way." end
@@ -1625,7 +1625,7 @@ net.Receive("lc_dream_act", function(_, p)
     SendStatus(p)
 end)
 
-local function Reply(p, m) if IsValid(p) then p:ChatPrint("[Living City] " .. m) else print("[Living City] " .. m) end end
+local function Reply(p, m) if IsValid(p) then p:ChatPrint("[Miscount] " .. m) else print("[Miscount] " .. m) end end
 concommand.Add("lc_dream_restore", function(p, _, args)
     if IsValid(p) and not p:IsAdmin() then return end
     local ok, why = LC.DreamForceRestore(FindPlayer(args[1]))

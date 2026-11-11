@@ -9,7 +9,7 @@ AddCSLuaFile()
 ENT.Type = "anim"
 ENT.Base = "base_gmodentity"
 ENT.PrintName = "Combine barricade"
-ENT.Author = "Living City"
+ENT.Author = "Miscount"
 ENT.Spawnable = false
 
 -- The Combine's own walls, then anything that will stand in for them.

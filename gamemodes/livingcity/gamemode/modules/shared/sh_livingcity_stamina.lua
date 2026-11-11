@@ -114,11 +114,11 @@ if CLIENT then
     end
     timer.Create("LivingCityBreath", 0.25, 0, function()
         local ok, err = pcall(LCS.BreathTick, CurTime())
-        if not ok then print("[Living City] panting: " .. tostring(err)) end
+        if not ok then print("[Miscount] panting: " .. tostring(err)) end
     end)
     timer.Create("LivingCityBreathWatchdog", 1, 0, function()
         local ok, err = pcall(LCS.BreathWatchdog, CurTime())
-        if not ok then print("[Living City] panting watchdog: " .. tostring(err)) end
+        if not ok then print("[Miscount] panting watchdog: " .. tostring(err)) end
     end)
     hook.Add("ShutDown", "LivingCityBreath", function() for ply in pairs(pants) do StopPant(ply) end end)
     return

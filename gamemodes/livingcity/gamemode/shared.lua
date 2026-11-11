@@ -14,8 +14,8 @@
 
 DeriveGamemode("sandbox")
 
-GM.Name = "Living City"
-GM.Author = "Living City"
+GM.Name = "Miscount"
+GM.Author = "Miscount"
 GM.Email = ""
 GM.Website = ""
 GM.TeamBased = false

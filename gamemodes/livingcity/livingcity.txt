@@ -1,7 +1,7 @@
 "livingcity"
 {
 	"base"			"sandbox"
-	"title"			"Living City"
+	"title"			"Miscount"
 	"maps"			"^rp_|^d1_trainstation|^d3_c17|^gm_city"
 	"category"		"rp"
 	"menusystem"	"1"

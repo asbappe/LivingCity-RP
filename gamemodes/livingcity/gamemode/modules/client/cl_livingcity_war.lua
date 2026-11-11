@@ -154,7 +154,7 @@ local function LambdaMats()
         local m = Material(name)
         if m and not m:IsError() then lambdaMats[#lambdaMats + 1] = m end
     end
-    if #lambdaMats == 0 then print("[Living City] This install has no lambda spray decals; graffiti is drawn instead.") end
+    if #lambdaMats == 0 then print("[Miscount] This install has no lambda spray decals; graffiti is drawn instead.") end
     return lambdaMats
 end
 LC_CL.LambdaMats = LambdaMats

@@ -56,7 +56,7 @@ end
 
 -- Into a dream now, alone and awake. True and the dream, or false and why not.
 function LC.DreamTest(p, id)
-    if not CanTest(p) then return false, "Only those who may use the Living City Editor can test dreams." end
+    if not CanTest(p) then return false, "Only those who may use the Miscount Editor can test dreams." end
     id = string.lower(tostring(id or ""))
     if not (LC.DreamKnown and LC.DreamKnown(id)) then return false, "No such dream." end
     if LC.DreamActive then return false, "A dream is already under way. Wait for it to end, or wake everyone (C > Help > Dreams)." end
@@ -105,7 +105,7 @@ net.Receive("lc_dream_test", function(_, p)
         if not ok then Notice(p, "warn", "Dream test", why, 5) end
         return
     end
-    if not CanTest(p) then Notice(p, "warn", "Dream test", "Only those who may use the Living City Editor can test dreams.", 5) return end
+    if not CanTest(p) then Notice(p, "warn", "Dream test", "Only those who may use the Miscount Editor can test dreams.", 5) return end
     if what == "list" then SendList(p) return end
     if what == "test" then
         local ok, why = LC.DreamTest(p, arg)

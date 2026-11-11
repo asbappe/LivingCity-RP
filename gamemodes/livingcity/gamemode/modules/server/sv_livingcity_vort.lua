@@ -41,7 +41,7 @@ function LC.StartUnshackle(ply)
     local vort = tr and tr.Entity
     if not (Shackled(vort) or StreetSlave(vort)) or vort:GetPos():DistToSqr(ply:GetPos()) > 120 * 120 then return false, "Look at a shackled vortigaunt, up close." end
     if LC.SeenBySecurity and LC.SeenBySecurity(ply, 900) then return false, "Not with a Civil Protection unit watching." end
-    if vort:IsPlayer() then vort:ChatPrint("[Living City] Someone is working at your shackles.") end
+    if vort:IsPlayer() then vort:ChatPrint("[Miscount] Someone is working at your shackles.") end
     return LC.StartTask(ply, 10, "Cutting the shackles...", {
         maxMove = 40, cancelText = "You stop.",
         done = function(p)
@@ -56,7 +56,7 @@ function LC.StartUnshackle(ply)
                 return p:ChatPrint("A Civil Protection unit is watching. Not now.")
             end
             LC.SetFaction(vort, "resistance", "vortigaunt", true)
-            vort:ChatPrint("[Living City] The shackles fall away. The vortessence is yours again: left click strikes, right click charges a vest (yours or a comrade's). The Combine will want you back.")
+            vort:ChatPrint("[Miscount] The shackles fall away. The vortessence is yours again: left click strikes, right click charges a vest (yours or a comrade's). The Combine will want you back.")
             p:ChatPrint("The shackles fall. The vortigaunt is free.")
             if LC.AddXP then LC.AddXP(p, 30, "freeing a vortigaunt") end
             if LC.RadioNotice then LC.RadioNotice("resistance", "A vortigaunt has been freed. Welcome it.") end

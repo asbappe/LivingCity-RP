@@ -7,7 +7,7 @@ AddCSLuaFile()
 ENT.Type = "anim"
 ENT.Base = "base_anim"
 ENT.PrintName = "Weed"
-ENT.Author = "Living City"
+ENT.Author = "Miscount"
 ENT.Spawnable = false
 
 function ENT:Initialize()

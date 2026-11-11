@@ -9,8 +9,8 @@
 AddCSLuaFile()
 
 SWEP.PrintName    = "Microphone"
-SWEP.Author       = "Living City"
-SWEP.Category     = "Living City"
+SWEP.Author       = "Miscount"
+SWEP.Category     = "Miscount"
 SWEP.Purpose      = "The city's voice."
 SWEP.Instructions = "Left click: go live over every loudspeaker and screen (up to a minute; once every fifteen). Hold your voice key and speak, or type."
 SWEP.Spawnable    = true

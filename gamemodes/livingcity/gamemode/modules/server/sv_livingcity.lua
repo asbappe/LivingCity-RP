@@ -45,11 +45,11 @@ function LC.ZombieTarget()
     local grown = LC.GrownCount and LC.GrownCount("infest") or 0
     return math.min(cvZombies:GetInt() + grown, math.max(cvZombies:GetInt(), cvZomMax:GetInt()))
 end
-local cvAutostart = CreateConVar("lc_autostart", "0", FLAGS, "Start Living City automatically on map load")
+local cvAutostart = CreateConVar("lc_autostart", "0", FLAGS, "Start Miscount automatically on map load")
 local cvSpawnDist = CreateConVar("lc_spawn_mindist", "900", FLAGS, "Random spawns happen at least this far from players")
 local cvLifetime  = CreateConVar("lc_citizen_lifetime", "600", FLAGS, "Average seconds a citizen stays before going home (0 = forever)")
 local cvArrestChance = CreateConVar("lc_npc_arrest_chance", "8", FLAGS, "Percent chance an inspection ends with the citizen being taken to a cell")
-local cvBudget    = CreateConVar("lc_npc_budget", "100", FLAGS, "Hard cap on Living City NPCs, whatever the individual targets say")
+local cvBudget    = CreateConVar("lc_npc_budget", "100", FLAGS, "Hard cap on Miscount NPCs, whatever the individual targets say")
 local cvLodDist   = CreateConVar("lc_lod_distance", "3500", FLAGS, "NPCs farther than this from every player think less often")
 local cvRebelPursuit = CreateConVar("lc_rebel_pursuit", "0", FLAGS, "Security NPCs chase people into rebel zones")
 
@@ -91,12 +91,12 @@ function LC.Log(level, msg)
     buf[#buf + 1] = string.format("[%s %7.1f] %-5s %s", os.date("%H:%M:%S"), CurTime(), level, tostring(msg))
     if #buf > 300 then table.remove(buf, 1) end
     local dbg = GetConVar("lc_debug")
-    if level == "error" or (dbg and dbg:GetBool()) then print("[Living City] " .. level .. ": " .. tostring(msg)) end
+    if level == "error" or (dbg and dbg:GetBool()) then print("[Miscount] " .. level .. ": " .. tostring(msg)) end
 end
 
 function LC.Error(where, err)
     LC.Log("error", where .. ": " .. tostring(err))
-    ErrorNoHalt("[Living City] " .. where .. ": " .. tostring(err) .. "\n")
+    ErrorNoHalt("[Miscount] " .. where .. ": " .. tostring(err) .. "\n")
 end
 
 -- Is this sound file on the server's disk (and so, very likely, the
@@ -193,7 +193,7 @@ end
 local Face, FaceYaw = LC.Face, LC.FaceYaw
 
 local function Say(ply, msg)
-    if IsValid(ply) then ply:ChatPrint("[Living City] " .. msg) else print("[Living City] " .. msg) end
+    if IsValid(ply) then ply:ChatPrint("[Miscount] " .. msg) else print("[Miscount] " .. msg) end
 end
 LC.Say = Say
 
@@ -2632,7 +2632,7 @@ function LC.Start(ply)
     BuildFallback()
     local nodes = LC.NodeCount and LC.NodeCount() or 0
     if #LC.Fallback == 0 and #LC.Points == 0 and nodes == 0 then
-        Say(ply, "This map has no AI nodes or navmesh and nothing placed yet. Lay some path nodes or points with the Living City Editor, then start again.")
+        Say(ply, "This map has no AI nodes or navmesh and nothing placed yet. Lay some path nodes or points with the Miscount Editor, then start again.")
         return false
     end
     LC.RebuildLines()
@@ -2656,7 +2656,7 @@ function LC.Stop(ply)
     LC.Occupied = {}
     hook.Run("LivingCityStopped")
     for _, line in pairs(LC.Lines) do line.q = {} end
-    Say(ply, "Stopped and removed all Living City NPCs.")
+    Say(ply, "Stopped and removed all Miscount NPCs.")
 end
 
 ------------------------------------------------------------------------

@@ -211,7 +211,7 @@ concommand.Add("lc_perfdebug", function(ply, _, args)
         local text = P.ReportText(P.ServerSnapshot())
         if IsValid(ply) then
             for line in string.gmatch(text, "[^\n]+") do ply:PrintMessage(HUD_PRINTCONSOLE, line) end
-            Say("[Living City] Performance report printed to your console.")
+            Say("[Miscount] Performance report printed to your console.")
         else
             print(text)
         end
@@ -219,10 +219,10 @@ concommand.Add("lc_perfdebug", function(ply, _, args)
     end
     if a == "on" or a == "off" or a == "reset" or a == "save" then
         local done = P.Command(ply, a)
-        if a == "save" and P.lastFile then Say("[Living City] Report saved: " .. P.lastFile) end
-        if not done and (a == "on" or a == "off") then Say("[Living City] The performance debugger is already " .. a .. ".") end
+        if a == "save" and P.lastFile then Say("[Miscount] Report saved: " .. P.lastFile) end
+        if not done and (a == "on" or a == "off") then Say("[Miscount] The performance debugger is already " .. a .. ".") end
         return
     end
-    Say("[Living City] Performance debugger: " .. (P.on and ("on, started by " .. tostring(P.startedBy)) or "off")
+    Say("[Miscount] Performance debugger: " .. (P.on and ("on, started by " .. tostring(P.startedBy)) or "off")
         .. ". lc_perfdebug on | off | reset | save | report (or C > Help > Performance debugger).")
 end)

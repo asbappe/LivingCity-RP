@@ -11,8 +11,8 @@
 AddCSLuaFile()
 
 SWEP.PrintName    = "Weedkiller sprayer"
-SWEP.Author       = "Living City"
-SWEP.Category     = "Living City"
+SWEP.Author       = "Miscount"
+SWEP.Category     = "Miscount"
 SWEP.Instructions = "Hold left click on a weed or a glowing infestation growth to spray it dead."
 SWEP.Spawnable    = true
 SWEP.AdminOnly    = true

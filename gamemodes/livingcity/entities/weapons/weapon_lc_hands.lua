@@ -10,8 +10,8 @@
 AddCSLuaFile()
 
 SWEP.PrintName    = "Hands"
-SWEP.Author       = "Living City"
-SWEP.Category     = "Living City"
+SWEP.Author       = "Miscount"
+SWEP.Category     = "Miscount"
 SWEP.Purpose      = "Keep your hands to yourself."
 SWEP.Instructions = "Holstered. R: raise your fists (or draw what you had). Right click an apartment door to rent it, or lock and unlock yours. Bind a key to lc_holster to switch back and forth."
 SWEP.Spawnable    = true

@@ -35,7 +35,7 @@ concommand.Add("lc_bob_toggle", function()
     local on = not cvMine:GetBool()
     RunConsoleCommand("lc_my_view_bob", on and "1" or "0")
     if chat and chat.AddText then
-        chat.AddText(ACCENT, "[Living City] ", INK, on and "The camera sways with your steps again. (!bob keeps it still.)"
+        chat.AddText(ACCENT, "[Miscount] ", INK, on and "The camera sways with your steps again. (!bob keeps it still.)"
             or "The camera holds still now. (!bob brings the sway back.)")
     end
 end)
@@ -71,7 +71,7 @@ function LC_CL.CalcView(ply, view)
         if not ok then
             broken[m.name] = true
             sorted = nil
-            ErrorNoHalt("[Living City] camera: '" .. m.name .. "' failed and is off until you rejoin: " .. tostring(err) .. "\n")
+            ErrorNoHalt("[Miscount] camera: '" .. m.name .. "' failed and is off until you rejoin: " .. tostring(err) .. "\n")
         end
     end
     return view

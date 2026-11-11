@@ -9,7 +9,7 @@
 AddCSLuaFile()
 
 SWEP.PrintName = "Grenades"
-SWEP.Author = "Living City"
+SWEP.Author = "Miscount"
 SWEP.Instructions = "Left click: throw. R: switch between what you're carrying (smoke, flashbang, chlorine, poison gas, firebomb)."
 SWEP.Spawnable = false
 SWEP.Slot = 4

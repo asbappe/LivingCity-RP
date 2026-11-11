@@ -9,8 +9,8 @@
 AddCSLuaFile()
 
 SWEP.PrintName    = "Arrest Baton"
-SWEP.Author       = "Living City"
-SWEP.Category     = "Living City"
+SWEP.Author       = "Miscount"
+SWEP.Category     = "Miscount"
 SWEP.Purpose      = "Keep the peace."
 SWEP.Instructions = "Primary: strike. Secondary: arrest. Reload: search someone, or release a prisoner."
 SWEP.Spawnable    = true
@@ -45,7 +45,7 @@ local function MeleeTrace(owner)
     return tr
 end
 
-local function Tell(ply, msg) ply:ChatPrint("[Living City] " .. msg) end
+local function Tell(ply, msg) ply:ChatPrint("[Miscount] " .. msg) end
 
 function SWEP:PrimaryAttack()
     local owner = self:GetOwner()

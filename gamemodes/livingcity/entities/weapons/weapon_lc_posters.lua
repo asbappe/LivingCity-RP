@@ -12,8 +12,8 @@
 AddCSLuaFile()
 
 SWEP.PrintName    = "Poster roll"
-SWEP.Author       = "Living City"
-SWEP.Category     = "Living City"
+SWEP.Author       = "Miscount"
+SWEP.Category     = "Miscount"
 SWEP.Purpose      = "The city's walls."
 SWEP.Instructions = "Left click: hang the poster on the wall in front of you. Right click: take a poster down. Reload: choose another poster."
 SWEP.Spawnable    = true

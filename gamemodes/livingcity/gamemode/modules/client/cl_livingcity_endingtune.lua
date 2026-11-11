@@ -383,7 +383,7 @@ end
 LC_CL.EndingSameValue = SameValue
 
 local function Changes()
-    local lines = { "Living City: ending tuning, from the Endings menu" }
+    local lines = { "Miscount: ending tuning, from the Endings menu" }
     if info and info.settings then
         local any = false
         for g, list in pairs(info.settings) do

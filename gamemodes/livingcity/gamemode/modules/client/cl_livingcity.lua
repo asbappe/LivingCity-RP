@@ -72,7 +72,7 @@ function LC_CL.DrawLens(w, h, tint, edge, line)
     end
 end
 
-local cvShow  = CreateClientConVar("lc_show", "0", true, false, "Always show the Living City layout")
+local cvShow  = CreateClientConVar("lc_show", "0", true, false, "Always show the Miscount layout")
 local cvDebug = CreateClientConVar("lc_show_npcs", "1", true, false, "Show what the NPC you're looking at is doing, in the editor overlay")
 local cvAllNpcs = CreateClientConVar("lc_show_all_npcs", "0", true, false, "Show every nearby NPC's state and destination (cluttered)")
 local cvFill  = CreateClientConVar("lc_zone_fill", "1", true, false, "Shade zones on the ground in the editor")
@@ -986,11 +986,11 @@ net.Receive("lc_report", function()
     local t = ReadCompressed() or {}
     local text = t.text or "(empty report)"
     SetClipboardText(text)
-    chat.AddText(Color(120, 200, 255), "[Living City] ", color_white, "Debug report copied to your clipboard. Paste it to Claude. Also saved to " .. tostring(t.file))
+    chat.AddText(Color(120, 200, 255), "[Miscount] ", color_white, "Debug report copied to your clipboard. Paste it to Claude. Also saved to " .. tostring(t.file))
 
     local f = vgui.Create("DFrame")
     if LC_CL.SetTheme then LC_CL.SetTheme(f, "staff") end
-    f:SetTitle("Living City debug report")
+    f:SetTitle("Miscount debug report")
     f:SetSize(math.min(ScrW() - 80, 900), math.min(ScrH() - 80, 640))
     f:Center()
     f:MakePopup()

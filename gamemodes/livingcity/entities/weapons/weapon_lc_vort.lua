@@ -10,8 +10,8 @@
 AddCSLuaFile()
 
 SWEP.PrintName    = "Vortessence"
-SWEP.Author       = "Living City"
-SWEP.Category     = "Living City"
+SWEP.Author       = "Miscount"
+SWEP.Category     = "Miscount"
 SWEP.Instructions = "Primary: a bolt of vortessence (it shorts out power banks, forcefields and turrets too). Secondary: charge a vest, or mend another vortigaunt (a second to gather it). (Shackled: the collar holds it in.)"
 SWEP.Spawnable    = true
 SWEP.AdminOnly    = true

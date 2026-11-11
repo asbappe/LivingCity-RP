@@ -41,8 +41,8 @@ timer.Create("LivingCitySmallServer", 15, 0, function()
     SetGlobal2Bool("lc_small_server", now)
     if was ~= nil and now ~= was then
         for _, p in ipairs(player.GetAll()) do
-            p:ChatPrint(now and "[Living City] A quiet night in the city: with so few about, the city's own people carry more of it. Events and rebel operations come more often."
-                or "[Living City] The city's busy again: back to its usual pace.")
+            p:ChatPrint(now and "[Miscount] A quiet night in the city: with so few about, the city's own people carry more of it. Events and rebel operations come more often."
+                or "[Miscount] The city's busy again: back to its usual pace.")
         end
     end
     was = now

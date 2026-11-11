@@ -6,7 +6,7 @@ AddCSLuaFile()
 ENT.Type = "anim"
 ENT.Base = "base_gmodentity"
 ENT.PrintName = "Linked scanner"
-ENT.Author = "Living City"
+ENT.Author = "Miscount"
 ENT.Spawnable = false
 ENT.RenderGroup = RENDERGROUP_BOTH -- the model, and the red glow of its eye
 

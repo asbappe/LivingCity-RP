@@ -198,7 +198,7 @@ function LC.Soil(ply)
     Notice(ply, "warn", "You couldn't hold it", "You've soiled yourself. A toilet, a wash (a bathtub or shower) and clean clothes, or people will keep their distance (and you may make them ill).", 10)
     for _, p in ipairs(player.GetAll()) do
         if p ~= ply and p:GetPos():DistToSqr(ply:GetPos()) < 500 * 500 then
-            p:ChatPrint("[Living City] Someone nearby has soiled themselves. The smell reaches you a moment later.")
+            p:ChatPrint("[Miscount] Someone nearby has soiled themselves. The smell reaches you a moment later.")
         end
     end
     if LC.Bump then LC.Bump(ply, "soiled") end
@@ -248,7 +248,7 @@ function LC.UseToilet(ply)
             end
             if p:GetNW2Bool("lc_soiled", false) then
                 local left = p:GetNW2String("lc_soil_need", "")
-                if left ~= "" then p:ChatPrint("[Living City] Still to do: " .. string.gsub(string.gsub(left, "wash", "a wash (bathtub or shower)"), "clothes", "clean clothes") .. ".") end
+                if left ~= "" then p:ChatPrint("[Miscount] Still to do: " .. string.gsub(string.gsub(left, "wash", "a wash (bathtub or shower)"), "clothes", "clean clothes") .. ".") end
             end
         end,
     })
@@ -355,7 +355,7 @@ local function Shun(ply, now)
         if p ~= ply and p:Alive() and p:GetPos():DistToSqr(pos) < 150 * 150 then
             if (p.lcSmelled or 0) < now then
                 p.lcSmelled = now + 60
-                p:ChatPrint("[Living City] Someone near you reeks. Flies, and worse. You'd step back if you were sensible.")
+                p:ChatPrint("[Miscount] Someone near you reeks. Flies, and worse. You'd step back if you were sensible.")
             end
             if math.random() < cvSpread:GetFloat() and LC.Infect and LC.HasParasites and not LC.HasParasites(p) then LC.Infect(p) end
         end

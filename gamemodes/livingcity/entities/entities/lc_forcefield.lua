@@ -14,7 +14,7 @@ AddCSLuaFile()
 ENT.Type = "anim"
 ENT.Base = "base_gmodentity"
 ENT.PrintName = "Combine forcefield"
-ENT.Author = "Living City"
+ENT.Author = "Miscount"
 ENT.Spawnable = false
 ENT.RenderGroup = RENDERGROUP_TRANSLUCENT
 

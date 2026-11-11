@@ -238,10 +238,10 @@ function LC.GiveKey(ply, name, give)
     r.keys = r.keys or {}
     if give then
         r.keys[OwnerKey(target)] = OwnerName(target)
-        target:ChatPrint("[Living City] " .. OwnerName(ply) .. " gave you a key to their apartment.")
+        target:ChatPrint("[Miscount] " .. OwnerName(ply) .. " gave you a key to their apartment.")
     else
         r.keys[OwnerKey(target)] = nil
-        target:ChatPrint("[Living City] " .. OwnerName(ply) .. " took back the key to their apartment.")
+        target:ChatPrint("[Miscount] " .. OwnerName(ply) .. " took back the key to their apartment.")
     end
     Save()
     return true, give and ("You gave " .. OwnerName(target) .. " a key.") or ("You took " .. OwnerName(target) .. "'s key back.")
@@ -292,7 +292,7 @@ function LC.RentDoorUse(ply, door)
         door:EmitSound("doors/door_locked2.wav", 60)
         if (ply.lcRentLockedSaid or 0) < CurTime() then
             ply.lcRentLockedSaid = CurTime() + 4
-            ply:ChatPrint("[Living City] It's locked. Unlock it first: right click it with your hands out (or !unlock).")
+            ply:ChatPrint("[Miscount] It's locked. Unlock it first: right click it with your hands out (or !unlock).")
         end
         return false
     end
@@ -309,7 +309,7 @@ function LC.RentDoorUse(ply, door)
                 LC.Relock[door] = true
                 door:EmitSound("physics/wood/wood_crate_break3.wav", 80)
                 for _, q in ipairs(player.GetAll()) do
-                    if HasKey(q, r) then q:ChatPrint("[Living City] Civil Protection forced the door of " .. (r.ownerName or "the") .. "'s apartment.") end
+                    if HasKey(q, r) then q:ChatPrint("[Miscount] Civil Protection forced the door of " .. (r.ownerName or "the") .. "'s apartment.") end
                 end
             end,
         })
@@ -333,13 +333,13 @@ timer.Create("LivingCityRent", 30, 0, function()
             changed = true
             EachDoor(r, main, function(d) LC.ApplyRentDoor(d) end)
             for _, p in ipairs(player.GetAll()) do
-                if OwnerKey(p) == r.owner then p:ChatPrint("[Living City] Your rent ran out. The apartment isn't yours any more.") end
+                if OwnerKey(p) == r.owner then p:ChatPrint("[Miscount] Your rent ran out. The apartment isn't yours any more.") end
             end
         elseif not r.warned and r.untilT - now < 600 then
             r.warned = true
             changed = true
             for _, p in ipairs(player.GetAll()) do
-                if OwnerKey(p) == r.owner then p:ChatPrint("[Living City] Your rent runs out in 10 minutes. Look at the door, F1 > Rent / lock this door to pay more.") end
+                if OwnerKey(p) == r.owner then p:ChatPrint("[Miscount] Your rent runs out in 10 minutes. Look at the door, F1 > Rent / lock this door to pay more.") end
             end
         end
     end

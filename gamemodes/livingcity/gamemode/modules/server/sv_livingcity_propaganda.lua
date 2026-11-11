@@ -673,6 +673,6 @@ end)
 concommand.Add("lc_breencast", function(ply)
     if IsValid(ply) and not ply:IsSuperAdmin() then return end
     local ok, why = LC.StartNPCBroadcast()
-    local msg = ok and "[Living City] " .. LC.AdministratorName() .. " is on air." or ("[Living City] " .. tostring(why))
+    local msg = ok and "[Miscount] " .. LC.AdministratorName() .. " is on air." or ("[Miscount] " .. tostring(why))
     if IsValid(ply) then ply:ChatPrint(msg) else print(msg) end
 end)

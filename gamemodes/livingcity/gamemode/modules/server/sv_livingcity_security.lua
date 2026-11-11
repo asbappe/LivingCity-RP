@@ -99,8 +99,8 @@ end
 
 local function StuckCommand(ply)
     local ok, why = LC.Unstick(ply)
-    if ok then ply:ChatPrint("[Living City] You pull yourself out and brush yourself off.")
-    else ply:ChatPrint("[Living City] " .. tostring(why)) end
+    if ok then ply:ChatPrint("[Miscount] You pull yourself out and brush yourself off.")
+    else ply:ChatPrint("[Miscount] " .. tostring(why)) end
 end
 concommand.Add("lc_stuck", function(ply) if IsValid(ply) then StuckCommand(ply) end end)
 hook.Add("PlayerSay", "LivingCityStuck", function(ply, text)

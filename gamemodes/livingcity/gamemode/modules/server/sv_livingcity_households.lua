@@ -114,9 +114,9 @@ function LC.HouseholdInvite(head, target)
     end
     target.lcHouseInvite = { from = head, at = CurTime() }
     target:SetNW2String("lc_house_invite", Name(head))
-    target:ChatPrint("[Living City] " .. Name(head) .. " asks you to join their household. F2 > Me (More) > My household to accept.")
+    target:ChatPrint("[Miscount] " .. Name(head) .. " asks you to join their household. F2 > Me (More) > My household to accept.")
     if LC.Notice then LC.Notice(target, "info", "A household", Name(head) .. " asks you to join their household: the same block, shared crates, keys. F2 > Me (More) > My household to accept.", 10) end
-    head:ChatPrint("[Living City] You've asked " .. Name(target) .. " to join your household.")
+    head:ChatPrint("[Miscount] You've asked " .. Name(target) .. " to join your household.")
     return true
 end
 
@@ -127,7 +127,7 @@ function LC.HouseholdAccept(ply, yes)
     if not inv or CurTime() - inv.at > INVITE_SECS or not IsValid(inv.from) then return false, "There's no invitation waiting." end
     local head = inv.from
     if not yes then
-        head:ChatPrint("[Living City] " .. Name(ply) .. " declined your invitation.")
+        head:ChatPrint("[Miscount] " .. Name(ply) .. " declined your invitation.")
         return true
     end
     if LC.HouseholdOf(ply) then return false, "You're in a household already." end
@@ -143,7 +143,7 @@ function LC.HouseholdAccept(ply, yes)
     SyncAll()
     for cid in pairs(h.members) do
         local o = ByCID(cid)
-        if IsValid(o) then o:ChatPrint("[Living City] " .. Name(ply) .. " has joined " .. h.name .. ".") end
+        if IsValid(o) then o:ChatPrint("[Miscount] " .. Name(ply) .. " has joined " .. h.name .. ".") end
     end
     hook.Run("LivingCityHouseholdJoined", ply, h)
     return true
@@ -168,7 +168,7 @@ function LC.HouseholdLeave(ply)
     Save()
     SyncAll()
     ply:SetNW2String("lc_household", "")
-    ply:ChatPrint("[Living City] You've left " .. name .. ".")
+    ply:ChatPrint("[Miscount] You've left " .. name .. ".")
     return true
 end
 
@@ -181,8 +181,8 @@ function LC.HouseholdSendAway(head, name)
             Save()
             SyncAll()
             local o = ByCID(cid)
-            if IsValid(o) then o:ChatPrint("[Living City] You're no longer part of " .. h.name .. ".") o:SetNW2String("lc_household", "") end
-            head:ChatPrint("[Living City] " .. n .. " is no longer part of the household.")
+            if IsValid(o) then o:ChatPrint("[Miscount] You're no longer part of " .. h.name .. ".") o:SetNW2String("lc_household", "") end
+            head:ChatPrint("[Miscount] " .. n .. " is no longer part of the household.")
             return true
         end
     end
@@ -229,6 +229,6 @@ hook.Add("PlayerSay", "LivingCityHouseholds", function(ply, text)
     elseif cmd == "housename" then ok, why = LC.HouseholdRename(ply, rest)
     elseif cmd == "housesendaway" then ok, why = LC.HouseholdSendAway(ply, rest)
     else return end
-    if not ok and why then ply:ChatPrint("[Living City] " .. why) end
+    if not ok and why then ply:ChatPrint("[Miscount] " .. why) end
     return ""
 end)

@@ -68,12 +68,12 @@ concommand.Add("lc_profile", function(ply, _, args)
     local function Say(msg) if IsValid(ply) then ply:ChatPrint(msg) else print(msg) end end
     if args[1] == "reset" then
         LC.TimerPerf = {}
-        return Say("[Living City] Timer timings cleared.")
+        return Say("[Miscount] Timer timings cleared.")
     end
     local list = {}
     for id, p in pairs(LC.TimerPerf) do list[#list + 1] = { id = id, p = p } end
     table.sort(list, function(a, b) return a.p.total > b.p.total end)
-    Say("[Living City] Costliest timers (total ms, per call average, worst, calls):")
+    Say("[Miscount] Costliest timers (total ms, per call average, worst, calls):")
     for i = 1, math.min(12, #list) do
         local e = list[i]
         Say(string.format("  %-34s %8.1f total  %6.2f avg  %6.2f worst  %d calls", e.id, e.p.total * 1000,

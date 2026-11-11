@@ -11,7 +11,7 @@ AddCSLuaFile()
 ENT.Type = "anim"
 ENT.Base = "base_anim"
 ENT.PrintName = "Energizer"
-ENT.Author = "Living City"
+ENT.Author = "Miscount"
 ENT.Spawnable = false
 ENT.RenderGroup = RENDERGROUP_BOTH
 

@@ -709,11 +709,11 @@ end)
 concommand.Add("lc_event", function(ply, _, args)
     if not LC.CanEdit(ply) then return end
     local name = string.lower(args[1] or "")
-    if not LC.Running then return Say(ply, "[Living City] Start the city first.") end
+    if not LC.Running then return Say(ply, "[Miscount] Start the city first.") end
     if not LC.StartEvent(name, args[2]) then
-        return Say(ply, "[Living City] Events: rations, sweep, curfew, lockdown, raid, supply, jog, drill, parade (those three need their points placed). Usage: lc_event curfew 5")
+        return Say(ply, "[Miscount] Events: rations, sweep, curfew, lockdown, raid, supply, jog, drill, parade (those three need their points placed). Usage: lc_event curfew 5")
     end
-    Say(ply, "[Living City] Event started: " .. name)
+    Say(ply, "[Miscount] Event started: " .. name)
 end)
 
 concommand.Add("lc_endevent", function(ply)

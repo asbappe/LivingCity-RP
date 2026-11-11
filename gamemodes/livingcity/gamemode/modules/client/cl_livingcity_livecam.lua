@@ -67,7 +67,7 @@ hook.Add("RenderScene", "LivingCityLiveCam", function()
     if pushed then render.PopRenderTarget() end -- (an error mid-frame mustn't leave the screen drawing into the texture)
     rendering = false
     LC_CL.LiveCamRendering = false
-    if not ok then print("[Living City] broadcast picture: " .. tostring(err)) end
+    if not ok then print("[Miscount] broadcast picture: " .. tostring(err)) end
 end)
 
 -- In the picture, you're in it like everyone else (even if you're the one on air).

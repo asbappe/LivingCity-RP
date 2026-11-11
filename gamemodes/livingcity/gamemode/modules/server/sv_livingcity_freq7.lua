@@ -241,7 +241,7 @@ hook.Add("LivingCityOverwatchDrop", "LivingCityFreq7", function() LC.Freq7Warn("
 concommand.Add("lc_freq7_status", function(ply)
     if IsValid(ply) and not ply:IsAdmin() then return end
     local n = LC.Freq7Now()
-    local msg = string.format("[Living City] Freq 7: %s %.1f; on now: %s (%s); found in %d s%s",
+    local msg = string.format("[Miscount] Freq 7: %s %.1f; on now: %s (%s); found in %d s%s",
         n.onAir and "on air at" or "jammed at", n.f or 0, n.clip or "nothing (no recordings)", n.kind or "-",
         math.max(0, math.floor((S.holdUntil or 0) - CurTime())), LC.CityDark and " (blackout: the hunt has stopped)" or "")
     if IsValid(ply) then ply:PrintMessage(HUD_PRINTCONSOLE, msg) else print(msg) end

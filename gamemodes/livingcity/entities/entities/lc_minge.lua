@@ -9,7 +9,7 @@ AddCSLuaFile()
 ENT.Type = "anim"
 ENT.Base = "base_anim"
 ENT.PrintName = "Mingebag"
-ENT.Author = "Living City"
+ENT.Author = "Miscount"
 ENT.Spawnable = false
 ENT.AutomaticFrameAdvance = false
 ENT.RenderGroup = RENDERGROUP_OPAQUE

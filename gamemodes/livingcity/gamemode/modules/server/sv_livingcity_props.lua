@@ -27,7 +27,7 @@ LC.NextPropId = LC.NextPropId or 1
 
 local PROP_CLASSES = { prop_physics = true, prop_physics_multiplayer = true, prop_dynamic = true }
 
-local function Tell(ply, msg) if IsValid(ply) then ply:ChatPrint("[Living City] " .. msg) end end
+local function Tell(ply, msg) if IsValid(ply) then ply:ChatPrint("[Miscount] " .. msg) end end
 
 local function Freeze(e)
     local phys = e.GetPhysicsObject and e:GetPhysicsObject()

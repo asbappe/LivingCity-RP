@@ -254,7 +254,7 @@ function LC.PostBounty(ply, target, amount)
     ply.lcBountyNext = CurTime() + 120
     LC.Bounties[target] = { amount = amount, by = ply }
     TellUnits(string.format("[CP net] BOUNTY: %d credits for bringing in %s (%s). Posted by %s.", amount, Name(target), target:GetNW2String("lc_wanted_reason", "wanted"), Name(ply)))
-    target:ChatPrint(string.format("[Living City] There's a price on your head: %d credits to the unit who brings you in.", amount))
+    target:ChatPrint(string.format("[Miscount] There's a price on your head: %d credits to the unit who brings you in.", amount))
     if LC.Notice then LC.Notice(target, "warn", "A price on your head", amount .. " credits to the unit who brings you in.", 8) end
     hook.Run("LivingCityBountyPosted", ply, target, amount)
     return true
@@ -319,6 +319,6 @@ hook.Add("PlayerSay", "LivingCityOpPlan", function(ply, text)
     else
         return
     end
-    if not ok and why then ply:ChatPrint("[Living City] " .. why) end
+    if not ok and why then ply:ChatPrint("[Miscount] " .. why) end
     return ""
 end)

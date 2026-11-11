@@ -6,7 +6,7 @@
    **The tools** (`_dev/`: the voice and radio scripts, the tests) are for your own PC, not the server: they come in `livingcity_tools.zip`, which unzips to `livingcity/_dev/` next to your copy of the gamemode. The server zip leaves them out (Hexane's file manager refuses to unzip `.sh` files).
 2. In the main menu, click the gamemode button in the bottom right corner and pick **Living City**. Start a game on a city map.
 3. The city starts by itself. You're a citizen. Press **F1** for your quick menu (nine things on the number keys), **F2** for what your side and job can do, **C** for the full menu (the guide is the first thing in it), **F4** (the Factions tab) to pick a faction.
-4. To build the city as an admin, type `!build`. Build mode gives you the spawn menu, the physgun, the toolgun and noclip. Then go to Q menu > Tools > **Living City > Living City Editor**. Type `!build` again to go back to playing.
+4. To build the city as an admin, type `!build`. Build mode gives you the spawn menu, the physgun, the toolgun and noclip. Then go to Q menu > Tools > **Living City > Miscount Editor**. Type `!build` again to go back to playing.
 
 ### The gamemode, and what's left of Sandbox
 

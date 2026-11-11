@@ -501,7 +501,7 @@ concommand.Add("lc_reload", function(ply)
     if not LC.CanEdit(ply) then return end
     LC.LoadData(true)
     if LC.ApplyAllDoors then LC.ApplyAllDoors() end
-    local msg = string.format("[Living City] Reloaded layout: %d points, %d path nodes, %d zones, %d tagged doors.",
+    local msg = string.format("[Miscount] Reloaded layout: %d points, %d path nodes, %d zones, %d tagged doors.",
         #LC.Points, table.Count(LC.Nodes), #LC.Zones, table.Count(LC.DoorTags))
     if IsValid(ply) then ply:ChatPrint(msg) else print(msg) end
 end)
@@ -511,13 +511,13 @@ local function Reply(ply, msg) if IsValid(ply) then ply:ChatPrint(msg) else prin
 concommand.Add("lc_backup", function(ply)
     if not LC.CanEdit(ply) then return end
     local name = LC.BackupLayout("manual")
-    Reply(ply, name and ("[Living City] Backed up the layout as " .. name .. ".") or "[Living City] Nothing to back up yet.")
+    Reply(ply, name and ("[Miscount] Backed up the layout as " .. name .. ".") or "[Miscount] Nothing to back up yet.")
 end)
 
 concommand.Add("lc_backups", function(ply)
     if not LC.CanEdit(ply) then return end
     local all = LC.ListBackups()
-    Reply(ply, string.format("[Living City] Layout: data/%s. %d backups in data/%s/:", Path(), #all, BackupDir()))
+    Reply(ply, string.format("[Miscount] Layout: data/%s. %d backups in data/%s/:", Path(), #all, BackupDir()))
     for i = 1, math.min(10, #all) do Reply(ply, string.format("  %d. %s", i, all[i])) end
     if #all > 0 then Reply(ply, "Restore one with lc_restore <number>. What's there now is backed up first.") end
 end)
@@ -525,13 +525,13 @@ end)
 concommand.Add("lc_restore", function(ply, _, args)
     if not LC.CanEdit(ply) then return end
     local ok, what = LC.RestoreBackup(args[1])
-    Reply(ply, ok and ("[Living City] Restored " .. what .. ".") or ("[Living City] " .. what))
+    Reply(ply, ok and ("[Miscount] Restored " .. what .. ".") or ("[Miscount] " .. what))
 end)
 
 concommand.Add("lc_savesettings", function(ply)
     if not LC.CanEdit(ply) then return end
     LC.SaveSettings()
-    local msg = "[Living City] Population settings saved for " .. game.GetMap() .. "."
+    local msg = "[Miscount] Population settings saved for " .. game.GetMap() .. "."
     if IsValid(ply) then ply:ChatPrint(msg) else print(msg) end
 end)
 
@@ -540,7 +540,7 @@ concommand.Add("lc_autolink", function(ply, _, args)
     local n = LC.AutoLink(tonumber(args[1]) or 450)
     LC.SaveData()
     local orphans = #LC.OrphanNodes()
-    local msg = string.format("[Living City] Made %d new links.%s", n,
+    local msg = string.format("[Miscount] Made %d new links.%s", n,
         orphans > 0 and string.format(" %d nodes still have no links (shown in red).", orphans) or "")
     if IsValid(ply) then ply:ChatPrint(msg) else print(msg) end
 end)
@@ -575,12 +575,12 @@ concommand.Add("lc_goto_layout", function(ply, _, args)
     else
         for _, p in ipairs(LC.Points) do if p.kind == id then list[#list + 1] = p.pos end end
     end
-    if #list == 0 then return ply:ChatPrint("[Living City] None of those on this map.") end
+    if #list == 0 then return ply:ChatPrint("[Miscount] None of those on this map.") end
     n = (n - 1) % #list + 1
     local pos = list[n]
     if ply.SetMoveType and ply:GetMoveType() ~= MOVETYPE_NOCLIP then ply:SetMoveType(MOVETYPE_NOCLIP) end
     ply:SetPos(pos + Vector(0, 0, 24) - ply:GetForward() * 40)
-    ply:ChatPrint(string.format("[Living City] %s %d of %d. (You're in noclip; it's easy to land inside things.)", id, n, #list))
+    ply:ChatPrint(string.format("[Miscount] %s %d of %d. (You're in noclip; it's easy to land inside things.)", id, n, #list))
 end)
 
 ------------------------------------------------------------------------

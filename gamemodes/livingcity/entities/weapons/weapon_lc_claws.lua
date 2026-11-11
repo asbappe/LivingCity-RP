@@ -7,8 +7,8 @@
 AddCSLuaFile()
 
 SWEP.PrintName    = "Claws"
-SWEP.Author       = "Living City"
-SWEP.Category     = "Living City"
+SWEP.Author       = "Miscount"
+SWEP.Category     = "Miscount"
 SWEP.Instructions = "Primary: swipe. Secondary: moan."
 SWEP.Spawnable    = true
 SWEP.AdminOnly    = true

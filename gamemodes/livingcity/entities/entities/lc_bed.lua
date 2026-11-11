@@ -6,8 +6,8 @@ AddCSLuaFile()
 ENT.Type = "anim"
 ENT.Base = "base_gmodentity"
 ENT.PrintName = "Bed"
-ENT.Author = "Living City"
-ENT.Category = "Living City"
+ENT.Author = "Miscount"
+ENT.Category = "Miscount"
 ENT.Spawnable = true
 ENT.AdminOnly = true
 

@@ -82,9 +82,9 @@ function LC.Pickpocket(thief, mark)
             if seen then LC.ReportCrime(p, "Theft", 180) end
             if felt then
                 local who = (LC.Recognizes and LC.Recognizes(mark, p)) and Name(p) or (p:GetNW2String("lc_desc", "") ~= "" and p:GetNW2String("lc_desc", "") or "someone")
-                mark:ChatPrint("[Living City] A hand in your pocket! " .. who .. ".")
+                mark:ChatPrint("[Miscount] A hand in your pocket! " .. who .. ".")
                 if LC.Notice then LC.Notice(mark, "warn", "A pickpocket", "Someone tried your pockets: " .. who .. ".", 8) end
-                p:ChatPrint("[Living City] They felt it. You come away with nothing.")
+                p:ChatPrint("[Miscount] They felt it. You come away with nothing.")
                 hook.Run("LivingCityPickpocket", p, mark, false)
                 return
             end
@@ -96,15 +96,15 @@ function LC.Pickpocket(thief, mark)
                 local take = math.min(20, cr, math.random(5, 20))
                 LC.AddCredits(mark, -take)
                 LC.AddCredits(p, take, "a lifted wallet")
-                p:ChatPrint(string.format("[Living City] %d credits, and they never felt a thing.", take))
+                p:ChatPrint(string.format("[Miscount] %d credits, and they never felt a thing.", take))
             elseif #ids > 0 then
                 local id = ids[math.random(#ids)]
                 if LC.TakeItem(mark, id, 1) then
                     LC.GiveItem(p, id, 1)
-                    p:ChatPrint("[Living City] You come away with: " .. ((LCS.Items[id] and LCS.Items[id].name) or id) .. ". They never felt a thing.")
+                    p:ChatPrint("[Miscount] You come away with: " .. ((LCS.Items[id] and LCS.Items[id].name) or id) .. ". They never felt a thing.")
                 end
             else
-                p:ChatPrint("[Living City] Empty pockets.")
+                p:ChatPrint("[Miscount] Empty pockets.")
             end
             hook.Run("LivingCityPickpocket", p, mark, true)
         end })
@@ -140,8 +140,8 @@ function LC.OfferLoan(lender, borrower, n)
     if lender:GetPos():DistToSqr(borrower:GetPos()) > 250 * 250 then return false, "Face to face." end
     if (LC.Credits and LC.Credits(lender) or 0) < n then return false, "You haven't that much." end
     borrower.lcLoanOffer = { from = lender, n = n, at = CurTime() }
-    borrower:ChatPrint(string.format("[Living City] %s offers to lend you %d credits, %d back within %d hours. F2 > Me (More) > My debts.", Name(lender), n, math.ceil(n * 1.2), cvDebt:GetInt()))
-    lender:ChatPrint("[Living City] You've offered " .. Name(borrower) .. " a loan of " .. n .. ".")
+    borrower:ChatPrint(string.format("[Miscount] %s offers to lend you %d credits, %d back within %d hours. F2 > Me (More) > My debts.", Name(lender), n, math.ceil(n * 1.2), cvDebt:GetInt()))
+    lender:ChatPrint("[Miscount] You've offered " .. Name(borrower) .. " a loan of " .. n .. ".")
     SyncDebts(borrower)
     return true
 end
@@ -150,15 +150,15 @@ function LC.AcceptLoan(p, yes)
     local o = p.lcLoanOffer
     p.lcLoanOffer = nil
     if not o or CurTime() - o.at > 120 or not IsValid(o.from) then SyncDebts(p) return false, "No loan is on offer." end
-    if not yes then o.from:ChatPrint("[Living City] " .. Name(p) .. " turned the loan down.") SyncDebts(p) return true end
+    if not yes then o.from:ChatPrint("[Miscount] " .. Name(p) .. " turned the loan down.") SyncDebts(p) return true end
     if (LC.Credits(o.from) or 0) < o.n then SyncDebts(p) return false, "They haven't the money any more." end
     LC.AddCredits(o.from, -o.n, "a loan to " .. Name(p))
     LC.AddCredits(p, o.n, "a loan from " .. Name(o.from))
     local d = { lender = CID(o.from), lenderName = Name(o.from), borrower = CID(p), borrowerName = Name(p), owed = math.ceil(o.n * 1.2), due = os.time() + cvDebt:GetFloat() * 3600 }
     local a = Owes(p) a[#a + 1] = d SaveOwes(p, a)
     local b = Owed(o.from) b[#b + 1] = d SaveOwed(o.from, b)
-    o.from:ChatPrint(string.format("[Living City] %s took your loan: %d owed back.", Name(p), d.owed))
-    p:ChatPrint(string.format("[Living City] You owe %s %d credits, due in %d hours.", Name(o.from), d.owed, cvDebt:GetInt()))
+    o.from:ChatPrint(string.format("[Miscount] %s took your loan: %d owed back.", Name(p), d.owed))
+    p:ChatPrint(string.format("[Miscount] You owe %s %d credits, due in %d hours.", Name(o.from), d.owed, cvDebt:GetInt()))
     SyncDebts(p) SyncDebts(o.from)
     return true
 end
@@ -176,7 +176,7 @@ function LC.RepayDebt(p, index)
         local b = Owed(lender)
         for i, x in ipairs(b) do if x.borrower == d.borrower and x.due == d.due then table.remove(b, i) break end end
         SaveOwed(lender, b)
-        lender:ChatPrint(string.format("[Living City] %s repaid you %d credits.", Name(p), d.owed))
+        lender:ChatPrint(string.format("[Miscount] %s repaid you %d credits.", Name(p), d.owed))
         SyncDebts(lender)
     else
         local pend = Pending()
@@ -185,7 +185,7 @@ function LC.RepayDebt(p, index)
         table.insert(pend[d.lender .. ":clear"], { borrower = d.borrower, due = d.due })
         SavePending(pend)
     end
-    p:ChatPrint(string.format("[Living City] Debt repaid: %d credits to %s.", d.owed, d.lenderName))
+    p:ChatPrint(string.format("[Miscount] Debt repaid: %d credits to %s.", d.owed, d.lenderName))
     SyncDebts(p)
     return true
 end
@@ -204,12 +204,12 @@ function LC.ReportDebt(lender, index)
         if LC.AddStanding then LC.AddStanding(borrower, -10, "a debt left unpaid") end
         borrower:ChatPrint("[Civil Protection] " .. d.lenderName .. " reports an unpaid debt. Pay it.")
     else
-        lender:ChatPrint("[Living City] They aren't about. It's on record for when they are.")
+        lender:ChatPrint("[Miscount] They aren't about. It's on record for when they are.")
         local pend = Pending()
         pend[d.borrower .. ":default"] = true
         SavePending(pend)
     end
-    lender:ChatPrint("[Living City] Reported to Civil Protection.")
+    lender:ChatPrint("[Miscount] Reported to Civil Protection.")
     SyncDebts(lender)
     return true
 end
@@ -222,7 +222,7 @@ hook.Add("PlayerInitialSpawn", "LivingCityDebts", function(p)
         local changed = false
         if (pend[cid] or 0) > 0 then
             LC.AddCredits(p, pend[cid], "debts repaid while you were away")
-            p:ChatPrint(string.format("[Living City] Debts repaid while you were away: %d credits.", pend[cid]))
+            p:ChatPrint(string.format("[Miscount] Debts repaid while you were away: %d credits.", pend[cid]))
             local b = Owed(p)
             for _, c in ipairs(pend[cid .. ":clear"] or {}) do
                 for i, x in ipairs(b) do if x.borrower == c.borrower and x.due == c.due then table.remove(b, i) break end end
@@ -304,6 +304,6 @@ hook.Add("PlayerSay", "LivingCityStreetCrime", function(ply, text)
     elseif cmd == "repay" then ok, why = LC.RepayDebt(ply, rest)
     elseif cmd == "reportdebt" then ok, why = LC.ReportDebt(ply, rest)
     else return end
-    if not ok and why then ply:ChatPrint("[Living City] " .. why) end
+    if not ok and why then ply:ChatPrint("[Miscount] " .. why) end
     return ""
 end)

@@ -13,7 +13,7 @@
 -- Only in the Living City gamemode (it's the gamemode's editor; elsewhere it isn't listed)
 if engine.ActiveGamemode() ~= "livingcity" then TOOL.AddToMenu = false return end
 
-TOOL.Category = "Living City"
+TOOL.Category = "Miscount"
 TOOL.Name = "#tool.livingcity_editor.name"
 TOOL.ClientConVar = { mode = "idle", group = "1", radius = "300", shape = "box", height = "192" }
 
@@ -141,14 +141,14 @@ end
 local function Mode(id) return MODES[ModeIndex(id)] end
 
 if CLIENT then
-    language.Add("tool.livingcity_editor.name", "Living City Editor")
-    language.Add("tool.livingcity_editor.desc", "Build routines, paths, zones and door rules for Living City")
+    language.Add("tool.livingcity_editor.name", "Miscount Editor")
+    language.Add("tool.livingcity_editor.desc", "Build routines, paths, zones and door rules for Miscount")
     language.Add("tool.livingcity_editor.left", "Place / tag / select")
     language.Add("tool.livingcity_editor.right", "Remove what you're aiming at")
     language.Add("tool.livingcity_editor.reload", "Next mode")
 end
 
-local function Tell(ply, msg) ply:ChatPrint("[Living City] " .. msg) end
+local function Tell(ply, msg) ply:ChatPrint("[Miscount] " .. msg) end
 
 local function CheckAccess(ply)
     if LC and LC.CanEdit and LC.CanEdit(ply) then return true end
@@ -157,7 +157,7 @@ local function CheckAccess(ply)
 end
 
 local function Undoable(ply, label, fn)
-    undo.Create("Living City: " .. label)
+    undo.Create("Miscount: " .. label)
     undo.AddFunction(function() fn() end)
     undo.SetPlayer(ply)
     undo.Finish()

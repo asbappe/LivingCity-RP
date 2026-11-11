@@ -247,7 +247,7 @@ function LC_CL.PaintThemePanel(x, y, w, h, headH, name)
     OX, OY = 0, 0
     if not ok then
         LC_CL.ThemeBroken = true
-        print("[Living City] window styles are off after an error: " .. tostring(err))
+        print("[Miscount] window styles are off after an error: " .. tostring(err))
     end
     return t
 end
@@ -302,8 +302,8 @@ local function DefineSkin()
     local base = derma.GetNamedSkin("Default")
     if not base then return false end
     local SKIN = table.Copy(base)
-    SKIN.PrintName = "Living City"
-    SKIN.Author = "Living City"
+    SKIN.PrintName = "Miscount"
+    SKIN.Author = "Miscount"
     SKIN.Colours = SKIN.Colours or {}
     local light, dim = Color(232, 230, 222, 255), Color(150, 150, 146, 255)
     SKIN.Colours.Button = { Normal = light, Hover = Color(255, 255, 255, 255), Down = Color(255, 255, 255, 255), Disabled = dim }
@@ -335,7 +335,7 @@ local function DefineSkin()
         if panel.SetTextStyleColor then panel:SetTextStyleColor(t.text) end
     end
     function SKIN:PaintMenuSpacer(panel, w, h) local t = ThemeOf(panel) OX, OY = 0, 0 Rect(t.dim, 0, 0, w, h) end
-    derma.DefineSkin("LivingCity", "Living City: windows in your faction's style", SKIN)
+    derma.DefineSkin("LivingCity", "Miscount: windows in your faction's style", SKIN)
     return true
 end
 local skinOK = DefineSkin()
@@ -351,7 +351,7 @@ local function Themed(old)
         local okB, errB = pcall(LC_CL.PaintThemeBack, self, w, h)
         if not okB then
             LC_CL.ThemeBroken = true
-            print("[Living City] window styles are off after an error: " .. tostring(errB))
+            print("[Miscount] window styles are off after an error: " .. tostring(errB))
             return old(self, w, h)
         end
         -- (their own full-window box and title strip are what the theme stands in for: skip just those)

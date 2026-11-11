@@ -477,7 +477,7 @@ ok(LC.InNoGo(Vector(-8000, 8000, 0), "citizen"), "citizens avoid infestation zon
 ----------------------------------------------------------------------
 section("Debugging")
 local okr, report = pcall(LC.BuildReport)
-ok(okr and string.find(report, "LIVING CITY DEBUG REPORT", 1, true) and string.find(report, "== NPCs ==", 1, true),
+ok(okr and string.find(report, "MISCOUNT DEBUG REPORT", 1, true) and string.find(report, "== NPCs ==", 1, true),
     "debug report builds", okr and "" or report)
 concommand.list.lc_debugreport(nil)
 local wrote = false
@@ -12554,7 +12554,7 @@ ok(LC.IntakePending(nw) and LC.PlayerBlock(nw) == nil and not LC.HasItem(nw, "id
 local kind, title, text = LC.NoticeForChat("[Rebel] Hey! Those are our supplies. Quit it.")
 ok(kind == "speech" and title == "Rebel" and text == "Hey! Those are our supplies. Quit it.", "a rebel's warning shows as a subtitle")
 ok(LC.NoticeForChat("[Civil Protection] Halt.") == "warn" and LC.NoticeForChat("[Housing Allocation] Approved.") == "info", "units' warnings and the desks' notices as cards")
-ok(LC.NoticeForChat("[Living City] Something routine.") == nil, "routine lines stay in chat")
+ok(LC.NoticeForChat("[Miscount] Something routine.") == nil, "routine lines stay in chat")
 LC.FlushNotices()
 net.sent = {}
 LC.Notice(old, "warn", "Civil Protection", "Halt.")
@@ -12873,7 +12873,7 @@ Run("pose", "2")
 ok(m:GetNW2String("lc_act", "") == "pose2", "Me > Pose > stand: pose 2")
 LC.StopAct(m)
 Run("block")
-ok(has(m.chat, "[Living City]"), "Home > my housing block")
+ok(has(m.chat, "[Miscount]"), "Home > my housing block")
 Run("apartment")
 ok(#m.chat >= 1, "Home > about my apartment")
 Run("lock")

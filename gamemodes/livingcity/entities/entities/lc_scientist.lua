@@ -15,8 +15,8 @@ AddCSLuaFile()
 ENT.Type = "anim"
 ENT.Base = "base_anim"
 ENT.PrintName = "Resistance scientist"
-ENT.Author = "Living City"
-ENT.Category = "Living City"
+ENT.Author = "Miscount"
+ENT.Category = "Miscount"
 ENT.Spawnable = false
 ENT.AdminOnly = true
 ENT.AutomaticFrameAdvance = true

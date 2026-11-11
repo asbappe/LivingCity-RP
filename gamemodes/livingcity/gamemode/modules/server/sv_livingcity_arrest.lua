@@ -68,10 +68,10 @@ local function Name(e)
     local st = LC.NPCs and LC.NPCs[e]
     return (st and st.role == "rebel") and "the rebel" or "the citizen"
 end
-local function Tell(ply, msg) if IsValid(ply) and ply:IsPlayer() then ply:ChatPrint("[Living City] " .. msg) end end
+local function Tell(ply, msg) if IsValid(ply) and ply:IsPlayer() then ply:ChatPrint("[Miscount] " .. msg) end end
 local function Notice(ply, kind, title, text)
     if not (IsValid(ply) and ply:IsPlayer()) then return end
-    if LC.Notice then LC.Notice(ply, kind, title, text) else ply:ChatPrint("[Living City] " .. text) end
+    if LC.Notice then LC.Notice(ply, kind, title, text) else ply:ChatPrint("[Miscount] " .. text) end
 end
 local function MarchOn() local c = GetConVar("lc_march") return not c or c:GetBool() end
 local function PrisonTime() local c = GetConVar("lc_prison_time") return c and c:GetInt() or 180 end
@@ -613,7 +613,7 @@ local function Resolve(target, s, why)
         if target:IsPlayer() then
             if CuffPlayer(target, officer) then
                 Tell(officer, target:Nick() .. " is cuffed. Drag them to the cells yourself (F1 > Drag them along), or leave them: a unit is called to walk them in.")
-                target:ChatPrint("[Living City] They hold you down and get the cuffs on.")
+                target:ChatPrint("[Miscount] They hold you down and get the cuffs on.")
             end
         else
             local ok, err = LC.ArrestNPC(target, officer)

@@ -835,7 +835,7 @@ end)
 concommand.Add("lc_bloom_preview", function()
     preview = not preview
     if not preview and IsValid(LocalPlayer()) then Undance(LocalPlayer()) end
-    print("[Living City] Dance preview " .. (preview and "on (lc_bloom_preview again to stop)" or "off"))
+    print("[Miscount] Dance preview " .. (preview and "on (lc_bloom_preview again to stop)" or "off"))
 end)
 concommand.Add("lc_bloom_pose", function(_, _, args)
     local name = args[1]
@@ -843,7 +843,7 @@ concommand.Add("lc_bloom_pose", function(_, _, args)
         local names = {}
         for n in pairs(POSE) do names[#names + 1] = n end
         table.sort(names)
-        print("[Living City] lc_bloom_pose <" .. table.concat(names, "|") .. "> <pitch> <yaw> <roll>")
+        print("[Miscount] lc_bloom_pose <" .. table.concat(names, "|") .. "> <pitch> <yaw> <roll>")
         return
     end
     POSE[name] = Angle(tonumber(args[2]) or 0, tonumber(args[3]) or 0, tonumber(args[4]) or 0)
@@ -2154,8 +2154,8 @@ concommand.Add("lc_shalom_pose", function(_, _, args)
     if args[1] == "chair" then tbl = SEATED table.remove(args, 1) end
     local name = args[1]
     if not name or not tbl[name] then
-        print("[Living City] lc_shalom_pose <R_UpperArm|L_UpperArm|R_Forearm|L_Forearm> <pitch> <yaw> <roll>")
-        print("[Living City] lc_shalom_pose chair <R_Thigh|L_Thigh|R_Calf|L_Calf> <pitch> <yaw> <roll>")
+        print("[Miscount] lc_shalom_pose <R_UpperArm|L_UpperArm|R_Forearm|L_Forearm> <pitch> <yaw> <roll>")
+        print("[Miscount] lc_shalom_pose chair <R_Thigh|L_Thigh|R_Calf|L_Calf> <pitch> <yaw> <roll>")
         return
     end
     tbl[name] = Angle(tonumber(args[2]) or 0, tonumber(args[3]) or 0, tonumber(args[4]) or 0)

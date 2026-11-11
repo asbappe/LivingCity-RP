@@ -951,14 +951,14 @@ local function AdminTarget(ply, args, usage)
 end
 
 concommand.Add("lc_register", function(ply, _, args)
-    local target = AdminTarget(ply, args, "[Living City] Usage: lc_register <name>")
+    local target = AdminTarget(ply, args, "[Miscount] Usage: lc_register <name>")
     if not target then return end
     target:SetPData("lc_chosen", "1") -- (whatever name they have now is the one on file)
     LC.RegisterPerson(target, "staff")
 end)
 
 concommand.Add("lc_unregister", function(ply, _, args)
-    local target = AdminTarget(ply, args, "[Living City] Usage: lc_unregister <name> (sends them back through Civil Intake)")
+    local target = AdminTarget(ply, args, "[Miscount] Usage: lc_unregister <name> (sends them back through Civil Intake)")
     if not target then return end
     target:SetPData("lc_intake", "1")
     Save(target, "lc_registered", "0")
@@ -974,5 +974,5 @@ concommand.Add("lc_unregister", function(ply, _, args)
     target.lcIntakeState = nil
     target.lcIntakeSince = CurTime()
     Flags(target)
-    target:ChatPrint("[Living City] Staff have unregistered you. Register again at Civil Intake, then ask Housing Allocation for a room.")
+    target:ChatPrint("[Miscount] Staff have unregistered you. Register again at Civil Intake, then ask Housing Allocation for a room.")
 end)

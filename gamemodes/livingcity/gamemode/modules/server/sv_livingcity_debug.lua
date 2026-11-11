@@ -20,11 +20,11 @@ util.AddNetworkString("lc_clerror")
 
 LC = LC or {}
 
-CreateConVar("lc_debug", "0", bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED), "Print every Living City log line to the console")
+CreateConVar("lc_debug", "0", bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED), "Print every Miscount log line to the console")
 
 local function Mentions(text)
     text = string.lower(tostring(text or ""))
-    return string.find(text, "livingcity", 1, true) or string.find(text, "living city", 1, true)
+    return string.find(text, "livingcity", 1, true) or string.find(text, "living city", 1, true) or string.find(text, "miscount", 1, true)
         or string.find(text, "lc_", 1, true) or string.find(text, "weapon_lc_", 1, true)
 end
 
@@ -78,7 +78,7 @@ end
 
 function LC.BuildReport()
     local out = {}
-    out[#out + 1] = "LIVING CITY DEBUG REPORT"
+    out[#out + 1] = "MISCOUNT DEBUG REPORT"
     out[#out + 1] = string.format("version %s | map %s | gamemode %s | %s",
         LC.VERSION or "?", game.GetMap(), engine.ActiveGamemode(), os.date("%Y-%m-%d %H:%M:%S"))
     out[#out + 1] = string.format("players %d/%d | singleplayer %s | dedicated %s | uptime %s",
@@ -282,7 +282,7 @@ function LC.BuildReport()
     out[#out + 1] = "entities by class: " .. table.concat(top, ", ")
     local npcs = 0
     for _, e in ipairs(ents.GetAll()) do if e:IsNPC() then npcs = npcs + 1 end end
-    out[#out + 1] = string.format("NPCs on the map (all of them, Living City's and not): %d", npcs)
+    out[#out + 1] = string.format("NPCs on the map (all of them, Miscount's and not): %d", npcs)
     if LC.SleepStats then
         local z = LC.SleepStats
         out[#out + 1] = string.format("asleep (far from everyone, engine AI off; lc_npc_sleep %s): %d now; %d times put to sleep, %d woken, %d route stops walked out of sight",

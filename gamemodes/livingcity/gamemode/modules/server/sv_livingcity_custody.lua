@@ -351,7 +351,7 @@ concommand.Add("lc_unstalker", function(ply, _, args)
     for _, p in ipairs(player.GetAll()) do
         if LC.PlayerIsStalker(p) and (name == "" or string.find(string.lower(p:Nick()), name, 1, true)) then
             LC.FreeStalker(p, "[City] An administrator has let you off being a stalker.")
-            if IsValid(ply) then ply:ChatPrint("[Living City] " .. p:Nick() .. " is no longer a stalker.") end
+            if IsValid(ply) then ply:ChatPrint("[Miscount] " .. p:Nick() .. " is no longer a stalker.") end
         end
     end
 end)

@@ -10,8 +10,8 @@ AddCSLuaFile()
 ENT.Type = "anim"
 ENT.Base = "base_gmodentity"
 ENT.PrintName = "Ration dispenser"
-ENT.Author = "Living City"
-ENT.Category = "Living City"
+ENT.Author = "Miscount"
+ENT.Category = "Miscount"
 ENT.Spawnable = true
 ENT.AdminOnly = true
 ENT.AutomaticFrameAdvance = true -- so the dispensing animation plays

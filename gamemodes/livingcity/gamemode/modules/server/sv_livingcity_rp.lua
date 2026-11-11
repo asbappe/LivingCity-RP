@@ -436,7 +436,7 @@ function LC.GoDown(ply, attacker)
     end
     ply:SetNW2Float("lc_downed_until", d.untilT)
     ply:EmitSound("vo/npc/" .. (string.find(string.lower(ply:GetModel() or ""), "female", 1, true) and "female01" or "male01") .. "/pain0" .. math.random(1, 9) .. ".wav", 75)
-    ply:ChatPrint("[Living City] You're down, bleeding out. Someone can help you up (E on you). Hold on, or F1 > Give up.")
+    ply:ChatPrint("[Miscount] You're down, bleeding out. Someone can help you up (E on you). Hold on, or F1 > Give up.")
     -- whoever was after them stops shooting at a body
     for npc, st in pairs(LC.NPCs or {}) do
         if IsValid(npc) and (st.enemy == ply or st.foe == ply) then
@@ -477,7 +477,7 @@ function LC.Revive(ply, hp, by)
     ply:SetHealth(math.max(1, hp or 15))
     for _, cls in ipairs(d.weapons) do ply:Give(cls) end
     if ply.SelectWeapon then ply:SelectWeapon("weapon_lc_hands") end
-    ply:ChatPrint(IsValid(by) and ("[Living City] " .. LC.NameFor(ply, by) .. " gets you back on your feet.") or "[Living City] You get back on your feet.")
+    ply:ChatPrint(IsValid(by) and ("[Miscount] " .. LC.NameFor(ply, by) .. " gets you back on your feet.") or "[Miscount] You get back on your feet.")
     hook.Run("LivingCityRevived", ply, by)
     return true
 end
@@ -496,7 +496,7 @@ function LC.FinishDowned(ply, why)
     if ply:Alive() and ply.Kill then ply:Kill() end
     ply.lcFinishing = nil
     ply.lcNoDeathRag = nil
-    if why then ply:ChatPrint("[Living City] " .. why) end
+    if why then ply:ChatPrint("[Miscount] " .. why) end
     return true
 end
 

@@ -32,14 +32,14 @@ LC.Relock = LC.Relock or {}           -- [door] = true if we unlocked it for an 
 local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
 local cvUnlock      = CreateConVar("lc_unlock_doors", "1", FLAGS, "Unlock untagged map doors when the city starts")
 local cvPlayerDoors = CreateConVar("lc_player_doors", "1", FLAGS, "Let players open brush doors with E")
-local cvNPCDoors    = CreateConVar("lc_npc_doors", "1", FLAGS, "Open doors for Living City NPCs as they walk up")
+local cvNPCDoors    = CreateConVar("lc_npc_doors", "1", FLAGS, "Open doors for Miscount NPCs as they walk up")
 
 local DOOR_CLASSES = { prop_door_rotating = true, func_door = true, func_door_rotating = true, func_movelinear = true } -- (movelinear: the Combine's sliding doors, on some maps)
 local SF_DOOR_USE_OPENS = 256
 local LOCKED_SOUND = "doors/default_locked.wav"
 
 local function Say(ply, msg)
-    if IsValid(ply) then ply:ChatPrint("[Living City] " .. msg) else print("[Living City] " .. msg) end
+    if IsValid(ply) then ply:ChatPrint("[Miscount] " .. msg) else print("[Miscount] " .. msg) end
 end
 
 local function ShapeLooksLikeDoor(ent)

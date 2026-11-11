@@ -1504,7 +1504,7 @@ end)
 
 concommand.Add("lc_exercise", function(ply, _, args)
     if IsValid(ply) and not LC.CanEdit(ply) then return end
-    local function Reply(m) if IsValid(ply) then ply:ChatPrint("[Living City] " .. m) else print("[Living City] " .. m) end end
+    local function Reply(m) if IsValid(ply) then ply:ChatPrint("[Miscount] " .. m) else print("[Miscount] " .. m) end end
     local a = string.lower(tostring(args[1] or ""))
     if a == "stop" then
         if X then LC.EndEvent(false) Reply("Exercise stopped.") else Reply("No exercise on.") end

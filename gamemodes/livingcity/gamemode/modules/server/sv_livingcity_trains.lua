@@ -126,6 +126,6 @@ end)
 concommand.Add("lc_train", function(ply)
     if IsValid(ply) and not ply:IsAdmin() then return end
     local ok = LC.TrainArrive(true)
-    local msg = ok and "[Living City] A train pulls in." or "[Living City] No platform: place a \"Point: train platform\" with the editor."
+    local msg = ok and "[Miscount] A train pulls in." or "[Miscount] No platform: place a \"Point: train platform\" with the editor."
     if IsValid(ply) then ply:ChatPrint(msg) else print(msg) end
 end)

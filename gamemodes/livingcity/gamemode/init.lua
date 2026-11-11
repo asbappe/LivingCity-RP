@@ -128,12 +128,12 @@ function GM:LCSetBuild(ply, on)
     if on then
         ply:Give("weapon_physgun")
         ply:Give("gmod_tool")
-        ply:ChatPrint("[Living City] Build mode ON: spawn menu (Q), context menu (C), physgun, toolgun and noclip. The Living City Editor is under Q > Tools > Living City. Type !build again to go back to playing.")
+        ply:ChatPrint("[Miscount] Build mode ON: spawn menu (Q), context menu (C), physgun, toolgun and noclip. The Miscount Editor is under Q > Tools > Miscount. Type !build again to go back to playing.")
     else
         ply:StripWeapon("weapon_physgun")
         ply:StripWeapon("gmod_tool")
         if ply:GetMoveType() == MOVETYPE_NOCLIP then ply:SetMoveType(MOVETYPE_WALK) end
-        ply:ChatPrint("[Living City] Build mode OFF. You're just a person in the city now.")
+        ply:ChatPrint("[Miscount] Build mode OFF. You're just a person in the city now.")
     end
     return true
 end
@@ -155,7 +155,7 @@ hook.Add("PlayerSay", "LivingCityGamemode", function(ply, text)
         if ply:IsAdmin() then
             GAMEMODE:LCSetBuild(ply, not ply:GetNW2Bool("lc_build", false))
         else
-            ply:ChatPrint("[Living City] Build mode is for admins.")
+            ply:ChatPrint("[Miscount] Build mode is for admins.")
         end
         return ""
     end
@@ -172,9 +172,9 @@ end)
 hook.Add("PlayerInitialSpawn", "LivingCityGamemode", function(ply)
     timer.Simple(6, function()
         if not IsValid(ply) then return end
-        ply:ChatPrint("[Living City] Welcome to the city. F1: what you can do (and the guide). F2: what your side and job can do. F3 pockets, F4 your jobs, career and factions.")
+        ply:ChatPrint("[Miscount] Welcome to the city. F1: what you can do (and the guide). F2: what your side and job can do. F3 pockets, F4 your jobs, career and factions.")
         if ply:IsAdmin() then
-            ply:ChatPrint("[Living City] You're an admin: !build switches to build mode for the editor, physgun and noclip.")
+            ply:ChatPrint("[Miscount] You're an admin: !build switches to build mode for the editor, physgun and noclip.")
         end
     end)
 end)

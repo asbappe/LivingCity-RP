@@ -190,7 +190,7 @@ concommand.Add("lc_blackout", function(ply, _, args)
     if IsValid(ply) and not ply:IsAdmin() then return end
     local mode = args[1] or (LC.CityDark and "auto" or "on")
     LC.ForceBlackout(mode)
-    local msg = "[Living City] City-wide blackout: " .. (LC.CityDark and "ON" or "off") .. (LC.ForcedDark == nil and " (following the grid)" or " (forced)")
+    local msg = "[Miscount] City-wide blackout: " .. (LC.CityDark and "ON" or "off") .. (LC.ForcedDark == nil and " (following the grid)" or " (forced)")
     if IsValid(ply) then ply:ChatPrint(msg) else print(msg) end
 end)
 

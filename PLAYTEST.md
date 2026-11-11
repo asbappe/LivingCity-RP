@@ -1124,7 +1124,7 @@ Notes:
   Notes:
 
 ## 8 November, part 12: strange dreams and testing a dream from the editor
-- [ ] **Testing a dream:** with a Point: dream placed, open the Living City Editor panel, Dreams: test one. The list fills with every dream (Happy, Neutral, Nightmare). Pick one, Test it now (just me): you go straight in, awake, with stand-ins. Stop the test (wake up) puts you back where you were with everything you had.
+- [ ] **Testing a dream:** with a Point: dream placed, open the Miscount Editor panel, Dreams: test one. The list fills with every dream (Happy, Neutral, Nightmare). Pick one, Test it now (just me): you go straight in, awake, with stand-ins. Stop the test (wake up) puts you back where you were with everything you had.
   Notes:
 - [ ] **A test counts for nothing:** win a test dream, stop it: no Unbroken notice, no loyalty lost after a propaganda test, no health lost. Nobody asleep was pulled in. As a Civil Protection unit, a nightmare test lets you play it (not an Enforcer).
   Notes:
@@ -1156,7 +1156,7 @@ Notes:
   Notes:
 - [ ] **Music and lines:** put horse1.mp3 (or any dream's codeword, even maze1.mp3) in garrysmod/sound/livingcity/dreams/ and it plays in that dream. Recorded lines go in dreams/voice/, named as in VOICE_LINES.md. Dance: dance1.mp3 plus dance1.txt holding its BPM.
   Notes:
-- [ ] **Editor:** Dreams: test one is now the last section of the Living City Editor panel.
+- [ ] **Editor:** Dreams: test one is now the last section of the Miscount Editor panel.
   Notes:
 - [ ] **The Exam, reworked (9 November):** you are stuck at a desk with a paper on it; type A, B, C or D in chat to answer. After six questions Doctor Kleiner walks to each desk, picks up the paper, eats it (loud crunching, head back, shaking, a big gulp), and only then is that person told their score. Does the paper sit on the desk properly, and does the eating look dramatic enough?
   Notes:
@@ -1681,4 +1681,6 @@ Type them in the server console on the host panel, or in your own game console (
 - [ ] **Pictures loose in garrysmod/ (11 November):** unzip `livingcity_content.zip` in `garrysmod/`, FastDL sync (it should upload the posters, `ui/`, `pamphlet/` and `lcrebelhand.ttf`, and delete nothing), change the map, join from a clean client: posters show pictures, window backs are textured, the Resistance pamphlet is handwritten.
   Notes:
 - [ ] **Two voices (11 November):** with a key set, talk to several named citizens. Do they answer with real Half-Life 2 lines, spoken, that fit what you said ("I would not say that too loud", "Know what you mean")? Do units answer with their own clips ("Move along", "Final warning") and do the words on screen match what is said? Note any unit line whose words are wrong.
+  Notes:
+- [ ] **The new name, Miscount:** the server list and the F-menus say Miscount, chat lines start `[Miscount]`, the guide is headed "MISCOUNT: A GUIDE", and with !build the editor is under Q > Tools > Miscount ("Miscount Editor"). Every `lc_` command still works as before.
   Notes:

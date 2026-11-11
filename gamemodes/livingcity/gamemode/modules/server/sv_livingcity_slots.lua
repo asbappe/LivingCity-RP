@@ -181,10 +181,10 @@ function LC.SwitchCharacter(ply, n)
     m.slots[n] = Summary(ply)
     SaveMeta(ply)
     if fresh then
-        ply:ChatPrint(string.format("[Living City] You are someone new: %s, citizen %s.", LC.CharacterName(ply), ply:GetNW2String("lc_cid", "")))
+        ply:ChatPrint(string.format("[Miscount] You are someone new: %s, citizen %s.", LC.CharacterName(ply), ply:GetNW2String("lc_cid", "")))
         if LC.OpenCharacterCreator then timer.Simple(0.5, function() if IsValid(ply) then LC.OpenCharacterCreator(ply) end end) end
     else
-        ply:ChatPrint(string.format("[Living City] You are %s, citizen %s.", LC.CharacterName(ply), ply:GetNW2String("lc_cid", "")))
+        ply:ChatPrint(string.format("[Miscount] You are %s, citizen %s.", LC.CharacterName(ply), ply:GetNW2String("lc_cid", "")))
     end
     LC.Log("info", string.format("%s switched to slot %d (%s)", ply:Nick(), n, LC.CharacterName(ply)))
     return true

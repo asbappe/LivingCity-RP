@@ -16,8 +16,8 @@
 AddCSLuaFile()
 
 SWEP.PrintName    = "Hoover"
-SWEP.Author       = "Living City"
-SWEP.Category     = "Living City"
+SWEP.Author       = "Miscount"
+SWEP.Category     = "Miscount"
 SWEP.Instructions = "Hold left click on a dead growth to vacuum it up. Empty it into an infestation control barrel (E on it); where there's none, right click seals it in a bag."
 SWEP.Spawnable    = true
 SWEP.AdminOnly    = true

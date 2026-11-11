@@ -162,8 +162,8 @@ end
 -- The editor panel
 ------------------------------------------------------------------------
 local function Tell(ply, kind, text)
-    if not IsValid(ply) then print("[Living City] " .. text) return end
-    if LC.Notice then LC.Notice(ply, kind, "Her voice", text, 8) else ply:ChatPrint("[Living City] " .. text) end
+    if not IsValid(ply) then print("[Miscount] " .. text) return end
+    if LC.Notice then LC.Notice(ply, kind, "Her voice", text, 8) else ply:ChatPrint("[Miscount] " .. text) end
 end
 
 -- Speaks a line to the one who asked, whether lc_voice is on or not.

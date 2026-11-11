@@ -160,9 +160,9 @@ local DATA = {
         weapon_crowbar = { "Crowbar",
             "{+use} on junk (a wreck, pipes, a crate): pry out scrap. It's loud",
             { "A unit who sees it out makes you wanted (not on rebel ground)", NotUnit } },
-        ["tool:livingcity_editor"] = { "Living City Editor",
+        ["tool:livingcity_editor"] = { "Miscount Editor",
             "{+reload}: the next mode",
-            "Every mode and setting: hold {+menu}, Tools > Living City Editor" },
+            "Every mode and setting: hold {+menu}, Tools > Miscount Editor" },
     },
     zone = {
         rebel = { "Rebel territory",

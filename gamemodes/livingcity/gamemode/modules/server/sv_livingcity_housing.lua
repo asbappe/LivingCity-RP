@@ -94,7 +94,7 @@ function LC.AssignBlock(ply, force, granted)
         ply:SetPData(Key(), n)
         ply:SetPData("lc_housed_how", granted and "papers" or "auto") -- (Housing Allocation shows how you got it)
         ply.lcIntakeState = nil -- (sv_livingcity_intake.lua reads it again)
-        if not granted then ply:ChatPrint("[Living City] You have been assigned to " .. LC.BlockName(n) .. ".") end
+        if not granted then ply:ChatPrint("[Miscount] You have been assigned to " .. LC.BlockName(n) .. ".") end
     end
     return n
 end
@@ -146,9 +146,9 @@ end)
 hook.Add("PlayerSay", "LivingCityHousingChat", function(ply, text)
     if string.lower(string.Trim(text)) ~= "!block" then return end
     local n = LC.PlayerBlock(ply)
-    ply:ChatPrint(n and ("[Living City] You live in " .. LC.BlockName(n) .. ".")
-        or (LC.AwaitingHousing and LC.AwaitingHousing(ply) and "[Living City] You have no room yet. Ask Housing Allocation for one.")
-        or "[Living City] This map has no housing blocks yet.")
+    ply:ChatPrint(n and ("[Miscount] You live in " .. LC.BlockName(n) .. ".")
+        or (LC.AwaitingHousing and LC.AwaitingHousing(ply) and "[Miscount] You have no room yet. Ask Housing Allocation for one.")
+        or "[Miscount] This map has no housing blocks yet.")
     return ""
 end)
 
@@ -157,7 +157,7 @@ concommand.Add("lc_setblock", function(ply, _, args)
     local target = LC.FindPlayer(args[1])
     local n = tonumber(args[2])
     if not target or not n or not BlockExists(n) then
-        local msg = "[Living City] Usage: lc_setblock <name> <block number that exists>"
+        local msg = "[Miscount] Usage: lc_setblock <name> <block number that exists>"
         if IsValid(ply) then ply:ChatPrint(msg) else print(msg) end
         return
     end
@@ -165,7 +165,7 @@ concommand.Add("lc_setblock", function(ply, _, args)
     target:SetPData(Key(), n)
     target:SetPData("lc_housed_how", "staff")
     target.lcIntakeState = nil
-    target:ChatPrint("[Living City] You have been reassigned to " .. LC.BlockName(n) .. ".")
+    target:ChatPrint("[Miscount] You have been reassigned to " .. LC.BlockName(n) .. ".")
 end)
 
 concommand.Add("lc_reassignblocks", function(ply)

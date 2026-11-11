@@ -65,7 +65,7 @@ LC.ItemUseHandlers.finery = function(ply)
         ply.lcFineFrom = nil
         ply:SetNW2Bool("lc_well_dressed", false)
         ShowTitle(ply)
-        ply:ChatPrint("[Living City] You take off the fine clothes and fold them away.")
+        ply:ChatPrint("[Miscount] You take off the fine clothes and fold them away.")
         return true
     end
     local fine = LC.FineModelFor(ply:GetModel())
@@ -74,7 +74,7 @@ LC.ItemUseHandlers.finery = function(ply)
     ply:SetModel(fine)
     ply:SetNW2Bool("lc_well_dressed", true)
     ShowTitle(ply)
-    ply:ChatPrint("[Living City] You put on the fine clothes. People will notice.")
+    ply:ChatPrint("[Miscount] You put on the fine clothes. People will notice.")
     return true
 end
 hook.Add("PlayerSpawn", "LivingCityFinery", function(ply) ply.lcFineFrom = nil ply:SetNW2Bool("lc_well_dressed", false) end)
@@ -102,7 +102,7 @@ LC.ItemUseHandlers.petbird = function(ply)
     local on = not ply:GetNW2Bool("lc_pet_bird", false)
     ply:SetNW2Bool("lc_pet_bird", on)
     ply:EmitSound(on and "ambient/creatures/pigeon_idle" .. math.random(1, 4) .. ".wav" or "npc/crow/alert2.wav", 60)
-    ply:ChatPrint(on and "[Living City] Your bird hops onto your shoulder." or "[Living City] Your bird hops back into your coat.")
+    ply:ChatPrint(on and "[Miscount] Your bird hops onto your shoulder." or "[Miscount] Your bird hops back into your coat.")
     return true
 end
 hook.Add("PlayerDeath", "LivingCityPetBird", function(ply) ply:SetNW2Bool("lc_pet_bird", false) end)

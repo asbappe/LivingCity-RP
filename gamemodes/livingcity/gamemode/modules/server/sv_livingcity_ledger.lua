@@ -345,7 +345,7 @@ end
 function LC.GoToSpeechStand(ply)
     if not IsAdministrator(ply) then return false, "Only the City Administrator speaks from the stand." end
     local p = SpeechStand(ply:GetPos())
-    if not p then return false, "There's no speech stand in this city. (Staff: Living City Editor > Point: speech stand.)" end
+    if not p then return false, "There's no speech stand in this city. (Staff: Miscount Editor > Point: speech stand.)" end
     ply:SetPos((LC.FreeSpawnPos and LC.FreeSpawnPos(p.pos + Vector(0, 0, 8))) or p.pos)
     if ply.SetEyeAngles then ply:SetEyeAngles(Angle(0, p.yaw or 0, 0)) end
     ply:ChatPrint("[The office] You're at the speech stand. F2 > Me > The city's levers > Give a speech, when you're ready.")

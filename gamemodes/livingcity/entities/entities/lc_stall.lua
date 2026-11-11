@@ -8,8 +8,8 @@ AddCSLuaFile()
 ENT.Type = "anim"
 ENT.Base = "base_gmodentity"
 ENT.PrintName = "Market stall"
-ENT.Author = "Living City"
-ENT.Category = "Living City"
+ENT.Author = "Miscount"
+ENT.Category = "Miscount"
 ENT.Spawnable = false
 
 function ENT:Initialize()

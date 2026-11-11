@@ -368,7 +368,7 @@ concommand.Add("lc_people", function(ply, _, args)
             dead = dead + 1
         end
     end
-    Say(ply, string.format("[Living City] %d citizens and %d Civil Protection units alive (%d out now), %d sympathizers, %d with jobs, %d dead remembered",
+    Say(ply, string.format("[Miscount] %d citizens and %d Civil Protection units alive (%d out now), %d sympathizers, %d with jobs, %d dead remembered",
         Alive("citizen"), Alive("cop"), out, rebels, withJob, dead))
     if args[1] == "list" then
         for _, p in ipairs(P.list) do
@@ -387,5 +387,5 @@ concommand.Add("lc_resetpeople", function(ply)
     P.list, P.next, P.loaded = {}, 1, true
     LC.TopUpPeople()
     LC.SavePeople()
-    Say(ply, "[Living City] The city's people have been replaced. People already on the streets keep their old faces until they leave.")
+    Say(ply, "[Miscount] The city's people have been replaced. People already on the streets keep their old faces until they leave.")
 end)

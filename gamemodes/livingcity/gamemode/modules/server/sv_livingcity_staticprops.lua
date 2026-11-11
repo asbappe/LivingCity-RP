@@ -229,7 +229,7 @@ concommand.Add("lc_scanprops", function(ply)
     if #LC.StaticBins > 0 then parts[#parts + 1] = #LC.StaticBins .. " dumpsters or bins" end
     if #(LC.StaticJunk or {}) > 0 then parts[#parts + 1] = #LC.StaticJunk .. " pieces of junk to salvage" end
     if #(LC.StaticRest or {}) > 0 then parts[#parts + 1] = #LC.StaticRest .. " beds and seats" end
-    local msg = ok and ("[Living City] Static props: " .. (#parts > 0 and table.concat(parts, ", ") or "no stoves, sinks or vending machines")
-        or ("[Living City] Couldn't read the map's props: " .. tostring(LC.StaticScanNote)))
+    local msg = ok and ("[Miscount] Static props: " .. (#parts > 0 and table.concat(parts, ", ") or "no stoves, sinks or vending machines")
+        or ("[Miscount] Couldn't read the map's props: " .. tostring(LC.StaticScanNote)))
     if IsValid(ply) then ply:ChatPrint(msg) else print(msg) end
 end)

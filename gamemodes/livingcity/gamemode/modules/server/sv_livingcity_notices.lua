@@ -140,7 +140,7 @@ local PLACES = {
         if IsValid(e) then return e:GetPos(), "Civil Protection Commissary" end
         e = NearestEnt(ply:GetPos(), { "lc_terminal" })
         if IsValid(e) then return e:GetPos(), "Commissary (Civil Protection units are issued supplies here)" end
-        return nil, "There's no Civil Protection Commissary in this city yet. Your grenades are topped up when you go on duty. (Staff: Living City Editor > Fixture: Civil Protection Commissary.)"
+        return nil, "There's no Civil Protection Commissary in this city yet. Your grenades are topped up when you go on duty. (Staff: Miscount Editor > Fixture: Civil Protection Commissary.)"
     end,
     intake = function(ply)
         local e = LC.NearestIntake and LC.NearestIntake(ply:GetPos(), "register")
@@ -166,7 +166,7 @@ local PLACES = {
     lab = function(ply)
         local e = NearestEnt(ply:GetPos(), { "lc_workbench" })
         if IsValid(e) then return e:GetPos(), "The lab" end
-        return nil, "No cell has a lab yet. (Staff: Living City Editor > Fixture: Resistance lab.)"
+        return nil, "No cell has a lab yet. (Staff: Miscount Editor > Fixture: Resistance lab.)"
     end,
 }
 LC.WaypointPlaces = PLACES
@@ -178,7 +178,7 @@ function LC.WaypointTo(ply, what)
     if what == "lab" and ply:GetNW2String("lcf_faction", "") ~= "resistance" then return false end
     local pos, label = find(ply)
     if not pos then
-        if label then ply:ChatPrint("[Living City] " .. label) end
+        if label then ply:ChatPrint("[Miscount] " .. label) end
         return false, label
     end
     LC.SetWaypoint(ply, pos, label, what == "home" and 260 or 170)

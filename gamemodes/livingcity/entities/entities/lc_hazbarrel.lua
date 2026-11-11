@@ -9,7 +9,7 @@ AddCSLuaFile()
 ENT.Type = "anim"
 ENT.Base = "base_anim"
 ENT.PrintName = "Infestation control barrel"
-ENT.Author = "Living City"
+ENT.Author = "Miscount"
 ENT.Spawnable = false
 
 local PACK = "models/hlvr/combine_hazardprops/combinehazardprops_barrel.mdl"

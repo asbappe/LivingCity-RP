@@ -1759,15 +1759,15 @@ end)
 
 concommand.Add("lc_skirmish", function(ply, _, args)
     if IsValid(ply) and not ply:IsAdmin() then return end
-    if not LC.Running then return Say(ply, "[Living City] Start the city first.") end
+    if not LC.Running then return Say(ply, "[Miscount] Start the city first.") end
     if LC.Skirmish then EndSkirmish(LC.Skirmish, "called off") end
     local kind = string.lower(args[1] or "")
     local ok, why
     if kind == "sweep" then ok, why = StartSweep()
     elseif kind == "raid" then ok, why = StartRaid()
-    elseif kind == "end" then return Say(ply, "[Living City] Skirmish called off.")
-    else return Say(ply, "[Living City] Usage: lc_skirmish raid|sweep|end") end
-    Say(ply, ok and ("[Living City] " .. kind .. " started.") or ("[Living City] Couldn't start a " .. kind .. ": " .. tostring(why)))
+    elseif kind == "end" then return Say(ply, "[Miscount] Skirmish called off.")
+    else return Say(ply, "[Miscount] Usage: lc_skirmish raid|sweep|end") end
+    Say(ply, ok and ("[Miscount] " .. kind .. " started.") or ("[Miscount] Couldn't start a " .. kind .. ": " .. tostring(why)))
 end)
 
 ------------------------------------------------------------------------

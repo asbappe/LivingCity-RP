@@ -306,7 +306,7 @@ net.Receive("lcc_result", function()
     local ok, msg = net.ReadBool(), net.ReadString()
     if ok then
         if IsValid(frame) then frame:Remove() end
-        chat.AddText(Color(120, 200, 255), "[Living City] ", color_white, "You are " .. msg .. ".")
+        chat.AddText(Color(120, 200, 255), "[Miscount] ", color_white, "You are " .. msg .. ".")
     elseif IsValid(frame) then
         frame.errorMessage = msg
     end

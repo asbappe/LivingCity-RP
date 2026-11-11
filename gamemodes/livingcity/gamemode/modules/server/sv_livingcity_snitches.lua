@@ -114,7 +114,7 @@ local function Report(npc, st)
     for _, p in ipairs(player.GetAll()) do
         if LC.PlayerIsCP(p) then p:ChatPrint("[CP net] A citizen reports someone " .. r.what .. (where ~= "" and (", " .. where) or "") .. ": " .. who .. ". Outlined for 60 seconds.") end
     end
-    ply:ChatPrint("[Living City] Somebody told Civil Protection about you.")
+    ply:ChatPrint("[Miscount] Somebody told Civil Protection about you.")
     hook.Run("LivingCitySnitched", npc, ply, r.what)
 end
 LC.SnitchReport = Report
@@ -229,7 +229,7 @@ function LC.Burn(burner, target)
     local right = LC.ReallyInformant(target)
     local name = Name(target)
     if LC.RadioNotice then LC.RadioNotice("resistance", name .. " is burned: an informant. Don't deal with them.") end
-    target:ChatPrint("[Living City] The Resistance has burned you as an informant. Their people will know you.")
+    target:ChatPrint("[Miscount] The Resistance has burned you as an informant. Their people will know you.")
     if right then
         if LC.AddXP then LC.AddXP(burner, 15, "burned an informant") end
         burner:ChatPrint("[Resistance] You were right about them.")
@@ -239,7 +239,7 @@ function LC.Burn(burner, target)
             local pf = Faction(p)
             if p ~= target and (pf == "" or pf == "citizen") then
                 if LC.AddTrait then LC.AddTrait(p, "sympathy", -1) end
-                p:ChatPrint("[Living City] Word spreads: the Resistance burned an innocent citizen as an informant.")
+                p:ChatPrint("[Miscount] Word spreads: the Resistance burned an innocent citizen as an informant.")
             end
         end
         burner:ChatPrint("[Resistance] Word comes back: they were never an informant. The city won't forget it.")
@@ -256,7 +256,7 @@ function LC.Scar(burner, target)
     if not held then return false, "They'd fight you off. Only when they're cuffed, down, or have their hands up." end
     if target.GetPData and target:GetPData("lc_scar", "0") == "1" then return false, "They carry the mark already." end
     if not LC.StartTask then return false end
-    target:ChatPrint("[Living City] Someone grabs your face. A blade.")
+    target:ChatPrint("[Miscount] Someone grabs your face. A blade.")
     return LC.StartTask(burner, 5, "Marking them...", { maxMove = 60, cancelText = "You let them go.",
         done = function(p)
             if not IsValid(target) then return end
@@ -273,7 +273,7 @@ function LC.Scar(burner, target)
                 end
             end
             target:SetNW2Bool("lc_scar_mark", true) -- (the rat itself, drawn on the cheek: cl_livingcity_ratscar.lua)
-            target:ChatPrint("[Living City] They've carved a crude rat into your cheek. Everyone who sees you will see it, and the Resistance will never take you in.")
+            target:ChatPrint("[Miscount] They've carved a crude rat into your cheek. Everyone who sees you will see it, and the Resistance will never take you in.")
             p:ChatPrint("[Resistance] Marked. Anyone who looks at them will know.")
             hook.Run("LivingCityScarred", p, target)
         end })
@@ -290,7 +290,7 @@ local function BeatTick(now)
                     ply:SetHealth(math.max(15, ply:Health() - 10))
                     ply:EmitSound("physics/body/body_medium_impact_hard" .. math.random(1, 6) .. ".wav", 70)
                     if ply.ViewPunch then ply:ViewPunch(Angle(math.random(-12, 12), math.random(-12, 12), 0)) end
-                    ply:ChatPrint("[Living City] A rebel slams you against the wall. \"Rat. Get out of here.\"")
+                    ply:ChatPrint("[Miscount] A rebel slams you against the wall. \"Rat. Get out of here.\"")
                     break
                 end
             end

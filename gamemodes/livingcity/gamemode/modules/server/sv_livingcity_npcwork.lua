@@ -675,7 +675,7 @@ Task("medic", { id = "revive", label = "helping someone who's down", urgent = tr
           done = function(n)
               if LC.Revive and LC.Revive(ply, 30, nil) then
                   local who = LC.NPCStr(n, "lc_pname", "")
-                  ply:ChatPrint("[Living City] " .. (who ~= "" and who or "A Union medic") .. ", a Union medic, patches you up enough to stand.")
+                  ply:ChatPrint("[Miscount] " .. (who ~= "" and who or "A Union medic") .. ", a Union medic, patches you up enough to stand.")
                   hook.Run("LivingCityNPCRevived", n, ply)
               end
           end },
@@ -715,7 +715,7 @@ Task("medic", { id = "clinic", label = "on duty at the clinic", weight = 2, find
                       if LC.Face then LC.Face(n, p:GetPos()) end
                       if (p.lcClinicSaid or 0) < CurTime() then
                           p.lcClinicSaid = CurTime() + 60
-                          p:ChatPrint("[Living City] The clinic medic sees to you. (+10 health while you stay close)")
+                          p:ChatPrint("[Miscount] The clinic medic sees to you. (+10 health while you stay close)")
                       end
                   end
               end
@@ -1050,6 +1050,6 @@ end
 
 concommand.Add("lc_npcwork", function(ply)
     if IsValid(ply) and not ply:IsAdmin() then return end
-    local msg = "[Living City] " .. LC.NPCWorkSummary()
+    local msg = "[Miscount] " .. LC.NPCWorkSummary()
     if IsValid(ply) then ply:ChatPrint(msg) else print(msg) end
 end)

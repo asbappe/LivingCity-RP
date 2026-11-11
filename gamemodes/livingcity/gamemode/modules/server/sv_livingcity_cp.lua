@@ -439,7 +439,7 @@ function LC.SetHandsUp(ply, up)
     ply:SetNW2Bool("lc_handsup", up)
     if up then
         if ply:HasWeapon("weapon_lc_hands") then ply:SelectWeapon("weapon_lc_hands") end
-        ply:ChatPrint("[Living City] Hands up. (F1 > Lower my hands.)")
+        ply:ChatPrint("[Miscount] Hands up. (F1 > Lower my hands.)")
     end
     return true
 end
@@ -490,7 +490,7 @@ function LC.TiePlayer(target, tier)
     LC.Tied[target] = t
     if IsValid(tier) and not RealUnit(tier) and LC.TakeItem then LC.TakeItem(tier, "zipties", 1) end
     target:EmitSound("physics/plastic/plastic_box_impact_soft2.wav", 60)
-    target:ChatPrint("[Living City] Your hands are cuffed, so you can't use anything. To try to get free: F1 > Work at the cuffs, when nobody's looking.")
+    target:ChatPrint("[Miscount] Your hands are cuffed, so you can't use anything. To try to get free: F1 > Work at the cuffs, when nobody's looking.")
     if IsValid(tier) then tier:ChatPrint("Cuffed. Look at them and press F1 to drag them along or take the cuffs off.") end
     hook.Run("LivingCityTied", target, tier)
     return true
@@ -525,7 +525,7 @@ function LC.StartTie(ply, target)
     target = target or EyeTarget(ply)
     local ok, why = LC.CanTie(ply, target)
     if not ok then return false, why end
-    target:ChatPrint("[Living City] Someone is putting cuffs on you.")
+    target:ChatPrint("[Miscount] Someone is putting cuffs on you.")
     return LC.StartTask(ply, cvTieSecs:GetFloat(), "Cuffing them...", {
         maxMove = 40, cancelText = "You let go.",
         done = function(p)
@@ -544,7 +544,7 @@ function LC.StartUntie(ply, target)
     if LC.IsTied(ply) then return false, "Your own hands are cuffed." end
     if RealUnit(ply) then
         LC.Untie(target, ply, true)
-        target:ChatPrint("[Living City] A Civil Protection unit takes your cuffs off.")
+        target:ChatPrint("[Miscount] A Civil Protection unit takes your cuffs off.")
         return true
     end
     return LC.StartTask(ply, 4, "Uncuffing them...", {
@@ -552,7 +552,7 @@ function LC.StartUntie(ply, target)
         done = function(p)
             if IsValid(target) and LC.IsTied(target) and p:GetPos():DistToSqr(target:GetPos()) < 130 * 130 then
                 LC.Untie(target, p, true)
-                target:ChatPrint("[Living City] Someone gets your cuffs off. You're free.")
+                target:ChatPrint("[Miscount] Someone gets your cuffs off. You're free.")
             end
         end,
     })
@@ -578,11 +578,11 @@ function LC.StartStruggle(ply)
             local tt = LC.Tied[p]
             if not tt then return end
             if IsValid(tt.escort) or UnitSees(p, 700) then
-                p:ChatPrint("[Living City] They see you working at the cuffs, and tighten them.")
+                p:ChatPrint("[Miscount] They see you working at the cuffs, and tighten them.")
                 return
             end
             LC.Untie(p, p, true)
-            p:ChatPrint("[Living City] The cuffs give. Your hands are free.")
+            p:ChatPrint("[Miscount] The cuffs give. Your hands are free.")
         end,
     })
 end
@@ -606,7 +606,7 @@ function LC.TryEscort(ply)
     if LC.IsTied(ply) then return false, "Your hands are cuffed." end
     LC.Tied[target].escort = ply
     ply:ChatPrint("You take them by the arm. (F1 > Drag them along again to let go.)")
-    target:ChatPrint("[Living City] You're being walked along.")
+    target:ChatPrint("[Miscount] You're being walked along.")
     return true
 end
 

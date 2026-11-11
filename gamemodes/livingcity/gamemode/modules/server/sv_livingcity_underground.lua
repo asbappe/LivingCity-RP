@@ -52,7 +52,7 @@ local cvRisk      = CreateConVar("lc_disguise_risk", "5", FLAGS, "Percent chance
 local cvIdentity  = CreateConVar("lc_identity_minutes", "30", FLAGS, "How long a forged identity holds")
 local cvStash     = CreateConVar("lc_stash_size", "8", FLAGS, "Slots in your hidden stash at home")
 local cvRaid      = CreateConVar("lc_raid_chance", "25", FLAGS, "Percent chance an inspection sweep raids a stash with contraband in it")
-local cvGuns      = CreateConVar("lc_search_weapons", "1", FLAGS, "Searches confiscate guns from citizens (Living City factions only)")
+local cvGuns      = CreateConVar("lc_search_weapons", "1", FLAGS, "Searches confiscate guns from citizens (Miscount factions only)")
 
 local function Pick(t) return t[math.random(#t)] end
 local function Skill(ply, s) return LC.SkillMod and LC.SkillMod(ply, s) or 0 end

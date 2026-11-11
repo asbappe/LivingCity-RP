@@ -208,7 +208,7 @@ local function Open(st)
     local GOLD, DIM = Color(255, 210, 90), Color(170, 170, 180)
     if not st.point then
         Line(body, "No dream point on this map, so the secret endings are as they always were (the whole city, then the map reloads). "
-            .. "To make them dreams: the Living City Editor, Point: dream, somewhere out of the map nobody can walk to (and Zone: dream round it, for its edge).", GOLD)
+            .. "To make them dreams: the Miscount Editor, Point: dream, somewhere out of the map nobody can walk to (and Zone: dream round it, for its edge).", GOLD)
     elseif not st.on then
         Line(body, "Dreams are switched off (lc_dreams 0): the endings are as they always were.", GOLD)
     else

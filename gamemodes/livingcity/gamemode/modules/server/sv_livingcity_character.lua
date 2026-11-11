@@ -26,7 +26,7 @@ util.AddNetworkString("lcc_result")
 util.AddNetworkString("lcc_keep")
 
 local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
-local cvPerma = CreateConVar("lc_permadeath", "1", FLAGS, "In the Living City gamemode, dying means starting over as a new character")
+local cvPerma = CreateConVar("lc_permadeath", "1", FLAGS, "In the Miscount gamemode, dying means starting over as a new character")
 
 local FIRST_MALE = {
     "Dale", "Owen", "Tomas", "Piotr", "Jonas", "Anton", "Emil", "Felix", "Karl", "Stefan",
@@ -124,7 +124,7 @@ local function Assign(ply, announce)
     ply:SetPData("lc_model", model)
     if LC.StartLife then LC.StartLife(ply) end -- (their time in the city starts now: sv_livingcity_life.lua)
     if LC.IntakeNew then LC.IntakeNew(ply) end -- (nothing is theirs yet: sv_livingcity_intake.lua)
-    if announce then ply:ChatPrint(string.format("[Living City] You are %s, citizen %s.", name, cid)) end
+    if announce then ply:ChatPrint(string.format("[Miscount] You are %s, citizen %s.", name, cid)) end
 end
 
 LC.AssignNewCharacter = function(ply, announce) return Assign(ply, announce) end
@@ -148,7 +148,7 @@ hook.Add("PlayerInitialSpawn", "LivingCityCharacter", function(ply)
     end
     timer.Simple(7, function()
         if IsValid(ply) and Enabled() then
-            ply:ChatPrint(string.format("[Living City] You are %s, citizen %s. If you die, that person is gone.", LC.CharacterName(ply), ply:GetNW2String("lc_cid", "")))
+            ply:ChatPrint(string.format("[Miscount] You are %s, citizen %s. If you die, that person is gone.", LC.CharacterName(ply), ply:GetNW2String("lc_cid", "")))
         end
     end)
 end)
@@ -214,7 +214,7 @@ hook.Add("PlayerSpawn", "LivingCityCharacter", function(ply)
     ply.lcNewLife = nil
     timer.Simple(1, function()
         if not IsValid(ply) then return end
-        ply:ChatPrint(string.format("[Living City] %s is dead. You are %s, citizen %s. You start over with nothing.",
+        ply:ChatPrint(string.format("[Miscount] %s is dead. You are %s, citizen %s. You start over with nothing.",
             old, LC.CharacterName(ply), ply:GetNW2String("lc_cid", "")))
         LC.OpenCharacterCreator(ply)
     end)
@@ -230,7 +230,7 @@ hook.Add("PlayerDeath", "LivingCityCharacter", function(ply, inflictor, attacker
         return
     end
     if ply:GetNW2Bool("lc_build", false) then
-        ply:ChatPrint("[Living City] You died in build mode, so you keep this character. C > Help > Build mode to leave build mode and play for real.")
+        ply:ChatPrint("[Miscount] You died in build mode, so you keep this character. C > Help > Build mode to leave build mode and play for real.")
         Card(false, "Build mode: you keep this character.")
         return
     end
@@ -239,7 +239,7 @@ hook.Add("PlayerDeath", "LivingCityCharacter", function(ply, inflictor, attacker
         return
     end
     if LC.InCustody and LC.InCustody(ply) then
-        ply:ChatPrint("[Living City] You died in custody. That doesn't change who you are, or how long you're in for.")
+        ply:ChatPrint("[Miscount] You died in custody. That doesn't change who you are, or how long you're in for.")
         Card(false, "Died in custody: you're still you, and still serving your time.")
         return
     end
@@ -257,7 +257,7 @@ concommand.Add("lc_newcharacter", function(ply, _, args)
     if IsValid(ply) and not ply:IsAdmin() then return end
     local target = LC.FindPlayer and LC.FindPlayer(args[1])
     if not target then
-        local msg = "[Living City] Usage: lc_newcharacter <name>  (wipes their character)"
+        local msg = "[Miscount] Usage: lc_newcharacter <name>  (wipes their character)"
         if IsValid(ply) then ply:ChatPrint(msg) else print(msg) end
         return
     end
@@ -419,7 +419,7 @@ net.Receive("lcc_submit", function(_, ply)
     end
     if atDesk and LC.SetDescription then LC.SetDescription(ply, desc) end
     ply:SetPData("lc_chosen", "1")
-    if not atDesk then ply:ChatPrint(string.format("[Living City] You are %s, citizen %s.", clean, ply:GetNW2String("lc_cid", ""))) end
+    if not atDesk then ply:ChatPrint(string.format("[Miscount] You are %s, citizen %s.", clean, ply:GetNW2String("lc_cid", ""))) end
     Result(ply, true, clean)
     hook.Run("LivingCityCharacterChosen", ply, clean, model)
 end)
@@ -454,12 +454,12 @@ concommand.Add("lc_setname", function(ply, _, args)
     local target = LC.FindPlayer and LC.FindPlayer(args[1])
     local name = table.concat(args, " ", 2)
     if not target or name == "" then
-        local msg = "[Living City] Usage: lc_setname <player> <new name>"
+        local msg = "[Miscount] Usage: lc_setname <player> <new name>"
         if IsValid(ply) then ply:ChatPrint(msg) else print(msg) end
         return
     end
     LC.SetCharacter(target, name, nil)
-    target:ChatPrint("[Living City] Staff changed your name to " .. name .. ".")
+    target:ChatPrint("[Miscount] Staff changed your name to " .. name .. ".")
 end)
 
 concommand.Add("lc_creator", function(ply, _, args)
