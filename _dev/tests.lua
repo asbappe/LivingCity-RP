@@ -16357,7 +16357,9 @@ do
     ok(math.abs((t0 + 500 - e.lcAwakeSince) - awake) < 0.01, "and the hours with it out don't count as time awake")
     e.GetActiveWeapon = nil
     LC.RestTick(t0 + 505)
-    ok(e:GetNW2Bool("lc_tired", false), "put it away and you're as tired as you were")
+    ok(not e:GetNW2Bool("lc_tired", false), "put it away: not exhausted that instant (the owner, 11 November), six minutes to find a bed")
+    LC.RestTick(t0 + 505 + 365)
+    ok(e:GetNW2Bool("lc_tired", false), "after those six minutes you're as tired as you were")
     e.lcAwakeSince = CurTime() e:SetNW2Bool("lc_tired", false) LC.RestTick(CurTime())
     e:SetPos(Vector(-120000, -120000, 0))
 end

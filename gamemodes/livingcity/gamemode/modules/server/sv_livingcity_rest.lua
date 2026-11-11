@@ -324,6 +324,8 @@ hook.Add("KeyPress", "LivingCityBeds", function(ply, key)
     if not ok and why then ply:ChatPrint(why) end
 end)
 
+local EDIT_GRACE = 360 -- (seconds before tiredness can set in after the editor tool is put away)
+
 -- Every five seconds: who's tired, and the rested heal.
 function LC.RestTick(now)
     if not cvOn:GetBool() then return end
@@ -334,6 +336,16 @@ function LC.RestTick(now)
         local editing = LC.EditorHeld and LC.EditorHeld(ply)
         if editing and ply.lcRestTickAt and now > ply.lcRestTickAt then ply.lcAwakeSince = ply.lcAwakeSince + (now - ply.lcRestTickAt) end
         ply.lcRestTickAt = now
+        -- Putting the tool away after lights out isn't being caught out of bed that instant (the owner,
+        -- 11 November: "the second I put the tool away I am exhausted, can we not have it pile on and
+        -- catch up the instant I put it away?"): six minutes to get to a bed first, and a notice saying so.
+        if ply.lcWasEditing and not editing then
+            ply.lcEditGrace = now + EDIT_GRACE
+            if now >= LC.TiredDue(ply) - EDIT_GRACE and not Exempt(ply) then
+                Notice(ply, "warn", "Back in the city", "The editor tool is away, and it's late for you: you have about six minutes before your eyes start closing. Find a bed (F1 > What now? > Places).", 10)
+            end
+        end
+        ply.lcWasEditing = editing and true or nil
         if Exempt(ply) or editing then
             if ply:GetNW2Bool("lc_tired", false) then ply:SetNW2Bool("lc_tired", false) TiredHealth(ply, false) end
             if ply:GetNW2Bool("lc_drowsy", false) then ply:SetNW2Bool("lc_drowsy", false) end
@@ -343,6 +355,7 @@ function LC.RestTick(now)
             local tired = now >= due
             -- not in the middle of a fight: the eyes start closing once it's over (five minutes at most)
             if tired and not was and LC.InFight and LC.InFight(ply) and now - due < FIGHT_HOLD then tired = false end
+            if tired and not was and now < (ply.lcEditGrace or 0) then tired = false end -- (just put the editor tool away)
             -- the two warnings, once each time awake
             local w = ply.lcTiredWarn
             if not w or w.since ~= ply.lcAwakeSince then w = { since = ply.lcAwakeSince, n = 0 } ply.lcTiredWarn = w end
