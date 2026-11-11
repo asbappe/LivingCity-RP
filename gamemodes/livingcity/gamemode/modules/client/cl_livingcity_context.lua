@@ -116,7 +116,9 @@ local DATA = {
             { "{+use} on a citizen: they stop and wait, so you can search them", Unit },
             "{+reload} on someone: search them (or let a prisoner go)",
             "{+attack2} on someone: arrest them and send them to a cell",
-            { "Cuff and drag: {quick2} > Unit tools", Unit } },
+            -- (the owner, 11 November: it sent you to the Unit tools window, which fills the screen; the quick menu does it)
+            { "Cuff a player: look at them up close, then {quick2} > Cuff. An NPC: {+attack2} cuffs them", Unit },
+            { "Cuffed: {quick2} > Drag along, or Walk them to the cells", Unit } },
         weapon_lc_hoover = { "Hoover",
             "Hold {+attack} on a dead growth: vacuum it up",
             "{+use} on an infestation control barrel: empty it",

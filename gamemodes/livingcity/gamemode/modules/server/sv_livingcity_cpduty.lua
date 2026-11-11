@@ -359,6 +359,35 @@ function LC.CPBreak(ply)
     return true
 end
 
+-- A shift says when it starts, when it is half gone and when two minutes are left (the owner,
+-- 11 November: "I see no indication of a shift beginning or in progress ... I didn't even know my
+-- shift had started").
+local function QuotaLine(s)
+    local q, parts = Quota(), {}
+    if q.searches > 0 then parts[#parts + 1] = string.format("searches %d of %d", s.searches or 0, q.searches) end
+    if q.papers > 0 then parts[#parts + 1] = string.format("papers duty %d of %d", s.papers or 0, q.papers) end
+    if q.inspections > 0 then parts[#parts + 1] = string.format("residence inspections %d of %d", s.inspections or 0, q.inspections) end
+    return #parts > 0 and table.concat(parts, ", ") or "nothing asked for"
+end
+function LC.CPShiftTell(ply, s, now)
+    local mins = cvMins:GetFloat()
+    local left = s.startT + mins * 60 - now
+    local stage = left <= 120 and 3 or (left <= mins * 30 and 2 or 1)
+    if (s.told or 0) >= stage then return false end
+    local first = not s.told
+    s.told = stage
+    if not LC.Notice then return true end
+    if first then
+        LC.Notice(ply, "info", "Shift started", string.format("%d minutes. Your quota: %s. It's all on F2 > Me > My shift; a review and experience at the end.",
+            math.max(1, math.ceil(left / 60)), QuotaLine(s)), 10)
+    elseif stage == 2 then
+        LC.Notice(ply, "info", "Half your shift gone", string.format("%d minutes left. So far: %s. (F2 > Me > My shift)", math.ceil(left / 60), QuotaLine(s)), 8)
+    else
+        LC.Notice(ply, "warn", "Two minutes of your shift left", "So far: " .. QuotaLine(s) .. ". (F2 > Me > My shift)", 8)
+    end
+    return true
+end
+
 local function Tick()
     local now = CurTime()
     for _, ply in ipairs(player.GetAll()) do
@@ -370,6 +399,12 @@ local function Tick()
                 ply.lcPapersDuty = nil
                 if (g.done or 0) >= 3 then Count(ply, "papers") end -- (most of the travelers seen: it counts)
             end
+            -- With the editor tool out the shift's clock waits: building the map isn't a shift done badly
+            -- (the owner, 11 November: "I got a notice while testing and using the editor tool, that I did
+            -- nothing on my shift").
+            if LC.EditorHeld and LC.EditorHeld(ply) and s.lastTick then s.startT = s.startT + (now - s.lastTick) end
+            s.lastTick = now
+            LC.CPShiftTell(ply, s, now)
             if now >= s.startT + cvMins:GetFloat() * 60 then LC.CPReview(ply) Shift(ply) end
             if ply.lcInspectOrder and not IsValid(ply.lcInspectOrder.target) then
                 ply.lcInspectOrder = nil
