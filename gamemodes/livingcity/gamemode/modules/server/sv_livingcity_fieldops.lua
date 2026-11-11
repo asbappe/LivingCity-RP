@@ -105,7 +105,37 @@ LC.KeepBackupGunsOut = KeepGunsOut
 -- Hands to the eyes (a citizen's reaction to a scanner's flash), else a flinch.
 local BLIND_ANIMS = { "photo_react_blind", "photo_react_startle", "Fear_Reaction" }
 local NO_FIRE = bit.bor(CAP_WEAPON_RANGE_ATTACK1 or 0, CAP_WEAPON_RANGE_ATTACK2 or 0, CAP_INNATE_RANGE_ATTACK1 or 0,
-    CAP_INNATE_RANGE_ATTACK2 or 0, CAP_WEAPON_MELEE_ATTACK1 or 0, CAP_INNATE_MELEE_ATTACK1 or 0)
+    CAP_INNATE_RANGE_ATTACK2 or 0, CAP_WEAPON_MELEE_ATTACK1 or 0, CAP_INNATE_MELEE_ATTACK1 or 0, CAP_MOVE_SHOOT or 0)
+
+-- Blind, they haven't a gun to fire (the owner, 11 November, the second time: two flashbangs "right into
+-- them, and they never moved nor stopped shooting me"). Taking away what they may do and whom they see
+-- wasn't enough in the real game: they still hate whoever they were shooting at, see them again a tenth of
+-- a second later and fire. So the weapons themselves are taken out of their hands for as long as they are
+-- blind (fumbled, as far as anyone can tell) and put back after.
+local function Disarm(npc, st)
+    if st.flashWeapons or not npc.GetWeapons then return end
+    local active = npc.GetActiveWeapon and npc:GetActiveWeapon()
+    local list = {}
+    for _, w in ipairs(npc:GetWeapons() or {}) do
+        if IsValid(w) then
+            list[#list + 1] = { cls = w:GetClass(), active = w == active }
+            w:Remove()
+        end
+    end
+    st.flashWeapons = list
+end
+local function Rearm(npc, st)
+    local list = st.flashWeapons
+    st.flashWeapons = nil
+    if not list or not IsValid(npc) or npc:Health() <= 0 or not npc.Give then return end
+    local back
+    for _, w in ipairs(list) do
+        npc:Give(w.cls)
+        if w.active then back = w.cls end
+    end
+    if back and npc.SelectWeapon then npc:SelectWeapon(back) end
+end
+LC.FlashDisarm, LC.FlashRearm = Disarm, Rearm
 local PAIN = {
     cop = { "npc/metropolice/pain1.wav", "npc/metropolice/pain2.wav", "npc/metropolice/pain3.wav" },
     soldier = { "npc/combine_soldier/pain1.wav", "npc/combine_soldier/pain2.wav", "npc/combine_soldier/pain3.wav" },
@@ -148,6 +178,7 @@ function LC.FlashStun(npc, st, secs)
         local snd = PAIN[st.role] and Pick(PAIN[st.role])
             or ("vo/npc/" .. (st.gender or "male") .. "01/" .. Pick({ "ow01", "ow02", "pain01", "pain02" }) .. ".wav")
         npc:EmitSound(snd, 75)
+        Disarm(npc, st)
     end
     npc:SetEnemy(NULL)
     if npc.ClearEnemyMemory then npc:ClearEnemyMemory() end
@@ -162,6 +193,7 @@ local function FlashEnd(npc, st)
         npc:CapabilitiesAdd(st.flashCaps)
     end
     st.flashCaps = nil
+    Rearm(npc, st)
     CancelAnim(npc)
     if npc:Health() > 0 then npc:SetSchedule(SCHED_IDLE_STAND) end
 end

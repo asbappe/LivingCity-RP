@@ -118,3 +118,7 @@ On the night shift (`cp_nightshift`) or a patrol job (`cp_patrol`), 40 seconds i
 - **A line of fire.** One that knows of an enemy within 3000 units but can't see them goes for a line of fire or closes in, every four seconds, instead of standing facing a wall.
 - **Cover.** Hurt by an enemy, it takes cover from them three times in ten (seven in ten below half health), at most once in seven seconds.
 - **Better shots.** Each is given very good weapon handling once, may duck, and fires on the move.
+
+## Flashbangs that hold (11 November)
+
+Blinded NPCs now have their weapons taken out of their hands for as long as they are blind, and given back (the one they held, in hand) when it wears off. Before, only what they were allowed to do and whom they remembered was cleared, which the tests accepted but the real game did not: they saw their target again a moment later and fired. Anyone within 300 units of the bang is caught whatever is in the way (it was 150); further off, up to 560, they need a line of sight to it. Whoever threw it gets a chat line: "[Flashbang] 3 blinded: they can't shoot until it wears off." or "[Flashbang] Nobody was caught in it."

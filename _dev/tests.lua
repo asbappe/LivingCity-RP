@@ -24414,6 +24414,28 @@ function RetakeFieldTests()
     ok(table.Count(secs) >= 2, "a different time for each of them", table.Count(secs))
     ok(cleared, "and they lose who they were shooting at")
     ok(blinded[1][1]:IsCurrentSchedule(SCHED_FORCED_GO) or blinded[1][1].lcGesture ~= nil, "they stumble about with their hands at their eyes, not stand idle")
+    -- (the owner, 11 November: "they never moved nor stopped shooting me". Blind, the guns are out of their hands)
+    ok(LC.LastFlash and LC.LastFlash.blinded == 6 and has(unit.chat, "[Flashbang] 6 blinded"), "whoever threw it is told how many it caught")
+    do
+        local gunman, gst = blinded[1][1], blinded[1][2]
+        local held = { { cls = "weapon_smg1", removed = false }, { cls = "weapon_pistol", removed = false } }
+        local given, selected = {}, nil
+        local ents2 = {}
+        for i, h in ipairs(held) do
+            local w = ents.Create(h.cls) w:Spawn()
+            ents2[i] = w
+        end
+        gst.flashWeapons = nil
+        gunman.GetWeapons = function() local out = {} for _, w in ipairs(ents2) do if IsValid(w) then out[#out + 1] = w end end return out end
+        gunman.GetActiveWeapon = function() return ents2[1] end
+        gunman.Give = function(_, cls) given[#given + 1] = cls end
+        gunman.SelectWeapon = function(_, cls) selected = cls end
+        LC.FlashDisarm(gunman, gst)
+        ok(not IsValid(ents2[1]) and not IsValid(ents2[2]) and gst.flashWeapons and #gst.flashWeapons == 2, "blind, every weapon is out of their hands: nothing to shoot with")
+        LC.FlashRearm(gunman, gst)
+        ok(#given == 2 and selected == "weapon_smg1" and gst.flashWeapons == nil, "and back in them when it wears off, the one they held in hand")
+        gunman.GetWeapons, gunman.GetActiveWeapon, gunman.Give, gunman.SelectWeapon = nil, nil, nil, nil
+    end
     LC.FlashTick(CurTime() + 10)
     local over = true
     for _, b in ipairs(blinded) do if b[2].flashBlind then over = false end end

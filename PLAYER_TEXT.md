@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version f4db86b. Admin-only console messages and log lines are left out.
+Made from version c13b6bc. Admin-only console messages and log lines are left out.
 
-11436 lines, from 301 files.
+11438 lines, from 301 files.
 
 ## Contents
 
@@ -159,7 +159,7 @@ Made from version f4db86b. Admin-only console messages and log lines are left ou
 - [a Civil Protection shift, with a quota and a review](#a-civil-protection-shift-with-a-quota-and-a-review-svlivingcitycpdutylua) (60)
 - [the Civil Protection Commissary (units' supplies)](#the-civil-protection-commissary-units-supplies-svlivingcitycpsupplylua) (27)
 - [headcrab hunts for the Resistance's supply crate](#headcrab-hunts-for-the-resistances-supply-crate-svlivingcitycrabhuntlua) (15)
-- [making things, grenades, the arms trade, and getting people out](#making-things-grenades-the-arms-trade-and-getting-people-out-svlivingcitycraftinglua) (30)
+- [making things, grenades, the arms trade, and getting people out](#making-things-grenades-the-arms-trade-and-getting-people-out-svlivingcitycraftinglua) (32)
 - [the Cremator](#the-cremator-svlivingcitycrematorlua) (17)
 - [what custody costs the worst anticitizens](#what-custody-costs-the-worst-anticitizens-svlivingcitycustodylua) (30)
 - [saved layout](#saved-layout-svlivingcitydatalua) (14)
@@ -7100,39 +7100,44 @@ Made from version f4db86b. Admin-only console messages and log lines are left ou
 - "You've already got one in your hand."  (text, line 163)
 - "Brandishing a weapon"  (text, line 168)
 
+> Note for you (not shown in game): whoever threw it is told what it did (and if it ever says "nobody", that is worth knowing)
+
+- "[Flashbang] %d blinded: they can't shoot until it wears off."  (message, line 289)
+- "[Flashbang] Nobody was caught in it."  (chat message, line 290)
+
 > Note for you (not shown in game): a mask keeps it out (chlorine and poison alike), unless its filter has been fouled
 
-- "Your filter"  (on-screen notice, line 315)
-- "The gas is coming straight through your mask: the filter's no good. Get out of it!"  (on-screen notice, line 315)
+- "Your filter"  (on-screen notice, line 326)
+- "The gas is coming straight through your mask: the filter's no good. Get out of it!"  (on-screen notice, line 326)
 
 > Note for you (not shown in game): part of: throw grenade
 
-- "Not with your hands cuffed."  (text, line 355)
+- "Not with your hands cuffed."  (text, line 366)
 
 > Note for you (not shown in game): The Grenades weapon asks for one of a kind
 
-- "None left."  (text, line 405)
+- "None left."  (text, line 416)
 
 > Note for you (not shown in game): A unit's issued grenades are Combine issue: kept, thrown, or handed to another unit; never sold, dropped, stashed or passed to anyone else (they came back free with every respawn).
 
-- "That's Combine issue: it stays with you (or another unit)."  (text, line 430)
+- "That's Combine issue: it stays with you (or another unit)."  (text, line 441)
 
 > Note for you (not shown in game): Passing things on (and smuggling them into a cell)
 
-- "Look at the person you want to give it to, up close."  (text, line 457)
-- "Your papers stay with you. (Show them instead: Use.)"  (text, line 460)
+- "Look at the person you want to give it to, up close."  (text, line 468)
+- "Your papers stay with you. (Show them instead: Use.)"  (text, line 471)
 
 > Note for you (not shown in game): part of: give to
 
-- "They can't carry any more."  (text, line 462)
-- "Smuggling contraband into custody"  (text, line 467)
-- "[Civil Protection] A guard saw you pass something through the bars. It's confiscated, and so is your freedom."  (chat message, line 468)
-- "You hand over: {name}."  (chat message, line 473)
-- "slips you: {name}.{or}"  (chat message, line 474)
+- "They can't carry any more."  (text, line 473)
+- "Smuggling contraband into custody"  (text, line 478)
+- "[Civil Protection] A guard saw you pass something through the bars. It's confiscated, and so is your freedom."  (chat message, line 479)
+- "You hand over: {name}."  (chat message, line 484)
+- "slips you: {name}.{or}"  (chat message, line 485)
 
 > Note for you (not shown in game): typing in chat
 
-- "You don't have anything like that."  (chat message, line 488)
+- "You don't have anything like that."  (chat message, line 499)
 
 ## the Cremator (sv_livingcity_cremator.lua)
 
@@ -9423,72 +9428,72 @@ Made from version f4db86b. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: rebel wave
 
-- "Rebel counterattack: %d fighters toward %s"  (message, line 278)
+- "Rebel counterattack: %d fighters toward %s"  (message, line 310)
 
 > Note for you (not shown in game): Who they are, to the one they're with.
 
-- "[Dispatch] %d units are assigned to you for this job: armed, with you, and on whatever you fight until it's done."  (text, line 384)
-- "[Overwatch] %d soldiers are assigned to you for this protocol: with you, and on whatever you fight until it's done."  (text, line 385)
-- "[Resistance] %d fighters are coming with you on this one: they keep with you and fight beside you until it's done."  (text, line 386)
+- "[Dispatch] %d units are assigned to you for this job: armed, with you, and on whatever you fight until it's done."  (text, line 416)
+- "[Overwatch] %d soldiers are assigned to you for this protocol: with you, and on whatever you fight until it's done."  (text, line 417)
+- "[Resistance] %d fighters are coming with you on this one: they keep with you and fight beside you until it's done."  (text, line 418)
 
 > Note for you (not shown in game): part of: assign quest squad
 
-- "Your squad"  (on-screen notice, line 402)
-- "%d %s are with you for this job. They follow you and fight what you fight until it's over."  (message, line 402)
+- "Your squad"  (on-screen notice, line 434)
+- "%d %s are with you for this job. They follow you and fight what you fight until it's over."  (message, line 434)
 
 > Note for you (not shown in game): Who hid the contraband (the contraband sweep, sv_livingcity_quests.lua)
 
-- "a ration coupon stamped with citizen ID %s"  (text, line 524)
-- "a torn work card with citizen ID %s on it"  (text, line 525)
-- "a delivery slip signed by citizen %s"  (text, line 526)
-- "a housing chit for citizen %s, folded small"  (text, line 527)
+- "a ration coupon stamped with citizen ID %s"  (text, line 556)
+- "a torn work card with citizen ID %s on it"  (text, line 557)
+- "a delivery slip signed by citizen %s"  (text, line 558)
+- "a housing chit for citizen %s, folded small"  (text, line 559)
 
 > Note for you (not shown in game): part of: contraband trail
 
-- "down the street"  (text, line 542)
-- "Tucked under the last stash: {id}. Whoever hid all this lives around here."  (quest narration, line 543)
-- "Ask around: walk up to a citizen near the stashes and press E to ask who citizen {id} is"  (text, line 545)
+- "down the street"  (text, line 574)
+- "Tucked under the last stash: {id}. Whoever hid all this lives around here."  (quest narration, line 575)
+- "Ask around: walk up to a citizen near the stashes and press E to ask who citizen {id} is"  (text, line 577)
 
 > Note for you (not shown in game): part of: on done
 
-- "'{id}? Keeps odd hours. Saw them {place} not long ago.' They won't meet your eyes."  (text, line 553)
-- "'I don't want trouble. {id} went {place}. That's all I know.'"  (text, line 554)
-- "A shrug, then a whisper: '{place}. Don't tell them it was me.'"  (text, line 555)
+- "'{id}? Keeps odd hours. Saw them {place} not long ago.' They won't meet your eyes."  (text, line 585)
+- "'I don't want trouble. {id} went {place}. That's all I know.'"  (text, line 586)
+- "A shrug, then a whisper: '{place}. Don't tell them it was me.'"  (text, line 587)
 
 > Note for you (not shown in game): part of: contraband trail
 
-- "Track down citizen {id} (marked on your screen)"  (text, line 561)
-- "Citizen {id} sees {kind} in your hands and goes pale."  (quest choice, line 562)
-- "Detain them."  (text, line 563)
-- "Make them say who it was for."  (text, line 564)
+- "Track down citizen {id} (marked on your screen)"  (text, line 593)
+- "Citizen {id} sees {kind} in your hands and goes pale."  (quest choice, line 594)
+- "Detain them."  (text, line 595)
+- "Make them say who it was for."  (text, line 596)
 
 > Note for you (not shown in game): part of: success
 
-- "They crack: a name, a block, a time. Dispatch has it now."  (quest narration, line 568)
+- "They crack: a name, a block, a time. Dispatch has it now."  (quest narration, line 600)
 
 > Note for you (not shown in game): part of: fail
 
-- "They shove the stash at you and run! Catch them."  (quest narration, line 571)
+- "They shove the stash at you and run! Catch them."  (quest narration, line 603)
 
 > Note for you (not shown in game): part of: contraband trail
 
-- "Take their ration units and let them go (ends the job, less XP)."  (text, line 574)
+- "Take their ration units and let them go (ends the job, less XP)."  (text, line 606)
 
 > Note for you (not shown in game): part of: pick
 
-- "Their ration units go in your pocket. The stash goes in the incinerator. Nobody asks."  (quest narration, line 579)
+- "Their ration units go in your pocket. The stash goes in the incinerator. Nobody asks."  (quest narration, line 611)
 
 > Note for you (not shown in game): part of: contraband trail
 
-- "Let them go with a warning (ends the job)."  (text, line 582)
+- "Let them go with a warning (ends the job)."  (text, line 614)
 
 > Note for you (not shown in game): part of: pick
 
-- "'Not again.' They nod too fast, and they're gone."  (quest narration, line 587)
+- "'Not again.' They nod too fast, and they're gone."  (quest narration, line 619)
 
 > Note for you (not shown in game): part of: contraband trail
 
-- "Detain citizen {id} with the Arrest Baton (right click)"  (text, line 591)
+- "Detain citizen {id} with the Arrest Baton (right click)"  (text, line 623)
 
 ## Freq 7, the Resistance's pirate broadcast (sv_livingcity_freq7.lua)
 
