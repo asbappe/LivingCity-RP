@@ -58,6 +58,7 @@ _setcvar("lc_small_server", 0) -- (small-server mode turns on with few players o
 _setcvar("lc_bad_deal_chance", 0) -- (black market deals that go bad at random: tested on their own, StreetCrimeTests)
 _setcvar("lc_minds", 0) -- (watching the city's minds draws random numbers: tested on its own, MindsTests)
 _setcvar("lc_npc_vices", 0) -- (citizens drinking and smoking at random: tested on its own, MindsTests)
+LC.CollapseNpcRoll = function() return 3 end -- (the city's own Administrator refuses the G-Man three times, as she always did: tested on its own, CollapseOwnTests)
 _setcvar("lc_quest_allies", 0) -- (friendly NPCs on violent jobs: tested on their own, in QuestSquadTests)
 _setcvar("lc_directives", 1) -- (the G-Man's directives are off by default now, set aside by the owner; still tested as they are)
 _setcvar("lc_market_demand", 0) -- (demand moving black market prices: tested on its own, in MarketTests)
@@ -10991,7 +10992,9 @@ vst.state = "idle"
 v.lcProfile.rebel, vst.rebel, mv.rebel = nil, false, nil
 local poster = ents.Create("lc_civposter")
 poster:SetPos(T0 + Vector(0, 300, 0))
+for i = 1, 8 do LC.Minds.byId[8000 + i] = { id = 8000 + i, role = "citizen", p = { id = 8000 + i, alive = true }, name = "Crowd" .. i } end -- (a roster big enough that one more sympathizer is under the cap)
 did = LC.MindsAct(mv, "defy", CurTime())
+for i = 1, 8 do LC.Minds.byId[8000 + i] = nil end
 ok(v.lcProfile.rebel == true and vst.rebel == true and vst.mindErrand ~= nil, "defiance: they side with the Resistance, and go for a poster", did)
 v:SetPos(poster:GetPos() + Vector(40, 0, 0))
 LC.MindsErrandTick(CurTime())
@@ -11299,6 +11302,49 @@ for _, e in ipairs({ n, n2, unit, ply }) do if IsValid(e) then e:Remove() end en
 _setcvar("lc_minds_act", 0) _setcvar("lc_minds", 0)
 end
 BrainTests()
+
+function CollapseOwnTests()
+section("The collapse: the city's own Administrator refuses the G-Man one to three times")
+local human = {}
+for _, p in ipairs(player.GetAll()) do if p:GetNW2String("lcf_faction", "") == "admin" then human[#human + 1] = p p:SetNW2String("lcf_faction", "citizen") end end
+local roll, how = LC.CollapseNpcRoll, LC.CollapseNpcHow
+local seen = {}
+local realNotice = LC.Notice
+LC.Notice = function(p, kind, title, text) seen[#seen + 1] = tostring(title) end
+local function saw(title) for _, l in ipairs(seen) do if l == title then return true end end return false end
+if LC.CollapseActive() then LC.CollapseResolve("test") end
+-- once: she gives in when he comes back the first time
+LC.CollapseNpcRoll = function() return 1 end
+LC.CollapseNpcHow = function() return 0.1 end
+ok(LC.CollapseBegin("test") and LC.CollapseStage() == "offer", "BLACK with nobody in the post: he goes to the city's own Administrator")
+_run(4)
+ok(LC.CollapseStage() == "refused", "she refuses him the first time, always")
+seen = {}
+ok(LC.CollapseNext() == true and not LC.CollapseActive() and saw("The Administrator steps down"), "one refusal in her: asked again, she steps down, and the city calms")
+ok(LC.Chaos == 0, "the chaos is gone")
+-- twice: his first step happens, then she ends it
+LC.CollapseNpcRoll = function() return 2 end
+LC.CollapseNpcHow = function() return 0.9 end
+LC.CollapseBegin("test")
+_run(4)
+LC.CollapseNext()
+ok(LC.CollapseActive() and LC.CollapseStage() == "refused", "two refusals in her: she refuses again, and his first step comes")
+seen = {}
+LC.CollapseNext()
+ok(not LC.CollapseActive() and saw("The Administrator is dead"), "asked a third time she ends it herself")
+-- three times: it goes on to her last stand, as it always did
+LC.CollapseNpcRoll = function() return 3 end
+LC.CollapseBegin("test")
+_run(4)
+LC.CollapseNext() LC.CollapseNext() LC.CollapseNext()
+ok(LC.CollapseActive() and LC.CollapseStage() == "refused", "three refusals in her: he stops asking, and his steps go on toward her last stand", LC.CollapseStage())
+LC.CollapseResolve("test")
+ok(not LC.CollapseActive(), "(put back)")
+LC.Notice = realNotice
+LC.CollapseNpcRoll, LC.CollapseNpcHow = roll, how
+for _, p in ipairs(human) do if IsValid(p) then p:SetNW2String("lcf_faction", "admin") end end
+end
+CollapseOwnTests()
 function GiveTests()
 section("Giving a citizen something: food, a drink or a smoke, medicine, papers, arms")
 local function Later(secs) _advance(secs) _runtimers() end
