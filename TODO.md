@@ -110,7 +110,7 @@
 - [ ] **Order-dependent test (found 10 November):** "they wake with their health as it was before the dream, and no loyalty lost" (PropagandaDreamTests) fails when DreamGameTests runs earlier in the same shard (Civil Standing differs); it fails the same way on the code from before 10 November, and passes alone.
 - [x] **Resistance pamphlets in the Give menu** (the owner, 10 November): another chat made `rebel_pamphlet` (sv_livingcity_rebelpamphlet.lua); the talk window's Give menu lists it under Papers and hands it over with `LC.GiveRebelPamphlet`.
 - [ ] **Guns given to sympathizers** (Give menu): they hide it under their coat and it is gone. Later: they could come out armed in an uprising or a raid, or a search could find it. Ask the owner.
-- **The Cremator, waits on the owner (10 November):** the Workshop pages could not be opened from the chat, so the model and its animations are unchecked. Needed back, in this order:
+- **The Cremator, waits on the owner (10 November; 11 November: the owner says it works and walks the streets, the pace was doubled, `lc_cremator_speed`):** the Workshop pages could not be opened from the chat, so the model and its animations are unchecked. Needed back, in this order:
   1. Add Workshop items 2090972521 and 3329322225 to the server's Workshop collection. Upload the gamemode, press "FastDL sync" in the host panel, change the map, and rejoin.
   2. In game, as an admin, open the console (the key under Esc), look at open ground a few steps away, and type: `lc_cremator_spawn`
   3. The chat shows one line: either "A Cremator, model ...; animations: idle '...', walk '...', fire '...'" or "No Cremator model was found on the server". Copy that line.

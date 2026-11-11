@@ -19,21 +19,22 @@ The model is found by itself: `lc_cremator_model` if set, then any NPC an addon 
 - **Bodies:** a body that has lain `lc_cremator_grace` seconds (90), that nobody is hauling, has on a cart or has claimed: it walks over, turns its flame on it for five seconds, and the body is gone (a scorch mark stays). Not while the Administrator has stood the morticians down, and never on Resistance ground. Players and Morticians have those 90 seconds, and any time before it arrives, to search or haul the body first.
 - **Enemies** (seen within 520 units): whoever the units would shoot (a gun in hand, hurt someone lately, hunted), a zombie player, one of the Resistance's people out in the open (not one acting casual), headcrabs and zombies, and anyone who attacks it for 90 seconds after. It walks at them and burns them from 280 units: they catch fire and lose about 16 health a second. It gives up past 1000 units.
 - **Never enemies unless they attack it:** Civil Protection, the Administration, an admin holding the editor or in noclip, citizens doing no harm.
+- It walks `lc_cremator_speed` (2) times the unseen walker's own slow pace (the owner, 11 November: "at least 2x faster in movement speed (not animation speed)"). Only how fast it moves changes; the model's walk plays at its own speed. 0.5 to 4.
 - 400 health. Fire does nothing to it. A player (not Combine) who attacks it brings the units within 1200 units.
 - The city's own people take no notice of it.
 - Its name tag reads "Cremator", with what it is doing.
 
 ## How it is built
 
-Nobody could check which animations the Workshop model has, so the walking is done by an unseen `npc_stalker` (slow, and already used by the zone stalkers) and the Cremator seen is a `prop_dynamic` carried on it. It plays whichever of the model's own sequences sound like standing, walking and firing: likely names first, then the model's list scored by name. The model and the three animations used are in the debug report (People) and are printed by `lc_cremator_spawn`.
+Nobody could check which animations the Workshop model has, so the walking is done by an unseen `npc_stalker` (slow, and already used by the zone stalkers; its own unseen animation runs `lc_cremator_speed` times faster, which makes it cover ground that much faster, `LC.CrematorPace`) and the Cremator seen is a `prop_dynamic` carried on it. It plays whichever of the model's own sequences sound like standing, walking and firing: likely names first, then the model's list scored by name. The model and the three animations used are in the debug report (People) and are printed by `lc_cremator_spawn`.
 
 The flame is green, as the Immolator's was, drawn on the client from the model's muzzle attachment if it has one.
 
 ## Settings and commands
 
-- `lc_cremators` (1), `lc_cremator_grace` (90), `lc_cremator_model` (empty: found by itself).
+- `lc_cremators` (1), `lc_cremator_grace` (90), `lc_cremator_speed` (2: twice the walker's pace; 1 was the first pace), `lc_cremator_model` (empty: found by itself).
 - `lc_cremator_spawn` (admins, console): one where you are looking, and a line saying which model and animations were found. An extra for checking; the Cremators need no command. In the console it also lists every Cremator model found and every animation the model has (lines starting `[cremator]`), for sending back when it looks wrong.
 
 ## Code
 
-`sv_livingcity_cremator.lua` (`LC.CrematorModel`, `LC.CrematorModelsFound`, `LC.CrematorSequence`, `LC.SpawnCremator`, `LC.CrematorEnemy`, `LC.CrematorBody`, `LC.CrematorsStaff`/`Think`/`Tick`, `LC.CrematorDie`, `LC.CrematorSummary`; hooks `LivingCityCremated` with the walker as who, `LivingCityCrematorKilled`), `cl_livingcity_cremator.lua` (the flame). Tests: CrematorTests.
+`sv_livingcity_cremator.lua` (`LC.CrematorModel`, `LC.CrematorPace`, `LC.CrematorModelsFound`, `LC.CrematorSequence`, `LC.SpawnCremator`, `LC.CrematorEnemy`, `LC.CrematorBody`, `LC.CrematorsStaff`/`Think`/`Tick`, `LC.CrematorDie`, `LC.CrematorSummary`; hooks `LivingCityCremated` with the walker as who, `LivingCityCrematorKilled`), `cl_livingcity_cremator.lua` (the flame). Tests: CrematorTests.

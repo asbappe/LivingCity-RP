@@ -613,6 +613,7 @@ setting lc_crates_per_person = 2
 setting lc_cremation_pay = 6
 setting lc_cremator_grace = 90
 setting lc_cremator_model = 
+setting lc_cremator_speed = 2
 setting lc_cremators = 1
 setting lc_cripple_minutes = 15
 setting lc_crowbar_wanted = 120

@@ -29,7 +29,9 @@
 
     HOW IT IS BUILT: nobody here knows which animations the installed model
     has, so the walking is done by an unseen npc_stalker (slow, Combine, and
-    already proven on this gamemode's streets by the zone stalkers) and the
+    already proven on this gamemode's streets by the zone stalkers; its own
+    animation is run lc_cremator_speed (2) times faster so it keeps up with
+    the model's walk, LC.CrematorPace) and the
     Cremator seen is a prop_dynamic carried on it, playing whichever of the
     model's own sequences sounds like standing, walking and firing
     (LC.CrematorSequence: likely names first, then the model's list, scored).
@@ -47,6 +49,7 @@ local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
 local cvCount = CreateConVar("lc_cremators", "1", FLAGS, "Cremators walking the streets, burning the dead where they lie (0: none; needs a Cremator model from the Workshop on the server)")
 local cvModel = CreateConVar("lc_cremator_model", "", FLAGS, "The Cremator's model (empty: found by itself among the server's addons)")
 local cvGrace = CreateConVar("lc_cremator_grace", "90", FLAGS, "Seconds a body lies before a Cremator may burn it")
+local cvSpeed = CreateConVar("lc_cremator_speed", "2", FLAGS, "How fast the Cremator walks, times the slow pace of the walker underneath (1: that pace; 0.5 to 4)")
 
 -- The Workshop addons the owner chose (10 November): the NPC's, and the playermodel's.
 LC.CREMATOR_WORKSHOP = { npc = "2090972521", player = "3329322225" }
@@ -329,6 +332,21 @@ local NEUTRAL = { "player", "npc_citizen", "npc_metropolice", "npc_combine_s", "
     "npc_fastzombie", "npc_fastzombie_torso", "npc_poisonzombie", "npc_zombine", "npc_headcrab", "npc_headcrab_fast", "npc_headcrab_black",
     "npc_headcrab_poison", "npc_antlion", "npc_manhack", "npc_rollermine", "npc_turret_floor", "npc_cscanner", "npc_barnacle" }
 
+-- Its pace (the owner, 11 November: "at least 2x faster in movement speed (not
+-- animation speed)"). The unseen walker's own animation runs faster, and an NPC
+-- moves as far as its animation carries it, so it covers the ground faster; the
+-- model seen keeps its own walk at its own speed.
+function LC.CrematorPace()
+    return math.Clamp(cvSpeed:GetFloat(), 0.5, 4)
+end
+
+local function Pace(r)
+    local rate = LC.CrematorPace()
+    local now = Call(r.npc, "GetPlaybackRate")
+    if now and math.abs(now - rate) < 0.01 then return end
+    Call(r.npc, "SetPlaybackRate", rate)
+end
+
 local function Walk(npc, pos)
     npc:SetLastPosition(pos)
     npc:SetSchedule(SCHED_FORCED_GO)
@@ -406,6 +424,7 @@ function LC.SpawnCremator(pos, model, now)
     local r = { npc = npc, vis = vis, model = model, phase = "roam", provoked = setmetatable({}, { __mode = "k" }), calmed = setmetatable({}, { __mode = "k" }),
         lastPos = npc:GetPos(), lastMoved = now, pauseUntil = now + 2 }
     residents[npc] = r
+    Pace(r)
     SetAnim(r, "idle")
     return r
 end
@@ -528,6 +547,7 @@ end
 
 local function Think(r, now)
     local npc = r.npc
+    Pace(r) -- again each time: the walker's AI may set its animation back
     local pos = npc:GetPos()
     local moved = pos:DistToSqr(r.lastPos) > 3 * 3
     if moved then r.lastPos, r.lastMoved = pos, now end

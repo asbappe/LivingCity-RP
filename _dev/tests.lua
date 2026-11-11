@@ -23520,6 +23520,21 @@ ok(hook.Run("EntityTakeDamage", r.npc, _dmg(pc, 9999, 2)) == true and not IsVali
     "killed: the Cremator is gone (another comes later, out of sight)")
 hook.Remove("LivingCityCrematorKilled", "test_cremator")
 
+-- its pace: the unseen walker's animation runs lc_cremator_speed (2) times faster
+local rp = LC.SpawnCremator(C0)
+local rate
+rp.npc.SetPlaybackRate = function(_, x) rate = x end
+rp.npc.GetPlaybackRate = function() return rate or 1 end
+LC.CrematorsThink(CurTime() + 6000)
+ok(rate == 2, "the Cremator moves twice the walker's own pace by default", tostring(rate))
+_setcvar("lc_cremator_speed", 3)
+LC.CrematorsThink(CurTime() + 6001)
+ok(rate == 3, "lc_cremator_speed 3: three times", tostring(rate))
+_setcvar("lc_cremator_speed", 99)
+ok(LC.CrematorPace() == 4, "never past four times", tostring(LC.CrematorPace()))
+_setcvar("lc_cremator_speed", 2)
+rp.vis:Remove() rp.npc:Remove() LC.Cremators[rp.npc] = nil
+
 -- lc_cremators 0: none
 local r2 = LC.SpawnCremator(C0)
 _setcvar("lc_cremators", 0)
