@@ -1675,3 +1675,5 @@ Type them in the server console on the host panel, or in your own game console (
   Notes:
 - [ ] **Editor, "Arrange by what it's for" (11 November):** a "Dreams" folder now holds Point: dream and Zone: dream. Check it is there and that clicking each picks it.
   Notes:
+- [ ] **Pictures loose in garrysmod/ (11 November):** unzip `livingcity_content.zip` in `garrysmod/`, FastDL sync (it should upload the posters, `ui/`, `pamphlet/` and `lcrebelhand.ttf`, and delete nothing), change the map, join from a clean client: posters show pictures, window backs are textured, the Resistance pamphlet is handwritten.
+  Notes:
