@@ -4611,7 +4611,7 @@ ok(has(dutyU.chat, "Next allocation"), "it's the same allocation the dispenser g
 dutyU.lcnRationAt = 0
 ok(LC.UseDispenser(dutyU, nil), "but a unit can still take theirs from a dispenser")
 ok(dutyU.lcnRationAt - CurTime() <= 601, "and a unit's next allocation is still 10 minutes away, not the citizens' slower dispenser (the owner, 7 November)", tostring(dutyU.lcnRationAt - CurTime()))
-do dutyU.lcnRationAt = 0 LC.TakeItem(dutyU, "ration_voucher", 99) LC.IssueDutyAllocation(dutyU)
+do dutyU.lcnRationAt = 0 dutyU.lcnVoucherAt = 0 LC.TakeItem(dutyU, "ration_voucher", 99) LC.IssueDutyAllocation(dutyU)
 ok(math.abs(dutyU.lcnRationAt - CurTime() - 600) < 1, "a unit's duty allocation comes every 10 minutes", tostring(dutyU.lcnRationAt - CurTime())) end
 local citD = newPlayer("DutyCitizen", "citizen")
 citD:SetPos(FAR)
@@ -17421,7 +17421,11 @@ BS.dreamEve, LC.DreamTonightPending = dEve, realPending
 BS.roll[BS.eve or 0] = true
 local tmpl
 for _, t in ipairs(LC.QuestTemplates) do if t.id == "cp_nightshift" then tmpl = t end end
-ok(tmpl and tmpl.first and tmpl.available(cop), "most nights the night shift is on Civil Protection's board (first)")
+LC.SetHour(19)
+ok(tmpl and tmpl.first and tmpl.available(cop), "most nights the night shift is on Civil Protection's board (first), in the evening")
+LC.SetHour(23)
+ok(not tmpl.available(cop) and tmpl.recheck, "not later in the night (the owner, 11 November: only from 18:00 to 21:00), and checked again when it's taken")
+LC.SetHour(19)
 LC.QuestOf[cop] = { tmpl = tmpl }
 cop.lcNightShift = BS.eve
 ok(LC.OnNightShift(cop) and LC.BedtimeDue(cop) == nil, "on the night shift: no lights out")

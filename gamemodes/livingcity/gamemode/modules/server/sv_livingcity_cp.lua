@@ -1042,6 +1042,9 @@ concommand.Add("lc_handsup", function(ply) if IsValid(ply) then LC.SetHandsUp(pl
 local cvCoupons = CreateConVar("lc_cp_coupons", "8", FLAGS, "Credits in ration coupons a Civil Protection unit is issued each allocation (plus one per rank)")
 
 LC.DUTY_ALLOCATION_SECONDS = 600
+-- The voucher comes less often than the coupons (the owner, 11 November: "too many ration vouchers
+-- compared to hunger; can the rate be reduced 30%?"): one in about 14 minutes instead of 10.
+LC.DUTY_VOUCHER_SECONDS = 600 / 0.7
 
 function LC.IssueDutyAllocation(ply)
     if not On() or not RealUnit(ply) or not ply:Alive() then return false end
@@ -1053,13 +1056,14 @@ function LC.IssueDutyAllocation(ply)
     local credits = math.max(0, cvCoupons:GetInt()) + math.max(0, Rank(ply) - 1)
     local eats = not LCF.IsOverwatch(ply) -- (the Overwatch are fed through the suit)
     local got = {}
-    if eats and LC.GiveItem then
+    if eats and LC.GiveItem and now >= (ply.lcnVoucherAt or 0) then
+        ply.lcnVoucherAt = now + LC.DUTY_VOUCHER_SECONDS - 1
         if LC.GiveItem(ply, "ration_voucher", 1) then got[#got + 1] = "a ration voucher" end
     end
     if credits > 0 and LC.AddCredits then LC.AddCredits(ply, credits) got[#got + 1] = credits .. " credits in ration coupons" end
     if #got > 0 then
         ply:ChatPrint("[Civil Protection] Duty allocation issued: " .. table.concat(got, " and ") .. "."
-            .. (eats and " Take the voucher to a Civil Protection Commissary or a ration dispenser for your ration packet." or ""))
+            .. (eats and got[1] == "a ration voucher" and " Take the voucher to a Civil Protection Commissary or a ration dispenser for your ration packet." or ""))
         if eats and not ply.lcVoucherTold and LC.Notice then
             ply.lcVoucherTold = true
             LC.Notice(ply, "info", "Ration voucher", "Your duty allocation comes as a ration voucher, not a packet: take it to a Civil Protection Commissary or a ration dispenser (E) for your ration.", 9)

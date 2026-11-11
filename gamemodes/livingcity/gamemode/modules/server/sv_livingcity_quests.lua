@@ -3286,6 +3286,11 @@ function LC.AcceptPosting(ply, pid)
     end
     if not posting or posting.dead then ply:ChatPrint("[Living City] That job is no longer available.") return false end
     if posting.story and posting.owner ~= ply then return false end
+    -- (a job for a certain hour, still on the board after it: the night shift at midday, the owner, 11 November)
+    if posting.tmpl and posting.tmpl.recheck and posting.tmpl.available and not posting.q and not posting.tmpl.available(ply) then
+        ply:ChatPrint("[Living City] " .. (posting.tmpl.recheckWhy or "That job is no longer available."))
+        return false
+    end
     if LC.PlayerIsStalker and LC.PlayerIsStalker(ply) and posting.chain ~= "stalker" then
         ply:ChatPrint("[Living City] Stalkers can only do stalker work. You can't take this job.")
         return false

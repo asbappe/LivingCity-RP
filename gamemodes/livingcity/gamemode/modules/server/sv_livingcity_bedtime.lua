@@ -288,6 +288,12 @@ hook.Add("LivingCityDayPhase", "LivingCityBedtime", function(phase)
         end
     end
 end)
+LC.NightShiftFrom, LC.NightShiftTo = 18, 21
+function LC.NightShiftHour(h)
+    h = h or (LC.Hour and LC.Hour()) or 12
+    return h >= LC.NightShiftFrom and h < LC.NightShiftTo
+end
+
 function LC.NightShiftTonight()
     local n = S.eve or 0
     if S.roll[n] == nil then S.roll[n] = math.random() < math.Clamp(cvShift:GetFloat(), 0, 1) end
@@ -316,9 +322,11 @@ local function AddTemplate()
     local QB = LC.QB
     LC.QuestTemplates[#LC.QuestTemplates + 1] = {
         id = "cp_nightshift", factions = { cp = true, ota = true }, first = true,
+        -- Only in the evening, 18:00 to 21:00 (the owner, 11 November: it was on the board in the middle of
+        -- the day, "only available from like 6-9 ish"); checked again when it's taken.
+        recheck = true, recheckWhy = "The night shift is only given out in the evening, from 18:00 to 21:00.",
         available = function(p)
-            local ph = Phase()
-            return cvBed:GetBool() and (ph == "dusk" or ph == "night") and LC.NightShiftTonight() and p.lcNightShift ~= S.eve and p.lcNightShiftDone ~= S.eve
+            return cvBed:GetBool() and LC.NightShiftHour() and LC.NightShiftTonight() and p.lcNightShift ~= S.eve and p.lcNightShiftDone ~= S.eve
         end,
         build = function(p)
             local stops = {}

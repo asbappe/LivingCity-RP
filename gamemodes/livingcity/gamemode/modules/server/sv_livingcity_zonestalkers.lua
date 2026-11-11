@@ -500,6 +500,27 @@ function LC.ZoneStalkersThink(now)
     end
 end
 
+-- A stalker's own noises (the owner, 11 November: "every 5 ish seconds, and it's the same sound and it's
+-- horribly annoying. Please change it to like once every 60 seconds"). Its voice is let through once in
+-- LC.StalkerSoundGap seconds for each stalker; its footsteps are left alone. The walker inside a Cremator and a
+-- story's stalker standing by are stalkers too, and make none.
+LC.StalkerSoundGap = 60
+function LC.StalkerSoundAllowed(ent, name, now)
+    if not IsValid(ent) or ent:GetClass() ~= "npc_stalker" then return true end
+    name = string.lower(name or "")
+    if not string.find(name, "stalker", 1, true) or string.find(name, "footstep", 1, true) then return true end
+    if ent.lcCremator or ent.lcStalkerQuiet then return false end
+    now = now or CurTime()
+    if now < (ent.lcNextVoice or 0) then return false end
+    ent.lcNextVoice = now + LC.StalkerSoundGap
+    return true
+end
+hook.Add("EntityEmitSound", "LivingCityStalkerQuiet", function(data)
+    if not data or not IsValid(data.Entity) then return end
+    local name = (data.OriginalSoundName or "") .. " " .. (data.SoundName or "")
+    if not LC.StalkerSoundAllowed(data.Entity, name) then return false end
+end)
+
 -- One step of it all (the timer below; the tests call it directly).
 function LC.ZoneStalkersTick(now)
     LC.ZoneStalkersStaff(now)
