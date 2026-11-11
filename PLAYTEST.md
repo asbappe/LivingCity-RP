@@ -3,37 +3,53 @@
 Updated 1 November 2026. **Part 1** is everything new since your 1 November playtest: try those first. **Part 2** is older items (from 8 October on); skip any you've already checked.
 Tick a box when you've tried it, and write what you saw after **Notes:** (works, broken, feels off, ideas).
 
+Stalkers NPCs make a sound (to everyone near them) every 5 ish seconds, and it's the same sound and it's horribly annoying. Please change it to like once every 60 seconds.
+G does not kick (this never worked). Kick works from the F menus, but not from G.
+F2 > Unit Tools is cited as a way to Cuff people, but it's not a quick action: the unit tools window is a popup that takes up the whole screen: I saw this "tip" on the right hand side contextual help menu thing that persists; we need a different way to cuff via quick F1 or F2 menus
+the cremator attacks headcrabs in a test just fine, the problem is the burning/sizzling sound effect is sticking and persisting with the headcrabs and has been playing for several minutes. 
+If a cremator kills a bird, headcrab, etc, can it be a "cooked" version and not "raw"? It needs to spoil per the regular rules of spoilage
+the cremator never came back to cremate the headcrab corpses from the headcrabs it killed, it's been 5 minutes
+as a CP unit, the "POCKETS" in the pockets menu clips into the header, and so does my credit counter and civil standing counter
+I spawned some enemy NPCs and action HL2 music played which is great, but I killed all of them in about 5 seconds and the music just kept playing as if it has a "minimum" amount of time to play? And now ambient dystopian Nova Prospekt music is playing literally seconds after the battle/action music, which makes me think it interrupted the battle/action music? Also this nova prospekt music has played 3 times in 8 minutes, please lower the occurrence and add some variety goodness, I don't need music every 2 minutes.
+also I spawned (per last play session) as a CP unit, but my viewmodel is gone? I have no hands holding ANY weapons/tools.
+Cremator never came to cleanup/burn headcrab corpses of headcrabs I spawened and killed, is it because they are entities? (raw headcrab) instead of just corpses?
+cremator animations and model look great. Fire is a weird putrid yellow/green, can we make it more green and have some glow/bloom to it? it's very flat and dull like dust and almost just looks like a chemical spray
+Last time I reported the CP radio couldn't be put away with R, it would just flash as if it was putting away and taking out immediately, but now it's the opposite: I put it away and now it flickers for a milisecond/1 frame as if I am taking it out briefly then putting it back, I cannot get it back out.
+t
+
+Clipboard is positioned wrong in citizen NPC hands (see screenshot or remind me to post screenshot)
+
+F2 > kick animation is bizarre from first person, but more importantly I can still see some of the torso and it just looks awful, can we please shrink/remove this part of the torso so we only see the legs?
+as a CP unit I see no indication of a shift beginning or in progress, I spawned and I think I spawned into a shift and I got a notice while testing and using the editor tool, that I did nothing on my shift, I didn't even know my shift had started?
+searches seem to be working well, only issue is I searched someone holding a suitcase and another holding a box/parcel and I would like those to be searchable in the search popup minigame.
+The game says we search and check papers, but there is no paperwork check. if we feel we are done searching, can there also be a button to "check papers" and then it switches to the checking papers minigame? It's not mandatory but offers further searching and opportunity to meet quotas and get rewards for catching those out of compliance. We do get rewards for catching contraband and false/wrong/expired/illegal paperwork right? Even if just 1 credit and +5 civil standing?
+I love the guiding yellow pointers on the ground to the quest objective, only issue is that when I run they speed up and it looks really disorienting.
+Housing block inspection: the waypoint ground markers guided me to a combine HQ BELOW, a floor below, the housing block instead of to the door or one of the contraband props, and there was no path from one to the other; it totally misled me. Then the contrabad props (a large wooden crate) spawned halfway into the ground and the suitcase spawned 95% in the wall with just a corner sticking out. THEN the door that was supposed to be locked and it wanted me to breach opened when I pressed E on it and I couldn't set a breach charge on it at all, so I failed the quest. BOOOOOOO. Just have an option to kick the door down in addition to the breach, and please make it so the door locks and is not open-able during the quest until we kick it down or breach it.
+
+"CP net] Dispatch: CP DvL-55140 has retaken anticitizen ground in rebel territory.
+[Freq 7] We've lost the ground in rebel territory.
+[City] CP DvL-55140 has retaken ground from the Resistance in rebel territory.
+[Civil Standing] +5: anticitizen neutralized" we don't need FOUR chat messages for me killing 1 rebel and therefore regaining a bit of ground. The chat is an absolute mess with all these events, we really need to tighten things down to 1 message for this, not have 4 duplicate sources for a single event.
+
+so I took a rebel sweep/raid quest and was 100m away, and battle/action music started as soon as I took it: can we have the music only kick in when I reach the destination and the fighting starts?
+When I arrived in the rebel territory, I called for backup, which arrived 3 minutes later (WAY too late, make them spawn NEARBY), though that may be because there were rebels nearby distracting them.
+When the combine backup finally followed me into the rebel zone, they just walked in staring at walls (seeing enemies through walls no doubt) and never fired a shot, and were killed.
+So I did all the work myself, then ran to defend a landing zone via a quest that popped up, but messages appeared saying the landing zone party was wiped out about 15 seconds after I saw the notice and took the quest. Can we have a little more flipping time if the quest is given? Like at least delay the dropship a minute or two and give me time to get there (which complicates things if there are lots of players I know).
+So I get to the landing zone since it's still my active quest and there are rebels standing in this big open street/plaza just shooting combine who are standing in this big open plaza. No cover? no one is even crouching when shooting? CAN WE FIX THE BLOODY COMBAT AI IN THIS GAMEMODE? it is so stupid and retarded and acts like something from 1995. Take cover! Strafe or crouch! SHOOT YOUR GUNS LIKE YOU DO AT ME!!! these AI NPCs of both sides shoot ARSENALS at me as fast as they can, but against each other or other NPCs they shoot 1 or two bullets, almost as if they are unsure or computing something and it's stopping them. This is true against even the infestation!
+ON THAT NOTE, I setup combine barricades via the editor tool and a cremator has been stuck failing navigation around them for about 15 minutes, and therefore not cleaning up bodies, it is deadset on it's destination and will not pathfind around the barricades.
+as a CP/overwatch, what am I supposed to do with all this junk? If I drop it, it clutters the city. and I can't sell it anywhere; please make it so I can sell these things at the commissary
+Also the commissary purchase window, for CPs at least, is stilll too low UNTIL I buy 1 item (not next/previous page, specifically buy something), then it jumps up to the correct height.
+I picked up a stunstick from a dead metrocop, and 2 things: 1, it has the electric effect on the SWEP, and I love it , for the viewmodel. Why can't the arrest baton have that? and 2: it shouldn't be a separate entity for a CP unit, I shouldn't even be able to pick it up, only citizens and rebels should be able to pick it up as a stunstick, and NOT an arrest baton.
+second night sleeping with a dream oint in the map: no dream. I went to sleep at 21:15....I'm a CP unit inside the nexus, did I say I don't want them to dream? I don't remember.
+Stalkers dont appear to be picking up trash? Ihave a big pile of trash I dropped from my pockets and they inch closer and closer then turn around; maybe they are targetting the item deepest in the pile and can't reach it? . Items I or other players drop really need to despawn after a 5 minutes. Same with corpses and raw/cooked headcrabs/birds. It seems your ai routines for morticians and cremators isn't cleaning up.
+
 # Part 1: new since your 1 November playtest
 
 ## Infestation Cleanup (fixed after your notes: try first)
 
 Players now download both workshop packs when they join (the Alyx hazard props 2043900984, the Infestation Control workers 3185145650). The server needs them too: put both in its workshop collection. Anyone missing a model sees a stand-in, never an ERROR.
 
-- [x] **Growths:** Xen gunk with the pack (or a stand-in), glowing green, spores drifting up. Still any ERROR? Say where.
-  Notes:
-- [x] **A warning post at each infestation's edge:** sign, lamp and a yellow infestation control barrel (cones and an oil drum without the pack). Found it? Standing sensibly?
-  Notes:
-- [x] **Your own barrels:** the editor's "Fixture: infestation control barrel" (in the "by use" view: Job: Infestation Cleanup, and Infestation).
-  Notes:
-- [x] **Take the job** (F3 > Jobs > Infestation Cleanup): weedkiller, a **sprayer** and a **hoover** in your weapons; own clothes until a shift.
-  Notes:
-- [x] **Accept a shift:** the hazmat suit (a woman the female one, a man the male one). Hands nearer than before? If not right yet, try `lc_suit_hands "-6 0 0"` with other numbers (forward right up) and send me what looks right.
-  Notes:
-- [x] **Guards:** two come; if one falls behind (stuck, lost) for a few seconds, they're back beside you; after a fight they come back; nobody free, a unit's sent. Do they stay with you now?
-  Notes:
-- [x] **Spray:** sprayer out, hold left click on a glowing growth: green mist, a bar, it dies (dark, stays there). E still works too.
-  Notes:
-- [x] **Vacuum:** hoover out, hold left click on a dead growth: a bar, gone, "Hoover: 1 of 3". **All three count now** (the job said "2 more" before: fixed).
-  Notes:
 - [ ] **Do you see the sprayer and the hoover** in first person, and in your hands in third person? Placement: `lc_sprayer_view "18 9 -10"`, `lc_hoover_view "26 11 -15"` (forward right up): send me numbers that look right.
-  Notes:
-- [x] **Empty it:** the last step marks the nearest barrel; E on it. No barrel near: right click with the hoover bags it.
-  Notes:
-- [x] **The geiger counter** at the edge of a zone: calmer now (40% fewer clicks, quieter)?
-  Notes:
-- [x] **Clear every growth in a patch that grew:** the patch goes. Dead growths nobody collects rot after 10 minutes.
-  Notes:
-- [x] **Joining Civil Protection:** a cleanup shift counts as two Intake Processor shifts.
   Notes:
 
 ## Also fixed from your notes
@@ -45,7 +61,7 @@ Players now download both workshop packs when they join (the Alyx hazard props 2
 - [ ] **The Man Inside, part 2:** the choice (transfer order, a fire, a false report): the guards go off to the fire or the report; the order mostly passes.
   Notes:
 - [ ] **Guns lowered:** pistol out: pointing down, no crosshair; hold R raises it; click while down raises it; tap R reloads. Does the gun use Half-Life 2's lowered pose?
-  Notes:
+  Notes: this does not appear to be working? nothing happens when I hold R for a weapon as a CP unit
 - [ ] **Wear and legacy:** lockpicks, fishing lines and weedkiller run out after a while; a title under your name after 3 lives; a ring with each new person.
   Notes:
 - [ ] **Contraband found** in a street search: a FIGHT / COMPLY box, five seconds. Fight: you keep it, wanted. Comply or wait: taken.
@@ -83,8 +99,6 @@ Players now download both workshop packs when they join (the Alyx hazard props 2
 - [ ] **Job items** (6-12's belongings, evidence, anything to find): never under stairs or in walled-off space; always somewhere you can walk up to.
   Notes:
 - [ ] **Sleeping citizens:** lying flat on the bed, eyes shut, not sitting up through it. Heads at the pillow end? (If at the foot: `lc_bed_head_flip 1`.) Too high or sunk in? `lc_bed_npc_lift` (9). Shoot one: they wake.
-  Notes:
-- [ ] **Career paths on F3:** jobs grouped (Civil Protection path: Intake Processor, Infestation Cleanup; Administration path: Records Clerk, Block Warden; Union work). F4's Civil Protection bar counts Intake Processor shifts.
   Notes:
 - [ ] **Block Warden:** not listed below 100 standing; listed and takeable at 100.
   Notes:
@@ -326,7 +340,7 @@ Players now download both workshop packs when they join (the Alyx hazard props 2
 - [ ] **Tiredness:** skip a day's sleep and your eyelids droop, less health, no running.
   Notes:
 - [ ] **Powered vests:** the VEST bar replaces SUIT; vortigaunts charge them.
-  Notes:
+  Notes: never seen a vortigaunt charge them, can we have them do the animation like from HL2 when they charge Freeman's HEV suit? they hold up their hand and green energy pulses to the player.
 - [ ] **Father Grigori:** an NPC in rebel territory with blessings and sermons; a player Grigori's shotgun holds 2 shells.
   Notes:
 
@@ -738,15 +752,13 @@ Notes:
 - [ ] **Old job gone on becoming a unit (7 November, part 2):** as Infestation Cleanup, become a metrocop, then reconnect after a restart: no job on the card, no suit gloves or skin on any viewmodel, no hoover or sprayer.
   Notes:
 - [ ] **Ration voucher (7 November, part 2):** as a unit, the duty allocation is a voucher, not a packet; E at the CP Commissary or a dispenser swaps it.
-  Notes:
+  Notes:working well, but too often, I am getting too may ration vouchers compared to hunger; can the rate be reduced 30%?
 - [ ] **CP Commissary kit and vest (7 November, part 2):** one health vial and bandage a city day; stand there with low armour and watch it charge (not with the power out).
-  Notes:
+  Notes: vests charge for CP units at commissary automatically, but the charging sound NEVER STOPS. We seem to ALWAYS have issues with sounds looping eternally and they really need to NEVER to do so. health vial also does not go into pockets if health is full, it instead falls to the floor. If health is full, it needs to go into pockets for later use.
 - [ ] **Radio away (7 November, part 2):** as a metrocop, raise the radio and press R: it goes away and stays away.
-  Notes:
+  Notes: yeah stays away too well, I can't pull it out, it glitches the animation and shows out for 1 frame but otherwise is stuck put away.
 - [ ] **Editor tool and sleep (7 November, part 2):** hold the editor tool for a long while: never exhausted.
-  Notes:
-- [ ] **Rebel bodies (7 November, part 2):** kill rebels: their bodies keep the rebel clothes.
-  Notes:
+  Notes: and the second I put the tool away I am exhausted, can we not have it pile on and catch up the instant I put it away? or maybe it was coincidental timing and this isn't working at all.
 - [ ] **Baton arrest (7 November, part 2):** arrest a citizen: a unit walks over and walks them to the cells, no teleport. With no unit about, the cuffed NPC follows you; F1 > Walk them to the cells / let go.
   Notes:
 - [ ] **Struggle (7 November, part 2):** arrest a player and a rebel: the bar shows on both screens and pressing E fast decides it. Broke free: the officer is shoved back and the NPC runs flat out. Arrested yourself: press E fast to break free, or hands up to go quietly.
@@ -786,7 +798,7 @@ Notes:
 - [ ] **Rain (7 November, part 2):** rain outdoors is about 30% quieter.
   Notes:
 - [ ] **Sleep warnings (7 November, part 2):** "Getting tired" about 6 minutes before and "Very tired" about 2 minutes before; a bed works from the first; the job box stays visible as your eyes close; your eyes don't close in the middle of a fight; as a citizen you're only tired in the evening and at night.
-  Notes:
+  Notes: 
 - [ ] **Pacing (7 November, part 2):** an hour of play has far fewer announcements and events, and never two voices at once; stock HL2 Overwatch lines only where you have no recording.
   Notes:
 - [ ] **Combat music for units (7 November, part 2):** as Civil Protection in a sweep, a violent job or a firefight, action music plays.
@@ -802,9 +814,9 @@ Notes:
 - [ ] **Restrictions and the Resistance (7 November, part 2):** restrict 3 goods: 3 more fighters in rebel territory, a refused citizen leans to the Resistance, sociostability isn't moved; the Administrator's market page describes the mood in plain words.
   Notes:
 - [ ] **Zone stalkers (7 November, part 2):** place "Point: stalker terminal" in front of a terminal in a Combine zone, standing where the stalker should stand and facing the terminal; the stalker goes there and works it. The debug report's "terminal animation" line says which animation it chose: does it look right?
-  Notes:
+  Notes: have not seen a staker stand in front of a terminal, however they are dragging dead bodies in the combine HQ away. Can we have it so there is a rope effect tied between the stalker's hand and the dead body?
 - [ ] **Stalker repairs (7 November, part 2):** break a streetlight or loudspeaker inside a Combine zone; after about a minute the stalker leaves the terminal, repairs it and goes back.
-  Notes:
+  Notes: 
 - [ ] **Stalker replaced (7 November, part 2):** kill a zone's stalker; another appears out of sight about two minutes later.
   Notes:
 - [ ] **F1 (7 November, part 2):** the same general menu for a citizen, a unit and a rebel; 2 is Hands up; 5 opens pockets.
@@ -828,7 +840,7 @@ Notes:
 - [ ] **Shortages and the mood (7 November, part 2):** restrict 4 goods: sociostability won't sit at green.
   Notes:
 - [ ] **Raids are real (7 November, part 2):** on the usual NPC budget, start a raid (C > Help, or lc_skirmish raid). As Resistance, follow the "Our fighters" marker: the fighters reach the target and 2 or 3 units come to fight them. The NPC count doesn't go up.
-  Notes:
+  Notes:Raid on the combine HQ was great, 2 issues: 1. metrocops were walking around inside the combine zone holding arrest batons and doing nothing while soldiers and rebels were shooting. and 2: some rebel fighters spawned inside jail/prison cells/zones and were stuck and therefore had no weapons and I had to go in and put them out of their misery. They need to not spawn inside the prison cells when raiding.
 - [ ] **Raid timing (7 November, part 2):** as Civil Protection, the "10-20: ANTICITIZEN ATTACK" marker appears when the fight starts; rations are docked only then.
   Notes:
 - [ ] **Raids and restrictions (7 November, part 2):** restrict 3, then 5 goods: raid parties grow (5, then 6 or more).
@@ -1097,11 +1109,9 @@ Notes:
 - [ ] **Say Cheese / The Doors / Splat!:** hide behind the giant things before the flash; stand at the door the music box plays behind; paint the floor your colour.
   Notes:
 - [ ] **Conga! / Shh! / Bubbles / The Watchers:** stay in the glow behind the conga line; gather toys without waking the baby (running and jumping are loud); pop bubbles (big ones lift you); gather keys while the black figures only move when unwatched.
-  Notes:
-- [ ] **Nonsense everywhere:** in any strange dream, are there things floating and spinning in the sky in rainbow colours, rainbow swirls overhead, some things with odd textures (wireframe, glass, flesh...), some people pulling random faces that change every few seconds, and some things with sparkles, smoke, hearts, fire, confetti, moons, a rainbow beam or a disco light?
-  Notes:
+  Notes:Blue bubbles need to initiate low gravity for 4x as long, and there need to be about 4x as many bubbles: I could only get 4 during the whole dream, there weren't enough. The biggest most positive change is that the blue bubbles are more abundant and the low grav jump is stronger and lasts longer.
 - [ ] **Warped sounds:** are some sounds higher or lower, some recorded lines slowed or sped up, and does the music lurch slow or fast every so often (but never in Dance Marathon)? Too much, or not enough?
-  Notes:
+  Notes:It shifted too much in the bubbles dream; it just needs to last longer for each pitch, like 2x as long. speed of the music should be altered too.
 - [ ] **Performance:** with all the nonsense (12 floating things, faces, effects), does a dream stay smooth? If not, say so and the shares can be turned down.
   Notes:
 

@@ -214,17 +214,25 @@ LC.StalkerTakenItem = Taken
 -- Dead headcrabs don't lie about for ever
 ------------------------------------------------------------------------
 
+-- The owner, 11 November: "Items I or other players drop really need to despawn after 5 minutes.
+-- Same with corpses and raw/cooked headcrabs/birds." So what a dead headcrab or bird left (raw, or
+-- cooked by a Cremator) and anything dropped out of a player's pockets is gone lc_body_time
+-- seconds after it was last let go of, seen or not. (Before, only headcrabs, and only out of sight.)
+local MEAT = { raw_bird = true, raw_crow = true, raw_gull = true, cooked_bird = true, raw_headcrab = true, raw_fastcrab = true,
+    raw_poisoncrab = true, cooked_headcrab = true }
+function LC.ClearsAway(e)
+    if not IsValid(e) or e:GetClass() ~= "lc_item" then return false end
+    return e.lcPocketDrop == true or MEAT[e:GetNW2String("lc_item", "")] == true
+end
+
 function LC.CarcassDecayTick(now)
     local cv = GetConVar("lc_body_time")
     local secs = cv and cv:GetFloat() or 300
     local n = 0
     for _, e in ipairs(LC.EntsOf and LC.EntsOf("lc_item") or {}) do
-        if IsValid(e) and LC.CrabCarcass and LC.CrabCarcass(e) and not Taken(e) and now - (e.lcBorn or now) > secs then
-            local p = e:GetPos()
-            if (not LC.FarFromPlayers or LC.FarFromPlayers(p, 600)) and not LC.IsSeen(p + Vector(0, 0, 10)) then
-                e:Remove()
-                n = n + 1
-            end
+        if LC.ClearsAway(e) and not Taken(e) and now - math.max(e.lcBorn or now, e.lcDroppedAt or 0) > secs then
+            e:Remove()
+            n = n + 1
         end
     end
     return n

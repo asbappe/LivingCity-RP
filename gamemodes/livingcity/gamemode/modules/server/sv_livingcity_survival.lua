@@ -697,6 +697,7 @@ function LC.InvAction(ply, action, id)
         local born = LC.SpoilOldest(ply, id)
         LC.TakeItem(ply, id)
         local dropped = LC.SpawnWorldItem(id, Front(ply), nil, nil, born)
+        if IsValid(dropped) then dropped.lcPocketDrop = true end -- (cleared away after lc_body_time: sv_livingcity_combineground.lua)
         if dropped and LC.ClaimEntity then LC.ClaimEntity(ply, dropped) end -- a raid traces it back to you
         -- no endless piles: past lc_drops_kept of your own on the ground, the oldest is cleared away
         if IsValid(dropped) then
@@ -918,9 +919,19 @@ hook.Add("PlayerUse", "LivingCityBirdDoors", function(ply, ent)
 end)
 
 -- Every dead bird or headcrab leaves something you can pick up and cook.
-hook.Add("OnNPCKilled", "LivingCityCarcass", function(npc)
-    local cls = npc:GetClass()
+-- What a kill leaves: burnt to death by a Cremator, it's cooked already (the owner, 11 November), and spoils as cooked meat does.
+function LC.CarcassItem(cls, attacker)
     local id = BIRD_ITEM[cls] or CRAB_CLASS[cls] or nil
+    if id and IsValid(attacker) and attacker.lcCremator then
+        local it = LCS.Items[id]
+        id = it and it.cooksTo or id
+    end
+    return id
+end
+
+hook.Add("OnNPCKilled", "LivingCityCarcass", function(npc, attacker)
+    local cls = npc:GetClass()
+    local id = LC.CarcassItem(cls, attacker)
     if not id then return end
     local pos = npc:GetPos() + Vector(0, 0, 6)
     timer.Simple(0.2, function() LC.SpawnWorldItem(id, pos) end)

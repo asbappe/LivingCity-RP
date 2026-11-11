@@ -22,6 +22,9 @@ LC = LC or {}
 
 local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
 local cvOn   = CreateConVar("lc_bodies", "1", FLAGS, "The dead leave bodies you can search")
+-- A body somebody is looking at stays this much longer, then goes all the same (the owner,
+-- 11 November: corpses were lying about for good while he watched).
+local SEEN_EXTRA = 60
 local cvTime = CreateConVar("lc_body_time", "300", FLAGS, "Seconds a body stays")
 local cvMax  = CreateConVar("lc_max_bodies", "16", FLAGS, "Most bodies at once (oldest go first)")
 
@@ -85,7 +88,8 @@ local function Trim()
         local b = LC.Bodies[i]
         if not IsValid(b.ent) then
             table.remove(LC.Bodies, i)
-        elseif now - b.born > cvTime:GetFloat() and not Busy(b.ent) and not LC.IsSeen(b.ent:GetPos() + Vector(0, 0, 20)) then
+        elseif now - b.born > cvTime:GetFloat() and not Busy(b.ent)
+            and (now - b.born > cvTime:GetFloat() + SEEN_EXTRA or not LC.IsSeen(b.ent:GetPos() + Vector(0, 0, 20))) then
             b.ent:Remove()
             table.remove(LC.Bodies, i)
         end

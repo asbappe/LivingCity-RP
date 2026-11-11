@@ -54,19 +54,30 @@ function LC_CL.CrematorFlame(e, to, now)
                 p:SetEndSize(26)
                 p:SetRoll(math.Rand(0, 360))
                 p:SetRollDelta(math.Rand(-2, 2))
-                p:SetColor(160, 255, 140)
+                p:SetColor(40, 255, 50)
                 p:SetGravity(Vector(0, 0, 40))
                 p:SetAirResistance(40)
             end
+        end
+        -- a glow along the stream: on its own the flame was flat and dull, like a spray (the owner, 11 November)
+        local g = emitter:Add("sprites/light_glow02_add", from)
+        if g then
+            g:SetVelocity(dir * (dist / 0.4) + VectorRand() * 12)
+            g:SetDieTime(0.4)
+            g:SetStartAlpha(170)
+            g:SetEndAlpha(0)
+            g:SetStartSize(14)
+            g:SetEndSize(46)
+            g:SetColor(30, 255, 40)
         end
     end
     local dl = DynamicLight and DynamicLight(e:EntIndex())
     if dl then
         dl.pos = from + dir * (dist * 0.5)
-        dl.r, dl.g, dl.b = 120, 255, 110
-        dl.brightness = 2
+        dl.r, dl.g, dl.b = 40, 255, 50
+        dl.brightness = 4
         dl.Decay = 800
-        dl.Size = 220
+        dl.Size = 320
         dl.DieTime = now + 0.15
     end
 end

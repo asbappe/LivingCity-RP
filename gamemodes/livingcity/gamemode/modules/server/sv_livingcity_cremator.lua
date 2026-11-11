@@ -64,6 +64,7 @@ local HEALTH = 400
 local SPOT, LOSE, FLAME = 520, 1000, 280
 local BODY_RANGE, BODY_REACH, BURN_SECS = 3500, 150, 5
 local UP = Vector(0, 0, 40)
+local WEDGE_SECS, WEDGE_DIST = 20, 80 -- (getting nowhere: less than this far in this long, while trying to walk)
 
 LC.Cremators = LC.Cremators or {} -- [carrier npc] = { npc, vis, phase, body, foe, ... }
 local residents = LC.Cremators
@@ -252,6 +253,7 @@ function LC.CrematorEnemy(r, e, now)
     if not Alive(e) or e == r.npc then return false end
     if residents[e] then return false end
     now = now or CurTime()
+    if r.gaveUp and (r.gaveUp[e] or 0) > now then return false end -- (it couldn't get to them)
     if e:IsPlayer() then
         if LC.EditorHeld and LC.EditorHeld(e) then return false end
         if e.GetMoveType and MOVETYPE_NOCLIP and e:GetMoveType() == MOVETYPE_NOCLIP then return false end
@@ -308,8 +310,17 @@ local function Hiss(r, now)
     r.vis:EmitSound("ambient/fire/mtov_flame2.wav", 75, math.random(95, 115))
 end
 
+-- Small prey isn't set alight: the engine's fire stayed with what a headcrab or
+-- bird left behind and sizzled on for minutes (the owner, 11 November). The
+-- stream and the burn damage are enough for them.
+local SMALL = { npc_headcrab = true, npc_headcrab_fast = true, npc_headcrab_black = true, npc_headcrab_poison = true,
+    npc_pigeon = true, npc_crow = true, npc_seagull = true, npc_manhack = true }
+function LC.CrematorIgnites(e)
+    return IsValid(e) and e.Ignite ~= nil and not SMALL[e:GetClass()]
+end
+
 local function Scorch(r, e, now)
-    if e.Ignite then e:Ignite(3, 0) end
+    if LC.CrematorIgnites(e) then e:Ignite(3, 0) end
     if DamageInfo and e.TakeDamageInfo then
         local d = DamageInfo()
         d:SetDamage(8)
@@ -375,7 +386,7 @@ local function Unclaim(r, skip)
     local b = r.body
     r.body = nil
     if IsValid(b) then
-        if b.lcBody then b.lcBody.claimed = nil end
+        Claim(b, false)
         if skip then b.lcCrematorSkip = CurTime() + 180 end
         if b.Extinguish and r.phase == "burn" then b:Extinguish() end
     end
@@ -499,6 +510,18 @@ function LC.CrematorsStaff(now)
 end
 
 -- The body it would see to next.
+-- What a dead headcrab or bird leaves is an item, not a body: the Cremator burns those too
+-- (the owner, 11 November: it never came for the headcrabs it had killed).
+local CARCASS = { raw_bird = true, raw_crow = true, raw_gull = true }
+function LC.CrematorCarcass(e)
+    if not IsValid(e) or e:GetClass() ~= "lc_item" then return false end
+    return (LC.CrabCarcass and LC.CrabCarcass(e)) or CARCASS[e:GetNW2String("lc_item", "")] == true
+end
+
+local function Claim(body, on)
+    if body.lcBody then body.lcBody.claimed = on or nil else body.lcBagging = on or nil end
+end
+
 function LC.CrematorBody(pos, now)
     if LC.MorticiansSuspended and LC.MorticiansSuspended() then return nil end -- (stood down: the dead wait)
     local grace = math.max(0, cvGrace:GetFloat())
@@ -512,6 +535,14 @@ function LC.CrematorBody(pos, now)
             if d < bd then best, bd = e, d end
         end
     end
+    for _, e in ipairs(LC.EntsOf and LC.EntsOf("lc_item") or {}) do
+        if LC.CrematorCarcass(e) and not e.lcBagging and not e.lcStalkerTaken and not (e.GetParent and IsValid(e:GetParent()))
+            and now - (e.lcBorn or now) >= grace and (e.lcCrematorSkip or 0) <= now
+            and not (LC.InRebelZone and LC.InRebelZone(e:GetPos())) then
+            local d = e:GetPos():DistToSqr(pos)
+            if d < bd then best, bd = e, d end
+        end
+    end
     return best
 end
 
@@ -520,6 +551,7 @@ local function Burnt(r, body)
     r.body = nil
     if util.Decal then util.Decal("Scorch", pos + Vector(0, 0, 12), pos - Vector(0, 0, 40), body) end
     if sound and sound.Play then sound.Play("ambient/fire/ignite.wav", pos, 70, 80) end
+    if body.Extinguish then body:Extinguish() end -- (or its fire's sound can stay behind)
     body:Remove()
     r.burnt = (r.burnt or 0) + 1
     LC.CrematorsBurnt = (LC.CrematorsBurnt or 0) + 1
@@ -551,7 +583,32 @@ local function Think(r, now)
     local pos = npc:GetPos()
     local moved = pos:DistToSqr(r.lastPos) > 3 * 3
     if moved then r.lastPos, r.lastMoved = pos, now end
-    local stuck = now - r.lastMoved > 20
+    -- Pushing at something it can't get round (a barricade set down with the editor: the owner,
+    -- 11 November, watched one walk into them for 15 minutes) still shuffles a little, so
+    -- "hasn't moved" misses it: every 20 seconds, has it got anywhere?
+    local wanting = r.foe ~= nil or r.phase == "tobody" or (r.phase == "roam" and r.dest ~= nil)
+    local wedged = false
+    if not r.anchor or now - r.anchorT >= WEDGE_SECS then
+        wedged = r.anchor ~= nil and wanting and not r.standing and pos:DistToSqr(r.anchor) < WEDGE_DIST * WEDGE_DIST
+        r.anchor, r.anchorT = pos, now
+        r.wedgedN = wedged and (r.wedgedN or 0) + 1 or nil
+    end
+    local stuck = now - r.lastMoved > 20 or wedged
+    if wedged then
+        -- give up on what it was after, and after a while start again somewhere else
+        if r.foe then r.gaveUp = r.gaveUp or setmetatable({}, { __mode = "k" }) r.gaveUp[r.foe] = now + 60 r.foe = nil end
+        local n = r.wedgedN or 0
+        if n >= 2 and (n >= 6 or not (LC.IsSeen and LC.IsSeen(pos + UP))) then
+            local p = HiddenSpot()
+            if p then
+                if r.body then Unclaim(r, true) end
+                npc:SetPos(p + Vector(0, 0, 4))
+                r.phase, r.dest, r.wedgedN, r.anchor, r.lastPos, r.lastMoved = "roam", nil, nil, nil, p, now
+                SetFlame(r, nil, now)
+                return
+            end
+        end
+    end
 
     -- an enemy comes before everything
     local foe = r.foe
@@ -571,7 +628,7 @@ local function Think(r, now)
         r.nextBody = now + 3
         local body = LC.CrematorBody(pos, now)
         if body then
-            body.lcBody.claimed = true
+            Claim(body, true)
             r.body, r.phase, r.nextWalk, r.lastMoved = body, "tobody", 0, now
         end
     end
@@ -671,6 +728,11 @@ hook.Add("LivingCityStopped", "LivingCityCremators", function()
 end)
 
 -- Fire does nothing to it; whoever hurts it is an enemy, and the units nearby come.
+-- Nothing it killed goes on burning (the fire's sound stayed with the dead).
+hook.Add("OnNPCKilled", "LivingCityCrematorFire", function(npc, attacker)
+    if IsValid(npc) and IsValid(attacker) and attacker.lcCremator and npc.Extinguish then npc:Extinguish() end
+end)
+
 hook.Add("EntityTakeDamage", "LivingCityCremator", function(victim, dmg)
     local r = residents[victim]
     if not r or r.dead then return end

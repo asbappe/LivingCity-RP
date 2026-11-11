@@ -23268,7 +23268,25 @@ fresh.lcBorn = CurTime() - 1000
 local watcher = newPlayer("CrabWatcher", "citizen")
 watcher:SetPos(Y + Vector(200, 0, 0))
 LC.CarcassDecayTick(CurTime())
-ok(IsValid(fresh), "not while someone's standing right there")
+ok(not IsValid(fresh), "and with someone standing right there too (the owner, 11 November: gone after 5 minutes, seen or not)")
+do
+    local cooked = LC.SpawnWorldItem("cooked_headcrab", Y + Vector(100, 60, 0))
+    local dropped = LC.SpawnWorldItem("scrap", Y + Vector(100, 120, 0))
+    local placed = LC.SpawnWorldItem("scrap", Y + Vector(100, 180, 0))
+    dropped.lcPocketDrop = true
+    cooked.lcBorn, dropped.lcBorn, placed.lcBorn = CurTime() - 1000, CurTime() - 1000, CurTime() - 1000
+    dropped.lcDroppedAt = CurTime() - 10
+    LC.CarcassDecayTick(CurTime())
+    ok(not IsValid(cooked), "cooked meat left lying goes the same way")
+    ok(IsValid(dropped), "something out of a player's pockets, just let go of again: it stays")
+    dropped.lcDroppedAt = CurTime() - 1000
+    LC.CarcassDecayTick(CurTime())
+    ok(not IsValid(dropped) and IsValid(placed), "five minutes after it was dropped it's gone; an item nobody dropped is left alone")
+    placed:Remove()
+    local cremator = ents.Create("npc_stalker") cremator:Spawn() cremator.lcCremator = true
+    ok(LC.CarcassItem("npc_headcrab", cremator) == "cooked_headcrab" and LC.CarcassItem("npc_crow", cremator) == "cooked_bird"
+        and LC.CarcassItem("npc_headcrab", nil) == "raw_headcrab", "what a Cremator burns to death is left cooked; anyone else's kill is raw")
+end
 watcher:SetPos(Vector(-30000, 30000, 0))
 local can = LC.SpawnWorldItem("can_empty", Y + Vector(-100, 0, 0))
 can.lcBorn = CurTime() - 1000
