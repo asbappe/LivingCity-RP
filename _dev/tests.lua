@@ -14430,7 +14430,7 @@ concommand.list.lc_ending_reset_cooldown(nil, "lc_ending_reset_cooldown", {})
 local realGetAll = player.GetAll
 player.GetAll = function() return { a, b } end -- (just these two in the world for the endings below: the suite's other players would crowd the landing zone)
 _setcvar("lc_ending_minge_swell", 20)
-_setcvar("lc_ending_minge_end", 40)
+_setcvar("lc_ending_minge_end", 45) -- (45, not 40: the last five seconds are the killing and the rising now)
 _setcvar("lc_ending_minge_max", 12)
 ok(LC.TriggerEnding("harpies", a), "again (cooldown cleared)")
 _run(5)
@@ -14517,12 +14517,76 @@ ok(E.mode == "leap" and (E.ringHits or 0) > 0 and not a.lcEndTaken and not b.lcE
     "then they leap, at the Combine and the city's people first, and the players have a chance to run",
     E.mode .. " ring hits " .. tostring(E.ringHits) .. " a " .. tostring(a.lcEndTaken) .. " b " .. tostring(b.lcEndTaken))
 ok(LC.MingeFury(E.leapAt + 10) < 0.5 and LC.MingeFury(E.leapAt + 45) > 2.5, "they hit lightly at first, and much harder 30 to 45 seconds in")
+-- carried off, and turned (the owner, 11 November)
+do
+    local function Out(e) local c = e:GetPos() - E.lz return math.sqrt(c.x * c.x + c.y * c.y) end
+    local mg
+    for _, m in ipairs(E.minges) do if IsValid(m) and not m.lcMinge.carry then mg = m break end end
+    ok(LC.MingeCarry(a, mg) == true and a.lcMingeCarried and a.lcEndTaken and a.frozen and a:GetNW2Bool("lc_minge_carried", false) and mg.lcMinge.carry == a,
+        "brought down, a player is lifted over the mingebag's head: held, out of the fight, not dead")
+    ok(LC.MingeCarry(b, mg) == false, "(one mingebag carries one)")
+    local d0 = Out(mg)
+    for i = 1, 5 do LC.MingeStep(mg, 0.1) end
+    ok(Out(mg) > d0 + 50 and a:GetPos():Distance(mg:GetPos() + Vector(0, 0, LC.MingeCarryUp)) < 60 and a.lcMingeCarried ~= nil,
+        "it runs for the dark with them", Out(mg) - d0)
+    local wasV = E.vulnerable
+    E.vulnerable = true
+    mg.lcMinge.hp = 1
+    ok(LC.MingeHurt(mg, nil) == false and IsValid(mg) and a.lcMingeCarried ~= nil and mg.lcMinge.invincible and a.lcMingeGod,
+        "nothing interrupts it: the one with a player over its head can't be shot down, and nothing touches the player (the owner, 11 November)")
+    E.vulnerable = wasV
+    local mg2 = mg
+    a.lcMingeCarried.turnAt = CurTime()
+    _run(0.3)
+    local own = a.lcMingeSelf
+    ok(not a.lcMingeCarried and a.lcEndTaken and a:GetNW2Bool("lc_end_spectating", false) and IsValid(own) and own.lcMinge.was == a and a.lcEndWatching == own
+        and mg2.lcMinge.carry == nil, "in the dark they turn: one of them now, a mingebag of their own, and they ride with it")
+    local told = false
+    for _, l in ipairs(b.chat or {}) do if string.find(l, "One of them", 1, true) then told = true end end
+    ok(told, "and the others are told who it was that came back")
+    -- (the owner, later that day: this is the whole of it now) the Combine's units and the city's people go the same way
+    local victim
+    for _, list in ipairs({ E.combine or {}, E.folk or {} }) do for _, n in ipairs(list) do if IsValid(n) and not n.lcEndTaken then victim = victim or n end end end
+    local mg3
+    for _, m in ipairs(E.minges) do if IsValid(m) and not m.lcMinge.carry and not m.lcMinge.invincible and not m.lcMinge.was then mg3 = m break end end
+    if victim and mg3 then
+        local bodies0, minges0 = #(E.bodies or {}), #E.minges
+        ok(LC.MingeCarry(victim, mg3) == true and victim.lcEndTaken and mg3.lcMinge.carry == victim, "one of the Combine's units (or the city's people) is carried off the same way")
+        victim.lcMingeCarried.turnAt = CurTime()
+        LC.MingeStep(mg3, 0.1)
+        ok(not IsValid(victim) and #E.minges == minges0 + 1 and #(E.bodies or {}) == bodies0, "and comes back as one more of them: no body left lying there")
+        local wasV2 = E.vulnerable
+        E.vulnerable = true
+        mg2.lcMinge.hp = 1
+        ok(LC.MingeHurt(mg2, nil) == false and IsValid(mg2), "(the one that took the player stays unstoppable after it has set them down)")
+        mg3.lcMinge.hp = 1
+        ok(not mg3.lcMinge.invincible and LC.MingeHurt(mg3, nil) == true, "(one that only ever took a unit can still be shot down)")
+        E.vulnerable = wasV2
+    end
+end
 for _, n in ipairs(FIRE) do _files["sound/npc/metropolice/vo/" .. n .. ".wav"] = nil end
-runTo(38.5)
+local maxM = GetConVar("lc_ending_minge_max"):GetInt()
+local busyM, freeM = 0, 0
+for _, m in ipairs(E.minges) do if IsValid(m) then if m.lcMinge.carry or m.lcMinge.was then busyM = busyM + 1 else freeM = freeM + 1 end end end
+runTo(39.5)
+freeM = 0
+for _, m in ipairs(E.minges) do if IsValid(m) and not (m.lcMinge.carry or m.lcMinge.was) then freeM = freeM + 1 end end
+-- (and each unit or citizen turned is one more on top)
+ok(freeM > maxM and freeM >= math.floor(maxM * LC.MingeMore) - 2, "once they leap there are half as many again (carrying people off keeps them busy, and the song is no longer)", freeM .. " of " .. maxM)
+ok(not b.lcEndTaken, "(someone still standing, five seconds and a bit from the end)")
+runTo(40.3)
+ok(b.lcEndTaken and b:GetNW2Bool("lc_end_spectating", false) and IsValid(b.lcMingeBody) and not IsValid(b.lcMingeSelf), "the last five seconds: whoever still stands is killed where they stand, a body on the ground")
+runTo(43.5)
 ok(a.lcEndTaken and b.lcEndTaken and a.alive and b.alive and a:GetNW2Bool("lc_end_spectating", false),
     "by the end everyone's gone, and the dead watch (nobody really dies: no close call, no new character)")
+ok(IsValid(b.lcMingeSelf) and b.lcMingeSelf.lcMinge.was == b and b.lcMingeBody == nil and b.lcEndWatching == b.lcMingeSelf,
+    "three from the end the dead get up as mingebags where they fell, and watch from their own")
+local function OutM(m) local c = m:GetPos() - E.lz return math.sqrt(c.x * c.x + c.y * c.y) end
+local own, dOwn = b.lcMingeSelf, OutM(b.lcMingeSelf)
+runTo(44.6)
+ok(IsValid(own) and own.lcMinge.fleeGoal ~= nil and OutM(own) > dOwn + 200, "and in the last second and a half every one of them scurries off into the night", OutM(own) - dOwn)
 ok(LC.EndingSession().phase == "apocalypse", "the song plays out with the dead watching")
-runTo(41)
+runTo(46)
 ok(LC.EndingSession() and LC.EndingSession().phase == "reset", "and when it's over the city resets")
 _run(6)
 ok(reloaded == 1 and LC.EndingSession() == nil and not a.lcEndTaken, "and the map reloads")

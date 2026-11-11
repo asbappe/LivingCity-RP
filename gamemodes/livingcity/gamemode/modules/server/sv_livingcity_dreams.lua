@@ -820,14 +820,15 @@ end
 local function Leave(p)
     if p.lcEndFrozen or (p.IsFrozen and p:IsFrozen()) then p:Freeze(false) end
     p.lcEndFrozen = nil
+    if p.lcMingeGod then p.lcMingeGod = nil if p.GodDisable then p:GodDisable() end end -- (carried off by a mingebag: sv_livingcity_endings.lua)
     if p.SetMoveType then p:SetMoveType(MOVETYPE_WALK) end
     if p.SetNoDraw then p:SetNoDraw(false) end
     if p.SetNotSolid then p:SetNotSolid(false) end
     if p.SetGravity then p:SetGravity(1) end
     if p.lcEndSpectating and p.UnSpectate then p:UnSpectate() if p.Spawn then p:Spawn() end end
     for _, k in ipairs({ "lcEndTaken", "lcEndRide", "lcEndHang", "lcEndUnder", "lcEndSpectating", "lcEndWatching", "lcEndRoam", "lcHang", "lcHangHP",
-        "lcShalom", "lcFire", "lcHora", "lcBloomUp", "lcEndModel" }) do p[k] = nil end
-    for _, k in ipairs({ "lc_end_taken", "lc_end_spectating", "lc_dancing", "lc_seated", "lc_rocking", "lc_chair", "lc_flying", "lc_limp" }) do p:SetNW2Bool(k, false) end
+        "lcShalom", "lcFire", "lcHora", "lcBloomUp", "lcEndModel", "lcMingeCarried", "lcMingeSelf", "lcMingeBody" }) do p[k] = nil end
+    for _, k in ipairs({ "lc_end_taken", "lc_end_spectating", "lc_dancing", "lc_seated", "lc_rocking", "lc_chair", "lc_flying", "lc_limp", "lc_minge_carried" }) do p:SetNW2Bool(k, false) end
     p:SetNW2Float("lc_fire", 0)
     p:SetNW2Float("lc_hanged", 0)
     p:SetNW2Entity("lc_riding", NULL)
