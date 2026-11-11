@@ -214,7 +214,7 @@ end)
 -- screen has "The dream is over" between the two bars, with a line of that dream's own. The same closes a dream
 -- you play for whoever didn't win it.
 LC.DreamCloseLines = {
-    harpies = "They came out of the dark and left nobody standing. You wake before they return.",
+    harpies = "They carried you into the dark and made you one of them. You wake with your arms still out.",
     bus = "The bus drove on without you. You can still feel the bass in your teeth.",
     plane = "The plane flew on over the city. Your arms are still doing the dance.",
     standup = "The rope hangs empty, and the crowd has gone home.",

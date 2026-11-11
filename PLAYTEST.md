@@ -1562,3 +1562,12 @@ Needs Workshop items 2090972521 (and 3329322225) in the server collection, then 
   Notes:
 - [ ] **The close, 11 November:** dream one of the endings to its end (the harpies, the plane, the fire). As you wake in bed, "The dream is over" and a line about that dream should show for five seconds. Lose a dream you play: a closing line too.
   Notes:
+
+## 11 November: the harpies carry you off
+
+- [ ] **Carried off:** in the harpies ending (or as a dream), let them bring you down. Does one lift you over its head and run into the dark with you, the screen going black? Does it look right (your height over it, how fast it goes)?
+  Notes:
+- [ ] **Turned:** about six seconds later, are you watching from a mingebag of your own as it goes after the others? Do the others see the two chat lines (carried off; comes back, one of them)?
+  Notes:
+- [ ] **Shot down:** have someone shoot the mingebag carrying a player. Is the player dropped, alive, and able to run?
+  Notes:

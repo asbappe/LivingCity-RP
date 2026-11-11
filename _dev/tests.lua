@@ -14390,6 +14390,35 @@ ok(E.mode == "leap" and (E.ringHits or 0) > 0 and not a.lcEndTaken and not b.lcE
     "then they leap, at the Combine and the city's people first, and the players have a chance to run",
     E.mode .. " ring hits " .. tostring(E.ringHits) .. " a " .. tostring(a.lcEndTaken) .. " b " .. tostring(b.lcEndTaken))
 ok(LC.MingeFury(E.leapAt + 10) < 0.5 and LC.MingeFury(E.leapAt + 45) > 2.5, "they hit lightly at first, and much harder 30 to 45 seconds in")
+-- carried off, and turned (the owner, 11 November)
+do
+    local function Out(e) local c = e:GetPos() - E.lz return math.sqrt(c.x * c.x + c.y * c.y) end
+    local mg
+    for _, m in ipairs(E.minges) do if IsValid(m) and not m.lcMinge.carry then mg = m break end end
+    ok(LC.MingeCarry(a, mg) == true and a.lcMingeCarried and a.lcEndTaken and a.frozen and a:GetNW2Bool("lc_minge_carried", false) and mg.lcMinge.carry == a,
+        "brought down, a player is lifted over the mingebag's head: held, out of the fight, not dead")
+    ok(LC.MingeCarry(b, mg) == false, "(one mingebag carries one)")
+    local d0 = Out(mg)
+    for i = 1, 5 do LC.MingeStep(mg, 0.1) end
+    ok(Out(mg) > d0 + 50 and a:GetPos():Distance(mg:GetPos() + Vector(0, 0, LC.MingeCarryUp)) < 60 and a.lcMingeCarried ~= nil,
+        "it runs for the dark with them", Out(mg) - d0)
+    local wasV = E.vulnerable
+    E.vulnerable = true
+    mg.lcMinge.hp = 1
+    ok(LC.MingeHurt(mg, nil) == true and not a.lcMingeCarried and not a.lcEndTaken and not a.frozen and a:Health() == 40, "shot down, it drops them, alive and free to run")
+    E.vulnerable = wasV
+    local mg2
+    for _, m in ipairs(E.minges) do if IsValid(m) and not m.lcMinge.carry then mg2 = m break end end
+    LC.MingeCarry(a, mg2)
+    a.lcMingeCarried.turnAt = CurTime()
+    _run(0.3)
+    local own = a.lcMingeSelf
+    ok(not a.lcMingeCarried and a.lcEndTaken and a:GetNW2Bool("lc_end_spectating", false) and IsValid(own) and own.lcMinge.was == a and a.lcEndWatching == own
+        and mg2.lcMinge.carry == nil, "in the dark they turn: one of them now, a mingebag of their own, and they ride with it")
+    local told = false
+    for _, l in ipairs(b.chat or {}) do if string.find(l, "One of them", 1, true) then told = true end end
+    ok(told, "and the others are told who it was that came back")
+end
 for _, n in ipairs(FIRE) do _files["sound/npc/metropolice/vo/" .. n .. ".wav"] = nil end
 runTo(38.5)
 ok(a.lcEndTaken and b.lcEndTaken and a.alive and b.alive and a:GetNW2Bool("lc_end_spectating", false),

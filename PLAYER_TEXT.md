@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version 9a5ed13. Admin-only console messages and log lines are left out.
+Made from version e52d213. Admin-only console messages and log lines are left out.
 
-10844 lines, from 297 files.
+10849 lines, from 297 files.
 
 ## Contents
 
@@ -179,7 +179,7 @@ Made from version 9a5ed13. Admin-only console messages and log lines are left ou
 - [the Combine's dropship](#the-combines-dropship-svlivingcitydropshiplua) (7)
 - [economy and social credit](#economy-and-social-credit-svlivingcityeconomylua) (32)
 - [a business of your own (the owner, 10 November: "real](#a-business-of-your-own-the-owner-10-november-real-svlivingcityemploymentlua) (23)
-- [secret endings](#secret-endings-svlivingcityendingslua) (80)
+- [secret endings](#secret-endings-svlivingcityendingslua) (85)
 - [escorts through Combine doors](#escorts-through-combine-doors-svlivingcityescortlua) (74)
 - [city events](#city-events-svlivingcityeventslua) (80)
 - [burning the confiscated contraband (the owner, 7 November)](#burning-the-confiscated-contraband-the-owner-7-november-svlivingcityevidencelua) (45)
@@ -8029,7 +8029,7 @@ Made from version 9a5ed13. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): The close: the dreams nobody can win (the harpies' line was first written as if they carried people off: they don't, they leap and kill. Corrected 11 November.) The close: the dreams nobody can win (the owner, 11 November: "what about dreams that can't be won? Like the harpies or plane or fire") The secret endings dreamt as dreams have their own opening (the ending's title comes up by itself) and their own choreography, but nothing to win, so they used to just stop. Now, as each dreamer wakes at the end of one, their screen has "The dream is over" between the two bars, with a line of that dream's own. The same closes a dream you play for whoever didn't win it.
 
-- "They came out of the dark and left nobody standing. You wake before they return."  (text, line 217)
+- "They carried you into the dark and made you one of them. You wake with your arms still out."  (text, line 217)
 - "The bus drove on without you. You can still feel the bass in your teeth."  (text, line 218)
 - "The plane flew on over the city. Your arms are still doing the dance."  (text, line 219)
 - "The rope hangs empty, and the crowd has gone home."  (text, line 220)
@@ -8381,163 +8381,177 @@ Made from version 9a5ed13. Admin-only console messages and log lines are left ou
 
 - "The mingebags got you."  (text, line 637)
 
-> Note for you (not shown in game): part of: hit
+> Note for you (not shown in game): part of: drop
 
-- "They're on you, all of them, in that pose. The mingebags got you."  (text, line 675)
+- "It goes down, and drops you. Run!"  (chat message, line 661)
+
+> Note for you (not shown in game): part of: minge carry
+
+- "It has you. It lifts you over its head like a toy, and runs for the dark."  (chat message, line 693)
+- "is carried off into the dark."  (chat message, line 695)
+
+> Note for you (not shown in game): part of: minge turn
+
+- "In the dark it sets you down. Your arms won't come down. You slide. You're one of them now."  (text, line 709)
+- "comes back out of the dark. One of them."  (chat message, line 719)
+
+> Note for you (not shown in game): (carried off into the dark and turned, by the one that got them; killed where they stand only if it can't)
+
+- "They're on you, all of them, in that pose. The mingebags got you."  (text, line 761)
 
 > Note for you (not shown in game): part of: harpies
 
-- "[Civil Protection] "All Civil Protection units, open fire! Take them down!""  (chat message, line 1018)
+- "[Civil Protection] "All Civil Protection units, open fire! Take them down!""  (chat message, line 1117)
 
 > Note for you (not shown in game): the last two seconds: nobody's left
 
-- "There's nowhere left. The mingebags got you."  (text, line 1112)
+- "There's nowhere left. The mingebags got you."  (text, line 1222)
 
 > Note for you (not shown in game): part of: bloom
 
-- "You spin up into the sky and burst into sparkles. Watch the rest go."  (text, line 1276)
+- "You spin up into the sky and burst into sparkles. Watch the rest go."  (text, line 1386)
 
 > Note for you (not shown in game): part of: convert
 
-- "The skeletons got you. You're one of them now. Dance."  (chat message, line 1350)
+- "The skeletons got you. You're one of them now. Dance."  (chat message, line 1460)
 
 > Note for you (not shown in game): part of: apply section
 
-- "The skeletons claim everyone in the end. You're one of them now. Dance it out."  (text, line 1470)
+- "The skeletons claim everyone in the end. You're one of them now. Dance it out."  (text, line 1580)
 
 > Note for you (not shown in game): the ride lasts the song, more or less, and then nobody ever gets off
 
-- "The ride doesn't stop. It never stops."  (text, line 1639)
+- "The ride doesn't stop. It never stops."  (text, line 1749)
 
 > Note for you (not shown in game): Engrish: what everyone says, the way the captain would say it.
 
-- "%f[%a][Yy]our%f[%A]"  (text, line 1954)
-- "%f[%a][Yy]ou're%f[%A]"  (text, line 1954)
-- "you are"  (text, line 1954)
-- "are belong"  (text, line 1954)
-- "%f[%a]going to%f[%A]"  (text, line 1956)
-- "on the way to"  (text, line 1956)
+- "%f[%a][Yy]our%f[%A]"  (text, line 2064)
+- "%f[%a][Yy]ou're%f[%A]"  (text, line 2064)
+- "you are"  (text, line 2064)
+- "are belong"  (text, line 2064)
+- "%f[%a]going to%f[%A]"  (text, line 2066)
+- "on the way to"  (text, line 2066)
 
 > Note for you (not shown in game): Partied too hard: down they go.
 
-- "You partied too hard. Lights out."  (text, line 2285)
+- "You partied too hard. Lights out."  (text, line 2395)
 
 > Note for you (not shown in game): the music cuts: everyone left goes down
 
-- "The music stops. So do you. You partied too hard."  (text, line 2359)
+- "The music stops. So do you. You partied too hard."  (text, line 2469)
 
 > Note for you (not shown in game): part of: burst
 
-- "Your behind takes you all the way up, and you go off like a firework. Watch the rest go."  (text, line 2852)
+- "Your behind takes you all the way up, and you go off like a firework. Watch the rest go."  (text, line 2962)
 
 > Note for you (not shown in game): (held there, not frozen: a frozen player can't even look about, and the rope's view is all about looking about; where they are is set every tick anyway)
 
-- "A rope drops round your neck from above, and up you go. (You can still look about.)"  (chat message, line 3187)
+- "A rope drops round your neck from above, and up you go. (You can still look about.)"  (chat message, line 3297)
 
 > Note for you (not shown in game): Gone limp: still hanging there, looking on.
 
-- "You stop kicking. You hang there, and watch the rest."  (chat message, line 3208)
+- "You stop kicking. You hang there, and watch the rest."  (chat message, line 3318)
 
 > Note for you (not shown in game): part of: bite
 
-- "Something huge comes up out of the dark water. That's the last you see."  (text, line 3384)
+- "Something huge comes up out of the dark water. That's the last you see."  (text, line 3494)
 
 > Note for you (not shown in game): part of: icthy step
 
-- "It comes over the edge of the stage at you, jaws first. That's the last you see."  (text, line 3399)
+- "It comes over the edge of the stage at you, jaws first. That's the last you see."  (text, line 3509)
 
 > Note for you (not shown in game): part of: water
 
-- "Father Grigori"  (text, line 3493)
+- "Father Grigori"  (text, line 3603)
 
 > Note for you (not shown in game): under the water: you hold your breath, then you drown
 
-- "The water closes over your head. Somewhere above, Father Grigori hits the high note."  (text, line 3634)
+- "The water closes over your head. Somewhere above, Father Grigori hits the high note."  (text, line 3744)
 
 > Note for you (not shown in game): the last note: whoever's still here goes, and Father Grigori last of all
 
-- "The tide takes you, gently, at the very end."  (text, line 3761)
-- "Father Grigori holds the last note, bows, and the flood takes its encore."  (text, line 3763)
+- "The tide takes you, gently, at the very end."  (text, line 3871)
+- "Father Grigori holds the last note, bows, and the flood takes its encore."  (text, line 3873)
 
 > Note for you (not shown in game): part of: water
 
-- "Father Grigori holds the last note, bows, and the flood takes its encore."  (chat message, line 3766)
+- "Father Grigori holds the last note, bows, and the flood takes its encore."  (chat message, line 3876)
 
 > Note for you (not shown in game): part of: go to
 
-- "[???] Time stops. A man in a blue suit is standing in front of you. He'd like a word, and your vote: 1 to let it happen, 2 to skip it."  (text, line 3859)
-- "No song"  (on-screen notice, line 3868)
-- "No song found for {id}: put {id}.mp3 in garrysmod/sound/livingcity/endings/ on the server (and sync FastDL). lc_endings shows what it finds."  (on-screen notice, line 3868)
-- "[???] So be it. {say}"  (text, line 3873)
-- "[???] The city resets. Everyone you were is still you."  (text, line 3882)
+- "[???] Time stops. A man in a blue suit is standing in front of you. He'd like a word, and your vote: 1 to let it happen, 2 to skip it."  (text, line 3971)
+- "No song"  (on-screen notice, line 3980)
+- "No song found for {id}: put {id}.mp3 in garrysmod/sound/livingcity/endings/ on the server (and sync FastDL). lc_endings shows what it finds."  (on-screen notice, line 3980)
+- "[???] So be it. {say}"  (text, line 3985)
+- "[???] The city resets. Everyone you were is still you."  (text, line 3994)
 
 > Note for you (not shown in game): part of: trigger ending
 
-- "No such ending."  (text, line 3889)
-- "One's already under way."  (text, line 3890)
-- "Secret endings are off."  (text, line 3891)
-- "Not yet ({EndingCooldownLeft} minutes)."  (text, line 3892)
+- "No such ending."  (text, line 4001)
+- "One's already under way."  (text, line 4002)
+- "Secret endings are off."  (text, line 4003)
+- "Not yet ({EndingCooldownLeft} minutes)."  (text, line 4004)
 
 > Note for you (not shown in game): pcall
 
-- "[???] %d to %d. Very well. He straightens his tie, and time starts again."  (message, line 3953)
+- "[???] %d to %d. Very well. He straightens his tie, and time starts again."  (message, line 4065)
 
 > Note for you (not shown in game): "Not this time." (the owner, 2 November; Episode One's G-Man, where the game has it)
 
-- "Not this time."  (text, line 3955)
-- "[???] Silence. He takes that as a yes."  (text, line 3958)
+- "Not this time."  (text, line 4067)
+- "[???] Silence. He takes that as a yes."  (text, line 4070)
 
 > Note for you (not shown in game): Triggers Father Grigori eats the motherlode.
 
-- "You'd break your teeth."  (text, line 4004)
-- "You've nothing like that to eat."  (text, line 4005)
-- "Not now."  (text, line 4006)
-- "It doesn't go down. Not yet."  (text, line 4007)
-- "Not now."  (text, line 4008)
+- "You'd break your teeth."  (text, line 4116)
+- "You've nothing like that to eat."  (text, line 4117)
+- "Not now."  (text, line 4118)
+- "It doesn't go down. Not yet."  (text, line 4119)
+- "Not now."  (text, line 4120)
 
 > Note for you (not shown in game): part of: eat chip
 
-- "** Father Grigori swallows a Combine data core whole. His eyes light up."  (chat message, line 4012)
+- "** Father Grigori swallows a Combine data core whole. His eyes light up."  (chat message, line 4124)
 
 > Note for you (not shown in game): For the admin
 
-- "[Living City] {m}"  (chat message, line 4026)
+- "[Living City] {m}"  (chat message, line 4138)
 
 > Note for you (not shown in game): the console command lc_endings
 
-- "{song} is a low-quality copy ({hz} Hz: it plays, but sounds muffled); a better copy would sound much better"  (text, line 4034)
-- "NO SONG FOUND (looking for {id}.mp3 in garrysmod/sound/{ROOT})"  (text, line 4036)
+- "{song} is a low-quality copy ({hz} Hz: it plays, but sounds muffled); a better copy would sound much better"  (text, line 4146)
+- "NO SONG FOUND (looking for {id}.mp3 in garrysmod/sound/{ROOT})"  (text, line 4148)
 
 > Note for you (not shown in game): everything that's actually there, so a file in the wrong place shows
 
-- "In sound/{ROOT}: {or}"  (text, line 4041)
-- "The folder {d}/ holds {inside} file(s) that never play: move them up one level, straight into sound/{ROOT}"  (text, line 4046)
+- "In sound/{ROOT}: {or}"  (text, line 4153)
+- "The folder {d}/ holds {inside} file(s) that never play: move them up one level, straight into sound/{ROOT}"  (text, line 4158)
 
 > Note for you (not shown in game): the console command lc_endings
 
-- "never plays: name it for its ending (harpies.mp3, bus.mp3 ...)"  (text, line 4052)
-- "isn't a sound the game plays (.mp3, .ogg or .wav)"  (text, line 4054)
-- "Next one possible in {left} minutes (lc_ending_reset_cooldown)."  (text, line 4058)
-- "One can happen now."  (text, line 4058)
+- "never plays: name it for its ending (harpies.mp3, bus.mp3 ...)"  (text, line 4164)
+- "isn't a sound the game plays (.mp3, .ogg or .wav)"  (text, line 4166)
+- "Next one possible in {left} minutes (lc_ending_reset_cooldown)."  (text, line 4170)
+- "One can happen now."  (text, line 4170)
 
 > Note for you (not shown in game): the console command lc_ending
 
-- "Ending triggered: {id}"  (text, line 4068)
+- "Ending triggered: {id}"  (text, line 4180)
 
 > Note for you (not shown in game): the console command lc_ending_cancel
 
-- "Ending cancelled. Time runs again."  (text, line 4073)
-- "No ending on."  (text, line 4073)
+- "Ending cancelled. Time runs again."  (text, line 4185)
+- "No ending on."  (text, line 4185)
 
 > Note for you (not shown in game): the console command lc_ending_reset_cooldown
 
-- "Secret ending cooldown cleared."  (text, line 4079)
-- "harpies=2,shalom=2"  (text, line 4124)
-- "harpies=4,shalom=2"  (text, line 4124)
-- "3.5:bomb,14.7:screen,34:zig,126:move,174:justice,212:boom,224:end"  (text, line 4125)
-- "3.5:bomb,9.5:screen,34:zig,126:move,174:justice,212:boom,224:end"  (text, line 4125)
-- "2.2=CAPTAIN: What happen ?\|3.5=MECHANIC: Somebody set up us the bomb.\|6.5=OPERATOR: We get signal.\|9.5=CAPTAIN: What !\|12.5=OPERATOR: Main screen turn on.\|14.7=CAPTAIN: It's you !!\|16.4=CATS: How are you gentlemen !!\|18.4=CATS: All your base are belong to us.\|20.4=CATS: You are on the way to destruction.\|21.6=CAPTAIN: What you say !!\|23.0=CATS: You have no chance to survive make your time.\|26.0=CATS: Ha ha ha ha ....\|34=CAPTAIN: Take off every 'ZIG' !!\|126=CAPTAIN: Move 'ZIG'.\|174=CAPTAIN: For great justice."  (text, line 4126)
-- "2.15=CAPTAIN: What happen ?\|3.55=MECHANIC: Somebody set up us the bomb.\|4.65=OPERATOR: We get signal.\|6.5=CAPTAIN: What !\|9.5=OPERATOR: Main screen turn on.\|11.7=CAPTAIN: It's you !!\|12.55=CATS: How are you gentlemen !!\|14.7=CATS: All your base are belong to us.\|18.45=CATS: You are on the way to destruction.\|20.6=CAPTAIN: What you say !!\|21.65=CATS: You have no chance to survive make your time.\|26.0=CATS: Ha ha ha ha ....\|34=CAPTAIN: Take off every 'ZIG' !!\|126=CAPTAIN: Move 'ZIG'.\|174=CAPTAIN: For great justice."  (text, line 4126)
+- "Secret ending cooldown cleared."  (text, line 4191)
+- "harpies=2,shalom=2"  (text, line 4236)
+- "harpies=4,shalom=2"  (text, line 4236)
+- "3.5:bomb,14.7:screen,34:zig,126:move,174:justice,212:boom,224:end"  (text, line 4237)
+- "3.5:bomb,9.5:screen,34:zig,126:move,174:justice,212:boom,224:end"  (text, line 4237)
+- "2.2=CAPTAIN: What happen ?\|3.5=MECHANIC: Somebody set up us the bomb.\|6.5=OPERATOR: We get signal.\|9.5=CAPTAIN: What !\|12.5=OPERATOR: Main screen turn on.\|14.7=CAPTAIN: It's you !!\|16.4=CATS: How are you gentlemen !!\|18.4=CATS: All your base are belong to us.\|20.4=CATS: You are on the way to destruction.\|21.6=CAPTAIN: What you say !!\|23.0=CATS: You have no chance to survive make your time.\|26.0=CATS: Ha ha ha ha ....\|34=CAPTAIN: Take off every 'ZIG' !!\|126=CAPTAIN: Move 'ZIG'.\|174=CAPTAIN: For great justice."  (text, line 4238)
+- "2.15=CAPTAIN: What happen ?\|3.55=MECHANIC: Somebody set up us the bomb.\|4.65=OPERATOR: We get signal.\|6.5=CAPTAIN: What !\|9.5=OPERATOR: Main screen turn on.\|11.7=CAPTAIN: It's you !!\|12.55=CATS: How are you gentlemen !!\|14.7=CATS: All your base are belong to us.\|18.45=CATS: You are on the way to destruction.\|20.6=CAPTAIN: What you say !!\|21.65=CATS: You have no chance to survive make your time.\|26.0=CATS: Ha ha ha ha ....\|34=CAPTAIN: Take off every 'ZIG' !!\|126=CAPTAIN: Move 'ZIG'.\|174=CAPTAIN: For great justice."  (text, line 4238)
 
 ## escorts through Combine doors (sv_livingcity_escort.lua)
 
