@@ -48,21 +48,44 @@ Tick a box when you've tried it, and write what you saw after **Notes:** (works,
 - [ ] **Bubbles dream:** many more of the big pale lift bubbles, a harder throw, 12 seconds of floating. The music's lurches last twice as long.
   Notes:
 
-## Your 11 November notes: not done yet (kept in `TODO.md`)
+## 11 November, part 2: fixed, please try again
 
-- The kick seen from your own eyes still shows some torso. Your first person hands missing as a unit: I need to know whether the gun is missing too or only the hands, and what `lc_cp_hands` is on the server.
-- "POCKETS", the credit and standing counters clipping the header as a unit; the CP Commissary window too low until you buy something.
-- Selling junk at the CP Commissary; the stunstick (the baton's spark, and units not picking one up).
+- [ ] **Your hands as a unit:** are your own sleeves and gloves back in first person? In your game's console (not the server's) there should be a line `own hands: N arm bones of M kept on ...`: if the hands are still missing, tell me that line (or that there is none).
+  Notes:
+- [ ] **The kick from your own eyes:** only the leg now, no lump of torso.
+  Notes:
+- [ ] **Clipboards:** a courier or clerk carries it hanging from the hand, flat against the leg. Better? If you want it held another way (under the arm, up in front), say which.
+  Notes:
+- [ ] **Pockets as a unit:** "POCKETS", credits and standing sit under the title strip, nothing running through them.
+  Notes:
+- [ ] **CP Commissary screen:** the right height the first time it opens.
+  Notes:
+- [ ] **Turning in junk:** at the CP Commissary, under the goods: "Turn in all: ..." pays you for what you carry.
+  Notes:
+- [ ] **Arrest Baton:** the glow and sparks at its head in your view. A stunstick on the ground can't be picked up by a unit.
+  Notes:
+- [ ] **F3 and F4:** with the pockets open press F4 (and the other way round): the open one shuts and the other opens. The window's own key shuts it.
+  Notes:
+- [ ] **Protect jobs:** when a dropship or supply drop is announced, the job is on F4 for 60 seconds. Take it: "arrives in 1:00" counts down in the job tracker, top right, and it lands when that runs out. Leave it: it comes a second after the job disappears.
+  Notes:
+- [ ] **Housing block inspection:** the trail goes to a door of the block; the door stays shut until you set the charge (E) or kick it in; the furniture stands on the floor inside the room.
+  Notes:
+- [ ] **Backup:** call it from far from any unit: they should be with you in well under a minute.
+  Notes:
+- [ ] **Metrocops in a raid:** pistols out near the fighting, not sticks. Unarmed rebels standing in the cells are prisoners (it says so under their name), not raiders.
+  Notes:
+- [ ] **Editor tool and sleep:** put the tool away late at night: a notice, and six minutes before you are exhausted.
+  Notes:
+- [ ] **Stalkers:** a body they drag is on a rope from the hand; a pile of dropped junk in their zone gets cleared (and anything dropped goes after 5 minutes anyway).
+  Notes:
+
+## Not done yet (kept in `TODO.md`)
+
 - Searching a suitcase or parcel in the search window; a "Check papers" button after a search.
-- The housing inspection: the trail to the wrong floor, props in the floor and wall, the door that wasn't locked, kicking it in.
-- Backup arriving late and not shooting; the landing zone lost before you can reach it; cover, crouching and firing between NPCs.
-- Rebels spawning inside cells in a raid, and metrocops standing about with batons during it.
-- No dream as a unit asleep in the Nexus; exhausted the moment the editor tool is put away.
-- Stalkers and a pile of dropped items (dropped items now go after 5 minutes anyway); a rope from a stalker's hand to the body it drags.
-- A clipboard sitting wrong in citizens' hands (a screenshot would help).
+- NPC combat: cover, crouching, firing at each other as they do at you; backup that stands and doesn't shoot.
+- No dream as a unit asleep in the Nexus: after a night with no dream, please send the debug report.
 - Somebody to meet on the night shift and on patrol jobs.
-- "Guns lowered: hold R" did nothing for you: that is how it is built today (guns are only carried lowered on rebel ground, and by recruits and metrocops on the Combine's own ground). Say if you want hold R to lower and raise a gun anywhere.
-
+- "Guns lowered: hold R": only on rebel ground, and for recruits and metrocops on the Combine's ground. You said you would test it there.
 
 # Part 1: new since your 1 November playtest
 

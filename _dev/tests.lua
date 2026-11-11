@@ -13781,6 +13781,43 @@ LC.VortCharge(reb, v)
 ok(reb:Armor() > 0 and reb:Health() == 50, "a freed vortigaunt charges our vests when asked (and doesn't heal)", reb:Armor() .. " / " .. reb:Health())
 ok(v:GetNW2Entity("lc_vort_charge_to") == reb and v:GetNW2Float("lc_vort_charge_until", 0) > CurTime(), "and it shows: for a few seconds its energy runs to whoever it charged (the owner, 11 November)")
 LC.RebelVorts[v] = nil v:Remove()
+do -- papers on the street, and what's carried in a search (the owner, 11 November)
+    local P0 = Vector(-171000, 171000, 0)
+    local unit = newPlayer("PapersUnit", "cp")
+    unit:SetPos(P0)
+    local cit, cst = LC.SpawnCitizen(P0 + Vector(60, 0, 4))
+    cst = cst or LC.NPCs[cit]
+    local far = newPlayer("PapersCitizen", "citizen") far:SetPos(P0)
+    ok(not LC.StreetPapers(far, cit), "only a unit asks for papers")
+    local wasW, wasF = LC.StreetPapersWrong, LC.StreetPapersForged
+    LC.StreetPapersWrong, LC.StreetPapersForged = 1, 0
+    local credits, standing = LC.Credits(unit), LC.Standing(unit)
+    ok(LC.StreetPapers(unit, cit) and unit.lcStreetPapers and unit.lcStreetPapers.wrong ~= nil and _lastnet("lc_papers_check") ~= nil,
+        "a unit asks a citizen for their papers: the papers window, against today's rules")
+    ok(LC.StreetPapersDecide(unit, "deny") == true and LC.Credits(unit) == credits + 1 and LC.Standing(unit) == standing + 5,
+        "out of order and cited: 1 credit and +5 Civil Standing")
+    ok(not LC.StreetPapers(unit, cit), "not the same citizen again straight away")
+    cst.papersAt = 0
+    LC.StreetPapersWrong = 0
+    standing = LC.Standing(unit)
+    LC.StreetPapers(unit, cit)
+    ok(LC.StreetPapersDecide(unit, "deny") == false and LC.Standing(unit) == standing - 2, "papers in order, cited anyway: thrown out, -2 Civil Standing")
+    cst.papersAt = 0
+    LC.StreetPapers(unit, cit)
+    ok(LC.StreetPapersDecide(unit, "approve") == true and unit.lcStreetPapers == nil, "in order and waved on: right")
+    LC.StreetPapersWrong, LC.StreetPapersForged = wasW, wasF
+    -- what they carry is a spot of its own
+    ok(LC.PatSearchCarried(cit, cst) == nil, "(empty hands: the four spots)")
+    local case = ents.Create("prop_dynamic") case:SetModel("models/props_c17/suitcase001a.mdl") case:Spawn()
+    cst.carry = case
+    ok(LC.PatSearchCarried(cit, cst) == "Suitcase", "someone carrying a suitcase: the suitcase is searched too")
+    local S = LC.PatSearchOffer(unit, cit)
+    ok(S and #S.spots == 5 and S.spots[5].name == "Suitcase" and S.papers == true, "a fifth spot in the search window, and their papers can be asked for from it")
+    if S then LC.PatSearchEnd(S, "done") end
+    cst.carry = nil case:Remove()
+    cit:Remove()
+    unit:SetPos(Vector(-150000, 150000, 0)) far:SetPos(Vector(-150000, 150000, 0))
+end
 -- Father Grigori
 local z = LC.AddZone(V0 + Vector(6000, 0, 0), 600, "rebel", 0)
 local priests = {}

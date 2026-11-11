@@ -283,6 +283,7 @@ LC_MODULES = {
         "cl_livingcity_arrest", -- (the struggle bar when someone resists arrest)
         "cl_livingcity_cremator", -- (the Cremator's flame)
         "cl_livingcity_vortcharge", -- (a vortigaunt charging a vest: the green beam from its hand)
+        "cl_livingcity_dragrope", -- (the rope a stalker tows a body on)
         "cl_livingcity_fmenus", -- (F3 and F4: each one's key shuts the other's window and opens its own)
         "cl_livingcity_ways",
         "cl_livingcity_outfits",

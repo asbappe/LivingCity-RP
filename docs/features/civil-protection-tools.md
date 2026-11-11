@@ -75,3 +75,23 @@ Something for Civil Protection to do when no rebels are about. Every Civil Prote
 - **Cuffing:** the Arrest Baton's on-screen tip now says F2 with the person in front of you (Cuff, Drag), not the Unit tools window.
 - **Action music:** about 20 seconds after the last shot it ends (it was 50), a violent job only counts within 1500 units of where it happens, and afterwards the city is quiet for 8 to 15 minutes. More calm and tense pieces, none of the last six repeated.
 - **Ground retaken or lost:** each player gets one chat line (their radio's, or the city's), not one from every band.
+
+## Changes from the 11 November playtest, part 2
+
+- **First person:** the kick shows only the kicking leg (the hips are hidden too). A unit's own hands (`lc_cp_hands own`): the arm bones are found by name before anything is shrunk, and it is tried again each second until they are, so the hands can no longer vanish while the gun still shows. The game's console prints `own hands: N arm bones of M kept on <model>` once it has them.
+- **The Arrest Baton** has the stunstick's glow and sparks in your own view. A unit can't pick up a stunstick lying about (a dead metrocop's); citizens and rebels can, as a stunstick.
+- **Turning things in:** at a Civil Protection Commissary a unit is paid for whatever they carry that isn't their own issue (not the ration voucher, health vial, bandages or issued grenades): what a dealer would pay, or one credit. On the Commissary's screen and in its window, under the goods: "Turn in all: ...".
+- **The pockets window** keeps its title and counters under the window's title strip. **A terminal's screen in the world** takes its height from where you stand (your feet plus your standing eye height), kept up to date.
+- **F3 and F4:** with one of the two windows open, its own key shuts it and the other's key shuts it and opens the other (`cl_livingcity_fmenus.lua`).
+- **Backup** from further than 1400 units that nobody is looking at starts its walk from a hidden spot 450 to 1300 units from the caller, on about their level.
+- **Metrocop NPCs in a firefight** (their enemy a rebel fighter or one of the infested, or within 2200 units of a raid or sweep under way) have their pistols out until it is over.
+- **An NPC held in the cells** says "a prisoner, held in the cells" under its name.
+- **Six minutes** after the editor tool is put away before tiredness can set in, with a notice.
+
+## Jobs that protect something on its way (11 November)
+
+The jobs to secure a landing zone (`cp_securelz`) and to guard a supply drop (`cp_guardsupply`) are on the board for 60 seconds (`LC.ProtectBoardSecs`). If a player takes one, what it protects (the dropship, the supply drop) arrives 60 seconds after that (`LC.ProtectTakenSecs`); if nobody does, it arrives one second after the job leaves the board, and the job is gone. Everyone on the job sees "The dropship arrives in 0:42" in the job tracker, top right. With no unit online to take the job, a dropship comes after six seconds and a supply drop at once, as before. The Resistance's answer to a landing is counted from the landing. A landing party counts as lost only once somebody had landed and all of them are dead. (`LC.ProtectWait` in sv_livingcity_quests.lua.)
+
+## The housing block inspection (11 November)
+
+The trail leads to a door of the block itself (the one nearest its middle), not the block's middle. The door is shut and locked until the breaching charge (E on it) or a kick (G, or F2 > Kick) opens it; any door of the block within 900 units will do. The stash furniture is set down on the room's floor, out from the middle only as far as the walls allow.
