@@ -1561,4 +1561,5 @@ Needs Workshop items 2090972521 (and 3329322225) in the server collection, then 
 - [ ] **Musical Chairs, 11 November:** press Use at a chair while the music is still playing: a life gone (of three) and back to the start. When it stops, only Use sits you down; crouching does nothing.
   Notes:
 - [ ] **The G-Man and the city's own (11 November):** with nobody elected, let the city go BLACK a few times (or step it with the staff tools). About two times in three she should step down or end it after one or two refusals; the third, her last stand.
+- [ ] **The close, 11 November:** dream one of the endings to its end (the harpies, the plane, the fire). As you wake in bed, "The dream is over" and a line about that dream should show for five seconds. Lose a dream you play: a closing line too.
   Notes:

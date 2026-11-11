@@ -32,6 +32,10 @@
       cheer (sv_livingcity_dreamstandins.lua), the figures react as above, and every dreamer's
       screen has "Ada made it through" between the two bars. The first to win is "first".
 
+      The close. The secret endings dreamt as dreams (the harpies, the plane, the fire...) can't
+      be won: as each dreamer wakes at the end of one, their screen has "The dream is over"
+      with a line of that dream's own. The same for whoever didn't win a dream you play.
+
     Hooks: LivingCityDreamStage(g, what, player) for "open", "hit", "out", "won".
 ]]
 
@@ -198,7 +202,58 @@ timer.Create("LivingCityDreamStage", 0.1, 0, function()
     if not ok and LC.Error then LC.Error("dream stage", err) end
 end)
 
--- Awake: their body is their own again.
-hook.Add("LivingCityDreamWoke", "LivingCityDreamStage", function(p)
-    if IsValid(p) then LC.DreamActSet(p, nil) end
+------------------------------------------------------------------------
+-- The close: the dreams nobody can win (the owner, 11 November: "what about dreams that can't be won? Like the
+-- harpies or plane or fire")
+------------------------------------------------------------------------
+
+-- The secret endings dreamt as dreams have their own opening (the ending's title comes up by itself) and their own
+-- choreography, but nothing to win, so they used to just stop. Now, as each dreamer wakes at the end of one, their
+-- screen has "The dream is over" between the two bars, with a line of that dream's own. The same closes a dream
+-- you play for whoever didn't win it.
+LC.DreamCloseLines = {
+    harpies = "They took everyone they came for. You wake before they come back for you.",
+    bus = "The bus drove on without you. You can still feel the bass in your teeth.",
+    plane = "The plane flew on over the city. Your arms are still doing the dance.",
+    standup = "The rope hangs empty, and the crowd has gone home.",
+    hard = "The party stopped. Your ears will ring until morning.",
+    shalom = "The ring let go of your hands. You're still humming it.",
+    fire = "The fire went out. You check, to be sure.",
+    base = "Somebody set up us the bomb. You wake before it goes off.",
+    marrow = "The skeletons danced away into the dark, and took the music with them.",
+    bloom = "The song ended at last. Your feet haven't noticed.",
+    water = "The water went down. Your sheets are dry. You check twice.",
+}
+LC.DreamCloseMoods = {
+    happy = "It was only a dream. A good one.",
+    neutral = "It was only a dream. Probably.",
+    nightmare = "It was only a dream. It will be back.",
+    propaganda = "She is not pleased. Sleep on it.",
+}
+-- What a dreamer's screen says as they wake at the end of dream: { title, sub }, or nil for nothing (they won it).
+function LC.DreamCloseFor(p, dream)
+    if not dream or dream.test then return nil end
+    local g = dream.game
+    local mood = dream.mood or "neutral"
+    local title = mood == "nightmare" and "The nightmare is over" or "The dream is over"
+    if not g then
+        return { title = title, sub = LC.DreamCloseLines[dream.ending or ""] or LC.DreamCloseMoods[mood] or LC.DreamCloseMoods.neutral }
+    end
+    local s = g.pl and g.pl[p]
+    if not s or s.how == "won" then return nil end -- (not one of its players, or they've had their finish)
+    if #(g.won or {}) > 0 then return { title = title, sub = "Someone made it through. Not you, this time." } end
+    local prop = LC.PropagandaDreams and LC.PropagandaDreams[g.id]
+    return { title = title, sub = prop and LC.DreamCloseMoods.propaganda or (mood == "nightmare" and "Nobody made it through. It will be back." or LC.DreamCloseMoods[mood]) }
+end
+
+-- Awake: their body is their own again; and when the dream ended (not when they left it early), the close.
+hook.Add("LivingCityDreamWoke", "LivingCityDreamStage", function(p, _, why, dream)
+    if not IsValid(p) then return end
+    LC.DreamActSet(p, nil)
+    if why ~= "end" or p.lcDreamWokeEnforcer then return end
+    local t = LC.DreamCloseFor(p, dream)
+    if not t then return end
+    net.Start("lc_dream_stage")
+    net.WriteTable({ k = "close", title = t.title, sub = t.sub, mood = dream.mood, secs = 5 })
+    net.Send(p)
 end)

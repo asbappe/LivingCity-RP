@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version d5183db. Admin-only console messages and log lines are left out.
+Made from version 3358e2a. Admin-only console messages and log lines are left out.
 
-10831 lines, from 296 files.
+10851 lines, from 297 files.
 
 ## Contents
 
@@ -77,7 +77,7 @@ Made from version d5183db. Admin-only console messages and log lines are left ou
 - [cl_livingcity_cp.lua](#cllivingcitycplua-cllivingcitycplua) (26)
 - [cl_livingcity_dialog.lua](#cllivingcitydialoglua-cllivingcitydialoglua) (3)
 - [cl_livingcity_directives.lua](#cllivingcitydirectiveslua-cllivingcitydirectiveslua) (19)
-- [how the dreams' figures move (sv_livingcity_dreamstandins.lua, sv_livingcity_dreamstage.lua)](#how-the-dreams-figures-move-svlivingcitydreamstandinslua-svlivingcitydreamstagelua-cllivingcitydreamactinglua) (7)
+- [how the dreams' figures move (sv_livingcity_dreamstandins.lua, sv_livingcity_dreamstage.lua)](#how-the-dreams-figures-move-svlivingcitydreamstandinslua-svlivingcitydreamstagelua-cllivingcitydreamactinglua) (8)
 - [cl_livingcity_dreamenforce.lua](#cllivingcitydreamenforcelua-cllivingcitydreamenforcelua) (1)
 - [the nightmare dreams you play, your side (sv_livingcity_dreamgames.lua)](#the-nightmare-dreams-you-play-your-side-svlivingcitydreamgameslua-cllivingcitydreamgameslua) (24)
 - [shared dreams, your side (sv_livingcity_dreams.lua)](#shared-dreams-your-side-svlivingcitydreamslua-cllivingcitydreamslua) (35)
@@ -173,6 +173,7 @@ Made from version d5183db. Admin-only console messages and log lines are left ou
 - [which dream tonight (the rules, and the city's own pick)](#which-dream-tonight-the-rules-and-the-citys-own-pick-svlivingcitydreamruleslua) (13)
 - [shared dreams](#shared-dreams-svlivingcitydreamslua) (71)
 - [sitting out a kind of dream, earned (the owner, 10 November)](#sitting-out-a-kind-of-dream-earned-the-owner-10-november-svlivingcitydreamskiplua) (6)
+- [staging the dreams you play](#staging-the-dreams-you-play-svlivingcitydreamstagelua) (19)
 - [stand-ins, so no dream is ever thin](#stand-ins-so-no-dream-is-ever-thin-svlivingcitydreamstandinslua) (67)
 - [testing a dream from the editor](#testing-a-dream-from-the-editor-svlivingcitydreamtestlua) (17)
 - [the Combine's dropship](#the-combines-dropship-svlivingcitydropshiplua) (7)
@@ -918,7 +919,7 @@ Made from version d5183db. Admin-only console messages and log lines are left ou
 - "More strange dreams: Hooves and All (Neutral: when Father Grigori's shot stops the black horse, run in and bite it with E; don't get trampled), The Main Event (box: punch with attack next to it, crouch when it winds up), The Exam (stuck at your desk: type A, B, C or D in chat; the right answer is whatever most of the class picks, and you only learn your score once Doctor Kleiner has eaten your paper), The Last Train (the door moves away while anyone looks at it: walk backwards), Where's Lamarr? (catch the hopping headcrabs; the golden one counts three), Running in Molasses (reach the glowing corners in turn, slowly, away from the zombie), Hot Potato (touch someone to pass the grenade before it goes off), Overwatch Says (do it only when he says "Overwatch says"), Dance Marathon (jump on the big beat) and Counting Headcrabs (count them, not the watermelons, and say how many in chat)."  (text, line 101)
 - "Nonsense dreams: Stop the Clocks (touch each melting clock to stop it; stop them all at once), The Tea Party (move to the seat that glows when the host shouts), The Headcrab Derby (stand on a lane's pad before the race to back its headcrab), Say Cheese (hide behind something giant before the scanner's flash), The Doors (stand at the door the music box plays behind), Splat! (paint the floor your colour), Conga! (keep in the glow at the tail of the line), Shh! (gather toys quietly: running and jumping wake the baby), Bubbles (pop them; big ones lift you) and The Watchers (they only move while nobody looks at them: gather the keys). In every strange dream, expect nonsense: things floating in the sky, odd textures, faces pulling expressions, sparkles and smoke, and sounds that won't stay at one pitch."  (text, line 102)
 - "The Midnight Rally (a Happy dream): a buggy race at night. Forward to go, back to brake, look where you want to go; you watch from behind your buggy. Stay between the cones (off the road you crawl), drive every part of the lap in order, and drive through the glowing crates for a pickup: a boost, a melon to drop behind you (whoever hits it spins out) or a horn blast that slows everyone near. Jump uses it. The first three over the line win. When few are asleep, the city's people drive the other buggies, and they can beat you."  (text, line 103)
-- "Every dream you play opens with its name on screen, and closes a win with who made it through. The dream's own figures act: her figure points at whoever just lost a life and holds out a hand to whoever wins, the giant officers shake a fist or hang their heads, her admirers reach out to her. Other dreamers' bodies flinch, cower and cheer too."  (text, line 104)
+- "Every dream you play opens with its name on screen, and closes a win with who made it through. The dream's own figures act: her figure points at whoever just lost a life and holds out a hand to whoever wins, the giant officers shake a fist or hang their heads, her admirers reach out to her. Other dreamers' bodies flinch, cower and cheer too. A dream nobody can win (the harpies, the plane, the fire and the other endings) closes with a line of its own as you wake."  (text, line 104)
 - "City Administrator: your tablet's Tonight's dream says when the next dream is (a countdown at night) and lets you choose a kind, a Nightmare or a propaganda dream, once every few nights (never the night after one); the city decides which dream. You only have to be in the dreams you chose: on other nights lights out leaves you alone, unless you choose to join them (you're also asked as you lie down). Its Combine manpower shows what Civil Protection and Overwatch have left in reserve. Out of it in a dream? Watch the rest: click to follow another dreamer, Jump to fly about inside the dream."  (text, line 105)
 - "Tonight's dream follows the day: a unit murdered or a city in uproar can bring a Nightmare or a propaganda dream, a calm day a Happy one, an uneasy day a Neutral one; never two Nightmare or propaganda nights in a row. As the dream comes, the screen goes dark and you get a sense of what's coming."  (text, line 106)
 - "You can kill birds with your fists. Cook them before you eat them."  (text, line 107)
@@ -1956,6 +1957,10 @@ Made from version d5183db. Admin-only console messages and log lines are left ou
 - "made it through"  (text, line 217)
 - "First through"  (text, line 218)
 - "the dream"  (text, line 218)
+
+> Note for you (not shown in game): (as they wake at the end of a dream nobody can win, or one they didn't: shown over their bed)
+
+- "The dream is over"  (text, line 221)
 
 ## cl_livingcity_dreamenforce.lua (cl_livingcity_dreamenforce.lua)
 
@@ -8029,6 +8034,39 @@ Made from version d5183db. Admin-only console messages and log lines are left ou
 > Note for you (not shown in game): part of: set dream skip
 
 - "[Dreams] {kind}"  (chat message, line 95)
+
+## staging the dreams you play (sv_livingcity_dreamstage.lua)
+
+`gamemodes/livingcity/gamemode/modules/server/sv_livingcity_dreamstage.lua`
+
+
+> Note for you (not shown in game): The close: the dreams nobody can win (the owner, 11 November: "what about dreams that can't be won? Like the harpies or plane or fire") The secret endings dreamt as dreams have their own opening (the ending's title comes up by itself) and their own choreography, but nothing to win, so they used to just stop. Now, as each dreamer wakes at the end of one, their screen has "The dream is over" between the two bars, with a line of that dream's own. The same closes a dream you play for whoever didn't win it.
+
+- "They took everyone they came for. You wake before they come back for you."  (text, line 215)
+- "The bus drove on without you. You can still feel the bass in your teeth."  (text, line 216)
+- "The plane flew on over the city. Your arms are still doing the dance."  (text, line 217)
+- "The rope hangs empty, and the crowd has gone home."  (text, line 218)
+- "The party stopped. Your ears will ring until morning."  (text, line 219)
+- "The ring let go of your hands. You're still humming it."  (text, line 220)
+- "The fire went out. You check, to be sure."  (text, line 221)
+- "Somebody set up us the bomb. You wake before it goes off."  (text, line 222)
+- "The skeletons danced away into the dark, and took the music with them."  (text, line 223)
+- "The song ended at last. Your feet haven't noticed."  (text, line 224)
+- "The water went down. Your sheets are dry. You check twice."  (text, line 225)
+- "It was only a dream. A good one."  (text, line 228)
+- "It was only a dream. Probably."  (text, line 229)
+- "It was only a dream. It will be back."  (text, line 230)
+- "She is not pleased. Sleep on it."  (text, line 231)
+
+> Note for you (not shown in game): What a dreamer's screen says as they wake at the end of dream: { title, sub }, or nil for nothing (they won it).
+
+- "The nightmare is over"  (title, line 238)
+- "The dream is over"  (title, line 238)
+
+> Note for you (not shown in game): part of: dream close for
+
+- "Someone made it through. Not you, this time."  (text, line 244)
+- "Nobody made it through. It will be back."  (text, line 246)
 
 ## stand-ins, so no dream is ever thin (sv_livingcity_dreamstandins.lua)
 

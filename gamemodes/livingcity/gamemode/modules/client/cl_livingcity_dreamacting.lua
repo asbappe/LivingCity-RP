@@ -216,6 +216,9 @@ net.Receive("lc_dream_stage", function()
         local mine = IsValid(me) and me.SteamID64 and t.sid ~= nil and me:SteamID64() == t.sid
         card = { k = "finish", title = mine and "You made it through" or (tostring(t.who or "Someone") .. " made it through"),
             sub = (t.first and "First through " or "Through ") .. tostring(t.name or "the dream"), t0 = CurTime(), secs = tonumber(t.secs) or 3.5, col = Color(255, 225, 130) }
+    elseif t.k == "close" then
+        -- (as they wake at the end of a dream nobody can win, or one they didn't: shown over their bed)
+        card = { k = "close", title = tostring(t.title or "The dream is over"), sub = tostring(t.sub or ""), t0 = CurTime(), secs = tonumber(t.secs) or 5, col = CARDCOL[t.mood or ""] }
     end
 end)
 LC_CL.DreamStageCard = function() return card end
@@ -223,7 +226,7 @@ hook.Add("HUDPaint", "LivingCityDreamStage", function()
     if not card then return end
     local me = LocalPlayer()
     local t = CurTime() - card.t0
-    if t > card.secs or not IsValid(me) or not me:GetNW2Bool("lc_dreaming", false) then card = nil return end
+    if t > card.secs or not IsValid(me) or (card.k ~= "close" and not me:GetNW2Bool("lc_dreaming", false)) then card = nil return end
     -- (in over a third of a second, out over the last two thirds of one)
     local a = math.Clamp(t / 0.35, 0, 1) * math.Clamp((card.secs - t) / 0.65, 0, 1)
     local w, h = ScrW(), ScrH()
@@ -232,7 +235,7 @@ hook.Add("HUDPaint", "LivingCityDreamStage", function()
     surface.DrawRect(0, 0, w, bar)
     surface.DrawRect(0, h - bar, w, bar)
     local c = card.col or Color(235, 235, 235)
-    local y = card.k == "open" and h * 0.36 or h * 0.2
+    local y = card.k == "finish" and h * 0.2 or h * 0.36
     draw.SimpleTextOutlined(card.title, "DermaLarge", w / 2, y, Color(c.r, c.g, c.b, math.floor(255 * a)), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, Color(0, 0, 0, math.floor(220 * a)))
     draw.SimpleTextOutlined(card.sub, "DermaDefaultBold", w / 2, y + 30, Color(230, 230, 235, math.floor(220 * a)), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, Color(0, 0, 0, math.floor(200 * a)))
 end)
