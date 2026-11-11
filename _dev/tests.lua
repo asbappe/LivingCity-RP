@@ -13781,6 +13781,57 @@ LC.VortCharge(reb, v)
 ok(reb:Armor() > 0 and reb:Health() == 50, "a freed vortigaunt charges our vests when asked (and doesn't heal)", reb:Armor() .. " / " .. reb:Health())
 ok(v:GetNW2Entity("lc_vort_charge_to") == reb and v:GetNW2Float("lc_vort_charge_until", 0) > CurTime(), "and it shows: for a few seconds its energy runs to whoever it charged (the owner, 11 November)")
 LC.RebelVorts[v] = nil v:Remove()
+do -- company on a patrol (the owner, 11 November): a loiterer who may bolt, a tail who runs when seen
+    local C0 = Vector(-173000, 173000, 0)
+    local unit = newPlayer("CompanyUnit", "cp")
+    unit:SetPos(C0)
+    ok(LC.OnPatrolJob(unit) == nil and LC.PatrolCompanyJobs.cp_nightshift and LC.PatrolCompanyJobs.cp_patrol, "(the night shift and patrol jobs are the ones with company)")
+    LC.QuestOf[unit] = { tmpl = { id = "cp_patrol" }, owner = unit, members = { unit }, stages = {}, stage = 1 }
+    ok(LC.OnPatrolJob(unit) ~= nil, "a unit on a patrol job")
+    local wasSpot, wasSeen, wasLOS, wasRand = LC.RandomWanderPos, LC.IsSeen, LC.LineOfSight, math.random
+    LC.RandomWanderPos = function() return C0 + Vector(700, 0, 0) end
+    LC.IsSeen = function() return false end
+    LC.LineOfSight = function() return true end
+    local now = CurTime()
+    local xp0 = tonumber(unit:GetPData("lcf_xp_cp", 0)) or 0
+    local enc = LC.PatrolCompanyStart(unit, "loiter", now)
+    ok(enc and IsValid(enc.npc) and enc.phase == "wait" and enc.st.suspect == true and LC.PatrolCompany[unit] == enc, "a loiterer waits out of sight near the patrol; the unit is told")
+    ok(LC.PatrolCompanyStart(unit, "tail", now) == nil, "never two at a time")
+    LC.PatrolCompanyStep(enc, now + 1)
+    ok(enc.phase == "wait", "far off: nothing yet")
+    unit:SetPos(enc.npc:GetPos() - Vector(300, 0, 0))
+    math.random = function(a, b) if a then return wasRand(a, b) end return 0.1 end -- (this one bolts)
+    LC.PatrolCompanyStep(enc, now + 2)
+    math.random = wasRand
+    ok(enc.phase == "run", "seen from close by, this one bolts")
+    unit:SetPos(enc.npc:GetPos() - Vector(60, 0, 0))
+    LC.PatrolCompanyStep(enc, now + 3)
+    ok(enc.phase == "stopped" and (tonumber(unit:GetPData("lcf_xp_cp", 0)) or 0) == xp0 + 3, "run down: they give up, 3 experience")
+    enc.st.papersAt = now + 300 -- (their papers looked at)
+    LC.PatrolCompanyStep(enc, now + 4)
+    ok(LC.PatrolCompany[unit] == nil and (tonumber(unit:GetPData("lcf_xp_cp", 0)) or 0) == xp0 + 5 and enc.st.unmanaged == nil, "seen to (their papers): 2 more, and they go on their way")
+    -- a tail
+    unit:SetPos(C0)
+    local tail = LC.PatrolCompanyStart(unit, "tail", now + 200)
+    ok(tail and tail.phase == "follow", "a tail walks after the unit")
+    unit.GetAimVector = function() return Vector(-1, 0, 0) end -- (looking the other way)
+    unit:SetPos(tail.npc:GetPos() - Vector(400, 0, 0))
+    LC.PatrolCompanyStep(tail, now + 230)
+    ok(tail.phase == "follow" and tail.told == true, "after a while: the feeling of being followed")
+    unit.GetAimVector = function() return Vector(1, 0, 0) end -- (turned round, looking at them)
+    LC.PatrolCompanyStep(tail, now + 231)
+    LC.PatrolCompanyStep(tail, now + 232)
+    ok(tail.phase == "run", "looked at for a moment: they run")
+    unit:SetPos(tail.npc:GetPos() - Vector(3000, 0, 0))
+    LC.PatrolCompanyStep(tail, now + 233)
+    ok(LC.PatrolCompany[unit] == nil, "far enough away: lost")
+    unit.GetAimVector = nil
+    LC.RandomWanderPos, LC.IsSeen, LC.LineOfSight = wasSpot, wasSeen, wasLOS
+    LC.QuestOf[unit] = nil
+    if IsValid(enc.npc) then enc.npc:Remove() end
+    if IsValid(tail.npc) then tail.npc:Remove() end
+    unit:SetPos(Vector(-150000, 150000, 0))
+end
 do -- papers on the street, and what's carried in a search (the owner, 11 November)
     local P0 = Vector(-171000, 171000, 0)
     local unit = newPlayer("PapersUnit", "cp")

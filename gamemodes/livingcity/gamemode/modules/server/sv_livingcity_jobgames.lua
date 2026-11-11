@@ -860,7 +860,8 @@ function LC.StreetPapers(cop, npc)
     if (st.papersAt or 0) > now then return false, "You've seen their papers. Pick someone else." end
     st.papersAt = now + LC.StreetPapersAgain
     local rules = LC.StreetPapersRules()
-    local g = { rules = rules, today = rules.today, wrongChance = LC.StreetPapersWrong, forgedChance = LC.StreetPapersForged }
+    local g = { rules = rules, today = rules.today, wrongChance = st.suspect and math.max(0.6, LC.StreetPapersWrong) or LC.StreetPapersWrong,
+        forgedChance = st.suspect and math.max(0.2, LC.StreetPapersForged) or LC.StreetPapersForged }
     local papers, wrong, forged = MakePapers(g, npc)
     cop.lcStreetPapers = { npc = npc, st = st, papers = papers, wrong = wrong, forged = forged, at = now }
     if LC.SetState then LC.SetState(npc, st, "event") end
