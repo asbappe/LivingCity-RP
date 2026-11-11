@@ -208,6 +208,9 @@ LCS.Items = {
                         desc = "Union-issue. Mixed with the right things, they do more than clean" },
     gun_parts       = { name = "Gun parts", model = "models/props_lab/box01a.mdl", contraband = true, conceal = 0.4, sell = 12,
                         desc = "Springs, a barrel, a firing pin. Off a dead Civil Protection unit, or out of a smuggler's crate" },
+    -- (a unit's daily issue, kept in the pockets until wanted: the owner, 11 November, it fell on the floor at full health)
+    health_vial     = { name = "Health vial", model = "models/healthvial.mdl", use = "heal", useLabel = "Use it", heal = 10,
+                        desc = "Ten health, at once" },
     bandage         = { name = "Bandage", model = "models/props_junk/garbage_newspaper001a.mdl", use = "heal", useLabel = "Patch up", heal = 20,
                         desc = "Twenty health, give or take" },
     ammo_pistol     = { name = "Box of pistol rounds", model = "models/items/boxsrounds.mdl", use = "ammo", useLabel = "Load", ammo = { "Pistol", 18 },

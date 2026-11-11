@@ -104,15 +104,25 @@ local function Garble(text)
     return table.concat(out, " ")
 end
 
-function LC.RadioNotice(band, text)
+-- heard (optional): a table of players who have had this news already. They're passed over, and
+-- whoever gets it here is added, so one event told on several bands is one line each (the owner,
+-- 11 November: "we don't need FOUR chat messages for me killing 1 rebel").
+function LC.RadioNotice(band, text, heard)
     local name = BAND_NAMES[band] or band
     for _, p in ipairs(player.GetAll()) do
-        if Hears(p, band) and band == "cp" and LC.Jammed and LC.Jammed(p:GetPos()) then
-            p:ChatPrint("[" .. name .. "] *static* " .. Garble(Garble(text)))
+        local line
+        if heard and heard[p] then
+            line = nil
+        elseif Hears(p, band) and band == "cp" and LC.Jammed and LC.Jammed(p:GetPos()) then
+            line = "[" .. name .. "] *static* " .. Garble(Garble(text))
         elseif Hears(p, band) then
-            p:ChatPrint("[" .. name .. "] " .. text)
+            line = "[" .. name .. "] " .. text
         elseif band == "cp" and LC.RadioBand(p) == "resistance" and not (LC.Prisoners and LC.Prisoners[p]) then
-            p:ChatPrint("[Intercept] " .. Garble(text))
+            line = "[Intercept] " .. Garble(text)
+        end
+        if line then
+            p:ChatPrint(line)
+            if heard then heard[p] = true end
         end
     end
 end

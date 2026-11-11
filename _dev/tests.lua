@@ -16253,11 +16253,11 @@ do
     u.chat = {}
     LC.UseCPSupply(u, sup)
     ok(LC.HasItem(u, "ration") and not LC.HasItem(u, "ration_voucher") and has(u.chat, "for your voucher"), "the CP Commissary takes the voucher and hands over a ration packet")
-    ok(#ents.FindByClass("item_healthvial") == vials + 1 and LC.HasItem(u, "bandage", 3), "and once a city day, a health vial and a bandage (on top of the bandages it tops up)")
+    ok(#ents.FindByClass("item_healthvial") == vials and LC.HasItem(u, "health_vial", 1) and LC.HasItem(u, "bandage", 3), "and once a city day, a health vial (in the pockets, not on the floor: the owner, 11 November) and a bandage (on top of the bandages it tops up)")
     ok(not LC.CPDailyKitDue(u), "not again the same day")
     u.lcSupplyNext = 0
     LC.UseCPSupply(u, sup)
-    ok(#ents.FindByClass("item_healthvial") == vials + 1, "(no second vial)")
+    ok(#ents.FindByClass("item_healthvial") == vials and not LC.HasItem(u, "health_vial", 2), "(no second vial)")
     u:SetPData("lc_cp_daily_at", tostring(os.time() - 999999))
     ok(LC.CPDailyKitDue(u), "the next city day it's due again")
     -- a voucher at a dispenser
@@ -19295,6 +19295,7 @@ a.pushed = nil
 g.bubbles[2] = { x = mid.x, y = mid.y, z = mid.z, t0 = CurTime() + 0.1, kind = 3 }
 _run(0.1)
 ok(a.pushed and a.pushed.z > 400, "a big one carries you up")
+ok(s.liftUntil and s.liftUntil - CurTime() > 10 and #g.bubbles >= 30, "and leaves you floating for twelve seconds; there are far more bubbles (the owner, 11 November)")
 Stop(d)
 
 -- The Watchers

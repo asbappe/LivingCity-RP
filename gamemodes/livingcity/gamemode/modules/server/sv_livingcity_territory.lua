@@ -367,7 +367,7 @@ local function GrowthSpot(seed)
     return nil
 end
 
-local function Radio(band, text) if LC.RadioNotice then LC.RadioNotice(band, text) end end
+local function Radio(band, text, heard) if LC.RadioNotice then LC.RadioNotice(band, text, heard) end end
 
 -- Growth that happens close together is one notice on the radio, not one per patch.
 local pendingNotice = {} -- [kind] = { places }
@@ -509,16 +509,17 @@ function LC.RecedeTerritory(z, why, by)
     if where == "somewhere in the city" then where = "" end
     local who = IsValid(by) and by:IsPlayer() and Callsign(by) or nil
     local place = where ~= "" and (" " .. where) or ""
+    local heard = {} -- (one line each: whoever has it from a radio isn't told again by another band or by the city)
     if z.kind == "rebel" then
-        Radio("cp", who and ("Dispatch: " .. who .. " has retaken anticitizen ground" .. place .. ".") or ("Dispatch: anticitizen ground" .. place .. " is retaken."))
-        Radio("resistance", "We've lost the ground" .. place .. ".")
+        Radio("cp", who and ("Dispatch: " .. who .. " has retaken anticitizen ground" .. place .. ".") or ("Dispatch: anticitizen ground" .. place .. " is retaken."), heard)
+        Radio("resistance", "We've lost the ground" .. place .. ".", heard)
     else
-        Radio("cp", who and ("Dispatch: " .. who .. " has contained the infestation" .. place .. ".") or ("Dispatch: infestation" .. place .. " is contained."))
+        Radio("cp", who and ("Dispatch: " .. who .. " has contained the infestation" .. place .. ".") or ("Dispatch: infestation" .. place .. " is contained."), heard)
     end
     if who then
         local line = z.kind == "rebel" and (who .. " has retaken ground from the Resistance" .. place .. ".")
             or (who .. " has contained the infestation" .. place .. ".")
-        for _, p in ipairs(player.GetAll()) do p:ChatPrint("[City] " .. line) end
+        for _, p in ipairs(player.GetAll()) do if not heard[p] then p:ChatPrint("[City] " .. line) end end
     end
     LC.Log("info", "Territory: " .. z.kind .. " ground at " .. tostring(lost.pos) .. " lost (" .. (why or "pushed back") .. ")")
     hook.Run("LivingCityTerritoryReceded", z.seed, lost, why)

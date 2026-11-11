@@ -219,7 +219,9 @@ local function Swarm(g, p)
         local e = Actor(g, HACK, from + Vector(math.cos(a) * 80, math.sin(a) * 80, 90), 0, 1)
         if e then g.hacks[#g.hacks + 1] = { e = e, target = p, speed = math.Rand(240, 320), next = 0 } end
     end
-    Snd(p, "npc/manhack/mh_engine_loop1.wav", 80)
+    -- (on a manhack, not on the dreamer: it's a loop, and on a player it never stopped; it goes with the manhack)
+    local h = g.hacks[#g.hacks]
+    if h and IsValid(h.e) then Snd(h.e, "npc/manhack/mh_engine_loop1.wav", 80) end
 end
 
 -- Back among the rebels at the far end.

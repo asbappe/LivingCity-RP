@@ -189,6 +189,8 @@ function LC.FoilHatUse(p, id)
     p.lcDreamFoilUntil = CurTime() + DayLen()
     p.lcDreamFoilWorks = math.random() < math.Clamp(cvFoil:GetFloat(), 0, 1) -- (decided now, kept quiet: about one night in three)
     p:EmitSound("physics/metal/metal_box_scrape_rough_loop1.wav", 50, 160)
+    -- (a loop: a second of crinkling, then stopped, or it went on for ever)
+    timer.Simple(1.2, function() if IsValid(p) and p.StopSound then p:StopSound("physics/metal/metal_box_scrape_rough_loop1.wav") end end)
     Notice(p, "info", "Foil hat on", "It crinkles as you pull it down. Will it keep the dream out? Sometimes: about one night in three. "
         .. "The scientist says something about field harmonics; it's a tin foil hat. It's spent come the dream either way, and it's contraband: don't let a unit see you in it.", 10)
     return true

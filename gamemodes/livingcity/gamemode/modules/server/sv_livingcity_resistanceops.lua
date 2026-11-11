@@ -175,7 +175,7 @@ end
 function LC.PrisonBreakAlarm(pos)
     TellUnits("[CP net] PRISON BREAK " .. Where(pos) .. ". Anticitizens are at the cells. All Civil Protection units respond.")
     MarkUnits("PRISON BREAK", pos, 120)
-    if sound and sound.Play then sound.Play("ambient/alarms/apc_alarm_loop1.wav", pos, 85) end
+    if sound and sound.Play then sound.Play("ambient/alarms/klaxon1.wav", pos, 85) end -- (a klaxon that ends: the alarm used before is a loop, and never stopped)
     LC.LastPrisonBreak = { pos = pos, at = CurTime() }
     if LC.PostDirective then LC.PostDirective("cp_prisonbreak") end
 end

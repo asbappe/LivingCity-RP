@@ -810,8 +810,13 @@ end
 do
     LC.BubbleRise, LC.BubbleLife = 45, 14 -- (how fast they rise, and for how long)
     LC.BubbleGravity = 0.6
+    -- The lift bubbles (the owner, 11 November: "Blue bubbles need to initiate low gravity for 4x as long,
+    -- and there need to be about 4x as many bubbles ... the low grav jump is stronger and lasts longer"):
+    -- about four times as many of them, a harder push, and twelve seconds of floating after each.
+    LC.BubbleCount, LC.BubbleLiftShare = 30, 0.37
+    LC.BubbleLiftPush, LC.BubbleLiftGravity, LC.BubbleLiftSecs = 640, 0.15, 12
     local def = { id = "bubbles", name = "Bubbles", mood = "happy", secs = 150, lives = 1, need = 15, leave = Leave,
-        goal = "Pop the bubbles (touch them). Golden ones count three. Big pale ones carry you up to the high ones.",
+        goal = "Pop the bubbles (touch them). Golden ones count three. Big pale ones throw you up and leave you floating for a while.",
         timeUp = { "Pop", "The last bubble pops, and so does the dream." },
         woke = Woke({ name = "Bubbles",
             won = { "Bubbly", "You wake up light and fizzy, like you're full of bubbles. You probably aren't." },
@@ -827,14 +832,14 @@ do
     local function NewBubble(g, i, now)
         local at = AnyWhere(g, 80)
         local r = math.random()
-        g.bubbles[i] = { x = at.x, y = at.y, z = g.top + 30, t0 = now, kind = r < 0.1 and 2 or (r < 0.25 and 3 or 1) } -- (1 plain, 2 golden, 3 a lift)
+        g.bubbles[i] = { x = at.x, y = at.y, z = g.top + 30, t0 = now, kind = r < 0.1 and 2 or (r < 0.1 + LC.BubbleLiftShare and 3 or 1) } -- (1 plain, 2 golden, 3 a lift)
     end
 
     function def.build(g, dream)
         Plain(g, dream, 3, function(i, j) return Rainbow((i + j) / 6, 255) end)
         g.bubbles = {}
         local now = CurTime()
-        for i = 1, 18 do NewBubble(g, i, now - math.Rand(0, LC.BubbleLife)) end
+        for i = 1, LC.BubbleCount do NewBubble(g, i, now - math.Rand(0, LC.BubbleLife)) end
         Ring(g, 160)
         return true
     end
@@ -847,11 +852,16 @@ do
         for _, p in ipairs(players) do
             local s = g.pl[p]
             s.got = s.got or 0
+            if s.liftUntil and now >= s.liftUntil then s.liftUntil = nil Light(p, LC.BubbleGravity) end
             local mid = p:GetPos() + Vector(0, 0, 36)
             for i, b in ipairs(g.bubbles) do
                 local at = LC.BubbleAt(b, now)
                 if at:Distance(mid) < (b.kind == 3 and 70 or 50) then
-                    if b.kind == 3 and p.SetVelocity then p:SetVelocity(Vector(0, 0, 520)) end
+                    if b.kind == 3 then
+                        if p.SetVelocity then p:SetVelocity(Vector(0, 0, LC.BubbleLiftPush)) end
+                        s.liftUntil = now + LC.BubbleLiftSecs
+                        Light(p, LC.BubbleLiftGravity)
+                    end
                     s.got = s.got + (b.kind == 2 and 3 or (b.kind == 3 and 0 or 1))
                     Snd(p, "garrysmod/balloon_pop_cute.wav", 70, math.random(90, 130))
                     NewBubble(g, i, now)

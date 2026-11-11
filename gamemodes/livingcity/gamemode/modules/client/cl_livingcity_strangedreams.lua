@@ -270,7 +270,7 @@ local function MusicWarp(st, now)
     if not (IsValid(ch) and ch.SetPlaybackRate) then return end
     if st.theme == "cheese" then ch:SetPlaybackRate(1 + 0.12 * math.sin(now * 0.9)) return end
     if st.theme == "dance" then return end -- (the beat has to stay the beat)
-    if now >= lurch.at then lurch.rate, lurch.til, lurch.at = (math.random() < 0.5 and math.Rand(0.65, 0.85) or math.Rand(1.2, 1.4)), now + math.Rand(1.5, 3), now + math.Rand(10, 20) end
+    if now >= lurch.at then lurch.rate, lurch.til, lurch.at = (math.random() < 0.5 and math.Rand(0.65, 0.85) or math.Rand(1.2, 1.4)), now + math.Rand(3, 6), now + math.Rand(13, 23) end -- (each lurch twice as long: the owner, 11 November)
     ch:SetPlaybackRate(now < lurch.til and lurch.rate or 1)
 end
 

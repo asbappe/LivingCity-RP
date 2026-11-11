@@ -510,7 +510,7 @@ function LC.UsePowerBank(ply, b)
     if live and LC.ChargeVest and LC.HasVest and LC.HasVest(ply) and (ply.lcBankChargeNext or 0) <= CurTime() then
         ply.lcBankChargeNext = CurTime() + 0.9
         charged = LC.ChargeVest(ply, BANK_CHARGE)
-        if charged > 0 then ply:EmitSound("items/suitcharge1.wav", 60) end
+        if charged > 0 then ply:EmitSound("items/battery_pickup.wav", 60, 120) end -- (never the charger's hum: that file loops for ever)
     end
     if LC.PlayerIsCP(ply) then
         local vest = ""

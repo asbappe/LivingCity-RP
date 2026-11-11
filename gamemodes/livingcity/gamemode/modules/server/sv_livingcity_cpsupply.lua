@@ -128,12 +128,18 @@ function LC.IssueCPDailyKit(ply, ent)
     local got = {}
     if not IsValid(ply) or not Unit(ply) or not LC.CPDailyKitDue(ply) then return got end
     ply:SetPData("lc_cp_daily_at", tostring(os.time()))
-    local vial = ents.Create("item_healthvial")
-    if IsValid(vial) then
-        local from = IsValid(ent) and ent or ply
-        vial:SetPos(from:GetPos() + from:GetForward() * 40 + Vector(0, 0, 20))
-        vial:Spawn()
-        got[#got + 1] = IsValid(ent) and "a health vial (on the floor in front of the Commissary)" or "a health vial (on the floor in front of you)"
+    -- into the pockets, for when it's wanted (it used to drop on the floor, where a unit at full health
+    -- couldn't pick it up); on the floor only when the pockets are full
+    if LC.GiveItem and LCS.Items.health_vial and LC.GiveItem(ply, "health_vial", 1) then
+        got[#got + 1] = "a health vial (in your pockets: F3)"
+    else
+        local vial = ents.Create("item_healthvial")
+        if IsValid(vial) then
+            local from = IsValid(ent) and ent or ply
+            vial:SetPos(from:GetPos() + from:GetForward() * 40 + Vector(0, 0, 20))
+            vial:Spawn()
+            got[#got + 1] = IsValid(ent) and "a health vial (on the floor in front of the Commissary: your pockets are full)" or "a health vial (on the floor in front of you)"
+        end
     end
     if LC.GiveItem and LCS.Items.bandage and LC.GiveItem(ply, "bandage", 1) then got[#got + 1] = "a bandage" end
     return got
@@ -198,10 +204,13 @@ function LC.CPSupplyRechargeTick()
             ply:SetArmor(math.min(want, ply:Armor() + math.ceil(rate)))
             if not ply.lcSupplyCharging then
                 ply.lcSupplyCharging = true
-                ply:EmitSound("items/suitcharge1.wav", 55)
+                -- (never Half-Life 2's charger hum: that file loops for ever, and did: the owner, 11 November,
+                -- "the charging sound NEVER STOPS")
+                ply:EmitSound("items/battery_pickup.wav", 55)
                 ply:ChatPrint("[CP Commissary] Your vest is charging. Stay here until it's full.")
             end
             if ply:Armor() >= want then
+                ply:StopSound("items/suitcharge1.wav") -- (anyone still hearing the old one)
                 ply:EmitSound("items/suitchargeok1.wav", 55)
                 ply:ChatPrint("[CP Commissary] Vest charged (" .. want .. ").")
             end
