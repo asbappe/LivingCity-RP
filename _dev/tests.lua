@@ -13832,6 +13832,28 @@ do -- company on a patrol (the owner, 11 November): a loiterer who may bolt, a t
     if IsValid(tail.npc) then tail.npc:Remove() end
     unit:SetPos(Vector(-150000, 150000, 0))
 end
+do -- tonight's dream waits for the first sleeper when every bed was empty as it came (the owner, 11 November)
+    local DS = LC.DreamState
+    local keep = { at = DS.at, queued = DS.queued, missed = DS.missedNight, active = LC.DreamActive }
+    local wasReady, wasPhase, wasSleepers = LC.DreamReady, LC.DayPhase, LC.DreamSleepers
+    local late = newPlayer("LateSleeper", "citizen")
+    local asleep = {}
+    LC.DreamReady = function() return true end
+    LC.DayPhase = function() return "night" end
+    LC.DreamSleepers = function() return asleep end
+    LC.DreamActive = nil
+    DS.at, DS.queued, DS.missedNight = nil, { id = "cheese", vote = false, t = os.time(), source = "auto" }, DS.night
+    local now = CurTime()
+    ok(LC.DreamMissedCheck(now) == false and DS.at == nil and DS.missedNight == DS.night, "nobody in bed yet: the missed dream goes on waiting")
+    asleep = { late }
+    ok(LC.DreamMissedCheck(now) == true and DS.at == now + 20 and DS.missedNight == nil, "the first to fall asleep that night: it comes twenty seconds later")
+    DS.at, DS.missedNight = nil, DS.night
+    LC.DayPhase = function() return "day" end
+    ok(LC.DreamMissedCheck(now) == false and DS.missedNight == nil, "by morning it's forgotten")
+    LC.DreamReady, LC.DayPhase, LC.DreamSleepers = wasReady, wasPhase, wasSleepers
+    DS.at, DS.queued, DS.missedNight, LC.DreamActive = keep.at, keep.queued, keep.missed, keep.active
+    late:SetPos(Vector(-150000, 150000, 0))
+end
 do -- papers on the street, and what's carried in a search (the owner, 11 November)
     local P0 = Vector(-171000, 171000, 0)
     local unit = newPlayer("PapersUnit", "cp")
