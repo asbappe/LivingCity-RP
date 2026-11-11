@@ -331,6 +331,13 @@ function LC.CollapseBegin(why)
     -- the G-Man, to the Administrator
     local adm = SittingAdministrator()
     C.offeredTo = adm
+    -- the city's own Administrator refuses him once, twice or three times (the owner, 11 November: "she should
+    -- refuse gmans offers at random ... at least 1 time, up to maybe 3"): he asks again each time he comes back,
+    -- and she gives in after one or two, or refuses a third time and it goes to her last stand (LC.CollapseNext)
+    C.npcRefusals, C.npcRefused = nil, nil
+    if not IsValid(adm) then
+        C.npcRefusals, C.npcRefused = (LC.CollapseNpcRoll and LC.CollapseNpcRoll()) or math.random(1, 3), 1
+    end
     if IsValid(adm) then
         -- he steps out in front of her, and she can't walk away while he talks (the owner, 10 November: "the Gman
         -- appears before the administrator himself and tries to force the issue", not only a window)
@@ -460,6 +467,23 @@ LC.CollapsePhases = PHASES
 function LC.CollapseNext()
     if C.stage == "offer" then Refuse() return true end
     if C.stage ~= "refused" then return false end
+    -- the city's own: he asks her again before his first and second steps
+    if C.npcRefusals and not IsValid(C.offeredTo) and C.phase < 2 then
+        if C.npcRefused < C.npcRefusals then
+            C.npcRefused = C.npcRefused + 1
+            Each(function(p) if LC.Vision then LC.Vision(p, "voice", "", "He asked her again. Again she chose ... poorly.") end end)
+        else
+            local how = ((LC.CollapseNpcHow and LC.CollapseNpcHow()) or math.random()) < 0.5 and "resign" or "end"
+            Each(function(p) if LC.Vision then LC.Vision(p, "voice", "", how == "resign" and "A wise choice." or "... As you wish.") end end)
+            if how == "resign" then
+                NoticeAll("event", "The Administrator steps down", AdminName() .. " has resigned as City Administrator. The Combine will name another.", 12)
+            else
+                NoticeAll("event", "The Administrator is dead", AdminName() .. " is dead, by her own hand. The Combine will name another.", 12)
+            end
+            C.npcRefusals = nil
+            return Resolve("own_" .. how)
+        end
+    end
     C.phase = C.phase + 1
     C.nextPhase = Now() + math.max(0.5, cvPhase:GetFloat()) * 60
     local fn = PHASES[C.phase]

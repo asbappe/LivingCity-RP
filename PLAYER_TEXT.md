@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version e093a97. Admin-only console messages and log lines are left out.
+Made from version d5183db. Admin-only console messages and log lines are left out.
 
-10824 lines, from 296 files.
+10831 lines, from 296 files.
 
 ## Contents
 
@@ -148,7 +148,7 @@ Made from version e093a97. Admin-only console messages and log lines are left ou
 - [checkpoints, turrets, and holding the infestation back](#checkpoints-turrets-and-holding-the-infestation-back-svlivingcitycheckpointslua) (54)
 - [the City Administrator's office, and idle players (the owner, 1 November)](#the-city-administrators-office-and-idle-players-the-owner-1-november-svlivingcitycityadminlua) (72)
 - [weedkiller against the infestation, and against the Combine (the owner, 2026-11-01)](#weedkiller-against-the-infestation-and-against-the-combine-the-owner-2026-11-01-svlivingcitycleanuplua) (28)
-- [the collapse (sociostability BLACK) and the Administrator's last stand](#the-collapse-sociostability-black-and-the-administrators-last-stand-svlivingcitycollapselua) (92)
+- [the collapse (sociostability BLACK) and the Administrator's last stand](#the-collapse-sociostability-black-and-the-administrators-last-stand-svlivingcitycollapselua) (99)
 - [the Colonel](#the-colonel-svlivingcitycolonellua) (52)
 - [the Combine's own ground](#the-combines-own-ground-svlivingcitycombinegroundlua) (2)
 - [Half-Life: Alyx-style Combine models](#half-life-alyx-style-combine-models-svlivingcitycombinemodelslua) (5)
@@ -6146,136 +6146,149 @@ Made from version e093a97. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): the city's own Administrator: she refuses him
 
-- "She was given a choice. She chose ... poorly."  (text, line 356)
+- "She was given a choice. She chose ... poorly."  (text, line 363)
 
 > Note for you (not shown in game): part of: refuse
 
-- "You refused him"  (on-screen notice, line 426)
-- "He means to hasten your end. Your guards, your office, your shield: you'll need all of them."  (on-screen notice, line 426)
+- "You refused him"  (on-screen notice, line 433)
+- "He means to hasten your end. Your guards, your office, your shield: you'll need all of them."  (on-screen notice, line 433)
 
 > Note for you (not shown in game): His hand on the city
 
-- "[???] Crates have turned up around the city. Nobody saw who left them."  (chat message, line 440)
+- "[???] Crates have turned up around the city. Nobody saw who left them."  (chat message, line 447)
 
 > Note for you (not shown in game): each
 
-- "[Rumour] People are waking up with weapons in their hands. Nobody knows where they come from."  (chat message, line 445)
-- "[City] The grid is failing, block by block."  (chat message, line 449)
+- "[Rumour] People are waking up with weapons in their hands. Nobody knows where they come from."  (chat message, line 452)
+- "[City] The grid is failing, block by block."  (chat message, line 456)
+
+> Note for you (not shown in game): the city's own: he asks her again before his first and second steps
+
+- "He asked her again. Again she chose ... poorly."  (text, line 474)
+- "A wise choice."  (text, line 477)
+- "... As you wish."  (text, line 477)
+
+> Note for you (not shown in game): part of: collapse next
+
+- "The Administrator steps down"  (text, line 479)
+- "has resigned as City Administrator. The Combine will name another."  (text, line 479)
+- "The Administrator is dead"  (text, line 481)
+- "is dead, by her own hand. The Combine will name another."  (text, line 481)
 
 > Note for you (not shown in game): waking with a weapon (step 2): once each, after he's started it
 
-- "Something in your hands"  (on-screen notice, line 479)
-- "You wake holding something you didn't go to sleep with."  (on-screen notice, line 479)
+- "Something in your hands"  (on-screen notice, line 503)
+- "You wake holding something you didn't go to sleep with."  (on-screen notice, line 503)
 
 > Note for you (not shown in game): part of: spawn her
 
-- "City Administrator"  (text, line 541)
+- "City Administrator"  (text, line 565)
 
 > Note for you (not shown in game): her: the player, brought to her office, or the city's own
 
-- "Your last stand"  (on-screen notice, line 907)
-- "He's put you where you belong. Hold out {GetFloat} minutes. Your shield holds while its transformer stands, and only near it: stay close."  (on-screen notice, line 907)
+- "Your last stand"  (on-screen notice, line 931)
+- "He's put you where you belong. Hold out {GetFloat} minutes. Your shield holds while its transformer stands, and only near it: stay close."  (on-screen notice, line 931)
 
 > Note for you (not shown in game): each
 
-- "Defend the Administrator"  (on-screen notice, line 974)
-- "Her last stand has begun. Guard her, and guard the transformers that power her shield ({powers})."  (on-screen notice, line 974)
-- "The last stand"  (on-screen notice, line 976)
-- "Her shield deflects every bullet. Destroy every transformer powering it ({powers}, marked on screen, each behind glass and guarded), then end her."  (on-screen notice, line 976)
-- "An Overwatch squad is on its way to the Administrator."  (on-screen notice, line 1035)
+- "Defend the Administrator"  (on-screen notice, line 998)
+- "Her last stand has begun. Guard her, and guard the transformers that power her shield ({powers})."  (on-screen notice, line 998)
+- "The last stand"  (on-screen notice, line 1000)
+- "Her shield deflects every bullet. Destroy every transformer powering it ({powers}, marked on screen, each behind glass and guarded), then end her."  (on-screen notice, line 1000)
+- "An Overwatch squad is on its way to the Administrator."  (on-screen notice, line 1059)
 
 > Note for you (not shown in game): part of: collapse power hit
 
-- "A transformer is failing"  (text, line 1131)
-- "It's half gone. Keep at it."  (text, line 1131)
-- "A transformer is down"  (text, line 1141)
-- "more stands"  (text, line 1141)
-- "more stand"  (text, line 1141)
-- "between her and you."  (text, line 1141)
-- "Her shield is down"  (text, line 1147)
-- "Her last transformer is destroyed. {AdminName} is unprotected. Now."  (text, line 1147)
+- "A transformer is failing"  (text, line 1155)
+- "It's half gone. Keep at it."  (text, line 1155)
+- "A transformer is down"  (text, line 1165)
+- "more stands"  (text, line 1165)
+- "more stand"  (text, line 1165)
+- "between her and you."  (text, line 1165)
+- "Her shield is down"  (text, line 1171)
+- "Her last transformer is destroyed. {AdminName} is unprotected. Now."  (text, line 1171)
 
 > Note for you (not shown in game): a player Administrator who strays out of her transformer's reach is told (and unprotected)
 
-- "Out of your shield's reach"  (on-screen notice, line 1230)
-- "Shielded again"  (on-screen notice, line 1230)
-- "Get back near your transformers: out here, bullets reach you."  (on-screen notice, line 1230)
-- "You're within your transformers' reach."  (on-screen notice, line 1230)
+- "Out of your shield's reach"  (on-screen notice, line 1254)
+- "Shielded again"  (on-screen notice, line 1254)
+- "Get back near your transformers: out here, bullets reach you."  (on-screen notice, line 1254)
+- "You're within your transformers' reach."  (on-screen notice, line 1254)
 
 > Note for you (not shown in game): Heroes: Barney, then Freeman
 
-- "Barney Calhoun"  (name, line 1288)
-- "Gordon Freeman"  (name, line 1291)
+- "Barney Calhoun"  (name, line 1312)
+- "Gordon Freeman"  (name, line 1315)
 
 > Note for you (not shown in game): (whoever was the last hero is themselves again first)
 
-- "You are {name}"  (on-screen notice, line 1388)
-- "Back in rebel territory, armed for it. Rally the Resistance and take the Administrator's office.{or}"  (on-screen notice, line 1388)
+- "You are {name}"  (on-screen notice, line 1412)
+- "Back in rebel territory, armed for it. Rally the Resistance and take the Administrator's office.{or}"  (on-screen notice, line 1412)
 
 > Note for you (not shown in game): each
 
-- "is in the city"  (on-screen notice, line 1421)
-- "Stop him before he reaches the Administrator."  (on-screen notice, line 1421)
-- "is here{who}"  (on-screen notice, line 1422)
-- "Rally to him. Every fighter in the city is moving on the Administrator's office."  (on-screen notice, line 1422)
+- "is in the city"  (on-screen notice, line 1445)
+- "Stop him before he reaches the Administrator."  (on-screen notice, line 1445)
+- "is here{who}"  (on-screen notice, line 1446)
+- "Rally to him. Every fighter in the city is moving on the Administrator's office."  (on-screen notice, line 1446)
 
 > Note for you (not shown in game): part of: calm
 
-- "open rebellion"  (text, line 1526)
+- "open rebellion"  (text, line 1550)
 
 > Note for you (not shown in game): how: "resign", "end" (by her own hand), "killed" (the people), "crushed" (time ran out), "fled", "off" (an admin)
 
-- "The Administrator steps down"  (text, line 1546)
-- "has resigned as City Administrator. The office is empty."  (text, line 1546)
+- "The Administrator steps down"  (text, line 1570)
+- "has resigned as City Administrator. The office is empty."  (text, line 1570)
 
 > Note for you (not shown in game): part of: resolve
 
-- "The Administrator is dead"  (text, line 1549)
-- "is dead, by her own hand. The office is empty."  (text, line 1549)
-- "the Administrator's fall"  (text, line 1558)
-- "She's dead"  (on-screen notice, line 1559)
-- "The city is yours tonight.{or}"  (on-screen notice, line 1559)
-- "The Administrator is dead"  (text, line 1562)
-- "has fallen in her office. The people have the Nexus tonight."  (text, line 1562)
-- "A fresh city"  (text, line 1567)
-- "The server starts the city over in a minute."  (text, line 1567)
-- "The uprising is crushed"  (text, line 1572)
-- "Overwatch has retaken the Nexus. {AdminName} keeps the office."  (text, line 1572)
-- "The Administrator has fled"  (text, line 1576)
-- "The office is empty. Overwatch pulls back to the Nexus."  (text, line 1576)
+- "The Administrator is dead"  (text, line 1573)
+- "is dead, by her own hand. The office is empty."  (text, line 1573)
+- "the Administrator's fall"  (text, line 1582)
+- "She's dead"  (on-screen notice, line 1583)
+- "The city is yours tonight.{or}"  (on-screen notice, line 1583)
+- "The Administrator is dead"  (text, line 1586)
+- "has fallen in her office. The people have the Nexus tonight."  (text, line 1586)
+- "A fresh city"  (text, line 1591)
+- "The server starts the city over in a minute."  (text, line 1591)
+- "The uprising is crushed"  (text, line 1596)
+- "Overwatch has retaken the Nexus. {AdminName} keeps the office."  (text, line 1596)
+- "The Administrator has fled"  (text, line 1600)
+- "The office is empty. Overwatch pulls back to the Nexus."  (text, line 1600)
 
 > Note for you (not shown in game): the curfew: on for as long as the city is BLACK (put back if anything else takes its place, a lockdown aside)
 
-- "Mandatory curfew"  (text, line 1615)
-- "Martial law: everyone indoors. Anyone in the street is fair game."  (text, line 1615)
+- "Mandatory curfew"  (text, line 1639)
+- "Martial law: everyone indoors. Anyone in the street is fair game."  (text, line 1639)
 
 > Note for you (not shown in game): part of: suppressor hit
 
-- "The suppression device is destroyed"  (text, line 1720)
-- "The shelling stops."  (text, line 1720)
+- "The suppression device is destroyed"  (text, line 1744)
+- "The shelling stops."  (text, line 1744)
 
 > Note for you (not shown in game): Admins: test every part (the editor's "The collapse" section) what: "black" (collapse now), "next" (his next step now), "stand" (the last stand now), "off" (end it), "chaos" (half full)
 
-- "Already collapsed."  (text, line 1850)
-- "an admin's test"  (text, line 1852)
-- "The city collapses to BLACK."  (text, line 1852)
-- "Not collapsed: push it to black first."  (text, line 1854)
-- "The G-Man's next step."  (text, line 1855)
+- "Already collapsed."  (text, line 1874)
+- "an admin's test"  (text, line 1876)
+- "The city collapses to BLACK."  (text, line 1876)
+- "Not collapsed: push it to black first."  (text, line 1878)
+- "The G-Man's next step."  (text, line 1879)
 
 > Note for you (not shown in game): part of: collapse test
 
-- "an admin's test"  (text, line 1857)
-- "Her last stand begins."  (text, line 1859)
-- "Chaos cleared."  (text, line 1861)
-- "Back to normal."  (text, line 1864)
-- "Start her last stand first."  (text, line 1866)
-- "is in the city."  (text, line 1869)
-- ": nobody to play him."  (text, line 1869)
-- "Chaos set to half."  (text, line 1873)
+- "an admin's test"  (text, line 1881)
+- "Her last stand begins."  (text, line 1883)
+- "Chaos cleared."  (text, line 1885)
+- "Back to normal."  (text, line 1888)
+- "Start her last stand first."  (text, line 1890)
+- "is in the city."  (text, line 1893)
+- ": nobody to play him."  (text, line 1893)
+- "Chaos set to half."  (text, line 1897)
 
 > Note for you (not shown in game): the console command lc_collapse_test
 
-- "[Collapse] {why}"  (chat message, line 1881)
+- "[Collapse] {why}"  (chat message, line 1905)
 
 ## the Colonel (sv_livingcity_colonel.lua)
 
