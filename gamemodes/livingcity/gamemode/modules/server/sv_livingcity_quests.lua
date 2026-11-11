@@ -2928,12 +2928,22 @@ T{
         local n, z = SomeBlock()
         if not z then return nil end
         local name = LC.BlockName and LC.BlockName(n) or ("Block " .. n)
+        -- The way leads to a door of the block itself, the one nearest its middle (the owner, 11 November:
+        -- the markers led "to a combine HQ a floor below the housing block instead of to the door").
+        local at, atR, bd = z.pos, math.max(250, z.r * 0.8), nil
+        for _, e in ipairs(ents.FindInSphere(z.pos, math.max(700, z.r or 0))) do
+            local cls = IsValid(e) and e:GetClass() or ""
+            if (cls == "prop_door_rotating" or cls == "func_door_rotating" or cls == "func_door") and InBlock(n, e:GetPos(), 40) then
+                local d = e:GetPos():DistToSqr(z.pos)
+                if not bd or d < bd then at, atR, bd = e:GetPos(), 150, d end
+            end
+        end
         return {
             title = "Housing block inspection: " .. name, reward = 45, limit = 600,
             desc = "The raid team is searching " .. name .. ". Back them up: inspect the residents, then guard the block until the search is done.",
             stages = GamesOn() and {
-                GameGo(z.pos, "Go to " .. name .. " (marked)", "breach", { pos = z.pos }, math.max(250, z.r * 0.8)),
-                GameStage("Breach and search: press E on the locked door to set the charge and stand back, press E on each resident to put them on the floor, then press E on the furniture to search it"),
+                GameGo(at, "Go to " .. name .. " (the marked door)", "breach", { pos = at }, atR),
+                GameStage("Breach and search: press E on the locked door to set the charge and stand back (or kick it in), press E on each resident to put them on the floor, then press E on the furniture to search it"),
             } or {
                 Goto(z.pos, "Go to " .. name .. " (marked)", math.max(250, z.r * 0.8)),
                 { kind = "count", event = "used_npc", need = 3, distinct = true,

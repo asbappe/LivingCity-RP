@@ -540,6 +540,22 @@ if not kh then problems[#problems + 1] = "no kick reminder" else
     if not okK then problems[#problems + 1] = "the kick reminder errors: " .. tostring(errK) end
 end
 _me.nw.lc_kick_hint = nil
+-- F3 and F4: with one window open, its own key shuts it and the other's key switches (11 November)
+if LC_CL.FMenu and LC_CL.FMenuPress then
+    LC_CL.FMenu("gm_showspare2", nil) -- (an F4 window an earlier check left open)
+    local f3 = vgui.Create("DFrame")
+    LC_CL.FMenu("gm_showspare1", f3)
+    local a1 = LC_CL.FMenuPress("gm_showspare1")
+    local a2, other = LC_CL.FMenuPress("gm_showspare2")
+    if a1 ~= "close" or a2 ~= "switch" or other ~= "gm_showspare1" then
+        problems[#problems + 1] = "F3/F4: with the pockets open, F3 should close and F4 switch: " .. tostring(a1) .. ", " .. tostring(a2)
+    end
+    f3:Remove()
+    LC_CL.FMenu("gm_showspare1", nil)
+    if LC_CL.FMenuPress("gm_showspare2") ~= nil then problems[#problems + 1] = "F3/F4: with nothing open the keys are the game's own" end
+else
+    problems[#problems + 1] = "F3/F4 switching is missing"
+end
 -- the kick shows only the legs: every bone but the kicking leg is shrunk, the hips too (11 November) (a fake skeleton,
 -- with an extra mask bone off the head like the HL:Alyx metrocop's)
 if LC_CL.KickHideUpper then

@@ -52,6 +52,7 @@ local function Build()
     hub:SetSize(math.min(ScrW() - 60, 780), math.min(ScrH() - 60, 660))
     hub:Center()
     hub:MakePopup()
+    if LC_CL.FMenu then LC_CL.FMenu("gm_showspare2", hub) end -- (F3 shuts it and opens the pockets: cl_livingcity_fmenus.lua)
     hub.Paint = function(self, w, h) draw.RoundedBox(4, 0, 0, w, h, PANEL) end
     pages, filled = {}, {}
     local bar = vgui.Create("DPanel", hub)
