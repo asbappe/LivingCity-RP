@@ -95,6 +95,9 @@ Tick a box when you've tried it, and write what you saw after **Notes:** (works,
 - [ ] **Window titles (11 November):** the guide (C > Guide), the Commissary window, the black market and quartermaster windows and Father Grigori: their own big title, counters and the guide's search box sit under the title strip now, nothing running through them. The guide shows keys as [F1], not {gm_showhelp}.
   Notes:
 
+- [ ] **Flashbangs (11 November):** throw one into rebels shooting at you. Chat should say "[Flashbang] N blinded". The blinded ones have no gun in their hands, rub their eyes or stumble for 4 to 9 seconds, then pick the fight up again. If it says "Nobody was caught in it" when it landed among them, tell me: then the bang isn't reaching them at all.
+  Notes:
+
 ## Still open
 
 - "Guns lowered: hold R" only applies on rebel ground, and for recruits and metrocops on the Combine's ground. You said you would test it there.

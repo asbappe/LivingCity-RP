@@ -182,6 +182,7 @@ LC.Smokes = LC.Smokes or {} -- { pos, r, untilT }
 LC.GasClouds = LC.GasClouds or {}
 
 local SMOKE_R, GAS_R, FLASH_R = 240, 260, 700
+local FLASH_NEAR = 300 -- (this close to a flashbang, nothing in the way saves you; it was 150)
 
 -- Does smoke stand between a and b?
 function LC.SmokeBlocks(a, b)
@@ -265,10 +266,14 @@ function LC.Detonate(kind, pos, owner)
         -- (the owner, 7 November: a flashbang in a raid, and the rebels didn't even blink) everyone in sight of it,
         -- or right beside it, is blinded for 4 to 9 seconds each: hands to their eyes, stumbling, not shooting
         -- (LC.FlashStun, sv_livingcity_fieldops.lua)
+        -- (anyone within FLASH_NEAR is caught whatever is in the way: in a cluster they stood in each other's light)
+        local blinded = 0
         for npc, st in pairs(LC.NPCs or {}) do
             if IsValid(npc) and st.role ~= "zombie" and st.role ~= "scanner" and not (byCombine and LC.IsSecurity(st)) then
                 local d2 = npc:GetPos():DistToSqr(pos)
-                if d2 < (FLASH_R * 0.8) ^ 2 and (d2 < 150 * 150 or LOS(npc:EyePos(), pos + Vector(0, 0, 10), npc)) then
+                if d2 < (FLASH_R * 0.8) ^ 2 and (d2 < FLASH_NEAR * FLASH_NEAR or LOS(npc:EyePos(), pos + Vector(0, 0, 10), npc)
+                    or LOS(npc:EyePos(), pos + Vector(0, 0, 40), npc)) then
+                    blinded = blinded + 1
                     if LC.FlashStun then
                         LC.FlashStun(npc, st, math.Rand(4, 9))
                     else
@@ -279,6 +284,12 @@ function LC.Detonate(kind, pos, owner)
                 end
             end
         end
+        -- whoever threw it is told what it did (and if it ever says "nobody", that is worth knowing)
+        if IsValid(owner) and owner:IsPlayer() then
+            owner:ChatPrint(blinded > 0 and string.format("[Flashbang] %d blinded: they can't shoot until it wears off.", blinded)
+                or "[Flashbang] Nobody was caught in it.")
+        end
+        LC.LastFlash = { at = now, pos = pos, blinded = blinded }
     elseif kind == "gas" then
         Cloud(pos, "gas", 18)
         LC.GasClouds[#LC.GasClouds + 1] = { pos = pos + Vector(0, 0, 30), r = GAS_R, untilT = now + 18, owner = owner }
