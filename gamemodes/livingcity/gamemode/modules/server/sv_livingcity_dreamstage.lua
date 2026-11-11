@@ -203,6 +203,8 @@ timer.Create("LivingCityDreamStage", 0.1, 0, function()
 end)
 
 ------------------------------------------------------------------------
+-- The close: the dreams nobody can win (the harpies' line was first written as if they carried people off: they
+-- don't, they leap and kill. Corrected 11 November.)
 -- The close: the dreams nobody can win (the owner, 11 November: "what about dreams that can't be won? Like the
 -- harpies or plane or fire")
 ------------------------------------------------------------------------
@@ -212,7 +214,7 @@ end)
 -- screen has "The dream is over" between the two bars, with a line of that dream's own. The same closes a dream
 -- you play for whoever didn't win it.
 LC.DreamCloseLines = {
-    harpies = "They took everyone they came for. You wake before they come back for you.",
+    harpies = "They came out of the dark and left nobody standing. You wake before they return.",
     bus = "The bus drove on without you. You can still feel the bass in your teeth.",
     plane = "The plane flew on over the city. Your arms are still doing the dance.",
     standup = "The rope hangs empty, and the crowd has gone home.",

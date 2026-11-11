@@ -4,7 +4,7 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version 3358e2a. Admin-only console messages and log lines are left out.
+Made from version 3c0eb7b. Admin-only console messages and log lines are left out.
 
 10851 lines, from 297 files.
 
@@ -8040,33 +8040,33 @@ Made from version 3358e2a. Admin-only console messages and log lines are left ou
 `gamemodes/livingcity/gamemode/modules/server/sv_livingcity_dreamstage.lua`
 
 
-> Note for you (not shown in game): The close: the dreams nobody can win (the owner, 11 November: "what about dreams that can't be won? Like the harpies or plane or fire") The secret endings dreamt as dreams have their own opening (the ending's title comes up by itself) and their own choreography, but nothing to win, so they used to just stop. Now, as each dreamer wakes at the end of one, their screen has "The dream is over" between the two bars, with a line of that dream's own. The same closes a dream you play for whoever didn't win it.
+> Note for you (not shown in game): The close: the dreams nobody can win (the harpies' line was first written as if they carried people off: they don't, they leap and kill. Corrected 11 November.) The close: the dreams nobody can win (the owner, 11 November: "what about dreams that can't be won? Like the harpies or plane or fire") The secret endings dreamt as dreams have their own opening (the ending's title comes up by itself) and their own choreography, but nothing to win, so they used to just stop. Now, as each dreamer wakes at the end of one, their screen has "The dream is over" between the two bars, with a line of that dream's own. The same closes a dream you play for whoever didn't win it.
 
-- "They took everyone they came for. You wake before they come back for you."  (text, line 215)
-- "The bus drove on without you. You can still feel the bass in your teeth."  (text, line 216)
-- "The plane flew on over the city. Your arms are still doing the dance."  (text, line 217)
-- "The rope hangs empty, and the crowd has gone home."  (text, line 218)
-- "The party stopped. Your ears will ring until morning."  (text, line 219)
-- "The ring let go of your hands. You're still humming it."  (text, line 220)
-- "The fire went out. You check, to be sure."  (text, line 221)
-- "Somebody set up us the bomb. You wake before it goes off."  (text, line 222)
-- "The skeletons danced away into the dark, and took the music with them."  (text, line 223)
-- "The song ended at last. Your feet haven't noticed."  (text, line 224)
-- "The water went down. Your sheets are dry. You check twice."  (text, line 225)
-- "It was only a dream. A good one."  (text, line 228)
-- "It was only a dream. Probably."  (text, line 229)
-- "It was only a dream. It will be back."  (text, line 230)
-- "She is not pleased. Sleep on it."  (text, line 231)
+- "They came out of the dark and left nobody standing. You wake before they return."  (text, line 217)
+- "The bus drove on without you. You can still feel the bass in your teeth."  (text, line 218)
+- "The plane flew on over the city. Your arms are still doing the dance."  (text, line 219)
+- "The rope hangs empty, and the crowd has gone home."  (text, line 220)
+- "The party stopped. Your ears will ring until morning."  (text, line 221)
+- "The ring let go of your hands. You're still humming it."  (text, line 222)
+- "The fire went out. You check, to be sure."  (text, line 223)
+- "Somebody set up us the bomb. You wake before it goes off."  (text, line 224)
+- "The skeletons danced away into the dark, and took the music with them."  (text, line 225)
+- "The song ended at last. Your feet haven't noticed."  (text, line 226)
+- "The water went down. Your sheets are dry. You check twice."  (text, line 227)
+- "It was only a dream. A good one."  (text, line 230)
+- "It was only a dream. Probably."  (text, line 231)
+- "It was only a dream. It will be back."  (text, line 232)
+- "She is not pleased. Sleep on it."  (text, line 233)
 
 > Note for you (not shown in game): What a dreamer's screen says as they wake at the end of dream: { title, sub }, or nil for nothing (they won it).
 
-- "The nightmare is over"  (title, line 238)
-- "The dream is over"  (title, line 238)
+- "The nightmare is over"  (title, line 240)
+- "The dream is over"  (title, line 240)
 
 > Note for you (not shown in game): part of: dream close for
 
-- "Someone made it through. Not you, this time."  (text, line 244)
-- "Nobody made it through. It will be back."  (text, line 246)
+- "Someone made it through. Not you, this time."  (text, line 246)
+- "Nobody made it through. It will be back."  (text, line 248)
 
 ## stand-ins, so no dream is ever thin (sv_livingcity_dreamstandins.lua)
 
