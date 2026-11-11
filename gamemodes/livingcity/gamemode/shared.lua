@@ -226,7 +226,9 @@ LC_MODULES = {
         "sv_livingcity_career", -- (C > My career: rank, XP, the way to the Overwatch)
         "sv_livingcity_evidence", -- (what units confiscate is kept, and burned in public now and then)
         "sv_livingcity_psyche", -- (the city's minds: traits, needs, thoughts, stress, ties, rumours; pure arithmetic)
-        "sv_livingcity_minds", -- (watching the city's minds and writing it down, data/livingcity/minds/; changes nothing)
+        "sv_livingcity_minds", -- (watching the city's minds and writing it down, data/livingcity/minds/)
+        "sv_livingcity_mindsact", -- (the minds acting: choices bend, breaks happen in the street, informants and unrest come from them)
+        "sv_livingcity_brain", -- (the director and free talk: a hosted model picks from what the game can do, and speaks for named people)
         "sv_livingcity_npcvices", -- (citizens fond of a drink and a smoke light up or take out a bottle, where players can see)
     },
     client = {

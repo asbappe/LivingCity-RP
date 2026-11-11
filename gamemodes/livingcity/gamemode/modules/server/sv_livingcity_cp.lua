@@ -729,7 +729,8 @@ function LC.SocioAuto()
     local why
     if LC.Event == "curfew" or LC.Event == "sweep" or LC.Event == "raid" then why = LC.Event
     elseif LC.CityState and LC.CityState() == "unrest" then why = "civil unrest"
-    elseif LC.Skirmish ~= nil then why = "fighting in the streets" end
+    elseif LC.Skirmish ~= nil then why = "fighting in the streets"
+    elseif LC.MindsUnrestHigh and LC.MindsUnrestHigh() then why = "the mood of the city" end -- (sv_livingcity_mindsact.lua)
     local npcKills, scale = LC.SocioNpcMurders(), LC.SocioScale()
     if npcKills >= LC.SocioNpcRed * scale then return "red", "units murdered by rebels" end
     if npcKills >= LC.SocioNpcYellow * scale then why = why or "units murdered by rebels" end
