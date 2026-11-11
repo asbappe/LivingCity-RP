@@ -363,6 +363,9 @@ def scripts(doc, street, units, group_of, order):
            "3. `American man in his late thirties, clear medium-pitched voice, clean and resonant but not deep, neutral General American. Articulate, steady, dryly humorous, concerned and alert, speaks with energy and clear emphasis. No gravel, no drawl. Close, dry studio recording.`", "",
            "**If it still misses,** change one word at a time and listen: too deep or old (add `higher, lighter, younger`), too flat (add `animated, expressive`), too smooth or like an announcer (add `natural, conversational, slightly breathy`), too gruff (add `smooth, clean, no rasp`). "
            "The tags on the lines ask for tired and quiet; if this voice then sounds unlike itself, delete the tag for that line.", "",
+           "**A voice that is right but too high** (ElevenLabs will not lower a voice without changing it): make the lines with it as it is, then "
+           "`bash _dev/tools/voice_deeper.sh FOLDER_IN FOLDER_OUT` writes a deeper copy of every file at the same speed. `SEMITONES=-1` is subtle, `-1.5` the default, `-2` clearly deeper, "
+           "`-3` about as far as it stays natural: `SEMITONES=-2 bash _dev/tools/voice_deeper.sh in out`. The originals are never overwritten.", "",
            "### The citizen, a woman (every named female citizen)", "",
            "The Half-Life 2 woman is likewise clear and medium-pitched, in her thirties, earnest and expressive, not husky or low.", "",
            "1. `An American woman in her early thirties with a clear, medium-pitched voice, warm and smooth with no rasp. Clean, neutral General American accent, articulate. Earnest, capable and caring, expressive, quick to sound concerned or urgent, never husky, never low, never sleepy. Sounds like a trained stage actor playing an ordinary woman. Close, dry studio recording, no reverb.`",
