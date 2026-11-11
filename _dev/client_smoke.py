@@ -540,7 +540,7 @@ if not kh then problems[#problems + 1] = "no kick reminder" else
     if not okK then problems[#problems + 1] = "the kick reminder errors: " .. tostring(errK) end
 end
 _me.nw.lc_kick_hint = nil
--- the kick shows only the legs: every bone but the hips and the kicking leg is shrunk (a fake skeleton,
+-- the kick shows only the legs: every bone but the kicking leg is shrunk, the hips too (11 November) (a fake skeleton,
 -- with an extra mask bone off the head like the HL:Alyx metrocop's)
 if LC_CL.KickHideUpper then
     local names = { [0] = "ValveBiped.Bip01_Pelvis", "ValveBiped.Bip01_Spine", "ValveBiped.Bip01_Head1", "mask",
@@ -552,7 +552,7 @@ if LC_CL.KickHideUpper then
         ManipulateBoneScale = function(_, b) shrunk[b] = true end }
     local okL, nL = pcall(LC_CL.KickHideUpper, fake)
     if not okL then problems[#problems + 1] = "the kick's legs-only errors: " .. tostring(nL)
-    elseif not (shrunk[1] and shrunk[2] and shrunk[3] and shrunk[6] and not shrunk[0] and not shrunk[4] and not shrunk[5]) then
+    elseif not (shrunk[1] and shrunk[2] and shrunk[3] and shrunk[6] and shrunk[0] and not shrunk[4] and not shrunk[5]) then
         problems[#problems + 1] = "the kick shows more than the legs (the mask or the head) or hides the kicking leg"
     end
 else problems[#problems + 1] = "no LC_CL.KickHideUpper" end

@@ -39,12 +39,36 @@ local function IsArm(name)
     for _, a in ipairs(ARM) do if string.find(name, a, 1, true) then return true end end
     return false
 end
+-- Which of a model's bones are its arms and hands, and how many bones it has.
+function LC_CL.OwnHandsArms(ent)
+    local arms, n = {}, ent.GetBoneCount and ent:GetBoneCount() or 0
+    for i = 0, n - 1 do
+        if IsArm(ent:GetBoneName(i)) then arms[#arms + 1] = i end
+    end
+    return arms, n
+end
+
 hook.Add("PreDrawPlayerHands", "LivingCityOwnHands", function(hands, vm, ply, wep)
     if not IsValid(hands) or not hands.GetNW2Bool or not hands:GetNW2Bool("lc_own_hands", false) then return end
     local m = hands:GetModel()
     if hands.lcShrunkFor == m or not hands.GetBoneCount or not hands.ManipulateBoneScale then return end
-    hands.lcShrunkFor = m
-    for i = 0, hands:GetBoneCount() - 1 do
-        hands:ManipulateBoneScale(i, IsArm(hands:GetBoneName(i)) and Vector(1, 1, 1) or Vector(0, 0, 0))
+    -- The arms are found by their bones' names. Asked before the model's bones are ready, no name
+    -- matched, every bone was shrunk and the hands were gone for good while guns still showed (the
+    -- owner, 11 November). So: nothing is shrunk until arms are found, and it's tried again.
+    if hands.SetupBones then hands:SetupBones() end
+    local arms, n = LC_CL.OwnHandsArms(hands)
+    if #arms == 0 then
+        if (hands.lcShrinkTry or 0) < CurTime() then
+            hands.lcShrinkTry = CurTime() + 1
+            for i = 0, n - 1 do hands:ManipulateBoneScale(i, Vector(1, 1, 1)) end
+        end
+        return true -- (not drawn this frame: better no hands for a moment than a whole body in your face)
     end
+    hands.lcShrunkFor = m
+    local keep = {}
+    for _, i in ipairs(arms) do keep[i] = true end
+    for i = 0, n - 1 do
+        hands:ManipulateBoneScale(i, keep[i] and Vector(1, 1, 1) or Vector(0, 0, 0))
+    end
+    print(string.format("[Living City] own hands: %d arm bones of %d kept on %s", #arms, n, tostring(m)))
 end)

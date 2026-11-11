@@ -156,6 +156,10 @@ end
 local AT_SIDE = {
     ["models/props_c17/suitcase001a.mdl"] = true,
     ["models/props_c17/suitcase_passenger_physics.mdl"] = true,
+    -- (a clipboard too: fixed to the hand's attachment it stuck out behind the hand at an angle, the owner's
+    -- screenshot of 11 November; like this it hangs from the hand flat against the leg, kept upright.
+    -- lc_clipboard_angle no longer turns it.)
+    ["models/props_lab/clipboard.mdl"] = true,
 }
 LC.CarryAtSide = AT_SIDE
 local HAND_Z, SIDE_Y = 33, -13 -- the top of what's carried; to their right
