@@ -162,17 +162,6 @@ local function RecomputeRank(ply)
     if not f then return false end
     local old = ply:GetNW2Int("lcf_rank", 1)
     ply:SetNW2Bool("lcf_transhuman", Conditioned(ply))
-    -- Conditioned means Overwatch: nobody who took it is left a Division Leader for want of
-    -- experience (the owner, 11 November: "Why let me condition when I don't have enough XP?").
-    -- This also puts right anyone conditioned before that day.
-    if f.id == "cp" and Conditioned(ply) then
-        for _, r in ipairs(f.ranks or {}) do
-            if r.overwatch then
-                if (tonumber(ply:GetPData("lcf_xp_cp", 0)) or 0) < r.xp then ply:SetPData("lcf_xp_cp", r.xp) end
-                break
-            end
-        end
-    end
     local new = RankFor(ply, f)
     ply:SetNW2Int("lcf_rank", new)
     Publish(ply)
@@ -709,7 +698,9 @@ end
 -- The conditioning as it happens to you (the owner, 11 November: "nothing happened... Can we
 -- get a fade to black and some machine whirring or something? Can I be a combine soldier when
 -- I undergo the conditioning?"). The screen goes black, the machines run, and you come out of
--- it Overwatch: at least the first Overwatch rank, whatever experience you had.
+-- it Overwatch. No experience is given: the story is only offered to a unit who already has
+-- enough for the first Overwatch rank (the owner, same day: "do not give it as an option until
+-- I have enough XP to become a prison guard or soldier").
 LC.ConditioningSounds = {
     { 0.3, "ambient/machines/spinup.wav" },
     { 2.2, "ambient/machines/thumper_hit.wav" },
@@ -720,20 +711,19 @@ LC.ConditioningSounds = {
 }
 LC.ConditioningSecs = 6.5
 
+-- How much experience a unit is short of the first Overwatch rank (0 or less: enough). The
+-- conditioning is only offered with enough (sv_livingcity_stories.lua).
+function LC.ConditioningXPShort(ply)
+    local f = LCF and LCF.Get and LCF.Get("cp")
+    for _, r in ipairs(f and f.ranks or {}) do
+        if r.overwatch then return r.xp - (tonumber(ply:GetPData("lcf_xp_cp", 0)) or 0), r end
+    end
+    return 0
+end
+
 function LC.ConditionPromote(ply)
     if not IsValid(ply) then return false end
-    LC.Condition(ply)
-    local f = LCF and LCF.Get and LCF.Get("cp")
-    if f and ply:GetNW2String("lcf_faction", "") == "cp" then
-        for _, r in ipairs(f.ranks or {}) do
-            if r.overwatch then
-                if (tonumber(ply:GetPData("lcf_xp_cp", 0)) or 0) < r.xp then ply:SetPData("lcf_xp_cp", r.xp) end
-                break
-            end
-        end
-        LC.AddXP(ply, 0, "the conditioning")
-    end
-    return true
+    return LC.Condition(ply) -- (the rank follows from the experience they already have)
 end
 
 function LC.ConditioningScene(ply)

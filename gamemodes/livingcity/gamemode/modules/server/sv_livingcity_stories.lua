@@ -809,7 +809,13 @@ LC.Chain{
 
 LC.Chain{
     id = "candidate", name = "The Overwatch Candidate", factions = { cp = true },
-    unlock = function(ply) return Q.RankIndex(ply) >= 3 and not (LC.Conditioned and LC.Conditioned(ply)) end, -- (Division Leaders)
+    -- Division Leaders with the experience for the first Overwatch rank (the owner, 11 November:
+    -- "conditioning should only be available when the player has enough XP to become a soldier or
+    -- prison guard"): accepting it is then one step, the fade, the promotion and the uniform together.
+    unlock = function(ply)
+        return Q.RankIndex(ply) >= 3 and not (LC.Conditioned and LC.Conditioned(ply))
+            and (not LC.ConditioningXPShort or LC.ConditioningXPShort(ply) <= 0)
+    end,
     start = "evaluation",
     endings = {
         transhuman = "You accepted the conditioning. You don't remember your name. You don't need to.",
@@ -839,10 +845,34 @@ LC.Chain{
                 title = "Conditioning", reward = 20, limit = 480,
                 desc = "You've been ordered to report " .. Place(pos, ply:GetPos()) .. ". Come alone.",
                 stages = {
-                    Goto(pos, "Go to the marked spot as ordered", 300),
+                    -- (the owner, 11 November: the choice came up through a wall, from a staircase above,
+                    -- with nobody there. A soldier and a stalker wait at the spot; nothing happens until
+                    -- you have walked right up to them.)
+                    {
+                        kind = "target", action = "reach", r = 90, text = "Walk up to the soldier waiting at the marked spot",
+                        onEnter = function(q, st)
+                            local npc = Q.SpawnActor(q, "soldier", pos, 900)
+                            if not IsValid(npc) then return false end
+                            q.data.actor = npc
+                            st.npc = npc
+                            local stalker = ents.Create("npc_stalker")
+                            if IsValid(stalker) then
+                                stalker:SetPos(npc:GetPos() + Vector(46, 30, 4))
+                                stalker:SetAngles(npc:GetAngles())
+                                stalker:Spawn()
+                                stalker:Activate()
+                                for _, rel in ipairs({ "player D_NU 99", "npc_citizen D_NU 99", "npc_metropolice D_NU 99", "npc_combine_s D_NU 99" }) do
+                                    if stalker.AddRelationship then stalker:AddRelationship(rel) end
+                                end
+                                if stalker.SetKeyValue then stalker:SetKeyValue("BeamPower", "0") end
+                                stalker.lcStalkerQuiet = true
+                                q.ents[#q.ents + 1] = stalker
+                            end
+                        end,
+                    },
                     Choice("A technician in a coat that has never been white. 'Transhuman conditioning. It will make you Overwatch. " ..
                         "You won't remember your name, Civil Protection unit. You won't need to.'", {
-                        { text = "Accept. (You become Overwatch, a Combine Prison Guard at once: the Soldier and Elite ranks open to you. There's no undoing it.)", pick = function(q, p)
+                        { text = "Accept. (You become Overwatch here and now, a Combine Prison Guard: the Soldier and Elite ranks follow with experience. There's no undoing it.)", pick = function(q, p)
                             q.chainEnd = "transhuman"
                             if LC.ConditioningScene then LC.ConditioningScene(p) end -- (black screen, machines, and out of it Overwatch)
                         end },

@@ -74,8 +74,14 @@ local function CandidateLine(ply, idx, f)
     local cs = s and s.chains.candidate
     local chain = LC.Chains and LC.Chains.candidate
     local dvl = f.ranks[3] and f.ranks[3].name or "Division Leader"
+    local short, first = 0, nil
+    if LC.ConditioningXPShort then short, first = LC.ConditioningXPShort(ply) end
+    local firstName = first and first.name or "Combine Prison Guard"
     if idx < 3 then
-        return string.format("At %s, the Overwatch Candidate story comes to your board (F4): an evaluation, then the transhuman conditioning.", dvl)
+        return string.format("As a %s with the experience for %s (%d XP), the Overwatch Candidate story comes to your board (F4): an evaluation, then the transhuman conditioning.", dvl, firstName, first and first.xp or 1200)
+    end
+    if short > 0 and not (cs and cs.done) then
+        return string.format("%d more XP (enough for %s), and the Overwatch Candidate story comes to your board (F4): an evaluation, then the conditioning, which makes you Overwatch on the spot.", short, firstName)
     end
     if cs and cs.done == "human" then
         local ok, wait = LC.CanReassess(ply)

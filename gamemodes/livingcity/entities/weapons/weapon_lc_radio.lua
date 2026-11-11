@@ -110,6 +110,9 @@ function SWEP:Reload()
     if not IsValid(owner) then return end
     -- (the same R, still held, reached the hands' own R a moment later and drew the radio straight back out:
     -- the owner, 7 November, "it just flashes and reappears". The hands ignore it until R is let go.)
+    -- (and the other way round: the R that drew it out of your hands, still held, put it straight back:
+    -- the owner, 11 November, "I cannot get it back out")
+    if LC and LC.ReloadHeld and LC.ReloadHeld(owner) then return end
     if LC and LC.HoldReload then LC.HoldReload(owner) end
     if owner:HasWeapon("weapon_lc_hands") then owner:SelectWeapon("weapon_lc_hands") end
 end

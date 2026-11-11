@@ -13872,7 +13872,9 @@ ok(LC.QuestFaction(ow) == "ota", "the Overwatch ranks keep their own board")
 local dl = newPlayer("DivLeader", "cp", nil, 900)
 _run(0.3)
 ok(dl:GetNW2Int("lcf_rank", 1) == 3 and LC.IsCPOfficer(dl), "a Division Leader is an officer")
-ok(LC.Chains.candidate.unlock(dl) and not LC.Chains.candidate.unlock(ow), "the Overwatch Candidate story comes to Division Leaders who haven't had the conditioning")
+ok(not LC.Chains.candidate.unlock(dl), "a Division Leader short of the first Overwatch rank's XP: no Overwatch Candidate story yet (the owner, 11 November)")
+dl:SetPData("lcf_xp_cp", 1200)
+ok(LC.Chains.candidate.unlock(dl) and not LC.Chains.candidate.unlock(ow), "the Overwatch Candidate story comes to Division Leaders with that XP who haven't had the conditioning")
 -- the Commander
 local cmd = newPlayer("OWCommander", "cp", "ow_commander", 3000)
 cmd:SetPData("lcf_transhuman", "1")
@@ -24560,7 +24562,7 @@ function CareerTests()
     LC.SendCareer(mc)
     ok(_lastnet("lc_career") ~= nil, "it's sent to their screen (C > My career)")
     -- a Division Leader: where the story stands
-    local dl = newPlayer("CareerDvL", "cp", nil, 700)
+    local dl = newPlayer("CareerDvL", "cp", nil, 1300) -- (enough for the first Overwatch rank: the story is only offered then)
     local s = LC.Story(dl)
     s.flags.story_gate = { need = 3, base = tonumber(dl:GetPData("lcq_done", 0)) or 0 }
     joined = table.concat(LC.CareerInfo(dl).steps, " ")
@@ -24589,18 +24591,19 @@ function CareerTests()
     LC.Condition(ow)
     local i3 = LC.CareerInfo(ow)
     ok(i3.conditioned and string.find(i3.steps[1], "Combine Soldier", 1, true), "conditioned: the XP to the next Overwatch rank", i3.steps[1])
-    do -- the conditioning itself (the owner, 11 November): out of it you are Overwatch at once
-        local cand = newPlayer("CareerCandidate", "cp", nil, 700)
-        ok(LCF.RankOf(cand).name == "Division Leader", "(a Division Leader)")
+    do -- the conditioning (the owner, 11 November): only offered with the experience for the first Overwatch rank
+        local short = newPlayer("CareerShort", "cp", nil, 700)
+        local chain = LC.Chains.candidate
+        ok(LC.ConditioningXPShort(short) == 500 and not chain.unlock(short), "a Division Leader 500 XP short of Combine Prison Guard: the story isn't offered yet")
+        ok(string.find(table.concat(LC.CareerInfo(short).steps, " "), "500 more XP", 1, true), "and My career says how much more it takes")
+        local cand = newPlayer("CareerCandidate", "cp", nil, 1300)
+        ok(LCF.RankOf(cand).name == "Division Leader" and chain.unlock(cand), "with enough, still a Division Leader: it is offered")
         ok(LC.ConditionPromote(cand) and LC.Conditioned(cand) and LCF.RankOf(cand).name == "Combine Prison Guard"
-            and LCF.IsOverwatch(cand), "the conditioning makes a Division Leader a Combine Prison Guard at once, whatever their experience",
-            LCF.RankOf(cand).name)
-        local vet = newPlayer("CareerCandidate2", "cp", nil, 700)
-        vet:SetPData("lcf_xp_cp", 5000)
-        LC.ConditionPromote(vet)
-        ok((tonumber(vet:GetPData("lcf_xp_cp", 0)) or 0) == 5000, "experience past that is never lowered")
+            and LCF.IsOverwatch(cand), "accepting makes them a Combine Prison Guard at once", LCF.RankOf(cand).name)
+        LC.ConditionPromote(short)
+        ok((tonumber(short:GetPData("lcf_xp_cp", 0)) or 0) == 700, "no experience is ever given by it")
         ok(LC.ConditioningScene(cand) == true and cand.lcConditioning == true and #LC.ConditioningSounds >= 4, "the scene: black screen, held still, the machines")
-        cand:SetPos(Vector(-150000, 150000, 0)) vet:SetPos(Vector(-150000, 150000, 0))
+        cand:SetPos(Vector(-150000, 150000, 0)) short:SetPos(Vector(-150000, 150000, 0))
     end
     for _, p in ipairs({ mc, dl, ow }) do p:SetPos(Vector(-150000, 150000, 0)) end
 

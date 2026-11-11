@@ -146,7 +146,9 @@ hook.Add("PlayerButtonDown", "LivingCityKick", function(ply, button)
     if button ~= KeyCode() then return end
     if (vgui.GetKeyboardFocus and IsValid(vgui.GetKeyboardFocus())) or (gui.IsGameUIVisible and gui.IsGameUIVisible()) then return end
     if ply:GetNW2String("lcf_faction", "") ~= "cp" then return end
-    RunConsoleCommand("lc_kick")
+    -- (the same way F2 > Kick sends it. "lc_kick" typed or run on a player's game is the server's on/off
+    -- setting of that name, which only prints its value, so the key never kicked: the owner, 11 November)
+    if LC_CL.SendAction then LC_CL.SendAction("kick") else RunConsoleCommand("lc_kick") end
 end)
 
 ------------------------------------------------------------------------
