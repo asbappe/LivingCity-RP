@@ -4,7 +4,10 @@
      the body next to it. Morticians are paid for every one
      (sv_livingcity_mortuary.lua). Nothing else ever spawns one: no
      incinerator on the map, no cremations.
-     It's a spent headcrab canister, a fire burning in its broad, open end. ]]
+     It's a spent headcrab canister, a fire burning in its broad, open end.
+     It stands on end, the open end to the sky, like a torch (the owner,
+     12 November: "can we make it so it stands with the fire/open/big end up
+     at the sky? Like a fire torch?"). ]]
 
 AddCSLuaFile()
 
@@ -31,7 +34,7 @@ function ENT:Initialize()
     self:SetUseType(SIMPLE_USE)
     local phys = self:GetPhysicsObject()
     if IsValid(phys) then phys:EnableMotion(false) end
-    timer.Simple(0.2, function() if IsValid(self) then self:FindMouth() end end)
+    timer.Simple(0.2, function() if IsValid(self) then self:FindMouth() self:StandUp() end end)
 end
 
 if SERVER then
@@ -62,6 +65,39 @@ if SERVER then
         self:SetNW2Vector("lc_mouth", back)
         self:SetNW2Vector("lc_mouth_dir", dir)
         self:SetNW2Float("lc_mouth_r", math.max(lo, hi, 8))
+    end
+
+    -- Stood on end, the broad open end up and the other on the floor (only a model lying on its
+    -- side, as the canister does: a boiler or a stove already stands). `ground`: the floor spot it
+    -- stands on (the editor's marker; else the floor under it). Frozen there, steady.
+    function ENT:StandUp(ground)
+        local dir = self:GetNW2Vector("lc_mouth_dir", Vector(0, 0, 0))
+        local mins, maxs = self:OBBMins(), self:OBBMaxs()
+        if not (dir and mins and maxs) then return false end
+        local axis = math.abs(dir.x) > 0.5 and "x" or (math.abs(dir.y) > 0.5 and "y" or nil)
+        if not axis or (maxs[axis] - mins[axis]) < 40 then return false end
+        local yaw = self:GetAngles().y
+        local ang
+        if axis == "x" then ang = Angle(dir.x > 0 and -90 or 90, yaw, 0)   -- (pitch -90: its front to the sky)
+        else ang = Angle(0, yaw, dir.y > 0 and 90 or -90) end               -- (roll 90: its left to the sky)
+        if not ground and self.lcFixturePoint and self.lcFixturePoint.pos then ground = self.lcFixturePoint.pos end
+        if not ground then
+            local from = self:WorldSpaceCenter()
+            local tr = util.TraceLine({ start = from, endpos = from - Vector(0, 0, 400), filter = self, mask = MASK_SOLID_BRUSHONLY })
+            ground = (tr and tr.Hit) and tr.HitPos or (from - Vector(0, 0, (maxs[axis] - mins[axis]) * 0.5))
+        end
+        self:SetAngles(ang)
+        -- the closed end (the middle of it) on the floor spot
+        local c = (mins + maxs) * 0.5
+        local foot = Vector(c.x, c.y, c.z)
+        foot[axis] = dir[axis] > 0 and mins[axis] or maxs[axis]
+        local at = self:LocalToWorld(foot)
+        self:SetPos(self:GetPos() + (ground - at))
+        self.lcBasePos = Vector(ground.x, ground.y, ground.z)
+        self:SetNW2Bool("lc_upright", true)
+        local phys = self:GetPhysicsObject()
+        if IsValid(phys) then phys:EnableMotion(false) phys:Wake() end
+        return true
     end
 
     function ENT:Use(ply)
@@ -181,7 +217,7 @@ if CLIENT then
     end
 
     -- (made once here, not every frame)
-    local V_60_60_60 = Vector(60, 60, 60)
+    local V_60_60_60 = Vector(120, 120, 120) -- (standing on end, the flames lick well over the top)
     function ENT:Draw()
         self:DrawModel()
         -- (the sprites and flames reach past the model: drawn whenever any of it could be seen)
@@ -204,7 +240,8 @@ if CLIENT then
         -- the burner, roaring out of the back
         local s = (burning and 110 or 70) + math.sin(CurTime() * 9) * 8
         render.DrawSprite(back + out * 6, s, s, burning and C_255_160_70 or C_255_120_45_210)
-        -- and the glow of the furnace at the hatch
+        -- and the glow of the furnace at the hatch (none standing on end: that end is on the floor)
+        if self:GetNW2Bool("lc_upright", false) then return end
         local m = (burning and 44 or 22) + math.sin(CurTime() * 7) * 3
         render.DrawSprite(front, m, m, Color(255, 110, 40, burning and 200 or 110))
     end

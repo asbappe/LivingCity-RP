@@ -1104,7 +1104,8 @@ SHIFTS.mortuary = {
         if not proc then return nil end
         local n = 0
         for _, b in ipairs(LC.Bodies or {}) do
-            if IsValid(b.ent) and b.ent.lcBody and not b.ent.lcBody.claimed and not (LC.HauledBy and LC.HauledBy(b.ent)) then n = n + 1 end
+            if IsValid(b.ent) and b.ent.lcBody and not b.ent.lcBody.claimed and not (LC.HauledBy and LC.HauledBy(b.ent))
+                and not (LC.InInfest and LC.InInfest(b.ent:GetPos())) then n = n + 1 end -- (the infestation's dead are the Cremators')
         end
         if n < 2 then return nil end
         n = math.min(3, n)
@@ -1119,7 +1120,7 @@ SHIFTS.mortuary = {
     function(ply, job)
         local incs = LC.EntsOf("lc_incinerator")
         local inc = #incs > 0 and Pick(incs) or nil
-        local morgue = IsValid(inc) and inc:GetPos() or WorkSpot(ply, job.num)
+        local morgue = IsValid(inc) and (inc.lcBasePos or inc:GetPos()) or WorkSpot(ply, job.num)
         if not morgue then return nil end
         local work = Hold(morgue, 30, "Stay at the incinerator for 30 seconds to burn the bodies", 160)
         work.onDone = function() if IsValid(inc) then inc:SetNW2Float("lc_burn_until", CurTime() + 8) end end
@@ -1453,9 +1454,9 @@ do
         if not GamesOn() then return incinerator(ply, job) end
         local incs = LC.EntsOf("lc_incinerator")
         local inc = #incs > 0 and Pick(incs) or nil
-        local morgue = IsValid(inc) and inc:GetPos() or WorkSpot(ply, job.num)
+        local morgue = IsValid(inc) and (inc.lcBasePos or inc:GetPos()) or WorkSpot(ply, job.num)
         if not morgue then return nil end
-        local slab = IsValid(inc) and (inc:GetPos() + inc:GetForward() * 90) or morgue
+        local slab = IsValid(inc) and (morgue + Angle(0, inc:GetAngles().y, 0):Forward() * 90) or morgue -- (beside it, on the floor: it stands on end)
         return {
             title = "Before the fire", reward = 10, limit = 600,
             desc = "Three bodies go in the incinerator tonight. Search every pocket first. The overseer checks on you now and then: don't get caught keeping anything.",

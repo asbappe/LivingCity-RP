@@ -608,7 +608,8 @@ Task("mortuary", { id = "haul", label = "collecting the dead", urgent = true, fi
     for _, b in ipairs(LC.Bodies or {}) do
         local e = b.ent
         if IsValid(e) and e.lcBody and not e.lcBody.claimed and not (LC.HauledBy and LC.HauledBy(e)) and now - (b.born or now) >= grace
-            and not OffLimits(npc, st, e:GetPos()) then
+            and not OffLimits(npc, st, e:GetPos())
+            and not (LC.InInfest and LC.InInfest(e:GetPos())) then -- (morticians never go into an infestation: those dead are the Cremators')
             local d = e:GetPos():DistToSqr(npc:GetPos())
             if d < 3500 * 3500 and (not bd or d < bd) then best, bd = e, d end
         end

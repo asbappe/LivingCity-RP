@@ -135,6 +135,8 @@ for rel in sorted(os.path.relpath(p, ENTS) for p in glob.glob(ENTS + "/entities/
     L.execute("ENT = {}")
     L.globals()._SRC = open(os.path.join(ENTS, rel)).read()
     L.execute("assert(loadstring(_SRC, %r))()" % rel)
+    # (kept, so a test can call an entity's own functions: _ENTSRC["entities/lc_incinerator.lua"])
+    L.execute("_ENTSRC = _ENTSRC or {} _ENTSRC[%r] = _SRC" % rel)
 for rel in sorted(os.path.relpath(p, ENTS) for p in glob.glob(ENTS + "/weapons/*.lua")):
     L.execute("SWEP = {}")
     L.globals()._SRC = open(os.path.join(ENTS, rel)).read()

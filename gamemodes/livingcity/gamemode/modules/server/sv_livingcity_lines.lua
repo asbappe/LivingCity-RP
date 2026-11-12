@@ -532,6 +532,29 @@ function LC.VoiceReplacement(path)
     return replaced[p]
 end
 
+-- Mouths that move (the owner, 12 November: "With the new voices, can we get the NPCs' mouths to
+-- move?"). The owner's recordings carry no phoneme data, so Source's own lip sync leaves the face
+-- still. Whoever says one (anything under sound/livingcity/) is marked talking for as long as it
+-- lasts, and every player's game near them works their jaw (cl_livingcity_lipsync.lua). Half-Life
+-- 2's own clips are left to the engine, which has their phonemes.
+function LC.MarkTalking(ent, path)
+    if not IsValid(ent) or ent:IsPlayer() or type(path) ~= "string" then return false end
+    local p = string.lower(path)
+    p = string.gsub(p, "^[^%w]+", "")   -- (the game puts marks in front of some names)
+    p = string.gsub(p, "^sound/", "")
+    if string.sub(p, 1, 11) ~= "livingcity/" then return false end
+    local secs = LC.AnnounceKnownSecs and LC.AnnounceKnownSecs(p) or 0
+    if not secs or secs <= 0.2 then secs = 2.5 end -- (a length unknown: about a line's)
+    local now = CurTime()
+    ent:SetNW2Float("lc_talk_from", now)
+    ent:SetNW2Float("lc_talk_until", now + math.min(secs, 30))
+    return true
+end
+
+hook.Add("EntityEmitSound", "LivingCityLipSync", function(data)
+    if data and IsValid(data.Entity) then LC.MarkTalking(data.Entity, data.SoundName) end
+end)
+
 -- Every sound an entity makes passes here: a Half-Life 2 clip that has been re-recorded is swapped for the recording.
 hook.Add("EntityEmitSound", "LivingCityVoiceReplace", function(data)
     local name = data and data.SoundName
@@ -545,6 +568,7 @@ hook.Add("EntityEmitSound", "LivingCityVoiceReplace", function(data)
         if not st or LC.VoiceOf(ent, st) ~= "own" then return end
     end
     data.SoundName = mine
+    if IsValid(data.Entity) then LC.MarkTalking(data.Entity, mine) end -- (returning true ends the hooks: the jaw is marked here)
     return true
 end)
 
