@@ -73,10 +73,10 @@ function LC_CL.ExecutionPage(Do, target)
         if me:GetNW2Int("lcf_rank", 1) >= 4 then
             items[1] = { label = "Execute them", run = function() Do("execute") end }
         elseif IsValid(target) and me:GetNW2Entity("lc_exec_leave") == target then
-            items[1] = { label = "Execute them (leave is given)", run = function() Do("execute") end }
+            items[1] = { label = "Execute them (you have permission)", run = function() Do("execute") end }
         else
-            items[1] = { label = "Ask leave to execute them", run = function() Do("askleave") end }
-            items[2] = { label = "Execute them without leave", run = function() Do("execnoleave") end }
+            items[1] = { label = "Ask permission to execute them", run = function() Do("askleave") end }
+            items[2] = { label = "Execute them without permission", run = function() Do("execnoleave") end }
         end
         return { title = "Execution", items = items }
     end
@@ -114,9 +114,9 @@ net.Receive("lc_exec_ask", function()
         net.WriteBool(yes)
         net.SendToServer()
     end
-    LC_CL.OpenSituation({ id = "execask", title = who .. " asks leave", note = who .. " asks leave to execute " .. name .. ".",
+    LC_CL.OpenSituation({ id = "execask", title = who .. " asks permission", note = who .. " asks permission to execute " .. name .. ".",
         items = {
-            { label = "Give leave", run = function() Answer(true) end },
+            { label = "Give permission", run = function() Answer(true) end },
             { label = "Refuse", run = function() Answer(false) end },
         } })
 end)
@@ -130,8 +130,8 @@ net.Receive("lc_exec_judge", function()
         net.WriteString(what)
         net.SendToServer()
     end
-    LC_CL.OpenSituation({ id = "execjudge", title = "Without leave",
-        note = who .. " killed " .. name .. (refused and " after leave was refused." or " without leave.") .. " The cell waits for your answer.",
+    LC_CL.OpenSituation({ id = "execjudge", title = "Without permission",
+        note = who .. " killed " .. name .. (refused and " after permission was refused." or " without permission.") .. " The cell waits for your answer.",
         items = {
             { label = "Expel them", run = function() Judge("expel") end },
             { label = "Break them in rank", run = function() Judge("demote") end },
@@ -156,7 +156,7 @@ net.Receive("lc_rebelclip", function()
     LC_CL.OpenSituation({ id = "rebelclip", title = leader and "The cell's rules" or "The cell's rules (the leader's to change)", note = word,
         items = {
             { label = Box(brutal) .. "Hands may be laid on prisoners", run = Set("brutal"), disabled = not leader },
-            { label = Box(execute) .. "Prisoners may be executed, with leave", run = Set("execute"), disabled = not leader },
+            { label = Box(execute) .. "Prisoners may be executed, with permission", run = Set("execute"), disabled = not leader },
             { label = Box(symp) .. "Sympathizers who turn are fair game", run = Set("sympathizers"), disabled = not leader },
             { label = "Priority: " .. priority, run = Set("priority"), disabled = not leader },
             { label = "Mood: " .. (mood == "" and "as events make it" or mood), run = Set("mood"), disabled = not leader },

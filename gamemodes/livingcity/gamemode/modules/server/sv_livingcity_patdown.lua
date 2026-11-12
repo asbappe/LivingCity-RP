@@ -230,7 +230,7 @@ hook.Add("LivingCityIncarcerated", "LivingCityPatdownNPC", function(npc, _, _, a
     if not IsValid(npc) or npc:IsPlayer() then return end
     local st = LC.NPCs and LC.NPCs[npc]
     if not st then return end
-    st.lcHidden, st.lcPatted, st.lcHeldSince = nil, nil, nil
+    st.lcHidden, st.lcPatted, st.lcHeldSince, st.lcCuffSecs, st.lcCuffCue = nil, nil, nil, nil, nil
     if not On() then return end
     if IsValid(arrester) and arrester:IsPlayer() then
         net.Start("lc_custody")
@@ -285,6 +285,77 @@ function LC.NPCSlipTick(now)
     return out
 end
 if timer and timer.Create then timer.Create("LivingCityNPCSlip", 5, 0, function() LC.NPCSlipTick(CurTime()) end) end
+
+-- Cuffed and being walked in, with a pick nobody found (the owner, 12 November: "do NPCs who may have a lockpick hide
+-- them and attempt to get out of cuffs? yes please!"). They work at the cuffs only while no captor is looking at them:
+-- CUFF_WORK seconds of that, then a try (the same odds as a player's). A captor who looks while they're at it may
+-- catch the movement: the cue to pat them down. Out of the cuffs, they run.
+local CUFF_WORK, CUFF_TICK = 20, 2
+
+-- Is a captor looking at this cuffed one? Returns the player who is (or true for a city unit), or nil.
+function LC.NPCCuffsWatched(npc, c)
+    local L = c and c.leader
+    if IsValid(L) and not L:IsPlayer() then
+        if not (LC.CopInFirefight and LC.CopInFirefight(L)) and L:GetPos():DistToSqr(npc:GetPos()) < 300 * 300 then return true end
+    end
+    for _, p in ipairs(player.GetAll()) do
+        if p:Alive() and (IsUnit(p) or p == L) and p:GetPos():DistToSqr(npc:GetPos()) < 400 * 400 then
+            local to = npc:GetPos() - p:GetPos()
+            to.z = 0
+            if to:LengthSqr() > 1 then to:Normalize() end
+            local aim = p:EyeAngles():Forward()
+            if aim:Dot(to) > 0.5 and (not LC.LineOfSight or LC.LineOfSight(p:EyePos(), npc:GetPos() + Vector(0, 0, 40), p, npc)) then return p end
+        end
+    end
+    return nil
+end
+
+function LC.NPCCuffTick(now)
+    now = now or CurTime()
+    if not On() then return 0 end
+    local out = 0
+    for npc, c in pairs(LC.NPCCustody or {}) do
+        local st = c.st
+        if IsValid(npc) and st and LC.NPCs[npc] == st and st.state == "detained" and not st.lcPatted then
+            local hid = LC.NPCHides(npc, st)
+            if hid.pick then
+                local seen = LC.NPCCuffsWatched(npc, c)
+                if seen then
+                    -- caught at it, now and then: only once they have really started
+                    if (st.lcCuffSecs or 0) > 0 and seen ~= true and now >= (st.lcCuffCue or 0) and Roll() < 0.3 then
+                        st.lcCuffCue = now + 15
+                        seen:ChatPrint("** " .. NameOfNPC(npc) .. "'s hands are busy behind their back. Something glints.")
+                    end
+                else
+                    st.lcCuffSecs = (st.lcCuffSecs or 0) + CUFF_TICK
+                    if st.lcCuffSecs >= CUFF_WORK then
+                        if Roll() < PICK_OK then
+                            hid.pick, st.lcCuffSecs = false, nil
+                            local name, from = NameOfNPC(npc), IsValid(c.leader) and c.leader or npc:GetPos()
+                            Scene(npc:GetPos(), name .. "'s cuffs drop to the ground. They run.")
+                            npc:EmitSound("physics/metal/metal_solid_impact_soft1.wav", 65)
+                            npc:SetNW2Bool("lc_cuffed", false)
+                            if LC.Release then LC.Release(npc, st) end
+                            st.jailUntil = nil
+                            if LC.SetState then LC.SetState(npc, st, "idle") end
+                            st.untilT = now + 1
+                            if LC.NPCFlee then LC.NPCFlee(npc, from, 40) end
+                            local p = npc.lcProfile
+                            if p and p.id and LC.ChronicleAdd then LC.ChronicleAdd({ k = "escaped", s = p.id, sn = name, pred = "picked their cuffs on the way to the cells and ran", pos = npc:GetPos(), w = 3 }) end
+                            out = out + 1
+                        elseif Roll() < PICK_SNAP then
+                            hid.pick, st.lcCuffSecs = false, nil -- (the pick snapped: that was their chance)
+                        else
+                            st.lcCuffSecs = CUFF_WORK - 10 -- (it wouldn't give: another go in a while)
+                        end
+                    end
+                end
+            end
+        end
+    end
+    return out
+end
+if timer and timer.Create then timer.Create("LivingCityNPCCuffs", CUFF_TICK, 0, function() LC.NPCCuffTick(CurTime()) end) end
 
 ------------------------------------------------------------------------
 -- A lockpick on the cuffs

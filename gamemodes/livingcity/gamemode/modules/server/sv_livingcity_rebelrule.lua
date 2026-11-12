@@ -29,9 +29,9 @@
     Kind options  In the chair: talk without blows, food or water, and asking
                   them to join.
     Executions    At the cage or the chair. A Lieutenant or above does it or
-                  gives leave; a Fighter asks leave, or does it without. A
-                  proper execution is a player's real death; one without leave
-                  is an ordinary death two times in three. Without leave, the
+                  gives permission; a Fighter asks for it, or does it without. A
+                  proper execution is a player's real death; one without permission
+                  is an ordinary death two times in three. Without permission, the
                   highest-ranked member answers: expel, demote, order their
                   execution, or stand by them.
 
@@ -173,7 +173,7 @@ function LC.RebelBoardLines()
     if not On() then return {} end
     local out = { MOOD_LINE[LC.RebelAtmosphere()] }
     out[#out + 1] = R.brutal and "Prisoners: hands may be laid on them." or "Prisoners: nobody lays a hand on them."
-    out[#out + 1] = R.execute and "An informer may be shot, with leave." or "Prisoners are let go. Nobody is shot."
+    out[#out + 1] = R.execute and "An informer may be shot, with permission." or "Prisoners are let go. Nobody is shot."
     out[#out + 1] = (R.sympathizers and "Sympathizers who turn are fair game." or "Sympathizers are off limits.")
         .. " We " .. (PRIORITY_NAME[R.priority] or "lie low") .. "."
     return out
@@ -335,8 +335,8 @@ end
 
 function LC.ExecAskLeave(by, target)
     if not On() or not (LC.RebelMayHold and LC.RebelMayHold(by)) or not LC.RebelHolds(target) then return nil end
-    if LC.RebelMayOrder(by) then return "You don't need anyone's leave." end
-    if LC.ExecHasLeave(by, target) then return "You have leave already." end
+    if LC.RebelMayOrder(by) then return "You don't need anyone's permission." end
+    if LC.ExecHasLeave(by, target) then return "You already have permission." end
     local officers = {}
     for _, p in ipairs(player.GetAll()) do if p ~= by and LC.RebelMayOrder(p) then officers[#officers + 1] = p end end
     LC.ExecAsks[by] = { target = target, at = CurTime(), officers = #officers }
@@ -347,7 +347,7 @@ function LC.ExecAskLeave(by, target)
         net.WriteString(NameOf(target))
         net.Send(officers)
     end
-    return "You ask leave to execute " .. NameOf(target) .. ". Wait for the word."
+    return "You ask permission to execute " .. NameOf(target) .. ". Wait for the word."
 end
 
 net.Receive("lc_exec_answer", function(_, ply)
@@ -370,7 +370,7 @@ function LC.Execute(by, target)
     Scene(pos, by:Nick() .. " puts the barrel to " .. name .. "'s head. One shot.")
     target:EmitSound("weapons/pistol/pistol_fire2.wav", 90)
     if LC.ChronicleAdd and key then
-        LC.ChronicleAdd({ k = "executed", s = key, o = id, pred = "executed " .. name .. (approved and "" or (refused and " after leave was refused" or " without leave")), pos = pos, w = 5 })
+        LC.ChronicleAdd({ k = "executed", s = key, o = id, pred = "executed " .. name .. (approved and "" or (refused and " after permission was refused" or " without permission")), pos = pos, w = 5 })
     end
     local final = true
     if target:IsPlayer() then
@@ -392,7 +392,7 @@ function LC.Execute(by, target)
     LC.RebelAgainstRules(by, "execute", name)
     hook.Run("LivingCityExecuted", by, target, approved, final)
     if not approved then Judge(by, name, refused) end
-    return approved and "It's done." or "It's done. Nobody gave you leave: someone will answer for that, and it will be you."
+    return approved and "It's done." or "It's done. Nobody gave you permission: someone will answer for that, and it will be you."
 end
 
 -- At the cage or the chair: "execute" (with leave, or a Lieutenant or above), "askleave", "execnoleave".
@@ -400,7 +400,7 @@ function LC.RebelExecDo(by, target, what)
     if not On() then return nil end
     if what == "askleave" then return LC.ExecAskLeave(by, target) end
     if what == "execute" then
-        if not (LC.RebelMayOrder(by) or LC.ExecHasLeave(by, target)) then return "You'd need leave for that. Ask, or do it without." end
+        if not (LC.RebelMayOrder(by) or LC.ExecHasLeave(by, target)) then return "You'd need permission for that. Ask, or do it without." end
         return LC.Execute(by, target)
     end
     if what == "execnoleave" then return LC.Execute(by, target) end
@@ -455,7 +455,7 @@ function LC.ExecJudged(judge, what)
         Told("is to be shot for killing " .. j.name, 4)
         LC.ExecLeave[killer] = { by = nil, untilT = CurTime() + 900 }
         killer:ChatPrint("[Miscount] The word is out: you are to be shot for it. Any of them may, once they have you.")
-        if LC.RadioNotice then LC.RadioNotice("resistance", killer:Nick() .. " killed a prisoner without leave. Bring them in. The order is given.") end
+        if LC.RadioNotice then LC.RadioNotice("resistance", killer:Nick() .. " killed a prisoner without permission. Bring them in. The order is given.") end
     else
         what = "stand"
         Told("killed " .. j.name .. ", and the cell stood by it", 3)
