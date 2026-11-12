@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version 8b9e80a. Admin-only console messages and log lines are left out.
+Made from version 4241061. Admin-only console messages and log lines are left out.
 
-11459 lines, from 302 files.
+11463 lines, from 304 files.
 
 ## Contents
 
@@ -38,6 +38,7 @@ Made from version 8b9e80a. Admin-only console messages and log lines are left ou
 - [lc_lawboard.lua](#lclawboardlua-lclawboardlua) (1)
 - [lc_masterterminal.lua](#lcmasterterminallua-lcmasterterminallua) (1)
 - [lc_nest.lua](#lcnestlua-lcnestlua) (1)
+- [lc_newsfeed.lua](#lcnewsfeedlua-lcnewsfeedlua) (1)
 - [lc_powerbank.lua](#lcpowerbanklua-lcpowerbanklua) (5)
 - [lc_rebelpamphlet.lua](#lcrebelpamphletlua-lcrebelpamphletlua) (1)
 - [lc_recycler.lua](#lcrecyclerlua-lcrecyclerlua) (2)
@@ -86,6 +87,7 @@ Made from version 8b9e80a. Admin-only console messages and log lines are left ou
 - [the Endings menu (superadmins): tune the secret endings live](#the-endings-menu-superadmins-tune-the-secret-endings-live-cllivingcityendingtunelua) (69)
 - [morning exercise, on your screen (sv_livingcity_exercise.lua)](#morning-exercise-on-your-screen-svlivingcityexerciselua-cllivingcityexerciselua) (11)
 - [cl_livingcity_factions.lua](#cllivingcityfactionslua-cllivingcityfactionslua) (23)
+- [cl_livingcity_feeds.lua](#cllivingcityfeedslua-cllivingcityfeedslua) (2)
 - [cl_livingcity_feverdream.lua](#cllivingcityfeverdreamlua-cllivingcityfeverdreamlua) (24)
 - [cl_livingcity_grigori.lua](#cllivingcitygrigorilua-cllivingcitygrigorilua) (10)
 - [cl_livingcity_hints.lua](#cllivingcityhintslua-cllivingcityhintslua) (11)
@@ -148,7 +150,7 @@ Made from version 8b9e80a. Admin-only console messages and log lines are left ou
 - [your career, on one page (the owner's 7 November playtest: "playing as a](#your-career-on-one-page-the-owners-7-november-playtest-playing-as-a-svlivingcitycareerlua) (23)
 - [characters and permanent death](#characters-and-permanent-death-svlivingcitycharacterlua) (28)
 - [checkpoints, turrets, and holding the infestation back](#checkpoints-turrets-and-holding-the-infestation-back-svlivingcitycheckpointslua) (54)
-- [the chronicle (what happened in the city, and what led to it)](#the-chronicle-what-happened-in-the-city-and-what-led-to-it-svlivingcitychroniclelua) (21)
+- [the chronicle (what happened in the city, and what led to it)](#the-chronicle-what-happened-in-the-city-and-what-led-to-it-svlivingcitychroniclelua) (22)
 - [the City Administrator's office, and idle players (the owner, 1 November)](#the-city-administrators-office-and-idle-players-the-owner-1-november-svlivingcitycityadminlua) (72)
 - [weedkiller against the infestation, and against the Combine (the owner, 2026-11-01)](#weedkiller-against-the-infestation-and-against-the-combine-the-owner-2026-11-01-svlivingcitycleanuplua) (28)
 - [the collapse (sociostability BLACK) and the Administrator's last stand](#the-collapse-sociostability-black-and-the-administrators-last-stand-svlivingcitycollapselua) (99)
@@ -541,6 +543,12 @@ Made from version 8b9e80a. Admin-only console messages and log lines are left ou
 `gamemodes/livingcity/entities/entities/lc_nest.lua`
 
 - "Infestation growth"  (name, line 10)
+
+## lc_newsfeed.lua (lc_newsfeed.lua)
+
+`gamemodes/livingcity/entities/entities/lc_newsfeed.lua`
+
+- "News feed"  (name, line 16)
 
 ## lc_powerbank.lua (lc_powerbank.lua)
 
@@ -1109,7 +1117,7 @@ Made from version 8b9e80a. Admin-only console messages and log lines are left ou
 - "A stalker works down below, in the Combine areas: see The Stalker's Lot on your job board (F4). Units leave stalkers alone, their papers are stamped STALKER, and they can scream but not speak. The only way out of being a stalker is death. At the end of the stalker's story is a Combine ball energizer you built yourself; stepping into it is a way out, and that character is gone for good."  (text, line 298)
 - "Civil Protection is one career path: Recruit, Metrocop, Division Leader, then the Overwatch ranks (Prison Guard, Soldier, Elite). The Overwatch ranks need the transhuman conditioning, which the Overwatch Candidate story offers to Division Leaders once they have the experience for Combine Prison Guard (F4 > Career says how much is missing). Accept it and you come out of the dark Overwatch."  (text, line 299)
 - "Not sure what to do? F1 > What now? > Ways to get by lists everything open to you, and what you need for the rest."  (text, line 300)
-- "The city remembers. Things that happen to its people lead to other things, and citizens pass the stories on: press E on a citizen and Chat. F1 > What now? > What's been happening lists the last day, and when you come back a card says what happened while you were away."  (text, line 301)
+- "The city remembers. Things that happen to its people lead to other things, and citizens pass the stories on: press E on a citizen and Chat. Civil Protection's incident feed (a Combine monitor) lists what was formally reported; the Resistance keep a notice board of what their own people saw."  (text, line 301)
 - "Civil Protection units can kick: G (or F2 > Kick). Doors swing open, locked doors give way on the second kick, and people get knocked back. A Combine Soldier kicks a hinged door off its hinges; an Elite sends it flying and knocks out anyone it hits. Maintenance Technicians rehang fallen doors: E to lift it, carry it to the frame, E again."  (text, line 302)
 - "Any Civil Protection unit can fly a scanner from a Combine console or from the Nexus (F2 > Unit tools). Reports earn XP; any rebel you photograph gets a BOLO."  (text, line 303)
 - "Running in front of Civil Protection gets you a beating and sent on your way. Do it a third time within an hour and it's prison."  (text, line 304)
@@ -1608,9 +1616,9 @@ Made from version 8b9e80a. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: open news
 
-- "What's been happening"  (window title, line 32)
+- "The city's stories (staff)"  (window title, line 32)
 - "Nobody is keeping track of the city's stories on this server."  (label or button, line 45)
-- "A quiet day so far. Ask around: people talk (press E on a citizen, then Chat)."  (label or button, line 46)
+- "Nothing has been written down in the last day."  (label or button, line 46)
 
 ## cl_livingcity_cityadmin.lua (cl_livingcity_cityadmin.lua)
 
@@ -2414,6 +2422,16 @@ Made from version 8b9e80a. Admin-only console messages and log lines are left ou
 - "BOLO: {GetNW2String}"  (text, line 420)
 - "Hands cuffed"  (text, line 421)
 - "Hands up"  (text, line 422)
+
+## cl_livingcity_feeds.lua (cl_livingcity_feeds.lua)
+
+`gamemodes/livingcity/gamemode/modules/client/cl_livingcity_feeds.lua`
+
+
+> Note for you (not shown in game): part of: draw rebel
+
+- "What we know"  (drawn on screen, line 63)
+- "Nothing new. Keep your eyes open."  (drawn on screen, line 67)
 
 ## cl_livingcity_feverdream.lua (cl_livingcity_feverdream.lua)
 
@@ -3338,7 +3356,7 @@ Made from version 8b9e80a. Admin-only console messages and log lines are left ou
 - "Show me the way:"  (text, line 145)
 - "Nothing pressing"  (menu option, line 151)
 - "Ways to get by (everything you could do)"  (menu option, line 153)
-- "What's been happening (the city's stories)"  (menu option, line 154)
+- "The city's stories (staff: the chronicle, secrets included)"  (menu option, line 154)
 - "Places in the city"  (text, line 155)
 - "Keep it on screen: always (change)"  (menu option, line 157)
 - "Keep it on screen: new life and urgent (change)"  (text, line 157)
@@ -5965,63 +5983,67 @@ Made from version 8b9e80a. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: tell
 
-- "saw it, and later {pred}."  (text, line 165)
+- "saw it, and later {pred}."  (text, line 169)
 
 > Note for you (not shown in game): A citizen passes one on (Chat in the talk window: sv_livingcity_talk.lua)
 
-- "They say"  (text, line 199)
-- "Did you hear?"  (text, line 199)
-- "People are talking."  (text, line 199)
-- "Keep this to yourself."  (text, line 199)
+- "They say"  (text, line 203)
+- "Did you hear?"  (text, line 203)
+- "People are talking."  (text, line 203)
+- "Keep this to yourself."  (text, line 203)
 
 > Note for you (not shown in game): part of: chronicle rumor
 
-- "I saw it myself."  (text, line 224)
+- "I saw it myself."  (text, line 228)
 
-> Note for you (not shown in game): a timer (regularly)
+> Note for you (not shown in game): (staff only, as the list is: nobody else knows what they weren't there for)
 
-- "While you were away"  (on-screen notice, line 253)
+- "While you were away"  (on-screen notice, line 258)
+
+> Note for you (not shown in game): part of: send news
+
+- "[Miscount] The city's stories are for staff. Ask around (E on a citizen, then Chat), or read a board."  (chat message, line 292)
 
 > Note for you (not shown in game): part of: chronicle killed
 
-- "killed {to}"  (text, line 318)
+- "killed {to}"  (text, line 431)
 
 > Note for you (not shown in game): the game's living city incarcerated moment
 
-- "was taken to the cells{or}"  (text, line 339)
+- "was taken to the cells{or}"  (text, line 452)
 
 > Note for you (not shown in game): the game's living city pickpocket moment
 
-- "was caught with a hand in {to}'s pocket"  (text, line 346)
+- "was caught with a hand in {to}'s pocket"  (text, line 459)
 
 > Note for you (not shown in game): the game's living city burned moment
 
-- "beat {to} as an informer"  (text, line 353)
+- "beat {to} as an informer"  (text, line 466)
 
 > Note for you (not shown in game): the game's living city poster defaced moment
 
-- "painted over a Combine poster"  (text, line 360)
+- "painted over a Combine poster"  (text, line 473)
 
 > Note for you (not shown in game): the game's living city snitched moment
 
-- "reported {to} to Civil Protection"  (text, line 367)
+- "reported {to} to Civil Protection"  (text, line 480)
 
 > Note for you (not shown in game): what the street could see; anything else was done quietly, at home or not at all
 
-- "went to"  (text, line 374)
-- "sat down"  (text, line 374)
-- "drank in the street"  (text, line 374)
-- "drank on duty"  (text, line 374)
-- "shared food"  (text, line 374)
+- "went to"  (text, line 487)
+- "sat down"  (text, line 487)
+- "drank in the street"  (text, line 487)
+- "drank on duty"  (text, line 487)
+- "shared food"  (text, line 487)
 
 > Note for you (not shown in game): and the last week in plain words, secrets included, for the owner
 
-- "The chronicle: stories of the last week, the weightiest first (secrets included: not what players are told)."  (text, line 427)
+- "The chronicle: stories of the last week, the weightiest first (secrets included: not what players are told)."  (text, line 540)
 
 > Note for you (not shown in game): For the debug report.
 
-- "off (lc_chronicle 0)"  (text, line 437)
-- "entries kept %d \| stories in the last day %d, %d of them with a cause"  (message, line 443)
+- "off (lc_chronicle 0)"  (text, line 550)
+- "entries kept %d \| stories in the last day %d, %d of them with a cause"  (message, line 556)
 
 ## the City Administrator's office, and idle players (the owner, 1 November) (sv_livingcity_cityadmin.lua)
 

@@ -11201,15 +11201,40 @@ ok(away and string.find(away, "Olga Volkov saw it", 1, true) ~= nil and #away <=
 C.seen[tostring(p:SteamID())] = t0 + 1900
 ok(LC.ChronicleAway(p, t0 + 2000) == nil, "gone for a minute: no card")
 local news = LC.ChronicleNews(t0 + 2000)
-ok(#news >= 1 and news[1].mins >= 0 and LC.SlashCommands.news ~= nil, "F1 > What now? > What's been happening lists the day's stories (and !news)", #news)
+ok(#news >= 1 and news[1].mins >= 0 and LC.SlashCommands.news ~= nil, "staff: F1 > What now? > The city's stories lists the day (and !news)", #news)
+local newsText = ""
+for _, s in ipairs(news) do newsText = newsText .. s.text end
+ok(string.find(newsText, "informant", 1, true) ~= nil, "the staff list has the secrets")
+p.IsAdmin = function() return false end
+ok(LC.SendNews(p) == false and LC.ChronicleStaff(p) == false, "a player who isn't staff is sent nothing: the stories are heard in the world")
+p.IsAdmin = nil
+-- the two feeds (lc_newsfeed)
+M.byId[9003].rebel = true -- (Irina Belova, who saw the beating, is a sympathizer)
+local feeds = LC.ChronicleFeeds(t0 + 2000)
+local cpText, rbText = "", ""
+for _, it in ipairs(feeds.cp) do cpText = cpText .. it.text .. " " end
+for _, it in ipairs(feeds.rebel) do rbText = rbText .. it.text .. " " end
+ok(string.find(cpText, "DETAINED: OLGA VOLKOV.", 1, true) ~= nil, "the Civil Protection feed lists an arrest", cpText)
+ok(not string.find(cpText, "BEAT", 1, true) and not string.find(cpText, "POSTER", 1, true), "and only what was formally reported: not a unit's beating, not a poster", cpText)
+ok(string.find(rbText, "Unit 30 beat Pavel Orlov.", 1, true) ~= nil, "the Resistance board has what one of their own saw", rbText)
+ok(not string.find(rbText, "informant", 1, true), "and no secrets", rbText)
+local e5 = LC.ChronicleAdd({ k = "hurt", s = 9001, o = 9030, pred = "attacked Unit 30", w = 3, saw = { 9003 } }, t0 + 1950)
+local feeds2 = LC.ChronicleFeeds(t0 + 2000)
+ok(feeds2.cp[1] and feeds2.cp[1].text == "ASSAULT ON UNIT 30." and feeds2.cp[1].hot == true and feeds2.cp[1].more == "SUSPECT: OLGA VOLKOV", "a unit attacked is on the feed at once, in red, with the suspect", feeds2.cp[1] and feeds2.cp[1].text)
+local soon = false
+for _, it in ipairs(feeds2.rebel) do if string.find(it.text, "attacked Unit 30", 1, true) then soon = true end end
+ok(not soon, "word takes five minutes to reach the Resistance's board")
+M.byId[9003].rebel = nil
+ok(#LC.ChronicleFeeds(t0 + 2000).rebel == 0, "with none of their own there to see, the board has nothing")
 ok(#LC.ChronicleReport() >= 1, "the debug report has a line for it")
 -- kept over a map change
 LC.ChronicleSave(t0 + 2000)
 local n = #C.list
 C.list, C.byN, C.n, C.seen = {}, {}, 0, {}
 ok(LC.ChronicleLoad() == n and C.byN[e3.n] and C.byN[e3.n].c == e2.n and C.byN[e1.n].saw[1] == 9001, "saved and read back: the entries, their causes and who saw", #C.list)
-local st2 = LC.ChronicleStories(t0 - 1, t0 + 1000, true)
-ok(st2[1] and st2[1].text == st[1].text, "and the same story is told after it")
+local sameAgain = false
+for _, s2 in ipairs(LC.ChronicleStories(t0 - 1, t0 + 1000, true)) do if string.find(s2.text, "Olga Volkov was taken to the cells by Unit 30.", 1, true) then sameAgain = true end end
+ok(sameAgain, "and the same story is told after it")
 -- off
 _setcvar("lc_chronicle", 0)
 ok(LC.ChronicleAdd({ k = "hurt", s = 9030, o = 9001, pred = "beat Olga Volkov", w = 3 }, t0 + 9000) == nil and LC.ChronicleRumor(p3, nil, t0 + 1200) == nil

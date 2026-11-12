@@ -289,7 +289,8 @@ LC_MODULES = {
         "cl_livingcity_dragrope", -- (the rope a stalker tows a body on)
         "cl_livingcity_fmenus", -- (F3 and F4: each one's key shuts the other's window and opens its own)
         "cl_livingcity_ways",
-        "cl_livingcity_chronicle", -- (F1 > What now? > What's been happening)
+        "cl_livingcity_chronicle", -- (staff: F1 > What now? > The city's stories)
+        "cl_livingcity_feeds", -- (the Civil Protection incident feed and the Resistance notice board: lc_newsfeed)
         "cl_livingcity_outfits",
         "cl_livingcity_lab",
         "cl_livingcity_market", -- (the Administrator's Commissary and market panel)

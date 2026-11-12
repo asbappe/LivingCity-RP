@@ -29,7 +29,7 @@ function LC_CL.OpenNews(t)
     if IsValid(frame) then frame:Remove() end
     local list = t.stories or {}
     frame = vgui.Create("DFrame")
-    frame:SetTitle("What's been happening")
+    frame:SetTitle("The city's stories (staff)")
     frame:SetSize(math.min(ScrW() - 40, 680), math.min(ScrH() - 60, 90 + math.max(1, #list) * 84))
     frame:Center()
     frame:MakePopup()
@@ -43,7 +43,7 @@ function LC_CL.OpenNews(t)
         l:SetWrap(true)
         l:SetAutoStretchVertical(true)
         l:SetText(t.on == false and "Nobody is keeping track of the city's stories on this server."
-            or "A quiet day so far. Ask around: people talk (press E on a citizen, then Chat).")
+            or "Nothing has been written down in the last day.")
         return
     end
     for _, s in ipairs(list) do

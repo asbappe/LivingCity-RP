@@ -16,11 +16,15 @@
     (c): the latest thing of weight in the last three hours that happened to,
     was done by, or was seen by the one who acted.
 
-    Players meet it three ways:
+    Players meet it in the world only:
       - a citizen's Chat (E on a citizen) passes on a story, once the city's
         older rumours (LC.TakeRumor) have run out; one who saw it says so
-      - on joining, "While you were away": what happened since you left
-      - F1 > What now? > What's been happening (or !news): the last day
+      - the Civil Protection incident feed (a placed monitor): only what was
+        formally reported (arrests, reports received, units attacked or lost)
+      - the Resistance notice board (placed): what their own people saw
+    Staff only, for testing: "While you were away" on joining, and the
+    stories list (F1 > What now? > The city's stories, or !news), secrets
+    included.
 
     Kept secret from players (staff see them in the stories file): who
     informs, who leaks to the Resistance, who shelters, and the quiet things
@@ -249,8 +253,9 @@ hook.Add("PlayerInitialSpawn", "LivingCityChronicle", function(ply)
     if not On() then return end
     timer.Simple(25, function()
         if not IsValid(ply) then return end
+        -- (staff only, as the list is: nobody else knows what they weren't there for)
         local ok, text = pcall(LC.ChronicleAway, ply)
-        if ok and text and LC.Notice then LC.Notice(ply, "info", "While you were away", text, 18) end
+        if ok and text and LC.Notice and IsStaff(ply) then LC.Notice(ply, "info", "While you were away", text, 18) end
         C.seen[SeenKey(ply)] = os.time()
         C.dirty = true
     end)
@@ -266,11 +271,16 @@ end)
 ------------------------------------------------------------------------
 -- F1 > What now? > What's been happening (or !news)
 ------------------------------------------------------------------------
+-- Staff only (the owner, 12 November: "only admins should have it for testing purposes; we don't need
+-- to add in psychic lore breaking roleplay breaking concepts"): secrets included.
+local function IsStaff(ply) return IsValid(ply) and (ply:IsAdmin() or (LC.CanEdit ~= nil and LC.CanEdit(ply))) or false end
+LC.ChronicleStaff = IsStaff
+
 function LC.ChronicleNews(now)
     now = now or os.time()
     local out = {}
-    for _, st in ipairs(LC.ChronicleStories(now - NEWS_AGE, now, true)) do
-        if st.score >= 3 and #out < 12 then out[#out + 1] = { text = st.text, mins = math.max(0, math.floor((now - st.t) / 60)) } end
+    for _, st in ipairs(LC.ChronicleStories(now - NEWS_AGE, now, false)) do
+        if #out < 20 then out[#out + 1] = { text = st.text, mins = math.max(0, math.floor((now - st.t) / 60)) } end
     end
     table.sort(out, function(a, b) return a.mins < b.mins end)
     return out
@@ -278,6 +288,10 @@ end
 
 function LC.SendNews(ply)
     if not IsValid(ply) or not LC.SendCompressed then return false end
+    if not IsStaff(ply) then
+        ply:ChatPrint("[Miscount] The city's stories are for staff. Ask around (E on a citizen, then Chat), or read a board.")
+        return false
+    end
     LC.SendCompressed("lc_chronicle", { on = On(), stories = On() and LC.ChronicleNews() or {} }, ply)
     return true
 end
@@ -285,6 +299,105 @@ end
 if util.AddNetworkString then util.AddNetworkString("lc_chronicle") end
 LC.SlashCommands = LC.SlashCommands or {}
 LC.SlashCommands.news = function(ply) LC.SendNews(ply) end
+
+------------------------------------------------------------------------
+-- The two feeds (lc_newsfeed: the Civil Protection incident feed, the Resistance notice board)
+------------------------------------------------------------------------
+local FEED_MAX = 8
+local WORD_TRAVELS = 300 -- seconds before the Resistance's board has it
+
+local function PlayerOfKey(id)
+    if not IsPlayerKey(id) then return nil end
+    for _, ply in ipairs(player.GetAll()) do if KeyOf(ply) == id then return ply end end
+    return nil
+end
+local function IsUnitId(id)
+    if id == nil then return false end
+    local m = LC.Minds and LC.Minds.byId[id]
+    if m then return m.role == "cop" end
+    local ply = PlayerOfKey(id)
+    return ply ~= nil and LC.PlayerIsCP ~= nil and LC.PlayerIsCP(ply) or false
+end
+local function IsRebelId(id)
+    if id == nil then return false end
+    local m = LC.Minds and LC.Minds.byId[id]
+    if m then return m.rebel == true or (m.p ~= nil and m.p.rebel == true) end
+    local ply = PlayerOfKey(id)
+    return ply ~= nil and ply:GetNW2String("lcf_faction", "") == "resistance"
+end
+local function Short(s, n) s = tostring(s or "") if #s > n then return string.sub(s, 1, n - 2) .. ".." end return s end
+
+-- What Civil Protection's feed says of an entry: only what was formally reported (an arrest, a report
+-- received, a unit attacked or lost, a subject killed by a unit). Nil: not on the feed.
+local function CPLine(e)
+    local s, o = string.upper(Short(e.sn, 24)), e.o ~= nil and string.upper(Short(NameOf(e.o), 24)) or nil
+    if e.k == "arrest" then return "DETAINED: " .. s .. ".", false end
+    if (e.k == "snitch" or e.k == "did:inform") and o then return "REPORT RECEIVED. SUBJECT: " .. o .. ".", false end
+    if e.k == "hurt" and o and IsUnitId(e.o) and not IsUnitId(e.s) then return "ASSAULT ON " .. o .. ".", true, "SUSPECT: " .. s end
+    if e.k == "killed" and o and IsUnitId(e.o) then return "UNIT LOST: " .. o .. ".", true, "SUSPECT: " .. s end
+    if e.k == "killed" and o and IsUnitId(e.s) then return "AMPUTATED: " .. o .. ".", false, "BY: " .. s end
+    return nil
+end
+
+-- What the Resistance's board has: things the street could see, that one of their own (a sympathizer,
+-- a Resistance player) saw or was part of. It can be wrong: an accusation goes up as it was shouted.
+local REBEL_KINDS = { hurt = true, killed = true, died = true, arrest = true, burned = true,
+    ["did:accuse"] = true, ["did:brutal"] = true, ["did:tantrum"] = true, ["did:sabotage"] = true, ["did:defy"] = true }
+local function RebelLine(e)
+    if e.sec or not REBEL_KINDS[e.k] then return nil end
+    local known = IsRebelId(e.s) or IsRebelId(e.o)
+    if not known then for _, id in ipairs(e.saw or {}) do if IsRebelId(id) then known = true break end end end
+    if not known then return nil end
+    return Short(e.sn .. " " .. e.pred .. ".", 62)
+end
+
+function LC.ChronicleFeeds(now)
+    Ensure()
+    now = now or os.time()
+    local cp, rebel = {}, {}
+    for i = #C.list, 1, -1 do
+        local e = C.list[i]
+        if now - e.t > RUMOUR_AGE then break end
+        local mins = math.max(0, math.floor((now - e.t) / 60))
+        if #cp < FEED_MAX then
+            local text, hot, more = CPLine(e)
+            if text then cp[#cp + 1] = { text = text, hot = hot or nil, more = more, mins = mins } end
+        end
+        if #rebel < FEED_MAX and now - e.t >= WORD_TRAVELS then
+            local text = RebelLine(e)
+            if text then rebel[#rebel + 1] = { text = text, mins = mins } end
+        end
+    end
+    return { cp = cp, rebel = rebel }
+end
+
+local function FeedSig(f)
+    local parts = {}
+    for _, it in ipairs(f.cp) do parts[#parts + 1] = it.text end
+    parts[#parts + 1] = "|"
+    for _, it in ipairs(f.rebel) do parts[#parts + 1] = it.text end
+    return table.concat(parts, ";")
+end
+
+function LC.ChronicleSendFeeds(to, force)
+    if not On() or not LC.SendCompressed then return false end
+    local f = LC.ChronicleFeeds()
+    local sig = FeedSig(f)
+    if not force and sig == C.feedSig and os.time() - (C.feedAt or 0) < 600 then return false end
+    if not to then C.feedSig, C.feedAt = sig, os.time() end
+    LC.SendCompressed("lc_feeds", f, to or player.GetAll())
+    return true
+end
+
+if util.AddNetworkString then util.AddNetworkString("lc_feeds") end
+timer.Create("LivingCityChronicleFeeds", 20, 0, function()
+    if not On() or #player.GetAll() == 0 then return end
+    local ok, err = pcall(LC.ChronicleSendFeeds)
+    if not ok and LC.Error then LC.Error("chronicle (feeds)", err) end
+end)
+hook.Add("PlayerInitialSpawn", "LivingCityChronicleFeeds", function(ply)
+    timer.Simple(12, function() if IsValid(ply) and On() then pcall(LC.ChronicleSendFeeds, ply, true) end end)
+end)
 
 ------------------------------------------------------------------------
 -- What's watched (the game's own moments; nothing here changes them)
