@@ -1684,3 +1684,7 @@ Type them in the server console on the host panel, or in your own game console (
   Notes:
 - [ ] **The new name, Miscount:** the server list and the F-menus say Miscount, chat lines start `[Miscount]`, the guide is headed "MISCOUNT: A GUIDE", and with !build the editor is under Q > Tools > Miscount ("Miscount Editor"). Every `lc_` command still works as before.
   Notes:
+- [ ] **The chronicle (12 November):** play for a while with named citizens and units about (get someone beaten or arrested, wait for a break in the street). Then press E on a citizen and Chat a few times: once the usual rumours run out you should hear a story ("They say ...", or "I saw it myself. ..."). F1 > What now? > What's been happening (or `!news`) lists the day. Leave for ten minutes or more and rejoin: a "While you were away" card about 25 seconds in. Nobody should ever tell you who informs.
+  Notes:
+- [ ] **The chronicle, for you:** after a week, copy `garrysmod/data/livingcity/chronicle/` off the server (the `_stories.txt` file is the readable one) and bring it back.
+  Notes:

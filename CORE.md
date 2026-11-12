@@ -60,6 +60,7 @@ This is the master technical document. It lists what the owner's server, files, 
 | Households: names, heads and members (by citizen number) | `data/livingcity/households.json` | sv_livingcity_households.lua |
 | The Administrator's Commissary rules and the market's stock and demand | `data/livingcity/<map>_market.json` | sv_livingcity_market.lua |
 | The city's minds: logs to bring back, and the minds kept over a map change (`lc_minds`) | `data/livingcity/minds/<map>_<date>_<time>.txt`, `data/livingcity/minds/<map>_state.json` | sv_livingcity_minds.lua |
+| The chronicle: what happened and what led to it (`lc_chronicle`) | `data/livingcity/chronicle/<map>.json` (the entries, and when each player was last here), `data/livingcity/chronicle/<map>_stories.txt` (the last week in plain words, secrets included, for the owner) |
 | Pose Recorder recordings | the player's `data/pose_recorder/<name>.json` | pose_recorder/ |
 
 Every recording and song is sent to players with `resource.AddFile` when the map starts.

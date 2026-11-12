@@ -58,6 +58,7 @@ _setcvar("lc_ledger", 0) -- (the state of the city, day to day, and its effects 
 _setcvar("lc_small_server", 0) -- (small-server mode turns on with few players online: tested on its own, SmallServerTests)
 _setcvar("lc_bad_deal_chance", 0) -- (black market deals that go bad at random: tested on their own, StreetCrimeTests)
 _setcvar("lc_minds", 0) -- (watching the city's minds draws random numbers: tested on its own, MindsTests)
+_setcvar("lc_chronicle", 0) -- (the chronicle writes down what the other tests do: tested on its own, ChronicleTests)
 _setcvar("lc_npc_vices", 0) -- (citizens drinking and smoking at random: tested on its own, MindsTests)
 LC.CollapseNpcRoll = function() return 3 end -- (the city's own Administrator refuses the G-Man three times, as she always did: tested on its own, CollapseOwnTests)
 _setcvar("lc_quest_allies", 0) -- (friendly NPCs on violent jobs: tested on their own, in QuestSquadTests)
@@ -11141,6 +11142,83 @@ ok(#LC.Minds.buf == n0 and LC.MindsSeem(v) == "", "lc_minds 0: nothing is watche
 for _, e in ipairs({ v, f, cop }) do if IsValid(e) then e:Remove() end end
 end
 MindsTests()
+
+function ChronicleTests()
+section("The chronicle: what happened, and what led to it")
+_setcvar("lc_chronicle", 1)
+local C, M = LC.Chron, LC.Minds
+C.list, C.byN, C.n, C.seen, C.loaded = {}, {}, 0, {}, true
+local keepMinds = M.byId
+M.byId = { [9001] = { id = 9001, name = "Olga Volkov", role = "citizen" }, [9002] = { id = 9002, name = "Pavel Orlov", role = "citizen" },
+    [9003] = { id = 9003, name = "Irina Belova", role = "citizen" }, [9030] = { id = 9030, name = "Unit 30", role = "cop" } }
+local t0 = 1000000
+local e1 = LC.ChronicleAdd({ k = "hurt", s = 9030, o = 9002, pred = "beat Pavel Orlov", w = 3, saw = { 9001, 9003 } }, t0)
+ok(e1 and e1.c == nil and e1.sn == "Unit 30" and #C.list == 1, "a thing that happened is written down: who, what, to whom, who saw")
+ok(LC.ChronicleAdd({ k = "hurt", s = 9030, o = 9002, pred = "beat Pavel Orlov", w = 3 }, t0 + 30) == e1 and #C.list == 1, "the same blow again within two minutes is one entry")
+local e2 = LC.ChronicleBroke(M.byId[9001], "defy", "went to paint over a poster, and sides with the Resistance now", t0 + 600)
+ok(e2 and e2.c == e1.n and e2.pred == "went to paint over a poster" and not e2.sec, "someone who saw it and later broke: the beating is what led to it (and whose side they took isn't street talk)", e2 and e2.pred)
+local e3 = LC.ChronicleAdd({ k = "arrest", s = 9001, o = 9030, pred = "was taken to the cells by Unit 30", w = 3 }, t0 + 900)
+ok(e3 and e3.c == e2.n, "then taken in: what they did is what led to it")
+local st = LC.ChronicleStories(t0 - 1, t0 + 1000, true)
+ok(#st == 1 and st[1].text == "Unit 30 beat Pavel Orlov. Olga Volkov saw it, and later went to paint over a poster. Then, Olga Volkov was taken to the cells by Unit 30.",
+    "one story, told from its start", st[1] and st[1].text)
+-- secrets
+local e4 = LC.ChronicleBroke(M.byId[9002], "inform", "is an informant now", t0 + 1000)
+ok(e4 and e4.sec == true and e4.c == e1.n, "an informer is written down, with why")
+local told = ""
+for _, s in ipairs(LC.ChronicleStories(t0 - 1, t0 + 1100, true)) do told = told .. s.text end
+ok(not string.find(told, "informant", 1, true), "players are never told who informs")
+local staff = ""
+for _, s in ipairs(LC.ChronicleStories(t0 - 1, t0 + 1100, false)) do staff = staff .. s.text end
+ok(string.find(staff, "Pavel Orlov is an informant now", 1, true) ~= nil, "the owner's stories file has it")
+local quiet = LC.ChronicleBroke(M.byId[9003], "tantrum", "let it out at home", t0 + 1100)
+ok(quiet and quiet.sec == true and quiet.w == 1, "what's done quietly at home is kept from the street, and leads to nothing")
+local late = LC.ChronicleAdd({ k = "did:tantrum", s = 9003, pred = "shouted in the street", w = 3 }, t0 + 5 * 3600)
+ok(late and late.c == nil, "three hours on, nothing is put down to it any more")
+-- a citizen passes it on, once
+local p = newPlayer("ChronA", "citizen")
+local line = LC.ChronicleRumor(p, nil, t0 + 1200)
+ok(line and string.find(line, "Unit 30 beat Pavel Orlov", 1, true) ~= nil, "Chat: a citizen passes the story on", line)
+local line2 = LC.ChronicleRumor(p, nil, t0 + 1200)
+ok(line2 == nil or not string.find(line2, "taken to the cells", 1, true), "each story once to each player", line2)
+local witness = ents.Create("npc_citizen")
+witness:Spawn()
+witness.lcProfile = { id = 9003, name = "Irina Belova", role = "citizen" }
+local p2 = newPlayer("ChronB", "citizen")
+local sawLine = LC.ChronicleRumor(p2, witness, t0 + 1200)
+ok(sawLine and string.sub(sawLine, 1, 16) == "I saw it myself.", "one who was there says so", sawLine)
+local inIt = ents.Create("npc_citizen")
+inIt:Spawn()
+inIt.lcProfile = { id = 9001, name = "Olga Volkov", role = "citizen" }
+local p3 = newPlayer("ChronC", "citizen")
+local own = LC.ChronicleRumor(p3, inIt, t0 + 1200)
+ok(own == nil or not string.find(own, "Olga Volkov", 1, true), "nobody gossips about themselves", own)
+-- on joining
+ok(LC.ChronicleAway(p, t0 + 2000) == nil, "never here before: no card")
+C.seen[tostring(p:SteamID())] = t0 - 100
+local away = LC.ChronicleAway(p, t0 + 2000)
+ok(away and string.find(away, "Olga Volkov saw it", 1, true) ~= nil and #away <= 400, "back after a while: what happened while you were away", away)
+C.seen[tostring(p:SteamID())] = t0 + 1900
+ok(LC.ChronicleAway(p, t0 + 2000) == nil, "gone for a minute: no card")
+local news = LC.ChronicleNews(t0 + 2000)
+ok(#news >= 1 and news[1].mins >= 0 and LC.SlashCommands.news ~= nil, "F1 > What now? > What's been happening lists the day's stories (and !news)", #news)
+ok(#LC.ChronicleReport() >= 1, "the debug report has a line for it")
+-- kept over a map change
+LC.ChronicleSave(t0 + 2000)
+local n = #C.list
+C.list, C.byN, C.n, C.seen = {}, {}, 0, {}
+ok(LC.ChronicleLoad() == n and C.byN[e3.n] and C.byN[e3.n].c == e2.n and C.byN[e1.n].saw[1] == 9001, "saved and read back: the entries, their causes and who saw", #C.list)
+local st2 = LC.ChronicleStories(t0 - 1, t0 + 1000, true)
+ok(st2[1] and st2[1].text == st[1].text, "and the same story is told after it")
+-- off
+_setcvar("lc_chronicle", 0)
+ok(LC.ChronicleAdd({ k = "hurt", s = 9030, o = 9001, pred = "beat Olga Volkov", w = 3 }, t0 + 9000) == nil and LC.ChronicleRumor(p3, nil, t0 + 1200) == nil
+    and LC.ChronicleAway(p, t0 + 9000) == nil, "lc_chronicle 0: nothing is written or told")
+for _, e in ipairs({ witness, inIt }) do if IsValid(e) then e:Remove() end end
+C.list, C.byN, C.n, C.seen = {}, {}, 0, {}
+M.byId = keepMinds
+end
+ChronicleTests()
 
 function BrainTests()
 section("The director and free talk: a hosted model, on a short list")

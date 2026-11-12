@@ -344,6 +344,10 @@ function LC.BuildReport()
         for _, l in ipairs(LC.MindsReport()) do out[#out + 1] = l end
         if LC.MindsActReport then for _, l in ipairs(LC.MindsActReport()) do out[#out + 1] = l end end
     end
+    if LC.ChronicleReport then
+        Section(out, "The chronicle (sv_livingcity_chronicle.lua)")
+        for _, l in ipairs(LC.ChronicleReport()) do out[#out + 1] = l end
+    end
     if LC.BrainReport then
         Section(out, "The director and free talk (sv_livingcity_brain.lua)")
         for _, l in ipairs(LC.BrainReport()) do out[#out + 1] = l end

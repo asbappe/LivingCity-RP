@@ -96,6 +96,7 @@ chat command /lie
 chat command /lock
 chat command /loserecord
 chat command /meet
+chat command /news
 chat command /nod
 chat command /outfits
 chat command /papers
@@ -566,6 +567,7 @@ setting lc_chip_dreams = 3
 setting lc_chip_notice = 0.15
 setting lc_chip_price = 500
 setting lc_chipless_sleep = 90
+setting lc_chronicle = 1
 setting lc_citizen_advice = 1
 setting lc_citizen_lead = 1
 setting lc_citizen_lead_range = 3000

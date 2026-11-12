@@ -238,6 +238,8 @@ local function Chat(ply, npc, st)
     CitSay(npc, st, Vo(st.gender, string.format("question%02d", math.random(1, 20))), 65)
     -- a rumour if they've heard one (warm, they always share it)
     local line = (feel >= WARM or math.random() < 0.7) and LC.TakeRumor and LC.TakeRumor(ply)
+    -- or a story from the chronicle: something that happened, and what led to it (sv_livingcity_chronicle.lua)
+    if not line and LC.ChronicleRumor then line = LC.ChronicleRumor(ply, npc) end
     -- a sympathizer who likes you: where the Resistance can be found
     if not line and st.rebel and feel >= WARM and LC.SafeHouseHint then line = LC.SafeHouseHint(ply) end
     return line and ("'" .. line .. "'") or Pick(SMALL_TALK)
