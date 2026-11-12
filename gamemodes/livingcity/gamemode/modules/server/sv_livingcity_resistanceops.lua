@@ -775,10 +775,10 @@ local cvSlaves = CreateConVar("lc_vort_slaves", "2", FLAGS, "Shackled vortigaunt
 LC.VortSlaves = LC.VortSlaves or {}
 local nextSlave = 0
 local BROOM_MODEL = "models/props_c17/pushbroom.mdl"
--- where the broom sits (in the right claw when the model has the attachment, on the body otherwise),
--- and how far it swings: tune here if it looks wrong in game
-local BROOM = { claw = { pos = Vector(0, 0, 0), ang = Angle(50, 0, 0) }, body = { pos = Vector(16, 8, 34), ang = Angle(50, 0, 0) },
-    swing = 12, tilt = 7, rate = 2.4 }
+-- where the broom sits, from the vortigaunt's feet, and how far it swings. (The owner, 12 November:
+-- held in the claw it stuck out to the side, the claw's own angle being the engine's; now it sits
+-- out in front, head on the ground, handle up to the hands, the way a stalker holds it: lc_broom_hold.)
+local BROOM = { body = { pos = Vector(34, -6, 2), ang = Angle(-35, 0, 0) }, swing = 12, tilt = 7, rate = 2.4 }
 local SLAVE_MONSTERS = { "npc_headcrab", "npc_headcrab_fast", "npc_headcrab_black", "npc_headcrab_poison",
     "npc_zombie", "npc_zombie_torso", "npc_fastzombie", "npc_fastzombie_torso", "npc_poisonzombie", "npc_zombine" }
 
@@ -800,9 +800,8 @@ local function Broom(v, s)
     e:SetPos(v:GetPos() + Vector(0, 0, 40))
     e:Spawn()
     if e.SetSolid then e:SetSolid(SOLID_NONE) end
-    local att = v.LookupAttachment and v:LookupAttachment("rightclaw") or 0
-    local fit = (att and att > 0) and BROOM.claw or BROOM.body
-    if att and att > 0 then e:SetParent(v, att) else e:SetParent(v) end
+    local fit = BROOM.body
+    e:SetParent(v)
     if e.SetLocalPos then e:SetLocalPos(fit.pos) end
     if e.SetLocalAngles then e:SetLocalAngles(fit.ang) end
     s.broom, s.fit = e, fit
