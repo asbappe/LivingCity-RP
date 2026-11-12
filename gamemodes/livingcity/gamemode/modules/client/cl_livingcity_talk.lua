@@ -36,8 +36,8 @@ net.Receive("lc_talk", function()
         local id, label = net.ReadString(), net.ReadString()
         if id and id ~= "" then give[#give + 1] = { id = id, label = label or id } end
     end
-    local canChair = net.ReadBool()
-    local tall = 330 + (seem ~= "" and 34 or 0) + (canChair and 30 or 0)
+    local canChair, canCage = net.ReadBool(), net.ReadBool()
+    local tall = 330 + (seem ~= "" and 34 or 0) + (canChair and 30 or 0) + (canCage and 30 or 0)
 
     if IsValid(frame) then frame:Remove() end
     frame = vgui.Create("DFrame")
@@ -105,6 +105,7 @@ net.Receive("lc_talk", function()
         m:Open()
     end
     if canRecruit then Button("Ask them to keep watch for us (a lookout)", "recruit") end
+    if canCage then Button("Take them prisoner (to the holding cage)", "cage") end
     if canChair then Button("Take them to interrogation chair", "chair") end
     Button("Pick their pocket (Guile)", "pick", canPick)
     if canInform then Button("Inform on them to Civil Protection", "inform") end

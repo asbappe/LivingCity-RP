@@ -24,12 +24,13 @@ net.Receive("lc_chair", function()
         return
     end
     local name, said, hits, max = net.ReadString(), net.ReadString(), net.ReadUInt(4), net.ReadUInt(4)
+    local fromCage = net.ReadBool()
     if IsValid(frame) then frame:Remove() end
     frame = vgui.Create("DFrame")
     frame:SetTitle(name .. ", in the chair")
-    frame:SetSize(420, 290)
+    frame:SetSize(420, fromCage and 320 or 290)
     -- low on the screen, off to the right, and see-through, as the talk window is
-    frame:SetPos(math.floor(ScrW() * 0.62), ScrH() - 290 - 60)
+    frame:SetPos(math.floor(ScrW() * 0.62), ScrH() - (fromCage and 320 or 290) - 60)
     frame:MakePopup()
     frame.Paint = function(_, w, h)
         draw.RoundedBox(6, 0, 0, w, h, Color(16, 15, 13, 150))
@@ -55,6 +56,7 @@ net.Receive("lc_chair", function()
     Button("Ask what they've done", "done")
     Button("Ask what they've seen", "seen")
     Button(hits >= max and "Hit them (any more would kill them)" or ("Hit them (" .. hits .. " of " .. max .. ")"), "hit", hits < max)
+    if fromCage then Button("Back to the cage with them", "cage") end
     Button("Let them go", "free")
     Button("Step back", nil)
 end)

@@ -46,10 +46,10 @@ It says "later" and "then", never "because": the link is the likeliest cause, no
 
 ## The Resistance's interrogation chair (12 November)
 
-The owner: "resistance interrogations force people into a chair entity and the resistance members use their fists to beat them", "please spawn a harsh bright spotlight above the chair that shines down onto the chair to borderline blind the person or NPC being interrogated", and on the risk: "the resistance can then also be morally gray and push good people towards CP and loyalism". **This first part is a Resistance player questioning a citizen** (`sv_livingcity_chair.lua`, entity `lc_interrochair`; setting `lc_chair`, 1).
+The owner: "resistance interrogations force people into a chair entity and the resistance members use their fists to beat them", "please spawn a harsh bright spotlight above the chair that shines down onto the chair to borderline blind the person or NPC being interrogated", and on the risk: "the resistance can then also be morally gray and push good people towards CP and loyalism". **This first part is a Resistance Fighter or above (the owner: "Resistance fighters and above") questioning a citizen** (`sv_livingcity_chair.lua`, entity `lc_interrochair`; setting `lc_chair`, 1).
 
 - **The chair** (editor: "Fixture: Resistance interrogation chair"): a wooden chair with a lamp hung 112 units over it, pointing straight down. Dark while empty. When someone is sat in it the lamp comes on: a visible beam, a tight and very bright cone of light on the chair, and the bulb's glare.
-- **Taking someone to it.** With a free chair within 1200 units of a citizen, a Resistance player's talk window (E on the citizen) has **"Take them to interrogation chair"**. The citizen thinks less of you for it, walks to the chair (90 seconds at most, or they slip away), is pushed down into it and held there. People within 600 units see a line of the scene.
+- **Taking someone to it.** With a free chair within 1200 units of a citizen, the talk window of a Resistance Fighter or above (E on the citizen) has **"Take them to interrogation chair"**. The citizen thinks less of you for it, walks to the chair (90 seconds at most, or they slip away), is pushed down into it and held there. People within 600 units see a line of the scene.
 - **Asking** (E on the chair): **Ask what they've done**, **Ask what they've seen**, **Hit them**, **Let them go**. Nobody talks at first. Each blow is with the fists: 6 health, never under 10 health, six blows at most. Each wears down their resolve, 1 to 5 blows' worth, from who they are (the brave, the proud and the tough hold out longest).
 - **What comes out is from the chronicle:** something they really did, secrets included (this is how an informer is found), or something they really saw or had done to them. Nothing is told twice.
 - **The risk.** Beat someone twice or more who has nothing to tell and has told nothing, and ask what they've done: it was for nothing. They and their friends turn on you (the grudge is the kind the minds inform over), a sympathizer stops being one, and "beat NAME in the chair for nothing" goes in the chronicle for the street to tell.
@@ -57,14 +57,28 @@ The owner: "resistance interrogations force people into a chair entity and the r
 - **Players in the chair:** the game of anyone sat in it (once that exists) is all but whited out by the lamp; the screen effect is in already (`cl_livingcity_chair.lua`).
 - **Not checked in the game:** how the lamp, beam and light look, and how the citizen sits on this chair model.
 
+## The Resistance's holding cage (12 November)
+
+The owner: "They should have a holding cell that is a cage (the chain link fences in a tight square) and with the chain link door/gate that is on the side closest/facing the admin that places the entity, and it functions as a door that can opened/closed by the resistance but is permanently locked to anyone in custody. it should more or less mirror the CP prison/jail system but using an entity with the spawned props." (`sv_livingcity_rebelhold.lua`, entity `lc_rebelcage`; settings `lc_rebel_cage` 1, `lc_rebel_hold` 1200.)
+
+- **The cage** (editor: "Fixture: Resistance holding cage"): four chain link panels in a tight square, one a side, made by the entity and removed with it. **The gate is the side facing whoever placed it.** It swings out on its left-hand corner.
+- **Who may use it:** a Resistance **Fighter or above** (the same for the chair). E on any side of the cage opens its window: **Open/Shut the gate**, and for each of those held, **To the interrogation chair** and **Let them go**. Anyone else pressing E is told it's locked; so is anyone held in it.
+- **Taking a prisoner.** With a cage with room within 1500 units of a citizen, the talk window has **"Take them prisoner (to the holding cage)"**. Any citizen: a sympathizer, a loyalist, an informant. They think less of you, walk to the cage (two minutes at most) and are locked in. **Four to a cage.**
+- **Held.** They stand in the cage and stay there. After `lc_rebel_hold` seconds (1200: twenty minutes) they are let out, so nobody is held for ever.
+- **To the chair and back.** From the cage's window one of those held is sent to the nearest free interrogation chair within 1200 units of the cage. The chair's window then also has **"Back to the cage with them"**; a prisoner left alone in the chair is marched back to the cage rather than walking free. The time held carries on from when they were first locked up.
+- **It is known.** "locked NAME in the Resistance's cage" goes in the chronicle (once), the prisoner thinks of it as an arrest and holds it against whoever took them, and their friends know who took them.
+- **Civil Protection needs no cage** (the owner): their interrogation pulls from whoever is already in the cells.
+- **Not checked in the game:** the fence model and its size (so how tight the square is), how the gate swings, and where those held stand.
+
 ## The plan this belongs to
 
 1. **The chronicle** (done): what happens is kept with what led to it.
 2. **Show it to players, in the world** (done: citizens' rumours, the two boards). Next: **radio news** (the owner: "if others want to hear it, they can tune into a radio"): the Union band reads the Combine's version between its lines, Freq 7 the Resistance's, at the stations' own slow pace; behind a setting, since it changes what the stations play.
 3. **Interrogation that draws on the chronicle** (the owner said yes, 12 November):
-   - **done:** the Resistance's chair, with its lamp, for a Resistance player questioning a citizen (above)
-   - **next:** the Resistance's own people doing it by themselves to those they suspect; players in the chair, which needs a way for the Resistance to cuff someone and escort them back to rebel ground
-   - **next, changes an existing feature (behind a setting):** Civil Protection's interrogation in the cells draws on the chronicle too, and the units are seen beating the prisoner with the stun baton while they ask
+   - **done:** the Resistance's chair with its lamp, and their holding cage, for a Fighter or above and citizen prisoners (above)
+   - **next:** Civil Protection units and players as the Resistance's prisoners (a way to cuff and escort them), and players in the chair
+   - **next:** the Resistance's own people taking suspects by themselves: whoever was publicly accused of informing, or was seen going to a unit, most suspected first; one at a time to the chair, the others watching
+   - **next, replaces the existing interrogation** (the owner: "Please replace the existing interrogation with the new chair interrogation"): Civil Protection get a chair with a lamp in the prison; it pulls from whoever is already in the cells (no holding spot for them); the units beat the prisoner with the stun baton while they ask. **To settle with the owner first:** what becomes of a player prisoner's choices in today's interrogation (tell the truth, lie, say nothing, bargain).
 4. **Revenge jobs**: a wrong in the chronicle plus a grudge in the minds makes a job (a friend beaten, an informer who named you, a unit attacked). Best after interrogation can reveal names.
 5. **Events become consequences** (each behind a setting): a block raid hits the block an informant named, a sweep follows real sabotage, curfew follows unrest.
 6. **A storyteller for pacing**: rules that decide which simmering thread boils over when the city is quiet, and hold back when it is busy.

@@ -54,7 +54,8 @@ end
 
 local function On() return cvOn:GetBool() end
 local function Pick(t) return t[math.random(#t)] end
-local function IsRebel(ply) return IsValid(ply) and ply:IsPlayer() and ply:GetNW2String("lcf_faction", "") == "resistance" end
+-- (a Resistance Fighter or above: the owner, 12 November, "I want Resistance fighters and above to be able to interrogate")
+local function IsRebel(ply) return IsValid(ply) and ply:IsPlayer() and ply:GetNW2String("lcf_faction", "") == "resistance" and ply:GetNW2Int("lcf_rank", 1) >= 3 end
 local function NameOf(npc) return (LC.NPCStr and LC.NPCStr(npc, "lc_pname", "") ~= "" and LC.NPCStr(npc, "lc_pname", "")) or (npc.lcProfile and npc.lcProfile.name) or "the citizen" end
 local function Scene(pos, text)
     for _, ply in ipairs(player.GetAll()) do
@@ -84,8 +85,10 @@ function LC.ChairFor(ply, npc)
     if not On() or not IsRebel(ply) or not IsValid(npc) then return nil end
     local st = LC.NPCs and LC.NPCs[npc]
     if not st or st.role ~= "citizen" or SessionOfNPC(npc) then return nil end
+    if LC.RebelHeld and LC.RebelHeld[npc] then return nil end -- (held in the cage: sent from the cage's own window)
     return LC.ChairNear(npc:GetPos())
 end
+function LC.ChairHas(npc) return SessionOfNPC(npc) ~= nil end
 
 -- How many blows before they talk: 1 to 5, from who they are.
 local function Resolve(npc)
@@ -148,12 +151,13 @@ local function Seat(s)
 end
 
 -- "Take them to interrogation chair" in the talk window (sv_livingcity_talk.lua). Returns what's said, and whether the window closes.
-function LC.ChairTake(ply, npc)
+-- from: { cage, at } when they come out of the holding cage (sv_livingcity_rebelhold.lua): they can be sent back to it.
+function LC.ChairTake(ply, npc, from)
     local chair = LC.ChairFor(ply, npc)
     if not chair then return "There's no chair near enough for that.", false end
     local st = LC.NPCs[npc]
     if st.state == "inline" and LC.LeaveLine then LC.LeaveLine(npc, st) end
-    local s = { chair = chair, npc = npc, st = st, asker = ply, at = CurTime(), hits = 0, told = {} }
+    local s = { chair = chair, npc = npc, st = st, asker = ply, at = CurTime(), hits = 0, told = {}, from = from }
     S[chair] = s
     st.questLock = true
     if LC.Remember then LC.Remember(npc, ply, -2) end
@@ -206,6 +210,14 @@ function LC.ChairDo(ply, chair, what)
         Release(s)
         return "You let them go."
     end
+    if what == "cage" then
+        if not (s.from and IsValid(s.from.cage) and LC.CageTake) then return nil end
+        local from = s.from
+        Scene(chair:GetPos(), NameOf(npc) .. " is pulled out of the chair and marched back to the cage.")
+        Release(s)
+        LC.CageTake(ply, npc, from.cage, from)
+        return "Back to the cage with them."
+    end
     if what == "hit" then
         if s.hits >= MAX_HITS then return "Any more and you'd kill them." end
         s.hits = s.hits + 1
@@ -243,6 +255,7 @@ local function SendMenu(ply, s, said)
     net.WriteString(said or "")
     net.WriteUInt(s.hits, 4)
     net.WriteUInt(MAX_HITS, 4)
+    net.WriteBool(s.from ~= nil and IsValid(s.from.cage))
     net.Send(ply)
 end
 
@@ -251,7 +264,8 @@ function LC.ChairUse(ply, chair)
     if not On() or not IsValid(ply) or not IsValid(chair) then return end
     local s = S[chair]
     if not IsRebel(ply) then
-        ply:ChatPrint(s and s.seated and "[Miscount] This is none of your business. Walk on." or "[Miscount] A chair, under a lamp. Not yours.")
+        ply:ChatPrint(ply:GetNW2String("lcf_faction", "") == "resistance" and "[Miscount] The chair is for Fighters and above."
+            or (s and s.seated and "[Miscount] This is none of your business. Walk on." or "[Miscount] A chair, under a lamp. Not yours."))
         return
     end
     if not s then
@@ -291,8 +305,14 @@ function LC.ChairTick(now)
             local near = IsValid(s.asker) and s.asker:GetPos():DistToSqr(chair:GetPos()) < STAY * STAY
             if near then s.farSince = nil else s.farSince = s.farSince or now end
             if now - s.seatedAt > SESSION or (s.farSince and now - s.farSince > 20) then
-                Scene(chair:GetPos(), NameOf(npc) .. " gets up out of the chair, unsteadily.")
-                Release(s)
+                local from = s.from
+                if from and IsValid(from.cage) and LC.CageTake then -- (a prisoner: back to the cage, not out of the door)
+                    Release(s)
+                    LC.CageTake(s.asker, npc, from.cage, from)
+                else
+                    Scene(chair:GetPos(), NameOf(npc) .. " gets up out of the chair, unsteadily.")
+                    Release(s)
+                end
             end
         end
     end

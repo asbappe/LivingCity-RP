@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version 1c50e8f. Admin-only console messages and log lines are left out.
+Made from version ee16d79. Admin-only console messages and log lines are left out.
 
-11504 lines, from 307 files.
+11531 lines, from 310 files.
 
 ## Contents
 
@@ -41,6 +41,7 @@ Made from version 1c50e8f. Admin-only console messages and log lines are left ou
 - [lc_nest.lua](#lcnestlua-lcnestlua) (1)
 - [lc_newsfeed.lua](#lcnewsfeedlua-lcnewsfeedlua) (1)
 - [lc_powerbank.lua](#lcpowerbanklua-lcpowerbanklua) (5)
+- [lc_rebelcage.lua](#lcrebelcagelua-lcrebelcagelua) (1)
 - [lc_rebelpamphlet.lua](#lcrebelpamphletlua-lcrebelpamphletlua) (1)
 - [lc_recycler.lua](#lcrecyclerlua-lcrecyclerlua) (2)
 - [lc_rscanner.lua](#lcrscannerlua-lcrscannerlua) (2)
@@ -71,7 +72,7 @@ Made from version 1c50e8f. Admin-only console messages and log lines are left ou
 - [cl_livingcity_atmos.lua](#cllivingcityatmoslua-cllivingcityatmoslua) (5)
 - [cl_livingcity_bodysigns.lua](#cllivingcitybodysignslua-cllivingcitybodysignslua) (9)
 - [cl_livingcity_career.lua](#cllivingcitycareerlua-cllivingcitycareerlua) (6)
-- [cl_livingcity_chair.lua](#cllivingcitychairlua-cllivingcitychairlua) (7)
+- [cl_livingcity_chair.lua](#cllivingcitychairlua-cllivingcitychairlua) (8)
 - [cl_livingcity_character.lua](#cllivingcitycharacterlua-cllivingcitycharacterlua) (13)
 - [cl_livingcity_chronicle.lua](#cllivingcitychroniclelua-cllivingcitychroniclelua) (6)
 - [cl_livingcity_cityadmin.lua](#cllivingcitycityadminlua-cllivingcitycityadminlua) (44)
@@ -115,6 +116,7 @@ Made from version 1c50e8f. Admin-only console messages and log lines are left ou
 - [cl_livingcity_perfdebug.lua](#cllivingcityperfdebuglua-cllivingcityperfdebuglua) (63)
 - [cl_livingcity_quests.lua](#cllivingcityquestslua-cllivingcityquestslua) (21)
 - [cl_livingcity_quick.lua](#cllivingcityquicklua-cllivingcityquicklua) (264)
+- [cl_livingcity_rebelhold.lua](#cllivingcityrebelholdlua-cllivingcityrebelholdlua) (7)
 - [apartment doors (client)](#apartment-doors-client-cllivingcityrentlua) (12)
 - [cl_livingcity_resistance.lua](#cllivingcityresistancelua-cllivingcityresistancelua) (5)
 - [cl_livingcity_rest.lua](#cllivingcityrestlua-cllivingcityrestlua) (5)
@@ -126,7 +128,7 @@ Made from version 1c50e8f. Admin-only console messages and log lines are left ou
 - [cl_livingcity_standingpanel.lua](#cllivingcitystandingpanellua-cllivingcitystandingpanellua) (1)
 - [the strange dreams, your side (sv_livingcity_strangedreams.lua, sv_livingcity_strangedreams2.lua)](#the-strange-dreams-your-side-svlivingcitystrangedreamslua-svlivingcitystrangedreams2lua-cllivingcitystrangedreamslua) (9)
 - [cl_livingcity_suit.lua](#cllivingcitysuitlua-cllivingcitysuitlua) (1)
-- [cl_livingcity_talk.lua](#cllivingcitytalklua-cllivingcitytalklua) (10)
+- [cl_livingcity_talk.lua](#cllivingcitytalklua-cllivingcitytalklua) (11)
 - [cl_livingcity_theme.lua](#cllivingcitythemelua-cllivingcitythemelua) (1)
 - [cl_livingcity_unittools.lua](#cllivingcityunittoolslua-cllivingcityunittoolslua) (65)
 - [cigarettes, alcohol, stimulants and the shakes, your side (sv_livingcity_vices.lua)](#cigarettes-alcohol-stimulants-and-the-shakes-your-side-svlivingcityviceslua-cllivingcityviceslua) (9)
@@ -150,7 +152,7 @@ Made from version 1c50e8f. Admin-only console messages and log lines are left ou
 - [apartments and trade](#apartments-and-trade-svlivingcitybusinesslua) (41)
 - [rearranging a rebel camp](#rearranging-a-rebel-camp-svlivingcitycampmovelua) (3)
 - [your career, on one page (the owner's 7 November playtest: "playing as a](#your-career-on-one-page-the-owners-7-november-playtest-playing-as-a-svlivingcitycareerlua) (23)
-- [the Resistance's interrogation chair (lc_interrochair)](#the-resistances-interrogation-chair-lcinterrochair-svlivingcitychairlua) (31)
+- [the Resistance's interrogation chair (lc_interrochair)](#the-resistances-interrogation-chair-lcinterrochair-svlivingcitychairlua) (35)
 - [characters and permanent death](#characters-and-permanent-death-svlivingcitycharacterlua) (28)
 - [checkpoints, turrets, and holding the infestation back](#checkpoints-turrets-and-holding-the-infestation-back-svlivingcitycheckpointslua) (54)
 - [the chronicle (what happened in the city, and what led to it)](#the-chronicle-what-happened-in-the-city-and-what-led-to-it-svlivingcitychroniclelua) (22)
@@ -258,6 +260,7 @@ Made from version 1c50e8f. Admin-only console messages and log lines are left ou
 - [habitation block raids](#habitation-block-raids-svlivingcityraidslua) (15)
 - ["ration units are being deducted"](#ration-units-are-being-deducted-svlivingcityrationslua) (5)
 - [the Resistance's raids and operations, made real and findable](#the-resistances-raids-and-operations-made-real-and-findable-svlivingcityrebeleventslua) (3)
+- [the Resistance's prisoners (the holding cage, lc_rebelcage)](#the-resistances-prisoners-the-holding-cage-lcrebelcage-svlivingcityrebelholdlua) (13)
 - [rebel life](#rebel-life-svlivingcityrebellifelua) (35)
 - [the Resistance pamphlet](#the-resistance-pamphlet-svlivingcityrebelpamphletlua) (40)
 - [the Resistance on the street](#the-resistance-on-the-street-svlivingcityrebelslua) (87)
@@ -571,6 +574,12 @@ Made from version 1c50e8f. Admin-only console messages and log lines are left ou
 - "No power: nothing charges here"  (spoken line, line 82)
 - "Tampering with it is a crime"  (spoken line, line 83)
 - "Dead. Leave it be"  (spoken line, line 83)
+
+## lc_rebelcage.lua (lc_rebelcage.lua)
+
+`gamemodes/livingcity/entities/entities/lc_rebelcage.lua`
+
+- "Holding cage"  (name, line 17)
 
 ## lc_rebelpamphlet.lua (lc_rebelpamphlet.lua)
 
@@ -1127,7 +1136,7 @@ Made from version 1c50e8f. Admin-only console messages and log lines are left ou
 - "Civil Protection is one career path: Recruit, Metrocop, Division Leader, then the Overwatch ranks (Prison Guard, Soldier, Elite). The Overwatch ranks need the transhuman conditioning, which the Overwatch Candidate story offers to Division Leaders once they have the experience for Combine Prison Guard (F4 > Career says how much is missing). Accept it and you come out of the dark Overwatch."  (text, line 299)
 - "Not sure what to do? F1 > What now? > Ways to get by lists everything open to you, and what you need for the rest."  (text, line 300)
 - "The city remembers. Things that happen to its people lead to other things, and citizens pass the stories on: press E on a citizen and Chat. Civil Protection's incident feed (a Combine monitor) lists what was formally reported; the Resistance keep a notice board of what their own people saw."  (text, line 301)
-- "The Resistance has a chair, under a lamp. A Resistance fighter near one can take a citizen to it (E on them, Take them to interrogation chair), then press E on the chair: ask, or hit them until they talk. What they give up is what they really did or saw. Beat someone who has done nothing, and they and their friends won't forget it."  (text, line 302)
+- "The Resistance has a chair, under a lamp, and a chain link cage to hold prisoners in. A Fighter or above near them can take a citizen prisoner or straight to the chair (E on them), work the cage from any of its sides (E), and at the chair press E: ask, or hit them until they talk. What they give up is what they really did or saw. Beat someone who has done nothing, and they and their friends won't forget it."  (text, line 302)
 - "Civil Protection units can kick: G (or F2 > Kick). Doors swing open, locked doors give way on the second kick, and people get knocked back. A Combine Soldier kicks a hinged door off its hinges; an Elite sends it flying and knocks out anyone it hits. Maintenance Technicians rehang fallen doors: E to lift it, carry it to the frame, E again."  (text, line 303)
 - "Any Civil Protection unit can fly a scanner from a Combine console or from the Nexus (F2 > Unit tools). Reports earn XP; any rebel you photograph gets a BOLO."  (text, line 304)
 - "Running in front of Civil Protection gets you a beating and sent on your way. Do it a third time within an hour and it's prison."  (text, line 305)
@@ -1587,13 +1596,14 @@ Made from version 1c50e8f. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): the game answering something done in a window (lc_chair)
 
-- ", in the chair"  (window title, line 29)
-- "Ask what they've done"  (button, line 55)
-- "Ask what they've seen"  (button, line 56)
-- "Hit them (any more would kill them)"  (button, line 57)
-- "Hit them ({hits} of {max})"  (text, line 57)
-- "Let them go"  (button, line 58)
-- "Step back"  (button, line 59)
+- ", in the chair"  (window title, line 30)
+- "Ask what they've done"  (button, line 56)
+- "Ask what they've seen"  (button, line 57)
+- "Hit them (any more would kill them)"  (button, line 58)
+- "Hit them ({hits} of {max})"  (text, line 58)
+- "Back to the cage with them"  (button, line 59)
+- "Let them go"  (button, line 60)
+- "Step back"  (button, line 61)
 
 ## cl_livingcity_character.lua (cl_livingcity_character.lua)
 
@@ -4160,6 +4170,21 @@ Made from version 1c50e8f. Admin-only console messages and log lines are left ou
 - "+menu_context"  (text, line 1093)
 - ": the full menu"  (drawn on screen, line 1094)
 
+## cl_livingcity_rebelhold.lua (cl_livingcity_rebelhold.lua)
+
+`gamemodes/livingcity/gamemode/modules/client/cl_livingcity_rebelhold.lua`
+
+
+> Note for you (not shown in game): the game answering something done in a window (lc_cage)
+
+- "The holding cage"  (window title, line 32)
+- "Shut the gate"  (button, line 47)
+- "Open the gate"  (button, line 47)
+- "Nobody is held here. To take someone prisoner: press E on a citizen nearby, then "Take them prisoner"."  (label or button, line 57)
+- "To the interrogation chair"  (button, line 68)
+- "To the interrogation chair (none free near)"  (button, line 68)
+- "Let them go"  (button, line 70)
+
 ## apartment doors (client) (cl_livingcity_rent.lua)
 
 `gamemodes/livingcity/gamemode/modules/client/cl_livingcity_rent.lua`
@@ -4450,12 +4475,13 @@ Made from version 1c50e8f. Admin-only console messages and log lines are left ou
 - "Give something..."  (button, line 101)
 - "Give something (nothing to give)"  (button, line 101)
 - "Ask them to keep watch for us (a lookout)"  (button, line 107)
-- "Take them to interrogation chair"  (button, line 108)
+- "Take them prisoner (to the holding cage)"  (button, line 108)
 
 > Note for you (not shown in game): the game answering something done in a window (lc_talk)
 
-- "Pick their pocket (Guile)"  (button, line 109)
-- "Inform on them to Civil Protection"  (button, line 110)
+- "Take them to interrogation chair"  (button, line 109)
+- "Pick their pocket (Guile)"  (button, line 110)
+- "Inform on them to Civil Protection"  (button, line 111)
 
 ## cl_livingcity_theme.lua (cl_livingcity_theme.lua)
 
@@ -5819,69 +5845,73 @@ Made from version 1c50e8f. Admin-only console messages and log lines are left ou
 `gamemodes/livingcity/gamemode/modules/server/sv_livingcity_chair.lua`
 
 
-> Note for you (not shown in game): part of: name of
+> Note for you (not shown in game): (a Resistance Fighter or above: the owner, 12 November, "I want Resistance fighters and above to be able to interrogate")
 
-- "the citizen"  (text, line 58)
+- "the citizen"  (text, line 59)
 
 > Note for you (not shown in game): part of: release
 
-- "[Miscount] {why}"  (chat message, line 121)
+- "[Miscount] {why}"  (chat message, line 124)
 
 > Note for you (not shown in game): part of: seat
 
-- "is pushed down into the chair. The lamp comes on."  (text, line 147)
+- "is pushed down into the chair. The lamp comes on."  (text, line 150)
 
-> Note for you (not shown in game): "Take them to interrogation chair" in the talk window (sv_livingcity_talk.lua). Returns what's said, and whether the window closes.
+> Note for you (not shown in game): "Take them to interrogation chair" in the talk window (sv_livingcity_talk.lua). Returns what's said, and whether the window closes. from: { cage, at } when they come out of the holding cage (sv_livingcity_rebelhold.lua): they can be sent back to it.
 
-- "There's no chair near enough for that."  (text, line 153)
+- "There's no chair near enough for that."  (text, line 157)
 
 > Note for you (not shown in game): part of: chair take
 
-- "You take them by the arm. 'Walk. We need to talk.'"  (text, line 161)
-- "They stare at the floor and say nothing."  (text, line 165)
-- "'I haven't done anything. I haven't!'"  (text, line 165)
-- "'I don't know what you want from me.'"  (text, line 165)
-- "They squint up into the lamp, and shake their head."  (text, line 166)
-- "'Please. I just want to go home.'"  (text, line 166)
-- "You hit them. Their head snaps to the side."  (text, line 169)
-- "Your fist lands. They gasp, and the chair creaks."  (text, line 169)
-- "You hit them again. Blood on your knuckles, not yours."  (text, line 170)
-- "A blow to the stomach. They fold as far as the chair allows."  (text, line 170)
-- "'I don't know anything. I swear it.' You believe them."  (text, line 172)
-- "'There's nothing. There was never anything.' It sounds true."  (text, line 172)
+- "You take them by the arm. 'Walk. We need to talk.'"  (text, line 165)
+- "They stare at the floor and say nothing."  (text, line 169)
+- "'I haven't done anything. I haven't!'"  (text, line 169)
+- "'I don't know what you want from me.'"  (text, line 169)
+- "They squint up into the lamp, and shake their head."  (text, line 170)
+- "'Please. I just want to go home.'"  (text, line 170)
+- "You hit them. Their head snaps to the side."  (text, line 173)
+- "Your fist lands. They gasp, and the chair creaks."  (text, line 173)
+- "You hit them again. Blood on your knuckles, not yours."  (text, line 174)
+- "A blow to the stomach. They fold as far as the chair allows."  (text, line 174)
+- "'I don't know anything. I swear it.' You believe them."  (text, line 176)
+- "'There's nothing. There was never anything.' It sounds true."  (text, line 176)
 
 > Note for you (not shown in game): whatever they thought of the Resistance, it's gone
 
-- "beat {npc} in the chair for nothing"  (text, line 194)
+- "beat {npc} in the chair for nothing"  (text, line 198)
 
 > Note for you (not shown in game): What the one asking does: "done", "seen", "hit" or "free". Returns what happens, in words.
 
-- "is let out of the chair."  (text, line 205)
+- "is let out of the chair."  (text, line 209)
 
 > Note for you (not shown in game): part of: chair do
 
-- "beat {npc} in the chair"  (text, line 221)
-- "Something in them gives."  (text, line 223)
-- "It comes out of them:"  (text, line 230)
-- "They saw something:"  (text, line 230)
-- "Whatever they thought of the Resistance, it's gone now."  (text, line 234)
+- "is pulled out of the chair and marched back to the cage."  (text, line 216)
+- "Back to the cage with them."  (text, line 219)
+- "Any more and you'd kill them."  (text, line 222)
+- "beat {npc} in the chair"  (text, line 233)
+- "Something in them gives."  (text, line 235)
+- "It comes out of them:"  (text, line 242)
+- "They saw something:"  (text, line 242)
+- "Whatever they thought of the Resistance, it's gone now."  (text, line 246)
 
 > Note for you (not shown in game): E on the chair.
 
-- "[Miscount] This is none of your business. Walk on."  (chat message, line 254)
-- "[Miscount] A chair, under a lamp. Not yours."  (chat message, line 254)
+- "[Miscount] The chair is for Fighters and above."  (chat message, line 267)
+- "[Miscount] This is none of your business. Walk on."  (text, line 268)
+- "[Miscount] A chair, under a lamp. Not yours."  (text, line 268)
 
 > Note for you (not shown in game): part of: chair use
 
-- "[Miscount] The chair is empty. To question someone: press E on a citizen nearby, then "Take them to interrogation chair"."  (chat message, line 258)
-- "[Miscount] They're on their way to the chair."  (chat message, line 261)
-- "[Miscount] Someone else is asking the questions."  (chat message, line 263)
-- "They squint up at you through the light."  (text, line 264)
+- "[Miscount] The chair is empty. To question someone: press E on a citizen nearby, then "Take them to interrogation chair"."  (chat message, line 272)
+- "[Miscount] They're on their way to the chair."  (chat message, line 275)
+- "[Miscount] Someone else is asking the questions."  (chat message, line 277)
+- "They squint up at you through the light."  (text, line 278)
 
 > Note for you (not shown in game): part of: chair tick
 
-- "They slipped away before you got them to the chair."  (text, line 285)
-- "gets up out of the chair, unsteadily."  (text, line 294)
+- "They slipped away before you got them to the chair."  (text, line 299)
+- "gets up out of the chair, unsteadily."  (text, line 313)
 
 ## characters and permanent death (sv_livingcity_character.lua)
 
@@ -16211,6 +16241,48 @@ Made from version 1c50e8f. Admin-only console messages and log lines are left ou
 
 - "never got there"  (text, line 410)
 
+## the Resistance's prisoners (the holding cage, lc_rebelcage) (sv_livingcity_rebelhold.lua)
+
+`gamemodes/livingcity/gamemode/modules/server/sv_livingcity_rebelhold.lua`
+
+
+> Note for you (not shown in game): part of: name of
+
+- "the citizen"  (text, line 52)
+
+> Note for you (not shown in game): part of: put
+
+- "is pushed into the cage, and the gate is shut on them."  (text, line 106)
+- "locked {npc} in the Resistance's cage"  (text, line 111)
+
+> Note for you (not shown in game): "Take them prisoner" in the talk window, or back from the chair (cage given, told: no second telling).
+
+- "There's no cage with room near enough for that."  (text, line 126)
+
+> Note for you (not shown in game): part of: cage take
+
+- "You take them by the collar. 'You're coming with us.'"  (text, line 135)
+
+> Note for you (not shown in game): part of: cage tick
+
+- "is let out of the cage, and doesn't look back."  (text, line 172)
+
+> Note for you (not shown in game): E on any side of a cage.
+
+- "[Miscount] The cage is for Fighters and above to open."  (chat message, line 210)
+- "[Miscount] Chain link, and a padlock. It doesn't give."  (chat message, line 210)
+
+> Note for you (not shown in game): "gate", "free" or "chair" (with the one meant). Returns what's said.
+
+- "You swing the gate open."  (text, line 222)
+- "You shut the gate."  (text, line 222)
+
+> Note for you (not shown in game): part of: cage do
+
+- "is let out of the cage."  (text, line 227)
+- "You let them go."  (text, line 229)
+- "There's no free chair near enough."  (text, line 233)
+
 ## rebel life (sv_livingcity_rebellife.lua)
 
 `gamemodes/livingcity/gamemode/modules/server/sv_livingcity_rebellife.lua`
@@ -20499,48 +20571,48 @@ Made from version 1c50e8f. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): (no sympathy for it any more: the owner, 9 November, sympathy is the way into the Resistance, and a kindness to a stranger isn't that)
 
-- "They take the {name} with both hands. 'I won't forget this. I mean it.'"  (name, line 258)
-- "They take the {name} and hide it in their coat. 'Thank you.'"  (name, line 259)
-- "A drink or a smoke"  (text, line 283)
+- "They take the {name} with both hands. 'I won't forget this. I mean it.'"  (name, line 260)
+- "They take the {name} and hide it in their coat. 'Thank you.'"  (name, line 261)
+- "A drink or a smoke"  (text, line 285)
 
 > Note for you (not shown in game): part of: taken
 
-- "You've nothing like that to give."  (name, line 328)
+- "You've nothing like that to give."  (name, line 330)
 
 > Note for you (not shown in game): part of: give
 
-- "They shake their head. 'I don't, thanks. Keep it.'"  (text, line 335)
-- "They take the {name} and light it there and then. 'God, I needed that.'"  (text, line 336)
-- "They take a long pull of the {name}. 'You're a good sort, you know that?'"  (text, line 337)
-- "They turn the {name} over in their hands. 'Medicine. You don't see that often. Thank you.'"  (text, line 341)
-- "They back away from you. 'I don't want any trouble, officer.'"  (text, line 343)
-- "They go white. 'Are you out of your mind? Put that away before a unit sees!'"  (text, line 346)
-- "They glance about, then slip the {name} under their coat. 'It'll go where it's needed.'"  (text, line 348)
-- "They push it back at you. 'I never saw this. I never saw you.'"  (text, line 354)
-- "They read the first lines and fold it small. 'Somebody has to say it.'"  (text, line 356)
-- "They take the {name} without looking at it. 'I know what it says.'"  (text, line 358)
-- "They take the {name}. 'Thank you, citizen.'"  (text, line 359)
-- "They don't want that."  (text, line 361)
+- "They shake their head. 'I don't, thanks. Keep it.'"  (text, line 337)
+- "They take the {name} and light it there and then. 'God, I needed that.'"  (text, line 338)
+- "They take a long pull of the {name}. 'You're a good sort, you know that?'"  (text, line 339)
+- "They turn the {name} over in their hands. 'Medicine. You don't see that often. Thank you.'"  (text, line 343)
+- "They back away from you. 'I don't want any trouble, officer.'"  (text, line 345)
+- "They go white. 'Are you out of your mind? Put that away before a unit sees!'"  (text, line 348)
+- "They glance about, then slip the {name} under their coat. 'It'll go where it's needed.'"  (text, line 350)
+- "They push it back at you. 'I never saw this. I never saw you.'"  (text, line 356)
+- "They read the first lines and fold it small. 'Somebody has to say it.'"  (text, line 358)
+- "They take the {name} without looking at it. 'I know what it says.'"  (text, line 360)
+- "They take the {name}. 'Thank you, citizen.'"  (text, line 361)
+- "They don't want that."  (text, line 363)
 
 > Note for you (not shown in game): part of: pick pocket
 
-- "Their pockets are already empty."  (text, line 379)
-- "Your fingers come out with {item}. They didn't feel a thing."  (text, line 387)
-- "%d credits, and they didn't feel a thing."  (message, line 392)
+- "Their pockets are already empty."  (text, line 381)
+- "Your fingers come out with {item}. They didn't feel a thing."  (text, line 389)
+- "%d credits, and they didn't feel a thing."  (message, line 394)
 
 > Note for you (not shown in game): caught
 
-- "[Civil Protection] A Civil Protection unit saw that."  (chat message, line 399)
+- "[Civil Protection] A Civil Protection unit saw that."  (chat message, line 401)
 
 > Note for you (not shown in game): part of: pick pocket
 
-- "They feel your hand and spin round. 'Thief! Get away from me!'"  (text, line 405)
+- "They feel your hand and spin round. 'Thief! Get away from me!'"  (text, line 407)
 
 > Note for you (not shown in game): part of: inform
 
-- "You reported someone a moment ago. Don't push your luck."  (text, line 409)
-- "You give their name to a Civil Protection unit. He writes it down. (+15 standing) They'll be picked up."  (text, line 423)
-- "You give their name to a Civil Protection unit. He checks it and looks at you instead. 'Waste of time.' (-5 standing)"  (text, line 427)
+- "You reported someone a moment ago. Don't push your luck."  (text, line 411)
+- "You give their name to a Civil Protection unit. He writes it down. (+15 standing) They'll be picked up."  (text, line 425)
+- "You give their name to a Civil Protection unit. He checks it and looks at you instead. 'Waste of time.' (-5 standing)"  (text, line 429)
 
 ## territory that spreads, and is pushed back (sv_livingcity_territory.lua)
 

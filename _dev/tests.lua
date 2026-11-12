@@ -59,6 +59,7 @@ _setcvar("lc_small_server", 0) -- (small-server mode turns on with few players o
 _setcvar("lc_bad_deal_chance", 0) -- (black market deals that go bad at random: tested on their own, StreetCrimeTests)
 _setcvar("lc_minds", 0) -- (watching the city's minds draws random numbers: tested on its own, MindsTests)
 _setcvar("lc_chronicle", 0) -- (the chronicle writes down what the other tests do: tested on its own, ChronicleTests)
+_setcvar("lc_rebel_cage", 0) -- (the holding cage adds a button to the talk window near one: tested on its own, CageTests)
 _setcvar("lc_chair", 0) -- (the interrogation chair adds a button to the talk window near one: tested on its own, ChairTests)
 _setcvar("lc_npc_vices", 0) -- (citizens drinking and smoking at random: tested on its own, MindsTests)
 LC.CollapseNpcRoll = function() return 3 end -- (the city's own Administrator refuses the G-Man three times, as she always did: tested on its own, CollapseOwnTests)
@@ -11265,12 +11266,14 @@ local function person(off)
     return n, st
 end
 local function has(k) for _, e in ipairs(C.list) do if e.k == k then return e end end return nil end
-local rebel = newPlayer("ChairRebel", "resistance")
+local rebel = newPlayer("ChairRebel", "resistance", nil, 900)
+local member = newPlayer("ChairMember", "resistance", nil, 150)
 rebel:SetPos(P0 + Vector(100, 0, 0))
 local cit = newPlayer("ChairCit", "citizen")
 cit:SetPos(P0 + Vector(100, 50, 0))
 local n, st = person(Vector(300, 0, 0))
-ok(LC.ChairFor(cit, n) == nil and LC.ChairFor(rebel, n) == chair, "a Resistance player with a chair within reach can take a citizen to it; nobody else")
+ok(rebel:GetNW2Int("lcf_rank", 1) >= 3 and member:GetNW2Int("lcf_rank", 1) < 3, "a Lieutenant and a Member to try it", rebel:GetNW2Int("lcf_rank", 1))
+ok(LC.ChairFor(cit, n) == nil and LC.ChairFor(member, n) == nil and LC.ChairFor(rebel, n) == chair, "a Resistance Fighter or above with a chair within reach can take a citizen to it; nobody else")
 local far = person(Vector(4000, 0, 0))
 ok(LC.ChairFor(rebel, far) == nil, "no chair near enough: no such option")
 local said, close = LC.ChairTake(rebel, n)
@@ -11330,6 +11333,85 @@ C.list, C.byN, C.n = {}, {}, 0
 _setcvar("lc_chronicle", 0)
 end
 ChairTests()
+
+function CageTests()
+section("The Resistance's holding cage")
+_setcvar("lc_rebel_cage", 1)
+_setcvar("lc_chair", 1)
+_setcvar("lc_chronicle", 1)
+local C = LC.Chron
+C.list, C.byN, C.n, C.seen, C.loaded = {}, {}, 0, {}, true
+local P0 = Vector(-22000, 30000, 0)
+local cage = ents.Create("lc_rebelcage")
+cage:SetPos(P0)
+cage:Spawn()
+local function person(off)
+    local n, st = LC.SpawnCitizen(P0 + off)
+    st.leaveAt = nil
+    n.sim = false
+    if not n.lcProfile then LC.AttachProfile(n, st, LC.NewPerson("citizen")) end
+    LC.Minds.byId[n.lcProfile.id] = LC.Minds.byId[n.lcProfile.id] or { id = n.lcProfile.id, name = n.lcProfile.name, role = "citizen" }
+    return n, st
+end
+local function count(k) local c = 0 for _, e in ipairs(C.list) do if e.k == k then c = c + 1 end end return c end
+local lt = newPlayer("CageLt", "resistance", nil, 900)
+lt:SetPos(P0 + Vector(120, 0, 0))
+local member = newPlayer("CageMember", "resistance", nil, 150)
+local cit = newPlayer("CageCit", "citizen")
+local n, st = person(Vector(400, 0, 0))
+ok(LC.RebelMayHold(lt) and not LC.RebelMayHold(member) and not LC.RebelMayHold(cit), "Fighters and above take prisoners: not a Member, not a citizen")
+ok(LC.CageFor(lt, n) == cage and LC.CageFor(member, n) == nil and LC.CageFor(cit, n) == nil, "with a cage within reach, a Fighter or above can take a citizen prisoner")
+local said, close = LC.CageTake(lt, n)
+ok(close == true and LC.RebelHeld[n] ~= nil and st.questLock == true and #LC.CageList(cage) == 0, "taken by the collar: on their way, not yet in", said)
+n:SetPos(P0 + Vector(60, 0, 0))
+LC.CageTick(CurTime())
+ok(#LC.CageList(cage) == 1 and st.state == "detained" and count("caged") == 1, "at the cage they're locked in, held, and it's in the chronicle")
+LC.CageTick(CurTime() + 500)
+ok(st.state == "detained" and LC.RebelHeld[n] ~= nil, "and they stay held")
+ok(LC.CageFor(lt, n) == nil and LC.ChairFor(lt, n) == nil, "someone held isn't taken again from the talk window")
+ok(LC.CageDo(member, cage, "gate") == nil and LC.CageDo(lt, cage, "gate") ~= nil, "only a Fighter or above works the gate")
+-- to the chair and back
+ok(string.find(LC.CageDo(lt, cage, "chair", n) or "", "no free chair", 1, true) ~= nil and LC.RebelHeld[n] ~= nil, "no chair near: they stay in the cage")
+local chair = ents.Create("lc_interrochair")
+chair:SetPos(P0 + Vector(300, 0, 0))
+chair:Spawn()
+LC.CageDo(lt, cage, "chair", n)
+ok(LC.RebelHeld[n] == nil and LC.Chairs[chair] ~= nil and LC.Chairs[chair].npc == n and st.questLock == true, "sent from the cage to the interrogation chair")
+n:SetPos(chair:GetPos() + Vector(20, 0, 0))
+LC.ChairTick(CurTime())
+ok(LC.Chairs[chair].seated == true, "and sat in it")
+lt:SetPos(chair:GetPos() + Vector(60, 0, 0))
+ok(LC.ChairDo(lt, chair, "cage") ~= nil and LC.Chairs[chair] == nil and LC.RebelHeld[n] ~= nil and LC.RebelHeld[n].walking ~= nil, "from the chair, back to the cage with them")
+n:SetPos(P0 + Vector(60, 0, 0))
+LC.CageTick(CurTime())
+ok(#LC.CageList(cage) == 1 and count("caged") == 1, "back in, and it isn't told a second time")
+-- four at most
+local more = {}
+for i = 1, 3 do
+    local m2 = person(Vector(400, 60 * i, 0))
+    LC.CageTake(lt, m2)
+    m2:SetPos(P0 + Vector(60, 10 * i, 0))
+    more[#more + 1] = m2
+end
+LC.CageTick(CurTime())
+local fifth = person(Vector(400, 300, 0))
+ok(#LC.CageList(cage) == 4 and LC.CageFor(lt, fifth) == nil, "four to a cage: no room for a fifth")
+-- let go, and time
+ok(LC.CageDo(lt, cage, "free", more[1]) ~= nil and LC.RebelHeld[more[1]] == nil and LC.NPCs[more[1]].questLock == nil and LC.NPCs[more[1]].state ~= "detained", "let go: free to walk off")
+LC.RebelHeld[n].at = CurTime() - 1300
+LC.CageTick(CurTime())
+ok(LC.RebelHeld[n] == nil and st.state ~= "detained", "nobody is held for ever: after twenty minutes they're let out")
+cage:Remove()
+LC.CageGone(cage)
+ok(next(LC.RebelHeld) == nil, "the cage taken away: everyone in it is free")
+_setcvar("lc_rebel_cage", 0)
+ok(LC.CageFor(lt, fifth) == nil, "lc_rebel_cage 0: no such option")
+for _, e in ipairs({ n, fifth, more[1], more[2], more[3], chair }) do if IsValid(e) then LC.NPCs[e] = nil e:Remove() end end
+C.list, C.byN, C.n = {}, {}, 0
+_setcvar("lc_chair", 0)
+_setcvar("lc_chronicle", 0)
+end
+CageTests()
 
 function BrainTests()
 section("The director and free talk: a hosted model, on a short list")
