@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # Living City: record every named citizen line (man and woman) with ElevenLabs, the simple way.
 #
-#   bash _dev/tools/record_citizens.sh
+#   bash record_citizens.sh
+#
+# Keep these three files together in one folder: record_citizens.sh, elevenlabs_batch.py, voice_batch.tsv.
 #
 # It asks for your ElevenLabs key (typed hidden, never saved), tells you what it will cost, makes 3 lines
 # for you to listen to, then the rest, and makes them all louder. Run it again any time: lines already made
@@ -10,10 +12,10 @@
 MAN="zSPSnKB3yoR0pAl7oln6"
 WOMAN="6ybFVMFdNOweF3NRmXj7"
 
-ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
-OUT="$ROOT/voice_out"
+HERE="$(cd "$(dirname "$0")" && pwd)"   # everything it needs sits in this same folder
+OUT="$HERE/voice_out"
 DIR="$OUT/sound/livingcity/citizens"
-BATCH=(python3 "$ROOT/_dev/tools/elevenlabs_batch.py" --man "$MAN" --woman "$WOMAN" --out "$OUT")
+BATCH=(python3 "$HERE/elevenlabs_batch.py" --man "$MAN" --woman "$WOMAN" --out "$OUT")
 
 ask() { read -r -p "$1 [y/n] " a; [[ "$a" == [yY]* ]]; }
 
