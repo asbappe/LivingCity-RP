@@ -14,6 +14,8 @@
 ## All of them at once (instead of pasting each line)
 
 `_dev/tools/elevenlabs_batch.py` sends every line to ElevenLabs and saves each file under its right name, in the right folder, ready to upload. On Linux Mint, in a terminal in the gamemode's folder:
+**Just the citizens, the simple way:** `bash _dev/tools/record_citizens.sh`. It asks for your key (hidden, never saved), shows the cost, makes 3 to listen to, then the rest, and makes them all louder (needs `ffmpeg`). The two voice ids are at the top of the script. Upload what lands in `voice_out/sound/livingcity/citizens/` to the server's `garrysmod/sound/livingcity/citizens/`.
+
 
 ```
 export ELEVENLABS_API_KEY='your key here'
