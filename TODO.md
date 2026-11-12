@@ -128,3 +128,45 @@
 - [ ] **Left from the owner's 11 November playtest** (their words are in the git history of `PLAYTEST.md`, commit "Cremator: no stuck sizzle"): the kick's torso in first person; a unit's first person hands missing (ask: gun too, or only hands? `lc_cp_hands`?); the pockets header and counters clipping as a unit; the CP Commissary window too low until something is bought; selling junk at the CP Commissary; the stunstick (spark on the Arrest Baton, units not picking one up, citizens and rebels getting a stunstick not a baton); suitcases and parcels in the search window; a "Check papers" button after a search, with a small reward for a catch; the housing inspection (trail to the wrong floor, props spawning in the floor and wall, the door not locked, kick it in as well as breach); backup spawning near and fighting; more time before a landing zone is lost; NPC combat (cover, crouching, firing at each other as they do at players); rebels spawning in cells in a raid, metrocops idle with batons in one; no dream as a unit asleep in the Nexus (a Combine-only zone spares sleepers from nightmares: check Happy and Neutral nights); exhausted the moment the editor tool is put away; stalkers not reaching an item deep in a pile; a rope from a stalker's hand to a dragged body; the clipboard in citizens' hands; somebody to meet on the night shift and patrol jobs (a shady character, someone following or hiding); whether hold R should lower a gun anywhere.
 - [ ] **Two voices by personality** (the owner, 11 November: "if the NPCs personality lines up with the available default HL2 voice lines, then they could be used, and then save other NPCs for the custom voice lines"; agreed, waits on the clip list). Each named person gets a voice for life from their traits: the lively, sociable, hopeful and wry keep Half-Life 2's voice and pick from a bank built out of its real clips; the despairing, timid, bitter and cold get the custom voice and the recorded bank (`LC.StreetLines`). The clip swap (`LC.VoiceReplacement`) then applies only to custom-voiced people (the hook has the speaker). **Needs first:** `data/livingcity/hl2_lines.txt` from `lc_hl2_lines` on the owner's server, to build the Half-Life 2 bank from what is really there (many clips are about combat or Freeman and will not fit). This is instead of replacing every Half-Life 2 line. `docs/features/recorded-lines.md`.
 - [ ] **Waiting on the owner after the 11 November playtest:** whether a unit's first person hands are back (the `own hands:` line in their game's console); the clipboard's new hold; whether hold R should lower a gun anywhere (they will test it on rebel and Combine ground first); how the patrol company and `lc_combat_ai` feel in the real game (both untried there: crouching is left to the engine, only allowed, not ordered).
+
+## The Resistance's prisoners: what becomes of them, and what the city makes of it (ideas, 12 November)
+
+The owner, 12 November: the rebels "would likely cram prisoners in if it gets too full, but they wouldn't have any interest in keeping prisoners. They would likely imprison, interrogate, then either execute or let go", and executions should have consequences inside the Resistance, among the people, and from the Administrator. **Nothing here is built. These are options to choose from**, written down because there was no time to build them that week. What exists: the cage, the chair and the chronicle (`docs/features/chronicle.md`).
+
+### The cage
+- [ ] **Cram more in.** Four is a guess made without seeing the fence in the game. Once the owner has seen how big the square is: a setting for how many fit (six or eight, standing closer), and past a comfortable number those held get more stressed the fuller it is.
+- [ ] **No long stays.** Instead of twenty minutes and out: a prisoner who has been questioned must be dealt with (below) before another is brought in, or after a while the cell's people do it themselves.
+
+### After the chair: let go, or worse
+- [ ] **Let them go**, with a choice of how: a warning (the timid stay quiet out of fear, the loyal and proud go straight to a unit, by their traits); blindfolded and walked out, so they can't tell Civil Protection where the cage is; or made to work for the cell (an informer turned, feeding Civil Protection false reports).
+- [ ] **Exchange them.** A captured unit or loyalist traded for a rebel in the Combine's cells: an offer the Administrator (a player, or the city's own) can take or refuse.
+- [ ] **Execute them.** Only at the cage or the chair, only a Fighter or above. Quietly inside, or in front of people. Either way it goes in the chronicle at the highest weight, and anyone who saw it carries it.
+- [ ] **The body.** Dumped somewhere: found by citizens or a patrol, it is evidence, and it points back towards rebel ground.
+
+### How the people take it
+- [ ] **A standing for the Resistance among the people**, one number for the city, moved by the chronicle: beatings for nothing and executions pull it down; sharing food, sheltering, and Civil Protection's own brutality push it up. Low standing: fewer sympathizers, more informing, citizens stepping away from rebels; high: the opposite.
+- [ ] **Who was killed matters.** Someone who confessed in the chair to informing: most people shrug, some approve. Someone who had done nothing: the worst. A Civil Protection unit: split (those that unit beat are glad; the loyal are appalled).
+- [ ] **Not everyone minds.** The hot-tempered and the bitterly disloyal think better of the Resistance for it; a cell known to be ruthless also frightens informers into silence. So brutality is a real choice with a price, not simply a mistake.
+
+### The Resistance answers for it
+- [ ] **Someone of higher rank than the killer decides** (their F2 or the cage's window, within a few minutes; with nobody of higher rank online, the cell's own leader decides after a while, or silence counts as approval):
+  - **expel them:** the people get some trust back; the expelled player is nobody's now (hunted by Civil Protection, unwelcome on rebel ground), and could go to the Combine with what they know
+  - **demote them:** a little trust back, little cost
+  - **execute them:** the most trust back from the people, but the cell's own fighters are shaken (and it is in the chronicle too)
+  - **stand by them:** nothing regained; the cell is known as hard
+- [ ] Each of these is a line citizens pass on and the Resistance board carries, and each moves the standing differently.
+
+### The Combine answers
+- [ ] **The Administrator speaks** (a player Administrator from F2, or the city's own): a broadcast naming who the Resistance killed, in her kind voice. The Civil Protection feed carries it; a new civil notice poster could follow.
+- [ ] **Then she chooses** (a player, or the storyteller once it exists):
+  - **reprisal:** rebels in the cells are executed in public, one for one. Fear and unrest rise, and the dead become martyrs: the Resistance's standing recovers
+  - **a raid:** on rebel ground, the more exact the more Civil Protection has learned (a body found, a released prisoner who talked, an expelled rebel)
+  - **the moral high ground:** no reprisal: an amnesty or an extra ration day, loyalty and informing rise, the Resistance's standing sinks further
+  - **an exchange:** offered publicly, so refusing it costs the Resistance too
+- [ ] Each of these is a start, not an end: a reprisal invites revenge jobs, a raid a counter-raid, an amnesty a harder cell.
+
+### To settle with the owner before building
+- [ ] Can a **player** prisoner be executed, and is that a real death or one of their close calls (`docs/features/permanent-death.md`)?
+- [ ] Who may execute: any Fighter, or only a Lieutenant and above?
+- [ ] Is the standing shown to anyone (a line on the Resistance board, a figure for the Administrator), or only felt?
+- [ ] Order: the standing first (everything else moves it), then execution and the cell's answer, then the Administrator's answer.
