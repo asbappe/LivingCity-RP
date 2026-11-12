@@ -75,6 +75,7 @@ end
 function LC.CageCount(cage)
     local n = 0
     for _, h in pairs(H) do if h.cage == cage then n = n + 1 end end
+    for _, h in pairs(LC.RebelHeldPly or {}) do if h.cage == cage then n = n + 1 end end -- (players: sv_livingcity_patdown.lua)
     return n
 end
 
@@ -100,6 +101,7 @@ end
 local function FreeSlot(cage)
     local used = {}
     for _, h in pairs(H) do if h.cage == cage and h.slot then used[h.slot] = true end end
+    for _, h in pairs(LC.RebelHeldPly or {}) do if h.cage == cage and h.slot then used[h.slot] = true end end
     for i = 1, 8 do if not used[i] then return i end end
     return 1
 end
@@ -353,8 +355,10 @@ local function SendMenu(ply, cage)
     net.WriteEntity(cage)
     net.WriteBool(cage.IsOpen and cage:IsOpen() or false)
     net.WriteBool(LC.ChairNear ~= nil and LC.ChairNear(cage:GetPos()) ~= nil)
-    net.WriteUInt(#list, 4)
+    local plys = LC.CagePlayers and LC.CagePlayers(cage) or {}
+    net.WriteUInt(math.min(15, #list + #plys), 4)
     for _, npc in ipairs(list) do net.WriteEntity(npc) net.WriteString(NameOf(npc)) end
+    for i = 1, math.min(#plys, 15 - #list) do net.WriteEntity(plys[i]) net.WriteString(plys[i]:Nick()) end
     net.Send(ply)
 end
 
@@ -376,6 +380,7 @@ function LC.CageDo(ply, cage, what, npc)
         if cage.SetOpen then cage:SetOpen(open) end
         return open and "You swing the gate open." or "You shut the gate."
     end
+    if IsValid(npc) and npc:IsPlayer() then return LC.CagePlayerDo and LC.CagePlayerDo(ply, cage, what, npc) or nil end
     local h = IsValid(npc) and H[npc]
     if not h or h.cage ~= cage or h.walking then return nil end
     if what == "free" then

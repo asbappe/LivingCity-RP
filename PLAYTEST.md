@@ -1696,3 +1696,17 @@ Type them in the server console on the host panel, or in your own game console (
   Notes:
 - [ ] **The Resistance's prisoners, part 2 (12 November):** take a few citizens prisoner with a chair near the cage, then stand back. Within about 15 seconds the cell should start taking them to the chair one at a time by itself (a voice from behind the lamp, blows, then back to the cage), and after five minutes each is let out. Check the Resistance notice board after someone breaks: "NAME admitted it in the chair: ...". While anyone is held, Father Grigori should be at the cage preaching, a line every 30 to 60 seconds (kill him, or be Father Grigori yourself: a vortigaunt should walk over instead; with none, a rebel). Fill the cage with eight: say whether they fit, and whether they are set straight when one leaves.
   Notes:
+
+## 12 November: the patdown, lockpicks on cuffs, the cage for players, quick menus
+- [ ] **Cuffing a player:** does a list come up at the left by itself (1 Pat them down, 2 walk them along, 3 cuffs off), and do the number keys work while you move?
+  Notes:
+- [ ] **Patdown:** does it take the weapons, radio and lockpick from their pockets, and leave food? As a rebel, do you get what you found?
+  Notes:
+- [ ] **A unit walking you in:** does it search you first, and skip it during a firefight?
+  Notes:
+- [ ] **Pick the cuffs (F1) with a lockpick:** does a watching captor take the pick? Alone, do the cuffs open?
+  Notes:
+- [ ] **The cage:** drag a cuffed player to it as a Fighter: are they put inside? Can they walk through the fence? After picking the cuffs and the padlock, does the gate open so they can walk out?
+  Notes:
+- [ ] **The chair and the cage menus:** now lists with number keys, what was said written underneath. Readable? In the way of anything?
+  Notes:

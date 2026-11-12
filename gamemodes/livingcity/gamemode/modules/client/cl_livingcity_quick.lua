@@ -235,7 +235,12 @@ local function Context(me, unit, rebel)
         Add("Wake up from the dream", function() if LC_CL.DreamAct then LC_CL.DreamAct("wake") end end)
     end
     if me:GetNW2Float("lc_downed_until", 0) > now then Add("Give up (let go)", function() Send("giveup") end) end
-    if me:GetNW2Bool("lc_tied", false) then Add("Work at the cuffs", function() Send("struggle") end) end
+    if me:GetNW2Bool("lc_tied", false) then
+        Add("Work at the cuffs", function() Send("struggle") end)
+        Add("Pick the cuffs (needs a lockpick)", function() Send("pickcuffs") end)
+    elseif IsValid(me:GetNW2Entity("lc_rebel_cage_in")) then
+        Add("Pick the cage's padlock (needs a lockpick)", function() Send("pickcage") end)
+    end
     if me:GetNW2Float("lc_jail_until", 0) > now and not me:GetNW2Bool("lc_work_detail", false) then Add("Ask for a work detail (time off your sentence)", function() Send("workdetail") end) end
     if me:GetNW2Float("lc_probation_until", 0) > now and not me:GetNW2Bool("lc_probation_checked", false) then Add("Check in for probation (close to a unit)", function() Send("checkin") end) end
     if me:GetNW2Float("lc_gman_rival_until", 0) > now then Add("Call a vote to remove the City Administrator", function() Send("recall") end) end
@@ -261,6 +266,7 @@ local function Context(me, unit, rebel)
             end
             if tied then
                 Add("Drag " .. n .. " along / let go", function() Send("drag") end)
+                Add("Pat " .. n .. " down", function() Send("patdown", "", e) end)
                 Add("Uncuff " .. n, function() Send("untie") end)
             else
                 Add("Cuff " .. n, function() Send("tie") end, true)
@@ -273,6 +279,7 @@ local function Context(me, unit, rebel)
             if tied then
                 Add("Uncuff " .. n, function() Send("untie") end)
                 Add("Drag " .. n .. " along / let go", function() Send("drag") end)
+                Add("Pat " .. n .. " down", function() Send("patdown", "", e) end)
             end
             if me:GetNW2Bool("lc_foreman", false) then Add("Give " .. n .. " a work order", function() Send("assign", "", e) end, true) end
             if rebel and e:GetNW2String("lcf_faction", "") == "vort" then Add("Cut the vortigaunt's shackles", function() Send("unshackle") end, true) end
@@ -981,6 +988,21 @@ function LC_CL.OpenQuick2()
     if CurTime() - (LC_CL.QuickInfoAt or -99) > 1 then AskInfo() end
 end
 
+-- A quick menu for a situation (the owner, 12 November: no mouse windows for the patdown, the cuffs, the cage or the
+-- chair, "a special hidden menu that appears for these situations similar to the F1 and F2 quick menus"): the same
+-- list and number keys, opened by what's happening and gone when it's over.
+-- page: { id, title, items, note (words shown under the list), stay = function: still going? }
+function LC_CL.OpenSituation(page)
+    local me = LocalPlayer()
+    if not IsValid(me) or not me:Alive() or not istable(page) then return end
+    open = { page = page, stack = {}, last = CurTime(), kind = "situation", id = page.id, stay = page.stay, note = page.note }
+end
+-- id: only that one (nil: whichever is up)
+function LC_CL.CloseSituation(id)
+    if open and open.kind == "situation" and (id == nil or open.id == id) then open = nil end
+end
+function LC_CL.SituationOpen(id) return open ~= nil and open.kind == "situation" and (id == nil or open.id == id) end
+
 -- New word from the server (what's greyed, and why): F2's page as it is now, in place.
 function LC_CL.QuickRebuild()
     if not open or open.kind ~= "role" or not open.page.rebuild then return end
@@ -1024,9 +1046,19 @@ local was = {}
 hook.Add("Think", "LivingCityQuickKeys", function()
     if not open then return end
     local me = LocalPlayer()
-    if not IsValid(me) or not me:Alive() or (gui and gui.IsGameUIVisible and gui.IsGameUIVisible()) or CurTime() - open.last > 20 then
+    if not IsValid(me) or not me:Alive() or (gui and gui.IsGameUIVisible and gui.IsGameUIVisible())
+        or (open.kind ~= "situation" and CurTime() - open.last > 20) then
         open = nil
         return
+    end
+    -- a situation's menu stays for as long as the situation does (two minutes at most without a key)
+    if open.kind == "situation" then
+        local ok, still = true, true
+        if open.stay then ok, still = pcall(open.stay) end
+        if not ok or not still or CurTime() - open.last > 120 then
+            open = nil
+            return
+        end
     end
     -- F2 stays up to date while it's open (what's greyed, and why)
     if open.kind == "role" and CurTime() >= (open.askAt or 0) then
@@ -1092,6 +1124,29 @@ hook.Add("HUDPaint", "LivingCityQuick", function()
     draw.SimpleText(#open.stack > 0 and "0  Back" or "0  Close", "DermaDefault", x + 12, y + H - 13, DIM, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
     local key = input and input.LookupBinding and input.LookupBinding("+menu_context")
     draw.SimpleText((key and string.upper(key) or "C") .. ": the full menu", "DermaDefault", x + W - 12, y + H - 13, DIM, TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
+    -- what was just said (a situation's menu: the chair), under the list
+    if open.note and open.note ~= "" then
+        if open.noteFor ~= open.note then
+            open.noteFor, open.noteLines = open.note, {}
+            surface.SetFont("LCQuickItem")
+            local line = ""
+            for word in string.gmatch(open.note, "%S+") do
+                local try = line == "" and word or (line .. " " .. word)
+                if surface.GetTextSize(try) > W - 24 and line ~= "" then
+                    open.noteLines[#open.noteLines + 1] = line
+                    line = word
+                else
+                    line = try
+                end
+            end
+            if line ~= "" then open.noteLines[#open.noteLines + 1] = line end
+        end
+        local n = #open.noteLines
+        draw.RoundedBox(4, x, y + H + 6, W, 12 + n * 20, BG)
+        for i, l in ipairs(open.noteLines) do
+            draw.SimpleText(l, "LCQuickItem", x + 12, y + H + 12 + (i - 1) * 20, INK, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+        end
+    end
 end)
 
 -- The keys that open F1 and F2 (whatever they're bound to), and where something is on the first

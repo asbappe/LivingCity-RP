@@ -11500,6 +11500,104 @@ _setcvar("lc_chair", 0)
 _setcvar("lc_chronicle", 0)
 end
 CageTests()
+function PatdownTests()
+section("The patdown, a lockpick on the cuffs, and players in the Resistance's cage")
+_setcvar("lc_patdown", 1)
+_setcvar("lc_rebel_cage", 1)
+_setcvar("lc_rebel_visitor", 0)
+_setcvar("lc_rebel_auto", 0)
+local P0 = Vector(-24000, 30000, 0)
+local unit = newPlayer("PatUnit", "cp")
+local lt = newPlayer("PatLt", "resistance", nil, 900)
+local member = newPlayer("PatMember", "resistance", nil, 150)
+local cit = newPlayer("PatCit", "citizen")
+local other = newPlayer("PatOther", "citizen")
+for _, p in ipairs({ unit, lt, member, cit, other }) do p:SetPos(P0) end
+other:SetPos(P0 + Vector(5000, 0, 0))
+LC.GiveItem(cit, "lockpick", 2)
+LC.GiveItem(cit, "gun_pistol", 1)
+LC.GiveItem(cit, "radio", 1)
+LC.GiveItem(cit, "canned_food", 1)
+ok(LC.MayPatDown(unit, cit) == false, "nobody is patted down who isn't cuffed")
+LC.TiePlayer(cit, unit)
+ok(LC.MayPatDown(unit, cit) == true and LC.MayPatDown(lt, cit) == true, "cuffed: a unit, or a Fighter or above, may pat them down")
+ok(LC.MayPatDown(member, cit) == false and LC.MayPatDown(other, cit) == false, "not a Member, and not a passer-by")
+ok(LC.HasItem(cit, "lockpick", 2) and LC.HasItem(cit, "gun_pistol"), "cuffing alone takes nothing from the pockets (as it always was)")
+local names = LC.PatdownDo(unit, cit)
+ok(#names == 3 and not LC.HasItem(cit, "lockpick") and not LC.HasItem(cit, "gun_pistol") and not LC.HasItem(cit, "radio"), "a patdown takes the weapons, radios and tools in their pockets")
+ok(LC.HasItem(cit, "canned_food"), "and leaves the rest")
+ok(not LC.HasItem(unit, "lockpick"), "a unit bags it as evidence")
+ok(LC.MayPatDown(unit, cit) == false, "once is enough: they've been patted down")
+LC.Untie(cit, unit, true)
+ok(LC.Patted[cit] == nil, "uncuffed: the next arrest starts again")
+-- the Resistance keep what they find
+LC.GiveItem(cit, "lockpick", 1)
+LC.TiePlayer(cit, lt)
+LC.PatdownDo(lt, cit)
+ok(LC.HasItem(lt, "lockpick") and not LC.HasItem(cit, "lockpick"), "a rebel who pats someone down keeps what they find")
+LC.TakeItem(lt, "lockpick", 1)
+_setcvar("lc_patdown", 0)
+LC.Patted[cit] = nil
+ok(LC.MayPatDown(lt, cit) == false, "lc_patdown 0: no patdown")
+_setcvar("lc_patdown", 1)
+-- a lockpick on the cuffs
+ok(LC.StartPickCuffs(cit) == false, "no lockpick: nothing to pick the cuffs with")
+LC.GiveItem(cit, "lockpick", 3)
+ok(LC.PickCuffsDone(cit) == false and LC.IsTied(cit) and LC.HasItem(cit, "lockpick", 2) and not LC.HasItem(cit, "lockpick", 3), "a captor watching sees the pick and takes it")
+for _, p in ipairs({ unit, lt, member }) do p:SetPos(P0 + Vector(6000, 0, 0)) end
+local rolls = { 0.9, 0.1 }
+LC.PatdownRoll = function() return table.remove(rolls, 1) or 0.5 end
+ok(LC.PickCuffsDone(cit) == false and LC.IsTied(cit) and LC.HasItem(cit, "lockpick", 1) and not LC.HasItem(cit, "lockpick", 2), "unwatched, a bad try can snap the pick")
+_setcvar("lc_wear_uses", 0)
+rolls = { 0.1 }
+ok(LC.PickCuffsDone(cit) == true and not LC.IsTied(cit) and LC.HasItem(cit, "lockpick", 1), "a good try: the cuffs click open, and the pick is still theirs")
+-- into the cage, walked there by a Fighter or above
+local cage = ents.Create("lc_rebelcage")
+cage:SetPos(P0 + Vector(0, 3000, 0))
+cage:Spawn()
+if not cage.IsOpen then -- (the stub's cage has no gate of its own)
+    cage.IsOpen = function(c) return c.lcTestOpen == true end
+    cage.SetOpen = function(c, o) c.lcTestOpen = o and true or false end
+end
+LC.TiePlayer(cit, lt)
+cit:SetPos(cage:GetPos() + Vector(150, 0, 0))
+lt:SetPos(cage:GetPos() + Vector(200, 0, 0))
+LC.Tied[cit].escort = member
+LC.RebelPrisonerTick(CurTime())
+ok(LC.RebelHeldPly[cit] == nil, "a Member dragging someone to the cage: it isn't theirs to fill")
+LC.Tied[cit].escort = lt
+LC.RebelPrisonerTick(CurTime())
+ok(LC.RebelHeldPly[cit] ~= nil and LC.CageCount(cage) == 1 and LC.Tied[cit].escort == nil, "a Fighter or above walks a cuffed player to the cage: in they go")
+ok(#LC.CagePlayers(cage) == 1 and cit:GetNW2Entity("lc_rebel_cage_in") == cage, "they're on the cage's list")
+ok(LC.HasItem(cit, "lockpick"), "nobody patted them down: the pick went in with them")
+ok(LC.StartPickCage(cit) == false, "the padlock can't be picked with cuffed hands")
+lt:SetPos(P0 + Vector(6000, 0, 0))
+rolls = { 0.1, 0.1 }
+ok(LC.PickCuffsDone(cit) == true and LC.RebelHeldPly[cit] ~= nil, "cuffs off, and still in the cage")
+cit:SetPos(cage:GetPos() + Vector(400, 0, 0))
+LC.RebelPrisonerTick(CurTime())
+ok(cit:GetPos():DistToSqr(cage:GetPos()) < 100 * 100, "the gate is shut: there's no walking out")
+ok(LC.PickCageDone(cit) == true and cage:IsOpen(), "the lockpick on the padlock: the gate swings open")
+cit:SetPos(cage:GetPos() + Vector(400, 0, 0))
+LC.RebelPrisonerTick(CurTime())
+ok(LC.RebelHeldPly[cit] == nil and LC.CageCount(cage) == 0, "and through the open gate they're out")
+-- held, then let go
+LC.TiePlayer(cit, lt)
+ok(LC.CagePutPlayer(cit, cage, lt) == true, "put back in")
+ok(LC.CageDo(lt, cage, "chair", cit) == nil and LC.RebelHeldPly[cit] ~= nil, "the chair isn't for player prisoners yet")
+LC.RebelHeldPly[cit].at = CurTime() - 100000
+LC.RebelPrisonerTick(CurTime())
+ok(LC.RebelHeldPly[cit] == nil and not LC.IsTied(cit), "their time up: let out, and the cuffs taken off")
+LC.TiePlayer(cit, lt)
+LC.CagePutPlayer(cit, cage, lt)
+lt:SetPos(cage:GetPos() + Vector(100, 0, 0))
+ok(LC.CageDo(lt, cage, "free", cit) == "You let them go." and LC.RebelHeldPly[cit] == nil and not LC.IsTied(cit), "or let go from the cage's menu")
+LC.PatdownRoll = nil
+_setcvar("lc_wear_uses", 10)
+cage:Remove()
+_setcvar("lc_rebel_cage", 0)
+end
+PatdownTests()
 
 function BrainTests()
 section("The director and free talk: a hosted model, on a short list")

@@ -59,6 +59,8 @@ The owner: "resistance interrogations force people into a chair entity and the r
 
 ## The Resistance's holding cage (12 November)
 
+**Later on 12 November:** the cage's and the chair's mouse windows became quick menus (number keys), and cuffed players can be held in the cage: `docs/features/patdown-and-cuffs.md`.
+
 The owner: "They should have a holding cell that is a cage (the chain link fences in a tight square) and with the chain link door/gate that is on the side closest/facing the admin that places the entity, and it functions as a door that can opened/closed by the resistance but is permanently locked to anyone in custody. it should more or less mirror the CP prison/jail system but using an entity with the spawned props." (`sv_livingcity_rebelhold.lua`, entity `lc_rebelcage`; settings `lc_rebel_cage` 1, `lc_rebel_hold` 300, `lc_rebel_cage_room` 8, `lc_rebel_auto` 1, `lc_rebel_visitor` 1.)
 
 - **The cage** (editor: "Fixture: Resistance holding cage"): four chain link panels in a tight square, one a side, made by the entity and removed with it. **The gate is the side facing whoever placed it.** It swings out on its left-hand corner.
