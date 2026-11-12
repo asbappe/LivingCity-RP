@@ -808,12 +808,16 @@ end
 ------------------------------------------------------------------------
 
 do
-    LC.BubbleRise, LC.BubbleLife = 45, 14 -- (how fast they rise, and for how long)
-    LC.BubbleGravity = 0.6
+    -- (the owner, 12 November: "I can't get any. They rise too fast and are still too few ... make the legit bubbles
+    -- bigger ... lower the gravity for dreamers ... like 40%": slower, more of them, bigger and easier to touch,
+    -- and the dreamers at 40% of their weight; the tiny effect bubbles are left out of this dream, cl_livingcity_strangedreams.lua)
+    LC.BubbleRise, LC.BubbleLife = 24, 22 -- (how fast they rise, and for how long)
+    LC.BubbleGravity = 0.4
+    LC.BubbleReach, LC.BubbleLiftReach = 75, 95 -- (how close counts as touching one: a plain or golden one, a lift)
     -- The lift bubbles (the owner, 11 November: "Blue bubbles need to initiate low gravity for 4x as long,
     -- and there need to be about 4x as many bubbles ... the low grav jump is stronger and lasts longer"):
     -- about four times as many of them, a harder push, and twelve seconds of floating after each.
-    LC.BubbleCount, LC.BubbleLiftShare = 30, 0.37
+    LC.BubbleCount, LC.BubbleLiftShare = 48, 0.3
     LC.BubbleLiftPush, LC.BubbleLiftGravity, LC.BubbleLiftSecs = 640, 0.15, 12
     local def = { id = "bubbles", name = "Bubbles", mood = "happy", secs = 150, lives = 1, need = 15, leave = Leave,
         goal = "Pop the bubbles (touch them). Golden ones count three. Big pale ones throw you up and leave you floating for a while.",
@@ -853,10 +857,12 @@ do
             local s = g.pl[p]
             s.got = s.got or 0
             if s.liftUntil and now >= s.liftUntil then s.liftUntil = nil Light(p, LC.BubbleGravity) end
+            -- (kept light, whatever else touched their gravity)
+            if not s.liftUntil and p.GetGravity and p:GetGravity() ~= LC.BubbleGravity then Light(p, LC.BubbleGravity) end
             local mid = p:GetPos() + Vector(0, 0, 36)
             for i, b in ipairs(g.bubbles) do
                 local at = LC.BubbleAt(b, now)
-                if at:Distance(mid) < (b.kind == 3 and 70 or 50) then
+                if at:Distance(mid) < (b.kind == 3 and LC.BubbleLiftReach or LC.BubbleReach) then
                     if b.kind == 3 then
                         if p.SetVelocity then p:SetVelocity(Vector(0, 0, LC.BubbleLiftPush)) end
                         s.liftUntil = now + LC.BubbleLiftSecs

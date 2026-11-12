@@ -199,6 +199,8 @@ local function Emit(now)
     if not IsValid(me) then return end
     if not emitter then emitter = ParticleEmitter(me:GetPos()) end
     if not emitter then return end
+    local gst = LC_CL.DreamGame and LC_CL.DreamGame()
+    local bubbleDream = gst ~= nil and gst.theme == "bubbles"
     for _, f in ipairs(LC_CL.DreamFxList) do
         local e = f.e
         if IsValid(e) then
@@ -208,7 +210,7 @@ local function Emit(now)
                 if pt then pt:SetVelocity(Vector(math.Rand(-20, 20), math.Rand(-20, 20), math.Rand(30, 60))) pt:SetDieTime(2.5) pt:SetStartAlpha(120) pt:SetEndAlpha(0)
                     pt:SetStartSize(10) pt:SetEndSize(50) local c = Rainbow(now * 0.1 + f.seed * 0.1) pt:SetColor(c.r, c.g, c.b) end
             end
-            if Has(f.m, 4) then -- bubbles
+            if Has(f.m, 4) and not bubbleDream then -- bubbles (not in the Bubbles dream: only the real ones there)
                 local pt = emitter:Add("effects/bubble", top + Vector(math.Rand(-20, 20), math.Rand(-20, 20), 0))
                 if pt then pt:SetVelocity(Vector(0, 0, math.Rand(40, 90))) pt:SetDieTime(2) pt:SetStartAlpha(255) pt:SetEndAlpha(0) pt:SetStartSize(4) pt:SetEndSize(8) end
             end
@@ -377,8 +379,8 @@ hook.Add("PostDrawTranslucentRenderables", "LivingCityStrangeDreams", function(_
             local t = now - (b[4] or now)
             local p = Vector(b[1] + math.sin(t * 1.3 + b[1]) * 30, b[2] + math.cos(t * 1.1 + b[2]) * 30, b[3] + t * (st.rise or 45))
             local big = b[5] == 3
-            local c = b[5] == 2 and GOLD or (big and Color(230, 245, 255, 120) or Rainbow(b[1] * 0.001 + now * 0.1, 140))
-            local sz = big and 120 or 60
+            local c = b[5] == 2 and GOLD or (big and Color(230, 245, 255, 120) or Rainbow(b[1] * 0.001 + now * 0.1, 170))
+            local sz = big and 150 or 100 -- (the owner, 12 November: bigger, so it's clear which ones count)
             render.DrawSprite(p, sz, sz, c)
             render.DrawSprite(p + Vector(0, 0, sz * 0.2), sz * 0.25, sz * 0.25, Color(255, 255, 255, 200))
         end

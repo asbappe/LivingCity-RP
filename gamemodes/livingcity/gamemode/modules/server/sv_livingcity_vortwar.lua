@@ -38,6 +38,8 @@ local Line, Everyone, Notice = P.Line, P.Everyone, P.Notice
 LC.VortWarPer, LC.VortWarMost = 0.15, 0.60
 LC.VortWarAt = { 0.25, 0.45 }      -- (when they break in: this far through the dream)
 LC.VortWarSecs = 45                -- (the longest the tug-of-war lasts)
+LC.VortWarLead = 8                 -- (from their appearing to the tug-of-war: the owner, 12 November, "can the delay be like 8 seconds?")
+LC.VortWarSound = "ambient/energy/whiteflash.wav" -- (their arrival: once, not a loop; the charge sound looped and outlived the dream)
 LC.VortWarPull = 1 / 18            -- (the meter, a second, with every dreamer on one side)
 LC.VortWarRadius = 120             -- (their light)
 LC.VortWarCost, LC.VortWarLoyal, LC.VortWarXP = 5, 5, 10
@@ -123,7 +125,13 @@ function LC.VortWarSetup(g)
     g.def = setmetatable({ state = function(gg, p)
         local t = base.state(gg, p) or {}
         local vw = gg.vw
-        if vw and vw.phase == "tug" then
+        if vw and vw.phase == "gather" then
+            local spots = {}
+            for _, v in ipairs(vw.vorts or {}) do spots[#spots + 1] = { v.at.x, v.at.y, v.at.z } end
+            t.vw = false
+            t.vwSpots = spots
+            t.big = string.format("The vortigaunts are gathering their power. In %d seconds: stand in their light, or keep to her.", math.max(1, math.ceil((vw.tugAt or 0) - CurTime())))
+        elseif vw and vw.phase == "tug" then
             local spots = {}
             for _, v in ipairs(vw.vorts) do spots[#spots + 1] = { v.at.x, v.at.y, v.at.z } end
             t.vw = { meter = vw.meter, light = vw.side[p] and vw.side[p].now or false, spots = spots, r = LC.VortWarRadius }
@@ -159,9 +167,9 @@ local function BreakIn(g, now)
         if e then
             e:SetColor(PURPLE)
             vw.vorts[#vw.vorts + 1] = { e = e, at = at }
-            Snd(e, "npc/vort/attack_charge.wav", 90)
         end
     end
+    if vw.vorts[1] then Snd(vw.vorts[1].e, LC.VortWarSound, 75) end
     -- her figure: there to flicker (a giant one if this dream has none)
     if not IsValid(g.her) and not IsValid(g.star) and LC.AdmireModel then
         local b = g.bounds
@@ -179,11 +187,12 @@ local function BreakIn(g, now)
             e:SetAngles(e:GetAngles() + Angle(0, math.random(-40, 40), 0))
         end
     end
-    vw.phase, vw.since, vw.answerAt = "tug", now, now + 8
+    -- (a short gathering, then the tug-of-war: LC.VortWarLead)
+    vw.phase, vw.tugAt = "gather", now + LC.VortWarLead
     SayAs(g, "vortwar_in")
     for _, p in ipairs(Everyone(g)) do
         if p.ScreenFade then p:ScreenFade(SCREENFADE and SCREENFADE.IN or 1, Color(150, 60, 255, 170), 2, 0.3) end
-        Notice(p, "warn", "The vortigaunts are here", "Purple vortigaunts have broken into the dream. Stand in their light to side with them (it costs Civil Standing, but the Resistance will hear of it), or keep to her task and stay loyal.", 10)
+        Notice(p, "warn", "The vortigaunts are here", string.format("Purple vortigaunts have broken into the dream. In %d seconds, stand in their light to side with them (it costs Civil Standing, but the Resistance will hear of it), or keep to her task and stay loyal.", LC.VortWarLead), 10)
     end
     g.dirty = true
 end
@@ -238,6 +247,12 @@ local function Tick(g, dt, now)
     local vw = g.vw
     if vw.phase == "wait" then
         if now >= vw.at then BreakIn(g, now) end
+        return
+    end
+    if vw.phase == "gather" then
+        if now >= (vw.tugAt or 0) then
+            vw.phase, vw.since, vw.answerAt, g.dirty = "tug", now, now + 8, true
+        elseif now >= (vw.sentAt or 0) then vw.sentAt, g.dirty = now + 1, true end -- (the countdown on their screens)
         return
     end
     if vw.phase ~= "tug" then return end

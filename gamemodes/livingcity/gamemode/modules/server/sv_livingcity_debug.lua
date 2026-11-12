@@ -174,6 +174,15 @@ function LC.BuildReport()
             songs[#songs + 1] = id .. " " .. n
         end
         out[#out + 1] = "ending songs (sound/livingcity/endings/): " .. table.concat(songs, ", ")
+        if LC.DreamMusicList then -- (the dreams you play: their own songs found, else Half-Life 2's, else none: sv_livingcity_strangedreams.lua)
+            local ds = {}
+            for _, r in ipairs(LC.DreamMusicList()) do ds[#ds + 1] = r.id .. " " .. (r.own > 0 and tostring(r.own) or (r.fallback and "0 (Half-Life 2's)" or "0")) end
+            out[#out + 1] = "dream songs (sound/livingcity/dreams/<codeword>/, or <codeword>1.mp3 there): " .. table.concat(ds, ", ")
+        end
+        if LC.SoundGuardReport then -- (sounds refused for starting over and over: sh_livingcity_soundguard.lua)
+            local sg = LC.SoundGuardReport()
+            out[#out + 1] = "sound guard (stopped for repeating): " .. (#sg > 0 and table.concat(sg, ", ") or "none")
+        end
         local url = GetConVar("sv_downloadurl")
         out[#out + 1] = "downloads: sv_downloadurl \"" .. (url and url:GetString() or "") .. "\" (players get new sounds after a FastDL sync and a map change)"
     end

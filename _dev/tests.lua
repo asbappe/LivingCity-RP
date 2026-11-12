@@ -17729,6 +17729,242 @@ end
 DreamTests()
 
 ----------------------------------------------------------------------
+-- The dreams after the owner's playtest of 12 November: the sound guard, a unit dreaming in the Combine zone, the
+-- dream's own weapons, a folder of music for each dream, staff stopping a dream from inside it, and the dreams changed
+-- (The Battle Line, Careless Talk, Duck and Cover, Freeze, Citizen, Bubbles)
+function DreamFixTests()
+section("Shared dreams: the playtest fixes of 12 November (sound guard, units dreaming, dream weapons, music, stopping, battle line, careless talk, duck and cover, freeze, bubbles)")
+_setcvar("lc_dream_rules", 0) _setcvar("lc_dream_auto", 0)
+local errs0 = #_errors
+local savedWalls, realGetAll, realReload = _walls, player.GetAll, LC.EndingReload
+_walls = {}
+LC.EndEvent(true)
+_setcvar("lc_needs", 0)
+LC.EndingReload = function() end
+local CITY, DREAM = Vector(172000, -172000, 0), Vector(232000, -232000, 0)
+local adm = newPlayer("FXAdmin", "admin")
+local a = newPlayer("FXA", "citizen")
+local b = newPlayer("FXB", "citizen")
+local cop = newPlayer("FXCop", "cp")
+_run(3)
+local function Asleep(p, at)
+    p:SetPos(at)
+    local key = string.format("x%d_%d_%d", math.floor(at.x), math.floor(at.y), math.floor(at.z))
+    p.lcSleep = { t0 = CurTime() - 70, done = CurTime() - 10, last = CurTime(), slept = true }
+    p:SetNW2Bool("lc_sleeping", true)
+    p.lcBedKey, p.lcBedFrom = key, at + Vector(40, 0, 0)
+    LC.BedSleepers[key] = p
+end
+local function Up(p) if p.lcSleep and LC.WakeUp then LC.WakeUp(p, "quiet") end end
+local function Has(list, p) for _, q in ipairs(list) do if q == p then return true end end return false end
+local function Both() Asleep(a, CITY) Asleep(b, CITY + Vector(0, 200, 0)) end
+local function Start(id)
+    Both()
+    local okS, d = LC.DreamStart(id, adm, false, nil, true)
+    local g = okS and d.game
+    _run(0.1)
+    if g then g.pl[a].safe, g.pl[b].safe = 0, 0 end
+    return g, d
+end
+local function Stop(d) LC.DreamGameStop(d, "test") _run(4) end -- (everything put back in full before the next)
+local function SentTo(p, name, test)
+    for _, m in ipairs(net.sent) do
+        local t = m.data[1]
+        if m.name == name and (m.to == p or (type(m.to) == "table" and table.HasValue(m.to, p))) and type(t) == "table" and (not test or test(t)) then return t end
+    end
+    return nil
+end
+player.GetAll = function() return { adm, a, b, cop } end
+local dp = LC.AddPoint(DREAM, 0, "dream")
+
+-- the sound guard (the owner: "stops sounds that have played more than like 4 times in a row for no reason")
+LC.SoundGuardReset()
+local thing, other = ents.Create("prop_dynamic"), ents.Create("prop_dynamic")
+local started = 0
+for i = 1, 6 do if LC.SoundGuardCheck(thing, "livingcity/dreams/loop.mp3", 100 + i) then started = started + 1 end end
+ok(started == LC.SoundGuardMax and LC.SoundGuardMax == 4, "the same sound on the same thing: four starts, then refused", started)
+local last = LC.SoundGuardStopped[#LC.SoundGuardStopped]
+ok(last and last.snd == "livingcity/dreams/loop.mp3" and #LC.SoundGuardReport() >= 1, "and the refusal is listed for the debug report")
+ok(LC.SoundGuardCheck(thing, "livingcity/dreams/loop.mp3", 107 + LC.SoundGuardWindow), "twenty seconds on, it may play again")
+ok(LC.SoundGuardCheck(other, "livingcity/dreams/loop.mp3", 107), "the same sound on something else is counted on its own")
+local shots = 0
+for i = 1, 10 do if LC.SoundGuardCheck(thing, "weapons/ar2/fire1.wav", 200 + i * 0.1) then shots = shots + 1 end end
+ok(shots == 10 and not LC.SoundGuarded("player/footsteps/concrete1.wav") and LC.SoundGuarded("ambient/alarms/alarm1.wav")
+    and LC.SoundGuarded("npc/vort/attack_charge.wav") and LC.SoundGuarded("Weapon_AR2.Single", true) and not LC.SoundGuarded("Weapon_AR2.Single"),
+    "gunfire, footsteps and the like are never refused; alarms, loops and the city's own sounds always count")
+ok(LC.SoundGuardClean(")livingcity\\Dreams\\X.MP3") == "livingcity/dreams/x.mp3", "a path's markers and capitals don't fool it")
+LC.SoundGuardReset()
+
+-- a Civil Protection unit asleep in the Combine zone dreams the nightmare (the owner: "I want to dream")
+local realCZ = LC.CombineZoneAt
+LC.CombineZoneAt = function(pos) return (pos.y < -171000 and pos.y > -173000) or nil end
+Asleep(cop, CITY) Asleep(a, CITY + Vector(0, 300, 0))
+local night = LC.DreamSleepers("nightmare", "maze")
+ok(Has(night, cop) and not Has(night, a), "asleep in the Combine zone: the unit dreams the nightmare, a citizen there is still spared")
+ok(LC.DreamOnlyEnforcers({ cop }, "maze") and not LC.DreamOnlyEnforcers({ cop, a }, "maze") and not LC.DreamOnlyEnforcers({ cop }, "cheese"),
+    "only Enforcers asleep for a dream nobody can opt out of: they'll dream it like anyone")
+LC.CombineZoneAt = realCZ
+Up(cop) Up(a)
+
+-- the dream's own weapons get through (they were taken away the moment they were given: "I have no guns as a CP unit")
+local pick = hook.t.PlayerCanPickupWeapon.LivingCityDreams
+local rifle = { IsValid = function() return true end, GetClass = function() return "weapon_ar2" end }
+a.lcDreaming = 999
+local blocked = pick(a, rifle) == false
+LC.DreamGive(a, "weapon_ar2")
+ok(blocked and pick(a, rifle) == nil and a.lcDreamGrant.weapon_ar2, "in a dream: a weapon is refused, unless the dream itself hands it over")
+a.lcDreaming, a.lcDreamGrant = nil, nil
+
+-- music: a folder for each dream, and Half-Life 2's own when there's none
+_files["sound/livingcity/dreams/freeze/creepy.ogg"] = "x"
+ok(table.HasValue(LC.PropagandaSongs("freeze"), "livingcity/dreams/freeze/creepy.ogg") and LC.DreamSongFor("freeze") == "livingcity/dreams/freeze/creepy.ogg",
+    "a dream's own folder: sound/livingcity/dreams/freeze/", tostring(LC.DreamSongFor("freeze")))
+_files["sound/livingcity/dreams/freeze/creepy.ogg"] = nil
+local listed
+for _, r in ipairs(LC.DreamMusicList()) do if r.id == "harvest" then listed = r end end
+ok(LC.DreamSongFor("freeze") == LC.StrangeFallbackSongs.freeze and LC.DreamSongFor("harvest") ~= nil and listed and listed.own == 0 and listed.fallback,
+    "without one, Half-Life 2's own: every dream has music, and the debug report lists them")
+
+-- staff stop the dream from inside it; every sound it started is stopped
+net.sent = {}
+local g, d = Start("maze")
+ok(g ~= nil and a.lcDreaming, "a dream under way")
+LC.SoundGuardTrack(a, "ambient/alarms/alarm1.wav")
+ok(LC.SoundGuardHeard[d.id] and #LC.SoundGuardHeard[d.id].list == 1, "a sound started on a dreamer is remembered")
+local okStop = LC.DreamStopAll(adm)
+_run(3)
+ok(okStop and LC.DreamActive == nil and not a.lcDreaming and not b.lcDreaming, "stopped for everyone (F1 > Staff, or F1 in the dream)")
+ok(SentTo(a, "lc_soundguard", function(t) return t.k == "dreamend" and t.list[1] and t.list[1][2] == "ambient/alarms/alarm1.wav" end),
+    "and every sound it started is stopped on the dreamers' computers too")
+ok(select(1, LC.DreamStopAll(adm)) == false, "nothing to stop: says so")
+Up(a) Up(b)
+
+-- Duck and Cover: at a pace that can be read, and the alarm only while the siren lasts
+g, d = Start("duck")
+ok(g and math.abs(g.at - CurTime() - LC.DuckFirst) < 1, "the first siren once the hello has been read", g and (g.at - CurTime()))
+g.at = CurTime()
+_run(0.2)
+ok(g.phase == "siren" and g.alarmOn and g.sirenLen >= LC.DuckSiren[2], "the siren: the alarm on, long enough to find a table")
+g.at = CurTime()
+_run(0.2)
+ok(g.phase == "calm" and not g.alarmOn and g.at - CurTime() >= LC.DuckCalm[1] - 1, "after it: the alarm stopped, and a long calm", g.at - CurTime())
+Stop(d)
+
+-- Careless Talk: the spy gives themselves away, and the tables have signs
+g, d = Start("spy")
+g.at = CurTime()
+_run(0.2)
+ok(g.phase == "pick" and g.round == 1, "a round begins")
+local stS = g.def.state(g, a)
+ok(stS.signs and #stS.signs == 4 and string.find(stS.signs[1][4], "^Table ") and string.find(LC.DreamGames.spy.goal, "glancing", 1, true),
+    "a sign over every table, and the goal says how to tell the spy")
+g.glanceAt = CurTime()
+_run(0.2)
+local spy = g.spyN
+local still = true
+for _, n in ipairs(g.npcs) do if n ~= spy and n.e:GetAngles().y ~= n.yaw then still = false end end
+ok((g.glances or 0) >= 1 and spy.e:GetAngles().y ~= spy.yaw and still, "the spy glances over their shoulder; nobody else does")
+_run(LC.SpyGlanceSecs + 0.3)
+ok(g.phase ~= "pick" or spy.e:GetAngles().y == spy.yaw and g.glanceAt > CurTime(), "and turns back, to glance again a few seconds later")
+ok(LC.SpyDescribe(spy) and string.find(LC.SpyDescribe(spy), ", at the table ", 1, true), "described in plain words", LC.SpyDescribe(spy))
+Stop(d)
+
+-- Bubbles: bigger, more, slower, and the dreamers light
+ok(LC.BubbleGravity == 0.4 and LC.BubbleCount >= 45 and LC.BubbleRise <= 25 and LC.BubbleReach >= 70, "more bubbles, slower, easier to touch; the dreamers at 40% of their weight")
+g, d = Start("bubbles")
+ok(g and #g.bubbles == LC.BubbleCount and (a:GetGravity() == LC.BubbleGravity or g.pl[a].liftUntil), "in the dream, light as said", a:GetGravity())
+for _, bb in ipairs(g.bubbles) do bb.x = bb.x + 90000 end -- (none to touch just now)
+g.pl[a].liftUntil = nil
+a:SetGravity(1)
+_run(0.2)
+ok(a:GetGravity() == LC.BubbleGravity, "and kept light, whatever else touched it")
+Stop(d)
+
+-- Freeze, Citizen: the lights go out, the dead follow, and his eyes burn red
+local lamp, cityLamp = ents.Create("light_spot"), ents.Create("light_spot")
+lamp:SetPos(DREAM + Vector(100, 0, 200))
+cityLamp:SetPos(CITY + Vector(0, 0, 200))
+g, d = Start("freeze")
+ok(g and table.HasValue(lamp.fired or {}, "TurnOff") and not table.HasValue(cityLamp.fired or {}, "TurnOff") and g.def.state(g, a).dark,
+    "the dream zone's lights go out (the city's stay on), and the dreamers' screens go dark")
+g.t0 = CurTime() - LC.FreezeZombieAfter - 1
+_run(0.3)
+ok(g.zombies and #g.zombies >= 2, "the dead come shuffling after them", g.zombies and #g.zombies)
+local livesA = g.pl[a].lives
+a:SetPos(g.starts[1] + Vector(200, 0, 0))
+for _, z in ipairs(g.zombies) do if IsValid(z.e) then z.e:SetPos(Vector(g.zx - 2000, z.e:GetPos().y, g.top)) end end
+g.phase, g.phaseAt, g.redFrom, g.pl[a].safe = "red", CurTime() + 10, 0, 0
+a.GetVelocity = function() return Vector(200, 0, 0) end
+_run(0.1)
+a.GetVelocity = nil
+local stF = g.def.state(g, a)
+ok(g.pl[a].lives == livesA - 1 and stF.lasers and stF.lasers[1] and stF.cop, "caught moving: red beams from his eyes, and a life gone")
+Stop(d)
+ok(table.HasValue(lamp.fired or {}, "TurnOn"), "awake: the lights back on")
+lamp:Remove() cityLamp:Remove()
+
+-- the vortigaunts: from their appearing to the tug-of-war, LC.VortWarLead seconds (the owner: "can the delay be like 8 seconds?")
+LC.VortWarForceNext = true
+g, d = Start("harvest")
+g.vw.at = CurTime()
+_run(0.3)
+local vwG = g.vw
+local stV = g.def.state(g, a)
+ok(LC.VortWarLead == 8 and vwG.phase == "gather" and math.abs(vwG.tugAt - CurTime() - LC.VortWarLead) < 1 and stV.vw == false and string.find(stV.big or "", "seconds", 1, true),
+    "they appear, and the tug-of-war begins eight seconds later (counted down on screen)", tostring(vwG.phase))
+vwG.tugAt = CurTime()
+_run(0.3)
+ok(vwG.phase == "tug" and type(g.def.state(g, a).vw) == "table", "then the meter, and the tug-of-war")
+Stop(d)
+
+-- The Battle Line: the whole dream zone, a usual run, rifles in the soldiers' hands, the city's NPCs sent off the field
+local bz = LC.AddZone(nil, nil, "dream", 0, { mins = DREAM - Vector(3000, 2000, 100), maxs = DREAM + Vector(3000, 2000, 2000) })
+net.sent = {}
+g, d = Start("battleline")
+ok(g and g.wide and g.x1 - g.x0 > 5000 and g.bounds.maxs.x > DREAM.x + 2900, "the field is the whole dream zone", g and (g.x1 - g.x0))
+local held = 0
+for _, e in ipairs(g.ents) do if IsValid(e) and e:GetModel() == "models/weapons/w_irifle.mdl" and e:GetParent() ~= nil then held = held + 1 end end
+ok(held == #g.soldiers and #g.soldiers == 6, "every soldier has a rifle in their hands", held)
+local r1 = LC.BattleLineNewRebel(g, nil)
+ok(r1.speed >= LC.BattleLineRun.rebel * 0.85 and r1.speed <= LC.BattleLineRun.rebel * 1.15, "the rebels run at a usual pace", r1.speed)
+ok(LC.BattleLineAdvance(g) == 1, "no giants yet: nothing holding her air back")
+local big = LC.BattleLineNewRebel(g, "doom", nil, 3)
+ok(LC.BattleLineAdvance(g) < 0.1, "a giant just come: hardly started", LC.BattleLineAdvance(g))
+big.e:SetPos(Vector((big.x0 + g.lineX) / 2, big.y, g.top))
+ok(math.abs(LC.BattleLineAdvance(g) - 0.5) < 0.05, "half way across", LC.BattleLineAdvance(g))
+local walker = ents.Create("npc_citizen")
+walker:SetPos(Vector(g.lineX + 400, (g.y0 + g.y1) / 2 + 100, g.top))
+d.made[walker] = nil -- (a city NPC that wandered in, not one the dream made)
+local findWas = ents.FindInBox
+ents.FindInBox = function() return { walker } end
+LC.BattleLineClearField(g)
+ents.FindInBox = findWas
+ok(walker.sched == (SCHED_FORCED_GO_RUN or 71) and walker.goal and (walker.goal.y > g.y1 or walker.goal.y < g.y0), "a city NPC on the field is sent off it")
+local dmg = { n = 30 }
+function dmg:GetAttacker() return a end
+function dmg:SetDamage(v) self.n = v end
+hook.t.EntityTakeDamage.LivingCityBattleLine(walker, dmg)
+ok(dmg.n == 0, "and the dream's rifle never hurts anything in the waking world")
+LC.BattleLineTracer(Vector(0, 0, 0), Vector(100, 0, 0))
+ok(SentTo(a, "lc_dreamgame", function(t) return t.k == "tracer" end), "shots' streaks are drawn on the dreamers' screens (gone with the dream), not left in the world")
+walker:Remove()
+Stop(d)
+LC.RemoveZone(bz)
+
+LC.DreamForget()
+LC.RemovePoint(dp)
+for _, p in ipairs({ adm, a, b, cop }) do
+    Up(p)
+    p:SetPos(Vector(-122000, -122000, 0))
+end
+player.GetAll, LC.EndingReload = realGetAll, realReload
+_setcvar("lc_needs", 1)
+_walls = savedWalls
+ok(#_errors == errs0, "(no errors in any of it)", _errors[errs0 + 1])
+end
+DreamFixTests()
+
+----------------------------------------------------------------------
 -- Shared dreams, the Administrator's choice (sv_livingcity_dreams.lua): moods, the tablet, and watching once you're out
 local function DreamMoodTests()
 section("Shared dreams: Happy, Neutral or Nightmare, chosen on the Administrator's tablet")
@@ -18378,11 +18614,12 @@ LC.AddXP = realAddE
 ok(not cop.lcDreaming and paidE == 1, "awake, the Enforcer's XP is paid (after everything's put back)", paidE)
 ok(LC.DreamsEndured(a) == end0 + 1 and LC.DreamsEndured(cop) == 0, "a dreamer has lived through one more dream; an Enforcer hasn't")
 ok(g.standins and not IsValid(g.standins[2] and g.standins[2].ent), "everything of the stand-ins is gone when it ends")
--- only Enforcers asleep: no dream
+-- only Enforcers asleep: they dream it like anyone (the owner, 12 November: "I want to dream")
 Up(a) Up(b)
 Asleep(cop, CITY)
 local okE, whyE = LC.DreamStart("maze", nil, false, nil, true)
-ok(okE == false and string.find(tostring(whyE), "Enforcers", 1, true), "a nightmare with only Enforcers asleep doesn't happen", tostring(whyE))
+ok(okE == true and whyE.allDream and whyE.game and whyE.game.pl[cop] ~= nil and not cop.lcDreamEnforcer, "a nightmare with only Enforcers asleep: they dream it like anyone", tostring(whyE))
+if okE then LC.DreamGameStop(whyE, "admin") _run(3.5) end
 Up(cop)
 -- no stand-ins with lc_dream_min 0
 _setcvar("lc_dream_min", 0)
@@ -19560,6 +19797,8 @@ do
     -- when it should be over: giants in metal and flesh, then her gunships and the helicopter's bombs
     g.t0 = CurTime() - (BT.calm + BT.battle)
     _run(0.2)
+    ok(g.phase == "doom" and LC.BattleLineAlive(g) < LC.BattleLineDoom, "the giants come in a few at a time, not all in one instant (the owner, 12 November)", tostring(LC.BattleLineAlive(g)))
+    ok(Until(g, function() return #(g.doomQueue or { 1 }) == 0 end) and g.phase == "doom", "and soon all of them, before her air comes", tostring(g.phase))
     local giants, skinned = 0, 0
     local sizes = {}
     for _, r in ipairs(g.rebels) do if r.alive and r.doom then giants = giants + 1 sizes[r.e:GetModelScale()] = (sizes[r.e:GetModelScale()] or 0) + 1 if r.e:GetMaterial() ~= "" then skinned = skinned + 1 end end end
@@ -19569,10 +19808,10 @@ do
     for _, r in ipairs(g.rebels) do if r.alive and r.doom then if r.e:GetModelScale() >= 3 and not big then big = r elseif r.e:GetModelScale() == 2 and not small then small = r end end end
     local bigHp, smallHp = big.hp, small.hp
     for _, r in ipairs(g.rebels) do if r ~= big and r.alive and IsValid(r.e) then r.e:SetPos(r.e:GetPos() + Vector(0, 9000, 0)) end end
-    local hitBig = LC.BattleLineShot(b, big.e:GetPos() + Vector(-600, 0, 40 * big.e:GetModelScale()), Vector(1, 0, 0))
+    local hitBig = LC.BattleLineShot(b, big.e:GetPos() + Vector(-150, 0, 40 * big.e:GetModelScale()), Vector(1, 0, 0))
     for _, r in ipairs(g.rebels) do if r ~= small and r.alive and IsValid(r.e) then r.e:SetPos(r.e:GetPos() + Vector(0, 9000, 0)) end end
     small.e:SetPos(Vector(small.e:GetPos().x, small.y, g.top))
-    LC.BattleLineShot(b, small.e:GetPos() + Vector(-600, 0, 80), Vector(1, 0, 0))
+    LC.BattleLineShot(b, small.e:GetPos() + Vector(-150, 0, 80), Vector(1, 0, 0)) -- (from in front of the line: the giants have been coming a while)
     for _, r in ipairs(g.rebels) do if r.alive and IsValid(r.e) then r.e:SetPos(Vector(r.e:GetPos().x, r.y, g.top)) end end
     ok(hitBig == "immune" and big.hp == bigHp and small.hp == smallHp - 1 and bigHp == 10 * big.e:GetModelScale() ^ 2,
         "three times the size and up, the dreamers' bullets bounce off; twice the size, they can be shot (health by size)", tostring(hitBig) .. " " .. big.hp .. " " .. small.hp)
@@ -19600,15 +19839,20 @@ do
         and string.find(LC.VortWarLine() or "", "60%", 1, true), "15% for each freed vortigaunt alive, at most 60%; her tablet says so", LC.VortWarLine())
     -- they break in (for sure, as the editor's button makes it), and both dreamers stand in their light: her figure shatters
     LC.VortWarForceNext = true
+    -- (the dream before put back in full first, which can take a few seconds: what they wake with is measured from it;
+    -- and nobody still being walked to the cells from the night before: not this test's business)
+    _run(1.2)
+    if LC.Marching then LC.Marching[a], LC.Marching[b] = nil, nil end
     g, d = Start("harvest")
     ok(g and g.vw and g.vw.phase == "wait" and g.vw.at > CurTime(), "a propaganda dream: they will break in, a while in")
+    local leadWas = LC.VortWarLead
+    LC.VortWarLead = 0 -- (straight into the tug-of-war, for these: DreamFixTests has the wait)
     g.vw.at = CurTime()
     _run(0.3)
     local vw = g.vw
     ok(vw.phase == "tug" and #vw.vorts >= 2 and Said(g, "vortwar_in") and (IsValid(g.her) or IsValid(g.star)), "purple vortigaunts break in, and say so", tostring(vw.phase) .. " " .. #vw.vorts)
     local sa = g.def.state(g, a)
     ok(type(sa.vw) == "table" and #sa.vw.spots == #vw.vorts, "everyone's screen gets their light and the meter")
-    local stA, stB = LC.Standing(a), LC.Standing(b)
     a:SetPos(vw.vorts[1].at + Vector(0, 0, 4)) b:SetPos(vw.vorts[1].at + Vector(30, 0, 4))
     _run(1)
     ok(vw.meter > 0 and vw.side[a].now, "standing in their light pulls toward them", tostring(vw.meter))
@@ -19621,9 +19865,14 @@ do
     LC.VortWarPull = pullWas
     ok(okU and Said(g, "vortwar_shatter") and g.her == nil and LC.VortWeakNext == true,
         "everyone in their light: her figure shatters, and her spell is weakened", tostring(vw.phase) .. " " .. tostring(vw.meter))
+    -- (what siding cost, as it was charged: the standing itself also moves as the night before is put back, a few seconds either way)
+    local charged, addWas = {}, LC.AddStanding
+    LC.AddStanding = function(p, n, why, ...) if why == "sided with the vortigaunts in a dream" then charged[p] = (charged[p] or 0) + n end return addWas(p, n, why, ...) end
     _run(3)
-    ok(g.pl[a].done and LC.Standing(a) == stA - LC.VortWarCost and LC.Counter(a, "res_jobs") >= 1,
-        "the dream ends; waking, siding with them cost Civil Standing, and the Resistance remembers", (LC.Standing(a) - stA) .. " " .. (LC.Standing(b) - stB) .. " " .. LC.Counter(a, "res_jobs") .. " " .. tostring(g.pl[a].done))
+    for _ = 1, 12 do if LC.VortWarSide(a) == nil and LC.VortWarSide(b) == nil then break end _run(0.5) end -- (putting everything back can take a few seconds)
+    LC.AddStanding = addWas
+    ok(g.pl[a].done and charged[a] == -LC.VortWarCost and charged[b] == -LC.VortWarCost and LC.Counter(a, "res_jobs") >= 1,
+        "the dream ends; waking, siding with them cost Civil Standing, and the Resistance remembers", tostring(charged[a]) .. " " .. tostring(charged[b]) .. " " .. LC.Counter(a, "res_jobs") .. " " .. tostring(g.pl[a].done))
     Stop(d)
     -- next time: her spell weakened (offences cost half); this time nobody listens, and she wins
     LC.VortWarForceNext = true
@@ -19646,6 +19895,7 @@ do
     LC.VortWarPull = pullWas2
     ok(okG and Said(g, "vortwar_loyal") and LC.VortWarSide(a) == "loyal" and not g.pl[b].done,
         "nobody in their light: 'Begone!', they fade, the dream carries on, and the dreamers kept to her", tostring(vw.phase))
+    LC.VortWarLead = leadWas
     Stop(d)
     for _, v in ipairs(freed) do v:Remove() end
     for _, e in ipairs(vorts) do if IsValid(e) then e.lcVortFreed = true end end

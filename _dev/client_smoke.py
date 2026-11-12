@@ -2241,6 +2241,8 @@ local ok, e = pcall(function()
         { "shh", { noise = 80, crying = false } },
         { "bubbles", { bubbles = { { 0, 0, 30, CurTime() - 1, 1 }, { 10, 0, 30, CurTime(), 2 }, { 20, 0, 30, CurTime(), 3 } }, rise = 45 } },
         { "watchers", { watchers = { 1 }, glows = { { 0, 0, 30, 5 } } } },
+        { "propaganda", { signs = { { 0, 0, 120, "Table by the window" } }, big = "Crouch beside the one you suspect: 20 seconds left." } }, -- (Careless Talk's signs)
+        { "freeze", { dark = true, cop = 1, lasers = { { 1, CurTime() + 1 } }, phase = "red" } }, -- (Freeze, Citizen: the dark and his red eyes)
     }
     for _, th in ipairs(themes) do
         Msg({ k = "start", id = th[1], name = th[1], goal = "Go.", ends = CurTime() + 100, lives = 3, maxLives = 3, theme = th[1] })
@@ -2254,6 +2256,20 @@ local ok, e = pcall(function()
         hook.t.HUDPaint.LivingCityDreamGames()
     end
     if not LC_CL.DanceBeat({ bpm = 120, beat0 = CurTime() - 2 }, CurTime()) then error("the dance's beat") end
+    -- the dark (Freeze, Citizen), shots' streaks (The Battle Line), city NPCs left out of the arena, and the sound guard's end of a dream
+    Msg({ k = "start", id = "battleline", name = "The Battle Line", goal = "Go.", ends = CurTime() + 100, lives = 3, maxLives = 3, theme = "propaganda", bounds = { -100, -100, -10, 100, 100, 200 } })
+    Msg({ k = "state", lives = 3, dark = true })
+    Msg({ k = "tracer", a = { 0, 0, 40 }, b = { 500, 0, 40 }, heavy = true })
+    if #LC_CL.DreamTracers ~= 1 then error("a shot's streak wasn't kept to draw") end
+    hook.t.PostDrawTranslucentRenderables.LivingCityDreamGames(false, false)
+    hook.t.RenderScreenspaceEffects.LivingCityDreamDark()
+    hook.t.SetupWorldFog.LivingCityDreamDark()
+    hook.t.SetupSkyboxFog.LivingCityDreamDark(1)
+    hook.t.Think.LivingCityDreamNPCs()
+    Msg({ k = "stop", how = "over" })
+    if #LC_CL.DreamTracers ~= 0 then error("shots' streaks outlived the dream") end
+    LC.SoundGuardClientEnd({ { 0, "ambient/alarms/alarm1.wav" }, { 1, "livingcity/dreams/x.mp3" } })
+    if LC.SoundGuardCheck("me", "livingcity/test.wav") ~= true then error("the sound guard refused a first play") end
     -- the nonsense: floating things, faces, effects (fakes for the client-only pieces)
     local cmWas, fbcWas = ClientsideModel, ents.FindByClass
     local made = 0
