@@ -32,6 +32,15 @@ Code: `sv_livingcity_patdown.lua`, `cl_livingcity_patdown.lua`; the quick menu i
 - Dragged out by the arm, killed, or locked up by Civil Protection instead: off the cage's list.
 - It goes in the chronicle (kind `caged`), as a caged citizen does.
 
+## How cuffed people look (12 November)
+
+The owner: "is it possible to apply a 'cuffed' animation for NPCs and the players? even a primitive model for cuffs, even if just two metal circles wrapped around the wrists? hands would be cuffed behind their backs", and "a squirming animation where the hands that are cuffed are shuffling around pointer-finger/thumb are fiddling with the cuffs". Code: `cl_livingcity_cuffed.lua` (drawn on each player's own game; nothing on the server).
+
+- **Arms behind the back:** anyone cuffed (a player, or a cuffed citizen or rebel) has their arms turned behind them, on top of whatever they are doing (standing, walking, being dragged).
+- **The cuffs:** two steel rings drawn round the wrists, with a short link between them. Not drawn in your own first person view.
+- **Working at them:** while a cuffed player works at the cuffs or picks them, and while a citizen with a hidden pick is at it, the wrists twist against each other, the shoulders work, and the thumb and forefinger pick at the cuffs. This is the sign to watch for; nothing else tells you.
+- **To adjust by eye, in your own game's console (saved on your PC):** `lc_cuff_pose "24 10 35 -28 20"` (degrees: upper arm back, in towards the spine, twist, elbow bend, wrist), `lc_cuff_ring "0.075 0.035"` (the rings' width and thickness), `lc_cuffs_show 0` to turn it off. The pose was set without seeing it in the game: expect to tune it.
+
 ## The quick menu for situations
 
 `LC_CL.OpenSituation(page)` shows a list where F1's is, picked with the number keys, with what was just said written under it. It stays while the situation does (near the chair, near the cage, the prisoner cuffed and in reach) and for two minutes at most without a key. **The interrogation chair and the holding cage use it now, in place of their mouse windows** (the same choices; the cage lists each prisoner, and a second page has what to do with them).

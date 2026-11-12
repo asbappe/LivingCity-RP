@@ -1726,3 +1726,5 @@ Type them in the server console on the host panel, or in your own game console (
   Notes:
 - [ ] **A cuffed citizen with a hidden lockpick:** cuff several, skip the patdown, walk ahead with your back to them. Does one slip the cuffs and run? Looking at them, do you sometimes get the "something glints" line?
   Notes:
+- [ ] **How cuffed people look:** cuff a player and a citizen. Are the arms behind the back (not through the body, not out to the sides)? Are the two rings on the wrists, the right size, with the link between? Have the player work at the cuffs: do the hands and fingers fiddle? If the pose is off, try `lc_cuff_pose "24 10 35 -28 20"` with other numbers and send the ones that look right (and a screenshot of what was wrong).
+  Notes:

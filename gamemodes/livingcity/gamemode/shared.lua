@@ -296,6 +296,7 @@ LC_MODULES = {
         "cl_livingcity_ways",
         "cl_livingcity_chronicle", -- (staff: F1 > What now? > The city's stories)
         "cl_livingcity_rebelhold", -- (the holding cage's quick menu)
+        "cl_livingcity_cuffed", -- (cuffed people: arms behind the back, and the cuffs drawn on their wrists)
         "cl_livingcity_patdown", -- (the quick menu that comes with cuffing someone)
         "cl_livingcity_chair", -- (the interrogation chair: the asker's window, and the lamp in the sitter's eyes)
         "cl_livingcity_feeds", -- (the Civil Protection incident feed and the Resistance notice board: lc_newsfeed)

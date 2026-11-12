@@ -4,7 +4,7 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version 8d1a70d. Admin-only console messages and log lines are left out.
+Made from version b7628e4. Admin-only console messages and log lines are left out.
 
 11785 lines, from 316 files.
 
@@ -14130,68 +14130,68 @@ Made from version 8d1a70d. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: npccuff tick
 
-- "'s cuffs drop to the ground. They run."  (text, line 335)
-- "picked their cuffs on the way to the cells and ran"  (text, line 344)
+- "'s cuffs drop to the ground. They run."  (text, line 336)
+- "picked their cuffs on the way to the cells and ran"  (text, line 345)
 
 > Note for you (not shown in game): part of: pick fails
 
-- "Your pick snaps in the {lock}."  (chat message, line 381)
-- "The {lock} won't give. Try again."  (chat message, line 383)
+- "Your pick snaps in the {lock}."  (chat message, line 382)
+- "The {lock} won't give. Try again."  (chat message, line 384)
 
 > Note for you (not shown in game): part of: pick cuffs done
 
-- "[Miscount] They see the pick in your fingers, and take it off you."  (chat message, line 393)
-- "had a lockpick in their cuffs. You take it."  (chat message, line 394)
-- "The pick's bent out of true: it won't do another lock."  (text, line 398)
-- "[Miscount] The cuffs click open. Your hands are free."  (chat message, line 400)
+- "[Miscount] They see the pick in your fingers, and take it off you."  (chat message, line 394)
+- "had a lockpick in their cuffs. You take it."  (chat message, line 395)
+- "The pick's bent out of true: it won't do another lock."  (text, line 399)
+- "[Miscount] The cuffs click open. Your hands are free."  (chat message, line 401)
 
 > Note for you (not shown in game): part of: start pick cuffs
 
-- "Your hands aren't cuffed."  (text, line 406)
-- "You've nothing to pick them with."  (text, line 407)
-- "Not while they've got hold of you."  (text, line 408)
-- "Working the pick into the cuffs..."  (progress bar, line 410)
-- "You palm the pick again."  (text, line 411)
+- "Your hands aren't cuffed."  (text, line 407)
+- "You've nothing to pick them with."  (text, line 408)
+- "Not while they've got hold of you."  (text, line 409)
+- "Working the pick into the cuffs..."  (progress bar, line 411)
+- "You palm the pick again."  (text, line 412)
 
 > Note for you (not shown in game): part of: cage put player
 
-- "is pushed into the cage, and the gate is shut on them."  (text, line 449)
-- "[Miscount] You're in the Resistance's cage. They don't keep anyone long."  (chat message, line 450)
-- "locked {Nick} in the Resistance's cage"  (text, line 453)
+- "is pushed into the cage, and the gate is shut on them."  (text, line 450)
+- "[Miscount] You're in the Resistance's cage. They don't keep anyone long."  (chat message, line 451)
+- "locked {Nick} in the Resistance's cage"  (text, line 454)
 
 > Note for you (not shown in game): part of: cage free player
 
-- "[Miscount] The gate opens, the cuffs come off, and you're shoved out. 'Go on. And remember who let you walk.'"  (chat message, line 469)
-- "[Miscount] You're out of the cage. Don't be here when they look."  (chat message, line 471)
+- "[Miscount] The gate opens, the cuffs come off, and you're shoved out. 'Go on. And remember who let you walk.'"  (chat message, line 470)
+- "[Miscount] You're out of the cage. Don't be here when they look."  (chat message, line 472)
 
 > Note for you (not shown in game): walked up to a cage by a Fighter or above: in they go
 
-- "You put {Nick} in the cage."  (chat message, line 486)
+- "You put {Nick} in the cage."  (chat message, line 487)
 
 > Note for you (not shown in game): part of: rebel prisoner tick
 
-- "is let out of the cage."  (text, line 495)
+- "is let out of the cage."  (text, line 496)
 
 > Note for you (not shown in game): The cage's quick menu, for a player held in it: "free" or "pat". Returns what's said.
 
-- "is let out of the cage."  (text, line 513)
-- "You let them go."  (text, line 515)
+- "is let out of the cage."  (text, line 514)
+- "You let them go."  (text, line 516)
 
 > Note for you (not shown in game): part of: pick cage done
 
-- "[Miscount] A hand comes through the chain link and takes the pick off you."  (chat message, line 533)
-- "was at the cage's padlock with a pick. You take it."  (chat message, line 534)
-- "The pick's bent out of true: it won't do another lock."  (text, line 538)
-- "[Miscount] The padlock drops open. The gate swings."  (chat message, line 540)
+- "[Miscount] A hand comes through the chain link and takes the pick off you."  (chat message, line 534)
+- "was at the cage's padlock with a pick. You take it."  (chat message, line 535)
+- "The pick's bent out of true: it won't do another lock."  (text, line 539)
+- "[Miscount] The padlock drops open. The gate swings."  (chat message, line 541)
 
 > Note for you (not shown in game): part of: start pick cage
 
-- "You aren't in the cage."  (text, line 546)
-- "Not with your hands cuffed. The cuffs first."  (text, line 547)
-- "The gate's open."  (text, line 548)
-- "You've nothing to pick it with."  (text, line 549)
-- "Working at the padlock..."  (progress bar, line 551)
-- "You palm the pick again."  (text, line 552)
+- "You aren't in the cage."  (text, line 547)
+- "Not with your hands cuffed. The cuffs first."  (text, line 548)
+- "The gate's open."  (text, line 549)
+- "You've nothing to pick it with."  (text, line 550)
+- "Working at the padlock..."  (progress bar, line 552)
+- "You palm the pick again."  (text, line 553)
 
 ## path mapping, drawing the walkable network by walking it (sv_livingcity_pathmap.lua)
 

@@ -328,6 +328,7 @@ function LC.NPCCuffTick(now)
                     end
                 else
                     st.lcCuffSecs = (st.lcCuffSecs or 0) + CUFF_TICK
+                    npc:SetNW2Float("lc_cuff_work_until", now + CUFF_TICK + 0.5) -- (their hands fiddle: cl_livingcity_cuffed.lua)
                     if st.lcCuffSecs >= CUFF_WORK then
                         if Roll() < PICK_OK then
                             hid.pick, st.lcCuffSecs = false, nil
