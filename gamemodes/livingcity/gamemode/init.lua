@@ -96,6 +96,8 @@ end
 
 -- Half-Life 2's realistic fall damage.
 function GM:GetFallDamage(ply, speed) return math.max(0, (speed - 526.5) * (100 / 396)) end
+-- No sprays in Miscount (the owner, 12 November: G is the spray key and the kick key)
+function GM:PlayerSpray(ply) return true end
 
 -- The death card is up meanwhile (lc_respawn_secs, sv_livingcity_life.lua).
 function GM:PlayerDeath(ply, inflictor, attacker)
