@@ -250,6 +250,9 @@ local function Context(me, unit, rebel)
         Add("Talk to the interrogator", function() net.Start("lc_interrogate_reply") net.WriteBool(true) net.SendToServer() end)
     end
     if me:GetNW2Bool("lc_hauling", false) then Add("Let go of the body", function() Send("haul") end) end
+    -- the radio up: your side's jobs, over the radio (the owner, 12 November; LC.RadioJobs)
+    local held = me.GetActiveWeapon and me:GetActiveWeapon()
+    if IsValid(held) and held:GetClass() == "weapon_lc_radio" then Add("Jobs over the radio", function() Send("radiojobs") end) end
     if IsValid(me:GetNW2Entity("lc_scanner")) then Add("Disconnect from the scanner", function() Send("unlink") end) end
 
     local tr = me:GetEyeTrace()

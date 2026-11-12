@@ -8,6 +8,15 @@
     lc_cremators of them (1; 0: none) walk the streets. One appears out of
     sight, and one killed is replaced, out of sight, five minutes later.
 
+    GUARDIANS OF THE INFESTATION (the owner, 12 November): with an infestation
+    marked, each guards one (the one with the fewest, then the nearest),
+    walking between spots inside it or a little outside it, and burns only the
+    dead in or near an infestation: the city's dead are the morticians', and
+    no mortician goes into an infestation. When a cleanup crew is under guard
+    there (a player on a shift, or one of the city's crews), the nearest free
+    Cremator walks with them and burns what comes for them, then goes back to
+    its post. With no infestation marked it walks the streets as before.
+
       a body          one that has lain lc_cremator_grace seconds (90) and that
                       nobody is hauling or has claimed: it walks over, burns it
                       where it lies, and the body is gone. Not while the
@@ -278,10 +287,10 @@ local function Sees(r, e)
     return r.npc:Visible(e) == true
 end
 
-local function FindFoe(r, pos, now)
+local function FindFoe(r, pos, now, blind)
     local best, bd
     for _, e in ipairs(ents.FindInSphere(pos, SPOT)) do
-        if (e:IsPlayer() or e:IsNPC()) and LC.CrematorEnemy(r, e, now) and Sees(r, e) then
+        if (e:IsPlayer() or e:IsNPC()) and LC.CrematorEnemy(r, e, now) and (blind or Sees(r, e)) then
             local d = e:GetPos():DistToSqr(pos)
             if not bd or d < bd then best, bd = e, d end
         end
@@ -382,6 +391,8 @@ local function SetDoing(r, text)
     if LC.SetNPCStr then LC.SetNPCStr(r.npc, "lc_doing", text or "") end
 end
 
+local Claim -- (with the bodies, below: Unclaim called a global Claim that isn't there, and errored)
+
 local function Unclaim(r, skip)
     local b = r.body
     r.body = nil
@@ -473,8 +484,84 @@ function LC.CrematorDie(r, attacker)
     if LC.Log then LC.Log("info", "a cremator was killed" .. (IsValid(attacker) and attacker:IsPlayer() and (" by " .. attacker:Nick()) or "")) end
 end
 
--- A street spot nobody can see.
-local function HiddenSpot()
+------------------------------------------------------------------------
+-- Guardians of the infestation (the owner, 12 November: "Cremators hang
+-- around the infection area, whether a little bit outside or inside of it
+-- ... morticians never go into the infested zones. Cremators are sort of
+-- guardians of the infested zones, cleanup for them, and can escort the
+-- infestation cleanup crews in too.")
+------------------------------------------------------------------------
+
+local TURF = 1200       -- this far outside an infestation is still its ground: the dead there are the Cremators'
+local POST_OUT = 500    -- it stands guard inside one, or up to this far outside it
+local ESCORT_NEAR, ESCORT_FAR, ESCORT_TAKE = 160, 300, 9000
+
+local function Infests() return LC.ZonesOfKindShared and LC.ZonesOfKindShared("infest") or {} end
+
+-- The infestation pos is in or near (the Cremators' ground), or nil.
+function LC.CrematorTurf(pos)
+    if not pos then return nil end
+    for _, z in ipairs(Infests()) do
+        if LCZ.Near(z, pos, TURF) then return z end
+    end
+    return nil
+end
+
+local function ZoneLive(z)
+    if not z then return false end
+    for _, o in ipairs(Infests()) do if o == z then return true end end
+    return false
+end
+
+-- Which infestation it guards: the one with the fewest Cremators at it, then the nearest.
+-- A placed zone before the patches grown out of it (those are beside it anyway).
+function LC.CrematorPickZone(r, pos)
+    local zs = Infests()
+    if #zs == 0 then return nil end
+    local count = {}
+    for _, o in pairs(residents) do
+        if o ~= r and o.zone then count[o.zone] = (count[o.zone] or 0) + 1 end
+    end
+    local best, bs
+    for pass = 1, 2 do
+        for _, z in ipairs(zs) do
+            if pass == 2 or not z.grown then
+                local s = (count[z] or 0) * 1e12 + (pos and z.pos and z.pos:DistToSqr(pos) or 0)
+                if not bs or s < bs then best, bs = z, s end
+            end
+        end
+        if best then break end
+    end
+    return best
+end
+
+-- Somewhere to stand guard: a path node in the infestation or a little outside it
+-- (never on Resistance ground), else somewhere inside it. Kept half a minute per zone.
+function LC.CrematorPostSpot(z)
+    if not z then return nil end
+    local now = CurTime()
+    if not z.lcCremPosts or now > (z.lcCremPostsT or 0) then
+        local picks = {}
+        for _, n in pairs(LC.Nodes or {}) do
+            local p = n.pos
+            if p and LCZ.Near(z, p, POST_OUT) and not (LC.InRebelZone and LC.InRebelZone(p)) then picks[#picks + 1] = p end
+        end
+        z.lcCremPosts, z.lcCremPostsT = picks, now + 30
+    end
+    local picks = z.lcCremPosts
+    if #picks > 0 then return picks[math.random(#picks)] end
+    return LCZ.RandomInside and LCZ.RandomInside(z, 0.8) or z.pos
+end
+
+-- A street spot nobody can see (by an infestation, when there is one).
+local function HiddenSpot(z)
+    z = z or LC.CrematorPickZone(nil, nil)
+    if z then
+        for _ = 1, 12 do
+            local p = LC.CrematorPostSpot(z)
+            if p and not (LC.IsSeen and LC.IsSeen(p + UP)) and (not LC.FarFromPlayers or LC.FarFromPlayers(p, 600)) then return p end
+        end
+    end
     if not LC.RandomWanderPos then return nil end
     for _ = 1, 12 do
         local p = LC.RandomWanderPos("cop")
@@ -518,7 +605,7 @@ function LC.CrematorCarcass(e)
     return (LC.CrabCarcass and LC.CrabCarcass(e)) or CARCASS[e:GetNW2String("lc_item", "")] == true
 end
 
-local function Claim(body, on)
+function Claim(body, on)
     if body.lcBody then body.lcBody.claimed = on or nil else body.lcBagging = on or nil end
 end
 
@@ -526,11 +613,14 @@ function LC.CrematorBody(pos, now)
     if LC.MorticiansSuspended and LC.MorticiansSuspended() then return nil end -- (stood down: the dead wait)
     local grace = math.max(0, cvGrace:GetFloat())
     local best, bd = nil, BODY_RANGE * BODY_RANGE
+    -- with an infestation on the map, the dead in the city are the morticians'; the Cremators
+    -- see to those in or near the infestation (where no mortician goes)
+    local turfOnly = #Infests() > 0
     for _, b in ipairs(LC.Bodies or {}) do
         local e = b.ent
         if IsValid(e) and e.lcBody and not e.lcBody.claimed and not e.lcOnCart and not (LC.HauledBy and LC.HauledBy(e))
             and now - (b.born or now) >= grace and (e.lcCrematorSkip or 0) <= now
-            and not (LC.InRebelZone and LC.InRebelZone(e:GetPos())) then
+            and not (LC.InRebelZone and LC.InRebelZone(e:GetPos())) and (not turfOnly or LC.CrematorTurf(e:GetPos())) then
             local d = e:GetPos():DistToSqr(pos)
             if d < bd then best, bd = e, d end
         end
@@ -538,7 +628,7 @@ function LC.CrematorBody(pos, now)
     for _, e in ipairs(LC.EntsOf and LC.EntsOf("lc_item") or {}) do
         if LC.CrematorCarcass(e) and not e.lcBagging and not e.lcStalkerTaken and not (e.GetParent and IsValid(e:GetParent()))
             and now - (e.lcBorn or now) >= grace and (e.lcCrematorSkip or 0) <= now
-            and not (LC.InRebelZone and LC.InRebelZone(e:GetPos())) then
+            and not (LC.InRebelZone and LC.InRebelZone(e:GetPos())) and (not turfOnly or LC.CrematorTurf(e:GetPos())) then
             local d = e:GetPos():DistToSqr(pos)
             if d < bd then best, bd = e, d end
         end
@@ -577,6 +667,45 @@ local function Fight(r, foe, pos, now)
     end
 end
 
+-- A cleanup worker under guard (sv_livingcity_cleanup.lua: a player on a shift by an
+-- infestation, or one of the city's crews at it) that no other Cremator walks with.
+function LC.CrematorEscortWanted(r, pos)
+    local best, bd
+    for w in pairs(LC.CleanupGuards or {}) do
+        if Alive(w) then
+            local taken = false
+            for _, o in pairs(residents) do
+                if o ~= r and o.escort == w then taken = true break end
+            end
+            local d = w:GetPos():DistToSqr(pos)
+            if not taken and d < ESCORT_TAKE * ESCORT_TAKE and (not bd or d < bd) then best, bd = w, d end
+        end
+    end
+    return best
+end
+
+-- Walking with the crew: close behind them, its flame on whatever comes for them.
+local function Escort(r, pos, now, moved)
+    local w = r.escort
+    SetFlame(r, nil, now)
+    SetDoing(r, "escorting the cleanup crew")
+    local wp = w:GetPos()
+    local d = pos:DistToSqr(wp)
+    if d > ESCORT_FAR * ESCORT_FAR or (d > ESCORT_NEAR * ESCORT_NEAR and not r.standing) then
+        SetAnim(r, "walk")
+        local away = pos - wp
+        away.z = 0
+        local len = away:Length()
+        local spot = len > 1 and (wp + away * (ESCORT_NEAR * 0.7 / len)) or wp
+        Go(r, spot, now, 1.5)
+    else
+        Stand(r)
+        SetAnim(r, moved and "walk" or "idle")
+        if LC.Face then LC.Face(r.npc, wp) end
+        if d > ESCORT_FAR * ESCORT_FAR * 0.5 then r.standing = nil end -- (falling behind: catch up)
+    end
+end
+
 local function Think(r, now)
     local npc = r.npc
     Pace(r) -- again each time: the walker's AI may set its animation back
@@ -599,7 +728,7 @@ local function Think(r, now)
         if r.foe then r.gaveUp = r.gaveUp or setmetatable({}, { __mode = "k" }) r.gaveUp[r.foe] = now + 60 r.foe = nil end
         local n = r.wedgedN or 0
         if n >= 2 and (n >= 6 or not (LC.IsSeen and LC.IsSeen(pos + UP))) then
-            local p = HiddenSpot()
+            local p = HiddenSpot(ZoneLive(r.zone) and r.zone or nil)
             if p then
                 if r.body then Unclaim(r, true) end
                 npc:SetPos(p + Vector(0, 0, 4))
@@ -616,11 +745,35 @@ local function Think(r, now)
     if not foe and now >= (r.nextLook or 0) then
         r.nextLook = now + 1
         foe = FindFoe(r, pos, now)
+        -- walking with a cleanup crew: whatever comes for them too, seen or not (it goes round to it)
+        if not foe and Alive(r.escort) then foe = FindFoe(r, r.escort:GetPos(), now, true) end
     end
     if foe ~= r.foe then r.foe, r.nextWalk = foe, 0 end
     if foe then
         if r.phase == "burn" then r.phase = "tobody" end
         Fight(r, foe, pos, now)
+        return
+    end
+
+    -- a cleanup crew going in: the nearest free Cremator walks with them, then back to its post
+    if r.phase == "roam" and now >= (r.nextEscortLook or 0) then
+        r.nextEscortLook = now + 2
+        if r.escort and not (Alive(r.escort) and LC.CleanupGuards and LC.CleanupGuards[r.escort]) then
+            r.escort, r.dest, r.pauseUntil = nil, nil, now + 2
+        end
+        if not r.escort then
+            local w = LC.CrematorEscortWanted(r, pos)
+            if w then
+                r.escort, r.dest, r.nextWalk, r.standing = w, nil, 0, nil
+                r.escorted = (r.escorted or 0) + 1
+                if w:IsPlayer() and LC.Notice then
+                    LC.Notice(w, "info", "A Cremator", "A Cremator is coming to walk with you. It burns whatever comes for you while you work.")
+                end
+            end
+        end
+    end
+    if r.phase == "roam" and r.escort then
+        Escort(r, pos, now, moved)
         return
     end
 
@@ -669,14 +822,20 @@ local function Think(r, now)
     end
 
     if r.phase == "roam" then
+        -- its infestation (gone, or none yet: the one most in need of a guard)
+        if not ZoneLive(r.zone) then r.zone, r.dest = LC.CrematorPickZone(r, pos), nil end
         SetFlame(r, nil, now)
-        SetDoing(r, "")
+        SetDoing(r, r.zone and "guarding the infestation" or "")
         SetAnim(r, moved and "walk" or "idle")
         local there = r.dest and pos:DistToSqr(r.dest) < 90 * 90
         if there then r.dest, r.pauseUntil = nil, now + math.Rand(4, 12) Stand(r) end
         if r.dest and stuck then r.dest, r.lastMoved = nil, now end
-        if not r.dest and now >= (r.pauseUntil or 0) and LC.RandomWanderPos then
-            r.dest = LC.RandomWanderPos("cop", pos) or LC.RandomWanderPos("cop")
+        if not r.dest and now >= (r.pauseUntil or 0) then
+            if r.zone then
+                r.dest = LC.CrematorPostSpot(r.zone)
+            elseif LC.RandomWanderPos then
+                r.dest = LC.RandomWanderPos("cop", pos) or LC.RandomWanderPos("cop")
+            end
             r.nextWalk, r.lastMoved = 0, now
         end
         if r.dest then Go(r, r.dest, now, 5) end
@@ -754,17 +913,20 @@ end)
 
 -- In the debug report (People).
 function LC.CrematorSummary()
-    local n, busy, foes = 0, 0, 0
+    local n, busy, foes, guarding, escorting, streets = 0, 0, 0, 0, 0, 0
     for npc, r in pairs(residents) do
         if IsValid(npc) then
             n = n + 1
             if r.body then busy = busy + 1 end
             if r.foe then foes = foes + 1 end
+            if r.escort then escorting = escorting + 1
+            elseif ZoneLive(r.zone) then guarding = guarding + 1
+            else streets = streets + 1 end
         end
     end
     local model = LC.CrematorModel()
-    return string.format("Cremators: %d (want %d), %d at a body, %d fighting, %d bodies burnt; model: %s; animations: %s",
-        n, math.Clamp(cvCount:GetInt(), 0, MAX), busy, foes, LC.CrematorsBurnt or 0,
+    return string.format("Cremators: %d (want %d), %d guarding the infestation, %d escorting a cleanup crew, %d on the streets (%d infestations marked), %d at a body, %d fighting, %d bodies burnt; model: %s; animations: %s",
+        n, math.Clamp(cvCount:GetInt(), 0, MAX), guarding, escorting, streets, #Infests(), busy, foes, LC.CrematorsBurnt or 0,
         model or "none found (add a Cremator model from the Workshop, or set lc_cremator_model)", tostring(LC.CrematorSequencesUsed or "not chosen yet"))
 end
 

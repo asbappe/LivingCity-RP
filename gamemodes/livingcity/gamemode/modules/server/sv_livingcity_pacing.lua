@@ -7,10 +7,16 @@
       sweep with shooting and suddenly my eyes are closing").
 
       In action (a Civil Protection unit, the Overwatch's soldiers included): in a
-      fight, on a violent job, or on duty in a raid, a sweep or a lockdown, or
-      near a skirmish. Their game then plays Half-Life 2's combat music, as a
-      wanted rebel's plays theirs (cl_livingcity_atmos.lua: the owner, 7 November,
-      "as the combine nothing plays at all").
+      fight, on a violent job and near where it happens, or near a skirmish.
+      Their game then plays Half-Life 2's combat music, as a wanted rebel's plays
+      theirs (cl_livingcity_atmos.lua: the owner, 7 November, "as the combine
+      nothing plays at all").
+
+      A city event starting (inspections, a raid, a lockdown) is never action on
+      its own, and nobody asleep, in bed or dreaming is ever in action (the owner,
+      12 November: inspections started while they were in bed, then 5000 units
+      away in a dream, and the action music played: "there's no radius effect,
+      I didn't take the job, and no fighting near me at all").
 ]]
 
 if CLIENT then return end
@@ -42,25 +48,33 @@ hook.Add("EntityFireBullets", "LivingCityPacingFight", function(ent)
     if IsValid(ent) and ent:IsPlayer() then ent.lcFightAt = CurTime() end
 end)
 
-local ACTION_EVENTS = { sweep = true, raid = true, lockdown = true }
+-- Asleep, lying in bed, or in a dream: never in action, whatever goes on in the city.
+function LC.AtRest(ply)
+    if not IsValid(ply) then return false end
+    if ply:GetNW2Bool("lc_sleeping", false) or ply:GetNW2Bool("lc_dreaming", false) then return true end
+    if LC.Dreaming and LC.Dreaming(ply) then return true end
+    local top = ply:GetNW2Vector("lc_bed_top", Vector(0, 0, 0))
+    return top ~= nil and type(top) ~= "string" and (top.x ~= 0 or top.y ~= 0 or top.z ~= 0) -- (lying in bed)
+end
 
 -- Why a unit is in action now, or nil.
 function LC.InAction(ply)
     if not IsValid(ply) or not ply:Alive() or ply:GetNW2String("lcf_faction", "") ~= "cp" then return nil end
+    if LC.AtRest(ply) then return nil end
     if LC.InFight(ply, ACTION_FIGHT) then return "fight" end
     local q = LC.QuestOf and LC.QuestOf[ply]
     if q and q.violent then
         -- (the owner, 11 November: the music started 100 metres away, the moment the job was taken:
         -- "only kick in when I reach the destination and the fighting starts")
+        -- (and only near it: where the job is unknown, it isn't action until there's a fight)
         local okAt, at = pcall(function() return q.stages and LC.QuestObjectivePos and LC.QuestObjectivePos(ply) or nil end)
-        if not okAt or not at or ply:GetPos():DistToSqr(at) < JOB_NEAR * JOB_NEAR then return "job" end
+        if okAt and at and ply:GetPos():DistToSqr(at) < JOB_NEAR * JOB_NEAR then return "job" end
     end
-    if LC.Event and ACTION_EVENTS[LC.Event] then return LC.Event end
     local sk = LC.Skirmish
     if sk then
         local z = sk.zone
         local pos = z and (z.pos or z.center)
-        if not pos or ply:GetPos():DistToSqr(pos) < SKIRMISH_NEAR * SKIRMISH_NEAR then return "skirmish" end
+        if pos and ply:GetPos():DistToSqr(pos) < SKIRMISH_NEAR * SKIRMISH_NEAR then return "skirmish" end
     end
     return nil
 end
@@ -70,8 +84,8 @@ function LC.ActionTick(now)
         local was = ply:GetNW2Float("lc_action_until", 0)
         if LC.InAction(ply) then
             if was < now + ACTION_HOLD - 3 then ply:SetNW2Float("lc_action_until", now + ACTION_HOLD) end
-        elseif was > now and ply:GetNW2String("lcf_faction", "") ~= "cp" then
-            ply:SetNW2Float("lc_action_until", 0) -- (left Civil Protection: no more of it)
+        elseif was > now and (ply:GetNW2String("lcf_faction", "") ~= "cp" or LC.AtRest(ply)) then
+            ply:SetNW2Float("lc_action_until", 0) -- (left Civil Protection, or gone to bed: no more of it)
         end
     end
 end

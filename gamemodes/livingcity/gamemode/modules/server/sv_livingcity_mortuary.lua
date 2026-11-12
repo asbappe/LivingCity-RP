@@ -35,11 +35,18 @@ end
 -- Where bodies go
 ------------------------------------------------------------------------
 
+-- Where bodies are brought to an incinerator: standing on end, the floor at its foot; lying
+-- down (an old model), its middle (the canister is long).
+function LC.IncineratorBase(e)
+    if e.lcBasePos then return e.lcBasePos + Vector(0, 0, 24) end
+    return e:WorldSpaceCenter()
+end
+
 -- Incinerators, then morgue workplaces. Each: { pos, ent, name }.
 function LC.BodyProcessors()
     local out = {}
     for _, e in ipairs(LC.EntsOf("lc_incinerator")) do
-        if IsValid(e) then out[#out + 1] = { pos = e:WorldSpaceCenter(), ent = e, name = "the incinerator" } end -- (its middle: the canister is long)
+        if IsValid(e) then out[#out + 1] = { pos = LC.IncineratorBase(e), ent = e, name = "the incinerator" } end
     end
     local job = LCJ and LCJ.ById and LCJ.ById.mortuary
     if job and LC.PointsOfKind then
@@ -64,7 +71,8 @@ function LC.UnclaimedBody(pos, maxD)
     local best, bd = nil, (maxD or 3000) ^ 2
     for _, b in ipairs(LC.Bodies or {}) do
         local e = b.ent
-        if IsBody(e) and not e.lcBody.claimed and not e.lcOnCart and not LC.HauledBy(e) then
+        if IsBody(e) and not e.lcBody.claimed and not e.lcOnCart and not LC.HauledBy(e)
+            and not (LC.InInfest and LC.InInfest(e:GetPos())) then -- (the infestation's dead are the Cremators')
             local d = e:GetPos():DistToSqr(pos)
             if d < bd then best, bd = e, d end
         end
@@ -163,7 +171,7 @@ end
 -- E on the incinerator: in goes whoever you're hauling, or a body lying right beside it.
 function LC.FeedIncinerator(ply, inc)
     if CurTime() - (ply.lcFedAt or 0) < 1 then return true end
-    local mid = inc:WorldSpaceCenter()
+    local mid = LC.IncineratorBase(inc)
     local proc = { pos = mid, ent = inc, name = "the incinerator" }
     local body = hauling[ply]
     -- a body cart brought up to it: everything on it goes in

@@ -8101,6 +8101,51 @@ b3:Remove() inc:Remove()
 for _, p in ipairs({ att, cit }) do p:SetPos(Vector(-30000, 30000, 0)) end
 end
 MortuaryTests()
+function IncineratorUprightTests() -- (the owner, 12 November: "stands with the fire/open/big end up at the sky? Like a fire torch?")
+section("The incinerator stands on end, its open end to the sky, its foot on the floor")
+local I0 = Vector(-151000, -151000, 0)
+local function IncDef()
+    local was = ENT
+    ENT = {}
+    assert(loadstring(_ENTSRC["entities/lc_incinerator.lua"], "lc_incinerator"))()
+    local def = ENT
+    ENT = was
+    return def
+end
+local def = IncDef()
+local inc = ents.Create("lc_incinerator")
+inc:SetPos(I0 + Vector(0, 0, 40))
+inc:Spawn()
+inc.StandUp = def.StandUp
+inc.obbmin, inc.obbmax = Vector(-10, -30, -30), Vector(190, 30, 30) -- (a canister lying along its length)
+inc:SetNW2Vector("lc_mouth_dir", Vector(1, 0, 0))
+inc.lcFixturePoint = { pos = I0, kind = "incinerator" }
+inc:SetAngles(Angle(0, 35, 0))
+ok(inc:StandUp() == true, "a canister lying on its side is stood up")
+local a = inc:GetAngles()
+ok(math.abs(a.p + 90) < 0.01 and math.abs(a.r) < 0.01 and math.abs(a.y - 35) < 0.01, "pitched so its broad, open end points at the sky (and still facing the way it was placed)",
+    tostring(a.p) .. " " .. tostring(a.y) .. " " .. tostring(a.r))
+ok(inc:GetNW2Bool("lc_upright", false) == true and inc.lcBasePos ~= nil and inc.lcBasePos:DistToSqr(I0) < 1, "its foot stands on the floor where it was placed")
+inc:SetNW2Vector("lc_mouth_dir", Vector(-1, 0, 0))
+inc:StandUp(I0)
+ok(math.abs(inc:GetAngles().p - 90) < 0.01, "the open end the other way along it: pitched the other way, still open end up")
+inc:SetNW2Vector("lc_mouth_dir", Vector(0, 1, 0))
+inc:StandUp(I0)
+ok(math.abs(inc:GetAngles().r - 90) < 0.01 and math.abs(inc:GetAngles().p) < 0.01, "open end along its side: rolled up instead")
+local tall = ents.Create("lc_incinerator") tall:SetPos(I0 + Vector(900, 0, 0)) tall:Spawn()
+tall.StandUp = def.StandUp
+tall:SetNW2Vector("lc_mouth_dir", Vector(0, 0, 1))
+tall:SetAngles(Angle(0, 10, 0))
+ok(tall:StandUp() == false and tall:GetAngles().p == 0 and tall:GetAngles().r == 0, "a model that already stands (a boiler) is left as it is")
+tall:Remove()
+-- the dead are brought to its foot, not up in the air beside it
+local base = LC.IncineratorBase(inc)
+ok(base.z < I0.z + 40 and base:DistToSqr(I0) < 30 * 30, "bodies are brought to its foot", tostring(base))
+local proc = LC.NearestBodyProcessor(I0 + Vector(120, 0, 0), 170)
+ok(proc ~= nil and proc.ent == inc, "a body let go beside its foot is beside the incinerator")
+inc:Remove()
+end
+IncineratorUprightTests()
 section("Street furniture and broadcasts")
 local S0 = Vector(-48000, 12000, 0)
 local spk = ents.Create("lc_loudspeaker") spk:SetPos(S0)
@@ -8779,6 +8824,31 @@ end
 for _, p in ipairs({ fighter, respawned, mole, cit }) do LC.TakeOff(p, true) p:SetPos(FAR) end
 end
 DisguiseTests()
+function MetrocopRecheckTests() -- (the owner, 12 November: "low res on server start", the proper metrocop after a dream)
+section("A unit left in Half-Life 2's old metrocop is dressed in the server's Half-Life: Alyx one")
+RunConsoleCommand("lc_pm_metrocop", "models/player/hla/metrocop.mdl")
+local cop = newPlayer("RecheckCop", "cp")
+cop:SetModel("models/player/police.mdl")
+ok(LC.MetrocopRecheck(cop) == true and cop:GetModel() == "models/player/hla/metrocop.mdl", "in the old one a few seconds after spawning: dressed again", cop:GetModel())
+ok(LC.MetrocopRecheck(cop) == false, "(already in it: nothing)")
+local cit = newPlayer("RecheckCitizen", "citizen")
+cit:SetModel("models/player/police.mdl")
+ok(LC.MetrocopRecheck(cit) == false and cit:GetModel() == "models/player/police.mdl", "a citizen (a costume, a disguise) is left as they are")
+RunConsoleCommand("lc_pm_metrocop", "")
+-- a pack that lists its playermodel after the first look is found on a later one
+local pmWas = player_manager
+player_manager = nil
+LC.RescanCombineModels()
+ok(LC.MetrocopModel() == nil, "(none on the server yet)")
+player_manager = { AllValidModels = function() return { hla_metrocop = "models/player/hla/metrocop2.mdl" } end }
+ok(LC.MetrocopModel() == nil, "(not looked for again straight away)")
+_advance(31)
+ok(LC.MetrocopModel() == "models/player/hla/metrocop2.mdl", "looked for again a little later: found", tostring(LC.MetrocopModel()))
+player_manager = pmWas
+LC.RescanCombineModels()
+cop:SetPos(Vector(-30000, 30000, 0)) cit:SetPos(Vector(-30000, 30000, 0))
+end
+MetrocopRecheckTests()
 
 function CraftingTests()
 local FAR = Vector(-30000, 30000, 0)
@@ -12516,6 +12586,25 @@ n.EmitSound, ply.ChatPrint = realEmit, realChat
 for _, e in ipairs({ n, ply }) do if IsValid(e) then e:Remove() end end
 end
 VoiceCuesTests()
+function LipSyncTests() -- (the owner, 12 November: "can we get the NPCs' mouths to move?")
+section("Whoever says a recorded line is marked talking for its length (their mouth moves on players' screens)")
+local L0 = Vector(-153000, -153000, 0)
+local npc = ents.Create("npc_citizen") npc:SetPos(L0) npc:Spawn()
+ok(LC.MarkTalking(npc, "livingcity/citizens/advice_bins_male1.wav") == true, "a recorded line: marked")
+local from, untilT = npc:GetNW2Float("lc_talk_from", 0), npc:GetNW2Float("lc_talk_until", 0)
+ok(untilT > CurTime() and math.abs((untilT - from) - 2.5) < 0.01, "for as long as it lasts (a length unknown: about a line's)", tostring(untilT - from))
+local npc2 = ents.Create("npc_citizen") npc2:SetPos(L0 + Vector(100, 0, 0)) npc2:Spawn()
+ok(LC.MarkTalking(npc2, "vo/npc/male01/hi01.wav") == false and npc2:GetNW2Float("lc_talk_until", 0) == 0, "Half-Life 2's own clip: left to the engine (it has the phonemes)")
+ok(LC.MarkTalking(npc2, ")sound/livingcity/clerk/rations1.wav") == true, "(the marks the game puts in front of a name are ignored)")
+local pl = newPlayer("LipSyncPlayer", "citizen")
+ok(LC.MarkTalking(pl, "livingcity/citizens/advice_bins_male1.wav") == false, "never a player (their own voice)")
+local npc3 = ents.Create("npc_citizen") npc3:SetPos(L0 + Vector(200, 0, 0)) npc3:Spawn()
+hook.Run("EntityEmitSound", { Entity = npc3, SoundName = "livingcity/oldtimer/bins1.wav", OriginalSoundName = "livingcity/oldtimer/bins1.wav" })
+ok(npc3:GetNW2Float("lc_talk_until", 0) > CurTime(), "any recorded line an NPC says (the clerk, the old-timer, citizens): marked as it is played")
+npc:Remove() npc2:Remove() npc3:Remove()
+pl:SetPos(Vector(-30000, 30000, 0))
+end
+LipSyncTests()
 function GiveTests()
 section("Giving a citizen something: food, a drink or a smoke, medicine, papers, arms")
 local function Later(secs) _advance(secs) _runtimers() end
@@ -17448,6 +17537,47 @@ do
 end
 end
 UnitLifeTests()
+function RadioJobsTests() -- (the owner, 12 November: "if you hold a radio in your hands, you can open the 'Jobs' screen/board")
+section("Jobs over the radio: the radio up opens your side's jobs from anywhere")
+local u = newPlayer("RadioJobsUnit", "cp")
+local sent = 0
+local sbWas, tbWas = LC.SendBoard, LC.TransmitBands
+LC.SendBoard = function(p) if p == u then sent = sent + 1 end end
+if not u:HasWeapon("weapon_lc_hands") then u:Give("weapon_lc_hands") end
+u:SelectWeapon("weapon_lc_hands")
+local okA, why = LC.RadioJobs(u)
+ok(not okA and why ~= nil and sent == 0, "without the radio up: no (and it says how)", tostring(why))
+if not u:HasWeapon("weapon_lc_radio") then u:Give("weapon_lc_radio") end
+u:SelectWeapon("weapon_lc_radio")
+ok(LC.RadioHeld(u) and LC.RadioJobs(u) == true and sent == 1, "the radio up: the jobs board opens (F4's Jobs tab)")
+ok(LC.TargetActions and LC.TargetActions.radiojobs ~= nil, "F1 has it while the radio is up (the action behind it)")
+u.lcRadioJobsAt = 0
+LC.TargetActions.radiojobs(u)
+ok(sent == 2, "(and it works)")
+-- right click on the radio: the jobs, for someone with one band
+local was = SWEP
+SWEP = {}
+assert(loadstring(_WEAPONSRC["weapons/weapon_lc_radio.lua"], "weapon_lc_radio"))()
+local radio = setmetatable({ GetOwner = function() return u end, GetNW2String = function(_, _, d) return d end,
+    SetNW2String = function() end, SetNW2Int = function() end }, { __index = SWEP })
+SWEP = was
+LC.TransmitBands = function() return { "cp" } end
+u.lcRadioJobsAt = 0
+radio:SecondaryAttack()
+ok(sent == 3, "right click on the radio, with one band: the jobs board")
+LC.TransmitBands = function() return { "cp", "resistance" } end
+local tuned = 0
+local tuneWas = LC.TuneTransmitter
+LC.TuneTransmitter = function() tuned = tuned + 1 return "cp" end
+radio.nextTune = 0
+u.lcRadioJobsAt = 0
+radio:SecondaryAttack()
+ok(sent == 3 and tuned == 1, "with two bands (an Insider), right click still switches frequency (F1 has the jobs)")
+LC.SendBoard, LC.TransmitBands, LC.TuneTransmitter = sbWas, tbWas, tuneWas
+u:SelectWeapon("weapon_lc_hands")
+u:SetPos(Vector(-120000, -120000, 0))
+end
+RadioJobsTests()
 
 ----------------------------------------------------------------------
 -- Shared dreams (sv_livingcity_dreams.lua): the secret endings, dreamt by everyone asleep
@@ -24536,6 +24666,8 @@ ZoneStalkerTests()
 function CrematorTests()
 section("The Cremator: its model found, the dead burnt where they lie, enemies burnt out")
 local overWas = LC.CrematorModelOverride
+local crZonesWas = LC.Zones
+LC.Zones = {} -- (no infestation here: with one, it burns only the dead in or near it, CrematorGuardTests)
 LC.CrematorModelOverride = nil
 -- the model: none on the server, none walk
 ok(LC.CrematorModel(true) == nil, "no Cremator model on the server: none found")
@@ -24574,7 +24706,7 @@ local C0 = Vector(-180000, 150000, 0)
 local r = LC.SpawnCremator(C0)
 ok(r ~= nil and IsValid(r.npc) and r.npc:GetClass() == "npc_stalker" and IsValid(r.vis) and r.vis:GetClass() == "prop_dynamic"
     and r.vis:GetModel() == "models/cremator.mdl" and r.vis:GetNW2Bool("lc_cremator", false) == true, "a Cremator: a walker, and the model carried on it")
-if not r then LC.CrematorModelOverride = overWas _files["models/cremator.mdl"] = nil return end
+if not r then LC.CrematorModelOverride = overWas LC.Zones = crZonesWas _files["models/cremator.mdl"] = nil return end
 ok(r.npc:Health() == 400 and r.npc:GetNW2Bool("lc_noragdoll", false) == true, "sturdy, and the walker leaves no body of its own")
 
 -- a body: left a while for the living, then burnt where it lies
@@ -24675,8 +24807,62 @@ _files["models/cremator.mdl"] = nil
 LC.CrematorModelOverride = overWas
 LC.CrematorModel(true)
 for _, x in pairs(LC.Cremators) do if IsValid(x.vis) then x.vis:Remove() end if IsValid(x.npc) then x.npc:Remove() end LC.Cremators[x.npc] = nil end
+LC.Zones = crZonesWas
 end
 CrematorTests()
+function CrematorGuardTests() -- (the owner, 12 November: Cremators guard the infestation; morticians never go in)
+section("Cremators guard the infestation, burn its dead, and walk with the cleanup crews; morticians stay out")
+local overWas, zonesWas, guardsWas = LC.CrematorModelOverride, LC.Zones, LC.CleanupGuards
+LC.CrematorModelOverride = nil
+_files["models/cremator.mdl"] = "x"
+LC.CrematorModel(true)
+local G0 = Vector(-182000, -120000, 0)
+local z = { pos = G0, r = 400, kind = "infest", group = 0 }
+LC.Zones = { z }
+LC.CleanupGuards = {}
+ok(LC.CrematorTurf(G0 + Vector(900, 0, 0)) == z and LC.CrematorTurf(G0 + Vector(5000, 0, 0)) == nil, "in or near the infestation is the Cremators' ground; the city is not")
+local r = LC.SpawnCremator(G0 + Vector(2500, 0, 0))
+ok(r ~= nil, "(a Cremator)")
+if not r then LC.Zones, LC.CleanupGuards, LC.CrematorModelOverride = zonesWas, guardsWas, overWas _files["models/cremator.mdl"] = nil return end
+local t = CurTime() + 2000
+r.pauseUntil = 0
+for i = 1, 3 do LC.CrematorsThink(t + i) end
+ok(r.zone == z and r.doing == "guarding the infestation", "it guards the infestation", tostring(r.doing))
+ok(r.dest ~= nil and LCZ.Near(z, r.dest, 500), "and walks to a spot in it or a little outside it", tostring(r.dest))
+ok(string.find(LC.CrematorSummary(), "1 guarding the infestation", 1, true) ~= nil, "the debug report says so", LC.CrematorSummary())
+-- the dead: the infestation's are the Cremator's, the city's the morticians'
+local cityBody = LC.SpawnBody("models/humans/group01/male_01.mdl", G0 + Vector(4400, 0, 0))
+local zoneBody = LC.SpawnBody("models/humans/group01/male_02.mdl", G0 + Vector(150, 0, 0))
+ok(LC.CrematorBody(r.npc:GetPos(), t + 200) == zoneBody, "it goes for the body in the infestation, not the nearer one in the city")
+ok(LC.InInfest(zoneBody:GetPos()) and LC.UnclaimedBody(G0, 6000) == cityBody, "a Mortician is never sent into the infestation for one")
+cityBody:Remove() zoneBody:Remove()
+-- a cleanup crew going in: it walks with them, then back to its post
+local crew = LC.SpawnCitizen(G0 + Vector(300, 200, 4))
+LC.CleanupGuards[crew] = { units = {} }
+for i = 4, 7 do LC.CrematorsThink(t + i * 3) end
+ok(r.escort == crew and r.doing == "escorting the cleanup crew", "a cleanup crew under guard: the Cremator walks with them", tostring(r.doing))
+ok(string.find(LC.CrematorSummary(), "1 escorting a cleanup crew", 1, true) ~= nil, "(the debug report says so)", LC.CrematorSummary())
+local r2 = LC.SpawnCremator(G0 + Vector(2600, 0, 0))
+if r2 then
+    for i = 8, 10 do LC.CrematorsThink(t + i * 3) end
+    ok(r2.escort == nil, "one Cremator to a crew: the other keeps its post")
+    r2.vis:Remove() r2.npc:Remove() LC.Cremators[r2.npc] = nil
+end
+LC.CleanupGuards[crew] = nil
+for i = 11, 13 do LC.CrematorsThink(t + i * 3) end
+ok(r.escort == nil and r.doing == "guarding the infestation", "the crew done: back to guarding", tostring(r.doing))
+-- no infestation marked: the streets, as before, and every body is fair game again
+LC.Zones = {}
+for i = 14, 16 do LC.CrematorsThink(t + i * 3) end
+ok(r.zone == nil and string.find(LC.CrematorSummary(), "1 on the streets", 1, true) ~= nil, "no infestation marked: it walks the streets", LC.CrematorSummary())
+if IsValid(zoneBody) then zoneBody:Remove() end
+if IsValid(crew) then LC.NPCs[crew] = nil crew:Remove() end
+r.vis:Remove() r.npc:Remove() LC.Cremators[r.npc] = nil
+LC.Zones, LC.CleanupGuards, LC.CrematorModelOverride = zonesWas, guardsWas, overWas
+_files["models/cremator.mdl"] = nil
+LC.CrematorModel(true)
+end
+CrematorGuardTests()
 
 function RebelPamphletTests()
 section("The Resistance pamphlet: read, handed over, left lying about")
@@ -25102,17 +25288,63 @@ ok(LC.InAction(rebel) == nil and LC.InAction(cit) == nil, "(a rebel's music is t
 _advance(35)
 unit.lcFightAt = nil
 ok(LC.InAction(unit) == nil, "the fight over: out of action")
-LC.QuestOf[unit] = { violent = true }
-ok(LC.InAction(unit) == "job", "on a violent job: in action")
+LC.QuestOf[unit] = { violent = true, stages = {} }
+local qopWas = LC.QuestObjectivePos
+LC.QuestObjectivePos = function() return unit:GetPos() + Vector(400, 0, 0) end
+ok(LC.InAction(unit) == "job", "on a violent job, near where it happens: in action")
+LC.QuestObjectivePos = function() return unit:GetPos() + Vector(5000, 0, 0) end
+ok(LC.InAction(unit) == nil, "(far from it: not yet)")
+LC.QuestObjectivePos = qopWas
 LC.QuestOf[unit] = nil
+-- (the owner, 12 November: a city event starting never starts the action music on its own)
 LC.Event = "sweep"
-ok(LC.InAction(unit) == "sweep", "in a sweep: in action")
+ok(LC.InAction(unit) == nil, "civil status inspections (a sweep) going on: no action music by itself")
 LC.Event = "raid"
-ok(LC.InAction(unit) == "raid", "in a raid: in action")
+ok(LC.InAction(unit) == nil, "a raid going on, the job not taken: none either")
 LC.Event, LC.Skirmish = evWas, skWas
 for _, p in ipairs({ unit, rebel, cit }) do p:SetPos(Vector(-30000, 30000, 0)) end
 end
 CombineMusicTests()
+function ActionMusicRestTests() -- (the owner, 12 November: the action music played in bed and in a dream)
+section("No action music while asleep, in bed or dreaming, nor from an event starting")
+local evWas, skWas = LC.Event, LC.Skirmish
+LC.Event, LC.Skirmish = "sweep", nil
+local unit = newPlayer("RestUnit", "cp")
+_run(0.2)
+unit.lcFightAt = nil
+unit:SetNW2Float("lc_action_until", 0)
+LC.ActionTick(CurTime())
+ok(unit:GetNW2Float("lc_action_until", 0) <= CurTime(), "inspections on, no fight, no job: no action music")
+unit.lcFightAt = CurTime()
+ok(LC.InAction(unit) == "fight", "(a fight: action)")
+unit:SetNW2Bool("lc_sleeping", true)
+ok(LC.AtRest(unit) and LC.InAction(unit) == nil, "asleep: never in action, even with a fight just now")
+unit:SetNW2Bool("lc_sleeping", false)
+unit:SetNW2Bool("lc_dreaming", true)
+ok(LC.InAction(unit) == nil, "in a dream: never in action")
+unit:SetNW2Bool("lc_dreaming", false)
+unit:SetNW2Vector("lc_bed_top", Vector(10, 10, 30))
+ok(LC.InAction(unit) == nil, "lying in bed: never in action")
+unit:SetNW2Vector("lc_bed_top", Vector(0, 0, 0))
+ok(not LC.AtRest(unit) and LC.InAction(unit) == "fight", "up again: the fight counts")
+LC.ActionTick(CurTime())
+ok(unit:GetNW2Float("lc_action_until", 0) > CurTime(), "(in action: the music's mark set)")
+unit:SetNW2Bool("lc_sleeping", true)
+LC.ActionTick(CurTime())
+ok(unit:GetNW2Float("lc_action_until", 0) <= CurTime(), "gone to bed in the middle of it: the action music's mark is taken off at once")
+unit:SetNW2Bool("lc_sleeping", false)
+local far = { zone = { pos = unit:GetPos() + Vector(5000, 0, 0) } }
+unit.lcFightAt = nil
+LC.Skirmish = far
+ok(LC.InAction(unit) == nil, "a skirmish 5000 units away: no action music")
+LC.Skirmish = { zone = {} }
+ok(LC.InAction(unit) == nil, "a skirmish nobody knows where: none either")
+LC.Skirmish = { zone = { pos = unit:GetPos() + Vector(800, 0, 0) } }
+ok(LC.InAction(unit) == "skirmish", "a skirmish nearby: action")
+LC.Event, LC.Skirmish = evWas, skWas
+unit:SetPos(Vector(-30000, 30000, 0))
+end
+ActionMusicRestTests()
 -- The owner's 7 November playtest, part 2 (sv_livingcity_fieldops.lua and friends): a unit each.
 function RetakeFieldTests()
     local function FieldPost(p, spec, tid, violent)

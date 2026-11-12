@@ -121,12 +121,36 @@ local function ScanMetrocop()
     return metroFound
 end
 -- The metrocop playermodel to use (nil: Half-Life 2's own).
+-- None found is looked for again now and then (every 30 seconds at most): a pack that lists its
+-- playermodel after the first look was missed until the map changed, so a unit's first spawn after a
+-- server start wore Half-Life 2's old metrocop (the owner, 12 November: "low res on server start").
+local metroLookedAt = -1e9
 function LC.MetrocopModel()
     if not cvOn:GetBool() then return nil end
     if cvMetro:GetString() ~= "" then return cvMetro:GetString() end
-    if metroFound == nil then ScanMetrocop() end
+    if metroFound == nil or (metroFound == false and CurTime() - metroLookedAt > 30) then
+        metroLookedAt = CurTime()
+        ScanMetrocop()
+    end
     return metroFound or nil
 end
+
+-- A unit still in Half-Life 2's old metrocop a few seconds after spawning, when the server has the
+-- Half-Life: Alyx one: dressed again (their rank's model, which is that one).
+function LC.MetrocopRecheck(ply)
+    if not IsValid(ply) or not ply:Alive() or ply:GetNW2String("lcf_faction", "") ~= "cp" then return false end
+    if LCF and LCF.IsOverwatch and LCF.IsOverwatch(ply) then return false end
+    if (LC.Dreaming and LC.Dreaming(ply)) or ply:GetNW2Bool("lc_dreaming", false) then return false end
+    local want = LC.MetrocopModel()
+    local now = string.lower(ply:GetModel() or "")
+    if not want or now == string.lower(want) or not string.find(now, "police", 1, true) then return false end
+    if not LC.RefreshModel then return false end
+    LC.RefreshModel(ply)
+    return true
+end
+hook.Add("PlayerSpawn", "LivingCityMetrocopRecheck", function(ply)
+    timer.Simple(4, function() if IsValid(ply) then LC.MetrocopRecheck(ply) end end)
+end)
 
 LC.ModelOverrides = LC.ModelOverrides or {}
 -- A Civil Protection player in a street rank (not the Overwatch; a rank with another look of its own keeps it)

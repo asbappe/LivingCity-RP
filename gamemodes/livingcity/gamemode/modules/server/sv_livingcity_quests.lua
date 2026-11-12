@@ -3336,6 +3336,29 @@ function LC.SendBoard(ply)
     }, { ply })
 end
 
+-- Jobs over the radio (the owner, 12 November: "if you hold a radio in your hands, you can open the
+-- 'Jobs' screen/board"). With the radio transmitter up (weapon_lc_radio: a unit's issued one, or a
+-- Freq 7 radio and a transmitter), your side's board opens wherever you are: F4's Jobs tab, the same
+-- window. Taking a job from it goes through the very same checks (LC.AcceptPosting: your side, the
+-- wait between jobs, a full squad). Right click on the radio (with one band), or F1 while it's up.
+function LC.RadioHeld(ply)
+    if not IsValid(ply) or not ply.GetActiveWeapon then return false end
+    local w = ply:GetActiveWeapon()
+    return IsValid(w) and w:GetClass() == "weapon_lc_radio"
+end
+
+function LC.RadioJobs(ply)
+    if not IsValid(ply) then return false end
+    if not LC.RadioHeld(ply) then return false, "Hold your radio up first (switch to the radio transmitter, next to Hands)." end
+    if (ply.lcRadioJobsAt or 0) > CurTime() then return true end
+    ply.lcRadioJobsAt = CurTime() + 1
+    ply:EmitSound("buttons/button16.wav", 50)
+    LC.SendBoard(ply)
+    return true
+end
+LC.TargetActions = LC.TargetActions or {}
+LC.TargetActions.radiojobs = function(ply) return LC.RadioJobs(ply) end
+
 function LC.AcceptPosting(ply, pid)
     if not cvOn:GetBool() then return false end
     if LC.QuestOf[ply] then ply:ChatPrint("[Miscount] Finish or abandon your current job first.") return false end

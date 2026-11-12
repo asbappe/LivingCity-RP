@@ -265,15 +265,27 @@ end
 local playing, playingMood, nextTrack = nil, nil, 100
 local QUIET_MIN, QUIET_MAX = 480, 900 -- (8 to 15 minutes of quiet between pieces; it was 5 to 12)
 
+-- Asleep, in bed or in a dream: no action music, whatever goes on in the city (the owner, 12 November).
+function LC_CL.AtRest(ply)
+    if not IsValid(ply) then return false end
+    if ply:GetNW2Bool("lc_sleeping", false) or ply:GetNW2Bool("lc_dreaming", false) then return true end
+    local top = ply:GetNW2Vector("lc_bed_top", Vector(0, 0, 0))
+    return top ~= nil and type(top) ~= "string" and (top.x ~= 0 or top.y ~= 0 or top.z ~= 0) -- (lying in bed)
+end
+
+-- The action moods come only from action near you (the owner, 12 November: an event starting played
+-- the action music in bed and 5000 units away in a dream): a unit in a fight, on a violent job by where
+-- it happens, or by a skirmish ("combat"), or you being hunted ("urgent"). The city's own state (red,
+-- a lockdown) makes the music tense, never action.
 local function Mood()
     local socio = GetGlobal2String("lc_socio", "green")
     local event = GetGlobal2String("lc_event", "")
     local ply = LocalPlayer()
+    local resting = LC_CL.AtRest(ply)
     -- (a unit in action: the Combine's own action music, as a wanted rebel has theirs)
-    if LC_CL.InAction(ply) then return "combat" end
-    if socio == "red" or (IsValid(ply) and ply:GetNW2Float("lc_wanted_until", 0) > CurTime()) then return "urgent" end
-    if event == "lockdown" then return "urgent" end
-    if socio == "yellow" or event == "curfew" or Phase(LC_CL.Hour()) == "night" then return "tense" end
+    if not resting and LC_CL.InAction(ply) then return "combat" end
+    if not resting and IsValid(ply) and ply:GetNW2Float("lc_wanted_until", 0) > CurTime() then return "urgent" end
+    if socio == "red" or socio == "yellow" or event == "lockdown" or event == "curfew" or Phase(LC_CL.Hour()) == "night" then return "tense" end
     return "calm"
 end
 LC_CL.MusicMood = Mood
@@ -345,17 +357,8 @@ timer.Create("LivingCityMusic", 1, 0, function()
         nextTrack = CurTime() + 20
         return
     end
-    -- a lockdown starts with its music, straight away: no waiting for the next piece
-    local event = GetGlobal2String("lc_event", "")
-    if event ~= lastEvent then
-        lastEvent = event
-        if event == "lockdown" then
-            if Live(playing) then Stop(true) end
-            timer.Simple(1.5, function() if cvMusic:GetBool() then PlayMood("urgent") end end)
-            nextTrack = CurTime() + 60
-            return
-        end
-    end
+    -- (a lockdown used to start the action music straight away, wherever you were: no event starts it now)
+    lastEvent = GetGlobal2String("lc_event", "")
     -- just made a stalker: the saddest piece, straight away
     do
         local lp = LocalPlayer()

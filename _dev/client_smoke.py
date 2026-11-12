@@ -3580,6 +3580,12 @@ local ok, e = pcall(function()
     _me.nw.lcf_faction = "cp"
     _me.nw.lc_action_until = CurTime() + 10
     if LC_CL.MusicMood() ~= "combat" then bad[#bad + 1] = "a unit in action gets no action music: " .. tostring(LC_CL.MusicMood()) end
+    _me.nw.lc_sleeping = true
+    if LC_CL.MusicMood() == "combat" then bad[#bad + 1] = "asleep, and the action music plays (the owner, 12 November)" end
+    _me.nw.lc_sleeping = nil
+    _me.nw.lc_dreaming = true
+    if LC_CL.MusicMood() == "combat" then bad[#bad + 1] = "in a dream, and the action music plays" end
+    _me.nw.lc_dreaming = nil
     _me.nw.lc_action_until = 0
     if LC_CL.MusicMood() == "combat" then bad[#bad + 1] = "out of action, still the action music" end
     _me.nw.lcf_faction = "citizen"
@@ -3854,6 +3860,49 @@ if LC.NPCStr(npc, "lc_pname", "gone") ~= "gone" then return "npc tags: a removed
 local okF, errF = pcall(timer.list.LivingCityNPCStr.fn)
 if not okF then return "npc tags timer: " .. tostring(errF) end
 npc:Remove()
+return nil
+""")
+if err:
+    problems = (problems + "\n" if problems else "") + str(err)
+
+# mouths that move with the recorded voices (cl_livingcity_lipsync.lua, the owner, 12 November)
+err = L.execute(r"""
+local function Face(model, flexes)
+    local e = ents.Create("npc_citizen")
+    e:SetPos(_me:GetPos() + Vector(100, 0, 0))
+    local w = {}
+    e.GetModel = function() return model end
+    e.GetFlexNum = function() return flexes and 40 or 0 end
+    e.GetFlexIDByName = function(_, n) return flexes and flexes[n] or nil end
+    e.GetFlexBounds = function() return 0, 1 end
+    e.GetFlexWeight = function(_, id) return w[id] or 0 end
+    e.SetFlexWeight = function(_, id, v) w[id] = v end
+    e.Health = function() return 100 end
+    return e, w
+end
+local npc, w = Face("models/humans/group01/male_07.mdl", { jaw_drop = 3, right_part = 5, left_part = 6 })
+npc:SetNW2Float("lc_talk_from", CurTime())
+npc:SetNW2Float("lc_talk_until", CurTime() + 2)
+hook.t.EntityNetworkedVarChanged.LivingCityLipSync(npc, "lc_talk_until", 0, CurTime() + 2)
+local opened, shut = 0, 0
+for _ = 1, 30 do
+    _advance(0.05)
+    hook.t.Think.LivingCityLipSync()
+    if (w[3] or 0) > 0.05 then opened = opened + 1 else shut = shut + 1 end
+end
+if opened < 5 then return "lip sync: the jaw never opened while they spoke" end
+if shut < 1 then return "lip sync: the jaw never closed between syllables" end
+if (w[5] or 0) <= 0 and (w[6] or 0) <= 0 then return "lip sync: the lips never parted" end
+_advance(3)
+hook.t.Think.LivingCityLipSync()
+if (w[3] or 0) ~= 0 then return "lip sync: the mouth stayed open after the line" end
+local cop = Face("models/police.mdl", nil)
+cop:SetNW2Float("lc_talk_until", CurTime() + 2)
+hook.t.EntityNetworkedVarChanged.LivingCityLipSync(cop, "lc_talk_until", 0, CurTime() + 2)
+local okT, errT = pcall(hook.t.Think.LivingCityLipSync)
+if not okT then return "lip sync: " .. tostring(errT) end
+if LC.LipSyncFace(cop) ~= false then return "lip sync: a metrocop's mask has no jaw to move" end
+npc:Remove() cop:Remove()
 return nil
 """)
 if err:

@@ -18,7 +18,7 @@ SWEP.PrintName    = "Radio transmitter"
 SWEP.Author       = "Miscount"
 SWEP.Category     = "Miscount"
 SWEP.Purpose      = "Talk over your radio."
-SWEP.Instructions = "While it's up, your chat and voice go over your radio's band. Only people right beside you hear you directly. Left click calls for backup. R puts it away."
+SWEP.Instructions = "While it's up, your chat and voice go over your radio's band. Only people right beside you hear you directly. Left click calls for backup. Right click opens your side's jobs (F1 too). R puts it away."
 SWEP.Spawnable    = false
 SWEP.AdminOnly    = false
 
@@ -57,12 +57,22 @@ function SWEP:PrimaryAttack()
 end
 -- Right click: switch frequency, for someone who can send on more than one (a Resistance Insider:
 -- the CP net and Freq 7). Careful which one you're on.
+-- With one band, right click opens your side's jobs over the radio (the owner, 12 November: "if you hold
+-- a radio in your hands, you can open the 'Jobs' screen/board"; LC.RadioJobs). F1 has it too, for everyone.
 function SWEP:SecondaryAttack()
     if CLIENT then return end
     if (self.nextTune or 0) > CurTime() then return end
     self.nextTune = CurTime() + 0.4
     local owner = self:GetOwner()
-    if not IsValid(owner) or not (LC and LC.TuneTransmitter) then return end
+    if not IsValid(owner) or not LC then return end
+    if not (LC.TransmitBands and #LC.TransmitBands(owner) > 1) then
+        if LC.RadioJobs then
+            local ok, why = LC.RadioJobs(owner)
+            if not ok and why and LC.Notice then LC.Notice(owner, "warn", "Radio", tostring(why), 6) end
+        end
+        return
+    end
+    if not LC.TuneTransmitter then return end
     local before = self:GetNW2String("lc_band", "")
     local band = LC.TuneTransmitter(owner)
     self:SetNW2String("lc_band", band or "")
@@ -192,7 +202,7 @@ if CLIENT then
         local band = BANDS[self:GetNW2String("lc_band", "")] or "your radio"
         local w, h = ScrW(), ScrH()
         draw.SimpleTextOutlined("TRANSMITTER UP: what you type and say goes out on " .. band, "DermaDefaultBold", w / 2, h - 120, C_150_220_150, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, color_black)
-        draw.SimpleTextOutlined("Only someone right beside you hears you directly. Left click calls for backup. R puts it away." .. (self:GetNW2Int("lc_bands", 1) > 1 and " Right click switches frequency." or ""),
+        draw.SimpleTextOutlined("Only someone right beside you hears you directly. Left click calls for backup. R puts it away." .. (self:GetNW2Int("lc_bands", 1) > 1 and " Right click switches frequency; F1 has your jobs." or " Right click: your jobs."),
             "DermaDefault", w / 2, h - 102, C_220_220_210, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, color_black)
     end
 
