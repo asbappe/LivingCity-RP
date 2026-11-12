@@ -11595,7 +11595,7 @@ lt:SetPos(cage:GetPos() + Vector(100, 0, 0))
 ok(LC.CageDo(lt, cage, "free", cit) == "You let them go." and LC.RebelHeldPly[cit] == nil and not LC.IsTied(cit), "or let go from the cage's menu")
 -- the evidence locker
 _setcvar("lc_evidence_locker", 1)
-table.Empty(LC.EvidenceStock)
+for i = #LC.EvidenceStock, 1, -1 do LC.EvidenceStock[i] = nil end
 for id, n in pairs(LC.Inventory(cit)) do LC.TakeItem(cit, id, n) end
 LC.GiveItem(cit, "lockpick", 1)
 LC.TiePlayer(cit, unit)
@@ -11614,7 +11614,7 @@ ok(got == true and LC.HasItem(cit, "lockpick", 2) and LC.EvidenceTotal() == 0, "
 LC.EvidenceAdd("radio", 1, "arrest")
 ok(LC.EvidenceLockerTake(unit, "radio") == true and LC.HasItem(unit, "radio"), "a unit can help themselves too")
 cit.lcEvLockerOpen = nil
-table.Empty(LC.EvidenceStock)
+for i = #LC.EvidenceStock, 1, -1 do LC.EvidenceStock[i] = nil end
 LC.PatdownRoll = nil
 _setcvar("lc_wear_uses", 10)
 cage:Remove()
