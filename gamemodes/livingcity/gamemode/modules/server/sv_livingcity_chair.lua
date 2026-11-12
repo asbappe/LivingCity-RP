@@ -10,7 +10,7 @@
     This first part is a Resistance player questioning a citizen:
 
       - With a chair within 1200 units, the talk window (E on a citizen) has
-        "Take them to the chair". They walk to it, are pushed down into it,
+        "Take them to interrogation chair". They walk to it, are pushed down into it,
         and the lamp comes on.
       - E on the chair: ask what they've done, ask what they've seen, hit
         them, or let them go. Nobody talks at first. Each blow (fists, 6 at
@@ -147,7 +147,7 @@ local function Seat(s)
     Scene(pos, NameOf(npc) .. " is pushed down into the chair. The lamp comes on.")
 end
 
--- "Take them to the chair" in the talk window (sv_livingcity_talk.lua). Returns what's said, and whether the window closes.
+-- "Take them to interrogation chair" in the talk window (sv_livingcity_talk.lua). Returns what's said, and whether the window closes.
 function LC.ChairTake(ply, npc)
     local chair = LC.ChairFor(ply, npc)
     if not chair then return "There's no chair near enough for that.", false end
@@ -255,7 +255,7 @@ function LC.ChairUse(ply, chair)
         return
     end
     if not s then
-        ply:ChatPrint("[Miscount] The chair is empty. To question someone: press E on a citizen nearby, then \"Take them to the chair\".")
+        ply:ChatPrint("[Miscount] The chair is empty. To question someone: press E on a citizen nearby, then \"Take them to interrogation chair\".")
         return
     end
     if not s.seated then ply:ChatPrint("[Miscount] They're on their way to the chair.") return end

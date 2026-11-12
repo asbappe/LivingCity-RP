@@ -105,7 +105,7 @@ net.Receive("lc_talk", function()
         m:Open()
     end
     if canRecruit then Button("Ask them to keep watch for us (a lookout)", "recruit") end
-    if canChair then Button("Take them to the chair (interrogate)", "chair") end
+    if canChair then Button("Take them to interrogation chair", "chair") end
     Button("Pick their pocket (Guile)", "pick", canPick)
     if canInform then Button("Inform on them to Civil Protection", "inform") end
     Button("Leave", nil)

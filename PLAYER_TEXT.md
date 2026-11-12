@@ -4,7 +4,7 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version 347c091. Admin-only console messages and log lines are left out.
+Made from version 1c50e8f. Admin-only console messages and log lines are left out.
 
 11504 lines, from 307 files.
 
@@ -1127,7 +1127,7 @@ Made from version 347c091. Admin-only console messages and log lines are left ou
 - "Civil Protection is one career path: Recruit, Metrocop, Division Leader, then the Overwatch ranks (Prison Guard, Soldier, Elite). The Overwatch ranks need the transhuman conditioning, which the Overwatch Candidate story offers to Division Leaders once they have the experience for Combine Prison Guard (F4 > Career says how much is missing). Accept it and you come out of the dark Overwatch."  (text, line 299)
 - "Not sure what to do? F1 > What now? > Ways to get by lists everything open to you, and what you need for the rest."  (text, line 300)
 - "The city remembers. Things that happen to its people lead to other things, and citizens pass the stories on: press E on a citizen and Chat. Civil Protection's incident feed (a Combine monitor) lists what was formally reported; the Resistance keep a notice board of what their own people saw."  (text, line 301)
-- "The Resistance has a chair, under a lamp. A Resistance fighter near one can take a citizen to it (E on them, Take them to the chair), then press E on the chair: ask, or hit them until they talk. What they give up is what they really did or saw. Beat someone who has done nothing, and they and their friends won't forget it."  (text, line 302)
+- "The Resistance has a chair, under a lamp. A Resistance fighter near one can take a citizen to it (E on them, Take them to interrogation chair), then press E on the chair: ask, or hit them until they talk. What they give up is what they really did or saw. Beat someone who has done nothing, and they and their friends won't forget it."  (text, line 302)
 - "Civil Protection units can kick: G (or F2 > Kick). Doors swing open, locked doors give way on the second kick, and people get knocked back. A Combine Soldier kicks a hinged door off its hinges; an Elite sends it flying and knocks out anyone it hits. Maintenance Technicians rehang fallen doors: E to lift it, carry it to the frame, E again."  (text, line 303)
 - "Any Civil Protection unit can fly a scanner from a Combine console or from the Nexus (F2 > Unit tools). Reports earn XP; any rebel you photograph gets a BOLO."  (text, line 304)
 - "Running in front of Civil Protection gets you a beating and sent on your way. Do it a third time within an hour and it's prison."  (text, line 305)
@@ -4450,7 +4450,7 @@ Made from version 347c091. Admin-only console messages and log lines are left ou
 - "Give something..."  (button, line 101)
 - "Give something (nothing to give)"  (button, line 101)
 - "Ask them to keep watch for us (a lookout)"  (button, line 107)
-- "Take them to the chair (interrogate)"  (button, line 108)
+- "Take them to interrogation chair"  (button, line 108)
 
 > Note for you (not shown in game): the game answering something done in a window (lc_talk)
 
@@ -5831,7 +5831,7 @@ Made from version 347c091. Admin-only console messages and log lines are left ou
 
 - "is pushed down into the chair. The lamp comes on."  (text, line 147)
 
-> Note for you (not shown in game): "Take them to the chair" in the talk window (sv_livingcity_talk.lua). Returns what's said, and whether the window closes.
+> Note for you (not shown in game): "Take them to interrogation chair" in the talk window (sv_livingcity_talk.lua). Returns what's said, and whether the window closes.
 
 - "There's no chair near enough for that."  (text, line 153)
 
@@ -5873,7 +5873,7 @@ Made from version 347c091. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: chair use
 
-- "[Miscount] The chair is empty. To question someone: press E on a citizen nearby, then "Take them to the chair"."  (chat message, line 258)
+- "[Miscount] The chair is empty. To question someone: press E on a citizen nearby, then "Take them to interrogation chair"."  (chat message, line 258)
 - "[Miscount] They're on their way to the chair."  (chat message, line 261)
 - "[Miscount] Someone else is asking the questions."  (chat message, line 263)
 - "They squint up at you through the light."  (text, line 264)
