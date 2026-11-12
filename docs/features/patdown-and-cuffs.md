@@ -50,6 +50,7 @@ The owner: "can we make this an entity in the editor that an escaped prisoner, a
 - Each one taken (cuffed by Civil Protection, or put in the Resistance's cage) may be hiding something, worked out once: a thing a search would find, and now and then a **lockpick** (about one in eight; three in ten for a rebel).
 - **Pat them down:** the quick menu that comes with cuffing them, F1 while looking at them, or the cage's menu. A unit's finds go to the evidence locker; a rebel keeps the lockpick.
 - A **city unit** searches whoever it arrests, unless it is in a firefight.
+- **Working at the cuffs** (the owner: "do NPCs who may have a lockpick hide them and attempt to get out of cuffs? yes please!"): a cuffed citizen or rebel with a pick nobody found works at the cuffs **only while no captor is looking at them** (the player leading them or any unit player facing them within 400 units; a city unit leading them, unless it is in a firefight). After 20 seconds of that they try: about two in three the cuffs drop and **they run**; otherwise the pick snaps or they try again. A captor who looks at them while they are at it sometimes catches it ("hands busy behind their back, something glints"): the cue to pat them down. In the chronicle as `escaped`.
 - **Nobody searched them and they had a pick:** after 75 seconds in a cell or the cage they are out. Civil Protection's radio hears "a prisoner has picked a cell door"; at the cage the padlock is found hanging open. Either way it is in the chronicle (kind `escaped`).
 
 ## A player in the interrogation chair

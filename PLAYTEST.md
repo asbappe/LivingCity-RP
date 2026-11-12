@@ -1724,3 +1724,5 @@ Type them in the server console on the host panel, or in your own game console (
   Notes:
 - [ ] **Be kind** in the chair: talk, food, ask them to join.
   Notes:
+- [ ] **A cuffed citizen with a hidden lockpick:** cuff several, skip the patdown, walk ahead with your back to them. Does one slip the cuffs and run? Looking at them, do you sometimes get the "something glints" line?
+  Notes:

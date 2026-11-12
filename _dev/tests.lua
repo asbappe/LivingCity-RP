@@ -11703,6 +11703,35 @@ st2.lcHidden = { pick = true }
 st2.lcHideFor = LC.RebelHeld[n2]
 LC.RebelHeld[n2].at = CurTime() - 200
 ok(LC.NPCSlipTick(CurTime()) == 1 and LC.RebelHeld[n2] == nil and has("escaped") ~= nil, "nobody searched this one: they pick the padlock and are gone")
+-- cuffed, with a pick nobody found: they work at the cuffs when nobody is looking
+do
+    local c1, cst = person(Vector(3000, 0, 0))
+    LC.SetState(c1, cst, "detained")
+    c1:SetNW2Bool("lc_cuffed", true)
+    LC.NPCCustody[c1] = { st = cst, leader = lt }
+    cst.lcHidden, cst.lcPatted, cst.lcCuffSecs = { pick = true }, nil, nil
+    lt:SetPos(c1:GetPos() + Vector(-100, 0, 0))
+    lt:SetEyeAngles(Angle(0, 0, 0))
+    ok(LC.NPCCuffsWatched(c1, LC.NPCCustody[c1]) == lt, "the one leading a cuffed citizen is looking at them")
+    for _ = 1, 15 do LC.NPCCuffTick(CurTime()) end
+    ok(cst.lcCuffSecs == nil and cst.state == "detained", "watched: their hands stay still")
+    lt:SetPos(c1:GetPos() + Vector(100, 0, 0)) -- (walking ahead of them now, their back turned)
+    ok(LC.NPCCuffsWatched(c1, LC.NPCCustody[c1]) == nil, "the captor looks away")
+    rolls = {}
+    for _ = 1, 9 do LC.NPCCuffTick(CurTime()) end
+    ok((cst.lcCuffSecs or 0) >= 18 and cst.state == "detained", "unwatched, they work at the cuffs")
+    rolls = { 0.1 }
+    ok(LC.NPCCuffTick(CurTime()) == 1 and cst.state ~= "detained" and not c1:GetNW2Bool("lc_cuffed", false) and cst.lcHidden.pick == false, "and after long enough the cuffs are off, and they run")
+    local c2, cst2 = person(Vector(3200, 0, 0))
+    LC.SetState(c2, cst2, "detained")
+    LC.NPCCustody[c2] = { st = cst2, leader = lt }
+    cst2.lcHidden, cst2.lcPatted = { pick = true }, true
+    for _ = 1, 15 do LC.NPCCuffTick(CurTime()) end
+    ok(cst2.lcCuffSecs == nil and cst2.state == "detained", "patted down: nothing to work with")
+    LC.NPCCustody[c1], LC.NPCCustody[c2] = nil, nil
+    for _, e in ipairs({ c1, c2 }) do if IsValid(e) then LC.NPCs[e] = nil e:Remove() end end
+    lt:SetPos(P0 + Vector(100, 0, 0))
+end
 -- kind options in the chair
 LC.RebelHeld[n].at = CurTime()
 LC.CageDo(lt, cage, "chair", n)
