@@ -757,8 +757,10 @@ net.Receive("lce_shop", function()
     if not t or not LCS then return end
     local keep = IsValid(shopFrame) and ScrollOf(shopFrame.lcScroll) or nil
     if IsValid(shopFrame) then shopFrame:Remove() end
-    -- the Civil Protection Commissary's counter, on its own screen (cl_livingcity_screens.lua), if this player has them on
-    local scr = t.cp and LC_CL.ScreenFor and LC_CL.ScreenFor({ "lc_cpsupply" })
+    -- the Civil Protection Commissary's counter, on its own screen (cl_livingcity_screens.lua), if this player has them on;
+    -- the Union Commissary's terminal too (the owner, 12 November: "it doesn't have the in-game floating menu like the
+    -- CP Commissary, can we change that and put it over the console")
+    local scr = LC_CL.ScreenFor and LC_CL.ScreenFor(t.cp and { "lc_cpsupply" } or { "lc_terminal" })
     if scr then
         local tierS = LCS.TierFor(t.standing or 0)
         local rows = { { kind = "line", text = string.format("%d credits   |   %s (%d)", t.credits or 0, tierS.name, t.standing or 0), col = tierS.color } }
@@ -778,7 +780,7 @@ net.Receive("lce_shop", function()
                     fn = function() net.Start("lce_turnin") net.WriteString(id) net.WriteBool(true) net.SendToServer() end }
             end
         end
-        LC_CL.ScreenOpen(scr, "CIVIL PROTECTION COMMISSARY", "the unit counter", rows)
+        LC_CL.ScreenOpen(scr, t.cp and "CIVIL PROTECTION COMMISSARY" or "UNION COMMISSARY", t.cp and "the unit counter" or "goods by Civil Standing", rows)
         return
     end
     shopFrame = vgui.Create("DFrame")
@@ -794,6 +796,9 @@ net.Receive("lce_shop", function()
         draw.SimpleText(t.cp and "CIVIL PROTECTION COMMISSARY" or "UNION COMMISSARY", "DermaLarge", 16, 28, ACCENT)
         draw.SimpleText(string.format("%d credits   |   %s (%d)", t.credits or 0, tier.name, t.standing or 0), "DermaDefault", w - 16, 38, tier.color, TEXT_ALIGN_RIGHT)
     end
+    -- (a Combine screen, a little see-through, with faint scanlines over it: cl_livingcity_screens.lua)
+    shopFrame:SetAlpha(242)
+    if LC_CL.HoloLines then shopFrame.PaintOver = function(self, w, h) LC_CL.HoloLines(0, 0, w, h, 5) end end
     local scroll = vgui.Create("DScrollPanel", shopFrame)
     scroll:Dock(FILL)
     scroll:DockMargin(6, 40, 6, 6)

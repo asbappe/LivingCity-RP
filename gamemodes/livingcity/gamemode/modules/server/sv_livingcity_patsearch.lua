@@ -121,6 +121,15 @@ function LC.PatSearchOffer(cop, target)
     if carried then S.spots[#S.spots + 1] = { name = carried, items = {}, carried = true } end
     S.papers = S.npc and S.st ~= nil and S.st.role == "citizen" or nil
     PAT[target], BYCOP[cop] = S, target
+    -- a citizen searched stands still, facing the unit, until it's over (sv_livingcity_cp.lua, LC.HoldFacing; the
+    -- owner, 12 November: "make it so they stay facing the officer ... I'm standing still so they don't need to be moving")
+    if S.npc and LC.HoldFacing then
+        LC.HoldFacing(target, cop, 90, function(n, st)
+            if PAT[n] ~= S or S.ended then return false end
+            if st and st.state == "detained" then st.untilT = math.max(st.untilT or 0, CurTime() + 2) end
+            return true
+        end)
+    end
     Push(S)
     return S
 end

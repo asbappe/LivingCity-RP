@@ -152,7 +152,9 @@ function LC_CL.OpenUnitTools()
             Button(s, "Uncuff them", "Let their hands go.", Do("untie"))
             Button(s, "Drag them along / let go", "Walk them where you're going.", Do("drag"))
         else
-            Button(s, "Cuff them", "Their hands up, down, stopped by a Civil Protection unit, or from behind.", Do("tie"))
+            local nc = me:GetNW2Int("lc_cuffs", 0)
+            Button(s, "Cuff them", (nc > 0 and string.format("You carry %d cuffs. ", nc) or "No cuffs: the CP Commissary gives you more. ")
+                .. "Their hands up, down, stopped by a Civil Protection unit, or from behind.", Do("tie"))
         end
         if who:GetNW2String("lcj_job", "") ~= "" and who:GetNW2Entity("lc_escorting") ~= me then
             Button(s, "Escort them", "A worker on a job behind Combine doors: they go through with you.", Do("escort", "", who))

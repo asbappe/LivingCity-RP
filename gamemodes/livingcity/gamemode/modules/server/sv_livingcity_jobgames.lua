@@ -868,6 +868,8 @@ function LC.StreetPapers(cop, npc)
     st.eventUntil = now + 40
     if npc.SetSchedule then npc:SetSchedule(SCHED_IDLE_STAND) end
     if LC.Face then LC.Face(npc, cop:GetPos()) end
+    -- (they stand still facing the unit until the call is made: sv_livingcity_cp.lua; the owner, 12 November)
+    if LC.HoldFacing then LC.HoldFacing(npc, cop, 40, function(n) local c = cop.lcStreetPapers return c ~= nil and c.npc == n end) end
     net.Start("lc_papers_check")
     net.WriteString(util.TableToJSON({ papers = papers, rules = RuleLines(rules), today = rules.today, n = 1, of = 1, street = true }))
     net.Send(cop)

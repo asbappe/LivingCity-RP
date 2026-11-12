@@ -4451,6 +4451,88 @@ GAMEMODE = savedGM
 for _, p in ipairs({ cit, unit, target, tier, hu, cop, adminS, ow }) do if IsValid(p) then p:SetPos(FAR) end end
 end
 CPToolTests()
+function CPCuffTests()
+section("A unit's cuffs: three, standard issue, used up and topped up at a CP Commissary; F2 > Cuff on a citizen")
+do
+    local P = Vector(43000, -46000, 0)
+    local notes = {}
+    local realNotice = LC.Notice
+    LC.Notice = function(p, kind, title, text, secs) notes[#notes + 1] = { p = p, t = tostring(title) .. ": " .. tostring(text) } return realNotice(p, kind, title, text, secs) end
+    local function Told(p, needle) for i = #notes, 1, -1 do if notes[i].p == p and string.find(notes[i].t, needle, 1, true) then return true end end return false end
+    local unit = newPlayer("CuffUnit", "cp")
+    local cit = newPlayer("CuffCitizen", "citizen")
+    unit:SetPos(P) cit:SetPos(P + Vector(60, 0, 0))
+    ok(LC.CuffCount(unit) == 3 and unit:GetNW2Int("lc_cuffs", -1) == 3, "a unit is issued three cuffs as they take the role (the owner, 12 November), and F2 knows how many", LC.CuffCount(unit))
+    ok(LC.CuffCount(cit) == 0, "a citizen isn't")
+    -- cuffing uses a pair; a unit taking them off gets them back
+    cit:SetNW2Bool("lc_handsup", true)
+    ok(LC.CanTie(unit, cit) and LC.TiePlayer(cit, unit) and LC.CuffCount(unit) == 2 and unit:GetNW2Int("lc_cuffs", -1) == 2, "cuffing someone uses a pair", LC.CuffCount(unit))
+    unit.lookingAt = nil
+    ok(LC.StartUntie(unit, cit) and not LC.IsTied(cit) and LC.CuffCount(unit) == 3, "a unit taking them off puts them back in their pocket", LC.CuffCount(unit))
+    -- none left: refused, with where to get more
+    LC.TakeItem(unit, "zipties", 3)
+    cit:SetNW2Bool("lc_handsup", true)
+    local okT, whyT = LC.CanTie(unit, cit)
+    ok(not okT and whyT == "No cuffs: the CP Commissary gives you more." and unit:GetNW2Int("lc_cuffs", -1) == 0, "no cuffs left: refused, and told the CP Commissary gives more", whyT)
+    local cn, cst = LC.Spawners.citizen(P + Vector(0, 70, 0))
+    unit.chat = {}
+    local okN, whyN = LC.TargetActions.cuffnpc(unit, cn)
+    ok(not okN and string.find(whyN or "", "No cuffs", 1, true) and not LC.NPCCustody[cn], "F2 > Cuff them on a citizen: the same, with none left", whyN)
+    local okB, whyB = LC.BatonArrest(unit, cn)
+    ok(not okB and string.find(whyB or "", "No cuffs", 1, true), "and the baton's arrest too", whyB)
+    -- the Commissary: back up to three, free, with a word
+    ok(LC.CPSupplyCuffs(unit) == 3 and LC.CuffCount(unit) == 3 and Told(unit, "Cuffs issued"), "a CP Commissary tops a unit back up to three, free, and says so")
+    ok(LC.CPSupplyCuffs(unit) == 0, "(and not past three)")
+    LC.TakeItem(unit, "zipties", 2)
+    unit.lcSupplyUse = 0
+    LC.UseCPSupply(unit, nil)
+    ok(LC.CuffCount(unit) == 3, "opening the Commissary does it too", LC.CuffCount(unit))
+    ok(LC.CPTurnInPrice(unit, "zipties") == nil, "a unit's cuffs are Combine issue: not turned in for credits")
+    -- F2 > Cuff them on a citizen: the baton's arrest, a pair used
+    _setcvar("lc_arrest_struggle_chance", 0)
+    local okC = LC.TargetActions.cuffnpc(unit, cn)
+    ok(okC and LC.NPCCustody[cn] ~= nil and cn:GetNW2Bool("lc_cuffed", false) and LC.CuffCount(unit) == 2, "with cuffs: F2 > Cuff them cuffs the citizen (the baton's arrest), and uses a pair", LC.CuffCount(unit))
+    if LC.NPCCustody[cn] and LC.ReleaseNPCPrisoner then pcall(LC.ReleaseNPCPrisoner, cn, cst, CurTime(), true) end
+    -- a spawn tops them up
+    LC.TakeItem(unit, "zipties", 2)
+    hook.Run("PlayerSpawn", unit)
+    _run(2)
+    ok(LC.CuffCount(unit) == 3, "and every spawn", LC.CuffCount(unit))
+    -- the Resistance buys them: the dealer and the quartermaster
+    local g = LCS.BlackById and LCS.BlackById.zipties
+    ok(g ~= nil and not g.qm and g.item == "zipties", "cuffs are for sale at the black market dealer, and so at the quartermaster")
+    LC.Notice = realNotice
+    cit:SetNW2Bool("lc_handsup", false)
+    if IsValid(cn) then cn:Remove() end
+    for _, p in ipairs({ unit, cit }) do p:SetPos(P + Vector(30000, 0, 0)) end
+end
+
+section("Held facing the unit: papers checked or searched, a citizen stands still and faces them")
+do
+    local P = Vector(43000, -49000, 0)
+    local unit = newPlayer("FaceUnit", "cp")
+    unit:SetPos(P)
+    local cn, cst = LC.Spawners.citizen(P + Vector(80, 0, 0))
+    local held = true
+    ok(LC.HoldFacing(cn, unit, 30, function() return held end) and LC.FacingHolds[cn] ~= nil, "a hold on a citizen, facing a unit")
+    cn.yaw = 123
+    LC.FacingTick(CurTime())
+    ok(math.abs(math.AngleDifference(cn.yaw or 0, (unit:GetPos() - cn:GetPos()):Angle().y)) < 1, "they turn to face the unit, every moment of it", cn.yaw)
+    held = false
+    LC.FacingTick(CurTime())
+    ok(LC.FacingHolds[cn] == nil, "and are let go when it's over")
+    cst.papersAt = 0
+    if LC.StreetPapers and LC.StreetPapers(unit, cn) then
+        ok(LC.FacingHolds[cn] ~= nil and LC.FacingHolds[cn].ent == unit, "checking their papers holds them facing the unit (the owner, 12 November: they turned around)")
+        LC.StreetPapersDecide(unit, "approve")
+        LC.FacingTick(CurTime())
+        ok(LC.FacingHolds[cn] == nil, "until the call is made")
+    end
+    if IsValid(cn) then cn:Remove() end
+    unit:SetPos(P + Vector(30000, 0, 0))
+end
+end
+CPCuffTests()
 
 function DirectiveTests()
 local FAR = Vector(-30000, 30000, 0)
@@ -4605,7 +4687,7 @@ local cb = LC.Credits(dutyU)
 dutyU.chat = {}
 ok(LC.IssueDutyAllocation(dutyU) and LC.HasItem(dutyU, "ration_voucher") and not LC.HasItem(dutyU, "ration") and LC.Credits(dutyU) > cb,
     "a unit on duty is issued a ration voucher (no packet out of thin air: the owner, 7 November) and coupons")
-ok(has(dutyU.chat, "Duty allocation issued"), "and told")
+ok(has(dutyU.chat, "Ration voucher issued") and not has(dutyU.chat, "coupons"), "and told of the voucher; the coupons are paid quietly (the owner, 12 November: pointless noise)")
 ok(not LC.IssueDutyAllocation(dutyU), "once an allocation")
 dutyU.chat = {}
 ok(LC.UseDispenser(dutyU, nil) and not LC.HasItem(dutyU, "ration_voucher") and has(dutyU.chat, "Voucher accepted"), "the voucher is a ration at a dispenser")
@@ -12717,6 +12799,45 @@ LC.RemoveZone(bz)
 for _, p in ipairs({ unit, cit }) do p:SetPos(D0 + Vector(30000, 0, 0)) end
 end
 CPDutyTests()
+function CPShiftFixTests()
+section("A unit's shift: 30 minutes again, and one 'Shift started', not two in a row")
+do
+    local cv = GetConVar("lc_cp_shift_minutes")
+    ok(_cvarDefaults["lc_cp_shift_minutes"] == "30", "a shift is 30 minutes by default (the owner, 12 November: \"just make the shift back to 30 minutes\")", _cvarDefaults["lc_cp_shift_minutes"])
+    local was = cv:GetString()
+    _setcvar("lc_cp_shift_minutes", "15")
+    LC.EndingRetune()
+    ok(cv:GetString() == "30", "a server still on the old 15 moves to 30", cv:GetString())
+    _setcvar("lc_cp_shift_minutes", was)
+    local notes = {}
+    local realNotice = LC.Notice
+    LC.Notice = function(p, kind, title, text, secs) notes[#notes + 1] = { p = p, t = tostring(title) } return realNotice(p, kind, title, text, secs) end
+    local function Started(p) local n = 0 for _, x in ipairs(notes) do if x.p == p and x.t == "Shift started" then n = n + 1 end end return n end
+    local unit = newPlayer("ShiftUnit", "cp")
+    unit:SetPos(Vector(44000, -52000, 0))
+    unit.lcShift, unit.lcOffDuty = nil, nil
+    LC.CPDutyTick()
+    local s = LC.CPShift(unit)
+    ok(s ~= nil and Started(unit) == 1, "on duty: a shift starts, and they're told once", Started(unit))
+    -- a moment off the books (a respawn, a change of uniform): the same shift, no second notice
+    unit:SetNW2String("lcf_faction", "citizen")
+    LC.CPDutyTick()
+    unit:SetNW2String("lcf_faction", "cp")
+    LC.CPDutyTick()
+    ok(LC.CPShift(unit) == s and Started(unit) == 1, "a blip off duty keeps the shift: no second 'Shift started'", Started(unit))
+    -- a new shift straight after another start: not announced twice in a row
+    unit.lcShift = nil
+    LC.CPDutyTick()
+    ok(LC.CPShift(unit) ~= s and Started(unit) == 1, "a new shift within two minutes of the last notice isn't announced again (it's on F2 > Me > My shift)", Started(unit))
+    -- off duty for good (a break): dropped at once
+    LC.CPBreak(unit)
+    ok(LC.CPShift(unit) == nil and unit.lcShift == nil, "a break still drops the shift at once")
+    LC.CPBreak(unit)
+    LC.Notice = realNotice
+    unit:SetPos(Vector(74000, -52000, 0))
+end
+end
+CPShiftFixTests()
 function SnitchTests()
 section("Secret informants among the citizens, and the Resistance burning one")
 local function Later(secs) _advance(secs) _runtimers() end
@@ -16533,6 +16654,7 @@ _run(0.3)
 res:SetPos(A0 + Vector(50, 200, 0))
 res.lcGraceUntil = 0
 off:SetPos(A0 + Vector(0, 200, 0))
+LC.GiveItem(off, "zipties", 6) -- (a unit's cuffs are issue now, three, and each arrest uses a pair: enough here for every arrest below)
 off.pushed = nil
 LC.BatonArrest(off, res)
 ok(LC.Struggles[res] ~= nil and res:GetNW2Float("lc_struggle_until", 0) > CurTime(), "a player arrested with the baton gets the chance to resist, held where they stand")
@@ -21083,6 +21205,54 @@ LC.Notice, LC.SquadSteps, player.GetAll = nw, stepsWas, realGetAll
 ok(#_errors == errs0, "(no errors in any of it)", _errors[errs0 + 1])
 end
 SquadSizeTests()
+function SquadCatchUpTests()
+section("Squad mates who fall behind or get stuck are put just behind their leader")
+do
+    local S = Vector(246000, -246000, 0)
+    local lead = newPlayer("CatchLead", "cp")
+    lead:SetNW2Int("lcf_rank", 3)
+    lead:SetPos(S)
+    lead.aim = Vector(1, 0, 0)
+    local u, ust = LC.Spawners.cop(S + Vector(-2500, 0, 0))
+    ust.backupFor, ust.backupUntil, ust.backupJoined = lead, CurTime() + 600, true
+    local t0 = CurTime()
+    ok(LC.SquadCatchUpOne(u, ust, lead, t0) and u:GetPos():Distance(lead:GetPos()) < 320, "further than 900 from the leader: put near them at once (the owner, 12 November: \"They need to TELEPORT to me\")", tostring(u:GetPos():Distance(lead:GetPos())))
+    local back = u:GetPos() - lead:GetPos()
+    back.z = 0
+    ok(back:GetNormalized():Dot(lead.aim) < 0, "behind them, not in front where they look")
+    ok(math.abs(u:GetPos().z - lead:GetPos().z) < 48, "on the floor they stand on")
+    -- close enough: left alone
+    u:SetPos(S + Vector(-200, 0, 0))
+    ok(not LC.SquadCatchUpOne(u, ust, lead, t0 + 10), "close by: left where it is")
+    -- stuck: no closer for 10 seconds
+    u:SetPos(S + Vector(-600, 0, 0))
+    ok(not LC.SquadCatchUpOne(u, ust, lead, t0 + 20), "600 away and just fallen behind: given the chance to walk")
+    ok(not LC.SquadCatchUpOne(u, ust, lead, t0 + 26), "still trying")
+    ok(LC.SquadCatchUpOne(u, ust, lead, t0 + 31) and u:GetPos():Distance(lead:GetPos()) < 320, "no closer for 10 seconds: stuck, so put behind them")
+    -- in a fight close by, it isn't 'stuck'
+    u:SetPos(S + Vector(-600, 0, 0))
+    ust.state, ust.enemy = "hostile", lead
+    ok(not LC.SquadCatchUpOne(u, ust, lead, t0 + 40) and not LC.SquadCatchUpOne(u, ust, lead, t0 + 55), "fighting within 900: left to fight")
+    u:SetPos(S + Vector(-1500, 0, 0))
+    ok(LC.SquadCatchUpOne(u, ust, lead, t0 + 60), "but whatever it's doing, further than 900 and it comes")
+    ust.state, ust.enemy = "idle", nil
+    -- never into the dream zone unless the leader's in it
+    local oldDZ = LC.DreamZone
+    local dz = { pos = S + Vector(-150, 0, 0), r = 120, kind = "dream" }
+    LC.DreamZone = function() return dz end
+    local spot = LC.SquadCatchSpot(lead, u)
+    ok(spot and not LC.SquadInDreamZone(spot), "never put in the dream zone while the leader is outside it", tostring(spot))
+    LC.DreamZone = oldDZ
+    -- the tick does every squad mate of a Combine leader
+    u:SetPos(S + Vector(-3000, 0, 0))
+    ust.catchNext = 0
+    ok(LC.SquadCatchUpTick(t0 + 100) >= 1 and u:GetPos():Distance(lead:GetPos()) < 320, "every 2 seconds, every squad mate far behind is brought up")
+    ust.backupFor = nil
+    u:Remove()
+    lead:SetPos(S + Vector(40000, 0, 0))
+end
+end
+SquadCatchUpTests()
 
 -- The performance debugger (sh_livingcity_perfdebug.lua, sv_livingcity_perfdebug.lua)
 function PerfDebugTests()
