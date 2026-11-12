@@ -208,3 +208,16 @@ The staging above (the opening card, the figures' acting, the finish) is for the
 **Changes from the 11 November playtest.** **Bubbles:** 30 bubbles at a time (it was 18), about 37% of them lift bubbles (it was 15%: about four times as many); a lift bubble throws you up harder (640) and leaves you floating at very low gravity for 12 seconds. **Strange dreams' music:** each lurch lasts 3 to 6 seconds (twice as long), 13 to 23 seconds apart.
 
 **A dream that found every bed empty waits (11 November).** When the night's dream comes and nobody is asleep to dream it, it is not lost for the night: the first to fall asleep later that night (a dreamer, not only an Enforcer) has it twenty seconds after they do. By morning it is forgotten.
+
+**The 12 November playtest (the owner: "fix all of it please").**
+- **Units dream too:** a Civil Protection unit (or any Combine side) asleep in a Combine zone gets the nightmares; only citizens there are spared. With only would-be Enforcers asleep, they dream it as ordinary dreamers.
+- **Stop the dream from inside it:** F1 > Staff > "Stop the dream under way", and "Stop the dream for everyone (staff)" in F1 while an admin dreams (`LC.DreamStopAll`: every dreamer woken, sounds stopped, loadouts back).
+- **Music for every dream:** `sound/livingcity/dreams/<codeword>/` (any mp3, ogg or wav), or the flat `<codeword>1.mp3`, else Half-Life 2's own; fades out at the end; the debug report lists "dream songs".
+- **The sound guard** (`sh_livingcity_soundguard.lua`): the same custom sound started on the same thing more than 4 times in 20 seconds is refused, copies playing are stopped, and it is logged ("sound guard" in the debug report). Footsteps, weapons, physics and voices are never refused. At every dream's end every sound started on dreamers, dream figures or in the zone is stopped (`LC.SoundGuardDreamEnd`).
+- **Battle Line:** the whole dream zone (up to 3000 wide), rebels at a normal run, the last giants arriving five a second, gunships and the helicopter at half way (30 seconds at the latest), bombs every 0.3 seconds, up to 240 seconds. Every dreamer gets a pulse rifle (taken back on waking; it hurts nothing in the waking world), soldiers hold rifles, shot streaks are drawn on dreamers' screens and gone at the end, city NPCs are sent off the field.
+- **The party bus** drives on the dream's floor and passes through everything.
+- **Careless Talk:** plainer text, signs over the tables, and the spy glances over their shoulder every 4 to 7 seconds from 6 seconds in (the goal says so). The vortigaunts gather for 8 seconds (a countdown) before the tug-of-war; their arrival sound plays once.
+- **Duck and Cover:** slower (first siren at 20 seconds, calm 14 to 18, tips every 12 to 16, 210 seconds in all); the alarm is quieter and plays only during the siren.
+- **Freeze, Citizen:** the dream zone's lights go out (and back on after), the screen darkens with black fog, 2 to 4 slow zombies trail the dreamers (a touch costs a life), and the officer's red eye beams hit anyone caught moving.
+- **Bubbles:** 48 bigger, slower bubbles, no tiny effect bubbles, and dreamers weigh 40% of normal.
+- A dreamer is never taken in by an NPC unit mid-dream.

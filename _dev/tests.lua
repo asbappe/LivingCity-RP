@@ -18202,6 +18202,7 @@ ok(SentTo(a, "lc_dreamgame", function(t) return t.k == "tracer" end), "shots' st
 walker:Remove()
 Stop(d)
 LC.RemoveZone(bz)
+LC.VortWeakNext, LC.VortWarForceNext = nil, nil -- (nothing of tonight's vortigaunts carried into the next unit's dreams)
 
 LC.DreamForget()
 LC.RemovePoint(dp)
@@ -19421,7 +19422,7 @@ ok(sm.score == 4 and a.lcDreaming, "(a command isn't a compliment: commands stil
 hook.Run("PlayerSay", a, "gorgeous divine goddess perfect")
 ok(sm.how == "won", "enough adoration: the fairest of them all", sm.score)
 LC.DreamGameStop(d3, "test")
-_run(2.5)
+_run(4) -- (everything put back in full first, as after any dream)
 ok(LC.Standing(b) == stB - 14, "waking: 3 loyalty points an offence, 5 more for being thrown out (here 14)", LC.Standing(b) - stB)
 
 -- The Saviour

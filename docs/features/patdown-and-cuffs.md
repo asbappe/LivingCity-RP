@@ -105,3 +105,8 @@ The owner: "a Lieutenant or above can give the order and do it themselves, but t
 - The clipboard's "general sentiment as a sentence" shows the cell's mood for now; the people's sentiment is not built.
 - Jobs taken at the board instead of F4 (needs the owner's yes).
 - The priority doing something, and the mood changing how readily the cell's fighters fight.
+
+**The 12 November playtest (the owner: "fix all of it please").**
+- **Cuffs are standard issue:** a unit has 3 (`LC.CP_CUFFS`) on taking the role and on every spawn; walking up to or opening a CP Commissary tops them back up to 3, free ("Cuffs issued"). Each cuffing (F2 or the baton's right click, players and NPCs) uses a pair, uncuffing gives it back; nothing is used up in a dream. Unit cuffs are Combine issue: never turned in or handed to non-units. The Resistance buys cuffs from the black market dealer or the quartermaster, as before.
+- **F2:** Cuff stays on the menu when a unit has none, greyed with "(No cuffs: the CP Commissary gives you more)"; "Cuff them (walked to the cells)" on a citizen NPC. The unit tools window shows how many cuffs you carry.
+- **Cuffed arms:** behind the back, wrists together; the cuffs on the wrists are unchanged. New default `lc_cuff_pose "40 6 75 -75 10"` (back, in, turned in, elbow, wrist).

@@ -46,3 +46,7 @@ The flame is green, as the Immolator's was, drawn on the client from the model's
 ## Code
 
 `sv_livingcity_cremator.lua` (`LC.CrematorModel`, `LC.CrematorPace`, `LC.CrematorModelsFound`, `LC.CrematorSequence`, `LC.SpawnCremator`, `LC.CrematorEnemy`, `LC.CrematorBody`, `LC.CrematorsStaff`/`Think`/`Tick`, `LC.CrematorDie`, `LC.CrematorSummary`; hooks `LivingCityCremated` with the walker as who, `LivingCityCrematorKilled`), `cl_livingcity_cremator.lua` (the flame). Tests: CrematorTests.
+
+**The 12 November playtest (the owner: "fix all of it please").**
+- **The incinerator stands on end**, open end up, the fire coming out of the top like a torch (`ENT:StandUp`); bodies are brought to its foot (`LC.IncineratorBase`). It stands up again after a physgun move.
+- **Cremators guard the infestations:** each picks the infestation with the fewest (`LC.CrematorPickZone`) and keeps to it, inside or up to 500 units out, burning only the dead on that ground (within 1200 units: `LC.CrematorTurf`). Morticians (NPC and the Collection shift) handle the city and never take a body inside an infestation. A cleanup crew (player shift or NPC crew) near an infestation gets the nearest free Cremator as an escort, 160 to 300 units off, burning what comes near them; then it goes back. With no infestation marked, Cremators walk the streets as before. The debug report counts guarding, escorting and street ones.

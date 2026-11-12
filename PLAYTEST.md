@@ -1,16 +1,73 @@
 # Playtest checklist
 
-Updated 1 November 2026. **Part 1** is everything new since your 1 November playtest: try those first. **Part 2** is older items (from 8 October on); skip any you've already checked.
+Updated 12 November 2026. **Part 1** is everything new since your 1 November playtest: try those first. **Part 2** is older items (from 8 October on); skip any you've already checked.
 Tick a box when you've tried it, and write what you saw after **Notes:** (works, broken, feels off, ideas).
 
-## Your 11 November notes: fixed, please try again
+## Your 12 November notes: fixed, please try again
 
-- [ ] **Stalkers' noise:** a stalker NPC now speaks once a minute, not every few seconds. Still too much?
+- [ ] **Lights out:** the warnings say "About six minutes until sleep" and "Two minutes until sleep".
   Notes:
-- [ ] **G kicks:** as a unit, press G at a door or a person. (It never worked: the key ran the server's setting of the same name.)
+- [ ] **Sprays:** off. G only kicks.
   Notes:
+- [ ] **Vortigaunt broom:** a street vortigaunt holds it out in front, head on the ground, not sideways.
+  Notes:
+- [ ] **Cuffs:** a unit carries 3. Cuff 3 people: F2 then shows Cuff greyed with the reason. Walk up to the CP Commissary: "Cuffs issued", back to 3.
+  Notes:
+- [ ] **Cuffed arms:** behind the back, wrists together (tune in your own console: `lc_cuff_pose "40 6 75 -75 10"`). Send a screenshot if still off.
+  Notes:
+- [ ] **Arrest Baton:** the baton shows in first person, with one small glow at its tip. Screenshot please if not.
+  Notes:
+- [ ] **Duty allocation:** no more "credits in ration coupons" line.
+  Notes:
+- [ ] **Shift:** 30 minutes again, and "Shift started" only once.
+  Notes:
+- [ ] **CP Commissary screen:** right over the console, the floating sign hidden while it's open; signs and screens flicker like holograms. The Union Commissary has its own screen too. Turning in junk keeps your page.
+  Notes:
+- [ ] **Checking papers:** "Done searching: check their papers" on the search window; the citizen stays facing you, still.
+  Notes:
+- [ ] **Squad mates:** walk off fast or go up a floor. One more than 900 units back, or stuck 10 seconds, appears just behind you.
+  Notes:
+- [ ] **Action music:** an inspection starts while you're in bed, in a dream, or far away: no action music.
+  Notes:
+- [ ] **Jobs over the radio:** radio transmitter up, right click (or F1 > Jobs over the radio).
+  Notes:
+- [ ] **Incinerator:** stands on end, fire out of the top like a torch; bodies go to its foot.
+  Notes:
+- [ ] **Cremators:** one stays at each infestation; take a cleanup shift there and one escorts you. Morticians never go in.
+  Notes:
+- [ ] **Mouths:** a citizen speaking a recorded line moves their mouth.
+  Notes:
+- [ ] **Your model at server start:** a unit in the old low-res metrocop is switched to the right one a few seconds after spawning.
+  Notes:
+- [ ] **Dreaming as a unit:** a CP in a Combine-zone bed gets the nightmares.
+  Notes:
+- [ ] **Stop the dream:** as an admin in a dream, F1 > Stop the dream for everyone (also F1 > Staff).
+  Notes:
+- [ ] **Battle Line:** the whole dream zone, rebels at normal speed, giants over a few seconds, gunships at half way, a pulse rifle for you, no streaks left after, no citizens in front.
+  Notes:
+- [ ] **Party bus:** drives on the dream floor, through anything.
+  Notes:
+- [ ] **Careless Talk:** signs over the tables, plainer text; the spy keeps glancing over their shoulder. Vortigaunts start 8 seconds after appearing; their sound plays once.
+  Notes:
+- [ ] **Sound guard:** any sound starting more than 4 times in 20 seconds is stopped ("sound guard" in the debug report). Every dream sound stops when it ends.
+  Notes:
+- [ ] **Duck and Cover:** slower, and the alarm is quieter and only during the siren.
+  Notes:
+- [ ] **Freeze:** lights out in the dream zone, darker screen, zombies trailing you, red eye beams on anyone caught moving.
+  Notes:
+- [ ] **Bubbles:** bigger, more, slower, no tiny ones; you weigh 40% of normal. (It was already 60%: say if you meant 60%.)
+  Notes:
+- [ ] **Dream music:** drop songs in `garrysmod/sound/livingcity/dreams/<codeword>/` (for example `freeze/`, `battleline/`, `duck/`, `spy/`, `bubbles/`); the debug report lists what it found. Until then Half-Life 2's own play.
+  Notes:
+
+## Your 11 November notes: fixed, please try again
+- [x] **Stalkers' noise:** a stalker NPC now speaks once a minute, not every few seconds. Still too much?
+  Notes: Yes much better
+- [X] **G kicks:** as a unit, press G at a door or a person. (It never worked: the key ran the server's setting of the same name.)
+  Notes: Works, thanks. Except when I kick it sprays my old spray cause G is my spray button: can we disable sprays on this gamemode?
 - [ ] **Cuffing without the big window:** look at a player up close, F2: Cuff, then Drag. The baton's tip on the right now says so.
-  Notes:
+  Notes: Please make cuffs standard issue for CP units; they should get 3 cuffs and can automatically get more if low by visiting the CP commissary
+I didn't see the F2 cuff option: I patted someone down, found something, then pressed F2 and didn't see it. why not just have it popup as a contextual "cheat" F menu like we said? The hidden F menu...ok wait, I stopped someone and pressed F2 and I don't see a cuff option, what gives? Ohhh I don't have any cuffs...well there are no cuffs for sale at the CP COmmissary, come on! I can't get cuffs, no wonder! Like I said, CP units should get them automatically when going to a CP commissary and rebel units should be able to buy them from the black market dealer or a quartermaster.
 - [ ] **Cremator, the sizzle:** let one kill headcrabs. No burning sound left behind afterwards?
   Notes:
 - [ ] **Cremator, cooked meat:** what it kills leaves a cooked headcrab or roast bird, not a raw one, and that spoils in time.
@@ -26,7 +83,7 @@ Tick a box when you've tried it, and write what you saw after **Notes:** (works,
 - [ ] **The radio and R:** radio out, R puts it away; R again brings it back and it stays out.
   Notes:
 - [ ] **A unit's shift:** a notice when a shift starts (with the quota), at half time and with two minutes left. With the editor tool out the shift's clock waits.
-  Notes:
+  Notes: ok it says when a shift starts, but 2 happen in a row, and I didn't see an option to take a break? so just make the shift back to 30 minutes then.
 - [ ] **The trail when you run:** the chevrons should stay where they are on the ground and not race ahead with you.
   Notes:
 - [ ] **The trail in the open:** with a clear walk to the objective (same floor, no wall) it should point straight at it, not zigzag over path nodes. `lc_trail_straight 0` in the server console is the old way, to compare.
@@ -46,26 +103,26 @@ Tick a box when you've tried it, and write what you saw after **Notes:** (works,
 - [ ] **A vortigaunt charging your vest** (as Resistance, E on a freed one): it turns to you, raises its hands, and a green beam pulses to your chest for three seconds. Does it play a charging animation? (The server log says which one it found.)
   Notes:
 - [ ] **Bubbles dream:** many more of the big pale lift bubbles, a harder throw, 12 seconds of floating. The music's lurches last twice as long.
-  Notes:
+  Notes:Nope, still not enough, I can't get any. they rise too fast and are still too few. I am running in circles unable to get any. Can we make the bubbles a little bigger? There are also tons of tiny bubbles everywhere that don't count for points I guess and make it confusing as to which are ok to grab, so maybe make the legit bubbles bigger, the ones that I can grab/eat/pop. Also lower the grav for dreamers for the bubble dream a bit, like 40% please.
 
 ## 11 November, part 2: fixed, please try again
 
 - [ ] **Your hands as a unit:** are your own sleeves and gloves back in first person? In your game's console (not the server's) there should be a line `own hands: N arm bones of M kept on ...`: if the hands are still missing, tell me that line (or that there is none).
-  Notes:
+  Notes: yes they are thanks.
 - [ ] **The kick from your own eyes:** only the leg now, no lump of torso.
   Notes:
 - [ ] **Clipboards:** a courier or clerk carries it hanging from the hand, flat against the leg. Better? If you want it held another way (under the arm, up in front), say which.
   Notes:
-- [ ] **Pockets as a unit:** "POCKETS", credits and standing sit under the title strip, nothing running through them.
-  Notes:
-- [ ] **CP Commissary screen:** the right height the first time it opens.
+- [x] **Pockets as a unit:** "POCKETS", credits and standing sit under the title strip, nothing running through them.
+  Notes:Perfect thank you
+- [x] **CP Commissary screen:** the right height the first time it opens.
   Notes:
 - [ ] **Turning in junk:** at the CP Commissary, under the goods: "Turn in all: ..." pays you for what you carry.
-  Notes:
+  Notes: This works but when I select junk to turn in, it goes back to the first page; please make it stick to the page I am on when selling/turning in.
 - [ ] **Arrest Baton:** the glow and sparks at its head in your view. A stunstick on the ground can't be picked up by a unit.
-  Notes:
-- [ ] **F3 and F4:** with the pockets open press F4 (and the other way round): the open one shuts and the other opens. The window's own key shuts it.
-  Notes:
+  Notes:arrest baton sparks are in a group of 3 and sitting too far back from the viewmodel, please ask me for the screenshot if I forget it.
+- [x] **F3 and F4:** with the pockets open press F4 (and the other way round): the open one shuts and the other opens. The window's own key shuts it.
+  Notes: Works great
 - [ ] **Protect jobs:** when a dropship or supply drop is announced, the job is on F4 for 60 seconds. Take it: "arrives in 1:00" counts down in the job tracker, top right, and it lands when that runs out. Leave it: it comes a second after the job disappears.
   Notes:
 - [ ] **Housing block inspection:** the trail goes to a door of the block; the door stays shut until you set the charge (E) or kick it in; the furniture stands on the floor inside the room.
@@ -84,7 +141,7 @@ Tick a box when you've tried it, and write what you saw after **Notes:** (works,
 - [ ] **Searching a suitcase or parcel:** search an NPC carrying one: a fifth spot ("Suitcase", "Parcel") beside the legs.
   Notes:
 - [ ] **Checking papers:** in the search window, "Done searching: check their papers"; or F2 > Check their papers with a citizen in front of you. The papers window against today's rules: wave on, cite, or take in a forgery. A catch is 1 credit and +5 Civil Standing; citing papers that were in order costs 2.
-  Notes:
+  Notes: "Done searching: check their papers" I do not see this on the search window. Thankfully the F2 > check their papers works. However when I Checked their papers, they turned around and I couldn't see their face; please make it so they stay facing the officer/person checking their papers; I'm standing still so they don't need to be moving to follow or get out of my way, they just need to face me.
 - [ ] **Company on a patrol:** take the night shift (18:00 to 21:00) or a patrol job. Within a few minutes: a loiterer marked on your screen (may bolt when you come near), or somebody following you (a notice, look behind you, they run). Run them down, then search them or check their papers. Too often, too rare, too easy to lose?
   Notes:
 - [ ] **NPCs fighting each other:** watch units and rebels meet. They should stop and shoot it out instead of firing a round and walking on, come round a corner for a shot instead of facing a wall, and duck into cover when hurt. `lc_combat_ai 0` in the server console is the old way, to compare.
@@ -379,7 +436,7 @@ Players now download both workshop packs when they join (the Alyx hazard props 2
 - [ ] **Rain:** thinner, twice as many drops, fog only under open sky.
   Notes:
 - [ ] **CP Commissary:** a separate counter for units; the Union Commissary doesn't sell to them.
-  Notes:
+  Notes: It exists but it doesn't have the in game floating menu like the CP Commissary, can we change that and put it over the console like I mentioned for the CP COmmisary? Thanks
 - [ ] **Nova Prospekt:** soldiers near the prison wear the prison guard uniform.
   Notes:
 - [ ] **Dropships:** the container stays in the claws, the door opens and soldiers jump out; on red alert the first one out is an Elite.

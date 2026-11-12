@@ -18,3 +18,5 @@ Whatever a game wants you to look at is outlined: hiding places, residents, furn
 `lc_jobgames 0` (editor panel, Survival and economy) puts the old shifts back.
 
 Place each job's workplace from the editor's "Workplaces" section. Shifts pay Credits and Civil Standing, and many carry small choices: the mother with one ration card, the beaten man who begs you to write "fell down the stairs". The newer jobs are also where contraband comes from, if you want it: a dead man's papers from the morgue, a suitcase that's heavier than clothes, a pistol under the rubble. (Blank forms, uniforms and Freq 7 radios come from the black market, the dead, scavenging and the Resistance lab.)
+
+**The 12 November playtest (the owner: "fix all of it please").** **Jobs over the radio:** with the radio transmitter up, right click (one band) or F1 > "Jobs over the radio" opens your side's jobs; Insiders with two bands keep right click for the band and use F1. F4's Jobs tab still opens anywhere too.

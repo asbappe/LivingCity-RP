@@ -19,3 +19,5 @@
 `lc_loyalty_rewards 0` turns all of it off.
 
 **Changes from the 7 November playtest.** The city's collared vortigaunts sweep for real, a push broom in hand, pacing a short stretch; they step aside when a person or NPC walks into them, and new sweeping spots keep out of doorways. A shackled vortigaunt never zaps: it runs from any headcrab or zombie within 400 units.
+
+**The 12 November playtest (the owner: "fix all of it please").** The street vortigaunt's push broom sits out in front, head on the ground, handle up to its hands (held in the claw, it stuck out to the side).

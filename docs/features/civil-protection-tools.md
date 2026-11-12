@@ -50,7 +50,7 @@
 
 ## A unit's shift: the quota, papers duty, inspections, the review (the owner, 10 November)
 
-Something for Civil Protection to do when no rebels are about. Every Civil Protection player on duty works shifts of `lc_cp_shift_minutes` (15; it was 30 for a day, the owner: "let's do 15"), each with a quota. **F2 > Me > My shift** shows the time left and the quota so far, and holds the work:
+Something for Civil Protection to do when no rebels are about. Every Civil Protection player on duty works shifts of `lc_cp_shift_minutes` (30 again since 12 November, the owner: "just make the shift back to 30 minutes then"; it was 15 from 10 November), each with a quota. **F2 > Me > My shift** shows the time left and the quota so far, and holds the work:
 
 - **Searches** (`lc_cp_quota_searches`, 3): anyone searched counts, a player (the pat-down) or one of the city's people.
 - **Checkpoint papers duty** (`lc_cp_quota_papers`, 1): F2 > Me > My shift > Checkpoint papers duty. Travelers walk up one at a time; E on each shows their papers beside today's rules (expiry, the photo, a banned district, the stamps); approve, deny or call it in. It's the Intake Processor's papers check, done by a unit. Seeing most of them through (3 of 5) counts.
@@ -122,3 +122,14 @@ On the night shift (`cp_nightshift`) or a patrol job (`cp_patrol`), 40 seconds i
 ## Flashbangs that hold (11 November)
 
 Blinded NPCs now have their weapons taken out of their hands for as long as they are blind, and given back (the one they held, in hand) when it wears off. Before, only what they were allowed to do and whom they remembered was cleared, which the tests accepted but the real game did not: they saw their target again a moment later and fired. Anyone within 300 units of the bang is caught whatever is in the way (it was 150); further off, up to 560, they need a line of sight to it. Whoever threw it gets a chat line: "[Flashbang] 3 blinded: they can't shoot until it wears off." or "[Flashbang] Nobody was caught in it."
+
+**The 12 November playtest (the owner: "fix all of it please").**
+- **Duty allocation:** the ration coupon credits are paid quietly; only a ration voucher gets a chat line.
+- **Shift:** 30 minutes again; "Shift started" is never sent twice within two minutes, and a moment off duty (respawn, uniform change) keeps the same shift for 60 seconds.
+- **Terminal screens:** a terminal's screen (CP Commissary, Union Commissary, Civil Intake, Housing, Labor) stands right over its console, where the floating sign was, and the sign is hidden while the screen is open; it comes back on closing or walking away. Signs and screens look like holograms: a little see-through, a gentle flicker, faint scanlines (`LC_CL.HoloFlicker`, `HoloJitter`, `HoloLines`). The Union Commissary has its own screen now. Buying or turning in keeps you on the page you were on.
+- **Arrest Baton:** the baton shows in first person (draw and idle animations), with one small glow and crackle at the tip (`LC_CL.BatonTipSpace` undoes the engine's view-model field of view for the attachment).
+- **Checking papers:** "Done searching: check their papers" shows on the search window; the citizen stands still facing the unit for the whole search and papers check (`LC.HoldFacing`).
+- **Jobs over the radio:** with the radio transmitter up, right click (one band) or F1 > "Jobs over the radio" opens your side's jobs (F4, Jobs tab), with the same rules as a terminal or board (`LC.RadioJobs`).
+- **Sprays are off** in the gamemode (G is the kick key).
+- **Action music (12 November):** no city event (inspections, raids, lockdowns) starts it by itself; it plays only for a fight near you, a violent job within 1500 units of where it happens, a skirmish within 3000, or being wanted (urgent), and never while asleep, in bed or dreaming (`LC.AtRest`). Red alert and a lockdown play tense music.
+- **The metrocop at server start:** a street-rank unit still in Half-Life 2's `police.mdl` 4 seconds after spawning is re-dressed in the server's Half-Life: Alyx one (`LC.MetrocopRecheck`), and the lookup is retried every 30 seconds while none was found.
