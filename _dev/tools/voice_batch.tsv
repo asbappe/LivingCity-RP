@@ -51,8 +51,8 @@ man	livingcity/citizens/say_greet_cold_male1	[cold, flat] What do you want?
 woman	livingcity/citizens/say_greet_cold_female1	[cold, flat] What do you want?
 man	livingcity/citizens/say_greet_guarded_male1	[wary, guarded] Do I know you?
 woman	livingcity/citizens/say_greet_guarded_female1	[wary, guarded] Do I know you?
-man	livingcity/citizens/say_greet_plain_male1	[tired, dry] Hey. Still here, huh. [exhales] Me too.
-woman	livingcity/citizens/say_greet_plain_female1	[tired, dry] Hey. Still here, huh. [exhales] Me too.
+man	livingcity/citizens/say_greet_plain_male1	[tired, dry] Hey. Still here, huh? [exhales] Me too.
+woman	livingcity/citizens/say_greet_plain_female1	[tired, dry] Hey. Still here, huh? [exhales] Me too.
 man	livingcity/citizens/say_greet_unit_male1	[nervous, too polite] No trouble here, officer.
 woman	livingcity/citizens/say_greet_unit_female1	[nervous, too polite] No trouble here, officer.
 man	livingcity/citizens/say_greet_warm_male1	[relieved, warm] Oh, it's you. Good to see a friendly face.
@@ -67,8 +67,8 @@ man	livingcity/citizens/say_later_male1	[hushed, tense] Not now. Not here.
 woman	livingcity/citizens/say_later_female1	[hushed, tense] Not now. Not here.
 man	livingcity/citizens/say_maybe_male1	[hesitant] Maybe. I'd have to think about it.
 woman	livingcity/citizens/say_maybe_female1	[hesitant] Maybe. I'd have to think about it.
-man	livingcity/citizens/say_no_male1	[flat, apologetic] No. Sorry.
-woman	livingcity/citizens/say_no_female1	[flat, apologetic] No. Sorry.
+man	livingcity/citizens/say_no_male1	[flat, apologetic] Sorry, but no.
+woman	livingcity/citizens/say_no_female1	[flat, apologetic] Sorry, but no.
 man	livingcity/citizens/say_no_hard_male1	[firm, low] No. [pause] And don't ask me again.
 woman	livingcity/citizens/say_no_hard_female1	[firm, low] No. [pause] And don't ask me again.
 man	livingcity/citizens/say_yes_male1	[plain, tired] Yeah. All right.
@@ -89,10 +89,10 @@ man	livingcity/citizens/say_truth_male1	[quiet, grim] Honestly? [sighs] It's as 
 woman	livingcity/citizens/say_truth_female1	[quiet, grim] Honestly? [sighs] It's as bad as it looks.
 man	livingcity/citizens/say_state_angry_male1	[tight, barely holding it in] I've had about all I can take.
 woman	livingcity/citizens/say_state_angry_female1	[tight, barely holding it in] I've had about all I can take.
-man	livingcity/citizens/say_state_fine_male1	[worn, matter of fact] Getting by. That's all anyone can say.
-woman	livingcity/citizens/say_state_fine_female1	[worn, matter of fact] Getting by. That's all anyone can say.
-man	livingcity/citizens/say_state_hopeful_male1	[quiet, hopeful] It can't last forever. Nothing does.
-woman	livingcity/citizens/say_state_hopeful_female1	[quiet, hopeful] It can't last forever. Nothing does.
+man	livingcity/citizens/say_state_fine_male1	[worn, matter of fact] Getting by. That's all I can do.
+woman	livingcity/citizens/say_state_fine_female1	[worn, matter of fact] Getting by. That's all I can do.
+man	livingcity/citizens/say_state_hopeful_male1	[quiet, hopeful] It can't last forever. Nothing ever does.
+woman	livingcity/citizens/say_state_hopeful_female1	[quiet, hopeful] It can't last forever. Nothing ever does.
 man	livingcity/citizens/say_state_hungry_male1	[weak, hollow] I haven't had a real meal in days.
 woman	livingcity/citizens/say_state_hungry_female1	[weak, hollow] I haven't had a real meal in days.
 man	livingcity/citizens/say_state_lonely_male1	[soft, grateful] It's good to just talk to someone.
@@ -105,8 +105,8 @@ man	livingcity/citizens/say_state_tired_male1	[exhausted] I'm tired. [sighs] Jus
 woman	livingcity/citizens/say_state_tired_female1	[exhausted] I'm tired. [sighs] Just so tired.
 man	livingcity/citizens/say_agree_male1	[dry, low] You're not wrong.
 woman	livingcity/citizens/say_agree_female1	[dry, low] You're not wrong.
-man	livingcity/citizens/say_disagree_male1	[even, firm] I don't see it that way.
-woman	livingcity/citizens/say_disagree_female1	[even, firm] I don't see it that way.
+man	livingcity/citizens/say_disagree_male1	[even, firm] Well, I don't see it that way.
+woman	livingcity/citizens/say_disagree_female1	[even, firm] Well, I don't see it that way.
 man	livingcity/citizens/say_insulted_male1	[stung, stiff] Hey. There's no need for that.
 woman	livingcity/citizens/say_insulted_female1	[stung, stiff] Hey. There's no need for that.
 man	livingcity/citizens/say_laugh_male1	[short laugh] Ha. [warm, surprised] That's the first laugh I've had all week.
@@ -125,8 +125,8 @@ man	livingcity/citizens/say_fear_units_male1	[low, warning] Stay away from the u
 woman	livingcity/citizens/say_fear_units_female1	[low, warning] Stay away from the units today. They're in a mood.
 man	livingcity/citizens/say_hate_quiet_male1	[low, bitter, controlled] One day they'll answer for all of it.
 woman	livingcity/citizens/say_hate_quiet_female1	[low, bitter, controlled] One day they'll answer for all of it.
-man	livingcity/citizens/say_loyal_male1	[earnest, a little rehearsed] The Administrator knows best. I believe that.
-woman	livingcity/citizens/say_loyal_female1	[earnest, a little rehearsed] The Administrator knows best. I believe that.
+man	livingcity/citizens/say_loyal_male1	[earnest, a little rehearsed] The Administrator knows best. Everyone knows that!
+woman	livingcity/citizens/say_loyal_female1	[earnest, a little rehearsed] The Administrator knows best. Everyone knows that!
 man	livingcity/citizens/say_loyal_warn_male1	[alarmed, hushed] You shouldn't say things like that. Someone will hear.
 woman	livingcity/citizens/say_loyal_warn_female1	[alarmed, hushed] You shouldn't say things like that. Someone will hear.
 man	livingcity/citizens/say_obey_male1	[tired, kindly] Keep your head down and do what they say. That's how you make it.
@@ -141,8 +141,8 @@ man	livingcity/citizens/say_res_refuse_male1	[afraid, firm] I've got people to t
 woman	livingcity/citizens/say_res_refuse_female1	[afraid, firm] I've got people to think about. Leave me out of it.
 man	livingcity/citizens/say_res_respect_male1	[quiet, a hint of a smile] Whoever they are, good luck to them.
 woman	livingcity/citizens/say_res_respect_female1	[quiet, a hint of a smile] Whoever they are, good luck to them.
-man	livingcity/citizens/say_res_side_male1	[very quietly, steady] If someone needed a door left open, mine might be.
-woman	livingcity/citizens/say_res_side_female1	[very quietly, steady] If someone needed a door left open, mine might be.
+man	livingcity/citizens/say_res_side_male1	[very quietly, steady] If someone needed a door left open, mine would be.
+woman	livingcity/citizens/say_res_side_female1	[very quietly, steady] If someone needed a door left open, mine would be.
 man	livingcity/citizens/say_tip_help_male1	[low, kind] If you need something, ask. [whispers] Quietly.
 woman	livingcity/citizens/say_tip_help_female1	[low, kind] If you need something, ask. [whispers] Quietly.
 man	livingcity/citizens/say_tip_trouble_male1	[uneasy, low] There's gonna be trouble tonight. I can feel it.
@@ -153,8 +153,8 @@ man	livingcity/citizens/say_warn_go_male1	[urgent, hushed] You should go. Now.
 woman	livingcity/citizens/say_warn_go_female1	[urgent, hushed] You should go. Now.
 man	livingcity/citizens/say_warn_informer_male1	[low, careful] Watch who you talk to. Not everyone here is a friend.
 woman	livingcity/citizens/say_warn_informer_female1	[low, careful] Watch who you talk to. Not everyone here is a friend.
-man	livingcity/citizens/say_warn_watched_male1	[whispers, barely moving lips] You're being watched. Don't turn around.
-woman	livingcity/citizens/say_warn_watched_female1	[whispers, barely moving lips] You're being watched. Don't turn around.
+man	livingcity/citizens/say_warn_watched_male1	[whispers, barely moving lips] You're being watched. Don't look now and don't turn around.
+woman	livingcity/citizens/say_warn_watched_female1	[whispers, barely moving lips] You're being watched. Don't look now and don't turn around.
 man	livingcity/citizens/say_ask_food_male1	[weak, ashamed to ask] You got anything to eat? [pause] Anything?
 woman	livingcity/citizens/say_ask_food_female1	[weak, ashamed to ask] You got anything to eat? [pause] Anything?
 man	livingcity/citizens/say_ask_help_male1	[desperate, quietly] I need help. I've got nobody else to ask.
@@ -183,8 +183,8 @@ man	livingcity/citizens/say_break_seek_male1	[relieved, a little shaky] There yo
 woman	livingcity/citizens/say_break_seek_female1	[relieved, a little shaky] There you are. I've been looking for you.
 man	livingcity/citizens/say_break_share_male1	[gentle, insisting] Go on, take half. You need it more than I do.
 woman	livingcity/citizens/say_break_share_female1	[gentle, insisting] Go on, take half. You need it more than I do.
-man	livingcity/citizens/say_break_steady_male1	[calm, soothing, low] Easy. Easy now. We're still here, right?
-woman	livingcity/citizens/say_break_steady_female1	[calm, soothing, low] Easy. Easy now. We're still here, right?
+man	livingcity/citizens/say_break_steady_male1	[calm, soothing, low] Easy. Easy now. We're going to be ok, right?
+woman	livingcity/citizens/say_break_steady_female1	[calm, soothing, low] Easy. Easy now. We're going to be ok, right?
 man	livingcity/citizens/say_break_tantrum_male1	[shouting, voice cracking] I've had enough! Do you hear me? Enough!
 woman	livingcity/citizens/say_break_tantrum_female1	[shouting, voice cracking] I've had enough! Do you hear me? Enough!
 man	livingcity/citizens/say_grief_male1	[numb, grieving] They took my friend. [pause] Just dragged them off.

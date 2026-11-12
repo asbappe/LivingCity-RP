@@ -13,8 +13,8 @@ Voicing every answer as it is written would cost money on every line, for ever. 
 1. **Lines are written by what they do, not what they are about.** "I wouldn't know anything about that." answers any question about anything. "You should go. Now." fits a raid, a snitch, a unit coming, a fight starting. The bank is a set of moves: greet, part, agree, refuse, put off, not know, admit, thank, back down, take offence, warn, ask, give.
 2. **Nothing specific is in them:** no names, jobs, places, times of day, events or items. Any named citizen can say any line, at any hour, on any map.
 3. **The same few feelings throughout:** warm, plain, guarded, cold. Where the feeling changes the words there are two or three versions (four greetings, three goodbyes); where it does not there is one.
-4. **Six openers** ("Listen.", "Look.", "Please.", "Keep your voice down.", "Well.", "You.") can be said before any other line. They turn 73 lines into several hundred that sound different: "Look. No. Sorry." is not "Please. No. Sorry."
-5. **Who they are comes from which line is picked,** not from the words: the loyal say "The Administrator knows best. I believe that."; the frightened say "I don't know, and I don't want to know."; a sympathizer who trusts you says "There are people. That's all I'll say."
+4. **Six openers** ("Listen.", "Look.", "Please.", "Keep your voice down.", "Well.", "You.") can be said before any other line. They turn 73 lines into several hundred that sound different: "Look. Sorry, but no." is not "Please. Sorry, but no."
+5. **Who they are comes from which line is picked,** not from the words: the loyal say "The Administrator knows best. Everyone knows that!"; the frightened say "I don't know, and I don't want to know."; a sympathizer who trusts you says "There are people. That's all I'll say."
 
 ## The groups (a citizen)
 

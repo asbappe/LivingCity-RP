@@ -339,6 +339,7 @@ def scripts(doc, street, units, group_of, order):
            "## All of them at once (instead of pasting each line)", "",
            "`_dev/tools/elevenlabs_batch.py` sends every line to ElevenLabs and saves each file under its right name, in the right folder, ready to upload. "
            "On Linux Mint, in a terminal in the gamemode's folder:", "",
+           "**Just the citizens, the simple way:** keep `record_citizens.sh`, `elevenlabs_batch.py` and `voice_batch.tsv` together in one folder (any folder) and run `bash record_citizens.sh` there: it makes 3 test lines only. `bash record_citizens.sh all` then makes the rest. It asks for your key (hidden, never saved) and makes them louder (needs `ffmpeg`). The two voice ids are at the top of the script. Upload what lands in `voice_out/sound/livingcity/citizens/` (made beside the script) to the server's `garrysmod/sound/livingcity/citizens/`.", "",
            "```",
            "export ELEVENLABS_API_KEY='your key here'",
            "python3 _dev/tools/elevenlabs_batch.py --man VOICE_ID --woman VOICE_ID --dry-run",

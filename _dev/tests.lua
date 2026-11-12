@@ -12203,7 +12203,7 @@ local realEmit = n.EmitSound
 n.EmitSound = function(self, path) heardSounds[#heardSounds + 1] = path end
 local realClip = LC.AdviceClip
 LC.AdviceClip = function() return nil end
-ok(LC.LineSay(n, st, "say_no") == "No. Sorry." and #heardSounds == 0, "no recording: the words only, never Half-Life 2's voice in its place", heardSounds[1])
+ok(LC.LineSay(n, st, "say_no") == "Sorry, but no." and #heardSounds == 0, "no recording: the words only, never Half-Life 2's voice in its place", heardSounds[1])
 -- one voice for each named person
 local realAny = LC.AdviceHasAny
 LC.VoiceForce = nil

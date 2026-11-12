@@ -14,8 +14,8 @@
 ## All of them at once (instead of pasting each line)
 
 `_dev/tools/elevenlabs_batch.py` sends every line to ElevenLabs and saves each file under its right name, in the right folder, ready to upload. On Linux Mint, in a terminal in the gamemode's folder:
-**Just the citizens, the simple way:** keep `record_citizens.sh`, `elevenlabs_batch.py` and `voice_batch.tsv` together in one folder (any folder) and run `bash record_citizens.sh` there: it makes 3 test lines only. `bash record_citizens.sh all` then makes the rest. It asks for your key (hidden, never saved) and makes them louder (needs `ffmpeg`). The two voice ids are at the top of the script. Upload what lands in `voice_out/sound/livingcity/citizens/` (made beside the script) to the server's `garrysmod/sound/livingcity/citizens/`.
 
+**Just the citizens, the simple way:** keep `record_citizens.sh`, `elevenlabs_batch.py` and `voice_batch.tsv` together in one folder (any folder) and run `bash record_citizens.sh` there: it makes 3 test lines only. `bash record_citizens.sh all` then makes the rest. It asks for your key (hidden, never saved) and makes them louder (needs `ffmpeg`). The two voice ids are at the top of the script. Upload what lands in `voice_out/sound/livingcity/citizens/` (made beside the script) to the server's `garrysmod/sound/livingcity/citizens/`.
 
 ```
 export ELEVENLABS_API_KEY='your key here'
@@ -147,7 +147,7 @@ Folder: `citizens/`. Paste each line twice: once with the man's voice (save as t
 | | | | **Hello** |
 | [ ] | `say_greet_cold_male1` | `say_greet_cold_female1` | [cold, flat] What do you want? |
 | [ ] | `say_greet_guarded_male1` | `say_greet_guarded_female1` | [wary, guarded] Do I know you? |
-| [ ] | `say_greet_plain_male1` | `say_greet_plain_female1` | [tired, dry] Hey. Still here, huh. [exhales] Me too. |
+| [ ] | `say_greet_plain_male1` | `say_greet_plain_female1` | [tired, dry] Hey. Still here, huh? [exhales] Me too. |
 | [ ] | `say_greet_unit_male1` | `say_greet_unit_female1` | [nervous, too polite] No trouble here, officer. |
 | [ ] | `say_greet_warm_male1` | `say_greet_warm_female1` | [relieved, warm] Oh, it's you. Good to see a friendly face. |
 | | | | **Goodbye** |
@@ -157,7 +157,7 @@ Folder: `citizens/`. Paste each line twice: once with the man's voice (save as t
 | | | | **Yes, no, perhaps** |
 | [ ] | `say_later_male1` | `say_later_female1` | [hushed, tense] Not now. Not here. |
 | [ ] | `say_maybe_male1` | `say_maybe_female1` | [hesitant] Maybe. I'd have to think about it. |
-| [ ] | `say_no_male1` | `say_no_female1` | [flat, apologetic] No. Sorry. |
+| [ ] | `say_no_male1` | `say_no_female1` | [flat, apologetic] Sorry, but no. |
 | [ ] | `say_no_hard_male1` | `say_no_hard_female1` | [firm, low] No. [pause] And don't ask me again. |
 | [ ] | `say_yes_male1` | `say_yes_female1` | [plain, tired] Yeah. All right. |
 | [ ] | `say_yes_warm_male1` | `say_yes_warm_female1` | [warm, a small smile] For you? Of course. |
@@ -170,8 +170,8 @@ Folder: `citizens/`. Paste each line twice: once with the man's voice (save as t
 | [ ] | `say_truth_male1` | `say_truth_female1` | [quiet, grim] Honestly? [sighs] It's as bad as it looks. |
 | | | | **How they are** |
 | [ ] | `say_state_angry_male1` | `say_state_angry_female1` | [tight, barely holding it in] I've had about all I can take. |
-| [ ] | `say_state_fine_male1` | `say_state_fine_female1` | [worn, matter of fact] Getting by. That's all anyone can say. |
-| [ ] | `say_state_hopeful_male1` | `say_state_hopeful_female1` | [quiet, hopeful] It can't last forever. Nothing does. |
+| [ ] | `say_state_fine_male1` | `say_state_fine_female1` | [worn, matter of fact] Getting by. That's all I can do. |
+| [ ] | `say_state_hopeful_male1` | `say_state_hopeful_female1` | [quiet, hopeful] It can't last forever. Nothing ever does. |
 | [ ] | `say_state_hungry_male1` | `say_state_hungry_female1` | [weak, hollow] I haven't had a real meal in days. |
 | [ ] | `say_state_lonely_male1` | `say_state_lonely_female1` | [soft, grateful] It's good to just talk to someone. |
 | [ ] | `say_state_low_male1` | `say_state_low_female1` | [hollow, defeated] What's the point? [pause] Really, what is the point? |
@@ -179,7 +179,7 @@ Folder: `citizens/`. Paste each line twice: once with the man's voice (save as t
 | [ ] | `say_state_tired_male1` | `say_state_tired_female1` | [exhausted] I'm tired. [sighs] Just so tired. |
 | | | | **Answering how they were spoken to** |
 | [ ] | `say_agree_male1` | `say_agree_female1` | [dry, low] You're not wrong. |
-| [ ] | `say_disagree_male1` | `say_disagree_female1` | [even, firm] I don't see it that way. |
+| [ ] | `say_disagree_male1` | `say_disagree_female1` | [even, firm] Well, I don't see it that way. |
 | [ ] | `say_insulted_male1` | `say_insulted_female1` | [stung, stiff] Hey. There's no need for that. |
 | [ ] | `say_laugh_male1` | `say_laugh_female1` | [short laugh] Ha. [warm, surprised] That's the first laugh I've had all week. |
 | [ ] | `say_sorry_male1` | `say_sorry_female1` | [nervous, backing down] I'm sorry. I didn't mean anything by it. |
@@ -190,7 +190,7 @@ Folder: `citizens/`. Paste each line twice: once with the man's voice (save as t
 | [ ] | `say_careful_male1` | `say_careful_female1` | [whispers] Careful. The walls have ears. |
 | [ ] | `say_fear_units_male1` | `say_fear_units_female1` | [low, warning] Stay away from the units today. They're in a mood. |
 | [ ] | `say_hate_quiet_male1` | `say_hate_quiet_female1` | [low, bitter, controlled] One day they'll answer for all of it. |
-| [ ] | `say_loyal_male1` | `say_loyal_female1` | [earnest, a little rehearsed] The Administrator knows best. I believe that. |
+| [ ] | `say_loyal_male1` | `say_loyal_female1` | [earnest, a little rehearsed] The Administrator knows best. Everyone knows that! |
 | [ ] | `say_loyal_warn_male1` | `say_loyal_warn_female1` | [alarmed, hushed] You shouldn't say things like that. Someone will hear. |
 | [ ] | `say_obey_male1` | `say_obey_female1` | [tired, kindly] Keep your head down and do what they say. That's how you make it. |
 | [ ] | `say_units_near_male1` | `say_units_near_female1` | [under their breath] Not with them standing right there. |
@@ -199,14 +199,14 @@ Folder: `citizens/`. Paste each line twice: once with the man's voice (save as t
 | [ ] | `say_res_hint_male1` | `say_res_hint_female1` | [whispers, meaningful] There are people. [pause] That's all I'll say. |
 | [ ] | `say_res_refuse_male1` | `say_res_refuse_female1` | [afraid, firm] I've got people to think about. Leave me out of it. |
 | [ ] | `say_res_respect_male1` | `say_res_respect_female1` | [quiet, a hint of a smile] Whoever they are, good luck to them. |
-| [ ] | `say_res_side_male1` | `say_res_side_female1` | [very quietly, steady] If someone needed a door left open, mine might be. |
+| [ ] | `say_res_side_male1` | `say_res_side_female1` | [very quietly, steady] If someone needed a door left open, mine would be. |
 | | | | **Warnings and tips** |
 | [ ] | `say_tip_help_male1` | `say_tip_help_female1` | [low, kind] If you need something, ask. [whispers] Quietly. |
 | [ ] | `say_tip_trouble_male1` | `say_tip_trouble_female1` | [uneasy, low] There's gonna be trouble tonight. I can feel it. |
 | [ ] | `say_warn_asked_male1` | `say_warn_asked_female1` | [low, urgent] Someone's been asking about you. |
 | [ ] | `say_warn_go_male1` | `say_warn_go_female1` | [urgent, hushed] You should go. Now. |
 | [ ] | `say_warn_informer_male1` | `say_warn_informer_female1` | [low, careful] Watch who you talk to. Not everyone here is a friend. |
-| [ ] | `say_warn_watched_male1` | `say_warn_watched_female1` | [whispers, barely moving lips] You're being watched. Don't turn around. |
+| [ ] | `say_warn_watched_male1` | `say_warn_watched_female1` | [whispers, barely moving lips] You're being watched. Don't look now and don't turn around. |
 | | | | **Asking and giving** |
 | [ ] | `say_ask_food_male1` | `say_ask_food_female1` | [weak, ashamed to ask] You got anything to eat? [pause] Anything? |
 | [ ] | `say_ask_help_male1` | `say_ask_help_female1` | [desperate, quietly] I need help. I've got nobody else to ask. |
@@ -223,7 +223,7 @@ Folder: `citizens/`. Paste each line twice: once with the man's voice (save as t
 | [ ] | `say_break_inform_male1` | `say_break_inform_female1` | [nervous, eager, hushed] Officer. I've got something you'll want to hear. |
 | [ ] | `say_break_seek_male1` | `say_break_seek_female1` | [relieved, a little shaky] There you are. I've been looking for you. |
 | [ ] | `say_break_share_male1` | `say_break_share_female1` | [gentle, insisting] Go on, take half. You need it more than I do. |
-| [ ] | `say_break_steady_male1` | `say_break_steady_female1` | [calm, soothing, low] Easy. Easy now. We're still here, right? |
+| [ ] | `say_break_steady_male1` | `say_break_steady_female1` | [calm, soothing, low] Easy. Easy now. We're going to be ok, right? |
 | [ ] | `say_break_tantrum_male1` | `say_break_tantrum_female1` | [shouting, voice cracking] I've had enough! Do you hear me? Enough! |
 | | | | **What they saw** |
 | [ ] | `say_grief_male1` | `say_grief_female1` | [numb, grieving] They took my friend. [pause] Just dragged them off. |

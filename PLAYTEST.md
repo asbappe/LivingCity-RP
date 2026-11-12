@@ -1730,3 +1730,7 @@ Type them in the server console on the host panel, or in your own game console (
   Notes:
 - [ ] **Small things are missed in a patdown:** put three lockpicks and a pistol in a friend's pockets, cuff them, pat them down twice. The pistol should go the first time; the lockpicks only some of the time. Does a rebel NPC usually have one, a plain citizen almost never?
   Notes:
+
+## 12 November: named citizens recorded
+- [ ] **Named citizens speak:** with the recordings in `sound/livingcity/citizens/` (after FastDL sync and a map change), talk to a few named citizens; `lc_voice_missing` lists no citizen lines. The nine reworded lines (for example "Sorry, but no.", "Getting by. That's all I can do.") show the same words that are heard.
+  Notes:
