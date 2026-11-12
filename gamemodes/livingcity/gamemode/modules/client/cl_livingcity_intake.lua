@@ -110,33 +110,45 @@ end)
 -- "just look like static map props").
 -- (made once here, not every frame)
 local C_8_16_26_230 = Color(8, 16, 26, 230)
-function LC_CL.DrawTerminalSign(title, line)
-    draw.RoundedBox(6, -300, -70, 600, 140, C_8_16_26_230)
+-- (a hologram, the owner, 12 November: a little see-through, a faint flicker and jump, scanlines:
+-- LC_CL.HoloFlicker and the rest, cl_livingcity_screens.lua). seed: each sign its own rhythm.
+function LC_CL.DrawTerminalSign(title, line, seed)
+    local holo = LC_CL.HoloFlicker ~= nil and surface.SetAlphaMultiplier ~= nil
+    local dx = holo and LC_CL.HoloJitter(seed) or 0
+    if holo then surface.SetAlphaMultiplier(0.78 * LC_CL.HoloFlicker(seed, 1)) end
+    draw.RoundedBox(6, -300 + dx, -70, 600, 140, C_8_16_26_230)
     surface.SetDrawColor(BLUE.r, BLUE.g, BLUE.b, 180)
-    surface.DrawOutlinedRect(-300, -70, 600, 140, 3)
-    draw.SimpleText(title, "LCIntakeSign", 0, -24, BLUE, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
-    draw.SimpleText(line, "LCIntakeSignSmall", 0, 30, INK, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+    surface.DrawOutlinedRect(-300 + dx, -70, 600, 140, 3)
+    draw.SimpleText(title, "LCIntakeSign", dx, -24, BLUE, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+    draw.SimpleText(line, "LCIntakeSignSmall", dx, 30, INK, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+    if holo then
+        LC_CL.HoloLines(-297 + dx, -67, 594, 134, 12)
+        surface.SetAlphaMultiplier(1)
+    end
 end
 
 -- Where a terminal's sign floats, and how it faces (the same for every terminal that has one).
 function LC_CL.TerminalSign(ent, title, line)
     if LocalPlayer():GetPos():DistToSqr(ent:GetPos()) > 700 * 700 then return end
+    if LC_CL.ScreenHidesSign and LC_CL.ScreenHidesSign(ent) then return end -- (its menu stands there instead)
     local ang = ent:GetAngles()
     ang:RotateAroundAxis(ang:Up(), 90)
     ang:RotateAroundAxis(ang:Forward(), 90)
     local maxs = ent:OBBMaxs()
     local up = math.max(78, ((maxs and maxs.z) or 60) + 14)
     cam.Start3D2D(ent:GetPos() + ent:GetUp() * up + ent:GetForward() * 4, ang, 0.08)
-        LC_CL.DrawTerminalSign(title, line)
+        LC_CL.DrawTerminalSign(title, line, ent:EntIndex())
     cam.End3D2D()
 end
 
 -- The sign on the terminal itself (lc_intake.lua draws it, in 3D).
 function LC_CL.DrawIntakeSign(ent)
-    if DeskKind(ent) == "labor" then return LC_CL.DrawTerminalSign("LABOR ASSIGNMENT", "Your Union work is assigned here") end
+    if LC_CL.ScreenHidesSign and LC_CL.ScreenHidesSign(ent) then return end -- (its menu stands there instead)
+    local seed = IsValid(ent) and ent:EntIndex() or 0
+    if DeskKind(ent) == "labor" then return LC_CL.DrawTerminalSign("LABOR ASSIGNMENT", "Your Union work is assigned here", seed) end
     local housing = DeskKind(ent) == "housing"
     LC_CL.DrawTerminalSign(housing and "HOUSING ALLOCATION" or "CIVIL INTAKE",
-        housing and "Registered? Ask for a room here" or "New here? Register here")
+        housing and "Registered? Ask for a room here" or "New here? Register here", seed)
 end
 
 ------------------------------------------------------------------------

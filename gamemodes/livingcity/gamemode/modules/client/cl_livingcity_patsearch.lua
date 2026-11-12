@@ -51,7 +51,7 @@ local function BuildUnit()
 
     local foot = vgui.Create("DPanel", f)
     foot:Dock(BOTTOM)
-    foot:SetTall(150)
+    foot:SetTall(178) -- (room for Done and, under the spots found, Done searching: check their papers)
     foot.Paint = function(s, w, h)
         local st = unitState or {}
         local y = 0
@@ -67,7 +67,7 @@ local function BuildUnit()
                 y = y + 16
             end
         end
-        draw.SimpleText("Click a spot to check it. Spots you skip keep what's in them.", "DermaDefault", 4, h - 56, DIM)
+        draw.SimpleText("Click a spot to check it. Spots you skip keep what's in them.", "DermaDefault", 4, h - 88, DIM)
     end
     local done = (LC_CL.JobLook and LC_CL.JobLook.Button or function(p, text, _, click)
         local b = vgui.Create("DButton", p) b:SetText(text) b.DoClick = click return b
@@ -84,7 +84,19 @@ local function BuildUnit()
     papers:Dock(BOTTOM)
     papers:DockMargin(0, 0, 0, 4)
     papers:SetTall(26)
-    papers.Think = function(s) local st = unitState or {} s:SetVisible(st.papers == true and st.live == true) end
+    -- (shown and hidden from the footer: a hidden panel's own Think never runs, so once hidden as the window
+    -- opened, before the search was live, it never came back; the owner, 12 November: "'Done searching: check
+    -- their papers' I do not see this on the search window")
+    papers:SetVisible(false)
+    foot.Think = function(s)
+        local st = unitState or {}
+        local want = st.papers == true and st.live == true
+        if IsValid(papers) and papers:IsVisible() ~= want then
+            papers:SetVisible(want)
+            s:InvalidateLayout(true)
+        end
+    end
+    f.lcPapers = papers
 
     local body = vgui.Create("DPanel", f)
     body:Dock(FILL)

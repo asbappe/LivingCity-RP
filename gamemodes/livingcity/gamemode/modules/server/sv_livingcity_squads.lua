@@ -230,3 +230,121 @@ function LC.RebelTerritoryBackup(ply, n)
     end
     return sent
 end
+
+------------------------------------------------------------------------
+-- Squad mates who fall behind catch up (the owner, 12 November, "this is like the 4th time I've reported
+-- this": "they get stuck and get lost, I had one get lost for 10 minutes then suddenly run up. They need to
+-- TELEPORT to me if they get too far away"). Every 2 seconds, each unit in a player's squad (backup or
+-- recruited: st.backupFor) further than LC.SquadCatchFar from them, or more than LC.SquadCatchNear away
+-- without getting any closer for LC.SquadCatchStuck seconds, is put just behind them: on the floor they
+-- stand on, in the same room (a clear line from them), with room to stand (no wall or prop), where the nav
+-- graph can get to them. Out of everyone's sight if any such spot is, else out of the leader's own view,
+-- else anywhere that fits. Never into the dream zone unless the leader is in it. Whatever the unit was
+-- doing; not while it walks a prisoner in, and the "no closer" rule waits while it fights.
+------------------------------------------------------------------------
+
+LC.SquadCatchFar, LC.SquadCatchNear, LC.SquadCatchStuck, LC.SquadCatchEvery = 900, 300, 10, 2
+local CATCH_EYE = Vector(0, 0, 50)
+
+local function InDreamZone(pos)
+    local dz = LC.DreamZone and LC.DreamZone()
+    return dz ~= nil and LCZ ~= nil and LCZ.Contains ~= nil and LCZ.Contains(dz, pos) == true
+end
+LC.SquadInDreamZone = InDreamZone
+
+local function InLeaderView(leader, pos)
+    local d = pos + CATCH_EYE - leader:EyePos()
+    if d:LengthSqr() < 1 then return true end
+    d:Normalize()
+    return d:Dot(leader:GetAimVector()) > 0.3
+end
+
+-- Where a squad mate is put to catch up with its leader (nil: nowhere fits).
+function LC.SquadCatchSpot(leader, npc)
+    if not IsValid(leader) then return nil end
+    local lpos = leader:GetPos()
+    if leader.IsOnGround and not leader:IsOnGround() and LC.GroundAt then lpos = LC.GroundAt(lpos) end -- (mid-jump: the floor under them)
+    local back = leader:GetAimVector() * -1
+    back.z = 0
+    if back:LengthSqr() < 0.01 then back = leader:GetForward() * -1 back.z = 0 end
+    if back:LengthSqr() < 0.01 then back = Vector(-1, 0, 0) end
+    back:Normalize()
+    local right = Vector(-back.y, back.x, 0)
+    local cands = {}
+    for _, dist in ipairs({ 90, 140, 200, 280 }) do
+        for _, side in ipairs({ 0, 50, -50, 100, -100 }) do cands[#cands + 1] = lpos + back * dist + right * side end
+    end
+    for i = 0, 7 do -- (then all round them: a corridor behind them that ends in a wall)
+        local a = math.rad(i * 45)
+        local dir = Vector(math.cos(a), math.sin(a), 0)
+        for _, dist in ipairs({ 80, 140 }) do cands[#cands + 1] = lpos + dir * dist end
+    end
+    local dreamOK = InDreamZone(lpos)
+    local chest = lpos + Vector(0, 0, 40)
+    local fits = {}
+    for _, p in ipairs(cands) do
+        local g = LC.GroundAt and LC.GroundAt(p + Vector(0, 0, 30)) or p
+        if math.abs(g.z - lpos.z) < 40 and (not LC.ClearSpot or LC.ClearSpot(g)) and (dreamOK or not InDreamZone(g)) then
+            local tr = util.TraceLine({ start = chest, endpos = g + Vector(0, 0, 40), mask = MASK_NPCSOLID_BRUSHONLY, filter = { leader, npc } })
+            if (tr.Fraction or 1) > 0.97 and not tr.StartSolid and (not LC.NavReachable or LC.NavReachable(g, lpos)) then
+                fits[#fits + 1] = g
+            end
+        end
+    end
+    for _, g in ipairs(fits) do if not (LC.IsSeen and LC.IsSeen(g + CATCH_EYE)) then return g end end
+    for _, g in ipairs(fits) do if not InLeaderView(leader, g) then return g end end
+    return fits[1]
+end
+
+-- One squad mate: caught up now? (true when it was moved)
+function LC.SquadCatchUpOne(npc, st, leader, now)
+    if not (IsValid(npc) and st and IsValid(leader)) then return false end
+    if st.state == "jailed" or st.state == "escort" or st.marching then return false end
+    if (st.catchNext or 0) > now then return false end
+    if leader.InVehicle and leader:InVehicle() then return false end
+    if leader.GetMoveType and MOVETYPE_NOCLIP and leader:GetMoveType() == MOVETYPE_NOCLIP then return false end
+    local pos = npc:GetPos()
+    local d = pos:Distance(leader:GetPos())
+    if d <= LC.SquadCatchNear then
+        st.catchBest, st.catchSince, st.catchFrom = nil, nil, nil
+        return false
+    end
+    -- getting any closer? (a step better than its best so far, or it moved at all)
+    local fighting = st.state == "hostile" and IsValid(st.enemy)
+    if not st.catchBest or d < st.catchBest - 32 or fighting then
+        st.catchBest, st.catchSince = d, now
+    end
+    local stuck = now - (st.catchSince or now) >= LC.SquadCatchStuck
+    if d <= LC.SquadCatchFar and not stuck then return false end
+    local spot = LC.SquadCatchSpot(leader, npc)
+    if not spot then st.catchNext = now + LC.SquadCatchEvery return false end
+    npc:SetPos(spot + Vector(0, 0, 4))
+    if npc.SetLocalVelocity then npc:SetLocalVelocity(Vector(0, 0, 0)) end
+    if npc.StopMoving then npc:StopMoving() end
+    if npc.SetSchedule and SCHED_IDLE_STAND then npc:SetSchedule(SCHED_IDLE_STAND) end
+    -- (a walk it was on is over: it's there. Idle, so the next think picks up from here; a fight goes on.)
+    st.goingTo, st.backupMove = nil, 0
+    if st.state == "moving" and LC.SetState then LC.SetState(npc, st, "idle") st.untilT = now end
+    st.catchBest, st.catchSince, st.catchNext = nil, nil, now + 4
+    if LC.Face then LC.Face(npc, leader:GetPos() + leader:GetForward() * 300) end
+    hook.Run("LivingCitySquadCaughtUp", npc, leader, d)
+    return true
+end
+
+function LC.SquadCatchUpTick(now)
+    now = now or CurTime()
+    local n = 0
+    for npc, st in pairs(LC.NPCs or {}) do
+        local leader = st.backupFor
+        if IsValid(npc) and npc:Health() > 0 and IsValid(leader) and leader:IsPlayer() and leader:Alive() and LC.SquadSide(leader) == "combine" then
+            if LC.SquadCatchUpOne(npc, st, leader, now) then n = n + 1 end
+        elseif st.catchBest then
+            st.catchBest, st.catchSince = nil, nil
+        end
+    end
+    return n
+end
+timer.Create("LivingCitySquadCatchUp", LC.SquadCatchEvery, 0, function()
+    local ok, err = pcall(LC.SquadCatchUpTick, CurTime())
+    if not ok and LC.Error then LC.Error("squad catch up", err) end
+end)

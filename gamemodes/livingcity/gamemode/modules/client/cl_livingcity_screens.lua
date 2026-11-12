@@ -51,13 +51,18 @@ function LC_CL.ScreenFor(classes)
     return best
 end
 
--- Where the screen stands: in front of the terminal, upright, facing the way it faces.
+-- Where the screen stands: over the terminal, where its sign floats, upright, facing the way it faces.
+-- (the owner, 12 November: it "sits about 3 feet in front of it ... just have the purchase menu replace the
+-- hovering popup above it ... until I exit or walk away, then that popup re-appears". The sign is hidden
+-- while the screen is open: LC_CL.ScreenHidesSign.)
 local function Frame(ent, h)
     local ang = ent:GetAngles()
     ang:RotateAroundAxis(ang:Up(), 90)
     ang:RotateAroundAxis(ang:Forward(), 90)
     local maxs = ent.OBBMaxs and ent:OBBMaxs() or Vector(16, 16, 60)
-    local center = ent:GetPos() + ent:GetForward() * (math.max(8, maxs.x) + 10) + ent:GetUp() * 54
+    local half = h / 2 * SCALE
+    -- (just above the console's top, a hair forward of its middle, as the sign is: never inside it)
+    local center = ent:GetPos() + ent:GetForward() * 4 + ent:GetUp() * ((maxs and maxs.z or 60) + half + 2)
     -- (the owner, 1 November: it stood at crotch height. Its middle a hair below your eyes, as they were
     -- when it opened, wherever the terminal's own origin is)
     -- (the owner, 11 November: the CP Commissary's still opened too low until something was bought. The
@@ -69,7 +74,7 @@ local function Frame(ent, h)
             local off = me:GetViewOffset()
             S.eyeZ = me:GetPos().z + ((off and off.z and off.z > 30) and off.z or 64)
         end
-        if S.eyeZ then center.z = S.eyeZ - 8 end
+        if S.eyeZ then center.z = math.max(center.z, S.eyeZ - 8) end
     end
     local tl = center - ang:Forward() * (W / 2 * SCALE) - ang:Right() * (h / 2 * SCALE)
     return tl, ang
@@ -99,12 +104,51 @@ end
 function LC_CL.ScreenOpen(ent, title, sub, rows)
     if not IsValid(ent) then return false end
     local me = LocalPlayer()
-    S = { ent = ent, title = title or "", sub = sub or "", rows = rows or {}, page = 1, opened = CurTime(),
-        eyeZ = IsValid(me) and me.EyePos and me:EyePos().z or nil }
+    -- the same terminal's screen again (a thing bought or turned in): on the same page, not back at the first
+    -- (the owner, 12 November: "When I select junk to turn in, it goes back to the first page; please make it
+    -- stick to the page I am on"). Layout keeps it in range when the list is shorter.
+    local again = S and S.ent == ent and S.title == (title or "")
+    S = { ent = ent, title = title or "", sub = sub or "", rows = rows or {}, page = again and S.page or 1,
+        opened = CurTime(), eyeZ = again and S.eyeZ or (IsValid(me) and me.EyePos and me:EyePos().z or nil) }
     return true
 end
 function LC_CL.ScreenClose() S = nil end
 function LC_CL.ScreenState() return S end
+-- A terminal's floating sign gives way to its screen while that's open (cl_livingcity_intake.lua).
+function LC_CL.ScreenHidesSign(ent) return S ~= nil and S.ent == ent end
+
+------------------------------------------------------------------------
+-- The hologram look (the owner, 12 November: "add some slight distortion effects to make the popup menus look
+-- more like a hologram? Maybe make them flicker a tad bit? Also a slight transparency?"): a terminal's sign and
+-- its screen are a little see-through, hum faintly, now and then dip or jump a few pixels, with scanlines and
+-- a slow bright band rolling down. The screen gets a lighter touch than the sign, so it stays easy to read.
+------------------------------------------------------------------------
+
+local function Noise(n) local x = math.sin(n * 12.9898) * 43758.5453 return x - math.floor(x) end
+-- 1 is steady; depth 1 the sign's flicker, smaller for less. seed: a different rhythm for each.
+function LC_CL.HoloFlicker(seed, depth)
+    depth = depth or 1
+    seed = seed or 0
+    local t = CurTime()
+    local dip = Noise(math.floor(t * 10) + seed * 131) < 0.04 and 0.6 or 1
+    local hum = 0.94 + 0.06 * math.sin(t * 9 + seed)
+    return 1 - depth * (1 - hum * dip)
+end
+-- A sideways jump of a few pixels, now and then (0 most of the time).
+function LC_CL.HoloJitter(seed)
+    local r = Noise(math.floor(CurTime() * 12) * 3 + (seed or 0) * 71)
+    if r < 0.025 then return -3 elseif r < 0.05 then return 3 end
+    return 0
+end
+-- Scanlines and the rolling band, over x, y, w, h (in the 3D2D's own pixels).
+function LC_CL.HoloLines(x, y, w, h, alpha)
+    alpha = alpha or 10
+    surface.SetDrawColor(140, 200, 255, alpha)
+    for yy = y + 1, y + h - 2, 3 do surface.DrawRect(x, yy, w, 1) end
+    local band = (CurTime() * 40) % (h + 40) - 20
+    surface.SetDrawColor(170, 225, 255, math.min(255, alpha * 2))
+    surface.DrawRect(x, y + math.Clamp(band, 0, math.max(0, h - 6)), w, 6)
+end
 
 -- Where the crosshair is on the screen (x, y in its own pixels), or nil.
 local function Aim()
@@ -170,6 +214,7 @@ hook.Add("PostDrawTranslucentRenderables", "LivingCityScreens", function(depth, 
     local T = LC_CL.ThemeOn and LC_CL.ThemeOn() and LC_CL.Themes and LC_CL.Themes.combine or nil
     local edge = T and T.line or EDGE
     cam.Start3D2D(tl, ang, SCALE)
+        if surface.SetAlphaMultiplier then surface.SetAlphaMultiplier(0.88 * LC_CL.HoloFlicker(S.ent:EntIndex(), 0.35)) end
         if T then
             local top = math.max(30, (lay[1] and lay[1].y or 40) - 6)
             draw.RoundedBox(0, 0, 0, W, h, T.bg)
@@ -215,6 +260,8 @@ hook.Add("PostDrawTranslucentRenderables", "LivingCityScreens", function(depth, 
         if not S.hover then
             draw.SimpleText("Aim at a button and press E", "LCScreenText", W / 2, h - 6, DIM, TEXT_ALIGN_CENTER, TEXT_ALIGN_BOTTOM)
         end
+        LC_CL.HoloLines(0, 0, W, h, 6)
+        if surface.SetAlphaMultiplier then surface.SetAlphaMultiplier(1) end
     cam.End3D2D()
 end)
 

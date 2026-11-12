@@ -164,6 +164,7 @@ function LC.UseCPSupply(ply, ent)
         if IsValid(ent) then ent:EmitSound("items/ammo_pickup.wav", 65) end
         ply:ChatPrint("[CP Commissary] Issued: " .. (v == 1 and "a ration packet for your voucher" or (v .. " ration packets for your vouchers")) .. ".")
     end
+    LC.CPSupplyCuffs(ply) -- (cuffs back up to three, whatever the wait for the next issue)
     local wait = (ply.lcSupplyNext or 0) - CurTime()
     if wait > 0 then
         ply:ChatPrint(string.format("[CP Commissary] Your next issue is in %d seconds. The Civil Protection unit counter is open.", math.ceil(wait)))
@@ -185,6 +186,16 @@ function LC.UseCPSupply(ply, ent)
     if LC.OpenShop then LC.OpenShop(ply, true) end
 end
 
+-- A unit's cuffs, back up to three, free (the owner, 12 November: "CP units should get them automatically
+-- when going to a CP Commissary"). How many were given.
+function LC.CPSupplyCuffs(ply)
+    local n = LC.IssueUnitCuffs and LC.IssueUnitCuffs(ply) or 0
+    if n > 0 and LC.Notice then
+        LC.Notice(ply, "info", "Cuffs issued", string.format("%d pair%s of cuffs: you carry %d again.", n, n == 1 and "" or "s", LC.CP_CUFFS or 3), 6)
+    end
+    return n
+end
+
 -- Standing at one charges a unit's vest, up to their issue (the owner, 7 November: "automatic recharging of
 -- the vest at a CP Commissary would be wonderful too"). Not with the power out.
 function LC.CPSupplyRechargeTick()
@@ -199,6 +210,7 @@ function LC.CPSupplyRechargeTick()
                 if IsValid(e) and not e:GetNW2Bool("lc_nopower", false) and e:GetPos():DistToSqr(ply:GetPos()) < 120 * 120 then at = true break end
             end
         end
+        if at then LC.CPSupplyCuffs(ply) end -- (walking up to it is enough for the cuffs)
         local want = at and ArmourFor(ply) or 0
         if at and ply:Armor() < want then
             ply:SetArmor(math.min(want, ply:Armor() + math.ceil(rate)))

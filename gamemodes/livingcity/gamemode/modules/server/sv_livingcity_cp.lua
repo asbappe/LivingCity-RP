@@ -433,6 +433,51 @@ LC.Tied = LC.Tied or {} -- [ply] = { by, weapons, walk, run, escort }
 
 function LC.IsTied(ply) return LC.Tied[ply] ~= nil end
 
+-- A unit's cuffs (the owner, 12 November: "please make cuffs standard issue for CP units; they should get
+-- 3 cuffs and automatically get more if low by visiting the CP Commissary"). Cuffing anyone uses a pair;
+-- a unit taking them off again puts them back in their pocket. Three when they take the role and at every
+-- spawn, and a CP Commissary tops them back up to three (opened, or stood at: sv_livingcity_cpsupply.lua).
+-- In a dream the dream lends its own (nothing taken).
+LC.CP_CUFFS = 3
+LC.NO_CUFFS_UNIT = "No cuffs: the CP Commissary gives you more."
+local function CuffCount(ply) return (LC.Inventory and (LC.Inventory(ply) or {}).zipties) or 0 end
+LC.CuffCount = CuffCount
+function LC.SyncCuffs(ply)
+    if IsValid(ply) and ply.SetNW2Int then ply:SetNW2Int("lc_cuffs", CuffCount(ply)) end
+end
+-- Top a unit up to three. How many were given.
+function LC.IssueUnitCuffs(ply)
+    if not RealUnit(ply) or not LC.GiveItem then return 0 end
+    ply.lcCuffsIssued = true
+    local n = 0
+    for _ = 1, LC.CP_CUFFS - CuffCount(ply) do
+        if LC.GiveItem(ply, "zipties", 1) then n = n + 1 else break end
+    end
+    LC.SyncCuffs(ply)
+    return n
+end
+-- Does this unit spend a pair when they cuff someone? (Not in a dream.)
+function LC.UnitCuffsNeeded(ply)
+    return RealUnit(ply) and not ply.lcDreaming and not (ply.GetNW2Bool and ply:GetNW2Bool("lc_dreaming", false))
+end
+-- Can they cuff someone now? (A unit on duty from before this was in gets theirs the first time they reach for them.)
+function LC.HasCuffs(ply)
+    if not IsValid(ply) then return false end
+    if RealUnit(ply) and not LC.UnitCuffsNeeded(ply) then return true end
+    if RealUnit(ply) and not ply.lcCuffsIssued then LC.IssueUnitCuffs(ply) end
+    return LC.HasItem ~= nil and LC.HasItem(ply, "zipties")
+end
+function LC.UseUnitCuffs(ply)
+    if LC.UnitCuffsNeeded(ply) and LC.TakeItem then LC.TakeItem(ply, "zipties", 1) end
+end
+hook.Add("LivingCityInventoryChanged", "LivingCityCuffs", function(ply) LC.SyncCuffs(ply) end)
+hook.Add("LivingCityFactionChanged", "LivingCityCuffs", function(ply) if RealUnit(ply) then LC.IssueUnitCuffs(ply) end end)
+hook.Add("PlayerSpawn", "LivingCityCuffs", function(ply)
+    if timer and timer.Simple then
+        timer.Simple(1.5, function() if IsValid(ply) and RealUnit(ply) and ply:Alive() then LC.IssueUnitCuffs(ply) end end)
+    end
+end)
+
 function LC.SetHandsUp(ply, up)
     if up == nil then up = not ply:GetNW2Bool("lc_handsup", false) end
     if up and (LC.IsTied(ply) or (LC.IsDowned and LC.IsDowned(ply)) or not ply:Alive()) then return false end
@@ -468,7 +513,8 @@ function LC.CanTie(tier, target)
     if LC.IsTied(target) then return false, "Their hands are already cuffed." end
     if LC.Prisoners and LC.Prisoners[target] then return false, "They're already in custody." end
     if tier:GetPos():DistToSqr(target:GetPos()) > 110 * 110 then return false, "Get closer." end
-    if not RealUnit(tier) and not (LC.HasItem and LC.HasItem(tier, "zipties")) then return false, "You need cuffs." end
+    -- (a unit's cuffs are standard issue, three, topped up at a CP Commissary: the owner, 12 November)
+    if not LC.HasCuffs(tier) then return false, RealUnit(tier) and LC.NO_CUFFS_UNIT or "You need cuffs." end
     local willing = target:GetNW2Bool("lc_handsup", false) or (LC.IsDowned and LC.IsDowned(target))
         or (LC.Stops and LC.Stops[target]) or (LC.Detained and LC.Detained[target])
     if not willing and not Behind(tier, target) then
@@ -488,7 +534,7 @@ function LC.TiePlayer(target, tier)
     target:SetNW2Bool("lc_tied", true)
     target:SetNW2Bool("lc_handsup", false)
     LC.Tied[target] = t
-    if IsValid(tier) and not RealUnit(tier) and LC.TakeItem then LC.TakeItem(tier, "zipties", 1) end
+    if IsValid(tier) and LC.TakeItem and not (RealUnit(tier) and not LC.UnitCuffsNeeded(tier)) then LC.TakeItem(tier, "zipties", 1) end -- (a unit's too: issue, not endless)
     target:EmitSound("physics/plastic/plastic_box_impact_soft2.wav", 60)
     target:ChatPrint("[Miscount] Your hands are cuffed, so you can't use anything. To try to get free: F1 > Work at the cuffs, when nobody's looking.")
     if IsValid(tier) then tier:ChatPrint("Cuffed. Look at them and press F1 to drag them along or take the cuffs off.") end
@@ -544,6 +590,7 @@ function LC.StartUntie(ply, target)
     if LC.IsTied(ply) then return false, "Your own hands are cuffed." end
     if RealUnit(ply) then
         LC.Untie(target, ply, true)
+        if LC.GiveItem and LC.UnitCuffsNeeded(ply) then LC.GiveItem(ply, "zipties", 1) end -- (the cuffs back in the unit's pocket)
         target:ChatPrint("[Miscount] A Civil Protection unit takes your cuffs off.")
         return true
     end
@@ -1075,10 +1122,11 @@ function LC.IssueDutyAllocation(ply)
         ply.lcnVoucherAt = now + LC.DUTY_VOUCHER_SECONDS - 1
         if LC.GiveItem(ply, "ration_voucher", 1) then got[#got + 1] = "a ration voucher" end
     end
-    if credits > 0 and LC.AddCredits then LC.AddCredits(ply, credits) got[#got + 1] = credits .. " credits in ration coupons" end
+    -- (the coupons are paid quietly: the owner, 12 November, "please get rid of this '... credits in ration
+    -- coupons' ... it's just more pointless noise". Only a voucher is worth a line.)
+    if credits > 0 and LC.AddCredits then LC.AddCredits(ply, credits) end
     if #got > 0 then
-        ply:ChatPrint("[Civil Protection] Duty allocation issued: " .. table.concat(got, " and ") .. "."
-            .. (eats and got[1] == "a ration voucher" and " Take the voucher to a Civil Protection Commissary or a ration dispenser for your ration packet." or ""))
+        ply:ChatPrint("[Civil Protection] Ration voucher issued. Take it to a Civil Protection Commissary or a ration dispenser for your ration packet.")
         if eats and not ply.lcVoucherTold and LC.Notice then
             ply.lcVoucherTold = true
             LC.Notice(ply, "info", "Ration voucher", "Your duty allocation comes as a ration voucher, not a packet: take it to a Civil Protection Commissary or a ration dispenser (E) for your ration.", 9)
@@ -1099,3 +1147,68 @@ timer.Create("LivingCityDutyAllocation", 20, 0, function()
         end
     end
 end)
+
+------------------------------------------------------------------------
+-- F2 > Cuff them, on a citizen or rebel in front of a unit (the owner, 12 November: "I stopped someone
+-- and pressed F2 and I don't see a cuff option"). The same as the Arrest Baton's right click
+-- (sv_livingcity_arrest.lua): they may struggle, then they're walked to the cells. Greyed on F2 with
+-- why when the unit has no cuffs left.
+------------------------------------------------------------------------
+
+LC.TargetActions = LC.TargetActions or {}
+LC.TargetActions.cuffnpc = function(ply, target)
+    if not RealUnit(ply) then return false, "[CP net] Only Civil Protection units cuff people." end
+    if not (IsValid(target) and LC.NPCs and LC.NPCs[target]) then return false, "[CP net] Look at them, up close." end
+    if ply:GetPos():DistToSqr(target:GetPos()) > 130 * 130 then return false, "[CP net] Get closer." end
+    if not LC.HasCuffs(ply) then return false, "[CP net] " .. LC.NO_CUFFS_UNIT end
+    if not LC.BatonArrest then return false end
+    local ok, msg = LC.BatonArrest(ply, target)
+    if msg then ply:ChatPrint("[Miscount] " .. msg) end
+    return ok
+end
+
+------------------------------------------------------------------------
+-- Held facing a unit (the owner, 12 November: "when I checked their papers, they turned around and I
+-- couldn't see their face; please make it so they stay facing the officer while their papers are
+-- checked"). A citizen whose papers are checked, or who is searched, stands still and keeps turning to
+-- face the unit until it's over (keep() says false, they're gone, or `secs` runs out).
+------------------------------------------------------------------------
+
+LC.FacingHolds = LC.FacingHolds or {} -- [npc] = { ent, untilT, keep }
+
+function LC.HoldFacing(npc, ent, secs, keep)
+    if not (IsValid(npc) and IsValid(ent)) then return false end
+    LC.FacingHolds[npc] = { ent = ent, untilT = CurTime() + (secs or 30), keep = keep }
+    LC.FacingStep(npc, LC.FacingHolds[npc])
+    return true
+end
+
+function LC.FacingStep(npc, h)
+    if not (IsValid(npc) and h and IsValid(h.ent)) then return false end
+    if npc.IsMoving and npc:IsMoving() then
+        if npc.StopMoving then npc:StopMoving() end
+        if npc.SetSchedule and SCHED_IDLE_STAND then npc:SetSchedule(SCHED_IDLE_STAND) end
+    end
+    if LC.Face then LC.Face(npc, h.ent:GetPos()) end
+    return true
+end
+
+function LC.FacingTick(now)
+    for npc, h in pairs(LC.FacingHolds) do
+        local st = IsValid(npc) and LC.NPCs and LC.NPCs[npc]
+        local alive = IsValid(npc) and (not npc.Health or npc:Health() > 0)
+        if not alive or not IsValid(h.ent) or now > h.untilT or (h.keep and not h.keep(npc, st))
+            or (st and (st.state == "jailed" or st.state == "hostile")) then
+            LC.FacingHolds[npc] = nil
+        else
+            LC.FacingStep(npc, h)
+        end
+    end
+end
+if timer and timer.Create then
+    timer.Create("LivingCityFacingHolds", 0.3, 0, function()
+        local ok, err = pcall(LC.FacingTick, CurTime())
+        if not ok and LC.Error then LC.Error("facing holds", err) end
+    end)
+end
+hook.Add("EntityRemoved", "LivingCityFacingHolds", function(e) LC.FacingHolds[e] = nil end)

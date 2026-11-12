@@ -611,13 +611,14 @@ local function Resolve(target, s, why)
     if not free then
         -- held: cuffed
         if target:IsPlayer() then
-            if CuffPlayer(target, officer) then
+            if CuffPlayer(target, officer) then -- (LC.TiePlayer takes the unit's pair)
                 Tell(officer, target:Nick() .. " is cuffed. Drag them to the cells yourself (F1 > Drag them along), or leave them: a unit is called to walk them in.")
                 target:ChatPrint("[Miscount] They hold you down and get the cuffs on.")
             end
         else
             local ok, err = LC.ArrestNPC(target, officer)
             if ok then
+                if LC.UseUnitCuffs then LC.UseUnitCuffs(officer) end
                 Tell(officer, "Cuffed. A unit is called to walk them to the cells, or walk them in yourself (F2 > Walk them to the cells).")
             else
                 Tell(officer, "Couldn't arrest: " .. tostring(err))
@@ -723,6 +724,10 @@ function LC.BatonArrest(officer, ent)
     if LC.StruggleOf(officer) then return false, "You've got your hands full." end
     if LC.Struggles[ent] then return false end
     if (ent.lcBrokeFree or 0) > CurTime() then return false, Name(ent) .. " just broke free of you. Catch them first." end
+    -- a unit's cuffs are issue: three, topped up at a CP Commissary (sv_livingcity_cp.lua; the owner, 12 November)
+    if LC.UnitCuffsNeeded and LC.UnitCuffsNeeded(officer) and (ent:IsPlayer() or (LC.NPCs and LC.NPCs[ent])) and not LC.HasCuffs(officer) then
+        return false, LC.NO_CUFFS_UNIT or "No cuffs."
+    end
     if ent:IsPlayer() then
         if LC.PlayerIsCP(ent) and not officer:IsAdmin() then return false, "You can't arrest another Civil Protection unit." end
         if (LC.Prisoners and LC.Prisoners[ent]) or (LC.Marching and LC.Marching[ent]) or LC.ArrestHolds[ent] then
@@ -734,7 +739,7 @@ function LC.BatonArrest(officer, ent)
             return true, ent:Nick() .. " struggles! Press E as fast as you can to hold them."
         end
         local done, err = CuffPlayer(ent, officer)
-        if not done then return false, "Couldn't arrest: " .. tostring(err) end
+        if not done then return false, "Couldn't arrest: " .. tostring(err) end -- (LC.TiePlayer took the unit's pair)
         return true, ent:Nick() .. " is cuffed. Drag them to the cells yourself (F1 > Drag them along), or leave them: a unit is called to walk them in."
     end
     local st = LC.NPCs and LC.NPCs[ent]
@@ -748,6 +753,7 @@ function LC.BatonArrest(officer, ent)
     end
     local done, err = LC.ArrestNPC(ent, officer)
     if not done then return false, "Couldn't arrest: " .. tostring(err) end
+    if LC.UseUnitCuffs then LC.UseUnitCuffs(officer) end
     return true, "Cuffed. A unit is called to walk them to the cells, or walk them in yourself (F2 > Walk them to the cells)."
 end
 

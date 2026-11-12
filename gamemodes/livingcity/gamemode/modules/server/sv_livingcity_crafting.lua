@@ -433,6 +433,7 @@ local ISSUE = {
 -- sold, dropped, stashed or passed to anyone else (they came back free with every respawn).
 local ISSUED_ITEM = {}
 for _, is in ipairs(ISSUE) do ISSUED_ITEM[is.item] = true end
+ISSUED_ITEM.zipties = true -- (a unit's cuffs are issue too, free at a CP Commissary: sv_livingcity_cp.lua)
 function LC.IssuedLocked(ply, id, to)
     if not (IsValid(ply) and ISSUED_ITEM[id] and LC.PlayerIsCP(ply)) then return false end
     if IsValid(to) and LC.PlayerIsCP(to) then return false end

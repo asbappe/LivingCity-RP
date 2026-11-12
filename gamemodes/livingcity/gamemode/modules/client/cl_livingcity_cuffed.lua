@@ -16,15 +16,20 @@
 
     To adjust by eye in the game (your own client, saved):
       lc_cuffs_show 1/0
-      lc_cuff_pose "back in twist bend hand"   degrees: upper arm back, upper
-                   arm in towards the spine, upper arm twist, elbow bend, wrist
+      lc_cuff_arms "back in twist bend hand"   degrees: upper arm back, upper
+                   arm in towards the spine, upper arm turned in, elbow bend, wrist
+                   (it was lc_cuff_pose; renamed with the new pose, 12 November,
+                   so a value saved for the old one doesn't hold it)
       lc_cuff_ring "width thickness"           the rings, as a scale of the tube
 ]]
 
 LC_CL = LC_CL or {}
 
 local cvShow = CreateClientConVar("lc_cuffs_show", "1", true, false, "Show cuffed people with their hands behind their back, and the cuffs")
-local cvPose = CreateClientConVar("lc_cuff_pose", "24 10 35 -28 20", true, false, "The cuffed pose, in degrees: upper arm back, in, twist, elbow bend, wrist")
+-- (the owner, 12 November, a cuffed citizen walking ahead: "the arms are at a weird angle", hanging slightly bent at
+-- the sides with the wrists turned out. The upper arms now swing well back and turn inward, so the elbow bends the
+-- forearms across the small of the back and the wrists meet there.)
+local cvPose = CreateClientConVar("lc_cuff_arms", "40 6 75 -75 10", true, false, "The cuffed pose, in degrees: upper arm back, in, turned in, elbow bend, wrist")
 local cvRing = CreateClientConVar("lc_cuff_ring", "0.075 0.035", true, false, "The cuffs' rings: width and thickness (a scale)")
 
 local RING_MODEL = "models/hunter/tubes/tube1x1x1.mdl"
@@ -47,14 +52,16 @@ function LC_CL.IsCuffed(e)
     return IsValid(e) and (e:GetNW2Bool("lc_tied", false) or e:GetNW2Bool("lc_cuffed", false)) and (not e.Alive or e:Alive())
 end
 
--- The pose: { bone name = Angle }. On the arms, yaw swings an arm forward and back, pitch out to the side (minus for
--- the right arm, plus for the left), roll twists it; a forearm bends at the elbow on yaw.
+-- The pose: { bone name = Angle }. On the arms, yaw raises an arm forward (minus is up, so plus swings it back),
+-- pitch takes it out to the side (minus for the right arm, plus for the left: so plus right, minus left brings it
+-- in), roll twists it; a forearm bends at the elbow on yaw (minus, the way an elbow bends). The twist turns the
+-- upper arms inward (plus right, minus left), so that bend runs across the back, not out to the sides.
 function LC_CL.CuffPose()
     local p = Nums(cvPose, 5)
     local back, inw, twist, bend, hand = p[1], p[2], p[3], p[4], p[5]
     return {
-        ["ValveBiped.Bip01_R_UpperArm"] = Angle(inw, back, -twist),
-        ["ValveBiped.Bip01_L_UpperArm"] = Angle(-inw, back, twist),
+        ["ValveBiped.Bip01_R_UpperArm"] = Angle(inw, back, twist),
+        ["ValveBiped.Bip01_L_UpperArm"] = Angle(-inw, back, -twist),
         ["ValveBiped.Bip01_R_Forearm"] = Angle(0, bend, 0),
         ["ValveBiped.Bip01_L_Forearm"] = Angle(0, bend, 0),
         ["ValveBiped.Bip01_R_Hand"] = Angle(0, hand, 0),

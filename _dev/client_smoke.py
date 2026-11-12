@@ -1127,6 +1127,18 @@ do
         for id, fn in pairs(hook.t.Think or {}) do if id == "LivingCityScreens" then fn() end end
         if LC_CL.ScreenState().hover ~= 46 + 26 * 2 + 6 then error("the Close button didn't light up when aimed at: " .. tostring(LC_CL.ScreenState().hover)) end
         LC_CL.ScreenAim = aim
+        -- the same terminal's screen sent again (a thing turned in): it stays on the page it was on (the owner, 12
+        -- November), and the terminal's floating sign gives way to it while it's open
+        local many = {}
+        for i = 1, 30 do many[i] = { kind = "button", text = "Row " .. i, fn = function() end } end
+        LC_CL.ScreenOpen(term, "TEST", "sub", many)
+        LC_CL.ScreenState().page = 2
+        LC_CL.ScreenOpen(term, "TEST", "sub", many)
+        if LC_CL.ScreenState().page ~= 2 then error("sent again, the screen went back to page " .. tostring(LC_CL.ScreenState().page)) end
+        if not LC_CL.ScreenHidesSign(term) then error("the terminal's sign still shows over its open screen") end
+        for id, fn in pairs(hook.t.PostDrawTranslucentRenderables or {}) do if id == "LivingCityScreens" then fn(false, false) end end
+        LC_CL.ScreenClose()
+        if LC_CL.ScreenHidesSign(term) then error("the sign didn't come back when the screen closed") end
         LC_CL.ScreenClose()
         LC_CL.OpenDesk({ kind = "housing", awaiting = true, papers = true, blocks = { { n = 1, name = "Block 1", residents = 2 } } })
         if not LC_CL.ScreenState() then error("Housing Allocation didn't open on its screen") end
@@ -2448,6 +2460,43 @@ return nil
 """)
 if err:
     problems = (problems + "\n" if problems else "") + "weapon_lc_sprayer (client) " + str(err)
+# the Arrest Baton (the owner, 12 November: "sparks are in a group of 3 and sitting too far back"): one small glow,
+# at the spark point furthest from the hand, put back from your field of view to the view model's
+L.globals()._SRC = open(os.path.join(GMDIR, "entities", "weapons", "weapon_lc_baton.lua")).read()
+err = L.execute(r"""
+SWEP = {}
+local ok, err = pcall(function() assert(loadstring(_SRC, "weapon_lc_baton"))() end)
+if not ok then return "load: " .. tostring(err) end
+local def = SWEP
+local dsWas, gvsWas = render.DrawSprite, render.GetViewSetup
+local sprites = {}
+render.DrawSprite = function(pos, w) sprites[#sprites + 1] = { pos = pos, w = w } end
+render.GetViewSetup = function() return { origin = Vector(0, 0, 0), angles = Angle(0, 0, 0), fov = 90, fov_viewmodel = 54 } end
+local function restore() render.DrawSprite, render.GetViewSetup = dsWas, gvsWas end
+local k = math.tan(math.rad(27)) / math.tan(math.rad(45))
+local p = LC_CL.BatonTipSpace(Vector(100, -40, -20))
+if math.abs(p.x - 100) > 0.01 or math.abs(p.y + 40 * k) > 0.01 or math.abs(p.z + 20 * k) > 0.01 then restore() return "BatonTipSpace: " .. tostring(p) end
+local ATT = { sparkrear = Vector(30, -10, -10), spark1a = Vector(40, -12, -6), spark9b = Vector(60, -14, 0) }
+local names = { "sparkrear", "spark1a", "spark9b" }
+local ids = { sparkrear = 1, spark1a = 2, spark9b = 3 }
+local vm = { IsValid = function() return true end, GetModel = function() return "models/weapons/c_stunstick.mdl" end,
+    LookupAttachment = function(_, n) return ids[n] or 0 end, GetAttachment = function(_, id) return { Pos = ATT[names[id]] } end,
+    LookupBone = function() return 1 end, GetBonePosition = function() return Vector(20, -8, -14) end }
+for _ = 1, 20 do
+    local ok2, e2 = pcall(def.PostDrawViewModel, def, vm)
+    if not ok2 then restore() return "PostDrawViewModel: " .. tostring(e2) end
+end
+local tip = LC_CL.BatonTipSpace(ATT.spark9b)
+restore()
+if #sprites < 20 then return "the glow isn't drawn every frame: " .. #sprites end
+for _, s in ipairs(sprites) do
+    if s.pos:Distance(tip) > 1 then return "a spark away from the tip: " .. tostring(s.pos) .. " (tip " .. tostring(tip) .. ")" end
+    if s.w > 3.5 then return "the glow is too big: " .. s.w end
+end
+return nil
+""")
+if err:
+    problems = (problems + "\n" if problems else "") + "weapon_lc_baton (client) " + str(err)
 # the city's music: a real sound channel is userdata (it can't carry fields of its own)
 err = L.execute(r"""
 local realExists, realValid = file.Exists, IsValid

@@ -229,6 +229,15 @@ end
 local function Context(me, unit, rebel)
     local out = {}
     local function Add(label, run, role) out[#out + 1] = { label = label, run = run, ctx = true, role = role or nil } end
+    -- (a unit's cuffs are issue, three, topped up at a CP Commissary: with none left, Cuff is still there, greyed
+    -- with why; the owner, 12 November: "I stopped someone and pressed F2 and I don't see a cuff option")
+    local function AddCuff(label, run)
+        if unit and me:GetNW2Int("lc_cuffs", 0) <= 0 and not me:GetNW2Bool("lc_dreaming", false) then
+            out[#out + 1] = { label = label .. "  (No cuffs: the CP Commissary gives you more)", run = function() end, ctx = true, role = true, disabled = true }
+        else
+            Add(label, run, true)
+        end
+    end
     local now = CurTime()
     -- in a dream (cl_livingcity_dreams.lua): waking up, here first (the owner: never only in the C menu). Only once the
     -- server says they may (out of it, an Enforcer, a test), so it never offers what would be refused.
@@ -273,7 +282,7 @@ local function Context(me, unit, rebel)
                 Add("Pat " .. n .. " down", function() Send("patdown", "", e) end)
                 Add("Uncuff " .. n, function() Send("untie") end)
             else
-                Add("Cuff " .. n, function() Send("tie") end, true)
+                AddCuff("Cuff " .. n, function() Send("tie") end)
             end
             if e:GetNW2String("lcj_job", "") ~= "" and e:GetNW2Entity("lc_escorting") ~= me then Add("Escort " .. n, function() Send("escort", "", e) end, true) end
             if tied or e:GetNW2Bool("lc_handsup", false) then Add("Take " .. n .. "'s microphone", function() Send("takemic", "", e) end, true) end
@@ -323,6 +332,7 @@ local function Context(me, unit, rebel)
     elseif unit and cls == "npc_citizen" and not e:GetNW2Bool("lc_cuffed", false) and not e:GetNW2Bool("lc_downed_body", false) and not e:GetNW2Bool("lc_body", false) then
         -- a citizen in front of a unit: their papers, without the search first (sv_livingcity_jobgames.lua, LC.StreetPapers)
         Add("Check their papers", function() Send("streetpapers", "", e) end, true)
+        AddCuff("Cuff them (walked to the cells)", function() Send("cuffnpc", "", e) end)
     elseif unit and e:GetNW2Bool("lc_cuffed", false) then
         -- a citizen or rebel cuffed with the baton (sv_livingcity_arrest.lua)
         Add("Walk them to the cells / let go", function() Send("drag") end, true)

@@ -4,7 +4,8 @@
     Combine to do when there are no rebels about).
 
     Every Civil Protection player on duty works shifts of lc_cp_shift_minutes
-    (15; the owner, 10 November: "30 ... is a bit extreme, let's do 15"). Each shift has a quota, on F2 > My shift:
+    (30; it was 15 for two days, then the owner, 12 November: "just make the shift
+    back to 30 minutes"). Each shift has a quota, on F2 > My shift:
       - searches        lc_cp_quota_searches (3): anyone, a player or one of
                         the city's people (the pat-down, the baton's reload)
       - papers duty     lc_cp_quota_papers (1): F2 > My shift > Checkpoint
@@ -33,7 +34,7 @@
     for extra, and experience for it (A 30, B 20, C 10), which is what
     promotes a unit. The last five reviews are kept (F2 > My shift).
 
-      lc_cp_duty 0/1, lc_cp_shift_minutes (15), lc_cp_quota_searches (3),
+      lc_cp_duty 0/1, lc_cp_shift_minutes (30), lc_cp_quota_searches (3),
       lc_cp_quota_papers (1), lc_cp_quota_inspections (1),
       lc_insider_clean_minutes (30)
 ]]
@@ -44,7 +45,7 @@ LC = LC or {}
 
 local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
 local cvOn      = CreateConVar("lc_cp_duty", "1", FLAGS, "Civil Protection players work shifts with a quota (searches, papers duty, an inspection) and a performance review")
-local cvMins    = CreateConVar("lc_cp_shift_minutes", "15", FLAGS, "Minutes in a Civil Protection shift")
+local cvMins    = CreateConVar("lc_cp_shift_minutes", "30", FLAGS, "Minutes in a Civil Protection shift")
 local cvSearch  = CreateConVar("lc_cp_quota_searches", "3", FLAGS, "Searches in a Civil Protection shift's quota")
 local cvPapers  = CreateConVar("lc_cp_quota_papers", "1", FLAGS, "Checkpoint papers duties in a Civil Protection shift's quota")
 local cvInspect = CreateConVar("lc_cp_quota_inspections", "1", FLAGS, "Residence inspections in a Civil Protection shift's quota")
@@ -362,6 +363,8 @@ end
 -- A shift says when it starts, when it is half gone and when two minutes are left (the owner,
 -- 11 November: "I see no indication of a shift beginning or in progress ... I didn't even know my
 -- shift had started").
+local SHIFT_GRACE, START_QUIET = 60, 120
+LC.CPShiftGrace, LC.CPShiftStartQuiet = SHIFT_GRACE, START_QUIET
 local function QuotaLine(s)
     local q, parts = Quota(), {}
     if q.searches > 0 then parts[#parts + 1] = string.format("searches %d of %d", s.searches or 0, q.searches) end
@@ -378,6 +381,10 @@ function LC.CPShiftTell(ply, s, now)
     s.told = stage
     if not LC.Notice then return true end
     if first then
+        -- (the owner, 12 November: "it says when a shift starts, but 2 happen in a row": never twice within
+        -- START_QUIET seconds; the new shift is still on F2 > Me > My shift)
+        if now - (ply.lcShiftStartToldAt or -1e9) < START_QUIET then return false end
+        ply.lcShiftStartToldAt = now
         LC.Notice(ply, "info", "Shift started", string.format("%d minutes. Your quota: %s. It's all on F2 > Me > My shift; a review and experience at the end.",
             math.max(1, math.ceil(left / 60)), QuotaLine(s)), 10)
     elseif stage == 2 then
@@ -392,6 +399,7 @@ local function Tick()
     local now = CurTime()
     for _, ply in ipairs(player.GetAll()) do
         if OnDuty(ply) then
+            ply.lcShiftOffAt = nil
             local s = Shift(ply)
             -- papers duty finished: counted
             local g = ply.lcPapersDuty
@@ -412,8 +420,13 @@ local function Tick()
             end
             Sync(ply)
         elseif ply.lcShift then
-            ply.lcShift, ply.lcInspectOrder = nil, nil
-            ply:SetNW2String("lc_shift", "")
+            -- (a moment off the books, a respawn or a change of uniform, isn't the end of the shift: it's kept
+            -- for SHIFT_GRACE seconds, so coming straight back doesn't start, and announce, a second one)
+            ply.lcShiftOffAt = ply.lcShiftOffAt or now
+            if ply.lcOffDuty or now - ply.lcShiftOffAt > SHIFT_GRACE then
+                ply.lcShift, ply.lcInspectOrder, ply.lcShiftOffAt = nil, nil, nil
+                ply:SetNW2String("lc_shift", "")
+            end
         end
     end
 end
