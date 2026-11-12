@@ -12329,7 +12329,7 @@ section("What named people say, recorded: a small bank for free talk, the direct
 LC.VoiceForce = "own" -- (the recorded voice first; who gets which voice is further down)
 local nCit, nOpen, bad = 0, 0, nil
 for id, l in pairs(LC.StreetLines) do
-    nCit = nCit + 1
+    if string.sub(id, 1, 10) ~= "say_small_" then nCit = nCit + 1 end -- (small talk, 12 November, counted apart)
     if string.sub(id, 1, 9) == "say_open_" then nOpen = nOpen + 1 end
     if string.sub(id, 1, 4) ~= "say_" or type(l[1]) ~= "string" or #l[1] > 70 or l[2] == nil or string.find(l[1], "\226\128\148", 1, true) then bad = id end
 end
@@ -12439,7 +12439,7 @@ ok(#heardSounds == 2 and string.find(heardSounds[2], "livingcity/citizens/say_wa
 local cit, unit = LC.LinesMissing()
 LC.AdviceClip = function() return nil end
 cit, unit = LC.LinesMissing()
-ok(#cit == nCit * 2 and #unit == nUnit, "lc_voice_missing can list every one not recorded yet", #cit)
+ok(#cit == (nCit + #LC.SpySmallTalk) * 2 and #unit == nUnit, "lc_voice_missing can list every one not recorded yet", #cit)
 local tagged = true
 for id, l in pairs(LC.StreetLines) do if type(l[3]) ~= "string" or string.sub(l[3], 1, 1) ~= "[" or not string.find(l[3], string.sub(l[1], 1, 3), 1, true) then tagged = id end end
 ok(tagged == true, "every line has its text for ElevenLabs: a direction in square brackets, then the words", tostring(tagged))
@@ -18102,23 +18102,56 @@ _run(0.2)
 ok(g.phase == "calm" and not g.alarmOn and g.at - CurTime() >= LC.DuckCalm[1] - 1, "after it: the alarm stopped, and a long calm", g.at - CurTime())
 Stop(d)
 
--- Careless Talk: the spy gives themselves away, and the tables have signs
+-- Careless Talk: three rounds, each with its own tell (the owner: "the NPCs I saw were all just statues")
 g, d = Start("spy")
 g.at = CurTime()
 _run(0.2)
-ok(g.phase == "pick" and g.round == 1, "a round begins")
+ok(g.phase == "pick" and g.round == 1 and g.kind == "chat" and LC.SpyRounds == 3 and g.def.need == 2, "three rounds; the first, the canteen")
 local stS = g.def.state(g, a)
-ok(stS.signs and #stS.signs == 4 and string.find(stS.signs[1][4], "^Table ") and string.find(LC.DreamGames.spy.goal, "glancing", 1, true),
-    "a sign over every table, and the goal says how to tell the spy")
+ok(stS.signs and #stS.signs == 4 and string.find(stS.signs[1][4], "^Table ") and string.find(LC.DreamGames.spy.goal, "Press E", 1, true),
+    "a sign over every table, and the goal says to press E on the one you suspect")
+g.talkAt = CurTime()
+_run(0.2)
+ok((g.talks or 0) >= 1 and #(LC.SpySmallTalk or {}) >= 10, "they chat at the tables (the city's small talk)", g.talks)
 g.glanceAt = CurTime()
 _run(0.2)
 local spy = g.spyN
 local still = true
 for _, n in ipairs(g.npcs) do if n ~= spy and n.e:GetAngles().y ~= n.yaw then still = false end end
-ok((g.glances or 0) >= 1 and spy.e:GetAngles().y ~= spy.yaw and still, "the spy glances over their shoulder; nobody else does")
+ok((g.glances or 0) >= 1 and spy.head ~= 0 and spy.e:GetAngles().y ~= spy.yaw and still, "the spy looks over their shoulder; nobody else does")
 _run(LC.SpyGlanceSecs + 0.3)
-ok(g.phase ~= "pick" or spy.e:GetAngles().y == spy.yaw and g.glanceAt > CurTime(), "and turns back, to glance again a few seconds later")
-ok(LC.SpyDescribe(spy) and string.find(LC.SpyDescribe(spy), ", at the table ", 1, true), "described in plain words", LC.SpyDescribe(spy))
+ok(spy.e:GetAngles().y == spy.yaw and spy.head == 0, "and turns back, to look again a few seconds later")
+ok(string.find(LC.SpyDescribe(spy), ", at the table ", 1, true), "described in plain words", LC.SpyDescribe(spy))
+-- the salute
+g.at = CurTime() _run(0.1) g.at = CurTime() _run(0.1)
+ok(g.round == 2 and g.kind == "salute", "round two: the salute", g.kind)
+spy = g.spyN
+g.chantAt = CurTime()
+_run(0.1)
+local allUp = true
+for _, n in ipairs(g.npcs) do if n ~= spy and n.salute ~= 1 then allUp = false end end
+ok(allUp and (spy.salute or 0) < 0.5, "everyone salutes and cheers at once; the spy hardly raises a hand")
+_run(LC.SpyChantLate + 0.2)
+ok(spy.salute and spy.salute > 0 and spy.salute < 1, "then a limp salute, a beat late", spy.salute)
+-- the firing squad
+g.at = CurTime() _run(0.1) g.at = CurTime() _run(0.1)
+ok(g.round == 3 and g.kind == "squad" and g.npcs[1].line == 1 and IsValid(g.npcs[1].rifle), "round three: the firing squad, in a line with rifles", g.kind)
+ok(not g.def.state(g, a).signs and string.find(LC.SpyDescribe(g.spyN), "in the line", 1, true), "(no table signs now; described by their place in the line)")
+spy = g.spyN
+g.roundT0 = CurTime() - LC.SpyVolleyAt[1]
+_run(0.1)
+local firedAll = true
+for _, n in ipairs(g.npcs) do if n ~= spy and not (g.fired and g.fired[n]) then firedAll = false end end
+ok(g.volley == 1 and firedAll and not g.fired[spy] and table.HasValue(g.said or {}, "spy_fire"), "\"Fire!\": every rifle fires but the spy's")
+-- E on the one you suspect
+local si
+for i, n in ipairs(g.npcs) do if n == spy then si = i end end
+a:SetPos(spy.pos - Vector(120, 0, 64))
+a.aim = Vector(1, 0, 0)
+a.keys = { [IN_USE] = true }
+_run(0.2)
+a.keys = nil
+ok(g.pl[a].pick == si, "E on the one you suspect: your pick", g.pl[a].pick)
 Stop(d)
 
 -- Bubbles: bigger, more, slower, and the dreamers light
@@ -19768,6 +19801,7 @@ ok(s.how == "won" and g.hero == a:Nick() and #g.ents == n0 + 1 and Said(g, "shif
 Stop(d)
 
 -- Careless Talk: a party game, everyone picks on their own, then the reveal
+local function UseOn(p, n) p:SetPos(n.pos - Vector(100, 0, 64)) p.aim = Vector(1, 0, 0) p.keys = nil _run(0.1) p.keys = { [IN_USE] = true } _run(0.2) p.keys = nil end
 g, d = Start("spy")
 s = g.pl[a]
 _run(8.2)
@@ -19778,14 +19812,10 @@ ok(#g.npcs == 12 and g.phase == "pick" and g.round == 1 and spy and same == 1, "
 _run(LC.SpyClueAt[1] + 0.2)
 ok(#g.clues == 1, "a clue is overheard")
 local wrong, wi, si
-for i, n in ipairs(g.npcs) do if n == spy then si = i elseif not wrong then wrong, wi = n, i end end
-a:SetPos(wrong.pos + Vector(10, 0, 0))
-Duck(a)
-ok(s.pick == wi and g.phase == "pick" and s.lives == 3, "crouching beside someone is your pick: nothing happens yet")
-a.crouch = nil
-_run(0.1)
-a:SetPos(spy.pos + Vector(10, 0, 0))
-Duck(a)
+for i, n in ipairs(g.npcs) do if n == spy then si = i elseif not wrong and n.tbl ~= spy.tbl then wrong, wi = n, i end end
+UseOn(a, wrong)
+ok(s.pick == wi and g.phase == "pick" and s.lives == 3, "E on someone is your pick: nothing happens yet", s.pick)
+UseOn(a, spy)
 ok(s.pick == si, "you can change your mind")
 g.pl[b].pick = wi
 ok(not Sent(b, "state", function(t) return t.big and string.find(t.big, "Your pick: " .. LC.SpyDescribe(spy), 1, true) end), "(nobody else sees your pick)")
@@ -19798,7 +19828,7 @@ _run(1)
 ok(spy.e:GetModelScale() >= 5 and spy.e:GetPos().z > z1 + 50 and Sent(a, "state", function(t) return t.villains end), "unmasked, the spy swells to a red giant and floats off into the sky")
 g.at = CurTime()
 _run(0.1)
-ok(g.phase == "pick" and g.round == 2 and not s.pick and #g.clues == 0 and spy.e:GetModelScale() == 1, "the next round: a fresh canteen (everyone their own size again) and a new spy")
+ok(g.phase == "pick" and g.round == 2 and g.kind == "salute" and not s.pick and #g.clues == 0 and spy.e:GetModelScale() == 1, "the next round: the salute (everyone their own size again) and a new spy")
 g.pl[b].safe = 0
 g.at = CurTime()
 _run(0.1)

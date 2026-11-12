@@ -178,6 +178,9 @@ function LC.CueTopic(npc, st, trusted)
     local t = Traits(npc, st)
     if UnitNear(npc:GetPos(), 500) and (t.loyal < 0 or st.rebel) then return "say_units_near" end
     local pool = { LC.CueState(npc, st), LC.CueState(npc, st) }
+    -- (small talk, most of the time when nothing presses: the owner, 12 November, "extremely random and casual")
+    local small = LC.SpySmallTalk or {}
+    if #small > 0 then for _ = 1, 3 do pool[#pool + 1] = small[math.random(#small)] end end
     if t.loyal > 0.4 then pool[#pool + 1] = "say_loyal" pool[#pool + 1] = "say_obey"
     elseif t.loyal < -0.4 then
         if trusted and t.brave > 0 then pool[#pool + 1] = "say_hate_quiet" end
@@ -204,6 +207,9 @@ function LC.CueAnswer(npc, st, heard)
         return Pick({ "say_agree", "say_heard" })
     elseif heard == "say_state_hopeful" then
         return t.hope < -0.2 and "say_disagree" or "say_agree"
+    elseif heard and string.sub(heard, 1, 10) == "say_small_" then
+        local small = LC.SpySmallTalk or {}
+        return Pick({ "say_laugh", "say_agree", "say_heard", #small > 0 and small[math.random(#small)] or "say_agree" })
     elseif heard and string.sub(heard, 1, 10) == "say_state_" then
         if t.hope > 0.4 then return "say_state_hopeful" end
         return Pick({ "say_agree", "say_truth", LC.CueState(npc, st) })

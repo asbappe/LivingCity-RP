@@ -229,6 +229,19 @@ Folder: `citizens/`. Paste each line twice: once with the man's voice (save as t
 | [ ] | `say_grief_male1` | `say_grief_female1` | [numb, grieving] They took my friend. [pause] Just dragged them off. |
 | [ ] | `say_saw_beating_male1` | `say_saw_beating_female1` | [under their breath, tense] Don't look. Just keep walking. |
 | [ ] | `say_saw_death_male1` | `say_saw_death_female1` | [horrified, gasping] Oh God. Oh God, no. |
+| | | | **Other** |
+| [ ] | `say_small_button_male1` | `say_small_button_female1` | [casual, absent-minded] I lost a button off my coat. I keep looking down for it. |
+| [ ] | `say_small_cat_male1` | `say_small_cat_female1` | [casual, dreamy] Did you ever have a cat? [pause] I think I had a cat once. |
+| [ ] | `say_small_crust_male1` | `say_small_crust_female1` | [casual, wistful] If you ever find bread with a crust that crunches, tell me. |
+| [ ] | `say_small_neighbor_male1` | `say_small_neighbor_female1` | [casual, tired] My neighbor hums through the wall. Same three notes, every night. |
+| [ ] | `say_small_pigeon_male1` | `say_small_pigeon_female1` | [casual, wry] There's a pigeon on my windowsill. I'm pretty sure it hates me. |
+| [ ] | `say_small_rain_male1` | `say_small_rain_female1` | [casual, resigned] Looks like rain again. [pause] It always looks like rain. |
+| [ ] | `say_small_shoes_male1` | `say_small_shoes_female1` | [casual, mildly annoyed] My shoes squeak now. Both of them. [pause] Since Tuesday. |
+| [ ] | `say_small_soup_male1` | `say_small_soup_female1` | [casual, puzzled] I had the strangest dream about soup last night. |
+| [ ] | `say_small_stairs_male1` | `say_small_stairs_female1` | [casual, grumbling] Lift's broken again. Eight floors. My knees hate me. |
+| [ ] | `say_small_tiles_male1` | `say_small_tiles_female1` | [casual, oddly proud] I counted the tiles in my hallway. Two hundred and twelve. |
+| [ ] | `say_small_tune_male1` | `say_small_tune_female1` | [casual, half laughing] I can't get that tune from the speakers out of my head. |
+| [ ] | `say_small_water_male1` | `say_small_water_female1` | [casual, thoughtful] The water tastes different this week. [pause] Not worse. Just different. |
 
 ## What units say
 

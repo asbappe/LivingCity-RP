@@ -383,8 +383,17 @@ Every line said in the dreams you play. Folder: **`garrysmod/sound/livingcity/dr
 
 | Done | File | Who | Words | How it should sound |
 |---|---|---|---|---|
-| [ ] | `spy_hello1.mp3` | The Administrator | Careless talk costs lives, my children. There is a traitor among you. Listen carefully. | her own voice |
+| [ ] | `spy_hello1.mp3` | The Administrator | Careless talk costs lives, my children. There is a traitor among you. Watch them closely. | her own voice |
 | [ ] | `spy_caught1.mp3` | The Administrator | Time is up. The traitor is revealed. I thank my vigilant citizens. | her own voice |
+| [ ] | `spy_chant_male1.mp3` | A diner (man), cheering | Glory to the Administrator! |  |
+| [ ] | `spy_chant_female1.mp3` | A diner (woman), cheering | Glory to the Administrator! |  |
+| [ ] | `spy_flat_male1.mp3` | The spy (man), flat and bored | Glory to the Administrator. |  |
+| [ ] | `spy_flat_female1.mp3` | The spy (woman), flat and bored | Glory to the Administrator. |  |
+| [ ] | `spy_whisper_male1.mp3` | The spy (man), whispering | The old bridge. After curfew. Don't be late. |  |
+| [ ] | `spy_whisper_female1.mp3` | The spy (woman), whispering | The old bridge. After curfew. Don't be late. |  |
+| [ ] | `spy_ready1.mp3` | The officer | Ready! |  |
+| [ ] | `spy_aim1.mp3` | The officer | Aim! |  |
+| [ ] | `spy_fire1.mp3` | The officer | Fire! |  |
 
 #### The Newsreel (`newsreel`)
 
@@ -715,6 +724,19 @@ A small bank of lines the city's named citizens say everywhere: answering you in
 | [ ] | `say_grief_male1.wav` | `say_grief_female1.wav` | A friend arrested or dead | They took my friend. Just dragged them off. |
 | [ ] | `say_saw_beating_male1.wav` | `say_saw_beating_female1.wav` | Someone beaten in front of them | Don't look. Just keep walking. |
 | [ ] | `say_saw_death_male1.wav` | `say_saw_death_female1.wav` | Someone killed in front of them | Oh God. Oh God, no. |
+| | | | **Other** | |
+| [ ] | `say_small_button_male1.wav` | `say_small_button_female1.wav` | Small talk | I lost a button off my coat. I keep looking down for it. |
+| [ ] | `say_small_cat_male1.wav` | `say_small_cat_female1.wav` | Small talk | Did you ever have a cat? I think I had a cat once. |
+| [ ] | `say_small_crust_male1.wav` | `say_small_crust_female1.wav` | Small talk | If you ever find bread with a crust that crunches, tell me. |
+| [ ] | `say_small_neighbor_male1.wav` | `say_small_neighbor_female1.wav` | Small talk | My neighbor hums through the wall. Same three notes, every night. |
+| [ ] | `say_small_pigeon_male1.wav` | `say_small_pigeon_female1.wav` | Small talk | There's a pigeon on my windowsill. I'm pretty sure it hates me. |
+| [ ] | `say_small_rain_male1.wav` | `say_small_rain_female1.wav` | Small talk | Looks like rain again. It always looks like rain. |
+| [ ] | `say_small_shoes_male1.wav` | `say_small_shoes_female1.wav` | Small talk | My shoes squeak now. Both of them. Since Tuesday. |
+| [ ] | `say_small_soup_male1.wav` | `say_small_soup_female1.wav` | Small talk | I had the strangest dream about soup last night. |
+| [ ] | `say_small_stairs_male1.wav` | `say_small_stairs_female1.wav` | Small talk | Lift's broken again. Eight floors. My knees hate me. |
+| [ ] | `say_small_tiles_male1.wav` | `say_small_tiles_female1.wav` | Small talk | I counted the tiles in my hallway. Two hundred and twelve. |
+| [ ] | `say_small_tune_male1.wav` | `say_small_tune_female1.wav` | Small talk | I can't get that tune from the speakers out of my head. |
+| [ ] | `say_small_water_male1.wav` | `say_small_water_female1.wav` | Small talk | The water tastes different this week. Not worse. Just different. |
 
 ## 11. What units say
 

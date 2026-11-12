@@ -37,6 +37,8 @@ Tick a box when you've tried it, and write what you saw after **Notes:** (works,
   Notes:
 - [ ] **Mouths:** a citizen speaking a recorded line moves their mouth.
   Notes:
+- [ ] **Small talk:** two citizens chatting in the street now often say something random and casual (12 lines in `VOICE_LINES.md` to record).
+  Notes:
 - [ ] **Your model at server start:** a unit in the old low-res metrocop is switched to the right one a few seconds after spawning.
   Notes:
 - [ ] **Dreaming as a unit:** a CP in a Combine-zone bed gets the nightmares.
@@ -47,7 +49,7 @@ Tick a box when you've tried it, and write what you saw after **Notes:** (works,
   Notes:
 - [ ] **Party bus:** drives on the dream floor, through anything.
   Notes:
-- [ ] **Careless Talk:** signs over the tables, plainer text; the spy keeps glancing over their shoulder. Vortigaunts start 8 seconds after appearing; their sound plays once.
+- [ ] **Careless Talk, three rounds:** press E on the one you suspect. The canteen: they chat and gesture, the spy looks over their shoulder. The salute: everyone salutes and cheers together, the spy late and flat. The firing squad: everyone fires but the spy. Vortigaunts start 8 seconds after appearing; their sound plays once.
   Notes:
 - [ ] **Sound guard:** any sound starting more than 4 times in 20 seconds is stopped ("sound guard" in the debug report). Every dream sound stops when it ends.
   Notes:

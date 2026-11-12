@@ -86,8 +86,19 @@ local CUES = {
     shift_double = { "The Administrator", "Double norm! Every blow counts twice!" },
     shift_hero = { "The Administrator", "A new Hero of Labour! Hang their portrait beside mine!" },
     shift_idle = { "The Administrator", "I see you standing there. Back to work, citizen!" },
-    spy_hello = { "The Administrator", "Careless talk costs lives, my children. There is a traitor among you. Listen carefully." },
+    spy_hello = { "The Administrator", "Careless talk costs lives, my children. There is a traitor among you. Watch them closely." },
     spy_caught = { "The Administrator", "Time is up. The traitor is revealed. I thank my vigilant citizens." },
+    -- (Careless Talk's diners, a man's take and a woman's of each: one take is picked at random, its .txt the words.
+    -- The chant is said by everyone at once; the spy says the flat one, bored, a beat late.)
+    spy_chant_male = { "A diner (man), cheering", "Glory to the Administrator!" },
+    spy_chant_female = { "A diner (woman), cheering", "Glory to the Administrator!" },
+    spy_flat_male = { "The spy (man), flat and bored", "Glory to the Administrator." },
+    spy_flat_female = { "The spy (woman), flat and bored", "Glory to the Administrator." },
+    spy_whisper_male = { "The spy (man), whispering", "The old bridge. After curfew. Don't be late." },
+    spy_whisper_female = { "The spy (woman), whispering", "The old bridge. After curfew. Don't be late." },
+    spy_ready = { "The officer", "Ready!" },
+    spy_aim = { "The officer", "Aim!" },
+    spy_fire = { "The officer", "Fire!" },
     newsreel_hello = { "The Administrator", "Welcome to my City Seventeen, where every citizen smiles, and every smile is sincere!" },
     newsreel_end = { "The Administrator", "And so another happy day draws to a close. Goodnight, my City Seventeen!" },
     hate_hello = { "The Administrator", "Citizens! Behold the enemy of the people. Let him hear you!" },
@@ -406,15 +417,25 @@ end
 ------------------------------------------------------------------------
 
 do
-    LC.SpyRounds, LC.SpyRoundSecs, LC.SpyReveal = 4, 30, 6
-    LC.SpyClueAt = { 3, 11, 19 } -- (seconds into a round)
-    -- The spy gives themselves away too (the owner, 12 November: "how are we supposed to know who the traitor is?"):
-    -- from this far into a round, they keep glancing nervously over their shoulder, every few seconds; nobody else does.
-    LC.SpyGlanceFrom, LC.SpyGlanceEvery, LC.SpyGlanceSecs = 6, { 4, 7 }, 1.5
-    local def = { id = "spy", name = "Careless Talk", mood = "happy", secs = 8 + LC.SpyRounds * (LC.SpyRoundSecs + LC.SpyReveal) + 4, lives = 3, need = 3,
+    -- (the owner, 12 November: "the NPCs I saw were all just statues, which makes it pointless". Three rounds now,
+    -- each with its own tell, and the pick is E on the one you suspect, not crouching beside them.)
+    --   1 the canteen: they chat in pairs (the city's small talk, LC.StreetLines say_small_*); the spy keeps
+    --     looking over their shoulder and mutters (spy_whisper); three clues as before
+    --   2 the salute: everyone faces her portrait, salutes and cheers in unison (spy_chant); the spy salutes
+    --     late and half-heartedly, in a flat voice (spy_flat)
+    --   3 the firing squad: rebels against the wall under a spotlight, the diners in a line with rifles; on
+    --     the officer's word (spy_ready, spy_aim, spy_fire) every rifle fires once but the spy's
+    LC.SpyRounds, LC.SpyRoundSecs, LC.SpyReveal = 3, 30, 6
+    LC.SpyKinds = { "chat", "salute", "squad" }
+    LC.SpyClueAt = { 3, 11, 19 } -- (seconds into the canteen round)
+    LC.SpyGlanceFrom, LC.SpyGlanceEvery, LC.SpyGlanceSecs = 4, { 3, 6 }, 1.5
+    LC.SpyChantEvery, LC.SpyChantLate = 4, 1.2   -- (seconds between cheers; how late the spy's salute is)
+    LC.SpyVolleyAt = { 7, 16, 25 }                -- (seconds into the firing squad round: "Fire!")
+    LC.SpyPickReach, LC.SpyPickRadius = 220, 26   -- (E: how far, and how near your line of sight their body must be)
+    local def = { id = "spy", name = "Careless Talk", mood = "happy", secs = 8 + LC.SpyRounds * (LC.SpyRoundSecs + LC.SpyReveal) + 4, lives = 3, need = 2,
         music = { "spy", "propaganda" },
-        goal = "One of the diners in the canteen is a rebel spy. Each round brings three clues: which table, a man or a woman, and the colour of their clothes. "
-            .. "Watch them too: the spy is nervous and keeps glancing over their shoulder. Crouch beside the one you suspect (you can change your mind). After 30 seconds, everyone's pick is shown.",
+        goal = "One of the diners is a rebel spy, and in each of the three rounds the spy gives themselves away: watch and listen. "
+            .. "Press E on the one you suspect (you can change your mind). After 30 seconds, everyone's pick is shown. Find the spy twice to win.",
         timeUp = { "The canteen empties", "The lights go off in the canteen, and you wake." }, spawn = Spawn,
         woke = Woke({
             won = { "Vigilant citizen", "You wake looking sideways at everyone, quietly proud. Loose lips sink ships. Not on your watch." },
@@ -424,13 +445,46 @@ do
     G.spy = def
     LC.SpyTables = { "by the window", "by the kitchen", "by the door", "under her portrait" }
     LC.SpyTints = { { "red", Color(230, 90, 90) }, { "green", Color(110, 210, 110) }, { "blue", Color(110, 150, 240) }, { "yellow", Color(235, 215, 90) } }
+    LC.SpyRoundNotes = {
+        chat = { "Round %d of %d: the canteen", "Everyone is chatting over lunch. The spy is jumpy: watch for whoever keeps looking over their shoulder, and listen for the clues." },
+        salute = { "Round %d of %d: the salute", "Everyone salutes her portrait and cheers for her. The spy doesn't mean it: watch for the late, half-hearted salute, and listen for the flat voice." },
+        squad = { "Round %d of %d: the firing squad", "The diners are handed rifles. When the officer says fire, every rifle fires, except the spy's." },
+    }
     local MEN = { "models/humans/group01/male_02.mdl", "models/humans/group02/male_04.mdl", "models/humans/group01/male_07.mdl" }
     local WOMEN = { "models/humans/group01/female_01.mdl", "models/humans/group02/female_02.mdl", "models/humans/group01/female_04.mdl" }
     local IDLE = { "LineIdle01", "lineidle01", "idle_subtle" }
+    -- (talking: they shift from one easy stance to another as they chat)
+    local CHAT = { { "LineIdle02", "lineidle02" }, { "LineIdle03", "lineidle03" }, { "LineIdle04", "lineidle04" }, { "LineIdle01", "lineidle01" }, { "idle_subtle" } }
+    local CHEER = { "cheer1", "cheer2", "Cheer1" }
+    local ORD = { "first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth", "tenth", "eleventh", "twelfth" }
 
     local function Combo(n) return n.tbl .. "/" .. n.man .. "/" .. n.tint end
-    local function Describe(n) return string.format("the %s in %s, at the table %s", n.man == 1 and "man" or "woman", LC.SpyTints[n.tint][1], LC.SpyTables[n.tbl]) end
+    local function Describe(n)
+        local where = n.line and string.format("%s in the line", ORD[n.line] or tostring(n.line)) or ("at the table " .. LC.SpyTables[n.tbl])
+        return string.format("the %s in %s, %s", n.man == 1 and "man" or "woman", LC.SpyTints[n.tint][1], where)
+    end
     LC.SpyDescribe = Describe
+    local function Gender(n) return n.man == 1 and "male" or "female" end
+    -- The head turned (degrees, the model's head_yaw), when the model has it.
+    local function Head(n, yaw)
+        n.head = yaw
+        if IsValid(n.e) and n.e.SetPoseParameter then n.e:SetPoseParameter("head_yaw", yaw) end
+    end
+    -- The right arm up to the brow (amount 0 to 1: 1 a smart salute, a half a limp one), or down (0).
+    -- (the core's bone rules: on the arms yaw raises it forward, minus up; pitch out to the side, minus for
+    -- the right arm; the forearm bends at the elbow on yaw)
+    local function Salute(n, amount)
+        n.salute = amount
+        local e = n.e
+        if not IsValid(e) or not e.ManipulateBoneAngles or not e.LookupBone then return end
+        local up, fore = e:LookupBone("ValveBiped.Bip01_R_UpperArm"), e:LookupBone("ValveBiped.Bip01_R_Forearm")
+        if up then e:ManipulateBoneAngles(up, Angle(-35 * amount, -75 * amount, 0)) end
+        if fore then e:ManipulateBoneAngles(fore, Angle(0, -115 * amount, 0)) end
+    end
+    local function Rifle(g, n, on)
+        if on and not IsValid(n.rifle) and LC.BattleLineHolding then n.rifle = LC.BattleLineHolding(g, n.e) end
+        if not on and IsValid(n.rifle) then n.rifle:Remove() n.rifle = nil end
+    end
     local function Look(n)
         if not IsValid(n.e) then return end
         n.e:SetModel((n.man == 1 and MEN or WOMEN)[n.seat])
@@ -441,11 +495,42 @@ do
         if n.yaw then n.e:SetAngles(Angle(0, n.yaw, 0)) end
         if n.e.SetNoDraw then n.e:SetNoDraw(false) end
         Pose(n.e, IDLE, ACT_IDLE)
+        Head(n, 0)
+        Salute(n, 0)
     end
-    -- A fresh canteen: everyone's sex and colour shuffled, and a new spy whose table, sex and
-    -- colour together belong to nobody else.
+    -- One of the dream's recordings for a diner (man or woman), or nil.
+    local function Voice(cue) local snd = LC.PropagandaVoice(cue) return snd end
+    local function Speak(n, path, lvl, pitch)
+        if path and IsValid(n.e) then Snd(n.e, path, lvl or 70, pitch or 100) n.spoke = (n.spoke or 0) + 1 end
+    end
+
+    -- Where everyone stands for the round.
+    local function Arrange(g)
+        local kind = g.kind
+        for i, n in ipairs(g.npcs) do
+            Rifle(g, n, false)
+            n.line = nil
+            if kind == "squad" then
+                n.line = i
+                n.pos = Vector(g.squadX, g.squadY0 + (i - 1) * g.squadGap, g.top)
+                n.yaw = 0
+            else
+                n.pos = n.seatPos
+                -- the canteen: facing their table; the salute: facing her portrait, at the far end
+                local to = kind == "salute" and g.portrait or n.tablePos
+                n.yaw = math.deg(math.atan2(to.y - n.seatPos.y, to.x - n.seatPos.x))
+            end
+            Look(n)
+            if kind == "squad" then Rifle(g, n, true) end
+        end
+        for _, e in ipairs(g.rebels or {}) do if IsValid(e) and e.SetNoDraw then e:SetNoDraw(kind ~= "squad") end end
+        if IsValid(g.spot) and g.spot.Fire then g.spot:Fire(kind == "squad" and "TurnOn" or "TurnOff") end
+    end
+
+    -- A fresh round: everyone's sex and colour shuffled, and a new spy whose table, sex and colour
+    -- together belong to nobody else.
     local function NewRound(g)
-        for _, n in ipairs(g.npcs) do n.man, n.tint = math.random(2), math.random(#LC.SpyTints) Look(n) end
+        for _, n in ipairs(g.npcs) do n.man, n.tint = math.random(2), math.random(#LC.SpyTints) end
         local n = g.npcs[math.random(#g.npcs)]
         local taken = {}
         for _, o in ipairs(g.npcs) do if o ~= n then taken[Combo(o)] = true end end
@@ -453,33 +538,122 @@ do
             for man = 1, 2 do for tint = 1, #LC.SpyTints do
                 if not taken[n.tbl .. "/" .. man .. "/" .. tint] then n.man, n.tint = man, tint end
             end end
-            Look(n)
         end
         g.spyN = n
+        g.round = g.round + 1
+        g.kind = LC.SpyKinds[g.round] or "chat"
+        Arrange(g)
         local order = { "tbl", "man", "tint" }
         for i = #order, 2, -1 do local j = math.random(i) order[i], order[j] = order[j], order[i] end
-        g.round, g.phase, g.roundT0, g.clueOrder, g.clues = g.round + 1, "pick", CurTime(), order, {}
+        g.phase, g.roundT0, g.clueOrder, g.clues = "pick", CurTime(), order, {}
         g.at, g.dirty = CurTime() + LC.SpyRoundSecs, true
         g.glanceAt, g.glanceTil = CurTime() + LC.SpyGlanceFrom, nil
+        g.talkAt, g.chantAt, g.volley, g.fired = CurTime() + 1, CurTime() + 3, 0, nil
         for _, s in pairs(g.pl) do s.pick = nil end
-        for _, q in ipairs(Everyone(g)) do Notice(q, "info", string.format("Round %d of %d", g.round, LC.SpyRounds), "One of the diners is a rebel spy. Listen for the clues, and watch for whoever keeps glancing over their shoulder.", 6) end
+        local note = LC.SpyRoundNotes[g.kind]
+        for _, q in ipairs(Everyone(g)) do Notice(q, "info", string.format(note[1], g.round, LC.SpyRounds), note[2], 8) end
     end
     LC.SpyNewRound = NewRound
-    -- The spy's nerves: a glance over the shoulder (turned away for a moment, then back), every few seconds of a round.
+
+    -- The canteen: the spy's nerves, a look over the shoulder (the head turned right round and the body half
+    -- turned, for a moment), every few seconds; nobody else does it.
     function LC.SpyGlance(g, now)
         local n = g.spyN
         if not n or not IsValid(n.e) or not n.yaw then return end
         if g.glanceTil then
             if now >= g.glanceTil then
                 n.e:SetAngles(Angle(0, n.yaw, 0))
+                Head(n, 0)
                 g.glanceTil, g.glanceAt = nil, now + math.Rand(LC.SpyGlanceEvery[1], LC.SpyGlanceEvery[2])
             end
         elseif now >= (g.glanceAt or math.huge) then
             g.glanceTil = now + LC.SpyGlanceSecs
             g.glances = (g.glances or 0) + 1
-            n.e:SetAngles(Angle(0, n.yaw + (math.random(2) == 1 and 140 or -140), 0))
+            local side = math.random(2) == 1 and 1 or -1
+            n.e:SetAngles(Angle(0, n.yaw + side * 55, 0))
+            Head(n, side * 70)
         end
     end
+    -- The canteen: someone at a table says something to the one beside them, who turns to listen.
+    function LC.SpyTalk(g, now)
+        if now < (g.talkAt or 0) then return end
+        g.talkAt = now + math.Rand(1.2, 2.5)
+        local t = math.random(4)
+        local at = {}
+        for _, n in ipairs(g.npcs) do if n.tbl == t and not (n == g.spyN and g.glanceTil) then at[#at + 1] = n end end
+        if #at < 2 then return end
+        local who, to = at[1], at[2]
+        if math.random(2) == 1 then who, to = to, who end
+        for _, n in ipairs(at) do Pose(n.e, CHAT[math.random(#CHAT)], ACT_IDLE) end
+        -- heads turned to each other
+        local function Toward(a, b)
+            local want = math.deg(math.atan2(b.pos.y - a.pos.y, b.pos.x - a.pos.x))
+            Head(a, math.Clamp(math.NormalizeAngle and math.NormalizeAngle(want - a.yaw) or 0, -60, 60))
+        end
+        Toward(who, to) Toward(to, who)
+        if who == g.spyN then
+            Speak(who, Voice("spy_whisper_" .. Gender(who)), 58)
+        else
+            local ids = LC.SpySmallTalk or {}
+            local id = #ids > 0 and ids[math.random(#ids)] or nil
+            local clip = id and LC.AdviceClip and LC.AdviceClip(id, Gender(who))
+            Speak(who, clip or string.format("vo/npc/%s01/question%02d.wav", Gender(who), math.random(1, 20)), 66)
+        end
+        g.talks = (g.talks or 0) + 1
+    end
+    -- The salute: a cheer in unison every few seconds, arms up; the spy a beat late, half up, flat.
+    function LC.SpyChant(g, now)
+        if g.spyLateAt and now >= g.spyLateAt then
+            g.spyLateAt = nil
+            local n = g.spyN
+            if n then Salute(n, 0.45) Speak(n, Voice("spy_flat_" .. Gender(n)), 66) end
+        end
+        if now < (g.chantAt or math.huge) then return end
+        g.chantAt = now + LC.SpyChantEvery
+        local male, female = Voice("spy_chant_male"), Voice("spy_chant_female")
+        for _, n in ipairs(g.npcs) do
+            if n ~= g.spyN then
+                Salute(n, 1)
+                Pose(n.e, CHEER, ACT_IDLE)
+                Speak(n, (n.man == 1 and male or female) or string.format("vo/npc/%s01/yeah02.wav", Gender(n)), 72)
+            else
+                Salute(n, 0.15)
+            end
+        end
+        g.spyLateAt = now + LC.SpyChantLate
+        g.chants = (g.chants or 0) + 1
+        if g.chants == 1 then Narrate(g, "The canteen", "Glory to the Administrator! Our city, our mother!") end
+    end
+    -- The firing squad: "Ready... aim... fire!", and every rifle but the spy's fires once.
+    function LC.SpyVolley(g, now)
+        local i = (g.volley or 0) + 1
+        local at = LC.SpyVolleyAt[i]
+        if not at then return end
+        local t = now - g.roundT0
+        if t >= at - 3 and not g.saidReady then g.saidReady = true SayAs(g, "spy_ready") end
+        if t >= at - 1.5 and not g.saidAim then g.saidAim = true SayAs(g, "spy_aim") end
+        if t < at then return end
+        g.volley, g.saidReady, g.saidAim = i, nil, nil
+        SayAs(g, "spy_fire")
+        local targets = {}
+        for _, e in ipairs(g.rebels or {}) do if IsValid(e) then targets[#targets + 1] = e end end
+        g.fired = {}
+        for k, n in ipairs(g.npcs) do
+            if n ~= g.spyN and IsValid(n.e) then
+                g.fired[n] = true
+                Snd(n.e, "weapons/357/357_fire2.wav", 80, math.random(95, 105))
+                local to = targets[(k - 1) % math.max(1, #targets) + 1]
+                if to and LC.BattleLineTracer then LC.BattleLineTracer(n.e:GetPos() + Vector(30, 0, 52), to:GetPos() + Vector(0, 0, 50)) end
+            end
+        end
+        -- the rebels drop, and the next ones are led to the wall
+        for _, e in ipairs(targets) do if e.SetNoDraw then e:SetNoDraw(true) end end
+        timer.Simple(2.5, function()
+            if not g or g.stopped or g.kind ~= "squad" then return end
+            for _, e in ipairs(g.rebels or {}) do if IsValid(e) and e.SetNoDraw then e:SetNoDraw(false) end end
+        end)
+    end
+
     local function Clue(g)
         local n = g.spyN
         local what = n and g.clueOrder[#g.clues + 1]
@@ -519,16 +693,43 @@ do
             elseif not n then Offend(g, p, "Reported nobody", "A good citizen always has someone to report.") end
         end
         -- unmasked: the spy swells to a giant, glows red and floats off into the sky
+        Rifle(g, spy, false)
+        Salute(spy, 0)
         Redden(spy.e, 6)
         g.villains = { spy.e }
         if IsValid(spy.e) then Snd(spy.e, "vo/npc/male01/no02.wav", 90, 60) end
         timer.Simple(LC.SpyReveal - 0.5, function() if g and not g.stopped and IsValid(spy.e) and spy.e.SetNoDraw then spy.e:SetNoDraw(true) end end)
     end
 
+    -- E on a diner: the first one your line of sight passes through (within reach), as a press of E would.
+    function LC.SpyAimed(g, p)
+        local eye = p.GetShootPos and p:GetShootPos() or (p:GetPos() + Vector(0, 0, 64))
+        local aim = p.GetAimVector and p:GetAimVector()
+        local best, bestT
+        for i, n in ipairs(g.npcs) do
+            if IsValid(n.e) and not (n.e.GetNoDraw and n.e:GetNoDraw()) then
+                for _, h in ipairs({ 20, 45, 70 }) do -- (their body, feet to head)
+                    local v = (n.pos + Vector(0, 0, h)) - eye
+                    local t = aim and v:Dot(aim) or v:Length()
+                    local off = aim and (v - aim * t):Length() or 0
+                    if t > 0 and t <= LC.SpyPickReach and off <= LC.SpyPickRadius and (not bestT or t < bestT) then best, bestT = i, t end
+                end
+            end
+        end
+        return best
+    end
+    local function Used(s, p)
+        local d = p.KeyDown ~= nil and IN_USE ~= nil and p:KeyDown(IN_USE) == true
+        local was = s.useWas
+        s.useWas = d
+        return d and not was
+    end
+
     function def.build(g, dream)
         local x0, x1, top = Hall(g, dream, 2, Color(95, 95, 85))
         local c = dream.pos
         local half = (x1 - x0) / 2
+        g.top = top
         local spots = { { c.x + half * 0.45, c.y + 200 }, { c.x + half * 0.45, c.y - 200 }, { c.x - half * 0.2, c.y - 200 }, { c.x - half * 0.2, c.y + 200 } }
         g.npcs = {}
         for t, xy in ipairs(spots) do
@@ -539,7 +740,34 @@ do
                 local at = Vector(xy[1] + off[1], xy[2] + off[2], top)
                 local yaw = math.deg(math.atan2(xy[2] - at.y, xy[1] - at.x))
                 local e = Actor(g, MEN[k], at, yaw, 1, ACT_IDLE or 1)
-                g.npcs[#g.npcs + 1] = { e = e, pos = at, tbl = t, seat = k, man = 1, tint = 1, yaw = yaw }
+                g.npcs[#g.npcs + 1] = { e = e, pos = at, seatPos = at, tablePos = Vector(xy[1], xy[2], top), tbl = t, seat = k, man = 1, tint = 1, yaw = yaw }
+            end
+        end
+        -- her portrait's end of the hall (the salute), and the wall the firing squad faces
+        g.portrait = Vector(x1 - 40, c.y, top + 120)
+        g.squadX, g.squadGap = x1 - 560, 56
+        g.squadY0 = c.y - g.squadGap * (#g.npcs - 1) / 2
+        g.rebels = {}
+        for i, dy in ipairs({ -90, 0, 90 }) do
+            local m = LC.PropagandaRebels[i] or LC.PropagandaRebels[1]
+            local e = Actor(g, m, Vector(x1 - 70, c.y + dy, top), 180, 1, ACT_IDLE or 1)
+            if IsValid(e) and e.SetNoDraw then e:SetNoDraw(true) end
+            g.rebels[#g.rebels + 1] = e
+        end
+        -- a spotlight on the wall, lit for the firing squad
+        if ents and ents.Create then
+            local l = ents.Create("light_dynamic")
+            if IsValid(l) then
+                l:SetPos(Vector(x1 - 260, c.y, top + 220))
+                l:SetAngles(Angle(35, 0, 0))
+                if l.SetKeyValue then
+                    l:SetKeyValue("_light", "255 245 215 900") l:SetKeyValue("distance", "520")
+                    l:SetKeyValue("_cone", "40") l:SetKeyValue("_inner_cone", "25") l:SetKeyValue("brightness", "6")
+                end
+                l:Spawn()
+                if l.Fire then l:Fire("TurnOff") end
+                g.ents[#g.ents + 1] = l
+                g.spot = l
             end
         end
         g.round, g.phase, g.at = 0, "wait", CurTime() + 8
@@ -561,17 +789,23 @@ do
         end
         if g.phase == "pick" then
             g.villains = nil
-            local at = LC.SpyClueAt[#g.clues + 1]
-            if at and now >= g.roundT0 + at then Clue(g) end
-            LC.SpyGlance(g, now)
+            if g.kind == "chat" then
+                local at = LC.SpyClueAt[#g.clues + 1]
+                if at and now >= g.roundT0 + at then Clue(g) end
+                LC.SpyGlance(g, now)
+                LC.SpyTalk(g, now)
+            elseif g.kind == "salute" then
+                LC.SpyChant(g, now)
+            elseif g.kind == "squad" then
+                LC.SpyVolley(g, now)
+            end
             for _, p in ipairs(players) do
                 local s = g.pl[p]
-                if Ducked(s, p) then
-                    local pos, best, bd = p:GetPos(), nil, 80
-                    for i, n in ipairs(g.npcs) do local d = Dist2(pos, n.pos) if d < bd then best, bd = i, d end end
+                if Used(s, p) then
+                    local best = LC.SpyAimed(g, p)
                     if best and best ~= s.pick then
                         s.pick, g.dirty = best, true
-                        Notice(p, "info", "Your pick", "You'll report " .. Describe(g.npcs[best]) .. ". Nobody else knows. Crouch beside someone else to change your mind.", 4)
+                        Notice(p, "info", "Your pick", "You'll report " .. Describe(g.npcs[best]) .. ". Nobody else knows. Press E on someone else to change your mind.", 4)
                     end
                 end
             end
@@ -598,11 +832,12 @@ do
         local big, notes = nil, g.clues
         local left = math.max(0, math.ceil((g.at or 0) - CurTime()))
         if g.phase == "pick" then
-            big = s.pick and string.format("Your pick: %s (%d seconds to change your mind)", Describe(g.npcs[s.pick]), left) or string.format("Crouch beside the one you suspect: %d seconds left.", left)
+            big = s.pick and string.format("Your pick: %s (%d seconds to change your mind)", Describe(g.npcs[s.pick]), left) or string.format("Press E on the one you suspect: %d seconds left.", left)
         elseif g.phase == "reveal" and g.spyN then
             big, notes = "The spy was " .. Describe(g.spyN) .. "!", g.results
-        elseif g.phase == "wait" then big = "Listen. The first round is about to begin." end
-        return { glows = glows, notes = notes, big = big, tone = g.phase == "reveal" and "warn" or "love", villains = Villains(g), signs = g.signs,
+        elseif g.phase == "wait" then big = "Watch and listen. The first round is about to begin." end
+        return { glows = glows, notes = notes, big = big, tone = g.phase == "reveal" and "warn" or "love", villains = Villains(g),
+            signs = g.kind ~= "squad" and g.signs or nil,
             meterName = string.format("Round %d of %d   |   Spies found: %d (you need %d)", math.max(1, g.round), LC.SpyRounds, s.score or 0, def.need) }
     end
 end

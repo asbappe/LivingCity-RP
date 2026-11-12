@@ -111,7 +111,25 @@ LC.StreetLines = {
     say_saw_beating = { "Don't look. Just keep walking.", "Someone beaten in front of them", "[under their breath, tense] Don't look. Just keep walking." },
     say_saw_death = { "Oh God. Oh God, no.", "Someone killed in front of them", "[horrified, gasping] Oh God. Oh God, no." },
     say_grief = { "They took my friend. Just dragged them off.", "A friend arrested or dead", "[numb, grieving] They took my friend. [pause] Just dragged them off." },
+    -- Small talk (the owner, 12 November: "extremely random and casual"): two of the city's people chatting,
+    -- and the diners in the Careless Talk dream (LC.SpySmallTalk)
+    say_small_shoes = { "My shoes squeak now. Both of them. Since Tuesday.", "Small talk", "[casual, mildly annoyed] My shoes squeak now. Both of them. [pause] Since Tuesday." },
+    say_small_soup = { "I had the strangest dream about soup last night.", "Small talk", "[casual, puzzled] I had the strangest dream about soup last night." },
+    say_small_pigeon = { "There's a pigeon on my windowsill. I'm pretty sure it hates me.", "Small talk", "[casual, wry] There's a pigeon on my windowsill. I'm pretty sure it hates me." },
+    say_small_water = { "The water tastes different this week. Not worse. Just different.", "Small talk", "[casual, thoughtful] The water tastes different this week. [pause] Not worse. Just different." },
+    say_small_neighbor = { "My neighbor hums through the wall. Same three notes, every night.", "Small talk", "[casual, tired] My neighbor hums through the wall. Same three notes, every night." },
+    say_small_tiles = { "I counted the tiles in my hallway. Two hundred and twelve.", "Small talk", "[casual, oddly proud] I counted the tiles in my hallway. Two hundred and twelve." },
+    say_small_rain = { "Looks like rain again. It always looks like rain.", "Small talk", "[casual, resigned] Looks like rain again. [pause] It always looks like rain." },
+    say_small_crust = { "If you ever find bread with a crust that crunches, tell me.", "Small talk", "[casual, wistful] If you ever find bread with a crust that crunches, tell me." },
+    say_small_stairs = { "Lift's broken again. Eight floors. My knees hate me.", "Small talk", "[casual, grumbling] Lift's broken again. Eight floors. My knees hate me." },
+    say_small_tune = { "I can't get that tune from the speakers out of my head.", "Small talk", "[casual, half laughing] I can't get that tune from the speakers out of my head." },
+    say_small_button = { "I lost a button off my coat. I keep looking down for it.", "Small talk", "[casual, absent-minded] I lost a button off my coat. I keep looking down for it." },
+    say_small_cat = { "Did you ever have a cat? I think I had a cat once.", "Small talk", "[casual, dreamy] Did you ever have a cat? [pause] I think I had a cat once." },
 }
+
+LC.SpySmallTalk = {}
+for id in pairs(LC.StreetLines) do if string.sub(id, 1, 10) == "say_small_" then LC.SpySmallTalk[#LC.SpySmallTalk + 1] = id end end
+table.sort(LC.SpySmallTalk)
 
 -- A unit's lines: one voice. Every id starts unit_. A fourth entry names Half-Life 2's own Civil Protection
 -- clips that say the same words (sound/npc/metropolice/vo/<name>.wav): with no recording of yours, the first
