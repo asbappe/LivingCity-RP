@@ -1734,3 +1734,5 @@ Type them in the server console on the host panel, or in your own game console (
 ## 12 November: named citizens recorded
 - [ ] **Named citizens speak:** with the recordings in `sound/livingcity/citizens/` (after FastDL sync and a map change), talk to a few named citizens; `lc_voice_missing` lists no citizen lines. The nine reworded lines (for example "Sorry, but no.", "Getting by. That's all I can do.") show the same words that are heard.
   Notes:
+- [ ] **Citizens speak without the director (12 November):** with the recordings up, talk to named citizens (E): hello by how they feel, Chat says how they are, give food (thanks), walk away (goodbye). Say "hello" and "how are you" in chat facing one. Watch two citizens chat in the street, a unit beating someone with citizens near, and wait near citizens for one to walk up (hungry, a warning, a gift). Too chatty or too quiet? `lc_voice_approach` sets the walk-ups, `lc_voice_cues 0` turns it all off.
+  Notes:

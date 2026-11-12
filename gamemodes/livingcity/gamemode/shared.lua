@@ -238,6 +238,7 @@ LC_MODULES = {
         "sv_livingcity_chronicle", -- (what happens is kept with what led to it: told as rumours, on joining and in F1; data/livingcity/chronicle/)
         "sv_livingcity_brain", -- (the director and free talk: a hosted model picks from what the game can do, and speaks for named people)
         "sv_livingcity_lines", -- (what named people say, recorded: a small bank for free talk, the director and the minds' breaks)
+        "sv_livingcity_voicecues", -- (named citizens say those recorded lines at the moments that fit, without the director)
         "sv_livingcity_voice", -- (the city's own Administrator's decrees spoken in her voice; off until a voice key and id are set)
         "sv_livingcity_npcvices", -- (citizens fond of a drink and a smoke light up or take out a bottle, where players can see)
     },

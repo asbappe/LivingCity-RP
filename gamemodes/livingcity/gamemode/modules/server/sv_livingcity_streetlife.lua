@@ -234,7 +234,8 @@ local COWER = { "ACT_COWER", "Fear_Reaction", "photo_react_startle" }
 local CRIES = { "help01", "runforyourlife01", "runforyourlife02", "runforyourlife03", "gethellout", "watchout", "uhoh", "no01", "no02" }
 local function Cry(npc, st)
     local path = "vo/npc/" .. (st.gender == "female" and "female01" or "male01") .. "/" .. CRIES[math.random(#CRIES)] .. ".wav"
-    if not (LC.OwnVoice and LC.OwnVoice(npc, st, path)) then npc:EmitSound(path, 80, math.random(96, 108)) end
+    if not (LC.OwnVoice and LC.OwnVoice(npc, st, path)) then npc:EmitSound(path, 80, math.random(96, 108))
+    elseif LC.Cue then LC.Cue(npc, st, { "say_warn_go", "say_saw_death" }, { lead = false }) end -- (sv_livingcity_voicecues.lua)
 end
 
 -- Off, away from where the shots came from (not just anywhere).

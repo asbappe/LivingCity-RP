@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version 3c278ed. Admin-only console messages and log lines are left out.
+Made from version 0c43810. Admin-only console messages and log lines are left out.
 
-11784 lines, from 316 files.
+11856 lines, from 317 files.
 
 ## Contents
 
@@ -302,7 +302,7 @@ Made from version 3c278ed. Admin-only console messages and log lines are left ou
 - [sv_livingcity_streetlife.lua](#svlivingcitystreetlifelua-svlivingcitystreetlifelua) (13)
 - [survival](#survival-svlivingcitysurvivallua) (71)
 - [Realistic or Relaxed survival, chosen per character](#realistic-or-relaxed-survival-chosen-per-character-svlivingcitysurvivalmodelua) (9)
-- [talking to people](#talking-to-people-svlivingcitytalklua) (42)
+- [talking to people](#talking-to-people-svlivingcitytalklua) (58)
 - [territory that spreads, and is pushed back](#territory-that-spreads-and-is-pushed-back-svlivingcityterritorylua) (37)
 - [territory grows along the path nodes](#territory-grows-along-the-path-nodes-svlivingcityterritorypathslua) (14)
 - [the trains](#the-trains-svlivingcitytrainslua) (9)
@@ -310,6 +310,7 @@ Made from version 3c278ed. Admin-only console messages and log lines are left ou
 - [powered vests ("suit power")](#powered-vests-suit-power-svlivingcityvestlua) (4)
 - [cigarettes, alcohol and stimulants (and how a night's dream leaves you)](#cigarettes-alcohol-and-stimulants-and-how-a-nights-dream-leaves-you-svlivingcityviceslua) (31)
 - [the Administrator's spoken decrees (the owner, 11 November: "Please build it but I](#the-administrators-spoken-decrees-the-owner-11-november-please-build-it-but-i-svlivingcityvoicelua) (23)
+- [named citizens say their recorded lines at the moments that fit, without the director](#named-citizens-say-their-recorded-lines-at-the-moments-that-fit-without-the-director-svlivingcityvoicecueslua) (56)
 - [vortigaunts](#vortigaunts-svlivingcityvortlua) (12)
 - [vortigaunt dream warfare (sv_livingcity_vortwar.lua)](#vortigaunt-dream-warfare-svlivingcityvortwarlua-svlivingcityvortwarlua) (25)
 - [things to do as a vortigaunt (and for the city's own)](#things-to-do-as-a-vortigaunt-and-for-the-citys-own-svlivingcityvortworklua) (51)
@@ -1001,7 +1002,7 @@ Made from version 3c278ed. Admin-only console messages and log lines are left ou
 - "To carry a body, look at it and choose F1 > Haul the body (Morticians just press E). Let go of it next to the incinerator and it goes in; attendants are paid for each one."  (text, line 136)
 - "The Resistance prints pamphlets (their quartermaster sells them). A member can hand one to you (F1 > a person > Hand them a Resistance pamphlet) or leave one lying about (F1 > Leave a Resistance pamphlet here). Press E on one you find to read it. It is contraband, and a unit that sees one handed over or left will come for whoever did it."  (text, line 137)
 - "A Cremator walks the streets. A body left lying for a minute or two it burns where it lies, so search or haul it first. It also burns anyone the units would shoot, and anyone who attacks it. Fire does nothing to it."  (text, line 138)
-- "Press E on a citizen to talk: hear the news, give them something (food, a drink or a smoke, medicine, a pamphlet, even a gun to a sympathizer), pick their pocket (uses Guile), or inform on them. They remember how you treat them."  (text, line 139)
+- "Press E on a citizen to talk: hear the news, give them something (food, a drink or a smoke, medicine, a pamphlet, even a gun to a sympathizer), pick their pocket (uses Guile), or inform on them. They remember how you treat them. Named citizens speak to you out loud: say hello or ask how they are in chat while facing one, and some will walk up to you with a warning, a request or a small gift."  (text, line 139)
 - "Lost, hungry or thirsty? Chat with a citizen: they may point you the way, and one who likes you will walk you there."  (text, line 140)
 - "Questions about the rules? The Citizen Information clerk answers them (the official version), and marks the way to Civil Intake, Housing, Labor, the Commissary and the dispenser. Your orientation pamphlet (in your pockets) says the same."  (text, line 141)
 - "Realistic survival: you can catch a cold in the rain, a stomach bug from raw meat or dirty water, and a fever from a cold left alone (no running, no fists, and at midday it knocks you down into a fever dream that breaks it). Union medicine from the Commissary cures a cold or a fever."  (text, line 142)
@@ -4923,93 +4924,93 @@ Made from version 3c278ed. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: choose citizen task
 
-- "curfew or lockdown: gone home"  (text, line 1829)
+- "curfew or lockdown: gone home"  (text, line 1832)
 
 > Note for you (not shown in game): more people out than the hour calls for: home (sv_livingcity_rhythm.lua)
 
-- "the time of day: fewer people out at this hour"  (text, line 1834)
+- "the time of day: fewer people out at this hour"  (text, line 1837)
 
 > Note for you (not shown in game): how they feel bends it all (sv_livingcity_mindsact.lua; nil for the unnamed, or with lc_minds_act 0)
 
-- "worn down: gone home"  (text, line 1845)
+- "worn down: gone home"  (text, line 1848)
 
 > Note for you (not shown in game): part of: cop provoked
 
-- "[Civil Protection] The Civil Protection unit shoves you back. Move along."  (chat message, line 2232)
-- "[Civil Protection] A crack across the ribs with the stick. Last warning."  (chat message, line 2233)
-- "[Civil Protection] You were warned. Obstructing Civil Protection."  (chat message, line 2237)
-- "Obstructing Civil Protection"  (text, line 2238)
+- "[Civil Protection] The Civil Protection unit shoves you back. Move along."  (chat message, line 2236)
+- "[Civil Protection] A crack across the ribs with the stick. Last warning."  (chat message, line 2237)
+- "[Civil Protection] You were warned. Obstructing Civil Protection."  (chat message, line 2241)
+- "Obstructing Civil Protection"  (text, line 2242)
 
 > Note for you (not shown in game): A city scanner that has a fugitive in sight (wanted, or a hunted rebel who isn't passing as a citizen) tells the units where they are: a flash, a report to every unit on duty, and the nearby units come after them.
 
-- "a wanted citizen"  (text, line 2395)
+- "a wanted citizen"  (text, line 2399)
 
 > Note for you (not shown in game): part of: scanner tip off
 
-- "A scanner's flash. You've been photographed, and Civil Protection has the picture."  (chat message, line 2400)
-- "[CP net] Scanner report: %s%s."  (message, line 2404)
+- "A scanner's flash. You've been photographed, and Civil Protection has the picture."  (chat message, line 2404)
+- "[CP net] Scanner report: %s%s."  (message, line 2408)
 
 > Note for you (not shown in game): part of: start
 
-- "This map has no AI nodes or navmesh and nothing placed yet. Lay some path nodes or points with the Miscount Editor, then start again."  (chat message, line 2635)
-- "Started. Map nav: %d spots (%s). Your layout: %d points, %d path nodes."  (message, line 2642)
+- "This map has no AI nodes or navmesh and nothing placed yet. Lay some path nodes or points with the Miscount Editor, then start again."  (chat message, line 2639)
+- "Started. Map nav: %d spots (%s). Your layout: %d points, %d path nodes."  (message, line 2646)
 
 > Note for you (not shown in game): part of: stop
 
-- "Stopped and removed all Miscount NPCs."  (chat message, line 2659)
+- "Stopped and removed all Miscount NPCs."  (chat message, line 2663)
 
 > Note for you (not shown in game): part of: spawn test walker
 
-- "your path network (%d hops)"  (message, line 2688)
-- "the map's own navigation"  (text, line 2688)
-- "Test walker heading out using {how}."  (chat message, line 2689)
+- "your path network (%d hops)"  (message, line 2692)
+- "the map's own navigation"  (text, line 2692)
+- "Test walker heading out using {how}."  (chat message, line 2693)
 
 > Note for you (not shown in game): part of: test arrived
 
-- "Test walker arrived in %.1f seconds. This route works."  (message, line 2694)
+- "Test walker arrived in %.1f seconds. This route works."  (message, line 2698)
 
 > Note for you (not shown in game): part of: test stuck
 
-- "Test walker stuck at %s on hop %d/%d"  (message, line 2701)
-- "Test walker got stuck after %.1f seconds, on hop %d of %d (marked red)."  (message, line 2702)
-- "Add a path node here and link it toward the destination, or check for a door it can't open."  (text, line 2705)
+- "Test walker stuck at %s on hop %d/%d"  (message, line 2705)
+- "Test walker got stuck after %.1f seconds, on hop %d of %d (marked red)."  (message, line 2706)
+- "Add a path node here and link it toward the destination, or check for a door it can't open."  (text, line 2709)
 
 > Note for you (not shown in game): guarding a supply drop (sv_livingcity_convoy.lua): he answers, without leaving his post
 
-- "[Civil Protection] "Supply point secure. Hold the perimeter until the load moves on.""  (chat message, line 2929)
+- "[Civil Protection] "Supply point secure. Hold the perimeter until the load moves on.""  (chat message, line 2934)
 
 > Note for you (not shown in game): pressing E on something
 
-- "[Civil Protection] "{Pick}""  (chat message, line 2933)
+- "[Civil Protection] "{Pick}""  (chat message, line 2938)
 
 > Note for you (not shown in game): a Civil Protection player stops a citizen: they freeze and apologise
 
-- "[Civil Protection] Stopped. With the Arrest Baton out: R to search them, right click to detain."  (chat message, line 2950)
+- "[Civil Protection] Stopped. With the Arrest Baton out: R to search them, right click to detain."  (chat message, line 2956)
 
 > Note for you (not shown in game): a crime, and every cop comes for you (a scanner is city property, not a person) (one report per few seconds for a scanner: every bullet of a burst isn't a new offence)
 
-- "Damaging city property"  (text, line 3002)
-- "Assaulting Civil Protection"  (text, line 3005)
-- "Assaulting a citizen"  (text, line 3005)
+- "Damaging city property"  (text, line 3009)
+- "Assaulting Civil Protection"  (text, line 3012)
+- "Assaulting a citizen"  (text, line 3012)
 
 > Note for you (not shown in game): Console commands
 
-- "Civil Protection has stood down."  (chat message, line 3041)
+- "Civil Protection has stood down."  (chat message, line 3048)
 
 > Note for you (not shown in game): the console command lc_addpoint
 
-- "Kinds: idle, sit, sitchair, lean, queue, patrol, checkpoint, spawn, cell, release"  (chat message, line 3048)
-- "Added %s point (%d total on this map)."  (message, line 3051)
+- "Kinds: idle, sit, sitchair, lean, queue, patrol, checkpoint, spawn, cell, release"  (chat message, line 3055)
+- "Added %s point (%d total on this map)."  (message, line 3058)
 
 > Note for you (not shown in game): the console command lc_removepoint
 
-- "Removed nearest {kind} point."  (text, line 3057)
-- "No point within 150 Civil Protection units."  (chat message, line 3057)
+- "Removed nearest {kind} point."  (text, line 3064)
+- "No point within 150 Civil Protection units."  (chat message, line 3064)
 
 > Note for you (not shown in game): the console command lc_status
 
-- "citizens %d/%d, cops %d/%d, soldiers %d/%d, scanners %d/%d, zombies %d/%d, rebels %d/%d"  (message, line 3068)
-- "map nav %d (%s) \| points %d \| path nodes %d, links %d, unlinked %d \| zones %d \| lines %d \| patrol beats %d"  (message, line 3072)
+- "citizens %d/%d, cops %d/%d, soldiers %d/%d, scanners %d/%d, zombies %d/%d, rebels %d/%d"  (message, line 3075)
+- "map nav %d (%s) \| points %d \| path nodes %d, links %d, unlinked %d \| zones %d \| lines %d \| patrol beats %d"  (message, line 3079)
 
 ## the actions menu (server side) (sv_livingcity_actions.lua)
 
@@ -15598,8 +15599,8 @@ Made from version 3c278ed. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: describe
 
-- "craving a drink or a smoke"  (text, line 447)
-- "mood %+.0f, stress %.0f: %s"  (message, line 448)
+- "craving a drink or a smoke"  (text, line 448)
+- "mood %+.0f, stress %.0f: %s"  (message, line 449)
 
 ## quests (sv_livingcity_quests.lua)
 
@@ -20836,7 +20837,7 @@ Made from version 3c278ed. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: cower
 
-- "head down"  (text, line 272)
+- "head down"  (text, line 273)
 
 ## survival (sv_livingcity_survival.lua)
 
@@ -21040,81 +21041,103 @@ Made from version 3c278ed. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): Who you are to them: this character of yours, not just your account.
 
-- "\|{GetNW2String}"  (text, line 56)
+- "\|{GetNW2String}"  (text, line 66)
 
 > Note for you (not shown in game): part of: mood word
 
-- "glad to see you"  (text, line 87)
-- "terrified of you"  (text, line 89)
-- "wary of you"  (text, line 90)
+- "glad to see you"  (text, line 97)
+- "terrified of you"  (text, line 99)
+- "wary of you"  (text, line 100)
 
 > Note for you (not shown in game): A sympathizer who likes you: where the Resistance gathers.
 
-- "out past the checkpoints"  (text, line 135)
+- "out past the checkpoints"  (text, line 145)
 
 > Note for you (not shown in game): part of: safe house hint
 
-- "If you're looking for people who think like you, they're {where}. Ask for the quartermaster."  (text, line 136)
-- "'Another day. Keep your head down and it's another day.'"  (text, line 140)
-- "'The water tastes of something again.'"  (text, line 140)
-- "'They moved the line again this morning. Nobody knows why.'"  (text, line 141)
-- "'I don't sleep much. Nobody does.'"  (text, line 141)
-- "'Have you seen my neighbour? Since Tuesday, nobody has.'"  (text, line 142)
-- "'The trains are always full coming in. Never going out.'"  (text, line 142)
-- "'Don't stand under the scanners. They don't like it.'"  (text, line 143)
-- "'They say the rations will be bigger next month. They always say that.'"  (text, line 143)
-- "They won't look at you."  (text, line 145)
-- "They step back, hands up: 'I don't want any trouble.'"  (text, line 145)
-- "'Please. Just leave me alone.'"  (text, line 145)
+- "If you're looking for people who think like you, they're {where}. Ask for the quartermaster."  (text, line 146)
+- "'Another day. Keep your head down and it's another day.'"  (text, line 150)
+- "'The water tastes of something again.'"  (text, line 150)
+- "'They moved the line again this morning. Nobody knows why.'"  (text, line 151)
+- "'I don't sleep much. Nobody does.'"  (text, line 151)
+- "'Have you seen my neighbour? Since Tuesday, nobody has.'"  (text, line 152)
+- "'The trains are always full coming in. Never going out.'"  (text, line 152)
+- "'Don't stand under the scanners. They don't like it.'"  (text, line 153)
+- "'They say the rations will be bigger next month. They always say that.'"  (text, line 153)
+- "They won't look at you."  (text, line 155)
+- "They step back, hands up: 'I don't want any trouble.'"  (text, line 155)
+- "'Please. Just leave me alone.'"  (text, line 155)
 
 > Note for you (not shown in game): part of: doing
 
-- "waiting in the ration line"  (text, line 159)
+- "waiting in the ration line"  (text, line 169)
+
+> Note for you (not shown in game): What you can do
+
+- "They step back. '{w}'"  (text, line 249)
+
+> Note for you (not shown in game): (a named citizen with the recorded voice: a line of the bank first, then what they tell you: sv_livingcity_voicecues.lua)
+
+- "'{w}' '{line}'"  (text, line 266)
 
 > Note for you (not shown in game): (no sympathy for it any more: the owner, 9 November, sympathy is the way into the Resistance, and a kindness to a stranger isn't that)
 
-- "They take the {name} with both hands. 'I won't forget this. I mean it.'"  (name, line 260)
-- "They take the {name} and hide it in their coat. 'Thank you.'"  (name, line 261)
-- "A drink or a smoke"  (text, line 285)
+- "They take the {name} with both hands. 'I won't forget this. I mean it.'"  (text, line 278)
+- "They take the {name} with both hands."  (text, line 278)
+- "They take the {name} and hide it in their coat. 'Thank you.'"  (text, line 279)
+- "They take the {name} and hide it in their coat."  (text, line 279)
+- "A drink or a smoke"  (text, line 303)
 
 > Note for you (not shown in game): part of: taken
 
-- "You've nothing like that to give."  (name, line 330)
+- "You've nothing like that to give."  (name, line 348)
 
 > Note for you (not shown in game): part of: give
 
-- "They shake their head. 'I don't, thanks. Keep it.'"  (text, line 337)
-- "They take the {name} and light it there and then. 'God, I needed that.'"  (text, line 338)
-- "They take a long pull of the {name}. 'You're a good sort, you know that?'"  (text, line 339)
-- "They turn the {name} over in their hands. 'Medicine. You don't see that often. Thank you.'"  (text, line 343)
-- "They back away from you. 'I don't want any trouble, officer.'"  (text, line 345)
-- "They go white. 'Are you out of your mind? Put that away before a unit sees!'"  (text, line 348)
-- "They glance about, then slip the {name} under their coat. 'It'll go where it's needed.'"  (text, line 350)
-- "They push it back at you. 'I never saw this. I never saw you.'"  (text, line 356)
-- "They read the first lines and fold it small. 'Somebody has to say it.'"  (text, line 358)
-- "They take the {name} without looking at it. 'I know what it says.'"  (text, line 360)
-- "They take the {name}. 'Thank you, citizen.'"  (text, line 361)
-- "They don't want that."  (text, line 363)
+- "They shake their head. 'I don't, thanks. Keep it.'"  (text, line 355)
+- "They shake their head."  (text, line 355)
+- "They take the {name} and light it there and then."  (text, line 356)
+- "They take a long pull of the {name}."  (text, line 356)
+- "They take the {name} and light it there and then. 'God, I needed that.'"  (text, line 357)
+- "They take a long pull of the {name}. 'You're a good sort, you know that?'"  (text, line 358)
+- "They turn the {name} over in their hands. 'Medicine. You don't see that often. Thank you.'"  (text, line 362)
+- "They turn the {name} over in their hands."  (text, line 362)
+- "They back away from you. 'I don't want any trouble, officer.'"  (text, line 364)
+- "They back away from you."  (text, line 364)
+- "They go white. 'Are you out of your mind? Put that away before a unit sees!'"  (text, line 367)
+- "They go white."  (text, line 367)
+- "They glance about, then slip the {name} under their coat. 'It'll go where it's needed.'"  (text, line 369)
+- "They glance about, then slip the {name} under their coat."  (text, line 369)
+- "They push it back at you. 'I never saw this. I never saw you.'"  (text, line 375)
+- "They push it back at you."  (text, line 375)
+- "They read the first lines and fold it small. 'Somebody has to say it.'"  (text, line 377)
+- "They read the first lines and fold it small."  (text, line 377)
+- "They take the {name} without looking at it. 'I know what it says.'"  (text, line 379)
+- "They take the {name} without looking at it."  (text, line 379)
+- "They take the {name}. 'Thank you, citizen.'"  (text, line 380)
+- "They take the {name}."  (text, line 380)
+- "They don't want that."  (text, line 382)
 
 > Note for you (not shown in game): part of: pick pocket
 
-- "Their pockets are already empty."  (text, line 381)
-- "Your fingers come out with {item}. They didn't feel a thing."  (text, line 389)
-- "%d credits, and they didn't feel a thing."  (message, line 394)
+- "Their pockets are already empty."  (text, line 400)
+- "Your fingers come out with {item}. They didn't feel a thing."  (text, line 408)
+- "%d credits, and they didn't feel a thing."  (message, line 413)
 
 > Note for you (not shown in game): caught
 
-- "[Civil Protection] A Civil Protection unit saw that."  (chat message, line 401)
+- "[Civil Protection] A Civil Protection unit saw that."  (chat message, line 420)
 
 > Note for you (not shown in game): part of: pick pocket
 
-- "They feel your hand and spin round. 'Thief! Get away from me!'"  (text, line 407)
+- "They feel your hand and spin round. 'Thief! Get away from me!'"  (text, line 426)
+- "They feel your hand and spin round."  (text, line 426)
 
 > Note for you (not shown in game): part of: inform
 
-- "You reported someone a moment ago. Don't push your luck."  (text, line 411)
-- "You give their name to a Civil Protection unit. He writes it down. (+15 standing) They'll be picked up."  (text, line 425)
-- "You give their name to a Civil Protection unit. He checks it and looks at you instead. 'Waste of time.' (-5 standing)"  (text, line 429)
+- "You reported someone a moment ago. Don't push your luck."  (text, line 430)
+- "You give their name to a Civil Protection unit. He writes it down. (+15 standing) They'll be picked up."  (text, line 444)
+- "You give their name to a Civil Protection unit. He checks it and looks at you instead. 'Waste of time.' (-5 standing)"  (text, line 448)
 
 ## territory that spreads, and is pushed back (sv_livingcity_territory.lua)
 
@@ -21829,6 +21852,73 @@ Made from version 3c278ed. Admin-only console messages and log lines are left ou
 - "Saved on the server. Key: %s. Voice id: %s."  (message, line 189)
 - "not set"  (message, line 189)
 - "not set"  (message, line 189)
+
+## named citizens say their recorded lines at the moments that fit, without the director (sv_livingcity_voicecues.lua)
+
+`gamemodes/livingcity/gamemode/modules/server/sv_livingcity_voicecues.lua`
+
+
+> Note for you (not shown in game): part of: show
+
+- "says: "{words}""  (text, line 108)
+- "see you"  (text, line 335)
+- "see ya"  (text, line 335)
+- "take care"  (text, line 335)
+- "good night"  (text, line 335)
+- "gotta go"  (text, line 335)
+- "got to go"  (text, line 335)
+- "how are you"  (text, line 336)
+- "how're you"  (text, line 336)
+- "how you doing"  (text, line 336)
+- "how are you doing"  (text, line 336)
+- "you okay"  (text, line 336)
+- "you ok%f[%A]"  (text, line 336)
+- "how's it going"  (text, line 336)
+- "how are things"  (text, line 336)
+- "how have you been"  (text, line 336)
+- "you alright"  (text, line 336)
+- "you all right"  (text, line 336)
+- "shut up"  (text, line 338)
+- "kill you"  (text, line 339)
+- "hurt you"  (text, line 339)
+- "beat you"  (text, line 339)
+- "shoot you"  (text, line 339)
+- "i'll get you"  (text, line 339)
+- "watch yourself"  (text, line 339)
+- "you're dead"  (text, line 339)
+- "or else"  (text, line 339)
+- "break your"  (text, line 339)
+- "my bad"  (text, line 340)
+- "didn't mean"  (text, line 340)
+- "fight back"  (text, line 341)
+- "civil protection"  (text, line 342)
+- "the cops"  (text, line 342)
+- "down with"  (text, line 343)
+- "can't stand"  (text, line 343)
+- "sick of"  (text, line 343)
+- "love the"  (text, line 344)
+- "long live"  (text, line 344)
+- "knows best"  (text, line 344)
+- "thank the"  (text, line 344)
+- "help me"  (text, line 347)
+- "need help"  (text, line 347)
+- "can you help"  (text, line 347)
+- "could you help"  (text, line 347)
+- "help us"  (text, line 347)
+- "what happened"  (text, line 348)
+- "know anything"  (text, line 348)
+- "anything going on"  (text, line 348)
+- "will you"  (text, line 349)
+- "would you"  (text, line 349)
+- "can you"  (text, line 349)
+- "could you"  (text, line 349)
+- "do you want"  (text, line 349)
+- "come with"  (text, line 349)
+- "are you in"  (text, line 349)
+
+> Note for you (not shown in game): minds errand
+
+- "They press {item} into your hand."  (chat message, line 532)
 
 ## vortigaunts (sv_livingcity_vort.lua)
 

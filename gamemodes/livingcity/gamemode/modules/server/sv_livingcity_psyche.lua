@@ -161,6 +161,7 @@ end
 -- Something happened to them. who: the other person's id, if any.
 function Psy.Think(p, kind, now, who)
     local s = Psy.State(p)
+    if hook and hook.Run then hook.Run("LivingCityThought", p, kind, who) end -- (what they see, said out loud: sv_livingcity_voicecues.lua)
     local d = THOUGHTS[kind]
     local th = s.th
     for _, t in ipairs(th) do

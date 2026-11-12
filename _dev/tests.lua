@@ -12378,6 +12378,144 @@ LC.MindsActs.errands = {}
 for _, e in ipairs({ n, ply }) do if IsValid(e) then e:Remove() end end
 end
 LinesTests()
+function VoiceCuesTests()
+section("Named citizens say their recorded lines at the moments that fit, without the director (sv_livingcity_voicecues.lua)")
+local function Later(secs) _advance(secs) _runtimers() end
+local T0 = Vector(-43400, 31400, 0)
+local n, st = LC.SpawnCitizen(T0)
+st.leaveAt = nil n.sim = false st.state = "idle"
+if not n.lcProfile then LC.AttachProfile(n, st, LC.NewPerson("citizen")) end
+st.rebel = false -- (a sympathizer counts as disloyal, whatever their traits)
+local heard = {}
+local realEmit, realClip, realFeeling = n.EmitSound, LC.AdviceClip, LC.Feeling
+n.EmitSound = function(self, path) heard[#heard + 1] = path end
+LC.AdviceClip = function(id, g) return "livingcity/citizens/" .. id .. "_" .. (g or "male") .. "1.mp3" end
+_setcvar("lc_voice_cues", 1)
+LC.VoiceForce = "own"
+local w = LC.Cue(n, st, "say_yes", { lead = false })
+ok(w == "Yeah. All right." and heard[#heard] == "livingcity/citizens/say_yes_" .. (st.gender or "male") .. "1.mp3", "a named citizen with the recorded voice says the line: the recording plays, the words come back", tostring(w) .. " " .. tostring(heard[#heard]))
+ok(LC.Cue(n, st, "say_no", { lead = false }) == nil and LC.Cue(n, st, "say_no", { lead = false, force = true }) == "Sorry, but no.", "never two lines in a row from the same person, unless the moment calls for it")
+LC.VoiceForce = "hl2"
+n.lcCueAt = nil
+ok(LC.Cue(n, st, "say_yes", { lead = false }) == nil, "someone with Half-Life 2's voice: nothing where Half-Life 2's voice already plays")
+n.lcCueAt = nil
+local w2 = LC.Cue(n, st, "say_saw_death", { all = true, lead = false })
+ok(w2 ~= nil and w2 ~= "" and w2 ~= LC.StreetLines.say_saw_death[1], "where nothing played before, they say Half-Life 2's own line in its place", tostring(w2))
+n.lcCueAt = nil
+ok(LC.Cue(n, st, "say_tip_help", { all = true }) == nil, "and nothing where Half-Life 2 has nothing like it")
+LC.VoiceForce = "own"
+_setcvar("lc_voice_cues", 0)
+n.lcCueAt = nil
+ok(LC.Cue(n, st, "say_yes", { force = true }) == nil, "lc_voice_cues 0: none of it")
+_setcvar("lc_voice_cues", 1)
+-- who they are, and how they feel about you
+local m = LC.MindOf(n.lcProfile)
+local function SetTraits(t)
+    local all = { brave = 0, temper = 0, loyal = 0, social = 0, hope = 0, greed = 0, compassion = 0, suspicion = 0, resilience = 0, pride = 0, vice = 0 }
+    for k, v in pairs(t) do all[k] = v end
+    m.tr = all
+end
+SetTraits({})
+local ply = newPlayer("CueTalker", "citizen")
+ply:SetPos(T0 + Vector(60, 0, 0))
+local feel = 0
+LC.Feeling = function() return feel end
+ok(LC.CueGreeting(n, st, ply) == "say_greet_plain", "hello: plain to a stranger", LC.CueGreeting(n, st, ply))
+feel = 5 ok(LC.CueGreeting(n, st, ply) == "say_greet_warm" and LC.CueGoodbye(n, st, ply) == "say_bye_warm", "warm to someone they like, hello and goodbye")
+feel = -4 ok(LC.CueGreeting(n, st, ply) == "say_greet_guarded" and LC.CueGoodbye(n, st, ply) == "say_bye_cold", "wary of someone they fear")
+feel = -8 ok(LC.CueGreeting(n, st, ply) == "say_greet_cold", "cold to someone they hate")
+feel = 0
+-- how they are
+local s = LC.Psy.State(m)
+s.food, s.rest, s.company, s.stress, s.mood = 0.1, 0.8, 0.7, 0, 0
+ok(LC.CueState(n, st) == "say_state_hungry", "how they are comes from their needs: hungry", LC.CueState(n, st))
+s.food, s.rest = 0.8, 0.1
+ok(LC.CueState(n, st) == "say_state_tired", "tired", LC.CueState(n, st))
+s.rest, s.stress = 0.8, 25
+SetTraits({ temper = 0.5 })
+ok(LC.CueState(n, st) == "say_state_angry", "close to breaking, and hot-headed: angry", LC.CueState(n, st))
+s.stress = 0
+SetTraits({ loyal = 0.6 })
+ok(LC.CueAnswer(n, st, "say_hate_quiet") == "say_loyal_warn", "the loyal warn whoever speaks against the Combine")
+SetTraits({ loyal = -0.6, brave = 0.5 })
+ok(LC.CueAnswer(n, st, "say_loyal") == "say_disagree", "the bold and disloyal disagree with the loyal")
+-- what a player says near them
+SetTraits({})
+ok(LC.CueReply(ply, n, st, "Hey there") == "say_greet_plain", "chat: hello", LC.CueReply(ply, n, st, "Hey there"))
+ok(LC.CueReply(ply, n, st, "how are you doing?") == LC.CueState(n, st), "chat: how are you", LC.CueReply(ply, n, st, "how are you doing?"))
+ok(LC.CueReply(ply, n, st, "you're an idiot") == "say_insulted", "chat: an insult")
+ok(LC.CueReply(ply, n, st, "I'll kill you") == "say_threatened", "chat: a threat")
+ok(LC.CueReply(ply, n, st, "haha that's good") == "say_laugh", "chat: a joke")
+SetTraits({ loyal = 0.6 })
+ok(LC.CueReply(ply, n, st, "have you heard of the resistance?") == "say_loyal_warn", "chat: the loyal won't hear of the Resistance")
+SetTraits({})
+ok(LC.CueReply(ply, n, st, "the weather is grey") == nil, "chat: nothing to say to something that isn't for them")
+local realBrain = LC.BrainOn
+LC.BrainOn = function() return false end
+ply:SetPos(T0 + Vector(80, 0, 0))
+ply.GetAimVector = function() return Vector(-1, 0, 0) end
+n.lcCueAt, ply.lcCueHeardAt = nil, nil
+local said = {}
+local realChat = ply.ChatPrint
+ply.ChatPrint = function(self, t) said[#said + 1] = t end
+LC.CueHeard(ply, "say", "hello")
+Later(2)
+local shown = false
+for _, t in ipairs(said) do if string.find(t, "says: \"Hey. Still here, huh? Me too.\"", 1, true) then shown = true end end
+ok(st.lcCueLast == "say_greet_plain" and shown, "a player says hello near them: they answer out loud, and the words show", tostring(st.lcCueLast) .. " " .. tostring(said[#said]))
+LC.BrainOn = function() return true end
+n.lcCueAt, ply.lcCueHeardAt, st.lcCueLast = nil, nil, nil
+LC.CueHeard(ply, "say", "hello")
+Later(2)
+ok(st.lcCueLast == nil, "with the director's key, the model answers instead")
+LC.BrainOn = function() return false end
+-- the talk window: thanks, quoted as heard
+n.lcCueAt = nil
+feel = 0
+LC.GiveItem(ply, "ration", 1)
+local r = LC.TalkAction(ply, n, "food")
+ok(string.find(r or "", "'Thank you. I won't forget it.'", 1, true) ~= nil, "food given: they thank you in their recorded voice, and the window quotes what was heard", tostring(r))
+-- goodbye when you walk off
+n.lcCueAt = nil
+ply.lcCueTalk = { npc = n, at = CurTime() }
+ply:SetPos(T0 + Vector(600, 0, 0))
+Later(1.5)
+ok(st.lcCueLast == "say_bye_plain" and ply.lcCueTalk == nil, "walk off after talking: goodbye", tostring(st.lcCueLast))
+-- what they see
+ply:SetPos(T0 + Vector(100, 0, 0))
+n.lcCueAt, n.lcCueSeen, st.lcCueLast = nil, nil, nil
+m.p = m.p or n.lcProfile
+local realNpc = m.p.npc
+m.p.npc = n
+LC.Psy.Think(m, "saw_beating", CurTime(), nil)
+Later(3)
+ok(st.lcCueLast == "say_saw_beating", "they see someone beaten: they say so", tostring(st.lcCueLast))
+n.lcCueAt = nil
+LC.Psy.Think(m, "friend_taken", CurTime(), nil)
+Later(3)
+ok(st.lcCueLast == "say_grief", "a friend taken away: grief", tostring(st.lcCueLast))
+-- walking up to someone
+SetTraits({ loyal = 0.5 })
+s.food, s.stress, s.company = 0.1, 0, 0.7
+ok(LC.CueApproachLine(ply, n, st) == "say_ask_food", "hungry: they walk up and ask for food", tostring(LC.CueApproachLine(ply, n, st)))
+s.food = 0.8
+ok(LC.CueApproachLine(ply, n, st) == nil, "nothing on their mind: they leave you be")
+feel = -5
+s.food = 0.1
+ok(LC.CueApproachLine(ply, n, st) == nil, "never someone who fears you")
+-- every line of the bank has a moment
+local leads = 0
+for _, l in pairs(LC.CueLeads) do if string.sub(l, 1, 9) == "say_open_" then leads = leads + 1 end end
+ok(leads > 10, "openers come before the lines they suit")
+-- tidy up
+m.p.npc = realNpc
+LC.BrainOn, LC.Feeling, LC.AdviceClip = realBrain, realFeeling, realClip
+LC.VoiceForce = nil
+m.tr = nil
+n.EmitSound, ply.ChatPrint = realEmit, realChat
+for _, e in ipairs({ n, ply }) do if IsValid(e) then e:Remove() end end
+end
+VoiceCuesTests()
 function GiveTests()
 section("Giving a citizen something: food, a drink or a smoke, medicine, papers, arms")
 local function Later(secs) _advance(secs) _runtimers() end

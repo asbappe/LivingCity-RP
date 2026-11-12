@@ -45,6 +45,16 @@ local function CitSay(ent, st, path, ...)
     ent:EmitSound(path, ...)
 end
 
+-- A named citizen with the recorded voice says a line of the bank (sv_livingcity_voicecues.lua); the window
+-- then quotes what was heard, after narr. Anyone else: the words as they were (fallback).
+local function Said(npc, st, id, fallback, narr, o)
+    local o2 = o or {}
+    o2.force = true
+    local w = LC.Cue and LC.Cue(npc, st, id, o2)
+    if not w then return fallback end
+    return (narr and (narr .. " ") or "") .. "'" .. w .. "'"
+end
+
 ------------------------------------------------------------------------
 -- Memory: how each of your characters has treated them
 ------------------------------------------------------------------------
@@ -219,6 +229,7 @@ function LC.OpenTalk(ply, npc, said)
     net.WriteBool(o.chair == true)
     net.WriteBool(o.cage == true)
     net.Send(ply)
+    if not said and LC.CueTalkOpen then LC.CueTalkOpen(ply, npc, st) end -- (hello, in the recorded voice: sv_livingcity_voicecues.lua)
     -- they stop for you
     StepAway(npc, ply)
     LC.Face(npc, ply:GetPos())
@@ -233,7 +244,10 @@ end
 
 local function Chat(ply, npc, st)
     local feel = LC.Feeling(npc, ply)
-    if feel <= AFRAID then return Pick(AFRAID_LINES) end
+    if feel <= AFRAID then
+        local w = LC.CueTalkChat and LC.CueTalkChat(ply, npc, st, "afraid")
+        return w and ("They step back. '" .. w .. "'") or Pick(AFRAID_LINES)
+    end
     -- what you need, if they notice: a trail, or a friend walks you there (sv_livingcity_advice.lua)
     if LC.CitizenAdvice then
         local said, close = LC.CitizenAdvice(ply, npc, st, feel)
@@ -245,8 +259,12 @@ local function Chat(ply, npc, st)
     -- or a story from the chronicle: something that happened, and what led to it (sv_livingcity_chronicle.lua)
     if not line and LC.ChronicleRumor then line = LC.ChronicleRumor(ply, npc) end
     -- a sympathizer who likes you: where the Resistance can be found
-    if not line and st.rebel and feel >= WARM and LC.SafeHouseHint then line = LC.SafeHouseHint(ply) end
-    return line and ("'" .. line .. "'") or Pick(SMALL_TALK)
+    local what = line and "rumour" or nil
+    if not line and st.rebel and feel >= WARM and LC.SafeHouseHint then line = LC.SafeHouseHint(ply) what = line and "hint" or nil end
+    -- (a named citizen with the recorded voice: a line of the bank first, then what they tell you: sv_livingcity_voicecues.lua)
+    local w = LC.CueTalkChat and LC.CueTalkChat(ply, npc, st, what or "small")
+    if line then return w and ("'" .. w .. "' '" .. line .. "'") or ("'" .. line .. "'") end
+    return w and ("'" .. w .. "'") or Pick(SMALL_TALK)
 end
 
 local function ShareFood(ply, npc, st, chosen)
@@ -257,8 +275,8 @@ local function ShareFood(ply, npc, st, chosen)
     CitSay(npc, st, Vo(st.gender, Pick({ "hi01", "hi02" })), 65)
     hook.Run("LivingCitySharedFood", ply, npc, id)
     local name = LCS and LCS.Items[id] and string.lower(LCS.Items[id].name) or "food"
-    if v >= 6 then return "They take the " .. name .. " with both hands. 'I won't forget this. I mean it.'" end
-    return "They take the " .. name .. " and hide it in their coat. 'Thank you.'"
+    if v >= 6 then return Said(npc, st, "say_thanks_big", "They take the " .. name .. " with both hands. 'I won't forget this. I mean it.'", "They take the " .. name .. " with both hands.") end
+    return Said(npc, st, "say_thanks", "They take the " .. name .. " and hide it in their coat. 'Thank you.'", "They take the " .. name .. " and hide it in their coat.")
 end
 
 ------------------------------------------------------------------------
@@ -334,31 +352,32 @@ local function Give(ply, npc, st, id)
     end
     if kind == "vice" then
         local vice = LC.NPCViceOf and LC.NPCViceOf(npc) or 0.5
-        if vice <= 0 then return "They shake their head. 'I don't, thanks. Keep it.'" end
-        local said = Taken(vice > 0.5 and 3 or 2, it.vice == "smoke" and "They take the " .. name .. " and light it there and then. 'God, I needed that.'"
-            or "They take a long pull of the " .. name .. ". 'You're a good sort, you know that?'")
+        if vice <= 0 then return Said(npc, st, "say_decline_gift", "They shake their head. 'I don't, thanks. Keep it.'", "They shake their head.") end
+        local narr = it.vice == "smoke" and ("They take the " .. name .. " and light it there and then.") or ("They take a long pull of the " .. name .. ".")
+        local said = Taken(vice > 0.5 and 3 or 2, Said(npc, st, "say_thanks", it.vice == "smoke" and "They take the " .. name .. " and light it there and then. 'God, I needed that.'"
+            or "They take a long pull of the " .. name .. ". 'You're a good sort, you know that?'", narr))
         if LC.NPCViceStart and GetConVar("lc_npc_vices") and GetConVar("lc_npc_vices"):GetBool() then LC.NPCViceStart(npc, it.vice) end
         return said
     elseif kind == "medicine" then
-        return Taken(3, "They turn the " .. name .. " over in their hands. 'Medicine. You don't see that often. Thank you.'")
+        return Taken(3, Said(npc, st, "say_thanks_big", "They turn the " .. name .. " over in their hands. 'Medicine. You don't see that often. Thank you.'", "They turn the " .. name .. " over in their hands."))
     elseif kind == "arms" then
-        if LC.PlayerIsCP(ply) then return "They back away from you. 'I don't want any trouble, officer.'" end -- (not in a unit's menu; only if asked for directly)
+        if LC.PlayerIsCP(ply) then return Said(npc, st, "say_threatened", "They back away from you. 'I don't want any trouble, officer.'", "They back away from you.") end -- (not in a unit's menu; only if asked for directly)
         if not st.rebel then
             LC.Remember(npc, ply, -1)
-            return "They go white. 'Are you out of your mind? Put that away before a unit sees!'"
+            return Said(npc, st, "say_decline_gift", "They go white. 'Are you out of your mind? Put that away before a unit sees!'", "They go white.", { lead = "say_open_quiet" })
         end
-        return Taken(3, "They glance about, then slip the " .. name .. " under their coat. 'It'll go where it's needed.'")
+        return Taken(3, Said(npc, st, "say_thanks", "They glance about, then slip the " .. name .. " under their coat. 'It'll go where it's needed.'", "They glance about, then slip the " .. name .. " under their coat.", { lead = "say_open_quiet" }))
     elseif kind == "papers" then
         local loyal = LoyalOf(npc, st)
         if it.leaflet == "resistance" then
             if loyal > 0.2 then
                 LC.Remember(npc, ply, -3)
-                return "They push it back at you. 'I never saw this. I never saw you.'"
+                return Said(npc, st, "say_res_deny", "They push it back at you. 'I never saw this. I never saw you.'", "They push it back at you.")
             end
-            return Taken(2, "They read the first lines and fold it small. 'Somebody has to say it.'")
+            return Taken(2, Said(npc, st, "say_res_respect", "They read the first lines and fold it small. 'Somebody has to say it.'", "They read the first lines and fold it small."))
         end
-        if loyal < -0.2 then return Taken(0, "They take the " .. name .. " without looking at it. 'I know what it says.'") end
-        return Taken(1, "They take the " .. name .. ". 'Thank you, citizen.'")
+        if loyal < -0.2 then return Taken(0, Said(npc, st, "say_heard", "They take the " .. name .. " without looking at it. 'I know what it says.'", "They take the " .. name .. " without looking at it.")) end
+        return Taken(1, Said(npc, st, loyal > 0.4 and "say_loyal" or "say_thanks", "They take the " .. name .. ". 'Thank you, citizen.'", "They take the " .. name .. "."))
     end
     return "They don't want that."
 end
@@ -404,7 +423,7 @@ local function PickPocket(ply, npc, st)
         timer.Simple(0.5, function() if IsValid(npc) and LC.NPCs[npc] then LC.Scatter(npc:GetPos(), 60) end end)
     end
     hook.Run("LivingCityPickpocket", ply, npc, false)
-    return "They feel your hand and spin round. 'Thief! Get away from me!'", true
+    return Said(npc, st, "say_insulted", "They feel your hand and spin round. 'Thief! Get away from me!'", "They feel your hand and spin round."), true
 end
 
 local function Inform(ply, npc, st)
@@ -446,6 +465,7 @@ net.Receive("lc_talk_do", function(_, ply)
     elseif what == "recruit" and LC.RecruitLookout then
         local ok, msg = LC.RecruitLookout(ply, npc)
         said, close = msg, ok
+        if LC.CueRecruit then LC.CueRecruit(ply, npc, st, ok) end -- (yes or no, in the recorded voice: sv_livingcity_voicecues.lua)
     else return end
     StepAway(npc, ply)
     if close then
@@ -491,11 +511,15 @@ timer.Create("LivingCityMemory", 2, 0, function()
                         -- back off from the one who hurt them
                         npc.lcFleeAt = now + 6
                         local away = npc:GetPos() + (npc:GetPos() - ply:GetPos()):GetNormalized() * 300
-                        if LC.GoTo(npc, st, away, true, nil) then CitSay(npc, st, Vo(st.gender, Pick({ "sorry01", "sorry02" })), 65) end
+                        if LC.GoTo(npc, st, away, true, nil) then
+                            CitSay(npc, st, Vo(st.gender, Pick({ "sorry01", "sorry02" })), 65)
+                            if LC.Cue then LC.Cue(npc, st, "say_threatened") end
+                        end
                     elseif feel >= WARM and (npc.lcGreetAt or 0) < now then
                         npc.lcGreetAt = now + 90
                         LC.Face(npc, ply:GetPos())
                         CitSay(npc, st, Vo(st.gender, Pick({ "hi01", "hi02" })), 65)
+                        if LC.Cue then LC.Cue(npc, st, "say_greet_warm") end
                     end
                 end
             end

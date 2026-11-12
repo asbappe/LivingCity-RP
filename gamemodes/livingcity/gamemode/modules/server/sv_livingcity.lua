@@ -1805,10 +1805,13 @@ local function TryChat(npc, st, now)
             if st.state ~= "inline" then Face(npc, other:GetPos()) end
             if ost.state ~= "inline" then Face(other, npc:GetPos()) end
             CitSay(npc, st, Vo(st.gender, string.format("question%02d", math.random(1, 20))), 70)
+            -- (a named citizen with the recorded voice says a real line instead: sv_livingcity_voicecues.lua)
+            local said = LC.Cue and select(2, LC.Cue(npc, st, function(n, s) return LC.CueTopic(n, s, true) end))
             ost.nextChat = now + 30
             timer.Simple(math.Rand(2.5, 4), function()
                 if IsValid(other) then
                     CitSay(other, ost, Vo(ost.gender or "male", string.format("answer%02d", math.random(1, 20))), 70)
+                    if LC.Cue then LC.Cue(other, ost, function(n, s) return LC.CueAnswer(n, s, said) end) end
                 end
             end)
             return
@@ -1990,6 +1993,7 @@ local function TryArrestCitizen(cop, cst, cit, ist, now)
     if not LC.ArrestNPC then return false end
     cop:EmitSound(Pick(COP_ARREST), 75)
     CitSay(cit, ist, Vo(ist.gender, Pick(CIT_PROTEST)), 70)
+    if LC.Cue then LC.Cue(cit, ist, "say_break_beaten", { force = true }) end
     cst.subject = nil
     SetState(cop, cst, "idle")
     cst.untilT = now + math.Rand(2, 5)
@@ -2027,7 +2031,7 @@ local function ThinkInspection(cop, cst, now)
             end)
             if ist then
                 timer.Simple(2, function()
-                    if IsValid(cit) then CitSay(cit, ist, Vo(ist.gender, Pick(CIT_NERVOUS)), 70) end
+                    if IsValid(cit) then CitSay(cit, ist, Vo(ist.gender, Pick(CIT_NERVOUS)), 70) if LC.Cue then LC.Cue(cit, ist, "say_greet_unit") end end
                 end)
             end
             SetState(cop, cst, "inspect_talk"); cst.untilT = now + math.Rand(5, 8)
@@ -2812,6 +2816,7 @@ function LC.CitizenPanic(npc, st, threat)
     if (st.nextPanic or 0) > now then return false end
     st.nextPanic = now + 3.5
     CitSay(npc, st, Vo(st.gender, Pick(CIT_PANIC)), 85, math.random(98, 108))
+    if LC.Cue then LC.Cue(npc, st, { "say_warn_go", "say_saw_death" }, { lead = false }) end
     local npos = npc:GetPos()
     if st.state ~= "detained" and st.state ~= "jailed" and st.state ~= "escorted" and st.state ~= "event" then
         CancelBusy(npc, st)
@@ -2944,6 +2949,7 @@ hook.Add("PlayerUse", "LivingCityUse", function(ply, ent)
         if LC.PlayerIsCP(ply) then
             -- a Civil Protection player stops a citizen: they freeze and apologise
             CitSay(ent, st, Vo(st.gender, Pick(CIT_NERVOUS)), 70)
+            if LC.Cue then LC.Cue(ent, st, "say_greet_unit") end
             SetState(ent, st, "detained"); st.untilT = CurTime() + 10
             if (ply.lcStopHintAt or 0) < CurTime() then
                 ply.lcStopHintAt = CurTime() + 300
@@ -2951,6 +2957,7 @@ hook.Add("PlayerUse", "LivingCityUse", function(ply, ent)
             end
         else
             CitSay(ent, st, Vo(st.gender, Pick(CIT_GREET)), 70)
+            if LC.Cue then LC.Cue(ent, st, LC.CueGreeting(ent, st, ply)) end
             SetState(ent, st, "idle"); st.untilT = CurTime() + 4
         end
         return false
