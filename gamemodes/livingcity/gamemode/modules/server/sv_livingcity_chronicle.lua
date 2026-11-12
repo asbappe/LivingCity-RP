@@ -276,13 +276,16 @@ end)
 function LC.ChronicleKnows(id, what, told)
     if not On() or id == nil then return nil end
     Ensure()
-    local best
+    -- (things that were done to them aren't things they did; and a secret is what the chair is for)
+    local PASSIVE = { chair = true, chair_wrong = true, confess = true, arrest = true, died = true }
+    local best, bv
     for i = #C.list, 1, -1 do
         local e = C.list[i]
         local fits
-        if what == "done" then fits = e.s == id and (e.sec or (e.w or 0) >= 2) and e.pred ~= ""
+        if what == "done" then fits = e.s == id and not PASSIVE[e.k] and (e.sec or (e.w or 0) >= 2) and e.pred ~= ""
         else fits = (Has(e.saw, id) or e.o == id) and (e.w or 0) >= 2 end
-        if fits and not (told and told[e.n]) and (not best or (e.w or 0) > (best.w or 0)) then best = e end
+        local v = (e.w or 0) + (e.sec and 2 or 0)
+        if fits and not (told and told[e.n]) and (not best or v > bv) then best, bv = e, v end
     end
     return best
 end
@@ -360,6 +363,7 @@ end
 local REBEL_KINDS = { hurt = true, killed = true, died = true, arrest = true, burned = true,
     ["did:accuse"] = true, ["did:brutal"] = true, ["did:tantrum"] = true, ["did:sabotage"] = true, ["did:defy"] = true }
 local function RebelLine(e)
+    if e.k == "confess" then return Short(e.sn .. " " .. e.pred .. ".", 62) end -- (said in their own chair)
     if e.sec or not REBEL_KINDS[e.k] then return nil end
     local known = IsRebelId(e.s) or IsRebelId(e.o)
     if not known then for _, id in ipairs(e.saw or {}) do if IsRebelId(id) then known = true break end end end
@@ -379,7 +383,7 @@ function LC.ChronicleFeeds(now)
             local text, hot, more = CPLine(e)
             if text then cp[#cp + 1] = { text = text, hot = hot or nil, more = more, mins = mins } end
         end
-        if #rebel < FEED_MAX and now - e.t >= WORD_TRAVELS then
+        if #rebel < FEED_MAX and (now - e.t >= WORD_TRAVELS or e.k == "confess") then
             local text = RebelLine(e)
             if text then rebel[#rebel + 1] = { text = text, mins = mins } end
         end

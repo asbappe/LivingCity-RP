@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version ee16d79. Admin-only console messages and log lines are left out.
+Made from version d375b67. Admin-only console messages and log lines are left out.
 
-11531 lines, from 310 files.
+11562 lines, from 310 files.
 
 ## Contents
 
@@ -152,7 +152,7 @@ Made from version ee16d79. Admin-only console messages and log lines are left ou
 - [apartments and trade](#apartments-and-trade-svlivingcitybusinesslua) (41)
 - [rearranging a rebel camp](#rearranging-a-rebel-camp-svlivingcitycampmovelua) (3)
 - [your career, on one page (the owner's 7 November playtest: "playing as a](#your-career-on-one-page-the-owners-7-november-playtest-playing-as-a-svlivingcitycareerlua) (23)
-- [the Resistance's interrogation chair (lc_interrochair)](#the-resistances-interrogation-chair-lcinterrochair-svlivingcitychairlua) (35)
+- [the Resistance's interrogation chair (lc_interrochair)](#the-resistances-interrogation-chair-lcinterrochair-svlivingcitychairlua) (48)
 - [characters and permanent death](#characters-and-permanent-death-svlivingcitycharacterlua) (28)
 - [checkpoints, turrets, and holding the infestation back](#checkpoints-turrets-and-holding-the-infestation-back-svlivingcitycheckpointslua) (54)
 - [the chronicle (what happened in the city, and what led to it)](#the-chronicle-what-happened-in-the-city-and-what-led-to-it-svlivingcitychroniclelua) (22)
@@ -260,7 +260,7 @@ Made from version ee16d79. Admin-only console messages and log lines are left ou
 - [habitation block raids](#habitation-block-raids-svlivingcityraidslua) (15)
 - ["ration units are being deducted"](#ration-units-are-being-deducted-svlivingcityrationslua) (5)
 - [the Resistance's raids and operations, made real and findable](#the-resistances-raids-and-operations-made-real-and-findable-svlivingcityrebeleventslua) (3)
-- [the Resistance's prisoners (the holding cage, lc_rebelcage)](#the-resistances-prisoners-the-holding-cage-lcrebelcage-svlivingcityrebelholdlua) (13)
+- [the Resistance's prisoners (the holding cage, lc_rebelcage)](#the-resistances-prisoners-the-holding-cage-lcrebelcage-svlivingcityrebelholdlua) (31)
 - [rebel life](#rebel-life-svlivingcityrebellifelua) (35)
 - [the Resistance pamphlet](#the-resistance-pamphlet-svlivingcityrebelpamphletlua) (40)
 - [the Resistance on the street](#the-resistance-on-the-street-svlivingcityrebelslua) (87)
@@ -5847,71 +5847,93 @@ Made from version ee16d79. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): (a Resistance Fighter or above: the owner, 12 November, "I want Resistance fighters and above to be able to interrogate")
 
-- "the citizen"  (text, line 59)
+- "the citizen"  (text, line 60)
 
 > Note for you (not shown in game): part of: release
 
-- "[Miscount] {why}"  (chat message, line 124)
+- "[Miscount] {why}"  (chat message, line 125)
 
 > Note for you (not shown in game): part of: seat
 
-- "is pushed down into the chair. The lamp comes on."  (text, line 150)
-
-> Note for you (not shown in game): "Take them to interrogation chair" in the talk window (sv_livingcity_talk.lua). Returns what's said, and whether the window closes. from: { cage, at } when they come out of the holding cage (sv_livingcity_rebelhold.lua): they can be sent back to it.
-
-- "There's no chair near enough for that."  (text, line 157)
+- "is pushed down into the chair. The lamp comes on."  (text, line 151)
 
 > Note for you (not shown in game): part of: chair take
 
-- "You take them by the arm. 'Walk. We need to talk.'"  (text, line 165)
-- "They stare at the floor and say nothing."  (text, line 169)
-- "'I haven't done anything. I haven't!'"  (text, line 169)
-- "'I don't know what you want from me.'"  (text, line 169)
-- "They squint up into the lamp, and shake their head."  (text, line 170)
-- "'Please. I just want to go home.'"  (text, line 170)
-- "You hit them. Their head snaps to the side."  (text, line 173)
-- "Your fist lands. They gasp, and the chair creaks."  (text, line 173)
-- "You hit them again. Blood on your knuckles, not yours."  (text, line 174)
-- "A blow to the stomach. They fold as far as the chair allows."  (text, line 174)
-- "'I don't know anything. I swear it.' You believe them."  (text, line 176)
-- "'There's nothing. There was never anything.' It sounds true."  (text, line 176)
+- "There's no chair near enough for that."  (text, line 165)
+- "You take them by the arm. 'Walk. We need to talk.'"  (text, line 173)
+- "They stare at the floor and say nothing."  (text, line 177)
+- "'I haven't done anything. I haven't!'"  (text, line 177)
+- "'I don't know what you want from me.'"  (text, line 177)
+- "They squint up into the lamp, and shake their head."  (text, line 178)
+- "'Please. I just want to go home.'"  (text, line 178)
+- "You hit them. Their head snaps to the side."  (text, line 181)
+- "Your fist lands. They gasp, and the chair creaks."  (text, line 181)
+- "You hit them again. Blood on your knuckles, not yours."  (text, line 182)
+- "A blow to the stomach. They fold as far as the chair allows."  (text, line 182)
+- "'I don't know anything. I swear it.' You believe them."  (text, line 184)
+- "'There's nothing. There was never anything.' It sounds true."  (text, line 184)
 
 > Note for you (not shown in game): whatever they thought of the Resistance, it's gone
 
-- "beat {npc} in the chair for nothing"  (text, line 198)
+- "beat {npc} in the chair for nothing"  (text, line 206)
+
+> Note for you (not shown in game): part of: blow
+
+- "beat {npc} in the chair"  (text, line 225)
+- "was beaten in the Resistance's chair"  (text, line 228)
+
+> Note for you (not shown in game): The cell's own people asking, with nobody at the window (the owner, 12 November: "script an interrogation for anyone in the prison"). About forty seconds in the chair: a question, blows until their resolve is gone (four at most), what comes out, and back to the cage. What they admit goes on the Resistance's board.
+
+- "'Who do you talk to? Give us a name.'"  (text, line 235)
+- "'We know you went to them. What did you say?'"  (text, line 235)
+- "'Start talking. We have all night.'"  (text, line 235)
+- "A fist. %s's head snaps to the side."  (text, line 236)
+- "They hit %s again. The chair creaks."  (text, line 236)
+- "A blow to the stomach. %s folds as far as the chair allows."  (text, line 236)
+
+> Note for you (not shown in game): part of: auto step
+
+- "A voice from behind the lamp: {AUTO_ASK}"  (text, line 243)
+- "breaks. It comes out of them: {sn} {pred}."  (text, line 253)
+- "admitted it in the chair: {pred}"  (text, line 254)
+
+> Note for you (not shown in game): for nothing: whatever they thought of the Resistance, it's gone
+
+- "'I've done nothing. Nothing.' It sounds true. They chose the wrong one."  (text, line 258)
+- "was beaten in the Resistance's chair for nothing"  (text, line 261)
+- "says nothing they can use."  (text, line 263)
 
 > Note for you (not shown in game): What the one asking does: "done", "seen", "hit" or "free". Returns what happens, in words.
 
-- "is let out of the chair."  (text, line 209)
+- "is let out of the chair."  (text, line 280)
 
 > Note for you (not shown in game): part of: chair do
 
-- "is pulled out of the chair and marched back to the cage."  (text, line 216)
-- "Back to the cage with them."  (text, line 219)
-- "Any more and you'd kill them."  (text, line 222)
-- "beat {npc} in the chair"  (text, line 233)
-- "Something in them gives."  (text, line 235)
-- "It comes out of them:"  (text, line 242)
-- "They saw something:"  (text, line 242)
-- "Whatever they thought of the Resistance, it's gone now."  (text, line 246)
+- "is pulled out of the chair and marched back to the cage."  (text, line 287)
+- "Back to the cage with them."  (text, line 290)
+- "Any more and you'd kill them."  (text, line 293)
+- "Something in them gives."  (text, line 295)
+- "It comes out of them:"  (text, line 302)
+- "They saw something:"  (text, line 302)
+- "Whatever they thought of the Resistance, it's gone now."  (text, line 306)
 
 > Note for you (not shown in game): E on the chair.
 
-- "[Miscount] The chair is for Fighters and above."  (chat message, line 267)
-- "[Miscount] This is none of your business. Walk on."  (text, line 268)
-- "[Miscount] A chair, under a lamp. Not yours."  (text, line 268)
+- "[Miscount] The chair is for Fighters and above."  (chat message, line 327)
+- "[Miscount] This is none of your business. Walk on."  (text, line 328)
+- "[Miscount] A chair, under a lamp. Not yours."  (text, line 328)
 
 > Note for you (not shown in game): part of: chair use
 
-- "[Miscount] The chair is empty. To question someone: press E on a citizen nearby, then "Take them to interrogation chair"."  (chat message, line 272)
-- "[Miscount] They're on their way to the chair."  (chat message, line 275)
-- "[Miscount] Someone else is asking the questions."  (chat message, line 277)
-- "They squint up at you through the light."  (text, line 278)
+- "[Miscount] The chair is empty. To question someone: press E on a citizen nearby, then "Take them to interrogation chair"."  (chat message, line 332)
+- "[Miscount] They're on their way to the chair."  (chat message, line 335)
+- "[Miscount] Someone else is asking the questions."  (chat message, line 338)
+- "They squint up at you through the light."  (text, line 339)
 
 > Note for you (not shown in game): part of: chair tick
 
-- "They slipped away before you got them to the chair."  (text, line 299)
-- "gets up out of the chair, unsteadily."  (text, line 313)
+- "They slipped away before you got them to the chair."  (text, line 360)
+- "gets up out of the chair, unsteadily."  (text, line 376)
 
 ## characters and permanent death (sv_livingcity_character.lua)
 
@@ -6127,48 +6149,48 @@ Made from version ee16d79. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: send news
 
-- "[Miscount] The city's stories are for staff. Ask around (E on a citizen, then Chat), or read a board."  (chat message, line 308)
+- "[Miscount] The city's stories are for staff. Ask around (E on a citizen, then Chat), or read a board."  (chat message, line 311)
 
 > Note for you (not shown in game): part of: chronicle killed
 
-- "killed {to}"  (text, line 447)
+- "killed {to}"  (text, line 451)
 
 > Note for you (not shown in game): the game's living city incarcerated moment
 
-- "was taken to the cells{or}"  (text, line 468)
+- "was taken to the cells{or}"  (text, line 472)
 
 > Note for you (not shown in game): the game's living city pickpocket moment
 
-- "was caught with a hand in {to}'s pocket"  (text, line 475)
+- "was caught with a hand in {to}'s pocket"  (text, line 479)
 
 > Note for you (not shown in game): the game's living city burned moment
 
-- "beat {to} as an informer"  (text, line 482)
+- "beat {to} as an informer"  (text, line 486)
 
 > Note for you (not shown in game): the game's living city poster defaced moment
 
-- "painted over a Combine poster"  (text, line 489)
+- "painted over a Combine poster"  (text, line 493)
 
 > Note for you (not shown in game): the game's living city snitched moment
 
-- "reported {to} to Civil Protection"  (text, line 496)
+- "reported {to} to Civil Protection"  (text, line 500)
 
 > Note for you (not shown in game): what the street could see; anything else was done quietly, at home or not at all
 
-- "went to"  (text, line 503)
-- "sat down"  (text, line 503)
-- "drank in the street"  (text, line 503)
-- "drank on duty"  (text, line 503)
-- "shared food"  (text, line 503)
+- "went to"  (text, line 507)
+- "sat down"  (text, line 507)
+- "drank in the street"  (text, line 507)
+- "drank on duty"  (text, line 507)
+- "shared food"  (text, line 507)
 
 > Note for you (not shown in game): and the last week in plain words, secrets included, for the owner
 
-- "The chronicle: stories of the last week, the weightiest first (secrets included: not what players are told)."  (text, line 556)
+- "The chronicle: stories of the last week, the weightiest first (secrets included: not what players are told)."  (text, line 560)
 
 > Note for you (not shown in game): For the debug report.
 
-- "off (lc_chronicle 0)"  (text, line 566)
-- "entries kept %d \| stories in the last day %d, %d of them with a cause"  (message, line 572)
+- "off (lc_chronicle 0)"  (text, line 570)
+- "entries kept %d \| stories in the last day %d, %d of them with a cause"  (message, line 576)
 
 ## the City Administrator's office, and idle players (the owner, 1 November) (sv_livingcity_cityadmin.lua)
 
@@ -9784,30 +9806,30 @@ Made from version ee16d79. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: spawn grigori
 
-- "Father Grigori"  (text, line 96)
-- "keeping watch over the flock"  (text, line 97)
+- "Father Grigori"  (text, line 97)
+- "keeping watch over the flock"  (text, line 98)
 
 > Note for you (not shown in game): Talking to him
 
-- "[Father Grigori] "Ah, a shepherd of the Combine! Come closer, so Annabelle can give you my blessing.""  (chat message, line 181)
+- "[Father Grigori] "Ah, a shepherd of the Combine! Come closer, so Annabelle can give you my blessing.""  (chat message, line 184)
 
 > Note for you (not shown in game): A blessing, a sermon, or a word. True, or false and why not.
 
-- "Father Grigori isn't here."  (text, line 202)
-- "[Father Grigori] {SAYINGS}"  (chat message, line 205)
+- "Father Grigori isn't here."  (text, line 205)
+- "[Father Grigori] {SAYINGS}"  (chat message, line 208)
 
 > Note for you (not shown in game): part of: grigori ask
 
-- ""Go with God, child. But go.""  (text, line 208)
-- ""Patience. God does not repeat Himself so soon." (%d s)"  (message, line 210)
-- "He lays a heavy hand on your head and mutters in Russian. For five minutes, the world hurts you a little less."  (on-screen notice, line 216)
-- ""I have said my piece. Come back later and I will say it again, louder." (%d s)"  (message, line 219)
-- "Father Grigori's sermon"  (text, line 228)
-- "Father Grigori preaches fire and brimstone at the Combine. For ten minutes your shots hit them harder."  (on-screen notice, line 229)
+- ""Go with God, child. But go.""  (text, line 211)
+- ""Patience. God does not repeat Himself so soon." (%d s)"  (message, line 213)
+- "He lays a heavy hand on your head and mutters in Russian. For five minutes, the world hurts you a little less."  (on-screen notice, line 219)
+- ""I have said my piece. Come back later and I will say it again, louder." (%d s)"  (message, line 222)
+- "Father Grigori's sermon"  (text, line 231)
+- "Father Grigori preaches fire and brimstone at the Combine. For ten minutes your shots hit them harder."  (on-screen notice, line 232)
 
 > Note for you (not shown in game): the game answering something done in a window (lc_grigori_ask)
 
-- "[Father Grigori] {why}"  (chat message, line 242)
+- "[Father Grigori] {why}"  (chat message, line 245)
 
 ## flood guard (sv_livingcity_guard.lua)
 
@@ -16248,40 +16270,64 @@ Made from version ee16d79. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: name of
 
-- "the citizen"  (text, line 52)
+- "the citizen"  (text, line 63)
 
 > Note for you (not shown in game): part of: put
 
-- "is pushed into the cage, and the gate is shut on them."  (text, line 106)
-- "locked {npc} in the Resistance's cage"  (text, line 111)
+- "is pushed into the cage, and the gate is shut on them."  (text, line 132)
+- "locked {npc} in the Resistance's cage"  (text, line 137)
 
 > Note for you (not shown in game): "Take them prisoner" in the talk window, or back from the chair (cage given, told: no second telling).
 
-- "There's no cage with room near enough for that."  (text, line 126)
+- "There's no cage with room near enough for that."  (text, line 152)
 
 > Note for you (not shown in game): part of: cage take
 
-- "You take them by the collar. 'You're coming with us.'"  (text, line 135)
+- "You take them by the collar. 'You're coming with us.'"  (text, line 161)
 
 > Note for you (not shown in game): part of: cage tick
 
-- "is let out of the cage, and doesn't look back."  (text, line 172)
+- "is let out of the cage, and doesn't look back."  (text, line 199)
+
+> Note for you (not shown in game): Someone at the cage (the owner, 12 November: "I would LOVE for Father Gregori to walk up to the jail and start preaching at the prisoners ... If Father Gregori is dead or busy, a vortigaunt walks up and starts talking to them. If no vortigaunt around, then a rebel walks up and starts taunting them or insulting them sporadically (please don't have it be a barrage of nonstop noise, it can be every 30-60 seconds)")
+
+- "'Repent, my children! The cage is a mercy. The pit is not!'"  (text, line 233)
+- "'I have buried better than you. I have buried worse. The Lord sorts them, not I.'"  (text, line 234)
+- "'You served the shepherds of wolves. Now hear a shepherd of sheep!'"  (text, line 235)
+- "'Confess it! A light conscience weighs nothing on the way down.'"  (text, line 236)
+- "'Do you smell it? That is fear. Fear is where wisdom begins, my child.'"  (text, line 237)
+- "'Be glad it is my voice you hear, and not the things that walk at night.'"  (text, line 238)
+- "'The caged one fears us. It need not. We remember cages.'"  (text, line 241)
+- "'We see the cord that binds this one to the Combine. It is thinner than it believes.'"  (text, line 242)
+- "'Speak truly to them, and the lamp will be brief.'"  (text, line 243)
+- "'We were slaves also. We do not gloat. We observe.'"  (text, line 244)
+- "'This one's heart is loud. We hear it from here.'"  (text, line 245)
+- "'Comfortable in there? Your friends in the masks aren't coming.'"  (text, line 248)
+- "'Should've kept your mouth shut. Too late for that now.'"  (text, line 249)
+- "'Look at me when I'm talking to you. That's better.'"  (text, line 250)
+- "'You'll get your turn under the lamp. Everybody does.'"  (text, line 251)
+- "'How many rations did they give you for it? Was it worth it?'"  (text, line 252)
+- "Father Grigori"  (text, line 255)
+
+> Note for you (not shown in game): part of: cage visit
+
+- ", at the cage: {line}"  (text, line 322)
 
 > Note for you (not shown in game): E on any side of a cage.
 
-- "[Miscount] The cage is for Fighters and above to open."  (chat message, line 210)
-- "[Miscount] Chain link, and a padlock. It doesn't give."  (chat message, line 210)
+- "[Miscount] The cage is for Fighters and above to open."  (chat message, line 365)
+- "[Miscount] Chain link, and a padlock. It doesn't give."  (chat message, line 365)
 
 > Note for you (not shown in game): "gate", "free" or "chair" (with the one meant). Returns what's said.
 
-- "You swing the gate open."  (text, line 222)
-- "You shut the gate."  (text, line 222)
+- "You swing the gate open."  (text, line 377)
+- "You shut the gate."  (text, line 377)
 
 > Note for you (not shown in game): part of: cage do
 
-- "is let out of the cage."  (text, line 227)
-- "You let them go."  (text, line 229)
-- "There's no free chair near enough."  (text, line 233)
+- "is let out of the cage."  (text, line 382)
+- "You let them go."  (text, line 384)
+- "There's no free chair near enough."  (text, line 388)
 
 ## rebel life (sv_livingcity_rebellife.lua)
 

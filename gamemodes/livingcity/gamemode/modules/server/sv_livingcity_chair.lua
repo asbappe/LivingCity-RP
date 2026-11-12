@@ -46,6 +46,7 @@ local WRONG_HITS = 2   -- this many blows on someone with nothing to tell, and i
 
 LC.Chairs = LC.Chairs or {} -- chair -> session
 local S = LC.Chairs
+local Blow
 
 if util.AddNetworkString then
     util.AddNetworkString("lc_chair")
@@ -152,15 +153,22 @@ end
 
 -- "Take them to interrogation chair" in the talk window (sv_livingcity_talk.lua). Returns what's said, and whether the window closes.
 -- from: { cage, at } when they come out of the holding cage (sv_livingcity_rebelhold.lua): they can be sent back to it.
-function LC.ChairTake(ply, npc, from)
-    local chair = LC.ChairFor(ply, npc)
+-- auto: nobody is asking; the cell's own people do it, by a script (AutoStep below).
+function LC.ChairTake(ply, npc, from, auto)
+    local chair
+    if auto then
+        local st0 = LC.NPCs and LC.NPCs[npc]
+        if On() and st0 and st0.role == "citizen" and not SessionOfNPC(npc) then chair = LC.ChairNear(npc:GetPos()) end
+    else
+        chair = LC.ChairFor(ply, npc)
+    end
     if not chair then return "There's no chair near enough for that.", false end
     local st = LC.NPCs[npc]
     if st.state == "inline" and LC.LeaveLine then LC.LeaveLine(npc, st) end
-    local s = { chair = chair, npc = npc, st = st, asker = ply, at = CurTime(), hits = 0, told = {}, from = from }
+    local s = { chair = chair, npc = npc, st = st, asker = ply, at = CurTime(), hits = 0, told = {}, from = from, auto = auto and true or nil }
     S[chair] = s
     st.questLock = true
-    if LC.Remember then LC.Remember(npc, ply, -2) end
+    if IsValid(ply) and LC.Remember then LC.Remember(npc, ply, -2) end
     if LC.GoTo then LC.GoTo(npc, st, chair:GetPos(), true) end
     return "You take them by the arm. 'Walk. We need to talk.'", true
 end
@@ -199,6 +207,69 @@ local function Wronged(s, ply)
     end
 end
 
+-- One blow with the fists (by: the player hitting, or nil when the cell's own people do it).
+Blow = function(s, by)
+    local npc = s.npc
+    local id = npc.lcProfile and npc.lcProfile.id
+    s.hits = s.hits + 1
+    s.resolve = (s.resolve or 2) - 1
+    npc:SetHealth(math.max(10, npc:Health() - 6))
+    npc:EmitSound("physics/body/body_medium_impact_hard" .. math.random(1, 6) .. ".wav", 75)
+    if IsValid(by) then
+        if by.DoAnimationEvent and ACT_HL2MP_GESTURE_RANGE_ATTACK_FIST then by:DoAnimationEvent(ACT_HL2MP_GESTURE_RANGE_ATTACK_FIST) end
+        if by.ViewPunch then by:ViewPunch(Angle(2, math.random(-2, 2), 0)) end
+        if LC.MindsHurt then LC.MindsHurt(npc, by, 6) end
+        if LC.Remember then LC.Remember(npc, by, -3) end
+        local key = LC.MindsWhoKey and LC.MindsWhoKey(by)
+        if s.hits == 1 and LC.ChronicleAdd and key and id then
+            LC.ChronicleAdd({ k = "chair", s = key, o = id, pred = "beat " .. NameOf(npc) .. " in the chair", pos = npc:GetPos(), w = 3 })
+        end
+    elseif s.hits == 1 and LC.ChronicleAdd and id then
+        LC.ChronicleAdd({ k = "chair", s = id, pred = "was beaten in the Resistance's chair", pos = npc:GetPos(), w = 3 })
+    end
+end
+
+-- The cell's own people asking, with nobody at the window (the owner, 12 November: "script an interrogation for
+-- anyone in the prison"). About forty seconds in the chair: a question, blows until their resolve is gone (four at
+-- most), what comes out, and back to the cage. What they admit goes on the Resistance's board.
+local AUTO_ASK = { "'Who do you talk to? Give us a name.'", "'We know you went to them. What did you say?'", "'Start talking. We have all night.'" }
+local AUTO_BLOW = { "A fist. %s's head snaps to the side.", "They hit %s again. The chair creaks.", "A blow to the stomach. %s folds as far as the chair allows." }
+local function AutoStep(s, now)
+    local npc, chair = s.npc, s.chair
+    local id = npc.lcProfile and npc.lcProfile.id
+    if not s.phase then s.phase, s.nextAt = "ask", (s.seatedAt or now) + 4 end
+    if now < s.nextAt then return end
+    if s.phase == "ask" then
+        Scene(chair:GetPos(), "A voice from behind the lamp: " .. Pick(AUTO_ASK))
+        s.phase, s.nextAt = "hit", now + 5
+    elseif s.phase == "hit" then
+        Blow(s, nil)
+        Scene(chair:GetPos(), string.format(Pick(AUTO_BLOW), NameOf(npc)))
+        s.phase, s.nextAt = ((s.resolve or 0) <= 0 or s.hits >= 4) and "answer" or "hit", now + 6
+    elseif s.phase == "answer" then
+        local e = id and (s.resolve or 0) <= 0 and LC.ChronicleKnows and LC.ChronicleKnows(id, "done", s.told)
+        if e then
+            s.told[e.n] = true
+            Scene(chair:GetPos(), NameOf(npc) .. " breaks. It comes out of them: " .. e.sn .. " " .. e.pred .. ".")
+            if LC.ChronicleAdd then LC.ChronicleAdd({ k = "confess", s = id, sn = NameOf(npc), pred = "admitted it in the chair: " .. e.pred, pos = npc:GetPos(), w = 3 }) end
+        elseif s.hits >= WRONG_HITS and (s.resolve or 0) <= 0 then
+            -- for nothing: whatever they thought of the Resistance, it's gone
+            s.wronged = true
+            Scene(chair:GetPos(), "'I've done nothing. Nothing.' It sounds true. They chose the wrong one.")
+            if npc.lcProfile then npc.lcProfile.rebel = false end
+            s.st.rebel = false
+            if LC.ChronicleAdd and id then LC.ChronicleAdd({ k = "chair_wrong", s = id, sn = NameOf(npc), pred = "was beaten in the Resistance's chair for nothing", pos = npc:GetPos(), w = 4 }) end
+        else
+            Scene(chair:GetPos(), NameOf(npc) .. " says nothing they can use.")
+        end
+        s.phase, s.nextAt = "back", now + 4
+    elseif s.phase == "back" then
+        local from = s.from
+        Release(s)
+        if from and IsValid(from.cage) and LC.CageTake then LC.CageTake(nil, npc, from.cage, from) end
+    end
+end
+
 -- What the one asking does: "done", "seen", "hit" or "free". Returns what happens, in words.
 function LC.ChairDo(ply, chair, what)
     local s = IsValid(chair) and S[chair]
@@ -220,18 +291,7 @@ function LC.ChairDo(ply, chair, what)
     end
     if what == "hit" then
         if s.hits >= MAX_HITS then return "Any more and you'd kill them." end
-        s.hits = s.hits + 1
-        s.resolve = (s.resolve or 2) - 1
-        npc:SetHealth(math.max(10, npc:Health() - 6))
-        npc:EmitSound("physics/body/body_medium_impact_hard" .. math.random(1, 6) .. ".wav", 75)
-        if ply.DoAnimationEvent and ACT_HL2MP_GESTURE_RANGE_ATTACK_FIST then ply:DoAnimationEvent(ACT_HL2MP_GESTURE_RANGE_ATTACK_FIST) end
-        if ply.ViewPunch then ply:ViewPunch(Angle(2, math.random(-2, 2), 0)) end
-        if LC.MindsHurt then LC.MindsHurt(npc, ply, 6) end
-        if LC.Remember then LC.Remember(npc, ply, -3) end
-        local key = LC.MindsWhoKey and LC.MindsWhoKey(ply)
-        if s.hits == 1 and LC.ChronicleAdd and key and id then
-            LC.ChronicleAdd({ k = "chair", s = key, o = id, pred = "beat " .. NameOf(npc) .. " in the chair", pos = npc:GetPos(), w = 3 })
-        end
+        Blow(s, ply)
         return Pick(BLOW) .. ((s.resolve or 0) <= 0 and " Something in them gives." or "")
     end
     if what ~= "done" and what ~= "seen" then return nil end
@@ -273,6 +333,7 @@ function LC.ChairUse(ply, chair)
         return
     end
     if not s.seated then ply:ChatPrint("[Miscount] They're on their way to the chair.") return end
+    if s.auto then s.auto, s.phase, s.nextAt = nil, nil, nil end -- (a Fighter steps in: the questions are theirs now)
     if s.asker ~= ply and (not IsValid(s.asker) or s.asker:GetPos():DistToSqr(chair:GetPos()) > STAY * STAY) then s.asker = ply end
     if s.asker ~= ply then ply:ChatPrint("[Miscount] Someone else is asking the questions.") return end
     SendMenu(ply, s, "They squint up at you through the light.")
@@ -301,6 +362,8 @@ function LC.ChairTick(now)
                 s.next = now + 3
                 if LC.GoTo then LC.GoTo(npc, st, chair:GetPos(), true) end
             end
+        elseif s.auto then
+            AutoStep(s, now)
         else
             local near = IsValid(s.asker) and s.asker:GetPos():DistToSqr(chair:GetPos()) < STAY * STAY
             if near then s.farSince = nil else s.farSince = s.farSince or now end

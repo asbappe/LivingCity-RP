@@ -57,6 +57,7 @@ local function Speak(g, level)
     return true
 end
 LC.GrigoriSpeak = Speak
+LC.GrigoriSpeak = Speak
 local function Rebel(ply) return ply:GetNW2String("lcf_faction", "") == "resistance" end
 local function Notice(ply, kind, title, text, secs) if LC.Notice then LC.Notice(ply, kind, title, text, secs) else ply:ChatPrint(title .. ": " .. text) end end
 
@@ -118,6 +119,8 @@ function LC.GrigoriTick(now)
         if now - deadAt >= cvRespawn:GetFloat() * 60 then LC.SpawnGrigori() end
         return
     end
+    -- preaching at the Resistance's prisoners (sv_livingcity_rebelhold.lua): he stays where he is
+    if (g.lcPreachUntil or 0) > now then return end
     -- now and then he moves on to another of the Resistance's camps (when nobody's about to see him go)
     if LC.GrigoriMove(g, now) then return end
     -- he keeps to his ground (and wanders it a little)

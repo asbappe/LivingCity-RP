@@ -59,16 +59,25 @@ The owner: "resistance interrogations force people into a chair entity and the r
 
 ## The Resistance's holding cage (12 November)
 
-The owner: "They should have a holding cell that is a cage (the chain link fences in a tight square) and with the chain link door/gate that is on the side closest/facing the admin that places the entity, and it functions as a door that can opened/closed by the resistance but is permanently locked to anyone in custody. it should more or less mirror the CP prison/jail system but using an entity with the spawned props." (`sv_livingcity_rebelhold.lua`, entity `lc_rebelcage`; settings `lc_rebel_cage` 1, `lc_rebel_hold` 1200.)
+The owner: "They should have a holding cell that is a cage (the chain link fences in a tight square) and with the chain link door/gate that is on the side closest/facing the admin that places the entity, and it functions as a door that can opened/closed by the resistance but is permanently locked to anyone in custody. it should more or less mirror the CP prison/jail system but using an entity with the spawned props." (`sv_livingcity_rebelhold.lua`, entity `lc_rebelcage`; settings `lc_rebel_cage` 1, `lc_rebel_hold` 300, `lc_rebel_cage_room` 8, `lc_rebel_auto` 1, `lc_rebel_visitor` 1.)
 
 - **The cage** (editor: "Fixture: Resistance holding cage"): four chain link panels in a tight square, one a side, made by the entity and removed with it. **The gate is the side facing whoever placed it.** It swings out on its left-hand corner.
 - **Who may use it:** a Resistance **Fighter or above** (the same for the chair). E on any side of the cage opens its window: **Open/Shut the gate**, and for each of those held, **To the interrogation chair** and **Let them go**. Anyone else pressing E is told it's locked; so is anyone held in it.
-- **Taking a prisoner.** With a cage with room within 1500 units of a citizen, the talk window has **"Take them prisoner (to the holding cage)"**. Any citizen: a sympathizer, a loyalist, an informant. They think less of you, walk to the cage (two minutes at most) and are locked in. **Four to a cage.**
-- **Held.** They stand in the cage and stay there. After `lc_rebel_hold` seconds (1200: twenty minutes) they are let out, so nobody is held for ever.
-- **To the chair and back.** From the cage's window one of those held is sent to the nearest free interrogation chair within 1200 units of the cage. The chair's window then also has **"Back to the cage with them"**; a prisoner left alone in the chair is marched back to the cage rather than walking free. The time held carries on from when they were first locked up.
+- **Taking a prisoner.** With a cage with room within 1500 units of a citizen, the talk window has **"Take them prisoner (to the holding cage)"**. Any citizen: a sympathizer, a loyalist, an informant. They think less of you, walk to the cage (two minutes at most) and are locked in. **Eight to a cage** (`lc_rebel_cage_room`, 4 to 8; the owner: "let's try 8 as a max for now"); past six they stand in each other a little, and **whenever one leaves the cage, for the chair or for good, everyone still held is stood in their own place again**, so nobody stays stuck in anybody.
+- **Not kept.** The owner: the rebels "wouldn't have any interest in keeping prisoners". After `lc_rebel_hold` seconds (**300: five minutes**) a prisoner is let out. One the cell hasn't questioned yet is kept up to twice that, so everyone gets their turn.
+- **The cell questions everyone by itself** (`lc_rebel_auto`, 1; the owner: "script an interrogation for anyone in the prison"). With a free chair within 1200 units of the cage, those held are taken to it one at a time (not before 15 seconds in the cage, never twice). About forty seconds under the lamp: a voice from behind it asks, blows until their resolve is gone (four at most, never under 10 health), then what comes out, and back to the cage. People within 600 units see it as lines of the scene.
+  - Someone who breaks gives up what the chronicle says they did. **It goes on the Resistance notice board at once** ("NAME admitted it in the chair: ..."): this is how the cell, and its players, learn who informs.
+  - Someone the four blows don't break says nothing they can use.
+  - Someone broken who has nothing to tell was beaten for nothing: a sympathizer stops being one, and it is in the chronicle for the street to tell.
+  - A Fighter or above who presses E on the chair takes the questioning over.
+- **Someone at the cage** (`lc_rebel_visitor`, 1). While anyone is held, someone comes and talks at them, **one line every 30 to 60 seconds** (heard within 600 units):
+  - **Father Grigori**, if he is alive and nobody is talking to him elsewhere: he is simply there, preaching, in his own voice, and stays until the cage is empty
+  - else **a settled vortigaunt** within 4000 units walks over and speaks to them
+  - else **one of the Resistance's own** within 3000 units walks over and taunts them
+- **To the chair and back, by hand.** From the cage's window one of those held is sent to the nearest free interrogation chair within 1200 units of the cage. The chair's window then also has **"Back to the cage with them"**; a prisoner left alone in the chair is marched back to the cage rather than walking free. The time held carries on from when they were first locked up.
 - **It is known.** "locked NAME in the Resistance's cage" goes in the chronicle (once), the prisoner thinks of it as an arrest and holds it against whoever took them, and their friends know who took them.
 - **Civil Protection needs no cage** (the owner): their interrogation pulls from whoever is already in the cells.
-- **Not checked in the game:** the fence model and its size (so how tight the square is), how the gate swings, and where those held stand.
+- **Not checked in the game:** the fence model and its size (so how tight the square is, and whether eight fit), how the gate swings, where those held stand, and whether the vortigaunt and the rebel walk over as told.
 
 ## The plan this belongs to
 

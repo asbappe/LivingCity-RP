@@ -105,9 +105,10 @@ end
 
 -- Where the nth of those held stands, and a spot just outside the gate.
 function ENT:Slot(n)
-    local q = (self.lcHalf or 60) * 0.42
-    local offs = { Vector(-q, -q, 0), Vector(-q, q, 0), Vector(q, -q, 0), Vector(q, q, 0) }
-    local o = offs[(n - 1) % 4 + 1]
+    local q = (self.lcHalf or 60) * 0.5
+    local offs = { Vector(-q, -q, 0), Vector(-q, q, 0), Vector(q * 0.4, -q, 0), Vector(q * 0.4, q, 0), Vector(-q, 0, 0), Vector(q * 0.4, 0, 0),
+        Vector(-q * 0.3, -q * 0.5, 0), Vector(-q * 0.3, q * 0.5, 0) } -- (the last two stand between the others)
+    local o = offs[(n - 1) % 8 + 1]
     o:Rotate(Angle(0, self:GetAngles().y, 0))
     return self:GetPos() + o + Vector(0, 0, 2)
 end

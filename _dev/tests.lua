@@ -11337,6 +11337,8 @@ ChairTests()
 function CageTests()
 section("The Resistance's holding cage")
 _setcvar("lc_rebel_cage", 1)
+_setcvar("lc_rebel_auto", 0) -- (by hand first; the cell's own questioning is further down)
+_setcvar("lc_rebel_visitor", 0)
 _setcvar("lc_chair", 1)
 _setcvar("lc_chronicle", 1)
 local C = LC.Chron
@@ -11366,7 +11368,7 @@ ok(close == true and LC.RebelHeld[n] ~= nil and st.questLock == true and #LC.Cag
 n:SetPos(P0 + Vector(60, 0, 0))
 LC.CageTick(CurTime())
 ok(#LC.CageList(cage) == 1 and st.state == "detained" and count("caged") == 1, "at the cage they're locked in, held, and it's in the chronicle")
-LC.CageTick(CurTime() + 500)
+LC.CageTick(CurTime() + 200)
 ok(st.state == "detained" and LC.RebelHeld[n] ~= nil, "and they stay held")
 ok(LC.CageFor(lt, n) == nil and LC.ChairFor(lt, n) == nil, "someone held isn't taken again from the talk window")
 ok(LC.CageDo(member, cage, "gate") == nil and LC.CageDo(lt, cage, "gate") ~= nil, "only a Fighter or above works the gate")
@@ -11385,9 +11387,9 @@ ok(LC.ChairDo(lt, chair, "cage") ~= nil and LC.Chairs[chair] == nil and LC.Rebel
 n:SetPos(P0 + Vector(60, 0, 0))
 LC.CageTick(CurTime())
 ok(#LC.CageList(cage) == 1 and count("caged") == 1, "back in, and it isn't told a second time")
--- four at most
+-- eight at most
 local more = {}
-for i = 1, 3 do
+for i = 1, 7 do
     local m2 = person(Vector(400, 60 * i, 0))
     LC.CageTake(lt, m2)
     m2:SetPos(P0 + Vector(60, 10 * i, 0))
@@ -11395,19 +11397,105 @@ for i = 1, 3 do
 end
 LC.CageTick(CurTime())
 local fifth = person(Vector(400, 300, 0))
-ok(#LC.CageList(cage) == 4 and LC.CageFor(lt, fifth) == nil, "four to a cage: no room for a fifth")
+ok(#LC.CageList(cage) == 8 and LC.CageFor(lt, fifth) == nil, "eight to a cage: no room for a ninth")
+more[2]:SetPos(P0 + Vector(5, 5, 0))
+more[3]:SetPos(P0 + Vector(5, 5, 0))
 -- let go, and time
 ok(LC.CageDo(lt, cage, "free", more[1]) ~= nil and LC.RebelHeld[more[1]] == nil and LC.NPCs[more[1]].questLock == nil and LC.NPCs[more[1]].state ~= "detained", "let go: free to walk off")
+ok(LC.CageReseats(cage) >= 1, "and whenever one leaves, everyone still held is stood in their own place again (nobody stuck in anybody)", LC.CageReseats(cage))
 LC.RebelHeld[n].at = CurTime() - 1300
 LC.CageTick(CurTime())
-ok(LC.RebelHeld[n] == nil and st.state ~= "detained", "nobody is held for ever: after twenty minutes they're let out")
+ok(LC.RebelHeld[n] == nil and st.state ~= "detained", "nobody is kept: questioned, and past five minutes, they're let out")
+LC.RebelHeld[more[2]].at = CurTime() - 400
+LC.CageTick(CurTime())
+ok(LC.RebelHeld[more[2]] == nil, "with the cell's own questioning off, five minutes is five minutes for everyone")
+_setcvar("lc_rebel_auto", 1)
+LC.RebelHeld[more[3]].at = CurTime() - 400
+LC.CageTick(CurTime())
+ok(LC.RebelHeld[more[3]] ~= nil, "one not yet questioned is kept past five minutes, so everyone gets their turn")
+LC.RebelHeld[more[3]].at = CurTime() - 700
+LC.CageTick(CurTime())
+ok(LC.RebelHeld[more[3]] == nil, "but never more than twice as long")
+_setcvar("lc_rebel_auto", 0)
 cage:Remove()
 LC.CageGone(cage)
 ok(next(LC.RebelHeld) == nil, "the cage taken away: everyone in it is free")
 _setcvar("lc_rebel_cage", 0)
 ok(LC.CageFor(lt, fifth) == nil, "lc_rebel_cage 0: no such option")
-for _, e in ipairs({ n, fifth, more[1], more[2], more[3], chair }) do if IsValid(e) then LC.NPCs[e] = nil e:Remove() end end
+for _, e in ipairs({ n, fifth, more[1], more[2], more[3], more[4], more[5], more[6], more[7] }) do if IsValid(e) then LC.NPCs[e] = nil e:Remove() end end
+-- the cell's own people question everyone held
+_setcvar("lc_rebel_cage", 1)
+_setcvar("lc_rebel_auto", 1)
 C.list, C.byN, C.n = {}, {}, 0
+local cage2 = ents.Create("lc_rebelcage")
+cage2:SetPos(P0 + Vector(0, 2000, 0))
+cage2:Spawn()
+chair:SetPos(P0 + Vector(300, 2000, 0))
+local a, ast = person(Vector(500, 2000, 0))
+LC.CageTake(lt, a)
+a:SetPos(cage2:GetPos() + Vector(60, 0, 0))
+LC.CageTick(CurTime())
+ok(LC.CageAutoNext(cage2, CurTime()) == false, "just locked in: left to stew a moment first")
+LC.RebelHeld[a].at = CurTime() - 20
+LC.ChronicleAdd({ k = "snitch", s = a.lcProfile.id, sn = "Auto Person", pred = "reported CageLt to Civil Protection", w = 2, sec = true })
+ok(LC.CageAutoNext(cage2, CurTime()) == true and LC.RebelHeld[a] == nil and LC.Chairs[chair] and LC.Chairs[chair].auto == true, "with a chair free, the next one not yet questioned is taken to it")
+a:SetPos(chair:GetPos() + Vector(20, 0, 0))
+local near = newPlayer("CageWatcher", "citizen")
+near:SetPos(chair:GetPos() + Vector(100, 0, 0))
+near.chat = {}
+local t1 = CurTime()
+LC.ChairTick(t1)
+LC.Chairs[chair].resolve = 2 -- (someone two blows will break; the toughest hold out past the four they get)
+for i = 0, 70 do
+    if LC.Chairs[chair] then a:SetPos(chair:GetPos() + Vector(20, 0, 0)) end
+    LC.ChairTick(t1 + i)
+end
+local heard = table.concat(near.chat or {}, " | ")
+ok(string.find(heard, "A voice from behind the lamp", 1, true) ~= nil and string.find(heard, "breaks. It comes out of them: Auto Person reported CageLt to Civil Protection.", 1, true) ~= nil,
+    "a question, blows, and what they did comes out, for those near to hear", string.sub(heard, 1, 200))
+ok(LC.Chairs[chair] == nil and LC.RebelHeld[a] ~= nil and LC.RebelHeld[a].questioned == true and a:Health() >= 10, "then back to the cage, questioned, in under a minute and alive")
+local onBoard = false
+for _, it in ipairs(LC.ChronicleFeeds().rebel) do if string.find(it.text, "admitted it in the chair", 1, true) then onBoard = true end end
+ok(onBoard, "what they admitted is on the Resistance's notice board at once")
+a:SetPos(cage2:GetPos() + Vector(60, 0, 0))
+LC.CageTick(CurTime())
+ok(LC.CageAutoNext(cage2, CurTime() + 100) == false, "nobody is questioned twice")
+-- someone at the cage
+_setcvar("lc_rebel_visitor", 1)
+local keepG, keepV = LC.Grigori, LC.RebelVorts
+LC.Grigori, LC.RebelVorts = nil, {}
+ok(LC.CageVisit(cage2, CurTime()) == nil or LC.CageVisit(cage2, CurTime()) == "rebel", "nobody to send: nobody comes")
+local monk = ents.Create("npc_monk")
+monk:SetPos(P0 + Vector(9000, 0, 0))
+monk:Spawn()
+monk:SetHealth(100)
+LC.Grigori = monk
+cage2.lcVisit = nil
+near:SetPos(cage2:GetPos() + Vector(150, 0, 0))
+near.chat = {}
+local t2 = CurTime()
+local kind = LC.CageVisit(cage2, t2)
+ok(kind == "grigori" and monk:GetPos():DistToSqr(cage2:GetPos()) < 350 * 350 and (monk.lcPreachUntil or 0) > t2, "Father Grigori is at the cage, and stays")
+local said = 0
+for i = 1, 120 do local _, line = LC.CageVisit(cage2, t2 + i) if line then said = said + 1 end end
+ok(said >= 2 and said <= 4, "he preaches at them every 30 to 60 seconds, not without end", said)
+ok(string.find(table.concat(near.chat or {}, " | "), "Father Grigori, at the cage:", 1, true) ~= nil, "and those near hear it")
+monk:SetHealth(0)
+local vort = ents.Create("npc_vortigaunt")
+vort:SetPos(cage2:GetPos() + Vector(200, 0, 0))
+vort:Spawn()
+vort:SetHealth(100)
+LC.RebelVorts = { [vort] = true }
+cage2.lcVisit = nil
+ok(LC.CageVisit(cage2, t2 + 200) == "vort", "with Father Grigori dead, a vortigaunt comes instead")
+_setcvar("lc_rebel_visitor", 0)
+ok(LC.CageVisit(cage2, t2 + 300) == nil, "lc_rebel_visitor 0: nobody comes")
+LC.Grigori, LC.RebelVorts = keepG, keepV
+LC.CageGone(cage2)
+for _, e in ipairs({ a, monk, vort, chair, cage2 }) do if IsValid(e) then LC.NPCs[e] = nil e:Remove() end end
+C.list, C.byN, C.n = {}, {}, 0
+_setcvar("lc_rebel_auto", 0)
+_setcvar("lc_rebel_cage", 0)
 _setcvar("lc_chair", 0)
 _setcvar("lc_chronicle", 0)
 end
