@@ -215,6 +215,11 @@ function LC.PatSearchSlip(target)
     local S = PAT[target]
     if not S or not S.live or S.npc or S.ended then return false end
     if S.slipUsed then return false end
+    -- (the owner, 12 November: cuffed, "they are unable to move items around")
+    if target:GetNW2Bool("lc_tied", false) then
+        target:ChatPrint("[Search] Not with your hands cuffed behind you.")
+        return false
+    end
     local done, from = {}, {}
     for i, sp in ipairs(S.spots) do
         if sp.done then done[#done + 1] = i

@@ -12,9 +12,11 @@ Code: `sv_livingcity_patdown.lua`, `cl_livingcity_patdown.lua`; the quick menu i
 
 ## The patdown
 
-- **Who:** a Civil Protection unit, a Resistance Fighter or above, or whoever put the cuffs on. Only on a **cuffed player**, within arm's reach, once per cuffing.
+- **Who:** a Civil Protection unit, a Resistance Fighter or above, or whoever put the cuffs on. Only on a **cuffed player**, within arm's reach.
 - **How:** cuffing a player brings up a quick menu by itself (number keys, like F1 and F2; no mouse): **1 Pat them down, 2 No time: walk them along, 3 Take the cuffs off**, 0 closes it. It goes away when the prisoner is out of reach. Skipped, it can still be done later for as long as they are cuffed: look at them, F1 > "Pat (name) down". In the Resistance's cage it is on the cage's menu too.
-- **What it does:** four seconds beside them, then every **weapon, radio and tool** (lockpicks, bypass charges, keycards) in their pockets is taken, and what was taken from their hands at cuffing is not handed back. A unit bags it as evidence (gone); anyone else keeps it.
+- **What it does:** four seconds beside them, then the **weapons, radios and tools** (lockpicks, bypass charges, keycards) it finds in their pockets are taken, and what was taken from their hands at cuffing is not handed back. A unit bags it as evidence; anyone else keeps it.
+- **Small things are missed** (the owner: "a gun is nearly impossible to hide, a lockpick is so small it would be a toss up whether it was found, and even if one was found there might be others"): a gun is found 97 times in 100, a radio 9 in 10, a bypass charge 85 in 100, a keycard 6 in 10, and **each lockpick by itself 1 time in 2**. They can be searched again, as often as you like, but what was missed is hidden well: the odds for the small things halve each time (a lockpick: 1 in 2, then 1 in 4, then 1 in 8).
+- **The search game and cuffs:** in Civil Protection's search window the person searched can slip one thing into a spot already checked. **Not with their hands cuffed** (the owner: "they are unable to move items around").
 - **City units:** a unit that walks a prisoner to the cells pats them down first, **unless it is in a firefight** (then: "No time to search you"). The transport that takes a prisoner when no unit is free does not search.
 - `lc_patdown 0`: no patdown is offered and city units don't do one (an arrest is exactly as it was).
 
@@ -56,7 +58,8 @@ The owner: "can we make this an entity in the editor that an escaped prisoner, a
 
 ## Citizens and rebels in custody
 
-- Each one taken (cuffed by Civil Protection, or put in the Resistance's cage) may be hiding something, worked out once: a thing a search would find, and now and then a **lockpick** (about one in eight; three in ten for a rebel).
+- Each one taken (cuffed by Civil Protection, or put in the Resistance's cage) may be hiding something, worked out once: a thing a search would find, and perhaps **lockpicks**. Who carries them (the owner: "a resistance sympathizer would more often have a lockpick, and resistance members almost always"): an **ordinary citizen** 6 times in 100 (one); a **sympathizer** about one time in three (one or two); a **rebel** 85 times in 100 (one to three).
+- A patdown finds each of their lockpicks one time in two, like a player's, and less each time they are searched again. One left on them is enough to try the cuffs, the cell or the cage; a pick that snaps is gone, and with another they start again.
 - **Pat them down:** the quick menu that comes with cuffing them, F1 while looking at them, or the cage's menu. A unit's finds go to the evidence locker; a rebel keeps the lockpick.
 - A **city unit** searches whoever it arrests, unless it is in a firefight.
 - **Working at the cuffs** (the owner: "do NPCs who may have a lockpick hide them and attempt to get out of cuffs? yes please!"): a cuffed citizen or rebel with a pick nobody found works at the cuffs **only while no captor is looking at them** (the player leading them or any unit player facing them within 400 units; a city unit leading them, unless it is in a firefight). After 20 seconds of that they try: about two in three the cuffs drop and **they run**; otherwise the pick snaps or they try again. A captor who looks at them while they are at it sometimes catches it ("hands busy behind their back, something glints"): the cue to pat them down. In the chronicle as `escaped`.

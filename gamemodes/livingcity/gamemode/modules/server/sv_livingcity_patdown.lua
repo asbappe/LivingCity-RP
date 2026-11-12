@@ -68,6 +68,19 @@ function LC.PatdownFinds(target)
     return LC.ItemsWhere and LC.ItemsWhere(target, Finds) or {}
 end
 
+-- How likely one of these is found by hands going over a coat. times: which search of this prisoner it is (1, 2...).
+function LC.PatdownChance(it, times)
+    if not it then return 0 end
+    local c
+    if it.use == "arm" then c = 0.97
+    elseif it.tool == "lockpick" then c = 0.5
+    elseif it.tool == "keycard" then c = 0.6
+    elseif it.radio ~= nil then c = 0.9
+    else c = 0.85 end
+    if c < 0.9 and (times or 1) > 1 then c = c * 0.5 ^ ((times or 1) - 1) end
+    return c
+end
+
 -- ok, or false and why.
 function LC.MayPatDown(by, target)
     if not On() then return false, "Not on this server." end
@@ -80,7 +93,6 @@ function LC.MayPatDown(by, target)
     if not (IsUnit(by) or by:IsAdmin() or t.by == by or (LC.RebelMayHold and LC.RebelMayHold(by))) then
         return false, "They aren't yours to search."
     end
-    if LC.Patted[target] then return false, "They've been patted down already." end
     return true
 end
 
@@ -88,11 +100,17 @@ end
 function LC.PatdownDo(by, target)
     local t = LC.Tied and LC.Tied[target]
     if not IsValid(target) or not t then return nil end
-    LC.Patted[target] = true
+    -- A gun is nearly impossible to hide; a lockpick is a toss-up, each one by itself, so some may be left (the owner,
+    -- 12 November). Searching again can turn up more, but what was missed once is hidden well: half the odds each time.
+    local times = (tonumber(LC.Patted[target]) or 0) + 1
+    LC.Patted[target] = times
     local keeps = IsValid(by) and by:IsPlayer() and not IsUnit(by)
     local names = {}
-    for id, n in pairs(LC.PatdownFinds(target)) do
-        if LC.TakeItem(target, id, n) then
+    for id, have in pairs(LC.PatdownFinds(target)) do
+        local chance = LC.PatdownChance(LCS and LCS.Items and LCS.Items[id], times)
+        local n = 0
+        for _ = 1, have do if Roll() < chance then n = n + 1 end end
+        if n > 0 and LC.TakeItem(target, id, n) then
             local it = LCS and LCS.Items and LCS.Items[id]
             names[#names + 1] = (n > 1 and (n .. " x ") or "") .. (it and it.name or id)
             if keeps and LC.GiveItem then LC.GiveItem(by, id, n)
@@ -128,7 +146,6 @@ function LC.PatdownStart(by, target)
             if not IsValid(target) or not (LC.Tied and LC.Tied[target]) or p:GetPos():DistToSqr(target:GetPos()) > (PAT_REACH + 40) ^ 2 then
                 return p:ChatPrint("They're out of your hands.")
             end
-            if LC.Patted[target] then return end
             LC.PatdownDo(p, target)
         end,
     })
@@ -148,7 +165,7 @@ hook.Add("LivingCityUntied", "LivingCityPatdown", function(target) if target the
 
 -- A city unit walks them in: it pats them down first, unless it's in a fight (sv_livingcity_march.lua).
 hook.Add("LivingCityMarchStarted", "LivingCityPatdown", function(ply, m)
-    if not On() or not IsValid(ply) or LC.Patted[ply] or not (LC.Tied and LC.Tied[ply]) then return end
+    if not On() or not IsValid(ply) or not (LC.Tied and LC.Tied[ply]) then return end
     local unit = m and (m.unit or m.lead or m.npc)
     if IsValid(unit) and LC.CopInFirefight and LC.CopInFirefight(unit) then
         ply:ChatPrint("[Miscount] No time to search you: the unit shoves you along.")
@@ -163,12 +180,19 @@ end)
 
 local NPC_SLIP = 75 -- seconds in a cell or the cage before a hidden pick is used
 
--- What this one has on them, worked out once each time they're taken: { what = a thing (or nil), pick = a lockpick? }
+-- What this one has on them, worked out once each time they're taken: { what = a thing (or nil), picks = how many
+-- lockpicks }. Who carries one (the owner, 12 November: not everyone, not nobody; "a resistance sympathizer would more
+-- often have a lockpick, and resistance members almost always"): an ordinary citizen now and then (6 in 100, one),
+-- a sympathizer about one time in three (one or two), a rebel nearly always (85 in 100, one to three).
 function LC.NPCHides(npc, st)
     st = st or (LC.NPCs and LC.NPCs[npc])
     if not st then return nil end
     if st.lcHidden == nil then
-        st.lcHidden = { what = LC.SearchNPCRoll and LC.SearchNPCRoll(st) or nil, pick = Roll() < (st.role == "rebel" and 0.3 or 0.12) }
+        local odds, most = 0.06, 1
+        if st.role == "rebel" then odds, most = 0.85, 3 elseif st.rebel then odds, most = 0.35, 2 end
+        local picks = 0
+        if Roll() < odds then picks = 1 + math.floor(Roll() * most * 0.999) end
+        st.lcHidden = { what = LC.SearchNPCRoll and LC.SearchNPCRoll(st) or nil, picks = picks }
     end
     return st.lcHidden
 end
@@ -185,7 +209,6 @@ function LC.MayPatDownNPC(by, npc)
         if not (IsUnit(by) or by:IsAdmin() or (LC.RebelMayHold and LC.RebelMayHold(by))) then return false, "They aren't yours to search." end
         if by:GetPos():DistToSqr(npc:GetPos()) > 220 * 220 then return false, "Get closer." end
     end
-    if st.lcPatted then return false, "They've been patted down already." end
     return true
 end
 
@@ -194,20 +217,25 @@ function LC.PatdownNPC(by, npc)
     local st = IsValid(npc) and LC.NPCs and LC.NPCs[npc]
     if not st then return nil end
     local h = LC.NPCHides(npc, st)
-    st.lcPatted = true
+    st.lcPatted = (tonumber(st.lcPatted) or 0) + 1
     local byPlayer = IsValid(by) and by:IsPlayer()
     local keeps = byPlayer and not IsUnit(by)
     local names = {}
     -- (only a player unit's finds go to the evidence room: the city's own arrests would fill it and set off burnings)
-    if h.pick then
-        names[#names + 1] = "a lockpick"
-        if keeps and LC.GiveItem then LC.GiveItem(by, "lockpick", 1) elseif byPlayer then hook.Run("LivingCityPatdownBagged", "lockpick", 1, npc, by) end
+    -- (each lockpick is a toss-up, and less each time they're searched again: some may be left)
+    local chance = LC.PatdownChance({ tool = "lockpick" }, st.lcPatted)
+    local got = 0
+    for _ = 1, (h.picks or 0) do if Roll() < chance then got = got + 1 end end
+    if got > 0 then
+        h.picks = h.picks - got
+        names[#names + 1] = got > 1 and (got .. " lockpicks") or "a lockpick"
+        if keeps and LC.GiveItem then LC.GiveItem(by, "lockpick", got) elseif byPlayer then hook.Run("LivingCityPatdownBagged", "lockpick", got, npc, by) end
     end
     if h.what then
         names[#names + 1] = tostring(h.what)
         if byPlayer and not keeps and LC.EvidenceAdd then LC.EvidenceAdd(nil, 1, "arrest", h.what) end
     end
-    h.pick, h.what = false, nil
+    h.what = nil
     if IsValid(by) and by:IsPlayer() then
         by:ChatPrint(#names > 0 and ("You find: " .. table.concat(names, ", ") .. (keeps and "." or ". Bagged as evidence.")) or "Nothing on them.")
     end
@@ -256,8 +284,8 @@ function LC.NPCSlipTick(now)
         if IsValid(npc) and st and not h.walking then
             if st.lcHideFor ~= h then st.lcHideFor, st.lcHidden, st.lcPatted = h, nil, nil end
             local hid = LC.NPCHides(npc, st)
-            if hid.pick and not st.lcPatted and now - h.at > NPC_SLIP then
-                hid.pick = false
+            if (hid.picks or 0) > 0 and now - h.at > NPC_SLIP then
+                hid.picks = hid.picks - 1
                 if LC.RebelMoodPush then LC.RebelMoodPush(1, 0) end
                 local name, cage = NameOfNPC(npc), h.cage
                 if LC.CageFree then LC.CageFree(npc) end
@@ -269,10 +297,10 @@ function LC.NPCSlipTick(now)
         end
     end
     for npc, st in pairs(LC.NPCs or {}) do
-        if st.state == "jailed" and st.lcHidden and st.lcHidden.pick and not st.lcPatted and IsValid(npc) then
+        if st.state == "jailed" and st.lcHidden and (st.lcHidden.picks or 0) > 0 and IsValid(npc) then
             st.lcHeldSince = st.lcHeldSince or now
             if now - st.lcHeldSince > NPC_SLIP then
-                st.lcHidden.pick, st.lcHeldSince = false, nil
+                st.lcHidden.picks, st.lcHeldSince = st.lcHidden.picks - 1, nil
                 local name = NameOfNPC(npc)
                 if LC.ReleaseNPCPrisoner then LC.ReleaseNPCPrisoner(npc, st, now, true) end
                 if LC.RadioNotice then LC.RadioNotice("cp", "A prisoner has picked a cell door and walked out. Nobody searched them.") end
@@ -316,9 +344,9 @@ function LC.NPCCuffTick(now)
     local out = 0
     for npc, c in pairs(LC.NPCCustody or {}) do
         local st = c.st
-        if IsValid(npc) and st and LC.NPCs[npc] == st and st.state == "detained" and not st.lcPatted then
+        if IsValid(npc) and st and LC.NPCs[npc] == st and st.state == "detained" then
             local hid = LC.NPCHides(npc, st)
-            if hid.pick then
+            if (hid.picks or 0) > 0 then
                 local seen = LC.NPCCuffsWatched(npc, c)
                 if seen then
                     -- caught at it, now and then: only once they have really started
@@ -331,7 +359,7 @@ function LC.NPCCuffTick(now)
                     npc:SetNW2Float("lc_cuff_work_until", now + CUFF_TICK + 0.5) -- (their hands fiddle: cl_livingcity_cuffed.lua)
                     if st.lcCuffSecs >= CUFF_WORK then
                         if Roll() < PICK_OK then
-                            hid.pick, st.lcCuffSecs = false, nil
+                            hid.picks, st.lcCuffSecs = hid.picks - 1, nil
                             local name, from = NameOfNPC(npc), IsValid(c.leader) and c.leader or npc:GetPos()
                             Scene(npc:GetPos(), name .. "'s cuffs drop to the ground. They run.")
                             npc:EmitSound("physics/metal/metal_solid_impact_soft1.wav", 65)
@@ -345,7 +373,7 @@ function LC.NPCCuffTick(now)
                             if p and p.id and LC.ChronicleAdd then LC.ChronicleAdd({ k = "escaped", s = p.id, sn = name, pred = "picked their cuffs on the way to the cells and ran", pos = npc:GetPos(), w = 3 }) end
                             out = out + 1
                         elseif Roll() < PICK_SNAP then
-                            hid.pick, st.lcCuffSecs = false, nil -- (the pick snapped: that was their chance)
+                            hid.picks, st.lcCuffSecs = hid.picks - 1, nil -- (the pick snapped: with another, they start again)
                         else
                             st.lcCuffSecs = CUFF_WORK - 10 -- (it wouldn't give: another go in a while)
                         end

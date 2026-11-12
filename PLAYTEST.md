@@ -1728,3 +1728,5 @@ Type them in the server console on the host panel, or in your own game console (
   Notes:
 - [ ] **How cuffed people look:** cuff a player and a citizen. Are the arms behind the back (not through the body, not out to the sides)? Are the two rings on the wrists, the right size, with the link between? Have the player work at the cuffs: do the hands and fingers fiddle? If the pose is off, try `lc_cuff_pose "24 10 35 -28 20"` with other numbers and send the ones that look right (and a screenshot of what was wrong).
   Notes:
+- [ ] **Small things are missed in a patdown:** put three lockpicks and a pistol in a friend's pockets, cuff them, pat them down twice. The pistol should go the first time; the lockpicks only some of the time. Does a rebel NPC usually have one, a plain citizen almost never?
+  Notes:

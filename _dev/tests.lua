@@ -11520,6 +11520,7 @@ LC.GiveItem(cit, "lockpick", 2)
 LC.GiveItem(cit, "gun_pistol", 1)
 LC.GiveItem(cit, "radio", 1)
 LC.GiveItem(cit, "canned_food", 1)
+LC.PatdownRoll = function() return 0 end -- (everything is found, until the odds are tried below)
 ok(LC.MayPatDown(unit, cit) == false, "nobody is patted down who isn't cuffed")
 LC.TiePlayer(cit, unit)
 ok(LC.MayPatDown(unit, cit) == true and LC.MayPatDown(lt, cit) == true, "cuffed: a unit, or a Fighter or above, may pat them down")
@@ -11529,7 +11530,20 @@ local names = LC.PatdownDo(unit, cit)
 ok(#names == 3 and not LC.HasItem(cit, "lockpick") and not LC.HasItem(cit, "gun_pistol") and not LC.HasItem(cit, "radio"), "a patdown takes the weapons, radios and tools in their pockets")
 ok(LC.HasItem(cit, "canned_food"), "and leaves the rest")
 ok(not LC.HasItem(unit, "lockpick"), "a unit bags it as evidence")
-ok(LC.MayPatDown(unit, cit) == false, "once is enough: they've been patted down")
+ok(LC.PatdownChance(LCS.Items.gun_pistol, 1) > 0.9 and LC.PatdownChance(LCS.Items.lockpick, 1) == 0.5 and LC.PatdownChance(LCS.Items.lockpick, 2) == 0.25
+    and LC.PatdownChance(LCS.Items.gun_pistol, 3) > 0.9, "a gun is nearly always found; a lockpick is a toss-up, and less each time they're searched again")
+LC.GiveItem(cit, "lockpick", 3)
+do
+    local seq = { 0.4, 0.6, 0.6 }
+    LC.PatdownRoll = function() return table.remove(seq, 1) or 0.99 end
+    local again = LC.PatdownDo(unit, cit)
+    ok(LC.Patted[cit] == 2 and #again == 0 and LC.HasItem(cit, "lockpick", 3), "searched a second time: what was missed is hidden well (a roll that would have found one the first time doesn't now)")
+    seq = { 0.1, 0.9, 0.9 }
+    LC.PatdownDo(unit, cit)
+    ok(LC.HasItem(cit, "lockpick", 2) and not LC.HasItem(cit, "lockpick", 3), "each lockpick is found or missed by itself: one found, two still on them")
+    LC.TakeItem(cit, "lockpick", 2)
+    LC.PatdownRoll = function() return 0 end
+end
 LC.Untie(cit, unit, true)
 ok(LC.Patted[cit] == nil, "uncuffed: the next arrest starts again")
 -- the Resistance keep what they find
@@ -11599,6 +11613,7 @@ for i = #LC.EvidenceStock, 1, -1 do LC.EvidenceStock[i] = nil end
 for id, n in pairs(LC.Inventory(cit)) do LC.TakeItem(cit, id, n) end
 LC.GiveItem(cit, "lockpick", 1)
 LC.TiePlayer(cit, unit)
+rolls = { 0 }
 LC.PatdownDo(unit, cit)
 ok(LC.EvidenceTotal() == 1 and LC.EvidenceStock[1].id == "lockpick", "what a unit's patdown bags is in the evidence stock")
 LC.Untie(cit, unit, true)
@@ -11687,19 +11702,30 @@ n:SetPos(cage:GetPos() + Vector(60, 0, 0))
 LC.CageTick(CurTime())
 local rolls = {}
 LC.PatdownRoll = function() return table.remove(rolls, 1) or 0.99 end
-st.lcHidden = { pick = true }
+do
+    local reb = { role = "rebel" }
+    rolls = { 0.5, 0.99 }
+    ok(LC.NPCHides(nil, reb).picks == 3, "a rebel almost always carries a lockpick, sometimes several")
+    local sym, plain = { role = "citizen", rebel = true }, { role = "citizen" }
+    rolls = { 0.3, 0.0, 0.3 }
+    ok(LC.NPCHides(nil, sym).picks == 1 and LC.NPCHides(nil, plain).picks == 0, "a sympathizer often does; an ordinary citizen seldom")
+end
+st.lcHidden = { picks = 2 }
 st.lcHideFor = LC.RebelHeld[n]
 ok(LC.MayPatDownNPC(lt, n) == true and LC.MayPatDownNPC(cit, n) == false, "a held citizen can be patted down by a Fighter or above")
+rolls = { 0.4, 0.7 }
 local found = LC.PatdownNPC(lt, n)
-ok(#found == 1 and LC.HasItem(lt, "lockpick") and st.lcPatted == true, "the lockpick they hid is found, and kept")
-ok(LC.MayPatDownNPC(lt, n) == false, "once is enough")
+ok(#found == 1 and LC.HasItem(lt, "lockpick") and st.lcPatted == 1 and st.lcHidden.picks == 1, "one lockpick is found and kept; the other is missed")
+rolls = { 0.1 }
+LC.PatdownNPC(lt, n)
+ok(st.lcHidden.picks == 0, "a second search turns up the other")
 LC.RebelHeld[n].at = CurTime() - 200
 ok(LC.NPCSlipTick(CurTime()) == 0 and LC.RebelHeld[n] ~= nil, "searched: they stay where they are")
 local n2, st2 = person(Vector(420, 0, 0))
 LC.CageTake(lt, n2)
 n2:SetPos(cage:GetPos() + Vector(60, 0, 0))
 LC.CageTick(CurTime())
-st2.lcHidden = { pick = true }
+st2.lcHidden = { picks = 1 }
 st2.lcHideFor = LC.RebelHeld[n2]
 LC.RebelHeld[n2].at = CurTime() - 200
 ok(LC.NPCSlipTick(CurTime()) == 1 and LC.RebelHeld[n2] == nil and has("escaped") ~= nil, "nobody searched this one: they pick the padlock and are gone")
@@ -11709,7 +11735,7 @@ do
     LC.SetState(c1, cst, "detained")
     c1:SetNW2Bool("lc_cuffed", true)
     LC.NPCCustody[c1] = { st = cst, leader = lt }
-    cst.lcHidden, cst.lcPatted, cst.lcCuffSecs = { pick = true }, nil, nil
+    cst.lcHidden, cst.lcPatted, cst.lcCuffSecs = { picks = 1 }, nil, nil
     lt:SetPos(c1:GetPos() + Vector(-100, 0, 0))
     lt:SetEyeAngles(Angle(0, 0, 0))
     ok(LC.NPCCuffsWatched(c1, LC.NPCCustody[c1]) == lt, "the one leading a cuffed citizen is looking at them")
@@ -11721,13 +11747,13 @@ do
     for _ = 1, 9 do LC.NPCCuffTick(CurTime()) end
     ok((cst.lcCuffSecs or 0) >= 18 and cst.state == "detained", "unwatched, they work at the cuffs")
     rolls = { 0.1 }
-    ok(LC.NPCCuffTick(CurTime()) == 1 and cst.state ~= "detained" and not c1:GetNW2Bool("lc_cuffed", false) and cst.lcHidden.pick == false, "and after long enough the cuffs are off, and they run")
+    ok(LC.NPCCuffTick(CurTime()) == 1 and cst.state ~= "detained" and not c1:GetNW2Bool("lc_cuffed", false) and cst.lcHidden.picks == 0, "and after long enough the cuffs are off, and they run")
     local c2, cst2 = person(Vector(3200, 0, 0))
     LC.SetState(c2, cst2, "detained")
     LC.NPCCustody[c2] = { st = cst2, leader = lt }
-    cst2.lcHidden, cst2.lcPatted = { pick = true }, true
+    cst2.lcHidden, cst2.lcPatted = { picks = 0 }, 1
     for _ = 1, 15 do LC.NPCCuffTick(CurTime()) end
-    ok(cst2.lcCuffSecs == nil and cst2.state == "detained", "patted down: nothing to work with")
+    ok(cst2.lcCuffSecs == nil and cst2.state == "detained", "searched and nothing left on them: nothing to work with")
     LC.NPCCustody[c1], LC.NPCCustody[c2] = nil, nil
     for _, e in ipairs({ c1, c2 }) do if IsValid(e) then LC.NPCs[e] = nil e:Remove() end end
     lt:SetPos(P0 + Vector(100, 0, 0))
