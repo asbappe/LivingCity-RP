@@ -366,7 +366,7 @@ function LC.RestTick(now)
                 if w.n < 1 and left <= WARN1 and left > WARN2 then
                     w.n = 1
                     if bedtime then
-                        Notice(ply, "warn", "Lights out soon", "The good night is in about six minutes: the city goes to bed then, and so do you. Head home to bed (F1 > What now? > Places)."
+                        Notice(ply, "warn", "Lights out soon", "About six minutes until sleep: the city goes to bed then, and so do you. Head home to bed (F1 > What now? > Places)."
                             .. (unit and " On duty tonight? Take the night shift from your board (F4)." or ""), 10)
                     else
                         Notice(ply, "warn", "Getting tired", "You'll be exhausted in about six minutes: your eyes will keep closing and you'll be weaker. You can sleep in a bed now (F1 > What now? > Places).", 10)
@@ -374,7 +374,7 @@ function LC.RestTick(now)
                 elseif w.n < 2 and left <= WARN2 then
                     w.n = 2
                     if bedtime then
-                        Notice(ply, "warn", "Lights out", "About two minutes to the good night. Get into bed (F1 > What now? > Places): after it, your eyes keep closing until you sleep.", 10)
+                        Notice(ply, "warn", "Lights out", "Two minutes until sleep. Get into bed (F1 > What now? > Places): after it, your eyes keep closing until you sleep.", 10)
                     else
                         Notice(ply, "warn", "Very tired", "About two minutes before your eyes start closing. Find a bed and sleep (F1 > What now? > Places).", 10)
                     end
