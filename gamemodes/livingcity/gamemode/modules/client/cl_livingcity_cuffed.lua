@@ -16,10 +16,8 @@
 
     To adjust by eye in the game (your own client, saved):
       lc_cuffs_show 1/0
-      lc_cuff_arms "back in twist bend hand"   degrees: upper arm back, upper
+      lc_cuff_pose "back in twist bend hand"   degrees: upper arm back, upper
                    arm in towards the spine, upper arm turned in, elbow bend, wrist
-                   (it was lc_cuff_pose; renamed with the new pose, 12 November,
-                   so a value saved for the old one doesn't hold it)
       lc_cuff_ring "width thickness"           the rings, as a scale of the tube
 ]]
 
@@ -29,7 +27,7 @@ local cvShow = CreateClientConVar("lc_cuffs_show", "1", true, false, "Show cuffe
 -- (the owner, 12 November, a cuffed citizen walking ahead: "the arms are at a weird angle", hanging slightly bent at
 -- the sides with the wrists turned out. The upper arms now swing well back and turn inward, so the elbow bends the
 -- forearms across the small of the back and the wrists meet there.)
-local cvPose = CreateClientConVar("lc_cuff_arms", "40 6 75 -75 10", true, false, "The cuffed pose, in degrees: upper arm back, in, turned in, elbow bend, wrist")
+local cvPose = CreateClientConVar("lc_cuff_pose", "40 6 75 -75 10", true, false, "The cuffed pose, in degrees: upper arm back, in, turned in, elbow bend, wrist")
 local cvRing = CreateClientConVar("lc_cuff_ring", "0.075 0.035", true, false, "The cuffs' rings: width and thickness (a scale)")
 
 local RING_MODEL = "models/hunter/tubes/tube1x1x1.mdl"
