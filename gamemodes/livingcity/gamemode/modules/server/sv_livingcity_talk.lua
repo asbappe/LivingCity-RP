@@ -171,6 +171,7 @@ local function Options(ply, npc, st)
         pick = not unit and not (npc.lcPickedAt and npc.lcPickedAt > CurTime() - 600), -- (never picked counts as ready, even in a server's first ten minutes)
         inform = not unit and not rebel,
         recruit = rebel and st.rebel == true and LC.CanRecruitLookout ~= nil and (LC.CanRecruitLookout(ply, npc)),
+        chair = rebel and LC.ChairFor ~= nil and LC.ChairFor(ply, npc) ~= nil, -- (the interrogation chair: sv_livingcity_chair.lua)
     }
 end
 
@@ -214,6 +215,7 @@ function LC.OpenTalk(ply, npc, said)
     -- what you could give them (Give something): at most 30
     net.WriteUInt(math.min(#o.give, 30), 8)
     for i = 1, math.min(#o.give, 30) do net.WriteString(o.give[i].id) net.WriteString(o.give[i].label) end
+    net.WriteBool(o.chair == true)
     net.Send(ply)
     -- they stop for you
     StepAway(npc, ply)
@@ -437,6 +439,7 @@ net.Receive("lc_talk_do", function(_, ply)
     elseif string.sub(what, 1, 5) == "give:" then said = Give(ply, npc, st, string.sub(what, 6))
     elseif what == "pick" and not LC.PlayerIsCP(ply) then said, close = PickPocket(ply, npc, st)
     elseif what == "inform" and not LC.PlayerIsCP(ply) then said, close = Inform(ply, npc, st)
+    elseif what == "chair" and LC.ChairTake then said, close = LC.ChairTake(ply, npc)
     elseif what == "recruit" and LC.RecruitLookout then
         local ok, msg = LC.RecruitLookout(ply, npc)
         said, close = msg, ok

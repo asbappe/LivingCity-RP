@@ -59,6 +59,7 @@ _setcvar("lc_small_server", 0) -- (small-server mode turns on with few players o
 _setcvar("lc_bad_deal_chance", 0) -- (black market deals that go bad at random: tested on their own, StreetCrimeTests)
 _setcvar("lc_minds", 0) -- (watching the city's minds draws random numbers: tested on its own, MindsTests)
 _setcvar("lc_chronicle", 0) -- (the chronicle writes down what the other tests do: tested on its own, ChronicleTests)
+_setcvar("lc_chair", 0) -- (the interrogation chair adds a button to the talk window near one: tested on its own, ChairTests)
 _setcvar("lc_npc_vices", 0) -- (citizens drinking and smoking at random: tested on its own, MindsTests)
 LC.CollapseNpcRoll = function() return 3 end -- (the city's own Administrator refuses the G-Man three times, as she always did: tested on its own, CollapseOwnTests)
 _setcvar("lc_quest_allies", 0) -- (friendly NPCs on violent jobs: tested on their own, in QuestSquadTests)
@@ -11244,6 +11245,91 @@ C.list, C.byN, C.n, C.seen = {}, {}, 0, {}
 M.byId = keepMinds
 end
 ChronicleTests()
+
+function ChairTests()
+section("The Resistance's interrogation chair")
+_setcvar("lc_chair", 1)
+_setcvar("lc_chronicle", 1)
+local C = LC.Chron
+C.list, C.byN, C.n, C.seen, C.loaded = {}, {}, 0, {}, true
+local P0 = Vector(-26000, 30000, 0)
+local chair = ents.Create("lc_interrochair")
+chair:SetPos(P0)
+chair:Spawn()
+local function person(off)
+    local n, st = LC.SpawnCitizen(P0 + off)
+    st.leaveAt = nil
+    n.sim = false
+    if not n.lcProfile then LC.AttachProfile(n, st, LC.NewPerson("citizen")) end
+    LC.Minds.byId[n.lcProfile.id] = LC.Minds.byId[n.lcProfile.id] or { id = n.lcProfile.id, name = n.lcProfile.name, role = "citizen" }
+    return n, st
+end
+local function has(k) for _, e in ipairs(C.list) do if e.k == k then return e end end return nil end
+local rebel = newPlayer("ChairRebel", "resistance")
+rebel:SetPos(P0 + Vector(100, 0, 0))
+local cit = newPlayer("ChairCit", "citizen")
+cit:SetPos(P0 + Vector(100, 50, 0))
+local n, st = person(Vector(300, 0, 0))
+ok(LC.ChairFor(cit, n) == nil and LC.ChairFor(rebel, n) == chair, "a Resistance player with a chair within reach can take a citizen to it; nobody else")
+local far = person(Vector(4000, 0, 0))
+ok(LC.ChairFor(rebel, far) == nil, "no chair near enough: no such option")
+local said, close = LC.ChairTake(rebel, n)
+ok(close == true and LC.Chairs[chair] ~= nil and st.questLock == true, "taken by the arm: they're on their way, and the talk window closes", said)
+local other = person(Vector(320, 40, 0))
+ok(LC.ChairFor(rebel, other) == nil, "the chair is spoken for")
+n:SetPos(P0 + Vector(30, 0, 0))
+LC.ChairTick(CurTime())
+local s = LC.Chairs[chair]
+ok(s and s.seated == true and st.state == "detained" and chair:GetNW2Entity("lc_chair_sitter") == n and s.resolve >= 1 and s.resolve <= 5,
+    "at the chair they're sat in it, held there, and how long they'll hold out comes from who they are", s and s.resolve)
+s.resolve = 2
+ok(LC.ChairDo(cit, chair, "hit") == nil, "only the one asking can touch them")
+local r1 = LC.ChairDo(rebel, chair, "done")
+ok(r1 ~= nil and not string.find(r1, "comes out", 1, true), "nobody talks at first", r1)
+local id = n.lcProfile.id
+LC.ChronicleAdd({ k = "snitch", s = id, sn = "Test Person", pred = "reported ChairRebel to Civil Protection", w = 2, sec = true })
+local hp = n:Health()
+LC.ChairDo(rebel, chair, "hit")
+local blow = LC.ChairDo(rebel, chair, "hit")
+ok(s.hits == 2 and n:Health() < hp and n:Health() >= 10 and string.find(blow, "Something in them gives", 1, true) ~= nil, "two blows with the fists: hurt, never near death, and their resolve is gone", blow)
+ok(has("chair") ~= nil and has("chair").w == 3, "a beating in the chair is in the chronicle")
+local r2 = LC.ChairDo(rebel, chair, "done")
+ok(r2 and string.find(r2, "Test Person reported ChairRebel to Civil Protection.", 1, true) ~= nil, "broken, they give up what the chronicle says they did: this is how an informer is found", r2)
+local r3 = LC.ChairDo(rebel, chair, "done")
+ok(r3 and not string.find(r3, "reported", 1, true) and not s.wronged, "the same thing isn't told twice, and someone who had something to tell wasn't wronged", r3)
+for _ = 1, 10 do LC.ChairDo(rebel, chair, "hit") end
+ok(s.hits == 6 and n:Health() >= 10, "six blows at most")
+ok(LC.ChairDo(rebel, chair, "free") ~= nil and LC.Chairs[chair] == nil and st.questLock == nil and st.state ~= "detained", "let go: they're free to walk off, and the chair is empty")
+-- someone who has done nothing
+local n2, st2 = person(Vector(200, 100, 0))
+st2.rebel = true
+n2.lcProfile.rebel = true
+LC.ChairTake(rebel, n2)
+n2:SetPos(P0 + Vector(20, 0, 0))
+LC.ChairTick(CurTime())
+local s2 = LC.Chairs[chair]
+s2.resolve = 1
+LC.ChairDo(rebel, chair, "hit")
+ok(not string.find(LC.ChairDo(rebel, chair, "done"), "gone now", 1, true) and not s2.wronged, "one blow and nothing to tell: no harm done yet")
+LC.ChairDo(rebel, chair, "hit")
+local r4 = LC.ChairDo(rebel, chair, "done")
+ok(s2.wronged == true and string.find(r4, "it's gone now", 1, true) ~= nil and st2.rebel == false and n2.lcProfile.rebel == false,
+    "beaten twice for nothing: a sympathizer stops being one", r4)
+ok(has("chair_wrong") ~= nil and string.find(has("chair_wrong").pred, "in the chair for nothing", 1, true) ~= nil, "and the chronicle has it, for the street to tell")
+-- the one asking walks away
+rebel:SetPos(P0 + Vector(3000, 0, 0))
+LC.ChairTick(CurTime())
+ok(LC.Chairs[chair] ~= nil, "a moment away isn't the end of it")
+LC.ChairTick(CurTime() + 25)
+ok(LC.Chairs[chair] == nil and st2.state ~= "detained", "left alone for twenty seconds, they get up and go")
+_setcvar("lc_chair", 0)
+rebel:SetPos(P0 + Vector(100, 0, 0))
+ok(LC.ChairFor(rebel, other) == nil, "lc_chair 0: no such option")
+for _, e in ipairs({ n, n2, other, far, chair }) do if IsValid(e) then LC.NPCs[e] = nil e:Remove() end end
+C.list, C.byN, C.n = {}, {}, 0
+_setcvar("lc_chronicle", 0)
+end
+ChairTests()
 
 function BrainTests()
 section("The director and free talk: a hosted model, on a short list")

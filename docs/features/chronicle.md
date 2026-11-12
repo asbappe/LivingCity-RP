@@ -44,16 +44,27 @@ It says "later" and "then", never "because": the link is the likeliest cause, no
 
 **One thing to know:** a sympathizer who likes you used to give the safe-house hint whenever the city had no rumour to tell; now they tell a chronicle story first if there is one you haven't heard, and the hint after.
 
+## The Resistance's interrogation chair (12 November)
+
+The owner: "resistance interrogations force people into a chair entity and the resistance members use their fists to beat them", "please spawn a harsh bright spotlight above the chair that shines down onto the chair to borderline blind the person or NPC being interrogated", and on the risk: "the resistance can then also be morally gray and push good people towards CP and loyalism". **This first part is a Resistance player questioning a citizen** (`sv_livingcity_chair.lua`, entity `lc_interrochair`; setting `lc_chair`, 1).
+
+- **The chair** (editor: "Fixture: Resistance interrogation chair"): a wooden chair with a lamp hung 112 units over it, pointing straight down. Dark while empty. When someone is sat in it the lamp comes on: a visible beam, a tight and very bright cone of light on the chair, and the bulb's glare.
+- **Taking someone to it.** With a free chair within 1200 units of a citizen, a Resistance player's talk window (E on the citizen) has **"Take them to the chair (interrogate)"**. The citizen thinks less of you for it, walks to the chair (90 seconds at most, or they slip away), is pushed down into it and held there. People within 600 units see a line of the scene.
+- **Asking** (E on the chair): **Ask what they've done**, **Ask what they've seen**, **Hit them**, **Let them go**. Nobody talks at first. Each blow is with the fists: 6 health, never under 10 health, six blows at most. Each wears down their resolve, 1 to 5 blows' worth, from who they are (the brave, the proud and the tough hold out longest).
+- **What comes out is from the chronicle:** something they really did, secrets included (this is how an informer is found), or something they really saw or had done to them. Nothing is told twice.
+- **The risk.** Beat someone twice or more who has nothing to tell and has told nothing, and ask what they've done: it was for nothing. They and their friends turn on you (the grudge is the kind the minds inform over), a sympathizer stops being one, and "beat NAME in the chair for nothing" goes in the chronicle for the street to tell.
+- Every beating in the chair is in the chronicle. If the one asking stays more than 320 units away for 20 seconds, or after four minutes, they get up and go.
+- **Players in the chair:** the game of anyone sat in it (once that exists) is all but whited out by the lamp; the screen effect is in already (`cl_livingcity_chair.lua`).
+- **Not checked in the game:** how the lamp, beam and light look, and how the citizen sits on this chair model.
+
 ## The plan this belongs to
 
 1. **The chronicle** (done): what happens is kept with what led to it.
 2. **Show it to players, in the world** (done: citizens' rumours, the two boards). Next: **radio news** (the owner: "if others want to hear it, they can tune into a radio"): the Union band reads the Combine's version between its lines, Freq 7 the Resistance's, at the stations' own slow pace; behind a setting, since it changes what the stations play.
-3. **Interrogation that draws on the chronicle** (the owner said yes, 12 November; changes an existing feature, so behind a setting):
-   - a questioned person can give up what the chronicle says they did or saw; whether they talk depends on their traits
-   - **Civil Protection's:** the units beat the prisoner with the stun baton while they ask
-   - **the Resistance's:** the prisoner is put in a chair (an entity) and beaten with fists; it carries a risk: a wrongly accused citizen turns against the Resistance, towards Civil Protection and loyalism ("the resistance can then also be morally gray")
-   - both run by NPCs on their own, and both playable: a player can interrogate and be interrogated
-   - later: the Resistance can cuff someone and escort them back to rebel ground for it
+3. **Interrogation that draws on the chronicle** (the owner said yes, 12 November):
+   - **done:** the Resistance's chair, with its lamp, for a Resistance player questioning a citizen (above)
+   - **next:** the Resistance's own people doing it by themselves to those they suspect; players in the chair, which needs a way for the Resistance to cuff someone and escort them back to rebel ground
+   - **next, changes an existing feature (behind a setting):** Civil Protection's interrogation in the cells draws on the chronicle too, and the units are seen beating the prisoner with the stun baton while they ask
 4. **Revenge jobs**: a wrong in the chronicle plus a grudge in the minds makes a job (a friend beaten, an informer who named you, a unit attacked). Best after interrogation can reveal names.
 5. **Events become consequences** (each behind a setting): a block raid hits the block an informant named, a sweep follows real sabotage, curfew follows unrest.
 6. **A storyteller for pacing**: rules that decide which simmering thread boils over when the city is quiet, and hold back when it is busy.

@@ -77,6 +77,7 @@ local MODES = {
     { id = "lawboard",    label = "Fixture: law board" },
     { id = "cpfeed",      label = "Fixture: Civil Protection incident feed (arrests and reports, from the chronicle)" },
     { id = "rebelboard",  label = "Fixture: Resistance notice board (what the cell has seen, from the chronicle)" },
+    { id = "interrochair", label = "Fixture: Resistance interrogation chair (with its lamp)" },
     { id = "infodesk",    label = "Fixture: Citizen Information desk (a clerk who answers questions; place behind a counter)" },
     { id = "civposter",   label = "Fixture: Civil notice poster (its words fit what's nearest: rations, water, the Commissary...)" },
     { id = "console",     label = "Fixture: Combine console (fly a scanner: prisoners and Civil Protection units)" },

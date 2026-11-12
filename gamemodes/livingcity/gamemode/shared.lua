@@ -230,6 +230,7 @@ LC_MODULES = {
         "sv_livingcity_psyche", -- (the city's minds: traits, needs, thoughts, stress, ties, rumours; pure arithmetic)
         "sv_livingcity_minds", -- (watching the city's minds and writing it down, data/livingcity/minds/)
         "sv_livingcity_mindsact", -- (the minds acting: choices bend, breaks happen in the street, informants and unrest come from them)
+        "sv_livingcity_chair", -- (the Resistance's interrogation chair: a citizen taken to it, beaten and asked; what they tell comes from the chronicle)
         "sv_livingcity_chronicle", -- (what happens is kept with what led to it: told as rumours, on joining and in F1; data/livingcity/chronicle/)
         "sv_livingcity_brain", -- (the director and free talk: a hosted model picks from what the game can do, and speaks for named people)
         "sv_livingcity_lines", -- (what named people say, recorded: a small bank for free talk, the director and the minds' breaks)
@@ -290,6 +291,7 @@ LC_MODULES = {
         "cl_livingcity_fmenus", -- (F3 and F4: each one's key shuts the other's window and opens its own)
         "cl_livingcity_ways",
         "cl_livingcity_chronicle", -- (staff: F1 > What now? > The city's stories)
+        "cl_livingcity_chair", -- (the interrogation chair: the asker's window, and the lamp in the sitter's eyes)
         "cl_livingcity_feeds", -- (the Civil Protection incident feed and the Resistance notice board: lc_newsfeed)
         "cl_livingcity_outfits",
         "cl_livingcity_lab",

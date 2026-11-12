@@ -35,7 +35,7 @@ local USES = {
         "forcefield", "barricade_low", "barricade", "barricade_tall", "dataterm", "masterterm", "zone_combine", "sterm", "door_cp", "door_office", "studio", "loudspeaker", "screen_big" } },
     { title = "The Administrator's last stand", ids = { "desk", "adminpower", "suppressor", "speech", "door_office", "zone_combine" } },
     { title = "Prison", ids = { "cell", "release", "prisonwork", "zone_prison", "door_prison" } },
-    { title = "The Resistance and rebel bases", ids = { "zone_rebel", "rspawn", "rlookout", "rebelboard", "bunk", "workbench", "dealer", "bed", "toilet", "stove",
+    { title = "The Resistance and rebel bases", ids = { "zone_rebel", "rspawn", "rlookout", "rebelboard", "interrochair", "bunk", "workbench", "dealer", "bed", "toilet", "stove",
         "sit", "sitchair", "lean", "fire", "locker", "graffiti" } },
     { title = "Infestation", ids = { "zone_infest", "zspawn", "hazbarrel" } },
     { title = "Morning exercise", ids = { "jogroute", "yard", "parade" } },
@@ -155,7 +155,7 @@ local WANTED = {
 local function Glance()
     local pts, fx, zones, doors = 0, 0, #(LC_CL.zones or {}), #(LC_CL.doors or {})
     local FIX = { vending = true, dispenser = true, terminal = true, stove = true, fire = true, dealer = true, locker = true,
-        screen = true, lawboard = true, cpfeed = true, rebelboard = true, infodesk = true, civposter = true, console = true, workbench = true, recycler = true, dataterm = true, masterterm = true, citybin = true, streetlight = true, loudspeaker = true, screen_big = true, tv = true, incinerator = true, hazbarrel = true, transformer = true, forcefield = true, powerbank = true, turret = true, barricade_low = true, barricade = true, barricade_tall = true, intake = true, housingterm = true, laborterm = true, cpsupply = true, conveyor = true, bed = true, toilet = true, bath = true }
+        screen = true, lawboard = true, cpfeed = true, rebelboard = true, interrochair = true, infodesk = true, civposter = true, console = true, workbench = true, recycler = true, dataterm = true, masterterm = true, citybin = true, streetlight = true, loudspeaker = true, screen_big = true, tv = true, incinerator = true, hazbarrel = true, transformer = true, forcefield = true, powerbank = true, turret = true, barricade_low = true, barricade = true, barricade_tall = true, intake = true, housingterm = true, laborterm = true, cpsupply = true, conveyor = true, bed = true, toilet = true, bath = true }
     for _, p in ipairs(LC_CL.points or {}) do if FIX[p.kind] then fx = fx + 1 else pts = pts + 1 end end
     local npcs = 0
     for _, e in ipairs(ents.FindByClass("npc_*")) do if e:GetNW2String("lc_role", "") ~= "" then npcs = npcs + 1 end end

@@ -557,6 +557,7 @@ setting lc_cache_trickle = 5
 setting lc_can_event = 1
 setting lc_carry_bulky = 1
 setting lc_carry_kg = 12
+setting lc_chair = 1
 setting lc_char_slots = 3
 setting lc_char_switch_cooldown = 300
 setting lc_chat_flood = 6

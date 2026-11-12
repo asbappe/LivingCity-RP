@@ -1690,3 +1690,5 @@ Type them in the server console on the host panel, or in your own game console (
   Notes:
 - [ ] **The chronicle, for you:** after a week, copy `garrysmod/data/livingcity/chronicle/` off the server (the `_stories.txt` file is the readable one) and bring it back.
   Notes:
+- [ ] **The interrogation chair (12 November):** with !build, place "Fixture: Resistance interrogation chair" somewhere in rebel ground. Check the lamp hangs over it and is dark. As a Resistance fighter, press E on a citizen within about 1200 units of it: "Take them to the chair (interrogate)". They should walk to it and sit, and the lamp should come on: a bright cone straight down on them. Press E on the chair: ask (they refuse), hit them a few times, ask again. Try it on a citizen you saw do something, and on one who did nothing (twice or more: they should turn on you). Walk away for 20 seconds: they get up. Say how the lamp looks and whether they sit properly.
+  Notes:

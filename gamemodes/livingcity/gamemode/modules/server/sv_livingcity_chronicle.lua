@@ -271,6 +271,22 @@ end)
 ------------------------------------------------------------------------
 -- F1 > What now? > What's been happening (or !news)
 ------------------------------------------------------------------------
+-- What a named person could give up when questioned (the chair: sv_livingcity_chair.lua): the weightiest thing
+-- they did ("done": secrets included, informing above all) or saw or had done to them ("seen"), not yet told.
+function LC.ChronicleKnows(id, what, told)
+    if not On() or id == nil then return nil end
+    Ensure()
+    local best
+    for i = #C.list, 1, -1 do
+        local e = C.list[i]
+        local fits
+        if what == "done" then fits = e.s == id and (e.sec or (e.w or 0) >= 2) and e.pred ~= ""
+        else fits = (Has(e.saw, id) or e.o == id) and (e.w or 0) >= 2 end
+        if fits and not (told and told[e.n]) and (not best or (e.w or 0) > (best.w or 0)) then best = e end
+    end
+    return best
+end
+
 -- Staff only (the owner, 12 November: "only admins should have it for testing purposes; we don't need
 -- to add in psychic lore breaking roleplay breaking concepts"): secrets included.
 local function IsStaff(ply) return IsValid(ply) and (ply:IsAdmin() or (LC.CanEdit ~= nil and LC.CanEdit(ply))) or false end
