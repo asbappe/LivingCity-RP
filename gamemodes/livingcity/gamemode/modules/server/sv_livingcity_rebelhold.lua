@@ -197,7 +197,7 @@ function LC.CageTick(now)
                 h.next = now + 3
                 if LC.GoTo then LC.GoTo(npc, st, cage.Outside and cage:Outside() or cage:GetPos(), true) end
             end
-        elseif now - h.at > cvSecs:GetFloat() * ((h.questioned or not cvAuto:GetBool()) and 1 or 2) then
+        elseif now - h.at > cvSecs:GetFloat() * (LC.RebelHoldFactor and LC.RebelHoldFactor() or 1) * ((h.questioned or not cvAuto:GetBool()) and 1 or 2) then
             Scene(cage:GetPos(), NameOf(npc) .. " is let out of the cage, and doesn't look back.")
             LC.CageFree(npc)
         else
@@ -383,6 +383,12 @@ function LC.CageDo(ply, cage, what, npc)
     if IsValid(npc) and npc:IsPlayer() then return LC.CagePlayerDo and LC.CagePlayerDo(ply, cage, what, npc) or nil end
     local h = IsValid(npc) and H[npc]
     if not h or h.cage ~= cage or h.walking then return nil end
+    if what == "execute" or what == "askleave" or what == "execnoleave" then return LC.RebelExecDo and LC.RebelExecDo(ply, npc, what) or nil end
+    if what == "pat" then
+        if not LC.PatdownNPCStart then return nil end
+        local ok, why = LC.PatdownNPCStart(ply, npc)
+        return (not ok) and why or nil
+    end
     if what == "free" then
         Scene(cage:GetPos(), NameOf(npc) .. " is let out of the cage.")
         LC.CageFree(npc)

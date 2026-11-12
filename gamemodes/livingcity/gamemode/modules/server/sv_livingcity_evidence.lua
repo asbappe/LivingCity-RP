@@ -619,3 +619,164 @@ hook.Add("LivingCityStopped", "LivingCityEvidence", function()
 end)
 
 Publish()
+
+------------------------------------------------------------------------
+-- The evidence locker (the owner, 12 November: "can we make this an entity in the editor that an escaped prisoner,
+-- a thief, or a corrupt CP unit, can search and take from?"). Entity lc_evidencelocker, editor fixture "evidlocker".
+-- It opens onto the stock above. A unit opens it with their own key; anyone else picks the lock (quiet, if nobody
+-- sees) or pries it with a crowbar (loud: always reported). Once open it stays open to that person for 90 seconds.
+------------------------------------------------------------------------
+
+local cvLocker = CreateConVar("lc_evidence_locker", "1", FCVAR_ARCHIVE, "The evidence locker can be opened: by units, and by anyone who picks or pries it")
+local LOCKER_OPEN, LOCKER_REACH = 90, 160
+
+if util.AddNetworkString then
+    util.AddNetworkString("lc_evlocker")
+    util.AddNetworkString("lc_evlocker_do")
+end
+
+local function IsUnitPly(ply) return (LC.PlayerIsCP and LC.PlayerIsCP(ply)) or false end
+local function LockerRoll() return LC.PatdownRoll and LC.PatdownRoll() or math.random() end
+
+-- What can be taken out (things that are something: not "a parcel of papers"), newest first, eight at most.
+function LC.EvidenceLockerList()
+    local out = {}
+    for i = #LC.EvidenceStock, 1, -1 do
+        local e = LC.EvidenceStock[i]
+        if e.id and e.n > 0 then out[#out + 1] = e end
+        if #out >= 8 then break end
+    end
+    return out
+end
+
+function LC.EvidenceLockerIsOpen(ply)
+    return IsUnitPly(ply) or (ply.lcEvLockerOpen or 0) > CurTime()
+end
+
+local function SendLocker(ply, ent)
+    local open = LC.EvidenceLockerIsOpen(ply)
+    local list = open and LC.EvidenceLockerList() or {}
+    net.Start("lc_evlocker")
+    net.WriteEntity(ent)
+    net.WriteBool(open)
+    net.WriteUInt(#list, 4)
+    for _, e in ipairs(list) do net.WriteString(e.key) net.WriteString(e.name .. (e.n > 1 and (" x" .. e.n) or "")) end
+    net.Send(ply)
+end
+
+function LC.EvidenceLockerUse(ply, ent)
+    if not cvLocker:GetBool() or not IsValid(ply) or not IsValid(ent) then return end
+    if ply:GetNW2Bool("lc_tied", false) then ply:ChatPrint("[Miscount] Not with your hands cuffed.") return end
+    SendLocker(ply, ent)
+end
+
+-- One thing out of the stock, into their hands or pockets. ok, what's said.
+function LC.EvidenceLockerTake(ply, key)
+    if not LC.EvidenceLockerIsOpen(ply) then return false, "It's locked." end
+    local entry, at
+    for i, e in ipairs(LC.EvidenceStock) do if e.key == key and e.id and e.n > 0 then entry, at = e, i break end end
+    if not entry then return false, "That's gone." end
+    local n
+    if string.sub(entry.id, 1, 2) == "w:" then
+        n = 1
+        ply:Give(string.sub(entry.id, 3))
+    else
+        n = entry.n
+        if LC.CanCarry and not LC.CanCarry(ply, entry.id, n) then n = 1 end
+        if LC.GiveItem(ply, entry.id, n) == false then return false, "Your pockets are full." end
+    end
+    entry.n = entry.n - n
+    if entry.n <= 0 then table.remove(LC.EvidenceStock, at) end
+    Publish()
+    local what = entry.name .. (n > 1 and (" x" .. n) or "")
+    local unit = IsUnitPly(ply)
+    local seen = false
+    if unit then
+        -- a unit helping themselves: no alarm, but another unit who is looking sees it
+        for _, p in ipairs(player.GetAll()) do
+            if p ~= ply and p:Alive() and IsUnitPly(p) and p:GetPos():DistToSqr(ply:GetPos()) < 600 * 600
+                and (not LC.LineOfSight or LC.LineOfSight(p:EyePos(), ply:EyePos(), p)) then
+                seen = true
+                p:ChatPrint("[Miscount] You see " .. ply:Nick() .. " take " .. what .. " out of the evidence locker.")
+            end
+        end
+    else
+        seen = Seen(ply)
+        if seen and LC.ReportCrime then LC.ReportCrime(ply, "Stealing confiscated contraband", 240) end
+    end
+    hook.Run("LivingCityEvidenceTaken", ply, entry.id, n, seen, unit)
+    if unit then return true, "You take " .. what .. " out of evidence" .. (seen and ". Someone saw." or ". Nobody is looking.") end
+    return true, "You take " .. what .. (seen and ", and a unit saw you: you're wanted." or ". Nobody saw.")
+end
+
+local function Opened(ply, how)
+    ply.lcEvLockerOpen = CurTime() + LOCKER_OPEN
+    hook.Run("LivingCityEvidenceLockerOpened", ply, how)
+end
+
+function LC.EvidenceLockerPickDone(ply, ent)
+    if not LC.HasItem(ply, "lockpick") then return false end
+    if Seen(ply) then
+        if LC.ReportCrime then LC.ReportCrime(ply, "Breaking into the evidence locker", 240) end
+        ply:ChatPrint("[Miscount] A unit sees you at the evidence locker: you're wanted.")
+        return false
+    end
+    if LockerRoll() >= 0.65 then
+        if LockerRoll() < 0.4 then
+            LC.TakeItem(ply, "lockpick", 1)
+            ply:ChatPrint("Your pick snaps in the lock.")
+        else
+            ply:ChatPrint("The lock won't give. Try again.")
+        end
+        return false
+    end
+    if LC.WearOut then LC.WearOut(ply, "lockpick", "The pick's bent out of true: it won't do another lock.") end
+    Opened(ply, "pick")
+    if IsValid(ent) then ent:EmitSound("doors/door_latch3.wav", 60) end
+    ply:ChatPrint("[Miscount] The evidence locker's lock turns.")
+    return true
+end
+
+function LC.EvidenceLockerPryDone(ply, ent)
+    if not ply:HasWeapon("weapon_crowbar") then return false end
+    Opened(ply, "pry")
+    if IsValid(ent) then ent:EmitSound("physics/metal/metal_box_break1.wav", 95) end
+    if LC.ReportCrime then LC.ReportCrime(ply, "Breaking into the evidence locker", 240) end
+    ply:ChatPrint("[Miscount] The door tears open with a noise the whole block hears. You're wanted.")
+    return true
+end
+
+-- "pick", "pry", or "take" (with the entry's key). Returns what's said.
+function LC.EvidenceLockerDo(ply, ent, what, key)
+    if not cvLocker:GetBool() or not IsValid(ent) or ply:GetNW2Bool("lc_tied", false) then return nil end
+    if what == "take" then
+        local _, said = LC.EvidenceLockerTake(ply, key)
+        return said
+    end
+    if LC.EvidenceLockerIsOpen(ply) then return nil end
+    if what == "pick" then
+        if not LC.HasItem(ply, "lockpick") then return "You've nothing to pick it with." end
+        if not LC.StartTask then LC.EvidenceLockerPickDone(ply, ent) return nil end
+        LC.StartTask(ply, 8, "Picking the evidence locker...", { maxMove = 30, cancelText = "You palm the pick again.",
+            done = function(p) LC.EvidenceLockerPickDone(p, ent) if IsValid(ent) and IsValid(p) then SendLocker(p, ent) end end })
+    elseif what == "pry" then
+        if not ply:HasWeapon("weapon_crowbar") then return "You'd need a crowbar." end
+        if not LC.StartTask then LC.EvidenceLockerPryDone(ply, ent) return nil end
+        LC.StartTask(ply, 5, "Prying the evidence locker open...", { maxMove = 30, cancelText = "You stop.",
+            done = function(p) LC.EvidenceLockerPryDone(p, ent) if IsValid(ent) and IsValid(p) then SendLocker(p, ent) end end })
+    end
+    return nil
+end
+
+net.Receive("lc_evlocker_do", function(_, ply)
+    local ent, what, key = net.ReadEntity(), net.ReadString(), net.ReadString()
+    if (ply.lcEvLockerNext or 0) > CurTime() then return end
+    ply.lcEvLockerNext = CurTime() + 0.4
+    if not IsValid(ent) or ent:GetClass() ~= "lc_evidencelocker" or ply:GetPos():DistToSqr(ent:GetPos()) > LOCKER_REACH * LOCKER_REACH then return end
+    local said = LC.EvidenceLockerDo(ply, ent, what, key)
+    if said then ply:ChatPrint(said) end
+    if what == "take" and IsValid(ent) then SendLocker(ply, ent) end
+end)
+
+-- What a unit's patdown bags goes in (sv_livingcity_patdown.lua), and what stays behind on release (sv_livingcity_prison.lua).
+hook.Add("LivingCityPatdownBagged", "LivingCityEvidence", function(id, n) LC.EvidenceAdd(id, n, "arrest") end)

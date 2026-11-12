@@ -95,7 +95,8 @@ function LC.PatdownDo(by, target)
         if LC.TakeItem(target, id, n) then
             local it = LCS and LCS.Items and LCS.Items[id]
             names[#names + 1] = (n > 1 and (n .. " x ") or "") .. (it and it.name or id)
-            if keeps and LC.GiveItem then LC.GiveItem(by, id, n) end
+            if keeps and LC.GiveItem then LC.GiveItem(by, id, n)
+            else hook.Run("LivingCityPatdownBagged", id, n, target, by) end -- (the evidence locker: sv_livingcity_evidence.lua)
         end
     end
     table.sort(names)
@@ -155,6 +156,135 @@ hook.Add("LivingCityMarchStarted", "LivingCityPatdown", function(ply, m)
     end
     LC.PatdownDo(IsValid(unit) and unit or nil, ply)
 end)
+
+------------------------------------------------------------------------
+-- Citizens and rebels (NPCs) in custody: what they hide, and what happens when nobody looks
+------------------------------------------------------------------------
+
+local NPC_SLIP = 75 -- seconds in a cell or the cage before a hidden pick is used
+
+-- What this one has on them, worked out once each time they're taken: { what = a thing (or nil), pick = a lockpick? }
+function LC.NPCHides(npc, st)
+    st = st or (LC.NPCs and LC.NPCs[npc])
+    if not st then return nil end
+    if st.lcHidden == nil then
+        st.lcHidden = { what = LC.SearchNPCRoll and LC.SearchNPCRoll(st) or nil, pick = Roll() < (st.role == "rebel" and 0.3 or 0.12) }
+    end
+    return st.lcHidden
+end
+
+local function NPCHeld(npc)
+    return (LC.NPCCustody and LC.NPCCustody[npc] ~= nil) or (LC.RebelHeld and LC.RebelHeld[npc] ~= nil and not LC.RebelHeld[npc].walking)
+end
+
+function LC.MayPatDownNPC(by, npc)
+    if not On() then return false, "Not on this server." end
+    local st = IsValid(npc) and LC.NPCs and LC.NPCs[npc]
+    if not st or not NPCHeld(npc) then return false, "They aren't in anyone's hands." end
+    if IsValid(by) and by:IsPlayer() then
+        if not (IsUnit(by) or by:IsAdmin() or (LC.RebelMayHold and LC.RebelMayHold(by))) then return false, "They aren't yours to search." end
+        if by:GetPos():DistToSqr(npc:GetPos()) > 220 * 220 then return false, "Get closer." end
+    end
+    if st.lcPatted then return false, "They've been patted down already." end
+    return true
+end
+
+-- by: a player, an NPC unit, or nil. Returns the names of what was found.
+function LC.PatdownNPC(by, npc)
+    local st = IsValid(npc) and LC.NPCs and LC.NPCs[npc]
+    if not st then return nil end
+    local h = LC.NPCHides(npc, st)
+    st.lcPatted = true
+    local byPlayer = IsValid(by) and by:IsPlayer()
+    local keeps = byPlayer and not IsUnit(by)
+    local names = {}
+    -- (only a player unit's finds go to the evidence room: the city's own arrests would fill it and set off burnings)
+    if h.pick then
+        names[#names + 1] = "a lockpick"
+        if keeps and LC.GiveItem then LC.GiveItem(by, "lockpick", 1) elseif byPlayer then hook.Run("LivingCityPatdownBagged", "lockpick", 1, npc, by) end
+    end
+    if h.what then
+        names[#names + 1] = tostring(h.what)
+        if byPlayer and not keeps and LC.EvidenceAdd then LC.EvidenceAdd(nil, 1, "arrest", h.what) end
+    end
+    h.pick, h.what = false, nil
+    if IsValid(by) and by:IsPlayer() then
+        by:ChatPrint(#names > 0 and ("You find: " .. table.concat(names, ", ") .. (keeps and "." or ". Bagged as evidence.")) or "Nothing on them.")
+    end
+    hook.Run("LivingCityPattedDown", npc, by, names)
+    return names
+end
+
+function LC.PatdownNPCStart(by, npc)
+    local ok, why = LC.MayPatDownNPC(by, npc)
+    if not ok then return false, why end
+    if not LC.StartTask then LC.PatdownNPC(by, npc) return true end
+    return LC.StartTask(by, PAT_SECS, "Patting them down...", {
+        maxMove = 40, cancelText = "You leave their pockets alone.",
+        done = function(p) if LC.MayPatDownNPC(p, npc) then LC.PatdownNPC(p, npc) end end,
+    })
+end
+
+-- Cuffed by Civil Protection: a fresh start; a city unit searches unless it's in a fight; a player gets the quick menu.
+hook.Add("LivingCityIncarcerated", "LivingCityPatdownNPC", function(npc, _, _, arrester)
+    if not IsValid(npc) or npc:IsPlayer() then return end
+    local st = LC.NPCs and LC.NPCs[npc]
+    if not st then return end
+    st.lcHidden, st.lcPatted, st.lcHeldSince = nil, nil, nil
+    if not On() then return end
+    if IsValid(arrester) and arrester:IsPlayer() then
+        net.Start("lc_custody")
+        net.WriteEntity(npc)
+        net.WriteString("Your prisoner")
+        net.Send(arrester)
+    elseif not (IsValid(arrester) and LC.CopInFirefight and LC.CopInFirefight(arrester)) then
+        LC.PatdownNPC(IsValid(arrester) and arrester or nil, npc)
+    end
+end)
+
+local function NameOfNPC(npc)
+    return (LC.NPCStr and LC.NPCStr(npc, "lc_pname", "") ~= "" and LC.NPCStr(npc, "lc_pname", "")) or (npc.lcProfile and npc.lcProfile.name) or "A prisoner"
+end
+
+-- Nobody looked, and they had a pick: out of the cell, or out of the cage.
+function LC.NPCSlipTick(now)
+    now = now or CurTime()
+    if not On() then return 0 end
+    local out = 0
+    for npc, h in pairs(LC.RebelHeld or {}) do
+        local st = h.st
+        if IsValid(npc) and st and not h.walking then
+            if st.lcHideFor ~= h then st.lcHideFor, st.lcHidden, st.lcPatted = h, nil, nil end
+            local hid = LC.NPCHides(npc, st)
+            if hid.pick and not st.lcPatted and now - h.at > NPC_SLIP then
+                hid.pick = false
+                if LC.RebelMoodPush then LC.RebelMoodPush(1, 0) end
+                local name, cage = NameOfNPC(npc), h.cage
+                if LC.CageFree then LC.CageFree(npc) end
+                if IsValid(cage) then Scene(cage:GetPos(), "The cage's padlock is hanging open. " .. name .. " is gone.") end
+                local p = npc.lcProfile
+                if p and p.id and LC.ChronicleAdd then LC.ChronicleAdd({ k = "escaped", s = p.id, sn = name, pred = "picked the padlock of the Resistance's cage and got away", pos = npc:GetPos(), w = 3 }) end
+                out = out + 1
+            end
+        end
+    end
+    for npc, st in pairs(LC.NPCs or {}) do
+        if st.state == "jailed" and st.lcHidden and st.lcHidden.pick and not st.lcPatted and IsValid(npc) then
+            st.lcHeldSince = st.lcHeldSince or now
+            if now - st.lcHeldSince > NPC_SLIP then
+                st.lcHidden.pick, st.lcHeldSince = false, nil
+                local name = NameOfNPC(npc)
+                if LC.ReleaseNPCPrisoner then LC.ReleaseNPCPrisoner(npc, st, now, true) end
+                if LC.RadioNotice then LC.RadioNotice("cp", "A prisoner has picked a cell door and walked out. Nobody searched them.") end
+                local p = npc.lcProfile
+                if p and p.id and LC.ChronicleAdd then LC.ChronicleAdd({ k = "escaped", s = p.id, sn = name, pred = "picked the lock of a cell and walked out of the prison", pos = npc:GetPos(), w = 3 }) end
+                out = out + 1
+            end
+        end
+    end
+    return out
+end
+if timer and timer.Create then timer.Create("LivingCityNPCSlip", 5, 0, function() LC.NPCSlipTick(CurTime()) end) end
 
 ------------------------------------------------------------------------
 -- A lockpick on the cuffs
@@ -315,6 +445,10 @@ function LC.CagePlayerDo(by, cage, what, ply)
     elseif what == "pat" then
         local ok, why = LC.PatdownStart(by, ply)
         return (not ok) and why or nil
+    elseif what == "chair" then
+        return LC.ChairPlayerTake and LC.ChairPlayerTake(by, ply, cage) or nil
+    elseif what == "execute" or what == "askleave" or what == "execnoleave" then
+        return LC.RebelExecDo and LC.RebelExecDo(by, ply, what) or nil
     end
     return nil
 end
@@ -359,6 +493,9 @@ hook.Add("LivingCityIncarcerated", "LivingCityRebelPrisoners", function(ply) if 
 ------------------------------------------------------------------------
 
 LC.TargetActions = LC.TargetActions or {}
-LC.TargetActions.patdown = function(ply, target) return LC.PatdownStart(ply, target) end
+LC.TargetActions.patdown = function(ply, target)
+    if IsValid(target) and not target:IsPlayer() then return LC.PatdownNPCStart(ply, target) end
+    return LC.PatdownStart(ply, target)
+end
 LC.TargetActions.pickcuffs = function(ply) return LC.StartPickCuffs(ply) end
 LC.TargetActions.pickcage = function(ply) return LC.StartPickCage(ply) end

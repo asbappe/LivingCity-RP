@@ -361,6 +361,7 @@ end
 -- What the Resistance's board has: things the street could see, that one of their own (a sympathizer,
 -- a Resistance player) saw or was part of. It can be wrong: an accusation goes up as it was shouted.
 local REBEL_KINDS = { hurt = true, killed = true, died = true, arrest = true, burned = true,
+    executed = true, judged = true, against_rules = true, recruited = true, escaped = true, -- (sv_livingcity_rebelrule.lua, sv_livingcity_patdown.lua)
     ["did:accuse"] = true, ["did:brutal"] = true, ["did:tantrum"] = true, ["did:sabotage"] = true, ["did:defy"] = true }
 local function RebelLine(e)
     if e.k == "confess" then return Short(e.sn .. " " .. e.pred .. ".", 62) end -- (said in their own chair)
@@ -388,6 +389,10 @@ function LC.ChronicleFeeds(now)
             if text then rebel[#rebel + 1] = { text = text, mins = mins } end
         end
     end
+    -- the cell's mood and its leader's rules head the Resistance's board (sv_livingcity_rebelrule.lua)
+    local top = LC.RebelBoardLines and LC.RebelBoardLines() or {}
+    for i = #top, 1, -1 do table.insert(rebel, 1, { text = top[i], mins = 0 }) end
+    while #rebel > math.max(FEED_MAX, #top + 2) do table.remove(rebel) end
     return { cp = cp, rebel = rebel }
 end
 

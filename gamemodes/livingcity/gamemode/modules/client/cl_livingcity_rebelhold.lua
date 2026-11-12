@@ -31,13 +31,13 @@ net.Receive("lc_cage", function()
     local function PersonPage(hd)
         return function()
             local sub = {}
-            if IsValid(hd.npc) and hd.npc:IsPlayer() then
-                sub[#sub + 1] = { label = "Pat them down", run = function() Do(cage, "pat", hd.npc) end }
-            else
-                sub[#sub + 1] = { label = chair and "To the interrogation chair" or "To the interrogation chair (none free near)",
-                    run = function() Do(cage, "chair", hd.npc) end, disabled = not chair }
-            end
+            sub[#sub + 1] = { label = "Pat them down", run = function() Do(cage, "pat", hd.npc) end }
+            sub[#sub + 1] = { label = chair and "To the interrogation chair" or "To the interrogation chair (none free near)",
+                run = function() Do(cage, "chair", hd.npc) end, disabled = not chair }
             sub[#sub + 1] = { label = "Let them go", run = function() Do(cage, "free", hd.npc) end }
+            if LC_CL.ExecutionPage then
+                sub[#sub + 1] = { label = "Execution", page = LC_CL.ExecutionPage(function(what) Do(cage, what, hd.npc) end, hd.npc) }
+            end
             return { title = hd.name, items = sub }
         end
     end

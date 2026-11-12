@@ -174,7 +174,12 @@ function LC.ReleasePrisoner(ply)
             ply:StripWeapons()
             local kept = LC.ItemsWhere and LC.ItemsWhere(ply, function(it) return it.use == "arm" or it.radio ~= nil end) or {}
             local lost = 0
-            for id, n in pairs(kept) do if LC.TakeItem(ply, id, n) then lost = lost + n end end
+            for id, n in pairs(kept) do
+                if LC.TakeItem(ply, id, n) then
+                    lost = lost + n
+                    if LC.EvidenceAdd then LC.EvidenceAdd(id, n, "arrest") end -- (it really is in the evidence locker now)
+                end
+            end
             if lost > 0 then ply:ChatPrint("[Civil Protection] Your weapons and radio stay in the evidence locker.") end
         end
         ply:Give("weapon_fists")

@@ -191,6 +191,7 @@ local function ResistancePage()
     }
     if me:HasWeapon("weapon_lc_multitool") then items[#items + 1] = Item("Hack the Combine door I'm looking at", function() Send("hack") end) end
     items[#items + 1] = Page("Operations: plan or join", OpsPage)
+    items[#items + 1] = Item("The cell's rules (the leader's clipboard)", function() Send("rebelrules") end)
     -- (the owner, 7 November: losses you can see; the fighters we have left, under the rest)
     return { title = "RESISTANCE", items = items, empty = ManpowerRows(7) }
 end
@@ -322,6 +323,7 @@ local function Context(me, unit, rebel)
     elseif unit and e:GetNW2Bool("lc_cuffed", false) then
         -- a citizen or rebel cuffed with the baton (sv_livingcity_arrest.lua)
         Add("Walk them to the cells / let go", function() Send("drag") end, true)
+        Add("Pat them down", function() Send("patdown", "", e) end, true)
     elseif e:GetNW2Bool("lc_downed_body", false) then
         Add("Drag them along / let go", function() Send("drag") end)
         Add(unit and "Cuff them, or help them up: hold E" or "Help them up: hold E", function() end)

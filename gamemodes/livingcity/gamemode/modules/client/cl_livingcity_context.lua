@@ -157,6 +157,9 @@ local DATA = {
         weapon_lc_admin = { "Administrator's tablet",
             "{+attack} at someone: your bodyguard kills them",
             "{+attack2}: the office" },
+        weapon_lc_rebelclip = { "The cell's clipboard",
+            "{+attack}: the rules and the mood, as boxes to tick (number keys)",
+            "What you set is written on the Resistance's notice board" },
         weapon_crowbar = { "Crowbar",
             "{+use} on junk (a wreck, pipes, a crate): pry out scrap. It's loud",
             { "A unit who sees it out makes you wanted (not on rebel ground)", NotUnit } },
@@ -233,6 +236,42 @@ end, nil, function(me)
     local t, why = LC_CL.InsiderSlipNow(me)
     return (t and why == "") and "bright" or "faint"
 end)
+
+-- Cuffed, caged, beside a prisoner or the evidence locker (the owner, 12 November: "please add this, and other
+-- similar new options, to the context HUD popup on the right"): sv_livingcity_patdown.lua, sv_livingcity_evidence.lua.
+local function Tied(me) return me:GetNW2Bool("lc_tied", false) end
+local function Caged(me) return IsValid(me:GetNW2Entity("lc_rebel_cage_in")) end
+local function LooksAt(me, range)
+    local tr = me.GetEyeTrace and me:GetEyeTrace()
+    local e = tr and tr.Entity
+    if IsValid(e) and e:GetPos():DistToSqr(me:GetPos()) < (range or 130) ^ 2 then return e end
+    return nil
+end
+LC_CL.SetContextTitle("nearby", "cuffed", "Cuffed")
+LC_CL.AddContextHint("nearby", "cuffed", "{quick} > Work at the cuffs: slow, and only when no captor is watching", Tied)
+LC_CL.AddContextHint("nearby", "cuffed", "{quick} > Pick the cuffs: quicker, with a lockpick. Seen, they take it", Tied)
+LC_CL.SetContextTitle("nearby", "caged", "In the cage")
+LC_CL.AddContextHint("nearby", "caged", "They let you out after a few minutes", Caged)
+LC_CL.AddContextHint("nearby", "caged", "Hands free and a lockpick: {quick} > Pick the cage's padlock",
+    function(me) return Caged(me) and not Tied(me) end)
+LC_CL.SetContextTitle("nearby", "prisoner", "Your prisoner")
+local function Prisoner(me)
+    local e = LooksAt(me, 130)
+    return e ~= nil and e:IsPlayer() and e:GetNW2Bool("lc_tied", false) and not Tied(me)
+end
+LC_CL.AddContextHint("nearby", "prisoner", "{quick} > Pat them down: weapons, radios and tools out of their pockets", Prisoner)
+LC_CL.AddContextHint("nearby", "prisoner", "{quick} > Drag them along, or uncuff them", Prisoner)
+LC_CL.SetContextTitle("nearby", "inchair", "In the chair")
+LC_CL.AddContextHint("nearby", "inchair", "When they ask, answer with the number keys: the truth, a lie, or nothing",
+    function(me) return IsValid(me:GetNW2Entity("lc_chair_in")) end)
+LC_CL.SetContextTitle("nearby", "evlocker", "Evidence locker")
+local function AtLocker(me)
+    local e = LooksAt(me, 160)
+    return e ~= nil and e:GetNW2Bool("lc_evlocker", false)
+end
+LC_CL.AddContextHint("nearby", "evlocker", "{+use}: open it", function(me) return AtLocker(me) and (me:GetNW2String("lcf_faction", "") == "cp") end)
+LC_CL.AddContextHint("nearby", "evlocker", "{+use}: pick the lock (quiet, unless a unit sees) or pry it with a crowbar (loud)",
+    function(me) return AtLocker(me) and me:GetNW2String("lcf_faction", "") ~= "cp" end)
 
 ------------------------------------------------------------------------
 -- What applies now

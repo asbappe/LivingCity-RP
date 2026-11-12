@@ -1039,7 +1039,7 @@ local function FrontSlot(ent, up, out)
 end
 local FIXTURE_CLASS = {
     vending = "lc_vending", dispenser = "lc_dispenser", terminal = "lc_terminal", stove = "lc_stove", fire = "lc_fire",
-    dealer = "lc_dealer", locker = "lc_locker", screen = "lc_screen", cpfeed = "lc_newsfeed", rebelboard = "lc_newsfeed", interrochair = "lc_interrochair", rebelcage = "lc_rebelcage", lawboard = "lc_lawboard", infodesk = "lc_infoclerk", civposter = "lc_civposter", console = "lc_console",
+    dealer = "lc_dealer", locker = "lc_locker", screen = "lc_screen", cpfeed = "lc_newsfeed", rebelboard = "lc_newsfeed", interrochair = "lc_interrochair", evidlocker = "lc_evidencelocker", rebelcage = "lc_rebelcage", lawboard = "lc_lawboard", infodesk = "lc_infoclerk", civposter = "lc_civposter", console = "lc_console",
     workbench = "lc_workbench", recycler = "lc_recycler", dataterm = "lc_dataterminal", masterterm = "lc_masterterminal", incinerator = "lc_incinerator",
     hazbarrel = "lc_hazbarrel", -- (sv_livingcity_cleanup.lua)
     transformer = "lc_transformer", forcefield = "lc_forcefield",

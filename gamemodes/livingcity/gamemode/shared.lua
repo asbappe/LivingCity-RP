@@ -232,6 +232,8 @@ LC_MODULES = {
         "sv_livingcity_mindsact", -- (the minds acting: choices bend, breaks happen in the street, informants and unrest come from them)
         "sv_livingcity_rebelhold", -- (the Resistance's prisoners: the holding cage, lc_rebelcage)
         "sv_livingcity_patdown", -- (the patdown at arrest, a lockpick on the cuffs, players in the Resistance's cage)
+        "sv_livingcity_chairplayer", -- (a player prisoner in the chair: truth, a lie, or nothing)
+        "sv_livingcity_rebelrule", -- (the Resistance's rules and mood, the leader's clipboard, kind options, executions)
         "sv_livingcity_chair", -- (the Resistance's interrogation chair: a citizen taken to it, beaten and asked; what they tell comes from the chronicle)
         "sv_livingcity_chronicle", -- (what happens is kept with what led to it: told as rumours, on joining and in F1; data/livingcity/chronicle/)
         "sv_livingcity_brain", -- (the director and free talk: a hosted model picks from what the game can do, and speaks for named people)

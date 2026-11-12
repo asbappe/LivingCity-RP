@@ -73,7 +73,7 @@ end
 function LC.ChairNear(pos)
     local best, bd
     for _, c in ipairs(ents.FindByClass("lc_interrochair")) do
-        if IsValid(c) and not S[c] then
+        if IsValid(c) and not S[c] and not (LC.ChairPlayers and LC.ChairPlayers[c]) then
             local d = c:GetPos():DistToSqr(pos)
             if d < REACH * REACH and (not bd or d < bd) then best, bd = c, d end
         end
@@ -242,16 +242,23 @@ local function AutoStep(s, now)
     if s.phase == "ask" then
         Scene(chair:GetPos(), "A voice from behind the lamp: " .. Pick(AUTO_ASK))
         s.phase, s.nextAt = "hit", now + 5
+    elseif s.phase == "hit" and LC.RebelNoBlows and LC.RebelNoBlows() then
+        -- the leader's rules: nobody lays a hand on a prisoner (sv_livingcity_rebelrule.lua). Asked twice, quietly.
+        s.asks = (s.asks or 0) + 1
+        if math.random() < 0.4 then s.resolve = (s.resolve or 2) - 1 end
+        Scene(chair:GetPos(), "They ask " .. NameOf(npc) .. " again, quietly. Nobody raises a hand.")
+        s.phase, s.nextAt = ((s.resolve or 0) <= 0 or s.asks >= 2) and "answer" or "hit", now + 6
     elseif s.phase == "hit" then
         Blow(s, nil)
         Scene(chair:GetPos(), string.format(Pick(AUTO_BLOW), NameOf(npc)))
-        s.phase, s.nextAt = ((s.resolve or 0) <= 0 or s.hits >= 4) and "answer" or "hit", now + 6
+        s.phase, s.nextAt = ((s.resolve or 0) <= 0 or s.hits >= (LC.RebelAutoHits and LC.RebelAutoHits() or 4)) and "answer" or "hit", now + 6
     elseif s.phase == "answer" then
         local e = id and (s.resolve or 0) <= 0 and LC.ChronicleKnows and LC.ChronicleKnows(id, "done", s.told)
         if e then
             s.told[e.n] = true
             Scene(chair:GetPos(), NameOf(npc) .. " breaks. It comes out of them: " .. e.sn .. " " .. e.pred .. ".")
             if LC.ChronicleAdd then LC.ChronicleAdd({ k = "confess", s = id, sn = NameOf(npc), pred = "admitted it in the chair: " .. e.pred, pos = npc:GetPos(), w = 3 }) end
+            if LC.RebelMoodPush then LC.RebelMoodPush(0, 1) end -- (an informer found: the cell hardens)
         elseif s.hits >= WRONG_HITS and (s.resolve or 0) <= 0 then
             -- for nothing: whatever they thought of the Resistance, it's gone
             s.wronged = true
@@ -292,9 +299,11 @@ function LC.ChairDo(ply, chair, what)
     if what == "hit" then
         if s.hits >= MAX_HITS then return "Any more and you'd kill them." end
         Blow(s, ply)
+        if LC.RebelAgainstRules then LC.RebelAgainstRules(ply, "brutal", NameOf(npc)) end
         return Pick(BLOW) .. ((s.resolve or 0) <= 0 and " Something in them gives." or "")
     end
-    if what ~= "done" and what ~= "seen" then return nil end
+    if what == "execute" or what == "askleave" or what == "execnoleave" then return LC.RebelExecDo and LC.RebelExecDo(ply, npc, what) or nil end
+    if what ~= "done" and what ~= "seen" then return LC.RebelChairExtra and LC.RebelChairExtra(ply, s, what) or nil end
     if (s.resolve or 0) > 0 then return Pick(REFUSE) end
     local e = id and LC.ChronicleKnows and LC.ChronicleKnows(id, what, s.told)
     if e then
@@ -316,12 +325,14 @@ local function SendMenu(ply, s, said)
     net.WriteUInt(s.hits, 4)
     net.WriteUInt(MAX_HITS, 4)
     net.WriteBool(s.from ~= nil and IsValid(s.from.cage))
+    net.WriteBool(false) -- (not a player: sv_livingcity_chairplayer.lua)
     net.Send(ply)
 end
 
 -- E on the chair.
 function LC.ChairUse(ply, chair)
     if not On() or not IsValid(ply) or not IsValid(chair) then return end
+    if LC.ChairPlayerUse and LC.ChairPlayerUse(ply, chair) then return end -- (a player in it)
     local s = S[chair]
     if not IsRebel(ply) then
         ply:ChatPrint(ply:GetNW2String("lcf_faction", "") == "resistance" and "[Miscount] The chair is for Fighters and above."
@@ -344,6 +355,13 @@ net.Receive("lc_chair_do", function(_, ply)
     if (ply.lcChairNext or 0) > CurTime() then return end
     ply.lcChairNext = CurTime() + 0.6
     if not IsValid(chair) or ply:GetPos():DistToSqr(chair:GetPos()) > STAY * STAY then return end
+    if LC.ChairPlayers and LC.ChairPlayers[chair] then
+        local ps = LC.ChairPlayers[chair]
+        local psaid = LC.ChairPlayerDo(ply, chair, what)
+        if psaid and LC.ChairPlayers[chair] == ps and what ~= "done" and what ~= "seen" then LC.ChairPlayerUse(ply, chair) end
+        if psaid then ply:ChatPrint(psaid) end
+        return
+    end
     local s = S[chair]
     local said = LC.ChairDo(ply, chair, what)
     if said and S[chair] == s and s then SendMenu(ply, s, said) elseif said then ply:ChatPrint(said) end

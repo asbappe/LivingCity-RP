@@ -11227,7 +11227,9 @@ local soon = false
 for _, it in ipairs(feeds2.rebel) do if string.find(it.text, "attacked Unit 30", 1, true) then soon = true end end
 ok(not soon, "word takes five minutes to reach the Resistance's board")
 M.byId[9003].rebel = nil
+_setcvar("lc_rebel_rules", 0) -- (the cell's mood and rules head the board otherwise: RebelRuleTests)
 ok(#LC.ChronicleFeeds(t0 + 2000).rebel == 0, "with none of their own there to see, the board has nothing")
+_setcvar("lc_rebel_rules", 1)
 ok(#LC.ChronicleReport() >= 1, "the debug report has a line for it")
 -- kept over a map change
 LC.ChronicleSave(t0 + 2000)
@@ -11584,7 +11586,6 @@ ok(LC.RebelHeldPly[cit] == nil and LC.CageCount(cage) == 0, "and through the ope
 -- held, then let go
 LC.TiePlayer(cit, lt)
 ok(LC.CagePutPlayer(cit, cage, lt) == true, "put back in")
-ok(LC.CageDo(lt, cage, "chair", cit) == nil and LC.RebelHeldPly[cit] ~= nil, "the chair isn't for player prisoners yet")
 LC.RebelHeldPly[cit].at = CurTime() - 100000
 LC.RebelPrisonerTick(CurTime())
 ok(LC.RebelHeldPly[cit] == nil and not LC.IsTied(cit), "their time up: let out, and the cuffs taken off")
@@ -11592,12 +11593,213 @@ LC.TiePlayer(cit, lt)
 LC.CagePutPlayer(cit, cage, lt)
 lt:SetPos(cage:GetPos() + Vector(100, 0, 0))
 ok(LC.CageDo(lt, cage, "free", cit) == "You let them go." and LC.RebelHeldPly[cit] == nil and not LC.IsTied(cit), "or let go from the cage's menu")
+-- the evidence locker
+_setcvar("lc_evidence_locker", 1)
+table.Empty(LC.EvidenceStock)
+for id, n in pairs(LC.Inventory(cit)) do LC.TakeItem(cit, id, n) end
+LC.GiveItem(cit, "lockpick", 1)
+LC.TiePlayer(cit, unit)
+LC.PatdownDo(unit, cit)
+ok(LC.EvidenceTotal() == 1 and LC.EvidenceStock[1].id == "lockpick", "what a unit's patdown bags is in the evidence stock")
+LC.Untie(cit, unit, true)
+for _, p in ipairs({ unit, lt, member, other }) do p:SetPos(P0 + Vector(6000, 0, 0)) end
+cit:SetPos(P0 + Vector(0, -4000, 0))
+ok(LC.EvidenceLockerIsOpen(unit) and not LC.EvidenceLockerIsOpen(cit), "the evidence locker: open to a unit, locked to anyone else")
+ok(LC.EvidenceLockerTake(cit, "lockpick") == false, "locked: nothing comes out")
+LC.GiveItem(cit, "lockpick", 1)
+rolls = { 0.1 }
+ok(LC.EvidenceLockerPickDone(cit) == true and LC.EvidenceLockerIsOpen(cit), "a lockpick, with nobody looking: it opens")
+local got = LC.EvidenceLockerTake(cit, "lockpick")
+ok(got == true and LC.HasItem(cit, "lockpick", 2) and LC.EvidenceTotal() == 0, "and what was taken off them can be taken back")
+LC.EvidenceAdd("radio", 1, "arrest")
+ok(LC.EvidenceLockerTake(unit, "radio") == true and LC.HasItem(unit, "radio"), "a unit can help themselves too")
+cit.lcEvLockerOpen = nil
+table.Empty(LC.EvidenceStock)
 LC.PatdownRoll = nil
 _setcvar("lc_wear_uses", 10)
 cage:Remove()
 _setcvar("lc_rebel_cage", 0)
 end
 PatdownTests()
+function RebelRuleTests()
+section("The Resistance's rules and mood, kind options, executions, a player in the chair")
+for k, v in pairs({ lc_rebel_rules = 1, lc_patdown = 1, lc_rebel_cage = 1, lc_rebel_visitor = 0, lc_rebel_auto = 0, lc_chair = 1, lc_chronicle = 1 }) do _setcvar(k, v) end
+local C = LC.Chron
+C.list, C.byN, C.n, C.seen, C.loaded = {}, {}, 0, {}, true
+local function has(k) for _, e in ipairs(C.list) do if e.k == k then return e end end return nil end
+local P0 = Vector(-26000, 30000, 0)
+local cage = ents.Create("lc_rebelcage")
+cage:SetPos(P0)
+cage:Spawn()
+if not cage.IsOpen then
+    cage.IsOpen = function(c) return c.lcTestOpen == true end
+    cage.SetOpen = function(c, o) c.lcTestOpen = o and true or false end
+end
+local chair = ents.Create("lc_interrochair")
+chair:SetPos(P0 + Vector(300, 0, 0))
+chair:Spawn()
+local function person(off)
+    local n, st = LC.SpawnCitizen(P0 + off)
+    st.leaveAt = nil
+    n.sim = false
+    if not n.lcProfile then LC.AttachProfile(n, st, LC.NewPerson("citizen")) end
+    LC.Minds.byId[n.lcProfile.id] = LC.Minds.byId[n.lcProfile.id] or { id = n.lcProfile.id, name = n.lcProfile.name, role = "citizen" }
+    return n, st
+end
+local lt = newPlayer("RuleLt", "resistance", nil, 900)
+local ftr = newPlayer("RuleFighter", "resistance", nil, 400)
+local cit = newPlayer("RuleCit", "citizen")
+for _, p in ipairs({ lt, ftr, cit }) do p:SetPos(P0 + Vector(100, 0, 0)) end
+-- (Resistance players left by earlier tests would outrank ours: out of the way for this unit)
+local others = {}
+for _, p in ipairs(player.GetAll()) do
+    if p ~= lt and p ~= ftr and p:GetNW2String("lcf_faction", "") == "resistance" then others[#others + 1] = p p:SetNW2String("lcf_faction", "citizen") end
+end
+local R = LC.RebelRules
+R.brutal, R.execute, R.sympathizers, R.priority, R.mood = true, false, false, "lielow", ""
+LC.RebelMood.fear, LC.RebelMood.anger = 0, 0
+-- the leader and the clipboard
+ok(LC.RebelChief() == lt and LC.RebelChief(lt) == ftr, "the highest-ranked Resistance player on is the leader")
+ok(LC.RebelRuleSet(ftr, "brutal") == false and R.brutal == true, "the clipboard is the leader's alone")
+ok(LC.RebelRuleSet(lt, "brutal") == true and R.brutal == false and LC.RebelNoBlows() == true, "the leader unticks a box: nobody lays a hand on prisoners")
+ok(string.find(LC.RebelBoardLines()[2], "nobody lays a hand", 1, true) ~= nil, "and it is written on the Resistance's board")
+LC.RebelRuleSet(lt, "brutal")
+LC.RebelRuleSet(lt, "priority")
+ok(R.priority == "attack", "the priority moves to the next one")
+ok(LC.RebelAtmosphere() == "calm", "nothing has happened to the cell: calm")
+LC.RebelMoodPush(4, 0)
+ok(LC.RebelAtmosphere() == "wary", "losses make it wary")
+LC.RebelMoodPush(5, 0)
+ok(LC.RebelAtmosphere() == "desperate" and LC.RebelHoldFactor() == 0.5, "more, and it is desperate: prisoners are let go sooner")
+LC.RebelMoodPush(0, 7)
+ok(LC.RebelAtmosphere() == "vengeful" and LC.RebelAutoHits() == 5 and LC.RebelHoldFactor() == 2, "wronged enough, it is vengeful: harder questions, longer in the cage")
+ok(string.find(LC.RebelBoardLines()[1], "blood", 1, true) ~= nil, "the board says so, in words")
+LC.RebelMoodTick()
+ok(LC.RebelMood.anger < 7, "it fades with time")
+LC.RebelRuleSet(lt, "mood")
+ok(R.mood == "calm" and LC.RebelAtmosphere() == "calm", "or the leader sets the mood")
+R.mood = ""
+LC.RebelMood.fear, LC.RebelMood.anger = 0, 0
+-- a citizen in the cage: what they hide
+local n, st = person(Vector(400, 0, 0))
+LC.CageTake(lt, n)
+n:SetPos(cage:GetPos() + Vector(60, 0, 0))
+LC.CageTick(CurTime())
+local rolls = {}
+LC.PatdownRoll = function() return table.remove(rolls, 1) or 0.99 end
+st.lcHidden = { pick = true }
+st.lcHideFor = LC.RebelHeld[n]
+ok(LC.MayPatDownNPC(lt, n) == true and LC.MayPatDownNPC(cit, n) == false, "a held citizen can be patted down by a Fighter or above")
+local found = LC.PatdownNPC(lt, n)
+ok(#found == 1 and LC.HasItem(lt, "lockpick") and st.lcPatted == true, "the lockpick they hid is found, and kept")
+ok(LC.MayPatDownNPC(lt, n) == false, "once is enough")
+LC.RebelHeld[n].at = CurTime() - 200
+ok(LC.NPCSlipTick(CurTime()) == 0 and LC.RebelHeld[n] ~= nil, "searched: they stay where they are")
+local n2, st2 = person(Vector(420, 0, 0))
+LC.CageTake(lt, n2)
+n2:SetPos(cage:GetPos() + Vector(60, 0, 0))
+LC.CageTick(CurTime())
+st2.lcHidden = { pick = true }
+st2.lcHideFor = LC.RebelHeld[n2]
+LC.RebelHeld[n2].at = CurTime() - 200
+ok(LC.NPCSlipTick(CurTime()) == 1 and LC.RebelHeld[n2] == nil and has("escaped") ~= nil, "nobody searched this one: they pick the padlock and are gone")
+-- kind options in the chair
+LC.RebelHeld[n].at = CurTime()
+LC.CageDo(lt, cage, "chair", n)
+n:SetPos(chair:GetPos() + Vector(20, 0, 0))
+LC.ChairTick(CurTime())
+local s = LC.Chairs[chair]
+ok(s ~= nil and s.seated == true, "to the chair")
+s.resolve = 3
+ok(LC.ChairDo(lt, chair, "food") == "You've nothing to give them.", "nothing in your pockets to give")
+LC.GiveItem(lt, "canned_food", 1)
+LC.ChairDo(lt, chair, "food")
+ok(s.fed == true and s.resolve == 2 and not LC.HasItem(lt, "canned_food"), "food given: they soften a little")
+if n.lcProfile then n.lcProfile.traits = nil end
+rolls = { 0.0 }
+local was = s.resolve
+local t = LC.Psy and LC.Psy.Traits and n.lcProfile and LC.Psy.Traits(n.lcProfile) or {}
+LC.ChairDo(lt, chair, "talk")
+ok(((t.pride or 0) > 0.4 and s.resolve == was) or s.resolve == was - 1, "talking without blows works on those who aren't too proud")
+st.rebel = false
+rolls = { 0.0, 0.99 }
+LC.ChairDo(lt, chair, "recruit")
+ok(st.rebel == true and has("recruited") ~= nil, "asked to join after being treated well: they come over")
+ok(LC.ChairDo(lt, chair, "recruit") == "You've had their answer.", "asked once")
+-- executions
+ok(LC.RebelExecDo(ftr, n, "execute") == "You'd need leave for that. Ask, or do it without.", "a Fighter has no leave to execute")
+LC.Chairs[chair].asker = ftr
+R.execute = false
+LC.ExecAskLeave(ftr, n)
+ok(LC.ExecAsks[ftr] ~= nil, "they ask leave, and it goes to the Lieutenant")
+LC.ExecAnswer(lt, ftr, false)
+ok(not LC.ExecHasLeave(ftr, n) and ftr.lcExecRefused == n, "refused")
+LC.ExecAskLeave(ftr, n)
+LC.ExecAnswer(lt, ftr, true)
+ok(LC.ExecHasLeave(ftr, n) == true, "or given")
+LC.Execute(ftr, n)
+ok((not IsValid(n) or n:Health() <= 0) and has("executed") ~= nil and LC.ExecJudging == nil, "with leave: done, known, and nobody answers for it")
+ok(has("against_rules") ~= nil, "against the cell's own rules, though (prisoners are let go), and the board carries that")
+LC.ChairTick(CurTime())
+-- without leave
+local n3, st3 = person(Vector(440, 0, 0))
+LC.CageTake(ftr, n3)
+n3:SetPos(cage:GetPos() + Vector(60, 0, 0))
+LC.CageTick(CurTime())
+ok(LC.CageDo(ftr, cage, "execnoleave", n3) ~= nil and LC.ExecJudging ~= nil and LC.ExecJudging.judge == lt, "a Fighter does it without leave: the Lieutenant has to answer")
+local rk = ftr:GetNW2Int("lcf_rank", 1)
+LC.ExecJudged(lt, "demote")
+ok(ftr:GetNW2Int("lcf_rank", 1) == rk - 1 and has("judged") ~= nil, "broken in rank for it")
+ftr:SetPData("lcf_xp_resistance", 400)
+LC.AddXP(ftr, 0, "test")
+-- a player prisoner: the chair, and the two kinds of death
+LC.TiePlayer(cit, lt)
+LC.CagePutPlayer(cit, cage, lt)
+local keyC = LC.MindsWhoKey(cit)
+LC.ChronicleAdd({ k = "did:sabotage", s = keyC, sn = "RuleCit", pred = "cut the wires at the checkpoint", w = 3, sec = true })
+lt:SetPos(chair:GetPos() + Vector(60, 0, 0))
+ok(LC.CageDo(lt, cage, "chair", cit) == "To the chair with them." and LC.ChairPlayerOf(cit) ~= nil and LC.RebelHeldPly[cit] == nil, "a held player is sent to the chair")
+ok(LC.ChairNear(cage:GetPos()) == nil, "the chair is taken")
+LC.ChairPlayerDo(lt, chair, "seen")
+ok(LC.ChairPlayerOf(cit).q == "seen", "asked: the answer is the prisoner's")
+ok(LC.ChairPlayerAnswer(cit, "silent") ~= nil and LC.ChairPlayerOf(cit).q == nil, "they say nothing")
+LC.ChairPlayerDo(lt, chair, "done")
+local truth = LC.ChairPlayerAnswer(cit, "truth")
+ok(string.find(truth or "", "cut the wires", 1, true) ~= nil, "the truth is what the chronicle holds about them", truth)
+LC.ChairPlayerDo(lt, chair, "done")
+rolls = { 0.99 }
+local lie = LC.ChairPlayerAnswer(cit, "lie")
+ok(string.find(lie or "", "It comes out of them", 1, true) ~= nil and string.find(lie, "cut the wires", 1, true) == nil, "a lie sounds the same, and isn't")
+local hp = cit:Health()
+LC.ChairPlayerDo(lt, chair, "hit")
+ok(cit:Health() < hp and LC.ChairPlayerOf(cit).hits == 1, "a blow hurts")
+LC.ChairPlayerDo(lt, chair, "cage")
+ok(LC.ChairPlayerOf(cit) == nil and LC.RebelHeldPly[cit] ~= nil, "back to the cage")
+local final
+hook.Add("LivingCityExecuted", "RuleTest", function(_, _, _, f) final = f end)
+rolls = { 0.9 }
+ftr:SetPos(cage:GetPos() + Vector(100, 0, 0))
+LC.CageDo(ftr, cage, "execnoleave", cit)
+ok(final == false and LC.RebelHeldPly[cit] == nil, "a player killed without leave: an ordinary death, two times in three")
+LC.ExecJudged(nil, "stand")
+cit:Spawn()
+LC.TiePlayer(cit, lt)
+LC.CagePutPlayer(cit, cage, lt)
+lt:SetPos(cage:GetPos() + Vector(100, 0, 0))
+LC.CageDo(lt, cage, "execute", cit)
+ok(final == true, "a proper execution, by a Lieutenant: the character's death")
+hook.Remove("LivingCityExecuted", "RuleTest")
+cit.lcEndOfLife = nil
+LC.ExecJudging, LC.PatdownRoll = nil, nil
+R.brutal, R.execute, R.sympathizers, R.priority, R.mood = true, false, false, "lielow", ""
+LC.RebelMood.fear, LC.RebelMood.anger = 0, 0
+for _, p in ipairs(others) do if IsValid(p) then p:SetNW2String("lcf_faction", "resistance") end end
+LC.CageGone(cage)
+for _, e in ipairs({ n, n2, n3, chair, cage }) do if IsValid(e) then LC.NPCs[e] = nil e:Remove() end end
+C.list, C.byN, C.n = {}, {}, 0
+for k in pairs({ lc_rebel_cage = 1, lc_chair = 1, lc_chronicle = 1 }) do _setcvar(k, 0) end
+end
+RebelRuleTests()
 
 function BrainTests()
 section("The director and free talk: a hosted model, on a short list")
@@ -26886,6 +27088,7 @@ CrabHuntTests()
 -- The owner, 7 November: what units confiscate is burned in public, in the square, the citizens made to
 -- watch, the Resistance with a chance to snatch some back before it catches (sv_livingcity_evidence.lua).
 function EvidenceTests()
+_setcvar("lc_patdown", 0) -- (a unit that walks a wanted player in bags what is in their pockets: that would add to the stock counted here; PatdownTests has it)
     local FAR = Vector(29000, -29000, 0)
     local wasRunning, wasAuto, wasBudget = LC.Running, LC.EvidenceAuto, GetConVar("lc_npc_budget"):GetInt()
     LC.Running, LC.EvidenceAuto = true, false
@@ -27078,6 +27281,7 @@ function EvidenceTests()
     LC.Running, LC.EvidenceAuto = wasRunning, wasAuto
     _setcvar("lc_npc_budget", wasBudget)
     _run(1)
+_setcvar("lc_patdown", 1)
 end
 EvidenceTests()
 

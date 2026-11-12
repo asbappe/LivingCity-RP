@@ -76,6 +76,7 @@ local MODES = {
     { id = "screen",      label = "Fixture: city screen (shows broadcasts)" },
     { id = "lawboard",    label = "Fixture: law board" },
     { id = "cpfeed",      label = "Fixture: Civil Protection incident feed (arrests and reports, from the chronicle)" },
+    { id = "evidlocker",  label = "Fixture: evidence locker (what Civil Protection confiscates; it can be broken into)" },
     { id = "rebelboard",  label = "Fixture: Resistance notice board (what the cell has seen, from the chronicle)" },
     { id = "interrochair", label = "Fixture: Resistance interrogation chair (with its lamp)" },
     { id = "rebelcage",   label = "Fixture: Resistance holding cage (chain link; the gate faces you)" },

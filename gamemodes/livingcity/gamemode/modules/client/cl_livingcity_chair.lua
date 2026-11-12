@@ -24,16 +24,31 @@ net.Receive("lc_chair", function()
     end
     local name, said, hits, max = net.ReadString(), net.ReadString(), net.ReadUInt(4), net.ReadUInt(4)
     local fromCage = net.ReadBool()
+    local isPlayer = net.ReadBool()
     if not LC_CL.OpenSituation then return end
     -- A quick menu, not a window (the owner, 12 November): number keys, and you can still move and look.
     local items = {
         { label = "Ask what they've done", run = function() Do(chair, "done") end },
         { label = "Ask what they've seen", run = function() Do(chair, "seen") end },
-        { label = hits >= max and "Hit them (any more would kill them)" or ("Hit them (" .. hits .. " of " .. max .. ")"),
-            run = function() Do(chair, "hit") end, disabled = hits >= max },
     }
+    if not isPlayer then
+        -- the kind options (sv_livingcity_rebelrule.lua)
+        items[#items + 1] = { label = "Be kind", page = function()
+            return { title = "Be kind", items = {
+                { label = "Talk to them, no threats", run = function() Do(chair, "talk") end },
+                { label = "Give them food or water (from your pockets)", run = function() Do(chair, "food") end },
+                { label = "Ask them to join us", run = function() Do(chair, "recruit") end },
+            } }
+        end }
+    end
+    items[#items + 1] = { label = hits >= max and "Hit them (any more would kill them)" or ("Hit them (" .. hits .. " of " .. max .. ")"),
+        run = function() Do(chair, "hit") end, disabled = hits >= max }
     if fromCage then items[#items + 1] = { label = "Back to the cage with them", run = function() Do(chair, "cage") end } end
     items[#items + 1] = { label = "Let them go", run = function() Do(chair, "free") end }
+    if LC_CL.ExecutionPage then
+        local sitter = chair:GetNW2Entity("lc_chair_sitter")
+        items[#items + 1] = { label = "Execution", page = LC_CL.ExecutionPage(function(what) Do(chair, what) end, sitter) }
+    end
     LC_CL.OpenSituation({ id = "chair", title = name .. ", in the chair", items = items, note = said,
         stay = function()
             local me = LocalPlayer()

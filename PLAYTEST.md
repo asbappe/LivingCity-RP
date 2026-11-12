@@ -1710,3 +1710,17 @@ Type them in the server console on the host panel, or in your own game console (
   Notes:
 - [ ] **The chair and the cage menus:** now lists with number keys, what was said written underneath. Readable? In the way of anything?
   Notes:
+
+## 12 November, later: the evidence locker, the chair for players, the rules and executions
+- [ ] **Evidence locker** (editor: Fixture: evidence locker): does it stand right? As a unit, E lists what was confiscated; as a citizen, can you pick it or pry it, and take your things back?
+  Notes:
+- [ ] **The right-hand panel:** cuffed, in the cage, in the chair, looking at a prisoner or the locker: does it show what you can do?
+  Notes:
+- [ ] **A player in the chair:** does the prisoner get the three answers on the number keys? Can they see anything but the lamp? Does the asker's menu stay usable?
+  Notes:
+- [ ] **The clipboard:** does the leader get it? How does it look in the hand? Do the boxes tick, and does the Resistance board show the mood and rules as its first lines without crowding out the news?
+  Notes:
+- [ ] **Executions:** as a Fighter, ask leave; as a Lieutenant, give or refuse it; kill without leave and answer for it. Does each menu come up for the right person?
+  Notes:
+- [ ] **Be kind** in the chair: talk, food, ask them to join.
+  Notes:
