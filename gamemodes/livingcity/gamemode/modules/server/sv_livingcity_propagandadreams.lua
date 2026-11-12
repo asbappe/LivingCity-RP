@@ -137,11 +137,17 @@ local function Find(root)
     table.sort(names)
     return names
 end
--- Songs for a word: flat in sound/livingcity/dreams/ (and, for admire, the older folder).
+-- Songs for a word: flat in sound/livingcity/dreams/, or any in its own folder there,
+-- sound/livingcity/dreams/<word>/ (the owner, 12 November: a folder for each dream's music);
+-- and, for admire, the older folder.
 function LC.PropagandaSongs(word)
     local out = {}
     for _, n in ipairs(Find(LC.PropagandaRoot)) do
         if AUDIO[Ext(n) or ""] and LC.PropagandaWordOf(n, LC.PropagandaSongWords) == word then out[#out + 1] = LC.PropagandaRoot .. n end
+    end
+    if word and word ~= "" and word ~= "voice" then
+        local dir = LC.PropagandaRoot .. string.lower(word) .. "/"
+        for _, n in ipairs(Find(dir)) do if AUDIO[Ext(n) or ""] then out[#out + 1] = dir .. n end end
     end
     if word == "admire" then
         for _, n in ipairs(Find(LC.PropagandaOldRoot)) do if AUDIO[Ext(n) or ""] then out[#out + 1] = LC.PropagandaOldRoot .. n end end
@@ -174,6 +180,13 @@ do -- (all of it sent to players when the map starts)
     for _, n in ipairs(Find(LC.PropagandaRoot)) do if AUDIO[Ext(n) or ""] then Add(LC.PropagandaRoot .. n) end end
     for _, n in ipairs(Find(LC.PropagandaOldRoot)) do if AUDIO[Ext(n) or ""] then Add(LC.PropagandaOldRoot .. n) end end
     for _, n in ipairs(Find(LC.PropagandaVoiceRoot)) do if AUDIO[Ext(n) or ""] then Add(LC.PropagandaVoiceRoot .. n) end end
+    -- (each dream's own folder: sound/livingcity/dreams/<codeword>/)
+    local _, dirs = file.Find("sound/" .. LC.PropagandaRoot .. "*", "GAME")
+    for _, d in ipairs(dirs or {}) do
+        if d ~= "voice" and d ~= "administrator" then
+            for _, n in ipairs(Find(LC.PropagandaRoot .. d .. "/")) do if AUDIO[Ext(n) or ""] then Add(LC.PropagandaRoot .. d .. "/" .. n) end end
+        end
+    end
 end
 
 -- Everyone in the dream (still in it, or watching), and the star.

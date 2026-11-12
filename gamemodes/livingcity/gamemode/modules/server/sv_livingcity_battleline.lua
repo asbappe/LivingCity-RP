@@ -44,9 +44,16 @@ local Line, Starts, Spawn, Offend, Notice, HerEnt = P.Line, P.Starts, P.Spawn, P
 local Villain = LC.PropagandaVillain
 
 local ID = "battleline"
-LC.BattleLineTimes = { calm = 5, battle = 100, doom = 7, rescue = 22, victory = 4 }
+-- (the owner, 12 November: "paced out to last a tad longer": the doom's giants come in over a few seconds, not all
+-- at once (LC.BattleLineDoomEvery); her air comes once they're about half way across (LC.BattleLineAirAt), or after
+-- doom seconds at the latest; the bombs fall slower, and the rescue may take up to rescue seconds)
+LC.BattleLineTimes = { calm = 6, battle = 110, doom = 30, rescue = 45, victory = 4 }
+LC.BattleLineDoomEvery, LC.BattleLineAirAt, LC.BattleLineBombEvery = 0.2, 0.5, 0.3
+-- Their pace: a usual run, whatever the size of the field (it's the whole dream zone now: LC.BattleLineField).
+LC.BattleLineRun = { rebel = 230, giant = 200, doom = 180 }
+LC.BattleLineWidest = 3000 -- (the field across: the whole zone's length, but no wider than this, so a line can hold it)
 local T = LC.BattleLineTimes
-local def = { id = ID, name = "The Battle Line", mood = "happy", secs = 170, lives = 3, music = { ID, "propaganda" },
+local def = { id = ID, name = "The Battle Line", mood = "happy", secs = 240, lives = 3, music = { ID, "propaganda" },
     goal = "The terrorists are coming! Shoot the red rebels before they reach the line. Never fire on her soldiers.",
     timeUp = { "The guns fall silent", "The field goes quiet, and you wake." } }
 G[ID] = def
@@ -105,9 +112,10 @@ local function Fighters(g, players)
     return out
 end
 
+-- (the dream's own rifle: let through by LC.DreamGive, sv_livingcity_dreams.lua; taken back as they wake with their own things)
 local function Arm(p)
     if not IsValid(p) or not p.Give or (p.HasWeapon and p:HasWeapon(LC.BattleLineGun)) then return end
-    p:Give(LC.BattleLineGun)
+    if LC.DreamGive then LC.DreamGive(p, LC.BattleLineGun) else p:Give(LC.BattleLineGun) end
     if p.GiveAmmo then p:GiveAmmo(900, LC.BattleLineAmmo, true) end
     if p.SelectWeapon then p:SelectWeapon(LC.BattleLineGun) end
 end
@@ -118,10 +126,37 @@ function def.spawn(g, p, i)
     return at, yaw
 end
 
+-- The field: the whole dream zone, on the map's own floor under the dream point (the owner, 12 November: "have
+-- the zone expand to the entire area"). x0, x1, y0, y1, the floor's height; nil: no zone or no floor there (then
+-- the dream builds its own small floor, as it did before).
+function LC.BattleLineField(dream)
+    local z, c = dream.zone, dream.pos
+    if not (z and z.box and z.box.mins and z.box.maxs) then return nil end
+    local tr = util.TraceLine({ start = c + Vector(0, 0, 40), endpos = c - Vector(0, 0, 300), mask = MASK_SOLID_BRUSHONLY })
+    if not (tr and tr.Hit and not tr.StartSolid and tr.HitPos) then return nil end
+    local b = z.box
+    local x0, x1 = b.mins.x + 80, b.maxs.x - 80
+    local half = math.min(LC.BattleLineWidest / 2, (b.maxs.y - b.mins.y) / 2 - 80)
+    if x1 - x0 < 1200 or half < 300 then return nil end -- (smaller than the dream's own floor: that instead)
+    local cy = math.Clamp(c.y, b.mins.y + 80 + half, b.maxs.y - 80 - half)
+    return x0, x1, cy - half, cy + half, tr.HitPos.z + 2
+end
+
 function def.build(g, dream)
-    local x0, x1, top = P.Hall(g, dream, 3, Color(70, 62, 52))
     local c = dream.pos
-    g.x0, g.x1, g.y0, g.y1 = x0, x1, c.y - K.PLATE8_S + 40, c.y + K.PLATE8_S - 40
+    local x0, x1, top
+    local fx0, fx1, fy0, fy1, ftop = LC.BattleLineField(dream)
+    if fx0 then
+        x0, x1, top = fx0, fx1, ftop
+        g.top = top
+        g.x0, g.x1, g.y0, g.y1 = x0, x1, fy0, fy1
+        g.bounds = { mins = Vector(x0 - 60, fy0 - 60, top - 160), maxs = Vector(x1 + 60, fy1 + 60, top + 1200) }
+        g.wide = true
+    else
+        x0, x1, top = P.Hall(g, dream, 3, Color(70, 62, 52))
+        g.x0, g.x1, g.y0, g.y1 = x0, x1, c.y - K.PLATE8_S + 40, c.y + K.PLATE8_S - 40
+    end
+    local cy = (g.y0 + g.y1) / 2
     g.lineX = x0 + 300 -- (the barricades: the rebels must not get past here)
     local bm = FirstModel(BARRICADES)
     local n = math.max(3, math.floor((g.y1 - g.y0) / 140))
@@ -133,15 +168,32 @@ function def.build(g, dream)
     for i = 0, 5 do
         local at = Vector(g.lineX - 50, g.y0 + 60 + i * (g.y1 - g.y0 - 120) / 5, top)
         local e = Actor(g, SOLDIER, at, 0, 1, ACT_IDLE_ANGRY or ACT_IDLE or 1)
-        if e then g.soldiers[#g.soldiers + 1] = { e = e, next = CurTime() + T.calm + math.Rand(1, 3) } end
+        if e then
+            g.soldiers[#g.soldiers + 1] = { e = e, next = CurTime() + T.calm + math.Rand(1, 3) }
+            LC.BattleLineHolding(g, e) -- (a rifle in their hands: the owner saw them firing with none)
+        end
     end
-    g.apc = Actor(g, FirstModel(APC), Vector(g.lineX - 180, c.y, top), 0, 1)
+    g.apc = Actor(g, FirstModel(APC), Vector(g.lineX - 180, cy, top), 0, 1)
     local z = dream.zone
     local ceiling = (z and z.box and z.box.maxs.z) or (top + (LC.DreamGameHeadroom and LC.DreamGameHeadroom(dream) or 2000))
     g.airZ = math.max(top + 300, math.min(ceiling - 150, top + 550)) -- (the gunships' height, under the room's ceiling)
     g.rebels, g.hacks, g.air, g.bombs, g.phase, g.kills = {}, {}, {}, {}, "calm", 0
-    Starts(g, x0 + 110, c.y, top)
+    Starts(g, x0 + 110, cy, top)
     return true
+end
+-- A pulse rifle in a figure's hands (its world model, merged onto the hand).
+function LC.BattleLineHolding(g, e)
+    if not IsValid(e) or not ents or not ents.Create then return nil end
+    local w = ents.Create("prop_dynamic")
+    if not IsValid(w) then return nil end
+    w:SetModel("models/weapons/w_irifle.mdl")
+    w:SetPos(e:GetPos())
+    w:Spawn()
+    if w.SetNotSolid then w:SetNotSolid(true) end
+    if w.SetParent then w:SetParent(e) end
+    if w.AddEffects then w:AddEffects(EF_BONEMERGE or 1) end
+    g.ents[#g.ents + 1] = w
+    return w
 end
 
 function def.hello(g)
@@ -161,12 +213,14 @@ local function NewRebel(g, kind, y, size)
     if K.Animate then K.Animate(e, ACT_RUN or 1) end
     -- (the field's as long as the dream point's room allows: a charge takes 11 to 16 seconds across it, a giant 25, the last charge 30)
     local run = math.max(200, g.x1 - 40 - g.lineX)
-    local secs = (kind == "doom" and (28 + scale)) or (kind == "giant" and 25) or math.Rand(11, 16)
+    -- (a usual run: the owner, 12 November, "have the rebels run at usual/normal speed"; on the small floor, as before)
+    local pace = (kind == "doom" and (LC.BattleLineRun.doom + 10 * scale)) or (kind == "giant" and LC.BattleLineRun.giant) or LC.BattleLineRun.rebel * math.Rand(0.9, 1.1)
+    local secs = g.wide and (run / pace) or ((kind == "doom" and (28 + scale)) or (kind == "giant" and 25) or math.Rand(11, 16))
     -- (the owner: health to match their size, 10 x size squared: 40 at twice the size up to 490 at seven times;
     -- three times and bigger, only her gunships and the helicopter's bombs can bring them down)
     local m = { e = e, alive = true, hp = (kind == "doom" and 10 * scale * scale) or (kind == "giant" and 10) or 1,
         immune = (kind == "doom" and scale >= LC.BattleLineImmuneFrom) or nil, giant = kind == "giant" or nil, doom = kind == "doom" or nil,
-        speed = run / secs, y = y }
+        speed = run / secs, y = y, x0 = at.x }
     g.rebels[#g.rebels + 1] = m
     return m
 end
@@ -174,14 +228,30 @@ LC.BattleLineNewRebel = NewRebel
 
 local function Alive(g) local n = 0 for _, m in ipairs(g.rebels) do if m.alive and IsValid(m.e) then n = n + 1 end end return n end
 LC.BattleLineAlive = Alive
-
-local function Tracer(from, to, kind)
-    if not EffectData then return end
-    local ed = EffectData()
-    ed:SetOrigin(to)
-    if ed.SetStart then ed:SetStart(from) end
-    util.Effect(kind or "AR2Tracer", ed, true, true)
+-- How far the last charge has come: the furthest giant's share of the way from where it began to the line (0 to 1;
+-- 1 when none are left standing).
+function LC.BattleLineAdvance(g)
+    local best, any = 0, false
+    for _, m in ipairs(g.rebels) do
+        if m.doom and m.alive and IsValid(m.e) then
+            any = true
+            local run = math.max(1, (m.x0 or g.x1) - g.lineX)
+            best = math.max(best, math.Clamp(((m.x0 or g.x1) - m.e:GetPos().x) / run, 0, 1))
+        end
+    end
+    return any and best or 1
 end
+
+-- A shot's streak, drawn on the dreamers' screens for a moment (cl_livingcity_dreamgames.lua): never a game effect
+-- that might outlive the dream (the owner, 12 November: the trails "never went away").
+local function Tracer(from, to, kind)
+    local dream = LC.DreamActive
+    local g = dream and dream.game
+    if not g or g.stopped or not K.Send then return end
+    K.Send(g, { k = "tracer", a = { math.floor(from.x), math.floor(from.y), math.floor(from.z) }, b = { math.floor(to.x), math.floor(to.y), math.floor(to.z) },
+        heavy = kind == "AirboatGunHeavyTracer" or nil })
+end
+LC.BattleLineTracer = Tracer
 
 -- A rebel goes down (by: who or what fired, for the tracer).
 local function Fall(g, m, by)
@@ -283,6 +353,8 @@ function LC.BattleLineShot(p, src, dir)
     local g = dream and dream.game
     if not g or g.stopped or g.id ~= ID then return nil end
     local s = g.pl[p]
+    local enf = not s and g.enf and g.enf[p] or nil -- (an Enforcer shoots with the rest: the owner, 12 November, "I have no guns as a CP unit")
+    if enf then s = enf end
     if not s or s.done or s.turned or g.phase == "calm" then return nil end
     dir = dir:GetNormalized()
     local best, bestT, kind
@@ -290,7 +362,7 @@ function LC.BattleLineShot(p, src, dir)
         if not IsValid(e) then return end
         local c = Center(e, h)
         local t = (c - src):Dot(dir)
-        if t <= 0 or t > 6000 then return end
+        if t <= 0 or t > 30000 then return end
         if (src + dir * t - c):Length() <= r * Scale(e) and (not bestT or t < bestT) then best, bestT, kind = m or e, t, k end
     end
     for _, m in ipairs(g.rebels) do if m.alive then Try(m.e, 24, 40, "rebel", m) end end
@@ -311,13 +383,14 @@ function LC.BattleLineShot(p, src, dir)
         end
         return "rebel"
     elseif kind == "traitor" then
-        if CurTime() >= (g.pl[best].safe or 0) then
+        if not enf and CurTime() >= (g.pl[best].safe or 0) then
             Down(g, best, p)
             s.kills = (s.kills or 0) + 1
             g.kills = g.kills + 1
         end
         return "traitor"
     elseif kind == "combine" then
+        if enf then return "combine" end -- (nothing in it touches an Enforcer)
         if (s.traitorAt or 0) > CurTime() then return "combine" end -- (one burst is one offence)
         s.traitorAt = CurTime() + 3
         SayAs(g, "battleline_traitor")
@@ -334,10 +407,33 @@ hook.Add("EntityFireBullets", "LivingCityBattleLine", function(ent, data)
 end)
 -- (dreamers can't hurt each other in it)
 hook.Add("EntityTakeDamage", "LivingCityBattleLine", function(victim, dmg)
-    if not IsValid(victim) or not victim:IsPlayer() or victim.lcDreamGame ~= ID then return end
+    if not IsValid(victim) then return end
     local a = dmg:GetAttacker()
+    -- (the dream's rifle hurts nothing in the waking world: a city NPC wandering by, a door, a prop)
+    if IsValid(a) and a.IsPlayer and a:IsPlayer() and a.lcDreamGame == ID and not (victim.IsPlayer and victim:IsPlayer()) then dmg:SetDamage(0) return true end
+    if not victim:IsPlayer() or victim.lcDreamGame ~= ID then return end
     if IsValid(a) and a:IsPlayer() then dmg:SetDamage(0) return true end
 end)
+-- City NPCs wandering onto the field are sent off it (the owner, 12 November: "the citizen NPCs were just running in front
+-- of me"); the dreamers' screens don't show them there either (cl_livingcity_dreamgames.lua).
+function LC.BattleLineClearField(g)
+    local b = g.bounds
+    if not b or not ents.FindInBox then return 0 end
+    local n = 0
+    local dream = g.dream
+    for _, e in ipairs(ents.FindInBox(b.mins, b.maxs)) do
+        if IsValid(e) and e.IsNPC and e:IsNPC() and not (dream.made and dream.made[e]) then
+            local pos = e:GetPos()
+            local outY = (pos.y - g.y0 < g.y1 - pos.y) and (g.y0 - 400) or (g.y1 + 400)
+            if e.SetLastPosition and e.SetSchedule then
+                e:SetLastPosition(Vector(pos.x, outY, pos.z))
+                e:SetSchedule(SCHED_FORCED_GO_RUN or 71)
+            end
+            n = n + 1
+        end
+    end
+    return n
+end
 
 local function Toward(e, to, speed, dt, z)
     local pos = e:GetPos()
@@ -382,6 +478,12 @@ function def.tick(g, dt, players)
     local t = now - g.t0
     local fighters = Fighters(g, players)
     for _, p in ipairs(fighters) do Arm(p) end
+    for p in pairs(g.enf or {}) do if IsValid(p) and p.lcDreaming == g.dream.id then Arm(p) end end -- (Enforcers too)
+    if now >= (g.clearAt or 0) then
+        g.clearAt = now + 1
+        local okC, errC = pcall(LC.BattleLineClearField, g)
+        if not okC and LC.Error then LC.Error("battle line field", errC) end
+    end
     if g.phase == "calm" and t >= T.calm then g.phase, g.dirty, g.spawnAt, g.giantAt, g.tauntAt = "battle", true, now, now + 30, now + 3 end
     if g.phase == "battle" then
         local f = math.Clamp((t - T.calm) / T.battle, 0, 1)
@@ -398,14 +500,23 @@ function def.tick(g, dt, players)
         if t >= T.calm + T.battle then
             g.phase, g.dirty, g.doomAt = "doom", true, now
             for _, m in ipairs(g.rebels) do if m.alive then Fall(g, m, nil) end end
+            -- (not all in one instant: the owner, 12 November, it "froze my game"; a few every second, the biggest last)
+            g.doomQueue, g.doomNext = {}, now
             for _, w in ipairs(LC.BattleLineDoomWave) do
-                for _ = 1, w[2] do NewRebel(g, "doom", math.Rand(g.y0 + 40, g.y1 - 40), w[1]) end
+                for _ = 1, w[2] do g.doomQueue[#g.doomQueue + 1] = w[1] end
             end
             SayAs(g, "battleline_doom")
             for _, p in ipairs(players) do if p.ScreenFade then p:ScreenFade(SCREENFADE and SCREENFADE.IN or 1, Color(120, 0, 0, 180), 2, 0.5) end end
         end
     end
-    if g.phase == "doom" and now >= g.doomAt + T.doom then
+    if g.phase == "doom" and g.doomQueue then
+        while #g.doomQueue > 0 and now >= g.doomNext do
+            NewRebel(g, "doom", math.Rand(g.y0 + 40, g.y1 - 40), table.remove(g.doomQueue, 1))
+            g.doomNext = g.doomNext + LC.BattleLineDoomEvery
+        end
+    end
+    -- her air: once the giants are about half way across (or at the latest after T.doom)
+    if g.phase == "doom" and ((#(g.doomQueue or {}) == 0 and LC.BattleLineAdvance(g) >= LC.BattleLineAirAt) or now >= g.doomAt + T.doom) then
         g.phase, g.dirty, g.airAt = "rescue", true, now
         AirIn(g, now)
         SayAs(g, "battleline_air")
@@ -471,7 +582,7 @@ function def.tick(g, dt, players)
                 local left = Toward(a.e, a.hover, 700, dt, a.hover.z)
                 a.e:SetAngles(Angle(0, 0, 0))
                 if left < 40 and not a.chopper and now >= a.next then
-                    a.next = now + 0.3
+                    a.next = now + 0.5
                     local target
                     for _, m in ipairs(g.rebels) do if m.alive and IsValid(m.e) then target = m break end end
                     if target then
@@ -490,7 +601,7 @@ function def.tick(g, dt, players)
         local chopper
         for _, a in ipairs(g.air) do if a.chopper and IsValid(a.e) then chopper = a end end
         if g.bombAt and (g.bombsLeft or 0) > 0 and chopper and now >= (g.nextBomb or 0) then
-            g.nextBomb = now + 0.12
+            g.nextBomb = now + LC.BattleLineBombEvery
             g.bombsLeft = g.bombsLeft - 1
             local f = 1 - g.bombsLeft / LC.BattleLineBombs
             chopper.hover = Vector(g.lineX + (g.x1 - g.lineX) * (0.25 + 0.7 * f), chopper.hover.y, chopper.hover.z)

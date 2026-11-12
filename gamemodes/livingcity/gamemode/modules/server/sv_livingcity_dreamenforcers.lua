@@ -63,6 +63,9 @@ function LC.DreamEnforcerRole(p, id)
     if p.lcDreamTesting then return false end -- (testing a dream from the editor: they play it, sv_livingcity_dreamtest.lua)
     id = id or (LC.DreamActive and LC.DreamActive.ending)
     if not id or not (LC.DreamForced and LC.DreamForced(id)) then return false end
+    -- (nobody but them asleep for it: they dream it like anyone, LC.DreamOnlyEnforcers in sv_livingcity_dreams.lua)
+    local d = LC.DreamActive
+    if d and d.allDream and d.ending == id then return false end
     local f = p:GetNW2String("lcf_faction", "")
     return f == "cp" or f == "admin"
 end
@@ -84,7 +87,7 @@ function LC.DreamEnforcerJoin(g, p, hello)
     local at = #starts > 0 and (starts[math.random(#starts)] + Vector(math.Rand(-60, 60), math.Rand(-60, 60), 8)) or g.watchAt
     p:SetPos(at)
     g.enf[p].home = at
-    if p.Give then p:Give("weapon_stunstick") end
+    if LC.DreamGive then LC.DreamGive(p, "weapon_stunstick") elseif p.Give then p:Give("weapon_stunstick") end
     if p.SelectWeapon then p:SelectWeapon("weapon_stunstick") end
     local t = { k = "start", id = g.def.id, name = g.def.name, goal = GOAL, ends = g.ends, lives = 1, maxLives = 1, enforcer = true }
     for k, v in pairs(hello or {}) do if t[k] == nil then t[k] = v end end

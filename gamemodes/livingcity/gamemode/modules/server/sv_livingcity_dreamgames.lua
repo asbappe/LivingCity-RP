@@ -806,8 +806,109 @@ end
 
 do
     local def = { id = "freeze", name = "Freeze, Citizen", mood = "nightmare", secs = 180, lives = 3,
-        goal = "Cross the yard to the giant officer. Move only while his back is turned: when he turns and shouts, stand still." }
+        goal = "Cross the yard to the giant officer in the dark. Move only while his back is turned: when he turns and shouts, stand still, "
+            .. "or his eyes burn you with red light. And keep ahead of the dead things shuffling after you." }
     G.freeze = def
+    -- Scarier (the owner, 12 November: "zombies following behind the players, and if the metrocop sees you moving, he shoots
+    -- lasers out of his eyes, big red lasers ... all the light objects inside the dream zone ... need to shut off for it"):
+    -- slow zombies trail the dreamers (touch one: back to the start, a life gone); whoever he catches moving, a dreamer or a
+    -- zombie, takes his red eye beams (a zombie is burnt back to the start); the dream zone's lights go out, and the
+    -- dreamers' screens go dark (the map's baked light can't be switched off: cl_livingcity_dreamgames.lua).
+    LC.FreezeZombieModel = "models/zombie/classic.mdl"
+    LC.FreezeZombies, LC.FreezeZombieSpeed, LC.FreezeZombieReach, LC.FreezeZombieAfter = 4, { 70, 45 }, 40, 6 -- (most, speed when he's turned away / facing, touch, seconds before they come)
+    LC.FreezeLaserSecs = 0.9
+    LC.FreezeLightClasses = { light = { "TurnOff", "TurnOn" }, light_spot = { "TurnOff", "TurnOn" }, light_dynamic = { "TurnOff", "TurnOn" },
+        env_sprite = { "HideSprite", "ShowSprite" }, point_spotlight = { "LightOff", "LightOn" }, env_lightglow = false, gmod_light = false, gmod_lamp = false,
+        env_projectedtexture = { "TurnOff", "TurnOn" } }
+    -- The dream zone's lights, off (and the list of them, to put back). Only those inside the dream: the city's stay lit.
+    function LC.FreezeLightsOut(g)
+        g.lightsOut = {}
+        local dream = g.dream
+        for cls, io in pairs(LC.FreezeLightClasses) do
+            for _, e in ipairs(ents.FindByClass and ents.FindByClass(cls) or {}) do
+                if IsValid(e) and LC.DreamHolds and LC.DreamHolds(dream, e:GetPos(), true) then
+                    local rec = { e = e, io = io }
+                    if io then e:Fire(io[1], "", 0)
+                    elseif e.SetOn and e.GetOn then rec.was = e:GetOn() e:SetOn(false)
+                    elseif e.SetNoDraw then rec.hid = true e:SetNoDraw(true) end
+                    g.lightsOut[#g.lightsOut + 1] = rec
+                end
+            end
+        end
+        return #g.lightsOut
+    end
+    function LC.FreezeLightsOn(g)
+        for _, rec in ipairs(g.lightsOut or {}) do
+            local e = rec.e
+            if IsValid(e) then
+                if rec.io then e:Fire(rec.io[2], "", 0)
+                elseif rec.was ~= nil and e.SetOn then e:SetOn(rec.was)
+                elseif rec.hid and e.SetNoDraw then e:SetNoDraw(false) end
+            end
+        end
+        g.lightsOut = nil
+    end
+    -- Red light from his eyes at whoever he caught moving (an entity: a dreamer or a zombie), on everyone's screen.
+    local function Laser(g, e)
+        if not IsValid(e) then return end
+        g.lasers = g.lasers or {}
+        g.lasers[#g.lasers + 1] = { e = e, til = CurTime() + LC.FreezeLaserSecs }
+        g.dirty = true
+        Snd(e, "ambient/energy/zap" .. math.random(1, 3) .. ".wav", 85, 70)
+    end
+    LC.FreezeLaser = Laser
+    local function Zombie(g, i)
+        local z = g.zombies[i]
+        local back = (z and IsValid(z.e)) and (250 + i * 60) or 0 -- (after a grab or a burning: further back, a fair head start)
+        local at = Vector(g.zx - back, g.dream.pos.y + math.Rand(-250, 250), g.top)
+        if not (z and IsValid(z.e)) then
+            local e = Actor(g, ValidModel(LC.FreezeZombieModel) and LC.FreezeZombieModel or COP, at, 0, 1, ACT_WALK or 6)
+            if not e then return end
+            if not ValidModel(LC.FreezeZombieModel) then e:SetColor(Color(90, 120, 80)) end
+            z = { e = e }
+            g.zombies[i] = z
+        end
+        z.e:SetPos(at)
+        z.e:SetNoDraw(false)
+        z.caught = nil
+    end
+    local function Zombies(g, dt, players, now)
+        if now < g.t0 + LC.FreezeZombieAfter then return end
+        if not g.zombies then
+            g.zombies = {}
+            for i = 1, math.Clamp(#players + 1, 2, LC.FreezeZombies) do Zombie(g, i) end
+        end
+        local speed = LC.FreezeZombieSpeed[g.phase == "red" and 2 or 1]
+        for i, z in ipairs(g.zombies) do
+            if IsValid(z.e) then
+                local pos = z.e:GetPos()
+                local best, bd
+                for _, p in ipairs(players) do local d = p:GetPos():Distance(pos) if not bd or d < bd then best, bd = p, d end end
+                if best then
+                    local to = best:GetPos() - pos
+                    to.z = 0
+                    local len = to:Length()
+                    if len > 1 then
+                        local step = math.min(len, speed * dt)
+                        z.e:SetPos(pos + to * (step / len))
+                        z.e:SetAngles(Angle(0, to:Angle().y, 0))
+                    end
+                    if bd < LC.FreezeZombieReach + 16 and Hit(g, best, "Caught", "A dead hand closes round your ankle and drags you back.") then
+                        Snd(best, "npc/zombie/zombie_alert" .. math.random(1, 3) .. ".wav", 80)
+                        Zombie(g, i)
+                    end
+                    -- (he sees them move too: burnt back to the start)
+                    if g.phase == "red" and now >= (g.redFrom or 0) and not z.caught then
+                        z.caught = true
+                        Laser(g, z.e)
+                        local e = z.e
+                        timer.Simple(LC.FreezeLaserSecs, function() if g and not g.stopped and IsValid(e) then Zombie(g, i) end end)
+                    end
+                end
+            end
+        end
+    end
+    LC.FreezeZombieTick = Zombies
     local SHOUTS = { "npc/metropolice/vo/holdit.wav", "npc/metropolice/vo/dontmove.wav", "npc/metropolice/vo/finalwarning.wav", "npc/metropolice/vo/firstwarningmove.wav" }
 
     function def.build(g, dream)
@@ -829,6 +930,8 @@ do
         end
         g.cop = Actor(g, COP, Vector(x0 + long * PLATE8_S - 70, c.y, top), 0, 3.2, ACT_IDLE or 1)
         g.phase, g.phaseAt, g.turned = "green", CurTime() + math.Rand(3, 5), false
+        g.zx = x0 - 20 -- (where the dead come from: behind the start)
+        LC.FreezeLightsOut(g)
         g.bounds = { mins = Vector(x0 - 60, c.y - PLATE8_S - 60, top - 160), maxs = Vector(x0 + long * PLATE8_S + 60, c.y + PLATE8_S + 60, top + 300) }
         g.starts = {}
         for i = 0, 11 do g.starts[#g.starts + 1] = Vector(g.startX + (i % 2) * 40, c.y - 330 + i * 60, top + 4) end
@@ -844,6 +947,7 @@ do
             if g.phase == "green" then
                 g.phase, g.phaseAt, g.redFrom = "red", now + math.Rand(2, 3.5), now + 0.6 -- (a moment to stop)
                 if IsValid(g.cop) then Snd(g.cop, SHOUTS[math.random(#SHOUTS)], 95, 70) end
+                for _, z in ipairs(g.zombies or {}) do z.caught = nil end
             else
                 g.phase, g.phaseAt = "green", now + math.Rand(1.5, 4.5) * pace
             end
@@ -861,14 +965,34 @@ do
                 Win(g, p, "You reached him without being seen. He's gone.")
             elseif g.phase == "red" and now >= (g.redFrom or 0) then
                 local v = p.GetVelocity and p:GetVelocity() or Vector(0, 0, 0)
-                if v:Length2D() > 45 and Hit(g, p, "Seen", "He saw you move.") then
-                    Snd(p, "weapons/stunstick/stunstick_fleshhit1.wav", 75)
+                if v:Length2D() > 45 then
+                    local okHit = CurTime() >= ((g.pl[p] or {}).safe or 0)
+                    if okHit then Laser(g, p) end
+                    if Hit(g, p, "Seen", "He saw you move, and his eyes burnt red.") then
+                        Snd(p, "weapons/stunstick/stunstick_fleshhit1.wav", 75)
+                    end
                 end
             end
         end
+        local okZ, errZ = pcall(Zombies, g, dt, players, now)
+        if not okZ and LC.Error then LC.Error("freeze zombies", errZ) end
+        if g.lasers then
+            local keep = {}
+            for _, l in ipairs(g.lasers) do if now < l.til and IsValid(l.e) then keep[#keep + 1] = l end end
+            if #keep ~= #g.lasers then g.dirty = true end
+            g.lasers = #keep > 0 and keep or nil
+        end
     end
+    function def.stop(g) LC.FreezeLightsOn(g) end -- (the lights back on: LC.DreamGameStop)
 
-    function def.state(g) return { phase = g.phase } end
+    function def.state(g)
+        local lasers
+        for _, l in ipairs(g.lasers or {}) do
+            lasers = lasers or {}
+            lasers[#lasers + 1] = { l.e:EntIndex(), l.til }
+        end
+        return { phase = g.phase, dark = true, cop = IsValid(g.cop) and g.cop:EntIndex() or nil, lasers = lasers }
+    end
 end
 
 ------------------------------------------------------------------------
@@ -949,6 +1073,11 @@ function LC.DreamGameStart(dream)
     end
     g.started = #players
     local hello = def.hello and def.hello(g) or {}
+    -- (the arena's box: the dreamers' screens leave out any city NPC wandering inside it, cl_livingcity_dreamgames.lua)
+    if g.bounds and hello.bounds == nil then
+        local b = g.bounds
+        hello.bounds = { math.floor(b.mins.x), math.floor(b.mins.y), math.floor(b.mins.z), math.ceil(b.maxs.x), math.ceil(b.maxs.y), math.ceil(b.maxs.z) }
+    end
     g.hello = hello -- (kept for anyone who joins late: LC.DreamGameJoin)
     -- (music for any dream: the owner's file named for its codeword, sv_livingcity_strangedreams.lua; not before the voices in the dark)
     if hello.song == nil and not hello.intro and not def.ownMusic and LC.DreamSongFor then hello.song = LC.DreamSongFor(def.id) end
@@ -1071,6 +1200,11 @@ function LC.DreamGameStop(dream, why)
     if not g or g.stopped then return end
     g.stopped = true
     timer.Remove("LivingCityDreamGames")
+    if g.def.stop then -- (what a dream changed outside its arena, put back: the Freeze dream's lights)
+        local okS, errS = pcall(g.def.stop, g)
+        if not okS and LC.Error then LC.Error("dream game stop", errS) end
+    end
+    if LC.SoundGuardDreamEnd then pcall(LC.SoundGuardDreamEnd, dream) end -- (its sounds, before what made them goes: sh_livingcity_soundguard.lua)
     for p, s in pairs(g.pl) do
         if IsValid(p) and not s.done then Send(g, { k = "stop", how = why or "over" }, p) end
     end

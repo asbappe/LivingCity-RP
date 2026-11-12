@@ -210,9 +210,33 @@ local function IntroHello(theme)
 end
 -- Every dream you play can have music: the owner's file named for its codeword (its id), else the
 -- strange dreams' Half-Life 2 fallback (sv_livingcity_dreamgames.lua asks this when a dream brings none).
+-- (no song of its own and no fallback named for it: one of these, always the same one for that dream)
+LC.DreamDefaultSongs = { "music/hl2_song19.mp3", "music/hl2_song26.mp3", "music/hl2_song30.mp3", "music/hl2_song33.mp3", "music/hl2_song16.mp3" }
+function LC.DreamDefaultSong(id)
+    local list = LC.DreamDefaultSongs
+    if not id or #list == 0 then return nil end
+    local h = 0
+    for i = 1, #id do h = (h * 31 + string.byte(id, i)) % 9973 end
+    return list[h % #list + 1]
+end
 function LC.DreamSongFor(id)
     local own = LC.PropagandaSong and LC.PropagandaSong({ id })
-    return own or (LC.StrangeFallbackSongs and LC.StrangeFallbackSongs[id]) or nil
+    return own or (LC.StrangeFallbackSongs and LC.StrangeFallbackSongs[id]) or LC.DreamDefaultSong(id)
+end
+-- (the owner, 12 November: "Freeze dream needs music, all of them need music": Half-Life 2's own for the
+-- first dreams too, until the owner puts theirs in sound/livingcity/dreams/<codeword>/)
+for id, path in pairs({ maze = "music/hl2_song3.mp3", barrels = "music/hl2_song4.mp3", crumble = "music/hl2_song29.mp3",
+    freeze = "music/hl2_song13.mp3" }) do
+    LC.StrangeFallbackSongs[id] = LC.StrangeFallbackSongs[id] or path
+end
+-- Every dream you play and its music, for the debug report: { { id, own songs found, the fallback or nil } }.
+function LC.DreamMusicList()
+    local out = {}
+    for _, id in ipairs(LC.DreamGameOrder or {}) do
+        local own = LC.PropagandaSongs and LC.PropagandaSongs(id) or {}
+        out[#out + 1] = { id = id, own = #own, fallback = LC.StrangeFallbackSongs and LC.StrangeFallbackSongs[id] or LC.DreamDefaultSong(id) }
+    end
+    return out
 end
 local CITIZENS = { "models/humans/group01/male_07.mdl", "models/humans/group01/female_02.mdl", "models/humans/group01/male_02.mdl", "models/humans/group01/female_04.mdl" }
 local function FirstModel(list)

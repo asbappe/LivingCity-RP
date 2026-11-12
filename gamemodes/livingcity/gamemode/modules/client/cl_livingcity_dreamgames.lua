@@ -28,7 +28,10 @@ local choice -- the "wake up, or watch?" window
 local function CloseChoice() if IsValid(choice) then choice:Remove() end choice = nil end
 -- The music (propaganda dreams), looping until the dream's over for you.
 local song
-local function StopSong() if IsValid(song) then song:Stop() end song = nil end
+local function StopSong() -- (faded out, not cut: sh_livingcity_soundguard.lua)
+    if IsValid(song) then if LC.SoundGuardFade then LC.SoundGuardFade(song, 1.5) else song:Stop() end end
+    song = nil
+end
 local function PlaySong(path, want)
     StopSong()
     if not path or path == "" or not (sound and sound.PlayFile) then return end
@@ -99,6 +102,11 @@ net.Receive("lc_dreamgame", function()
         if t.song then PlaySong(t.song, st) end
     elseif t.k == "line" then
         if st then SayLine(t) end
+    elseif t.k == "tracer" then -- (a shot's streak, for a moment: The Battle Line)
+        if st and t.a and t.b then
+            LC_CL.DreamTracers[#LC_CL.DreamTracers + 1] = { a = Vector(t.a[1], t.a[2], t.a[3]), b = Vector(t.b[1], t.b[2], t.b[3]), heavy = t.heavy, til = CurTime() + (t.heavy and 0.2 or 0.12) }
+            while #LC_CL.DreamTracers > 40 do table.remove(LC_CL.DreamTracers, 1) end
+        end
     elseif t.k == "music" then
         if st then PlaySong(t.song, st) end
     elseif t.k == "got" then
@@ -113,9 +121,38 @@ net.Receive("lc_dreamgame", function()
         StopSong()
         StopVoice()
         CloseChoice()
+        LC_CL.DreamTracers = {}
+        if LC_CL.DreamShowNPCs then LC_CL.DreamShowNPCs() end
     end
 end)
 function LC_CL.DreamGame() return st end
+LC_CL.DreamTracers = LC_CL.DreamTracers or {}
+-- City NPCs inside the arena while you dream: not in your dream, so not on your screen (the owner, 12 November: "the
+-- citizen NPCs were just running in front of me"). Shown again as they leave it, or as the dream ends.
+local hiddenNPCs = {}
+function LC_CL.DreamShowNPCs()
+    for e in pairs(hiddenNPCs) do if IsValid(e) and e.SetNoDraw then e:SetNoDraw(false) end end
+    hiddenNPCs = {}
+end
+local npcScanAt = 0
+hook.Add("Think", "LivingCityDreamNPCs", function()
+    local now = CurTime()
+    if now < npcScanAt then return end
+    npcScanAt = now + 0.5
+    local b = st and st.bounds
+    if not b then
+        if next(hiddenNPCs) ~= nil then LC_CL.DreamShowNPCs() end
+        return
+    end
+    local mins, maxs = Vector(b[1], b[2], b[3]), Vector(b[4], b[5], b[6])
+    local inside = {}
+    for _, e in ipairs(ents.FindInBox and ents.FindInBox(mins, maxs) or {}) do
+        if IsValid(e) and e.IsNPC and e:IsNPC() then inside[e] = true if not hiddenNPCs[e] then hiddenNPCs[e] = true e:SetNoDraw(true) end end
+    end
+    for e in pairs(hiddenNPCs) do
+        if not inside[e] then if IsValid(e) then e:SetNoDraw(false) end hiddenNPCs[e] = nil end
+    end
+end)
 
 local glow = Material("sprites/light_glow02_add")
 local BLUE, GOLD = Color(120, 210, 255), Color(255, 205, 70)
@@ -217,6 +254,9 @@ hook.Add("PostDrawTranslucentRenderables", "LivingCityDreamGames", function(_, s
     end
     if st.board then LC_CL.DreamBoard(st.board) end
     if st.mosaic then LC_CL.DreamMosaic(st.mosaic) end
+    if st.signs then LC_CL.DreamSigns(st.signs) end
+    if st.lasers then LC_CL.DreamLasers(st) end
+    if #LC_CL.DreamTracers > 0 then LC_CL.DrawDreamTracers() end
     if not st.tokens then return end
     local pulse = 0.75 + 0.25 * math.sin(CurTime() * 6)
     for i, t in ipairs(st.tokens) do
@@ -227,6 +267,80 @@ hook.Add("PostDrawTranslucentRenderables", "LivingCityDreamGames", function(_, s
         end
     end
 end)
+
+-- Shots' streaks (The Battle Line), each gone in a moment and all of them gone with the dream.
+local tracerMat = Material("effects/gunshiptracer")
+function LC_CL.DrawDreamTracers()
+    local now = CurTime()
+    local keep = {}
+    for _, t in ipairs(LC_CL.DreamTracers) do
+        if now < t.til then
+            keep[#keep + 1] = t
+            if render and render.DrawBeam then
+                render.SetMaterial(tracerMat)
+                render.DrawBeam(t.a, t.b, t.heavy and 10 or 5, 0, 1, t.heavy and Color(255, 230, 160) or Color(140, 200, 255))
+            end
+        end
+    end
+    LC_CL.DreamTracers = keep
+end
+
+-- Freeze, Citizen: red beams from the giant officer's eyes to whoever he caught moving ({ entity index, until }).
+local laserMat = Material("cable/redlaser")
+local RED = Color(255, 30, 20)
+function LC_CL.DreamLasers(s)
+    local cop = s.cop and Entity and Entity(s.cop)
+    if not IsValid(cop) or not render or not render.DrawBeam then return end
+    local sc = cop.GetModelScale and cop:GetModelScale() or 1
+    local fwd, side = cop:GetAngles():Forward(), cop:GetAngles():Right()
+    local head = cop:GetPos() + Vector(0, 0, 64 * sc) + fwd * 6 * sc
+    local now = CurTime()
+    for _, l in ipairs(s.lasers or {}) do
+        local e = Entity(l[1])
+        if IsValid(e) and now < (l[2] or 0) then
+            local to = e:GetPos() + Vector(0, 0, 40)
+            local w = 10 + 4 * math.sin(now * 40)
+            for _, eye in ipairs({ head + side * 2.5 * sc, head - side * 2.5 * sc }) do
+                render.SetMaterial(laserMat)
+                render.DrawBeam(eye, to, w, 0, 1, RED)
+                render.SetMaterial(glow)
+                render.DrawSprite(eye, 30, 30, RED)
+            end
+            render.DrawSprite(to, 60, 60, RED)
+        end
+    end
+end
+-- Freeze, Citizen: the dark (the dream zone's lights are off; the map's own baked light can't be, so the screen is darkened, with a black fog).
+hook.Add("RenderScreenspaceEffects", "LivingCityDreamDark", function()
+    if not (st and st.dark) or not DrawColorModify then return end
+    DrawColorModify({ ["$pp_colour_addr"] = 0, ["$pp_colour_addg"] = 0, ["$pp_colour_addb"] = 0.01, ["$pp_colour_brightness"] = -0.12,
+        ["$pp_colour_contrast"] = 0.85, ["$pp_colour_colour"] = 0.45, ["$pp_colour_mulr"] = 0, ["$pp_colour_mulg"] = 0, ["$pp_colour_mulb"] = 0 })
+end)
+local function DarkFog(scale)
+    if not (st and st.dark) or not render or not render.FogMode then return end
+    scale = scale or 1
+    render.FogMode(MATERIAL_FOG_LINEAR or 1)
+    render.FogStart(120 * scale)
+    render.FogEnd(1100 * scale)
+    render.FogMaxDensity(0.97)
+    render.FogColor(2, 2, 4)
+    return true
+end
+hook.Add("SetupWorldFog", "LivingCityDreamDark", function() return DarkFog(1) end)
+hook.Add("SetupSkyboxFog", "LivingCityDreamDark", function(s) return DarkFog(s) end)
+
+-- Signs hanging in the air, turned to face you: { x, y, z, words } (Careless Talk's tables).
+function LC_CL.DreamSigns(list)
+    if not (cam and cam.Start3D2D and EyePos) then return end
+    local eye = EyePos()
+    for _, sg in ipairs(list or {}) do
+        local pos = Vector(sg[1], sg[2], sg[3])
+        local yaw = (eye - pos):Angle().y
+        cam.Start3D2D(pos, Angle(0, yaw + 90, 90), 0.3)
+            draw.SimpleTextOutlined(tostring(sg[4] or ""), "DermaLarge", 0, 0, Color(255, 240, 200), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 2, color_black)
+        cam.End3D2D()
+    end
+end
 
 -- A board hanging in the air, facing its yaw: a title and lines (the enemy of the people: his face).
 function LC_CL.DreamBoard(b)

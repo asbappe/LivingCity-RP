@@ -29,6 +29,7 @@ GM.TeamBased = false
 LC_MODULES = {
     shared = {
         "sh_livingcity_cache", -- (first: quick lookups the rest use)
+        "sh_livingcity_soundguard", -- (every sound through the guard against sounds stuck looping: before anything plays one)
         "sh_livingcity_net", -- (big and frequent sends to players, made safe: before anything sends)
         "sh_livingcity_perfdebug", -- (staff: the performance debugger, off until turned on)
         "sh_livingcity_npcstr", -- (the people's names, jobs and doings: sent only to players near them)

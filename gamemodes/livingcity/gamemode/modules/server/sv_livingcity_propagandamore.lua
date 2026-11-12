@@ -408,13 +408,17 @@ end
 do
     LC.SpyRounds, LC.SpyRoundSecs, LC.SpyReveal = 4, 30, 6
     LC.SpyClueAt = { 3, 11, 19 } -- (seconds into a round)
+    -- The spy gives themselves away too (the owner, 12 November: "how are we supposed to know who the traitor is?"):
+    -- from this far into a round, they keep glancing nervously over their shoulder, every few seconds; nobody else does.
+    LC.SpyGlanceFrom, LC.SpyGlanceEvery, LC.SpyGlanceSecs = 6, { 4, 7 }, 1.5
     local def = { id = "spy", name = "Careless Talk", mood = "happy", secs = 8 + LC.SpyRounds * (LC.SpyRoundSecs + LC.SpyReveal) + 4, lives = 3, need = 3,
         music = { "spy", "propaganda" },
-        goal = "One citizen in the canteen is a rebel spy. Listen to the clues, then crouch beside the one you suspect (you can change your mind). After 30 seconds, everyone's pick is revealed.",
+        goal = "One of the diners in the canteen is a rebel spy. Each round brings three clues: which table, a man or a woman, and the colour of their clothes. "
+            .. "Watch them too: the spy is nervous and keeps glancing over their shoulder. Crouch beside the one you suspect (you can change your mind). After 30 seconds, everyone's pick is shown.",
         timeUp = { "The canteen empties", "The lights go off in the canteen, and you wake." }, spawn = Spawn,
         woke = Woke({
             won = { "Vigilant citizen", "You wake looking sideways at everyone, quietly proud. Loose lips sink ships. Not on your watch." },
-            out = { "Informer", "You wake feeling you accused the wrong people in your sleep. Hopefully nobody remembers." },
+            out = { "Informer", "You wake with the feeling you accused the wrong people in your sleep. With luck, nobody remembers." },
             time = { "The canteen empties", "You wake listening hard, as if someone nearby were whispering." },
         }) }
     G.spy = def
@@ -425,7 +429,7 @@ do
     local IDLE = { "LineIdle01", "lineidle01", "idle_subtle" }
 
     local function Combo(n) return n.tbl .. "/" .. n.man .. "/" .. n.tint end
-    local function Describe(n) return string.format("the %s in %s %s", n.man == 1 and "man" or "woman", LC.SpyTints[n.tint][1], LC.SpyTables[n.tbl]) end
+    local function Describe(n) return string.format("the %s in %s, at the table %s", n.man == 1 and "man" or "woman", LC.SpyTints[n.tint][1], LC.SpyTables[n.tbl]) end
     LC.SpyDescribe = Describe
     local function Look(n)
         if not IsValid(n.e) then return end
@@ -434,6 +438,7 @@ do
         if n.e.SetMaterial then n.e:SetMaterial("") end
         if n.e.SetModelScale then n.e:SetModelScale(1) end
         n.e:SetPos(n.pos)
+        if n.yaw then n.e:SetAngles(Angle(0, n.yaw, 0)) end
         if n.e.SetNoDraw then n.e:SetNoDraw(false) end
         Pose(n.e, IDLE, ACT_IDLE)
     end
@@ -455,18 +460,34 @@ do
         for i = #order, 2, -1 do local j = math.random(i) order[i], order[j] = order[j], order[i] end
         g.round, g.phase, g.roundT0, g.clueOrder, g.clues = g.round + 1, "pick", CurTime(), order, {}
         g.at, g.dirty = CurTime() + LC.SpyRoundSecs, true
+        g.glanceAt, g.glanceTil = CurTime() + LC.SpyGlanceFrom, nil
         for _, s in pairs(g.pl) do s.pick = nil end
-        for _, q in ipairs(Everyone(g)) do Notice(q, "info", string.format("Round %d of %d", g.round, LC.SpyRounds), "Someone in the canteen is a spy. Listen...", 4) end
+        for _, q in ipairs(Everyone(g)) do Notice(q, "info", string.format("Round %d of %d", g.round, LC.SpyRounds), "One of the diners is a rebel spy. Listen for the clues, and watch for whoever keeps glancing over their shoulder.", 6) end
     end
     LC.SpyNewRound = NewRound
+    -- The spy's nerves: a glance over the shoulder (turned away for a moment, then back), every few seconds of a round.
+    function LC.SpyGlance(g, now)
+        local n = g.spyN
+        if not n or not IsValid(n.e) or not n.yaw then return end
+        if g.glanceTil then
+            if now >= g.glanceTil then
+                n.e:SetAngles(Angle(0, n.yaw, 0))
+                g.glanceTil, g.glanceAt = nil, now + math.Rand(LC.SpyGlanceEvery[1], LC.SpyGlanceEvery[2])
+            end
+        elseif now >= (g.glanceAt or math.huge) then
+            g.glanceTil = now + LC.SpyGlanceSecs
+            g.glances = (g.glances or 0) + 1
+            n.e:SetAngles(Angle(0, n.yaw + (math.random(2) == 1 and 140 or -140), 0))
+        end
+    end
     local function Clue(g)
         local n = g.spyN
         local what = n and g.clueOrder[#g.clues + 1]
         if not what then return end
         local text
-        if what == "tbl" then text = "A whisper from the table " .. LC.SpyTables[n.tbl] .. ": \"...the old bridge, after curfew...\""
-        elseif what == "man" then text = n.man == 1 and "The voice that said it was a man's." or "The voice that said it was a woman's."
-        else text = "You catch a glimpse of a " .. LC.SpyTints[n.tint][1] .. " sleeve as someone hides a note." end
+        if what == "tbl" then text = "You overhear a whisper from the table " .. LC.SpyTables[n.tbl] .. ": \"...the old bridge, after curfew...\""
+        elseif what == "man" then text = n.man == 1 and "The whisper was in a man's voice." or "The whisper was in a woman's voice."
+        else text = "You glimpse a " .. LC.SpyTints[n.tint][1] .. " sleeve as someone hides a note." end
         g.clues[#g.clues + 1] = text
         g.dirty = true
         for _, q in ipairs(Everyone(g)) do Notice(q, "info", "Overheard", text, 7) end
@@ -481,9 +502,9 @@ do
             local n = s.pick and g.npcs[s.pick]
             if n == spy then
                 s.score = (s.score or 0) + 1
-                lines[#lines + 1] = p:Nick() .. ": right!"
+                lines[#lines + 1] = p:Nick() .. ": found the spy"
             elseif n then
-                lines[#lines + 1] = p:Nick() .. ": reported " .. Describe(n) .. " (loyal)"
+                lines[#lines + 1] = p:Nick() .. ": reported " .. Describe(n) .. ", who is loyal"
             else
                 lines[#lines + 1] = p:Nick() .. ": reported nobody"
             end
@@ -516,11 +537,15 @@ do
             end
             for k, off in ipairs({ { -55, -50 }, { 55, -50 }, { 0, 62 } }) do
                 local at = Vector(xy[1] + off[1], xy[2] + off[2], top)
-                local e = Actor(g, MEN[k], at, math.deg(math.atan2(xy[2] - at.y, xy[1] - at.x)), 1, ACT_IDLE or 1)
-                g.npcs[#g.npcs + 1] = { e = e, pos = at, tbl = t, seat = k, man = 1, tint = 1 }
+                local yaw = math.deg(math.atan2(xy[2] - at.y, xy[1] - at.x))
+                local e = Actor(g, MEN[k], at, yaw, 1, ACT_IDLE or 1)
+                g.npcs[#g.npcs + 1] = { e = e, pos = at, tbl = t, seat = k, man = 1, tint = 1, yaw = yaw }
             end
         end
         g.round, g.phase, g.at = 0, "wait", CurTime() + 8
+        -- (a sign over each table, so "the table by the window" can be found: the client draws them, cl_livingcity_dreamgames.lua)
+        g.signs = {}
+        for t, xy in ipairs(spots) do g.signs[#g.signs + 1] = { math.floor(xy[1]), math.floor(xy[2]), math.floor(top + 120), "Table " .. LC.SpyTables[t] } end
         for _, n in ipairs(g.npcs) do n.man, n.tint = math.random(2), math.random(#LC.SpyTints) Look(n) end
         Starts(g, x0 + 90, c.y, top)
         return true
@@ -538,6 +563,7 @@ do
             g.villains = nil
             local at = LC.SpyClueAt[#g.clues + 1]
             if at and now >= g.roundT0 + at then Clue(g) end
+            LC.SpyGlance(g, now)
             for _, p in ipairs(players) do
                 local s = g.pl[p]
                 if Ducked(s, p) then
@@ -556,8 +582,8 @@ do
             g.phase, g.at = "over", math.huge
             for _, p in ipairs(players) do
                 local n = g.pl[p].score or 0
-                if n >= def.need then Done(g, p, "won", "Vigilant citizen", string.format("You found the spy %d times out of %d. The canteen applauds you.", n, LC.SpyRounds))
-                else Done(g, p, "time", "The canteen empties", string.format("You found the spy %d times out of %d. The lights go off, and you wake.", n, LC.SpyRounds)) end
+                if n >= def.need then Done(g, p, "won", "Vigilant citizen", string.format("You found the spy in %d of %d rounds. The canteen applauds you.", n, LC.SpyRounds))
+                else Done(g, p, "time", "The canteen empties", string.format("You found the spy in %d of %d rounds. The lights go off, and you wake.", n, LC.SpyRounds)) end
             end
             return
         end
@@ -572,12 +598,12 @@ do
         local big, notes = nil, g.clues
         local left = math.max(0, math.ceil((g.at or 0) - CurTime()))
         if g.phase == "pick" then
-            big = s.pick and string.format("Your pick: %s (%d s to change your mind)", Describe(g.npcs[s.pick]), left) or string.format("Crouch beside the one you suspect. %d s.", left)
+            big = s.pick and string.format("Your pick: %s (%d seconds to change your mind)", Describe(g.npcs[s.pick]), left) or string.format("Crouch beside the one you suspect: %d seconds left.", left)
         elseif g.phase == "reveal" and g.spyN then
             big, notes = "The spy was " .. Describe(g.spyN) .. "!", g.results
         elseif g.phase == "wait" then big = "Listen. The first round is about to begin." end
-        return { glows = glows, notes = notes, big = big, tone = g.phase == "reveal" and "warn" or "love", villains = Villains(g),
-            meterName = string.format("Round %d of %d     Spies found: %d of %d needed", math.max(1, g.round), LC.SpyRounds, s.score or 0, def.need) }
+        return { glows = glows, notes = notes, big = big, tone = g.phase == "reveal" and "warn" or "love", villains = Villains(g), signs = g.signs,
+            meterName = string.format("Round %d of %d   |   Spies found: %d (you need %d)", math.max(1, g.round), LC.SpyRounds, s.score or 0, def.need) }
     end
 end
 
@@ -1247,7 +1273,7 @@ end
 ------------------------------------------------------------------------
 
 do
-    local def = { id = "duck", name = "Duck and Cover", mood = "happy", secs = 150, lives = 3, need = 6, music = { "duck", "propaganda" },
+    local def = { id = "duck", name = "Duck and Cover", mood = "happy", secs = 210, lives = 3, need = 6, music = { "duck", "propaganda" },
         goal = "The Resistance is firing rockets at the city. Listen to Sunny the Scanner: when the siren wails and the rocket goes up, crouch beside a table before the flash. Two to a table!",
         timeUp = { "Class dismissed", "Sunny waves goodbye with a little searchlight, and you wake." }, spawn = Spawn,
         woke = Woke({
@@ -1265,6 +1291,20 @@ do
         "Keep calm and keep low! That's the Sunny way!",
     }
     LC.DuckReach, LC.DuckPerTable = 75, 2
+    -- The pace (the owner, 12 November: "playing SOOOO fast I can't keep up ... I can't even read the words popping up"):
+    -- the first siren once the hello has been read, a long calm between rounds, and the siren itself long enough to
+    -- find a table. The alarm plays only while the siren lasts, and quietly ("GOODNESS MY EARS").
+    LC.DuckFirst, LC.DuckCalm, LC.DuckSiren, LC.DuckTipEvery = 20, { 14, 18 }, { 7, 5 }, { 12, 16 }
+    LC.DuckAlarm, LC.DuckAlarmLevel, LC.DuckAlarmVolume = "ambient/alarms/alarm1.wav", 60, 0.45
+    -- The alarm, on everyone in the dream, for the siren only (it's a looping sound: stopped for sure).
+    function LC.DuckAlarmOn(g, on)
+        for _, p in ipairs(Everyone(g)) do
+            if on then
+                if p.EmitSound then p:EmitSound(LC.DuckAlarm, LC.DuckAlarmLevel, 100, LC.DuckAlarmVolume) end
+            elseif p.StopSound then p:StopSound(LC.DuckAlarm) end
+        end
+        g.alarmOn = on or nil
+    end
     -- The rocket: White Forest's (the owner, 9 November: "the model "models/props_silo/rocket_low.mdl" is the needed model, and it is 1299 units
     -- tall ... and ~180 units wide"), else Garry's Mod's own. { model, scale, its height at scale 1 (to fit the headroom), if known }.
     LC.DuckRockets = { { "models/props_silo/rocket_low.mdl", 0.3, 1299 }, { "models/props_silo/rocket.mdl", 0.3, 1299 }, { "models/props_phx/rocket1.mdl", 2 },
@@ -1301,7 +1341,7 @@ do
             end
         end
         g.mag = Villain(g, LC.DuckMagnusson, g.padAt + Vector(-60, 120, 40), 180, 5)
-        g.phase, g.at, g.tipAt, g.rounds = "calm", CurTime() + 10, CurTime() + 6, 0
+        g.phase, g.at, g.tipAt, g.rounds = "calm", CurTime() + LC.DuckFirst, CurTime() + 9, 0
         Starts(g, x0 + 90, c.y, top)
         return true
     end
@@ -1339,26 +1379,30 @@ do
             g.mag:SetPos(g.padAt + Vector(-60, 120, (IsValid(g.rocket) and (g.rocket:GetPos().z - g.padAt.z) or 0) + 40 + bob))
             g.mag:SetAngles(Angle(0, 180 + math.sin(now * 1.7) * 25, g.phase == "siren" and math.sin(now * 6) * 15 or 0))
         end
-        if g.phase == "calm" and now >= g.tipAt then
-            g.tipAt = now + math.Rand(9, 13)
+        if g.phase == "calm" and now >= g.tipAt and g.at - now > 6 then -- (never just before a siren: one thing to read at a time)
+            g.tipAt = now + math.Rand(LC.DuckTipEvery[1], LC.DuckTipEvery[2])
             Narrate(g, "Sunny the Scanner", LC.DuckTips[math.random(#LC.DuckTips)])
         end
         if now < g.at then return end
         if g.phase == "calm" then
-            g.sirenLen = math.max(3, 6 - g.rounds * 0.4)
+            g.sirenLen = math.max(LC.DuckSiren[2], LC.DuckSiren[1] - g.rounds * 0.3)
             g.phase, g.at, g.dirty = "siren", now + g.sirenLen, true
             SayAs(g, "duck_siren")
-            for _, p in ipairs(Everyone(g)) do Snd(p, "ambient/alarms/alarm1.wav", 75) end
+            LC.DuckAlarmOn(g, true)
             if IsValid(g.rocket) then
                 if g.rocket.SetNoDraw then g.rocket:SetNoDraw(false) end
                 Snd(g.rocket, "weapons/rpg/rocketfire1.wav", 100, 60)
             end
             if IsValid(g.mag) then
                 if g.mag.SetNoDraw then g.mag:SetNoDraw(false) end
-                for _, q in ipairs(Everyone(g)) do Notice(q, "warn", "The Resistance!", "A fifty-foot rebel scientist, glowing red, rides the rocket into the sky shaking his fist and cackling.", 4) end
+                if g.rounds == 0 then -- (said once: after that, everyone knows who he is)
+                    for _, q in ipairs(Everyone(g)) do Notice(q, "warn", "The Resistance!", "A fifty-foot rebel scientist, glowing red, rides the rocket into the sky, shaking his fist and cackling.", 6) end
+                end
             end
         elseif g.phase == "siren" then
-            g.rounds, g.phase, g.at, g.dirty = g.rounds + 1, "calm", now + math.Rand(7, 10), true
+            g.rounds, g.phase, g.at, g.dirty = g.rounds + 1, "calm", now + math.Rand(LC.DuckCalm[1], LC.DuckCalm[2]), true
+            g.tipAt = math.max(g.tipAt or 0, now + 6)
+            LC.DuckAlarmOn(g, false)
             local covered = LC.DuckCovered(g, players)
             for _, p in ipairs(Everyone(g)) do
                 if p.ScreenFade then p:ScreenFade(SCREENFADE and SCREENFADE.IN or 1, Color(255, 255, 255, 255), 1.5, 0.3) end
@@ -1372,12 +1416,12 @@ do
                 if covered[p] then
                     s.score = (s.score or 0) + 1
                     if s.score >= def.need then Done(g, p, "won", "Prepared citizen", "Sunny gives you a gold star sticker. It glows slightly. That's normal!")
-                    else Notice(p, "info", "Safe and sound!", string.format("You ducked and covered. %d of %d.", s.score, def.need), 3) end
+                    else Notice(p, "info", "Safe and sound!", string.format("You ducked and covered. %d of %d.", s.score, def.need), 5) end
                 else
                     Offend(g, p, "Caught in the flash", "You weren't covered when the rebels' rocket came down. Sunny looks very disappointed in you.")
                 end
             end
-            timer.Simple(1.5, function() if g and not g.stopped then SayAs(g, "duck_clear") end end)
+            timer.Simple(2.5, function() if g and not g.stopped then SayAs(g, "duck_clear") end end)
         end
     end
 

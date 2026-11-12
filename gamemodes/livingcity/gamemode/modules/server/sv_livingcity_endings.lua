@@ -1983,8 +1983,19 @@ SETUP.bus = function()
     local near = (Living()[1] and Living()[1]:GetPos()) or E.centre
     local bus = Prop(FirstModel(BUS), GroundSpot(near))
     if not bus then return end
+    -- (a dream: it drives on the dream's own floor, straight through anything, never down under it: the owner,
+    -- 12 November, "stuck below the floor ... can it please just clip through it?")
+    if E.dream then
+        local d = E.dream.pos
+        local tr = util.TraceLine({ start = d + Vector(0, 0, 40), endpos = d - Vector(0, 0, 400), mask = MASK_SOLID_BRUSHONLY })
+        E.busFloor = (tr and tr.Hit and not tr.StartSolid) and tr.HitPos.z or d.z
+        local bp = bus:GetPos()
+        bus:SetPos(Vector(bp.x, bp.y, E.busFloor))
+    end
     bus:SetPos(bus:GetPos() + Vector(0, 0, BusLift(bus)))
     if bus.SetSolid then bus:SetSolid(SOLID_NONE) end
+    if bus.SetCollisionGroup then bus:SetCollisionGroup(COLLISION_GROUP_IN_VEHICLE or 10) end
+    if bus.SetMoveType then bus:SetMoveType(MOVETYPE_NOCLIP or 8) end
     E.bus = bus
     E.busDir = Vector(1, 0, 0)
     E.goal = GroundSpot(near)
@@ -2075,7 +2086,7 @@ TICK.bus = function(now)
             end
         end
         if not flying then
-            local g = Ground(nextPos)
+            local g = E.busFloor and Vector(nextPos.x, nextPos.y, E.busFloor) or Ground(nextPos) -- (a dream: its own floor, SETUP.bus)
             -- (coming down to the road: a gentle descent rather than a drop; on its wheels)
             nextPos.z = g and (pos.z + (g.z + BusLift(bus) - pos.z) * 0.3) or pos.z
         end
@@ -4126,6 +4137,7 @@ end
 function LC.CancelEnding()
     if not E then return false end
     local dream = E.dream
+    if dream and LC.SoundGuardDreamEnd then pcall(LC.SoundGuardDreamEnd, dream) end -- (its sounds, before what made them goes: sh_livingcity_soundguard.lua)
     Freeze(false)
     Clear()
     E = nil

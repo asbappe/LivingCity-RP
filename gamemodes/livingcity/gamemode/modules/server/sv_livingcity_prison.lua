@@ -462,6 +462,7 @@ end)
 function LC.NPCTakesIn(unit, victim)
     if not IsValid(unit) or not IsValid(victim) or not victim:Alive() or not cvArrests:GetBool() then return false end
     if LC.Prisoners[victim] or LC.Detained[victim] or (LC.Marching and LC.Marching[victim]) then return false end
+    if victim.lcDreaming then return false end -- (in a shared dream, somewhere else entirely: never marched off from inside one)
     local reason = victim:GetNW2String("lc_wanted_reason", "")
     if reason == "" then reason = "Resisting Civil Protection" end
     -- caught running, the first or second time this hour: a beating and "you can go", not the cells

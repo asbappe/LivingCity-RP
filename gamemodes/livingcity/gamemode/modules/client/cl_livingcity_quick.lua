@@ -218,6 +218,8 @@ local function StaffPage()
         Item("Admin testing tools", function() Send("admintools") end),
         Item(me:GetNW2Bool("lc_build", false) and "Build mode: off (back to playing)" or "Build mode: on", function() Send("build") end),
         Item("Path mapping: on / off", function() Send("pathmap") end),
+        -- (the owner, 12 November: the editor's stop button is out of reach in a dream, with the tool gun taken away)
+        Item("Stop the dream under way (wake everyone in it)", function() if LC_CL.DreamAct then LC_CL.DreamAct("wakeall") end end),
     } }
 end
 
@@ -243,6 +245,9 @@ local function Context(me, unit, rebel)
     -- server says they may (out of it, an Enforcer, a test), so it never offers what would be refused.
     if me:GetNW2Bool("lc_dreaming", false) and (me:GetNW2Bool("lc_dream_canwake", false) or me:GetNW2Bool("lc_dream_test", false)) then
         Add("Wake up from the dream", function() if LC_CL.DreamAct then LC_CL.DreamAct("wake") end end)
+    end
+    if me:GetNW2Bool("lc_dreaming", false) and me:IsAdmin() then
+        Add("Stop the dream for everyone (staff)", function() if LC_CL.DreamAct then LC_CL.DreamAct("wakeall") end end)
     end
     if me:GetNW2Float("lc_downed_until", 0) > now then Add("Give up (let go)", function() Send("giveup") end) end
     if me:GetNW2Bool("lc_tied", false) then
