@@ -11727,7 +11727,7 @@ LC.ChairDo(lt, chair, "recruit")
 ok(st.rebel == true and has("recruited") ~= nil, "asked to join after being treated well: they come over")
 ok(LC.ChairDo(lt, chair, "recruit") == "You've had their answer.", "asked once")
 -- executions
-ok(LC.RebelExecDo(ftr, n, "execute") == "You'd need leave for that. Ask, or do it without.", "a Fighter has no leave to execute")
+ok(LC.RebelExecDo(ftr, n, "execute") == "You'd need permission for that. Ask, or do it without.", "a Fighter has no leave to execute")
 LC.Chairs[chair].asker = ftr
 R.execute = false
 LC.ExecAskLeave(ftr, n)
@@ -11738,7 +11738,7 @@ LC.ExecAskLeave(ftr, n)
 LC.ExecAnswer(lt, ftr, true)
 ok(LC.ExecHasLeave(ftr, n) == true, "or given")
 LC.Execute(ftr, n)
-ok((not IsValid(n) or n:Health() <= 0) and has("executed") ~= nil and LC.ExecJudging == nil, "with leave: done, known, and nobody answers for it")
+ok((not IsValid(n) or n:Health() <= 0) and has("executed") ~= nil and LC.ExecJudging == nil, "with permission: done, known, and nobody answers for it")
 ok(has("against_rules") ~= nil, "against the cell's own rules, though (prisoners are let go), and the board carries that")
 LC.ChairTick(CurTime())
 -- without leave

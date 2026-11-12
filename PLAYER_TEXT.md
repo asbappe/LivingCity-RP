@@ -4,7 +4,7 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version b4f9334. Admin-only console messages and log lines are left out.
+Made from version eedd4cb. Admin-only console messages and log lines are left out.
 
 11782 lines, from 316 files.
 
@@ -1026,7 +1026,7 @@ Made from version b4f9334. Admin-only console messages and log lines are left ou
 - "Interrogated? Each question is your choice: the truth, a lie (he may see through it), silence (the baton wears your resolve down) or a bargain for a shorter sentence. Civil Protection players can interrogate prisoners themselves: F2 > Interrogate, beside the cell."  (text, line 161)
 - "If a Civil Protection unit arrests you, you're cuffed and two units walk you to the cells. On the way, anyone can free you: take down the unit in front, then you can use {gm_showhelp} > Work at the cuffs."  (text, line 162)
 - "Whoever cuffs you may pat you down, or may not have the time. A patdown takes weapons, radios and tools from your pockets. If nobody does it, what you carry goes in with you: with a lockpick, {gm_showhelp} > Pick the cuffs when no captor can see, then the cell door or the cage's padlock."  (text, line 163)
-- "The Resistance: a Fighter or above can hold prisoners in the cage, pat them down, question them in the chair (or be kind: talk, food, ask them to join) and, with a Lieutenant's leave, execute them. The leader carries the cell's clipboard: its rules and mood are written on the Resistance's notice board, nowhere else."  (text, line 164)
+- "The Resistance: a Fighter or above can hold prisoners in the cage, pat them down, question them in the chair (or be kind: talk, food, ask them to join) and, with a Lieutenant's permission, execute them. The leader carries the cell's clipboard: its rules and mood are written on the Resistance's notice board, nowhere else."  (text, line 164)
 - "What Civil Protection takes off people is kept in the evidence locker. A unit can open it. Anyone else can pick its lock, or pry it with a crowbar and be heard."  (text, line 165)
 - "Rations come from the city's stores (shown under the clock). Kitchen and factory work refills them; when the stores run low, rations shrink too and people get restless."  (text, line 166)
 - "Each transformer powers its district: lights (including the map's switchable ones), screens and TVs, ration dispensers, vending machines, the Commissary and Combine door locks. Sabotage one (with a multitool) to cause a district-wide blackout and unlock its Combine doors, until Maintenance repairs it. Prison doors stay locked."  (text, line 167)
@@ -3552,12 +3552,12 @@ Made from version b4f9334. Admin-only console messages and log lines are left ou
 > Note for you (not shown in game): Executions, the prisoner's answers, and the leader's clipboard (sv_livingcity_rebelrule.lua, sv_livingcity_chairplayer.lua). All quick menus: number keys, no mouse. The "Execution" page at the cage and the chair. A Lieutenant or above does it; a Fighter asks leave, or doesn't.
 
 - "Execute them"  (label, line 74)
-- "Execute them (leave is given)"  (label, line 76)
+- "Execute them (you have permission)"  (label, line 76)
 
 > Note for you (not shown in game): part of: execution page
 
-- "Ask leave to execute them"  (label, line 78)
-- "Execute them without leave"  (label, line 79)
+- "Ask permission to execute them"  (label, line 78)
+- "Execute them without permission"  (label, line 79)
 
 > Note for you (not shown in game): the game answering something done in a window (lc_chair_q)
 
@@ -3567,13 +3567,13 @@ Made from version b4f9334. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): the game answering something done in a window (lc_exec_ask)
 
-- "asks leave"  (title, line 117)
-- "asks leave to execute {name}."  (text, line 117)
-- "Give leave"  (label, line 119)
+- "asks permission"  (title, line 117)
+- "asks permission to execute {name}."  (text, line 117)
+- "Give permission"  (label, line 119)
 
 > Note for you (not shown in game): the game answering something done in a window (lc_exec_judge)
 
-- "Without leave"  (title, line 133)
+- "Without permission"  (title, line 133)
 - "killed {name}{or} The cell waits for your answer."  (text, line 134)
 - "Expel them"  (label, line 136)
 - "Break them in rank"  (label, line 137)
@@ -3585,7 +3585,7 @@ Made from version b4f9334. Admin-only console messages and log lines are left ou
 - "The cell's rules"  (title, line 156)
 - "The cell's rules (the leader's to change)"  (title, line 156)
 - "Hands may be laid on prisoners"  (label, line 158)
-- "Prisoners may be executed, with leave"  (label, line 159)
+- "Prisoners may be executed, with permission"  (label, line 159)
 - "Sympathizers who turn are fair game"  (label, line 160)
 - "Priority: {priority}"  (label, line 161)
 - "Mood: {mood}"  (label, line 162)
@@ -16916,20 +16916,20 @@ Made from version b4f9334. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: exec ask leave
 
-- "You don't need anyone's leave."  (text, line 338)
-- "You have leave already."  (text, line 339)
-- "You ask leave to execute {target}. Wait for the word."  (text, line 350)
+- "You don't need anyone's permission."  (text, line 338)
+- "You already have permission."  (text, line 339)
+- "You ask permission to execute {target}. Wait for the word."  (text, line 350)
 
 > Note for you (not shown in game): part of: execute
 
 - "puts the barrel to {name}'s head. One shot."  (text, line 370)
 - "executed {name}{or}"  (text, line 373)
 - "It's done."  (text, line 395)
-- "It's done. Nobody gave you leave: someone will answer for that, and it will be you."  (text, line 395)
+- "It's done. Nobody gave you permission: someone will answer for that, and it will be you."  (text, line 395)
 
 > Note for you (not shown in game): At the cage or the chair: "execute" (with leave, or a Lieutenant or above), "askleave", "execnoleave".
 
-- "You'd need leave for that. Ask, or do it without."  (text, line 403)
+- "You'd need permission for that. Ask, or do it without."  (text, line 403)
 
 > Note for you (not shown in game): part of: exec judged
 
@@ -16941,7 +16941,7 @@ Made from version b4f9334. Admin-only console messages and log lines are left ou
 - "[Miscount] 'You don't decide who dies.' They take your rank."  (chat message, line 453)
 - "is to be shot for killing {name}"  (text, line 455)
 - "[Miscount] The word is out: you are to be shot for it. Any of them may, once they have you."  (chat message, line 457)
-- "killed a prisoner without leave. Bring them in. The order is given."  (text, line 458)
+- "killed a prisoner without permission. Bring them in. The order is given."  (text, line 458)
 - "killed {name}, and the cell stood by it"  (text, line 461)
 - "[Miscount] Nobody says a word about it. That is your answer."  (chat message, line 462)
 

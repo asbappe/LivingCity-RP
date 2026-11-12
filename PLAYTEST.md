@@ -1720,7 +1720,7 @@ Type them in the server console on the host panel, or in your own game console (
   Notes:
 - [ ] **The clipboard:** does the leader get it? How does it look in the hand? Do the boxes tick, and does the Resistance board show the mood and rules as its first lines without crowding out the news?
   Notes:
-- [ ] **Executions:** as a Fighter, ask leave; as a Lieutenant, give or refuse it; kill without leave and answer for it. Does each menu come up for the right person?
+- [ ] **Executions:** as a Fighter, ask permission; as a Lieutenant, give or refuse it; kill without permission and answer for it. Does each menu come up for the right person?
   Notes:
 - [ ] **Be kind** in the chair: talk, food, ask them to join.
   Notes:
