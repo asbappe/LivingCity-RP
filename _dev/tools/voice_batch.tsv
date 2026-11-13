@@ -1,34 +1,5 @@
 # Made by python3 _dev/voice_lines.py for _dev/tools/elevenlabs_batch.py: voice, file (under garrysmod/sound/, no ending), text
-administrator	livingcity/administrator/rations1	[warm, motherly, smiling] Good news, everyone! Rations are being handed out right now. Come along, and don't forget your card.
-administrator	livingcity/administrator/sweep_firm1	[firm, composed, still kind] A little inspection, nothing to worry about. Stand still, papers out, and it'll be over before you know it.
-administrator	livingcity/administrator/curfew_firm1	[firm, composed, still kind] Bedtime, everyone. Curfew starts now: home you go, and stay there till morning.
-administrator	livingcity/administrator/lockdown_stern1	[stern, cold, slowly] The city is in lockdown. Stay inside. I am not asking.
-administrator	livingcity/administrator/raid_stern1	[stern, cold, slowly] Civil Protection is visiting one of our blocks. Cooperate, and everyone sleeps soundly tonight.
-administrator	livingcity/administrator/supply1	[warm, motherly, smiling] A supply convoy is coming through! Step aside and let it pass, there's a love.
-administrator	livingcity/administrator/ended1	[warm, motherly, smiling] That's all done. Thank you, everyone. Back to your day.
-administrator	livingcity/administrator/rations_soon1	[warm, motherly, smiling] In just a couple of minutes, rations! Start making your way over, dears.
-administrator	livingcity/administrator/curfew_soon_firm1	[firm, composed, still kind] Curfew in two minutes. Finish up and head home, please.
-administrator	livingcity/administrator/socio_green1	[warm, motherly, smiling] Everything is calm again. Well done, all of you.
-administrator	livingcity/administrator/socio_yellow_firm1	[firm, composed, still kind] Things are a little tense. Papers ready, heads down, and we'll get through it.
-administrator	livingcity/administrator/socio_red_stern1	[stern, cold, slowly] We are on red. Go home. Whatever happens out there now, you were warned.
 administrator	livingcity/administrator/socio_black_furious1	[furious, barely controlled, clipped] Citizens. The city has been overrun by its own ingratitude. Go indoors and stay there. Anyone in the open will be fired upon from the Nexus. This is not a request.
-administrator	livingcity/administrator/dawn1	[warm, motherly, smiling] Good morning, everyone! Rise and shine: a brand new day for the city.
-administrator	livingcity/administrator/day1	[warm, motherly, smiling] Halfway through the day. Keep it up, I'm proud of you.
-administrator	livingcity/administrator/dusk1	[warm, motherly, smiling] The day's nearly done. Finish up, and think about heading home.
-administrator	livingcity/administrator/night1	[warm, motherly, smiling] Goodnight, everyone. Sleep well, and dream of the city.
-administrator	livingcity/administrator/outbreak_firm1	[firm, composed, still kind] Something has got out of the infestation. Keep away from it and let the crews do their work.
-administrator	livingcity/administrator/blackout_firm1	[firm, composed, still kind] A little power cut, nothing more. The crews are on it, so stay calm.
-administrator	livingcity/administrator/power_restored1	[warm, motherly, smiling] Lights back on! Thank you for your patience.
-administrator	livingcity/administrator/skirmish_raid_stern1	[stern, cold, slowly] Overwatch is dealing with some trouble. Stay well away from it.
-administrator	livingcity/administrator/skirmish_sweep_stern1	[stern, cold, slowly] Overwatch is cleaning up a troubled corner of the city. Let them work.
-administrator	livingcity/administrator/response_stern1	[stern, cold, slowly] A response team is on its way. Please don't get in their way.
-administrator	livingcity/administrator/breakout_furious1	[furious, barely controlled, clipped] Some people have run from where they belong. If you see them, tell a unit. Now.
-administrator	livingcity/administrator/overwatch_drop_stern1	[stern, cold, slowly] Overwatch soldiers are arriving. Make way for them.
-administrator	livingcity/administrator/block_raided_stern1	[stern, cold, slowly] We're checking one of our housing blocks. Stay in your room and it'll be quick.
-administrator	livingcity/administrator/territory_grew_firm1	[firm, composed, still kind] Some troublemakers are spreading out. Don't go near them, and don't listen to them.
-administrator	livingcity/administrator/train_arrival1	[warm, motherly, smiling] Welcome to the city, all you new faces! Civil Intake is just this way.
-administrator	livingcity/administrator/welcome1	[warm, motherly, smiling] Hello, and welcome to the city! You're going to love it here.
-administrator	livingcity/administrator/ambient1	[warm, motherly, smiling] Remember, a good citizen is a happy citizen. And I do so want you all to be happy.
 administrator	livingcity/administrator/jog1	[warm, motherly, smiling] Morning, everyone! Shoes on: time for our little jog.
 administrator	livingcity/administrator/drill1	[warm, motherly, smiling] Into the yard, everyone, for our morning exercises. Stretch!
 administrator	livingcity/administrator/parade1	[warm, motherly, smiling] Parade time! Chins up, shoulders back, and let's show the city who we are.

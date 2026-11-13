@@ -42,6 +42,168 @@ def load_done():
             f.write(n + "\n")
     return done
 
+# The server's own list of what it lacks (lc_voice_missing writes garrysmod/data/livingcity/voice_missing.txt; a copy kept
+# here as _dev/voice_missing.txt): every line of a folder it checks that isn't on it is recorded, and is ticked.
+SERVER_MISSING = os.path.join(HERE, "voice_missing.txt")
+# (the folders lc_voice_missing checks; the Colonel's are not among them, so his are never ticked from it)
+SERVER_FOLDERS = ["dreams/voice/", "overwatch/", "administrator/", "radio/", "gman/", "citizens/", "units/", "clerk/", "oldtimer/",
+                  "machines/", "cubbage/"]
+
+def load_missing():
+    if not os.path.exists(SERVER_MISSING):
+        return None
+    miss = {f: set() for f in SERVER_FOLDERS}
+    for line in open(SERVER_MISSING, encoding="utf-8"):
+        line = line.strip().lower()
+        if not line or line.startswith("#") or "/" not in line:
+            continue
+        folder, _, name = line.rpartition("/")
+        miss.setdefault(folder + "/", set()).add(name)
+    return miss
+
+def file_stem(token, tone=False):
+    """A file in a table, as lc_voice_missing names it: no folder, no ending, no take number 1 (or _1), no tone word."""
+    n = os.path.basename(token.lower())
+    n = re.sub(r"\.(wav|mp3|ogg)$", "", n)
+    if n.endswith("1"):
+        n = n[:-1]
+    n = n.rstrip("_")
+    if tone:
+        n = re.sub(r"_(firm|stern|furious)$", "", n)
+    return n
+
+def tick_server(lines, miss, folder_of):
+    """Rows ticked from the server's list. folder_of(heading) gives a section's folder (or None: leave it)."""
+    if miss is None:
+        return lines
+    out, folder = [], None
+    for line in lines:
+        if line.startswith("## "):
+            folder = folder_of(line)
+        elif folder and (line.startswith("| [ ] |") or line.lower().startswith("| [x] |")):
+            cells = line.split("|")
+            line = "| [ ] |" + line[len("| [ ] |"):]  # (the server's word decides, over an older tick)
+            if folder == "announce":
+                trig = _TICK.findall(cells[2])
+                if trig and trig[0] not in miss["overwatch/"] and trig[0] not in miss["administrator/"]:
+                    line = "| [x] |" + line[len("| [ ] |"):]
+            else:
+                files = _TICK.findall(cells[2] + "|" + (cells[3] if len(cells) > 5 else ""))
+                files = [f for f in files if not f.startswith("npc/") and "<" not in f]
+                tone = folder == "administrator/"
+                if files and all(file_stem(f, tone) not in miss.get(folder, set()) for f in files):
+                    line = "| [x] |" + line[len("| [ ] |"):]
+        out.append(line)
+    return out
+
+def lines_folder(heading):
+    """VOICE_LINES.md: each numbered section's folder."""
+    m = re.match(r"## (\d+)\.", heading)
+    n = int(m.group(1)) if m else 0
+    return {1: "announce", 2: "radio/", 4: "dreams/voice/", 5: "citizens/", 6: "clerk/", 7: "oldtimer/", 8: "machines/",
+            10: "citizens/", 11: "units/", 12: "cubbage/"}.get(n)
+
+def scripts_folder(heading):
+    h = heading.lower()
+    for key, f in (("administrator's announcements", "administrator/"), ("what named citizens say", "citizens/"), ("what units say", "units/"),
+                   ("not real clips", "gman/"), ("cubbage", "cubbage/"), ("overwatch's announcements", "overwatch/"), ("## the radio", "radio/"),
+                   ("the dreams' lines", "dreams/voice/"), ("citizens showing the way", "citizens/"), ("information clerk", "clerk/"),
+                   ("the old-timer", "oldtimer/"), ("machines", "machines/")):
+        if key in h:
+            return f
+    return None
+
+def section(doc, num):
+    """The lines of VOICE_LINES.md's section num (its heading left out)."""
+    out, inside = [], False
+    for line in doc:
+        if line.startswith("## "):
+            inside = line.startswith("## %d." % num)
+            continue
+        if inside:
+            out.append(line)
+    return out
+
+def more_scripts(doc, rows=()):
+    """VOICE_SCRIPTS.md's sections for every other kind of line (from VOICE_LINES.md, with its ticks)."""
+    out = []
+    def intro(lines):
+        for l in lines:
+            if l.strip() and not l.startswith("|") and not l.startswith("#"):
+                return l
+        return ""
+    # Overwatch's announcements (section 1: the Overwatch file and words of each)
+    s1 = section(doc, 1)
+    out += ["", "## Overwatch's announcements", "",
+            "Folder: `overwatch/`. Overwatch: cold and clinical, a dispatcher, the same voice as his existing recordings.", "",
+            "| Done | File | When | Paste |", "|---|---|---|---|"]
+    miss = load_missing()
+    for l in s1:
+        if l.startswith("| [") and l.count("|") >= 8:
+            c = [x.strip() for x in l.split("|")]
+            f = _TICK.findall(c[4])
+            if not f:
+                continue
+            done = "[x]" if (miss and file_stem(f[0]) not in miss["overwatch/"]) else "[ ]"
+            out.append("| %s | `%s` | %s | [cold, clinical, flat dispatcher] %s |" % (done, f[0], c[3], c[5]))
+    # the radio (section 2)
+    s2 = section(doc, 2)
+    out += ["", "## The radio", "", intro(s2), "", "| Done | File | When | Paste |", "|---|---|---|---|"]
+    for l in s2:
+        if l.startswith("| ["):
+            c = [x.strip() for x in l.split("|")]
+            words = c[4].strip().strip('"')
+            if words.startswith("("):
+                continue  # (static, music: nothing to say)
+            m = re.search(r'"([^"]+)"', c[4])
+            out.append("| %s | %s | %s | %s |" % (c[1], c[2], c[3], m.group(1) if m else words))
+    # the dreams (section 4): each dream's lines, "how it should sound" as the tag
+    s4 = section(doc, 4)
+    out += ["", "## The dreams' lines", "",
+            "Folder: `dreams/voice/`. Each dream has its own speakers (the column Who); design a voice for each from how it should sound. "
+            "Save as the file named (`.mp3`, `.ogg` or `.wav`).", ""]
+    head = None
+    for l in s4:
+        if l.startswith("#### "):
+            head = l[5:]
+            out += ["", "### " + head, "", "| Done | File | Who | Paste |", "|---|---|---|---|"]
+        elif l.startswith("| [") and head:
+            c = [x.strip() for x in l.split("|")]
+            out.append("| %s | %s | %s | [%s] %s |" % (c[1], c[2], c[3], c[5], c[4]))
+    # the Loyalty Quiz's questions, read out by her (VOICE_LINES.md only mentions them)
+    qs = sorted([r for r in rows if r[0] == "quizq"], key=lambda r: int(r[2]))
+    if qs:
+        out += ["", "### The Loyalty Quiz's questions (`quiz`)", "", "| Done | File | Who | Paste |", "|---|---|---|---|"]
+        for r in qs:
+            out.append("| [ ] | `%s1.mp3` | The Administrator | [her own voice: warm, regal, a little vain, a quizmaster] %s |" % (r[1], r[3]))
+    # citizens showing the way (section 5), the clerk, the old-timer, the machines (6 to 8)
+    s5 = section(doc, 5)
+    out += ["", "## Citizens showing the way", "", "Folder: `citizens/`. The citizen voices (man and woman) above: paste each line twice.", "",
+            "| Done | Man's file | Woman's file | When | Paste |", "|---|---|---|---|---|"]
+    out += [l for l in s5 if l.startswith("| [")]
+    for num, title in ((6, "The Citizen Information clerk"), (7, "The old-timer"), (8, "Machines")):
+        sx = section(doc, num)
+        out += ["", "## " + title, "", intro(sx), "", "| Done | File | When | Paste |", "|---|---|---|---|"]
+        out += [l for l in sx if l.startswith("| [")]
+    return out
+
+def summary(miss):
+    """What's left to record, by folder, from the server's list."""
+    if miss is None:
+        return []
+    names = {"dreams/voice/": "the dreams' lines", "overwatch/": "Overwatch", "administrator/": "the Administrator", "radio/": "the radio",
+             "gman/": "the G-Man", "citizens/": "citizens (named citizens and showing the way)", "units/": "units", "clerk/": "the clerk",
+             "oldtimer/": "the old-timer", "machines/": "machines", "cubbage/": "Colonel Cubbage"}
+    total = sum(len(v) for v in miss.values())
+    out = ["", "## Still to record (the server's `lc_voice_missing`)", "",
+           "Ticked [x] below: the server already has it. Left to record, %d files:" % total, ""]
+    for f in SERVER_FOLDERS:
+        n = len(miss.get(f, ()))
+        out.append("- **%s** (`%s`): %s" % (names[f], f, "nothing missing" if n == 0 else "%d missing" % n))
+    out += ["", "Run `lc_voice_missing` on the server after uploading, and give Claude the list (or `data/livingcity/voice_missing.txt`) "
+            "to update the ticks. The Colonel's own lines (the ghost) aren't checked by it.", ""]
+    return out
+
 def tick(lines, done):
     """Rows whose files are all recorded, ticked."""
     out = []
@@ -133,6 +295,7 @@ for _, t in ipairs(LC.OldTimerTroubles or {}) do W("oldtimer", "hint_" .. t[1], 
 for id, l in pairs(LC.MachineLines or {}) do W("machine", id, l[1], l[2]) end
 for id, words in pairs(LC.ColonelLines or {}) do W("colonel", id, "", words) end
 for id, words in pairs(LC.SpeechAnswerLines or {}) do W("cubbage", id, "", words) end
+for i, q in ipairs(LC.QuizQuestions or {}) do W("quizq", "quiz_q" .. i, tostring(i), q.q) end
 for id, l in pairs(LC.StreetLines or {}) do W("street", id, l[2], l[1], l[3] or l[1]) end
 for id, l in pairs(LC.UnitLines or {}) do W("unitline", id, l[2], l[1], l[3] or l[1], table.concat(l[4] or {}, ", ")) end
 for _, t in ipairs(LC.SpeechPieces or {}) do W("speech", t.id, t.part, t.when, t.words) end
@@ -373,7 +536,7 @@ def main():
         doc.append("| [ ] | `answer_%s1.wav` | %s | %s |" % (r[1], {"open": "(his opening)", "close": "(his closing)"}.get(r[1], "her `speech_%s`" % r[1]), r[3]))
         count += 1
     done = load_done()
-    doc[:] = tick(doc, done)
+    doc[:] = tick_server(tick(doc, done), load_missing(), lines_folder)
     text = "\n".join(doc).rstrip("\n") + "\n"
     with open(OUT, "w", encoding="utf-8") as f:
         f.write(text)
@@ -552,7 +715,11 @@ def scripts(doc, street, units, group_of, order, done=frozenset(), rows=()):
             out.append("| [ ] | `answer_%s1` | %s | [defiant, dry, a speaker enjoying himself] %s |" % (r[1], what, r[3]))
             batch.append(("cubbage", "livingcity/cubbage/answer_" + r[1] + "1", "[defiant, dry, a speaker enjoying himself] " + r[3]))
             n += 1
-    out[:] = tick(out, done)
+    out += more_scripts(doc, rows)
+    out[:] = tick_server(tick(out, done), load_missing(), scripts_folder)
+    # what's left, near the top (after "How to use it")
+    at = next((i for i, l in enumerate(out) if l.startswith("## How to use it")), 1)
+    out[at:at] = summary(load_missing())
     with open(os.path.join(os.path.dirname(OUT), "VOICE_SCRIPTS.md"), "w", encoding="utf-8") as fh:
         fh.write("\n".join(out).rstrip("\n") + "\n")
     print("wrote VOICE_SCRIPTS.md: %d lines to paste" % n)

@@ -2,6 +2,25 @@
 
 **Made from the code by `python3 _dev/voice_lines.py`: never edit it by hand.** The lines of `VOICE_LINES.md` that are generated speech (named citizens, units, the Administrator, and the G-Man's made-up lines), written the way ElevenLabs wants them, with a voice description for each voice.
 
+
+## Still to record (the server's `lc_voice_missing`)
+
+Ticked [x] below: the server already has it. Left to record, 357 files:
+
+- **the dreams' lines** (`dreams/voice/`): 150 missing
+- **Overwatch** (`overwatch/`): 9 missing
+- **the Administrator** (`administrator/`): 31 missing
+- **the radio** (`radio/`): 11 missing
+- **the G-Man** (`gman/`): 10 missing
+- **citizens (named citizens and showing the way)** (`citizens/`): 67 missing
+- **units** (`units/`): nothing missing
+- **the clerk** (`clerk/`): 16 missing
+- **the old-timer** (`oldtimer/`): 29 missing
+- **machines** (`machines/`): 10 missing
+- **Colonel Cubbage** (`cubbage/`): 24 missing
+
+Run `lc_voice_missing` on the server after uploading, and give Claude the list (or `data/livingcity/voice_missing.txt`) to update the ticks. The Colonel's own lines (the ghost) aren't checked by it.
+
 ## How to use it
 
 - **Model:** Eleven v4 (or v3). A direction in **square brackets** changes how what follows is said: `[whispers] Careful.` It is not read out. Put it just before the words it changes. Your own wording works (`[tired, flat]`), as do reactions (`[sighs]`, `[exhales]`, `[short laugh]`) and `[pause]`. If a tag is read aloud, the model is not v4 or v3, or the brackets are not square.
@@ -94,39 +113,10 @@ Folder: `administrator/`. **Use the voice her existing recordings were made with
 
 | Done | File | When | Paste |
 |---|---|---|---|
-| [ ] | `rations1.wav` | A ration distribution starts | [warm, motherly, smiling] Good news, everyone! Rations are being handed out right now. Come along, and don't forget your card. |
-| [ ] | `sweep_firm1.wav` | An inspection sweep starts | [firm, composed, still kind] A little inspection, nothing to worry about. Stand still, papers out, and it'll be over before you know it. |
-| [ ] | `curfew_firm1.wav` | Curfew starts | [firm, composed, still kind] Bedtime, everyone. Curfew starts now: home you go, and stay there till morning. |
-| [ ] | `lockdown_stern1.wav` | A lockdown starts | [stern, cold, slowly] The city is in lockdown. Stay inside. I am not asking. |
-| [ ] | `raid_stern1.wav` | A raid on a block starts | [stern, cold, slowly] Civil Protection is visiting one of our blocks. Cooperate, and everyone sleeps soundly tonight. |
-| [ ] | `supply1.wav` | A supply convoy arrives | [warm, motherly, smiling] A supply convoy is coming through! Step aside and let it pass, there's a love. |
-| [ ] | `ended1.wav` | An event is over | [warm, motherly, smiling] That's all done. Thank you, everyone. Back to your day. |
-| [ ] | `rations_soon1.wav` | Two minutes before a ration distribution | [warm, motherly, smiling] In just a couple of minutes, rations! Start making your way over, dears. |
-| [ ] | `curfew_soon_firm1.wav` | Two minutes before curfew | [firm, composed, still kind] Curfew in two minutes. Finish up and head home, please. |
-| [ ] | `socio_green1.wav` | Sociostability goes green | [warm, motherly, smiling] Everything is calm again. Well done, all of you. |
-| [ ] | `socio_yellow_firm1.wav` | Sociostability goes yellow | [firm, composed, still kind] Things are a little tense. Papers ready, heads down, and we'll get through it. |
-| [ ] | `socio_red_stern1.wav` | Sociostability goes red | [stern, cold, slowly] We are on red. Go home. Whatever happens out there now, you were warned. |
 | [ ] | `socio_black_furious1.wav` | The city collapses to BLACK (also every 5 minutes while it lasts): open rebellion, the curfew and the shelling, in one | [furious, barely controlled, clipped] Citizens. The city has been overrun by its own ingratitude. Go indoors and stay there. Anyone in the open will be fired upon from the Nexus. This is not a request. |
-| [ ] | `dawn1.wav` | Dawn | [warm, motherly, smiling] Good morning, everyone! Rise and shine: a brand new day for the city. |
-| [ ] | `day1.wav` | Midday | [warm, motherly, smiling] Halfway through the day. Keep it up, I'm proud of you. |
-| [ ] | `dusk1.wav` | Dusk | [warm, motherly, smiling] The day's nearly done. Finish up, and think about heading home. |
-| [ ] | `night1.wav` | Night | [warm, motherly, smiling] Goodnight, everyone. Sleep well, and dream of the city. |
-| [ ] | `outbreak_firm1.wav` | Infected break out into the streets | [firm, composed, still kind] Something has got out of the infestation. Keep away from it and let the crews do their work. |
-| [ ] | `blackout_firm1.wav` | A district loses power | [firm, composed, still kind] A little power cut, nothing more. The crews are on it, so stay calm. |
-| [ ] | `power_restored1.wav` | Power comes back | [warm, motherly, smiling] Lights back on! Thank you for your patience. |
-| [ ] | `skirmish_raid_stern1.wav` | Overwatch answers a fight with the Resistance | [stern, cold, slowly] Overwatch is dealing with some trouble. Stay well away from it. |
-| [ ] | `skirmish_sweep_stern1.wav` | Overwatch sweeps into rebel ground | [stern, cold, slowly] Overwatch is cleaning up a troubled corner of the city. Let them work. |
-| [ ] | `response_stern1.wav` | A response squad is sent | [stern, cold, slowly] A response team is on its way. Please don't get in their way. |
-| [ ] | `breakout_furious1.wav` | Prisoners break out | [furious, barely controlled, clipped] Some people have run from where they belong. If you see them, tell a unit. Now. |
-| [ ] | `overwatch_drop_stern1.wav` | Overwatch soldiers are dropped in | [stern, cold, slowly] Overwatch soldiers are arriving. Make way for them. |
-| [ ] | `block_raided_stern1.wav` | A housing block is raided | [stern, cold, slowly] We're checking one of our housing blocks. Stay in your room and it'll be quick. |
-| [ ] | `territory_grew_firm1.wav` | The Resistance gains ground | [firm, composed, still kind] Some troublemakers are spreading out. Don't go near them, and don't listen to them. |
-| [ ] | `train_arrival1.wav` | A train arrives | [warm, motherly, smiling] Welcome to the city, all you new faces! Civil Intake is just this way. |
-| [ ] | `welcome1.wav` | Someone joins the server (just for them) | [warm, motherly, smiling] Hello, and welcome to the city! You're going to love it here. |
-| [ ] | `ambient1.wav` | General city announcements now and then (also her addresses, with lc_breen_broadcasts 1) | [warm, motherly, smiling] Remember, a good citizen is a happy citizen. And I do so want you all to be happy. |
 | [ ] | `jog1.wav` | The morning jog | [warm, motherly, smiling] Morning, everyone! Shoes on: time for our little jog. |
-| [ ] | `drill1.wav` | The morning drill | [warm, motherly, smiling] Into the yard, everyone, for our morning exercises. Stretch! |
-| [ ] | `parade1.wav` | The morning parade | [warm, motherly, smiling] Parade time! Chins up, shoulders back, and let's show the city who we are. |
+| [x] | `drill1.wav` | The morning drill | [warm, motherly, smiling] Into the yard, everyone, for our morning exercises. Stretch! |
+| [x] | `parade1.wav` | The morning parade | [warm, motherly, smiling] Parade time! Chins up, shoulders back, and let's show the city who we are. |
 | [ ] | `black_stand_furious1.wav` | Her last stand begins | [furious, barely controlled, clipped] So you have come for me. Come, then. You will not reach me. |
 | [ ] | `black_crushed_stern1.wav` | The uprising is crushed (time ran out) | [stern, cold, slowly] It is over. The city is mine again, and I will remember every one of you. |
 | [ ] | `suppressor_down_furious1.wav` | The suppression device is destroyed | [furious, barely controlled, clipped] They have silenced the Nexus. It changes nothing. |
@@ -247,7 +237,7 @@ Folder: `citizens/`. Paste each line twice: once with the man's voice (save as t
 | [x] | `say_break_despair_male1` | `say_break_despair_female1` | [broken, near tears] I can't. [shaky breath] I just can't anymore. |
 | [x] | `say_break_inform_male1` | `say_break_inform_female1` | [nervous, eager, hushed] Officer. I've got something you'll want to hear. |
 | [x] | `say_break_seek_male1` | `say_break_seek_female1` | [relieved, a little shaky] There you are. I've been looking for you. |
-| [x] | `say_break_share_male1` | `say_break_share_female1` | [gentle, insisting] Go on, take half. You need it more than I do. |
+| [ ] | `say_break_share_male1` | `say_break_share_female1` | [gentle, insisting] Go on, take half. You need it more than I do. |
 | [x] | `say_break_steady_male1` | `say_break_steady_female1` | [calm, soothing, low] Easy. Easy now. We're going to be ok, right? |
 | [x] | `say_break_tantrum_male1` | `say_break_tantrum_female1` | [shouting, voice cracking] I've had enough! Do you hear me? Enough! |
 | | | | **What they saw** |
@@ -341,3 +331,543 @@ Folder: `cubbage/`. Odessa Cubbage, alive and well, answering her address from t
 | [ ] | `answer_mood_restless1` | her `speech_mood_restless` | [defiant, dry, a speaker enjoying himself] She feels your restlessness, she says. Good. Let her feel it. |
 | [ ] | `answer_mood_content1` | her `speech_mood_content` | [defiant, dry, a speaker enjoying himself] Rested, fed and calm, she says. Look around you. Does that look like anyone you know? |
 | [ ] | `answer_close1` | (his closing) | [defiant, dry, a speaker enjoying himself] That's all from me. Keep your heads down, your eyes open, and your door unlocked for a friend. We're closer than she thinks. |
+
+## Overwatch's announcements
+
+Folder: `overwatch/`. Overwatch: cold and clinical, a dispatcher, the same voice as his existing recordings.
+
+| Done | File | When | Paste |
+|---|---|---|---|
+| [x] | `rations1` | A ration distribution starts | [cold, clinical, flat dispatcher] Attention, residents: ration distribution is now in progress. Report to your assigned distribution point. |
+| [x] | `sweep1` | An inspection sweep starts | [cold, clinical, flat dispatcher] Attention, residents: inspection sweep in progress. Remain where you are and present your identification. |
+| [x] | `curfew1` | Curfew starts | [cold, clinical, flat dispatcher] Attention, residents: curfew is now in effect. Return to your residence block immediately. |
+| [x] | `lockdown1` | A lockdown starts | [cold, clinical, flat dispatcher] Attention, all residents: the city is now in lockdown. Remain indoors. Civil Protection is authorized to use force. |
+| [x] | `raid1` | A raid on a block starts | [cold, clinical, flat dispatcher] Attention, residents: a block inspection is under way. Do not interfere with Civil Protection. |
+| [x] | `supply1` | A supply convoy arrives | [cold, clinical, flat dispatcher] Attention, residents: supply convoy in transit. Clear the route. |
+| [x] | `ended1` | An event is over | [cold, clinical, flat dispatcher] Attention, residents: sociostabilization restored. Resume assigned duties. |
+| [x] | `rations_soon1` | Two minutes before a ration distribution | [cold, clinical, flat dispatcher] Attention, residents: ration distribution begins in two minutes. |
+| [x] | `curfew_soon1` | Two minutes before curfew | [cold, clinical, flat dispatcher] Attention, residents: curfew begins in two minutes. Proceed to your residence block. |
+| [x] | `socio_green1` | Sociostability goes green | [cold, clinical, flat dispatcher] Sociostability nominal. Resume normal activity. |
+| [x] | `socio_yellow1` | Sociostability goes yellow | [cold, clinical, flat dispatcher] Sociostability marginal. Expect increased inspections. Keep your papers ready. |
+| [x] | `socio_red1` | Sociostability goes red | [cold, clinical, flat dispatcher] Judgment waiver in effect. Civil Protection may act at their discretion. Remain indoors. |
+| [ ] | `socio_black1` | The city collapses to BLACK (also every 5 minutes while it lasts): open rebellion, the curfew and the shelling, in one | [cold, clinical, flat dispatcher] Attention all residents: sociostability has collapsed. Martial law is in effect. Mandatory curfew. Suppression fire authorized on all exposed sectors. |
+| [x] | `dawn1` | Dawn | [cold, clinical, flat dispatcher] Attention, residents: a new work cycle begins. Report to your assignments. |
+| [x] | `day1` | Midday | [cold, clinical, flat dispatcher] Attention, residents: productivity quotas remain in effect. |
+| [x] | `dusk1` | Dusk | [cold, clinical, flat dispatcher] Attention, residents: the work cycle is ending. Prepare for curfew. |
+| [x] | `night1` | Night | [cold, clinical, flat dispatcher] Attention, residents: night cycle. Movement outside residence blocks is restricted. |
+| [x] | `outbreak1` | Infected break out into the streets | [cold, clinical, flat dispatcher] Alert: biotic contamination in the city. Avoid the affected area. Containment teams are responding. |
+| [x] | `blackout1` | A district loses power | [cold, clinical, flat dispatcher] Alert: power failure in your district. Remain calm. Maintenance has been dispatched. |
+| [x] | `power_restored1` | Power comes back | [cold, clinical, flat dispatcher] Power restored. Resume normal activity. |
+| [x] | `skirmish_raid1` | Overwatch answers a fight with the Resistance | [cold, clinical, flat dispatcher] Overwatch response team deployed. Residents, clear the area. |
+| [x] | `skirmish_sweep1` | Overwatch sweeps into rebel ground | [cold, clinical, flat dispatcher] Overwatch sweep under way in an anticivil sector. Residents, remain clear. |
+| [x] | `response1` | A response squad is sent | [cold, clinical, flat dispatcher] Protection response team dispatched. Do not interfere. |
+| [x] | `breakout1` | Prisoners break out | [cold, clinical, flat dispatcher] Alert: unauthorized departure from detention. All residents, report sightings to Civil Protection. |
+| [x] | `overwatch_drop1` | Overwatch soldiers are dropped in | [cold, clinical, flat dispatcher] Overwatch deployment in progress. Residents, clear the landing zone. |
+| [x] | `block_raided1` | A housing block is raided | [cold, clinical, flat dispatcher] Housing block inspection in progress. Remain in your unit. |
+| [x] | `territory_grew1` | The Resistance gains ground | [cold, clinical, flat dispatcher] Alert: anticivil activity expanding. Avoid unregistered areas. |
+| [x] | `train_arrival1` | A train arrives | [cold, clinical, flat dispatcher] Attention: new arrivals at the platform. Proceed to Civil Intake. |
+| [x] | `welcome1` | Someone joins the server (just for them) | [cold, clinical, flat dispatcher] Attention, new resident: report to Civil Intake for registration. |
+| [x] | `ambient1` | General city announcements now and then (also her addresses, with lc_breen_broadcasts 1) | [cold, clinical, flat dispatcher] Attention, residents: inaction is conspiracy. Report suspicious behavior. |
+| [ ] | `jog1` | The morning jog | [cold, clinical, flat dispatcher] Attention, residents: morning exercise. Assemble for the run. |
+| [ ] | `drill1` | The morning drill | [cold, clinical, flat dispatcher] Attention, residents: morning drill. Assemble in the yard. |
+| [ ] | `parade1` | The morning parade | [cold, clinical, flat dispatcher] Attention, residents: assemble for the parade. |
+| [ ] | `black_stand1` | Her last stand begins | [cold, clinical, flat dispatcher] Overwatch acknowledges incursion at the Nexus. All units, converge and protect the Administrator. |
+| [ ] | `black_fallen1` | She's dead (always Overwatch's: she can't announce her own death) | [cold, clinical, flat dispatcher] Administrator biosignal lost. City administration suspended. All units, fall back to the Nexus. |
+| [ ] | `black_crushed1` | The uprising is crushed (time ran out) | [cold, clinical, flat dispatcher] Incursion contained. Sociostability restoring. Remain indoors. |
+| [ ] | `suppressor_down1` | The suppression device is destroyed | [cold, clinical, flat dispatcher] Alert: Nexus suppression device offline. All units, contain and repair. |
+| [ ] | `speech_soon1` | Her address is called: the city must gather (Overwatch's when a player Administrator calls it from her tablet; hers when the city gives it) | [cold, clinical, flat dispatcher] Attention, all residents: the City Administrator will address the city. Report to the assembly point immediately. Attendance is mandatory. |
+
+## The radio
+
+Folder: **`garrysmod/sound/livingcity/radio/`**. One voice of your choosing (a Union announcer for `union`, a Resistance voice for Freq 7).
+
+| Done | File | When | Paste |
+|---|---|---|---|
+| [ ] | `union1.wav` | An ordinary station, the Union band (none: her ambient recordings play instead) | This is the Union band. Work hard, sleep well. |
+| [ ] | `freq7_1.wav` | The Resistance's pirate broadcast, between songs (its .txt is shown on the panel) | This is Frequency 7. They can't jam us all. Stay low, stay alive. |
+| [ ] | `freq7_sweep1.wav` | Freq 7 warns: a sweep is coming | Heads up: a sweep is coming into our ground. Hide what you've got. |
+| [ ] | `freq7_raid1.wav` | Freq 7 warns: a raid is coming | They're raiding a block. If you can get out, get out now. |
+| [ ] | `freq7_curfew1.wav` | Freq 7 warns: curfew | Curfew's coming. Get where you need to be. |
+| [ ] | `freq7_supply1.wav` | Freq 7 warns: a supply convoy (a chance to hit it) | Supply convoy on the move. Anyone feeling brave? |
+| [ ] | `freq7_incursion1.wav` | Freq 7 warns: the Combine are in rebel ground | Combine in our territory. Everyone to your posts. |
+| [ ] | `freq7_lockdown1.wav` | Freq 7 warns: lockdown | Lockdown. Stay put, stay quiet, wait it out. |
+| [ ] | `freq7_dropship1.wav` | Freq 7 warns: a dropship | Dropship incoming. Find cover. |
+
+## The dreams' lines
+
+Folder: `dreams/voice/`. Each dream has its own speakers (the column Who); design a voice for each from how it should sound. Save as the file named (`.mp3`, `.ogg` or `.wav`).
+
+
+### The Cheese Dream (`cheese`)
+
+| Done | File | Who | Paste |
+|---|---|---|---|
+| [ ] | `cheese_hello1.mp3` | The Heads in the Sky | [a choir of giant floating heads, humming, slow, warm, reverb-heavy and slightly off-key] Cheeeeese. Cheeeeeeeese. |
+| [ ] | `cheese_gold1.mp3` | The Heads in the Sky | [the same choir, suddenly excited, overlapping, high-pitched] The golden cheese! The golden cheese! |
+
+### Musical Chairs (`chairs`)
+
+| Done | File | Who | Paste |
+|---|---|---|---|
+| [ ] | `chairs_hello1.mp3` | The Music Man | [a cheerful old game-show host, a little too close to the microphone] Ladies and gentlemen, musical chairs! When the music stops... sit. |
+| [ ] | `chairs_sit1.mp3` | The Music Man | [the game-show host, sudden and loud] SIT! |
+
+### Wings (`flying`)
+
+| Done | File | Who | Paste |
+|---|---|---|---|
+| [ ] | `flying_hello1.mp3` | A Gentle Voice | [a soft, kind, dreamy narrator, almost whispering] Go on. You always knew you could. Just... flap. |
+
+### It's Raining Melons (`melons`)
+
+| Done | File | Who | Paste |
+|---|---|---|---|
+| [ ] | `melons_hello1.mp3` | The Weatherman | [a chirpy TV weatherman, completely serious about it] Today's forecast: melons. Heavy melons, with a chance of lead. |
+
+### Hooves and All (`horse`)
+
+| Done | File | Who | Paste |
+|---|---|---|---|
+| [ ] | `horse_intro_male1.mp3` | A Hungry Man | [a weary, starving working man, far away, as if from the end of a long tunnel (replaces Half-Life 2's line)] I'm so hungry... I could eat a horse. |
+| [ ] | `horse_intro_female1.mp3` | A Hungry Woman | [a tired, starving woman, distant and dreamy (replaces Half-Life 2's line)] I'm so hungry... I could eat a horse. |
+| [ ] | `horse_grigori11.mp3` | Father Grigori | [an old, wild-eyed priest with a booming, theatrical voice, laughing between words] Back! Back to the pit, foul beast! |
+| [ ] | `horse_grigori21.mp3` | Father Grigori | [the old priest, delighted and horrified at once] It will not die! Why will it not die?! |
+| [ ] | `horse_grigori31.mp3` | Father Grigori | [the old priest, preaching at the top of his lungs] Eat, my children! Eat, while it stands still! |
+| [ ] | `horse_grigori41.mp3` | Father Grigori | [the old priest, proud and completely mad] I have been shooting this horse since the old days. I will shoot it until the end of days! |
+| [ ] | `horse_grigori51.mp3` | Father Grigori | [the old priest, cackling] Hah! Feel the wrath of the Lord, and buckshot! |
+| [ ] | `horse_grigori61.mp3` | Father Grigori | [the old priest, suddenly quiet and tender] Hooves and all, children. Hooves and all. |
+
+### The Main Event (`boxing`)
+
+| Done | File | Who | Paste |
+|---|---|---|---|
+| [ ] | `boxing_hello1.mp3` | The Ring Announcer | [a classic big-fight ring announcer, stretching every vowel] Ladies and gentlemen, citizens of all ages... welcome... to the Main Event! |
+| [ ] | `boxing_foe11.mp3` | The Ring Announcer | [the ring announcer, building to a roar] In the far corner, weighing in at four hundred pounds of pure debeaked fury... Lamarr! |
+| [ ] | `boxing_foe21.mp3` | The Ring Announcer | [the ring announcer, deadly serious] And now, undefeated in forty bouts, dispensing pain at a reasonable price... the Soda Machine! |
+| [ ] | `boxing_foe31.mp3` | The Ring Announcer | [the ring announcer, almost screaming] And your final opponent... he's big, he's bald, he's barely a year old... the Baby! |
+| [ ] | `boxing_ko1.mp3` | The Ring Announcer | [the ring announcer, ecstatic] It's a knockout! |
+| [ ] | `boxing_champ1.mp3` | The Ring Announcer | [the ring announcer, over a roaring crowd] Your new... champion... of the world! |
+
+### The Exam (`exam`)
+
+| Done | File | Who | Paste |
+|---|---|---|---|
+| [ ] | `exam_hello1.mp3` | Doctor Kleiner | [an elderly, fussy, kindly professor, absent-minded and a little alarmed] Good morning, class. Pencils ready. Oh dear. You did study, didn't you? And... where are your trousers? |
+| [ ] | `exam_q11.mp3` | Doctor Kleiner | [the old professor, peering over his glasses] Next question. Take your time. Actually, don't. |
+| [ ] | `exam_q21.mp3` | Doctor Kleiner | [the old professor, puzzled by his own words] This one will be on the test. This is the test. |
+| [ ] | `exam_q31.mp3` | Doctor Kleiner | [the old professor, mumbling] Hmm. I'm not sure I know this one either. |
+| [ ] | `exam_end1.mp3` | Doctor Kleiner | [the old professor, very full, patting his stomach] Marvellous. All graded. I couldn't eat another bite. |
+| [ ] | `exam_collect1.mp3` | Doctor Kleiner | [the old professor, licking his lips] Pencils down! I shall now collect your papers. Personally. |
+| [ ] | `exam_eat11.mp3` | Doctor Kleiner | [the old professor, chewing loudly, mouth full] Mmm. A little dry. |
+| [ ] | `exam_eat21.mp3` | Doctor Kleiner | [the old professor, mouth full, ecstatic] Delicious. Absolutely delicious. |
+| [ ] | `exam_eat31.mp3` | Doctor Kleiner | [the old professor, chewing, matter-of-fact] I grade with my mouth. It's the only fair way. |
+| [ ] | `exam_eat41.mp3` | Doctor Kleiner | [the old professor, crunching, delighted] Oh, this one has a lot of crossing out. Crunchy. |
+
+### The Last Train (`train`)
+
+| Done | File | Who | Paste |
+|---|---|---|---|
+| [ ] | `train_hello1.mp3` | The Conductor | [a hoarse old train conductor, echoing down a station platform] Last train! Last train out of City Seventeen! All aboard! |
+| [ ] | `train_hint1.mp3` | The Conductor | [the conductor, conspiratorial, a stage whisper] You're looking right at it. That never works in dreams. |
+| [ ] | `train_closing1.mp3` | The Conductor | [the conductor, urgent] Doors closing! Doors closing! |
+
+### Where's Lamarr? (`lamarr`)
+
+| Done | File | Who | Paste |
+|---|---|---|---|
+| [ ] | `lamarr_hello1.mp3` | Doctor Kleiner | [the old professor, fretting over a lost pet] Lamarr? Lamarr! Oh, where has she got to now? Has anyone seen my headcrab? |
+| [ ] | `lamarr_found1.mp3` | Doctor Kleiner | [the old professor, overjoyed] Lamarr! There you are, you naughty girl! |
+
+### Running in Molasses (`molasses`)
+
+| Done | File | Who | Paste |
+|---|---|---|---|
+| [ ] | `molasses_hello1.mp3` | A Whisper | [a slow, breathy, menacing whisper, dragged out] Run. Why aren't you running? Run... |
+
+### Hot Potato (`potato`)
+
+| Done | File | Who | Paste |
+|---|---|---|---|
+| [ ] | `potato_hello1.mp3` | The Host | [a manic children's party host] Hot potato! Don't be holding it when the music... I mean the grenade... stops! |
+
+### Overwatch Says (`simon`)
+
+| Done | File | Who | Paste |
+|---|---|---|---|
+| [ ] | `simon_hello1.mp3` | The Officer | [a Civil Protection officer through a gas mask radio, flat and clipped] Citizens. You will do as Overwatch says. Only as Overwatch says. |
+| [ ] | `simon_says_jump1.mp3` | The Officer | [the masked officer, flat] Overwatch says: jump. |
+| [ ] | `simon_says_crouch1.mp3` | The Officer | [the masked officer, flat] Overwatch says: crouch. |
+| [ ] | `simon_says_freeze1.mp3` | The Officer | [the masked officer, flat] Overwatch says: freeze. |
+| [ ] | `simon_says_walk1.mp3` | The Officer | [the masked officer, flat] Overwatch says: walk. |
+| [ ] | `simon_trap_jump1.mp3` | The Officer | [the masked officer, flat, sly] Jump. |
+| [ ] | `simon_trap_crouch1.mp3` | The Officer | [the masked officer, flat, sly] Crouch. |
+| [ ] | `simon_end1.mp3` | The Officer | [the masked officer, almost pleased] Compliance noted. Dismissed. |
+
+### Dance Marathon (`dance`)
+
+| Done | File | Who | Paste |
+|---|---|---|---|
+| [ ] | `dance_hello1.mp3` | The DJ | [an over-excited club DJ with heavy reverb] City Seventeen, are you ready to move? Jump on the big beat! |
+
+### Counting Headcrabs (`sheep`)
+
+| Done | File | Who | Paste |
+|---|---|---|---|
+| [ ] | `sheep_hello1.mp3` | A Sleepy Voice | [a soft, slow, yawning bedtime voice] Close your eyes... and count the headcrabs. One... two... |
+| [ ] | `sheep_ask1.mp3` | A Sleepy Voice | [the sleepy voice, half asleep] How many was that? Say it... before you drift off... |
+| [ ] | `sheep_again1.mp3` | A Sleepy Voice | [the sleepy voice, yawning] Again... from the beginning... |
+
+### Stop the Clocks (`clocks`)
+
+| Done | File | Who | Paste |
+|---|---|---|---|
+| [ ] | `clocks_hello1.mp3` | The Clock Voice | [a slow, deep, echoing voice, like a grandfather clock talking in its sleep] Tick. Tock. Tick. Tock. It's later than you think. It's earlier than you think. It's cheese. |
+| [ ] | `clocks_won1.mp3` | The Clock Voice | [the clock voice, slowing down to nothing] Time... stops. |
+
+### The Tea Party (`tea`)
+
+| Done | File | Who | Paste |
+|---|---|---|---|
+| [ ] | `tea_hello1.mp3` | The Host | [a manic, posh, very old-fashioned tea-party host, talking far too fast] Welcome, welcome! No room! No room! Sit anywhere. No, not there. |
+| [ ] | `tea_down11.mp3` | The Host | [the posh host, shrieking with delight] Change places! Move down one! |
+| [ ] | `tea_down21.mp3` | The Host | [the posh host, shrieking with delight] Change places! Move down two! |
+| [ ] | `tea_down31.mp3` | The Host | [the posh host, shrieking with delight] Change places! Move down three! |
+| [ ] | `tea_up1.mp3` | The Host | [the posh host, outraged] Clean cup! Clean cup! Move up! |
+
+### The Headcrab Derby (`derby`)
+
+| Done | File | Who | Paste |
+|---|---|---|---|
+| [ ] | `derby_hello1.mp3` | The Commentator | [a breathless horse-racing commentator] Welcome to the Headcrab Derby! Place your bets, place your bets! |
+| [ ] | `derby_off1.mp3` | The Commentator | [the racing commentator, at full gallop] And they're off! |
+| [ ] | `derby_win11.mp3` | The Commentator | [the racing commentator, ecstatic] And it's Lamarr's Cousin by a leg! It only has legs! |
+| [ ] | `derby_win21.mp3` | The Commentator | [the racing commentator, baffled and thrilled] Hooves wins it! Hooves! A headcrab called Hooves! |
+| [ ] | `derby_win31.mp3` | The Commentator | [the racing commentator, screaming] Mister Leg takes it! Mister Leg, everybody! |
+| [ ] | `derby_win41.mp3` | The Commentator | [the racing commentator, losing his mind] Breen's Toupee! Breen's Toupee wins the Derby! |
+
+### Say Cheese (`photo`)
+
+| Done | File | Who | Paste |
+|---|---|---|---|
+| [ ] | `photo_hello1.mp3` | The Scanner | [a chirpy robotic camera voice, slightly glitchy] Hello! Hello! Lovely day for a photograph! Everybody smile! |
+| [ ] | `photo_cheese1.mp3` | The Scanner | [the chirpy robot camera, sing-song] Say cheese! |
+
+### The Doors (`doors`)
+
+| Done | File | Who | Paste |
+|---|---|---|---|
+| [ ] | `doors_hello1.mp3` | A Little Voice | [a small, sweet, slightly eerie child's voice, whispering] Six doors. One plays a song. Listen... listen... |
+| [ ] | `doors_open1.mp3` | A Little Voice | [the eerie child's voice, giggling] That one. It was always that one. |
+
+### Splat! (`paint`)
+
+| Done | File | Who | Paste |
+|---|---|---|---|
+| [ ] | `paint_hello1.mp3` | The Painter | [an over-the-top, flamboyant artist] A blank canvas! Make it yours! Splat! |
+
+### Conga! (`conga`)
+
+| Done | File | Who | Paste |
+|---|---|---|---|
+| [ ] | `conga_hello1.mp3` | The Bandleader | [a jolly big-band leader, shouting over brass] Everybody conga! One, two, three, kick! |
+
+### Shh! (`shh`)
+
+| Done | File | Who | Paste |
+|---|---|---|---|
+| [ ] | `shh_hello1.mp3` | A Whisper | [a very quiet, tense whisper] Shhhh. The baby's sleeping. Don't wake the baby. |
+| [ ] | `shh_wake1.mp3` | A Whisper | [the whisper, cold and disappointed] You woke the baby. |
+
+### Bubbles (`bubbles`)
+
+| Done | File | Who | Paste |
+|---|---|---|---|
+| [ ] | `bubbles_hello1.mp3` | A Bubbly Voice | [a giggly, bubbly, high-pitched voice] Pop! Pop! Pop them all! |
+
+### The Watchers (`watchers`)
+
+| Done | File | Who | Paste |
+|---|---|---|---|
+| [ ] | `watchers_hello1.mp3` | A Whisper | [a slow, hollow whisper, very close to the ear] They don't move while you watch them. You can't watch them all. |
+
+### Pick Up That Can (`can`)
+
+| Done | File | Who | Paste |
+|---|---|---|---|
+| [ ] | `can_hello1.mp3` | The Officer | [a Civil Protection officer through his mask's radio, flat and bored, just as in Half-Life 2] Pick up that can. |
+| [ ] | `can_trash1.mp3` | The Officer | [the officer, flat, already enjoying himself] Now, put it in the trash can. |
+| [ ] | `can_again1.mp3` | The Officer | [the officer, slower and lower every word, losing patience] Pick. Up. That. Can. |
+| [ ] | `can_litter1.mp3` | The Officer | [the officer, slow and deep, as if he has grown very large] That is not the trash can. Nothing is the trash can. Pick up that can. |
+| [ ] | `can_bin1.mp3` | The Bin | [a deep, hollow, echoing voice from inside a metal bin, ending in a small burp] Thank you. Delicious. |
+| [ ] | `can_swap1.mp3` | The Can | [the officer's line, tinny and high, as if spoken from inside an empty drinks can] Pick up that can. |
+| [ ] | `can_clone1.mp3` | Another Can | [tinny and high, several voices not quite together] Pick up that can. Pick up that can. Pick up that can. |
+| [ ] | `can_full1.mp3` | The Can | [tinny and high, delighted with itself] No more room. Pick up all the cans. |
+
+### Kneel Before Her (`adore`)
+
+| Done | File | Who | Paste |
+|---|---|---|---|
+| [ ] | `adore_hello1.mp3` | The Administrator | [her own voice: warm, regal, a little vain] You may look upon me. On your knees, of course. |
+
+### Roses for Her (`roses`)
+
+| Done | File | Who | Paste |
+|---|---|---|---|
+| [ ] | `roses_hello1.mp3` | The Administrator | [her own voice: warm, regal, a little vain] Flowers? For me? How predictable. How lovely. |
+
+### Mirror, Mirror (`mirror`)
+
+| Done | File | Who | Paste |
+|---|---|---|---|
+| [ ] | `mirror_hello1.mp3` | The Administrator | [her own voice: warm, regal, a little vain] Tell me what you see. |
+
+### The Saviour (`saviour`)
+
+| Done | File | Who | Paste |
+|---|---|---|---|
+| [ ] | `saviour_stop1.mp3` | The Administrator | [her own voice: warm, regal, a little vain] STOP! |
+| [ ] | `saviour_soldiers1.mp3` | The Administrator | [her own voice: warm, regal, a little vain] Come, my soldiers. Protect them. |
+| [ ] | `saviour_safe1.mp3` | The Administrator | [her own voice: warm, regal, a little vain] You are safe now, my children. You are always safe with me. |
+
+### The Loyalty Quiz (`quiz`)
+
+| Done | File | Who | Paste |
+|---|---|---|---|
+| [ ] | `quiz_hello1.mp3` | The Administrator | [her own voice: warm, regal, a little vain] Good evening, citizens. Let us see how well you know your city. |
+| [ ] | `quiz_end1.mp3` | The Administrator | [her own voice: warm, regal, a little vain] Well answered. The city is proud of you. |
+| [ ] | `quiz_rebel1.mp3` | The Administrator | [her own voice: warm, regal, a little vain] Officers. Remove him. |
+| [ ] | `quiz_resume1.mp3` | The Administrator | [her own voice: warm, regal, a little vain] Where were we? Ah, yes. |
+
+### Record Harvest (`harvest`)
+
+| Done | File | Who | Paste |
+|---|---|---|---|
+| [ ] | `harvest_hello1.mp3` | The Administrator | [her own voice] Citizens! The harvest is ripe and the quota is waiting. Bring it in! |
+| [ ] | `harvest_medal1.mp3` | The Administrator | [her own voice] For glorious labour beyond the plan: the Order of the Golden Sheaf. |
+
+### The Stakhanov Shift (`shift`)
+
+| Done | File | Who | Paste |
+|---|---|---|---|
+| [ ] | `shift_hello1.mp3` | The Administrator | [her own voice] My workers! Today's norm is one hundred percent. Tomorrow's is fourteen hundred. Why wait? |
+| [ ] | `shift_double1.mp3` | The Administrator | [her own voice] Double norm! Every blow counts twice! |
+| [ ] | `shift_hero1.mp3` | The Administrator | [her own voice] A new Hero of Labour! Hang their portrait beside mine! |
+| [ ] | `shift_idle1.mp3` | The Administrator | [her own voice] I see you standing there. Back to work, citizen! |
+
+### Careless Talk (`spy`)
+
+| Done | File | Who | Paste |
+|---|---|---|---|
+| [ ] | `spy_hello1.mp3` | The Administrator | [her own voice] Careless talk costs lives, my children. There is a traitor among you. Watch them closely. |
+| [ ] | `spy_caught1.mp3` | The Administrator | [her own voice] Time is up. The traitor is revealed. I thank my vigilant citizens. |
+| [ ] | `spy_chant_male1.mp3` | A diner (man), cheering | [] Glory to the Administrator! |
+| [ ] | `spy_chant_female1.mp3` | A diner (woman), cheering | [] Glory to the Administrator! |
+| [ ] | `spy_flat_male1.mp3` | The spy (man), flat and bored | [] Glory to the Administrator. |
+| [ ] | `spy_flat_female1.mp3` | The spy (woman), flat and bored | [] Glory to the Administrator. |
+| [ ] | `spy_whisper_male1.mp3` | The spy (man), whispering | [] The old bridge. After curfew. Don't be late. |
+| [ ] | `spy_whisper_female1.mp3` | The spy (woman), whispering | [] The old bridge. After curfew. Don't be late. |
+| [ ] | `spy_ready1.mp3` | The officer | [] Ready! |
+| [ ] | `spy_aim1.mp3` | The officer | [] Aim! |
+| [ ] | `spy_fire1.mp3` | The officer | [] Fire! |
+
+### The Newsreel (`newsreel`)
+
+| Done | File | Who | Paste |
+|---|---|---|---|
+| [ ] | `newsreel_hello1.mp3` | The Administrator | [her own voice] Welcome to my City Seventeen, where every citizen smiles, and every smile is sincere! |
+| [ ] | `newsreel_end1.mp3` | The Administrator | [her own voice] And so another happy day draws to a close. Goodnight, my City Seventeen! |
+
+### Two Minutes of Hate (`hate`)
+
+| Done | File | Who | Paste |
+|---|---|---|---|
+| [ ] | `hate_hello1.mp3` | The Administrator | [her own voice] Citizens! Behold the enemy of the people. Let him hear you! |
+| [ ] | `hate_end1.mp3` | The Administrator | [her own voice] The enemy fades. Love returns. Love me. |
+
+### The Mass Games (`massgames`)
+
+| Done | File | Who | Paste |
+|---|---|---|---|
+| [ ] | `massgames_hello1.mp3` | The Administrator | [her own voice] Cards ready! Together, you are my portrait. |
+| [ ] | `massgames_flip1.mp3` | The Administrator | [her own voice] FLIP! |
+
+### On-the-Spot Guidance (`guidance`)
+
+| Done | File | Who | Paste |
+|---|---|---|---|
+| [ ] | `guidance_hello1.mp3` | The Administrator | [her own voice] Show me your work. I have so much guidance to give. |
+| [ ] | `guidance_end1.mp3` | The Administrator | [her own voice] Excellent. I have improved everything here simply by looking at it. |
+
+### The Scrap Drive (`scrap`)
+
+| Done | File | Who | Paste |
+|---|---|---|---|
+| [ ] | `scrap_hello1.mp3` | The Administrator | [her own voice] Every pot, every pan, every bucket. The city needs your scrap! |
+
+### Flowers for the Liberators (`flowers`)
+
+| Done | File | Who | Paste |
+|---|---|---|---|
+| [ ] | `flowers_hello1.mp3` | The Administrator | [her own voice] My soldiers are marching home. Show them how much you love them. |
+
+### Duck and Cover (`duck`)
+
+| Done | File | Who | Paste |
+|---|---|---|---|
+| [ ] | `duck_hello1.mp3` | Sunny the Scanner | [] Hi, citizens! I'm Sunny! The nasty terrorists have built a rocket. If they launch it, what do we do? We duck, and cover! |
+| [ ] | `duck_siren1.mp3` | Sunny the Scanner | [] Rocket launch! Duck and cover! Crouch beside a table, quick as you can! |
+| [ ] | `duck_clear1.mp3` | Sunny the Scanner | [] All clear! The Combine protects us. Wasn't that fun? |
+
+### Ravenholm (`ravenholm`)
+
+| Done | File | Who | Paste |
+|---|---|---|---|
+| [ ] | `ravenholm_rise1.mp3` | Father Grigori | [] RISE, my children! Rise from your graves and FEAST! |
+| [ ] | `ravenholm_stop1.mp3` | The Administrator | [her own voice] Begone, false priest! These citizens are under MY protection. |
+| [ ] | `ravenholm_safe1.mp3` | The Administrator | [her own voice] You see? Only I can keep you safe. Never forget it. |
+| [ ] | `ravenholm_vort1.mp3` | A Vortigaunt | [] The Vortessence sees through the false light. Behold what is true. |
+| [ ] | `ravenholm_good1.mp3` | Father Grigori | [] Hah! Back to your rest, poor souls! Not one of these children shall be harmed! |
+| [ ] | `ravenholm_defeat1.mp3` | The Administrator | [her own voice] No... NO! This is MY dream! |
+
+### battleline (`battleline`)
+
+| Done | File | Who | Paste |
+|---|---|---|---|
+| [ ] | `battleline_hello1.mp3` | The Administrator | [her own voice] My brave citizens! The terrorists are coming. Take up arms beside my soldiers and hold the line! |
+| [ ] | `battleline_giant1.mp3` | The Administrator | [her own voice] Look at the size of that one! Everyone, fire! |
+| [ ] | `battleline_traitor1.mp3` | The Administrator | [her own voice] You fired on MY soldiers? Manhacks! Deal with this traitor. |
+| [ ] | `battleline_turned1.mp3` | The Administrator | [her own voice] A traitor wants to be a rebel? Then be one. Forever. |
+| [ ] | `battleline_doom1.mp3` | Overwatch | [] Sector overrun. Hostiles beyond containment. Requesting immediate air support. |
+| [ ] | `battleline_air1.mp3` | The Administrator | [her own voice] Did you think I would abandon you? Behold my wings! |
+| [ ] | `battleline_held1.mp3` | The Administrator | [her own voice] The line held! Every one of you is a hero of my city. |
+
+### vortwar (`vortwar`)
+
+| Done | File | Who | Paste |
+|---|---|---|---|
+| [ ] | `vortwar_in1.mp3` | A Vortigaunt | [] The Vortessence sees through her false light. Come, stand with us, and see what is true. |
+| [ ] | `vortwar_answer11.mp3` | A Vortigaunt | [] She says she protects you. Ask who built the walls. |
+| [ ] | `vortwar_answer21.mp3` | A Vortigaunt | [] Her smile is painted on. Look closer. |
+| [ ] | `vortwar_answer31.mp3` | A Vortigaunt | [] We were chained as you are chained. We are free. You can be. |
+| [ ] | `vortwar_answer41.mp3` | A Vortigaunt | [] The dream is hers. The waking is yours. |
+| [ ] | `vortwar_loyal1.mp3` | The Administrator | [her own voice] Begone, false spirits! These citizens are MINE. |
+| [ ] | `vortwar_shatter1.mp3` | A Vortigaunt | [] Her light was never yours. Wake, and see. |
+
+### The Loyalty Quiz's questions (`quiz`)
+
+| Done | File | Who | Paste |
+|---|---|---|---|
+| [ ] | `quiz_q11.mp3` | The Administrator | [her own voice: warm, regal, a little vain, a quizmaster] Who keeps you safe at night? |
+| [ ] | `quiz_q21.mp3` | The Administrator | [her own voice: warm, regal, a little vain, a quizmaster] What do we do when an officer speaks to us? |
+| [ ] | `quiz_q31.mp3` | The Administrator | [her own voice: warm, regal, a little vain, a quizmaster] Where does your ration come from? |
+| [ ] | `quiz_q41.mp3` | The Administrator | [her own voice: warm, regal, a little vain, a quizmaster] What are the people who call themselves the Resistance? |
+| [ ] | `quiz_q51.mp3` | The Administrator | [her own voice: warm, regal, a little vain, a quizmaster] Complete the phrase: Compliance is... |
+| [ ] | `quiz_q61.mp3` | The Administrator | [her own voice: warm, regal, a little vain, a quizmaster] How would you describe the Administrator? |
+| [ ] | `quiz_q71.mp3` | The Administrator | [her own voice: warm, regal, a little vain, a quizmaster] What should you do if you see a rebel? |
+| [ ] | `quiz_q81.mp3` | The Administrator | [her own voice: warm, regal, a little vain, a quizmaster] Who is your best friend? |
+| [ ] | `quiz_q91.mp3` | The Administrator | [her own voice: warm, regal, a little vain, a quizmaster] What happens to those who disobey? |
+| [ ] | `quiz_q101.mp3` | The Administrator | [her own voice: warm, regal, a little vain, a quizmaster] What is the most important thing a citizen can be? |
+
+## Citizens showing the way
+
+Folder: `citizens/`. The citizen voices (man and woman) above: paste each line twice.
+
+| Done | Man's file | Woman's file | When | Paste |
+|---|---|---|---|---|
+| [ ] | `advice_bins_male1.wav` | `advice_bins_female1.wav` | Advice | You look half-starved. Try the bins. Nobody checks them as often as they should. |
+| [ ] | `advice_buy_male1.wav` | `advice_buy_female1.wav` | Advice | You look hungry, and you've got credits. The Commissary has food. Go on. |
+| [ ] | `advice_drink_own_male1.wav` | `advice_drink_own_female1.wav` | Advice | You've something to drink in your coat. Drink it. You look awful. |
+| [ ] | `advice_eat_own_male1.wav` | `advice_eat_own_female1.wav` | Advice | You've got food on you, haven't you? Eat it, before someone takes it off you. |
+| [ ] | `advice_home_male1.wav` | `advice_home_female1.wav` | Advice | You look lost. Your block's that way. Get there before curfew. |
+| [ ] | `advice_housing_male1.wav` | `advice_housing_female1.wav` | Advice | Nowhere to sleep? They hand out rooms. Go and ask, it's not far. |
+| [ ] | `advice_intake_male1.wav` | `advice_intake_female1.wav` | Advice | You're new, aren't you? Get yourself on the register before anything else. Over that way. |
+| [ ] | `advice_job_male1.wav` | `advice_job_female1.wav` | Advice | No work? The Union doesn't like idle hands. Find a job before they find you. |
+| [ ] | `advice_labor_male1.wav` | `advice_labor_female1.wav` | Advice | Registered, but no work? Nobody gets a room without a work assignment. Go and get one. |
+| [ ] | `advice_nowhere_male1.wav` | `advice_nowhere_female1.wav` | No such place on this map | Can't help you there, friend. I wish I could. |
+| [ ] | `advice_ration_male1.wav` | `advice_ration_female1.wav` | Advice | Your ration's waiting. Don't leave it too long, they notice who doesn't come. |
+| [ ] | `advice_shift_male1.wav` | `advice_shift_female1.wav` | Advice | Short on credits? Get to work. A shift pays. |
+| [ ] | `advice_water_male1.wav` | `advice_water_female1.wav` | Advice | You look parched. There's water near here. Drink before you fall down. |
+| [ ] | `advice_work_male1.wav` | `advice_work_female1.wav` | Advice | Hungry, and no card? Work a shift. It's the only way they give you one. |
+| [ ] | `lead_arrive_male1.wav` | `lead_arrive_female1.wav` | Walking you there | Here. Don't tell anyone I helped you. |
+| [ ] | `lead_arrive2_male1.wav` | `lead_arrive2_female1.wav` | Walking you there | This is it. Good luck. |
+| [ ] | `lead_cantgo_male1.wav` | `lead_cantgo_female1.wav` | Walking you there | I can't go there. It's that way, look. |
+| [ ] | `lead_giveup_male1.wav` | `lead_giveup_female1.wav` | Walking you there | Fine. It's that way. Find it yourself. |
+| [ ] | `lead_start_male1.wav` | `lead_start_female1.wav` | Walking you there | Come on, I'll show you. Stay close. |
+| [ ] | `lead_start2_male1.wav` | `lead_start2_female1.wav` | Walking you there | Here, let me show you. Follow me. |
+| [ ] | `lead_wait_male1.wav` | `lead_wait_female1.wav` | Walking you there | Keep up! I'm not waiting all day. |
+
+## The Citizen Information clerk
+
+The clerk behind the Citizen Information desk: flat, tired, official. Folder: **`garrysmod/sound/livingcity/clerk/`**. One voice for every clerk (or record a man's and a woman's take and keep whichever fits). Without a recording, a terminal's chime, and the words show.
+
+| Done | File | When | Paste |
+|---|---|---|---|
+| [ ] | `rations1.wav` | Rations and ration cards | Rations are issued at the ration dispenser. Each ration requires one ration card. Ration cards are issued on completion of a Union shift: one card per shift. No shift, no card. No card, no ration. Your first allocation after arrival is guaranteed. |
+| [ ] | `work1.wav` | Work | All residents are assigned labor. Report to Labor Assignment for your assignment. Shifts pay credits and Civil Standing, and each completed shift earns one ration card. Your shifts are listed on your work board. |
+| [ ] | `housing1.wav` | Housing | Housing Allocation assigns rooms to registered residents with a work assignment. Your room is in your housing block. Sleep there, keep your possessions there, and be there at curfew. |
+| [ ] | `papers1.wav` | Papers and registration | Every resident is registered at Civil Intake and carries identity papers at all times. Present them to any Civil Protection unit on request. Lost papers are replaced at Civil Intake, for a fee. |
+| [ ] | `law1.wav` | The law | The city's laws are posted on the law board. Ignorance of the law is not a defence. Comply with Civil Protection. Do not run in their presence. Report anticivil activity. |
+| [ ] | `curfew1.wav` | Curfew | Curfew is announced two minutes in advance. When it begins, return to your housing block and remain there until morning. Residents found outside during curfew will be detained. |
+| [ ] | `standing1.wav` | Civil Standing | Civil Standing measures your value to the city. Work, compliance and reporting raise it. Infractions lower it. Below zero, ration privileges are withdrawn. High standing qualifies a resident for Civil Protection. |
+| [ ] | `cp1.wav` | Joining Civil Protection | Residents of sufficient Civil Standing may apply to Civil Protection. Applications are made on your work board, under Factions. Civil Protection serves the city. Consider it. |
+| [ ] | `closed1.wav` | (said between answers) | This desk is closed. Come back later. |
+| [ ] | `greet1.wav` | (said between answers) | Citizen Information. State your question. |
+| [ ] | `greet_curt1.wav` | (said between answers) | Make it quick. There are others waiting. |
+| [ ] | `greet_warm1.wav` | (said between answers) | Good day, citizen. Thank you for your cooperation. How may I help you? |
+| [ ] | `noplace1.wav` | (said between answers) | That facility is not available in this sector. |
+| [ ] | `route1.wav` | (said between answers) | The route is marked. Follow it. Next. |
+| [ ] | `wanted1.wav` | (said between answers) | You have an outstanding warrant. Remain where you are. Civil Protection is aware of you. |
+| [ ] | `where1.wav` | (said between answers) | Which location? I will mark the route. |
+
+## The old-timer
+
+The old man who gives advice: warm, worn, a little wry. Folder: **`garrysmod/sound/livingcity/oldtimer/`**. For "Is anyone fighting back?" he goes on to say where the Resistance gathers (that part changes with the map, so it only shows as words). Without a recording, Half-Life 2's own citizen voice.
+
+| Done | File | When | Paste |
+|---|---|---|---|
+| [ ] | `headdown1.wav` | Any advice for someone like me? | Keep your head down, your papers handy, and your mouth shut. The ones who last are the ones nobody remembers. |
+| [ ] | `curfew1.wav` | What about curfew? | When the voice says two minutes, it means one. Be indoors. I've seen what they do to the ones who are late, and so have the walls. |
+| [ ] | `scanners1.wav` | The flying things? | Scanners. They take your picture. Don't stand under them, don't do anything worth photographing, and if one flashes you, walk, don't run. |
+| [ ] | `running1.wav` | Why does everyone walk so slowly? | Run in front of a cop and you're a suspect. Walk. Even when your heart's going like a train, walk. |
+| [ ] | `bins1.wav` | Where do people find food, really? | The bins. Commissary scraps, things people drop. Nobody checks them as often as they should. Here, I'll show you the nearest. |
+| [ ] | `water1.wav` | And water? | Sinks, the machines, open water if you're desperate. Boil anything that isn't from a tap, or you'll be coughing for a week. |
+| [ ] | `fishing1.wav` | Anything else to eat out there? | Fish, if you can find a line. Cook what you catch on a stove or a fire barrel. Raw meat will turn your stomach. |
+| [ ] | `dealer1.wav` | Things the Commissary doesn't sell? | There's a man who trades in what you can't buy. Don't tell him I sent you, and don't let a cop see you with him. That way. |
+| [ ] | `lockpick1.wav` | What's a lockpick good for? | Doors that aren't yours. Rooms people left in a hurry. Be quick, be quiet, and never in front of a unit. |
+| [ ] | `resistance1.wav` | Is anyone fighting back? | You didn't hear it from me. |
+| [ ] | `hint_hungry1.wav` | What's troubling him (said instead of his greeting) | My legs won't take me to the bins any more. Some days I don't eat at all. |
+| [ ] | `thanks_hungry1.wav` | You helped him with it | Food. Real food. You don't know what that means to an old man. |
+| [ ] | `hint_thirsty1.wav` | What's troubling him (said instead of his greeting) | The tap on my floor's been dry a week. Carrying water up those stairs, at my age... |
+| [ ] | `thanks_thirsty1.wav` | You helped him with it | Water. Bless you. I'll make it last. |
+| [ ] | `hint_cough1.wav` | What's troubling him (said instead of his greeting) | This cough. Twenty years I've had it. The Commissary wants more for its medicine than I see in a month. |
+| [ ] | `thanks_cough1.wav` | You helped him with it | Medicine? For me? I'll sleep tonight, for the first time in a long while. |
+| [ ] | `hint_card1.wav` | What's troubling him (said instead of his greeting) | Some young thug took my ration card in the line. I'm too old to work a shift for another. |
+| [ ] | `thanks_card1.wav` | You helped him with it | A card? You worked for that. I won't forget it. Not ever. |
+| [ ] | `hint_smoke1.wav` | What's troubling him (said instead of his greeting) | What I wouldn't give for a smoke. Even the Union's, and those taste of floor sweepings. |
+| [ ] | `thanks_smoke1.wav` | You helped him with it | Ah. Now that's a kindness. Sit with me while I have it. |
+| [ ] | `food1.wav` | (said between answers) | For me? You're a good one. I won't forget it. |
+| [ ] | `greet1.wav` | (said between answers) | Sit down, sit down. My knees aren't what they were. What do you want to know? |
+| [ ] | `greet_friend1.wav` | (said between answers) | Ah, you again. Good. Not many come back. |
+| [ ] | `keepsake1.wav` | (said between answers) | You've done more for me than my own family. Here. My old picks. I won't be needing them, and you might. Doors don't stay locked for people who know how. |
+| [ ] | `keepsake_again1.wav` | (said between answers) | Sit a while. The city's quieter when there's someone to share it with. |
+| [ ] | `nothing1.wav` | (said between answers) | Kind of you. But nothing I need, not that. |
+| [ ] | `notyet1.wav` | (said between answers) | Hm. Ask me that when I know you better. |
+| [ ] | `nowhere1.wav` | (said between answers) | There used to be one. Not in this part of town, not any more. |
+| [ ] | `stranger1.wav` | (said between answers) | I don't know you. Ask me something simple. |
+
+## Machines
+
+The ration dispenser and the vending machines, in a flat machine voice (a Combine terminal's). Folder: **`garrysmod/sound/livingcity/machines/`**. Without a recording, the machine's beep.
+
+| Done | File | When | Paste |
+|---|---|---|---|
+| [ ] | `dispenser_blackout1.wav` | Ration dispenser | Power failure. Service unavailable. |
+| [ ] | `dispenser_empty1.wav` | Ration dispenser | Distribution suspended. |
+| [ ] | `dispenser_nocard1.wav` | Ration dispenser | No ration card detected. Report for labor assignment. |
+| [ ] | `dispenser_short1.wav` | Ration dispenser | Supply shortfall. Try again shortly. |
+| [ ] | `dispenser_suspended1.wav` | Ration dispenser | Ration privileges suspended. |
+| [ ] | `dispenser_unregistered1.wav` | Ration dispenser | Identity not found. Report to Civil Intake. |
+| [ ] | `dispenser_wait1.wav` | Ration dispenser | Allocation not yet available. Return later. |
+| [ ] | `dispenser_withheld1.wav` | Ration dispenser | Allocation withheld. Noncompliance is recorded. |
+| [ ] | `vending_blackout1.wav` | Vending machine | Power failure. Service unavailable. |
+| [ ] | `vending_credits1.wav` | Vending machine | Insufficient credits. |
