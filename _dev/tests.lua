@@ -6388,6 +6388,27 @@ ok(LC.PropRecord(id).pos:Distance(P0 + Vector(100, 0, 0)) < 1, "moved with the p
 -- right click: no longer persistent
 ok(LC.UnpersistProp(again, true) and IsValid(again) and LC.PropRecord(id) == nil, "right click: out of the layout, left where it is")
 again:Remove()
+-- the tool of its own, "Save with the gamemode" (lua/weapons/gmod_tool/stools/livingcity_keep.lua)
+if _KEEPTOOL then
+    local toolWas = TOOL
+    TOOL = {}
+    assert(loadstring(_KEEPTOOL, "livingcity_keep.lua"))()
+    local keep = TOOL
+    TOOL = toolWas
+    keep.GetOwner = function() return builder end
+    local k = ents.Create("prop_physics")
+    k:SetModel("models/props_c17/oildrum001.mdl")
+    k:SetPos(P0 + Vector(0, 300, 0))
+    k:Spawn()
+    ok(keep:LeftClick({ Entity = k }) == true and k.lcPersistId ~= nil and LC.PropRecord(k.lcPersistId) ~= nil and k:GetNW2Bool("lc_persist", false),
+        "Save with the gamemode, left click: the prop is saved with the layout and marked (it glows green while the tool is out)")
+    local kid = k.lcPersistId
+    ok(keep:RightClick({ Entity = k }) == true and LC.PropRecord(kid) == nil and IsValid(k), "its right click: no longer saved, left where it is")
+    local nobody = newPlayer("NotABuilder", "citizen")
+    keep.GetOwner = function() return nobody end
+    ok(keep:LeftClick({ Entity = k }) == false and k.lcPersistId == nil, "and only superadmins can use it")
+    k:Remove()
+end
 end
 PersistentPropTests()
 section("Guns hit the floor")

@@ -2521,6 +2521,38 @@ return (not ok) and tostring(e) or nil
 """)
 if err:
     problems = (problems + "\n" if problems else "") + "strange dreams and the editor's dream test (client) " + str(err)
+# "Save with the gamemode" (lua/weapons/gmod_tool/stools/livingcity_keep.lua): saved props glow green while it's out
+L.globals()["_keep_tool"] = open(os.path.join(os.path.dirname(GMDIR), "..", "lua", "weapons", "gmod_tool", "stools", "livingcity_keep.lua")).read()
+err = L.execute(r"""
+local ok, e = pcall(function()
+    TOOL = {}
+    language = language or {}
+    language.Add = language.Add or function() end
+    assert(loadstring(_keep_tool, "livingcity_keep.lua"))()
+    local keep = TOOL
+    if keep.Category ~= "Miscount" then error("not in Q > Tools > Miscount") end
+    local prop = ents.Create("prop_physics")
+    prop:SetPos(_me:GetPos() + Vector(80, 0, 0))
+    prop:SetNW2Bool("lc_persist", true)
+    local found = false
+    for _, p in ipairs(keep.MarkedProps()) do if p == prop then found = true end end
+    if not found then error("a saved prop isn't found to glow") end
+    local tool = { GetClass = function() return "gmod_tool" end, GetMode = function() return "livingcity_keep" end, IsValid = function() return true end }
+    local was = _me.GetActiveWeapon
+    _me.GetActiveWeapon = function() return tool end
+    local held = keep.HoldingKeep()
+    if hook.t.PreDrawHalos and hook.t.PreDrawHalos.LivingCityKeepTool then hook.t.PreDrawHalos.LivingCityKeepTool() end
+    keep.DrawHUD(keep)
+    _me.GetActiveWeapon = was
+    if not held then error("holding the tool isn't seen") end
+    local cp = setmetatable({}, { __index = function() return function() end end })
+    keep.BuildCPanel(cp)
+    prop:Remove()
+end)
+return (not ok) and tostring(e) or nil
+""")
+if err:
+    problems = (problems + "\n" if problems else "") + "save with the gamemode tool (client) " + str(err)
 # cigarettes, alcohol, stimulants and the shakes (cl_livingcity_vices.lua); the dream games' wake-or-watch window
 err = L.execute(r"""
 local ok, e = pcall(function()

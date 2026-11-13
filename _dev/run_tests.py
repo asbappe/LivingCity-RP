@@ -145,6 +145,8 @@ for rel in sorted(os.path.relpath(p, ENTS) for p in glob.glob(ENTS + "/weapons/*
     L.execute("_WEAPONSRC = _WEAPONSRC or {} _WEAPONSRC[%r] = _SRC" % rel)
 L.execute("TOOL = { GetClientInfo = function() return 'idle' end }")
 L.execute(open(os.path.join(TOOLS, "livingcity_editor.lua")).read())
+# the "Save with the gamemode" tool, kept for its test to load (section "Persistent props")
+L.globals()._KEEPTOOL = open(os.path.join(TOOLS, "livingcity_keep.lua")).read()
 
 # the gamemode is loaded by the tests themselves, at the point they test it
 GMROOT = os.path.join(GMDIR, "gamemode")
