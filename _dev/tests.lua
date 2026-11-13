@@ -15871,6 +15871,23 @@ ok(LC.NextExercise(false) ~= nil, "the next morning's exercise is known", LC.Nex
 for _, p in ipairs(pp) do LC.RemovePoint(p) end
 ok(LC.NextExercise(false) == nil, "and with no points on the map, there's none")
 for _, p in ipairs({ fan, dour }) do p:SetPos(Vector(-120000, -120000, 0)) end
+-- the crowd: a sympathizer only mutters, flat and late; after a speech the same
+do
+    local SP = Vector(-79000, -72000, 0)
+    local loyal, lst = LC.SpawnCitizen(SP + Vector(100, 0, 0))
+    local sym, sst = LC.SpawnCitizen(SP + Vector(-100, 0, 0))
+    lst.rebel, sst.rebel = nil, true
+    lst.state, sst.state = "idle", "idle"
+    ok(LC.CrowdCheer(loyal, lst) == "cheer", "a loyal citizen in the crowd cheers")
+    ok(LC.CrowdCheer(sym, sst) == "flat" and (sst.flatCheers or 0) == 1, "a sympathizer mutters it flat instead")
+    local far, fst = LC.SpawnCitizen(SP + Vector(5000, 0, 0))
+    fst.state = "idle"
+    local c, f = LC.SpeechCrowd(SP, 1200)
+    ok(c == 1 and f == 1, "after her speech: the loyal one within earshot cheers, the sympathizer mutters, the far one hears nothing", c, f)
+    _run(3)
+    ok((sst.flatCheers or 0) == 2, "(and a moment later the sympathizer has muttered again)", sst.flatCheers)
+    for _, n in ipairs({ loyal, sym, far }) do if IsValid(n) then n:Remove() end end
+end
 _walls = savedWalls
 end
 ExerciseParadeTests()

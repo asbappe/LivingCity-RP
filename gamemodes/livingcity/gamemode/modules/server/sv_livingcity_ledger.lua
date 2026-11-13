@@ -375,6 +375,7 @@ function LC.GiveSpeech(ply, text)
             if (f == "" or f == "citizen") and LC.AddStanding then LC.AddStanding(p, 2, "heard the Administrator speak") heard = heard + 1 end
         end
     end
+    if LC.SpeechCrowd then LC.SpeechCrowd(ply:GetPos()) end -- (the crowd cheers; sympathizers mutter)
     Add("morale", 6, nil) Add("authority", 3, nil)
     News(string.format("%s addressed the city%s.", who, heard > 0 and (" before a crowd of " .. heard) or ""))
     Save()

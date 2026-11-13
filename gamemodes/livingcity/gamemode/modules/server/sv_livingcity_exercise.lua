@@ -1146,6 +1146,47 @@ local CHEER_SOUNDS = {
 }
 local GESTURE_CHEER = { cheer = 35, salute = 30, wave = 20, point = 10, nod = 8, bow = 15 }
 
+-- One NPC in a crowd cheers the Administrator: a loyal one out loud with a gesture; a Resistance
+-- sympathizer (st.rebel) a beat late, flat and bored (spy_flat_male/_female, the same takes as
+-- Careless Talk's spy), arm half up; with no flat take on the server, they just don't cheer.
+-- Returns "cheer" or "flat".
+LC.FlatCheerLate = 0.8
+function LC.CrowdCheer(npc, st)
+    st = st or LC.NPCs[npc]
+    if st and st.rebel then
+        local man = not (LC.IsFemaleModel and LC.IsFemaleModel(npc.GetModel and npc:GetModel() or ""))
+        local snd = LC.PropagandaVoice and LC.PropagandaVoice("spy_flat_" .. (man and "male" or "female"))
+        timer.Simple(LC.FlatCheerLate, function()
+            if not IsValid(npc) then return end
+            if snd then npc:EmitSound(snd, 62, math.random(94, 100)) end
+            if LC.PlayGesture then LC.PlayGesture(npc, { "g_salute", "ACT_GESTURE_BOW" }, 1) end
+        end)
+        st.flatCheers = (st.flatCheers or 0) + 1
+        return "flat"
+    end
+    local s = Pick(CHEER_SOUNDS)
+    if file.Exists("sound/" .. s, "GAME") then npc:EmitSound(s, 72) end
+    if LC.PlayGesture then LC.PlayGesture(npc, { "cheer1", "cheer2", "ACT_CHEER" }, 2) end
+    return "cheer"
+end
+
+-- After the Administrator's speech, the citizens within earshot of the stand cheer once, a moment
+-- apart (their sympathizers flat, as above). Returns how many cheered and how many muttered.
+function LC.SpeechCrowd(pos, radius)
+    radius = radius or 1200
+    local cheered, flat = 0, 0
+    for npc, st in pairs(LC.NPCs or {}) do
+        local free = st.state == "idle" or st.state == "moving" or st.state == "event" or st.state == "busy"
+        if IsValid(npc) and st.role == "citizen" and free and npc:GetPos():DistToSqr(pos) < radius * radius then
+            if st.rebel then flat = flat + 1 else cheered = cheered + 1 end
+            timer.Simple(math.Rand(0.2, 1.6), function()
+                if IsValid(npc) then LC.CrowdCheer(npc, LC.NPCs[npc]) end
+            end)
+        end
+    end
+    return cheered, flat
+end
+
 function LC.ParadeCheer(ply, amount)
     local r = X and X.kind == "parade" and X.phase == "run" and X.people[ply]
     if not r then return false end
@@ -1236,14 +1277,12 @@ local function ParadeThink(now, dt)
             end
         end
     end
-    -- the NPCs along the route cheer as it goes by
+    -- the NPCs along the route cheer as it goes by (a sympathizer only mutters, flat and late)
     for npc in pairs(X.npcs) do
         local st = IsValid(npc) and LC.NPCs[npc]
         if st and st.state == "event" and now > (st.exCheerNext or 0) and ColumnDist(npc:GetPos()) < 600 then
             st.exCheerNext = now + math.Rand(3, 6)
-            local s = Pick(CHEER_SOUNDS)
-            if file.Exists("sound/" .. s, "GAME") then npc:EmitSound(s, 72) end
-            if LC.PlayGesture then LC.PlayGesture(npc, { "cheer1", "cheer2", "ACT_CHEER" }, 2) end
+            LC.CrowdCheer(npc, st)
         end
     end
     if alive == 0 or done >= alive then
