@@ -2521,6 +2521,33 @@ return (not ok) and tostring(e) or nil
 """)
 if err:
     problems = (problems + "\n" if problems else "") + "strange dreams and the editor's dream test (client) " + str(err)
+# a poster that hints at a dream (entities/lc_civposter.lua, sv_livingcity_dreamposters.lua): drawn with its own words
+L.globals()["_poster_ent"] = open(os.path.join(GMDIR, "entities", "entities", "lc_civposter.lua")).read()
+err = L.execute(r"""
+local ok, e = pcall(function()
+    local was = ENT
+    ENT = {}
+    AddCSLuaFile = AddCSLuaFile or function() end
+    assert(loadstring(_poster_ent, "lc_civposter.lua"))()
+    local def = ENT
+    ENT = was
+    local p = ents.Create("prop_physics")
+    p:SetPos(_me:GetPos() + Vector(60, 0, 0))
+    p:SetNW2String("lc_notice", "dream")
+    p:SetNW2String("lc_dream_id", "melons")
+    p:SetNW2String("lc_dream_head", "FORECAST: FAIR, WITH PRODUCE")
+    p:SetNW2String("lc_dream_body", "Fresh fruit is a privilege of compliance.")
+    p.Words, p.Draw = def.Words, def.Draw
+    if p:Words()[1] ~= "FORECAST: FAIR, WITH PRODUCE" then error("the dream's words aren't used") end
+    p:Draw()
+    p:SetNW2Bool("lc_defaced", true)
+    p:Draw()
+    p:Remove()
+end)
+return (not ok) and tostring(e) or nil
+""")
+if err:
+    problems = (problems + "\n" if problems else "") + "dream poster (client) " + str(err)
 # "Save with the gamemode" (lua/weapons/gmod_tool/stools/livingcity_keep.lua): saved props glow green while it's out
 L.globals()["_keep_tool"] = open(os.path.join(os.path.dirname(GMDIR), "..", "lua", "weapons", "gmod_tool", "stools", "livingcity_keep.lua")).read()
 err = L.execute(r"""

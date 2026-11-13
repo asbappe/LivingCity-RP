@@ -22,6 +22,10 @@
     a Resistance member holding a roll can hang: rebel_leash, rebel_water,
     rebel_home, rebel_watch.
 
+    Some plain curfew ones hint at a dream instead, a different few each day
+    (the owner, 12 November; sv_livingcity_dreamposters.lua, lc_dream_posters):
+    lc_notice "dream", its words in lc_dream_head and lc_dream_body.
+
     Press E to read it closely: that's learning it, and its tip cards don't
     come (LC.Learn, sv_livingcity_learning.lua).
 
@@ -78,7 +82,17 @@ local DEFACED = {
     informants = "SNITCHES BURN", contraband = "ARMS US", radio = "WE HEAR YOU TOO", illness = "THE CITY IS THE SICKNESS",
     infestation = "THEY LET IT GROW", housing = "IS A CELL", vortigaunt = "FREE THEM", recruit = "TRAITORS", administrator = "LIAR",
 }
+DEFACED.dream = "WAKE UP"
 ENT.Defaced = DEFACED
+
+-- Its heading and body (a dream's poster carries its own words: sv_livingcity_dreamposters.lua).
+function ENT:Words()
+    local kind = self:GetNW2String("lc_notice", "curfew")
+    if kind == "dream" then
+        return { self:GetNW2String("lc_dream_head", "SLEEP WELL, CITIZEN"), self:GetNW2String("lc_dream_body", "") }
+    end
+    return NOTICES[kind] or NOTICES.curfew
+end
 -- (the order the Director's poster roll lists them in)
 ENT.NoticeOrder = { "administrator", "loyalty", "informants", "work", "housing", "recruit", "contraband", "radio", "illness", "infestation", "vortigaunt",
     "curfew", "law", "dispenser", "commissary", "intake", "water" }
@@ -101,6 +115,17 @@ if SERVER then
     function ENT:PickNotice()
         -- (one hung by hand keeps the poster it was hung as: LC.HangPoster)
         local best = self.lcFixedKind or (LC and LC.CivPosterNotice and LC.CivPosterNotice(self:GetPos())) or "curfew"
+        -- (a plain curfew one may hint at a dream instead today: sv_livingcity_dreamposters.lua)
+        if best == "curfew" and not self.lcFixedKind and LC and LC.DreamPosterFor then
+            local id = LC.DreamPosterFor(self:GetPos())
+            if id then
+                local head, body = LC.DreamPosterWords(id)
+                self:SetNW2String("lc_dream_id", id)
+                self:SetNW2String("lc_dream_head", head)
+                self:SetNW2String("lc_dream_body", body)
+                best = "dream"
+            end
+        end
         self:SetNW2String("lc_notice", best)
         self.lcPickedAt = CurTime()
         return best
@@ -115,19 +140,20 @@ if SERVER then
     function ENT:Use(activator)
         if not IsValid(activator) or not activator:IsPlayer() then return end
         local kind = self:GetNW2String("lc_notice", "curfew")
-        local n = NOTICES[kind] or NOTICES.curfew
+        local n = self:Words()
         if self:GetNW2Bool("lc_defaced", false) then
             activator:ChatPrint("[City] " .. n[1] .. ". Someone has painted over it: " .. (DEFACED[kind] or "the lambda") .. ".")
             return
         end
         if string.sub(kind, 1, 6) == "rebel_" then activator:ChatPrint("[Paste-up] " .. n[1] .. " " .. n[2]) return end
         activator:ChatPrint("[City] " .. n[1] .. ". " .. n[2])
-        if LC and LC.CivPosterRead then LC.CivPosterRead(activator, kind) end
+        if kind ~= "dream" and LC and LC.CivPosterRead then LC.CivPosterRead(activator, kind) end
     end
 end
 
 if CLIENT then
     local PAPER, INK, RED, ORANGE = Color(205, 200, 185, 245), Color(25, 25, 28), Color(150, 20, 20), Color(232, 145, 42)
+    local NIGHT = Color(40, 46, 96) -- (a dream's poster: night blue where the others are red)
     local art = {} -- [kind] = the owner's picture (a Material), or false
     local function Art(kind)
         if art[kind] == nil then
@@ -142,7 +168,8 @@ if CLIENT then
     function ENT:Draw()
         if LocalPlayer():GetPos():DistToSqr(self:GetPos()) > 900 * 900 then return end
         local kind = self:GetNW2String("lc_notice", "curfew")
-        local n = NOTICES[kind] or NOTICES.curfew
+        local n = self:Words()
+        local dreamy = kind == "dream"
         local ang = self:GetAngles()
         ang:RotateAroundAxis(ang:Up(), 90)
         ang:RotateAroundAxis(ang:Forward(), 90)
@@ -152,6 +179,11 @@ if CLIENT then
         local daub = nil
         if not (pic and not pic:IsError()) then
             pic = Art(kind)
+            -- (a dream's: its own picture, dream_<id>, else dream.png)
+            if dreamy then
+                local own = Art("dream_" .. self:GetNW2String("lc_dream_id", ""))
+                if own and not own:IsError() then pic = own end
+            end
             daub = defaced and (DEFACED[kind] or "LIES") or nil
         end
         if pic and not pic:IsError() then
@@ -165,8 +197,8 @@ if CLIENT then
         end
         cam.Start3D2D(self:GetPos() + self:GetForward() * 0.6, ang, 0.1)
             draw.RoundedBox(0, -230, -310, 460, 620, PAPER)
-            draw.RoundedBox(0, -230, -310, 460, 70, RED)
-            draw.SimpleText("CITY ADMINISTRATION", "DermaLarge", 0, -275, PAPER, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+            draw.RoundedBox(0, -230, -310, 460, 70, dreamy and NIGHT or RED)
+            draw.SimpleText(dreamy and "SLEEP WELL, CITIZEN" or "CITY ADMINISTRATION", "DermaLarge", 0, -275, PAPER, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
             if self.lcWrappedH ~= n[1] and LC_CL and LC_CL.WrapText then
                 self.lcHead, self.lcBody = LC_CL.WrapText(n[1], "DermaLarge", 420), LC_CL.WrapText(n[2], "DermaDefaultBold", 400)
                 self.lcWrappedH = n[1]

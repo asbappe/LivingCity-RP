@@ -13348,6 +13348,90 @@ for _, n in ipairs({ cop, loyal }) do if IsValid(n) then n:Remove() end end
 _setcvar("lc_ledger", 0)
 end
 SpeechTests()
+section("Posters that hint at dreams (the owner, 12 November)")
+function DreamPosterTests()
+local DP0 = Vector(-81000, 61000, 60)
+local planNext, planDecide, tonight = LC.DreamPlanNext, LC.DreamPlanDecide, LC.DreamPlanTonight
+LC.DreamPlanDecide = function() return "happy", "calm" end
+LC.DreamPlanNext = function(kind) return kind == "happy" and "melons" or nil end
+LC.DreamPlanTonight = function() return 7 end
+local seenWas = LC.DreamPosterSeen
+LC.DreamPosterSeen = {}
+-- (with every poster showing one: which do, and which dream)
+_setcvar("lc_dream_posters", 1)
+ok(LC.DreamPosterFor(DP0) == "melons", "with none dreamt yet, a poster foreshadows tonight's dream")
+local h, b = LC.DreamPosterWords("melons")
+ok(h ~= nil and b ~= nil and not string.find(string.lower(h .. b), "melons", 1, true), "in the city's voice, a hint that never names it", h)
+local mh = LC.DreamPosterWords("some_ending_without_lines")
+ok(mh ~= nil and mh ~= "", "a dream without lines of its own gets its mood's", mh)
+-- a dream dreamt: some posters remember it (a test dream never counts)
+local dreamt = hook.t.LivingCityDreamStarted.LivingCityDreamPosters -- (only the posters' own: a made-up dream would trouble the rest)
+dreamt({ ending = "cheese", test = true })
+ok(#LC.DreamPosterSeen == 0, "a test dream isn't remembered")
+dreamt({ ending = "cheese" })
+local sawPast, sawTonight = false, false
+for i = 1, 40 do
+    local id = LC.DreamPosterFor(DP0 + Vector(i * 97, i * 31, 0))
+    if id == "cheese" then sawPast = true elseif id == "melons" then sawTonight = true end
+end
+ok(sawPast and sawTonight, "then some remember the last dream, the rest foreshadow tonight's")
+-- a share: about a quarter by default, a different few each day, the same all day
+_setcvar("lc_dream_posters", 0.25)
+local n, same = 0, true
+for i = 1, 200 do
+    local p = DP0 + Vector(i * 113, i * 57, 0)
+    local a = LC.DreamPosterFor(p)
+    if a then n = n + 1 end
+    if LC.DreamPosterFor(p) ~= a then same = false end
+end
+ok(n > 25 and n < 80 and same, "a quarter of them, and a poster keeps its dream all day", n)
+LC.DreamPlanTonight = function() return 8 end
+local moved = 0
+for i = 1, 200 do
+    local p = DP0 + Vector(i * 113, i * 57, 0)
+    LC.DreamPlanTonight = function() return 7 end
+    local a = LC.DreamPosterFor(p) ~= nil
+    LC.DreamPlanTonight = function() return 8 end
+    if (LC.DreamPosterFor(p) ~= nil) ~= a then moved = moved + 1 end
+end
+ok(moved > 10, "and a different few the next day", moved)
+_setcvar("lc_dream_posters", 0)
+ok(LC.DreamPosterFor(DP0) == nil, "lc_dream_posters 0: none")
+-- on the wall: a poster that would show curfew shows the dream's; one that teaches a rule, or hung by hand, doesn't
+_setcvar("lc_dream_posters", 1)
+LC.DreamPlanTonight = function() return 7 end
+local wall = ents.Create("lc_civposter")
+wall:SetPos(DP0 + Vector(0, 0, 0)) wall:Spawn()
+do -- (the poster's own functions: entities/lc_civposter.lua)
+    local was = ENT
+    ENT = {}
+    assert(loadstring(_ENTSRC["entities/lc_civposter.lua"], "lc_civposter"))()
+    wall.PickNotice, wall.Words, wall.Use = ENT.PickNotice, ENT.Words, ENT.Use
+    ENT = was
+end
+local noticeWas = LC.CivPosterNotice
+LC.CivPosterNotice = function() return "curfew" end
+wall:PickNotice()
+ok(wall:GetNW2String("lc_notice", "") == "dream" and wall:GetNW2String("lc_dream_head", "") ~= "" and wall:Words()[1] == wall:GetNW2String("lc_dream_head", ""),
+    "a plain curfew poster on the wall hints at a dream", wall:GetNW2String("lc_notice", ""))
+local reader = newPlayer("DreamPosterReader", "citizen")
+reader.chat = {}
+wall:Use(reader)
+ok(reader.chat[#reader.chat] and string.find(reader.chat[#reader.chat], wall:GetNW2String("lc_dream_head", ""), 1, true), "pressing E reads its words")
+LC.CivPosterNotice = function() return "dispenser" end
+wall:PickNotice()
+ok(wall:GetNW2String("lc_notice", "") == "dispenser", "one beside a ration dispenser keeps teaching its rule")
+LC.CivPosterNotice = function() return "curfew" end
+wall.lcFixedKind = "loyalty"
+wall:PickNotice()
+ok(wall:GetNW2String("lc_notice", "") == "loyalty", "and one hung by hand keeps what it was hung as")
+wall:Remove()
+LC.CivPosterNotice = noticeWas
+_setcvar("lc_dream_posters", 0.25)
+LC.DreamPlanNext, LC.DreamPlanDecide, LC.DreamPlanTonight = planNext, planDecide, tonight
+LC.DreamPosterSeen = seenWas
+end
+DreamPosterTests()
 function Ledger2Tests()
 section("The state of the city on the streets: checkpoints, ambushes, prices, acts")
 local function Later(secs) _advance(secs) _runtimers() end
