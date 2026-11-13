@@ -600,7 +600,8 @@ local function LeversPage()
     local l = util.JSONToTable(GetGlobal2String("lc_ledger", "") or "") or {}
     local items = {}
     if l.stand then items[#items + 1] = Item("Go to the speech stand", function() Send("speechstand") end) end
-    items[#items + 1] = Item(l.spoke and "Give a speech (done today)" or "Give a speech... (morale +6, authority +3)", function() Say("A speech", "Your words to the whole city, from the stand", "!speech ") end)
+    items[#items + 1] = Item(l.spoke and "Give a speech (done today)" or (l.crowd and "Give a speech... (the city gathers first; morale +6, authority +3)" or "Give a speech... (morale +6, authority +3)"),
+        function() Say("A speech", l.crowd and "Your words to the whole city. They are called to the stand, and you speak once they have gathered." or "Your words to the whole city, from the stand", "!speech ") end)
     items[#items + 1] = Item(l.amnesty and "Declare an amnesty (done today)" or "Declare an amnesty (morale +6, authority -8, Resistance +3)", function() Send("amnesty") end)
     items[#items + 1] = Page("Order a crackdown on a district (authority +5, morale -6, Resistance +4)", function()
         local its = {}

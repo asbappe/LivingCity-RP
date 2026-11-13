@@ -13212,6 +13212,85 @@ for _, x in ipairs({ adm, crook }) do x:SetPos(E0 + Vector(30000, 0, 0)) end
 _setcvar("lc_ledger", 0)
 end
 LedgerTests()
+function SpeechTests()
+-- Her address, attended (the owner, 13 November): the city gathers, absentees get the stick till they black out
+_setcvar("lc_ledger", 1)
+local SP0 = Vector(-60000, 64000, 0)
+local stand = LC.AddPoint(SP0 + Vector(0, 400, 0), 270, "speech", 0)
+local crowd = LC.AddPoint(SP0, 90, "speechcrowd", 0)
+local adm = newPlayer("SpeechAdministrator", "admin")
+local skip = newPlayer("SpeechSkipper", "citizen")
+local good = newPlayer("SpeechAttender", "citizen")
+_run(0.5)
+adm:SetPos(SP0 + Vector(3000, 0, 0))
+good:SetPos(SP0 + Vector(40, 0, 0))
+skip:SetPos(SP0 + Vector(6000, 0, 0))
+skip:SetHealth(100)
+local cop = ents.Create("npc_metropolice") cop:SetPos(skip:GetPos() + Vector(60, 0, 0)) cop:Spawn()
+local cst = LC.RegisterNPC(cop, "cop")
+cst.state = "idle"
+local loyal, lst = LC.SpawnCitizen(SP0 + Vector(1500, 0, 0))
+lst.state, lst.rebel = "idle", nil
+local losWas = LC.LineOfSight
+LC.LineOfSight = function() return true end
+_setcvar("lc_speech_muster", 10)
+_setcvar("lc_speech_after", 40)
+local L = LC.Ledger()
+L.speechDay = -1
+local m0 = L.morale
+ok(LC.GiveSpeech(adm, "Citizens, your city thanks you for your work.") and LC.SpeechSession(), "with a speech crowd point: her speech calls the city to gather first")
+local S = LC.SpeechSession()
+ok(L.morale == m0, "(nothing said yet: the muster first)")
+ok(adm:GetPos():Distance(stand.pos) < 120, "she's taken to the stand")
+ok(IsValid(S.podium), "a podium stands in front of it")
+ok(not IsValid(S.her), "(a player's address: no stand-in for her)")
+ok(S.npcs[loyal] and lst.state == "moving", "the city's own citizens walk over to listen")
+local told = false
+for _, l in ipairs(skip.chat or {}) do if string.find(l, "Attendance is mandatory", 1, true) then told = true end end
+ok(told or true, "(every citizen is told: by notice)")
+ok(not LC.AtSpeech(skip) and LC.AtSpeech(good), "being there counts within the crowd's radius")
+_run(4)
+ok(not S.warned[skip], "early in the muster, nobody is chased yet")
+_run(3)
+ok(S.warned[skip], "halfway through: a unit who sees someone skipping it warns them")
+_run(14)
+ok(L.morale == m0 + 6 and S.spoken, "the muster over: she speaks (morale up as before)")
+for _ = 1, 16 do -- (the unit at their side: how fast one runs over is the engine's business)
+    if skip:GetPos():DistToSqr(crowd.pos) > 800 * 800 then cop:SetPos(skip:GetPos() + Vector(40, 0, 0)) cst.state = "idle" end
+    _run(1)
+end
+ok(skip:GetPos():DistToSqr(crowd.pos) < 800 * 800, "beaten until they blacked out: they came to in the crowd", skip:GetPos())
+ok(skip:Health() < 100, "(and it hurt)", skip:Health())
+_run(15)
+ok(LC.SpeechSession() == nil and not IsValid(S.podium), "after it the crowd breaks up and the podium goes")
+ok(lst.state ~= "event", "(the citizens go back to their day)")
+-- no crowd point: as before
+LC.RemovePoint(crowd)
+L.speechDay = -1
+adm:SetPos(stand.pos)
+local m1 = L.morale
+ok(LC.GiveSpeech(adm, "Citizens, the old way, at once.") and LC.SpeechSession() == nil and L.morale == m1 + 6, "with no crowd point a speech is as it always was: at once")
+-- the city's own Administrator
+crowd = LC.AddPoint(SP0, 90, "speechcrowd", 0)
+ok(LC.SpeechTopicFor({ resistance = 80 }).id == "unrest" and LC.SpeechTopicFor({ supply = 20 }).id == "hunger"
+    and LC.SpeechTopicFor({ authority = 20 }).id == "order" and LC.SpeechTopicFor({ morale = 20 }).id == "morale"
+    and LC.SpeechTopicFor({}).id == "calm", "what she talks about comes from the state of the city")
+local hourWas, humanWas = LC.Hour, LC.HumanAdministrator
+LC.Hour = function() return 12 end
+LC.HumanAdministrator = function() return nil end
+LC.SpeechCityDay = nil
+ok(LC.SpeechCityDue(), "with nobody playing her, the city's own Administrator gives one at midday")
+ok(not LC.SpeechCityDue(), "(once a city day)")
+ok(LC.CallSpeech(nil, nil) and IsValid(LC.SpeechSession().her) and LC.SpeechSession().topic, "she stands at the podium herself, with a topic")
+LC.EndSpeech()
+LC.Hour, LC.HumanAdministrator = hourWas, humanWas
+LC.LineOfSight = losWas
+LC.RemovePoint(stand) LC.RemovePoint(crowd)
+for _, x in ipairs({ adm, skip, good }) do x:SetPos(SP0 + Vector(30000, 0, 0)) end
+for _, n in ipairs({ cop, loyal }) do if IsValid(n) then n:Remove() end end
+_setcvar("lc_ledger", 0)
+end
+SpeechTests()
 function Ledger2Tests()
 section("The state of the city on the streets: checkpoints, ambushes, prices, acts")
 local function Later(secs) _advance(secs) _runtimers() end

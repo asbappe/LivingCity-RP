@@ -58,7 +58,10 @@ WORDS = {
     "black_fallen": ("She's dead (always Overwatch's: she can't announce her own death)", "Administrator biosignal lost. City administration suspended. All units, fall back to the Nexus.", None),
     "black_crushed": ("The uprising is crushed (time ran out)", "Incursion contained. Sociostability restoring. Remain indoors.", "It is over. The city is mine again, and I will remember every one of you."),
     "suppressor_down": ("The suppression device is destroyed", "Alert: Nexus suppression device offline. All units, contain and repair.", "They have silenced the Nexus. It changes nothing."),
+    "speech_soon": ("Her address is called: the city must gather (Overwatch's when a player Administrator calls it from her tablet; hers when the city gives it)", "Attention, all residents: the City Administrator will address the city. Report to the assembly point immediately. Attendance is mandatory.", "My dear citizens, I am going to speak to you all in a few minutes. Come and gather in front of the stand. I would so hate to miss anyone."),
 }
+
+SPEECH_WORDS = {}  # her addresses (filled from LC.SpeechTopics, sv_livingcity_speech.lua)
 
 RADIO = [
     ("static", "The hiss between stations on the radio repair bench (long and loopable is best)", "(no words: radio static)"),
@@ -94,6 +97,7 @@ for id, l in pairs(LC.MachineLines or {}) do W("machine", id, l[1], l[2]) end
 for id, words in pairs(LC.ColonelLines or {}) do W("colonel", id, "", words) end
 for id, l in pairs(LC.StreetLines or {}) do W("street", id, l[2], l[1], l[3] or l[1]) end
 for id, l in pairs(LC.UnitLines or {}) do W("unitline", id, l[2], l[1], l[3] or l[1], table.concat(l[4] or {}, ", ")) end
+for _, t in ipairs(LC.SpeechTopics or {}) do W("speech", t.id, string.lower(string.sub(t.when, 1, 1)) .. string.sub(t.when, 2), t.words) end
 for key, g in pairs(LC.CollapseGmanLines or {}) do
     local cv = GetConVar(g[1])
     W("gman", key, g[1], cv and cv:GetString() or "", g[2])
@@ -123,6 +127,7 @@ def demote(lines):
 
 def main():
     rows = dump()
+    SPEECH_WORDS.update({"speech_" + r[1]: ("Her own address, with nobody playing her: " + r[2], r[3]) for r in rows if r[0] == "speech"})
     triggers = [(r[1], int(r[2]), r[3]) for r in rows if r[0] == "trigger"]
     tiers = [r[1] for r in rows if r[0] == "tier"]
     gman = {r[1]: (r[2], r[3], r[4]) for r in rows if r[0] == "gman"}
@@ -157,6 +162,11 @@ def main():
     for trig, tier, title in triggers:
         when, ow, adm = WORDS.get(trig, (title or trig, "", ""))
         hf, word = her_file(trig, tier, tiers)
+        if trig in SPEECH_WORDS:
+            when, adm = SPEECH_WORDS[trig]
+            doc.append("| [ ] | `%s` | %s | (not his) | | `%s` (%s) | %s |" % (trig, when, hf, word, adm))
+            count += 1
+            continue
         doc.append("| [ ] | `%s` | %s | `%s1.wav` | %s | %s | %s |" % (
             trig, when, trig, ow or "", ("`%s` (%s)" % (hf, word)) if adm is not None else "(not hers)", adm or ""))
         count += 2 if adm is not None else 1

@@ -1314,6 +1314,8 @@ function Arrive(npc, st, now)
         st.untilT = now + math.Rand(40, 120)
     elseif k == "exercise" then
         if LC.ExerciseArrive then LC.ExerciseArrive(npc, st, now) else st.untilT = now + 5 end
+    elseif k == "speech" then
+        if LC.SpeechArrive then LC.SpeechArrive(npc, st, now) else st.untilT = now + 5 end
     elseif k == "npcwork" then
         if LC.NPCWorkArrive then LC.NPCWorkArrive(npc, st, now) else st.untilT = now + 5 end
     elseif k == "work" then

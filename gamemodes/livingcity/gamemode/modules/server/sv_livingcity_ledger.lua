@@ -354,31 +354,46 @@ function LC.GoToSpeechStand(ply)
     return true
 end
 
-function LC.GiveSpeech(ply, text)
-    if not IsAdministrator(ply) then return false, "Only the City Administrator gives speeches." end
-    local s = Load()
-    if s.speechDay == s.day then return false, "You've spoken to the city today. Tomorrow." end
-    text = string.Trim(tostring(text or ""))
-    if #text < 10 then return false, "Say something to the city (at least a sentence)." end
-    local stand = SpeechStand(ply:GetPos())
-    if stand and ply:GetPos():DistToSqr(stand.pos) > 400 * 400 then return false, "Speak from the speech stand: F2 > Me > The city's levers > Go to the speech stand." end
-    s.speechDay = s.day
-    local who = (LC.CharacterName and LC.CharacterName(ply)) or ply:Nick()
+-- Her words to the city: on the screens and in chat, the crowd's cheer, and what it does to the numbers.
+-- by: the player Administrator, or nil (the city's own, sv_livingcity_speech.lua). at: where she spoke.
+local function Deliver(by, text, at)
+    local who = IsValid(by) and ((LC.CharacterName and LC.CharacterName(by)) or by:Nick()) or ((LC.AdministratorName and LC.AdministratorName()) or "The City Administrator")
     if LC.SetGlobalLong then LC.SetGlobalLong("lc_broadcast", string.sub(text, 1, 590)) end
     SetGlobal2String("lc_broadcast_by", "The City Administrator")
     SetGlobal2Float("lc_broadcast_at", CurTime())
     for _, p in ipairs(player.GetAll()) do p:ChatPrint("[The City Administrator, from the stand] " .. text) end
     local heard = 0
     for _, p in ipairs(player.GetAll()) do
-        if p ~= ply and p:GetPos():DistToSqr(ply:GetPos()) < 1200 * 1200 then
+        if p ~= by and p:GetPos():DistToSqr(at) < 1200 * 1200 then
             local f = p:GetNW2String("lcf_faction", "")
             if (f == "" or f == "citizen") and LC.AddStanding then LC.AddStanding(p, 2, "heard the Administrator speak") heard = heard + 1 end
         end
     end
-    if LC.SpeechCrowd then LC.SpeechCrowd(ply:GetPos()) end -- (the crowd cheers; sympathizers mutter)
+    if not (LC.SpeechSession and LC.SpeechSession()) and LC.SpeechCrowd then LC.SpeechCrowd(at) end -- (the crowd cheers; sympathizers mutter. An attended address does its own.)
     Add("morale", 6, nil) Add("authority", 3, nil)
     News(string.format("%s addressed the city%s.", who, heard > 0 and (" before a crowd of " .. heard) or ""))
     Save()
+end
+LC.SpeechDeliver = Deliver
+
+function LC.GiveSpeech(ply, text)
+    if not IsAdministrator(ply) then return false, "Only the City Administrator gives speeches." end
+    local s = Load()
+    if s.speechDay == s.day then return false, "You've spoken to the city today. Tomorrow." end
+    text = string.Trim(tostring(text or ""))
+    if #text < 10 then return false, "Say something to the city (at least a sentence)." end
+    -- with a speech crowd point on the map, the city gathers first (sv_livingcity_speech.lua)
+    if LC.SpeechPlaces and LC.SpeechPlaces(ply:GetPos()) then
+        local ok, why = LC.CallSpeech(ply, text)
+        if not ok then return false, why end
+        s.speechDay = s.day
+        Save()
+        return true
+    end
+    local stand = SpeechStand(ply:GetPos())
+    if stand and ply:GetPos():DistToSqr(stand.pos) > 400 * 400 then return false, "Speak from the speech stand: F2 > Me > The city's levers > Go to the speech stand." end
+    s.speechDay = s.day
+    Deliver(ply, text, ply:GetPos())
     return true
 end
 
@@ -438,7 +453,8 @@ local function Sync()
     end
     SetGlobal2String("lc_ledger", util.TableToJSON({ day = s.day, supply = s.supply, morale = s.morale, combine = s.combine, resistance = s.resistance,
         authority = s.authority, districts = d, spoke = s.speechDay == s.day or nil, amnesty = s.amnestyDay == s.day or nil,
-        stand = (LC.CountPointsOfKind and LC.CountPointsOfKind("speech") or 0) > 0 or nil }) or "")
+        stand = (LC.CountPointsOfKind and LC.CountPointsOfKind("speech") or 0) > 0 or nil,
+        crowd = (LC.CountPointsOfKind and LC.CountPointsOfKind("speechcrowd") or 0) > 0 or nil }) or "")
 end
 LC.LedgerSync = Sync
 

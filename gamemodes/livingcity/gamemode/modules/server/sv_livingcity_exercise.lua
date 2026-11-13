@@ -294,7 +294,7 @@ end
 local SWING = { "pushplayer", "swinggesture", "ACT_MELEE_ATTACK_SWING_GESTURE", "ACT_MELEE_ATTACK1", "ACT_MELEE_ATTACK_SWING" }
 -- (on the jog: "Move it!", "Keep moving!", never "First warning, move away", which sounded like being told to get back)
 local COP_BARK = { "npc/metropolice/vo/moveit.wav", "npc/metropolice/vo/moveit2.wav", "npc/metropolice/vo/keepmoving.wav", "npc/metropolice/vo/movealong.wav" }
-local HIT = { jog = "Keep up, citizen.", drill = "Do it properly.", parade = "Louder, citizen. With feeling.", absent = "Exercise is mandatory." }
+local HIT = { jog = "Keep up, citizen.", drill = "Do it properly.", parade = "Louder, citizen. With feeling.", absent = "Exercise is mandatory.", speech = "The Administrator is speaking. Attendance is mandatory." }
 
 local function Rec(ply) return X and X.people[ply] end
 
@@ -1151,6 +1151,22 @@ local GESTURE_CHEER = { cheer = 35, salute = 30, wave = 20, point = 10, nod = 8,
 -- Careless Talk's spy), arm half up; with no flat take on the server, they just don't cheer.
 -- Returns "cheer" or "flat".
 LC.FlatCheerLate = 0.8
+-- The right arm up to the brow (amount 1 a smart salute, about a half a limp one), down again after a moment:
+-- the same pose as Careless Talk's salute (sv_livingcity_propagandamore.lua).
+function LC.CrowdSalute(npc, amount, secs)
+    if not (IsValid(npc) and npc.ManipulateBoneAngles and npc.LookupBone) then return false end
+    local up, fore = npc:LookupBone("ValveBiped.Bip01_R_UpperArm"), npc:LookupBone("ValveBiped.Bip01_R_Forearm")
+    if up then npc:ManipulateBoneAngles(up, Angle(-35 * amount, -75 * amount, 0)) end
+    if fore then npc:ManipulateBoneAngles(fore, Angle(0, -115 * amount, 0)) end
+    npc.lcSaluteAmt = amount
+    timer.Simple(secs or 2.5, function()
+        if not IsValid(npc) then return end
+        if up then npc:ManipulateBoneAngles(up, Angle(0, 0, 0)) end
+        if fore then npc:ManipulateBoneAngles(fore, Angle(0, 0, 0)) end
+        npc.lcSaluteAmt = 0
+    end)
+    return true
+end
 function LC.CrowdCheer(npc, st)
     st = st or LC.NPCs[npc]
     if st and st.rebel then
@@ -1159,14 +1175,15 @@ function LC.CrowdCheer(npc, st)
         timer.Simple(LC.FlatCheerLate, function()
             if not IsValid(npc) then return end
             if snd then npc:EmitSound(snd, 62, math.random(94, 100)) end
-            if LC.PlayGesture then LC.PlayGesture(npc, { "g_salute", "ACT_GESTURE_BOW" }, 1) end
+            LC.CrowdSalute(npc, 0.45, 1.6) -- (half up, and down again early)
         end)
         st.flatCheers = (st.flatCheers or 0) + 1
         return "flat"
     end
     local s = Pick(CHEER_SOUNDS)
     if file.Exists("sound/" .. s, "GAME") then npc:EmitSound(s, 72) end
-    if LC.PlayGesture then LC.PlayGesture(npc, { "cheer1", "cheer2", "ACT_CHEER" }, 2) end
+    if math.random() < 0.5 then LC.CrowdSalute(npc, 1, 2.5)
+    elseif LC.PlayGesture then LC.PlayGesture(npc, { "cheer1", "cheer2", "ACT_CHEER" }, 2) end
     return "cheer"
 end
 

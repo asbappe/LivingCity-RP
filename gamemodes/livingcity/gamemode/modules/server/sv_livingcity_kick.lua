@@ -90,7 +90,7 @@ LC.BlownDoors = LC.BlownDoors or {} -- [door] = the flying prop
 ------------------------------------------------------------------------
 
 local KO_SECS = 15
-function LC.KnockOut(ent, secs, dizzy)
+function LC.KnockOut(ent, secs, dizzy, notice) -- (notice: { title, text } instead of the door's)
     if not IsValid(ent) then return false end
     local now = CurTime()
     if ent:IsPlayer() then
@@ -103,7 +103,9 @@ function LC.KnockOut(ent, secs, dizzy)
         end
         ent:SetNW2Float("lc_dizzy_from", now + secs)
         ent:SetNW2Float("lc_dizzy_until", now + secs + (dizzy or 0))
-        if LC.Notice then
+        if LC.Notice and notice then
+            LC.Notice(ent, "bad", notice[1], notice[2], 6)
+        elseif LC.Notice then
             LC.Notice(ent, "bad", secs > 0 and "Out cold" or "Knocked senseless",
                 secs > 0 and "A door, out of nowhere. Everything goes black." or "The door catches you on its way down. The room won't keep still.", 6)
         end

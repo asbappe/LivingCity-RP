@@ -1838,3 +1838,9 @@ Type them in the server console on the host panel, or in your own game console (
   Notes:
 - [ ] **Which scene is yours:** hit the living can so a new can, bin and officer appear. Is it lit for you (golden beam, pulsing glow, circling lights, "YOURS" over it), and are you told "That one is yours"? Is your next tiny officer knocked off that bin? With a second player: do they see their own lit, not yours? Is the beam too much or too little?
   Notes:
+- [ ] **Speeches, attended (13 November):** place a speech crowd point in front of the speech stand. As the Administrator, F2 > Me > The city's levers > Give a speech: is Overwatch's call heard, do the NPCs stand in rows facing the stand, does the podium (Breen's console) look right in front of her? Skip it as a citizen: warned, then the stick until you black out, waking in the crowd? With nobody as Administrator, set the city to midday (lc_speech_city_hour) and watch her speak at the podium herself.
+  Notes:
+- [ ] **Sympathizers at parades and speeches:** in the cheering crowd, a few should half salute late and mutter flat (needs spy_flat_male1/spy_flat_female1 recorded; silent without). Does the salute arm pose look right on citizens?
+  Notes:
+- [ ] **The harpies dreamt in a forest:** pick the harpies as tonight's dream (F2, as Administrator). Are the pines there (Episode Two) or Half-Life 2's trees? Do the mingebags slip behind trees and rocks and out again? Too many trees for the edict limit?
+  Notes:
