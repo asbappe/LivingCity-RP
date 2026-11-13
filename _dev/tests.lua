@@ -4297,8 +4297,13 @@ ok(string.find(lastV(cit), "Contraband: Lockpick set", 1, true), "so does contra
 net.sent = {}
 hook.Run("PlayerSay", cit, "!records")
 ok(_lastnet("lc_records") == nil and has(cit.chat, "Civil Protection only"), "citizens can't open the terminal")
+net.sent = {}
 hook.Run("PlayerSay", unit, "!records")
-ok(_lastnet("lc_records") ~= nil, "units can")
+ok(_lastnet("lc_records") == nil, "a unit without the radio up can't: HQ only hears you over it (the owner, 13 November)")
+_radioUp(unit)
+hook.Run("PlayerSay", unit, "!records")
+ok(_lastnet("lc_records") ~= nil, "units can, with the radio up")
+_radioDown(unit)
 _netcall("lc_records_do", unit, "note", key, "Seen near the canal at night", "")
 local r = LC.RecordOf(cit)
 ok(r.n[#r.n] and r.n[#r.n].text == "Seen near the canal at night", "units add notes")
@@ -9040,6 +9045,7 @@ _run(3)
 ok(victim:Health() < 100, "chlorine chokes anyone without a mask", victim:Health())
 ok(unit:Health() == 100, "units' masks protect them")
 local r0 = reb:Health()
+if LC.NPCs[reb] then LC.NPCs[reb].gasMask = false end -- (one without a gas mask: a rebel in three has one, 13 November)
 reb:SetPos(GZ + Vector(10, 10, 0))
 _run(2)
 ok(reb:Health() < r0, "rebels in the cloud take it too")
@@ -9472,6 +9478,8 @@ rookie:SetPos(FAR)
 section("Backup and 10-20s")
 for n, st in pairs(LC.NPCs) do if IsValid(n) and LC.IsSecurity(st) then n:Remove() end end
 local caller = newPlayer("BackupCaller", "cp")
+ok(not LC.CallBackup(caller), "no backup without the radio up (the owner, 13 November: HQ calls only over the radio)")
+_radioUp(caller)
 local B = Vector(-38000, 38000, 0)
 caller:SetPos(B)
 local helpers = {}
@@ -15221,6 +15229,7 @@ end
 LC.CommanderDropAt = 0
 if LC.OverwatchDrop then LC.EndOverwatchDrop() end
 cmd:SetPos(M0)
+_radioUp(cmd) -- (an HQ call: over the radio, the owner, 13 November)
 local okD = LC.CommanderDrop(cmd)
 ok(okD and LC.OverwatchDrop ~= nil, "the Commander calls in a squad")
 ok(not LC.CommanderDrop(cmd), "(and not again for a while)")
@@ -17703,7 +17712,7 @@ ok(LC.TargetActions and LC.TargetActions.radiojobs ~= nil, "F1 has it while the 
 u.lcRadioJobsAt = 0
 LC.TargetActions.radiojobs(u)
 ok(sent == 2, "(and it works)")
--- right click on the radio: the jobs, for someone with one band
+-- right click on the radio: its own menu (the owner, 13 November), which has the jobs and, for an Insider, the switch
 local was = SWEP
 SWEP = {}
 assert(loadstring(_WEAPONSRC["weapons/weapon_lc_radio.lua"], "weapon_lc_radio"))()
@@ -17711,22 +17720,230 @@ local radio = setmetatable({ GetOwner = function() return u end, GetNW2String = 
     SetNW2String = function() end, SetNW2Int = function() end }, { __index = SWEP })
 SWEP = was
 LC.TransmitBands = function() return { "cp" } end
-u.lcRadioJobsAt = 0
+net.sent = {}
 radio:SecondaryAttack()
-ok(sent == 3, "right click on the radio, with one band: the jobs board")
+ok(_lastnet("lc_radio_menu") ~= nil and sent == 2, "right click on the radio: the Radio menu opens (the jobs are on it)")
 LC.TransmitBands = function() return { "cp", "resistance" } end
 local tuned = 0
 local tuneWas = LC.TuneTransmitter
 LC.TuneTransmitter = function() tuned = tuned + 1 return "cp" end
-radio.nextTune = 0
-u.lcRadioJobsAt = 0
-radio:SecondaryAttack()
-ok(sent == 3 and tuned == 1, "with two bands (an Insider), right click still switches frequency (F1 has the jobs)")
+ok(LC.TargetActions.radiotune and LC.TargetActions.radiotune(u) == true and tuned == 1, "with two bands (an Insider), Switch frequency on the Radio menu switches it")
 LC.SendBoard, LC.TransmitBands, LC.TuneTransmitter = sbWas, tbWas, tuneWas
 u:SelectWeapon("weapon_lc_hands")
 u:SetPos(Vector(-120000, -120000, 0))
 end
 RadioJobsTests()
+
+function RadioHQTests() -- (the owner, 13 November: HQ calls only with the radio out; right click opens the Radio menu; the resupply scanner)
+section("HQ only over the radio: a unit's backup, 10-20, records, BOLO and resupply need the radio up")
+local u = newPlayer("HQUnit", "cp")
+u:SetPos(Vector(-161000, 91000, 0))
+local okR, whyR = LC.RadioOnly(u)
+ok(not okR and whyR == LC.RADIO_NEEDED, "a unit without the radio up: no (and it says how)", tostring(whyR))
+local okB, whyB = LC.CallBackup(u)
+ok(not okB and whyB == LC.RADIO_NEEDED, "no backup without it", tostring(whyB))
+ok(LC.RadioChatBlocked(u, "bolo") and LC.RadioChatBlocked(u, "records"), "!bolo and !records: not without it")
+local cit = newPlayer("HQCitizen", "citizen")
+ok(LC.RadioOnly(cit) == true and not LC.RadioChatBlocked(cit, "records"), "everyone else's calls are as they were")
+local _, why1020 = LC.Mark1020(u, true)
+ok(why1020 ~= LC.RADIO_NEEDED, "the backup call's own 10-20 isn't held up (it went out on the radio)")
+u:Give("weapon_pistol")
+u:SelectWeapon("weapon_pistol")
+_radioUp(u)
+ok(LC.RadioOnly(u) == true and not LC.RadioChatBlocked(u, "bolo"), "with the radio up: yes")
+ok(LC.BackupViolent(u), "a gun put away for the radio still counts as a gun out: backup comes armed")
+u.lcGunOutAt = CurTime() - 21
+u.lcShotAt = nil
+ok(not LC.BackupViolent(u), "(20 seconds later, not any more)")
+_setcvar("lc_radio_only", 0)
+_radioDown(u)
+ok(LC.RadioOnly(u) == true, "lc_radio_only 0: the old way")
+_setcvar("lc_radio_only", 1)
+
+section("Half-Life 2's ammo limits, not Garry's Mod's 9999 of everything")
+ok(LC.AmmoMax("Pistol") == 150 and LC.AmmoMax("SMG1") == 225 and LC.AmmoMax("Buckshot") == 30 and LC.AmmoMax("AR2") == 60 and LC.AmmoMax("357") == 12,
+    "pistol 150, SMG 225, shotgun 30, pulse rifle 60, .357 12 (the owner, 13 November)")
+local am = newPlayer("AmmoCap", "cp")
+am.ammo = { Pistol = 400, SMG1 = 100, AR2 = 999 }
+LC.ClampAmmo(am)
+ok(am:GetAmmoCount("Pistol") == 150 and am:GetAmmoCount("SMG1") == 100 and am:GetAmmoCount("AR2") == 60, "anyone over a limit is cut down to it; under it, left alone")
+ok(LC.AmmoCapped("Pistol", 400) == 150 and LC.AmmoCapped("Pistol", 20) == 20, "rounds put back (waking from a dream, after a story) stop at the limit")
+am.ammo = { Buckshot = 99 }
+hook.Run("PlayerSpawn", am)
+_run(1)
+ok(am:GetAmmoCount("Buckshot") == 30, "and on every spawn and respawn (and after a close call, and waking from a dream)", am:GetAmmoCount("Buckshot"))
+_setcvar("lc_hl2_ammo", 0)
+ok(LC.AmmoMax("Pistol") == nil, "lc_hl2_ammo 0: Garry's Mod's own again")
+_setcvar("lc_hl2_ammo", 1)
+am:SetPos(Vector(-120000, -120000, 0))
+
+section("Resupply: what a unit is shortest of, and what the crate holds")
+local r = newPlayer("RSUnit", "cp")
+r:SetPos(Vector(-162000, 92000, 0))
+r:SetNW2Int("lcf_rank", 2)
+r.weps = { "weapon_pistol" }
+r.active = "weapon_pistol"
+r.ammo = { Pistol = 10 }
+r.maxhp = 100
+r:SetHealth(40)
+r.armor = 40
+local needs = LC.ResupplyNeeds(r)
+ok(#needs == 2 and needs[1].kind == "ammo" and needs[1].ammo == "Pistol" and needs[2].kind == "health",
+    "pistol rounds under 30% first, then health (the vest at 40 of 50 is fine)", (needs[1] and needs[1].kind or "-") .. ", " .. (needs[2] and needs[2].kind or "-"))
+r:SetHealth(5)
+r.ammo = { Pistol = 40 } -- (just under 30% of Half-Life 2's 150)
+needs = LC.ResupplyNeeds(r)
+ok(needs[1] and needs[1].kind == "health" and string.find(needs[1].label, "two", 1, true), "near death: health first, two vials")
+r.armor = 5
+r.ammo = { Pistol = 10, SMG1 = 0, Buckshot = 0 }
+r.weps = { "weapon_pistol", "weapon_smg1", "weapon_shotgun" }
+needs = LC.ResupplyNeeds(r)
+ok(#needs == 3, "never more than three", #needs)
+local give, words, essential = LC.ResupplyContents(r)
+local all = table.concat(words, ", ")
+ok(essential and string.find(all, "flashbang", 1, true), "a Metrocop's crate has a flashbang", all)
+ok(LC.CuffCount(r) >= LC.CP_CUFFS or string.find(all, "cuffs", 1, true), "and cuffs back up to issue, if short", all)
+r:SetNW2Int("lcf_rank", 1)
+ok(LC.ResupplyGrenade(r) == "gren_smoke", "a Recruit's: smoke")
+r:SetNW2Int("lcf_rank", 5)
+ok(LC.ResupplyGrenade(r) == "gren_gas", "the Overwatch's: chlorine gas")
+r:SetNW2Int("lcf_rank", 2)
+-- stocked: nothing to send
+r.ammo = { Pistol = 72 }
+r.weps = { "weapon_pistol" }
+r:SetHealth(100)
+r.armor = 50
+for _ = 1, LC.CP_CUFFS do if LC.CuffCount(r) < LC.CP_CUFFS then LC.GiveItem(r, "zipties", 1) end end
+_radioUp(r)
+local okS, whyS = LC.RequestResupply(r)
+ok(not okS and string.find(whyS or "", "stocked", 1, true), "stocked: HQ sends nothing", tostring(whyS))
+-- short of rounds, but indoors
+r.ammo = { Pistol = 5 }
+local tl = util.TraceLine
+util.TraceLine = function(t) return { HitSky = false, HitPos = t.start + Vector(0, 0, 120), Hit = true, Fraction = 0.01 } end
+local okI, whyI = LC.RequestResupply(r)
+ok(not okI and string.find(whyI or "", "open sky", 1, true), "indoors or underground: no scanner can reach you", tostring(whyI))
+util.TraceLine = function(t) return { HitSky = true, HitPos = t.start + Vector(0, 0, 2000), Hit = true, Fraction = 0.1 } end
+local okO, whyO = LC.RequestResupply(r)
+util.TraceLine = tl
+ok(okO == true and IsValid(LC.ResupplyOut[r]), "under open sky: a scanner is on its way", tostring(whyO))
+local again, whyA = LC.RequestResupply(r)
+ok(not again and string.find(whyA or "", "already", 1, true), "one at a time", tostring(whyA))
+local sc = LC.ResupplyOut[r]
+ok(sc and sc.lcDrop and sc.lcTop and sc.lcDrop.z < sc.lcTop.z and sc.lcDrop.z <= r:GetPos().z + 170, "it comes down the shaft of sky above where you called from")
+ok(sc and sc.lcHeading and math.abs(sc.lcHeading.x) + math.abs(sc.lcHeading.y) == 1, "and leaves north, south, east or west")
+LC.ResupplyOut[r] = nil
+if IsValid(sc) then sc:Remove() end
+local okW, whyW = LC.RequestResupply(r)
+ok(not okW and string.find(whyW or "", "Next one in", 1, true), "then not again for a while", tostring(whyW))
+-- the crate broke: what's in it lies on the ground
+local spilled = LC.ResupplySpill({ lcFor = r, lcWords = { "x" }, lcGive = { { cls = "item_ammo_pistol", n = 2 }, { item = "gren_flash", n = 1 } } }, r:GetPos())
+ok(#spilled == 3, "the crate breaks and leaves what was in it on the ground", #spilled)
+for _, e in ipairs(spilled) do if IsValid(e) then e:Remove() end end
+-- the Radio menu's actions
+ok(LC.TargetActions.resupply ~= nil and LC.TargetActions.radiotune ~= nil, "Request resupply and Switch frequency: the Radio menu's actions")
+_radioDown(r)
+r:SetPos(Vector(-120000, -120000, 0))
+u:SetPos(Vector(-120000, -120000, 0))
+end
+RadioHQTests()
+
+function Freq7KitTests() -- (the owner, 13 November: no Freq 7 broadcasting without a transmitter; Fighters are issued one)
+section("Freq 7: no broadcasting without a transmitter, and a Fighter's issued radio and transmitter")
+local m = newPlayer("F7Member", "resistance")
+m:SetNW2Int("lcf_rank", 2)
+m:SetPos(Vector(-167000, 97000, 0))
+LC.GiveItem(m, "radio_tuned", 1)
+local okB, whyB = LC.RebelCallBackup(m)
+ok(not okB and string.find(whyB or "", "transmitter", 1, true), "a Freq 7 radio alone can't call for backup", tostring(whyB))
+local okP, whyP = LC.RebelSendPosition(m)
+ok(not okP and string.find(whyP or "", "transmitter", 1, true), "nor send their position", tostring(whyP))
+ok(LC.IssueRebelRadio(m) == 0 and not LC.HasItem(m, "radio_transmitter"), "a Member isn't issued one")
+ok(not LC.IssuedLocked(m, "radio_tuned"), "and can sell or hand over their own radio, as before")
+local f = newPlayer("F7Fighter", "resistance")
+f:SetNW2Int("lcf_rank", 3)
+f:SetPos(Vector(-167100, 97000, 0))
+hook.Run("LivingCityRankChanged", f, "resistance", 3)
+ok(LC.HasItem(f, "radio_tuned") and LC.HasItem(f, "radio_transmitter"), "promoted to Fighter: a Freq 7 radio and a transmitter, issued")
+ok(LC.SendsOnFreq7(f), "so they can send on Freq 7")
+ok(LC.IssuedLocked(f, "radio_transmitter") and LC.IssuedLocked(f, "radio_tuned") and LC.SellPrice(f, "radio_transmitter") == nil, "theirs to keep: not sold, dropped, stashed or handed over")
+ok(string.find(LC.IssuedWhy(f, "radio_transmitter"), "Freq 7 kit", 1, true) ~= nil, "(and it says so in the Resistance's words, not the Combine's)")
+LC.GiveItem(f, "radio_transmitter", 1)
+ok(not LC.IssuedLocked(f, "radio_transmitter"), "a spare can still go")
+LC.TakeItem(f, "radio_transmitter", 2)
+hook.Run("PlayerSpawn", f)
+_run(2)
+ok(LC.HasItem(f, "radio_transmitter"), "lost: a new one at the next spawn")
+for _, p in ipairs({ m, f }) do p:SetPos(Vector(-120000, -120000, 0)) end
+end
+Freq7KitTests()
+
+function GasMaskTests() -- (the owner, 13 November: gas masks, hands to the face, running from the gas)
+section("Gas masks: off a uniform or the dead, four broken make one, a rebel in three carries one")
+ok(LCS.Items.gas_mask and LCS.Items.gas_mask.contraband and LCS.Items.gas_mask_broken and LCS.Items.gas_mask_broken.contraband, "a gas mask, whole or broken, is contraband")
+local rec = LCS.RecipesById.gas_mask
+ok(rec and rec.needs.gas_mask_broken == 4, "four broken masks make one")
+local whole, broken = 0, 0
+for _ = 1, 400 do if LC.DeadUnitMask() == "gas_mask" then whole = whole + 1 else broken = broken + 1 end end
+ok(whole > 140 and broken > 140, "a dead unit's mask: whole about half the time, else broken", whole .. " / " .. broken)
+local reb = newPlayer("GMRebel", "resistance")
+reb:SetPos(Vector(-163000, 93000, 0))
+LC.GiveItem(reb, "uniform_cp", 1)
+local okS = LC.ScavengeGasMask(reb)
+_run(6)
+ok(okS and LC.HasItem(reb, "gas_mask") and not LC.HasItem(reb, "uniform_cp"), "Scavenge gas mask: cut out of a uniform (the uniform's used up)")
+local unit = newPlayer("GMUnit", "cp")
+unit:SetPos(Vector(-163500, 93000, 0))
+ok(not LC.ScavengeGasMask(unit), "a unit has their own")
+_setcvar("lc_gasmask_rebels", 1)
+local nr, nrst = LC.SpawnRebel(Vector(-164000, 94000, 4), nil)
+ok(LC.NPCHasGasMask(nr, nrst), "a Resistance fighter can carry one")
+local nc, ncst = LC.SpawnCitizen and LC.SpawnCitizen(Vector(-164000, 94100, 4)) or nil
+if ncst then ok(not LC.NPCHasGasMask(nc, ncst), "a citizen never: it's contraband") end
+_setcvar("lc_gasmask_rebels", 0)
+local nr2, nr2st = LC.SpawnRebel(Vector(-164000, 94200, 4), nil)
+ok(not LC.NPCHasGasMask(nr2, nr2st), "lc_gasmask_rebels 0: none do")
+for _, n in ipairs({ nr, nc, nr2 }) do if IsValid(n) then n:Remove() end end
+_setcvar("lc_gasmask_rebels", 0.33)
+
+section("In the gas: masks go on by themselves, everyone else covers their mouth, coughs and runs, away from Combine units first")
+local G = Vector(-166000, 96000, 0)
+for npc in pairs(LC.NPCs) do if IsValid(npc) and npc:GetPos():Distance(G) < 3000 then npc:Remove() end end
+local masked, mst = LC.SpawnRebel(G + Vector(30, 0, 4), nil)
+mst.gasMask = true
+local bare, bst = LC.SpawnRebel(G + Vector(-30, 0, 4), nil)
+bst.gasMask = false
+reb:SetPos(G + Vector(0, 30, 0))
+reb:SetHealth(100)
+local plain = newPlayer("GMPlain", "citizen")
+plain:SetPos(G + Vector(0, -30, 0))
+plain:SetHealth(100)
+local mhp, bhp = masked:Health(), bare:Health()
+LC.Detonate("gas", G, unit)
+_run(1.5)
+ok(masked:Health() == mhp and masked:GetNW2Bool("lc_gasmask_on", false), "a fighter with a mask puts it on and takes no harm")
+ok(bare:Health() < bhp and bare:GetNW2String("lc_handface", "") == "mouth", "one without covers their mouth and chokes")
+ok((bst.gasFleeUntil or 0) > CurTime() and bst.gasFleeTo ~= nil, "and runs from it")
+ok(reb:Health() == 100 and reb:GetNW2Bool("lc_gasmask_on", false), "a player with a mask in their pockets puts it on by themselves")
+ok(plain:Health() < 100 and plain:GetNW2String("lc_handface", "") == "mouth", "a player without one coughs with a hand over their mouth")
+-- where to run: never the way the Combine units are, while there's another way out
+local g = LC.GasClouds[#LC.GasClouds]
+local from = bare:GetPos()
+local spots = {}
+for i = -1, 1 do spots[#spots + 1] = Vector(g.pos.x + g.r + 260, g.pos.y + i * 150, 0) end
+local dest = LC.GasFleeSpot(bare, g, spots)
+ok(LC.GasCombineOnTheWay(from, dest, spots) == 0 and dest:Distance(Vector(g.pos.x, g.pos.y, from.z)) > g.r, "it runs out of the gas the way with no Combine unit on it")
+local ring = {}
+for i = 0, 15 do local a = math.rad(i * 22.5) ring[#ring + 1] = Vector(g.pos.x + math.cos(a) * (g.r + 260), g.pos.y + math.sin(a) * (g.r + 260), 0) end
+local dest2 = LC.GasFleeSpot(bare, g, ring)
+ok(dest2 ~= nil and dest2:Distance(Vector(g.pos.x, g.pos.y, from.z)) > g.r, "surrounded: out of the gas all the same, into them if it must")
+-- the gas gone: the masks come off by themselves
+_run(25)
+ok(not masked:GetNW2Bool("lc_gasmask_on", false) and not reb:GetNW2Bool("lc_gasmask_on", false), "once out of it a few seconds, the masks come off by themselves")
+for _, n in ipairs({ masked, bare }) do if IsValid(n) then n:Remove() end end
+for _, p in ipairs({ reb, plain, unit }) do p:SetPos(Vector(-120000, -120000, 0)) end
+end
+GasMaskTests()
 
 ----------------------------------------------------------------------
 -- Shared dreams (sv_livingcity_dreams.lua): the secret endings, dreamt by everyone asleep
@@ -21022,6 +21239,148 @@ ok(#_errors == errs0, "(no errors in any of it)", _errors[errs0 + 1])
 end
 NonsenseDreamTests()
 
+-- Pick Up That Can, a fever dream (sv_livingcity_candream.lua)
+function CanDreamTests()
+section("Shared dreams: Pick Up That Can (your own can; at him, in the bin, anywhere else; the living cans)")
+_setcvar("lc_dream_rules", 0) _setcvar("lc_dream_auto", 0)
+local errs0 = #_errors
+local savedWalls, realGetAll, realReload = _walls, player.GetAll, LC.EndingReload
+_walls = {}
+LC.EndEvent(true)
+_setcvar("lc_needs", 0)
+LC.EndingReload = function() end
+local CITY, DREAM = Vector(165000, -165000, 0), Vector(225000, -225000, 0)
+local adm = newPlayer("CDAdmin", "admin")
+local a = newPlayer("CDA", "citizen")
+local b = newPlayer("CDB", "citizen")
+_run(3)
+local function Asleep(p, at)
+    p:SetPos(at)
+    local key = string.format("s%d_%d_%d", math.floor(at.x), math.floor(at.y), math.floor(at.z))
+    p.lcSleep = { t0 = CurTime() - 70, done = CurTime() - 10, last = CurTime(), slept = true }
+    p:SetNW2Bool("lc_sleeping", true)
+    p.lcBedKey, p.lcBedFrom = key, at + Vector(40, 0, 0)
+    LC.BedSleepers[key] = p
+end
+player.GetAll = function() return { adm, a, b } end
+local dp = LC.AddPoint(DREAM, 0, "dream")
+local function Aim(p, at)
+    local e = p:EyePos()
+    local dx, dy, dz = at.x - e.x, at.y - e.y, at.z - e.z
+    local l = math.sqrt(dx * dx + dy * dy + dz * dz)
+    p.aim = Vector(dx / l, dy / l, dz / l)
+end
+local function Tap(p, key) p.keys = { [key] = true } _run(0.1) p.keys = nil _run(0.1) end
+
+local where = {}
+for _, grp in ipairs(LC.DreamOffice().groups) do for _, e in ipairs(grp.endings) do where[e.id] = grp.mood end end
+ok(where.can == "neutral", "Pick Up That Can is on her tablet, under Neutral")
+ok(LC.StrangeIs("can") and LC.StrangeIs("cheese") and LC.StrangeIs("watchers") and not LC.StrangeIs("maze"), "it's a strange dream (and the others still are)")
+ok(LC.StrangeCues.can_hello and LC.StrangeCues.can_hello[2] == "Pick up that can.", "his line is Half-Life 2's")
+
+Asleep(a, CITY) Asleep(b, CITY + Vector(0, 200, 0))
+a.keys, b.keys, a.aim, b.aim = nil, nil, nil, nil
+local okS, d = LC.DreamStart("can", adm, false, nil, true)
+local g = okS and d.game
+ok(g ~= nil and #g.sets == 1 and IsValid(g.sets[1].cop) and IsValid(g.sets[1].bin), "an officer and a bin in the middle")
+_run(0.2)
+local st = g.def.state(g, a)
+ok(st.can and st.can.s == "bin" and st.can.k == "can", "your can starts on the bin")
+_run(3.5)
+st = g.def.state(g, a)
+local ca, cb = g.pl[a].can, g.pl[b].can
+ok(ca.st == "floor" and cb.st == "floor" and st.can.s == "floor" and st.glows and #st.glows == 1, "he knocks it off: a can each, on the floor")
+ok(ca.pos:Distance(cb.pos) > 10, "(each their own)")
+local said = false
+for _, cue in ipairs(g.said or {}) do if cue == "can_hello" then said = true end end
+ok(said, "\"Pick up that can.\"")
+
+-- too far away to pick up; then near
+a:SetPos(ca.pos + Vector(400, 0, 0))
+Tap(a, IN_USE)
+ok(g.pl[a].can.st == "floor", "too far away to pick it up")
+a:SetPos(ca.pos + Vector(30, 0, 0))
+Tap(a, IN_USE)
+ok(g.pl[a].can.st == "held" and g.def.state(g, a).can.s == "held", "Use picks it up")
+
+-- what a throw hits
+local m = g.sets[1]
+a:SetPos(Vector(m.o.x, m.o.y - 250, g.top + 4))
+Aim(a, Vector(m.o.x, m.o.y, g.top + 50))
+ok(LC.CanAim(g, a) == "cop", "thrown at him: him")
+Aim(a, LC.CanBinTop(g))
+ok(LC.CanAim(g, a) == "bin", "thrown at the bin: the bin")
+Aim(a, Vector(m.o.x - 400, m.o.y - 250, g.top))
+local what, at = LC.CanAim(g, a)
+ok(what == "away" and math.abs(at.z - g.top) < 5, "thrown anywhere else: it lands on the floor")
+a:SetPos(Vector(m.binAt.x, m.binAt.y - 50, g.top + 4))
+a.aim = Vector(0, 0.5, -0.86)
+ok(LC.CanAim(g, a) == "bin", "standing over the bin, looking down: dropped in")
+
+-- at him: the can and the officer swap
+a:SetPos(Vector(m.o.x, m.o.y - 250, g.top + 4))
+Aim(a, Vector(m.o.x, m.o.y, g.top + 50))
+Tap(a, IN_ATTACK)
+ok(g.swapped and m.swapped and IsValid(m.can) and IsValid(m.stick) and m.cop == nil and #g.sets == 1, "at him: the can grows, comes alive and takes the stunstick")
+ok(g.pl[a].can.st == "fly" and g.pl[a].did.cop == 1, "(your can is away)")
+_run(2)
+ok(m.hid == true and m.tiny.nodraw == true, "the officer shrinks onto the bin")
+_run(LC.CanBack + 3)
+ok(g.pl[a].can.st == "floor" and g.pl[a].can.kind == "cop" and g.def.state(g, a).can.k == "cop", "the can knocks a tiny officer off the bin for you")
+ok(string.find(g.def.state(g, a).big or "", "officer", 1, true) ~= nil, "(and tells you to pick that up)")
+
+-- every hit after that: another living can, bin and tiny officer
+LC.CanThrown(g, b, "cop", Vector(m.o.x, m.o.y, g.top + 40), m)
+ok(#g.sets == 2 and IsValid(g.sets[2].can) and IsValid(g.sets[2].tiny) and IsValid(g.sets[2].bin), "hit it again: another can, bin and tiny officer beside it")
+local s2 = g.sets[2]
+ok(s2.o:Distance(m.o) <= 110, "(right next to the first)")
+_run(LC.CanCycle + 0.5)
+ok(s2.cyc ~= nil, "which knocks its own officer off its own bin")
+a:SetPos(Vector(s2.o.x, s2.o.y - 200, g.top + 4))
+Aim(a, Vector(s2.o.x, s2.o.y, g.top + 36))
+local w2, _, set2 = LC.CanAim(g, a)
+ok(w2 == "cop" and set2 == s2, "any of them can be hit")
+local n = 0
+while LC.CanAddSet(g) and n < 100 do n = n + 1 end
+ok(#g.sets == LC.CanMaxSets and LC.CanMaxSets == 30, "thirty of them at most", #g.sets)
+LC.CanThrown(g, b, "cop", Vector(m.o.x, m.o.y, g.top + 40), m)
+ok(#g.sets == LC.CanMaxSets, "(a hit after that adds none)")
+_run(0.3)
+
+-- in the bin; anywhere else
+local rainWas = g.rain
+LC.CanThrown(g, a, "bin", LC.CanBinTop(g), m)
+ok(m.binScale > 1 and g.rain ~= rainWas and g.def.state(g, b).rain == g.rain, "in the bin: the bin grows, and it rains cans on everyone")
+local growWas = m.grow
+LC.CanThrown(g, a, "away", Vector(m.o.x - 300, m.o.y - 200, g.top + 3))
+ok(m.grow > growWas and #g.trees == 1 and IsValid(g.trees[1].ent), "anywhere else: a can tree where it lands, and the one in charge grows")
+for _ = 1, 40 do LC.CanThrown(g, a, "away", Vector(m.o.x - 300, m.o.y - 200, g.top + 3)) LC.CanThrown(g, a, "bin", LC.CanBinTop(g), m) end
+ok(#g.trees == LC.CanMaxTrees and m.grow <= LC.CanCopMax and m.binScale <= LC.CanBinMax, "(none of it grows for ever)")
+ok(LC.CanWays(g.pl[a]) == 3 and LC.CanWays(g.pl[b]) == 1 and g.def.state(g, a).meter == 100, "three ways tried")
+_run(0.5)
+ok(pcall(g.def.state, g, adm), "(someone not playing can still watch)")
+
+-- the end: every which way wins
+g.ends = CurTime() + 0.4
+_run(0.2)
+ok(g.pl[a].how == "won" and g.pl[b].how ~= "won", "all three before the time's up: you wake Unbroken; not all three: nothing lost")
+LC.DreamGameStop(d, "test")
+_run(2.5)
+
+LC.DreamForget()
+LC.RemovePoint(dp)
+for _, p in ipairs({ adm, a, b }) do
+    p.crouch, p.keys, p.ground, p.aim, p.vel = nil, nil, nil, nil, nil
+    if p.lcSleep and LC.WakeUp then LC.WakeUp(p, "quiet") end
+    p:SetPos(Vector(-121000, -121000, 0))
+end
+player.GetAll, LC.EndingReload = realGetAll, realReload
+_setcvar("lc_needs", 1)
+_walls = savedWalls
+ok(#_errors == errs0, "(no errors in any of it)", _errors[errs0 + 1])
+end
+CanDreamTests()
+
 -- The dream plan (sv_livingcity_dreamplan.lua): her choice of a kind now and then, the city's by sociostability, in turn
 function DreamPlanTests()
 section("Shared dreams: the plan (she chooses a kind every few nights, only her own dreams for her; the city by sociostability; round robin; the black screen's line)")
@@ -21571,7 +21930,7 @@ Others(0, "resistance")
 member.lcRebBackupNext = 0
 local okNo, whyNo = LC.RebelCallBackup(member)
 ok(not okNo and string.find(whyNo or "", "Freq 7 radio", 1, true), "no Freq 7 radio: no backup", whyNo)
-LC.GiveItem(member, "radio_tuned")
+LC.GiveItem(member, "radio_tuned") LC.GiveItem(member, "radio_transmitter") -- (a transmitter too: 13 November)
 local far, fst = Real(LC.Spawners.rebel, S + Vector(20000, 0, 0))
 local inZone, seen, spotWas = LC.InRebelZone, LC.IsSeen, LC.RebelBackupSpot
 LC.InRebelZone = function(pos) return pos.x > S.x + 15000 end
@@ -21607,6 +21966,7 @@ cs2.state = "idle"
 LC.UnitRecruit(unit, c2, cs2)
 ok(cs1.backupFor == unit and cs2.backupFor == nil and Told(unit, "Your squad is full: 1 of 1"), "8 Combine players: one unit each, and told so")
 -- call for backup: no room, no call; an Elite never answers a Metrocop's call
+_radioUp(unit)
 unit.lcBackupNext = 0
 local okF, whyF = LC.CallBackup(unit)
 ok(not okF and string.find(whyF or "", "squad is full", 1, true), "a full squad can't call for more", whyF)
@@ -21615,6 +21975,7 @@ cs1.backupFor = nil
 es1.backupFor = nil
 local okC, sentC = LC.CallBackup(unit)
 ok(okC and es1.backupFor == nil, "an Elite doesn't answer a Metrocop's backup call", tostring(sentC))
+_radioDown(unit)
 for _, n in ipairs({ c1, c2, s1, e1 }) do if IsValid(n) then n:Remove() end end
 
 -- proving yourself before joining the Resistance (the owner, 9 November)
@@ -23314,8 +23675,9 @@ end)()
 section("The radio held up: chat and voice over the band")
 ;(function()
     local R0 = Vector(-228000, 228000, 0)
-    local a = newPlayer("RadioA", "resistance", nil, 400)
-    local b = newPlayer("RadioB", "resistance", nil, 400)
+    -- (Members: from Fighter up the radio and transmitter are issued, 13 November)
+    local a = newPlayer("RadioA", "resistance", nil, 150)
+    local b = newPlayer("RadioB", "resistance", nil, 150)
     local cit = newPlayer("RadioBystander", "citizen")
     local close = newPlayer("RadioClose", "citizen")
     _run(1)
@@ -24376,7 +24738,7 @@ local mate = newPlayer("QMMate", "resistance", nil, 150)
 local cit = newPlayer("QMCitizen", "citizen")
 local okNR, whyNR = LC.RebelCallBackup(reb)
 ok(not okNR and string.find(whyNR or "", "Freq 7 radio", 1, true), "no Freq 7 radio: no calling for backup (the owner, 9 November)", whyNR)
-LC.GiveItem(reb, "radio_tuned") LC.GiveItem(mate, "radio_tuned")
+LC.GiveItem(reb, "radio_tuned") LC.GiveItem(mate, "radio_tuned") LC.GiveItem(reb, "radio_transmitter") LC.GiveItem(mate, "radio_transmitter") -- (a transmitter too: 13 November)
 reb:SetPos(S0) mate:SetPos(S0 + Vector(2500, 0, 0)) cit:SetPos(S0 + Vector(0, 2500, 0))
 mate.chat, cit.chat = {}, {}
 local f1, fs1 = LC.Spawners.rebel(S0 + Vector(300, 0, 0))
@@ -24398,7 +24760,7 @@ ok((LC.QuickInfo(reb).reb or {}).backup > 0, "(and F2 greys it with how long)")
 for _, n in ipairs({ f1, f2, f4 }) do local st = LC.NPCs[n] if st and st.follow then LC.DismissFollower(n, st, true) end end
 -- a Sympathizer: heard, but fighters only follow Members and up
 local sym = newPlayer("QMSym", "resistance")
-LC.GiveItem(sym, "radio_tuned")
+LC.GiveItem(sym, "radio_tuned") LC.GiveItem(sym, "radio_transmitter")
 sym:SetPos(S0 + Vector(0, -200, 0))
 local okS, sentS = LC.RebelCallBackup(sym)
 ok(okS and sentS == 0 and Told(sym, "Members and up"), "a Sympathizer's call is heard, but no fighters come", Last(sym))
@@ -24523,6 +24885,8 @@ ok(string.find(LC.OfficerSweepWhyNot(dl, "sweep") or "", "dreams", 1, true), "no
 LC.EndingBusy = eb
 ok(LC.OfficerSweepWhyNot(dl, "sweep") == nil, "a Division Leader can, with the city quiet", LC.OfficerSweepWhyNot(dl, "sweep"))
 unit.chat = {}
+ok(not LC.OfficerCallSweep(dl, "sweep") and LC.Event ~= "sweep", "not without the radio up (an HQ call, the owner, 13 November)")
+_radioUp(dl)
 ok(LC.OfficerCallSweep(dl, "sweep") and LC.Event == "sweep" and has(unit.chat, "orders a contraband sweep"), "the sweep starts (the city's own event), and units hear who ordered it", unit.chat[#unit.chat])
 ok(string.find(LC.OfficerSweepWhyNot(dl, "raid") or "", "something on", 1, true), "not while the city has something on (a curfew, say)")
 LC.EndEvent(true)
@@ -25874,6 +26238,8 @@ function RetakeFieldTests()
     if IsValid(shooter) then shooter:Remove() end
     caller:Give("weapon_pistol")
     caller:SelectWeapon("weapon_pistol")
+    -- (the call goes out on the radio since 13 November: the gun just put away for it still counts)
+    _radioUp(caller)
     local units = {}
     for i = 1, 3 do
         local c, cst = LC.SpawnCop(P + Vector(200 + i * 40, 0, 4))
@@ -25982,7 +26348,11 @@ function RetakeFieldTests()
     ok(#blinded == 6 and okAll, "a flashbang blinds the rebels in the blast for 4 to 9 seconds")
     ok(table.Count(secs) >= 2, "a different time for each of them", table.Count(secs))
     ok(cleared, "and they lose who they were shooting at")
-    ok(blinded[1][1]:IsCurrentSchedule(SCHED_FORCED_GO) or blinded[1][1].lcGesture ~= nil, "they stumble about with their hands at their eyes, not stand idle")
+    -- (the owner, 13 November: "cover their eyes with their hand (preferably left hand ...) and stumble about")
+    local b1 = blinded[1][1]
+    ok(b1:GetNW2String("lc_handface", "") == "eyes" and b1:GetNW2Float("lc_handface_until", 0) > CurTime() + 3, "they cover their eyes with their left hand for as long as they're blind")
+    LC.FlashTick(CurTime() + 2.1)
+    ok(b1:IsCurrentSchedule(SCHED_FORCED_GO), "and stumble about, not stand idle")
     -- (the owner, 11 November: "they never moved nor stopped shooting me". Blind, the guns are out of their hands)
     ok(LC.LastFlash and LC.LastFlash.blinded == 6 and has(unit.chat, "[Flashbang] 6 blinded"), "whoever threw it is told how many it caught")
     do

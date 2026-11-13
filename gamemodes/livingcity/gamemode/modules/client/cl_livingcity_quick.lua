@@ -264,9 +264,7 @@ local function Context(me, unit, rebel)
         Add("Talk to the interrogator", function() net.Start("lc_interrogate_reply") net.WriteBool(true) net.SendToServer() end)
     end
     if me:GetNW2Bool("lc_hauling", false) then Add("Let go of the body", function() Send("haul") end) end
-    -- the radio up: your side's jobs, over the radio (the owner, 12 November; LC.RadioJobs)
-    local held = me.GetActiveWeapon and me:GetActiveWeapon()
-    if IsValid(held) and held:GetClass() == "weapon_lc_radio" then Add("Jobs over the radio", function() Send("radiojobs") end) end
+    -- (the jobs over the radio, the owner's 12 November ask, are on the radio's own menu now: right click with it up)
     if IsValid(me:GetNW2Entity("lc_scanner")) then Add("Disconnect from the scanner", function() Send("unlink") end) end
 
     local tr = me:GetEyeTrace()
@@ -462,8 +460,8 @@ local function Freq7Page()
     local r = Info("reb")
     return { title = "FREQ 7", items = {
         Can("Message on Freq 7...", function() Ask("Freq 7", "What do you say on Freq 7?", "r") end, r.tx == false and "no transmitter" or nil),
-        Can("Call for backup" .. SquadTag(), function() QM("rbackup") end, (r.radio == false and "no Freq 7 radio") or Later(r.backup)),
-        Can("Send my position", function() QM("rpos") end, Later(r.pos)),
+        Can("Call for backup" .. SquadTag(), function() QM("rbackup") end, (r.radio == false and "no Freq 7 radio") or (r.tx == false and "no transmitter") or Later(r.backup)),
+        Can("Send my position", function() QM("rpos") end, (r.tx == false and "no transmitter") or Later(r.pos)),
         Item("Guide me to the nearest rebel ground", function() QM("guide", "rebel") end),
         Item("Guide me to the nearest lab", function() QM("guide", "lab") end),
     } }
@@ -862,7 +860,9 @@ function LC_CL.QuickRoleRoot()
     if unit then
         title = me:GetNW2String("lcf_title", "") ~= "" and me:GetNW2String("lcf_title", "") or ((LCF and LCF.IsOverwatch and LCF.IsOverwatch(me)) and "OVERWATCH" or "CIVIL PROTECTION")
         accent = ACCENT.cp
-        -- (the owner, 7 November: 1 Voice lines, 2 Unit tools, 3 Kick, 4 Call for backup, 5 BOLO, 6 Send my 10-20)
+        -- (the owner, 7 November: 1 Voice lines, 2 Unit tools, 3 Kick, 4 Call for backup, 5 BOLO, 6 Send my 10-20; then,
+        -- 13 November: what goes to HQ (backup, the BOLO, the 10-20, records, sweeps, directives) is only on the radio's
+        -- own menu, right click with the radio up. F2 keeps what's done on the spot.)
         local tools = Item("Unit tools (everything a unit has)", function() if LC_CL.OpenUnitTools then LC_CL.OpenUnitTools() end end)
         tools.id = "unittools"
         local kick = Item("Kick (" .. (LC_CL.KickKeyName and LC_CL.KickKeyName() or "G") .. ")", function() Send("kick") end)
@@ -870,9 +870,14 @@ function LC_CL.QuickRoleRoot()
         Add(Page("Voice lines", VoicePage))
         Add(tools)
         Add(kick)
-        Add(Item("Call for backup" .. SquadTag(), function() Send("backup") end))
-        Add(Item("Issue a BOLO...", function() Ask("BOLO", "What should Civil Protection units look out for?", "bolo") end))
-        Add(Item("Send my 10-20", function() Send("10-20") end))
+        local radio = Item("HQ calls: get your radio out, right click (backup, resupply, BOLO, 10-20)", function()
+            if LC_CL.OpenRadioQuick and LocalPlayer():HasWeapon("weapon_lc_radio") then
+                RunConsoleCommand("use", "weapon_lc_radio")
+                timer.Simple(0.3, function() if LC_CL.OpenRadioQuick then LC_CL.OpenRadioQuick() end end)
+            end
+        end)
+        radio.id = "radio"
+        Add(radio)
         -- the Resistance's man inside, beside a prisoner being marched to the cells (sv_livingcity_insider.lua):
         -- right after the six, only while it's there; greyed while someone can see
         local slipT, slipWhy = nil, nil
@@ -890,13 +895,7 @@ function LC_CL.QuickRoleRoot()
             inside.id = "inside"
             Add(inside)
         end
-        -- Division Leader and up: the city's sweep or raid, on order (after what's in front of you)
-        if f == "cp" and me:GetNW2Int("lcf_rank", 1) >= 3 then
-            local sw = Page("Call a sweep", SweepPage)
-            sw.id = "sweep"
-            late[#late + 1] = sw
-        end
-        usual = { Item("My directives (F4)", function() Hub("jobs") end), Item("Records terminal", function() Send("records") end) }
+        -- (a Division Leader's sweep or raid, their directives and the records terminal: on the Radio menu now)
     elseif rebel then
         title, accent = "RESISTANCE", ACCENT.resistance
         local plain = me:GetNW2String("lcd_disguise", "") ~= ""
@@ -1022,6 +1021,67 @@ function LC_CL.CloseSituation(id)
     if open and open.kind == "situation" and (id == nil or open.id == id) then open = nil end
 end
 function LC_CL.SituationOpen(id) return open ~= nil and open.kind == "situation" and (id == nil or open.id == id) end
+
+------------------------------------------------------------------------
+-- The Radio menu: right click with the radio up (weapon_lc_radio.lua)
+------------------------------------------------------------------------
+
+-- The owner, 13 November: what's said on the spot (voice lines, the kick, cuffs, papers) is on F2; anything that
+-- would mean talking to HQ (backup, resupply, a BOLO, a 10-20, the job board) only with the radio out, from its own
+-- menu, the same list and number keys as F1 and F2. A unit's calls go to HQ (sv_livingcity_radiohq.lua makes the
+-- server hold them to it too); on Freq 7, the Resistance's.
+local function RadioHeld(me)
+    local w = IsValid(me) and me.GetActiveWeapon and me:GetActiveWeapon()
+    return IsValid(w) and w:GetClass() == "weapon_lc_radio", w
+end
+function LC_CL.QuickRadioRoot()
+    local me = LocalPlayer()
+    local held, w = RadioHeld(me)
+    local band = held and w:GetNW2String("lc_band", "") or ""
+    local items = {}
+    local function Add(it) if it and #items < 9 then items[#items + 1] = it end end
+    if band == "cp" then
+        Add(Item("Request resupply (a scanner brings what you're short of)", function() Send("resupply") end))
+        Add(Item("Call for backup" .. SquadTag(), function() Send("backup") end))
+        Add(Item("Send my 10-20", function() Send("10-20") end))
+        Add(Item("Issue a BOLO...", function() Ask("BOLO", "What should Civil Protection units look out for?", "bolo") end))
+        Add(Item("Records check (the records terminal)", function() Send("records") end))
+        Add(Item("My directives (the job board)", function() Send("radiojobs") end))
+        if me:GetNW2String("lcf_faction", "") == "cp" and me:GetNW2Int("lcf_rank", 1) >= 3 then
+            local sw = Page("Call a sweep", SweepPage)
+            sw.id = "sweep"
+            Add(sw)
+        end
+        if me:GetNW2String("lcf_special", "") == "ow_commander" then
+            local left = me:GetNW2Float("lc_cmd_drop_at", 0) - CurTime()
+            Add(Can("Call in an Overwatch squad", function() Send("dropship") end, left > 0 and string.format("next in %d:%02d", math.floor(left / 60), math.floor(left % 60)) or nil))
+        end
+    elseif band == "resistance" then
+        local r = Info("reb")
+        Add(Can("Message on Freq 7...", function() Ask("Freq 7", "What do you say on Freq 7?", "r") end, r.tx == false and "no transmitter" or nil))
+        Add(Can("Call for backup" .. SquadTag(), function() QM("rbackup") end, (r.radio == false and "no Freq 7 radio") or (r.tx == false and "no transmitter") or Later(r.backup)))
+        Add(Can("Send my position", function() QM("rpos") end, (r.tx == false and "no transmitter") or Later(r.pos)))
+        Add(Item("Jobs over the radio", function() Send("radiojobs") end))
+    end
+    if held and w:GetNW2Int("lc_bands", 1) > 1 then
+        Add(Item("Switch frequency (now " .. (band == "cp" and "the CP net" or (band == "resistance" and "Freq 7" or "nothing")) .. ")", function() Send("radiotune") end))
+    end
+    local accent = band == "cp" and ACCENT.cp or (band == "resistance" and ACCENT.resistance or ACCENT.default)
+    return { id = "radio", title = band == "cp" and "RADIO: HQ" or (band == "resistance" and "RADIO: FREQ 7" or "RADIO"), items = items, accent = accent,
+        empty = #items == 0 and { "Nothing to send on this band." } or nil }
+end
+function LC_CL.OpenRadioQuick()
+    local me = LocalPlayer()
+    if not IsValid(me) or not me:Alive() or not RadioHeld(me) then return end
+    if LC_CL.SituationOpen("radio") and CurTime() - (open.last or 0) < 0.3 then return end -- (the click's own two answers)
+    local page = LC_CL.QuickRadioRoot()
+    -- gone as soon as the radio is put away
+    page.stay = function() return (RadioHeld(LocalPlayer())) end
+    LC_CL.OpenSituation(page)
+    if open then open.page.accent = page.accent end
+    if CurTime() - (LC_CL.QuickInfoAt or -99) > 1 then AskInfo() end
+end
+net.Receive("lc_radio_menu", function() if LC_CL.OpenRadioQuick then LC_CL.OpenRadioQuick() end end)
 
 -- New word from the server (what's greyed, and why): F2's page as it is now, in place.
 function LC_CL.QuickRebuild()

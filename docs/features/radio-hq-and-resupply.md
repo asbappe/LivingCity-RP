@@ -1,0 +1,35 @@
+# The radio to HQ, and the resupply scanner
+
+## HQ only over the radio
+
+The owner, 13 November: "anything that is local (saying a voice line, a kick, cuffing, checking papers) to the roleplay of the player is done through the F2 menu, but anything that would require communication realistically with combine HQ (call for backup, request resupply, BOLO, 10-20, job board, etc) is all done ONLY with the CP radio out and SWEP in hand, THEN having it out and right clicking opens the hidden 'Radio' quick F1/F2 styled menu for these commands that are not 'local' in a roleplay/lore sense".
+
+- **The radio's right click opens the Radio menu**: the same list and number keys as F1 and F2, gone as soon as the radio is put away (`LC_CL.OpenRadioQuick`, `LC_CL.QuickRadioRoot` in cl_livingcity_quick.lua; the server also sends `lc_radio_menu` in case the click wasn't predicted). Left click still calls for backup.
+- **On the CP net** (a Civil Protection or Overwatch unit): Request resupply, Call for backup, Send my 10-20, Issue a BOLO, Records check, My directives (the job board), Call a sweep (Division Leader and up), Call in an Overwatch squad (the Overwatch Commander). **On Freq 7**: Message on Freq 7, Call for backup, Send my position, Jobs over the radio. **Two bands** (a Resistance Insider): Switch frequency (it was the right click before).
+- **Off F2, Unit tools and the C menu** for units: Call for backup, Issue a BOLO, Send my 10-20, Records terminal, Call a sweep, My directives, Call in a squad. F2's slot 4 is now "HQ calls: get your radio out, right click", which draws the radio and opens its menu; Unit tools and the C menu say the same. F2 keeps what's done on the spot: Voice lines, Unit tools, Kick, and searching, cuffing and escorting whoever is in front of you. So an Insider's Let them slip is now F2 > 5 and Inside F2 > 5 or 6.
+- **The server holds units to it** (sv_livingcity_radiohq.lua, `LC.RadioOnly`): `LC.CallBackup`, `LC.Mark1020` (not its own call from backup), `LC.OfficerCallSweep`, `LC.CommanderDrop`, chat `!records` and `!bolo`, and the same from the menus, are refused without the radio in hand ("Get your radio out first: HQ only hears you over it..."). Everyone else (citizens, the Resistance, the Administrator) is as before; in a dream it doesn't apply. `lc_radio_only` (1).
+- **A gun put away for the radio** still counts as a gun out for 20 seconds, so backup called in a gunfight comes armed (`LC.BackupViolent`, `ply.lcGunOutAt`).
+- **The F4 Jobs tab and the physical boards and terminals are unchanged** (the owner, 13 November: "let's hold off on removing the F4 jobs tab for now"; how job boards work at terminals is still to settle).
+
+## Freq 7: a transmitter to send, and a Fighter's issued kit
+
+The owner, 13 November: "no one should be able to broadcast on freq7 without a transmitter. I think resistance fighters should just get one by default though when they are promoted [to resistance fighter] and have one as standard issue (un-sellable, cannot unequip, same as CP radios)".
+
+- **Sending on Freq 7 takes a Freq 7 radio and a radio transmitter**: a message (as before), Call for backup (it took only the radio) and Send my position (it took nothing) (`LC.SendsOnFreq7`, sv_livingcity_quickmore.lua). F2 > Freq 7 and the Radio menu grey them with "no transmitter". Listening still takes only the radio. The F2 Freq 7 page stays (only units' HQ calls are radio-only).
+- **Fighters and up are issued both** (`LC.IssueRebelRadio`, sv_livingcity_crafting.lua): on promotion to Fighter (told by a notice), at every spawn, and on rejoining the Resistance at that rank, one of each if they have none. That one of each is theirs to keep, like a unit's issue: never sold, dropped, stashed or handed over (`LC.IssuedLocked`, `LC.IssuedWhy`: "That's your issued Freq 7 kit: it stays with you."); a spare can still go. They're still contraband: a unit's search can take them, and the next spawn brings new ones. Members and below buy or make their own, as before.
+
+## Request resupply
+
+The owner, 13 November: shield scanners "as a CP support that spawns high up below the skybox and delivers ammo, cuffs, suit (vest) battery, health vials, etc to CP/Overwatch units who 'request resupply' ... doesn't/wouldn't work if under ground or indoors ... a single shrunk-down resupply crate ... the crate being about 1/4 the size of the usual resupply crates, which break upon hitting the ground. Then the scanner flies back up into the open sky, in the cardinal direction of the nearest combine zone, and disappears."
+
+- **Who and where**: a Civil Protection or Overwatch unit, the radio in hand, under open sky (a trace straight up must reach the sky with at least 220 units of room: `LC.OpenSkyAbove`). Indoors or underground: "No open sky above you...". One scanner at a time per unit, then `lc_resupply_cooldown` (300) seconds. `lc_resupply` (1).
+- **The scanner** (`lc_resupplyscanner`, `models/shield_scanner.mdl`): flown by the game, not the engine's AI. It starts just under the sky straight above where the unit called from, comes down to about 170 units above the ground, hovers a moment, drops the crate, climbs back up the same shaft and flies off north, south, east or west, whichever way the nearest Combine-only zone lies (`LC.ResupplyHeading`; north with none), fading out over 3 seconds. Gone in 45 seconds whatever happens.
+- **The crate** (`lc_resupplycrate`): the supply crate model at a quarter of its size. It breaks when it hits the ground (or after 8 seconds) and leaves what was in it lying there for whoever gets to it first (`LC.ResupplySpill`); anything left is cleared after two minutes.
+- **What's in it** (`LC.ResupplyNeeds`, `LC.ResupplyContents`): the three things the unit is shortest of, by score:
+  - ammo, only under 30% of a full load, which is Half-Life 2's limit (pistol 150, SMG 225, shotgun 30, pulse rifle 60; the clip counts; `docs/features/ammo-limits.md`): 1 to 2, the emptier the higher, a quarter more for the gun in hand. Enough Half-Life 2 ammo pickups to reach about 60%, at most 3.
+  - health, under 75%: what's missing times 2 (half health ties with a gun just under 30%). A health vial, two under 40%.
+  - the vest, under half its rank's charge: up to 1.2. A suit battery, two under a quarter.
+  - then, on top of the three: cuffs back up to the issue of three (Civil Protection), and one grenade for the rank unless they already carry two: Recruit smoke, Metrocop and Division Leader a flashbang, the Overwatch chlorine gas.
+- **Nothing short** (ammo over 30%, health and vest fine, cuffs full): "HQ: you're stocked", no scanner. A grenade alone never brings one.
+
+Tests: `RadioHQTests`, `RadioJobsTests`, and the units' records, backup, squad and armed-backup sections.

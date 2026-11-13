@@ -141,6 +141,11 @@ LCS.Items = {
     rebel_gear      = { name = "Resistance gear", model = "models/props_c17/BriefCase001a.mdl", wear = "rebel",
                         contraband = true, conceal = 0.15, sell = 25,
                         desc = "Off a dead fighter. The fighters in rebel territory will take you for one of them. Civil Protection units will too" },
+    -- gas masks (the owner, 13 November; sv_livingcity_gasmask.lua): contraband, off a uniform or a dead unit
+    gas_mask        = { name = "Gas mask", model = "models/props_junk/garbage_metalcan001a.mdl", contraband = true, conceal = 0.4, sell = 30,
+                        desc = "A Civil Protection mask, filter and all. Carry it and you put it on by yourself when gas reaches you: chlorine and weedkiller can't get at you" },
+    gas_mask_broken = { name = "Broken gas mask", model = "models/props_junk/garbage_metalcan002a.mdl", contraband = true, conceal = 0.5, sell = 6,
+                        desc = "Cracked, off a dead unit. No good on its own: four of them make one that works (F3, Make)" },
     uniform_clean   = { name = "Clean uniform", model = "models/props_c17/BriefCase001a.mdl",
                         desc = "A fresh Civil Protection uniform, pressed and bagged, for when yours is past saving (put it on: F1 > What now? > Change into clean clothes)" },
     civvies         = { name = "Spare citizen clothes", model = "models/props_c17/suitcase_passenger_physics.mdl", wear = "citizen",
@@ -351,7 +356,7 @@ LCS.Weights = {
     lockpick = 0.1, bypass = 0.6, cp_keycard = 0.02, canned_food = 0.5, vegetables = 0.6, raw_fish = 0.7, cooked_fish = 0.6,
     seeds = 0.05, fishing_line = 0.2, spraypaint = 0.4, pasteup = 0.1, cloth = 0.2, chemicals = 0.8, gun_parts = 1.0, bandage = 0.1,
     ammo_pistol = 0.4, ammo_smg = 0.8, ammo_buckshot = 0.7, gun_pistol = 1.1, gun_shotgun = 3.4, gun_smg = 2.8,
-    smokebomb = 0.4, gas_bomb = 0.4, firebomb = 0.6, ration_short = 0.3, gren_smoke = 0.5, gren_flash = 0.5, gren_gas = 0.6, arms_crate = 9.0, smuggled_supplies = 2.5, data_shard = 0.3, master_chip = 0.6, zipties = 0.05,
+    smokebomb = 0.4, gas_bomb = 0.4, firebomb = 0.6, ration_short = 0.3, gren_smoke = 0.5, gren_flash = 0.5, gren_gas = 0.6, arms_crate = 9.0, smuggled_supplies = 2.5, data_shard = 0.3, master_chip = 0.6, zipties = 0.05, gas_mask = 0.6, gas_mask_broken = 0.5,
     request_device = 0.3, scrap = 0.5, keepsake = 0.01, satchel = 0.8, storage_crate = 6.0,
     business_license = 0.02, vendor_stall = 7.0, paper = 0.02,
     rag_doll = 0.3, tin_toy = 0.3, patched_coat = 1.5,
@@ -543,6 +548,7 @@ end
 LCS.Recipes = {
     { id = "lockpick", out = "lockpick", needs = { scrap = 4 }, secs = 5, desc = "Bent and filed scrap" },
     { id = "bandage", out = "bandage", needs = { cloth = 2 }, secs = 4, desc = "Rags, torn into strips" },
+    { id = "gas_mask", out = "gas_mask", needs = { gas_mask_broken = 4 }, secs = 10, private = true, desc = "Four broken gas masks, made into one that works" },
     -- (hand-made goods, to sell from a stall: sv_livingcity_employment.lua)
     { id = "rag_doll", out = "rag_doll", needs = { cloth = 3 }, secs = 8, desc = "Sew a rag doll to sell (the city pays about 18)" },
     { id = "tin_toy", out = "tin_toy", needs = { scrap = 3 }, secs = 8, desc = "Hammer out a tin toy to sell (about 20)" },

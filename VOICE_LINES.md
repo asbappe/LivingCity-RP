@@ -324,6 +324,19 @@ Every line said in the dreams you play. Folder: **`garrysmod/sound/livingcity/dr
 |---|---|---|---|---|
 | [ ] | `watchers_hello1.mp3` | A Whisper | They don't move while you watch them. You can't watch them all. | a slow, hollow whisper, very close to the ear |
 
+#### Pick Up That Can (`can`)
+
+| Done | File | Who | Words | How it should sound |
+|---|---|---|---|---|
+| [ ] | `can_hello1.mp3` | The Officer | Pick up that can. | a Civil Protection officer through his mask's radio, flat and bored, just as in Half-Life 2 |
+| [ ] | `can_trash1.mp3` | The Officer | Now, put it in the trash can. | the officer, flat, already enjoying himself |
+| [ ] | `can_again1.mp3` | The Officer | Pick. Up. That. Can. | the officer, slower and lower every word, losing patience |
+| [ ] | `can_litter1.mp3` | The Officer | That is not the trash can. Nothing is the trash can. Pick up that can. | the officer, slow and deep, as if he has grown very large |
+| [ ] | `can_bin1.mp3` | The Bin | Thank you. Delicious. | a deep, hollow, echoing voice from inside a metal bin, ending in a small burp |
+| [ ] | `can_swap1.mp3` | The Can | Pick up that can. | the officer's line, tinny and high, as if spoken from inside an empty drinks can |
+| [ ] | `can_clone1.mp3` | Another Can | Pick up that can. Pick up that can. Pick up that can. | tinny and high, several voices not quite together |
+| [ ] | `can_full1.mp3` | The Can | No more room. Pick up all the cans. | tinny and high, delighted with itself |
+
 ### The propaganda dreams
 
 (The Loyalty Quiz's questions, `quiz_q1` onwards, are read out too: each is its question.)

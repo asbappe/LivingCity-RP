@@ -129,10 +129,8 @@ local DATA = {
         weapon_lc_radio = { "Radio transmitter",
             "While it's up, your chat and voice go out over the radio",
             "Only someone right beside you hears you directly",
-            { "{+attack2}: switch frequency", function(me)
-                local w = me:GetActiveWeapon()
-                return IsValid(w) and w.GetNW2Int and w:GetNW2Int("lc_bands", 0) > 1
-            end },
+            "{+attack}: call for backup",
+            "{+attack2}: the Radio menu (HQ calls, jobs, switching frequency)",
             "{+reload}: put it away" },
         weapon_lc_multitool = { "Multitool",
             "{+attack} at a Combine door, a city screen, a data terminal or a shackled vortigaunt: hack it" },

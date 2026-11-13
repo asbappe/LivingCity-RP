@@ -157,6 +157,8 @@ function LC.RebelCallBackup(ply)
     if not ply:Alive() or (LC.Prisoners and LC.Prisoners[ply]) then return false, "Not now." end
     -- (the owner, 9 November: calling for backup takes a Freq 7 radio)
     if LC.RadioBand and LC.RadioBand(ply) ~= "resistance" then return false, "You need a Freq 7 radio to call for backup." end
+    -- (the owner, 13 November: "no one should be able to broadcast on freq7 without a transmitter")
+    if not LC.SendsOnFreq7(ply) then return false, "You need a radio transmitter too: a Freq 7 radio only listens." end
     local wait = Wait(ply.lcRebBackupNext)
     if wait > 0 then return false, string.format("Your last call is still out. Again in %d seconds.", wait) end
     ply.lcRebBackupNext = CurTime() + REB_BACKUP_GAP
@@ -195,9 +197,17 @@ function LC.RebelCallBackup(ply)
     return true, sent
 end
 
+-- Sends on Freq 7: a Freq 7 radio and a radio transmitter (a Fighter and up are issued both: sv_livingcity_crafting.lua).
+function LC.SendsOnFreq7(ply)
+    if not LC.TransmitBands then return true end
+    for _, b in ipairs(LC.TransmitBands(ply)) do if b == "resistance" then return true end end
+    return false
+end
+
 function LC.RebelSendPosition(ply)
     if not IsValid(ply) or Faction(ply) ~= "resistance" then return false, "Only the Resistance." end
     if not ply:Alive() or (LC.Prisoners and LC.Prisoners[ply]) then return false, "Not now." end
+    if not LC.SendsOnFreq7(ply) then return false, "You need a Freq 7 radio and a radio transmitter to send your position." end
     local wait = Wait(ply.lcRebPosNext)
     if wait > 0 then return false, string.format("Again in %d seconds.", wait) end
     ply.lcRebPosNext = CurTime() + REB_POS_GAP

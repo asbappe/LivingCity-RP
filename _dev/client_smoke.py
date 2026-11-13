@@ -933,11 +933,17 @@ do
         if not okQ2 then problems[#problems + 1] = "F2 for " .. faction .. ": " .. tostring(root2) return end
         if not root2.items[9] then problems[#problems + 1] = "F2 for " .. faction .. " has no 9 (the full menu)" end
         if faction == "cp" then
-            -- (the owner, 7 November: 1 Voice lines, 2 Unit tools, 3 Kick, 4 Call for backup, 5 BOLO, 6 Send my 10-20)
+            -- (the owner, 7 November: 1 Voice lines, 2 Unit tools, 3 Kick; 13 November: HQ calls only on the radio, so 4
+            -- points to it, and backup, the BOLO and the 10-20 are nowhere on F2)
             local it = root2.items
-            if not (it[1] and it[1].label == "Voice lines" and it[2] and it[2].id == "unittools" and it[3] and it[3].id == "kick"
-                and it[4] and string.find(it[4].label, "Call for backup", 1, true) and it[5] and string.find(it[5].label, "BOLO", 1, true) and it[6] and it[6].label == "Send my 10-20") then
-                problems[#problems + 1] = "a unit's F2 (" .. faction .. "): should be 1 Voice lines, 2 Unit tools, 3 Kick, 4 Call for backup, 5 BOLO, 6 Send my 10-20"
+            if not (it[1] and it[1].label == "Voice lines" and it[2] and it[2].id == "unittools" and it[3] and it[3].id == "kick" and it[4] and it[4].id == "radio") then
+                problems[#problems + 1] = "a unit's F2 (" .. faction .. "): should be 1 Voice lines, 2 Unit tools, 3 Kick, 4 HQ calls (the radio)"
+            end
+            for i = 1, 8 do
+                local l = it[i] and tostring(it[i].label) or ""
+                if l == "Call for backup" or string.find(l, "^Call for backup") or string.find(l, "^Issue a BOLO") or l == "Send my 10-20" then
+                    problems[#problems + 1] = "a unit's F2 (" .. faction .. ") still has '" .. l .. "': HQ calls are only on the radio"
+                end
             end
             if LC_CL.QuickSlot("kick") ~= 3 or select(2, LC_CL.QuickSlot("kick")) ~= "F2" then problems[#problems + 1] = "the kick reminder can't find Kick at F2 > 3" end
         end
@@ -960,6 +966,31 @@ do
         end
         WalkQ(root, 0)
         WalkQ(root2, 0)
+        -- the radio's own menu (right click with it up; the owner, 13 November): a unit's HQ calls, Freq 7's
+        if faction == "cp" or faction == "ota" or faction == "resistance" then
+            local band = faction == "resistance" and "resistance" or "cp"
+            local radio = { GetClass = function() return "weapon_lc_radio" end, IsValid = function() return true end,
+                GetNW2String = function(_, k, d) if k == "lc_band" then return band end return d end, GetNW2Int = function(_, k, d) return d end }
+            local gaw = _me.GetActiveWeapon
+            _me.GetActiveWeapon = function() return radio end
+            local okR, rroot = pcall(LC_CL.QuickRadioRoot)
+            if not okR then problems[#problems + 1] = "the Radio menu (" .. faction .. "): " .. tostring(rroot)
+            else
+                local labels = {}
+                for _, it in ipairs(rroot.items) do labels[#labels + 1] = tostring(it.label) end
+                local all = table.concat(labels, " | ")
+                local want = band == "cp" and { "Request resupply", "Call for backup", "Send my 10-20", "Issue a BOLO", "Records check", "My directives" } or { "Message on Freq 7", "Call for backup", "Jobs over the radio" }
+                for _, w in ipairs(want) do
+                    if not string.find(all, w, 1, true) then problems[#problems + 1] = "the Radio menu (" .. faction .. ") has no '" .. w .. "': " .. all end
+                end
+                WalkQ(rroot, 1)
+                local okO, errO = pcall(LC_CL.OpenRadioQuick)
+                if not okO then problems[#problems + 1] = "opening the Radio menu (" .. faction .. "): " .. tostring(errO)
+                elseif not LC_CL.SituationOpen("radio") then problems[#problems + 1] = "the radio's right click didn't open its menu (" .. faction .. ")" end
+                if LC_CL.CloseSituation then LC_CL.CloseSituation("radio") end
+            end
+            _me.GetActiveWeapon = gaw
+        end
         -- F2, as the server answers gm_showteam: opens, draws, and F1 swaps to its own; F2 again closes it
         local okF2, errF2 = pcall(net["recv_lcg_quick2"])
         if not okF2 then problems[#problems + 1] = "F2 (" .. faction .. "): " .. tostring(errF2)
@@ -3315,7 +3346,7 @@ return (not ok) and tostring(e) or nil
 if err:
     problems = (problems + "\n" if problems else "") + "context panel / quest trail: " + str(err)
 
-# the Resistance Insider beside a prisoner being marched to the cells (sv_livingcity_insider.lua): F2 > 7
+# the Resistance Insider beside a prisoner being marched to the cells (sv_livingcity_insider.lua): F2 > 5
 # lets them slip and the panel on the right says so, bright; greyed and faint while someone can see;
 # nothing for anyone else, or once the prisoner is out of reach
 err = L.execute(r"""
@@ -3346,20 +3377,20 @@ local ok, e = pcall(function()
     LC_CL.Insider = false
     Told(pris, "")
     if #Lines() > 0 or F2Slip() then error("an ordinary unit sees Let them slip") end
-    -- the Insider, unseen: F2 > 7, and the line, bright, naming the key
+    -- the Insider, unseen: F2 > 5, and the line, bright, naming the key
     LC_CL.Insider = true
     local it, n, root = F2Slip()
-    if not it or n ~= 7 or it.disabled then error("F2: no live Let them slip at 7 (got " .. tostring(n) .. ")") end
-    if not (root.items[1].label == "Voice lines" and root.items[6].label == "Send my 10-20") then error("F2: the owner's six moved") end
+    if not it or n ~= 5 or it.disabled then error("F2: no live Let them slip at 5 (got " .. tostring(n) .. ")") end
+    if not (root.items[1].label == "Voice lines" and root.items[4].id == "radio") then error("F2: the owner's four moved") end
     local sent
     local sa = LC_CL.SendAction
     LC_CL.SendAction = function(cmd) sent = cmd end
-    LC_CL.OpenQuick2() LC_CL.QuickPick(7)
+    LC_CL.OpenQuick2() LC_CL.QuickPick(5)
     LC_CL.SendAction = sa
-    if sent ~= "letslip" then error("F2 > 7 didn't send letslip: " .. tostring(sent)) end
+    if sent ~= "letslip" then error("F2 > 5 didn't send letslip: " .. tostring(sent)) end
     local L1 = Lines()
-    if #L1 ~= 1 or not string.find(L1[1].t, "[F2] > 7", 1, true) or L1[1].st ~= "bright" then
-        error("panel: no bright 'Let them slip: F2 > 7' line: " .. tostring(L1[1] and L1[1].t) .. " " .. tostring(L1[1] and L1[1].st))
+    if #L1 ~= 1 or not string.find(L1[1].t, "[F2] > 5", 1, true) or L1[1].st ~= "bright" then
+        error("panel: no bright 'Let them slip: F2 > 5' line: " .. tostring(L1[1] and L1[1].t) .. " " .. tostring(L1[1] and L1[1].st))
     end
     if LC_CL.ContextGroups(_me)[1].title ~= "Inside" then error("panel: the Insider's line isn't first") end
     _advance(0.3)
@@ -3370,7 +3401,7 @@ local ok, e = pcall(function()
     if not it or not it.disabled or not string.find(it.label, "someone can see you", 1, true) then error("F2: not greyed while watched: " .. tostring(it and it.label)) end
     sent = nil
     LC_CL.SendAction = function(cmd) sent = cmd end
-    LC_CL.OpenQuick2() LC_CL.QuickPick(7)
+    LC_CL.OpenQuick2() LC_CL.QuickPick(5)
     LC_CL.SendAction = sa
     if sent then error("F2: a greyed Let them slip still sent " .. tostring(sent)) end
     LC_CL.CloseQuick()
@@ -3429,14 +3460,14 @@ local ok, e = pcall(function()
     _me.GetEyeTrace = function() return { Hit = false, HitPos = Vector(0, 0, 0) } end
     LC_CL.InsiderSlipNet = nil
 
-    -- the Insider: the owner's six, then Inside > at 7; each greyed with why
+    -- the Insider: the owner's four, then Inside > at 5; each greyed with why
     _me.nw = { lcf_faction = "cp", lcf_rank = 2 }
     LC_CL.Insider = true
     Info({ ins = { watched = "Someone can see you.", wait = { tip = 0, skim = 0, copy = 0, foul = 0, spike = 0 }, wanted = 2, commissary = true, weedkiller = true } })
     local root = LC_CL.QuickRoleRoot()
-    if not (root.items[1].label == "Voice lines" and root.items[2].id == "unittools" and root.items[3].id == "kick" and root.items[6].label == "Send my 10-20") then error("Insider: the owner's six moved: " .. Labels(root)) end
+    if not (root.items[1].label == "Voice lines" and root.items[2].id == "unittools" and root.items[3].id == "kick" and root.items[4].id == "radio") then error("Insider: the owner's four moved: " .. Labels(root)) end
     local ins, n = Find(root, "inside")
-    if n ~= 7 then error("Insider: Inside > should be 7, is " .. tostring(n) .. ": " .. Labels(root)) end
+    if n ~= 5 then error("Insider: Inside > should be 5, is " .. tostring(n) .. ": " .. Labels(root)) end
     local p = ins.page()
     for i = 1, 6 do if not p.items[i].disabled then error("Inside, watched: '" .. p.items[i].label .. "' isn't greyed") end end
     if not string.find(p.items[1].label, "watched", 1, true) or not (p.empty and p.empty[9] and string.find(p.empty[9], "Someone can see you", 1, true)) then error("Inside: doesn't say why: " .. Labels(p)) end
@@ -3449,7 +3480,7 @@ local ok, e = pcall(function()
     if not string.find(p.items[#p.items].label, "Reveal myself", 1, true) then error("Inside: no Reveal myself last") end
     -- a greyed one does nothing; an open one sends the Insider's own action
     local undo = Watch()
-    LC_CL.OpenQuick2() LC_CL.QuickPick(7) LC_CL.QuickPick(4)
+    LC_CL.OpenQuick2() LC_CL.QuickPick(5) LC_CL.QuickPick(4)
     if sentAct then error("Inside: a greyed entry still sent " .. tostring(sentAct)) end
     Info({ ins = { wait = { tip = 0, skim = 0, copy = 0, foul = 0, spike = 0 }, wanted = 1, commissary = true, weedkiller = true } })
     if not LC_CL.QuickOpen("role") then error("Inside: the server's word closed F2") end
@@ -3485,14 +3516,21 @@ local ok, e = pcall(function()
     -- a Division Leader: Call a sweep >, greyed with why
     _me.nw = { lcf_faction = "cp", lcf_rank = 3 }
     Info({ sweep = { sweep = "Not while the city has something on." } })
-    root = LC_CL.QuickRoleRoot()
+    -- (on the Radio menu since 13 November: a sweep goes to HQ, so never on F2)
+    if Find(LC_CL.QuickRoleRoot(), "sweep") then error("a Division Leader's F2 still has Call a sweep: it's the radio's") end
+    local radioW = { GetClass = function() return "weapon_lc_radio" end, IsValid = function() return true end,
+        GetNW2String = function(_, k, d) if k == "lc_band" then return "cp" end return d end, GetNW2Int = function(_, k, d) return d end }
+    local gawS = _me.GetActiveWeapon
+    _me.GetActiveWeapon = function() return radioW end
+    root = LC_CL.QuickRadioRoot()
     local sw, sn = Find(root, "sweep")
-    if not sw or sn ~= 7 then error("a Division Leader: Call a sweep > should be 7: " .. Labels(root)) end
+    if not sw then error("a Division Leader: no Call a sweep > on the Radio menu: " .. Labels(root)) end
     p = sw.page()
     if not (p.items[1].disabled and not p.items[2].disabled) then error("Call a sweep: " .. Labels(p)) end
     if not (p.empty and p.empty[4] and string.find(p.empty[4], "something on", 1, true)) then error("Call a sweep doesn't say why") end
     _me.nw = { lcf_faction = "cp", lcf_rank = 2 }
-    if Find(LC_CL.QuickRoleRoot(), "sweep") then error("a Metrocop can call a sweep") end
+    if Find(LC_CL.QuickRadioRoot(), "sweep") then error("a Metrocop can call a sweep") end
+    _me.GetActiveWeapon = gawS
 
     -- the Resistance: Freq 7 >, after what was there
     _me.nw = { lcf_faction = "resistance", lcf_rank = 2 }
@@ -3502,7 +3540,11 @@ local ok, e = pcall(function()
     local band, bn = Find(root, "freq7")
     if bn ~= 4 then error("the Resistance: Freq 7 > should be 4: " .. Labels(root)) end
     p = band.page()
-    if not (p.items[1].disabled and p.items[2].disabled and string.find(p.items[2].label, "in 50s", 1, true) and not p.items[3].disabled) then error("Freq 7: " .. Labels(p)) end
+    -- (no transmitter: nothing goes out on Freq 7, the owner, 13 November; with one, backup waits its turn)
+    if not (p.items[1].disabled and p.items[2].disabled and string.find(p.items[2].label, "no transmitter", 1, true) and p.items[3].disabled) then error("Freq 7: " .. Labels(p)) end
+    Info({ reb = { tx = true, backup = 50, pos = 0 } })
+    local p2 = band.page()
+    if not (not p2.items[1].disabled and p2.items[2].disabled and string.find(p2.items[2].label, "in 50s", 1, true) and not p2.items[3].disabled) then error("Freq 7, with a transmitter: " .. Labels(p2)) end
     if not (string.find(p.items[4].label, "rebel ground", 1, true) and string.find(p.items[5].label, "lab", 1, true)) then error("Freq 7: no guidance: " .. Labels(p)) end
     undo = Watch()
     p.items[4].run()
@@ -3976,6 +4018,35 @@ local okT, errT = pcall(hook.t.Think.LivingCityLipSync)
 if not okT then return "lip sync: " .. tostring(errT) end
 if LC.LipSyncFace(cop) ~= false then return "lip sync: a metrocop's mask has no jaw to move" end
 npc:Remove() cop:Remove()
+return nil
+""")
+if err:
+    problems = (problems + "\n" if problems else "") + str(err)
+
+# gas masks on faces and a left hand over the eyes or mouth (cl_livingcity_gasmask.lua, the owner, 13 November)
+err = L.execute(r"""
+local e = ents.Create("npc_citizen")
+e:SetPos(_me:GetPos() + Vector(100, 0, 0))
+e:SetNW2String("lc_handface", "eyes")
+e:SetNW2Float("lc_handface_until", CurTime() + 5)
+e:SetNW2Bool("lc_gasmask_on", true)
+if LC_CL.HandFace(e) ~= "eyes" then return "gas mask: the hand over the eyes isn't seen" end
+local pose = LC_CL.HandFacePose("mouth")
+if not pose["ValveBiped.Bip01_L_UpperArm"] then return "gas mask: the hand pose turns no left arm" end
+local okT, errT = pcall(hook.t.Think.LivingCityGasMask)
+if not okT then return "gas mask think: " .. tostring(errT) end
+local okD, errD = pcall(hook.t.PostDrawOpaqueRenderables.LivingCityGasMask, false, false)
+if not okD then return "gas mask drawing: " .. tostring(errD) end
+_me:SetNW2Bool("lc_gasmask_on", true)
+local okH, errH = pcall(hook.t.HUDPaint.LivingCityGasMaskView)
+_me:SetNW2Bool("lc_gasmask_on", false)
+if not okH then return "gas mask view: " .. tostring(errH) end
+e:SetNW2Float("lc_handface_until", 0)
+e:SetNW2Bool("lc_gasmask_on", false)
+_advance(0.3)
+local okT2, errT2 = pcall(hook.t.Think.LivingCityGasMask)
+if not okT2 then return "gas mask think (after): " .. tostring(errT2) end
+e:Remove()
 return nil
 """)
 if err:

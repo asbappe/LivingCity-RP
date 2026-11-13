@@ -1272,7 +1272,7 @@ local function LTCleanup(ply, restore)
     -- everything back as it was: their own gear, and where they came from
     ply:StripWeapons()
     for _, cls in ipairs(sc.weps or {}) do ply:Give(cls) end
-    for id, n in pairs(sc.ammo or {}) do ply:SetAmmo(n, id) end
+    for id, n in pairs(sc.ammo or {}) do ply:SetAmmo(LC.AmmoCapped and LC.AmmoCapped(id, n) or n, id) end -- (Half-Life 2's limits)
     if ply:HasWeapon("weapon_lc_hands") then ply:SelectWeapon("weapon_lc_hands") end
     if sc.from then ply:SetPos(sc.from) end
 end

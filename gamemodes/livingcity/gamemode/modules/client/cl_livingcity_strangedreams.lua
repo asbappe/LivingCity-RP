@@ -129,7 +129,7 @@ end)
 
 LC_CL.StrangeThemes = {}
 for _, id in ipairs({ "cheese", "chairs", "flying", "melons", "horse", "boxing", "exam", "train", "lamarr", "molasses", "potato", "simon", "dance", "sheep",
-    "clocks", "tea", "derby", "photo", "doors", "paint", "conga", "shh", "bubbles", "watchers" }) do LC_CL.StrangeThemes[id] = true end
+    "clocks", "tea", "derby", "photo", "doors", "paint", "conga", "shh", "bubbles", "watchers", "can" }) do LC_CL.StrangeThemes[id] = true end
 LC_CL.NonsenseModels = { "models/props_junk/watermelon01.mdl", "models/props_interiors/bathtub01a.mdl", "models/props_c17/clock01.mdl", "models/props_c17/furnituretoilet001a.mdl",
     "models/props_c17/doll01.mdl", "models/props_junk/shoe001a.mdl", "models/props_c17/chair02a.mdl", "models/props_junk/popcan01a.mdl", "models/headcrabclassic.mdl",
     "models/props_c17/oildrum001.mdl", "models/props_lab/huladoll.mdl", "models/props_junk/garbage_coffeemug001a.mdl" }

@@ -1229,7 +1229,7 @@ end)
 function LC.StashStore(ply, id)
     if not LC.CanReachStash(ply) then return false, "Your stash is at home, in your own block." end
     if not LC.HasItem(ply, id) then return false end
-    if LC.IssuedLocked and LC.IssuedLocked(ply, id) then return false, "That's Combine issue: it stays with you (or another unit)." end
+    if LC.IssuedLocked and LC.IssuedLocked(ply, id) then return false, (LC.IssuedWhy and LC.IssuedWhy(ply, id) or "That's Combine issue: it stays with you (or another unit).") end
     if StashCount(ply) >= cvStash:GetInt() + (LC.LoyalStashExtra and LC.LoyalStashExtra(ply) or 0) then return false, "Your stash is full." end
     LC.TakeItem(ply, id)
     local st = LC.Stash(ply)
@@ -1729,6 +1729,8 @@ function LC.UndergroundAction(ply, action, id)
             why = "You bend and file the scrap into a lockpick set."
         end
         ok = false
+    elseif action == "scavengemask" then -- a CP uniform's Scavenge gas mask button in your pockets (sv_livingcity_gasmask.lua)
+        if LC.ScavengeGasMask then ok, why = LC.ScavengeGasMask(ply) else ok, why = false, nil end
     elseif action == "callhelp" then -- the call box's Call for help button in your pockets (sv_livingcity_cp.lua)
         if LC.CPRequest then ok, why = LC.CPRequest(ply, id) else ok, why = false, "Requests are off on this server." end
         if not ok and why then why = "[Request] " .. why end

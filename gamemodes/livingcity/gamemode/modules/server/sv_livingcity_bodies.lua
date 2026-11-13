@@ -52,6 +52,8 @@ local LOOT = {
         t.ammo[#t.ammo + 1] = { "Pistol", math.random(12, 36) }
         if Roll(0.35) then t.items[#t.items + 1] = "cp_keycard" end
         if Roll(0.25) then t.items[#t.items + 1] = "uniform_cp" end -- mask and all
+        -- their gas mask (the owner, 13 November): whole half the time, else broken (sv_livingcity_gasmask.lua)
+        if LC.DeadUnitMask then t.items[#t.items + 1] = LC.DeadUnitMask() end
         if Roll(0.25) then t.weapons[#t.weapons + 1] = "weapon_stunstick" end
         if Roll(0.15) then t.items[#t.items + 1] = "ration" end
         if Roll(0.7) then t.credits = math.random(5, 20) end
@@ -73,6 +75,7 @@ local LOOT = {
         if Roll(0.3) then t.weapons[#t.weapons + 1] = "weapon_frag" end
         if Roll(0.35) then t.ents[#t.ents + 1] = "item_healthvial" end
         if Roll(0.2) then t.items[#t.items + 1] = "cp_keycard" end
+        if LC.DeadUnitMask then t.items[#t.items + 1] = LC.DeadUnitMask() end -- (their gas mask: whole or broken)
         if Roll(0.5) then t.credits = math.random(10, 30) end
         return t
     end,

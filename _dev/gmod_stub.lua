@@ -498,6 +498,18 @@ function PMT:ChatPrint(m) self.chat = self.chat or {} table.insert(self.chat, m)
 function PMT:GetPData(k, d) local v = self.pdata[k] if v == nil then return d end return v end
 function PMT:SetPData(k, v) self.pdata[k] = tostring(v) end
 function PMT:RemovePData(k) self.pdata[k] = nil end
+if not PMT.GetAmmoCount then function PMT:GetAmmoCount(t) return (self.ammo or {})[t] or 0 end end
+if not PMT.SetAmmo then function PMT:SetAmmo(n, t) self.ammo = self.ammo or {} self.ammo[t] = n end end
+-- (a unit's HQ calls need the radio up: sv_livingcity_radiohq.lua) the radio into their hands, and back to what they had
+function _radioUp(p)
+    local w = p:GetActiveWeapon()
+    p._radioWas = w and w:GetClass() or nil
+    if not p:HasWeapon("weapon_lc_radio") then p:Give("weapon_lc_radio") end
+    p:SelectWeapon("weapon_lc_radio")
+end
+function _radioDown(p)
+    if p._radioWas and p:HasWeapon(p._radioWas) then p:SelectWeapon(p._radioWas) else p.active = nil end
+end
 function PMT:GetWeapons() local o = {} for _, c in ipairs(self.weps) do local cls = c o[#o + 1] = { GetClass = function() return cls end } end return o end
 function PMT:StripWeapons() self.weps = {} end
 function PMT:Give(c) table.insert(self.weps, c) end

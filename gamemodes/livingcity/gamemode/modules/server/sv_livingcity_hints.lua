@@ -329,7 +329,7 @@ LC.HINTS = {
         text = { citizen = "Don't run in front of Civil Protection units and don't crowd around them. If one stops you, stand still until they're done.",
                  resistance = "Don't run in front of Civil Protection units and don't crowd around them. In plain clothes, keep your gun out of sight." } },
     wanted_near = { title = "Someone wanted",
-        text = { cp = "Someone near you is wanted. Your baton's {+attack2} arrests them, and {+reload} searches them. If it turns violent, use {+menu_context} > Unit tools > Call for backup." } },
+        text = { cp = "Someone near you is wanted. Your baton's {+attack2} arrests them, and {+reload} searches them. If it turns violent, get your radio out and left click it to call for backup ({+attack2} on it for the Radio menu)." } },
     unshackle = { title = "A shackled vortigaunt",
         text = { resistance = "From the rank of Member up, you can cut its shackles: look at it and choose {+menu_context} > Cut the vortigaunt's shackles (it takes ten seconds, and no Civil Protection unit can be watching). It then joins the Resistance." } },
     stranger = { title = "Strangers", when = ICChat,
