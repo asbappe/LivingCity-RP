@@ -118,7 +118,7 @@ LCS.Items = {
                         contraband = true, conceal = 0.25, sell = 20,
                         desc = "Tuned to Freq 7, the Resistance's: their chat, sweep warnings, and whatever Civil Protection says when it thinks nobody is listening. It only listens: to talk on Freq 7 you also need a radio transmitter" },
     radio_transmitter = { name = "Radio transmitter", model = "models/props_lab/reciever01a.mdl", contraband = true, conceal = 0.35, sell = 25,
-                        desc = "A hand-held set that sends, not just listens: with a Freq 7 radio, talk on Freq 7 (switch to it like a weapon, or !r). Contraband (units have their own, on the CP net)" },
+                        desc = "A hand-held set that sends, not just listens: with a Freq 7 radio, talk on Freq 7 (switch to it like a weapon, next to Hands, and talk). Contraband (units have their own, on the CP net)" },
     permit          = { name = "Travel permit", model = "models/props_c17/paper01.mdl", permit = true,
                         desc = "Stamped and legal. Gets you past one curfew stop" },
     papers_blank    = { name = "Blank identity form", model = "models/props_c17/paper01.mdl", forge = true,

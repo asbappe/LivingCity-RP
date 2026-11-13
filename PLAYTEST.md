@@ -1815,3 +1815,5 @@ Type them in the server console on the host panel, or in your own game console (
   Notes:
 - [ ] **Freq 7 kit:** get promoted to Fighter: are you told you were issued a Freq 7 radio and a transmitter, and can you talk on Freq 7 straight away? Try to sell, drop, stash or give them: refused? As a Member with only a Freq 7 radio: are Call for backup and Send my position greyed "no transmitter"?
   Notes:
+- [ ] **No psychic communication:** as a rebel, is F2's Freq 7 page now Find the way (just the two guides)? With the transmitter put away, are !r, backup and position refused? With it out, does talking, left click (backup) and its right click menu (message, backup, position) all work?
+  Notes:

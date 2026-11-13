@@ -160,6 +160,9 @@ function LC.RadioSay(ply, text, band)
     if not LC.CanTransmit(ply) then
         return false, "Your radio only listens. To talk on Freq 7 you need a radio transmitter (black market, or the Resistance lab) and a Freq 7 radio."
     end
+    -- (the owner, 13 November: "all non-local communication to be through the transmitter; no psychic communication":
+    -- only with the radio transmitter in hand. With it up, whatever you type goes over the band anyway.)
+    if LC.RadioHeld and not LC.RadioHeld(ply) then return false, "Get your radio transmitter out first (next to Hands): with it up, just talk." end
     band = band or LC.TransmitBand(ply)
     if LC.Prisoners and LC.Prisoners[ply] then return false, "Your radio was taken when you were processed." end
     if not table.HasValue(LC.TransmitBands(ply), band) then return false, "Your transmitter isn't on that band." end
@@ -1753,7 +1756,7 @@ function LC.UndergroundAction(ply, action, id)
         elseif it.permit then
             why = "Keep it on you. It's shown when a Civil Protection unit stops you during curfew."
         elseif it.radio then
-            why = it.radio == "resistance" and "It only listens. With a radio transmitter too, you can talk on Freq 7: switch to the Radio transmitter (next to Hands), or !r <message>."
+            why = it.radio == "resistance" and "It only listens. With a radio transmitter too, you can talk on Freq 7: switch to the Radio transmitter (next to Hands) and talk."
                 or "It only listens: nobody talks on the Union band, it's the city's. Press Listen to hear it."
         elseif it.rationCard then
             why = "Use any ration dispenser."

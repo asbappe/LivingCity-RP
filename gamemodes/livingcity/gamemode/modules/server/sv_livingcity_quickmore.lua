@@ -159,6 +159,8 @@ function LC.RebelCallBackup(ply)
     if LC.RadioBand and LC.RadioBand(ply) ~= "resistance" then return false, "You need a Freq 7 radio to call for backup." end
     -- (the owner, 13 November: "no one should be able to broadcast on freq7 without a transmitter")
     if not LC.SendsOnFreq7(ply) then return false, "You need a radio transmitter too: a Freq 7 radio only listens." end
+    -- (no psychic calls: the transmitter in hand, the owner, 13 November; its left click calls backup)
+    if LC.RadioHeld and not LC.RadioHeld(ply) then return false, "Get your radio transmitter out first (next to Hands), then left click it or use its menu (right click)." end
     local wait = Wait(ply.lcRebBackupNext)
     if wait > 0 then return false, string.format("Your last call is still out. Again in %d seconds.", wait) end
     ply.lcRebBackupNext = CurTime() + REB_BACKUP_GAP
@@ -208,6 +210,7 @@ function LC.RebelSendPosition(ply)
     if not IsValid(ply) or Faction(ply) ~= "resistance" then return false, "Only the Resistance." end
     if not ply:Alive() or (LC.Prisoners and LC.Prisoners[ply]) then return false, "Not now." end
     if not LC.SendsOnFreq7(ply) then return false, "You need a Freq 7 radio and a radio transmitter to send your position." end
+    if LC.RadioHeld and not LC.RadioHeld(ply) then return false, "Get your radio transmitter out first (next to Hands), then right click it for its menu." end
     local wait = Wait(ply.lcRebPosNext)
     if wait > 0 then return false, string.format("Again in %d seconds.", wait) end
     ply.lcRebPosNext = CurTime() + REB_POS_GAP

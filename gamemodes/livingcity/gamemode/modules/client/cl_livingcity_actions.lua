@@ -290,7 +290,8 @@ function LC_CL.OpenActions()
     Add(talk, "Roll the dice (1 to 100)", function() RunConsoleCommand("say", "/roll") end)
     Add(talk, "Out of character, nearby...", function() Say("Out of character", "Said out of character, to people nearby", "/looc ") end)
     Add(talk, "Out of character, everyone...", function() Say("Out of character", "Said out of character, to the whole server", "// ") end)
-    Add(talk, "On my radio...", function() Ask("Radio", "What do you say on the radio?", "r") end, "icon16/transmit.png")
+    -- (the radio only with the transmitter in hand, the owner, 13 November: this gets it out; then just talk)
+    Add(talk, "On my radio: get the radio transmitter out, then just talk", function() if me:HasWeapon("weapon_lc_radio") then RunConsoleCommand("use", "weapon_lc_radio") end end, "icon16/transmit.png")
 
     -- getting by
     local by, byo = menu:AddSubMenu("Getting by")
