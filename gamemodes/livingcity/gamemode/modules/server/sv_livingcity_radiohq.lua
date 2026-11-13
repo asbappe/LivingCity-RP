@@ -156,8 +156,9 @@ LC.TargetActions.resupply = function(ply) return LC.RequestResupply(ply) end
 -- Resupply: what a unit is shortest of
 ------------------------------------------------------------------------
 
--- A full load for each kind of round (the issue and a little over), and what's low: under 30% of it.
-LC.RESUPPLY_FULL = { Pistol = 72, SMG1 = 180, Buckshot = 24, AR2 = 90 }
+-- A full load for each kind of round: the most anyone carries, Half-Life 2's limits (the owner, 13 November:
+-- "have this apply to those instead of the Gmod ammo limits"; sv_livingcity_ammo.lua). Low is under 30% of it.
+LC.RESUPPLY_FULL = { Pistol = 150, SMG1 = 225, Buckshot = 30, AR2 = 60 }
 LC.RESUPPLY_LOW = 0.3
 local WEAPON_AMMO = { weapon_pistol = "Pistol", weapon_smg1 = "SMG1", weapon_shotgun = "Buckshot", weapon_ar2 = "AR2" }
 local GUN_NAME = { Pistol = "pistol", SMG1 = "SMG", Buckshot = "shotgun", AR2 = "pulse rifle" }
@@ -193,7 +194,7 @@ function LC.ResupplyNeeds(ply)
     for _, w in ipairs(ply.GetWeapons and ply:GetWeapons() or {}) do
         local ammo = w and w.GetClass and WEAPON_AMMO[w:GetClass()]
         if ammo then
-            local full = LC.RESUPPLY_FULL[ammo]
+            local full = (LC.AmmoMax and LC.AmmoMax(ammo)) or LC.RESUPPLY_FULL[ammo]
             local have = (ply:GetAmmoCount(ammo) or 0) + math.max(0, w.Clip1 and w:Clip1() or 0)
             local frac = have / full
             if frac < LC.RESUPPLY_LOW then

@@ -219,6 +219,7 @@ local GUIDE = {
         "Spray cans paint the lambda symbol on walls. Civil Protection units and loyal citizens scrub tags off with E.",
         "Civil Protection units: smoke, flashbang and gas grenades unlock as you rank up. The Grenades weapon throws them; R switches type.",
         "Request resupply (Radio menu: radio out, right click): a shield scanner comes down out of the open sky with a small crate of the three things you're shortest of (ammo under 30%, health, your vest), cuffs back to three and a grenade for your rank. Not indoors or underground: stand under the sky. One every five minutes.",
+        "Ammo: you carry no more than Half-Life 2 lets you: pistol 150, SMG 225, shotgun 30, pulse rifle 60, .357 12, crossbow 10, grenades 5. Anything past that isn't picked up.",
         "Gas masks: units have their own. Anyone else carrying one (contraband) puts it on by themselves when gas reaches them. Cut one out of a Civil Protection uniform (F3: Scavenge gas mask), or search a dead unit: half the time the mask is whole, else broken, and four broken ones make one (F3, Make). Without one, the gas has you coughing with a hand over your mouth.",
     } },
     { "Disguises", {

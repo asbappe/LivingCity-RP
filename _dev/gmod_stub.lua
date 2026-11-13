@@ -499,6 +499,7 @@ function PMT:GetPData(k, d) local v = self.pdata[k] if v == nil then return d en
 function PMT:SetPData(k, v) self.pdata[k] = tostring(v) end
 function PMT:RemovePData(k) self.pdata[k] = nil end
 if not PMT.GetAmmoCount then function PMT:GetAmmoCount(t) return (self.ammo or {})[t] or 0 end end
+if not PMT.SetAmmo then function PMT:SetAmmo(n, t) self.ammo = self.ammo or {} self.ammo[t] = n end end
 -- (a unit's HQ calls need the radio up: sv_livingcity_radiohq.lua) the radio into their hands, and back to what they had
 function _radioUp(p)
     local w = p:GetActiveWeapon()

@@ -53,3 +53,4 @@ This file is only an index. The specification of how everything behaves (the agr
 - [Squads: sizes, leading units, backup by radio](docs/features/squads.md): How many NPCs a player leads by players on their side, E on a unit, backup out of rebel territory, the radio's left click
 - [The radio to HQ, and the resupply scanner](docs/features/radio-hq-and-resupply.md): a unit's calls to HQ only with the radio out, its right click's Radio menu, and the shield scanner's resupply crate.
 - [Gas masks, the gas and the flashbang](docs/features/gas-masks.md): masks off uniforms and the dead, who puts one on in the gas, hands over mouths and eyes, running from the gas.
+- [Half-Life 2's ammo limits](docs/features/ammo-limits.md): pistol 150, SMG 225, shotgun 30 and the rest instead of Garry's Mod's 9999, kept through deaths, respawns, close calls and dreams.

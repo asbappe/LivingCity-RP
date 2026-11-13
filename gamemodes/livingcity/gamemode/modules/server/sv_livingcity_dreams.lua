@@ -700,11 +700,12 @@ end)
 Field("ammo", function(p, snap)
     if not p.GetAmmo then return end
     if p.RemoveAllAmmo then p:RemoveAllAmmo() end
-    for name, n in pairs(snap.ammo or {}) do if p.SetAmmo then p:SetAmmo(n, name) end end
+    -- (never past Half-Life 2's limits, the owner, 13 November: sv_livingcity_ammo.lua)
+    for name, n in pairs(snap.ammo or {}) do if p.SetAmmo then p:SetAmmo(LC.AmmoCapped and LC.AmmoCapped(name, n) or n, name) end end
 end, function(p, snap)
     if not p.GetAmmo then return true end
     local now = AmmoAll(p)
-    for name, n in pairs(snap.ammo or {}) do if (now[name] or 0) ~= n then return false end end
+    for name, n in pairs(snap.ammo or {}) do if (now[name] or 0) ~= (LC.AmmoCapped and LC.AmmoCapped(name, n) or n) then return false end end
     for name, n in pairs(now) do if (snap.ammo or {})[name] == nil and n > 0 then return false end end
     return true
 end)

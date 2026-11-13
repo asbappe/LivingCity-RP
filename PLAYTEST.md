@@ -1811,3 +1811,5 @@ Type them in the server console on the host panel, or in your own game console (
   Notes:
 - [ ] **Flashbang:** do blinded rebels hold their left hand over their eyes and stumble, without shooting? Tune with lc_handface_eyes.
   Notes:
+- [ ] **Ammo limits:** buy or pick up more than 150 pistol rounds (or 30 shells, 225 SMG): does it stop at the limit? Die and respawn, get revived after a close call, sleep through a dream: still no more than the limit? lc_hl2_ammo 0 brings back Garry's Mod's 9999.
+  Notes:

@@ -829,6 +829,7 @@ setting lc_heist_master_seconds = 60
 setting lc_heist_seconds = 30
 setting lc_hints = 1
 setting lc_hints_wait = 240
+setting lc_hl2_ammo = 1
 setting lc_hoover_capacity = 3
 setting lc_household_max = 6
 setting lc_households = 1
