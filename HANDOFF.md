@@ -37,6 +37,7 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 - **The Fitness Test** (`course`, Happy): `sv_livingcity_dreamcourse.lua` (`LC.CourseLay`, `LC.CourseSwept`).
 - **Cubbage answers her speeches:** `sv_livingcity_speechanswer.lua` (`LC.SpeechAnswer`, `LC.SpeechAnswerLines`, `LC.Freq7CutIn`); ghost face `lc_colonel_model` (male_07, a guess at an old man: check in game); `VOICE_LINES.md` section 12.
 - Unseen in game: all of the above (PLAYTEST.md, "13 November, later"); the baton and hurdle models, stone spacing.
+- Other chat, same day: HQ calls only over the radio, the resupply scanner, gas masks, Half-Life 2 ammo limits, and Freq 7 sent only with a transmitter in hand (`LC.SendsOnFreq7`; Fighters and up issued one, `LC.IssueRebelRadio`).
 - Next from TODO.md: job boards at terminals to settle with the owner; the dream posters' pictures.
 - Earlier, still open: arm pose and baton glow; Careless Talk's vortigaunt delay; the chronicle file after a week; voice cue chattiness; the cuffed pose; the loading screen not hosted.
 - History of every earlier chat: `TIMELINE.md`, `CORE_CHANGELOG.md`.

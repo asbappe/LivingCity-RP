@@ -456,15 +456,13 @@ local function InsidePage()
 end
 
 -- The Resistance's band: in the spirit of a unit's dispatch, but nobody gives orders.
+-- Finding the way to the Resistance's places: what's done on the spot. (Freq 7's message, backup and position went to the
+-- radio's own menu, the owner, 13 November: "all non-local communication to be through the transmitter".)
 local function Freq7Page()
-    local r = Info("reb")
-    return { title = "FREQ 7", items = {
-        Can("Message on Freq 7...", function() Ask("Freq 7", "What do you say on Freq 7?", "r") end, r.tx == false and "no transmitter" or nil),
-        Can("Call for backup" .. SquadTag(), function() QM("rbackup") end, (r.radio == false and "no Freq 7 radio") or (r.tx == false and "no transmitter") or Later(r.backup)),
-        Can("Send my position", function() QM("rpos") end, (r.tx == false and "no transmitter") or Later(r.pos)),
+    return { title = "FIND THE WAY", items = {
         Item("Guide me to the nearest rebel ground", function() QM("guide", "rebel") end),
         Item("Guide me to the nearest lab", function() QM("guide", "lab") end),
-    } }
+    }, empty = { [4] = "Freq 7 (messages, backup, your position): get your radio transmitter out and right click it." } }
 end
 
 -- A citizen's own: work, rations, home, standing (each marks the way, and says the rest).
@@ -904,8 +902,8 @@ function LC_CL.QuickRoleRoot()
         Add(Item("Black market", function() Send("market") end))
         Add(Page("Resistance", ResistancePage))
         if me:GetNW2Int("lc_squad_n", 0) > 0 then Add(Page("Squad orders", SquadPage)) end
-        local band = Page("Freq 7", Freq7Page)
-        band.id = "freq7"
+        local band = Page("Find the way (rebel ground, the lab)", Freq7Page)
+        band.id = "findway"
         Add(band)
     elseif f == "admin" then
         -- only the Administrator sets sociostability (the owner, 7 November)

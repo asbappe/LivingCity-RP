@@ -3708,17 +3708,14 @@ local ok, e = pcall(function()
     Info({ reb = { tx = false, backup = 50, pos = 0 } })
     root = LC_CL.QuickRoleRoot()
     if not (string.find(root.items[1].label, "clothes", 1, true) and root.items[2].label == "Black market" and root.items[3].label == "Resistance") then error("the Resistance's F2 moved: " .. Labels(root)) end
-    local band, bn = Find(root, "freq7")
-    if bn ~= 4 then error("the Resistance: Freq 7 > should be 4: " .. Labels(root)) end
+    -- (13 November: Freq 7's message, backup and position are only on the radio's menu; F2 keeps finding the way)
+    local band, bn = Find(root, "findway")
+    if bn ~= 4 then error("the Resistance: Find the way > should be 4: " .. Labels(root)) end
     p = band.page()
-    -- (no transmitter: nothing goes out on Freq 7, the owner, 13 November; with one, backup waits its turn)
-    if not (p.items[1].disabled and p.items[2].disabled and string.find(p.items[2].label, "no transmitter", 1, true) and p.items[3].disabled) then error("Freq 7: " .. Labels(p)) end
-    Info({ reb = { tx = true, backup = 50, pos = 0 } })
-    local p2 = band.page()
-    if not (not p2.items[1].disabled and p2.items[2].disabled and string.find(p2.items[2].label, "in 50s", 1, true) and not p2.items[3].disabled) then error("Freq 7, with a transmitter: " .. Labels(p2)) end
-    if not (string.find(p.items[4].label, "rebel ground", 1, true) and string.find(p.items[5].label, "lab", 1, true)) then error("Freq 7: no guidance: " .. Labels(p)) end
+    if not (#p.items == 2 and string.find(p.items[1].label, "rebel ground", 1, true) and string.find(p.items[2].label, "lab", 1, true)) then error("Find the way: " .. Labels(p)) end
+    for i = 1, 8 do local it = root.items[i] if it and (string.find(tostring(it.label), "Freq 7", 1, true) or string.find(tostring(it.label), "Call for backup", 1, true)) then error("the Resistance's F2 still sends on Freq 7: " .. Labels(root)) end end
     undo = Watch()
-    p.items[4].run()
+    p.items[1].run()
     undo()
     if sentQM ~= "guide" then error("Freq 7: guide me sent " .. tostring(sentQM)) end
 

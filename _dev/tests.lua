@@ -1379,6 +1379,10 @@ LC.GiveItem(listener, "radio_transmitter") LC.GiveItem(rebelR, "radio_transmitte
 ok(LCS.Items.radio_transmitter.contraband and LCS.BlackById and LCS.BlackById.radio_transmitter and LCS.LabById.radio_transmitter, "the radio transmitter: contraband, from the black market or the Resistance lab")
 hook.Run("PlayerSay", listener, "!r anyone out there")
 ok(not has(rebelR.chat, "anyone out there"), "a transmitter alone, with no Freq 7 radio: nobody hears you")
+rebelR.chat = {}
+hook.Run("PlayerSay", rebelR, "!r meet at the canal")
+ok(has(rebelR.chat, "radio transmitter out") and not has(rebelR.chat, "[Freq 7]"), "not with the transmitter put away: no psychic calls (the owner, 13 November)")
+_radioUp(rebelR) _radioUp(unitR)
 hook.Run("PlayerSay", rebelR, "!r meet at the canal")
 ok(has(rebelR.chat, "[Freq 7]") and not has(listener.chat, "meet at the canal") and not has(unitR.chat, "meet at the canal"), "with a Freq 7 radio and a transmitter: Freq 7, and it's private")
 hook.Run("PlayerSay", unitR, "!r sweep in block two")
@@ -1386,6 +1390,7 @@ ok(has(rebelR.chat, "[Intercept]") and not has(listener.chat, "sweep in block tw
 -- a Resistance Insider: a unit with a Freq 7 radio and a transmitter can send on both, and switches
 local insider = newPlayer("InsiderR", "cp")
 LC.GiveItem(insider, "radio_tuned") LC.GiveItem(insider, "radio_transmitter")
+_radioUp(insider)
 insider.chat = {}
 ok(#LC.TransmitBands(insider) == 2 and LC.TransmitBand(insider) == "cp", "a unit with a Freq 7 radio and a transmitter can send on the CP net and Freq 7 (an Insider)")
 ok(LC.TuneTransmitter(insider) == "resistance", "and switches between them (right click on the transmitter)")
@@ -1395,6 +1400,7 @@ ok(has(rebelR.chat, "[Freq 7]") and has(rebelR.chat, "the sweep is at the canal"
 hook.Run("PlayerSay", rebelR, "!r understood")
 ok(has(insider.chat, "understood"), "and the Insider hears Freq 7 too")
 insider.valid = false
+_radioDown(rebelR) _radioDown(unitR)
 ok(hook.Run("PlayerSay", deaf, "!r hello") == "" and has(deaf.chat, "You don't have a radio"), "no radio, no talking")
 listener.chat, rebelR.chat = {}, {}
 hook.Run("LivingCityEventSoon", "curfew", 45)
@@ -22306,7 +22312,7 @@ Others(0, "resistance")
 member.lcRebBackupNext = 0
 local okNo, whyNo = LC.RebelCallBackup(member)
 ok(not okNo and string.find(whyNo or "", "Freq 7 radio", 1, true), "no Freq 7 radio: no backup", whyNo)
-LC.GiveItem(member, "radio_tuned") LC.GiveItem(member, "radio_transmitter") -- (a transmitter too: 13 November)
+LC.GiveItem(member, "radio_tuned") LC.GiveItem(member, "radio_transmitter") _radioUp(member) -- (a transmitter too, in hand: 13 November)
 local far, fst = Real(LC.Spawners.rebel, S + Vector(20000, 0, 0))
 local inZone, seen, spotWas = LC.InRebelZone, LC.IsSeen, LC.RebelBackupSpot
 LC.InRebelZone = function(pos) return pos.x > S.x + 15000 end
@@ -25115,6 +25121,7 @@ local cit = newPlayer("QMCitizen", "citizen")
 local okNR, whyNR = LC.RebelCallBackup(reb)
 ok(not okNR and string.find(whyNR or "", "Freq 7 radio", 1, true), "no Freq 7 radio: no calling for backup (the owner, 9 November)", whyNR)
 LC.GiveItem(reb, "radio_tuned") LC.GiveItem(mate, "radio_tuned") LC.GiveItem(reb, "radio_transmitter") LC.GiveItem(mate, "radio_transmitter") -- (a transmitter too: 13 November)
+_radioUp(reb) -- (in hand: no psychic calls, 13 November)
 reb:SetPos(S0) mate:SetPos(S0 + Vector(2500, 0, 0)) cit:SetPos(S0 + Vector(0, 2500, 0))
 mate.chat, cit.chat = {}, {}
 local f1, fs1 = LC.Spawners.rebel(S0 + Vector(300, 0, 0))
@@ -25136,7 +25143,7 @@ ok((LC.QuickInfo(reb).reb or {}).backup > 0, "(and F2 greys it with how long)")
 for _, n in ipairs({ f1, f2, f4 }) do local st = LC.NPCs[n] if st and st.follow then LC.DismissFollower(n, st, true) end end
 -- a Sympathizer: heard, but fighters only follow Members and up
 local sym = newPlayer("QMSym", "resistance")
-LC.GiveItem(sym, "radio_tuned") LC.GiveItem(sym, "radio_transmitter")
+LC.GiveItem(sym, "radio_tuned") LC.GiveItem(sym, "radio_transmitter") _radioUp(sym)
 sym:SetPos(S0 + Vector(0, -200, 0))
 local okS, sentS = LC.RebelCallBackup(sym)
 ok(okS and sentS == 0 and Told(sym, "Members and up"), "a Sympathizer's call is heard, but no fighters come", Last(sym))
@@ -25146,6 +25153,7 @@ local pool = LC.ManpowerPool("rebel")
 local had = pool.reserve
 pool.reserve = 0
 mate:SetPos(S0 + Vector(100, 100, 0))
+_radioUp(mate)
 local okR, sentR = LC.RebelCallBackup(mate)
 ok(okR and sentR == 0 and Told(mate, "can't spare"), "with the reserve run down, the call goes out but no fighters come", Last(mate))
 pool.reserve = had
