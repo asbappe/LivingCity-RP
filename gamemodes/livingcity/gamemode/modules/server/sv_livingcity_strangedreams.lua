@@ -850,7 +850,7 @@ LC.DreamMaterials = { "models/wireframe", "debug/env_cubemap_model", "models/sha
 LC.StrangeAll = {}
 local function Strange(id)
     if next(LC.StrangeAll) == nil then
-        for _, list in ipairs({ LC.StrangeDreams, LC.StrangeDreams2, LC.StrangeDreams3 }) do for _, x in ipairs(list or {}) do LC.StrangeAll[x] = true end end
+        for _, list in ipairs({ LC.StrangeDreams, LC.StrangeDreams2, LC.StrangeDreams3, LC.StrangeDreams4 }) do for _, x in ipairs(list or {}) do LC.StrangeAll[x] = true end end
     end
     return LC.StrangeAll[id] == true
 end

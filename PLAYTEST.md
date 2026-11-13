@@ -1815,3 +1815,18 @@ Type them in the server console on the host panel, or in your own game console (
   Notes:
 - [ ] **Freq 7 kit:** get promoted to Fighter: are you told you were issued a Freq 7 radio and a transmitter, and can you talk on Freq 7 straight away? Try to sell, drop, stash or give them: refused? As a Member with only a Freq 7 radio: are Call for backup and Send my position greyed "no transmitter"?
   Notes:
+
+## 13 November: Pick Up That Can (a fever dream)
+
+- [ ] **The scene:** test it from the Miscount Editor (Dreams: test one, Pick Up That Can). Does the officer stand by the bin and swing at it about 3 seconds in, with "Pick up that can."? Is the bin the right one, standing on the floor?
+  Notes:
+- [ ] **Your can:** does it sit on the bin, fall to the floor with a white glow, and can you pick it up with Use? Does it sit well in your view while held? With a second player: do you each see only your own?
+  Notes:
+- [ ] **At him:** throw it at the officer. Does the can grow to a man's height, wobble, and hold the stunstick somewhere sensible? Does the officer shrink onto the bin? Is the next thing you pick up a tiny officer? Hit it again: does another can, bin and tiny officer appear beside the first and knock its own officer off?
+  Notes:
+- [ ] **In the bin:** throw it in (or stand over the bin, look down, click). Does the bin grow, does he chuckle, and does it rain cans around you?
+  Notes:
+- [ ] **Anywhere else:** throw it at the floor. Does a coloured can grow where it landed, and does he get taller and deeper each time?
+  Notes:
+- [ ] **The end:** with all three tried, do you wake Unbroken ("Every which way")? Is aiming fair (too easy or too hard to hit him or the bin)?
+  Notes:

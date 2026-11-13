@@ -21205,6 +21205,148 @@ ok(#_errors == errs0, "(no errors in any of it)", _errors[errs0 + 1])
 end
 NonsenseDreamTests()
 
+-- Pick Up That Can, a fever dream (sv_livingcity_candream.lua)
+function CanDreamTests()
+section("Shared dreams: Pick Up That Can (your own can; at him, in the bin, anywhere else; the living cans)")
+_setcvar("lc_dream_rules", 0) _setcvar("lc_dream_auto", 0)
+local errs0 = #_errors
+local savedWalls, realGetAll, realReload = _walls, player.GetAll, LC.EndingReload
+_walls = {}
+LC.EndEvent(true)
+_setcvar("lc_needs", 0)
+LC.EndingReload = function() end
+local CITY, DREAM = Vector(165000, -165000, 0), Vector(225000, -225000, 0)
+local adm = newPlayer("CDAdmin", "admin")
+local a = newPlayer("CDA", "citizen")
+local b = newPlayer("CDB", "citizen")
+_run(3)
+local function Asleep(p, at)
+    p:SetPos(at)
+    local key = string.format("s%d_%d_%d", math.floor(at.x), math.floor(at.y), math.floor(at.z))
+    p.lcSleep = { t0 = CurTime() - 70, done = CurTime() - 10, last = CurTime(), slept = true }
+    p:SetNW2Bool("lc_sleeping", true)
+    p.lcBedKey, p.lcBedFrom = key, at + Vector(40, 0, 0)
+    LC.BedSleepers[key] = p
+end
+player.GetAll = function() return { adm, a, b } end
+local dp = LC.AddPoint(DREAM, 0, "dream")
+local function Aim(p, at)
+    local e = p:EyePos()
+    local dx, dy, dz = at.x - e.x, at.y - e.y, at.z - e.z
+    local l = math.sqrt(dx * dx + dy * dy + dz * dz)
+    p.aim = Vector(dx / l, dy / l, dz / l)
+end
+local function Tap(p, key) p.keys = { [key] = true } _run(0.1) p.keys = nil _run(0.1) end
+
+local where = {}
+for _, grp in ipairs(LC.DreamOffice().groups) do for _, e in ipairs(grp.endings) do where[e.id] = grp.mood end end
+ok(where.can == "neutral", "Pick Up That Can is on her tablet, under Neutral")
+ok(LC.StrangeIs("can") and LC.StrangeIs("cheese") and LC.StrangeIs("watchers") and not LC.StrangeIs("maze"), "it's a strange dream (and the others still are)")
+ok(LC.StrangeCues.can_hello and LC.StrangeCues.can_hello[2] == "Pick up that can.", "his line is Half-Life 2's")
+
+Asleep(a, CITY) Asleep(b, CITY + Vector(0, 200, 0))
+a.keys, b.keys, a.aim, b.aim = nil, nil, nil, nil
+local okS, d = LC.DreamStart("can", adm, false, nil, true)
+local g = okS and d.game
+ok(g ~= nil and #g.sets == 1 and IsValid(g.sets[1].cop) and IsValid(g.sets[1].bin), "an officer and a bin in the middle")
+_run(0.2)
+local st = g.def.state(g, a)
+ok(st.can and st.can.s == "bin" and st.can.k == "can", "your can starts on the bin")
+_run(3.5)
+st = g.def.state(g, a)
+local ca, cb = g.pl[a].can, g.pl[b].can
+ok(ca.st == "floor" and cb.st == "floor" and st.can.s == "floor" and st.glows and #st.glows == 1, "he knocks it off: a can each, on the floor")
+ok(ca.pos:Distance(cb.pos) > 10, "(each their own)")
+local said = false
+for _, cue in ipairs(g.said or {}) do if cue == "can_hello" then said = true end end
+ok(said, "\"Pick up that can.\"")
+
+-- too far away to pick up; then near
+a:SetPos(ca.pos + Vector(400, 0, 0))
+Tap(a, IN_USE)
+ok(g.pl[a].can.st == "floor", "too far away to pick it up")
+a:SetPos(ca.pos + Vector(30, 0, 0))
+Tap(a, IN_USE)
+ok(g.pl[a].can.st == "held" and g.def.state(g, a).can.s == "held", "Use picks it up")
+
+-- what a throw hits
+local m = g.sets[1]
+a:SetPos(Vector(m.o.x, m.o.y - 250, g.top + 4))
+Aim(a, Vector(m.o.x, m.o.y, g.top + 50))
+ok(LC.CanAim(g, a) == "cop", "thrown at him: him")
+Aim(a, LC.CanBinTop(g))
+ok(LC.CanAim(g, a) == "bin", "thrown at the bin: the bin")
+Aim(a, Vector(m.o.x - 400, m.o.y - 250, g.top))
+local what, at = LC.CanAim(g, a)
+ok(what == "away" and math.abs(at.z - g.top) < 5, "thrown anywhere else: it lands on the floor")
+a:SetPos(Vector(m.binAt.x, m.binAt.y - 50, g.top + 4))
+a.aim = Vector(0, 0.5, -0.86)
+ok(LC.CanAim(g, a) == "bin", "standing over the bin, looking down: dropped in")
+
+-- at him: the can and the officer swap
+a:SetPos(Vector(m.o.x, m.o.y - 250, g.top + 4))
+Aim(a, Vector(m.o.x, m.o.y, g.top + 50))
+Tap(a, IN_ATTACK)
+ok(g.swapped and m.swapped and IsValid(m.can) and IsValid(m.stick) and m.cop == nil and #g.sets == 1, "at him: the can grows, comes alive and takes the stunstick")
+ok(g.pl[a].can.st == "fly" and g.pl[a].did.cop == 1, "(your can is away)")
+_run(2)
+ok(m.hid == true and m.tiny.nodraw == true, "the officer shrinks onto the bin")
+_run(LC.CanBack + 3)
+ok(g.pl[a].can.st == "floor" and g.pl[a].can.kind == "cop" and g.def.state(g, a).can.k == "cop", "the can knocks a tiny officer off the bin for you")
+ok(string.find(g.def.state(g, a).big or "", "officer", 1, true) ~= nil, "(and tells you to pick that up)")
+
+-- every hit after that: another living can, bin and tiny officer
+LC.CanThrown(g, b, "cop", Vector(m.o.x, m.o.y, g.top + 40), m)
+ok(#g.sets == 2 and IsValid(g.sets[2].can) and IsValid(g.sets[2].tiny) and IsValid(g.sets[2].bin), "hit it again: another can, bin and tiny officer beside it")
+local s2 = g.sets[2]
+ok(s2.o:Distance(m.o) <= 110, "(right next to the first)")
+_run(LC.CanCycle + 0.5)
+ok(s2.cyc ~= nil, "which knocks its own officer off its own bin")
+a:SetPos(Vector(s2.o.x, s2.o.y - 200, g.top + 4))
+Aim(a, Vector(s2.o.x, s2.o.y, g.top + 36))
+local w2, _, set2 = LC.CanAim(g, a)
+ok(w2 == "cop" and set2 == s2, "any of them can be hit")
+local n = 0
+while LC.CanAddSet(g) and n < 100 do n = n + 1 end
+ok(#g.sets == LC.CanMaxSets and LC.CanMaxSets == 30, "thirty of them at most", #g.sets)
+LC.CanThrown(g, b, "cop", Vector(m.o.x, m.o.y, g.top + 40), m)
+ok(#g.sets == LC.CanMaxSets, "(a hit after that adds none)")
+_run(0.3)
+
+-- in the bin; anywhere else
+local rainWas = g.rain
+LC.CanThrown(g, a, "bin", LC.CanBinTop(g), m)
+ok(m.binScale > 1 and g.rain ~= rainWas and g.def.state(g, b).rain == g.rain, "in the bin: the bin grows, and it rains cans on everyone")
+local growWas = m.grow
+LC.CanThrown(g, a, "away", Vector(m.o.x - 300, m.o.y - 200, g.top + 3))
+ok(m.grow > growWas and #g.trees == 1 and IsValid(g.trees[1].ent), "anywhere else: a can tree where it lands, and the one in charge grows")
+for _ = 1, 40 do LC.CanThrown(g, a, "away", Vector(m.o.x - 300, m.o.y - 200, g.top + 3)) LC.CanThrown(g, a, "bin", LC.CanBinTop(g), m) end
+ok(#g.trees == LC.CanMaxTrees and m.grow <= LC.CanCopMax and m.binScale <= LC.CanBinMax, "(none of it grows for ever)")
+ok(LC.CanWays(g.pl[a]) == 3 and LC.CanWays(g.pl[b]) == 1 and g.def.state(g, a).meter == 100, "three ways tried")
+_run(0.5)
+ok(pcall(g.def.state, g, adm), "(someone not playing can still watch)")
+
+-- the end: every which way wins
+g.ends = CurTime() + 0.4
+_run(0.2)
+ok(g.pl[a].how == "won" and g.pl[b].how ~= "won", "all three before the time's up: you wake Unbroken; not all three: nothing lost")
+LC.DreamGameStop(d, "test")
+_run(2.5)
+
+LC.DreamForget()
+LC.RemovePoint(dp)
+for _, p in ipairs({ adm, a, b }) do
+    p.crouch, p.keys, p.ground, p.aim, p.vel = nil, nil, nil, nil, nil
+    if p.lcSleep and LC.WakeUp then LC.WakeUp(p, "quiet") end
+    p:SetPos(Vector(-121000, -121000, 0))
+end
+player.GetAll, LC.EndingReload = realGetAll, realReload
+_setcvar("lc_needs", 1)
+_walls = savedWalls
+ok(#_errors == errs0, "(no errors in any of it)", _errors[errs0 + 1])
+end
+CanDreamTests()
+
 -- The dream plan (sv_livingcity_dreamplan.lua): her choice of a kind now and then, the city's by sociostability, in turn
 function DreamPlanTests()
 section("Shared dreams: the plan (she chooses a kind every few nights, only her own dreams for her; the city by sociostability; round robin; the black screen's line)")
