@@ -19171,6 +19171,52 @@ do
     for _, p in ipairs({ a, b }) do p:SetNW2Float("lc_unbroken_until", 0) p:SetNW2Float("lc_secondwind_until", 0) p.keys = nil if p.lcSleep and LC.WakeUp then LC.WakeUp(p, "quiet") end end
 end
 
+-- The Fitness Test (the owner, 12 November: "a new dream, an airboat race or an obstacle course")
+do
+    for _, p in ipairs({ adm, a, b }) do if p.lcSleep and LC.WakeUp then LC.WakeUp(p, "quiet") end end
+    for _, p in ipairs({ a, b }) do p:SetNW2Float("lc_unbroken_until", 0) p:SetNW2Float("lc_secondwind_until", 0) end
+    ok(LC.DreamMood("course") == "happy" and LC.DreamTitle("course") == "The Fitness Test" and LC.DreamSongFor("course") ~= nil, "The Fitness Test is a Happy dream, with music")
+    -- laid out snaking: rows joined by two bridge tiles, everything else in order
+    local lay = LC.CourseLay(5)
+    local kinds, bridges = {}, 0
+    for _, t in ipairs(lay) do if t.kind == "bridge" then bridges = bridges + 1 else kinds[#kinds + 1] = t.kind end end
+    ok(#kinds == #LC.CourseLayout and kinds[1] == "start" and kinds[#kinds] == "finish" and bridges > 0 and bridges % 2 == 0, "the course snakes in rows, joined by bridges", #kinds .. " tiles, " .. bridges .. " bridges")
+    Asleep(a, CITY)
+    Asleep(b, CITY + Vector(0, 200, 0))
+    local okC, dc = LC.DreamStart("course", nil, false, nil, true)
+    local gc = okC and dc.game
+    _run(0.3)
+    ok(okC and #gc.tiles >= #LC.CourseLayout and #gc.flags == 3 and #gc.sweeps >= 3 and gc.finishAt ~= nil, "built: tiles, three flags, the batons, the gold tile", okC and #gc.tiles or tostring(dc))
+    if okC then
+        local function Tile(kind, n)
+            local seen = 0
+            for i, t in ipairs(gc.tiles) do if t.kind == kind then seen = seen + 1 if seen == (n or 1) then return i, t end end end
+        end
+        -- a flag reached: falling after it starts you there
+        local fi, ft = Tile("flag")
+        a:SetPos(ft.pos + Vector(0, 0, 4))
+        _run(0.2)
+        ok(gc.pl[a].flag == fi, "reaching a green flag")
+        a:SetPos(ft.pos - Vector(0, 0, LC.CourseFall + 50))
+        _run(0.2)
+        ok(a:GetPos():Distance(ft.pos + Vector(0, 0, 4)) < 2, "falling: back at the last flag")
+        -- a baton sweeping by: on the floor in its way, swept; jumping, not
+        local sw = gc.sweeps[1]
+        local ang = math.rad(sw.ang)
+        local inWay = sw.pivot + Vector(math.cos(ang) * 50, math.sin(ang) * 50, 2)
+        ok(LC.CourseSwept(gc, inWay) and not LC.CourseSwept(gc, inWay + Vector(0, 0, 50)), "a baton sweeps you off your feet, unless you jump it")
+        -- the gold tile: passed, in first place
+        local _, fin = Tile("finish")
+        a:SetPos(fin.pos + Vector(0, 0, 4))
+        _run(0.2)
+        ok(gc.pl[a].how == "won" and gc.passed == 1, "reaching the gold tile passes the test")
+        LC.DreamGameStop(dc, "admin")
+        _run(2.5)
+    end
+    ok(LC.DreamActive == nil, "and it ends")
+    for _, p in ipairs({ a, b }) do p:SetNW2Float("lc_unbroken_until", 0) p:SetNW2Float("lc_secondwind_until", 0) p.keys = nil if p.lcSleep and LC.WakeUp then LC.WakeUp(p, "quiet") end end
+end
+
 -- falling asleep late (the owner, 10 November): whoever lies down after a dream has begun joins it, in every dream you play
 do
     for _, p in ipairs({ adm, a, b }) do if p.lcSleep and LC.WakeUp then LC.WakeUp(p, "quiet") end end

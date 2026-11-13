@@ -102,6 +102,7 @@ LC_MODULES = {
         "sv_livingcity_strangedreams3", -- (ten more, nonsense on purpose: clocks, tea party, headcrab derby, say cheese, doors, splat, conga, shh, bubbles, the watchers)
         "sv_livingcity_candream", -- (Pick Up That Can, a fever dream: the officer, the bin, and a can of your own; after strangedreams3)
         "sv_livingcity_dreamrally", -- (The Midnight Rally: a buggy race, a Happy dream you play)
+        "sv_livingcity_dreamcourse", -- (The Fitness Test: an obstacle course, a Happy dream you play)
         "sv_livingcity_dreamtest", -- (testing any dream from the Living City Editor, alone and awake)
         "sv_livingcity_dreamplan", -- (who chooses tonight's dream: her kind now and then, the city by sociostability, in turn; the black screen's line)
         "sv_livingcity_desperation", -- (the outnumbered Combine fight dirtier: SMGs, grenades, energy balls, a little more damage)
