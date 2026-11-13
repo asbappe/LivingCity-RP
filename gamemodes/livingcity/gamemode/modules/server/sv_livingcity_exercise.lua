@@ -13,9 +13,10 @@
               along the route at lc_jog_pace) gets the stick: and a few
               seconds of extra speed to catch back up (lc_jog_boost).
 
-      drill   The morning drill. At the exercise yard ("Point: exercise yard":
-              place it where the leader stands, from where the citizens will
-              be). Everyone gets a place in rows in front of the leader and
+      drill   The morning drill. At the start of the jogging route (the leader
+              stands there, the rows in front of it, the way the point faces),
+              or at an exercise yard if one is placed ("Point: exercise yard",
+              optional: where the leader stands). Everyone gets a place in rows in front of the leader and
               copies the leader's moves: crouch, jump, spin, step left, right,
               forward or back. The leader is a player Clinic Medic or Records
               Clerk if one is there (their own moves are called out), or else a
@@ -178,11 +179,17 @@ function LC.LayJogNodes()
     return changed
 end
 
+-- The drill's yard: an exercise yard point if one is placed, else the start of each jogging route (the owner,
+-- 13 November: "just make the jogging start point into the exercise yard point, they can be the same").
 local function Yards()
     local out = {}
     for _, p in ipairs(LC.Points or {}) do if p.kind == "yard" then out[#out + 1] = p end end
+    if #out == 0 then
+        for _, r in ipairs(Routes("jogroute")) do out[#out + 1] = r[1] end
+    end
     return out
 end
+LC.ExerciseYards = Yards
 
 function LC.ExerciseReady(kind)
     if kind == "jog" then return #Routes("jogroute") > 0 end
@@ -294,7 +301,7 @@ end
 local SWING = { "pushplayer", "swinggesture", "ACT_MELEE_ATTACK_SWING_GESTURE", "ACT_MELEE_ATTACK1", "ACT_MELEE_ATTACK_SWING" }
 -- (on the jog: "Move it!", "Keep moving!", never "First warning, move away", which sounded like being told to get back)
 local COP_BARK = { "npc/metropolice/vo/moveit.wav", "npc/metropolice/vo/moveit2.wav", "npc/metropolice/vo/keepmoving.wav", "npc/metropolice/vo/movealong.wav" }
-local HIT = { jog = "Keep up, citizen.", drill = "Do it properly.", parade = "Louder, citizen. With feeling.", absent = "Exercise is mandatory." }
+local HIT = { jog = "Keep up, citizen.", drill = "Do it properly.", parade = "Louder, citizen. With feeling.", absent = "Exercise is mandatory.", speech = "The Administrator is speaking. Attendance is mandatory." }
 
 local function Rec(ply) return X and X.people[ply] end
 
@@ -1146,6 +1153,64 @@ local CHEER_SOUNDS = {
 }
 local GESTURE_CHEER = { cheer = 35, salute = 30, wave = 20, point = 10, nod = 8, bow = 15 }
 
+-- One NPC in a crowd cheers the Administrator: a loyal one out loud with a gesture; a Resistance
+-- sympathizer (st.rebel) a beat late, flat and bored (spy_flat_male/_female, the same takes as
+-- Careless Talk's spy), arm half up; with no flat take on the server, they just don't cheer.
+-- Returns "cheer" or "flat".
+LC.FlatCheerLate = 0.8
+-- The right arm up to the brow (amount 1 a smart salute, about a half a limp one), down again after a moment:
+-- the same pose as Careless Talk's salute (sv_livingcity_propagandamore.lua).
+function LC.CrowdSalute(npc, amount, secs)
+    if not (IsValid(npc) and npc.ManipulateBoneAngles and npc.LookupBone) then return false end
+    local up, fore = npc:LookupBone("ValveBiped.Bip01_R_UpperArm"), npc:LookupBone("ValveBiped.Bip01_R_Forearm")
+    if up then npc:ManipulateBoneAngles(up, Angle(-35 * amount, -75 * amount, 0)) end
+    if fore then npc:ManipulateBoneAngles(fore, Angle(0, -115 * amount, 0)) end
+    npc.lcSaluteAmt = amount
+    timer.Simple(secs or 2.5, function()
+        if not IsValid(npc) then return end
+        if up then npc:ManipulateBoneAngles(up, Angle(0, 0, 0)) end
+        if fore then npc:ManipulateBoneAngles(fore, Angle(0, 0, 0)) end
+        npc.lcSaluteAmt = 0
+    end)
+    return true
+end
+function LC.CrowdCheer(npc, st)
+    st = st or LC.NPCs[npc]
+    if st and st.rebel then
+        local man = not (LC.IsFemaleModel and LC.IsFemaleModel(npc.GetModel and npc:GetModel() or ""))
+        local snd = LC.PropagandaVoice and LC.PropagandaVoice("spy_flat_" .. (man and "male" or "female"))
+        timer.Simple(LC.FlatCheerLate, function()
+            if not IsValid(npc) then return end
+            if snd then npc:EmitSound(snd, 62, math.random(94, 100)) end
+            LC.CrowdSalute(npc, 0.45, 1.6) -- (half up, and down again early)
+        end)
+        st.flatCheers = (st.flatCheers or 0) + 1
+        return "flat"
+    end
+    local s = Pick(CHEER_SOUNDS)
+    if file.Exists("sound/" .. s, "GAME") then npc:EmitSound(s, 72) end
+    if math.random() < 0.5 then LC.CrowdSalute(npc, 1, 2.5)
+    elseif LC.PlayGesture then LC.PlayGesture(npc, { "cheer1", "cheer2", "ACT_CHEER" }, 2) end
+    return "cheer"
+end
+
+-- After the Administrator's speech, the citizens within earshot of the stand cheer once, a moment
+-- apart (their sympathizers flat, as above). Returns how many cheered and how many muttered.
+function LC.SpeechCrowd(pos, radius)
+    radius = radius or 1200
+    local cheered, flat = 0, 0
+    for npc, st in pairs(LC.NPCs or {}) do
+        local free = st.state == "idle" or st.state == "moving" or st.state == "event" or st.state == "busy"
+        if IsValid(npc) and st.role == "citizen" and free and npc:GetPos():DistToSqr(pos) < radius * radius then
+            if st.rebel then flat = flat + 1 else cheered = cheered + 1 end
+            timer.Simple(math.Rand(0.2, 1.6), function()
+                if IsValid(npc) then LC.CrowdCheer(npc, LC.NPCs[npc]) end
+            end)
+        end
+    end
+    return cheered, flat
+end
+
 function LC.ParadeCheer(ply, amount)
     local r = X and X.kind == "parade" and X.phase == "run" and X.people[ply]
     if not r then return false end
@@ -1236,14 +1301,12 @@ local function ParadeThink(now, dt)
             end
         end
     end
-    -- the NPCs along the route cheer as it goes by
+    -- the NPCs along the route cheer as it goes by (a sympathizer only mutters, flat and late)
     for npc in pairs(X.npcs) do
         local st = IsValid(npc) and LC.NPCs[npc]
         if st and st.state == "event" and now > (st.exCheerNext or 0) and ColumnDist(npc:GetPos()) < 600 then
             st.exCheerNext = now + math.Rand(3, 6)
-            local s = Pick(CHEER_SOUNDS)
-            if file.Exists("sound/" .. s, "GAME") then npc:EmitSound(s, 72) end
-            if LC.PlayGesture then LC.PlayGesture(npc, { "cheer1", "cheer2", "ACT_CHEER" }, 2) end
+            LC.CrowdCheer(npc, st)
         end
     end
     if alive == 0 or done >= alive then
@@ -1455,6 +1518,8 @@ end
 hook.Add("LivingCityDayPhase", "LivingCityExercise", function(phase)
     if phase ~= "dawn" or not cvOn:GetBool() then return end
     dawns = dawns + 1
+    -- (whether this morning has exercise: the city's own Administrator speaks on the days without, sv_livingcity_speech.lua)
+    LC.ExerciseToday = (dawns - 1) % math.max(1, cvEvery:GetInt()) == 0 and LC.NextExercise(false) ~= nil
     if (dawns - 1) % math.max(1, cvEvery:GetInt()) ~= 0 then return end
     -- now, or as soon as whatever's on (rations, an inspection) is over, while it's still morning
     local tries = 0
@@ -1512,14 +1577,14 @@ concommand.Add("lc_exercise", function(ply, _, args)
     end
     if a == "next" or a == "" then
         local k = LC.NextExercise(false)
-        Reply("Next morning exercise: " .. (k and NAMES[k] or "none (place a jogging route, an exercise yard or a parade route)") ..
+        Reply("Next morning exercise: " .. (k and NAMES[k] or "none (place a jogging route or a parade route)") ..
             ". Every " .. math.max(1, cvEvery:GetInt()) .. " morning(s), at dawn. lc_exercise <jog|drill|parade> starts one now.")
         return
     end
     if not LC.ExerciseKinds[a] then Reply("lc_exercise <jog|drill|parade|next|stop>") return end
     if not LC.Running then Reply("Start the city first.") return end
     if not LC.ExerciseReady(a) then
-        Reply(a == "drill" and "Place an exercise yard first (editor: Point: exercise yard)."
+        Reply(a == "drill" and "Place a jogging route first (the drill is held at its start), or an exercise yard (editor: Point: exercise yard)."
             or ("Place a " .. (a == "jog" and "jogging route" or "parade route") .. " first (two or more stops, in order)."))
         return
     end

@@ -652,7 +652,8 @@ local MAX_TAGS = 60
 local function SendTags(target)
     local list = {}
     for _, t in ipairs(LC.Tags) do
-        list[#list + 1] = { x = t.pos.x, y = t.pos.y, z = t.pos.z, nx = t.normal.x, ny = t.normal.y, nz = t.normal.z }
+        list[#list + 1] = { x = t.pos.x, y = t.pos.y, z = t.pos.z, nx = t.normal.x, ny = t.normal.y, nz = t.normal.z,
+            k = t.kind ~= "lambda" and t.kind or nil } -- (which mark it is; none means the lambda)
     end
     LC.SendCompressed("lc_tags", { tags = list }, IsValid(target) and { target } or player.GetAll())
 end
@@ -678,7 +679,29 @@ local function TagNear(pos, r)
 end
 LC.TagNear = TagNear
 
-local function Spray(ply)
+-- What a spray can can put on a wall (the owner, 13 November: "the player chooses which tag from the
+-- spray can's menu"). The lambda is the game's own decal; the others are the owner's pictures in
+-- materials/livingcity/graffiti/<id>.png, painted as decals too (cl_livingcity_war.lua). A mark whose
+-- picture isn't on the server isn't offered; with none of them there, the can sprays the lambda
+-- without asking, as it always did.
+LC.TagKinds = {
+    { id = "lambda", label = "The lambda", doing = "Spraying the lambda" },
+    { id = "tally", label = "The tally, with one too many", doing = "Spraying the tally", art = "graffiti/tally.png" },
+    { id = "norecord", label = "NO RECORD", doing = "Stencilling NO RECORD", art = "graffiti/norecord.png" },
+}
+-- Is one of the gamemode's pictures on the server (materials/livingcity/<rel>)?
+function LC.HasArt(rel)
+    return file and file.Exists and file.Exists("materials/livingcity/" .. rel, "GAME") or false
+end
+function LC.TagKindsOffered()
+    local out = {}
+    for _, k in ipairs(LC.TagKinds) do
+        if not k.art or LC.HasArt(k.art) then out[#out + 1] = k end
+    end
+    return out
+end
+
+local function Spray(ply, kind)
     local pos, normal = WallAhead(ply)
     if not pos then return false, "Look at a wall, up close." end
     -- a poster on this wall: paint over it instead (entities/lc_civposter.lua, LC.DefacePoster)
@@ -703,12 +726,22 @@ local function Spray(ply)
         })
     end
     if TagNear(pos, 60) then return false, "There's already one here." end
-    return LC.StartTask(ply, 2.5, "Spraying the lambda... keep looking at the wall", {
+    local offered = LC.TagKindsOffered()
+    if not kind and #offered > 1 and LC.OpenDialog then
+        local options = {}
+        for _, k in ipairs(offered) do options[#options + 1] = { k.id, k.label } end
+        options[#options + 1] = { "no", "Never mind" }
+        LC.OpenDialog(ply, "spraytag", nil, { title = "Spray can", sub = "One can, one mark", text = "What goes on the wall?", options = options })
+        return true
+    end
+    local what = offered[1]
+    for _, k in ipairs(offered) do if k.id == kind then what = k end end
+    return LC.StartTask(ply, 2.5, what.doing .. "... keep looking at the wall", {
         maxMove = 30, cancelText = "You stop, half done, and the paint runs.",
         done = function(p)
             if not LC.TakeItem(p, "spraypaint") then return end
             p:EmitSound("ambient/water/water_spray3.wav", 60)
-            local t = { pos = pos + normal * 0.5, normal = normal, owner = p, at = CurTime() }
+            local t = { pos = pos + normal * 0.5, normal = normal, owner = p, at = CurTime(), kind = what.id }
             table.insert(LC.Tags, t)
             while #LC.Tags > MAX_TAGS do table.remove(LC.Tags, 1) end
             SendTags()
@@ -730,6 +763,18 @@ local function Spray(ply)
             hook.Run("LivingCityTagged", p, t)
         end,
     })
+end
+
+LC.SprayTag = Spray
+LC.DialogHandlers = LC.DialogHandlers or {}
+LC.DialogHandlers.spraytag = function(ply, _, id)
+    ply.lcDialog = nil
+    if LC.CloseDialog then LC.CloseDialog(ply) end
+    if id == "no" then return end
+    if not LC.HasItem(ply, "spraypaint") then return end
+    local ok, why = Spray(ply, id)
+    if not ok and why then LC.Notice(ply, "warn", "Spray can", why, 4) end
+    return ok
 end
 
 -- A Resistance paste-up from your pockets, onto a bare wall (the owner, 10 November). One of their four,

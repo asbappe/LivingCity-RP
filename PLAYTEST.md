@@ -4,6 +4,10 @@ Updated 12 November 2026. **Part 1** is everything new since your 1 November pla
 Tick a box when you've tried it, and write what you saw after **Notes:** (works, broken, feels off, ideas).
 
 ## Your 12 November notes: fixed, please try again
+- [ ] **Spray can marks (new pictures; needs `livingcity_content.zip`, FastDL sync, map change):** Spray at a bare wall: a window asks The lambda, The tally, NO RECORD or Never mind. Try each. Are the two new marks the right size beside a lambda, the right way up, and lit like the wall? Do they scrub off?
+  Notes:
+- [ ] **The Cheese Dream's surfaces:** the plain, slabs and wheels should look like holed cheese (are the holes a sensible size, or too small or too big?); the wedges in the sky should be swirling colours; take a golden cheese and the whole plain should melt into colours for 6 seconds, then go back.
+  Notes:
 
 - [ ] **Lights out:** the warnings say "About six minutes until sleep" and "Two minutes until sleep".
   Notes:
@@ -1816,4 +1820,32 @@ Type them in the server console on the host panel, or in your own game console (
 - [ ] **Freq 7 kit:** get promoted to Fighter: are you told you were issued a Freq 7 radio and a transmitter, and can you talk on Freq 7 straight away? Try to sell, drop, stash or give them: refused? As a Member with only a Freq 7 radio: are Call for backup and Send my position greyed "no transmitter"?
   Notes:
 - [ ] **No psychic communication:** as a rebel, is F2's Freq 7 page now Find the way (just the two guides)? With the transmitter put away, are !r, backup and position refused? With it out, does talking, left click (backup) and its right click menu (message, backup, position) all work?
+
+## 13 November: Pick Up That Can (a fever dream)
+
+- [ ] **The scene:** test it from the Miscount Editor (Dreams: test one, Pick Up That Can). Does the officer stand by the bin and swing at it about 3 seconds in, with "Pick up that can."? Is the bin the right one, standing on the floor?
+  Notes:
+- [ ] **Your can:** does it sit on the bin, fall to the floor with a white glow, and can you pick it up with Use? Does it sit well in your view while held? With a second player: do you each see only your own?
+  Notes:
+- [ ] **At him:** throw it at the officer. Does the can grow to a man's height, wobble, and hold the stunstick somewhere sensible? Does the officer shrink onto the bin? Is the next thing you pick up a tiny officer? Hit it again: does another can, bin and tiny officer appear beside the first and knock its own officer off?
+  Notes:
+- [ ] **In the bin:** throw it in (or stand over the bin, look down, click). Does the bin grow, does he chuckle, and does it rain cans around you?
+  Notes:
+- [ ] **Anywhere else:** throw it at the floor. Does a coloured can grow where it landed, and does he get taller and deeper each time?
+  Notes:
+- [ ] **The end:** with all three tried, do you wake Unbroken ("Every which way")? Is aiming fair (too easy or too hard to hit him or the bin)?
+  Notes:
+- [ ] **The tiny officer's voice:** once the can has swapped with him, does your tiny officer squeak threats and orders (knocked off, picked up, in your hand, thrown, in the bin)? Too often, too loud, too high? Do the other cans' officers squeak from the floor too, and is thirty of them bearable?
+  Notes:
+- [ ] **Which scene is yours:** hit the living can so a new can, bin and officer appear. Is it lit for you (golden beam, pulsing glow, circling lights, "YOURS" over it), and are you told "That one is yours"? Is your next tiny officer knocked off that bin? With a second player: do they see their own lit, not yours? Is the beam too much or too little?
+  Notes:
+- [ ] **Speeches, attended (13 November):** place a speech crowd point in front of the speech stand. As the Administrator, F2 > Me > The city's levers > Give a speech: is Overwatch's call heard, do the NPCs stand in rows facing the stand, does the podium (Breen's console) look right in front of her? Skip it as a citizen: warned, then the stick until you black out, waking in the crowd? With nobody as Administrator, set the city to midday (lc_speech_city_hour) and watch her speak at the podium herself.
+  Notes:
+- [ ] **Sympathizers at parades and speeches:** in the cheering crowd, a few should half salute late and mutter flat (needs spy_flat_male1/spy_flat_female1 recorded; silent without). Does the salute arm pose look right on citizens?
+  Notes:
+- [ ] **The harpies dreamt in a forest:** pick the harpies as tonight's dream (F2, as Administrator). Are the pines there (Episode Two) or Half-Life 2's trees? Do the mingebags slip behind trees and rocks and out again? Too many trees for the edict limit?
+  Notes:
+- [ ] **Her own stitched speech:** with nobody as Administrator, on a morning with no exercise, let it reach midday (or set lc_speech_city_hour). Does she say an opening, a few lines about what really happened lately (arrests, a beating, posters...), one about the mood, and a closing, one after another? Are the pauses between pieces right?
+  Notes:
+- [ ] **The drill at the jogging start:** with no exercise yard placed, run `lc_exercise drill`: does the leader stand at the jogging route's first stop with the rows in front of it? If the rows land in a wall, turn that stop to face open ground (the rows form the way it faces).
   Notes:

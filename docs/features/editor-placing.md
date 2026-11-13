@@ -28,3 +28,5 @@
 **Point: prison work spot** (new, 10 November): where a prisoner's work detail picks up trash (`docs/features/city-events.md`, "The work detail"). Optional: without one, the prison zone, else the corridor between the cells.
 
 **Point: speech stand** (new, 10 November): where the City Administrator gives her speeches (F2 > Me > The city's levers > Go to the speech stand takes her there, facing the way the point faces). Optional.
+
+**Point: speech crowd** (new, 13 November): where the city gathers for her address, in front of the stand. With one placed, a speech calls the city first and attendance is mandatory (`docs/features/city.md`, "Her address, attended"). Optional.

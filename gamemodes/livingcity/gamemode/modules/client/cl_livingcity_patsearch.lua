@@ -5,6 +5,12 @@
     person searched gets a small panel: the four spots, which one is being
     checked, "Stand still", and R to slip one thing into a spot already
     checked, once. The look is the job games' (cl_livingcity_moregames.lua).
+
+    The unit's side is a quick menu with the number keys now, like F1 and F2
+    (the owner, 12 November: "yes they should, they should close other opened
+    F1-F4 menus and popup, giving the player a quick and easy way to
+    respond"): a spot per number, what was found written under it.
+    lc_situation_windows 1 (your own client) brings back the window.
 ]]
 
 LC_CL = LC_CL or {}
@@ -22,10 +28,45 @@ local function SendCheck(i) net.Start("lc_pat_check") net.WriteUInt(i, 3) net.Se
 local function SendClose() net.Start("lc_pat_close") net.SendToServer() end
 local function SendSlip() net.Start("lc_pat_slip") net.SendToServer() end
 
+local quickOn = false -- (the unit's quick menu is up, or between the server's updates)
+
 local function CloseAll()
     if IsValid(unitWin) then unitWin.silent = true unitWin:Remove() end
     if IsValid(targetPanel) then targetPanel:Remove() end
-    unitWin, unitState, targetPanel, targetState, checkSpot = nil, nil, nil, nil, nil
+    if quickOn and LC_CL.CloseSituation then LC_CL.CloseSituation("patsearch") end
+    unitWin, unitState, targetPanel, targetState, checkSpot, quickOn = nil, nil, nil, nil, nil, false
+end
+
+-- The unit's search as a quick menu: one number per spot, Done searching: check their papers, Done.
+local function UnitQuick(st)
+    local items = {}
+    for i, sp in ipairs(st.spots or {}) do
+        local name = tostring(sp.name or ("Spot " .. i))
+        if sp.state == 2 then
+            items[#items + 1] = { label = name .. ": " .. ((sp.text == "Nothing.") and "nothing" or tostring(sp.text or "found something")), disabled = true }
+        elseif sp.state == 1 then
+            items[#items + 1] = { label = name .. ": checking...", disabled = true }
+        else
+            local can = st.live == true and not st.checking
+            items[#items + 1] = { label = "Check: " .. name, disabled = not can, run = function() SendCheck(i) end }
+        end
+    end
+    if st.papers == true and st.live == true then
+        items[#items + 1] = { label = "Done searching: check their papers", run = function()
+            quickOn = false
+            net.Start("lc_pat_papers") net.SendToServer()
+        end }
+    end
+    items[#items + 1] = { label = "Done", run = function() quickOn = false SendClose() end }
+    local lines = {}
+    if st.flash and CurTime() - flashAt < 3 then lines[#lines + 1] = tostring(st.flash) end
+    lines[#lines + 1] = "Spots you skip keep what's in them."
+    local first = not quickOn
+    quickOn = true
+    LC_CL.OpenSituation({ id = "patsearch", title = "Searching " .. tostring(st.who or "them"), items = items,
+        note = table.concat(lines, "\n"),
+        onClose = function() if quickOn then quickOn = false SendClose() end end })
+    if first then SendCheck(0) end -- (the menu is open)
 end
 
 -- Where each spot sits on the body (fractions of the body area): x, y, w, h.
@@ -187,6 +228,9 @@ net.Receive("lc_pat_open", function()
         checkSpot = t.checking
         if t.flash and (t.flashId or 0) ~= flashSeen then flashSeen, flashAt = t.flashId or 0, CurTime() surface.PlaySound("buttons/button10.wav") end
         unitState = t
+        if not IsValid(unitWin) and LC_CL.OpenSituation and not (LC_CL.SituationWindows and LC_CL.SituationWindows()) then
+            return UnitQuick(t)
+        end
         if not IsValid(unitWin) then
             local ok = pcall(BuildUnit)
             if not ok or not IsValid(unitWin) then
@@ -205,5 +249,6 @@ end)
 net.Receive("lc_pat_close", CloseAll)
 
 function LC_CL.PatSearchWindow() return unitWin, unitState end
+function LC_CL.PatSearchQuick() return quickOn, unitState end
 function LC_CL.PatSearchPanel() return targetPanel, targetState end
 LC_CL.PatSearchClose = CloseAll

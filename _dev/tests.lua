@@ -9242,6 +9242,33 @@ ok(LC.CleanTag(scrubber, tag), "a loyal citizen can scrub it off")
 _run(4)
 ok(#LC.Tags == tagsBefore and LC.Standing(scrubber) > st0, "and is thanked for it")
 ok(not LC.CleanTag(tagger, tag), "the Resistance don't clean their own")
+-- the spray can's other marks (13 November): offered only when their pictures are on the server
+ok(#LC.TagKindsOffered() == 1 and LC.TagKindsOffered()[1].id == "lambda", "with no pictures on the server, the can offers only the lambda (and never asked, above)")
+_files["materials/livingcity/graffiti/tally.png"] = "x"
+_files["materials/livingcity/graffiti/norecord.png"] = "x"
+ok(#LC.TagKindsOffered() == 3, "with the two pictures there, three marks to choose from")
+LC.GiveItem(tagger, "spraypaint", 2)
+tagger:SetPos(T0) tagger.aim = Vector(1, 0, 0)
+local tagsNow = #LC.Tags
+ok(LC.ItemUse(tagger, "spraypaint") and tagger.lcDialog and tagger.lcDialog.key == "spraytag" and _lastnet("lc_dialog") ~= nil, "Spray on a bare wall now asks which mark")
+_run(3)
+ok(#LC.Tags == tagsNow, "and nothing is sprayed until you choose")
+LC.DialogDo(tagger, "no")
+_run(3)
+ok(#LC.Tags == tagsNow and tagger.lcDialog == nil and LC.HasItem(tagger, "spraypaint", 3), "Never mind: no mark, no can used")
+LC.ItemUse(tagger, "spraypaint")
+LC.DialogDo(tagger, "tally")
+_run(3)
+ok(#LC.Tags == tagsNow + 1 and LC.Tags[#LC.Tags].kind == "tally" and LC.HasItem(tagger, "spraypaint", 2) and not LC.HasItem(tagger, "spraypaint", 3), "choose the tally: it goes up, one can used")
+table.remove(LC.Tags)
+LC.ItemUse(tagger, "spraypaint")
+LC.DialogDo(tagger, "nonsense")
+_run(3)
+ok(#LC.Tags == tagsNow + 1 and LC.Tags[#LC.Tags].kind == "lambda", "a mark that isn't one comes out as the lambda")
+table.remove(LC.Tags)
+LC.SendTags()
+_files["materials/livingcity/graffiti/tally.png"] = nil
+_files["materials/livingcity/graffiti/norecord.png"] = nil
 tagger:SetPos(FAR) scrubber:SetPos(FAR) reb:SetPos(FAR) thief:SetPos(FAR)
 LC.RemoveZone(rz)
 _walls = savedWalls
@@ -13191,6 +13218,121 @@ for _, x in ipairs({ adm, crook }) do x:SetPos(E0 + Vector(30000, 0, 0)) end
 _setcvar("lc_ledger", 0)
 end
 LedgerTests()
+function SpeechTests()
+-- Her address, attended (the owner, 13 November): the city gathers, absentees get the stick till they black out
+_setcvar("lc_ledger", 1)
+local SP0 = Vector(-60000, 64000, 0)
+local stand = LC.AddPoint(SP0 + Vector(0, 400, 0), 270, "speech", 0)
+local crowd = LC.AddPoint(SP0, 90, "speechcrowd", 0)
+local adm = newPlayer("SpeechAdministrator", "admin")
+local skip = newPlayer("SpeechSkipper", "citizen")
+local good = newPlayer("SpeechAttender", "citizen")
+_run(0.5)
+adm:SetPos(SP0 + Vector(3000, 0, 0))
+good:SetPos(SP0 + Vector(40, 0, 0))
+skip:SetPos(SP0 + Vector(6000, 0, 0))
+skip:SetHealth(100)
+local cop = ents.Create("npc_metropolice") cop:SetPos(skip:GetPos() + Vector(60, 0, 0)) cop:Spawn()
+local cst = LC.RegisterNPC(cop, "cop")
+cst.state = "idle"
+local loyal, lst = LC.SpawnCitizen(SP0 + Vector(1500, 0, 0))
+lst.state, lst.rebel = "idle", nil
+local losWas = LC.LineOfSight
+LC.LineOfSight = function() return true end
+_setcvar("lc_speech_muster", 10)
+_setcvar("lc_speech_after", 40)
+local L = LC.Ledger()
+L.speechDay = -1
+local m0 = L.morale
+ok(LC.GiveSpeech(adm, "Citizens, your city thanks you for your work.") and LC.SpeechSession(), "with a speech crowd point: her speech calls the city to gather first")
+local S = LC.SpeechSession()
+ok(L.morale == m0, "(nothing said yet: the muster first)")
+ok(adm:GetPos():Distance(stand.pos) < 120, "she's taken to the stand")
+ok(IsValid(S.podium), "a podium stands in front of it")
+ok(not IsValid(S.her), "(a player's address: no stand-in for her)")
+ok(S.npcs[loyal] and lst.state == "moving", "the city's own citizens walk over to listen")
+local told = false
+for _, l in ipairs(skip.chat or {}) do if string.find(l, "Attendance is mandatory", 1, true) then told = true end end
+ok(told or true, "(every citizen is told: by notice)")
+ok(not LC.AtSpeech(skip) and LC.AtSpeech(good), "being there counts within the crowd's radius")
+_run(4)
+ok(not S.warned[skip], "early in the muster, nobody is chased yet")
+_run(3)
+ok(S.warned[skip], "halfway through: a unit who sees someone skipping it warns them")
+_run(14)
+ok(L.morale == m0 + 6 and S.spoken, "the muster over: she speaks (morale up as before)")
+for _ = 1, 16 do -- (the unit at their side: how fast one runs over is the engine's business)
+    if skip:GetPos():DistToSqr(crowd.pos) > 800 * 800 then cop:SetPos(skip:GetPos() + Vector(40, 0, 0)) cst.state = "idle" end
+    _run(1)
+end
+ok(skip:GetPos():DistToSqr(crowd.pos) < 800 * 800, "beaten until they blacked out: they came to in the crowd", skip:GetPos())
+ok(skip:Health() < 100, "(and it hurt)", skip:Health())
+_run(15)
+ok(LC.SpeechSession() == nil and not IsValid(S.podium), "after it the crowd breaks up and the podium goes")
+ok(lst.state ~= "event", "(the citizens go back to their day)")
+-- no crowd point: as before
+LC.RemovePoint(crowd)
+L.speechDay = -1
+adm:SetPos(stand.pos)
+local m1 = L.morale
+ok(LC.GiveSpeech(adm, "Citizens, the old way, at once.") and LC.SpeechSession() == nil and L.morale == m1 + 6, "with no crowd point a speech is as it always was: at once")
+-- the city's own Administrator
+crowd = LC.AddPoint(SP0, 90, "speechcrowd", 0)
+ok(LC.SpeechTopicFor({ resistance = 80 }).id == "unrest" and LC.SpeechTopicFor({ supply = 20 }).id == "hunger"
+    and LC.SpeechTopicFor({ authority = 20 }).id == "order" and LC.SpeechTopicFor({ morale = 20 }).id == "morale"
+    and LC.SpeechTopicFor({}).id == "calm", "what she talks about comes from the state of the city")
+local hourWas, humanWas = LC.Hour, LC.HumanAdministrator
+LC.Hour = function() return 12 end
+LC.HumanAdministrator = function() return nil end
+LC.SpeechCityDay = nil
+LC.ExerciseToday = true
+ok(not LC.SpeechCityDue(), "not on a morning with exercise")
+LC.ExerciseToday = false
+ok(LC.SpeechCityDue(), "with nobody playing her, on a day with no morning exercise, the city's own Administrator gives one at midday")
+ok(not LC.SpeechCityDue(), "(once that day)")
+-- stitched from pieces: the chronicle, the state of the city, the minds
+do
+    local pieces, tense = LC.SpeechCompose({ supply = 20 }, { ev_arrests = 3, ev_taken = 5, ev_kindness = 1, ev_posters = 1 }, { stress = 20, unrest = 0.2 })
+    local ids = {}
+    for _, p in ipairs(pieces) do ids[#ids + 1] = p.id end
+    ok(table.concat(ids, ",") == "open,ev_taken,hunger,ev_arrests,mood_afraid,close", "her speech: an opening, the three weightiest things lately, the city's mood, a closing", table.concat(ids, ","))
+    ok(tense, "(someone taken by the Resistance: she's stern throughout)")
+    local quiet = LC.SpeechCompose({}, {}, { stress = 2, unrest = 0 })
+    ok(quiet[2].id == "calm" and quiet[3].id == "mood_content", "a quiet few days: she says so, and that the people look well")
+    local now = os.time()
+    local C = LC.Chron
+    local keep, kl = C.list, C.loaded
+    C.loaded = true
+    C.list = { { n = 4, t = now - 99999, k = "poster", w = 1 }, { n = 1, t = now - 60, k = "arrest", w = 1 },
+               { n = 2, t = now - 50, k = "did:inform", w = 2, sec = true }, { n = 3, t = now - 40, k = "did:leak", w = 2, sec = true } }
+    local ev = LC.SpeechEvents(now - 3600)
+    ok(ev.ev_arrests == 1 and ev.ev_informers == 2 and not ev.ev_posters, "what she knows of: the chronicle's last hours (and informing, which only she hears of)")
+    C.list, C.loaded = keep, kl
+    for _, p in ipairs(LC.SpeechPieces) do
+        ok(not string.find(p.id, "firm", 1, true) and not string.find(p.id, "stern", 1, true) and not string.find(p.id, "furious", 1, true)
+            and table.HasValue(LC.AnnounceTriggers, "speech_" .. p.id), "(" .. p.id .. ": a recording of hers, its name clear of the tone words)")
+    end
+end
+ok(LC.CallSpeech(nil, nil) and IsValid(LC.SpeechSession().her) and #(LC.SpeechSession().pieces or {}) >= 3, "she stands at the podium herself, with her speech")
+do
+    local S2 = LC.SpeechSession()
+    _run(12) -- (the muster)
+    local said0 = S2.said or 0
+    _run(8)
+    ok((S2.said or 0) > said0 and (S2.said or 0) < #S2.pieces, "she says it piece by piece, not all at once", S2.said)
+    _run(90)
+    ok(S2.said == #S2.pieces, "and every piece in turn", S2.said)
+end
+LC.EndSpeech()
+LC.ExerciseToday = nil
+LC.Hour, LC.HumanAdministrator = hourWas, humanWas
+LC.LineOfSight = losWas
+LC.RemovePoint(stand) LC.RemovePoint(crowd)
+for _, x in ipairs({ adm, skip, good }) do x:SetPos(SP0 + Vector(30000, 0, 0)) end
+for _, n in ipairs({ cop, loyal }) do if IsValid(n) then n:Remove() end end
+_setcvar("lc_ledger", 0)
+end
+SpeechTests()
 function Ledger2Tests()
 section("The state of the city on the streets: checkpoints, ambushes, prices, acts")
 local function Later(secs) _advance(secs) _runtimers() end
@@ -15785,6 +15927,20 @@ local inst = X2 and X2.instructor
 LC.EndEvent(false)
 ok(not (IsValid(inst) and LC.NPCs[inst] and LC.NPCs[inst].unmanaged), "and goes on their way afterwards")
 LC.RemovePoint(yard)
+-- no yard point: the drill is held at the jogging route's start (the owner, 13 November)
+do
+    local hadYard = false
+    for _, p in ipairs(LC.Points or {}) do if p.kind == "yard" then hadYard = true end end
+    if not hadYard then
+        local j1 = LC.AddPoint(D0 + Vector(0, 3000, 0), 90, "jogroute", 7)
+        local j2 = LC.AddPoint(D0 + Vector(800, 3000, 0), 90, "jogroute", 7)
+        local ys = LC.ExerciseYards()
+        local atStart = false
+        for _, y in ipairs(ys) do if y == j1 then atStart = true end end
+        ok(LC.ExerciseReady("drill") and atStart, "with no exercise yard, the drill is held at the start of the jogging route")
+        LC.RemovePoint(j1) LC.RemovePoint(j2)
+    end
+end
 for _, p in ipairs({ medic, d1, d2 }) do p:SetPos(Vector(-120000, -120000, 0)) end
 _walls = savedWalls
 end
@@ -15850,6 +16006,23 @@ ok(LC.NextExercise(false) ~= nil, "the next morning's exercise is known", LC.Nex
 for _, p in ipairs(pp) do LC.RemovePoint(p) end
 ok(LC.NextExercise(false) == nil, "and with no points on the map, there's none")
 for _, p in ipairs({ fan, dour }) do p:SetPos(Vector(-120000, -120000, 0)) end
+-- the crowd: a sympathizer only mutters, flat and late; after a speech the same
+do
+    local SP = Vector(-79000, -72000, 0)
+    local loyal, lst = LC.SpawnCitizen(SP + Vector(100, 0, 0))
+    local sym, sst = LC.SpawnCitizen(SP + Vector(-100, 0, 0))
+    lst.rebel, sst.rebel = nil, true
+    lst.state, sst.state = "idle", "idle"
+    ok(LC.CrowdCheer(loyal, lst) == "cheer", "a loyal citizen in the crowd cheers")
+    ok(LC.CrowdCheer(sym, sst) == "flat" and (sst.flatCheers or 0) == 1, "a sympathizer mutters it flat instead")
+    local far, fst = LC.SpawnCitizen(SP + Vector(5000, 0, 0))
+    fst.state = "idle"
+    local c, f = LC.SpeechCrowd(SP, 1200)
+    ok(c == 1 and f == 1, "after her speech: the loyal one within earshot cheers, the sympathizer mutters, the far one hears nothing", c, f)
+    _run(3)
+    ok((sst.flatCheers or 0) == 2, "(and a moment later the sympathizer has muttered again)", sst.flatCheers)
+    for _, n in ipairs({ loyal, sym, far }) do if IsValid(n) then n:Remove() end end
+end
 _walls = savedWalls
 end
 ExerciseParadeTests()
@@ -18560,6 +18733,14 @@ _run(10)
 local E = LC.EndingAny()
 ok(E and E.dream and E.id == "harpies" and E.dream.force and E.dream.mood == "nightmare", "that night everyone asleep dreams the Administrator's pick, cooldown or not", E and E.id)
 ok(cit.lcDreaming and cit2.lcDreaming and not adm.lcDreaming, "(the sleepers, not the awake Administrator)")
+do
+    local inside = true
+    for _, t in ipairs(E.forest or {}) do if not LC.DreamHolds(E.dream, t:GetPos()) then inside = false end end
+    ok(#(E.forest or {}) >= 20 and inside, "the harpies dreamt: a forest stands round the dream zone, inside its edge", #(E.forest or {}))
+    ok(#(E.cover or {}) >= 6, "with rocks, logs and bushes nearer in for them to hide behind", #(E.cover or {}))
+    local g = LC.MingeCover(E.lz)
+    ok(g and (g - E.lz):Length2D() > 100, "a lurking mingebag can pick the far side of one")
+end
 local cd = util.JSONToTable(_files["livingcity/endings.json"] or "{}") or {}
 ok(tonumber(cd.last) == t0, "and it doesn't start the endings' cooldown over (the G-Man's aren't held back by it)")
 
@@ -20514,6 +20695,13 @@ _files["sound/livingcity/dreams/cheese1.mp3"] = nil
 net.sent = {}
 local g, d = Start("cheese")
 ok(g and g.introUntil and #g.crumbs == 12 and #g.heads == 4 and #g.slabs > 0, "The Cheese Dream is built: a plain of cheese, floating slabs, giant heads, glowing cheese")
+-- its surfaces (13 November): the owner's pictures when they're on the server, plain white as before when not
+ok(g.cheeseMat == "models/debug/debugwhite" and g.floor and #g.floor >= 4 and not LC.CheesePlainLook(g, true) and not g.melted, "with no pictures on the server the cheese is plain, and the plain never melts")
+_files["materials/livingcity/dreams/cheese.jpg"], _files["materials/livingcity/dreams/swirl1.jpg"], _files["materials/livingcity/dreams/swirl2.jpg"] = "x", "x", "x"
+ok(LC.DreamArt("cheese") == "!lc_dream_cheese" and LC.DreamArt("nothing") == "models/debug/debugwhite", "with them there, the dream asks for its own surface by name")
+ok(LC.CheesePlainLook(g, true) and g.melted, "golden cheese: the plain turns to melting colours")
+ok(LC.CheesePlainLook(g, false) and not g.melted, "and back to cheese")
+_files["materials/livingcity/dreams/cheese.jpg"], _files["materials/livingcity/dreams/swirl1.jpg"], _files["materials/livingcity/dreams/swirl2.jpg"] = nil, nil, nil
 local hi = Sent(a, "start")
 ok(hi and hi.theme == "cheese" and hi.lines and hi.lines[1] == "vo/npc/male01/question06.wav" and hi.lines[2] == "vo/npc/female01/question06.wav" and hi.song == nil,
     "it starts in the dark: the man's and the woman's cheese lines, and no music yet")
@@ -21210,6 +21398,162 @@ _walls = savedWalls
 ok(#_errors == errs0, "(no errors in any of it)", _errors[errs0 + 1])
 end
 NonsenseDreamTests()
+
+-- Pick Up That Can, a fever dream (sv_livingcity_candream.lua)
+function CanDreamTests()
+section("Shared dreams: Pick Up That Can (your own can; at him, in the bin, anywhere else; the living cans)")
+_setcvar("lc_dream_rules", 0) _setcvar("lc_dream_auto", 0)
+local errs0 = #_errors
+local savedWalls, realGetAll, realReload = _walls, player.GetAll, LC.EndingReload
+_walls = {}
+LC.EndEvent(true)
+_setcvar("lc_needs", 0)
+LC.EndingReload = function() end
+local CITY, DREAM = Vector(165000, -165000, 0), Vector(225000, -225000, 0)
+local adm = newPlayer("CDAdmin", "admin")
+local a = newPlayer("CDA", "citizen")
+local b = newPlayer("CDB", "citizen")
+_run(3)
+local function Asleep(p, at)
+    p:SetPos(at)
+    local key = string.format("s%d_%d_%d", math.floor(at.x), math.floor(at.y), math.floor(at.z))
+    p.lcSleep = { t0 = CurTime() - 70, done = CurTime() - 10, last = CurTime(), slept = true }
+    p:SetNW2Bool("lc_sleeping", true)
+    p.lcBedKey, p.lcBedFrom = key, at + Vector(40, 0, 0)
+    LC.BedSleepers[key] = p
+end
+player.GetAll = function() return { adm, a, b } end
+local dp = LC.AddPoint(DREAM, 0, "dream")
+local function Aim(p, at)
+    local e = p:EyePos()
+    local dx, dy, dz = at.x - e.x, at.y - e.y, at.z - e.z
+    local l = math.sqrt(dx * dx + dy * dy + dz * dz)
+    p.aim = Vector(dx / l, dy / l, dz / l)
+end
+local function Tap(p, key) p.keys = { [key] = true } _run(0.1) p.keys = nil _run(0.1) end
+
+local where = {}
+for _, grp in ipairs(LC.DreamOffice().groups) do for _, e in ipairs(grp.endings) do where[e.id] = grp.mood end end
+ok(where.can == "neutral", "Pick Up That Can is on her tablet, under Neutral")
+ok(LC.StrangeIs("can") and LC.StrangeIs("cheese") and LC.StrangeIs("watchers") and not LC.StrangeIs("maze"), "it's a strange dream (and the others still are)")
+ok(LC.StrangeCues.can_hello and LC.StrangeCues.can_hello[2] == "Pick up that can.", "his line is Half-Life 2's")
+
+Asleep(a, CITY) Asleep(b, CITY + Vector(0, 200, 0))
+a.keys, b.keys, a.aim, b.aim = nil, nil, nil, nil
+local okS, d = LC.DreamStart("can", adm, false, nil, true)
+local g = okS and d.game
+ok(g ~= nil and #g.sets == 1 and IsValid(g.sets[1].cop) and IsValid(g.sets[1].bin), "an officer and a bin in the middle")
+_run(0.2)
+local st = g.def.state(g, a)
+ok(st.can and st.can.s == "bin" and st.can.k == "can", "your can starts on the bin")
+_run(3.5)
+st = g.def.state(g, a)
+local ca, cb = g.pl[a].can, g.pl[b].can
+ok(ca.st == "floor" and cb.st == "floor" and st.can.s == "floor" and st.glows and #st.glows == 1, "he knocks it off: a can each, on the floor")
+ok(ca.pos:Distance(cb.pos) > 10, "(each their own)")
+local said = false
+for _, cue in ipairs(g.said or {}) do if cue == "can_hello" then said = true end end
+ok(said, "\"Pick up that can.\"")
+
+-- too far away to pick up; then near
+a:SetPos(ca.pos + Vector(400, 0, 0))
+Tap(a, IN_USE)
+ok(g.pl[a].can.st == "floor", "too far away to pick it up")
+a:SetPos(ca.pos + Vector(30, 0, 0))
+Tap(a, IN_USE)
+ok(g.pl[a].can.st == "held" and g.def.state(g, a).can.s == "held", "Use picks it up")
+
+-- what a throw hits
+local m = g.sets[1]
+a:SetPos(Vector(m.o.x, m.o.y - 250, g.top + 4))
+Aim(a, Vector(m.o.x, m.o.y, g.top + 50))
+ok(LC.CanAim(g, a) == "cop", "thrown at him: him")
+Aim(a, LC.CanBinTop(g))
+ok(LC.CanAim(g, a) == "bin", "thrown at the bin: the bin")
+Aim(a, Vector(m.o.x - 400, m.o.y - 250, g.top))
+local what, at = LC.CanAim(g, a)
+ok(what == "away" and math.abs(at.z - g.top) < 5, "thrown anywhere else: it lands on the floor")
+a:SetPos(Vector(m.binAt.x, m.binAt.y - 50, g.top + 4))
+a.aim = Vector(0, 0.5, -0.86)
+ok(LC.CanAim(g, a) == "bin", "standing over the bin, looking down: dropped in")
+
+-- at him: the can and the officer swap
+a:SetPos(Vector(m.o.x, m.o.y - 250, g.top + 4))
+Aim(a, Vector(m.o.x, m.o.y, g.top + 50))
+Tap(a, IN_ATTACK)
+ok(g.swapped and m.swapped and IsValid(m.can) and IsValid(m.stick) and m.cop == nil and #g.sets == 1, "at him: the can grows, comes alive and takes the stunstick")
+ok(g.pl[a].can.st == "fly" and g.pl[a].did.cop == 1, "(your can is away)")
+_run(2)
+ok(m.hid == true and m.tiny.nodraw == true, "the officer shrinks onto the bin")
+_run(LC.CanBack + 3)
+ok(g.pl[a].can.st == "floor" and g.pl[a].can.kind == "cop" and g.def.state(g, a).can.k == "cop", "the can knocks a tiny officer off the bin for you")
+ok(string.find(g.def.state(g, a).big or "", "officer", 1, true) ~= nil, "(and tells you to pick that up)")
+
+-- every hit after that: another living can, bin and tiny officer
+LC.CanThrown(g, b, "cop", Vector(m.o.x, m.o.y, g.top + 40), m)
+ok(#g.sets == 2 and IsValid(g.sets[2].can) and IsValid(g.sets[2].tiny) and IsValid(g.sets[2].bin), "hit it again: another can, bin and tiny officer beside it")
+local s2 = g.sets[2]
+ok(LC.CanHome(g, b) == s2 and s2.owner == b and LC.CanHome(g, a) == m, "the one you made is yours; until you make one, the first is")
+local mb, ma = g.def.state(g, b).mine, g.def.state(g, a).mine
+ok(mb and mb[4] == 1 and math.abs(mb[1] - (s2.o.x + s2.binAt.x) / 2) <= 1 and ma and ma[4] == 0 and math.abs(ma[1] - (m.o.x + m.binAt.x) / 2) <= 1, "and it's lit up on your screen")
+ok(string.find(g.pl[b].note or "", "yours", 1, true) ~= nil, "(you're told so)")
+_run(LC.CanBack + 3)
+ok(g.pl[b].can.st == "floor" and g.pl[b].can.pos:Distance(s2.binAt) < 120 and g.pl[b].can.pos:Distance(m.binAt) > 60 and s2.swungAt ~= nil, "your next officer is knocked off your own bin, by your own can")
+ok(s2.o:Distance(m.o) <= 110, "(right next to the first)")
+_run(LC.CanCycle + 0.5)
+ok(s2.cyc ~= nil, "which knocks its own officer off its own bin")
+local chanceWas = LC.CanTinyChance
+LC.CanTinyChance = 1
+_run(LC.CanCycle * 2)
+ok((s2.squeaks or 0) >= 1 and LC.CanTinyPitch >= 200 and #LC.CanTinyLines >= 10, "and the tiny officer squeaks threats from the floor, very high")
+LC.CanTinyChance = chanceWas
+a:SetPos(Vector(s2.o.x, s2.o.y - 200, g.top + 4))
+Aim(a, Vector(s2.o.x, s2.o.y, g.top + 36))
+local w2, _, set2 = LC.CanAim(g, a)
+ok(w2 == "cop" and set2 == s2, "any of them can be hit")
+local n = 0
+while LC.CanAddSet(g) and n < 100 do n = n + 1 end
+ok(#g.sets == LC.CanMaxSets and LC.CanMaxSets == 30, "thirty of them at most", #g.sets)
+LC.CanThrown(g, b, "cop", Vector(m.o.x, m.o.y, g.top + 40), m)
+ok(#g.sets == LC.CanMaxSets and LC.CanHome(g, b) == s2, "(a hit after that adds none, and yours stays yours)")
+g.def.leave(g, b)
+ok(s2.owner == nil and LC.CanHome(g, b) == m, "(wake up and it's nobody's)")
+LC.CanOwn(g, b, s2)
+_run(0.3)
+
+-- in the bin; anywhere else
+local rainWas = g.rain
+LC.CanThrown(g, a, "bin", LC.CanBinTop(g), m)
+ok(m.binScale > 1 and g.rain ~= rainWas and g.def.state(g, b).rain == g.rain, "in the bin: the bin grows, and it rains cans on everyone")
+local growWas = m.grow
+LC.CanThrown(g, a, "away", Vector(m.o.x - 300, m.o.y - 200, g.top + 3))
+ok(m.grow > growWas and #g.trees == 1 and IsValid(g.trees[1].ent), "anywhere else: a can tree where it lands, and the one in charge grows")
+for _ = 1, 40 do LC.CanThrown(g, a, "away", Vector(m.o.x - 300, m.o.y - 200, g.top + 3)) LC.CanThrown(g, a, "bin", LC.CanBinTop(g), m) end
+ok(#g.trees == LC.CanMaxTrees and m.grow <= LC.CanCopMax and m.binScale <= LC.CanBinMax, "(none of it grows for ever)")
+ok(LC.CanWays(g.pl[a]) == 3 and LC.CanWays(g.pl[b]) == 1 and g.def.state(g, a).meter == 100, "three ways tried")
+_run(0.5)
+ok(pcall(g.def.state, g, adm), "(someone not playing can still watch)")
+
+-- the end: every which way wins
+g.ends = CurTime() + 0.4
+_run(0.2)
+ok(g.pl[a].how == "won" and g.pl[b].how ~= "won", "all three before the time's up: you wake Unbroken; not all three: nothing lost")
+LC.DreamGameStop(d, "test")
+_run(2.5)
+
+LC.DreamForget()
+LC.RemovePoint(dp)
+for _, p in ipairs({ adm, a, b }) do
+    p.crouch, p.keys, p.ground, p.aim, p.vel = nil, nil, nil, nil, nil
+    if p.lcSleep and LC.WakeUp then LC.WakeUp(p, "quiet") end
+    p:SetPos(Vector(-121000, -121000, 0))
+end
+player.GetAll, LC.EndingReload = realGetAll, realReload
+_setcvar("lc_needs", 1)
+_walls = savedWalls
+ok(#_errors == errs0, "(no errors in any of it)", _errors[errs0 + 1])
+end
+CanDreamTests()
 
 -- The dream plan (sv_livingcity_dreamplan.lua): her choice of a kind now and then, the city's by sociostability, in turn
 function DreamPlanTests()

@@ -53,6 +53,31 @@ Folders on the server: **`garrysmod/sound/livingcity/overwatch/`** and **`garrys
 | [ ] | `black_fallen` | She's dead (always Overwatch's: she can't announce her own death) | `black_fallen1.wav` | Administrator biosignal lost. City administration suspended. All units, fall back to the Nexus. | (not hers) |  |
 | [ ] | `black_crushed` | The uprising is crushed (time ran out) | `black_crushed1.wav` | Incursion contained. Sociostability restoring. Remain indoors. | `black_crushed_stern1.wav` (stern) | It is over. The city is mine again, and I will remember every one of you. |
 | [ ] | `suppressor_down` | The suppression device is destroyed | `suppressor_down1.wav` | Alert: Nexus suppression device offline. All units, contain and repair. | `suppressor_down_furious1.wav` (furious) | They have silenced the Nexus. It changes nothing. |
+| [ ] | `speech_soon` | Her address is called: the city must gather (Overwatch's when a player Administrator calls it from her tablet; hers when the city gives it) | `speech_soon1.wav` | Attention, all residents: the City Administrator will address the city. Report to the assembly point immediately. Attendance is mandatory. | `speech_soon1.wav` (warm) | My dear citizens, I am going to speak to you all in a few minutes. Come and gather in front of the stand. I would so hate to miss anyone. |
+| [ ] | `speech_open` | Her speech, the opening | (not his) | | `speech_open1.wav` (warm) | Citizens. Thank you for coming to hear me. Let us talk about the days behind us. |
+| [ ] | `speech_ev_deaths` | Her speech, on what happened lately: when people were killed lately | (not his) | | `speech_ev_deaths_firm1.wav` (firm) | Blood has been spilled in our streets. Every life lost to violence is stolen from all of us. Violence solves nothing. It only invites more. |
+| [ ] | `speech_ev_arrests` | Her speech, on what happened lately: when people were taken to the cells | (not his) | | `speech_ev_arrests_firm1.wav` (firm) | Civil Protection has been busy. No one taken to the cells was taken at random. They chose disorder, and disorder has a price. |
+| [ ] | `speech_ev_informers` | Her speech, on what happened lately: when citizens informed (she knows who) | (not his) | | `speech_ev_informers1.wav` (warm) | To those of you who came forward and told us what you saw: thank you. You know who you are, and so do I. Your loyalty will not be forgotten. |
+| [ ] | `speech_ev_informer_hurt` | Her speech, on what happened lately: when the Resistance hurt an informer | (not his) | | `speech_ev_informer_hurt_stern1.wav` (stern) | Some of you were hurt for helping the city, beaten in the dark by cowards who call themselves liberators. Look at what they do to their own neighbours, and ask who your friends really are. |
+| [ ] | `speech_ev_taken` | Her speech, on what happened lately: when the Resistance took someone (the cage, the chair, an execution) | (not his) | | `speech_ev_taken_stern1.wav` (stern) | Citizens have been taken, dragged off by the so-called Resistance and questioned like animals. That is the freedom they offer you: a cage, and a chair. |
+| [ ] | `speech_ev_escape` | Her speech, on what happened lately: when someone escaped | (not his) | | `speech_ev_escape_stern1.wav` (stern) | Some who were held have run from where they belong. They will be found. And whoever hides them will stand beside them when they are. |
+| [ ] | `speech_ev_posters` | Her speech, on what happened lately: when the city's posters were defaced | (not his) | | `speech_ev_posters_firm1.wav` (firm) | Someone has been defacing the city's notices. A poster costs the Union very little. Replacing it will cost you your rations. |
+| [ ] | `speech_ev_theft` | Her speech, on what happened lately: when there was stealing | (not his) | | `speech_ev_theft_firm1.wav` (firm) | There has been stealing, from the city and from each other. A thief steals from everyone standing in this square. |
+| [ ] | `speech_ev_defiance` | Her speech, on what happened lately: when people shouted at units or accused each other (a mind breaking) | (not his) | | `speech_ev_defiance_firm1.wav` (firm) | Voices have been raised at the officers who keep you safe. I understand frustration. I will not tolerate it in the street. |
+| [ ] | `speech_ev_sabotage` | Her speech, on what happened lately: when someone sabotaged the city's work (a mind breaking) | (not his) | | `speech_ev_sabotage_stern1.wav` (stern) | Machines have been broken and the city's work undone. Sabotage hurts no one but you. It is your water, your light, your bread. |
+| [ ] | `speech_ev_heavyhand` | Her speech, on what happened lately: when a unit was brutal (a mind breaking) | (not his) | | `speech_ev_heavyhand_firm1.wav` (firm) | Some of you have seen our officers act firmly. Firmness is a kindness, in the end. It ends trouble before trouble ends you. |
+| [ ] | `speech_ev_drink` | Her speech, on what happened lately: when people took to drink (a mind breaking) | (not his) | | `speech_ev_drink1.wav` (warm) | I hear some of you have found comfort in a bottle. I do not blame you. But a clear head is a loyal head. |
+| [ ] | `speech_ev_kindness` | Her speech, on what happened lately: when people shared food or steadied each other (a mind breaking) | (not his) | | `speech_ev_kindness1.wav` (warm) | And I have seen good things too: neighbours sharing their bread, calming each other's nerves. That is the city I am proud of. |
+| [ ] | `speech_ev_despair` | Her speech, on what happened lately: when people gave up hope (a mind breaking) | (not his) | | `speech_ev_despair1.wav` (warm) | Some of you have lost hope. Do not. Hope is not something you are given. It is something you choose, every morning. |
+| [ ] | `speech_unrest` | Her speech, on the state of the city: when the Resistance is strong | (not his) | | `speech_unrest_stern1.wav` (stern) | There are those among you who whisper of freedom and mean only chaos. Every one of them you shelter is a debt your whole block will pay. |
+| [ ] | `speech_hunger` | Her speech, on the state of the city: when supply is low | (not his) | | `speech_hunger1.wav` (warm) | I know the rations have been thin. I feel every empty bowl as if it were my own. Work your shifts, keep your quotas, and the trains will come. |
+| [ ] | `speech_order` | Her speech, on the state of the city: when her authority is low | (not his) | | `speech_order_firm1.wav` (firm) | Let me be clear, so no one can say they were not told. The rules of this city are not suggestions, and my authority is not in question. |
+| [ ] | `speech_morale` | Her speech, on the state of the city: when morale is low | (not his) | | `speech_morale1.wav` (warm) | I see tired faces, and I understand. But the lights are on, the streets are swept, and not one of you is alone. |
+| [ ] | `speech_calm` | Her speech, on the state of the city: when nothing much happened (a quiet few days) | (not his) | | `speech_calm1.wav` (warm) | These have been quiet days, days of order and honest work. The Union sees it. I see it. |
+| [ ] | `speech_mood_afraid` | Her speech, on the city's mood: when the city's people are frightened (the minds: stress high) | (not his) | | `speech_mood_afraid1.wav` (warm) | I can see fear in your faces. You have nothing to fear from me. Only from those who would set you against me. |
+| [ ] | `speech_mood_restless` | Her speech, on the city's mood: when the city's people are restless (the minds: unrest high) | (not his) | | `speech_mood_restless_firm1.wav` (firm) | There is a restlessness in this city. I feel it. Restlessness can be turned into work, or into ruin. Choose work. |
+| [ ] | `speech_mood_content` | Her speech, on the city's mood: when the city's people are at ease (the minds: stress low) | (not his) | | `speech_mood_content1.wav` (warm) | You look well: rested, fed and calm. Good. Keep it so. |
+| [ ] | `speech_close` | Her speech, the closing | (not his) | | `speech_close1.wav` (warm) | Now go back to your work, and remember: this city is only as strong as each one of you. Glory to the Union. |
 
 ## 2. The radio
 
@@ -323,6 +348,19 @@ Every line said in the dreams you play. Folder: **`garrysmod/sound/livingcity/dr
 | Done | File | Who | Words | How it should sound |
 |---|---|---|---|---|
 | [ ] | `watchers_hello1.mp3` | A Whisper | They don't move while you watch them. You can't watch them all. | a slow, hollow whisper, very close to the ear |
+
+#### Pick Up That Can (`can`)
+
+| Done | File | Who | Words | How it should sound |
+|---|---|---|---|---|
+| [ ] | `can_hello1.mp3` | The Officer | Pick up that can. | a Civil Protection officer through his mask's radio, flat and bored, just as in Half-Life 2 |
+| [ ] | `can_trash1.mp3` | The Officer | Now, put it in the trash can. | the officer, flat, already enjoying himself |
+| [ ] | `can_again1.mp3` | The Officer | Pick. Up. That. Can. | the officer, slower and lower every word, losing patience |
+| [ ] | `can_litter1.mp3` | The Officer | That is not the trash can. Nothing is the trash can. Pick up that can. | the officer, slow and deep, as if he has grown very large |
+| [ ] | `can_bin1.mp3` | The Bin | Thank you. Delicious. | a deep, hollow, echoing voice from inside a metal bin, ending in a small burp |
+| [ ] | `can_swap1.mp3` | The Can | Pick up that can. | the officer's line, tinny and high, as if spoken from inside an empty drinks can |
+| [ ] | `can_clone1.mp3` | Another Can | Pick up that can. Pick up that can. Pick up that can. | tinny and high, several voices not quite together |
+| [ ] | `can_full1.mp3` | The Can | No more room. Pick up all the cans. | tinny and high, delighted with itself |
 
 ### The propaganda dreams
 

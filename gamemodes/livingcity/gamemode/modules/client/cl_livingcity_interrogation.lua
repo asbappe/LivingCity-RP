@@ -3,8 +3,12 @@
     (sv_livingcity_interrogation.lua). The prisoner gets each question with
     the choices: tell the truth, lie, say nothing (not with no resolve
     left), bargain (once), or tell them everything. A Civil Protection
-    player asking gets a window: the three questions, the baton, the
-    answers so far, and Done.
+    player asking gets the three questions, the baton, the answers so far,
+    and Done. Both are quick menus with the number keys, like F1 and F2 (the
+    owner, 12 November: "yes they should, they should close other opened
+    F1-F4 menus and popup, giving the player a quick and easy way to
+    respond"); lc_situation_windows 1 (your own client) brings back the
+    windows.
 ]]
 
 LC_CL = LC_CL or {}
@@ -32,6 +36,7 @@ local function Answer(c)
     net.SendToServer()
     if IsValid(qWin) then qWin:Remove() end
     qWin = nil
+    if LC_CL.CloseSituation then LC_CL.CloseSituation("intrq") end
 end
 
 local function BuildQuestion(t)
@@ -154,8 +159,63 @@ local function BuildCP()
     return f
 end
 
+------------------------------------------------------------------------
+-- As quick menus (number keys), the default
+------------------------------------------------------------------------
+
+local function Quick() return LC_CL.OpenSituation ~= nil and not (LC_CL.SituationWindows and LC_CL.SituationWindows()) end
+
+local function QuestionQuick(t)
+    local openAt = CurTime()
+    local items = {
+        { label = "Tell the truth", run = function() Answer("truth") end },
+        { label = "Lie (they may see through it)", run = function() Answer("lie") end },
+    }
+    if (t.resolve or 0) > 0 then
+        items[#items + 1] = { label = "Say nothing (the baton)", run = function() Answer("silent") end }
+    else
+        items[#items + 1] = { label = "Say nothing (you can't take any more)", disabled = true }
+    end
+    if t.bargain then items[#items + 1] = { label = "Bargain: the truth, for a shorter sentence", run = function() Answer("bargain") end } end
+    items[#items + 1] = { label = "Tell them everything (and it stops)", run = function() Answer("everything") end }
+    local said = tostring(t.by or "The unit") .. ": \"" .. tostring(t.text or "") .. "\""
+    LC_CL.OpenSituation({ id = "intrq", title = "Interrogation", items = items,
+        note = function()
+            local left = math.max(0, math.ceil((t.secs or 12) - (CurTime() - openAt)))
+            return said .. "\n" .. string.format("Resolve: %d. No answer in %ds is silence.", t.resolve or 0, left)
+        end,
+        stay = function()
+            return CurTime() - openAt <= (t.secs or 12) + 1 and LocalPlayer():GetNW2Bool("lc_interrogated", false)
+        end })
+end
+
+local function CPQuick(st)
+    local items = {}
+    for i = 1, 3 do
+        local text = (st.questions or {})[i] or ("Question " .. i)
+        if st.asked and st.asked[i] then text = text .. " (asked)" end
+        items[#items + 1] = { label = "Ask: " .. text, run = function() Do("ask", i) end }
+    end
+    items[#items + 1] = { label = "Use the baton", run = function() Do("baton") end }
+    items[#items + 1] = { label = "Done", run = function() Do("done") end }
+    local lines = { string.format("Their resolve: %d. Blows: %d.%s", st.resolve or 0, st.hits or 0, (st.waiting or 0) > 0 and " (Waiting for an answer.)" or "") }
+    if #(st.answers or {}) > 0 then
+        lines[#lines + 1] = "What they've said (true or not: you'll find out):"
+        for _, a in ipairs(st.answers) do lines[#lines + 1] = tostring(a.text or "") end
+    end
+    LC_CL.OpenSituation({ id = "intrcp", title = "Questioning " .. tostring(st.who or "the prisoner"), items = items,
+        note = table.concat(lines, "\n"),
+        -- put away (0, or another menu): the questioning is over, as Done
+        onClose = function() Do("done") end })
+end
+
 net.Receive("lc_intr_q", function()
     local t = util.JSONToTable(net.ReadString() or "") or {}
+    if Quick() then
+        if IsValid(qWin) then qWin:Remove() end
+        qWin = nil
+        return QuestionQuick(t)
+    end
     BuildQuestion(t)
 end)
 net.Receive("lc_intr_cp", function()
@@ -163,9 +223,11 @@ net.Receive("lc_intr_cp", function()
     if t.done then
         if IsValid(cpWin) then cpWin.silent = true cpWin:Remove() end
         cpWin, cpState = nil, nil
+        if LC_CL.CloseSituation then LC_CL.CloseSituation("intrcp") end
         return
     end
     cpState = t
+    if Quick() then return CPQuick(t) end
     BuildCP()
 end)
 

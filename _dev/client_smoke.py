@@ -1096,6 +1096,9 @@ do
         RunConsoleCommand = function(c) asked[c] = true end
         LC_CL.AskCareer = function() asked.career = true end
         local okHub, errHub = pcall(function()
+            -- (as a new session: earlier checks may have left another tab as the last one, e.g. a tab's content
+            -- arriving after a situation's quick menu shut the window)
+            LC_CL.OpenHub("jobs", true)
             LC_CL.CloseHub()
             net["recv_lc_hub"]()
             if not LC_CL.HubOpen() then error("F4 didn't open the window") end
@@ -1319,6 +1322,7 @@ if not okLt then problems[#problems + 1] = "letter: " .. tostring(errLt) end
 if made < 5 then problems[#problems + 1] = "letter window built only " .. made .. " controls" end
 util.JSONToTable = oldJ
 -- the talk window (E on a citizen)
+GetConVar("lc_situation_windows").v = "1"
 local talkNpc = ents.Create("npc_citizen")
 net.ReadString = function() return table.remove(net._q, 1) end
 net.ReadBool = function() return table.remove(net._q, 1) == true end
@@ -1347,6 +1351,18 @@ net.ReadUInt = oldUInt
 net._q = { nil }
 okTk, errTk = pcall(net["recv_lc_talk"]) -- (and closing it)
 if not okTk then problems[#problems + 1] = "talk window close: " .. tostring(errTk) end
+GetConVar("lc_situation_windows").v = "0"
+-- the same as a quick menu (the default): open with their words, then gone when the server says so
+net._q = { talkNpc, "Mira Kovacs", "Factory Worker", "working the line", "friendly", "warm", "'Another day.'", true, true, true, true, true, "", 0, false, false }
+net.ReadUInt = function() return table.remove(net._q, 1) end
+okTk, errTk = pcall(net["recv_lc_talk"])
+net.ReadUInt = oldUInt
+if not okTk then problems[#problems + 1] = "talk quick menu: " .. tostring(errTk) end
+if not LC_CL.SituationOpen("talk") then problems[#problems + 1] = "talk quick menu didn't open" end
+run("HUDPaint")
+net._q = { nil }
+pcall(net["recv_lc_talk"])
+if LC_CL.SituationOpen("talk") then problems[#problems + 1] = "talk quick menu didn't close" end
 -- the editor's layout browser: counts, find through walls
 LC_CL.points = { { pos = Vector(100, 0, 0), kind = "dealer" } }
 LC_CL.zones, LC_CL.doors, LC_CL.nodes = {}, {}, {}
@@ -1548,6 +1564,7 @@ if not okMG then problems[#problems + 1] = "more job games: " .. tostring(errMG)
 -- a unit's search as a pat-down (cl_livingcity_patsearch.lua): the unit's window builds, updates, paints; the panel
 -- for the person searched; both close; a window that can't be built hands back to the old search
 local psSaved = { net.ReadString, util.JSONToTable, vgui, net.SendToServer, net.Start, net.WriteUInt }
+GetConVar("lc_situation_windows").v = "1"
 local okPS, errPS = pcall(function()
     local doc, sent, made = nil, {}, {}
     local curName
@@ -1599,6 +1616,7 @@ local okPS, errPS = pcall(function()
 end)
 net.ReadString, util.JSONToTable, vgui, net.SendToServer, net.Start, net.WriteUInt = psSaved[1], psSaved[2], psSaved[3], psSaved[4], psSaved[5], psSaved[6]
 if not okPS then problems[#problems + 1] = "pat-down search: " .. tostring(errPS) end
+GetConVar("lc_situation_windows").v = "0"
 -- the arrival search (cl_livingcity_intaketutor.lua): the choice, the panel for the person searched (with the lesson),
 -- the lesson's last page and the practice search all build and paint, and close on the server's word
 local tsSaved = { net.ReadString, util.JSONToTable, vgui, net.SendToServer, net.Start, net.WriteBool }
@@ -1653,6 +1671,7 @@ if not okTS then problems[#problems + 1] = "arrival search: " .. tostring(errTS)
 -- the interrogation question by question (cl_livingcity_interrogation.lua): the prisoner's question window and the
 -- unit's window build and paint, answers go to the server, and the unit's window closes when it's over
 local itSaved = { net.ReadString, util.JSONToTable, vgui, net.SendToServer, net.Start, net.WriteString, net.WriteUInt }
+GetConVar("lc_situation_windows").v = "1"
 local okIT, errIT = pcall(function()
     local doc, sent, made = nil, {}, {}
     local curName
@@ -1705,6 +1724,49 @@ local okIT, errIT = pcall(function()
 end)
 net.ReadString, util.JSONToTable, vgui, net.SendToServer, net.Start, net.WriteString, net.WriteUInt = itSaved[1], itSaved[2], itSaved[3], itSaved[4], itSaved[5], itSaved[6], itSaved[7]
 if not okIT then problems[#problems + 1] = "interrogation windows: " .. tostring(errIT) end
+GetConVar("lc_situation_windows").v = "0"
+-- the pat-down and the interrogation as quick menus (the default): open, update, picked, put away
+local qmSaved = { net.ReadString, util.JSONToTable, net.SendToServer, net.Start, net.WriteString, net.WriteUInt }
+local okQM, errQM = pcall(function()
+    local doc, sent, curName = nil, {}, nil
+    net.ReadString = function() return "x" end
+    util.JSONToTable = function() return doc end
+    net.Start = function(n) curName = n end
+    net.WriteString = function() end
+    net.WriteUInt = function() end
+    net.SendToServer = function() sent[#sent + 1] = curName end
+    local four = function(a, b, c, d) return { { name = "Jacket", state = a }, { name = "Waist", state = b }, { name = "Legs", state = c }, { name = "Boots", state = d } } end
+    doc = { role = "unit", who = "Citizen", live = false, secs = 1, spots = four(0, 0, 0, 0) }
+    net.recv_lc_pat_open()
+    if not LC_CL.SituationOpen("patsearch") then error("the search menu didn't open") end
+    if sent[#sent] ~= "lc_pat_check" then error("the menu didn't tell the server it's open") end
+    local n0 = #sent
+    doc = { role = "unit", who = "Citizen", live = true, papers = true, secs = 1, spots = four(2, 0, 0, 0) }
+    doc.spots[1].text = "Lockpick"
+    net.recv_lc_pat_open()
+    if #sent ~= n0 then error("an update sent something") end
+    run("HUDPaint")
+    LC_CL.QuickPick(2)
+    if sent[#sent] ~= "lc_pat_check" then error("a spot isn't checked from its number") end
+    net.recv_lc_pat_open()
+    LC_CL.QuickPick(0)
+    if sent[#sent] ~= "lc_pat_close" or LC_CL.SituationOpen("patsearch") or LC_CL.PatSearchQuick() then error("0 didn't end the search") end
+    doc = { q = 1, text = "Where is the hideout?", resolve = 0, bargain = true, secs = 12, by = "Unit 42" }
+    net.recv_lc_intr_q()
+    if not LC_CL.SituationOpen("intrq") then error("the prisoner's question didn't open") end
+    run("HUDPaint")
+    LC_CL.QuickPick(1)
+    if sent[#sent] ~= "lc_intr_a" or LC_CL.SituationOpen("intrq") then error("the answer wasn't sent") end
+    doc = { who = "Prisoner", resolve = 2, hits = 1, waiting = 0, asked = { true }, answers = { { q = 1, text = "\"They meet by the canal.\"" } },
+        questions = { "Where is the hideout?", "Names.", "Supplies?" } }
+    net.recv_lc_intr_cp()
+    if not LC_CL.SituationOpen("intrcp") then error("the unit's questioning didn't open") end
+    run("HUDPaint")
+    LC_CL.QuickPick(0)
+    if sent[#sent] ~= "lc_intr_cp_do" or LC_CL.SituationOpen("intrcp") then error("putting it away isn't Done") end
+end)
+net.ReadString, util.JSONToTable, net.SendToServer, net.Start, net.WriteString, net.WriteUInt = qmSaved[1], qmSaved[2], qmSaved[3], qmSaved[4], qmSaved[5], qmSaved[6]
+if not okQM then problems[#problems + 1] = "situation quick menus: " .. tostring(errQM) end
 -- "Where I stand" (cl_livingcity_standingpanel.lua): the window builds from the rows and paints
 local spSaved = { net.ReadString, util.JSONToTable, vgui }
 local okSP, errSP = pcall(function()
@@ -1796,6 +1858,23 @@ local okAR, errAR = pcall(function()
     if LC_CL.Struggle then error("not cleared") end
 end)
 if not okAR then problems[#problems + 1] = "resisting arrest: " .. tostring(errAR) end
+-- working at the cuffs, felt and not a bar (cl_livingcity_cuffed.lua): the line by progress, the Think and the paint run
+local wasCF = { _me.nw.lc_tied, _me.nw.lcu_pick_until, _me.nw.lcu_pick_start, _me.nw.lcu_progress }
+local okCF, errCF = pcall(function()
+    if not LC_CL.CuffsFelt or not LC_CL.CuffsFeel or not LC_CL.StruggleFeel then error("missing") end
+    if LC_CL.CuffsFeel(0.1, false) == LC_CL.CuffsFeel(0.9, false) then error("no change by progress") end
+    if not string.find(LC_CL.CuffsFeel(0.5, true), "pick", 1, true) then error("pick line") end
+    _me.nw.lc_tied, _me.nw.lcu_pick_start, _me.nw.lcu_pick_until, _me.nw.lcu_progress = true, CurTime() - 2, CurTime() + 5, "Working at the cuffs..."
+    if not LC_CL.CuffsFelt(_me) then error("not felt while cuffed") end
+    hook.t.Think.LivingCityCuffsFelt() hook.t.HUDPaint.LivingCityCuffsFelt()
+    GetConVar("lc_struggle_bar").v = "1"
+    if LC_CL.CuffsFelt(_me) then error("bar setting ignored") end
+    GetConVar("lc_struggle_bar").v = "0"
+    local s = { role = "resist", other = "Unit 12" }
+    if LC_CL.StruggleFeel(s, 0.1) == LC_CL.StruggleFeel(s, 0.7) then error("struggle line doesn't change") end
+end)
+_me.nw.lc_tied, _me.nw.lcu_pick_until, _me.nw.lcu_pick_start, _me.nw.lcu_progress = wasCF[1], wasCF[2], wasCF[3], wasCF[4]
+if not okCF then problems[#problems + 1] = "cuffs felt: " .. tostring(errCF) end
 -- the lag monitor (cl_livingcity_lagwatch.lua): on, a few seconds of it, the panel, the printout, off
 local okLW, errLW = pcall(function()
     LC_CL.SetLagWatch(true)
@@ -2338,6 +2417,39 @@ local ok, e = pcall(function()
     local r = LC_CL.DreamVoiceRate({ theme = "conga" })
     if r and (r < 0.7 or r > 1.4) then error("a line's speed out of range") end
     Msg({ k = "stop", how = "won" })
+    -- Pick Up That Can: your own can (or tiny officer) is drawn where the server says, and the tiny officer squeaks
+    sound = sound or {}
+    file = file or {}
+    local canPlay, canExists, canPlayed = sound.Play, file.Exists, {}
+    sound.Play = function(path, pos, lvl, pitch) canPlayed[#canPlayed + 1] = { path, pitch } end
+    file.Exists = function() return true end
+    Msg({ k = "start", id = "can", name = "Pick Up That Can", goal = "Go.", ends = CurTime() + 100, lives = 1, maxLives = 1, theme = "can" })
+    Msg({ k = "state", rain = CurTime(), can = { s = "floor", k = "cop", a = CurTime(), b = { 0, 0, 40 }, p = { 50, 0, 3 } } })
+    hook.t.Think.LivingCityCanDream()
+    if #canPlayed ~= 1 or canPlayed[1][2] < 200 or not string.find(canPlayed[1][1], "npc/metropolice/vo/", 1, true) then error("the can dream: the tiny officer said nothing when knocked off") end
+    local canAt = LC_CL.CanWhere({ s = "floor", k = "cop", a = CurTime() - 2, b = { 0, 0, 40 }, p = { 50, 0, 3 } }, CurTime())
+    if not canAt or canAt.x ~= 50 then error("the can dream: your can isn't on the floor where it fell") end
+    if LC_CL.CanWhere({ s = "bin", k = "can", a = CurTime(), b = { 0, 0, 40 } }, CurTime()).z ~= 40 then error("the can dream: your can isn't on the bin") end
+    Msg({ k = "state", can = { s = "held", k = "cop", a = CurTime(), b = { 0, 0, 40 } } })
+    hook.t.Think.LivingCityCanDream()
+    if #canPlayed ~= 2 then error("the can dream: the tiny officer said nothing when picked up") end
+    _advance(6)
+    hook.t.Think.LivingCityCanDream()
+    if #canPlayed ~= 3 then error("the can dream: the tiny officer stays quiet in your hand") end
+    Msg({ k = "state", can = { s = "held", k = "can", a = CurTime(), b = { 0, 0, 40 } } })
+    hook.t.Think.LivingCityCanDream()
+    _advance(6)
+    hook.t.Think.LivingCityCanDream()
+    if #canPlayed ~= 3 then error("the can dream: a can doesn't talk") end
+if LC_CL.CanMine() then error("the can dream: one scene only, nothing to light up") end
+Msg({ k = "state", mine = { 100, 200, 0, 1 } })
+local mineAt, mineOwn = LC_CL.CanMine()
+if not mineAt or mineAt.y ~= 200 or not mineOwn then error("the can dream: your own scene isn't lit up") end
+hook.t.PostDrawTranslucentRenderables.LivingCityCanDream(false, false)
+hook.t.HUDPaint.LivingCityCanDream()
+    Msg({ k = "stop", how = "won" })
+    hook.t.Think.LivingCityCanDream()
+    sound.Play, file.Exists = canPlay, canExists
     hook.t.Think.LivingCityStrangeNonsense()
     if #LC_CL.StrangeFloaters() ~= 0 then error("the nonsense stayed after the dream") end
     ClientsideModel, ents.FindByClass = cmWas, fbcWas
@@ -2591,6 +2703,14 @@ for _ = 1, 3 do _advance(1.1) _runtimers() end
 if painted ~= 2 then return "graffiti: repainted without cause (" .. painted .. ")" end
 LC_CL.SetTags({ tag(100) })
 if removed < 1 then return "graffiti: a removed tag did not come off the wall" end
+-- the spray can's other marks (13 November): the kind comes with the tag, and it is painted as a decal either way
+local marked = tag(300) marked.k = "tally"
+LC_CL.SetTags({ tag(100), marked })
+if not (LC_CL.tags[2] and LC_CL.tags[2].kind == "tally" and LC_CL.tags[1].kind == nil) then return "graffiti: a tag's kind did not arrive" end
+for _ = 1, 3 do _advance(1.1) _runtimers() end
+if painted ~= 3 then return "graffiti: the tally was not painted (" .. painted .. ")" end
+if LC_CL.TagMat("lambda") ~= nil or LC_CL.TagMat(nil) ~= nil then return "graffiti: the lambda has no picture of its own" end
+if not (LC_CL.DreamArt and LC_CL.DreamArt.cheese and LC_CL.DreamArtMade.cheese ~= nil and LC_CL.DreamArtMade.swirl1 ~= nil) then return "dream art: the cheese and swirl materials were not made" end
 local before = _calls["cam.Start3D2D"] or 0
 for _, h in pairs(hook.t["PostDrawTranslucentRenderables"] or {}) do h(false, false) end
 if (_calls["cam.Start3D2D"] or 0) ~= before then return "graffiti: drew a letter while real decals exist" end

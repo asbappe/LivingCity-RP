@@ -25,6 +25,38 @@
 LC_CL = LC_CL or {}
 
 local function St() return LC_CL.DreamGame and LC_CL.DreamGame() or nil end
+
+-- The dreams' own surfaces (the owner's pictures, 13 November): materials/livingcity/dreams/<name>.jpg,
+-- each made into a material the server puts on its blocks by name ("!lc_dream_cheese",
+-- sv_livingcity_strangedreams.lua). The second number is how many times the picture repeats across
+-- one plate's width (less than 1: bigger). A game that hasn't the picture gets plain white there,
+-- which is what those blocks were before.
+LC_CL.DreamArt = {
+    cheese = { "livingcity/dreams/cheese.jpg", 0.25 },
+    swirl1 = { "livingcity/dreams/swirl1.jpg", 0.25 },
+    swirl2 = { "livingcity/dreams/swirl2.jpg", 0.25 },
+}
+LC_CL.DreamArtMade = {}
+function LC_CL.MakeDreamArt()
+    if not CreateMaterial then return end
+    for name, a in pairs(LC_CL.DreamArt) do
+        local tex
+        if file and file.Exists and file.Exists("materials/" .. a[1], "GAME") then
+            local pic = Material(a[1], "noclamp smooth mips")
+            tex = pic and pic.IsError and not pic:IsError() and pic.GetTexture and pic:GetTexture("$basetexture") or nil
+        end
+        local m = CreateMaterial("lc_dream_" .. name, "VertexLitGeneric", { ["$basetexture"] = "models/debug/debugwhite", ["$model"] = 1 })
+        if m and m.SetTexture and tex then
+            m:SetTexture("$basetexture", tex)
+            if Matrix and m.SetMatrix then
+                local mx = Matrix()
+                if mx and mx.Scale then mx:Scale(Vector(a[2], a[2], 1)) m:SetMatrix("$basetexturetransform", mx) end
+            end
+        end
+        LC_CL.DreamArtMade[name] = tex and true or false
+    end
+end
+LC_CL.MakeDreamArt()
 local glow = Material("sprites/light_glow02_add")
 local beam = Material("cable/rope")
 local beamMat = Material("sprites/physbeama")
@@ -97,7 +129,7 @@ end)
 
 LC_CL.StrangeThemes = {}
 for _, id in ipairs({ "cheese", "chairs", "flying", "melons", "horse", "boxing", "exam", "train", "lamarr", "molasses", "potato", "simon", "dance", "sheep",
-    "clocks", "tea", "derby", "photo", "doors", "paint", "conga", "shh", "bubbles", "watchers" }) do LC_CL.StrangeThemes[id] = true end
+    "clocks", "tea", "derby", "photo", "doors", "paint", "conga", "shh", "bubbles", "watchers", "can" }) do LC_CL.StrangeThemes[id] = true end
 LC_CL.NonsenseModels = { "models/props_junk/watermelon01.mdl", "models/props_interiors/bathtub01a.mdl", "models/props_c17/clock01.mdl", "models/props_c17/furnituretoilet001a.mdl",
     "models/props_c17/doll01.mdl", "models/props_junk/shoe001a.mdl", "models/props_c17/chair02a.mdl", "models/props_junk/popcan01a.mdl", "models/headcrabclassic.mdl",
     "models/props_c17/oildrum001.mdl", "models/props_lab/huladoll.mdl", "models/props_junk/garbage_coffeemug001a.mdl" }

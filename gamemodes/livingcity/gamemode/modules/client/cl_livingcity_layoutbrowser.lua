@@ -33,7 +33,7 @@ local USES = {
     { title = "Arriving and leaving the city", ids = { "arrival", "intake", "laborterm", "housingterm", "platform", "spawn", "lz" } },
     { title = "Civil Protection and the Combine", ids = { "patrol", "checkpoint", "cpsupply", "cpfeed", "evidlocker", "console", "sspawn", "powerbank", "turret",
         "forcefield", "barricade_low", "barricade", "barricade_tall", "dataterm", "masterterm", "zone_combine", "sterm", "door_cp", "door_office", "studio", "loudspeaker", "screen_big" } },
-    { title = "The Administrator's last stand", ids = { "desk", "adminpower", "suppressor", "speech", "door_office", "zone_combine" } },
+    { title = "The Administrator's last stand", ids = { "desk", "adminpower", "suppressor", "speech", "speechcrowd", "door_office", "zone_combine" } },
     { title = "Prison", ids = { "cell", "release", "prisonwork", "zone_prison", "door_prison" } },
     { title = "The Resistance and rebel bases", ids = { "zone_rebel", "rspawn", "rlookout", "rebelboard", "interrochair", "rebelcage", "bunk", "workbench", "dealer", "bed", "toilet", "stove",
         "sit", "sitchair", "lean", "fire", "locker", "graffiti" } },

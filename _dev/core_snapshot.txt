@@ -47,6 +47,31 @@ announce trigger socio_black
 announce trigger socio_green
 announce trigger socio_red
 announce trigger socio_yellow
+announce trigger speech_calm
+announce trigger speech_close
+announce trigger speech_ev_arrests
+announce trigger speech_ev_deaths
+announce trigger speech_ev_defiance
+announce trigger speech_ev_despair
+announce trigger speech_ev_drink
+announce trigger speech_ev_escape
+announce trigger speech_ev_heavyhand
+announce trigger speech_ev_informer_hurt
+announce trigger speech_ev_informers
+announce trigger speech_ev_kindness
+announce trigger speech_ev_posters
+announce trigger speech_ev_sabotage
+announce trigger speech_ev_taken
+announce trigger speech_ev_theft
+announce trigger speech_hunger
+announce trigger speech_mood_afraid
+announce trigger speech_mood_content
+announce trigger speech_mood_restless
+announce trigger speech_morale
+announce trigger speech_open
+announce trigger speech_order
+announce trigger speech_soon
+announce trigger speech_unrest
 announce trigger supply
 announce trigger suppressor_down
 announce trigger sweep
@@ -717,12 +742,15 @@ setting lc_ending_marrow_model = models/player/skeleton.mdl
 setting lc_ending_marrow_sections = 45:dance,75:attack,82:rave,112:attack,150:dance,180:attack,188:dance,217:outro,232:end
 setting lc_ending_max = 180
 setting lc_ending_minge_chatter = 1
+setting lc_ending_minge_cover = 12
 setting lc_ending_minge_crowd = 12
 setting lc_ending_minge_end = 120
+setting lc_ending_minge_forest = 36
 setting lc_ending_minge_max = 60
 setting lc_ending_minge_models = models/player/kleiner.mdl
 setting lc_ending_minge_pose = ragdoll
 setting lc_ending_minge_swell = 60
+setting lc_ending_minge_trees = models/props_foliage/tree_pine04.mdl,models/props_foliage/tree_pine05.mdl,models/props_foliage/tree_pine06.mdl,models/props_foliage/tree_pine_large.mdl
 setting lc_ending_pause = 4
 setting lc_ending_plane_bpm = 130
 setting lc_ending_plane_captions = 15.1=MA-IA-HII|16.3=MA-IA-HUU|17.5=MA-IA-HOO|18.7=MA-IA-HAHA
@@ -1123,6 +1151,15 @@ setting lc_soldier_scale = 1.10
 setting lc_soldiers = 0
 setting lc_spawn_mindist = 900
 setting lc_spawn_protect = 8
+setting lc_speech_after = 45
+setting lc_speech_beatings = 3
+setting lc_speech_city = 1
+setting lc_speech_city_hour = 12
+setting lc_speech_lookback = 240
+setting lc_speech_muster = 120
+setting lc_speech_npcs = 18
+setting lc_speech_podium = models/props_combine/breenconsole.mdl
+setting lc_speech_radius = 650
 setting lc_squad = 1
 setting lc_squad_cops = 2
 setting lc_squad_delay = 5

@@ -24,7 +24,7 @@ LC.NextNodeId = LC.NextNodeId or 1
 
 LC.POINT_KINDS = {
     idle = true, sit = true, sitchair = true, lean = true, queue = true,
-    patrol = true, checkpoint = true, spawn = true, cell = true, release = true, prisonwork = true, speech = true,
+    patrol = true, checkpoint = true, spawn = true, cell = true, release = true, prisonwork = true, speech = true, speechcrowd = true,
     work = true, vending = true, dispenser = true, terminal = true, stove = true, fire = true, dealer = true, locker = true, screen = true, lawboard = true, cpfeed = true, evidlocker = true, rebelboard = true, interrochair = true, rebelcage = true, console = true,
     infodesk = true, civposter = true,
     workbench = true, recycler = true, bin = true, salvage = true, -- (sv_livingcity_salvage.lua)

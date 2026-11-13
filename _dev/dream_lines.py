@@ -21,7 +21,7 @@ NAMES = {
     "horse": "Hooves and All", "boxing": "The Main Event", "exam": "The Exam", "train": "The Last Train", "lamarr": "Where's Lamarr?",
     "molasses": "Running in Molasses", "potato": "Hot Potato", "simon": "Overwatch Says", "dance": "Dance Marathon", "sheep": "Counting Headcrabs",
     "clocks": "Stop the Clocks", "tea": "The Tea Party", "derby": "The Headcrab Derby", "photo": "Say Cheese", "doors": "The Doors", "paint": "Splat!",
-    "conga": "Conga!", "shh": "Shh!", "bubbles": "Bubbles", "watchers": "The Watchers",
+    "conga": "Conga!", "shh": "Shh!", "bubbles": "Bubbles", "watchers": "The Watchers", "can": "Pick Up That Can",
     "adore": "Kneel Before Her", "roses": "Roses for Her", "mirror": "Mirror, Mirror", "saviour": "The Saviour", "quiz": "The Loyalty Quiz",
     "harvest": "Record Harvest", "shift": "The Stakhanov Shift", "spy": "Careless Talk", "newsreel": "The Newsreel", "hate": "Two Minutes of Hate",
     "massgames": "The Mass Games", "guidance": "On-the-Spot Guidance", "scrap": "The Scrap Drive", "flowers": "Flowers for the Liberators",
@@ -40,7 +40,7 @@ def read(name):
 
 def strange():
     out = []
-    for name in ("sv_livingcity_strangedreams.lua", "sv_livingcity_strangedreams2.lua", "sv_livingcity_strangedreams3.lua"):
+    for name in ("sv_livingcity_strangedreams.lua", "sv_livingcity_strangedreams2.lua", "sv_livingcity_strangedreams3.lua", "sv_livingcity_candream.lua"):
         inside = False
         for line in read(name):
             if "LC.StrangeAddCues({" in line:

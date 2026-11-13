@@ -193,7 +193,7 @@ LCS.Items = {
                         desc = "Stand in the canal, or look at the water, and wait. Good for four to eight casts, then it snaps" },
     spraypaint      = { name = "Spray can", model = "models/props_junk/popcan01a.mdl", use = "spray", useLabel = "Spray",
                         contraband = true, conceal = 0.5, sell = 4,
-                        desc = "Look at a wall and spray the lambda, or at one of the city's posters to paint over it. Don't let a Civil Protection unit see you do it" },
+                        desc = "Look at a wall and spray the lambda or another mark of ours, or at one of the city's posters to paint over it. Don't let a Civil Protection unit see you do it" },
     -- (a Resistance poster to paste on a wall: Paste in sv_livingcity_scavenge.lua, entities/lc_civposter.lua)
     pasteup         = { name = "Resistance paste-up", model = "models/props_c17/paper01.mdl", use = "pasteup", useLabel = "Paste it up",
                         contraband = true, conceal = 0.5, sell = 3,
