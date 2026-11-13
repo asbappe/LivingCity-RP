@@ -10050,6 +10050,16 @@ for _, r in ipairs(LC.VoiceMissing()) do
     end
 end
 ok(vmRows["Colonel Cubbage"] and string.find(vmRows["Colonel Cubbage"], "|answer_open|", 1, true), "lc_voice_missing lists Colonel Cubbage's answers too (cubbage/)")
+do -- (a long row in pieces short enough for chat, every name kept)
+    local many = {}
+    for i = 1, 60 do many[i] = "speech_ev_informer_hurt" .. i end
+    local pieces = LC.VoiceMissingLines({ name = "administrator", folder = "administrator/", missing = many })
+    local longest, joined = 0, table.concat(pieces, " ")
+    for _, l in ipairs(pieces) do longest = math.max(longest, #l) end
+    local all = true
+    for _, m in ipairs(many) do if not string.find(joined, m .. ",", 1, true) and not string.find(joined, m .. "$", 1, false) and not (joined:sub(-#m) == m) then all = false end end
+    ok(#pieces > 1 and longest <= 230 and all, "lc_voice_missing splits a long row into lines that arrive in chat (a line over 255 characters never does)", #pieces .. " lines, longest " .. longest)
+end
 ok(vmRows.overwatch and not string.find(vmRows.overwatch, "|lockdown|", 1, true) and not string.find(vmRows.overwatch, "|blackout|", 1, true) and #vmWrong == 0, "lc_voice_missing lists only the triggers with no recording", table.concat(vmWrong, ", "))
 ok(vmRows.administrator and not string.find(vmRows.administrator, "|dawn|", 1, true), "and hers (a recording in any tone counts)", vmRows.administrator)
 ok(vmRows.radio and vmRows["G-Man"] and vmRows["Dream lines"], "and the radio's, the G-Man's and the dreams' lines")

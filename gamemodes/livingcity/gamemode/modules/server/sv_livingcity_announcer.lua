@@ -755,6 +755,26 @@ function LC.VoiceMissing()
     return out
 end
 
+-- One row of lc_voice_missing as lines short enough to arrive in chat (at most about 200 characters each).
+function LC.VoiceMissingLines(r, width)
+    width = width or 200
+    local head = "[Miscount] " .. r.name .. " (sound/livingcity/" .. r.folder .. "), "
+    if #r.missing == 0 then return { head .. "nothing missing" } end
+    local out, line = {}, head .. #r.missing .. " missing: "
+    local first = true
+    for _, m in ipairs(r.missing) do
+        local add = (first and "" or ", ") .. m
+        if #line + #add > width and not first then
+            out[#out + 1] = line .. ","
+            line, add = "[Miscount]   ... " .. m, ""
+        end
+        line = line .. add
+        first = false
+    end
+    out[#out + 1] = line
+    return out
+end
+
 concommand.Add("lc_voice_missing", function(ply)
     if IsValid(ply) and not ply:IsSuperAdmin() then return end
     local total = 0
@@ -769,8 +789,8 @@ concommand.Add("lc_voice_missing", function(ply)
     Reply(ply, "[Miscount] The whole list is also in data/livingcity/voice_missing.txt (" .. #lines .. " lines).")
     for _, r in ipairs(LC.VoiceMissing()) do
         total = total + #r.missing
-        Reply(ply, "[Miscount] " .. r.name .. " (sound/livingcity/" .. r.folder .. "), " ..
-            (#r.missing == 0 and "nothing missing" or (#r.missing .. " missing: " .. table.concat(r.missing, ", "))))
+        -- (in pieces: a chat line over 255 characters never arrives, so the long rows went missing in game)
+        for _, line in ipairs(LC.VoiceMissingLines(r)) do Reply(ply, line) end
     end
     Reply(ply, "[Miscount] " .. total .. " voice lines with no recording yet. Without one, the words still show (Half-Life 2's own Overwatch lines only with lc_announce_stock 1). " ..
         "Name a file for its line (curfew1.wav, ravenholm_defeat1.wav); a .txt with the same name is its subtitle. Everything to record, with suggested words: VOICE_LINES.md, in the gamemode's folder.")
