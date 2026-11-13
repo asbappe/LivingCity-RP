@@ -1083,6 +1083,8 @@ hook.Add("PlayerSay", "LivingCityCPChat", function(ply, text)
     local cmd, rest = string.match(raw, "^[!/](%S+)%s*(.*)$")
     local fn = cmd and COMMANDS[string.lower(cmd)]
     if not fn then return end
+    -- a unit's records check and BOLO go to HQ: only over the radio (sv_livingcity_radiohq.lua)
+    if LC.RadioChatBlocked and LC.RadioChatBlocked(ply, cmd) then return "" end
     fn(ply, rest or "")
     return ""
 end)

@@ -50,6 +50,9 @@ end)
 function LC.BackupViolent(ply)
     if not IsValid(ply) then return false end
     if LC.GunInHand and LC.GunInHand(ply) then return true end
+    -- (a gun put away for the radio in the last 20 seconds: the call goes out on the radio now, so the hand holds that;
+    -- sv_livingcity_radiohq.lua)
+    if (ply.lcGunOutAt or -1e9) > CurTime() - 20 then return true end
     if (ply.lcShotAt or -1e9) > CurTime() - 30 then return true end
     local q = LC.QuestOf and LC.QuestOf[ply]
     return q ~= nil and not q.done and q.violent == true
@@ -149,12 +152,24 @@ local function CancelAnim(npc)
     end
 end
 
--- One beat of being blind: rubbing their eyes where they stand, or a few stumbling steps.
+-- One beat of being blind: standing pressing their eyes, or a few stumbling steps. Either way the left hand is over
+-- their eyes the whole time (the owner, 13 November: "cover their eyes with their hand (preferably left hand, since
+-- their right is holding their weapon) and stumble about"; drawn by cl_livingcity_gasmask.lua). It used to be
+-- Half-Life 2's two-handed flinch (BLIND_ANIMS), which hid the hand on the face; only when that pose is off
+-- (lc_flash_hand 0) is it still played.
+local cvFlashHand = CreateConVar("lc_flash_hand", "1", bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED), "A flashbanged NPC covers their eyes with their left hand (0: Half-Life 2's two-handed flinch instead)")
 local function FlashStep(npc, st, now)
     st.flashPhase = st.flashPhase == "rub" and "stumble" or "rub"
-    if st.flashPhase == "rub" and LC.PlayGesture and LC.PlayGesture(npc, BLIND_ANIMS, 2.5) then
-        st.flashNext = now + math.Rand(1.6, 2.6)
-        return
+    if st.flashPhase == "rub" then
+        if cvFlashHand:GetBool() then
+            CancelAnim(npc)
+            npc:SetSchedule(SCHED_IDLE_STAND)
+            st.flashNext = now + math.Rand(1.2, 2.0)
+            return
+        elseif LC.PlayGesture and LC.PlayGesture(npc, BLIND_ANIMS, 2.5) then
+            st.flashNext = now + math.Rand(1.6, 2.6)
+            return
+        end
     end
     st.flashPhase = "stumble"
     CancelAnim(npc)
@@ -182,6 +197,7 @@ function LC.FlashStun(npc, st, secs)
     end
     npc:SetEnemy(NULL)
     if npc.ClearEnemyMemory then npc:ClearEnemyMemory() end
+    if cvFlashHand:GetBool() and LC.HandToFace then LC.HandToFace(npc, "eyes", st.stunnedUntil - now) end
     st.flashPhase = nil
     FlashStep(npc, st, now)
 end
@@ -195,6 +211,7 @@ local function FlashEnd(npc, st)
     st.flashCaps = nil
     Rearm(npc, st)
     CancelAnim(npc)
+    if LC.HandFromFace then LC.HandFromFace(npc) end
     if npc:Health() > 0 then npc:SetSchedule(SCHED_IDLE_STAND) end
 end
 

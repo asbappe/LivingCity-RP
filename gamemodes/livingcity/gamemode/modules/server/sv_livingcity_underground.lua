@@ -1729,6 +1729,8 @@ function LC.UndergroundAction(ply, action, id)
             why = "You bend and file the scrap into a lockpick set."
         end
         ok = false
+    elseif action == "scavengemask" then -- a CP uniform's Scavenge gas mask button in your pockets (sv_livingcity_gasmask.lua)
+        if LC.ScavengeGasMask then ok, why = LC.ScavengeGasMask(ply) else ok, why = false, nil end
     elseif action == "callhelp" then -- the call box's Call for help button in your pockets (sv_livingcity_cp.lua)
         if LC.CPRequest then ok, why = LC.CPRequest(ply, id) else ok, why = false, "Requests are off on this server." end
         if not ok and why then why = "[Request] " .. why end

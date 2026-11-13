@@ -9,7 +9,9 @@
     and only someone standing right beside you hears you directly. Your hands
     are full: no gun at the same time. R, or switching to anything else, puts
     it away. You have it while you carry a radio and a radio transmitter (a radio
-    alone only listens); units are issued theirs.
+    alone only listens); units are issued theirs. Right click opens the Radio
+    menu: a unit's calls to HQ (backup, resupply, BOLO, 10-20, records, sweeps,
+    directives) go out only from there (sv_livingcity_radiohq.lua).
 ]]
 
 AddCSLuaFile()
@@ -18,7 +20,7 @@ SWEP.PrintName    = "Radio transmitter"
 SWEP.Author       = "Miscount"
 SWEP.Category     = "Miscount"
 SWEP.Purpose      = "Talk over your radio."
-SWEP.Instructions = "While it's up, your chat and voice go over your radio's band. Only people right beside you hear you directly. Left click calls for backup. Right click opens your side's jobs (F1 too). R puts it away."
+SWEP.Instructions = "While it's up, your chat and voice go over your radio's band. Only people right beside you hear you directly. Left click calls for backup. Right click opens the Radio menu (HQ: backup, resupply, BOLO, 10-20, jobs). R puts it away."
 SWEP.Spawnable    = false
 SWEP.AdminOnly    = false
 
@@ -55,32 +57,26 @@ function SWEP:PrimaryAttack()
     else ok, why = false, "Nobody to call on this band." end
     if not ok and why and LC.Notice then LC.Notice(owner, "warn", "Backup", tostring(why), 8) end
 end
--- Right click: switch frequency, for someone who can send on more than one (a Resistance Insider:
--- the CP net and Freq 7). Careful which one you're on.
--- With one band, right click opens your side's jobs over the radio (the owner, 12 November: "if you hold
--- a radio in your hands, you can open the 'Jobs' screen/board"; LC.RadioJobs). F1 has it too, for everyone.
+-- Right click: the Radio menu (the owner, 13 November: "anything that would require communication realistically
+-- with combine HQ (call for backup, request resupply, BOLO, 10-20, job board, etc) is all done ONLY with the CP radio
+-- out and SWEP in hand, THEN having it out and right clicking opens the hidden 'Radio' quick F1/F2 styled menu").
+-- The same list and number keys as F1 and F2 (LC_CL.OpenRadioQuick, cl_livingcity_quick.lua): a unit's HQ calls,
+-- the jobs over the radio, and switching frequency for someone who sends on two (a Resistance Insider).
 function SWEP:SecondaryAttack()
-    if CLIENT then return end
-    if (self.nextTune or 0) > CurTime() then return end
-    self.nextTune = CurTime() + 0.4
-    local owner = self:GetOwner()
-    if not IsValid(owner) or not LC then return end
-    if not (LC.TransmitBands and #LC.TransmitBands(owner) > 1) then
-        if LC.RadioJobs then
-            local ok, why = LC.RadioJobs(owner)
-            if not ok and why and LC.Notice then LC.Notice(owner, "warn", "Radio", tostring(why), 6) end
+    if (self.nextMenu or 0) > CurTime() then return end
+    self.nextMenu = CurTime() + 0.4
+    if SERVER then
+        -- (and from the server too, in case the click was never predicted on the player's side; opening twice is harmless)
+        local owner = self:GetOwner()
+        if IsValid(owner) and owner:IsPlayer() and LC and LC.RadioOnly then -- (lc_radio_menu is pooled by sv_livingcity_radiohq.lua)
+            net.Start("lc_radio_menu")
+            net.Send(owner)
         end
         return
     end
-    if not LC.TuneTransmitter then return end
-    local before = self:GetNW2String("lc_band", "")
-    local band = LC.TuneTransmitter(owner)
-    self:SetNW2String("lc_band", band or "")
-    self:SetNW2Int("lc_bands", #LC.TransmitBands(owner))
-    if band ~= before then
-        owner:EmitSound("buttons/button16.wav", 50)
-        owner:ChatPrint("[Radio] Now transmitting on " .. (BANDS[band] or "nothing") .. ".")
-    end
+    if IsFirstTimePredicted and not IsFirstTimePredicted() then return end
+    if self:GetOwner() ~= LocalPlayer() then return end
+    if LC_CL and LC_CL.OpenRadioQuick then LC_CL.OpenRadioQuick() end
 end
 
 function SWEP:Deploy()
@@ -202,7 +198,7 @@ if CLIENT then
         local band = BANDS[self:GetNW2String("lc_band", "")] or "your radio"
         local w, h = ScrW(), ScrH()
         draw.SimpleTextOutlined("TRANSMITTER UP: what you type and say goes out on " .. band, "DermaDefaultBold", w / 2, h - 120, C_150_220_150, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, color_black)
-        draw.SimpleTextOutlined("Only someone right beside you hears you directly. Left click calls for backup. R puts it away." .. (self:GetNW2Int("lc_bands", 1) > 1 and " Right click switches frequency; F1 has your jobs." or " Right click: your jobs."),
+        draw.SimpleTextOutlined("Only someone right beside you hears you directly. Left click calls for backup. Right click: the Radio menu. R puts it away.",
             "DermaDefault", w / 2, h - 102, C_220_220_210, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, color_black)
     end
 

@@ -126,16 +126,13 @@ function LC_CL.OpenUnitTools()
         local m = Section("Manpower", "the reserve, and what's been lost")
         for _, l in ipairs(LC_CL.Manpower) do Note(m, l) end
     end
-    local s = Section("Dispatch")
-    Button(s, "Call for backup", "The nearest Civil Protection units come to you, and see where you are.", Do("backup"))
-    Button(s, "Send my 10-20", "Marks where you are on every Civil Protection unit's screen.", Do("10-20"))
-    Button(s, "Issue a BOLO...", "Something for every Civil Protection unit to look out for: a face, clothes, a name.", function()
-        Close()
-        Ask("BOLO", "What should Civil Protection units look out for?", "bolo")
-    end)
-
-    s = Section("Records")
-    Button(s, "Open the records terminal", "Citizens by name and number: record, loyalty, violations. BOLOs, and requests citizens sent in.", Do("records"))
+    -- (the owner, 13 November: anything that goes to HQ only with the radio out, from its own menu)
+    local s = Section("HQ, over the radio")
+    Note(s, "Get your radio out (next to Hands) and right click: request resupply, call for backup, send your 10-20,")
+    Note(s, "issue a BOLO, a records check, your directives" .. (me:GetNW2Int("lcf_rank", 1) >= 3 and ", call a sweep" or "") .. ". HQ only hears you over the radio.")
+    if me:HasWeapon("weapon_lc_radio") then
+        Button(s, "Get my radio out", "Switch to the radio transmitter; right click it for the Radio menu.", function() Close() RunConsoleCommand("use", "weapon_lc_radio") end)
+    end
 
     s = Section("Your boot")
     Button(s, "Kick", "Doors swing open, locked ones give on the second kick; people are knocked back. Key: " ..
@@ -174,7 +171,7 @@ function LC_CL.OpenUnitTools()
     if me:GetNW2String("lcf_special", "") == "ow_commander" then
         local left = me:GetNW2Float("lc_cmd_drop_at", 0) - CurTime()
         s = Section("Overwatch Commander", left > 0 and string.format("next squad in %d:%02d", math.floor(left / 60), math.floor(left % 60)) or "a squad is ready")
-        Button(s, "Call in a squad", "A dropship lands an Overwatch squad at the landing zone nearest you. One every fifteen minutes.", Do("dropship"))
+        Note(s, "Call in a squad from the Radio menu (radio out, right click): a dropship lands an Overwatch squad at the landing zone nearest you. One every fifteen minutes.")
     end
 
     if LCF.IsOverwatch(me) or me:IsAdmin() then
@@ -232,7 +229,7 @@ function LC_CL.OpenUnitTools()
     end
 
     s = Section("Your work")
-    Button(s, "My directives (F4)", "What Overwatch wants done: patrols, stops, arrests, for XP and rank.", function() Close() if LC_CL.OpenHub then LC_CL.OpenHub("jobs") else RunConsoleCommand("gm_showspare2") end end)
+    Note(s, "Your directives (what Overwatch wants done, for XP and rank) come over the radio: radio out, right click.")
 end
 
 concommand.Add("lc_unittools", function() LC_CL.OpenUnitTools() end)

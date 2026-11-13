@@ -352,6 +352,8 @@ item fishing_line
 item foil_hat
 item freq7_sheet
 item gas_bomb
+item gas_mask
+item gas_mask_broken
 item gren_flash
 item gren_gas
 item gren_smoke
@@ -763,6 +765,7 @@ setting lc_fever_dream = 1
 setting lc_fighter_trust_jobs = 3
 setting lc_firebomb_secs = 12
 setting lc_fixture_wear = 1
+setting lc_flash_hand = 1
 setting lc_foil_chance = 0.33
 setting lc_food_availability = 0.5
 setting lc_food_restock_minutes = 20
@@ -790,6 +793,7 @@ setting lc_garrison = 6
 setting lc_garrison_cops = 3
 setting lc_garrison_respawn = 90
 setting lc_gas_damage = 6
+setting lc_gasmask_rebels = 0.33
 setting lc_give_fists = 1
 setting lc_gman_crates = 6
 setting lc_gman_dream_chance = 30
@@ -1014,6 +1018,7 @@ setting lc_quest_squad = 3
 setting lc_quest_violent_ratio = 8
 setting lc_quests = 1
 setting lc_quiet_hud = 1
+setting lc_radio_only = 1
 setting lc_radio_overhear = 110
 setting lc_radio_set_secs = 120
 setting lc_raid_chance = 25
@@ -1074,6 +1079,8 @@ setting lc_resistance_plainclothes = 1
 setting lc_respawn_secs = 12
 setting lc_response = 1
 setting lc_response_soldiers = 6
+setting lc_resupply = 1
+setting lc_resupply_cooldown = 300
 setting lc_roster_cops = 10
 setting lc_roster_size = 30
 setting lc_run_memory = 30

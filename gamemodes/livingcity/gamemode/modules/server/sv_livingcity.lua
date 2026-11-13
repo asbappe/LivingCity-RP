@@ -2599,6 +2599,7 @@ local function Think()
             st.nextThink = near and (now + 0.45) or (now + 2)
             if LC.NPCSleepTick then LC.NPCSleepTick(npc, st, now, near) end -- (sv_livingcity_sleep.lua)
             local fn = THINKERS[st.role] or (LC.Thinkers and LC.Thinkers[st.role])
+            if (st.gasFleeUntil or 0) > now then fn = nil end -- (running from the gas: sv_livingcity_gasmask.lua)
             if fn then
                 local ok, err = pcall(fn, npc, st, now)
                 if not ok then

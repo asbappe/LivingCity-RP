@@ -1795,3 +1795,19 @@ Type them in the server console on the host panel, or in your own game console (
   Notes:
 - [ ] **Citizens speak without the director (12 November):** with the recordings up, talk to named citizens (E): hello by how they feel, Chat says how they are, give food (thanks), walk away (goodbye). Say "hello" and "how are you" in chat facing one. Watch two citizens chat in the street, a unit beating someone with citizens near, and wait near citizens for one to walk up (hungry, a warning, a gift). Too chatty or too quiet? `lc_voice_approach` sets the walk-ups, `lc_voice_cues 0` turns it all off.
   Notes:
+
+## 13 November: HQ calls only over the radio, the resupply scanner, gas masks
+- [ ] **The Radio menu:** as a unit, get the radio out (next to Hands) and right click. Is the menu there with the number keys (Request resupply, Call for backup, Send my 10-20, Issue a BOLO, Records check, My directives)? Does it close when you put the radio away? Are backup, BOLO and 10-20 gone from F2, Unit tools and the C menu? Does F2 > 4 draw the radio and open its menu?
+  Notes:
+- [ ] **Refused without the radio:** type !backup, !bolo something, !records as a unit with your hands out. Each should say to get your radio out.
+  Notes:
+- [ ] **Insider:** with two bands, is Switch frequency on the Radio menu? Is Let them slip now F2 > 5?
+  Notes:
+- [ ] **Request resupply:** outside under open sky, low on ammo or hurt. Does a shield scanner come down from the sky above you, drop a small crate that breaks on landing, then fly back up and away toward the nearest Combine zone? Is what lies on the ground right (ammo for your gun, a vial or battery, cuffs, a grenade for your rank)? Try indoors and underground: it should refuse.
+  Notes:
+- [ ] **Gas masks:** as a rebel, put a CP uniform in your pockets and press Scavenge gas mask. Search a dead unit (mask whole or broken). Make one from four broken. Walk into chlorine gas: does the mask go on by itself, with the visor edge and breathing, and come off a few seconds after you leave? How does the mask look on a face (lc_gasmask_fit "forward right up scale" to adjust)?
+  Notes:
+- [ ] **In the gas:** do citizens and rebels without a mask cover their mouth with their left hand and cough, and run out of it away from units? About 1 in 3 rebels should mask up instead. Tune the arm with lc_handface_mouth.
+  Notes:
+- [ ] **Flashbang:** do blinded rebels hold their left hand over their eyes and stumble, without shooting? Tune with lc_handface_eyes.
+  Notes:

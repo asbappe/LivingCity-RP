@@ -222,11 +222,22 @@ LC.SmokeCloud = Cloud
 local function Masked(ply)
     if LC.PlayerIsZombie and LC.PlayerIsZombie(ply) then return true end
     if LC.CleanupRespirator and LC.CleanupRespirator(ply) then return true end
+    -- a gas mask in their pockets: on it goes by itself (the owner, 13 November; sv_livingcity_gasmask.lua)
+    if ply.Alive and ply:Alive() and LC.GasMaskPlayer and LC.InGasCloud and LC.InGasCloud(ply:GetPos()) and LC.GasMaskPlayer(ply) then return true end
     local unit = LC.PlayerIsCP(ply) or (LC.DisguisedAsCP and LC.DisguisedAsCP(ply))
     if unit and LC.FiltersFouled and LC.FiltersFouled() then return false, true end
     return unit
 end
 LC.GasMasked = Masked
+
+-- The gas cloud someone is standing in, or nil.
+function LC.InGasCloud(pos)
+    local now = CurTime()
+    for _, g in ipairs(LC.GasClouds or {}) do
+        if now <= g.untilT and pos:DistToSqr(g.pos) < g.r * g.r then return g end
+    end
+    return nil
+end
 
 local function LOS(a, b, filter)
     local tr = util.TraceLine({ start = a, endpos = b, mask = MASK_OPAQUE, filter = filter })
@@ -337,17 +348,26 @@ timer.Create("LivingCityGas", 1, 0, function()
                         ply:TakeDamage(cvGasDmg:GetFloat() * mul * (g.poison and 1.5 or 1), attacker, attacker)
                     end
                     ply:EmitSound(Pick(COUGHS), 70)
+                    if LC.HandToFace then LC.HandToFace(ply, "mouth", 1.6) end -- (a hand over the mouth, as others see it)
                     if ply.ViewPunch then ply:ViewPunch(Angle(math.Rand(2, 5), math.Rand(-2, 2), 0)) end
                 end
             end
+            local spots -- (where the Combine units are, looked up once a cloud, only if someone has to run)
             for npc, st in pairs(LC.NPCs or {}) do
                 local nmul = 1
                 if LC.IsSecurity(st) then nmul = (LC.FiltersFouled and LC.FiltersFouled()) and 1 or 0 end -- (masked, unless an Insider fouled the filters)
+                -- a Resistance fighter with a gas mask puts it on; anyone else covers their mouth and coughs
+                -- (the owner, 13 November; sv_livingcity_gasmask.lua)
+                if nmul > 0 and IsValid(npc) and npc:Health() > 0 and LC.GasNPC and npc:GetPos():DistToSqr(g.pos) < r2
+                    and LC.GasNPC(npc, st, g, now) then nmul = 0 end
                 if IsValid(npc) and npc:Health() > 0 and nmul > 0 and st.role ~= "scanner"
                     and npc:GetPos():DistToSqr(g.pos) < r2 then
                     npc:TakeDamage((cvGasDmg:GetFloat() + 2) * nmul * (g.poison and 1.5 or 1), attacker, attacker)
-                    -- get out of it
-                    if npc:Health() > 0 and npc.SetLastPosition then
+                    -- get out of it: a way out clear of Combine units first (LC.GasFlee)
+                    if npc:Health() > 0 and LC.GasFlee and st.role ~= "zombie" then
+                        spots = spots or (LC.GasCombineSpots and LC.GasCombineSpots()) or {}
+                        LC.GasFlee(npc, st, g, now, spots)
+                    elseif npc:Health() > 0 and npc.SetLastPosition then
                         local away = npc:GetPos() - g.pos
                         away.z = 0
                         if away:LengthSqr() < 1 then away = Vector(1, 0, 0) end

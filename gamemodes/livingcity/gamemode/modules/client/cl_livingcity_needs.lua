@@ -548,6 +548,17 @@ local function OpenInventory()
             end
             if giveTo then Btn("Give", "give", "Hand one to the person in front of you") end
             if it.tool then Btn("Use", "use", "Look at a locked door first. Or type !pick, or bind a key to lc_pick.") end
+            -- (the owner, 13 November) a rebel or citizen can cut the gas mask out of a Civil Protection uniform
+            if id == "uniform_cp" and not LocalPlayer():GetNW2Bool("lc_unit", false) and LocalPlayer():GetNW2String("lcf_faction", "") ~= "cp" then
+                local b = vgui.Create("DButton", row)
+                b:Dock(RIGHT)
+                b:DockMargin(4, 4, 4, 4)
+                b:SetWide(130)
+                b:SetText("Scavenge gas mask")
+                b:SetTooltip("Cut the gas mask out of the uniform (five seconds, keep still). The uniform is no good after.")
+                b.DoClick = function() Act("scavengemask", id) end
+                btnW = btnW + 138
+            end
             if id == "request_device" then -- (the owner, 7 November: a Call for help button here, where the call box is)
                 local b = vgui.Create("DButton", row)
                 b:Dock(RIGHT)
