@@ -1796,6 +1796,23 @@ local okAR, errAR = pcall(function()
     if LC_CL.Struggle then error("not cleared") end
 end)
 if not okAR then problems[#problems + 1] = "resisting arrest: " .. tostring(errAR) end
+-- working at the cuffs, felt and not a bar (cl_livingcity_cuffed.lua): the line by progress, the Think and the paint run
+local wasCF = { _me.nw.lc_tied, _me.nw.lcu_pick_until, _me.nw.lcu_pick_start, _me.nw.lcu_progress }
+local okCF, errCF = pcall(function()
+    if not LC_CL.CuffsFelt or not LC_CL.CuffsFeel or not LC_CL.StruggleFeel then error("missing") end
+    if LC_CL.CuffsFeel(0.1, false) == LC_CL.CuffsFeel(0.9, false) then error("no change by progress") end
+    if not string.find(LC_CL.CuffsFeel(0.5, true), "pick", 1, true) then error("pick line") end
+    _me.nw.lc_tied, _me.nw.lcu_pick_start, _me.nw.lcu_pick_until, _me.nw.lcu_progress = true, CurTime() - 2, CurTime() + 5, "Working at the cuffs..."
+    if not LC_CL.CuffsFelt(_me) then error("not felt while cuffed") end
+    hook.t.Think.LivingCityCuffsFelt() hook.t.HUDPaint.LivingCityCuffsFelt()
+    GetConVar("lc_struggle_bar").v = "1"
+    if LC_CL.CuffsFelt(_me) then error("bar setting ignored") end
+    GetConVar("lc_struggle_bar").v = "0"
+    local s = { role = "resist", other = "Unit 12" }
+    if LC_CL.StruggleFeel(s, 0.1) == LC_CL.StruggleFeel(s, 0.7) then error("struggle line doesn't change") end
+end)
+_me.nw.lc_tied, _me.nw.lcu_pick_until, _me.nw.lcu_pick_start, _me.nw.lcu_progress = wasCF[1], wasCF[2], wasCF[3], wasCF[4]
+if not okCF then problems[#problems + 1] = "cuffs felt: " .. tostring(errCF) end
 -- the lag monitor (cl_livingcity_lagwatch.lua): on, a few seconds of it, the panel, the printout, off
 local okLW, errLW = pcall(function()
     LC_CL.SetLagWatch(true)

@@ -119,6 +119,65 @@ function LC_CL.CuffWorking(e)
     return e:IsPlayer() and e:GetNW2Bool("lc_tied", false) and e:GetNW2Float("lcu_pick_until", 0) > now
 end
 
+-- Your own hands at the cuffs, felt and not shown on a bar (the owner, 12 November: "if we could find a different way
+-- to illustrate or show or infer progress or at least struggling other than a bar, then yes please"): the metal clicks
+-- and creaks, faster and higher as it gives, each tug jolts the view, and a line says what your fingers feel.
+-- lc_struggle_bar 1 (cl_livingcity_arrest.lua) brings the bar back.
+function LC_CL.CuffsFelt(ply)
+    if LC_CL.StruggleBar and LC_CL.StruggleBar() then return false end
+    return IsValid(ply) and ply:GetNW2Bool("lc_tied", false) and ply:GetNW2Float("lcu_pick_until", 0) > CurTime()
+end
+
+-- How far along (0 to 1), and whether it's a pick or bare hands.
+local function CuffsProgress(ply)
+    local now = CurTime()
+    local untilT = ply:GetNW2Float("lcu_pick_until", 0)
+    local start = ply:GetNW2Float("lcu_pick_start", now)
+    local frac = math.Clamp((now - start) / math.max(0.1, untilT - start), 0, 1)
+    local picking = string.find(string.lower(ply:GetNW2String("lcu_progress", "")), "pick", 1, true) ~= nil
+    return frac, picking
+end
+
+function LC_CL.CuffsFeel(frac, picking)
+    if picking then
+        if frac < 0.35 then return "You feel for the catch with the pick..."
+        elseif frac < 0.75 then return "Something inside lifts under the pick."
+        end
+        return "Almost... one more turn."
+    end
+    if frac < 0.35 then return "The cuffs bite into your wrists."
+    elseif frac < 0.75 then return "Something in them gives a little."
+    end
+    return "Nearly... keep at it."
+end
+
+local CREAK = { "physics/metal/chain_impact_soft1.wav", "physics/metal/chain_impact_soft2.wav", "physics/metal/chain_impact_soft3.wav" }
+local nextTug = 0
+hook.Add("Think", "LivingCityCuffsFelt", function()
+    local me = LocalPlayer()
+    if not LC_CL.CuffsFelt(me) then return end
+    local now = CurTime()
+    if now < nextTug then return end
+    local frac, picking = CuffsProgress(me)
+    nextTug = now + (1.3 - 0.85 * frac) * (0.8 + math.random() * 0.4)
+    if picking then
+        if LC_CL.FeltTug then LC_CL.FeltTug(0.6, "buttons/lightswitch2.wav", 140 + 40 * frac) end
+    elseif LC_CL.FeltTug then
+        LC_CL.FeltTug(1 + frac * 1.5, CREAK[math.random(#CREAK)], 90 + 30 * frac)
+    end
+end)
+
+local C_INK = Color(235, 220, 200)
+hook.Add("HUDPaint", "LivingCityCuffsFelt", function()
+    local me = LocalPlayer()
+    if not LC_CL.CuffsFelt(me) then return end
+    local frac, picking = CuffsProgress(me)
+    -- (the edges loosen as it gives)
+    if LC_CL.ClosingEdges then LC_CL.ClosingEdges(0.45 * (1 - frac)) end
+    draw.SimpleTextOutlined(LC_CL.CuffsFeel(frac, picking), "DermaLarge", ScrW() / 2, ScrH() * 0.66, C_INK,
+        TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 2, color_black)
+end)
+
 local FINGERS = { "Finger0", "Finger01", "Finger1", "Finger11", "Finger12" } -- (thumb, then the index finger's joints)
 
 -- Every frame, only for those at it: the wrists twist against each other, the shoulders work, thumb and finger pick.

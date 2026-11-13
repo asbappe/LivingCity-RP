@@ -175,7 +175,8 @@ hook.Add("HUDPaint", "LivingCityUndergroundHUD", function()
 
     -- working a lock
     local pickUntil = ply:GetNW2Float("lcu_pick_until", 0)
-    if pickUntil > now then
+    -- (cuffed and at the cuffs, it's felt instead: cl_livingcity_cuffed.lua, LC_CL.CuffsFelt)
+    if pickUntil > now and not (LC_CL.CuffsFelt and LC_CL.CuffsFelt(ply)) then
         local start = ply:GetNW2Float("lcu_pick_start", now)
         local frac = math.Clamp((now - start) / math.max(0.1, pickUntil - start), 0, 1)
         local cx, cy, bw = ScrW() / 2, ScrH() * 0.62, 260
