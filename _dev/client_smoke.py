@@ -3532,7 +3532,11 @@ local ok, e = pcall(function()
     local band, bn = Find(root, "freq7")
     if bn ~= 4 then error("the Resistance: Freq 7 > should be 4: " .. Labels(root)) end
     p = band.page()
-    if not (p.items[1].disabled and p.items[2].disabled and string.find(p.items[2].label, "in 50s", 1, true) and not p.items[3].disabled) then error("Freq 7: " .. Labels(p)) end
+    -- (no transmitter: nothing goes out on Freq 7, the owner, 13 November; with one, backup waits its turn)
+    if not (p.items[1].disabled and p.items[2].disabled and string.find(p.items[2].label, "no transmitter", 1, true) and p.items[3].disabled) then error("Freq 7: " .. Labels(p)) end
+    Info({ reb = { tx = true, backup = 50, pos = 0 } })
+    local p2 = band.page()
+    if not (not p2.items[1].disabled and p2.items[2].disabled and string.find(p2.items[2].label, "in 50s", 1, true) and not p2.items[3].disabled) then error("Freq 7, with a transmitter: " .. Labels(p2)) end
     if not (string.find(p.items[4].label, "rebel ground", 1, true) and string.find(p.items[5].label, "lab", 1, true)) then error("Freq 7: no guidance: " .. Labels(p)) end
     undo = Watch()
     p.items[4].run()

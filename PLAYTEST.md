@@ -1813,3 +1813,5 @@ Type them in the server console on the host panel, or in your own game console (
   Notes:
 - [ ] **Ammo limits:** buy or pick up more than 150 pistol rounds (or 30 shells, 225 SMG): does it stop at the limit? Die and respawn, get revived after a close call, sleep through a dream: still no more than the limit? lc_hl2_ammo 0 brings back Garry's Mod's 9999.
   Notes:
+- [ ] **Freq 7 kit:** get promoted to Fighter: are you told you were issued a Freq 7 radio and a transmitter, and can you talk on Freq 7 straight away? Try to sell, drop, stash or give them: refused? As a Member with only a Freq 7 radio: are Call for backup and Send my position greyed "no transmitter"?
+  Notes:

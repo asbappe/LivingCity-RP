@@ -9,7 +9,14 @@ The owner, 13 November: "anything that is local (saying a voice line, a kick, cu
 - **Off F2, Unit tools and the C menu** for units: Call for backup, Issue a BOLO, Send my 10-20, Records terminal, Call a sweep, My directives, Call in a squad. F2's slot 4 is now "HQ calls: get your radio out, right click", which draws the radio and opens its menu; Unit tools and the C menu say the same. F2 keeps what's done on the spot: Voice lines, Unit tools, Kick, and searching, cuffing and escorting whoever is in front of you. So an Insider's Let them slip is now F2 > 5 and Inside F2 > 5 or 6.
 - **The server holds units to it** (sv_livingcity_radiohq.lua, `LC.RadioOnly`): `LC.CallBackup`, `LC.Mark1020` (not its own call from backup), `LC.OfficerCallSweep`, `LC.CommanderDrop`, chat `!records` and `!bolo`, and the same from the menus, are refused without the radio in hand ("Get your radio out first: HQ only hears you over it..."). Everyone else (citizens, the Resistance, the Administrator) is as before; in a dream it doesn't apply. `lc_radio_only` (1).
 - **A gun put away for the radio** still counts as a gun out for 20 seconds, so backup called in a gunfight comes armed (`LC.BackupViolent`, `ply.lcGunOutAt`).
-- **The F4 Jobs tab and the physical boards and terminals are unchanged.** Whether F4's Jobs tab should also go for units is a question for the owner.
+- **The F4 Jobs tab and the physical boards and terminals are unchanged** (the owner, 13 November: "let's hold off on removing the F4 jobs tab for now"; how job boards work at terminals is still to settle).
+
+## Freq 7: a transmitter to send, and a Fighter's issued kit
+
+The owner, 13 November: "no one should be able to broadcast on freq7 without a transmitter. I think resistance fighters should just get one by default though when they are promoted [to resistance fighter] and have one as standard issue (un-sellable, cannot unequip, same as CP radios)".
+
+- **Sending on Freq 7 takes a Freq 7 radio and a radio transmitter**: a message (as before), Call for backup (it took only the radio) and Send my position (it took nothing) (`LC.SendsOnFreq7`, sv_livingcity_quickmore.lua). F2 > Freq 7 and the Radio menu grey them with "no transmitter". Listening still takes only the radio. The F2 Freq 7 page stays (only units' HQ calls are radio-only).
+- **Fighters and up are issued both** (`LC.IssueRebelRadio`, sv_livingcity_crafting.lua): on promotion to Fighter (told by a notice), at every spawn, and on rejoining the Resistance at that rank, one of each if they have none. That one of each is theirs to keep, like a unit's issue: never sold, dropped, stashed or handed over (`LC.IssuedLocked`, `LC.IssuedWhy`: "That's your issued Freq 7 kit: it stays with you."); a spare can still go. They're still contraband: a unit's search can take them, and the next spawn brings new ones. Members and below buy or make their own, as before.
 
 ## Request resupply
 

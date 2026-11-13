@@ -1229,7 +1229,7 @@ end)
 function LC.StashStore(ply, id)
     if not LC.CanReachStash(ply) then return false, "Your stash is at home, in your own block." end
     if not LC.HasItem(ply, id) then return false end
-    if LC.IssuedLocked and LC.IssuedLocked(ply, id) then return false, "That's Combine issue: it stays with you (or another unit)." end
+    if LC.IssuedLocked and LC.IssuedLocked(ply, id) then return false, (LC.IssuedWhy and LC.IssuedWhy(ply, id) or "That's Combine issue: it stays with you (or another unit).") end
     if StashCount(ply) >= cvStash:GetInt() + (LC.LoyalStashExtra and LC.LoyalStashExtra(ply) or 0) then return false, "Your stash is full." end
     LC.TakeItem(ply, id)
     local st = LC.Stash(ply)

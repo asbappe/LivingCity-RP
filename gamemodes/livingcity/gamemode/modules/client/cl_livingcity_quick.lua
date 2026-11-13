@@ -460,8 +460,8 @@ local function Freq7Page()
     local r = Info("reb")
     return { title = "FREQ 7", items = {
         Can("Message on Freq 7...", function() Ask("Freq 7", "What do you say on Freq 7?", "r") end, r.tx == false and "no transmitter" or nil),
-        Can("Call for backup" .. SquadTag(), function() QM("rbackup") end, (r.radio == false and "no Freq 7 radio") or Later(r.backup)),
-        Can("Send my position", function() QM("rpos") end, Later(r.pos)),
+        Can("Call for backup" .. SquadTag(), function() QM("rbackup") end, (r.radio == false and "no Freq 7 radio") or (r.tx == false and "no transmitter") or Later(r.backup)),
+        Can("Send my position", function() QM("rpos") end, (r.tx == false and "no transmitter") or Later(r.pos)),
         Item("Guide me to the nearest rebel ground", function() QM("guide", "rebel") end),
         Item("Guide me to the nearest lab", function() QM("guide", "lab") end),
     } }
@@ -1059,8 +1059,8 @@ function LC_CL.QuickRadioRoot()
     elseif band == "resistance" then
         local r = Info("reb")
         Add(Can("Message on Freq 7...", function() Ask("Freq 7", "What do you say on Freq 7?", "r") end, r.tx == false and "no transmitter" or nil))
-        Add(Can("Call for backup" .. SquadTag(), function() QM("rbackup") end, (r.radio == false and "no Freq 7 radio") or Later(r.backup)))
-        Add(Can("Send my position", function() QM("rpos") end, Later(r.pos)))
+        Add(Can("Call for backup" .. SquadTag(), function() QM("rbackup") end, (r.radio == false and "no Freq 7 radio") or (r.tx == false and "no transmitter") or Later(r.backup)))
+        Add(Can("Send my position", function() QM("rpos") end, (r.tx == false and "no transmitter") or Later(r.pos)))
         Add(Item("Jobs over the radio", function() Send("radiojobs") end))
     end
     if held and w:GetNW2Int("lc_bands", 1) > 1 then

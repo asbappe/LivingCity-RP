@@ -454,12 +454,50 @@ local ISSUE = {
 local ISSUED_ITEM = {}
 for _, is in ipairs(ISSUE) do ISSUED_ITEM[is.item] = true end
 ISSUED_ITEM.zipties = true -- (a unit's cuffs are issue too, free at a CP Commissary: sv_livingcity_cp.lua)
+-- A Resistance Fighter's Freq 7 radio and transmitter (the owner, 13 November: "resistance fighters should just get one
+-- by default though when they are promoted [to resistance fighter] and have one as standard issue (un-sellable, cannot
+-- unequip, same as CP radios)"): from Fighter up, one of each, topped up at every spawn and on promotion. That one of
+-- each stays with them: never sold, dropped, stashed or handed over (a spare can be).
+LC.REBEL_ISSUE = { "radio_tuned", "radio_transmitter" }
+local REBEL_ISSUED = { radio_tuned = true, radio_transmitter = true }
+local REBEL_ISSUE_RANK = 3 -- (Fighter)
+local function RebelIssued(ply)
+    return IsValid(ply) and ply:IsPlayer() and ply:GetNW2String("lcf_faction", "") == "resistance" and ply:GetNW2Int("lcf_rank", 1) >= REBEL_ISSUE_RANK
+end
+LC.RebelIssued = RebelIssued
+function LC.IssueRebelRadio(ply)
+    if not RebelIssued(ply) or not LC.Inventory or not LC.GiveItem then return 0 end
+    local n = 0
+    for _, id in ipairs(LC.REBEL_ISSUE) do
+        if (LC.Inventory(ply)[id] or 0) < 1 and LC.GiveItem(ply, id, 1) then n = n + 1 end
+    end
+    return n
+end
+hook.Add("PlayerSpawn", "LivingCityRebelRadio", function(ply)
+    timer.Simple(1.6, function() if IsValid(ply) then LC.IssueRebelRadio(ply) end end)
+end)
+hook.Add("LivingCityFactionChanged", "LivingCityRebelRadio", function(ply) -- (back to a Fighter's rank without a respawn)
+    timer.Simple(0.5, function() if IsValid(ply) then LC.IssueRebelRadio(ply) end end)
+end)
+hook.Add("LivingCityRankChanged", "LivingCityRebelRadio", function(ply, fid)
+    if fid ~= "resistance" or not IsValid(ply) then return end
+    if LC.IssueRebelRadio(ply) > 0 and LC.Notice then
+        LC.Notice(ply, "info", "Freq 7", "You're issued a Freq 7 radio and a radio transmitter: yours to keep. Switch to the radio transmitter (next to Hands) to talk on Freq 7.", 8)
+    end
+end)
+
 function LC.IssuedLocked(ply, id, to)
+    if REBEL_ISSUED[id] and RebelIssued(ply) and LC.Inventory and (LC.Inventory(ply)[id] or 0) <= 1 then return true end
     if not (IsValid(ply) and ISSUED_ITEM[id] and LC.PlayerIsCP(ply)) then return false end
     if IsValid(to) and LC.PlayerIsCP(to) then return false end
     return true
 end
 local ISSUED_WHY = "That's Combine issue: it stays with you (or another unit)."
+-- Why it can't go: a unit's Combine issue, or a Fighter's Freq 7 kit.
+function LC.IssuedWhy(ply, id)
+    if REBEL_ISSUED[id] and RebelIssued(ply) then return "That's your issued Freq 7 kit: it stays with you." end
+    return ISSUED_WHY
+end
 
 function LC.IssueGrenades(ply)
     if not IsValid(ply) or not LC.Inventory then return end
@@ -490,7 +528,7 @@ function LC.GiveTo(ply, id)
     end
     if not LC.HasItem(ply, id) then return false end
     if LCS.Items[id] and LCS.Items[id].doc then return false, "Your papers stay with you. (Show them instead: Use.)" end
-    if LC.IssuedLocked(ply, id, target) then return false, ISSUED_WHY end
+    if LC.IssuedLocked(ply, id, target) then return false, LC.IssuedWhy(ply, id) end
     if not LC.CanCarry(target, id, 1) then return false, "They can't carry any more." end
     local it = LCS.Items[id]
     local prisoner = LC.Prisoners and LC.Prisoners[target]

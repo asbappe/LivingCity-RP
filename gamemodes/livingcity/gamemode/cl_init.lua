@@ -189,7 +189,7 @@ local GUIDE = {
         "Everyone else buys guns, ammunition and jammers at the black market. If a Civil Protection unit finds the scientist, the lab shuts down for ten minutes.",
         "Citizens pick up rumours. Talk to them (E) now and then.",
         "Ways for the Resistance to make money: write notes on what you see near a checkpoint or a unit (F2 > Resistance, needs paper) and sell them to the quartermaster; steal good parts off the factory line (R while holding one); or have the lab make forged ration cards (but if too many turn up, the camp gets swept).",
-        "The Resistance: F2 > Freq 7. Send a message on the band, call for backup (every Resistance player hears it and sees where you are, and a Member or higher gets a couple of idle fighters from nearby, who stay with you), send your position, or follow a trail to the nearest rebel ground or the lab.",
+        "The Resistance: F2 > Freq 7. Send a message on the band, call for backup (every Resistance player hears it and sees where you are, and a Member or higher gets a couple of idle fighters from nearby, who stay with you), send your position, or follow a trail to the nearest rebel ground or the lab. Anything that goes out on Freq 7 needs a Freq 7 radio and a radio transmitter; from Fighter up you're issued both, yours to keep (they can't be sold, dropped or handed over).",
         "Rebel zones that touch count as one camp: one quartermaster, one supply crate. He buys food back for 2 credits at most (food from his crate is free).",
         "A role (Hacker, Father Grigori...) is added on top of your rank: you're still a Fighter working toward Lieutenant, but you carry the role's kit. To give up the role, join the faction again in F4.",
     } },

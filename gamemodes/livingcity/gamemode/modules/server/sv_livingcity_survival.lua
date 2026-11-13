@@ -693,7 +693,7 @@ function LC.InvAction(ply, action, id)
         if atSink then ply:EmitSound("ambient/water/water_spray1.wav", 55, 115, 0.6) else ply:EmitSound("ambient/water/water_splash2.wav", 50, 100, 0.5) end
     elseif action == "drop" then
         if it.doc then return ply:ChatPrint("[Papers] You keep your papers on you. (Stash them at home if you must.)") end
-        if LC.IssuedLocked and LC.IssuedLocked(ply, id) then return ply:ChatPrint("That's Combine issue: it stays with you (or another unit).") end
+        if LC.IssuedLocked and LC.IssuedLocked(ply, id) then return ply:ChatPrint((LC.IssuedWhy and LC.IssuedWhy(ply, id) or "That's Combine issue: it stays with you (or another unit).")) end
         local born = LC.SpoilOldest(ply, id)
         LC.TakeItem(ply, id)
         local dropped = LC.SpawnWorldItem(id, Front(ply), nil, nil, born)

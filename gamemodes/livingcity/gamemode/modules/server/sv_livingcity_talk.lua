@@ -333,7 +333,7 @@ end
 local function Give(ply, npc, st, id)
     local kind = LC.GiveKind(id)
     if not kind or not (LC.HasItem and LC.HasItem(ply, id)) then return "You've nothing like that to give." end
-    if LC.IssuedLocked and LC.IssuedLocked(ply, id, nil) then return "That's Combine issue: it stays with you (or another unit)." end
+    if LC.IssuedLocked and LC.IssuedLocked(ply, id, nil) then return (LC.IssuedWhy and LC.IssuedWhy(ply, id) or "That's Combine issue: it stays with you (or another unit).") end
     if kind == "food" then return ShareFood(ply, npc, st, id) end
     local it = LCS.Items[id]
     -- the Resistance pamphlet: handed over as its own module says (who takes it, who is won over, who informs)
