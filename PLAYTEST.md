@@ -1830,3 +1830,5 @@ Type them in the server console on the host panel, or in your own game console (
   Notes:
 - [ ] **The end:** with all three tried, do you wake Unbroken ("Every which way")? Is aiming fair (too easy or too hard to hit him or the bin)?
   Notes:
+- [ ] **The tiny officer's voice:** once the can has swapped with him, does your tiny officer squeak threats and orders (knocked off, picked up, in your hand, thrown, in the bin)? Too often, too loud, too high? Do the other cans' officers squeak from the floor too, and is thirty of them bearable?
+  Notes:

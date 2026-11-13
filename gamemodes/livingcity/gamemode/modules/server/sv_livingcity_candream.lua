@@ -19,7 +19,9 @@
           shrinks and climbs onto the bin. The can knocks him off: "Pick up that can." From then on
           what you pick up is a tiny officer. Every hit after that (on any officer or any living can)
           puts another living can, bin and tiny officer next to the first, each knocking its own
-          officer off its own bin, up to LC.CanMaxSets (30) of them.
+          officer off its own bin, up to LC.CanMaxSets (30) of them. The tiny officers squeak threats
+          and orders, Half-Life 2's own lines pitched as high as they go (LC.CanTinyLines; yours, on
+          your own screen: LC_CL.CanTinyLines).
         In the bin (any bin): he chuckles, the bin says thank you, burps and grows, and it rains cans
           on everyone.
         Anywhere else: where it lands a can tree grows, in every colour, and he grows taller and
@@ -71,6 +73,14 @@ local BINS = { "models/props_trainstation/trashcan_indoor001b.mdl", "models/prop
 local PICKUP = { "npc/metropolice/vo/pickupthecan1.wav", "npc/metropolice/vo/pickupthecan2.wav", "npc/metropolice/vo/pickupthecan3.wav" }
 local TRASH = { "npc/metropolice/vo/putitinthetrash1.wav", "npc/metropolice/vo/putitinthetrash2.wav" }
 local CHUCKLE = "npc/metropolice/vo/chuckle.wav"
+-- What a tiny officer squeaks from the floor (the owner, 13 November: "super high pitch shifted voice lines coming from
+-- the tiny officer: threats, commands"): Half-Life 2's own, as high as they go. Your own one's are in cl_livingcity_candream.lua.
+LC.CanTinyPitch = 240
+LC.CanTinyChance = 0.6 -- (how often one of the living cans' officers has something to say about it, each time it's knocked off)
+LC.CanTinyLines = { "npc/metropolice/vo/holdit.wav", "npc/metropolice/vo/holditrightthere.wav", "npc/metropolice/vo/dontmove.wav", "npc/metropolice/vo/stopthere.wav",
+    "npc/metropolice/vo/firstwarningmove.wav", "npc/metropolice/vo/secondwarning.wav", "npc/metropolice/vo/finalwarning.wav", "npc/metropolice/vo/getdown.wav",
+    "npc/metropolice/vo/prepareforjudgement.wav", "npc/metropolice/vo/youwantamalcomplianceverdict.wav", "npc/metropolice/vo/movealong.wav", "npc/metropolice/vo/moveit.wav",
+    "npc/metropolice/vo/keepmoving.wav", "npc/metropolice/vo/finalverdictadministered.wav", "npc/metropolice/vo/citizen.wav", "npc/metropolice/vo/allunitsrespondcode3.wav" }
 
 -- How tall a thing is, and how far its feet are below where it is (at scale 1).
 local function Tall(e)
@@ -355,6 +365,11 @@ do
                             set.cyc = cyc
                             Snd(set.can, PICKUP[1 + (i % 3)], 62, 130 + (i * 17) % 90)
                             Snd(set.tiny, "npc/metropolice/pain" .. math.random(1, 4) .. ".wav", 55, 230)
+                            set.squeak = math.random() < LC.CanTinyChance and (now + math.Rand(0.9, 2.6)) or nil
+                        end
+                        if set.squeak and now >= set.squeak then -- (flat on his back, and furious about it)
+                            set.squeak, set.squeaks = nil, (set.squeaks or 0) + 1
+                            Snd(set.tiny, LC.CanTinyLines[math.random(#LC.CanTinyLines)], 60, LC.CanTinyPitch + (i * 7) % 16)
                         end
                         local fx, fy = set.binAt.x + 40, set.binAt.y + ((i % 2 == 0) and 25 or -25)
                         if t < 0.25 or t >= LC.CanCycle - 0.5 then -- (on the bin, or hopping back up)

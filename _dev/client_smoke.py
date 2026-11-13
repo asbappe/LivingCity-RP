@@ -2338,6 +2338,33 @@ local ok, e = pcall(function()
     local r = LC_CL.DreamVoiceRate({ theme = "conga" })
     if r and (r < 0.7 or r > 1.4) then error("a line's speed out of range") end
     Msg({ k = "stop", how = "won" })
+    -- Pick Up That Can: your own can (or tiny officer) is drawn where the server says, and the tiny officer squeaks
+    sound = sound or {}
+    file = file or {}
+    local canPlay, canExists, canPlayed = sound.Play, file.Exists, {}
+    sound.Play = function(path, pos, lvl, pitch) canPlayed[#canPlayed + 1] = { path, pitch } end
+    file.Exists = function() return true end
+    Msg({ k = "start", id = "can", name = "Pick Up That Can", goal = "Go.", ends = CurTime() + 100, lives = 1, maxLives = 1, theme = "can" })
+    Msg({ k = "state", rain = CurTime(), can = { s = "floor", k = "cop", a = CurTime(), b = { 0, 0, 40 }, p = { 50, 0, 3 } } })
+    hook.t.Think.LivingCityCanDream()
+    if #canPlayed ~= 1 or canPlayed[1][2] < 200 or not string.find(canPlayed[1][1], "npc/metropolice/vo/", 1, true) then error("the can dream: the tiny officer said nothing when knocked off") end
+    local canAt = LC_CL.CanWhere({ s = "floor", k = "cop", a = CurTime() - 2, b = { 0, 0, 40 }, p = { 50, 0, 3 } }, CurTime())
+    if not canAt or canAt.x ~= 50 then error("the can dream: your can isn't on the floor where it fell") end
+    if LC_CL.CanWhere({ s = "bin", k = "can", a = CurTime(), b = { 0, 0, 40 } }, CurTime()).z ~= 40 then error("the can dream: your can isn't on the bin") end
+    Msg({ k = "state", can = { s = "held", k = "cop", a = CurTime(), b = { 0, 0, 40 } } })
+    hook.t.Think.LivingCityCanDream()
+    if #canPlayed ~= 2 then error("the can dream: the tiny officer said nothing when picked up") end
+    _advance(6)
+    hook.t.Think.LivingCityCanDream()
+    if #canPlayed ~= 3 then error("the can dream: the tiny officer stays quiet in your hand") end
+    Msg({ k = "state", can = { s = "held", k = "can", a = CurTime(), b = { 0, 0, 40 } } })
+    hook.t.Think.LivingCityCanDream()
+    _advance(6)
+    hook.t.Think.LivingCityCanDream()
+    if #canPlayed ~= 3 then error("the can dream: a can doesn't talk") end
+    Msg({ k = "stop", how = "won" })
+    hook.t.Think.LivingCityCanDream()
+    sound.Play, file.Exists = canPlay, canExists
     hook.t.Think.LivingCityStrangeNonsense()
     if #LC_CL.StrangeFloaters() ~= 0 then error("the nonsense stayed after the dream") end
     ClientsideModel, ents.FindByClass = cmWas, fbcWas

@@ -21302,6 +21302,11 @@ local s2 = g.sets[2]
 ok(s2.o:Distance(m.o) <= 110, "(right next to the first)")
 _run(LC.CanCycle + 0.5)
 ok(s2.cyc ~= nil, "which knocks its own officer off its own bin")
+local chanceWas = LC.CanTinyChance
+LC.CanTinyChance = 1
+_run(LC.CanCycle * 2)
+ok((s2.squeaks or 0) >= 1 and LC.CanTinyPitch >= 200 and #LC.CanTinyLines >= 10, "and the tiny officer squeaks threats from the floor, very high")
+LC.CanTinyChance = chanceWas
 a:SetPos(Vector(s2.o.x, s2.o.y - 200, g.top + 4))
 Aim(a, Vector(s2.o.x, s2.o.y, g.top + 36))
 local w2, _, set2 = LC.CanAim(g, a)

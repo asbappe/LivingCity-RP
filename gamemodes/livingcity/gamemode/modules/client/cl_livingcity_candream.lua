@@ -4,7 +4,8 @@
       Your own can (the owner: "every player has their own client side can prop"): nobody else sees
       it. The server says where it is (on the bin, knocked to the floor, in your hand, thrown, and
       where it lands); this draws it there. Once the can has swapped places with the officer, what you
-      pick up is a tiny officer instead. And when anyone puts theirs in a bin, it rains cans on you.
+      pick up is a tiny officer instead, squeaking threats and orders the whole time (LC_CL.CanTinyLines).
+      And when anyone puts theirs in a bin, it rains cans on you.
 ]]
 
 if SERVER then return end
@@ -16,7 +17,44 @@ LC_CL.CanTiny = 0.22  -- (a tiny officer: as on the server)
 LC_CL.CanRain = 24    -- (cans in a shower)
 LC_CL.CanRainSecs = 3.5
 
+-- What your tiny officer squeaks (the owner, 13 November: "super high pitch shifted voice lines coming from the tiny
+-- officer: threats, commands, etc to make it more comical"): Half-Life 2's own officer, as high as it goes, from
+-- wherever he is. By the moment: knocked off the bin, picked up, held (every few seconds), thrown, and where he ends up.
+LC_CL.CanTinyPitch = 240
+LC_CL.CanTinyEvery = { 2.5, 4.5 } -- (seconds between his lines while he's in your hand, or lying on the floor)
+local VO = "npc/metropolice/vo/"
+LC_CL.CanTinyLines = {
+    floor = { "youknockeditover", "holdit", "holditrightthere", "dontmove", "stopthere", "firstwarningmove", "lookingfortrouble", "isaidmovealong", "pickupthecan2", "citizen" },
+    held = { "secondwarning", "finalwarning", "thisisyoursecondwarning", "prepareforjudgement", "youwantamalcomplianceverdict", "getdown", "dontmove", "putitinthetrash1",
+        "officerneedsassistance", "officerneedshelp", "backup", "help", "allunitsrespondcode3", "finalverdictadministered", "amputate", "pacifying" },
+    pickup = { "watchit", "holdit", "help", "shit", "officerneedsassistance", "stopthere" },
+    thrown = { "shit", "help", "lookout", "watchit", "officerneedshelp" },
+    cop = { "finalverdictadministered", "chuckle", "pacifying" },         -- (he hit the one in charge)
+    bin = { "allrightyoucango", "nowgetoutofhere", "movealong", "keepmoving" }, -- (from inside the bin)
+    away = { "getdown", "isaidmovealong", "moveit", "backup" },
+}
+local known = {}
+local function Have(path)
+    if known[path] == nil then known[path] = not (file and file.Exists) or file.Exists("sound/" .. path, "GAME") == true end
+    return known[path]
+end
+-- One of his lines for this moment, from where he is. The path played, or nil (none of them on this computer).
+function LC_CL.CanSqueak(kind, pos)
+    local list = LC_CL.CanTinyLines[kind]
+    if not list or not pos then return nil end
+    local at = math.random(#list)
+    for i = 0, #list - 1 do
+        local path = VO .. list[(at + i - 1) % #list + 1] .. ".wav"
+        if Have(path) then
+            if sound and sound.Play then sound.Play(path, pos, 75, math.Clamp(LC_CL.CanTinyPitch + math.random(-12, 12), 30, 255), 1) end
+            return path
+        end
+    end
+    return nil
+end
+
 local mine, mineKind
+local was, nextLine, landed
 local rain, rainAt = {}, nil
 
 local function St()
@@ -31,6 +69,7 @@ end
 local function Clear()
     if IsValid(mine) then mine:Remove() end
     mine, mineKind = nil, nil
+    was, nextLine, landed = nil, nil, nil
     for _, r in ipairs(rain) do if IsValid(r.m) then r.m:Remove() end end
     rain, rainAt = {}, nil
 end
@@ -125,6 +164,25 @@ hook.Add("Think", "LivingCityCanDream", function()
     local m = Mine(c.k == "cop" and "cop" or "can")
     if not m then return end
     if m.SetNoDraw then m:SetNoDraw(pos == nil) end
+    -- the tiny officer has plenty to say about all of this
+    if c.k == "cop" then
+        local key = c.s .. (c.a or 0)
+        local at = pos or V(c.t) or eye
+        if key ~= was then
+            was, landed = key, nil
+            local kind = ({ floor = "floor", held = "pickup", fly = "thrown" })[c.s]
+            if kind then LC_CL.CanSqueak(kind, at) end
+            nextLine = now + math.Rand(LC_CL.CanTinyEvery[1], LC_CL.CanTinyEvery[2])
+        elseif c.s == "fly" and not landed and now - (c.a or now) > 0.9 then
+            landed = true
+            LC_CL.CanSqueak(c.w or "away", at)
+        elseif (c.s == "held" or c.s == "floor") and now >= (nextLine or 0) then
+            nextLine = now + math.Rand(LC_CL.CanTinyEvery[1], LC_CL.CanTinyEvery[2])
+            LC_CL.CanSqueak(c.s, at)
+        end
+    else
+        was = nil
+    end
     if pos then
         m:SetPos(pos)
         m:SetAngles(a or Angle(0, 0, 0))
