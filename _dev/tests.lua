@@ -10049,6 +10049,7 @@ for _, r in ipairs(LC.VoiceMissing()) do
         end
     end
 end
+ok(vmRows["Colonel Cubbage"] and string.find(vmRows["Colonel Cubbage"], "|answer_open|", 1, true), "lc_voice_missing lists Colonel Cubbage's answers too (cubbage/)")
 ok(vmRows.overwatch and not string.find(vmRows.overwatch, "|lockdown|", 1, true) and not string.find(vmRows.overwatch, "|blackout|", 1, true) and #vmWrong == 0, "lc_voice_missing lists only the triggers with no recording", table.concat(vmWrong, ", "))
 ok(vmRows.administrator and not string.find(vmRows.administrator, "|dawn|", 1, true), "and hers (a recording in any tone counts)", vmRows.administrator)
 ok(vmRows.radio and vmRows["G-Man"] and vmRows["Dream lines"], "and the radio's, the G-Man's and the dreams' lines")

@@ -746,6 +746,12 @@ function LC.VoiceMissing()
     for _, t in ipairs(LC.OldTimerTroubles or {}) do oldIds[#oldIds + 1] = "hint_" .. t[1] oldIds[#oldIds + 1] = "thanks_" .. t[1] end
     Each("The old-timer", "oldtimer/", LC.OldTimerRescan, LC.OldTimerClip, oldIds)
     Each("Machines", "machines/", LC.MachineRescan, LC.MachineClip, Ids(nil, LC.MachineLines))
+    -- Colonel Cubbage answering her speeches (sv_livingcity_speechanswer.lua): answer_<piece>
+    if LC.SpeechAnswerLines and LC.CubbageClip then
+        local m = {}
+        for id in pairs(LC.SpeechAnswerLines) do if not LC.CubbageClip(id) then m[#m + 1] = "answer_" .. id end end
+        Row("Colonel Cubbage", "cubbage/", m)
+    end
     return out
 end
 
