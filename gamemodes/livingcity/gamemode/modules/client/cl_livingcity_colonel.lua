@@ -1,8 +1,10 @@
 --[[
     Living City (client): the Colonel (sv_livingcity_colonel.lua)
 
-    Drawn only here, only for the Resistance: Odessa Cubbage's face, standing
-    by the quartermaster. He's a model on your own screen and nowhere else:
+    Drawn only here, only for the Resistance: an old man's face (lc_colonel_model,
+    a Half-Life 2 citizen since 13 November, when Odessa Cubbage himself began
+    answering her speeches: sv_livingcity_speechanswer.lua), standing by the
+    quartermaster. He's a model on your own screen and nowhere else:
     nothing to bump into, bullets go through him, and when the Combine come
     into the camp he isn't there. E while looking at him talks to him. His
     voice (if recorded) is heard by you alone.
@@ -16,7 +18,11 @@
 
 LC_CL = LC_CL or {}
 
-local MODEL = "models/odessa.mdl"
+local MODEL = "models/odessa.mdl" -- (as it was; the server's lc_colonel_model is used, sent as a global)
+local function Model()
+    local m = GetGlobal2String and GetGlobal2String("lc_colonel_model", "") or ""
+    return m ~= "" and m or MODEL
+end
 local REACH = 140
 local colonel
 
@@ -44,9 +50,11 @@ hook.Add("Think", "LivingCityColonel", function()
     if not Mine() then Remove() return end
     local pos = GetGlobal2Vector("lc_colonel_pos", Vector(0, 0, 0))
     if pos == Vector(0, 0, 0) then Remove() return end
+    if IsValid(colonel) and colonel.lcModel ~= Model() then Remove() end -- (his face changed)
     if not IsValid(colonel) then
-        colonel = ClientsideModel(MODEL, RENDERGROUP_TRANSLUCENT)
+        colonel = ClientsideModel(Model(), RENDERGROUP_TRANSLUCENT)
         if not IsValid(colonel) then return end
+        colonel.lcModel = Model()
         colonel.lcGhost = LocalPlayer():GetNW2Float("lc_colonel_ghost", 0)
         local seq = colonel:SelectWeightedSequence(ACT_IDLE)
         if not seq or seq < 0 then seq = colonel:LookupSequence("idle_subtle") end

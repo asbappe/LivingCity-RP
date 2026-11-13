@@ -192,6 +192,13 @@ function LC.Freq7Warn(name)
     return true
 end
 
+-- Someone's recording cuts in now (Colonel Cubbage answering her address: sv_livingcity_speechanswer.lua).
+function LC.Freq7CutIn(path, text)
+    if S.dark or not S.freq or not path then return false end
+    Play(CurTime(), path, "voice", text)
+    return true
+end
+
 function LC.Freq7Tick(now, dt)
     now = now or CurTime()
     if not S.freq then

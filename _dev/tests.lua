@@ -13432,6 +13432,63 @@ LC.DreamPlanNext, LC.DreamPlanDecide, LC.DreamPlanTonight = planNext, planDecide
 LC.DreamPosterSeen = seenWas
 end
 DreamPosterTests()
+section("Colonel Cubbage answers her speeches (the owner, 12 November)")
+function SpeechAnswerTests()
+local CA0 = Vector(-83000, 63000, 0)
+local spotWas, sessWas = LC.ColonelSpot, LC.SpeechSession
+LC.ColonelSpot = function() return CA0, 90 end
+-- what he says: an answer to each thing she spoke about, between his opening and closing
+local P = LC.SpeechPiece
+local said = LC.SpeechAnswerCompose({ P.open, P.ev_deaths, P.hunger, P.mood_afraid, P.close })
+ok(#said == 5 and said[1].id == "open" and said[2].id == "ev_deaths" and said[3].id == "hunger" and said[4].id == "mood_afraid" and said[5].id == "close",
+    "he answers each thing she spoke about, between his opening and closing", #said)
+local quiet = LC.SpeechAnswerCompose({ P.open, P.close })
+ok(#quiet == 3 and quiet[2].id == "calm", "after a quiet speech, he answers the quiet")
+local missing = {}
+for _, piece in ipairs(LC.SpeechPieces) do if not LC.SpeechAnswerLines[piece.id] then missing[#missing + 1] = piece.id end end
+ok(#missing == 0, "he has an answer for every piece of her speech", table.concat(missing, ", "))
+ok(#LC.SpeechAnswerCompose(nil) >= 3, "and when she spoke her own words, he answers what the city has been through")
+-- he answers at the camp: heard near him, in chat
+local near = newPlayer("CubbageListener", "citizen")
+near:SetPos(CA0 + Vector(200, 0, 0))
+near.chat = {}
+local far = newPlayer("CubbageFarAway", "citizen")
+far:SetPos(CA0 + Vector(20000, 0, 0))
+far.chat = {}
+local okA = LC.SpeechAnswer({ P.open, P.ev_arrests, P.close })
+local st = LC.SpeechAnswerState()
+ok(okA and st and IsValid(st.man) and st.man:GetModel() == "models/odessa.mdl", "Colonel Cubbage stands up at the camp to answer her")
+for i = 1, 60 do LC.SpeechAnswerThink(CurTime()) _advance(1) end
+ok(has(near.chat, "Colonel Cubbage") and #far.chat == 0, "heard near him, not across the city")
+ok(LC.SpeechAnswerState() == nil and not IsValid(st.man), "and when he's done, he's gone")
+-- her address over: his answer is due a few minutes later
+_setcvar("lc_speech_answer_delay", 5)
+local session = { spoken = CurTime(), pieces = { P.open, P.ev_theft, P.close } }
+LC.SpeechSession = function() return session end
+LC.SpeechAnswerWatch(CurTime())
+LC.SpeechSession = function() return nil end
+LC.SpeechAnswerWatch(CurTime())
+local _, due = LC.SpeechAnswerState()
+ok(due ~= nil and due.pieces == session.pieces, "her address over, his answer is due")
+_advance(6)
+LC.SpeechAnswerThink(CurTime())
+ok(LC.SpeechAnswerState() ~= nil, "a few minutes later, he answers")
+LC.SpeechAnswerStop()
+-- the Combine in the camp: no answer
+local unit = newPlayer("CubbageUnit", "cp")
+unit:SetPos(CA0 + Vector(100, 0, 0))
+local okC = LC.SpeechAnswer(nil)
+ok(not okC, "not while the Combine are in the camp")
+unit:SetPos(CA0 + Vector(40000, 0, 0))
+_setcvar("lc_speech_answer", 0)
+ok(not LC.SpeechAnswer(nil), "lc_speech_answer 0: no answer")
+_setcvar("lc_speech_answer", 1)
+_setcvar("lc_speech_answer_delay", 240)
+ok(GetConVar("lc_colonel_model"):GetString() ~= "models/odessa.mdl", "and the ghost by the quartermaster wears another old man's face")
+for _, x in ipairs({ near, far }) do x:SetPos(CA0 + Vector(50000, 0, 0)) end
+LC.ColonelSpot, LC.SpeechSession = spotWas, sessWas
+end
+SpeechAnswerTests()
 function Ledger2Tests()
 section("The state of the city on the streets: checkpoints, ambushes, prices, acts")
 local function Later(secs) _advance(secs) _runtimers() end
