@@ -95,6 +95,7 @@ for id, words in pairs(LC.OldTimerLines or {}) do W("oldtimer", id, "", words) e
 for _, t in ipairs(LC.OldTimerTroubles or {}) do W("oldtimer", "hint_" .. t[1], "What's troubling him (said instead of his greeting)", t[3]) W("oldtimer", "thanks_" .. t[1], "You helped him with it", t[4]) end
 for id, l in pairs(LC.MachineLines or {}) do W("machine", id, l[1], l[2]) end
 for id, words in pairs(LC.ColonelLines or {}) do W("colonel", id, "", words) end
+for id, words in pairs(LC.SpeechAnswerLines or {}) do W("cubbage", id, "", words) end
 for id, l in pairs(LC.StreetLines or {}) do W("street", id, l[2], l[1], l[3] or l[1]) end
 for id, l in pairs(LC.UnitLines or {}) do W("unitline", id, l[2], l[1], l[3] or l[1], table.concat(l[4] or {}, ", ")) end
 for _, t in ipairs(LC.SpeechPieces or {}) do W("speech", t.id, t.part, t.when, t.words) end
@@ -266,7 +267,7 @@ def main():
         return "Between answers"
     rs = sorted([r for r in rows if r[0] == "colonel"], key=lambda r: r[1])
     doc.extend(["", "## 9. The Colonel", "",
-                "The old fighter at the Resistance camp (Odessa Cubbage's face): weary, dry, kind underneath, a ghost who doesn't quite know it at first. "
+                "The old fighter at the Resistance camp (an old man's face, `lc_colonel_model`; Odessa Cubbage himself answers her speeches, section 12): weary, dry, kind underneath, a ghost who doesn't quite know it at first. "
                 "Folder: **`garrysmod/sound/livingcity/colonel/`**. Only the player he's talking to hears these. Without a recording he's silent and the words show. "
                 "`job_unit` names a unit's designation where it says %s: record it without the number (\"Designation... still walking around\").",
                 "", "| Done | File | When | Says |", "|---|---|---|---|"])
@@ -322,6 +323,18 @@ def main():
         else:
             doc.append("| [ ] | `%s1.wav` | %s | %s |" % (r[1], r[2], r[3]))
             count += 1
+    order12 = [r[1] for r in rows if r[0] == "speech"]
+    cub = sorted([r for r in rows if r[0] == "cubbage"], key=lambda r: (0 if r[1] == "open" else (2 if r[1] == "close" else 1),
+                                                                       order12.index(r[1]) if r[1] in order12 else 99, r[1]))
+    doc.extend(["", "## 12. Colonel Cubbage answers her speeches", "",
+                "Odessa Cubbage, alive and well, at the Resistance's camp a few minutes after her address: defiant, dry, a speaker who enjoys "
+                "taking her apart. An opening, an answer to each thing she spoke about (named as her piece in section 1), and a closing. "
+                "Folder: **`garrysmod/sound/livingcity/cubbage/`**. Heard near him, and a recording cuts in on Freq 7. Without a recording, "
+                "the words show in chat.",
+                "", "| Done | File | Answers | Says |", "|---|---|---|---|"])
+    for r in cub:
+        doc.append("| [ ] | `answer_%s1.wav` | %s | %s |" % (r[1], {"open": "(his opening)", "close": "(his closing)"}.get(r[1], "her `speech_%s`" % r[1]), r[3]))
+        count += 1
     text = "\n".join(doc).rstrip("\n") + "\n"
     with open(OUT, "w", encoding="utf-8") as f:
         f.write(text)

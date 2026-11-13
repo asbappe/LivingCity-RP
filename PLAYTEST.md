@@ -1848,3 +1848,23 @@ Type them in the server console on the host panel, or in your own game console (
   Notes:
 - [ ] **The drill at the jogging start:** with no exercise yard placed, run `lc_exercise drill`: does the leader stand at the jogging route's first stop with the rows in front of it? If the rows land in a wall, turn that stop to face open ground (the rows form the way it faces).
   Notes:
+
+## 13 November, later: the TODO run (felt cuffs, quick menus, the save tool, dream posters, the Fitness Test, Cubbage answers)
+- [ ] **Resisting arrest, felt:** get cuffed by a unit player and hammer E. No bar: does the view jolt, do the screen edges close in as you lose and open as you win, does the line change, is the heartbeat there at the end? `lc_struggle_bar 1` brings the bar back.
+  Notes:
+- [ ] **Working at / picking the cuffs, felt:** cuffed, F1 > Work at the cuffs, and with a lockpick Pick the cuffs. Clicks and creaks faster as it goes, small jolts, the line changing; is it clear enough without a bar?
+  Notes:
+- [ ] **Talking to a citizen is a quick menu:** E on a citizen. Number keys, their words under it, Give something opens a page; F3/F4 shut when it opens; walking off closes it.
+  Notes:
+- [ ] **A unit's search is a quick menu:** search a citizen (baton reload). Numbers check the spots, found items show in the list, Done searching: check their papers, 0 ends it. The person searched still sees their panel and R.
+  Notes:
+- [ ] **Interrogation as quick menus:** F2 > Interrogate someone in a cell. The unit: three questions, baton, Done, answers under it. The prisoner (a player): answers by number, seconds left shown.
+  Notes:
+- [ ] **Save with the gamemode:** Q > Tools > Miscount > Save with the gamemode. Left click a spawned prop, change map, is it back? Do saved props glow green only while the tool is out? Right click stops saving.
+  Notes:
+- [ ] **Dream posters:** with a few Civil notice posters placed away from machines/desks, do about a quarter show a night-blue "SLEEP WELL, CITIZEN" poster? Different ones the next day? (`lc_dream_posters 1` to make them all show one for testing.)
+  Notes:
+- [ ] **The Fitness Test:** editor panel, Dreams: test one > The Fitness Test. Hurdles jumpable, stones reachable with a running jump, batons flat and jumpable, falling and being swept send you to the last green flag, gold tile passes.
+  Notes:
+- [ ] **Colonel Cubbage answers:** after one of her addresses (or `lc_speech_answer_delay 10`), does Odessa Cubbage stand up at the camp and answer point by point, in chat near him and on Freq 7? Does the ghost now have another old man's face (`lc_colonel_model`)?
+  Notes:

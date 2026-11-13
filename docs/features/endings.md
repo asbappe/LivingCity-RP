@@ -198,6 +198,16 @@ No new settings or commands.
 - **On screen:** "Lap 2 of 4   3rd of 6   Carrying: BOOST (Jump to use)", and "off the road", "Spinning out!", "Slowed!".
 - **Music:** the owner's `rally` file in `sound/livingcity/dreams/` if there is one, else Half-Life 2's own. Late sleepers can join it like any dream.
 
+## The Fitness Test (13 November; the owner, 12 November: "a new dream, an airboat race or an obstacle course")
+
+`course`, a Happy dream you play, up to 180 seconds (`sv_livingcity_dreamcourse.lua`). The race already has its dream (The Midnight Rally), so this is the obstacle course: the city's morning exercise, dreamt.
+
+- **The course:** floor tiles snaking back and forth at the dream point (as many to a row as fit the dream zone, the rows joined by two-tile bridges at the ends, with a two-tile drop between rows so nobody jumps across), a drill officer at the start. In order (`LC.CourseLayout`): hurdles (red bars, jump them), stepping stones over the drop (small plates a tile apart: jump from one to the next), giant stun batons sweeping round at ankle height (jump them as they come), three green flags along the way, and a gold tile at the end.
+- **Falling** (below the course) or **swept** by a baton: back to the last green flag you reached (the start before the first). No lives are lost and nothing is lost: it's a happy dream.
+- **Passing:** everyone who reaches the gold tile passes and wakes as from any dream they've won (Unbroken, a second wind); the first three are told their place. On screen: "Flags: 1 of 3", and how many have passed. When the time is up, "The whistle blows" and the rest wake.
+- Stand-ins fill in as in any dream you play. Music: the owner's `course` file or `dreams/course/` folder, else Half-Life 2's own.
+- Unseen in game yet: the baton's model turned flat, the hurdle bar's model (`models/hunter/blocks/cube025x4x025.mdl`, else smaller ones), and how far a running jump carries between the stones.
+
 ## Real seats for the chairs (10 November; the owner: "for the dreams that involve chairs (musical chairs and shalom), can we just use the gmod seat entity instead of awkward player placement?")
 
 `LC.DreamSeat(player, pos, yaw)`, `LC.DreamSeatMove`, `LC.DreamUnseat` in `sv_livingcity_dreams.lua`: Garry's Mod's own seat (the one the seat tool makes, `prop_vehicle_prisoner_pod` with the airboat seat), unseen and not solid, with the player sat in it by the game's own sitting animation. Nobody can climb out of one or into someone else's: the dream seats and unseats. Waking, or the ending finishing, always takes them out and removes the seat.

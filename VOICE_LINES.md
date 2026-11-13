@@ -623,7 +623,7 @@ The ration dispenser and the vending machines, in a flat machine voice (a Combin
 
 ## 9. The Colonel
 
-The old fighter at the Resistance camp (Odessa Cubbage's face): weary, dry, kind underneath, a ghost who doesn't quite know it at first. Folder: **`garrysmod/sound/livingcity/colonel/`**. Only the player he's talking to hears these. Without a recording he's silent and the words show. `job_unit` names a unit's designation where it says %s: record it without the number ("Designation... still walking around").
+The old fighter at the Resistance camp (an old man's face, `lc_colonel_model`; Odessa Cubbage himself answers her speeches, section 12): weary, dry, kind underneath, a ghost who doesn't quite know it at first. Folder: **`garrysmod/sound/livingcity/colonel/`**. Only the player he's talking to hears these. Without a recording he's silent and the words show. `job_unit` names a unit's designation where it says %s: record it without the number ("Designation... still walking around").
 
 | Done | File | When | Says |
 |---|---|---|---|
@@ -803,3 +803,34 @@ The named Civil Protection units' answers in free talk, and what they say when t
 | n/a | `unit_warn_first1.wav` (optional) | A first warning | First warning: move away. (Half-Life 2 has it: `npc/metropolice/vo/firstwarningmove.wav`, used by itself) |
 | n/a | `unit_warn_second1.wav` (optional) | A second warning | This is your second warning. (Half-Life 2 has it: `npc/metropolice/vo/thisisyoursecondwarning.wav`, used by itself) |
 | n/a | `unit_yes1.wav` (optional) | Agreeing | Affirmative. (Half-Life 2 has it: `npc/metropolice/vo/affirmative.wav`, used by itself) |
+
+## 12. Colonel Cubbage answers her speeches
+
+Odessa Cubbage, alive and well, at the Resistance's camp a few minutes after her address: defiant, dry, a speaker who enjoys taking her apart. An opening, an answer to each thing she spoke about (named as her piece in section 1), and a closing. Folder: **`garrysmod/sound/livingcity/cubbage/`**. Heard near him, and a recording cuts in on Freq 7. Without a recording, the words show in chat.
+
+| Done | File | Answers | Says |
+|---|---|---|---|
+| [ ] | `answer_open1.wav` | (his opening) | You heard her. Now hear me. Colonel Cubbage, and I have a few corrections to make. |
+| [ ] | `answer_ev_deaths1.wav` | her `speech_ev_deaths` | She talks about blood in the streets. Ask whose hands it's on. Her units don't carry those batons for show. |
+| [ ] | `answer_ev_arrests1.wav` | her `speech_ev_arrests` | Not one of them taken at random, she says. Then tell me what crime a man commits by standing in the wrong square. |
+| [ ] | `answer_ev_informers1.wav` | her `speech_ev_informers` | She thanks the ones who whispered to her. We know who you are too. It isn't too late to stop. |
+| [ ] | `answer_ev_informer_hurt1.wav` | her `speech_ev_informer_hurt` | She calls us cowards. We don't drag families out of bed at night. We deal with the ones who sell their neighbours. |
+| [ ] | `answer_ev_taken1.wav` | her `speech_ev_taken` | Yes, we take some of hers, and we ask them questions. She takes all of you, every day, and doesn't bother asking. |
+| [ ] | `answer_ev_escape1.wav` | her `speech_ev_escape` | Some of ours walked out of her cells. Good. If one of them knocks at your door, open it. |
+| [ ] | `answer_ev_posters1.wav` | her `speech_ev_posters` | She frets about her posters. Paper. She worries about paper while you go hungry. |
+| [ ] | `answer_ev_theft1.wav` | her `speech_ev_theft` | Stealing, she says. The only thief in this city sits in an office and takes your bread to pay for her speeches. |
+| [ ] | `answer_ev_defiance1.wav` | her `speech_ev_defiance` | People raised their voices at her officers. Good. Your voice is the first thing they take, and the last thing you should give up. |
+| [ ] | `answer_ev_sabotage1.wav` | her `speech_ev_sabotage` | Broken machines hurt only you, she says. They're her machines, and they keep you in line. Let them break. |
+| [ ] | `answer_ev_heavyhand1.wav` | her `speech_ev_heavyhand` | Firmness, she calls it. You saw what it was. Remember it. |
+| [ ] | `answer_ev_drink1.wav` | her `speech_ev_drink` | She doesn't blame you for drinking. Of course she doesn't. A drunk doesn't fight back. |
+| [ ] | `answer_ev_kindness1.wav` | her `speech_ev_kindness` | She takes the credit for you sharing your bread. That was you. It's the one thing she can't stamp out, and it frightens her. |
+| [ ] | `answer_ev_despair1.wav` | her `speech_ev_despair` | Hope is a choice, she says. Then choose it. Just don't let her tell you what to hope for. |
+| [ ] | `answer_unrest1.wav` | her `speech_unrest` | Whispers of freedom mean chaos, she says. We mean freedom. She knows the difference, and it terrifies her. |
+| [ ] | `answer_hunger1.wav` | her `speech_hunger` | She feels every empty bowl, does she? Then why is hers never empty? |
+| [ ] | `answer_order1.wav` | her `speech_order` | Her authority is not in question, she says. When someone has to say that out loud, it already is. |
+| [ ] | `answer_morale1.wav` | her `speech_morale` | Tired faces, she says. You're tired because she works you to the bone. Rest isn't her gift. It's yours. |
+| [ ] | `answer_calm1.wav` | her `speech_calm` | Quiet days, she calls them. Quiet is what she calls it when nobody dares to speak. |
+| [ ] | `answer_mood_afraid1.wav` | her `speech_mood_afraid` | You've nothing to fear from her, she says. Tell that to the ones she's taken. |
+| [ ] | `answer_mood_restless1.wav` | her `speech_mood_restless` | She feels your restlessness, she says. Good. Let her feel it. |
+| [ ] | `answer_mood_content1.wav` | her `speech_mood_content` | Rested, fed and calm, she says. Look around you. Does that look like anyone you know? |
+| [ ] | `answer_close1.wav` | (his closing) | That's all from me. Keep your heads down, your eyes open, and your door unlocked for a friend. We're closer than she thinks. |
