@@ -989,13 +989,27 @@ end
 
 local open -- { page, stack, last, kind }
 
+-- A situation's menu put away by the player (0, walking off, another menu), not by the server or a choice: its
+-- onClose runs (the search ends, the interrogation is done), once.
+local function Dismiss()
+    local o = open
+    open = nil
+    if o and o.kind == "situation" and o.onClose then
+        local f = o.onClose
+        o.onClose = nil
+        local ok, err = pcall(f)
+        if not ok and ErrorNoHalt then ErrorNoHalt("[Miscount] situation close: " .. tostring(err) .. "\n") end
+    end
+end
+
 -- open at all, or (kind "general" for F1, "role" for F2) that one
 function LC_CL.QuickOpen(kind) return open ~= nil and (kind == nil or open.kind == kind) end
-function LC_CL.CloseQuick() open = nil end
+function LC_CL.CloseQuick() Dismiss() end
 
 function LC_CL.OpenQuick()
     local me = LocalPlayer()
     if not IsValid(me) or not me:Alive() then return end
+    Dismiss()
     open = { page = LC_CL.QuickRoot(), stack = {}, last = CurTime(), kind = "general" }
     LC_CL.ActionsOpenedAt = CurTime() -- (the server's own F1 answer doesn't also open the guide)
 end
@@ -1003,6 +1017,7 @@ end
 function LC_CL.OpenQuick2()
     local me = LocalPlayer()
     if not IsValid(me) or not me:Alive() then return end
+    Dismiss()
     open = { page = LC_CL.QuickRoleRoot(), stack = {}, last = CurTime(), kind = "role", askAt = CurTime() + 2 }
     open.page.rebuild = LC_CL.QuickRoleRoot
     if CurTime() - (LC_CL.QuickInfoAt or -99) > 1 then AskInfo() end
@@ -1011,12 +1026,38 @@ end
 -- A quick menu for a situation (the owner, 12 November: no mouse windows for the patdown, the cuffs, the cage or the
 -- chair, "a special hidden menu that appears for these situations similar to the F1 and F2 quick menus"): the same
 -- list and number keys, opened by what's happening and gone when it's over.
--- page: { id, title, items, note (words shown under the list), stay = function: still going? }
+-- page: { id, title, items, note (words shown under the list, or a function giving them, asked every frame),
+--   stay = function: still going?, onClose = function: run if the player puts it away (0, walking off, another menu) }
+-- Opening one shuts F1, F2, F3 and F4 (the owner, 12 November: "they should close other opened F1-F4 menus and
+-- popup"). The same id opened again (the server's news) is an update: the onClose of the old one doesn't run, and
+-- keep = true holds the page they're on.
 function LC_CL.OpenSituation(page)
     local me = LocalPlayer()
     if not IsValid(me) or not me:Alive() or not istable(page) then return end
-    open = { page = page, stack = {}, last = CurTime(), kind = "situation", id = page.id, stay = page.stay, note = page.note }
+    local same = open and open.kind == "situation" and page.id ~= nil and open.id == page.id
+    if not same then
+        Dismiss()
+        if LC_CL.CloseFMenus then LC_CL.CloseFMenus() end
+        if LC_CL.CloseHub then LC_CL.CloseHub() end
+    end
+    local o = { page = page, stack = {}, last = CurTime(), kind = "situation", id = page.id, stay = page.stay, note = page.note, onClose = page.onClose }
+    if same and page.keep and #open.stack > 0 then o.stack, o.page = open.stack, open.page end
+    open = o
 end
+-- The old mouse windows instead (the talk window, Civil Protection's search and the interrogation), your own client.
+local cvWindows = CreateClientConVar("lc_situation_windows", "0", true, false,
+    "1: talking to people, a unit's search and the interrogation open mouse windows, as before; 0: a quick menu (number keys)")
+function LC_CL.SituationWindows() return cvWindows:GetBool() end
+
+-- A long list cut into pages of eight, the ninth "More..." (for a situation's menu).
+function LC_CL.SituationPaged(title, items)
+    if #items <= 9 then return { title = title, items = items } end
+    local first, rest = {}, {}
+    for i, it in ipairs(items) do if i <= 8 then first[#first + 1] = it else rest[#rest + 1] = it end end
+    first[9] = { label = "More...", page = function() return LC_CL.SituationPaged(title, rest) end }
+    return { title = title, items = first }
+end
+
 -- id: only that one (nil: whichever is up)
 function LC_CL.CloseSituation(id)
     if open and open.kind == "situation" and (id == nil or open.id == id) then open = nil end
@@ -1100,7 +1141,7 @@ function LC_CL.QuickPick(n)
     if not open then return end
     open.last = CurTime()
     if n == 0 then
-        if #open.stack > 0 then open.page = table.remove(open.stack) else open = nil end
+        if #open.stack > 0 then open.page = table.remove(open.stack) else Dismiss() end
         return
     end
     local it = open.page.items[n]
@@ -1129,7 +1170,7 @@ hook.Add("Think", "LivingCityQuickKeys", function()
     local me = LocalPlayer()
     if not IsValid(me) or not me:Alive() or (gui and gui.IsGameUIVisible and gui.IsGameUIVisible())
         or (open.kind ~= "situation" and CurTime() - open.last > 20) then
-        open = nil
+        Dismiss()
         return
     end
     -- a situation's menu stays for as long as the situation does (two minutes at most without a key)
@@ -1137,7 +1178,7 @@ hook.Add("Think", "LivingCityQuickKeys", function()
         local ok, still = true, true
         if open.stay then ok, still = pcall(open.stay) end
         if not ok or not still or CurTime() - open.last > 120 then
-            open = nil
+            Dismiss()
             return
         end
     end
@@ -1206,12 +1247,18 @@ hook.Add("HUDPaint", "LivingCityQuick", function()
     local key = input and input.LookupBinding and input.LookupBinding("+menu_context")
     draw.SimpleText((key and string.upper(key) or "C") .. ": the full menu", "DermaDefault", x + W - 12, y + H - 13, DIM, TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
     -- what was just said (a situation's menu: the chair), under the list
-    if open.note and open.note ~= "" then
-        if open.noteFor ~= open.note then
-            open.noteFor, open.noteLines = open.note, {}
+    local note = open.note
+    if type(note) == "function" then
+        local ok, said = pcall(note)
+        note = ok and said or nil
+    end
+    if note and note ~= "" then
+        if open.noteFor ~= note then
+            open.noteFor, open.noteLines = note, {}
             surface.SetFont("LCQuickItem")
             local line = ""
-            for word in string.gmatch(open.note, "%S+") do
+            for raw in string.gmatch(note .. "\n", "([^\n]*)\n") do
+              for word in string.gmatch(raw, "%S+") do
                 local try = line == "" and word or (line .. " " .. word)
                 if surface.GetTextSize(try) > W - 24 and line ~= "" then
                     open.noteLines[#open.noteLines + 1] = line
@@ -1219,8 +1266,11 @@ hook.Add("HUDPaint", "LivingCityQuick", function()
                 else
                     line = try
                 end
+              end
+              -- (a new line in the words starts a new row)
+              if line ~= "" then open.noteLines[#open.noteLines + 1] = line end
+              line = ""
             end
-            if line ~= "" then open.noteLines[#open.noteLines + 1] = line end
         end
         local n = #open.noteLines
         draw.RoundedBox(4, x, y + H + 6, W, 12 + n * 20, BG)

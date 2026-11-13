@@ -1,9 +1,12 @@
 --[[
     Living City (client): talking to people
 
-    The little window that opens when you press E on a citizen
-    (sv_livingcity_talk.lua): who they are, how they feel about you, what
-    they just said, and what you can do.
+    What comes up when you press E on a citizen (sv_livingcity_talk.lua): who
+    they are, how they feel about you, what they just said, and what you can
+    do. A quick menu with the number keys, like F1 and F2, with their words
+    under it (the owner, 12 November: "yes they should, they should close other
+    opened F1-F4 menus and popup, giving the player a quick and easy way to
+    respond"); lc_situation_windows 1 (your own client) brings back the window.
 ]]
 
 LC_CL = LC_CL or {}
@@ -24,6 +27,7 @@ net.Receive("lc_talk", function()
     local npc = net.ReadEntity()
     if not IsValid(npc) then
         if IsValid(frame) then frame:Remove() end
+        if LC_CL.CloseSituation then LC_CL.CloseSituation("talk") end
         return
     end
     local name, job, doing, mood, kind, said = net.ReadString(), net.ReadString(), net.ReadString(), net.ReadString(), net.ReadString(), net.ReadString()
@@ -37,6 +41,38 @@ net.Receive("lc_talk", function()
         if id and id ~= "" then give[#give + 1] = { id = id, label = label or id } end
     end
     local canChair, canCage = net.ReadBool(), net.ReadBool()
+    if LC_CL.OpenSituation and not (LC_CL.SituationWindows and LC_CL.SituationWindows()) then
+        if IsValid(frame) then frame:Remove() end
+        local lines = { (job ~= "" and job or "No work") .. (doing ~= "" and (", " .. doing) or "") .. ". They're " .. mood .. "." }
+        if seem ~= "" then lines[#lines + 1] = seem end
+        lines[#lines + 1] = said ~= "" and said or "They wait for you to say something."
+        local items = {}
+        local function Add(label, what, enabled)
+            items[#items + 1] = { label = label, run = function() if what then Do(npc, what) end end, disabled = enabled == false }
+        end
+        Add("Chat (what have they heard?)", "chat", canChat)
+        if #give > 0 then
+            items[#items + 1] = { label = "Give something", page = function()
+                local list = {}
+                for _, g in ipairs(give) do list[#list + 1] = { label = g.label, run = function() Do(npc, "give:" .. g.id) end } end
+                return LC_CL.SituationPaged("Give " .. name, list)
+            end }
+        else
+            Add("Give something (nothing to give)", nil, false)
+        end
+        if canRecruit then Add("Ask them to keep watch for us (a lookout)", "recruit") end
+        if canCage then Add("Take them prisoner (to the holding cage)", "cage") end
+        if canChair then Add("Take them to the interrogation chair", "chair") end
+        Add("Pick their pocket (Guile)", "pick", canPick)
+        if canInform then Add("Inform on them to Civil Protection", "inform") end
+        Add("Leave", nil)
+        LC_CL.OpenSituation({ id = "talk", title = name, items = items, note = table.concat(lines, "\n"),
+            stay = function()
+                local me = LocalPlayer()
+                return IsValid(npc) and IsValid(me) and me:GetPos():DistToSqr(npc:GetPos()) <= 220 * 220
+            end })
+        return
+    end
     local tall = 330 + (seem ~= "" and 34 or 0) + (canChair and 30 or 0) + (canCage and 30 or 0)
 
     if IsValid(frame) then frame:Remove() end

@@ -1096,6 +1096,9 @@ do
         RunConsoleCommand = function(c) asked[c] = true end
         LC_CL.AskCareer = function() asked.career = true end
         local okHub, errHub = pcall(function()
+            -- (as a new session: earlier checks may have left another tab as the last one, e.g. a tab's content
+            -- arriving after a situation's quick menu shut the window)
+            LC_CL.OpenHub("jobs", true)
             LC_CL.CloseHub()
             net["recv_lc_hub"]()
             if not LC_CL.HubOpen() then error("F4 didn't open the window") end
@@ -1319,6 +1322,7 @@ if not okLt then problems[#problems + 1] = "letter: " .. tostring(errLt) end
 if made < 5 then problems[#problems + 1] = "letter window built only " .. made .. " controls" end
 util.JSONToTable = oldJ
 -- the talk window (E on a citizen)
+GetConVar("lc_situation_windows").v = "1"
 local talkNpc = ents.Create("npc_citizen")
 net.ReadString = function() return table.remove(net._q, 1) end
 net.ReadBool = function() return table.remove(net._q, 1) == true end
@@ -1347,6 +1351,18 @@ net.ReadUInt = oldUInt
 net._q = { nil }
 okTk, errTk = pcall(net["recv_lc_talk"]) -- (and closing it)
 if not okTk then problems[#problems + 1] = "talk window close: " .. tostring(errTk) end
+GetConVar("lc_situation_windows").v = "0"
+-- the same as a quick menu (the default): open with their words, then gone when the server says so
+net._q = { talkNpc, "Mira Kovacs", "Factory Worker", "working the line", "friendly", "warm", "'Another day.'", true, true, true, true, true, "", 0, false, false }
+net.ReadUInt = function() return table.remove(net._q, 1) end
+okTk, errTk = pcall(net["recv_lc_talk"])
+net.ReadUInt = oldUInt
+if not okTk then problems[#problems + 1] = "talk quick menu: " .. tostring(errTk) end
+if not LC_CL.SituationOpen("talk") then problems[#problems + 1] = "talk quick menu didn't open" end
+run("HUDPaint")
+net._q = { nil }
+pcall(net["recv_lc_talk"])
+if LC_CL.SituationOpen("talk") then problems[#problems + 1] = "talk quick menu didn't close" end
 -- the editor's layout browser: counts, find through walls
 LC_CL.points = { { pos = Vector(100, 0, 0), kind = "dealer" } }
 LC_CL.zones, LC_CL.doors, LC_CL.nodes = {}, {}, {}
@@ -1548,6 +1564,7 @@ if not okMG then problems[#problems + 1] = "more job games: " .. tostring(errMG)
 -- a unit's search as a pat-down (cl_livingcity_patsearch.lua): the unit's window builds, updates, paints; the panel
 -- for the person searched; both close; a window that can't be built hands back to the old search
 local psSaved = { net.ReadString, util.JSONToTable, vgui, net.SendToServer, net.Start, net.WriteUInt }
+GetConVar("lc_situation_windows").v = "1"
 local okPS, errPS = pcall(function()
     local doc, sent, made = nil, {}, {}
     local curName
@@ -1599,6 +1616,7 @@ local okPS, errPS = pcall(function()
 end)
 net.ReadString, util.JSONToTable, vgui, net.SendToServer, net.Start, net.WriteUInt = psSaved[1], psSaved[2], psSaved[3], psSaved[4], psSaved[5], psSaved[6]
 if not okPS then problems[#problems + 1] = "pat-down search: " .. tostring(errPS) end
+GetConVar("lc_situation_windows").v = "0"
 -- the arrival search (cl_livingcity_intaketutor.lua): the choice, the panel for the person searched (with the lesson),
 -- the lesson's last page and the practice search all build and paint, and close on the server's word
 local tsSaved = { net.ReadString, util.JSONToTable, vgui, net.SendToServer, net.Start, net.WriteBool }
@@ -1653,6 +1671,7 @@ if not okTS then problems[#problems + 1] = "arrival search: " .. tostring(errTS)
 -- the interrogation question by question (cl_livingcity_interrogation.lua): the prisoner's question window and the
 -- unit's window build and paint, answers go to the server, and the unit's window closes when it's over
 local itSaved = { net.ReadString, util.JSONToTable, vgui, net.SendToServer, net.Start, net.WriteString, net.WriteUInt }
+GetConVar("lc_situation_windows").v = "1"
 local okIT, errIT = pcall(function()
     local doc, sent, made = nil, {}, {}
     local curName
@@ -1705,6 +1724,49 @@ local okIT, errIT = pcall(function()
 end)
 net.ReadString, util.JSONToTable, vgui, net.SendToServer, net.Start, net.WriteString, net.WriteUInt = itSaved[1], itSaved[2], itSaved[3], itSaved[4], itSaved[5], itSaved[6], itSaved[7]
 if not okIT then problems[#problems + 1] = "interrogation windows: " .. tostring(errIT) end
+GetConVar("lc_situation_windows").v = "0"
+-- the pat-down and the interrogation as quick menus (the default): open, update, picked, put away
+local qmSaved = { net.ReadString, util.JSONToTable, net.SendToServer, net.Start, net.WriteString, net.WriteUInt }
+local okQM, errQM = pcall(function()
+    local doc, sent, curName = nil, {}, nil
+    net.ReadString = function() return "x" end
+    util.JSONToTable = function() return doc end
+    net.Start = function(n) curName = n end
+    net.WriteString = function() end
+    net.WriteUInt = function() end
+    net.SendToServer = function() sent[#sent + 1] = curName end
+    local four = function(a, b, c, d) return { { name = "Jacket", state = a }, { name = "Waist", state = b }, { name = "Legs", state = c }, { name = "Boots", state = d } } end
+    doc = { role = "unit", who = "Citizen", live = false, secs = 1, spots = four(0, 0, 0, 0) }
+    net.recv_lc_pat_open()
+    if not LC_CL.SituationOpen("patsearch") then error("the search menu didn't open") end
+    if sent[#sent] ~= "lc_pat_check" then error("the menu didn't tell the server it's open") end
+    local n0 = #sent
+    doc = { role = "unit", who = "Citizen", live = true, papers = true, secs = 1, spots = four(2, 0, 0, 0) }
+    doc.spots[1].text = "Lockpick"
+    net.recv_lc_pat_open()
+    if #sent ~= n0 then error("an update sent something") end
+    run("HUDPaint")
+    LC_CL.QuickPick(2)
+    if sent[#sent] ~= "lc_pat_check" then error("a spot isn't checked from its number") end
+    net.recv_lc_pat_open()
+    LC_CL.QuickPick(0)
+    if sent[#sent] ~= "lc_pat_close" or LC_CL.SituationOpen("patsearch") or LC_CL.PatSearchQuick() then error("0 didn't end the search") end
+    doc = { q = 1, text = "Where is the hideout?", resolve = 0, bargain = true, secs = 12, by = "Unit 42" }
+    net.recv_lc_intr_q()
+    if not LC_CL.SituationOpen("intrq") then error("the prisoner's question didn't open") end
+    run("HUDPaint")
+    LC_CL.QuickPick(1)
+    if sent[#sent] ~= "lc_intr_a" or LC_CL.SituationOpen("intrq") then error("the answer wasn't sent") end
+    doc = { who = "Prisoner", resolve = 2, hits = 1, waiting = 0, asked = { true }, answers = { { q = 1, text = "\"They meet by the canal.\"" } },
+        questions = { "Where is the hideout?", "Names.", "Supplies?" } }
+    net.recv_lc_intr_cp()
+    if not LC_CL.SituationOpen("intrcp") then error("the unit's questioning didn't open") end
+    run("HUDPaint")
+    LC_CL.QuickPick(0)
+    if sent[#sent] ~= "lc_intr_cp_do" or LC_CL.SituationOpen("intrcp") then error("putting it away isn't Done") end
+end)
+net.ReadString, util.JSONToTable, net.SendToServer, net.Start, net.WriteString, net.WriteUInt = qmSaved[1], qmSaved[2], qmSaved[3], qmSaved[4], qmSaved[5], qmSaved[6]
+if not okQM then problems[#problems + 1] = "situation quick menus: " .. tostring(errQM) end
 -- "Where I stand" (cl_livingcity_standingpanel.lua): the window builds from the rows and paints
 local spSaved = { net.ReadString, util.JSONToTable, vgui }
 local okSP, errSP = pcall(function()

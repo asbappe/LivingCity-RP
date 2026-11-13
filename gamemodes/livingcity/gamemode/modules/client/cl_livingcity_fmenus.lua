@@ -34,6 +34,15 @@ function LC_CL.FMenu(cmd, frame)
     for _, c in ipairs(CMDS) do was[c] = Down(c) end -- (the key that opened it is still down: not a new press)
 end
 
+-- Shut F3 and F4 (a situation's quick menu takes over: cl_livingcity_quick.lua, LC_CL.OpenSituation).
+function LC_CL.CloseFMenus()
+    for _, c in ipairs(CMDS) do
+        local f = open[c]
+        if IsValid(f) then if f.Close then f:Close() else f:Remove() end end
+        open[c] = nil
+    end
+end
+
 -- What a press of this command's key does now: "close", "switch" (shut the other window and open this one) or nil.
 function LC_CL.FMenuPress(cmd)
     local mine = IsValid(open[cmd])
