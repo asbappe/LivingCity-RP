@@ -163,97 +163,97 @@ Folder: `citizens/`. Paste each line twice: once with the man's voice (save as t
 | Done | Man's file | Woman's file | Paste |
 |---|---|---|---|
 | | | | **Openers (a word or two before another line)** |
-| [ ] | `say_open_listen_male1` | `say_open_listen_female1` | [low, urgent] Listen. |
-| [ ] | `say_open_look_male1` | `say_open_look_female1` | [tired, flat] Look. |
-| [ ] | `say_open_please_male1` | `say_open_please_female1` | [pleading, quietly] Please. |
-| [ ] | `say_open_quiet_male1` | `say_open_quiet_female1` | [whispers, tense] Keep your voice down. |
-| [ ] | `say_open_well_male1` | `say_open_well_female1` | [thinking it over] Well... |
-| [ ] | `say_open_you_male1` | `say_open_you_female1` | [sharp, low] You. |
+| [x] | `say_open_listen_male1` | `say_open_listen_female1` | [low, urgent] Listen. |
+| [x] | `say_open_look_male1` | `say_open_look_female1` | [tired, flat] Look. |
+| [x] | `say_open_please_male1` | `say_open_please_female1` | [pleading, quietly] Please. |
+| [x] | `say_open_quiet_male1` | `say_open_quiet_female1` | [whispers, tense] Keep your voice down. |
+| [x] | `say_open_well_male1` | `say_open_well_female1` | [thinking it over] Well... |
+| [x] | `say_open_you_male1` | `say_open_you_female1` | [sharp, low] You. |
 | | | | **Hello** |
-| [ ] | `say_greet_cold_male1` | `say_greet_cold_female1` | [cold, flat] What do you want? |
-| [ ] | `say_greet_guarded_male1` | `say_greet_guarded_female1` | [wary, guarded] Do I know you? |
-| [ ] | `say_greet_plain_male1` | `say_greet_plain_female1` | [tired, dry] Hey. Still here, huh? [exhales] Me too. |
-| [ ] | `say_greet_unit_male1` | `say_greet_unit_female1` | [nervous, too polite] No trouble here, officer. |
-| [ ] | `say_greet_warm_male1` | `say_greet_warm_female1` | [relieved, warm] Oh, it's you. Good to see a friendly face. |
+| [x] | `say_greet_cold_male1` | `say_greet_cold_female1` | [cold, flat] What do you want? |
+| [x] | `say_greet_guarded_male1` | `say_greet_guarded_female1` | [wary, guarded] Do I know you? |
+| [x] | `say_greet_plain_male1` | `say_greet_plain_female1` | [tired, dry] Hey. Still here, huh? [exhales] Me too. |
+| [x] | `say_greet_unit_male1` | `say_greet_unit_female1` | [nervous, too polite] No trouble here, officer. |
+| [x] | `say_greet_warm_male1` | `say_greet_warm_female1` | [relieved, warm] Oh, it's you. Good to see a friendly face. |
 | | | | **Goodbye** |
-| [ ] | `say_bye_cold_male1` | `say_bye_cold_female1` | [cold, final] We're done here. |
-| [ ] | `say_bye_plain_male1` | `say_bye_plain_female1` | [flat, tired] I should get going. |
-| [ ] | `say_bye_warm_male1` | `say_bye_warm_female1` | [warm, quietly] Take care of yourself. [sincere] I mean it. |
+| [x] | `say_bye_cold_male1` | `say_bye_cold_female1` | [cold, final] We're done here. |
+| [x] | `say_bye_plain_male1` | `say_bye_plain_female1` | [flat, tired] I should get going. |
+| [x] | `say_bye_warm_male1` | `say_bye_warm_female1` | [warm, quietly] Take care of yourself. [sincere] I mean it. |
 | | | | **Yes, no, perhaps** |
-| [ ] | `say_later_male1` | `say_later_female1` | [hushed, tense] Not now. Not here. |
-| [ ] | `say_maybe_male1` | `say_maybe_female1` | [hesitant] Maybe. I'd have to think about it. |
-| [ ] | `say_no_male1` | `say_no_female1` | [flat, apologetic] Sorry, but no. |
-| [ ] | `say_no_hard_male1` | `say_no_hard_female1` | [firm, low] No. [pause] And don't ask me again. |
-| [ ] | `say_yes_male1` | `say_yes_female1` | [plain, tired] Yeah. All right. |
-| [ ] | `say_yes_warm_male1` | `say_yes_warm_female1` | [warm, a small smile] For you? Of course. |
+| [x] | `say_later_male1` | `say_later_female1` | [hushed, tense] Not now. Not here. |
+| [x] | `say_maybe_male1` | `say_maybe_female1` | [hesitant] Maybe. I'd have to think about it. |
+| [x] | `say_no_male1` | `say_no_female1` | [flat, apologetic] Sorry, but no. |
+| [x] | `say_no_hard_male1` | `say_no_hard_female1` | [firm, low] No. [pause] And don't ask me again. |
+| [x] | `say_yes_male1` | `say_yes_female1` | [plain, tired] Yeah. All right. |
+| [x] | `say_yes_warm_male1` | `say_yes_warm_female1` | [warm, a small smile] For you? Of course. |
 | | | | **What they know** |
-| [ ] | `say_ask_else_male1` | `say_ask_else_female1` | [tired, dismissive] You're asking the wrong person. |
-| [ ] | `say_cant_say_male1` | `say_cant_say_female1` | [hushed, uneasy] I can't talk about that. You know why. |
-| [ ] | `say_dunno_male1` | `say_dunno_female1` | [guarded, flat] I wouldn't know anything about that. |
-| [ ] | `say_dunno_scared_male1` | `say_dunno_scared_female1` | [frightened, quick] I don't know, and I don't want to know. |
-| [ ] | `say_heard_male1` | `say_heard_female1` | [low, careful] I've heard things. [pause] Everyone has. |
-| [ ] | `say_truth_male1` | `say_truth_female1` | [quiet, grim] Honestly? [sighs] It's as bad as it looks. |
+| [x] | `say_ask_else_male1` | `say_ask_else_female1` | [tired, dismissive] You're asking the wrong person. |
+| [x] | `say_cant_say_male1` | `say_cant_say_female1` | [hushed, uneasy] I can't talk about that. You know why. |
+| [x] | `say_dunno_male1` | `say_dunno_female1` | [guarded, flat] I wouldn't know anything about that. |
+| [x] | `say_dunno_scared_male1` | `say_dunno_scared_female1` | [frightened, quick] I don't know, and I don't want to know. |
+| [x] | `say_heard_male1` | `say_heard_female1` | [low, careful] I've heard things. [pause] Everyone has. |
+| [x] | `say_truth_male1` | `say_truth_female1` | [quiet, grim] Honestly? [sighs] It's as bad as it looks. |
 | | | | **How they are** |
-| [ ] | `say_state_angry_male1` | `say_state_angry_female1` | [tight, barely holding it in] I've had about all I can take. |
-| [ ] | `say_state_fine_male1` | `say_state_fine_female1` | [worn, matter of fact] Getting by. That's all I can do. |
-| [ ] | `say_state_hopeful_male1` | `say_state_hopeful_female1` | [quiet, hopeful] It can't last forever. Nothing ever does. |
-| [ ] | `say_state_hungry_male1` | `say_state_hungry_female1` | [weak, hollow] I haven't had a real meal in days. |
-| [ ] | `say_state_lonely_male1` | `say_state_lonely_female1` | [soft, grateful] It's good to just talk to someone. |
-| [ ] | `say_state_low_male1` | `say_state_low_female1` | [hollow, defeated] What's the point? [pause] Really, what is the point? |
-| [ ] | `say_state_scared_male1` | `say_state_scared_female1` | [frightened, hushed] I'm scared. Aren't you? |
-| [ ] | `say_state_tired_male1` | `say_state_tired_female1` | [exhausted] I'm tired. [sighs] Just so tired. |
+| [x] | `say_state_angry_male1` | `say_state_angry_female1` | [tight, barely holding it in] I've had about all I can take. |
+| [x] | `say_state_fine_male1` | `say_state_fine_female1` | [worn, matter of fact] Getting by. That's all I can do. |
+| [x] | `say_state_hopeful_male1` | `say_state_hopeful_female1` | [quiet, hopeful] It can't last forever. Nothing ever does. |
+| [x] | `say_state_hungry_male1` | `say_state_hungry_female1` | [weak, hollow] I haven't had a real meal in days. |
+| [x] | `say_state_lonely_male1` | `say_state_lonely_female1` | [soft, grateful] It's good to just talk to someone. |
+| [x] | `say_state_low_male1` | `say_state_low_female1` | [hollow, defeated] What's the point? [pause] Really, what is the point? |
+| [x] | `say_state_scared_male1` | `say_state_scared_female1` | [frightened, hushed] I'm scared. Aren't you? |
+| [x] | `say_state_tired_male1` | `say_state_tired_female1` | [exhausted] I'm tired. [sighs] Just so tired. |
 | | | | **Answering how they were spoken to** |
-| [ ] | `say_agree_male1` | `say_agree_female1` | [dry, low] You're not wrong. |
-| [ ] | `say_disagree_male1` | `say_disagree_female1` | [even, firm] Well, I don't see it that way. |
-| [ ] | `say_insulted_male1` | `say_insulted_female1` | [stung, stiff] Hey. There's no need for that. |
-| [ ] | `say_laugh_male1` | `say_laugh_female1` | [short laugh] Ha. [warm, surprised] That's the first laugh I've had all week. |
-| [ ] | `say_sorry_male1` | `say_sorry_female1` | [nervous, backing down] I'm sorry. I didn't mean anything by it. |
-| [ ] | `say_thanks_male1` | `say_thanks_female1` | [sincere, quietly] Thank you. I won't forget it. |
-| [ ] | `say_thanks_big_male1` | `say_thanks_big_female1` | [moved, voice catching] You didn't have to do that. Thank you. |
-| [ ] | `say_threatened_male1` | `say_threatened_female1` | [frightened, hands up] I don't want any trouble. |
+| [x] | `say_agree_male1` | `say_agree_female1` | [dry, low] You're not wrong. |
+| [x] | `say_disagree_male1` | `say_disagree_female1` | [even, firm] Well, I don't see it that way. |
+| [x] | `say_insulted_male1` | `say_insulted_female1` | [stung, stiff] Hey. There's no need for that. |
+| [x] | `say_laugh_male1` | `say_laugh_female1` | [short laugh] Ha. [warm, surprised] That's the first laugh I've had all week. |
+| [x] | `say_sorry_male1` | `say_sorry_female1` | [nervous, backing down] I'm sorry. I didn't mean anything by it. |
+| [x] | `say_thanks_male1` | `say_thanks_female1` | [sincere, quietly] Thank you. I won't forget it. |
+| [x] | `say_thanks_big_male1` | `say_thanks_big_female1` | [moved, voice catching] You didn't have to do that. Thank you. |
+| [x] | `say_threatened_male1` | `say_threatened_female1` | [frightened, hands up] I don't want any trouble. |
 | | | | **The Combine** |
-| [ ] | `say_careful_male1` | `say_careful_female1` | [whispers] Careful. The walls have ears. |
-| [ ] | `say_fear_units_male1` | `say_fear_units_female1` | [low, warning] Stay away from the units today. They're in a mood. |
-| [ ] | `say_hate_quiet_male1` | `say_hate_quiet_female1` | [low, bitter, controlled] One day they'll answer for all of it. |
-| [ ] | `say_loyal_male1` | `say_loyal_female1` | [earnest, a little rehearsed] The Administrator knows best. Everyone knows that! |
-| [ ] | `say_loyal_warn_male1` | `say_loyal_warn_female1` | [alarmed, hushed] You shouldn't say things like that. Someone will hear. |
-| [ ] | `say_obey_male1` | `say_obey_female1` | [tired, kindly] Keep your head down and do what they say. That's how you make it. |
-| [ ] | `say_units_near_male1` | `say_units_near_female1` | [under their breath] Not with them standing right there. |
+| [x] | `say_careful_male1` | `say_careful_female1` | [whispers] Careful. The walls have ears. |
+| [x] | `say_fear_units_male1` | `say_fear_units_female1` | [low, warning] Stay away from the units today. They're in a mood. |
+| [x] | `say_hate_quiet_male1` | `say_hate_quiet_female1` | [low, bitter, controlled] One day they'll answer for all of it. |
+| [x] | `say_loyal_male1` | `say_loyal_female1` | [earnest, a little rehearsed] The Administrator knows best. Everyone knows that! |
+| [x] | `say_loyal_warn_male1` | `say_loyal_warn_female1` | [alarmed, hushed] You shouldn't say things like that. Someone will hear. |
+| [x] | `say_obey_male1` | `say_obey_female1` | [tired, kindly] Keep your head down and do what they say. That's how you make it. |
+| [x] | `say_units_near_male1` | `say_units_near_female1` | [under their breath] Not with them standing right there. |
 | | | | **The Resistance** |
-| [ ] | `say_res_deny_male1` | `say_res_deny_female1` | [quick, stiff, too careful] I don't know anything about any Resistance. |
-| [ ] | `say_res_hint_male1` | `say_res_hint_female1` | [whispers, meaningful] There are people. [pause] That's all I'll say. |
-| [ ] | `say_res_refuse_male1` | `say_res_refuse_female1` | [afraid, firm] I've got people to think about. Leave me out of it. |
-| [ ] | `say_res_respect_male1` | `say_res_respect_female1` | [quiet, a hint of a smile] Whoever they are, good luck to them. |
-| [ ] | `say_res_side_male1` | `say_res_side_female1` | [very quietly, steady] If someone needed a door left open, mine would be. |
+| [x] | `say_res_deny_male1` | `say_res_deny_female1` | [quick, stiff, too careful] I don't know anything about any Resistance. |
+| [x] | `say_res_hint_male1` | `say_res_hint_female1` | [whispers, meaningful] There are people. [pause] That's all I'll say. |
+| [x] | `say_res_refuse_male1` | `say_res_refuse_female1` | [afraid, firm] I've got people to think about. Leave me out of it. |
+| [x] | `say_res_respect_male1` | `say_res_respect_female1` | [quiet, a hint of a smile] Whoever they are, good luck to them. |
+| [x] | `say_res_side_male1` | `say_res_side_female1` | [very quietly, steady] If someone needed a door left open, mine would be. |
 | | | | **Warnings and tips** |
-| [ ] | `say_tip_help_male1` | `say_tip_help_female1` | [low, kind] If you need something, ask. [whispers] Quietly. |
-| [ ] | `say_tip_trouble_male1` | `say_tip_trouble_female1` | [uneasy, low] There's gonna be trouble tonight. I can feel it. |
-| [ ] | `say_warn_asked_male1` | `say_warn_asked_female1` | [low, urgent] Someone's been asking about you. |
-| [ ] | `say_warn_go_male1` | `say_warn_go_female1` | [urgent, hushed] You should go. Now. |
-| [ ] | `say_warn_informer_male1` | `say_warn_informer_female1` | [low, careful] Watch who you talk to. Not everyone here is a friend. |
-| [ ] | `say_warn_watched_male1` | `say_warn_watched_female1` | [whispers, barely moving lips] You're being watched. Don't look now and don't turn around. |
+| [x] | `say_tip_help_male1` | `say_tip_help_female1` | [low, kind] If you need something, ask. [whispers] Quietly. |
+| [x] | `say_tip_trouble_male1` | `say_tip_trouble_female1` | [uneasy, low] There's gonna be trouble tonight. I can feel it. |
+| [x] | `say_warn_asked_male1` | `say_warn_asked_female1` | [low, urgent] Someone's been asking about you. |
+| [x] | `say_warn_go_male1` | `say_warn_go_female1` | [urgent, hushed] You should go. Now. |
+| [x] | `say_warn_informer_male1` | `say_warn_informer_female1` | [low, careful] Watch who you talk to. Not everyone here is a friend. |
+| [x] | `say_warn_watched_male1` | `say_warn_watched_female1` | [whispers, barely moving lips] You're being watched. Don't look now and don't turn around. |
 | | | | **Asking and giving** |
-| [ ] | `say_ask_food_male1` | `say_ask_food_female1` | [weak, ashamed to ask] You got anything to eat? [pause] Anything? |
-| [ ] | `say_ask_help_male1` | `say_ask_help_female1` | [desperate, quietly] I need help. I've got nobody else to ask. |
-| [ ] | `say_ask_smoke_male1` | `say_ask_smoke_female1` | [edgy, hopeful] You wouldn't have a smoke on you, would you? |
-| [ ] | `say_decline_gift_male1` | `say_decline_gift_female1` | [gentle, proud] I can't take that. Keep it. |
-| [ ] | `say_offer_male1` | `say_offer_female1` | [hushed, quick] Here. Take it. Don't say where you got it. |
+| [x] | `say_ask_food_male1` | `say_ask_food_female1` | [weak, ashamed to ask] You got anything to eat? [pause] Anything? |
+| [x] | `say_ask_help_male1` | `say_ask_help_female1` | [desperate, quietly] I need help. I've got nobody else to ask. |
+| [x] | `say_ask_smoke_male1` | `say_ask_smoke_female1` | [edgy, hopeful] You wouldn't have a smoke on you, would you? |
+| [x] | `say_decline_gift_male1` | `say_decline_gift_female1` | [gentle, proud] I can't take that. Keep it. |
+| [x] | `say_offer_male1` | `say_offer_female1` | [hushed, quick] Here. Take it. Don't say where you got it. |
 | | | | **As a mind gives way** |
-| [ ] | `say_break_accuse_male1` | `say_break_accuse_female1` | [loud, accusing, pointing] That one! That one talks to Civil Protection! |
-| [ ] | `say_break_accused_male1` | `say_break_accused_female1` | [panicked, loud] That's a lie! I never told them anything! |
-| [ ] | `say_break_beaten_male1` | `say_break_beaten_female1` | [crying out in pain, terrified] Stop! Please, I didn't do anything! |
-| [ ] | `say_break_binge_male1` | `say_break_binge_female1` | [slurred, tired, bitter] Leave me alone. Just let me have this. |
-| [ ] | `say_break_defy_male1` | `say_break_defy_female1` | [quiet, defiant, steady] They can't scare all of us forever. |
-| [ ] | `say_break_despair_male1` | `say_break_despair_female1` | [broken, near tears] I can't. [shaky breath] I just can't anymore. |
-| [ ] | `say_break_inform_male1` | `say_break_inform_female1` | [nervous, eager, hushed] Officer. I've got something you'll want to hear. |
-| [ ] | `say_break_seek_male1` | `say_break_seek_female1` | [relieved, a little shaky] There you are. I've been looking for you. |
-| [ ] | `say_break_share_male1` | `say_break_share_female1` | [gentle, insisting] Go on, take half. You need it more than I do. |
-| [ ] | `say_break_steady_male1` | `say_break_steady_female1` | [calm, soothing, low] Easy. Easy now. We're going to be ok, right? |
-| [ ] | `say_break_tantrum_male1` | `say_break_tantrum_female1` | [shouting, voice cracking] I've had enough! Do you hear me? Enough! |
+| [x] | `say_break_accuse_male1` | `say_break_accuse_female1` | [loud, accusing, pointing] That one! That one talks to Civil Protection! |
+| [x] | `say_break_accused_male1` | `say_break_accused_female1` | [panicked, loud] That's a lie! I never told them anything! |
+| [x] | `say_break_beaten_male1` | `say_break_beaten_female1` | [crying out in pain, terrified] Stop! Please, I didn't do anything! |
+| [x] | `say_break_binge_male1` | `say_break_binge_female1` | [slurred, tired, bitter] Leave me alone. Just let me have this. |
+| [x] | `say_break_defy_male1` | `say_break_defy_female1` | [quiet, defiant, steady] They can't scare all of us forever. |
+| [x] | `say_break_despair_male1` | `say_break_despair_female1` | [broken, near tears] I can't. [shaky breath] I just can't anymore. |
+| [x] | `say_break_inform_male1` | `say_break_inform_female1` | [nervous, eager, hushed] Officer. I've got something you'll want to hear. |
+| [x] | `say_break_seek_male1` | `say_break_seek_female1` | [relieved, a little shaky] There you are. I've been looking for you. |
+| [x] | `say_break_share_male1` | `say_break_share_female1` | [gentle, insisting] Go on, take half. You need it more than I do. |
+| [x] | `say_break_steady_male1` | `say_break_steady_female1` | [calm, soothing, low] Easy. Easy now. We're going to be ok, right? |
+| [x] | `say_break_tantrum_male1` | `say_break_tantrum_female1` | [shouting, voice cracking] I've had enough! Do you hear me? Enough! |
 | | | | **What they saw** |
-| [ ] | `say_grief_male1` | `say_grief_female1` | [numb, grieving] They took my friend. [pause] Just dragged them off. |
-| [ ] | `say_saw_beating_male1` | `say_saw_beating_female1` | [under their breath, tense] Don't look. Just keep walking. |
-| [ ] | `say_saw_death_male1` | `say_saw_death_female1` | [horrified, gasping] Oh God. Oh God, no. |
+| [x] | `say_grief_male1` | `say_grief_female1` | [numb, grieving] They took my friend. [pause] Just dragged them off. |
+| [x] | `say_saw_beating_male1` | `say_saw_beating_female1` | [under their breath, tense] Don't look. Just keep walking. |
+| [x] | `say_saw_death_male1` | `say_saw_death_female1` | [horrified, gasping] Oh God. Oh God, no. |
 | | | | **Other** |
 | [ ] | `say_small_button_male1` | `say_small_button_female1` | [casual, absent-minded] I lost a button off my coat. I keep looking down for it. |
 | [ ] | `say_small_cat_male1` | `say_small_cat_female1` | [casual, dreamy] Did you ever have a cat? [pause] I think I had a cat once. |
@@ -310,3 +310,34 @@ Folder: as in the File column, under `garrysmod/sound/`. These are the collapse 
 | `gman_last_stand_lost.wav` | The Administrator falls in her office | [slow, satisfied, breathy] The city ... thanks you. In its way. |
 | `gman_time_resumes.wav` | Time starts again after his vote | [slow, businesslike] Time, I think ... to resume. |
 | `gman_patience.wav` | A directive has waited too long | [slow, cold, quiet] My employers ... are not patient. |
+
+## Colonel Cubbage answers her speeches
+
+Folder: `cubbage/`. Odessa Cubbage, alive and well, answering her address from the Resistance's camp: a well-spoken, defiant older man who enjoys taking her apart. Voice: `A British man in his fifties, rich and theatrical baritone, educated, dry and wry, a confident public speaker with a gleam of mischief; warm toward his listeners, scornful of the one he answers. Close, dry studio recording.` (Describes a kind of voice: no game or actor named.)
+
+| Done | File | Answers | Paste |
+|---|---|---|---|
+| [ ] | `answer_open1` | (his opening) | [defiant, dry, a speaker enjoying himself] You heard her. Now hear me. Colonel Cubbage, and I have a few corrections to make. |
+| [ ] | `answer_ev_deaths1` | her `speech_ev_deaths` | [defiant, dry, a speaker enjoying himself] She talks about blood in the streets. Ask whose hands it's on. Her units don't carry those batons for show. |
+| [ ] | `answer_ev_arrests1` | her `speech_ev_arrests` | [defiant, dry, a speaker enjoying himself] Not one of them taken at random, she says. Then tell me what crime a man commits by standing in the wrong square. |
+| [ ] | `answer_ev_informers1` | her `speech_ev_informers` | [defiant, dry, a speaker enjoying himself] She thanks the ones who whispered to her. We know who you are too. It isn't too late to stop. |
+| [ ] | `answer_ev_informer_hurt1` | her `speech_ev_informer_hurt` | [defiant, dry, a speaker enjoying himself] She calls us cowards. We don't drag families out of bed at night. We deal with the ones who sell their neighbours. |
+| [ ] | `answer_ev_taken1` | her `speech_ev_taken` | [defiant, dry, a speaker enjoying himself] Yes, we take some of hers, and we ask them questions. She takes all of you, every day, and doesn't bother asking. |
+| [ ] | `answer_ev_escape1` | her `speech_ev_escape` | [defiant, dry, a speaker enjoying himself] Some of ours walked out of her cells. Good. If one of them knocks at your door, open it. |
+| [ ] | `answer_ev_posters1` | her `speech_ev_posters` | [defiant, dry, a speaker enjoying himself] She frets about her posters. Paper. She worries about paper while you go hungry. |
+| [ ] | `answer_ev_theft1` | her `speech_ev_theft` | [defiant, dry, a speaker enjoying himself] Stealing, she says. The only thief in this city sits in an office and takes your bread to pay for her speeches. |
+| [ ] | `answer_ev_defiance1` | her `speech_ev_defiance` | [defiant, dry, a speaker enjoying himself] People raised their voices at her officers. Good. Your voice is the first thing they take, and the last thing you should give up. |
+| [ ] | `answer_ev_sabotage1` | her `speech_ev_sabotage` | [defiant, dry, a speaker enjoying himself] Broken machines hurt only you, she says. They're her machines, and they keep you in line. Let them break. |
+| [ ] | `answer_ev_heavyhand1` | her `speech_ev_heavyhand` | [defiant, dry, a speaker enjoying himself] Firmness, she calls it. You saw what it was. Remember it. |
+| [ ] | `answer_ev_drink1` | her `speech_ev_drink` | [defiant, dry, a speaker enjoying himself] She doesn't blame you for drinking. Of course she doesn't. A drunk doesn't fight back. |
+| [ ] | `answer_ev_kindness1` | her `speech_ev_kindness` | [defiant, dry, a speaker enjoying himself] She takes the credit for you sharing your bread. That was you. It's the one thing she can't stamp out, and it frightens her. |
+| [ ] | `answer_ev_despair1` | her `speech_ev_despair` | [defiant, dry, a speaker enjoying himself] Hope is a choice, she says. Then choose it. Just don't let her tell you what to hope for. |
+| [ ] | `answer_unrest1` | her `speech_unrest` | [defiant, dry, a speaker enjoying himself] Whispers of freedom mean chaos, she says. We mean freedom. She knows the difference, and it terrifies her. |
+| [ ] | `answer_hunger1` | her `speech_hunger` | [defiant, dry, a speaker enjoying himself] She feels every empty bowl, does she? Then why is hers never empty? |
+| [ ] | `answer_order1` | her `speech_order` | [defiant, dry, a speaker enjoying himself] Her authority is not in question, she says. When someone has to say that out loud, it already is. |
+| [ ] | `answer_morale1` | her `speech_morale` | [defiant, dry, a speaker enjoying himself] Tired faces, she says. You're tired because she works you to the bone. Rest isn't her gift. It's yours. |
+| [ ] | `answer_calm1` | her `speech_calm` | [defiant, dry, a speaker enjoying himself] Quiet days, she calls them. Quiet is what she calls it when nobody dares to speak. |
+| [ ] | `answer_mood_afraid1` | her `speech_mood_afraid` | [defiant, dry, a speaker enjoying himself] You've nothing to fear from her, she says. Tell that to the ones she's taken. |
+| [ ] | `answer_mood_restless1` | her `speech_mood_restless` | [defiant, dry, a speaker enjoying himself] She feels your restlessness, she says. Good. Let her feel it. |
+| [ ] | `answer_mood_content1` | her `speech_mood_content` | [defiant, dry, a speaker enjoying himself] Rested, fed and calm, she says. Look around you. Does that look like anyone you know? |
+| [ ] | `answer_close1` | (his closing) | [defiant, dry, a speaker enjoying himself] That's all from me. Keep your heads down, your eyes open, and your door unlocked for a friend. We're closer than she thinks. |

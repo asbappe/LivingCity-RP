@@ -26,6 +26,7 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 - `python3 _dev/player_text.py` makes `PLAYER_TEXT.md` (every line of player text, for the owner to correct). Run it once at the end of a task that changed player text. Never hand-edit it or read it whole (700 KB).
 - When the owner sends a corrected copy back: `python3 _dev/apply_player_text.py EDITED.md ORIGINAL.md`.
 - Rewording drafts and originals are in `_dev/rewording/` (batches 1 to 5 done; not needed).
+- `python3 _dev/voice_lines.py` writes `VOICE_LINES.md` and `VOICE_SCRIPTS.md` from the code; what the owner has recorded is kept in `_dev/voice_done.txt` (rows ticked [x] in either file are added to it first), so ticks survive. `elevenlabs_batch.py` skips what's listed there.
 
 ## Where things stand
 - 2026-11-13, latest (owner: "please work on todo items"; core, in `CORE_CHANGELOG.md`, snapshot: 5 setting lines added): the six approved TODO items, built.

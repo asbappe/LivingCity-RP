@@ -17,7 +17,7 @@ import argparse, json, os, re, shutil, subprocess, sys, time, urllib.error, urll
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 URL = "https://api.elevenlabs.io/v1/text-to-speech/%s?output_format=%s"
-VOICES = ["man", "woman", "unit", "administrator", "gman", "soldier", "overwatch"]
+VOICES = ["man", "woman", "unit", "administrator", "gman", "soldier", "overwatch", "cubbage"]
 RADIO = ("unit", "soldier")  # recorded clean, then given their radio sound by unit_radio.sh
 
 
@@ -116,6 +116,18 @@ def main():
         source = [row for row in source if row[0] in ("gman", "gman_extra")
                   or (os.path.dirname(row[1]) + "/" + stem(os.path.basename(row[1]))) in want]
         print("the server already has %d of these lines: left out" % (before - len(source)))
+    # (already recorded: the files in voice_done.txt, next to this script or in the folder above it, are left out)
+    here = os.path.dirname(os.path.abspath(__file__))
+    recorded = set()
+    for d in (here, os.path.dirname(here)):
+        f = os.path.join(d, "voice_done.txt")
+        if os.path.exists(f):
+            recorded |= {l.strip() for l in open(f, encoding="utf-8") if l.strip() and not l.startswith("#")}
+    if recorded and not a.hl2:
+        before = len(source)
+        source = [row for row in source if os.path.basename(row[1]) not in recorded]
+        if before != len(source):
+            print("%d lines are already recorded (voice_done.txt): left out" % (before - len(source)))
     for voice, path, text in source:
         if not ids.get(voice):
             skipped_voice[voice] = skipped_voice.get(voice, 0) + 1

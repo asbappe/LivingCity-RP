@@ -18,6 +18,43 @@ OUT = os.path.join(ROOT, "VOICE_LINES.md")
 sys.path.insert(0, HERE)
 import dream_lines  # noqa: E402
 
+# What the owner has already recorded (the owner, 13 November: their checked-off copy of the citizen lines came back
+# unchecked, because both files are written afresh from the code). _dev/voice_done.txt lists each recorded file's
+# name (no ending), one to a line; a row ticked [x] by hand in VOICE_LINES.md or VOICE_SCRIPTS.md is added to it
+# before they are written again, and every row whose files are all on it is written ticked.
+DONE = os.path.join(HERE, "voice_done.txt")
+_TICK = re.compile(r"`([A-Za-z0-9_./-]+?)(?:\.(?:wav|mp3|ogg))?`")
+
+def load_done():
+    done = set()
+    if os.path.exists(DONE):
+        done |= {l.strip() for l in open(DONE, encoding="utf-8") if l.strip() and not l.startswith("#")}
+    for name in ("VOICE_LINES.md", "VOICE_SCRIPTS.md"):
+        path = os.path.join(ROOT, name)
+        if not os.path.exists(path):
+            continue
+        for line in open(path, encoding="utf-8"):
+            if line.lower().startswith("| [x] |"):
+                done |= set(_TICK.findall(line.split("|")[2] + "|" + (line.split("|")[3] if line.count("|") > 4 else "")))
+    with open(DONE, "w", encoding="utf-8") as f:
+        f.write("# Recorded already (kept by python3 _dev/voice_lines.py; tick a row [x] in VOICE_LINES.md or VOICE_SCRIPTS.md, or add a file name here)\n")
+        for n in sorted(done):
+            f.write(n + "\n")
+    return done
+
+def tick(lines, done):
+    """Rows whose files are all recorded, ticked."""
+    out = []
+    for line in lines:
+        if line.startswith("| [ ] |"):
+            cells = line.split("|")
+            files = _TICK.findall(cells[2] + "|" + (cells[3] if len(cells) > 5 else ""))
+            files = [f for f in files if not f.startswith("npc/")]
+            if files and all(f in done for f in files):
+                line = "| [x] |" + line[len("| [ ] |"):]
+        out.append(line)
+    return out
+
 # When each announcement plays, and words to say: (when, Overwatch, the Administrator). Overwatch is cold and
 # clinical, a dispatcher; she is a kindly parent with a dash of the cheerful host (sterner as her tone goes up).
 WORDS = {
@@ -335,18 +372,20 @@ def main():
     for r in cub:
         doc.append("| [ ] | `answer_%s1.wav` | %s | %s |" % (r[1], {"open": "(his opening)", "close": "(his closing)"}.get(r[1], "her `speech_%s`" % r[1]), r[3]))
         count += 1
+    done = load_done()
+    doc[:] = tick(doc, done)
     text = "\n".join(doc).rstrip("\n") + "\n"
     with open(OUT, "w", encoding="utf-8") as f:
         f.write(text)
     print("wrote VOICE_LINES.md: %d lines" % count)
-    scripts(doc, street, units, group_of, order)
+    scripts(doc, street, units, group_of, order, done, rows)
 
 
 HER_TONE = {"warm": "[warm, motherly, smiling]", "firm": "[firm, composed, still kind]", "stern": "[stern, cold, slowly]",
             "furious": "[furious, barely controlled, clipped]"}
 GMAN_TAG = "[slow, breathy, unsettling calm, odd pauses and emphasis]"
 
-def scripts(doc, street, units, group_of, order):
+def scripts(doc, street, units, group_of, order, done=frozenset(), rows=()):
     """VOICE_SCRIPTS.md: the same lines as text to paste into ElevenLabs, with voice descriptions."""
     out = ["# Voice scripts: what to paste into ElevenLabs", "",
            "**Made from the code by `python3 _dev/voice_lines.py`: never edit it by hand.** The lines of `VOICE_LINES.md` that are generated speech "
@@ -497,6 +536,23 @@ def scripts(doc, street, units, group_of, order):
         fh.write("# Made by python3 _dev/voice_lines.py for _dev/tools/elevenlabs_batch.py: voice, file (under garrysmod/sound/, no ending), text\n")
         for v, path, text in batch:
             fh.write("%s\t%s\t%s\n" % (v, path, text))
+    # Colonel Cubbage answering her speeches (sv_livingcity_speechanswer.lua)
+    cub = [r for r in rows if r[0] == "cubbage"]
+    if cub:
+        order12 = [r[1] for r in rows if r[0] == "speech"]
+        cub.sort(key=lambda r: (0 if r[1] == "open" else (2 if r[1] == "close" else 1), order12.index(r[1]) if r[1] in order12 else 99, r[1]))
+        out += ["", "## Colonel Cubbage answers her speeches", "",
+                "Folder: `cubbage/`. Odessa Cubbage, alive and well, answering her address from the Resistance's camp: a well-spoken, defiant "
+                "older man who enjoys taking her apart. Voice: `A British man in his fifties, rich and theatrical baritone, educated, dry and "
+                "wry, a confident public speaker with a gleam of mischief; warm toward his listeners, scornful of the one he answers. Close, dry "
+                "studio recording.` (Describes a kind of voice: no game or actor named.)", "",
+                "| Done | File | Answers | Paste |", "|---|---|---|---|"]
+        for r in cub:
+            what = {"open": "(his opening)", "close": "(his closing)"}.get(r[1], "her `speech_%s`" % r[1])
+            out.append("| [ ] | `answer_%s1` | %s | [defiant, dry, a speaker enjoying himself] %s |" % (r[1], what, r[3]))
+            batch.append(("cubbage", "livingcity/cubbage/answer_" + r[1] + "1", "[defiant, dry, a speaker enjoying himself] " + r[3]))
+            n += 1
+    out[:] = tick(out, done)
     with open(os.path.join(os.path.dirname(OUT), "VOICE_SCRIPTS.md"), "w", encoding="utf-8") as fh:
         fh.write("\n".join(out).rstrip("\n") + "\n")
     print("wrote VOICE_SCRIPTS.md: %d lines to paste" % n)

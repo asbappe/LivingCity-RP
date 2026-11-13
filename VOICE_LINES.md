@@ -671,97 +671,97 @@ A small bank of lines the city's named citizens say everywhere: answering you in
 | Done | Man's file | Woman's file | When | Says |
 |---|---|---|---|---|
 | | | | **Openers (a word or two before another line)** | |
-| [ ] | `say_open_listen_male1.wav` | `say_open_listen_female1.wav` | Opener: before something that matters | Listen. |
-| [ ] | `say_open_look_male1.wav` | `say_open_look_female1.wav` | Opener: before a refusal or a plain truth | Look. |
-| [ ] | `say_open_please_male1.wav` | `say_open_please_female1.wav` | Opener: before asking, or begging off | Please. |
-| [ ] | `say_open_quiet_male1.wav` | `say_open_quiet_female1.wav` | Opener: before anything dangerous to say | Keep your voice down. |
-| [ ] | `say_open_well_male1.wav` | `say_open_well_female1.wav` | Opener: thinking it over | Well. |
-| [ ] | `say_open_you_male1.wav` | `say_open_you_female1.wav` | Opener: stopping someone | You. |
+| [x] | `say_open_listen_male1.wav` | `say_open_listen_female1.wav` | Opener: before something that matters | Listen. |
+| [x] | `say_open_look_male1.wav` | `say_open_look_female1.wav` | Opener: before a refusal or a plain truth | Look. |
+| [x] | `say_open_please_male1.wav` | `say_open_please_female1.wav` | Opener: before asking, or begging off | Please. |
+| [x] | `say_open_quiet_male1.wav` | `say_open_quiet_female1.wav` | Opener: before anything dangerous to say | Keep your voice down. |
+| [x] | `say_open_well_male1.wav` | `say_open_well_female1.wav` | Opener: thinking it over | Well. |
+| [x] | `say_open_you_male1.wav` | `say_open_you_female1.wav` | Opener: stopping someone | You. |
 | | | | **Hello** | |
-| [ ] | `say_greet_cold_male1.wav` | `say_greet_cold_female1.wav` | Greeting someone they dislike | What do you want? |
-| [ ] | `say_greet_guarded_male1.wav` | `say_greet_guarded_female1.wav` | Greeting a stranger they are wary of | Do I know you? |
-| [ ] | `say_greet_plain_male1.wav` | `say_greet_plain_female1.wav` | Greeting anyone | Hey. Still here, huh? Me too. |
-| [ ] | `say_greet_unit_male1.wav` | `say_greet_unit_female1.wav` | Spoken to by a unit | No trouble here, officer. |
-| [ ] | `say_greet_warm_male1.wav` | `say_greet_warm_female1.wav` | Greeting someone they like | Oh, it's you. Good to see a friendly face. |
+| [x] | `say_greet_cold_male1.wav` | `say_greet_cold_female1.wav` | Greeting someone they dislike | What do you want? |
+| [x] | `say_greet_guarded_male1.wav` | `say_greet_guarded_female1.wav` | Greeting a stranger they are wary of | Do I know you? |
+| [x] | `say_greet_plain_male1.wav` | `say_greet_plain_female1.wav` | Greeting anyone | Hey. Still here, huh? Me too. |
+| [x] | `say_greet_unit_male1.wav` | `say_greet_unit_female1.wav` | Spoken to by a unit | No trouble here, officer. |
+| [x] | `say_greet_warm_male1.wav` | `say_greet_warm_female1.wav` | Greeting someone they like | Oh, it's you. Good to see a friendly face. |
 | | | | **Goodbye** | |
-| [ ] | `say_bye_cold_male1.wav` | `say_bye_cold_female1.wav` | Ending a conversation they want no more of | We're done here. |
-| [ ] | `say_bye_plain_male1.wav` | `say_bye_plain_female1.wav` | Ending a conversation | I should get going. |
-| [ ] | `say_bye_warm_male1.wav` | `say_bye_warm_female1.wav` | Parting from someone they like | Take care of yourself. I mean it. |
+| [x] | `say_bye_cold_male1.wav` | `say_bye_cold_female1.wav` | Ending a conversation they want no more of | We're done here. |
+| [x] | `say_bye_plain_male1.wav` | `say_bye_plain_female1.wav` | Ending a conversation | I should get going. |
+| [x] | `say_bye_warm_male1.wav` | `say_bye_warm_female1.wav` | Parting from someone they like | Take care of yourself. I mean it. |
 | | | | **Yes, no, perhaps** | |
-| [ ] | `say_later_male1.wav` | `say_later_female1.wav` | Putting it off: the wrong time or place | Not now. Not here. |
-| [ ] | `say_maybe_male1.wav` | `say_maybe_female1.wav` | Not sure | Maybe. I'd have to think about it. |
-| [ ] | `say_no_male1.wav` | `say_no_female1.wav` | Refusing | Sorry, but no. |
-| [ ] | `say_no_hard_male1.wav` | `say_no_hard_female1.wav` | Refusing for good | No. And don't ask me again. |
-| [ ] | `say_yes_male1.wav` | `say_yes_female1.wav` | Agreeing to something | Yeah. All right. |
-| [ ] | `say_yes_warm_male1.wav` | `say_yes_warm_female1.wav` | Agreeing, for someone they like | For you? Of course. |
+| [x] | `say_later_male1.wav` | `say_later_female1.wav` | Putting it off: the wrong time or place | Not now. Not here. |
+| [x] | `say_maybe_male1.wav` | `say_maybe_female1.wav` | Not sure | Maybe. I'd have to think about it. |
+| [x] | `say_no_male1.wav` | `say_no_female1.wav` | Refusing | Sorry, but no. |
+| [x] | `say_no_hard_male1.wav` | `say_no_hard_female1.wav` | Refusing for good | No. And don't ask me again. |
+| [x] | `say_yes_male1.wav` | `say_yes_female1.wav` | Agreeing to something | Yeah. All right. |
+| [x] | `say_yes_warm_male1.wav` | `say_yes_warm_female1.wav` | Agreeing, for someone they like | For you? Of course. |
 | | | | **What they know** | |
-| [ ] | `say_ask_else_male1.wav` | `say_ask_else_female1.wav` | Asked for something they can't give | You're asking the wrong person. |
-| [ ] | `say_cant_say_male1.wav` | `say_cant_say_female1.wav` | Asked what can't be said aloud | I can't talk about that. You know why. |
-| [ ] | `say_dunno_male1.wav` | `say_dunno_female1.wav` | Asked something they don't know, or won't say | I wouldn't know anything about that. |
-| [ ] | `say_dunno_scared_male1.wav` | `say_dunno_scared_female1.wav` | Asked something dangerous | I don't know, and I don't want to know. |
-| [ ] | `say_heard_male1.wav` | `say_heard_female1.wav` | Asked about a rumour | I've heard things. Everyone has. |
-| [ ] | `say_truth_male1.wav` | `say_truth_female1.wav` | Asked how things are, by someone they trust | Honestly? It's as bad as it looks. |
+| [x] | `say_ask_else_male1.wav` | `say_ask_else_female1.wav` | Asked for something they can't give | You're asking the wrong person. |
+| [x] | `say_cant_say_male1.wav` | `say_cant_say_female1.wav` | Asked what can't be said aloud | I can't talk about that. You know why. |
+| [x] | `say_dunno_male1.wav` | `say_dunno_female1.wav` | Asked something they don't know, or won't say | I wouldn't know anything about that. |
+| [x] | `say_dunno_scared_male1.wav` | `say_dunno_scared_female1.wav` | Asked something dangerous | I don't know, and I don't want to know. |
+| [x] | `say_heard_male1.wav` | `say_heard_female1.wav` | Asked about a rumour | I've heard things. Everyone has. |
+| [x] | `say_truth_male1.wav` | `say_truth_female1.wav` | Asked how things are, by someone they trust | Honestly? It's as bad as it looks. |
 | | | | **How they are** | |
-| [ ] | `say_state_angry_male1.wav` | `say_state_angry_female1.wav` | Asked how they are: close to breaking | I've had about all I can take. |
-| [ ] | `say_state_fine_male1.wav` | `say_state_fine_female1.wav` | Asked how they are: all right | Getting by. That's all I can do. |
-| [ ] | `say_state_hopeful_male1.wav` | `say_state_hopeful_female1.wav` | Asked how they are: in good spirits | It can't last forever. Nothing ever does. |
-| [ ] | `say_state_hungry_male1.wav` | `say_state_hungry_female1.wav` | Asked how they are: hungry | I haven't had a real meal in days. |
-| [ ] | `say_state_lonely_male1.wav` | `say_state_lonely_female1.wav` | Asked how they are: starved of company | It's good to just talk to someone. |
-| [ ] | `say_state_low_male1.wav` | `say_state_low_female1.wav` | Asked how they are: in despair | What's the point? Really, what is the point? |
-| [ ] | `say_state_scared_male1.wav` | `say_state_scared_female1.wav` | Asked how they are: afraid | I'm scared. Aren't you? |
-| [ ] | `say_state_tired_male1.wav` | `say_state_tired_female1.wav` | Asked how they are: worn out | I'm tired. Just so tired. |
+| [x] | `say_state_angry_male1.wav` | `say_state_angry_female1.wav` | Asked how they are: close to breaking | I've had about all I can take. |
+| [x] | `say_state_fine_male1.wav` | `say_state_fine_female1.wav` | Asked how they are: all right | Getting by. That's all I can do. |
+| [x] | `say_state_hopeful_male1.wav` | `say_state_hopeful_female1.wav` | Asked how they are: in good spirits | It can't last forever. Nothing ever does. |
+| [x] | `say_state_hungry_male1.wav` | `say_state_hungry_female1.wav` | Asked how they are: hungry | I haven't had a real meal in days. |
+| [x] | `say_state_lonely_male1.wav` | `say_state_lonely_female1.wav` | Asked how they are: starved of company | It's good to just talk to someone. |
+| [x] | `say_state_low_male1.wav` | `say_state_low_female1.wav` | Asked how they are: in despair | What's the point? Really, what is the point? |
+| [x] | `say_state_scared_male1.wav` | `say_state_scared_female1.wav` | Asked how they are: afraid | I'm scared. Aren't you? |
+| [x] | `say_state_tired_male1.wav` | `say_state_tired_female1.wav` | Asked how they are: worn out | I'm tired. Just so tired. |
 | | | | **Answering how they were spoken to** | |
-| [ ] | `say_agree_male1.wav` | `say_agree_female1.wav` | Agreeing with an opinion | You're not wrong. |
-| [ ] | `say_disagree_male1.wav` | `say_disagree_female1.wav` | Disagreeing with an opinion | Well, I don't see it that way. |
-| [ ] | `say_insulted_male1.wav` | `say_insulted_female1.wav` | Insulted | Hey. There's no need for that. |
-| [ ] | `say_laugh_male1.wav` | `say_laugh_female1.wav` | Something funny was said | Ha. That's the first laugh I've had all week. |
-| [ ] | `say_sorry_male1.wav` | `say_sorry_female1.wav` | Backing down | I'm sorry. I didn't mean anything by it. |
-| [ ] | `say_thanks_male1.wav` | `say_thanks_female1.wav` | Thanked for a kindness | Thank you. I won't forget it. |
-| [ ] | `say_thanks_big_male1.wav` | `say_thanks_big_female1.wav` | A real kindness: food, medicine, help | You didn't have to do that. Thank you. |
-| [ ] | `say_threatened_male1.wav` | `say_threatened_female1.wav` | Threatened | I don't want any trouble. |
+| [x] | `say_agree_male1.wav` | `say_agree_female1.wav` | Agreeing with an opinion | You're not wrong. |
+| [x] | `say_disagree_male1.wav` | `say_disagree_female1.wav` | Disagreeing with an opinion | Well, I don't see it that way. |
+| [x] | `say_insulted_male1.wav` | `say_insulted_female1.wav` | Insulted | Hey. There's no need for that. |
+| [x] | `say_laugh_male1.wav` | `say_laugh_female1.wav` | Something funny was said | Ha. That's the first laugh I've had all week. |
+| [x] | `say_sorry_male1.wav` | `say_sorry_female1.wav` | Backing down | I'm sorry. I didn't mean anything by it. |
+| [x] | `say_thanks_male1.wav` | `say_thanks_female1.wav` | Thanked for a kindness | Thank you. I won't forget it. |
+| [x] | `say_thanks_big_male1.wav` | `say_thanks_big_female1.wav` | A real kindness: food, medicine, help | You didn't have to do that. Thank you. |
+| [x] | `say_threatened_male1.wav` | `say_threatened_female1.wav` | Threatened | I don't want any trouble. |
 | | | | **The Combine** | |
-| [ ] | `say_careful_male1.wav` | `say_careful_female1.wav` | Warning someone who is talking too freely | Careful. The walls have ears. |
-| [ ] | `say_fear_units_male1.wav` | `say_fear_units_female1.wav` | A warning about Civil Protection | Stay away from the units today. They're in a mood. |
-| [ ] | `say_hate_quiet_male1.wav` | `say_hate_quiet_female1.wav` | A disloyal citizen, to someone they trust | One day they'll answer for all of it. |
-| [ ] | `say_loyal_male1.wav` | `say_loyal_female1.wav` | A loyal citizen, on the Combine | The Administrator knows best. Everyone knows that! |
-| [ ] | `say_loyal_warn_male1.wav` | `say_loyal_warn_female1.wav` | Hearing sedition, and not liking it | You shouldn't say things like that. Someone will hear. |
-| [ ] | `say_obey_male1.wav` | `say_obey_female1.wav` | Advice to a newcomer | Keep your head down and do what they say. That's how you make it. |
-| [ ] | `say_units_near_male1.wav` | `say_units_near_female1.wav` | Won't talk with a unit close | Not with them standing right there. |
+| [x] | `say_careful_male1.wav` | `say_careful_female1.wav` | Warning someone who is talking too freely | Careful. The walls have ears. |
+| [x] | `say_fear_units_male1.wav` | `say_fear_units_female1.wav` | A warning about Civil Protection | Stay away from the units today. They're in a mood. |
+| [x] | `say_hate_quiet_male1.wav` | `say_hate_quiet_female1.wav` | A disloyal citizen, to someone they trust | One day they'll answer for all of it. |
+| [x] | `say_loyal_male1.wav` | `say_loyal_female1.wav` | A loyal citizen, on the Combine | The Administrator knows best. Everyone knows that! |
+| [x] | `say_loyal_warn_male1.wav` | `say_loyal_warn_female1.wav` | Hearing sedition, and not liking it | You shouldn't say things like that. Someone will hear. |
+| [x] | `say_obey_male1.wav` | `say_obey_female1.wav` | Advice to a newcomer | Keep your head down and do what they say. That's how you make it. |
+| [x] | `say_units_near_male1.wav` | `say_units_near_female1.wav` | Won't talk with a unit close | Not with them standing right there. |
 | | | | **The Resistance** | |
-| [ ] | `say_res_deny_male1.wav` | `say_res_deny_female1.wav` | Asked about the Resistance | I don't know anything about any Resistance. |
-| [ ] | `say_res_hint_male1.wav` | `say_res_hint_female1.wav` | A sympathizer, hinting to someone they trust | There are people. That's all I'll say. |
-| [ ] | `say_res_refuse_male1.wav` | `say_res_refuse_female1.wav` | Asked to help the Resistance, and afraid | I've got people to think about. Leave me out of it. |
-| [ ] | `say_res_respect_male1.wav` | `say_res_respect_female1.wav` | Quiet approval of the Resistance | Whoever they are, good luck to them. |
-| [ ] | `say_res_side_male1.wav` | `say_res_side_female1.wav` | A sympathizer, offering help | If someone needed a door left open, mine would be. |
+| [x] | `say_res_deny_male1.wav` | `say_res_deny_female1.wav` | Asked about the Resistance | I don't know anything about any Resistance. |
+| [x] | `say_res_hint_male1.wav` | `say_res_hint_female1.wav` | A sympathizer, hinting to someone they trust | There are people. That's all I'll say. |
+| [x] | `say_res_refuse_male1.wav` | `say_res_refuse_female1.wav` | Asked to help the Resistance, and afraid | I've got people to think about. Leave me out of it. |
+| [x] | `say_res_respect_male1.wav` | `say_res_respect_female1.wav` | Quiet approval of the Resistance | Whoever they are, good luck to them. |
+| [x] | `say_res_side_male1.wav` | `say_res_side_female1.wav` | A sympathizer, offering help | If someone needed a door left open, mine would be. |
 | | | | **Warnings and tips** | |
-| [ ] | `say_tip_help_male1.wav` | `say_tip_help_female1.wav` | Offering help | If you need something, ask. Quietly. |
-| [ ] | `say_tip_trouble_male1.wav` | `say_tip_trouble_female1.wav` | The city's mood is turning | There's gonna be trouble tonight. I can feel it. |
-| [ ] | `say_warn_asked_male1.wav` | `say_warn_asked_female1.wav` | A warning: they are being looked for | Someone's been asking about you. |
-| [ ] | `say_warn_go_male1.wav` | `say_warn_go_female1.wav` | A warning: get away | You should go. Now. |
-| [ ] | `say_warn_informer_male1.wav` | `say_warn_informer_female1.wav` | A warning about informants | Watch who you talk to. Not everyone here is a friend. |
-| [ ] | `say_warn_watched_male1.wav` | `say_warn_watched_female1.wav` | A warning: an informant or a unit has an eye on them | You're being watched. Don't look now and don't turn around. |
+| [x] | `say_tip_help_male1.wav` | `say_tip_help_female1.wav` | Offering help | If you need something, ask. Quietly. |
+| [x] | `say_tip_trouble_male1.wav` | `say_tip_trouble_female1.wav` | The city's mood is turning | There's gonna be trouble tonight. I can feel it. |
+| [x] | `say_warn_asked_male1.wav` | `say_warn_asked_female1.wav` | A warning: they are being looked for | Someone's been asking about you. |
+| [x] | `say_warn_go_male1.wav` | `say_warn_go_female1.wav` | A warning: get away | You should go. Now. |
+| [x] | `say_warn_informer_male1.wav` | `say_warn_informer_female1.wav` | A warning about informants | Watch who you talk to. Not everyone here is a friend. |
+| [x] | `say_warn_watched_male1.wav` | `say_warn_watched_female1.wav` | A warning: an informant or a unit has an eye on them | You're being watched. Don't look now and don't turn around. |
 | | | | **Asking and giving** | |
-| [ ] | `say_ask_food_male1.wav` | `say_ask_food_female1.wav` | Hungry, asking a player | You got anything to eat? Anything? |
-| [ ] | `say_ask_help_male1.wav` | `say_ask_help_female1.wav` | In trouble, asking a player | I need help. I've got nobody else to ask. |
-| [ ] | `say_ask_smoke_male1.wav` | `say_ask_smoke_female1.wav` | Craving, asking a player | You wouldn't have a smoke on you, would you? |
-| [ ] | `say_decline_gift_male1.wav` | `say_decline_gift_female1.wav` | Refusing a gift | I can't take that. Keep it. |
-| [ ] | `say_offer_male1.wav` | `say_offer_female1.wav` | Giving something | Here. Take it. Don't say where you got it. |
+| [x] | `say_ask_food_male1.wav` | `say_ask_food_female1.wav` | Hungry, asking a player | You got anything to eat? Anything? |
+| [x] | `say_ask_help_male1.wav` | `say_ask_help_female1.wav` | In trouble, asking a player | I need help. I've got nobody else to ask. |
+| [x] | `say_ask_smoke_male1.wav` | `say_ask_smoke_female1.wav` | Craving, asking a player | You wouldn't have a smoke on you, would you? |
+| [x] | `say_decline_gift_male1.wav` | `say_decline_gift_female1.wav` | Refusing a gift | I can't take that. Keep it. |
+| [x] | `say_offer_male1.wav` | `say_offer_female1.wav` | Giving something | Here. Take it. Don't say where you got it. |
 | | | | **As a mind gives way** | |
-| [ ] | `say_break_accuse_male1.wav` | `say_break_accuse_female1.wav` | Accusing someone of informing | That one! That one talks to Civil Protection! |
-| [ ] | `say_break_accused_male1.wav` | `say_break_accused_female1.wav` | Accused of informing | That's a lie! I never told them anything! |
-| [ ] | `say_break_beaten_male1.wav` | `say_break_beaten_female1.wav` | Being beaten | Stop! Please, I didn't do anything! |
-| [ ] | `say_break_binge_male1.wav` | `say_break_binge_female1.wav` | Drinking in the street | Leave me alone. Just let me have this. |
-| [ ] | `say_break_defy_male1.wav` | `say_break_defy_female1.wav` | Defiance: painting over a poster | They can't scare all of us forever. |
-| [ ] | `say_break_despair_male1.wav` | `say_break_despair_female1.wav` | Despair | I can't. I just can't anymore. |
-| [ ] | `say_break_inform_male1.wav` | `say_break_inform_female1.wav` | Informing to a unit | Officer. I've got something you'll want to hear. |
-| [ ] | `say_break_seek_male1.wav` | `say_break_seek_female1.wav` | Finding a friend | There you are. I've been looking for you. |
-| [ ] | `say_break_share_male1.wav` | `say_break_share_female1.wav` | Sharing food | Go on, take half. You need it more than I do. |
-| [ ] | `say_break_steady_male1.wav` | `say_break_steady_female1.wav` | Steadying the people near | Easy. Easy now. We're going to be ok, right? |
-| [ ] | `say_break_tantrum_male1.wav` | `say_break_tantrum_female1.wav` | A tantrum, in a unit's face | I've had enough! Do you hear me? Enough! |
+| [x] | `say_break_accuse_male1.wav` | `say_break_accuse_female1.wav` | Accusing someone of informing | That one! That one talks to Civil Protection! |
+| [x] | `say_break_accused_male1.wav` | `say_break_accused_female1.wav` | Accused of informing | That's a lie! I never told them anything! |
+| [x] | `say_break_beaten_male1.wav` | `say_break_beaten_female1.wav` | Being beaten | Stop! Please, I didn't do anything! |
+| [x] | `say_break_binge_male1.wav` | `say_break_binge_female1.wav` | Drinking in the street | Leave me alone. Just let me have this. |
+| [x] | `say_break_defy_male1.wav` | `say_break_defy_female1.wav` | Defiance: painting over a poster | They can't scare all of us forever. |
+| [x] | `say_break_despair_male1.wav` | `say_break_despair_female1.wav` | Despair | I can't. I just can't anymore. |
+| [x] | `say_break_inform_male1.wav` | `say_break_inform_female1.wav` | Informing to a unit | Officer. I've got something you'll want to hear. |
+| [x] | `say_break_seek_male1.wav` | `say_break_seek_female1.wav` | Finding a friend | There you are. I've been looking for you. |
+| [x] | `say_break_share_male1.wav` | `say_break_share_female1.wav` | Sharing food | Go on, take half. You need it more than I do. |
+| [x] | `say_break_steady_male1.wav` | `say_break_steady_female1.wav` | Steadying the people near | Easy. Easy now. We're going to be ok, right? |
+| [x] | `say_break_tantrum_male1.wav` | `say_break_tantrum_female1.wav` | A tantrum, in a unit's face | I've had enough! Do you hear me? Enough! |
 | | | | **What they saw** | |
-| [ ] | `say_grief_male1.wav` | `say_grief_female1.wav` | A friend arrested or dead | They took my friend. Just dragged them off. |
-| [ ] | `say_saw_beating_male1.wav` | `say_saw_beating_female1.wav` | Someone beaten in front of them | Don't look. Just keep walking. |
-| [ ] | `say_saw_death_male1.wav` | `say_saw_death_female1.wav` | Someone killed in front of them | Oh God. Oh God, no. |
+| [x] | `say_grief_male1.wav` | `say_grief_female1.wav` | A friend arrested or dead | They took my friend. Just dragged them off. |
+| [x] | `say_saw_beating_male1.wav` | `say_saw_beating_female1.wav` | Someone beaten in front of them | Don't look. Just keep walking. |
+| [x] | `say_saw_death_male1.wav` | `say_saw_death_female1.wav` | Someone killed in front of them | Oh God. Oh God, no. |
 | | | | **Other** | |
 | [ ] | `say_small_button_male1.wav` | `say_small_button_female1.wav` | Small talk | I lost a button off my coat. I keep looking down for it. |
 | [ ] | `say_small_cat_male1.wav` | `say_small_cat_female1.wav` | Small talk | Did you ever have a cat? I think I had a cat once. |
