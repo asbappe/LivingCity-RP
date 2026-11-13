@@ -1511,6 +1511,8 @@ end
 hook.Add("LivingCityDayPhase", "LivingCityExercise", function(phase)
     if phase ~= "dawn" or not cvOn:GetBool() then return end
     dawns = dawns + 1
+    -- (whether this morning has exercise: the city's own Administrator speaks on the days without, sv_livingcity_speech.lua)
+    LC.ExerciseToday = (dawns - 1) % math.max(1, cvEvery:GetInt()) == 0 and LC.NextExercise(false) ~= nil
     if (dawns - 1) % math.max(1, cvEvery:GetInt()) ~= 0 then return end
     -- now, or as soon as whatever's on (rations, an inspection) is over, while it's still morning
     local tries = 0

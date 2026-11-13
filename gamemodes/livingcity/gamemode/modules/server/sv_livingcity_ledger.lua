@@ -356,12 +356,12 @@ end
 
 -- Her words to the city: on the screens and in chat, the crowd's cheer, and what it does to the numbers.
 -- by: the player Administrator, or nil (the city's own, sv_livingcity_speech.lua). at: where she spoke.
-local function Deliver(by, text, at)
+local function Deliver(by, text, at, quiet) -- (quiet: no chat line, the speech says it piece by piece)
     local who = IsValid(by) and ((LC.CharacterName and LC.CharacterName(by)) or by:Nick()) or ((LC.AdministratorName and LC.AdministratorName()) or "The City Administrator")
     if LC.SetGlobalLong then LC.SetGlobalLong("lc_broadcast", string.sub(text, 1, 590)) end
     SetGlobal2String("lc_broadcast_by", "The City Administrator")
     SetGlobal2Float("lc_broadcast_at", CurTime())
-    for _, p in ipairs(player.GetAll()) do p:ChatPrint("[The City Administrator, from the stand] " .. text) end
+    if not quiet then for _, p in ipairs(player.GetAll()) do p:ChatPrint("[The City Administrator, from the stand] " .. text) end end
     local heard = 0
     for _, p in ipairs(player.GetAll()) do
         if p ~= by and p:GetPos():DistToSqr(at) < 1200 * 1200 then

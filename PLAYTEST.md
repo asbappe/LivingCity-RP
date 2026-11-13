@@ -1844,3 +1844,5 @@ Type them in the server console on the host panel, or in your own game console (
   Notes:
 - [ ] **The harpies dreamt in a forest:** pick the harpies as tonight's dream (F2, as Administrator). Are the pines there (Episode Two) or Half-Life 2's trees? Do the mingebags slip behind trees and rocks and out again? Too many trees for the edict limit?
   Notes:
+- [ ] **Her own stitched speech:** with nobody as Administrator, on a morning with no exercise, let it reach midday (or set lc_speech_city_hour). Does she say an opening, a few lines about what really happened lately (arrests, a beating, posters...), one about the mood, and a closing, one after another? Are the pauses between pieces right?
+  Notes:

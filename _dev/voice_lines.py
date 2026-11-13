@@ -97,7 +97,7 @@ for id, l in pairs(LC.MachineLines or {}) do W("machine", id, l[1], l[2]) end
 for id, words in pairs(LC.ColonelLines or {}) do W("colonel", id, "", words) end
 for id, l in pairs(LC.StreetLines or {}) do W("street", id, l[2], l[1], l[3] or l[1]) end
 for id, l in pairs(LC.UnitLines or {}) do W("unitline", id, l[2], l[1], l[3] or l[1], table.concat(l[4] or {}, ", ")) end
-for _, t in ipairs(LC.SpeechTopics or {}) do W("speech", t.id, string.lower(string.sub(t.when, 1, 1)) .. string.sub(t.when, 2), t.words) end
+for _, t in ipairs(LC.SpeechPieces or {}) do W("speech", t.id, t.part, t.when, t.words) end
 for key, g in pairs(LC.CollapseGmanLines or {}) do
     local cv = GetConVar(g[1])
     W("gman", key, g[1], cv and cv:GetString() or "", g[2])
@@ -127,7 +127,9 @@ def demote(lines):
 
 def main():
     rows = dump()
-    SPEECH_WORDS.update({"speech_" + r[1]: ("Her own address, with nobody playing her: " + r[2], r[3]) for r in rows if r[0] == "speech"})
+    PART = {"open": "Her speech, the opening", "close": "Her speech, the closing", "event": "Her speech, on what happened lately: when",
+            "state": "Her speech, on the state of the city: when", "mood": "Her speech, on the city's mood: when"}
+    SPEECH_WORDS.update({"speech_" + r[1]: (PART.get(r[2], "Her speech") + ("" if r[2] in ("open", "close") else " " + r[3]), r[4]) for r in rows if r[0] == "speech"})
     triggers = [(r[1], int(r[2]), r[3]) for r in rows if r[0] == "trigger"]
     tiers = [r[1] for r in rows if r[0] == "tier"]
     gman = {r[1]: (r[2], r[3], r[4]) for r in rows if r[0] == "gman"}

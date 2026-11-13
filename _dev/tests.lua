@@ -13279,10 +13279,46 @@ local hourWas, humanWas = LC.Hour, LC.HumanAdministrator
 LC.Hour = function() return 12 end
 LC.HumanAdministrator = function() return nil end
 LC.SpeechCityDay = nil
-ok(LC.SpeechCityDue(), "with nobody playing her, the city's own Administrator gives one at midday")
-ok(not LC.SpeechCityDue(), "(once a city day)")
-ok(LC.CallSpeech(nil, nil) and IsValid(LC.SpeechSession().her) and LC.SpeechSession().topic, "she stands at the podium herself, with a topic")
+LC.ExerciseToday = true
+ok(not LC.SpeechCityDue(), "not on a morning with exercise")
+LC.ExerciseToday = false
+ok(LC.SpeechCityDue(), "with nobody playing her, on a day with no morning exercise, the city's own Administrator gives one at midday")
+ok(not LC.SpeechCityDue(), "(once that day)")
+-- stitched from pieces: the chronicle, the state of the city, the minds
+do
+    local pieces, tense = LC.SpeechCompose({ supply = 20 }, { ev_arrests = 3, ev_taken = 5, ev_kindness = 1, ev_posters = 1 }, { stress = 20, unrest = 0.2 })
+    local ids = {}
+    for _, p in ipairs(pieces) do ids[#ids + 1] = p.id end
+    ok(table.concat(ids, ",") == "open,ev_taken,hunger,ev_arrests,mood_afraid,close", "her speech: an opening, the three weightiest things lately, the city's mood, a closing", table.concat(ids, ","))
+    ok(tense, "(someone taken by the Resistance: she's stern throughout)")
+    local quiet = LC.SpeechCompose({}, {}, { stress = 2, unrest = 0 })
+    ok(quiet[2].id == "calm" and quiet[3].id == "mood_content", "a quiet few days: she says so, and that the people look well")
+    local now = os.time()
+    local C = LC.Chron
+    local keep, kl = C.list, C.loaded
+    C.loaded = true
+    C.list = { { n = 4, t = now - 99999, k = "poster", w = 1 }, { n = 1, t = now - 60, k = "arrest", w = 1 },
+               { n = 2, t = now - 50, k = "did:inform", w = 2, sec = true }, { n = 3, t = now - 40, k = "did:leak", w = 2, sec = true } }
+    local ev = LC.SpeechEvents(now - 3600)
+    ok(ev.ev_arrests == 1 and ev.ev_informers == 2 and not ev.ev_posters, "what she knows of: the chronicle's last hours (and informing, which only she hears of)")
+    C.list, C.loaded = keep, kl
+    for _, p in ipairs(LC.SpeechPieces) do
+        ok(not string.find(p.id, "firm", 1, true) and not string.find(p.id, "stern", 1, true) and not string.find(p.id, "furious", 1, true)
+            and table.HasValue(LC.AnnounceTriggers, "speech_" .. p.id), "(" .. p.id .. ": a recording of hers, its name clear of the tone words)")
+    end
+end
+ok(LC.CallSpeech(nil, nil) and IsValid(LC.SpeechSession().her) and #(LC.SpeechSession().pieces or {}) >= 3, "she stands at the podium herself, with her speech")
+do
+    local S2 = LC.SpeechSession()
+    _run(12) -- (the muster)
+    local said0 = S2.said or 0
+    _run(8)
+    ok((S2.said or 0) > said0 and (S2.said or 0) < #S2.pieces, "she says it piece by piece, not all at once", S2.said)
+    _run(90)
+    ok(S2.said == #S2.pieces, "and every piece in turn", S2.said)
+end
 LC.EndSpeech()
+LC.ExerciseToday = nil
 LC.Hour, LC.HumanAdministrator = hourWas, humanWas
 LC.LineOfSight = losWas
 LC.RemovePoint(stand) LC.RemovePoint(crowd)
