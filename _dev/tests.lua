@@ -18598,6 +18598,14 @@ _run(10)
 local E = LC.EndingAny()
 ok(E and E.dream and E.id == "harpies" and E.dream.force and E.dream.mood == "nightmare", "that night everyone asleep dreams the Administrator's pick, cooldown or not", E and E.id)
 ok(cit.lcDreaming and cit2.lcDreaming and not adm.lcDreaming, "(the sleepers, not the awake Administrator)")
+do
+    local inside = true
+    for _, t in ipairs(E.forest or {}) do if not LC.DreamHolds(E.dream, t:GetPos()) then inside = false end end
+    ok(#(E.forest or {}) >= 20 and inside, "the harpies dreamt: a forest stands round the dream zone, inside its edge", #(E.forest or {}))
+    ok(#(E.cover or {}) >= 6, "with rocks, logs and bushes nearer in for them to hide behind", #(E.cover or {}))
+    local g = LC.MingeCover(E.lz)
+    ok(g and (g - E.lz):Length2D() > 100, "a lurking mingebag can pick the far side of one")
+end
 local cd = util.JSONToTable(_files["livingcity/endings.json"] or "{}") or {}
 ok(tonumber(cd.last) == t0, "and it doesn't start the endings' cooldown over (the G-Man's aren't held back by it)")
 

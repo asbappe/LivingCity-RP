@@ -1107,12 +1107,78 @@ end
 
 LC.EndingChatter = function(kind) if E then return Chatter(Speaker(), kind) end end
 
+-- The harpies dreamt: a forest all round the dream zone (the owner, 12 November: "nothing is creepier than a
+-- forest"). Half-Life 2: Episode Two's pines; Half-Life 2's own trees on a server without Episode Two. The trees
+-- stand in a band at the edge, where the mingebags lurk; rocks, logs and bushes nearer in give them something
+-- to hide behind and come out from (LC.MingeCover: a lurking one picks the dark side of one).
+local cvForest = CreateConVar("lc_ending_minge_forest", "36", FLAGS, "The Harpies dreamt: how many trees stand round the dream zone (0: none, the bare room)")
+local cvForestCover = CreateConVar("lc_ending_minge_cover", "12", FLAGS, "The Harpies dreamt: how many rocks, logs and bushes the mingebags hide behind")
+local cvTrees = CreateConVar("lc_ending_minge_trees",
+    "models/props_foliage/tree_pine04.mdl,models/props_foliage/tree_pine05.mdl,models/props_foliage/tree_pine06.mdl,models/props_foliage/tree_pine_large.mdl",
+    FLAGS, "The Harpies dreamt: the forest's trees (Episode Two's pines; any missing are skipped)")
+LC.MingeTreesHL2 = { "models/props_foliage/tree_deciduous_01a.mdl", "models/props_foliage/tree_deciduous_02a.mdl",
+    "models/props_foliage/tree_deciduous_03a.mdl", "models/props_foliage/tree_poplar_01.mdl", "models/props_foliage/tree_cliff_01a.mdl" }
+LC.MingeCoverModels = { "models/props_wasteland/rockgranite02a.mdl", "models/props_wasteland/rockgranite02b.mdl",
+    "models/props_wasteland/rockgranite03a.mdl", "models/props_foliage/driftwood_01a.mdl", "models/props_foliage/driftwood_03a.mdl",
+    "models/props_foliage/shrub_01a.mdl" }
+local function Usable(list)
+    local out = {}
+    for _, m in ipairs(list) do if not util.IsValidModel or util.IsValidModel(m) then out[#out + 1] = m end end
+    return out
+end
+function LC.MingeTreeModels()
+    local own = {}
+    for m in string.gmatch(cvTrees:GetString() or "", "[^,]+") do own[#own + 1] = string.Trim(m) end
+    local have = Usable(own)
+    if #have == 0 then have = Usable(LC.MingeTreesHL2) end
+    return have
+end
+-- Plants the forest round centre, radius r (the dream zone's). Returns the trees and the cover.
+function LC.MingeForest(centre, r)
+    local trees, cover = {}, {}
+    local tm, cm = LC.MingeTreeModels(), Usable(LC.MingeCoverModels)
+    local function Plant(list, model, d, a, scale)
+        local g = Ground(centre + Vector(math.cos(a) * d, math.sin(a) * d, 0)) or (centre + Vector(math.cos(a) * d, math.sin(a) * d, 0))
+        if E and E.dream and LC.DreamHolds and not LC.DreamHolds(E.dream, g) then return end
+        local e = Prop(model, g, scale)
+        if IsValid(e) then
+            e:SetAngles(Angle(0, math.random(0, 359), 0))
+            list[#list + 1] = e
+        end
+    end
+    local n = cvForest:GetInt()
+    for i = 1, (#tm > 0 and n or 0) do
+        local a = (i / n) * math.pi * 2 + math.Rand(-0.12, 0.12)
+        Plant(trees, tm[math.random(#tm)], r * math.Rand(0.72, 0.98), a, math.Rand(0.8, 1.15))
+    end
+    local c = cvForestCover:GetInt()
+    for i = 1, (#cm > 0 and c or 0) do
+        local a = (i / c) * math.pi * 2 + math.Rand(-0.25, 0.25)
+        Plant(cover, cm[math.random(#cm)], r * math.Rand(0.45, 0.7), a, math.Rand(0.7, 1))
+    end
+    E.forest, E.cover = trees, cover
+    return trees, cover
+end
+-- A lurking mingebag's hiding place: the far side of a piece of cover (or a tree), from the middle.
+function LC.MingeCover(centre)
+    local list = {}
+    for _, e in ipairs(E and E.cover or {}) do if IsValid(e) then list[#list + 1] = e end end
+    for _, e in ipairs(E and E.forest or {}) do if IsValid(e) then list[#list + 1] = e end end
+    if #list == 0 then return nil end
+    local e = list[math.random(#list)]
+    local off = e:GetPos() - centre
+    off.z = 0
+    local away = off:GetNormalized()
+    return e:GetPos() + away * 48, math.atan2(off.y, off.x)
+end
+
 SETUP.harpies = function()
     E.minges, E.bodies = {}, {}
     local lz = E.dream and { { pos = E.dream.pos } } or (LC.PointsOfKind and LC.PointsOfKind("lz")) or {} -- (a dream: round the dream point)
     E.lz = (#lz > 0 and lz[1].pos) or (LC.SupplyDropSpot and LC.SupplyDropSpot()) or (IsValid(E.by) and E.by:GetPos()) or Centre()
     E.holdUntil = CurTime() + cvMingeEnd:GetFloat()
     if LC.OpenEveryDoor and not E.dream then LC.OpenEveryDoor() E.doorsOpen = true end -- (every door locked open: nothing stuck behind one, them or us)
+    if E.dream and LC.DreamRadius then LC.MingeForest(E.lz, LC.DreamRadius(E.dream)) end -- (dreamt: in a forest)
     -- everyone to the landing zone, facing out into the dark
     local ps = LC.EndingPlayers()
     local taken = {}
@@ -1234,6 +1300,11 @@ TICK.harpies = function(now)
             s.speed = 40 + 160 * k
             if not s.goal or (pos:DistToSqr(s.goal) < 30 * 30 and now >= (s.rest or 0)) or math.abs((s.ringD or far) - far) > 250 then
                 local g, a = RingSpot(centre, far, k < 0.6, s.angle)
+                -- (in the dreamt forest, often behind a tree or a rock instead, then out again)
+                if E.cover and math.random() < 0.5 then
+                    local cg, ca = LC.MingeCover(centre)
+                    if cg then g, a = cg, ca end
+                end
                 if g then s.goal, s.angle, s.ringD = g, a, far end
                 s.rest = now + math.Rand(2, 6)
             end
