@@ -19,7 +19,9 @@
           shrinks and climbs onto the bin. The can knocks him off: "Pick up that can." From then on
           what you pick up is a tiny officer. Every hit after that (on any officer or any living can)
           puts another living can, bin and tiny officer next to the first, each knocking its own
-          officer off its own bin, up to LC.CanMaxSets (30) of them. The tiny officers squeak threats
+          officer off its own bin, up to LC.CanMaxSets (30) of them. The one your hit made is yours
+          (LC.CanHome): your next officers are knocked off its bin, and on your screen it stands in a
+          pulsing beam of light with "YOURS" over it. Until you make one, the first is everyone's. The tiny officers squeak threats
           and orders, Half-Life 2's own lines pitched as high as they go (LC.CanTinyLines; yours, on
           your own screen: LC_CL.CanTinyLines).
         In the bin (any bin): he chuckles, the bin says thank you, burps and grows, and it rains cans
@@ -111,6 +113,31 @@ end
 
 -- The first of them: the one in the middle.
 local function Main(g) return g.sets[1] end
+-- The scene that's yours: the one your hit made (the newest of them), else the first, which is everyone's.
+-- (the owner, 13 November: "how do they know which little scene is theirs? Maybe it should pulse or glow")
+local function Home(g, p)
+    local s = p and g.pl[p]
+    local set = s and s.set
+    if set and set.owner == p then return set end
+    return Main(g)
+end
+LC.CanHome = Home
+-- This scene is yours now (nil: none of them is). Its own tiny officer isn't sent to you: you have your own to pick up.
+function LC.CanOwn(g, p, set)
+    local s = g.pl[p]
+    if not s then return end
+    local old = s.set
+    if old and old.owner == p then
+        old.owner = nil
+        if IsValid(old.tiny) and old.tiny.SetPreventTransmit and IsValid(p) then old.tiny:SetPreventTransmit(p, false) end
+    end
+    s.set = set
+    if set then
+        set.owner = p
+        if IsValid(set.tiny) and set.tiny.SetPreventTransmit then set.tiny:SetPreventTransmit(p, true) end
+    end
+    g.dirty = true
+end
 function LC.CanBinTop(g, set)
     set = set or Main(g)
     local tall = Tall(set.bin)
@@ -118,11 +145,12 @@ function LC.CanBinTop(g, set)
 end
 -- Where your can lands when it's knocked off: on the floor between the bin and where you started.
 function LC.CanSpot(g, p)
-    local s, at = g.pl[p], Main(g).binAt
+    local s, home = g.pl[p], Home(g, p)
+    local at = home.binAt
     local to = s and s.start or (at + Vector(60, 0, 0))
     local dx, dy = to.x - at.x, to.y - at.y
     local l = math.max(1, math.sqrt(dx * dx + dy * dy))
-    local r = 55 + 20 * (Main(g).binScale or 1)
+    local r = 55 + 20 * (home.binScale or 1)
     return Vector(at.x + dx / l * r, at.y + dy / l * r, g.top + 3)
 end
 
@@ -263,6 +291,9 @@ function LC.CanThrown(g, p, what, at, set)
             LC.CanSwap(g)
             Say(g, "can_swap", m.can, PICKUP[1], 160, 6)
         elseif LC.CanAddSet(g) then
+            LC.CanOwn(g, p, g.sets[#g.sets]) -- (that one is theirs: their next officer is knocked off its bin, and it glows for them)
+            s.note, s.noteTil = "That one is yours. Follow the light.", now + 6
+            if p.EmitSound then p:EmitSound("buttons/blip1.wav", 60, 140) end
             Say(g, "can_clone", g.sets[#g.sets].can, PICKUP[2], 170, 5)
         else
             Say(g, "can_full", m.can, CHUCKLE, 160, 8)
@@ -279,6 +310,7 @@ function LC.CanThrown(g, p, what, at, set)
         Say(g, "can_bin", set.bin, nil, nil, 6)
     else
         Tree(g, at)
+        m = Home(g, p) -- (the one in charge of your own scene)
         m.grow = math.min(LC.CanCopMax, (m.grow or 1) + 0.15)
         Snd(p, "physics/metal/soda_can_impact_soft" .. math.random(1, 3) .. ".wav", 70, 100)
         Say(g, n % 3 == 1 and "can_litter" or "can_again", m.cop or m.can, PICKUP[2 + n % 2], (m.swapped and 160 or 100) / math.sqrt(m.grow), 5)
@@ -314,12 +346,21 @@ do
         return true
     end
     def.spawn = SpawnAt
+    def.leave = function(g, p) if g.pl[p] and g.pl[p].set then LC.CanOwn(g, p, nil) end end
     def.hello = function() return { theme = "can" } end
 
     -- The officer (or the first living can) swings the stunstick at the bin.
-    local function Swing(g)
+    local function Swing(g, set)
         local now = CurTime()
         local m = Main(g)
+        if set and set ~= m then -- (your own living can, at your own bin)
+            if now < (set.swungAt or 0) + 0.8 then return end
+            set.swungAt = now
+            Snd(set.can, "weapons/stunstick/stunstick_swing" .. math.random(1, 2) .. ".wav", 75, 100)
+            Snd(set.bin, "physics/metal/soda_can_impact_hard" .. math.random(1, 3) .. ".wav", 70, 100)
+            Snd(set.can, PICKUP[1], 75, 160 / math.sqrt(set.grow or 1))
+            return
+        end
         if now < (g.swungAt or 0) + 0.8 then return end
         g.swungAt = now
         if IsValid(m.cop) then
@@ -347,6 +388,9 @@ do
                 end
                 local t = set.main and (now - (g.swungAt or -10)) or ((now + (set.phase or 0)) % LC.CanCycle)
                 local swing = t < 0.5 and math.sin(t / 0.5 * math.pi) or 0
+                if set.owner and not IsValid(set.owner) then set.owner = nil end
+                local mineT = now - (set.swungAt or -10)
+                if not set.main and mineT < 0.5 then swing = math.max(swing, math.sin(mineT / 0.5 * math.pi)) end
                 if IsValid(set.stick) then
                     set.stick:SetPos(Vector(set.o.x + 16 * grow, set.o.y - 20 * grow, g.top + LC.CanTall * grow * in01 * 0.6))
                     set.stick:SetAngles(Angle(-60 + swing * 110, set.yaw, 0))
@@ -416,7 +460,7 @@ do
             local use, atk = Pressed(s, p, KEY_USE, "canUse"), Pressed(s, p, KEY_ATTACK, "canAtk")
             if c.st == "bin" then
                 if now >= c.knock and not (g.swapped and now < g.swapped + 1.6) then
-                    Swing(g)
+                    Swing(g, Home(g, p))
                     c.st, c.at, c.pos, c.nag, g.dirty = "floor", now, LC.CanSpot(g, p), now + 9, true
                 end
             elseif c.st == "floor" then
@@ -468,7 +512,11 @@ do
         t.meterName = string.format("Ways tried: %d of 3", ways)
         if c then
             local thing = c.kind == "cop" and "officer" or "can"
-            t.can = { s = c.st, k = c.kind, a = c.at, w = c.what, b = Flat(LC.CanBinTop(g)), p = c.pos and Flat(c.pos) or nil, t = c.to and Flat(c.to) or nil }
+            local home = Home(g, p)
+            if #g.sets > 1 then -- (which of them is yours: lit up on your screen)
+                t.mine = Flat(Vector((home.o.x + home.binAt.x) / 2, (home.o.y + home.binAt.y) / 2, g.top), home.owner == p and 1 or 0)
+            end
+            t.can = { s = c.st, k = c.kind, a = c.at, w = c.what, b = Flat(LC.CanBinTop(g, home)), p = c.pos and Flat(c.pos) or nil, t = c.to and Flat(c.to) or nil }
             if c.st == "floor" then
                 t.glows = { Flat(c.pos + Vector(0, 0, 6), 6) }
                 t.big = "Pick up that " .. thing .. ". (Use)"

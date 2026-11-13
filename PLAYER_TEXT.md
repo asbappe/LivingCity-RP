@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version 904aacf. Admin-only console messages and log lines are left out.
+Made from version 87fe63f. Admin-only console messages and log lines are left out.
 
-12070 lines, from 323 files.
+12071 lines, from 323 files.
 
 ## Contents
 
@@ -156,7 +156,7 @@ Made from version 904aacf. Admin-only console messages and log lines are left ou
 - [the director and free talk (the owner, 10 November: "run some](#the-director-and-free-talk-the-owner-10-november-run-some-svlivingcitybrainlua) (90)
 - [apartments and trade](#apartments-and-trade-svlivingcitybusinesslua) (41)
 - [rearranging a rebel camp](#rearranging-a-rebel-camp-svlivingcitycampmovelua) (3)
-- [Pick Up That Can, a fever dream](#pick-up-that-can-a-fever-dream-svlivingcitycandreamlua) (46)
+- [Pick Up That Can, a fever dream](#pick-up-that-can-a-fever-dream-svlivingcitycandreamlua) (47)
 - [your career, on one page (the owner's 7 November playtest: "playing as a](#your-career-on-one-page-the-owners-7-november-playtest-playing-as-a-svlivingcitycareerlua) (23)
 - [the Resistance's interrogation chair (lc_interrochair)](#the-resistances-interrogation-chair-lcinterrochair-svlivingcitychairlua) (49)
 - [sv_livingcity_chairplayer.lua](#svlivingcitychairplayerlua-svlivingcitychairplayerlua) (32)
@@ -984,7 +984,7 @@ Made from version 904aacf. Admin-only console messages and log lines are left ou
 - "Strange dreams: The Cheese Dream (it starts in the dark, with two voices: gather the glowing cheese, jump onto the floating slabs, and keep out of the way of the rolling wheels; it gets colourful), Musical Chairs (walk round the chairs while the music plays; when it stops, get to a free one and press Use to sit down in it; try to sit while the music is still playing and you lose one of your three lives), Wings (jump, then jump again in the air to flap, and fly through the golden rings) and It's Raining Melons (stand on a green glow to catch a melon; keep out from under a red one). Win one and you wake Unbroken; losing one costs nothing."  (text, line 102)
 - "More strange dreams: Hooves and All (Neutral: when Father Grigori's shot stops the black horse, run in and bite it with E; don't get trampled), The Main Event (box: punch with attack next to it, crouch when it winds up), The Exam (stuck at your desk: type A, B, C or D in chat; the right answer is whatever most of the class picks, and you only learn your score once Doctor Kleiner has eaten your paper), The Last Train (the door moves away while anyone looks at it: walk backwards), Where's Lamarr? (catch the hopping headcrabs; the golden one counts three), Running in Molasses (reach the glowing corners in turn, slowly, away from the zombie), Hot Potato (touch someone to pass the grenade before it goes off), Overwatch Says (do it only when he says "Overwatch says"), Dance Marathon (jump on the big beat) and Counting Headcrabs (count them, not the watermelons, and say how many in chat)."  (text, line 103)
 - "Nonsense dreams: Stop the Clocks (touch each melting clock to stop it; stop them all at once), The Tea Party (move to the seat that glows when the host shouts), The Headcrab Derby (stand on a lane's pad before the race to back its headcrab), Say Cheese (hide behind something giant before the scanner's flash), The Doors (stand at the door the music box plays behind), Splat! (paint the floor your colour), Conga! (keep in the glow at the tail of the line), Shh! (gather toys quietly: running and jumping wake the baby), Bubbles (pop them; big ones lift you) and The Watchers (they only move while nobody looks at them: gather the keys). In every strange dream, expect nonsense: things floating in the sky, odd textures, faces pulling expressions, sparkles and smoke, and sounds that won't stay at one pitch."  (text, line 104)
-- "Pick Up That Can (a Neutral fever dream): an officer knocks a can off a bin with his stunstick. Everyone has a can of their own that only they see. Use picks it up, left click throws it: at him, into the bin, or anywhere else. Each does something different to the dream, for everybody. Another can is always on its way; try all three before the time is up. If what you are holding starts squeaking threats at you, that is normal."  (text, line 105)
+- "Pick Up That Can (a Neutral fever dream): an officer knocks a can off a bin with his stunstick. Everyone has a can of their own that only they see. Use picks it up, left click throws it: at him, into the bin, or anywhere else. Each does something different to the dream, for everybody. Another can is always on its way; try all three before the time is up. If what you are holding starts squeaking threats at you, that is normal. When there are several bins, yours is the one in the golden light marked YOURS."  (text, line 105)
 - "The Midnight Rally (a Happy dream): a buggy race at night. Forward to go, back to brake, look where you want to go; you watch from behind your buggy. Stay between the cones (off the road you crawl), drive every part of the lap in order, and drive through the glowing crates for a pickup: a boost, a melon to drop behind you (whoever hits it spins out) or a horn blast that slows everyone near. Jump uses it. The first three over the line win. When few are asleep, the city's people drive the other buggies, and they can beat you."  (text, line 106)
 - "Every dream you play opens with its name on screen, and closes a win with who made it through. The dream's own figures act: her figure points at whoever just lost a life and holds out a hand to whoever wins, the giant officers shake a fist or hang their heads, her admirers reach out to her. Other dreamers' bodies flinch, cower and cheer too. A dream nobody can win (the harpies, the plane, the fire and the other endings) closes with a line of its own as you wake."  (text, line 107)
 - "City Administrator: your tablet's Tonight's dream says when the next dream is (a countdown at night) and lets you choose a kind, a Nightmare or a propaganda dream, once every few nights (never the night after one); the city decides which dream. You only have to be in the dreams you chose: on other nights lights out leaves you alone, unless you choose to join them (you're also asked as you lie down). Its Combine manpower shows what Civil Protection and Overwatch have left in reserve. Out of it in a dream? Watch the rest: click to follow another dreamer, Jump to fly about inside the dream."  (text, line 108)
@@ -5995,61 +5995,65 @@ Made from version 904aacf. Admin-only console messages and log lines are left ou
 
 `gamemodes/livingcity/gamemode/modules/server/sv_livingcity_candream.lua`
 
-- "Right between the eyes."  (text, line 238)
-- "It didn't like that. It liked that."  (text, line 238)
-- "In the bin. Good citizen."  (text, line 239)
-- "The bin says thank you."  (text, line 239)
-- "That is not the bin."  (text, line 240)
-- "Littering. He felt that."  (text, line 240)
-- "Pick Up That Can"  (name, line 290)
-- "Pick up that can. Use it to pick it up, left click to throw it. Then try something else with the next one."  (text, line 291)
-- "The can rolls away"  (text, line 292)
-- "It rolls off somewhere you can't follow, and you wake."  (text, line 292)
-- "Pick Up That Can"  (name, line 293)
-- "Every which way"  (text, line 294)
-- "You wake up having done everything that can be done with a can. You feel oddly complete."  (text, line 294)
-- "Pick it up"  (text, line 295)
-- "You wake up and look for a can to pick up. There is no can."  (text, line 295)
-- "The can rolls away"  (text, line 296)
-- "You wake up sure you dropped something. You check the floor twice."  (text, line 296)
+- "Right between the eyes."  (text, line 266)
+- "It didn't like that. It liked that."  (text, line 266)
+- "In the bin. Good citizen."  (text, line 267)
+- "The bin says thank you."  (text, line 267)
+- "That is not the bin."  (text, line 268)
+- "Littering. He felt that."  (text, line 268)
+
+> Note for you (not shown in game): part of: can thrown
+
+- "That one is yours. Follow the light."  (text, line 295)
+- "Pick Up That Can"  (name, line 322)
+- "Pick up that can. Use it to pick it up, left click to throw it. Then try something else with the next one."  (text, line 323)
+- "The can rolls away"  (text, line 324)
+- "It rolls off somewhere you can't follow, and you wake."  (text, line 324)
+- "Pick Up That Can"  (name, line 325)
+- "Every which way"  (text, line 326)
+- "You wake up having done everything that can be done with a can. You feel oddly complete."  (text, line 326)
+- "Pick it up"  (text, line 327)
+- "You wake up and look for a can to pick up. There is no can."  (text, line 327)
+- "The can rolls away"  (text, line 328)
+- "You wake up sure you dropped something. You check the floor twice."  (text, line 328)
 
 > Note for you (not shown in game): part of: tick
 
-- "Every which way"  (text, line 448)
-- "At him, in the bin, and anywhere but. Everything a can can do."  (text, line 448)
+- "Every which way"  (text, line 492)
+- "At him, in the bin, and anywhere but. Everything a can can do."  (text, line 492)
 
 > Note for you (not shown in game): part of: state
 
-- "Ways tried: %d of 3"  (message, line 468)
-- "Pick up that {thing}. (Use)"  (text, line 474)
-- "Left click: throw it. At him, in the bin, or anywhere."  (text, line 476)
+- "Ways tried: %d of 3"  (message, line 512)
+- "Pick up that {thing}. (Use)"  (text, line 522)
+- "Left click: throw it. At him, in the bin, or anywhere."  (text, line 524)
 
 > Note for you (not shown in game): Every line said in this dream (to record: VOICE_LINES.md)
 
-- "The Officer"  (text, line 490)
-- "Pick up that can."  (text, line 490)
-- "a Civil Protection officer through his mask's radio, flat and bored, just as in Half-Life 2"  (text, line 490)
-- "The Officer"  (text, line 491)
-- "Now, put it in the trash can."  (text, line 491)
-- "the officer, flat, already enjoying himself"  (text, line 491)
-- "The Officer"  (text, line 492)
-- "Pick. Up. That. Can."  (text, line 492)
-- "the officer, slower and lower every word, losing patience"  (text, line 492)
-- "The Officer"  (text, line 493)
-- "That is not the trash can. Nothing is the trash can. Pick up that can."  (text, line 493)
-- "the officer, slow and deep, as if he has grown very large"  (text, line 493)
-- "The Bin"  (text, line 494)
-- "Thank you. Delicious."  (text, line 494)
-- "a deep, hollow, echoing voice from inside a metal bin, ending in a small burp"  (text, line 494)
-- "The Can"  (text, line 495)
-- "Pick up that can."  (text, line 495)
-- "the officer's line, tinny and high, as if spoken from inside an empty drinks can"  (text, line 495)
-- "Another Can"  (text, line 496)
-- "Pick up that can. Pick up that can. Pick up that can."  (text, line 496)
-- "tinny and high, several voices not quite together"  (text, line 496)
-- "The Can"  (text, line 497)
-- "No more room. Pick up all the cans."  (text, line 497)
-- "tinny and high, delighted with itself"  (text, line 497)
+- "The Officer"  (text, line 538)
+- "Pick up that can."  (text, line 538)
+- "a Civil Protection officer through his mask's radio, flat and bored, just as in Half-Life 2"  (text, line 538)
+- "The Officer"  (text, line 539)
+- "Now, put it in the trash can."  (text, line 539)
+- "the officer, flat, already enjoying himself"  (text, line 539)
+- "The Officer"  (text, line 540)
+- "Pick. Up. That. Can."  (text, line 540)
+- "the officer, slower and lower every word, losing patience"  (text, line 540)
+- "The Officer"  (text, line 541)
+- "That is not the trash can. Nothing is the trash can. Pick up that can."  (text, line 541)
+- "the officer, slow and deep, as if he has grown very large"  (text, line 541)
+- "The Bin"  (text, line 542)
+- "Thank you. Delicious."  (text, line 542)
+- "a deep, hollow, echoing voice from inside a metal bin, ending in a small burp"  (text, line 542)
+- "The Can"  (text, line 543)
+- "Pick up that can."  (text, line 543)
+- "the officer's line, tinny and high, as if spoken from inside an empty drinks can"  (text, line 543)
+- "Another Can"  (text, line 544)
+- "Pick up that can. Pick up that can. Pick up that can."  (text, line 544)
+- "tinny and high, several voices not quite together"  (text, line 544)
+- "The Can"  (text, line 545)
+- "No more room. Pick up all the cans."  (text, line 545)
+- "tinny and high, delighted with itself"  (text, line 545)
 
 ## your career, on one page (the owner's 7 November playtest: "playing as a (sv_livingcity_career.lua)
 

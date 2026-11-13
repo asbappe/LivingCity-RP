@@ -1836,3 +1836,5 @@ Type them in the server console on the host panel, or in your own game console (
   Notes:
 - [ ] **The tiny officer's voice:** once the can has swapped with him, does your tiny officer squeak threats and orders (knocked off, picked up, in your hand, thrown, in the bin)? Too often, too loud, too high? Do the other cans' officers squeak from the floor too, and is thirty of them bearable?
   Notes:
+- [ ] **Which scene is yours:** hit the living can so a new can, bin and officer appear. Is it lit for you (golden beam, pulsing glow, circling lights, "YOURS" over it), and are you told "That one is yours"? Is your next tiny officer knocked off that bin? With a second player: do they see their own lit, not yours? Is the beam too much or too little?
+  Notes:

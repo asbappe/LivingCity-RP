@@ -2362,6 +2362,12 @@ local ok, e = pcall(function()
     _advance(6)
     hook.t.Think.LivingCityCanDream()
     if #canPlayed ~= 3 then error("the can dream: a can doesn't talk") end
+if LC_CL.CanMine() then error("the can dream: one scene only, nothing to light up") end
+Msg({ k = "state", mine = { 100, 200, 0, 1 } })
+local mineAt, mineOwn = LC_CL.CanMine()
+if not mineAt or mineAt.y ~= 200 or not mineOwn then error("the can dream: your own scene isn't lit up") end
+hook.t.PostDrawTranslucentRenderables.LivingCityCanDream(false, false)
+hook.t.HUDPaint.LivingCityCanDream()
     Msg({ k = "stop", how = "won" })
     hook.t.Think.LivingCityCanDream()
     sound.Play, file.Exists = canPlay, canExists

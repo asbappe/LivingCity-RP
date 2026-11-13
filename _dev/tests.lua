@@ -21333,6 +21333,12 @@ ok(string.find(g.def.state(g, a).big or "", "officer", 1, true) ~= nil, "(and te
 LC.CanThrown(g, b, "cop", Vector(m.o.x, m.o.y, g.top + 40), m)
 ok(#g.sets == 2 and IsValid(g.sets[2].can) and IsValid(g.sets[2].tiny) and IsValid(g.sets[2].bin), "hit it again: another can, bin and tiny officer beside it")
 local s2 = g.sets[2]
+ok(LC.CanHome(g, b) == s2 and s2.owner == b and LC.CanHome(g, a) == m, "the one you made is yours; until you make one, the first is")
+local mb, ma = g.def.state(g, b).mine, g.def.state(g, a).mine
+ok(mb and mb[4] == 1 and math.abs(mb[1] - (s2.o.x + s2.binAt.x) / 2) <= 1 and ma and ma[4] == 0 and math.abs(ma[1] - (m.o.x + m.binAt.x) / 2) <= 1, "and it's lit up on your screen")
+ok(string.find(g.pl[b].note or "", "yours", 1, true) ~= nil, "(you're told so)")
+_run(LC.CanBack + 3)
+ok(g.pl[b].can.st == "floor" and g.pl[b].can.pos:Distance(s2.binAt) < 120 and g.pl[b].can.pos:Distance(m.binAt) > 60 and s2.swungAt ~= nil, "your next officer is knocked off your own bin, by your own can")
 ok(s2.o:Distance(m.o) <= 110, "(right next to the first)")
 _run(LC.CanCycle + 0.5)
 ok(s2.cyc ~= nil, "which knocks its own officer off its own bin")
@@ -21349,7 +21355,10 @@ local n = 0
 while LC.CanAddSet(g) and n < 100 do n = n + 1 end
 ok(#g.sets == LC.CanMaxSets and LC.CanMaxSets == 30, "thirty of them at most", #g.sets)
 LC.CanThrown(g, b, "cop", Vector(m.o.x, m.o.y, g.top + 40), m)
-ok(#g.sets == LC.CanMaxSets, "(a hit after that adds none)")
+ok(#g.sets == LC.CanMaxSets and LC.CanHome(g, b) == s2, "(a hit after that adds none, and yours stays yours)")
+g.def.leave(g, b)
+ok(s2.owner == nil and LC.CanHome(g, b) == m, "(wake up and it's nobody's)")
+LC.CanOwn(g, b, s2)
 _run(0.3)
 
 -- in the bin; anywhere else

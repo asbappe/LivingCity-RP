@@ -5,7 +5,8 @@
       it. The server says where it is (on the bin, knocked to the floor, in your hand, thrown, and
       where it lands); this draws it there. Once the can has swapped places with the officer, what you
       pick up is a tiny officer instead, squeaking threats and orders the whole time (LC_CL.CanTinyLines).
-      And when anyone puts theirs in a bin, it rains cans on you.
+      And when anyone puts theirs in a bin, it rains cans on you. Once there is more than one scene,
+      yours is lit up (a pulsing beam, circling lights, "YOURS").
 ]]
 
 if SERVER then return end
@@ -187,4 +188,47 @@ hook.Add("Think", "LivingCityCanDream", function()
         m:SetPos(pos)
         m:SetAngles(a or Angle(0, 0, 0))
     end
+end)
+
+-- Which scene is yours (the owner: "how do they know which little scene is theirs? Maybe it should pulse or glow or do a
+-- few things"): a beam of light into the sky, a glow that pulses, lights circling its feet, and "YOURS" over it.
+LC_CL.CanMineColour = Color(255, 225, 90)
+local glowMat = Material and Material("sprites/light_glow02_add") or nil
+local beamMat = Material and Material("sprites/physbeama") or nil
+function LC_CL.CanMine()
+    local st = St()
+    local m = st and not st.out and st.mine
+    if not m then return nil end
+    return Vector(m[1], m[2], m[3]), m[4] == 1
+end
+hook.Add("PostDrawTranslucentRenderables", "LivingCityCanDream", function(_, sky)
+    if sky then return end
+    local at = LC_CL.CanMine()
+    if not at or not render then return end
+    local now = CurTime()
+    local pulse = 0.5 + 0.5 * math.sin(now * 4)
+    local col = LC_CL.CanMineColour
+    if beamMat and render.SetMaterial and render.DrawBeam then
+        render.SetMaterial(beamMat)
+        render.DrawBeam(at + Vector(0, 0, 4), at + Vector(0, 0, 1400), 14 + pulse * 18, now * 0.5, now * 0.5 + 6, Color(col.r, col.g, col.b, 160))
+    end
+    if glowMat and render.SetMaterial and render.DrawSprite then
+        render.SetMaterial(glowMat)
+        local s = 150 + pulse * 110
+        render.DrawSprite(at + Vector(0, 0, 40), s, s, Color(col.r, col.g, col.b, 150))
+        for i = 1, 8 do -- (lights going round its feet)
+            local a = now * 1.6 + i / 8 * math.pi * 2
+            render.DrawSprite(at + Vector(math.cos(a) * 80, math.sin(a) * 80, 6 + math.sin(now * 3 + i) * 4), 26, 26, col)
+        end
+    end
+end)
+hook.Add("HUDPaint", "LivingCityCanDream", function()
+    local at, own = LC_CL.CanMine()
+    if not at then return end
+    local top = at + Vector(0, 0, 125 + math.sin(CurTime() * 3) * 6)
+    local sc = top.ToScreen and top:ToScreen()
+    if not sc or sc.visible == false then return end
+    local col = LC_CL.CanMineColour
+    local a = math.floor(170 + 85 * math.sin(CurTime() * 4))
+    draw.SimpleTextOutlined(own and "YOURS" or "YOUR BIN", "DermaLarge", sc.x, sc.y, Color(col.r, col.g, col.b, a), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, Color(0, 0, 0, a))
 end)
