@@ -159,6 +159,33 @@ local function LambdaMats()
 end
 LC_CL.LambdaMats = LambdaMats
 
+-- The spray can's other marks (the owner, 13 November): the tally with one too many, and NO RECORD.
+-- Each is a picture, materials/livingcity/graffiti/<kind>.png, made into a decal of its own so it
+-- sits on the wall and takes its light like the lambda does. A game that hasn't the picture (not
+-- downloaded yet) paints the lambda there instead.
+LC_CL.TagArt = { tally = "livingcity/graffiti/tally.png", norecord = "livingcity/graffiti/norecord.png" }
+local TAG_DECAL_SCALE = 0.14 -- (a 512 picture comes out about 72 units across, a little over the lambda's size)
+local tagMats = {}
+local function TagMat(kind)
+    if not kind or not LC_CL.TagArt[kind] then return nil end
+    if tagMats[kind] ~= nil then return tagMats[kind] or nil end
+    tagMats[kind] = false
+    local path = LC_CL.TagArt[kind]
+    if not (file and file.Exists and file.Exists("materials/" .. path, "GAME")) then return nil end
+    local pic = Material(path, "smooth mips")
+    local tex = pic and pic.IsError and not pic:IsError() and pic.GetTexture and pic:GetTexture("$basetexture")
+    if not tex or not CreateMaterial then return nil end
+    local m = CreateMaterial("lc_tag_" .. kind, "LightmappedGeneric", {
+        ["$basetexture"] = tex.GetName and tex:GetName() or path, ["$decal"] = 1, ["$translucent"] = 1,
+        ["$vertexcolor"] = 1, ["$vertexalpha"] = 1, ["$decalscale"] = TAG_DECAL_SCALE,
+    })
+    if not m or not m.SetTexture then return nil end
+    m:SetTexture("$basetexture", tex)
+    tagMats[kind] = m
+    return m
+end
+LC_CL.TagMat = TagMat
+
 local painted = {} -- [key] = { at = when it was painted, scale = how big }
 local function TagKey(t)
     return string.format("%d_%d_%d", math.floor(t.pos.x + 0.5), math.floor(t.pos.y + 0.5), math.floor(t.pos.z + 0.5))
@@ -171,9 +198,13 @@ end
 -- One tag, on its wall. Which of the game's sprays it is comes from where it is,
 -- so everyone sees the same one.
 local function PaintTag(t, mats, scale)
-    local pick = (math.abs(math.floor(t.pos.x * 3 + t.pos.y * 5 + t.pos.z * 7)) % #mats) + 1
+    local mat = TagMat(t.kind)
+    if not mat then
+        if #mats == 0 then return end -- (no decal to use: the drawn lambda stands in, below)
+        mat = mats[(math.abs(math.floor(t.pos.x * 3 + t.pos.y * 5 + t.pos.z * 7)) % #mats) + 1]
+    end
     local wall = t.pos - t.normal * 0.5 -- (the server puts it half a unit off the wall)
-    util.DecalEx(mats[pick], game.GetWorld(), wall, t.normal, WHITE, scale, scale)
+    util.DecalEx(mat, game.GetWorld(), wall, t.normal, WHITE, scale, scale)
     painted[TagKey(t)] = { at = CurTime(), scale = scale }
 end
 
@@ -182,7 +213,7 @@ end
 function LC_CL.SetTags(list)
     local fresh, keep = {}, {}
     for _, g in ipairs(list or {}) do
-        local t = { pos = Vector(g.x, g.y, g.z), normal = Vector(g.nx, g.ny, g.nz) }
+        local t = { pos = Vector(g.x, g.y, g.z), normal = Vector(g.nx, g.ny, g.nz), kind = g.k }
         fresh[#fresh + 1] = t
         keep[TagKey(t)] = true
     end
@@ -206,7 +237,7 @@ end)
 -- player can clear them all). Painting again takes the old one off first.
 timer.Create("LivingCityTagDecals", 1, 0, function()
     local mats = LambdaMats()
-    if #mats == 0 or not util.DecalEx then return end
+    if not util.DecalEx then return end
     local me = LocalPlayer()
     if not IsValid(me) then return end
     local eye, now, scale = me:GetPos(), CurTime(), math.Clamp(cvTagScale:GetFloat(), 0.25, 4)
@@ -253,7 +284,7 @@ hook.Add("PostDrawTranslucentRenderables", "LivingCityTags", function(depth, sky
     if sky or #LambdaMats() > 0 then return end
     local eye = EyePos()
     for _, t in ipairs(LC_CL.tags or {}) do
-        if t.pos:DistToSqr(eye) < 1500 * 1500 then
+        if t.pos:DistToSqr(eye) < 1500 * 1500 and not TagMat(t.kind) then
             local ang = t.normal:Angle()
             ang:RotateAroundAxis(ang:Up(), 90)
             ang:RotateAroundAxis(ang:Forward(), 90)

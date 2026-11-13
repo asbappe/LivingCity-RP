@@ -216,7 +216,7 @@ local GUIDE = {
         "Homemade guns and ammo sell at the black market, and for more at the quartermaster. The risky part is getting them there.",
         "F3 > Give hands an item to whoever you're looking at. With a lockpick, a prisoner can pick their cell lock.",
         "In a cell with a Combine console? Press E on it to fly a city scanner while your body stays in the cell. Taking a flash photo of a Civil Protection unit adds a minute to your sentence. Photographing rebels, free vortigaunts, wanted people or zombies from about ten feet away earns Civil Standing (never time off your sentence) and marks them for every unit. Scanners can't see into or through smoke.",
-        "Spray cans paint the lambda symbol on walls. Civil Protection units and loyal citizens scrub tags off with E.",
+        "Spray cans paint a mark on walls: pressing Spray at a bare wall asks which (the lambda, the tally with one too many, or NO RECORD). Civil Protection units and loyal citizens scrub tags off with E.",
         "Civil Protection units: smoke, flashbang and gas grenades unlock as you rank up. The Grenades weapon throws them; R switches type.",
     } },
     { "Disguises", {

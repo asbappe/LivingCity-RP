@@ -9230,6 +9230,33 @@ ok(LC.CleanTag(scrubber, tag), "a loyal citizen can scrub it off")
 _run(4)
 ok(#LC.Tags == tagsBefore and LC.Standing(scrubber) > st0, "and is thanked for it")
 ok(not LC.CleanTag(tagger, tag), "the Resistance don't clean their own")
+-- the spray can's other marks (13 November): offered only when their pictures are on the server
+ok(#LC.TagKindsOffered() == 1 and LC.TagKindsOffered()[1].id == "lambda", "with no pictures on the server, the can offers only the lambda (and never asked, above)")
+_files["materials/livingcity/graffiti/tally.png"] = "x"
+_files["materials/livingcity/graffiti/norecord.png"] = "x"
+ok(#LC.TagKindsOffered() == 3, "with the two pictures there, three marks to choose from")
+LC.GiveItem(tagger, "spraypaint", 2)
+tagger:SetPos(T0) tagger.aim = Vector(1, 0, 0)
+local tagsNow = #LC.Tags
+ok(LC.ItemUse(tagger, "spraypaint") and tagger.lcDialog and tagger.lcDialog.key == "spraytag" and _lastnet("lc_dialog") ~= nil, "Spray on a bare wall now asks which mark")
+_run(3)
+ok(#LC.Tags == tagsNow, "and nothing is sprayed until you choose")
+LC.DialogDo(tagger, "no")
+_run(3)
+ok(#LC.Tags == tagsNow and tagger.lcDialog == nil and LC.HasItem(tagger, "spraypaint", 3), "Never mind: no mark, no can used")
+LC.ItemUse(tagger, "spraypaint")
+LC.DialogDo(tagger, "tally")
+_run(3)
+ok(#LC.Tags == tagsNow + 1 and LC.Tags[#LC.Tags].kind == "tally" and LC.HasItem(tagger, "spraypaint", 2) and not LC.HasItem(tagger, "spraypaint", 3), "choose the tally: it goes up, one can used")
+table.remove(LC.Tags)
+LC.ItemUse(tagger, "spraypaint")
+LC.DialogDo(tagger, "nonsense")
+_run(3)
+ok(#LC.Tags == tagsNow + 1 and LC.Tags[#LC.Tags].kind == "lambda", "a mark that isn't one comes out as the lambda")
+table.remove(LC.Tags)
+LC.SendTags()
+_files["materials/livingcity/graffiti/tally.png"] = nil
+_files["materials/livingcity/graffiti/norecord.png"] = nil
 tagger:SetPos(FAR) scrubber:SetPos(FAR) reb:SetPos(FAR) thief:SetPos(FAR)
 LC.RemoveZone(rz)
 _walls = savedWalls
@@ -20291,6 +20318,13 @@ _files["sound/livingcity/dreams/cheese1.mp3"] = nil
 net.sent = {}
 local g, d = Start("cheese")
 ok(g and g.introUntil and #g.crumbs == 12 and #g.heads == 4 and #g.slabs > 0, "The Cheese Dream is built: a plain of cheese, floating slabs, giant heads, glowing cheese")
+-- its surfaces (13 November): the owner's pictures when they're on the server, plain white as before when not
+ok(g.cheeseMat == "models/debug/debugwhite" and g.floor and #g.floor >= 4 and not LC.CheesePlainLook(g, true) and not g.melted, "with no pictures on the server the cheese is plain, and the plain never melts")
+_files["materials/livingcity/dreams/cheese.jpg"], _files["materials/livingcity/dreams/swirl1.jpg"], _files["materials/livingcity/dreams/swirl2.jpg"] = "x", "x", "x"
+ok(LC.DreamArt("cheese") == "!lc_dream_cheese" and LC.DreamArt("nothing") == "models/debug/debugwhite", "with them there, the dream asks for its own surface by name")
+ok(LC.CheesePlainLook(g, true) and g.melted, "golden cheese: the plain turns to melting colours")
+ok(LC.CheesePlainLook(g, false) and not g.melted, "and back to cheese")
+_files["materials/livingcity/dreams/cheese.jpg"], _files["materials/livingcity/dreams/swirl1.jpg"], _files["materials/livingcity/dreams/swirl2.jpg"] = nil, nil, nil
 local hi = Sent(a, "start")
 ok(hi and hi.theme == "cheese" and hi.lines and hi.lines[1] == "vo/npc/male01/question06.wav" and hi.lines[2] == "vo/npc/female01/question06.wav" and hi.song == nil,
     "it starts in the dark: the man's and the woman's cheese lines, and no music yet")

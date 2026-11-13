@@ -2560,6 +2560,14 @@ for _ = 1, 3 do _advance(1.1) _runtimers() end
 if painted ~= 2 then return "graffiti: repainted without cause (" .. painted .. ")" end
 LC_CL.SetTags({ tag(100) })
 if removed < 1 then return "graffiti: a removed tag did not come off the wall" end
+-- the spray can's other marks (13 November): the kind comes with the tag, and it is painted as a decal either way
+local marked = tag(300) marked.k = "tally"
+LC_CL.SetTags({ tag(100), marked })
+if not (LC_CL.tags[2] and LC_CL.tags[2].kind == "tally" and LC_CL.tags[1].kind == nil) then return "graffiti: a tag's kind did not arrive" end
+for _ = 1, 3 do _advance(1.1) _runtimers() end
+if painted ~= 3 then return "graffiti: the tally was not painted (" .. painted .. ")" end
+if LC_CL.TagMat("lambda") ~= nil or LC_CL.TagMat(nil) ~= nil then return "graffiti: the lambda has no picture of its own" end
+if not (LC_CL.DreamArt and LC_CL.DreamArt.cheese and LC_CL.DreamArtMade.cheese ~= nil and LC_CL.DreamArtMade.swirl1 ~= nil) then return "dream art: the cheese and swirl materials were not made" end
 local before = _calls["cam.Start3D2D"] or 0
 for _, h in pairs(hook.t["PostDrawTranslucentRenderables"] or {}) do h(false, false) end
 if (_calls["cam.Start3D2D"] or 0) ~= before then return "graffiti: drew a letter while real decals exist" end
