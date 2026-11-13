@@ -4,7 +4,7 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version b77d63b. Admin-only console messages and log lines are left out.
+Made from version e3708d1. Admin-only console messages and log lines are left out.
 
 12148 lines, from 324 files.
 
@@ -1253,7 +1253,7 @@ Made from version b77d63b. Admin-only console messages and log lines are left ou
 - "Your own announcements: put .wav files directly in the server's garrysmod/sound/livingcity/overwatch/ or .../administrator/ folder, named after the trigger (curfew1.wav, ambient2.wav). For the Administrator, the tone goes in the name too (curfew_firm1.wav, curfew_stern1.wav, curfew_furious1.wav; warm has no tone word). Each folder's README lists the triggers. lc_announce_clips lists the files it found (and any the game can't play: an MP3 renamed to .wav is silent, so keep .mp3 files as .mp3; a .wav must be 16-bit 44100 Hz). lc_announce_say <voice> <trigger> [tone] tests one. Each player's own computer plays them, so players get them through FastDL (press FastDL sync after adding one, then change the map). lc_sound_check tests a player's own copy."  (text, line 392)
 - "Secret endings (keep them secret): the G-Man stops time and everyone votes: 1 lets the city end, 2 skips it (if nobody votes, it ends). Nobody really dies; the map reloads afterwards. Songs go directly in the server's garrysmod/sound/livingcity/endings/ folder, named after the ending: harpies.mp3, bus.mp3, plane.mp3, standup.mp3, water.mp3, bloom.mp3, marrow.mp3, base.mp3, hard.mp3, shalom.mp3, fire.mp3. Father Grigori eating a master data core (Eat it in his pockets, or /eatchip) starts the flood (if an admin starts it, the city's own Father Grigori takes the stage; lc_ending_flood_crowd sets how many others are up there with him). Commands: lc_endings, lc_ending <id> [now], lc_ending_cancel, lc_ending_reset_cooldown. The Endings menu (C > Help > Endings menu, superadmins only, or lc_endings_menu): adjust any ending live while it plays, including its dances bone by bone (the selected bone lights up on the dancers) and all its settings, then copy what you changed. The Harpies (mingebags): lc_ending_minge_swell is the second the song swells, lc_ending_minge_end when it's all over, lc_ending_minge_max how many there are, lc_ending_minge_crowd how many of the city's people stand in the ring, lc_ending_minge_chatter 0 silences the Combine's radio chatter. Bloom (the dance): lc_ending_bloom_speedup, _ramp, _peak, _bpm; lc_bloom_preview and lc_bloom_pose tune the dance. Marrow (the skeletons): lc_ending_marrow_sections lines it up with the song (seconds:dance\|rave\|attack\|outro\|end). The Bus: lc_ending_bus_sections (seconds:fly\|drive\|fast\|end), lc_ending_bus_bpm. Base: lc_ending_base_sections, lc_ending_base_lines (the subtitles). Hard (party hard): lc_ending_hard_sections, lc_ending_hard_moment_beats (how often another Combine member joins in), lc_ending_hard_moment_max (how many at once). Plane (numa numa): lc_ending_plane_sections, lc_ending_plane_captions. Standup (the rope): lc_ending_standup_sections, lc_ending_standup_drain. The Flood: lc_ending_flood_attack_from (when the ichthyosaurs start biting), lc_ending_flood_boats (rowboats), each player's lc_headbang_angle (Father Grigori's nod). The Plane: lc_ending_plane_model_yaw (if it flies sideways). Marrow: lc_ending_marrow_crowd. Any ending: lc_ending_bodies (bodies left lying), lc_ending_edict_limit (spawning stops near the server's entity limit). Bloom: each player's lc_bloom_palm (-90 if the palms face backwards). Shalom (the hora): lc_ending_shalom_sections, lc_ending_shalom_candles (when each of the hanukkiah's candles is lit), lc_ending_shalom_lift_beats (how often someone is lifted up on a chair), lc_ending_shalom_sayings (extra sayings shown over heads, separated by \|); each player's lc_shalom_pose tunes the dance's arms and lc_shalom_kippah where the kippah sits. Fire (behinds on fire, then flying on them): lc_ending_fire_sections (seconds:ignite\|hop\|fly\|launch\|end), lc_ending_fire_hop (how high the hops are), lc_ending_fire_fly_speed, lc_ending_fire_crowd; the flying pose is tuned in the Endings menu (Pelvis tilts the whole body)."  (text, line 393)
 - "Freq 7 (the pirate broadcast): voice lines and songs take turns, and warnings cut in. The Combine jam it every lc_freq7_hold minutes on green (faster on yellow and red, never during a blackout). Recordings go in the sound addon's radio/ folder. lc_freq7_status shows where it is."  (text, line 394)
-- "Morning exercise: use the editor to place a jogging route (stops in order; the first is the start), an exercise yard (stand where the rows will be, and aim at the leader's spot) and a parade route (stops in order). Every lc_exercise_every dawns (2), one of them runs, taking turns (lc_exercise_kinds). lc_exercise <jog\|drill\|parade> starts one now, lc_exercise next shows which is next, lc_exercise stop ends it."  (text, line 395)
+- "Morning exercise: use the editor to place a jogging route (stops in order; the first is the start, where the drill is held too; an exercise yard is optional) and a parade route (stops in order). Every lc_exercise_every dawns (2), one of them runs, taking turns (lc_exercise_kinds). lc_exercise <jog\|drill\|parade> starts one now, lc_exercise next shows which is next, lc_exercise stop ends it."  (text, line 395)
 - "The Administrator's address: place a speech stand and a speech crowd point (editor) and her speeches become attended: the city gathers, absentees are beaten to the crowd, and with nobody playing her the city's own Administrator speaks once a day (lc_speech_city)."  (text, line 396)
 - "NPCs losing track of you in a chase? Path mapping (editor panel, Paths and doors, or !pathmap) places path nodes as you walk the streets, stairs and alleys, links them and saves them with the map. Noclip pauses it; lc_pathmap_undo removes the nodes placed this session."  (text, line 397)
 - "Every setting in the editor panel is saved with the map as soon as you change it, so your values survive a restart."  (text, line 398)
@@ -9787,148 +9787,148 @@ Made from version b77d63b. Admin-only console messages and log lines are left ou
 
 `gamemodes/livingcity/gamemode/modules/server/sv_livingcity_exercise.lua`
 
-- "Morning jog"  (text, line 83)
-- "Morning drill"  (text, line 83)
-- "Morning parade"  (text, line 83)
+- "Morning jog"  (text, line 84)
+- "Morning drill"  (text, line 84)
+- "Morning parade"  (text, line 84)
 
 > Note for you (not shown in game): part of: where
 
-- "the assembly point"  (text, line 93)
+- "the assembly point"  (text, line 94)
 
 > Note for you (not shown in game): (on the jog: "Move it!", "Keep moving!", never "First warning, move away", which sounded like being told to get back)
 
-- "Keep up, citizen."  (text, line 297)
-- "Do it properly."  (text, line 297)
-- "Louder, citizen. With feeling."  (text, line 297)
-- "Exercise is mandatory."  (text, line 297)
-- "The Administrator is speaking. Attendance is mandatory."  (text, line 297)
+- "Keep up, citizen."  (text, line 304)
+- "Do it properly."  (text, line 304)
+- "Louder, citizen. With feeling."  (text, line 304)
+- "Exercise is mandatory."  (text, line 304)
+- "The Administrator is speaking. Attendance is mandatory."  (text, line 304)
 
 > Note for you (not shown in game): on the jog, a shove on along the route: toward the next marker
 
-- "[Civil Protection] A crack with the stick. {absent}"  (chat message, line 351)
+- "[Civil Protection] A crack with the stick. {absent}"  (chat message, line 358)
 
 > Note for you (not shown in game): part of: tell
 
-- "[{or}] {msg}"  (chat message, line 447)
+- "[{or}] {msg}"  (chat message, line 454)
 
 > Note for you (not shown in game): part of: setup drill
 
-- "You lead the drill this morning. Stand at the front of the yard (the marker) facing the rows: every move you make (crouch, jump, spin, a step left, right, forward or back) is called out for them to copy, one every few seconds. Stand still and the instructor fills in."  (chat message, line 604)
+- "You lead the drill this morning. Stand at the front of the yard (the marker) facing the rows: every move you make (crouch, jump, spin, a step left, right, forward or back) is called out for them to copy, one every few seconds. Stand still and the instructor fills in."  (chat message, line 611)
 
 > Note for you (not shown in game): part of: join
 
-- "Late. It has been noted."  (chat message, line 708)
+- "Late. It has been noted."  (chat message, line 715)
 
 > Note for you (not shown in game): part of: start run
 
-- "You're leading. Go."  (chat message, line 746)
-- "Union fitness instructor"  (text, line 758)
-- "Go! Keep jogging, and keep up with the pace marker."  (chat message, line 796)
-- "Stay on your place (the ring) and copy every move. Mistakes are counted."  (chat message, line 797)
-- "Here they come. Cheer! (/cheer, /salute, chant in chat, jump.) Enthusiasm is watched."  (chat message, line 798)
-- "You didn't report. Get there now: {center}. Civil Protection units are looking for you."  (chat message, line 801)
+- "You're leading. Go."  (chat message, line 753)
+- "Union fitness instructor"  (text, line 765)
+- "Go! Keep jogging, and keep up with the pace marker."  (chat message, line 803)
+- "Stay on your place (the ring) and copy every move. Mistakes are counted."  (chat message, line 804)
+- "Here they come. Cheer! (/cheer, /salute, chant in chat, jump.) Enthusiasm is watched."  (chat message, line 805)
+- "You didn't report. Get there now: {center}. Civil Protection units are looking for you."  (chat message, line 808)
 
 > Note for you (not shown in game): part of: truants
 
-- "[Civil Protection] Morning exercise is mandatory. Report to {center}. Now."  (chat message, line 823)
+- "[Civil Protection] Morning exercise is mandatory. Report to {center}. Now."  (chat message, line 830)
 
 > Note for you (not shown in game): part of: jog think
 
-- "You're falling behind the pace. Run."  (chat message, line 920)
-- "That's not jogging. Pick it up."  (chat message, line 920)
+- "You're falling behind the pace. Run."  (chat message, line 927)
+- "That's not jogging. Pick it up."  (chat message, line 927)
 
 > Note for you (not shown in game): The drill
 
-- "Turn around, all the way!"  (text, line 941)
-- "Step left!"  (text, line 941)
-- "Step right!"  (text, line 942)
-- "Step forward!"  (text, line 942)
-- "Step back!"  (text, line 942)
+- "Turn around, all the way!"  (text, line 948)
+- "Step left!"  (text, line 948)
+- "Step right!"  (text, line 949)
+- "Step forward!"  (text, line 949)
+- "Step back!"  (text, line 949)
 
 > Note for you (not shown in game): part of: rope start
 
-- "Skipping! Jump on every beat of the rope."  (chat message, line 1002)
+- "Skipping! Jump on every beat of the rope."  (chat message, line 1009)
 
 > Note for you (not shown in game): part of: drill think
 
-- "The rope catches your ankles."  (text, line 1074)
-- "Too slow."  (text, line 1096)
-- "Wrong move."  (text, line 1097)
+- "The rope catches your ankles."  (text, line 1081)
+- "Too slow."  (text, line 1103)
+- "Wrong move."  (text, line 1104)
 
 > Note for you (not shown in game): your own place, not someone else's
 
-- "Back to your place."  (text, line 1105)
+- "Back to your place."  (text, line 1112)
 
 > Note for you (not shown in game): The parade
 
-- "long live"  (text, line 1142)
+- "long live"  (text, line 1149)
 
 > Note for you (not shown in game): part of: parade think
 
-- "[Civil Protection] Show some enthusiasm, citizen."  (chat message, line 1276)
+- "[Civil Protection] Show some enthusiasm, citizen."  (chat message, line 1283)
 
 > Note for you (not shown in game): Afterwards
 
-- "[Union] Exemplary citizens are served first: a hot breakfast, and coffee. You feel well fed."  (chat message, line 1366)
+- "[Union] Exemplary citizens are served first: a hot breakfast, and coffee. You feel well fed."  (chat message, line 1373)
 
 > Note for you (not shown in game): part of: breakfast
 
-- "[Union] For citizens of good standing: breakfast."  (chat message, line 1369)
-- "[Union] Rations are issued at the usual distribution. Breakfast is for citizens of good standing."  (chat message, line 1371)
+- "[Union] For citizens of good standing: breakfast."  (chat message, line 1376)
+- "[Union] Rations are issued at the usual distribution. Breakfast is for citizens of good standing."  (chat message, line 1378)
 
 > Note for you (not shown in game): standing: for doing it, and doing it well
 
-- "You didn't finish."  (chat message, line 1385)
+- "You didn't finish."  (chat message, line 1392)
 
 > Note for you (not shown in game): part of: exercise finish
 
-- "Poor showing at the {kind}"  (text, line 1393)
+- "Poor showing at the {kind}"  (text, line 1400)
 
 > Note for you (not shown in game): said plainly, on screen: what it earned (the owner: a small reward for doing it)
 
-- "morning exercise"  (text, line 1396)
-- "Done. %+d Civil Standing%s."  (message, line 1399)
-- "and %d credits"  (message, line 1399)
-- "A poor showing: %d Civil Standing."  (message, line 1400)
+- "morning exercise"  (text, line 1403)
+- "Done. %+d Civil Standing%s."  (message, line 1406)
+- "and %d credits"  (message, line 1406)
+- "A poor showing: %d Civil Standing."  (message, line 1407)
 
 > Note for you (not shown in game): part of: exercise finish
 
-- "Led the morning drill"  (text, line 1405)
-- "Skipped morning exercise"  (text, line 1408)
+- "Led the morning drill"  (text, line 1412)
+- "Skipped morning exercise"  (text, line 1415)
 
 > Note for you (not shown in game): and a reprimand they can't miss: their next ration is withheld (sv_livingcity_survival.lua)
 
-- "you skipped morning exercise"  (text, line 1410)
-- "You skipped morning exercise: -10 Civil Standing{or}"  (on-screen notice, line 1412)
+- "you skipped morning exercise"  (text, line 1417)
+- "You skipped morning exercise: -10 Civil Standing{or}"  (on-screen notice, line 1419)
 
 > Note for you (not shown in game): What it means, for the person reading the announcement (sv_livingcity_events.lua).
 
-- "the assembly point"  (text, line 1457)
-- ": citizens report {where} within {secs} seconds. Civil Protection units are posted automatically; anyone shirking gets the stick."  (text, line 1460)
-- "for citizens, {where}."  (text, line 1462)
+- "the assembly point"  (text, line 1464)
+- ": citizens report {where} within {secs} seconds. Civil Protection units are posted automatically; anyone shirking gets the stick."  (text, line 1467)
+- "for citizens, {where}."  (text, line 1469)
 
 > Note for you (not shown in game): part of: exercise means
 
-- "Report to the start of the jogging route, {where}, within {secs} seconds (your HUD points the way). Then run it: keep jogging and keep up with the pace marker, or Civil Protection units along the route use the stick (which does speed you up)."  (text, line 1464)
-- "Report to the exercise yard, {where}, within {secs} seconds. Take your place in the rows and copy every move (crouch, jump, spin, a step); jump on every beat when the rope comes out. Too many mistakes and you get the stick."  (text, line 1467)
-- "Line the parade route, {where}, within {secs} seconds, and cheer the column as it passes: /cheer, /salute, chant in chat, jump. Your enthusiasm is on screen; let it drop as they pass and a Civil Protection unit sees to it."  (text, line 1470)
+- "Report to the start of the jogging route, {where}, within {secs} seconds (your HUD points the way). Then run it: keep jogging and keep up with the pace marker, or Civil Protection units along the route use the stick (which does speed you up)."  (text, line 1471)
+- "Report to the exercise yard, {where}, within {secs} seconds. Take your place in the rows and copy every move (crouch, jump, spin, a step); jump on every beat when the rope comes out. Too many mistakes and you get the stick."  (text, line 1474)
+- "Line the parade route, {where}, within {secs} seconds, and cheer the column as it passes: /cheer, /salute, chant in chat, jump. Your enthusiasm is on screen; let it drop as they pass and a Civil Protection unit sees to it."  (text, line 1477)
 
 > Note for you (not shown in game): a timer (regularly)
 
-- "You're well fed. Work goes better on a full stomach (+15% XP)."  (chat message, line 1551)
+- "You're well fed. Work goes better on a full stomach (+15% XP)."  (chat message, line 1558)
 
 > Note for you (not shown in game): For the admin
 
-- "Exercise stopped."  (text, line 1568)
-- "No exercise on."  (text, line 1568)
+- "Exercise stopped."  (text, line 1575)
+- "No exercise on."  (text, line 1575)
 
 > Note for you (not shown in game): the console command lc_exercise
 
-- "Next morning exercise: {or}. Every {GetInt} morning(s), at dawn. lc_exercise <jog\|drill\|parade> starts one now."  (text, line 1573)
-- "Start the city first."  (text, line 1578)
-- "Place an exercise yard first (editor: Point: exercise yard)."  (text, line 1580)
-- "Place a {or} first (two or more stops, in order)."  (text, line 1581)
-- "Couldn't start it."  (text, line 1584)
+- "Next morning exercise: {or}. Every {GetInt} morning(s), at dawn. lc_exercise <jog\|drill\|parade> starts one now."  (text, line 1580)
+- "Start the city first."  (text, line 1585)
+- "Place a jogging route first (the drill is held at its start), or an exercise yard (editor: Point: exercise yard)."  (text, line 1587)
+- "Place a {or} first (two or more stops, in order)."  (text, line 1588)
+- "Couldn't start it."  (text, line 1591)
 
 ## sv_livingcity_factions.lua (sv_livingcity_factions.lua)
 

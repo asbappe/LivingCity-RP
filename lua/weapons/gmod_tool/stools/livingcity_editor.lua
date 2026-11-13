@@ -50,7 +50,7 @@ local MODES = {
     { id = "adminpower",  label = "Her last stand: the Administrator's power (place 2 or 3; # is its guards: 1 manhacks, 2 turrets, 3 mines; its glass screen goes on the side facing you; her shield holds till all are destroyed)", group = true },
     { id = "studio",      label = "Point: broadcast studio (the Administrator speaks here, filmed live, when no player is Director of Propaganda)" },
     { id = "jogroute",    label = "Point: jogging route stop (morning jog: place them in order round the route, the first is the start; route #)", group = true },
-    { id = "yard",        label = "Point: exercise yard (morning drill: stand where the rows of citizens will be and aim at where the leader stands)" },
+    { id = "yard",        label = "Point: exercise yard (optional: the morning drill is held at the jogging route's start without one; stand where the rows of citizens will be and aim at where the leader stands)" },
     { id = "parade",      label = "Point: parade route stop (morning parade: in order, the first is where the column forms up; route #)", group = true },
     { id = "sterm",       label = "Point: stalker terminal (a Combine zone's stalker works a terminal here: stand where it should stand, facing the terminal, and aim at the floor at your feet)" },
     { id = "lz",          label = "Point: Overwatch landing zone (a dropship brings soldiers down here: open sky above it)" },

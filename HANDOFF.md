@@ -33,6 +33,6 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 - Unseen in game: the podium model and placement, the salute pose on citizens, the pine model names (Episode Two guesses, filtered by `util.IsValidModel`), the crowd rows.
 - Next from TODO.md (owner said yes): number-key quick menus for CP search, interrogation and the talk window; struggle at cuffs shown without a bar; posters hinting at dreams; the "save with the gamemode" tool; a new dream (airboat race or obstacle course); dynamic speeches from events and the Resistance's answer.
 - Full suite (run_parallel, 13 November): all pass but a few dream tests that pass alone or are random ("a melon, dropped behind" fails about one run in two since the forest's random rolls).
-- The owner has only ever seen the jog: the drill needs a "Point: exercise yard" (asked them to run `lc_exercise drill`).
+- The drill is now held at the jogging route's start when no exercise yard is placed (owner-asked; `LC.ExerciseYards`): the owner had only ever seen the jog.
 - Earlier, still open: arm pose and baton glow need the owner's eyes; Careless Talk's vortigaunt delay; the chronicle file after a week; voice cue chattiness; the cuffed pose; the loading screen not hosted; job boards at terminals to settle.
 - History of every earlier chat: `TIMELINE.md`, `CORE_CHANGELOG.md`.

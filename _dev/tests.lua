@@ -15921,6 +15921,20 @@ local inst = X2 and X2.instructor
 LC.EndEvent(false)
 ok(not (IsValid(inst) and LC.NPCs[inst] and LC.NPCs[inst].unmanaged), "and goes on their way afterwards")
 LC.RemovePoint(yard)
+-- no yard point: the drill is held at the jogging route's start (the owner, 13 November)
+do
+    local hadYard = false
+    for _, p in ipairs(LC.Points or {}) do if p.kind == "yard" then hadYard = true end end
+    if not hadYard then
+        local j1 = LC.AddPoint(D0 + Vector(0, 3000, 0), 90, "jogroute", 7)
+        local j2 = LC.AddPoint(D0 + Vector(800, 3000, 0), 90, "jogroute", 7)
+        local ys = LC.ExerciseYards()
+        local atStart = false
+        for _, y in ipairs(ys) do if y == j1 then atStart = true end end
+        ok(LC.ExerciseReady("drill") and atStart, "with no exercise yard, the drill is held at the start of the jogging route")
+        LC.RemovePoint(j1) LC.RemovePoint(j2)
+    end
+end
 for _, p in ipairs({ medic, d1, d2 }) do p:SetPos(Vector(-120000, -120000, 0)) end
 _walls = savedWalls
 end

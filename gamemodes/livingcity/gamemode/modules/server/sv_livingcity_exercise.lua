@@ -13,9 +13,10 @@
               along the route at lc_jog_pace) gets the stick: and a few
               seconds of extra speed to catch back up (lc_jog_boost).
 
-      drill   The morning drill. At the exercise yard ("Point: exercise yard":
-              place it where the leader stands, from where the citizens will
-              be). Everyone gets a place in rows in front of the leader and
+      drill   The morning drill. At the start of the jogging route (the leader
+              stands there, the rows in front of it, the way the point faces),
+              or at an exercise yard if one is placed ("Point: exercise yard",
+              optional: where the leader stands). Everyone gets a place in rows in front of the leader and
               copies the leader's moves: crouch, jump, spin, step left, right,
               forward or back. The leader is a player Clinic Medic or Records
               Clerk if one is there (their own moves are called out), or else a
@@ -178,11 +179,17 @@ function LC.LayJogNodes()
     return changed
 end
 
+-- The drill's yard: an exercise yard point if one is placed, else the start of each jogging route (the owner,
+-- 13 November: "just make the jogging start point into the exercise yard point, they can be the same").
 local function Yards()
     local out = {}
     for _, p in ipairs(LC.Points or {}) do if p.kind == "yard" then out[#out + 1] = p end end
+    if #out == 0 then
+        for _, r in ipairs(Routes("jogroute")) do out[#out + 1] = r[1] end
+    end
     return out
 end
+LC.ExerciseYards = Yards
 
 function LC.ExerciseReady(kind)
     if kind == "jog" then return #Routes("jogroute") > 0 end
@@ -1570,14 +1577,14 @@ concommand.Add("lc_exercise", function(ply, _, args)
     end
     if a == "next" or a == "" then
         local k = LC.NextExercise(false)
-        Reply("Next morning exercise: " .. (k and NAMES[k] or "none (place a jogging route, an exercise yard or a parade route)") ..
+        Reply("Next morning exercise: " .. (k and NAMES[k] or "none (place a jogging route or a parade route)") ..
             ". Every " .. math.max(1, cvEvery:GetInt()) .. " morning(s), at dawn. lc_exercise <jog|drill|parade> starts one now.")
         return
     end
     if not LC.ExerciseKinds[a] then Reply("lc_exercise <jog|drill|parade|next|stop>") return end
     if not LC.Running then Reply("Start the city first.") return end
     if not LC.ExerciseReady(a) then
-        Reply(a == "drill" and "Place an exercise yard first (editor: Point: exercise yard)."
+        Reply(a == "drill" and "Place a jogging route first (the drill is held at its start), or an exercise yard (editor: Point: exercise yard)."
             or ("Place a " .. (a == "jog" and "jogging route" or "parade route") .. " first (two or more stops, in order)."))
         return
     end

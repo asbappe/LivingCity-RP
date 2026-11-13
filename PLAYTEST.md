@@ -1846,3 +1846,5 @@ Type them in the server console on the host panel, or in your own game console (
   Notes:
 - [ ] **Her own stitched speech:** with nobody as Administrator, on a morning with no exercise, let it reach midday (or set lc_speech_city_hour). Does she say an opening, a few lines about what really happened lately (arrests, a beating, posters...), one about the mood, and a closing, one after another? Are the pauses between pieces right?
   Notes:
+- [ ] **The drill at the jogging start:** with no exercise yard placed, run `lc_exercise drill`: does the leader stand at the jogging route's first stop with the rows in front of it? If the rows land in a wall, turn that stop to face open ground (the rows form the way it faces).
+  Notes:
