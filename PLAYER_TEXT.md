@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version 88d1582. Admin-only console messages and log lines are left out.
+Made from version 904aacf. Admin-only console messages and log lines are left out.
 
-12060 lines, from 323 files.
+12070 lines, from 323 files.
 
 ## Contents
 
@@ -284,7 +284,7 @@ Made from version 88d1582. Admin-only console messages and log lines are left ou
 - [save files written safely](#save-files-written-safely-svlivingcitysafefilelua) (7)
 - [salvage, bins anywhere, the reclamation point, and workbenches](#salvage-bins-anywhere-the-reclamation-point-and-workbenches-svlivingcitysalvagelua) (42)
 - [flying a scanner from a Combine console](#flying-a-scanner-from-a-combine-console-svlivingcityscannerlua) (46)
-- [getting by](#getting-by-svlivingcityscavengelua) (76)
+- [getting by](#getting-by-svlivingcityscavengelua) (85)
 - [Combine-only areas](#combine-only-areas-svlivingcitysecuritylua) (10)
 - [sentences that fit the crimes, the work detail, probation](#sentences-that-fit-the-crimes-the-work-detail-probation-svlivingcitysentencelua) (58)
 - [jobs that come with supply drops, and Union work orders that](#jobs-that-come-with-supply-drops-and-union-work-orders-that-svlivingcitysidejobslua) (96)
@@ -300,7 +300,7 @@ Made from version 88d1582. Admin-only console messages and log lines are left ou
 - [the city's stores](#the-citys-stores-svlivingcitystockpilelua) (8)
 - [places to keep things](#places-to-keep-things-svlivingcitystoragelua) (44)
 - [story chains](#story-chains-svlivingcitystorieslua) (355)
-- [strange dreams (Happy and Neutral dreams you play)](#strange-dreams-happy-and-neutral-dreams-you-play-svlivingcitystrangedreamslua) (82)
+- [strange dreams (Happy and Neutral dreams you play)](#strange-dreams-happy-and-neutral-dreams-you-play-svlivingcitystrangedreamslua) (83)
 - [ten more strange dreams (dreams you play)](#ten-more-strange-dreams-dreams-you-play-svlivingcitystrangedreams2lua) (331)
 - [ten more strange dreams, nonsense on purpose](#ten-more-strange-dreams-nonsense-on-purpose-svlivingcitystrangedreams3lua) (235)
 - [crime between citizens (the owner, 10 November: "citizen](#crime-between-citizens-the-owner-10-november-citizen-svlivingcitystreetcrimelua) (51)
@@ -1095,7 +1095,7 @@ Made from version 88d1582. Admin-only console messages and log lines are left ou
 - "Homemade guns and ammo sell at the black market, and for more at the quartermaster. The risky part is getting them there."  (text, line 217)
 - "F3 > Give hands an item to whoever you're looking at. With a lockpick, a prisoner can pick their cell lock."  (text, line 218)
 - "In a cell with a Combine console? Press E on it to fly a city scanner while your body stays in the cell. Taking a flash photo of a Civil Protection unit adds a minute to your sentence. Photographing rebels, free vortigaunts, wanted people or zombies from about ten feet away earns Civil Standing (never time off your sentence) and marks them for every unit. Scanners can't see into or through smoke."  (text, line 219)
-- "Spray cans paint the lambda symbol on walls. Civil Protection units and loyal citizens scrub tags off with E."  (text, line 220)
+- "Spray cans paint a mark on walls: pressing Spray at a bare wall asks which (the lambda, the tally with one too many, or NO RECORD). Civil Protection units and loyal citizens scrub tags off with E."  (text, line 220)
 - "Civil Protection units: smoke, flashbang and gas grenades unlock as you rank up. The Grenades weapon throws them; R switches type."  (text, line 221)
 - "Request resupply (Radio menu: radio out, right click): a shield scanner comes down out of the open sky with a small crate of the three things you're shortest of (ammo under 30%, health, your vest), cuffs back to three and a grenade for your rank. Not indoors or underground: stand under the sky. One every five minutes."  (text, line 222)
 - "Ammo: you carry no more than Half-Life 2 lets you: pistol 150, SMG 225, shotgun 30, pulse rifle 60, .357 12, crossbow 10, grenades 5. Anything past that isn't picked up."  (text, line 223)
@@ -4626,15 +4626,15 @@ Made from version 88d1582. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): How it looks
 
-- "$pp_colour_addr"  (text, line 299)
-- "$pp_colour_addg"  (text, line 299)
-- "$pp_colour_addb"  (text, line 299)
-- "$pp_colour_brightness"  (text, line 299)
-- "$pp_colour_contrast"  (text, line 300)
-- "$pp_colour_colour"  (text, line 300)
-- "$pp_colour_mulr"  (text, line 300)
-- "$pp_colour_mulg"  (text, line 300)
-- "$pp_colour_mulb"  (text, line 300)
+- "$pp_colour_addr"  (text, line 331)
+- "$pp_colour_addg"  (text, line 331)
+- "$pp_colour_addb"  (text, line 331)
+- "$pp_colour_brightness"  (text, line 331)
+- "$pp_colour_contrast"  (text, line 332)
+- "$pp_colour_colour"  (text, line 332)
+- "$pp_colour_mulr"  (text, line 332)
+- "$pp_colour_mulg"  (text, line 332)
+- "$pp_colour_mulb"  (text, line 332)
 
 ## cl_livingcity_suit.lua (cl_livingcity_suit.lua)
 
@@ -4848,23 +4848,23 @@ Made from version 88d1582. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: pot label
 
-- "Empty pot"  (text, line 269)
-- "Plant a seed packet (E)"  (text, line 269)
-- "Ripe vegetables"  (text, line 270)
-- "Ripe in %d:%02d"  (message, line 272)
+- "Empty pot"  (text, line 300)
+- "Plant a seed packet (E)"  (text, line 300)
+- "Ripe vegetables"  (text, line 301)
+- "Ripe in %d:%02d"  (message, line 303)
 
 > Note for you (not shown in game): on screen
 
-- "%d meal%s stored"  (message, line 288)
+- "%d meal%s stored"  (message, line 319)
 
 > Note for you (not shown in game): the Resistance see when the next supplies are due (sv_livingcity_scavenge.lua, LC.FoodRestock)
 
-- ". More supplies in about %d minute%s"  (message, line 293)
+- ". More supplies in about %d minute%s"  (message, line 324)
 
 > Note for you (not shown in game): on screen
 
-- "Step in and they'll open fire."  (text, line 381)
-- "You're inside. They will shoot."  (text, line 385)
+- "Step in and they'll open fire."  (text, line 412)
+- "You're inside. They will shoot."  (text, line 416)
 
 ## cl_livingcity_ways.lua (cl_livingcity_ways.lua)
 
@@ -18343,68 +18343,83 @@ Made from version 88d1582. Admin-only console messages and log lines are left ou
 - "fed the Resistance"  (text, line 639)
 - "[Resistance] You add %d meal%s to the stores. %d in the crate."  (message, line 641)
 
+> Note for you (not shown in game): What a spray can can put on a wall (the owner, 13 November: "the player chooses which tag from the spray can's menu"). The lambda is the game's own decal; the others are the owner's pictures in materials/livingcity/graffiti/<id>.png, painted as decals too (cl_livingcity_war.lua). A mark whose picture isn't on the server isn't offered; with none of them there, the can sprays the lambda without asking, as it always did.
+
+- "The lambda"  (label, line 688)
+- "Spraying the lambda"  (what someone is doing, line 688)
+- "The tally, with one too many"  (label, line 689)
+- "Spraying the tally"  (what someone is doing, line 689)
+
 > Note for you (not shown in game): part of: spray
 
-- "Look at a wall, up close."  (text, line 683)
+- "Look at a wall, up close."  (text, line 706)
 
 > Note for you (not shown in game): a poster on this wall: paint over it instead (entities/lc_civposter.lua, LC.DefacePoster)
 
-- "Someone has seen to this one already."  (text, line 687)
-- "That one is ours."  (text, line 688)
-- "Painting over the poster... keep looking at it"  (progress bar, line 689)
-- "You stop, half done, and the paint runs."  (text, line 690)
+- "Someone has seen to this one already."  (text, line 710)
+- "That one is ours."  (text, line 711)
+- "Painting over the poster... keep looking at it"  (progress bar, line 712)
+- "You stop, half done, and the paint runs."  (text, line 713)
 
 > Note for you (not shown in game): part of: done
 
-- "[Civil Protection] A Civil Protection unit saw that."  (chat message, line 698)
+- "[Civil Protection] A Civil Protection unit saw that."  (chat message, line 721)
 
 > Note for you (not shown in game): part of: spray
 
-- "There's already one here."  (text, line 705)
-- "Spraying the lambda... keep looking at the wall"  (progress bar, line 706)
-- "You stop, half done, and the paint runs."  (text, line 707)
+- "There's already one here."  (text, line 728)
+- "Never mind"  (text, line 733)
+- "Spray can"  (title, line 734)
+- "One can, one mark"  (text, line 734)
+- "What goes on the wall?"  (text, line 734)
+- "... keep looking at the wall"  (progress bar, line 739)
+- "You stop, half done, and the paint runs."  (text, line 740)
 
 > Note for you (not shown in game): part of: done
 
-- "[Civil Protection] A Civil Protection unit saw that."  (chat message, line 717)
+- "[Civil Protection] A Civil Protection unit saw that."  (chat message, line 750)
+
+> Note for you (not shown in game): part of: spraytag
+
+- "Spray can"  (on-screen notice, line 776)
 
 > Note for you (not shown in game): A Resistance paste-up from your pockets, onto a bare wall (the owner, 10 November). One of their four, not the same as the last one you put up. Anyone holding one can paste it: sympathisers too.
 
-- "Look at a wall, up close."  (text, line 739)
-- "There's a poster here already. A spray can would deal with it."  (text, line 740)
-- "Pasting it up... keep looking at the wall"  (progress bar, line 741)
-- "You stop, and the paper curls off the wall."  (text, line 742)
+- "Look at a wall, up close."  (text, line 784)
+- "There's a poster here already. A spray can would deal with it."  (text, line 785)
+- "Pasting it up... keep looking at the wall"  (progress bar, line 786)
+- "You stop, and the paper curls off the wall."  (text, line 787)
 
 > Note for you (not shown in game): part of: done
 
-- "It won't stick."  (chat message, line 749)
-- "[Civil Protection] A Civil Protection unit saw that."  (chat message, line 755)
+- "It won't stick."  (chat message, line 794)
+- "[Civil Protection] A Civil Protection unit saw that."  (chat message, line 800)
 
 > Note for you (not shown in game): part of: clean tag
 
-- "Paint over our own? No."  (text, line 765)
-- "Scrubbing it off..."  (progress bar, line 766)
-- "You leave it half scrubbed."  (text, line 767)
+- "Paint over our own? No."  (text, line 810)
+- "Scrubbing it off..."  (progress bar, line 811)
+- "You leave it half scrubbed."  (text, line 812)
 
 > Note for you (not shown in game): part of: done
 
-- "cleaned up anticitizen graffiti"  (text, line 775)
-- "[Civil Protection] Gone. As if it never was."  (chat message, line 776)
-- "You scrub it off. Someone from the Union nods at you. +3 standing."  (chat message, line 780)
+- "cleaned up anticitizen graffiti"  (text, line 820)
+- "[Civil Protection] Gone. As if it never was."  (chat message, line 821)
+- "You scrub it off. Someone from the Union nods at you. +3 standing."  (chat message, line 825)
 
 > Note for you (not shown in game): part of: item use
 
-- "Find an empty pot in rebel territory."  (text, line 832)
-- "Something's already growing in that one."  (text, line 833)
+- "Find an empty pot in rebel territory."  (text, line 877)
+- "Something's already growing in that one."  (text, line 878)
 
 > Note for you (not shown in game): typing in chat
 
-- "You need a fishing line (the Commissary sells them)."  (chat message, line 878)
+- "You need a fishing line (the Commissary sells them)."  (chat message, line 923)
 
 > Note for you (not shown in game): the game's living city tagged moment
 
-- "Someone painted the lambda up {or}. Bold."  (text, line 887)
-- "There's a lambda on the wall {or}. Civil Protection will have it off by morning."  (text, line 888)
+- "Someone painted the lambda up {or}. Bold."  (text, line 932)
+- "There's a lambda on the wall {or}. Civil Protection will have it off by morning."  (text, line 933)
 
 ## Combine-only areas (sv_livingcity_security.lua)
 
@@ -20164,123 +20179,127 @@ Made from version 88d1582. Admin-only console messages and log lines are left ou
 `gamemodes/livingcity/gamemode/modules/server/sv_livingcity_strangedreams.lua`
 
 
+> Note for you (not shown in game): One of the dreams' own surfaces (the owner's pictures, materials/livingcity/dreams/<name>.jpg; each player's game makes the material, cl_livingcity_strangedreams.lua), or plain white, as these blocks always were, while the picture isn't on the server.
+
+- "!lc_dream_{name}"  (text, line 103)
+
 > Note for you (not shown in game): The Cheese Dream
 
-- "The Cheese Dream"  (name, line 255)
-- "Sometimes... I dream about cheese."  (text, line 256)
-- "Sometimes... I dream... about... cheese."  (text, line 256)
-- "Gather the glowing cheese (golden counts three). You're light as a crumb: jump onto the floating slabs. Keep out of the way of the rolling wheels."  (text, line 257)
-- "The cheese melts away"  (text, line 258)
-- "The plain of cheese drips into the dark, and you wake, hungry."  (text, line 258)
-- "The Cheese Dream"  (name, line 259)
-- "The Big Cheese"  (text, line 260)
-- "You wake with the taste of a cheese that doesn't exist anymore. Somewhere, a man and a woman are still talking about it."  (text, line 260)
-- "You wake feeling rolled thin. It was only cheese. Only cheese."  (text, line 261)
-- "You wake up. Sometimes you dream about cheese. Now you know why."  (text, line 262)
+- "The Cheese Dream"  (name, line 268)
+- "Sometimes... I dream about cheese."  (text, line 269)
+- "Sometimes... I dream... about... cheese."  (text, line 269)
+- "Gather the glowing cheese (golden counts three). You're light as a crumb: jump onto the floating slabs. Keep out of the way of the rolling wheels."  (text, line 270)
+- "The cheese melts away"  (text, line 271)
+- "The plain of cheese drips into the dark, and you wake, hungry."  (text, line 271)
+- "The Cheese Dream"  (name, line 272)
+- "The Big Cheese"  (text, line 273)
+- "You wake with the taste of a cheese that doesn't exist anymore. Somewhere, a man and a woman are still talking about it."  (text, line 273)
+- "You wake feeling rolled thin. It was only cheese. Only cheese."  (text, line 274)
+- "You wake up. Sometimes you dream about cheese. Now you know why."  (text, line 275)
 
 > Note for you (not shown in game): part of: tick
 
-- "A great wheel of cheese rolls right over you."  (text, line 393)
-- "Golden cheese"  (on-screen notice, line 407)
-- "Three at once. The world turns inside out for a moment."  (on-screen notice, line 407)
-- "The Big Cheese"  (text, line 410)
-- "Your arms are full of cheese. The heads in the sky sing your name. Well: they sing "cheese"."  (text, line 410)
+- "A great wheel of cheese rolls right over you."  (text, line 433)
+- "Golden cheese"  (on-screen notice, line 448)
+- "Three at once. The world turns inside out for a moment."  (on-screen notice, line 448)
+- "The Big Cheese"  (text, line 451)
+- "Your arms are full of cheese. The heads in the sky sing your name. Well: they sing "cheese"."  (text, line 451)
 
 > Note for you (not shown in game): part of: state
 
-- "Gather the glowing cheese!"  (text, line 426)
-- "Cheese: %d of %d"  (message, line 428)
+- "Gather the glowing cheese!"  (text, line 467)
+- "Cheese: %d of %d"  (message, line 469)
 
 > Note for you (not shown in game): (three lives since 11 November: the owner, "if they sit while the music is still playing they lose a life". Before, one.)
 
-- "Musical Chairs"  (name, line 443)
-- "Walk round the chairs while the music plays. When it stops, get to a free chair and press Use to sit in it. No chair, you're out. Try to sit while the music is still playing and you lose a life."  (text, line 445)
-- "The music never stops"  (text, line 446)
-- "The chairs keep drifting round and round, and you drift awake."  (text, line 446)
-- "Musical Chairs"  (name, line 447)
-- "The last one sitting"  (text, line 448)
-- "You wake up sitting bolt upright in bed, and nobody can take it from you."  (text, line 448)
-- "No chair for you"  (text, line 449)
-- "You wake with a tune stuck in your head and the feeling that a chair laughed at you."  (text, line 449)
-- "Round and round"  (text, line 450)
-- "You wake dizzy, humming. Were there always that many chairs?"  (text, line 450)
+- "Musical Chairs"  (name, line 484)
+- "Walk round the chairs while the music plays. When it stops, get to a free chair and press Use to sit in it. No chair, you're out. Try to sit while the music is still playing and you lose a life."  (text, line 486)
+- "The music never stops"  (text, line 487)
+- "The chairs keep drifting round and round, and you drift awake."  (text, line 487)
+- "Musical Chairs"  (name, line 488)
+- "The last one sitting"  (text, line 489)
+- "You wake up sitting bolt upright in bed, and nobody can take it from you."  (text, line 489)
+- "No chair for you"  (text, line 490)
+- "You wake with a tune stuck in your head and the feeling that a chair laughed at you."  (text, line 490)
+- "Round and round"  (text, line 491)
+- "You wake dizzy, humming. Were there always that many chairs?"  (text, line 491)
 
 > Note for you (not shown in game): part of: tick
 
-- "Too soon!"  (text, line 537)
-- "You tried to sit while the music was still playing."  (text, line 537)
-- "No chair for you"  (text, line 577)
-- "The music stopped and every chair was taken. The chairs laugh at you (chairs can do that, here)."  (text, line 577)
-- "The last one sitting"  (text, line 585)
-- "The music stops for good. Yours is the only chair left, and it's very comfortable."  (text, line 585)
+- "Too soon!"  (text, line 578)
+- "You tried to sit while the music was still playing."  (text, line 578)
+- "No chair for you"  (text, line 618)
+- "The music stopped and every chair was taken. The chairs laugh at you (chairs can do that, here)."  (text, line 618)
+- "The last one sitting"  (text, line 626)
+- "The music stops for good. Yours is the only chair left, and it's very comfortable."  (text, line 626)
 
 > Note for you (not shown in game): part of: state
 
-- "Get ready: the music's about to start."  (text, line 600)
-- "Keep walking round the chairs... (don't sit yet!)"  (text, line 601)
-- "You've got a chair."  (text, line 603)
-- "SIT! Press Use at a free chair!"  (text, line 603)
-- "Safe! One chair fewer..."  (text, line 604)
-- "Round %d     Chairs: %d"  (message, line 606)
+- "Get ready: the music's about to start."  (text, line 641)
+- "Keep walking round the chairs... (don't sit yet!)"  (text, line 642)
+- "You've got a chair."  (text, line 644)
+- "SIT! Press Use at a free chair!"  (text, line 644)
+- "Safe! One chair fewer..."  (text, line 645)
+- "Round %d     Chairs: %d"  (message, line 647)
 
 > Note for you (not shown in game): Wings
 
-- "You can fly! Jump, then jump again in the air to flap. Fly through the golden rings."  (text, line 619)
-- "Gently down"  (text, line 620)
-- "You float down, softly, softly, into your own bed."  (text, line 620)
-- "You flew"  (text, line 622)
-- "You wake up light as air. For a moment you're sure you could step off the roof and keep going. Don't."  (text, line 622)
-- "Gently down"  (text, line 623)
-- "You wake from a flying dream, arms spread, smiling."  (text, line 623)
+- "You can fly! Jump, then jump again in the air to flap. Fly through the golden rings."  (text, line 660)
+- "Gently down"  (text, line 661)
+- "You float down, softly, softly, into your own bed."  (text, line 661)
+- "You flew"  (text, line 663)
+- "You wake up light as air. For a moment you're sure you could step off the roof and keep going. Don't."  (text, line 663)
+- "Gently down"  (text, line 664)
+- "You wake from a flying dream, arms spread, smiling."  (text, line 664)
 
 > Note for you (not shown in game): part of: tick
 
-- "You flew"  (text, line 693)
-- "Through every ring, round the pigeons, over the dream. You actually flew."  (text, line 693)
+- "You flew"  (text, line 734)
+- "Through every ring, round the pigeons, over the dream. You actually flew."  (text, line 734)
 
 > Note for you (not shown in game): part of: state
 
-- "Jump, then jump again in the air to flap!"  (text, line 706)
-- "Rings: %d of %d"  (message, line 707)
+- "Jump, then jump again in the air to flap!"  (text, line 747)
+- "Rings: %d of %d"  (message, line 748)
 
 > Note for you (not shown in game): It's Raining Melons
 
-- "It's Raining Melons"  (name, line 719)
-- "Watermelons are falling! Stand on a green glow to catch one. A red glow is a lead melon: keep out from under it."  (text, line 720)
-- "The rain stops"  (text, line 721)
-- "The last melon lands, the sun comes out, and you wake."  (text, line 721)
-- "It's Raining Melons"  (name, line 722)
-- "You wake up full, and sticky, and happy. There's no melon anywhere. There never is."  (text, line 723)
-- "You wake with a bump on your head that isn't there. Lead melons. Who grows those?"  (text, line 724)
-- "The rain stops"  (text, line 725)
-- "You wake to the sound of rain and, for a moment, hope."  (text, line 725)
+- "It's Raining Melons"  (name, line 760)
+- "Watermelons are falling! Stand on a green glow to catch one. A red glow is a lead melon: keep out from under it."  (text, line 761)
+- "The rain stops"  (text, line 762)
+- "The last melon lands, the sun comes out, and you wake."  (text, line 762)
+- "It's Raining Melons"  (name, line 763)
+- "You wake up full, and sticky, and happy. There's no melon anywhere. There never is."  (text, line 764)
+- "You wake with a bump on your head that isn't there. Lead melons. Who grows those?"  (text, line 765)
+- "The rain stops"  (text, line 766)
+- "You wake to the sound of rain and, for a moment, hope."  (text, line 766)
 
 > Note for you (not shown in game): part of: melon land
 
-- "A lead melon. It's exactly as heavy as it sounds."  (text, line 771)
-- "Your arms are full of melons and the sky is still raining them. A perfect dream."  (text, line 775)
+- "A lead melon. It's exactly as heavy as it sounds."  (text, line 812)
+- "Your arms are full of melons and the sky is still raining them. A perfect dream."  (text, line 816)
 
 > Note for you (not shown in game): part of: state
 
-- "Catch the melons! Stand on the green glows."  (text, line 807)
-- "Melons: %d of %d"  (message, line 808)
-- "The Heads in the Sky"  (text, line 813)
-- "Cheeeeese. Cheeeeeeeese."  (text, line 813)
-- "a choir of giant floating heads, humming, slow, warm, reverb-heavy and slightly off-key"  (text, line 813)
-- "The Heads in the Sky"  (text, line 814)
-- "The golden cheese! The golden cheese!"  (text, line 814)
-- "the same choir, suddenly excited, overlapping, high-pitched"  (text, line 814)
-- "The Music Man"  (text, line 815)
-- "Ladies and gentlemen, musical chairs! When the music stops... sit."  (text, line 815)
-- "a cheerful old game-show host, a little too close to the microphone"  (text, line 815)
-- "The Music Man"  (text, line 816)
-- "the game-show host, sudden and loud"  (text, line 816)
-- "A Gentle Voice"  (text, line 817)
-- "Go on. You always knew you could. Just... flap."  (text, line 817)
-- "a soft, kind, dreamy narrator, almost whispering"  (text, line 817)
-- "The Weatherman"  (text, line 818)
-- "Today's forecast: melons. Heavy melons, with a chance of lead."  (text, line 818)
-- "a chirpy TV weatherman, completely serious about it"  (text, line 818)
+- "Catch the melons! Stand on the green glows."  (text, line 848)
+- "Melons: %d of %d"  (message, line 849)
+- "The Heads in the Sky"  (text, line 854)
+- "Cheeeeese. Cheeeeeeeese."  (text, line 854)
+- "a choir of giant floating heads, humming, slow, warm, reverb-heavy and slightly off-key"  (text, line 854)
+- "The Heads in the Sky"  (text, line 855)
+- "The golden cheese! The golden cheese!"  (text, line 855)
+- "the same choir, suddenly excited, overlapping, high-pitched"  (text, line 855)
+- "The Music Man"  (text, line 856)
+- "Ladies and gentlemen, musical chairs! When the music stops... sit."  (text, line 856)
+- "a cheerful old game-show host, a little too close to the microphone"  (text, line 856)
+- "The Music Man"  (text, line 857)
+- "the game-show host, sudden and loud"  (text, line 857)
+- "A Gentle Voice"  (text, line 858)
+- "Go on. You always knew you could. Just... flap."  (text, line 858)
+- "a soft, kind, dreamy narrator, almost whispering"  (text, line 858)
+- "The Weatherman"  (text, line 859)
+- "Today's forecast: melons. Heavy melons, with a chance of lead."  (text, line 859)
+- "a chirpy TV weatherman, completely serious about it"  (text, line 859)
 
 ## ten more strange dreams (dreams you play) (sv_livingcity_strangedreams2.lua)
 
@@ -23806,7 +23825,7 @@ Made from version 88d1582. Admin-only console messages and log lines are left ou
 - "Fishing line"  (name, line 192)
 - "Stand in the canal, or look at the water, and wait. Good for four to eight casts, then it snaps"  (description, line 193)
 - "Spray can"  (name, line 194)
-- "Look at a wall and spray the lambda, or at one of the city's posters to paint over it. Don't let a Civil Protection unit see you do it"  (description, line 196)
+- "Look at a wall and spray the lambda or another mark of ours, or at one of the city's posters to paint over it. Don't let a Civil Protection unit see you do it"  (description, line 196)
 
 > Note for you (not shown in game): (a Resistance poster to paste on a wall: Paste in sv_livingcity_scavenge.lua, entities/lc_civposter.lua)
 

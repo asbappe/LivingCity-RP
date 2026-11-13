@@ -96,16 +96,29 @@ local function Woke(lines)
     end
 end
 
--- A square floor of n by n plates round the dream point, its top at top; plates coloured by col(i, j).
-local function Plain(g, dream, maxN, col)
+-- One of the dreams' own surfaces (the owner's pictures, materials/livingcity/dreams/<name>.jpg; each
+-- player's game makes the material, cl_livingcity_strangedreams.lua), or plain white, as these blocks
+-- always were, while the picture isn't on the server.
+function LC.DreamArt(name)
+    if LC.HasArt and LC.HasArt("dreams/" .. name .. ".jpg") then return "!lc_dream_" .. name end
+    return "models/debug/debugwhite"
+end
+
+-- A square floor of n by n plates round the dream point, its top at top; plates coloured by col(i, j)
+-- (mat: its surface, plain white if not given).
+local function Plain(g, dream, maxN, col, mat)
     local half = LC.DreamGameHalf(dream)
     local n = math.Clamp(math.floor(half * 2 / PLATE8_S), 2, maxN or 2)
     local c = dream.pos
     local top = c.z + 2
     local x0, y0 = c.x - n * PLATE8_S / 2, c.y - n * PLATE8_S / 2
     for i = 1, n do for j = 1, n do
-        local f = Floor(g, PLATE8, x0 + (i - 0.5) * PLATE8_S, y0 + (j - 0.5) * PLATE8_S, top, col(i, j), "models/debug/debugwhite")
-        if IsValid(f) then f.lcKeepLook = true end -- (the floor stays readable)
+        local f = Floor(g, PLATE8, x0 + (i - 0.5) * PLATE8_S, y0 + (j - 0.5) * PLATE8_S, top, col(i, j), mat or "models/debug/debugwhite")
+        if IsValid(f) then
+            f.lcKeepLook = true -- (the floor stays readable)
+            g.floor = g.floor or {}
+            g.floor[#g.floor + 1] = { ent = f, col = col(i, j), odd = (i + j) % 2 == 1 }
+        end
     end end
     g.top, g.n = top, n
     g.half = n * PLATE8_S / 2
@@ -263,6 +276,23 @@ do
         }) }
     G.cheese = def
     local CHEESE, RIND = Color(255, 205, 60), Color(235, 160, 40)
+    local SWIRL_WHITE = Color(255, 255, 255)
+    LC.CheeseMeltSecs = 6 -- (how long the plain is melting colours after someone takes golden cheese)
+    -- The plain itself: cheese, or (melt) the two melting colours, square about. Only when both of
+    -- those pictures are on the server; without them the plain never changes, as before.
+    local function PlainLook(g, melt)
+        local a, b = LC.DreamArt("swirl1"), LC.DreamArt("swirl2")
+        if melt and (a == "models/debug/debugwhite" or b == "models/debug/debugwhite") then return false end
+        for _, f in ipairs(g.floor or {}) do
+            if IsValid(f.ent) then
+                f.ent:SetColor(melt and SWIRL_WHITE or f.col)
+                if f.ent.SetMaterial then f.ent:SetMaterial(melt and (f.odd and b or a) or g.cheeseMat or "models/debug/debugwhite") end
+            end
+        end
+        g.melted = melt and true or nil
+        return true
+    end
+    LC.CheesePlainLook = PlainLook
     local WHEEL = "models/hunter/tubes/circle4x4.mdl"
     local WEDGES = { "models/hunter/triangles/2x2x2.mdl", "models/hunter/triangles/1x1x1.mdl", "models/hunter/blocks/cube2x2x2.mdl" }
 
@@ -279,14 +309,15 @@ do
     end
 
     function def.build(g, dream)
-        local top = Plain(g, dream, 3, function(i, j) return (i + j) % 2 == 0 and CHEESE or RIND end)
+        g.cheeseMat = LC.DreamArt("cheese")
+        local top = Plain(g, dream, 3, function(i, j) return (i + j) % 2 == 0 and CHEESE or RIND end, g.cheeseMat)
         local c = dream.pos
         g.introUntil = g.t0 + LC.CheeseIntro
         -- floating slabs of cheese, to jump onto
         g.slabs = {}
         for i = 1, 6 do
             local at = AnyWhere(g, 160) + Vector(0, 0, math.Rand(90, 150))
-            local e = Block(g, PLATE4, at, Angle(0, math.Rand(0, 90), 0), CHEESE, "models/debug/debugwhite")
+            local e = Block(g, PLATE4, at, Angle(0, math.Rand(0, 90), 0), CHEESE, g.cheeseMat)
             if e then g.slabs[#g.slabs + 1] = at + Vector(0, 0, 1.5) end
         end
         -- giant heads floating overhead (the citizens who dream of it), and wedges turning in the sky
@@ -302,7 +333,15 @@ do
         for i = 1, 3 do
             local at = Vector(c.x + math.Rand(-g.half, g.half) * 0.6, c.y + math.Rand(-g.half, g.half) * 0.6, top + math.Rand(500, 650))
             local e = Actor(g, wedge, at, 0, 2, nil)
-            if e then e:SetColor(CHEESE) if e.SetMaterial then e:SetMaterial("models/debug/debugwhite") end g.wedges[#g.wedges + 1] = { ent = e, at = at, spin = math.Rand(20, 60) } end
+            if e then
+                -- (the wedges in the sky are the melting colours, when those pictures are there; cheese otherwise)
+                local swirl = LC.DreamArt(i % 2 == 0 and "swirl2" or "swirl1")
+                local own = swirl ~= "models/debug/debugwhite"
+                e:SetColor(own and SWIRL_WHITE or CHEESE)
+                if e.SetMaterial then e:SetMaterial(own and swirl or g.cheeseMat) end
+                e.lcKeepLook = own or nil
+                g.wedges[#g.wedges + 1] = { ent = e, at = at, spin = math.Rand(20, 60) }
+            end
         end
         g.crumbs = {}
         for i = 1, 12 do g.crumbs[i] = {} NewCrumb(g, i) end
@@ -328,7 +367,7 @@ do
         local e = Actor(g, FirstModel({ WHEEL, PLATE4 }), from, math.deg(a), scale, nil)
         if not e then return end
         e:SetColor(CHEESE)
-        if e.SetMaterial then e:SetMaterial("models/debug/debugwhite") end
+        if e.SetMaterial then e:SetMaterial(g.cheeseMat or "models/debug/debugwhite") end
         e:SetAngles(Angle(0, math.deg(a), 90)) -- (stood on its edge, rolling along dir)
         g.wheels[#g.wheels + 1] = { ent = e, pos = from, dir = dir, side = side, r = r, speed = math.Rand(260, 380), went = 0, len = (g.half + r) * 2, spin = 0, yaw = math.deg(a) }
         Snd(e, "physics/wood/wood_box_impact_hard3.wav", 80, 60)
@@ -346,6 +385,7 @@ do
         local now = CurTime()
         if IntroTick(g, players) then return end -- (the voices in the dark first)
         local t = now - g.t0
+        if g.melted and now >= (g.meltUntil or 0) then PlainLook(g, false) end -- (the plain is cheese again)
         -- the heads hum the line now and then, every colour of the rainbow
         for i, h in ipairs(g.heads) do
             if IsValid(h.ent) then
@@ -403,6 +443,7 @@ do
                         Snd(p, "garrysmod/save_load1.wav", 60, cr.gold and 70 or math.random(130, 160))
                         if cr.gold then
                             s.flip = now + 6
+                            if PlainLook(g, true) then g.meltUntil = now + LC.CheeseMeltSecs end
                             if (g.goldSaid or 0) < now then g.goldSaid = now + 20 SayAs(g, "cheese_gold") end
                             Notice(p, "info", "Golden cheese", "Three at once. The world turns inside out for a moment.", 3)
                         end

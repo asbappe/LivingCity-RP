@@ -4,6 +4,10 @@ Updated 12 November 2026. **Part 1** is everything new since your 1 November pla
 Tick a box when you've tried it, and write what you saw after **Notes:** (works, broken, feels off, ideas).
 
 ## Your 12 November notes: fixed, please try again
+- [ ] **Spray can marks (new pictures; needs `livingcity_content.zip`, FastDL sync, map change):** Spray at a bare wall: a window asks The lambda, The tally, NO RECORD or Never mind. Try each. Are the two new marks the right size beside a lambda, the right way up, and lit like the wall? Do they scrub off?
+  Notes:
+- [ ] **The Cheese Dream's surfaces:** the plain, slabs and wheels should look like holed cheese (are the holes a sensible size, or too small or too big?); the wedges in the sky should be swirling colours; take a golden cheese and the whole plain should melt into colours for 6 seconds, then go back.
+  Notes:
 
 - [ ] **Lights out:** the warnings say "About six minutes until sleep" and "Two minutes until sleep".
   Notes:

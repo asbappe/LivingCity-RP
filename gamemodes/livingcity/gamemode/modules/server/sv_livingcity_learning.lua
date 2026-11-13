@@ -269,7 +269,8 @@ local function SendPosterArt()
         if ext == "png" or ext == "jpg" then resource.AddFile("materials/livingcity/posters/" .. n) end
     end
     -- (and the orientation pamphlet's paper, cl_livingcity_dialog.lua, and the windows' backs, cl_livingcity_theme.lua)
-    for _, dir in ipairs({ "pamphlet", "ui" }) do
+    -- (and the spray can's marks, cl_livingcity_war.lua, and the dreams' surfaces, cl_livingcity_strangedreams.lua)
+    for _, dir in ipairs({ "pamphlet", "ui", "graffiti", "dreams" }) do
         for _, n in ipairs(file.Find("materials/livingcity/" .. dir .. "/*", "GAME") or {}) do
             local ext = string.lower(string.match(n, "%.(%w+)$") or "")
             if ext == "png" or ext == "jpg" then resource.AddFile("materials/livingcity/" .. dir .. "/" .. n) end
