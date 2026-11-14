@@ -1990,3 +1990,15 @@ Type them in the server console on the host panel, or in your own game console (
   Notes:
 - [ ] **Dream card:** a black card before each dream you play (what it is, rules, win, lose). Long enough? Space skips it.
   Notes:
+
+## Your 14 November answers: built, please try
+- [ ] **Prison guard:** as a Combine Prison Guard, F4 shows Cell inspection, Question a prisoner, A break for it, Watch over the cells. Do four: are you a Combine Soldier?
+  Notes:
+- [ ] **The infested:** not on F4 Factions. Go down to a zombie or headcrab inside an infestation and bleed out: do you come back infested in the nest? Got up in time: nothing. Killed as infested: back as yourself at the clinic?
+  Notes:
+- [ ] **Lamarr:** at a lab run by Dr. Kleiner, is she on the bench? Does she sit right (not floating or sunk)? E on her.
+  Notes:
+- [ ] **Dressed dreams:** a ring of props below the edge of each playable dream. Does it look right, and is it out of the way?
+  Notes:
+- [ ] **Job board:** place "Fixture: job board" in the city, on rebel ground and on Combine ground. Do the lists show, and does E open your jobs?
+  Notes:

@@ -66,7 +66,7 @@ function LC.EnsureUtilityBoxes()
                     box:SetNW2Entity("lc_speaker", sp)
                     box.lcSpeaker = sp
                     sp.lcBox = box
-                    sp:CallOnRemove("lc_utilitybox", function(e) if IsValid(e.lcBox) then e.lcBox:Remove() end end)
+                    if sp.CallOnRemove then sp:CallOnRemove("lc_utilitybox", function(e) if IsValid(e.lcBox) then e.lcBox:Remove() end end) end
                     made = made + 1
                 end
             end

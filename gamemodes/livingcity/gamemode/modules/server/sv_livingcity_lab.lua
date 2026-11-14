@@ -133,7 +133,36 @@ function LC.SetupLab(bench)
             bench.lcScientist = s
         end
     end
+    LC.LabLamarr(bench)
     return bench.lcScientist
+end
+
+-- Lamarr, on Dr. Kleiner's bench and nobody else's (the owner, 14 November: a secret pet that "should sit
+-- idle on top of the lab equipment prop if Dr Kleiner is the resistance scientist"; entities/lc_lamarr.lua).
+-- On the bench's top, at one end; gone with the bench, or if someone else runs the lab.
+function LC.LabLamarr(bench)
+    if not IsValid(bench) then return nil end
+    local s = bench.lcScientist
+    local kleiner = IsValid(s) and s.lcWho == "kleiner"
+    if not kleiner then
+        if IsValid(bench.lcLamarr) then bench.lcLamarr:Remove() end
+        bench.lcLamarr = nil
+        return nil
+    end
+    if IsValid(bench.lcLamarr) then return bench.lcLamarr end
+    local mins, maxs = bench:OBBMins(), bench:OBBMaxs()
+    local spot = bench:LocalToWorld(Vector(mins.x + (maxs.x - mins.x) * 0.8, (mins.y + maxs.y) / 2, maxs.z + 2))
+    local tr = util.TraceLine({ start = spot + Vector(0, 0, 40), endpos = spot - Vector(0, 0, maxs.z - mins.z), filter = bench.lcClutter })
+    local top = (tr and tr.Hit and IsValid(tr.Entity) and tr.Entity == bench) and tr.HitPos or spot
+    local l = ents.Create("lc_lamarr")
+    if not IsValid(l) then return nil end
+    l:SetPos(top)
+    l:SetAngles(Angle(0, bench:GetAngles().y + 160, 0))
+    l:Spawn()
+    l:SetParent(bench)
+    bench.lcLamarr = l
+    if bench.CallOnRemove then bench:CallOnRemove("lc_lamarr", function(b) if IsValid(b.lcLamarr) then b.lcLamarr:Remove() end end) end
+    return l
 end
 
 -- Stand the scientist beside the bench, facing the way it faces (towards

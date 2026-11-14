@@ -2314,7 +2314,9 @@ local ghostName = ghost:GetNW2String("lc_char", "")
 LC.AddCredits(ghost, 50)
 ghost.alive = false
 hook.Run("PlayerDeath", ghost)
-ok(ghost:GetNW2String("lc_char", "") == ghostName and LC.Credits(ghost) >= 50, "the infested come back as themselves")
+-- (since 14 November, the infested a hidden side: killed while infested, the headcrab dies with them, for a close call)
+-- (here every death is final, as for the resident above: with no close call left, it's a new life, and not an infested one)
+ok(not LC.PlayerIsZombie(ghost), "the infested don't stay infested after death (freed for a close call; with none left, a new life)", ghost:GetNW2String("lcf_faction", ""))
 ghost.alive = true
 -- movement
 local function Mv(buttons)
@@ -5027,7 +5029,7 @@ ok(LC.NearWorkbench(sal) == nil and LC.NearWorkbench(bench) ~= nil, "(rebels sti
 LC.GiveItem(sal, "armor_vest", 1)
 sal:SetArmor(0)
 LC.ArmsUse(sal, "armor_vest")
-ok(sal:Armor() == 30 and not LC.HasItem(sal, "armor_vest"), "an armour vest gives thirty armour")
+ok(sal:Armor() == 75 and not LC.HasItem(sal, "armor_vest"), "an armour vest goes on fully charged (the owner, 14 November)", sal:Armor())
 bench:Remove()
 
 LC.GiveItem(sal, "scrap", 4) LC.GiveItem(sal, "can_empty", 2)
@@ -28570,7 +28572,7 @@ function RebelEventTests()
     _setcvar("lc_rebels", 4)
     _run(60)
     local before = LC.CityNPCCount()
-    ok(before >= 10 and LC.RebelsIn(rz) <= 1 and count("cop") == 0,
+    ok(before >= 10 and LC.RebelsIn(rz) <= 2 and count("cop") == 0, -- (the quartermaster and, since 14 November, the medic keep their posts)
         "(the owner's setup) lc_npc_budget 10 is full of citizens: hardly a fighter at home and no unit on the street", before .. " NPCs, " .. LC.RebelsIn(rz) .. " at home, " .. count("cop") .. " units")
     local okR, why = LC.StartRebelRaid(rz, T)
     local sk = LC.Skirmish
@@ -29774,6 +29776,63 @@ section("The owner's 14 November notes: stores, Civil Protection's toughness, th
     if ex then
         local spec = ex.build(reb)
         ok(spec == nil or string.find(spec.desc, "Combine's city", 1, true) ~= nil, "Extraction: the fugitive hides in the Combine's city and is brought back")
+    end
+end)()
+
+
+section("The owner's 14 November answers: prison guards, the infested, Lamarr, dressed dreams, job boards")
+;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)
+    local function T(id) for _, x in ipairs(LC.QuestTemplates) do if x.id == id then return x end end end
+    -- the prison guard: four jobs, and the fourth done makes them a soldier
+    local pg = newPlayer("Guard15", "ota")
+    ok(LC.IsPrisonGuard(pg), "an Overwatch recruit starts as a Combine Prison Guard", pg:GetNW2Int("lcf_rank", 0))
+    local cop = newPlayer("NotGuard15", "cp")
+    local n = 0
+    for _, id in ipairs({ "pg_inspect", "pg_question", "pg_break", "pg_watch" }) do if T(id) then n = n + 1 end end
+    ok(n == 4, "four prison guard jobs", n)
+    ok(not T("pg_watch").available(cop), "a metrocop doesn't get them")
+    pg:SetPData("lc_pg_jobs", 0)
+    for i = 1, 3 do LC.PrisonGuardJobDone(pg) end
+    ok(LC.IsPrisonGuard(pg) and LC.PrisonGuardDone(pg) == 3, "three done: still a guard")
+    ok(LC.PrisonGuardJobDone(pg) and not LC.IsPrisonGuard(pg), "the fourth: a Combine Soldier", pg:GetNW2Int("lcf_rank", 0))
+    -- the infested: never chosen; turned when not got up; freed by death
+    local cit = newPlayer("Turned15", "resistance", nil, 200)
+    local okJoin = LC.CanJoinFaction(cit, "zombie", nil)
+    ok(not okJoin, "nobody chooses the infestation")
+    ok(LC.InfestedAttacker(ents.Create("npc_headcrab")) and not LC.InfestedAttacker(cit), "a headcrab is an infested attacker; a rebel isn't")
+    LC.TurnInfested(cit)
+    ok(LC.PlayerIsZombie(cit), "turned: one of the infested")
+    LC.InfestedFreed(cit)
+    ok(cit:GetNW2String("lcf_faction", "") == "resistance", "freed by death: back on their own side", cit:GetNW2String("lcf_faction", ""))
+    -- Lamarr: on Dr. Kleiner's bench only
+    local bench = ents.Create("lc_workbench")
+    if IsValid(bench) then
+        bench:SetPos(Vector(-64000, -64000, 0)) bench:Spawn()
+        local sci = bench.lcScientist
+        if not IsValid(sci) then sci = ents.Create("lc_scientist") sci:Spawn() bench.lcScientist = sci end
+        ok(IsValid(sci), "the bench has a scientist")
+        if IsValid(sci) then
+            sci.lcWho = "kleiner"
+            ok(IsValid(LC.LabLamarr(bench)), "Lamarr sits on Dr. Kleiner's bench")
+            sci.lcWho = "eli"
+            ok(LC.LabLamarr(bench) == nil and not IsValid(bench.lcLamarr), "and not on anyone else's")
+        end
+        bench:Remove()
+    end
+    -- the dreams' dressing leaves a dream with its own (or no arena box) alone
+    ok(LC.DreamDress({ def = { id = "spy", noDress = true }, bounds = { mins = Vector(0, 0, 0), maxs = Vector(10, 10, 10) }, ents = {} }) == 0, "a dream that dresses itself is left alone")
+    ok(LC.DreamDress({ def = { id = "x" }, ents = {} }) == 0, "and one with no arena box")
+    -- a job board: whose follows where it stands; E opens your jobs, or says whose it is
+    local jb = ents.Create("lc_jobboard")
+    if IsValid(jb) then
+        jb:SetPos(Vector(-65000, -65000, 0)) jb:Spawn()
+        ok(LC.JobBoardSide(jb) == "citizen", "a job board in the city is the Union's")
+        local c2 = newPlayer("BoardCitizen15", "citizen")
+        local r2 = newPlayer("BoardRebel15", "resistance", nil, 200)
+        ok(LC.UseJobBoard(c2, jb) and not LC.UseJobBoard(r2, jb), "a citizen's jobs open from it; a rebel is told it isn't theirs")
+        LC.JobBoardRefresh(jb)
+        ok(jb:GetNW2String("lc_board_name", "") == "Assignments", "its glass says whose board it is")
+        jb:Remove()
     end
 end)()
 

@@ -29,7 +29,7 @@ local CATS = {
 -- A thing can be in more than one. Occupations get a folder each: their workplace and what goes with it.
 local USES = {
     { title = "Citizens' daily life", ids = { "idle", "sit", "sitchair", "lean", "queue", "dispenser", "vending", "terminal", "stove", "bed",
-        "toilet", "bath", "fire", "locker", "tv", "screen", "lawboard", "infodesk", "civposter", "citybin", "bin", "zone_block", "door_rent" } },
+        "toilet", "bath", "fire", "locker", "tv", "screen", "lawboard", "jobboard", "infodesk", "civposter", "citybin", "bin", "zone_block", "door_rent" } },
     { title = "Arriving and leaving the city", ids = { "arrival", "intake", "laborterm", "housingterm", "platform", "spawn", "lz" } },
     { title = "Civil Protection and the Combine", ids = { "patrol", "checkpoint", "cpsupply", "cpfeed", "evidlocker", "console", "sspawn", "powerbank", "turret",
         "forcefield", "barricade_low", "barricade", "barricade_tall", "dataterm", "masterterm", "zone_combine", "sterm", "door_cp", "door_office", "studio", "loudspeaker", "screen_big" } },

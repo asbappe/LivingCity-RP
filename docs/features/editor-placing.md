@@ -33,3 +33,5 @@
 **Point: speech crowd** (new, 13 November): where the city gathers for her address, in front of the stand. With one placed, a speech calls the city first and attendance is mandatory (`docs/features/city.md`, "Her address, attended"). Optional.
 
 **14 November:** "Point: jogging route stop" is gone from the editor (the morning jog is archived, `lc_jog` 0: `city-events.md`). The morning drill is held at an exercise yard.
+
+**Fixture: job board** (14 November): a screen listing its side's jobs; which side follows where it stands (`docs/features/jobs-and-quests.md`, end).

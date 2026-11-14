@@ -432,7 +432,7 @@ do
     LC.SpyChantEvery, LC.SpyChantLate = 4, 1.2   -- (seconds between cheers; how late the spy's salute is)
     LC.SpyVolleyAt = { 7, 16, 25 }                -- (seconds into the firing squad round: "Fire!")
     LC.SpyPickReach, LC.SpyPickRadius = 220, 26   -- (E: how far, and how near your line of sight their body must be)
-    local def = { id = "spy", name = "Careless Talk", mood = "happy", secs = 8 + LC.SpyRounds * (LC.SpyRoundSecs + LC.SpyReveal) + 4, lives = 3, need = 2,
+    local def = { id = "spy", name = "Careless Talk", mood = "happy", noDress = true, secs = 8 + LC.SpyRounds * (LC.SpyRoundSecs + LC.SpyReveal) + 4, lives = 3, need = 2,
         music = { "spy", "propaganda" },
         goal = "One of the diners is a rebel spy, and in each of the three rounds the spy gives themselves away: watch and listen. "
             .. "Press E on the one you suspect (you can change your mind). After 30 seconds, everyone's pick is shown. Find the spy twice to win.",

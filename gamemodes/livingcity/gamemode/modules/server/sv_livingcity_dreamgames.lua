@@ -1071,6 +1071,59 @@ local function Tick()
     end
 end
 
+-- Dressing a bare dream (the owner, 13 November playtest: "The dream is so bare, most of the dreams are so
+-- bare"): round the arena's box (g.bounds), just outside where the game is played and LC.DreamDressDrop
+-- below its floor, a ring of ground with props on it that fit the dream's mood, so nothing in the game changes.
+LC.DreamDressDrop = 420
+-- A dream that dresses itself (Careless Talk) or has no box is left as it is (def.noDress, no g.bounds).
+LC.DreamDressProps = {
+    nightmare = { "models/props_foliage/tree_dead01.mdl", "models/props_c17/oildrum001.mdl", "models/props_debris/wood_board04a.mdl",
+        "models/props_junk/wood_crate001a_damaged.mdl", "models/props_c17/gravestone002a.mdl", "models/props_wasteland/controlroom_chair001a.mdl" },
+    happy = { "models/props_foliage/tree_poplar_01.mdl", "models/props_c17/streetsign004e.mdl", "models/props_c17/bench01a.mdl",
+        "models/props_c17/lamppost03a_off.mdl", "models/props_junk/terracotta01.mdl", "models/props_c17/fountain01.mdl" },
+    neutral = { "models/props_junk/wood_crate001a.mdl", "models/props_c17/chair02a.mdl", "models/props_c17/furnituretable002a.mdl",
+        "models/props_c17/lamppost03a_off.mdl", "models/props_junk/trafficcone001a.mdl", "models/props_c17/clock01.mdl" },
+    propaganda = { "models/props_combine/combine_barricade_short01a.mdl", "models/props_c17/lamppost03a_off.mdl",
+        "models/props_combine/breenbust.mdl", "models/props_combine/combine_monitorbay.mdl", "models/props_c17/bench01a.mdl" },
+}
+function LC.DreamDress(g)
+    if not g or g.dressed or not g.bounds or (g.def and g.def.noDress) then return 0 end
+    g.dressed = true
+    local b = g.bounds
+    local cx, cy = (b.mins.x + b.maxs.x) / 2, (b.mins.y + b.maxs.y) / 2
+    -- the arena's floor: the first thing straight down through the middle of its box
+    local tr = util.TraceLine({ start = Vector(cx, cy, b.maxs.z), endpos = Vector(cx, cy, b.mins.z), mask = MASK_SOLID })
+    if not (tr and tr.Hit) then return 0 end
+    -- (well below the arena, a dreamscape to look down on: nobody steps onto it, and a fall off the edge is
+    -- still a fall, whatever the game counts as fallen)
+    local top = tr.HitPos.z - LC.DreamDressDrop
+    local prop = g.def and (g.def.propaganda or (LC.PropagandaDreams and LC.PropagandaDreams[g.def.id]))
+    local list = LC.DreamDressProps[prop and "propaganda" or (g.def and g.def.mood or "neutral")] or LC.DreamDressProps.neutral
+    local ok = {}
+    for _, m in ipairs(list) do if not util.IsValidModel or util.IsValidModel(m) then ok[#ok + 1] = m end end
+    local S = PLATE8_S
+    local x0, x1, y0, y1 = b.mins.x - S / 2, b.maxs.x + S / 2, b.mins.y - S / 2, b.maxs.y + S / 2
+    local made = 0
+    local function Plate(x, y)
+        if Block(g, PLATE8, Vector(x, y, top - 1.5), Angle(0, 0, 0), Color(70, 70, 75), "models/debug/debugwhite") then made = made + 1 end
+    end
+    local function Dress(x, y, i)
+        if #ok == 0 or i % 2 == 1 then return end
+        local m = ok[math.random(#ok)]
+        local e = Block(g, m, Vector(x + math.random(-80, 80), y + math.random(-80, 80), top), Angle(0, math.random(0, 359), 0))
+        if IsValid(e) then
+            -- standing on the ring, whatever the model's origin
+            local mins = e:OBBMins()
+            e:SetPos(e:GetPos() + Vector(0, 0, -mins.z))
+            made = made + 1
+        end
+    end
+    local i = 0
+    for x = x0, x1 + 1, S do Plate(x, y0) Plate(x, y1) Dress(x, y0, i) Dress(x, y1, i + 1) i = i + 1 end
+    for y = y0 + S, y1 - S + 1, S do Plate(x0, y) Plate(x1, y) Dress(x0, y, i) Dress(x1, y, i + 1) i = i + 1 end
+    return made
+end
+
 -- Build tonight's game at the dream point and put its dreamers in it. True, or false and why not.
 function LC.DreamGameStart(dream)
     local def = dream and G[dream.ending]
@@ -1090,6 +1143,7 @@ function LC.DreamGameStart(dream)
         return false, "The dream couldn't be built here."
     end
     g.started = #players
+    do local okD, errD = pcall(LC.DreamDress, g) if not okD and LC.Error then LC.Error("dream dressing", errD) end end
     local hello = def.hello and def.hello(g) or {}
     -- (the arena's box: the dreamers' screens leave out any city NPC wandering inside it, cl_livingcity_dreamgames.lua)
     if g.bounds and hello.bounds == nil then

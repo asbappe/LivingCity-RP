@@ -479,6 +479,9 @@ function LC.CanJoinFaction(ply, fid, sid)
             return false, "Only the Resistance can free you: cut your shackles (or reach out through the vortessence)."
         end
     end
+    if f.zombie and ply:GetNW2String("lcf_faction", "") ~= fid then
+        return false, "Nobody chooses the infestation. It chooses you."
+    end
     -- a mole who was caught: Resistance for good (sv_livingcity_insider.lua)
     if fid ~= "resistance" and LC.InsiderBarred then
         local why = LC.InsiderBarred(ply, "faction", fid)
@@ -599,7 +602,8 @@ local function SendMenu(ply)
       -- (the owner: a stalker is a punishment, never a choice: not on the screen, unless it's what you are)
       -- (nor the shackled vortigaunts, for a human: a vortigaunt is chosen at the start of a new life, the owner,
       -- 14 November; a vortigaunt sees only its own: LC.IsVortChar)
-      if (not f.stalker or data.current == f.id) and (not f.vort or LC.IsVortChar(ply)) then
+      -- (nor the Infested: nobody chooses it, the owner, 13 November playtest; sv_livingcity_infestedside.lua)
+      if (not f.stalker or data.current == f.id) and (not f.zombie or data.current == f.id) and (not f.vort or LC.IsVortChar(ply)) then
         local xp = XP(ply, f.id)
         local ok, why = LC.CanJoinFaction(ply, f.id, nil)
         local entry = { id = f.id, xp = xp, rank = RankFor(ply, f, xp), ok = ok, why = why, specials = {} }
