@@ -96,7 +96,7 @@ const DEFACE = {
   housing: { strike: [1], words: [['IS A', 384, 300, 120, -7, WHITE], ['CELL', 384, 450, 170, -7, ORANGE]], lam: [130, 540, 1.0, -8] },
   vortigaunt: { words: [['FREE', 384, 280, 150, -9, WHITE], ['THEM', 384, 430, 150, -9, ORANGE]], lam: [130, 130, 0.9, 8] },
   recruit: { words: [['TRAITORS', 384, 360, 132, -8, WHITE]], lam: [130, 150, 0.9, -8] },
-  neighbour: { strike: [1], words: [['HATE THE', 384, 878, 60, -3, ORANGE, { tm: 3, run: 0.3 }], ['ADMINISTRATOR', 384, 944, 60, -3, ORANGE, { tm: 3, run: 0.3 }]], lam: [130, 150, 0.9, -8] },
+  neighbour: { strike: [1], words: [['HATE THE', 384, 878, 60, -3, ORANGE, { tm: 3, run: 0.3 }], ['ADMINISTRATOR', 384, 944, 60, -3, ORANGE, { tm: 3, run: 0.3 }]], lam: [636, 276, 2.1, -4] },
   administrator: { words: [['LIAR', 384, 500, 210, -8, WHITE]], lam: [660, 130, 0.9, 8],
     extra: `<g filter="url(#spray)" stroke="${BLACK}" stroke-width="15" stroke-linecap="round" fill="none"><path d="M296,218 L374,282 M378,226 L302,274 M394,224 L470,280 M466,216 L398,284"/></g>` },
 };
