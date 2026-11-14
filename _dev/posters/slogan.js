@@ -7,14 +7,19 @@ const ART = {};
 ART.neighbour = () => {
   let s = R(0, 0, 720, 610, '#d6cfba') + rays(232, 250, 40, 1000, C.paper, 0, 360, 'opacity=".75"');
   s += skyline(470, C.steel2, '#d6cfba', 22, 110) + R(0, 466, 720, 144, C.steel);
-  // the neighbours
-  const body = (t, bd) => P('M-34,214 L-16,152 L30,118 L72,118 L112,142 L128,214Z', t) + P('M36,118 L52,118 L62,214 L44,214Z', bd);
-  s += G('translate(8,176) scale(1.62)', body(C.blue, C.blueD) + head({ cap: C.blueD, smile: true }));
-  s += G('translate(456,176) scale(-1.62,1.62)', body('#335073', '#263a55') + head({ skin: '#c8c2b1', sh: '#727e88', hair: '#3a2c22', smile: true }));
-  // their hands
-  s += P('M150,440 L226,446 L236,478 L156,492Z', C.blue2) + P('M314,440 L238,446 L228,478 L308,492Z', '#456a93');
-  s += P('M206,444 L262,448 L266,476 L210,482Z', C.paper) + P('M258,444 L214,450 L210,470 L256,480Z', '#c8c2b1') + L('M222,452 L222,474 M234,452 L234,476 M246,452 L246,476', C.ink, 2.2, 'opacity=".5"');
-  s += G('translate(232,112) scale(1.5)', P('M0,26 L-30,-4 Q-34,-28 -14,-28 Q-2,-28 0,-14 Q2,-28 14,-28 Q34,-28 30,-4Z', C.red));
+  // the neighbours: a man and a woman of the block, shaking hands
+  const body = (t, bd) => P('M-34,270 L-16,152 L30,118 L72,118 L112,142 L128,270Z', t) + P('M36,118 L52,118 L62,270 L44,270Z', bd);
+  const scarf = P('M16,52 L24,22 L44,4 L70,4 L86,18 L88,40 L64,38 L58,52 L42,54 L40,72 L32,96 L46,120 L22,126 L10,86Z', C.steel2) + P('M24,22 L44,4 L70,4 L86,18 L60,20 L40,30Z', '#c9d0d0');
+  s += G('translate(-22,150) scale(1.62)', body(C.blue, C.blueD) + head({ cap: C.blueD, smile: true }));
+  s += G('translate(488,150) scale(-1.62,1.62)', body('#335073', '#263a55') + head({ skin: '#d8cdb8', sh: '#8f8a7c', hair: C.steel2, smile: true }) + scarf);
+  // their arms (shoulder, elbow, wrist), meeting in the open between them: his thumb over her hand
+  const O = `stroke="${C.ink}" stroke-width="2.2" stroke-opacity=".5" stroke-linejoin="round"`;
+  const skinB = '#d8cdb8';
+  s += P('M380,392 L342,388 L318,476 L354,490Z', '#4f77a3', O) + P('M354,492 L324,462 L262,438 L252,468 L334,502Z', '#4f77a3', O) + P('M270,441 L258,437 L249,468 L261,472Z', '#263a55');
+  s += P('M222,440 L258,438 L258,470 L224,470Z', skinB, O);
+  s += P('M84,392 L122,388 L146,476 L110,490Z', C.blue2, O) + P('M110,492 L140,462 L202,438 L212,468 L130,502Z', C.blue2, O) + P('M194,441 L206,437 L215,468 L203,472Z', C.blueD);
+  s += P('M206,438 L240,436 L246,444 L246,466 L210,470Z', C.paper, O) + P('M216,427 L238,425 L242,438 L220,440Z', C.paper, O);
+  s += P('M205,449 L219,448 L219,455 L205,456Z', skinB, O) + P('M205,458 L219,457 L219,464 L205,465Z', skinB, O);
   // the traitor
   s += P('M500,0 L720,0 L720,610 L420,610Z', '#0b1119') + P('M500,0 L512,0 L432,610 L420,610Z', C.red);
   s += G('translate(322,96) scale(0.82)', [
