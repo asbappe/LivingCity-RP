@@ -48,6 +48,7 @@ This is the master technical document. It lists what the owner's server, files, 
 | Who knew whom (for "word gets around"), and news of a death still to pass on | `data/livingcity/known.json`, `data/livingcity/word.json` | sv_livingcity_life.lua |
 | Lockers, storage crates and market stalls, with what's in them | `data/livingcity/<map>_storage.json` | sv_livingcity_storage.lua |
 | Debug reports (each one saved as it's copied) | `data/livingcity/reports/` | sv_livingcity_debug.lua |
+| Players' bug reports and feedback (F1 > Out of character > Report a bug or feedback; their words with a debug report under them; one a minute each) | `data/livingcity/feedback/<date>_<time>_<steamid64>.txt` | `LC.Feedback`, sv_livingcity_feedback.lua |
 | Performance debugger reports (saved when it stops, or on Save report; the newest 30 kept) | `data/livingcity/perf/` | sv_livingcity_perfdebug.lua |
 | When the last secret ending was | `data/livingcity/endings.json` | `LC.EndingCooldownFile` |
 | The endings' dances as tuned in the Endings menu, and its shared settings | `data/livingcity/ending_tuning.json` | `LC.EndingTuneFile`, sv_livingcity_endingtune.lua |

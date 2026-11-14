@@ -2023,7 +2023,6 @@ Type them in the server console on the host panel, or in your own game console (
 - [ ] **Get the lab running:** the parts are searched for by hand (hold E) at the yard and the shop, and freed from a loudspeaker box with the wiring game; the bench is rewired the same way.
   Notes:
 
-<<<<<<< HEAD
 ## 14 November: no more stand-still steps
 - [ ] **Hold E jobs:** Bin round (each bin), Graffiti removal (the bucket), The count (three crates), a leaking pipe (the valve), Paper the walls (a see-through flyer at each spot). Does the bar fill, and is the thing easy to find and aim at?
   Notes:
@@ -2032,7 +2031,6 @@ Type them in the server console on the host panel, or in your own game console (
 - [ ] **Needle game:** Break them out (the cell lock, alarm going), a vortigaunt's A whisper in the vortessence and Read the Combine. Is the window's wording odd for a vortigaunt?
   Notes:
 - [ ] **Others:** Address the citizens (speak to 3), The secret mass (bless the three who gather: do they come?), Leak the schedule (dead drop game), Dead drop (note handed over on arrival), Collect your ration (ends at the front of the line), letters (delivered at the door), a stalker's Processing.
-=======
 ## The play study (14 November, last)
 
 - [ ] **Start it:** F4 > Factions > *Admin: play study* > *Start: this session counts*. The top right of the screen says STUDY: counting.
@@ -2048,5 +2046,6 @@ Type them in the server console on the host panel, or in your own game console (
 - [ ] **Does it slow the game?** If play feels heavier with the study on, say so.
   Notes:
 - [ ] **Send one:** `cd ~/.steam/steam/steamapps/common/GarrysMod/garrysmod/data/livingcity/study && zip -r ~/study.zip FOLDER_NAME`
->>>>>>> origin/main
+  Notes:
+- [ ] **Bug reports and feedback:** F1 > 6 > 3, type a line, send. Is there a new file in the server's `garrysmod/data/livingcity/feedback/` with your words on top and a debug report under them? Does a second one within a minute get refused?
   Notes:

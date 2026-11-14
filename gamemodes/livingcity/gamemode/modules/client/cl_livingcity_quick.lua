@@ -82,6 +82,16 @@ local function OOCPage()
     return { title = "OUT OF CHARACTER", items = {
         Item("Nearby...", function() Say("Out of character, nearby", "Not your character speaking, to the people near you", "/looc ") end),
         Item("Server-wide...", function() Say("Out of character, server-wide", "Not your character speaking, to the whole server", "// ") end),
+        -- (saved on the server with a debug report; one a minute: sv_livingcity_feedback.lua)
+        Item("Report a bug or feedback...", function()
+            Derma_StringRequest("Report a bug or feedback", "What happened, or what would you change?", "", function(text)
+                text = string.Trim(text or "")
+                if text == "" then return end
+                net.Start("lc_feedback")
+                net.WriteString(string.sub(text, 1, 1000))
+                net.SendToServer()
+            end)
+        end),
     } }
 end
 

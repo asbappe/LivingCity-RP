@@ -29779,6 +29779,26 @@ ok(sentPath == "", "an announcement with no recording of the owner's goes out si
 end
 TeamChatTests()
 
+function FeedbackTests()
+section("Bug reports and feedback from players (the owner, 14 November)")
+local fb = newPlayer("FBPlayer", "citizen")
+local name = LC.Feedback(fb, "  The bin wouldn't empty.  ")
+local saved = name and file.Read(name) or ""
+ok(name ~= nil and string.find(name, "livingcity/feedback/", 1, true) == 1, "a report is saved in data/livingcity/feedback/", tostring(name))
+ok(string.find(saved, "The bin wouldn't empty.", 1, true) ~= nil and string.find(saved, "FBPlayer", 1, true) ~= nil, "with their words and who sent it")
+ok(string.find(saved, "MISCOUNT DEBUG REPORT", 1, true) ~= nil, "and a debug report in the same file")
+local again, why, secs = LC.Feedback(fb, "And another thing.")
+ok(again == nil and why == "wait" and secs > 0 and secs <= 60, "a second one straight away is refused: one a minute", tostring(why))
+local other = newPlayer("FBOther", "citizen")
+ok(LC.Feedback(other, "Mine.") ~= nil, "someone else's is not held up by it")
+ok(LC.Feedback(other, "   ") == nil, "an empty one is nothing")
+_run(61)
+ok(LC.Feedback(fb, "And another thing.") ~= nil, "a minute later they can send another")
+local long = file.Read(LC.Feedback(newPlayer("FBLong", "citizen"), string.rep("x", 5000)))
+ok(string.find(long, string.rep("x", 1000), 1, true) ~= nil and string.find(long, string.rep("x", 1001), 1, true) == nil, "a very long one is cut to 1000 letters")
+end
+FeedbackTests()
+
 
 section("The owner's 14 November notes: stores, Civil Protection's toughness, the medic, jobs, water, the vest")
 ;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)

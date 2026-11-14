@@ -359,7 +359,7 @@ local GUIDE = {
     { "Talking, and knowing people", {
         "Chat is spoken out loud: only people nearby hear it. C > Talk lets you yell so people further away hear (/y), or whisper to whoever is right next to you (/w).",
         "C > Talk: describe what your character does (/me lights a cigarette), describe the scene (/it), or roll 1 to 100 for everyone nearby to see (/roll).",
-        "Out of character: F1 > 6 > 1 Nearby (/looc) or 2 Server-wide (//, with a cooldown). Also C > Talk > Out of character.",
+        "Out of character: F1 > 6 > 1 Nearby (/looc) or 2 Server-wide (//, with a cooldown). Also C > Talk > Out of character. F1 > 6 > 3 sends the server's owner a bug report or feedback (one a minute).",
         "U (the game's team chat key): talk to your own side only, wherever they are: Civil Protection, Overwatch and the Administrator; the Resistance; citizens; the infested. Marked (Team) in chat.",
         "Voice chat works the same way: people only hear you if they're close enough.",
         "Strangers don't know your name; they see your description instead. Set it in C > Me > Change how strangers see me (\"tall, with a scar over one eye\").",

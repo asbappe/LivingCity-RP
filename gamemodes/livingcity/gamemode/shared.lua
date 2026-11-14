@@ -71,6 +71,7 @@ LC_MODULES = {
         "sv_livingcity_custody",
         "sv_livingcity_data",
         "sv_livingcity_debug",
+        "sv_livingcity_feedback", -- (players' bug reports and feedback, each saved with a debug report)
         "sv_livingcity_lagwatch", -- (staff: the lag monitor)
         "sv_livingcity_perfdebug", -- (staff: the performance debugger)
         "sv_livingcity_nextstep", -- (what now? everyone always has a next step)
