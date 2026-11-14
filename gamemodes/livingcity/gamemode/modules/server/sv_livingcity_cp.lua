@@ -831,6 +831,7 @@ local function AnnounceSocio(level, by, force)
         if LC.StockVoice then said = LC.StockVoice(said) end -- (no Half-Life 2 voice unless lc_announce_stock)
         if said ~= "" then
             if LC.OverwatchSpeaks then LC.OverwatchSpeaks(said) end
+            if LC.Log then LC.Log("info", string.format("PA: overwatch says %s (%s)", trig, tostring(said))) end
             if LC.PAMark then LC.PAMark(LC.AnnounceClipSecs and LC.AnnounceClipSecs(said) or 8) else LC.LastPA = CurTime() end
         end
         net.Start("lc_announce")

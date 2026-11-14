@@ -249,6 +249,21 @@ function LC.BuildReport()
             end
         end
         out[#out + 1] = "recordings: " .. (#parts > 0 and table.concat(parts, ", ") or "none found in sound/livingcity/overwatch/, administrator/, radio/ or under announce/")
+        out[#out + 1] = string.format("the map's own PA lines (npc/overwatch/cityvoice/): %d let through, %d silenced (lc_map_pa_minutes %s)",
+            LC.MapPALet or 0, LC.MapPAHeld or 0, GetConVar("lc_map_pa_minutes") and GetConVar("lc_map_pa_minutes"):GetString() or "?")
+        -- recordings that carry a loop mark play over and over from one start (the owner, 14 November): named here
+        if LC.SoundLoops then
+            local looped, checked = {}, 0
+            for _, voice in ipairs({ "overwatch", "administrator", "radio" }) do
+                for _, f in ipairs(file.Find("sound/livingcity/" .. voice .. "/*.wav", "GAME") or {}) do
+                    checked = checked + 1
+                    local okL, loops = pcall(LC.SoundLoops, "livingcity/" .. voice .. "/" .. f)
+                    if okL and loops then looped[#looped + 1] = voice .. "/" .. f end
+                end
+            end
+            out[#out + 1] = string.format("recordings with a loop mark (the engine would repeat them; announcements now play them once): %d of %d%s",
+                #looped, checked, #looped > 0 and (": " .. table.concat(looped, ", ", 1, math.min(#looped, 30)) .. (#looped > 30 and ", ..." or "")) or "")
+        end
         local songs = {}
         for _, id in ipairs(LC.EndingOrder or {}) do
             local n = #(LC.EndingSongs and LC.EndingSongs(id) or {})

@@ -756,6 +756,36 @@ local function VoiceSecs(path, said, fallback)
 end
 LC_CL.VoiceSecs = VoiceSecs
 
+-- An announcement played once, whatever is in the file (the owner, 14 November: the Overwatch voice they made
+-- "is just SPAMMING announcements still, every like 15 seconds". A .wav carrying a loop mark plays for ever
+-- from one start through the engine's own sound, and surface.PlaySound can never be stopped. A file played
+-- through sound.PlayFile plays once; it is kept here so it isn't thrown away mid-line, and stopped when its
+-- time is up all the same.)
+LC_CL.AnnounceChannels = LC_CL.AnnounceChannels or {}
+function LC_CL.PlayAnnounceOnce(path, vol, secs)
+    if not (sound and sound.PlayFile) then
+        if surface and surface.PlaySound then surface.PlaySound(path) end
+        return "surface"
+    end
+    sound.PlayFile("sound/" .. path, "noplay", function(ch)
+        if not ch then
+            if surface and surface.PlaySound then surface.PlaySound(path) end -- (couldn't open it that way)
+            return
+        end
+        if ch.EnableLooping then ch:EnableLooping(false) end
+        ch:SetVolume(vol or 1)
+        ch:Play()
+        local key = tostring(ch)
+        LC_CL.AnnounceChannels[key] = ch
+        timer.Simple(math.max(1, (secs or 8) + 1.5), function()
+            local c = LC_CL.AnnounceChannels[key]
+            LC_CL.AnnounceChannels[key] = nil
+            if c then pcall(function() c:Stop() end) end
+        end)
+    end)
+    return "file"
+end
+
 local function PlayNextVoice()
     if CurTime() < voiceBusy or #voiceQueue == 0 then return end
     local v = table.remove(voiceQueue, 1)
@@ -765,11 +795,12 @@ local function PlayNextVoice()
         local me = LocalPlayer()
         local vol = LC_CL.BreencastVolume and LC_CL.BreencastVolume() or 0.5
         if LC_CL.SoundTrouble then LC_CL.SoundTrouble(v.path) end
+        local secs = VoiceSecs(v.path, v.dur, 6)
         if vol > 0 and IsValid(me) then
-            me:EmitSound(v.path, 0, 100, vol, CHAN_VOICE2)
+            LC_CL.PlayAnnounceOnce(v.path, vol, secs)
             LC_CL.lastBreencast = v.path
         end
-        voiceBusy = CurTime() + VoiceSecs(v.path, v.dur, 6) + 0.8
+        voiceBusy = CurTime() + secs + 0.8
         return
     end
     if LC_CL.SpeakerBrokenNear(LocalPlayer():GetPos()) then
@@ -786,7 +817,7 @@ local function PlayNextVoice()
     v.path = path
     if v.path == "" then -- (nothing to say aloud: Half-Life 2's voice is off, lc_announce_stock; the banner only)
     elseif file.Exists("sound/" .. v.path, "GAME") then
-        surface.PlaySound(v.path)
+        LC_CL.PlayAnnounceOnce(v.path, 1, VoiceSecs(v.path, v.dur, 4.5))
     elseif string.find(v.path, "^livingcity/") and LC_CL.SoundTrouble then
         LC_CL.SoundTrouble(v.path) -- (one of the server's own recordings: say it's missing here)
     end -- (a stock Half-Life 2 line this install doesn't have: the banner and the words, without the sound)

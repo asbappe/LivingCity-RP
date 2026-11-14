@@ -952,6 +952,7 @@ setting lc_manpower_rebel_max = 20
 setting lc_manpower_rebel_minutes = 8
 setting lc_manpower_restrict_pct = 15
 setting lc_mantle_height = 108
+setting lc_map_pa_minutes = 5
 setting lc_march = 1
 setting lc_march_max = 240
 setting lc_market = 1

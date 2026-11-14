@@ -573,10 +573,34 @@ hook.Add("EntityEmitSound", "LivingCityLipSync", function(data)
     if data and IsValid(data.Entity) then LC.MarkTalking(data.Entity, data.SoundName) end
 end)
 
+-- The map's own PA (the owner, 14 November: "the overwatch announcer voice I custom made is just SPAMMING
+-- announcements still, every like 15 seconds"). rp_c18_ug plays Half-Life 2's city voice lines
+-- (npc/overwatch/cityvoice/) by itself on a timer, and since 11 November those you recorded play in your
+-- voice. The city's own announcer never goes this way (it plays on each player's screen), so anything here
+-- is the map's: one line is let through every lc_map_pa_minutes (5), and none while the city's PA is
+-- speaking or within a minute of it; the rest are silenced. 0 silences the map's PA altogether.
+local cvMapPA = CreateConVar("lc_map_pa_minutes", "5", FCVAR_ARCHIVE, "The map's own Overwatch PA lines (npc/overwatch/cityvoice/): one every this many minutes at most, never over the city's announcer (0: never)")
+LC.MapPANext, LC.MapPAHeld, LC.MapPALet = 0, 0, 0
+function LC.MapPAAllowed(name, now)
+    if type(name) ~= "string" or not string.find(string.lower(name), "npc/overwatch/cityvoice/", 1, true) then return true end
+    now = now or CurTime()
+    local every = cvMapPA:GetFloat()
+    local busy = LC.PAQuiet and LC.PAQuiet() < 60
+    if every <= 0 or busy or now < (LC.MapPANext or 0) then
+        LC.MapPAHeld = (LC.MapPAHeld or 0) + 1
+        return false
+    end
+    LC.MapPANext = now + every * 60
+    LC.MapPALet = (LC.MapPALet or 0) + 1
+    if LC.PAMark then LC.PAMark(8) end -- (the city's announcer waits for it in turn)
+    return true
+end
+
 -- Every sound an entity makes passes here: a Half-Life 2 clip that has been re-recorded is swapped for the recording.
 hook.Add("EntityEmitSound", "LivingCityVoiceReplace", function(data)
     local name = data and data.SoundName
     if not name then return end
+    if not LC.MapPAAllowed(name) then return false end
     local mine = LC.VoiceReplacement(name)
     if not mine then return end
     -- a citizen's clip is swapped only for a named citizen with the recorded voice: the others keep Half-Life 2's

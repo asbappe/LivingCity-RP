@@ -26838,6 +26838,23 @@ function NearYouTests() -- (14 November: the debug report's "Near you": who is n
     watcher:SetPos(Vector(-150000, 150000, 0))
 end
 NearYouTests()
+function MapPATests() -- (14 November: the map's own Overwatch PA, in the owner's voice, every 15 seconds)
+    section("The map's own PA lines: one every few minutes, never over the city's announcer")
+    LC.MapPANext, LC.MapPAHeld, LC.MapPALet = 0, 0, 0
+    local quietWas = LC.PAQuiet
+    LC.PAQuiet = function() return 600 end
+    local t0 = CurTime()
+    ok(LC.MapPAAllowed("npc/overwatch/cityvoice/f_anticitizenreport_spkr.wav", t0) == true, "the map's first PA line plays")
+    ok(LC.MapPAAllowed("npc/overwatch/cityvoice/f_innactionisconspiracy_spkr.wav", t0 + 15) == false, "another 15 seconds later is silenced")
+    ok(LC.MapPAAllowed("npc/overwatch/cityvoice/f_capitalmalcompliance_spkr.wav", t0 + 5 * 60 + 1) == true, "five minutes on, one more")
+    LC.PAQuiet = function() return 10 end
+    ok(LC.MapPAAllowed("npc/overwatch/cityvoice/f_rationunitsdeduct_3_spkr.wav", t0 + 20 * 60) == false, "never right after the city's own announcer")
+    ok(LC.MapPAAllowed("vo/npc/male01/hi01.wav", t0) == true, "anything else is untouched")
+    ok(LC.MapPAHeld == 2 and LC.MapPALet == 2, "(counted for the debug report)")
+    LC.PAQuiet = quietWas
+    LC.MapPANext = 0
+end
+MapPATests()
 -- The owner's 7 November playtest, part 2 (sv_livingcity_fieldops.lua and friends): a unit each.
 function RetakeFieldTests()
     local function FieldPost(p, spec, tid, violent)

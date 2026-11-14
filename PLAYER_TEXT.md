@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version fdedee6. Admin-only console messages and log lines are left out.
+Made from version 5454ad8. Admin-only console messages and log lines are left out.
 
-12322 lines, from 331 files.
+12335 lines, from 331 files.
 
 ## Contents
 
@@ -174,7 +174,7 @@ Made from version fdedee6. Admin-only console messages and log lines are left ou
 - [Half-Life: Alyx-style Combine models](#half-life-alyx-style-combine-models-svlivingcitycombinemodelslua) (5)
 - [conduct (anti-RDM and anti-combat-logging)](#conduct-anti-rdm-and-anti-combat-logging-svlivingcityconductlua) (26)
 - [supply drops, radio jammers](#supply-drops-radio-jammers-svlivingcityconvoylua) (33)
-- [Civil Protection's toolset](#civil-protections-toolset-svlivingcitycplua) (107)
+- [Civil Protection's toolset](#civil-protections-toolset-svlivingcitycplua) (108)
 - [a Civil Protection shift, with a quota and a review](#a-civil-protection-shift-with-a-quota-and-a-review-svlivingcitycpdutylua) (60)
 - [the Civil Protection Commissary (units' supplies)](#the-civil-protection-commissary-units-supplies-svlivingcitycpsupplylua) (29)
 - [headcrab hunts for the Resistance's supply crate](#headcrab-hunts-for-the-resistances-supply-crate-svlivingcitycrabhuntlua) (15)
@@ -182,7 +182,7 @@ Made from version fdedee6. Admin-only console messages and log lines are left ou
 - [the Cremator](#the-cremator-svlivingcitycrematorlua) (20)
 - [what custody costs the worst anticitizens](#what-custody-costs-the-worst-anticitizens-svlivingcitycustodylua) (30)
 - [saved layout](#saved-layout-svlivingcitydatalua) (16)
-- [debugging](#debugging-svlivingcitydebuglua) (67)
+- [debugging](#debugging-svlivingcitydebuglua) (78)
 - [the desperate Combine (sv_livingcity_desperation.lua)](#the-desperate-combine-svlivingcitydesperationlua-svlivingcitydesperationlua) (12)
 - [sv_livingcity_directives.lua](#svlivingcitydirectiveslua-svlivingcitydirectiveslua) (56)
 - [doors](#doors-svlivingcitydoorslua) (9)
@@ -203,7 +203,7 @@ Made from version fdedee6. Admin-only console messages and log lines are left ou
 - [a business of your own (the owner, 10 November: "real](#a-business-of-your-own-the-owner-10-november-real-svlivingcityemploymentlua) (23)
 - [secret endings](#secret-endings-svlivingcityendingslua) (84)
 - [escorts through Combine doors](#escorts-through-combine-doors-svlivingcityescortlua) (74)
-- [city events](#city-events-svlivingcityeventslua) (80)
+- [city events](#city-events-svlivingcityeventslua) (81)
 - [burning the confiscated contraband (the owner, 7 November)](#burning-the-confiscated-contraband-the-owner-7-november-svlivingcityevidencelua) (67)
 - [morning exercise (mandatory for citizens)](#morning-exercise-mandatory-for-citizens-svlivingcityexerciselua) (62)
 - [sv_livingcity_factions.lua](#svlivingcityfactionslua-svlivingcityfactionslua) (57)
@@ -1328,39 +1328,39 @@ Made from version fdedee6. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: play next voice
 
-- "(the loudspeaker here is broken)"  (text, line 776)
+- "(the loudspeaker here is broken)"  (text, line 807)
 
 > Note for you (not shown in game): on screen
 
-- "Cuffed and kneeling. Wait it out."  (drawn on screen, line 900)
-- "ESCORT CALLED AWAY: stay put, another Civil Protection unit is coming (%ds)"  (message, line 936)
-- "Spawn protection %ds"  (message, line 945)
-- "Ration distribution"  (text, line 953)
-- "Civil status inspections"  (text, line 953)
-- "Housing block inspection"  (text, line 953)
-- "Supply convoy unloading"  (text, line 953)
+- "Cuffed and kneeling. Wait it out."  (drawn on screen, line 931)
+- "ESCORT CALLED AWAY: stay put, another Civil Protection unit is coming (%ds)"  (message, line 967)
+- "Spawn protection %ds"  (message, line 976)
+- "Ration distribution"  (text, line 984)
+- "Civil status inspections"  (text, line 984)
+- "Housing block inspection"  (text, line 984)
+- "Supply convoy unloading"  (text, line 984)
 
 > Note for you (not shown in game): units and Overwatch don't go home for curfew: they enforce it
 
-- "Grace period: %ds to get home."  (message, line 963)
+- "Grace period: %ds to get home."  (message, line 994)
 
 > Note for you (not shown in game): (a stalker has no home: the curfew's "report to your block" and HOME marker aren't for it)
 
-- "You are home. Stay inside."  (text, line 968)
-- "Report to {block}."  (text, line 968)
+- "You are home. Stay inside."  (text, line 999)
+- "Report to {block}."  (text, line 999)
 
 > Note for you (not shown in game): Debug report viewer
 
-- "Debug report copied to your clipboard. Paste it to Claude. Also saved to {file}"  (chat message, line 990)
+- "Debug report copied to your clipboard. Paste it to Claude. Also saved to {file}"  (chat message, line 1021)
 
 > Note for you (not shown in game): the game answering something done in a window (lc_report)
 
-- "Miscount debug report"  (window title, line 994)
-- "Copy to clipboard again"  (label or button, line 1007)
+- "Miscount debug report"  (window title, line 1025)
+- "Copy to clipboard again"  (label or button, line 1038)
 
 > Note for you (not shown in game): Path mapping (sv_livingcity_pathmap.lua): say so on screen while it's on (made once here, not every frame)
 
-- "PATH MAPPING: walk to lay nodes"  (text, line 1043)
+- "PATH MAPPING: walk to lay nodes"  (text, line 1074)
 
 ## cl_livingcity_actions.lua (cl_livingcity_actions.lua)
 
@@ -5420,67 +5420,67 @@ Made from version fdedee6. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: say
 
-- "[{or}] "{text}""  (chat message, line 432)
-- "[{or}] "{text}""  (chat message, line 448)
+- "[{or}] "{text}""  (chat message, line 433)
+- "[{or}] "{text}""  (chat message, line 449)
 
 > Note for you (not shown in game): a timer (regularly)
 
-- "Sound files"  (on-screen notice, line 625)
-- "recording(s) can't be played (an MP3 renamed .wav, or a WAV that isn't 16-bit 44100 Hz). Type lc_announce_clips in the console to see which, and how to fix each."  (on-screen notice, line 625)
+- "Sound files"  (on-screen notice, line 626)
+- "recording(s) can't be played (an MP3 renamed .wav, or a WAV that isn't 16-bit 44100 Hz). Type lc_announce_clips in the console to see which, and how to fix each."  (on-screen notice, line 626)
 
 > Note for you (not shown in game): the console command lc_announce_clips
 
-- "[Miscount] {v}: {or}"  (text, line 652)
-- "[Miscount]   check {v}/{why}"  (text, line 653)
-- "[Miscount]   CAN'T PLAY {why}"  (text, line 656)
-- "[Miscount] {v}: {parts}"  (text, line 664)
-- "[Miscount] Players' computers play these, so each needs the files: {or}sv_allowdownload {or}, sv_downloadurl "{or}" (a Workshop addon is the reliable way). Each player can type lc_sound_check to test their own."  (text, line 667)
-- "[Miscount] {total} custom announcements found. Folders: sound/livingcity/overwatch/, administrator/, radio/ (or the same under sound/{ROOT}), flat: a file's name starts with its trigger (curfew1.wav), and the Administrator's tone is in it (curfew_firm1.wav); lc_announce_rescan after adding files."  (text, line 671)
+- "[Miscount] {v}: {or}"  (text, line 653)
+- "[Miscount]   check {v}/{why}"  (text, line 654)
+- "[Miscount]   CAN'T PLAY {why}"  (text, line 657)
+- "[Miscount] {v}: {parts}"  (text, line 665)
+- "[Miscount] Players' computers play these, so each needs the files: {or}sv_allowdownload {or}, sv_downloadurl "{or}" (a Workshop addon is the reliable way). Each player can type lc_sound_check to test their own."  (text, line 668)
+- "[Miscount] {total} custom announcements found. Folders: sound/livingcity/overwatch/, administrator/, radio/ (or the same under sound/{ROOT}), flat: a file's name starts with its trigger (curfew1.wav), and the Administrator's tone is in it (curfew_firm1.wav); lc_announce_rescan after adding files."  (text, line 672)
 
 > Note for you (not shown in game): part of: voice missing
 
-- "Dream lines"  (text, line 687)
-- "dream1 (optional)"  (text, line 708)
+- "Dream lines"  (text, line 688)
+- "dream1 (optional)"  (text, line 709)
 
 > Note for you (not shown in game): what named people say (sv_livingcity_lines.lua): citizens a man's take and a woman's, units one voice
 
-- "Named citizens' lines"  (text, line 728)
-- "Units' lines"  (text, line 729)
+- "Named citizens' lines"  (text, line 729)
+- "Units' lines"  (text, line 730)
 
 > Note for you (not shown in game): part of: voice missing
 
-- "Citizen Information clerk"  (text, line 744)
-- "The old-timer"  (text, line 747)
+- "Citizen Information clerk"  (text, line 745)
+- "The old-timer"  (text, line 748)
 
 > Note for you (not shown in game): Colonel Cubbage answering her speeches (sv_livingcity_speechanswer.lua): answer_<piece>
 
-- "Colonel Cubbage"  (text, line 753)
+- "Colonel Cubbage"  (text, line 754)
 
 > Note for you (not shown in game): One row of lc_voice_missing as lines short enough to arrive in chat (at most about 200 characters each).
 
-- "[Miscount] {name} (sound/livingcity/{folder}),"  (text, line 761)
-- "nothing missing"  (text, line 762)
+- "[Miscount] {name} (sound/livingcity/{folder}),"  (text, line 762)
+- "nothing missing"  (text, line 763)
 
 > Note for you (not shown in game): also as a file, one missing recording to a line (folder/name), for _dev/tools/elevenlabs_batch.py --missing: it then makes only what the server lacks (the owner, 11 November: "I already have loads of these")
 
-- "[Miscount] The whole list is also in data/livingcity/voice_missing.txt ({lines} lines)."  (text, line 789)
+- "[Miscount] The whole list is also in data/livingcity/voice_missing.txt ({lines} lines)."  (text, line 790)
 
 > Note for you (not shown in game): (in pieces: a chat line over 255 characters never arrives, so the long rows went missing in game)
 
-- "[Miscount] {total} voice lines with no recording yet. Without one, the words still show (Half-Life 2's own Overwatch lines only with lc_announce_stock 1). Name a file for its line (curfew1.wav, ravenholm_defeat1.wav); a .txt with the same name is its subtitle. Everything to record, with suggested words: VOICE_LINES.md, in the gamemode's folder."  (text, line 795)
+- "[Miscount] {total} voice lines with no recording yet. Without one, the words still show (Half-Life 2's own Overwatch lines only with lc_announce_stock 1). Name a file for its line (curfew1.wav, ravenholm_defeat1.wav); a .txt with the same name is its subtitle. Everything to record, with suggested words: VOICE_LINES.md, in the gamemode's folder."  (text, line 796)
 
 > Note for you (not shown in game): the console command lc_announce_rescan
 
-- "[Miscount] {AnnounceRescan} custom announcements found."  (text, line 801)
+- "[Miscount] {AnnounceRescan} custom announcements found."  (text, line 802)
 
 > Note for you (not shown in game): the console command lc_announce_say
 
-- "[Miscount] lc_announce_say <overwatch\|administrator> <trigger> [warm\|firm\|stern\|furious]"  (text, line 807)
-- "[Miscount] Nothing in sound/{ROOT}{voice}/{trig}/ to say (or it's off)."  (text, line 810)
+- "[Miscount] lc_announce_say <overwatch\|administrator> <trigger> [warm\|firm\|stern\|furious]"  (text, line 808)
+- "[Miscount] Nothing in sound/{ROOT}{voice}/{trig}/ to say (or it's off)."  (text, line 811)
 
 > Note for you (not shown in game): the console command lc_announce_tier
 
-- "[Miscount] {trig}: she would be {t} about it now (sociostability {or}, {Heat} violent things in ten minutes){or}."  (text, line 818)
+- "[Miscount] {trig}: she would be {t} about it now (sociostability {or}, {Heat} violent things in ten minutes){or}."  (text, line 819)
 
 ## arrests in the open (the owner's playtest, 7 November) (sv_livingcity_arrest.lua)
 
@@ -7467,71 +7467,75 @@ Made from version fdedee6. Admin-only console messages and log lines are left ou
 - "an anticitizen at large"  (text, line 808)
 - "a wanted anticitizen"  (text, line 809)
 
+> Note for you (not shown in game): one voice for it: Overwatch, or (some of the time) the Administrator in his place (sv_livingcity_announcer.lua)
+
+- "PA: overwatch says %s (%s)"  (message, line 834)
+
 > Note for you (not shown in game): part of: announce socio
 
-- "[Overwatch] "{subtitle}""  (chat message, line 842)
-- "[Overwatch] Sociostability: %s.%s"  (message, line 845)
+- "[Overwatch] "{subtitle}""  (chat message, line 843)
+- "[Overwatch] Sociostability: %s.%s"  (message, line 846)
 
 > Note for you (not shown in game): part of: set socio
 
-- "Only the Administrator sets sociostability."  (text, line 890)
-- "Sociostability is back to what the city makes it."  (text, line 895)
-- "Pick green, yellow, red, or auto (the city decides)."  (text, line 897)
+- "Only the Administrator sets sociostability."  (text, line 891)
+- "Sociostability is back to what the city makes it."  (text, line 896)
+- "Pick green, yellow, red, or auto (the city decides)."  (text, line 898)
 
 > Note for you (not shown in game): (announced to the whole city each time: not more than once every half minute)
 
-- "You only just set it. Wait %d seconds."  (message, line 900)
-- "Sociostability set to %s for %d minutes."  (message, line 906)
+- "You only just set it. Wait %d seconds."  (message, line 901)
+- "Sociostability set to %s for %d minutes."  (message, line 907)
 
 > Note for you (not shown in game): Requests
 
-- "Requests are off on this server."  (text, line 920)
-- "You're a Civil Protection unit. Use the radio, or !backup."  (text, line 922)
-- "You need a Civil Protection call box (the Union Commissary sells them)."  (text, line 923)
-- "Say what's wrong: /request <what's wrong>"  (text, line 924)
+- "Requests are off on this server."  (text, line 921)
+- "You're a Civil Protection unit. Use the radio, or !backup."  (text, line 923)
+- "You need a Civil Protection call box (the Union Commissary sells them)."  (text, line 924)
+- "Say what's wrong: /request <what's wrong>"  (text, line 925)
 
 > Note for you (not shown in game): part of: cprequest
 
-- "The call box crackles. Nothing gets through: something nearby is jamming it."  (text, line 925)
-- "The device is still recharging (%ds)."  (message, line 928)
-- "[Request] Sent. Civil Protection has your location."  (chat message, line 960)
-- "[Request] Sent. A Civil Protection unit is on the way."  (text, line 961)
-- "[Request] Sent. Nobody answers."  (text, line 961)
-- "request from %s: %s"  (message, line 962)
+- "The call box crackles. Nothing gets through: something nearby is jamming it."  (text, line 926)
+- "The device is still recharging (%ds)."  (message, line 929)
+- "[Request] Sent. Civil Protection has your location."  (chat message, line 961)
+- "[Request] Sent. A Civil Protection unit is on the way."  (text, line 962)
+- "[Request] Sent. Nobody answers."  (text, line 962)
+- "request from %s: %s"  (message, line 963)
 
 > Note for you (not shown in game): Play a line and say it. word: the line's short word, its number, or its words.
 
-- "Only Civil Protection units have the mask's voice."  (text, line 998)
-- "No such line. !vo opens the list."  (text, line 1001)
+- "Only Civil Protection units have the mask's voice."  (text, line 999)
+- "No such line. !vo opens the list."  (text, line 1002)
 
 > Note for you (not shown in game): part of: vo
 
-- "Only Civil Protection units have the mask's voice."  (chat message, line 1054)
+- "Only Civil Protection units have the mask's voice."  (chat message, line 1055)
 
 > Note for you (not shown in game): part of: socio
 
-- "[Overwatch] Sociostability: %s%s"  (message, line 1066)
-- "(set by %s, %d min left)"  (message, line 1067)
+- "[Overwatch] Sociostability: %s%s"  (message, line 1067)
+- "(set by %s, %d min left)"  (message, line 1068)
 
 > Note for you (not shown in game): every 10 minutes, as before the dispenser was slowed (the owner, 7 November: only citizens feel the scarcity)
 
-- "a ration voucher"  (text, line 1132)
+- "a ration voucher"  (text, line 1133)
 
 > Note for you (not shown in game): (the coupons are paid quietly: the owner, 12 November, "please get rid of this '... credits in ration coupons' ... it's just more pointless noise". Only a voucher is worth a line.)
 
-- "[Civil Protection] Ration voucher issued. Take it to a Civil Protection Commissary or a ration dispenser for your ration packet."  (chat message, line 1138)
-- "Ration voucher"  (on-screen notice, line 1141)
-- "Your duty allocation comes as a ration voucher, not a packet: take it to a Civil Protection Commissary or a ration dispenser (E) for your ration."  (on-screen notice, line 1141)
+- "[Civil Protection] Ration voucher issued. Take it to a Civil Protection Commissary or a ration dispenser for your ration packet."  (chat message, line 1139)
+- "Ration voucher"  (on-screen notice, line 1142)
+- "Your duty allocation comes as a ration voucher, not a packet: take it to a Civil Protection Commissary or a ration dispenser (E) for your ration."  (on-screen notice, line 1142)
 
 > Note for you (not shown in game): F2 > Cuff them, on a citizen or rebel in front of a unit (the owner, 12 November: "I stopped someone and pressed F2 and I don't see a cuff option"). The same as the Arrest Baton's right click (sv_livingcity_arrest.lua): they may struggle, then they're walked to the cells. Greyed on F2 with why when the unit has no cuffs left.
 
-- "[CP net] Only Civil Protection units cuff people."  (text, line 1169)
-- "[CP net] Look at them, up close."  (text, line 1170)
-- "[CP net] Get closer."  (text, line 1171)
+- "[CP net] Only Civil Protection units cuff people."  (text, line 1170)
+- "[CP net] Look at them, up close."  (text, line 1171)
+- "[CP net] Get closer."  (text, line 1172)
 
 > Note for you (not shown in game): part of: cuffnpc
 
-- "[Miscount] {msg}"  (chat message, line 1175)
+- "[Miscount] {msg}"  (chat message, line 1176)
 
 ## a Civil Protection shift, with a quota and a review (sv_livingcity_cpduty.lua)
 
@@ -8062,73 +8066,93 @@ Made from version fdedee6. Admin-only console messages and log lines are left ou
 
 - "= {GetString}"  (text, line 74)
 
+> Note for you (not shown in game): Near you (the owner, 14 November: a unit "keeps running by me ... then disappears, and then respawns where he started", and the report, taken right then, couldn't say which unit: its NPC list is a sample). Every half second each NPC within NEAR of a player is looked at: a jump of more than JUMP units in that time (no NPC runs that fast: the code put it somewhere), appearing, or being taken away, is noted with who, where and how far from the player. The report lists the last of those, and every NPC near each player now.
+
+- "[{role} {state}]"  (text, line 94)
+- "[not Miscount's]"  (message, line 94)
+
+> Note for you (not shown in game): the game's entity removed moment
+
+- "taken away"  (text, line 132)
+
+> Note for you (not shown in game): part of: near report
+
+- "%s at %.0f %.0f %.0f: %d NPCs within %d"  (message, line 145)
+- "%4.0f away: %s at %.0f %.0f %.0f%s%s%s"  (message, line 149)
+- "recov {recoveries}"  (text, line 150)
+- "beat {routeGroup}"  (text, line 151)
+- "hop {hop}/{route}"  (text, line 152)
+- "jumped, appeared or taken away near a player (newest last):"  (text, line 155)
+
 > Note for you (not shown in game): part of: build report
 
-- "version %s \| map %s \| gamemode %s \| %s"  (message, line 82)
-- "players %d/%d \| singleplayer %s \| dedicated %s \| uptime %s"  (message, line 84)
-- "city %s \| event %s"  (message, line 87)
-- "running for {CurTime}"  (text, line 88)
-- "points: {or}"  (text, line 102)
-- "zones: {GrownCount}"  (text, line 113)
-- "territory grown since placed: rebel %d patches, infestation %d patches (lc_territory for details)"  (message, line 115)
-- "door tags: {or}"  (text, line 122)
-- "no prison cells: arrests become street detentions (cuffed, searched, fined, released)"  (text, line 128)
-- "no spawn/exit doorways: NPCs appear out of sight and leave into blocks or wander off"  (text, line 129)
-- "no housing blocks: curfew can't send anyone home, and nobody has a stash"  (text, line 130)
-- "static map fixtures: {or}{or}"  (text, line 136)
-- "people: %d alive (%d sympathizers), %d dead remembered"  (message, line 144)
-- "no Combine-only zones: citizens can walk into the nexus, offices and armory (doors by the cells still lock)"  (text, line 146)
-- "no infestation spawn points: zombies appear at random spots inside infestation zones"  (text, line 147)
-- "no checkpoints or patrol beats: cops wander at random"  (text, line 148)
-- "no workplaces: Union shifts happen out on the streets"  (text, line 149)
-- "line %d has no ration dispenser at its front: NPCs are still served, and players who wait at the front are handed a ration"  (message, line 157)
-- "recordings: {or}"  (text, line 170)
-- "ending songs (sound/livingcity/endings/): {DreamMusicList}"  (text, line 176)
-- "dream songs (sound/livingcity/dreams/<codeword>/, or <codeword>1.mp3 there): {ds}"  (text, line 180)
-- "sound guard (stopped for repeating): {or}"  (text, line 184)
-- "downloads: sv_downloadurl "{or}" (players get new sounds after a FastDL sync and a map change)"  (text, line 187)
-- "save files that couldn't be read, kept and not saved over: {names}"  (text, line 193)
-- "setup notes: {_}"  (text, line 195)
-- "people who left since the map started: %d"  (message, line 201)
-- ", no dispenser by its front (a clerk hands rations out)"  (text, line 208)
-- ", its dispenser has NO POWER: nobody queues for a dead dispenser"  (text, line 209)
-- "line %d: %d slots, %d queued, %d on their way, front waiting %ds%s%s"  (message, line 210)
-- "(placed from the back: turned round so the front is at the dispenser)"  (message, line 212)
-- "vortigaunts: %d freed in rebel ground (lc_rebel_vorts %s)%s, %d shackled on the streets (lc_vort_slaves %s)"  (message, line 222)
-- "chasing %s at %.0fu"  (message, line 235)
-- "%-8s %-16s hp %3d recov %d err %d hop %s/%s pos %s%s%s%s"  (message, line 238)
-- "beat {routeGroup}"  (text, line 242)
-- "line {line} slot {slotIndex}"  (text, line 243)
-- "heading to line {lineHeading}"  (text, line 243)
-- "by role: {out}{or}"  (text, line 250)
-- "stuck: %d moved on a step, %d far trips given up%s"  (message, line 254)
-- "routes: %s, %d trips not started (unreachable), %d places skipped as hard to reach"  (message, line 259)
-- "%d planned over the nodegraph, %d short enough to walk direct"  (message, line 260)
-- "no nodegraph links"  (message, line 260)
-- "route repairs: %d legs walked in single steps, %d links found unwalkable (%d avoided right now), %d trips re-planned around them"  (message, line 263)
-- "main loop: avg %.2f ms, last %.2f ms, worst %.2f ms over %d ticks"  (message, line 273)
-- "server tick interval %.4f, entity count %d"  (message, line 275)
-- "whole server frame (engine AI, physics, networking): avg %.2f ms, worst %.2f ms, %d of %d ticks late (%.1f%%), a tick should take %.1f ms"  (message, line 278)
-- "entities by class: {top}"  (text, line 291)
-- "NPCs on the map (all of them, Miscount's and not): %d"  (message, line 294)
-- "asleep (far from everyone, engine AI off; lc_npc_sleep %s): %d now; %d times put to sleep, %d woken, %d route stops walked out of sight"  (message, line 297)
-- "%s [%s] step %d/%d (%s) %ds left: %s"  (message, line 308)
-- "active %d \| violent cap %d"  (message, line 313)
-- "prisoners: {prisoners} \| detained on the street: {held}"  (text, line 320)
-- "stops in progress: {stops} \| next event: {_}"  (text, line 323)
-- "disguise {GetNW2String}"  (text, line 331)
-- "alias {GetNW2String}"  (text, line 332)
-- "radio {GetNW2String}"  (text, line 333)
-- "contraband {illegal}"  (text, line 334)
-- "alert %d (heat %d, %d soldiers after them)"  (message, line 336)
-- "running check: {pl}"  (text, line 338)
-- "(rebel territory)"  (message, line 340)
-- "%s \| %s \| job %s \| block %s \| cp %s \| wanted %s \| hunger %d thirst %d \| credits %s standing %s%s%s"  (message, line 341)
-- "The city's minds (sv_livingcity_minds.lua, sv_livingcity_mindsact.lua)"  (text, line 352)
-- "The chronicle (sv_livingcity_chronicle.lua)"  (text, line 357)
-- "The director and free talk (sv_livingcity_brain.lua)"  (text, line 361)
-- "her voice: {l}"  (text, line 363)
-- "Recent log (newest last)"  (text, line 366)
+- "version %s \| map %s \| gamemode %s \| %s"  (message, line 163)
+- "players %d/%d \| singleplayer %s \| dedicated %s \| uptime %s"  (message, line 165)
+- "city %s \| event %s"  (message, line 168)
+- "running for {CurTime}"  (text, line 169)
+- "points: {or}"  (text, line 183)
+- "zones: {GrownCount}"  (text, line 194)
+- "territory grown since placed: rebel %d patches, infestation %d patches (lc_territory for details)"  (message, line 196)
+- "door tags: {or}"  (text, line 203)
+- "no prison cells: arrests become street detentions (cuffed, searched, fined, released)"  (text, line 209)
+- "no spawn/exit doorways: NPCs appear out of sight and leave into blocks or wander off"  (text, line 210)
+- "no housing blocks: curfew can't send anyone home, and nobody has a stash"  (text, line 211)
+- "static map fixtures: {or}{or}"  (text, line 217)
+- "people: %d alive (%d sympathizers), %d dead remembered"  (message, line 225)
+- "no Combine-only zones: citizens can walk into the nexus, offices and armory (doors by the cells still lock)"  (text, line 227)
+- "no infestation spawn points: zombies appear at random spots inside infestation zones"  (text, line 228)
+- "no checkpoints or patrol beats: cops wander at random"  (text, line 229)
+- "no workplaces: Union shifts happen out on the streets"  (text, line 230)
+- "line %d has no ration dispenser at its front: NPCs are still served, and players who wait at the front are handed a ration"  (message, line 238)
+- "recordings: {SoundLoops}"  (text, line 251)
+- "recordings with a loop mark (the engine would repeat them; announcements now play them once): %d of %d%s"  (message, line 264)
+- "ending songs (sound/livingcity/endings/): {DreamMusicList}"  (text, line 272)
+- "dream songs (sound/livingcity/dreams/<codeword>/, or <codeword>1.mp3 there): {ds}"  (text, line 276)
+- "sound guard (stopped for repeating): {or}"  (text, line 280)
+- "downloads: sv_downloadurl "{or}" (players get new sounds after a FastDL sync and a map change)"  (text, line 283)
+- "save files that couldn't be read, kept and not saved over: {names}"  (text, line 289)
+- "setup notes: {_}"  (text, line 291)
+- "people who left since the map started: %d"  (message, line 297)
+- ", no dispenser by its front (a clerk hands rations out)"  (text, line 304)
+- ", its dispenser has NO POWER: nobody queues for a dead dispenser"  (text, line 305)
+- "line %d: %d slots, %d queued, %d on their way, front waiting %ds%s%s"  (message, line 306)
+- "(placed from the back: turned round so the front is at the dispenser)"  (message, line 308)
+- "Near you"  (text, line 311)
+- "vortigaunts: %d freed in rebel ground (lc_rebel_vorts %s)%s, %d shackled on the streets (lc_vort_slaves %s)"  (message, line 321)
+- "chasing %s at %.0fu"  (message, line 334)
+- "%-8s %-16s hp %3d recov %d err %d hop %s/%s pos %s%s%s%s"  (message, line 337)
+- "beat {routeGroup}"  (text, line 341)
+- "line {line} slot {slotIndex}"  (text, line 342)
+- "heading to line {lineHeading}"  (text, line 342)
+- "by role: {out}{or}"  (text, line 349)
+- "stuck: %d moved on a step, %d far trips given up%s"  (message, line 353)
+- "routes: %s, %d trips not started (unreachable), %d places skipped as hard to reach"  (message, line 358)
+- "%d planned over the nodegraph, %d short enough to walk direct"  (message, line 359)
+- "no nodegraph links"  (message, line 359)
+- "route repairs: %d legs walked in single steps, %d links found unwalkable (%d avoided right now), %d trips re-planned around them"  (message, line 362)
+- "main loop: avg %.2f ms, last %.2f ms, worst %.2f ms over %d ticks"  (message, line 372)
+- "server tick interval %.4f, entity count %d"  (message, line 374)
+- "whole server frame (engine AI, physics, networking): avg %.2f ms, worst %.2f ms, %d of %d ticks late (%.1f%%), a tick should take %.1f ms"  (message, line 377)
+- "entities by class: {top}"  (text, line 390)
+- "NPCs on the map (all of them, Miscount's and not): %d"  (message, line 393)
+- "asleep (far from everyone, engine AI off; lc_npc_sleep %s): %d now; %d times put to sleep, %d woken, %d route stops walked out of sight"  (message, line 396)
+- "%s [%s] step %d/%d (%s) %ds left: %s"  (message, line 407)
+- "active %d \| violent cap %d"  (message, line 412)
+- "prisoners: {prisoners} \| detained on the street: {held}"  (text, line 419)
+- "stops in progress: {stops} \| next event: {_}"  (text, line 422)
+- "disguise {GetNW2String}"  (text, line 430)
+- "alias {GetNW2String}"  (text, line 431)
+- "radio {GetNW2String}"  (text, line 432)
+- "contraband {illegal}"  (text, line 433)
+- "alert %d (heat %d, %d soldiers after them)"  (message, line 435)
+- "running check: {pl}"  (text, line 437)
+- "(rebel territory)"  (message, line 439)
+- "%s \| %s \| job %s \| block %s \| cp %s \| wanted %s \| hunger %d thirst %d \| credits %s standing %s%s%s"  (message, line 440)
+- "The city's minds (sv_livingcity_minds.lua, sv_livingcity_mindsact.lua)"  (text, line 451)
+- "The chronicle (sv_livingcity_chronicle.lua)"  (text, line 456)
+- "The director and free talk (sv_livingcity_brain.lua)"  (text, line 460)
+- "her voice: {l}"  (text, line 462)
+- "Recent log (newest last)"  (text, line 465)
 
 ## the desperate Combine (sv_livingcity_desperation.lua) (sv_livingcity_desperation.lua)
 
@@ -9796,73 +9820,77 @@ Made from version fdedee6. Admin-only console messages and log lines are left ou
 - "Morning exercise is over. Off to work."  (text, line 198)
 - "The parade is over. Off to work."  (text, line 198)
 
+> Note for you (not shown in game): (no Half-Life 2 voice unless lc_announce_stock: the words still go in chat and on screen)
+
+- "PA: overwatch says %s (%s)"  (message, line 233)
+
 > Note for you (not shown in game): and in chat, what it said and what it means
 
-- "[{title}] "{says}""  (chat message, line 246)
+- "[{title}] "{says}""  (chat message, line 247)
 
 > Note for you (not shown in game): part of: end event
 
-- "[City] {was}"  (chat message, line 285)
+- "[City] {was}"  (chat message, line 286)
 
 > Note for you (not shown in game): pull idle citizens toward the lines right away
 
-- "curfew or lockdown: gone home"  (text, line 322)
+- "curfew or lockdown: gone home"  (text, line 323)
 
 > Note for you (not shown in game): part of: start event
 
-- "Event started: %s (%s min)"  (message, line 327)
+- "Event started: %s (%s min)"  (message, line 328)
 
 > Note for you (not shown in game): part of: block name
 
-- "Habitation Block %02d"  (text, line 370)
+- "Habitation Block %02d"  (text, line 371)
 
 > Note for you (not shown in game): the one this is all about: no warnings, he knows you
 
-- "[Civil Protection] "That's the one!" The Civil Protection unit knows you: this curfew is about you. You are wanted."  (chat message, line 437)
-- "Wanted in connection with the unrest"  (text, line 438)
+- "[Civil Protection] "That's the one!" The Civil Protection unit knows you: this curfew is about you. You are wanted."  (chat message, line 438)
+- "Wanted in connection with the unrest"  (text, line 439)
 
 > Note for you (not shown in game): and he comes over: walking at the first warning, running after that
 
-- "Civil Intake (you have no room yet)"  (text, line 451)
-- "your residence"  (text, line 451)
-- "[Civil Protection] Curfew is in effect. Return to %s. (Warning %d of %d)"  (message, line 455)
+- "Civil Intake (you have no room yet)"  (text, line 452)
+- "your residence"  (text, line 452)
+- "[Civil Protection] Curfew is in effect. Return to %s. (Warning %d of %d)"  (message, line 456)
 
 > Note for you (not shown in game): part of: enforce curfew
 
-- "[Civil Protection] Curfew violation. You are now wanted."  (chat message, line 459)
-- "Curfew violation"  (text, line 460)
+- "[Civil Protection] Curfew violation. You are now wanted."  (chat message, line 460)
+- "Curfew violation"  (text, line 461)
 
 > Note for you (not shown in game): "now put it in the trash": a marker to the nearest bin, in case it isn't in plain sight
 
-- "The bin"  (text, line 577)
+- "The bin"  (text, line 578)
 
 > Note for you (not shown in game): part of: can think
 
-- "Refusing a lawful order"  (text, line 640)
+- "Refusing a lawful order"  (text, line 641)
 
 > Note for you (not shown in game): Commands
 
-- "[Miscount] Start the city first."  (chat message, line 712)
-- "[Miscount] Events: rations, sweep, curfew, lockdown, raid, supply, jog, drill, parade (those three need their points placed). Usage: lc_event curfew 5"  (chat message, line 714)
-- "[Miscount] Event started: {name}"  (chat message, line 716)
+- "[Miscount] Start the city first."  (chat message, line 713)
+- "[Miscount] Events: rations, sweep, curfew, lockdown, raid, supply, jog, drill, parade (those three need their points placed). Usage: lc_event curfew 5"  (chat message, line 715)
+- "[Miscount] Event started: {name}"  (chat message, line 717)
 
 > Note for you (not shown in game): a unit sets off after someone causing a disturbance
 
-- "Civil Protection is chasing someone {or}. Stay out of the way."  (chat message, line 748)
+- "Civil Protection is chasing someone {or}. Stay out of the way."  (chat message, line 749)
 
 > Note for you (not shown in game): wanted: for running, evasion; for killing or attacking, capital malcompliance
 
-- "citizen {GetNW2String}"  (text, line 755)
-- "is wanted: {or}."  (chat message, line 757)
-- "is wanted: {or}."  (chat message, line 759)
+- "citizen {GetNW2String}"  (text, line 756)
+- "is wanted: {or}."  (chat message, line 758)
+- "is wanted: {or}."  (chat message, line 760)
 
 > Note for you (not shown in game): a long sentence: citizenship revoked
 
-- "has been sentenced."  (chat message, line 765)
+- "has been sentenced."  (chat message, line 766)
 
 > Note for you (not shown in game): someone reports a crime: failing to report is conspiracy (said when people do report)
 
-- "A citizen has reported something to Civil Protection."  (chat message, line 770)
+- "A citizen has reported something to Civil Protection."  (chat message, line 771)
 
 ## burning the confiscated contraband (the owner, 7 November) (sv_livingcity_evidence.lua)
 
@@ -13105,7 +13133,7 @@ Made from version fdedee6. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): the console command lc_voice_replaced
 
-- "[Miscount] {msg}"  (chat message, line 597)
+- "[Miscount] {msg}"  (chat message, line 621)
 
 ## Resistance lookouts (sv_livingcity_lookouts.lua)
 

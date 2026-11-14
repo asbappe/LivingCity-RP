@@ -230,6 +230,7 @@ function LC.Announce(kind, path, detail)
         subtitle, path = nil, ""
     else
         if heard ~= "" and LC.OverwatchSpeaks then LC.OverwatchSpeaks(heard) end
+        if heard ~= "" and LC.Log then LC.Log("info", string.format("PA: overwatch says %s (%s)", tostring(kind), tostring(heard))) end
         if heard == "" then -- (nothing said: the PA stays free)
         elseif LC.PAMark then LC.PAMark(LC.AnnounceClipSecs and LC.AnnounceClipSecs(heard) or 8) else LC.LastPA = CurTime() end
         net.Start("lc_announce")

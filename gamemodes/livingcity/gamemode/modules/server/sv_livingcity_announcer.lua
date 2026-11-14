@@ -421,6 +421,7 @@ local function Say(voice, trig, only, force, tier)
         for _, p in ipairs(player.GetAll()) do if (p.lcWelcomeUntil or 0) <= now then to[#to + 1] = p end end
         if #to == #player.GetAll() then to = nil end
     end
+    if LC.Log and not only then LC.Log("info", string.format("PA: %s says %s (%s)", voice, tostring(trig), tostring(path))) end
     if voice == "overwatch" then
         if not only then LC.OverwatchSpeaks(path) end
         net.Start("lc_announce")
