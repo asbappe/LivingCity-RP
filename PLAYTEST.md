@@ -1925,3 +1925,7 @@ Type them in the server console on the host panel, or in your own game console (
   Notes:
 - [ ] **Colonel Cubbage answers:** after one of her addresses (or `lc_speech_answer_delay 10`), does Odessa Cubbage stand up at the camp and answer point by point, in chat near him and on Freq 7? Does the ghost now have another old man's face (`lc_colonel_model`)?
   Notes:
+
+## 14 November: five dream posters
+- [ ] **Dream posters, the pictures:** unzip `livingcity_content.zip` in `garrysmod/`, FastDL sync, change the map. Use the editor's Dreams: test one for It's Raining Melons, Where's Lamarr?, The Cheese Dream, The Watchers or Mirror, Mirror, or wait for one of those to be tonight's: a plain curfew poster showing that dream should carry its picture (melons falling, a headcrab mugshot, cheese refused, eyes round a bed, her face in a mirror). Any other dream still shows the drawn notice.
+  Notes:

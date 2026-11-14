@@ -5,6 +5,7 @@ const { chromium } = require('playwright');
 const { C, P, R, G, rays, emblem, head, childHead, worker, officer, citizen, reader, adminBust } = require('./lib.js');
 const more = require('./art2.js');
 const res = require('./art3.js');
+const dreams = require('./dreams.js');
 
 const ART = {};
 
@@ -247,10 +248,13 @@ const POSTERS = [
 
 Object.assign(ART, more.ART);
 POSTERS.push(...more.POSTERS);
+// the posters that hint at dreams (dream_<codeword>; never painted over one by one: dream_x is for all)
+Object.assign(ART, dreams.ART);
+POSTERS.push(...dreams.POSTERS);
 
 function page(p, defaced) {
   const dark = p.accent === 'cyan';
-  const acc = dark ? C.cyan : C.red, body = dark ? C.paper : C.ink, ground = dark ? (p.id === 'curfew' || p.dark ? C.night : C.slate) : C.paper;
+  const acc = p.acc || (dark ? C.cyan : C.red), body = dark ? C.paper : C.ink, ground = p.ground || (dark ? (p.id === 'curfew' || p.dark ? C.night : C.slate) : C.paper);
   const T0 = 634, X0 = 50, TW = 668;
   let t = '', y = T0 + 20;
   if (p.head.length === 1) y += 14;
@@ -292,7 +296,7 @@ ${t}
 <rect x="24" y="958" width="720" height="42" fill="${footFill}"/>
 ${emblem(40, 965, 0.62, acc)}
 <text x="76" y="985.5" font-family="Inter" font-weight="800" font-size="15.5" fill="${footInk}" letter-spacing="2.6">OFFICE OF THE CITY ADMINISTRATOR</text>
-<text x="728" y="985.5" text-anchor="end" font-family="Inter" font-weight="700" font-size="13" fill="${footInk}" letter-spacing="1.6" opacity=".8">CIVIL NOTICE ${p.n}</text>
+<text x="728" y="985.5" text-anchor="end" font-family="Inter" font-weight="700" font-size="13" fill="${footInk}" letter-spacing="1.6" opacity=".8">${p.tag || 'CIVIL NOTICE ' + p.n}</text>
 ${defaced ? res.defaceLayer(p) : ''}
 <g clip-path="url(#sheet)" style="pointer-events:none">
   <rect width="768" height="1024" filter="url(#fade)" opacity=".15"/>
@@ -332,7 +336,7 @@ function rebelPage(id, n) {
   };
   for (const p of POSTERS) {
     await shot(page(p), p.id);
-    await shot(page(p, true), p.id + '_x'); // (painted over by the Resistance)
+    if (!p.tag) await shot(page(p, true), p.id + '_x'); // (painted over by the Resistance)
   }
   let n = 40;
   for (const id of Object.keys(res.REBEL)) await shot(rebelPage(id, n++), id);
