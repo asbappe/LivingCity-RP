@@ -291,7 +291,7 @@ end
 
 LC.JobGameDefine("hack", {
     start = function(g)
-        g.title = "Records terminal"
+        g.title = g.opts.title or "Records terminal"
         g.what = g.opts.what or "the records terminal"
         g.center = g.opts.pos or g.ply:GetPos()
         g.t0, g.speed = CurTime(), 0.55
@@ -352,7 +352,7 @@ LC.JobGameDefine("hack", {
             if IsValid(g.scanner) then g.scanner:EmitSound("npc/scanner/scanner_alarm1.wav", 80) end
             if g.alarms >= 2 then
                 g.tripped = true
-                if LC.ReportCrime then LC.ReportCrime(g.ply, "Tampering with a Combine terminal", 180) end
+                if LC.ReportCrime then LC.ReportCrime(g.ply, g.opts.crime or "Tampering with a Combine terminal", 180) end
                 Note(g, "The scanner saw you twice and set off the alarm. You're wanted: get out.")
                 g.pay = g.got * 2
                 LC.JobGameEnd(g.ply, "done")

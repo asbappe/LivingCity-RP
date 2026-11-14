@@ -20,6 +20,13 @@ if not Q then return end
 
 local Goto, Hold, Count, Narrate, Place, Spot, HideSpots = Q.Goto, Q.Hold, Q.Count, Q.Narrate, Q.Place, Q.Spot, Q.HideSpots
 
+-- A repair as the wiring game: walking up starts it, and the stage after is the game.
+local function Wire(p, go, r, what, fixed)
+    local game = Q.GameStage("Rewire it")
+    game.onDone = fixed
+    return Q.GameGo(p, go, "wiring", { what = what, pos = p }, r), game
+end
+
 local function T(def)
     def.factions = def.factions or {}
     LC.QuestTemplates[#LC.QuestTemplates + 1] = def
@@ -116,16 +123,15 @@ T{
             local spec = {
                 title = "Work order: fix a streetlight", reward = 12, limit = 420,
                 desc = "A streetlight is out " .. Place(p, ply:GetPos()) .. ". Rewire it. Keep what's left over.",
-                stages = { Goto(p, "Find the dead streetlight", 160), Hold(p, 12, "Rewire it (stay close)", 150) },
+                stages = { Wire(p, "Find the dead streetlight", 160, "the streetlight", function() if LC.RepairStreetFixture then LC.RepairStreetFixture(lamp) end end) },
                 onFinish = PayIn({ scrap = 1, chemicals = 1 }, "The light flickers on."),
             }
-            spec.stages[2].onDone = function() if LC.RepairStreetFixture then LC.RepairStreetFixture(lamp) end end
             return spec
         end
         return {
             title = "Work order: fix a streetlight", reward = 12, limit = 420,
             desc = "A streetlight is out " .. Place(p, ply:GetPos()) .. ". Rewire it. Keep what's left over.",
-            stages = { Goto(p, "Find the dead streetlight", 150), Hold(p, 12, "Rewire it (stay close)", 140) },
+            stages = { Wire(p, "Find the dead streetlight", 150, "the streetlight") },
             onFinish = PayIn({ scrap = 1, chemicals = 1 }, "The light flickers on."),
         }
     end,
@@ -153,8 +159,9 @@ T{
         if not p then return nil end
         return {
             title = "Work order: patch a leaking pipe", reward = 12, limit = 420,
-            desc = "A pipe is leaking " .. Place(p, ply:GetPos()) .. ". Get down and patch it.",
-            stages = { Goto(p, "Find the leak", 150), Hold(p, 15, "Patch the pipe (crouch beside it)", 140, true) },
+            desc = "A pipe is leaking " .. Place(p, ply:GetPos()) .. ". Patch it.",
+            stages = { Goto(p, "Find the leak", 150),
+                LC.QuestHandsStage({ pos = p, r = 140, model = "models/props_pipes/valve001.mdl", busy = "Patching... (keep holding E)", text = "Patch the leak: hold E on the valve" }) },
             onFinish = PayIn({ chemicals = 1, cloth = 1, scrap = 1 }, "The leak stops."),
         }
     end,
@@ -243,13 +250,15 @@ T{
     build = function(ply)
         local prisoner, cell = LC.JailedRebel()
         if not prisoner or prisoner == ply then return nil end
-        local hold = Hold(cell, 20, "Get the cell open (stay at the door while the alarm goes)", 170)
+        -- the lock is the needle game, with the alarm going (and the scanner looking in)
+        local go = Q.GameGo(cell, "Get to the cells", "hack", { what = "the cell lock", title = "The cell lock", pos = cell }, 220)
+        local hold = Q.GameStage("Get the cell open")
         hold.onEnter = function() if LC.PrisonBreakAlarm then LC.PrisonBreakAlarm(cell) end end
         hold.onDone = function(q) if LC.BreakOut then LC.BreakOut(prisoner, q.owner) end end
         return {
             title = "Break " .. prisoner:Nick() .. " out", reward = 60, limit = 900,
             desc = prisoner:Nick() .. " is in a cell " .. Place(cell, ply:GetPos()) .. ". Get in (a keycard, a bypass charge, or a Hacker's multitool on the Combine doors), get the cell open, get them out.",
-            stages = { Goto(cell, "Get to the cells", 220), hold },
+            stages = { go, hold },
         }
     end,
 }
@@ -510,7 +519,9 @@ T{
             end
             return e
         end
-        local cut = Hold(site, 12, "Cut the shackles (stay beside it)", 140)
+        -- the collar comes off as the wiring game, there beside it
+        local cut = Q.GameStage("Get the collar off")
+        cut.onEnter = function(q) if IsValid(q.owner) and LC.JobGameStart then LC.JobGameStart(q.owner, "wiring", q, { what = "the collar", pos = site }) end end
         cut.onDone = function(q)
             local p = q.owner
             if IsValid(p) and LC.SeenBySecurity and LC.SeenBySecurity(p, 900) then LC.ReportCrime(p, "Theft of Combine property", 180) end
@@ -518,7 +529,7 @@ T{
             Narrate(q, "The shackles fall. It looks at you, and waits. Lead it home.")
         end
         local choose = Q.Choice("The vortigaunt waits, its collar humming. Cut it loose here, or walk it out as if it were still the Combine's?", {
-            { text = "Cut the shackles here (twelve seconds beside it; its keepers may see), then lead it home.",
+            { text = "Cut the shackles here (its keepers may see), then lead it home.",
               pick = function(q) Q.InsertStages(q, { cut, Home("Lead it home to rebel territory (any of it)") }) return "next" end },
             { text = "Lead it off still shackled, like Combine property on the move; cut them in rebel territory (a unit may stop you and ask).",
               pick = function(q) q.data.shackled = true Q.InsertStages(q, { Home("Walk it to rebel territory (any of it), still shackled", true) }) return "next" end },

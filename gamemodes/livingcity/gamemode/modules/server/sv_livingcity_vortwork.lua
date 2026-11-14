@@ -155,12 +155,14 @@ LC.Chain{
         whisper = { num = 3, build = function(ply)
             local pos = Q.Spot(ply, 300, 1500)
             if not pos then return nil end
-            local hold = Hold(pos, 20, "Reach out through the vortessence: stay still here, unseen, for 20 seconds", 140)
+            -- reaching out is the needle game: catch the vortessence as it passes, and never while the scanner looks
+            local go = Q.GameGo(pos, "Find a quiet corner (marked)", "hack", { what = "the vortessence", title = "The vortessence", crime = "Unsanctioned vortal activity", pos = pos }, 140)
+            local hold = Q.GameStage("Reach out through the vortessence")
             hold.onDone = function(q) if IsValid(q.owner) then Call(q.owner) end end
             return {
                 title = "A whisper in the vortessence", reward = 20, limit = 600,
                 desc = "Some nights the collar flickers, and the vortessence stirs behind it. Find somewhere quiet " .. Place(pos, ply:GetPos()) .. ", and reach out.",
-                stages = { Goto(pos, "Find a quiet corner (marked)", 140), hold },
+                stages = { go, hold },
                 onFinish = function(q, success) if success then q.chainEnd = "called" end end,
             }
         end },
@@ -226,8 +228,9 @@ T{
             title = "Read the Combine", reward = 35, limit = 600,
             desc = "The vortessence sees what eyes don't: who stands where, and when they change. Watch the checkpoint " .. Place(target, ply:GetPos()) .. " from a little way off, unseen, and bring what it shows you to the quartermaster.",
             stages = {
-                Goto(spot, "Find somewhere to watch from (marked), out of the units' sight", 200),
-                Hold(spot, 20, "Still yourself and let the vortessence read the checkpoint (20 seconds, unseen)", 160),
+                Q.GameGo(spot, "Find somewhere to watch from (marked), out of the units' sight", "hack",
+                    { what = "the vortessence", title = "The vortessence", crime = "Unsanctioned vortal activity", pos = spot }, 200),
+                Q.GameStage("Let the vortessence read the checkpoint"),
             },
             onFinish = function(q, success)
                 if not success or not IsValid(q.owner) then return end

@@ -339,13 +339,10 @@ SHIFTS.sanitation = {
                 local tr = util.TraceLine({ start = sp + Vector(0, 0, 40), endpos = sp - Vector(0, 0, 300), mask = MASK_SOLID_BRUSHONLY })
                 if tr.Hit then sp = tr.HitPos end -- on the ground, not floating
             end
-            local h = Hold(sp, 6, string.format("Go to bin %d of 3 (%s) and stay next to it for 6 seconds to empty it", i, Place(sp, ply:GetPos())), 110)
-            if bin then
-                h.item = bin.ent
-            else
-                h.onEnter = function(q, st) st.item = Q.SpawnItem(q, "models/props_trainstation/trashcan_indoor001a.mdl", sp) end
-            end
-            stages[i] = h
+            -- (emptied by hand: hold E on the bin itself; one put down where the map has none)
+            stages[i] = LC.QuestHandsStage({ pos = sp, r = 110, ent = bin and bin.ent or nil, model = "models/props_trainstation/trashcan_indoor001a.mdl",
+                busy = "Emptying... (keep holding E)",
+                text = string.format("Empty bin %d of 3 (%s): hold E on it", i, Place(sp, ply:GetPos())) })
         end
         return { title = "Bin round", reward = 15, limit = 480, desc = "Three bins are overflowing. Go to each one and empty it.", stages = stages }
     end,
@@ -375,7 +372,8 @@ SHIFTS.sanitation = {
                         Insert(q, { Count("used_npc", 1, "Find a Civil Protection unit and press E on them to report the name", Q.IsCopNPC) })
                     end },
                 }),
-                Hold(sp, 5, "Crouch at the wall for 5 seconds to scrub it clean", 100, true),
+                LC.QuestHandsStage({ pos = sp, r = 100, model = "models/props_junk/metalbucket01a.mdl", busy = "Scrubbing... (keep holding E)",
+                    text = "Scrub it off: hold E on the bucket" }),
             },
         }
     end,
@@ -423,7 +421,9 @@ SHIFTS.kitchen = {
             desc = "Every ration pack in the dispensers must match the register. Go to the dispensers and count them.",
             stages = {
                 Goto(at, "Go to the dispensers (marked)", 200),
-                Hold(at, 25, "Stay at the dispensers for 25 seconds to count the packs against the register", 180),
+                LC.QuestSearchStage({ pos = at, r = 180, only = true, min = 3, quiet = true, busy = "Counting... (keep holding E)",
+                    junk = { "models/props_junk/cardboard_box001a.mdl", "models/props_junk/cardboard_box002a.mdl" },
+                    text = "Count the packs: hold E on each crate" }),
                 Choice("The count is three packs short. Nobody signed for them, and the register doesn't care whose fault that is.", {
                     { text = "Report the missing packs to the supervisor.", pick = function(q, p)
                         Trait(p, "loyalty", 1)
@@ -710,7 +710,8 @@ SHIFTS.courier = {
             local dest = LC.LetterDestination(l, ply:GetPos())
             if dest then
                 carried[#carried + 1] = l
-                local h = Hold(dest, 3, "", 140)
+                local h = Goto(dest, "", 110)
+                h.letter = true -- (pushed under the door as you reach it)
                 h.onDone = function(q) LC.DeliverLetter(l, q.owner) end
                 stages[#stages + 1] = h
             end
@@ -718,9 +719,9 @@ SHIFTS.courier = {
         if #carried == 0 then return nil end
         local n = 0
         for _, st in ipairs(stages) do
-            if st.kind == "hold" then
+            if st.letter then
                 n = n + 1
-                st.text = string.format("Take letter %d of %d to %s (marked) and stay at their door for 3 seconds to push it under", n, #carried, carried[n].toName or "someone")
+                st.text = string.format("Take letter %d of %d to %s's door (marked)", n, #carried, carried[n].toName or "someone")
             end
         end
         -- they're yours from the moment you start

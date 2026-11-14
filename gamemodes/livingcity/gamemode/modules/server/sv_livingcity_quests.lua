@@ -2028,10 +2028,10 @@ T{
         if not pos then return nil end
         return {
             title = "Address the citizens", reward = 20, limit = 360,
-            desc = "The people need to hear their Administrator. Go to the plaza, speak to the crowd, then choose how to end your speech.",
+            desc = "The people need to hear their Administrator. Go to the plaza, speak to three of them, then choose how to end it.",
             stages = {
                 Goto(pos, "Go to the plaza (marked)", 150),
-                Hold(pos, 40, "Stay there for 40 seconds while you give your speech", 220),
+                Count("used_npc", 3, "Speak to 3 citizens: press E on each", IsCitizenNPC),
                 Choice("The crowd watches you in silence. How do you end it?", {
                     { text = "Announce additional rations (starts a ration handout).", pick = function(q, p)
                         LC.AddTrait(p, "sympathy", 1)
@@ -2101,7 +2101,8 @@ T{
         if not spots[3] then return nil end
         local stages = {}
         for i, s in ipairs(spots) do
-            stages[i] = Hold(s, 3, string.format("Post flyer %d of 3 %s: crouch at the marked spot for 3 seconds", i, Place(s, ply:GetPos())), 90, true)
+            stages[i] = LC.QuestHandsStage({ pos = s, r = 90, model = "models/props_c17/paper01.mdl", ghost = true, busy = "Pasting... (keep holding E)",
+                text = string.format("Post flyer %d of 3 %s: hold E on it", i, Place(s, ply:GetPos())) })
             stages[i].onDone = function(q)
                 local flyer = SpawnItem(q, "models/props_c17/paper01.mdl", s, true, true)
                 if IsValid(flyer) then SafeRemoveEntityDelayed(flyer, 600) end
@@ -2126,7 +2127,9 @@ T{
     build = function(ply)
         local cp = Pick(LC.PointsOfKind("checkpoint"))
         local dest, r, where = SafeHouse(ply)
-        local plant = Hold(cp.pos, 5, "Go to the marked checkpoint and crouch there for 5 seconds to plant the charge", 100, true)
+        -- the charge is wired by hand (the wiring game), there at the checkpoint
+        local go = GameGo(cp.pos, "Go to the marked checkpoint to plant the charge", "wiring", { what = "the charge", pos = cp.pos }, 100)
+        local plant = GameStage("Wire the charge")
         plant.onDone = function(q)
             Boom(cp.pos + Vector(0, 0, 20))
             cp.disabledUntil = CurTime() + 300
@@ -2140,7 +2143,7 @@ T{
         return {
             title = "Sabotage " .. Place(cp.pos, ply:GetPos()), reward = 45, limit = 480, failOnArrest = true,
             desc = "Blow up the checkpoint to put it out of action for five minutes, then escape to safety.",
-            stages = { plant, Deliver(dest, "Escape: get to the safe spot (" .. where .. ")", r) },
+            stages = { go, plant, Deliver(dest, "Escape: get to the safe spot (" .. where .. ")", r) },
         }
     end,
 }
@@ -2214,8 +2217,7 @@ T{
             desc = "Meet a contact at the meeting point, then hide a message at the drop for the Resistance to find.",
             stages = {
                 Goto(a, "Go to the marked meeting point " .. Place(a, ply:GetPos()), 120),
-                Hold(a, 20, "Wait at the meeting point for 20 seconds for your contact", 160),
-                Choice("Your contact doesn't come. Instead, a child walks past and presses a folded note into your hand.", {
+                Choice("Your contact isn't there. Instead, a child walks past and presses a folded note into your hand.", {
                     { text = "Read it.", pick = function(q) Narrate(q, Pick(NOTES)) end },
                     { text = "Burn it unread.", pick = function(q) Narrate(q, "Some things are safer not known.") end },
                 }),
@@ -2474,8 +2476,8 @@ T{
         local front = LC.Lines[g].slots[1].pos
         return {
             title = "Collect your ration", reward = LC.Event == "rations" and 20 or 10, limit = 300,
-            desc = "Your ration is ready. Go to ration line " .. g .. " and wait at the front to collect it.",
-            stages = { Goto(front, "Go to ration line " .. g .. " (marked)", 200), Hold(front, 10, "Stand at the front of the line for 10 seconds", 110) },
+            desc = "Your ration is ready. Go to the front of ration line " .. g .. " to collect it.",
+            stages = { Goto(front, "Go to the front of ration line " .. g .. " (marked)", 110) },
         }
     end,
 }
@@ -2620,7 +2622,6 @@ T{
             desc = "Neighbors whisper about something going on behind " .. (noun == "the bins" and "some bins " or "a dumpster ") .. Place(s, ply:GetPos()) .. ". Go and see what it is.",
             stages = {
                 look,
-                Hold(s, 6, "Stay nearby and watch quietly for 6 seconds", 220),
                 Choice(prompt, {
                     { text = "Report it to a Civil Protection unit.", pick = function(q, p)
                         LC.AddTrait(p, "loyalty", 1)
@@ -3115,10 +3116,9 @@ T{
         if #stops == 0 then return nil end
         local stages = {}
         for i, sp in ipairs(stops) do stages[#stages + 1] = Goto(sp, string.format("Clear the streets: go to stop %d of %d, %s", i, #stops, Place(sp, ply:GetPos())), 180) end
-        stages[#stages + 1] = Hold(stops[#stops], 60, "Stay on this street for 60 seconds. Anyone still outside gets three warnings before they become wanted", 300)
         return {
             title = "Curfew enforcement", reward = 35, limit = 540,
-            desc = "Curfew is in effect. Walk to each marked stop, moving people along as you go, then stay at the last stop for 60 seconds.",
+            desc = "Curfew is in effect. Walk to each marked stop, moving people along as you go.",
             stages = stages,
         }
     end,

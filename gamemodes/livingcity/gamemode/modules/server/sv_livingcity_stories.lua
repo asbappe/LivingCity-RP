@@ -474,7 +474,6 @@ LC.Chain{
                 desc = "The Union wants you to keep watch " .. Place(s, ply:GetPos()) .. ", then report what you saw to Civil Protection.",
                 stages = {
                     Goto(s, "Go to the marked lookout spot", 180),
-                    Hold(s, 15, "Stay near the spot for 15 seconds and watch who comes and goes", 260),
                     Count("used_npc", 1, "Report what you saw: find any Civil Protection unit and press E on him", Q.IsCopNPC),
                 },
             }
@@ -748,7 +747,19 @@ LC.Chain{
         mass = { num = 2, build = function(ply)
             local pos, r, where = Q.SafeHouse(ply)
             if not pos then return nil end
-            local hold = Hold(pos, 60, "Hold a secret mass: stay at the chapel for 60 seconds, out of sight of Civil Protection", math.max(220, r))
+            -- the faithful gather, and each is blessed in turn (E on each), out of the units' sight
+            local hold = Count("used_npc", 3, "Bless each of the faithful: press E on them", function(q, _, npc)
+                for _, f in ipairs(q.data.flock or {}) do if f == npc then return true end end
+                return false
+            end)
+            hold.mass = true
+            hold.poll = function(q, st)
+                if not q.data.flock then return end
+                local n = 0
+                for _, f in ipairs(q.data.flock or {}) do if IsValid(f) then n = n + 1 end end
+                if n < st.need then st.need = n end
+                if (st.got or 0) >= st.need then Q.Advance(q) end -- (nobody came, or one was lost on the way)
+            end
             hold.onEnter = function(q)
                 q.data.flock = {}
                 for _ = 1, 3 do
@@ -792,7 +803,7 @@ LC.Chain{
                 tick = function(q)
                     if q.data.seen or not IsValid(q.owner) then return end
                     local st = q.stages[q.stage]
-                    if st and st.kind == "hold" and LC.SeenBySecurity(q.owner, 900) then
+                    if st and st.mass and LC.SeenBySecurity(q.owner, 900) then
                         q.data.seen = true
                         Narrate(q, "Boots on the stairs: Civil Protection saw the mass. You're wanted for unlawful worship.")
                         LC.ReportCrime(q.owner, "Unlawful worship", 240)
@@ -1087,14 +1098,15 @@ local OPS = {}
 OPS[#OPS + 1] = function(ply)
     local s = Q.Spot(ply, 500, 2500)
     if not s then return nil end
-    local hold = Hold(s, 4, "Crouch at the dead drop for 4 seconds to leave the patrol schedule", 90, true)
+    local go = Q.GameGo(s, "Go to the dead drop (marked)", "drop", { pos = s }, 150)
+    local hold = Q.GameStage("Hide the patrol schedule: E on a marked hiding place, then crouch by it")
     hold.onDone = function(q)
         if LC.SeenBySecurity(q.owner, 800) then Suspect(q, q.owner, "A Civil Protection unit watched you crouch by that drainpipe. He'll wonder why.") end
     end
     return {
         title = "Leak the schedule", reward = 25, limit = 420,
         desc = "Leave tomorrow's patrol routes at a Resistance dead drop " .. Place(s, ply:GetPos()) .. ". Don't let other units see you.",
-        stages = { Goto(s, "Go to the dead drop (marked)", 150), hold },
+        stages = { go, hold },
     }
 end
 

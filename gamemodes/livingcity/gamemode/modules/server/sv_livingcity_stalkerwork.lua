@@ -572,15 +572,14 @@ LC.Chain{
             go.onEnter = function(q) if IsValid(q.owner) then q.data.tech = LC.StalkerTechnician(q.owner, pos) end end
             return {
                 title = "Processing", reward = 0, limit = 600,
-                desc = "They brought you up from below with a number where your name was, and a voice that can only scream. Report where you're kept: a technician is waiting there with the harness. Stand still while they finish you.",
+                desc = "They brought you up from below with a number where your name was, and a voice that can only scream. Report where you're kept: a technician is waiting there with the harness.",
                 stages = {
                     Then(go, function(q)
                         if IsValid(q.owner) and not IsValid(q.data.tech) then q.data.tech = LC.StalkerTechnician(q.owner, pos) end
-                        Narrate(q, "The Overwatch technician has been waiting for you, the harness in their hands. They step round behind you.")
-                    end),
-                    Then(Hold(pos, 20, "Stand still while the technician fits the harness", 160), function(q)
-                        TechGone(q.data.tech)
-                        Narrate(q, "Cold metal on your spine. A click. Your legs are yours to walk with, and nothing else.")
+                        -- (it's done to you as you arrive: no standing about for it)
+                        local tech = q.data.tech
+                        timer.Simple(5, function() TechGone(tech) end)
+                        Narrate(q, "The technician steps round behind you. Cold metal on your spine. A click. Your legs are yours to walk with, and nothing else.")
                     end),
                 },
             }

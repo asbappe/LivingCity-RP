@@ -16,6 +16,11 @@
     (the bed, the toilet, a terminal: E does nothing else for them). Searching is holding E on it for
     LC.SearchSecs (2.5) seconds, looking at it, within reach: let go or look away and it stops.
     Everything searched with nothing found also ends the stage.
+
+    The same hold of E does other work by hand (emptying a bin, pasting a flyer, patching a pipe):
+    LC.QuestHandsStage{ pos, text, model (a thing put down at pos to work on) or ent (the thing itself,
+    or a function(q, st) giving it), ghost (the thing is see-through), busy (the words by the bar) }.
+    Nothing is said in chat for those.
 ]]
 
 if CLIENT then return end
@@ -52,16 +57,27 @@ function LC.QuestSearchStage(opts)
     local st = { kind = "count", need = 1, text = opts.text or "Search everything there (hold E on each)", pos = opts.pos, r = opts.r or 130 }
     st.search = {}
     st.onEnter = function(q, s)
-        local list = Gather(s.pos, s.r)
+        local list = {}
+        if opts.things then
+            local got = opts.things(q, s)
+            for _, e in ipairs(IsValid(got) and { got } or (type(got) == "table" and got or {})) do if IsValid(e) then list[#list + 1] = e end end
+        elseif not opts.only then
+            list = Gather(s.pos, s.r)
+        end
         local junk = opts.junk or DEFAULT_JUNK
+        local want = opts.things and (#list == 0 and 1 or 0) or (opts.min or 3)
         local tries = 0
-        while #list < (opts.min or 3) and tries < 8 do
+        while #list < want and tries < 8 do
             tries = tries + 1
             local a = math.rad(math.random(0, 359))
-            local spot = s.pos + Vector(math.cos(a) * math.random(20, 60), math.sin(a) * math.random(20, 60), 0)
+            local spot = want == 1 and s.pos or (s.pos + Vector(math.cos(a) * math.random(20, 60), math.sin(a) * math.random(20, 60), 0))
             local e = Q and Q.SpawnItem and Q.SpawnItem(q, junk[math.random(#junk)], spot)
-            if IsValid(e) then list[#list + 1] = e end
+            if IsValid(e) then
+                list[#list + 1] = e
+                if opts.ghost and e.SetRenderMode then e:SetRenderMode(RENDERMODE_TRANSCOLOR or 1) e:SetColor(Color(255, 255, 255, 110)) end
+            end
         end
+        s.quiet, s.busy = opts.quiet, opts.busy
         s.search, s.searched, s.got = {}, {}, 0
         for _, e in ipairs(list) do s.search[e] = true end
         s.need = math.max(1, #list)
@@ -69,6 +85,17 @@ function LC.QuestSearchStage(opts)
         s.foundFn, s.emptyWords = opts.found, opts.empty or EMPTY
     end
     return st
+end
+
+-- Work done by hand on one thing: the same hold of E, with nothing said in chat.
+function LC.QuestHandsStage(opts)
+    local ent = opts.ent
+    return LC.QuestSearchStage({ pos = opts.pos, text = opts.text, r = opts.r, quiet = true, only = true, min = 1, ghost = opts.ghost,
+        busy = opts.busy or "Working... (keep holding E)", junk = opts.model and { opts.model } or nil,
+        things = ent and function(q, st)
+            if type(ent) == "function" then return ent(q, st) end
+            return ent
+        end or nil })
 end
 
 -- The stage the holder is on, if it's a search, and the thing is in it.
@@ -95,13 +122,13 @@ hook.Add("PlayerUse", "LivingCityQuestSearch", function(ply, ent)
     local q, st = SearchOf(ply, ent)
     if not q then return end
     if st.searched[ent] then
-        if (ply.lcSearchSaid or 0) < CurTime() then ply.lcSearchSaid = CurTime() + 1 ply:ChatPrint("[Search] You've searched that already.") end
+        if not st.quiet and (ply.lcSearchSaid or 0) < CurTime() then ply.lcSearchSaid = CurTime() + 1 ply:ChatPrint("[Search] You've searched that already.") end
         return false
     end
     if not LC.Searching[ply] then
         local now = CurTime()
         LC.Searching[ply] = { ent = ent, q = q, st = st, untilT = now + LC.SearchSecs }
-        ply:SetNW2String("lcu_progress", "Searching... (keep holding E)")
+        ply:SetNW2String("lcu_progress", st.busy or "Searching... (keep holding E)")
         ply:SetNW2Float("lcu_pick_start", now)
         ply:SetNW2Float("lcu_pick_until", now + LC.SearchSecs)
     end
@@ -123,7 +150,7 @@ function LC.QuestSearchDone(ply, q, st, ent)
         if not handled and not q.done and Q and Q.Advance then Q.Advance(q) end
         return
     end
-    ply:ChatPrint("[Search] " .. st.emptyWords[math.random(#st.emptyWords)])
+    if not st.quiet then ply:ChatPrint("[Search] " .. st.emptyWords[math.random(#st.emptyWords)]) end
     if st.got >= st.need then
         if Q and Q.Advance then Q.Advance(q) end
     elseif Q and Q.SendStateAll then
@@ -141,7 +168,7 @@ function LC.QuestSearchTick(now)
             Clear(ply)
         elseif not holding or not looking then
             Clear(ply)
-            ply:ChatPrint("[Search] You stop searching. (Hold E on it until it's done.)")
+            if not s.st.quiet then ply:ChatPrint("[Search] You stop searching. (Hold E on it until it's done.)") end
         elseif now >= s.untilT then
             Clear(ply)
             LC.QuestSearchDone(ply, s.q, s.st, s.ent)

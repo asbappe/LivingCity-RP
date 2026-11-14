@@ -1104,6 +1104,8 @@ local function work(q, p)
         local st = q.stages[q.stage]
         if st.kind == "goto" or st.kind == "deliver" then
             p:SetPos(st.pos) _run(1)
+        elseif st.search then -- (work by hand: hold E on each thing)
+            for e in pairs(st.search) do if not q.done and q.stages[q.stage] == st then LC.QuestSearchDone(p, q, st, e) end end
         elseif st.kind == "hold" then
             p:SetPos(st.pos) p.crouch = st.crouch _run(st.secs + 1) p.crouch = false
         elseif st.kind == "collect" then
@@ -1838,6 +1840,8 @@ local function workAll(q, p)
         local st = q.stages[q.stage]
         if st.kind == "goto" or st.kind == "deliver" then
             p:SetPos(st.pos) _run(1)
+        elseif st.search then -- (work by hand: hold E on each thing)
+            for e in pairs(st.search) do if not q.done and q.stages[q.stage] == st then LC.QuestSearchDone(p, q, st, e) end end
         elseif st.kind == "hold" then
             p:SetPos(st.pos) p.crouch = st.crouch _run(st.secs + 1) p.crouch = false
         elseif st.kind == "collect" then
@@ -2594,6 +2598,8 @@ for _ = 1, 40 do
     local st = qr.stages[qr.stage]
     if st.kind == "collect" then for e in pairs(st.items) do hook.Run("PlayerUse", crook, e) end
     elseif st.kind == "count" and st.event == "game_done" then LC.JobGameFinishForTest(crook) _run(0.5)
+    elseif st.search then -- (work by hand: hold E on each thing)
+        for e in pairs(st.search) do if not qr.done and qr.stages[qr.stage] == st then LC.QuestSearchDone(crook, qr, st, e) end end
     elseif st.kind == "hold" then crook:SetPos(st.pos) crook.crouch = st.crouch _run(st.secs + 1) crook.crouch = false
     else crook:SetPos(st.pos or crook:GetPos()) _run(1) end
 end
@@ -5141,6 +5147,34 @@ local fakeQ = { owner = worker, members = { worker }, squad = { worker } }
 local n1 = LC.InvCount(worker)
 local okF = pcall(spec.onFinish, fakeQ, true)
 ok(okF and LC.InvCount(worker) >= n1 + 3, "and pay in materials", tostring(LC.InvCount(worker) - n1))
+-- no standing at it (the owner, 14 November): the pipe is patched by hand, hold E on its valve
+do
+    local hold = 0
+    for _, st in ipairs(spec.stages) do if st.kind == "hold" then hold = hold + 1 end end
+    local st = spec.stages[2]
+    ok(hold == 0 and st and st.search ~= nil, "the leak is patched by hand, not by standing at it", tostring(hold))
+    local q = { stages = { st, { kind = "goto", pos = Vector(0, 0, 0), text = "x" } }, stage = 1, data = {}, ents = {}, marked = {}, members = { worker }, owner = worker,
+        expires = CurTime() + 300, title = "Test hands", board = "Assignments", id = 99125, narration = {} }
+    LC.QuestOf[worker] = q
+    st.got, st.seen = 0, {}
+    st.onEnter(q, st)
+    local n, thing = 0, nil
+    for e in pairs(st.search) do n, thing = n + 1, e end
+    ok(n == 1 and st.quiet and st.need == 1, "one thing to work on (the valve), with nothing said in chat", tostring(n))
+    worker.chat = {}
+    pcall(LC.QuestSearchDone, worker, q, st, thing)
+    ok(st.searched[thing] and not has(worker.chat, "[Search]"), "hold E on it and it's done")
+    LC.QuestOf[worker] = nil
+    for _, e in ipairs(q.ents) do if IsValid(e) then e:Remove() end end
+    local stand = 0
+    for _, t in ipairs(LC.QuestTemplates) do
+        if t.id == "cit_streetlight" or t.id == "cit_rations" or t.id == "res_propaganda" or t.id == "res_sabotage" or t.id == "res_deaddrop" or t.id == "admin_address" then
+            local okB, sp = pcall(t.build, worker)
+            for _, s2 in ipairs(okB and sp and sp.stages or {}) do if s2.kind == "hold" then stand = stand + 1 end end
+        end
+    end
+    ok(stand == 0, "nor do the streetlight, the ration, the flyers, the charge, the dead drop or her address", tostring(stand))
+end
 for _, p in ipairs({ raider, guard, jp, worker }) do p:SetPos(Vector(-30000, 30000, 0)) end
 end
 ConvoyTests()
