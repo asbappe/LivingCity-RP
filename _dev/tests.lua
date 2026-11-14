@@ -29489,8 +29489,8 @@ local benched = {}
 for _, p in ipairs(player.GetAll()) do if p:GetNW2String("lcf_faction", "") == "admin" then benched[#benched + 1] = p p:SetNW2String("lcf_faction", "citizen") end end
 -- the chaos: red fills it, green drains it
 LC.Chaos = 0
-LC.ChaosStep("red", 60 * 15)
-ok(math.abs(LC.Chaos - 0.5) < 0.01, "fifteen minutes of red: the city is halfway to collapse (lc_black_minutes 30)", LC.Chaos)
+LC.ChaosStep("red", 60 * 150)
+ok(math.abs(LC.Chaos - 0.5) < 0.01, "two and a half hours of red: the city is halfway to collapse (an hour of red adds 20%, since 14 November)", LC.Chaos)
 LC.ChaosStep("yellow", 60 * 60)
 ok(LC.Chaos > 0.5 and LC.Chaos < 0.53, "an hour of yellow barely moves it (5% of a quarter of red's pace, since 14 November)", LC.Chaos)
 LC.ChaosStep("green", 60 * 30)

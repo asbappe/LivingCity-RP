@@ -235,7 +235,7 @@ local GUIDE = {
         "Gas masks: units have their own. Anyone else carrying one (contraband) puts it on by themselves when gas reaches them. Cut one out of a Civil Protection uniform (F3: Scavenge gas mask), or search a dead unit: half the time the mask is whole, else broken, and four broken ones make one (F3, Make). Without one, the gas has you coughing with a hand over your mouth.",
     } },
     { "Disguises", {
-        "Resistance: you respawn in plain clothes. C > Resistance > Gear up puts your Resistance gear on; Change into plain clothes takes it off again.",
+        "Resistance: you respawn in plain clothes. C > Resistance > Gear up puts your Resistance gear on; Change into citizen clothes takes it off again.",
         "In plain clothes nobody looks twice at you, unless a Civil Protection unit sees a gun in your hand.",
         "You can take clothes from the dead (citizen clothes, CP uniforms, Resistance gear) and find them in bins. Wear them from F3.",
         "A CP uniform fools Civil Protection units on the street, for a while. Resistance gear makes rebel fighters think you're one of them, and makes units shoot at you.",

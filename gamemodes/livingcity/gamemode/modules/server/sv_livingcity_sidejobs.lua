@@ -329,10 +329,31 @@ T{
             desc = "A dropship is bringing Overwatch soldiers down at the landing zone. Be there when it comes in, and hit the landing party while they're still on the ground.",
             stages = {
                 Goto(d.pos, "Get to the landing zone before the dropship does", 800),
-                Count("killed", need, "Bring down the landing party (the soldiers off the dropship)", function(_, _, npc)
-                    local st = LC.NPCs[npc]
-                    return st ~= nil and st.drop == d -- (these soldiers: not any soldier anywhere)
-                end),
+                (function()
+                    local c = Count("killed", need, "Bring down the landing party (the soldiers off the dropship)", function(_, _, npc)
+                        local st = LC.NPCs[npc]
+                        return st ~= nil and st.drop == d -- (these soldiers: not any soldier anywhere)
+                    end)
+                    -- fewer on the ground than the counter needs: off the dropship, or (the drop over) at the landing zone
+                    c.refill = function(_, _, missing)
+                        local made = LC.OverwatchDropTopUp and LC.OverwatchDropTopUp(d, missing)
+                        if made ~= 0 then return made end
+                        local sp = LC.Spawners and LC.Spawners.soldier
+                        if not sp then return 0 end
+                        made = 0
+                        for i = 1, missing do
+                            local a = i / missing * math.pi * 2
+                            local at = (LC.GroundAt and LC.GroundAt(d.pos + Vector(math.cos(a) * 160, math.sin(a) * 160, 0)) or d.pos) + Vector(0, 0, 6)
+                            local ok, npc, st = pcall(LC.ManpowerFree or function(f, ...) return f(...) end, sp, at)
+                            if ok and IsValid(npc) and st then
+                                st.drop, st.unmanaged, st.dropGuard, st.holdPos, st.leaveAt = d, true, true, at, CurTime() + 600
+                                made = made + 1
+                            end
+                        end
+                        return made
+                    end
+                    return c
+                end)(),
             },
         }
     end,
@@ -358,7 +379,8 @@ T{
             desc = "A sweep team is moving into anticitizen territory " .. Place(z.pos, ply:GetPos()) .. ". Join it, and take down the anticitizens who resist.",
             stages = {
                 Goto(z.pos, "Join the sweep team at the edge of anticitizen territory", math.max(500, (z.r or 300) + 300)),
-                Count("killed", 2, "Take down two armed anticitizens there", RebelNear(z.pos, (z.r or 300) + 800)),
+                Q.Spawns(Count("killed", 2, "Take down two armed anticitizens there", RebelNear(z.pos, (z.r or 300) + 800)),
+                    { role = "rebel", pos = z.pos, r = z.r or 300, arg = z }),
             },
         }
     end,
@@ -423,10 +445,10 @@ T{
             desc = "Our fighters are hitting the Combine " .. Place(target, ply:GetPos()) .. ". Get there, and help them: take down the units they're fighting.",
             stages = {
                 Goto(target, "Meet our fighters at the target", 600),
-                Count("killed", 2, "Back them up: take down two of the Combine's units there", function(_, _, npc)
+                Q.Spawns(Count("killed", 2, "Back them up: take down two of the Combine's units there", function(_, _, npc)
                     local st = LC.NPCs[npc]
                     return st ~= nil and LC.IsSecurity(st) and IsValid(npc) and npc:GetPos():DistToSqr(target) < 1400 * 1400
-                end),
+                end), { role = "cop", pos = target, r = 900 }),
             },
         }
     end,

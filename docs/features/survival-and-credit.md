@@ -57,3 +57,6 @@ Each character chooses how hard staying alive is:
 
 
 **Filling a can by water (the owner, 14 November: "just a few feet near water").** Within about 110 units of water (at your feet or a step down from the bank) counts, not only standing in it (`LC.NearWater`, sv_livingcity_survival.lua).
+Since 14 November (the owner: a can filled ten feet away, with water under the ground they stood on) the water must also be in view: the line from your eye to it crosses no wall or floor of the map.
+
+**Guns drawn from the pockets survive a restart (the owner, 14 November: "my pistol and SMG are gone ... why do I still have grenades").** Only the pockets are saved, and drawing a gun takes it out of them. Leaving the server (a restart, a map change, a disconnect), the guns in your hands that have a pocket item (pistol, SMG, shotgun, revolver, crowbar) go back in your pockets, past the weight limit if need be, to be drawn again. Not the ones your rank hands out, and not in a dream (`LC.PocketHeldGuns`, sv_livingcity_survival.lua). A server crash still loses them. Guns lost before this change are not brought back.

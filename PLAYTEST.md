@@ -2049,3 +2049,19 @@ Type them in the server console on the host panel, or in your own game console (
   Notes:
 - [ ] **Bug reports and feedback:** F1 > 6 > 3, type a line, send. Is there a new file in the server's `garrysmod/data/livingcity/feedback/` with your words on top and a debug report under them? Does a second one within a minute get refused?
   Notes:
+
+## 14 November (evening fixes)
+- [ ] **Overwatch PA:** play an hour. No two Overwatch or Administrator routine lines within 90 seconds of each other; "ration stores running low" at most once in 20 minutes.
+  Notes:
+- [ ] **Landing ambush:** take "Ambush the landing". If the door opens and nobody comes out, soldiers appear at the landing zone within about half a minute; the counter always has someone to shoot.
+  Notes:
+- [ ] **Any kill counter** (Ambush a patrol, Back up the raid, Join the sweep, Proof): kill counter short of targets for 10 seconds brings more; nothing at all for 45 seconds, you are paid for what you did.
+  Notes:
+- [ ] **Guns over a restart:** draw a bought pistol and SMG, restart the server, rejoin: both are in your pockets to draw again (not your rank's own guns).
+  Notes:
+- [ ] **Filling a can:** standing near water you can see fills it; ten feet from water hidden under ground or brush does not.
+  Notes:
+- [ ] **Collapse:** one checkpoint attack and the red after it leave collapse at about 3%, not 30% (an hour of red adds 20%).
+  Notes:
+- [ ] **Clothes button:** reads "Change into citizen clothes".
+  Notes:

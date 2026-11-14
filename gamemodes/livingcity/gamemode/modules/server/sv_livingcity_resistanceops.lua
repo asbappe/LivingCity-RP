@@ -403,6 +403,13 @@ function LC.StartOverwatchDrop(pos)
             at = spot + Vector(math.cos(a) * (50 + clear + i * 12), math.sin(a) * (50 + clear + i * 12), 6)
             if LC.GroundAt then at = LC.GroundAt(at) + Vector(0, 0, 6) end
         end
+        -- The drop brings its own soldiers: Overwatch's reserve is topped up for each one as they step off (it
+        -- was added when the drop was called, and in the minute or two the dropship waits other soldiers took it:
+        -- the owner, 14 November, the dropship's door opened and nobody came out).
+        if LC.ManpowerCan and LC.ManpowerPool and not LC.ManpowerCan("ota") then
+            local p = LC.ManpowerPool("ota")
+            p.reserve = p.reserve + 1
+        end
         local ok, npc, st = pcall(sp, at, (elite and i == 1) and "elite" or nil)
         if ok and IsValid(npc) and st and door then
             npc:SetAngles(Angle(0, door.dir:Angle().y, 0))
@@ -426,9 +433,11 @@ function LC.StartOverwatchDrop(pos)
     end
     local n = cvDropN:GetInt()
     d.expected = n
+    d.deploy = function(i) Deploy(pos, i, n, false, nil) end -- (on the ground at the landing zone: LC.OverwatchDropTopUp)
     local function Land()
         if LC.OverwatchDrop ~= d or d.landT then return end
         d.landT, d.untilT = CurTime(), CurTime() + 300
+        d.deployDue = CurTime() + 25 + n * 1.5 -- (flown in, landed, and every one out by now)
         local ship = LC.FlyDropship and LC.FlyDropship({ pos = pos, hold = 8 + n * 1.5, troops = true, -- (the soldiers come out of its container, which never leaves its claws)
             onLanded = function(_, ground, container, door)
                 if IsValid(container) and not door then clear = 130 end
@@ -446,6 +455,18 @@ function LC.StartOverwatchDrop(pos)
     if #posted > 0 and LC.ProtectWait then LC.ProtectWait({ "cp_securelz" }, posted, Land, "The dropship") else timer.Simple(6, Land) end
     hook.Run("LivingCityOverwatchDrop", d)
     return true, d
+end
+
+-- Whoever didn't come off the dropship (or didn't come at all) is put on the ground at the landing zone
+-- (the owner, 14 November: "SPAWN THEM, RESEND THE DROPSHIP AND RESPAWN THEM, OR JUST SPAWN THEM AT THE
+-- LANDING ZONE"). nil while they're still on their way; else how many were put there.
+function LC.OverwatchDropTopUp(d, missing)
+    d = d or LC.OverwatchDrop
+    if not d or LC.OverwatchDrop ~= d or not d.deploy then return 0 end
+    if not d.landT or CurTime() < (d.deployDue or 0) then return nil end
+    local before = #d.soldiers
+    for k = 1, math.max(0, missing or 0) do d.deploy(before + k) end
+    return #d.soldiers - before
 end
 
 function LC.EndOverwatchDrop()
@@ -500,6 +521,14 @@ local function DropTick(now)
         -- after the landing was due. (It was "nobody alive 45 seconds after the call", which a slow dropship
         -- made true before anyone had set foot on the ground: the party was "lost" with nobody there.)
         local land = d.landT
+        -- the door opened and fewer came out than were on board: the rest are put on the ground, once
+        if land and not d.toppedUp and d.deployDue and now > d.deployDue then
+            d.toppedUp = true
+            local short = (d.expected or 0) - #d.soldiers
+            if short > 0 then LC.OverwatchDropTopUp(d, short) end
+            alive = 0
+            for _, s in ipairs(d.soldiers) do if IsValid(s) and s:Health() > 0 then alive = alive + 1 end end
+        end
         local lost = land ~= nil and alive == 0 and ((#d.soldiers > 0 and now - land > 20) or now - land > 120)
         if now > d.untilT or lost then
             if lost then

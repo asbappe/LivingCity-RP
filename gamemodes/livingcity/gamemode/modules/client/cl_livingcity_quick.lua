@@ -908,7 +908,7 @@ function LC_CL.QuickRoleRoot()
     elseif rebel then
         title, accent = "RESISTANCE", ACCENT.resistance
         local plain = me:GetNW2String("lcd_disguise", "") ~= ""
-        Add(Item(plain and "Gear up (Resistance clothes)" or "Change into plain clothes", function() Send(plain and "gearup" or "plain") end))
+        Add(Item(plain and "Gear up (Resistance clothes)" or "Change into citizen clothes", function() Send(plain and "gearup" or "plain") end))
         Add(Item("Black market", function() Send("market") end))
         Add(Page("Resistance", ResistancePage))
         if me:GetNW2Int("lc_squad_n", 0) > 0 then Add(Page("Squad orders", SquadPage)) end

@@ -79,9 +79,12 @@ local SAY = {
 }
 
 local lastLevel
+local saidAt = {} -- (each level said once in 20 minutes: stores sitting on the line flipped back and forth)
+local SAY_GAP = 20 * 60
 local function CheckLevel()
     local lvl = LC.StockLevel()
-    if lastLevel and lvl ~= lastLevel and SAY[lvl] and LC.Announce then
+    if lastLevel and lvl ~= lastLevel and SAY[lvl] and LC.Announce and CurTime() - (saidAt[lvl] or -1e9) >= SAY_GAP then
+        saidAt[lvl] = CurTime()
         local ok = pcall(LC.Announce, "ambient", nil, SAY[lvl])
         if not ok then for _, p in ipairs(player.GetAll()) do p:ChatPrint("[City] " .. SAY[lvl]) end end
     end
