@@ -88,3 +88,7 @@ The Director of Propaganda hangs these with the poster roll (they never appear b
 ## The Resistance's answer
 
 Each of the seventeen has a painted-over version, `<kind>_x` (a spray can on the poster shows it): words struck out or sprayed across by hand in white and orange paint (every line at its own tilt, uneven letters, runs), with a lambda. And four paste-ups of their own, rough sprayed and painted by hand on scrap paper, with a typed line under: `rebel_watch` (SHE WATCHES. WE SEE.), `rebel_leash` (THE RATION IS THE LEASH), `rebel_water` (DON'T DRINK THE WATER), `rebel_home` (THIS IS NOT YOUR HOME). All drawn by `_dev/posters/art3.js`.
+
+## The posters that hint at dreams
+
+Some plain curfew posters show a dream's poster instead (`docs/features/dream-posters.md`). Same style, with "SLEEP WELL, CITIZEN" where the others say "CIVIL NOTICE". File names: `dream_<codeword>` (`.png` or `.jpg`), `dream` for any dream without its own, `dream_x` painted over ("WAKE UP"). Their words are `LC.DreamPosterHints` in `sv_livingcity_dreamposters.lua`. Five are drawn (`_dev/posters/dreams.js`): `dream_melons`, `dream_lamarr`, `dream_cheese`, `dream_watchers`, `dream_mirror`.

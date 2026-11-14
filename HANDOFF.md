@@ -29,15 +29,11 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 - `python3 _dev/voice_lines.py` writes `VOICE_LINES.md` and `VOICE_SCRIPTS.md` from the code; what the owner has recorded is kept in `_dev/voice_done.txt` (rows ticked [x] in either file are added to it first), so ticks survive. `elevenlabs_batch.py` skips what's listed there. `_dev/voice_missing.txt` is the server's last `lc_voice_missing` list: when present it decides the ticks for every folder it checks (replace it with a newer one from the owner and rerun).
 
 ## Where things stand
-- 2026-11-13, latest (owner: "please work on todo items"; core, in `CORE_CHANGELOG.md`, snapshot: 5 setting lines added): the six approved TODO items, built.
-- **Cuffs felt, not a bar:** `cl_livingcity_arrest.lua` (resisting arrest: `LC_CL.FeltTug`, `LC_CL.ClosingEdges`, `LC_CL.StruggleFeel`) and `cl_livingcity_cuffed.lua` (working at or picking the cuffs: `LC_CL.CuffsFelt`); `lc_struggle_bar` client setting. Door and padlock picking keeps its bar.
-- **Quick menus:** the talk window, a unit's search (`UnitQuick`), the interrogation (`QuestionQuick`, `CPQuick`) on `LC_CL.OpenSituation`, which now shuts F1 to F4 (`LC_CL.CloseFMenus`), takes `onClose`, `keep` and a function `note`; `lc_situation_windows` 1 brings the old windows.
-- **Save with the gamemode:** `lua/weapons/gmod_tool/stools/livingcity_keep.lua` (uses `LC.PersistProp`; green halo while held).
-- **Dream posters:** `sv_livingcity_dreamposters.lua` (`LC.DreamPosterFor`, `LC.DreamPosterHints`), poster kind `dream` in `lc_civposter.lua`; the pictures are a TODO item reserved for a particular chat (owner's request).
-- **The Fitness Test** (`course`, Happy): `sv_livingcity_dreamcourse.lua` (`LC.CourseLay`, `LC.CourseSwept`).
-- **Cubbage answers her speeches:** `sv_livingcity_speechanswer.lua` (`LC.SpeechAnswer`, `LC.SpeechAnswerLines`, `LC.Freq7CutIn`); ghost face `lc_colonel_model` (male_07, a guess at an old man: check in game); `VOICE_LINES.md` section 12.
-- Unseen in game: all of the above (PLAYTEST.md, "13 November, later"); the baton and hurdle models, stone spacing.
-- Other chat, same day: HQ calls only over the radio, the resupply scanner, gas masks, Half-Life 2 ammo limits, and Freq 7 sent only with a transmitter in hand (`LC.SendsOnFreq7`; Fighters and up issued one, `LC.IssueRebelRadio`).
-- Next from TODO.md: job boards at terminals to settle with the owner; the dream posters' pictures.
+- 2026-11-14, latest (owner: "please reference the todo and generate 5 dream posters"): five pictures for the posters that hint at dreams, `materials/livingcity/posters/dream_melons.jpg`, `dream_lamarr.jpg`, `dream_cheese.jpg`, `dream_watchers.jpg`, `dream_mirror.jpg`, drawn by `_dev/posters/dreams.js` (through `gen.js`, which now takes a poster's own accent, ground and footer tag). No gamemode code changed; `livingcity_content.zip` sent.
+- Still to draw (TODO.md, reserved for a Fable 5.2 chat): the other 42 dreams, the general `dream.png`, the painted-over `dream_x.png`.
+- 2026-11-13 (core, in `CORE_CHANGELOG.md`): cuffs felt, not a bar (`lc_struggle_bar`); the talk window, search and interrogation as quick menus (`LC_CL.OpenSituation`, `lc_situation_windows`); the tool Save with the gamemode (`livingcity_keep`); dream posters (`sv_livingcity_dreamposters.lua`); The Fitness Test (`course`); Cubbage answers her speeches (`sv_livingcity_speechanswer.lua`, `lc_colonel_model`).
+- Same day, other chat: HQ calls only over the radio, the resupply scanner, gas masks, Half-Life 2 ammo limits, Freq 7 only with a transmitter in hand.
+- Unseen in game: all of 13 November (PLAYTEST.md, "13 November, later"), and the five dream posters on a wall.
+- Next from TODO.md: job boards at terminals to settle with the owner; the rest of the dream posters; the black screen that explains each dream.
 - Earlier, still open: arm pose and baton glow; Careless Talk's vortigaunt delay; the chronicle file after a week; voice cue chattiness; the cuffed pose; the loading screen not hosted.
 - History of every earlier chat: `TIMELINE.md`, `CORE_CHANGELOG.md`.
