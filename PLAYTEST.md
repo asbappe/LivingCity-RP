@@ -1992,7 +1992,7 @@ Type them in the server console on the host panel, or in your own game console (
   Notes:
 
 ## Your 14 November answers: built, please try
-- [ ] **Prison guard:** as a Combine Prison Guard, F4 shows Cell inspection, Question a prisoner, A break for it, Watch over the cells. Do four: are you a Combine Soldier?
+- [ ] **Prison guard:** as a Combine Prison Guard, F4 shows Cell inspection (hold E on everything in the cells until the spoon turns up; the bunk and toilet do nothing else meanwhile), Question a prisoner (the quick menu: ask, baton, "Liar.", until the truth), A break for it, Unrest in the cells (order them down or the baton before a door gives). Do four: are you a Combine Soldier?
   Notes:
 - [ ] **The infested:** not on F4 Factions. Go down to a zombie or headcrab inside an infestation and bleed out: do you come back infested in the nest? Got up in time: nothing. Killed as infested: a new character (no close call)?
   Notes:
@@ -2001,4 +2001,10 @@ Type them in the server console on the host panel, or in your own game console (
 - [ ] **Dressed dreams:** a ring of props below the edge of each playable dream. Does it look right, and is it out of the way?
   Notes:
 - [ ] **Job board:** place "Fixture: job board" in the city, on rebel ground and on Combine ground. Do the lists show, and does E open your jobs?
+  Notes:
+- [ ] **The lab:** only charge cells, firebombs and the foil hat listed (plus decode, new face, pull the chip). Guns and the rest only at the quartermaster.
+  Notes:
+- [ ] **A new face:** forty seconds, black screen, whirring and wet sounds, a clang, a ding at the end. Too long, too short, too gross?
+  Notes:
+- [ ] **Get the lab running:** the parts are searched for by hand (hold E) at the yard and the shop, and freed from a loudspeaker box with the wiring game; the bench is rewired the same way.
   Notes:

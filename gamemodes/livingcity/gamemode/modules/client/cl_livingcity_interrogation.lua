@@ -138,6 +138,12 @@ local function BuildCP()
     baton:Dock(TOP)
     baton:SetTall(30)
     baton:DockMargin(6, 6, 6, 0)
+    -- (a prisoner who isn't a player: call their last answer a lie; sv_livingcity_prisonguard.lua)
+    local liar = Button(f, "\"Liar.\" (call that answer a lie)", BAD, function() Do("call") end)
+    liar:Dock(TOP)
+    liar:SetTall(26)
+    liar:DockMargin(6, 4, 6, 0)
+    liar.Think = function(self) self:SetVisible(cpState and cpState.canCall and true or false) end
     local done = Button(f, "Done", Color(55, 60, 66), function() f:Remove() end)
     done:Dock(BOTTOM)
     done:SetTall(30)
@@ -197,6 +203,8 @@ local function CPQuick(st)
         items[#items + 1] = { label = "Ask: " .. text, run = function() Do("ask", i) end }
     end
     items[#items + 1] = { label = "Use the baton", run = function() Do("baton") end }
+    -- (questioning a prisoner who isn't a player: call their last answer a lie; sv_livingcity_prisonguard.lua)
+    if st.canCall then items[#items + 1] = { label = "\"Liar.\" (call that answer a lie)", run = function() Do("call") end } end
     items[#items + 1] = { label = "Done", run = function() Do("done") end }
     local lines = { string.format("Their resolve: %d. Blows: %d.%s", st.resolve or 0, st.hits or 0, (st.waiting or 0) > 0 and " (Waiting for an answer.)" or "") }
     if #(st.answers or {}) > 0 then

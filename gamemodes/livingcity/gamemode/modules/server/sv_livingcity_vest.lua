@@ -9,8 +9,8 @@
                       capacity (and the Civil Protection Commissary tops it up)
       the Resistance  a fighter's rank comes with one (Fighter 25, Lieutenant
                       50, Commander 75)
-      anyone else     none, unless they put one on: a powered vest, made in the
-                      Resistance lab (or bought on the black market), holds
+      anyone else     none, unless they put one on: a powered vest, from the
+                      quartermaster (or bought on the black market), holds
                       lc_vest_capacity (75) and comes fully charged
 
     No vest, no charge: a suit battery or a charger does nothing for you.
@@ -28,7 +28,7 @@ if CLIENT then return end
 LC = LC or {}
 
 local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
-local cvCap = CreateConVar("lc_vest_capacity", "75", FLAGS, "How much charge a powered vest from the lab or the black market holds")
+local cvCap = CreateConVar("lc_vest_capacity", "75", FLAGS, "How much charge a powered vest from the quartermaster or the black market holds")
 
 -- How much charge someone can hold right now.
 function LC.VestCap(ply)

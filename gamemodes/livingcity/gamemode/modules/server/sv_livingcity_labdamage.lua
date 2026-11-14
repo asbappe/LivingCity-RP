@@ -9,8 +9,8 @@
 
     Fixing it is a job on the Resistance's board (F4), "Get the lab running": get the parts (dug out
     at the reclamation yard, pocketed at the radio repair shop, pulled from a loudspeaker's utility
-    box; a spare part hidden nearby for any the map lacks), bring them to the lab, and put the bench
-    back together with the scientist. Only a player
+    box; a spare part hidden nearby for any the map lacks), bring them to the lab, and rewire the bench
+    with the scientist (the wiring game). Searching is by hand, holding E (sv_livingcity_questsearch.lua). Only a player
     can do it. Done, and the smoke and sparks stop.
 
     A bench that's only been knocked about (not wrecked) still works; the scientist patches it
@@ -226,18 +226,29 @@ local function FixLabTemplate()
                     Q.Narrate(q, "A unit saw that.")
                 end
             end
+            -- (no "stand here" steps: the owner, 14 November. A search by hand, or the rewiring game.)
+            local JUNK = { "models/props_junk/metal_paintcan001a.mdl", "models/props_junk/cardboard_box001a.mdl", "models/props_c17/oildrum001.mdl",
+                "models/props_junk/garbage_metalcan002a.mdl", "models/props_debris/metal_panel01a.mdl" }
+            local SHELF = { "models/props_lab/reciever01a.mdl", "models/props_lab/reciever01b.mdl", "models/props_junk/cardboard_box002a.mdl",
+                "models/props_lab/harddrive02.mdl", "models/props_c17/consolebox03a.mdl" }
             if yard then
-                stages[#stages + 1] = Q.Hold(yard, 10, "Dig a part out of the scrap at the reclamation yard " .. Q.Place(yard, from) .. " (marked): stay there for 10 seconds", 160)
+                stages[#stages + 1] = LC.QuestSearchStage({ pos = yard, r = 160, min = 5, junk = JUNK, hide = true,
+                    text = "Dig through the scrap at the reclamation yard " .. Q.Place(yard, from) .. " (marked): hold E on the heaps until you find a part that works",
+                    empty = { "Rust and bent tin.", "Nothing useful in this lot.", "A dead motor, seized solid." },
+                    found = function(q, st, ent, p) p:ChatPrint("[Search] Under the junk: a coil that still works. That'll do.") end })
             else missing = missing + 1 end
             if shop then
-                local st = Q.Hold(shop, 5, "Pocket a radio at the radio repair shop " .. Q.Place(shop, from) .. " (marked): crouch there for 5 seconds, out of any unit's sight", 140, true)
-                st.onDone = function(q) Seen(q, "Theft") end
-                stages[#stages + 1] = st
+                stages[#stages + 1] = LC.QuestSearchStage({ pos = shop, r = 140, min = 4, junk = SHELF, hide = true,
+                    text = "Find a working radio at the radio repair shop " .. Q.Place(shop, from) .. " (marked): hold E on the sets and boxes, and don't let a unit see you take it",
+                    empty = { "Gutted for parts already.", "This one's dead.", "Empty casing." },
+                    found = function(q, st, ent, p) p:ChatPrint("[Search] This one hums when you shake it. Into your coat.") Seen(q, "Theft") end })
             else missing = missing + 1 end
             if box then
-                local st = Q.Hold(box, 6, "Pull a circuit board out of a loudspeaker's utility box " .. Q.Place(box, from) .. " (marked): stay at it for 6 seconds", 100)
-                st.onDone = function(q) Seen(q, "Sabotage of city property") end
+                local st = Q.GameGo(box, "Get to a loudspeaker's utility box " .. Q.Place(box, from) .. " (marked)", "wiring", { what = "the utility box", pos = box }, 100)
                 stages[#stages + 1] = st
+                local free = Q.GameStage("Rewire the box so the circuit board comes free (without a unit seeing you)")
+                free.onDone = function(q) Seen(q, "Sabotage of city property") end
+                stages[#stages + 1] = free
             else missing = missing + 1 end
             if missing > 0 then
                 local cache = Q.Spot(ply, 500, 2200)
@@ -248,7 +259,8 @@ local function FixLabTemplate()
                 end
             end
             stages[#stages + 1] = Q.Deliver(pos, "Bring the parts to the scientist at the lab " .. where, 220)
-            local fix = Q.Hold(pos, 20, "Stay at the bench for 20 seconds while you and the scientist put it back together", 220)
+            stages[#stages + 1] = Q.GameGo(pos, "Back to the bench " .. where .. " (marked) to put it together with the scientist", "wiring", { what = "the bench", pos = pos }, 220)
+            local fix = Q.GameStage("Rewire the bench while the scientist holds the panel")
             fix.onDone = function(q)
                 if IsValid(bench) then
                     LC.RepairLab(bench, q.owner)

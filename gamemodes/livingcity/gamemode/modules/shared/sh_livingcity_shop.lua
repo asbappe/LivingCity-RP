@@ -558,31 +558,17 @@ for _, r in ipairs(LCS.Recipes) do LCS.RecipesById[r.id] = r end
 
 ------------------------------------------------------------------------
 -- The Resistance lab (sv_livingcity_lab.lua): what the scientist makes, for
--- the Resistance only. Bring him the materials (needs) and he makes it for
--- nothing; or pay him: 60% of the dealer's price (never less than the
--- quartermaster pays for it). secs: how long he takes.
+-- the Resistance only, and only what the quartermaster doesn't sell (the owner,
+-- 14 November: "anything the quartermaster sells should not appear at all in the
+-- lab"; guns, ammunition, the vest, bypass charges, smoke, forged cards, the
+-- transmitter, the jammer and the crowbar are the quartermaster's). Bring him the
+-- materials (needs) and he makes it for nothing; or pay him: 60% of the dealer's
+-- price (never less than it sells back for). secs: how long he takes.
 ------------------------------------------------------------------------
 
 LCS.Lab = {
-    { id = "ammo_pistol", out = "ammo_pistol", needs = { scrap = 2, chemicals = 1 }, secs = 6, desc = "Eighteen pistol rounds" },
-    { id = "ammo_buckshot", out = "ammo_buckshot", needs = { scrap = 2, chemicals = 2 }, secs = 6, desc = "Twelve shotgun shells" },
-    { id = "ammo_smg", out = "ammo_smg", needs = { scrap = 3, chemicals = 2 }, secs = 8, desc = "Forty-five SMG rounds" },
-    { id = "ammo_357", out = "ammo_357", needs = { scrap = 3, chemicals = 2 }, secs = 8, desc = "Six .357 rounds" },
-    { id = "gun_pistol", out = "gun_pistol", needs = { gun_parts = 2, scrap = 3 }, secs = 12, desc = "A pistol" },
-    { id = "gun_smg", out = "gun_smg", needs = { gun_parts = 4, scrap = 6, chemicals = 1 }, secs = 18, desc = "An SMG" },
-    { id = "gun_shotgun", out = "gun_shotgun", needs = { gun_parts = 3, scrap = 5 }, secs = 15, desc = "A shotgun" },
-    { id = "gun_357", out = "gun_357", needs = { gun_parts = 4, scrap = 6, chemicals = 1 }, secs = 20, desc = "A .357 revolver" },
-    { id = "armor_vest", out = "armor_vest", needs = { scrap = 6, cloth = 4, chemicals = 1 }, secs = 14, desc = "A powered vest: holds a charge (charge cells top it up)" },
     { id = "vest_cell", out = "vest_cell", needs = { scrap = 2, chemicals = 2 }, secs = 6, desc = "A charge cell: twenty-five charge into your vest" },
-    { id = "forged_batch", out = "ration_forged", count = 5, needs = { paper = 3, chemicals = 1 }, secs = 12,
-      desc = "Five forged ration cards: the dealer buys them, the dispensers take them. The more turn up, the hotter the search for the forger" },
-    { id = "smokebomb", out = "smokebomb", needs = { chemicals = 2, can_empty = 1 }, secs = 5, desc = "Thick white smoke" },
-    { id = "bypass", out = "bypass", needs = { gun_parts = 1, chemicals = 2, scrap = 2 }, secs = 10, desc = "Opens any door once, Combine doors too, and holds it open ten seconds" },
     { id = "firebomb", out = "firebomb", needs = { weedkiller = 2, bottle_empty = 1, cloth = 1 }, secs = 8, desc = "Weedkiller, cooked down, in a bottle with a rag: fire, which armour doesn't keep out" },
-    { id = "chemicals_weedkiller", out = "chemicals", needs = { weedkiller = 2 }, secs = 6, desc = "Two canisters of weedkiller, cooked down into chemicals" },
-    { id = "radio_transmitter", out = "radio_transmitter", needs = { radio_tuned = 1, scrap = 2 }, secs = 12, desc = "A Freq 7 radio rebuilt to send as well as listen" },
-    { id = "jammer", out = "jammer", needs = { radio_tuned = 1, scrap = 2, chemicals = 1 }, secs = 15, desc = "A radio that only screams" },
-    { id = "crowbar", out = "crowbar", needs = { scrap = 6 }, secs = 10, desc = "Bar stock, heated and bent" },
     -- (only once you've lived through lc_chip_dreams of the city's dreams: sv_livingcity_bedtime.lua)
     { id = "foil_hat", out = "foil_hat", needs = { scrap = 1, cloth = 1 }, secs = 5, dreamGate = true,
       desc = "A foil hat: sleep in it and it keeps the dream out about one night in three. \"The physics is... complicated.\" Contraband" },
