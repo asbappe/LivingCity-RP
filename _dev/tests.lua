@@ -2314,9 +2314,9 @@ local ghostName = ghost:GetNW2String("lc_char", "")
 LC.AddCredits(ghost, 50)
 ghost.alive = false
 hook.Run("PlayerDeath", ghost)
--- (since 14 November, the infested a hidden side: killed while infested, the headcrab dies with them, for a close call)
+-- (since 14 November, the infested a hidden side: killed while infested, the character is dead)
 -- (here every death is final, as for the resident above: with no close call left, it's a new life, and not an infested one)
-ok(not LC.PlayerIsZombie(ghost), "the infested don't stay infested after death (freed for a close call; with none left, a new life)", ghost:GetNW2String("lcf_faction", ""))
+ok(not LC.PlayerIsZombie(ghost) and ghost:GetNW2String("lc_char", "") ~= ghostName, "killed while infested: a new life, never a close call", ghost:GetNW2String("lcf_faction", ""))
 ghost.alive = true
 -- movement
 local function Mv(buttons)
@@ -29802,8 +29802,11 @@ section("The owner's 14 November answers: prison guards, the infested, Lamarr, d
     ok(LC.InfestedAttacker(ents.Create("npc_headcrab")) and not LC.InfestedAttacker(cit), "a headcrab is an infested attacker; a rebel isn't")
     LC.TurnInfested(cit)
     ok(LC.PlayerIsZombie(cit), "turned: one of the infested")
-    LC.InfestedFreed(cit)
-    ok(cit:GetNW2String("lcf_faction", "") == "resistance", "freed by death: back on their own side", cit:GetNW2String("lcf_faction", ""))
+    local before = cit:GetNW2String("lc_char", "")
+    cit.alive = false
+    hook.Run("PlayerDeath", cit)
+    cit.alive = true
+    ok(not LC.PlayerIsZombie(cit) and cit:GetNW2String("lc_char", "") ~= before, "killed while infested: the character is dead, no close call (the owner, 14 November)", cit:GetNW2String("lc_char", ""))
     -- Lamarr: on Dr. Kleiner's bench only
     local bench = ents.Create("lc_workbench")
     if IsValid(bench) then
@@ -29813,7 +29816,16 @@ section("The owner's 14 November answers: prison guards, the infested, Lamarr, d
         ok(IsValid(sci), "the bench has a scientist")
         if IsValid(sci) then
             sci.lcWho = "kleiner"
-            ok(IsValid(LC.LabLamarr(bench)), "Lamarr sits on Dr. Kleiner's bench")
+            local lam = LC.LabLamarr(bench)
+            ok(IsValid(lam), "Lamarr sits on Dr. Kleiner's bench")
+            if IsValid(lam) then
+                sci:SetNW2Float("lc_away_until", CurTime() + 60)
+                LC.LamarrSync(lam)
+                ok(lam.lcHidden, "she's gone while he's taken away")
+                sci:SetNW2Float("lc_away_until", 0)
+                LC.LamarrSync(lam)
+                ok(not lam.lcHidden, "and back when he is")
+            end
             sci.lcWho = "eli"
             ok(LC.LabLamarr(bench) == nil and not IsValid(bench.lcLamarr), "and not on anyone else's")
         end

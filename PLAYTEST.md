@@ -1994,9 +1994,9 @@ Type them in the server console on the host panel, or in your own game console (
 ## Your 14 November answers: built, please try
 - [ ] **Prison guard:** as a Combine Prison Guard, F4 shows Cell inspection, Question a prisoner, A break for it, Watch over the cells. Do four: are you a Combine Soldier?
   Notes:
-- [ ] **The infested:** not on F4 Factions. Go down to a zombie or headcrab inside an infestation and bleed out: do you come back infested in the nest? Got up in time: nothing. Killed as infested: back as yourself at the clinic?
+- [ ] **The infested:** not on F4 Factions. Go down to a zombie or headcrab inside an infestation and bleed out: do you come back infested in the nest? Got up in time: nothing. Killed as infested: a new character (no close call)?
   Notes:
-- [ ] **Lamarr:** at a lab run by Dr. Kleiner, is she on the bench? Does she sit right (not floating or sunk)? E on her.
+- [ ] **Lamarr:** at a lab run by Dr. Kleiner, is she on the bench? Does she sit right (not floating or sunk)? E on her. Have a unit take Kleiner away: is she gone, and back with him?
   Notes:
 - [ ] **Dressed dreams:** a ring of props below the edge of each playable dream. Does it look right, and is it out of the way?
   Notes:

@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version 7f35e02. Admin-only console messages and log lines are left out.
+Made from version 547df84. Admin-only console messages and log lines are left out.
 
-12474 lines, from 342 files.
+12473 lines, from 342 files.
 
 ## Contents
 
@@ -167,7 +167,7 @@ Made from version 7f35e02. Admin-only console messages and log lines are left ou
 - [your career, on one page (the owner's 7 November playtest: "playing as a](#your-career-on-one-page-the-owners-7-november-playtest-playing-as-a-svlivingcitycareerlua) (23)
 - [the Resistance's interrogation chair (lc_interrochair)](#the-resistances-interrogation-chair-lcinterrochair-svlivingcitychairlua) (49)
 - [sv_livingcity_chairplayer.lua](#svlivingcitychairplayerlua-svlivingcitychairplayerlua) (32)
-- [characters and permanent death](#characters-and-permanent-death-svlivingcitycharacterlua) (30)
+- [characters and permanent death](#characters-and-permanent-death-svlivingcitycharacterlua) (29)
 - [checkpoints, turrets, and holding the infestation back](#checkpoints-turrets-and-holding-the-infestation-back-svlivingcitycheckpointslua) (54)
 - [the chronicle (what happened in the city, and what led to it)](#the-chronicle-what-happened-in-the-city-and-what-led-to-it-svlivingcitychroniclelua) (22)
 - [the City Administrator's office, and idle players (the owner, 1 November)](#the-city-administrators-office-and-idle-players-the-owner-1-november-svlivingcitycityadminlua) (72)
@@ -224,7 +224,7 @@ Made from version 7f35e02. Admin-only console messages and log lines are left ou
 - [toilets, baths and what happens without them](#toilets-baths-and-what-happens-without-them-svlivingcityhygienelua) (53)
 - [catching something](#catching-something-svlivingcityillnesslua) (13)
 - [help for the outnumbered side](#help-for-the-outnumbered-side-svlivingcityimbalancelua) (24)
-- [the infested, a hidden side (the owner, 13 November playtest: off the F4 menu and every](#the-infested-a-hidden-side-the-owner-13-november-playtest-off-the-f4-menu-and-every-svlivingcityinfestedsidelua) (3)
+- [the infested, a hidden side (the owner, 13 November playtest: off the F4 menu and every](#the-infested-a-hidden-side-the-owner-13-november-playtest-off-the-f4-menu-and-every-svlivingcityinfestedsidelua) (2)
 - [Citizen Information](#citizen-information-svlivingcityinfodesklua) (36)
 - [the Resistance Insider (a Civil Protection unit secretly with the Resistance)](#the-resistance-insider-a-civil-protection-unit-secretly-with-the-resistance-svlivingcityinsiderlua) (65)
 - [Civil Intake (becoming somebody)](#civil-intake-becoming-somebody-svlivingcityintakelua) (84)
@@ -270,7 +270,7 @@ Made from version 7f35e02. Admin-only console messages and log lines are left ou
 - [the power grid](#the-power-grid-svlivingcitypowerlua) (28)
 - [prison](#prison-svlivingcityprisonlua) (42)
 - [the prison guard's work, and a short rank (the owner, 13 November playtest: "I went](#the-prison-guards-work-and-a-short-rank-the-owner-13-november-playtest-i-went-svlivingcityprisonguardlua) (26)
-- [close calls, careers for life, and what passes on](#close-calls-careers-for-life-and-what-passes-on-svlivingcityprogresslua) (20)
+- [close calls, careers for life, and what passes on](#close-calls-careers-for-life-and-what-passes-on-svlivingcityprogresslua) (21)
 - [street furniture, and the city's voice](#street-furniture-and-the-citys-voice-svlivingcitypropagandalua) (43)
 - [propaganda dreams (dreams you play)](#propaganda-dreams-dreams-you-play-svlivingcitypropagandadreamslua) (212)
 - [more propaganda dreams (dreams you play), drawn from real propaganda](#more-propaganda-dreams-dreams-you-play-drawn-from-real-propaganda-svlivingcitypropagandamorelua) (375)
@@ -592,10 +592,10 @@ Made from version 7f35e02. Admin-only console messages and log lines are left ou
 
 `gamemodes/livingcity/entities/entities/lc_lamarr.lua`
 
-- "Lamarr lets you scratch her back, then tries to climb your arm."  (text, line 22)
-- "Lamarr ignores you completely. Then she sneezes."  (text, line 23)
-- "Lamarr nuzzles your hand where her beak used to be."  (text, line 24)
-- "Lamarr hops a little closer to the warm screen and settles down again."  (text, line 25)
+- "Lamarr lets you scratch her back, then tries to climb your arm."  (text, line 23)
+- "Lamarr ignores you completely. Then she sneezes."  (text, line 24)
+- "Lamarr nuzzles your hand where her beak used to be."  (text, line 25)
+- "Lamarr hops a little closer to the warm screen and settles down again."  (text, line 26)
 
 ## lc_lawboard.lua (lc_lawboard.lua)
 
@@ -977,7 +977,7 @@ Made from version 7f35e02. Admin-only console messages and log lines are left ou
 - "Under every loudspeaker is a utility box. A Resistance Hacker can splice into it (E): when Colonel Cubbage next answers her, he's heard from that loudspeaker too. Units cut splices out there; the radio repair crew mends a broken loudspeaker from it."  (text, line 45)
 - "Before each dream you play, a black card says what it is, the rules, how to win and how to lose. Space starts it straight away."  (text, line 46)
 - "A Combine Prison Guard's board (F4) has four prison jobs: finish four and you join the soldiers."  (text, line 47)
-- "Beware the infestation: put down there by a zombie or a headcrab, and if nobody gets you up, you turn. Killed while infested, the headcrab dies with you (a close call)."  (text, line 48)
+- "Beware the infestation: put down there by a zombie or a headcrab, and if nobody gets you up, you turn. Die while infested and that character is dead: no close call."  (text, line 48)
 - "Job boards around the city list their side's work: E on one of your side's opens your jobs."  (text, line 49)
 - "Lost? {gm_showhelp} > What now? always shows your next step and how to get there. What now? > Places marks useful spots on your screen (the ration dispenser, water, your housing block, your workplace)."  (text, line 50)
 - "F3: your pockets (and your stash at home)        F4: Jobs (your job board: jobs, stories, Union employment), Career (rank and the way up) and Factions, as tabs"  (text, line 51)
@@ -6485,61 +6485,60 @@ Made from version 7f35e02. Admin-only console messages and log lines are left ou
 
 - "You turned: you come back as one of the infested."  (text, line 242)
 
-> Note for you (not shown in game): killed while infested: the headcrab dies with them, at the cost of a close call (the last one: the end)
+> Note for you (not shown in game): killed while infested: the end of them, no close call (the owner, 14 November: "if you die as an infested your character is dead; no close calls"); the next life starts as a new person (sv_livingcity_infestedside.lua)
 
-- "The infestation doesn't let go. You come back as you were."  (text, line 248)
+- "Died infested: there's no coming back from that."  (text, line 249)
+- "[Miscount] You died in custody. That doesn't change who you are, or how long you're in for."  (chat message, line 254)
 
 > Note for you (not shown in game): someone dying
 
-- "The headcrab died with you. {or}"  (text, line 254)
-- "[Miscount] You died in custody. That doesn't change who you are, or how long you're in for."  (chat message, line 259)
-- "Died in custody: you're still you, and still serving your time."  (text, line 260)
+- "Died in custody: you're still you, and still serving your time."  (text, line 255)
 
 > Note for you (not shown in game): a close call, unless this one is the end of them (sv_livingcity_progress.lua)
 
-- "A close call: %d left."  (message, line 266)
-- "A close call: the last one."  (text, line 266)
+- "A close call: %d left."  (message, line 261)
+- "A close call: the last one."  (text, line 261)
 
 > Note for you (not shown in game): Whole words that are never fine in a name.
 
-- "Choose a realistic name for a person living in this city and era: an ordinary name, first and last if you like. No celebrities, characters from games, films or shows, memes or joke names."  (text, line 318)
+- "Choose a realistic name for a person living in this city and era: an ordinary name, first and last if you like. No celebrities, characters from games, films or shows, memes or joke names."  (text, line 313)
 
 > Note for you (not shown in game): Returns true, the cleaned-up name; or false, why not.
 
-- "Names are between 3 and 26 characters long."  (text, line 330)
-- "Names use letters only: no numbers or symbols."  (text, line 331)
-- "A name is one to three words: a first name, and a surname if you like."  (text, line 334)
+- "Names are between 3 and 26 characters long."  (text, line 325)
+- "Names use letters only: no numbers or symbols."  (text, line 326)
+- "A name is one to three words: a first name, and a surname if you like."  (text, line 329)
 
 > Note for you (not shown in game): part of: validate character name
 
-- "Each part of your name needs at least two letters."  (text, line 337)
-- "That doesn't read like a real name."  (text, line 338)
-- "That doesn't read like a real name."  (text, line 339)
-- "That name isn't allowed. {REMINDER}"  (text, line 341)
-- "That name looks like a celebrity, a character or a joke. {REMINDER}"  (text, line 347)
+- "Each part of your name needs at least two letters."  (text, line 332)
+- "That doesn't read like a real name."  (text, line 333)
+- "That doesn't read like a real name."  (text, line 334)
+- "That name isn't allowed. {REMINDER}"  (text, line 336)
+- "That name looks like a celebrity, a character or a joke. {REMINDER}"  (text, line 342)
 
 > Note for you (not shown in game): a new life: first, a citizen or a vortigaunt? (sv_livingcity_vortstart.lua)
 
-- "[Civil Intake] Who you are goes on your registration form, at the Civil Intake terminal."  (chat message, line 395)
+- "[Civil Intake] Who you are goes on your registration form, at the Civil Intake terminal."  (chat message, line 390)
 
 > Note for you (not shown in game): the game answering something done in a window (lcc_submit)
 
-- "One moment."  (text, line 415)
+- "One moment."  (text, line 410)
 
 > Note for you (not shown in game): a new name and face is no way out of trouble
 
-- "Not while you're wanted or in custody."  (text, line 419)
+- "Not while you're wanted or in custody."  (text, line 414)
 
 > Note for you (not shown in game): the game answering something done in a window (lcc_submit)
 
-- "Choose one of the faces shown."  (text, line 426)
-- "Someone in the city already has that name."  (text, line 429)
-- "That person can't come back. Choose another name."  (text, line 430)
-- "[Miscount] You are %s, citizen %s."  (message, line 443)
+- "Choose one of the faces shown."  (text, line 421)
+- "Someone in the city already has that name."  (text, line 424)
+- "That person can't come back. Choose another name."  (text, line 425)
+- "[Miscount] You are %s, citizen %s."  (message, line 438)
 
 > Note for you (not shown in game): the console command lc_setname
 
-- "[Miscount] Staff changed your name to {name}."  (chat message, line 483)
+- "[Miscount] Staff changed your name to {name}."  (chat message, line 478)
 
 ## checkpoints, turrets, and holding the infestation back (sv_livingcity_checkpoints.lua)
 
@@ -11377,11 +11376,7 @@ Made from version 7f35e02. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): They turn (called as they die, from sv_livingcity_character.lua): their side is kept for the way back.
 
-- "[Miscount] You turned. You come back as one of the infested, in the nest. Killed like this, the headcrab dies with you."  (chat message, line 57)
-
-> Note for you (not shown in game): Freed by death (called as they die): back to the side they were on.
-
-- "[Miscount] The headcrab died with you. You come back as yourself."  (chat message, line 70)
+- "[Miscount] You turned. You come back as one of the infested, in the nest. Killed like this, it's the end of you."  (chat message, line 57)
 
 ## Citizen Information (sv_livingcity_infodesk.lua)
 
@@ -12270,152 +12265,152 @@ Made from version 7f35e02. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): the Combine's data, decoded here (sv_livingcity_heist.lua)
 
-- "150 XP, 150 credits, and every Civil Protection unit marked for the whole Resistance for ten minutes"  (description, line 253)
-- "50 XP, 50 credits, and every Civil Protection unit marked for the whole Resistance for five minutes"  (description, line 254)
-- "He looks up from a tangle of wires. "Ah! Yes, hello. What do you need?""  (text, line 273)
-- ""Mind the, ah, the jar. What can I make for you?""  (text, line 274)
-- "He pushes his glasses up his nose. "Materials, or credits? Either will do.""  (text, line 275)
+- "150 XP, 150 credits, and every Civil Protection unit marked for the whole Resistance for ten minutes"  (description, line 269)
+- "50 XP, 50 credits, and every Civil Protection unit marked for the whole Resistance for five minutes"  (description, line 270)
+- "He looks up from a tangle of wires. "Ah! Yes, hello. What do you need?""  (text, line 289)
+- ""Mind the, ah, the jar. What can I make for you?""  (text, line 290)
+- "He pushes his glasses up his nose. "Materials, or credits? Either will do.""  (text, line 291)
 
 > Note for you (not shown in game): part of: use scientist
 
-- "He steps between you and the bench. "I'm terribly sorry, I don't believe we've met. This is a private... laboratory. Please, go.""  (chat message, line 286)
+- "He steps between you and the bench. "I'm terribly sorry, I don't believe we've met. This is a private... laboratory. Please, go.""  (chat message, line 302)
 
 > Note for you (not shown in game): something he finished after they walked off: handed over first
 
-- ""Not yet, not yet. Another %d seconds.""  (message, line 294)
+- ""Not yet, not yet. Another %d seconds.""  (message, line 310)
 
 > Note for you (not shown in game): wrecked by the Combine: nothing to work with until it's fixed (sv_livingcity_labdamage.lua)
 
-- "He waves at the smoking bench. "Look at it! I can't make so much as a fuse until this is repaired. Spare parts, and a pair of hands: the job's on your board (F4), 'Get the lab running'.""  (chat message, line 301)
-- "The lab is wrecked"  (on-screen notice, line 302)
-- "Nothing can be made, decoded or done here until it's repaired. Take the job 'Get the lab running' from your board (F4)."  (on-screen notice, line 302)
+- "He waves at the smoking bench. "Look at it! I can't make so much as a fuse until this is repaired. Spare parts, and a pair of hands: the job's on your board (F4), 'Get the lab running'.""  (chat message, line 317)
+- "The lab is wrecked"  (on-screen notice, line 318)
+- "Nothing can be made, decoded or done here until it's repaired. Take the job 'Get the lab running' from your board (F4)."  (on-screen notice, line 318)
 
 > Note for you (not shown in game): part of: use scientist
 
-- ""Half a chip? Bring me the other fragment and I'll decode the lot.""  (chat message, line 311)
-- ""Is that Combine data? I can decode that. (Decode: at the top of my list.)""  (chat message, line 312)
+- ""Half a chip? Bring me the other fragment and I'll decode the lot.""  (chat message, line 327)
+- ""Is that Combine data? I can decode that. (Decode: at the top of my list.)""  (chat message, line 328)
 
 > Note for you (not shown in game): part of: lab collect
 
-- ""Ah, there you are. I kept it safe for you." He hands you: {names}."  (chat message, line 358)
+- ""Ah, there you are. I kept it safe for you." He hands you: {names}."  (chat message, line 374)
 
 > Note for you (not shown in game): part of: lab make
 
-- "He only works for the Resistance."  (text, line 365)
-- "Find the scientist in the lab."  (text, line 371)
-- "You're busy."  (text, line 372)
-- "He's still working on the last thing."  (text, line 375)
-- "He's in the middle of someone else's work (%ds)."  (message, line 376)
-- "He wants {price} credits for that. You don't have them."  (text, line 381)
-- "the lab"  (text, line 382)
-- "You're missing the materials ({mid})."  (text, line 385)
+- "He only works for the Resistance."  (text, line 381)
+- "Find the scientist in the lab."  (text, line 387)
+- "You're busy."  (text, line 388)
+- "He's still working on the last thing."  (text, line 391)
+- "He's in the middle of someone else's work (%ds)."  (message, line 392)
+- "He wants {price} credits for that. You don't have them."  (text, line 397)
+- "the lab"  (text, line 398)
+- "You're missing the materials ({mid})."  (text, line 401)
 
 > Note for you (not shown in game): part of: refund
 
-- "the lab, handed back"  (text, line 404)
+- "the lab, handed back"  (text, line 420)
 
 > Note for you (not shown in game): part of: lab make
 
-- ""Credits. Yes. Fine. Give me a moment.""  (chat message, line 410)
-- ""Ah, good, good. Let me see what I can do with these.""  (chat message, line 410)
-- "The scientist is making your {name}... stay in the lab"  (progress bar, line 411)
+- ""Credits. Yes. Fine. Give me a moment.""  (chat message, line 426)
+- ""Ah, good, good. Let me see what I can do with these.""  (chat message, line 426)
+- "The scientist is making your {name}... stay in the lab"  (progress bar, line 427)
 
 > Note for you (not shown in game): part of: done
 
-- ""There. Do be careful with it." He hands you: {name}."  (chat message, line 421)
+- ""There. Do be careful with it." He hands you: {name}."  (chat message, line 437)
 
 > Note for you (not shown in game): part of: finished
 
-- "The lab"  (on-screen notice, line 437)
-- "The scientist has finished your {name}. Go back and talk to him to collect it: he keeps it for you alone."  (on-screen notice, line 437)
+- "The lab"  (on-screen notice, line 453)
+- "The scientist has finished your {name}. Go back and talk to him to collect it: he keeps it for you alone."  (on-screen notice, line 453)
 
 > Note for you (not shown in game): part of: lab make
 
-- "[Scientist] You step away. "Go on, go on, I'll keep at it. Come back and ask me for it.""  (text, line 448)
+- "[Scientist] You step away. "Go on, go on, I'll keep at it. Come back and ask me for it.""  (text, line 464)
 
 > Note for you (not shown in game): A new face. Papers in a dead man's name don't stop a unit who knows your face; the scientist can change it. Twenty seconds under (stay on the table), lc_surgery_price credits, and you wake with someone else's face, bandaged and slow on your feet for a few minutes. Nobody's looking for that face: your wanted status, any BOLO on you and the scanners' pictures are gone, a wanted notice won't match it, and a Civil Standing below lc_surgery_standing (-50) comes back up to it (the records can't put a name to the face). Get wanted again and they learn the new one.
 
-- "He only works for the Resistance."  (text, line 470)
-- ""Surgery? Here? Good heavens, no.""  (text, line 472)
-- ""Your face needs to heal first." (%d min)"  (message, line 474)
-- "%d credits, and you don't have them."  (message, line 475)
+- "He only works for the Resistance."  (text, line 486)
+- ""Surgery? Here? Good heavens, no.""  (text, line 488)
+- ""Your face needs to heal first." (%d min)"  (message, line 490)
+- "%d credits, and you don't have them."  (message, line 491)
 
 > Note for you (not shown in game): part of: lab surgery
 
-- "Find the scientist in the lab."  (text, line 493)
-- "He's in the middle of someone else's work."  (text, line 495)
-- "a new face"  (text, line 497)
-- ""Lie down, lie down. You'll feel a little... well. You won't feel anything, actually. Count backwards from ten.""  (chat message, line 501)
-- "Under the knife... stay on the table"  (progress bar, line 504)
+- "Find the scientist in the lab."  (text, line 509)
+- "He's in the middle of someone else's work."  (text, line 511)
+- "a new face"  (text, line 513)
+- ""Lie down, lie down. You'll feel a little... well. You won't feel anything, actually. Count backwards from ten.""  (chat message, line 517)
+- "Under the knife... stay on the table"  (progress bar, line 520)
 
 > Note for you (not shown in game): part of: done
 
-- "a face the records don't know"  (text, line 520)
-- ""There. Nobody will know you. Well, I hardly do. Keep the bandages on a few minutes, and don't run.""  (chat message, line 525)
-- "A new face"  (on-screen notice, line 526)
-- "Nobody's looking for this face. Your wanted status, any BOLO and the scanners' pictures are gone, and a wanted notice won't match it. Get wanted again and they'll learn this one."  (on-screen notice, line 526)
+- "a face the records don't know"  (text, line 536)
+- ""There. Nobody will know you. Well, I hardly do. Keep the bandages on a few minutes, and don't run.""  (chat message, line 541)
+- "A new face"  (on-screen notice, line 542)
+- "Nobody's looking for this face. Your wanted status, any BOLO and the scanners' pictures are gone, and a wanted notice won't match it. Get wanted again and they'll learn this one."  (on-screen notice, line 542)
 
 > Note for you (not shown in game): part of: cancel
 
-- "the lab, handed back"  (text, line 533)
+- "the lab, handed back"  (text, line 549)
 
 > Note for you (not shown in game): part of: lab surgery
 
-- "[Scientist] You sit up too soon. "No, no, no! We'll have to do this another time." He hands your credits back."  (text, line 536)
-- "the lab, handed back"  (text, line 541)
+- "[Scientist] You sit up too soon. "No, no, no! We'll have to do this another time." He hands your credits back."  (text, line 552)
+- "the lab, handed back"  (text, line 557)
 
 > Note for you (not shown in game): Pulling the chip (the owner, 8 November: "make it 500 for the chip surgery, make an in game explanation that it requires special one-time tools and codes to remove the chip"). Only once they've lived through lc_chip_dreams of the city's dreams. Thirty seconds under (stay on the table); then no dreams ever, a short night's sleep, and now and then a unit notices there's no implant signal (sv_livingcity_bedtime.lua).
 
-- "Find the scientist in the lab."  (text, line 559)
-- "He's in the middle of someone else's work."  (text, line 561)
+- "Find the scientist in the lab."  (text, line 575)
+- "He's in the middle of someone else's work."  (text, line 577)
 
 > Note for you (not shown in game): part of: lab chip
 
-- "the chip pulled (tools and codes)"  (text, line 563)
-- ""The tools are one use only, and the codes cost more than I'd like to say. The chip sits right against the... well. Don't move. Not even a little.""  (chat message, line 567)
-- "The chip coming out... stay on the table"  (progress bar, line 570)
+- "the chip pulled (tools and codes)"  (text, line 579)
+- ""The tools are one use only, and the codes cost more than I'd like to say. The chip sits right against the... well. Don't move. Not even a little.""  (chat message, line 583)
+- "The chip coming out... stay on the table"  (progress bar, line 586)
 
 > Note for you (not shown in game): part of: done
 
-- "He holds up something small and bloody in the tweezers. "There. That's the last time she gets inside your head. Keep the bandage on, and keep your head down: a unit's scanner may notice there's nothing there.""  (chat message, line 582)
-- "The chip is out"  (on-screen notice, line 583)
-- "No more dreams, ever, and a night's sleep is short. But a unit checking your papers or searching you may notice there's no implant signal: that marks you as an anticitizen."  (on-screen notice, line 583)
+- "He holds up something small and bloody in the tweezers. "There. That's the last time she gets inside your head. Keep the bandage on, and keep your head down: a unit's scanner may notice there's nothing there.""  (chat message, line 598)
+- "The chip is out"  (on-screen notice, line 599)
+- "No more dreams, ever, and a night's sleep is short. But a unit checking your papers or searching you may notice there's no implant signal: that marks you as an anticitizen."  (on-screen notice, line 599)
 
 > Note for you (not shown in game): part of: cancel
 
-- "the lab, handed back"  (text, line 590)
+- "the lab, handed back"  (text, line 606)
 
 > Note for you (not shown in game): part of: lab chip
 
-- "[Scientist] You sit up too soon. "No! Lie still! ... We'll have to try another time." He hands your credits back: the tools are still sealed."  (text, line 593)
-- "the lab, handed back"  (text, line 598)
+- "[Scientist] You sit up too soon. "No! Lie still! ... We'll have to try another time." He hands your credits back: the tools are still sealed."  (text, line 609)
+- "the lab, handed back"  (text, line 614)
 
 > Note for you (not shown in game): the game answering something done in a window (lc_lab_chip)
 
-- "[Lab] {why}"  (chat message, line 608)
+- "[Lab] {why}"  (chat message, line 624)
 
 > Note for you (not shown in game): the game answering something done in a window (lc_lab_surgery)
 
-- "[Lab] {why}"  (chat message, line 615)
+- "[Lab] {why}"  (chat message, line 631)
 
 > Note for you (not shown in game): the game answering something done in a window (lc_lab_decode)
 
-- "He slots it into a humming console and leans in. "Oh, this is marvellous. Get the word out.""  (chat message, line 623)
+- "He slots it into a humming console and leans in. "Oh, this is marvellous. Get the word out.""  (chat message, line 639)
 
 > Note for you (not shown in game): the game answering something done in a window (lc_lab_make)
 
-- "[Lab] {why}"  (chat message, line 633)
+- "[Lab] {why}"  (chat message, line 649)
 
 > Note for you (not shown in game): part of: shut lab
 
-- "[Civil Protection] A Resistance lab. The scientist is taken into custody and the equipment smashed. Nothing will be made here for a while."  (chat message, line 652)
-- "a Resistance lab shut down"  (text, line 653)
-- "Shut down a Resistance lab"  (text, line 654)
-- "They found the lab {GetPos}. The scientist's been taken. Nothing comes out of there for a while."  (text, line 658)
+- "[Civil Protection] A Resistance lab. The scientist is taken into custody and the equipment smashed. Nothing will be made here for a while."  (chat message, line 668)
+- "a Resistance lab shut down"  (text, line 669)
+- "Shut down a Resistance lab"  (text, line 670)
+- "They found the lab {GetPos}. The scientist's been taken. Nothing comes out of there for a while."  (text, line 674)
 
 > Note for you (not shown in game): a timer (regularly)
 
-- "The scientist's back at the lab {GetPos}."  (text, line 665)
+- "The scientist's back at the lab {GetPos}."  (text, line 681)
 
 ## a Resistance lab can be shot up (the owner's 7 November playtest) (sv_livingcity_labdamage.lua)
 
@@ -15318,6 +15313,7 @@ Made from version 7f35e02. Admin-only console messages and log lines are left ou
 - "The conditioning can't be undone: this person is Overwatch for life. Another character (!characters) can be someone else."  (text, line 174)
 - "stepped into the light"  (text, line 198)
 - "was taken out of the city by staff"  (text, line 198)
+- "died infested"  (text, line 198)
 
 > Note for you (not shown in game): a timer (regularly)
 

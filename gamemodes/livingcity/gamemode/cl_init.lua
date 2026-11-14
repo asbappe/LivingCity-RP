@@ -45,7 +45,7 @@ local GUIDE = {
         "Under every loudspeaker is a utility box. A Resistance Hacker can splice into it (E): when Colonel Cubbage next answers her, he's heard from that loudspeaker too. Units cut splices out there; the radio repair crew mends a broken loudspeaker from it.",
         "Before each dream you play, a black card says what it is, the rules, how to win and how to lose. Space starts it straight away.",
         "A Combine Prison Guard's board (F4) has four prison jobs: finish four and you join the soldiers.",
-        "Beware the infestation: put down there by a zombie or a headcrab, and if nobody gets you up, you turn. Killed while infested, the headcrab dies with you (a close call).",
+        "Beware the infestation: put down there by a zombie or a headcrab, and if nobody gets you up, you turn. Die while infested and that character is dead: no close call.",
         "Job boards around the city list their side's work: E on one of your side's opens your jobs.",
         "Lost? {gm_showhelp} > What now? always shows your next step and how to get there. What now? > Places marks useful spots on your screen (the ration dispenser, water, your housing block, your workplace).",
         "F3: your pockets (and your stash at home)        F4: Jobs (your job board: jobs, stories, Union employment), Career (rank and the way up) and Factions, as tabs",

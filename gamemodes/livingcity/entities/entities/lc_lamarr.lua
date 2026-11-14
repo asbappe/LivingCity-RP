@@ -1,7 +1,8 @@
 --[[
     Lamarr (Living City; the owner, 14 November: "add a secret Lamar pet that is non-aggressive and is
     friendly to the gamemode ... it should sit idle on top of the lab equipment prop if Dr Kleiner is the
-    resistance scientist"). Dr. Kleiner's debeaked headcrab, sitting on his bench: never an NPC, so
+    resistance scientist"; and: "if the Dr Kleiner is captured/arrested/caught, then Lamarr disappears until
+    Dr Kleiner returns"). Dr. Kleiner's debeaked headcrab, sitting on his bench: never an NPC, so
     nobody fights her and she fights nobody. She idles, turns now and then, makes a small noise. E on
     her: she lets you pet her (or doesn't). Put there by sv_livingcity_lab.lua, never placed by hand.
 ]]
@@ -47,6 +48,8 @@ if SERVER then
     end
     function ENT:Think()
         local now = CurTime()
+        -- gone while Dr. Kleiner is (LC.LamarrSync, sv_livingcity_lab.lua)
+        if LC and LC.LamarrSync and LC.LamarrSync(self) then self:NextThink(now + 1) return true end
         if now >= (self.lcNext or 0) then
             self:Idle()
             -- a turn on the spot, now and then, and a small noise
@@ -57,7 +60,7 @@ if SERVER then
         return true
     end
     function ENT:Use(activator)
-        if not (IsValid(activator) and activator:IsPlayer()) then return end
+        if not (IsValid(activator) and activator:IsPlayer()) or self.lcHidden then return end
         if (activator.lcLamarrNext or 0) > CurTime() then return end
         activator.lcLamarrNext = CurTime() + 3
         activator:ChatPrint(PETS[math.random(#PETS)])

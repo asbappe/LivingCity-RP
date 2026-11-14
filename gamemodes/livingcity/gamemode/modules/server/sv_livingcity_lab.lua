@@ -137,6 +137,21 @@ function LC.SetupLab(bench)
     return bench.lcScientist
 end
 
+-- Lamarr is gone while Dr. Kleiner is (the owner, 14 November: "if the Dr Kleiner is captured/arrested/caught,
+-- then Lamarr disappears until Dr Kleiner returns"): taken by a unit (lc_away_until, LC.ShutLab), or not
+-- at the bench at all. Hidden and not solid; back when he is. True while she's hidden.
+function LC.LamarrSync(l)
+    if not IsValid(l) then return true end
+    local sci = l.lcSci
+    local away = not IsValid(sci) or sci:GetNW2Float("lc_away_until", 0) > CurTime()
+    if away ~= (l.lcHidden or false) then
+        l.lcHidden = away
+        if l.SetNoDraw then l:SetNoDraw(away) end
+        if l.SetNotSolid then l:SetNotSolid(away) end
+    end
+    return away
+end
+
 -- Lamarr, on Dr. Kleiner's bench and nobody else's (the owner, 14 November: a secret pet that "should sit
 -- idle on top of the lab equipment prop if Dr Kleiner is the resistance scientist"; entities/lc_lamarr.lua).
 -- On the bench's top, at one end; gone with the bench, or if someone else runs the lab.
@@ -149,7 +164,7 @@ function LC.LabLamarr(bench)
         bench.lcLamarr = nil
         return nil
     end
-    if IsValid(bench.lcLamarr) then return bench.lcLamarr end
+    if IsValid(bench.lcLamarr) then bench.lcLamarr.lcSci = s return bench.lcLamarr end
     local mins, maxs = bench:OBBMins(), bench:OBBMaxs()
     local spot = bench:LocalToWorld(Vector(mins.x + (maxs.x - mins.x) * 0.8, (mins.y + maxs.y) / 2, maxs.z + 2))
     local tr = util.TraceLine({ start = spot + Vector(0, 0, 40), endpos = spot - Vector(0, 0, maxs.z - mins.z), filter = bench.lcClutter })
@@ -160,6 +175,7 @@ function LC.LabLamarr(bench)
     l:SetAngles(Angle(0, bench:GetAngles().y + 160, 0))
     l:Spawn()
     l:SetParent(bench)
+    l.lcSci = s -- (she's gone while he's taken away: entities/lc_lamarr.lua)
     bench.lcLamarr = l
     if bench.CallOnRemove then bench:CallOnRemove("lc_lamarr", function(b) if IsValid(b.lcLamarr) then b.lcLamarr:Remove() end end) end
     return l

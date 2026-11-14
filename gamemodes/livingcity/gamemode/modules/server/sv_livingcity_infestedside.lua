@@ -9,9 +9,9 @@
       - Put down (bleeding out) by a zombie, a headcrab or an infested player, inside an infestation
         zone: you're turning (told so). Got up: it passes. Bled out or gave up: no close call is used;
         you come back as one of the infested, in their nest (LC.TurnInfested).
-      - The way back: killed while infested, the headcrab dies with you. That costs a close call, and
-        you wake at the clinic as yourself, on the side you were on (LC.InfestedFreed). With none left,
-        it's the end of you, as any death would be.
+      - There is no way back: killed while infested, the character is dead, no close call (the owner,
+        14 November: "if you die as an infested your character is dead; no close calls"). The next life
+        is a new person (sv_livingcity_character.lua).
       Vortigaunts and stalkers never turn.
 ]]
 
@@ -54,20 +54,7 @@ function LC.TurnInfested(ply)
     local was = ply:GetNW2String("lcf_faction", "citizen") .. ":" .. ply:GetNW2String("lcf_special", "")
     ply:SetPData("lc_infested_from", was)
     if LC.SetFaction then LC.SetFaction(ply, "zombie", nil, true) end
-    ply:ChatPrint("[Miscount] You turned. You come back as one of the infested, in the nest. Killed like this, the headcrab dies with you.")
+    ply:ChatPrint("[Miscount] You turned. You come back as one of the infested, in the nest. Killed like this, it's the end of you.")
     hook.Run("LivingCityTurned", ply)
-    return true
-end
-
--- Freed by death (called as they die): back to the side they were on.
-function LC.InfestedFreed(ply)
-    if not IsValid(ply) then return false end
-    local was = ply:GetPData("lc_infested_from", "citizen:")
-    local fid, sid = string.match(was, "^([^:]*):?(.*)$")
-    if not fid or fid == "" or fid == "zombie" or not (LCF and LCF.Get and LCF.Get(fid)) then fid, sid = "citizen", "" end
-    ply:RemovePData("lc_infested_from")
-    if LC.SetFaction then LC.SetFaction(ply, fid, sid ~= "" and sid or nil, true) end
-    ply:ChatPrint("[Miscount] The headcrab died with you. You come back as yourself.")
-    hook.Run("LivingCityFreedOfInfestation", ply)
     return true
 end

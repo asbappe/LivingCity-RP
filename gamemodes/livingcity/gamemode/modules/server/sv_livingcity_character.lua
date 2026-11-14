@@ -242,18 +242,13 @@ hook.Add("PlayerDeath", "LivingCityCharacter", function(ply, inflictor, attacker
         Card(false, "You turned: you come back as one of the infested.")
         return
     end
-    -- killed while infested: the headcrab dies with them, at the cost of a close call (the last one: the end)
+    -- killed while infested: the end of them, no close call (the owner, 14 November: "if you die as an infested
+    -- your character is dead; no close calls"); the next life starts as a new person (sv_livingcity_infestedside.lua)
     if LC.PlayerIsZombie(ply) then
-        if not LC.InfestedFreed then
-            Card(false, "The infestation doesn't let go. You come back as you were.")
-            return
-        end
-        if not (LC.DeathIsFinal and LC.DeathIsFinal(ply)) then
-            local left = LC.UseCloseCall(ply)
-            LC.InfestedFreed(ply)
-            Card(false, "The headcrab died with you. " .. (left > 0 and string.format("A close call: %d left.", left) or "A close call: the last one."))
-            return
-        end
+        ply:RemovePData("lc_infested_from")
+        Card(true, "Died infested: there's no coming back from that.")
+        LC.NewCharacter(ply, "infested")
+        return
     end
     if LC.InCustody and LC.InCustody(ply) then
         ply:ChatPrint("[Miscount] You died in custody. That doesn't change who you are, or how long you're in for.")

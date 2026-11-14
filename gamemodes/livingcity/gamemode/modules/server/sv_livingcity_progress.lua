@@ -195,7 +195,7 @@ function LC.Legacy(ply)
     return t
 end
 
-local ENDS = { death = "died", energizer = "stepped into the light", retired = "retired", admin = "was taken out of the city by staff" }
+local ENDS = { death = "died", energizer = "stepped into the light", retired = "retired", admin = "was taken out of the city by staff", infested = "died infested" }
 
 -- The person ending now, written into the player's legacy.
 function LC.RecordLegacy(ply, why)
