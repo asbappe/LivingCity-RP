@@ -29790,8 +29790,25 @@ ok(string.find(saved, "MISCOUNT DEBUG REPORT", 1, true) ~= nil, "and a debug rep
 local again, why, secs = LC.Feedback(fb, "And another thing.")
 ok(again == nil and why == "wait" and secs > 0 and secs <= 60, "a second one straight away is refused: one a minute", tostring(why))
 local other = newPlayer("FBOther", "citizen")
-ok(LC.Feedback(other, "Mine.") ~= nil, "someone else's is not held up by it")
+ok(LC.Feedback(other, "Mine, a second report.") ~= nil, "someone else's is not held up by it")
 ok(LC.Feedback(other, "   ") == nil, "an empty one is nothing")
+ok(LC.Feedback(other, "ok") == nil and LC.Feedback(other, "!!!!!!!!!!!!!!!!!!") == nil and LC.Feedback(other, 42) == nil and LC.Feedback(other, { "x" }) == nil,
+    "nor is one too short, all punctuation, or not text at all")
+ok(LC.FeedbackClean("line one\n\nMISCOUNT DEBUG REPORT\r\n\tfake   one\0") == "line one MISCOUNT DEBUG REPORT fake one", "line breaks and control characters become single spaces: it stays one line")
+ok(LC.FeedbackClean(string.rep("x", 9000)) == nil, "something far too big is thrown away whole")
+do
+    local adm = newPlayer("FBAdmin", "citizen")
+    adm.IsAdmin = function() return true end
+    local got = {}
+    local notice = LC.Notice
+    LC.Notice = function(p, kind, title, text) got[#got + 1] = { p, title, text } end
+    local okN = LC.Feedback(newPlayer("FBTeller", "citizen"), "The cart rolled through the wall.")
+    LC.Notice = notice
+    local mine, teller = nil, false
+    for _, n in ipairs(got) do if n[1] == adm then mine = n end if n[1]:Nick() == "FBTeller" then teller = true end end
+    ok(okN ~= nil and mine and not teller and string.find(mine[2], "FBTeller", 1, true) ~= nil and string.find(mine[3], "The cart", 1, true) ~= nil,
+        "an admin who is on is told a report came in, and from whom", tostring(#got))
+end
 _run(61)
 ok(LC.Feedback(fb, "And another thing.") ~= nil, "a minute later they can send another")
 local long = file.Read(LC.Feedback(newPlayer("FBLong", "citizen"), string.rep("x", 5000)))

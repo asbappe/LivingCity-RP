@@ -85,8 +85,8 @@ local function OOCPage()
         -- (saved on the server with a debug report; one a minute: sv_livingcity_feedback.lua)
         Item("Report a bug or feedback...", function()
             Derma_StringRequest("Report a bug or feedback", "What happened, or what would you change?", "", function(text)
-                text = string.Trim(text or "")
-                if text == "" then return end
+                text = string.Trim(string.gsub(tostring(text or ""), "%c", " "))
+                if #text < 10 then chat.AddText(Color(235, 180, 70), "[Miscount] Not sent: write a few words.") return end
                 net.Start("lc_feedback")
                 net.WriteString(string.sub(text, 1, 1000))
                 net.SendToServer()

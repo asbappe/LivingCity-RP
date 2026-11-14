@@ -2065,3 +2065,5 @@ Type them in the server console on the host panel, or in your own game console (
   Notes:
 - [ ] **Clothes button:** reads "Change into citizen clothes".
   Notes:
+- [ ] **Bug reports, part 2:** with a second admin on, does a card "Report from NAME" show for them? Does a one-word report get "Not sent: write a few words."?
+  Notes:
