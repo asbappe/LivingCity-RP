@@ -518,8 +518,8 @@ function LC.UsePowerBank(ply, b)
             vest = charged > 0 and string.format(" Vest charging: +%d, now %d. Hold E for more.", charged, ply:Armor())
                 or (LC.HasVest and LC.HasVest(ply) and ply:Armor() >= (LC.VestCap and LC.VestCap(ply) or 0)) and " Your vest is full." or ""
         end
-        return true, string.format("Power bank: %s. Feeding %d turret%s and %d forcefield%s (it can feed %d).%s", live and "live" or "DEAD (no power)",
-            turrets, turrets == 1 and "" or "s", fields, fields == 1 and "" or "s", cvLoads:GetInt(), vest)
+        return true, string.format("Power bank: %s. Feeding %d turret%s and %d forcefield%s (it can feed %d powered device%s).%s", live and "live" or "DEAD (no power)",
+            turrets, turrets == 1 and "" or "s", fields, fields == 1 and "" or "s", cvLoads:GetInt(), cvLoads:GetInt() == 1 and "" or "s", vest)
     end
     if not live then return false, "Dead. No power." end
     if charged > 0 then

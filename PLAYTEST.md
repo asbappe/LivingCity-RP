@@ -1,7 +1,63 @@
 # Playtest checklist
 
-Updated 12 November 2026. **Part 1** is everything new since your 1 November playtest: try those first. **Part 2** is older items (from 8 October on); skip any you've already checked.
+Updated 14 November 2026. **Part 1** is everything new since your 1 November playtest: try those first. **Part 2** is older items (from 8 October on); skip any you've already checked.
 Tick a box when you've tried it, and write what you saw after **Notes:** (works, broken, feels off, ideas).
+
+## Your 13 November notes: fixed, please try again (14 November)
+- [ ] **The heartbeat (and every sound that loops by itself):** get hurt below 35 health so the heartbeat starts, then die or have a close call and respawn: is it silent? Does any other sound keep going after a respawn?
+  Notes:
+- [ ] **Guns on rebel ground as a unit:** as a prison guard or any unit, walk into rebel territory: no "LOWER YOUR WEAPON" prompt, and every gun fires. Toggle !build there and sleep in their bed, as you did: still firing?
+  Notes:
+- [ ] **Repel the attack at a checkpoint:** take it, kill attackers on the way and with your squad: do all of them count? When Dispatch says the attack is over, does the job complete instead of sticking at 1 of 2?
+  Notes:
+- [ ] **Chevrons:** as a unit with a job in rebel territory (and as a rebel with one on Combine ground): does the trail go round the walls now?
+  Notes:
+- [ ] **The Cremator:** does it appear by the infestation? Does it really walk faster (about twice a stalker's pace)? No more cremator error in the debug report?
+  Notes:
+- [ ] **Action music:** standing around near a job or a skirmish: silence? Fire three shots, or get shot: does it start within a few seconds, and stop soon after?
+  Notes:
+- [ ] **Eerie music:** do Ravenholm's and the spooky pieces only come up by the infestation, and fade when you walk away?
+  Notes:
+- [ ] **Call for backup:** units from further off: do they come in from out of sight about 15 seconds later (Dispatch says so)? Down and bleeding out with units of your squad near: does one kneel by you and get you up?
+  Notes:
+- [ ] **Commissary screen:** 20% larger? Previous page and Next page side by side on the bottom row, on every page?
+  Notes:
+- [ ] **Quartermaster and dealer:** buy something halfway down the list: does it stay there? Is the bypass charge's description wrapped beside the button? Do the extra goods have different lines, not all "Off the back of a Union lorry"?
+  Notes:
+- [ ] **Ammo boxes and health vials:** with full ammo, Load on a box: refused, the box kept? At full health, E on a health vial on the ground: into your pockets?
+  Notes:
+- [ ] **Poison gas bomb only:** the CP Commissary has no chlorine gas grenade; a Division Leader and the Overwatch are issued poison gas bombs; any old chlorine grenades in your pockets became poison gas bombs.
+  Notes:
+- [ ] **Resupply scanner:** does it come down from the top of the sky over about three seconds? Is the crate twice as big?
+  Notes:
+- [ ] **Firebomb:** 30% smaller fire: better?
+  Notes:
+- [ ] **Rebels' damage:** 20% more against players (lc_rebel_damage should read 0.6 in the debug report): a threat now?
+  Notes:
+- [ ] **Roses for Her:** is there a rose to see (stem, leaves, red bud)? Do notices say "You have a rose" and "Rose 1 of 3 laid at her feet", and does the laid rose lie at her feet? Is there time to crouch at the gold line?
+  Notes:
+- [ ] **Careless Talk:** is the spy at a different table each round? Salutes: arms outside the body? Fridge, stove and sink by the kitchen table, and props by the other three?
+  Notes:
+- [ ] **Sociostability lines:** no more "(the mood of the city)".
+  Notes:
+- [ ] **Job titles:** "to the north-east", no distance in the tracker's header.
+  Notes:
+- [ ] **Headcrab hunt:** stand at a different supply crate with the meat: does it take it?
+  Notes:
+- [ ] **The lab scientist:** start something and walk off: does he keep at it, tell you when it's done, and hand it over when you talk to him (and to nobody else)? After a raid, when he's back or the lab is fixed: no blood on him or the equipment?
+  Notes:
+- [ ] **Zombies:** scattered round the infestation, most still near the middle?
+  Notes:
+- [ ] **The infested:** two infested players: no damage to each other, a shove instead?
+  Notes:
+- [ ] **Resistance roles:** Smuggler from Member, Hacker only from Fighter, Father Grigori only from Lieutenant?
+  Notes:
+- [ ] **The morning jog is archived:** never on the schedule; the layout's jogging stops are gone after a map start (the debug report's points line has no jogroute; a backup is in lc_backups) and the jog's start is an exercise yard. You now have two yards (the old one and the jog's start): delete the one you don't want with the editor.
+  Notes:
+- [ ] **Sweeps:** over a few sweeps, does every rebel camp get one, the underground ones too?
+  Notes:
+- [ ] **Power bank and the blessing:** "(it can feed 2 powered devices)"; Father Grigori's blessing no longer says Russian.
+  Notes:
 
 ## Your 12 November notes: fixed, please try again
 - [ ] **Spray can marks (new pictures; needs `livingcity_content.zip`, FastDL sync, map change):** Spray at a bare wall: a window asks The lambda, The tally, NO RECORD or Never mind. Try each. Are the two new marks the right size beside a lambda, the right way up, and lit like the wall? Do they scrub off?
@@ -9,9 +65,9 @@ Tick a box when you've tried it, and write what you saw after **Notes:** (works,
 - [ ] **The Cheese Dream's surfaces:** the plain, slabs and wheels should look like holed cheese (are the holes a sensible size, or too small or too big?); the wedges in the sky should be swirling colours; take a golden cheese and the whole plain should melt into colours for 6 seconds, then go back.
   Notes:
 
-- [ ] **Lights out:** the warnings say "About six minutes until sleep" and "Two minutes until sleep".
+- [x] **Lights out:** the warnings say "About six minutes until sleep" and "Two minutes until sleep".
   Notes:
-- [ ] **Sprays:** off. G only kicks.
+- [x] **Sprays:** off. G only kicks.
   Notes:
 - [ ] **Vortigaunt broom:** a street vortigaunt holds it out in front, head on the ground, not sideways.
   Notes:
@@ -21,19 +77,19 @@ Tick a box when you've tried it, and write what you saw after **Notes:** (works,
   Notes:
 - [ ] **Arrest Baton:** the baton shows in first person, with one small glow at its tip. Screenshot please if not.
   Notes:
-- [ ] **Duty allocation:** no more "credits in ration coupons" line.
+- [x] **Duty allocation:** no more "credits in ration coupons" line.
   Notes:
 - [ ] **Shift:** 30 minutes again, and "Shift started" only once.
   Notes:
-- [ ] **CP Commissary screen:** right over the console, the floating sign hidden while it's open; signs and screens flicker like holograms. The Union Commissary has its own screen too. Turning in junk keeps your page.
-  Notes:
+- [x] **CP Commissary screen:** right over the console, the floating sign hidden while it's open; signs and screens flicker like holograms. The Union Commissary has its own screen too. Turning in junk keeps your page.
+  Notes: can we please have the layout so every page of the commissary screen has the next page and previous page not stacked on top of each other, but instead previous page takes up the left of the bottom row and next page takes up the right of the bottom row? Also please make the commissary interactive window 20% larger, it's just a hair too small (font to scale with it please)
 - [ ] **Checking papers:** "Done searching: check their papers" on the search window; the citizen stays facing you, still.
   Notes:
-- [ ] **Squad mates:** walk off fast or go up a floor. One more than 900 units back, or stuck 10 seconds, appears just behind you.
+- [x] **Squad mates:** walk off fast or go up a floor. One more than 900 units back, or stuck 10 seconds, appears just behind you.
   Notes:
 - [ ] **Action music:** an inspection starts while you're in bed, in a dream, or far away: no action music.
-  Notes:
-- [ ] **Jobs over the radio:** radio transmitter up, right click (or F1 > Jobs over the radio).
+  Notes: well now action music is just sort of playing randomly while standing around. New rule: action music only plays for a player when they've fired more than 2 bullets and/or when they've been shot.
+- [x] **Jobs over the radio:** radio transmitter up, right click (or F1 > Jobs over the radio).
   Notes:
 - [ ] **Incinerator:** stands on end, fire out of the top like a torch; bodies go to its foot.
   Notes:
@@ -454,24 +510,24 @@ Players now download both workshop packs when they join (the Alyx hazard props 2
 
 ## Body and daily life
 
-- [ ] **Toilets and parasites:** parasites mean toilet trips (they dehydrate you).
+- [x] **Toilets and parasites:** parasites mean toilet trips (they dehydrate you).
   Notes:
-- [ ] **Soiling yourself:** a stain on the ground, clean clothes and a bath needed; you stink, flies follow you, people back away. Sanitation crews clean the stains.
+- [x] **Soiling yourself:** a stain on the ground, clean clothes and a bath needed; you stink, flies follow you, people back away. Sanitation crews clean the stains.
   Notes:
-- [ ] **Sleep:** beds, and sleep at night.
+- [x] **Sleep:** beds, and sleep at night.
   Notes:
-- [ ] **Tiredness:** skip a day's sleep and your eyelids droop, less health, no running.
+- [x] **Tiredness:** skip a day's sleep and your eyelids droop, less health, no running.
   Notes:
-- [ ] **Powered vests:** the VEST bar replaces SUIT; vortigaunts charge them.
+- [x] **Powered vests:** the VEST bar replaces SUIT; vortigaunts charge them.
   Notes: never seen a vortigaunt charge them, can we have them do the animation like from HL2 when they charge Freeman's HEV suit? they hold up their hand and green energy pulses to the player.
-- [ ] **Father Grigori:** an NPC in rebel territory with blessings and sermons; a player Grigori's shotgun holds 2 shells.
+- [x] **Father Grigori:** an NPC in rebel territory with blessings and sermons; a player Grigori's shotgun holds 2 shells.
   Notes:
 
 ## Stalkers
 
-- [ ] **Stalker playermodel:** worn by stalkers (Workshop 268895264).
+- [x] **Stalker playermodel:** worn by stalkers (Workshop 268895264).
   Notes:
-- [ ] **Stalkers for life:** no way out but death.
+- [x] **Stalkers for life:** no way out but death.
   Notes:
 - [ ] **The Stalker's Lot (F3):** ends at an energizer you build; step in (that person ends) or turn away (still a stalker; E twice on it later to step in).
   Notes:
@@ -1816,7 +1872,7 @@ Type them in the server console on the host panel, or in your own game console (
 - [ ] **Flashbang:** do blinded rebels hold their left hand over their eyes and stumble, without shooting? Tune with lc_handface_eyes.
   Notes:
 - [ ] **Ammo limits:** buy or pick up more than 150 pistol rounds (or 30 shells, 225 SMG): does it stop at the limit? Die and respawn, get revived after a close call, sleep through a dream: still no more than the limit? lc_hl2_ammo 0 brings back Garry's Mod's 9999.
-  Notes:
+  Notes: if I have boxes of ammo in my inventory, it lets me, and tells me, that I can load them infinitely no matter if my ammo is already full. ALSO, if it issues me a health vial and my health is full, it now seems to just drop the health vial on the ground? And I press E on it and I just hold it in front of me, never putting it into my pockets: can we please have pressing E on a health vial when pockets are full put it in my pockets?
 - [ ] **Freq 7 kit:** get promoted to Fighter: are you told you were issued a Freq 7 radio and a transmitter, and can you talk on Freq 7 straight away? Try to sell, drop, stash or give them: refused? As a Member with only a Freq 7 radio: are Call for backup and Send my position greyed "no transmitter"?
   Notes:
 - [ ] **No psychic communication:** as a rebel, is F2's Freq 7 page now Find the way (just the two guides)? With the transmitter put away, are !r, backup and position refused? With it out, does talking, left click (backup) and its right click menu (message, backup, position) all work?

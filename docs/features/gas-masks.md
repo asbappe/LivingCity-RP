@@ -10,7 +10,7 @@ Asked for by the owner, 13 November.
 - **Four broken make one**: F3's Make list (out of sight of units, ten seconds).
 - **Resistance fighters**: about 1 in 3 carries one (`lc_gasmask_rebels`, 0.33), decided once per fighter.
 
-## In the gas (chlorine, and the Combine's weedkiller gas)
+## In the gas (the poison gas bomb, the Combine's weedkiller gas; the chlorine gas grenade is gone since 14 November)
 
 - **A mask goes on by itself** as the gas reaches someone carrying one, NPC or player (nothing to pick), and keeps the gas out completely. A player is told the first time. It comes off by itself 3 seconds after they're out of the gas (`LC.GasMaskOn`, `LC.GasMaskOff`). Players see the edge of the visor and hear their breathing while it's on.
 - **Everyone else covers their mouth with their left hand and coughs** for as long as they're in it, players and NPCs (`LC.HandToFace`, NW2 `lc_handface` "mouth").

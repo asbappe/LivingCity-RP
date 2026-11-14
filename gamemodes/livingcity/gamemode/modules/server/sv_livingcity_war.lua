@@ -627,6 +627,7 @@ function LC.BackupBringNear(npc, ply)
     return true
 end
 
+LC.BackupDelay = 15 -- (seconds before backup from further off comes into the fight)
 function LC.CallBackup(ply)
     if not IsUnitPlayer(ply) then return false, "Only Civil Protection units can call for backup." end
     if LC.Jammed and LC.Jammed(ply:GetPos()) then return false, "Static. Your radio can't get through: there's a jammer nearby." end
@@ -649,7 +650,7 @@ function LC.CallBackup(ply)
         end
     end
     table.sort(near, function(a, b) return a.d < b.d end)
-    local sent = 0
+    local sent, delayed = 0, 0
     -- (the owner, 7 November: backup came WITH STUNSTICKS to a gunfight) gun out, shot at in the last
     -- 30 seconds, or on a violent job: they come with pistols and SMGs, and keep them out (sv_livingcity_fieldops.lua)
     local violent = LC.BackupViolent ~= nil and LC.BackupViolent(ply)
@@ -661,14 +662,31 @@ function LC.CallBackup(ply)
         -- between them so Half-Life 2's own squad tactics work
         u.st.backupFor, u.st.backupUntil, u.st.backupJoined = ply, now + BACKUP_SECS, nil
         if u.npc.SetSquad then u.npc:SetSquad("lcbk" .. ply:EntIndex()) end
-        LC.BackupBringNear(u.npc, ply)
-        if LC.GoTo(u.npc, u.st, ply:GetPos(), true, nil) then sent = sent + 1 end
+        -- A unit already close walks over now. One from further off comes in from out of sight
+        -- BACKUP_DELAY (15) seconds after the call, and runs in (the owner, 13 November: "5 combine spawned
+        -- on top of me ... spawn them out of sight at least 15 seconds after I call for them, then they
+        -- can run in and be heroes").
+        local npc, st = u.npc, u.st
+        if npc:GetPos():DistToSqr(ply:GetPos()) < BACKUP_WALK * BACKUP_WALK then
+            if LC.GoTo(npc, st, ply:GetPos(), true, nil) then sent = sent + 1 end
+        else
+            sent = sent + 1
+            delayed = delayed + 1
+            st.backupComingAt = now + LC.BackupDelay
+            timer.Simple(LC.BackupDelay, function()
+                if not (IsValid(npc) and IsValid(ply) and st.backupFor == ply) then return end
+                st.backupComingAt = nil
+                LC.BackupBringNear(npc, ply)
+                LC.GoTo(npc, st, ply:GetPos(), true, nil)
+            end)
+        end
     end
     LC.Mark1020(ply, true)
     local where = LC.DescribePlace and LC.DescribePlace(ply:GetPos()) or ""
     for _, p in ipairs(player.GetAll()) do
         if IsUnitPlayer(p) and p ~= ply then p:ChatPrint("[CP net] " .. Callsign(ply) .. " requests backup " .. where .. ". Respond for XP.") end
     end
+    if delayed > 0 then ply:ChatPrint(string.format("[Dispatch] %d of them from further off: about %d seconds out.", delayed, LC.BackupDelay)) end
     ply:ChatPrint(sent > 0 and string.format("[Dispatch] %d unit%s en route to you. They join your squad when they reach you: with you, and on whatever you fight, for %d minutes.%s", sent, sent == 1 and "" or "s", math.floor(BACKUP_SECS / 60),
             violent and " Weapons free: they're coming with pistols and SMGs." or "")
         or "[Dispatch] No Civil Protection units free nearby. Your 10-20 is out to every unit.")
@@ -681,12 +699,56 @@ local function Sees(npc, e, range)
     return LC.LineOfSight(npc:EyePos(), e:EyePos(), npc, e)
 end
 
+-- A unit of the squad gets its downed leader back up (the owner, 13 November: "they are all walking
+-- all over me and none of them save me and I die: can the NPCs at least attempt to save me? ...
+-- maybe even REVIVE ME WHILE IM DYING"). With no enemy in its sights it goes to them, kneels
+-- LC.SquadReviveSecs (4) seconds within reach, and they are back on their feet with 25 health.
+LC.SquadReviveSecs, LC.SquadReviveReach = 4, 110
+function LC.SquadReviveStep(npc, st, caller, now)
+    if not (LC.IsDowned and LC.IsDowned(caller)) then st.reviveSince = nil return false end
+    if st.state == "hostile" then st.reviveSince = nil return false end
+    -- (where they lie: the body on the ground, not the eyes watching it)
+    local d = LC.Downed and LC.Downed[caller]
+    local at = (d and IsValid(d.rag) and d.rag:GetPos()) or caller:GetPos()
+    if npc:GetPos():DistToSqr(at) > LC.SquadReviveReach * LC.SquadReviveReach then
+        st.reviveSince = nil
+        if now > (st.backupMove or 0) then
+            st.backupMove = now + 2
+            LC.GoTo(npc, st, at, true, nil)
+        end
+        return true
+    end
+    -- one of them at a time
+    if caller.lcSquadReviver ~= nil and caller.lcSquadReviver ~= npc and IsValid(caller.lcSquadReviver)
+        and (caller.lcSquadReviverAt or 0) > now - 2 then return true end
+    caller.lcSquadReviver, caller.lcSquadReviverAt = npc, now
+    if not st.reviveSince then
+        st.reviveSince = now
+        if LC.Face then LC.Face(npc, at) end
+        npc:EmitSound(st.role == "soldier" and "npc/combine_soldier/vo/coverhurt.wav" or "npc/metropolice/vo/officerneedsassistance.wav", 70)
+        caller:ChatPrint("[CP net] A unit of your squad is getting you up. Hold on.")
+    elseif now - st.reviveSince >= LC.SquadReviveSecs then
+        st.reviveSince = nil
+        caller.lcSquadReviver = nil
+        if LC.Revive(caller, 25, nil) then
+            local who = LC.NPCStr and LC.NPCStr(npc, "lc_pname", "") or ""
+            caller:ChatPrint("[CP net] " .. (who ~= "" and ("Unit " .. who) or "A unit of your squad") .. " gets you back on your feet.")
+            hook.Run("LivingCitySquadRevived", caller, npc)
+        end
+    end
+    return true
+end
+
 local function BackupTick(now)
     for npc, st in pairs(LC.NPCs or {}) do
         local caller = st.backupFor
         if IsValid(npc) and caller ~= nil then
             if not IsValid(caller) or not caller:Alive() or now > (st.backupUntil or 0) then
                 st.backupFor, st.backupUntil = nil, nil
+            elseif st.backupComingAt then
+                -- (still on its way in: LC.CallBackup)
+            elseif st.state ~= "hostile" and LC.SquadReviveStep(npc, st, caller, now) then
+                -- (seeing to its downed leader)
             elseif st.state ~= "hostile" then
                 -- there: deal with whatever's going on
                 local threat

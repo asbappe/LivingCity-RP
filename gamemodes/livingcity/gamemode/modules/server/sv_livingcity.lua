@@ -1594,15 +1594,36 @@ function LC.SpotInZone(z)
     return wet
 end
 
+-- A clear spot on the same floor within r of pos that can be walked to from it; pos itself if none.
+function LC.ScatterNear(pos, r)
+    if not (util and util.TraceLine) then return pos end
+    for _ = 1, 6 do
+        local a, d = math.Rand(0, math.pi * 2), math.Rand(60, r)
+        local try = pos + Vector(math.cos(a) * d, math.sin(a) * d, 0)
+        local tr = util.TraceLine({ start = try + Vector(0, 0, 48), endpos = try - Vector(0, 0, 96), mask = MASK_SOLID_BRUSHONLY })
+        if tr and tr.Hit and not tr.StartSolid and tr.HitPos and math.abs(tr.HitPos.z - pos.z) < 64
+            and ClearSpot(tr.HitPos) and (not LC.Walkable or LC.Walkable(pos + Vector(0, 0, 4), tr.HitPos + Vector(0, 0, 4))) then
+            return tr.HitPos
+        end
+    end
+    return pos
+end
+
 local function FindSpawnPos(role)
     if role == "zombie" then
         -- infestation spawn points first, spread out; then spots inside infestation zones
+        -- (scattered: the owner, 13 November, "zombies only seem to spawn in one spot ... they should
+        -- still spawn around randomly, even if in the center are the most". Four in ten come up anywhere
+        -- in an infestation; the rest by a spawn point, up to 350 units from it, not all on it.)
         local zs = PointsOfKind("zspawn")
+        local anywhere = #zs > 0 and math.random() < 0.4
         for _ = 1, 6 do
-            if #zs == 0 then break end
+            if #zs == 0 or anywhere then break end
             local p = Pick(zs)
             if FarFromPlayers(p.pos, 400) and not LC.IsSeen(p.pos + UP) and not (LC.InfestQuietAt and LC.InfestQuietAt(p.pos)) then
-                return p.pos + Vector(0, 0, 4), LC.InfestZoneAt and LC.InfestZoneAt(p.pos) or nil
+                local at = LC.ScatterNear and LC.ScatterNear(p.pos, 350) or p.pos
+                if at ~= p.pos and (LC.IsSeen(at + UP) or not FarFromPlayers(at, 400)) then at = p.pos end
+                return at + Vector(0, 0, 4), LC.InfestZoneAt and LC.InfestZoneAt(p.pos) or nil
             end
         end
         local zones = {}

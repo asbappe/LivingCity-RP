@@ -34,3 +34,5 @@ Built 9 November, as the owner asked: "Black sociostatus means the server is dev
 - A player Administrator who leaves mid-stand: "fled", the office empty.
 
 **Admins.** The editor's section "The collapse (sociostability BLACK) and the Administrator's last stand" has every setting and a test button for each part: collapse now, his next step, her stand, Barney, Freeman, make me Barney or Freeman, halfway to collapse, back to normal (`lc_collapse_test black | next | stand | barney | freeman | mebarney | mefreeman | chaos | off`).
+
+**14 November:** the reason "(the mood of the city)" is no longer shown beside the sociostability level (the level itself is unchanged).

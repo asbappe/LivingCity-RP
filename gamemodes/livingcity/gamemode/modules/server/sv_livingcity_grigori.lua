@@ -216,7 +216,7 @@ function LC.GrigoriAsk(ply, what)
         ply:SetNW2Float("lc_blessed_until", now + BLESS_SECS)
         ply:EmitSound("items/medshot4.wav", 65)
         Speak(g, 70)
-        Notice(ply, "info", "Blessed", "He lays a heavy hand on your head and mutters in Russian. For five minutes, the world hurts you a little less.", 6)
+        Notice(ply, "info", "Blessed", "He lays a heavy hand on your head and mutters a blessing. For five minutes, the world hurts you a little less.", 6)
         return true
     elseif what == "sermon" then
         if (g.lcSermonNext or 0) > now then return false, string.format("\"I have said my piece. Come back later and I will say it again, louder.\" (%d s)", math.ceil(g.lcSermonNext - now)) end

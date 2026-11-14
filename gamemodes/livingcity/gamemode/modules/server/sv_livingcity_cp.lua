@@ -782,6 +782,13 @@ hook.Add("OnNPCKilled", "LivingCitySocioNpcMurders", function(npc, attacker)
     if IsValid(npc) and npc.GetClass and SOCIO_UNITS[npc:GetClass()] and IsValid(attacker) and attacker.GetClass and SOCIO_KILLERS[attacker:GetClass()] then LC.SocioNpcMurder() end
 end)
 
+-- The reason players are shown beside the level. The minds' unrest is never said (the owner,
+-- 13 November: "(the mood of the city)" on every line cluttered the screen).
+function LC.SocioWhyShown(why)
+    if why == "the mood of the city" then return nil end
+    return why
+end
+
 function LC.SocioAuto()
     if LC.Event == "lockdown" then return "red", "lockdown" end
     local now = CurTime()
@@ -859,7 +866,7 @@ local function AnnounceSocioPaced(level, by, force)
         socioSaid.level, socioSaid.at = lvl, CurTime()
         local o = LC.SocioOverride
         local _, why = LC.SocioAuto()
-        AnnounceSocio(lvl, (o and o.by) or why)
+        AnnounceSocio(lvl, (o and o.by) or LC.SocioWhyShown(why))
     end)
 end
 
@@ -872,7 +879,7 @@ function LC.RefreshSocio(quiet, force)
     if level ~= LC.Socio or force then
         local old = LC.Socio or "green"
         LC.Socio = level
-        if not quiet then AnnounceSocioPaced(level, (o and o.by) or why, force) end
+        if not quiet then AnnounceSocioPaced(level, (o and o.by) or LC.SocioWhyShown(why), force) end
         LC.Log("info", "Sociostability: " .. old .. " -> " .. level)
         hook.Run("LivingCitySocioChanged", level, old)
     end

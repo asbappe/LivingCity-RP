@@ -268,6 +268,24 @@ local function BlackItems()
     return inBlack
 end
 
+-- Where the dealer's extra goods came from: a line for each, always the same one for the same
+-- good (the owner, 13 November: every one of them said "Off the back of a Union lorry").
+LC.MarketExtraDescs = {
+    "Off the back of a Union lorry. The Commissary won't sell it to you; he will.",
+    "A crate that never reached the Commissary's shelves. He doesn't say whose.",
+    "Signed out of a Union storeroom by a clerk who owed him. His price, not theirs.",
+    "The Commissary keeps this behind the counter. He keeps it under his coat.",
+    "Counted twice at the depot and delivered once. This is the difference.",
+    "Ration stock with the stamp scratched off. No card, no questions.",
+    "It was on a manifest this morning. Tonight it's here, and the manifest is ash.",
+    "A unit looked the other way while this left the warehouse. That cost him, so it costs you.",
+}
+function LC.MarketExtraDesc(id)
+    local n = 0
+    for i = 1, #tostring(id) do n = n + string.byte(tostring(id), i) * i end
+    return LC.MarketExtraDescs[n % #LC.MarketExtraDescs + 1]
+end
+
 local extras = {} -- [mkt_<good id>] = the dealer's entry (made once, kept the same table)
 local function Extra(g)
     local id = "mkt_" .. g.id
@@ -277,7 +295,7 @@ local function Extra(g)
         extras[id] = e
     end
     e.price = math.max(1, math.ceil(g.price * math.max(1, cvMarkup:GetFloat())))
-    e.desc = "Off the back of a Union lorry. The Commissary won't sell it to you; he will."
+    e.desc = LC.MarketExtraDesc(g.id)
     return e
 end
 local function ExtraAvailable(g)

@@ -232,6 +232,35 @@ function LC.SaveData(settingsOnly)
     LC.SendData(nil)
 end
 
+-- Takes the jogging routes out of LC.Points (unless lc_jog is 1). The first stop of each route
+-- becomes an exercise yard where there is none within 400 units. How many stops were taken out.
+function LC.ArchiveJogPoints()
+    local cv = GetConVar and GetConVar("lc_jog")
+    if cv and cv:GetBool() then return 0 end
+    local any = false
+    for _, p in ipairs(LC.Points) do if p.kind == "jogroute" then any = true break end end
+    if not any then return 0 end
+    if LC.BackupLayout then pcall(LC.BackupLayout, "before the jogging routes were removed") end
+    local keep, seen, n = {}, {}, 0
+    for _, p in ipairs(LC.Points) do
+        if p.kind ~= "jogroute" then
+            keep[#keep + 1] = p
+        else
+            n = n + 1
+            if not seen[p.group or 0] then
+                seen[p.group or 0] = true
+                local near = false
+                for _, o in ipairs(LC.Points) do
+                    if o.kind == "yard" and o.pos:DistToSqr(p.pos) < 400 * 400 then near = true break end
+                end
+                if not near then keep[#keep + 1] = { pos = p.pos, yaw = p.yaw or 0, kind = "yard", group = 0 } end
+            end
+        end
+    end
+    LC.Points = keep
+    return n
+end
+
 function LC.LoadData(applySettings)
     LC.Points, LC.Nodes, LC.Zones, LC.DoorTags, LC.Settings = {}, {}, {}, {}, nil
     LC.NextNodeId = 1
@@ -277,6 +306,17 @@ function LC.LoadData(applySettings)
         LC.NextNodeId = math.max(LC.NextNodeId, tonumber(t.nextNodeId) or 1)
         LC.Settings = t.settings
         if (t.version or 1) < 3 then migrated = true end
+    end
+
+    -- The morning jog is archived (lc_jog 0: sv_livingcity_exercise.lua): its routes come out of the
+    -- layout, and each route's start stays as an exercise yard (unless a yard is already there), so
+    -- the morning drill gathers where the jog used to. A backup of the layout is kept first.
+    if LC.ArchiveJogPoints then
+        local n = LC.ArchiveJogPoints()
+        if n > 0 then
+            migrated = true
+            LC.Log("info", string.format("The morning jog is archived: %d jogging route stops taken out of the layout (a backup was kept: lc_backups).", n))
+        end
     end
 
     -- the very first builds kept Civil Protection door tags in a separate file

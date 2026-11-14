@@ -22,7 +22,7 @@ LC_CL = LC_CL or {}
 local cvOn = CreateClientConVar("lc_screen_ui", "1", true, false, "Terminals show their menu on their own screen in the world (0: a window instead)")
 
 local W, ROW, HEAD, PER_PAGE = 600, 26, 46, 11
-local SCALE = 0.055
+local SCALE = 0.066 -- (the owner, 13 November: "20% larger, it's just a hair too small (font to scale with it)"; was 0.055)
 local BG, EDGE, INK, DIM, HOT = Color(10, 16, 22, 235), Color(110, 170, 230), Color(220, 230, 240), Color(140, 150, 160), Color(110, 170, 230)
 local HOT_ON, HOT_OFF, BTN = Color(HOT.r, HOT.g, HOT.b, 120), Color(HOT.r, HOT.g, HOT.b, 60), Color(30, 40, 52, 230) -- (made once, not every frame)
 
@@ -92,12 +92,19 @@ local function Layout()
         y = y + ROW
     end
     -- paging and closing, always at the bottom
-    local nav = {}
-    if S.page > 1 then nav[#nav + 1] = { kind = "button", text = "< Previous page", enabled = true, fn = function() S.page = S.page - 1 end, keep = true } end
-    if S.page < pages then nav[#nav + 1] = { kind = "button", text = "Next page >", enabled = true, fn = function() S.page = S.page + 1 end, keep = true } end
-    nav[#nav + 1] = { kind = "button", text = "Close", enabled = true, fn = function() LC_CL.ScreenClose() end, keep = true }
+    -- (the owner, 13 November: Previous and Next side by side on one row, Previous on the left and Next on
+    -- the right, on every page, never one above the other; the one that leads nowhere is dimmed)
     y = y + 6
-    for _, r in ipairs(nav) do out[#out + 1] = { r = r, y = y } y = y + ROW end
+    if pages > 1 then
+        local half = (W - 30) / 2
+        out[#out + 1] = { y = y, x = 10, w = half, r = { kind = "button", text = "< Previous page", enabled = S.page > 1, keep = true,
+            fn = function() S.page = math.max(1, S.page - 1) end } }
+        out[#out + 1] = { y = y, x = 20 + half, w = half, r = { kind = "button", text = "Next page >", enabled = S.page < pages, keep = true,
+            fn = function() S.page = math.min(pages, S.page + 1) end } }
+        y = y + ROW
+    end
+    out[#out + 1] = { y = y, r = { kind = "button", text = "Close", enabled = true, fn = function() LC_CL.ScreenClose() end, keep = true } }
+    y = y + ROW
     return out, y + 10
 end
 
@@ -168,7 +175,8 @@ local function Hovered()
     if not x or x < 0 or x > W then return nil end
     local lay = Layout()
     for _, l in ipairs(lay) do
-        if l.r.kind == "button" and y >= l.y and y < l.y + ROW - 2 then return l end
+        local bx, bw = l.x or 10, l.w or (W - 20)
+        if l.r.kind == "button" and y >= l.y and y < l.y + ROW - 2 and x >= bx - 4 and x <= bx + bw + 4 then return l end
     end
     return nil
 end
@@ -195,7 +203,7 @@ hook.Add("Think", "LivingCityScreens", function()
     local l = Hovered()
     -- (by where it is: the paging and Close buttons are made anew each time the screen's laid out, so the
     -- one under the crosshair was never the same one being drawn, and never lit up)
-    S.hover = l and l.y or nil
+    S.hover, S.hoverX = l and l.y or nil, l and (l.x or 10) or nil
 end)
 
 -- E (or left click) on a button presses it, and nothing else happens (the terminal isn't used again).
@@ -240,17 +248,18 @@ hook.Add("PostDrawTranslucentRenderables", "LivingCityScreens", function(depth, 
         for _, l in ipairs(lay) do
             local r = l.r
             if r.kind == "button" then
-                local hot = S.hover == l.y
+                local bx, bw = l.x or 10, l.w or (W - 20)
+                local hot = S.hover == l.y and (S.hoverX or 10) == bx
                 local off = r.enabled == false
                 if T then
-                    draw.RoundedBox(0, 10, l.y, W - 20, ROW - 4, (hot and not off) and T.plateHot or T.plate)
+                    draw.RoundedBox(0, bx, l.y, bw, ROW - 4, (hot and not off) and T.plateHot or T.plate)
                     surface.SetDrawColor(off and T.dim or T.line)
-                    surface.DrawRect(10, l.y, 4, ROW - 4)
-                    if hot then surface.DrawOutlinedRect(10, l.y, W - 20, ROW - 4, 1) end
+                    surface.DrawRect(bx, l.y, 4, ROW - 4)
+                    if hot then surface.DrawOutlinedRect(bx, l.y, bw, ROW - 4, 1) end
                 else
-                    draw.RoundedBox(4, 10, l.y, W - 20, ROW - 4, hot and (off and HOT_OFF or HOT_ON) or BTN)
+                    draw.RoundedBox(4, bx, l.y, bw, ROW - 4, hot and (off and HOT_OFF or HOT_ON) or BTN)
                 end
-                draw.SimpleText((hot and "> " or "") .. (r.text or ""), "LCScreenText", T and 24 or 20, l.y + (ROW - 4) / 2, off and DIM or (T and T.text or INK), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+                draw.SimpleText((hot and "> " or "") .. (r.text or ""), "LCScreenText", bx + (T and 14 or 10), l.y + (ROW - 4) / 2, off and DIM or (T and T.text or INK), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
             else
                 local text = r.text or ""
                 if #text > 64 then text = string.sub(text, 1, 62) .. "..." end

@@ -40,3 +40,12 @@ Admins can start any chain directly: `lcq_startchain <ia|inside|missing|candidat
 ## The trail on the ground (11 November)
 
 The chevrons keep their place on the ground and flow on at the same speed however fast you move (they were spaced from your own feet, so they ran with you). The way leaves out path points you could walk straight past: on your own level (70 units up or down at most), nothing solid in the way, floor under the line, up to 2200 units, as far as the objective itself. `lc_trail_straight` (1; 0 follows every path point as before).
+
+## 14 November (the owner's 13 November playtest)
+
+- **Kills count sooner.** A kill made on the way to a job's fight counts toward the kills its next stage asks for, and with them all made, arriving is done too. A kill by an NPC of your own side within 1500 units of you counts for your job (`LC.QuestAssist`).
+- **"Repel the attack" ends with the attack:** over while you were there, or after a kill of yours, it is complete; over before you arrived, it is called off ("the attack was over before you got there"). A job template can say this with `over`.
+- **The trail goes round walls into the other side's ground.** The planners keep units off rebel ground and everyone else off the Combine's; a job there used to get one straight line through every wall. Now a way is looked for again with no ground kept out of.
+- **No distance in a job's title** ("to the north-east", not "240 metres north-east of you"): the marker shows it.
+- **Headcrab hunt:** any of the Resistance's supply crates takes the meat.
+- **The lab:** walk off while the scientist is making something and he works on, keeps it for you alone, and hands it over when you next talk to him; if a unit takes him, it is lost with him. Back from the cells, or the lab fixed, the blood is cleaned off him, the bench and the kit.

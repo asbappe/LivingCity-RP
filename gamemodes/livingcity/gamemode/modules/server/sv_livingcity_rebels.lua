@@ -36,7 +36,7 @@
       lc_rebels <n>              fighters kept across the rebel zones (4)
       lc_skirmishes 0/1          raids and sweeps (1)
       lc_skirmish_interval <m>   average minutes between skirmishes (50: one every 40 to 60)
-      lc_rebel_damage <x>        damage multiplier for rebel NPCs shooting players (0.5)
+      lc_rebel_damage <x>        damage multiplier for rebel NPCs shooting players (0.6; 0.5 until 13 November)
       lc_rebel_warning <s>       seconds of shouting before they open fire on a unit (2)
       lc_skirmish raid|sweep     start one now (admin)
       lc_units_spot_rebels <u>   how close a unit notices an armed rebel off rebel ground (600; 0 never)
@@ -64,7 +64,7 @@ local cvRaidLead = CreateConVar("lc_raid_warning", "90", FLAGS, "Seconds the Res
 local cvSkirmInt = CreateConVar("lc_skirmish_interval", "50", FLAGS, "Average minutes between skirmishes (each one comes 20% either side of it)")
 -- the old default (9) was far too busy: a server still on it moves to the new one
 timer.Simple(5, function() if cvSkirmInt:GetFloat() == 9 then RunConsoleCommand("lc_skirmish_interval", "50") end end)
-local cvDamage   = CreateConVar("lc_rebel_damage", "0.5", FLAGS, "Damage multiplier for Resistance NPCs shooting players")
+local cvDamage   = CreateConVar("lc_rebel_damage", "0.6", FLAGS, "Damage multiplier for Resistance NPCs shooting players")
 local cvHomeHurt = CreateConVar("lc_rebel_home_hurt", "1", FLAGS, "Damage multiplier for rebels who aren't following a player (1: as tough as a player's squad; 2: half as tough)")
 -- (the owner, 9 November: weaker than the Combine, no armour and no training, but not too weak; and slightly more of them)
 local cvHealth   = CreateConVar("lc_rebel_health", "50", FLAGS, "Health of Resistance fighter NPCs (Half-Life 2's own: 40)")
@@ -1437,8 +1437,26 @@ function LC.SweepRallyPoint(sk, u, now)
     return best:GetPos()
 end
 
+-- Which rebel ground the next sweep goes to: the one swept longest ago (never yet, first), a
+-- random one among equals. The owner, 13 November: sweeps and raids on rebel territory "seem to
+-- target 1 or 2 zones and never the others I have placed underground": a plain random pick could
+-- land on the same camp again and again; now every camp has its turn before any has a second.
+local sweptAt = setmetatable({}, { __mode = "k" })
+function LC.NextSweepZone(now)
+    local zs = RebelZones()
+    if #zs == 0 then return nil end
+    local best, bt = {}, nil
+    for _, z in ipairs(zs) do
+        local t = sweptAt[z] or 0
+        if not bt or t < bt then best, bt = { z }, t elseif t == bt then best[#best + 1] = z end
+    end
+    local z = best[math.random(#best)]
+    sweptAt[z] = now or CurTime()
+    return z
+end
+
 local function StartSweep(z)
-    z = z or Pick(RebelZones())
+    z = z or LC.NextSweepZone()
     if not z then return false, "no rebel territory on this map" end
     if not LC.Spawners or not LC.Spawners.cop then return false, "no Civil Protection units" end
     local stage = StagingSpot(z)
@@ -1495,7 +1513,7 @@ local function IsCombinePlayer(p)
     return f == "cp" or f == "ota" or (LC.PlayerIsCP and LC.PlayerIsCP(p))
 end
 local function PlanSweep(now, z)
-    z = z or Pick(RebelZones())
+    z = z or LC.NextSweepZone(now)
     if not z then return false end
     if LC.ManpowerHold and LC.ManpowerHold("cp") then return false end -- (postponed, and the Combine told why)
     local lead = cvSweepLead:GetFloat()

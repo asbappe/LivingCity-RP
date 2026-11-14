@@ -310,3 +310,188 @@ if CLIENT then
         end)
     end
 end
+
+------------------------------------------------------------------------
+-- Sounds that loop by themselves (the owner, 13 November: the bleeding-out heartbeat was
+-- still thumping after the respawn; "ARCHITECT A NEW WAY TO FIX THIS")
+------------------------------------------------------------------------
+-- Some of Half-Life 2's .wav files carry a loop mark: started once, they play for ever
+-- until something stops them (player/heartbeat1.wav, player/breathe1.wav and many more).
+-- Counting starts (above) never catches those: one start is enough. So:
+--   1. LC.SoundLoops(snd) reads the file itself and says whether it carries a loop mark.
+--   2. Such a sound started on a player is stopped by itself: after one play for the ones
+--      meant as a single beat or breath (LC.SoundLoopOnce), else after LC.SoundLoopMax
+--      seconds, unless whoever started it said how long it may go (LC.SoundLoopKeep).
+--   3. On a player's own screen (surface.PlaySound can never be stopped) it is played on
+--      the player instead, so rule 2 holds there too.
+--   4. Every one of them still going on a player stops when they die and when they spawn.
+LC.SoundLoopOnce = { ["player/heartbeat1.wav"] = true, ["player/breathe1.wav"] = true }
+LC.SoundLoopMax = 20
+
+local loopKnown = {}
+local function LE(str, at) -- a 4-byte number, lowest byte first
+    local a, b, c, d = string.byte(str, at, at + 3)
+    if not d then return 0 end
+    return a + b * 256 + c * 65536 + d * 16777216
+end
+-- Does this .wav's own data say it loops? (a "cue " or "smpl" part with a loop in it)
+function LC.SoundLoopMarked(data)
+    if type(data) ~= "string" or string.sub(data, 1, 4) ~= "RIFF" or string.sub(data, 9, 12) ~= "WAVE" then return false end
+    local at = 13
+    for _ = 1, 64 do
+        if at + 7 > #data then break end
+        local id, len = string.sub(data, at, at + 3), LE(data, at + 4)
+        if id == "cue " then return LE(data, at + 8) > 0 end
+        if id == "smpl" then return LE(data, at + 8 + 28) > 0 end
+        at = at + 8 + len + (len % 2)
+    end
+    return false
+end
+function LC.SoundLoops(snd)
+    local s = Clean(snd)
+    if not s or s == "" then return false end
+    if LC.SoundLoopOnce[s] then return true end
+    if loopKnown[s] ~= nil then return loopKnown[s] end
+    local loops = false
+    if string.sub(s, -4) == ".wav" and file and file.Open then
+        local ok, res = pcall(function()
+            local f = file.Open("sound/" .. s, "rb", "GAME")
+            if not f then return false end
+            -- the marks sit before or after the sound itself: the head, and the tail of a long file
+            local size = f:Size() or 0
+            local head = f:Read(math.min(size, 4096)) or ""
+            local found = LC.SoundLoopMarked(head)
+            if not found and size > 4096 then
+                -- walk the parts without reading the sound: each says how long it is
+                local at = 12
+                for _ = 1, 64 do
+                    if at + 8 > size then break end
+                    f:Seek(at)
+                    local h = f:Read(8)
+                    if not h or #h < 8 then break end
+                    local id, len = string.sub(h, 1, 4), LE(h, 5)
+                    if id == "cue " or id == "smpl" then
+                        local body = f:Read(math.min(len, 64)) or ""
+                        found = (id == "cue " and LE(body, 1) > 0) or (id == "smpl" and LE(body, 29) > 0)
+                        break
+                    end
+                    at = at + 8 + len + (len % 2)
+                end
+            end
+            f:Close()
+            return found
+        end)
+        loops = ok and res == true
+    end
+    loopKnown[s] = loops
+    return loops
+end
+
+local going = setmetatable({}, { __mode = "k" }) -- [player] = { [sound] = { gen } }
+local keeps = setmetatable({}, { __mode = "k" }) -- [player] = { [clean sound] = seconds }
+-- "This loop on this player is meant: let it go for secs" (then it's stopped all the same).
+function LC.SoundLoopKeep(ply, snd, secs)
+    local s = Clean(snd)
+    if not (ply and s) then return end
+    keeps[ply] = keeps[ply] or {}
+    keeps[ply][s] = secs
+end
+-- How long a self-looping sound may go on a player before it's stopped.
+function LC.SoundLoopSecs(ply, snd)
+    local s = Clean(snd)
+    if not s then return LC.SoundLoopMax end
+    local k = keeps[ply] and keeps[ply][s]
+    if k then return k end
+    if LC.SoundLoopOnce[s] then
+        local d = SoundDuration and SoundDuration(s) or 0
+        if not d or d <= 0.2 then d = 1.5 end
+        return math.min(d, 4)
+    end
+    return LC.SoundLoopMax
+end
+local function RawStop(ply, snd)
+    local stop = EMT and (EMT.lcRawStopSound or EMT.StopSound)
+    if stop then pcall(stop, ply, snd) end
+end
+function LC.SoundLoopWatch(ply, snd)
+    if not (ply and ply.IsPlayer and IsValid(ply) and ply:IsPlayer()) then return false end
+    if not LC.SoundLoops(snd) then return false end
+    local t = going[ply]
+    if not t then t = {} going[ply] = t end
+    local gen = ((t[snd] and t[snd].gen) or 0) + 1
+    t[snd] = { gen = gen }
+    if timer and timer.Simple then
+        timer.Simple(LC.SoundLoopSecs(ply, snd), function()
+            local now = going[ply]
+            if IsValid(ply) and now and now[snd] and now[snd].gen == gen then
+                now[snd] = nil
+                RawStop(ply, snd)
+            end
+        end)
+    end
+    return true
+end
+-- Everything self-looping still going on this player, stopped (death, spawn).
+function LC.SoundLoopsStop(ply)
+    if not IsValid(ply) then return 0 end
+    local n = 0
+    for snd in pairs(going[ply] or {}) do RawStop(ply, snd) n = n + 1 end
+    going[ply] = nil
+    for s in pairs(LC.SoundLoopOnce) do RawStop(ply, s) end
+    return n
+end
+function LC.SoundLoopsGoing(ply)
+    local out = {}
+    for snd in pairs(going[ply] or {}) do out[#out + 1] = snd end
+    return out
+end
+
+if EMT and EMT.EmitSound and not EMT.lcLoopEmit then
+    local guarded = EMT.EmitSound
+    EMT.lcLoopEmit = true
+    EMT.EmitSound = function(self, snd, ...)
+        local ok = pcall(LC.SoundLoopWatch, self, snd)
+        return guarded(self, snd, ...)
+    end
+end
+
+if SERVER and hook and hook.Add then
+    hook.Add("PlayerSpawn", "LivingCitySoundLoops", function(p) LC.SoundLoopsStop(p) end)
+    hook.Add("PostPlayerDeath", "LivingCitySoundLoops", function(p) LC.SoundLoopsStop(p) end)
+end
+if CLIENT then
+    if surface and surface.PlaySound and not surface.lcLoopPlaySound then
+        local guarded = surface.PlaySound
+        surface.lcLoopPlaySound = true
+        surface.PlaySound = function(snd, ...)
+            local me = LocalPlayer and LocalPlayer()
+            if IsValid(me) and LC.SoundLoops(snd) then
+                -- on the player, not the screen: the screen's can never be stopped
+                me:EmitSound(snd, 0, 100, 1)
+                return
+            end
+            return guarded(snd, ...)
+        end
+    end
+    local wasAlive
+    local function Mine()
+        local me = LocalPlayer and LocalPlayer()
+        if IsValid(me) then LC.SoundLoopsStop(me) end
+    end
+    if timer and timer.Create then
+        timer.Create("LivingCitySoundLoops", 0.5, 0, function()
+            local me = LocalPlayer and LocalPlayer()
+            if not IsValid(me) then return end
+            local alive = me:Alive()
+            if wasAlive ~= nil and alive ~= wasAlive then Mine() end
+            wasAlive = alive
+        end)
+    end
+    if gameevent and gameevent.Listen and hook and hook.Add then
+        gameevent.Listen("player_spawn")
+        hook.Add("player_spawn", "LivingCitySoundLoops", function(data)
+            local me = LocalPlayer and LocalPlayer()
+            if IsValid(me) and data and data.userid == me:UserID() then Mine() end
+        end)
+    end
+end

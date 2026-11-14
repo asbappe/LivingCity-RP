@@ -29,15 +29,15 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 - `python3 _dev/voice_lines.py` writes `VOICE_LINES.md` and `VOICE_SCRIPTS.md` from the code; what the owner has recorded is kept in `_dev/voice_done.txt` (rows ticked [x] in either file are added to it first), so ticks survive. `elevenlabs_batch.py` skips what's listed there. `_dev/voice_missing.txt` is the server's last `lc_voice_missing` list: when present it decides the ticks for every folder it checks (replace it with a newer one from the owner and rerun).
 
 ## Where things stand
-- 2026-11-13, latest (owner: "please work on todo items"; core, in `CORE_CHANGELOG.md`, snapshot: 5 setting lines added): the six approved TODO items, built.
-- **Cuffs felt, not a bar:** `cl_livingcity_arrest.lua` (resisting arrest: `LC_CL.FeltTug`, `LC_CL.ClosingEdges`, `LC_CL.StruggleFeel`) and `cl_livingcity_cuffed.lua` (working at or picking the cuffs: `LC_CL.CuffsFelt`); `lc_struggle_bar` client setting. Door and padlock picking keeps its bar.
-- **Quick menus:** the talk window, a unit's search (`UnitQuick`), the interrogation (`QuestionQuick`, `CPQuick`) on `LC_CL.OpenSituation`, which now shuts F1 to F4 (`LC_CL.CloseFMenus`), takes `onClose`, `keep` and a function `note`; `lc_situation_windows` 1 brings the old windows.
-- **Save with the gamemode:** `lua/weapons/gmod_tool/stools/livingcity_keep.lua` (uses `LC.PersistProp`; green halo while held).
-- **Dream posters:** `sv_livingcity_dreamposters.lua` (`LC.DreamPosterFor`, `LC.DreamPosterHints`), poster kind `dream` in `lc_civposter.lua`; the pictures are a TODO item reserved for a particular chat (owner's request).
-- **The Fitness Test** (`course`, Happy): `sv_livingcity_dreamcourse.lua` (`LC.CourseLay`, `LC.CourseSwept`).
-- **Cubbage answers her speeches:** `sv_livingcity_speechanswer.lua` (`LC.SpeechAnswer`, `LC.SpeechAnswerLines`, `LC.Freq7CutIn`); ghost face `lc_colonel_model` (male_07, a guess at an old man: check in game); `VOICE_LINES.md` section 12.
-- Unseen in game: all of the above (PLAYTEST.md, "13 November, later"); the baton and hurdle models, stone spacing.
-- Other chat, same day: HQ calls only over the radio, the resupply scanner, gas masks, Half-Life 2 ammo limits, and Freq 7 sent only with a transmitter in hand (`LC.SendsOnFreq7`; Fighters and up issued one, `LC.IssueRebelRadio`).
-- Next from TODO.md: job boards at terminals to settle with the owner; the dream posters' pictures.
-- Earlier, still open: arm pose and baton glow; Careless Talk's vortigaunt delay; the chronicle file after a week; voice cue chattiness; the cuffed pose; the loading screen not hosted.
+- 2026-11-14 (the owner sent their `PLAYTEST.md` from the 13 November playtest: about 45 notes; core, in `CORE_CHANGELOG.md`; snapshot: `- item gren_gas`, `+ lc_jog 0`, `lc_rebel_damage` 0.6). Built: `PLAYTEST.md`, "Your 13 November notes" (27 items to retry).
+- **Sounds that loop by themselves:** `sh_livingcity_soundguard.lua`, end (`LC.SoundLoops` reads the .wav's loop mark; `LC.SoundLoopWatch`, `LC.SoundLoopsStop` on death and spawn; `surface.PlaySound` of one goes through the player).
+- **Jobs:** kills on the way and NPC allies' kills count (`LC.QuestEvent`, `LC.QuestAssist`), a template's `over` (cp_repelraid); the trail retries with no ground kept out (`LC.TrailRoute`, `EditorRoute(..., free)`).
+- **Combine:** no lowered guns for units on rebel ground (`LC.LoweredGround`); backup delay and squad revive (`LC.CallBackup`, `LC.SquadReviveStep`, sv_livingcity_war.lua); sweeps in turn (`LC.NextSweepZone`).
+- **Music:** `sv_livingcity_pacing.lua` (`LC.NoteShot`, `LC.InAction` for everyone, `lc_by_infest`), `cl_livingcity_atmos.lua` ("eerie" mood).
+- **Cremator:** `LC.CrematorBoost` (real speed), `LC.CrematorNearestNode`, `LC.CrematorEscortHere`.
+- **Dreams:** Roses (`LC_CL.DrawRose`, `g.laid`), Careless Talk (`g.spyTbls`, `LC.SpyDressing`, the salute).
+- **Also:** jog archived (`lc_jog`, `LC.ArchiveJogPoints`); `gren_gas` gone; lab (`LC.LabHold`, `LC.LabCollect`, `LC.LabClean`); `LC.AmmoRoom`, `LC.PocketVial`; shop scroll and wrap (`cl_livingcity_needs.lua`); screens 20% larger with paging side by side; role ranks; `LC.InfestedKin`; `LC.ScatterNear`.
+- **Waiting on the owner** (asked in chat, listed at the end of `TODO.md`): `lc_announce_clips` (the "report" announcement repeating, hers silent), `lc_territory` (underground camps), yellow filling the collapse bar or not, the Free Vortigaunt role, the unit that ran past and vanished, the dreams' text screenshot.
+- **Next from `TODO.md`** ("From the owner's 13 November playtest"): prison guard jobs and rank, the infested as a hidden side, vortigaunts chosen at the start, lab parts found not lying about, loudspeaker utility boxes, a way out of a manhunt, Resistance operations on the F4 board, dressing the dreams.
+- Unseen in game: everything above. Tests (2026-11-14): `python3 _dev/run_parallel.py` 6241 passed, 0 failed; client smoke passes.
 - History of every earlier chat: `TIMELINE.md`, `CORE_CHANGELOG.md`.

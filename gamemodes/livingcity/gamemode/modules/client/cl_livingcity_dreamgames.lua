@@ -167,6 +167,45 @@ local THEMES = { harvest = Color(255, 205, 70), newsreel = Color(235, 235, 235),
     clocks = Color(200, 160, 255), tea = Color(255, 180, 220), derby = Color(160, 230, 120), photo = Color(240, 240, 240), doors = Color(200, 140, 255),
     paint = Color(255, 90, 190), conga = Color(255, 200, 90), shh = Color(200, 220, 255), bubbles = Color(160, 220, 255), watchers = Color(200, 30, 30), can = Color(230, 60, 50) } -- (the strange dreams: cl_livingcity_strangedreams.lua)
 -- Where she is: her figure or the star (as an entity, when you can see it), else where she was.
+-- A rose, drawn (Half-Life 2 has no rose model: the owner, 13 November, "there is no model for roses"):
+-- a green stem with two leaves and a red bud of petals, a soft glow round it. Standing where it waits
+-- to be picked up (at is the bud's height, the stem goes down to the floor); lying flat at her feet.
+local STEM, LEAF = Color(40, 135, 55), Color(55, 160, 70)
+local BUD, PETAL, HEART = Color(190, 20, 45), Color(225, 45, 70), Color(140, 10, 30)
+function LC_CL.DrawRose(at, lying)
+    LC_CL.RoseDrawn = (LC_CL.RoseDrawn or 0) + 1
+    if not (render and render.DrawSphere and render.DrawBeam and render.SetColorMaterial) then
+        if render and render.DrawSprite then render.DrawSprite(at, 30, 30, BUD) end
+        return
+    end
+    local now = CurTime()
+    local base, bud
+    if lying then
+        base, bud = at, at + Vector(-26, 6, 2)
+    else
+        local sway = math.sin(now * 2 + at.x) * 1.5
+        base, bud = Vector(at.x, at.y, at.z - 20), Vector(at.x + sway, at.y, at.z + 8)
+    end
+    render.SetColorMaterial()
+    render.DrawBeam(base, bud, 1.6, 0, 1, STEM)
+    local mid = base + (bud - base) * 0.45
+    local side = lying and Vector(0, 6, 1) or Vector(6, 0, 3)
+    render.DrawBeam(mid, mid + side, 3, 0, 1, LEAF)
+    render.DrawBeam(mid + (bud - base) * 0.15, mid + (bud - base) * 0.15 - side, 3, 0, 1, LEAF)
+    render.DrawSphere(bud, 5, 10, 10, BUD)
+    for i = 0, 3 do
+        local a = i * math.pi / 2 + 0.6
+        render.DrawSphere(bud + Vector(math.cos(a) * 3, math.sin(a) * 3, 1.5), 3.2, 8, 8, PETAL)
+    end
+    render.DrawSphere(bud + Vector(0, 0, 3.5), 2.4, 8, 8, HEART)
+    -- (the sprites drawn after this one want their glow back)
+    if render.SetMaterial then render.SetMaterial(glow) end
+    if not lying and render.DrawSprite then
+        local pulse = 0.8 + 0.2 * math.sin(now * 5 + at.x)
+        render.DrawSprite(bud, 26 * pulse, 26 * pulse, Color(255, 90, 120, 110))
+    end
+end
+
 local function HerPos()
     local e = st.herEnt and Entity and Entity(st.herEnt)
     if IsValid(e) then return e:GetPos(), (e.GetModelScale and e:GetModelScale() or 1) end
@@ -195,6 +234,7 @@ hook.Add("PostDrawTranslucentRenderables", "LivingCityDreamGames", function(_, s
     end
     -- the admiring dreams: hearts drifting up from her, and the roses
     if st.theme == "admire" then
+        LC_CL.RoseDrawn = 0
         local at, sc = HerPos()
         if at then
             local now = CurTime()
@@ -207,8 +247,7 @@ hook.Add("PostDrawTranslucentRenderables", "LivingCityDreamGames", function(_, s
             end
         end
         for _, r in ipairs(st.roses or {}) do
-            local pulse = 0.8 + 0.2 * math.sin(CurTime() * 5 + r[1])
-            render.DrawSprite(Vector(r[1], r[2], r[3]), 30 * pulse, 30 * pulse, ROSE)
+            LC_CL.DrawRose(Vector(r[1], r[2], r[3]), r[4] == 1)
         end
     end
     -- the ten more: glows, boards hanging in the air, her portrait in cards

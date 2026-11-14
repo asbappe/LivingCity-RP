@@ -50,3 +50,10 @@ The flame is green, as the Immolator's was, drawn on the client from the model's
 **The 12 November playtest (the owner: "fix all of it please").**
 - **The incinerator stands on end**, open end up, the fire coming out of the top like a torch (`ENT:StandUp`); bodies are brought to its foot (`LC.IncineratorBase`). It stands up again after a physgun move.
 - **Cremators guard the infestations:** each picks the infestation with the fewest (`LC.CrematorPickZone`) and keeps to it, inside or up to 500 units out, burning only the dead on that ground (within 1200 units: `LC.CrematorTurf`). Morticians (NPC and the Collection shift) handle the city and never take a body inside an infestation. A cleanup crew (player shift or NPC crew) near an infestation gets the nearest free Cremator as an escort, 160 to 300 units off, burning what comes near them; then it goes back. With no infestation marked, Cremators walk the streets as before. The debug report counts guarding, escorting and street ones.
+
+## 14 November (the owner's 13 November playtest)
+
+- **It really is faster now.** `lc_cremator_speed` (2) used to speed up the unseen walker's animation, which the engine ignores when it moves an NPC ("INCREASE THEIR MOVEMENT SPEED! ... it seems nothing has changed"). Now the ground it covers is measured every frame it walks, and whatever it falls short of `lc_cremator_speed` times its own pace (45 units a second) is made up along the way it is going, never through a wall or off a ledge (`LC.CrematorBoost`).
+- **It appears by the infestation.** With no hidden spot at an infestation it takes the nearest path node to it that nobody can see (`LC.CrematorNearestNode`), before anywhere else in the city.
+- **It walks with a cleanup crew only at an infestation** (within 1800 units of one: `LC.CrematorEscortHere`), not across the city.
+- Fixed: "Tried to use a NULL entity" when the worker it walked with was gone between two looks.

@@ -257,6 +257,15 @@ function LC.UseScientist(ply, sci)
         Say(ply, "He steps between you and the bench. \"I'm terribly sorry, I don't believe we've met. This is a private... laboratory. Please, go.\"")
         return
     end
+    -- something he finished after they walked off: handed over first
+    if LC.LabCollect(ply, sci) > 0 then return end
+    do
+        local job = sci.lcLabJob
+        if job and job.away and job.sid == LC.LabKey(ply) and job.untilT > CurTime() then
+            Say(ply, string.format("\"Not yet, not yet. Another %d seconds.\"", math.ceil(job.untilT - CurTime())))
+            return
+        end
+    end
     -- wrecked by the Combine: nothing to work with until it's fixed (sv_livingcity_labdamage.lua)
     if LC.LabBroken and LC.LabBroken(sci) then
         SciSay(sci, "ohdear", 70)
@@ -277,6 +286,49 @@ function LC.UseScientist(ply, sci)
 end
 
 -- Have him make one. how: "mats" (from your pockets) or "pay". True, or false and why not.
+-- What he has finished and is keeping for someone who walked off: theirs alone, handed over when
+-- they next speak to him, and lost with him if he's taken (LC.ShutLab).
+-- Back from the cells, or the lab fixed: no blood left on him, the bench or the kit on it (the
+-- owner, 13 November: he "respawned but is covered in blood still from when the combine raided").
+function LC.LabClean(sci)
+    local function Wipe(e) if IsValid(e) and e.RemoveAllDecals then e:RemoveAllDecals() end end
+    Wipe(sci)
+    local bench = IsValid(sci) and sci.lcLab or nil
+    Wipe(bench)
+    for _, c in ipairs(IsValid(bench) and bench.lcClutter or {}) do Wipe(c) end
+    return true
+end
+function LC.LabKey(ply)
+    if not IsValid(ply) then return nil end
+    return (ply.SteamID64 and ply:SteamID64()) or (ply.SteamID and ply:SteamID()) or tostring(ply)
+end
+function LC.LabHold(sci, key, out, count)
+    if not IsValid(sci) or not key then return end
+    sci.lcLabHeld = sci.lcLabHeld or {}
+    sci.lcLabHeld[key] = sci.lcLabHeld[key] or {}
+    table.insert(sci.lcLabHeld[key], { out = out, count = count or 1 })
+end
+function LC.LabHeldFor(sci, ply)
+    local key = LC.LabKey(ply)
+    return IsValid(sci) and key and sci.lcLabHeld and sci.lcLabHeld[key] or nil
+end
+-- Hands over what he kept for this player. How many kinds were handed over.
+function LC.LabCollect(ply, sci)
+    local held = LC.LabHeldFor(sci, ply)
+    if not held or #held == 0 then return 0 end
+    sci.lcLabHeld[LC.LabKey(ply)] = nil
+    local names = {}
+    for _, h in ipairs(held) do
+        for _ = 1, h.count do
+            if not LC.GiveItem(ply, h.out) and LC.SpawnWorldItem then LC.SpawnWorldItem(h.out, ply:GetPos() + ply:GetForward() * 30 + Vector(0, 0, 20)) end
+        end
+        names[#names + 1] = LCS.Items[h.out] and LCS.Items[h.out].name or h.out
+    end
+    SciSay(sci, "excellent", 65)
+    Say(ply, "\"Ah, there you are. I kept it safe for you.\" He hands you: " .. table.concat(names, ", ") .. ".")
+    return #held
+end
+
 function LC.LabMake(ply, id, how)
     local r = (LC.MarketLabById and LC.MarketLabById(id)) or (LCS.LabById and LCS.LabById[id])
     if not r or not IsValid(ply) then return false end
@@ -304,7 +356,7 @@ function LC.LabMake(ply, id, how)
         end
         for mid, n in pairs(r.needs) do LC.TakeItem(ply, mid, n) end
     end
-    local job = { ply = ply, untilT = CurTime() + r.secs }
+    local job = { ply = ply, untilT = CurTime() + r.secs, sid = LC.LabKey(ply) }
     local settled = false
     -- Once only. Someone who died mid-job gets nothing back (that life's
     -- credits are gone with it); their materials are left on the bench.
@@ -338,8 +390,31 @@ function LC.LabMake(ply, id, how)
             Say(p, "\"There. Do be careful with it.\" He hands you: " .. it.name .. ".")
             hook.Run("LivingCityLabMade", p, r.out, how)
         end,
-        cancel = function(p) Clear() Refund(p) end,
-        cancelText = "[Scientist] You wander off. He sighs, and hands it all back.",
+        -- Walking off no longer undoes it (the owner, 13 November: "he should just keep making it and I
+        -- can collect it when I return and talk to him; no one else should be able to steal it from me.
+        -- If he dies, then it's lost with him forever"): he works on, keeps it for them alone, and hands
+        -- it over when they next speak to him. Dying mid-job is as before (Refund).
+        cancel = function(p)
+            if IsValid(p) and p:Alive() and IsValid(sci) and not LC.LabShut(sci) and sci.lcLabJob == job then
+                settled = true
+                job.away = true
+                local function Finished()
+                    if not IsValid(sci) or sci.lcLabJob ~= job then return end -- (taken away meanwhile: lost with him)
+                    sci.lcLabJob = nil
+                    LC.LabHold(sci, job.sid, r.out, r.count or 1)
+                    if IsValid(p) and LC.Notice then
+                        LC.Notice(p, "info", "The lab", "The scientist has finished your " .. string.lower(it.name) .. ". Go back and talk to him to collect it: he keeps it for you alone.", 8)
+                    end
+                    hook.Run("LivingCityLabMade", p, r.out, how)
+                end
+                job.finish = Finished
+                timer.Simple(math.max(0, job.untilT - CurTime()), Finished)
+            else
+                Clear()
+                Refund(p)
+            end
+        end,
+        cancelText = "[Scientist] You step away. \"Go on, go on, I'll keep at it. Come back and ask me for it.\"",
     })
     if not ok then
         Clear()
@@ -540,7 +615,8 @@ function LC.ShutLab(cop, sci)
     sci:EmitSound("npc/metropolice/vo/holdit.wav", 80)
     local job = sci.lcLabJob
     sci.lcLabJob = nil
-    if job and IsValid(job.ply) and LC.CancelTask then LC.CancelTask(job.ply) end
+    sci.lcLabHeld = nil -- (what he was keeping for people is lost with him)
+    if job and not job.away and IsValid(job.ply) and LC.CancelTask then LC.CancelTask(job.ply) end
     if IsValid(cop) then
         cop:ChatPrint("[Civil Protection] A Resistance lab. The scientist is taken into custody and the equipment smashed. Nothing will be made here for a while.")
         if LC.AddCredits then LC.AddCredits(cop, 30, "a Resistance lab shut down") end
@@ -554,6 +630,7 @@ function LC.ShutLab(cop, sci)
         if not IsValid(sci) then return end
         sci:SetNotSolid(false)
         sci:SetNoDraw(false)
+        LC.LabClean(sci)
         if LC.RadioNotice then LC.RadioNotice("resistance", "The scientist's back at the lab " .. Where(sci:GetPos()) .. ".") end
     end)
     hook.Run("LivingCityLabShut", cop, sci)

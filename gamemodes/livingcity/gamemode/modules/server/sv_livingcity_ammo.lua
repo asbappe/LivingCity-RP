@@ -97,3 +97,42 @@ timer.Create("LivingCityAmmoClamp", 5, 0, function()
     if not cvOn:GetBool() then return end
     for _, p in ipairs(player.GetAll()) do LC.ClampAmmo(p) end
 end)
+
+-- How many more rounds of this kind the player can carry: a number, or nil when there is no limit
+-- (lc_hl2_ammo 0, or a kind with none). An ammo box isn't loaded into a full pocket.
+function LC.AmmoRoom(ply, ammo)
+    if not IsValid(ply) or not ammo then return nil end
+    local max = LC.AmmoMax and LC.AmmoMax(ammo) or nil
+    if not max or max <= 0 then return nil end
+    return math.max(0, max - (ply:GetAmmoCount(ammo) or 0))
+end
+
+-- A health vial on the ground, E pressed on it at full health: into the pockets, not held out in
+-- front (the owner, 13 November: "I press E on it and I just hold it in front of me, never putting
+-- it into my pockets"). Hurt, walking over it heals as it always did.
+function LC.PocketVial(ply, ent)
+    if not (IsValid(ply) and IsValid(ent)) or ent:GetClass() ~= "item_healthvial" or ent.lcPocketed then return false end
+    if ply:Health() < ply:GetMaxHealth() then return false end
+    if not (LC.GiveItem and LCS and LCS.Items and LCS.Items.health_vial) then return false end
+    if not LC.GiveItem(ply, "health_vial", 1) then
+        if LC.Notice and (ply.lcVialFullAt or 0) < CurTime() then
+            ply.lcVialFullAt = CurTime() + 3
+            LC.Notice(ply, "warn", "Pockets full", "No room for the health vial. Make room (F3) and pick it up again.", 4)
+        end
+        return true
+    end
+    ent.lcPocketed = true
+    ent:Remove()
+    ply:EmitSound("items/itempickup.wav", 55)
+    if LC.Notice then LC.Notice(ply, "info", "Health vial", "In your pockets (F3), for when you need it.", 4) end
+    return true
+end
+hook.Add("PlayerUse", "LivingCityPocketVial", function(ply, ent)
+    if IsValid(ent) and ent:GetClass() == "item_healthvial" and LC.PocketVial(ply, ent) then return false end
+end)
+hook.Add("AllowPlayerPickup", "LivingCityPocketVial", function(ply, ent)
+    if IsValid(ent) and ent:GetClass() == "item_healthvial" and ply:Health() >= ply:GetMaxHealth() then
+        LC.PocketVial(ply, ent)
+        return false
+    end
+end)

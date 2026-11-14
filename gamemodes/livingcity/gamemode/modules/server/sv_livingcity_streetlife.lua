@@ -27,7 +27,7 @@ local cvObit     = CreateConVar("lc_obituary", "1", FLAGS, "When a player charac
 -- Guns (the owner, 2 November): a gun is contraband, and the Combine won't have anyone else
 -- carrying one.
 --   Out on the streets: a citizen seen by a unit with a gun in hand, raised or not: wanted at once.
---   Rebel ground (everyone), and the Combine's ground (Civil Protection's recruits and
+--   Rebel ground (everyone but the Combine's own units, since 13 November), and the Combine's ground (Civil Protection's recruits and
 --   metrocops: they haven't had the Overwatch's conditioning, and the Combine don't wholly trust
 --   them; not the Overwatch, nor Division Leaders): walking in, a card says to lower your gun
 --   (hold R). While it's up, the fighters (or the Overwatch's soldiers) who can see you stand to
@@ -57,7 +57,9 @@ end
 function LC.LoweredGround(ply)
     if not ply:Alive() then return nil end
     local pos = ply:GetPos()
-    if (LC.NearRebelZone or LC.InRebelZone)(pos) then return "rebel", LC.InRebelZone(pos) end
+    -- (not a Civil Protection or Overwatch unit: they come to rebel ground to fight. The owner,
+    -- 13 November, as a prison guard there: "my guns stopped working, I couldn't shoot ANY guns")
+    if not IsUnit(ply) and not IsOverwatch(ply) and (LC.NearRebelZone or LC.InRebelZone)(pos) then return "rebel", LC.InRebelZone(pos) end
     if Untrusted(ply) and (LC.NearCombineZone or LC.CombineZoneAt)(pos) then return "combine", LC.CombineZoneAt(pos) ~= nil end
     return nil
 end
