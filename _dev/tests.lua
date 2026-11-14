@@ -15287,7 +15287,8 @@ cit:SetArmor(50)
 _advance(1.1) _runtimers()
 ok(cit:Armor() == 0 and not LC.HasVest(cit), "a citizen with no vest holds no charge")
 LC.GiveItem(cit, "armor_vest")
-ok(LC.ItemUse(cit, "armor_vest") and cit:GetNW2Bool("lc_vest", false) and cit:Armor() == 30, "put on a powered vest: it comes with thirty in it")
+ok(LC.ItemUse(cit, "armor_vest") and cit:GetNW2Bool("lc_vest", false) and cit:Armor() == 75, "put on a powered vest: it comes fully charged (the owner, 14 November)")
+cit:SetArmor(30)
 ok(LC.ChargeVest(cit, 100) == 45 and cit:Armor() == 75, "and holds up to seventy-five")
 local unit = newPlayer("VestUnit", "cp")
 _run(0.3)
@@ -29659,6 +29660,79 @@ for _, m in ipairs(net.sent) do if m.name == "lc_announce" then sentPath = m.dat
 ok(sentPath == "", "an announcement with no recording of the owner's goes out silent", tostring(sentPath))
 end
 TeamChatTests()
+
+
+section("The owner's 14 November notes: stores, Civil Protection's toughness, the medic, jobs, water, the vest")
+;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)
+    local function T(id) for _, x in ipairs(LC.QuestTemplates) do if x.id == id then return x end end end
+    -- the stores: an NPC served at a line costs a ration only while rations are handed out
+    local was = LC.Event
+    LC.StockAdd(200 - LC.Stock())
+    LC.Event = nil
+    hook.Run("LivingCityServed", nil, 1)
+    ok(LC.Stock() == 200, "an NPC served at a line outside a handout takes nothing from the stores", LC.Stock())
+    LC.Event = "rations"
+    hook.Run("LivingCityServed", nil, 1)
+    ok(LC.Stock() == 199, "during a handout it takes one", LC.Stock())
+    LC.Event = was
+    ok(string.find(LC.StockLedgerLine(), "ration line (handout) -1", 1, true) ~= nil, "and the stores' ledger says where it went", LC.StockLedgerLine())
+    -- players' shots at Civil Protection NPCs hit harder; soldiers and NPCs' shots are as before
+    local shooter = newPlayer("CPShooter14", "citizen")
+    local c, cs = LC.Spawners.cop(Vector(-61000, -61000, 0))
+    ok(IsValid(c) and math.abs(LC.CPDamageTakenMul(c, shooter) - 1.5) < 0.001, "a player's shot at a metrocop does half again (about 10 pistol hits)")
+    local sol = LC.Spawners.soldier and LC.Spawners.soldier(Vector(-61200, -61000, 0))
+    if IsValid(sol) then ok(LC.CPDamageTakenMul(sol, shooter) == 1, "a soldier is as tough as before") end
+    ok(LC.CPDamageTakenMul(c, sol or c) == 1, "an NPC's shot at a metrocop is as before")
+    if IsValid(c) then c:Remove() end
+    if IsValid(sol) then sol:Remove() end
+    -- Doctor the records: the Hacker's job only
+    local rt = T("res_terminal")
+    local reb = newPlayer("NotAHacker14", "resistance")
+    ok(rt and not rt.available(reb), "Doctor the records isn't offered to a rebel who isn't a Hacker")
+    reb:SetNW2String("lcf_special", "hacker")
+    local GamesOn = GetConVar("lc_minigames")
+    ok(rt and (rt.available(reb) or (GamesOn and not GamesOn:GetBool())), "but is to a Hacker")
+    reb:SetNW2String("lcf_special", "")
+    -- the board: fewer jobs, cycled sooner
+    ok(LC.BoardPostSecs == 150, "a job stays on the board 150 seconds untaken")
+    -- the Union shift is a job of your own, not a story
+    local shift
+    for _, ch in ipairs(LC.ChainList or {}) do if ch.id == "shift" then shift = ch end end
+    ok(shift and shift.flat, "the Union shift is marked as a job of your own (YOUR JOB, not YOUR STORY)")
+    -- water: a few feet from it will do
+    local pcWas = util.PointContents
+    local swimmer = newPlayer("WaterEdge14", "citizen")
+    swimmer:SetPos(Vector(-98000, 0, 0))
+    util.PointContents = function(p) return p.x < -98060 and (CONTENTS_WATER or 32) or 0 end
+    ok(LC.NearWater(swimmer), "water a few feet away counts as near water (to fill a can)")
+    util.PointContents = function() return 0 end
+    ok(not LC.NearWater(swimmer), "and none is none")
+    util.PointContents = pcWas
+    -- the medic: a vial or a medkit for credits
+    local mp = Vector(-62000, -62000, 0)
+    local m, mst = LC.SpawnRebel(mp + Vector(0, 0, 4), nil)
+    if IsValid(m) then
+        mst.quartermaster, mst.medic = true, true
+        local pat = newPlayer("Patient14", "resistance")
+        pat:SetPos(mp + Vector(60, 0, 0))
+        pat:SetHealth(30)
+        LC.AddCredits(pat, 20 - LC.Credits(pat))
+        ok(LC.MedicBuy(pat, "kit") and pat:Health() == 70 and LC.Credits(pat) == 12, "the medic's large medkit: 40 health for 8 credits", pat:Health() .. " " .. LC.Credits(pat))
+        ok(LC.MedicBuy(pat, "vial") and pat:Health() == 80 and LC.Credits(pat) == 9, "his small health vial: 10 for 3")
+        LC.AddCredits(pat, -LC.Credits(pat))
+        ok(not LC.MedicBuy(pat, "vial"), "no credits, no care")
+        ok(LC.NearQuartermaster(pat) == nil, "the medic isn't taken for the quartermaster")
+        m:Remove()
+    else
+        ok(false, "a medic could be made")
+    end
+    -- the Extraction job: the fugitive hides in the Combine's city
+    local ex = T("res_rescue")
+    if ex then
+        local spec = ex.build(reb)
+        ok(spec == nil or string.find(spec.desc, "Combine's city", 1, true) ~= nil, "Extraction: the fugitive hides in the Combine's city and is brought back")
+    end
+end)()
 
 
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")

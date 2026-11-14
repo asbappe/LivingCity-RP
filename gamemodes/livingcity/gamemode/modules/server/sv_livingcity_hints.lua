@@ -386,7 +386,7 @@ LC.HINTS = {
     item_raw = { title = "Raw meat",
         text = "Cook it near a stove, oven or burning barrel, from your pockets ({gm_showspare1}). Eating it raw can give you parasites." },
     item_empty = { title = "An empty container",
-        text = "Fill it in water or at a sink from your pockets ({gm_showspare1}), then boil it near a stove or fire before you drink it." },
+        text = "Fill it at the water's edge or at a sink from your pockets ({gm_showspare1}), then boil it near a stove or fire before you drink it." },
     item_dirty = { title = "Untreated water",
         text = "Boil it near a stove or fire first, from your pockets ({gm_showspare1}). Drinking it unboiled can give you parasites." },
     item_clothes = { title = "Clothes",
@@ -764,7 +764,7 @@ function LC.HintScan(ply)
             local st = LC.NPCs and LC.NPCs[e]
             local wild = LC.Wildlife and LC.Wildlife[e]
             if st and e:Health() > 0 then
-                if st.quartermaster and d2 < 250 * 250 and Due(ply, "quartermaster") then return Try("quartermaster") end
+                if st.quartermaster and not st.medic and d2 < 250 * 250 and Due(ply, "quartermaster") then return Try("quartermaster") end
                 if st.role == "rebel" and not st.quartermaster and d2 < 300 * 300 and Due(ply, "fighter") then return Try("fighter") end
                 if st.role == "citizen" and d2 < 200 * 200 and Due(ply, "citizen_npc") then return Try("citizen_npc") end
                 if st.role == "cop" and d2 < 350 * 350 and Due(ply, "cop_near") then return Try("cop_near") end

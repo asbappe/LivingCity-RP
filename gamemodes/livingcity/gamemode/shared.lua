@@ -208,6 +208,7 @@ LC_MODULES = {
         "sv_livingcity_vort",
         "sv_livingcity_vortwork", -- (things to do as a vortigaunt, and the freed ones' camp life)
         "sv_livingcity_vortstart", -- (a new life as a vortigaunt, chosen at the start; reaching out, the rescue)
+        "sv_livingcity_rebelmedic", -- (the Resistance's medic in each rebel territory: heals for a few credits)
         "sv_livingcity_weeds", -- (weeds on open ground, the Groundskeeper, weedkiller as poison)
         "sv_livingcity_cleanup", -- (the infestation's growths, Infestation Cleanup, the firebomb, barnacles, fouled filters)
         "sv_livingcity_cityadmin", -- (the City Administrator: the election, the office, the bodyguard; idle players)
@@ -280,6 +281,7 @@ LC_MODULES = {
         "cl_livingcity_atmos",
         "cl_livingcity_character",
         "cl_livingcity_vortstart", -- (the choice at a new life's start: a citizen or a vortigaunt)
+        "cl_livingcity_rebelmedic", -- (the Resistance's medic: his offer)
         "cl_livingcity_checkpoints",
         "cl_livingcity_endings",
         "cl_livingcity_endingtune", -- (the Endings menu)

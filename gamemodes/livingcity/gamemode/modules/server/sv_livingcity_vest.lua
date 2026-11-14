@@ -11,7 +11,7 @@
                       50, Commander 75)
       anyone else     none, unless they put one on: a powered vest, made in the
                       Resistance lab (or bought on the black market), holds
-                      lc_vest_capacity (75) and comes with some charge in it
+                      lc_vest_capacity (75) and comes fully charged
 
     No vest, no charge: a suit battery or a charger does nothing for you.
     Charging, and nothing else (sleeping doesn't): the Combine's suit
@@ -56,10 +56,11 @@ function LC.PutOnVest(ply, id)
     if ply:GetNW2Int("lc_vest_cap", 0) >= cvCap:GetInt() then return false, "Your own gear has a vest at least as good." end
     LC.TakeItem(ply, id)
     ply:SetNW2Bool("lc_vest", true)
-    local it = LCS.Items[id]
-    LC.ChargeVest(ply, it and it.armor or 30)
+    -- fully charged as it goes on (the owner, 14 November: "if I buy a powered vest, it needs to be
+    -- fully charged when I receive it and put it on")
+    LC.ChargeVest(ply, LC.VestCap(ply))
     ply:EmitSound("items/battery_pickup.wav", 55)
-    if LC.Notice then LC.Notice(ply, "info", "Powered vest", "On, with some charge in it. Vortigaunts, suit batteries and chargers top it up.", 6) end
+    if LC.Notice then LC.Notice(ply, "info", "Powered vest", "On, fully charged. Vortigaunts, suit batteries and chargers top it up.", 6) end
     return true
 end
 

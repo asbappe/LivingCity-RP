@@ -128,3 +128,20 @@ hook.Add("EntityTakeDamage", "LivingCityCombat", function(victim, dmg)
     local ok, err = pcall(LC.CombatHurt, victim, st, dmg:GetAttacker(), dmg:GetDamage(), CurTime())
     if not ok and LC.Error then LC.Error("combat cover", err) end
 end)
+
+-- A player's shots at a Civil Protection NPC hit harder (the owner, 14 November: "As a citizen/
+-- resistance member with a pistol, it takes about 20 shots to kill a metrocop, which is insane.
+-- For a soldier? ehhhh that might be acceptable, but for a metrocop? I would expect 10-13 shots
+-- from a pistol."). Metrocops have lc_cp_health (70); Half-Life 2's pistol does 5 a hit, so 14
+-- hits. At lc_cp_damage_taken 1.5 it is 10 (fewer with a head shot). Soldiers and Elites, and
+-- NPCs shooting each other, are as before.
+local cvCPTaken = CreateConVar("lc_cp_damage_taken", "1.5", FLAGS, "Players' damage to Civil Protection NPCs is multiplied by this (1: Half-Life 2's own; 1.5: about 10 pistol hits on a metrocop)")
+function LC.CPDamageTakenMul(victim, attacker)
+    local st = IsValid(victim) and LC.NPCs and LC.NPCs[victim]
+    if not st or st.role ~= "cop" or not IsValid(attacker) or not attacker:IsPlayer() then return 1 end
+    return math.max(0, cvCPTaken:GetFloat())
+end
+hook.Add("EntityTakeDamage", "LivingCityCPDamageTaken", function(victim, dmg)
+    local m = LC.CPDamageTakenMul(victim, dmg:GetAttacker())
+    if m ~= 1 then dmg:ScaleDamage(m) end
+end)

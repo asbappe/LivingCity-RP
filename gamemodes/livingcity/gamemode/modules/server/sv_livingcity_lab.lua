@@ -325,6 +325,7 @@ function LC.LabCollect(ply, sci)
         names[#names + 1] = LCS.Items[h.out] and LCS.Items[h.out].name or h.out
     end
     SciSay(sci, "excellent", 65)
+    if sci.HandOver then sci:HandOver() end
     Say(ply, "\"Ah, there you are. I kept it safe for you.\" He hands you: " .. table.concat(names, ", ") .. ".")
     return #held
 end
@@ -387,6 +388,7 @@ function LC.LabMake(ply, id, how)
                 if not LC.GiveItem(p, r.out) and LC.SpawnWorldItem then LC.SpawnWorldItem(r.out, p:GetPos() + p:GetForward() * 30 + Vector(0, 0, 20)) end
             end
             SciSay(sci, "excellent", 65)
+            if IsValid(sci) and sci.HandOver then sci:HandOver() end
             Say(p, "\"There. Do be careful with it.\" He hands you: " .. it.name .. ".")
             hook.Run("LivingCityLabMade", p, r.out, how)
         end,

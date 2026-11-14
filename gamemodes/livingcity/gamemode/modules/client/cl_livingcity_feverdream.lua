@@ -163,6 +163,6 @@ hook.Add("CalcViewModelView", "LivingCityFeverSway", function(wep, vm, oldPos, o
     if not LC.HasFever(me) then return end
     -- (lowered or in a work suit: those hooks place the gun and sway it themselves)
     if LC_CL.InSuit and LC_CL.InSuit(me) then return end
-    if LCL and LCL.Lowered and LCL.Lowered(me) then return end
+    if LCL and LCL.Lowered and (LCL.Lowered(me) or (me.lcLowFrac or 0) > 0) then return end
     return LC_CL.FeverViewModel(pos, ang)
 end)

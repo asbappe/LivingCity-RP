@@ -89,9 +89,35 @@ local function CheckLevel()
     lastLevel = lvl
 end
 
+-- Where the rations went and came from, this hour and the last (lc_stock, the debug report):
+-- LC.StockLedger[why] = { inn, out }, started over every hour (the previous hour kept in LC.StockLedgerLast).
+LC.StockLedger, LC.StockLedgerLast, LC.StockLedgerSince = LC.StockLedger or {}, LC.StockLedgerLast or nil, LC.StockLedgerSince or 0
+local function Ledger(why, d)
+    local now = CurTime()
+    if now - (LC.StockLedgerSince or 0) >= 3600 then
+        LC.StockLedgerLast, LC.StockLedger, LC.StockLedgerSince = LC.StockLedger, {}, now
+    end
+    local e = LC.StockLedger[why or "other"] or { 0, 0 }
+    if d > 0 then e[1] = e[1] + d else e[2] = e[2] - d end
+    LC.StockLedger[why or "other"] = e
+end
+-- "ration line +0 -12, the city eating -40, ..." for a ledger (the current one by default)
+function LC.StockLedgerLine(t)
+    local parts = {}
+    for why, e in pairs(t or LC.StockLedger) do parts[#parts + 1] = { why = why, n = e[1] + e[2], e = e } end
+    table.sort(parts, function(a, b) return a.n > b.n end)
+    local out = {}
+    for _, p in ipairs(parts) do
+        out[#out + 1] = p.why .. (p.e[1] > 0 and (" +" .. math.floor(p.e[1])) or "") .. (p.e[2] > 0 and (" -" .. math.floor(p.e[2])) or "")
+    end
+    return #out > 0 and table.concat(out, ", ") or "nothing yet"
+end
+
 function LC.StockAdd(n, why)
     if not cvOn:GetBool() or not n or n == 0 then return LC.Stock() end
+    local before = LC.Stock()
     stock = math.Clamp(LC.Stock() + n, 0, Max())
+    if stock ~= before then Ledger(why, stock - before) end
     dirty = true
     Publish()
     CheckLevel()
@@ -99,11 +125,11 @@ function LC.StockAdd(n, why)
 end
 
 -- One ration out of the stores, if there is one.
-function LC.StockTake(n)
+function LC.StockTake(n, why)
     if not cvOn:GetBool() then return true end
     n = n or 1
     if LC.Stock() < n then return false end
-    LC.StockAdd(-n)
+    LC.StockAdd(-n, why or "a player's ration")
     return true
 end
 
@@ -139,7 +165,14 @@ hook.Add("LivingCitySupplyEnded", "LivingCityStock", function(s, left) if (left 
 -- What goes out
 ------------------------------------------------------------------------
 
-hook.Add("LivingCityServed", "LivingCityStock", function() LC.StockAdd(-1, "ration line") end)
+-- An NPC served at a ration line takes from the stores only while rations are being handed out.
+-- (The owner, 14 November: "Ration supplies are perpetually running low (and out of stock) and I
+-- have no idea why." The lines move all day, one person every 20 to 40 seconds a line, and each
+-- took a ration: a few lines emptied more than the kitchen, factory and trains brought in, on top
+-- of the city eating, which already feeds the citizens out. Outside a handout they only queue.)
+hook.Add("LivingCityServed", "LivingCityStock", function()
+    if LC.Event == "rations" then LC.StockAdd(-1, "ration line (handout)") end
+end)
 
 timer.Create("LivingCityStock", 60, 0, function()
     if not cvOn:GetBool() then return end
@@ -148,7 +181,7 @@ timer.Create("LivingCityStock", 60, 0, function()
         -- (it was every fifteen: a full city of 80 ate 6 a minute, more than its
         -- kitchen, factory and trains could ever bring in)
         local out = LC.RoleCounts and LC.RoleCounts.citizen or 0
-        LC.StockAdd(-math.ceil(out / math.max(5, cvEat:GetFloat())))
+        LC.StockAdd(-math.ceil(out / math.max(5, cvEat:GetFloat())), "the city eating")
         local lvl = LC.StockLevel()
         -- hungry people listen to the Resistance; fed ones keep their heads down
         if lvl == "short" or lvl == "empty" then
@@ -168,5 +201,6 @@ concommand.Add("lc_stock", function(ply, _, args)
     local n = tonumber(args[1])
     if n then LC.StockAdd(n - LC.Stock(), "admin") end
     local msg = string.format("[Miscount] City stores: %d of %d rations (%s).", LC.Stock(), Max(), LC.StockLevel())
-    if IsValid(ply) then ply:ChatPrint(msg) else print(msg) end
+    local led = "[Miscount] This hour: " .. LC.StockLedgerLine() .. (LC.StockLedgerLast and ("; last hour: " .. LC.StockLedgerLine(LC.StockLedgerLast)) or "")
+    if IsValid(ply) then ply:ChatPrint(msg) ply:ChatPrint(led) else print(msg) print(led) end
 end)

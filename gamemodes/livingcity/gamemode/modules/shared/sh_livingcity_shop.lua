@@ -298,7 +298,7 @@ LCS.Items = {
     jammer          = { name = "Radio jammer", model = "models/props_lab/reciever01b.mdl", use = "jammer", useLabel = "Set down",
                         contraband = true, conceal = 0.3, sell = 35, desc = "Set it down: four minutes of static on every Civil Protection unit radio nearby, and no scanner photos get out" },
     armor_vest      = { name = "Powered vest", model = "models/props_c17/SuitCase001a.mdl", use = "armor", useLabel = "Put on", armor = 30,
-                        contraband = true, conceal = 0.15, sell = 30, desc = "Plates and salvaged charge cells: holds a charge (75), comes with thirty in it. Charge cells (the lab's, or off a dead unit or a downed scanner) top it up, and a vortigaunt will if you ask" },
+                        contraband = true, conceal = 0.15, sell = 30, desc = "Plates and salvaged charge cells: holds a charge (75) and comes fully charged. Charge cells (the lab's, or off a dead unit or a downed scanner) top it up, and a vortigaunt will if you ask" },
     -- the Resistance's money (sv_livingcity_funding.lua): intel only the quartermaster buys, and
     -- parts skimmed off the factory line
     freq7_sheet     = { name = "Freq 7 sheet", model = "models/props_c17/paper01.mdl", kg = 0, contraband = true, conceal = 0.85, sell = 6,
@@ -503,7 +503,7 @@ LCS.Black = {
     { id = "gun_smg", item = "gun_smg", price = 200, desc = "It jams. Not often." },
     { id = "gun_shotgun", item = "gun_shotgun", price = 210, desc = "Hard to hide. Hard to argue with." },
     { id = "gun_357", item = "gun_357", price = 240, desc = "Loud, heavy, final." },
-    { id = "armor_vest", item = "armor_vest", price = 90, desc = "Plates and salvaged charge cells. Holds a charge; comes with thirty in it." },
+    { id = "armor_vest", item = "armor_vest", price = 90, desc = "Plates and salvaged charge cells. Holds a charge; comes fully charged." },
     { id = "radio_transmitter", item = "radio_transmitter", price = 70, desc = "Talk on your radio's band, not just listen. Contraband." },
     { id = "jammer", item = "jammer", price = 150, desc = "Four minutes of static on every Civil Protection unit radio nearby." },
 }

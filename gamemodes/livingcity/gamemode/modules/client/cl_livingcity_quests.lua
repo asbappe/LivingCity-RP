@@ -148,7 +148,8 @@ local function BuildBoard(parent, data)
             tag:Dock(TOP)
             tag:SetFont("DermaDefaultBold")
             tag:SetTextColor(STORY)
-            tag:SetText("YOUR STORY")
+            -- (the Union shift and Civil rehabilitation are jobs of your own, not stories: the owner, 14 November)
+            tag:SetText(p.flat and "YOUR JOB" or "YOUR STORY")
             tag:SizeToContents()
         end
 

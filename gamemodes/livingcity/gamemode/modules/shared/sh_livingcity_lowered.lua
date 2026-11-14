@@ -8,8 +8,8 @@
 
     There, a gun comes out lowered: pointed at the ground, no crosshair, and it won't fire. Hold R (half a second)
     to raise it, and again to lower it; a left click while it's lowered raises it instead of firing.
-    Tapping R still reloads. In your own view it's Half-Life 2's lowered animation where the gun has one
-    (the anniversary update's), and tipped down otherwise. Switching weapon lowers it again.
+    Tapping R still reloads. In your own view the gun tips down (it used to be Half-Life 2's lowered animation where the gun has one
+    (the anniversary update's), which the server's own idle hid). Switching weapon lowers it again.
 
       lc_lowered_weapons 0/1 (1)
 ]]
@@ -92,26 +92,35 @@ if CLIENT then
     hook.Add("HUDShouldDraw", "LivingCityLowered", function(name)
         if name == "CHudCrosshair" and LCL.Lowered(LocalPlayer()) then return false end
     end)
-    -- Half-Life 2's lowered animation, kept playing while it's down
-    hook.Add("Think", "LivingCityLowered", function()
+    -- In your own view the gun is tipped down, smoothly, while it's lowered. (It used to play Half-Life
+    -- 2's lowered animation where the gun had one, but the server's view model sends its own idle over
+    -- it, so nothing showed: the owner, 14 November, "it just makes a gun clicking sound but there's no
+    -- viewmodel difference". Moving the view model here is the client's alone and always shows.)
+    -- pos, ang tipped by how far down the gun is (nil when it's all the way up). The work suit's hands
+    -- call this too (cl_livingcity_suit.lua), so a lowered gun shows in a suit as well.
+    function LCL.LowerViewModel(pos, ang)
         local me = LocalPlayer()
-        if not IsValid(me) then return end
-        local vm = me.GetViewModel and me:GetViewModel()
-        if not IsValid(vm) then return end
-        if LCL.Lowered(me) then
-            local seq = vm:SelectWeightedSequence(ACT_VM_IDLE_LOWERED or 0)
-            me.lcLowSeq = (seq and seq > 0) and seq or nil
-            if me.lcLowSeq and vm:GetSequence() ~= me.lcLowSeq then vm:SendViewModelMatchingSequence(me.lcLowSeq) end
+        if not IsValid(me) then return nil end
+        local want = LCL.Lowered(me) and 1 or 0
+        local f = me.lcLowFrac or 0
+        local now = CurTime()
+        local dt = math.Clamp(now - (me.lcLowAt or now), 0, 0.25)
+        me.lcLowAt = now
+        if dt > 0 then
+            f = math.Approach(f, want, dt * 4)
+            me.lcLowFrac = f
         end
-    end)
-    -- no lowered animation: tipped down instead
+        if f <= 0 then return nil end
+        local a = Angle(ang.p, ang.y, ang.r)
+        a:RotateAroundAxis(a:Right(), -32 * f)
+        a:RotateAroundAxis(a:Up(), 14 * f)
+        return pos - ang:Up() * (5 * f) + ang:Right() * (2 * f) - ang:Forward() * (2 * f), a
+    end
     hook.Add("CalcViewModelView", "LivingCityLowered", function(wep, vm, oldPos, oldAng, pos, ang)
         local me = LocalPlayer()
-        if not LCL.Lowered(me) or me.lcLowSeq then return end
-        local a = Angle(ang.p, ang.y, ang.r)
-        a:RotateAroundAxis(a:Right(), -28)
-        a:RotateAroundAxis(a:Up(), 12)
-        local p2, a2 = pos - ang:Up() * 4 + ang:Right() * 2, a
+        if not IsValid(me) or (LC_CL and LC_CL.InSuit and LC_CL.InSuit(me)) then return end
+        local p2, a2 = LCL.LowerViewModel(pos, ang)
+        if not p2 then return end
         if LC_CL and LC_CL.FeverViewModel then return LC_CL.FeverViewModel(p2, a2) end -- (a fever sways it too: sh_livingcity_illness.lua)
         return p2, a2
     end)

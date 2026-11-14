@@ -26,6 +26,11 @@ hook.Add("CalcViewModelView", "LivingCitySuitHands", function(wep, vm, oldPos, o
     for n in string.gmatch(cvHands:GetString(), "%-?[%d%.]+") do parts[#parts + 1] = tonumber(n) end
     local f, r, u = parts[1] or -6, parts[2] or 0, parts[3] or 0
     local p2 = pos + ang:Forward() * f + ang:Right() * r + ang:Up() * u
+    -- (a gun carried lowered tips down here too: sh_livingcity_lowered.lua)
+    if LCL and LCL.LowerViewModel then
+        local lp, la = LCL.LowerViewModel(p2, ang)
+        if lp then p2, ang = lp, la end
+    end
     if LC_CL.FeverViewModel then return LC_CL.FeverViewModel(p2, ang) end -- (a fever sways it too: sh_livingcity_illness.lua)
     return p2, ang
 end)

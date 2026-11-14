@@ -1856,7 +1856,7 @@ T{
 
 local function Quartermaster()
     for npc, st in pairs(LC.NPCs or {}) do
-        if IsValid(npc) and st.quartermaster and npc:Health() > 0 then return npc end
+        if IsValid(npc) and st.quartermaster and not st.medic and npc:Health() > 0 then return npc end
     end
     return nil
 end
@@ -2255,7 +2255,9 @@ T{
 
 T{
     id = "res_terminal", factions = { resistance = true },
-    available = function() return GamesOn() end,
+    -- hacking a terminal is the Hacker's trade (the owner, 14 November: "I am not a hacker,
+    -- so please restrict that job to just a hacker role")
+    available = function(ply) return GamesOn() and Special(ply) == "hacker" end,
     build = function(ply)
         local terms = {}
         for _, c in ipairs({ "lc_terminal", "lc_console" }) do
@@ -2315,12 +2317,19 @@ T{
     id = "res_rescue", factions = { resistance = true },
     available = function() return #LC.ZonesOfKind("rebel") > 0 end,
     build = function(ply)
-        local where = Spot(ply, 600, 2500)
+        -- (the owner, 14 November: "is rebel territory not safety?": the fugitive hides out in the
+        -- Combine's city, never on rebel ground, and is led back to it)
+        local where
+        for _ = 1, 8 do
+            local p = Spot(ply, 600, 2500)
+            if p and not (LC.InRebelZone and LC.InRebelZone(p)) then where = p break end
+        end
         if not where then return nil end
         local dest, r, safe = SafeHouse(ply)
+        if not dest then return nil end
         return {
             title = "Extraction", reward = 40, limit = 600,
-            desc = "Someone on a Civil Protection wanted list is hiding " .. Place(where, ply:GetPos()) .. ". Find them and lead them to safety.",
+            desc = "Someone on a Civil Protection wanted list is hiding in the Combine's city, " .. Place(where, ply:GetPos()) .. ". Find them and bring them back to " .. safe .. ".",
             stages = {
                 {
                     kind = "target", action = "reach", r = 140, text = "Find the fugitive (marked on your screen)",
@@ -2772,6 +2781,7 @@ function LC.StoryPostings(ply)
                     nextId = nextId + 1
                     spec.tmpl = { id = chain.id .. "/" .. part }
                     spec.story, spec.chain, spec.part, spec.chainName = true, chain.id, part, chain.name
+                    spec.flat = chain.flat == true -- (the Union shift and its like: a job of your own, not a story)
                     spec.partNum = def.num or 1
                     if chain.flat then
                         spec.title = string.format("%s: %s", chain.name, spec.title)
@@ -3144,6 +3154,7 @@ local function Shuffle(t)
 end
 LC.QB.Shuffle = Shuffle
 
+LC.BoardPostSecs = 150 -- how long a job stays on the board untaken (240 until 14 November)
 function LC.RefreshBoard(ply)
     local f = LC.QuestFaction(ply)
     local now = CurTime()
@@ -3155,7 +3166,9 @@ function LC.RefreshBoard(ply)
     end
     LC.Postings[f] = list
 
-    local want = math.Clamp(2 + math.ceil(FactionPlayers(f) * 0.6), 3, 10)
+    -- (the owner, 14 November: "too many jobs on the screen, please tune it down a hair and have
+    -- them cycle a little more": one fewer, and each up for 150 seconds instead of 240)
+    local want = math.Clamp(1 + math.ceil(FactionPlayers(f) * 0.5), 2, 8)
     local open = 0
     local used = {}
     for _, p in ipairs(list) do
@@ -3189,7 +3202,7 @@ function LC.RefreshBoard(ply)
                 spec.faction = f
                 spec.squad = spec.squad or t.squad
                 spec.during = t.during
-                spec.expiresPost = now + 240
+                spec.expiresPost = now + LC.BoardPostSecs
                 spec.data = spec.data or {}
                 list[#list + 1] = spec
                 open = open + 1
@@ -3359,7 +3372,7 @@ function LC.SendBoard(ply)
             out[#out + 1] = {
                 id = p.id, title = p.title, desc = p.desc, reward = p.reward, violent = false, limit = p.limit,
                 taken = p.q and 1 or 0, max = 1, mine = mine ~= nil and mine.posting == p,
-                story = true, chain = p.chainName, part = p.partNum,
+                story = true, flat = p.flat, chain = p.chainName, part = p.partNum,
             }
         end
     end

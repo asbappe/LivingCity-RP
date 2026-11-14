@@ -269,6 +269,7 @@ local function HiddenSpot(z, allowSeen)
     if allowSeen then return (LC.RoomySpot(z)) end
     return nil
 end
+LC.RebelHiddenSpot = function(z, allowSeen) return HiddenSpot(z, allowSeen) end -- (the medic: sv_livingcity_rebelmedic.lua)
 
 -- Called by the population code: the emptiest rebel zone, out of sight.
 function LC.RebelSpawnPos()
@@ -1799,7 +1800,7 @@ local function RankOf(ply) return ply:GetNW2Int("lcf_rank", 1) end
 
 function LC.NearQuartermaster(ply)
     for npc, st in pairs(LC.NPCs) do
-        if IsValid(npc) and st.quartermaster and npc:Health() > 0 and npc:GetPos():DistToSqr(ply:GetPos()) < 220 * 220 then return npc end
+        if IsValid(npc) and st.quartermaster and not st.medic and npc:Health() > 0 and npc:GetPos():DistToSqr(ply:GetPos()) < 220 * 220 then return npc end
     end
     return nil
 end
@@ -1906,6 +1907,11 @@ hook.Add("PlayerUse", "LivingCityRebelsUse", function(ply, ent)
     if heldSince and CurTime() - heldSince < 0.3 then return false end
     if (ply.lcRebelUseNext or 0) > CurTime() then return false end
     ply.lcRebelUseNext = CurTime() + 0.6
+    -- the medic keeps his post like the quartermaster (st.quartermaster), but sells his care (sv_livingcity_rebelmedic.lua)
+    if st.medic then
+        if not LooksCombine(ply) and LC.UseMedic then LC.UseMedic(ply, ent) end
+        return false
+    end
     if not IsResistance(ply) then
         if st.quartermaster and not LooksCombine(ply) then
             -- (the owner, 9 November: a stranger can sell or give him arms, in his own window)
@@ -2100,7 +2106,7 @@ local function EnsureQuartermasters()
     local have = {}
     local zones = RebelZones()
     for npc, st in pairs(LC.NPCs) do
-        if IsValid(npc) and st.quartermaster and npc:Health() > 0 then
+        if IsValid(npc) and st.quartermaster and not st.medic and npc:Health() > 0 then
             local lead = st.zone and table.HasValue(zones, st.zone) and LC.RebelLeader(st.zone)
             if not lead or have[lead] then
                 LC.NPCs[npc] = nil
@@ -2129,7 +2135,7 @@ LC.EnsureQuartermasters = EnsureQuartermasters
 
 hook.Add("OnNPCKilled", "LivingCityQuartermaster", function(npc)
     local st = LC.NPCs[npc]
-    if st and st.quartermaster and st.zone then
+    if st and st.quartermaster and not st.medic and st.zone then
         LC.QMDead[LC.RebelLeader(st.zone)] = CurTime() + QM_RESPAWN
         if LC.RadioNotice then LC.RadioNotice("resistance", "They got the quartermaster. Someone will take his place, give it time.") end
     end

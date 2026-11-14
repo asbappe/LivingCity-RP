@@ -264,7 +264,7 @@ local GUIDE = {
         "Armour is the charge stored in a powered vest. Civil Protection units have one built into the uniform, rebel ranks come with one, and anyone else needs one from the lab. Vortigaunts can charge it.",
         "When no player is Father Grigori, he stays in rebel territory: press E on him for a blessing, a sermon, or a few words.",
         "A full day lasts one real hour. Nights are dark, and curfews are more likely. C > The city shows the time and weather.",
-        "Stand out in the rain to fill an empty bottle or can. lc_music 0 turns off the city's music.",
+        "Fill an empty bottle or can at the water's edge (a few feet away will do) or at a sink. lc_music 0 turns off the city's music.",
         "Need a staff member? Type @ followed by your message.",
     } },
     { "Directives and jobs", {

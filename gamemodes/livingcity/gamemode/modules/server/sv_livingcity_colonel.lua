@@ -127,7 +127,7 @@ local JOBS = { "medicine", "tags", "unit" }
 
 local function Quartermaster()
     for npc, st in pairs(LC.NPCs or {}) do
-        if IsValid(npc) and st.quartermaster and npc:Health() > 0 then return npc end
+        if IsValid(npc) and st.quartermaster and not st.medic and npc:Health() > 0 then return npc end
     end
 end
 

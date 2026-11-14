@@ -148,10 +148,14 @@ function LC_CL.HoloJitter(seed)
     return 0
 end
 -- Scanlines and the rolling band, over x, y, w, h (in the 3D2D's own pixels).
-function LC_CL.HoloLines(x, y, w, h, alpha)
+-- bandOnly: just the rolling band, no fine lines (on a screen out in the world they shimmer into a
+-- moire pattern at any distance: the owner, 14 November, on the screen above the terminals).
+function LC_CL.HoloLines(x, y, w, h, alpha, bandOnly)
     alpha = alpha or 10
-    surface.SetDrawColor(140, 200, 255, alpha)
-    for yy = y + 1, y + h - 2, 3 do surface.DrawRect(x, yy, w, 1) end
+    if not bandOnly then
+        surface.SetDrawColor(140, 200, 255, alpha)
+        for yy = y + 1, y + h - 2, 3 do surface.DrawRect(x, yy, w, 1) end
+    end
     local band = (CurTime() * 40) % (h + 40) - 20
     surface.SetDrawColor(170, 225, 255, math.min(255, alpha * 2))
     surface.DrawRect(x, y + math.Clamp(band, 0, math.max(0, h - 6)), w, 6)
@@ -269,7 +273,7 @@ hook.Add("PostDrawTranslucentRenderables", "LivingCityScreens", function(depth, 
         if not S.hover then
             draw.SimpleText("Aim at a button and press E", "LCScreenText", W / 2, h - 6, DIM, TEXT_ALIGN_CENTER, TEXT_ALIGN_BOTTOM)
         end
-        LC_CL.HoloLines(0, 0, W, h, 6)
+        LC_CL.HoloLines(0, 0, W, h, 6, true)
         if surface.SetAlphaMultiplier then surface.SetAlphaMultiplier(1) end
     cam.End3D2D()
 end)

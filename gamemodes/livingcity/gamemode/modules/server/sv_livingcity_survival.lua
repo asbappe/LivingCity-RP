@@ -523,6 +523,28 @@ end
 
 local function InWater(ply) return ply:WaterLevel() >= 1 end
 
+-- Water within a few feet: standing in it, or at its edge (the owner, 14 November: "please make it so
+-- I don't have to stand IN water to fill a can, just a few feet near water"). Points in a ring round
+-- your feet, at and below them (a canal's water is often a step down from the bank).
+LC.WaterReach = 110
+local WATER_MASK = bit.bor(CONTENTS_WATER or 32, CONTENTS_SLIME or 16)
+function LC.NearWater(ply)
+    if InWater(ply) then return true end
+    if not (util and util.PointContents) then return false end
+    local feet = ply:GetPos()
+    for _, r in ipairs({ 0, LC.WaterReach * 0.5, LC.WaterReach }) do
+        for a = 0, 315, 45 do
+            local rad = math.rad(a)
+            for _, dz in ipairs({ -6, -40, -80 }) do
+                local p = feet + Vector(math.cos(rad) * r, math.sin(rad) * r, dz)
+                if bit.band(util.PointContents(p), WATER_MASK) ~= 0 then return true end
+            end
+            if r == 0 then break end
+        end
+    end
+    return false
+end
+
 -- Seeing something, not just being near it. A sink on the far side of a wall
 -- (behind the ladder you just pressed E on) is close but not in view, and
 -- you can't drink from it. Nothing of a map's own props is an entity to ask,
@@ -685,8 +707,9 @@ function LC.InvAction(ply, action, id)
         ply:ChatPrint(it.name .. " becomes " .. string.lower(LCS.Items[it.cooksTo].name) .. ".")
     elseif action == "fill" then
         if not it.fillTo then return end
-        if not InWater(ply) and not LC.NearSink(ply) then return ply:ChatPrint("Stand in water, or by a sink, to fill it.") end
-        local atSink = not InWater(ply)
+        local wet = LC.NearWater(ply)
+        if not wet and not LC.NearSink(ply) then return ply:ChatPrint("Stand by water, or a sink, to fill it.") end
+        local atSink = not wet
         LC.TakeItem(ply, id)
         LC.GiveItem(ply, it.fillTo)
         -- the tap running into it (a splash was too loud for a sink); dipped in water, a soft slosh
