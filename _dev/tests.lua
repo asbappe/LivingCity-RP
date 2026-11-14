@@ -21127,6 +21127,7 @@ g, d = Start("melons")
 s = g.pl[a]
 _run(3.5)
 ok(#g.drops >= 1, "melons fall, each with its glow where it lands")
+ok(g.boards == 4, "the city's forecast stands on a billboard at each side of the meadow")
 b:SetPos(a:GetPos() + Vector(1000, 0, 0))
 LC.MelonLand(g, { land = a:GetPos(), lead = false }, { a, b })
 ok(s.got == 1, "standing where it lands: caught")

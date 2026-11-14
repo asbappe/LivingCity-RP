@@ -1926,8 +1926,12 @@ Type them in the server console on the host panel, or in your own game console (
 - [ ] **Colonel Cubbage answers:** after one of her addresses (or `lc_speech_answer_delay 10`), does Odessa Cubbage stand up at the camp and answer point by point, in chat near him and on Freq 7? Does the ghost now have another old man's face (`lc_colonel_model`)?
   Notes:
 
-## 14 November: five dream posters
-- [ ] **Dream posters, the pictures:** unzip `livingcity_content.zip` in `garrysmod/`, FastDL sync, change the map. Use the editor's Dreams: test one for It's Raining Melons, Where's Lamarr?, The Cheese Dream, The Watchers or Mirror, Mirror, or wait for one of those to be tonight's: a plain curfew poster showing that dream should carry its picture (melons falling, a headcrab mugshot, cheese refused, eyes round a bed, her face in a mirror). Any other dream still shows the drawn notice.
+## 14 November: the dream posters
+- [ ] **Dream posters, the pictures:** unzip `livingcity_content.zip` in `garrysmod/`, FastDL sync, change the map. A plain curfew poster hinting at Where's Lamarr?, The Cheese Dream, The Watchers or Mirror, Mirror should carry its picture (a headcrab mugshot, cheese refused, eyes round a bed, her face in a mirror). Any other dream, It's Raining Melons among them, still shows the drawn notice in the city.
+  Notes:
+- [ ] **The forecast inside the melons dream:** Miscount Editor > Dreams: test one > It's Raining Melons. A big FORECAST: FAIR, WITH PRODUCE poster should stand at each of the meadow's four sides, facing in; E on one reads it. Are they the right size and height, the right way round, and do they stay in view when you look away from their middle?
+  Notes:
+- [ ] **One-sentence subtitles:** read a few dream posters with E: the small words should be a single sentence each.
   Notes:
 - [ ] **A new life as a vortigaunt:** die permanently (or start a fresh slot): a window asks citizen or vortigaunt. Choose vortigaunt: shackled, a "Laborer VLB-..." designation, no train. F2 > Reach out is refused for the first 4 minutes, then works. Stay shackled 10 minutes: do two rebels come and cut you loose (a Free Vortigaunt)? As a human, the Free Vortigaunt is gone from the Resistance list in F4.
   Notes:

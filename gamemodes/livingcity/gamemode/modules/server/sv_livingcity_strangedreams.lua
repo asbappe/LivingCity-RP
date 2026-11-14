@@ -757,6 +757,7 @@ do
     LC.MelonFall = 2.6 -- (seconds from the sky to the ground)
     LC.MelonLead = 0.18 -- (the share that are lead)
     LC.MelonReach = 55
+    LC.MelonBillboard = 3 -- (the forecast's billboards: times a wall poster's size)
     local def = { id = "melons", name = "It's Raining Melons", mood = "happy", secs = 150, lives = 3, need = 12,
         goal = "Watermelons are falling! Stand on a green glow to catch one. A red glow is a lead melon: keep out from under it.",
         timeUp = { "The rain stops", "The last melon lands, the sun comes out, and you wake." },
@@ -787,6 +788,20 @@ do
         g.drops, g.nextDrop = {}, CurTime() + 3
         g.song = LC.StrangeSong("melons")
         Ring(g, 150)
+        -- the city's forecast, on a billboard at each side of the meadow (the owner, 14 November)
+        if LC.DreamBillboard then
+            local c, out = dream.pos, g.half + 30
+            for i = 0, 3 do
+                local yaw = i * 90
+                local at = Vector(c.x + math.cos(math.rad(yaw)) * out, c.y + math.sin(math.rad(yaw)) * out, g.top + 120)
+                local e = LC.DreamBillboard(at, yaw + 180, "melons", "forecast", LC.MelonBillboard)
+                if e then
+                    e.lcDreamGame, e.lcKeepLook = true, true
+                    g.ents[#g.ents + 1] = e
+                    g.boards = (g.boards or 0) + 1
+                end
+            end
+        end
         return true
     end
     def.spawn = SpawnAt
