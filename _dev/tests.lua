@@ -21226,6 +21226,73 @@ ok(not su.lcDreaming and not LC.DreamActive and su:GetNW2Float("lc_unbroken_unti
 ok((LC.DreamsEndured and LC.DreamsEndured(su) or 0) == endured, "and it isn't counted as a dream lived through")
 ok(LC.DreamTest(su, "nosuch") == false, "(no such dream)")
 
+-- the dream flight recorder (sv_livingcity_dreamrec.lua): an editor test is written down for the tester, nothing else ever is
+ok(not LC.DreamRecording(), "the recorder: nothing is recorded with no test under way")
+local startWas0, noticeWas0 = net.Start, LC.Notice
+local function RecSent()
+    local out, kinds = {}, {}
+    for _, m in ipairs(net.sent) do
+        if m.name == "lc_dreamrec" and m.to == su then
+            kinds[#kinds + 1] = m.data[1]
+            for i = 0, (m.data[3] or 0) - 1 do out[#out + 1] = tostring(m.data[5 + i * 3]) .. " " .. tostring(m.data[6 + i * 3]) end
+        end
+    end
+    return table.concat(out, "\n"), kinds
+end
+net.sent = {}
+local okR, dR = LC.DreamTest(su, "melons")
+local rec = LC.DreamRecording()
+ok(okR and rec and rec.ply == su and rec.dream == dR, "the recorder: a test from the editor is recorded")
+LC.Notice(su, "info", "Melons", "Catch them before they land.", 6)
+LC.Notice(a, "info", "Elsewhere", "Not the tester's.", 6)
+hook.Run("PlayerSay", su, "this bit is too fast", false)
+local recProp = ents.Create("prop_physics")
+recProp:SetModel("models/props_junk/watermelon01.mdl")
+recProp:SetPos(dR.pos + Vector(40, 0, 0))
+recProp:Spawn()
+hook.Run("OnEntityCreated", recProp)
+local recFar = ents.Create("prop_physics")
+recFar:SetModel("models/props_c17/oildrum001.mdl")
+recFar:SetPos(dR.pos + Vector(90000, 0, 0))
+recFar:Spawn()
+hook.Run("OnEntityCreated", recFar)
+if IN_USE then hook.Run("KeyPress", su, IN_USE) end
+_run(2.2)
+local recText, recKinds = RecSent()
+local function RecHas(t) return string.find(recText, t, 1, true) ~= nil end
+ok(recKinds[1] == "start" and RecHas("start \"") and RecHas("(melons)"), "the recorder: the tester's computer is told what's being recorded, first")
+ok(RecHas("notice [info, 6s] Melons: Catch them before they land.") and not RecHas("Not the tester's."), "the recorder: a notice to the tester is written down as sent, nobody else's")
+ok(RecHas("you typed: this bit is too fast"), "the recorder: what the tester types is a note in the log")
+ok(RecHas("made prop_physics models/props_junk/watermelon01.mdl at (40, 0, 0)") and not RecHas("oildrum001"), "the recorder: what the dream makes, with its place from the dream point; the city's own elsewhere is left out")
+ok(RecHas("state game.") and RecHas("you at ("), "the recorder: the dream's workings and where the tester is")
+ok(not RecHas("recorder couldn't look"), "(the recorder looked without a hitch)", recText)
+ok(not IN_USE or RecHas("you pressed USE"), "the recorder: the tester's keys")
+recProp:Remove()
+hook.Run("EntityRemoved", recProp)
+if IsValid(recFar) then recFar:Remove() end
+ok(LC.DreamTestStop(su), "(the recorded test, stopped)")
+_run(1.5)
+recText, recKinds = RecSent()
+ok(recKinds[#recKinds] == "end" and RecHas("gone prop_physics models/props_junk/watermelon01.mdl") and RecHas("woke (test)"), "the recorder: what went, the waking, and the end are sent")
+ok(not LC.DreamRecording() and net.Start == startWas0 and LC.Notice == noticeWas0 and not su.lcDreaming, "the recorder: over with the test, and nothing is left wrapped or hooked")
+-- "Record the test" unticked on the tester's computer: a test like any before
+su.GetInfoNum = function(_, name, def) if name == "lc_dreamrec" then return 0 end return def end
+net.sent = {}
+ok(LC.DreamTest(su, "melons") and not LC.DreamRecording() and net.Start == startWas0, "the recorder: with Record the test unticked, a test isn't recorded")
+LC.DreamTestStop(su)
+_run(1.5)
+su.GetInfoNum = nil
+-- a test that can't start leaves nothing behind
+ok(LC.DreamTest(su, "nosuch") == false and not LC.DreamRecording(), "the recorder: a test that doesn't start records nothing")
+-- and a dream that isn't a test (an admin's "dream it now") never is
+local okN, dN = LC.DreamStart("melons", su, false, su, true)
+ok(okN and dN and not dN.test and not LC.DreamRecording() and net.Start == startWas0 and #select(1, RecSent()) == 0, "the recorder: a dream that isn't an editor test is never recorded")
+if dN then
+    if dN.game and LC.DreamGameStop then LC.DreamGameStop(dN, "empty") end
+    LC.DreamWake(dN)
+end
+_run(1.5)
+
 LC.DreamForget()
 LC.RemovePoint(dp)
 for _, p in ipairs({ adm, a, b, su }) do

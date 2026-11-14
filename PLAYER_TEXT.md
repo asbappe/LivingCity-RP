@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version 62d66fe. Admin-only console messages and log lines are left out.
+Made from version d0df7f4. Admin-only console messages and log lines are left out.
 
-12530 lines, from 343 files.
+12569 lines, from 345 files.
 
 ## Contents
 
@@ -93,6 +93,7 @@ Made from version 62d66fe. Admin-only console messages and log lines are left ou
 - [how the dreams' figures move (sv_livingcity_dreamstandins.lua, sv_livingcity_dreamstage.lua)](#how-the-dreams-figures-move-svlivingcitydreamstandinslua-svlivingcitydreamstagelua-cllivingcitydreamactinglua) (8)
 - [cl_livingcity_dreamenforce.lua](#cllivingcitydreamenforcelua-cllivingcitydreamenforcelua) (1)
 - [the nightmare dreams you play, your side (sv_livingcity_dreamgames.lua)](#the-nightmare-dreams-you-play-your-side-svlivingcitydreamgameslua-cllivingcitydreamgameslua) (34)
+- [the dream flight recorder (the tester's side)](#the-dream-flight-recorder-the-testers-side-cllivingcitydreamreclua) (23)
 - [shared dreams, your side (sv_livingcity_dreams.lua)](#shared-dreams-your-side-svlivingcitydreamslua-cllivingcitydreamslua) (33)
 - [secret endings, on your screen (sv_livingcity_endings.lua)](#secret-endings-on-your-screen-svlivingcityendingslua-cllivingcityendingslua) (65)
 - [the Endings menu (superadmins): tune the secret endings live](#the-endings-menu-superadmins-tune-the-secret-endings-live-cllivingcityendingtunelua) (69)
@@ -196,6 +197,7 @@ Made from version 62d66fe. Admin-only console messages and log lines are left ou
 - [the dream plan (who chooses tonight's dream, and how)](#the-dream-plan-who-chooses-tonights-dream-and-how-svlivingcitydreamplanlua) (58)
 - [posters that hint at dreams](#posters-that-hint-at-dreams-svlivingcitydreamposterslua) (51)
 - [The Midnight Rally (a Happy dream you play)](#the-midnight-rally-a-happy-dream-you-play-svlivingcitydreamrallylua) (20)
+- [the dream flight recorder (server side)](#the-dream-flight-recorder-server-side-svlivingcitydreamreclua) (16)
 - [which dream tonight (the rules, and the city's own pick)](#which-dream-tonight-the-rules-and-the-citys-own-pick-svlivingcitydreamruleslua) (13)
 - [shared dreams](#shared-dreams-svlivingcitydreamslua) (72)
 - [sitting out a kind of dream, earned (the owner, 10 November)](#sitting-out-a-kind-of-dream-earned-the-owner-10-november-svlivingcitydreamskiplua) (6)
@@ -1295,7 +1297,7 @@ Made from version 62d66fe. Admin-only console messages and log lines are left ou
 - "Nightmare dreams you play (the Administrator's tablet, under Nightmare; or C > Help > Dreams: dream it now): The Patrol Maze, The Barrel Tower, The Crumbling Floor, Freeze, Citizen. Each builds its own arena at the dream point and removes it afterwards; it fits inside the dream zone (or lc_dream_radius), so give it about 1500 units each way and some headroom for the tower."  (text, line 386)
 - "Propaganda dreams (her tablet, under Happy, as Propaganda; or C > Help > Dreams): Kneel Before Her, Roses for Her, Mirror, Mirror, The Saviour, The Loyalty Quiz, and ten more (Record Harvest, The Union Shift, Careless Talk, The Newsreel, Two Minutes of Hate, The Mass Games, On-the-Spot Guidance, The Scrap Drive, Flowers for the Liberators, Duck and Cover, Ravenholm). Asleep for one with someone else, the Administrator stars herself (tablet > Tonight's dream > Star in propaganda dreams yourself: on or off); otherwise a giant figure of her does. Music goes flat in garrysmod/sound/livingcity/dreams/, named admire, saviour_horde, saviour or quiz (admire1.mp3), or for the ten more their codeword (harvest, shift, spy, newsreel, hate, massgames, guidance, scrap, flowers, duck, ravenholm) or propaganda; her voice lines in dreams/voice/ (saviour_stop1.wav, a .txt beside it for the subtitle). Upload, FastDL sync, map change."  (text, line 387)
 - "Save with the gamemode (Q > Tools > Miscount): spawn a prop, put it where you want it and left click it: it's saved with the map's layout and back every time the map loads. Right click stops saving it. Saved props glow green while the tool is out."  (text, line 388)
-- "Testing a dream: the Miscount Editor's panel, Dreams: test one. Pick any dream and Test it now (just me): you play it at once, awake and alone (the city's people stand in), and Stop the test whenever you like. Nobody asleep is pulled in, it isn't tonight's dream, and nothing you win or lose counts."  (text, line 389)
+- "Testing a dream: the Miscount Editor's panel, Dreams: test one. Pick any dream and Test it now (just me): you play it at once, awake and alone (the city's people stand in), and Stop the test whenever you like. Nobody asleep is pulled in, it isn't tonight's dream, and nothing you win or lose counts. With Record the test ticked there (it is, to begin with), the test is written down for the code chat: when you wake, a folder in garrysmod/data/livingcity/dreamrec/ on your own computer holds log.txt (every text that was on screen, how long it was up and whether that was long enough to read; what the dream made; what you did) and screenshots. Type a note in chat mid-test and it lands in the log at that second. Only a test from the editor is ever recorded."  (text, line 389)
 - "Civil Protection Commissary (editor fixture): Civil Protection units get grenades, ammunition, armour, bandages and a ration there. lc_cpsupply_cooldown (120), lc_cpsupply_ration (600). If none is placed, the Union Commissary terminal issues them instead."  (text, line 390)
 - "Resistance lab (editor fixture, formerly the workbench): a lab bench and a scientist who makes what the quartermaster doesn't sell (charge cells, firebombs, the foil hat) and decodes chips, changes faces and pulls the chip. Place one in every rebel base. lc_lab_price (0.6 of the dealer's price), lc_lab_shutdown (600 seconds closed after a Civil Protection unit finds it)."  (text, line 391)
 - "How it feels (editor panel, How it feels): lc_fov (75, the widest view anyone gets; 0 leaves it to each player), lc_eye_height (61; GMod's default is 64), lc_view_bob (with lc_view_bob_amount, 100%, for how strong), lc_quiet_hud, lc_respawn_secs (12, how long the death card shows), lc_word_gets_around."  (text, line 392)
@@ -2255,6 +2257,52 @@ Made from version 62d66fe. Admin-only console messages and log lines are left ou
 - "NOW! Throw your flowers (jump)"  (text, line 577)
 - "Move! His back is turned."  (text, line 583)
 - "They're afraid of you: catch them! (%d)"  (message, line 585)
+
+## the dream flight recorder (the tester's side) (cl_livingcity_dreamrec.lua)
+
+`gamemodes/livingcity/gamemode/modules/client/cl_livingcity_dreamrec.lua`
+
+
+> Note for you (not shown in game): wrap
+
+- "in the world"  (text, line 188)
+
+> Note for you (not shown in game): the game's entity emit sound moment
+
+- "from {GetClass}"  (text, line 193)
+
+> Note for you (not shown in game): part of: report
+
+- "Map %s, %s. Length %.1f seconds. Ended: %s. The dreams' limit (lc_dream_max_minutes): %s."  (message, line 294)
+- "Screen %dx%d. Screenshots: %d (shot_SSSS_T.jpg: the second and tenth it was taken). Lowest frames a second: %s."  (message, line 295)
+- "How to read this (for the code chat):"  (text, line 297)
+- "[seconds into the dream] kind, then what happened. Places are (x, y, z) from the dream point, in units (a person is 72 tall)."  (text, line 298)
+- "From the server: start, made/gone (what the dream put out and took away), sound, notice (as sent: kind, seconds asked), state"  (text, line 299)
+- "(the dream's own workings; "at 45.0s" is a moment of the dream), nw (networked about the tester), net (messages by name),"  (text, line 300)
+- "you (the tester: place, looking at, pressed, used, idle, typed: a note typed in chat mid-dream), near, end."  (text, line 301)
+- "From the tester's screen: text (seconds it was readable, then the words; "screen" is drawn on the HUD, "world" is on something"  (text, line 302)
+- "in the dream, "window" is in a window), chat, sound, shot, fps."  (text, line 303)
+- "== TEXT ON SCREEN, IN ORDER (the pacing check) =="  (text, line 305)
+- "Reading time: 1 second to notice a text, then %.1f words a second. TOO FAST: up for under 80%% of that. tight: under it."  (message, line 306)
+- "Texts: %d. TOO FAST: %d. tight: %d. Longest stretch with no new text of three words or more: %.1fs (from %.1fs)."  (message, line 307)
+- "start    shown  words  needs  verdict   text"  (text, line 308)
+- "[%6.1f] %6.1fs %4dw %6s  %-8s  "%s" (%s, %s)"  (message, line 310)
+- "On screen nearly the whole time (the HUD: not judged):"  (text, line 314)
+- ""{text}" ({src}, {font})"  (text, line 315)
+
+> Note for you (not shown in game): part of: finish
+
+- "Saved on this computer: {where} (log.txt and {shots} screenshots).{or} Zip the folder and give it to the code chat."  (text, line 344)
+- "Dream recording"  (on-screen notice, line 346)
+- "[Dream recording]"  (chat message, line 347)
+
+> Note for you (not shown in game): (the server never said it was over: out of the dream for ten seconds is the end)
+
+- "the tester was out of the dream (the server never said it was over)"  (text, line 389)
+
+> Note for you (not shown in game): part of: start
+
+- "another test began"  (text, line 401)
 
 ## shared dreams, your side (sv_livingcity_dreams.lua) (cl_livingcity_dreams.lua)
 
@@ -8878,6 +8926,57 @@ Made from version 62d66fe. Admin-only console messages and log lines are left ou
 - "Carrying: {item} (Jump to use)"  (text, line 497)
 - "off the road"  (text, line 498)
 
+## the dream flight recorder (server side) (sv_livingcity_dreamrec.lua)
+
+`gamemodes/livingcity/gamemode/modules/server/sv_livingcity_dreamrec.lua`
+
+
+> Note for you (not shown in game): part of: spill
+
+- "at {pos}"  (text, line 98)
+
+> Note for you (not shown in game): part of: diff
+
+- "keeps changing (a clock or a count): not written again until it settles"  (text, line 179)
+- "settled at {v}"  (text, line 182)
+
+> Note for you (not shown in game): part of: near
+
+- "things of the dream's; nearest: {nearSaid}"  (spoken line, line 289)
+
+> Note for you (not shown in game): (net messages: by name; one that goes out every time is named once)
+
+- "(goes out all the time: not written again)"  (text, line 333)
+
+> Note for you (not shown in game): (put back only what's still ours: anything wrapped over it since stays, and ours does nothing with no recording)
+
+- "the tester left"  (text, line 381)
+
+> Note for you (not shown in game): (safeguards: a test that never began, or a dream that went without a word, isn't waited for)
+
+- "the dream was gone"  (text, line 388)
+
+> Note for you (not shown in game): A test is about to start (sv_livingcity_dreamtest.lua, before the dream is made, so everything it puts out from the very first is seen). Nothing reaches the tester until it really starts.
+
+- "another test began"  (text, line 415)
+
+> Note for you (not shown in game): hook
+
+- "the tester"  (text, line 451)
+- "the world"  (text, line 457)
+- "(from {from})"  (quest step, line 459)
+- "the tester left"  (text, line 496)
+- ""{title}" ({id}), {mood}, dream point at {or}"  (text, line 507)
+- "woke: {or}"  (text, line 514)
+
+> Note for you (not shown in game): (the tester's own waking, a moment later, closes the recording; this is in case it never comes)
+
+- "the dream ended"  (text, line 520)
+
+> Note for you (not shown in game): Notices to the tester, and the names of the net messages going out.
+
+- "[{kind}{or}] {title}: {text}"  (text, line 528)
+
 ## which dream tonight (the rules, and the city's own pick) (sv_livingcity_dreamrules.lua)
 
 `gamemodes/livingcity/gamemode/modules/server/sv_livingcity_dreamrules.lua`
@@ -9255,35 +9354,35 @@ Made from version 62d66fe. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): Every dream there is, by mood (Happy, Neutral, Nightmare; propaganda under Happy): { id, name, mood, kind }.
 
-- "Propaganda: {name}"  (name, line 42)
+- "Propaganda: {name}"  (name, line 44)
 
 > Note for you (not shown in game): Into a dream now, alone and awake. True and the dream, or false and why not.
 
-- "Only those who may use the Miscount Editor can test dreams."  (text, line 59)
-- "No such dream."  (text, line 61)
-- "A dream is already under way. Wait for it to end, or wake everyone (C > Help > Dreams)."  (text, line 62)
-- "You're already dreaming."  (text, line 63)
-- "You have to be alive to dream."  (text, line 64)
-- "Get out of bed first (a test is dreamt awake)."  (text, line 65)
+- "Only those who may use the Miscount Editor can test dreams."  (text, line 61)
+- "No such dream."  (text, line 63)
+- "A dream is already under way. Wait for it to end, or wake everyone (C > Help > Dreams)."  (text, line 64)
+- "You're already dreaming."  (text, line 65)
+- "You have to be alive to dream."  (text, line 66)
+- "Get out of bed first (a test is dreamt awake)."  (text, line 67)
 
 > Note for you (not shown in game): part of: dream test
 
-- "The dream couldn't start (see the server's errors)."  (text, line 73)
-- "The dream couldn't start."  (text, line 77)
+- "The dream couldn't start (see the server's errors)."  (text, line 77)
+- "The dream couldn't start."  (text, line 81)
 
 > Note for you (not shown in game): Out of the test now (the dream ends, since nobody else is in it but stand-ins).
 
-- "You aren't dreaming."  (text, line 86)
-- "This isn't a test: wake up from C > Settings > Shared dreams once you're out of it."  (text, line 88)
+- "You aren't dreaming."  (text, line 90)
+- "This isn't a test: wake up from C > Settings > Shared dreams once you're out of it."  (text, line 92)
 
 > Note for you (not shown in game): the game answering something done in a window (lc_dream_test)
 
-- "Dream test"  (on-screen notice, line 105)
-- "Dream test"  (on-screen notice, line 108)
-- "Only those who may use the Miscount Editor can test dreams."  (on-screen notice, line 108)
-- "Dream test"  (on-screen notice, line 113)
-- "Testing "{arg}". Stop whenever you like: the editor's Stop the test, or C > Settings > Shared dreams. Nothing you win or lose counts."  (on-screen notice, line 113)
-- "Dream test"  (on-screen notice, line 115)
+- "Dream test"  (on-screen notice, line 109)
+- "Dream test"  (on-screen notice, line 112)
+- "Only those who may use the Miscount Editor can test dreams."  (on-screen notice, line 112)
+- "Dream test"  (on-screen notice, line 117)
+- "Testing "{arg}". Stop whenever you like: the editor's Stop the test, or C > Settings > Shared dreams. Nothing you win or lose counts."  (on-screen notice, line 117)
+- "Dream test"  (on-screen notice, line 119)
 
 ## the Combine's dropship (sv_livingcity_dropship.lua)
 

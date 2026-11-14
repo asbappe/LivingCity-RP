@@ -2002,6 +2002,20 @@ Type them in the server console on the host panel, or in your own game console (
   Notes:
 - [ ] **Job board:** place "Fixture: job board" in the city, on rebel ground and on Combine ground. Do the lists show, and does E open your jobs?
   Notes:
+
+## The dream flight recorder (14 November, last)
+
+- [ ] **A recorded test:** Q menu > the editor > Dreams: test one. *Record the test (for the code chat)* is ticked. Test any dream, play it, and wake (or Stop the test). A notice and a chat line say where it was saved.
+  Notes:
+- [ ] **The folder:** on your PC, `~/.steam/steam/steamapps/common/GarrysMod/garrysmod/data/livingcity/dreamrec/` has one folder for the test, with `log.txt` and `shot_*.jpg`. Open `log.txt`: the pacing check on top lists the dream's texts with TOO FAST / tight / ok.
+  Notes:
+- [ ] **Notes as you play:** type something in chat during a test ("this bit lost me"): it is in the log as `you typed:` at that second.
+  Notes:
+- [ ] **Does it slow the dream?** If a recorded test feels choppier than an unrecorded one, say so (and try the screenshot slider at 0).
+  Notes:
+- [ ] **Unticked:** untick *Record the test*, test a dream: no new folder, no notice.
+  Notes:
+- [ ] **Send one:** zip a test's folder and give it to the code chat: `cd ~/.steam/steam/steamapps/common/GarrysMod/garrysmod/data/livingcity/dreamrec && zip -r ~/dreamrec.zip FOLDER_NAME`
 - [ ] **The lab:** only charge cells, firebombs and the foil hat listed (plus decode, new face, pull the chip). Guns and the rest only at the quartermaster.
   Notes:
 - [ ] **A new face:** forty seconds, black screen, whirring and wet sounds, a clang, a ding at the end. Too long, too short, too gross?

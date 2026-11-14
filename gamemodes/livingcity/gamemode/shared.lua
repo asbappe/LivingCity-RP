@@ -104,6 +104,7 @@ LC_MODULES = {
         "sv_livingcity_dreamrally", -- (The Midnight Rally: a buggy race, a Happy dream you play)
         "sv_livingcity_dreamcourse", -- (The Fitness Test: an obstacle course, a Happy dream you play)
         "sv_livingcity_dreamtest", -- (testing any dream from the Living City Editor, alone and awake)
+        "sv_livingcity_dreamrec", -- (the dream flight recorder: an editor test written down for the code chat)
         "sv_livingcity_dreamplan", -- (who chooses tonight's dream: her kind now and then, the city by sociostability, in turn; the black screen's line)
         "sv_livingcity_desperation", -- (the outnumbered Combine fight dirtier: SMGs, grenades, energy balls, a little more damage)
         "sv_livingcity_imbalance", -- (one side's players far outnumbering the other's: more NPCs for the outnumbered, and the Combine's reaction force)
@@ -292,6 +293,7 @@ LC_MODULES = {
         "cl_livingcity_endings",
         "cl_livingcity_endingtune", -- (the Endings menu)
         "cl_livingcity_dreams", -- (shared dreams: opting out, waking up, the admins' window)
+        "cl_livingcity_dreamrec", -- (the dream flight recorder: what was on screen, and the saved recording)
         "cl_livingcity_dreamgames", -- (the dreams you play: tokens, lives, time, on screen)
         "cl_livingcity_vortwar", -- (the vortigaunts' purple light, the tug-of-war meter)
         "cl_livingcity_strangedreams", -- (the strange dreams: the cheese dream's voices and colours, wings' rings; after dreamgames)
