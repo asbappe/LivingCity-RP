@@ -1825,7 +1825,7 @@ function LC.DismissFollower(npc, st, quiet)
         st.returning, st.unmanaged, st.expires = true, true, CurTime() + 60
     end
     if st.foe then DropFoe(npc, st, CurTime()) end
-    if not quiet and IsValid(leader) then leader:ChatPrint("[Resistance] '" .. LC.NPCStr(npc, "lc_pname", "Right") .. ". I'll head back.'") end
+    if not quiet and IsValid(leader) then LC.ResistanceSay(leader, npc, "head_back", LC.NPCStr(npc, "lc_pname", "") .. ":") end
 end
 
 local function Recruit(ply, npc, st)
@@ -1834,18 +1834,18 @@ local function Recruit(ply, npc, st)
         return
     end
     if st.follow or st.raid or st.quartermaster or st.post then
-        ply:ChatPrint(st.post and "[Resistance] 'I'm on watch. Find someone else.'" or "[Resistance] They're busy.")
+        LC.ResistanceSay(ply, npc, st.post and "on_watch" or "busy")
         return
     end
     if RankOf(ply) < 2 then
-        ply:ChatPrint("[Resistance] '" .. "Who are you? Get someone who's earned it to ask me." .. "' (Members and up can lead fighters.)")
+        LC.ResistanceSay(ply, npc, "not_earned", nil, "(Members and up can lead fighters.)")
         return
     end
     -- (the owner, 9 November: squads shrink as more players join the side, sv_livingcity_squads.lua)
     local limit = LC.SquadLimit and LC.SquadLimit(ply) or MAX_FOLLOWERS
     if #FollowersOf(ply) >= limit then
         local text = LC.SquadFullText and LC.SquadFullText(ply) or ("You've got " .. limit .. " with you already.")
-        ply:ChatPrint("[Resistance] 'Any more and you're a parade.' " .. text)
+        LC.ResistanceSay(ply, npc, "parade", nil, text)
         if LC.Notice then LC.Notice(ply, "warn", "Squad", text, 8) end
         return
     end
@@ -1915,16 +1915,17 @@ hook.Add("PlayerUse", "LivingCityRebelsUse", function(ply, ent)
     if not IsResistance(ply) then
         if st.quartermaster and not LooksCombine(ply) then
             -- (the owner, 9 November: a stranger can sell or give him arms, in his own window)
-            ply:ChatPrint("[Resistance] The quartermaster looks you over. 'I don't know you. But if you've brought something for the fight, I'll take it.'")
+            LC.ResistanceSay(ply, ent, "qm_stranger", "The quartermaster looks you over.")
             if LC.OpenMarket then LC.OpenMarket(ply) end
         end
         return false
     end
     if st.quartermaster then
-        ent:EmitSound(Vo(st, Pick({ "hi01", "hi02" })), 70)
-        ply:ChatPrint("[Quartermaster] 'What do you need?' (Work: F4. Fighters: E on any of ours here, to bring them along.)")
+        if not LC.ResistanceSay(ply, ent, "qm_greet", nil, "(Work: F4. Fighters: E on any of ours here, to bring them along.)", "[Quartermaster] ") then
+            ent:EmitSound(Vo(st, Pick({ "hi01", "hi02" })), 70)
+        end
         if LC.HasItem and (LC.HasItem(ply, "data_chip") or LC.HasItem(ply, "master_chip")) then
-            ply:ChatPrint("[Quartermaster] 'Is that a Combine chip? Don't wave it about. Take it to the lab, the doc will decode it.'")
+            LC.ResistanceSay(ply, ent, "qm_chip", nil, nil, "[Quartermaster] ")
         end
         if LC.OpenMarket then LC.OpenMarket(ply) end
         return false
@@ -1957,7 +1958,7 @@ LC.SlashCommands.meet = function(ply)
             fst.goingTo = nil
         end
     end
-    ply:ChatPrint("[Resistance] 'We'll meet you there.' They go on ahead, acting casual, and wait for you near the job's marker.")
+    LC.ResistanceSay(ply, fs[1], "meet_there", nil, "They go on ahead, acting casual, and wait for you near the job's marker.")
 end
 hook.Add("PlayerSay", "LivingCitySquadOrders", function(ply, text)
     local t = string.lower(string.Trim(text or ""))

@@ -35,8 +35,6 @@ LC.MedicDead = LC.MedicDead or {}
 util.AddNetworkString("lc_medic_menu")
 util.AddNetworkString("lc_medic_buy")
 
-local CHARGE = "\"I hate to charge, but these don't grow on trees.\""
-
 local function Vo(st, name) return "vo/npc/" .. (st and st.gender or "male") .. "01/" .. name .. ".wav" end
 
 -- The medic's own clothes: the same face, from the medic set.
@@ -108,11 +106,10 @@ function LC.UseMedic(ply, npc)
     if LC.Face then LC.Face(npc, ply:GetPos()) end
     local hp, max = ply:Health(), ply:GetMaxHealth()
     if hp >= max then
-        npc:EmitSound(Vo(st, "hi0" .. math.random(1, 2)), 70)
-        ply:ChatPrint("[Medic] \"You look fine to me. Come back when you're bleeding.\"")
+        if not LC.ResistanceSay(ply, npc, "medic_fine", nil, nil, "[Medic] ") then npc:EmitSound(Vo(st, "hi0" .. math.random(1, 2)), 70) end
         return false
     end
-    npc:EmitSound(Vo(st, "health0" .. math.random(1, 5)), 70)
+    if not LC.ResistanceSay(ply, npc, "medic_hurt", nil, nil, "[Medic] ") then npc:EmitSound(Vo(st, "health0" .. math.random(1, 5)), 70) end
     net.Start("lc_medic_menu")
     net.WriteEntity(npc)
     net.WriteUInt(LC.MedicVialPrice, 8) net.WriteUInt(LC.MedicVialHeal, 8)
@@ -131,11 +128,14 @@ function LC.MedicBuy(ply, what)
     if what == "kit" then price, heal = LC.MedicKitPrice, LC.MedicKitHeal elseif what ~= "vial" then return false end
     local max = ply:GetMaxHealth()
     if ply:Health() >= max then return false, "\"You look fine to me.\"" end
-    if not LC.Credits or LC.Credits(ply) < price then return false, string.format("\"%d credits. You don't have them, friend. Sorry.\"", price) end
+    if not LC.Credits or LC.Credits(ply) < price then
+        LC.ResistanceSay(ply, npc, "medic_broke", nil, string.format("(%d credits.)", price), "[Medic] ")
+        return false
+    end
     LC.AddCredits(ply, -price, "the Resistance's medic")
     ply:SetHealth(math.min(max, ply:Health() + heal))
     ply:EmitSound(what == "kit" and "items/medshot4.wav" or "items/smallmedkit1.wav", 60)
-    ply:ChatPrint("[Medic] " .. CHARGE)
+    LC.ResistanceSay(ply, npc, "medic_charge", nil, nil, "[Medic] ")
     hook.Run("LivingCityMedicHealed", ply, npc, what)
     return true
 end

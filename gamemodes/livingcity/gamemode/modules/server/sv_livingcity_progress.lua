@@ -98,9 +98,36 @@ function LC.UseCloseCall(ply)
     return left
 end
 
+-- Where a close call wakes you: the clinic (an editor "work" point for the Clinic Medic job), the one
+-- nearest where you fell, so the infirmary the notice speaks of is real (the owner, 13 November playtest:
+-- a unit woke at Combine HQ). The Resistance, vortigaunts, stalkers and the infested wake where their
+-- side does, as before (a rebel isn't carried into a Union clinic). nil: no clinic on the map.
+function LC.CloseCallWakeSpot(ply, fellAt)
+    if not IsValid(ply) or not LC.PointsOfKind then return nil end
+    local f = ply:GetNW2String("lcf_faction", "")
+    if f == "resistance" or f == "vortigaunt" or (LC.PlayerIsStalker and LC.PlayerIsStalker(ply)) or (LC.PlayerIsZombie and LC.PlayerIsZombie(ply)) then return nil end
+    if LC.IsVortChar and LC.IsVortChar(ply) then return nil end
+    local job = LCJ and LCJ.ById and LCJ.ById.medic
+    local list = job and LC.PointsOfKind("work", job.num) or {}
+    local best, bd
+    for _, pt in ipairs(list) do
+        local d = fellAt and pt.pos:DistToSqr(fellAt) or 0
+        if not bd or d < bd then best, bd = pt, d end
+    end
+    if not best then return nil end
+    return LC.ReleaseSpot and LC.ReleaseSpot(best.pos, ply) or (best.pos + Vector(0, 0, 4))
+end
+hook.Add("PlayerDeath", "LivingCityCloseCallWhere", function(ply) if IsValid(ply) then ply.lcFellAt = ply:GetPos() end end)
+
 hook.Add("PlayerSpawn", "LivingCityCloseCall", function(ply)
     if ply.lcCloseCall then
         ply.lcCloseCall = nil
+        -- to the clinic, once the faction has put them at its spawn
+        timer.Simple(0.3, function()
+            if not IsValid(ply) or not ply:Alive() then return end
+            local p = LC.CloseCallWakeSpot(ply, ply.lcFellAt)
+            if p then ply:SetPos(p) end
+        end)
         ply:SetNW2Float("lc_recovering_until", CurTime() + cvRecover:GetFloat() * 60)
         local left = LC.CloseCallsLeft(ply)
         timer.Simple(1.5, function()

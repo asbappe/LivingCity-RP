@@ -145,10 +145,14 @@ local function Say(line)
     local clip = LC.CubbageClip(line.id)
     if clip and IsValid(A.man) then A.man:EmitSound(clip, 90, 100) end
     if clip and LC.Freq7CutIn then LC.Freq7CutIn(clip, line.words) end
+    local heard = {}
     for _, h in ipairs(LC.SpeechAnswerHearers(A.pos)) do
         local p, how = h[1], h[2]
+        heard[p] = true
         p:ChatPrint((how == "radio" and "[Freq 7] Colonel Cubbage: " or "[Colonel Cubbage, at the camp] ") .. line.words)
     end
+    -- and from every loudspeaker the Resistance's hackers have spliced into (sv_livingcity_speakerhack.lua)
+    if LC.SpeakerHackSay then LC.SpeakerHackSay(clip, line.words, heard) end
     local secs = clip and LC.AnnounceKnownSecs and LC.AnnounceKnownSecs(clip) or 0
     if secs <= 0.2 then
         local n = 0

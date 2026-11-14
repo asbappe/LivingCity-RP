@@ -117,6 +117,82 @@ local function BuildBoard(parent, data)
         end
     end
 
+    -- The Resistance's planned operations, right on the board (the owner, 13 November playtest: "It's like 5
+    -- menus nested in depth by the end of it ... can we just move that to the board"): join, back out or
+    -- call it off; or, for whoever may plan one, each target with its three times as buttons. (F2 >
+    -- Resistance > Operations still has it too.)
+    if data.faction == "resistance" then
+        local m = util.JSONToTable(LocalPlayer():GetNW2String("lc_op_menu", "") or "") or {}
+        local function Act(...) if LC_CL.SendAction then LC_CL.SendAction(...) end Close() end
+        local card = vgui.Create("DPanel", scroll)
+        card:Dock(TOP)
+        card:DockMargin(0, 0, 0, 10)
+        card:DockPadding(14, 30, 10, 10)
+        card.Paint = function(self, w, h)
+            draw.RoundedBox(4, 0, 0, w, h, Color(30, 28, 24, 240))
+            draw.RoundedBox(0, 0, 0, 3, h, Color(200, 90, 70))
+            draw.SimpleText("PLANNED OPERATIONS", "DermaDefault", 14, 10, DIM)
+        end
+        local function Line(text, col)
+            local l = vgui.Create("DLabel", card)
+            l:Dock(TOP)
+            l:SetWrap(true)
+            l:SetAutoStretchVertical(true)
+            l:SetTextColor(col or INK)
+            l:SetText(text)
+            return l
+        end
+        local function Buttons(list)
+            local row = vgui.Create("DPanel", card)
+            row:Dock(TOP)
+            row:DockMargin(0, 4, 0, 0)
+            row:SetTall(26)
+            row.Paint = function() end
+            for _, b in ipairs(list) do
+                local btn = vgui.Create("DButton", row)
+                btn:Dock(LEFT)
+                btn:DockMargin(0, 0, 6, 0)
+                btn:SetWide(b.w or 110)
+                btn:SetText(b.text)
+                btn.DoClick = b.fn
+            end
+        end
+        if m.plan then
+            local p = m.plan
+            Line(tostring(p.label))
+            Line(string.format("Planned by %s. %s. %d joined.", tostring(p.by), p.waiting and "Waiting for the streets to quiet" or ("In " .. math.ceil((p.left or 0) / 60) .. " min"), p.joined or 0), DIM)
+            local list = { { text = m.joined and "Back out" or "Join it", fn = function() Act("joinop") end } }
+            if m.can then list[#list + 1] = { text = "Call it off", fn = function() Act("cancelop") end } end
+            Buttons(list)
+        elseif m.can and (m.wait or 0) > 0 then
+            Line(string.format("Too soon after the last one: %d min.", math.ceil(m.wait / 60)), DIM)
+        elseif m.can and #(m.targets or {}) > 0 then
+            Line("Plan one: pick a target and when. Everyone who joins is rewarded; word may leak to Civil Protection.", DIM)
+            for i, label in ipairs(m.targets) do
+                Line(label)
+                Buttons({
+                    { text = "In 2 minutes", fn = function() Act("planop", i .. ":2") end },
+                    { text = "In 5 minutes", fn = function() Act("planop", i .. ":5") end },
+                    { text = "In 10 minutes", fn = function() Act("planop", i .. ":10") end },
+                })
+            end
+        elseif m.can then
+            Line("Nothing to hit right now: no terminal, screen, prisoner or drop.", DIM)
+        else
+            Line("Nothing planned. " .. tostring(m.why or ""), DIM)
+        end
+        card:SetTall(60)
+        -- (as tall as what's in it, once the lines have wrapped)
+        card.PerformLayout = function(self, w, h)
+            local bottom = 0
+            for _, c in ipairs(self:GetChildren()) do
+                local _, y = c:GetPos()
+                bottom = math.max(bottom, y + c:GetTall())
+            end
+            if bottom > 0 and math.abs(bottom + 10 - h) > 1 then self:SetTall(bottom + 10) end
+        end
+    end
+
     if data.wait and data.wait > 0 and not data.active then
         local w = vgui.Create("DLabel", scroll)
         w:Dock(TOP)

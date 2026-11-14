@@ -208,7 +208,9 @@ LC_MODULES = {
         "sv_livingcity_vort",
         "sv_livingcity_vortwork", -- (things to do as a vortigaunt, and the freed ones' camp life)
         "sv_livingcity_vortstart", -- (a new life as a vortigaunt, chosen at the start; reaching out, the rescue)
+        "sv_livingcity_rebelvoice", -- (what the Resistance's people say to you, recordable: sound/livingcity/resistance/)
         "sv_livingcity_rebelmedic", -- (the Resistance's medic in each rebel territory: heals for a few credits)
+        "sv_livingcity_speakerhack", -- (a utility box under every loudspeaker: Hackers splice the Colonel onto the PA)
         "sv_livingcity_weeds", -- (weeds on open ground, the Groundskeeper, weedkiller as poison)
         "sv_livingcity_cleanup", -- (the infestation's growths, Infestation Cleanup, the firebomb, barnacles, fouled filters)
         "sv_livingcity_cityadmin", -- (the City Administrator: the election, the office, the bodyguard; idle players)

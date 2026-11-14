@@ -836,3 +836,36 @@ Odessa Cubbage, alive and well, at the Resistance's camp a few minutes after her
 | [ ] | `answer_mood_content1.wav` | her `speech_mood_content` | Rested, fed and calm, she says. Look around you. Does that look like anyone you know? |
 | [x] | `answer_slogan1.wav` | her `speech_slogan` | Love your neighbour, hate the traitor, she says. We agree. Ask yourself who sold this city. |
 | [ ] | `answer_close1.wav` | (his closing) | That's all from me. Keep your heads down, your eyes open, and your door unlocked for a friend. We're closer than she thinks. |
+
+## 13. The Resistance's people
+
+What a fighter, a lookout, the quartermaster and the medic say to you (sv_livingcity_rebelvoice.lua): a man's take and a woman's, as for named citizens. Folder: **`garrysmod/sound/livingcity/resistance/`**. Played from the one saying it. Without a recording, Half-Life 2's own rebel voice where there was one, and the words show in chat.
+
+| Done | File | Who | Says |
+|---|---|---|---|
+| [x] | `busy_male1.wav` | a fighter or lookout | I'm busy. Ask someone else. |
+| [x] | `busy_female1.wav` | a fighter or lookout | I'm busy. Ask someone else. |
+| [x] | `head_back_male1.wav` | a fighter or lookout | Right. I'll head back. |
+| [x] | `head_back_female1.wav` | a fighter or lookout | Right. I'll head back. |
+| [x] | `medic_broke_male1.wav` | the medic | You don't have the credits, friend. Sorry. |
+| [x] | `medic_broke_female1.wav` | the medic | You don't have the credits, friend. Sorry. |
+| [x] | `medic_charge_male1.wav` | the medic | I hate to charge, but these don't grow on trees. |
+| [x] | `medic_charge_female1.wav` | the medic | I hate to charge, but these don't grow on trees. |
+| [x] | `medic_fine_male1.wav` | the medic | You look fine to me. Come back when you're bleeding. |
+| [x] | `medic_fine_female1.wav` | the medic | You look fine to me. Come back when you're bleeding. |
+| [x] | `medic_hurt_male1.wav` | the medic | Hurt? I can patch you up. |
+| [x] | `medic_hurt_female1.wav` | the medic | Hurt? I can patch you up. |
+| [x] | `meet_there_male1.wav` | a fighter or lookout | We'll meet you there. |
+| [x] | `meet_there_female1.wav` | a fighter or lookout | We'll meet you there. |
+| [x] | `not_earned_male1.wav` | a fighter or lookout | Who are you? Get someone who's earned it to ask me. |
+| [x] | `not_earned_female1.wav` | a fighter or lookout | Who are you? Get someone who's earned it to ask me. |
+| [x] | `on_watch_male1.wav` | a fighter or lookout | I'm on watch. Find someone else. |
+| [x] | `on_watch_female1.wav` | a fighter or lookout | I'm on watch. Find someone else. |
+| [x] | `parade_male1.wav` | a fighter or lookout | Any more and you're a parade. |
+| [x] | `parade_female1.wav` | a fighter or lookout | Any more and you're a parade. |
+| [x] | `qm_chip_male1.wav` | the quartermaster | Is that a Combine chip? Don't wave it about. Take it to the lab, the doc will decode it. |
+| [x] | `qm_chip_female1.wav` | the quartermaster | Is that a Combine chip? Don't wave it about. Take it to the lab, the doc will decode it. |
+| [x] | `qm_greet_male1.wav` | the quartermaster | What do you need? |
+| [x] | `qm_greet_female1.wav` | the quartermaster | What do you need? |
+| [x] | `qm_stranger_male1.wav` | the quartermaster | I don't know you. But if you've brought something for the fight, I'll take it. |
+| [x] | `qm_stranger_female1.wav` | the quartermaster | I don't know you. But if you've brought something for the fight, I'll take it. |

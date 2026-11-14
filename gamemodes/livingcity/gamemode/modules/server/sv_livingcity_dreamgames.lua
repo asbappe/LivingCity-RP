@@ -174,6 +174,24 @@ end
 -- Dreamers in the game: lives, the start, being caught, winning
 ------------------------------------------------------------------------
 
+-- The black card before a dream (the owner, 13 November: "a black screen before every dream that explains
+-- it ... what the dream is (the idea), the rules, how to win, and how to lose (or that it can't be won or
+-- lost)"). Four lines, from the dream's own idea/win/lose if it has them, else made from what it is:
+-- its mood, its goal (the rules), its lives and its time. Shown for LC_CL.DreamCardSecs on the client.
+local MOOD_IDEA = { nightmare = "A nightmare.", happy = "A happy dream.", neutral = "A strange dream.", propaganda = "A propaganda dream, on her tablet." }
+function LC.DreamIntro(def)
+    if not def then return nil end
+    local mins = def.secs and math.max(1, math.floor(def.secs / 60 + 0.5)) or nil
+    local prop = def.propaganda or (LC.PropagandaDreams and LC.PropagandaDreams[def.id])
+    local idea = def.idea or ((prop and MOOD_IDEA.propaganda) or MOOD_IDEA[def.mood or ""] or "A dream.")
+    local win = def.win or ("Do what the rules say before the dream ends" .. (mins and (" (about " .. mins .. " minute" .. (mins == 1 and "" or "s") .. ")") or "") .. ".")
+    local lose
+    if def.lose then lose = def.lose
+    elseif (def.lives or 0) > 0 then lose = string.format("Lose %s and you're out of it (you can wake, or watch the rest).", def.lives == 1 and "your one life" or ("all " .. def.lives .. " lives"))
+    else lose = "It can't be lost: it ends when the time is up." end
+    return { idea = idea, rules = def.goal or "", win = win, lose = lose }
+end
+
 local function Send(g, t, who)
     net.Start("lc_dreamgame")
     net.WriteTable(t)
@@ -1089,7 +1107,8 @@ function LC.DreamGameStart(dream)
         elseif p == g.star then
             p.lcDreamGame, p.lcDreamStar = def.id, true
             def.starring(g, p)
-            local t = { k = "start", id = def.id, name = def.name, goal = def.starGoal or def.goal, ends = g.ends, lives = 1, maxLives = 1, star = true }
+            local t = { k = "start", id = def.id, name = def.name, goal = def.starGoal or def.goal, ends = g.ends, lives = 1, maxLives = 1, star = true,
+                card = { idea = "You're the star of this dream: what you say in chat, the dreamers see.", rules = def.starGoal or def.goal or "", win = "Play your part until it ends.", lose = "You can't lose it." } }
             for k, v in pairs(hello) do t[k] = v end
             Send(g, t, p)
             Notice(p, "info", def.name .. ": you're the star", def.starGoal or def.goal, 10)
@@ -1100,7 +1119,7 @@ function LC.DreamGameStart(dream)
             g.pl[p] = { lives = def.lives, start = at, yaw = yaw }
             p.lcDreamGame = def.id
             ToStart(g, p, 3)
-            local t = { k = "start", id = def.id, name = def.name, goal = def.goal, ends = g.ends, lives = def.lives, maxLives = def.lives }
+            local t = { k = "start", id = def.id, name = def.name, goal = def.goal, ends = g.ends, lives = def.lives, maxLives = def.lives, card = LC.DreamIntro(def) }
             for k, v in pairs(hello) do t[k] = v end
             Send(g, t, p)
             Notice(p, "warn", def.name, def.goal, 10)
@@ -1132,7 +1151,7 @@ function LC.DreamGameJoin(g, p)
     g.pl[p] = { lives = def.lives, start = at, yaw = yaw, late = true }
     p.lcDreamGame = def.id
     ToStart(g, p, 4)
-    local t = { k = "start", id = def.id, name = def.name, goal = def.goal, ends = g.ends, lives = def.lives, maxLives = def.lives }
+    local t = { k = "start", id = def.id, name = def.name, goal = def.goal, ends = g.ends, lives = def.lives, maxLives = def.lives, card = LC.DreamIntro(def) }
     for k, v in pairs(hello) do t[k] = v end
     Send(g, t, p)
     Notice(p, "warn", def.name .. " (already under way)", def.goal, 10)

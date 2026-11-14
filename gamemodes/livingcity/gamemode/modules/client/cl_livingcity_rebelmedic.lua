@@ -21,7 +21,7 @@ net.Receive("lc_medic_menu", function()
         { label = string.format("A large medkit: %d health for %d credits", kh, kp), run = function() Buy("kit") end, disabled = credits < kp },
         { label = "Leave", run = function() end },
     }
-    local note = string.format("\"Hurt? I can patch you up.\" You have %d credits.", credits)
+    local note = string.format("You have %d credits.", credits)
     if LC_CL.OpenSituation and not (LC_CL.SituationWindows and LC_CL.SituationWindows()) then
         LC_CL.OpenSituation({ id = "medic", title = "The medic", items = items, note = note,
             stay = function()

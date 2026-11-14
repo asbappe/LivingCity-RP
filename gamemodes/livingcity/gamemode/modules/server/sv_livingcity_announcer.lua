@@ -753,6 +753,8 @@ function LC.VoiceMissing()
         for id in pairs(LC.SpeechAnswerLines) do if not LC.CubbageClip(id) then m[#m + 1] = "answer_" .. id end end
         Row("Colonel Cubbage", "cubbage/", m)
     end
+    -- what the Resistance's people say to you (sv_livingcity_rebelvoice.lua): a man's take and a woman's
+    if LC.ResistanceMissing then Row("The Resistance's people", "resistance/", LC.ResistanceMissing()) end
     return out
 end
 

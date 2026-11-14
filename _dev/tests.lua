@@ -29726,6 +29726,49 @@ section("The owner's 14 November notes: stores, Civil Protection's toughness, th
     else
         ok(false, "a medic could be made")
     end
+    -- a way out of a manhunt: given at Overwatch response, never posted
+    local gg = T("res_goground")
+    ok(gg and not gg.available(reb), "Go to ground is never on the board by itself")
+    local hunted = newPlayer("Hunted14", "resistance")
+    hunted.lcHeat = 0
+    ok(not LC.ManhuntWayOut(hunted), "no manhunt, no Go to ground")
+    -- the black card before a dream: four lines from what the dream is
+    local intro = LC.DreamIntro({ id = "x", name = "X", mood = "nightmare", secs = 180, lives = 3, goal = "Do the thing." })
+    ok(intro and intro.idea == "A nightmare." and intro.rules == "Do the thing." and string.find(intro.lose, "all 3 lives", 1, true) and string.find(intro.win, "3 minutes", 1, true),
+        "a dream's card: what it is, the rules, to win, to lose", intro and (intro.idea .. " | " .. intro.win .. " | " .. intro.lose))
+    local intro2 = LC.DreamIntro({ id = "y", mood = "happy", goal = "g" })
+    ok(intro2 and string.find(intro2.lose, "can't be lost", 1, true), "a dream with no lives can't be lost")
+    -- a close call: the Resistance wake in their camp, not a Union clinic
+    ok(LC.CloseCallWakeSpot(reb, Vector(0, 0, 0)) == nil, "a rebel's close call doesn't wake them in the Union clinic")
+    -- what the Resistance's people say: in chat as before, recordable
+    local said
+    local was2 = reb.ChatPrint
+    reb.ChatPrint = function(_, t) said = t end
+    LC.ResistanceSay(reb, nil, "on_watch")
+    reb.ChatPrint = was2
+    ok(said == "[Resistance] 'I'm on watch. Find someone else.'", "a lookout's line still shows in chat", said)
+    -- a Hacker splices into a loudspeaker at its utility box; a unit cuts it out
+    local sp = ents.Create("lc_loudspeaker")
+    if IsValid(sp) then
+        sp:SetPos(Vector(-63000, -63000, 200)) sp:Spawn()
+        local box = ents.Create("lc_utilitybox")
+        box:SetPos(Vector(-63000, -63000, 36)) box:Spawn()
+        box.lcSpeaker = sp sp.lcBox = box
+        local hk = newPlayer("Hacker14", "resistance")
+        hk:SetNW2String("lcf_special", "hacker")
+        hk:SetPos(Vector(-63020, -63000, 0))
+        ok(LC.UseUtilityBox(hk, box), "a Hacker starts splicing into a loudspeaker at its box")
+        _advance(LC.SpeakerHackTask + 1) _runtimers()
+        ok(LC.SpeakerHacked(sp), "and it's the Resistance's", sp:GetNW2Float("lc_hacked_until", 0) .. " " .. CurTime())
+        local heard = LC.SpeakerHackSay(nil, "Test words.", {})
+        ok(#heard >= 1, "the Colonel's words come out of a hacked loudspeaker")
+        local u = newPlayer("Cutter14", "cp")
+        u:SetPos(Vector(-63020, -63010, 0))
+        ok(LC.UseUtilityBox(u, box), "a unit starts cutting the splice out")
+        _advance(LC.SpeakerCutTask + 1) _runtimers()
+        ok(not LC.SpeakerHacked(sp), "and the loudspeaker is the city's again")
+        box:Remove() sp:Remove()
+    end
     -- the Extraction job: the fugitive hides in the Combine's city
     local ex = T("res_rescue")
     if ex then

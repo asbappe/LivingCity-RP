@@ -7,8 +7,10 @@
     sparking and smoking, and nothing is made, decoded or done there (the scientist is still
     there, but has nothing to work with) until the Resistance fixes it.
 
-    Fixing it is a job on the Resistance's board (F4), "Get the lab running": find spare parts,
-    bring them to the lab, and put the bench back together with the scientist. Only a player
+    Fixing it is a job on the Resistance's board (F4), "Get the lab running": get the parts (dug out
+    at the reclamation yard, pocketed at the radio repair shop, pulled from a loudspeaker's utility
+    box; a spare part hidden nearby for any the map lacks), bring them to the lab, and put the bench
+    back together with the scientist. Only a player
     can do it. Done, and the smoke and sparks stop.
 
     A bench that's only been knocked about (not wrecked) still works; the scientist patches it
@@ -197,11 +199,53 @@ local function FixLabTemplate()
             local pos = bench:GetPos()
             local where = Q.Place(pos, ply:GetPos())
             local stages = {}
-            local cache = Q.Spot(ply, 500, 2200)
-            local spots = cache and Q.HideSpots(cache, 3, 600) or {}
-            if #spots > 0 then
-                stages[#stages + 1] = { kind = "collect", spots = spots, need = #spots, models = PART_MODELS,
-                    text = "Find spare parts for the lab (marked) and press E on each" }
+            -- The parts are found, not lying on walkways (the owner, 13 November playtest: "Dig one out at
+            -- the reclamation point, steal a radio or a part from the radio repair shop, and a third"): one
+            -- dug out of the reclamation yard's scrap, one pocketed at the radio repair shop (seen by a unit,
+            -- it's theft), and one pulled out of a loudspeaker's utility box (seen, it's sabotage). Each
+            -- the map lacks is a spare part hidden somewhere nearby instead, as before.
+            local from = ply:GetPos()
+            local function NearestOf(list) local b, bd for _, x in ipairs(list) do local d = x:DistToSqr(from) if not bd or d < bd then b, bd = x, d end end return b end
+            local function PointsOf(jobId)
+                local job = LCJ and LCJ.ById and LCJ.ById[jobId]
+                local out = {}
+                for _, pt in ipairs(job and LC.PointsOfKind and LC.PointsOfKind("work", job.num) or {}) do out[#out + 1] = pt.pos end
+                return out
+            end
+            local yardList = PointsOf("scrap")
+            for _, e in ipairs(LC.EntsOf and LC.EntsOf("lc_recycler") or {}) do yardList[#yardList + 1] = e:GetPos() end
+            local yard, shop = NearestOf(yardList), NearestOf(PointsOf("radio"))
+            local boxes = {}
+            for _, e in ipairs(LC.EntsOf and LC.EntsOf("lc_utilitybox") or {}) do boxes[#boxes + 1] = e:GetPos() end
+            local box = NearestOf(boxes)
+            local missing = 0
+            local function Seen(q, crime)
+                local p = q.owner
+                if IsValid(p) and LC.SeenBySecurity and LC.SeenBySecurity(p, 1200) and LC.ReportCrime then
+                    LC.ReportCrime(p, crime)
+                    Q.Narrate(q, "A unit saw that.")
+                end
+            end
+            if yard then
+                stages[#stages + 1] = Q.Hold(yard, 10, "Dig a part out of the scrap at the reclamation yard " .. Q.Place(yard, from) .. " (marked): stay there for 10 seconds", 160)
+            else missing = missing + 1 end
+            if shop then
+                local st = Q.Hold(shop, 5, "Pocket a radio at the radio repair shop " .. Q.Place(shop, from) .. " (marked): crouch there for 5 seconds, out of any unit's sight", 140, true)
+                st.onDone = function(q) Seen(q, "Theft") end
+                stages[#stages + 1] = st
+            else missing = missing + 1 end
+            if box then
+                local st = Q.Hold(box, 6, "Pull a circuit board out of a loudspeaker's utility box " .. Q.Place(box, from) .. " (marked): stay at it for 6 seconds", 100)
+                st.onDone = function(q) Seen(q, "Sabotage of city property") end
+                stages[#stages + 1] = st
+            else missing = missing + 1 end
+            if missing > 0 then
+                local cache = Q.Spot(ply, 500, 2200)
+                local spots = cache and Q.HideSpots(cache, missing, 600) or {}
+                if #spots > 0 then
+                    table.insert(stages, 1, { kind = "collect", spots = spots, need = #spots, models = PART_MODELS,
+                        text = #spots == 1 and "Find a spare part for the lab (marked) and press E on it" or "Find spare parts for the lab (marked) and press E on each" })
+                end
             end
             stages[#stages + 1] = Q.Deliver(pos, "Bring the parts to the scientist at the lab " .. where, 220)
             local fix = Q.Hold(pos, 20, "Stay at the bench for 20 seconds while you and the scientist put it back together", 220)
@@ -214,7 +258,7 @@ local function FixLabTemplate()
             stages[#stages + 1] = fix
             return {
                 title = "Get the lab running " .. where, reward = 45, limit = 900,
-                desc = "The Combine wrecked our lab " .. where .. ". Nothing can be made there until it's fixed. Find spare parts, bring them to the scientist, and put the bench back together with him.",
+                desc = "The Combine wrecked our lab " .. where .. ". Nothing can be made there until it's fixed. Get the parts (the reclamation yard, the radio repair shop, a loudspeaker's box), bring them to the scientist, and put the bench back together with him.",
                 stages = stages,
             }
         end,

@@ -2349,6 +2349,91 @@ T{
     end,
 }
 
+-- A way out of a manhunt (the owner, 13 November playtest: wanted at level 3 with no job on, a Resistance
+-- player gets a job by itself: leave this rebel ground for another, and the Combine lose track of them;
+-- the same outside rebel ground). Never on the board: LC.ManhuntWayOut gives it (a timer, below).
+-- The destination is the nearest rebel territory other than the one they stand in; reached, and out of
+-- every unit's sight there for LC.GoGroundSecs, the hunt is called off (heat and wanted status cleared).
+LC.GoGroundSecs = 10
+local function OtherRebelGround(ply)
+    local here = LC.ZoneAt and LC.ZoneAt(ply:GetPos())
+    local hereLead = here and here.kind == "rebel" and LC.RebelLeader and LC.RebelLeader(here) or nil
+    local best, bd
+    for _, z in ipairs(LC.ZonesOfKind("rebel")) do
+        local lead = LC.RebelLeader and LC.RebelLeader(z) or z
+        if lead ~= hereLead and not (here and z == here) then
+            local d = z.pos:DistToSqr(ply:GetPos())
+            if d > 400 * 400 and (not bd or d < bd) then best, bd = z, d end
+        end
+    end
+    return best, hereLead ~= nil
+end
+LC.OtherRebelGround = OtherRebelGround
+T{
+    id = "res_goground", factions = { resistance = true }, manhunt = true,
+    available = function() return false end, -- (given, never posted: LC.ManhuntWayOut)
+    build = function(ply)
+        local z, onRebelGround = OtherRebelGround(ply)
+        if not z then return nil end
+        local where = Place(z.pos, ply:GetPos())
+        local r = math.max(150, (z.r or 300) * 0.7)
+        return {
+            title = "Go to ground", reward = 15, limit = 420,
+            desc = (onRebelGround and "Overwatch knows this camp is hiding you. Leave it for another rebel camp, " or "Overwatch is hunting you. Get to rebel ground, ")
+                .. where .. ", and lie low out of every unit's sight. They'll lose track of you.",
+            stages = {
+                Goto(z.pos, "Get to the rebel camp " .. where .. " (marked)", r),
+                { kind = "hold", pos = z.pos, r = r, secs = LC.GoGroundSecs, text = "Lie low there for a few seconds, out of sight of every unit" },
+            },
+            onFinish = function(q, success)
+                if not success then return end
+                for _, p in ipairs(q.members or {}) do
+                    if IsValid(p) then
+                        if LC.ResetHeat then LC.ResetHeat(p) end
+                        if LC.ClearWanted then LC.ClearWanted(p) end
+                        if LC.CalmCops then LC.CalmCops(p) end
+                        if LC.Notice then LC.Notice(p, "info", "Gone to ground", "The Combine have lost track of you. Keep your head down.", 7) end
+                    end
+                end
+            end,
+        }
+    end,
+}
+
+-- Every few seconds: a Resistance player at Overwatch response (alert 3) or worse, with no job on, gets
+-- "Go to ground". Once a manhunt; again only after it cools off (LC.GoGroundAgain seconds).
+LC.GoGroundAgain = 180
+function LC.ManhuntWayOut(ply)
+    if not IsValid(ply) or not ply:Alive() or LC.QuestOf[ply] then return false end
+    if LC.QuestFaction(ply) ~= "resistance" or not LC.AlertLevel or LC.AlertLevel(ply) < 3 then return false end
+    if (ply.lcGoGroundAt or -1e9) + LC.GoGroundAgain > CurTime() then return false end
+    local t
+    for _, x in ipairs(LC.QuestTemplates) do if x.id == "res_goground" then t = x end end
+    if not t then return false end
+    local ok, spec = pcall(t.build, ply)
+    if not ok then LC.Error("quest res_goground", spec) return false end
+    if not spec then return false end
+    spec.id = nextId
+    nextId = nextId + 1
+    spec.tmpl, spec.faction, spec.data = t, "resistance", spec.data or {}
+    spec.expiresPost = CurTime() + 60
+    LC.Postings.resistance = LC.Postings.resistance or {}
+    table.insert(LC.Postings.resistance, 1, spec)
+    ply.lcGoGroundAt = CurTime()
+    local was = ply.lcqNext
+    ply.lcqNext = 0 -- (a job just finished doesn't hold this one up)
+    local took = LC.AcceptPosting(ply, spec.id)
+    if not took then ply.lcqNext = was spec.dead = true return false end
+    return true
+end
+timer.Create("LivingCityManhuntWayOut", 4, 0, function()
+    if not LC.Running or not cvOn:GetBool() then return end
+    for _, p in ipairs(player.GetAll()) do
+        local ok, err = pcall(LC.ManhuntWayOut, p)
+        if not ok then LC.Error("manhunt way out", err) end
+    end
+end)
+
 T{
     id = "res_ministry", factions = { resistance = true },
     available = function(ply) return Special(ply) == "chaplain" end,
@@ -3362,6 +3447,7 @@ end)
 function LC.SendBoard(ply)
     if not cvOn:GetBool() then return ply:ChatPrint("[Miscount] Quests are turned off on this server.") end
     local list, f = LC.RefreshBoard(ply)
+    if LC.OpSyncMenu then pcall(LC.OpSyncMenu, ply) end -- (the planned operations card on the Resistance's board)
     local out = {}
     local mine = LC.QuestOf[ply]
     -- a stalker's board has its work on it (The Stalker's Lot), and nothing else

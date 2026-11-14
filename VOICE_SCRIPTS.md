@@ -18,6 +18,7 @@ Ticked [x] below: the server already has it. Left to record, 357 files:
 - **the old-timer** (`oldtimer/`): 29 missing
 - **machines** (`machines/`): 10 missing
 - **Colonel Cubbage** (`cubbage/`): 24 missing
+- **the Resistance's people** (`resistance/`): nothing missing
 
 Run `lc_voice_missing` on the server after uploading, and give Claude the list (or `data/livingcity/voice_missing.txt`) to update the ticks. The Colonel's own lines (the ghost) aren't checked by it.
 
@@ -332,6 +333,39 @@ Folder: `cubbage/`. Odessa Cubbage, alive and well, answering her address from t
 | [ ] | `answer_mood_content1` | her `speech_mood_content` | [defiant, dry, a speaker enjoying himself] Rested, fed and calm, she says. Look around you. Does that look like anyone you know? |
 | [x] | `answer_slogan1` | her `speech_slogan` | [defiant, dry, a speaker enjoying himself] Love your neighbour, hate the traitor, she says. We agree. Ask yourself who sold this city. |
 | [ ] | `answer_close1` | (his closing) | [defiant, dry, a speaker enjoying himself] That's all from me. Keep your heads down, your eyes open, and your door unlocked for a friend. We're closer than she thinks. |
+
+## The Resistance's people
+
+Folder: `resistance/`. Fighters, lookouts, the quartermaster and the medic speaking to a player: tired, wary, warm to their own. Record each twice: `_male1` in a man's voice (`A man in his thirties, gruff and tired, plain-spoken, low and wary, close dry recording.`) and `_female1` in a woman's (`A woman in her thirties, firm and tired, plain-spoken, wary, close dry recording.`). (Describes a kind of voice: no game or actor named.)
+
+| Done | File | Paste |
+|---|---|---|
+| [x] | `busy_male1` | [tired, wary, plain] I'm busy. Ask someone else. |
+| [x] | `busy_female1` | [tired, wary, plain] I'm busy. Ask someone else. |
+| [x] | `head_back_male1` | [tired, wary, plain] Right. I'll head back. |
+| [x] | `head_back_female1` | [tired, wary, plain] Right. I'll head back. |
+| [x] | `medic_broke_male1` | [tired, wary, plain] You don't have the credits, friend. Sorry. |
+| [x] | `medic_broke_female1` | [tired, wary, plain] You don't have the credits, friend. Sorry. |
+| [x] | `medic_charge_male1` | [tired, wary, plain] I hate to charge, but these don't grow on trees. |
+| [x] | `medic_charge_female1` | [tired, wary, plain] I hate to charge, but these don't grow on trees. |
+| [x] | `medic_fine_male1` | [tired, wary, plain] You look fine to me. Come back when you're bleeding. |
+| [x] | `medic_fine_female1` | [tired, wary, plain] You look fine to me. Come back when you're bleeding. |
+| [x] | `medic_hurt_male1` | [tired, wary, plain] Hurt? I can patch you up. |
+| [x] | `medic_hurt_female1` | [tired, wary, plain] Hurt? I can patch you up. |
+| [x] | `meet_there_male1` | [tired, wary, plain] We'll meet you there. |
+| [x] | `meet_there_female1` | [tired, wary, plain] We'll meet you there. |
+| [x] | `not_earned_male1` | [tired, wary, plain] Who are you? Get someone who's earned it to ask me. |
+| [x] | `not_earned_female1` | [tired, wary, plain] Who are you? Get someone who's earned it to ask me. |
+| [x] | `on_watch_male1` | [tired, wary, plain] I'm on watch. Find someone else. |
+| [x] | `on_watch_female1` | [tired, wary, plain] I'm on watch. Find someone else. |
+| [x] | `parade_male1` | [tired, wary, plain] Any more and you're a parade. |
+| [x] | `parade_female1` | [tired, wary, plain] Any more and you're a parade. |
+| [x] | `qm_chip_male1` | [tired, wary, plain] Is that a Combine chip? Don't wave it about. Take it to the lab, the doc will decode it. |
+| [x] | `qm_chip_female1` | [tired, wary, plain] Is that a Combine chip? Don't wave it about. Take it to the lab, the doc will decode it. |
+| [x] | `qm_greet_male1` | [tired, wary, plain] What do you need? |
+| [x] | `qm_greet_female1` | [tired, wary, plain] What do you need? |
+| [x] | `qm_stranger_male1` | [tired, wary, plain] I don't know you. But if you've brought something for the fight, I'll take it. |
+| [x] | `qm_stranger_female1` | [tired, wary, plain] I don't know you. But if you've brought something for the fight, I'll take it. |
 
 ## Overwatch's announcements
 

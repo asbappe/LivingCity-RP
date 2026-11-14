@@ -47,7 +47,7 @@ def load_done():
 SERVER_MISSING = os.path.join(HERE, "voice_missing.txt")
 # (the folders lc_voice_missing checks; the Colonel's are not among them, so his are never ticked from it)
 SERVER_FOLDERS = ["dreams/voice/", "overwatch/", "administrator/", "radio/", "gman/", "citizens/", "units/", "clerk/", "oldtimer/",
-                  "machines/", "cubbage/"]
+                  "machines/", "cubbage/", "resistance/"]
 
 def load_missing():
     if not os.path.exists(SERVER_MISSING):
@@ -101,14 +101,14 @@ def lines_folder(heading):
     m = re.match(r"## (\d+)\.", heading)
     n = int(m.group(1)) if m else 0
     return {1: "announce", 2: "radio/", 4: "dreams/voice/", 5: "citizens/", 6: "clerk/", 7: "oldtimer/", 8: "machines/",
-            10: "citizens/", 11: "units/", 12: "cubbage/"}.get(n)
+            10: "citizens/", 11: "units/", 12: "cubbage/", 13: "resistance/"}.get(n)
 
 def scripts_folder(heading):
     h = heading.lower()
     for key, f in (("administrator's announcements", "administrator/"), ("what named citizens say", "citizens/"), ("what units say", "units/"),
                    ("not real clips", "gman/"), ("cubbage", "cubbage/"), ("overwatch's announcements", "overwatch/"), ("## the radio", "radio/"),
                    ("the dreams' lines", "dreams/voice/"), ("citizens showing the way", "citizens/"), ("information clerk", "clerk/"),
-                   ("the old-timer", "oldtimer/"), ("machines", "machines/")):
+                   ("the old-timer", "oldtimer/"), ("machines", "machines/"), ("the resistance's people", "resistance/")):
         if key in h:
             return f
     return None
@@ -193,7 +193,7 @@ def summary(miss):
         return []
     names = {"dreams/voice/": "the dreams' lines", "overwatch/": "Overwatch", "administrator/": "the Administrator", "radio/": "the radio",
              "gman/": "the G-Man", "citizens/": "citizens (named citizens and showing the way)", "units/": "units", "clerk/": "the clerk",
-             "oldtimer/": "the old-timer", "machines/": "machines", "cubbage/": "Colonel Cubbage"}
+             "oldtimer/": "the old-timer", "machines/": "machines", "cubbage/": "Colonel Cubbage", "resistance/": "the Resistance's people"}
     total = sum(len(v) for v in miss.values())
     out = ["", "## Still to record (the server's `lc_voice_missing`)", "",
            "Ticked [x] below: the server already has it. Left to record, %d files:" % total, ""]
@@ -295,6 +295,7 @@ for _, t in ipairs(LC.OldTimerTroubles or {}) do W("oldtimer", "hint_" .. t[1], 
 for id, l in pairs(LC.MachineLines or {}) do W("machine", id, l[1], l[2]) end
 for id, words in pairs(LC.ColonelLines or {}) do W("colonel", id, "", words) end
 for id, words in pairs(LC.SpeechAnswerLines or {}) do W("cubbage", id, "", words) end
+for id, words in pairs(LC.ResistanceLines or {}) do W("resistance", id, "", words) end
 for i, q in ipairs(LC.QuizQuestions or {}) do W("quizq", "quiz_q" .. i, tostring(i), q.q) end
 for id, l in pairs(LC.StreetLines or {}) do W("street", id, l[2], l[1], l[3] or l[1]) end
 for id, l in pairs(LC.UnitLines or {}) do W("unitline", id, l[2], l[1], l[3] or l[1], table.concat(l[4] or {}, ", ")) end
@@ -535,6 +536,17 @@ def main():
     for r in cub:
         doc.append("| [ ] | `answer_%s1.wav` | %s | %s |" % (r[1], {"open": "(his opening)", "close": "(his closing)"}.get(r[1], "her `speech_%s`" % r[1]), r[3]))
         count += 1
+    res = sorted([r for r in rows if r[0] == "resistance"], key=lambda r: r[1])
+    doc.extend(["", "## 13. The Resistance's people", "",
+                "What a fighter, a lookout, the quartermaster and the medic say to you (sv_livingcity_rebelvoice.lua): a man's take and a "
+                "woman's, as for named citizens. Folder: **`garrysmod/sound/livingcity/resistance/`**. Played from the one saying it. "
+                "Without a recording, Half-Life 2's own rebel voice where there was one, and the words show in chat.",
+                "", "| Done | File | Who | Says |", "|---|---|---|---|"])
+    for r in res:
+        who = "the medic" if r[1].startswith("medic_") else ("the quartermaster" if r[1].startswith("qm_") else "a fighter or lookout")
+        for g in ("male", "female"):
+            doc.append("| [ ] | `%s_%s1.wav` | %s | %s |" % (r[1], g, who, r[3]))
+            count += 1
     done = load_done()
     doc[:] = tick_server(tick(doc, done), load_missing(), lines_folder)
     text = "\n".join(doc).rstrip("\n") + "\n"
@@ -715,6 +727,18 @@ def scripts(doc, street, units, group_of, order, done=frozenset(), rows=()):
             out.append("| [ ] | `answer_%s1` | %s | [defiant, dry, a speaker enjoying himself] %s |" % (r[1], what, r[3]))
             batch.append(("cubbage", "livingcity/cubbage/answer_" + r[1] + "1", "[defiant, dry, a speaker enjoying himself] " + r[3]))
             n += 1
+    res = sorted([r for r in rows if r[0] == "resistance"], key=lambda r: r[1])
+    if res:
+        out += ["", "## The Resistance's people", "",
+                "Folder: `resistance/`. Fighters, lookouts, the quartermaster and the medic speaking to a player: tired, wary, warm to their "
+                "own. Record each twice: `_male1` in a man's voice (`A man in his thirties, gruff and tired, plain-spoken, low and wary, "
+                "close dry recording.`) and `_female1` in a woman's (`A woman in her thirties, firm and tired, plain-spoken, wary, close "
+                "dry recording.`). (Describes a kind of voice: no game or actor named.)", "",
+                "| Done | File | Paste |", "|---|---|---|"]
+        for r in res:
+            for g in ("male", "female"):
+                out.append("| [ ] | `%s_%s1` | [tired, wary, plain] %s |" % (r[1], g, r[3]))
+                n += 1
     out += more_scripts(doc, rows)
     out[:] = tick_server(tick(out, done), load_missing(), scripts_folder)
     # what's left, near the top (after "How to use it")

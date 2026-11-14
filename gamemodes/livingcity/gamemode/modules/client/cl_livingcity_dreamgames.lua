@@ -98,6 +98,8 @@ net.Receive("lc_dreamgame", function()
     if t.k == "start" then
         -- (when this dream's state first came: its goal line shows for a while, then steps aside)
         LC_CL.DreamGoalFrom = CurTime()
+        -- the black card that explains it (a join part-way, the same dream again: not shown twice)
+        if istable(t.card) and not (st and st.id == t.id) then LC_CL.DreamCard = { til = CurTime() + LC_CL.DreamCardSecs, name = t.name, intro = t.card } end
         st = t
         st.got = {}
         StopSong()
@@ -445,8 +447,40 @@ function LC_CL.DreamGameOn() return st ~= nil end
 -- How long the goal line stays up (the owner, 14 November: "SO MUCH TEXT ON SCREEN"); hold Tab to see it again.
 LC_CL.DreamGoalSecs = 15
 
+-- The black card before a dream: what it is, the rules, how to win, how to lose. Up for this long, or
+-- until Space is pressed (the owner, 13 November).
+LC_CL.DreamCardSecs = 9
+local C_CARD_HEAD, C_CARD_LABEL, C_CARD_TEXT = Color(235, 215, 150), Color(150, 150, 150), Color(230, 230, 230)
+local function Faded(c, a) return Color(c.r, c.g, c.b, a) end
+function LC_CL.DrawDreamCard()
+    local c = LC_CL.DreamCard
+    if not c then return false end
+    local now = CurTime()
+    if now >= c.til or (input and input.IsKeyDown and KEY_SPACE and input.IsKeyDown(KEY_SPACE)) then LC_CL.DreamCard = nil return false end
+    local fade = math.Clamp(c.til - now, 0, 1)
+    surface.SetDrawColor(0, 0, 0, math.floor(255 * fade))
+    surface.DrawRect(0, 0, ScrW(), ScrH())
+    local w = math.min(ScrW() - 80, 760)
+    local x, y = (ScrW() - w) / 2, ScrH() * 0.22
+    local a = math.floor(255 * fade)
+    draw.SimpleText(c.name or "A dream", "DermaLarge", ScrW() / 2, y, Faded(C_CARD_HEAD, a), TEXT_ALIGN_CENTER)
+    y = y + 56
+    for _, row in ipairs({ { "WHAT IT IS", c.intro.idea }, { "THE RULES", c.intro.rules }, { "TO WIN", c.intro.win }, { "TO LOSE", c.intro.lose } }) do
+        if row[2] and row[2] ~= "" then
+            draw.SimpleText(row[1], "DermaDefaultBold", x, y, Faded(C_CARD_LABEL, a))
+            y = y + 18
+            local lines = LC_CL.WrapPlain and LC_CL.WrapPlain(row[2], "DermaDefaultBold", w) or { row[2] }
+            for _, l in ipairs(lines) do draw.SimpleText(l, "DermaDefaultBold", x, y, Faded(C_CARD_TEXT, a)) y = y + 18 end
+            y = y + 14
+        end
+    end
+    draw.SimpleText("Space: start now", "DermaDefault", ScrW() / 2, y + 10, Faded(C_CARD_LABEL, a), TEXT_ALIGN_CENTER)
+    return true
+end
+
 hook.Add("HUDPaint", "LivingCityDreamGames", function()
     if not st then return end
+    if LC_CL.DrawDreamCard() then return end
     local me = LocalPlayer()
     if not IsValid(me) or not me:GetNW2Bool("lc_dreaming", false) then st, sub = nil, nil StopSong() StopVoice() CloseChoice() return end
     local now = CurTime()
