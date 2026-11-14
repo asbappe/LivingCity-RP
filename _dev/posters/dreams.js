@@ -1,5 +1,6 @@
 // The posters that hint at dreams (sv_livingcity_dreamposters.lua): dream_<codeword>, drawn by gen.js.
-// The words are LC.DreamPosterHints' own. Five so far: melons, lamarr, cheese, watchers, mirror.
+// The words are LC.DreamPosterHints' own. Five so far: lamarr, cheese, watchers, mirror, and the melons' (dream_forecast, inside the dream only).
+// The small words are one sentence each (the owner, 14 November).
 const { C, P, R, G, rays, emblem, worker, officer, reader, adminBust } = require('./lib.js');
 
 const E = (cx, cy, rx, ry, f, extra = '') => `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="${f}" ${extra}/>`;
@@ -9,17 +10,21 @@ function rng(seed) { let a = seed; return () => { a = (a * 16807) % 2147483647; 
 
 const ART = {};
 
-// It's Raining Melons: fair weather, with produce. Nobody looks up.
+// It's Raining Melons: fair weather, with produce. Nobody looks up. (dream_forecast: it hangs only
+// inside that dream, never in the waking city: the owner, 14 November.)
+let melonN = 0;
 function melon(x, y, s, rot, fall = 0) {
   const gr = '#3f6b4a', gd = '#264a33';
   let g = '';
   if (fall) for (const dx of [-34, 0, 34]) g += R(dx - 4, -60 - fall - (dx ? 0 : 40), 8, fall, C.slate3, 'opacity=".45"');
-  let m = E(0, 0, 62, 48, gr);
+  const id = 'mel' + (melonN++);
+  let m = `<clipPath id="${id}"><ellipse cx="0" cy="0" rx="62" ry="48"/></clipPath>` + E(0, 0, 62, 48, gr) + `<g clip-path="url(#${id})">`;
   for (const [dx, k] of [[-42, -14], [-15, -6], [15, 6], [42, 14]]) m += L(`M${dx},${-Math.sqrt(1 - (dx / 62) ** 2) * 46} Q${dx + k},0 ${dx},${Math.sqrt(1 - (dx / 62) ** 2) * 46}`, gd, 9);
+  m += '</g>';
   m += E(-22, -24, 16, 7, '#8fb08f', 'opacity=".55" transform="rotate(-24 -22 -24)"');
   return G(`translate(${x},${y}) scale(${s})`, g + G(`rotate(${rot})`, m));
 }
-ART.dream_melons = () => {
+ART.dream_forecast = () => {
   let s = R(0, 0, 720, 610, '#b9c6c4') + rays(360, -60, 40, 1000, C.paper, 0, 180, 'opacity=".55"');
   // the city, far off
   const sky = [[0, 400, 90], [80, 350, 70], [150, 420, 80], [230, 330, 60], [470, 340, 70], [540, 410, 90], [630, 360, 90]];
@@ -57,7 +62,6 @@ ART.dream_lamarr = () => {
   c += E(0, 0, 118, 84, tan) + P('M-118,0 A118,84 0 0 0 118,0 Q0,58 -118,0Z', tanD);
   c += L('M-54,-58 Q-20,-70 4,-60', tanD, 5) + L('M22,-66 Q52,-58 70,-40', tanD, 5) + L('M-84,-22 Q-70,-40 -52,-44', tanD, 4);
   c += E(-34, -34, 26, 12, '#efe3c4', 'opacity=".6" transform="rotate(-18 -34 -34)"');
-  c += E(0, 64, 30, 12, C.ink) + [-18, -6, 6, 18].map(x => P(`M${x - 4},58 L${x + 4},58 L${x},70Z`, C.paper)).join('');
   c += P('M-64,34 L-128,58 L-150,150 L-128,152 L-104,86 L-40,66Z', tan) + P('M64,34 L128,58 L150,150 L128,152 L104,86 L40,66Z', tan);
   c += P('M-128,58 L-150,150 L-140,151 L-118,70Z', tanD) + P('M128,58 L150,150 L140,151 L118,70Z', tanD);
   c += P('M-150,150 L-128,152 L-144,186Z', C.ink) + P('M150,150 L128,152 L144,186Z', C.ink);
@@ -145,16 +149,16 @@ ART.dream_mirror = () => {
 
 const TAG = 'SLEEP WELL, CITIZEN';
 const POSTERS = [
-  { id: 'dream_melons', n: 51, accent: 'red', tag: TAG, head: [['FORECAST: FAIR,', 78], ['WITH PRODUCE', 92]],
-    small: ['Fresh fruit is a privilege of compliance.', 'Do not look up for it.'] },
+  { id: 'dream_forecast', n: 51, accent: 'red', tag: TAG, head: [['FORECAST: FAIR,', 78], ['WITH PRODUCE', 92]],
+    small: ['Fresh fruit is a privilege of compliance;', 'do not look up for it.'] },
   { id: 'dream_lamarr', n: 52, accent: 'red', tag: TAG, head: [['HAVE YOU SEEN', 84], ['THIS ANIMAL?', 92]],
-    small: ['A small, bald, beaked pet is loose in the city.', 'Do not approach. Do not feed.', 'Report.'] },
+    small: ['A small, bald, beaked pet is loose in the city:', 'do not approach it, do not feed it, report it.'] },
   { id: 'dream_cheese', n: 53, accent: 'cyan', dark: true, acc: '#e3b93c', tag: TAG, head: [['DAIRY IS', 132], ['A PRIVILEGE', 98]],
-    small: ['Citizens do not think about cheese.', 'Citizens think about their quota.'] },
+    small: ['Citizens do not think about cheese;', 'citizens think about their quota.'] },
   { id: 'dream_watchers', n: 54, accent: 'cyan', dark: true, acc: C.red, ground: '#080d15', tag: TAG, head: [['YOU ARE', 140], ['NEVER ALONE', 96]],
-    small: ['Even when you close your eyes.', 'Especially then.'] },
+    small: ['Even when you close your eyes.'] },
   { id: 'dream_mirror', n: 55, accent: 'cyan', tag: TAG, head: [['WHO IS', 140], ['THE FAIREST?', 92]],
-    small: ['You already know the answer.', 'Say it aloud.'] },
+    small: ['You already know the answer.'] },
 ];
 
 module.exports = { ART, POSTERS };

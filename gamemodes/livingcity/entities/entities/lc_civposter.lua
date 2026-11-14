@@ -113,6 +113,8 @@ end
 if SERVER then
     -- (what's nearest, and what reading it teaches: sv_livingcity_learning.lua)
     function ENT:PickNotice()
+        -- (a dream's own billboard is what it was made as: LC.DreamBillboard)
+        if self.lcDreamProp then self.lcPickedAt = CurTime() return self:GetNW2String("lc_notice", "dream") end
         -- (one hung by hand keeps the poster it was hung as: LC.HangPoster)
         local best = self.lcFixedKind or (LC and LC.CivPosterNotice and LC.CivPosterNotice(self:GetPos())) or "curfew"
         -- (a plain curfew one may hint at a dream instead today: sv_livingcity_dreamposters.lua)
@@ -166,7 +168,13 @@ if CLIENT then
         return art[kind]
     end
     function ENT:Draw()
-        if LocalPlayer():GetPos():DistToSqr(self:GetPos()) > 900 * 900 then return end
+        -- (a billboard inside a dream is several times the size: LC.DreamBillboard)
+        local big = math.max(1, self:GetNW2Float("lc_big", 1))
+        if LocalPlayer():GetPos():DistToSqr(self:GetPos()) > (900 * big) ^ 2 then return end
+        if big > 1 and self.lcBigBounds ~= big and self.SetRenderBounds then
+            self.lcBigBounds = big
+            self:SetRenderBounds(Vector(-4, -26, -34) * big, Vector(4, 26, 34) * big)
+        end
         local kind = self:GetNW2String("lc_notice", "curfew")
         local n = self:Words()
         local dreamy = kind == "dream"
@@ -187,7 +195,7 @@ if CLIENT then
             daub = defaced and (DEFACED[kind] or "LIES") or nil
         end
         if pic and not pic:IsError() then
-            cam.Start3D2D(self:GetPos() + self:GetForward() * 0.6, ang, 0.1)
+            cam.Start3D2D(self:GetPos() + self:GetForward() * 0.6, ang, 0.1 * big)
                 surface.SetDrawColor(255, 255, 255, 255)
                 surface.SetMaterial(pic)
                 surface.DrawTexturedRect(-230, -310, 460, 620)
@@ -195,7 +203,7 @@ if CLIENT then
             cam.End3D2D()
             return
         end
-        cam.Start3D2D(self:GetPos() + self:GetForward() * 0.6, ang, 0.1)
+        cam.Start3D2D(self:GetPos() + self:GetForward() * 0.6, ang, 0.1 * big)
             draw.RoundedBox(0, -230, -310, 460, 620, PAPER)
             draw.RoundedBox(0, -230, -310, 460, 70, dreamy and NIGHT or RED)
             draw.SimpleText(dreamy and "SLEEP WELL, CITIZEN" or "CITY ADMINISTRATION", "DermaLarge", 0, -275, PAPER, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)

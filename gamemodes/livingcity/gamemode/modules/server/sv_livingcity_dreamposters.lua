@@ -23,6 +23,11 @@
     (or .jpg; the dream's codeword, as lc_endings lists them), else dream.png
     for all of them, else the drawn notice. Painted over by the Resistance it
     reads WAKE UP.
+
+    The owner, 14 November: every poster's small words read as one sentence;
+    and the melons' picture is "too on the nose" for the waking city, so it
+    hangs only inside that dream (dream_forecast.jpg, LC.DreamBillboard below,
+    sv_livingcity_strangedreams.lua); the city's hint at it stays the drawn notice.
 ]]
 
 if CLIENT then return end
@@ -35,65 +40,65 @@ local cvShare = CreateConVar("lc_dream_posters", "0.25", bit.bor(FCVAR_ARCHIVE, 
 -- [dream codeword] = { heading, body }. In the city's voice; a hint, never the dream's name.
 local HINTS = {
     -- Happy
-    flying = { "KEEP YOUR FEET ON THE GROUND", "The sky belongs to the Combine. Citizens who leave the ground will be returned to it." },
-    melons = { "FORECAST: FAIR, WITH PRODUCE", "Fresh fruit is a privilege of compliance. Do not look up for it." },
-    lamarr = { "HAVE YOU SEEN THIS ANIMAL?", "A small, bald, beaked pet is loose in the city. Do not approach. Do not feed. Report." },
-    dance = { "IDLE FEET ARE IDLE HANDS", "Movement without purpose is forbidden. Movement to music doubly so." },
-    sheep = { "CAN'T SLEEP? COUNT YOUR BLESSINGS", "Not the other thing. Never the other thing. Sleep is mandatory." },
-    derby = { "PARASITE RACING IS ILLEGAL", "Wagering on headcrabs is a crime against hygiene. Sanitation is watching." },
-    paint = { "PAINT IS A CONTROLLED SUBSTANCE", "All colour belongs to the city. Unlicensed colour will be scrubbed." },
-    conga = { "SINGLE FILE. NO DANCING.", "Lines are for rations. Lines are not for fun." },
-    bubbles = { "SOAP IS FOR WASHING", "Surplus soap must be returned to the Commissary. Nothing floats in this city." },
-    rally = { "NO RACING AFTER CURFEW", "Unlicensed vehicles will be confiscated. So will the drivers." },
+    flying = { "KEEP YOUR FEET ON THE GROUND", "The sky belongs to the Combine, and citizens who leave the ground will be returned to it." },
+    melons = { "FORECAST: FAIR, WITH PRODUCE", "Fresh fruit is a privilege of compliance; do not look up for it." },
+    lamarr = { "HAVE YOU SEEN THIS ANIMAL?", "A small, bald, beaked pet is loose in the city: do not approach it, do not feed it, report it." },
+    dance = { "IDLE FEET ARE IDLE HANDS", "Movement without purpose is forbidden, and movement to music doubly so." },
+    sheep = { "CAN'T SLEEP? COUNT YOUR BLESSINGS", "Not the other thing, never the other thing; sleep is mandatory." },
+    derby = { "PARASITE RACING IS ILLEGAL", "Wagering on headcrabs is a crime against hygiene, and Sanitation is watching." },
+    paint = { "PAINT IS A CONTROLLED SUBSTANCE", "All colour belongs to the city, and unlicensed colour will be scrubbed." },
+    conga = { "SINGLE FILE. NO DANCING.", "Lines are for rations, not for fun." },
+    bubbles = { "SOAP IS FOR WASHING", "Surplus soap must be returned to the Commissary, for nothing floats in this city." },
+    rally = { "NO RACING AFTER CURFEW", "Unlicensed vehicles will be confiscated, and so will their drivers." },
     -- Neutral
-    cheese = { "DAIRY IS A PRIVILEGE", "Citizens do not think about cheese. Citizens think about their quota." },
-    chairs = { "A SEAT FOR EVERY WORKER", "Unless there is not. Remain standing until told." },
-    horse = { "KNOW YOUR OWN FACE", "Report any change to your appearance at once. Especially hooves." },
-    boxing = { "DISPUTES ARE SETTLED BY CIVIL PROTECTION", "Not in a ring. Not with gloves. Not under lights." },
-    exam = { "ARE YOU READY FOR YOUR ASSESSMENT?", "Every citizen will be tested. You will not know when. Study." },
+    cheese = { "DAIRY IS A PRIVILEGE", "Citizens do not think about cheese; citizens think about their quota." },
+    chairs = { "A SEAT FOR EVERY WORKER", "Unless there is not, so remain standing until told." },
+    horse = { "KNOW YOUR OWN FACE", "Report any change to your appearance at once, especially hooves." },
+    boxing = { "DISPUTES ARE SETTLED BY CIVIL PROTECTION", "Not in a ring, not with gloves and not under lights." },
+    exam = { "ARE YOU READY FOR YOUR ASSESSMENT?", "Every citizen will be tested, and you will not know when, so study." },
     train = { "EVERY TRAIN ARRIVES ON TIME", "Do not ask where the last one goes." },
     potato = { "DO NOT PASS IT ON", "Whatever you are holding, it is now your responsibility." },
-    simon = { "DO ONLY WHAT OVERWATCH SAYS", "And only when Overwatch says it. Listen closely." },
+    simon = { "DO ONLY WHAT OVERWATCH SAYS", "And only when Overwatch says it, so listen closely." },
     clocks = { "TIME IS THE CITY'S", "Clocks are not to be stopped, wound back or argued with." },
-    tea = { "GATHERINGS OF MORE THAN THREE ARE FORBIDDEN", "This includes tea. This especially includes tea." },
-    photo = { "SMILE. YOU ARE BEING RECORDED.", "Every face is on file. Keep yours still." },
-    doors = { "NOT EVERY DOOR IS FOR YOU", "Open only the doors you were assigned. Some open onto nothing." },
-    shh = { "SILENCE IS COMPLIANCE", "Quiet blocks are safe blocks. Something is listening for noise." },
-    can = { "PICK IT UP", "Litter is disorder. When an officer tells you, you pick it up. Then you put it in the bin." },
+    tea = { "GATHERINGS OF MORE THAN THREE ARE FORBIDDEN", "This includes tea, and this especially includes tea." },
+    photo = { "SMILE. YOU ARE BEING RECORDED.", "Every face is on file, so keep yours still." },
+    doors = { "NOT EVERY DOOR IS FOR YOU", "Open only the doors you were assigned, for some open onto nothing." },
+    shh = { "SILENCE IS COMPLIANCE", "Quiet blocks are safe blocks, and something is listening for noise." },
+    can = { "PICK IT UP", "Litter is disorder: when an officer tells you, you pick it up, then you put it in the bin." },
     -- Nightmares
-    maze = { "THE PATROL KNOWS EVERY TURN", "Do you? Stay on the routes you were given." },
+    maze = { "THE PATROL KNOWS EVERY TURN", "If you do not, stay on the routes you were given." },
     barrels = { "DO NOT STACK THE BARRELS", "They are heavier than they look, and they fall." },
-    crumble = { "WATCH YOUR STEP", "Not every floor in this city will hold you. Report cracks." },
-    freeze = { "WHEN A UNIT SAYS FREEZE, FREEZE", "Do not breathe until told. Do not blink." },
-    molasses = { "RUNNING IS FORBIDDEN", "You will not get far. You never do." },
-    watchers = { "YOU ARE NEVER ALONE", "Even when you close your eyes. Especially then." },
+    crumble = { "WATCH YOUR STEP", "Not every floor in this city will hold you, so report cracks." },
+    freeze = { "WHEN A UNIT SAYS FREEZE, FREEZE", "Do not breathe or blink until told." },
+    molasses = { "RUNNING IS FORBIDDEN", "You will not get far; you never do." },
+    watchers = { "YOU ARE NEVER ALONE", "Even when you close your eyes." },
     -- Propaganda (her dreams)
-    adore = { "KNEEL WHEN SHE PASSES", "Your Administrator has done so much for you. Show her." },
-    roses = { "FLOWERS FOR THE ADMINISTRATOR", "A grateful city remembers her. Bring what you can." },
-    mirror = { "WHO IS THE FAIREST?", "You already know the answer. Say it aloud." },
-    saviour = { "SHE WILL COME FOR YOU", "When the monsters close in, the Administrator will save you. Wait for her." },
-    quiz = { "DO YOU KNOW YOUR ADMINISTRATOR?", "Loyalty is tested. Wrong answers are noted." },
-    harvest = { "A RECORD HARVEST", "This year's yield exceeds every target. Do not count it yourself." },
-    shift = { "DOUBLE THE QUOTA. DOUBLE THE GLORY.", "One worker did the work of fourteen. What is your excuse?" },
-    spy = { "CARELESS TALK COSTS LIVES", "Anyone could be listening. Anyone could be one of them." },
-    newsreel = { "THE NEWS IS GOOD", "Tonight's broadcast will show you how good. Watch it all." },
-    hate = { "TWO MINUTES. EVERY CITIZEN.", "Know the enemy's face. Show what you feel about it." },
-    massgames = { "TEN THOUSAND AS ONE", "Every citizen holds up a card. Together they make her face." },
-    guidance = { "SHE IS COMING TO YOUR WORKPLACE", "Have your station clean. She may have advice for you." },
-    scrap = { "EVERY CAN COUNTS", "Bring your scrap. Bring everyone's scrap. The city is built from it." },
-    flowers = { "GREET THE LIBERATORS", "Smile, wave and throw flowers. They are here to help." },
-    duck = { "WHEN THE SIREN SOUNDS, DUCK AND COVER", "A desk will protect you. It always has." },
-    ravenholm = { "WE DON'T GO TO RAVENHOLM", "There is nothing there. The city has seen to it." },
-    battleline = { "THE LINE HOLDS", "Stand with her soldiers. Do not look at the giants." },
+    adore = { "KNEEL WHEN SHE PASSES", "Your Administrator has done so much for you, so show her." },
+    roses = { "FLOWERS FOR THE ADMINISTRATOR", "A grateful city remembers her, so bring what you can." },
+    mirror = { "WHO IS THE FAIREST?", "You already know the answer." },
+    saviour = { "SHE WILL COME FOR YOU", "When the monsters close in, the Administrator will save you, so wait for her." },
+    quiz = { "DO YOU KNOW YOUR ADMINISTRATOR?", "Loyalty is tested, and wrong answers are noted." },
+    harvest = { "A RECORD HARVEST", "This year's yield exceeds every target, so do not count it yourself." },
+    shift = { "DOUBLE THE QUOTA. DOUBLE THE GLORY.", "One worker did the work of fourteen, so what is your excuse?" },
+    spy = { "CARELESS TALK COSTS LIVES", "Anyone could be listening, and anyone could be one of them." },
+    newsreel = { "THE NEWS IS GOOD", "Tonight's broadcast will show you how good, so watch it all." },
+    hate = { "TWO MINUTES. EVERY CITIZEN.", "Know the enemy's face, and show what you feel about it." },
+    massgames = { "TEN THOUSAND AS ONE", "Every citizen holds up a card, and together they make her face." },
+    guidance = { "SHE IS COMING TO YOUR WORKPLACE", "Have your station clean, for she may have advice for you." },
+    scrap = { "EVERY CAN COUNTS", "Bring your scrap and everyone's scrap, for the city is built from it." },
+    flowers = { "GREET THE LIBERATORS", "Smile, wave and throw flowers, for they are here to help." },
+    duck = { "WHEN THE SIREN SOUNDS, DUCK AND COVER", "A desk will protect you, as it always has." },
+    ravenholm = { "WE DON'T GO TO RAVENHOLM", "There is nothing there; the city has seen to it." },
+    battleline = { "THE LINE HOLDS", "Stand with her soldiers, and do not look at the giants." },
 }
 LC.DreamPosterHints = HINTS
 
 -- A dream without its own lines: its mood's.
 local BY_MOOD = {
-    happy = { "SLEEP WELL, CITIZEN", "A compliant city dreams sweetly. Tonight may be one of those nights." },
-    neutral = { "DREAMS ARE NOT YOUR CONCERN", "If tonight's seems strange, report it in the morning. Then forget it." },
-    nightmare = { "LOCK YOUR DOOR TONIGHT", "Whatever you see when your eyes are closed is not real. Probably." },
-    propaganda = { "SHE IS IN YOUR DREAMS", "Your Administrator never rests. Not even while you do." },
+    happy = { "SLEEP WELL, CITIZEN", "A compliant city dreams sweetly, and tonight may be one of those nights." },
+    neutral = { "DREAMS ARE NOT YOUR CONCERN", "If tonight's seems strange, report it in the morning, then forget it." },
+    nightmare = { "LOCK YOUR DOOR TONIGHT", "Whatever you see when your eyes are closed is not real, probably." },
+    propaganda = { "SHE IS IN YOUR DREAMS", "Your Administrator never rests, not even while you do." },
 }
 LC.DreamPosterByMood = BY_MOOD
 
@@ -148,4 +153,24 @@ function LC.DreamPosterFor(pos)
         return seen[(Roll(pos, day, 3) % #seen) + 1]
     end
     return LC.DreamPosterTonight() or seen[#seen]
+end
+
+-- A dream's own poster, standing inside the dream (the owner, 14 November): big times a wall
+-- poster's size, its picture posters/dream_<art> (the drawn notice with the words without it),
+-- the words dream id's. It never changes what it shows and is never one of the city's hung posters.
+function LC.DreamBillboard(pos, facing, id, art, big)
+    local e = ents.Create("lc_civposter")
+    if not IsValid(e) then return nil end
+    local head, body = LC.DreamPosterWords(id)
+    e.lcDreamProp = true
+    e:SetPos(pos)
+    e:SetAngles(Angle(0, facing or 0, 0))
+    e:Spawn()
+    if e.SetModelScale then e:SetModelScale(big or 1) end -- (so it's drawn from as far as it's seen)
+    e:SetNW2String("lc_notice", "dream")
+    e:SetNW2String("lc_dream_id", art or id)
+    e:SetNW2String("lc_dream_head", head)
+    e:SetNW2String("lc_dream_body", body)
+    e:SetNW2Float("lc_big", big or 1)
+    return e
 end

@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version a51b984. Admin-only console messages and log lines are left out.
+Made from version caa42d5. Admin-only console messages and log lines are left out.
 
-12282 lines, from 328 files.
+12284 lines, from 328 files.
 
 ## Contents
 
@@ -148,7 +148,7 @@ Made from version a51b984. Admin-only console messages and log lines are left ou
 - [acts (server). See sh_livingcity_acts.lua for the list](#acts-server-see-shlivingcityactslua-for-the-list-svlivingcityactslua) (7)
 - [testing tools for admins](#testing-tools-for-admins-svlivingcityadmintoolslua) (48)
 - [citizens who show you the way](#citizens-who-show-you-the-way-svlivingcityadvicelua) (24)
-- [custom announcements, for Overwatch and for the Administrator](#custom-announcements-for-overwatch-and-for-the-administrator-svlivingcityannouncerlua) (50)
+- [custom announcements, for Overwatch and for the Administrator](#custom-announcements-for-overwatch-and-for-the-administrator-svlivingcityannouncerlua) (52)
 - [arrests in the open (the owner's playtest, 7 November)](#arrests-in-the-open-the-owners-playtest-7-november-svlivingcityarrestlua) (52)
 - [the time of day, the weather, and the city's music](#the-time-of-day-the-weather-and-the-citys-music-svlivingcityatmoslua) (1)
 - [The Battle Line, a propaganda dream (sv_livingcity_battleline.lua)](#the-battle-line-a-propaganda-dream-svlivingcitybattlelinelua-svlivingcitybattlelinelua) (48)
@@ -411,12 +411,12 @@ Made from version a51b984. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: use
 
-- "[City] {n}. Someone has painted over it: {or}."  (chat message, line 145)
-- "[Paste-up] {n} {n}"  (chat message, line 148)
+- "[City] {n}. Someone has painted over it: {or}."  (chat message, line 147)
+- "[Paste-up] {n} {n}"  (chat message, line 150)
 
 > Note for you (not shown in game): part of: draw
 
-- "Your cooperation is noted."  (drawn on screen, line 216)
+- "Your cooperation is noted."  (drawn on screen, line 224)
 
 ## lc_console.lua (lc_console.lua)
 
@@ -5420,27 +5420,35 @@ Made from version a51b984. Admin-only console messages and log lines are left ou
 - "Citizen Information clerk"  (text, line 744)
 - "The old-timer"  (text, line 747)
 
+> Note for you (not shown in game): Colonel Cubbage answering her speeches (sv_livingcity_speechanswer.lua): answer_<piece>
+
+- "Colonel Cubbage"  (text, line 753)
+
+> Note for you (not shown in game): One row of lc_voice_missing as lines short enough to arrive in chat (at most about 200 characters each).
+
+- "[Miscount] {name} (sound/livingcity/{folder}),"  (text, line 761)
+- "nothing missing"  (text, line 762)
+
 > Note for you (not shown in game): also as a file, one missing recording to a line (folder/name), for _dev/tools/elevenlabs_batch.py --missing: it then makes only what the server lacks (the owner, 11 November: "I already have loads of these")
 
-- "[Miscount] The whole list is also in data/livingcity/voice_missing.txt ({lines} lines)."  (text, line 763)
+- "[Miscount] The whole list is also in data/livingcity/voice_missing.txt ({lines} lines)."  (text, line 789)
 
-> Note for you (not shown in game): the console command lc_voice_missing
+> Note for you (not shown in game): (in pieces: a chat line over 255 characters never arrives, so the long rows went missing in game)
 
-- "[Miscount] {name} (sound/livingcity/{folder}), {missing}"  (text, line 766)
-- "[Miscount] {total} voice lines with no recording yet. Without one, the words still show (Half-Life 2's own Overwatch lines only with lc_announce_stock 1). Name a file for its line (curfew1.wav, ravenholm_defeat1.wav); a .txt with the same name is its subtitle. Everything to record, with suggested words: VOICE_LINES.md, in the gamemode's folder."  (text, line 769)
+- "[Miscount] {total} voice lines with no recording yet. Without one, the words still show (Half-Life 2's own Overwatch lines only with lc_announce_stock 1). Name a file for its line (curfew1.wav, ravenholm_defeat1.wav); a .txt with the same name is its subtitle. Everything to record, with suggested words: VOICE_LINES.md, in the gamemode's folder."  (text, line 795)
 
 > Note for you (not shown in game): the console command lc_announce_rescan
 
-- "[Miscount] {AnnounceRescan} custom announcements found."  (text, line 775)
+- "[Miscount] {AnnounceRescan} custom announcements found."  (text, line 801)
 
 > Note for you (not shown in game): the console command lc_announce_say
 
-- "[Miscount] lc_announce_say <overwatch\|administrator> <trigger> [warm\|firm\|stern\|furious]"  (text, line 781)
-- "[Miscount] Nothing in sound/{ROOT}{voice}/{trig}/ to say (or it's off)."  (text, line 784)
+- "[Miscount] lc_announce_say <overwatch\|administrator> <trigger> [warm\|firm\|stern\|furious]"  (text, line 807)
+- "[Miscount] Nothing in sound/{ROOT}{voice}/{trig}/ to say (or it's off)."  (text, line 810)
 
 > Note for you (not shown in game): the console command lc_announce_tier
 
-- "[Miscount] {trig}: she would be {t} about it now (sociostability {or}, {Heat} violent things in ten minutes){or}."  (text, line 792)
+- "[Miscount] {trig}: she would be {t} about it now (sociostability {or}, {Heat} violent things in ten minutes){or}."  (text, line 818)
 
 ## arrests in the open (the owner's playtest, 7 November) (sv_livingcity_arrest.lua)
 
@@ -8576,69 +8584,69 @@ Made from version a51b984. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): Happy
 
-- "The sky belongs to the Combine. Citizens who leave the ground will be returned to it."  (text, line 38)
-- "Fresh fruit is a privilege of compliance. Do not look up for it."  (text, line 39)
-- "A small, bald, beaked pet is loose in the city. Do not approach. Do not feed. Report."  (text, line 40)
-- "Movement without purpose is forbidden. Movement to music doubly so."  (text, line 41)
-- "Not the other thing. Never the other thing. Sleep is mandatory."  (text, line 42)
-- "Wagering on headcrabs is a crime against hygiene. Sanitation is watching."  (text, line 43)
-- "All colour belongs to the city. Unlicensed colour will be scrubbed."  (text, line 44)
-- "Lines are for rations. Lines are not for fun."  (text, line 45)
-- "Surplus soap must be returned to the Commissary. Nothing floats in this city."  (text, line 46)
-- "Unlicensed vehicles will be confiscated. So will the drivers."  (text, line 47)
+- "The sky belongs to the Combine, and citizens who leave the ground will be returned to it."  (text, line 43)
+- "Fresh fruit is a privilege of compliance; do not look up for it."  (text, line 44)
+- "A small, bald, beaked pet is loose in the city: do not approach it, do not feed it, report it."  (text, line 45)
+- "Movement without purpose is forbidden, and movement to music doubly so."  (text, line 46)
+- "Not the other thing, never the other thing; sleep is mandatory."  (text, line 47)
+- "Wagering on headcrabs is a crime against hygiene, and Sanitation is watching."  (text, line 48)
+- "All colour belongs to the city, and unlicensed colour will be scrubbed."  (text, line 49)
+- "Lines are for rations, not for fun."  (text, line 50)
+- "Surplus soap must be returned to the Commissary, for nothing floats in this city."  (text, line 51)
+- "Unlicensed vehicles will be confiscated, and so will their drivers."  (text, line 52)
 
 > Note for you (not shown in game): Neutral
 
-- "Citizens do not think about cheese. Citizens think about their quota."  (text, line 49)
-- "Unless there is not. Remain standing until told."  (text, line 50)
-- "Report any change to your appearance at once. Especially hooves."  (text, line 51)
-- "Not in a ring. Not with gloves. Not under lights."  (text, line 52)
-- "Every citizen will be tested. You will not know when. Study."  (text, line 53)
-- "Do not ask where the last one goes."  (text, line 54)
-- "Whatever you are holding, it is now your responsibility."  (text, line 55)
-- "And only when Overwatch says it. Listen closely."  (text, line 56)
-- "Clocks are not to be stopped, wound back or argued with."  (text, line 57)
-- "This includes tea. This especially includes tea."  (text, line 58)
-- "Every face is on file. Keep yours still."  (text, line 59)
-- "Open only the doors you were assigned. Some open onto nothing."  (text, line 60)
-- "Quiet blocks are safe blocks. Something is listening for noise."  (text, line 61)
-- "Litter is disorder. When an officer tells you, you pick it up. Then you put it in the bin."  (text, line 62)
+- "Citizens do not think about cheese; citizens think about their quota."  (text, line 54)
+- "Unless there is not, so remain standing until told."  (text, line 55)
+- "Report any change to your appearance at once, especially hooves."  (text, line 56)
+- "Not in a ring, not with gloves and not under lights."  (text, line 57)
+- "Every citizen will be tested, and you will not know when, so study."  (text, line 58)
+- "Do not ask where the last one goes."  (text, line 59)
+- "Whatever you are holding, it is now your responsibility."  (text, line 60)
+- "And only when Overwatch says it, so listen closely."  (text, line 61)
+- "Clocks are not to be stopped, wound back or argued with."  (text, line 62)
+- "This includes tea, and this especially includes tea."  (text, line 63)
+- "Every face is on file, so keep yours still."  (text, line 64)
+- "Open only the doors you were assigned, for some open onto nothing."  (text, line 65)
+- "Quiet blocks are safe blocks, and something is listening for noise."  (text, line 66)
+- "Litter is disorder: when an officer tells you, you pick it up, then you put it in the bin."  (text, line 67)
 
 > Note for you (not shown in game): Nightmares
 
-- "Do you? Stay on the routes you were given."  (text, line 64)
-- "They are heavier than they look, and they fall."  (text, line 65)
-- "Not every floor in this city will hold you. Report cracks."  (text, line 66)
-- "Do not breathe until told. Do not blink."  (text, line 67)
-- "You will not get far. You never do."  (text, line 68)
-- "Even when you close your eyes. Especially then."  (text, line 69)
+- "If you do not, stay on the routes you were given."  (text, line 69)
+- "They are heavier than they look, and they fall."  (text, line 70)
+- "Not every floor in this city will hold you, so report cracks."  (text, line 71)
+- "Do not breathe or blink until told."  (text, line 72)
+- "You will not get far; you never do."  (text, line 73)
+- "Even when you close your eyes."  (text, line 74)
 
 > Note for you (not shown in game): Propaganda (her dreams)
 
-- "Your Administrator has done so much for you. Show her."  (text, line 71)
-- "A grateful city remembers her. Bring what you can."  (text, line 72)
-- "You already know the answer. Say it aloud."  (text, line 73)
-- "When the monsters close in, the Administrator will save you. Wait for her."  (text, line 74)
-- "Loyalty is tested. Wrong answers are noted."  (text, line 75)
-- "This year's yield exceeds every target. Do not count it yourself."  (text, line 76)
-- "One worker did the work of fourteen. What is your excuse?"  (text, line 77)
-- "Anyone could be listening. Anyone could be one of them."  (text, line 78)
-- "Tonight's broadcast will show you how good. Watch it all."  (text, line 79)
-- "Know the enemy's face. Show what you feel about it."  (text, line 80)
-- "Every citizen holds up a card. Together they make her face."  (text, line 81)
-- "Have your station clean. She may have advice for you."  (text, line 82)
-- "Bring your scrap. Bring everyone's scrap. The city is built from it."  (text, line 83)
-- "Smile, wave and throw flowers. They are here to help."  (text, line 84)
-- "A desk will protect you. It always has."  (text, line 85)
-- "There is nothing there. The city has seen to it."  (text, line 86)
-- "Stand with her soldiers. Do not look at the giants."  (text, line 87)
+- "Your Administrator has done so much for you, so show her."  (text, line 76)
+- "A grateful city remembers her, so bring what you can."  (text, line 77)
+- "You already know the answer."  (text, line 78)
+- "When the monsters close in, the Administrator will save you, so wait for her."  (text, line 79)
+- "Loyalty is tested, and wrong answers are noted."  (text, line 80)
+- "This year's yield exceeds every target, so do not count it yourself."  (text, line 81)
+- "One worker did the work of fourteen, so what is your excuse?"  (text, line 82)
+- "Anyone could be listening, and anyone could be one of them."  (text, line 83)
+- "Tonight's broadcast will show you how good, so watch it all."  (text, line 84)
+- "Know the enemy's face, and show what you feel about it."  (text, line 85)
+- "Every citizen holds up a card, and together they make her face."  (text, line 86)
+- "Have your station clean, for she may have advice for you."  (text, line 87)
+- "Bring your scrap and everyone's scrap, for the city is built from it."  (text, line 88)
+- "Smile, wave and throw flowers, for they are here to help."  (text, line 89)
+- "A desk will protect you, as it always has."  (text, line 90)
+- "There is nothing there; the city has seen to it."  (text, line 91)
+- "Stand with her soldiers, and do not look at the giants."  (text, line 92)
 
 > Note for you (not shown in game): A dream without its own lines: its mood's.
 
-- "A compliant city dreams sweetly. Tonight may be one of those nights."  (text, line 93)
-- "If tonight's seems strange, report it in the morning. Then forget it."  (text, line 94)
-- "Whatever you see when your eyes are closed is not real. Probably."  (text, line 95)
-- "Your Administrator never rests. Not even while you do."  (text, line 96)
+- "A compliant city dreams sweetly, and tonight may be one of those nights."  (text, line 98)
+- "If tonight's seems strange, report it in the morning, then forget it."  (text, line 99)
+- "Whatever you see when your eyes are closed is not real, probably."  (text, line 100)
+- "Your Administrator never rests, not even while you do."  (text, line 101)
 
 ## The Midnight Rally (a Happy dream you play) (sv_livingcity_dreamrally.lua)
 
@@ -20619,42 +20627,42 @@ Made from version a51b984. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): It's Raining Melons
 
-- "It's Raining Melons"  (name, line 760)
-- "Watermelons are falling! Stand on a green glow to catch one. A red glow is a lead melon: keep out from under it."  (text, line 761)
-- "The rain stops"  (text, line 762)
-- "The last melon lands, the sun comes out, and you wake."  (text, line 762)
-- "It's Raining Melons"  (name, line 763)
-- "You wake up full, and sticky, and happy. There's no melon anywhere. There never is."  (text, line 764)
-- "You wake with a bump on your head that isn't there. Lead melons. Who grows those?"  (text, line 765)
-- "The rain stops"  (text, line 766)
-- "You wake to the sound of rain and, for a moment, hope."  (text, line 766)
+- "It's Raining Melons"  (name, line 761)
+- "Watermelons are falling! Stand on a green glow to catch one. A red glow is a lead melon: keep out from under it."  (text, line 762)
+- "The rain stops"  (text, line 763)
+- "The last melon lands, the sun comes out, and you wake."  (text, line 763)
+- "It's Raining Melons"  (name, line 764)
+- "You wake up full, and sticky, and happy. There's no melon anywhere. There never is."  (text, line 765)
+- "You wake with a bump on your head that isn't there. Lead melons. Who grows those?"  (text, line 766)
+- "The rain stops"  (text, line 767)
+- "You wake to the sound of rain and, for a moment, hope."  (text, line 767)
 
 > Note for you (not shown in game): part of: melon land
 
-- "A lead melon. It's exactly as heavy as it sounds."  (text, line 812)
-- "Your arms are full of melons and the sky is still raining them. A perfect dream."  (text, line 816)
+- "A lead melon. It's exactly as heavy as it sounds."  (text, line 827)
+- "Your arms are full of melons and the sky is still raining them. A perfect dream."  (text, line 831)
 
 > Note for you (not shown in game): part of: state
 
-- "Catch the melons! Stand on the green glows."  (text, line 848)
-- "Melons: %d of %d"  (message, line 849)
-- "The Heads in the Sky"  (text, line 854)
-- "Cheeeeese. Cheeeeeeeese."  (text, line 854)
-- "a choir of giant floating heads, humming, slow, warm, reverb-heavy and slightly off-key"  (text, line 854)
-- "The Heads in the Sky"  (text, line 855)
-- "The golden cheese! The golden cheese!"  (text, line 855)
-- "the same choir, suddenly excited, overlapping, high-pitched"  (text, line 855)
-- "The Music Man"  (text, line 856)
-- "Ladies and gentlemen, musical chairs! When the music stops... sit."  (text, line 856)
-- "a cheerful old game-show host, a little too close to the microphone"  (text, line 856)
-- "The Music Man"  (text, line 857)
-- "the game-show host, sudden and loud"  (text, line 857)
-- "A Gentle Voice"  (text, line 858)
-- "Go on. You always knew you could. Just... flap."  (text, line 858)
-- "a soft, kind, dreamy narrator, almost whispering"  (text, line 858)
-- "The Weatherman"  (text, line 859)
-- "Today's forecast: melons. Heavy melons, with a chance of lead."  (text, line 859)
-- "a chirpy TV weatherman, completely serious about it"  (text, line 859)
+- "Catch the melons! Stand on the green glows."  (text, line 863)
+- "Melons: %d of %d"  (message, line 864)
+- "The Heads in the Sky"  (text, line 869)
+- "Cheeeeese. Cheeeeeeeese."  (text, line 869)
+- "a choir of giant floating heads, humming, slow, warm, reverb-heavy and slightly off-key"  (text, line 869)
+- "The Heads in the Sky"  (text, line 870)
+- "The golden cheese! The golden cheese!"  (text, line 870)
+- "the same choir, suddenly excited, overlapping, high-pitched"  (text, line 870)
+- "The Music Man"  (text, line 871)
+- "Ladies and gentlemen, musical chairs! When the music stops... sit."  (text, line 871)
+- "a cheerful old game-show host, a little too close to the microphone"  (text, line 871)
+- "The Music Man"  (text, line 872)
+- "the game-show host, sudden and loud"  (text, line 872)
+- "A Gentle Voice"  (text, line 873)
+- "Go on. You always knew you could. Just... flap."  (text, line 873)
+- "a soft, kind, dreamy narrator, almost whispering"  (text, line 873)
+- "The Weatherman"  (text, line 874)
+- "Today's forecast: melons. Heavy melons, with a chance of lead."  (text, line 874)
+- "a chirpy TV weatherman, completely serious about it"  (text, line 874)
 
 ## ten more strange dreams (dreams you play) (sv_livingcity_strangedreams2.lua)
 

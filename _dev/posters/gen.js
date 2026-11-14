@@ -264,9 +264,9 @@ function page(p, defaced) {
     t += `<text x="${X0}" y="${y.toFixed(1)}" font-family="Inter Display" font-weight="900" font-size="${size}" fill="${acc}" textLength="${TW}" lengthAdjust="spacingAndGlyphs">${txt}</text>`;
     y += 15;
   }
-  const n = p.small.length, last = 944, step = n === 2 ? 34 : 29.5, fs = n === 2 ? 25 : 22.5;
+  const n = p.small.length, last = 944, step = n <= 2 ? 34 : 29.5, fs = n === 1 ? 28 : n === 2 ? 25 : 22.5;
   let sy = Math.max(y + 22, last - (n - 1) * step);
-  if (n === 2 || p.head.length === 1) sy = (y + 8 + last - (n - 1) * step) / 2 + 6;
+  if (n <= 2 || p.head.length === 1) sy = (y + 8 + last - (n - 1) * step) / 2 + 6;
   p.small.forEach((line, i) => {
     t += `<text x="384" y="${(sy + i * step).toFixed(1)}" text-anchor="middle" font-family="Inter" font-weight="${i === n - 1 && n === 3 ? 800 : 600}" font-size="${fs}" fill="${body}">${line}</text>`;
   });
