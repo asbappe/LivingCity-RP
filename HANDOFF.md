@@ -36,5 +36,5 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 - Earlier the same day: the playtest notes (stores, `lc_cp_damage_taken`, the medic, scientist, vest, water, board), the to-do run (Go to ground, operations on F4, clinic close calls, loudspeaker boxes and hacking, lab parts, Resistance lines, the dream card).
 - Tests: full suite on every core 6319 passed, 4 failed before fixes; three fixed (old vest, old infested death, the medic at home), the fourth is the known order-dependent LedgerTests one. Client smoke passes.
 - Open in TODO.md: the lab's dark look (needs the model in game), each dream's own card wording, the dream posters (a Fable 5.2 chat), the leader's clipboard for operations.
-- **Remind the owner at the end of every message until answered:** the unit that ran past and vanished (copy a report soon after: "Near you" names it).
+- The owner asked (14 November) to stop the reminder about the vanishing unit: don't raise it again unless they bring it up.
 - History of every earlier chat: `TIMELINE.md`, `CORE_CHANGELOG.md`.
