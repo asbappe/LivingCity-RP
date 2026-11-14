@@ -54,6 +54,15 @@ local function BuildFactions(menu, data)
         tools:DockMargin(4, 4, 4, 2)
         tools:SetText("Admin: testing tools (XP, ranks, credits, standing)")
         tools.DoClick = function() RunConsoleCommand("lc_admintools") if LC_CL and LC_CL.CloseHub then LC_CL.CloseHub() end end
+        -- the play study (cl_livingcity_study.lua): how the owner plays, as a model for the city's people
+        if LC_CL and LC_CL.StudyMenu and LocalPlayer().IsSuperAdmin and LocalPlayer():IsSuperAdmin() then
+            local study = vgui.Create("DButton", menu)
+            study:Dock(BOTTOM)
+            study:SetTall(28)
+            study:DockMargin(4, 4, 4, 0)
+            study:SetText((LC_CL.Studying and LC_CL.Studying()) and "Admin: play study (ON: stop, strike or discard)" or "Admin: play study (record how I play, for the code chat)")
+            study.DoClick = function() LC_CL.StudyMenu() if LC_CL.CloseHub then LC_CL.CloseHub() end end
+        end
     end
 
     local scroll = vgui.Create("DScrollPanel", menu)

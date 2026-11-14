@@ -48,6 +48,7 @@ This file is only an index. The specification of how everything behaves (the agr
 - [Pose Recorder (a separate tool)](docs/features/pose-recorder.md): The separate dance and pose tool
 - [The Resistance's way marks](docs/features/way-marks.md): permanent sprayed arrows and FREEDOM THIS WAY, painted on walls with the editor, pointing to rebel ground
 - [Posters that hint at dreams](docs/features/dream-posters.md): a share of the plain curfew posters foreshadow tonight's dream or remember a recent one
+- [The play study](docs/features/play-study.md): the owner's own play written down (who, where, in what, on which job), as a model for the city's people; F4 > Factions > Admin: play study
 - [Secret endings](docs/features/endings.md): Sealed directives, every ending, songs, the Endings menu
 - [The collapse: sociostability BLACK and the last stand](docs/features/collapse.md): Chaos after long red, the G-Man's offer to the Administrator, her last stand in her office, Barney and Freeman
 - [Hooks, and how the code is laid out](docs/features/code-layout.md): For whoever works on the code: modules, load order, hooks

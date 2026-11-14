@@ -15,7 +15,7 @@ or `python3 _dev/run_section.py "section name"`; `anon@N` is a nameless test blo
 A `-` under Tests means no test calls enough of this module's own functions (client code is covered by
 `_dev/client_smoke.py`).
 
-250 modules. Elsewhere: entities and weapons in `gamemodes/livingcity/entities/`, the editor tool in `lua/weapons/gmod_tool/stools/livingcity_editor.lua`, the player guide in `gamemode/cl_init.lua`.
+251 modules. Elsewhere: entities and weapons in `gamemodes/livingcity/entities/`, the editor tool in `lua/weapons/gmod_tool/stools/livingcity_editor.lua`, the player guide in `gamemode/cl_init.lua`.
 
 | Module | What it is | Server | Client | Shared | Key functions | Tests |
 |---|---|---|---|---|---|---|
@@ -92,7 +92,7 @@ A `-` under Tests means no test calls enough of this module's own functions (cli
 | `events` | City events | `server/sv_livingcity_events.lua` 41K | - | - | `LC.Announce`, `LC.EndEvent`, `LC.StartEvent`, `LC.CurfewGrace` | AnnouncementTests (3); section "Housing and curfew enforcement" (3); ConvoyTests (2) |
 | `evidence` | Burning the confiscated contraband (the owner, 7 November) | `server/sv_livingcity_evidence.lua` 36K | - | - | `LC.EvidenceAdd`, `LC.EvidenceTotal`, `LC.EvidenceBurnNow`, `LC.EvidenceLockerIsOpen`, `LC.EvidenceStatus`, `LC.EvidenceSnatch` | EvidenceTests (8); PatdownTests (5) |
 | `exercise` | Morning exercise (mandatory for citizens) | `server/sv_livingcity_exercise.lua` 71K | `client/cl_livingcity_exercise.lua` 10K | - | `LC.ExerciseSession`, `LC.ExerciseReady`, `LC.ExerciseBeat`, `LC.SpeechCrowd`, `LC.ExerciseFinish`, `LC.ExerciseMeans` | ExerciseParadeTests (7); ExerciseJogTests (5); ExerciseDrillTests (2) |
-| `factions` | City Factions (server) | `server/sv_livingcity_factions.lua` 54K | `client/cl_livingcity_factions.lua` 21K | `shared/sh_livingcity_factions.lua` 14K | `LC.AddXP`, `LC.SetFaction`, `LC.PlayerIsHunted`, `LCF.IsOverwatch`, `LC.CanJoinFaction`, `LCF.RankOf` | section "Factions" (6); CareerTests (6); SideBalanceTests (4) |
+| `factions` | City Factions (server) | `server/sv_livingcity_factions.lua` 54K | `client/cl_livingcity_factions.lua` 22K | `shared/sh_livingcity_factions.lua` 14K | `LC.AddXP`, `LC.SetFaction`, `LC.PlayerIsHunted`, `LCF.IsOverwatch`, `LC.CanJoinFaction`, `LCF.RankOf` | section "Factions" (6); CareerTests (6); SideBalanceTests (4) |
 | `feeds` | The two news feeds (lc_newsfeed, sv_livingcity_chronicle.lua) | - | `client/cl_livingcity_feeds.lua` 4K | - | `LC_CL.DrawFeed` | - |
 | `feel` | How the city feels to be in (the settings, shared) | - | - | `shared/sh_livingcity_feel.lua` 2K | `LC.EyeHeights` | - |
 | `feverdream` | The fever dream | - | `client/cl_livingcity_feverdream.lua` 8K | - | `LC_CL.FeverViewModel` | - |
@@ -154,7 +154,7 @@ A `-` under Tests means no test calls enough of this module's own functions (cli
 | `needs` | Survival and economy (client): hunger and thirst HUD, Credits | - | `client/cl_livingcity_needs.lua` 52K | - | `LC_CL.WrapPlain`, `LC_CL.QuietHUD`, `LC_CL.LeftColumnTop`, `LC_CL.LeftColumnBottom`, `LC_CL.SpoilText`, `LC_CL.NeedsVisible` | - |
 | `net` | Sending big and frequent things to players safely (server and client) | - | - | `shared/sh_livingcity_net.lua` 13K | `LC.SetGlobalLong`, `N.Assemble`, `LC.GetGlobalLong`, `N.Split` | NetSafetyTests (4) |
 | `nextstep` | What now? | `server/sv_livingcity_nextstep.lua` 15K | `client/cl_livingcity_nextstep.lua` 8K | - | `LC.NextStep`, `LC.FirstRationDue`, `LC_CL.PlacesPage`, `LC_CL.RankCard`, `LC_CL.WhatNowPage`, `LC_CL.ShowNextStep` | NextStepTests (2) |
-| `notices` | On the screen, not just in chat | `server/sv_livingcity_notices.lua` 9K | `client/cl_livingcity_notices.lua` 17K | - | `LC.Notice`, `LC.SetWaypoint`, `LC.WaypointTo`, `LC.FlushNotices`, `LC.BlockCenter`, `LC_CL.AddNotice` | PapersHousingTests (3); LaborTests (2) |
+| `notices` | On the screen, not just in chat | `server/sv_livingcity_notices.lua` 9K | `client/cl_livingcity_notices.lua` 17K | - | `LC.Notice`, `LC.SetWaypoint`, `LC.WaypointTo`, `LC_CL.AddNotice`, `LC.FlushNotices`, `LC.BlockCenter` | PapersHousingTests (3); LaborTests (2) |
 | `npcstr` | The city's people's name tags, sent only where they're seen | - | - | `shared/sh_livingcity_npcstr.lua` 9K | - | - |
 | `npcvices` | Citizens who drink and smoke | `server/sv_livingcity_npcvices.lua` 6K | - | - | `LC.NPCViceStart`, `LC.NPCViceOf`, `LC.NPCViceStop`, `LC.NPCViceTick` | MindsTests (3) |
 | `npcwork` | The city does its own work | `server/sv_livingcity_npcwork.lua` 51K | - | - | `LC.NPCWorkChoose`, `LC.NPCWorkGrace`, `LC.AddNPCTask`, `LC.NPCWorkReset`, `LC.NPCWorkDispatch`, `LC.CrabCarcass` | NPCWorkTests (4); PowerTests (3); CarryTests (2) |
@@ -240,6 +240,7 @@ A `-` under Tests means no test calls enough of this module's own functions (cli
 | `strangedreams3` | Ten more strange dreams, nonsense on purpose | `server/sv_livingcity_strangedreams3.lua` 56K | - | - | - | - |
 | `streetcrime` | Crime between citizens (the owner, 10 November: "citizen | `server/sv_livingcity_streetcrime.lua` 17K | - | - | `LC.Pickpocket`, `LC.OfferLoan`, `LC.AcceptLoan`, `LC.RepayDebt`, `LC.ReportDebt` | StreetCrimeTests (5) |
 | `streetlife` | Street life (the owner, 2 November: the lost v2.7 pieces, rebuilt) | `server/sv_livingcity_streetlife.lua` 17K | - | - | `LC.BrandishTick`, `LC.Obituary`, `LC.LoweredGround`, `LC.GunfireFear`, `LC.MustCarryLowered` | anon@25507 (2) |
+| `study` | The play study (server side) | `server/sv_livingcity_study.lua` 39K | `client/cl_livingcity_study.lua` 9K | - | `LC.Studying`, `LC.StudyStart`, `LC_CL.StudyMenu`, `LC.StudyStrike`, `LC_CL.StudyState` | anon@29920 (2) |
 | `suit` | First-person hands: the Infestation Control suits', and a unit's own | - | `client/cl_livingcity_suit.lua` 4K | - | `LC_CL.OwnHandsArms` | - |
 | `survival` | Survival | `server/sv_livingcity_survival.lua` 70K | - | - | `LC.HasItem`, `LC.GiveItem`, `LC.TakeItem`, `LC.InvAction`, `LC.SpawnWorldItem`, `LC.GiveOrDrop` | section "Hunger, thirst and survival" (12); UpdateTests (8); anon@24375 (8) |
 | `survivalmode` | Realistic or Relaxed survival, chosen per character | `server/sv_livingcity_survivalmode.lua` 6K | - | - | `LC.Relaxed`, `LC.SurvivalPayMul`, `LC.SurvivalMode`, `LC.SetSurvivalMode`, `LC.RelaxedNeedsMul`, `LC.SurvivalSwitchWait` | SurvivalModeTests (4); TalkTests (2) |
