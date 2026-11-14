@@ -208,6 +208,11 @@ local HARSH = {
 local RESPONSE_GAP = 180 -- (a response squad is announced once in three minutes, however many go in)
 local lastResponse = -1e9
 function LC.Announce(kind, path, detail)
+    -- A routine line waits for the PA to have been quiet a while (lc_announce_quiet, 90 seconds after the last
+    -- one finished), whoever asks for it (the owner, 14 November: four Overwatch lines in a row; the ration
+    -- stores going "short" again every time they ticked across the line asked for one each time, past the
+    -- guard the timed lines have).
+    if kind == "ambient" and LC.AnnounceTooSoon and LC.AnnounceTooSoon("ambient") then return end
     if kind == "response" then
         if CurTime() - lastResponse < RESPONSE_GAP then return end
         lastResponse = CurTime()

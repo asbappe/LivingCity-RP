@@ -528,6 +528,13 @@ local function InWater(ply) return ply:WaterLevel() >= 1 end
 -- your feet, at and below them (a canal's water is often a step down from the bank).
 LC.WaterReach = 110
 local WATER_MASK = bit.bor(CONTENTS_WATER or 32, CONTENTS_SLIME or 16)
+-- Water you can see (the owner, 14 November: a can filled ten feet from the water, with water under the ground
+-- and brush they stood on): the line from your eye to it crosses no wall or floor of the map's.
+local function WaterInView(ply, p)
+    if not (util.TraceLine and ply.EyePos) then return true end
+    local tr = util.TraceLine({ start = ply:EyePos(), endpos = p, mask = MASK_SOLID_BRUSHONLY, filter = ply })
+    return not (tr and tr.Hit) or tr.HitPos:DistToSqr(p) <= 8 * 8
+end
 function LC.NearWater(ply)
     if InWater(ply) then return true end
     if not (util and util.PointContents) then return false end
@@ -537,7 +544,7 @@ function LC.NearWater(ply)
             local rad = math.rad(a)
             for _, dz in ipairs({ -6, -40, -80 }) do
                 local p = feet + Vector(math.cos(rad) * r, math.sin(rad) * r, dz)
-                if bit.band(util.PointContents(p), WATER_MASK) ~= 0 then return true end
+                if bit.band(util.PointContents(p), WATER_MASK) ~= 0 and WaterInView(ply, p) then return true end
             end
             if r == 0 then break end
         end
@@ -745,6 +752,35 @@ end)
 -- F3 (the owner, 7 November: pockets moved from F2 to F3)
 hook.Add("ShowSpare1", "LivingCityInventory", function(ply) LC.SendInv(ply, true) end)
 concommand.Add("lci_inv", function(ply) if IsValid(ply) then LC.SendInv(ply, true) end end)
+
+-- A gun drawn from the pockets is in the hand, not the pockets, and only the pockets are saved: a server
+-- restart took a bought SMG and pistol (the owner, 14 November: "my pistol and SMG are gone ... why do I still
+-- have grenades"). Leaving the server (a restart, a map change, a disconnect), the guns in hand go back in the
+-- pockets, to be drawn again. Not the ones a faction hands out with the rank (that would be a free gun every
+-- restart), and not in a dream (its own hands, not the city's).
+function LC.PocketHeldGuns(ply)
+    if not IsValid(ply) or not ply.GetWeapons or ply.lcDreaming or ply.lcGunsPocketed then return 0 end
+    local byClass = {}
+    for id, it in pairs(LCS.Items) do if it.use == "arm" and it.weapon then byClass[it.weapon] = id end end
+    local inv, n = Inv(ply), 0
+    for _, w in ipairs(ply:GetWeapons() or {}) do
+        local cls = IsValid(w) and w:GetClass()
+        local id = cls and byClass[cls]
+        if id and not (LC.IsIssuedWeapon and LC.IsIssuedWeapon(ply, cls)) then
+            inv[id] = (inv[id] or 0) + 1 -- (past the weight limit if need be: it was being carried already)
+            n = n + 1
+        end
+    end
+    if n > 0 then
+        ply.lcGunsPocketed = true -- (once: a disconnect during the shutdown doesn't pocket them twice)
+        SaveInv(ply)
+    end
+    return n
+end
+hook.Add("PlayerDisconnected", "LivingCityPocketGuns", function(ply) LC.PocketHeldGuns(ply) end)
+hook.Add("ShutDown", "LivingCityPocketGuns", function()
+    for _, p in ipairs(player.GetAll()) do pcall(LC.PocketHeldGuns, p) end
+end)
 hook.Add("PlayerSay", "LivingCityInventoryChat", function(ply, text)
     local t = string.lower(string.Trim(text))
     if t == "!inv" or t == "!inventory" then LC.SendInv(ply, true) return "" end

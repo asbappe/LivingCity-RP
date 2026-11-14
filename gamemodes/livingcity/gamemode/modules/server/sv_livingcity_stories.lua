@@ -597,7 +597,8 @@ LC.Chain{
                 -- (the owner, 7 November: a choice popping up mid-fight took over the cursor in a zombie-infested
                 -- zone) no choice window here: a zombine in his uniform comes at you, the screen says who it must be,
                 -- and what you do decides it. Kill him (mercy), or walk out of the infestation (left).
-                local fight = Count("killed", 3, "Fight your way through: kill 3 zombies or headcrabs", function(_, _, npc) return Q.IsZombieNPC(npc) end)
+                local fight = Q.Spawns(Count("killed", 3, "Fight your way through: kill 3 zombies or headcrabs", function(_, _, npc) return Q.IsZombieNPC(npc) end),
+                    { role = "zombie", pos = z.pos, r = z.r or 400 })
                 -- (400 past its edge, and you've left the infestation: grown ground by its cells, LCZ.Near)
                 local him = {
                     kind = "count", event = "killed", need = 1, untallied = true,
@@ -1634,10 +1635,10 @@ LC.Chain{
                 desc = "You told the Resistance you're done with them. Overwatch wants proof: go in with the sweep team on their ground " .. Place(z.pos, ply:GetPos()) .. ", and put down two of their fighters.",
                 stages = {
                     go,
-                    Count("killed", 2, "Take down two of the Resistance's fighters there", function(_, _, npc)
+                    Q.Spawns(Count("killed", 2, "Take down two of the Resistance's fighters there", function(_, _, npc)
                         local st = LC.NPCs[npc]
                         return st ~= nil and st.role == "rebel" and IsValid(npc) and npc:GetPos():DistToSqr(z.pos) < zr * zr
-                    end),
+                    end), { role = "rebel", pos = z.pos, r = z.r or 300, arg = z }),
                 },
                 onFinish = function(q, success)
                     if not success then return end

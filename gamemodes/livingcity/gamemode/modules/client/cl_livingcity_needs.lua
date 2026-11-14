@@ -316,7 +316,7 @@ local function OpenInventory()
         b:Dock(TOP)
         b:DockMargin(0, 0, 0, 8)
         b:SetTall(30)
-        b:SetText("Change into plain clothes")
+        b:SetText("Change into citizen clothes")
         b.DoClick = function() Act("wear", "plain") end
     end
     if lastInv.alias then

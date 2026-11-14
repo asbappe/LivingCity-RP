@@ -757,6 +757,7 @@ end
 function EnterStage(q)
     local st = Stage(q)
     st.got, st.progress, st.seen = 0, 0, {}
+    st.enteredAt, st.shortSince, st.brought, st.lastBring = CurTime(), nil, 0, nil
     if st.onEnter and st.onEnter(q, st) == false then
         return Finish(q, false, st.failText or "the job's target couldn't be found")
     end
@@ -996,6 +997,72 @@ local function TailSuspicion(npc, p, st)
     return rate
 end
 
+-- A counter you can finish (the owner, 14 November: "if there is a counter, the quest is broken ... the
+-- gamemode needs to check and see if THREE SOLDIERS EXIST OR NOT. If they don't, then SPAWN THEM"). Every few
+-- seconds a kill counter counts the targets still standing that it would take. Short of what it still needs
+-- for ten seconds, it brings the rest: the stage's own `refill(q, st, missing)` (nil: not yet, they're on their
+-- way), else `spawn = { role, pos (or a function of q), r, arg }` (round the place, out of sight if it can).
+-- Nothing it can bring, and nothing left to fight for 45 seconds: what was done is paid, or the job is called off.
+local WATCH_EVERY, WATCH_SHORT, WATCH_GAP, WATCH_GIVEUP = 3, 10, 15, 45
+local function TargetsUp(q, st)
+    local n = 0
+    for npc in pairs(LC.NPCs) do
+        if IsValid(npc) and npc:Health() > 0 and not (st.seen and st.seen[npc]) then
+            local ok, yes = pcall(st.filter, q, q.owner, npc)
+            if ok and yes then n = n + 1 end
+        end
+    end
+    return n
+end
+local function SpawnTargets(q, st, missing)
+    local sp = st.spawn
+    local fn = sp and LC.Spawners and LC.Spawners[sp.role]
+    if not fn then return 0 end
+    local at0 = isfunction(sp.pos) and sp.pos(q) or sp.pos
+    if not at0 then return 0 end
+    local made = 0
+    for _ = 1, math.min(missing, 4) do
+        local at
+        if not sp.r and LC.AlarmSquadSpot then at = LC.AlarmSquadSpot(at0) end -- (anywhere: from out of sight, a walk away)
+        if not at then
+            local r = sp.r or 400
+            for _ = 1, 8 do
+                local a, d = math.random() * math.pi * 2, r * (0.3 + math.random() * 0.5)
+                local p = GroundAt(at0 + Vector(math.cos(a) * d, math.sin(a) * d, 0)) + Vector(0, 0, 6)
+                at = at or p
+                if not (LC.IsSeen and LC.IsSeen(p + Vector(0, 0, 40))) then at = p break end
+            end
+        end
+        local ok, npc = pcall(LC.ManpowerFree or function(f, ...) return f(...) end, fn, at, sp.arg)
+        if ok and IsValid(npc) then made = made + 1 end
+    end
+    return made
+end
+local function WatchTargets(q, st, now)
+    if not st.filter or st.untallied or st.poll or (st.need or 0) >= 9999 then return end
+    if now < (st.watchAt or 0) then return end
+    st.watchAt = now + WATCH_EVERY
+    local left = st.need - (st.got or 0)
+    if left <= 0 then return end
+    local up = TargetsUp(q, st)
+    if up >= left then st.shortSince = nil return end
+    st.shortSince = st.shortSince or now
+    if now - st.shortSince < WATCH_SHORT or now - (st.enteredAt or 0) < WATCH_SHORT then return end
+    local made
+    if (st.refill or st.spawn) and (st.brought or 0) < st.need * 2 + 2 and now - (st.lastBring or -1e9) >= WATCH_GAP then
+        if st.refill then made = st.refill(q, st, left - up) else made = SpawnTargets(q, st, left - up) end
+        if made == nil then st.shortSince = now return end -- (on their way: wait)
+        st.lastBring = now
+        st.brought = (st.brought or 0) + made
+        if made > 0 then st.shortSince = nil return end
+    end
+    if up == 0 and now - st.shortSince >= WATCH_GIVEUP then
+        if LC.Log then LC.Log("warn", "Quest counter had nothing left to take: " .. tostring(q.title)) end
+        if (st.got or 0) > 0 then return Advance(q) end
+        return Finish(q, false, "there was nobody left to fight there")
+    end
+end
+
 local function Poll(q, now)
     -- what the job was about is over (a raid put down while you were on your way, or after your
     -- first kill: the owner, 13 November, stuck at 1 of 2 with every attacker dead)
@@ -1102,6 +1169,8 @@ local function Poll(q, now)
         PollEscort(q, st)
     elseif k == "count" and st.poll then
         st.poll(q, st)
+    elseif k == "count" and st.event == "killed" then
+        WatchTargets(q, st, now)
     end
 end
 
@@ -1312,6 +1381,8 @@ local function Hold(pos, secs, text, r, crouch) return { kind = "hold", pos = po
 local function Count(event, need, text, filter, distinct)
     return { kind = "count", event = event, need = need, text = text, filter = filter, distinct = distinct ~= false }
 end
+-- What a kill counter brings when there aren't enough to take (WatchTargets): { role, pos, r, arg }.
+local function Spawns(st, sp) st.spawn = sp return st end
 local function Choice(prompt, options) return { kind = "choice", prompt = prompt, options = options, text = "Choose what to do" } end
 
 -- Hands-on games (sv_livingcity_jobgames.lua, sv_livingcity_moregames.lua):
@@ -2307,10 +2378,10 @@ T{
         return {
             title = "Ambush a patrol", reward = 40, limit = 480,
             desc = "For fighters only. Kill two Civil Protection units, then get away.",
-            stages = { Count("killed", 2, "Kill 2 Civil Protection units", function(_, _, npc)
+            stages = { Spawns(Count("killed", 2, "Kill 2 Civil Protection units", function(_, _, npc)
                 local st = LC.NPCs[npc]
                 return st ~= nil and LC.IsSecurity(st)
-            end) },
+            end), { role = "cop", pos = function(q) return IsValid(q.owner) and q.owner:GetPos() or nil end }) },
         }
     end,
 }
@@ -2722,10 +2793,10 @@ T{
         return {
             title = "Hunger", reward = 30, limit = 480,
             desc = "Feed.",
-            stages = { Count("killed", 2, "Kill 2 citizens", function(_, _, npc)
+            stages = { Spawns(Count("killed", 2, "Kill 2 citizens", function(_, _, npc)
                 local st = LC.NPCs[npc]
                 return st ~= nil and st.role == "citizen"
-            end) },
+            end), { role = "citizen", pos = function(q) return IsValid(q.owner) and q.owner:GetPos() or nil end }) },
         }
     end,
 }
@@ -3023,6 +3094,7 @@ end
 LC.QB = {
     Contact = Contact, PersonSpot = PersonSpot,
     Goto = Goto, Deliver = Deliver, Hold = Hold, Count = Count, Choice = Choice, GameGo = GameGo, GameStage = GameStage,
+    Spawns = Spawns,
     FindCitizenStage = FindCitizenStage, ArrestStage = ArrestStage, Flee = Flee,
     Spot = Spot, Route = Route, SpotsNear = SpotsNear, HideSpots = HideSpots, FindBins = FindBins, Place = Place, SafeHouse = SafeHouse, NearestZone = NearestZone,
     Freeze = Freeze, Lock = Lock, SpawnActor = SpawnActor, SpawnItem = SpawnItem,

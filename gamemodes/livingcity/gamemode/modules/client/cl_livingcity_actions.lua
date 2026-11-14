@@ -406,7 +406,7 @@ function LC_CL.OpenActions()
         -- the fighters we have left (sv_livingcity_manpower.lua)
         for _, l in ipairs(LC_CL.Manpower or {}) do Add(rs, l, function() end, "icon16/group.png") end
         if #(LC_CL.Manpower or {}) > 0 then rs:AddSpacer() end
-        Add(rs, "Change into plain clothes", function() Send("plain") end)
+        Add(rs, "Change into citizen clothes", function() Send("plain") end)
         Add(rs, "Gear up (Resistance clothes)", function() Send("gearup") end)
         Add(rs, "Black market (here, in rebel territory)", function() Send("market") end, "icon16/money.png")
         Add(rs, "Find the lab (the scientist makes our guns; mark it)", function() Send("waypoint", "lab") end, "icon16/map.png")
