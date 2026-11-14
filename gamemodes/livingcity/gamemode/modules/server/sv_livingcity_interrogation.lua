@@ -310,6 +310,8 @@ function LC.StartPlayerInterrogation(cp, prisoner)
 end
 
 function LC.PlayerInterrogationDo(cp, what, n)
+    -- (a prison guard questioning a prisoner who isn't a player: sv_livingcity_prisonguard.lua)
+    if LC.NPCInterrogationDo and LC.NPCInterrogationDo(cp, what, n) then return true end
     local prisoner, it
     for p, s in pairs(LC.Interrogations or {}) do if s.byPlayer == cp then prisoner, it = p, s break end end
     if not it then return false end

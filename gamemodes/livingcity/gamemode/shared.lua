@@ -238,6 +238,7 @@ LC_MODULES = {
         "sv_livingcity_guidance", -- (the quest trail's way, and where you are for the panel of what you can do)
         "sv_livingcity_fieldops", -- (after the quests and the war: backup's guns, squads for violent jobs, flashbangs, rebel ground)
         "sv_livingcity_labdamage", -- (a lab shot up and wrecked, and the job to fix it)
+        "sv_livingcity_questsearch", -- (a job's step of searching things by hand: hold E on each)
         "sv_livingcity_prisonguard", -- (the prison guard's four jobs; the fourth done makes them a soldier)
         "sv_livingcity_infestedside", -- (the infested as a hidden side: turned when not got up in an infestation)
         "sv_livingcity_jobboards", -- (job boards in the world: whose follows where it stands; E opens your Jobs)

@@ -250,3 +250,11 @@ Each of these is the owner's own request from the playtest notes. The small ones
 - [ ] **Order-dependent test (found 14 November):** "beaten until they blacked out: they came to in the crowd" (LedgerTests) failed once in `run_parallel.py` (6265 passed, 1 failed) and passes alone (`run_section.py`).
 - [x] (14 November: in every address of hers, `speech_slogan`; the standing rule is in `CORE.md`) **The owner's slogan: "Love your neighbour, hate the traitor."** Use it wherever new Administration content is written (the owner: "for speeches and anywhere else we/I have not created the content for yet").
 - [x] (14 November: renamed The Union Shift; the poster redrawn with her and fourteen workers) The owner's answers on the Stakhanov Shift.
+
+## No "stand here" steps: the older ones to replace (the owner, 14 November)
+The rule is in `CLAUDE.md` (house rule 9) and `CORE.md`. Fixed already: the prison guard jobs, Get the lab running (search by hand, the wiring game), Go to ground. Still standing about (file:line of the step):
+- [ ] **Shifts (sv_livingcity_work.lua):** bins (342, stay 6 s each), scrub a wall (378, crouch 5 s), count packs at the dispensers (426, 25 s), work the line (545, 25 s; 572, 20 s), fit a part (548, 15 s), streetlights, fuse boxes and a terminal "stay next to it to repair it" (804, 817, 833), the incinerator (1125, 30 s), rubble piles (1208).
+- [ ] **Side jobs (sv_livingcity_sidejobs.lua):** the dead streetlight (119, 128), the leak (157), open the cell during the alarm (246), cut the shackles (513).
+- [ ] **Board jobs (sv_livingcity_quests.lua):** a speech, stay 40 s (2034); post flyers, crouch 3 s (2104); plant a charge, crouch 5 s (2129); wait 20 s for a contact (2217); watch quietly 6 s (2623); a block search, stay 45 s (3103); a curfew street, stay 60 s (3118). Borderline (enemies come at you while you hold it): hold the ground 30 s (1734), stay 60 s while units come (1776).
+- [ ] **Stories (sv_livingcity_stories.lua):** watch a spot 15 s (477), a secret mass, 60 s (751), stand 90 s while Overwatch observes (834), a dead drop, crouch 4 s (1090).
+- [ ] **Vortigaunts (sv_livingcity_vortwork.lua):** reach out, still 20 s (158), read the checkpoint, 20 s (230).

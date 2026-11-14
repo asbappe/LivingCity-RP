@@ -1375,14 +1375,14 @@ ok(not LC.Buy(listener, "radio") and not LCS.BlackById.radio, "no plain radio an
 LC.GiveItem(listener, "radio_tuned")
 ok(LC.RadioBand(listener) == "resistance" and LCS.Items.radio_tuned.contraband, "a civilian's radio is a Freq 7 radio, and contraband")
 LC.TakeItem(listener, "radio_tuned") -- (the listener goes without one from here: no radio, no band)
-ok(LCS.LabById.radio_transmitter and LCS.LabById.radio_transmitter.needs.radio_tuned == 1, "the lab makes the transmitter from a Freq 7 radio")
+ok(not LCS.LabById.radio_transmitter and LCS.BlackById.radio_transmitter, "the transmitter is the quartermaster's and the black market's, not the lab's (14 November)")
 LC.GiveItem(rebelR, "radio_tuned")
 ok(LC.RadioBand(rebelR) == "resistance" and LC.RadioBand(unitR) == "cp", "a retuned radio is Freq 7; units are on the CP net")
 listener.chat, rebelR.chat, unitR.chat, deaf.chat = {}, {}, {}, {}
 hook.Run("PlayerSay", rebelR, "!r anyone out there")
 ok(has(rebelR.chat, "only listens") and not has(listener.chat, "anyone out there"), "a radio alone only listens: no talking without a radio transmitter")
 LC.GiveItem(listener, "radio_transmitter") LC.GiveItem(rebelR, "radio_transmitter")
-ok(LCS.Items.radio_transmitter.contraband and LCS.BlackById and LCS.BlackById.radio_transmitter and LCS.LabById.radio_transmitter, "the radio transmitter: contraband, from the black market or the Resistance lab")
+ok(LCS.Items.radio_transmitter.contraband and LCS.BlackById and LCS.BlackById.radio_transmitter, "the radio transmitter: contraband, from the black market or the quartermaster")
 hook.Run("PlayerSay", listener, "!r anyone out there")
 ok(not has(rebelR.chat, "anyone out there"), "a transmitter alone, with no Freq 7 radio: nobody hears you")
 rebelR.chat = {}
@@ -5023,7 +5023,7 @@ section("Workbenches and reclamation")
 sal.lookingAt = nil
 LC.GiveItem(sal, "scrap", 6)
 local okB, whyB = LC.Craft(sal, "crowbar")
-ok(not okB and string.find(whyB or "", "lab", 1, true), "a crowbar is the Resistance lab's work now, not a workbench's", whyB)
+ok(not okB, "a crowbar isn't made at a workbench (the quartermaster and the dealer sell them)", whyB)
 local bench = ents.Create("lc_workbench") bench:SetPos(T + Vector(40, -2000, 0))
 ok(LC.NearWorkbench(sal) == nil and LC.NearWorkbench(bench) ~= nil, "(rebels still find a lab bench to busy themselves at)")
 LC.GiveItem(sal, "armor_vest", 1)
@@ -5104,7 +5104,7 @@ section("Radio jammers")
 local jp = newPlayer("Jammerer", "resistance", nil, 900) jp.chat = {}
 _run(3)
 jp:SetPos(D + Vector(0, 3000, 0)) guard:SetPos(D + Vector(200, 3000, 0)) guard.chat = {}
-ok(LCS.LabById.jammer and LCS.BlackById.jammer and not LCS.RecipesById.jammer, "a jammer comes from the Resistance lab, or the black market")
+ok(not LCS.LabById.jammer and LCS.BlackById.jammer and not LCS.RecipesById.jammer, "a jammer comes from the quartermaster or the black market")
 LC.GiveItem(jp, "jammer", 1)
 local okJ, j = LC.PlaceJammer(jp)
 ok(okJ and IsValid(j) and LC.Jammed(guard:GetPos()), "set down, it jams everything near it")
@@ -8992,7 +8992,7 @@ LC.GiveItem(smith, "gun_parts", 2)
 LC.GiveItem(smith, "scrap", 3)
 smith:SetPos(Vector(43000, 0, 0))
 local nope, why = LC.Craft(smith, "gun_pistol")
-ok(not nope and why and why:find("lab's work") and LC.HasItem(smith, "gun_parts", 2), "a gun isn't made by hand: it's the Resistance lab's work, or the black market's", why)
+ok(not nope and LC.HasItem(smith, "gun_parts", 2), "a gun isn't made by hand: the quartermaster and the black market sell them", why)
 ok(LCS.BlackById.gun_pistol and LCS.BlackById.gun_pistol.price > 0, "the black market sells one")
 ok(LC.IsPrivate(smith), "with nobody watching it is private, wherever you are")
 LC.TakeItem(smith, "gun_parts", 2) LC.TakeItem(smith, "scrap", 3)
@@ -9015,7 +9015,7 @@ local AZ = Vector(48000, 48000, 0)
 local az = LC.AddZone(AZ, 500, "rebel", 0)
 LC.EnsureQuartermasters()
 local qm
-for n, st in pairs(LC.NPCs) do if IsValid(n) and st.quartermaster then qm = n end end
+for n, st in pairs(LC.NPCs) do if IsValid(n) and st.quartermaster and not st.medic then qm = n end end
 ok(qm ~= nil, "(there's a quartermaster)")
 local seller = newPlayer("ArmsSeller", "resistance", nil, 200)
 seller:SetPos(FAR)
@@ -9453,7 +9453,7 @@ section("The quartermaster, and fighters who follow you")
 LC.QMDead[wseed] = nil
 LC.EnsureQuartermasters()
 local qm, qst
-for n, st in pairs(LC.NPCs) do if IsValid(n) and st.quartermaster then qm, qst = n, st end end
+for n, st in pairs(LC.NPCs) do if IsValid(n) and st.quartermaster and not st.medic then qm, qst = n, st end end
 ok(qm ~= nil and LC.InRebelZone(qm:GetPos()), "rebel territory has a quartermaster")
 local leader = newPlayer("RebLeader", "resistance", nil, 500)
 leader:SetPos(qm:GetPos() + Vector(60, 0, 0))
@@ -14089,32 +14089,36 @@ cit.chat = {}
 net.sent = {}
 LC.UseScientist(cit, sci)
 ok(has(cit.chat, "private") and _lastnet("lc_lab") == nil, "he only works for the Resistance")
-local okN, whyN = LC.LabMake(cit, "gun_pistol", "pay")
+local okN, whyN = LC.LabMake(cit, "vest_cell", "pay")
 ok(not okN and whyN and string.find(whyN, "Resistance", 1, true), "(and won't make a citizen anything)")
 net.sent = {}
 LC.UseScientist(rebel, sci)
 local lab = Payload("lc_lab")
 local pistol
 for _, it in ipairs(lab and lab.items or {}) do if it.id == "gun_pistol" then pistol = it end end
-ok(pistol and pistol.price < LCS.BlackById.gun_pistol.price and pistol.price > LCS.Items.gun_pistol.sell * 1.5,
-    "for the Resistance: what he makes, for less than the dealer (but more than the quartermaster pays)", pistol and pistol.price)
+ok(pistol == nil, "guns aren't the lab's: anything the quartermaster sells isn't listed there (the owner, 14 November)")
+local cell
+for _, it in ipairs(lab and lab.items or {}) do if it.id == "vest_cell" then cell = it end end
+ok(cell and cell.price and cell.price < 60, "what only he makes (a charge cell) has his price", cell and cell.price)
 for id in pairs(LC.Inventory(rebel)) do if id == "gun_pistol" or id == "ammo_pistol" then LC.TakeItem(rebel, id, 99) end end
-LC.GiveItem(rebel, "gun_parts", 2) LC.GiveItem(rebel, "scrap", 3)
+LC.GiveItem(rebel, "scrap", 2) LC.GiveItem(rebel, "chemicals", 2)
 rebel.chat = {}
-ok(LC.LabMake(rebel, "gun_pistol", "mats"), "bring him the materials")
-ok(not LC.HasItem(rebel, "gun_parts"), "(he takes them)")
-local okB, whyB = LC.LabMake(rebel, "ammo_pistol", "pay")
+ok(not LC.LabMake(rebel, "gun_pistol", "mats"), "(no guns from him, even from materials)")
+ok(LC.LabMake(rebel, "vest_cell", "mats"), "bring him the materials")
+ok(not LC.HasItem(rebel, "chemicals"), "(he takes them)")
+local okB, whyB = LC.LabMake(rebel, "firebomb", "pay")
 ok(not okB, "one thing at a time", whyB)
-Later(13)
-ok(LC.HasItem(rebel, "gun_pistol") and has(rebel.chat, "He hands you"), "and he makes it, for nothing")
+Later(7)
+ok(LC.HasItem(rebel, "vest_cell") and has(rebel.chat, "He hands you"), "and he makes it, for nothing")
 LC.AddCredits(rebel, 500)
 local c0 = LC.Credits(rebel)
-local ammoPrice = LC.LabPrice(LCS.LabById.ammo_pistol)
-ok(LC.LabMake(rebel, "ammo_pistol", "pay") and LC.Credits(rebel) == c0 - ammoPrice, "or pay him", LC.Credits(rebel) - c0)
+local ammoPrice = LC.LabPrice(LCS.LabById.vest_cell)
+ok(LC.LabMake(rebel, "vest_cell", "pay") and LC.Credits(rebel) == c0 - ammoPrice, "or pay him (for what only he makes)", LC.Credits(rebel) - c0)
 Later(7)
-ok(LC.HasItem(rebel, "ammo_pistol"), "and it's yours")
+ok(LC.HasItem(rebel, "vest_cell", 2), "and it's yours")
+ok(not LC.LabMake(rebel, "ammo_pistol", "pay"), "(not for ammunition: that's the quartermaster's)")
 c0 = LC.Credits(rebel)
-LC.LabMake(rebel, "ammo_smg", "pay")
+LC.LabMake(rebel, "firebomb", "pay")
 rebel:SetPos(sci:GetPos() + Vector(900, 0, 0))
 rebel.chat = {}
 Later(1)
@@ -14123,17 +14127,17 @@ ok(LC.Credits(rebel) < c0 and has(rebel.chat, "keep at it") and sci.lcLabJob and
 do
     local thief = newPlayer("LabThief", "resistance", nil, 900)
     Later(12)
-    ok(sci.lcLabJob == nil and LC.LabHeldFor(sci, rebel) ~= nil and not LC.HasItem(rebel, "ammo_smg"), "finished while they were away: he keeps it for them")
+    ok(sci.lcLabJob == nil and LC.LabHeldFor(sci, rebel) ~= nil and not LC.HasItem(rebel, "firebomb"), "finished while they were away: he keeps it for them")
     thief:SetPos(sci:GetPos() + Vector(40, 0, 0))
     thief.lcLabUse = 0
     LC.UseScientist(thief, sci)
-    ok(not LC.HasItem(thief, "ammo_smg") and LC.LabHeldFor(sci, rebel) ~= nil, "nobody else is handed it")
+    ok(not LC.HasItem(thief, "firebomb") and LC.LabHeldFor(sci, rebel) ~= nil, "nobody else is handed it")
     rebel:SetPos(sci:GetPos() + Vector(40, 0, 0))
     rebel.lcLabUse, rebel.chat = 0, {}
     LC.UseScientist(rebel, sci)
-    ok(LC.HasItem(rebel, "ammo_smg") and has(rebel.chat, "kept it safe") and LC.LabHeldFor(sci, rebel) == nil, "back and talking to him: it's handed over")
+    ok(LC.HasItem(rebel, "firebomb") and has(rebel.chat, "kept it safe") and LC.LabHeldFor(sci, rebel) == nil, "back and talking to him: it's handed over")
     -- taken by a unit: what he was keeping is lost with him
-    LC.LabHold(sci, LC.LabKey(rebel), "ammo_smg", 1)
+    LC.LabHold(sci, LC.LabKey(rebel), "firebomb", 1)
     local heldWas = sci.lcLabHeld
     ok(heldWas ~= nil, "(something kept)")
     local saveShut = LC.LabShut
@@ -14149,7 +14153,7 @@ Later(1)
 LC.UseScientist(unit, sci)
 ok(LC.LabShut(sci) and has(unit.chat, "Resistance lab"), "a unit who finds him shuts the lab down")
 rebel:SetPos(sci:GetPos() + Vector(40, 0, 0))
-local okS, whyS = LC.LabMake(rebel, "ammo_pistol", "pay")
+local okS, whyS = LC.LabMake(rebel, "vest_cell", "pay")
 ok(not okS and whyS and string.find(whyS, "Find the scientist", 1, true), "nothing is made there for a while", whyS)
 Later(GetConVar("lc_lab_shutdown"):GetFloat() + 1)
 ok(not LC.LabShut(sci), "then he's back")
@@ -14182,7 +14186,7 @@ local r1 = newPlayer("LabDier", "resistance", nil, 900)
 Later(3)
 r1:SetPos(sci:GetPos() + Vector(40, 0, 0))
 LC.AddCredits(r1, 500)
-ok(LC.LabMake(r1, "ammo_smg", "pay"), "a rebel pays for a job")
+ok(LC.LabMake(r1, "vest_cell", "pay"), "a rebel pays for a job (what only the lab makes)")
 r1:Kill()
 local cAfter = LC.Credits(r1)
 Later(1)
@@ -14193,37 +14197,37 @@ r1:SetPos(Vector(-150000, 150000, 0))
 local r2 = newPlayer("LabDier2", "resistance", nil, 900)
 Later(3)
 r2:SetPos(sci:GetPos() + Vector(40, 0, 0))
-LC.GiveItem(r2, "gun_parts", 2) LC.GiveItem(r2, "scrap", 3)
-local parts0 = ItemsNear(sci:GetPos(), "gun_parts")
-ok(LC.LabMake(r2, "gun_pistol", "mats"), "a rebel brings materials")
+LC.GiveItem(r2, "chemicals", 2) LC.GiveItem(r2, "scrap", 2)
+local parts0 = ItemsNear(sci:GetPos(), "chemicals")
+ok(LC.LabMake(r2, "vest_cell", "mats"), "a rebel brings materials")
 r2:Kill()
 Later(1)
-ok(ItemsNear(sci:GetPos(), "gun_parts") == parts0 + 2, "dying mid-job leaves the materials at the lab", ItemsNear(sci:GetPos(), "gun_parts") - parts0)
+ok(ItemsNear(sci:GetPos(), "chemicals") == parts0 + 2, "dying mid-job leaves the materials at the lab", ItemsNear(sci:GetPos(), "chemicals") - parts0)
 r2:SetPos(Vector(-150000, 150000, 0))
 -- walks off with full pockets: what he hands back lands at their feet
 local r3 = newPlayer("LabFull", "resistance", nil, 900)
 Later(3)
 r3:SetPos(sci:GetPos() + Vector(40, 0, 0))
-for id in pairs(LC.Inventory(r3)) do if id == "gun_parts" then LC.TakeItem(r3, id, 99) end end
-LC.GiveItem(r3, "gun_parts", 2) LC.GiveItem(r3, "scrap", 3)
-ok(LC.LabMake(r3, "gun_pistol", "mats"), "another job")
+for id in pairs(LC.Inventory(r3)) do if id == "chemicals" then LC.TakeItem(r3, id, 99) end end
+LC.GiveItem(r3, "chemicals", 2) LC.GiveItem(r3, "scrap", 2)
+ok(LC.LabMake(r3, "vest_cell", "mats"), "another job")
 local savedCarry = LC.CanCarry
 LC.CanCarry = function() return false end
 r3:SetPos(sci:GetPos() + Vector(900, 0, 0))
-local before = ItemsNear(r3:GetPos(), "gun_parts")
+local before = ItemsNear(r3:GetPos(), "chemicals")
 Later(1)
 LC.CanCarry = savedCarry
-ok(ItemsNear(r3:GetPos(), "gun_parts") == before and sci.lcLabJob and sci.lcLabJob.away == true, "walking off with full pockets: nothing is dropped, he keeps working", ItemsNear(r3:GetPos(), "gun_parts") - before)
+ok(ItemsNear(r3:GetPos(), "chemicals") == before and sci.lcLabJob and sci.lcLabJob.away == true, "walking off with full pockets: nothing is dropped, he keeps working", ItemsNear(r3:GetPos(), "chemicals") - before)
 Later(20)
-ok(sci.lcLabJob == nil and LC.LabHeldFor(sci, r3) ~= nil, "and keeps the pistol for them when it's done")
+ok(sci.lcLabJob == nil and LC.LabHeldFor(sci, r3) ~= nil, "and keeps it for them when it's done")
 r3:SetPos(sci:GetPos() + Vector(40, 0, 0))
 r3.lcLabUse = 0
 LC.UseScientist(r3, sci)
-ok(LC.HasItem(r3, "gun_pistol"), "collected on coming back")
+ok(LC.HasItem(r3, "vest_cell"), "collected on coming back")
 -- someone else's job isn't cleared by an old one finishing
 r3:SetPos(sci:GetPos() + Vector(40, 0, 0))
 LC.AddCredits(r3, 500)
-ok(LC.LabMake(r3, "ammo_pistol", "pay"), "a job starts")
+ok(LC.LabMake(r3, "firebomb", "pay"), "a job starts")
 local other = { ply = r3, untilT = CurTime() + 999 }
 sci.lcLabJob = other
 Later(8)
@@ -23817,7 +23821,7 @@ end)()
     LC.ScientistNear = function() return sci end
     local okS, why = LC.LabSurgery(pat)
     ok(okS, "the scientist will change your face (for the Resistance, for credits)", why)
-    _run(21)
+    _run(LC.SurgerySecs + 1) -- (forty seconds under since 14 November)
     ok(pat:GetNW2String("lc_model", "") ~= "models/humans/group01/male_02.mdl" and not LC.PlayerIsWanted(pat) and LC.Standing(pat) >= -50,
         "you wake with a new face: not wanted, and the records can't put your old standing to it", pat:GetNW2String("lc_model", "") .. " " .. LC.Standing(pat))
     ok(not LC.LabSurgery(pat), "(not again for a while)")
@@ -23951,7 +23955,7 @@ section("The Resistance's money: intel, skimming, forged cards")
     LC.JobGameEnd(worker, "quit")
     worker.valid = false
     -- forged cards: five at a time at the lab; enough turning up, and they come for the forger
-    ok(LCS.LabById.forged_batch and LCS.LabById.forged_batch.count == 5, "the lab makes forged ration cards five at a time")
+    ok(not LCS.LabById.forged_batch and LCS.BlackById.ration_forged, "forged ration cards are the quartermaster's and the dealer's, not the lab's (14 November)")
     local zr = LC.AddZone(F0 + Vector(0, -2000, 0), 300, "rebel", 0)
     _setcvar("lc_forgery_heat", 3)
     LC.PlannedSweep = nil
@@ -24707,7 +24711,7 @@ section("The 1 November playtest: infestations, sweeps, tools, traits, bins, rat
     gk:SetHealth(100)
     LC.Consume(gk, "tainted_bread")
     ok(gk:Health() < 100, "and whoever eats it is poisoned", gk:Health())
-    ok(LCS.LabById.chemicals_weedkiller and LCS.LabById.chemicals_weedkiller.needs.weedkiller == 2, "two canisters cook down into chemicals at the lab")
+    ok(not LCS.LabById.chemicals_weedkiller, "the lab no longer cooks weedkiller into chemicals (the owner, 14 November)")
     do
     ok(not LCS.LabById.gas_bomb and LCS.LabById.firebomb and LCS.LabById.firebomb.needs.weedkiller == 2 and LCS.Items.firebomb.grenade == "fire",
         "the lab makes a firebomb from weedkiller now, not poison gas")
@@ -27710,9 +27714,20 @@ function LabDamageTests()
             end
             reb:SetPos(LB)
             _run(1)
-            ok(q.stages[q.stage].kind == "hold", "parts found and brought: now put it back together")
+            -- (the parts' searches, if the map had a yard, a shop or a box: done by hand, here at once)
+            for _ = 1, 4 do
+                local cs = q.stages[q.stage]
+                if cs and cs.search and not q.done then
+                    for e in pairs(cs.search) do if not q.done and q.stages[q.stage] == cs then LC.QuestSearchDone(reb, q, cs, e) end end
+                end
+            end
+            reb:SetPos(LB)
+            _run(2)
+            ok(q.stages[q.stage].event == "game_done", "parts found and brought: now rewire the bench (the wiring game, no standing about)", tostring(q.stages[q.stage].kind))
             ok(LC.LabBroken(bench), "(still wrecked until it's done)")
-            _run(40) -- (the test clock runs quest timers a little slow)
+            if LC.JobGames and LC.JobGames[reb] then LC.JobGameEnd(reb, "test") end
+            LC.QuestEvent("game_done", reb)
+            _run(1)
             ok(q.done and not LC.LabBroken(bench) and bench:GetNW2Int("lc_lab_dmg", 0) == 0, "repaired: the smoke and sparks stop")
             ok(LC.ScientistNear(sci:GetPos()) == sci, "and the lab works again")
         end
@@ -29855,9 +29870,78 @@ section("The owner's 14 November answers: prison guards, the infested, Lamarr, d
     ok(LC.IsPrisonGuard(pg), "an Overwatch recruit starts as a Combine Prison Guard", pg:GetNW2Int("lcf_rank", 0))
     local cop = newPlayer("NotGuard15", "cp")
     local n = 0
-    for _, id in ipairs({ "pg_inspect", "pg_question", "pg_break", "pg_watch" }) do if T(id) then n = n + 1 end end
+    for _, id in ipairs({ "pg_inspect", "pg_question", "pg_break", "pg_riot" }) do if T(id) then n = n + 1 end end
     ok(n == 4, "four prison guard jobs", n)
-    ok(not T("pg_watch").available(cop), "a metrocop doesn't get them")
+    ok(not T("pg_riot").available(cop), "a metrocop doesn't get them")
+    -- no "stand here" in any of them (the owner, 14 November)
+    local standing = 0
+    LC.PointsOfKind_was = LC.PointsOfKind
+    for _, id in ipairs({ "pg_inspect", "pg_question", "pg_break", "pg_riot" }) do
+        local okB, spec = pcall(T(id).build, pg)
+        for _, st in ipairs(okB and spec and spec.stages or {}) do if st.kind == "hold" or st.kind == "survive" then standing = standing + 1 end end
+    end
+    ok(standing == 0, "none of the prison jobs is standing about", standing)
+    -- searching by hand: E on a thing in the stage, held, searches it; the hidden one ends it
+    do
+        local q = { stages = {}, stage = 1, data = {}, ents = {}, members = { pg }, owner = pg, expires = CurTime() + 300, title = "Test search", board = "Directives", id = 99123, narration = {} }
+        local a, b = ents.Create("prop_physics"), ents.Create("prop_physics")
+        a:Spawn() b:Spawn()
+        local st = { kind = "count", need = 2, got = 0, search = { [a] = true, [b] = true }, searched = {}, hidden = b, emptyWords = { "Nothing." } }
+        local found = false
+        st.foundFn = function() found = true return true end
+        q.stages[1] = st
+        LC.QuestOf[pg] = q
+        ok(hook.t.PlayerUse.LivingCityQuestSearch(pg, a) == false, "E on a thing to search does nothing else for the job holder (the bed, the toilet: off)")
+        LC.Searching[pg] = nil
+        LC.QuestSearchDone(pg, q, st, a)
+        ok(st.searched[a] and not found, "searched: nothing in that one")
+        LC.QuestSearchDone(pg, q, st, b)
+        ok(found, "the hidden one has it")
+        LC.QuestOf[pg] = nil
+        a:Remove() b:Remove()
+    end
+    -- questioning a prisoner who isn't a player: lies and silence until broken, then the truth
+    do
+        local pr, pst = LC.Spawners.citizen(Vector(-66000, -66000, 4))
+        pst = pst or LC.NPCs[pr]
+        pst.jailUntil = CurTime() + 600
+        LC.OnNPCReachedCell(pr, pst, CurTime())
+        pr:SetPos(pg:GetPos() + Vector(40, 0, 0))
+        local q = { data = {}, stages = {}, stage = 1, members = { pg }, owner = pg, expires = CurTime() + 300, title = "Test question", board = "Directives", id = 99124, narration = {}, ents = {} }
+        ok(LC.NPCInterrogationStart(pg, pr, q), "a guard starts questioning someone held in a cell")
+        local s = LC.NPCInterrogations[pg]
+        local start = s.resolve
+        LC.NPCInterrogationDo(pg, "baton")
+        ok(s.resolve == start - 1 and s.hits == 1, "the baton wears them down")
+        s.resolve = 0
+        LC.NPCInterrogationDo(pg, "ask", 1)
+        _advance(2) _runtimers()
+        ok(q.data.talked and LC.NPCInterrogations[pg] == nil, "broken, they tell the truth, and that ends it")
+        pr:Remove()
+    end
+    -- the riot: the baton always quiets a prisoner; ordering them may not
+    do
+        local q = { data = {}, stages = {}, stage = 1, ents = {} }
+        local r = ents.Create("npc_citizen") r:Spawn()
+        q.stages[1] = { rioters = { [r] = { noise = 50, quiet = false } } }
+        LC.QuestOf[pg] = q
+        ok(LC.RiotQuiet(pg, r, "baton") and q.stages[1].rioters[r].quiet, "the baton quiets a rioting prisoner")
+        LC.QuestOf[pg] = nil
+        r:Remove()
+    end
+    LC.PointsOfKind_was = nil
+    -- the lab and the quartermaster (the owner, 14 November): nothing he sells is the lab's
+    ok(LC.QuartermasterStocks("gun_pistol") and not LC.QuartermasterStocks("vest_cell"), "the quartermaster stocks pistols, not charge cells")
+    local dup = {}
+    for _, r in ipairs(LCS.Lab) do if LC.QuartermasterStocks(r.out) then dup[#dup + 1] = r.id end end
+    ok(#dup == 0 and LCS.LabById.vest_cell and LCS.LabById.firebomb and LCS.LabById.foil_hat and not LCS.LabById.radio_transmitter,
+        "the lab makes only what the quartermaster doesn't sell: charge cells, firebombs, the foil hat", table.concat(dup, ", "))
+    do
+        local rr = newPlayer("LabBuyer15", "resistance", nil, 400)
+        LC.AddCredits(rr, 500)
+        local okP, whyP = LC.LabMake(rr, "gun_pistol", "pay")
+        ok(not okP, "and won't make a pistol", whyP)
+    end
     pg:SetPData("lc_pg_jobs", 0)
     for i = 1, 3 do LC.PrisonGuardJobDone(pg) end
     ok(LC.IsPrisonGuard(pg) and LC.PrisonGuardDone(pg) == 3, "three done: still a guard")

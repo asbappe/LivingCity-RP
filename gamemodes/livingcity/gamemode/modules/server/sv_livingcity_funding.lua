@@ -21,8 +21,8 @@
                     at the end of the shift (it comes out of your pay, and
                     your standing).
 
-      Forgery       the lab's scientist turns out forged ration cards five at
-                    a time (paper and chemicals). The dealer buys them (4 each)
+      Forgery       forged ration cards (the quartermaster's and the dealer's;
+                    the lab made them until 14 November). The dealer buys them (4 each)
                     and the dispensers take them. But every forged card that
                     turns up (sold, or used at a dispenser) heats up the
                     Combine's search for the forger (lc_forgery_heat: at 15, it

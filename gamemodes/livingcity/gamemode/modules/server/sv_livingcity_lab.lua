@@ -4,24 +4,22 @@
     A lab ("Fixture: Resistance lab" in the editor; entities/lc_workbench.lua)
     is one of Dr. Kleiner's own lab workstations with a scientist standing
     beside it (entities/lc_scientist.lua): the Resistance's own, Dr. Kleiner,
-    Eli Vance or Dr. Magnusson, a different one at each lab. He decodes
-    Combine data chips (use one from your pockets beside him), and makes
-    what a cell needs and can't buy in the open (LCS.Lab, the shared shop
-    config): guns, ammunition, armour, jammers, bypass charges, smoke bombs,
-    and a Union radio retuned to Freq 7.
+    Eli Vance or Dr. Magnusson, a different one at each lab. He does what
+    nobody else in the city does (LCS.Lab, the shared shop config): charge
+    cells for a vest, firebombs and the foil hat; decoding Combine data chips,
+    a new face, pulling the chip. Nothing the quartermaster sells is made or
+    listed here (the owner, 14 November: "anything the quartermaster sells
+    should not appear at all in the lab"; guns, ammunition, the vest and the
+    rest are the quartermaster's).
 
       Bring him the materials and he makes it for nothing. Or pay him:
       lc_lab_price (60%) of what the black market dealer charges, and never
-      less than the quartermaster would pay for it (no money in buying from
-      him to sell on). He takes a few seconds; stay in the lab, or he hands
-      it all back.
+      less than it sells back for. He takes a few seconds; walk off and he
+      keeps it for you.
 
-    Only for the Resistance. Anyone else gets shown the door, and buys these
-    at the black market dealer instead. A unit who finds him shuts the lab
-    down: the scientist is taken away for lc_lab_shutdown (600) seconds.
-
-    Every rebel base needs a lab for its guns. Lockpicks and bandages are
-    still made by hand, from F3, anywhere.
+    Only for the Resistance. Anyone else gets shown the door. A unit who
+    finds him shuts the lab down: the scientist is taken away for
+    lc_lab_shutdown (600) seconds.
 ]]
 
 if CLIENT then return end
@@ -234,6 +232,15 @@ end
 -- Dealing with him
 ------------------------------------------------------------------------
 
+-- Does the quartermaster sell this item? Then it isn't the lab's at all (the owner, 14 November: "anything
+-- the quartermaster sells should not appear at all in the lab"): not listed, not made.
+function LC.QuartermasterStocks(item)
+    for _, g in ipairs(LC.MarketBlackList and LC.MarketBlackList() or LCS.Black or {}) do
+        if g.item == item then return true end
+    end
+    return false
+end
+
 function LC.SendLab(ply, sci)
     local credits = LC.Credits and LC.Credits(ply) or 0
     local inv = LC.Inventory and LC.Inventory(ply) or {}
@@ -241,7 +248,7 @@ function LC.SendLab(ply, sci)
     -- (and what he makes while the Commissary won't sell it: sv_livingcity_market.lua)
     for _, r in ipairs(LC.MarketLabList and LC.MarketLabList() or LCS.Lab or {}) do
         local it = LCS.Items[r.out]
-        if it then
+        if it and not LC.QuartermasterStocks(r.out) then
             local can, mats = true, {}
             for id, n in pairs(r.needs) do
                 local have = inv[id] or 0
@@ -379,6 +386,7 @@ function LC.LabMake(ply, id, how)
     local r = (LC.MarketLabById and LC.MarketLabById(id)) or (LCS.LabById and LCS.LabById[id])
     if not r or not IsValid(ply) then return false end
     if not Rebel(ply) then return false, "He only works for the Resistance." end
+    if LC.QuartermasterStocks(r.out) then return false, "\"The quartermaster has those. I've better things to make.\"" end
     if r.dreamGate and LC.DreamOptOutEarned then
         local earned, why = LC.DreamOptOutEarned(ply)
         if not earned then return false, why end
@@ -473,7 +481,9 @@ end
 
 ------------------------------------------------------------------------
 -- A new face. Papers in a dead man's name don't stop a unit who knows your
--- face; the scientist can change it. Twenty seconds under (stay on the table),
+-- face; the scientist can change it. Forty seconds under, in the dark, hearing all of it (stay on the
+-- table; LC.SurgeryScene, the owner, 14 November: "black your screen, then have whirring sounds and gross
+-- mushy flesh sounds and maybe a metallic ding or clang ... about 40 seconds"),
 -- lc_surgery_price credits, and you wake with someone else's face, bandaged
 -- and slow on your feet for a few minutes. Nobody's looking for that face:
 -- your wanted status, any BOLO on you and the scanners' pictures are gone,
@@ -502,6 +512,34 @@ local function NewFace(ply)
     return #list > 0 and list[math.random(#list)] or nil
 end
 
+LC.SurgerySecs = 40
+-- What you hear on the table, in the dark: { seconds in, sound, volume } (one-off sounds only, never a loop).
+LC.SurgeryScene = {
+    { 1, "items/medshot4.wav", 60 },
+    { 4, "npc/dog/dog_servo1.wav", 65 }, { 5.5, "npc/dog/dog_servo2.wav", 65 },
+    { 7, "physics/flesh/flesh_squishy_impact_hard1.wav", 60 },
+    { 9, "npc/dog/dog_servo6.wav", 65 }, { 10, "physics/flesh/flesh_squishy_impact_hard2.wav", 60 },
+    { 12, "physics/flesh/flesh_bloody_break.wav", 55 },
+    { 14, "physics/metal/metal_solid_impact_soft1.wav", 70, "Something metal drops into a tray." },
+    { 16, "npc/dog/dog_servo7.wav", 65 }, { 17.5, "npc/dog/dog_servo8.wav", 65 },
+    { 19, "physics/flesh/flesh_squishy_impact_hard3.wav", 60, "\"Hold still. Well, you are holding still. Good.\"" },
+    { 22, "physics/flesh/flesh_impact_bullet3.wav", 55 }, { 23.5, "physics/flesh/flesh_squishy_impact_hard4.wav", 60 },
+    { 26, "npc/dog/dog_servo10.wav", 65 },
+    { 28, "physics/metal/metal_canister_impact_hard1.wav", 75, "Clang. \"Oh dear. No, that's fine. That's fine.\"" },
+    { 31, "physics/flesh/flesh_squishy_impact_hard1.wav", 60 }, { 33, "npc/dog/dog_servo12.wav", 65 },
+    { 35, "physics/flesh/flesh_bloody_break.wav", 50 },
+    { 37, "buttons/bell1.wav", 60, "Ding. \"Done! Now, the bandages.\"" },
+}
+local function PlayScene(ply, sci, job)
+    for _, s in ipairs(LC.SurgeryScene) do
+        timer.Simple(s[1], function()
+            if not IsValid(ply) or not (IsValid(sci) and sci.lcLabJob == job) then return end
+            ply:EmitSound(s[2], s[3] or 60)
+            if s[4] then ply:ChatPrint("** " .. s[4]) end
+        end)
+    end
+end
+
 function LC.LabSurgery(ply)
     local ok, why = LC.SurgeryReady(ply)
     if not ok then return false, why end
@@ -511,13 +549,13 @@ function LC.LabSurgery(ply)
     if job and IsValid(job.ply) and job.untilT > CurTime() then return false, "He's in the middle of someone else's work." end
     local price = cvSurgery:GetInt()
     LC.AddCredits(ply, -price, "a new face")
-    job = { ply = ply, untilT = CurTime() + 20 }
+    job = { ply = ply, untilT = CurTime() + LC.SurgerySecs }
     sci.lcLabJob = job
     local function Clear() if IsValid(sci) and sci.lcLabJob == job then sci.lcLabJob = nil end end
     Say(ply, "\"Lie down, lie down. You'll feel a little... well. You won't feel anything, actually. Count backwards from ten.\"")
     ply:ScreenFade(bit.bor(SCREENFADE.OUT or 2, SCREENFADE.STAYOUT or 8), Color(0, 0, 0, 255), 2, 0)
-    ply:EmitSound("items/medshot4.wav", 60)
-    local okT, whyT = LC.StartTask(ply, 20, "Under the knife... stay on the table", {
+    PlayScene(ply, sci, job)
+    local okT, whyT = LC.StartTask(ply, LC.SurgerySecs, "Under the knife... stay on the table", {
         maxMove = 120,
         done = function(p)
             Clear()

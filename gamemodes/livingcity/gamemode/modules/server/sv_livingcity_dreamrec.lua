@@ -474,8 +474,19 @@ function LC.DreamRecBegin(p, id)
         R.usedEnt, R.usedAt = e, now
         Add("you", "used " .. (R.seen[e] or Words(e)))
     end)
+    -- (chat has many listeners and any of them may answer first, so the gamemode's own "spoke" is listened to as well)
+    local function Typed(text)
+        text = tostring(text)
+        local now = CurTime()
+        if R.typed == text and now - (R.typedAt or 0) < 1 then return end
+        R.typed, R.typedAt = text, now
+        Add("you", "typed: " .. text)
+    end
     Hook("PlayerSay", function(ply, text)
-        if ply == R.ply then Add("you", "typed: " .. tostring(text)) end
+        if ply == R.ply then Typed(text) end
+    end)
+    Hook("LivingCitySpoke", function(ply, _, text)
+        if ply == R.ply and text then Typed(text) end
     end)
     Hook("EntityTakeDamage", function(e, dmg)
         if e ~= R.ply or not dmg then return end

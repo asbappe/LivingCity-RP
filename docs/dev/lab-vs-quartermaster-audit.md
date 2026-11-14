@@ -51,7 +51,13 @@ Freq 7 radio (36), forged papers (48), blank forms (18), lockpicks (21; also 4 s
 4. **Some recipes aren't worth making.** Chemicals from weedkiller turns 12 credits of weedkiller into a 4-credit bottle. The transmitter's radio costs 36 bought, so the lab saves only 6 over buying it outright.
 5. **The crowbar is two different things.** The lab makes it as an item (sells back 14 as an item), the quartermaster sells the weapon (sells back 20); the same 30 either way.
 
-## Choices for the owner (nothing changed yet)
+## What the owner chose (14 November), and what was done
+
+- Nothing the quartermaster sells is made or listed at the lab: the lab keeps charge cells, firebombs and the foil hat, and its services (decoding, a new face, pulling the chip). That ends the gun loop too (the lab makes no guns).
+- The weedkiller-to-chemicals recipe is gone; the transmitter went with the rest (the quartermaster sells it).
+- Surgery: forty seconds under, black screen, scripted sounds.
+
+## The choices as first offered
 
 - Close the gun loop: the lab could refuse to make guns from bought gun parts' full value (for example, the quartermaster buying lab-made arms back at the plain sell price, not 1.5x), or gun parts could cost more.
 - Give the lab's "pay" option a reason: a lower price than the quartermaster (for example 0.45 instead of 0.6), or keep the quartermaster for goods the lab doesn't make and take the lab's recipes off his list.

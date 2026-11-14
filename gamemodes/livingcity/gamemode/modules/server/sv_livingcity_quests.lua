@@ -2352,9 +2352,8 @@ T{
 -- A way out of a manhunt (the owner, 13 November playtest: wanted at level 3 with no job on, a Resistance
 -- player gets a job by itself: leave this rebel ground for another, and the Combine lose track of them;
 -- the same outside rebel ground). Never on the board: LC.ManhuntWayOut gives it (a timer, below).
--- The destination is the nearest rebel territory other than the one they stand in; reached, and out of
--- every unit's sight there for LC.GoGroundSecs, the hunt is called off (heat and wanted status cleared).
-LC.GoGroundSecs = 10
+-- The destination is the nearest rebel territory other than the one they stand in; reached, the hunt is
+-- called off (heat and wanted status cleared). (No standing about once there: CORE.md, no "stand here" steps.)
 local function OtherRebelGround(ply)
     local here = LC.ZoneAt and LC.ZoneAt(ply:GetPos())
     local hereLead = here and here.kind == "rebel" and LC.RebelLeader and LC.RebelLeader(here) or nil
@@ -2383,7 +2382,6 @@ T{
                 .. where .. ", and lie low out of every unit's sight. They'll lose track of you.",
             stages = {
                 Goto(z.pos, "Get to the rebel camp " .. where .. " (marked)", r),
-                { kind = "hold", pos = z.pos, r = r, secs = LC.GoGroundSecs, text = "Lie low there for a few seconds, out of sight of every unit" },
             },
             onFinish = function(q, success)
                 if not success then return end
@@ -3023,7 +3021,7 @@ end
 
 LC.QB = {
     Contact = Contact, PersonSpot = PersonSpot,
-    Goto = Goto, Deliver = Deliver, Hold = Hold, Count = Count, Choice = Choice,
+    Goto = Goto, Deliver = Deliver, Hold = Hold, Count = Count, Choice = Choice, GameGo = GameGo, GameStage = GameStage,
     FindCitizenStage = FindCitizenStage, ArrestStage = ArrestStage, Flee = Flee,
     Spot = Spot, Route = Route, SpotsNear = SpotsNear, HideSpots = HideSpots, FindBins = FindBins, Place = Place, SafeHouse = SafeHouse, NearestZone = NearestZone,
     Freeze = Freeze, Lock = Lock, SpawnActor = SpawnActor, SpawnItem = SpawnItem,

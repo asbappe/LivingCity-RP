@@ -1992,7 +1992,7 @@ Type them in the server console on the host panel, or in your own game console (
   Notes:
 
 ## Your 14 November answers: built, please try
-- [ ] **Prison guard:** as a Combine Prison Guard, F4 shows Cell inspection, Question a prisoner, A break for it, Watch over the cells. Do four: are you a Combine Soldier?
+- [ ] **Prison guard:** as a Combine Prison Guard, F4 shows Cell inspection (hold E on everything in the cells until the spoon turns up; the bunk and toilet do nothing else meanwhile), Question a prisoner (the quick menu: ask, baton, "Liar.", until the truth), A break for it, Unrest in the cells (order them down or the baton before a door gives). Do four: are you a Combine Soldier?
   Notes:
 - [ ] **The infested:** not on F4 Factions. Go down to a zombie or headcrab inside an infestation and bleed out: do you come back infested in the nest? Got up in time: nothing. Killed as infested: a new character (no close call)?
   Notes:
@@ -2016,6 +2016,11 @@ Type them in the server console on the host panel, or in your own game console (
 - [ ] **Unticked:** untick *Record the test*, test a dream: no new folder, no notice.
   Notes:
 - [ ] **Send one:** zip a test's folder and give it to the code chat: `cd ~/.steam/steam/steamapps/common/GarrysMod/garrysmod/data/livingcity/dreamrec && zip -r ~/dreamrec.zip FOLDER_NAME`
+- [ ] **The lab:** only charge cells, firebombs and the foil hat listed (plus decode, new face, pull the chip). Guns and the rest only at the quartermaster.
+  Notes:
+- [ ] **A new face:** forty seconds, black screen, whirring and wet sounds, a clang, a ding at the end. Too long, too short, too gross?
+  Notes:
+- [ ] **Get the lab running:** the parts are searched for by hand (hold E) at the yard and the shop, and freed from a loudspeaker box with the wiring game; the bench is rewired the same way.
   Notes:
 
 ## The play study (14 November, last)

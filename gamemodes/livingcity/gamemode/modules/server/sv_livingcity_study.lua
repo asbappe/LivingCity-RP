@@ -689,6 +689,16 @@ function LC.StudyStart(p)
     if S then return false, S.ply == p and "The study is already on." or "Someone else is being studied." end
     S = { ply = p, nick = p:Nick(), t0 = CurTime(), out = {}, total = 0, samples = {}, events = {}, quests = {}, encounters = {}, struck = {},
         hot = {}, nw = {}, nwHot = {}, nwFirst = true, ticks = 0, idleFor = 0 }
+    -- (chat has many listeners and any of them may answer first: it's also caught as it's called, below; said once)
+    S.said = function(text)
+        text = tostring(text)
+        local now = CurTime()
+        if S.saidText == text and now - (S.saidAt or 0) < 1 then return end
+        S.saidText, S.saidAt = text, now
+        local c = string.sub(text, 1, 1)
+        if c == "/" or c == "!" then Event("command " .. (string.match(text, "^(%S+)") or text))
+        else Event("said something", text) end
+    end
     local fac = Who(p)
     net.Start("lc_study")
     net.WriteString("start")
@@ -713,11 +723,7 @@ function LC.StudyStart(p)
         Event("jumped", string.format("at %d %d %d", pos.x, pos.y, pos.z))
     end)
     Hook("PlayerSay", function(ply, text)
-        if ply ~= S.ply then return end
-        text = tostring(text)
-        local c = string.sub(text, 1, 1)
-        if c == "/" or c == "!" then Event("command " .. (string.match(text, "^(%S+)") or text))
-        else Event("said something", text) end
+        if ply == S.ply then S.said(text) end
     end)
     Hook("EntityTakeDamage", function(e, dmg)
         if not dmg or S.pause then return end
@@ -752,12 +758,19 @@ function LC.StudyStart(p)
 
     -- The gamemode's own events, and what the player is told.
     runWas, callWas = hook.Run, hook.Call
+    local function Chat(ply, text)
+        if S and ply == S.ply and text ~= nil then pcall(S.said, text) end
+    end
     runMine = function(name, ...)
-        if S then Seen(name, ...) end
+        if S then
+            if name == "PlayerSay" then Chat(...) else Seen(name, ...) end
+        end
         return runWas(name, ...)
     end
     callMine = function(name, gm, ...)
-        if S then Seen(name, ...) end
+        if S then
+            if name == "PlayerSay" then Chat(...) else Seen(name, ...) end
+        end
         return callWas(name, gm, ...)
     end
     hook.Run, hook.Call = runMine, callMine

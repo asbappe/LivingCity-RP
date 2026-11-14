@@ -88,7 +88,7 @@ function LC_CL.OpenLab(t)
         row.Paint = function(self, w, h)
             draw.RoundedBox(3, 0, 0, w, h, Color(52, 40, 46, 240))
             draw.SimpleText(string.format("A new face (%d credits)", sg.price or 0), "LCLabItem", 10, 13, INK, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
-            draw.SimpleText("Twenty seconds under. Nobody's looking for the face you wake with: wanted, BOLOs and", "DermaDefault", 10, 33, HAVE, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+            draw.SimpleText("Forty seconds under. Nobody's looking for the face you wake with: wanted, BOLOs and", "DermaDefault", 10, 33, HAVE, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
             draw.SimpleText(sg.ok and "photos gone, and the records can't put your old name (or your standing) to it." or (sg.why or ""), "DermaDefault", 10, 49, sg.ok and HAVE or DIM, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
         end
         local b = vgui.Create("DButton", row)
