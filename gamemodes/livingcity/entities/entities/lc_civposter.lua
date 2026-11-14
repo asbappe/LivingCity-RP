@@ -67,6 +67,8 @@ local NOTICES = {
     vortigaunt = { "THEY SERVE, AS YOU SERVE", "Shackled labor keeps your streets clean. Do not speak to it. Do not free it." },
     recruit = { "JOIN CIVIL PROTECTION. EAT BETTER.", "Better rations. Better housing. A place in the new order. Apply at any post." },
     administrator = { "SHE WATCHES OVER YOU", "Your Administrator works while you sleep. Work well, sleep well, and trust in her." },
+    -- (the owner's own slogan, 14 November: never reword it; it has no smaller words)
+    neighbour = { "LOVE YOUR NEIGHBOUR, HATE THE TRAITOR", "" },
     -- the Resistance's own paste-ups (only a Resistance member with a roll hangs these)
     rebel_leash = { "THE RATION IS THE LEASH", "They feed you so you will not bite." },
     rebel_water = { "DON'T DRINK THE WATER", "They put something in it to make you forget." },
@@ -80,7 +82,7 @@ local DEFACED = {
     dispenser = "CHAINS", commissary = "THE COMBINE", intake = "LIKE CATTLE", water = "DON'T DRINK IT. It makes you forget",
     law = "BREAK IT", curfew = "THE NIGHT IS OURS", work = "BUSY HANDS BUILD CAGES", loyalty = "SO IS COURAGE",
     informants = "SNITCHES BURN", contraband = "ARMS US", radio = "WE HEAR YOU TOO", illness = "THE CITY IS THE SICKNESS",
-    infestation = "THEY LET IT GROW", housing = "IS A CELL", vortigaunt = "FREE THEM", recruit = "TRAITORS", administrator = "LIAR",
+    infestation = "THEY LET IT GROW", housing = "IS A CELL", vortigaunt = "FREE THEM", recruit = "TRAITORS", administrator = "LIAR", neighbour = "LIES",
 }
 DEFACED.dream = "WAKE UP"
 ENT.Defaced = DEFACED
@@ -94,7 +96,7 @@ function ENT:Words()
     return NOTICES[kind] or NOTICES.curfew
 end
 -- (the order the Director's poster roll lists them in)
-ENT.NoticeOrder = { "administrator", "loyalty", "informants", "work", "housing", "recruit", "contraband", "radio", "illness", "infestation", "vortigaunt",
+ENT.NoticeOrder = { "administrator", "neighbour", "loyalty", "informants", "work", "housing", "recruit", "contraband", "radio", "illness", "infestation", "vortigaunt",
     "curfew", "law", "dispenser", "commissary", "intake", "water" }
 
 function ENT:Initialize()
@@ -148,7 +150,7 @@ if SERVER then
             return
         end
         if string.sub(kind, 1, 6) == "rebel_" then activator:ChatPrint("[Paste-up] " .. n[1] .. " " .. n[2]) return end
-        activator:ChatPrint("[City] " .. n[1] .. ". " .. n[2])
+        activator:ChatPrint("[City] " .. n[1] .. "." .. (n[2] ~= "" and (" " .. n[2]) or ""))
         if kind ~= "dream" and LC and LC.CivPosterRead then LC.CivPosterRead(activator, kind) end
     end
 end

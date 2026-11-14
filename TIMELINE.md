@@ -446,3 +446,4 @@ Every commit says what it did; TIMELINE.md has the summary. The big pieces:
 - 2026-11-14, evening: the "announcer spam" was the map's own PA lines playing the owner's recordings every few seconds: limited to one per `lc_map_pa_minutes` (5); announcements play once through a file channel; the debug report gained "Near you" and counts of the map's PA lines.
 - 2026-11-14, last: the owner's corrected words on the 21 Nightmare and propaganda posters, and three art fixes (barrels citizen, guidance background, battle line soldiers).
 - 2026-11-14, last: her slogan in every address (`speech_slogan`), The Union Shift (the dream renamed, its poster redrawn), way marks scrubbed off and back when unseen.
+- 2026-11-14, last: the slogan's own poster (`neighbour`, on the Director's poster roll; `_dev/posters/slogan.js`).

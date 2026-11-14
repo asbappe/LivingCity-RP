@@ -1956,3 +1956,5 @@ Type them in the server console on the host panel, or in your own game console (
   Notes:
 - [ ] **Her slogan:** at her address (the city's own, or test it), just before the closing she says "Love your neighbour, hate the traitor." (words on screen until `speech_slogan1.wav` is recorded in `sound/livingcity/administrator/`).
   Notes:
+- [ ] **The slogan's poster:** as Director of Propaganda, the poster roll's second poster is LOVE YOUR NEIGHBOUR, HATE THE TRAITOR: hang it, read it with E (the slogan and nothing after it), and spray over it as the Resistance (LIES).
+  Notes:

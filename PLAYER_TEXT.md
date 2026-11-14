@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version 0014d68. Admin-only console messages and log lines are left out.
+Made from version 475f137. Admin-only console messages and log lines are left out.
 
-12344 lines, from 332 files.
+12345 lines, from 332 files.
 
 ## Contents
 
@@ -15,7 +15,7 @@ Made from version 0014d68. Admin-only console messages and log lines are left ou
 - [lc_barricade.lua](#lcbarricadelua-lcbarricadelua) (1)
 - [lc_broadcastcam.lua](#lcbroadcastcamlua-lcbroadcastcamlua) (1)
 - [lc_citybin.lua](#lccitybinlua-lccitybinlua) (1)
-- [lc_civposter.lua](#lccivposterlua-lccivposterlua) (26)
+- [lc_civposter.lua](#lccivposterlua-lccivposterlua) (27)
 - [lc_console.lua](#lcconsolelua-lcconsolelua) (1)
 - [lc_conveyor.lua](#lcconveyorlua-lcconveyorlua) (1)
 - [lc_cpsupply.lua](#lccpsupplylua-lccpsupplylua) (2)
@@ -404,23 +404,24 @@ Made from version 0014d68. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): the Resistance's own paste-ups (only a Resistance member with a roll hangs these)
 
-- "They feed you so you will not bite."  (text, line 71)
-- "They put something in it to make you forget."  (text, line 72)
-- "Remember who you were."  (text, line 73)
-- "The Resistance is closer than you think."  (text, line 74)
+- "They feed you so you will not bite."  (text, line 73)
+- "They put something in it to make you forget."  (text, line 74)
+- "Remember who you were."  (text, line 75)
+- "The Resistance is closer than you think."  (text, line 76)
 
 > Note for you (not shown in game): what the Resistance paints over each of the city's posters (the picture: <kind>_x)
 
-- "DON'T DRINK IT. It makes you forget"  (text, line 80)
+- "DON'T DRINK IT. It makes you forget"  (text, line 82)
 
 > Note for you (not shown in game): part of: use
 
-- "[City] {n}. Someone has painted over it: {or}."  (chat message, line 147)
-- "[Paste-up] {n} {n}"  (chat message, line 150)
+- "[City] {n}. Someone has painted over it: {or}."  (chat message, line 149)
+- "[Paste-up] {n} {n}"  (chat message, line 152)
+- "[City] {n}.{or}"  (chat message, line 153)
 
 > Note for you (not shown in game): part of: draw
 
-- "Your cooperation is noted."  (drawn on screen, line 224)
+- "Your cooperation is noted."  (drawn on screen, line 226)
 
 ## lc_console.lua (lc_console.lua)
 

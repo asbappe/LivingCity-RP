@@ -251,18 +251,18 @@ POSTERS.push(...more.POSTERS);
 // the posters that hint at dreams (dream_<codeword>; never painted over one by one: dream_x is for all)
 Object.assign(ART, dreams.ART);
 POSTERS.push(...dreams.POSTERS);
-for (const f of ['./dreams2.js', './dreams3.js', './dreams4.js']) if (fs.existsSync(path.join(__dirname, f))) { const d = require(f); Object.assign(ART, d.ART); POSTERS.push(...d.POSTERS); }
+for (const f of ['./dreams2.js', './dreams3.js', './dreams4.js', './slogan.js']) if (fs.existsSync(path.join(__dirname, f))) { const d = require(f); Object.assign(ART, d.ART); POSTERS.push(...d.POSTERS); }
 
 function page(p, defaced) {
   const dark = p.accent === 'cyan';
   const acc = p.acc || (dark ? C.cyan : C.red), body = dark ? C.paper : C.ink, ground = p.ground || (dark ? (p.id === 'curfew' || p.dark ? C.night : C.slate) : C.paper);
   const T0 = 634, X0 = 50, TW = 668;
-  let t = '', y = T0 + 20;
+  let t = '', y = T0 + 20 + (p.headShift || 0);
   if (p.head.length === 1) y += 14;
-  for (const [txt, size] of p.head) {
+  for (const [txt, size, col] of p.head) {
     const cap = size * 0.727;
     y += cap;
-    t += `<text x="${X0}" y="${y.toFixed(1)}" font-family="Inter Display" font-weight="900" font-size="${size}" fill="${acc}" textLength="${TW}" lengthAdjust="spacingAndGlyphs">${txt}</text>`;
+    t += `<text x="${X0}" y="${y.toFixed(1)}" font-family="Inter Display" font-weight="900" font-size="${size}" fill="${col || acc}" textLength="${TW}" lengthAdjust="spacingAndGlyphs">${txt}</text>`;
     y += 15;
   }
   const n = p.small.length, last = 944, step = n <= 2 ? 34 : 29.5, fs = n === 1 ? (p.small[0].length > 40 ? 24 : 28) : n === 2 ? 25 : 22.5;

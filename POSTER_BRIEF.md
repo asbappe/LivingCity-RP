@@ -92,3 +92,7 @@ Each of the seventeen has a painted-over version, `<kind>_x` (a spray can on the
 ## The posters that hint at dreams
 
 Some plain curfew posters show a dream's poster instead (`docs/features/dream-posters.md`). Same style, with "SLEEP WELL, CITIZEN" where the others say "CIVIL NOTICE". File names: `dream_<codeword>` (`.png` or `.jpg`), `dream` for any dream without its own, `dream_x` painted over ("WAKE UP"). Their words are `LC.DreamPosterHints` in `sv_livingcity_dreamposters.lua`. The small words are one sentence. Drawn (`_dev/posters/dreams.js` to `dreams4.js`): every Nightmare and propaganda dream, `dream_lamarr`, `dream_cheese`, and `dream_forecast`, the melons' one, which hangs only inside that dream, never in the city.
+
+## Her slogan
+
+`neighbour` (and `neighbour_x`, painted over: LIES): **LOVE YOUR NEIGHBOUR, HATE THE TRAITOR**, the owner's own slogan (14 November), with no smaller words. Two neighbours shaking hands under a heart; beside them, in the dark, a Resistance face struck out in red. It is on the Director of Propaganda's poster roll with the eleven above. Drawn by `_dev/posters/slogan.js`.
