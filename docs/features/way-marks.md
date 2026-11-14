@@ -1,0 +1,10 @@
+# The Resistance's way marks (14 November)
+
+The owner, 14 November: "graffiti arrows and such to be used by the editor tool specifically as permanent decals to point the way towards resistance territory ... one should be pointing left, the other decal right, another forward, and another down ... the same orange color as the lambda that is also in the decal, or maybe ... 'Freedom this way'".
+
+`sv_livingcity_waymarks.lua`, the editor `lua/weapons/gmod_tool/stools/livingcity_editor.lua`, painting in `cl_livingcity_war.lua`, tests `WayMarkTests`.
+
+- **Five marks,** sprayed by hand in the lambda's orange, each with the lambda in its ring: an arrow pointing **left**, **right**, **up** (for straight on) and **down**, and the words **FREEDOM THIS WAY** (FREEDOM in white), to go beside an arrow.
+- **Painting one:** Miscount Editor, mode "Mark: Resistance arrow, pointing left" (or right, up, down) or "Mark: FREEDOM THIS WAY", then left click a **wall** (not a floor or a ceiling: the game turns floor decals its own way, so an arrow there would not point where you meant). Undo works; right click near one takes it off, as any point. In "Arrange by what it's for" they are under The Resistance and rebel bases.
+- **Permanent:** a mark is part of the layout (a `waymark` point: its number is which mark, its yaw the way the wall faces), saved with it and back after every map change. It is sent to players with the sprayed tags and painted the same way, about 107 units across (half as big again as a sprayed tag; `lc_tag_scale` on a player's own game scales it with the rest), but it never fades (`lc_tag_minutes` does not apply), nobody scrubs it off (no Civil Standing for it, sanitation ignores it), and no spray can makes one.
+- **Pictures:** `garrysmod/materials/livingcity/graffiti/arrow_left.png`, `arrow_right.png`, `arrow_up.png`, `arrow_down.png`, `freedom.png` (512 x 512, see-through), loose in the server's `garrysmod/` with the other graffiti (`livingcity_content.zip`). Without its picture a mark shows as the game's own lambda spray. They are drawn by `node _dev/posters/arrows.js OUTDIR`.

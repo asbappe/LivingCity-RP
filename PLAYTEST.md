@@ -1947,5 +1947,8 @@ Type them in the server console on the host panel, or in your own game console (
   Notes:
 - [ ] **Collapse:** an hour of yellow should barely move the collapse bar now.
   Notes:
+- [ ] **Nightmare and propaganda dream posters (21 more pictures):** after unzipping `livingcity_content.zip`, FastDL sync and a map change, a curfew poster hinting at any Nightmare or any of her propaganda dreams should carry its own picture. Any picture you would change?
+  Notes:
+- [ ] **Way marks (the Resistance's arrows):** Miscount Editor > "Mark: Resistance arrow, pointing left" (and right, up, down, and "Mark: FREEDOM THIS WAY"): left click a wall. Does each arrow point the way its name says, the right size, the lambda's orange? Is it still there after a map change, and does right click take it off? Can it be scrubbed (it should not)? On a floor it should refuse.
 - [ ] **The announcer:** stand around for 5 minutes: at most one of the map's own Overwatch lines in that time, none on top of a city announcement. The debug report's Layout part says how many of the map's lines were let through and silenced, and its log lists every "PA: overwatch says ..." line.
   Notes:

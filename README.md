@@ -46,6 +46,7 @@ This file is only an index. The specification of how everything behaves (the agr
 - [Staff tools](docs/features/staff-tools.md): Admin safeguards for a public server, staff menus
 - [Contraband, searches, the underground, and conduct](docs/features/contraband.md): Stop and search, stash, stealth, wanted, the black market, lockpicks, conduct
 - [Pose Recorder (a separate tool)](docs/features/pose-recorder.md): The separate dance and pose tool
+- [The Resistance's way marks](docs/features/way-marks.md): permanent sprayed arrows and FREEDOM THIS WAY, painted on walls with the editor, pointing to rebel ground
 - [Posters that hint at dreams](docs/features/dream-posters.md): a share of the plain curfew posters foreshadow tonight's dream or remember a recent one
 - [Secret endings](docs/features/endings.md): Sealed directives, every ending, songs, the Endings menu
 - [The collapse: sociostability BLACK and the last stand](docs/features/collapse.md): Chaos after long red, the G-Man's offer to the Administrator, her last stand in her office, Barney and Freeman

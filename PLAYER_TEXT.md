@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version 5454ad8. Admin-only console messages and log lines are left out.
+Made from version 4b29dde. Admin-only console messages and log lines are left out.
 
-12335 lines, from 331 files.
+12341 lines, from 332 files.
 
 ## Contents
 
@@ -328,6 +328,7 @@ Made from version 5454ad8. Admin-only console messages and log lines are left ou
 - [vortigaunt dream warfare (sv_livingcity_vortwar.lua)](#vortigaunt-dream-warfare-svlivingcityvortwarlua-svlivingcityvortwarlua) (26)
 - [things to do as a vortigaunt (and for the city's own)](#things-to-do-as-a-vortigaunt-and-for-the-citys-own-svlivingcityvortworklua) (51)
 - [the state of the city](#the-state-of-the-city-svlivingcitywarlua) (66)
+- [the Resistance's way marks](#the-resistances-way-marks-svlivingcitywaymarkslua) (6)
 - [ways to get by](#ways-to-get-by-svlivingcitywayslua) (5)
 - [weeds, the Groundskeeper, and weedkiller (the owner, 2026-11-01)](#weeds-the-groundskeeper-and-weedkiller-the-owner-2026-11-01-svlivingcityweedslua) (12)
 - [occupations](#occupations-svlivingcityworklua) (308)
@@ -4946,23 +4947,23 @@ Made from version 5454ad8. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: pot label
 
-- "Empty pot"  (text, line 300)
-- "Plant a seed packet (E)"  (text, line 300)
-- "Ripe vegetables"  (text, line 301)
-- "Ripe in %d:%02d"  (message, line 303)
+- "Empty pot"  (text, line 305)
+- "Plant a seed packet (E)"  (text, line 305)
+- "Ripe vegetables"  (text, line 306)
+- "Ripe in %d:%02d"  (message, line 308)
 
 > Note for you (not shown in game): on screen
 
-- "%d meal%s stored"  (message, line 319)
+- "%d meal%s stored"  (message, line 324)
 
 > Note for you (not shown in game): the Resistance see when the next supplies are due (sv_livingcity_scavenge.lua, LC.FoodRestock)
 
-- ". More supplies in about %d minute%s"  (message, line 324)
+- ". More supplies in about %d minute%s"  (message, line 329)
 
 > Note for you (not shown in game): on screen
 
-- "Step in and they'll open fire."  (text, line 412)
-- "You're inside. They will shoot."  (text, line 416)
+- "Step in and they'll open fire."  (text, line 417)
+- "You're inside. They will shoot."  (text, line 421)
 
 ## cl_livingcity_ways.lua (cl_livingcity_ways.lua)
 
@@ -8009,49 +8010,49 @@ Made from version 5454ad8. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: restore backup
 
-- "No such backup. lc_backups lists them."  (text, line 183)
-- "That backup can't be read."  (text, line 185)
+- "No such backup. lc_backups lists them."  (text, line 184)
+- "That backup can't be read."  (text, line 186)
 
 > Note for you (not shown in game): Takes the jogging routes out of LC.Points (unless lc_jog is 1). The first stop of each route becomes an exercise yard where there is none within 400 units. How many stops were taken out.
 
-- "before the jogging routes were removed"  (text, line 243)
+- "before the jogging routes were removed"  (text, line 244)
 
 > Note for you (not shown in game): The morning jog is archived (lc_jog 0: sv_livingcity_exercise.lua): its routes come out of the layout, and each route's start stays as an exercise yard (unless a yard is already there), so the morning drill gathers where the jog used to. A backup of the layout is kept first.
 
-- "The morning jog is archived: %d jogging route stops taken out of the layout (a backup was kept: lc_backups)."  (message, line 318)
+- "The morning jog is archived: %d jogging route stops taken out of the layout (a backup was kept: lc_backups)."  (message, line 319)
 
 > Note for you (not shown in game): the console command lc_reload
 
-- "[Miscount] Reloaded layout: %d points, %d path nodes, %d zones, %d tagged doors."  (message, line 544)
+- "[Miscount] Reloaded layout: %d points, %d path nodes, %d zones, %d tagged doors."  (message, line 545)
 
 > Note for you (not shown in game): the console command lc_backup
 
-- "[Miscount] Backed up the layout as {name}."  (text, line 554)
-- "[Miscount] Nothing to back up yet."  (text, line 554)
+- "[Miscount] Backed up the layout as {name}."  (text, line 555)
+- "[Miscount] Nothing to back up yet."  (text, line 555)
 
 > Note for you (not shown in game): the console command lc_backups
 
-- "[Miscount] Layout: data/%s. %d backups in data/%s/:"  (message, line 560)
-- "Restore one with lc_restore <number>. What's there now is backed up first."  (text, line 562)
+- "[Miscount] Layout: data/%s. %d backups in data/%s/:"  (message, line 561)
+- "Restore one with lc_restore <number>. What's there now is backed up first."  (text, line 563)
 
 > Note for you (not shown in game): the console command lc_restore
 
-- "[Miscount] Restored {what}."  (text, line 568)
-- "[Miscount] {what}"  (text, line 568)
+- "[Miscount] Restored {what}."  (text, line 569)
+- "[Miscount] {what}"  (text, line 569)
 
 > Note for you (not shown in game): the console command lc_autolink
 
-- "[Miscount] Made %d new links.%s"  (message, line 583)
-- "%d nodes still have no links (shown in red)."  (message, line 584)
+- "[Miscount] Made %d new links.%s"  (message, line 584)
+- "%d nodes still have no links (shown in red)."  (message, line 585)
 
 > Note for you (not shown in game): the console command lc_goto_layout
 
-- "[Miscount] None of those on this map."  (chat message, line 618)
-- "[Miscount] %s %d of %d. (You're in noclip; it's easy to land inside things.)"  (message, line 623)
+- "[Miscount] None of those on this map."  (chat message, line 619)
+- "[Miscount] %s %d of %d. (You're in noclip; it's easy to land inside things.)"  (message, line 624)
 
 > Note for you (not shown in game): the game answering something done in a window (lc_setting)
 
-- "%s set %s to %s"  (message, line 660)
+- "%s set %s to %s"  (message, line 661)
 
 ## debugging (sv_livingcity_debug.lua)
 
@@ -18660,81 +18661,81 @@ Made from version 5454ad8. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): What a spray can can put on a wall (the owner, 13 November: "the player chooses which tag from the spray can's menu"). The lambda is the game's own decal; the others are the owner's pictures in materials/livingcity/graffiti/<id>.png, painted as decals too (cl_livingcity_war.lua). A mark whose picture isn't on the server isn't offered; with none of them there, the can sprays the lambda without asking, as it always did.
 
-- "The lambda"  (label, line 688)
-- "Spraying the lambda"  (what someone is doing, line 688)
-- "The tally, with one too many"  (label, line 689)
-- "Spraying the tally"  (what someone is doing, line 689)
+- "The lambda"  (label, line 692)
+- "Spraying the lambda"  (what someone is doing, line 692)
+- "The tally, with one too many"  (label, line 693)
+- "Spraying the tally"  (what someone is doing, line 693)
 
 > Note for you (not shown in game): part of: spray
 
-- "Look at a wall, up close."  (text, line 706)
+- "Look at a wall, up close."  (text, line 710)
 
 > Note for you (not shown in game): a poster on this wall: paint over it instead (entities/lc_civposter.lua, LC.DefacePoster)
 
-- "Someone has seen to this one already."  (text, line 710)
-- "That one is ours."  (text, line 711)
-- "Painting over the poster... keep looking at it"  (progress bar, line 712)
-- "You stop, half done, and the paint runs."  (text, line 713)
+- "Someone has seen to this one already."  (text, line 714)
+- "That one is ours."  (text, line 715)
+- "Painting over the poster... keep looking at it"  (progress bar, line 716)
+- "You stop, half done, and the paint runs."  (text, line 717)
 
 > Note for you (not shown in game): part of: done
 
-- "[Civil Protection] A Civil Protection unit saw that."  (chat message, line 721)
+- "[Civil Protection] A Civil Protection unit saw that."  (chat message, line 725)
 
 > Note for you (not shown in game): part of: spray
 
-- "There's already one here."  (text, line 728)
-- "Never mind"  (text, line 733)
-- "Spray can"  (title, line 734)
-- "One can, one mark"  (text, line 734)
-- "What goes on the wall?"  (text, line 734)
-- "... keep looking at the wall"  (progress bar, line 739)
-- "You stop, half done, and the paint runs."  (text, line 740)
+- "There's already one here."  (text, line 732)
+- "Never mind"  (text, line 737)
+- "Spray can"  (title, line 738)
+- "One can, one mark"  (text, line 738)
+- "What goes on the wall?"  (text, line 738)
+- "... keep looking at the wall"  (progress bar, line 743)
+- "You stop, half done, and the paint runs."  (text, line 744)
 
 > Note for you (not shown in game): part of: done
 
-- "[Civil Protection] A Civil Protection unit saw that."  (chat message, line 750)
+- "[Civil Protection] A Civil Protection unit saw that."  (chat message, line 754)
 
 > Note for you (not shown in game): part of: spraytag
 
-- "Spray can"  (on-screen notice, line 776)
+- "Spray can"  (on-screen notice, line 780)
 
 > Note for you (not shown in game): A Resistance paste-up from your pockets, onto a bare wall (the owner, 10 November). One of their four, not the same as the last one you put up. Anyone holding one can paste it: sympathisers too.
 
-- "Look at a wall, up close."  (text, line 784)
-- "There's a poster here already. A spray can would deal with it."  (text, line 785)
-- "Pasting it up... keep looking at the wall"  (progress bar, line 786)
-- "You stop, and the paper curls off the wall."  (text, line 787)
+- "Look at a wall, up close."  (text, line 788)
+- "There's a poster here already. A spray can would deal with it."  (text, line 789)
+- "Pasting it up... keep looking at the wall"  (progress bar, line 790)
+- "You stop, and the paper curls off the wall."  (text, line 791)
 
 > Note for you (not shown in game): part of: done
 
-- "It won't stick."  (chat message, line 794)
-- "[Civil Protection] A Civil Protection unit saw that."  (chat message, line 800)
+- "It won't stick."  (chat message, line 798)
+- "[Civil Protection] A Civil Protection unit saw that."  (chat message, line 804)
 
 > Note for you (not shown in game): part of: clean tag
 
-- "Paint over our own? No."  (text, line 810)
-- "Scrubbing it off..."  (progress bar, line 811)
-- "You leave it half scrubbed."  (text, line 812)
+- "Paint over our own? No."  (text, line 814)
+- "Scrubbing it off..."  (progress bar, line 815)
+- "You leave it half scrubbed."  (text, line 816)
 
 > Note for you (not shown in game): part of: done
 
-- "cleaned up anticitizen graffiti"  (text, line 820)
-- "[Civil Protection] Gone. As if it never was."  (chat message, line 821)
-- "You scrub it off. Someone from the Union nods at you. +3 standing."  (chat message, line 825)
+- "cleaned up anticitizen graffiti"  (text, line 824)
+- "[Civil Protection] Gone. As if it never was."  (chat message, line 825)
+- "You scrub it off. Someone from the Union nods at you. +3 standing."  (chat message, line 829)
 
 > Note for you (not shown in game): part of: item use
 
-- "Find an empty pot in rebel territory."  (text, line 877)
-- "Something's already growing in that one."  (text, line 878)
+- "Find an empty pot in rebel territory."  (text, line 881)
+- "Something's already growing in that one."  (text, line 882)
 
 > Note for you (not shown in game): typing in chat
 
-- "You need a fishing line (the Commissary sells them)."  (chat message, line 923)
+- "You need a fishing line (the Commissary sells them)."  (chat message, line 927)
 
 > Note for you (not shown in game): the game's living city tagged moment
 
-- "Someone painted the lambda up {or}. Bold."  (text, line 932)
-- "There's a lambda on the wall {or}. Civil Protection will have it off by morning."  (text, line 933)
+- "Someone painted the lambda up {or}. Bold."  (text, line 936)
+- "There's a lambda on the wall {or}. Civil Protection will have it off by morning."  (text, line 937)
 
 ## Combine-only areas (sv_livingcity_security.lua)
 
@@ -23144,6 +23145,23 @@ Made from version 5454ad8. Admin-only console messages and log lines are left ou
 - "Rations are short again. That's what happens when the rebels are winning."  (text, line 988)
 - "It's quiet. Too quiet. The Combine have the whole city now."  (text, line 990)
 - "Haven't heard a shot in days. I don't know if that's good."  (text, line 991)
+
+## the Resistance's way marks (sv_livingcity_waymarks.lua)
+
+`gamemodes/livingcity/gamemode/modules/server/sv_livingcity_waymarks.lua`
+
+
+> Note for you (not shown in game): [the point's number] = the mark (the editor's modes are way_<id>: livingcity_editor.lua)
+
+- "an arrow pointing left"  (name, line 30)
+- "an arrow pointing right"  (name, line 31)
+- "an arrow pointing up (straight on)"  (name, line 32)
+- "an arrow pointing down"  (name, line 33)
+
+> Note for you (not shown in game): Paint one from the editor: on a wall (not a floor or a ceiling). The point, or nil and why.
+
+- "No such mark."  (text, line 52)
+- "Aim at a wall: the mark is painted on it."  (text, line 53)
 
 ## ways to get by (sv_livingcity_ways.lua)
 

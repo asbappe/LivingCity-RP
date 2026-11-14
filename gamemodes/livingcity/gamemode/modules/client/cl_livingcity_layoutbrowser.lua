@@ -36,7 +36,7 @@ local USES = {
     { title = "The Administrator's last stand", ids = { "desk", "adminpower", "suppressor", "speech", "speechcrowd", "door_office", "zone_combine" } },
     { title = "Prison", ids = { "cell", "release", "prisonwork", "zone_prison", "door_prison" } },
     { title = "The Resistance and rebel bases", ids = { "zone_rebel", "rspawn", "rlookout", "rebelboard", "interrochair", "rebelcage", "bunk", "workbench", "dealer", "bed", "toilet", "stove",
-        "sit", "sitchair", "lean", "fire", "locker", "graffiti" } },
+        "sit", "sitchair", "lean", "fire", "locker", "graffiti", "way_left", "way_right", "way_up", "way_down", "way_freedom" } },
     { title = "Infestation", ids = { "zone_infest", "zspawn", "hazbarrel" } },
     { title = "Morning exercise", ids = { "yard", "parade" } },
     { title = "Dreams", ids = { "dream", "zone_dream" } }, -- (the owner, 11 November: missing from this view)

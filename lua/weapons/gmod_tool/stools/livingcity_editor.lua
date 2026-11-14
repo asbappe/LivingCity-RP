@@ -56,6 +56,12 @@ local MODES = {
     { id = "dream",       label = "Point: dream (the secret endings play here as shared dreams for everyone asleep: put it out of the map, where nobody can walk to)" },
     { id = "dock",        label = "Point: loading dock (supply drops come in here, by dropship under open sky; supply trucks, crates)" },
     { id = "graffiti",    label = "Point: graffiti wall (sanitation scrubs it; aim at the foot of the wall)" },
+    -- (the Resistance's way marks: permanent sprayed arrows toward rebel ground, sv_livingcity_waymarks.lua)
+    { id = "way_left",    kind = "waymark", num = 1, label = "Mark: Resistance arrow, pointing left (a permanent sprayed arrow with the lambda: aim at a wall)" },
+    { id = "way_right",   kind = "waymark", num = 2, label = "Mark: Resistance arrow, pointing right (aim at a wall)" },
+    { id = "way_up",      kind = "waymark", num = 3, label = "Mark: Resistance arrow, pointing up, for straight on (aim at a wall)" },
+    { id = "way_down",    kind = "waymark", num = 4, label = "Mark: Resistance arrow, pointing down (aim at a wall)" },
+    { id = "way_freedom", kind = "waymark", num = 5, label = "Mark: FREEDOM THIS WAY (permanent, sprayed by hand: aim at a wall, beside an arrow)" },
     { id = "rubble",      label = "Point: rubble pile (reclamation crews and work orders clear it)" },
     { id = "pipe",        label = "Point: leaky pipe (citizens' work orders patch it)" },
     { id = "vending",     label = "Fixture: water vending machine" },
@@ -184,6 +190,15 @@ local lastNode, linkSel = {}, {}
 ------------------------------------------------------------------------
 
 local function PlacePoint(self, ply, trace, mode)
+    -- (a way mark goes on a wall, facing out of it: sv_livingcity_waymarks.lua)
+    if mode.kind == "waymark" then
+        if not trace.Hit or not LC.AddWayMark then Tell(ply, "Aim at a wall: the mark is painted on it.") return false end
+        local p, why = LC.AddWayMark(trace.HitPos, trace.HitNormal, mode.num)
+        if not p then Tell(ply, why or "Aim at a wall: the mark is painted on it.") return false end
+        Undoable(ply, "way mark", function() LC.RemovePoint(p) end)
+        Tell(ply, "Painted " .. LC.WayMarkKinds[mode.num].name .. ". It stays for good; right click it to take it off.")
+        return true
+    end
     if not trace.Hit or trace.HitNormal.z < 0.7 then
         Tell(ply, "Aim at the floor to place a point.")
         return false
