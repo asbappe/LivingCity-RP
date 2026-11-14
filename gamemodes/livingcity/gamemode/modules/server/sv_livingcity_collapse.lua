@@ -285,11 +285,12 @@ end
 ------------------------------------------------------------------------
 
 LC.ChaosYellowRate = 0.25 * 0.05
-LC.ChaosRedRate = 0.2
+LC.ChaosRedRate = 0.1
 function LC.ChaosStep(level, secs)
     local unit = secs / math.max(60, cvMinutes:GetFloat() * 60)
-    -- (red at a fifth: the owner, 14 November, "collapse 30% but we did 1 attack on a checkpoint: it should be
-    -- at like 7% at most"; the nine minutes of red after it filled 30%, now 6%. Two and a half hours of red fill it.)
+    -- (red at a tenth: the owner, 14 November, "collapse 30% but we did 1 attack on a checkpoint: it should be
+    -- at like 7% at most", then "change an hour of red to add 20%". The nine minutes of red after one attack
+    -- filled 30%, now 3%; five hours of red fill it.)
     if level == "red" then LC.Chaos = LC.Chaos + unit * LC.ChaosRedRate
     -- (yellow at 5% of the quarter it was: the owner, 14 November, "yellow needs to crawl it forward at 5% of
     -- what it does now; a 1 hour session of yellow filled it, which is absurd". 30 minutes of red still

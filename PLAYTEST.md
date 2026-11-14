@@ -2062,7 +2062,7 @@ Type them in the server console on the host panel, or in your own game console (
   Notes:
 - [ ] **Filling a can:** standing near water you can see fills it; ten feet from water hidden under ground or brush does not.
   Notes:
-- [ ] **Collapse:** one checkpoint attack and the red after it leave collapse at about 6%, not 30%.
+- [ ] **Collapse:** one checkpoint attack and the red after it leave collapse at about 3%, not 30% (an hour of red adds 20%).
   Notes:
 - [ ] **Clothes button:** reads "Change into citizen clothes".
   Notes:
