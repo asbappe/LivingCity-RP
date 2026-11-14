@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version 1cfa69b. Admin-only console messages and log lines are left out.
+Made from version d1737bb. Admin-only console messages and log lines are left out.
 
-12580 lines, from 345 files.
+12689 lines, from 347 files.
 
 ## Contents
 
@@ -70,7 +70,7 @@ Made from version 1cfa69b. Admin-only console messages and log lines are left ou
 - [weapon_lc_rebelclip.lua](#weaponlcrebelcliplua-weaponlcrebelcliplua) (1)
 - [Infestation Cleanup and the Groundskeeper)](#infestation-cleanup-and-the-groundskeeper-weaponlcsprayerlua) (3)
 - [weapon_lc_vort.lua](#weaponlcvortlua-weaponlcvortlua) (10)
-- [cl_init.lua](#clinitlua-clinitlua) (360)
+- [cl_init.lua](#clinitlua-clinitlua) (361)
 - [init.lua](#initlua-initlua) (5)
 - [cl_livingcity.lua](#cllivingcitylua-cllivingcitylua) (20)
 - [cl_livingcity_actions.lua](#cllivingcityactionslua-cllivingcityactionslua) (56)
@@ -98,7 +98,7 @@ Made from version 1cfa69b. Admin-only console messages and log lines are left ou
 - [secret endings, on your screen (sv_livingcity_endings.lua)](#secret-endings-on-your-screen-svlivingcityendingslua-cllivingcityendingslua) (65)
 - [the Endings menu (superadmins): tune the secret endings live](#the-endings-menu-superadmins-tune-the-secret-endings-live-cllivingcityendingtunelua) (69)
 - [morning exercise, on your screen (sv_livingcity_exercise.lua)](#morning-exercise-on-your-screen-svlivingcityexerciselua-cllivingcityexerciselua) (11)
-- [cl_livingcity_factions.lua](#cllivingcityfactionslua-cllivingcityfactionslua) (23)
+- [cl_livingcity_factions.lua](#cllivingcityfactionslua-cllivingcityfactionslua) (25)
 - [cl_livingcity_feeds.lua](#cllivingcityfeedslua-cllivingcityfeedslua) (2)
 - [cl_livingcity_feverdream.lua](#cllivingcityfeverdreamlua-cllivingcityfeverdreamlua) (24)
 - [cl_livingcity_grigori.lua](#cllivingcitygrigorilua-cllivingcitygrigorilua) (10)
@@ -138,6 +138,7 @@ Made from version 1cfa69b. Admin-only console messages and log lines are left ou
 - [cl_livingcity_staff.lua](#cllivingcitystafflua-cllivingcitystafflua) (21)
 - [cl_livingcity_standingpanel.lua](#cllivingcitystandingpanellua-cllivingcitystandingpanellua) (1)
 - [the strange dreams, your side (sv_livingcity_strangedreams.lua, sv_livingcity_strangedreams2.lua)](#the-strange-dreams-your-side-svlivingcitystrangedreamslua-svlivingcitystrangedreams2lua-cllivingcitystrangedreamslua) (9)
+- [the play study (the player's side)](#the-play-study-the-players-side-cllivingcitystudylua) (18)
 - [cl_livingcity_suit.lua](#cllivingcitysuitlua-cllivingcitysuitlua) (1)
 - [cl_livingcity_talk.lua](#cllivingcitytalklua-cllivingcitytalklua) (15)
 - [cl_livingcity_theme.lua](#cllivingcitythemelua-cllivingcitythemelua) (1)
@@ -325,6 +326,7 @@ Made from version 1cfa69b. Admin-only console messages and log lines are left ou
 - [ten more strange dreams, nonsense on purpose](#ten-more-strange-dreams-nonsense-on-purpose-svlivingcitystrangedreams3lua) (235)
 - [crime between citizens (the owner, 10 November: "citizen](#crime-between-citizens-the-owner-10-november-citizen-svlivingcitystreetcrimelua) (51)
 - [sv_livingcity_streetlife.lua](#svlivingcitystreetlifelua-svlivingcitystreetlifelua) (13)
+- [the play study (server side)](#the-play-study-server-side-svlivingcitystudylua) (88)
 - [survival](#survival-svlivingcitysurvivallua) (71)
 - [Realistic or Relaxed survival, chosen per character](#realistic-or-relaxed-survival-chosen-per-character-svlivingcitysurvivalmodelua) (9)
 - [talking to people](#talking-to-people-svlivingcitytalklua) (59)
@@ -1298,41 +1300,42 @@ Made from version 1cfa69b. Admin-only console messages and log lines are left ou
 - "Propaganda dreams (her tablet, under Happy, as Propaganda; or C > Help > Dreams): Kneel Before Her, Roses for Her, Mirror, Mirror, The Saviour, The Loyalty Quiz, and ten more (Record Harvest, The Union Shift, Careless Talk, The Newsreel, Two Minutes of Hate, The Mass Games, On-the-Spot Guidance, The Scrap Drive, Flowers for the Liberators, Duck and Cover, Ravenholm). Asleep for one with someone else, the Administrator stars herself (tablet > Tonight's dream > Star in propaganda dreams yourself: on or off); otherwise a giant figure of her does. Music goes flat in garrysmod/sound/livingcity/dreams/, named admire, saviour_horde, saviour or quiz (admire1.mp3), or for the ten more their codeword (harvest, shift, spy, newsreel, hate, massgames, guidance, scrap, flowers, duck, ravenholm) or propaganda; her voice lines in dreams/voice/ (saviour_stop1.wav, a .txt beside it for the subtitle). Upload, FastDL sync, map change."  (text, line 387)
 - "Save with the gamemode (Q > Tools > Miscount): spawn a prop, put it where you want it and left click it: it's saved with the map's layout and back every time the map loads. Right click stops saving it. Saved props glow green while the tool is out."  (text, line 388)
 - "Testing a dream: the Miscount Editor's panel, Dreams: test one. Pick any dream and Test it now (just me): you play it at once, awake and alone (the city's people stand in), and Stop the test whenever you like. Nobody asleep is pulled in, it isn't tonight's dream, and nothing you win or lose counts. With Record the test ticked there (it is, to begin with), the test is written down for the code chat: when you wake, a folder in garrysmod/data/livingcity/dreamrec/ on your own computer holds log.txt (every text that was on screen, how long it was up and whether that was long enough to read; what the dream made; what you did) and screenshots. Type a note in chat mid-test and it lands in the log at that second. Only a test from the editor is ever recorded."  (text, line 389)
-- "Civil Protection Commissary (editor fixture): Civil Protection units get grenades, ammunition, armour, bandages and a ration there. lc_cpsupply_cooldown (120), lc_cpsupply_ration (600). If none is placed, the Union Commissary terminal issues them instead."  (text, line 390)
-- "Resistance lab (editor fixture, formerly the workbench): a lab bench and a scientist who makes what the quartermaster doesn't sell (charge cells, firebombs, the foil hat) and decodes chips, changes faces and pulls the chip. Place one in every rebel base. lc_lab_price (0.6 of the dealer's price), lc_lab_shutdown (600 seconds closed after a Civil Protection unit finds it)."  (text, line 391)
-- "How it feels (editor panel, How it feels): lc_fov (75, the widest view anyone gets; 0 leaves it to each player), lc_eye_height (61; GMod's default is 64), lc_view_bob (with lc_view_bob_amount, 100%, for how strong), lc_quiet_hud, lc_respawn_secs (12, how long the death card shows), lc_word_gets_around."  (text, line 392)
-- "C > Help > Admin testing tools (or the button on F4, or !admintools): give yourself XP, a rank, credits and Civil Standing, switch faction, or start over."  (text, line 394)
-- "Switching faction from F4 changes your uniform and kit on the spot: no need to go back to a spawn point."  (text, line 395)
-- "Chat commands: !givexp, !setrank, !givecredits, !givestanding <n> [name]; !resetxp, !resetcredits [name]; !resetme."  (text, line 396)
-- "C > Help > Staff panel (or !staff): logs, tickets, warnings, character bans. !warn <name> <reason>, !charban <name> <reason>."  (text, line 397)
-- "To black out the whole city for an event: !admintools > The city, or lc_blackout on\|off\|auto."  (text, line 399)
-- "Checkpoints in the editor: Combine power bank, Combine turret, Combine barricades. Place one at the edge of the infestation and the infestation stops spreading there, until the checkpoint loses power."  (text, line 400)
-- "Cell doors not locking? Tag them in the editor with Door: prison or cell. They stay locked during a blackout, and close themselves if anyone other than a Civil Protection unit opens them."  (text, line 401)
-- "Door: always open keeps a door open permanently: it's locked open, and opens again if anything shuts it."  (text, line 402)
-- "Your own announcements: put .wav files directly in the server's garrysmod/sound/livingcity/overwatch/ or .../administrator/ folder, named after the trigger (curfew1.wav, ambient2.wav). For the Administrator, the tone goes in the name too (curfew_firm1.wav, curfew_stern1.wav, curfew_furious1.wav; warm has no tone word). Each folder's README lists the triggers. lc_announce_clips lists the files it found (and any the game can't play: an MP3 renamed to .wav is silent, so keep .mp3 files as .mp3; a .wav must be 16-bit 44100 Hz). lc_announce_say <voice> <trigger> [tone] tests one. Each player's own computer plays them, so players get them through FastDL (press FastDL sync after adding one, then change the map). lc_sound_check tests a player's own copy."  (text, line 403)
-- "Secret endings (keep them secret): the G-Man stops time and everyone votes: 1 lets the city end, 2 skips it (if nobody votes, it ends). Nobody really dies; the map reloads afterwards. Songs go directly in the server's garrysmod/sound/livingcity/endings/ folder, named after the ending: harpies.mp3, bus.mp3, plane.mp3, standup.mp3, water.mp3, bloom.mp3, marrow.mp3, base.mp3, hard.mp3, shalom.mp3, fire.mp3. Father Grigori eating a master data core (Eat it in his pockets, or /eatchip) starts the flood (if an admin starts it, the city's own Father Grigori takes the stage; lc_ending_flood_crowd sets how many others are up there with him). Commands: lc_endings, lc_ending <id> [now], lc_ending_cancel, lc_ending_reset_cooldown. The Endings menu (C > Help > Endings menu, superadmins only, or lc_endings_menu): adjust any ending live while it plays, including its dances bone by bone (the selected bone lights up on the dancers) and all its settings, then copy what you changed. The Harpies (mingebags): lc_ending_minge_swell is the second the song swells, lc_ending_minge_end when it's all over, lc_ending_minge_max how many there are, lc_ending_minge_crowd how many of the city's people stand in the ring, lc_ending_minge_chatter 0 silences the Combine's radio chatter. Bloom (the dance): lc_ending_bloom_speedup, _ramp, _peak, _bpm; lc_bloom_preview and lc_bloom_pose tune the dance. Marrow (the skeletons): lc_ending_marrow_sections lines it up with the song (seconds:dance\|rave\|attack\|outro\|end). The Bus: lc_ending_bus_sections (seconds:fly\|drive\|fast\|end), lc_ending_bus_bpm. Base: lc_ending_base_sections, lc_ending_base_lines (the subtitles). Hard (party hard): lc_ending_hard_sections, lc_ending_hard_moment_beats (how often another Combine member joins in), lc_ending_hard_moment_max (how many at once). Plane (numa numa): lc_ending_plane_sections, lc_ending_plane_captions. Standup (the rope): lc_ending_standup_sections, lc_ending_standup_drain. The Flood: lc_ending_flood_attack_from (when the ichthyosaurs start biting), lc_ending_flood_boats (rowboats), each player's lc_headbang_angle (Father Grigori's nod). The Plane: lc_ending_plane_model_yaw (if it flies sideways). Marrow: lc_ending_marrow_crowd. Any ending: lc_ending_bodies (bodies left lying), lc_ending_edict_limit (spawning stops near the server's entity limit). Bloom: each player's lc_bloom_palm (-90 if the palms face backwards). Shalom (the hora): lc_ending_shalom_sections, lc_ending_shalom_candles (when each of the hanukkiah's candles is lit), lc_ending_shalom_lift_beats (how often someone is lifted up on a chair), lc_ending_shalom_sayings (extra sayings shown over heads, separated by \|); each player's lc_shalom_pose tunes the dance's arms and lc_shalom_kippah where the kippah sits. Fire (behinds on fire, then flying on them): lc_ending_fire_sections (seconds:ignite\|hop\|fly\|launch\|end), lc_ending_fire_hop (how high the hops are), lc_ending_fire_fly_speed, lc_ending_fire_crowd; the flying pose is tuned in the Endings menu (Pelvis tilts the whole body)."  (text, line 404)
-- "Freq 7 (the pirate broadcast): voice lines and songs take turns, and warnings cut in. The Combine jam it every lc_freq7_hold minutes on green (faster on yellow and red, never during a blackout). Recordings go in the sound addon's radio/ folder. lc_freq7_status shows where it is."  (text, line 405)
-- "Morning exercise: use the editor to place an exercise yard (the drill) and a parade route (stops in order). Every lc_exercise_every dawns (2), one of them runs, taking turns (lc_exercise_kinds). The morning jog is archived (lc_jog 0): its routes are taken out of the layout as it loads, each start kept as an exercise yard. lc_exercise <drill\|parade> starts one now, lc_exercise next shows which is next, lc_exercise stop ends it."  (text, line 406)
-- "The Administrator's address: place a speech stand and a speech crowd point (editor) and her speeches become attended: the city gathers, absentees are beaten to the crowd, and with nobody playing her the city's own Administrator speaks once a day (lc_speech_city)."  (text, line 407)
-- "NPCs losing track of you in a chase? Path mapping (editor panel, Paths and doors, or !pathmap) places path nodes as you walk the streets, stairs and alleys, links them and saves them with the map. Noclip pauses it; lc_pathmap_undo removes the nodes placed this session."  (text, line 408)
-- "Every setting in the editor panel is saved with the map as soon as you change it, so your values survive a restart."  (text, line 409)
-- "Persistent props: spawn a prop, place it, and click it with the editor's Prop: make persistent. It's saved with the layout, frozen, and comes back every time the map loads."  (text, line 410)
-- "Rebel lookout post (editor point): an armed fighter guards that spot. Place it from the side the Combine would come from, so he faces that way."  (text, line 411)
-- "Bunk (editor point): a bed rebels sleep on. Mattresses, beds, couches, chairs, workbenches and crates inside rebel territory are found automatically."  (text, line 412)
-- "Tag the Combine's doors with Door: Civil Protection only and Civil Protection units are routed through them, even where the map's navigation was cut off by the door."  (text, line 414)
-- "The Miscount Editor places everything: street furniture (bins, streetlights, loudspeakers, big screens, TVs), an incinerator for bodies, and a workplace for each Union job, plus loading docks, graffiti walls, rubble piles and leaky pipes for the jobs that use them."  (text, line 415)
+- "The play study (superadmins): F4 > Factions > Admin: play study. Start it and play as you mean the city's people to behave. It notes who you are (faction, rank), the zone you're in and whose ground it is, your job, how you move, what you do about security, and whether you're in the city or a dream, each kept apart. It pauses by itself while you fly, hold the editor's tool, are out of the game window or away from the keys. A job that fails or is abandoned is kept out; strike the last job or the last 5 minutes yourself when something went wrong. Stop and save: report.txt and log.txt are in garrysmod/data/livingcity/study/ on your own computer, for the code chat. Nothing about the city's people changes by itself."  (text, line 390)
+- "Civil Protection Commissary (editor fixture): Civil Protection units get grenades, ammunition, armour, bandages and a ration there. lc_cpsupply_cooldown (120), lc_cpsupply_ration (600). If none is placed, the Union Commissary terminal issues them instead."  (text, line 391)
+- "Resistance lab (editor fixture, formerly the workbench): a lab bench and a scientist who makes what the quartermaster doesn't sell (charge cells, firebombs, the foil hat) and decodes chips, changes faces and pulls the chip. Place one in every rebel base. lc_lab_price (0.6 of the dealer's price), lc_lab_shutdown (600 seconds closed after a Civil Protection unit finds it)."  (text, line 392)
+- "How it feels (editor panel, How it feels): lc_fov (75, the widest view anyone gets; 0 leaves it to each player), lc_eye_height (61; GMod's default is 64), lc_view_bob (with lc_view_bob_amount, 100%, for how strong), lc_quiet_hud, lc_respawn_secs (12, how long the death card shows), lc_word_gets_around."  (text, line 393)
+- "C > Help > Admin testing tools (or the button on F4, or !admintools): give yourself XP, a rank, credits and Civil Standing, switch faction, or start over."  (text, line 395)
+- "Switching faction from F4 changes your uniform and kit on the spot: no need to go back to a spawn point."  (text, line 396)
+- "Chat commands: !givexp, !setrank, !givecredits, !givestanding <n> [name]; !resetxp, !resetcredits [name]; !resetme."  (text, line 397)
+- "C > Help > Staff panel (or !staff): logs, tickets, warnings, character bans. !warn <name> <reason>, !charban <name> <reason>."  (text, line 398)
+- "To black out the whole city for an event: !admintools > The city, or lc_blackout on\|off\|auto."  (text, line 400)
+- "Checkpoints in the editor: Combine power bank, Combine turret, Combine barricades. Place one at the edge of the infestation and the infestation stops spreading there, until the checkpoint loses power."  (text, line 401)
+- "Cell doors not locking? Tag them in the editor with Door: prison or cell. They stay locked during a blackout, and close themselves if anyone other than a Civil Protection unit opens them."  (text, line 402)
+- "Door: always open keeps a door open permanently: it's locked open, and opens again if anything shuts it."  (text, line 403)
+- "Your own announcements: put .wav files directly in the server's garrysmod/sound/livingcity/overwatch/ or .../administrator/ folder, named after the trigger (curfew1.wav, ambient2.wav). For the Administrator, the tone goes in the name too (curfew_firm1.wav, curfew_stern1.wav, curfew_furious1.wav; warm has no tone word). Each folder's README lists the triggers. lc_announce_clips lists the files it found (and any the game can't play: an MP3 renamed to .wav is silent, so keep .mp3 files as .mp3; a .wav must be 16-bit 44100 Hz). lc_announce_say <voice> <trigger> [tone] tests one. Each player's own computer plays them, so players get them through FastDL (press FastDL sync after adding one, then change the map). lc_sound_check tests a player's own copy."  (text, line 404)
+- "Secret endings (keep them secret): the G-Man stops time and everyone votes: 1 lets the city end, 2 skips it (if nobody votes, it ends). Nobody really dies; the map reloads afterwards. Songs go directly in the server's garrysmod/sound/livingcity/endings/ folder, named after the ending: harpies.mp3, bus.mp3, plane.mp3, standup.mp3, water.mp3, bloom.mp3, marrow.mp3, base.mp3, hard.mp3, shalom.mp3, fire.mp3. Father Grigori eating a master data core (Eat it in his pockets, or /eatchip) starts the flood (if an admin starts it, the city's own Father Grigori takes the stage; lc_ending_flood_crowd sets how many others are up there with him). Commands: lc_endings, lc_ending <id> [now], lc_ending_cancel, lc_ending_reset_cooldown. The Endings menu (C > Help > Endings menu, superadmins only, or lc_endings_menu): adjust any ending live while it plays, including its dances bone by bone (the selected bone lights up on the dancers) and all its settings, then copy what you changed. The Harpies (mingebags): lc_ending_minge_swell is the second the song swells, lc_ending_minge_end when it's all over, lc_ending_minge_max how many there are, lc_ending_minge_crowd how many of the city's people stand in the ring, lc_ending_minge_chatter 0 silences the Combine's radio chatter. Bloom (the dance): lc_ending_bloom_speedup, _ramp, _peak, _bpm; lc_bloom_preview and lc_bloom_pose tune the dance. Marrow (the skeletons): lc_ending_marrow_sections lines it up with the song (seconds:dance\|rave\|attack\|outro\|end). The Bus: lc_ending_bus_sections (seconds:fly\|drive\|fast\|end), lc_ending_bus_bpm. Base: lc_ending_base_sections, lc_ending_base_lines (the subtitles). Hard (party hard): lc_ending_hard_sections, lc_ending_hard_moment_beats (how often another Combine member joins in), lc_ending_hard_moment_max (how many at once). Plane (numa numa): lc_ending_plane_sections, lc_ending_plane_captions. Standup (the rope): lc_ending_standup_sections, lc_ending_standup_drain. The Flood: lc_ending_flood_attack_from (when the ichthyosaurs start biting), lc_ending_flood_boats (rowboats), each player's lc_headbang_angle (Father Grigori's nod). The Plane: lc_ending_plane_model_yaw (if it flies sideways). Marrow: lc_ending_marrow_crowd. Any ending: lc_ending_bodies (bodies left lying), lc_ending_edict_limit (spawning stops near the server's entity limit). Bloom: each player's lc_bloom_palm (-90 if the palms face backwards). Shalom (the hora): lc_ending_shalom_sections, lc_ending_shalom_candles (when each of the hanukkiah's candles is lit), lc_ending_shalom_lift_beats (how often someone is lifted up on a chair), lc_ending_shalom_sayings (extra sayings shown over heads, separated by \|); each player's lc_shalom_pose tunes the dance's arms and lc_shalom_kippah where the kippah sits. Fire (behinds on fire, then flying on them): lc_ending_fire_sections (seconds:ignite\|hop\|fly\|launch\|end), lc_ending_fire_hop (how high the hops are), lc_ending_fire_fly_speed, lc_ending_fire_crowd; the flying pose is tuned in the Endings menu (Pelvis tilts the whole body)."  (text, line 405)
+- "Freq 7 (the pirate broadcast): voice lines and songs take turns, and warnings cut in. The Combine jam it every lc_freq7_hold minutes on green (faster on yellow and red, never during a blackout). Recordings go in the sound addon's radio/ folder. lc_freq7_status shows where it is."  (text, line 406)
+- "Morning exercise: use the editor to place an exercise yard (the drill) and a parade route (stops in order). Every lc_exercise_every dawns (2), one of them runs, taking turns (lc_exercise_kinds). The morning jog is archived (lc_jog 0): its routes are taken out of the layout as it loads, each start kept as an exercise yard. lc_exercise <drill\|parade> starts one now, lc_exercise next shows which is next, lc_exercise stop ends it."  (text, line 407)
+- "The Administrator's address: place a speech stand and a speech crowd point (editor) and her speeches become attended: the city gathers, absentees are beaten to the crowd, and with nobody playing her the city's own Administrator speaks once a day (lc_speech_city)."  (text, line 408)
+- "NPCs losing track of you in a chase? Path mapping (editor panel, Paths and doors, or !pathmap) places path nodes as you walk the streets, stairs and alleys, links them and saves them with the map. Noclip pauses it; lc_pathmap_undo removes the nodes placed this session."  (text, line 409)
+- "Every setting in the editor panel is saved with the map as soon as you change it, so your values survive a restart."  (text, line 410)
+- "Persistent props: spawn a prop, place it, and click it with the editor's Prop: make persistent. It's saved with the layout, frozen, and comes back every time the map loads."  (text, line 411)
+- "Rebel lookout post (editor point): an armed fighter guards that spot. Place it from the side the Combine would come from, so he faces that way."  (text, line 412)
+- "Bunk (editor point): a bed rebels sleep on. Mattresses, beds, couches, chairs, workbenches and crates inside rebel territory are found automatically."  (text, line 413)
+- "Tag the Combine's doors with Door: Civil Protection only and Civil Protection units are routed through them, even where the map's navigation was cut off by the door."  (text, line 415)
+- "The Miscount Editor places everything: street furniture (bins, streetlights, loudspeakers, big screens, TVs), an incinerator for bodies, and a workplace for each Union job, plus loading docks, graffiti walls, rubble piles and leaky pipes for the jobs that use them."  (text, line 416)
 
 > Note for you (not shown in game): (its own title, line and search box sit under the window's title strip, 24 tall: they ran into the strip's line, its words and the close button, the owner's screenshot of 11 November)
 
-- "C > Guide opens this guide. Tips also pop up the first time something happens (C > Tips I've seen lists them all)."  (drawn on screen, line 439)
+- "C > Guide opens this guide. Tips also pop up the first time something happens (C > Tips I've seen lists them all)."  (drawn on screen, line 440)
 
 > Note for you (not shown in game): part of: open guide
 
-- "Search the guide"  (text, line 444)
+- "Search the guide"  (text, line 445)
 
 > Note for you (not shown in game): part of: show search
 
-- "Nothing found for "{q}". Try a single word: cuffs, rent, curfew, fish..."  (text, line 490)
+- "Nothing found for "{q}". Try a single word: cuffs, rent, curfew, fish..."  (text, line 491)
 
 ## init.lua (init.lua)
 
@@ -2631,51 +2634,56 @@ Made from version 1cfa69b. Admin-only console messages and log lines are left ou
 
 - "Admin: testing tools (XP, ranks, credits, standing)"  (label or button, line 55)
 
+> Note for you (not shown in game): the play study (cl_livingcity_study.lua): how the owner plays, as a model for the city's people
+
+- "Admin: play study (ON: stop, strike or discard)"  (label or button, line 63)
+- "Admin: play study (record how I play, for the code chat)"  (label or button, line 63)
+
 > Note for you (not shown in game): part of: build factions
 
-- "%d special role%s"  (message, line 72)
-- "Your rank: %s   XP %d%s"  (message, line 105)
-- "(next: %s at %d)"  (message, line 106)
-- "(highest rank)"  (message, line 106)
-- "You are here"  (text, line 130)
-- "Join {name}"  (text, line 130)
-- "Special role: {name}  ({taken}/{or} taken)"  (label or button, line 139)
+- "%d special role%s"  (message, line 81)
+- "Your rank: %s   XP %d%s"  (message, line 114)
+- "(next: %s at %d)"  (message, line 115)
+- "(highest rank)"  (message, line 115)
+- "You are here"  (text, line 139)
+- "Join {name}"  (text, line 139)
+- "Special role: {name}  ({taken}/{or} taken)"  (label or button, line 148)
 
 > Note for you (not shown in game): how a role sits with your rank: on top of it, not instead of it
 
-- "your rank"  (text, line 152)
-- "A role, not a rank: you stay %s and keep earning XP toward the next rank. While you hold it you carry its kit%s instead of your rank's%s. To give it up, press "Join %s" above: you're back to %s with %s kit."  (message, line 157)
+- "your rank"  (text, line 161)
+- "A role, not a rank: you stay %s and keep earning XP toward the next rank. While you hold it you carry its kit%s instead of your rank's%s. To give it up, press "Join %s" above: you're back to %s with %s kit."  (message, line 166)
 
 > Note for you (not shown in game): part of: build factions
 
-- "and wear its clothes"  (message, line 158)
-- "your rank"  (message, line 158)
-- "a {myRank}'s"  (message, line 158)
-- "You hold this role"  (text, line 162)
-- "Take up the role of {name}"  (text, line 162)
+- "and wear its clothes"  (message, line 167)
+- "your rank"  (message, line 167)
+- "a {myRank}'s"  (message, line 167)
+- "You hold this role"  (text, line 171)
+- "Take up the role of {name}"  (text, line 171)
 
 > Note for you (not shown in game): (a special role is held on top of your rank: "Hacker (Fighter)")
 
-- "Habitation Block %02d"  (text, line 224)
+- "Habitation Block %02d"  (text, line 233)
 
 > Note for you (not shown in game): (the Overwatch ranks wait on the conditioning: the Overwatch Candidate story)
 
-- "%s   %d XP (higher needs the Overwatch conditioning)"  (message, line 255)
+- "%s   %d XP (higher needs the Overwatch conditioning)"  (message, line 264)
 
 > Note for you (not shown in game): part of: xpinfo
 
-- "%s   %d XP (top rank)"  (message, line 262)
+- "%s   %d XP (top rank)"  (message, line 271)
 
 > Note for you (not shown in game): the game's huddraw target id moment
 
-- "Citizen {alias}"  (text, line 407)
-- "NOT ON THE ROSTER (search them: baton reload, or !search)"  (text, line 415)
+- "Citizen {alias}"  (text, line 416)
+- "NOT ON THE ROSTER (search them: baton reload, or !search)"  (text, line 424)
 
 > Note for you (not shown in game): what units know: a BOLO out on them, hands tied, hands up (sv_livingcity_cp.lua)
 
-- "BOLO: {GetNW2String}"  (text, line 420)
-- "Hands cuffed"  (text, line 421)
-- "Hands up"  (text, line 422)
+- "BOLO: {GetNW2String}"  (text, line 429)
+- "Hands cuffed"  (text, line 430)
+- "Hands up"  (text, line 431)
 
 ## cl_livingcity_feeds.lua (cl_livingcity_feeds.lua)
 
@@ -4840,6 +4848,47 @@ Made from version 1cfa69b. Admin-only console messages and log lines are left ou
 - "$pp_colour_mulr"  (text, line 332)
 - "$pp_colour_mulg"  (text, line 332)
 - "$pp_colour_mulb"  (text, line 332)
+
+## the play study (the player's side) (cl_livingcity_study.lua)
+
+`gamemodes/livingcity/gamemode/modules/client/cl_livingcity_study.lua`
+
+
+> Note for you (not shown in game): part of: mins
+
+- "%dh %02dm"  (message, line 47)
+- "%dm %02ds"  (message, line 48)
+
+> Note for you (not shown in game): on screen
+
+- "STUDY: counting ({counted})"  (text, line 65)
+
+> Note for you (not shown in game): (typing in chat or a window open is still being here: only the game's own menu and another window count as away)
+
+- "\|{lastInput}"  (text, line 73)
+
+> Note for you (not shown in game): part of: fill
+
+- "Play as you mean the city's people to behave: where you go, how long you stay, how you move, what you do about security. It notes who you are (faction, rank), the zone you're in and whose ground it is, your job, and whether you're in the city or a dream, and keeps each apart. Nothing about any NPC changes by itself: the report goes to the code chat."  (text, line 109)
+- "Counted {counted} of {total}. You: {or}. Where: {or}.{or}{or}"  (text, line 112)
+- "Stop and save"  (text, line 114)
+- "Strike the last job: "{lastQuest}" (it went wrong or was glitched)"  (text, line 115)
+- "Strike the last job (none taken yet)"  (text, line 115)
+- "Strike the last 5 minutes (I wasn't playing it straight)"  (text, line 116)
+- "Discard this whole session (keep nothing)"  (text, line 117)
+- "It pauses by itself while you fly (noclip), hold the editor's tool, the physics gun or the camera, are out of the game window, or leave the keys alone for a minute and a half. A job that fails or is abandoned is kept out of the baselines without your doing anything."  (text, line 118)
+- "Start: this session counts"  (text, line 121)
+- "Away from the keys after (seconds)"  (label or button, line 126)
+- "Last saved: garrysmod/data/{StudyLast}/ (report.txt and log.txt). Zip the folder and give it to the code chat."  (text, line 131)
+
+> Note for you (not shown in game): part of: study menu
+
+- "Play study: how I play, for the city's people to learn from"  (window title, line 140)
+
+> Note for you (not shown in game): the game answering something done in a window (lc_study)
+
+- "Play study"  (on-screen notice, line 195)
+- "[Play study]"  (chat message, line 196)
 
 ## cl_livingcity_suit.lua (cl_livingcity_suit.lua)
 
@@ -8965,17 +9014,17 @@ Made from version 1cfa69b. Admin-only console messages and log lines are left ou
 - "the tester"  (text, line 451)
 - "the world"  (text, line 457)
 - "(from {from})"  (quest step, line 459)
-- "the tester left"  (text, line 496)
-- ""{title}" ({id}), {mood}, dream point at {or}"  (text, line 507)
-- "woke: {or}"  (text, line 514)
+- "the tester left"  (text, line 507)
+- ""{title}" ({id}), {mood}, dream point at {or}"  (text, line 518)
+- "woke: {or}"  (text, line 525)
 
 > Note for you (not shown in game): (the tester's own waking, a moment later, closes the recording; this is in case it never comes)
 
-- "the dream ended"  (text, line 520)
+- "the dream ended"  (text, line 531)
 
 > Note for you (not shown in game): Notices to the tester, and the names of the net messages going out.
 
-- "[{kind}{or}] {title}: {text}"  (text, line 528)
+- "[{kind}{or}] {title}: {text}"  (text, line 539)
 
 ## which dream tonight (the rules, and the city's own pick) (sv_livingcity_dreamrules.lua)
 
@@ -22237,6 +22286,171 @@ Made from version 1cfa69b. Admin-only console messages and log lines are left ou
 > Note for you (not shown in game): part of: cower
 
 - "head down"  (text, line 275)
+
+## the play study (server side) (sv_livingcity_study.lua)
+
+`gamemodes/livingcity/gamemode/modules/server/sv_livingcity_study.lua`
+
+
+> Note for you (not shown in game): part of: where
+
+- "open ground"  (text, line 98)
+- "own ground"  (text, line 100)
+- "the other side's ground"  (text, line 101)
+- "the Combine's ground"  (text, line 102)
+- "the Resistance's ground"  (text, line 102)
+- "the editor's tool"  (text, line 114)
+- "the physics gun"  (text, line 114)
+- "the camera"  (text, line 114)
+
+> Note for you (not shown in game): part of: paused
+
+- "away (out of the game window)"  (text, line 117)
+- "away from the keys"  (text, line 118)
+- "flying (noclip)"  (text, line 119)
+- "holding {tool}"  (text, line 122)
+- "watching (spectating)"  (text, line 123)
+
+> Note for you (not shown in game): part of: mode
+
+- "crouched still"  (text, line 133)
+
+> Note for you (not shown in game): The report
+
+- "%dh %02dm"  (message, line 232)
+- "%dm %02ds"  (message, line 233)
+
+> Note for you (not shown in game): part of: report
+
+- "a job that {or}"  (text, line 270)
+
+> Note for you (not shown in game): (a visit: seconds in a row in the same zone)
+
+- "Player %s, map %s. %s recorded, %s counted. Ended: %s."  (message, line 306)
+
+> Note for you (not shown in game): part of: report
+
+- "How to read this (for the code chat): one player's real play, as a model for how the city's people might behave. Every table is"  (text, line 308)
+- "for one WHO (faction and rank) in one WHAT (the city, or a dream) and split by WHERE (the kind of zone, and whose ground it is"  (text, line 309)
+- "to that player). Never merge rows across factions: a Rebel on the Combine's ground and a unit there are different things."  (text, line 310)
+- "Seconds are counted only while the player was really playing (see NOT COUNTED). log.txt has every line behind these numbers."  (text, line 311)
+- "kept out, {k}: {k}"  (text, line 316)
+- "nothing: every second counted"  (text, line 317)
+- "struck by the player: %.0fs to %.0fs (%s)"  (message, line 318)
+- "== {ctx} \| {key} ({n}) =="  (text, line 323)
+- "time of day: {n}"  (text, line 325)
+- "security in sight {n} of the time; on a job {n}; people within 500 units, on average {n}"  (text, line 327)
+- "by place (most time first):"  (text, line 328)
+- "%s: %s (%s), %d visits, a visit lasts %s (median), longest %s"  (message, line 333)
+- "moving: {n}; security in sight {n}; on a job {n}; {n}"  (text, line 334)
+- "none taken"  (text, line 340)
+- "[STRUCK by the player: not in the tables]"  (text, line 347)
+- "[kept out of the tables]"  (text, line 347)
+- "[%.0fs] "%s" [%s] from %s, as %s: %s, %s of play%s"  (message, line 348)
+- "== MEETINGS WITH SECURITY (a unit or soldier in sight, within 700 units) =="  (text, line 354)
+- "%s: %d meetings, lasting %s (median), closest %d units (median); the player: %s"  (message, line 370)
+- "[%.0fs] %s, %s: %s, from %d to %d units (closest %d), %s; %s"  (message, line 373)
+- "== WHERE ON THE MAP (the city only; squares of 256 units, named by the map coordinates of their middle) =="  (text, line 377)
+- "Jumping and crouching may be the map's shape (a ledge, a low gap), not a habit: check the spot before making it a behaviour."  (text, line 378)
+
+> Note for you (not shown in game): part of: spots
+
+- "{title}: {or}"  (text, line 391)
+
+> Note for you (not shown in game): part of: report
+
+- "most time"  (text, line 393)
+- "== WHAT HAPPENED, COUNTED (who \| where: event xN) =="  (text, line 398)
+
+> Note for you (not shown in game): part of: tick
+
+- "the player left"  (text, line 534)
+
+> Note for you (not shown in game): away from the keys: the quiet time before it was noticed is taken out too
+
+- "away from the keys"  (text, line 546)
+
+> Note for you (not shown in game): who, in what, where
+
+- "(was {key})"  (text, line 560)
+- "the city"  (text, line 561)
+- "a dream ({id}{or})"  (text, line 565)
+
+> Note for you (not shown in game): pcall
+
+- "({ground}){or}"  (text, line 569)
+- ", after {now} in {zone}"  (text, line 571)
+
+> Note for you (not shown in game): (the trail: where on the map, every five seconds on the move, for laying over the map itself one day)
+
+- "crouched still"  (text, line 607)
+
+> Note for you (not shown in game): a meeting with security: from first sight until four seconds out of it
+
+- "security in sight: %d of them, the nearest %d units off; the player is %s in %s"  (message, line 627)
+
+> Note for you (not shown in game): pcall
+
+- "ran off"  (text, line 637)
+- "moved away"  (text, line 637)
+- "closed in"  (text, line 637)
+- "crouched still"  (text, line 638)
+- "kept low"  (text, line 638)
+- "stood their ground"  (text, line 639)
+- "carried on"  (text, line 639)
+- "over after %s: from %d to %d units (closest %d); the player %s"  (message, line 642)
+
+> Note for you (not shown in game): part of: study start
+
+- "Nobody to study."  (text, line 687)
+- "Only those who may use the Miscount Editor can be studied."  (text, line 688)
+- "The study is already on."  (text, line 689)
+- "Someone else is being studied."  (text, line 689)
+
+> Note for you (not shown in game): (chat has many listeners and any of them may answer first: it's also caught as it's called, below; said once)
+
+- "command {text}"  (text, line 699)
+- "said something"  (text, line 700)
+
+> Note for you (not shown in game): hook
+
+- "used {GetClass}"  (text, line 715)
+- "was hit by {or}"  (text, line 735)
+- "attacked {GetClass}"  (text, line 740)
+- "with {GetClass}"  (text, line 740)
+- "killed {GetClass}"  (text, line 744)
+- "to {GetClass}"  (text, line 747)
+- "the player left"  (text, line 750)
+
+> Note for you (not shown in game): pcall
+
+- "[{kind}] {title}: {text}"  (spoken line, line 782)
+
+> Note for you (not shown in game): Strike a stretch of it: it stays in the log, marked, and the report leaves it out.
+
+- "The study isn't on."  (text, line 801)
+- "No job has been taken in this study."  (text, line 805)
+- ""{title}" is already struck."  (text, line 806)
+
+> Note for you (not shown in game): part of: study strike
+
+- "the job "{title}""  (text, line 808)
+- "Struck: "{title}"."  (text, line 810)
+- "the last {mins} minutes"  (text, line 814)
+- "Struck: the last {mins} minutes."  (text, line 816)
+
+> Note for you (not shown in game): part of: notice
+
+- "Play study"  (on-screen notice, line 820)
+- "Play study: {text}"  (chat message, line 820)
+
+> Note for you (not shown in game): the game answering something done in a window (lc_study_act)
+
+- "Only those who may use the Miscount Editor can be studied."  (on-screen notice, line 834)
+- "On. Play as you mean the city's people to behave. It pauses by itself while you fly, use the editor, or are away. Stop it from F4 > Factions > Admin: play study."  (on-screen notice, line 838)
+- "The study isn't on."  (on-screen notice, line 842)
+- "stopped by the player"  (text, line 843)
+- "Discarded: nothing of this session is kept."  (on-screen notice, line 844)
 
 ## survival (sv_livingcity_survival.lua)
 

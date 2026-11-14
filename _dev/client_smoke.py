@@ -4325,6 +4325,61 @@ _ed = open(os.path.join(GMDIR, "..", "..", "lua", "weapons", "gmod_tool", "stool
 if '"lc_dreamrec"' not in _ed or '"lc_dreamrec_shots"' not in _ed:
     problems = (problems + "\n" if problems else "") + "the editor's Dreams: test one has no Record the test box"
 
+# the play study (cl_livingcity_study.lua): what the server sends is saved in data/livingcity/study/
+# as log.txt and report.txt; a discarded session leaves nothing; F4 > Factions has its button
+err = L.execute(r"""
+local recv = net["recv_lc_study"]
+if not recv then return "play study: no receiver" end
+local keep = { rs = net.ReadString, ru = net.ReadUInt, rf = net.ReadFloat, file = file, json = util.JSONToTable, notice = LC_CL.AddNotice, tc = timer.Create, tr = timer.Remove }
+local q, files, said = {}, {}, nil
+net.ReadString = function() return table.remove(q, 1) end
+net.ReadUInt = function() return table.remove(q, 1) end
+net.ReadFloat = function() return table.remove(q, 1) end
+timer.Create, timer.Remove = function() end, function() end
+file = { CreateDir = function() end, Write = function(path, data) files[path] = data end, Append = function(path, data) files[path] = (files[path] or "") .. data end,
+    Delete = function(path) files[path] = nil end }
+util.JSONToTable = function() return { faction = "resistance", nick = "Owner", map = "rp_test", on = true, counted = 75 } end
+LC_CL.AddNotice = function(_, title, text) said = title .. ": " .. text end
+local ok, e = pcall(function()
+    q = { "start", "{}", 0 } recv()
+    if not LC_CL.Studying() then error("the start didn't begin saving") end
+    q = { "status", "{}", 0 } recv()
+    if hook.t.HUDPaint.LivingCityStudy then hook.t.HUDPaint.LivingCityStudy() end
+    q = { "lines", "", 1, 12.5, "place", "combine (the other side's ground)" } recv()
+    q = { "report", "", 2, 0, "report", "LIVING CITY: A PLAY STUDY", 0, "report", "== THE CITY | resistance, Fighter (1m 15s) ==" } recv()
+    q = { "end", "", 0 } recv()
+    LC_CL.StudyMenu()
+end)
+local log, report
+for path, data in pairs(files) do
+    if string.find(path, "livingcity/study/", 1, true) and string.find(path, "_resistance/", 1, true) then
+        if string.find(path, "log.txt", 1, true) then log = data elseif string.find(path, "report.txt", 1, true) then report = data end
+    end
+end
+local before = 0
+for _ in pairs(files) do before = before + 1 end
+local okD, eD = pcall(function()
+    q = { "start", "{}", 0 } recv()
+    q = { "lines", "", 1, 1, "place", "no zone" } recv()
+    q = { "end", "discard", 0 } recv()
+end)
+local left = 0
+for _ in pairs(files) do left = left + 1 end
+net.ReadString, net.ReadUInt, net.ReadFloat, file, util.JSONToTable, LC_CL.AddNotice, timer.Create, timer.Remove = keep.rs, keep.ru, keep.rf, keep.file, keep.json, keep.notice, keep.tc, keep.tr
+if not ok then return "play study: " .. tostring(e) end
+if not okD then return "play study (discard): " .. tostring(eD) end
+if LC_CL.Studying() then return "play study: still saving after the end" end
+if not log or not string.find(log, "combine (the other side's ground)", 1, true) then return "play study: log.txt is missing the server's lines" end
+if not report or not string.find(report, "== THE CITY | resistance, Fighter", 1, true) then return "play study: no report.txt" end
+if not said or not string.find(said, "garrysmod/data/livingcity/study/", 1, true) then return "play study: the player isn't told where it was saved" end
+if left > before then return "play study: a discarded session left files behind" end
+return nil
+""")
+if err:
+    problems = (problems + "\n" if problems else "") + str(err)
+if "LC_CL.StudyMenu" not in open(os.path.join(GMDIR, "gamemode", "modules", "client", "cl_livingcity_factions.lua")).read():
+    problems = (problems + "\n" if problems else "") + "F4 > Factions has no play study button"
+
 # the official folder for recordings and songs is the server's garrysmod/sound/livingcity/ (CORE.md):
 # what players read in the guide and the sound check must send them there, never to the old sound addon
 _guide = open(os.path.join(GMDIR, "gamemode", "cl_init.lua")).read()

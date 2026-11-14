@@ -2023,6 +2023,7 @@ Type them in the server console on the host panel, or in your own game console (
 - [ ] **Get the lab running:** the parts are searched for by hand (hold E) at the yard and the shop, and freed from a loudspeaker box with the wiring game; the bench is rewired the same way.
   Notes:
 
+<<<<<<< HEAD
 ## 14 November: no more stand-still steps
 - [ ] **Hold E jobs:** Bin round (each bin), Graffiti removal (the bucket), The count (three crates), a leaking pipe (the valve), Paper the walls (a see-through flyer at each spot). Does the bar fill, and is the thing easy to find and aim at?
   Notes:
@@ -2031,4 +2032,21 @@ Type them in the server console on the host panel, or in your own game console (
 - [ ] **Needle game:** Break them out (the cell lock, alarm going), a vortigaunt's A whisper in the vortessence and Read the Combine. Is the window's wording odd for a vortigaunt?
   Notes:
 - [ ] **Others:** Address the citizens (speak to 3), The secret mass (bless the three who gather: do they come?), Leak the schedule (dead drop game), Dead drop (note handed over on arrival), Collect your ration (ends at the front of the line), letters (delivered at the door), a stalker's Processing.
+=======
+## The play study (14 November, last)
+
+- [ ] **Start it:** F4 > Factions > *Admin: play study* > *Start: this session counts*. The top right of the screen says STUDY: counting.
+  Notes:
+- [ ] **Pauses:** noclip, take out the editor's tool, alt-tab away, and leave the keys alone for a minute and a half: each time the line says STUDY PAUSED and why, and counts again when you're back.
+  Notes:
+- [ ] **A job:** take a job and finish it; take one and abandon it. In the window, the last job is named on the *Strike the last job* button.
+  Notes:
+- [ ] **A dream:** test a dream with the study on. It carries on (as "a dream"), kept apart from the city.
+  Notes:
+- [ ] **Stop and save:** a notice says where. On your PC, `~/.steam/steam/steamapps/common/GarrysMod/garrysmod/data/livingcity/study/` has a folder with `report.txt` and `log.txt`. Does report.txt name your faction and rank, and the places, as you'd expect? Are the place names (zone, whose ground, "by a ... point") fine-grained enough to tell your activities apart?
+  Notes:
+- [ ] **Does it slow the game?** If play feels heavier with the study on, say so.
+  Notes:
+- [ ] **Send one:** `cd ~/.steam/steam/steamapps/common/GarrysMod/garrysmod/data/livingcity/study && zip -r ~/study.zip FOLDER_NAME`
+>>>>>>> origin/main
   Notes:

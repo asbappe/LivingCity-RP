@@ -30034,6 +30034,127 @@ section("The owner's 14 November answers: prison guards, the infested, Lamarr, d
 end)()
 
 
+section("The play study: how the owner plays, written down as a model for the city's people (sv_livingcity_study.lua)")
+;(function()
+    local errs0 = #_errors
+    local p = newPlayer("StudyOwner", "resistance")
+    local other = newPlayer("StudyOther", "citizen")
+    p.superadmin = true
+    p:SetPos(Vector(-90000, 90000, 0))
+    local runWas0, callWas0, noticeWas0 = hook.Run, hook.Call, LC.Notice
+    local function Sent()
+        local log, report, kinds = {}, {}, {}
+        for _, m in ipairs(net.sent) do
+            if m.name == "lc_study" and m.to == p then
+                kinds[#kinds + 1] = m.data[1]
+                for i = 0, (m.data[3] or 0) - 1 do
+                    local line = tostring(m.data[5 + i * 3]) .. " " .. tostring(m.data[6 + i * 3])
+                    if m.data[1] == "report" then report[#report + 1] = line else log[#log + 1] = line end
+                end
+            end
+        end
+        return table.concat(log, "\n"), table.concat(report, "\n"), kinds
+    end
+    local function Act(what, arg) net._q = { what, arg or "" } net["recv_lc_study_act"](0, p) end
+    local function Has(text, t) return string.find(text, t, 1, true) ~= nil end
+
+    ok(not LC.Studying(), "the study: off until someone switches it on")
+    ok(select(1, LC.StudyStart(other)) == false and not LC.Studying(), "the study: only those who may use the editor can be studied")
+    net.sent = {}
+    Act("start")
+    ok(LC.Studying() and LC.Studying().ply == p, "the study: switched on from the window")
+    ok(select(1, LC.StudyStart(p)) == false, "(one at a time)")
+    _run(3.2)
+    -- a job, done well
+    local q1 = { title = "Carry the parcel", tmpl = { id = "res_parcel" }, board = "The Resistance", stage = 1, stages = { { kind = "goto", text = "Go there." }, { kind = "use" } }, owner = p, members = { p } }
+    LC.QuestOf[p] = q1
+    _run(2.2)
+    q1.stage = 2
+    hook.Run("LivingCityScavenged", p, "a tin")
+    hook.Run("LivingCityScavenged", other, "not the player's")
+    hook.Run("LivingCityIsWanted", p)
+    if IN_JUMP then hook.Run("KeyPress", p, IN_JUMP) end
+    hook.Run("PlayerSay", p, "/radio", false)
+    LC.Notice(p, "info", "Curfew", "Get indoors.", 6)
+    _run(2.2)
+    q1.done = true
+    hook.Run("LivingCityQuestComplete", p, q1)
+    LC.QuestOf[p] = nil
+    _run(2.2)
+    -- flying, and holding the editor's tool: not counted
+    p:SetMoveType(MOVETYPE_NOCLIP)
+    _run(3.2)
+    ok(LC.Studying().pause and Has(LC.Studying().pause, "flying"), "the study: paused while flying")
+    p:SetMoveType(MOVETYPE_WALK)
+    _run(2.2)
+    ok(not LC.Studying().pause, "the study: counting again on the ground")
+    -- out of the game window, then away from the keys (the quiet time before is taken out too)
+    Act("input", "0|0")
+    _run(2.2)
+    ok(Has(tostring(LC.Studying().pause), "away"), "the study: paused out of the game window")
+    Act("input", "1|0")
+    _run(2.2)
+    local counted0 = 0
+    for _, s in ipairs(LC.Studying().samples) do if not s.pause then counted0 = counted0 + 1 end end
+    Act("input", "1|91")
+    _run(2.2)
+    local counted1 = 0
+    for _, s in ipairs(LC.Studying().samples) do if not s.pause then counted1 = counted1 + 1 end end
+    ok(Has(tostring(LC.Studying().pause), "away from the keys") and counted1 < counted0, "the study: away from the keys pauses it, and the quiet time before it was noticed isn't counted either")
+    Act("input", "1|0")
+    _run(2.2)
+    -- a dream is its own context
+    p.lcDreaming = 99
+    _run(2.2)
+    p.lcDreaming = nil
+    _run(2.2)
+    -- a job that fails is kept out; a job that went wrong is struck by hand
+    local q2 = { title = "The glitched one", tmpl = { id = "res_glitch" }, board = "The Resistance", stage = 1, stages = { { kind = "goto" } }, owner = p, members = { p } }
+    LC.QuestOf[p] = q2
+    _run(3.2)
+    q2.done = true
+    hook.Run("LivingCityQuestFailed", p, q2)
+    LC.QuestOf[p] = nil
+    _run(2.2)
+    local q3 = { title = "Done but wrong", tmpl = { id = "res_wrong" }, board = "The Resistance", stage = 1, stages = { { kind = "goto" } }, owner = p, members = { p } }
+    LC.QuestOf[p] = q3
+    _run(3.2)
+    q3.done = true
+    hook.Run("LivingCityQuestComplete", p, q3)
+    LC.QuestOf[p] = nil
+    _run(2.2)
+    Act("strike_job")
+    ok(#LC.Studying().struck == 1 and LC.Studying().quests[3].struck, "the study: the last job can be struck")
+    Act("stop")
+    local log, report, kinds = Sent()
+    ok(not LC.Studying() and hook.Run == runWas0 and hook.Call == callWas0 and LC.Notice == noticeWas0, "the study: stopped, and nothing is left wrapped or hooked")
+    ok(kinds[1] == "start" and Has(log, "who resistance, ") and Has(log, "what in the city") and Has(log, "place no zone (open ground)"), "the study: who, in what and where are written down")
+    ok(Has(log, "job taken: \"Carry the parcel\" [res_parcel] from The Resistance") and Has(log, "job stage 2 (use)") and Has(log, "\"Carry the parcel\" complete"), "the study: a job, its stages and how it ended")
+    ok(Has(log, "event Scavenged: a tin") and not Has(log, "not the player's") and not Has(log, "IsWanted"), "the study: the gamemode's own events about the player, nobody else's, and no questions")
+    ok(Has(log, "event command /radio") and Has(log, "told [info] Curfew: Get indoors.") and (not IN_JUMP or Has(log, "event jumped: at ")), "the study: commands, what they're told, and jumps with the spot on the map")
+    ok(Has(log, "pause flying (noclip)") and Has(log, "pause playing again") and Has(log, "what in a dream ("), "the study: pauses, and a dream as its own context")
+    ok(Has(log, "\"The glitched one\" failed") and Has(log, "kept out of the baselines") and Has(log, "strike the job \"Done but wrong\""), "the study: a failed job is kept out, a struck one is marked")
+    ok(not Has(log, "couldn't look"), "(the study looked without a hitch)", log)
+    ok(Has(report, "LIVING CITY: A PLAY STUDY") and Has(report, "== THE CITY | resistance, ") and Has(report, "== A DREAM (") and Has(report, "no zone (open ground): "), "the report: a table for each who and what, by place")
+    ok(Has(report, "paused, flying (noclip)") and Has(report, "paused, away from the keys") and Has(report, "kept out, a job that failed") and Has(report, "kept out, struck"), "the report: what wasn't counted, and why")
+    ok(Has(report, "\"Carry the parcel\" [res_parcel]") and Has(report, "[kept out of the tables]") and Has(report, "[STRUCK by the player: not in the tables]"), "the report: every job, with the ones left out marked")
+    ok(Has(report, "Scavenged") and Has(report, "== WHERE ON THE MAP") and Has(report, "(-89984 89984 64)"), "the report: what happened, and where on the map")
+    ok(kinds[#kinds] == "status" and kinds[#kinds - 1] == "end", "the report is sent, then the end")
+    -- discarding keeps nothing
+    net.sent = {}
+    Act("start")
+    _run(2.2)
+    Act("discard")
+    local _, report2, kinds2 = Sent()
+    local discarded = false
+    for _, m in ipairs(net.sent) do if m.name == "lc_study" and m.data[1] == "end" and m.data[2] == "discard" then discarded = true end end
+    ok(not LC.Studying() and report2 == "" and discarded and hook.Run == runWas0, "the study: a discarded session sends no report")
+    ok(#_errors == errs0, "(no errors in any of it)", _errors[errs0 + 1])
+    p:SetPos(Vector(-121000, -121000, 0))
+    other:SetPos(Vector(-121000, -121000, 0))
+end)()
+
+
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")
 ;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)
     -- Everything here is something the owner's server, files or players depend on. The list is
