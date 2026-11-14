@@ -163,7 +163,12 @@ LC_CL.LambdaMats = LambdaMats
 -- Each is a picture, materials/livingcity/graffiti/<kind>.png, made into a decal of its own so it
 -- sits on the wall and takes its light like the lambda does. A game that hasn't the picture (not
 -- downloaded yet) paints the lambda there instead.
-LC_CL.TagArt = { tally = "livingcity/graffiti/tally.png", norecord = "livingcity/graffiti/norecord.png" }
+LC_CL.TagArt = { tally = "livingcity/graffiti/tally.png", norecord = "livingcity/graffiti/norecord.png",
+    -- (the editor's way marks toward rebel ground: sv_livingcity_waymarks.lua)
+    arrow_left = "livingcity/graffiti/arrow_left.png", arrow_right = "livingcity/graffiti/arrow_right.png",
+    arrow_up = "livingcity/graffiti/arrow_up.png", arrow_down = "livingcity/graffiti/arrow_down.png", freedom = "livingcity/graffiti/freedom.png" }
+-- (a way mark is half as big again as a sprayed tag: about 107 units across)
+LC_CL.TagSize = { arrow_left = 0.21, arrow_right = 0.21, arrow_up = 0.21, arrow_down = 0.21, freedom = 0.21 }
 local TAG_DECAL_SCALE = 0.14 -- (a 512 picture comes out about 72 units across, a little over the lambda's size)
 local tagMats = {}
 local function TagMat(kind)
@@ -177,7 +182,7 @@ local function TagMat(kind)
     if not tex or not CreateMaterial then return nil end
     local m = CreateMaterial("lc_tag_" .. kind, "LightmappedGeneric", {
         ["$basetexture"] = tex.GetName and tex:GetName() or path, ["$decal"] = 1, ["$translucent"] = 1,
-        ["$vertexcolor"] = 1, ["$vertexalpha"] = 1, ["$decalscale"] = TAG_DECAL_SCALE,
+        ["$vertexcolor"] = 1, ["$vertexalpha"] = 1, ["$decalscale"] = LC_CL.TagSize[kind] or TAG_DECAL_SCALE,
     })
     if not m or not m.SetTexture then return nil end
     m:SetTexture("$basetexture", tex)

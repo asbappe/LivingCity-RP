@@ -177,6 +177,7 @@ LC_MODULES = {
         "sv_livingcity_oldtimer",
         "sv_livingcity_pamphlet",
         "sv_livingcity_learning",
+        "sv_livingcity_waymarks", -- (the Resistance's arrows the editor paints on walls: permanent tags)
         "sv_livingcity_dreamposters", -- (some plain curfew posters hint at tonight's dream, or one dreamt lately)
         "sv_livingcity_machines",
         "sv_livingcity_illness",

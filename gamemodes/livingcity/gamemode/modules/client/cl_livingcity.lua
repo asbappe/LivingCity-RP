@@ -107,7 +107,7 @@ end
 ------------------------------------------------------------------------
 
 local POINT_COLORS = {
-    jogroute = Color(120, 230, 160), yard = Color(255, 210, 90), parade = Color(240, 120, 200),
+    jogroute = Color(120, 230, 160), yard = Color(255, 210, 90), parade = Color(240, 120, 200), waymark = Color(232, 145, 42),
     idle = Color(90, 220, 120), sit = Color(60, 200, 200), sitchair = Color(60, 170, 220), lean = Color(120, 230, 230),
     queue = Color(240, 200, 60), patrol = Color(80, 150, 255), checkpoint = Color(255, 80, 80),
     spawn = Color(240, 240, 240), cell = Color(255, 140, 40), release = Color(255, 200, 140),
@@ -120,7 +120,7 @@ local POINT_COLORS = {
     speechcrowd = Color(230, 200, 120), -- (where the city gathers for her address: sv_livingcity_speech.lua)
 }
 local POINT_NAMES = {
-    jogroute = "JOGGING ROUTE", yard = "EXERCISE YARD", parade = "PARADE ROUTE", dream = "DREAM POINT", sterm = "STALKER TERMINAL", speechcrowd = "SPEECH CROWD",
+    jogroute = "JOGGING ROUTE", yard = "EXERCISE YARD", parade = "PARADE ROUTE", waymark = "WAY MARK", dream = "DREAM POINT", sterm = "STALKER TERMINAL", speechcrowd = "SPEECH CROWD",
     idle = "LOITER", sit = "SIT", sitchair = "BENCH", lean = "LEAN", queue = "LINE", patrol = "PATROL",
     checkpoint = "CHECKPOINT", spawn = "SPAWN/EXIT", cell = "CELL", release = "RELEASE",
     work = "WORKPLACE", vending = "VENDING", dispenser = "RATIONS", terminal = "COMMISSARY", stove = "STOVE", fire = "FIRE",

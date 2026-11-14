@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version fdedee6. Admin-only console messages and log lines are left out.
+Made from version 6a3f362. Admin-only console messages and log lines are left out.
 
-12322 lines, from 331 files.
+12338 lines, from 332 files.
 
 ## Contents
 
@@ -182,7 +182,7 @@ Made from version fdedee6. Admin-only console messages and log lines are left ou
 - [the Cremator](#the-cremator-svlivingcitycrematorlua) (20)
 - [what custody costs the worst anticitizens](#what-custody-costs-the-worst-anticitizens-svlivingcitycustodylua) (30)
 - [saved layout](#saved-layout-svlivingcitydatalua) (16)
-- [debugging](#debugging-svlivingcitydebuglua) (67)
+- [debugging](#debugging-svlivingcitydebuglua) (77)
 - [the desperate Combine (sv_livingcity_desperation.lua)](#the-desperate-combine-svlivingcitydesperationlua-svlivingcitydesperationlua) (12)
 - [sv_livingcity_directives.lua](#svlivingcitydirectiveslua-svlivingcitydirectiveslua) (56)
 - [doors](#doors-svlivingcitydoorslua) (9)
@@ -328,6 +328,7 @@ Made from version fdedee6. Admin-only console messages and log lines are left ou
 - [vortigaunt dream warfare (sv_livingcity_vortwar.lua)](#vortigaunt-dream-warfare-svlivingcityvortwarlua-svlivingcityvortwarlua) (26)
 - [things to do as a vortigaunt (and for the city's own)](#things-to-do-as-a-vortigaunt-and-for-the-citys-own-svlivingcityvortworklua) (51)
 - [the state of the city](#the-state-of-the-city-svlivingcitywarlua) (66)
+- [the Resistance's way marks](#the-resistances-way-marks-svlivingcitywaymarkslua) (6)
 - [ways to get by](#ways-to-get-by-svlivingcitywayslua) (5)
 - [weeds, the Groundskeeper, and weedkiller (the owner, 2026-11-01)](#weeds-the-groundskeeper-and-weedkiller-the-owner-2026-11-01-svlivingcityweedslua) (12)
 - [occupations](#occupations-svlivingcityworklua) (308)
@@ -4946,23 +4947,23 @@ Made from version fdedee6. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: pot label
 
-- "Empty pot"  (text, line 300)
-- "Plant a seed packet (E)"  (text, line 300)
-- "Ripe vegetables"  (text, line 301)
-- "Ripe in %d:%02d"  (message, line 303)
+- "Empty pot"  (text, line 305)
+- "Plant a seed packet (E)"  (text, line 305)
+- "Ripe vegetables"  (text, line 306)
+- "Ripe in %d:%02d"  (message, line 308)
 
 > Note for you (not shown in game): on screen
 
-- "%d meal%s stored"  (message, line 319)
+- "%d meal%s stored"  (message, line 324)
 
 > Note for you (not shown in game): the Resistance see when the next supplies are due (sv_livingcity_scavenge.lua, LC.FoodRestock)
 
-- ". More supplies in about %d minute%s"  (message, line 324)
+- ". More supplies in about %d minute%s"  (message, line 329)
 
 > Note for you (not shown in game): on screen
 
-- "Step in and they'll open fire."  (text, line 412)
-- "You're inside. They will shoot."  (text, line 416)
+- "Step in and they'll open fire."  (text, line 417)
+- "You're inside. They will shoot."  (text, line 421)
 
 ## cl_livingcity_ways.lua (cl_livingcity_ways.lua)
 
@@ -8005,49 +8006,49 @@ Made from version fdedee6. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: restore backup
 
-- "No such backup. lc_backups lists them."  (text, line 183)
-- "That backup can't be read."  (text, line 185)
+- "No such backup. lc_backups lists them."  (text, line 184)
+- "That backup can't be read."  (text, line 186)
 
 > Note for you (not shown in game): Takes the jogging routes out of LC.Points (unless lc_jog is 1). The first stop of each route becomes an exercise yard where there is none within 400 units. How many stops were taken out.
 
-- "before the jogging routes were removed"  (text, line 243)
+- "before the jogging routes were removed"  (text, line 244)
 
 > Note for you (not shown in game): The morning jog is archived (lc_jog 0: sv_livingcity_exercise.lua): its routes come out of the layout, and each route's start stays as an exercise yard (unless a yard is already there), so the morning drill gathers where the jog used to. A backup of the layout is kept first.
 
-- "The morning jog is archived: %d jogging route stops taken out of the layout (a backup was kept: lc_backups)."  (message, line 318)
+- "The morning jog is archived: %d jogging route stops taken out of the layout (a backup was kept: lc_backups)."  (message, line 319)
 
 > Note for you (not shown in game): the console command lc_reload
 
-- "[Miscount] Reloaded layout: %d points, %d path nodes, %d zones, %d tagged doors."  (message, line 544)
+- "[Miscount] Reloaded layout: %d points, %d path nodes, %d zones, %d tagged doors."  (message, line 545)
 
 > Note for you (not shown in game): the console command lc_backup
 
-- "[Miscount] Backed up the layout as {name}."  (text, line 554)
-- "[Miscount] Nothing to back up yet."  (text, line 554)
+- "[Miscount] Backed up the layout as {name}."  (text, line 555)
+- "[Miscount] Nothing to back up yet."  (text, line 555)
 
 > Note for you (not shown in game): the console command lc_backups
 
-- "[Miscount] Layout: data/%s. %d backups in data/%s/:"  (message, line 560)
-- "Restore one with lc_restore <number>. What's there now is backed up first."  (text, line 562)
+- "[Miscount] Layout: data/%s. %d backups in data/%s/:"  (message, line 561)
+- "Restore one with lc_restore <number>. What's there now is backed up first."  (text, line 563)
 
 > Note for you (not shown in game): the console command lc_restore
 
-- "[Miscount] Restored {what}."  (text, line 568)
-- "[Miscount] {what}"  (text, line 568)
+- "[Miscount] Restored {what}."  (text, line 569)
+- "[Miscount] {what}"  (text, line 569)
 
 > Note for you (not shown in game): the console command lc_autolink
 
-- "[Miscount] Made %d new links.%s"  (message, line 583)
-- "%d nodes still have no links (shown in red)."  (message, line 584)
+- "[Miscount] Made %d new links.%s"  (message, line 584)
+- "%d nodes still have no links (shown in red)."  (message, line 585)
 
 > Note for you (not shown in game): the console command lc_goto_layout
 
-- "[Miscount] None of those on this map."  (chat message, line 618)
-- "[Miscount] %s %d of %d. (You're in noclip; it's easy to land inside things.)"  (message, line 623)
+- "[Miscount] None of those on this map."  (chat message, line 619)
+- "[Miscount] %s %d of %d. (You're in noclip; it's easy to land inside things.)"  (message, line 624)
 
 > Note for you (not shown in game): the game answering something done in a window (lc_setting)
 
-- "%s set %s to %s"  (message, line 660)
+- "%s set %s to %s"  (message, line 661)
 
 ## debugging (sv_livingcity_debug.lua)
 
@@ -8062,73 +8063,92 @@ Made from version fdedee6. Admin-only console messages and log lines are left ou
 
 - "= {GetString}"  (text, line 74)
 
+> Note for you (not shown in game): Near you (the owner, 14 November: a unit "keeps running by me ... then disappears, and then respawns where he started", and the report, taken right then, couldn't say which unit: its NPC list is a sample). Every half second each NPC within NEAR of a player is looked at: a jump of more than JUMP units in that time (no NPC runs that fast: the code put it somewhere), appearing, or being taken away, is noted with who, where and how far from the player. The report lists the last of those, and every NPC near each player now.
+
+- "[{role} {state}]"  (text, line 94)
+- "[not Miscount's]"  (message, line 94)
+
+> Note for you (not shown in game): the game's entity removed moment
+
+- "taken away"  (text, line 132)
+
+> Note for you (not shown in game): part of: near report
+
+- "%s at %.0f %.0f %.0f: %d NPCs within %d"  (message, line 145)
+- "%4.0f away: %s at %.0f %.0f %.0f%s%s%s"  (message, line 149)
+- "recov {recoveries}"  (text, line 150)
+- "beat {routeGroup}"  (text, line 151)
+- "hop {hop}/{route}"  (text, line 152)
+- "jumped, appeared or taken away near a player (newest last):"  (text, line 155)
+
 > Note for you (not shown in game): part of: build report
 
-- "version %s \| map %s \| gamemode %s \| %s"  (message, line 82)
-- "players %d/%d \| singleplayer %s \| dedicated %s \| uptime %s"  (message, line 84)
-- "city %s \| event %s"  (message, line 87)
-- "running for {CurTime}"  (text, line 88)
-- "points: {or}"  (text, line 102)
-- "zones: {GrownCount}"  (text, line 113)
-- "territory grown since placed: rebel %d patches, infestation %d patches (lc_territory for details)"  (message, line 115)
-- "door tags: {or}"  (text, line 122)
-- "no prison cells: arrests become street detentions (cuffed, searched, fined, released)"  (text, line 128)
-- "no spawn/exit doorways: NPCs appear out of sight and leave into blocks or wander off"  (text, line 129)
-- "no housing blocks: curfew can't send anyone home, and nobody has a stash"  (text, line 130)
-- "static map fixtures: {or}{or}"  (text, line 136)
-- "people: %d alive (%d sympathizers), %d dead remembered"  (message, line 144)
-- "no Combine-only zones: citizens can walk into the nexus, offices and armory (doors by the cells still lock)"  (text, line 146)
-- "no infestation spawn points: zombies appear at random spots inside infestation zones"  (text, line 147)
-- "no checkpoints or patrol beats: cops wander at random"  (text, line 148)
-- "no workplaces: Union shifts happen out on the streets"  (text, line 149)
-- "line %d has no ration dispenser at its front: NPCs are still served, and players who wait at the front are handed a ration"  (message, line 157)
-- "recordings: {or}"  (text, line 170)
-- "ending songs (sound/livingcity/endings/): {DreamMusicList}"  (text, line 176)
-- "dream songs (sound/livingcity/dreams/<codeword>/, or <codeword>1.mp3 there): {ds}"  (text, line 180)
-- "sound guard (stopped for repeating): {or}"  (text, line 184)
-- "downloads: sv_downloadurl "{or}" (players get new sounds after a FastDL sync and a map change)"  (text, line 187)
-- "save files that couldn't be read, kept and not saved over: {names}"  (text, line 193)
-- "setup notes: {_}"  (text, line 195)
-- "people who left since the map started: %d"  (message, line 201)
-- ", no dispenser by its front (a clerk hands rations out)"  (text, line 208)
-- ", its dispenser has NO POWER: nobody queues for a dead dispenser"  (text, line 209)
-- "line %d: %d slots, %d queued, %d on their way, front waiting %ds%s%s"  (message, line 210)
-- "(placed from the back: turned round so the front is at the dispenser)"  (message, line 212)
-- "vortigaunts: %d freed in rebel ground (lc_rebel_vorts %s)%s, %d shackled on the streets (lc_vort_slaves %s)"  (message, line 222)
-- "chasing %s at %.0fu"  (message, line 235)
-- "%-8s %-16s hp %3d recov %d err %d hop %s/%s pos %s%s%s%s"  (message, line 238)
-- "beat {routeGroup}"  (text, line 242)
-- "line {line} slot {slotIndex}"  (text, line 243)
-- "heading to line {lineHeading}"  (text, line 243)
-- "by role: {out}{or}"  (text, line 250)
-- "stuck: %d moved on a step, %d far trips given up%s"  (message, line 254)
-- "routes: %s, %d trips not started (unreachable), %d places skipped as hard to reach"  (message, line 259)
-- "%d planned over the nodegraph, %d short enough to walk direct"  (message, line 260)
-- "no nodegraph links"  (message, line 260)
-- "route repairs: %d legs walked in single steps, %d links found unwalkable (%d avoided right now), %d trips re-planned around them"  (message, line 263)
-- "main loop: avg %.2f ms, last %.2f ms, worst %.2f ms over %d ticks"  (message, line 273)
-- "server tick interval %.4f, entity count %d"  (message, line 275)
-- "whole server frame (engine AI, physics, networking): avg %.2f ms, worst %.2f ms, %d of %d ticks late (%.1f%%), a tick should take %.1f ms"  (message, line 278)
-- "entities by class: {top}"  (text, line 291)
-- "NPCs on the map (all of them, Miscount's and not): %d"  (message, line 294)
-- "asleep (far from everyone, engine AI off; lc_npc_sleep %s): %d now; %d times put to sleep, %d woken, %d route stops walked out of sight"  (message, line 297)
-- "%s [%s] step %d/%d (%s) %ds left: %s"  (message, line 308)
-- "active %d \| violent cap %d"  (message, line 313)
-- "prisoners: {prisoners} \| detained on the street: {held}"  (text, line 320)
-- "stops in progress: {stops} \| next event: {_}"  (text, line 323)
-- "disguise {GetNW2String}"  (text, line 331)
-- "alias {GetNW2String}"  (text, line 332)
-- "radio {GetNW2String}"  (text, line 333)
-- "contraband {illegal}"  (text, line 334)
-- "alert %d (heat %d, %d soldiers after them)"  (message, line 336)
-- "running check: {pl}"  (text, line 338)
-- "(rebel territory)"  (message, line 340)
-- "%s \| %s \| job %s \| block %s \| cp %s \| wanted %s \| hunger %d thirst %d \| credits %s standing %s%s%s"  (message, line 341)
-- "The city's minds (sv_livingcity_minds.lua, sv_livingcity_mindsact.lua)"  (text, line 352)
-- "The chronicle (sv_livingcity_chronicle.lua)"  (text, line 357)
-- "The director and free talk (sv_livingcity_brain.lua)"  (text, line 361)
-- "her voice: {l}"  (text, line 363)
-- "Recent log (newest last)"  (text, line 366)
+- "version %s \| map %s \| gamemode %s \| %s"  (message, line 163)
+- "players %d/%d \| singleplayer %s \| dedicated %s \| uptime %s"  (message, line 165)
+- "city %s \| event %s"  (message, line 168)
+- "running for {CurTime}"  (text, line 169)
+- "points: {or}"  (text, line 183)
+- "zones: {GrownCount}"  (text, line 194)
+- "territory grown since placed: rebel %d patches, infestation %d patches (lc_territory for details)"  (message, line 196)
+- "door tags: {or}"  (text, line 203)
+- "no prison cells: arrests become street detentions (cuffed, searched, fined, released)"  (text, line 209)
+- "no spawn/exit doorways: NPCs appear out of sight and leave into blocks or wander off"  (text, line 210)
+- "no housing blocks: curfew can't send anyone home, and nobody has a stash"  (text, line 211)
+- "static map fixtures: {or}{or}"  (text, line 217)
+- "people: %d alive (%d sympathizers), %d dead remembered"  (message, line 225)
+- "no Combine-only zones: citizens can walk into the nexus, offices and armory (doors by the cells still lock)"  (text, line 227)
+- "no infestation spawn points: zombies appear at random spots inside infestation zones"  (text, line 228)
+- "no checkpoints or patrol beats: cops wander at random"  (text, line 229)
+- "no workplaces: Union shifts happen out on the streets"  (text, line 230)
+- "line %d has no ration dispenser at its front: NPCs are still served, and players who wait at the front are handed a ration"  (message, line 238)
+- "recordings: {or}"  (text, line 251)
+- "ending songs (sound/livingcity/endings/): {DreamMusicList}"  (text, line 257)
+- "dream songs (sound/livingcity/dreams/<codeword>/, or <codeword>1.mp3 there): {ds}"  (text, line 261)
+- "sound guard (stopped for repeating): {or}"  (text, line 265)
+- "downloads: sv_downloadurl "{or}" (players get new sounds after a FastDL sync and a map change)"  (text, line 268)
+- "save files that couldn't be read, kept and not saved over: {names}"  (text, line 274)
+- "setup notes: {_}"  (text, line 276)
+- "people who left since the map started: %d"  (message, line 282)
+- ", no dispenser by its front (a clerk hands rations out)"  (text, line 289)
+- ", its dispenser has NO POWER: nobody queues for a dead dispenser"  (text, line 290)
+- "line %d: %d slots, %d queued, %d on their way, front waiting %ds%s%s"  (message, line 291)
+- "(placed from the back: turned round so the front is at the dispenser)"  (message, line 293)
+- "Near you"  (text, line 296)
+- "vortigaunts: %d freed in rebel ground (lc_rebel_vorts %s)%s, %d shackled on the streets (lc_vort_slaves %s)"  (message, line 306)
+- "chasing %s at %.0fu"  (message, line 319)
+- "%-8s %-16s hp %3d recov %d err %d hop %s/%s pos %s%s%s%s"  (message, line 322)
+- "beat {routeGroup}"  (text, line 326)
+- "line {line} slot {slotIndex}"  (text, line 327)
+- "heading to line {lineHeading}"  (text, line 327)
+- "by role: {out}{or}"  (text, line 334)
+- "stuck: %d moved on a step, %d far trips given up%s"  (message, line 338)
+- "routes: %s, %d trips not started (unreachable), %d places skipped as hard to reach"  (message, line 343)
+- "%d planned over the nodegraph, %d short enough to walk direct"  (message, line 344)
+- "no nodegraph links"  (message, line 344)
+- "route repairs: %d legs walked in single steps, %d links found unwalkable (%d avoided right now), %d trips re-planned around them"  (message, line 347)
+- "main loop: avg %.2f ms, last %.2f ms, worst %.2f ms over %d ticks"  (message, line 357)
+- "server tick interval %.4f, entity count %d"  (message, line 359)
+- "whole server frame (engine AI, physics, networking): avg %.2f ms, worst %.2f ms, %d of %d ticks late (%.1f%%), a tick should take %.1f ms"  (message, line 362)
+- "entities by class: {top}"  (text, line 375)
+- "NPCs on the map (all of them, Miscount's and not): %d"  (message, line 378)
+- "asleep (far from everyone, engine AI off; lc_npc_sleep %s): %d now; %d times put to sleep, %d woken, %d route stops walked out of sight"  (message, line 381)
+- "%s [%s] step %d/%d (%s) %ds left: %s"  (message, line 392)
+- "active %d \| violent cap %d"  (message, line 397)
+- "prisoners: {prisoners} \| detained on the street: {held}"  (text, line 404)
+- "stops in progress: {stops} \| next event: {_}"  (text, line 407)
+- "disguise {GetNW2String}"  (text, line 415)
+- "alias {GetNW2String}"  (text, line 416)
+- "radio {GetNW2String}"  (text, line 417)
+- "contraband {illegal}"  (text, line 418)
+- "alert %d (heat %d, %d soldiers after them)"  (message, line 420)
+- "running check: {pl}"  (text, line 422)
+- "(rebel territory)"  (message, line 424)
+- "%s \| %s \| job %s \| block %s \| cp %s \| wanted %s \| hunger %d thirst %d \| credits %s standing %s%s%s"  (message, line 425)
+- "The city's minds (sv_livingcity_minds.lua, sv_livingcity_mindsact.lua)"  (text, line 436)
+- "The chronicle (sv_livingcity_chronicle.lua)"  (text, line 441)
+- "The director and free talk (sv_livingcity_brain.lua)"  (text, line 445)
+- "her voice: {l}"  (text, line 447)
+- "Recent log (newest last)"  (text, line 450)
 
 ## the desperate Combine (sv_livingcity_desperation.lua) (sv_livingcity_desperation.lua)
 
@@ -18632,81 +18652,81 @@ Made from version fdedee6. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): What a spray can can put on a wall (the owner, 13 November: "the player chooses which tag from the spray can's menu"). The lambda is the game's own decal; the others are the owner's pictures in materials/livingcity/graffiti/<id>.png, painted as decals too (cl_livingcity_war.lua). A mark whose picture isn't on the server isn't offered; with none of them there, the can sprays the lambda without asking, as it always did.
 
-- "The lambda"  (label, line 688)
-- "Spraying the lambda"  (what someone is doing, line 688)
-- "The tally, with one too many"  (label, line 689)
-- "Spraying the tally"  (what someone is doing, line 689)
+- "The lambda"  (label, line 692)
+- "Spraying the lambda"  (what someone is doing, line 692)
+- "The tally, with one too many"  (label, line 693)
+- "Spraying the tally"  (what someone is doing, line 693)
 
 > Note for you (not shown in game): part of: spray
 
-- "Look at a wall, up close."  (text, line 706)
+- "Look at a wall, up close."  (text, line 710)
 
 > Note for you (not shown in game): a poster on this wall: paint over it instead (entities/lc_civposter.lua, LC.DefacePoster)
 
-- "Someone has seen to this one already."  (text, line 710)
-- "That one is ours."  (text, line 711)
-- "Painting over the poster... keep looking at it"  (progress bar, line 712)
-- "You stop, half done, and the paint runs."  (text, line 713)
+- "Someone has seen to this one already."  (text, line 714)
+- "That one is ours."  (text, line 715)
+- "Painting over the poster... keep looking at it"  (progress bar, line 716)
+- "You stop, half done, and the paint runs."  (text, line 717)
 
 > Note for you (not shown in game): part of: done
 
-- "[Civil Protection] A Civil Protection unit saw that."  (chat message, line 721)
+- "[Civil Protection] A Civil Protection unit saw that."  (chat message, line 725)
 
 > Note for you (not shown in game): part of: spray
 
-- "There's already one here."  (text, line 728)
-- "Never mind"  (text, line 733)
-- "Spray can"  (title, line 734)
-- "One can, one mark"  (text, line 734)
-- "What goes on the wall?"  (text, line 734)
-- "... keep looking at the wall"  (progress bar, line 739)
-- "You stop, half done, and the paint runs."  (text, line 740)
+- "There's already one here."  (text, line 732)
+- "Never mind"  (text, line 737)
+- "Spray can"  (title, line 738)
+- "One can, one mark"  (text, line 738)
+- "What goes on the wall?"  (text, line 738)
+- "... keep looking at the wall"  (progress bar, line 743)
+- "You stop, half done, and the paint runs."  (text, line 744)
 
 > Note for you (not shown in game): part of: done
 
-- "[Civil Protection] A Civil Protection unit saw that."  (chat message, line 750)
+- "[Civil Protection] A Civil Protection unit saw that."  (chat message, line 754)
 
 > Note for you (not shown in game): part of: spraytag
 
-- "Spray can"  (on-screen notice, line 776)
+- "Spray can"  (on-screen notice, line 780)
 
 > Note for you (not shown in game): A Resistance paste-up from your pockets, onto a bare wall (the owner, 10 November). One of their four, not the same as the last one you put up. Anyone holding one can paste it: sympathisers too.
 
-- "Look at a wall, up close."  (text, line 784)
-- "There's a poster here already. A spray can would deal with it."  (text, line 785)
-- "Pasting it up... keep looking at the wall"  (progress bar, line 786)
-- "You stop, and the paper curls off the wall."  (text, line 787)
+- "Look at a wall, up close."  (text, line 788)
+- "There's a poster here already. A spray can would deal with it."  (text, line 789)
+- "Pasting it up... keep looking at the wall"  (progress bar, line 790)
+- "You stop, and the paper curls off the wall."  (text, line 791)
 
 > Note for you (not shown in game): part of: done
 
-- "It won't stick."  (chat message, line 794)
-- "[Civil Protection] A Civil Protection unit saw that."  (chat message, line 800)
+- "It won't stick."  (chat message, line 798)
+- "[Civil Protection] A Civil Protection unit saw that."  (chat message, line 804)
 
 > Note for you (not shown in game): part of: clean tag
 
-- "Paint over our own? No."  (text, line 810)
-- "Scrubbing it off..."  (progress bar, line 811)
-- "You leave it half scrubbed."  (text, line 812)
+- "Paint over our own? No."  (text, line 814)
+- "Scrubbing it off..."  (progress bar, line 815)
+- "You leave it half scrubbed."  (text, line 816)
 
 > Note for you (not shown in game): part of: done
 
-- "cleaned up anticitizen graffiti"  (text, line 820)
-- "[Civil Protection] Gone. As if it never was."  (chat message, line 821)
-- "You scrub it off. Someone from the Union nods at you. +3 standing."  (chat message, line 825)
+- "cleaned up anticitizen graffiti"  (text, line 824)
+- "[Civil Protection] Gone. As if it never was."  (chat message, line 825)
+- "You scrub it off. Someone from the Union nods at you. +3 standing."  (chat message, line 829)
 
 > Note for you (not shown in game): part of: item use
 
-- "Find an empty pot in rebel territory."  (text, line 877)
-- "Something's already growing in that one."  (text, line 878)
+- "Find an empty pot in rebel territory."  (text, line 881)
+- "Something's already growing in that one."  (text, line 882)
 
 > Note for you (not shown in game): typing in chat
 
-- "You need a fishing line (the Commissary sells them)."  (chat message, line 923)
+- "You need a fishing line (the Commissary sells them)."  (chat message, line 927)
 
 > Note for you (not shown in game): the game's living city tagged moment
 
-- "Someone painted the lambda up {or}. Bold."  (text, line 932)
-- "There's a lambda on the wall {or}. Civil Protection will have it off by morning."  (text, line 933)
+- "Someone painted the lambda up {or}. Bold."  (text, line 936)
+- "There's a lambda on the wall {or}. Civil Protection will have it off by morning."  (text, line 937)
 
 ## Combine-only areas (sv_livingcity_security.lua)
 
@@ -23116,6 +23136,23 @@ Made from version fdedee6. Admin-only console messages and log lines are left ou
 - "Rations are short again. That's what happens when the rebels are winning."  (text, line 988)
 - "It's quiet. Too quiet. The Combine have the whole city now."  (text, line 990)
 - "Haven't heard a shot in days. I don't know if that's good."  (text, line 991)
+
+## the Resistance's way marks (sv_livingcity_waymarks.lua)
+
+`gamemodes/livingcity/gamemode/modules/server/sv_livingcity_waymarks.lua`
+
+
+> Note for you (not shown in game): [the point's number] = the mark (the editor's modes are way_<id>: livingcity_editor.lua)
+
+- "an arrow pointing left"  (name, line 30)
+- "an arrow pointing right"  (name, line 31)
+- "an arrow pointing up (straight on)"  (name, line 32)
+- "an arrow pointing down"  (name, line 33)
+
+> Note for you (not shown in game): Paint one from the editor: on a wall (not a floor or a ceiling). The point, or nil and why.
+
+- "No such mark."  (text, line 52)
+- "Aim at a wall: the mark is painted on it."  (text, line 53)
 
 ## ways to get by (sv_livingcity_ways.lua)
 

@@ -655,6 +655,10 @@ local function SendTags(target)
         list[#list + 1] = { x = t.pos.x, y = t.pos.y, z = t.pos.z, nx = t.normal.x, ny = t.normal.y, nz = t.normal.z,
             k = t.kind ~= "lambda" and t.kind or nil } -- (which mark it is; none means the lambda)
     end
+    -- (and the layout's own way marks, which never fade and aren't scrubbed: sv_livingcity_waymarks.lua)
+    for _, t in ipairs(LC.WayMarks and LC.WayMarks() or {}) do
+        list[#list + 1] = { x = t.pos.x, y = t.pos.y, z = t.pos.z, nx = t.normal.x, ny = t.normal.y, nz = t.normal.z, k = t.kind }
+    end
     LC.SendCompressed("lc_tags", { tags = list }, IsValid(target) and { target } or player.GetAll())
 end
 LC.SendTags = SendTags
@@ -842,7 +846,7 @@ timer.Create("LivingCityTags", 30, 0, function()
 end)
 
 hook.Add("PlayerInitialSpawn", "LivingCityTags", function(ply)
-    timer.Simple(4, function() if IsValid(ply) and #LC.Tags > 0 then SendTags(ply) end end)
+    timer.Simple(4, function() if IsValid(ply) and (#LC.Tags > 0 or (LC.WayMarks and #LC.WayMarks() > 0)) then SendTags(ply) end end)
 end)
 
 ------------------------------------------------------------------------

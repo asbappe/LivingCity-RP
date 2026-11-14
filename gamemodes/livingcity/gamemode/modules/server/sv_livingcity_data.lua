@@ -44,6 +44,7 @@ LC.POINT_KINDS = {
     desk = true, adminpower = true, suppressor = true, -- her last stand: her desk, and the transformer powering her shield (sv_livingcity_collapse.lua)
     incinerator = true, -- where the dead go (sv_livingcity_mortuary.lua)
     hazbarrel = true, -- an infestation control barrel: cleanup workers empty their hoovers here (sv_livingcity_cleanup.lua)
+    waymark = true, -- a permanent sprayed arrow toward rebel ground; its number is which (sv_livingcity_waymarks.lua)
     dock = true, graffiti = true, rubble = true, pipe = true, -- loading docks, walls that get tagged, rubble piles (Union shifts)
     ladder = true, -- two with the same number: a ladder NPCs can use (sv_livingcity_navgraph.lua)
     zspawn = true, rspawn = true, -- infested and resistance respawn/spawn points

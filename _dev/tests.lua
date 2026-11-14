@@ -13473,6 +13473,35 @@ LC.DreamPlanNext, LC.DreamPlanDecide, LC.DreamPlanTonight = planNext, planDecide
 LC.DreamPosterSeen = seenWas
 end
 DreamPosterTests()
+
+-- The Resistance's way marks: permanent arrows the editor paints on walls (sv_livingcity_waymarks.lua)
+function WayMarkTests()
+local n0 = #LC.Points
+ok(LC.POINT_KINDS.waymark and #LC.WayMarkKinds == 5, "the editor paints five way marks: four arrows and FREEDOM THIS WAY")
+local at = Vector(-82000, 62000, 80)
+local p, why = LC.AddWayMark(at, Vector(0, 0, 1), 1)
+ok(p == nil and why ~= nil and #LC.Points == n0, "a way mark goes on a wall, never a floor")
+ok(LC.AddWayMark(at, Vector(0, 1, 0), 9) == nil, "(and only the five there are)")
+p = LC.AddWayMark(at, Vector(0, 1, 0), 2)
+local mine
+for _, m in ipairs(LC.WayMarks()) do if m.kind == "arrow_right" and m.pos:DistToSqr(at) < 4 then mine = m end end
+ok(p and p.kind == "waymark" and p.group == 2 and mine and math.abs(mine.normal.y - 1) < 0.01 and math.abs(mine.normal.z) < 0.01,
+    "painted on a wall it is the layout's own: which arrow, where, and the way the wall faces")
+local sent
+local realSend = LC.SendCompressed
+LC.SendCompressed = function(name, data) if name == "lc_tags" then sent = data end end
+LC.SendTags()
+LC.SendCompressed = realSend
+local found = false
+for _, t in ipairs(sent and sent.tags or {}) do if t.k == "arrow_right" and math.abs(t.ny - 1) < 0.01 then found = true end end
+ok(found, "every player is sent it with the sprayed tags, to be painted the same way")
+local inTags = false
+for _, t in ipairs(LC.Tags) do if t.kind == "arrow_right" then inTags = true end end
+ok(not inTags, "it is not a sprayed tag: it never fades and nobody scrubs it off")
+LC.RemovePoint(p)
+ok(#LC.Points == n0 and #LC.WayMarks() == #LC.WayMarks() and not LC.NearestPoint(at, 8), "the editor takes it off again")
+end
+WayMarkTests()
 section("Colonel Cubbage answers her speeches (the owner, 12 November)")
 function SpeechAnswerTests()
 local CA0 = Vector(-83000, 63000, 0)

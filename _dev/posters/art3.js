@@ -178,4 +178,4 @@ const FILTERS = `
   <filter id="over" x="-20%" y="-40%" width="140%" height="180%"><feGaussianBlur stdDeviation="7"/></filter>
   <filter id="spray" x="-10%" y="-20%" width="120%" height="150%"><feTurbulence type="fractalNoise" baseFrequency="0.09" numOctaves="2" seed="5"/><feDisplacementMap in="SourceGraphic" scale="3.5" result="d"/><feGaussianBlur in="d" stdDeviation="0.7"/></filter>`;
 
-module.exports = { DEFACE, defaceLayer, REBEL, rebelPage, FILTERS };
+module.exports = { DEFACE, defaceLayer, REBEL, rebelPage, FILTERS, lambda, scrawl, WHITE, ORANGE };
