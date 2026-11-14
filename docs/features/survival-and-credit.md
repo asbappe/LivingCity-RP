@@ -55,3 +55,5 @@ Each character chooses how hard staying alive is:
 - **Union medicine** (new item: the Commissary, 12 credits; the black market, 18): cures a cold or a fever at once, from your pockets (Take). It does nothing for parasites or a stomach bug, and antiparasitic tablets do nothing for a cold.
 - You feel it before you're told (the coughing, the screen); the tip card waits like the others. Settings: `lc_illness` (1; 0 and nobody falls ill), `lc_illness_rate` (1; 0.5 is half as likely).
 
+
+**Filling a can by water (the owner, 14 November: "just a few feet near water").** Within about 110 units of water (at your feet or a step down from the bank) counts, not only standing in it (`LC.NearWater`, sv_livingcity_survival.lua).

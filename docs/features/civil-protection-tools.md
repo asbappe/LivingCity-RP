@@ -147,3 +147,5 @@ Blinded NPCs now have their weapons taken out of their hands for as long as they
 
 - **Action music: an enemy hit twice** (within 12 seconds), or being hurt: shots into the air or at a wall don't count, nor hits on your own side (`LC.IsEnemyOf`, `LC.NoteShot`).
 - **Squad revive priority:** a unit under fire keeps fighting; once it hasn't been hit by a bullet for 5 seconds it breaks off, even mid-fight, and goes to get its downed leader up (`LC.SquadReviveCalm`).
+
+**The terminal's screen without scan lines (the owner, 14 November: the lines made "an optical illusion").** The screen over a terminal (the Commissary's, Civil Intake's, Housing Allocation's) keeps its flicker and the rolling band, without the fine scan lines that shimmered at a distance (`LC_CL.HoloLines`, `bandOnly`).

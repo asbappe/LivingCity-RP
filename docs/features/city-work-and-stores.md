@@ -34,3 +34,5 @@ The rations the dispensers hand out come out of the city's stores (`lc_stock_max
 ## Clearing away (11 November)
 
 Meat left by a dead headcrab or bird (raw, or cooked by a Cremator) and anything dropped out of a player's pockets is gone `lc_body_time` seconds (300) after it was last let go of, whether or not anyone is looking (before: only headcrabs, and only out of sight). A body goes after `lc_body_time` when nobody sees it, and a minute later even when somebody does.
+
+**The stores and the ration lines (the owner, 14 November: "Ration supplies are perpetually running low (and out of stock) and I have no idea why").** An NPC served at a ration line takes a ration from the city's stores only while rations are being handed out (`LivingCityServed`, sv_livingcity_stockpile.lua); outside a handout the lines still move, but cost nothing (the city eating already feeds the citizens out). The stores keep a ledger of what came in and went out, by cause, this hour and the last: `lc_stock` prints it, and so does the debug report's top line (`LC.StockLedgerLine`).

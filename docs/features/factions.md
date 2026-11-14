@@ -43,3 +43,11 @@
 - **Who may take a Resistance role:** Smuggler from Member, Hacker from Fighter, Father Grigori from Lieutenant (it was Member for all three). The Free Vortigaunt is still from Member until vortigaunts are chosen at the start (`TODO.md`).
 - **Guns on rebel ground:** Civil Protection and Overwatch players no longer carry lowered there.
 - **The infested don't hurt each other:** one infested player's blow on another does no damage and shoves them a step away.
+
+**The Resistance's medic (the owner, 14 November).** One in each rebel territory (touching zones are one), in the medic's clothes, keeping his post like the quartermaster (never follows, squads up, raids or runs errands). E on him (anyone the Resistance doesn't take for the Combine), hurt: a quick menu, a small health vial (10 health, 3 credits) or a large medkit (40 health, 8 credits); paid, he says "I hate to charge, but these don't grow on trees." Every few seconds he tends one hurt friendly NPC within 500 units (the Resistance's people, vortigaunts, citizens on rebel ground) for 25, free. Killed, another comes after 5 minutes. `lc_rebel_medic` (1); sv_livingcity_rebelmedic.lua, cl_livingcity_rebelmedic.lua.
+
+**A powered vest goes on fully charged** (the owner, 14 November: "it needs to be fully charged when I receive it and put it on"), to its capacity (`lc_vest_capacity`, 75).
+
+**Carried lowered, in your own view (the owner, 14 November: "no viewmodel difference").** A lowered gun now tips down smoothly in first person (`LCL.LowerViewModel`, sh_livingcity_lowered.lua), in a work suit too; Half-Life 2's lowered animation was hidden by the server's own idle.
+
+**The Resistance's scientist (the owner, 14 November).** He reaches out to hand something over only when he does (what you bought, or what he kept for you: `ENT:HandOver`), not for being spoken to, and doesn't fiddle with his bench with someone at his elbow. His eyes are open, follow whoever is near, and blink (no more squint); more idles are tried (`LineIdle03`, `LineIdle04`, relaxed ones) where the model has them.

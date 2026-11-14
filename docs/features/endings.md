@@ -252,3 +252,5 @@ The staging above (the opening card, the figures' acting, the finish) is for the
 ## Less text in dreams (14 November, the owner's screenshot)
 
 While you dream, the city's own HUD steps aside: the status and rank cards, the hints panel, the sociostability pill (`lc_dream_quiet_hud`, 1, on each player's side). The wake line is one short line only when there's something to do ("TEST: nothing here counts. Stop: F1 > Wake up from the dream", or "You can wake"); "It ends in ... at the latest" is left out when the dream shows its own Time left. A dream's goal line shows for its first 15 seconds (hold Tab to see it again). Notices sit lower, below the dream's lines, with no "+N more".
+
+**A black card before every dream you play (the owner, 13 November: "I have no idea what half these dreams are").** For 9 seconds (Space closes it), on black: what it is, the rules (its goal), how to win and how to lose. Made from the dream itself (`LC.DreamIntro`: its mood, goal, lives and time); a dream can give its own `idea`, `win` and `lose` to say it better. Shown again on every start, an editor test included.

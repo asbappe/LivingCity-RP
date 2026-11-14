@@ -1958,3 +1958,35 @@ Type them in the server console on the host panel, or in your own game console (
   Notes:
 - [ ] **The slogan's poster:** as Director of Propaganda, the poster roll's second poster is LOVE YOUR NEIGHBOUR, HATE THE TRAITOR: hang it, read it with E (the slogan and nothing after it), and spray over it as the Resistance (LIES).
   Notes:
+
+## Your 14 November notes and the to-do list: built, please try (14 November, later)
+- [ ] **Pistol on a metrocop:** about 10 hits now (fewer with head shots). Soldiers as tough as before?
+  Notes:
+- [ ] **Rations:** after a while, do the stores stay up? `lc_stock` prints where rations went this hour.
+  Notes:
+- [ ] **The medic:** one in each rebel territory. E on him hurt: vial 3, medkit 8. Does he stay put, and patch up hurt rebels near him?
+  Notes:
+- [ ] **Lowered gun:** on rebel ground as a rebel, does the gun tip down in your view when lowered, and come back up when raised?
+  Notes:
+- [ ] **Scientist:** no handing-over gesture when you just talk to him; it plays when he hands you something. Eyes open, blinking?
+  Notes:
+- [ ] **Filling a can:** a few feet from the water's edge (not in it): does Fill work?
+  Notes:
+- [ ] **Powered vest:** fully charged when you put it on?
+  Notes:
+- [ ] **Jobs screen:** Union shift and Civil rehabilitation say YOUR JOB; fewer jobs, changing more often; Doctor the records only for a Hacker; Extraction starts in the Combine's city.
+  Notes:
+- [ ] **Commissary screen:** no more shimmering lines?
+  Notes:
+- [ ] **Go to ground:** as a rebel, get to Overwatch response (alert 3): a job comes by itself; reach the other camp: does the hunt stop?
+  Notes:
+- [ ] **Operations on F4:** as a Lieutenant, plan one straight from the Operations board.
+  Notes:
+- [ ] **Close call:** as a unit, die once: do you wake at the clinic?
+  Notes:
+- [ ] **Loudspeaker boxes:** a box with a cable under every loudspeaker? Where does it sit? As a Hacker, splice one; when the Colonel answers her, is he heard there? As a unit, cut it out.
+  Notes:
+- [ ] **Get the lab running:** parts from the reclamation yard, the radio repair shop and a loudspeaker box.
+  Notes:
+- [ ] **Dream card:** a black card before each dream you play (what it is, rules, win, lose). Long enough? Space skips it.
+  Notes:
