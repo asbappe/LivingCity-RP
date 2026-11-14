@@ -75,7 +75,7 @@ ART.dream_barrels = () => {
   s += L('M360,80 Q400,40 452,48', C.paper, 4, 'opacity=".5"') + L('M344,112 Q372,84 400,78', C.paper, 4, 'opacity=".35"') + L('M486,70 Q516,96 520,132', C.paper, 4, 'opacity=".5"');
   // where it will land
   s += E(590, 562, 78, 12, '#05080d', 'opacity=".75"');
-  s += citizen(552, 338, 0.98, { tone: 1 });
+  s += G('translate(652,0) scale(-1,1)', walker(0, 556 - 258 * 0.92, 0.92, { leg: '#4a6077', hat: '#4a6077' }));
   s += L('M520,120 Q590,190 592,300', C.red, 5, 'stroke-dasharray="10 12" opacity=".8"') + P('M580,296 L604,296 L592,320Z', C.red, 'opacity=".8"');
   return s;
 };
@@ -140,9 +140,9 @@ ART.dream_molasses = () => {
 const N = { night: true };
 const POSTERS = [
   row('maze', 61, ['THE PATROL KNOWS', 'EVERY TURN'], N),
-  row('barrels', 62, ['DO NOT STACK', 'THE BARRELS'], N),
+  row('barrels', 62, ['DO NOT', 'STACK BARRELS'], N),
   row('crumble', 63, ['WATCH', 'YOUR STEP'], N),
-  row('freeze', 64, ['WHEN A UNIT SAYS', 'FREEZE, FREEZE'], { accent: 'cyan' }),
+  row('freeze', 64, ['WHEN A UNIT SAYS', 'FREEZE, YOU FREEZE'], { accent: 'cyan' }),
   row('molasses', 65, ['RUNNING', 'IS FORBIDDEN'], N),
 ];
 

@@ -50,7 +50,10 @@ ART.dream_massgames = () => {
 // On-the-Spot Guidance
 ART.dream_guidance = () => {
   let s = R(0, 0, 720, 610, '#cfc8b4') + rays(140, 200, 40, 1000, C.paper, 0, 360, 'opacity=".6"');
-  for (let x = 330; x < 720; x += 130) s += R(x, 0, 14, 300, C.steel2) + R(x - 40, 60, 94, 10, C.steel2);
+  for (const x of [330, 456, 582]) {
+    s += R(x, 28, 104, 250, C.steel) + R(x + 8, 36, 88, 234, '#e9e3d2');
+    s += R(x + 48, 36, 8, 234, C.steel) + R(x + 8, 92, 88, 7, C.steel) + R(x + 8, 150, 88, 7, C.steel) + R(x + 8, 208, 88, 7, C.steel);
+  }
   s += R(0, 540, 720, 70, C.steel) + R(0, 540, 720, 6, C.slate3);
   // the station
   s += R(372, 356, 250, 190, C.slate) + R(372, 356, 250, 14, C.slate2) + R(392, 392, 90, 60, '#16212e') + L('M400,436 L420,410 L440,426 L470,402', C.cyan, 4) + `<circle cx="520" cy="410" r="12" fill="${C.red}"/><circle cx="560" cy="410" r="12" fill="${C.steel2}"/>`;
@@ -158,32 +161,48 @@ function giant(x, base, h, col) {
   return P(`M${x - w * 0.5},${base} L${x - w * 0.56},${base - h * 0.62} L${x - w * 0.3},${base - h * 0.74} L${x + w * 0.3},${base - h * 0.74} L${x + w * 0.56},${base - h * 0.62} L${x + w * 0.5},${base}Z`, col) +
     E(x, base - h * 0.86, w * 0.2, h * 0.11, col) + P(`M${x - w * 0.56},${base - h * 0.62} L${x - w * 0.95},${base - h * 0.98} L${x - w * 0.78},${base - h * 1.02} L${x - w * 0.3},${base - h * 0.74}Z`, col) + P(`M${x + w * 0.56},${base - h * 0.62} L${x + w * 0.9},${base - h * 0.3} L${x + w * 0.72},${base - h * 0.26} L${x + w * 0.4},${base - h * 0.56}Z`, col);
 }
+// an Overwatch soldier in profile, facing right, aiming a pulse rifle (about 260 x 300; the legs behind cover)
+function soldier(x, y, s) {
+  const suit = '#465763', suitD = '#33414c', vest = '#1c252f', mask = '#55646e';
+  return G(`translate(${x},${y}) scale(${s})`, [
+    P('M26,118 L112,108 L126,300 L18,300Z', suit), P('M34,112 L108,106 L118,214 L30,220Z', vest), P('M30,220 L118,214 L120,232 L28,238Z', suitD),
+    P('M40,128 L98,122 L100,134 L40,140Z', suitD) + P('M42,150 L100,144 L102,156 L42,162Z', suitD),
+    P('M36,96 L60,104 L58,120 L30,112Z', vest), P('M44,84 L60,96 L112,96 L116,104 L52,108Z', vest),
+    P('M40,62 Q38,12 84,10 Q124,10 128,52 L130,76 L114,96 L60,96 L44,84Z', mask), P('M40,62 Q38,12 84,10 Q100,10 110,18 Q70,16 62,60 L60,96 L44,84Z', suitD),
+    `<circle cx="106" cy="52" r="14" fill="${vest}"/><circle cx="106" cy="52" r="9" fill="${C.cyan}"/><circle cx="103" cy="49" r="3" fill="#eafcff"/>`,
+    P('M116,70 L142,74 L142,94 L114,96Z', vest), `<circle cx="134" cy="85" r="9" fill="${C.steel}"/><circle cx="134" cy="85" r="4" fill="${vest}"/>`,
+    L('M118,94 Q96,118 70,112', vest, 7),
+    // the rifle, and the arms on it
+    P('M92,150 L262,120 L264,134 L206,146 L196,168 L164,172 L154,156 L96,168Z', '#10161d'), R(196, 124, 60, 5, C.cyan, 'transform="rotate(-10 196 124)"'), P('M150,160 L170,158 L166,196 L150,196Z', '#10161d'),
+    P('M60,122 L96,118 L128,166 L104,180Z', suit), P('M104,180 L128,166 L176,150 L182,164 L122,192Z', suitD), R(72, 132, 22, 16, C.warm, 'transform="rotate(-8 72 132)"'),
+    P('M176,150 L196,146 L200,160 L182,164Z', vest),
+  ].join(''));
+}
 ART.dream_battleline = () => {
-  let s = R(0, 0, 720, 610, DARK) + E(360, 400, 520, 260, C.red, 'opacity=".16"') + E(360, 400, 340, 170, C.red, 'opacity=".16"');
+  let s = R(0, 0, 720, 610, DARK) + E(500, 380, 460, 280, C.red, 'opacity=".16"') + E(520, 380, 300, 180, C.red, 'opacity=".16"');
   // the giants
-  for (const [x, h, o] of [[150, 300, 0.5], [600, 250, 0.45], [370, 400, 0.85]]) s += `<g opacity="${o}">` + giant(x, 440, h * 1.04, C.redD) + giant(x, 440, h, C.red) + '</g>';
-  s += `<circle cx="358" cy="94" r="5" fill="#fff4ee"/><circle cx="384" cy="94" r="5" fill="#fff4ee"/>`;
+  for (const [x, h, o] of [[420, 250, 0.45], [660, 300, 0.55], [540, 410, 0.9]]) s += `<g opacity="${o}">` + giant(x, 440, h * 1.04, C.redD) + giant(x, 440, h, C.red) + '</g>';
+  s += `<circle cx="528" cy="88" r="5" fill="#fff4ee"/><circle cx="554" cy="88" r="5" fill="#fff4ee"/>`;
   s += skyline(440, '#0d141d', '#3a2420', 5, 110) + R(0, 436, 720, 174, '#0d141d');
+  // her soldiers, and their fire
+  for (const [x, y, k, a] of [[250, 268, 0.86, -16], [124, 252, 1.0, -13], [-18, 234, 1.16, -10]]) {
+    s += G(`rotate(${a} ${x + 80 * k} ${y + 200 * k})`, soldier(x, y, k) + L(`M${x + 270 * k},${y + 124 * k} L${x + 420 * k},${y + 98 * k}`, C.cyan, 5 * k, 'opacity=".8" stroke-dasharray="26 18"') + `<circle cx="${x + 266 * k}" cy="${y + 126 * k}" r="${9 * k}" fill="#eafcff"/>`);
+  }
   // the line
   s += P('M0,520 L60,490 L150,496 L230,484 L330,494 L420,486 L520,496 L610,486 L720,500 L720,610 L0,610Z', C.slate2) + P('M0,540 L720,524 L720,610 L0,610Z', C.slate);
   for (let i = 0; i < 9; i++) s += E(40 + i * 82, 508, 44, 16, C.slate3) + E(40 + i * 82, 504, 44, 13, '#52677d');
-  // her soldiers
-  for (const [x, y, k] of [[20, 400, 1.5], [170, 392, 1.6], [330, 388, 1.65], [490, 392, 1.6], [630, 400, 1.5]]) {
-    s += L(`M${x + 70 * k},${y + 96 * k} L${x + 100 * k},${y - 6 * k}`, C.steel, 7) + `<circle cx="${x + 100 * k}" cy="${y - 8 * k}" r="5" fill="${C.cyan}"/>`;
-    s += reader(x, y, k, 3, true) + R(x + 22 * k, y + 38 * k, 36 * k, 5 * k, C.cyan, 'opacity=".7"');
-  }
   return s;
 };
 
 const POSTERS = [
-  row('hate', 81, ['TWO MINUTES.', 'EVERY CITIZEN.'], { night: true }),
-  row('massgames', 82, ['TEN THOUSAND', 'AS ONE']),
-  row('guidance', 83, ['SHE IS COMING TO', 'YOUR WORKPLACE'], { accent: 'red' }),
+  row('hate', 81, ['TWO PURE', 'MINUTES.'], { night: true }),
+  row('massgames', 82, ['WE ARE ONE']),
+  row('guidance', 83, ['WORKPLACE', 'VISITS'], { accent: 'red' }),
   row('scrap', 84, ['EVERY CAN', 'COUNTS']),
-  row('flowers', 85, ['GREET THE', 'LIBERATORS'], { accent: 'red' }),
-  row('duck', 86, ['WHEN THE SIREN SOUNDS,', 'DUCK AND COVER']),
+  row('flowers', 85, ['GREET YOUR', 'LIBERATORS'], { accent: 'red' }),
+  row('duck', 86, ['DUCK AND', 'COVER']),
   row('ravenholm', 87, ["WE DON'T GO", 'TO RAVENHOLM'], { night: true, ground: '#0a111a' }),
-  row('battleline', 88, ['THE LINE', 'HOLDS'], { night: true }),
+  row('battleline', 88, ['HOLD THE LINE'], { night: true }),
 ];
 
 module.exports = { ART, POSTERS };

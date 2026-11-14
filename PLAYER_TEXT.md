@@ -4,7 +4,7 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version 4b29dde. Admin-only console messages and log lines are left out.
+Made from version a2ae56c. Admin-only console messages and log lines are left out.
 
 12341 lines, from 332 files.
 
@@ -8660,69 +8660,69 @@ Made from version 4b29dde. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): Happy
 
-- "The sky belongs to the Combine, and citizens who leave the ground will be returned to it."  (text, line 43)
-- "Fresh fruit is a privilege of compliance; do not look up for it."  (text, line 44)
-- "A small, bald, beaked pet is loose in the city: do not approach it, do not feed it, report it."  (text, line 45)
-- "Movement without purpose is forbidden, and movement to music doubly so."  (text, line 46)
-- "Not the other thing, never the other thing; sleep is mandatory."  (text, line 47)
-- "Wagering on headcrabs is a crime against hygiene, and Sanitation is watching."  (text, line 48)
-- "All colour belongs to the city, and unlicensed colour will be scrubbed."  (text, line 49)
-- "Lines are for rations, not for fun."  (text, line 50)
-- "Surplus soap must be returned to the Commissary, for nothing floats in this city."  (text, line 51)
-- "Unlicensed vehicles will be confiscated, and so will their drivers."  (text, line 52)
+- "The sky belongs to the Combine, and citizens who leave the ground will be returned to it."  (text, line 45)
+- "Fresh fruit is a privilege of compliance; do not look up for it."  (text, line 46)
+- "A small, bald, beaked pet is loose in the city: do not approach it, do not feed it, report it."  (text, line 47)
+- "Movement without purpose is forbidden, and movement to music doubly so."  (text, line 48)
+- "Not the other thing, never the other thing; sleep is mandatory."  (text, line 49)
+- "Wagering on headcrabs is a crime against hygiene, and Sanitation is watching."  (text, line 50)
+- "All colour belongs to the city, and unlicensed colour will be scrubbed."  (text, line 51)
+- "Lines are for rations, not for fun."  (text, line 52)
+- "Surplus soap must be returned to the Commissary, for nothing floats in this city."  (text, line 53)
+- "Unlicensed vehicles will be confiscated, and so will their drivers."  (text, line 54)
 
 > Note for you (not shown in game): Neutral
 
-- "Citizens do not think about cheese; citizens think about their quota."  (text, line 54)
-- "Unless there is not, so remain standing until told."  (text, line 55)
-- "Report any change to your appearance at once, especially hooves."  (text, line 56)
-- "Not in a ring, not with gloves and not under lights."  (text, line 57)
-- "Every citizen will be tested, and you will not know when, so study."  (text, line 58)
-- "Do not ask where the last one goes."  (text, line 59)
-- "Whatever you are holding, it is now your responsibility."  (text, line 60)
-- "And only when Overwatch says it, so listen closely."  (text, line 61)
-- "Clocks are not to be stopped, wound back or argued with."  (text, line 62)
-- "This includes tea, and this especially includes tea."  (text, line 63)
-- "Every face is on file, so keep yours still."  (text, line 64)
-- "Open only the doors you were assigned, for some open onto nothing."  (text, line 65)
-- "Quiet blocks are safe blocks, and something is listening for noise."  (text, line 66)
-- "Litter is disorder: when an officer tells you, you pick it up, then you put it in the bin."  (text, line 67)
+- "Citizens do not think about cheese; citizens think about their quota."  (text, line 56)
+- "Unless there is not, so remain standing until told."  (text, line 57)
+- "Report any change to your appearance at once, especially hooves."  (text, line 58)
+- "Not in a ring, not with gloves and not under lights."  (text, line 59)
+- "Every citizen will be tested, and you will not know when, so study."  (text, line 60)
+- "Do not ask where the last one goes."  (text, line 61)
+- "Whatever you are holding, it is now your responsibility."  (text, line 62)
+- "And only when Overwatch says it, so listen closely."  (text, line 63)
+- "Clocks are not to be stopped, wound back or argued with."  (text, line 64)
+- "This includes tea, and this especially includes tea."  (text, line 65)
+- "Every face is on file, so keep yours still."  (text, line 66)
+- "Open only the doors you were assigned, for some open onto nothing."  (text, line 67)
+- "Quiet blocks are safe blocks, and something is listening for noise."  (text, line 68)
+- "Litter is disorder: when an officer tells you, you pick it up, then you put it in the bin."  (text, line 69)
 
 > Note for you (not shown in game): Nightmares
 
-- "If you do not, stay on the routes you were given."  (text, line 69)
-- "They are heavier than they look, and they fall."  (text, line 70)
-- "Not every floor in this city will hold you, so report cracks."  (text, line 71)
-- "Do not breathe or blink until told."  (text, line 72)
-- "You will not get far; you never do."  (text, line 73)
-- "Even when you close your eyes."  (text, line 74)
+- "Traitors can run, but they cannot hide."  (text, line 71)
+- "They're heavier than they look; an injury is just a fall away."  (text, line 72)
+- "Report cracks and traitor-sabotaged infrastructure. Thank you for helping keep everyone safe."  (text, line 73)
+- "Ignoring authority leads to punishment."  (text, line 74)
+- "Only traitors run, and they do not get far."  (text, line 75)
+- "Even when you close your eyes."  (text, line 76)
 
 > Note for you (not shown in game): Propaganda (her dreams)
 
-- "Your Administrator has done so much for you, so show her."  (text, line 76)
-- "A grateful city remembers her, so bring what you can."  (text, line 77)
-- "You already know the answer."  (text, line 78)
-- "When the monsters close in, the Administrator will save you, so wait for her."  (text, line 79)
-- "Loyalty is tested, and wrong answers are noted."  (text, line 80)
-- "This year's yield exceeds every target, so do not count it yourself."  (text, line 81)
-- "One worker did the work of fourteen, so what is your excuse?"  (text, line 82)
-- "Anyone could be listening, and anyone could be one of them."  (text, line 83)
-- "Tonight's broadcast will show you how good, so watch it all."  (text, line 84)
-- "Know the enemy's face, and show what you feel about it."  (text, line 85)
-- "Every citizen holds up a card, and together they make her face."  (text, line 86)
-- "Have your station clean, for she may have advice for you."  (text, line 87)
-- "Bring your scrap and everyone's scrap, for the city is built from it."  (text, line 88)
-- "Smile, wave and throw flowers, for they are here to help."  (text, line 89)
-- "A desk will protect you, as it always has."  (text, line 90)
-- "There is nothing there; the city has seen to it."  (text, line 91)
-- "Stand with her soldiers, and do not look at the giants."  (text, line 92)
+- "Your Administrator does so much for the city; it's the least you can do."  (text, line 78)
+- "She sacrifices herself for you, surely you can spare a single flower?"  (text, line 79)
+- "You already know the answer."  (text, line 80)
+- "When monsters attack, trust in the Administrator."  (text, line 81)
+- "Loyalty is tested and wrong answers are noted."  (text, line 82)
+- "This year's yield exceeds every target, trust Her to count it for you."  (text, line 83)
+- "Every day the Administrator does the work of fourteen people; what is your excuse?"  (text, line 84)
+- "Anyone could be listening, and anyone could be a traitor."  (text, line 85)
+- "Tonight's broadcast will show you how double good. Viewing is mandatory."  (text, line 86)
+- "Love your neighbour, hate the traitor."  (text, line 87)
+- "We all help the Administrator, and she adorns us with her beauty."  (text, line 88)
+- "You wouldn't want to disappoint her; keep your workplace efficient and clean."  (text, line 89)
+- "Waste not, want not."  (text, line 90)
+- "They have given their lives to protect you; show your appreciation."  (text, line 91)
+- "When the siren sounds, so does your training!"  (text, line 92)
+- "Traitors beware: this is what happens when you threaten our citizens."  (text, line 93)
+- "Stand with her soldiers; the traitors are coming."  (text, line 94)
 
 > Note for you (not shown in game): A dream without its own lines: its mood's.
 
-- "A compliant city dreams sweetly, and tonight may be one of those nights."  (text, line 98)
-- "If tonight's seems strange, report it in the morning, then forget it."  (text, line 99)
-- "Whatever you see when your eyes are closed is not real, probably."  (text, line 100)
-- "Your Administrator never rests, not even while you do."  (text, line 101)
+- "A compliant city dreams sweetly, and tonight may be one of those nights."  (text, line 100)
+- "If tonight's seems strange, report it in the morning, then forget it."  (text, line 101)
+- "Whatever you see when your eyes are closed is not real, probably."  (text, line 102)
+- "Your Administrator never rests, not even while you do."  (text, line 103)
 
 ## The Midnight Rally (a Happy dream you play) (sv_livingcity_dreamrally.lua)
 

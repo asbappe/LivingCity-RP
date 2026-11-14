@@ -151,7 +151,7 @@ const POSTERS = [
   row('harvest', 75, ['A RECORD', 'HARVEST'], { accent: 'red' }),
   row('shift', 76, ['DOUBLE THE QUOTA.', 'DOUBLE THE GLORY.'], { accent: 'red' }),
   row('spy', 77, ['CARELESS TALK', 'COSTS LIVES']),
-  row('newsreel', 78, ['THE NEWS', 'IS GOOD'], { night: true, acc: C.cyan, ground: '#0a111a' }),
+  row('newsreel', 78, ['GOOD NEWS'], { night: true, acc: C.cyan, ground: '#0a111a' }),
 ];
 
 module.exports = { ART, POSTERS };

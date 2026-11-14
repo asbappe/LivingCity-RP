@@ -28,6 +28,8 @@
     and the melons' picture is "too on the nose" for the waking city, so it
     hangs only inside that dream (dream_forecast.jpg, LC.DreamBillboard below,
     sv_livingcity_strangedreams.lua); the city's hint at it stays the drawn notice.
+    The Nightmares' and propaganda dreams' words are the owner's own (14 November,
+    their corrected list): leave them as they are.
 ]]
 
 if CLIENT then return end
@@ -66,30 +68,30 @@ local HINTS = {
     shh = { "SILENCE IS COMPLIANCE", "Quiet blocks are safe blocks, and something is listening for noise." },
     can = { "PICK IT UP", "Litter is disorder: when an officer tells you, you pick it up, then you put it in the bin." },
     -- Nightmares
-    maze = { "THE PATROL KNOWS EVERY TURN", "If you do not, stay on the routes you were given." },
-    barrels = { "DO NOT STACK THE BARRELS", "They are heavier than they look, and they fall." },
-    crumble = { "WATCH YOUR STEP", "Not every floor in this city will hold you, so report cracks." },
-    freeze = { "WHEN A UNIT SAYS FREEZE, FREEZE", "Do not breathe or blink until told." },
-    molasses = { "RUNNING IS FORBIDDEN", "You will not get far; you never do." },
+    maze = { "THE PATROL KNOWS EVERY TURN", "Traitors can run, but they cannot hide." },
+    barrels = { "DO NOT STACK BARRELS", "They're heavier than they look; an injury is just a fall away." },
+    crumble = { "WATCH YOUR STEP", "Report cracks and traitor-sabotaged infrastructure. Thank you for helping keep everyone safe." },
+    freeze = { "WHEN A UNIT SAYS FREEZE, YOU FREEZE", "Ignoring authority leads to punishment." },
+    molasses = { "RUNNING IS FORBIDDEN", "Only traitors run, and they do not get far." },
     watchers = { "YOU ARE NEVER ALONE", "Even when you close your eyes." },
     -- Propaganda (her dreams)
-    adore = { "KNEEL WHEN SHE PASSES", "Your Administrator has done so much for you, so show her." },
-    roses = { "FLOWERS FOR THE ADMINISTRATOR", "A grateful city remembers her, so bring what you can." },
+    adore = { "KNEEL WHEN SHE PASSES", "Your Administrator does so much for the city; it's the least you can do." },
+    roses = { "FLOWERS FOR THE ADMINISTRATOR", "She sacrifices herself for you, surely you can spare a single flower?" },
     mirror = { "WHO IS THE FAIREST?", "You already know the answer." },
-    saviour = { "SHE WILL COME FOR YOU", "When the monsters close in, the Administrator will save you, so wait for her." },
-    quiz = { "DO YOU KNOW YOUR ADMINISTRATOR?", "Loyalty is tested, and wrong answers are noted." },
-    harvest = { "A RECORD HARVEST", "This year's yield exceeds every target, so do not count it yourself." },
-    shift = { "DOUBLE THE QUOTA. DOUBLE THE GLORY.", "One worker did the work of fourteen, so what is your excuse?" },
-    spy = { "CARELESS TALK COSTS LIVES", "Anyone could be listening, and anyone could be one of them." },
-    newsreel = { "THE NEWS IS GOOD", "Tonight's broadcast will show you how good, so watch it all." },
-    hate = { "TWO MINUTES. EVERY CITIZEN.", "Know the enemy's face, and show what you feel about it." },
-    massgames = { "TEN THOUSAND AS ONE", "Every citizen holds up a card, and together they make her face." },
-    guidance = { "SHE IS COMING TO YOUR WORKPLACE", "Have your station clean, for she may have advice for you." },
-    scrap = { "EVERY CAN COUNTS", "Bring your scrap and everyone's scrap, for the city is built from it." },
-    flowers = { "GREET THE LIBERATORS", "Smile, wave and throw flowers, for they are here to help." },
-    duck = { "WHEN THE SIREN SOUNDS, DUCK AND COVER", "A desk will protect you, as it always has." },
-    ravenholm = { "WE DON'T GO TO RAVENHOLM", "There is nothing there; the city has seen to it." },
-    battleline = { "THE LINE HOLDS", "Stand with her soldiers, and do not look at the giants." },
+    saviour = { "SHE WILL COME FOR YOU", "When monsters attack, trust in the Administrator." },
+    quiz = { "DO YOU KNOW YOUR ADMINISTRATOR?", "Loyalty is tested and wrong answers are noted." },
+    harvest = { "A RECORD HARVEST", "This year's yield exceeds every target, trust Her to count it for you." },
+    shift = { "DOUBLE THE QUOTA. DOUBLE THE GLORY.", "Every day the Administrator does the work of fourteen people; what is your excuse?" },
+    spy = { "CARELESS TALK COSTS LIVES", "Anyone could be listening, and anyone could be a traitor." },
+    newsreel = { "GOOD NEWS", "Tonight's broadcast will show you how double good. Viewing is mandatory." },
+    hate = { "TWO PURE MINUTES.", "Love your neighbour, hate the traitor." },
+    massgames = { "WE ARE ONE", "We all help the Administrator, and she adorns us with her beauty." },
+    guidance = { "WORKPLACE VISITS", "You wouldn't want to disappoint her; keep your workplace efficient and clean." },
+    scrap = { "EVERY CAN COUNTS", "Waste not, want not." },
+    flowers = { "GREET YOUR LIBERATORS", "They have given their lives to protect you; show your appreciation." },
+    duck = { "DUCK AND COVER", "When the siren sounds, so does your training!" },
+    ravenholm = { "WE DON'T GO TO RAVENHOLM", "Traitors beware: this is what happens when you threaten our citizens." },
+    battleline = { "HOLD THE LINE", "Stand with her soldiers; the traitors are coming." },
 }
 LC.DreamPosterHints = HINTS
 
