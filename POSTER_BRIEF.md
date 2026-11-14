@@ -95,4 +95,4 @@ Some plain curfew posters show a dream's poster instead (`docs/features/dream-po
 
 ## Her slogan
 
-`neighbour` (and `neighbour_x`, painted over: LIES): **LOVE YOUR NEIGHBOUR, HATE THE TRAITOR**, the owner's own slogan (14 November), with no smaller words. Two neighbours, a man and a woman of the block, shaking hands (no heart: the owner, 14 November); beside them, in the dark, a Resistance face struck out in red. It is on the Director of Propaganda's poster roll with the eleven above. Drawn by `_dev/posters/slogan.js`.
+`neighbour` (and `neighbour_x`, painted over: LIES): **LOVE YOUR NEIGHBOUR, HATE THE TRAITOR**, the owner's own slogan (14 November), with no smaller words. Two neighbours, both smiling: a younger man hands an older woman a framed portrait of the Administrator (the owner's idea, 14 November; no handshake, no heart); beside them, in the dark, a Resistance face struck out in red. It is on the Director of Propaganda's poster roll with the eleven above. Drawn by `_dev/posters/slogan.js`.

@@ -1,25 +1,29 @@
 // The owner's slogan as a poster (14 November): LOVE YOUR NEIGHBOUR, HATE THE TRAITOR. Kind "neighbour",
 // one of the Director of Propaganda's hand-hung posters (entities/lc_civposter.lua). Drawn by gen.js.
-const { C, P, R, G, rays, head } = require('./lib.js');
+const { C, P, R, G, rays, head, adminBust } = require('./lib.js');
 const { E, L, T, skyline } = require('./dreamkit.js');
 
 const ART = {};
 ART.neighbour = () => {
   let s = R(0, 0, 720, 610, '#d6cfba') + rays(232, 250, 40, 1000, C.paper, 0, 360, 'opacity=".75"');
   s += skyline(470, C.steel2, '#d6cfba', 22, 110) + R(0, 466, 720, 144, C.steel);
-  // the neighbours: a man and a woman of the block, shaking hands
+  // the neighbours: the younger hands the older a framed portrait of the Administrator; both smile
   const body = (t, bd) => P('M-34,270 L-16,152 L30,118 L72,118 L112,142 L128,270Z', t) + P('M36,118 L52,118 L62,270 L44,270Z', bd);
   const scarf = P('M16,52 L24,22 L44,4 L70,4 L86,18 L88,40 L64,38 L58,52 L42,54 L40,72 L32,96 L46,120 L22,126 L10,86Z', C.steel2) + P('M24,22 L44,4 L70,4 L86,18 L60,20 L40,30Z', '#c9d0d0');
-  s += G('translate(-22,150) scale(1.62)', body(C.blue, C.blueD) + head({ cap: C.blueD, smile: true }));
-  s += G('translate(488,150) scale(-1.62,1.62)', body('#335073', '#263a55') + head({ skin: '#d8cdb8', sh: '#8f8a7c', hair: C.steel2, smile: true }) + scarf);
-  // their arms (shoulder, elbow, wrist), meeting in the open between them: his thumb over her hand
+  const smile = L('M74,79 Q83,89 92,77', C.ink, 2.8) + L('M90,74 L94,79', C.ink, 2);
+  const skinB = '#d8cdb8', shB = '#8f8a7c';
+  s += G('translate(-22,150) scale(1.62)', body(C.blue, C.blueD) + head({ cap: C.blueD }) + smile);
+  s += G('translate(488,150) scale(-1.62,1.62)', body('#335073', '#263a55') + head({ skin: skinB, sh: shB, hair: C.steel2 }) + scarf + smile + L('M60,62 L66,66 M58,70 L65,72', shB, 1.6));
   const O = `stroke="${C.ink}" stroke-width="2.2" stroke-opacity=".5" stroke-linejoin="round"`;
-  const skinB = '#d8cdb8';
-  s += P('M380,392 L342,388 L318,476 L354,490Z', '#4f77a3', O) + P('M354,492 L324,462 L262,438 L252,468 L334,502Z', '#4f77a3', O) + P('M270,441 L258,437 L249,468 L261,472Z', '#263a55');
-  s += P('M222,440 L258,438 L258,470 L224,470Z', skinB, O);
-  s += P('M84,392 L122,388 L146,476 L110,490Z', C.blue2, O) + P('M110,492 L140,462 L202,438 L212,468 L130,502Z', C.blue2, O) + P('M194,441 L206,437 L215,468 L203,472Z', C.blueD);
-  s += P('M206,438 L240,436 L246,444 L246,466 L210,470Z', C.paper, O) + P('M216,427 L238,425 L242,438 L220,440Z', C.paper, O);
-  s += P('M205,449 L219,448 L219,455 L205,456Z', skinB, O) + P('M205,458 L219,457 L219,464 L205,465Z', skinB, O);
+  // their arms (shoulder, elbow, wrist), out to the frame
+  s += P('M380,392 L342,388 L318,476 L354,490Z', '#4f77a3', O) + P('M354,492 L324,462 L296,428 L282,454 L334,502Z', '#4f77a3', O);
+  s += P('M84,392 L122,388 L146,476 L110,490Z', C.blue2, O) + P('M110,492 L140,462 L168,428 L182,454 L130,502Z', C.blue2, O);
+  // the portrait
+  s += R(173, 338, 130, 172, '#10161f', 'opacity=".35"') + R(167, 332, 130, 172, C.slate, O) + R(178, 343, 108, 150, C.blueD);
+  s += `<clipPath id="gift"><rect x="178" y="343" width="108" height="150"/></clipPath><g clip-path="url(#gift)">` + rays(232, 404, 20, 240, C.cyan, 0, 360, 'opacity=".3"') + G('translate(168,352) scale(0.75)', adminBust({ pin: C.red })) + '</g>';
+  // his hand letting go of it, hers taking it
+  s += P('M158,426 L180,422 L184,454 L162,458Z', C.paper, O) + P('M166,418 L180,416 L182,426 L168,428Z', C.paper, O);
+  s += P('M306,426 L284,422 L280,454 L302,458Z', skinB, O) + P('M298,418 L284,416 L282,426 L296,428Z', skinB, O);
   // the traitor
   s += P('M500,0 L720,0 L720,610 L420,610Z', '#0b1119') + P('M500,0 L512,0 L432,610 L420,610Z', C.red);
   s += G('translate(322,96) scale(0.82)', [
