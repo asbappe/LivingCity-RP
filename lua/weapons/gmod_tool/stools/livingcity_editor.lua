@@ -969,6 +969,9 @@ function TOOL.BuildCPanel(panel)
     end end
     local stopBtn = panel:Button("Stop the test (wake up)")
     if IsValid(stopBtn) then stopBtn.DoClick = function() if LC_CL and LC_CL.DreamTestAct then LC_CL.DreamTestAct("stop") end end end
+    panel:CheckBox("Record the test (for the code chat)", "lc_dreamrec")
+    panel:NumSlider("A screenshot every (seconds, 0: none)", "lc_dreamrec_shots", 0, 30, 0)
+    panel:Help("A recorded test is saved on this computer when you wake: garrysmod/data/livingcity/dreamrec/, one folder a test, with log.txt (every text that was on screen and whether there was time to read it, what the dream made, what you did) and the screenshots. Anything you type in chat during the test goes in the log at that second, so you can leave notes as you play. Zip the folder and give it to the code chat. Only tests started here are ever recorded.")
     panel:Button("Vortigaunts break into the next propaganda dream (for sure)", "lc_vortwar_next")
     panel:Help("Press it, then test a propaganda dream: a quarter to nearly half way through, purple vortigaunts break in. Stand in their light to pull toward them.")
     local listBtn = panel:Button("Refresh the list")

@@ -4243,6 +4243,88 @@ return nil
 if err:
     problems = (problems + "\n" if problems else "") + str(err)
 
+# the dream flight recorder (cl_livingcity_dreamrec.lua): a recorded editor test is written to
+# data/livingcity/dreamrec/ with the pacing check on top; nothing is wrapped before or after it
+err = L.execute(r"""
+local recv = net["recv_lc_dreamrec"]
+if not recv then return "dream recorder: no receiver" end
+local keep = { rs = net.ReadString, ru = net.ReadUInt, rf = net.ReadFloat, tc = timer.Create, tr = timer.Remove, file = file, cap = render.Capture,
+    wp = vgui.GetWorldPanel, dt = surface.DrawText, sf = surface.SetFont, stp = surface.SetTextPos, stc = surface.SetTextColor, ps = surface.PlaySound,
+    add = chat.AddText, notice = LC_CL.AddNotice, sw = ScrW, sh = ScrH, json = util.JSONToTable }
+local q, files, tick, said = {}, {}, nil, nil
+net.ReadString = function() return table.remove(q, 1) end
+net.ReadUInt = function() return table.remove(q, 1) end
+net.ReadFloat = function() return table.remove(q, 1) end
+timer.Create = function(name, _, _, fn) if name == "LivingCityDreamRec" then tick = fn end end
+timer.Remove = function() end
+file = { CreateDir = function() end, Write = function(path, data) files[path] = data end, Append = function(path, data) files[path] = (files[path] or "") .. data end }
+render.Capture = function() return "JPEG" end
+ScrW, ScrH = function() return 1920 end, function() return 1080 end
+util.JSONToTable = function() return { id = "cheese", title = "The Cheese Dream", mood = "neutral", kind = "a dream you play", map = "rp_test", t0 = CurTime(), max = 5 } end
+surface.DrawText, surface.SetFont, surface.SetTextPos, surface.SetTextColor, surface.PlaySound = function() end, function() end, function() end, function() end, function() end
+local rawDraw = surface.DrawText
+local label = { IsValid = function() return true end, IsVisible = function() return true end, GetClassName = function() return "Label" end,
+    GetText = function() return "A window says this" end, GetChildren = function() return {} end, LocalToScreen = function() return 5, 6 end }
+vgui.GetWorldPanel = function() return { GetChildren = function() return { label } end } end
+LC_CL.AddNotice = function(_, title, text) said = title .. ": " .. text end
+local me = LocalPlayer()
+me:SetNW2Bool("lc_dreaming", true)
+local ok, e = pcall(function()
+    if LC_CL.DreamRecording() then error("recording before any test") end
+    q = { "start", "{}", 1, 0, "start", "\"The Cheese Dream\" (cheese)" }
+    recv()
+    if not LC_CL.DreamRecording() or not tick then error("the start didn't begin a recording") end
+    if surface.DrawText == rawDraw then error("the text on screen isn't being watched") end
+    -- a long sentence shown for half a second (too fast), and a short one that stays
+    surface.SetFont("LCBig") surface.SetTextColor(255, 255, 255, 255)
+    surface.SetTextPos(100, 200) surface.DrawText("Gather every last piece of the cheese before the moon comes down on you")
+    surface.SetTextPos(100, 300) surface.DrawText("Lives: 3")
+    surface.SetTextColor(255, 255, 255, 0) surface.SetTextPos(100, 400) surface.DrawText("You never saw this line at all")
+    surface.PlaySound("livingcity/dreams/cheese.mp3")
+    chat.AddText(Color(1, 1, 1), "The cheese speaks.")
+    tick() tick()
+    _advance(0.5)
+    for i = 1, 24 do
+        surface.SetTextColor(255, 255, 255, 255) surface.SetTextPos(100, 300) surface.DrawText("Lives: " .. (i > 12 and 2 or 3))
+        _advance(0.25) tick()
+        hook.Run("PostRender")
+    end
+    q = { "lines", "", 1, 2.5, "made", "3x prop_physics models/cheese.mdl at (0, 0, 0)" }
+    recv()
+    q = { "end", "woke: test", 1, 6, "end", "woke: test" }
+    recv()
+    _advance(1.2) tick()
+end)
+net.ReadString, net.ReadUInt, net.ReadFloat, timer.Create, timer.Remove, file, render.Capture, vgui.GetWorldPanel = keep.rs, keep.ru, keep.rf, keep.tc, keep.tr, keep.file, keep.cap, keep.wp
+local unwrapped = surface.DrawText == rawDraw
+surface.DrawText, surface.SetFont, surface.SetTextPos, surface.SetTextColor, surface.PlaySound = keep.dt, keep.sf, keep.stp, keep.stc, keep.ps
+chat.AddText, LC_CL.AddNotice, ScrW, ScrH, util.JSONToTable = keep.add, keep.notice, keep.sw, keep.sh, keep.json
+me:SetNW2Bool("lc_dreaming", false)
+if not ok then return "dream recorder: " .. tostring(e) end
+if LC_CL.DreamRecording() then return "dream recorder: still recording after the end" end
+if not unwrapped then return "dream recorder: the drawing functions weren't put back" end
+local log
+for path, data in pairs(files) do if string.find(path, "log.txt", 1, true) and string.find(path, "livingcity/dreamrec/", 1, true) and string.find(path, "_cheese/", 1, true) then log = data end end
+if not log then return "dream recorder: no log.txt in data/livingcity/dreamrec/<date>_cheese/" end
+local function Has(s) return string.find(log, s, 1, true) ~= nil end
+if not Has("TOO FAST") or not Has("Gather every last piece of the cheese") then return "dream recorder: the sentence shown too briefly isn't flagged" end
+if Has("You never saw this line") then return "dream recorder: invisible text was written down" end
+if not Has("\"Lives: 2\"") then return "dream recorder: a counter isn't one text (digits apart)" end
+if not Has("A window says this") then return "dream recorder: a window's label is missing" end
+if not Has("3x prop_physics models/cheese.mdl") or not Has("woke: test") then return "dream recorder: the server's lines are missing" end
+if not Has("livingcity/dreams/cheese.mp3") or not Has("The cheese speaks.") then return "dream recorder: the sound or the chat line is missing" end
+local shots = 0
+for path in pairs(files) do if string.find(path, "shot_", 1, true) then shots = shots + 1 end end
+if shots < 1 or not Has("shot_") then return "dream recorder: no screenshot" end
+if not said or not string.find(said, "garrysmod/data/livingcity/dreamrec/", 1, true) then return "dream recorder: the tester isn't told where it was saved" end
+return nil
+""")
+if err:
+    problems = (problems + "\n" if problems else "") + str(err)
+_ed = open(os.path.join(GMDIR, "..", "..", "lua", "weapons", "gmod_tool", "stools", "livingcity_editor.lua")).read()
+if '"lc_dreamrec"' not in _ed or '"lc_dreamrec_shots"' not in _ed:
+    problems = (problems + "\n" if problems else "") + "the editor's Dreams: test one has no Record the test box"
+
 # the official folder for recordings and songs is the server's garrysmod/sound/livingcity/ (CORE.md):
 # what players read in the guide and the sound check must send them there, never to the old sound addon
 _guide = open(os.path.join(GMDIR, "gamemode", "cl_init.lua")).read()
