@@ -478,8 +478,13 @@ do
         local e = n.e
         if not IsValid(e) or not e.ManipulateBoneAngles or not e.LookupBone then return end
         local up, fore = e:LookupBone("ValveBiped.Bip01_R_UpperArm"), e:LookupBone("ValveBiped.Bip01_R_Forearm")
-        if up then e:ManipulateBoneAngles(up, Angle(-35 * amount, -75 * amount, 0)) end
-        if fore then e:ManipulateBoneAngles(fore, Angle(0, -115 * amount, 0)) end
+        -- (the owner, 13 November: "the salute poses in careless talk had their arms inside their torso".
+        -- The arm went forward and in across the chest. Now it goes out to the side first (pitch, minus
+        -- for the right arm), up level with the shoulder, and only the forearm folds in to the brow.)
+        if up then e:ManipulateBoneAngles(up, Angle(-70 * amount, -30 * amount, -20 * amount)) end
+        if fore then e:ManipulateBoneAngles(fore, Angle(0, -125 * amount, 0)) end
+        local hand = e:LookupBone("ValveBiped.Bip01_R_Hand")
+        if hand then e:ManipulateBoneAngles(hand, Angle(0, 0, -40 * amount)) end
     end
     local function Rifle(g, n, on)
         if on and not IsValid(n.rifle) and LC.BattleLineHolding then n.rifle = LC.BattleLineHolding(g, n.e) end
@@ -531,7 +536,18 @@ do
     -- together belong to nobody else.
     local function NewRound(g)
         for _, n in ipairs(g.npcs) do n.man, n.tint = math.random(2), math.random(#LC.SpyTints) end
-        local n = g.npcs[math.random(#g.npcs)]
+        -- Never at a table the spy has already sat at in this dream, nor (for the first round) the table
+        -- of the last dream's last spy: the owner, 13 November, "every time the correct spy was in thes
+        -- same exact location".
+        g.spyTbls = g.spyTbls or {}
+        local pool = {}
+        for _, o in ipairs(g.npcs) do
+            if not g.spyTbls[o.tbl] and not (next(g.spyTbls) == nil and o.tbl == LC.SpyLastTbl) then pool[#pool + 1] = o end
+        end
+        if #pool == 0 then pool = g.npcs end
+        local n = pool[math.random(#pool)]
+        g.spyTbls[n.tbl] = true
+        LC.SpyLastTbl = n.tbl
         local taken = {}
         for _, o in ipairs(g.npcs) do if o ~= n then taken[Combo(o)] = true end end
         if taken[Combo(n)] then
@@ -741,6 +757,41 @@ do
                 local yaw = math.deg(math.atan2(xy[2] - at.y, xy[1] - at.x))
                 local e = Actor(g, MEN[k], at, yaw, 1, ACT_IDLE or 1)
                 g.npcs[#g.npcs + 1] = { e = e, pos = at, seatPos = at, tablePos = Vector(xy[1], xy[2], top), tbl = t, seat = k, man = 1, tint = 1, yaw = yaw }
+            end
+        end
+        -- Each table's corner dressed as what it's called (the owner, 13 November: "can we have a few props
+        -- next to the table that says 'next to kitchen'? Like a fridge and stove or something? the dream is
+        -- so bare"): a fridge, stove and sink by the kitchen, a radiator and plant pots under the window,
+        -- a door and coat rack by the door, a frame and sideboard under her portrait. Each stands on the
+        -- floor beyond its table, out of the way of the diners; a model this install lacks is left out.
+        local function Stand(model, x, y, yaw)
+            if not K.ValidModel(model) then return nil end
+            local e = Block(g, model, Vector(x, y, top), Angle(0, yaw or 0, 0))
+            if IsValid(e) and e.OBBMins then
+                local mins = e:OBBMins()
+                if mins and mins.z then e:SetPos(Vector(x, y, top - mins.z)) end
+            end
+            return e
+        end
+        LC.SpyDressing = {
+            { { "models/props_interiors/radiator01a.mdl", -40, 0 }, { "models/props_junk/terracotta01.mdl", 30, 0 }, { "models/props_junk/terracotta01.mdl", 70, 0 } },
+            { { "models/props_c17/furniturefridge001a.mdl", -60, 0 }, { "models/props_c17/furniturestove001a.mdl", 0, 0 }, { "models/props_interiors/sinkkitchen01a.mdl", 62, 0 } },
+            { { "models/props_c17/door01_left.mdl", -30, 90 }, { "models/props_c17/coatrack001a.mdl", 45, 0 } },
+            { { "models/props_c17/frame002a.mdl", 0, 0 }, { "models/props_c17/furnituredresser001a.mdl", 0, 0 } },
+        }
+        g.dressing = {}
+        for t, xy in ipairs(spots) do
+            local out = xy[2] >= c.y and 1 or -1 -- (the side of the hall this table is on)
+            for _, d in ipairs(LC.SpyDressing[t] or {}) do
+                local e = Stand(d[1], xy[1] + d[2], xy[2] + out * 170, (out > 0 and 270 or 90) + (d[3] or 0))
+                if IsValid(e) then g.dressing[#g.dressing + 1] = e end
+            end
+        end
+        -- (the frame hangs, it doesn't stand on the floor)
+        for _, e in ipairs(g.dressing) do
+            if IsValid(e) and e.GetModel and e:GetModel() == "models/props_c17/frame002a.mdl" then
+                local v = e:GetPos()
+                e:SetPos(Vector(v.x, v.y, top + 110))
             end
         end
         -- her portrait's end of the hall (the salute), and the wall the firing squad faces

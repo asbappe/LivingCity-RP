@@ -34,3 +34,8 @@ The owner, 13 November: shield scanners "as a CP support that spawns high up bel
 - **Nothing short** (ammo over 30%, health and vest fine, cuffs full): "HQ: you're stocked", no scanner. A grenade alone never brings one.
 
 Tests: `RadioHQTests`, `RadioJobsTests`, and the units' records, backup, squad and armed-backup sections.
+
+## 14 November (the owner's 13 November playtest)
+
+- The resupply scanner is seen coming: from the top of the open sky it takes three seconds or more to come down (it used to drop in an eye-blink and seem to appear overhead). Its crate is twice the size (half a full crate; it was a quarter).
+- The Overwatch's resupply grenade is a poison gas bomb (the chlorine gas grenade is gone).

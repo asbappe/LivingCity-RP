@@ -380,7 +380,6 @@ item gas_bomb
 item gas_mask
 item gas_mask_broken
 item gren_flash
-item gren_gas
 item gren_smoke
 item gun_357
 item gun_parts
@@ -896,6 +895,7 @@ setting lc_jammer_radius = 1000
 setting lc_jammer_secs = 240
 setting lc_job_cooldown = 900
 setting lc_jobgames = 1
+setting lc_jog = 0
 setting lc_jog_behind = 450
 setting lc_jog_boost = 1.5
 setting lc_jog_boost_secs = 4
@@ -1070,7 +1070,7 @@ setting lc_rebel_auto = 1
 setting lc_rebel_bed_height = 8
 setting lc_rebel_cage = 1
 setting lc_rebel_cage_room = 8
-setting lc_rebel_damage = 0.5
+setting lc_rebel_damage = 0.6
 setting lc_rebel_errand_minutes = 12
 setting lc_rebel_errands = 1
 setting lc_rebel_guard = 1

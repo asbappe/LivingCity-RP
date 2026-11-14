@@ -164,12 +164,12 @@ local WEAPON_AMMO = { weapon_pistol = "Pistol", weapon_smg1 = "SMG1", weapon_sho
 local GUN_NAME = { Pistol = "pistol", SMG1 = "SMG", Buckshot = "shotgun", AR2 = "pulse rifle" }
 -- Half-Life 2's own pickups (anyone walking over them picks them up), and how much each holds.
 local AMMO_ENT = { Pistol = { "item_ammo_pistol", 20 }, SMG1 = { "item_ammo_smg1", 45 }, Buckshot = { "item_box_buckshot", 20 }, AR2 = { "item_ammo_ar2", 20 } }
--- Grenade by rank: Recruit smoke, Metrocop and Division Leader a flashbang, the Overwatch chlorine gas.
+-- Grenade by rank: Recruit smoke, Metrocop and Division Leader a flashbang, the Overwatch a poison gas bomb.
 function LC.ResupplyGrenade(ply)
     local r = ply:GetNW2Int("lcf_rank", 1)
     local f = LCF and LCF.ById and LCF.ById[ply:GetNW2String("lcf_faction", "")]
     local rank = f and f.ranks and f.ranks[r]
-    if ply:GetNW2String("lcf_faction", "") == "ota" or (rank and rank.overwatch) then return "gren_gas" end
+    if ply:GetNW2String("lcf_faction", "") == "ota" or (rank and rank.overwatch) then return "gas_bomb" end
     if r <= 1 then return "gren_smoke" end
     return "gren_flash"
 end
@@ -244,7 +244,7 @@ function LC.ResupplyContents(ply)
     local essential = #needs > 0 or cuffs > 0
     if essential and carry < 2 then
         give[#give + 1] = { item = nade, n = 1 }
-        words[#words + 1] = (nade == "gren_smoke" and "a smoke grenade") or (nade == "gren_flash" and "a flashbang") or "a chlorine gas grenade"
+        words[#words + 1] = (nade == "gren_smoke" and "a smoke grenade") or (nade == "gren_flash" and "a flashbang") or "a poison gas bomb"
     end
     return give, words, essential
 end

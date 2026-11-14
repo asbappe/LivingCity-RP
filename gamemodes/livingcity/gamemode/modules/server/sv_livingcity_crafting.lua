@@ -34,7 +34,7 @@ LC = LC or {}
 local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
 local cvQMBonus = CreateConVar("lc_quartermaster_arms_bonus", "1.5", FLAGS, "What the Resistance quartermaster pays for arms, times the black market price")
 local cvQMFood = CreateConVar("lc_qm_food_price", "2", FLAGS, "The most the Resistance quartermaster pays for food or drink (he gives it out free from the supply crate; 0: he won't buy it)")
-local cvGasDmg  = CreateConVar("lc_gas_damage", "6", FLAGS, "Chlorine gas damage per second to anyone without a mask")
+local cvGasDmg  = CreateConVar("lc_gas_damage", "6", FLAGS, "Poison gas damage per second to anyone without a mask")
 
 local function Pick(t) return t[math.random(#t)] end
 local function IsResistance(ply) return ply:GetNW2String("lcf_faction", "") == "resistance" end
@@ -155,8 +155,12 @@ function LC.ArmsUse(ply, id)
         ply:EmitSound("items/battery_pickup.wav", 55)
         return true
     elseif it.use == "ammo" then
+        -- full already: the box stays in the pocket (the owner, 13 November: "it lets me, and tells me,
+        -- that I can load them infinitely no matter if my ammo is already full")
+        local room = LC.AmmoRoom and LC.AmmoRoom(ply, it.ammo[1]) or nil
+        if room ~= nil and room <= 0 then return false, "You can't carry any more of those rounds. The box stays in your pocket." end
         LC.TakeItem(ply, id)
-        ply:GiveAmmo(it.ammo[2], it.ammo[1])
+        ply:GiveAmmo(room and math.min(room, it.ammo[2]) or it.ammo[2], it.ammo[1])
         ply:EmitSound("items/ammo_pickup.wav", 55)
         return true
     elseif it.use == "arm" then
@@ -406,7 +410,7 @@ end
 -- What the Grenades weapon shows: how many of each you're carrying.
 -- (the owner, 1 November: a poison gas bomb bought at the Commissary was only throwable from F3. Everything
 -- you throw is on the Grenades weapon now: the poison gas bomb and the firebomb too)
-local KINDS = { { "gren_smoke", "smoke" }, { "smokebomb", "smoke" }, { "gren_flash", "flash" }, { "gren_gas", "gas" },
+local KINDS = { { "gren_smoke", "smoke" }, { "smokebomb", "smoke" }, { "gren_flash", "flash" },
     { "gas_bomb", "poison" }, { "firebomb", "fire" } }
 function LC.SyncGrenades(ply)
     if not IsValid(ply) then return end
@@ -429,7 +433,7 @@ end
 -- The Grenades weapon asks for one of a kind
 function LC.ThrowKind(ply, kind)
     local order = kind == "smoke" and { "gren_smoke", "smokebomb" } or (kind == "flash" and { "gren_flash" })
-        or (kind == "poison" and { "gas_bomb" }) or (kind == "fire" and { "firebomb" }) or { "gren_gas" }
+        or (kind == "fire" and { "firebomb" }) or { "gas_bomb" }
     for _, id in ipairs(order) do
         if LC.HasItem(ply, id) then return LC.ThrowGrenade(ply, id) end
     end
@@ -446,8 +450,8 @@ end)
 local ISSUE = {
     { faction = "cp", rank = 2, item = "gren_smoke", n = 1 },  -- Metrocop
     { faction = "cp", rank = 3, item = "gren_flash", n = 1 },  -- Division Leader
-    { faction = "cp", rank = 3, item = "gren_gas", n = 1 },
-    { faction = "cp", rank = 4, item = "gren_gas", n = 2 },    -- the Overwatch
+    { faction = "cp", rank = 3, item = "gas_bomb", n = 1 },
+    { faction = "cp", rank = 4, item = "gas_bomb", n = 2 },    -- the Overwatch
 }
 -- A unit's issued grenades are Combine issue: kept, thrown, or handed to another unit; never
 -- sold, dropped, stashed or passed to anyone else (they came back free with every respawn).
@@ -502,6 +506,12 @@ end
 function LC.IssueGrenades(ply)
     if not IsValid(ply) or not LC.Inventory then return end
     local f, rank = ply:GetNW2String("lcf_faction", ""), ply:GetNW2Int("lcf_rank", 1)
+    -- the chlorine gas grenade is gone (13 November): any still carried are poison gas bombs now
+    local old = LC.Inventory(ply).gren_gas or 0
+    if old > 0 then
+        LC.Inventory(ply).gren_gas = nil
+        LC.GiveItem(ply, "gas_bomb", old)
+    end
     for _, is in ipairs(ISSUE) do
         if is.faction == f and rank >= is.rank then
             local have = LC.Inventory(ply)[is.item] or 0

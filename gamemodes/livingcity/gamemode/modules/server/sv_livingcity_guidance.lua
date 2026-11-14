@@ -163,16 +163,24 @@ function LC.TrailShortcut(from, pts)
 end
 
 -- The way from `from` to `to`, as a list of points ending at `to` (never empty).
-function LC.TrailRoute(from, to, role)
-    local pts
+-- The city's people keep off the other side's ground, and the planners do it for them: a unit's way
+-- never crosses rebel territory, nobody else's the Combine's. A player's job often IS there, and
+-- with no way found the trail was one straight line through every wall (the owner, 13 November:
+-- "just point through all walls directly at the objective, useless"). So when the way for their
+-- role can't be found, it is looked for again with no ground kept out of.
+local function Planned(from, to, role, free)
     if LC.EditorRoute then
-        local r = LC.EditorRoute(from, to, role)
-        if type(r) == "table" and #r > 0 then pts = r end
+        local r = LC.EditorRoute(from, to, role, free)
+        if type(r) == "table" and #r > 0 then return r end
     end
-    if not pts and LC.NavPathPoints then
-        local r = LC.NavPathPoints(from, to, role)
-        if type(r) == "table" and #r > 0 then pts = r end
+    if LC.NavPathPoints then
+        local r = LC.NavPathPoints(from, to, free and "trail" or role)
+        if type(r) == "table" and #r > 0 then return r end
     end
+    return nil
+end
+function LC.TrailRoute(from, to, role)
+    local pts = Planned(from, to, role, false) or Planned(from, to, role, true)
     if not pts then
         local ok, r = pcall(NavMeshPath, from, to)
         if ok and type(r) == "table" and #r > 0 then pts = r end

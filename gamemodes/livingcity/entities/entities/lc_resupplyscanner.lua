@@ -64,7 +64,13 @@ if SERVER then
         local ply = self.lcFor
         if self.lcPhase == "down" then
             if IsValid(ply) then self:Face(ply:GetPos() - pos) end
-            local p, there = Toward(pos, self.lcDrop or pos, DOWN * dt)
+            -- seen coming: from the top of the sky in about three seconds or more, never a drop in
+            -- an eye-blink (the owner, 13 November: it "spawned about 3 feet above me")
+            if not self.lcDownSpeed then
+                local fall = self.lcDrop and (pos.z - self.lcDrop.z) or 0
+                self.lcDownSpeed = math.Clamp(fall / 3, 60, DOWN)
+            end
+            local p, there = Toward(pos, self.lcDrop or pos, self.lcDownSpeed * dt)
             self:SetPos(p)
             if there then
                 self.lcPhase = "hover"

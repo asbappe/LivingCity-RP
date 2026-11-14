@@ -191,8 +191,16 @@ local function Yards()
 end
 LC.ExerciseYards = Yards
 
+-- The morning jog is archived (the owner, 13 November: "it's time to archive the morning jog; please
+-- disable it ... Remove all jog paths/points please and remove it from the schedule in the gamemode.
+-- it's just kind of odd and awkward when played on the server"). Its code stays, behind lc_jog (0):
+-- with it off the jog is never held, by the schedule or by hand, and a layout's jogging routes are
+-- taken out as it loads, each route's start kept as an exercise yard (sv_livingcity_data.lua).
+local cvJog = CreateConVar("lc_jog", "0", bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED), "The morning jog (archived 13 November): 0 never held and jogging routes are removed from the layout as it loads, 1 as it was")
+function LC.JogOn() return cvJog:GetBool() end
+
 function LC.ExerciseReady(kind)
-    if kind == "jog" then return #Routes("jogroute") > 0 end
+    if kind == "jog" then return cvJog:GetBool() and #Routes("jogroute") > 0 end
     if kind == "parade" then return #Routes("parade") > 0 end
     if kind == "drill" then return #Yards() > 0 end
     return false
@@ -1584,7 +1592,8 @@ concommand.Add("lc_exercise", function(ply, _, args)
     if not LC.ExerciseKinds[a] then Reply("lc_exercise <jog|drill|parade|next|stop>") return end
     if not LC.Running then Reply("Start the city first.") return end
     if not LC.ExerciseReady(a) then
-        Reply(a == "drill" and "Place a jogging route first (the drill is held at its start), or an exercise yard (editor: Point: exercise yard)."
+        Reply(a == "drill" and "Place an exercise yard first (editor: Point: exercise yard)."
+            or (a == "jog" and not LC.JogOn()) and "The morning jog is archived (13 November). lc_jog 1 brings it back."
             or ("Place a " .. (a == "jog" and "jogging route" or "parade route") .. " first (two or more stops, in order)."))
         return
     end

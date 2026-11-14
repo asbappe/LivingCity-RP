@@ -57,7 +57,7 @@ function LC.IssueSupplies(ply)
     -- grenades by rank
     if LC.Inventory and LC.IssueGrenades then
         local before = {}
-        for _, id in ipairs({ "gren_smoke", "gren_flash", "gren_gas" }) do before[id] = LC.Inventory(ply)[id] or 0 end
+        for _, id in ipairs({ "gren_smoke", "gren_flash", "gas_bomb" }) do before[id] = LC.Inventory(ply)[id] or 0 end
         LC.IssueGrenades(ply)
         for id, n in pairs(before) do
             local more = (LC.Inventory(ply)[id] or 0) - n

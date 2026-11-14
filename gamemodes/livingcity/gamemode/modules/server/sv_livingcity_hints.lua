@@ -455,7 +455,7 @@ local ITEM_HINTS = {
     ammo_pistol = "item_arms", ammo_smg = "item_arms", ammo_buckshot = "item_arms",
     gun_357 = "item_arms", ammo_357 = "item_arms", jammer = "item_jammer", data_chip = "item_datachip", data_shard = "item_datashard", master_chip = "item_masterchip",
     business_license = "item_license", vendor_stall = "item_stall", paper = "item_paper", satchel = "item_satchel", storage_crate = "item_storage", zipties = "item_zipties", request_device = "item_request",
-    smokebomb = "item_grenade", gren_smoke = "item_grenade", gren_flash = "item_grenade", gren_gas = "item_grenade",
+    smokebomb = "item_grenade", gren_smoke = "item_grenade", gren_flash = "item_grenade", gas_bomb = "item_grenade",
 }
 LC.ITEM_HINTS = ITEM_HINTS
 

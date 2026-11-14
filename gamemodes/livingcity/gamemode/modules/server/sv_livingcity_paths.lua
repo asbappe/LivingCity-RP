@@ -403,12 +403,14 @@ function LC.BuildRoute(from, to, role)
     return nil
 end
 
-function EditorRoute(from, to, role)
+-- free: no ground is kept out of (the quest trail's second try: a unit's job in rebel territory,
+-- a rebel's on the Combine's ground).
+function EditorRoute(from, to, role, free)
     if #usableList < 2 then return nil end
     if from:DistToSqr(to) < 450 * 450 and LC.Walkable(from, to) then return nil end
 
-    local avoidRebel = IsSecurityRole(role)
-    local avoidCombine = not avoidRebel
+    local avoidRebel = not free and IsSecurityRole(role)
+    local avoidCombine = not free and not avoidRebel
     local s, e = EntryNode(from, avoidRebel, avoidCombine), EntryNode(to, avoidRebel, avoidCombine)
     if not s or not e or s == e then return nil end
 

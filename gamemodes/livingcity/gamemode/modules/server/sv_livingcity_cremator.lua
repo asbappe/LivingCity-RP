@@ -367,6 +367,52 @@ local function Pace(r)
     Call(r.npc, "SetPlaybackRate", rate)
 end
 
+-- The owner, 13 November: still slow ("INCREASE THEIR MOVEMENT SPEED! I requested both a few
+-- days ago and it seems nothing has changed"): the engine goes on moving the walker at its own
+-- pace whatever its animation's rate. So the ground it should cover is measured: every frame
+-- it is walking, whatever it fell short of lc_cremator_speed times its own pace is made up
+-- along the way it is going (never through a wall, never off a ledge or up a step too high).
+local BASE_PACE = 45 -- (units a second: the walker's own slow walk)
+function LC.CrematorBoost(r, dt)
+    local npc = r.npc
+    if not IsValid(npc) or r.dead or dt <= 0 or dt > 0.5 then return 0 end
+    local pos = npc:GetPos()
+    local last = r.boostPos
+    r.boostPos = pos
+    if not last then return 0 end
+    local step = pos - last
+    step.z = 0
+    local went = step:Length()
+    if went < 0.05 or went > 200 then return 0 end -- (standing, or set down somewhere else)
+    local want = BASE_PACE * LC.CrematorPace() * dt
+    local short = math.min(want - went, want)
+    if short <= 0.05 then return 0 end
+    local dir = step / went
+    local up = Vector(0, 0, 18)
+    local mins, maxs = Vector(-12, -12, 0), Vector(12, 12, 60)
+    local fwd = util.TraceHull({ start = pos + up, endpos = pos + up + dir * short, mins = mins, maxs = maxs,
+        filter = { npc, r.vis }, mask = MASK_NPCSOLID or MASK_SOLID })
+    if not fwd or fwd.Hit or fwd.StartSolid then return 0 end
+    local down = util.TraceHull({ start = fwd.HitPos or (pos + up + dir * short), endpos = (fwd.HitPos or (pos + up + dir * short)) - Vector(0, 0, 40),
+        mins = mins, maxs = maxs, filter = { npc, r.vis }, mask = MASK_NPCSOLID or MASK_SOLID })
+    if not down or not down.Hit or down.StartSolid then return 0 end
+    local to = down.HitPos
+    npc:SetPos(to)
+    r.boostPos = to
+    return short
+end
+
+hook.Add("Think", "LivingCityCrematorPace", function()
+    if not LC.Running or not next(residents) then return end
+    local dt = FrameTime()
+    for npc, r in pairs(residents) do
+        if IsValid(npc) then
+            local ok, err = pcall(LC.CrematorBoost, r, dt)
+            if not ok and LC.Error then LC.Error("cremator pace", err) end
+        end
+    end
+end)
+
 local function Walk(npc, pos)
     npc:SetLastPosition(pos)
     npc:SetSchedule(SCHED_FORCED_GO)
@@ -553,6 +599,24 @@ function LC.CrematorPostSpot(z)
     return LCZ.RandomInside and LCZ.RandomInside(z, 0.8) or z.pos
 end
 
+-- The path node nearest infestation z that ok(pos) allows (never on Resistance ground),
+-- looking no further than `reach` (3000) from it.
+function LC.CrematorNearestNode(z, ok, reach)
+    if not (z and z.pos) then return nil end
+    reach = reach or 3000
+    local best, bd
+    for _, n in pairs(LC.Nodes or {}) do
+        local p = n.pos
+        if p then
+            local d = p:DistToSqr(z.pos)
+            if d < reach * reach and (not bd or d < bd) and not (LC.InRebelZone and LC.InRebelZone(p)) and (not ok or ok(p)) then
+                best, bd = p, d
+            end
+        end
+    end
+    return best
+end
+
 -- A street spot nobody can see (by an infestation, when there is one).
 local function HiddenSpot(z)
     z = z or LC.CrematorPickZone(nil, nil)
@@ -561,6 +625,14 @@ local function HiddenSpot(z)
             local p = LC.CrematorPostSpot(z)
             if p and not (LC.IsSeen and LC.IsSeen(p + UP)) and (not LC.FarFromPlayers or LC.FarFromPlayers(p, 600)) then return p end
         end
+    end
+    -- still none: the path nodes nearest the infestation, nearest first (the owner, 13 November:
+    -- "spawn right at the entrance/path nodes nearest the infestation zone"), before anywhere else
+    if z and z.pos then
+        local p = LC.CrematorNearestNode(z, function(q)
+            return not (LC.IsSeen and LC.IsSeen(q + UP)) and (not LC.FarFromPlayers or LC.FarFromPlayers(q, 300))
+        end)
+        if p then return p end
     end
     if not LC.RandomWanderPos then return nil end
     for _ = 1, 12 do
@@ -667,6 +739,15 @@ local function Fight(r, foe, pos, now)
     end
 end
 
+-- Is pos close enough to an infestation for a Cremator to walk with a crew there?
+function LC.CrematorEscortHere(pos)
+    if not pos then return false end
+    for _, z in ipairs(Infests()) do
+        if LCZ.Near(z, pos, TURF * 1.5) then return true end
+    end
+    return false
+end
+
 -- A cleanup worker under guard (sv_livingcity_cleanup.lua: a player on a shift by an
 -- infestation, or one of the city's crews at it) that no other Cremator walks with.
 function LC.CrematorEscortWanted(r, pos)
@@ -678,7 +759,9 @@ function LC.CrematorEscortWanted(r, pos)
                 if o ~= r and o.escort == w then taken = true break end
             end
             local d = w:GetPos():DistToSqr(pos)
-            if not taken and d < ESCORT_TAKE * ESCORT_TAKE and (not bd or d < bd) then best, bd = w, d end
+            -- only a crew at an infestation (the owner, 13 November: one walked "escorting" as far
+            -- from the infestation as the map goes, with nobody there)
+            if not taken and LC.CrematorEscortHere(w:GetPos()) and d < ESCORT_TAKE * ESCORT_TAKE and (not bd or d < bd) then best, bd = w, d end
         end
     end
     return best
@@ -758,7 +841,8 @@ local function Think(r, now)
     -- a cleanup crew going in: the nearest free Cremator walks with them, then back to its post
     if r.phase == "roam" and now >= (r.nextEscortLook or 0) then
         r.nextEscortLook = now + 2
-        if r.escort and not (Alive(r.escort) and LC.CleanupGuards and LC.CleanupGuards[r.escort]) then
+        if r.escort and not (Alive(r.escort) and LC.CleanupGuards and LC.CleanupGuards[r.escort]
+            and LC.CrematorEscortHere(r.escort:GetPos())) then
             r.escort, r.dest, r.pauseUntil = nil, nil, now + 2
         end
         if not r.escort then
@@ -772,6 +856,7 @@ local function Think(r, now)
             end
         end
     end
+    if r.escort and not Alive(r.escort) then r.escort, r.dest = nil, nil end -- (gone between two looks: a NULL entity, 13 November)
     if r.phase == "roam" and r.escort then
         Escort(r, pos, now, moved)
         return

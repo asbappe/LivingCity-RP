@@ -13,7 +13,7 @@ ENT.Author = "Miscount"
 ENT.Spawnable = false
 
 local MODEL = "models/items/item_item_crate.mdl"
-local SCALE = 0.25
+local SCALE = 0.5 -- (twice the size since 13 November: the owner, "too small, can we make it 2x as big"; was 0.25)
 
 function ENT:Initialize()
     self:SetModel(MODEL)

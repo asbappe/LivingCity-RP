@@ -133,3 +133,12 @@ Blinded NPCs now have their weapons taken out of their hands for as long as they
 - **Sprays are off** in the gamemode (G is the kick key).
 - **Action music (12 November):** no city event (inspections, raids, lockdowns) starts it by itself; it plays only for a fight near you, a violent job within 1500 units of where it happens, a skirmish within 3000, or being wanted (urgent), and never while asleep, in bed or dreaming (`LC.AtRest`). Red alert and a lockdown play tense music.
 - **The metrocop at server start:** a street-rank unit still in Half-Life 2's `police.mdl` 4 seconds after spawning is re-dressed in the server's Half-Life: Alyx one (`LC.MetrocopRecheck`), and the lookup is retried every 30 seconds while none was found.
+
+## 14 November (the owner's 13 November playtest)
+
+- **Action music, one rule, for everyone** ("action music only plays for a player when they've fired more than 2 bullets and/or when they've been shot"): more than 2 shots inside 12 seconds, or hurt by a person or an NPC. A violent job nearby, a skirmish nearby or being wanted is no longer action by itself (being wanted makes the music tense). Civil Protection hears the combat pieces, everyone else the urgent ones (`sv_livingcity_pacing.lua`, `LC.NoteShot`, `LC.InAction`).
+- **Eerie music only by an infestation.** Ravenholm's pieces and Half-Life's eerie ones left the "tense" list and play only within 700 units of an infestation (`lc_by_infest`, `LC.ByInfest`); walking away fades one out.
+- **Backup from further off comes in from out of sight, 15 seconds after the call** (`LC.BackupDelay`), and runs in; a unit already within 1400 units walks over at once.
+- **A unit of your squad gets you up.** Down and bleeding out, a unit that answered your call (or that you lead) with no enemy in its sights goes to you, kneels 4 seconds and you are on your feet with 25 health (`LC.SquadReviveStep`).
+- **Units don't lower their guns on rebel ground.** Civil Protection and Overwatch players are no longer told to carry lowered there (their guns would not fire); the rule for recruits and metrocops on the Combine's own ground is unchanged.
+- **Sweeps take the rebel camps in turn** (`LC.NextSweepZone`): the camp swept longest ago is next, so no camp has a second sweep before every camp has had one.

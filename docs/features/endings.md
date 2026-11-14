@@ -242,3 +242,9 @@ The staging above (the opening card, the figures' acting, the finish) is for the
 - **Freeze, Citizen:** the dream zone's lights go out (and back on after), the screen darkens with black fog, 2 to 4 slow zombies trail the dreamers (a touch costs a life), and the officer's red eye beams hit anyone caught moving.
 - **Bubbles:** 48 bigger, slower bubbles, no tiny effect bubbles, and dreamers weigh 40% of normal.
 - A dreamer is never taken in by an NPC unit mid-dream.
+
+## 14 November (the owner's 13 November playtest)
+
+- **Roses for Her:** a rose is drawn (a stem, two leaves, a red bud) where there was only a glow; a rose laid at her feet lies there for all to see; picking one up and laying one each say so in a notice ("Rose 1 of 3 laid at her feet"); standing past the gold line is an offence only after 1.5 seconds, time to get down.
+- **Careless Talk:** the spy is never at a table already used in this dream, nor (in the first round) at the table of the last dream's last spy; the salute goes out to the side and up, not through the chest; each table's corner is dressed as its name says (a fridge, stove and sink by the kitchen, a radiator and plant pots under the window, a door and coat rack by the door, a frame and sideboard under her portrait).
+- **Sounds that loop by themselves** (the sound guard, `sh_livingcity_soundguard.lua`): some Half-Life 2 .wav files carry a loop mark and play for ever from one start (the heartbeat and the breath among them). `LC.SoundLoops` reads the file for the mark; such a sound started on a player stops by itself (after one play for a beat or a breath, else after 20 seconds unless `LC.SoundLoopKeep` says longer), a sound on the player's own screen is played on the player so it can be stopped, and every one still going stops when the player dies and when they spawn.

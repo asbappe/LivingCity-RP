@@ -1022,7 +1022,7 @@ end)
 -- The firebomb
 ------------------------------------------------------------------------
 
-local FIRE_R = 400 -- (the owner, 1 November: five times wider; it was too precise for a bottle that bounces first)
+local FIRE_R = 280 -- (the owner, 13 November: "wayyyy too wide of a blast radius, please reduce by 30%"; 400 since 1 November, five times the first)
 LC.Fires = LC.Fires or {}
 
 function LC.Firebomb(pos, owner)
@@ -1037,7 +1037,7 @@ function LC.Firebomb(pos, owner)
         if not IsValid(f) then return end
         f:SetPos(pos)
         f:SetKeyValue("health", tostring(secs))
-        f:SetKeyValue("firesize", "220")
+        f:SetKeyValue("firesize", "155")
         f:SetKeyValue("fireattack", "1")
         f:SetKeyValue("damagescale", "0")
         f:SetKeyValue("spawnflags", tostring(4 + 128))

@@ -4390,6 +4390,7 @@ end)
 -- the old one: anything still exactly at an old default moves to the new one (once;
 -- a value someone chose themselves is left alone).
 local RETUNED = {
+    { "lc_rebel_damage", { "0.5", "0.50", "0.500000" }, "0.6" }, -- (13 November, the owner: "no threat from rebels at all. Can we boost their damage a tad bit, like 20%?")
     { "lc_cp_shift_minutes", { "15" }, "30" }, -- (12 November: a unit's shift is back to 30 minutes, the owner asked; sv_livingcity_cpduty.lua)
     { "lc_ending_cooldown", { "60", "45" }, "180" }, -- (1 November: three hours between endings, the owner asked)
     { "lc_afk_minutes", { "5" }, "20" }, -- (2 November: away at 20 minutes, the owner asked; sv_livingcity_cityadmin.lua)

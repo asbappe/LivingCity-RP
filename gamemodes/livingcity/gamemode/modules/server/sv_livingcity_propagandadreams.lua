@@ -600,7 +600,12 @@ do
             local s = g.pl[p]
             s.given = s.given or 0
             local pos = p:GetPos()
-            if pos.x > g.lineX and not LC.AdmireKneeling(p) and now >= (s.safe or 0) then
+            -- (a moment to get down: the owner, 13 November, crouched at the gold line and was carried back
+            -- with "no indication". Standing past the line is an offence only after 1.5 seconds of it.)
+            local standing = pos.x > g.lineX and not LC.AdmireKneeling(p)
+            if not standing then s.stoodAt = nil elseif not s.stoodAt then s.stoodAt = now end
+            if standing and now - s.stoodAt >= 1.5 and now >= (s.safe or 0) then
+                s.stoodAt = nil
                 if Offend(g, p, "Nobody stands before her", "Her honour guard lifts you by the collar and carries you to the back of the hall.") then
                     s.carrying = nil
                     if IsValid(g.guards[1]) then Snd(g.guards[1], "npc/combine_soldier/vo/contained.wav", 80, 90) end
@@ -610,16 +615,21 @@ do
                     if not r.gone and r.pos:Distance(pos + Vector(0, 0, 20)) < 48 then
                         s.carrying, r.gone, g.dirty = true, now + 5, true
                         Snd(p, "items/flashlight1.wav", 60, 130)
+                        Notice(p, "info", "You have a rose", "Carry it to her feet, at the far end. Past the gold line, stay crouched.", 5)
                         break
                     end
                 end
             elseif pos.x >= g.feetX then
                 s.carrying, s.given, g.dirty = nil, s.given + 1, true
                 Snd(p, "garrysmod/save_load1.wav", 60, 120)
+                -- it lies there for all to see (no more wondering whether it counted)
+                g.laid = g.laid or {}
+                if #g.laid < 40 then g.laid[#g.laid + 1] = Vector(g.feetX + math.Rand(30, 90), g.midY + math.Rand(-70, 70), g.top + 3) end
                 if s.given >= def.need then
                     Done(g, p, "won", "She accepts your roses", "She lets the roses rest at her feet, and for a heartbeat she almost smiles at you. You are adored.")
                 else
-                    Notice(p, "info", "A rose at her feet", string.format("She doesn't look down, but you're sure she noticed. %d to go.", def.need - s.given), 4)
+                    Notice(p, "info", string.format("Rose %d of %d laid at her feet", s.given, def.need),
+                        string.format("It counted. She doesn't look down, but you're sure she noticed. You're sent back for the next: %d to go.", def.need - s.given), 6)
                     ToStart(g, p, 1)
                 end
             end
@@ -629,6 +639,7 @@ do
     function def.state(g, p)
         local roses = {}
         for _, r in ipairs(g.rose) do if not r.gone then roses[#roses + 1] = { r.pos.x, r.pos.y, r.pos.z } end end
+        for _, v in ipairs(g.laid or {}) do roses[#roses + 1] = { v.x, v.y, v.z, 1 } end -- (the 4th: lying at her feet)
         if p == g.star then local t = StarState(g, "They bring you roses, on their knees.") t.roses = roses return t end
         local s = p and g.pl[p] or {}
         local big, tone

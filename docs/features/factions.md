@@ -37,3 +37,9 @@
 **Changes from the 7 November playtest (part 2).** C > **My career** (now F4 > Career) shows the whole ladder and the way to the Overwatch (civil-protection-tools). **A reassessment:** a Division Leader who turned the conditioning down can, an hour later, ask Overwatch for a reassessment from that page: the Overwatch Candidate story comes back to their board from its first part, and passing it offers the conditioning again (it used to be "a Division Leader for good").
 
 **Changes from the 11 November playtest.** **The conditioning is only offered with the experience for it:** the Overwatch Candidate story comes to a Division Leader's board only once they have the XP of the first Overwatch rank (Combine Prison Guard, 1200); F4 > Career says how much is missing. No experience is given by it. **At the spot a soldier and a stalker wait,** and the technician's choice only comes when you have walked right up to them (within 90 units; it used to come up from 300 away, through walls and floors). **Accepting is one step:** the screen fades to black for six and a half seconds with machine sounds, you are held still, and you come out of it Overwatch with the new rank, uniform and weapons, and a notice saying so.
+
+## 14 November (the owner's 13 November playtest)
+
+- **Who may take a Resistance role:** Smuggler from Member, Hacker from Fighter, Father Grigori from Lieutenant (it was Member for all three). The Free Vortigaunt is still from Member until vortigaunts are chosen at the start (`TODO.md`).
+- **Guns on rebel ground:** Civil Protection and Overwatch players no longer carry lowered there.
+- **The infested don't hurt each other:** one infested player's blow on another does no damage and shoves them a step away.

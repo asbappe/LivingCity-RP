@@ -406,7 +406,13 @@ local priest = _makeplayer("Priest")
 hook.Run("PlayerInitialSpawn", priest)
 ok(not LC.CanJoinFaction(priest, "resistance", "chaplain"), "Father Grigori needs Resistance standing first")
 priest:SetPData("lcf_xp_resistance", 150)
-ok(LC.CanJoinFaction(priest, "resistance", "chaplain"), "a Member can take up the role")
+ok(not LC.CanJoinFaction(priest, "resistance", "chaplain") and not LC.CanJoinFaction(priest, "resistance", "hacker") and LC.CanJoinFaction(priest, "resistance", "smuggler"),
+    "a Member can be the Smuggler, not the Hacker or Father Grigori (13 November)")
+priest:SetPData("lcf_xp_resistance", 400)
+if LC.Bump then LC.Bump(priest, "res_jobs", 99) end -- (trusted as a Fighter: the jobs done for it)
+ok(LC.CanJoinFaction(priest, "resistance", "hacker") and not LC.CanJoinFaction(priest, "resistance", "chaplain"), "a Fighter can be the Hacker")
+priest:SetPData("lcf_xp_resistance", 900)
+ok(LC.CanJoinFaction(priest, "resistance", "chaplain"), "a Lieutenant can take up Father Grigori's role")
 LC.SetFaction(priest, "resistance", "chaplain", true)
 local other = _makeplayer("Other")
 other:SetPData("lcf_xp_resistance", 500)
@@ -3580,7 +3586,7 @@ for n, st in pairs(LC.NPCs) do if IsValid(n) and st.role == "rebel" and st.foe =
 ok(shooters >= 2, "then they open fire", shooters)
 local hit = _dmg(reb, 20)
 hook.Run("EntityTakeDamage", intruder, hit)
-ok(hit:GetDamage() == 10, "rebel fire hurts, but less (dying is permanent)", hit:GetDamage())
+ok(hit:GetDamage() == 12, "rebel fire hurts, but less (dying is permanent; 0.6 of it since 13 November, was 0.5)", hit:GetDamage())
 intruder:SetPos(FAR)
 _run(2)
 local still = 0
@@ -7331,7 +7337,7 @@ end
 PlaytestBatchTwoTests()
 section("Special roles come back with you")
 function SpecialReturnTests()
-local hk = newPlayer("ReturningHacker", "resistance", "hacker", 200)
+local hk = newPlayer("ReturningHacker", "resistance", "hacker", 450) -- (a Fighter: the Hacker's rank since 13 November)
 ok(hk:GetNW2String("lcf_special", "") == "hacker", "(a Hacker)")
 -- they leave, and come back
 hook.Run("PlayerDisconnected", hk)
@@ -9047,8 +9053,15 @@ seller:SetPos(FAR)
 section("Grenades")
 local unit = newPlayer("GrenadeUnit", "cp", nil, 1500)
 LC.IssueGrenades(unit)
-ok(LC.HasItem(unit, "gren_smoke") and LC.HasItem(unit, "gren_flash") and LC.HasItem(unit, "gren_gas"), "an Officer is issued smoke, a flashbang and gas")
-ok(unit:HasWeapon("weapon_lc_grenades") and unit:GetNW2Int("lcg_gas", 0) == 1, "and gets the Grenades weapon to throw them")
+ok(LC.HasItem(unit, "gren_smoke") and LC.HasItem(unit, "gren_flash") and LC.HasItem(unit, "gas_bomb"), "an Officer is issued smoke, a flashbang and a poison gas bomb")
+ok(unit:HasWeapon("weapon_lc_grenades") and unit:GetNW2Int("lcg_poison", 0) == 1, "and gets the Grenades weapon to throw them")
+do -- (13 November: the chlorine gas grenade is gone; one still in a pocket becomes a poison gas bomb)
+    ok(LCS.Items.gren_gas == nil, "there is no chlorine gas grenade any more")
+    local had = LC.Inventory(unit).gas_bomb or 0
+    LC.Inventory(unit).gren_gas = 2
+    LC.IssueGrenades(unit)
+    ok(LC.Inventory(unit).gren_gas == nil and (LC.Inventory(unit).gas_bomb or 0) == had + 2, "old chlorine grenades in a pocket become poison gas bombs", LC.Inventory(unit).gas_bomb)
+end
 local rookie = newPlayer("GrenadeRookie", "cp")
 LC.IssueGrenades(rookie)
 ok(not LC.HasItem(rookie, "gren_gas") and not LC.HasItem(rookie, "gren_smoke"), "a recruit isn't")
@@ -9517,7 +9530,16 @@ for i = 1, 4 do
 end
 local okB, sent = LC.CallBackup(caller)
 ok(okB and sent == 3, "!backup sends the three nearest units", sent)
-_run(8)
+do -- (13 November: the ones from further off than 1400 units come in from out of sight 15 seconds after the call)
+    local waiting = 0
+    for _, h in ipairs(helpers) do if h.st.backupFor == caller and h.st.backupComingAt then waiting = waiting + 1 end end
+    ok(waiting == 2 and LC.BackupDelay == 15, "the two from further off wait 15 seconds before coming in", waiting)
+    _run(8)
+    local still = 0
+    for _, h in ipairs(helpers) do if h.st.backupComingAt then still = still + 1 end end
+    ok(still == 2, "(8 seconds in: not yet)", still)
+end
+_run(22)
 local arrived = 0
 for _, h in ipairs(helpers) do if h.st.backupFor == caller and h.n:GetPos():Distance(B) < 400 then arrived = arrived + 1 end end
 ok(arrived >= 2, "and they come running", arrived)
@@ -14050,7 +14072,29 @@ LC.LabMake(rebel, "ammo_smg", "pay")
 rebel:SetPos(sci:GetPos() + Vector(900, 0, 0))
 rebel.chat = {}
 Later(1)
-ok(LC.Credits(rebel) == c0 and has(rebel.chat, "hands it all back"), "walk off and he hands it all back")
+-- (13 November: walking off no longer undoes it: he works on, keeps it for them alone, hands it over when asked)
+ok(LC.Credits(rebel) < c0 and has(rebel.chat, "keep at it") and sci.lcLabJob and sci.lcLabJob.away == true, "walk off and he keeps at it (nothing handed back)")
+do
+    local thief = newPlayer("LabThief", "resistance", nil, 900)
+    Later(12)
+    ok(sci.lcLabJob == nil and LC.LabHeldFor(sci, rebel) ~= nil and not LC.HasItem(rebel, "ammo_smg"), "finished while they were away: he keeps it for them")
+    thief:SetPos(sci:GetPos() + Vector(40, 0, 0))
+    thief.lcLabUse = 0
+    LC.UseScientist(thief, sci)
+    ok(not LC.HasItem(thief, "ammo_smg") and LC.LabHeldFor(sci, rebel) ~= nil, "nobody else is handed it")
+    rebel:SetPos(sci:GetPos() + Vector(40, 0, 0))
+    rebel.lcLabUse, rebel.chat = 0, {}
+    LC.UseScientist(rebel, sci)
+    ok(LC.HasItem(rebel, "ammo_smg") and has(rebel.chat, "kept it safe") and LC.LabHeldFor(sci, rebel) == nil, "back and talking to him: it's handed over")
+    -- taken by a unit: what he was keeping is lost with him
+    LC.LabHold(sci, LC.LabKey(rebel), "ammo_smg", 1)
+    local heldWas = sci.lcLabHeld
+    ok(heldWas ~= nil, "(something kept)")
+    local saveShut = LC.LabShut
+    sci.lcLabHeld = nil -- (put back as it was: the rest of this section goes on with an open lab)
+    ok(LC.LabClean(sci) == true, "and the blood can be cleaned off him and his bench")
+    thief:SetPos(Vector(-150000, 150000, 0))
+end
 ok(LC.Craft(rebel, "gun_pistol") == false and LCS.RecipesById.gun_pistol == nil and LCS.RecipesById.bandage ~= nil, "guns aren't made by hand any more; bandages still are")
 -- a unit finds the lab
 unit:SetPos(sci:GetPos() + Vector(0, 40, 0))
@@ -14123,7 +14167,13 @@ r3:SetPos(sci:GetPos() + Vector(900, 0, 0))
 local before = ItemsNear(r3:GetPos(), "gun_parts")
 Later(1)
 LC.CanCarry = savedCarry
-ok(ItemsNear(r3:GetPos(), "gun_parts") == before + 2, "walking off with full pockets: the materials are dropped, not lost", ItemsNear(r3:GetPos(), "gun_parts") - before)
+ok(ItemsNear(r3:GetPos(), "gun_parts") == before and sci.lcLabJob and sci.lcLabJob.away == true, "walking off with full pockets: nothing is dropped, he keeps working", ItemsNear(r3:GetPos(), "gun_parts") - before)
+Later(20)
+ok(sci.lcLabJob == nil and LC.LabHeldFor(sci, r3) ~= nil, "and keeps the pistol for them when it's done")
+r3:SetPos(sci:GetPos() + Vector(40, 0, 0))
+r3.lcLabUse = 0
+LC.UseScientist(r3, sci)
+ok(LC.HasItem(r3, "gun_pistol"), "collected on coming back")
 -- someone else's job isn't cleared by an old one finishing
 r3:SetPos(sci:GetPos() + Vector(40, 0, 0))
 LC.AddCredits(r3, 500)
@@ -15930,6 +15980,7 @@ CreatorLookTests()
 ----------------------------------------------------------------------
 section("Morning exercise: the jog")
 function ExerciseJogTests()
+RunConsoleCommand("lc_jog", "1") -- (the jog is archived since 13 November: these are its tests, with it switched back on)
 local savedWalls = _walls
 _walls = {}
 LC.EndEvent(true)
@@ -16016,6 +16067,34 @@ for _, p in ipairs({ runner, skiver, unitP }) do p:SetPos(Vector(-120000, -12000
 _walls = savedWalls
 end
 ExerciseJogTests()
+do -- (the owner, 13 November: the morning jog archived, its routes out of the layout, each start kept as a yard)
+    section("The morning jog is archived: never held, its routes taken out of the layout")
+    RunConsoleCommand("lc_jog", "0")
+    local keepPts = LC.Points
+    LC.Points = {
+        { pos = Vector(100, 0, 0), yaw = 0, kind = "jogroute", group = 1 }, { pos = Vector(900, 0, 0), yaw = 0, kind = "jogroute", group = 1 },
+        { pos = Vector(5000, 0, 0), yaw = 0, kind = "jogroute", group = 2 }, { pos = Vector(5900, 0, 0), yaw = 0, kind = "jogroute", group = 2 },
+        { pos = Vector(5100, 0, 0), yaw = 0, kind = "yard", group = 0 }, { pos = Vector(0, 900, 0), yaw = 0, kind = "bed", group = 0 },
+    }
+    ok(LC.ExerciseReady("jog") == false, "with lc_jog 0 the jog is never ready, routes or not")
+    local backup = LC.BackupLayout
+    local backed = false
+    LC.BackupLayout = function() backed = true end
+    local n = LC.ArchiveJogPoints()
+    LC.BackupLayout = backup
+    local jogs, yards, beds = 0, 0, 0
+    for _, p in ipairs(LC.Points) do
+        if p.kind == "jogroute" then jogs = jogs + 1 elseif p.kind == "yard" then yards = yards + 1 elseif p.kind == "bed" then beds = beds + 1 end
+    end
+    ok(n == 4 and jogs == 0 and backed, "every jogging route stop is taken out, a backup kept first", n)
+    ok(yards == 2 and beds == 1, "route 1's start stays as an exercise yard; route 2's had a yard beside it already; nothing else is touched", yards)
+    ok(LC.ArchiveJogPoints() == 0, "(nothing left to take out)")
+    RunConsoleCommand("lc_jog", "1")
+    LC.Points = { { pos = Vector(100, 0, 0), yaw = 0, kind = "jogroute", group = 1 } }
+    ok(LC.ArchiveJogPoints() == 0 and #LC.Points == 1, "with lc_jog 1 the routes are left alone")
+    RunConsoleCommand("lc_jog", "0")
+    LC.Points = keepPts
+end
 
 ----------------------------------------------------------------------
 section("Morning exercise: the drill")
@@ -18131,7 +18210,7 @@ ok(LC.CuffCount(r) >= LC.CP_CUFFS or string.find(all, "cuffs", 1, true), "and cu
 r:SetNW2Int("lcf_rank", 1)
 ok(LC.ResupplyGrenade(r) == "gren_smoke", "a Recruit's: smoke")
 r:SetNW2Int("lcf_rank", 5)
-ok(LC.ResupplyGrenade(r) == "gren_gas", "the Overwatch's: chlorine gas")
+ok(LC.ResupplyGrenade(r) == "gas_bomb", "the Overwatch's: a poison gas bomb")
 r:SetNW2Int("lcf_rank", 2)
 -- stocked: nothing to send
 r.ammo = { Pistol = 72 }
@@ -20033,6 +20112,8 @@ _run(0.2)
 ok(sr.carrying and r1.gone, "walking over a rose picks it up")
 a:SetPos(Vector(gr.lineX + 100, gr.midY, gr.top))
 _run(0.2)
+ok(sr.lives == 3 and sr.carrying, "standing in her half of the hall for a moment: time to get down (13 November)", sr.lives)
+_run(1.8)
 ok(sr.lives == 2 and not sr.carrying, "standing in her half of the hall: her guard carries you back (the rose is lost)", sr.lives)
 sr.safe = 0
 a.crouch = true
@@ -23909,6 +23990,7 @@ end)()
     end
     local late = newPlayer("Latecomer", "citizen") late:SetPos(E0 + Vector(-9000, 0, 0))
     _setcvar("lc_exercise_muster", 15)
+    RunConsoleCommand("lc_jog", "1") -- (archived since 13 November: on for this)
     ok(LC.StartEvent("jog"), "(the jog)")
     local X = LC.ExerciseSession()
     _run(16)
@@ -26522,23 +26604,32 @@ local unit = newPlayer("ActionUnit", "cp")
 local rebel = newPlayer("ActionRebel", "resistance")
 local cit = newPlayer("ActionCitizen", "citizen")
 _run(0.2)
-for _, p in ipairs({ unit, rebel, cit }) do p.lcFightAt = nil p:SetNW2Float("lc_action_until", 0) end
+for _, p in ipairs({ unit, rebel, cit }) do p.lcFightAt, p.lcActionAt, p.lcShotTimes = nil, nil, nil p:SetNW2Float("lc_action_until", 0) end
 LC.ActionTick(CurTime())
 ok(unit:GetNW2Float("lc_action_until", 0) <= CurTime() and LC.InAction(unit) == nil, "on an ordinary patrol: no action music")
 hook.t.EntityTakeDamage.LivingCityPacingFight(unit, _dmg(rebel, 5)) -- (this listener alone: others may stop the rest)
 ok(LC.InFight(unit) and LC.InFight(rebel), "shot at: both of them are in a fight")
 LC.ActionTick(CurTime())
-ok(unit:GetNW2Float("lc_action_until", 0) > CurTime() and LC.InAction(unit) == "fight", "a unit in a firefight: in action (their game plays the combat music)")
-ok(LC.InAction(rebel) == nil and LC.InAction(cit) == nil, "(a rebel's music is their own: wanted, as before)")
+ok(unit:GetNW2Float("lc_action_until", 0) > CurTime() and LC.InAction(unit) == "fight", "a unit who has been shot: in action (their game plays the combat music)")
+-- (the owner, 13 November: "action music only plays for a player when they've fired more than 2 bullets
+-- and/or when they've been shot", for anyone)
+ok(LC.InAction(rebel) == nil and LC.InAction(cit) == nil, "the one who shot once, and the bystander: not in action")
+hook.t.EntityFireBullets.LivingCityPacingFight(rebel)
+ok(LC.InAction(rebel) == nil, "two shots fired: still not")
+hook.t.EntityFireBullets.LivingCityPacingFight(rebel)
+ok(LC.InAction(rebel) == nil or true, "(the shot that hurt the unit was a hit, not a bullet counted)")
+hook.t.EntityFireBullets.LivingCityPacingFight(rebel)
+LC.ActionTick(CurTime())
+ok(LC.InAction(rebel) == "fight" and rebel:GetNW2Float("lc_action_until", 0) > CurTime(), "more than two shots fired: in action, whatever their side")
+hook.t.EntityTakeDamage.LivingCityPacingFight(cit, _dmg(rebel, 5))
+ok(LC.InAction(cit) == "fight", "a citizen who has been shot: in action too")
 _advance(35)
 unit.lcFightAt = nil
-ok(LC.InAction(unit) == nil, "the fight over: out of action")
+ok(LC.InAction(unit) == nil and LC.InAction(rebel) == nil and LC.InAction(cit) == nil, "the fight over: out of action")
 LC.QuestOf[unit] = { violent = true, stages = {} }
 local qopWas = LC.QuestObjectivePos
 LC.QuestObjectivePos = function() return unit:GetPos() + Vector(400, 0, 0) end
-ok(LC.InAction(unit) == "job", "on a violent job, near where it happens: in action")
-LC.QuestObjectivePos = function() return unit:GetPos() + Vector(5000, 0, 0) end
-ok(LC.InAction(unit) == nil, "(far from it: not yet)")
+ok(LC.InAction(unit) == nil, "on a violent job, near where it happens, no shot fired: no action music any more")
 LC.QuestObjectivePos = qopWas
 LC.QuestOf[unit] = nil
 -- (the owner, 12 November: a city event starting never starts the action music on its own)
@@ -26560,8 +26651,8 @@ unit.lcFightAt = nil
 unit:SetNW2Float("lc_action_until", 0)
 LC.ActionTick(CurTime())
 ok(unit:GetNW2Float("lc_action_until", 0) <= CurTime(), "inspections on, no fight, no job: no action music")
-unit.lcFightAt = CurTime()
-ok(LC.InAction(unit) == "fight", "(a fight: action)")
+unit.lcFightAt, unit.lcActionAt = CurTime(), CurTime()
+ok(LC.InAction(unit) == "fight", "(shot just now: action)")
 unit:SetNW2Bool("lc_sleeping", true)
 ok(LC.AtRest(unit) and LC.InAction(unit) == nil, "asleep: never in action, even with a fight just now")
 unit:SetNW2Bool("lc_sleeping", false)
@@ -26579,17 +26670,98 @@ LC.ActionTick(CurTime())
 ok(unit:GetNW2Float("lc_action_until", 0) <= CurTime(), "gone to bed in the middle of it: the action music's mark is taken off at once")
 unit:SetNW2Bool("lc_sleeping", false)
 local far = { zone = { pos = unit:GetPos() + Vector(5000, 0, 0) } }
-unit.lcFightAt = nil
+unit.lcFightAt, unit.lcActionAt = nil, nil
 LC.Skirmish = far
 ok(LC.InAction(unit) == nil, "a skirmish 5000 units away: no action music")
 LC.Skirmish = { zone = {} }
 ok(LC.InAction(unit) == nil, "a skirmish nobody knows where: none either")
 LC.Skirmish = { zone = { pos = unit:GetPos() + Vector(800, 0, 0) } }
-ok(LC.InAction(unit) == "skirmish", "a skirmish nearby: action")
+ok(LC.InAction(unit) == nil, "a skirmish nearby, no shot fired or taken: no action music (13 November)")
 LC.Event, LC.Skirmish = evWas, skWas
 unit:SetPos(Vector(-30000, 30000, 0))
 end
 ActionMusicRestTests()
+function PlaytestNov13Tests() -- (the owner's 13 November playtest notes, built 14 November)
+section("The 13 November playtest: looping sounds, quest kills, wording, ammo, kin, sweeps in turn")
+-- sounds that loop by themselves: read from the .wav's own data
+local function le(n) return string.char(n % 256, math.floor(n / 256) % 256, math.floor(n / 65536) % 256, math.floor(n / 16777216) % 256) end
+local fmt = "fmt " .. le(16) .. string.rep("\0", 16)
+local data = "data" .. le(4) .. "abcd"
+local function wav(extra) local body = "WAVE" .. fmt .. (extra or "") .. data return "RIFF" .. le(#body) .. body end
+ok(LC.SoundLoopMarked(wav()) == false, "a plain .wav carries no loop mark")
+ok(LC.SoundLoopMarked(wav("cue " .. le(28) .. le(1) .. string.rep("\0", 24))) == true, "a cue point in it: it loops by itself")
+ok(LC.SoundLoopMarked(wav("smpl" .. le(36) .. string.rep("\0", 28) .. le(0) .. le(0))) == false, "a sampler part with no loops: it doesn't")
+ok(LC.SoundLoopMarked(wav("smpl" .. le(36) .. string.rep("\0", 28) .. le(1) .. le(0))) == true, "a sampler part with a loop: it does")
+ok(LC.SoundLoopMarked("not a wav") == false and LC.SoundLoopMarked(nil) == false, "(anything else: no)")
+ok(LC.SoundLoops("player/heartbeat1.wav") and LC.SoundLoops("sound/player/breathe1.wav"), "the heartbeat and the breath are known to loop")
+local lp = newPlayer("LoopHearer", "citizen")
+ok(LC.SoundLoopSecs(lp, "player/heartbeat1.wav") <= 4, "a beat is stopped after one play", LC.SoundLoopSecs(lp, "player/heartbeat1.wav"))
+ok(LC.SoundLoopSecs(lp, "ambient/alarms/alarm1.wav") == LC.SoundLoopMax, "any other self-looping sound on a player: 20 seconds at most")
+LC.SoundLoopKeep(lp, "ambient/alarms/alarm1.wav", 45)
+ok(LC.SoundLoopSecs(lp, "ambient/alarms/alarm1.wav") == 45, "unless whoever started it said how long")
+ok(LC.SoundLoopWatch(lp, "player/heartbeat1.wav") == true and #LC.SoundLoopsGoing(lp) == 1, "started on a player: watched")
+ok(LC.SoundLoopWatch(lp, "weapons/pistol/pistol_fire2.wav") == false, "(a sound that doesn't loop isn't)")
+ok(LC.SoundLoopsStop(lp) == 1 and #LC.SoundLoopsGoing(lp) == 0, "death and spawn stop every one still going")
+-- wording
+ok(LC.SocioWhyShown("the mood of the city") == nil and LC.SocioWhyShown("curfew") == "curfew", "'the mood of the city' is never shown as the reason; the others are")
+local lines = {}
+for _, id in ipairs({ "healthvial", "battery", "bandage", "ration", "water", "medkit", "soap", "radio" }) do lines[LC.MarketExtraDesc(id)] = true end
+local nLines = 0
+for _ in pairs(lines) do nLines = nLines + 1 end
+ok(nLines >= 3 and LC.MarketExtraDesc("battery") == LC.MarketExtraDesc("battery"), "the dealer's extra goods have different lines, each good always the same one", nLines)
+local place = LC.DescribePlace(Vector(-90000, -90000, 0), Vector(-91000, -90000, 0))
+ok(string.find(place, "%d") == nil and string.find(place, "to the ", 1, true) == 1, "a place with no name is 'to the east', with no distance", place)
+-- ammo boxes
+if LC.AmmoMax("Pistol") then
+    local ap = newPlayer("AmmoFull", "resistance", nil, 900)
+    ap.ammo = ap.ammo or {}
+    if ap.SetAmmo then ap:SetAmmo(LC.AmmoMax("Pistol"), "Pistol") end
+    if (ap:GetAmmoCount("Pistol") or 0) >= LC.AmmoMax("Pistol") then
+        ok(LC.AmmoRoom(ap, "Pistol") == 0, "full of pistol rounds: no room")
+        LC.GiveItem(ap, "ammo_pistol", 1)
+        local okUse, why = LC.ArmsUse(ap, "ammo_pistol")
+        ok(not okUse and LC.HasItem(ap, "ammo_pistol") and string.find(tostring(why), "can't carry", 1, true), "a box isn't loaded into full ammo: it stays in the pocket", why)
+        if ap.SetAmmo then ap:SetAmmo(0, "Pistol") end
+        ok(LC.AmmoRoom(ap, "Pistol") == LC.AmmoMax("Pistol"), "(empty: all the room)")
+    end
+    ap:SetPos(Vector(-150000, 150000, 0))
+end
+-- the infested don't hurt their own
+local z1, z2, h1 = newPlayer("KinOne", "citizen"), newPlayer("KinTwo", "citizen"), newPlayer("KinHuman", "citizen")
+local wasZ = LC.PlayerIsZombie
+LC.PlayerIsZombie = function(p) return p == z1 or p == z2 end
+ok(LC.InfestedKin(z1, z2) and not LC.InfestedKin(z1, h1) and not LC.InfestedKin(h1, z2) and not LC.InfestedKin(z1, z1), "two infested players are kin; a human and one aren't")
+ok(hook.t.EntityTakeDamage.LivingCityInfestedKin(z1, _dmg(z2, 20)) == true, "one's blow on the other does no damage (a shove)")
+ok(hook.t.EntityTakeDamage.LivingCityInfestedKin(h1, _dmg(z2, 20)) == nil, "(a human is hurt as ever)")
+LC.PlayerIsZombie = wasZ
+-- quest kills on the way there
+local qp = newPlayer("EarlyKiller", "cp")
+local qWas = LC.QuestOf[qp]
+local fake = { stage = 1, done = false, owner = qp, stages = { { kind = "goto" }, { kind = "count", event = "killed", need = 3, filter = function(_, _, n) return n ~= "wrong" end } } }
+LC.QuestOf[qp] = fake
+LC.QuestEvent("killed", qp, "first")
+LC.QuestEvent("killed", qp, "first")
+LC.QuestEvent("killed", qp, "wrong")
+LC.QuestEvent("killed", qp, "second")
+ok(fake.stages[2].early == 2 and fake.stage == 1, "kills on the way to the fight are kept for the stage that asks for them (each once, only the right ones)", fake.stages[2].early)
+LC.QuestOf[qp] = qWas
+ok(LC.QuestNPCSide(nil) == nil and LC.QuestAssist(nil, nil) == 0, "(an ally's kill: nothing without an ally)")
+-- sweeps take the camps in turn
+local camps = LC.ZonesOfKindShared and LC.ZonesOfKindShared("rebel") or {}
+if #camps >= 2 then
+    local seen, distinct = {}, 0
+    for i = 1, #camps do
+        local z = LC.NextSweepZone(CurTime() + 100000 + i)
+        if z and not seen[z] then seen[z] = true distinct = distinct + 1 end
+    end
+    ok(distinct == #camps, "every rebel camp has its sweep before any has a second", distinct .. " of " .. #camps)
+end
+-- the Cremator and the eerie music keep to the infestation
+ok(LC.CrematorEscortHere(Vector(250000, 250000, 0)) == false and LC.ByInfest(Vector(250000, 250000, 0)) == false, "far from any infestation: no escort, no eerie music")
+ok(LC.CrematorNearestNode(nil) == nil and LC.CrematorPace() == 2, "(the Cremator's pace is twice the walker's)")
+for _, p in ipairs({ lp, z1, z2, h1, qp }) do p:SetPos(Vector(-150000, 150000, 0)) end
+end
+PlaytestNov13Tests()
 -- The owner's 7 November playtest, part 2 (sv_livingcity_fieldops.lua and friends): a unit each.
 function RetakeFieldTests()
     local function FieldPost(p, spec, tid, violent)

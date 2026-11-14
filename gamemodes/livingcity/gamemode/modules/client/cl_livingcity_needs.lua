@@ -741,6 +741,25 @@ end)
 local shopFrame
 
 -- Buying or selling re-sends the list: the reader stays where they were, not back at the top (the owner, 7 November).
+-- Plain text cut into lines no wider than maxW in this font.
+function LC_CL.WrapPlain(text, font, maxW)
+    local lines, cur = {}, ""
+    surface.SetFont(font)
+    for word in string.gmatch(tostring(text or ""), "%S+") do
+        local try = cur == "" and word or (cur .. " " .. word)
+        local tw = surface.GetTextSize(try)
+        if (tonumber(tw) or 0) > maxW and cur ~= "" then
+            lines[#lines + 1] = cur
+            cur = word
+        else
+            cur = try
+        end
+    end
+    if cur ~= "" then lines[#lines + 1] = cur end
+    if #lines == 0 then lines[1] = "" end
+    return lines
+end
+
 local function ScrollOf(panel)
     if not IsValid(panel) or not panel.GetVBar then return nil end
     local vb = panel:GetVBar()
@@ -749,12 +768,29 @@ local function ScrollOf(panel)
 end
 local function ScrollTo(panel, n)
     if not n or not IsValid(panel) or not panel.GetVBar then return end
-    timer.Simple(0, function()
-        if not IsValid(panel) then return end
+    -- (a new window knows how long its list is only once it has been laid out, and until then the
+    -- bar holds every scroll at the top: the owner, 13 November, "everytime I buy something from the
+    -- quartermaster, the menu scrolls back to the top". So it is laid out now, and set again over
+    -- the next few frames until it holds.)
+    local function Set()
+        if not IsValid(panel) then return true end
+        local canvas = panel.GetCanvas and panel:GetCanvas()
+        if IsValid(canvas) then
+            canvas:InvalidateLayout(true)
+            if canvas.SizeToChildren then canvas:SizeToChildren(false, true) end
+        end
         panel:InvalidateLayout(true)
         local vb = panel:GetVBar()
-        if vb and vb.SetScroll then vb:SetScroll(n) end
-    end)
+        if not (vb and vb.SetScroll) then return true end
+        if IsValid(canvas) and vb.SetUp then vb:SetUp(panel:GetTall(), canvas:GetTall()) end
+        vb:SetScroll(n)
+        local got = tonumber(vb.GetScroll and vb:GetScroll()) or 0
+        return math.abs(got - n) < 2
+    end
+    LC_CL.ScrollSetNow = Set
+    for _, wait in ipairs({ 0, 0.05, 0.15, 0.35 }) do
+        timer.Simple(wait, function() Set() end)
+    end
 end
 -- what's wrong with buying it, beside the name (the price always shows on the button)
 local SHORT = Color(230, 110, 90)
@@ -904,8 +940,18 @@ net.Receive("lcu_market", function()
                 local tw = surface.GetTextSize(name)
                 draw.SimpleText(note, "DermaDefault", 18 + tw, desc and 14 or h / 2, SHORT, TEXT_ALIGN_LEFT, desc and TEXT_ALIGN_TOP or TEXT_ALIGN_CENTER)
             end
-            if desc then draw.SimpleText(desc, "DermaDefault", 10, 32, DIM) end
-            if desc and market then draw.SimpleText(market, "DermaDefault", 10, 50, MARKET) end
+            if desc then
+                -- wrapped to the room left of the button (the owner, 13 November: the bypass charge's
+                -- description ran on under the button, "the last words I can see are 'ten seconds, open'")
+                if self.lcWrapW ~= w then
+                    self.lcWrapW = w
+                    self.lcLines = LC_CL.WrapPlain(desc, "DermaDefault", w - 186)
+                    local need = 32 + #self.lcLines * 15 + (market and 20 or 6)
+                    if need > self:GetTall() then self:SetTall(need) end
+                end
+                for i, l in ipairs(self.lcLines or { desc }) do draw.SimpleText(l, "DermaDefault", 10, 32 + (i - 1) * 15, DIM) end
+            end
+            if desc and market then draw.SimpleText(market, "DermaDefault", 10, 32 + #(self.lcLines or { desc }) * 15 + 3, MARKET) end
             if market and not desc then
                 surface.SetFont("DermaDefaultBold")
                 local tw = surface.GetTextSize(name)

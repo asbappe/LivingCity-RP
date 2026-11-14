@@ -31,3 +31,5 @@
 **Point: speech stand** (new, 10 November): where the City Administrator gives her speeches (F2 > Me > The city's levers > Go to the speech stand takes her there, facing the way the point faces). Optional.
 
 **Point: speech crowd** (new, 13 November): where the city gathers for her address, in front of the stand. With one placed, a speech calls the city first and attendance is mandatory (`docs/features/city.md`, "Her address, attended"). Optional.
+
+**14 November:** "Point: jogging route stop" is gone from the editor (the morning jog is archived, `lc_jog` 0: `city-events.md`). The morning drill is held at an exercise yard.

@@ -129,6 +129,9 @@ function LC.RepairLab(bench, by)
     if LC.SetupLab then LC.SetupLab(bench) end
     local sci = bench.lcScientist
     if IsValid(sci) and LC.ScientistSay then LC.ScientistSay(sci, "excellent", 75) end
+    if LC.LabClean then
+        if IsValid(sci) then LC.LabClean(sci) elseif bench.RemoveAllDecals then bench:RemoveAllDecals() end
+    end
     if was then
         if IsValid(by) and by:IsPlayer() then by:ChatPrint("[Scientist] \"Splendid! Everything's back on. The lab's open again.\"") end
         if LC.RadioNotice then LC.RadioNotice("resistance", "The lab " .. Where(bench:GetPos()) .. " is running again.") end

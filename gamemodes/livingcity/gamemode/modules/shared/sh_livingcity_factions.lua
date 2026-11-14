@@ -65,7 +65,9 @@ LCF.Factions = {
         },
         specials = {
             {
-                id = "hacker", name = "Hacker", max = 2, minRank = 2,
+                -- (who may take each role: the owner, 13 November, "Smuggler by a member; Hacker should only be
+                -- selectable by a fighter. And father gregori by a Lieutenant")
+                id = "hacker", name = "Hacker", max = 2, minRank = 3,
                 desc = "Combine locks, screens and terminals are your trade. You carry the multitool: hack doors open, " ..
                        "hijack city screens, pull data off Combine terminals. It's contraband: a search will take it.",
                 loadout = { "weapon_crowbar", "weapon_pistol", "weapon_lc_multitool" },
@@ -77,7 +79,7 @@ LCF.Factions = {
                 loadout = { "weapon_crowbar", "weapon_pistol" },
             },
             {
-                id = "chaplain", name = "Father Grigori", max = 1, minRank = 2,
+                id = "chaplain", name = "Father Grigori", max = 1, minRank = 4,
                 desc = "Chaplain of the Resistance. A priest who will not let faith die under the Combine. " ..
                        "He tends the wounded with his Blessing and preaches the Word aloud. The Combine have " ..
                        "declared his faith contraband, so Civil Protection hunts him on sight outside rebel territory.",

@@ -245,7 +245,10 @@ local TRACKS = {
         "music/hl2_song0.mp3", "music/hl2_song1.mp3", "music/hl2_song8.mp3", "music/hl2_song11.mp3", "music/hl2_song17.mp3",
         "music/hl2_song23_suitsong3.mp3", "music/hl2_song32.mp3", "music/hl1_song11.mp3", "music/hl1_song20.mp3" },
     tense = { "music/hl2_song13.mp3", "music/hl2_song26_trainstation1.mp3", "music/hl2_song30.mp3", "music/hl2_song33.mp3",
-        "music/hl2_song7.mp3", "music/hl2_song28.mp3", "music/hl1_song5.mp3", "music/hl1_song14.mp3", "music/hl1_song21.mp3" },
+        "music/hl2_song28.mp3" },
+    -- Ravenholm's and the other eerie pieces: only by an infestation (the owner, 13 November: "ravenholm
+    -- or spooky scary music should really only play near the infestation zone"). They were among the tense ones.
+    eerie = { "music/hl2_song7.mp3", "music/ravenholm_1.mp3", "music/hl1_song5.mp3", "music/hl1_song14.mp3", "music/hl1_song21.mp3" },
     urgent = { "music/hl2_song3.mp3", "music/hl2_song4.mp3", "music/hl2_song29.mp3", "music/hl2_song16.mp3" },
     -- the moment someone becomes a stalker (the owner, 7 November: "the most depressing HL2 music there is")
     stalker = { "music/hl2_song26.mp3" },
@@ -260,7 +263,7 @@ local function Hot(m) return m == "urgent" or m == "combat" end
 LC_CL.MusicHot = Hot
 -- A Civil Protection unit (the Overwatch's soldiers too) the server says is in action now (sv_livingcity_pacing.lua)
 function LC_CL.InAction(ply)
-    return IsValid(ply) and ply:GetNW2String("lcf_faction", "") == "cp" and ply:GetNW2Float("lc_action_until", 0) > CurTime()
+    return IsValid(ply) and ply:GetNW2Float("lc_action_until", 0) > CurTime()
 end
 local playing, playingMood, nextTrack = nil, nil, 100
 local QUIET_MIN, QUIET_MAX = 480, 900 -- (8 to 15 minutes of quiet between pieces; it was 5 to 12)
@@ -283,8 +286,13 @@ local function Mood()
     local ply = LocalPlayer()
     local resting = LC_CL.AtRest(ply)
     -- (a unit in action: the Combine's own action music, as a wanted rebel has theirs)
-    if not resting and LC_CL.InAction(ply) then return "combat" end
-    if not resting and IsValid(ply) and ply:GetNW2Float("lc_wanted_until", 0) > CurTime() then return "urgent" end
+    -- (the owner, 13 November: only after more than 2 shots fired or being shot, for anyone: the
+    -- server's lc_action_until. Being wanted alone is tense, not action.)
+    if not resting and LC_CL.InAction(ply) then
+        return ply:GetNW2String("lcf_faction", "") == "cp" and "combat" or "urgent"
+    end
+    if not resting and IsValid(ply) and ply:GetNW2Bool("lc_by_infest", false) then return "eerie" end -- (the server says: sv_livingcity_pacing.lua)
+    if IsValid(ply) and ply:GetNW2Float("lc_wanted_until", 0) > CurTime() then return "tense" end
     if socio == "red" or socio == "yellow" or event == "lockdown" or event == "curfew" or Phase(LC_CL.Hour()) == "night" then return "tense" end
     return "calm"
 end
@@ -383,6 +391,11 @@ timer.Create("LivingCityMusic", 1, 0, function()
             local cooling = Hot(playingMood)
             Stop(true)
             nextTrack = CurTime() + (cooling and math.random(QUIET_MIN, QUIET_MAX) or 5)
+        end
+        -- an eerie piece is for the infestation only: walk away and it goes
+        if Live(playing) and playingMood == "eerie" and mood ~= "eerie" then
+            Stop(true)
+            nextTrack = CurTime() + math.random(QUIET_MIN, QUIET_MAX)
         end
         if Live(playing) and playing:GetState() == GMOD_CHANNEL_STOPPED then
             playing, playingMood = nil, nil

@@ -38,7 +38,7 @@ local USES = {
     { title = "The Resistance and rebel bases", ids = { "zone_rebel", "rspawn", "rlookout", "rebelboard", "interrochair", "rebelcage", "bunk", "workbench", "dealer", "bed", "toilet", "stove",
         "sit", "sitchair", "lean", "fire", "locker", "graffiti" } },
     { title = "Infestation", ids = { "zone_infest", "zspawn", "hazbarrel" } },
-    { title = "Morning exercise", ids = { "jogroute", "yard", "parade" } },
+    { title = "Morning exercise", ids = { "yard", "parade" } },
     { title = "Dreams", ids = { "dream", "zone_dream" } }, -- (the owner, 11 November: missing from this view)
     { title = "Power and the street", ids = { "transformer", "streetlight", "loudspeaker", "screen_big", "pipe", "rubble", "salvage" } },
     { title = "Paths, ladders and doors", ids = { "node", "link", "ladder", "zone_nogo", "door_locked", "door_open", "door_ignore", "door_force", "door_test" } },

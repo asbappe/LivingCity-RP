@@ -200,7 +200,9 @@ function LC.DescribePlace(pos, from)
     if near("queue", 600) then return "by the ration line" end
     if near("checkpoint", 500) then return "at a checkpoint" end
     if near("spawn", 400) then return "outside an apartment doorway" end
-    if from then return string.format("%d metres %s of you", math.floor(from:Distance(pos) * 0.019), Compass(from, pos)) end
+    -- (no distance: the owner, 13 November, "a static number that doesn't matter because I can see on my
+    -- screen the objective marker that shows the distance")
+    if from then return "to the " .. Compass(from, pos) end
     return "somewhere in the city"
 end
 local Place = LC.DescribePlace
@@ -758,6 +760,11 @@ function EnterStage(q)
     if st.onEnter and st.onEnter(q, st) == false then
         return Finish(q, false, st.failText or "the job's target couldn't be found")
     end
+    -- kills made on the way here (LC.QuestEvent)
+    if st.kind == "count" and st.early then
+        st.got, st.seen, st.early, st.earlySeen = st.early, st.earlySeen or {}, nil, nil
+        if st.got >= st.need then return Advance(q) end
+    end
     -- heading for a housing block (or rebel territory, or the prison): walking
     -- into the zone counts, not just its exact center
     if st.pos and (st.kind == "goto" or st.kind == "deliver" or st.kind == "escort") then
@@ -990,6 +997,13 @@ local function TailSuspicion(npc, p, st)
 end
 
 local function Poll(q, now)
+    -- what the job was about is over (a raid put down while you were on your way, or after your
+    -- first kill: the owner, 13 November, stuck at 1 of 2 with every attacker dead)
+    if q.tmpl and q.tmpl.over and not q.done then
+        local res, why = q.tmpl.over(q, Stage(q))
+        if res == true then return Finish(q, true) end
+        if res == false then return Finish(q, false, why) end
+    end
     if now > q.expires then
         -- out of time, but standing there doing it (a hold or a holdout already under way): the clock waits for
         -- them to finish (the owner, 1 November: 15 seconds into 45 at the spot, and the job was called off)
@@ -1172,6 +1186,21 @@ function LC.QuestEvent(name, ply, a, b)
     local st = Stage(q)
     if not st then return end
 
+    -- a kill on the way there counts for the kills the next stage asks for (the owner, 13 November:
+    -- four attackers killed, one counted); with them all made, being there is done too
+    if name == "killed" and st.kind == "goto" then
+        local nx = q.stages[q.stage + 1]
+        if nx and nx.kind == "count" and nx.event == name and (not nx.filter or nx.filter(q, ply, a, b)) then
+            nx.earlySeen = nx.earlySeen or {}
+            if a == nil or not nx.earlySeen[a] then
+                if a ~= nil then nx.earlySeen[a] = true end
+                nx.early = (nx.early or 0) + 1
+                if nx.early >= nx.need then Advance(q) end
+            end
+        end
+        return
+    end
+
     if st.kind == "count" and st.event == name then
         if st.filter and not st.filter(q, ply, a, b) then return end
         if st.distinct and a ~= nil then
@@ -1218,8 +1247,34 @@ hook.Add("LivingCityPlayerUsedNPC", "LivingCityQuests", function(ply, npc, st) L
 hook.Add("LivingCityIncarcerated", "LivingCityQuests", function(target, secs, reason, arrester)
     if IsValid(arrester) and arrester:IsPlayer() then LC.QuestEvent("arrested", arrester, target) end
 end)
+-- Whose side an NPC fights on, as LC.SquadSide says it of a player: "combine", "rebels" or nil.
+function LC.QuestNPCSide(npc)
+    local st = IsValid(npc) and LC.NPCs and LC.NPCs[npc]
+    if not st then return nil end
+    if st.role == "rebel" then return "rebels" end
+    if LC.IsSecurity and LC.IsSecurity(st) then return "combine" end
+    return nil
+end
+-- A kill by an NPC of your own side within this far of you counts for your job (your squad's
+-- kills are yours: the owner, 13 November).
+LC.QuestAssistRange = 1500
+function LC.QuestAssist(npc, attacker)
+    local side = LC.QuestNPCSide(attacker)
+    if not side or not IsValid(npc) then return 0 end
+    local pos, n = npc:GetPos(), 0
+    for q in pairs(LC.ActiveQuests) do
+        local o = q.owner
+        if not q.done and IsValid(o) and LC.SquadSide and LC.SquadSide(o) == side
+            and o:GetPos():DistToSqr(pos) < LC.QuestAssistRange * LC.QuestAssistRange then
+            LC.QuestEvent("killed", o, npc)
+            n = n + 1
+        end
+    end
+    return n
+end
 hook.Add("OnNPCKilled", "LivingCityQuests", function(npc, attacker)
-    if IsValid(attacker) and attacker:IsPlayer() then LC.QuestEvent("killed", attacker, npc) end
+    if IsValid(attacker) and attacker:IsPlayer() then LC.QuestEvent("killed", attacker, npc)
+    elseif IsValid(attacker) and attacker:IsNPC() then LC.QuestAssist(npc, attacker) end
 end)
 hook.Add("LivingCityHealed", "LivingCityQuests", function(healer, target, amount) LC.QuestEvent("healed", healer, target, amount) end)
 hook.Add("LivingCityPreached", "LivingCityQuests", function(ply) LC.QuestEvent("preached", ply, nil) end)

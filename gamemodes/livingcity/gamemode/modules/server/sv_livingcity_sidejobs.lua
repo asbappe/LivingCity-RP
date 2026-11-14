@@ -357,6 +357,14 @@ T{
 T{
     id = "cp_repelraid", factions = { cp = true, ota = true }, violent = true, squad = 8,
     available = function() return LC.Skirmish ~= nil and LC.Skirmish.kind == "raid" end,
+    -- the attack is over: put down if you were there (or had a kill), called off if you never got there
+    over = function(q, st)
+        if LC.Skirmish ~= nil and LC.Skirmish.kind == "raid" then return nil end
+        if st and st.kind == "count" then return true end
+        local nx = q.stages[2]
+        if nx and (nx.early or 0) > 0 then return true end
+        return false, "the attack was over before you got there"
+    end,
     build = function(ply)
         local r = LC.Skirmish
         if not r or not r.target then return nil end

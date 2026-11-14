@@ -1160,6 +1160,23 @@ do
         LC_CL.ScreenAim = function() return 100, 46 + 26 * 2 + 6 + 5 end
         for id, fn in pairs(hook.t.Think or {}) do if id == "LivingCityScreens" then fn() end end
         if LC_CL.ScreenState().hover ~= 46 + 26 * 2 + 6 then error("the Close button didn't light up when aimed at: " .. tostring(LC_CL.ScreenState().hover)) end
+        -- Previous and Next share one row, Previous on the left and Next on the right (the owner, 13 November)
+        do
+            local rows = {}
+            for i = 1, 30 do rows[i] = { kind = "button", text = "Row " .. i, fn = function() end } end
+            LC_CL.ScreenClose()
+            LC_CL.ScreenOpen(term, "TEST", "sub", rows)
+            local navY = 46 + 26 * 11 + 6
+            LC_CL.ScreenAim = function() return 450, navY + 5 end -- (the right half: Next)
+            for id, fn in pairs(hook.t.Think or {}) do if id == "LivingCityScreens" then fn() end end
+            hook.t.PlayerBindPress.LivingCityScreens(_me, "+use", true)
+            if LC_CL.ScreenState().page ~= 2 then error("Next page, on the right of the bottom row, didn't turn the page: " .. tostring(LC_CL.ScreenState().page)) end
+            LC_CL.ScreenAim = function() return 100, navY + 5 end -- (the left half: Previous)
+            for id, fn in pairs(hook.t.Think or {}) do if id == "LivingCityScreens" then fn() end end
+            hook.t.PlayerBindPress.LivingCityScreens(_me, "+use", true)
+            if LC_CL.ScreenState().page ~= 1 then error("Previous page, on the left of the same row, didn't turn it back: " .. tostring(LC_CL.ScreenState().page)) end
+            LC_CL.ScreenClose()
+        end
         LC_CL.ScreenAim = aim
         -- the same terminal's screen sent again (a thing turned in): it stays on the page it was on (the owner, 12
         -- November), and the terminal's floating sign gives way to it while it's open

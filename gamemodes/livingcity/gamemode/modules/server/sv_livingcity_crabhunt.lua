@@ -176,6 +176,21 @@ LC.QuestTemplates[#LC.QuestTemplates + 1] = {
                 cache = other
                 st.pos = cache:GetPos()
             end
+            -- any of the Resistance's supply crates will do: standing by another one with the meat, that
+            -- one is the crate now (the owner, 13 November: "if I am at a different supply crate than
+            -- marked, how about it just let me put the headcrabs in there?")
+            for _, c in ipairs(Crates()) do
+                if IsValid(c) and c ~= cache then
+                    for _, p in ipairs(Members(q)) do
+                        if IsValid(p) and Held(p) > 0 and p:GetPos():DistToSqr(c:GetPos()) < (st.r or 200) ^ 2 then
+                            cache = c
+                            st.pos = c:GetPos()
+                            Q.SendStateAll(q)
+                            break
+                        end
+                    end
+                end
+            end
             -- what they're carrying, on the tracker
             local have = 0
             for _, p in ipairs(Members(q)) do if IsValid(p) then have = have + Held(p) end end

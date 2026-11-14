@@ -174,3 +174,21 @@ function LC.WantedLost(ply)
     if LC.AlertLevel and LC.AlertLevel(ply) >= 3 then return false end
     return CurTime() - (ply.lcWantedSeen or CurTime()) > cvLost:GetFloat()
 end
+
+-- The infested don't hurt their own (the owner, 13 November: "Infested players should not be able
+-- to harm other infested. but they can shove them out of the way if they get stuck"): one infested
+-- player's blow on another does no damage and pushes them a step away instead.
+function LC.InfestedKin(victim, attacker)
+    return IsValid(victim) and IsValid(attacker) and victim ~= attacker and victim:IsPlayer() and attacker:IsPlayer()
+        and LC.PlayerIsZombie ~= nil and LC.PlayerIsZombie(victim) == true and LC.PlayerIsZombie(attacker) == true
+end
+hook.Add("EntityTakeDamage", "LivingCityInfestedKin", function(victim, dmg)
+    local a = dmg and dmg:GetAttacker()
+    if not LC.InfestedKin(victim, a) then return end
+    local push = victim:GetPos() - a:GetPos()
+    push.z = 0
+    if push:LengthSqr() < 1 then push = a:GetForward() end
+    push:Normalize()
+    if victim.SetVelocity then victim:SetVelocity(push * 240 + Vector(0, 0, 70)) end
+    return true
+end)

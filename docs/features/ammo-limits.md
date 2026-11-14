@@ -9,3 +9,5 @@ The owner, 13 November: "the gamemode is using the Garry's mod max ammo count ..
 - **The resupply scanner** counts "under 30%" of these limits (`docs/features/radio-hq-and-resupply.md`).
 
 Tests: `RadioHQTests` ("Half-Life 2's ammo limits"), `DreamTests`.
+
+**14 November:** a box of rounds is not loaded when you already carry the limit of that kind (it stays in your pocket, and says so), and loads only up to the limit. A health vial on the ground, E pressed on it at full health, goes into your pockets instead of being held out in front of you (`LC.PocketVial`).
