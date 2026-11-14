@@ -82,7 +82,7 @@ local DEFACED = {
     dispenser = "CHAINS", commissary = "THE COMBINE", intake = "LIKE CATTLE", water = "DON'T DRINK IT. It makes you forget",
     law = "BREAK IT", curfew = "THE NIGHT IS OURS", work = "BUSY HANDS BUILD CAGES", loyalty = "SO IS COURAGE",
     informants = "SNITCHES BURN", contraband = "ARMS US", radio = "WE HEAR YOU TOO", illness = "THE CITY IS THE SICKNESS",
-    infestation = "THEY LET IT GROW", housing = "IS A CELL", vortigaunt = "FREE THEM", recruit = "TRAITORS", administrator = "LIAR", neighbour = "LIES",
+    infestation = "THEY LET IT GROW", housing = "IS A CELL", vortigaunt = "FREE THEM", recruit = "TRAITORS", administrator = "LIAR", neighbour = "HATE THE ADMINISTRATOR",
 }
 DEFACED.dream = "WAKE UP"
 ENT.Defaced = DEFACED
