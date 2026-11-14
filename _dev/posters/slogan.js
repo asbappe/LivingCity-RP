@@ -5,12 +5,13 @@ const { E, L, T, skyline } = require('./dreamkit.js');
 
 const ART = {};
 ART.neighbour = () => {
-  let s = R(0, 0, 720, 610, '#d6cfba') + rays(232, 250, 40, 1000, C.paper, 0, 360, 'opacity=".75"');
-  s += skyline(470, C.steel2, '#d6cfba', 22, 110) + R(0, 466, 720, 144, C.steel);
+  // (a sky darker than their faces, so the faces have an edge)
+  let s = R(0, 0, 720, 610, '#8fa3ad') + rays(232, 250, 40, 1000, '#a9bac0', 0, 360, 'opacity=".8"');
+  s += skyline(470, '#74899a', '#a9bac0', 22, 110) + R(0, 466, 720, 144, C.steel);
   // the neighbours: the younger hands the older a framed portrait of the Administrator; both smile
   const body = (t, bd) => P('M-34,270 L-16,152 L30,118 L72,118 L112,142 L128,270Z', t) + P('M36,118 L52,118 L62,270 L44,270Z', bd);
   const scarf = P('M16,52 L24,22 L44,4 L70,4 L86,18 L88,40 L64,38 L58,52 L42,54 L40,72 L32,96 L46,120 L22,126 L10,86Z', C.steel2) + P('M24,22 L44,4 L70,4 L86,18 L60,20 L40,30Z', '#c9d0d0');
-  const smile = L('M74,79 Q83,89 92,77', C.ink, 2.8) + L('M90,74 L94,79', C.ink, 2);
+  const smile = L('M70,80 Q78,89 85,81', C.ink, 2.8) + L('M68,77 L71,81', C.ink, 2); // (kept inside the face: the lips end at x 88)
   const skinB = '#d8cdb8', shB = '#8f8a7c';
   s += G('translate(-22,150) scale(1.62)', body(C.blue, C.blueD) + head({ cap: C.blueD }) + smile);
   s += G('translate(488,150) scale(-1.62,1.62)', body('#335073', '#263a55') + head({ skin: skinB, sh: shB, hair: C.steel2 }) + scarf + smile + L('M60,62 L66,66 M58,70 L65,72', shB, 1.6));
