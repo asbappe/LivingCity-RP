@@ -2085,3 +2085,6 @@ Type them in the server console on the host panel, or in your own game console (
   Notes:
 - [ ] **The errors file:** F4 > Factions > Admin: errors (N). A window opens with the list and it is on your clipboard; the same text is in the server's garrysmod/data/livingcity/errors.txt. Leave the server running with you on it for ten minutes, then send that file. "Sent it: start the list again" empties it (the old list stays as errors_previous.txt). [needs the real server: Leave the server running ten minutes, then send errors.txt (ErrorsFileTests has the rules)]
   Notes:
+
+- [ ] **Bug reports, part 2:** with a second admin on, does a card "Report from NAME" show for them? Does a one-word report get "Not sent: write a few words."? [needs the real server: a second admin online; the rules themselves are tested (FeedbackTests)]
+  Notes:

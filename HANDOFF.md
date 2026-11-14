@@ -37,7 +37,7 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 - **The tests:** `tests.lua` loads whole again (the reference run had been dead since a merge that morning: over 200 main-level locals) and the runners say when it does not; the fake game runs hooks and timers in the order they were made. About ten tests still come and go: list in `TODO.md`.
 - **`PLAYTEST.md` is a card** (17 things only a person can judge); the old list is `PLAYTEST_ARCHIVE.md`, every item tagged. `CLAUDE.md`, reading budget 4 and 5.
 - Waiting on the owner (`TODO.md`, "What the robot players and the audits found"): the kitchen shift "The counter", The Man Inside part 2, two stand-and-wait steps.
-- Earlier 14 November: Overwatch PA spam fixed at the root (`lc_announce_quiet`), every kill counter finishable (`WatchTargets`), players' bug reports (F1 > Out of character), the play study (next: the owner's `report.txt`), the dream flight recorder (next: `log.txt`), stand-here steps replaced (house rule 9).
+- Earlier 14 November: Overwatch PA spam fixed at the root (`lc_announce_quiet`), every kill counter finishable (`WatchTargets`), players' bug reports (F1 > Out of character; admins on are told, the text is cleaned by `LC.FeedbackClean`), the play study (next: the owner's `report.txt`), the dream flight recorder (next: `log.txt`), stand-here steps replaced (house rule 9).
 - Open in TODO.md from before: the lab's dark look, each dream's own card wording, the dream posters, the leader's clipboard for operations.
 - The owner asked (14 November) to stop the reminder about the vanishing unit: don't raise it again unless they bring it up.
 - History of every earlier chat: `TIMELINE.md`, `CORE_CHANGELOG.md`.

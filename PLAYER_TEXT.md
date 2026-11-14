@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version 4407e37. Admin-only console messages and log lines are left out.
+Made from version 9c564b0. Admin-only console messages and log lines are left out.
 
-12724 lines, from 349 files.
+12727 lines, from 349 files.
 
 ## Contents
 
@@ -125,7 +125,7 @@ Made from version 4407e37. Admin-only console messages and log lines are left ou
 - [cl_livingcity_patsearch.lua](#cllivingcitypatsearchlua-cllivingcitypatsearchlua) (15)
 - [cl_livingcity_perfdebug.lua](#cllivingcityperfdebuglua-cllivingcityperfdebuglua) (63)
 - [cl_livingcity_quests.lua](#cllivingcityquestslua-cllivingcityquestslua) (34)
-- [cl_livingcity_quick.lua](#cllivingcityquicklua-cllivingcityquicklua) (285)
+- [cl_livingcity_quick.lua](#cllivingcityquicklua-cllivingcityquicklua) (286)
 - [cl_livingcity_rebelhold.lua](#cllivingcityrebelholdlua-cllivingcityrebelholdlua) (8)
 - [the Resistance's medic, his offer (sv_livingcity_rebelmedic.lua). A quick menu](#the-resistances-medic-his-offer-svlivingcityrebelmediclua-a-quick-menu-cllivingcityrebelmediclua) (5)
 - [apartment doors (client)](#apartment-doors-client-cllivingcityrentlua) (12)
@@ -214,7 +214,7 @@ Made from version 4407e37. Admin-only console messages and log lines are left ou
 - [burning the confiscated contraband (the owner, 7 November)](#burning-the-confiscated-contraband-the-owner-7-november-svlivingcityevidencelua) (67)
 - [morning exercise (mandatory for citizens)](#morning-exercise-mandatory-for-citizens-svlivingcityexerciselua) (62)
 - [sv_livingcity_factions.lua](#svlivingcityfactionslua-svlivingcityfactionslua) (58)
-- [bug reports and feedback from players (the owner, 14 November: "add a bug report and](#bug-reports-and-feedback-from-players-the-owner-14-november-add-a-bug-report-and-svlivingcityfeedbacklua) (6)
+- [bug reports and feedback from players (the owner, 14 November: "add a bug report and](#bug-reports-and-feedback-from-players-the-owner-14-november-add-a-bug-report-and-svlivingcityfeedbacklua) (8)
 - [field operations (the owner's 7 November playtest)](#field-operations-the-owners-7-november-playtest-svlivingcityfieldopslua) (27)
 - [Freq 7, the Resistance's pirate broadcast](#freq-7-the-resistances-pirate-broadcast-svlivingcityfreq7lua) (6)
 - [the Resistance's money (besides raiding supply drops)](#the-resistances-money-besides-raiding-supply-drops-svlivingcityfundinglua) (16)
@@ -4049,6 +4049,7 @@ Made from version 4407e37. Admin-only console messages and log lines are left ou
 - "Report a bug or feedback..."  (menu option, line 86)
 - "Report a bug or feedback"  (text, line 87)
 - "What happened, or what would you change?"  (text, line 87)
+- "[Miscount] Not sent: write a few words."  (chat message, line 89)
 
 > Note for you (not shown in game): part of: pose page
 
@@ -10624,18 +10625,23 @@ Made from version 4407e37. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): The debug report is heavy: many players reporting the same thing at once share one.
 
-- "Report failed to build: {text}"  (text, line 30)
+- "Report failed to build: {text}"  (text, line 37)
 
 > Note for you (not shown in game): part of: feedback
 
-- "%s \| map %s \| version %s"  (message, line 50)
-- "from %s (%s) \| faction %s"  (message, line 51)
-- "at setpos %d %d %d"  (message, line 52)
+- "%s \| map %s \| version %s"  (message, line 73)
+- "from %s (%s) \| faction %s"  (message, line 74)
+- "at setpos %d %d %d"  (message, line 75)
+
+> Note for you (not shown in game): admins who are on hear of it (the owner, 14 November)
+
+- "Report from {Nick}"  (on-screen notice, line 89)
 
 > Note for you (not shown in game): the game answering something done in a window (lc_feedback)
 
-- "[Miscount] Sent. Thank you."  (chat message, line 69)
-- "[Miscount] One report a minute: try again in %d seconds."  (message, line 71)
+- "[Miscount] Sent. Thank you."  (chat message, line 102)
+- "[Miscount] One report a minute: try again in %d seconds."  (message, line 104)
+- "[Miscount] Not sent: write a few words."  (chat message, line 106)
 
 ## field operations (the owner's 7 November playtest) (sv_livingcity_fieldops.lua)
 
