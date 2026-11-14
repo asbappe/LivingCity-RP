@@ -26823,6 +26823,21 @@ for _, p in ipairs({ hum, v, lead }) do p:SetPos(Vector(-150000, 150000, 0)) end
 if IsValid(npcR) then npcR:Remove() end
 end
 PlaytestNov14Tests()
+function NearYouTests() -- (14 November: the debug report's "Near you": who is near each player, and who jumped, appeared or was taken away)
+    section("The debug report says who is near you, and who jumped or vanished there")
+    local watcher = newPlayer("NearWatcher", "cp")
+    watcher:SetPos(Vector(-160000, -160000, 0))
+    local npc = LC.Spawners.cop(watcher:GetPos() + Vector(300, 0, 4))
+    LC.NearWatchTick()
+    npc:SetPos(watcher:GetPos() + Vector(900, 0, 4))
+    LC.NearWatchTick()
+    local report = LC.BuildReport()
+    ok(string.find(report, "== Near you ==", 1, true) and string.find(report, "NearWatcher at", 1, true), "the report has a Near you section for each player")
+    ok(string.find(report, "jumped npc_metropolice", 1, true) ~= nil, "a unit moved by the code near a player is noted as jumped")
+    if IsValid(npc) then npc:Remove() end
+    watcher:SetPos(Vector(-150000, 150000, 0))
+end
+NearYouTests()
 -- The owner's 7 November playtest, part 2 (sv_livingcity_fieldops.lua and friends): a unit each.
 function RetakeFieldTests()
     local function FieldPost(p, spec, tid, violent)

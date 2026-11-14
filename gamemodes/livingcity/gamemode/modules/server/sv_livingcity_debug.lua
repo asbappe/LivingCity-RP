@@ -76,6 +76,87 @@ local function Settings()
     return out
 end
 
+------------------------------------------------------------------------
+-- Near you (the owner, 14 November: a unit "keeps running by me ... then disappears, and then respawns
+-- where he started", and the report, taken right then, couldn't say which unit: its NPC list is a sample).
+-- Every half second each NPC within NEAR of a player is looked at: a jump of more than JUMP units in that
+-- time (no NPC runs that fast: the code put it somewhere), appearing, or being taken away, is noted with
+-- who, where and how far from the player. The report lists the last of those, and every NPC near each
+-- player now.
+------------------------------------------------------------------------
+local NEAR, JUMP, KEEP = 2000, 260, 40
+LC.NearEvents = LC.NearEvents or {}
+local lastPos = setmetatable({}, { __mode = "k" })
+local function Who(npc)
+    local st = LC.NPCs and LC.NPCs[npc]
+    local name = LC.NPCStr and LC.NPCStr(npc, "lc_pname", "") or ""
+    local job = LC.NPCStr and LC.NPCStr(npc, "lc_pjob", "") or ""
+    return string.format("%s%s%s%s", npc:GetClass(), st and (" [" .. tostring(st.role) .. " " .. tostring(st.state) .. "]") or " [not Miscount's]",
+        name ~= "" and (" " .. name) or "", job ~= "" and (" (" .. job .. ")") or "")
+end
+LC.NearWho = Who
+local function NearestPlayer(pos)
+    local best, bd
+    for _, p in ipairs(player.GetAll()) do
+        local d = p:GetPos():Distance(pos)
+        if not bd or d < bd then best, bd = p, d end
+    end
+    return best, bd
+end
+function LC.NearNote(kind, npc, from, to)
+    local pos = to or from
+    local p, d = NearestPlayer(pos)
+    if not p or d > NEAR then return end
+    local t = LC.NearEvents
+    t[#t + 1] = string.format("[%s] %s %s: %s%s, %.0f from %s", os.date("%H:%M:%S"), kind, Who(npc),
+        from and string.format("%.0f %.0f %.0f", from.x, from.y, from.z) or "",
+        to and string.format(" -> %.0f %.0f %.0f", to.x, to.y, to.z) or "", d, p:Nick())
+    while #t > KEEP do table.remove(t, 1) end
+end
+function LC.NearWatchTick()
+    if not LC.Running then return end
+    for _, npc in ipairs(ents.GetAll()) do
+        if IsValid(npc) and npc:IsNPC() then
+            local pos = npc:GetPos()
+            local was = lastPos[npc]
+            lastPos[npc] = pos
+            if was and pos:DistToSqr(was) > JUMP * JUMP then LC.NearNote("jumped", npc, was, pos) end
+        end
+    end
+end
+timer.Create("LivingCityNearWatch", 0.5, 0, function() pcall(LC.NearWatchTick) end)
+hook.Add("OnEntityCreated", "LivingCityNearWatch", function(e)
+    timer.Simple(0.2, function() if IsValid(e) and e:IsNPC() then LC.NearNote("appeared", e, e:GetPos()) end end)
+end)
+hook.Add("EntityRemoved", "LivingCityNearWatch", function(e)
+    if IsValid(e) and e.IsNPC and e:IsNPC() then pcall(LC.NearNote, "taken away", e, e:GetPos()) end
+end)
+function LC.NearReport(out)
+    for _, p in ipairs(player.GetAll()) do
+        local pp = p:GetPos()
+        local rows = {}
+        for _, npc in ipairs(ents.GetAll()) do
+            if IsValid(npc) and npc:IsNPC() then
+                local d = npc:GetPos():Distance(pp)
+                if d < NEAR then rows[#rows + 1] = { d, npc } end
+            end
+        end
+        table.sort(rows, function(a, b) return a[1] < b[1] end)
+        out[#out + 1] = string.format("%s at %.0f %.0f %.0f: %d NPCs within %d", p:Nick(), pp.x, pp.y, pp.z, #rows, NEAR)
+        for i = 1, math.min(25, #rows) do
+            local npc, st = rows[i][2], LC.NPCs and LC.NPCs[rows[i][2]]
+            local v = npc:GetPos()
+            out[#out + 1] = string.format("  %4.0f away: %s at %.0f %.0f %.0f%s%s%s", rows[i][1], Who(npc), v.x, v.y, v.z,
+                st and st.recoveries and st.recoveries > 0 and (" recov " .. st.recoveries) or "",
+                st and st.routeGroup and (" beat " .. st.routeGroup) or "",
+                st and st.hop and st.route and (" hop " .. st.hop .. "/" .. #st.route) or "")
+        end
+    end
+    out[#out + 1] = "jumped, appeared or taken away near a player (newest last):"
+    if #LC.NearEvents == 0 then out[#out + 1] = "  none" end
+    for _, l in ipairs(LC.NearEvents) do out[#out + 1] = "  " .. l end
+end
+
 function LC.BuildReport()
     local out = {}
     out[#out + 1] = "MISCOUNT DEBUG REPORT"
@@ -211,6 +292,9 @@ function LC.BuildReport()
             (line.q[1] and line.frontSince) and math.floor(CurTime() - line.frontSince) or 0, dnote,
             line.reversed and " (placed from the back: turned round so the front is at the dispenser)" or "")
     end
+
+    Section(out, "Near you")
+    pcall(LC.NearReport, out)
 
     Section(out, "NPCs")
     do -- vortigaunts: the freed ones in rebel ground, and the shackled ones on the streets
