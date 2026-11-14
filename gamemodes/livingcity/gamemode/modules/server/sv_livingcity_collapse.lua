@@ -622,7 +622,7 @@ function LC.ReadStaticProps(path)
     if not (file and file.Open) then return out end
     local f = file.Open(path, "rb", "GAME")
     if not f then return out, false end
-    pcall(function()
+    LC.Try(function()
         if f:Read(4) ~= "VBSP" then return end
         f:ReadLong() -- (the BSP version: 19 to 20 for Half-Life 2 and Garry's Mod maps)
         -- lump 35, the game lump: each lump's entry is offset, length, version, and four bytes
@@ -1108,7 +1108,7 @@ function LC.CollapseFloatTick(now)
     local z = C.floatZ + math.sin(now * 1.5) * 4
     if math.abs(p.z - z) > 1 then boss:SetPos(Vector(p.x, p.y, z)) end
 end
-timer.Create("LivingCityCollapseFloat", 0.1, 0, function() if C.stage == "stand" then pcall(LC.CollapseFloatTick, CurTime()) end end)
+timer.Create("LivingCityCollapseFloat", 0.1, 0, function() if C.stage == "stand" then LC.Try(LC.CollapseFloatTick, CurTime()) end end)
 
 -- The transformer hit (lc_adminpower's OnTakeDamage). Shows it's working: sparks on every hit, smoke from
 -- three quarters, a small blast at half, a big one when it goes, and her shield with it.
@@ -1819,7 +1819,7 @@ function LC.SuppressorTick(now)
     local ts = LC.SuppressorTargets()
     if #ts > 0 then LC.SuppressorFire(ts[math.random(#ts)]) else C.nextShell = now + 2 end
 end
-timer.Create("LivingCitySuppressor", 0.25, 0, function() if C.stage then pcall(LC.SuppressorTick, CurTime()) end end)
+timer.Create("LivingCitySuppressor", 0.25, 0, function() if C.stage then LC.Try(LC.SuppressorTick, CurTime()) end end)
 
 ------------------------------------------------------------------------
 -- The clock
@@ -1867,10 +1867,10 @@ function LC.CollapseGmanTick(now)
         LC.CollapseWalkAway(adm, "walked")
     end
 end
-timer.Create("LivingCityCollapseGman", 0.5, 0, function() if C.stage == "offer" then pcall(LC.CollapseGmanTick, CurTime()) end end)
+timer.Create("LivingCityCollapseGman", 0.5, 0, function() if C.stage == "offer" then LC.Try(LC.CollapseGmanTick, CurTime()) end end)
 
-timer.Create("LivingCityCollapse", TICK, 0, function() if LC.Running ~= false then pcall(LC.CollapseTick, CurTime()) end end)
-timer.Create("LivingCityCollapseStand", 1, 0, function() if C.stage == "stand" then pcall(LC.CollapseStandTick, CurTime()) end end)
+timer.Create("LivingCityCollapse", TICK, 0, function() if LC.Running ~= false then LC.Try(LC.CollapseTick, CurTime()) end end)
+timer.Create("LivingCityCollapseStand", 1, 0, function() if C.stage == "stand" then LC.Try(LC.CollapseStandTick, CurTime()) end end)
 
 ------------------------------------------------------------------------
 -- Admins: test every part (the editor's "The collapse" section)

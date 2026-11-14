@@ -298,7 +298,7 @@ function LC.LedgerNewDay(quiet)
     if s.pendingRaid and not quiet then
         local k = s.pendingRaid
         s.pendingRaid = nil
-        if LC.StartRaid then pcall(LC.StartRaid, tonumber(k) or k) end
+        if LC.StartRaid then LC.Try(LC.StartRaid, tonumber(k) or k) end
     end
     dirty = true
     if not quiet then Bulletin(s) end
@@ -422,7 +422,7 @@ function LC.Crackdown(ply, block)
     s.districts[tostring(block)] = math.min(s.districts[tostring(block)] or 0, -40)
     Add("authority", 5, nil) Add("morale", -6, nil) Add("resistance", 4, nil)
     News("A crackdown on " .. BName(block) .. ".")
-    if LC.StartRaid then pcall(LC.StartRaid, block) end
+    if LC.StartRaid then LC.Try(LC.StartRaid, block) end
     for _, p in ipairs(player.GetAll()) do p:ChatPrint("[The City Administrator] A crackdown on " .. BName(block) .. ". Residents: cooperate.") end
     Save()
     return true
@@ -434,7 +434,7 @@ function LC.ExtraRations(ply)
     if s.supply < 20 then return false, "The stores are too low for extra rations." end
     Add("supply", -15, nil) Add("morale", 8, nil)
     News("The Administrator ordered extra rations.")
-    if LC.StartEvent then pcall(LC.StartEvent, "rations") end
+    if LC.StartEvent then LC.Try(LC.StartEvent, "rations") end
     Save()
     return true
 end
@@ -483,7 +483,7 @@ local function Tick()
     if dirty and (s.savedAt or 0) + 60 <= now then s.savedAt = now Save() end
 end
 timer.Create("LivingCityLedger", 5, 0, function()
-    local ok, err = pcall(Tick)
+    local ok, err = LC.Try(Tick)
     if not ok and LC.Error then LC.Error("ledger", err) end
 end)
 hook.Add("ShutDown", "LivingCityLedger", function() if L then Save() end end)

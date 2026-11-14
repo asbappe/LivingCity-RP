@@ -463,12 +463,12 @@ end
 
 timer.Create("LivingCityVortKin", 2, 0, function()
     local now = CurTime()
-    local ok, err = pcall(VortTalk, now)
+    local ok, err = LC.Try(VortTalk, now)
     if not ok and LC.Error then LC.Error("vortigaunt talk", err) end
-    ok, err = pcall(Commune, now)
+    ok, err = LC.Try(Commune, now)
     if not ok and LC.Error then LC.Error("vortigaunt commune", err) end
 end)
 timer.Create("LivingCityVortLife", 1, 0, function()
-    local ok, err = pcall(VortLife, CurTime())
+    local ok, err = LC.Try(VortLife, CurTime())
     if not ok and LC.Error then LC.Error("vortigaunt life", err) end
 end)

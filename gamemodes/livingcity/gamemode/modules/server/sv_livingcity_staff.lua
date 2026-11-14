@@ -50,8 +50,8 @@ function LC.StaffLogAdd(kind, text, ply)
     local log = LC.StaffLog
     log[#log + 1] = e
     if #log > MAX_LOG then table.remove(log, 1) end
-    local ok, day = pcall(os.date, "%Y-%m-%d", e.t)
-    local ok2, clock = pcall(os.date, "%H:%M:%S", e.t)
+    local ok, day = LC.Try(os.date, "%Y-%m-%d", e.t)
+    local ok2, clock = LC.Try(os.date, "%H:%M:%S", e.t)
     -- written to the day's file a few times a minute, not once a line (a flood of chat is a flood of disk writes)
     local f = DIR .. "/logs/" .. (ok and day or "log") .. ".txt"
     LC.StaffLogPending = LC.StaffLogPending or {}

@@ -206,7 +206,7 @@ function LC.BlackMesaLook(p, sex)
     if not HasModel(path) then return nil end
     if not bmsSkins[path] then
         local n = 1
-        pcall(function()
+        LC.Try(function()
             local info = util.GetModelInfo and util.GetModelInfo(path)
             n = math.max(1, tonumber(info and info.SkinCount) or 1)
         end)
@@ -512,6 +512,6 @@ local function DutyTick(now)
 end
 LC.OutfitDutyTick = DutyTick
 timer.Create("LivingCityDutyClothes", 2, 0, function()
-    local ok, err = pcall(DutyTick, CurTime())
+    local ok, err = LC.Try(DutyTick, CurTime())
     if not ok and LC.Error then LC.Error("duty clothes", err) end
 end)

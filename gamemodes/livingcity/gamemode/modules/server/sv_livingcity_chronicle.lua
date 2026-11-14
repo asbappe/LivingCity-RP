@@ -98,7 +98,7 @@ function LC.ChronicleLoad()
     return #C.list
 end
 
-local function Ensure() if not C.loaded then pcall(LC.ChronicleLoad) C.loaded = true end end
+local function Ensure() if not C.loaded then LC.Try(LC.ChronicleLoad) C.loaded = true end end
 
 ------------------------------------------------------------------------
 -- Writing a thing down
@@ -254,7 +254,7 @@ hook.Add("PlayerInitialSpawn", "LivingCityChronicle", function(ply)
     timer.Simple(25, function()
         if not IsValid(ply) then return end
         -- (staff only, as the list is: nobody else knows what they weren't there for)
-        local ok, text = pcall(LC.ChronicleAway, ply)
+        local ok, text = LC.Try(LC.ChronicleAway, ply)
         if ok and text and LC.Notice and IsStaff(ply) then LC.Notice(ply, "info", "While you were away", text, 18) end
         C.seen[SeenKey(ply)] = os.time()
         C.dirty = true
@@ -417,11 +417,11 @@ end
 if util.AddNetworkString then util.AddNetworkString("lc_feeds") end
 timer.Create("LivingCityChronicleFeeds", 20, 0, function()
     if not On() or #player.GetAll() == 0 then return end
-    local ok, err = pcall(LC.ChronicleSendFeeds)
+    local ok, err = LC.Try(LC.ChronicleSendFeeds)
     if not ok and LC.Error then LC.Error("chronicle (feeds)", err) end
 end)
 hook.Add("PlayerInitialSpawn", "LivingCityChronicleFeeds", function(ply)
-    timer.Simple(12, function() if IsValid(ply) and On() then pcall(LC.ChronicleSendFeeds, ply, true) end end)
+    timer.Simple(12, function() if IsValid(ply) and On() then LC.Try(LC.ChronicleSendFeeds, ply, true) end end)
 end)
 
 ------------------------------------------------------------------------
@@ -444,7 +444,7 @@ end
 hook.Add("EntityTakeDamage", "LivingCityChronicle", function(ent, dmg)
     if not On() or not IsValid(ent) or not (ent.lcProfile or ent:IsPlayer()) then return end
     if (dmg:GetDamage() or 0) <= 0 then return end
-    local ok, err = pcall(LC.ChronicleHurt, ent, dmg:GetAttacker())
+    local ok, err = LC.Try(LC.ChronicleHurt, ent, dmg:GetAttacker())
     if not ok and LC.Error then LC.Error("chronicle (hurt)", err) end
 end)
 
@@ -460,13 +460,13 @@ end
 
 hook.Add("OnNPCKilled", "LivingCityChronicle", function(npc, attacker)
     if not On() or not (IsValid(npc) and npc.lcProfile) then return end
-    local ok, err = pcall(LC.ChronicleKilled, npc, attacker)
+    local ok, err = LC.Try(LC.ChronicleKilled, npc, attacker)
     if not ok and LC.Error then LC.Error("chronicle (killed)", err) end
 end)
 
 hook.Add("PlayerDeath", "LivingCityChronicle", function(victim, _, attacker)
     if not On() then return end
-    pcall(LC.ChronicleKilled, victim, attacker)
+    LC.Try(LC.ChronicleKilled, victim, attacker)
 end)
 
 hook.Add("LivingCityIncarcerated", "LivingCityChronicle", function(ent, secs, reason, arrester)
@@ -537,7 +537,7 @@ end
 
 hook.Add("LivingCityMindBroke", "LivingCityChronicle", function(m, kind, did)
     if not On() then return end
-    local ok, err = pcall(LC.ChronicleBroke, m, kind, did)
+    local ok, err = LC.Try(LC.ChronicleBroke, m, kind, did)
     if not ok and LC.Error then LC.Error("chronicle (break)", err) end
 end)
 
@@ -585,10 +585,10 @@ end
 
 timer.Create("LivingCityChronicle", 60, 0, function()
     if not On() or not C.dirty or os.time() - (C.lastSave or 0) < SAVE_EVERY then return end
-    local ok, err = pcall(LC.ChronicleSave)
+    local ok, err = LC.Try(LC.ChronicleSave)
     if not ok and LC.Error then LC.Error("chronicle (save)", err) end
 end)
 
 hook.Add("ShutDown", "LivingCityChronicle", function()
-    if On() and C.loaded then pcall(LC.ChronicleSave) end
+    if On() and C.loaded then LC.Try(LC.ChronicleSave) end
 end)

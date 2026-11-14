@@ -105,7 +105,7 @@ function LC.StartInterrogation(ply)
     local spawner = LC.Spawners and LC.Spawners.cop
     if spawner then
         local spot = (LC.ReleaseSpot and LC.ReleaseSpot(cellPos + ply:GetForward() * 50, ply)) or (cellPos + Vector(50, 0, 4))
-        local ok, npc, st = pcall(LC.ManpowerFree, spawner, spot) -- (the interrogator: never from the reserve)
+        local ok, npc, st = LC.Try(LC.ManpowerFree, spawner, spot) -- (the interrogator: never from the reserve)
         if ok and IsValid(npc) and st then
             st.unmanaged = true
             st.interrogator = true
@@ -261,11 +261,11 @@ function LC.MakeStalker(ply)
         ply:RemovePData("lc_jail_left")
     end
     -- whatever they were doing, and whatever they had, goes with who they were
-    if LC.QuestOf and LC.QuestOf[ply] and LC.AbandonQuest then pcall(LC.AbandonQuest, ply) end
+    if LC.QuestOf and LC.QuestOf[ply] and LC.AbandonQuest then LC.Try(LC.AbandonQuest, ply) end
     if LC.Inventory and LC.TakeItem then
         for id, n in pairs(table.Copy(LC.Inventory(ply) or {})) do LC.TakeItem(ply, id, n) end
     end
-    if LC.SetJob then pcall(LC.SetJob, ply, "", true) end
+    if LC.SetJob then LC.Try(LC.SetJob, ply, "", true) end
     if LC.Feed then LC.Feed(ply, 100, 100) end
     LC.SetFaction(ply, "stalker", nil, true)
     ply:StripWeapons()

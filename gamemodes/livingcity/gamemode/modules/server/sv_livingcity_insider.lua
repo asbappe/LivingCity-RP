@@ -356,7 +356,7 @@ function LC.InsiderReveal(ply, target)
     local name = LC.CharacterName and LC.CharacterName(ply) or ply:Nick()
     Say(target, "[Freq 7] " .. name .. " leans in and says the codeword. This unit is the Resistance's friend inside. Keep it to yourself.")
     Say(ply, "[Inside] You say the codeword. They know now.")
-    if LC.LearnName then pcall(LC.LearnName, target, ply) end
+    if LC.LearnName then LC.Try(LC.LearnName, target, ply) end
     return true
 end
 

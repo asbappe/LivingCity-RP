@@ -78,9 +78,9 @@ local function Refresh()
     LC.ImbalanceRebels = side == "rebels" and bonus or 0
 end
 LC.ImbalanceRefresh = Refresh
-timer.Create("LivingCityImbalance", 5, 0, function() pcall(Refresh) end)
-hook.Add("PlayerInitialSpawn", "LivingCityImbalance", function() timer.Simple(1, function() pcall(Refresh) end) end)
-hook.Add("PlayerDisconnected", "LivingCityImbalance", function() timer.Simple(1, function() pcall(Refresh) end) end)
+timer.Create("LivingCityImbalance", 5, 0, function() LC.Try(Refresh) end)
+hook.Add("PlayerInitialSpawn", "LivingCityImbalance", function() timer.Simple(1, function() LC.Try(Refresh) end) end)
+hook.Add("PlayerDisconnected", "LivingCityImbalance", function() timer.Simple(1, function() LC.Try(Refresh) end) end)
 
 ------------------------------------------------------------------------
 -- The quick reaction force

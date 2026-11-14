@@ -355,7 +355,7 @@ function LC.CheckpointTick(now)
 end
 
 timer.Create("LivingCityCheckpoints", 1, 0, function()
-    local ok, err = pcall(LC.CheckpointTick, CurTime())
+    local ok, err = LC.Try(LC.CheckpointTick, CurTime())
     if not ok and LC.Error then LC.Error("checkpoints", err) end
 end)
 
@@ -367,7 +367,7 @@ timer.Create("LivingCityCheckpointTurrets", 60, 0, function()
             local x, y, z = string.match(key, "^turret_(%-?%d+)_(%-?%d+)_(%-?%d+)$")
             local spot = x and Vector(tonumber(x), tonumber(y), tonumber(z) + 40)
             if spot and not (LC.IsSeen and LC.IsSeen(spot)) then
-                local ok, err = pcall(LC.SyncFixtures)
+                local ok, err = LC.Try(LC.SyncFixtures)
                 if not ok and LC.Error then LC.Error("fixtures", err) end
                 return
             end
@@ -800,7 +800,7 @@ function LC.ForcefieldTick(now)
 end
 
 timer.Create("LivingCityForcefieldHealth", FF_DT, 0, function()
-    local ok, err = pcall(LC.ForcefieldTick, CurTime())
+    local ok, err = LC.Try(LC.ForcefieldTick, CurTime())
     if not ok and LC.Error then LC.Error("forcefield health", err) end
 end)
 

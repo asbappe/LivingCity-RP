@@ -498,7 +498,7 @@ function LC.HL2LinesDump()
 end
 concommand.Add("lc_hl2_lines", function(ply)
     if IsValid(ply) and not (LC.CanEdit and LC.CanEdit(ply)) then return end
-    local ok, n = pcall(LC.HL2LinesDump)
+    local ok, n = LC.Try(LC.HL2LinesDump)
     local msg = ok and ("wrote data/livingcity/hl2_lines.txt: " .. tostring(n) .. " clips. Bring it back to Claude.") or ("could not list them: " .. tostring(n))
     if IsValid(ply) then ply:ChatPrint("[Miscount] " .. msg) else print("[Miscount] " .. msg) end
 end)

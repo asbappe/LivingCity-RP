@@ -26,7 +26,7 @@ local function ScanlineMaterial(w, h)
     if lines.mat and lines.w == w and lines.h == h then return lines.mat end
     if lines.failed or not GetRenderTarget or not CreateMaterial then return nil end
     local pushed, started = false, false
-    local ok = pcall(function()
+    local ok = LC.Try(function()
         local name = "lc_scanlines_" .. w .. "x" .. h
         local rt = GetRenderTarget(name, w, h)
         render.PushRenderTarget(rt)
@@ -151,7 +151,7 @@ local LINK_COLOR, NODE_COLOR, ORPHAN_COLOR, SELECT_COLOR = Color(0, 200, 255), C
 
 local function BlockName(n)
     local cv = GetConVar("lc_block_name")
-    local ok, s = pcall(string.format, GetGlobal2String("lc_block_name", "") ~= "" and GetGlobal2String("lc_block_name", "") or (cv and cv:GetString()) or "Habitation Block %02d", n)
+    local ok, s = LC.Try(string.format, GetGlobal2String("lc_block_name", "") ~= "" and GetGlobal2String("lc_block_name", "") or (cv and cv:GetString()) or "Habitation Block %02d", n)
     return ok and s or ("Block " .. n)
 end
 
@@ -348,7 +348,7 @@ local function DrawFill(d, col, alpha)
     local segs, rings = d.segs, d.rings
     render.SetMaterial(FILL_MAT)
     mesh.Begin(MATERIAL_TRIANGLES, segs + (#rings - 1) * segs * 2)
-    local ok = pcall(function()
+    local ok = LC.Try(function()
         local function V(p) mesh.Position(p) mesh.Color(col.r, col.g, col.b, alpha) mesh.AdvanceVertex() end
         local first = rings[1]
         for j = 1, segs do
@@ -551,7 +551,7 @@ hook.Add("PostDrawTranslucentRenderables", "LivingCityOverlay", function(_, skyb
     for _, z in ipairs(LC_CL.zones) do
         if z.pos:DistToSqr(eye) < (3000 + z.r) ^ 2 and Shown(focus, z.kind, "zone") then
             local col = ZONE_COLORS[z.kind] or color_white
-            local ok = pcall(function()
+            local ok = LC.Try(function()
                 if z.rects then
                     -- territory that grew along the path nodes: the rectangles its cells merge into, eight feet tall
                     render.SetColorMaterial()
@@ -614,7 +614,7 @@ hook.Add("PostDrawTranslucentRenderables", "LivingCityOverlay", function(_, skyb
             local key = string.format("%d_%d_%d_%d", math.floor(hp.x / 16), math.floor(hp.y / 16), math.floor(hp.z / 16), math.floor(r))
             if not preview or preview.key ~= key then preview = { key = key, drape = Drape(hp, r, false) } end
             local col = ZONE_COLORS[zoneKind] or color_white
-            pcall(function()
+            LC.Try(function()
                 DrawFill(preview.drape, col, 45)
                 DrawEdge(preview.drape, C_255_255_255_200, true)
             end)
@@ -780,7 +780,7 @@ function LC_CL.PlayAnnounceOnce(path, vol, secs)
         timer.Simple(math.max(1, (secs or 8) + 1.5), function()
             local c = LC_CL.AnnounceChannels[key]
             LC_CL.AnnounceChannels[key] = nil
-            if c then pcall(function() c:Stop() end) end
+            if c then LC.Try(function() c:Stop() end) end
         end)
     end)
     return "file"
@@ -1018,11 +1018,14 @@ net.Receive("lc_report", function()
     local t = ReadCompressed() or {}
     local text = t.text or "(empty report)"
     SetClipboardText(text)
-    chat.AddText(Color(120, 200, 255), "[Miscount] ", color_white, "Debug report copied to your clipboard. Paste it to Claude. Also saved to " .. tostring(t.file))
+    -- (the errors list, F4 > Factions > Admin: errors, says where it is in its title: no chat line)
+    if not t.errors then
+        chat.AddText(Color(120, 200, 255), "[Miscount] ", color_white, "Debug report copied to your clipboard. Paste it to Claude. Also saved to " .. tostring(t.file))
+    end
 
     local f = vgui.Create("DFrame")
     if LC_CL.SetTheme then LC_CL.SetTheme(f, "staff") end
-    f:SetTitle("Miscount debug report")
+    f:SetTitle(t.errors and ("Miscount errors: copied. Also in " .. tostring(t.file)) or "Miscount debug report")
     f:SetSize(math.min(ScrW() - 80, 900), math.min(ScrH() - 80, 640))
     f:Center()
     f:MakePopup()
@@ -1037,24 +1040,16 @@ net.Receive("lc_report", function()
     copy:SetTall(30)
     copy:SetText("Copy to clipboard again")
     copy.DoClick = function() SetClipboardText(text); copy:SetText("Copied!") end
+    if t.errors and t.clear then
+        local clear = vgui.Create("DButton", f)
+        clear:Dock(BOTTOM)
+        clear:SetTall(26)
+        clear:SetText("Sent it: start the list again")
+        clear.DoClick = function() RunConsoleCommand("lc_errors_clear") f:Close() end
+    end
 end)
 
-------------------------------------------------------------------------
--- Forward our own client errors to the server log
-------------------------------------------------------------------------
-
-local nextSend = 0
-hook.Add("OnLuaError", "LivingCityClientErrors", function(err, realm, stack, name)
-    local text = tostring(err)
-    if istable(stack) and stack[1] then text = text .. " @ " .. tostring(stack[1].File) .. ":" .. tostring(stack[1].Line) end
-    local low = string.lower(text .. tostring(name))
-    if not (string.find(low, "livingcity", 1, true) or string.find(low, "weapon_lc_", 1, true)) then return end
-    if CurTime() < nextSend then return end
-    nextSend = CurTime() + 5
-    net.Start("lc_clerror")
-    net.WriteString(string.sub(text, 1, 400))
-    net.SendToServer()
-end)
+-- (our own errors go to the server from sh_livingcity_errors.lua)
 
 -- the first corner of a box zone being placed (the editor tells us)
 net.Receive("lc_boxcorner", function()

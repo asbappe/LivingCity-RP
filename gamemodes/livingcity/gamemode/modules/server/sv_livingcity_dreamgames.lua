@@ -992,7 +992,7 @@ do
                 end
             end
         end
-        local okZ, errZ = pcall(Zombies, g, dt, players, now)
+        local okZ, errZ = LC.Try(Zombies, g, dt, players, now)
         if not okZ and LC.Error then LC.Error("freeze zombies", errZ) end
         if g.lasers then
             local keep = {}
@@ -1021,7 +1021,7 @@ local function Tick()
     local dream = LC.DreamActive
     local g = dream and dream.game
     if not g or g.stopped then timer.Remove("LivingCityDreamGames") return end
-    local ok, err = pcall(function()
+    local ok, err = LC.Try(function()
         local now = CurTime()
         local dt = math.Clamp(now - (g.last or now), 0, 0.25)
         g.last = now
@@ -1135,7 +1135,7 @@ function LC.DreamGameStart(dream)
     local players = LC.DreamersOf and LC.DreamersOf(dream) or dream.list
     -- the Administrator, asleep with the others, may star in it herself (sv_livingcity_propagandadreams.lua)
     if def.starring and LC.DreamStarOf then g.star = LC.DreamStarOf(players) end
-    local ok, err = pcall(def.build, g, dream)
+    local ok, err = LC.Try(def.build, g, dream)
     if not ok or err == false then
         for _, e in ipairs(g.ents) do if IsValid(e) then e:Remove() end end
         dream.game = nil
@@ -1143,7 +1143,7 @@ function LC.DreamGameStart(dream)
         return false, "The dream couldn't be built here."
     end
     g.started = #players
-    do local okD, errD = pcall(LC.DreamDress, g) if not okD and LC.Error then LC.Error("dream dressing", errD) end end
+    do local okD, errD = LC.Try(LC.DreamDress, g) if not okD and LC.Error then LC.Error("dream dressing", errD) end end
     local hello = def.hello and def.hello(g) or {}
     -- (the arena's box: the dreamers' screens leave out any city NPC wandering inside it, cl_livingcity_dreamgames.lua)
     if g.bounds and hello.bounds == nil then
@@ -1216,7 +1216,7 @@ end
 function LC.DreamGameLeave(p, dream)
     if not IsValid(p) then return end
     local g = dream and dream.game
-    if g and g.def and g.def.leave then pcall(g.def.leave, g, p) end -- (a dream's own way out: gravity back, sv_livingcity_strangedreams.lua)
+    if g and g.def and g.def.leave then LC.Try(g.def.leave, g, p) end -- (a dream's own way out: gravity back, sv_livingcity_strangedreams.lua)
     if g and g.pl[p] and not g.pl[p].done then
         g.pl[p].done, g.pl[p].how = true, g.pl[p].how or "woke"
         Send(g, { k = "stop", how = "woke" }, p)
@@ -1274,10 +1274,10 @@ function LC.DreamGameStop(dream, why)
     g.stopped = true
     timer.Remove("LivingCityDreamGames")
     if g.def.stop then -- (what a dream changed outside its arena, put back: the Freeze dream's lights)
-        local okS, errS = pcall(g.def.stop, g)
+        local okS, errS = LC.Try(g.def.stop, g)
         if not okS and LC.Error then LC.Error("dream game stop", errS) end
     end
-    if LC.SoundGuardDreamEnd then pcall(LC.SoundGuardDreamEnd, dream) end -- (its sounds, before what made them goes: sh_livingcity_soundguard.lua)
+    if LC.SoundGuardDreamEnd then LC.Try(LC.SoundGuardDreamEnd, dream) end -- (its sounds, before what made them goes: sh_livingcity_soundguard.lua)
     for p, s in pairs(g.pl) do
         if IsValid(p) and not s.done then Send(g, { k = "stop", how = why or "over" }, p) end
     end

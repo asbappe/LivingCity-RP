@@ -371,7 +371,7 @@ LC.JobGameDefine("hack", {
             if g.got >= HACK_NEED then
                 g.pay = 8 + (g.alarms == 0 and 6 or 0) + (g.misses == 0 and 2 or 0)
                 if g.alarms == 0 then Note(g, "The scanner never saw you: 6 credits bonus.") end
-                if g.opts.onDone then pcall(g.opts.onDone, g.ply) end
+                if g.opts.onDone then LC.Try(g.opts.onDone, g.ply) end
                 LC.JobGameEnd(g.ply, "done")
                 return true
             end
@@ -461,7 +461,7 @@ LC.JobGameDefine("drop", {
                 g.pay = 6 + (g.burned == 0 and 4 or 0) + (g.maxSeen < 0.3 and 2 or 0)
                 Note(g, "Hidden in " .. h.ent.lcDropName .. ".")
                 if g.maxSeen < 0.3 then Note(g, "Nobody noticed you: 2 credits bonus.") end
-                if g.opts.onDone then pcall(g.opts.onDone, ply) end
+                if g.opts.onDone then LC.Try(g.opts.onDone, ply) end
                 return LC.JobGameEnd(ply, "done")
             end
         else

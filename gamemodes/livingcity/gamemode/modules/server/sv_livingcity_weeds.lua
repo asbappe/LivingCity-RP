@@ -116,7 +116,7 @@ local function WeedTick(now)
 end
 LC.WeedTick = WeedTick
 timer.Create("LivingCityWeeds", 5, 0, function()
-    local ok, err = pcall(WeedTick, CurTime())
+    local ok, err = LC.Try(WeedTick, CurTime())
     if not ok and LC.Error then LC.Error("weeds", err) end
 end)
 

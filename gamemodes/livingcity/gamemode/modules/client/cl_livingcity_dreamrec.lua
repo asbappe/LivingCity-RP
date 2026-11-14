@@ -113,7 +113,7 @@ local function Scan(pnl, depth)
             R.scanned = R.scanned + 1
             local cls = c.GetClassName and c:GetClassName() or ""
             if (cls == "Label" or cls == "RichText" or cls == "TextEntry") and c.GetText then
-                local ok, t = pcall(c.GetText, c)
+                local ok, t = LC.Try(c.GetText, c)
                 if ok and isstring(t) and t ~= "" then
                     local x, y = 0, 0
                     if c.LocalToScreen then x, y = c:LocalToScreen(0, 0) end
@@ -166,9 +166,9 @@ local function Install()
     end end)
     Wrap(surface, "DrawText", function(was) return function(text, ...)
         if R and alpha > 20 then
-            if in3d then pcall(Seen, text, font, 0, math.floor(ty or 0), "world")
+            if in3d then LC.Try(Seen, text, font, 0, math.floor(ty or 0), "world")
             elseif (tx or 0) > -400 and (ty or 0) > -100 and (tx or 0) < ScrW() and (ty or 0) < ScrH() then
-                pcall(Seen, text, font, math.floor(tx or 0), math.floor(ty or 0), "screen")
+                LC.Try(Seen, text, font, math.floor(tx or 0), math.floor(ty or 0), "screen")
             end
         end
         return was(text, ...)
@@ -179,28 +179,28 @@ local function Install()
         if R then
             local parts = {}
             for _, a in ipairs({ ... }) do if isstring(a) then parts[#parts + 1] = a end end
-            if #parts > 0 then pcall(Add, "chat", table.concat(parts)) end
+            if #parts > 0 then LC.Try(Add, "chat", table.concat(parts)) end
         end
         return was(...)
     end end)
-    Wrap(surface, "PlaySound", function(was) return function(s, ...) pcall(Heard, s) return was(s, ...) end end)
-    Wrap(sound, "PlayFile", function(was) return function(s, ...) pcall(Heard, s, "a file") return was(s, ...) end end)
-    Wrap(sound, "Play", function(was) return function(s, ...) pcall(Heard, s, "in the world") return was(s, ...) end end)
+    Wrap(surface, "PlaySound", function(was) return function(s, ...) LC.Try(Heard, s) return was(s, ...) end end)
+    Wrap(sound, "PlayFile", function(was) return function(s, ...) LC.Try(Heard, s, "a file") return was(s, ...) end end)
+    Wrap(sound, "Play", function(was) return function(s, ...) LC.Try(Heard, s, "in the world") return was(s, ...) end end)
 
     hook.Add("EntityEmitSound", "LivingCityDreamRec", function(data)
         if R and istable(data) then
             local e = data.Entity
-            pcall(Heard, data.SoundName or data.OriginalSoundName or "?", IsValid(e) and ("from " .. e:GetClass()) or nil)
+            LC.Try(Heard, data.SoundName or data.OriginalSoundName or "?", IsValid(e) and ("from " .. e:GetClass()) or nil)
         end
     end)
     hook.Add("ChatText", "LivingCityDreamRec", function(_, _, text)
-        if R and isstring(text) and text ~= "" then pcall(Add, "chat", text) end
+        if R and isstring(text) and text ~= "" then LC.Try(Add, "chat", text) end
     end)
     hook.Add("PostRender", "LivingCityDreamRec", function()
         if not (R and R.shotNow) then return end
         R.shotNow = nil
         if gui and gui.IsGameUIVisible and gui.IsGameUIVisible() then return end
-        local ok, data = pcall(render.Capture, { format = "jpeg", quality = 60, x = 0, y = 0, w = ScrW(), h = ScrH() })
+        local ok, data = LC.Try(render.Capture, { format = "jpeg", quality = 60, x = 0, y = 0, w = ScrW(), h = ScrH() })
         if not (ok and isstring(data) and #data > 0) then return end
         local t = T()
         local name = string.format("shot_%04d_%d.jpg", math.floor(t), math.floor((t % 1) * 10))
@@ -332,7 +332,7 @@ local function Finish(why)
     if not r or r.finishing then return end
     r.finishing = true
     Uninstall()
-    local ok, text, fast, tight = pcall(Report, why)
+    local ok, text, fast, tight = LC.Try(Report, why)
     if ok then
         file.Write(r.dir .. "/log.txt", text)
     else
@@ -352,13 +352,13 @@ LC_CL.DreamRecFinish = Finish
 local function Tick()
     if not R then return end
     local now = T()
-    local ok, err = pcall(function()
+    local ok, err = LC.Try(function()
         R.ticks = R.ticks + 1
         Close(now)
         if R.ticks % 2 == 0 then
             R.scanned = 0
-            if vgui.GetWorldPanel then pcall(Scan, vgui.GetWorldPanel(), 0) end
-            if GetHUDPanel then pcall(Scan, GetHUDPanel(), 0) end
+            if vgui.GetWorldPanel then LC.Try(Scan, vgui.GetWorldPanel(), 0) end
+            if GetHUDPanel then LC.Try(Scan, GetHUDPanel(), 0) end
         end
         -- (frames a second, when it's slow)
         local ft = RealFrameTime and RealFrameTime() or 0

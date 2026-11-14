@@ -308,7 +308,7 @@ function LC.HijackStart(screen, by)
         screen:SetNW2Float("lc_hijacked_until", 0)
         LC.RebelSurgeUntil = CurTime() + 600
         LC.SocioOverride = { level = "yellow", untilT = CurTime() + 600, by = "Resistance broadcast" }
-        if LC.RefreshSocio then pcall(LC.RefreshSocio, false, true) end
+        if LC.RefreshSocio then LC.Try(LC.RefreshSocio, false, true) end
         for _, p in ipairs(player.GetAll()) do p:ChatPrint("[City] The Resistance's message ran for a full minute. People are talking.") end
         if IsValid(screen.lcHijacker) and screen.lcHijacker:IsPlayer() and LC.AddXP then LC.AddXP(screen.lcHijacker, 40, "screen hijack") end
         hook.Run("LivingCityHijackDone", screen)
@@ -410,7 +410,7 @@ function LC.StartOverwatchDrop(pos)
             local p = LC.ManpowerPool("ota")
             p.reserve = p.reserve + 1
         end
-        local ok, npc, st = pcall(sp, at, (elite and i == 1) and "elite" or nil)
+        local ok, npc, st = LC.Try(sp, at, (elite and i == 1) and "elite" or nil)
         if ok and IsValid(npc) and st and door then
             npc:SetAngles(Angle(0, door.dir:Angle().y, 0))
             -- the deploy: Half-Life 2's soldiers jump or step down out of the container
@@ -713,7 +713,7 @@ function LC.AssignWork(foreman, target)
         for _, x in ipairs(LC.QuestTemplates or {}) do if x.id == id then t = x end end
     end
     if not t then return false, "No work orders to hand out." end
-    local okB, spec = pcall(t.build, target)
+    local okB, spec = LC.Try(t.build, target)
     if not okB or not spec then return false, "Nothing to send them to right now." end
     assignSerial = assignSerial + 1
     spec.id, spec.tmpl, spec.faction, spec.data = assignSerial, t, "citizen", spec.data or {}
@@ -913,7 +913,7 @@ local swingTick = 0
 timer.Create("LivingCityVortSweep", 0.1, 0, function()
     if next(LC.VortSlaves) == nil then return end
     local now = CurTime()
-    local ok, err = pcall(function()
+    local ok, err = LC.Try(function()
         for v, s in pairs(LC.VortSlaves) do if IsValid(v) and (s.fleeUntil or 0) < now then Swing(v, s, now) end end
         swingTick = swingTick + 1
         if swingTick % 3 == 0 then SlaveMakeWay(now) end
@@ -1124,7 +1124,7 @@ function LC.VortChargeShow(ply, v)
     local name = LC.VortChargeSequence(v)
     if name and LC.MakeSequence then
         local flags = (SF_SCRIPT_NO_COMPLAINTS or 128) + (SF_SCRIPT_ALLOW_DEATH or 64)
-        local ok, ss = pcall(LC.MakeSequence, v, v:GetPos(), v:GetAngles().y, name, name, flags, 0, 0)
+        local ok, ss = LC.Try(LC.MakeSequence, v, v:GetPos(), v:GetAngles().y, name, name, flags, 0, 0)
         if ok and IsValid(ss) then
             timer.Simple(secs + 0.3, function()
                 if not IsValid(ss) then return end
@@ -1208,7 +1208,7 @@ end)
 
 local nextOps, nextSmuggle, nextReact = 0, 0, 0
 timer.Create("LivingCityResistanceOps", 1, 0, function()
-    local ok, err = pcall(function()
+    local ok, err = LC.Try(function()
         local now = CurTime()
         OpTick(now)
         DropTick(now)

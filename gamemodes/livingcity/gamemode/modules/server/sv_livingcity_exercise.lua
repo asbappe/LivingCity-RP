@@ -269,7 +269,7 @@ local function Post(posts, prefer)
             local sp = LC.Spawners and (LC.Spawners[prefer or "cop"] or LC.Spawners.cop)
             local from = LC.AlarmSquadSpot and LC.AlarmSquadSpot(post) or post
             if sp then
-                local ok, n, s = pcall(sp, from)
+                local ok, n, s = LC.Try(sp, from)
                 if ok and IsValid(n) and s then npc, st = n, s st.unmanaged = true st.exTemp = true end
             end
         end
@@ -486,7 +486,7 @@ local function EnlistCitizens(n, poiFor)
         if not (pos and sp) then break end
         local from = (LC.AlarmSquadSpot and LC.AlarmSquadSpot(pos)) or nil
         if not from then break end
-        local ok, npc, st = pcall(sp, from)
+        local ok, npc, st = LC.Try(sp, from)
         if not (ok and IsValid(npc) and st) then break end
         if LC.GoTo and LC.GoTo(npc, st, pos, X.kind == "jog", { kind = "exercise", pos = pos, yaw = data and data.yaw }) then
             st.exCitizen = data or {}
@@ -729,7 +729,7 @@ function LC.ExerciseBegin(kind)
     local now = CurTime()
     X = { kind = kind, phase = "muster", start = now, musterEnds = now + math.max(15, cvMuster:GetFloat()),
         people = {}, absent = {}, npcs = {}, units = {}, column = {} }
-    local ok, err = pcall(kind == "jog" and SetupJog or kind == "drill" and SetupDrill or SetupParade)
+    local ok, err = LC.Try(kind == "jog" and SetupJog or kind == "drill" and SetupDrill or SetupParade)
     if not ok then
         LC.Error("exercise setup", err)
         X = nil
@@ -763,7 +763,7 @@ local function StartRun(now)
             -- a Union fitness instructor runs it
             local sp = LC.Spawners and LC.Spawners.citizen
             if sp then
-                local ok, npc, st = pcall(sp, X.yard.pos + Vector(0, 0, 4))
+                local ok, npc, st = LC.Try(sp, X.yard.pos + Vector(0, 0, 4))
                 if ok and IsValid(npc) and st then
                     st.unmanaged, st.questLock = true, true
                     LC.SetState(npc, st, "event")
@@ -1335,7 +1335,7 @@ timer.Create("LivingCityExercise", 0.1, 0, function()
         if p.lcxBoost and now > p.lcxBoost.untilT then EndBoost(p) end
     end
     if not X then return end
-    local ok, err = pcall(function()
+    local ok, err = LC.Try(function()
         if not LC.Running or (LC.Event ~= X.kind) then return LC.ExerciseFinish() end
         local dt = math.Clamp(now - lastTick, 0, 0.5)
         lastTick = now

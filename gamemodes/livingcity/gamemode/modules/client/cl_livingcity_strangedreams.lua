@@ -107,7 +107,7 @@ LC_CL.DreamEcho = Echo
 function LC_CL.DreamIntro(lines)
     lines = lines or {}
     local me = LocalPlayer()
-    if IsValid(me) and me.SetDSP then pcall(me.SetDSP, me, LC_CL.DreamEchoDSP, false) end
+    if IsValid(me) and me.SetDSP then LC.Try(me.SetDSP, me, LC_CL.DreamEchoDSP, false) end
     Echo(lines[1], 0.4)
     Echo(lines[2] or lines[1], 3.0)
     Echo(lines[1], 5.6, 82)

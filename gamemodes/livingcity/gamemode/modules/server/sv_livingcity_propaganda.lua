@@ -195,7 +195,7 @@ function LC.StopBroadcast(why)
         if pirate then
             LC.RebelSurgeUntil = now + 600
             LC.SocioOverride = { level = "yellow", untilT = now + 600, by = "pirate broadcast" }
-            if LC.RefreshSocio then pcall(LC.RefreshSocio, false, true) end
+            if LC.RefreshSocio then LC.Try(LC.RefreshSocio, false, true) end
             if IsValid(ply) and ply:GetNW2String("lcf_faction", "") == "resistance" and LC.AddXP then LC.AddXP(ply, 40, "pirate broadcast") end
         else
             LC.RebelCalmUntil = now + 600
@@ -394,7 +394,7 @@ function LC.WavDuration(path)
     durations[path] = false
     local f = file.Open and file.Open("sound/" .. path, "rb", "GAME")
     if not f then return nil end
-    local ok, secs = pcall(function()
+    local ok, secs = LC.Try(function()
         if f:Read(4) ~= "RIFF" then return nil end
         f:Read(4)
         if f:Read(4) ~= "WAVE" then return nil end
@@ -666,7 +666,7 @@ function LC.NPCBroadcastTick(now)
 end
 
 timer.Create("LivingCityNPCBroadcast", 10, 0, function()
-    local ok, err = pcall(LC.NPCBroadcastTick)
+    local ok, err = LC.Try(LC.NPCBroadcastTick)
     if not ok and LC.Error then LC.Error("npc broadcast", err) end
 end)
 

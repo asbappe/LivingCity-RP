@@ -47,10 +47,10 @@ local songVolSet
 hook.Add("Think", "LivingCityEndingSongVolume", function()
     if not channel or not channel.SetVolume then songVolSet = nil return end
     local v = LC_CL.EndingSongVolume()
-    if v ~= songVolSet then songVolSet = v pcall(channel.SetVolume, channel, v) end
+    if v ~= songVolSet then songVolSet = v LC.Try(channel.SetVolume, channel, v) end
 end)
 local function StopSong()
-    if channel and channel.Stop then pcall(channel.Stop, channel) end
+    if channel and channel.Stop then LC.Try(channel.Stop, channel) end
     channel, songAt = nil, nil
 end
 -- How far into the song it is: by the clock from when it started, not the

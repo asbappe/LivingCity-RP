@@ -49,7 +49,7 @@ end
 
 local function When(t)
     if not t then return "" end
-    local ok, s = pcall(os.date, "%d/%m %H:%M", t)
+    local ok, s = LC.Try(os.date, "%d/%m %H:%M", t)
     return ok and s or ""
 end
 

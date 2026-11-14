@@ -425,7 +425,7 @@ local function Hook(name, fn)
     HOOKS[#HOOKS + 1] = name
     hook.Add(name, "LivingCityStudy", function(...)
         if not S then return end
-        local ok, err = pcall(fn, ...)
+        local ok, err = LC.Try(fn, ...)
         if not ok and LC.Error then LC.Error("play study", err) end
         -- (never a return value: the study watches, it decides nothing)
     end)
@@ -444,8 +444,8 @@ local function Stop(why, discard)
             net.Start("lc_study") net.WriteString("end") net.WriteString("discard") net.WriteUInt(0, 16) net.Send(s.ply)
         else
             Add("end", why or "stopped")
-            pcall(Flush)
-            local ok, lines = pcall(Report, why or "stopped")
+            LC.Try(Flush)
+            local ok, lines = LC.Try(Report, why or "stopped")
             if ok then SendLines("report", lines) elseif LC.Error then LC.Error("play study report", lines) end
             net.Start("lc_study") net.WriteString("end") net.WriteString(ok and "" or "no report") net.WriteUInt(0, 16) net.Send(s.ply)
         end
@@ -497,7 +497,7 @@ local function Seen(name, ...)
     end
     if not mine then return end
     S.inSeen = true
-    local ok = pcall(function(...)
+    local ok = LC.Try(function(...)
         local short = string.sub(name, 11)
         local now = Now()
         -- (the same thing many times a minute is said once, then counted quietly)
@@ -532,7 +532,7 @@ local function Tick()
     if not S then return end
     local p = S.ply
     if not IsValid(p) then Stop("the player left") return end
-    local ok, err = pcall(function()
+    local ok, err = LC.Try(function()
         local now = Now()
         S.ticks = S.ticks + 1
 
@@ -679,7 +679,7 @@ local function Tick()
         S.errors = (S.errors or 0) + 1
         if S.errors <= 3 then Add("study", "couldn't look (" .. tostring(err) .. ")") end
     end
-    if S and S.ticks % 2 == 0 then pcall(Flush) end
+    if S and S.ticks % 2 == 0 then LC.Try(Flush) end
     if S and S.ticks % 5 == 0 then Status(S.ply) end
 end
 
@@ -759,7 +759,7 @@ function LC.StudyStart(p)
     -- The gamemode's own events, and what the player is told.
     runWas, callWas = hook.Run, hook.Call
     local function Chat(ply, text)
-        if S and ply == S.ply and text ~= nil then pcall(S.said, text) end
+        if S and ply == S.ply and text ~= nil then LC.Try(S.said, text) end
     end
     runMine = function(name, ...)
         if S then
@@ -778,7 +778,7 @@ function LC.StudyStart(p)
     if noticeWas then
         noticeMine = function(ply, kind, title, text, secs, ...)
             if S and not S.pause and (ply == S.ply or (istable(ply) and table.HasValue(ply, S.ply))) then
-                pcall(function()
+                LC.Try(function()
                     local line = "[" .. tostring(kind) .. "] " .. tostring(title) .. ": " .. tostring(text)
                     local now = CurTime()
                     if S.toldLine ~= line or now - (S.toldAt or 0) > 10 then Add("told", line) end

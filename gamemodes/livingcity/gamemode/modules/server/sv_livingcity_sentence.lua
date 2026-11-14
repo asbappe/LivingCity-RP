@@ -660,7 +660,7 @@ end
 local nextProb = 0
 timer.Create("LivingCitySentence", 0.2, 0, function()
     local now = CurTime()
-    local ok, err = pcall(function()
+    local ok, err = LC.Try(function()
         if next(DETAILS) then LC.SentenceTick(now) end
         if now >= nextProb then
             nextProb = now + 2

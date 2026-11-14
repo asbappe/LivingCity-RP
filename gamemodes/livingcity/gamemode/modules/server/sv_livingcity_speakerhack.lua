@@ -99,7 +99,7 @@ function LC.UseUtilityBox(ply, box)
             sp:SetNW2Float("lc_hacked_until", 0)
             box:EmitSound("buttons/combine_button5.wav", 60)
             if LC.Notice then LC.Notice(p, "info", "Splice cut out", "The loudspeaker is the city's again.", 5) end
-            if LC.AddXP then pcall(LC.AddXP, p, 2, "cut a Resistance splice out of a loudspeaker") end
+            if LC.AddXP then LC.Try(LC.AddXP, p, 2, "cut a Resistance splice out of a loudspeaker") end
             hook.Run("LivingCitySpeakerCut", p, sp)
         end)
     end
@@ -163,6 +163,6 @@ timer.Create("LivingCitySpeakerHackSparks", 6, 0, function()
     end
 end)
 timer.Create("LivingCityUtilityBoxes", 15, 0, function()
-    local ok, err = pcall(LC.EnsureUtilityBoxes)
+    local ok, err = LC.Try(LC.EnsureUtilityBoxes)
     if not ok and LC.Error then LC.Error("utility boxes", err) end
 end)

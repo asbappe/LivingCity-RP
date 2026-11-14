@@ -320,7 +320,7 @@ end)
 local nextWatch = 0
 timer.Create("LivingCitySnitches", 0.5, 0, function()
     local now = CurTime()
-    local ok, err = pcall(function()
+    local ok, err = LC.Try(function()
         SnitchTick(now)
         if now >= nextWatch then
             nextWatch = now + 2

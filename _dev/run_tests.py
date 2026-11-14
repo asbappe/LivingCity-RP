@@ -103,6 +103,21 @@ for path in glob.glob(GMROOT_ALL + "/lua/**/*.lua", recursive=True) + glob.glob(
     for m in MULTI_AND.finditer(code):
         line = code.count("\n", 0, m.start()) + 1
         problems.append("%s:%d takes several values from 'x and f()', which only ever gives one" % (os.path.relpath(path, GMROOT_ALL), line))
+# pcall swallows an error and tells nobody: the gamemode uses LC.Try (sh_livingcity_errors.lua), which is
+# pcall with the error written down in the server's errors file. (That file itself is the one place for pcall.)
+BARE_PCALL = re.compile(r"(?<![\w.:])pcall\b")
+for path in glob.glob(GMROOT_ALL + "/gamemodes/**/*.lua", recursive=True):
+    if path.endswith("sh_livingcity_errors.lua"):
+        continue
+    code = strip_lua(open(path).read())
+    for m in BARE_PCALL.finditer(code):
+        line = code.count("\n", 0, m.start()) + 1
+        problems.append("%s:%d uses pcall: use LC.Try, so what it swallows is written down" % (os.path.relpath(path, GMROOT_ALL), line))
+# the house rules as numbers that may fall but not rise (house_rules.py): stand-still job steps,
+# places that put text on a player's screen, console commands no menu names
+import house_rules
+if os.path.exists(house_rules.BASE) and not os.environ.get("LC_HOUSE_RULES_DONE"):
+    problems += house_rules.check(house_rules.count()[0], json.load(open(house_rules.BASE)))
 if problems:
     print("GMOD LUA CHECK FAILED")
     for p in problems: print("  " + p)
@@ -153,6 +168,10 @@ GMROOT = os.path.join(GMDIR, "gamemode")
 L.globals()._GMSRC_SHARED = open(os.path.join(GMROOT, "shared.lua")).read()
 L.globals()._GMSRC_INIT = open(os.path.join(GMROOT, "init.lua")).read()
 
+# the robot players (robots.lua), run by the RobotTests unit
+L.globals()._ROBOTSRC = open(os.path.join(HERE, "robots.lua")).read()
+L.globals()._ROBOTS_ON = bool(os.environ.get("LC_ROBOTS"))
+
 # the core snapshot (CORE.md): what the core looked like when the owner last OK'd it
 SNAP = os.path.join(HERE, "core_snapshot.txt")
 L.globals()._CORE_SNAPSHOT = open(SNAP).read() if os.path.exists(SNAP) else None
@@ -172,5 +191,21 @@ if now is not None and (not os.path.exists(SNAP) or open(SNAP).read() != now):
         f.write(now)
     print("\nThe core has changed (or there's no snapshot yet): the new list is in _dev/core_snapshot.new.txt. "
           "Diff it against core_snapshot.txt, and only with the owner's OK copy it over (CORE.md).")
+# What went wrong inside the gamemode while the tests ran, as the server's own errors file would list it
+# (sh_livingcity_errors.lua): errors a protected call swallowed show here and nowhere else.
+# LC_ERRDUMP=/some/path python3 run_tests.py ...  writes /some/path.<pid>.txt
+# The robot players' own report (what each job is made of, how it went): LC_ROBOTS=/some/file python3 run_tests.py ...
+if os.environ.get("LC_ROBOTS"):
+    rep = L.globals()._ROBOT_REPORT
+    if rep:
+        with open(os.environ["LC_ROBOTS"], "w") as f:
+            f.write(str(rep) + "\n")
+if os.environ.get("LC_ERRDUMP"):
+    try:
+        text = L.eval("LC and LC.ErrorsText and LC.ErrorsText()")
+        with open("%s.%d.txt" % (os.environ["LC_ERRDUMP"], os.getpid()), "w") as f:
+            f.write(text or "")
+    except Exception as e:
+        print("could not write the errors list: %s" % e)
 print(f"\n{passed} passed, {failed} failed")
 sys.exit(1 if failed else 0)

@@ -241,7 +241,7 @@ function LC.ArchiveJogPoints()
     local any = false
     for _, p in ipairs(LC.Points) do if p.kind == "jogroute" then any = true break end end
     if not any then return 0 end
-    if LC.BackupLayout then pcall(LC.BackupLayout, "before the jogging routes were removed") end
+    if LC.BackupLayout then LC.Try(LC.BackupLayout, "before the jogging routes were removed") end
     local keep, seen, n = {}, {}, 0
     for _, p in ipairs(LC.Points) do
         if p.kind ~= "jogroute" then

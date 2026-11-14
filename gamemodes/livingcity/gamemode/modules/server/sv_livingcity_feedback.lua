@@ -26,7 +26,7 @@ local cached, cachedAt
 local function Report()
     local now = CurTime()
     if cached and cachedAt and now - cachedAt < REPORT_KEEP then return cached end
-    local ok, text = pcall(LC.BuildReport)
+    local ok, text = LC.Try(LC.BuildReport)
     if not ok then text = "Report failed to build: " .. tostring(text) end
     cached, cachedAt = text, now
     return text

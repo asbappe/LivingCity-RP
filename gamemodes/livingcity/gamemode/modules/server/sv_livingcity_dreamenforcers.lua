@@ -183,7 +183,7 @@ function LC.DreamEnforcerStrike(p)
     local why = best.lcDreamBadWhy or "misbehaving"
     g.enfPunishing = true
     local hit
-    local ok, err = pcall(function()
+    local ok, err = LC.Try(function()
         if LC.PropagandaDreams and LC.PropagandaDreams[g.id] and LC.PropagandaOffend then
             hit = LC.PropagandaOffend(g, best, "An Enforcer's baton", "An Enforcer caught you (" .. why .. ").")
         elseif LC.DreamGameHit then
@@ -234,7 +234,7 @@ function LC.DreamEnforcersTick(now)
     end
 end
 timer.Create("LivingCityDreamEnforcers", 0.5, 0, function()
-    local ok, err = pcall(LC.DreamEnforcersTick, CurTime())
+    local ok, err = LC.Try(LC.DreamEnforcersTick, CurTime())
     if not ok and LC.Error then LC.Error("dream enforcers", err) end
 end)
 

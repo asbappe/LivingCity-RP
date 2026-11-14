@@ -320,7 +320,7 @@ hook.Add("ShutDown", "LivingCityPeople", function() if dirty then LC.SavePeople(
 
 hook.Add("InitPostEntity", "LivingCityPeople", function()
     timer.Simple(1, function()
-        local ok, err = pcall(function() LC.LoadPeople() LC.TopUpPeople() end)
+        local ok, err = LC.Try(function() LC.LoadPeople() LC.TopUpPeople() end)
         if not ok then LC.Error("people", err) end
     end)
 end)

@@ -288,7 +288,7 @@ LC.PushNextStep = Push
 
 timer.Create("LivingCityNextStep", 2, 0, function()
     for _, ply in ipairs(player.GetAll()) do
-        local ok, err = pcall(Push, ply)
+        local ok, err = LC.Try(Push, ply)
         if not ok and LC.Error then LC.Error("next step", err) end
     end
 end)
@@ -306,5 +306,5 @@ end
 hook.Add("LivingCityRationCollected", "LivingCityNextStep", function(ply)
     local cid = ply:GetNW2String("lc_cid", "")
     if cid ~= "" then ply:SetPData("lc_first_ration", cid) end
-    timer.Simple(0, function() if IsValid(ply) then pcall(Push, ply) end end)
+    timer.Simple(0, function() if IsValid(ply) then LC.Try(Push, ply) end end)
 end)

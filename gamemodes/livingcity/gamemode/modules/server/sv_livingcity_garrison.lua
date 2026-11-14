@@ -175,7 +175,7 @@ end
 
 timer.Create("LivingCityGarrison", 2, 0, function()
     if not LC.Running then return end
-    local ok, err = pcall(LC.GarrisonTick, CurTime())
+    local ok, err = LC.Try(LC.GarrisonTick, CurTime())
     if not ok and LC.Log then LC.Log("error", "garrison: " .. tostring(err)) end
 end)
 

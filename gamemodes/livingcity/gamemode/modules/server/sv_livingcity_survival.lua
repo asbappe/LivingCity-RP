@@ -779,7 +779,7 @@ function LC.PocketHeldGuns(ply)
 end
 hook.Add("PlayerDisconnected", "LivingCityPocketGuns", function(ply) LC.PocketHeldGuns(ply) end)
 hook.Add("ShutDown", "LivingCityPocketGuns", function()
-    for _, p in ipairs(player.GetAll()) do pcall(LC.PocketHeldGuns, p) end
+    for _, p in ipairs(player.GetAll()) do LC.Try(LC.PocketHeldGuns, p) end
 end)
 hook.Add("PlayerSay", "LivingCityInventoryChat", function(ply, text)
     local t = string.lower(string.Trim(text))
@@ -1173,7 +1173,7 @@ hook.Add("PhysgunDrop", "LivingCityFixtures", function(ply, e)
 end)
 
 hook.Add("LivingCityLayoutChanged", "LivingCityFixtures", function()
-    timer.Simple(0, function() local ok, err = pcall(LC.SyncFixtures) if not ok then LC.Error("fixtures", err) end end)
+    timer.Simple(0, function() local ok, err = LC.Try(LC.SyncFixtures) if not ok then LC.Error("fixtures", err) end end)
 end)
 
 function LC.UseVending(ply, ent)

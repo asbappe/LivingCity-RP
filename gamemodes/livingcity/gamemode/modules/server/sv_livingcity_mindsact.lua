@@ -174,7 +174,7 @@ function LC.MindsErrandTick(now)
             local pos = e.target:GetPos()
             if npc:GetPos():DistToSqr(pos) < NEAR * NEAR then
                 EndErrand(npc, st)
-                local ok, err = pcall(e.fn, npc, st, e.target)
+                local ok, err = LC.Try(e.fn, npc, st, e.target)
                 if not ok and LC.Error then LC.Error("minds (errand)", err) end
             elseif now - e.at > ERRAND_SECS then
                 EndErrand(npc, st)
@@ -607,7 +607,7 @@ LC.MindsFree, LC.MindsErrand, LC.MindsNamed = Free, Errand, Named -- (the direct
 function LC.MindsAct(m, kind, now)
     if not On() or not m or not m.psy or not ACT[kind] then return nil end
     now = now or CurTime()
-    local ok, did = pcall(ACT[kind], m, now)
+    local ok, did = LC.Try(ACT[kind], m, now)
     if not ok then
         if LC.Error then LC.Error("minds (act " .. tostring(kind) .. ")", did) end
         return nil
@@ -634,6 +634,6 @@ end
 
 timer.Create("LivingCityMindsAct", 1, 0, function()
     if LC.TimeStopped or not next(A.errands) then return end
-    local ok, err = pcall(LC.MindsErrandTick, CurTime())
+    local ok, err = LC.Try(LC.MindsErrandTick, CurTime())
     if not ok and LC.Error then LC.Error("minds (errands)", err) end
 end)

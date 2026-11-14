@@ -23,7 +23,7 @@ local function Do(action, a, b)
 end
 
 local function When(t)
-    local ok, s = pcall(os.date, "%d/%m %H:%M", t or 0)
+    local ok, s = LC.Try(os.date, "%d/%m %H:%M", t or 0)
     return ok and s or ""
 end
 

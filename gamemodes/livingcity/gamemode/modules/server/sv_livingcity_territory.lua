@@ -690,7 +690,7 @@ end
 LC.TerritoryTryGrow = TryGrow
 
 timer.Create("LivingCityTerritory", 10, 0, function()
-    local ok, err = pcall(function()
+    local ok, err = LC.Try(function()
         if not LC.Running or not cvOn:GetBool() then return end
         local now = CurTime()
         -- one growth at a time per territory (a cluster of touching zones), not per zone

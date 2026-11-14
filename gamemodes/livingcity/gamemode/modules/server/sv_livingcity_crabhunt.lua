@@ -251,6 +251,6 @@ function CH.Check(now)
 end
 
 timer.Create("LivingCityCrabHunt", 30, 0, function()
-    local ok, err = pcall(CH.Check)
+    local ok, err = LC.Try(CH.Check)
     if not ok and LC.Error then LC.Error("headcrab hunt", err) end
 end)

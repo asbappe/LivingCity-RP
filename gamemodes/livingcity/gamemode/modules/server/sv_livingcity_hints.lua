@@ -792,7 +792,7 @@ timer.Create("LivingCityHints", SCAN_EVERY / SLICES, 0, function()
     slice = (slice + 1) % SLICES
     for i, ply in LC.Players() do
         if i % SLICES == slice then
-            local ok, err = pcall(LC.HintScan, ply)
+            local ok, err = LC.Try(LC.HintScan, ply)
             if not ok and LC.Error then LC.Error("hints", err) end
         end
     end

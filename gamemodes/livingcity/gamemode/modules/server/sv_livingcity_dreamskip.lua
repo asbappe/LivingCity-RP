@@ -117,7 +117,7 @@ hook.Add("PlayerInitialSpawn", "LivingCityDreamSkip", function(p)
 end)
 -- (standing moves all the time: what's earned is looked at again now and then)
 timer.Create("LivingCityDreamSkip", 30, 0, function()
-    for _, p in ipairs(player.GetAll()) do pcall(Sync, p) end
+    for _, p in ipairs(player.GetAll()) do LC.Try(Sync, p) end
 end)
 hook.Add("LivingCityNewCharacter", "LivingCityDreamSkip", function(p)
     if not IsValid(p) then return end

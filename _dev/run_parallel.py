@@ -295,6 +295,16 @@ def parse(text):
     return regions, order, bool(done)
 
 
+SHARD_ENV = dict(os.environ, LC_HOUSE_RULES_DONE="1")   # (the house rules are checked once, here, not in every shard)
+
+
+def house_rules_problems():
+    import house_rules
+    if not os.path.exists(house_rules.BASE):
+        return []
+    return house_rules.check(house_rules.count()[0], json.load(open(house_rules.BASE)))
+
+
 def main():
     ap = argparse.ArgumentParser(description="Run _dev/tests.lua across the CPU cores and merge the results.")
     ap.add_argument("--workers", type=int, default=os.cpu_count() or 2, help="processes at once (default: the CPU count)")
@@ -311,6 +321,7 @@ def main():
     t = rs.Tests(args.tests)
     if t.final_depth != 0:
         sys.exit("block depth does not return to 0 (%d): run_section.py cannot read tests.lua" % t.final_depth)
+    whole = rs.whole_file_error(t)                 # (the shards load when the whole file no longer does)
     stop_line = find_stop(t)
     atoms = build_atoms(t, stop_line)
     weigh(atoms, load_times())
@@ -359,7 +370,7 @@ def main():
         s0 = time.time()
         try:
             with open(p["out"], "w") as fh:
-                r = subprocess.run([sys.executable, "run_tests.py", p["lua"]], cwd=HERE, stdout=fh,
+                r = subprocess.run([sys.executable, "run_tests.py", p["lua"]], cwd=HERE, stdout=fh, env=SHARD_ENV,
                                    stderr=subprocess.STDOUT, timeout=args.timeout)
             p["code"] = r.returncode
         except subprocess.TimeoutExpired:
@@ -495,6 +506,9 @@ def main():
           % (time.time() - t0, len(plan), sum(p.get("secs", 0) for p in plan), max(p.get("secs", 0) for p in plan)))
     for name, sec, line in fails:
         print("%s   [%s]" % (line[:300], sec or name))
+    problems += ["house rules: " + x for x in house_rules_problems()]
+    if whole:
+        problems.append("tests.lua does not load whole, so run_tests.py cannot run it: %s (%s)" % (whole, rs.WHOLE_FIX))
     for msg in problems:
         print("PROBLEM: " + msg)
     if core_msg:

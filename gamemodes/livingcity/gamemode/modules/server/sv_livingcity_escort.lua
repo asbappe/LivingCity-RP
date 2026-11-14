@@ -671,7 +671,7 @@ function LC.EscortTick()
 end
 
 timer.Create("LivingCityEscorts", 0.5, 0, function()
-    local ok, err = pcall(LC.EscortTick)
+    local ok, err = LC.Try(LC.EscortTick)
     if not ok and LC.Error then LC.Error("escort", err) end
 end)
 

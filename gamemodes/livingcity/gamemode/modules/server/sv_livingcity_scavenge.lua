@@ -98,12 +98,12 @@ timer.Create("LivingCityTasks", 0.25, 0, function()
             tasks[ply] = nil
         elseif not ply:Alive() then
             -- died mid-task: cancelled, so anything held for it is settled
-            local ok, err = pcall(EndTask, ply, false)
+            local ok, err = LC.Try(EndTask, ply, false)
             if not ok then LC.Error("task", err) end
         elseif ply:GetPos():DistToSqr(t.anchor) > t.maxMove * t.maxMove or ply:Health() < t.hp then
             EndTask(ply, false)
         elseif now >= t.untilT then
-            local ok, err = pcall(EndTask, ply, true)
+            local ok, err = LC.Try(EndTask, ply, true)
             if not ok then LC.Error("task", err) end
         end
     end
@@ -579,7 +579,7 @@ end
 -- pots ripen, crates refill
 local nextTrickle = 0
 timer.Create("LivingCityRebelSupplies", 5, 0, function()
-    local ok, err = pcall(function()
+    local ok, err = LC.Try(function()
         EnsureRebelProps()
         local now = CurTime()
         for _, r in pairs(LC.RebelProps) do

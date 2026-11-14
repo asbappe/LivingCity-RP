@@ -1053,7 +1053,7 @@ hook.Add("CreateClientsideRagdoll", "LivingCityNoDuplicates", function(ent, rag)
     if not IsValid(ent) or not IsValid(rag) then return end
     if CARCASS_CLASSES[ent:GetClass()] or ent:GetNW2Bool("lc_noragdoll", false) then
         rag:SetNoDraw(true)
-        timer.Simple(0, function() if IsValid(rag) then pcall(rag.Remove, rag) end end)
+        timer.Simple(0, function() if IsValid(rag) then LC.Try(rag.Remove, rag) end end)
     end
 end)
 

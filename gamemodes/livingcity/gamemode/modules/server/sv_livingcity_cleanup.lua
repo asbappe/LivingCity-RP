@@ -103,7 +103,7 @@ local function SuitOutfit(suit)
     if not Valid((string.gsub(pm, "{sex}", "male"))) then return nil end
     -- every skin it has, each person their own
     local n = 1
-    pcall(function()
+    LC.Try(function()
         local info = util.GetModelInfo and util.GetModelInfo((string.gsub(npc, "{sex}", "male")))
         n = math.max(1, tonumber(info and info.SkinCount) or 1)
     end)
@@ -149,7 +149,7 @@ hook.Add("LivingCityJobChanged", "LivingCityCleanup", function(ply, id)
         end
         ply:ChatPrint("[Union] You're issued a respirator, weedkiller (the sprayer) and a hoover. Accept a shift (F4): it takes you into the infestation. Civil Protection will guard you.")
     end
-    local ok, err = pcall(EnsureOutfit)
+    local ok, err = LC.Try(EnsureOutfit)
     if not ok and LC.Error then LC.Error("cleanup outfit", err) end
 end)
 timer.Simple(1, EnsureOutfit)
@@ -553,7 +553,7 @@ local function NestTick(now)
 end
 LC.NestTick = NestTick
 timer.Create("LivingCityNests", 10, 0, function()
-    local ok, err = pcall(NestTick, CurTime())
+    local ok, err = LC.Try(NestTick, CurTime())
     if not ok and LC.Error then LC.Error("nests", err) end
 end)
 
@@ -882,7 +882,7 @@ local function GuardTick(now)
 end
 LC.CleanupGuardTick = GuardTick
 timer.Create("LivingCityCleanupGuards", 0.5, 0, function()
-    local ok, err = pcall(GuardTick, CurTime())
+    local ok, err = LC.Try(GuardTick, CurTime())
     if not ok and LC.Error then LC.Error("cleanup guards", err) end
 end)
 
@@ -1014,7 +1014,7 @@ local function BarnacleTick()
 end
 LC.BarnacleTick = BarnacleTick
 timer.Create("LivingCityBarnacles", 0.5, 0, function()
-    local ok, err = pcall(BarnacleTick)
+    local ok, err = LC.Try(BarnacleTick)
     if not ok and LC.Error then LC.Error("barnacles", err) end
 end)
 
@@ -1032,7 +1032,7 @@ function LC.Firebomb(pos, owner)
         sound.Play("ambient/fire/ignite.wav", pos, 85)
     end
     -- the flames: the engine's own fire
-    pcall(function()
+    LC.Try(function()
         local f = ents.Create("env_fire")
         if not IsValid(f) then return end
         f:SetPos(pos)
@@ -1078,7 +1078,7 @@ local function FireTick(now)
 end
 LC.FireTick = FireTick
 timer.Create("LivingCityFires", 0.5, 0, function()
-    local ok, err = pcall(FireTick, CurTime())
+    local ok, err = LC.Try(FireTick, CurTime())
     if not ok and LC.Error then LC.Error("fires", err) end
 end)
 

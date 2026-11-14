@@ -500,14 +500,14 @@ local TechGone
 -- hiss of a welder), then go.
 function LC.StalkerTechnician(ply, pos)
     if not IsValid(ply) or not (LC.Spawners and LC.Spawners.cop) then return nil end
-    local ok, npc, st = pcall(LC.ManpowerFree, LC.Spawners.cop, pos) -- (a technician, not a street unit: never from the reserve)
+    local ok, npc, st = LC.Try(LC.ManpowerFree, LC.Spawners.cop, pos) -- (a technician, not a street unit: never from the reserve)
     if not (ok and IsValid(npc) and st) then return nil end
     st.unmanaged, st.questLock = true, true
     if LC.SetState then LC.SetState(npc, st, "event") end
     st.eventUntil = CurTime() + TECH_SECS
     LC.SetNPCStr(npc, "lc_pname", "Overwatch technician")
     npc.lcTechFor = ply
-    if LC.NPCCarry then pcall(LC.NPCCarry, npc, st, HarnessModel()) end
+    if LC.NPCCarry then LC.Try(LC.NPCCarry, npc, st, HarnessModel()) end
     if LC.Face then LC.Face(npc, ply:GetPos()) end
     local name = "LivingCityTech" .. npc:EntIndex()
     local working, ticks = false, 0
@@ -521,7 +521,7 @@ function LC.StalkerTechnician(ply, pos)
                 return
             end
             working = true
-            if LC.NPCDropCarry then pcall(LC.NPCDropCarry, npc, st) end -- (the harness goes on the stalker now)
+            if LC.NPCDropCarry then LC.Try(LC.NPCDropCarry, npc, st) end -- (the harness goes on the stalker now)
         end
         local behind = ply:GetPos() - ply:GetForward() * 38
         if npc:GetPos():DistToSqr(behind) > 60 * 60 then
@@ -543,7 +543,7 @@ TechGone = function(npc)
     timer.Remove("LivingCityTech" .. npc:EntIndex())
     local st = LC.NPCs and LC.NPCs[npc]
     if st then
-        if LC.NPCDropCarry then pcall(LC.NPCDropCarry, npc, st) end
+        if LC.NPCDropCarry then LC.Try(LC.NPCDropCarry, npc, st) end
         st.unmanaged, st.questLock, st.eventUntil = nil, nil, 0
     end
     if LC.StartLeaving and st then LC.StartLeaving(npc, st, false, "an Overwatch technician going back") else npc:Remove() end

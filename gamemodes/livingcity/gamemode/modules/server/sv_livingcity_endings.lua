@@ -4172,7 +4172,7 @@ local function GoTo(phase)
         end
         All("[???] So be it. " .. LC.Endings[E.id].say)
         if E.dream and LC.DreamCast then LC.DreamCast(E) end -- (a dream brings its own Combine units: never the city's)
-        local ok, err = pcall(SETUP[E.id])
+        local ok, err = LC.Try(SETUP[E.id])
         if not ok then LC.Error("ending setup " .. E.id, err) end
         hook.Run("LivingCityEndingStarted", E.id)
     elseif phase == "reset" then
@@ -4208,7 +4208,7 @@ end
 function LC.CancelEnding()
     if not E then return false end
     local dream = E.dream
-    if dream and LC.SoundGuardDreamEnd then pcall(LC.SoundGuardDreamEnd, dream) end -- (its sounds, before what made them goes: sh_livingcity_soundguard.lua)
+    if dream and LC.SoundGuardDreamEnd then LC.Try(LC.SoundGuardDreamEnd, dream) end -- (its sounds, before what made them goes: sh_livingcity_soundguard.lua)
     Freeze(false)
     Clear()
     E = nil
@@ -4242,7 +4242,7 @@ end
 
 timer.Create("LivingCityEndings", 0.1, 0, function()
     if not E then return end
-    local ok, err = pcall(function()
+    local ok, err = LC.Try(function()
         local now = CurTime()
         if E.phase == "pending" then
             if now - E.phaseT >= cvPause:GetFloat() then GoTo("gman") end

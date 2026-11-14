@@ -252,7 +252,7 @@ end
 local function SubsY(W, H, rows)
     local y = H * 0.76
     local top, bottom
-    local ok = pcall(function()
+    local ok = LC.Try(function()
         local world = vgui and vgui.GetWorldPanel and vgui.GetWorldPanel()
         for _, c in ipairs(world and world:GetChildren() or {}) do
             if IsValid(c) and c:IsVisible() and (c.ClassName == "DFrame" or c.Base == "DFrame") then

@@ -230,7 +230,7 @@ function LC.FlashTick(now)
     end
 end
 timer.Create("LivingCityFlashStun", 0.25, 0, function()
-    local ok, err = pcall(LC.FlashTick, CurTime())
+    local ok, err = LC.Try(LC.FlashTick, CurTime())
     if not ok and LC.Error then LC.Error("flash stun", err) end
 end)
 
@@ -455,7 +455,7 @@ function LC.AssignQuestSquad(ply, q)
 end
 
 hook.Add("LivingCityQuestAccepted", "LivingCityQuestSquad", function(ply, q)
-    local ok, err = pcall(LC.AssignQuestSquad, ply, q)
+    local ok, err = LC.Try(LC.AssignQuestSquad, ply, q)
     if not ok and LC.Error then LC.Error("quest squad", err) end
 end)
 
@@ -525,9 +525,9 @@ end
 timer.Create("LivingCityFieldOps", 1, 0, function()
     if not LC.Running then return end
     local now = CurTime()
-    local ok, err = pcall(KeepGunsOut)
+    local ok, err = LC.Try(KeepGunsOut)
     if not ok and LC.Error then LC.Error("backup guns", err) end
-    ok, err = pcall(LC.QuestSquadTick, now)
+    ok, err = LC.Try(LC.QuestSquadTick, now)
     if not ok and LC.Error then LC.Error("quest squads", err) end
 end)
 

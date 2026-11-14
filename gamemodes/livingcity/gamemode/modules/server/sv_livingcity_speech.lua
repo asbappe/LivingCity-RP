@@ -127,7 +127,7 @@ function LC.SpeechEvents(since)
     local out = {}
     local C = LC.Chron
     if not (C and C.list) then return out end
-    if LC.ChronicleLoad and not C.loaded then pcall(LC.ChronicleLoad) end
+    if LC.ChronicleLoad and not C.loaded then LC.Try(LC.ChronicleLoad) end
     for i = #C.list, 1, -1 do
         local e = C.list[i]
         if e.t < since then break end
@@ -325,7 +325,7 @@ function LC.CallSpeech(by, text)
     end
     -- the call: Overwatch's custom voice for a player's speech, her own for the city's
     local voice = S.by and "overwatch" or "administrator"
-    if LC.CustomAnnounce then pcall(LC.CustomAnnounce, voice, "speech_soon", nil, true) end
+    if LC.CustomAnnounce then LC.Try(LC.CustomAnnounce, voice, "speech_soon", nil, true) end
     local where = Where(crowd.pos)
     for _, p in ipairs(player.GetAll()) do
         if MustAttend(p) then

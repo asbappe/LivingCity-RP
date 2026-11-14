@@ -1628,7 +1628,7 @@ LC.Chain{
             if #zones == 0 then return nil end
             local z = zones[math.random(#zones)]
             local go = Goto(z.pos, "Join the sweep team at the edge of anticitizen territory (marked)", math.max(500, (z.r or 300) + 300))
-            go.onEnter = function() if not LC.Skirmish and LC.StartCombineSweep then pcall(LC.StartCombineSweep, z) end end
+            go.onEnter = function() if not LC.Skirmish and LC.StartCombineSweep then LC.Try(LC.StartCombineSweep, z) end end
             local zr = (z.r or 300) + 800
             return {
                 title = "Proof", reward = 40, limit = 900,

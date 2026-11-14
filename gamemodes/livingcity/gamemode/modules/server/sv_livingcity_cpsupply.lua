@@ -232,7 +232,7 @@ function LC.CPSupplyRechargeTick()
     end
 end
 timer.Create("LivingCityCPSupplyCharge", 1, 0, function()
-    local ok, err = pcall(LC.CPSupplyRechargeTick)
+    local ok, err = LC.Try(LC.CPSupplyRechargeTick)
     if not ok and LC.Error then LC.Error("cp supply charge", err) end
 end)
 

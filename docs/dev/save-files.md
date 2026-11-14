@@ -36,6 +36,7 @@ The extra files end in `.txt` (the data folder only takes certain extensions) an
 | `outfits.json` | sv_livingcity_outfits.lua | safe, guarded |
 | `logs/<date>.txt` (staff log), `conduct_log.txt` | sv_livingcity_staff.lua, sv_livingcity_conduct.lua | unchanged: appended a line at a time, a crash loses at most the last lines |
 | `reports/report_<time>.txt`, `backups/<map>/*.json` | sv_livingcity_debug.lua, sv_livingcity_data.lua | unchanged: each a new file, never overwritten |
+| `errors.txt`, `errors.json`, `errors_previous.txt` | sh_livingcity_errors.lua | written whole, a few times a minute at most; losing one loses only the list of errors |
 | Player records (PData, `sv.db`) | many | unchanged: SQLite is already safe |
 
 Tests: `SafeFileTests` in `_dev/tests.lua` (`python3 _dev/run_section.py --unit SafeFileTests`).

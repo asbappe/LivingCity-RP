@@ -88,7 +88,7 @@ function ENT:Initialize()
     self:SetSolid(SOLID_NONE)
     self:SetMoveType(MOVETYPE_NONE)
     -- (a moment later: the editor seats a fixture on the floor after it spawns)
-    timer.Simple(0.5, function() if IsValid(self) then pcall(self.Build, self) end end)
+    timer.Simple(0.5, function() if IsValid(self) then LC.Try(self.Build, self) end end)
 end
 
 function ENT:IsOpen() return self:GetNW2Bool("lc_cage_open", false) end

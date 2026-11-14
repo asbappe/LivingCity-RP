@@ -797,7 +797,7 @@ end
 
 timer.Create("LivingCityArrest", 0.2, 0, function()
     if not (next(LC.Struggles) or next(LC.NPCCustody) or next(LC.ArrestHolds) or next(LC.Fleeing)) then return end
-    local ok, err = pcall(function()
+    local ok, err = LC.Try(function()
         local now = CurTime()
         StruggleTick(now)
         for npc, c in pairs(LC.NPCCustody) do CustodyTick(npc, c, now) end
@@ -810,7 +810,7 @@ end)
 -- Leaving, dying, or removed mid-arrest.
 hook.Add("PlayerDisconnected", "LivingCityArrest", function(ply)
     local h = LC.ArrestHolds[ply]
-    if h then pcall(TakeInPlayer, ply, h) end -- (left with the cuffs on: on the books, as if they'd got there)
+    if h then LC.Try(TakeInPlayer, ply, h) end -- (left with the cuffs on: on the books, as if they'd got there)
     local s = LC.Struggles[ply]
     if s then LC.Struggles[ply] = nil end
 end)

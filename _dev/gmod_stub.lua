@@ -106,24 +106,62 @@ end
 function ConVarExists(name) return convars[name] ~= nil end
 function _setcvar(n, v) convars[n].v = v end
 
-hook = { t = {} }
-function hook.Add(ev, id, fn) hook.t[ev] = hook.t[ev] or {} hook.t[ev][id] = fn end
-function hook.Remove(ev, id) if hook.t[ev] then hook.t[ev][id] = nil end end
+-- Hooks run in the order they were added, the same on every run. (They used to run in the
+-- order pairs() gave, which this LuaJIT changes from one run to the next: a test that passed
+-- or failed by which of two hooks answered first did so at random.) The first hook to return
+-- something wins, as in the game. _HOOK_REVERSE runs them last-added first: the game's own
+-- order is not the order they were added in, so nothing may depend on it (the robot players
+-- do every job both ways round, _dev/robots.lua).
+hook = { t = {}, seq = {}, n = 0 }
+function hook.Add(ev, id, fn)
+    hook.t[ev] = hook.t[ev] or {}
+    hook.seq[ev] = hook.seq[ev] or {}
+    if hook.seq[ev][id] == nil then hook.n = hook.n + 1 hook.seq[ev][id] = hook.n end
+    hook.t[ev][id] = fn
+end
+function hook.Remove(ev, id)
+    if hook.t[ev] then hook.t[ev][id] = nil end
+    if hook.seq[ev] then hook.seq[ev][id] = nil end
+end
 function hook.Run(ev, ...)
     local hs = hook.t[ev]
     if not hs then return end
-    for _, fn in pairs(hs) do
-        local a, b, c = fn(...)
-        if a ~= nil then return a, b, c end
+    local seq = hook.seq[ev]
+    if not seq then seq = {} hook.seq[ev] = seq end
+    local ids = {}
+    for id in pairs(hs) do
+        -- (a test may put one straight into hook.t: it counts as added now)
+        if seq[id] == nil then hook.n = hook.n + 1 seq[id] = hook.n end
+        ids[#ids + 1] = id
+    end
+    if _HOOK_REVERSE then
+        table.sort(ids, function(a, b) return seq[a] > seq[b] end)
+    else
+        table.sort(ids, function(a, b) return seq[a] < seq[b] end)
+    end
+    for i = 1, #ids do
+        local fn = hs[ids[i]]
+        if fn then
+            local a, b, c = fn(...)
+            if a ~= nil then return a, b, c end
+        end
     end
 end
 
 timer = { list = {}, simple = {} }
-function timer.Create(name, delay, reps, fn) timer.list[name] = { delay = delay, fn = fn, next = now + delay } end
+-- (timers that are due fire in the order they were made, the same on every run: see hook.Run)
+local timerSeq = 0
+function timer.Create(name, delay, reps, fn) timerSeq = timerSeq + 1 timer.list[name] = { delay = delay, fn = fn, next = now + delay, seq = timerSeq } end
 function timer.Remove(name) timer.list[name] = nil end
 function timer.Simple(d, fn) table.insert(timer.simple, { at = now + d, fn = fn }) end
 function _runtimers()
-    for _, t in pairs(timer.list) do if now >= t.next then t.next = now + t.delay; t.fn() end end
+    local due = {}
+    for name, t in pairs(timer.list) do if now >= t.next then due[#due + 1] = name end end
+    table.sort(due, function(a, b) return (timer.list[a].seq or 0) < (timer.list[b].seq or 0) end)
+    for _, name in ipairs(due) do
+        local t = timer.list[name]
+        if t and now >= t.next then t.next = now + t.delay; t.fn() end
+    end
     local due = {}
     for i = #timer.simple, 1, -1 do
         local s = timer.simple[i]

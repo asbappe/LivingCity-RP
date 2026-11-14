@@ -37,8 +37,8 @@ if SERVER then
         activator:Give(gun)
         activator:GiveAmmo(gun == "weapon_smg1" and 135 or 24, gun == "weapon_smg1" and "SMG1" or "Buckshot")
         if LC and LC.GiveItem then
-            pcall(LC.GiveItem, activator, "armor_vest", 1)
-            pcall(LC.GiveItem, activator, "vest_cell", 2) -- (thirty in the vest, and fifty: full)
+            LC.Try(LC.GiveItem, activator, "armor_vest", 1)
+            LC.Try(LC.GiveItem, activator, "vest_cell", 2) -- (thirty in the vest, and fifty: full)
         end
         self:EmitSound("items/ammocrate_open.wav", 70)
         activator:ChatPrint("[???] " .. (gun == "weapon_smg1" and "An SMG" or "A shotgun") .. ", ammunition, a powered vest and the cells to charge it. Nobody's watching. Yet.")

@@ -206,10 +206,10 @@ function LC.BrainAsk(system, user, schema, maxTokens, cb)
         done = true
         B.inFlight = math.max(0, B.inFlight - 1)
         if err then B.lastError = string.sub(tostring(err), 1, 200) B.lastErrorAt = os.time() end
-        local okCb, e = pcall(cb, res, err)
+        local okCb, e = LC.Try(cb, res, err)
         if not okCb and LC.Error then LC.Error("brain (answer)", e) end
     end
-    local sent, e = pcall(LC.BrainHTTP, {
+    local sent, e = LC.Try(LC.BrainHTTP, {
         url = URL, method = "POST", type = "application/json", body = body, timeout = 30,
         headers = { ["x-api-key"] = Key(), ["anthropic-version"] = API_VERSION },
         success = function(code, text)
@@ -792,7 +792,7 @@ function LC.BrainHeard(ply, kind, text)
 end
 
 hook.Add("LivingCitySpoke", "LivingCityBrain", function(ply, kind, text)
-    local ok, err = pcall(LC.BrainHeard, ply, kind, text)
+    local ok, err = LC.Try(LC.BrainHeard, ply, kind, text)
     if not ok and LC.Error then LC.Error("brain (talk)", err) end
 end)
 
@@ -868,7 +868,7 @@ timer.Create("LivingCityDirector", 15, 0, function()
     local every = math.max(1, cvMins:GetFloat()) * 60
     if now - (B.lastLook or 0) >= every then
         B.lastLook = now
-        local ok, err = pcall(LC.DirectorLook, now)
+        local ok, err = LC.Try(LC.DirectorLook, now)
         if not ok and LC.Error then LC.Error("brain (director)", err) end
     end
     -- her office, with nobody in it: the first look half a wait in, so it never lands on the director's
@@ -876,7 +876,7 @@ timer.Create("LivingCityDirector", 15, 0, function()
     if not B.lastAdminLook then B.lastAdminLook = now - adminEvery / 2 end
     if now - B.lastAdminLook >= adminEvery then
         B.lastAdminLook = now
-        local ok, err = pcall(LC.AdminLook, now)
+        local ok, err = LC.Try(LC.AdminLook, now)
         if not ok and LC.Error then LC.Error("brain (administrator)", err) end
     end
 end)

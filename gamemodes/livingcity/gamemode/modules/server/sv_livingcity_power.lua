@@ -333,7 +333,7 @@ function LC.FieldUnstick()
     end
 end
 timer.Create("LivingCityFieldUnstick", 0.25, 0, function()
-    local ok, err = pcall(LC.FieldUnstick)
+    local ok, err = LC.Try(LC.FieldUnstick)
     if not ok and LC.Error then LC.Error("forcefield", err) end
 end)
 

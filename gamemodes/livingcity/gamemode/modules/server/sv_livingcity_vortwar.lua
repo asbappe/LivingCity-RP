@@ -148,7 +148,7 @@ local orig = LC.DreamGameStart
 function LC.DreamGameStart(dream)
     local ok, why = orig(dream)
     if ok and dream and dream.game then
-        local fine, err = pcall(LC.VortWarSetup, dream.game)
+        local fine, err = LC.Try(LC.VortWarSetup, dream.game)
         if not fine and LC.Error then LC.Error("vortigaunt dream warfare", err) end
     end
     return ok, why
@@ -299,7 +299,7 @@ timer.Create("LivingCityVortWar", 0.1, 0, function()
     local now = CurTime()
     local dt = math.Clamp(now - (g.vw.last or now), 0, 0.25)
     g.vw.last = now
-    local ok, err = pcall(Tick, g, dt, now)
+    local ok, err = LC.Try(Tick, g, dt, now)
     if not ok and LC.Error then LC.Error("vortigaunt dream warfare", err) end
 end)
 

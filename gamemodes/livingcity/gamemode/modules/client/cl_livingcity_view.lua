@@ -67,7 +67,7 @@ function LC_CL.CalcView(ply, view)
     ctx.vehicle = (ply.InVehicle and ply:InVehicle()) and true or false
     ctx.remote, ctx.third = nil, nil
     for _, m in ipairs(Sorted()) do
-        local ok, err = pcall(m.fn, ply, view, ctx)
+        local ok, err = LC.Try(m.fn, ply, view, ctx)
         if not ok then
             broken[m.name] = true
             sorted = nil

@@ -4380,6 +4380,63 @@ if err:
 if "LC_CL.StudyMenu" not in open(os.path.join(GMDIR, "gamemode", "modules", "client", "cl_livingcity_factions.lua")).read():
     problems = (problems + "\n" if problems else "") + "F4 > Factions has no play study button"
 
+# the errors file (sh_livingcity_errors.lua): a player's game writes down its own errors and sends each to
+# the server once, with how many times; the list opens in the report window with no chat line; F4 has its button
+err = L.execute(r"""
+if not (LC and LC.Try and LC.ErrorsSendOne) then return "errors: the player's side didn't load" end
+local keep = { st = net.Start, ws = net.WriteString, wu = net.WriteUInt, ss = net.SendToServer, add = chat.AddText, rcc = RunConsoleCommand, json = util.JSONToTable, rd = net.ReadData, ru = net.ReadUInt }
+local sent, cur, said, ran = {}, nil, 0, nil
+net.Start = function(n) cur = { name = n } end
+net.WriteString = function(s) cur[#cur + 1] = s end
+net.WriteUInt = function(v) cur[#cur + 1] = v end
+net.SendToServer = function() sent[#sent + 1] = cur end
+chat.AddText = function() said = said + 1 end
+RunConsoleCommand = function(c) ran = c end
+local ok, e = pcall(function()
+    local a, b = LC.Try(function() return 5 end)
+    if not (a == true and b == 5) then error("LC.Try doesn't give back what pcall gives") end
+    local function boom() error("smoke swallowed") end
+    for _ = 1, 3 do LC.Try(boom) end
+    local fn = hook.t.OnLuaError and hook.t.OnLuaError.LivingCityClientErrors
+    if not fn then error("no OnLuaError hook") end
+    fn("gamemodes/livingcity/gamemode/modules/client/cl_x.lua:9: smoke hud broke", "client", { { File = "gamemodes/livingcity/gamemode/modules/client/cl_x.lua", Line = 9, Function = "Paint" } }, "Miscount")
+    fn("addons/other/thing.lua:1: smoke not ours", "client", { { File = "addons/other/thing.lua", Line = 1, Function = "f" } }, "other")
+    local n = 0
+    while LC.ErrorsSendOne() and n < 10 do n = n + 1 end
+    local byText = {}
+    for _, m in ipairs(sent) do if m.name == "lc_clerror" then byText[#byText + 1] = m end end
+    if #byText ~= 2 then error("expected 2 errors sent, got " .. #byText) end
+    local sw, hud
+    for _, m in ipairs(byText) do
+        if string.find(m[2], "smoke swallowed", 1, true) then sw = m end
+        if string.find(m[2], "smoke hud broke", 1, true) then hud = m end
+    end
+    if not (sw and sw[1] == "hidden" and sw[3] == 3) then error("the swallowed error wasn't sent as hidden, 3 times") end
+    if not (hud and hud[1] == "client" and hud[3] == 1 and string.find(hud[2], "cl_x.lua:9 in Paint", 1, true)) then error("the game's error wasn't sent with its trace") end
+    LC.Try(boom)
+    if LC.ErrorsSendOne() then error("the same error was sent again inside a minute") end
+    -- the window
+    local recv = net["recv_lc_report"]
+    if not recv then error("no report window") end
+    net.ReadUInt = function() return 2 end
+    net.ReadData = function() return "{}" end
+    util.JSONToTable = function() return { text = "MISCOUNT ERRORS", file = "garrysmod/data/livingcity/errors.txt", errors = true, clear = true } end
+    recv()
+    if said ~= 0 then error("opening the errors list printed a chat line") end
+    util.JSONToTable = function() return { text = "MISCOUNT DEBUG REPORT", file = "garrysmod/data/livingcity/reports/r.txt" } end
+    recv()
+    if said ~= 1 then error("the debug report no longer says it was copied") end
+end)
+net.Start, net.WriteString, net.WriteUInt, net.SendToServer, chat.AddText, RunConsoleCommand, util.JSONToTable, net.ReadData, net.ReadUInt = keep.st, keep.ws, keep.wu, keep.ss, keep.add, keep.rcc, keep.json, keep.rd, keep.ru
+if not ok then return "errors file: " .. tostring(e) end
+return nil
+""")
+if err:
+    problems = (problems + "\n" if problems else "") + str(err)
+_fac = open(os.path.join(GMDIR, "gamemode", "modules", "client", "cl_livingcity_factions.lua")).read()
+if '"Admin: errors (%d)"' not in _fac or 'RunConsoleCommand("lc_errors")' not in _fac:
+    problems = (problems + "\n" if problems else "") + "F4 > Factions has no errors button"
+
 # the official folder for recordings and songs is the server's garrysmod/sound/livingcity/ (CORE.md):
 # what players read in the guide and the sound check must send them there, never to the old sound addon
 _guide = open(os.path.join(GMDIR, "gamemode", "cl_init.lua")).read()

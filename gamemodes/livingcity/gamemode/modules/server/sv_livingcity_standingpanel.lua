@@ -124,7 +124,7 @@ end
 
 function LC.SendStandingPanel(ply)
     if not IsValid(ply) then return false end
-    local ok, rows = pcall(LC.StandingRows, ply)
+    local ok, rows = LC.Try(LC.StandingRows, ply)
     if not ok then
         if LC.Error then LC.Error("standing panel", rows) end
         return false

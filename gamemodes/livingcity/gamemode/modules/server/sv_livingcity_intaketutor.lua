@@ -715,7 +715,7 @@ end
 local nextStaff, nextScan = 0, 0
 timer.Create("LivingCityIntakeTutor", 0.2, 0, function()
     local now = CurTime()
-    local ok, err = pcall(function()
+    local ok, err = LC.Try(function()
         if next(FLOWS) then LC.TutorTick(now) end
         if now >= nextStaff then
             nextStaff = now + 1

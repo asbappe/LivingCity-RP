@@ -294,7 +294,7 @@ net.Receive("lc_dream_test", function()
     local t = net.ReadTable() or {}
     if t.k ~= "list" then return end
     LC_CL.DreamTestList = t
-    for _, fn in pairs(LC_CL.DreamTestWatchers) do pcall(fn, t) end
+    for _, fn in pairs(LC_CL.DreamTestWatchers) do LC.Try(fn, t) end
 end)
 
 function LC_CL.DreamsMenu()

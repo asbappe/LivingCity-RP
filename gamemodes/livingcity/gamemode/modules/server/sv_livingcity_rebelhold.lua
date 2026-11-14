@@ -328,14 +328,14 @@ end
 timer.Create("LivingCityRebelHold", 1, 0, function()
     if LC.TimeStopped or not next(H) then return end
     local now = CurTime()
-    local ok, err = pcall(LC.CageTick, now)
+    local ok, err = LC.Try(LC.CageTick, now)
     if not ok and LC.Error then LC.Error("rebel hold", err) end
     local seen = {}
     for _, h in pairs(H) do
         local cage = h.cage
         if IsValid(cage) and not h.walking and not seen[cage] then
             seen[cage] = true
-            local ok2, err2 = pcall(function() LC.CageAutoNext(cage, now) LC.CageVisit(cage, now) end)
+            local ok2, err2 = LC.Try(function() LC.CageAutoNext(cage, now) LC.CageVisit(cage, now) end)
             if not ok2 and LC.Error then LC.Error("rebel hold (cage)", err2) end
         end
     end

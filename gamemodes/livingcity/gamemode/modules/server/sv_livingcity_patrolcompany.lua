@@ -204,7 +204,7 @@ end
 function LC.PatrolCompanyTick(now)
     now = now or CurTime()
     for ply, enc in pairs(MET) do
-        local ok, err = pcall(LC.PatrolCompanyStep, enc, now)
+        local ok, err = LC.Try(LC.PatrolCompanyStep, enc, now)
         if not ok then
             MET[ply] = nil
             if LC.Error then LC.Error("patrol company", err) end
@@ -224,7 +224,7 @@ function LC.PatrolCompanyTick(now)
 end
 
 timer.Create("LivingCityPatrolCompany", 1, 0, function()
-    local ok, err = pcall(LC.PatrolCompanyTick, CurTime())
+    local ok, err = LC.Try(LC.PatrolCompanyTick, CurTime())
     if not ok and LC.Error then LC.Error("patrol company", err) end
 end)
 

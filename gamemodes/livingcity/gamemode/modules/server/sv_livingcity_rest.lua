@@ -274,7 +274,7 @@ timer.Create("LivingCitySleepers", 0.5, 0, function()
     local now = CurTime()
     for _, ply in ipairs(player.GetAll()) do
         if ply.lcSleep then
-            local ok, err = pcall(SleepStep, ply, now)
+            local ok, err = LC.Try(SleepStep, ply, now)
             if not ok and LC.Error then LC.Error("rest", err) end
         end
     end
@@ -392,7 +392,7 @@ function LC.RestTick(now)
 end
 
 timer.Create("LivingCityRest", 5, 0, function()
-    local ok, err = pcall(LC.RestTick, CurTime())
+    local ok, err = LC.Try(LC.RestTick, CurTime())
     if not ok and LC.Error then LC.Error("rest", err) end
 end)
 

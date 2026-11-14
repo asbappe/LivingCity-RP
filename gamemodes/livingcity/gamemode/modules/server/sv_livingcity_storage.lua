@@ -364,8 +364,8 @@ function LC.RestoreCrates()
         if (c.kind == "crate" or c.kind == "stall") and not IsValid(c.ent) and c.pos then SpawnCrate(id, c) end
     end
 end
-hook.Add("InitPostEntity", "LivingCityStorage", function() timer.Simple(2, function() pcall(LC.RestoreCrates) end) end)
-hook.Add("PostCleanupMap", "LivingCityStorage", function() timer.Simple(1, function() pcall(LC.RestoreCrates) end) end)
+hook.Add("InitPostEntity", "LivingCityStorage", function() timer.Simple(2, function() LC.Try(LC.RestoreCrates) end) end)
+hook.Add("PostCleanupMap", "LivingCityStorage", function() timer.Simple(1, function() LC.Try(LC.RestoreCrates) end) end)
 
 -- What's left in bins gets thrown out.
 timer.Create("LivingCityBins", 60, 0, function()

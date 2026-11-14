@@ -334,7 +334,7 @@ end
 
 timer.Create("LivingCityRebelPamphlets", 15, 0, function()
     if not LC.Running then return end
-    local ok, err = pcall(LC.RebelPamphletsTick, CurTime())
+    local ok, err = LC.Try(LC.RebelPamphletsTick, CurTime())
     if not ok and LC.Error then LC.Error("rebel pamphlets", err) end
 end)
 

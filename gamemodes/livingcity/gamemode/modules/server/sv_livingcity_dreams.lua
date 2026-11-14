@@ -730,7 +730,7 @@ LC.DreamFields = FIELDS
 function LC.DreamCheck(p, snap)
     local bad = {}
     for _, f in ipairs(FIELDS) do
-        local ok, same = pcall(f.check, p, snap)
+        local ok, same = LC.Try(f.check, p, snap)
         if not ok or not same then bad[#bad + 1] = f.id end
     end
     return bad
@@ -740,11 +740,11 @@ local function ApplyFields(p, snap, only)
     if only then want = {} for _, id in ipairs(only) do want[id] = true end end
     for _, f in ipairs(FIELDS) do
         if not want or want[f.id] then
-            local ok, err = pcall(f.apply, p, snap)
+            local ok, err = LC.Try(f.apply, p, snap)
             if not ok and LC.Error then LC.Error("dream restore " .. f.id, err) end
         end
     end
-    if LC.SendInv then pcall(LC.SendInv, p) end
+    if LC.SendInv then LC.Try(LC.SendInv, p) end
 end
 
 local function Admins(fn) for _, a in ipairs(player.GetAll()) do if a:IsAdmin() then fn(a) end end end
@@ -822,7 +822,7 @@ local function Enter(p, dream, spot)
     -- their sleeping body stays in the bed, to be woken if it's hurt or the camp is raided (sv_livingcity_bedtime.lua)
     p.lcDreamBedPos = p:GetPos()
     if LC.DreamBodyMake then
-        local okB, errB = pcall(LC.DreamBodyMake, p, snap)
+        local okB, errB = LC.Try(LC.DreamBodyMake, p, snap)
         if not okB and LC.Error then LC.Error("dream body", errB) end
     end
     p:SetPos(spot)
@@ -913,7 +913,7 @@ function LC.DreamWakeOne(p, why)
         if E and E.dream and E.dream.id == p.lcDreaming then Leave(p) end
         if dream and dream.game and dream.id == p.lcDreaming and LC.DreamGameLeave then LC.DreamGameLeave(p, dream) end
         -- (every sound the dream started, stopped on their computer: sh_livingcity_soundguard.lua)
-        if mine and LC.SoundGuardDreamEnd then pcall(LC.SoundGuardDreamEnd, mine, p) end
+        if mine and LC.SoundGuardDreamEnd then LC.Try(LC.SoundGuardDreamEnd, mine, p) end
     end
     p.lcDreaming = nil
     p.lcDreamBed = nil
@@ -981,7 +981,7 @@ function LC.DreamWake(dream)
     if not dream then return end
     -- (every sound it started, stopped, before what made them is gone: sh_livingcity_soundguard.lua)
     if LC.SoundGuardDreamEnd then
-        local okS, errS = pcall(LC.SoundGuardDreamEnd, dream)
+        local okS, errS = LC.Try(LC.SoundGuardDreamEnd, dream)
         if not okS and LC.Error then LC.Error("dream sounds", errS) end
     end
     CleanUp(dream)
@@ -1047,7 +1047,7 @@ function LC.DreamStart(id, by, vote, also, force)
         made = setmetatable({}, { __mode = "k" }), started = CurTime(), force = force or nil, mood = LC.DreamMood(id), forced = LC.DreamForced(id), test = test or nil, allDream = allDream }
     local spots = LC.EndingRingSpots and LC.EndingRingSpots(pt.pos, 60, #who) or {}
     for i, p in ipairs(who) do
-        local ok, err = pcall(Enter, p, dream, spots[i] and spots[i].pos or pt.pos)
+        local ok, err = LC.Try(Enter, p, dream, spots[i] and spots[i].pos or pt.pos)
         if ok and err then dream.list[#dream.list + 1] = p elseif not ok and LC.Error then LC.Error("dream enter", err) end
     end
     if #dream.list == 0 then return false, "Nobody could be got ready to dream (their snapshots couldn't be saved)." end
@@ -1089,15 +1089,15 @@ function LC.DreamJoinLate(p, dream)
     local g = dream.game
     -- (an ending's Enforcers are set to watching as it starts: one arriving late sleeps on)
     if not g and dream.forced and LC.DreamEnforcerRole and LC.DreamEnforcerRole(p, dream.ending) then return false end
-    local ok, err = pcall(Enter, p, dream, dream.pos + Vector(math.Rand(-50, 50), math.Rand(-50, 50), 4))
+    local ok, err = LC.Try(Enter, p, dream, dream.pos + Vector(math.Rand(-50, 50), math.Rand(-50, 50), 4))
     if not ok or not err then
         if not ok and LC.Error then LC.Error("dream join", err) end
         return false
     end
     dream.list[#dream.list + 1] = p
     local okJ, errJ = true, nil
-    if g then okJ, errJ = pcall(LC.DreamGameJoin, g, p)
-    elseif LC.EndingSendTo then okJ, errJ = pcall(LC.EndingSendTo, p) end -- (their screen: the ending as it is now)
+    if g then okJ, errJ = LC.Try(LC.DreamGameJoin, g, p)
+    elseif LC.EndingSendTo then okJ, errJ = LC.Try(LC.EndingSendTo, p) end -- (their screen: the ending as it is now)
     if not okJ or errJ == false then
         -- (this dream can't take a latecomer after all: they wake at once with everything, and sleep on)
         if not okJ and LC.Error then LC.Error("dream join", errJ) end
@@ -1298,7 +1298,7 @@ function LC.DreamMissedCheck(now)
 end
 
 timer.Create("LivingCityDreams", 1, 0, function()
-    local ok, err = pcall(function()
+    local ok, err = LC.Try(function()
         local now = CurTime()
         if S.missedNight and now >= (S.missedCheck or 0) then
             S.missedCheck = now + 5
@@ -1329,7 +1329,7 @@ timer.Create("LivingCityDreams", 1, 0, function()
             -- the screen goes black, and the day's mood in a line (sv_livingcity_dreamplan.lua)
             if S.moodFor ~= S.at and now >= S.at - (LC.DreamMoodLead or 7) and not LC.DreamActive then
                 S.moodFor = S.at
-                if LC.DreamMoodSend then pcall(LC.DreamMoodSend, Nightly(), S.at + 1) end
+                if LC.DreamMoodSend then LC.Try(LC.DreamMoodSend, Nightly(), S.at + 1) end
             end
             if now >= S.at and not (LC.EndingBusy and LC.EndingBusy()) and not LC.DreamActive then LC.DreamTonight() end
         end
@@ -1342,9 +1342,9 @@ timer.Create("LivingCityDreams", 1, 0, function()
             Log("warn", string.format("Dream: %s still going after %d minutes: ended by the safeguard", tostring(dream.ending), math.floor(maxSecs / 60)))
             for _, p in ipairs(LC.DreamersOf(dream)) do Notice(p, "info", "The dream fades", "It loosens its grip, and you wake.", 6) end
             dream.timedOut = true
-            if dream.game and not dream.game.stopped and LC.DreamGameStop then pcall(LC.DreamGameStop, dream, "time limit") end
+            if dream.game and not dream.game.stopped and LC.DreamGameStop then LC.Try(LC.DreamGameStop, dream, "time limit") end
             local E0 = LC.EndingAny and LC.EndingAny()
-            if E0 and E0.dream == dream and LC.CancelEnding then pcall(LC.CancelEnding) end
+            if E0 and E0.dream == dream and LC.CancelEnding then LC.Try(LC.CancelEnding) end
             if LC.DreamActive == dream then LC.DreamWake(dream) end
             if LC.DreamActive == dream then LC.DreamActive = nil end -- (whatever happened, the next one isn't held up)
             return
@@ -1659,8 +1659,8 @@ function LC.DreamStopAll(by)
     local E = LC.EndingAny and LC.EndingAny()
     if not dream and not (E and E.dream) then return false, "Nobody is dreaming." end
     Log("info", "Dream: stopped by " .. (IsValid(by) and by:Nick() or "the server"))
-    if E and E.dream and LC.CancelEnding then pcall(LC.CancelEnding) end
-    if dream and dream.game and not dream.game.stopped and LC.DreamGameStop then pcall(LC.DreamGameStop, dream, "admin") end
+    if E and E.dream and LC.CancelEnding then LC.Try(LC.CancelEnding) end
+    if dream and dream.game and not dream.game.stopped and LC.DreamGameStop then LC.Try(LC.DreamGameStop, dream, "admin") end
     if LC.DreamActive == dream and dream then LC.DreamWake(dream) end
     if LC.DreamActive == dream then LC.DreamActive = nil end -- (whatever happened, the next one isn't held up)
     return true, "Everyone in the dream is woken."

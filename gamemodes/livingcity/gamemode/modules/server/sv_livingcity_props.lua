@@ -167,15 +167,15 @@ hook.Add("LivingCityLayoutChanged", "LivingCityProps", function()
     timer.Simple(0, function()
         local fresh = LC.PropsFresh
         LC.PropsFresh = nil
-        local ok, err = pcall(LC.SyncProps, fresh)
+        local ok, err = LC.Try(LC.SyncProps, fresh)
         if not ok and LC.Error then LC.Error("persistent props", err) end
     end)
 end)
 hook.Add("PostCleanupMap", "LivingCityProps", function()
-    timer.Simple(0, function() pcall(LC.SyncProps, true) end)
+    timer.Simple(0, function() LC.Try(LC.SyncProps, true) end)
 end)
 timer.Create("LivingCityProps", 10, 0, function()
-    local ok, err = pcall(LC.SyncProps, false)
+    local ok, err = LC.Try(LC.SyncProps, false)
     if not ok and LC.Error then LC.Error("persistent props", err) end
 end)
 

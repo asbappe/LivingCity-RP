@@ -67,10 +67,10 @@ function LC.DreamTest(p, id)
     if p.lcSleep then return false, "Get out of bed first (a test is dreamt awake)." end
     p.lcDreamTesting = true
     LC.DreamTestOnly = p
-    if LC.DreamRecBegin then pcall(LC.DreamRecBegin, p, id) end -- (the flight recorder: sv_livingcity_dreamrec.lua)
-    local okCall, ok, dream = pcall(LC.DreamStart, id, p, false, p, true)
+    if LC.DreamRecBegin then LC.Try(LC.DreamRecBegin, p, id) end -- (the flight recorder: sv_livingcity_dreamrec.lua)
+    local okCall, ok, dream = LC.Try(LC.DreamStart, id, p, false, p, true)
     LC.DreamTestOnly = nil
-    if not (okCall and ok) and LC.DreamRecAbort then pcall(LC.DreamRecAbort) end
+    if not (okCall and ok) and LC.DreamRecAbort then LC.Try(LC.DreamRecAbort) end
     if not okCall then
         p.lcDreamTesting = nil
         if LC.Error then LC.Error("dream test", ok) end

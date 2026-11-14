@@ -85,7 +85,7 @@ local function CheckLevel()
     local lvl = LC.StockLevel()
     if lastLevel and lvl ~= lastLevel and SAY[lvl] and LC.Announce and CurTime() - (saidAt[lvl] or -1e9) >= SAY_GAP then
         saidAt[lvl] = CurTime()
-        local ok = pcall(LC.Announce, "ambient", nil, SAY[lvl])
+        local ok = LC.Try(LC.Announce, "ambient", nil, SAY[lvl])
         if not ok then for _, p in ipairs(player.GetAll()) do p:ChatPrint("[City] " .. SAY[lvl]) end end
     end
     if lvl ~= lastLevel then hook.Run("LivingCityStockLevel", lvl, lastLevel) end

@@ -592,7 +592,7 @@ end
 timer.Create("LivingCityScannerFire", 0.4, 0, function()
     for ply, l in pairs(LC.ScannerLinks) do
         if IsValid(ply) and IsValid(l.sc) then
-            local ok, err = pcall(LC.RebelsFireAtScanner, ply, l, CurTime())
+            local ok, err = LC.Try(LC.RebelsFireAtScanner, ply, l, CurTime())
             if not ok and LC.Error then LC.Error("scanner fire", err) end
         end
     end

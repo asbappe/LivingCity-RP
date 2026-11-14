@@ -282,8 +282,8 @@ function LC.DesperationFight()
     return done
 end
 
-timer.Create("LivingCityDesperation", 5, 0, function() pcall(LC.DesperationTick) end)
-timer.Create("LivingCityDesperationFight", 2, 0, function() if LC.Running then pcall(LC.DesperationFight) end end)
+timer.Create("LivingCityDesperation", 5, 0, function() LC.Try(LC.DesperationTick) end)
+timer.Create("LivingCityDesperationFight", 2, 0, function() if LC.Running then LC.Try(LC.DesperationFight) end end)
 
 -- Up to 10% more damage to players from Combine units.
 hook.Add("EntityTakeDamage", "LivingCityDesperation", function(victim, dmg)

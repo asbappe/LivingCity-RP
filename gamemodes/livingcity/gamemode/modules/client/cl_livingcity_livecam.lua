@@ -52,7 +52,7 @@ hook.Add("RenderScene", "LivingCityLiveCam", function()
     rendering = true
     LC_CL.LiveCamRendering = true
     local pushed = false
-    local ok, err = pcall(function()
+    local ok, err = LC.Try(function()
         render.PushRenderTarget(rt)
         pushed = true
         render.Clear(0, 0, 0, 255, true, true)

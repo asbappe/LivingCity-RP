@@ -331,7 +331,7 @@ end
 
 timer.Create("LivingCityMarch", 0.1, 0, function()
     if not next(LC.Marching) then return end
-    local ok, err = pcall(Tick, CurTime())
+    local ok, err = LC.Try(Tick, CurTime())
     if not ok and LC.Error then LC.Error("march", err) end
 end)
 
@@ -350,7 +350,7 @@ end)
 -- Leaving mid-march: they're on the books, as if they'd got there.
 hook.Add("PlayerDisconnected", "LivingCityMarch", function(ply)
     local m = LC.Marching[ply]
-    if m then pcall(TakeIn, ply, m) end
+    if m then LC.Try(TakeIn, ply, m) end
 end)
 
 hook.Add("PlayerDeath", "LivingCityMarch", function(ply)

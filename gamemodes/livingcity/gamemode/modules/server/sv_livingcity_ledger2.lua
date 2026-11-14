@@ -217,7 +217,7 @@ end
 
 local nextCheck = 0
 timer.Create("LivingCityLedger2", 10, 0, function()
-    local ok, err = pcall(function()
+    local ok, err = LC.Try(function()
         if not On() then
             for n, npc in pairs(LC.LedgerPosts) do if Up(npc) then local st = LC.NPCs[npc] st.holdPos, st.ledgerPost = nil, nil end end
             LC.LedgerPosts = {}

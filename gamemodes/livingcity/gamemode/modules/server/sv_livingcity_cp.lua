@@ -1217,7 +1217,7 @@ function LC.FacingTick(now)
 end
 if timer and timer.Create then
     timer.Create("LivingCityFacingHolds", 0.3, 0, function()
-        local ok, err = pcall(LC.FacingTick, CurTime())
+        local ok, err = LC.Try(LC.FacingTick, CurTime())
         if not ok and LC.Error then LC.Error("facing holds", err) end
     end)
 end

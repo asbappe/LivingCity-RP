@@ -95,6 +95,7 @@ function LC.Log(level, msg)
 end
 
 function LC.Error(where, err)
+    if LC.ErrorNote then LC.Try(LC.ErrorNote, "caught", err, nil, nil, 1, tostring(where)) end -- (sh_livingcity_errors.lua: the errors file)
     LC.Log("error", where .. ": " .. tostring(err))
     ErrorNoHalt("[Miscount] " .. where .. ": " .. tostring(err) .. "\n")
 end
@@ -415,7 +416,7 @@ local function ReadNodegraph()
     if not f then return {}, nil end
     local nodes, byIndex = {}, {}
     local links
-    local ok = pcall(function()
+    local ok = LC.Try(function()
         if f:ReadLong() ~= 37 then error("unsupported nodegraph version") end
         f:ReadLong() -- map revision
         local n = f:ReadLong()
@@ -434,7 +435,7 @@ local function ReadNodegraph()
             end
         end
         -- the links: whoever can walk between which nodes
-        local okL = pcall(function()
+        local okL = LC.Try(function()
             local count = f:ReadLong()
             if not count or count < 0 or count > 200000 then error("no links") end
             local list = {}
@@ -771,7 +772,7 @@ function LC.PlayGesture(npc, candidates, holdSecs)
             if seq and seq >= 0 then name = c end
         end
         if name then
-            local ok, ss = pcall(MakeSequence, npc, npc:GetPos(), npc:GetAngles().y, name, nil,
+            local ok, ss = LC.Try(MakeSequence, npc, npc:GetPos(), npc:GetAngles().y, name, nil,
                 SF_SCRIPT_NO_COMPLAINTS + SF_SCRIPT_ALLOW_DEATH, 0, 0)
             if ok and IsValid(ss) then
                 npc.lcGesture = ss -- cancelled if they're attacked mid-animation
@@ -796,7 +797,7 @@ local function StartBusy(npc, st, p)
     local loop = SeqName(npc, names[2])
     if not loop then return false end
     local entry = SeqName(npc, names[1])
-    local ok, ss = pcall(MakeSequence, npc, p.pos, p.yaw or 0, entry or loop, loop,
+    local ok, ss = LC.Try(MakeSequence, npc, p.pos, p.yaw or 0, entry or loop, loop,
         SF_SCRIPT_LOOP_IN_POST_IDLE + SF_SCRIPT_NO_COMPLAINTS + SF_SCRIPT_ALLOW_DEATH, 1, 0)
     if not ok or not IsValid(ss) then return false end
     st.ss = ss
@@ -815,7 +816,7 @@ local function EndBusy(npc, st, withExit)
     if withExit and IsValid(npc) and st.busyKind then
         local exit = SeqName(npc, BUSY[st.busyKind][3])
         if exit then
-            local ok, ss2 = pcall(MakeSequence, npc, npc:GetPos(), npc:GetAngles().y, exit, nil,
+            local ok, ss2 = LC.Try(MakeSequence, npc, npc:GetPos(), npc:GetAngles().y, exit, nil,
                 SF_SCRIPT_NO_COMPLAINTS + SF_SCRIPT_ALLOW_DEATH, 0, 0.2)
             if ok and IsValid(ss2) then SafeRemoveEntityDelayed(ss2, 6) end
         end
@@ -2624,7 +2625,7 @@ local function Think()
             local fn = THINKERS[st.role] or (LC.Thinkers and LC.Thinkers[st.role])
             if (st.gasFleeUntil or 0) > now then fn = nil end -- (running from the gas: sv_livingcity_gasmask.lua)
             if fn then
-                local ok, err = pcall(fn, npc, st, now)
+                local ok, err = LC.Try(fn, npc, st, now)
                 if not ok then
                     st.errors = (st.errors or 0) + 1
                     LC.Error(st.role .. " in state " .. tostring(st.state), err)
@@ -2636,7 +2637,7 @@ local function Think()
 end
 timer.Create("LivingCityThink", 0.1, 0, function()
     local t0 = SysTime()
-    local ok, err = pcall(Think)
+    local ok, err = LC.Try(Think)
     if not ok then LC.Error("main loop", err) end
     local dt = (SysTime() - t0) * 1000
     local perf = LC.Perf
@@ -2882,7 +2883,7 @@ hook.Add("EntityTakeDamage", "LivingCityCitizenPanic", function(victim, dmg)
     if not st or st.test or st.role ~= "citizen" then return end
     local att = dmg:GetAttacker()
     if not IsMonster(att) then return end
-    local ok, err = pcall(LC.CitizenPanic, victim, st, att)
+    local ok, err = LC.Try(LC.CitizenPanic, victim, st, att)
     if not ok then LC.Error("citizen panic", err) end
 end)
 
@@ -2936,7 +2937,7 @@ function LC.UnitsSpotMonsters()
 end
 timer.Create("LivingCityUnitsSpotMonsters", 1, 0, function()
     if not LC.Running then return end
-    local ok, err = pcall(LC.UnitsSpotMonsters)
+    local ok, err = LC.Try(LC.UnitsSpotMonsters)
     if not ok then LC.Error("Civil Protection units and monsters", err) end
 end)
 
@@ -3176,7 +3177,7 @@ local function MakeWay(now)
 end
 LC.MakeWayTick = MakeWay
 timer.Create("LivingCityMakeWay", 0.25, 0, function()
-    local ok, err = pcall(MakeWay, CurTime())
+    local ok, err = LC.Try(MakeWay, CurTime())
     if not ok and LC.Error then LC.Error("make way", err) end
 end)
 
@@ -3218,6 +3219,6 @@ function LC.RescueFallen(now)
     end
 end
 timer.Create("LivingCityFallen", 1, 0, function()
-    local ok, err = pcall(LC.RescueFallen, CurTime())
+    local ok, err = LC.Try(LC.RescueFallen, CurTime())
     if not ok and LC.Error then LC.Error("fallen NPCs", err) end
 end)

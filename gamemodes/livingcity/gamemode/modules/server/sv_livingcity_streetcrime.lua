@@ -292,7 +292,7 @@ hook.Add("LivingCityNewCharacter", "LivingCityDebts", function(p)
     p:RemovePData("lc_debts") p:RemovePData("lc_lent") p:RemovePData("lc_employer") p:RemovePData("lc_employer_name")
 end)
 
-timer.Create("LivingCityDebtsSync", 30, 0, function() for _, p in ipairs(player.GetAll()) do pcall(SyncDebts, p) end end)
+timer.Create("LivingCityDebtsSync", 30, 0, function() for _, p in ipairs(player.GetAll()) do LC.Try(SyncDebts, p) end end)
 
 hook.Add("PlayerSay", "LivingCityStreetCrime", function(ply, text)
     local cmd, rest = string.match(string.Trim(tostring(text or "")), "^[!/](%a+)%s*(.*)$")

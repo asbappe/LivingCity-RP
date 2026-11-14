@@ -686,7 +686,7 @@ local function Finish(q, success, why)
     q.done = true
     LC.ActiveQuests[q] = nil
     if q.onFinish then
-        local ok, err = pcall(q.onFinish, q, success)
+        local ok, err = LC.Try(q.onFinish, q, success)
         if not ok then LC.Error("quest finish " .. tostring(q.title), err) end
     end
     if q.posting then q.posting.q = nil; q.posting.dead = true end
@@ -1008,7 +1008,7 @@ local function TargetsUp(q, st)
     local n = 0
     for npc in pairs(LC.NPCs) do
         if IsValid(npc) and npc:Health() > 0 and not (st.seen and st.seen[npc]) then
-            local ok, yes = pcall(st.filter, q, q.owner, npc)
+            local ok, yes = LC.Try(st.filter, q, q.owner, npc)
             if ok and yes then n = n + 1 end
         end
     end
@@ -1033,7 +1033,7 @@ local function SpawnTargets(q, st, missing)
                 if not (LC.IsSeen and LC.IsSeen(p + Vector(0, 0, 40))) then at = p break end
             end
         end
-        local ok, npc = pcall(LC.ManpowerFree or function(f, ...) return f(...) end, fn, at, sp.arg)
+        local ok, npc = LC.Try(LC.ManpowerFree or function(f, ...) return f(...) end, fn, at, sp.arg)
         if ok and IsValid(npc) then made = made + 1 end
     end
     return made
@@ -1231,7 +1231,7 @@ timer.Create("LivingCityQuests", 0.5, 0, function()
     local tick = math.floor(now * 2) % 2 == 0
     for q in pairs(LC.ActiveQuests) do
         local ok, err = true, nil
-        if OnBreak(q) then q.expires = q.expires + 0.5 else ok, err = pcall(Poll, q, now) end
+        if OnBreak(q) then q.expires = q.expires + 0.5 else ok, err = LC.Try(Poll, q, now) end
         if not ok then
             LC.Error("quest " .. tostring(q.tmpl and q.tmpl.id), err)
             Finish(q, false, "something went wrong")
@@ -1357,6 +1357,9 @@ hook.Add("LivingCityServed", "LivingCityQuests", function(npc)
 end)
 hook.Add("PlayerUse", "LivingCityQuestItems", function(ply, ent)
     if not ent.lcQuest then return end
+    -- a thing to search or to work on by hand (sv_livingcity_questsearch.lua): that hook answers, whichever of
+    -- the two hears the key first (this one used to swallow it when it came first: the robot players, 14 November)
+    if LC.QuestSearchOf and LC.QuestSearchOf(ply, ent) then return end
     if LC.QuestOf[ply] == ent.lcQuest then LC.QuestEvent("used_item", ply, ent) end
     return false
 end)
@@ -2481,7 +2484,7 @@ function LC.ManhuntWayOut(ply)
     local t
     for _, x in ipairs(LC.QuestTemplates) do if x.id == "res_goground" then t = x end end
     if not t then return false end
-    local ok, spec = pcall(t.build, ply)
+    local ok, spec = LC.Try(t.build, ply)
     if not ok then LC.Error("quest res_goground", spec) return false end
     if not spec then return false end
     spec.id = nextId
@@ -2500,7 +2503,7 @@ end
 timer.Create("LivingCityManhuntWayOut", 4, 0, function()
     if not LC.Running or not cvOn:GetBool() then return end
     for _, p in ipairs(player.GetAll()) do
-        local ok, err = pcall(LC.ManhuntWayOut, p)
+        local ok, err = LC.Try(LC.ManhuntWayOut, p)
         if not ok then LC.Error("manhunt way out", err) end
     end
 end)
@@ -2863,14 +2866,14 @@ end
 local function NextPart(ply, chain)
     local s = LC.Story(ply)
     if chain.gate then
-        local ok, open = pcall(chain.gate, ply, s)
+        local ok, open = LC.Try(chain.gate, ply, s)
         if not ok or not open then return nil end
     end
     local cs = s.chains[chain.id]
     if cs and cs.done then return nil end
     if cs and (cs.readyAt or 0) > os.time() then return nil end
     if cs and cs.part then return cs.part end
-    local ok, yes = pcall(chain.unlock, ply, s)
+    local ok, yes = LC.Try(chain.unlock, ply, s)
     if ok and yes then return chain.start end
     return nil
 end
@@ -2928,7 +2931,7 @@ function LC.StoryPostings(ply)
             else
                 local def = chain.parts[part]
                 local cs = LC.ChainState(ply, chain.id)
-                local ok, spec = pcall(def.build, ply, cs.data)
+                local ok, spec = LC.Try(def.build, ply, cs.data)
                 if not ok then
                     LC.Error("story " .. chain.id .. "/" .. part, spec)
                 elseif spec then
@@ -2999,7 +3002,7 @@ function LC.CheckUnlocks(ply)
     local changed = false
     for _, chain in ipairs(LC.ChainList) do
         if ChainFits(chain, ply) and not s.chains[chain.id] and not s.notified[chain.id] then
-            local ok, yes = pcall(chain.unlock, ply, s)
+            local ok, yes = LC.Try(chain.unlock, ply, s)
             if ok and yes then
                 s.notified[chain.id] = true
                 changed = true
@@ -3334,7 +3337,7 @@ function LC.RefreshBoard(ply)
     local cands = {}
     for _, t in ipairs(LC.QuestTemplates) do
         if t.factions[f] and not used[t] and (not t.during or EventOn(t.during)) then
-            local ok, avail = pcall(function() return not t.available or t.available(ply) end)
+            local ok, avail = LC.Try(function() return not t.available or t.available(ply) end)
             if ok and avail then cands[#cands + 1] = t end
         end
     end
@@ -3346,7 +3349,7 @@ function LC.RefreshBoard(ply)
     for _, t in ipairs(cands) do
         if open >= want then break end
         if not t.violent or ViolentInUse() < LC.ViolentCap() then
-            local ok, spec = pcall(t.build, ply)
+            local ok, spec = LC.Try(t.build, ply)
             if not ok then
                 LC.Error("quest " .. t.id, spec)
             elseif spec then
@@ -3418,7 +3421,7 @@ function LC.ProtectWaitTick(now)
             table.remove(LC.ProtectWaits, i)
             -- (nobody took it: off the board)
             if not w.takenAt then for _, p in ipairs(w.postings) do if not p.q then p.dead = true end end end
-            local ok, err = pcall(w.go, w.takenAt ~= nil)
+            local ok, err = LC.Try(w.go, w.takenAt ~= nil)
             if not ok and LC.Error then LC.Error("protect wait", err) end
         end
     end
@@ -3442,9 +3445,9 @@ function LC.PostDirective(tid, focus)
             for _, p in ipairs(LC.Postings[f]) do
                 if p.tmpl == t and not p.dead and not p.q and now < p.expiresPost then have = true end
             end
-            local ok, avail = pcall(function() return not t.available or t.available(people[1]) end)
+            local ok, avail = LC.Try(function() return not t.available or t.available(people[1]) end)
             if not have and ok and avail then
-                local okB, spec = pcall(t.build, people[1], focus)
+                local okB, spec = LC.Try(t.build, people[1], focus)
                 if not okB then
                     LC.Error("quest " .. t.id, spec)
                 elseif spec then
@@ -3517,7 +3520,7 @@ end)
 function LC.SendBoard(ply)
     if not cvOn:GetBool() then return ply:ChatPrint("[Miscount] Quests are turned off on this server.") end
     local list, f = LC.RefreshBoard(ply)
-    if LC.OpSyncMenu then pcall(LC.OpSyncMenu, ply) end -- (the planned operations card on the Resistance's board)
+    if LC.OpSyncMenu then LC.Try(LC.OpSyncMenu, ply) end -- (the planned operations card on the Resistance's board)
     local out = {}
     local mine = LC.QuestOf[ply]
     -- a stalker's board has its work on it (The Stalker's Lot), and nothing else

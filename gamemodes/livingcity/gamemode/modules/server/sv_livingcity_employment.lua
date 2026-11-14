@@ -208,7 +208,7 @@ end
 
 local nextCust, nextPay = 0, 0
 timer.Create("LivingCityEmployment", 30, 0, function()
-    local ok, err = pcall(function()
+    local ok, err = LC.Try(function()
         local now = CurTime()
         WageTick()
         if now >= nextPay then

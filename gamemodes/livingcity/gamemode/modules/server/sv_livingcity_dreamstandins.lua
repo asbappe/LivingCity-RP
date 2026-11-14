@@ -504,7 +504,7 @@ end
 
 hook.Add("LivingCityDreamStarted", "LivingCityDreamStandins", function(dream)
     if LC.DreamMin() <= 0 then return end
-    local ok, err = pcall(function()
+    local ok, err = LC.Try(function()
         if dream.game then LC.DreamStandinsGame(dream.game) else LC.DreamStandinsEnding(dream) end
     end)
     if not ok and LC.Error then LC.Error("dream stand-ins", err) end
@@ -535,6 +535,6 @@ function LC.DreamStandinsTick(now)
     end
 end
 timer.Create("LivingCityDreamStandins", 0.1, 0, function()
-    local ok, err = pcall(LC.DreamStandinsTick, CurTime())
+    local ok, err = LC.Try(LC.DreamStandinsTick, CurTime())
     if not ok and LC.Error then LC.Error("dream stand-ins", err) end
 end)

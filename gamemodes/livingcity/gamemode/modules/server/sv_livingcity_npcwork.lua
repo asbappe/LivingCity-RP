@@ -286,7 +286,7 @@ local function Drop(npc, st, finished)
     if w.key and claims[w.key] == npc then claims[w.key] = nil end
     if IsValid(npc) then DropCarry(npc, st) end
     if w.onEnd then
-        local ok, err = pcall(w.onEnd, npc, st, w, finished == true)
+        local ok, err = LC.Try(w.onEnd, npc, st, w, finished == true)
         if not ok and LC.Error then LC.Error("npc work " .. tostring(w.id), err) end
     end
     SetDoing(npc, "")
@@ -378,7 +378,7 @@ function LC.NPCWorkThink(npc, st, now)
     end
     if now < st.untilT then return end
     if s.done then
-        local ok, err = pcall(s.done, npc, st, w)
+        local ok, err = LC.Try(s.done, npc, st, w)
         if not ok and LC.Error then LC.Error("npc work " .. tostring(w.id), err) end
     end
     if st.npcWork ~= w then return end -- the step ended the work itself
@@ -415,7 +415,7 @@ local function PlanBarred(npc, st, plan)
     if not LC.CitizenBarredAt then return false end
     local pos = plan.point and plan.point.pos
     if not pos and plan.steps and plan.steps[1] then
-        local ok, p = pcall(Val, plan.steps[1].pos, npc, st, { data = plan.data or {}, steps = plan.steps, i = 1 })
+        local ok, p = LC.Try(Val, plan.steps[1].pos, npc, st, { data = plan.data or {}, steps = plan.steps, i = 1 })
         pos = ok and p or nil
     end
     return pos ~= nil and OffLimits(npc, st, pos)
@@ -438,7 +438,7 @@ function LC.NPCWorkChoose(npc, st, now)
     for _, t in ipairs(list) do order[#order + 1] = { t = t, w = (t.urgent and 1000 or 0) + math.random() * (t.weight or 1) } end
     table.sort(order, function(a, b) return a.w > b.w end)
     for _, o in ipairs(order) do
-        local ok, plan = pcall(o.t.find, npc, st, now)
+        local ok, plan = LC.Try(o.t.find, npc, st, now)
         if not ok then
             if LC.Error then LC.Error("npc work find " .. o.t.id, plan) end
         elseif plan and (not plan.key or not Claimed(plan.key, npc)) and not PlanBarred(npc, st, plan) then
@@ -1032,7 +1032,7 @@ end
 
 timer.Create("LivingCityNPCDispatch", 5, 0, function()
     if not LC.Running then return end
-    local ok, err = pcall(LC.NPCRetakeScreens)
+    local ok, err = LC.Try(LC.NPCRetakeScreens)
     if not ok and LC.Error then LC.Error("npc dispatch", err) end
 end)
 

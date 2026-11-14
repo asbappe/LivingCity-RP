@@ -83,7 +83,7 @@ function LC.JobGameStart(ply, kind, q, opts)
     if LC.JobGames[ply] then LC.JobGameEnd(ply, "replaced") end
     local g = { kind = kind, ply = ply, q = q, opts = opts or {}, startT = CurTime(), props = {}, pay = 0, notes = {} }
     LC.JobGames[ply] = g
-    local ok, err = pcall(def.start, g)
+    local ok, err = LC.Try(def.start, g)
     if not ok then
         LC.JobGames[ply] = nil
         if LC.Error then LC.Error("job game " .. kind, err) end
@@ -100,7 +100,7 @@ function LC.JobGameEnd(ply, how)
     if not g then return end
     LC.JobGames[ply] = nil
     local def = GAMES[g.kind]
-    if def.finish then pcall(def.finish, g, how) end
+    if def.finish then LC.Try(def.finish, g, how) end
     for _, e in ipairs(g.props) do if IsValid(e) then e:Remove() end end
     Hud(ply, nil)
     if how == "done" or how == "test" then
@@ -125,7 +125,7 @@ timer.Create("LivingCityJobGames", 0.1, 0, function()
         elseif ply.lcRationBreak then
             -- (on a ration break: the game waits too)
         else
-            local ok, err = pcall(GAMES[g.kind].tick, g, now)
+            local ok, err = LC.Try(GAMES[g.kind].tick, g, now)
             if not ok then
                 if LC.Error then LC.Error("job game " .. g.kind, err) end
                 LC.JobGameEnd(ply, "done")
@@ -1143,7 +1143,7 @@ function LC.WireTry(ply, k, ccw)
         if g.dark then base = base * 2 g.notes[#g.notes + 1] = "Blackout: pay doubled." end
         g.pay = base
         if g.shocks == 0 then g.notes[#g.notes + 1] = "Not shocked once." end
-        if g.opts.onFixed then pcall(g.opts.onFixed) end
+        if g.opts.onFixed then LC.Try(g.opts.onFixed) end
         LC.JobGameEnd(ply, "done")
         return true
     end
@@ -1243,7 +1243,7 @@ GAMES.triage = {
                         if hp <= 0 then
                             p.done, g.lost = true, g.lost + 1
                             npc:SetNW2Bool("lc_patient", false)
-                            if npc.TakeDamage then pcall(npc.TakeDamage, npc, 100, game.GetWorld and game.GetWorld() or npc) end
+                            if npc.TakeDamage then LC.Try(npc.TakeDamage, npc, 100, game.GetWorld and game.GetWorld() or npc) end
                             g.ply:ChatPrint("[Clinic] A patient has died: " .. p.injury.label .. ".")
                         end
                     end
@@ -1396,7 +1396,7 @@ function LC.JobGameAct(ply, action, arg)
     local def = g and GAMES[g.kind]
     if g and action == "closed" then g.panelOpen = nil return true end -- (they shut it: E brings it back)
     if not def or not def.act then return nil end
-    local ok, r = pcall(def.act, g, tostring(action or ""), arg)
+    local ok, r = LC.Try(def.act, g, tostring(action or ""), arg)
     if not ok then if LC.Error then LC.Error("job game " .. g.kind, r) end return nil end
     g.nextHud = 0
     return r
@@ -1407,7 +1407,7 @@ function LC.JobGameUse(ply, ent)
     local g = LC.JobGames[ply]
     local def = g and GAMES[g.kind]
     if not def or not def.use or not IsValid(ent) then return nil end
-    local ok, r = pcall(def.use, g, ent)
+    local ok, r = LC.Try(def.use, g, ent)
     if not ok then if LC.Error then LC.Error("job game " .. g.kind, r) end return nil end
     g.nextHud = 0
     return r

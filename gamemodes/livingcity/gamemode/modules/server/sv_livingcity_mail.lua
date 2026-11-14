@@ -199,7 +199,7 @@ function LC.MailTick()
 end
 
 timer.Create("LivingCityMail", 15, 0, function()
-    local ok, err = pcall(LC.MailTick)
+    local ok, err = LC.Try(LC.MailTick)
     if not ok and LC.Error then LC.Error("mail", err) end
 end)
 hook.Add("PlayerSpawn", "LivingCityMail", function(ply)

@@ -384,7 +384,7 @@ function LC.RebelTrimCrowds(now)
 end
 timer.Create("LivingCityRebelCrowd", 30, 0, function()
     if not LC.Running then return end
-    local ok, err = pcall(LC.RebelTrimCrowds, CurTime())
+    local ok, err = LC.Try(LC.RebelTrimCrowds, CurTime())
     if not ok and LC.Error then LC.Error("rebel crowds", err) end
 end)
 
@@ -1173,7 +1173,7 @@ function LC.UnitsSpotRebels()
 end
 
 timer.Create("LivingCityUnitsSpotRebels", 1, 0, function()
-    local ok, err = pcall(LC.UnitsSpotRebels)
+    local ok, err = LC.Try(LC.UnitsSpotRebels)
     if not ok then LC.Error("Civil Protection units spot rebels", err) end
 end)
 
@@ -1725,7 +1725,7 @@ local function CleanupWithdrawn(now)
 end
 
 timer.Create("LivingCitySkirmishes", 2, 0, function()
-    local ok, err = pcall(function()
+    local ok, err = LC.Try(function()
         local now = CurTime()
         if not LC.Running then nextSkirmish = nil return end
         local sk = LC.Skirmish
@@ -2094,7 +2094,7 @@ hook.Add("OnNPCKilled", "LivingCityLookoutPosts", function(npc)
 end)
 
 timer.Create("LivingCityLookoutPosts", 3, 0, function()
-    local ok, err = pcall(LC.EnsureLookoutPosts)
+    local ok, err = LC.Try(LC.EnsureLookoutPosts)
     if not ok then LC.Error("lookout posts", err) end
 end)
 
@@ -2143,7 +2143,7 @@ hook.Add("OnNPCKilled", "LivingCityQuartermaster", function(npc)
 end)
 
 timer.Create("LivingCityQuartermasters", 10, 0, function()
-    local ok, err = pcall(EnsureQuartermasters)
+    local ok, err = LC.Try(EnsureQuartermasters)
     if not ok then LC.Error("quartermasters", err) end
 end)
 

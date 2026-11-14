@@ -10,41 +10,19 @@
     lc_debug 1       Prints every log line to the server console as it happens.
 
     Lua errors that mention Living City are captured automatically, including
-    errors on players' clients (rate limited).
+    errors on players' clients (rate limited): sh_livingcity_errors.lua keeps
+    them, grouped and counted, in garrysmod/data/livingcity/errors.txt.
 ]]
 
 if CLIENT then return end
 
 util.AddNetworkString("lc_report")
-util.AddNetworkString("lc_clerror")
 
 LC = LC or {}
 
 CreateConVar("lc_debug", "0", bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED), "Print every Miscount log line to the console")
 
-local function Mentions(text)
-    text = string.lower(tostring(text or ""))
-    return string.find(text, "livingcity", 1, true) or string.find(text, "living city", 1, true) or string.find(text, "miscount", 1, true)
-        or string.find(text, "lc_", 1, true) or string.find(text, "weapon_lc_", 1, true)
-end
-
--- Server-side Lua errors (hook exists on current Garry's Mod builds)
-hook.Add("OnLuaError", "LivingCityCapture", function(err, realm, stack, name)
-    local where = ""
-    if istable(stack) and stack[1] then where = tostring(stack[1].File or "") .. ":" .. tostring(stack[1].Line or "") end
-    if Mentions(err) or Mentions(where) or Mentions(name) then
-        LC.Log("error", string.format("lua %s error: %s (%s)", tostring(realm), tostring(err), where))
-    end
-end)
-
--- Errors reported by clients
-local lastClientError = {}
-net.Receive("lc_clerror", function(_, ply)
-    if (lastClientError[ply] or 0) > CurTime() then return end
-    lastClientError[ply] = CurTime() + 5
-    local msg = string.sub(net.ReadString(), 1, 400)
-    if Mentions(msg) then LC.Log("error", "client " .. ply:Nick() .. ": " .. msg) end
-end)
+-- (Lua errors, the server's and the players', are caught in sh_livingcity_errors.lua: grouped, counted, kept in a file)
 
 ------------------------------------------------------------------------
 -- Report
@@ -124,12 +102,12 @@ function LC.NearWatchTick()
         end
     end
 end
-timer.Create("LivingCityNearWatch", 0.5, 0, function() pcall(LC.NearWatchTick) end)
+timer.Create("LivingCityNearWatch", 0.5, 0, function() LC.Try(LC.NearWatchTick) end)
 hook.Add("OnEntityCreated", "LivingCityNearWatch", function(e)
     timer.Simple(0.2, function() if IsValid(e) and e:IsNPC() then LC.NearNote("appeared", e, e:GetPos()) end end)
 end)
 hook.Add("EntityRemoved", "LivingCityNearWatch", function(e)
-    if IsValid(e) and e.IsNPC and e:IsNPC() then pcall(LC.NearNote, "taken away", e, e:GetPos()) end
+    if IsValid(e) and e.IsNPC and e:IsNPC() then LC.Try(LC.NearNote, "taken away", e, e:GetPos()) end
 end)
 function LC.NearReport(out)
     for _, p in ipairs(player.GetAll()) do
@@ -262,7 +240,7 @@ function LC.BuildReport()
             for _, voice in ipairs({ "overwatch", "administrator", "radio" }) do
                 for _, f in ipairs(file.Find("sound/livingcity/" .. voice .. "/*.wav", "GAME") or {}) do
                     checked = checked + 1
-                    local okL, loops = pcall(LC.SoundLoops, "livingcity/" .. voice .. "/" .. f)
+                    local okL, loops = LC.Try(LC.SoundLoops, "livingcity/" .. voice .. "/" .. f)
                     if okL and loops then looped[#looped + 1] = voice .. "/" .. f end
                 end
             end
@@ -314,7 +292,7 @@ function LC.BuildReport()
     end
 
     Section(out, "Near you")
-    pcall(LC.NearReport, out)
+    LC.Try(LC.NearReport, out)
 
     Section(out, "NPCs")
     do -- vortigaunts: the freed ones in rebel ground, and the shackled ones on the streets
@@ -467,6 +445,17 @@ function LC.BuildReport()
         if LC.VoiceReport then for _, l in ipairs(LC.VoiceReport()) do out[#out + 1] = "her voice: " .. l end end
     end
 
+    if LC.ErrorsSorted then
+        Section(out, "Errors, grouped (all of it: garrysmod/data/" .. tostring(LC.ErrorsFile) .. ")")
+        local list = LC.ErrorsSorted()
+        for i = 1, math.min(#list, 10) do
+            local e = list[i]
+            out[#out + 1] = string.format("%dx %s: %s%s", e.n, tostring(e.realm), string.sub(tostring(e.msg), 1, 200),
+                e.where and (" (from " .. e.where .. ")") or "")
+        end
+        if #list == 0 then out[#out + 1] = "(none)" elseif #list > 10 then out[#out + 1] = string.format("(and %d more)", #list - 10) end
+    end
+
     Section(out, "Recent log (newest last)")
     local buf = LC.LogBuffer or {}
     for i = math.max(1, #buf - 80), #buf do out[#out + 1] = buf[i] end
@@ -477,7 +466,7 @@ end
 
 concommand.Add("lc_debugreport", function(ply)
     if IsValid(ply) and not (ply:IsAdmin() or LC.CanEdit(ply)) then return end
-    local ok, report = pcall(LC.BuildReport)
+    local ok, report = LC.Try(LC.BuildReport)
     if not ok then report = "Report failed to build: " .. tostring(report) .. "\n\nLog:\n" .. table.concat(LC.LogBuffer or {}, "\n") end
 
     file.CreateDir("livingcity/reports")

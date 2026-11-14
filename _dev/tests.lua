@@ -618,13 +618,13 @@ LC.ArrestNPC(q2.data.target, cop)
 ok(q2.done and q2.bonus == 15, "with a bonus for the extra work")
 
 local q3 = inject(cop, "cp_apprehend")
-local t3 = q3.data.target
+do local t3 = q3.data.target
 reach(cop, t3)
 withRoll(1, function() LC.ResolveChoice(cop, q3.id, 2) end)
 ok(LC.NPCs[t3].state == "moving" and LC.NPCs[t3].run, "a failed check and the suspect bolts")
 ok(q3.stages[q3.stage].action == "arrest", "and you still have to catch them")
 LC.AbandonQuest(cop)
-ok(LC.NPCs[t3] == nil or LC.NPCs[t3].questLock == nil, "abandoning releases the suspect")
+ok(LC.NPCs[t3] == nil or LC.NPCs[t3].questLock == nil, "abandoning releases the suspect") end
 
 local q4 = inject(cop, "cp_apprehend")
 reach(cop, q4.data.target)
@@ -635,9 +635,9 @@ ok(q4.done and LC.Trait(cop, "corruption") == c0 + 1, "taking a bribe ends it, a
 ----------------------------------------------------------------------
 section("Quests: a supply run")
 local q5 = inject(member, "res_supply")
-local contact = q5.stages[1].npc
+do local contact = q5.stages[1].npc
 ok(IsValid(contact), "a person is waiting with the crate")
-hook.Run("LivingCityPlayerUsedNPC", member, contact, LC.NPCs[contact])
+hook.Run("LivingCityPlayerUsedNPC", member, contact, LC.NPCs[contact]) end
 ok(q5.stages[q5.stage].kind == "choice", "taking it from them leads to a choice")
 withRoll(1, function() LC.ResolveChoice(member, q5.id, 2) end)
 ok(LC.PlayerIsWanted(member), "a failed Guile check gets you noticed")
@@ -666,9 +666,9 @@ ok(q7.stages[q7.stage].kind == "choice", "peeking inside opens a second choice")
 local l0 = LC.Trait(cit, "loyalty")
 LC.ResolveChoice(cit, q7.id, 2)
 ok(q7.stages[q7.stage].kind == "count" and q7.stages[q7.stage].event == "used_npc", "turning it in replaces the delivery")
-local anyCop
+do local anyCop
 for n, s in pairs(LC.NPCs) do if IsValid(n) and s.role == "cop" then anyCop = n break end end
-hook.Run("LivingCityPlayerUsedNPC", cit, anyCop, LC.NPCs[anyCop])
+hook.Run("LivingCityPlayerUsedNPC", cit, anyCop, LC.NPCs[anyCop]) end
 ok(q7.done and LC.Trait(cit, "loyalty") == l0 + 2, "handing it to a unit completes it, and the city remembers")
 
 local q8 = inject(cit, "cit_lost")
@@ -694,10 +694,10 @@ LC.SetFaction(helper, "cp", nil, true)
 local qs = inject(leader, "cp_patrol")
 helper.lcqNext = 0
 ok(LC.AcceptPosting(helper, qs.id) and LC.QuestOf[helper] == qs, "a second unit can join the job as a squad")
-local hx0 = tonumber(helper:GetPData("lcf_xp_cp", 0))
+do local hx0 = tonumber(helper:GetPData("lcf_xp_cp", 0))
 for _, s in ipairs(qs.stages) do helper:SetPos(s.pos) _run(1) end
 ok(qs.done, "the helper's progress counts")
-ok(tonumber(helper:GetPData("lcf_xp_cp", 0)) > hx0, "and both get paid")
+ok(tonumber(helper:GetPData("lcf_xp_cp", 0)) > hx0, "and both get paid") end
 
 for i = 1, 24 do
     local p = _makeplayer("Crowd" .. i)
@@ -740,9 +740,9 @@ for _ = 1, 2 do
 end
 ok(LC.Counter(dirty, "bribes") == 2, "bribes are remembered")
 ok(has(dirty.chat, "A new story is available"), "the player is told something has changed")
-local ia = storyPosting(dirty, "ia")
+do local ia = storyPosting(dirty, "ia")
 ok(ia and ia.part == "summons", "Internal Affairs appears on their board")
-LC.AcceptPosting(dirty, ia.id)
+LC.AcceptPosting(dirty, ia.id) end
 local qi = LC.QuestOf[dirty]
 ok(qi and qi.chain == "ia" and qi.board == "Internal Affairs", "the summons begins")
 dirty:SetPos(qi.stages[1].pos)
@@ -752,9 +752,9 @@ ok(IsValid(officer) and LC.NPCs[officer].role == "cop", "an Internal Affairs off
 reach(dirty, officer)
 LC.ResolveChoice(dirty, qi.id, 1)
 ok(qi.done and not IsValid(officer), "confessing ends the meeting, and the officer leaves")
-local pen = storyPosting(dirty, "ia")
+do local pen = storyPosting(dirty, "ia")
 ok(pen and pen.part == "penance", "penance is next")
-LC.AcceptPosting(dirty, pen.id)
+LC.AcceptPosting(dirty, pen.id) end
 local qp = LC.QuestOf[dirty]
 for _ = 1, 6 do
     local stg = qp.stages[qp.stage]
@@ -780,20 +780,20 @@ concommand.list.lcq_startchain(admin, nil, { "ia", "BentCop" })
 local b1 = storyPosting(bent, "ia")
 ok(b1 ~= nil, "admins can start any story directly")
 LC.AcceptPosting(bent, b1.id)
-local qa = LC.QuestOf[bent]
+do local qa = LC.QuestOf[bent]
 bent:SetPos(qa.stages[1].pos)
 _run(1)
 reach(bent, qa.data.actor)
-withRoll(20, function() LC.ResolveChoice(bent, qa.id, 2) end)
+withRoll(20, function() LC.ResolveChoice(bent, qa.id, 2) end) end
 local b2 = storyPosting(bent, "ia")
 ok(b2 and b2.part == "audit", "talking your way out leads to the audit")
 LC.AcceptPosting(bent, b2.id)
-local qa2 = LC.QuestOf[bent]
+do local qa2 = LC.QuestOf[bent]
 bent:SetPos(qa2.stages[1].pos)
 _run(1)
 reach(bent, qa2.data.actor)
 LC.ResolveChoice(bent, qa2.id, 2)
-ok(qa2.done and LC.Prisoners[bent] ~= nil, "taking the test bribe gets you arrested on the spot")
+ok(qa2.done and LC.Prisoners[bent] ~= nil, "taking the test bribe gets you arrested on the spot") end
 ok(LC.Story(bent).chains.ia.done == "busted", "busted")
 LC.ReleasePrisoner(bent)
 
@@ -805,15 +805,15 @@ LC.CheckUnlocks(kind)
 local k1 = storyPosting(kind, "pamphleteer")
 ok(k1 ~= nil, "a sympathetic citizen is approached")
 LC.AcceptPosting(kind, k1.id)
-local qk = LC.QuestOf[kind]
+do local qk = LC.QuestOf[kind]
 kind:SetPos(qk.stages[1].pos)
 _run(1)
 reach(kind, qk.data.actor)
-LC.ResolveChoice(kind, qk.id, 1)
-local k2 = storyPosting(kind, "pamphleteer")
+LC.ResolveChoice(kind, qk.id, 1) end
+do local k2 = storyPosting(kind, "pamphleteer")
 ok(k2 and k2.part == "nerve", "listening leads to a test of nerve")
-LC.AcceptPosting(kind, k2.id)
-local qn = LC.QuestOf[kind]
+LC.AcceptPosting(kind, k2.id) end
+do local qn = LC.QuestOf[kind]
 hook.Run("LivingCityPlayerUsedNPC", kind, qn.stages[1].npc, LC.NPCs[qn.stages[1].npc])
 LC.ResolveChoice(kind, qn.id, 2)
 ok(qn.stages[qn.stage].kind == "goto", "taking the long way adds a detour")
@@ -822,7 +822,7 @@ for _ = 1, 4 do
     kind:SetPos(qn.stages[qn.stage].pos)
     _run(1)
 end
-ok(qn.done, "the parcel is delivered")
+ok(qn.done, "the parcel is delivered") end
 local k3 = storyPosting(kind, "pamphleteer")
 ok(k3 and k3.part == "decision", "and the final meeting is set")
 LC.AcceptPosting(kind, k3.id)
@@ -871,9 +871,9 @@ ok(sent and string.find(tostring(sent.data[2]), "suspicion", 1, true) ~= nil, "a
 ok(tst.kind == "tail" and not qt2.done, "but doesn't blow the tail on the spot")
 local wall = { a = mark2:GetPos() + Vector(100, -300, 0), b = mark2:GetPos() + Vector(100, 300, 0) }
 table.insert(_walls, wall)
-local high = tst.suspicion
+do local high = tst.suspicion
 _run(3)
-ok(not tst.seen and tst.suspicion < high and qt2.stages[qt2.stage] == tst, "back out of sight, it fades", tst.suspicion)
+ok(not tst.seen and tst.suspicion < high and qt2.stages[qt2.stage] == tst, "back out of sight, it fades", tst.suspicion) end
 table.remove(_walls)
 local s0 = tst.suspicion
 for _ = 1, 4 do loyal:SetPos(mark2:GetPos() + Vector(-500, 0, 0)) _run(0.5) end
@@ -904,12 +904,12 @@ ok(qt3.stages[2].text == "Report her: find any Civil Protection unit and press E
 LC.AbandonQuest(loyal)
 
 section("Names and faces match")
-local mism = 0
+do local mism = 0
 for _ = 1, 40 do
     local person = LC.NewPerson("citizen")
     if LC.NameGender(person.name) ~= person.gender or not person.model:find(person.gender == "female" and "female" or "/male", 1, true) then mism = mism + 1 end
 end
-ok(mism == 0, "new people get a name that goes with their face", mism)
+ok(mism == 0, "new people get a name that goes with their face", mism) end
 local fem = LC.QB.SpawnActor({ ents = {}, marked = {}, data = {} }, "citizen", Vector(9000, 9000, 0), 5, nil, { gender = "female" })
 ok(IsValid(fem) and LC.NPCs[fem].gender == "female" and fem:GetModel():find("female", 1, true), "a story can ask for a woman, and gets one")
 if IsValid(fem) then fem:Remove() end
@@ -926,17 +926,17 @@ LC.AddTrait(good, "sympathy", 3)
 LC.CheckUnlocks(good)
 local g1 = storyPosting(good, "inside")
 ok(g1 and g1.part == "note", "a kind, clean cop finds a note in their ration packet")
-local dirtyKind = newPlayer("KindButBent", "cp")
+do local dirtyKind = newPlayer("KindButBent", "cp")
 LC.AddTrait(dirtyKind, "sympathy", 3)
 LC.AddTrait(dirtyKind, "corruption", 2)
-ok(storyPosting(dirtyKind, "inside") == nil, "a kind cop who takes bribes is not trusted")
+ok(storyPosting(dirtyKind, "inside") == nil, "a kind cop who takes bribes is not trusted") end
 
 LC.AcceptPosting(good, g1.id)
-local qn1 = LC.QuestOf[good]
+do local qn1 = LC.QuestOf[good]
 good:SetPos(qn1.stages[1].pos)
 _run(1)
 reach(good, qn1.data.actor)
-LC.ResolveChoice(good, qn1.id, 1)
+LC.ResolveChoice(good, qn1.id, 1) end
 local g2 = storyPosting(good, "inside")
 ok(g2 and g2.part == "proof", "hearing her out leads to a test")
 LC.AcceptPosting(good, g2.id)
@@ -944,13 +944,13 @@ local qp2 = LC.QuestOf[good]
 ok(qp2.stages[1].kind == "choice", "first, how to get them out: a transfer order, a fire, or a false report")
 LC.ResolveChoice(good, qp2.id, 1) -- (the forged transfer order)
 ok(LC.HasItem(good, "transfer_order"), "the forged transfer order, in your pocket")
-local prisoner = qp2.stages[qp2.stage].npc
+do local prisoner = qp2.stages[qp2.stage].npc
 ok(IsValid(prisoner), "a real prisoner is named")
 for _ = 1, 30 do
     if LC.NPCs[prisoner].state == "jailed" then break end
     _run(1)
 end
-hook.Run("LivingCityPlayerUsedNPC", good, prisoner, LC.NPCs[prisoner])
+hook.Run("LivingCityPlayerUsedNPC", good, prisoner, LC.NPCs[prisoner]) end
 ok(qp2.stages[qp2.stage].kind == "escort", "you open the cell and walk them out")
 local dest2 = qp2.stages[qp2.stage].pos
 local from2 = good:GetPos()
@@ -961,9 +961,9 @@ for i = 1, 40 do
 end
 _run(10)
 ok(qp2.done, "and get them to safety")
-local g3 = storyPosting(good, "inside")
+do local g3 = storyPosting(good, "inside")
 ok(g3 and g3.part == "crossroads", "then the crossroads")
-LC.AcceptPosting(good, g3.id)
+LC.AcceptPosting(good, g3.id) end
 local qc = LC.QuestOf[good]
 ok(qc and qc.stages[1].pos ~= nil, "the crossroads starts with somewhere to go", qc and (tostring(qc.title) .. " / " .. tostring(qc.stages[1].kind)) or "no quest")
 if qc and qc.stages[1].pos then good:SetPos(qc.stages[1].pos) end
@@ -976,8 +976,8 @@ ok(LC.StoryFlag(good, "insider") == true and LC.Story(good).chains.inside.done =
 ok(good:GetNW2String("lcf_faction", "") == "cp", "still in uniform")
 local w1 = storyPosting(good, "insidework")
 ok(w1 ~= nil and string.find(w1.title, "Inside Work: ", 1, true) == 1, "secret Inside Work appears, for you alone", w1 and w1.title)
-local otherCop = newPlayer("OtherCop", "cp")
-ok(storyPosting(otherCop, "insidework") == nil, "nobody else sees it")
+do local otherCop = newPlayer("OtherCop", "cp")
+ok(storyPosting(otherCop, "insidework") == nil, "nobody else sees it") end
 if w1 then LC.AcceptPosting(good, w1.id) end
 ok(LC.QuestOf[good] ~= nil, "an op begins")
 LC.AbandonQuest(good)
@@ -1038,22 +1038,22 @@ ok(LC.StoryFlag(good, "exposed") == true and LC.PlayerIsStalker(good), "refusing
 end
 
 local brave = newPlayer("BraveCop", "cp")
-local bcs = LC.ChainState(brave, "inside")
-bcs.part, bcs.readyAt = "crossroads", 0
+do local bcs = LC.ChainState(brave, "inside")
+bcs.part, bcs.readyAt = "crossroads", 0 end
 local bc = storyPosting(brave, "inside")
 LC.AcceptPosting(brave, bc.id)
-local qbc = LC.QuestOf[brave]
+do local qbc = LC.QuestOf[brave]
 brave:SetPos(qbc.stages[1].pos)
 _run(1)
 reach(brave, qbc.data.actor)
-LC.ResolveChoice(brave, qbc.id, 1)
+LC.ResolveChoice(brave, qbc.id, 1) end
 _run(2)
 ok(brave:GetNW2String("lcf_faction", "") == "resistance" and brave:GetNW2Int("lcf_rank", 1) >= 3, "defecting makes you a Resistance Fighter")
 
 ----------------------------------------------------------------------
 section("Stories: every part of every chain starts")
 LC.SetFaction(tester.chaplain, "citizen", nil, true)
-local cast = { cp = newPlayer("SCop", "cp", nil, 1000), citizen = newPlayer("SCit", "citizen") }
+do local cast = { cp = newPlayer("SCop", "cp", nil, 1000), citizen = newPlayer("SCit", "citizen") }
 cast.chaplain = newPlayer("SPriest", "resistance", "chaplain", 200)
 cast.stalker = newPlayer("SStalker", "stalker")
 cast.vort = newPlayer("SVort", "vort") -- (The Collar: a shackled vortigaunt's story)
@@ -1093,7 +1093,7 @@ for _, chain in ipairs(LC.ChainList) do
 end
 ok(#problems2 == 0, "no story errors", problems2[1])
 ok(started2 == total2, "every part starts", started2 .. "/" .. total2)
-LC.SetFaction(cast.stalker, "citizen", nil, true)
+LC.SetFaction(cast.stalker, "citizen", nil, true) end
 
 
 ----------------------------------------------------------------------
@@ -1145,8 +1145,8 @@ end
 local worker = newPlayer("Worker", "citizen")
 ok(storyPosting(worker, "shift") == nil, "no job, no shifts")
 ok(LC.SetJob(worker, "sanitation") and LC.Job(worker).id == "sanitation", "a citizen can take a Union job")
-local unitJ = newPlayer("UnitJob", "cp")
-ok(not LC.SetJob(unitJ, "kitchen"), "units can't take Union jobs")
+do local unitJ = newPlayer("UnitJob", "cp")
+ok(not LC.SetJob(unitJ, "kitchen"), "units can't take Union jobs") end
 -- (7 November) the Union's kit comes back after prison; the job goes with a unit's badge, or an anticitizen's name
 do
 local kit = newPlayer("Kit", "citizen")
@@ -1182,9 +1182,9 @@ end
 ok(sp1 and string.find(sp1.title, "Union shift: Sanitation Worker: ", 1, true) == 1, "shifts appear on the board", sp1 and sp1.title)
 local c0, s0 = LC.Credits(worker), LC.Standing(worker)
 LC.AcceptPosting(worker, sp1.id)
-local qw = LC.QuestOf[worker]
+do local qw = LC.QuestOf[worker]
 work(qw, worker)
-ok(qw.done, "a shift can be worked to completion", qw.stages[qw.stage] and qw.stages[qw.stage].kind)
+ok(qw.done, "a shift can be worked to completion", qw.stages[qw.stage] and qw.stages[qw.stage].kind) end
 ok(LC.Credits(worker) - c0 == 15, "a shift pays credits", LC.Credits(worker) - c0)
 ok(LC.Standing(worker) - s0 >= 5, "and earns standing", LC.Standing(worker) - s0)
 ok(LC.Counter(worker, "shifts") == 1, "and is counted")
@@ -1226,9 +1226,9 @@ LC.Incarcerate(shopper, 30, "test")
 ok(LC.Standing(shopper) == st1 - 65, "being jailed costs more", LC.Standing(shopper) - st1)
 LC.ReleasePrisoner(shopper)
 LC.AddStanding(shopper, -1000)
-local disp0 = ents.Create("lc_dispenser")
+do local disp0 = ents.Create("lc_dispenser")
 disp0:SetPos(shopper:GetPos() + Vector(40, 0, 0))
-ok(not LC.UseDispenser(shopper, disp0), "anticitizens are refused rations")
+ok(not LC.UseDispenser(shopper, disp0), "anticitizens are refused rations") end
 ok(not LC.Buy(shopper, "bread"), "and most of the Commissary")
 
 ----------------------------------------------------------------------
@@ -1274,9 +1274,9 @@ local bird = ents.Create("npc_pigeon")
 bird:SetPos(surv:GetPos() + Vector(30, 0, 0))
 hook.Run("OnNPCKilled", bird, surv)
 _run(1)
-local carcass
+do local carcass
 for _, e in ipairs(ents.FindByClass("lc_item")) do if e:GetNW2String("lc_item", "") == "raw_bird" then carcass = e end end
-ok(IsValid(carcass), "a dead bird leaves a carcass you can pick up")
+ok(IsValid(carcass), "a dead bird leaves a carcass you can pick up") end
 LC.GiveItem(surv, "raw_bird")
 LC.InvAction(surv, "cook", "raw_bird")
 ok(LC.HasItem(surv, "cooked_bird"), "and you can roast it")
@@ -1306,9 +1306,9 @@ do
     LC.TakeItem(surv, "raw_fish")
     LC.SpoilClock = os.time
 end
-local crowNpc = ents.Create("npc_crow")
+do local crowNpc = ents.Create("npc_crow")
 crowNpc:SetPos(surv:GetPos() + Vector(40, 0, 0))
-hook.Run("OnNPCKilled", crowNpc, surv)
+hook.Run("OnNPCKilled", crowNpc, surv) end
 _run(1)
 local crowCarcass
 for _, e in ipairs(ents.FindByClass("lc_item")) do if e:GetNW2String("lc_item", "") == "raw_crow" then crowCarcass = e end end
@@ -1327,9 +1327,9 @@ local pig = ents.Create("npc_pigeon")
 local d2 = _dmg(surv, 5) d2.inflictor = fist
 hook.Run("EntityTakeDamage", pig, d2)
 ok(d2:GetDamage() >= 50, "but kills a bird outright")
-local wildlife = 0
+do local wildlife = 0
 for e, kind in pairs(LC.Wildlife) do if IsValid(e) then wildlife = wildlife + 1 end end
-ok(wildlife > 0, "birds and vermin live in the city", wildlife)
+ok(wildlife > 0, "birds and vermin live in the city", wildlife) end
 
 ----------------------------------------------------------------------
 section("Fixtures from the layout")
@@ -16152,7 +16152,7 @@ for _, p in ipairs({ runner, skiver, unitP }) do p:SetPos(Vector(-120000, -12000
 _walls = savedWalls
 end
 ExerciseJogTests()
-do -- (the owner, 13 November: the morning jog archived, its routes out of the layout, each start kept as a yard)
+;(function() -- (the owner, 13 November: the morning jog archived, its routes out of the layout, each start kept as a yard)
     section("The morning jog is archived: never held, its routes taken out of the layout")
     RunConsoleCommand("lc_jog", "0")
     local keepPts = LC.Points
@@ -16179,7 +16179,7 @@ do -- (the owner, 13 November: the morning jog archived, its routes out of the l
     ok(LC.ArchiveJogPoints() == 0 and #LC.Points == 1, "with lc_jog 1 the routes are left alone")
     RunConsoleCommand("lc_jog", "0")
     LC.Points = keepPts
-end
+end)()
 
 ----------------------------------------------------------------------
 section("Morning exercise: the drill")
@@ -18001,7 +18001,7 @@ GuidanceTests()
 
 ----------------------------------------------------------------------
 section("Playtest fixes (7 November, CP): the old job's looks and kit go, ration vouchers, the CP Commissary's daily kit and vest charging, the radio's R, the editor and sleep, rebels' bodies")
-local function UnitLifeTests()
+function UnitLifeTests()
 -- 1. a new faction: the Union job, its tools and its suit go, the saved job too
 do
     local p = newPlayer("RecCleaner", "citizen")
@@ -18992,7 +18992,7 @@ DreamFixTests()
 
 ----------------------------------------------------------------------
 -- Shared dreams, the Administrator's choice (sv_livingcity_dreams.lua): moods, the tablet, and watching once you're out
-local function DreamMoodTests()
+function DreamMoodTests()
 section("Shared dreams: Happy, Neutral or Nightmare, chosen on the Administrator's tablet")
 _setcvar("lc_dream_rules", 0) _setcvar("lc_dream_auto", 0) -- (the older tests: the Administrator picks freely, and the city doesn't pick: DreamCrowdTests has the rules)
 local errs0 = #_errors
@@ -29798,6 +29798,141 @@ local long = file.Read(LC.Feedback(newPlayer("FBLong", "citizen"), string.rep("x
 ok(string.find(long, string.rep("x", 1000), 1, true) ~= nil and string.find(long, string.rep("x", 1001), 1, true) == nil, "a very long one is cut to 1000 letters")
 end
 FeedbackTests()
+
+function ErrorsFileTests()
+section("Every error in one file: grouped, counted, kept over restarts (the owner, 14 November)")
+local keepErr = LC.Err
+LC.Err = { list = {}, by = {}, since = os.time(), boots = 1, lost = 0, loaded = true }
+local function entry(part)
+    for _, e in ipairs(LC.Err.list) do if string.find(e.msg, part, 1, true) then return e end end
+end
+-- LC.Try is pcall
+local a, b, c = LC.Try(function(x) return x, "two" end, 1)
+ok(a == true and b == 1 and c == "two", "LC.Try gives back what pcall gives: true and every value")
+local function boom() error("boom-swallowed") end
+local bad, why = LC.Try(boom)
+ok(bad == false and string.find(tostring(why), "boom-swallowed", 1, true) ~= nil, "and false with the error when it fails")
+local sw = entry("boom-swallowed")
+ok(sw ~= nil and sw.realm == "hidden" and sw.n == 1, "an error a protected call swallowed is written down", sw and sw.realm)
+ok(sw ~= nil and string.find(tostring(sw.where), "tests.lua", 1, true) ~= nil, "with the line that made the call", sw and tostring(sw.where))
+for _ = 1, 4 do LC.Try(boom) end
+ok(#LC.Err.list == 1 and sw.n == 5, "the same one again is counted, not listed again", #LC.Err.list .. " / " .. tostring(sw and sw.n))
+ok(select("#", LC.Try(nil)) == 2 and LC.Try(nil) == false, "calling nothing fails as pcall does, without an error of its own")
+local objOk, obj = LC.Try(function() error({ code = 7 }) end)
+ok(objOk == false and istable(obj) and obj.code == 7, "an error that isn't text comes back untouched")
+-- reported by the code that caught it: the same entry, named
+LC.Err.list, LC.Err.by = {}, {}
+local _, err2 = LC.Try(function() error("boom-reported") end)
+local before = #_errors
+LC.Error("the test's job", err2)
+local rep = entry("boom-reported")
+ok(#LC.Err.list == 1 and rep.n == 1 and rep.told == true and rep.where ~= nil, "an error caught and then reported is one entry, counted once", #LC.Err.list .. " / " .. tostring(rep and rep.n))
+ok(#_errors == before + 1, "LC.Error still tells the console, as before")
+_errors[#_errors] = nil
+LC.Error("somewhere else", "a plain complaint")
+ok(entry("a plain complaint") ~= nil and entry("a plain complaint").realm == "caught", "what the code reports by itself is listed too")
+_errors[#_errors] = nil
+-- the game's own errors
+LC.Err.list, LC.Err.by = {}, {}
+hook.Run("OnLuaError", "gamemodes/livingcity/gamemode/modules/server/sv_x.lua:12: attempt to index a nil value", "server",
+    { { File = "gamemodes/livingcity/gamemode/modules/server/sv_x.lua", Line = 12, Function = "Poll" }, { File = "lua/includes/modules/timer.lua", Line = 3, Function = "" } }, "Miscount")
+local se = entry("attempt to index a nil value")
+ok(se ~= nil and se.realm == "server" and string.find(se.stack, "sv_x.lua:12 in Poll", 1, true) ~= nil and string.find(se.stack, "timer.lua:3", 1, true) ~= nil,
+    "a Lua error on the server is kept with its whole trace", se and se.stack)
+hook.Run("OnLuaError", "lua/includes/extensions/net.lua:32: bad argument #1 to 'WriteString'", "server",
+    { { File = "lua/includes/extensions/net.lua", Line = 32, Function = "WriteString" }, { File = "gamemodes/livingcity/gamemode/modules/server/sv_y.lua", Line = 80, Function = "Send" } }, "")
+ok(entry("bad argument #1") ~= nil, "one raised in the game's own files is kept when the gamemode's code is further down the trace")
+hook.Run("OnLuaError", "addons/other/lua/autorun/thing.lua:5: nope", "server", { { File = "addons/other/lua/autorun/thing.lua", Line = 5, Function = "f" } }, "other")
+ok(entry("nope") == nil, "another addon's error is not ours to keep")
+LC.ErrorNote("server", "Entity [41][npc_citizen] has no brain at 0x1f00ab")
+LC.ErrorNote("server", "Entity [97][npc_citizen] has no brain at 0x2a11cd")
+ok(entry("has no brain").n == 2, "the same error about another entity or address is the same error")
+-- players' games
+local e1, e2, e3 = newPlayer("ErrOne", "citizen"), newPlayer("ErrTwo", "citizen"), newPlayer("ErrThree", "citizen")
+_netcall("lc_clerror", e1, "client", "gamemodes/livingcity/gamemode/modules/client/cl_x.lua:9: hud broke\ncl_x.lua:9 in Paint", 3)
+local ce = entry("hud broke")
+ok(ce ~= nil and ce.realm == "client" and ce.n == 3 and ce.players == 1 and string.find(ce.stack, "in Paint", 1, true) ~= nil, "a player's game sends its errors, with how many times", ce and (ce.n .. " / " .. tostring(ce.players)))
+_netcall("lc_clerror", e1, "client", "gamemodes/livingcity/gamemode/modules/client/cl_x.lua:9: hud broke\ncl_x.lua:9 in Paint", 50)
+ok(ce.n == 3, "one message every two seconds from a player, no more")
+_netcall("lc_clerror", e2, "client", "gamemodes/livingcity/gamemode/modules/client/cl_x.lua:9: hud broke\ncl_x.lua:9 in Paint", 1)
+ok(ce.n == 4 and ce.players == 2, "the same error on a second player's game: one entry, two players", ce.n .. " / " .. tostring(ce.players))
+_netcall("lc_clerror", e3, "client", "addons/other/thing.lua:1: not ours", 1)
+ok(entry("not ours") == nil, "a player's error from another addon is left out")
+_run(3)
+_netcall("lc_clerror", e3, "hidden", "cl_y.lua:4: swallowed over there\ncl_y.lua:20", 2)
+ok(entry("swallowed over there") ~= nil and entry("swallowed over there").realm == "client hidden", "and what a protected call swallowed on a player's game")
+-- the file
+_files["livingcity/errors.txt"], _files["livingcity/errors.json"] = nil, nil
+_run(11)
+local txt = _files["livingcity/errors.txt"] or ""
+ok(string.find(txt, "MISCOUNT ERRORS", 1, true) == 1 and string.find(txt, "hud broke", 1, true) ~= nil and string.find(txt, "at cl_x.lua:9 in Paint", 1, true) ~= nil,
+    "a new error is in data/livingcity/errors.txt within ten seconds", string.sub(txt, 1, 80))
+ok(string.find(txt, "a player's game (2 players)", 1, true) ~= nil and string.find(txt, "#1  4 times", 1, true) ~= nil, "the most frequent first, with whose game and how many players")
+ok(_files["livingcity/errors.json"] ~= nil, "and kept in errors.json for the next start")
+local wrote = _files["livingcity/errors.txt"]
+ce.n, LC.Err.dirty = ce.n + 1, true
+_files["livingcity/errors.txt"] = nil
+_run(30)
+ok(_files["livingcity/errors.txt"] == nil, "a count going up is not written every ten seconds")
+_run(100)
+ok(_files["livingcity/errors.txt"] ~= nil and _files["livingcity/errors.txt"] ~= wrote, "it is written within two minutes")
+LC.Err.dirty = true
+_files["livingcity/errors.txt"] = nil
+hook.Run("ShutDown")
+ok(_files["livingcity/errors.txt"] ~= nil, "and when the server shuts down")
+-- a restart
+local had = #LC.Err.list
+LC.Err = { list = {}, by = {}, since = os.time(), boots = 0, lost = 0, loaded = true }
+LC.ErrorsLoad()
+ok(#LC.Err.list == had and entry("hud broke") ~= nil and entry("hud broke").n == 5 and entry("hud broke").boot == 0, "after a restart the list is read back, counts kept", #LC.Err.list .. " of " .. had)
+LC.ErrorNote("client", "gamemodes/livingcity/gamemode/modules/client/cl_x.lua:9: hud broke")
+ok(#LC.Err.list == had and entry("hud broke").n == 6 and entry("hud broke").boot == 1, "the same error after the restart adds to it")
+local old = util.JSONToTable(_files["livingcity/errors.json"])
+old.list[1].last = os.time() - 15 * 86400
+local gone = old.list[1].msg
+_files["livingcity/errors.json"] = util.TableToJSON(old)
+LC.Err = { list = {}, by = {}, since = os.time(), boots = 0, lost = 0, loaded = true }
+LC.ErrorsLoad()
+ok(#LC.Err.list == had - 1 and entry(gone) == nil, "one not seen for two weeks is forgotten")
+-- the menu and the commands
+net.sent = {}
+local errAdmin = newPlayer("ErrAdmin", "citizen")
+errAdmin.admin, errAdmin.superadmin = true, true
+concommand.list["lc_errors"](e1)
+ok(_lastnet("lc_report") == nil, "someone who is not staff is not shown the list")
+concommand.list["lc_errors"](errAdmin)
+local shown = _lastnet("lc_report")
+ok(shown ~= nil, "an admin is (F4 > Factions > Admin: errors)")
+ok(LC.ErrorsCount() == #LC.Err.list and LC.ErrorsCount() > 0, "the button's number is how many different errors there are")
+local report = LC.BuildReport()
+ok(string.find(report, "Errors, grouped", 1, true) ~= nil and string.find(report, "x client: ", 1, true) ~= nil, "the debug report lists the most frequent")
+concommand.list["lc_errors_clear"](e1)
+ok(LC.ErrorsCount() > 0, "only a superadmin starts the list again")
+concommand.list["lc_errors_clear"](errAdmin)
+ok(LC.ErrorsCount() == 0 and string.find(_files["livingcity/errors_previous.txt"] or "", "hud broke", 1, true) ~= nil, "starting again keeps the old list as errors_previous.txt")
+ok(string.find(_files["livingcity/errors.txt"] or "", "Nothing has gone wrong.", 1, true) ~= nil, "and the file says nothing has gone wrong")
+-- a flood stays small
+for i = 1, 260 do LC.ErrorNote("server", "flood number " .. string.rep("z", i)) end
+ok(#LC.Err.list == 200 and LC.Err.lost == 60, "200 different errors are kept; the rest are only counted", #LC.Err.list .. " / " .. tostring(LC.Err.lost))
+LC.Err.list, LC.Err.by, LC.Err.lost = {}, {}, 0
+for i = 1, 80 do LC.Try(function() error("swallowed flood " .. string.rep("y", i)) end) end
+ok(#LC.Err.list == 60, "and at most 60 of them swallowed ones, so they can't crowd the others out", #LC.Err.list)
+ok(#LC.ErrorsText() > 0 and LC.Try(LC.ErrorsSave) == true, "the full list still writes")
+_files["livingcity/errors.txt"], _files["livingcity/errors.json"], _files["livingcity/errors_previous.txt"] = nil, nil, nil
+LC.Err = keepErr
+end
+ErrorsFileTests()
+
+function RobotTests()
+section("Robot players: every job on the boards, taken and done the way a player would (the owner, 14 November)")
+-- (their own run, from the city as the first 505 lines leave it: python3 _dev/robots.py. Inside the long run
+-- the city is whatever the tests before left, and the same job would go differently from one run to the next.)
+if not _ROBOTS_ON then return end
+local robots = assert(loadstring(_ROBOTSRC, "robots.lua"))()
+local rep = robots({ ok = ok, newPlayer = newPlayer, withRoll = withRoll })
+_ROBOT_REPORT = rep.text
+end
+RobotTests()
 
 
 section("The owner's 14 November notes: stores, Civil Protection's toughness, the medic, jobs, water, the vest")

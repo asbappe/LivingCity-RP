@@ -269,7 +269,7 @@ end
 
 hook.Add("EntityTakeDamage", "LivingCityMinds", function(ent, dmg)
     if not ent.lcProfile or not On() then return end
-    local ok, err = pcall(LC.MindsHurt, ent, dmg:GetAttacker(), dmg:GetDamage())
+    local ok, err = LC.Try(LC.MindsHurt, ent, dmg:GetAttacker(), dmg:GetDamage())
     if not ok and LC.Error then LC.Error("minds (hurt)", err) end
 end)
 
@@ -294,7 +294,7 @@ end
 
 hook.Add("OnNPCKilled", "LivingCityMinds", function(npc, attacker)
     if not On() or not (IsValid(npc) and npc.lcProfile) then return end
-    local ok, err = pcall(LC.MindsKilled, npc, attacker)
+    local ok, err = LC.Try(LC.MindsKilled, npc, attacker)
     if not ok and LC.Error then LC.Error("minds (killed)", err) end
 end)
 
@@ -668,21 +668,21 @@ end
 
 timer.Create("LivingCityMinds", STEP, 0, function()
     if not On() or LC.TimeStopped then return end
-    local ok, err = pcall(LC.MindsStep, CurTime())
+    local ok, err = LC.Try(LC.MindsStep, CurTime())
     if not ok and LC.Error then LC.Error("minds (step)", err) end
     local now = CurTime()
     if now - (M.lastSnap or 0) >= SNAP_EVERY then
         M.lastSnap = now
-        local okS, lines = pcall(LC.MindsSnapshot, 3)
+        local okS, lines = LC.Try(LC.MindsSnapshot, 3)
         if okS then for _, l in ipairs(lines) do Log("SNAP", "%s", l) end end
     end
     if now - (M.lastFlush or 0) >= 60 then M.lastFlush = now LC.MindsFlush() end
-    if now - (M.lastSave or 0) >= SAVE_EVERY then M.lastSave = now pcall(LC.MindsSave) end
+    if now - (M.lastSave or 0) >= SAVE_EVERY then M.lastSave = now LC.Try(LC.MindsSave) end
 end)
 
 hook.Add("ShutDown", "LivingCityMinds", function()
     if not On() then return end
-    pcall(function()
+    LC.Try(function()
         for _, l in ipairs(LC.MindsSnapshot(6)) do Log("SNAP", "%s", l) end
         Log("STOP", "map ending")
         LC.MindsFlush()

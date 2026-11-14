@@ -99,7 +99,7 @@ function LC.CombatTick(now)
     if not cvOn:GetBool() then return end
     for npc, st in pairs(LC.NPCs or {}) do
         if IsValid(npc) and LC.CombatRoles[st.role] and npc:Health() > 0 then
-            local ok, err = pcall(LC.CombatStep, npc, st, now)
+            local ok, err = LC.Try(LC.CombatStep, npc, st, now)
             if not ok and LC.Error then LC.Error("combat", err) end
         end
     end
@@ -125,7 +125,7 @@ end
 hook.Add("EntityTakeDamage", "LivingCityCombat", function(victim, dmg)
     local st = IsValid(victim) and LC.NPCs and LC.NPCs[victim]
     if not st or not LC.CombatRoles[st.role] then return end
-    local ok, err = pcall(LC.CombatHurt, victim, st, dmg:GetAttacker(), dmg:GetDamage(), CurTime())
+    local ok, err = LC.Try(LC.CombatHurt, victim, st, dmg:GetAttacker(), dmg:GetDamage(), CurTime())
     if not ok and LC.Error then LC.Error("combat cover", err) end
 end)
 

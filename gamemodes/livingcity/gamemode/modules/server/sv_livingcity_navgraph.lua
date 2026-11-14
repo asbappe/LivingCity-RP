@@ -157,7 +157,7 @@ function LC.RefreshNavTraffic()
     LC.NavTraffic, LC.NavStanding = traffic, standing
 end
 timer.Create("LivingCityNavTraffic", 2, 0, function()
-    local ok, err = pcall(LC.RefreshNavTraffic)
+    local ok, err = LC.Try(LC.RefreshNavTraffic)
     if not ok then LC.Error("nav traffic", err) end
 end)
 
@@ -413,7 +413,7 @@ LC.Ladders = LC.Ladders or {} -- { { a = pos, b = pos }, ... }
 local function MapLadders()
     local out = {}
     for _, e in ipairs(ents.FindByClass("func_useableladder")) do
-        local ok, top, bottom = pcall(function()
+        local ok, top, bottom = LC.Try(function()
             return e:GetInternalVariable("m_vecPlayerMountPositionTop"), e:GetInternalVariable("m_vecPlayerMountPositionBottom")
         end)
         if ok and isvector and isvector(top) and isvector(bottom) and top:DistToSqr(bottom) > 64 * 64 then
@@ -669,7 +669,7 @@ function LC.LadderLearnTick(now)
     end
 end
 timer.Create("LivingCityLadderLearn", 0.1, 0, function()
-    local ok, err = pcall(LC.LadderLearnTick, CurTime())
+    local ok, err = LC.Try(LC.LadderLearnTick, CurTime())
     if not ok and LC.Error then LC.Error("ladder learning", err) end
 end)
 hook.Add("PlayerDisconnected", "LivingCityLadderLearn", function(p) climbs[p] = nil end)
@@ -709,8 +709,8 @@ timer.Create("LivingCityLadders", 0.5, 0, function()
 end)
 
 hook.Add("LivingCityLayoutChanged", "LivingCityLadders", function()
-    timer.Simple(0, function() local ok, err = pcall(LC.ApplyLadders) if not ok and LC.Error then LC.Error("ladders", err) end end)
+    timer.Simple(0, function() local ok, err = LC.Try(LC.ApplyLadders) if not ok and LC.Error then LC.Error("ladders", err) end end)
 end)
 hook.Add("InitPostEntity", "LivingCityLadders", function()
-    timer.Simple(5, function() pcall(LC.ApplyLadders) end)
+    timer.Simple(5, function() LC.Try(LC.ApplyLadders) end)
 end)

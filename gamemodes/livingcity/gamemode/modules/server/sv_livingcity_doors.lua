@@ -396,12 +396,12 @@ local wasRunning = false
 timer.Create("LivingCityDoors", 0.3, 0, function()
     if LC.Running and not wasRunning then LC.ApplyAllDoors() end
     wasRunning = LC.Running
-    local ok, err = pcall(DoorThink)
+    local ok, err = LC.Try(DoorThink)
     if not ok then LC.Error("doors", err) end
     if LC.Running then
-        ok, err = pcall(LC.PrisonDoorThink, CurTime())
+        ok, err = LC.Try(LC.PrisonDoorThink, CurTime())
         if not ok then LC.Error("prison doors", err) end
-        ok, err = pcall(LC.KeepOpenThink, CurTime())
+        ok, err = LC.Try(LC.KeepOpenThink, CurTime())
         if not ok then LC.Error("doors kept open", err) end
     end
 end)

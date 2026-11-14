@@ -453,7 +453,7 @@ function LC.DreamBodyMake(p, snap)
     p.lcDreamBedPos = top
     local rag = ents.Create("prop_ragdoll")
     if not IsValid(rag) then return nil end
-    local ok = pcall(function()
+    local ok = LC.Try(function()
         rag:SetModel(p:GetModel())
         rag:SetSkin(p:GetSkin() or 0)
         for i = 0, (p.GetNumBodyGroups and p:GetNumBodyGroups() or 1) - 1 do rag:SetBodygroup(i, p:GetBodygroup(i)) end

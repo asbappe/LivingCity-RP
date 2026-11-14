@@ -258,7 +258,7 @@ if SERVER then
     end
     timer.Create("LivingCityNetPump", 0.1, 0, function()
         if next(N.busy) == nil then return end
-        local ok, err = pcall(N.PumpAll)
+        local ok, err = LC.Try(N.PumpAll)
         if not ok then print("[Miscount] net pump: " .. tostring(err)) end
     end)
 
@@ -293,7 +293,7 @@ if CLIENT then
         local gaveLen = false
         net.ReadUInt = function() if not gaveLen then gaveLen = true return #data end return 0 end
         net.ReadData = function() return data end
-        local ok, err = pcall(fn, #data * 8, nil)
+        local ok, err = LC.Try(fn, #data * 8, nil)
         net.ReadUInt, net.ReadData = rU, rD
         if not ok then print("[Miscount] " .. msg .. ": " .. tostring(err)) end
         return ok

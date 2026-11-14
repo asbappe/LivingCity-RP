@@ -203,7 +203,7 @@ LC.TrailNoWay = LC.TrailNoWay or 0
 function LC.TrailRoute(from, to, role)
     local pts = Planned(from, to, role, false) or Planned(from, to, role, true)
     if not pts then
-        local ok, r = pcall(NavMeshPath, from, to)
+        local ok, r = LC.Try(NavMeshPath, from, to)
         if ok and type(r) == "table" and #r > 1 then pts = r end
     end
     if not pts then
@@ -327,7 +327,7 @@ function LC.TrailTick(now)
 end
 
 timer.Create("LivingCityTrail", 1, 0, function()
-    local ok, err = pcall(LC.TrailTick, CurTime())
+    local ok, err = LC.Try(LC.TrailTick, CurTime())
     if not ok and LC.Error then LC.Error("quest trail", err) end
 end)
 
@@ -343,7 +343,7 @@ end
 
 timer.Create("LivingCityWhereAmI", 1, 0, function()
     for _, ply in ipairs(player.GetAll()) do
-        local ok, kind = pcall(LC.WhereKind, ply)
+        local ok, kind = LC.Try(LC.WhereKind, ply)
         kind = (ok and kind) or ""
         if ply:GetNW2String("lc_here", "") ~= kind then ply:SetNW2String("lc_here", kind) end
     end

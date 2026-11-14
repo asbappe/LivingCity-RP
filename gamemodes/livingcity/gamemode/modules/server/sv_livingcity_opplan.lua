@@ -276,7 +276,7 @@ end)
 ------------------------------------------------------------------------
 
 timer.Create("LivingCityOpPlan", 2, 0, function()
-    local ok, err = pcall(function()
+    local ok, err = LC.Try(function()
         local now = CurTime()
         local plan = LC.OpPlan
         if plan then

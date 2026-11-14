@@ -344,7 +344,7 @@ T{
                         for i = 1, missing do
                             local a = i / missing * math.pi * 2
                             local at = (LC.GroundAt and LC.GroundAt(d.pos + Vector(math.cos(a) * 160, math.sin(a) * 160, 0)) or d.pos) + Vector(0, 0, 6)
-                            local ok, npc, st = pcall(LC.ManpowerFree or function(f, ...) return f(...) end, sp, at)
+                            local ok, npc, st = LC.Try(LC.ManpowerFree or function(f, ...) return f(...) end, sp, at)
                             if ok and IsValid(npc) and st then
                                 st.drop, st.unmanaged, st.dropGuard, st.holdPos, st.leaveAt = d, true, true, at, CurTime() + 600
                                 made = made + 1

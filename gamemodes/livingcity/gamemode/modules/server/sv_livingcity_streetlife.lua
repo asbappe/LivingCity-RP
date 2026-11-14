@@ -184,7 +184,7 @@ function LC.BrandishTick(now)
     end
 end
 timer.Create("LivingCityBrandish", 0.5, 0, function()
-    local ok, err = pcall(LC.BrandishTick, CurTime())
+    local ok, err = LC.Try(LC.BrandishTick, CurTime())
     if not ok and LC.Error then LC.Error("guns", err) end
 end)
 
@@ -217,7 +217,7 @@ function LC.Obituary(victim, attacker, inflictor)
     return line
 end
 hook.Add("PlayerDeath", "LivingCityObituary", function(victim, inflictor, attacker)
-    local ok, err = pcall(LC.Obituary, victim, attacker, inflictor)
+    local ok, err = LC.Try(LC.Obituary, victim, attacker, inflictor)
     if not ok and LC.Error then LC.Error("obituary", err) end
 end)
 
@@ -308,6 +308,6 @@ hook.Add("EntityFireBullets", "LivingCityGunfireFear", function(ent, data)
     if (ent.lcShotHeardAt or 0) > now then return end
     ent.lcShotHeardAt = now + 1.5
     local src = data and data.Src or ent:GetPos()
-    local ok, err = pcall(LC.GunfireFear, ent, src, now)
+    local ok, err = LC.Try(LC.GunfireFear, ent, src, now)
     if not ok and LC.Error then LC.Error("gunfire fear", err) end
 end)

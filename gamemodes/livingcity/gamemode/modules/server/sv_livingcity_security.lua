@@ -58,7 +58,7 @@ end
 
 timer.Create("LivingCityCombineZones", 1, 0, function()
     if not LC.Running then return end
-    local ok, err = pcall(LC.CombineZoneTick, CurTime())
+    local ok, err = LC.Try(LC.CombineZoneTick, CurTime())
     if not ok and LC.Error then LC.Error("security", err) end
 end)
 

@@ -277,7 +277,7 @@ local function Dress(z, d)
                 if z.kind == "infest" and util.Decal then
                     -- and the stains to go with it
                     local g = LC.GroundAt and LC.GroundAt(p) or p
-                    pcall(util.Decal, "Blood", g + Vector(math.Rand(-30, 30), math.Rand(-30, 30), 10), g - Vector(0, 0, 20))
+                    LC.Try(util.Decal, "Blood", g + Vector(math.Rand(-30, 30), math.Rand(-30, 30), 10), g - Vector(0, 0, 20))
                 end
             end
         end
@@ -357,7 +357,7 @@ end
 LC.DressingTick = DressingTick
 
 timer.Create("LivingCityDressing", 5, 0, function()
-    local ok, err = pcall(DressingTick)
+    local ok, err = LC.Try(DressingTick)
     if not ok then LC.Error("dressing", err) end
 end)
 
@@ -515,7 +515,7 @@ local function OutbreakCheck()
 end
 
 timer.Create("LivingCityCityState", 20, 0, function()
-    local ok, err = pcall(function()
+    local ok, err = LC.Try(function()
         if not LC.Running then return end
         LC.RefreshCityState()
         OutbreakCheck()
@@ -822,7 +822,7 @@ local function BackupTick(now)
 end
 
 timer.Create("LivingCityBackup", 1, 0, function()
-    local ok, err = pcall(BackupTick, CurTime())
+    local ok, err = LC.Try(BackupTick, CurTime())
     if not ok then LC.Error("backup", err) end
 end)
 

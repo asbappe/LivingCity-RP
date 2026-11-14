@@ -83,7 +83,7 @@ local function Load()
     P.lastKind = t.lastKind
 end
 LC.DreamPlanLoad = Load
-if not LC.DreamPlanLoaded then LC.DreamPlanLoaded = true pcall(Load) end
+if not LC.DreamPlanLoaded then LC.DreamPlanLoaded = true LC.Try(Load) end
 
 hook.Add("LivingCityDayPhase", "LivingCityDreamPlan", function(phase)
     if phase == "night" then P.night = (P.night or 0) + 1 Save() end

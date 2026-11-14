@@ -463,7 +463,7 @@ function LC.CueHeard(ply, kind, text)
     end)
 end
 hook.Add("LivingCitySpoke", "LivingCityVoiceCues", function(ply, kind, text)
-    local ok, err = pcall(LC.CueHeard, ply, kind, text)
+    local ok, err = LC.Try(LC.CueHeard, ply, kind, text)
     if not ok and LC.Error then LC.Error("voice cues (chat)", err) end
 end)
 
@@ -571,7 +571,7 @@ timer.Create("LivingCityVoiceCues", 1, 0, function()
     if LC.Event == "curfew" or LC.Event == "lockdown" then return end
     for _, ply in ipairs(player.GetAll()) do
         if (ply.lcCueApproachAt or -1e9) < now - gap and (ply.lcCueJoinAt or now) < now - 120 and Chance(0.35) then
-            local ok, err = pcall(LC.CueApproach, ply, now)
+            local ok, err = LC.Try(LC.CueApproach, ply, now)
             if not ok and LC.Error then LC.Error("voice cues (walk-up)", err) end
         end
         ply.lcCueJoinAt = ply.lcCueJoinAt or now

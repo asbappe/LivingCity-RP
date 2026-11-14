@@ -133,7 +133,7 @@ function LC.SquadTick()
         end
     end
 end
-timer.Create("LivingCitySquads", 3, 0, function() pcall(LC.SquadTick) end)
+timer.Create("LivingCitySquads", 3, 0, function() LC.Try(LC.SquadTick) end)
 
 ------------------------------------------------------------------------
 -- A Combine unit pressing E on one of the city's units: "Follow me"
@@ -345,6 +345,6 @@ function LC.SquadCatchUpTick(now)
     return n
 end
 timer.Create("LivingCitySquadCatchUp", LC.SquadCatchEvery, 0, function()
-    local ok, err = pcall(LC.SquadCatchUpTick, CurTime())
+    local ok, err = LC.Try(LC.SquadCatchUpTick, CurTime())
     if not ok and LC.Error then LC.Error("squad catch up", err) end
 end)

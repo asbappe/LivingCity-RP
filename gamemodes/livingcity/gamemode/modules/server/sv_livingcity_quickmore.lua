@@ -368,7 +368,7 @@ function LC.AdminOrderArrest(admin, target)
     admin.lcArrestNext = CurTime() + ARREST_GAP
     if LC.AddBOLO and LC.RecordKey then
         admin.lcBoloNext = nil -- (the Administrator's order is its own call)
-        pcall(LC.AddBOLO, admin, LC.RecordKey(target), "By order of the Administrator: arrest on sight", 15)
+        LC.Try(LC.AddBOLO, admin, LC.RecordKey(target), "By order of the Administrator: arrest on sight", 15)
     end
     Tell(target, "warn", "Wanted", "The City Administrator has ordered your arrest. Every unit has your description.", 10)
     Tell(admin, "info", "Order of arrest", Name(target) .. " is wanted, by your order, and every unit has a BOLO.")
@@ -509,7 +509,7 @@ end
 
 function LC.QuickInfoSend(ply)
     if not IsValid(ply) then return end
-    local ok, t = pcall(LC.QuickInfo, ply)
+    local ok, t = LC.Try(LC.QuickInfo, ply)
     if not ok then
         if LC.Error then LC.Error("quick info", t) end
         t = {}
@@ -553,7 +553,7 @@ LC.QuickMoreActions = ACTIONS
 function LC.QuickMore(ply, cmd, arg, target)
     local fn = ACTIONS[tostring(cmd or "")]
     if not fn or not IsValid(ply) then return false end
-    local ok, a, b = pcall(fn, ply, arg, target)
+    local ok, a, b = LC.Try(fn, ply, arg, target)
     if not ok then
         if LC.Error then LC.Error("quick action " .. tostring(cmd), a) end
         return false

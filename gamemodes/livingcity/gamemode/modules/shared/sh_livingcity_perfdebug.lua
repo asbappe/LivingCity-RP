@@ -393,7 +393,7 @@ local function InstallAll()
                             local e = P.stats.nw[k]
                             if not e then e = { calls = 0, changes = 0 } P.stats.nw[k] = e end
                             e.calls = e.calls + 1
-                            local okG, old = pcall(get, self, key)
+                            local okG, old = LC.Try(get, self, key)
                             if not okG or old ~= value then e.changes = e.changes + 1 end
                         end
                         return o(self, key, value, ...)

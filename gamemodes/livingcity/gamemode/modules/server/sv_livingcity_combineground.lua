@@ -197,7 +197,7 @@ end
 
 timer.Create("LivingCityCombineGround", 2, 0, function()
     if not LC.Running then return end
-    local ok, err = pcall(LC.CombineGroundTick, CurTime())
+    local ok, err = LC.Try(LC.CombineGroundTick, CurTime())
     if not ok and LC.Error then LC.Error("combine ground", err) end
 end)
 
@@ -240,6 +240,6 @@ end
 
 timer.Create("LivingCityCarcassDecay", 15, 0, function()
     if not LC.Running then return end
-    local ok, err = pcall(LC.CarcassDecayTick, CurTime())
+    local ok, err = LC.Try(LC.CarcassDecayTick, CurTime())
     if not ok and LC.Error then LC.Error("carcass decay", err) end
 end)

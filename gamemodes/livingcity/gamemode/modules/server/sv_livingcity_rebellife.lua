@@ -369,7 +369,7 @@ local function Walking(npc) return npc:IsCurrentSchedule(SCHED_FORCED_GO) or npc
 -- An animation loop where they are (sitting, lying, leaning). moveTo: 1 walk into place, 4 put there.
 local function Loop(npc, L, pos, yaw, entry, loop, moveTo)
     if not LC.MakeSequence or not loop then return false end
-    local ok, ss = pcall(LC.MakeSequence, npc, pos, yaw, entry or loop, loop, SS_FLAGS, moveTo or 1, 0)
+    local ok, ss = LC.Try(LC.MakeSequence, npc, pos, yaw, entry or loop, loop, SS_FLAGS, moveTo or 1, 0)
     if not ok or not IsValid(ss) then return false end
     L.ss = ss
     return true
@@ -408,7 +408,7 @@ local function LieDouble(npc, L, b)
     if not util.IsValidModel or not npc.SetupBones or not npc.LookupBone then return false end
     local rag = ents.Create("prop_ragdoll")
     if not IsValid(rag) then return false end
-    local ok = pcall(function()
+    local ok = LC.Try(function()
         rag:SetModel(npc:GetModel())
         rag:SetSkin(npc:GetSkin() or 0)
         for i = 0, (npc.GetNumBodyGroups and npc:GetNumBodyGroups() or 1) - 1 do rag:SetBodygroup(i, npc:GetBodygroup(i)) end
@@ -818,7 +818,7 @@ local function Choose(npc, st, now)
             if r <= 0 then pick = o break end
         end
         if pick.fn == MILL then return false end
-        local ok, started = pcall(pick.fn, npc, st, z, now, pick.t, things)
+        local ok, started = LC.Try(pick.fn, npc, st, z, now, pick.t, things)
         if not ok and LC.Error then LC.Error("rebel life", started) end
         if ok and started then return true end
         for i, o in ipairs(opts) do if o == pick then table.remove(opts, i) break end end
@@ -1096,7 +1096,7 @@ function LC.RebelErrandThink(npc, st, now)
 end
 
 timer.Create("LivingCityRebelErrands", 5, 0, function()
-    local ok, err = pcall(function()
+    local ok, err = LC.Try(function()
         if not LC.Running or not cvErrands:GetBool() or #player.GetAll() == 0 then return end
         local now = CurTime()
         for _, z in ipairs(LC.ZonesOfKind and LC.ZonesOfKind("rebel") or {}) do

@@ -198,7 +198,7 @@ function LC.DreamStageTick(now)
     for _, e in ipairs(admirers) do Back(e) end
 end
 timer.Create("LivingCityDreamStage", 0.1, 0, function()
-    local ok, err = pcall(LC.DreamStageTick, CurTime())
+    local ok, err = LC.Try(LC.DreamStageTick, CurTime())
     if not ok and LC.Error then LC.Error("dream stage", err) end
 end)
 

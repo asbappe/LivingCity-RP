@@ -121,6 +121,6 @@ function LC.ActionTick(now)
     end
 end
 timer.Create("LivingCityAction", 2, 0, function()
-    local ok, err = pcall(LC.ActionTick, CurTime())
+    local ok, err = LC.Try(LC.ActionTick, CurTime())
     if not ok and LC.Error then LC.Error("pacing", err) end
 end)

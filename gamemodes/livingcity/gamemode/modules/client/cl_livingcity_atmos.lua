@@ -302,7 +302,7 @@ LC_CL.MusicMood = Mood
 -- errors on some builds (the error that started with the music). Ask it directly.
 local function Live(ch)
     if ch == nil then return false end
-    local ok = pcall(function() return ch:GetState() end)
+    local ok = LC.Try(function() return ch:GetState() end)
     return ok
 end
 

@@ -243,7 +243,7 @@ function LC_CL.PaintThemePanel(x, y, w, h, headH, name)
     name = THEMES[name] and name or LC_CL.ThemeName()
     local t = THEMES[name]
     OX, OY = x, y
-    local ok, err = pcall(PaintBack, t, name, w, h, headH)
+    local ok, err = LC.Try(PaintBack, t, name, w, h, headH)
     OX, OY = 0, 0
     if not ok then
         LC_CL.ThemeBroken = true
@@ -348,7 +348,7 @@ LC_CL.ThemeSkin = skinOK
 local function Themed(old)
     return function(self, w, h)
         if not LC_CL.ThemeOn() or self.lcNoTheme == true then return old(self, w, h) end
-        local okB, errB = pcall(LC_CL.PaintThemeBack, self, w, h)
+        local okB, errB = LC.Try(LC_CL.PaintThemeBack, self, w, h)
         if not okB then
             LC_CL.ThemeBroken = true
             print("[Miscount] window styles are off after an error: " .. tostring(errB))
@@ -362,7 +362,7 @@ local function Themed(old)
         draw.RoundedBox = function(r, x, y, bw, bh, ...) if Back(x, y, bw, bh) then return end return rb(r, x, y, bw, bh, ...) end
         draw.RoundedBoxEx = function(r, x, y, bw, bh, ...) if Back(x, y, bw, bh) then return end return rbx(r, x, y, bw, bh, ...) end
         surface.DrawRect = function(x, y, bw, bh) if Back(x, y, bw, bh) then return end return dr(x, y, bw, bh) end
-        local ok, res = pcall(old, self, w, h)
+        local ok, res = LC.Try(old, self, w, h)
         draw.RoundedBox, draw.RoundedBoxEx, surface.DrawRect = rb, rbx, dr
         if not ok then
             self.Paint = old -- (it paints itself as it always did, and says why if it still can't)
@@ -386,14 +386,14 @@ local function Trimmed(old)
         seen.w, seen.h, seen.hit = w, h, false
         seen.rb, seen.rbx, seen.dr = draw.RoundedBox, draw.RoundedBoxEx, surface.DrawRect
         draw.RoundedBox, draw.RoundedBoxEx, surface.DrawRect = SeeRB, SeeRBX, SeeDR
-        local ok, res = pcall(old, self, w, h)
+        local ok, res = LC.Try(old, self, w, h)
         draw.RoundedBox, draw.RoundedBoxEx, surface.DrawRect = seen.rb, seen.rbx, seen.dr
         if not ok then self.Paint = old return end
         if seen.hit then
             local t, name = ThemeOf(self)
             local hot, _, off = State(self)
             OX, OY = 0, 0
-            if not pcall(PaintTrim, t, name, w, h, hot, off) then LC_CL.ThemeBroken = true end
+            if not LC.Try(PaintTrim, t, name, w, h, hot, off) then LC_CL.ThemeBroken = true end
         end
         return res
     end
@@ -444,7 +444,7 @@ hook.Add("Think", "LivingCityThemeButtons", function()
     for _, p in ipairs(list) do
         if IsValid(p) and p.lcTrimSet ~= true then
             p.lcTrimSet = true
-            local ok, own = pcall(OwnPaint, p, "DButton")
+            local ok, own = LC.Try(OwnPaint, p, "DButton")
             if ok and own and InThemed(p) then p.Paint = Trimmed(own) end
         end
     end
@@ -457,7 +457,7 @@ if vgui and vgui.Create and not LC_CL.ThemeCreateWas then
         local p = create(class, ...)
         if p and cvTheme:GetBool() and not LC_CL.ThemeBroken then
             if class == "DFrame" then
-                if not pcall(LC_CL.ThemeWindow, p) then LC_CL.ThemeBroken = true end
+                if not LC.Try(LC_CL.ThemeWindow, p) then LC_CL.ThemeBroken = true end
             elseif class == "DButton" then
                 waiting[#waiting + 1] = p
             elseif class == "DMenu" and skinOK and p.SetSkin then

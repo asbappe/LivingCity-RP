@@ -90,11 +90,11 @@ local function MoveIn(ply, h)
         ply:SetPData("lc_housed_how", "household")
         ply.lcIntakeState = nil
     end
-    if IsValid(head) and ply ~= head and LC.GiveKey then pcall(LC.GiveKey, head, Name(ply), true) end
+    if IsValid(head) and ply ~= head and LC.GiveKey then LC.Try(LC.GiveKey, head, Name(ply), true) end
     -- they know each other
     for cid in pairs(h.members) do
         local o = ByCID(cid)
-        if IsValid(o) and o ~= ply and LC.Introduce then pcall(LC.Introduce, ply, o) pcall(LC.Introduce, o, ply) end
+        if IsValid(o) and o ~= ply and LC.Introduce then LC.Try(LC.Introduce, ply, o) LC.Try(LC.Introduce, o, ply) end
     end
 end
 

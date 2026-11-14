@@ -241,7 +241,7 @@ function LC.SpeechAnswerWatch(now)
 end
 
 timer.Create("LivingCitySpeechAnswer", 1, 0, function()
-    local ok, err = pcall(function()
+    local ok, err = LC.Try(function()
         LC.SpeechAnswerWatch(CurTime())
         LC.SpeechAnswerThink(CurTime())
     end)

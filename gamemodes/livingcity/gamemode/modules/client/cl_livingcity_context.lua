@@ -282,10 +282,10 @@ local function Collect(me, ctx, kind, key, out, budget)
     for _, l in ipairs(e.lines) do
         if budget.left <= 0 then break end
         local ok, yes = true, true
-        if l.when then ok, yes = pcall(l.when, me, ctx) end
+        if l.when then ok, yes = LC.Try(l.when, me, ctx) end
         local text = l.t
         if ok and yes and type(text) == "function" then
-            ok, text = pcall(text, me, ctx)
+            ok, text = LC.Try(text, me, ctx)
             yes = ok and type(text) == "string" and text ~= ""
         end
         if ok and yes then
@@ -300,7 +300,7 @@ local function Collect(me, ctx, kind, key, out, budget)
             if #group.lines < MAX_PER_GROUP then
                 group.lines[#group.lines + 1] = LC_CL.ContextText(text)
                 if l.style then
-                    local okS, st = pcall(l.style, me, ctx)
+                    local okS, st = LC.Try(l.style, me, ctx)
                     if okS and (st == "bright" or st == "faint") then
                         group.style = group.style or {}
                         group.style[#group.lines] = st
@@ -322,7 +322,7 @@ function LC_CL.ContextGroups(me)
     if IsValid(w) and w.GetClass then
         ctx.weapon = w:GetClass()
         if ctx.weapon == "gmod_tool" and w.GetMode then
-            local ok, mode = pcall(w.GetMode, w)
+            local ok, mode = LC.Try(w.GetMode, w)
             if ok and mode then ctx.weapon = "tool:" .. tostring(mode) end
         end
     end

@@ -262,7 +262,7 @@ function LC.CPReportClean(ply)
             end
             if had then
                 p:ChatPrint("[Inside] There was contraband there. You wrote it up clean. If a raid finds it soon, your report won't hold up.")
-                if LC.AddTrait then pcall(LC.AddTrait, p, "sympathy", 1) end
+                if LC.AddTrait then LC.Try(LC.AddTrait, p, "sympathy", 1) end
                 p.lcCleanReport = { block = o.block, at = CurTime() }
             end
             hook.Run("LivingCityResidenceInspected", p, t, 0)
@@ -432,7 +432,7 @@ local function Tick()
 end
 LC.CPDutyTick = Tick
 timer.Create("LivingCityCPDuty", 5, 0, function()
-    local ok, err = pcall(Tick)
+    local ok, err = LC.Try(Tick)
     if not ok and LC.Error then LC.Error("cp duty", err) end
 end)
 

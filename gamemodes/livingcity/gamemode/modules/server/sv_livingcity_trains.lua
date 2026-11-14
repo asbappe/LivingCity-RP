@@ -119,7 +119,7 @@ timer.Create("LivingCityTrains", 5, 0, function()
     if now < T.nextAt then return end
     if LC.Event == "curfew" or LC.Event == "lockdown" then T.nextAt = now + 120 return end
     if #LC.TrainPlatforms() == 0 then T.nextAt = now + 300 return end
-    local ok, err = pcall(LC.TrainArrive)
+    local ok, err = LC.Try(LC.TrainArrive)
     if not ok and LC.Error then LC.Error("trains", err) end
 end)
 

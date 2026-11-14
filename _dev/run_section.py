@@ -245,6 +245,23 @@ class Tests:
 
 
 
+def whole_file_error(t):
+    """tests.lua as one piece. Lua allows 200 local variables in a function, and the file's main
+    level is one function. A masked copy (one section, one shard) has fewer and still loads, so
+    nothing else notices when the whole file stops loading: it had, for a day, on 14 November,
+    and run_tests.py (the reference) could not run at all. -> the error, or None."""
+    try:
+        from lupa import luajit21 as lj
+    except Exception:
+        return None
+    L = lj.LuaRuntime()
+    L.globals()._S = t.src
+    return L.eval('(function() local f, e = loadstring(_S, "tests.lua") return e end)()')
+
+
+WHOLE_FIX = "put the new test in its own scope: function NameTests() ... end NameTests(), or ;(function() ... end)()"
+
+
 def last_code_line(t):
     last = t.n
     while last > 0 and not t.lines[last - 1].strip():
@@ -415,6 +432,10 @@ def main():
     t = Tests()
     if t.final_depth != 0:
         sys.exit("block depth does not return to 0 (%d): run_section.py cannot read tests.lua" % t.final_depth)
+    whole = whole_file_error(t)
+    if whole:
+        print("TESTS.LUA DOES NOT LOAD WHOLE (run_tests.py cannot run it): %s" % whole)
+        print("  " + WHOLE_FIX)
     if args.index:
         rows = listing(t)
         with open(INDEX, "w") as f:

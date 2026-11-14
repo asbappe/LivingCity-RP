@@ -227,7 +227,7 @@ local function Step(f, now)
             f.cargo:EmitSound("doors/heavy_metal_move1.wav", 85)
             f.door = LC.DropshipDoor(f.cargo)
             if f.opts.onLanded then
-                local ok, err = pcall(f.opts.onLanded, f.ship, f.ground, f.cargo, f.door)
+                local ok, err = LC.Try(f.opts.onLanded, f.ship, f.ground, f.cargo, f.door)
                 if not ok and LC.Error then LC.Error("dropship", err) end
             end
             f.leg = f.leg + 1
@@ -248,7 +248,7 @@ local function Step(f, now)
             if f.cargo.SetCollisionGroup then f.cargo:SetCollisionGroup(COLLISION_GROUP_WORLD) end
         end
         if f.opts.onLanded then
-            local ok, err = pcall(f.opts.onLanded, f.ship, f.ground, f.dropped)
+            local ok, err = LC.Try(f.opts.onLanded, f.ship, f.ground, f.dropped)
             if not ok and LC.Error then LC.Error("dropship", err) end
         end
     elseif leg.hold then
@@ -263,14 +263,14 @@ local function Step(f, now)
             if f.cargo.SetCollisionGroup then f.cargo:SetCollisionGroup(COLLISION_GROUP_WORLD) end
             f.cargo:EmitSound("physics/metal/metal_box_impact_soft" .. math.random(1, 3) .. ".wav", 85)
         end
-        if f.opts.onLeaving then pcall(f.opts.onLeaving, f.ship) end
+        if f.opts.onLeaving then LC.Try(f.opts.onLeaving, f.ship) end
     end
     f.leg = f.leg + 1
     f.legStart = now
     if f.leg > #f.legs then
         f.ship:Remove()
         if IsValid(f.cargo) then f.cargo:Remove() end -- (what it lifted goes with it)
-        if f.opts.onGone then pcall(f.opts.onGone) end
+        if f.opts.onGone then LC.Try(f.opts.onGone) end
         return false
     end
     return true
@@ -280,7 +280,7 @@ timer.Create("LivingCityDropships", 0.03, 0, function()
     if #LC.Dropships == 0 then return end
     local now = CurTime()
     for i = #LC.Dropships, 1, -1 do
-        local ok, keep = pcall(Step, LC.Dropships[i], now)
+        local ok, keep = LC.Try(Step, LC.Dropships[i], now)
         if not ok then
             if LC.Error then LC.Error("dropship", keep) end
             local f = LC.Dropships[i]

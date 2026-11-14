@@ -49,7 +49,7 @@ function LC.RunAction(ply, cmd, rest)
     rest = string.sub(tostring(rest or ""), 1, 200)
     if not ALLOWED[cmd] then return false end
     if LC.SlashCommands and LC.SlashCommands[cmd] then
-        local ok, err = pcall(LC.SlashCommands[cmd], ply, rest)
+        local ok, err = LC.Try(LC.SlashCommands[cmd], ply, rest)
         if not ok and LC.Error then LC.Error("action " .. cmd, err) end
         return true
     end

@@ -144,7 +144,7 @@ function LC.QuestSearchDone(ply, q, st, ent)
     if ent == st.hidden then
         local handled = false
         if st.foundFn then
-            local ok, r = pcall(st.foundFn, q, st, ent, ply)
+            local ok, r = LC.Try(st.foundFn, q, st, ent, ply)
             handled = ok and r == true -- (true: the job was ended there, nothing more to do)
         end
         if not handled and not q.done and Q and Q.Advance then Q.Advance(q) end
@@ -176,7 +176,7 @@ function LC.QuestSearchTick(now)
     end
 end
 timer.Create("LivingCityQuestSearch", 0.1, 0, function()
-    local ok, err = pcall(LC.QuestSearchTick, CurTime())
+    local ok, err = LC.Try(LC.QuestSearchTick, CurTime())
     if not ok and LC.Error then LC.Error("quest search", err) end
 end)
 hook.Add("PlayerDisconnected", "LivingCityQuestSearch", function(ply) LC.Searching[ply] = nil end)

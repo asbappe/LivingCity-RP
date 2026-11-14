@@ -1005,7 +1005,7 @@ local function Dismiss()
     if o and o.kind == "situation" and o.onClose then
         local f = o.onClose
         o.onClose = nil
-        local ok, err = pcall(f)
+        local ok, err = LC.Try(f)
         if not ok and ErrorNoHalt then ErrorNoHalt("[Miscount] situation close: " .. tostring(err) .. "\n") end
     end
 end
@@ -1136,7 +1136,7 @@ net.Receive("lc_radio_menu", function() if LC_CL.OpenRadioQuick then LC_CL.OpenR
 -- New word from the server (what's greyed, and why): F2's page as it is now, in place.
 function LC_CL.QuickRebuild()
     if not open or open.kind ~= "role" or not open.page.rebuild then return end
-    local ok, page = pcall(open.page.rebuild)
+    local ok, page = LC.Try(open.page.rebuild)
     if ok and istable(page) then
         page.rebuild = open.page.rebuild
         page.accent = page.accent or open.page.accent
@@ -1184,7 +1184,7 @@ hook.Add("Think", "LivingCityQuickKeys", function()
     -- a situation's menu stays for as long as the situation does (two minutes at most without a key)
     if open.kind == "situation" then
         local ok, still = true, true
-        if open.stay then ok, still = pcall(open.stay) end
+        if open.stay then ok, still = LC.Try(open.stay) end
         if not ok or not still or CurTime() - open.last > 120 then
             Dismiss()
             return
@@ -1257,7 +1257,7 @@ hook.Add("HUDPaint", "LivingCityQuick", function()
     -- what was just said (a situation's menu: the chair), under the list
     local note = open.note
     if type(note) == "function" then
-        local ok, said = pcall(note)
+        local ok, said = LC.Try(note)
         note = ok and said or nil
     end
     if note and note ~= "" then
@@ -1301,7 +1301,7 @@ function LC_CL.QuickRoleKeyName()
 end
 function LC_CL.QuickSlot(id)
     for _, r in ipairs({ { LC_CL.QuickRoleRoot, LC_CL.QuickRoleKeyName }, { LC_CL.QuickRoot, LC_CL.QuickKeyName } }) do
-        local ok, root = pcall(r[1])
+        local ok, root = LC.Try(r[1])
         if ok and root then
             for n = 1, 9 do local it = root.items[n] if it and it.id == id then return n, r[2]() end end
         end

@@ -202,6 +202,8 @@ console command lc_ending_cancel
 console command lc_ending_reset_cooldown
 console command lc_ending_vote
 console command lc_endings
+console command lc_errors
+console command lc_errors_clear
 console command lc_event
 console command lc_exercise
 console command lc_freq7_status

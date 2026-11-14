@@ -120,7 +120,7 @@ local function StartLoop(r, pos, yaw)
     local name = LC.StalkerConsoleSequence(r.npc)
     if not name or not LC.MakeSequence then return false end
     local flags = (SF_SCRIPT_LOOP_IN_POST_IDLE or 16) + (SF_SCRIPT_NO_COMPLAINTS or 128) + (SF_SCRIPT_ALLOW_DEATH or 64)
-    local ok, ss = pcall(LC.MakeSequence, r.npc, pos, yaw, name, name, flags, 0, 0)
+    local ok, ss = LC.Try(LC.MakeSequence, r.npc, pos, yaw, name, name, flags, 0, 0)
     if ok and IsValid(ss) then r.ss = ss return true end
     return false
 end
@@ -543,7 +543,7 @@ end)
 
 timer.Create("LivingCityZoneStalkers", 1, 0, function()
     if not LC.Running then return end
-    local ok, err = pcall(LC.ZoneStalkersTick, CurTime())
+    local ok, err = LC.Try(LC.ZoneStalkersTick, CurTime())
     if not ok and LC.Error then LC.Error("zone stalkers", err) end
 end)
 

@@ -178,7 +178,7 @@ function LC.ElectionTick(now)
     if LC.SetFaction then LC.SetFaction(best, "admin", nil, true) end
     hook.Run("LivingCityAdministratorChosen", best, "elected")
 end
-timer.Create("LivingCityElection", 2, 0, function() pcall(LC.ElectionTick, CurTime()) end)
+timer.Create("LivingCityElection", 2, 0, function() LC.Try(LC.ElectionTick, CurTime()) end)
 
 ------------------------------------------------------------------------
 -- The recall (the owner, 2 November): someone the G-Man has chosen (sv_livingcity_directives.lua,
@@ -238,7 +238,7 @@ function LC.RecallTick(now)
     end
     return yes > no
 end
-timer.Create("LivingCityRecall", 2, 0, function() pcall(LC.RecallTick, CurTime()) end)
+timer.Create("LivingCityRecall", 2, 0, function() LC.Try(LC.RecallTick, CurTime()) end)
 
 ------------------------------------------------------------------------
 -- The office
@@ -762,7 +762,7 @@ end
 LC.AdminGuardTick = GuardTick
 timer.Create("LivingCityAdminGuards", 0.5, 0, function()
     if not LC.Running then return end
-    local ok, err = pcall(GuardTick, CurTime())
+    local ok, err = LC.Try(GuardTick, CurTime())
     if not ok and LC.Error then LC.Error("admin guards", err) end
 end)
 

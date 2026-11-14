@@ -104,7 +104,7 @@ local ACTIONS = {
     clearwanted = function(t)
         if LC.ClearWanted then LC.ClearWanted(t) end
         if LC.CalmCops then LC.CalmCops(t) end
-        if LC.SetAlert then pcall(LC.SetAlert, t, 0) end
+        if LC.SetAlert then LC.Try(LC.SetAlert, t, 0) end
         return true, t:Nick() .. " is no longer wanted."
     end,
     pardon = function(t)
@@ -163,7 +163,7 @@ function LC.AdminTool(admin, target, action, value)
     if not IsValid(target) or not target:IsPlayer() then return false, "Nobody to do that to." end
     local fn = ACTIONS[action or ""]
     if not fn then return false, "Unknown action." end
-    local ok, a, b = pcall(fn, target, value, admin)
+    local ok, a, b = LC.Try(fn, target, value, admin)
     if not ok then return false, "That failed: " .. tostring(a) end
     if a and action ~= "refresh" and IsValid(admin) and LC.Log then
         LC.Log("info", string.format("admin tools: %s used %s %s on %s", admin:Nick(), action, tostring(value or ""), target:Nick()))

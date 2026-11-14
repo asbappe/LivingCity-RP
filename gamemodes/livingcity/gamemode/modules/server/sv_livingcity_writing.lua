@@ -264,8 +264,8 @@ function LC.RestoreNotes()
     end
     SaveWorldNotes()
 end
-hook.Add("InitPostEntity", "LivingCityNotes", function() timer.Simple(2, function() pcall(LC.RestoreNotes) end) end)
-hook.Add("PostCleanupMap", "LivingCityNotes", function() timer.Simple(1, function() pcall(LC.RestoreNotes) end) end)
+hook.Add("InitPostEntity", "LivingCityNotes", function() timer.Simple(2, function() LC.Try(LC.RestoreNotes) end) end)
+hook.Add("PostCleanupMap", "LivingCityNotes", function() timer.Simple(1, function() LC.Try(LC.RestoreNotes) end) end)
 timer.Create("LivingCityNotesExpire", 120, 0, function()
     local now, changed = os.time(), false
     for id, n in pairs(LoadNotes()) do

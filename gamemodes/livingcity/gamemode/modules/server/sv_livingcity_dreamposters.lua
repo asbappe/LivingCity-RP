@@ -130,7 +130,7 @@ end
 -- The dream the city would dream tonight, as the day stands (nil: none to dream).
 function LC.DreamPosterTonight()
     if not (LC.DreamPlanDecide and LC.DreamPlanNext) then return nil end
-    local ok, kind = pcall(LC.DreamPlanDecide)
+    local ok, kind = LC.Try(LC.DreamPlanDecide)
     if not ok or not kind then return nil end
     return LC.DreamPlanNext(kind) or LC.DreamPlanNext("neutral") or LC.DreamPlanNext("happy")
 end

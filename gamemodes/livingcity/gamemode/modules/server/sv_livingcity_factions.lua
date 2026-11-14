@@ -597,7 +597,8 @@ end)
 
 local function SendMenu(ply)
     local data = { current = ply:GetNW2String("lcf_faction", ""), special = ply:GetNW2String("lcf_special", ""), factions = {},
-        admin = ply:IsAdmin() or nil }
+        admin = ply:IsAdmin() or nil,
+        errors = ply:IsAdmin() and LC.ErrorsCount and LC.ErrorsCount() or nil } -- (sh_livingcity_errors.lua: the errors file)
     for _, f in ipairs(LCF.Factions) do
       -- (the owner: a stalker is a punishment, never a choice: not on the screen, unless it's what you are)
       -- (nor the shackled vortigaunts, for a human: a vortigaunt is chosen at the start of a new life, the owner,

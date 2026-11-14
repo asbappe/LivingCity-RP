@@ -54,6 +54,13 @@ local function BuildFactions(menu, data)
         tools:DockMargin(4, 4, 4, 2)
         tools:SetText("Admin: testing tools (XP, ranks, credits, standing)")
         tools.DoClick = function() RunConsoleCommand("lc_admintools") if LC_CL and LC_CL.CloseHub then LC_CL.CloseHub() end end
+        -- what has gone wrong on the server and in players' games, grouped, to copy and send (sh_livingcity_errors.lua)
+        local errs = vgui.Create("DButton", menu)
+        errs:Dock(BOTTOM)
+        errs:SetTall(28)
+        errs:DockMargin(4, 4, 4, 0)
+        errs:SetText(string.format("Admin: errors (%d)", tonumber(data.errors) or 0))
+        errs.DoClick = function() RunConsoleCommand("lc_errors") if LC_CL and LC_CL.CloseHub then LC_CL.CloseHub() end end
         -- the play study (cl_livingcity_study.lua): how the owner plays, as a model for the city's people
         if LC_CL and LC_CL.StudyMenu and LocalPlayer().IsSuperAdmin and LocalPlayer():IsSuperAdmin() then
             local study = vgui.Create("DButton", menu)
@@ -230,7 +237,7 @@ function LC_CL.IdentityLine()
     local block = ply:GetNW2Int("lc_block", 0)
     if block > 0 then
         local cv = GetConVar("lc_block_name")
-        local ok, s = pcall(string.format, GetGlobal2String("lc_block_name", "") ~= "" and GetGlobal2String("lc_block_name", "") or (cv and cv:GetString()) or "Habitation Block %02d", block)
+        local ok, s = LC.Try(string.format, GetGlobal2String("lc_block_name", "") ~= "" and GetGlobal2String("lc_block_name", "") or (cv and cv:GetString()) or "Habitation Block %02d", block)
         text = text .. "  |  " .. (ok and s or ("Block " .. block))
     end
     if (special and special.hunted) or (not special and rank.hunted) then text = text .. "  |  hunted" end
