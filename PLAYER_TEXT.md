@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version a2ae56c. Admin-only console messages and log lines are left out.
+Made from version 0014d68. Admin-only console messages and log lines are left out.
 
-12341 lines, from 332 files.
+12344 lines, from 332 files.
 
 ## Contents
 
@@ -296,8 +296,8 @@ Made from version a2ae56c. Admin-only console messages and log lines are left ou
 - [character slots](#character-slots-svlivingcityslotslua) (20)
 - [small-server mode (the owner, 10 November: "yes please")](#small-server-mode-the-owner-10-november-yes-please-svlivingcitysmallserverlua) (2)
 - [snitches among the citizens, and burning an informant](#snitches-among-the-citizens-and-burning-an-informant-svlivingcitysnitcheslua) (32)
-- [sv_livingcity_speech.lua](#svlivingcityspeechlua-svlivingcityspeechlua) (69)
-- [the Resistance answers her speeches](#the-resistance-answers-her-speeches-svlivingcityspeechanswerlua) (32)
+- [sv_livingcity_speech.lua](#svlivingcityspeechlua-svlivingcityspeechlua) (71)
+- [the Resistance answers her speeches](#the-resistance-answers-her-speeches-svlivingcityspeechanswerlua) (33)
 - [squad sizes and backup by radio (sv_livingcity_squads.lua)](#squad-sizes-and-backup-by-radio-svlivingcitysquadslua-svlivingcitysquadslua) (19)
 - [staff tools](#staff-tools-svlivingcitystafflua) (48)
 - [the stalker's lot](#the-stalkers-lot-svlivingcitystalkerworklua) (59)
@@ -987,7 +987,7 @@ Made from version a2ae56c. Admin-only console messages and log lines are left ou
 - "Cigarettes, alcohol and stimulants (F3, the item's button). A cigarette steadies your nerves and dulls hunger; too many and you cough. Drink and you get drunk: it dulls pain, then the world sways, then you throw up (and one moonshine in five is a bad batch). A stimulant keeps you awake for fifteen minutes (no dream can take you), then you crash."  (text, line 96)
 - "Nightmare dreams you play: The Patrol Maze (pick up every token while giant officers hunt you), The Barrel Tower (climb to the top, and don't touch the barrels: they explode), The Crumbling Floor (keep moving or the floor gives way) and Freeze, Citizen (move only while the giant officer's back is turned). Out of lives, or won: wake up now, or watch the rest until it's over. Win and you wake Unbroken (a day the Combine can't get into your head) with a second wind, and maybe a Vortigaunt's help; lose every life and you're 30 health down until your next full night's sleep."  (text, line 97)
 - "Propaganda dreams: Kneel Before Her (kneel, crouching, and gaze up at her to fill your Devotion; never let her catch you standing in her gaze), Roses for Her (carry glowing roses to her feet, on your knees in her half of the hall), Mirror, Mirror (kneel and compliment her in chat; new words count double, insults cost a life), The Saviour (the dead come for you, unarmed, and they hurt: when someone is close to the end, she descends and her soldiers save you), The Loyalty Quiz (answer her questions in chat, in your own words: a small typo is forgiven; beware thoughtcrime, and mind your language; with fewer than four of you, some of the city's people stand in, and one of them may not be as loyal as he looks). Every life you lose, every insult to her or the Combine, costs loyalty points (Civil Standing) when you wake."  (text, line 98)
-- "More propaganda dreams: Record Harvest (carry glowing crates to the depot; crouch to throw away a green, spoiled one), The Stakhanov Shift (crouch again and again at a work station to beat the norm by 1400%), Careless Talk (three rounds of 30 seconds, the canteen, the salute and the firing squad: watch for the spy giving themselves away and press E on them; everyone's pick is revealed together), The Newsreel (as the camera rolls, say the wave, salute or cheer it asks of you; everyone's take is shown at the cut), Two Minutes of Hate (jeer in chat; silence is noticed), The Mass Games (gold card: crouch, red: stand, at FLIP!), On-the-Spot Guidance (jump or say clap when she points), The Scrap Drive (fill the bins; never sell to the shady trader), Flowers for the Liberators (jump as a soldier passes you; stay off the road), Duck and Cover (when the siren wails and the Resistance's rocket goes up, crouch beside a table, two to a table), Ravenholm (the dead rise from the graves and a red Father Grigori rants; hold on until help comes, and if any vortigaunt freed from its shackles is alive in the city, you may see the truth)."  (text, line 99)
+- "More propaganda dreams: Record Harvest (carry glowing crates to the depot; crouch to throw away a green, spoiled one), The Union Shift (crouch again and again at a work station to beat the norm by 1400%), Careless Talk (three rounds of 30 seconds, the canteen, the salute and the firing squad: watch for the spy giving themselves away and press E on them; everyone's pick is revealed together), The Newsreel (as the camera rolls, say the wave, salute or cheer it asks of you; everyone's take is shown at the cut), Two Minutes of Hate (jeer in chat; silence is noticed), The Mass Games (gold card: crouch, red: stand, at FLIP!), On-the-Spot Guidance (jump or say clap when she points), The Scrap Drive (fill the bins; never sell to the shady trader), Flowers for the Liberators (jump as a soldier passes you; stay off the road), Duck and Cover (when the siren wails and the Resistance's rocket goes up, crouch beside a table, two to a table), Ravenholm (the dead rise from the graves and a red Father Grigori rants; hold on until help comes, and if any vortigaunt freed from its shackles is alive in the city, you may see the truth)."  (text, line 99)
 - "The Battle Line (a propaganda dream): you're handed a rifle behind her barricades; shoot the red rebels before they reach the line. Never fire on her soldiers or the APC: the manhacks come for you, and if they get you, you're a tiny unarmed rebel charging the line until the dream ends."  (text, line 100)
 - "Freed vortigaunts can break into propaganda dreams (the more freed and alive, the more often): purple vortigaunts in rings of light. Stand in their light to side with them (it costs Civil Standing, but the Resistance hears of it), or keep to her. If they win, her figure shatters and the dream ends."  (text, line 101)
 - "Strange dreams: The Cheese Dream (it starts in the dark, with two voices: gather the glowing cheese, jump onto the floating slabs, and keep out of the way of the rolling wheels; it gets colourful), Musical Chairs (walk round the chairs while the music plays; when it stops, get to a free one and press Use to sit down in it; try to sit while the music is still playing and you lose one of your three lives), Wings (jump, then jump again in the air to flap, and fly through the golden rings) and It's Raining Melons (stand on a green glow to catch a melon; keep out from under a red one). Win one and you wake Unbroken; losing one costs nothing."  (text, line 102)
@@ -1247,7 +1247,7 @@ Made from version a2ae56c. Admin-only console messages and log lines are left ou
 - "Labor Assignment: place "Fixture: Labor Assignment". Settings: lc_labor_min_minutes (30), lc_labor_min_shifts (4), lc_labor_cleanup_standing (25), lc_labor_porter_standing (50). Without one, the Union assigns work and the board (F4) changes it, as before."  (text, line 376)
 - "Shared dreams: place "Point: dream" in an out-of-map area (and "Zone: dream" round it, tall and open for the flying endings). Endings set off in play then come at night as a dream for sleepers only, with no reload. C > Help > Dreams: status, dream it now, wake everyone, put back a player's things. Settings: lc_dreams (1), lc_dream_delay (60), lc_dream_radius (1500), lc_dream_every_night (0), lc_dream_combine (6). Without a dream point, the endings are as before."  (text, line 377)
 - "Nightmare dreams you play (the Administrator's tablet, under Nightmare; or C > Help > Dreams: dream it now): The Patrol Maze, The Barrel Tower, The Crumbling Floor, Freeze, Citizen. Each builds its own arena at the dream point and removes it afterwards; it fits inside the dream zone (or lc_dream_radius), so give it about 1500 units each way and some headroom for the tower."  (text, line 378)
-- "Propaganda dreams (her tablet, under Happy, as Propaganda; or C > Help > Dreams): Kneel Before Her, Roses for Her, Mirror, Mirror, The Saviour, The Loyalty Quiz, and ten more (Record Harvest, The Stakhanov Shift, Careless Talk, The Newsreel, Two Minutes of Hate, The Mass Games, On-the-Spot Guidance, The Scrap Drive, Flowers for the Liberators, Duck and Cover, Ravenholm). Asleep for one with someone else, the Administrator stars herself (tablet > Tonight's dream > Star in propaganda dreams yourself: on or off); otherwise a giant figure of her does. Music goes flat in garrysmod/sound/livingcity/dreams/, named admire, saviour_horde, saviour or quiz (admire1.mp3), or for the ten more their codeword (harvest, shift, spy, newsreel, hate, massgames, guidance, scrap, flowers, duck, ravenholm) or propaganda; her voice lines in dreams/voice/ (saviour_stop1.wav, a .txt beside it for the subtitle). Upload, FastDL sync, map change."  (text, line 379)
+- "Propaganda dreams (her tablet, under Happy, as Propaganda; or C > Help > Dreams): Kneel Before Her, Roses for Her, Mirror, Mirror, The Saviour, The Loyalty Quiz, and ten more (Record Harvest, The Union Shift, Careless Talk, The Newsreel, Two Minutes of Hate, The Mass Games, On-the-Spot Guidance, The Scrap Drive, Flowers for the Liberators, Duck and Cover, Ravenholm). Asleep for one with someone else, the Administrator stars herself (tablet > Tonight's dream > Star in propaganda dreams yourself: on or off); otherwise a giant figure of her does. Music goes flat in garrysmod/sound/livingcity/dreams/, named admire, saviour_horde, saviour or quiz (admire1.mp3), or for the ten more their codeword (harvest, shift, spy, newsreel, hate, massgames, guidance, scrap, flowers, duck, ravenholm) or propaganda; her voice lines in dreams/voice/ (saviour_stop1.wav, a .txt beside it for the subtitle). Upload, FastDL sync, map change."  (text, line 379)
 - "Save with the gamemode (Q > Tools > Miscount): spawn a prop, put it where you want it and left click it: it's saved with the map's layout and back every time the map loads. Right click stops saving it. Saved props glow green while the tool is out."  (text, line 380)
 - "Testing a dream: the Miscount Editor's panel, Dreams: test one. Pick any dream and Test it now (just me): you play it at once, awake and alone (the city's people stand in), and Stop the test whenever you like. Nobody asleep is pulled in, it isn't tonight's dream, and nothing you win or lose counts."  (text, line 381)
 - "Civil Protection Commissary (editor fixture): Civil Protection units get grenades, ammunition, armour, bandages and a ration there. lc_cpsupply_cooldown (120), lc_cpsupply_ration (600). If none is placed, the Union Commissary terminal issues them instead."  (text, line 382)
@@ -15677,9 +15677,9 @@ Made from version a2ae56c. Admin-only console messages and log lines are left ou
 - "a ration crate"  (text, line 315)
 - "Crates delivered: %d of %d"  (message, line 316)
 
-> Note for you (not shown in game): The Stakhanov Shift
+> Note for you (not shown in game): The Union Shift
 
-- "The Stakhanov Shift"  (name, line 325)
+- "The Union Shift"  (name, line 325)
 - "Stand at a glowing work station and hammer (crouch, again and again) to beat the norm by 1400%. Don't stand idle: she is watching."  (text, line 326)
 - "The whistle blows"  (text, line 327)
 - "The shift is over before you've beaten the norm. You wake."  (text, line 327)
@@ -18719,23 +18719,23 @@ Made from version a2ae56c. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: done
 
-- "cleaned up anticitizen graffiti"  (text, line 824)
-- "[Civil Protection] Gone. As if it never was."  (chat message, line 825)
-- "You scrub it off. Someone from the Union nods at you. +3 standing."  (chat message, line 829)
+- "cleaned up anticitizen graffiti"  (text, line 828)
+- "[Civil Protection] Gone. As if it never was."  (chat message, line 829)
+- "You scrub it off. Someone from the Union nods at you. +3 standing."  (chat message, line 833)
 
 > Note for you (not shown in game): part of: item use
 
-- "Find an empty pot in rebel territory."  (text, line 881)
-- "Something's already growing in that one."  (text, line 882)
+- "Find an empty pot in rebel territory."  (text, line 885)
+- "Something's already growing in that one."  (text, line 886)
 
 > Note for you (not shown in game): typing in chat
 
-- "You need a fishing line (the Commissary sells them)."  (chat message, line 927)
+- "You need a fishing line (the Commissary sells them)."  (chat message, line 931)
 
 > Note for you (not shown in game): the game's living city tagged moment
 
-- "Someone painted the lambda up {or}. Bold."  (text, line 936)
-- "There's a lambda on the wall {or}. Civil Protection will have it off by morning."  (text, line 937)
+- "Someone painted the lambda up {or}. Bold."  (text, line 940)
+- "There's a lambda on the wall {or}. Civil Protection will have it off by morning."  (text, line 941)
 
 ## Combine-only areas (sv_livingcity_security.lua)
 
@@ -19233,65 +19233,70 @@ Made from version a2ae56c. Admin-only console messages and log lines are left ou
 - "There is a restlessness in this city. I feel it. Restlessness can be turned into work, or into ruin. Choose work."  (text, line 98)
 - "the city's people are at ease (the minds: stress low)"  (text, line 99)
 - "You look well: rested, fed and calm. Good. Keep it so."  (text, line 100)
-- "the closing"  (text, line 101)
-- "Now go back to your work, and remember: this city is only as strong as each one of you. Glory to the Union."  (text, line 102)
+
+> Note for you (not shown in game): (the owner's own slogan, 14 November: "THIS IS GOLD, SAVE THIS SOMEWHERE AS A SLOGAN"; never reword it)
+
+- "her slogan, before the closing, every time"  (text, line 102)
+- "Love your neighbour, hate the traitor."  (text, line 103)
+- "the closing"  (text, line 104)
+- "Now go back to your work, and remember: this city is only as strong as each one of you. Glory to the Union."  (text, line 105)
 
 > Note for you (not shown in game): The announcement and her speeches, as recordings (sv_livingcity_announcer.lua finds them by name).
 
-- "Attention, all residents: the City Administrator will address the city. Report to the assembly point immediately. Attendance is mandatory."  (text, line 183)
-- "My dear citizens, I am going to speak to you all in a few minutes. Come and gather in front of the stand. I would so hate to miss anyone."  (text, line 184)
+- "Attention, all residents: the City Administrator will address the city. Report to the assembly point immediately. Attendance is mandatory."  (text, line 187)
+- "My dear citizens, I am going to speak to you all in a few minutes. Come and gather in front of the stand. I would so hate to miss anyone."  (text, line 188)
 
 > Note for you (not shown in game): Both points, the crowd's and the nearest stand to it: nil when the map has no crowd point.
 
-- "the speech stand"  (text, line 206)
+- "the speech stand"  (text, line 210)
 
 > Note for you (not shown in game): part of: dress
 
-- "The City Administrator"  (text, line 259)
-- "City Administrator"  (text, line 260)
+- "The City Administrator"  (text, line 263)
+- "City Administrator"  (text, line 264)
 
 > Note for you (not shown in game): part of: tell
 
-- "[{title}] {text}"  (chat message, line 296)
+- "[{title}] {text}"  (chat message, line 300)
 
 > Note for you (not shown in game): Call the city to an address. by: the player Administrator (nil: the city's own). text: her words (a player's), or nil (the city's own picks a topic). Returns true, or false and why.
 
-- "The city is already gathering for an address."  (text, line 302)
-- "There's no speech crowd point in this city. (Staff: Miscount Editor > Point: speech crowd.)"  (text, line 304)
+- "The city is already gathering for an address."  (text, line 306)
+- "There's no speech crowd point in this city. (Staff: Miscount Editor > Point: speech crowd.)"  (text, line 308)
 
 > Note for you (not shown in game): part of: call speech
 
-- "Your address"  (chat message, line 320)
-- "The city is gathering in front of the stand. You speak in %d seconds."  (message, line 320)
+- "Your address"  (chat message, line 324)
+- "The city is gathering in front of the stand. You speak in %d seconds."  (message, line 324)
 
 > Note for you (not shown in game): the call: Overwatch's custom voice for a player's speech, her own for the city's
 
-- "The Administrator's address"  (chat message, line 328)
-- "All citizens report to {where} now. Attendance is mandatory."  (chat message, line 328)
+- "The Administrator's address"  (chat message, line 332)
+- "All citizens report to {where} now. Attendance is mandatory."  (chat message, line 332)
 
 > Note for you (not shown in game): The next piece of her speech: its recording from her at the podium, its words in chat. Returns seconds it takes.
 
-- "[The City Administrator, from the stand] {words}"  (chat message, line 358)
+- "[The City Administrator, from the stand] {words}"  (chat message, line 362)
 
 > Note for you (not shown in game): Out cold, then they come to in the crowd.
 
-- "Out cold"  (text, line 401)
-- "The stick again, and again. Everything goes black."  (text, line 401)
+- "Out cold"  (text, line 405)
+- "The stick again, and again. Everything goes black."  (text, line 405)
 
 > Note for you (not shown in game): a timer (regularly)
 
-- "You come to"  (chat message, line 407)
-- "Standing in the crowd in front of the stand, held up by the people either side of you. Your head is pounding."  (chat message, line 407)
+- "You come to"  (chat message, line 411)
+- "Standing in the crowd in front of the stand, held up by the people either side of you. Your head is pounding."  (chat message, line 411)
 
 > Note for you (not shown in game): part of: hunt
 
-- "Civil Protection"  (chat message, line 447)
-- "The Administrator is addressing the city. Report to {pos}. Now."  (chat message, line 447)
+- "Civil Protection"  (chat message, line 451)
+- "The Administrator is addressing the city. Report to {pos}. Now."  (chat message, line 451)
 
 > Note for you (not shown in game): part of: speech think
 
-- "The Administrator's address"  (chat message, line 487)
-- "The address is cancelled. Go about your business."  (chat message, line 487)
+- "The Administrator's address"  (chat message, line 491)
+- "The address is cancelled. Go about your business."  (chat message, line 491)
 
 ## the Resistance answers her speeches (sv_livingcity_speechanswer.lua)
 
@@ -19323,24 +19328,25 @@ Made from version a2ae56c. Admin-only console messages and log lines are left ou
 - "You've nothing to fear from her, she says. Tell that to the ones she's taken."  (text, line 68)
 - "She feels your restlessness, she says. Good. Let her feel it."  (text, line 69)
 - "Rested, fed and calm, she says. Look around you. Does that look like anyone you know?"  (text, line 70)
-- "That's all from me. Keep your heads down, your eyes open, and your door unlocked for a friend. We're closer than she thinks."  (text, line 71)
+- "Love your neighbour, hate the traitor, she says. We agree. Ask yourself who sold this city."  (text, line 71)
+- "That's all from me. Keep your heads down, your eyes open, and your door unlocked for a friend. We're closer than she thinks."  (text, line 72)
 
 > Note for you (not shown in game): part of: say
 
-- "[Freq 7] Colonel Cubbage:"  (text, line 149)
-- "[Colonel Cubbage, at the camp]"  (text, line 149)
+- "[Freq 7] Colonel Cubbage:"  (text, line 150)
+- "[Colonel Cubbage, at the camp]"  (text, line 150)
 
 > Note for you (not shown in game): He answers now (pieces: what she said, or nil). True, or false and why not.
 
-- "He's already speaking."  (text, line 179)
-- "Off (lc_speech_answer 0)."  (text, line 180)
-- "There's no Resistance camp."  (text, line 183)
-- "The Combine are in the camp."  (text, line 184)
+- "He's already speaking."  (text, line 180)
+- "Off (lc_speech_answer 0)."  (text, line 181)
+- "There's no Resistance camp."  (text, line 184)
+- "The Combine are in the camp."  (text, line 185)
 
 > Note for you (not shown in game): part of: speech answer
 
-- "Colonel Cubbage answers her"  (on-screen notice, line 203)
-- "He's speaking at the camp now, and on Freq 7."  (on-screen notice, line 203)
+- "Colonel Cubbage answers her"  (on-screen notice, line 204)
+- "He's speaking at the camp now, and on Freq 7."  (on-screen notice, line 204)
 
 ## squad sizes and backup by radio (sv_livingcity_squads.lua) (sv_livingcity_squads.lua)
 
@@ -23153,15 +23159,15 @@ Made from version a2ae56c. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): [the point's number] = the mark (the editor's modes are way_<id>: livingcity_editor.lua)
 
-- "an arrow pointing left"  (name, line 30)
-- "an arrow pointing right"  (name, line 31)
-- "an arrow pointing up (straight on)"  (name, line 32)
-- "an arrow pointing down"  (name, line 33)
+- "an arrow pointing left"  (name, line 36)
+- "an arrow pointing right"  (name, line 37)
+- "an arrow pointing up (straight on)"  (name, line 38)
+- "an arrow pointing down"  (name, line 39)
 
 > Note for you (not shown in game): Paint one from the editor: on a wall (not a floor or a ceiling). The point, or nil and why.
 
-- "No such mark."  (text, line 52)
-- "Aim at a wall: the mark is painted on it."  (text, line 53)
+- "No such mark."  (text, line 110)
+- "Aim at a wall: the mark is painted on it."  (text, line 111)
 
 ## ways to get by (sv_livingcity_ways.lua)
 

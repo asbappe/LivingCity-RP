@@ -68,6 +68,7 @@ LC.SpeechAnswerLines = {
     mood_afraid = "You've nothing to fear from her, she says. Tell that to the ones she's taken.",
     mood_restless = "She feels your restlessness, she says. Good. Let her feel it.",
     mood_content = "Rested, fed and calm, she says. Look around you. Does that look like anyone you know?",
+    slogan = "Love your neighbour, hate the traitor, she says. We agree. Ask yourself who sold this city.",
     close = "That's all from me. Keep your heads down, your eyes open, and your door unlocked for a friend. We're closer than she thinks.",
 }
 

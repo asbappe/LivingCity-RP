@@ -1140,7 +1140,7 @@ Notes:
   Notes:
 - [ ] **Record Harvest:** walk over a gold crate, carry it past the gold line: the quota board (floating by her) climbs. Pick up a green one: crouch throws it away; delivering it costs a life. Five crates: medal line.
   Notes:
-- [ ] **The Stakhanov Shift:** stand on a green glow, crouch repeatedly: your norm goes up 20% a blow (40% on "Double norm!"). Stand idle 12 s: a life. 1400%: a giant figure of you appears and your name tops the board.
+- [ ] **The Union Shift:** stand on a green glow, crouch repeatedly: your norm goes up 20% a blow (40% on "Double norm!"). Stand idle 12 s: a life. 1400%: a giant figure of you appears and your name tops the board.
   Notes:
 - [ ] **Careless Talk:** the tinted citizens look clearly red, green, blue or yellow; clues appear on screen every 14 s; crouch beside one to report. Wrong: a life and they glow green. Right: they vanish, you win.
   Notes:
@@ -1201,9 +1201,9 @@ Notes:
   Notes:
 - [ ] **Swearing at the Resistance is fine in the quiz:** "FUCKING TRAITORS!" and "FUCK FREEMAN!" are allowed (the first is also a right answer to #4); "fuck the Combine" and "Freeman is a fucking hero" are thoughtcrime; leet and misspellings (sh1t, fuuuck, shiet, fukc) are caught.
   Notes:
-- [ ] **The dreams speak with her voice:** in The Stakhanov Shift, Careless Talk, The Newsreel, Two Minutes of Hate and The Mass Games, the lines on screen are labelled "The Administrator" (Duck and Cover keeps Sunny the Scanner).
+- [ ] **The dreams speak with her voice:** in The Union Shift, Careless Talk, The Newsreel, Two Minutes of Hate and The Mass Games, the lines on screen are labelled "The Administrator" (Duck and Cover keeps Sunny the Scanner).
   Notes:
-- [ ] **No foreman in The Stakhanov Shift:** she stands on a gold pedestal at the far end of the factory (check she fits beside the board and the portrait); stand idle 12 seconds: "I see you standing there. Back to work, citizen!"
+- [ ] **No foreman in The Union Shift:** she stands on a gold pedestal at the far end of the factory (check she fits beside the board and the portrait); stand idle 12 seconds: "I see you standing there. Back to work, citizen!"
   Notes:
 - [ ] **Quiz stand-ins:** dream the Loyalty Quiz with fewer than four players: a row of the city's people stands before her and answers each question in chat (5 to 12 seconds in). One question between the 3rd and 8th, the rebel (in rebel clothes) shouts thoughtcrime; she orders him removed; two officers with stun batons beat him (check the batons sit in their hands, the swing and cower poses) and drag him to the back; she says "Where were we? Ah, yes." With four players: no stand-ins.
   Notes:
@@ -1951,4 +1951,8 @@ Type them in the server console on the host panel, or in your own game console (
   Notes:
 - [ ] **Way marks (the Resistance's arrows):** Miscount Editor > "Mark: Resistance arrow, pointing left" (and right, up, down, and "Mark: FREEDOM THIS WAY"): left click a wall. Does each arrow point the way its name says, the right size, the lambda's orange? Is it still there after a map change, and does right click take it off? Can it be scrubbed (it should not)? On a floor it should refuse.
 - [ ] **The announcer:** stand around for 5 minutes: at most one of the map's own Overwatch lines in that time, none on top of a city announcement. The debug report's Layout part says how many of the map's lines were let through and silenced, and its log lists every "PA: overwatch says ..." line.
+  Notes:
+- [ ] **Way marks scrub off and come back:** as a citizen or a unit, E on a painted arrow: it scrubs off like any graffiti. Walk away out of sight: after about 4 minutes it should be back. Stay and watch it: it should not reappear while you can see the wall.
+  Notes:
+- [ ] **Her slogan:** at her address (the city's own, or test it), just before the closing she says "Love your neighbour, hate the traitor." (words on screen until `speech_slogan1.wav` is recorded in `sound/livingcity/administrator/`).
   Notes:

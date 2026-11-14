@@ -11,7 +11,7 @@
           from the field to the depot while the quota board climbs to absurd numbers. A sickly
           green crate is spoiled: crouch to throw it away, because delivering it is wrecking.
           Five crates: a medal from her own hand.
-        The Stakhanov Shift (shift), Soviet labour heroes: stand at a work station and hammer
+        The Union Shift (shift), Soviet labour heroes: stand at a work station and hammer
           (crouch, again and again) to beat the norm by 1400%. Double norm now and then. Idle for
           12 seconds and she notices (no foreman: the owner, 8 November, "I prefer just using the administrator"). The first to 1400% gets a giant portrait.
         Careless Talk (spy), "loose lips sink ships": a canteen of citizens with one rebel spy
@@ -318,11 +318,11 @@ do
 end
 
 ------------------------------------------------------------------------
--- The Stakhanov Shift
+-- The Union Shift
 ------------------------------------------------------------------------
 
 do
-    local def = { id = "shift", name = "The Stakhanov Shift", mood = "happy", secs = 150, lives = 3, need = 1400, music = { "shift", "propaganda" },
+    local def = { id = "shift", name = "The Union Shift", mood = "happy", secs = 150, lives = 3, need = 1400, music = { "shift", "propaganda" },
         goal = "Stand at a glowing work station and hammer (crouch, again and again) to beat the norm by 1400%. Don't stand idle: she is watching.",
         timeUp = { "The whistle blows", "The shift is over before you've beaten the norm. You wake." }, spawn = Spawn,
         woke = Woke({

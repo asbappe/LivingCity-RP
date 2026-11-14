@@ -1,6 +1,7 @@
 # Recorded already (kept by python3 _dev/voice_lines.py; tick a row [x] in VOICE_LINES.md or VOICE_SCRIPTS.md, or add a file name here)
 ambient
 ambient1
+answer_slogan1
 blackout
 blackout1
 block_raided
@@ -207,6 +208,7 @@ socio_red
 socio_red1
 socio_yellow
 socio_yellow1
+speech_slogan
 static1
 supply
 supply1

@@ -23,7 +23,7 @@ NAMES = {
     "clocks": "Stop the Clocks", "tea": "The Tea Party", "derby": "The Headcrab Derby", "photo": "Say Cheese", "doors": "The Doors", "paint": "Splat!",
     "conga": "Conga!", "shh": "Shh!", "bubbles": "Bubbles", "watchers": "The Watchers", "can": "Pick Up That Can",
     "adore": "Kneel Before Her", "roses": "Roses for Her", "mirror": "Mirror, Mirror", "saviour": "The Saviour", "quiz": "The Loyalty Quiz",
-    "harvest": "Record Harvest", "shift": "The Stakhanov Shift", "spy": "Careless Talk", "newsreel": "The Newsreel", "hate": "Two Minutes of Hate",
+    "harvest": "Record Harvest", "shift": "The Union Shift", "spy": "Careless Talk", "newsreel": "The Newsreel", "hate": "Two Minutes of Hate",
     "massgames": "The Mass Games", "guidance": "On-the-Spot Guidance", "scrap": "The Scrap Drive", "flowers": "Flowers for the Liberators",
     "duck": "Duck and Cover", "ravenholm": "Ravenholm",
 }

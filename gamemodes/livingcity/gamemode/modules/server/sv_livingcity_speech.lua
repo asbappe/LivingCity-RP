@@ -98,6 +98,9 @@ LC.SpeechPieces = {
       words = "There is a restlessness in this city. I feel it. Restlessness can be turned into work, or into ruin. Choose work." },
     { id = "mood_content", part = "mood", when = "the city's people are at ease (the minds: stress low)", tier = 1,
       words = "You look well: rested, fed and calm. Good. Keep it so." },
+    -- (the owner's own slogan, 14 November: "THIS IS GOLD, SAVE THIS SOMEWHERE AS A SLOGAN"; never reword it)
+    { id = "slogan", part = "slogan", when = "her slogan, before the closing, every time", tier = 1,
+      words = "Love your neighbour, hate the traitor." },
     { id = "close", part = "close", when = "the closing", tier = 1,
       words = "Now go back to your work, and remember: this city is only as strong as each one of you. Glory to the Union." },
 }
@@ -168,6 +171,7 @@ function LC.SpeechCompose(state, events, mood)
         local m = (mood.stress >= 14 and "mood_afraid") or (mood.unrest >= 0.5 and "mood_restless") or (mood.stress <= 4 and "mood_content") or nil
         if m then out[#out + 1] = PIECE[m] end
     end
+    out[#out + 1] = PIECE.slogan
     out[#out + 1] = PIECE.close
     -- (tense: she takes the stern line throughout, where she has one)
     local tense = (state.resistance or 50) >= 65 or LC.Socio == "red" or (w.ev_taken or 0) > 0 or (w.ev_sabotage or 0) > 0

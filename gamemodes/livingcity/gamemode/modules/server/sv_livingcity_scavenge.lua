@@ -815,10 +815,14 @@ function LC.CleanTag(ply, tag)
     return LC.StartTask(ply, 3, "Scrubbing it off...", {
         maxMove = 40, cancelText = "You leave it half scrubbed.",
         done = function(p)
-            for i, t in ipairs(LC.Tags) do
+            -- (one of the layout's way marks: off the wall until it's painted again)
+            local mark = tag.permanent and LC.ScrubWayMark and LC.ScrubWayMark(tag.point)
+            for i, t in ipairs(mark and { tag } or LC.Tags) do
                 if t == tag then
-                    table.remove(LC.Tags, i)
-                    SendTags()
+                    if not mark then
+                        table.remove(LC.Tags, i)
+                        SendTags()
+                    end
                     p:EmitSound("ambient/water/water_spray1.wav", 55)
                     if LC.PlayerIsCP(p) then
                         if LC.AddXP then LC.AddXP(p, 4, "cleaned up anticitizen graffiti") end
@@ -901,7 +905,7 @@ hook.Add("KeyPress", "LivingCityScavenge", function(ply, key)
     if (ply.lcScavNext or 0) > CurTime() then return end
     local tr = ply:GetEyeTrace()
     if tr and tr.HitPos and tr.HitPos:DistToSqr(ply:EyePos()) < 110 * 110 then
-        local tag = TagNear(tr.HitPos, 50)
+        local tag = TagNear(tr.HitPos, 50) or (LC.WayMarkNear and LC.WayMarkNear(tr.HitPos, 50)) -- (a way mark scrubs off too, and comes back: sv_livingcity_waymarks.lua)
         if tag then
             ply.lcScavNext = CurTime() + 0.6
             local ok, why = LC.CleanTag(ply, tag)

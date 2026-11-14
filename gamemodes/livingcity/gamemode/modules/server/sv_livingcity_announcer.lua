@@ -124,7 +124,7 @@ LC.AnnounceTriggers = {
     "black_stand", "black_fallen", "black_crushed", "suppressor_down", -- the collapse (sv_livingcity_collapse.lua)
     "speech_soon", -- her address: the call to gather (sv_livingcity_speech.lua)
     -- her own address, stitched from pieces (hers only; sv_livingcity_speech.lua, LC.SpeechPieces)
-    "speech_open", "speech_ev_deaths", "speech_ev_arrests", "speech_ev_informers", "speech_ev_informer_hurt", "speech_ev_taken", "speech_ev_escape", "speech_ev_posters", "speech_ev_theft", "speech_ev_defiance", "speech_ev_sabotage", "speech_ev_heavyhand", "speech_ev_drink", "speech_ev_kindness", "speech_ev_despair", "speech_unrest", "speech_hunger", "speech_order", "speech_morale", "speech_calm", "speech_mood_afraid", "speech_mood_restless", "speech_mood_content", "speech_close",
+    "speech_open", "speech_slogan", "speech_ev_deaths", "speech_ev_arrests", "speech_ev_informers", "speech_ev_informer_hurt", "speech_ev_taken", "speech_ev_escape", "speech_ev_posters", "speech_ev_theft", "speech_ev_defiance", "speech_ev_sabotage", "speech_ev_heavyhand", "speech_ev_drink", "speech_ev_kindness", "speech_ev_despair", "speech_unrest", "speech_hunger", "speech_order", "speech_morale", "speech_calm", "speech_mood_afraid", "speech_mood_restless", "speech_mood_content", "speech_close",
 }
 -- Lines only she says (Overwatch has none of these): lc_voice_missing doesn't ask him for them.
 LC.AnnounceHersOnly = {}
@@ -148,7 +148,7 @@ local BASE_TIER = {
     lockdown = 3, raid = 3, skirmish_raid = 3, skirmish_sweep = 3, response = 3, block_raided = 3, overwatch_drop = 3, socio_red = 3,
     breakout = 4, socio_black = 4, black_stand = 4, black_fallen = 4, suppressor_down = 4, black_crushed = 3,
     jog = 1, drill = 1, parade = 1, -- (she loves a bit of exercise)
-    speech_soon = 1, speech_open = 1, speech_ev_deaths = 2, speech_ev_arrests = 2, speech_ev_informers = 1, speech_ev_informer_hurt = 3, speech_ev_taken = 3, speech_ev_escape = 3, speech_ev_posters = 2, speech_ev_theft = 2, speech_ev_defiance = 2, speech_ev_sabotage = 3, speech_ev_heavyhand = 2, speech_ev_drink = 1, speech_ev_kindness = 1, speech_ev_despair = 1, speech_unrest = 3, speech_hunger = 1, speech_order = 2, speech_morale = 1, speech_calm = 1, speech_mood_afraid = 1, speech_mood_restless = 2, speech_mood_content = 1, speech_close = 1,
+    speech_soon = 1, speech_open = 1, speech_slogan = 1, speech_ev_deaths = 2, speech_ev_arrests = 2, speech_ev_informers = 1, speech_ev_informer_hurt = 3, speech_ev_taken = 3, speech_ev_escape = 3, speech_ev_posters = 2, speech_ev_theft = 2, speech_ev_defiance = 2, speech_ev_sabotage = 3, speech_ev_heavyhand = 2, speech_ev_drink = 1, speech_ev_kindness = 1, speech_ev_despair = 1, speech_unrest = 3, speech_hunger = 1, speech_order = 2, speech_morale = 1, speech_calm = 1, speech_mood_afraid = 1, speech_mood_restless = 2, speech_mood_content = 1, speech_close = 1,
 }
 LC.AnnounceBaseTier = BASE_TIER -- (read only: the voice lines list, _dev/voice_lines.py)
 local VIOLENT = { raid = true, skirmish_raid = true, skirmish_sweep = true, breakout = true, outbreak = true, block_raided = true, territory_grew = true, overwatch_drop = true }

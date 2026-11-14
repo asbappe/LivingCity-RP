@@ -70,6 +70,7 @@ announce trigger speech_mood_restless
 announce trigger speech_morale
 announce trigger speech_open
 announce trigger speech_order
+announce trigger speech_slogan
 announce trigger speech_soon
 announce trigger speech_unrest
 announce trigger supply

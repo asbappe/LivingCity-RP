@@ -330,6 +330,7 @@ Folder: `cubbage/`. Odessa Cubbage, alive and well, answering her address from t
 | [ ] | `answer_mood_afraid1` | her `speech_mood_afraid` | [defiant, dry, a speaker enjoying himself] You've nothing to fear from her, she says. Tell that to the ones she's taken. |
 | [ ] | `answer_mood_restless1` | her `speech_mood_restless` | [defiant, dry, a speaker enjoying himself] She feels your restlessness, she says. Good. Let her feel it. |
 | [ ] | `answer_mood_content1` | her `speech_mood_content` | [defiant, dry, a speaker enjoying himself] Rested, fed and calm, she says. Look around you. Does that look like anyone you know? |
+| [x] | `answer_slogan1` | her `speech_slogan` | [defiant, dry, a speaker enjoying himself] Love your neighbour, hate the traitor, she says. We agree. Ask yourself who sold this city. |
 | [ ] | `answer_close1` | (his closing) | [defiant, dry, a speaker enjoying himself] That's all from me. Keep your heads down, your eyes open, and your door unlocked for a friend. We're closer than she thinks. |
 
 ## Overwatch's announcements
@@ -645,7 +646,7 @@ Folder: `dreams/voice/`. Each dream has its own speakers (the column Who); desig
 | [ ] | `harvest_hello1.mp3` | The Administrator | [her own voice] Citizens! The harvest is ripe and the quota is waiting. Bring it in! |
 | [ ] | `harvest_medal1.mp3` | The Administrator | [her own voice] For glorious labour beyond the plan: the Order of the Golden Sheaf. |
 
-### The Stakhanov Shift (`shift`)
+### The Union Shift (`shift`)
 
 | Done | File | Who | Paste |
 |---|---|---|---|

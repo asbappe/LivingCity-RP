@@ -55,6 +55,7 @@ Folders on the server: **`garrysmod/sound/livingcity/overwatch/`** and **`garrys
 | [ ] | `suppressor_down` | The suppression device is destroyed | `suppressor_down1.wav` | Alert: Nexus suppression device offline. All units, contain and repair. | `suppressor_down_furious1.wav` (furious) | They have silenced the Nexus. It changes nothing. |
 | [ ] | `speech_soon` | Her address is called: the city must gather (Overwatch's when a player Administrator calls it from her tablet; hers when the city gives it) | `speech_soon1.wav` | Attention, all residents: the City Administrator will address the city. Report to the assembly point immediately. Attendance is mandatory. | `speech_soon1.wav` (warm) | My dear citizens, I am going to speak to you all in a few minutes. Come and gather in front of the stand. I would so hate to miss anyone. |
 | [ ] | `speech_open` | Her speech, the opening | (not his) | | `speech_open1.wav` (warm) | Citizens. Thank you for coming to hear me. Let us talk about the days behind us. |
+| [x] | `speech_slogan` | Her speech her slogan, before the closing, every time | (not his) | | `speech_slogan1.wav` (warm) | Love your neighbour, hate the traitor. |
 | [ ] | `speech_ev_deaths` | Her speech, on what happened lately: when people were killed lately | (not his) | | `speech_ev_deaths_firm1.wav` (firm) | Blood has been spilled in our streets. Every life lost to violence is stolen from all of us. Violence solves nothing. It only invites more. |
 | [ ] | `speech_ev_arrests` | Her speech, on what happened lately: when people were taken to the cells | (not his) | | `speech_ev_arrests_firm1.wav` (firm) | Civil Protection has been busy. No one taken to the cells was taken at random. They chose disorder, and disorder has a price. |
 | [ ] | `speech_ev_informers` | Her speech, on what happened lately: when citizens informed (she knows who) | (not his) | | `speech_ev_informers1.wav` (warm) | To those of you who came forward and told us what you saw: thank you. You know who you are, and so do I. Your loyalty will not be forgotten. |
@@ -408,7 +409,7 @@ Every line said in the dreams you play. Folder: **`garrysmod/sound/livingcity/dr
 | [ ] | `harvest_hello1.mp3` | The Administrator | Citizens! The harvest is ripe and the quota is waiting. Bring it in! | her own voice |
 | [ ] | `harvest_medal1.mp3` | The Administrator | For glorious labour beyond the plan: the Order of the Golden Sheaf. | her own voice |
 
-#### The Stakhanov Shift (`shift`)
+#### The Union Shift (`shift`)
 
 | Done | File | Who | Words | How it should sound |
 |---|---|---|---|---|
@@ -833,4 +834,5 @@ Odessa Cubbage, alive and well, at the Resistance's camp a few minutes after her
 | [ ] | `answer_mood_afraid1.wav` | her `speech_mood_afraid` | You've nothing to fear from her, she says. Tell that to the ones she's taken. |
 | [ ] | `answer_mood_restless1.wav` | her `speech_mood_restless` | She feels your restlessness, she says. Good. Let her feel it. |
 | [ ] | `answer_mood_content1.wav` | her `speech_mood_content` | Rested, fed and calm, she says. Look around you. Does that look like anyone you know? |
+| [x] | `answer_slogan1.wav` | her `speech_slogan` | Love your neighbour, hate the traitor, she says. We agree. Ask yourself who sold this city. |
 | [ ] | `answer_close1.wav` | (his closing) | That's all from me. Keep your heads down, your eyes open, and your door unlocked for a friend. We're closer than she thinks. |

@@ -13351,7 +13351,7 @@ do
     local pieces, tense = LC.SpeechCompose({ supply = 20 }, { ev_arrests = 3, ev_taken = 5, ev_kindness = 1, ev_posters = 1 }, { stress = 20, unrest = 0.2 })
     local ids = {}
     for _, p in ipairs(pieces) do ids[#ids + 1] = p.id end
-    ok(table.concat(ids, ",") == "open,ev_taken,hunger,ev_arrests,mood_afraid,close", "her speech: an opening, the three weightiest things lately, the city's mood, a closing", table.concat(ids, ","))
+    ok(table.concat(ids, ",") == "open,ev_taken,hunger,ev_arrests,mood_afraid,slogan,close", "her speech: an opening, the three weightiest things lately, the city's mood, her slogan, a closing", table.concat(ids, ","))
     ok(tense, "(someone taken by the Resistance: she's stern throughout)")
     local quiet = LC.SpeechCompose({}, {}, { stress = 2, unrest = 0 })
     ok(quiet[2].id == "calm" and quiet[3].id == "mood_content", "a quiet few days: she says so, and that the people look well")
@@ -13497,9 +13497,22 @@ for _, t in ipairs(sent and sent.tags or {}) do if t.k == "arrow_right" and math
 ok(found, "every player is sent it with the sprayed tags, to be painted the same way")
 local inTags = false
 for _, t in ipairs(LC.Tags) do if t.kind == "arrow_right" then inTags = true end end
-ok(not inTags, "it is not a sprayed tag: it never fades and nobody scrubs it off")
+ok(not inTags, "it is not a sprayed tag: it never fades")
+-- scrubbed off, it comes back when nobody is looking
+local function Up() for _, m in ipairs(LC.WayMarks()) do if m.point == p then return true end end return false end
+local near = LC.WayMarkNear(at, 50)
+ok(near and near.point == p and LC.ScrubWayMark(p) and not Up() and not LC.WayMarkNear(at, 50), "scrubbed off, it is gone from the wall")
+local seenWas, backWas = LC.WayMarkSeen, LC.WayMarkReturn
+LC.WayMarkSeen = function() return false end
+ok(LC.WayMarkTick() == 0 and not Up(), "(and stays off for a few minutes)")
+LC.WayMarkReturn = 0
+LC.WayMarkSeen = function() return true end
+ok(LC.WayMarkTick() == 0 and not Up(), "while anyone can see the wall, nobody paints it again")
+LC.WayMarkSeen = function() return false end
+ok(LC.WayMarkTick() == 1 and Up(), "with nobody looking, it is back")
+LC.WayMarkSeen, LC.WayMarkReturn = seenWas, backWas
 LC.RemovePoint(p)
-ok(#LC.Points == n0 and #LC.WayMarks() == #LC.WayMarks() and not LC.NearestPoint(at, 8), "the editor takes it off again")
+ok(#LC.Points == n0 and not Up() and not LC.NearestPoint(at, 8), "the editor takes it off for good")
 end
 WayMarkTests()
 section("Colonel Cubbage answers her speeches (the owner, 12 November)")
@@ -20519,10 +20532,10 @@ ok(s.how == "won" and Said(g, "harvest_medal"), "five crates: she pins on the me
 Stop(d)
 ok(LC.Standing(a) == st0 - 3, "waking, the wrecking costs 3 loyalty points", LC.Standing(a) - st0)
 
--- The Stakhanov Shift
+-- The Union Shift
 g, d = Start("shift")
 s = g.pl[a]
-ok(g and #g.stations == 12 and g.herBase ~= nil and g.foreman == nil, "The Stakhanov Shift is built: twelve work stations, and she watches the floor (no foreman)")
+ok(g and #g.stations == 12 and g.herBase ~= nil and g.foreman == nil, "The Union Shift is built: twelve work stations, and she watches the floor (no foreman)")
 a:SetPos(g.stations[1])
 Duck(a)
 ok(s.pct == LC.ShiftStroke, "at a station, every crouch is a hammer blow", s.pct)

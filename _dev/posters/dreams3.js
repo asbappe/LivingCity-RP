@@ -102,15 +102,24 @@ ART.dream_harvest = () => {
   return s;
 };
 
-// The Stakhanov Shift
+// The Union Shift
 ART.dream_shift = () => {
-  let s = R(0, 0, 720, 610, C.paper) + rays(330, 250, 44, 1000, C.red, 0, 360, 'opacity=".16"');
-  for (const [x, h] of [[30, 250], [96, 310], [600, 280], [662, 230]]) s += R(x, 610 - h - 160, 30, h + 160, C.slate3) + R(x - 4, 610 - h - 160, 38, 12, C.slate2) + E(x + 26, 610 - h - 190, 36, 22, C.steel2, 'opacity=".7"') + E(x + 62, 610 - h - 222, 44, 24, C.steel2, 'opacity=".45"');
-  s += R(0, 470, 720, 140, C.slate3) + skyline(480, C.slate2, null, 4, 60);
-  // the work of fourteen
-  for (let i = 5; i >= 1; i--) s += G(`translate(${-i * 46},${i * 6})`, `<g opacity="${(0.34 - i * 0.05).toFixed(2)}">` + worker(196, 64, 1.2, { arm: 'out', hammer: true, tone: 3 }) + '</g>');
-  s += worker(196, 64, 1.2, { arm: 'out', hammer: true });
-  s += `<circle cx="604" cy="470" r="86" fill="${C.red}"/><circle cx="604" cy="470" r="74" fill="none" stroke="${C.paper}" stroke-width="4"/>` + T(604, 506, '×14', 84, C.paper);
+  let s = R(0, 0, 720, 610, C.paper) + rays(360, 190, 44, 1000, C.red, 0, 360, 'opacity=".16"');
+  for (const [x, h] of [[24, 250], [84, 300], [612, 280], [668, 230]]) s += R(x, 610 - h - 160, 30, h + 160, C.slate3) + R(x - 4, 610 - h - 160, 38, 12, C.slate2) + E(x + 26, 610 - h - 190, 36, 22, C.steel2, 'opacity=".7"') + E(x + 62, 610 - h - 222, 44, 24, C.steel2, 'opacity=".45"');
+  // her, who does the work of fourteen
+  s += `<circle cx="360" cy="226" r="204" fill="${C.red}"/><circle cx="360" cy="226" r="188" fill="none" stroke="${C.paper}" stroke-width="3" opacity=".6"/>`;
+  s += P('M226,372 L494,372 L520,610 L200,610Z', KNIT) + P('M380,372 L494,372 L520,610 L420,610Z', KNITD);
+  s += G('translate(203,6) scale(1.85)', adminBust({ pin: C.red }));
+  // the fourteen, flat out
+  s += R(0, 520, 720, 90, C.slate3);
+  const one = (x, y, k, tone) => {
+    let g = '';
+    for (let i = 4; i >= 1; i--) g += `<g opacity="${(0.3 - i * 0.05).toFixed(2)}" transform="translate(${-i * 13 * k / 0.3},${i * 1.5})">` + worker(x, y, k, { arm: 'out', hammer: true, tone: 3 }) + '</g>';
+    return g + worker(x, y, k, { arm: 'out', hammer: true, tone });
+  };
+  for (let i = 0; i < 7; i++) s += one(34 + i * 96, 330, 0.27, 2);
+  s += R(0, 470, 720, 140, C.slate3, 'opacity=".0"');
+  for (let i = 0; i < 7; i++) s += one(-8 + i * 100, 420, 0.32, i % 2);
   return s;
 };
 
