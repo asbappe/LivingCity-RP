@@ -96,7 +96,7 @@ const DEFACE = {
   housing: { strike: [1], words: [['IS A', 384, 300, 120, -7, WHITE], ['CELL', 384, 450, 170, -7, ORANGE]], lam: [130, 540, 1.0, -8] },
   vortigaunt: { words: [['FREE', 384, 280, 150, -9, WHITE], ['THEM', 384, 430, 150, -9, ORANGE]], lam: [130, 130, 0.9, 8] },
   recruit: { words: [['TRAITORS', 384, 360, 132, -8, WHITE]], lam: [130, 150, 0.9, -8] },
-  neighbour: { words: [['LIES', 384, 400, 230, -8, WHITE]], lam: [130, 150, 0.9, -8] },
+  neighbour: { strike: [1], words: [['LIES', 384, 400, 230, -8, WHITE]], lam: [130, 150, 0.9, -8] },
   administrator: { words: [['LIAR', 384, 500, 210, -8, WHITE]], lam: [660, 130, 0.9, 8],
     extra: `<g filter="url(#spray)" stroke="${BLACK}" stroke-width="15" stroke-linecap="round" fill="none"><path d="M296,218 L374,282 M378,226 L302,274 M394,224 L470,280 M466,216 L398,284"/></g>` },
 };
@@ -106,7 +106,7 @@ function defaceLayer(p) {
   if (!d) return '';
   let s = '';
   // where the headline lines sit (as page() lays them out)
-  let y = 634 + 20 + (p.head.length === 1 ? 14 : 0);
+  let y = 634 + 20 + (p.headShift || 0) + (p.head.length === 1 ? 14 : 0);
   const mids = [];
   for (const [, size] of p.head) { const cap = size * 0.727; y += cap; mids.push(y - cap / 2); y += 15; }
   const dark = p.accent === 'cyan';
