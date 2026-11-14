@@ -1947,3 +1947,5 @@ Type them in the server console on the host panel, or in your own game console (
   Notes:
 - [ ] **Collapse:** an hour of yellow should barely move the collapse bar now.
   Notes:
+- [ ] **Nightmare and propaganda dream posters (21 more pictures):** after unzipping `livingcity_content.zip`, FastDL sync and a map change, a curfew poster hinting at any Nightmare or any of her propaganda dreams should carry its own picture. Any picture you would change?
+  Notes:

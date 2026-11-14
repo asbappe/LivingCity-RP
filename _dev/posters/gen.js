@@ -251,6 +251,7 @@ POSTERS.push(...more.POSTERS);
 // the posters that hint at dreams (dream_<codeword>; never painted over one by one: dream_x is for all)
 Object.assign(ART, dreams.ART);
 POSTERS.push(...dreams.POSTERS);
+for (const f of ['./dreams2.js', './dreams3.js', './dreams4.js']) if (fs.existsSync(path.join(__dirname, f))) { const d = require(f); Object.assign(ART, d.ART); POSTERS.push(...d.POSTERS); }
 
 function page(p, defaced) {
   const dark = p.accent === 'cyan';
@@ -264,7 +265,7 @@ function page(p, defaced) {
     t += `<text x="${X0}" y="${y.toFixed(1)}" font-family="Inter Display" font-weight="900" font-size="${size}" fill="${acc}" textLength="${TW}" lengthAdjust="spacingAndGlyphs">${txt}</text>`;
     y += 15;
   }
-  const n = p.small.length, last = 944, step = n <= 2 ? 34 : 29.5, fs = n === 1 ? 28 : n === 2 ? 25 : 22.5;
+  const n = p.small.length, last = 944, step = n <= 2 ? 34 : 29.5, fs = n === 1 ? (p.small[0].length > 40 ? 24 : 28) : n === 2 ? 25 : 22.5;
   let sy = Math.max(y + 22, last - (n - 1) * step);
   if (n <= 2 || p.head.length === 1) sy = (y + 8 + last - (n - 1) * step) / 2 + 6;
   p.small.forEach((line, i) => {
