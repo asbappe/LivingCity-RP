@@ -8,13 +8,13 @@ ART.neighbour = () => {
   // (a sky darker than their faces, so the faces have an edge)
   let s = R(0, 0, 720, 610, '#8fa3ad') + rays(232, 250, 40, 1000, '#a9bac0', 0, 360, 'opacity=".8"');
   s += skyline(470, '#74899a', '#a9bac0', 22, 110) + R(0, 466, 720, 144, C.steel);
-  // the neighbours: the younger hands the older a framed portrait of the Administrator; both smile
+  // the neighbours: the younger hands the older a framed portrait of the Administrator, a heart above it
+  // (neutral faces: the owner, 14 November)
   const body = (t, bd) => P('M-34,270 L-16,152 L30,118 L72,118 L112,142 L128,270Z', t) + P('M36,118 L52,118 L62,270 L44,270Z', bd);
   const scarf = P('M16,52 L24,22 L44,4 L70,4 L86,18 L88,40 L64,38 L58,52 L42,54 L40,72 L32,96 L46,120 L22,126 L10,86Z', C.steel2) + P('M24,22 L44,4 L70,4 L86,18 L60,20 L40,30Z', '#c9d0d0');
-  const smile = L('M70,80 Q78,89 85,81', C.ink, 2.8) + L('M68,77 L71,81', C.ink, 2); // (kept inside the face: the lips end at x 88)
   const skinB = '#d8cdb8', shB = '#8f8a7c';
-  s += G('translate(-22,150) scale(1.62)', body(C.blue, C.blueD) + head({ cap: C.blueD }) + smile);
-  s += G('translate(488,150) scale(-1.62,1.62)', body('#335073', '#263a55') + head({ skin: skinB, sh: shB, hair: C.steel2 }) + scarf + smile + L('M60,62 L66,66 M58,70 L65,72', shB, 1.6));
+  s += G('translate(-22,150) scale(1.62)', body(C.blue, C.blueD) + head({ cap: C.blueD }));
+  s += G('translate(488,150) scale(-1.62,1.62)', body('#335073', '#263a55') + head({ skin: skinB, sh: shB, hair: C.steel2 }) + scarf + L('M60,62 L66,66 M58,70 L65,72', shB, 1.6));
   const O = `stroke="${C.ink}" stroke-width="2.2" stroke-opacity=".5" stroke-linejoin="round"`;
   // their arms (shoulder, elbow, wrist), out to the frame
   s += P('M380,392 L342,388 L318,476 L354,490Z', '#4f77a3', O) + P('M354,492 L324,462 L296,428 L282,454 L334,502Z', '#4f77a3', O);
@@ -22,6 +22,7 @@ ART.neighbour = () => {
   // the portrait
   s += R(173, 338, 130, 172, '#10161f', 'opacity=".35"') + R(167, 332, 130, 172, C.slate, O) + R(178, 343, 108, 150, C.blueD);
   s += `<clipPath id="gift"><rect x="178" y="343" width="108" height="150"/></clipPath><g clip-path="url(#gift)">` + rays(232, 404, 20, 240, C.cyan, 0, 360, 'opacity=".3"') + G('translate(168,352) scale(0.75)', adminBust({ pin: C.red })) + '</g>';
+  s += G('translate(232,262) scale(1.45)', P('M0,26 L-30,-4 Q-34,-28 -14,-28 Q-2,-28 0,-14 Q2,-28 14,-28 Q34,-28 30,-4Z', C.red));
   // his hand letting go of it, hers taking it
   s += P('M158,426 L180,422 L184,454 L162,458Z', C.paper, O) + P('M166,418 L180,416 L182,426 L168,428Z', C.paper, O);
   s += P('M306,426 L284,422 L280,454 L302,458Z', skinB, O) + P('M298,418 L284,416 L282,426 L296,428Z', skinB, O);
