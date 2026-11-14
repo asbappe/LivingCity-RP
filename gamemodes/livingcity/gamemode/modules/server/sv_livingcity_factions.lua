@@ -454,9 +454,31 @@ function LC.SidesEven(ply, fid)
     return false, string.format("The Combine is too big for the Resistance right now (%d of Civil Protection and Overwatch, %d fighters). Wait for more rebels to come on, or for a place to free up.", n.combine, n.rebels)
 end
 
+-- A vortigaunt character: shackled (the Vortigaunt faction) or freed (the Resistance's Free Vortigaunt).
+-- Being one is chosen at the start of a new life (sv_livingcity_vortstart.lua), never taken up by a human,
+-- and a vortigaunt never becomes human (the owner, 14 November: "it is absurd for a human to take on a
+-- vortigaunt role and transform into a vortigaunt, not lore friendly").
+function LC.IsVortChar(ply)
+    return IsValid(ply) and (ply:GetNW2String("lcf_faction", "") == "vort" or ply:GetNW2String("lcf_special", "") == "vortigaunt")
+end
+
 function LC.CanJoinFaction(ply, fid, sid)
     local f = LCF.Get(fid)
     if not f then return false, "No such faction." end
+    do
+        local vortNow = LC.IsVortChar(ply)
+        local wantsVort = f.vort or sid == "vortigaunt"
+        local mine = ply:GetNW2String("lcf_faction", "") == fid and ply:GetNW2String("lcf_special", "") == (sid or "")
+        if wantsVort and not vortNow and not mine then
+            return false, "A vortigaunt is chosen at the start of a new life, not taken up. The Free Vortigaunt is a vortigaunt the Resistance freed."
+        end
+        if vortNow and not wantsVort and not mine then
+            return false, "A vortigaunt can't become human."
+        end
+        if vortNow and sid == "vortigaunt" and ply:GetNW2String("lcf_faction", "") == "vort" then
+            return false, "Only the Resistance can free you: cut your shackles (or reach out through the vortessence)."
+        end
+    end
     -- a mole who was caught: Resistance for good (sv_livingcity_insider.lua)
     if fid ~= "resistance" and LC.InsiderBarred then
         local why = LC.InsiderBarred(ply, "faction", fid)
@@ -575,7 +597,9 @@ local function SendMenu(ply)
         admin = ply:IsAdmin() or nil }
     for _, f in ipairs(LCF.Factions) do
       -- (the owner: a stalker is a punishment, never a choice: not on the screen, unless it's what you are)
-      if not f.stalker or data.current == f.id then
+      -- (nor the shackled vortigaunts, for a human: a vortigaunt is chosen at the start of a new life, the owner,
+      -- 14 November; a vortigaunt sees only its own: LC.IsVortChar)
+      if (not f.stalker or data.current == f.id) and (not f.vort or LC.IsVortChar(ply)) then
         local xp = XP(ply, f.id)
         local ok, why = LC.CanJoinFaction(ply, f.id, nil)
         local entry = { id = f.id, xp = xp, rank = RankFor(ply, f, xp), ok = ok, why = why, specials = {} }
@@ -593,8 +617,11 @@ local function SendMenu(ply)
             end
         end
         for _, s in ipairs(f.specials or {}) do
-            local sok, swhy = LC.CanJoinFaction(ply, f.id, s.id)
-            entry.specials[#entry.specials + 1] = { id = s.id, ok = sok, why = swhy, taken = SpecialHolders(f.id, s.id) }
+            -- (a role nobody chooses, the Free Vortigaunt: on the list only for whoever holds it)
+            if not s.hidden or (data.current == f.id and ply:GetNW2String("lcf_special", "") == s.id) then
+                local sok, swhy = LC.CanJoinFaction(ply, f.id, s.id)
+                entry.specials[#entry.specials + 1] = { id = s.id, ok = sok, why = swhy, taken = SpecialHolders(f.id, s.id) }
+            end
         end
         data.factions[#data.factions + 1] = entry
       end

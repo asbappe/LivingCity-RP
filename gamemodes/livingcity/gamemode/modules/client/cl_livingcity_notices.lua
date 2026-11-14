@@ -209,7 +209,9 @@ local function DrawCards(now)
     local W, H = ScrW(), ScrH()
     local cw = math.min(W - 40, 560)
     local x = W / 2 - cw / 2
-    local y = math.max((LC_CL.StatusBottom or 0) + 6, math.floor(H * 0.12))
+    local dreaming = LC_CL.DreamQuietHUD and LC_CL.DreamQuietHUD()
+    -- (in a dream: below the dream's own lines and its big word, out of their way)
+    local y = dreaming and math.floor(H * 0.62) or math.max((LC_CL.StatusBottom or 0) + 6, math.floor(H * 0.12))
     if cur and cur.ends and cur.ends <= now then cur = nil cardFreeAt = now + 0.8 end
     if not cur then
         local nxt = cards[1]
@@ -238,7 +240,7 @@ local function DrawCards(now)
     draw.RoundedBox(0, x, y, 4, h, A(EDGE[c.kind] or EDGE.info, a))
     local title = string.upper(c.title ~= "" and c.title or "Notice") .. (c.n > 1 and ("  x" .. c.n) or "")
     draw.SimpleText(title, "LCNoticeTitle", x + 14, y + 6, A(EDGE[c.kind] or EDGE.info, a))
-    if #cards > 0 then draw.SimpleText("+" .. #cards .. " more", "LCNoticeTitle", x + cw - 12, y + 6, A(BODY, a * 0.7), TEXT_ALIGN_RIGHT) end
+    if #cards > 0 and not dreaming then draw.SimpleText("+" .. #cards .. " more", "LCNoticeTitle", x + cw - 12, y + 6, A(BODY, a * 0.7), TEXT_ALIGN_RIGHT) end
     for i, l in ipairs(c.lines) do
         draw.SimpleText(l, "LCNoticeText", x + 14, y + 8 + i * 19, A(i == 1 and INK or BODY, a))
     end

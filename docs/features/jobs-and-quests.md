@@ -49,3 +49,8 @@ The chevrons keep their place on the ground and flow on at the same speed howeve
 - **No distance in a job's title** ("to the north-east", not "240 metres north-east of you"): the marker shows it.
 - **Headcrab hunt:** any of the Resistance's supply crates takes the meat.
 - **The lab:** walk off while the scientist is making something and he works on, keeps it for you alone, and hands it over when you next talk to him; if a unit takes him, it is lost with him. Back from the cells, or the lab fixed, the blood is cleaned off him, the bench and the kit.
+
+## 14 November (the owner's answers)
+
+- **Repel the attack tracks every attacker:** "Put down the attackers (3 of 5 down)", counting all of the raid's fighters whoever brings them down; done when none is left standing, or when the attack is over.
+- **The trail never draws a line through walls.** When either end isn't near a path node on its own floor (an objective on a crate or a balcony, you on a ledge), the way is planned between the path nodes nearest each end; with no way at all, no trail is drawn (the marker still shows where). `LC.TrailNoWay` counts those.

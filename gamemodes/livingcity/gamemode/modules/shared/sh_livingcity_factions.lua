@@ -88,7 +88,9 @@ LCF.Factions = {
                 health = 120, armor = 0, hunted = true,
             },
             {
-                id = "vortigaunt", name = "Free Vortigaunt", max = 2, minRank = 2, vort = true,
+                -- (no longer chosen from the Resistance's list: the owner, 14 November. A shackled vortigaunt
+                -- player the Resistance frees becomes this: sv_livingcity_vort.lua, sv_livingcity_vortstart.lua)
+                id = "vortigaunt", name = "Free Vortigaunt", max = 8, minRank = 1, vort = true, hidden = true,
                 desc = "A vortigaunt with the shackles off, fighting beside the people who freed it. Its vortessence " ..
                        "heals (right click) and strikes (left click). The Combine want it back in chains, and hunt it on sight.",
                 models = { "models/vortigaunt.mdl" },

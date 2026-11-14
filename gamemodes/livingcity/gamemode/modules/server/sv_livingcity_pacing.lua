@@ -39,11 +39,25 @@ hook.Add("EntityTakeDamage", "LivingCityPacingFight", function(victim, dmg)
     if not IsValid(att) or att == victim or att == game.GetWorld() then return end
     if not (att:IsPlayer() or att:IsNPC()) then return end
     if victim:IsPlayer() then LC.NoteFight(victim) LC.NoteShotAt(victim) end
-    if att:IsPlayer() and (victim:IsPlayer() or victim:IsNPC()) then LC.NoteFight(att) end
+    if att:IsPlayer() and (victim:IsPlayer() or victim:IsNPC()) then
+        LC.NoteFight(att)
+        if LC.IsEnemyOf(att, victim) then LC.NoteShot(att) end
+    end
 end)
 hook.Add("EntityFireBullets", "LivingCityPacingFight", function(ent)
-    if IsValid(ent) and ent:IsPlayer() then ent.lcFightAt = CurTime() LC.NoteShot(ent) end
+    if IsValid(ent) and ent:IsPlayer() then ent.lcFightAt = CurTime() end -- (a shot alone is no longer action: LC.NoteShot)
 end)
+
+-- An enemy of this player: anyone not on their own side (a person or an NPC). The city's ordinary
+-- citizens count too, but never the player's own side.
+function LC.IsEnemyOf(ply, victim)
+    if not (IsValid(ply) and IsValid(victim)) or ply == victim then return false end
+    local mine = LC.SquadSide and LC.SquadSide(ply) or nil
+    local theirs
+    if victim:IsPlayer() then theirs = LC.SquadSide and LC.SquadSide(victim) or nil
+    else theirs = LC.QuestNPCSide and LC.QuestNPCSide(victim) or nil end
+    return mine == nil or theirs == nil or mine ~= theirs
+end
 
 -- Asleep, lying in bed, or in a dream: never in action, whatever goes on in the city.
 function LC.AtRest(ply)
@@ -54,10 +68,11 @@ function LC.AtRest(ply)
     return top ~= nil and type(top) ~= "string" and (top.x ~= 0 or top.y ~= 0 or top.z ~= 0) -- (lying in bed)
 end
 
--- The action music's one rule (the owner, 13 November: "action music is just sort of playing
--- randomly while standing around. New rule: action music only plays for a player when they've
--- fired more than 2 bullets and/or when they've been shot"). For everyone, whatever their side:
--- more than ACTION_SHOTS shots inside ACTION_FIGHT seconds, or hurt by a person or an NPC.
+-- The action music's one rule (the owner, 13 November: "action music only plays for a player when
+-- they've fired more than 2 bullets and/or when they've been shot", then 14 November: "let's change the
+-- 2 shots to 'shooting an enemy twice', so that shooting a shot into the air or as a warning at the
+-- ground/wall is not action music worthy"). For everyone, whatever their side: ACTION_SHOTS hits on an
+-- enemy inside ACTION_FIGHT seconds (LC.NoteShot, from the damage), or hurt by a person or an NPC.
 -- A job, a skirmish or an event nearby is never action on its own any more.
 local ACTION_SHOTS = 2
 function LC.NoteShot(ply, now)
@@ -68,7 +83,7 @@ function LC.NoteShot(ply, now)
     keep[#keep + 1] = now
     while #keep > 8 do table.remove(keep, 1) end
     ply.lcShotTimes = keep
-    if #keep > ACTION_SHOTS then ply.lcActionAt = now end
+    if #keep >= ACTION_SHOTS then ply.lcActionAt = now end
     return #keep
 end
 function LC.NoteShotAt(ply, now)

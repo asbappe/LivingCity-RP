@@ -71,6 +71,7 @@ local C_40_38_34_220 = Color(40, 38, 34, 220)
 hook.Add("HUDPaint", "LivingCityNeedsHUD", function()
     local ply = LocalPlayer()
     if not IsValid(ply) or not ply:Alive() then return end
+    if LC_CL.DreamQuietHUD and LC_CL.DreamQuietHUD(ply) then return end
     local quiet = LC_CL.QuietHUD()
     local needs = GetGlobal2Bool("lc_needs_on", false) and LC_CL.NeedsVisible(ply)
     -- credits and standing always (the owner asked: "I desperately need to see my credits"), and the traits under them
@@ -139,6 +140,7 @@ local C_60_10_10_220 = Color(60, 10, 10, 220)
 hook.Add("HUDPaint", "LivingCityUndergroundHUD", function()
     local ply = LocalPlayer()
     if not IsValid(ply) or not ply:Alive() then return end
+    if LC_CL.DreamQuietHUD and LC_CL.DreamQuietHUD(ply) then return end
     local now = CurTime()
 
     -- radio, disguise, papers: one quiet line under the needs box

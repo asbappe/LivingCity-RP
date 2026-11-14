@@ -284,10 +284,14 @@ end
 -- The chaos, filling with red
 ------------------------------------------------------------------------
 
+LC.ChaosYellowRate = 0.25 * 0.05
 function LC.ChaosStep(level, secs)
     local unit = secs / math.max(60, cvMinutes:GetFloat() * 60)
     if level == "red" then LC.Chaos = LC.Chaos + unit
-    elseif level == "yellow" then LC.Chaos = LC.Chaos + unit * 0.25
+    -- (yellow at 5% of the quarter it was: the owner, 14 November, "yellow needs to crawl it forward at 5% of
+    -- what it does now; a 1 hour session of yellow filled it, which is absurd". 30 minutes of red still
+    -- fills it; yellow alone would take 40 hours.)
+    elseif level == "yellow" then LC.Chaos = LC.Chaos + unit * LC.ChaosYellowRate
     else LC.Chaos = LC.Chaos - unit end
     LC.Chaos = math.Clamp(LC.Chaos, 0, 1)
     return LC.Chaos

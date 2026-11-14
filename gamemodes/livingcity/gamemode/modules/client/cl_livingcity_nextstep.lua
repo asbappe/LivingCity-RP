@@ -79,6 +79,7 @@ end
 hook.Add("HUDPaint", "LivingCityNextStep", function()
     local me = LocalPlayer()
     if not IsValid(me) or not me:Alive() then return end
+    if LC_CL.DreamQuietHUD and LC_CL.DreamQuietHUD(me) then return end
     local s = LC_CL.NextStep()
     local w = math.min(340, ScrW() - 32)
     local x, y = 16, (LC_CL.LeftColumnTop and LC_CL.LeftColumnTop() or 160) + 8

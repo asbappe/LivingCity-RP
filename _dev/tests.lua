@@ -3016,6 +3016,8 @@ local _, why = Name("Taylor Swift")
 ok(why:find("realistic name") and why:find("celebrities"), "with a reminder of what a good name is")
 local chooser = newPlayer("Chooser", "citizen")
 LC.OpenCharacterCreator(chooser)
+-- (since 14 November a new life is first asked: a citizen or a vortigaunt; a citizen then gets the creator)
+if chooser.lcRaceAskedFor then LC.OpenCharacterCreator(chooser, { afterRace = true }) end
 local open = _lastnet("lcc_open")
 ok(open ~= nil, "the creator opens for a new player")
 local face = LCF.CitizenModels[3]
@@ -17794,7 +17796,14 @@ ok(same, "the same way every time it's asked (no side steps: the trail doesn't j
 ok(LC.NavPathPoints(from, island.pos, "citizen") == false, "(somewhere it can't be walked to: false)")
 local route = LC.TrailRoute(from, to, "citizen")
 ok(#route == 5 and route[#route] == to, "the trail's way uses it", #route)
-ok(#LC.TrailRoute(from, island.pos, "citizen") == 1, "no way there: straight to it, so there's still something to follow")
+do -- (14 November: no way there and walls between: no trail at all, never a line through the walls)
+    local walls = _walls
+    local nw = LC.TrailNoWay
+    _walls = { { a = G0 + Vector(-3000, 450, 0), b = G0 + Vector(700, 450, 0) } } -- (between the island and every node)
+    local r = LC.TrailRoute(from, island.pos, "citizen")
+    _walls = walls
+    ok(#r == 0 and LC.TrailNoWay == nw + 1, "no way there: no line drawn through the walls (the marker still shows where)", #r)
+end
 -- points closer than a step are one, and a very long way is cut short
 local many = {}
 for i = 1, 300 do many[#many + 1] = G0 + Vector(i * 50, 0, 0) end
@@ -26610,16 +26619,17 @@ hook.t.EntityTakeDamage.LivingCityPacingFight(unit, _dmg(rebel, 5)) -- (this lis
 ok(LC.InFight(unit) and LC.InFight(rebel), "shot at: both of them are in a fight")
 LC.ActionTick(CurTime())
 ok(unit:GetNW2Float("lc_action_until", 0) > CurTime() and LC.InAction(unit) == "fight", "a unit who has been shot: in action (their game plays the combat music)")
--- (the owner, 13 November: "action music only plays for a player when they've fired more than 2 bullets
--- and/or when they've been shot", for anyone)
-ok(LC.InAction(rebel) == nil and LC.InAction(cit) == nil, "the one who shot once, and the bystander: not in action")
-hook.t.EntityFireBullets.LivingCityPacingFight(rebel)
-ok(LC.InAction(rebel) == nil, "two shots fired: still not")
-hook.t.EntityFireBullets.LivingCityPacingFight(rebel)
-ok(LC.InAction(rebel) == nil or true, "(the shot that hurt the unit was a hit, not a bullet counted)")
-hook.t.EntityFireBullets.LivingCityPacingFight(rebel)
+-- (the owner, 14 November: "shooting an enemy twice", so a shot in the air or at a wall isn't action)
+ok(LC.InAction(rebel) == nil and LC.InAction(cit) == nil, "the one who hit an enemy once, and the bystander: not in action")
+for _ = 1, 5 do hook.t.EntityFireBullets.LivingCityPacingFight(rebel) end
+ok(LC.InAction(rebel) == nil, "five shots into the air: still not")
+local ally = newPlayer("ActionAlly", "resistance")
+hook.t.EntityTakeDamage.LivingCityPacingFight(ally, _dmg(rebel, 5))
+ok(LC.InAction(rebel) == nil, "hitting one of your own side: not an enemy, not counted")
+hook.t.EntityTakeDamage.LivingCityPacingFight(unit, _dmg(rebel, 5))
 LC.ActionTick(CurTime())
-ok(LC.InAction(rebel) == "fight" and rebel:GetNW2Float("lc_action_until", 0) > CurTime(), "more than two shots fired: in action, whatever their side")
+ok(LC.InAction(rebel) == "fight" and rebel:GetNW2Float("lc_action_until", 0) > CurTime(), "an enemy hit twice: in action, whatever their side")
+ally:SetPos(Vector(-30000, 30000, 0))
 hook.t.EntityTakeDamage.LivingCityPacingFight(cit, _dmg(rebel, 5))
 ok(LC.InAction(cit) == "fight", "a citizen who has been shot: in action too")
 _advance(35)
@@ -26761,6 +26771,57 @@ ok(LC.CrematorNearestNode(nil) == nil and LC.CrematorPace() == 2, "(the Cremator
 for _, p in ipairs({ lp, z1, z2, h1, qp }) do p:SetPos(Vector(-150000, 150000, 0)) end
 end
 PlaytestNov13Tests()
+function PlaytestNov14Tests() -- (the owner's answers, 14 November)
+section("14 November: vortigaunts chosen at the start, the rescue, revive priority, every attacker counted")
+-- a human can't take up the Free Vortigaunt role, nor the Vortigaunt faction
+local hum = newPlayer("HumanNotVort", "resistance", nil, 2000)
+ok(not LC.CanJoinFaction(hum, "resistance", "vortigaunt"), "a human can't take up the Free Vortigaunt role")
+ok(not LC.CanJoinFaction(hum, "vort"), "nor become a shackled vortigaunt from F4")
+ok(LCF.Get("resistance").specialsById.vortigaunt.hidden == true, "the Free Vortigaunt is off the Resistance's list")
+-- the choice at a new life
+local v = newPlayer("NewLifeVort", "citizen")
+v:SetPData("lc_chosen", "0")
+v.lcRaceAskedFor = nil
+net.sent = {}
+LC.OpenCharacterCreator(v)
+local asked = false
+for _, m in ipairs(net.sent) do if m.name == "lc_race_pick" then asked = true end end
+ok(asked, "a new life is asked first: a citizen or a vortigaunt")
+ok(LC.BecomeVortSlave(v) and v:GetNW2String("lcf_faction", "") == "vort" and LC.IsVortChar(v), "choosing the vortigaunt: shackled, in the Vortigaunt faction")
+ok(string.find(v:GetNW2String("lc_char", ""), "Laborer VLB", 1, true) == 1, "with a laborer's designation, not a name", v:GetNW2String("lc_char", ""))
+ok(not LC.CanJoinFaction(v, "citizen") and not LC.CanJoinFaction(v, "resistance"), "a vortigaunt can't become human")
+ok(not LC.CanJoinFaction(v, "resistance", "vortigaunt"), "nor free itself from F4: the Resistance frees it")
+local okCall, whyCall = LC.VortCall(v)
+ok(not okCall and string.find(tostring(whyCall), "quiet", 1, true), "it can't reach out straight away", whyCall)
+-- the rescue after 10 minutes shackled
+v.lcVortShackledFor = 10 * 60 - 1
+LC.VortRescueTick(CurTime())
+ok(v.lcVortRescue ~= nil, "ten minutes shackled: a Resistance team comes for it")
+v.lcVortRescue.untilT = CurTime() - 1
+local seenWas = LC.SeenBySecurity
+LC.SeenBySecurity = function() return false end
+LC.VortRescueTick(CurTime())
+LC.SeenBySecurity = seenWas
+ok(v:GetNW2String("lcf_faction", "") == "resistance" and v:GetNW2String("lcf_special", "") == "vortigaunt", "and the shackles are cut: a Free Vortigaunt of the Resistance")
+ok(LC.CanJoinFaction(v, "resistance", "vortigaunt"), "(theirs to keep)")
+-- revive priority: under fire it fights; five seconds without a bullet, it goes to its leader
+local lead = newPlayer("DownedLead", "cp")
+local npcR, stR = LC.Spawners.cop(lead:GetPos() + Vector(60, 0, 4))
+stR.backupFor, stR.backupUntil = lead, CurTime() + 300
+local downWas = LC.IsDowned
+LC.IsDowned = function(p) return p == lead end
+stR.bulletHitAt = CurTime()
+ok(LC.SquadReviveStep(npcR, stR, lead, CurTime()) == false, "hit by a bullet just now: it keeps fighting")
+stR.bulletHitAt = CurTime() - 6
+stR.state = "hostile"
+ok(LC.SquadReviveStep(npcR, stR, lead, CurTime()) == true and stR.state ~= "hostile", "five seconds without a bullet: it breaks off and sees to its leader, even mid-fight")
+LC.IsDowned = downWas
+-- collapse: yellow crawls
+ok(math.abs(LC.ChaosYellowRate - 0.0125) < 1e-6, "yellow fills the collapse at 5% of the quarter it did")
+for _, p in ipairs({ hum, v, lead }) do p:SetPos(Vector(-150000, 150000, 0)) end
+if IsValid(npcR) then npcR:Remove() end
+end
+PlaytestNov14Tests()
 -- The owner's 7 November playtest, part 2 (sv_livingcity_fieldops.lua and friends): a unit each.
 function RetakeFieldTests()
     local function FieldPost(p, spec, tid, violent)
@@ -29236,8 +29297,8 @@ for _, p in ipairs(player.GetAll()) do if p:GetNW2String("lcf_faction", "") == "
 LC.Chaos = 0
 LC.ChaosStep("red", 60 * 15)
 ok(math.abs(LC.Chaos - 0.5) < 0.01, "fifteen minutes of red: the city is halfway to collapse (lc_black_minutes 30)", LC.Chaos)
-LC.ChaosStep("yellow", 60 * 4)
-ok(LC.Chaos > 0.5 and LC.Chaos < 0.54, "yellow fills it a quarter as fast", LC.Chaos)
+LC.ChaosStep("yellow", 60 * 60)
+ok(LC.Chaos > 0.5 and LC.Chaos < 0.53, "an hour of yellow barely moves it (5% of a quarter of red's pace, since 14 November)", LC.Chaos)
 LC.ChaosStep("green", 60 * 30)
 ok(LC.Chaos == 0, "and green drains it", LC.Chaos)
 ok(not LC.SetSocio(nil, "black"), "nobody can set BLACK by hand: it's only reached")

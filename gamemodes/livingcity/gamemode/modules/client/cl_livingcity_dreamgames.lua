@@ -96,6 +96,8 @@ end
 net.Receive("lc_dreamgame", function()
     local t = net.ReadTable() or {}
     if t.k == "start" then
+        -- (when this dream's state first came: its goal line shows for a while, then steps aside)
+        LC_CL.DreamGoalFrom = CurTime()
         st = t
         st.got = {}
         StopSong()
@@ -438,6 +440,11 @@ local function Line(text, y, col, font)
     draw.SimpleTextOutlined(text, font or "DermaDefaultBold", ScrW() / 2, y, col or Color(235, 235, 235), TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP, 1, Color(0, 0, 0, 220))
 end
 
+-- Is a dream you play on screen now (it shows its own Time left)?
+function LC_CL.DreamGameOn() return st ~= nil end
+-- How long the goal line stays up (the owner, 14 November: "SO MUCH TEXT ON SCREEN"); hold Tab to see it again.
+LC_CL.DreamGoalSecs = 15
+
 hook.Add("HUDPaint", "LivingCityDreamGames", function()
     if not st then return end
     local me = LocalPlayer()
@@ -481,8 +488,11 @@ hook.Add("HUDPaint", "LivingCityDreamGames", function()
         Line((sub.who and sub.who ~= "" and (sub.who .. ": ") or "") .. sub.text, ScrH() * 0.78, HALO, "DermaLarge")
     end
     y = y + 34
-    Line(st.goal or "", y, Color(225, 225, 225))
-    y = y + 18
+    local showGoal = now - (LC_CL.DreamGoalFrom or now) < LC_CL.DreamGoalSecs or (input and input.IsKeyDown and KEY_TAB and input.IsKeyDown(KEY_TAB))
+    if showGoal then
+        Line(st.goal or "", y, Color(225, 225, 225))
+        y = y + 18
+    end
     if st.star then
         Line("You're the star of this dream. What you say in chat, the dreamers see.", y, GOLD)
         y = y + 18

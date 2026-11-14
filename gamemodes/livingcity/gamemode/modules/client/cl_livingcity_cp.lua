@@ -399,7 +399,9 @@ hook.Add("HUDPaint", "LivingCityCPHUD", function()
     if not IsValid(ply) or not ply:Alive() then return end
     local w, h = ScrW(), ScrH()
     local level = SocioLevel()
-    if MaskOn(ply) then
+    if LC_CL.DreamQuietHUD and LC_CL.DreamQuietHUD(ply) then
+        -- (dreaming: no mask frame or sociostability pill)
+    elseif MaskOn(ply) then
         DrawMask(w, h, level)
     elseif level ~= "green" then
         DrawSocioPill(w, level)

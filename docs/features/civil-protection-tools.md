@@ -142,3 +142,8 @@ Blinded NPCs now have their weapons taken out of their hands for as long as they
 - **A unit of your squad gets you up.** Down and bleeding out, a unit that answered your call (or that you lead) with no enemy in its sights goes to you, kneels 4 seconds and you are on your feet with 25 health (`LC.SquadReviveStep`).
 - **Units don't lower their guns on rebel ground.** Civil Protection and Overwatch players are no longer told to carry lowered there (their guns would not fire); the rule for recruits and metrocops on the Combine's own ground is unchanged.
 - **Sweeps take the rebel camps in turn** (`LC.NextSweepZone`): the camp swept longest ago is next, so no camp has a second sweep before every camp has had one.
+
+## 14 November (the owner's answers)
+
+- **Action music: an enemy hit twice** (within 12 seconds), or being hurt: shots into the air or at a wall don't count, nor hits on your own side (`LC.IsEnemyOf`, `LC.NoteShot`).
+- **Squad revive priority:** a unit under fire keeps fighting; once it hasn't been hit by a bullet for 5 seconds it breaks off, even mid-fight, and goes to get its downed leader up (`LC.SquadReviveCalm`).

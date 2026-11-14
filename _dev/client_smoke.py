@@ -1160,6 +1160,12 @@ do
         LC_CL.ScreenAim = function() return 100, 46 + 26 * 2 + 6 + 5 end
         for id, fn in pairs(hook.t.Think or {}) do if id == "LivingCityScreens" then fn() end end
         if LC_CL.ScreenState().hover ~= 46 + 26 * 2 + 6 then error("the Close button didn't light up when aimed at: " .. tostring(LC_CL.ScreenState().hover)) end
+        -- the choice at a new life's start opens (sv_livingcity_vortstart.lua)
+        do
+            local okR, errR = pcall(LC_CL.OpenRacePick)
+            if not okR or not IsValid(LC_CL.RaceFrame) then error("the citizen-or-vortigaunt window didn't open: " .. tostring(errR)) end
+            LC_CL.RaceFrame:Remove()
+        end
         -- Previous and Next share one row, Previous on the left and Next on the right (the owner, 13 November)
         do
             local rows = {}

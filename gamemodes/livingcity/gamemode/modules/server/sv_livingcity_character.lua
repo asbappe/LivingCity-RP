@@ -370,6 +370,10 @@ end
 function LC.OpenCharacterCreator(ply, opts)
     if not IsValid(ply) then return end
     local intake = opts and opts.intake
+    -- a new life: first, a citizen or a vortigaunt? (sv_livingcity_vortstart.lua)
+    if not intake and not (opts and (opts.asked or opts.afterRace)) and ply:GetPData("lc_chosen", "0") ~= "1"
+        and LC.OfferRace and LC.OfferRace(ply) then return end
+    if LC.IsVortChar and LC.IsVortChar(ply) then return end -- (a vortigaunt has no face or name to choose)
     if not intake and LC.IntakeDefersCreator and LC.IntakeDefersCreator(ply) then
         if opts and opts.asked then ply:ChatPrint("[Civil Intake] Who you are goes on your registration form, at the Civil Intake terminal.") end
         return

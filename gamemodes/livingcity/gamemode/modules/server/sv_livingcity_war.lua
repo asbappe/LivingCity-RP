@@ -704,9 +704,21 @@ end
 -- maybe even REVIVE ME WHILE IM DYING"). With no enemy in its sights it goes to them, kneels
 -- LC.SquadReviveSecs (4) seconds within reach, and they are back on their feet with 25 health.
 LC.SquadReviveSecs, LC.SquadReviveReach = 4, 110
+-- Under fire it fights; once it hasn't been hit by a bullet for LC.SquadReviveCalm (5) seconds it goes to
+-- them, even mid-fight, so an enemy it can't reach round a wall doesn't keep it from them (the owner, 14
+-- November: "I just want to make sure the units won't suicide run in ... but on the same token I don't
+-- want them to all ignore me if there is a rebel on the other side of a wall ... start prioritizing
+-- reviving if they have not been hit by a bullet for 5 seconds").
+LC.SquadReviveCalm = 5
 function LC.SquadReviveStep(npc, st, caller, now)
     if not (LC.IsDowned and LC.IsDowned(caller)) then st.reviveSince = nil return false end
-    if st.state == "hostile" then st.reviveSince = nil return false end
+    if now - (st.bulletHitAt or -1e9) < LC.SquadReviveCalm then st.reviveSince = nil return false end
+    if st.state == "hostile" then
+        if LC.CalmOne then LC.CalmOne(npc, st, now) end
+        if st.state == "hostile" then st.state = "idle" end
+        if npc.SetEnemy then npc:SetEnemy(NULL) end
+        st.provokedBy, st.provokedUntil = nil, nil
+    end
     -- (where they lie: the body on the ground, not the eyes watching it)
     local d = LC.Downed and LC.Downed[caller]
     local at = (d and IsValid(d.rag) and d.rag:GetPos()) or caller:GetPos()
@@ -739,6 +751,16 @@ function LC.SquadReviveStep(npc, st, caller, now)
     return true
 end
 
+-- When each NPC was last hit by a bullet (LC.SquadReviveStep).
+hook.Add("EntityTakeDamage", "LivingCitySquadReviveHit", function(victim, dmg)
+    if not IsValid(victim) or not victim:IsNPC() or not dmg then return end
+    local bullet = (dmg.IsBulletDamage and dmg:IsBulletDamage()) or (dmg.IsDamageType and (dmg:IsDamageType(DMG_BULLET or 2)
+        or dmg:IsDamageType(DMG_BUCKSHOT or 536870912) or dmg:IsDamageType(DMG_BLAST or 64)))
+    if not bullet then return end
+    local st = LC.NPCs and LC.NPCs[victim]
+    if st then st.bulletHitAt = CurTime() end
+end)
+
 local function BackupTick(now)
     for npc, st in pairs(LC.NPCs or {}) do
         local caller = st.backupFor
@@ -747,7 +769,7 @@ local function BackupTick(now)
                 st.backupFor, st.backupUntil = nil, nil
             elseif st.backupComingAt then
                 -- (still on its way in: LC.CallBackup)
-            elseif st.state ~= "hostile" and LC.SquadReviveStep(npc, st, caller, now) then
+            elseif LC.SquadReviveStep(npc, st, caller, now) then
                 -- (seeing to its downed leader)
             elseif st.state ~= "hostile" then
                 -- there: deal with whatever's going on

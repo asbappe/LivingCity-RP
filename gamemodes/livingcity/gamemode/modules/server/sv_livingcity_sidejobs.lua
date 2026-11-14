@@ -368,12 +368,33 @@ T{
     build = function(ply)
         local r = LC.Skirmish
         if not r or not r.target then return nil end
+        -- Every attacker in the raid is on the tracker, whoever brings them down (the owner, 14 November:
+        -- "let's make the logic so that the quest counter is tracking all of the rebels in the attack ... it
+        -- was only tracking 2 and I recall seeing 4-5 rebels"): "Put down the attackers (3 of 5 down)",
+        -- done when none is left standing (or the attack is over: `over` below).
+        local function Standing()
+            local up, all = 0, 0
+            for _, npc in ipairs(r.rebels or {}) do
+                all = all + 1
+                if IsValid(npc) and npc:Health() > 0 then up = up + 1 end
+            end
+            return up, all
+        end
+        local fight = Count("killed", 9999, "Put down the attackers", RebelNear(r.target, 1400))
+        fight.untallied = true
+        fight.pos = r.target
+        fight.poll = function(q, st)
+            local up, all = Standing()
+            local text = all > 0 and string.format("Put down the attackers (%d of %d down)", all - up, all) or "Put down the attackers"
+            if st.text ~= text then st.text = text Q.SendStateAll(q) end
+            if all > 0 and up == 0 then Q.Advance(q) end
+        end
         return {
             title = "Repel the attack " .. Place(r.target, ply:GetPos()), reward = 50, limit = 360,
-            desc = "Armed anticitizens are attacking Civil Protection units " .. Place(r.target, ply:GetPos()) .. ". Get there and put it down.",
+            desc = "Armed anticitizens are attacking Civil Protection units " .. Place(r.target, ply:GetPos()) .. ". Get there and put every one of them down.",
             stages = {
                 Goto(r.target, "Get to the attack", 700),
-                Count("killed", 2, "Take down two of the attackers", RebelNear(r.target, 1400)),
+                fight,
             },
         }
     end,

@@ -21,3 +21,13 @@
 **Changes from the 7 November playtest.** The city's collared vortigaunts sweep for real, a push broom in hand, pacing a short stretch; they step aside when a person or NPC walks into them, and new sweeping spots keep out of doorways. A shackled vortigaunt never zaps: it runs from any headcrab or zombie within 400 units.
 
 **The 12 November playtest (the owner: "fix all of it please").** The street vortigaunt's push broom sits out in front, head on the ground, handle up to its hands (held in the claw, it stuck out to the side).
+
+## Vortigaunts are chosen at the start of a new life (14 November)
+
+The owner: "a human resistance member should not be able to spawn as a free vortigaunt; you have to select that at the beginning of the game". `sv_livingcity_vortstart.lua`, `cl_livingcity_vortstart.lua`.
+
+- **The choice.** At the start of every new life (a first visit, after a permanent death, a fresh character slot), before the character screen and before the train, a window asks: a citizen or a vortigaunt. A citizen goes on as before. `lc_vort_start` (1).
+- **Shackled.** A vortigaunt starts in the Vortigaunt faction with a laborer's designation ("Laborer VLB-4-117"), no Civil Intake, its work on F4 (The Collar).
+- **Reaching out** (F2, or !vortcall) opens `lc_vort_reach_minutes` (4) after the shackles go on; then every `lc_vort_call_minutes` (10) as before. The Resistance cuts the shackles (!unshackle).
+- **Rescue.** Still shackled after `lc_vort_rescue_minutes` (10) online, two Resistance fighters come in from out of sight and walk to it; when one reaches it (or a minute later), with no unit watching, the shackles are cut and it becomes a Free Vortigaunt.
+- **No crossing over.** The Free Vortigaunt is no longer on the Resistance's list; humans can't take it up or join the Vortigaunt faction (it isn't on their F4); a vortigaunt can't become human, nor free itself from F4. Anyone already holding the Free Vortigaunt role keeps it.

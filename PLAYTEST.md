@@ -1929,3 +1929,17 @@ Type them in the server console on the host panel, or in your own game console (
 ## 14 November: five dream posters
 - [ ] **Dream posters, the pictures:** unzip `livingcity_content.zip` in `garrysmod/`, FastDL sync, change the map. Use the editor's Dreams: test one for It's Raining Melons, Where's Lamarr?, The Cheese Dream, The Watchers or Mirror, Mirror, or wait for one of those to be tonight's: a plain curfew poster showing that dream should carry its picture (melons falling, a headcrab mugshot, cheese refused, eyes round a bed, her face in a mirror). Any other dream still shows the drawn notice.
   Notes:
+- [ ] **A new life as a vortigaunt:** die permanently (or start a fresh slot): a window asks citizen or vortigaunt. Choose vortigaunt: shackled, a "Laborer VLB-..." designation, no train. F2 > Reach out is refused for the first 4 minutes, then works. Stay shackled 10 minutes: do two rebels come and cut you loose (a Free Vortigaunt)? As a human, the Free Vortigaunt is gone from the Resistance list in F4.
+  Notes:
+- [ ] **Repel the attack:** does the tracker say "Put down the attackers (2 of 5 down)" and count every attacker, whoever kills them?
+  Notes:
+- [ ] **Action music:** shots into the air or a wall: silence. Hit an enemy twice, or get hit: it starts.
+  Notes:
+- [ ] **Squad revive:** down mid-fight with squad units near: do they keep fighting while being shot, and come to get you up once nobody has hit them for 5 seconds?
+  Notes:
+- [ ] **Chevrons:** watch for any straight line through walls again. If one shows, send the debug report.
+  Notes:
+- [ ] **Dreams, less text:** no status cards, hints or sociostability pill in a dream; the goal line goes after 15 seconds (Tab shows it); one short wake line; notices lower down.
+  Notes:
+- [ ] **Collapse:** an hour of yellow should barely move the collapse bar now.
+  Notes:

@@ -179,13 +179,55 @@ local function Planned(from, to, role, free)
     end
     return nil
 end
+-- The path nodes nearest pos on about its level (within 300 up or down), nearest first, up to n of them.
+-- (only nodes you could walk straight to or from it: never across a wall to the last leg)
+local function NodesBy(pos, n)
+    local out = {}
+    for _, nd in ipairs(LC.NavNodesNear and LC.NavNodesNear(pos, 1500) or {}) do
+        if math.abs(nd.pos.z - pos.z) < 300 and (not LC.Walkable or LC.Walkable(pos, nd.pos)) then out[#out + 1] = { nd.pos, nd.pos:DistToSqr(pos) } end
+    end
+    table.sort(out, function(a, b) return a[2] < b[2] end)
+    local pts = {}
+    for i = 1, math.min(n, #out) do pts[i] = out[i][1] end
+    return pts
+end
+LC.TrailNodesBy = NodesBy
+
+-- The owner, 14 November: the trail still pointed "in a straight line across the entire map despite there
+-- being no rebel route in the way ... several times (not every time)". The planners give up when either end
+-- isn't close to a path node on its own floor (the objective on a crate or a balcony, you mid-jump or on a
+-- ledge), and the trail then fell back to one straight line. Now the way is planned between the path nodes
+-- nearest each end instead, and with no way at all there is no trail (the marker still shows where), never a
+-- line through the walls. LC.TrailNoWay counts those, for the debug report.
+LC.TrailNoWay = LC.TrailNoWay or 0
 function LC.TrailRoute(from, to, role)
     local pts = Planned(from, to, role, false) or Planned(from, to, role, true)
     if not pts then
         local ok, r = pcall(NavMeshPath, from, to)
-        if ok and type(r) == "table" and #r > 0 then pts = r end
+        if ok and type(r) == "table" and #r > 1 then pts = r end
     end
-    return LC.TrailShortcut(from, Tidy(pts or { to }, from))
+    if not pts then
+        -- between the nodes nearest each end
+        local starts, ends = NodesBy(from, 3), NodesBy(to, 3)
+        for _, a in ipairs(starts) do
+            for _, b in ipairs(ends) do
+                local r = Planned(a, b, role, true)
+                if r then
+                    pts = { a }
+                    for _, q in ipairs(r) do pts[#pts + 1] = q end
+                    pts[#pts + 1] = to
+                    break
+                end
+            end
+            if pts then break end
+        end
+    end
+    if not pts then
+        if WalkLine(from, to) then return { to } end
+        LC.TrailNoWay = LC.TrailNoWay + 1
+        return {}
+    end
+    return LC.TrailShortcut(from, Tidy(pts, from))
 end
 
 local function RoleOf(ply)
@@ -215,6 +257,8 @@ end
 function LC.TrailNeedsRefresh(trail, pos, goal, now)
     if not trail then return true end
     if trail.goal:DistToSqr(goal) > MOVED * MOVED then return true end
+    -- no way was found: tried again only after a while, or once they've moved
+    if #(trail.pts or {}) == 0 then return now - (trail.at or 0) > REFRESH * 0.5 and pos:DistToSqr(trail.from or pos) > 60 * 60 end
     if LC.TrailDistance(trail, pos) > STRAY then return true end
     if now - (trail.at or 0) > REFRESH and pos:DistToSqr(trail.from or pos) > MOVED * MOVED then return true end
     return false

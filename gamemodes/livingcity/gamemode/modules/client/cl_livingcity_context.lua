@@ -413,6 +413,7 @@ end
 hook.Add("HUDPaint", "LivingCityContext", function()
     local me = LocalPlayer()
     if not IsValid(me) or not me:Alive() or not cvShow:GetBool() then return end
+    if LC_CL.DreamQuietHUD and LC_CL.DreamQuietHUD(me) then return end
     local now = CurTime()
     if now - cache.at > 0.25 or now < cache.at then
         cache.at = now

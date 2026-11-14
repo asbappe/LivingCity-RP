@@ -38,7 +38,16 @@ function LC_CL.DreamWhenLine(d)
     return string.format("When: the next dream comes about %d seconds after tonight's good night.", math.floor(tonumber(d.delay) or 60))
 end
 
--- While you dream: how to wake.
+-- In a dream the city's own HUD steps aside (the owner, 14 November, with a screenshot: "Dreams have SO MUCH
+-- TEXT ON SCREEN"): the status and rank cards, the hints panel, the sociostability pill and the editor's tool
+-- hints are hidden while you dream; the dream's own lines stay. lc_dream_quiet_hud 0 shows them all again.
+local cvQuiet = CreateClientConVar("lc_dream_quiet_hud", "1", true, false, "In a dream, hide the city's own HUD cards and hints (1), or keep them (0)")
+function LC_CL.DreamQuietHUD(me)
+    me = me or LocalPlayer()
+    return cvQuiet:GetBool() and IsValid(me) and me:GetNW2Bool("lc_dreaming", false)
+end
+
+-- While you dream: how to wake (one short line, only when there's something to do about it).
 -- (made once here, not every frame)
 local C_0_0_0_200 = Color(0, 0, 0, 200)
 local C_215_195_255_220 = Color(215, 195, 255, 220)
@@ -46,15 +55,15 @@ hook.Add("HUDPaint", "LivingCityDreams", function()
     local me = LocalPlayer()
     if not IsValid(me) or not me:GetNW2Bool("lc_dreaming", false) then return end
     local key = LC_CL.QuickKeyName and LC_CL.QuickKeyName() or "F1"
-    draw.SimpleTextOutlined(me:GetNW2Bool("lc_dream_test", false) and "Testing a dream. Stop whenever you like: the editor's Stop the test, or " .. key .. " > Wake up from the dream. Nothing here counts."
+    local line = me:GetNW2Bool("lc_dream_test", false) and ("TEST: nothing here counts. Stop: " .. key .. " > Wake up from the dream")
         -- (out of it, an Enforcer, or the Administrator in a dream she didn't choose: the server says when, LC.DreamCanWake)
-        or me:GetNW2Bool("lc_dream_canwake", false) and "You can wake up now: " .. key .. " > Wake up from the dream (or /dream wake). Or stay and watch: you wake in your bed with everything you had either way."
-        or me:GetNW2Bool("lc_nightmare", false) and "A nightmare. You'll wake in your bed with everything you had, but you can't wake yourself until you're out of it."
-        or "You're dreaming. You'll wake in your bed with everything you had, but you can't wake yourself until you're out of it.",
-        "DermaDefaultBold", ScrW() / 2, 14, C_215_195_255_220, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP, 1, C_0_0_0_200)
-    -- (no dream lasts past lc_dream_max_minutes: how long this one can still go on, at the most)
+        or me:GetNW2Bool("lc_dream_canwake", false) and ("You can wake: " .. key .. " > Wake up from the dream")
+        or nil
+    if line then draw.SimpleTextOutlined(line, "DermaDefault", ScrW() / 2, 6, C_215_195_255_220, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP, 1, C_0_0_0_200) end
+    -- (no dream lasts past lc_dream_max_minutes: how long this one can still go on, at the most; a dream you play
+    -- shows its own Time left, so this is left out then)
     local left = LC_CL.DreamTimeLeft()
-    if left then
+    if left and not (LC_CL.DreamGameOn and LC_CL.DreamGameOn()) then
         draw.SimpleTextOutlined(string.format("It ends in %d:%02d at the latest.", math.floor(left / 60), left % 60),
             "DermaDefault", ScrW() / 2, 32, C_215_195_255_220, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP, 1, C_0_0_0_200)
     end
