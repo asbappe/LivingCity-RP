@@ -52,6 +52,7 @@ LC = LC or {}
 util.AddNetworkString("lc_exercise")
 util.AddNetworkString("lc_drill_cue")
 util.AddNetworkString("lc_drill_rope")
+util.AddNetworkString("lc_parade_music")
 
 local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
 local cvOn       = CreateConVar("lc_morning_exercise", "1", FLAGS, "Morning exercise for citizens (a jog, a drill or a parade at dawn)")
@@ -76,8 +77,10 @@ local cvPaceD    = CreateConVar("lc_drill_pace", "3.5", FLAGS, "Seconds between 
 local cvWindow   = CreateConVar("lc_drill_window", "2.5", FLAGS, "Seconds to copy a move")
 local cvMistakes = CreateConVar("lc_drill_mistakes", "3", FLAGS, "Mistakes in the drill before the stick (then every two more)")
 local cvRope     = CreateConVar("lc_drill_rope", "1", FLAGS, "Skipping in the middle of the drill")
-local cvParadeN  = CreateConVar("lc_parade_units", "6", FLAGS, "Soldiers and Civil Protection units marching in the parade column")
+local cvParadeN  = CreateConVar("lc_parade_units", "6", FLAGS, "Soldiers marching in the parade column, two abreast (never fewer than 8)")
 local cvParadeMin = CreateConVar("lc_parade_min", "35", FLAGS, "Enthusiasm below this as the column passes earns the stick")
+local cvMachines = CreateConVar("lc_parade_machines", "1", FLAGS, "An APC and a strider follow the parade's column")
+local cvMusic    = CreateConVar("lc_parade_music", "music/hl2_song22_combinetheme3.mp3", FLAGS, "The march played from the parade's column once it is a third of the way along (a sound path; empty: none)")
 local cvFull     = CreateConVar("lc_fullstomach", "1", FLAGS, "A full stomach (hunger 85+) gives 15% more XP from jobs and shifts")
 
 LC.ExerciseKinds = { jog = true, drill = true, parade = true }
@@ -252,13 +255,18 @@ end
 -- maxDist: a free unit further from its post than this is left where it is and a fresh one comes
 -- instead (the parade: a column drafted from across the city never formed up; the owner, 14 November,
 -- "I ordered a parade and nothing happened").
-local function Post(posts, prefer, maxDist)
+-- opt.only: nobody of another kind is drafted (the parade's column is soldiers: a fresh one comes rather than
+-- a unit off the street). opt.free: fresh ones come whatever Overwatch's reserve says (LC.ManpowerFree, as the
+-- Administrator's guards do): with the reserve low the column came out three strong (the owner, 15 November,
+-- "right now there are just 3 soldiers walking the route"); if no soldier can come at all, a unit does.
+local function Post(posts, prefer, maxDist, opt)
+    opt = opt or {}
     local pool = {}
     for npc, st in pairs(LC.NPCs or {}) do
-        if Free(npc, st) then pool[#pool + 1] = { npc = npc, st = st } end
+        if Free(npc, st) and not (opt.only and st.role ~= prefer) then pool[#pool + 1] = { npc = npc, st = st } end
     end
     local units = {}
-    for _, post in ipairs(posts) do
+    for pi, post in ipairs(posts) do
         local best, bi
         for i, u in ipairs(pool) do
             local raw = u.npc:GetPos():DistToSqr(post)
@@ -272,14 +280,16 @@ local function Post(posts, prefer, maxDist)
             npc, st = pool[bi].npc, pool[bi].st
             table.remove(pool, bi)
         else
-            local sp = LC.Spawners and (LC.Spawners[prefer or "cop"] or LC.Spawners.cop)
             local from = LC.AlarmSquadSpot and LC.AlarmSquadSpot(post) or post
-            if sp then
-                local ok, n, s = LC.Try(sp, from)
-                if ok and IsValid(n) and s then npc, st = n, s st.unmanaged = true st.exTemp = true end
+            local first = LC.Spawners and (LC.Spawners[prefer or "cop"] or LC.Spawners.cop)
+            for _, sp in ipairs({ first, opt.only and LC.Spawners and LC.Spawners.cop or nil }) do
+                local ok, n, s
+                if opt.free and LC.ManpowerFree then ok, n, s = LC.Try(LC.ManpowerFree, sp, from) else ok, n, s = LC.Try(sp, from) end
+                if ok and IsValid(n) and s then npc, st = n, s st.unmanaged = true st.exTemp = true break end
             end
         end
         if npc then
+            st.exPostI = pi
             st.exUnit = true
             st.exInspect = st.nextInspect
             st.nextInspect = math.huge -- (no stopping people while on duty here)
@@ -291,14 +301,20 @@ local function Post(posts, prefer, maxDist)
     return units
 end
 
-local function Unpost(npc)
+local function Unpost(npc, walkOff)
     local st = IsValid(npc) and LC.NPCs and LC.NPCs[npc]
     if not st then return end
-    st.exUnit, st.holdPos, st.exChase, st.exColumn, st.exNext = nil, nil, nil, nil, nil
+    if st.exColumn then st.marching, st.provokedBy, st.provokedUntil, npc.lcParade = nil, nil, nil, nil end -- (no longer of the parade)
+    st.exUnit, st.holdPos, st.exChase, st.exColumn, st.exNext, st.exPostI = nil, nil, nil, nil, nil, nil
     st.nextInspect = CurTime() + math.Rand(20, 50)
     if st.state == "event" then LC.SetState(npc, st, "idle") st.untilT = CurTime() + 2 end
     if st.exTemp then
-        -- the extra ones go back where they came from, once nobody's looking
+        -- the extra ones go back where they came from, once nobody's looking (the parade's column
+        -- marches off out of sight first, rather than standing about where the route ends)
+        if walkOff and st.state ~= "hostile" then
+            local to = LC.AlarmSquadSpot and LC.AlarmSquadSpot(npc:GetPos())
+            if to and LC.GoTo then LC.GoTo(npc, st, to, false, nil) end
+        end
         local tries = 0
         timer.Create("LivingCityExerciseLeave" .. npc:EntIndex(), 5, 40, function()
             tries = tries + 1
@@ -480,6 +496,7 @@ local function Tell(ply, msg) if IsValid(ply) then ply:ChatPrint("[" .. (X and N
 local DRAFT = { idle = true, moving = true, busy = true, inline = true, working = true }
 local function Draftable(npc, st, wake)
     if not IsValid(npc) or st.role ~= "citizen" or st.test or st.unmanaged or st.questLock or st.leaving or st.exCitizen then return false end
+    if st.jailUntil or (X and st.exDone == X) then return false end -- (a prisoner; someone the parade has already let go)
     if st.carry and not st.npcWork then return false end
     if st.state == "abed" then return wake == true end
     return DRAFT[st.state] == true
@@ -575,20 +592,43 @@ local function JogTo(npc, st, c)
 end
 LC.ExerciseJogTo = function(npc, st, c) return X and JogTo(npc, st, c) end
 
+-- Where a marcher of the parade's column goes for the stop he is on: his own file, to the side of the way
+-- in to it; at the last stop each rank halts a little short of the one in front.
+local function ColumnStop(col)
+    local i = col.i
+    local dir = i > 1 and Flat(X.route[i] - X.route[i - 1]) or Vector(X.dir1.x, X.dir1.y, 0)
+    if dir:LengthSqr() < 0.01 then dir = Vector(X.dir1.x, X.dir1.y, 0) end
+    dir:Normalize()
+    local at = X.route[i] + Vector(-dir.y, dir.x, 0) * (col.side or 0)
+    if i == #X.route then
+        at = at - dir * ((col.rank or 0) * 50)
+        col.yaw = dir:Angle().y
+    end
+    return at
+end
+
 -- An NPC arriving somewhere for the exercise (sv_livingcity.lua's Arrive hands them over).
 function LC.ExerciseArrive(npc, st, now)
     local c = st.exCitizen
     if st.exColumn and X and X.kind == "parade" then
-        -- the column: on to the next stop of the route
         local col = st.exColumn
+        if col.forming then
+            -- back at his place after a fight: he stands there until the rest are formed up (ReformThink)
+            col.formed = true
+            LC.SetState(npc, st, "event") st.eventUntil = now + 600
+            if col.yaw then LC.FaceYaw(npc, col.yaw) end
+            return
+        end
+        -- the column: on to the next stop of the route
         repeat
             col.i = col.i + 1
             if col.i > #X.route then
                 col.done = true
                 LC.SetState(npc, st, "event") st.eventUntil = now + 600
+                if col.yaw then LC.FaceYaw(npc, col.yaw) end
                 return
             end
-        until LC.GoTo(npc, st, X.route[col.i] + col.offset, false, { kind = "exercise" })
+        until LC.GoTo(npc, st, ColumnStop(col), col.run == true, { kind = "exercise" })
         return
     end
     if not c or not X then st.untilT = now + 2 return end
@@ -693,27 +733,263 @@ local function ParadeRoute()
     return best
 end
 
+-- The parade (the owner, 15 November: "please make a parade out of marching soldiers, an APC, and a strider
+-- all marching along the path ... when it passes the first 1/3 of the route, have the combine march music play
+-- emanating from the parade marchers ... I want ALL the citizens to drop what they are doing and get their
+-- fannies to the parade, between the 1/3 mark and 2/3 mark, and cheer their hearts out").
+--
+-- X.head is how far along the route the front rank is (less than nothing: still behind the first stop). The
+-- soldiers walk the route themselves, stop to stop, in two files; the APC and the strider keep their places
+-- behind the last rank by X.head (X.machines, MachinesStep).
+local RANK_GAP, FILE_OFF = 70, 40            -- ranks this far apart, the two files this far either side of the way
+local APC_BEHIND, STRIDER_BEHIND = 240, 380  -- the APC behind the last rank, the strider behind the APC
+local MARCH_PACE = 75                        -- units a second, with nobody left marching to set the pace
+local CROWD_BACK, CROWD_APART = 170, 56      -- the crowd: this far back from the way, this far from each other
+local APC_MODEL = "models/combine_apc.mdl"
+local APC_SOUNDS = { "vehicles/apc/apc_cruise_loop3.wav", "vehicles/apc/apc_firstgear_loop1.wav", "vehicles/apc/apc_idle1.wav" }
+local APC_WHEELS = { "vehicle_wheel_fl_spin", "vehicle_wheel_fr_spin", "vehicle_wheel_rl_spin", "vehicle_wheel_rr_spin" }
+LC.ParadeLeftovers = LC.ParadeLeftovers or {} -- machines of a parade that is over, waiting to go unseen
+
+-- A spot this far along the parade (before the first stop: back along the way the first stretch runs), and
+-- the way the route runs there.
+local function ParadeAt(d)
+    if d <= 0 then return X.route[1] + X.dir1 * d, X.dir1 end
+    return AlongRoute(X.route, X.cum, d)
+end
+-- How far along it a spot is (behind the first stop: less than nothing).
+local function ParadeAlong(pos)
+    local _, along = OnRoute(X.route, X.cum, pos)
+    if along <= 0 then along = math.min(0, Flat(pos - X.route[1]):Dot(X.dir1)) end
+    return along
+end
+local function YawOf(dir) return math.deg(math.atan2(dir.y, dir.x)) end
+
+-- The march, as paths to try in order: the setting, the Combine march Half-Life 2 ships and never plays, and a
+-- piece every copy has. Each player's game plays the first it finds (cl_livingcity_exercise.lua) and says which.
+LC.ParadeMusicDefault, LC.ParadeMusicSure = "music/hl2_song22_combinetheme3.mp3", "music/hl2_song20_submix0.mp3"
+local function MusicList()
+    local own = string.lower(string.Trim(cvMusic:GetString()))
+    local out, seen = {}, {}
+    if own == "" then return out end -- (the setting emptied: no march)
+    for _, p in ipairs({ own, LC.ParadeMusicDefault, LC.ParadeMusicSure }) do
+        if not seen[p] then seen[p] = true out[#out + 1] = p end
+    end
+    return out
+end
+LC.ParadeMusicList = MusicList
+local function MusicStop()
+    SetGlobal2String("lc_parade_music", "")
+    SetGlobal2Float("lc_parade_music_at", 0)
+end
+MusicStop() -- (nothing is playing as the gamemode loads)
+
+local function RemoveMachine(m)
+    if m.patch then LC.Try(function() m.patch:Stop() end) m.patch = nil end
+    if IsValid(m.ent) then m.ent:Remove() end
+end
+-- The machines of a parade that is over go when nobody is looking at them (after a minute, anyway).
+local function DismissMachines(list)
+    for _, m in ipairs(list or {}) do
+        if m.patch then LC.Try(function() m.patch:Stop() end) m.patch = nil end -- (the engine is cut at once)
+        if IsValid(m.ent) then LC.ParadeLeftovers[#LC.ParadeLeftovers + 1] = m end
+    end
+    local tries = 0
+    timer.Create("LivingCityParadeMachines", 3, 21, function()
+        tries = tries + 1
+        for i = #LC.ParadeLeftovers, 1, -1 do
+            local m = LC.ParadeLeftovers[i]
+            if not IsValid(m.ent) or tries >= 20 or not (LC.IsSeen and LC.IsSeen(m.ent:GetPos() + Vector(0, 0, 40))) then
+                RemoveMachine(m)
+                table.remove(LC.ParadeLeftovers, i)
+            end
+        end
+        if #LC.ParadeLeftovers == 0 then timer.Remove("LivingCityParadeMachines") end
+    end)
+end
+local function ClearLeftovers()
+    for _, m in ipairs(LC.ParadeLeftovers) do RemoveMachine(m) end
+    LC.ParadeLeftovers = {}
+    timer.Remove("LivingCityParadeMachines")
+end
+
+-- The APC: a model rolled along the route by MachinesStep (nobody drives it, nothing can stop it; people walk
+-- through it rather than being run down, but it can be shot at, and its gun answers: TurretStep). The strider
+-- and the pair of hunters: real ones, so they stand and walk as they do. None of them is anyone's enemy, and
+-- nobody's enemy is any of them, until someone attacks the parade.
+function LC.ParadeCanHunters() -- (Episode Two's: never an error model where it is not installed)
+    return util.IsValidModel ~= nil and util.IsValidModel("models/hunter.mdl") == true
+end
+local WALKER_NEUTRAL = { "player", "npc_citizen", "npc_vortigaunt", "npc_alyx", "npc_barney", "npc_monk", "npc_kleiner", "npc_eli", "npc_mossman" }
+local function SpawnWalker(class, kind, off, side)
+    local e = ents.Create(class)
+    if not IsValid(e) then return nil end
+    local d = X.head - off
+    local pos, dir = ParadeAt(d)
+    local f = Flat(dir)
+    f:Normalize()
+    local ground = Ground(pos + Vector(-f.y, f.x, 0) * (side or 0) + Vector(0, 0, 30))
+    e:SetPos(ground + Vector(0, 0, 8)) -- (a strider finds its own height above the ground as it spawns)
+    e:SetAngles(Angle(0, YawOf(dir), 0))
+    e:SetKeyValue("spawnflags", tostring(SF_NPC_FADE_CORPSE or 512))
+    e:Spawn()
+    e:Activate()
+    for _, cls in ipairs(WALKER_NEUTRAL) do e:AddRelationship(cls .. " D_NU 99") end
+    for _, p in ipairs(player.GetAll()) do e:AddEntityRelationship(p, D_NU, 99) end
+    e.lcParade = true
+    X.machines[#X.machines + 1] = { kind = kind, ent = e, off = off, side = side, d = d, yaw = YawOf(dir), ground0 = ground }
+    return e
+end
+local function SpawnMachines()
+    X.machines = {}
+    if not cvMachines:GetBool() then return end
+    local up = Vector(0, 0, 30)
+    local ok, err = LC.Try(function()
+        if util.IsValidModel and not util.IsValidModel(APC_MODEL) then return end
+        local e = ents.Create("prop_dynamic")
+        if not IsValid(e) then return end
+        local d = X.head - X.offApc
+        local pos, dir = ParadeAt(d)
+        e:SetModel(APC_MODEL)
+        e:SetPos(Ground(pos + up))
+        e:SetKeyValue("solid", "6")
+        e:Spawn()
+        e:Activate()
+        e:SetCollisionGroup(COLLISION_GROUP_WEAPON or 11) -- (shots hit it; people and units pass through)
+        -- its wheels on the ground and its nose to the front, whichever way the model was built (a
+        -- vehicle's length runs along its own Y)
+        local mins, maxs = e:OBBMins(), e:OBBMaxs()
+        local m = { kind = "apc", ent = e, off = X.offApc, d = d, lift = -mins.z, turn = ((maxs.y - mins.y) > (maxs.x - mins.x)) and -90 or 0 }
+        m.yaw = YawOf(dir)
+        e:SetPos(Ground(pos + up) + Vector(0, 0, m.lift))
+        e:SetAngles(Angle(0, m.yaw + m.turn, 0))
+        e.lcParade = true
+        if CreateSound then
+            for _, s in ipairs(APC_SOUNDS) do
+                if file.Exists("sound/" .. s, "GAME") then
+                    m.patch = CreateSound(e, s)
+                    if m.patch then m.patch:SetSoundLevel(80) m.patch:PlayEx(0.25, 90) end
+                    break
+                end
+            end
+        end
+        X.machines[#X.machines + 1] = m
+    end)
+    if not ok then LC.Error("parade APC", err) end
+    -- the pair of hunters, either side of the way between the APC and the strider
+    if LC.ParadeCanHunters() then
+        local got = 0
+        for _, side in ipairs({ -90, 90 }) do
+            ok, err = LC.Try(function() if SpawnWalker("npc_hunter", "hunter", X.offHunters, side) then got = got + 1 end end)
+            if not ok then LC.Error("parade hunter", err) end
+        end
+        if got < 2 then LC.Log("warn", "The parade has " .. got .. " of its 2 hunters: npc_hunter could not be made here") end
+    else
+        LC.Log("info", "The parade goes without its hunters: this server has no models/hunter.mdl (Episode Two is not mounted)")
+    end
+    ok, err = LC.Try(function()
+        local e = SpawnWalker("npc_strider", "strider", X.offStrider, nil)
+        if not e then return end
+        e:Fire("DisableMinigun")
+        e:Fire("DisableAggressiveBehavior")
+        e.lcParadeStrider = true
+        X.strider = e
+    end)
+    if not ok then LC.Error("parade strider", err) end
+end
+
+-- Nobody in the city takes the strider or the hunters for an enemy either (a citizen who did would cower
+-- or run instead of cheering; a unit never does anyway). The Resistance's own are left as they are.
+local function WalkersAreFriends()
+    for npc, st in pairs(LC.NPCs or {}) do
+        if IsValid(npc) and st.role == "citizen" and st.exFriends ~= X.start then
+            st.exFriends = X.start
+            for _, m in ipairs(X.machines or {}) do
+                if m.kind ~= "apc" and IsValid(m.ent) then npc:AddEntityRelationship(m.ent, D_NU, 99) end
+            end
+        end
+    end
+end
+
+-- The crowd's places: both sides of the middle third of the route, spread along it (not filled from one end),
+-- a few steps back and facing the way; a second row behind when the first is full.
+local function CrowdPlaces()
+    local third = X.total / 3
+    local per = math.max(1, math.floor(third / CROWD_APART))
+    local order = {}
+    for i = 1, per do order[i] = i end
+    table.sort(order, function(a, b)
+        local fa, fb = (a * 0.618034) % 1, (b * 0.618034) % 1
+        if fa ~= fb then return fa < fb end
+        return a < b
+    end)
+    local n = 0
+    return function()
+        n = n + 1
+        local k = n - 1
+        local s = (k % 2 == 0) and 1 or -1
+        local m = math.floor(k / 2)
+        local row, slot = math.floor(m / per), order[m % per + 1]
+        local spot, d = AlongRoute(X.route, X.cum, third + (slot - 0.5) * third / per)
+        d = Flat(d)
+        if d:LengthSqr() < 0.01 then d = Vector(X.dir1.x, X.dir1.y, 0) end
+        d:Normalize()
+        local back = CROWD_BACK + row * CROWD_APART
+        return Ground(spot + Vector(-d.y, d.x, 0) * (back * s) + Vector(0, 0, 30)), { yaw = (Vector(d.y, -d.x, 0) * s):Angle().y, cheer = true }
+    end
+end
+
 local function SetupParade()
+    ClearLeftovers()
+    MusicStop()
     local pts = {}
     for _, p in ipairs(ParadeRoute()) do pts[#pts + 1] = p.pos end
     X.route = pts
     X.cum = Cumulative(pts)
     X.total = X.cum[#pts]
     X.center = pts[1]
-    -- the column forms up at the start: soldiers if there are any, Civil Protection otherwise
-    local n = math.max(2, cvParadeN:GetInt())
-    local dir = (pts[2] - pts[1]):GetNormalized()
-    local side = Vector(-dir.y, dir.x, 0)
+    local dir = Flat(pts[2] - pts[1])
+    dir:Normalize()
+    X.dir1 = dir
+    -- the column: soldiers, two abreast, eight at the least
+    local n = math.max(8, cvParadeN:GetInt())
+    n = n + n % 2
+    local ranks = n / 2
+    X.ranks = ranks
+    X.offApc = (ranks - 1) * RANK_GAP + APC_BEHIND
+    X.offHunters = X.offApc + STRIDER_BEHIND / 2
+    X.offStrider = X.offApc + STRIDER_BEHIND
+    -- it forms up behind the first stop; with a wall there, that much further on along the route
+    local need = 60 + (cvMachines:GetBool() and (X.offStrider + 150) or ((ranks - 1) * RANK_GAP + 60))
+    local clear = need
+    local tr = util.TraceLine({ start = pts[1] + Vector(0, 0, 40), endpos = pts[1] - dir * need + Vector(0, 0, 40), mask = MASK_SOLID_BRUSHONLY })
+    if tr and tr.Hit then clear = need * (tr.Fraction or 1) end
+    X.head = math.min(-60 + (need - clear), X.total * 0.25)
+    X.head0 = X.head
     local posts = {}
     for i = 1, n do
         local rank = math.floor((i - 1) / 2)
-        posts[i] = pts[1] - dir * (60 + rank * 70) + side * ((i % 2 == 0) and 40 or -40)
+        local at, d = ParadeAt(X.head - rank * RANK_GAP)
+        d = Flat(d)
+        d:Normalize()
+        posts[i] = at + Vector(-d.y, d.x, 0) * ((i % 2 == 0) and FILE_OFF or -FILE_OFF)
     end
-    X.column = Post(posts, "soldier", COLUMN_REACH)
-    for i, u in ipairs(X.column) do
+    X.column = Post(posts, "soldier", COLUMN_REACH, { only = true, free = true })
+    for _, u in ipairs(X.column) do
         local st = LC.NPCs[u]
-        if st then st.exColumn = { i = 0, offset = side * ((i % 2 == 0) and 40 or -40), delay = math.floor((i - 1) / 2) * 1.6 } end
+        if st then
+            local i = st.exPostI or 1
+            local rank = math.floor((i - 1) / 2)
+            local at = 0 -- (the stop behind him: he marches on from the next)
+            for k = 1, #pts do if X.cum[k] <= X.head - rank * RANK_GAP then at = k end end
+            st.exColumn = { i = at, rank = rank, side = (i % 2 == 0) and FILE_OFF or -FILE_OFF, delay = 0 }
+            -- one of the parade; and, as a unit walking a prisoner in, he goes for nobody but whoever attacks
+            -- it (LC.MakeOneHostile, sv_livingcity.lua): not the wanted, not a rebel who only stands there
+            u.lcParade = true
+            st.marching = true
+        end
     end
+    SpawnMachines()
+    WalkersAreFriends()
     -- and guards along the way, to keep the crowd honest
     local guards = {}
     local g = math.Clamp(math.floor(X.total / 700), 2, 6)
@@ -722,12 +998,12 @@ local function SetupParade()
         guards[#guards + 1] = spot + Vector(-d.y, d.x, 0) * ((i % 2 == 0) and 140 or -140)
     end
     X.units = Post(guards, "cop", GUARD_REACH)
-    EnlistCitizens(cvNPCs:GetInt(), function(i)
-        local spot, d = AlongRoute(pts, X.cum, X.total * (i - 0.5) / math.max(1, cvNPCs:GetInt()))
-        local s = (i % 2 == 0) and 1 or -1
-        local yaw = (Vector(d.y, -d.x, 0) * s):Angle().y
-        return spot + Vector(-d.y, d.x, 0) * (170 * s), { yaw = yaw, cheer = true }
-    end, true)
+    -- the crowd: every citizen the city has (and at least lc_exercise_npcs: more of its people come out of a
+    -- doorway near by); the city keeps calling until the column's tail has passed them (the clock, below)
+    X.crowdPoi = CrowdPlaces()
+    EnlistCitizens(math.huge, X.crowdPoi)
+    EnlistCitizens(cvNPCs:GetInt(), X.crowdPoi, true)
+    X.enlistNext = CurTime() + 4
 end
 
 ------------------------------------------------------------------------
@@ -862,7 +1138,8 @@ local function StartRun(now)
     elseif X.kind == "parade" then
         for _, u in ipairs(X.column) do
             local st = LC.NPCs[u]
-            if st and st.exColumn then
+            -- (attacked before it set off: they march when the fight is over and they have formed up again)
+            if st and st.exColumn and not X.fight and not X.reform then
                 -- one that never reached the form-up (lost on the way) is put with the others, while
                 -- nobody is looking at it or at its place
                 local post = st.holdPos
@@ -1388,9 +1665,391 @@ hook.Add("LivingCitySpoke", "LivingCityExercise", function(ply, kind, text)
     if kind == "say" or kind == "yell" then Chant(ply, text, kind == "yell") end
 end)
 
+-- Who is in the parade: the column's soldiers, the APC, the hunters, the strider.
+local function Member(e) return IsValid(e) and e.lcParade == true end
+LC.ParadeMember = Member
+local function Members()
+    local out = {}
+    for _, u in ipairs(X.column) do
+        if IsValid(u) and LC.NPCs[u] and u:Health() > 0 then out[#out + 1] = u end
+    end
+    for _, m in ipairs(X.machines or {}) do
+        if IsValid(m.ent) then out[#out + 1] = m.ent end
+    end
+    return out
+end
+
+------------------------------------------------------------------------
+-- The parade under attack (the owner, 15 November: "make sure they do not attack anyone, unless someone is
+-- stupid enough to attack the parade, then the APCs turret attacks the attacker and the combine troops swarm
+-- the attacker, hunters can as well, strider too, all so long as they reform the parade formation once the
+-- threat is neutralized or out of sight for 30 seconds, at which the parade resumes at the most recent parade
+-- path node and the music starts again from the beginning of the song"; and "make sure they cannot friendly
+-- fire each other or other cp or overwatch, nor really anyone EXCEPT the attackers").
+--
+-- X.fight = { foes = { [attacker] = when last seen }, all = { every attacker there was }, node = the last
+-- placed stop of the route the front rank had reached }. While it is set the march, the music and the
+-- cheering are stopped. X.reform: the fight is over and they are walking back to their places at that stop.
+------------------------------------------------------------------------
+
+local FIGHT_LOST = 30 -- seconds with no attacker seen by anyone in the parade: the threat is over
+LC.ParadeFightLost = FIGHT_LOST
+local COMBINE = { npc_combine_s = true, npc_metropolice = true, npc_strider = true, npc_hunter = true, npc_cscanner = true,
+    npc_clawscanner = true, npc_manhack = true, npc_rollermine = true, npc_turret_floor = true, npc_turret_ceiling = true,
+    npc_combinegunship = true, npc_helicopter = true, npc_combinedropship = true, npc_apcdriver = true }
+
+local function FoeAlive(a)
+    if not IsValid(a) then return false end
+    if a:IsPlayer() then return a:Alive() end
+    return a:Health() > 0
+end
+-- May this one be the parade's enemy? Never one of its own, never anyone on the Combine's side (a unit, a
+-- soldier, a player of Civil Protection or Overwatch), never the Administrator, never an admin at work.
+local function CanBeFoe(a)
+    if not IsValid(a) or Member(a) then return false end
+    if a:IsPlayer() then
+        local f = a:GetNW2String("lcf_faction", "")
+        if f == "cp" or f == "ota" or f == "admin" or LC.PlayerIsCP(a) or (LC.IsAdministrator and LC.IsAdministrator(a)) then return false end
+        if LC.EditorHeld and LC.EditorHeld(a) then return false end
+        return a:Alive()
+    end
+    if not a:IsNPC() or COMBINE[a:GetClass()] then return false end
+    local st = LC.NPCs[a]
+    if st and LC.IsSecurity(st) then return false end
+    return a:Health() > 0
+end
+LC.ParadeCanBeFoe = CanBeFoe
+
+-- One of the parade goes for one of its attackers.
+local function Engage(e, a, now)
+    local st = LC.NPCs[e]
+    if st then -- (a soldier of the column: the city's own way of going after someone)
+        if st.state ~= "hostile" or not FoeAlive(st.enemy) then
+            st.holdPos = nil
+            st.provokedBy, st.provokedUntil = a, now + 600
+            LC.MakeOneHostile(e, st, a)
+        elseif st.enemy ~= a and not a:IsPlayer() then
+            e:AddEntityRelationship(a, D_HT, 99)
+        end
+    elseif e:IsNPC() then -- (the strider, a hunter)
+        e:AddEntityRelationship(a, D_HT, 99)
+        if e.lcParadeStrider then e:Fire("EnableMinigun") end
+        if e.SetEnemy and not FoeAlive(e:GetEnemy()) then e:SetEnemy(a) end
+        if e:IsCurrentSchedule(SCHED_FORCED_GO) then e:SetSchedule(SCHED_CHASE_ENEMY) end
+    end
+    if e.UpdateEnemyMemory and e:IsNPC() then e:UpdateEnemyMemory(a, a:GetPos()) end
+end
+
+-- Someone has attacked the parade: it stops where it is, the music with it, and everyone in it goes for them.
+local function ParadeAttacked(a, now)
+    local F = X.fight
+    if not F then
+        local node = 0
+        for k = 1, #X.route do if X.cum[k] <= X.head + 1 then node = k end end
+        F = { foes = {}, all = {}, at = now, node = node }
+        X.fight, X.reform = F, nil
+        MusicStop()
+        X.music = nil
+        for _, u in ipairs(X.column) do
+            local col = IsValid(u) and LC.NPCs[u] and LC.NPCs[u].exColumn
+            if col then col.forming, col.formed = nil, nil end
+        end
+        LC.Log("info", "The parade was attacked by " .. (a:IsPlayer() and a:Nick() or a:GetClass()) .. ": the march stops")
+    end
+    local known = F.foes[a] ~= nil
+    F.foes[a], F.all[a] = now, true
+    if known then return end
+    for _, e in ipairs(Members()) do Engage(e, a, now) end
+end
+
+-- The APC's gun: at the nearest attacker it can see, in bursts. (What it hits besides is unharmed: the hook below.)
+local function TurretStep(m, F, now)
+    local e = m.ent
+    local nose = Angle(0, m.yaw, 0):Forward()
+    local src = e:GetPos() + Vector(0, 0, 95) + nose * 30
+    local best, bd, aim
+    for a in pairs(F.foes) do
+        if FoeAlive(a) then
+            local at = a:IsPlayer() and (a:GetPos() + Vector(0, 0, 40)) or a:WorldSpaceCenter()
+            local d = at:DistToSqr(src)
+            if d < 3500 * 3500 and (not bd or d < bd) and LC.LineOfSight(src, at, e, a) then best, bd, aim = a, d, at end
+        end
+    end
+    m.target = best
+    if not best then return end
+    local dir = (aim - src):GetNormalized()
+    if e.SetPoseParameter then
+        local ang = dir:Angle()
+        e:SetPoseParameter("vehicle_weapon_yaw", math.AngleDifference(ang.y, m.yaw))
+        e:SetPoseParameter("vehicle_weapon_pitch", math.AngleDifference(ang.p, 0))
+    end
+    if now < (m.fireAt or 0) then return end
+    m.shots = (m.shots or 0) + 1
+    m.fireAt = now + ((m.shots % 5 == 0) and 1.2 or 0.1)
+    if e.FireBullets then
+        e:FireBullets({ Attacker = e, Inflictor = e, Src = src, Dir = dir, Spread = Vector(0.02, 0.02, 0), Num = 1, Damage = 7,
+            Tracer = 1, TracerName = "AR2Tracer", IgnoreEntity = e })
+    end
+    e:EmitSound("weapons/ar2/fire1.wav", 95, math.random(96, 104))
+end
+
+-- The threat is over: enemies of nobody again, and back to their places at the last stop of the route the
+-- front rank had reached (the editor's own parade route point, not somewhere between two).
+local function StandDown(F, now)
+    for _, e in ipairs(Members()) do
+        local st = LC.NPCs[e]
+        for a in pairs(F.all) do
+            if IsValid(a) and e:IsNPC() then
+                if st and a:IsPlayer() then LC.SetRel(e, st, a, D_NU) else e:AddEntityRelationship(a, D_NU, 99) end
+            end
+        end
+        if st then
+            st.provokedBy, st.provokedUntil = nil, nil
+            if st.state == "hostile" then LC.CalmOne(e, st, now) end
+        elseif e:IsNPC() then
+            if e.lcParadeStrider then e:Fire("DisableMinigun") end
+            if e.SetEnemy then e:SetEnemy(NULL) end
+            if e.ClearEnemyMemory then e:ClearEnemyMemory() end
+            e:SetSchedule(SCHED_IDLE_STAND)
+        end
+    end
+end
+local function FightEnd(now)
+    local F = X.fight
+    X.fight = nil
+    StandDown(F, now)
+    local node = F.node
+    X.head = math.max(X.head0, node >= 1 and X.cum[node] or X.head0)
+    X.reform = { at = now, node = node }
+    X.paradeDone = nil
+    for _, u in ipairs(X.column) do
+        local st = IsValid(u) and LC.NPCs[u]
+        local col = st and st.exColumn
+        if col and u:Health() > 0 then
+            local d = X.head - (col.rank or 0) * RANK_GAP
+            local at, dir = ParadeAt(d)
+            dir = Flat(dir)
+            dir:Normalize()
+            col.post = Ground(at + Vector(-dir.y, dir.x, 0) * (col.side or 0) + Vector(0, 0, 30))
+            col.i = 0
+            for k = 1, #X.route do if X.cum[k] <= d then col.i = k end end
+            col.done, col.run, col.idleAt, col.forming, col.formed, col.yaw = nil, nil, nil, true, nil, YawOf(dir)
+            if not LC.GoTo(u, st, col.post, true, { kind = "exercise" }) then col.formed = true end
+        end
+    end
+    LC.Log("info", "The parade's attackers are dead or gone: it forms up again at stop " .. node .. " of its route")
+end
+
+local function FightThink(now)
+    local F = X.fight
+    local members = Members()
+    -- who is still a threat: alive, and seen by someone in the parade in the last half minute
+    if now >= (F.lookAt or 0) then
+        F.lookAt = now + 0.5
+        for a in pairs(F.foes) do
+            if not FoeAlive(a) then
+                F.foes[a] = nil
+            else
+                local eye = a:IsPlayer() and a:EyePos() or (a:GetPos() + Vector(0, 0, 40))
+                for _, e in ipairs(members) do
+                    if e:GetPos():DistToSqr(a:GetPos()) < 4000 * 4000 and LC.LineOfSight(e:EyePos(), eye, e, a) then F.foes[a] = now break end
+                end
+            end
+        end
+    end
+    local live = 0
+    for _, seen in pairs(F.foes) do if now - seen < FIGHT_LOST then live = live + 1 end end
+    if live == 0 or #members == 0 then return FightEnd(now) end
+    -- everyone keeps after them: one whose own enemy is dead or lost takes the nearest that is left
+    if now >= (F.pressAt or 0) then
+        F.pressAt = now + 1
+        for _, e in ipairs(members) do
+            local st = LC.NPCs[e]
+            local has
+            if st then has = st.state == "hostile" and FoeAlive(st.enemy) and F.foes[st.enemy] ~= nil
+            elseif e:IsNPC() then has = FoeAlive(e:GetEnemy()) and F.foes[e:GetEnemy()] ~= nil
+            else has = true end
+            if not has then
+                local best, bd
+                for a, seen in pairs(F.foes) do
+                    if now - seen < FIGHT_LOST then
+                        local d = a:GetPos():DistToSqr(e:GetPos())
+                        if not bd or d < bd then best, bd = a, d end
+                    end
+                end
+                if best then Engage(e, best, now) end
+            end
+        end
+    end
+    for _, m in ipairs(X.machines or {}) do
+        if m.kind == "apc" and IsValid(m.ent) then TurretStep(m, F, now) end
+    end
+    -- the crowd stops cheering and cowers where it stands
+    if now >= (F.cowerAt or 0) then
+        F.cowerAt = now + 4
+        for npc in pairs(X.npcs) do
+            local st = IsValid(npc) and LC.NPCs[npc]
+            if st and st.state == "event" and LC.PlayGesture then LC.PlayGesture(npc, { "crouchidle_panicked4", "Fear_Reaction", "ACT_COWER" }, 4) end
+        end
+    end
+end
+
+-- What the parade deals harms only those who attacked it: not its own, not a unit, not a citizen, not a
+-- bystander, not a thing (a stray round, a splash, a hunter's charge, the strider's foot). And whoever harms
+-- the parade is its enemy from then on.
+hook.Add("EntityTakeDamage", "LivingCityParade", function(victim, dmg)
+    local a, inf = dmg:GetAttacker(), dmg:GetInflictor()
+    local by = Member(a) or Member(inf)
+    if not by and IsValid(inf) and inf.GetOwner then by = Member(inf:GetOwner()) end
+    if not by and IsValid(a) and a.GetOwner then by = Member(a:GetOwner()) end
+    if by then
+        local F = X and X.fight
+        if F and F.foes[victim] ~= nil then return end
+        dmg:SetDamage(0)
+        return true
+    end
+    if X and X.kind == "parade" and Member(victim) and (dmg:GetDamage() or 0) > 0 and CanBeFoe(a) then
+        local ok, err = LC.Try(ParadeAttacked, a, CurTime())
+        if not ok then LC.Error("parade attacked", err) end
+    end
+end)
+
+-- The strider and the hunters keep their places behind the APC. Each walks there by itself, sent on whenever
+-- its place has got ahead of it; one that cannot find its way (left well behind for a few seconds) is carried
+-- along the route from then on, its walk playing.
+local function WalkerStep(m, e, ground, dir, now, dt, moving)
+    -- (its own height above the ground: a strider's middle is its body, far above its feet)
+    m.hgt = m.hgt or math.Clamp(e:GetPos().z - m.ground0.z, 0, 700)
+    local place = ground + Vector(0, 0, m.hgt)
+    local at = e:GetPos()
+    local to = Flat(place - at)
+    local off = to:Length()
+    if not m.carry then
+        local fwd = Flat(dir)
+        fwd:Normalize()
+        if (to:Dot(fwd) > 150 or (X.reform and off > 100)) and now >= (m.orderAt or 0) then
+            m.orderAt = now + 1.5
+            local goal = place
+            if not X.reform then -- (marching: a little on from its place, so it need not stop as soon as it gets there)
+                local ahead = (ParadeAt(math.min(m.d + 100, X.total)))
+                goal = Ground(ahead + Vector(-fwd.y, fwd.x, 0) * (m.side or 0) + Vector(0, 0, 30)) + Vector(0, 0, m.hgt)
+            end
+            e:SetLastPosition(goal)
+            e:SetSchedule(SCHED_FORCED_GO)
+        end
+        if off > 450 then
+            m.lostAt = m.lostAt or now
+            if now - m.lostAt > (X.reform and 12 or 3) then
+                m.carry = true
+                e:SetSchedule(SCHED_IDLE_STAND)
+            end
+        else
+            m.lostAt = nil
+        end
+        return
+    end
+    local step = math.min(off, 300 * dt)
+    if off > 1 then at = at + to * (step / off) end
+    e:SetPos(Vector(at.x, at.y, place.z))
+    e:SetAngles(Angle(0, m.yaw, 0))
+    local act = (moving or off > 20) and ACT_WALK or ACT_IDLE
+    if act and e.SetIdealActivity and now >= (m.actAt or 0) then
+        m.actAt = now + 0.5
+        if not e.GetIdealActivity or e:GetIdealActivity() ~= act then e:SetIdealActivity(act) end
+    end
+end
+
+-- The APC, the hunters and the strider, each kept at its place behind the column: every tick in the game (the
+-- Think hook below), so they move smoothly. Not while the parade fights. Forming up again, they may back up.
+local function MachinesStep(now)
+    if not (X and X.kind == "parade" and X.machines and not X.fight and (X.phase == "run" or X.reform)) then return end
+    local dt = math.Clamp(now - (X.machT or now), 0, 0.25)
+    X.machT = now
+    if dt <= 0 then return end
+    for _, m in ipairs(X.machines) do
+        local e = m.ent
+        if IsValid(e) then
+            local moved = math.Clamp(math.min(X.head, X.total) - m.off - m.d, X.reform and -220 * dt or 0, 220 * dt)
+            m.d = m.d + moved
+            local pos, dir = ParadeAt(m.d)
+            if m.side then
+                local f = Flat(dir)
+                f:Normalize()
+                pos = pos + Vector(-f.y, f.x, 0) * m.side
+            end
+            local ground = Ground(pos + Vector(0, 0, 30))
+            -- its nose comes round to the way it is going, not all at once
+            m.yaw = m.yaw + math.Clamp(math.AngleDifference(YawOf(dir), m.yaw), -90 * dt, 90 * dt)
+            if m.kind == "apc" then
+                e:SetPos(ground + Vector(0, 0, m.lift))
+                e:SetAngles(Angle(0, m.yaw + m.turn, 0))
+                if moved ~= 0 and e.SetPoseParameter then
+                    local spin = ((m.d * 2) % 360) - 180
+                    for _, w in ipairs(APC_WHEELS) do e:SetPoseParameter(w, spin) end
+                end
+            else
+                WalkerStep(m, e, ground, dir, now, dt, moved ~= 0)
+            end
+        end
+    end
+end
+LC.ParadeMachinesStep = MachinesStep
+hook.Add("Think", "LivingCityParadeMachines", function()
+    if not (X and X.machines and #X.machines > 0 and not X.machinesBroken) then return end
+    local ok, err = LC.Try(MachinesStep, CurTime())
+    if not ok then X.machinesBroken = true LC.Error("parade machines", err) end
+end)
+
+-- Forming up again after a fight: once every marcher is at his place and the machines at theirs (or after 25
+-- seconds: a straggler nobody is looking at is put in his place), the march goes on from that stop.
+local function ReformThink(now)
+    local R = X.reform
+    local ready = true
+    for _, u in ipairs(X.column) do
+        local st = IsValid(u) and LC.NPCs[u]
+        local col = st and st.exColumn
+        if col and col.forming and not col.formed then
+            if st.state == "idle" and not LC.GoTo(u, st, col.post, true, { kind = "exercise" }) then col.formed = true end
+            if not col.formed then ready = false end
+        end
+    end
+    for _, m in ipairs(X.machines or {}) do
+        if IsValid(m.ent) and math.abs(math.min(X.head, X.total) - m.off - m.d) > 30 then ready = false end
+    end
+    if not ready and now - R.at < 25 then return end
+    X.reform = nil
+    for _, u in ipairs(X.column) do
+        local st = IsValid(u) and LC.NPCs[u]
+        local col = st and st.exColumn
+        if col and col.forming then
+            if not col.formed and col.post and LC.IsSeen and not LC.IsSeen(col.post + Vector(0, 0, 40)) and not LC.IsSeen(u:GetPos() + Vector(0, 0, 40)) then
+                u:SetPos(col.post + Vector(0, 0, 4))
+            end
+            local post = col.post
+            col.forming, col.formed, col.post = nil, nil, nil
+            if X.phase == "run" then LC.ExerciseArrive(u, st, now)
+            else st.holdPos = post LC.SetState(u, st, "idle") st.untilT = now + 1 end
+        end
+    end
+    X.reformed = { at = now, node = R.node }
+    LC.Log("info", "The parade has formed up again: the march goes on from stop " .. R.node)
+end
+
+-- The crowd goes back to its day (the column's tail has passed the two-thirds mark).
+local function ReleaseCrowd()
+    ReleaseCitizens()
+    X.npcs = {}
+    X.crowdPoi = nil
+end
+
 local function ParadeThink(now, dt)
-    -- where the column is
-    local alive, done = 0, 0
+    if X.fight then return FightThink(now) end
+    if X.reform then
+        if not X.machinesBroken then MachinesStep(now) end
+        return ReformThink(now)
+    end
+    -- where the column is, and how far the front rank has come (never back, never in a leap)
+    local alive, done, front = 0, 0, nil
     for _, u in ipairs(X.column) do
         local st = IsValid(u) and LC.NPCs[u]
         if st and st.exColumn then
@@ -1398,23 +2057,69 @@ local function ParadeThink(now, dt)
             local col = st.exColumn
             if col.done then
                 done = done + 1
-            elseif st.state == "idle" and now - (X.runStart or now) > col.delay + 1 then
-                -- a marcher who has stopped short of a stop (the way there given up) goes on to the
-                -- next one: one of them standing about kept the parade from ever ending
-                col.idleAt = col.idleAt or now
-                if now - col.idleAt > 1.5 then
-                    col.idleAt = nil
-                    LC.ExerciseArrive(u, st, now)
-                end
             else
-                col.idleAt = nil
+                local along = ParadeAlong(u:GetPos()) + (col.rank or 0) * RANK_GAP
+                if along < X.head + 400 and (not front or along > front) then front = along end
+                -- one who has dropped behind his rank runs to make it up, and walks again once he has
+                if now >= (col.paceAt or 0) and col.i >= 1 and col.i <= #X.route and st.state == "moving" then
+                    col.paceAt = now + 1
+                    local lag = X.head - along
+                    local run = (lag > 150) or (col.run and lag > 30) or false
+                    if run ~= (col.run or false) then
+                        col.run = run
+                        LC.GoTo(u, st, ColumnStop(col), run, { kind = "exercise" })
+                    end
+                end
+                if st.state == "idle" and now - (X.runStart or now) > col.delay + 1 then
+                    -- a marcher who has stopped short of a stop (the way there given up) goes on to the
+                    -- next one: one of them standing about kept the parade from ever ending
+                    col.idleAt = col.idleAt or now
+                    if now - col.idleAt > 1.5 then
+                        col.idleAt = nil
+                        LC.ExerciseArrive(u, st, now)
+                    end
+                else
+                    col.idleAt = nil
+                end
             end
         end
     end
+    if alive == 0 or done >= alive then
+        X.head = math.min(X.total, X.head + MARCH_PACE * dt) -- (nobody left marching: the rest comes on at a walk)
+    elseif front then
+        X.head = math.Clamp(front, X.head, X.total)
+    end
+    if not X.machinesBroken then MachinesStep(now) end
+    local tail = X.head - (X.ranks - 1) * RANK_GAP
+    for _, m in ipairs(X.machines or {}) do
+        if IsValid(m.ent) then tail = math.min(tail, m.d) end
+    end
+    X.tail = tail
+    -- the march, from the middle of the column, once its head is a third of the way along (after a fight:
+    -- from the beginning again, as soon as it moves)
+    local mid = (ParadeAt(X.head - (X.ranks - 1) * RANK_GAP / 2)) + Vector(0, 0, 60)
+    if not X.music and (X.musicDue or X.head >= X.total / 3) then
+        X.musicDue = true
+        X.music = { list = MusicList(), at = now }
+        X.musicStarts = (X.musicStarts or 0) + 1
+        if #X.music.list > 0 then
+            SetGlobal2Vector("lc_parade_music_pos", mid)
+            SetGlobal2String("lc_parade_music", table.concat(X.music.list, "|"))
+            SetGlobal2Float("lc_parade_music_at", now)
+        end
+    elseif X.music and now >= (X.music.posAt or 0) then
+        X.music.posAt = now + 0.2
+        SetGlobal2Vector("lc_parade_music_pos", mid)
+    end
+    -- the crowd is let go once the tail has passed the two-thirds mark
+    if X.crowdPoi and tail >= X.total * 2 / 3 then ReleaseCrowd() end
     local function ColumnDist(pos)
         local best = math.huge
         for _, u in ipairs(X.column) do
             if IsValid(u) then best = math.min(best, u:GetPos():Distance(pos)) end
+        end
+        for _, m in ipairs(X.machines or {}) do
+            if IsValid(m.ent) then best = math.min(best, Dist2D(m.ent:GetPos(), pos)) end
         end
         return best
     end
@@ -1454,14 +2159,43 @@ local function ParadeThink(now, dt)
     for npc in pairs(X.npcs) do
         local st = IsValid(npc) and LC.NPCs[npc]
         if st and st.state == "event" and now > (st.exCheerNext or 0) and ColumnDist(npc:GetPos()) < 600 then
-            st.exCheerNext = now + math.Rand(3, 6)
+            st.exCheerNext = now + math.Rand(2, 4.5)
+            st.exCheers = (st.exCheers or 0) + 1
             LC.CrowdCheer(npc, st)
         end
     end
-    if alive == 0 or done >= alive then
+    -- over: the marchers at the end of the route (or none left), and the machines at their places behind them
+    local settled = X.head >= X.total - 1
+    for _, m in ipairs(X.machines or {}) do
+        if IsValid(m.ent) and not X.machinesBroken and X.total - m.off - m.d > 20 then settled = false end
+    end
+    if (alive == 0 or done >= alive) and settled then
         X.paradeDone = X.paradeDone or now
         if now - X.paradeDone > 8 then LC.EndEvent(false) end
     end
+end
+
+-- Which piece a player's game found and played (the first to say so, once a start): for the log and the debug report.
+net.Receive("lc_parade_music", function(_, ply)
+    local path = string.lower(string.sub(net.ReadString() or "", 1, 120))
+    local m = X and X.music
+    if not m or m.used or not IsValid(ply) then return end
+    local known = path == "none"
+    for _, p in ipairs(m.list) do if p == path then known = true end end
+    if not known then return end
+    m.used = path
+    LC.ParadeMusicUsed = { path = path, by = ply:Nick(), at = CurTime() }
+    if path == "none" then LC.Log("warn", "Parade music: none of " .. table.concat(m.list, ", ") .. " is on " .. ply:Nick() .. "'s game")
+    else LC.Log("info", "Parade music: " .. path .. " (as played on " .. ply:Nick() .. "'s game)") end
+end)
+
+-- The parade's march in a line, for the debug report: what was played last, and what would be tried.
+function LC.ParadeDebugLine()
+    local u = LC.ParadeMusicUsed
+    local tries = {}
+    for _, p in ipairs(MusicList()) do tries[#tries + 1] = p .. (file.Exists("sound/" .. p, "GAME") and " (the server has it)" or " (not on the server)") end
+    return "parade music: " .. (u and (u.path .. ", on " .. u.by .. "'s game, " .. math.floor((CurTime() - u.at) / 60) .. " min ago") or "none played yet")
+        .. " | tried in order: " .. (#tries > 0 and table.concat(tries, ", ") or "nothing (lc_parade_music is empty)")
 end
 
 ------------------------------------------------------------------------
@@ -1485,7 +2219,24 @@ timer.Create("LivingCityExercise", 0.1, 0, function()
             X.enlistNext = now + 4
             if X.phase == "muster" or (X.cueNo or 0) < math.floor(math.max(2, cvCues:GetInt()) / 2) then EnlistCitizens(cvNPCs:GetInt(), X.drillPoi) end
         end
+        -- the parade keeps calling every citizen until the column's tail has passed them; one frightened off
+        -- their place by a fight walks back to it
+        if X.crowdPoi and now >= (X.enlistNext or 0) then
+            X.enlistNext = now + 4
+            if not X.fight then
+                EnlistCitizens(math.huge, X.crowdPoi)
+                for npc in pairs(X.npcs) do
+                    local st = IsValid(npc) and LC.NPCs[npc]
+                    local c = st and st.exCitizen
+                    if c and c.spot and st.state == "idle" then LC.GoTo(npc, st, c.spot, false, { kind = "exercise", pos = c.spot, yaw = c.yaw }) end
+                end
+            end
+            WalkersAreFriends()
+        end
         if X.phase == "muster" then
+            -- (the parade attacked before it set off: the fight, and forming up again, as on the march)
+            if X.kind == "parade" and X.fight then FightThink(now)
+            elseif X.kind == "parade" and X.reform then MachinesStep(now) ReformThink(now) end
             -- people arriving
             if now >= X.musterEnds then return StartRun(now) end
             for _, p in ipairs(player.GetAll()) do
@@ -1575,8 +2326,15 @@ function LC.ExerciseFinish()
         end
     end
     -- everyone back to normal
+    if kind == "parade" then
+        -- the march is silent, nobody of the parade is anyone's enemy any more, and the machines go (once
+        -- nobody is looking at them)
+        MusicStop()
+        if x.fight then StandDown(x.fight, CurTime()) x.fight = nil end
+        DismissMachines(x.machines)
+    end
     for _, u in ipairs(x.units) do Unpost(u) end
-    for _, u in ipairs(x.column) do Unpost(u) end
+    for _, u in ipairs(x.column) do Unpost(u, kind == "parade") end
     X = x
     ReleaseCitizens()
     X = nil
