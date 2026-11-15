@@ -31150,4 +31150,130 @@ if IsValid(n3) then n3:Remove() hook.Run("EntityRemoved", n3) end
 end
 Nov15_PeopleStayTests()
 
+function Nov14E_CameraAimTests()
+section("14 November notes, group E: the broadcast camera films the face")
+local who = newPlayer("CamAimSpeaker", "citizen")
+_run(1)
+who:SetPos(Vector(-52000, 21000, 0))
+local was = ENT
+ENT = {}
+assert(loadstring(_ENTSRC["entities/lc_broadcastcam.lua"], "lc_broadcastcam"))()
+local def = ENT
+ENT = was
+local cam = ents.Create("lc_broadcastcam")
+cam:SetPos(who:GetPos() + Vector(92, 0, 70))
+cam:Spawn()
+local aim = def.AimAt(cam, who)
+local eye = who:EyePos()
+ok(aim.z >= eye.z - 0.5, "it points at their face, not a foot below it (was 12 lower)")
+ok(aim.z - who:GetPos().z >= 60, "which is head height on someone standing")
+ok(def.WantPos(cam, who).z >= eye.z, "and it still hangs a little above their eyes")
+cam:Remove()
+end
+Nov14E_CameraAimTests()
+
+function Nov14E_AdminNoJobTests()
+section("14 November notes, group E: the Administrator holds no Union job, and a parade gives her none")
+local savedWalls = _walls
+_walls = {}
+LC.EndEvent(true)
+local P0 = Vector(-84000, -64000, 0)
+local pp = {}
+for i = 0, 2 do pp[#pp + 1] = LC.AddPoint(P0 + Vector(i * 800, 0, 0), 0, "parade", 1) end
+local adm = newPlayer("ParadeAdministrator", "admin")
+adm:SetPos(P0 + Vector(400, 200, 0))
+_run(4)
+-- a job carried over from an earlier life as a citizen or a rebel
+adm:SetNW2String("lcj_job", "sanitation")
+adm:SetPData("lcj_job", "sanitation")
+LC.ReconcileAppearance(adm)
+ok(LC.Job(adm) == nil and adm:GetPData("lcj_job", "") == "", "taking the post, the Union job goes (and the saved one)")
+ok(not LC.CanWork(adm), "the Administrator is not the Union's to employ")
+local step = LC.NextStep(adm)
+ok(not step or (step.key ~= "job" and step.key ~= "shift" and step.key ~= "free" and step.key ~= "on_job"),
+    "her next step is never a Union job", step and step.key)
+adm.lcAdminNext = nil
+ok(LC.AdminDo(adm, "event", "parade") and LC.Event == "parade", "she orders a parade")
+_run(3)
+ok(LC.Job(adm) == nil and adm:GetNW2String("lcj_job", "") == "", "which gives her no job")
+ok(not (LC.QuestOf and LC.QuestOf[adm]), "and no quest or objective")
+local X = LC.ExerciseSession()
+ok(X and not X.people[adm] and not X.absent[adm], "nor a place in it to report to")
+LC.EndEvent(true)
+for _, p in ipairs(pp) do LC.RemovePoint(p) end
+_walls = savedWalls
+end
+Nov14E_AdminNoJobTests()
+
+function Nov14E_ParadeSeenTests()
+section("14 November notes, group E: a parade the Administrator orders is one she can see")
+local savedWalls = _walls
+_walls = {}
+LC.EndEvent(true)
+local P0 = Vector(-90000, -58000, 0)
+local adm = newPlayer("SeenParadeAdministrator", "admin")
+_run(2)
+for _, p in ipairs(table.Copy(LC.Points)) do if p.kind == "parade" then LC.RemovePoint(p) end end
+-- no route on the map: refused at once, with the reason, and nothing spent
+adm.lcAdminNext = nil
+local okN, whyN = LC.AdminDo(adm, "event", "parade")
+ok(okN == false and whyN == "This map has no parade route.", "no parade route: refused with the reason", whyN)
+ok(not (adm.lcAdminNext and (adm.lcAdminNext.event or 0) > CurTime()), "and the refusal costs her no wait")
+-- two routes: hers is the one that starts nearest
+local pp = {}
+for i = 0, 2 do pp[#pp + 1] = LC.AddPoint(P0 + Vector(i * 800, 9000, 0), 0, "parade", 1) end
+for i = 0, 2 do pp[#pp + 1] = LC.AddPoint(P0 + Vector(i * 800, 0, 0), 0, "parade", 2) end
+adm:SetPos(P0 + Vector(-200, 150, 0))
+-- the only free soldier is across the city
+for n, s in pairs(LC.NPCs) do if IsValid(n) and LC.IsSecurity(s) then n:Remove() end end
+local farSoldier = LC.Spawners.soldier(P0 + Vector(0, 30000, 0))
+_setcvar("lc_exercise_muster", 15)
+local said = {}
+local notice = LC.Notice
+LC.Notice = function(p, kind, title, text, ...)
+    if title == "The City Administrator" then said[#said + 1] = text end
+    return notice(p, kind, title, text, ...)
+end
+local okP = LC.AdminDo(adm, "event", "parade")
+LC.Notice = notice
+ok(okP and LC.Event == "parade", "with a route, the parade is ordered")
+local X = LC.ExerciseSession()
+ok(X and X.center:DistToSqr(P0) < 1, "on the route that starts nearest to her", X and tostring(X.center))
+local where = LC.ExerciseWhere()
+ok(where ~= nil and said[1] ~= nil and string.find(said[1], "a Combine parade, " .. where, 1, true) ~= nil, "and the order says where it is", said[1])
+ok(LC.ExerciseNear == nil, "(where she stood is not kept for the next morning's)")
+ok(X and #X.column >= 2, "a column forms up", X and #X.column)
+local drafted, close = false, true
+for _, u in ipairs(X and X.column or {}) do
+    if u == farSoldier then drafted = true end
+    if IsValid(u) and u:GetPos():Distance(P0) > 2600 then close = false end
+end
+ok(not drafted and close, "from units near the start or fresh ones: nobody is called from across the city")
+_run(16)
+ok(X.phase == "run", "it sets off")
+-- one marcher gives up his way and stands about: he goes on to the next stop
+_run(3)
+local u1 = X.column[1]
+local st1 = IsValid(u1) and LC.NPCs[u1]
+if st1 and st1.exColumn and not st1.exColumn.done then
+    local at = st1.exColumn.i
+    LC.SetState(u1, st1, "idle")
+    st1.untilT = CurTime() + 600
+    _run(4)
+    ok(st1.exColumn.done or st1.exColumn.i > at or st1.state == "moving", "a marcher who stopped is sent on", st1.state)
+end
+for _ = 1, 90 do
+    if not LC.ExerciseSession() then break end
+    _run(1)
+end
+local byItself = LC.ExerciseSession() == nil
+if LC.ExerciseSession() then LC.EndEvent(false) end
+ok(byItself, "the column reaches the end, and the parade is over by itself")
+LC.EndEvent(true)
+if IsValid(farSoldier) then farSoldier:Remove() end
+for _, p in ipairs(pp) do LC.RemovePoint(p) end
+_walls = savedWalls
+end
+Nov14E_ParadeSeenTests()
+
 return results.pass, results.fail, table.concat(results.lines, "\n")
