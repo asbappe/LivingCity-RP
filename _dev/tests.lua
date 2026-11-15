@@ -31546,6 +31546,56 @@ end
 Nov14D_StalkerTerminalTests()
 
 
+function Nov14D_LoudspeakerTests()
+section("Loudspeakers: the box back against the wall, smoke when broken, a spark every 15 seconds when hacked (14 November, group D)")
+local at = Vector(-28000, 20000, 200)
+local sp = ents.Create("lc_loudspeaker") sp:SetPos(at) sp:SetAngles(Angle(0, 0, 0)) sp:Spawn()
+local wasWalls = _walls
+_walls = { { a = Vector(at.x - 10, at.y - 200, 0), b = Vector(at.x - 10, at.y + 200, 0) } }
+local pos, ang = LC.UtilityBoxSpot(sp)
+ok(pos ~= nil and math.abs(pos.x - (at.x - 10 + LC.UtilityBoxOffWall)) < 1.5, "the box is set against the wall behind the loudspeaker, not two feet out from it", tostring(pos))
+ok(pos ~= nil and math.abs(pos.y - at.y) < 1, "(straight below it still)")
+_walls = {}
+local pos2 = LC.UtilityBoxSpot(sp)
+ok(pos2 ~= nil and math.abs(pos2.x - (at.x + 14)) < 1, "with no wall behind it (a loudspeaker on a pole), under the loudspeaker as before", tostring(pos2))
+_walls = wasWalls
+
+-- broken: smoke until it is mended
+local T = CurTime() + 50
+LC.SpeakerShowTick(T)
+ok(not IsValid(sp.lcSmoke), "a working loudspeaker: no smoke")
+LC.BreakStreetFixture(sp)
+LC.SpeakerShowTick(T + 3)
+local smoke = sp.lcSmoke
+ok(IsValid(smoke) and smoke:GetClass() == "env_smokestack", "a broken loudspeaker smokes")
+LC.SpeakerShowTick(T + 6)
+ok(sp.lcSmoke == smoke, "(one column of it, not one more each time)")
+LC.RepairStreetFixture(sp)
+LC.SpeakerShowTick(T + 9)
+ok(not IsValid(smoke) and sp.lcSmoke == nil, "mended: the smoke stops")
+
+-- hacked: one spark every fifteen seconds, no noise that loops
+local sparks, sounds = 0, {}
+local realEffect, realEmit = util.Effect, sp.EmitSound
+util.Effect = function(name) if name == "Sparks" then sparks = sparks + 1 end end
+sp.EmitSound = function(_, snd) sounds[#sounds + 1] = snd end
+sp:SetNW2Float("lc_hacked_until", CurTime() + 600)
+LC.SpeakerShowTick(T + 12)
+local first = sparks
+ok(first >= 1 and #sounds == 1, "a hacked loudspeaker gives a spark", first)
+LC.SpeakerShowTick(T + 15) LC.SpeakerShowTick(T + 18) LC.SpeakerShowTick(T + 24)
+ok(sparks == first and #sounds == 1, "(not again within fifteen seconds)", sparks)
+LC.SpeakerShowTick(T + 27.5)
+ok(sparks == first * 2 and #sounds == 2, "and another fifteen seconds on")
+ok(LC.SpeakerSparkEvery == 15, "(fifteen seconds, as asked)")
+ok(string.find(LC.SpeakerSummary(), "hacked", 1, true) ~= nil, "the debug report counts loudspeakers, broken and hacked", LC.SpeakerSummary())
+util.Effect = realEffect
+sp.EmitSound = realEmit
+sp:Remove()
+end
+Nov14D_LoudspeakerTests()
+
+
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")
 ;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)
     -- Everything here is something the owner's server, files or players depend on. The list is

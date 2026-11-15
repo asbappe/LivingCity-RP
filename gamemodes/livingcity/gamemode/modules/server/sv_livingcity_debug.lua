@@ -357,6 +357,7 @@ function LC.BuildReport()
     if LC.StalkerSummary then out[#out + 1] = LC.StalkerSummary() end
     if LC.CrematorSummary then out[#out + 1] = LC.CrematorSummary() end
     if LC.NPCWeaponsSummary then out[#out + 1] = LC.NPCWeaponsSummary() end
+    if LC.SpeakerSummary then out[#out + 1] = LC.SpeakerSummary() end
 
     Section(out, "Performance")
     local p = LC.Perf or {}
