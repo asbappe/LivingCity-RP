@@ -2219,6 +2219,32 @@ local ok, e = pcall(function()
         util.JSONToTable = j2t
         if not okO then error("the office: " .. tostring(errO)) end
     end
+    -- the tablet has a window of its own (the owner, 14 November: not a C menu), every act a button
+    local frames, vc, dmWas = 0, vgui.Create, DermaMenu
+    vgui.Create = function(c, ...) if c == "DFrame" then frames = frames + 1 end return vc(c, ...) end
+    DermaMenu = function() error("the tablet opened a drop-down menu") end
+    local j2t2 = util.JSONToTable
+    util.JSONToTable = function() return office end
+    net._q = { 1, "x" }
+    local okW, errW = pcall(net["recv_lc_admin_office"])
+    util.JSONToTable, vgui.Create, DermaMenu = j2t2, vc, dmWas
+    if not okW then error("the office window: " .. tostring(errW)) end
+    if frames < 1 then error("the tablet opens a window of its own") end
+    local got = {}
+    local pages = LC_CL.AdminOfficePages({ jobs = { { id = "sanitation", name = "Sanitation Worker" } }, people = { { idx = 1, name = "Someone", wanted = true } } },
+        function(what, arg) got[#got + 1] = what .. ":" .. tostring(arg) end)
+    local byId = {}
+    for _, pg in ipairs(pages) do byId[pg.id] = pg end
+    if not (byId.city and byId.orders and byId.work and byId.people) then error("the office's tabs") end
+    local function Press(pg, text) for _, r in ipairs(pg.rows) do if r.text == text then r.act() return true end end return false end
+    if not Press(byId.city, "A Combine parade") or got[#got] ~= "event:parade" then error("the parade button orders a parade: " .. tostring(got[#got])) end
+    if Press(byId.city, "Sanitation Worker") then error("a job bonus is not among the events") end
+    if not Press(byId.work, "Sanitation Worker") or got[#got] ~= "bonus:sanitation" then error("the job bonus has its own tab") end
+    local n = 0
+    for _, r in ipairs(byId.people.rows) do for _, a in ipairs(r.acts or {}) do a[2]() n = n + 1 end end
+    if n ~= 5 then error("a person's five acts: " .. n) end
+    LC_CL.AdminOfficeClose()
+    if LC_CL.AdminOfficeOpen() then error("the tablet's window shuts") end
 end)
 return (not ok) and tostring(e) or nil
 """)
