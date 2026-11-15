@@ -30,6 +30,11 @@
     sv_livingcity_strangedreams.lua); the city's hint at it stays the drawn notice.
     The Nightmares' and propaganda dreams' words are the owner's own (14 November,
     their corrected list): leave them as they are.
+    The other Happy and Neutral dreams' words were rewritten on 15 November to
+    match that list (the owner: "review the changes I made for the previous poster
+    subtitles and try to match the English and grammar and not use awkward ai
+    inference English"): plain notices in the city's own voice, the way the
+    owner writes them. No ", so ..." or ", for ..." joined on, no winks.
 ]]
 
 if CLIENT then return end
@@ -42,31 +47,31 @@ local cvShare = CreateConVar("lc_dream_posters", "0.25", bit.bor(FCVAR_ARCHIVE, 
 -- [dream codeword] = { heading, body }. In the city's voice; a hint, never the dream's name.
 local HINTS = {
     -- Happy
-    flying = { "KEEP YOUR FEET ON THE GROUND", "The sky belongs to the Combine, and citizens who leave the ground will be returned to it." },
+    flying = { "KEEP YOUR FEET ON THE GROUND", "The skies are patrolled for your safety; only traitors try to leave." },
     melons = { "FORECAST: FAIR, WITH PRODUCE", "Fresh fruit is a privilege of compliance; do not look up for it." },
     lamarr = { "HAVE YOU SEEN THIS ANIMAL?", "A small, bald, beaked pet is loose in the city: do not approach it, do not feed it, report it." },
-    dance = { "IDLE FEET ARE IDLE HANDS", "Movement without purpose is forbidden, and movement to music doubly so." },
-    sheep = { "CAN'T SLEEP? COUNT YOUR BLESSINGS", "Not the other thing, never the other thing; sleep is mandatory." },
-    derby = { "PARASITE RACING IS ILLEGAL", "Wagering on headcrabs is a crime against hygiene, and Sanitation is watching." },
-    paint = { "PAINT IS A CONTROLLED SUBSTANCE", "All colour belongs to the city, and unlicensed colour will be scrubbed." },
-    conga = { "SINGLE FILE. NO DANCING.", "Lines are for rations, not for fun." },
-    bubbles = { "SOAP IS FOR WASHING", "Surplus soap must be returned to the Commissary, for nothing floats in this city." },
-    rally = { "NO RACING AFTER CURFEW", "Unlicensed vehicles will be confiscated, and so will their drivers." },
+    dance = { "SAVE YOUR ENERGY FOR YOUR SHIFT", "The city needs every worker rested; there will be time to dance when the quota is met." },
+    sheep = { "CAN'T SLEEP? COUNT YOUR BLESSINGS", "A rested citizen is a productive citizen." },
+    derby = { "GAMBLING IS ILLEGAL", "Headcrabs are a health hazard, not entertainment; betting on them is a crime." },
+    paint = { "KEEP OUR CITY CLEAN", "Graffiti is the mark of a traitor; report fresh paint to Civil Protection." },
+    conga = { "SINGLE FILE, NO DANCING", "An orderly line feeds everyone faster." },
+    bubbles = { "SOAP IS FOR WASHING", "Don't waste your soap ration; a clean citizen is a healthy citizen." },
+    rally = { "NO RACING AFTER CURFEW", "Unlicensed vehicles will be confiscated; walk home like everyone else." },
     -- Neutral
     cheese = { "DAIRY IS A PRIVILEGE", "Citizens do not think about cheese; citizens think about their quota." },
-    chairs = { "A SEAT FOR EVERY WORKER", "Unless there is not, so remain standing until told." },
-    horse = { "KNOW YOUR OWN FACE", "Report any change to your appearance at once, especially hooves." },
-    boxing = { "DISPUTES ARE SETTLED BY CIVIL PROTECTION", "Not in a ring, not with gloves and not under lights." },
-    exam = { "ARE YOU READY FOR YOUR ASSESSMENT?", "Every citizen will be tested, and you will not know when, so study." },
-    train = { "EVERY TRAIN ARRIVES ON TIME", "Do not ask where the last one goes." },
-    potato = { "DO NOT PASS IT ON", "Whatever you are holding, it is now your responsibility." },
-    simon = { "DO ONLY WHAT OVERWATCH SAYS", "And only when Overwatch says it, so listen closely." },
-    clocks = { "TIME IS THE CITY'S", "Clocks are not to be stopped, wound back or argued with." },
-    tea = { "GATHERINGS OF MORE THAN THREE ARE FORBIDDEN", "This includes tea, and this especially includes tea." },
-    photo = { "SMILE. YOU ARE BEING RECORDED.", "Every face is on file, so keep yours still." },
-    doors = { "NOT EVERY DOOR IS FOR YOU", "Open only the doors you were assigned, for some open onto nothing." },
-    shh = { "SILENCE IS COMPLIANCE", "Quiet blocks are safe blocks, and something is listening for noise." },
-    can = { "PICK IT UP", "Litter is disorder: when an officer tells you, you pick it up, then you put it in the bin." },
+    chairs = { "A SEAT FOR EVERY WORKER", "Loyal citizens never go without; if there's no seat for you, ask yourself why." },
+    horse = { "NOT FEELING YOURSELF?", "Report any change in your appearance at once; early treatment saves lives." },
+    boxing = { "NO FIGHTING", "Civil Protection settles all disputes; save your fists for the traitors." },
+    exam = { "ARE YOU READY FOR YOUR ASSESSMENT?", "Every citizen will be tested; the prepared have nothing to fear." },
+    train = { "EVERY TRAIN LEAVES ON TIME", "Have your papers ready; latecomers will be left behind." },
+    potato = { "DON'T PASS IT ON", "Whatever you're holding is your responsibility; hand it to Civil Protection, not your neighbour." },
+    simon = { "DO AS OVERWATCH SAYS", "Listen closely and follow every order; mistakes are noted." },
+    clocks = { "BE ON TIME", "Every wasted minute is stolen from your fellow citizens." },
+    tea = { "NO GATHERINGS OF MORE THAN THREE", "Groups will be dispersed; drink your tea at home." },
+    photo = { "SMILE, YOU'RE ON CAMERA", "The scanners keep you safe; a loyal citizen has nothing to hide." },
+    doors = { "SOME DOORS STAY LOCKED", "They're locked for your safety; only traitors try the handle." },
+    shh = { "QUIET HOURS ARE IN EFFECT", "Respect your neighbours' rest; noise complaints are investigated." },
+    can = { "PICK IT UP", "When an officer tells you to pick it up, you pick it up." },
     -- Nightmares
     maze = { "THE PATROL KNOWS EVERY TURN", "Traitors can run, but they cannot hide." },
     barrels = { "DO NOT STACK BARRELS", "They're heavier than they look; an injury is just a fall away." },
