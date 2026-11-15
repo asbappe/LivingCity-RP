@@ -34,6 +34,10 @@ Tick what works, write a word under what does not. What is not on this card wait
   Notes:
 - [ ] **The baton's glow:** at the tip, on your side, the right size?
   Notes:
+- [ ] **The stalker and the loudspeakers:** does the stalker stand right at its terminal and work it smoothly? Is the loudspeaker's box flush on the wall? If a loudspeaker still loops a noise, send the debug report while it plays (its "loudspeakers:" line) and say whether the noise is at the speaker or the box.
+  Notes:
+- [ ] **Weapons in the street:** drop a gun near citizens. Do they leave it alone? Do cremators walk through the infestation's junk?
+  Notes:
 - [ ] **The editor's list:** can you find things now? (Old and new names: `docs/dev/editor-menu-names.md`.)
   Notes:
 - [ ] **The errors file:** last thing, F4 > Factions > Admin: errors (N). Send the server's errors.txt.
