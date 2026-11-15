@@ -31228,6 +31228,19 @@ inC, asked = jailedAndAsked(con, 600)
 ok(inC and asked, "a citizen in for ten minutes is questioned", tostring(inC) .. " " .. tostring(asked))
 inC, asked = jailedAndAsked(reb, 240)
 ok(inC and asked, "a Resistance member is questioned whatever the sentence, on a first arrest too", tostring(inC) .. " " .. tostring(asked))
+-- (the city stopped while the unit was on his way: nobody comes, so a stopped city stays empty)
+do
+    fresh(reb)
+    reb:SetPos(C0 + Vector(0, 1400, 0))
+    reb.lcExactSentence = true
+    LC.Incarcerate(reb, 240, "x", nil)
+    reb.lcExactSentence = nil
+    local running = LC.Running
+    LC.Running = false
+    ok(LC.StartInterrogation(reb) == false and LC.Interrogations[reb] == nil, "with the city stopped, no unit comes to question anyone")
+    LC.Running = running
+    LC.FreeFromCustody(reb)
+end
 -- escaping and walking back in does not shorten a sentence
 fresh(con)
 LC.RapClear(con)

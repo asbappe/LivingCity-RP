@@ -99,6 +99,7 @@ end
 
 function LC.StartInterrogation(ply)
     if LC.Interrogations[ply] or not (LC.Prisoners and LC.Prisoners[ply]) then return false end
+    if LC.Running == false then return false end -- (the city was stopped while the unit was on his way: nobody comes)
     local pr = LC.Prisoners[ply]
     local cellPos = pr.cell and pr.cell.pos or ply:GetPos()
     local cop
