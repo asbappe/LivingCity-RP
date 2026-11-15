@@ -424,9 +424,51 @@ local function MarkForSquad(leader, e, now, secs)
 end
 LC.MarkForSquad = MarkForSquad
 
+-- A unit hates the fighter who is shooting at him, whatever else he is doing (the owner, 14 November:
+-- "the overwatch soldiers weren't even shooting the rebel fighter NPCs at all, but the rebel fighter NPCs
+-- were shooting the combine"). A unit already hostile to someone else, one answering an alert or dropped
+-- for a player, used to keep his one enemy and treat the fighters as nobody. Now the fighter is an enemy
+-- to him as well (the engine picks whom to shoot), for as long as the fighter keeps at it.
+local FOE_SECS = 30
+local function HateBack(unit, est, rebel, now)
+    if not IsValid(unit) or not IsValid(rebel) or not est then return end
+    est.rebelFoes = est.rebelFoes or setmetatable({}, { __mode = "k" })
+    local known = est.rebelFoes[rebel]
+    est.rebelFoes[rebel] = now + FOE_SECS
+    if known then return end
+    unit:AddEntityRelationship(rebel, D_HT, 99)
+    if unit.UpdateEnemyMemory then unit:UpdateEnemyMemory(rebel, rebel:GetPos()) end
+end
+LC.UnitHatesRebel = HateBack
+-- ...and stops, once that fighter has left him alone (or is dead).
+function LC.UnitRebelFoesTick(now)
+    for unit, est in pairs(LC.NPCs or {}) do
+        if est.rebelFoes and IsValid(unit) then
+            for rebel, untilT in pairs(est.rebelFoes) do
+                local rst = IsValid(rebel) and LC.NPCs[rebel]
+                if not rst or rebel:Health() <= 0 then
+                    est.rebelFoes[rebel] = nil
+                elseif now > untilT then
+                    if rst.foe == unit or est.enemy == rebel then
+                        est.rebelFoes[rebel] = now + FOE_SECS
+                    else
+                        est.rebelFoes[rebel] = nil
+                        unit:AddEntityRelationship(rebel, D_NU, 99)
+                    end
+                end
+            end
+        end
+    end
+end
+timer.Create("LivingCityUnitRebelFoes", 5, 0, function()
+    local ok, err = LC.Try(LC.UnitRebelFoesTick, CurTime())
+    if not ok and LC.Error then LC.Error("units and the fighters shooting at them", err) end
+end)
+
 -- A Combine NPC that's being shot at shoots back.
 local function ProvokeBack(npc, e, now)
     local est = LC.NPCs[e]
+    if est and LC.IsSecurity(est) then HateBack(e, est, npc, now) end
     if est and LC.IsSecurity(est) and est.state ~= "hostile" then
         LC.ArmUnit(e, est)
         LC.MakeOneHostile(e, est, npc)
@@ -1061,6 +1103,8 @@ hook.Add("EntityTakeDamage", "LivingCityRebels", function(victim, dmg)
     end
 
     local vst = LC.NPCs[victim]
+    -- a unit hit by a fighter: that fighter is his enemy too (HateBack)
+    if vst and LC.IsSecurity(vst) and ast and ast.role == "rebel" then HateBack(victim, vst, attacker, CurTime()) return end
     if not vst or vst.role ~= "rebel" then return end
     -- the ones at home go down quicker (the owner: half the health); a player's own squad doesn't
     if not vst.follow and not vst.quartermaster then dmg:SetDamage(dmg:GetDamage() * math.max(0, cvHomeHurt:GetFloat())) end

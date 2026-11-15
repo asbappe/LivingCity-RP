@@ -483,14 +483,26 @@ end
 
 LC.AdminGuards = LC.AdminGuards or {} -- [npc] = administrator
 
+-- A guard with empty hands is given his rifle. True when he had to be.
+function LC.AdminGuardArm(npc)
+    if not IsValid(npc) or not npc.Give or not npc.GetActiveWeapon then return false end
+    if IsValid(npc:GetActiveWeapon()) then return false end
+    npc:Give("weapon_ar2")
+    return true
+end
+
 local function SpawnGuard(admin)
     local p = admin:GetPos() - admin:GetForward() * 120
     p = LC.GroundAt and LC.GroundAt(p + Vector(0, 0, 40)) or p
     if not LC.SpawnSoldier then return nil end
-    local npc, st = LC.ManpowerFree(LC.SpawnSoldier, p + Vector(0, 0, 4)) -- (the Administrator's guard: never from Overwatch's reserve)
+    -- (the Administrator's guard: never from Overwatch's reserve. Spawned with the pulse rifle in his hands:
+    -- one in five came with a shotgun and was then handed a second gun, and "one of them spawned without a
+    -- weapon": the owner, 14 November)
+    local npc, st = LC.ManpowerFree(LC.SpawnSoldier, p + Vector(0, 0, 4), "ar2")
     if not IsValid(npc) or not st then return nil end
     if not util.IsValidModel or util.IsValidModel("models/combine_super_soldier.mdl") then npc:SetModel("models/combine_super_soldier.mdl") end
-    if npc.Give then npc:Give("weapon_ar2") end
+    LC.AdminGuardArm(npc)
+    timer.Simple(1, function() LC.AdminGuardArm(npc) end) -- (and looked at again once he has settled)
     local hp = npc:Health() * 2
     if npc.SetMaxHealth then npc:SetMaxHealth(hp) end
     npc:SetHealth(hp)

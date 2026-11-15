@@ -332,14 +332,18 @@ con:SetPos(Vector(2000, -2000, 0))
 
 -- NPC arrests instead of kills (straight to a cell here: being marched there is tested in MarchTests)
 _setcvar("lc_march", 0)
-local cop2, cst2 = LC.Spawners.cop(Vector(-200, -200, 0))
+local cop2, cst2 = LC.Spawners.cop(con:GetPos() + Vector(60, 0, 0)) -- (at arm's reach: nobody is cuffed from across the street)
 cst2.untilT = 1e9
+cop2.sim = false
 local dmg = _dmg(cop2, 20, DMG_CLUB)
 con.lcSubdue = { n = 2, t = CurTime() } -- (two blows already: cuffed once they're subdued, lc_subdue_hits)
 hook.Run("EntityTakeDamage", con, dmg)
-ok(LC.Prisoners[con] ~= nil, "a stunstick hit from a cop arrests a wanted player (once they're subdued)")
-con.lcViolentUntil = nil
+-- (the owner, 14 November: every arrest by a unit gives the struggle first; Nov14A_CustodyTests)
+ok(LC.Struggles[con] ~= nil and not LC.Prisoners[con], "a stunstick hit from a cop on a wanted player (once they're subdued): he lays hands on them, and they may struggle")
 ok(dmg:GetDamage() == 0, "instead of hurting them")
+_run(5)
+ok(LC.Prisoners[con] ~= nil, "doing nothing about it: arrested")
+con.lcViolentUntil = nil
 LC.ReleasePrisoner(con)
 _setcvar("lc_march", 1)
 
@@ -30325,6 +30329,264 @@ section("The play study: how the owner plays, written down as a model for the ci
     p:SetPos(Vector(-121000, -121000, 0))
     other:SetPos(Vector(-121000, -121000, 0))
 end)()
+
+
+function Nov14A_CustodyTests()
+section("14 November, group A: never cuffed while armed and fighting, always a struggle, three checks")
+local C0 = Vector(-262000, 91000, 0)
+local cellC = LC.AddPoint(C0 + Vector(1400, 0, 0), 0, "cell", 0)
+LC.AddPoint(C0 + Vector(1400, 400, 0), 0, "release", 0)
+local errs0 = #_errors
+_setcvar("lc_arrest_struggle", 1)
+local function fresh(p)
+    p.lcFiredAt, p.lcAttackedSecurityAt, p.lcBrokeFree, p.lcHadChanceAt, p.lcInHandAt, p.lcStillSince, p.lcSubdue = nil, nil, nil, nil, nil, nil, nil
+    p.lcGraceUntil, p.lcViolentUntil, p.lcJailOwed = nil, nil, nil
+    if LC.Struggles[p] then LC.StruggleCancel(p) end
+end
+local function hands(p)
+    if not p:HasWeapon("weapon_fists") then p:Give("weapon_fists") end
+    p:SelectWeapon("weapon_fists")
+end
+local reb = newPlayer("A1Rebel", "resistance", nil, 900)
+_run(0.3)
+reb:SetPos(C0)
+local sol, sst = LC.Spawners.soldier(C0 + Vector(60, 0, 0))
+sol.sim = false
+sst.untilT = 1e9
+fresh(reb)
+-- armed and fighting: what counts
+hands(reb)
+ok(not LC.ArmedAndFighting(reb), "bare hands and nothing done: not armed and fighting")
+reb:Give("weapon_smg1") reb:SelectWeapon("weapon_smg1")
+ok(LC.ArmedAndFighting(reb), "a gun in hand: armed and fighting")
+hands(reb)
+hook.Run("EntityFireBullets", reb, { Src = reb:GetPos() })
+ok(LC.ArmedAndFighting(reb), "a shot just fired: armed and fighting, gun put away or not")
+reb.lcFiredAt = CurTime() - 20
+ok(not LC.ArmedAndFighting(reb), "(20 seconds after the last shot, hands empty: no longer)")
+reb.lcAttackedSecurityAt = CurTime()
+ok(LC.ArmedAndFighting(reb), "a unit just hurt: armed and fighting")
+fresh(reb)
+-- check 1: standing still with a gun out is aiming, not giving up
+LC.ReportCrime(reb, "Assaulting Civil Protection", 300)
+reb:SelectWeapon("weapon_smg1")
+reb.lcStillSince = CurTime() - 10
+ok(not LC.Subdued(reb), "check 1: standing still with a gun out is not 'subdued'")
+ok(LC.NPCSubdue(sol, sst, reb, CurTime()) == false and not LC.Marching[reb] and not LC.Struggles[reb], "check 1: a unit beside them does not lay hands on them")
+-- check 2: the gate refuses
+ok(LC.NPCTakesIn(sol, reb) == false and not LC.InCustody(reb) and not LC.Struggles[reb], "check 2: the gate refuses anyone armed and fighting")
+-- check 3: every door of custody refuses, and says so in the errors file
+local e1 = #_errors
+ok(LC.MarchToPrison(reb, sol, 180, "x") == false and not LC.Marching[reb], "check 3: no march to the cells")
+ok(LC.DetainOnTheSpot(reb, sol, "x") == false and not LC.Detained[reb], "check 3: no street detention")
+ok(LC.Incarcerate(reb, 180, "x", sol) == false and not LC.Prisoners[reb], "check 3: no cell")
+ok(#_errors > e1 and tostring(_errors[#_errors]):find("custody refused", 1, true) ~= nil, "(and each refusal is written down: a path skipped the first two checks)", tostring(_errors[#_errors]))
+for i = #_errors, e1 + 1, -1 do table.remove(_errors, i) end
+-- E on a unit in a firefight is not a surrender
+ok(LC.Surrender(reb, sol) == false and not LC.InCustody(reb), "pressing E on a unit with a gun out is not giving up")
+-- the hit that used to be an arrest is just a hit
+local function hit(by, who, amount, club)
+    local d = _dmg(by, amount, club and DMG_CLUB or nil)
+    return hook.Run("EntityTakeDamage", who, d), d
+end
+sst.enemy = reb
+reb:SetHealth(25)
+local blocked = hit(sol, reb, 10)
+ok(blocked ~= true and not LC.InCustody(reb) and not LC.Struggles[reb], "hurt badly with a gun out: shot, not cuffed")
+reb:SetHealth(100)
+-- no longer fighting, on their feet: the struggle, never straight into cuffs
+fresh(reb)
+hands(reb)
+reb.lcStillSince = CurTime() - 10
+ok(LC.NPCTakesIn(sol, reb) == true and LC.Struggles[reb] ~= nil and LC.Struggles[reb].officer == sol and not LC.Marching[reb],
+    "a unit laying hands on someone on their feet: the struggle first, no cuffs yet")
+local sm = _lastnet("lc_struggle")
+ok(sm and sm.to == reb and sm.data[1] == true and sm.data[2] == "resist" and sm.data[3] == "the soldier", "they see the struggle bar, against the soldier", sm and tostring(sm.data[3]))
+ok(reb:GetNW2Float("lc_struggle_until", 0) > CurTime(), "(held where they stand while it lasts)")
+local blocked2, d2 = hit(sol, reb, 10)
+ok(blocked2 == true and d2:GetDamage() == 0, "nobody shoots or beats them while a unit has hold of them")
+-- press hard: free, a head start, and wanted for it
+for _ = 1, 48 do _netcall("lc_struggle_press", reb) _run(0.08) end
+_run(1)
+ok(LC.Struggles[reb] == nil and not LC.InCustody(reb) and (reb.lcBrokeFree or 0) > CurTime(), "pressing E hard enough: free, and not in custody")
+ok(LC.NPCTakesIn(sol, reb) == false and LC.NPCSubdue(sol, sst, reb, CurTime()) == false, "(a head start: no unit grabs them again at once)")
+-- do nothing: cuffed and walked in, and then (only then) the doors open
+fresh(reb)
+LC.ReportCrime(reb, "Curfew violation", 300)
+reb:SetPos(C0)
+sol:SetPos(C0 + Vector(60, 0, 0))
+sst.stunnedUntil = 0
+ok(LC.NPCTakesIn(sol, reb) == true and LC.Struggles[reb] ~= nil, "caught again: another struggle")
+_run(5)
+ok(LC.Struggles[reb] == nil and (LC.Marching[reb] ~= nil or LC.Prisoners[reb] ~= nil), "doing nothing: cuffed and taken in", tostring(LC.InCustody(reb)))
+local m = LC.Marching[reb]
+ok((m and m.reason or (LC.Prisoners[reb] and LC.Prisoners[reb].reason)) == "Curfew violation", "the charge is what they were wanted for")
+LC.FreeFromCustody(reb)
+ok(not LC.InCustody(reb) and not LC.IsTied(reb) and LC.WantedReason(reb) == "", "(and staff can take them out of it: below)")
+-- drawing a gun while held: he lets go, and it is a fight
+fresh(reb)
+reb:SetPos(C0) sol:SetPos(C0 + Vector(60, 0, 0)) sst.stunnedUntil = 0 sst.marching, sst.questLock = nil, nil
+hands(reb)
+ok(LC.NPCTakesIn(sol, reb) == true and LC.Struggles[reb] ~= nil, "held again")
+if not reb:HasWeapon("weapon_smg1") then reb:Give("weapon_smg1") end
+reb:SelectWeapon("weapon_smg1")
+_run(0.5)
+ok(LC.Struggles[reb] == nil and not LC.InCustody(reb), "a gun drawn while held: the struggle ends, nobody is cuffed")
+-- someone with their hands up goes quietly: no struggle, straight to the cuffs
+fresh(reb)
+hands(reb)
+reb:SetPos(C0) sol:SetPos(C0 + Vector(60, 0, 0))
+reb:SetNW2Bool("lc_handsup", true)
+ok(LC.NPCTakesIn(sol, reb) == true and LC.Struggles[reb] == nil and LC.InCustody(reb), "hands up: taken in with no struggle (their own choice)")
+reb:SetNW2Bool("lc_handsup", false)
+LC.FreeFromCustody(reb)
+-- from across the street nobody is cuffed by a bullet
+fresh(reb)
+sst.marching, sst.questLock = nil, nil
+sst.enemy = reb
+LC.ReportCrime(reb, "Curfew violation", 300)
+reb:SetPos(C0) sol:SetPos(C0 + Vector(900, 0, 0))
+reb:SetHealth(25)
+local far = hit(sol, reb, 10)
+ok(far ~= true and not LC.InCustody(reb) and not LC.Struggles[reb], "shot from across the street: no cuffs appear on them")
+reb:SetHealth(100)
+
+section("14 November, group A: units shoot back at the fighters shooting them")
+local npcR, rstR = LC.Spawners.rebel(C0 + Vector(0, 600, 0))
+local unitH, ustH = LC.Spawners.soldier(C0 + Vector(200, 600, 0))
+npcR.sim, unitH.sim = false, false
+local other = newPlayer("A1Other", "citizen")
+LC.SetState(unitH, ustH, "hostile") ustH.enemy = other -- (already after someone else: he used to ignore the fighter)
+local rels = {}
+local addWas = unitH.AddEntityRelationship
+unitH.AddEntityRelationship = function(self, e, d, pr) rels[e] = d if addWas then return addWas(self, e, d, pr) end end
+hit(npcR, unitH, 5)
+ok(rels[npcR] == D_HT and ustH.rebelFoes and ustH.rebelFoes[npcR] ~= nil, "a unit hit by a fighter hates that fighter, whoever else he was after")
+ok(ustH.enemy == other, "(and keeps the enemy he had)")
+ustH.rebelFoes[npcR] = CurTime() - 1
+rstR.foe = nil
+LC.UnitRebelFoesTick(CurTime())
+ok(rels[npcR] == D_NU and ustH.rebelFoes[npcR] == nil, "left alone by that fighter for a while: back to ignoring each other")
+unitH.AddEntityRelationship = addWas
+npcR:Remove() unitH:Remove()
+
+section("14 November, group A: the Administrator is immune to her own")
+local adm = newPlayer("A2Admin", "admin")
+_run(0.3)
+adm:SetPos(C0 + Vector(0, -600, 0))
+local cop, cst = LC.Spawners.cop(C0 + Vector(60, -600, 0))
+cop.sim = false
+ok(LC.IsAdministrator(adm), "(she is the Administrator)")
+hit(adm, cop, 5)
+ok(cst.enemy ~= adm and cst.state ~= "hostile" and cst.provokedBy ~= adm and not LC.PlayerIsWanted(adm), "she strikes a unit: nobody turns on her, nothing is remembered", tostring(cst.state))
+LC.MakeCopsHostile(adm, adm:GetPos(), nil)
+ok(cst.enemy ~= adm and cst.state ~= "hostile", "no unit can be set on her")
+cst.enemy = adm
+adm:SetHealth(15)
+ok(LC.NPCTakesIn(cop, adm) == false and not LC.InCustody(adm) and not LC.Struggles[adm], "she is never taken in by a unit")
+ok(LC.Incarcerate(adm, 180, "x", cop) == false and LC.MarchToPrison(adm, cop, 180, "x") == false and LC.DetainOnTheSpot(adm, cop, "x") == false,
+    "(not by any door of custody either)")
+local stopped, dd = hit(cop, adm, 30)
+ok(stopped == true and dd:GetDamage() == 0, "a unit's blow or bullet does her no harm")
+local guardShot = _dmg(sol, 40)
+ok(hook.Run("EntityTakeDamage", adm, guardShot) == true and guardShot:GetDamage() == 0, "nor a soldier's (a guard firing past her)")
+local cit = newPlayer("A2Cit", "citizen")
+local byPlayer = _dmg(cit, 10)
+ok(LC.AdministratorImmune(adm, byPlayer) ~= true and byPlayer:GetDamage() == 10, "(a person can still hurt her)")
+adm:SetHealth(100)
+LC.RefreshRelations()
+ok(cst.rel and cst.rel[adm] == D_LI, "every unit holds her as one of their own")
+-- her guards come armed
+local bare = { GetActiveWeapon = function() return NULL end, Give = function(self, c) self.got = c end, IsValid = function() return true end }
+ok(LC.AdminGuardArm(bare) == true and bare.got == "weapon_ar2", "a guard with empty hands is handed a pulse rifle")
+local armed = { GetActiveWeapon = function() return sol end, Give = function(self, c) self.got = c end, IsValid = function() return true end }
+ok(LC.AdminGuardArm(armed) == false and armed.got == nil, "(one who has his rifle is left alone)")
+
+section("14 November, group A: the charge is the true one, a fair sentence, no way to shorten it, out of custody")
+-- the old charge does not stay on their name
+local con = newPlayer("A3Con", "citizen")
+_run(0.3)
+con:SetPos(C0 + Vector(0, 1400, 0))
+local cop3, cst3 = LC.Spawners.cop(C0 + Vector(60, 1400, 0))
+cop3.sim = false
+LC.ReportCrime(con, "Carrying a weapon (a crowbar)", 60)
+ok(LC.WantedReason(con) == "Carrying a weapon (a crowbar)", "wanted: the reason is known")
+LC.ClearWanted(con)
+ok(LC.WantedReason(con) == "" and con:GetNW2String("lc_wanted_reason", "x") == "", "no longer wanted: the reason is gone with it")
+con:SetNW2String("lc_wanted_reason", "Carrying a weapon (a crowbar)") -- (as it used to be left)
+con:SetNW2Bool("lc_handsup", true)
+cst3.enemy = con
+ok(LC.NPCTakesIn(cop3, con) == true and LC.InCustody(con), "taken in while not wanted for anything")
+local mm = LC.Marching[con]
+local charge = mm and mm.reason or (LC.Prisoners[con] and LC.Prisoners[con].reason)
+ok(charge == "Resisting Civil Protection", "the charge is not an old one left on their name", tostring(charge))
+con:SetNW2Bool("lc_handsup", false)
+LC.FreeFromCustody(con)
+-- the most a sentence can be goes by Civil Standing
+_setcvar("lc_sentences", 1)
+_setcvar("lc_sentence_max", 30)
+local function setStanding(p, v) LC.AddStanding(p, v - LC.Standing(p)) end
+local function record(p)
+    LC.RapClear(p)
+    for _, r in ipairs({ "Murder of a Civil Protection officer", "Assaulting Civil Protection", "Sabotage" }) do
+        hook.Run("LivingCityWanted", p, r, 60)
+    end
+end
+record(con) setStanding(con, -40)
+local secs, words = LC.SentenceFor(con, 180, "x", cop3)
+ok(secs == 300 and tostring(words):find("the most for your Civil Standing", 1, true) ~= nil, "Civil Standing -40 with a long record: 5 minutes, not 30", tostring(secs) .. " " .. tostring(words))
+record(con) setStanding(con, -100)
+ok(LC.SentenceFor(con, 180, "x", cop3) == 600, "-100: 10 minutes at most")
+record(con) setStanding(con, -300)
+ok(LC.SentenceFor(con, 180, "x", cop3) == 1200, "-300: 20 at most")
+record(con) setStanding(con, -600)
+ok(LC.SentenceFor(con, 180, "x", cop3) == 1800, "-600: the whole of lc_sentence_max (30)")
+record(con) setStanding(con, -40)
+hook.Run("LivingCityWanted", con, "Curfew violation", 60)
+LC.RapClear(con)
+hook.Run("LivingCityWanted", con, "Curfew violation", 60)
+ok(LC.SentenceFor(con, 180, "x", cop3) == 180, "(a short record is what it adds up to, as before: one petty crime, 3 minutes)")
+-- escaping and walking back in does not shorten a sentence
+fresh(con)
+LC.RapClear(con)
+con:SetPos(C0 + Vector(0, 1400, 0))
+con.lcExactSentence = true
+ok(LC.Incarcerate(con, 1000, "x", nil) == true and LC.Prisoners[con] ~= nil, "(in a cell for 1000 seconds)")
+con.lcExactSentence = nil
+LC.EscapePrisoner(con)
+ok(not LC.Prisoners[con] and LC.JailOwed(con) > 990, "escaped: what was left is still owed", tostring(LC.JailOwed(con)))
+con.lcGraceUntil = nil
+con:SetNW2Bool("lc_handsup", true)
+con:SetPos(C0 + Vector(1380, 0, 0)) cop3:SetPos(C0 + Vector(1340, 0, 0)) -- (at the cells: straight in)
+ok(LC.NPCTakesIn(cop3, con) == true and LC.Prisoners[con] ~= nil, "caught again", tostring(LC.InCustody(con)))
+local left = LC.Prisoners[con] and (LC.Prisoners[con].untilT - CurTime()) or 0
+ok(left > 990 + 300 and LC.JailOwed(con) == 0, "the new sentence is the escape (6 minutes) and the time they ran from, not 3 minutes", tostring(left))
+con:SetNW2Bool("lc_handsup", false)
+-- staff: out of custody at once, from every stage
+ok(select(1, LC.AdminTool(admin, con, "free")) == true and not LC.InCustody(con) and not LC.PlayerIsWanted(con) and #LC.RapSheet(con) == 0,
+    "Admin tools > Out of custody: out of a cell, not wanted, nothing on the record")
+ok((con.lcProbationUntil or 0) <= CurTime(), "(and no probation for it)")
+fresh(con)
+con:SetPos(C0 + Vector(0, 1400, 0)) cop3:SetPos(C0 + Vector(60, 1400, 0))
+cst3.marching, cst3.questLock = nil, nil
+con:SetNW2Bool("lc_handsup", true)
+LC.ReportCrime(con, "Curfew violation", 300)
+ok(LC.NPCTakesIn(cop3, con) == true and LC.Marching[con] ~= nil and LC.IsTied(con), "(being marched, cuffed)", tostring(LC.InCustody(con)))
+con:SetNW2Bool("lc_handsup", false)
+LC.AdminTool(admin, con, "free")
+ok(not LC.Marching[con] and not LC.IsTied(con) and not LC.InCustody(con) and not cst3.marching, "out of a march: cuffs off, the unit goes back to his day")
+_run(12)
+ok(not LC.InCustody(con), "(and it does not go ahead a few seconds later)")
+LC.ReportCrime(con, "Curfew violation", 300)
+ok(LC.NPCTakesIn(cop3, con) == true and LC.Struggles[con] ~= nil, "(held in a struggle)")
+LC.AdminTool(admin, con, "free")
+ok(LC.Struggles[con] == nil and con:GetNW2Float("lc_struggle_until", 0) == 0, "out of a struggle")
+setStanding(con, 0)
+ok(#_errors == errs0, "(no errors in any of it)", _errors[errs0 + 1])
+for _, e in ipairs({ sol, cop, cop3 }) do if IsValid(e) then e:Remove() end end
+for _, p in ipairs({ reb, adm, cit, con, other }) do p:SetPos(Vector(-121000, -121000, 0)) end
+end
+Nov14A_CustodyTests()
 
 
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")

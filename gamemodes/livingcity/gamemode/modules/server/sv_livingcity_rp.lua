@@ -515,6 +515,7 @@ local function CuffDowned(cop, ply)
     if not LC.Incarcerate then return false end
     local d = LC.Downed[ply]
     if not d then return false end
+    if LC.ArrestChanceGiven then LC.ArrestChanceGiven(ply, true) end -- (down: nothing to struggle with)
     LC.Revive(ply, 10, cop)
     local secs = GetConVar("lc_prison_time") and GetConVar("lc_prison_time"):GetFloat() or 180
     LC.Incarcerate(ply, secs, "Arrested while incapacitated", cop)
