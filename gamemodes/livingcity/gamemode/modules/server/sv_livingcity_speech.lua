@@ -305,7 +305,7 @@ end
 function LC.CallSpeech(by, text)
     if S then return false, "The city is already gathering for an address." end
     local stand, crowd = LC.SpeechPlaces(IsValid(by) and by:GetPos() or nil)
-    if not stand then return false, "There's no speech crowd point in this city. (Staff: Miscount Editor > Point: speech crowd.)" end
+    if not stand then return false, "There's no speech crowd point in this city. (Staff: Miscount Editor > Point: Administrator's speech crowd.)" end
     local now = CurTime()
     S = { by = IsValid(by) and by or nil, text = text, stand = stand, crowd = crowd, startT = now,
           speakAt = now + cvMuster:GetFloat(), npcs = {}, beaten = {}, warned = {} }

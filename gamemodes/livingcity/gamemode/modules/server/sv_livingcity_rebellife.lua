@@ -16,7 +16,7 @@
       The fire      sitting round the burning barrel
       Sitting       on a chair at the camp table, a couch, a bench, or the
                     editor's sit, bench and lean points inside the zone
-      Sleeping      on a mattress, a bed, or the editor's "Point: bunk" (more
+      Sleeping      on a mattress, a bed, or the editor's "Point: Resistance bunk" (more
                     of them at night); a shout wakes them
 
     What's in the zone counts: props you placed and made persistent, the

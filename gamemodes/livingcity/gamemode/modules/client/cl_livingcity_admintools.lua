@@ -74,6 +74,8 @@ end
 
 local function Build()
     local x, y
+    -- (every button sends the window again: it stays where it was scrolled, like the pockets)
+    local keep = IsValid(frame) and LC_CL.ScrollOf and LC_CL.ScrollOf(frame.lcScroll) or nil
     if IsValid(frame) then x, y = frame:GetPos() frame:Remove() end
     frame = vgui.Create("DFrame")
     if LC_CL.SetTheme then LC_CL.SetTheme(frame, "staff") end -- (out of character: cl_livingcity_theme.lua)
@@ -92,6 +94,7 @@ local function Build()
     who.OnSelect = function(_, _, _, id) state.target = id Do("refresh") end
 
     local scroll = vgui.Create("DScrollPanel", frame)
+    frame.lcScroll = scroll
     scroll:Dock(FILL)
 
     local f = LCF and LCF.Get and LCF.Get(state.faction or "")
@@ -142,6 +145,7 @@ local function Build()
     local so = Section(scroll, "Handy")
     local orow = Row(so)
     Btn(orow, "Clear wanted", function() Do("clearwanted") end, 110)
+    Btn(orow, "Out of custody", function() Do("free") end, 120)
     Btn(orow, "Feed and heal", function() Do("needs") end, 110)
     Btn(orow, "Clear conduct strikes", function() Do("pardon") end, 150)
     local ir = Row(so)
@@ -198,6 +202,7 @@ local function Build()
     local rr2 = Row(sr2)
     local wipe = Btn(rr2, "Reset XP, credits and standing to 0", function() Do("resetme") end, 260)
     wipe:SetTextColor(Color(200, 60, 50))
+    if LC_CL.ScrollTo then LC_CL.ScrollTo(scroll, keep) end
 end
 
 net.Receive("lc_admintools", function()

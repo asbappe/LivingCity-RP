@@ -52,7 +52,7 @@ The owner: "is it possible to apply a 'cuffed' animation for NPCs and the player
 
 The owner: "can we make this an entity in the editor that an escaped prisoner, a thief, or a corrupt CP unit, can search and take from?"
 
-- **Editor:** "Fixture: evidence locker" (`lc_evidencelocker`, kind `evidlocker`, in the "Civil Protection and the Combine" folder). Setting `lc_evidence_locker` (1).
+- **Editor:** "Fixture: Civil Protection evidence locker" (`lc_evidencelocker`, kind `evidlocker`, in the "Civil Protection and the Combine" folder). Setting `lc_evidence_locker` (1).
 - **What is in it:** the evidence stock that already existed (what searches and raids confiscate, burned in public now and then: `sv_livingcity_evidence.lua`). New into that stock: what a **player unit's patdown** bags, what a city unit takes off a **player** it walks in, and the guns and radios kept back on release. It is kept in memory: a restart empties it.
 - **E on it** brings up a quick menu. A unit opens it with their own key and can take anything: no alarm, but another unit player who is looking sees it. Anyone else: **pick the lock** (8 seconds; seen by a unit, wanted; the usual odds) or **pry it with a crowbar** (5 seconds, loud, always wanted). Once open it stays open to that person for 90 seconds; taking something while a unit can see makes you wanted.
 - The newest eight kinds of thing are listed; one pick takes that whole stack (or one gun).

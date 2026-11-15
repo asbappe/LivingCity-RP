@@ -31,7 +31,7 @@
                                     2 people waking from sleep with weapons in their hands
                                     3 the grid failing, the whole city dark for a few minutes
                                     4 the last stand
-      Last stand  Where her transformer is (lc_adminpower, the editor's "Her last stand: the
+      Last stand  Where her transformer is (lc_adminpower, the editor's "Fixture:
                   Administrator's power"): at her desk if it's within reach of it, else beside it (none
                   placed: the G-Man brings one beside her desk). The Administrator (a player, brought
                   there, or the city's own, with a pulse rifle), lc_black_admin_health (600) health,
@@ -576,7 +576,7 @@ local function SpawnHer(pos)
     return npc
 end
 
--- The transformers powering her shield: the editor's "Her last stand: the Administrator's power" (lc_adminpower),
+-- The transformers powering her shield: the editor's "Fixture: Administrator's power" (lc_adminpower),
 -- 2 or 3 of them (the owner, 10 November), in the order of their numbers (1, 2, 3).
 function LC.CollapsePowers()
     local out = {}

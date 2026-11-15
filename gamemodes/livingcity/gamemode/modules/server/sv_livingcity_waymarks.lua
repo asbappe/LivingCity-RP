@@ -7,8 +7,8 @@
     forward, and another down ... the same orange color as the lambda that is
     also in the decal, or maybe ... 'Freedom this way'".
 
-    Five marks the Miscount Editor paints on a wall (Mark: Resistance arrow ...,
-    Mark: FREEDOM THIS WAY): a "waymark" point in the layout, its number the mark,
+    Five marks the Miscount Editor paints on a wall (Point: Resistance way mark ...,
+    Point: Resistance way mark, FREEDOM THIS WAY): a "waymark" point in the layout, its number the mark,
     its yaw the way the wall faces. They are sent to every player with the
     sprayed tags (lc_tags, sv_livingcity_scavenge.lua) and painted the same way
     (cl_livingcity_war.lua), but they are the layout's own: they never fade, and

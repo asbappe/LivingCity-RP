@@ -2184,13 +2184,20 @@ local function Pursue(npc, st, e, now)
     -- after someone who's harmed nobody: run them down and lay hands on them (no shots).
     -- If they turn violent (hurt anyone, a gun in hand, the alert climbs), weapons free.
     if st.arrestOnly then
-        if not e:IsPlayer() or LC.Violent(e) then
+        -- (armed and fighting: a gun or a grenade in hand, a shot just fired: fought, never cuffed. The owner, 14 November)
+        if not e:IsPlayer() or LC.Violent(e) or (LC.ArmedAndFighting and LC.ArmedAndFighting(e)) then
             st.arrestOnly = nil
             if e:IsPlayer() then SetRel(npc, st, e, D_HT) end
             npc:SetEnemy(e)
             if LC.ArmForAlert then LC.ArmForAlert(npc, st, e) end
         else
             local epos = e:GetPos()
+            -- (a unit has hold of them, and they're struggling: he holds on, the others stand by. sv_livingcity_arrest.lua)
+            local held = LC.Struggles and LC.Struggles[e]
+            if held then
+                if held.officer == npc and not npc:IsCurrentSchedule(SCHED_IDLE_STAND) then npc:SetSchedule(SCHED_IDLE_STAND) end
+                return
+            end
             -- (laid hands on only once they're subdued: beaten, down, or standing still for it)
             if npc:GetPos():DistToSqr(epos) < 90 * 90 and LC.NPCSubdue and LC.NPCSubdue(npc, st, e, now) then return end
             if (st.nextShout or 0) < now then
@@ -2549,8 +2556,9 @@ end
 
 function LC.RefreshRelations()
     -- each player is looked at once, not once per NPC
-    local players, zombie, combine, wanted = player.GetAll(), {}, {}, {}
+    local players, zombie, combine, wanted, admin = player.GetAll(), {}, {}, {}, {}
     for i, ply in ipairs(players) do
+        admin[i] = LC.IsAdministrator and LC.IsAdministrator(ply) or false
         zombie[i] = LC.PlayerIsZombie and LC.PlayerIsZombie(ply) or false
         combine[i] = not zombie[i] and LooksCombine(ply) or false
         wanted[i] = not zombie[i] and LC.PlayerIsWanted and LC.PlayerIsWanted(ply) or false
@@ -2570,6 +2578,9 @@ function LC.RefreshRelations()
                 elseif security then
                     if z then
                         SetRel(npc, st, ply, D_HT)
+                    elseif admin[i] then
+                        SetRel(npc, st, ply, D_LI) -- the Administrator: never an enemy
+                        if st.enemy == ply then st.enemy = nil end
                     elseif role == "scanner" and combine[i] then
                         SetRel(npc, st, ply, D_LI) -- one of ours
                     elseif st.enemy ~= ply and not wanted[i] then
@@ -2763,6 +2774,8 @@ end
 -- level calls for it.
 function LC.MakeOneHostile(npc, st, target)
     local now = CurTime()
+    -- the Administrator is never the Combine's enemy, whatever she does (the owner, 14 November: "immune to it all")
+    if IsValid(target) and target:IsPlayer() and LC.IsAdministrator and LC.IsAdministrator(target) then return end
     -- walking a prisoner in (sv_livingcity_march.lua): he only lets go of him to
     -- fight whoever attacks him, not to chase someone else
     if st.marching and not (IsValid(target) and st.provokedBy == target and (st.provokedUntil or 0) > now) then return end
@@ -3026,6 +3039,9 @@ hook.Add("EntityTakeDamage", "LivingCityDamage", function(victim, dmg)
 
     -- Civil Protection players can rough up citizens without the NPC cops caring
     if LC.PlayerIsCP(attacker) and st.role == "citizen" then return end
+
+    -- the Administrator strikes one of her own: nobody remembers it, nobody answers it (the owner, 14 November)
+    if (IsSecurity(st) or st.role == "scanner") and LC.IsAdministrator and LC.IsAdministrator(attacker) then return end
 
     -- a unit that gets hurt remembers who did it, however far away they were
     if IsSecurity(st) or st.role == "scanner" then

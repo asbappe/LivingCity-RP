@@ -100,6 +100,7 @@ local ACTIONS = {
         ResetAllXP(t)
         SetCredits(t, 0)
         SetStanding(t, 0)
+        if LC.RapClear then LC.RapClear(t) end -- (and nothing left on their record for a later sentence)
         return true, t:Nick() .. ": XP, credits and standing all back to 0."
     end,
     faction = function(t, v)
@@ -113,6 +114,12 @@ local ACTIONS = {
         if LC.CalmCops then LC.CalmCops(t) end
         if LC.SetAlert then LC.Try(LC.SetAlert, t, 0) end
         return true, t:Nick() .. " is no longer wanted."
+    end,
+    -- out of custody at once: a struggle, the cuffs, a march, a street detention, a cell (sv_livingcity_prison.lua)
+    free = function(t)
+        if not LC.FreeFromCustody then return false, "No prison here." end
+        LC.FreeFromCustody(t)
+        return true, t:Nick() .. " is out of custody."
     end,
     pardon = function(t)
         if not LC.PardonStrikes then return false, "No conduct tracking here." end
