@@ -1026,9 +1026,12 @@ local function LineThink(now)
         end
         -- rations being handed out and the line short: people are called to it from across the city
         -- (the owner, 7 November: the line stood empty, and the supervision job couldn't be done)
+        -- (and until the line is full, not only up to three: everyone is to come for theirs, the owner, 15 November)
         if LC.Event == "rations" and now > (line.nextCall or 0) then
-            line.nextCall = now + 6
-            if #line.q + Coming(g) < math.min(#line.slots, 3) then LC.CallToLine(g) end
+            line.nextCall = now + 4
+            for _ = 1, 3 do
+                if #line.q + Coming(g) >= #line.slots or not LC.CallToLine(g) then break end
+            end
         end
         if now > (line.nextOrient or 0) then
             line.nextOrient = now + 10
@@ -1112,16 +1115,35 @@ function LC.CallToLine(g)
     if not front then return false end
     local now = CurTime()
     local best, bd
+    -- (not only the idle: whoever has not had theirs, whatever they are doing, by day out of bed too; the owner,
+    -- 15 November: the citizens "seem to not show up to scripted events like this ... nor the ration line". The
+    -- same rule as the morning exercise's, LC.ExerciseDraftable.)
+    local wake = not (LC.DayPhase and LC.DayPhase() == "night")
     for npc, st in pairs(LC.NPCs) do
-        if IsValid(npc) and st.role == "citizen" and st.state == "idle" and not st.test and not st.questLock and not st.leaving
-            and not st.line and not st.lineHeading and not (st.servedUntil and now < st.servedUntil) and now > (st.lineNoWay or 0) then
+        local can = IsValid(npc) and st.role == "citizen" and not st.test and not st.questLock and not st.leaving
+        if can then
+            if LC.ExerciseDraftable then can = LC.ExerciseDraftable(npc, st, wake) else can = st.state == "idle" end
+        end
+        if can and not st.line and not st.lineHeading and not (st.servedUntil and now < st.servedUntil) and now > (st.lineNoWay or 0) then
             local d = npc:GetPos():DistToSqr(front)
             if not bd or d < bd then best, bd = npc, d end
         end
     end
     if not best then return false end
     local st = LC.NPCs[best]
+    local was = st.state
+    if was ~= "idle" and was ~= "moving" then
+        -- (they drop what they were doing)
+        if LC.ExerciseCallAway then LC.ExerciseCallAway(best, st)
+        else
+            if was == "abed" and LC.NPCBedUp then LC.NPCBedUp(best, st) end
+            if was == "busy" then EndBusy(best, st, false) end
+            if st.npcWork and LC.NPCWorkReset then LC.NPCWorkReset(best, st) end
+            Release(best, st)
+        end
+    end
     if JoinLine(best, st, true) then return true end
+    if was ~= "idle" and was ~= "moving" and st.state ~= "idle" then SetState(best, st, "idle") st.untilT = now + 2 end
     st.lineNoWay = now + 120 -- (no way there from where they are: somebody else next time)
     return false
 end

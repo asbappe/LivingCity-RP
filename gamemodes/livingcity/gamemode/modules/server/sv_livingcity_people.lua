@@ -282,6 +282,22 @@ function LC.PersonAvailable(role)
     return false
 end
 
+-- A mandatory call by day (her address, the morning exercise, a parade, a ration handout): everyone at home
+-- is free to come out now, their time indoors cut short (the owner, 15 November: "please make sure all the
+-- citizen NPCs show up"). How many that frees. (Whoever is leaving the city for good stays gone.)
+function LC.PeopleCallOut(role)
+    if not P.loaded then LC.LoadPeople() end
+    role = role or "citizen"
+    local n = 0
+    for _, p in ipairs(P.list) do
+        if p.alive and p.role == role and not InWorld(p) and AtHome(p) and not p.moving then
+            p.homeUntil = 0
+            n = n + 1
+        end
+    end
+    return n
+end
+
 -- Who comes out next: someone not already out there, and whoever has been
 -- away longest. want.rebel asks for a sympathizer, want.job for a particular trade.
 function LC.ClaimProfile(role, want)

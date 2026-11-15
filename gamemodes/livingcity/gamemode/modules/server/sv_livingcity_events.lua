@@ -332,6 +332,7 @@ function LC.StartEvent(name, minutes)
     Publish()
 
     if name == "rations" then
+        if LC.PeopleCallOut then LC.PeopleCallOut("citizen") end -- (those at home are free to come out for theirs)
         for _, line in pairs(LC.Lines or {}) do line.nextAdvance = CurTime() + 8 end
         -- pull idle citizens toward the lines right away
         for npc, st in pairs(LC.NPCs or {}) do

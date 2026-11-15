@@ -37,7 +37,7 @@ local cvMuster  = CreateConVar("lc_speech_muster", "120", FLAGS, "Seconds the ci
 local cvAfter   = CreateConVar("lc_speech_after", "45", FLAGS, "Seconds the crowd stays after she has spoken")
 local cvRadius  = CreateConVar("lc_speech_radius", "650", FLAGS, "How close to the speech crowd point counts as being at the address")
 local cvBeats   = CreateConVar("lc_speech_beatings", "3", FLAGS, "Blows with the stick before someone who skipped the address blacks out (and comes to in the crowd)")
-local cvNPCs    = CreateConVar("lc_speech_npcs", "18", FLAGS, "How many of the city's own citizens gather for an address")
+local cvNPCs    = CreateConVar("lc_speech_npcs", "0", FLAGS, "How many of the city's own citizens gather for an address (0: every one of them)")
 local cvCity    = CreateConVar("lc_speech_city", "1", FLAGS, "With nobody playing the Administrator, the city's own Administrator gives an address on the days with no morning exercise")
 local cvLook    = CreateConVar("lc_speech_lookback", "240", FLAGS, "Minutes of the chronicle the city's own Administrator looks back over for her address")
 local cvCityHr  = CreateConVar("lc_speech_city_hour", "12", FLAGS, "The city hour the city's own Administrator gives her address")
@@ -209,21 +209,22 @@ function LC.SpeechPlaces(from)
 end
 local function Where(pos) return LC.DescribePlace and LC.DescribePlace(pos) or "the speech stand" end
 
--- The i-th place in the crowd: rows of six facing the stand.
-local function SpotFor(c, st, i)
+-- The i-th place in the crowd: rows of six facing the stand (cols: wider rows, for a whole city of them).
+local function SpotFor(c, st, i, cols)
+    cols = cols or 6
     local toward = st - c
     toward.z = 0
     if toward:LengthSqr() < 1 then toward = Vector(1, 0, 0) end
     toward:Normalize()
     local side = Vector(-toward.y, toward.x, 0)
-    local row, col = math.floor((i - 1) / 6), (i - 1) % 6
-    local pos = c + side * ((col - 2.5) * 56) - toward * (row * 60)
+    local row, col = math.floor((i - 1) / cols), (i - 1) % cols
+    local pos = c + side * ((col - (cols - 1) / 2) * 56) - toward * (row * 60)
     pos = (LC.GroundAt and LC.GroundAt(pos + Vector(0, 0, 30))) or pos
     return pos, math.deg(math.atan2(toward.y, toward.x))
 end
 function LC.SpeechSpot(i)
     if not S then return nil end
-    return SpotFor(S.crowd.pos, S.stand.pos, i)
+    return SpotFor(S.crowd.pos, S.stand.pos, i, S.cols)
 end
 
 local function AtSpeech(p)
@@ -271,24 +272,139 @@ local function Dress()
     end
 end
 
--- The city's own citizens walk to the crowd.
-local function Gather()
-    local n, got = cvNPCs:GetInt(), 0
-    S.npcs = {}
+-- Who of the city's own can be called to it, and how they drop what they were doing (the owner, 15 November:
+-- "please make sure all the citizen NPCs show up, they seem to not show up to scripted events like this"). Only
+-- the idle and the walking used to be asked, once, and at most 18 of them: at most hours nearly everyone is
+-- sitting, working, in a line or at home. The same rule as the morning exercise's (sv_livingcity_exercise.lua):
+-- whatever they are doing, by day out of bed too; never one in a player's job, held, going home or in something
+-- scripted already.
+local CALL = { idle = true, moving = true, busy = true, inline = true, working = true }
+local function Callable(npc, st, wake)
+    if LC.ExerciseDraftable then return LC.ExerciseDraftable(npc, st, wake) end
+    if not IsValid(npc) or st.role ~= "citizen" or st.test or st.unmanaged or st.questLock or st.leaving or st.exCitizen then return false end
+    if st.carry and not st.npcWork then return false end
+    if st.state == "abed" then return wake == true end
+    return CALL[st.state] == true
+end
+local function CallAway(npc, st)
+    if LC.ExerciseCallAway then return LC.ExerciseCallAway(npc, st) end
+    if st.state == "abed" and LC.NPCBedUp then LC.NPCBedUp(npc, st) end
+    if st.state == "busy" and LC.EndBusy then LC.EndBusy(npc, st, false) end
+    if st.line and LC.LeaveLine then LC.LeaveLine(npc, st) end
+    if st.npcWork and LC.NPCWorkReset then LC.NPCWorkReset(npc, st) end
+    if LC.Release then LC.Release(npc, st) end
+end
+local function Candidates()
+    local wake = not (LC.DayPhase and LC.DayPhase() == "night")
+    local now = CurTime()
+    local cands = {}
     for npc, st in pairs(LC.NPCs or {}) do
-        if got >= n then break end
-        if IsValid(npc) and st.role == "citizen" and (st.state == "idle" or st.state == "moving") and not st.unmanaged and not st.questLock
-            and not st.test and not st.leaving and not st.line and not st.npcWork and not st.carry and not st.exCitizen then
-            local pos, yaw = LC.SpeechSpot(got + 1)
-            if pos and LC.GoTo and LC.GoTo(npc, st, pos, false, { kind = "speech", pos = pos, yaw = yaw }) then
-                st.speechYaw = yaw
-                S.npcs[npc] = true
-                got = got + 1
+        if not S.npcs[npc] and not st.addressCrowd and now >= (st.speechNoWay or 0) and Callable(npc, st, wake) then
+            cands[#cands + 1] = { npc = npc, st = st, d = npc:GetPos():DistToSqr(S.crowd.pos) }
+        end
+    end
+    table.sort(cands, function(a, b) return a.d < b.d end)
+    return cands
+end
+
+-- The city's own citizens walk to the crowd: every one of them (lc_speech_npcs 0), nearest first. Asked again
+-- every few seconds until she speaks, so those who were held up or came out later come too.
+local function Gather()
+    local cap = cvNPCs:GetInt()
+    S.npcs = S.npcs or {}
+    S.spots = S.spots or 0
+    local now = CurTime()
+    for _, c in ipairs(Candidates()) do
+        if cap > 0 and S.spots >= cap then break end
+        local pos, yaw = LC.SpeechSpot(S.spots + 1)
+        if not pos then break end
+        local was = c.st.state
+        CallAway(c.npc, c.st)
+        if LC.GoTo and LC.GoTo(c.npc, c.st, pos, c.d > 1500 * 1500, { kind = "speech", pos = pos, yaw = yaw }) then
+            c.st.speechYaw = yaw
+            S.npcs[c.npc] = true
+            S.spots = S.spots + 1
+        else
+            c.st.speechNoWay = now + 120 -- (no way there from where they are: not asked again for a while)
+            if was ~= "idle" and was ~= "moving" then
+                LC.SetState(c.npc, c.st, "idle")
+                c.st.untilT = now + 2
             end
         end
     end
-    S.spots = got
-    return got
+    return S.spots
+end
+
+-- And those at home come out for it, by day: a few at each ask, from a doorway out of sight near the crowd
+-- (always one of the city's own people, never a nameless extra: sv_livingcity_people.lua).
+local function ComeOut(most)
+    if LC.DayPhase and LC.DayPhase() == "night" then return 0 end
+    local sp = LC.Spawners and LC.Spawners.citizen
+    if not (sp and LC.PersonAvailable and LC.AlarmSquadSpot) then return 0 end
+    if LC.PeopleCallOut then LC.PeopleCallOut("citizen") end
+    local cap, n = cvNPCs:GetInt(), 0
+    while n < most and (cap <= 0 or S.spots < cap) and LC.PersonAvailable("citizen") do
+        local pos, yaw = LC.SpeechSpot(S.spots + 1)
+        local from = pos and LC.AlarmSquadSpot(pos)
+        if not from then break end
+        local ok, npc, st = LC.Try(sp, from)
+        if not (ok and IsValid(npc) and st) then break end
+        n = n + 1
+        if LC.GoTo and LC.GoTo(npc, st, pos, true, { kind = "speech", pos = pos, yaw = yaw }) then
+            st.speechYaw = yaw
+            S.npcs[npc] = true
+            S.spots = S.spots + 1
+        end
+    end
+    return n
+end
+
+-- Three soldiers in a row in front of the stand, facing the crowd (the owner, 15 November: "can we have a row
+-- of 3 combine soldiers stand facing the speech crowd?"). The address's own: never from Overwatch's reserve,
+-- gone when it ends. One drawn off by a fight walks back to his place.
+local GUARD_OUT, GUARD_GAP = 110, 70
+local function PostGuards()
+    S.guards = {}
+    if not LC.SpawnSoldier then return end
+    local toward = S.crowd.pos - S.stand.pos
+    toward.z = 0
+    if toward:LengthSqr() < 1 then toward = Angle(0, S.stand.yaw or 0, 0):Forward() end
+    toward:Normalize()
+    local side = Vector(-toward.y, toward.x, 0)
+    local yaw = math.deg(math.atan2(toward.y, toward.x))
+    for i = -1, 1 do
+        local pos = S.stand.pos + toward * GUARD_OUT + side * (i * GUARD_GAP)
+        pos = (LC.GroundAt and LC.GroundAt(pos + Vector(0, 0, 30))) or pos
+        local ok, npc, st
+        if LC.ManpowerFree then ok, npc, st = LC.Try(LC.ManpowerFree, LC.SpawnSoldier, pos + Vector(0, 0, 4), "ar2")
+        else ok, npc, st = LC.Try(LC.SpawnSoldier, pos + Vector(0, 0, 4), "ar2") end
+        if ok and IsValid(npc) and st then
+            st.unmanaged, st.questLock = true, true
+            LC.SetState(npc, st, "speechguard")
+            npc:SetAngles(Angle(0, yaw, 0))
+            if LC.SetNPCStr then LC.SetNPCStr(npc, "lc_doing", "guarding the address") end
+            npc.lcSpeechGuard = { pos = pos, yaw = yaw }
+            S.guards[#S.guards + 1] = npc
+        end
+    end
+end
+LC.SpeechGuards = function() return S and S.guards or {} end
+local function GuardsThink(now)
+    if now < (S.nextGuards or 0) then return end
+    S.nextGuards = now + 2
+    for _, npc in ipairs(S.guards or {}) do
+        local post = IsValid(npc) and npc:Health() > 0 and npc.lcSpeechGuard
+        if post and not (npc.GetEnemy and IsValid(npc:GetEnemy())) then
+            if npc:GetPos():DistToSqr(post.pos) > 40 * 40 then
+                if npc.SetLastPosition and npc.SetSchedule then
+                    npc:SetLastPosition(post.pos)
+                    npc:SetSchedule(SCHED_FORCED_GO)
+                end
+            elseif LC.FaceYaw and math.abs((npc:GetAngles().y - post.yaw + 180) % 360 - 180) > 12 then
+                LC.FaceYaw(npc, post.yaw)
+            end
+        end
+    end
 end
 -- One of them at their place: they stand and face the stand (sv_livingcity.lua's Arrive hands them over).
 function LC.SpeechArrive(npc, st, now)
@@ -357,6 +473,11 @@ function LC.CallSpeech(by, text)
         S.text = table.concat(words, " ")
     end
     Dress()
+    PostGuards()
+    -- (rows of six for a small crowd; up to twelve across when the whole city comes)
+    local coming = #Candidates()
+    if cvNPCs:GetInt() > 0 then coming = math.min(coming, cvNPCs:GetInt()) end
+    S.cols = math.Clamp(math.ceil(math.sqrt(coming * 1.6)), 6, 12)
     if S.by then
         S.by:SetPos((LC.FreeSpawnPos and LC.FreeSpawnPos(stand.pos + Vector(0, 0, 8))) or stand.pos)
         if S.by.SetEyeAngles then S.by:SetEyeAngles(Angle(0, stand.yaw or 0, 0)) end
@@ -434,6 +555,7 @@ function LC.EndSpeech()
     end
     if IsValid(S.podium) then S.podium:Remove() end
     if IsValid(S.her) then S.her:Remove() end
+    for _, g in ipairs(S.guards or {}) do if IsValid(g) then g:Remove() end end
     S = nil
 end
 
@@ -535,6 +657,12 @@ function LC.SpeechThink(now)
         LC.EndSpeech()
         return
     end
+    if not S.spoken and now >= (S.nextGather or (S.startT + 4)) then
+        S.nextGather = now + 4
+        Gather()
+        ComeOut(4)
+    end
+    GuardsThink(now)
     if now >= S.startT + cvMuster:GetFloat() * 0.5 then Hunt(now) end
     if not S.spoken and now >= S.speakAt then Speak() end
     if S and S.queue then SpeakOn(now) end
