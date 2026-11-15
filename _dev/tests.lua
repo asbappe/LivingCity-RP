@@ -16644,7 +16644,10 @@ for _, m in ipairs(E.minges) do if IsValid(m) and not (m.lcMinge.carry or m.lcMi
 ok(freeM > maxM and freeM >= math.floor(maxM * LC.MingeMore) - 2, "once they leap there are half as many again (carrying people off keeps them busy, and the song is no longer)", freeM .. " of " .. maxM)
 ok(not b.lcEndTaken, "(someone still standing, five seconds and a bit from the end)")
 runTo(40.3)
-ok(b.lcEndTaken and b:GetNW2Bool("lc_end_spectating", false) and IsValid(b.lcMingeBody) and not IsValid(b.lcMingeSelf), "the last five seconds: whoever still stands is killed where they stand, a body on the ground")
+-- (carried off by one with its hands free, where there is one: the owner, 15 November, "they didn't carry me off";
+-- else cut down where they stand, a body on the ground)
+ok(b.lcEndTaken and ((b.lcMingeCarried ~= nil) or (b:GetNW2Bool("lc_end_spectating", false) and IsValid(b.lcMingeBody))) and not IsValid(b.lcMingeSelf),
+    "the last five seconds: whoever still stands is carried off into the dark (or, with none free, killed where they stand)")
 runTo(43.5)
 ok(a.lcEndTaken and b.lcEndTaken and a.alive and b.alive and a:GetNW2Bool("lc_end_spectating", false),
     "by the end everyone's gone, and the dead watch (nobody really dies: no close call, no new character)")
