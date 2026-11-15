@@ -31630,6 +31630,64 @@ end
 Nov14D_ForcefieldTests()
 
 
+function Nov14D_ConvoyRaidTests()
+section("The supply drop raided by rebel fighters: the guard down first, then every load, into the stores (14 November, group D)")
+local runWas, radioWas = LC.Running, LC.RadioNotice
+LC.Running = true
+LC.RadioNotice = function() end
+_setcvar("lc_rebel_ops", 1)
+_setcvar("lc_rebel_react", 1)
+if LC.Skirmish then LC.EndSkirmish(LC.Skirmish, "test") end
+local R0 = Vector(-108000, 60000, 0)
+local rz = LC.AddZone(R0, 400, "rebel", 0)
+local propsWas = LC.RebelProps[rz]
+local cache = ents.Create("lc_crate") cache:SetPos(R0) cache:Spawn()
+LC.RebelProps[rz] = { cache = cache, pots = {} }
+local at = R0 + Vector(1500, 0, 0)
+local crate = ents.Create("lc_supply") crate:SetPos(at) crate:Spawn()
+crate:SetNW2Int("lc_loads", 5)
+local guard = ents.Create("npc_combine_s") guard:SetPos(at + Vector(60, 0, 0)) guard:Spawn()
+local supWas = LC.Supply
+LC.Supply = { pos = at, crate = crate, startT = CurTime() - 60, guards = { guard }, props = {}, raided = {}, loads = 5 }
+local launched = LC.RebelReact(CurTime())
+local sk = LC.Skirmish
+ok(launched and sk and sk.purpose == "supply", "the fighters go for the supply drop")
+if sk then
+    sk.zone = sk.zone or rz
+    local reb = ents.Create("npc_citizen") reb:SetPos(at + Vector(-40, 0, 0)) reb:Spawn()
+    sk.rebels = sk.rebels or {}
+    sk.rebels[#sk.rebels + 1] = reb
+    local stock0 = cache.lcStock or 0
+    for _ = 1, 40 do LC.RebelOpTick(CurTime()) end
+    ok(LC.RebelSupplyGuarded(sk) and not sk.achieved and crate:GetNW2Int("lc_loads", 0) == 5, "while its guard stands, the crate is not touched", tostring(sk.progress))
+    guard:Remove()
+    ok(not LC.RebelSupplyGuarded(sk), "(the guard down: nobody guards it)")
+    local unit = newPlayer("ConvoyUnit14", "cp")
+    unit:SetPos(at + Vector(0, 100, 0))
+    local cpWas = LC.PlayerIsCP
+    LC.PlayerIsCP = function(p) return p == unit or cpWas(p) end
+    ok(LC.RebelSupplyGuarded(sk), "a unit standing beside the crate guards it too")
+    unit:SetPos(at + Vector(0, 5000, 0))
+    LC.PlayerIsCP = cpWas
+    for _ = 1, 40 do LC.RebelOpTick(CurTime()) if sk.achieved then break end end
+    ok(sk.achieved == true and crate:GetNW2Int("lc_loads", 0) == 0, "everyone guarding it down: they open it and take every load", tostring(crate:GetNW2Int("lc_loads", 0)))
+    local zc = LC.RebelProps[sk.zone] and LC.RebelProps[sk.zone].cache
+    ok(IsValid(zc) and (zc.lcStock or 0) > (zc == cache and stock0 or 0), "and it goes into the Resistance's stores at home", tostring(IsValid(zc) and zc.lcStock))
+    if IsValid(reb) then reb:Remove() end
+end
+if LC.Skirmish then LC.EndSkirmish(LC.Skirmish, "test") end
+LC.Supply = supWas
+LC.RebelProps[rz] = propsWas
+for n, st in pairs(LC.NPCs) do if IsValid(n) and st.role == "rebel" and st.zone == rz then LC.NPCs[n] = nil n:Remove() end end
+if IsValid(guard) then guard:Remove() end
+crate:Remove() cache:Remove()
+LC.RemoveZone(rz)
+_setcvar("lc_rebel_ops", 0)
+LC.Running, LC.RadioNotice = runWas, radioWas
+end
+Nov14D_ConvoyRaidTests()
+
+
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")
 ;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)
     -- Everything here is something the owner's server, files or players depend on. The list is

@@ -13,9 +13,11 @@
                       the objective for a while to pull it off; units can stop
                       them. And they answer what the Combine do: an Overwatch
                       landing or a supply drop gets a team sent at it (an
-                      ambush; a raid on the crate, two loads gone and food for
-                      the stores) lc_rebel_react of the time (0.5), straight
-                      away, whenever no other fight is on.
+                      ambush; a raid on the crate: once its guard, porters and
+                      any unit beside it are down they open it and take every
+                      load, two supplies each for the stores at home)
+                      lc_rebel_react of the time (0.5), straight away, whenever
+                      no other fight is on.
       Prison break    the Resistance can break one of their own out of a cell
                       (Operations board): get to the cell, hold it open while
                       the alarm goes. Units get "Prison break".
@@ -574,21 +576,53 @@ local function Achieve(sk)
     elseif purpose == "ambush" then
         Radio("resistance", "Our fighters hit the landing zone.")
     elseif purpose == "supply" then
+        -- the guard down, they open the crate and take all of it (the owner, 14 November: "can they open the
+        -- crates and raid the supplies (which automatically go into the resistance crates/network) when
+        -- they've killed all the nearby CP units and guards?"). It was two loads, guard or no guard.
         local sup, took = LC.Supply, 0
         if sup and IsValid(sup.crate) then
-            local left = sup.crate:GetNW2Int("lc_loads", 0)
-            took = math.min(2, left)
-            if took > 0 then sup.crate:SetNW2Int("lc_loads", left - took) end
+            took = sup.crate:GetNW2Int("lc_loads", 0)
+            if took > 0 then sup.crate:SetNW2Int("lc_loads", 0) end
+            -- the one nearest it is seen at it
+            local at, best, bd = sup.crate:GetPos()
+            for _, npc in ipairs(sk.rebels or {}) do
+                if IsValid(npc) and npc:Health() > 0 then
+                    local d = npc:GetPos():DistToSqr(at)
+                    if not bd or d < bd then best, bd = npc, d end
+                end
+            end
+            if best and LC.PlayGesture then LC.PlayGesture(best, { "ACT_PICKUP_GROUND", "pickup", "ACT_GMOD_GESTURE_ITEM_PLACE" }, 2) end
+            if took > 0 then sup.crate:EmitSound("physics/wood/wood_crate_impact_hard" .. math.random(1, 3) .. ".wav", 70) end
         end
-        -- and food for the stores at home
+        -- and it goes into the stores at home: two supplies for each load (never fewer than the three it always was)
         local rp = sk.zone and LC.RebelProps and LC.RebelProps[sk.zone]
-        if rp and IsValid(rp.cache) and LC.AddToCache then LC.AddToCache(rp.cache, 3) end
+        if rp and IsValid(rp.cache) and LC.AddToCache then LC.AddToCache(rp.cache, math.max(3, took * 2)) end
         Radio("resistance", took > 0 and string.format("Our fighters got into the supply drop: %d load%s gone, and food for the stores.", took, took == 1 and "" or "s")
             or "Our fighters hit the supply drop. Cleaned out already.")
         TellUnits("[CP net] Anticitizens looted the supply drop " .. Where(sk.target) .. ".")
     end
     hook.Run("LivingCityRebelOpDone", purpose, sk)
 end
+
+-- A supply drop's guard and porters, and any unit beside the crate: while one of them stands the fighters
+-- fight, and the crate is opened only once they are all down.
+local GUARD_NEAR = 350
+local function SupplyGuarded(sk)
+    local sup = LC.Supply
+    if not sup then return false end
+    for _, g in ipairs(sup.guards or {}) do
+        if IsValid(g) and g:Health() > 0 then return true end
+    end
+    local at = IsValid(sup.crate) and sup.crate:GetPos() or sk.target
+    for npc, st in pairs(LC.NPCs or {}) do
+        if (st.role == "cop" or st.role == "soldier") and IsValid(npc) and npc:Health() > 0 and npc:GetPos():DistToSqr(at) < GUARD_NEAR * GUARD_NEAR then return true end
+    end
+    for _, p in ipairs(player.GetAll()) do
+        if p:Alive() and LC.PlayerIsCP and LC.PlayerIsCP(p) and p:GetPos():DistToSqr(at) < GUARD_NEAR * GUARD_NEAR then return true end
+    end
+    return false
+end
+LC.RebelSupplyGuarded = SupplyGuarded
 
 local function OpTick(now)
     local sk = LC.Skirmish
@@ -599,7 +633,7 @@ local function OpTick(now)
     for _, npc in ipairs(sk.rebels or {}) do
         if IsValid(npc) and npc:Health() > 0 and npc:GetPos():DistToSqr(sk.target) < 280 * 280 then near = near + 1 end
     end
-    if near > 0 then
+    if near > 0 and not (sk.purpose == "supply" and SupplyGuarded(sk)) then
         sk.progress = (sk.progress or 0) + 1
         if not sk.alarmed and sk.progress >= math.floor((NEED[sk.purpose] or 20) / 2) then
             sk.alarmed = true
@@ -614,6 +648,8 @@ local function OpTick(now)
         if sk.progress >= (NEED[sk.purpose] or 20) then Achieve(sk) end
     end
 end
+
+LC.RebelOpTick = OpTick
 
 local function NearestRebelZone(pos)
     local best, bd
