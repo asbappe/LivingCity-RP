@@ -31497,6 +31497,73 @@ function Nov14C_EerieMusicTests()
 end
 Nov14C_EerieMusicTests()
 
+function Nov14C_PotsTests()
+    section("14 November notes (C): rebel pots stand on the camp's tables and dressers")
+    local runWas, seenWas = LC.Running, LC.IsSeen
+    LC.Running = true
+    LC.IsSeen = function() return false end
+    for _, z in ipairs(LC.ZonesOfKind("rebel")) do LC.RemoveZone(z) end
+    local at = Vector(-46000, 46000, 0)
+    local z = LC.AddZone(at, 500, "rebel", 0)
+    local function furniture(model, off)
+        local e = ents.Create("prop_physics")
+        e:SetModel(model) e:SetPos(at + off) e:Spawn()
+        e.lcDressing = true
+        return e
+    end
+    local tbl = furniture("models/props_c17/furnituretable002a.mdl", Vector(100, 0, 20))
+    local dresser = furniture("models/props_c17/FurnitureDrawer001a.mdl", Vector(-100, 60, 25))
+    local couch = furniture("models/props_c17/furniturecouch002a.mdl", Vector(0, -150, 20))
+    local dressedWas = LC.Dressed[z]
+    LC.Dressed[z] = { want = 3, ents = { couch, tbl, dresser } }
+    ok(LC.IsPotFurniture(tbl) and LC.IsPotFurniture(dresser) and not LC.IsPotFurniture(couch), "a table and a dresser take a pot; a couch does not")
+    LC.EnsureRebelProps()
+    local r = LC.RebelProps[z]
+    ok(r and #r.pots == 2, "the camp has its two pots", r and #r.pots)
+    local on = {}
+    for _, pot in ipairs(r and r.pots or {}) do
+        if IsValid(pot.lcSeat) then
+            on[pot.lcSeat] = pot
+            local p, f = pot:GetPos(), pot.lcSeat:GetPos()
+            if math.abs(p.x - f.x) > 40 or math.abs(p.y - f.y) > 40 or p.z <= f.z then on.bad = true end
+        end
+    end
+    ok(on[tbl] and on[dresser] and not on.bad, "one on the table and one on the dresser: over the middle of it, above it, not on the floor")
+    ok(not on[couch], "(none on the couch)")
+    -- the table is taken away (the dressing is refreshed): its pot comes down, it is not left in the air
+    local pot = on[tbl]
+    local was = pot and pot:GetPos()
+    tbl:Remove()
+    LC.Dressed[z].ents = { couch, dresser }
+    LC.EnsureRebelProps()
+    ok(pot and IsValid(pot) and pot.lcSeat == nil and pot:GetPos().z < was.z, "the table goes: its pot is set down on the floor")
+    -- a new table: the pot on the floor goes up on it, but only while nobody is looking
+    local tbl2 = furniture("models/props_c17/furnituretable001a.mdl", Vector(150, 100, 20))
+    LC.Dressed[z].ents = { couch, dresser, tbl2 }
+    LC.IsSeen = function() return true end
+    LC.EnsureRebelProps()
+    ok(pot.lcSeat == nil, "a player is looking: it does not jump onto the new table")
+    LC.IsSeen = function() return false end
+    LC.EnsureRebelProps()
+    ok(pot.lcSeat == tbl2, "nobody is looking: it stands on the new table")
+    -- the dresser is pushed across the room: its pot goes with it
+    local dp = on[dresser]
+    dresser:SetPos(at + Vector(-300, 200, 25))
+    LC.EnsureRebelProps()
+    ok(dp.lcSeat == dresser and math.abs(dp:GetPos().x - dresser:GetPos().x) < 40 and math.abs(dp:GetPos().y - dresser:GetPos().y) < 40, "the dresser is moved: its pot is on it still")
+    -- a pot a player carried and set down stays where they put it
+    pot.lcPlacedByHand, pot.lcSeat, pot.lcSeatAt = true, nil, nil
+    pot:SetPos(at + Vector(0, 300, 1))
+    LC.EnsureRebelProps()
+    ok(pot.lcSeat == nil and pot:GetPos():Distance(at + Vector(0, 300, 1)) < 2, "a pot a player set down by hand is left where they put it")
+    for _, e in ipairs({ dresser, couch, tbl2 }) do if IsValid(e) then e:Remove() end end
+    LC.Dressed[z] = dressedWas
+    LC.RemoveZone(z)
+    LC.EnsureRebelProps()
+    LC.Running, LC.IsSeen = runWas, seenWas
+end
+Nov14C_PotsTests()
+
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")
 ;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)
     -- Everything here is something the owner's server, files or players depend on. The list is
