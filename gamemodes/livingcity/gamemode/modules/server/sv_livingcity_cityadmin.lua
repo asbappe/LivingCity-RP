@@ -569,6 +569,7 @@ local AIM_RANGE = 800      -- (a gun pointed at her from this close counts)
 local KEEP_PLACE = 60      -- ("stay with me": this far from their place and they're called back)
 local COVER = 110          -- ("stand between us": this far out from her toward the threat, at most)
 local FOE_SECS = 60        -- (whoever hurt her or one of them is remembered this long)
+local LEASH = 450          -- (fighting by themselves: this far from her and they break off to catch up)
 
 local function PrefKey(admin) return (IsValid(admin) and admin.SteamID64) and admin:SteamID64() or tostring(admin) end
 function LC.AdminGuardPref(admin)
@@ -730,7 +731,16 @@ local function GuardTick(now)
             local pref = LC.AdminGuardPref(admin)
             local mode = LC.AdminGuardModes[pref.mode or ""] and pref.mode or "always"
             local hold = admin.lcGuardHold
-            local threats = (mode == "stay" or mode == "between") and #mine > 0 and LC.AdminGuardThreats(admin, mine) or nil
+            local threats = (mode == "stay" or mode == "between" or mode == "always") and #mine > 0 and LC.AdminGuardThreats(admin, mine) or nil
+            -- (as they always have, they now also shoot by themselves at anything hostile near her: a zombie, a
+            -- rebel with a gun, whoever hurt her; the owner, 15 November: "they should shoot at zombies for instance,
+            -- rather than requiring me to command them, but they should always follow me and take my orders to kill
+            -- someone/something above all else as a priority". Her order still comes first, and following her second.)
+            local hostiles = {}
+            if mode == "always" and threats then
+                for _, th in ipairs(threats) do if th.hostile then hostiles[#hostiles + 1] = th.e end end
+                threats = nil
+            end
             local trouble = threats ~= nil and #threats > 0
             local covering = {}
             local d = GUARD_DIST[pref.dist] or GUARD_DIST.medium
@@ -758,6 +768,10 @@ local function GuardTick(now)
                 elseif targeted then
                     Engage(npc, t)
                 else
+                    -- (always: the nearest hostile, a different one each when there are several, while they keep up with her)
+                    local foe = #hostiles > 0 and hostiles[((i - 1) % #hostiles) + 1] or nil
+                    if foe then Engage(npc, foe) end
+                    local go = foe and math.max(d.go, LEASH) or d.go
                     -- (F2 > Command the guards > Hold here: they keep to that spot instead, and walk back to it)
                     if hold then
                         local hp = hold.pos - hold.fwd * 40 + hold.right * (i % 2 == 0 and 50 or -50)
@@ -773,7 +787,7 @@ local function GuardTick(now)
                     if stuck then npc.lcGuardStill = now end
                     if dd > 900 * 900 or stuck then
                         npc:SetPos(admin:GetPos() - admin:GetForward() * 90 + admin:GetRight() * (i % 2 == 0 and 50 or -50) + Vector(0, 0, 4))
-                    elseif dd > d.go * d.go or (st and st.makeWayBack and now >= st.makeWayBack and not hold) then
+                    elseif dd > go * go or (st and st.makeWayBack and now >= st.makeWayBack and not hold) then
                         GoTo(npc, LC.AdminGuardSpot(admin, i, #mine), dd > 450 * 450)
                     end
                     if st and st.makeWayBack and now >= st.makeWayBack then st.makeWayBack = nil end -- (stepped aside: back to their place)

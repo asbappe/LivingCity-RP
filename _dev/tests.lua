@@ -28591,6 +28591,31 @@ function GuardOrdersTests()
     Tick()
     ok(g1.goal == nil, "(and a guard a few steps off is left be, as before)")
     reb:SetPos(away)
+    -- as always, and by themselves: a zombie near her, they shoot without being told (the owner, 15 November)
+    local zed = ents.Create("npc_zombie")
+    zed:SetPos(S + Vector(400, 0, 0)) zed:Spawn()
+    Reset()
+    g1:SetPos(S + Vector(-70, 50, 4)) g2:SetPos(S + Vector(-70, -50, 4))
+    Tick()
+    ok(LC.IsMonster(zed) and g1.enemy == zed and g2.enemy == zed and g1.goal == nil, "a zombie by her: they shoot it by themselves, from where they are", tostring(g1.enemy))
+    -- her order comes first
+    s1.adminTarget = reb
+    reb:SetPos(S + Vector(0, 500, 0))
+    Tick()
+    ok(g1.enemy == reb and (g2.enemy == zed or g2.enemy == reb), "whoever she orders killed comes first", tostring(g1.enemy == zed) .. " " .. tostring(g2.enemy == reb) .. " " .. tostring(LC.NPCs[g1] == s1) .. " " .. tostring(reb.hp or (reb.Health and reb:Health())))
+    s1.adminTarget = nil
+    reb:SetPos(away)
+    -- and keeping up with her: fighting a few steps off they stay; far behind they break off and catch up
+    Reset()
+    g1:SetPos(S + Vector(-300, 0, 4))
+    Tick()
+    ok(g1.goal == nil and g1.enemy == zed, "fighting a little way off: they stay on it")
+    Reset()
+    g1:SetPos(S + Vector(-600, 0, 4))
+    Tick()
+    ok(g1.goal ~= nil and Flat(g1.goal):Distance(S) < 150, "too far behind her: they catch up", tostring(g1.goal))
+    zed:Remove()
+    Reset()
 
     -- hold fire unless fired on
     ok(LC.AdminGuardOrder(adm, "holdfire") and Told(adm, "Hold fire"), "When there's trouble: Hold fire unless fired on")
