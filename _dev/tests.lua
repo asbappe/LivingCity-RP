@@ -31476,6 +31476,76 @@ end
 Nov14D_InfestJunkTests()
 
 
+function Nov14D_StalkerTerminalTests()
+section("A stalker at a terminal: onto the spot, leans in once, then works (14 November, group D)")
+local fake = ents.Create("npc_stalker")
+fake:SetModel("models/test_stalker_parts.mdl")
+fake.seqs = { console_work_pre = 4, console_work_loop = 5, console_work_post = 6 }
+fake.GetSequenceList = function() return { [0] = "idle01", [4] = "console_work_pre", [5] = "console_work_loop", [6] = "console_work_post" } end
+LC.StalkerConsoleSequence(fake, true)
+local entry, loop = LC.StalkerConsoleParts(fake)
+ok(entry == "console_work_pre" and loop == "console_work_loop", "a model with a lean in and a loop: the lean in once, the loop repeated (never the lean in over and over)", tostring(entry) .. " / " .. tostring(loop))
+ok(string.find(LC.StalkerSummary(), "console_work_pre, then console_work_loop", 1, true) ~= nil, "the debug report names both", LC.StalkerSequenceUsed)
+fake:SetModel("models/test_stalker_preonly.mdl")
+fake.seqs = { console_work_pre = 4 }
+fake.GetSequenceList = function() return { [0] = "idle01", [4] = "console_work_pre" } end
+LC.StalkerConsoleSequence(fake, true)
+entry, loop = LC.StalkerConsoleParts(fake)
+ok(entry == "console_work_pre" and loop == nil, "only a lean in: played once, nothing repeated", tostring(entry) .. " / " .. tostring(loop))
+fake:SetModel("models/test_stalker_plain.mdl")
+fake.seqs = { console_work = 7 }
+fake.GetSequenceList = nil
+LC.StalkerConsoleSequence(fake, true)
+entry, loop = LC.StalkerConsoleParts(fake)
+ok(entry == nil and loop == "console_work", "one plain animation: looped as before", tostring(entry) .. " / " .. tostring(loop))
+fake:Remove()
+
+local evWas = LC.Event
+LC.Event = nil
+_setcvar("lc_zone_stalkers", 1)
+local Z = Vector(-195000, 175000, 0)
+local hq = LC.AddZone(Z, 500, "combine", 0)
+local term = LC.AddPoint(Z + Vector(200, 0, 0), 90, "sterm", 0)
+LC.ZoneStalkersStaff(CurTime())
+local res
+for _, r in pairs(LC.ZoneStalkers) do if r.zone == hq then res = r end end
+if res and IsValid(res.npc) then
+    res.npc:SetModel("models/test_stalker_parts2.mdl")
+    res.npc.seqs = { console_work_pre = 4, console_work_loop = 5 }
+    res.npc.GetSequenceList = function() return { [4] = "console_work_pre", [5] = "console_work_loop" } end
+    LC.StalkerConsoleSequence(res.npc, true)
+    for _ = 1, 60 do
+        _run(0.5)
+        LC.ZoneStalkersTick(CurTime())
+        if res.phase == "working" then break end
+    end
+    local kv = IsValid(res.ss) and res.ss.kv or {}
+    ok(res.phase == "working" and kv.m_iszPlay == "console_work_pre" and kv.m_iszPostIdle == "console_work_loop",
+        "at its terminal: the lean in, then the loop", tostring(kv.m_iszPlay) .. " / " .. tostring(kv.m_iszPostIdle))
+    ok(tostring(kv.m_fMoveTo) == "1" and res.ss:GetPos():Distance(term.pos) < 1, "it walks the last steps onto the spot itself and faces the way the spot does", tostring(kv.m_fMoveTo))
+    -- something in the way of the last step: put on the spot, once
+    local first = res.ss
+    res.npc:SetPos(term.pos + Vector(-30, 0, 0))
+    res.ssAt = CurTime() - 9
+    LC.ZoneStalkersThink(CurTime())
+    local kv2 = IsValid(res.ss) and res.ss.kv or {}
+    ok(res.ss ~= first and tostring(kv2.m_fMoveTo) == "4", "still short of it after eight seconds: put on the spot", tostring(kv2.m_fMoveTo))
+    local second = res.ss
+    res.ssAt = CurTime() - 9
+    LC.ZoneStalkersThink(CurTime())
+    ok(res.ss == second, "(once: not again and again)")
+    if IsValid(res.ss) then res.ss:Remove() end
+    LC.ZoneStalkers[res.npc] = nil
+    res.npc:Remove()
+else
+    ok(false, "a resident stalker for the test")
+end
+LC.RemovePoint(term) LC.RemoveZone(hq)
+LC.Event = evWas
+end
+Nov14D_StalkerTerminalTests()
+
+
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")
 ;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)
     -- Everything here is something the owner's server, files or players depend on. The list is
