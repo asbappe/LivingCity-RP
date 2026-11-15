@@ -210,9 +210,7 @@ end
 local function Where(pos) return LC.DescribePlace and LC.DescribePlace(pos) or "the speech stand" end
 
 -- The i-th place in the crowd: rows of six facing the stand.
-function LC.SpeechSpot(i)
-    if not S then return nil end
-    local c, st = S.crowd.pos, S.stand.pos
+local function SpotFor(c, st, i)
     local toward = st - c
     toward.z = 0
     if toward:LengthSqr() < 1 then toward = Vector(1, 0, 0) end
@@ -222,6 +220,10 @@ function LC.SpeechSpot(i)
     local pos = c + side * ((col - 2.5) * 56) - toward * (row * 60)
     pos = (LC.GroundAt and LC.GroundAt(pos + Vector(0, 0, 30))) or pos
     return pos, math.deg(math.atan2(toward.y, toward.x))
+end
+function LC.SpeechSpot(i)
+    if not S then return nil end
+    return SpotFor(S.crowd.pos, S.stand.pos, i)
 end
 
 local function AtSpeech(p)
@@ -290,10 +292,48 @@ local function Gather()
 end
 -- One of them at their place: they stand and face the stand (sv_livingcity.lua's Arrive hands them over).
 function LC.SpeechArrive(npc, st, now)
-    if not (S and S.npcs[npc]) then st.untilT = now + 2 return end
+    if not (S and S.npcs[npc]) then
+        -- a few come to hear her for the agenda's "Address the citizens" (LC.SpeechGatherFew): they stay while it lasts
+        if st.addressCrowd and st.questLock == st.addressCrowd then
+            LC.SetState(npc, st, "event")
+            st.eventUntil = now + 300
+            if st.speechYaw and LC.FaceYaw then LC.FaceYaw(npc, st.speechYaw) end
+            return
+        end
+        st.untilT = now + 2
+        return
+    end
     LC.SetState(npc, st, "event")
     st.eventUntil = now + 900
     if st.speechYaw and LC.FaceYaw then LC.FaceYaw(npc, st.speechYaw) end
+end
+
+-- A few of the city's own walk to the crowd point to hear her, without a whole address (the agenda's
+-- "Address the citizens": the owner, 15 November, placed a stand and a crowd point and the job sent her to
+-- a random room). tag: what keeps them there (the job, which locks them to it: sv_livingcity_quests.lua).
+-- Returns the citizens on their way.
+function LC.SpeechGatherFew(stand, crowd, n, tag)
+    local out = {}
+    if not (stand and crowd) then return out end
+    local cands = {}
+    for npc, st in pairs(LC.NPCs or {}) do
+        if IsValid(npc) and st.role == "citizen" and (st.state == "idle" or st.state == "moving") and not st.unmanaged and not st.questLock
+            and not st.test and not st.leaving and not st.line and not st.npcWork and not st.carry and not st.exCitizen
+            and not (S and S.npcs[npc]) then
+            local d = npc:GetPos():DistToSqr(crowd.pos)
+            if d < 3000 * 3000 then cands[#cands + 1] = { npc = npc, st = st, d = d } end
+        end
+    end
+    table.sort(cands, function(a, b) return a.d < b.d end)
+    for _, c in ipairs(cands) do
+        if #out >= n then break end
+        local pos, yaw = SpotFor(crowd.pos, stand.pos, #out + 1)
+        if LC.GoTo and LC.GoTo(c.npc, c.st, pos, false, { kind = "speech", pos = pos, yaw = yaw }) then
+            c.st.speechYaw, c.st.addressCrowd = yaw, tag
+            out[#out + 1] = c.npc
+        end
+    end
+    return out
 end
 
 local function Tell(p, title, text, secs)

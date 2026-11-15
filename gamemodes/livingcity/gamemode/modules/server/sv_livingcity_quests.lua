@@ -2098,14 +2098,36 @@ T{
 T{
     id = "admin_address", factions = { admin = true },
     build = function(ply)
-        local spots = LC.PointsOfKind("idle")
-        local pos = #spots > 0 and Pick(spots).pos or Spot(ply, 300, 2000)
+        -- her speech stand, where one is placed (the owner, 15 November: "I placed an administrator speech point and
+        -- a crowd point, but the quest 'Address the citizens' is pointing me to a random room in a habitation block":
+        -- it took any spot where people idle). With a crowd point too, a few citizens come to it to hear her.
+        local from = IsValid(ply) and ply:GetPos() or Vector(0, 0, 0)
+        local stand, crowd
+        if LC.SpeechPlaces then stand, crowd = LC.SpeechPlaces(from) end
+        if not stand then
+            local bd
+            for _, p in ipairs(LC.PointsOfKind("speech")) do
+                local d = p.pos:DistToSqr(from)
+                if not bd or d < bd then stand, bd = p, d end
+            end
+        end
+        local pos = stand and stand.pos
+        if not pos then
+            local spots = LC.PointsOfKind("idle")
+            pos = #spots > 0 and Pick(spots).pos or Spot(ply, 300, 2000)
+        end
         if not pos then return nil end
+        local go = Goto(pos, stand and "Go to your speech stand (marked)" or "Go to the plaza (marked)", 150)
+        if crowd then
+            go.onDone = function(q)
+                for _, npc in ipairs(LC.SpeechGatherFew and LC.SpeechGatherFew(stand, crowd, 6, q) or {}) do Lock(q, npc) end
+            end
+        end
         return {
             title = "Address the citizens", reward = 20, limit = 360,
-            desc = "The people need to hear their Administrator. Go to the plaza, speak to three of them, then choose how to end it.",
+            desc = "The people need to hear their Administrator. Go to " .. (stand and "your speech stand" or "the plaza") .. ", speak to three of them, then choose how to end it.",
             stages = {
-                Goto(pos, "Go to the plaza (marked)", 150),
+                go,
                 Count("used_npc", 3, "Speak to 3 citizens: press E on each", IsCitizenNPC),
                 Choice("The crowd watches you in silence. How do you end it?", {
                     { text = "Announce additional rations (starts a ration handout).", pick = function(q, p)
@@ -2126,15 +2148,215 @@ T{
     end,
 }
 
+-- Her review of the units (the owner, 15 November: "this quest makes sense but is boring, nothing happens and
+-- there is no feedback, change in anything, it's just slop"). Units walk over and fall in, a line a few steps in
+-- front of her; she walks down it, E on each, and decides: commend, reprimand or reassign. The world shows each
+-- answer: a salute, a hung head, a unit marched off his beat; and it moves the city's numbers a little.
+local REVIEW_UNITS = 3
+local REVIEW_LOOK = {
+    sharp = "Boots polished, baton clean, eyes front.",
+    sloppy = "Scuffed boots, fogged mask, slouching.",
+    rough = "Split knuckles. Three complaints this week.",
+}
+local REVIEW_FITS = { sharp = 1, sloppy = 2, rough = 3 } -- (the answer that fits him: commend, reprimand, reassign)
+LC.ReviewLook, LC.ReviewFits = REVIEW_LOOK, REVIEW_FITS
+
+local function ReviewFree(npc, st)
+    return IsValid(npc) and st.role == "cop" and (st.state == "idle" or st.state == "moving") and not st.unmanaged
+        and not st.raid and not st.npcWork and not st.holdPos and not st.guardZone and not st.questLock and not st.exUnit
+        and not st.test and not st.subject and not st.marching and not st.supplyGuard and npc:Health() > 0
+end
+
+-- Off out of sight, and gone once nobody sees him (one reassigned, or one who came from out of sight for it).
+local function ReviewSendAway(u, st)
+    st.questLock, st.reviewSlot = nil, nil
+    st.reassigned = true
+    st.nextInspect = math.huge
+    local to = LC.AlarmSquadSpot and LC.AlarmSquadSpot(u:GetPos())
+    if not (to and LC.GoTo(u, st, to, false, nil)) then LC.SetState(u, st, "idle") end
+    local tries = 0
+    timer.Create("LivingCityReviewLeave" .. u:EntIndex(), 3, 40, function()
+        tries = tries + 1
+        if not IsValid(u) then return end
+        local there = not to or u:GetPos():DistToSqr(to) < 200 * 200
+        if tries >= 40 or (there and not (LC.IsSeen and LC.IsSeen(u:GetPos() + Vector(0, 0, 40)))) then u:Remove() end
+    end)
+end
+
+-- Out of the line, back to his beat (after the salute or the telling-off).
+local function ReviewDismiss(q, u, st, secs)
+    q.marked[u] = nil
+    timer.Simple(secs, function()
+        if not (IsValid(u) and LC.NPCs[u] == st) then return end
+        if st.reviewTemp then return ReviewSendAway(u, st) end
+        if st.questLock == q then st.questLock = nil end
+        st.reviewSlot = nil
+        if st.state == "event" then LC.SetState(u, st, "idle") st.untilT = CurTime() + 1 end
+    end)
+end
+
+local function ReviewBow(u, secs)
+    if not (u.ManipulateBoneAngles and u.LookupBone) then return end
+    local head, spine = u:LookupBone("ValveBiped.Bip01_Head1"), u:LookupBone("ValveBiped.Bip01_Spine2")
+    if head then u:ManipulateBoneAngles(head, Angle(0, 25, 0)) end
+    if spine then u:ManipulateBoneAngles(spine, Angle(0, 10, 0)) end
+    timer.Simple(secs, function()
+        if not IsValid(u) then return end
+        if head then u:ManipulateBoneAngles(head, Angle(0, 0, 0)) end
+        if spine then u:ManipulateBoneAngles(spine, Angle(0, 0, 0)) end
+    end)
+end
+
+-- The line: the nearest free units, fresh ones from out of sight for the rest, walking to places in a row a few
+-- steps in front of where she stands, facing her. Returns how many are on their way.
+local function ReviewFallIn(q, ply)
+    local yaw = ply:EyeAngles().y
+    local fwd, right = Angle(0, yaw, 0):Forward(), Angle(0, yaw, 0):Right()
+    fwd.z, right.z = 0, 0
+    local mid = ply:GetPos() + fwd * 200
+    local pool = {}
+    for npc, st in pairs(LC.NPCs) do
+        if ReviewFree(npc, st) then
+            local d = npc:GetPos():DistToSqr(mid)
+            if d < 3000 * 3000 then pool[#pool + 1] = { npc = npc, st = st, d = d } end
+        end
+    end
+    table.sort(pool, function(a, b) return a.d < b.d end)
+    q.data.line, q.data.seen, q.data.look = {}, {}, {}
+    local looks = { "sharp", "sharp", "sloppy", "sloppy", "rough" }
+    for i = 1, REVIEW_UNITS do
+        local slot = GroundAt(mid + right * ((i - (REVIEW_UNITS + 1) / 2) * 70) + Vector(0, 0, 30))
+        local npc, st, temp
+        local c = table.remove(pool, 1)
+        if c then
+            npc, st = c.npc, c.st
+        else
+            local from = LC.AlarmSquadSpot and LC.AlarmSquadSpot(slot)
+            local sp = LC.Spawners and LC.Spawners.cop
+            if from and sp then
+                local ok, nn, ss = LC.Try(sp, from)
+                if ok and IsValid(nn) and ss then npc, st, temp = nn, ss, true end
+            end
+        end
+        if npc then
+            local face = (ply:GetPos() - slot):Angle().y
+            if LC.GoTo(npc, st, slot, true, { kind = "fallin", pos = slot, yaw = face }) then
+                Lock(q, npc)
+                st.reviewSlot, st.reviewYaw, st.reviewTemp = slot, face, temp
+                q.data.line[#q.data.line + 1] = npc
+                q.data.look[npc] = Pick(looks)
+            elseif temp then
+                npc:Remove()
+            end
+        end
+    end
+    return #q.data.line
+end
+
+-- E on the next one in the line not yet seen to (the first: the line falls in).
+local function ReviewInspect()
+    return {
+        kind = "target", action = "use", text = "Inspect the line: press E on the unit (marked)", lostText = "the unit was called away",
+        failText = "no units could be spared",
+        onEnter = function(q, st)
+            if not q.data.line and not (IsValid(q.owner) and ReviewFallIn(q, q.owner) > 0) then return false end
+            local u
+            for _, v in ipairs(q.data.line) do
+                if IsValid(v) and LC.NPCs[v] and not q.data.seen[v] then u = v break end
+            end
+            if not u then
+                -- the rest of the line is gone (called away, or worse): what she has seen to is the review
+                if (q.data.reviewed or 0) > 0 then q.data.reviewDone = true return end
+                return false
+            end
+            q.data.cur, st.npc = u, u
+        end,
+    }
+end
+
+local function ReviewVerdict(q, p, v)
+    local u = q.data.cur
+    local st = IsValid(u) and LC.NPCs[u]
+    q.data.reviewed = (q.data.reviewed or 0) + 1
+    q.data.verdicts = q.data.verdicts or {}
+    q.data.verdicts[#q.data.verdicts + 1] = v
+    if not st then return end
+    q.data.seen[u] = true
+    if LC.Face and IsValid(p) then LC.Face(u, p:GetPos()) end
+    if REVIEW_FITS[q.data.look[u]] == v then q.bonus = (q.bonus or 0) + 5 end -- (the answer that fits him)
+    if v == 1 then
+        if LC.CrowdSalute then LC.CrowdSalute(u, 1, 2.5) end
+        u:EmitSound("npc/metropolice/vo/affirmative.wav", 75)
+        LC.AddTrait(p, "loyalty", 1)
+        if LC.LedgerAdd then LC.LedgerAdd("combine", 1, nil) end
+        ReviewDismiss(q, u, st, 2.6)
+    elseif v == 2 then
+        ReviewBow(u, 2.5)
+        u:EmitSound("npc/metropolice/vo/rodgerthat.wav", 75)
+        LC.AddTrait(p, "authority", 1)
+        if LC.LedgerAdd then LC.LedgerAdd("authority", 1, nil) end
+        ReviewDismiss(q, u, st, 2.6)
+    else
+        u:EmitSound("npc/metropolice/vo/copy.wav", 75)
+        LC.AddTrait(p, "authority", 1)
+        if LC.LedgerAdd then LC.LedgerAdd("authority", 1, nil) LC.LedgerAdd("combine", -1, nil) end
+        q.marked[u] = nil
+        ReviewSendAway(u, st)
+    end
+end
+LC.ReviewVerdict = ReviewVerdict
+
+local function ReviewJudge()
+    local st = Choice("", {
+        { text = "Commend him.", pick = function(q, p) ReviewVerdict(q, p, 1) return "next" end },
+        { text = "Reprimand him.", pick = function(q, p) ReviewVerdict(q, p, 2) return "next" end },
+        { text = "Reassign him.", pick = function(q, p) ReviewVerdict(q, p, 3) return "next" end },
+    })
+    st.onEnter = function(q, s)
+        local u = q.data.cur
+        local name = IsValid(u) and LC.NPCStr and LC.NPCStr(u, "lc_pname", "") or ""
+        s.prompt = (name ~= "" and name or "The unit") .. ". " .. (REVIEW_LOOK[q.data.look[u]] or REVIEW_LOOK.sharp)
+        s.npc = u
+    end
+    return st
+end
+
+-- The line keeps its places: one knocked off his (a door, a shove) walks back to it.
+local function ReviewTick(q, now)
+    if (q.data.tickAt or 0) > now then return end
+    q.data.tickAt = now + 2
+    for _, u in ipairs(q.data.line or {}) do
+        local st = IsValid(u) and LC.NPCs[u]
+        if st and st.questLock == q and not q.data.seen[u] and st.state == "idle" and st.reviewSlot
+            and u:GetPos():DistToSqr(st.reviewSlot) > 80 * 80 then
+            LC.GoTo(u, st, st.reviewSlot, true, { kind = "fallin", pos = st.reviewSlot, yaw = st.reviewYaw })
+        end
+    end
+end
+
+-- Over: those still in the line go back to their beats, and those who came from out of sight go back out of it.
+local function ReviewDone(q)
+    for _, u in ipairs(q.data.line or {}) do
+        local st = IsValid(u) and LC.NPCs[u]
+        if st and st.reviewTemp and not st.reassigned then ReviewSendAway(u, st)
+        elseif st then st.reviewSlot = nil end
+    end
+end
+
 T{
     id = "admin_review", factions = { admin = true },
     available = function() return LC.Running and CountRole("cop") >= 1 end,
+    over = function(q) if q.data and q.data.reviewDone then return true end end,
     build = function()
-        local need = math.min(3, math.max(1, CountRole("cop")))
+        local stages = {}
+        for _ = 1, REVIEW_UNITS do
+            stages[#stages + 1] = ReviewInspect()
+            stages[#stages + 1] = ReviewJudge()
+        end
         return {
-            title = "Review the Civil Protection units", reward = 15, limit = 360,
-            desc = "Check on Civil Protection in person: find units on the street and talk to them.",
-            stages = { Count("used_npc", need, "Talk to Civil Protection units: walk up to one and press E", IsCopNPC) },
+            title = "Review the Civil Protection units", reward = 15, limit = 360, data = {},
+            desc = "Units fall in in front of you. Walk down the line, E on each, and decide: commend, reprimand or reassign.",
+            stages = stages, tick = ReviewTick, onFinish = ReviewDone,
         }
     end,
 }

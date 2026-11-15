@@ -33010,6 +33010,216 @@ function DreamWakeScreenTests()
     p.ScreenFade = nil
 end
 DreamWakeScreenTests()
+function AddressStandTests()
+section("15 November playtest: her address goes to her speech stand, and a few come to the crowd point")
+LC.EndEvent(true)
+local savedWalls = _walls
+_walls = {}
+local A0 = Vector(-96000, -64000, 0)
+local adm = newPlayer("AddrAdministrator", "admin")
+adm:SetPos(A0 + Vector(-300, 0, 0))
+local stand = LC.AddPoint(A0, 180, "speech", 0)
+local crowd = LC.AddPoint(A0 + Vector(-500, 0, 0), 0, "speechcrowd", 0)
+local cits = {}
+for i = 1, 3 do
+    local c, cst = LC.SpawnCitizen(A0 + Vector(-900, i * 60, 0))
+    cst.state, cst.untilT = "idle", CurTime() + 600
+    cits[i] = { c, cst }
+end
+local t
+for _, x in ipairs(LC.QuestTemplates) do if x.id == "admin_address" then t = x end end
+local spec = t.build(adm)
+ok(spec and spec.stages[1].pos:DistToSqr(A0) < 1, "Address the citizens points at her speech stand", spec and tostring(spec.stages[1].pos))
+ok(spec and string.find(spec.stages[1].text, "speech stand", 1, true) ~= nil, "and says so", spec and spec.stages[1].text)
+spec.id = 71000 + math.random(1, 9999); spec.tmpl = t; spec.faction = LC.QuestFaction(adm)
+spec.expiresPost = CurTime() + 999; spec.data = {}
+LC.Postings[spec.faction] = LC.Postings[spec.faction] or {}
+table.insert(LC.Postings[spec.faction], spec)
+adm.lcqNext = 0
+LC.AcceptPosting(adm, spec.id)
+local q = LC.QuestOf[adm]
+ok(q and q.tmpl.id == "admin_address", "she takes it")
+adm:SetPos(A0 + Vector(30, 0, 0))
+_run(1)
+ok(q and q.stage == 2, "at the stand: on to speaking to them", q and q.stage)
+local came = 0
+for _, c in ipairs(cits) do if c[2].questLock == q and c[2].addressCrowd == q then came = came + 1 end end
+ok(came == 3, "the citizens near by walk to the crowd point to hear her", came)
+_run(12)
+local standing = 0
+for _, c in ipairs(cits) do if c[2].state == "event" and c[1]:GetPos():DistToSqr(crowd.pos) < 300 * 300 then standing = standing + 1 end end
+ok(standing == 3, "and stand there facing her", standing)
+LC.AbandonQuest(adm)
+_run(2)
+local back = 0
+for _, c in ipairs(cits) do if c[2].questLock == nil and c[2].state ~= "event" then back = back + 1 end end
+ok(back == 3, "when it's over they go back to their day", back)
+LC.RemovePoint(stand) LC.RemovePoint(crowd)
+if #LC.PointsOfKind("speech") == 0 then
+    local spec2 = t.build(adm)
+    ok(spec2 == nil or string.find(spec2.stages[1].text, "plaza", 1, true) ~= nil, "with no stand on the map: the plaza, as before", spec2 and spec2.stages[1].text)
+end
+for _, c in ipairs(cits) do if IsValid(c[1]) then c[1]:Remove() end end
+adm:SetPos(Vector(-120000, -120000, 0))
+_walls = savedWalls
+end
+AddressStandTests()
+
+function ReviewUnitsTests()
+section("15 November playtest: her review of the units is a line she walks down, and each answer shows")
+LC.EndEvent(true)
+local savedWalls = _walls
+_walls = {}
+local R0 = Vector(-98000, -60000, 0)
+local adm = newPlayer("ReviewAdministrator", "admin")
+adm:SetPos(R0)
+adm.eyeang = Angle(0, 0, 0)
+adm.chat = {}
+for n, s in pairs(LC.NPCs) do if IsValid(n) and LC.IsSecurity(s) then n:Remove() end end
+local units = {}
+for i = 1, 3 do
+    local u, ust = LC.Spawners.cop(R0 + Vector(900, (i - 2) * 300, 0))
+    if ust then ust.state, ust.untilT, ust.routeGroup = "idle", CurTime() + 600, nil end
+    units[#units + 1] = u
+end
+local t
+for _, x in ipairs(LC.QuestTemplates) do if x.id == "admin_review" then t = x end end
+local spec = t.build(adm)
+local talks = 0
+for _, s in ipairs(spec.stages) do if s.kind == "count" then talks = talks + 1 end end
+ok(talks == 0 and #spec.stages == 6, "no longer 'talk to units on the street': three units, each inspected and judged", #spec.stages)
+spec.id = 72000 + math.random(1, 9999); spec.tmpl = t; spec.faction = LC.QuestFaction(adm)
+spec.expiresPost = CurTime() + 999; spec.data = spec.data or {}
+LC.Postings[spec.faction] = LC.Postings[spec.faction] or {}
+table.insert(LC.Postings[spec.faction], spec)
+adm.lcqNext = 0
+local ledger = {}
+local add = LC.LedgerAdd
+LC.LedgerAdd = function(what, d, why) ledger[what] = (ledger[what] or 0) + d return add and add(what, d, why) end
+LC.AcceptPosting(adm, spec.id)
+local q = LC.QuestOf[adm]
+ok(q and q.data.line and #q.data.line == 3, "she takes it, and three units are called to fall in", q and q.data.line and #q.data.line)
+local locked = 0
+for _, u in ipairs(q and q.data.line or {}) do if LC.NPCs[u] and LC.NPCs[u].questLock == q then locked = locked + 1 end end
+ok(locked == 3, "(held by the job, off their beats)", locked)
+_run(10)
+local inLine, front = 0, 0
+for _, u in ipairs(q.data.line) do
+    local st = LC.NPCs[u]
+    if st and st.state == "event" then inLine = inLine + 1 end
+    if u:GetPos().x > R0.x + 100 and u:GetPos().x < R0.x + 300 then front = front + 1 end
+end
+ok(inLine == 3 and front == 3, "they walk over and stand in a line a few steps in front of her", inLine, front)
+-- the first: commend him
+local st1 = q.stages[q.stage]
+local u1 = st1.npc
+ok(st1.kind == "target" and u1 == q.data.line[1], "the first in the line is marked")
+q.data.look[u1] = "sharp"
+_sounds = {}
+LC.QuestEvent("used_npc", adm, u1)
+local ch = q.stages[q.stage]
+ok(ch.kind == "choice" and string.find(ch.prompt, LC.ReviewLook.sharp, 1, true) ~= nil, "E on him: how he looks, and what to do with him", ch.prompt)
+LC.ResolveChoice(adm, q.id, 1)
+ok(has(_sounds, "affirmative") and (ledger.combine or 0) == 1, "commended: he answers, and Civil Protection's strength rises", ledger.combine)
+ok((q.bonus or 0) == 5, "(the answer that fits him earns a little more)", q.bonus)
+_run(3)
+local s1 = LC.NPCs[u1]
+ok(s1 and s1.questLock == nil and s1.state ~= "event", "and after his salute he goes back to his beat", s1 and s1.state)
+-- the second: reassign him
+local u2 = q.stages[q.stage].npc
+ok(u2 == q.data.line[2], "on to the next in the line")
+LC.QuestEvent("used_npc", adm, u2)
+LC.ResolveChoice(adm, q.id, 3)
+local s2 = LC.NPCs[u2]
+ok(s2 and s2.reassigned and s2.questLock == nil, "reassigned: he is marched off his beat", s2 and s2.state)
+ok((ledger.authority or 0) >= 1 and (ledger.combine or 0) == 0, "(her authority up, Civil Protection's strength down)", ledger.authority, ledger.combine)
+-- the third: reprimand him, and it's done
+local u3 = q.stages[q.stage].npc
+LC.QuestEvent("used_npc", adm, u3)
+LC.ResolveChoice(adm, q.id, 2)
+ok(has(_sounds, "rodgerthat"), "reprimanded: he takes it")
+ok(q.done and has(adm.chat, "Complete: Review the Civil Protection units"), "the whole line seen to: the review is done", q.done)
+_run(3)
+local s3 = LC.NPCs[u3]
+ok(s3 and s3.questLock == nil and s3.state ~= "event", "and the last goes back to his beat too")
+-- one called away from the line before she gets to him: the review is what she saw to
+for n, s in pairs(LC.NPCs) do if IsValid(n) and LC.IsSecurity(s) then n:Remove() end end
+for i = 1, 3 do
+    local u, ust = LC.Spawners.cop(R0 + Vector(900, (i - 2) * 300, 0))
+    if ust then ust.state, ust.untilT, ust.routeGroup = "idle", CurTime() + 600, nil end
+end
+local spec2 = t.build(adm)
+spec2.id = 73000 + math.random(1, 9999); spec2.tmpl = t; spec2.faction = LC.QuestFaction(adm)
+spec2.expiresPost = CurTime() + 999; spec2.data = spec2.data or {}
+table.insert(LC.Postings[spec2.faction], spec2)
+adm.lcqNext = 0
+LC.AcceptPosting(adm, spec2.id)
+local q2 = LC.QuestOf[adm]
+_run(10)
+LC.QuestEvent("used_npc", adm, q2.stages[q2.stage].npc)
+LC.ResolveChoice(adm, q2.id, 1)
+for _, u in ipairs(q2.data.line) do if not q2.data.seen[u] and IsValid(u) then u:Remove() end end
+_run(1)
+ok(q2.done and has(adm.chat, "Complete: Review the Civil Protection units"), "the rest of the line called away: what she saw to is the review", q2.done)
+LC.LedgerAdd = add
+for n, s in pairs(LC.NPCs) do if IsValid(n) and LC.IsSecurity(s) then n:Remove() end end
+adm:SetPos(Vector(-120000, -120000, 0))
+_walls = savedWalls
+end
+ReviewUnitsTests()
+
+function DrillCrowdTests()
+section("15 November playtest: the city's own come to the drill whatever they were doing, and do the moves with the instructor")
+LC.EndEvent(true)
+local savedWalls = _walls
+_walls = {}
+local D0 = Vector(-100000, -56000, 0)
+for _, p in ipairs(table.Copy(LC.Points)) do if p.kind == "yard" then LC.RemovePoint(p) end end
+local yard = LC.AddPoint(D0, 0, "yard", 0)
+local function cit(off, state)
+    local c, cst = LC.SpawnCitizen(D0 + off)
+    cst.state, cst.untilT = state, CurTime() + 600
+    return c, cst
+end
+local sitter, sst = cit(Vector(-600, 0, 0), "busy")
+local worker, wst = cit(Vector(-600, 200, 0), "working")
+wst.npcWork = { id = "test" }
+local queuer, qst = cit(Vector(-600, -200, 0), "inline")
+_setcvar("lc_exercise_muster", 15)
+ok(LC.StartEvent("drill"), "the morning drill starts")
+local X = LC.ExerciseSession()
+ok(X and X.npcs[sitter] and X.npcs[worker] and X.npcs[queuer], "a citizen sitting, one at a job and one in a line all come (before, only the idle were asked)")
+ok(sst.state == "moving" and wst.npcWork == nil and qst.line == nil, "(each drops what they were doing and walks over)", sst.state)
+local late, lst = cit(Vector(-700, 0, 0), "busy")
+_run(5)
+ok(X.npcs[late], "one done sitting after it began is called too")
+_run(12)
+ok(X.phase == "run" and IsValid(X.instructor), "the instructor runs it")
+local placed = 0
+for _, c in ipairs({ sst, wst, qst }) do if c.state == "event" and c.exCitizen and c.exCitizen.spot then placed = placed + 1 end end
+ok(placed == 3, "they stand in their places in the rows", placed)
+local m0 = X.instructorMoves or 0
+X.nextCue = math.huge
+LC.DrillCue("crouch", CurTime())
+_run(1)
+ok((X.instructorMoves or 0) == m0 + 1, "the instructor does the move himself as he calls it")
+local copied = 0
+for _, c in ipairs({ sst, wst, qst }) do if (c.exCitizen and c.exCitizen.moves or 0) >= 1 then copied = copied + 1 end end
+ok(copied == 3, "and the rows copy it a beat behind", copied)
+local before = sitter:GetPos()
+LC.DrillDoMove(sitter, "step_right", 0, before)
+_run(1)
+ok(sitter:GetPos():Distance(before) > 10, "a step is a real step", sitter:GetPos():Distance(before))
+_run(2.5)
+ok(sitter:GetPos():Distance(before) < 10, "and back to their place")
+LC.EndEvent(false)
+ok(sst.exCitizen == nil and sst.state ~= "event", "afterwards they go back to their day")
+for _, c in ipairs({ sitter, worker, queuer, late }) do if IsValid(c) then c:Remove() end end
+if IsValid(X.instructor) then X.instructor:Remove() end
+LC.RemovePoint(yard)
+_walls = savedWalls
+end
+DrillCrowdTests()
 
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")
 ;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)
