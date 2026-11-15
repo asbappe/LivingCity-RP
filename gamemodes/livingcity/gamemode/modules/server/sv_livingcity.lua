@@ -2185,7 +2185,9 @@ local function Pursue(npc, st, e, now)
     -- If they turn violent (hurt anyone, a gun in hand, the alert climbs), weapons free.
     if st.arrestOnly then
         -- (armed and fighting: a gun or a grenade in hand, a shot just fired: fought, never cuffed. The owner, 14 November)
-        if not e:IsPlayer() or LC.Violent(e) or (LC.ArmedAndFighting and LC.ArmedAndFighting(e)) then
+        -- (bare hands are not a weapon: a punch still gets the stick and the struggle, the owner, 15 November)
+        local unarmed = LC.TakenUnarmed and LC.TakenUnarmed(e)
+        if not e:IsPlayer() or (LC.Violent(e) and not unarmed) or (LC.ArmedAndFighting and LC.ArmedAndFighting(e)) then
             st.arrestOnly = nil
             if e:IsPlayer() then SetRel(npc, st, e, D_HT) end
             npc:SetEnemy(e)
@@ -2213,6 +2215,16 @@ local function Pursue(npc, st, e, now)
             end
             return
         end
+    elseif e:IsPlayer() and LC.TakenUnarmed and LC.TakenUnarmed(e) and LC.PlayerIsWanted and LC.PlayerIsWanted(e)
+        and not (LC.PlayerIsZombie and LC.PlayerIsZombie(e)) then
+        -- fought, and now just bare hands (the owner, 15 November: beaten with the batons "while I had just my
+        -- hands out"): back to running them down, the stick, and the struggle, not a beating
+        st.arrestOnly = true
+        SetRel(npc, st, e, D_NU)
+        npc:SetEnemy(NULL)
+        if st.role == "cop" and npc.SelectWeapon and not st.armed then npc:SelectWeapon("weapon_stunstick") end
+        st.nextPursue = now
+        return
     end
     local epos = e:GetPos()
     if npc.UpdateEnemyMemory then npc:UpdateEnemyMemory(e, epos) end
@@ -2790,8 +2802,9 @@ function LC.MakeOneHostile(npc, st, target)
     SetState(npc, st, "hostile")
     st.enemy = target
     st.nextPursue, st.chasePos, st.lostSince = 0, nil, nil
-    -- someone wanted who's done nobody any harm: run them down and cuff them, no shooting
-    st.arrestOnly = target:IsPlayer() and LC.Violent and not LC.Violent(target) or nil
+    -- someone wanted who's done nobody any harm, or has only used their fists: run them down and cuff them
+    -- (the struggle first), no shooting
+    st.arrestOnly = target:IsPlayer() and LC.Violent and (not LC.Violent(target) or (LC.TakenUnarmed and LC.TakenUnarmed(target))) or nil
     if st.arrestOnly then
         SetRel(npc, st, target, D_NU)
         if st.role == "cop" and npc.SelectWeapon then npc:SelectWeapon("weapon_stunstick") end
@@ -3050,7 +3063,8 @@ hook.Add("EntityTakeDamage", "LivingCityDamage", function(victim, dmg)
     -- a unit that gets hurt remembers who did it, however far away they were
     if IsSecurity(st) or st.role == "scanner" then
         st.provokedBy, st.provokedUntil = attacker, CurTime() + 45
-        attacker.lcAttackedSecurityAt = CurTime()
+        -- (a punch is not a fight with a weapon: still taken with the struggle. sv_livingcity_law.lua)
+        if not (LC.BareHandedHit and LC.BareHandedHit(attacker, dmg)) then attacker.lcAttackedSecurityAt = CurTime() end
     end
 
     LC.Scatter(victim:GetPos(), 1500)

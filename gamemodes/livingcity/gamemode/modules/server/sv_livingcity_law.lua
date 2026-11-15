@@ -119,11 +119,38 @@ hook.Add("EntityFireBullets", "LivingCityFighting", function(ent)
     if IsValid(ent) and ent:IsPlayer() then ent.lcFiredAt = CurTime() end
 end)
 
+-- Bare hands are not a weapon (the owner's playtest, 15 November: "I punched a metrocop and they hit me a
+-- few times with their batons while I had just my hands out ... no struggle"). Someone who has only used
+-- their fists is still taken the unarmed way: run down, a blow or two of the stick, and the struggle
+-- (sv_livingcity_prison.lua), never fought like a gunman. A gun, a grenade, a blade or a crowbar is a weapon.
+local BARE = { weapon_fists = true, weapon_lc_hands = true }
+LC.BareHandWeapons = BARE
+function LC.BareHandedHit(attacker, dmg)
+    if not IsValid(attacker) or not attacker:IsPlayer() then return false end
+    local inf = dmg and dmg.GetInflictor and dmg:GetInflictor()
+    if IsValid(inf) and inf ~= attacker then return BARE[inf:GetClass()] == true end
+    local w = attacker.GetActiveWeapon and attacker:GetActiveWeapon()
+    local cls = IsValid(w) and w.GetClass and w:GetClass()
+    return cls == nil or BARE[cls] == true
+end
+-- Taken the unarmed way: nothing in hand that fights, no weapon used on anyone in the last two minutes, no
+-- sector-wide search (alert 2 and up: pistols out) and not hunted on sight. Units run such a person down and
+-- lay hands on them, with the struggle first, even after a punch (sv_livingcity.lua, Pursue).
+function LC.TakenUnarmed(ply)
+    if not IsValid(ply) or not ply:IsPlayer() or not ply:Alive() then return false end
+    if LC.ArmedAndFighting(ply) then return false end
+    if (ply.lcArmedViolentUntil or 0) > CurTime() then return false end
+    if LC.AlertLevel and LC.AlertLevel(ply) >= 2 then return false end
+    if LC.PlayerIsHunted and LC.PlayerIsHunted(ply) then return false end
+    return true
+end
+
 hook.Add("EntityTakeDamage", "LivingCityViolence", function(victim, dmg)
     local a = dmg:GetAttacker()
     if IsValid(a) and a:IsPlayer() and a ~= victim and IsValid(victim) and (victim:IsPlayer() or victim:IsNPC())
         and not (LC.IsMonster and LC.IsMonster(victim)) and dmg:GetDamage() > 0 then
         a.lcViolentUntil = CurTime() + 120
+        if not LC.BareHandedHit(a, dmg) then a.lcArmedViolentUntil = CurTime() + 120 end
     end
 end)
 

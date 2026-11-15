@@ -278,11 +278,12 @@ _run(40)
 ok(not has(citizen.chat, "Warning 1 of 3") and (LC.EventGraceEnds or 0) > CurTime(), "curfew gives a grace period to get home before anyone is warned")
 ok(LC.CurfewGrace() >= 60, "and it's never shorter than a minute")
 citizen.lcViolentUntil = CurTime() + 1e6 -- (taken for violent: the unit chases rather than laying hands on them, so the wanted status can be checked)
+citizen.lcArmedViolentUntil = CurTime() + 1e6 -- (violent with a weapon: a punch alone still gets the struggle, sv_livingcity_law.lua)
 _run(80)
 ok(has(citizen.chat, "Warning 1 of 3") and has(citizen.chat, "Warning 3 of 3"), "an officer who sees you gives three warnings")
 ok(LC.PlayerIsWanted(citizen), "then you're wanted", table.concat(citizen.chat, " | ") .. " cop=" .. tostring(cst.state))
 LC.ClearWanted(citizen)
-citizen.lcViolentUntil = nil
+citizen.lcViolentUntil, citizen.lcArmedViolentUntil = nil, nil
 citizen:SetPos(Vector(3000, 3000, 0))
 citizen.chat = {}
 _run(20)
@@ -323,6 +324,7 @@ if pz then
     _run(2)
     ok(LC.Prisoners[con] ~= nil, "a step past the edge of the prison area isn't an escape")
     con.lcViolentUntil = CurTime() + 1e6 -- (taken for violent: units chase with sticks rather than laying hands on him, for the stunstick test below)
+    con.lcArmedViolentUntil = CurTime() + 1e6 -- (with a weapon: a punch alone still gets the struggle, sv_livingcity_law.lua)
     con:SetPos(pz.pos + Vector(pz.r + 600, 0, 0))
     _run(2)
     ok(not LC.Prisoners[con], "but well beyond it is")
@@ -343,7 +345,7 @@ ok(LC.Struggles[con] ~= nil and not LC.Prisoners[con], "a stunstick hit from a c
 ok(dmg:GetDamage() == 0, "instead of hurting them")
 _run(5)
 ok(LC.Prisoners[con] ~= nil, "doing nothing about it: arrested")
-con.lcViolentUntil = nil
+con.lcViolentUntil, con.lcArmedViolentUntil = nil, nil
 LC.ReleasePrisoner(con)
 _setcvar("lc_march", 1)
 
@@ -1478,11 +1480,12 @@ ok(LC.Stops[frisked] ~= nil and has(frisked.chat, "Stand still for inspection"),
 copN.sim = true
 local standing0 = LC.Standing(frisked)
 frisked.lcViolentUntil = CurTime() + 1e6 -- (taken for violent: chased, not cuffed on the spot, so the wanted status can be checked)
+frisked.lcArmedViolentUntil = CurTime() + 1e6 -- (with a weapon: a punch alone still gets the struggle)
 _run(8)
 ok(LC.Stops[frisked] == nil, "the stop finishes")
 ok(not LC.HasItem(frisked, "uniform_cp") and has(frisked.chat, "Confiscated: Civil Protection uniform"), "contraband is found and confiscated")
 ok(LC.PlayerIsWanted(frisked) and LC.Standing(frisked) < standing0, "and you're wanted, with less standing")
-frisked.lcViolentUntil = nil
+frisked.lcViolentUntil, frisked.lcArmedViolentUntil = nil, nil
 ok(frisked.lcStopNext > CurTime() + 300, "and won't be stopped again for a while")
 LC.ClearWanted(frisked)
 LC.CalmCops(frisked)
@@ -9614,6 +9617,7 @@ ok(joined >= 1 and has(caller.chat, "in your squad"), "and join the caller's squ
 local perp = newPlayer("BackupPerp", "citizen")
 perp:SetPos(B + Vector(300, 0, 0))
 perp.lcViolentUntil = CurTime() + 1e6 -- (taken for violent: the units close in to fight, not to cuff)
+perp.lcArmedViolentUntil = CurTime() + 1e6 -- (with a weapon: a punch alone still gets the struggle)
 LC.ReportCrime(perp, "Test", 60)
 _run(2)
 local onIt = false
@@ -32659,6 +32663,67 @@ function DreamSurfaceTests()
     for _, t in ipairs({ g, g2, g3, g4 }) do for _, e in ipairs(t.ents) do if IsValid(e) then e:Remove() end end end
 end
 DreamSurfaceTests()
+
+function PunchStruggleTests()
+    section("15 November playtest: a punch at a unit still gets the struggle, never a beating")
+    local C0 = Vector(-266000, 95000, 0)
+    LC.AddPoint(C0 + Vector(1400, 0, 0), 0, "cell", 0)
+    LC.AddPoint(C0 + Vector(1400, 400, 0), 0, "release", 0)
+    local set = _setcvar
+    set("lc_arrest_struggle", 1)
+    local p = newPlayer("PunchCit", "citizen", nil, 900)
+    _run(0.3)
+    p:SetPos(C0)
+    local cop, cst = LC.Spawners.cop(C0 + Vector(60, 0, 0))
+    cop.sim = false
+    cst.untilT = 1e9
+    if not p:HasWeapon("weapon_fists") then p:Give("weapon_fists") end
+    p:SelectWeapon("weapon_fists")
+    ok(LC.BareHandedHit(p, _dmg(p, 10, DMG_CLUB)), "fists in hand: a bare-handed blow")
+    -- the punch
+    hook.Run("EntityTakeDamage", cop, _dmg(p, 10, DMG_CLUB))
+    ok(p.lcAttackedSecurityAt == nil and not LC.ArmedAndFighting(p), "a punch at a unit is not 'armed and fighting'")
+    ok(LC.Violent(p) and LC.TakenUnarmed(p), "violent (a punch), but taken the unarmed way")
+    ok(LC.PlayerIsWanted(p), "(wanted for it)")
+    ok(cst.enemy == p and cst.arrestOnly == true, "the unit runs them down to cuff them, not a fight", tostring(cst.arrestOnly))
+    -- hands out, standing still: his baton gives way to the struggle at once
+    if not p:HasWeapon("weapon_lc_hands") then p:Give("weapon_lc_hands") end
+    p:SelectWeapon("weapon_lc_hands")
+    p.lcStillSince = CurTime() - 5
+    local blocked = hook.Run("EntityTakeDamage", p, _dmg(cop, 10, DMG_CLUB))
+    ok(blocked == true and LC.Struggles[p] ~= nil and LC.Struggles[p].officer == cop, "hit by his baton with their hands out: the struggle, not a beating")
+    local sm = _lastnet("lc_struggle")
+    ok(sm and sm.to == p and sm.data[1] == true and sm.data[2] == "resist", "they see the struggle (press E to break free)")
+    LC.StruggleCancel(p)
+    -- a unit already fighting them goes back to the stick and the struggle once it's just bare hands
+    p:SetPos(C0 + Vector(500, 0, 0))
+    p.lcStillSince = nil
+    cst.arrestOnly = nil
+    cst.nextPursue = 0
+    if LC.SetState then LC.SetState(cop, cst, "hostile") end
+    cst.enemy = p
+    _run(1.5)
+    ok(cst.arrestOnly == true, "a unit that was fighting them switches to cuffing", tostring(cst.arrestOnly) .. " " .. tostring(cst.state))
+    -- a gun is a fight, as before
+    p:Give("weapon_smg1") p:SelectWeapon("weapon_smg1")
+    ok(not LC.TakenUnarmed(p), "a gun in hand: not unarmed")
+    cst.nextPursue = 0
+    _run(1.5)
+    ok(not cst.arrestOnly, "and the unit fights them")
+    hook.Run("EntityTakeDamage", cop, _dmg(p, 10))
+    ok(p.lcAttackedSecurityAt ~= nil and (p.lcArmedViolentUntil or 0) > CurTime(), "a unit hurt with a gun in hand: armed and fighting, as before")
+    p:SelectWeapon("weapon_lc_hands")
+    ok(not LC.TakenUnarmed(p), "(and for two minutes after, even with the gun put away)")
+    -- clean up
+    if LC.Struggles[p] then LC.StruggleCancel(p) end
+    if LC.FreeFromCustody then LC.FreeFromCustody(p) end
+    if LC.ClearWanted then LC.ClearWanted(p) end
+    if LC.ResetHeat then LC.ResetHeat(p) end
+    p.lcAttackedSecurityAt, p.lcArmedViolentUntil, p.lcViolentUntil, p.lcSubdue = nil, nil, nil, nil
+    if IsValid(cop) then cop:Remove() end
+    p:SetPos(Vector(0, -500, 0))
+end
+PunchStruggleTests()
 
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")
 ;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)
