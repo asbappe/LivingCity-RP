@@ -2255,6 +2255,10 @@ function LC.CopProvoked(npc, st, ply, now)
     -- escorting or who called them for backup
     if LC.InInfest and LC.InInfest(ply:GetPos()) then return end
     if st and (st.workEscort == ply or st.backupFor == ply) then return end
+    -- nor to the one they were sent after (the owner, 15 November): the unit fetching someone who skipped the
+    -- Administrator's address or the morning exercise stands by them, and took them for crowding it: "move
+    -- back", a shove, then wanted for obstruction and marched to the cells (which let them off the muster)
+    if (LC.SpeechChaser and LC.SpeechChaser(ply) == npc) or (st and st.exChase == ply and now - (st.exChaseT or -1e9) < 30) then return end
     -- a unit posted at the desks, and anyone in the arrival search, aren't "crowding" (sv_livingcity_intaketutor.lua)
     if (st and (st.tutorPost or st.tutorBusy)) or (LC.TutorFlows and LC.TutorFlows[ply]) then return end
     local b = ply.lcBump

@@ -413,6 +413,9 @@ local function BlackOut(p)
 end
 LC.SpeechBlackOut = BlackOut
 
+-- The unit after someone who skipped it, if any (sv_livingcity.lua: that unit never takes them for crowding it).
+function LC.SpeechChaser(p) return S and S.chaser and S.chaser[p] or nil end
+
 -- A unit who sees someone skipping it: a warning, then the stick until they black out.
 local function Strike(npc, p, now)
     if LC.ExerciseBeat and LC.ExerciseBeat(npc, p, "speech") then

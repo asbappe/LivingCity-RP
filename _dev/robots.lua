@@ -196,6 +196,60 @@ return function(T)
             for _, npc in ipairs(people("citizen")) do
                 if not (st.seen and st.seen[npc]) then stand(p, npc:GetPos(), Vector(60, 0, 0)) break end
             end
+        elseif k == "count" and st.event == "weed_killed" then
+            -- weedkiller on the nearest weed, and stand still while it works
+            if now < (mem.busyUntil or 0) then return end
+            local best, bd
+            for _, e in ipairs(ents.FindByClass("lc_weed")) do
+                local d = IsValid(e) and e:GetPos():DistToSqr(p:GetPos())
+                if d and (not bd or d < bd) then best, bd = e, d end
+            end
+            if not best then return "there is no weed in the city to spray" end
+            stand(p, best:GetPos(), Vector(30, 0, 0))
+            p.lookingAt = best
+            LC.SprayWeed(p, best)
+            mem.busyUntil = now + 7
+        elseif k == "count" and st.event == "nest_vacuumed" then
+            -- a growth: weedkiller first, then the hoover on what is left
+            if now < (mem.busyUntil or 0) then return end
+            local best, bd
+            for _, e in ipairs(ents.FindByClass("lc_nest")) do
+                local d = IsValid(e) and e:GetPos():DistToSqr(p:GetPos())
+                if d and (not bd or d < bd) then best, bd = e, d end
+            end
+            if not best then return "there is no growth in the city to clear" end
+            stand(p, best:GetPos(), Vector(30, 0, 0))
+            p.lookingAt = best
+            if LC.NestDead(best) then
+                LC.VacuumNest(p, best)
+                mem.busyUntil = now + 1
+            else
+                LC.SprayNest(p, best)
+                mem.busyUntil = now + 5
+            end
+        elseif k == "count" and st.event == "patched" then
+            -- the wounded are treated with the game's own medkit (left click on them), which the fake game
+            -- does not have: its effect is given to whoever the robot is standing over
+            if now < (mem.useAt or 0) then return end
+            mem.useAt = now + 2
+            local list = q.data.patients or { q.data.actor }
+            for _, npc in ipairs(list) do
+                if IsValid(npc) and npc:Health() < npc:GetMaxHealth() * 0.9 then
+                    stand(p, npc:GetPos(), Vector(40, 0, 0))
+                    npc:SetHealth(npc:GetMaxHealth())
+                    return
+                end
+            end
+        elseif k == "count" and st.event == "nest_dumped" then
+            -- the full hoover, emptied into an infestation control barrel (E on one)
+            if now < (mem.useAt or 0) then return end
+            mem.useAt = now + 1
+            local barrel = LC.BarrelNear and LC.BarrelNear(p)
+            if not barrel then return "the robot can't seal the hoover's bag yet, and no infestation control barrel is in reach" end
+            -- (E on it: the hook first, as in the game, then the barrel's own Use, which the fake game does not call)
+            if use(p, barrel) ~= false and LC.UseHazardBarrel then LC.UseHazardBarrel(p, barrel) end
+        elseif k == "count" and st.event == "crab_meat" then
+            if st.pos then stand(p, st.pos) end -- (by the crate, with the meat picked up on the way)
         elseif k == "count" and st.poll and st.event ~= "served" then
             -- a step the job watches for itself (meat in the crate, a wound patched): each needs its own doing
             return "the robot can't do this step yet: count / " .. tostring(st.event)
