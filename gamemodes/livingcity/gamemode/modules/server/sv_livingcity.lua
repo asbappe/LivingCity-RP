@@ -1587,7 +1587,8 @@ function LC.SpotInZone(z)
         local top = LCZ.RandomInside(z, 0.85) + Vector(0, 0, 64)
         -- (a patch of territory one floor deep: on its floor, not the street under a roof)
         local tr = util.TraceLine({ start = top, endpos = top - Vector(0, 0, z.h and (z.h + 64) or 400), mask = MASK_NPCSOLID_BRUSHONLY })
-        if tr.Hit and tr.HitNormal.z > 0.7 and (not z.h or LCZ.Contains(z, tr.HitPos)) and ClearSpot(tr.HitPos) then
+        -- (never inside the Resistance's holding cage: LC.CageAt, sv_livingcity_rebelhold.lua)
+        if tr.Hit and tr.HitNormal.z > 0.7 and (not z.h or LCZ.Contains(z, tr.HitPos)) and ClearSpot(tr.HitPos) and not (LC.CageAt and LC.CageAt(tr.HitPos)) then
             -- dry ground first: down in the water, or a channel below the zone's floor, only if there's nothing else
             if (LC.InWater and LC.InWater(tr.HitPos)) or tr.HitPos.z < LCZ.FloorAt(z, tr.HitPos) - 14 then wet = wet or tr.HitPos else return tr.HitPos end
         end

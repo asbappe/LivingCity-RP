@@ -110,6 +110,29 @@ end
 local cvTrust = CreateConVar("lc_fighter_trust_jobs", "3", bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED), "Jobs a Resistance member must finish for it before they're trusted as a Fighter (with the XP)")
 function LC.ResistanceTrust(ply) return LC.Counter and LC.Counter(ply, "res_jobs") or 0, math.max(0, cvTrust:GetInt()) end
 
+-- Trusted outright (the owner, 14 November: set to Lieutenant by the admin tools, and still a Member who the cage
+-- turned away). Staff who give a rank or the XP for one that carries arms give the trust with it, as a story that
+-- makes someone a Fighter does (sv_livingcity_stories.lua); the rank is then what the XP says.
+function LC.ResistanceTrustGive(ply)
+    if not IsValid(ply) or not LC.Bump then return false end
+    local have, need = LC.ResistanceTrust(ply)
+    if have >= need then return false end
+    LC.Bump(ply, "res_jobs", need - have)
+    return true
+end
+-- The XP the first rank that carries arms asks (Fighter: 400), or nil.
+function LC.ResistanceArmedXP()
+    local f = LCF.Get("resistance")
+    for _, r in ipairs(f and f.ranks or {}) do if r.hunted then return r.xp or 0 end end
+end
+-- What staff call after writing someone's XP: the trust, when the XP is a Fighter's or more.
+function LC.StaffTrust(ply)
+    local f = IsValid(ply) and LCF.Get(ply:GetNW2String("lcf_faction", ""))
+    local need = LC.ResistanceArmedXP()
+    if not f or f.id ~= "resistance" or not need then return end
+    if (tonumber(ply:GetPData("lcf_xp_resistance", 0)) or 0) >= need then LC.ResistanceTrustGive(ply) end
+end
+
 -- Proving yourself before you join (the owner, 9 November: "we don't want anyone to just walk into the resistance, they
 -- need to prove themselves as citizens"): lc_resistance_join_sympathy (5) sympathy first, earned by helping them (jobs and
 -- quests that help them, food for their supply crate, arms sold to their quartermaster, a ration or arms handed to one of
@@ -995,6 +1018,7 @@ AdminCmd("lcf_setxp", function(target, args, out)
     local xp = tonumber(args[2])
     if not f or not xp then return out("Usage: lcf_setxp <name> <xp>") end
     target:SetPData("lcf_xp_" .. f.id, math.max(0, xp))
+    LC.StaffTrust(target)
     LC.AddXP(target, 0)
     out(target:Nick() .. " now has " .. xp .. " XP in " .. f.name .. ".")
 end)
@@ -1005,6 +1029,7 @@ local function Step(target, dir, out)
     local idx = math.Clamp(target:GetNW2Int("lcf_rank", 1) + dir, 1, #f.ranks)
     if f.ranks[idx].overwatch then target:SetPData("lcf_transhuman", "1") end -- (staff can skip the story)
     target:SetPData("lcf_xp_" .. f.id, f.ranks[idx].xp or 0)
+    LC.StaffTrust(target)
     LC.AddXP(target, 0, "by staff")
     out(target:Nick() .. " is now " .. f.ranks[idx].name .. ".")
 end

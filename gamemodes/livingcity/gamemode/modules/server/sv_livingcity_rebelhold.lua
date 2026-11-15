@@ -72,6 +72,43 @@ function LC.RebelMayHold(ply)
     return IsValid(ply) and ply:IsPlayer() and ply:GetNW2String("lcf_faction", "") == "resistance" and ply:GetNW2Int("lcf_rank", 1) >= MIN_RANK
 end
 
+-- The cage a spot is inside of, if any (the owner, 14 November: "Rebel NPCs are spawning inside the cage prison
+-- cell"). LC.SpotInZone asks it, so nobody is spawned, stood or sent to a spot in a cage; the Resistance's own
+-- spawner asks it too, and the sweep below walks out anyone who got in some other way.
+local cages, cagesAt = {}, -1
+function LC.CageAt(pos, pad)
+    if not pos then return nil end
+    local now = CurTime()
+    if now - cagesAt > 2 or now < cagesAt then cages, cagesAt = ents.FindByClass("lc_rebelcage"), now end
+    for _, c in ipairs(cages) do
+        if IsValid(c) and c.Holds and c:Holds(pos, pad or 16) then return c end
+    end
+    return nil
+end
+function LC.CageForget() cagesAt = -1 end
+
+-- Anyone in a cage who isn't held there is stood outside the gate. Returns how many.
+function LC.CageSweep()
+    local n = 0
+    for npc, st in pairs(LC.NPCs or {}) do
+        local h = LC.RebelHeld[npc]
+        if IsValid(npc) and not (h and not h.walking) and not (LC.ChairHas and LC.ChairHas(npc)) then
+            local c = LC.CageAt(npc:GetPos(), 0)
+            if c and c.Outside then
+                npc:SetPos(c:Outside())
+                if st.state == "moving" and LC.SetState then LC.SetState(npc, st, "idle") st.untilT = CurTime() + 1 end
+                n = n + 1
+            end
+        end
+    end
+    return n
+end
+timer.Create("LivingCityRebelCageSweep", 5, 0, function()
+    if LC.TimeStopped or not On() then return end
+    local ok, err = LC.Try(LC.CageSweep)
+    if not ok and LC.Error then LC.Error("rebel cage sweep", err) end
+end)
+
 function LC.CageCount(cage)
     local n = 0
     for _, h in pairs(H) do if h.cage == cage then n = n + 1 end end

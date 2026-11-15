@@ -26,7 +26,14 @@ LC = LC or {}
 
 local function FactionOf(ply) return LCF and LCF.Get and LCF.Get(ply:GetNW2String("lcf_faction", "")) or nil end
 local function XP(ply, fid) return tonumber(ply:GetPData("lcf_xp_" .. fid, 0)) or 0 end
-local function Recompute(ply, why) if LC.AddXP then LC.AddXP(ply, 0, why) end end
+-- (the Resistance's trust goes with a Fighter's XP or more when staff give it: the owner, 14 November, set to
+-- Lieutenant and still a Member. LC.StaffTrust, sv_livingcity_factions.lua)
+local function Recompute(ply, why)
+    if why and LC.StaffTrust then LC.StaffTrust(ply) end
+    if LC.AddXP then LC.AddXP(ply, 0, why) end
+end
+-- The rank they hold now, by name (what the admin is told: never a rank the player did not get).
+local function RankName(ply, f) local r = f.ranks[ply:GetNW2Int("lcf_rank", 1)] return r and r.name or "?" end
 
 local function ResetAllXP(ply)
     for _, f in ipairs(LCF and LCF.Factions or {}) do ply:SetPData("lcf_xp_" .. f.id, 0) end
@@ -54,7 +61,7 @@ local ACTIONS = {
         local n = math.floor(tonumber(v) or 0)
         t:SetPData("lcf_xp_" .. f.id, math.max(0, XP(t, f.id) + n))
         Recompute(t, "by staff")
-        return true, string.format("%s: %d XP in %s.", t:Nick(), XP(t, f.id), f.name)
+        return true, string.format("%s: %d XP in %s (%s).", t:Nick(), XP(t, f.id), f.name, RankName(t, f))
     end,
     rank = function(t, v)
         local f = FactionOf(t)
@@ -64,7 +71,7 @@ local ACTIONS = {
         if f.ranks[i].overwatch then t:SetPData("lcf_transhuman", "1") end -- (staff skip the Overwatch Candidate story)
         t:SetPData("lcf_xp_" .. f.id, f.ranks[i].xp or 0)
         Recompute(t, "by staff")
-        return true, string.format("%s is now %s (%d XP).", t:Nick(), f.ranks[i].name, f.ranks[i].xp or 0)
+        return true, string.format("%s is now %s (%d XP).", t:Nick(), RankName(t, f), f.ranks[i].xp or 0)
     end,
     resetxp = function(t)
         ResetAllXP(t)

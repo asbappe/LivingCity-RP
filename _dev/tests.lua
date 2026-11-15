@@ -30327,6 +30327,106 @@ section("The play study: how the owner plays, written down as a model for the ci
 end)()
 
 
+function Nov14B_RankTests() -- (the owner, 14 November: "I set myself to Lieutenant via the admin tools ... it still says I am a member")
+section("14 November, B1: a rank or XP given by staff carries the Resistance's trust, and the cage opens for a Lieutenant")
+_setcvar("lc_fighter_trust_jobs", 3)
+_setcvar("lc_rebel_cage", 1)
+local adm = newPlayer("B1Admin", "resistance") adm.admin = true
+ok(adm:GetNW2Int("lcf_rank", 1) == 1 and (LC.ResistanceTrust(adm)) == 0, "a new member: Sympathizer, no jobs done for them yet")
+local good, msg = LC.AdminTool(adm, adm, "xp", 1000)
+ok(good == true and adm:GetNW2Int("lcf_rank", 1) == 4 and string.find(msg or "", "Lieutenant", 1, true) ~= nil, "+1000 XP from the admin tools: a Lieutenant, and the admin is told so", msg)
+ok(LC.RebelMayHold(adm) == true, "the cage opens for them")
+ok(LC.CanJoinFaction(adm, "resistance", "hacker") == true, "and the Hacker's role is open to them")
+LC.AdminTool(adm, adm, "resetme")
+ok(adm:GetNW2Int("lcf_rank", 1) == 1, "reset: a Sympathizer again")
+good, msg = LC.AdminTool(adm, adm, "rank", 4)
+ok(good == true and adm:GetNW2Int("lcf_rank", 1) == 4 and string.find(msg or "", "is now Lieutenant", 1, true) ~= nil, "set to rank 4 by the admin tools: a Lieutenant", msg)
+-- XP earned without the jobs is held as before, and the career page says why
+local raw = newPlayer("B1Raw", "resistance")
+raw:SetPData("lcf_xp_resistance", 1000)
+LC.AddXP(raw, 0)
+ok(raw:GetNW2Int("lcf_rank", 1) == 2 and not LC.RebelMayHold(raw), "XP earned without the jobs still stops at Member (trust before a gun is as it was)")
+local info = LC.CareerInfo(raw)
+ok(string.find(info.steps[1] or "", "3 more", 1, true) ~= nil and string.find(info.steps[1] or "", "Earn 0", 1, true) == nil, "the career page says what holds them back: three more jobs, not 'Earn 0 more XP'", info.steps[1])
+LC.AdminTool(adm, raw, "xp", 50)
+ok(raw:GetNW2Int("lcf_rank", 1) == 4, "XP from staff on top of a Fighter's XP gives the trust with it")
+local low = newPlayer("B1Low", "resistance")
+LC.AdminTool(adm, low, "xp", 200)
+ok(low:GetNW2Int("lcf_rank", 1) == 2 and (LC.ResistanceTrust(low)) == 0, "below a Fighter's XP nothing but the XP changes")
+-- the console's own commands do the same
+local con = newPlayer("B1Con", "resistance")
+con:SetPData("lcf_xp_resistance", 900)
+LC.StaffTrust(con) LC.AddXP(con, 0, "by staff")
+ok(con:GetNW2Int("lcf_rank", 1) == 4, "LC.StaffTrust: what lcf_setxp and lcf_promote call")
+for _, p in ipairs({ adm, raw, low, con }) do p:SetPos(Vector(-30000, 30000, 0)) end
+end
+Nov14B_RankTests()
+
+function Nov14B_CageTests() -- (the owner, 14 November: "Rebel NPCs are spawning inside the cage prison cell ... make sure that prisoners don't spawn outside the map brushes/walls")
+section("14 November, B2: nobody held is stood in the map's wall, and rebels stay out of the cage")
+_setcvar("lc_rebel_cage", 1)
+local VM = getmetatable(Vector(0, 0, 0))
+local hadRotate = VM.Rotate
+if not hadRotate then
+    function VM:Rotate(a) local r = math.rad(a.y or 0) local x, y = self.x, self.y self.x, self.y = x * math.cos(r) - y * math.sin(r), x * math.sin(r) + y * math.cos(r) end
+end
+local was = ENT
+ENT = {}
+assert(loadstring(_ENTSRC["entities/lc_rebelcage.lua"], "lc_rebelcage"))()
+local def = ENT
+ENT = was
+local P0 = Vector(-61000, 47000, 0)
+local cage = ents.Create("lc_rebelcage")
+cage:SetPos(P0)
+cage:Spawn()
+cage.lcHalf = 60
+for _, k in ipairs({ "Inside", "Holds", "Slot", "Outside" }) do cage[k] = def[k] end
+LC.CageForget()
+-- in the open every place is where it always was, inside the panels
+local allIn = true
+for i = 1, 8 do if not cage:Holds(cage:Slot(i)) then allIn = false end end
+ok(allIn and not cage:Holds(cage:Outside()), "in the open: eight places inside the four panels, and the way out is outside them")
+-- the map's wall runs through the back of the cage (the cage clips into it)
+local wall = { a = Vector(P0.x - 15, P0.y - 500, 0), b = Vector(P0.x - 15, P0.y + 500, 0) }
+table.insert(_walls, wall)
+local behind = 0
+for i = 1, 8 do if cage:Slot(i).x < P0.x - 15 then behind = behind + 1 end end
+ok(behind == 0, "with the wall through the back of the cage nobody is stood behind it", behind .. " behind the wall")
+local s1 = cage:Slot(1)
+ok(cage:Holds(s1) and s1.z == P0.z + 2, "a place pulled in from the wall is still in the cage, on its floor")
+for i = #_walls, 1, -1 do if _walls[i] == wall then table.remove(_walls, i) end end
+-- LC.CageAt, and the things that ask it
+ok(LC.CageAt(P0 + Vector(20, -20, 0)) == cage and LC.CageAt(P0 + Vector(300, 0, 0)) == nil and LC.CageAt(P0 + Vector(0, 0, 400)) == nil, "LC.CageAt: the cage a spot is in; not beside it, not the floor above")
+local z = { kind = "rebel", pos = P0, r = 50, radius = 50 }
+local inCage = 0
+local wasR = LCZ.RandomInside
+LCZ.RandomInside = function() return P0 + Vector(10, 10, 0) end
+for _ = 1, 5 do if LC.SpotInZone(z) then inCage = inCage + 1 end end
+LCZ.RandomInside = function() return P0 + Vector(400, 10, 0) end
+local out = LC.SpotInZone(z)
+LCZ.RandomInside = wasR
+ok(inCage == 0, "LC.SpotInZone never gives a spot in the cage (so nobody is spawned, stood or sent there)", inCage .. " of 5")
+ok(out ~= nil, "and beside the cage it gives spots as before")
+_setcvar("lc_manpower", 0)
+local npc, st = LC.SpawnRebel(P0 + Vector(10, 0, 4), nil)
+ok(IsValid(npc) and not cage:Holds(npc:GetPos()), "a rebel asked for in the cage appears outside its gate")
+-- one who got in some other way is walked out; someone held stays
+npc:SetPos(P0 + Vector(5, 5, 0))
+local held, hst = LC.SpawnCitizen(P0 + Vector(400, 0, 0))
+hst.leaveAt = nil
+LC.RebelHeld[held] = { cage = cage, st = hst, at = CurTime(), slot = 1 }
+held:SetPos(cage:Slot(1))
+local moved = LC.CageSweep()
+ok(moved == 1 and not cage:Holds(npc:GetPos()) and cage:Holds(held:GetPos()), "the sweep stands a stray outside the gate and leaves the prisoner where they are", tostring(moved))
+LC.RebelHeld[held] = nil
+if IsValid(npc) then npc:Remove() end
+if IsValid(held) then held:Remove() end
+cage:Remove()
+LC.CageForget()
+if not hadRotate then VM.Rotate = nil end
+end
+Nov14B_CageTests()
+
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")
 ;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)
     -- Everything here is something the owner's server, files or players depend on. The list is
