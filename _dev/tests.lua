@@ -30329,6 +30329,246 @@ section("The play study: how the owner plays, written down as a model for the ci
 end)()
 
 
+function Nov14B_RankTests() -- (the owner, 14 November: "I set myself to Lieutenant via the admin tools ... it still says I am a member")
+section("14 November, B1: a rank or XP given by staff carries the Resistance's trust, and the cage opens for a Lieutenant")
+_setcvar("lc_fighter_trust_jobs", 3)
+_setcvar("lc_rebel_cage", 1)
+local adm = newPlayer("B1Admin", "resistance") adm.admin = true
+ok(adm:GetNW2Int("lcf_rank", 1) == 1 and (LC.ResistanceTrust(adm)) == 0, "a new member: Sympathizer, no jobs done for them yet")
+local good, msg = LC.AdminTool(adm, adm, "xp", 1000)
+ok(good == true and adm:GetNW2Int("lcf_rank", 1) == 4 and string.find(msg or "", "Lieutenant", 1, true) ~= nil, "+1000 XP from the admin tools: a Lieutenant, and the admin is told so", msg)
+ok(LC.RebelMayHold(adm) == true, "the cage opens for them")
+ok(LC.CanJoinFaction(adm, "resistance", "hacker") == true, "and the Hacker's role is open to them")
+LC.AdminTool(adm, adm, "resetme")
+ok(adm:GetNW2Int("lcf_rank", 1) == 1, "reset: a Sympathizer again")
+good, msg = LC.AdminTool(adm, adm, "rank", 4)
+ok(good == true and adm:GetNW2Int("lcf_rank", 1) == 4 and string.find(msg or "", "is now Lieutenant", 1, true) ~= nil, "set to rank 4 by the admin tools: a Lieutenant", msg)
+-- XP earned without the jobs is held as before, and the career page says why
+local raw = newPlayer("B1Raw", "resistance")
+raw:SetPData("lcf_xp_resistance", 1000)
+LC.AddXP(raw, 0)
+ok(raw:GetNW2Int("lcf_rank", 1) == 2 and not LC.RebelMayHold(raw), "XP earned without the jobs still stops at Member (trust before a gun is as it was)")
+local info = LC.CareerInfo(raw)
+ok(string.find(info.steps[1] or "", "3 more", 1, true) ~= nil and string.find(info.steps[1] or "", "Earn 0", 1, true) == nil, "the career page says what holds them back: three more jobs, not 'Earn 0 more XP'", info.steps[1])
+LC.AdminTool(adm, raw, "xp", 50)
+ok(raw:GetNW2Int("lcf_rank", 1) == 4, "XP from staff on top of a Fighter's XP gives the trust with it")
+local low = newPlayer("B1Low", "resistance")
+LC.AdminTool(adm, low, "xp", 200)
+ok(low:GetNW2Int("lcf_rank", 1) == 2 and (LC.ResistanceTrust(low)) == 0, "below a Fighter's XP nothing but the XP changes")
+-- the console's own commands do the same
+local con = newPlayer("B1Con", "resistance")
+con:SetPData("lcf_xp_resistance", 900)
+LC.StaffTrust(con) LC.AddXP(con, 0, "by staff")
+ok(con:GetNW2Int("lcf_rank", 1) == 4, "LC.StaffTrust: what lcf_setxp and lcf_promote call")
+for _, p in ipairs({ adm, raw, low, con }) do p:SetPos(Vector(-30000, 30000, 0)) end
+end
+Nov14B_RankTests()
+
+function Nov14B_CageTests() -- (the owner, 14 November: "Rebel NPCs are spawning inside the cage prison cell ... make sure that prisoners don't spawn outside the map brushes/walls")
+section("14 November, B2: nobody held is stood in the map's wall, and rebels stay out of the cage")
+_setcvar("lc_rebel_cage", 1)
+local VM = getmetatable(Vector(0, 0, 0))
+local hadRotate = VM.Rotate
+if not hadRotate then
+    function VM:Rotate(a) local r = math.rad(a.y or 0) local x, y = self.x, self.y self.x, self.y = x * math.cos(r) - y * math.sin(r), x * math.sin(r) + y * math.cos(r) end
+end
+local was = ENT
+ENT = {}
+assert(loadstring(_ENTSRC["entities/lc_rebelcage.lua"], "lc_rebelcage"))()
+local def = ENT
+ENT = was
+local P0 = Vector(-61000, 47000, 0)
+local cage = ents.Create("lc_rebelcage")
+cage:SetPos(P0)
+cage:Spawn()
+cage.lcHalf = 60
+for _, k in ipairs({ "Inside", "Holds", "Slot", "Outside" }) do cage[k] = def[k] end
+LC.CageForget()
+-- in the open every place is where it always was, inside the panels
+local allIn = true
+for i = 1, 8 do if not cage:Holds(cage:Slot(i)) then allIn = false end end
+ok(allIn and not cage:Holds(cage:Outside()), "in the open: eight places inside the four panels, and the way out is outside them")
+-- the map's wall runs through the back of the cage (the cage clips into it)
+local wall = { a = Vector(P0.x - 15, P0.y - 500, 0), b = Vector(P0.x - 15, P0.y + 500, 0) }
+table.insert(_walls, wall)
+local behind = 0
+for i = 1, 8 do if cage:Slot(i).x < P0.x - 15 then behind = behind + 1 end end
+ok(behind == 0, "with the wall through the back of the cage nobody is stood behind it", behind .. " behind the wall")
+local s1 = cage:Slot(1)
+ok(cage:Holds(s1) and s1.z == P0.z + 2, "a place pulled in from the wall is still in the cage, on its floor")
+for i = #_walls, 1, -1 do if _walls[i] == wall then table.remove(_walls, i) end end
+-- LC.CageAt, and the things that ask it
+ok(LC.CageAt(P0 + Vector(20, -20, 0)) == cage and LC.CageAt(P0 + Vector(300, 0, 0)) == nil and LC.CageAt(P0 + Vector(0, 0, 400)) == nil, "LC.CageAt: the cage a spot is in; not beside it, not the floor above")
+local z = { kind = "rebel", pos = P0, r = 50, radius = 50 }
+local inCage = 0
+local wasR = LCZ.RandomInside
+LCZ.RandomInside = function() return P0 + Vector(10, 10, 0) end
+for _ = 1, 5 do if LC.SpotInZone(z) then inCage = inCage + 1 end end
+LCZ.RandomInside = function() return P0 + Vector(400, 10, 0) end
+local out = LC.SpotInZone(z)
+LCZ.RandomInside = wasR
+ok(inCage == 0, "LC.SpotInZone never gives a spot in the cage (so nobody is spawned, stood or sent there)", inCage .. " of 5")
+ok(out ~= nil, "and beside the cage it gives spots as before")
+_setcvar("lc_manpower", 0)
+local npc, st = LC.SpawnRebel(P0 + Vector(10, 0, 4), nil)
+ok(IsValid(npc) and not cage:Holds(npc:GetPos()), "a rebel asked for in the cage appears outside its gate")
+-- one who got in some other way is walked out; someone held stays
+npc:SetPos(P0 + Vector(5, 5, 0))
+local held, hst = LC.SpawnCitizen(P0 + Vector(400, 0, 0))
+hst.leaveAt = nil
+LC.RebelHeld[held] = { cage = cage, st = hst, at = CurTime(), slot = 1 }
+held:SetPos(cage:Slot(1))
+local moved = LC.CageSweep()
+ok(moved == 1 and not cage:Holds(npc:GetPos()) and cage:Holds(held:GetPos()), "the sweep stands a stray outside the gate and leaves the prisoner where they are", tostring(moved))
+LC.RebelHeld[held] = nil
+if IsValid(npc) then npc:Remove() end
+if IsValid(held) then held:Remove() end
+cage:Remove()
+LC.CageForget()
+if not hadRotate then VM.Rotate = nil end
+end
+Nov14B_CageTests()
+
+function Nov14B_LabSalesTests() -- (the owner, 14 November: "Rebel scientist needs to sell a charged vest, not the quartermaster", "combine bypass charges need to be only from the lab too")
+section("14 November, B5: the charged vest and the bypass charge come from the lab alone")
+ok(LCS.LabById.armor_vest ~= nil and LCS.LabById.bypass ~= nil, "the lab makes the powered vest and the bypass charge")
+ok(LCS.BlackById.armor_vest.lab == true and LCS.BlackById.bypass.lab == true, "both are marked as the lab's on the black market's list (kept there for their price)")
+ok(not LC.QuartermasterStocks("armor_vest") and not LC.QuartermasterStocks("bypass") and LC.QuartermasterStocks("gun_pistol"), "the quartermaster doesn't stock them (he still stocks pistols)")
+local dup = {}
+for _, r in ipairs(LCS.Lab) do if LC.QuartermasterStocks(r.out) then dup[#dup + 1] = r.id end end
+ok(#dup == 0, "nothing is sold by both the lab and the quartermaster", table.concat(dup, ", "))
+local pv, pb = LC.LabPrice(LCS.LabById.armor_vest), LC.LabPrice(LCS.LabById.bypass)
+ok(pv > 0 and pv < 90 and pb > 0 and pb < 70, "the lab's price for each is under the old dealer's (90 and 70)", pv .. ", " .. pb)
+-- nobody's list shows them, and nobody sells them
+local buyer = newPlayer("B5Buyer", "resistance", nil, 400)
+LC.AddCredits(buyer, 1000)
+local wasAccess = LC.MarketAccess
+LC.MarketAccess = function() return true end
+net.sent = {}
+LC.OpenMarket(buyer)
+local m = _lastnet("lcu_market")
+local t
+for _, d in ipairs(m and m.data or {}) do
+    if type(d) == "table" and d.goods then t = d elseif type(d) == "string" and not t then t = util.JSONToTable(d) end
+end
+local seen, pistols = 0, 0
+for _, g in ipairs(t and t.goods or {}) do
+    if g.id == "armor_vest" or g.id == "bypass" then seen = seen + 1 end
+    if g.id == "gun_pistol" then pistols = pistols + 1 end
+end
+ok(t ~= nil and seen == 0 and pistols == 1, "the black market's window lists neither (pistols are still there)", tostring(seen) .. " listed, pistols " .. tostring(pistols))
+local before = LC.Credits(buyer)
+local okV = LC.BlackBuy(buyer, "armor_vest")
+local okB = LC.BlackBuy(buyer, "bypass")
+ok(not okV and not okB and LC.Credits(buyer) == before and not LC.HasItem(buyer, "armor_vest") and not LC.HasItem(buyer, "bypass"), "and a buy sent for one anyway is refused, nothing charged")
+LC.MarketAccess = wasAccess
+buyer:SetPos(Vector(-30000, 30000, 0))
+end
+Nov14B_LabSalesTests()
+
+function Nov14B_SpawnTests() -- (the owner, 14 November: "resistance spawn points should be active for resistance human players based on the last one they were closest to, which survives server restarts")
+section("14 November, B4: a Resistance player comes back at the spawn point they were last closest to, and a restart keeps it")
+local A, B = Vector(-52000, 52000, 0), Vector(-47000, 52000, 0)
+local pts = { { kind = "rspawn", pos = A }, { kind = "rspawn", pos = B } }
+local wasPts = LC.PointsOfKind
+LC.PointsOfKind = function(kind, group) if kind == "rspawn" then return pts end return wasPts(kind, group) end
+local m = newPlayer("B4Member", "resistance", nil, 150) -- (a Member: not hunted, and it is theirs too)
+ok(not LC.PlayerIsHunted(m), "(a Member passes for a citizen)")
+m:SetPos(A + Vector(400, 100, 0))
+ok(LC.RebelSpawnNote(m) == pts[1] and m:GetPData("lc_rspawn", "") ~= "", "near the first spawn point: it is remembered, in their saved data")
+local function respawns(p, at, times)
+    local n = 0
+    for _ = 1, times do
+        hook.Run("PlayerSpawn", p)
+        _run(0.2)
+        if p:GetPos():DistToSqr(at + Vector(0, 0, 4)) < 4 then n = n + 1 end
+        p:SetPos(at + Vector(300, 0, 0)) -- (walks a little way off, still nearest to it)
+    end
+    return n
+end
+ok(respawns(m, A, 6) == 6, "six respawns, six times at that point (not any one of them)")
+m.lcRSpawn = nil -- (a restart: only the saved data is left)
+ok(respawns(m, A, 6) == 6, "after a restart it is still that one")
+m:SetPos(B + Vector(-200, 0, 0))
+LC.RebelSpawnNote(m)
+ok(respawns(m, B, 6) == 6, "having gone to the other base, they come back there")
+-- dying far from both: the one nearest to where they fell
+m:SetPos(A + Vector(1500, 0, 0))
+hook.Run("DoPlayerDeath", m)
+hook.Run("PlayerSpawn", m)
+_run(0.2)
+ok(m:GetPos():DistToSqr(A + Vector(0, 0, 4)) < 4, "killed nearer the first: back at the first")
+-- a point that has been taken away: any that is left
+pts = { { kind = "rspawn", pos = B } }
+m.lcRSpawn = nil
+m:SetPos(Vector(-30000, 30000, 0))
+hook.Run("PlayerSpawn", m)
+_run(0.2)
+ok(m:GetPos():DistToSqr(B + Vector(0, 0, 4)) < 4, "their point taken away with the editor: the one that is left")
+-- nobody else is sent there
+local cit = newPlayer("B4Cit", "citizen")
+cit:SetPos(B + Vector(100, 0, 0))
+ok(LC.RebelSpawnNote(cit) == nil and cit:GetPData("lc_rspawn", "") == "", "a citizen standing by one has nothing remembered")
+LC.PointsOfKind = wasPts
+for _, p in ipairs({ m, cit }) do p:SetPos(Vector(-30000, 30000, 0)) end
+end
+Nov14B_SpawnTests()
+
+function Nov14B_CuffTests() -- (the owner, 14 November: "I don't see an option to cuff NPCs as a resistance member, but I have 5 pairs of cuffs in my pockets")
+section("14 November, B6: F2 > Cuff them, for a Resistance Fighter or above with cuffs: to the holding cage")
+_setcvar("lc_rebel_cage", 1)
+_setcvar("lc_rebel_auto", 0)
+_setcvar("lc_rebel_visitor", 0)
+local P0 = Vector(-66000, 41000, 0)
+local cage = ents.Create("lc_rebelcage")
+cage:SetPos(P0)
+cage:Spawn()
+LC.CageForget()
+local function person(off)
+    local n, st = LC.SpawnCitizen(P0 + off)
+    st.leaveAt = nil
+    n.sim = false
+    return n, st
+end
+local act = LC.TargetActions.cagecuff
+ok(type(act) == "function", "F2's action for it is there")
+local lt = newPlayer("B6Lt", "resistance", nil, 900)
+local member = newPlayer("B6Member", "resistance", nil, 150)
+local n1, st1 = person(Vector(400, 0, 0))
+lt:SetPos(n1:GetPos() + Vector(60, 0, 0))
+member:SetPos(n1:GetPos() + Vector(-60, 0, 0))
+LC.GiveItem(member, "zipties", 2)
+ok(not act(member, n1) and LC.RebelHeld[n1] == nil and LC.CuffCount(member) == 2, "a Member with cuffs takes nobody (Fighters and above)")
+ok(not act(lt, n1) and LC.RebelHeld[n1] == nil, "a Lieutenant with no cuffs: nothing happens")
+LC.GiveItem(lt, "zipties", 5)
+lt:SetPos(n1:GetPos() + Vector(900, 0, 0))
+local far, why = act(lt, n1)
+ok(not far and string.find(why or "", "closer", 1, true) ~= nil and LC.CuffCount(lt) == 5, "from too far: told to get closer, no cuffs used", why)
+lt:SetPos(n1:GetPos() + Vector(60, 0, 0))
+ok(act(lt, n1) == true and LC.RebelHeld[n1] ~= nil and st1.questLock == true and LC.CuffCount(lt) == 4, "up close with cuffs: they are taken for the cage, and one pair is used", tostring(LC.CuffCount(lt)))
+n1:SetPos(P0 + Vector(60, 0, 0))
+LC.CageTick(CurTime())
+ok(#LC.CageList(cage) == 1 and st1.state == "detained", "at the cage they are locked in, as from the talk window")
+ok(not act(lt, n1) and LC.CuffCount(lt) == 4, "someone already held isn't cuffed again")
+-- no cage near enough: said so, no cuffs used
+local n2 = person(Vector(9000, 0, 0))
+lt:SetPos(n2:GetPos() + Vector(60, 0, 0))
+local none, whyNone = act(lt, n2)
+ok(not none and string.find(whyNone or "", "no cage", 1, true) ~= nil and LC.CuffCount(lt) == 4, "with no cage within reach: said so, no cuffs used", whyNone)
+-- one of their own isn't theirs to cuff
+local rb = LC.SpawnRebel(P0 + Vector(500, 300, 4), nil)
+if IsValid(rb) then
+    lt:SetPos(rb:GetPos() + Vector(60, 0, 0))
+    ok(not act(lt, rb) and LC.RebelHeld[rb] == nil and LC.CuffCount(lt) == 4, "a rebel isn't cuffed by their own")
+    rb:Remove()
+end
+LC.CageFree(n1)
+for _, e in ipairs({ n1, n2, cage }) do if IsValid(e) then e:Remove() end end
+LC.CageForget()
+for _, p in ipairs({ lt, member }) do p:SetPos(Vector(-30000, 30000, 0)) end
+end
+Nov14B_CuffTests()
+
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")
 ;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)
     -- Everything here is something the owner's server, files or players depend on. The list is
