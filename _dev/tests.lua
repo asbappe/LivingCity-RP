@@ -31439,6 +31439,43 @@ end
 Nov14D_WeaponsTests()
 
 
+function Nov14D_InfestJunkTests()
+section("The infestation's junk blocks nobody (14 November, group D)")
+local DEBRIS = COLLISION_GROUP_DEBRIS or 1
+local a = LC.DressingProp("models/props_junk/trashbin01a.mdl", Vector(-29000, 24000, 0), nil, true)
+ok(IsValid(a) and a:GetCollisionGroup() == DEBRIS, "a piece of the infestation's junk is debris: NPCs and players walk through it")
+local b = LC.DressingProp("models/props_junk/wood_crate001a.mdl", Vector(-29000, 24200, 0))
+ok(IsValid(b) and b:GetCollisionGroup() ~= DEBRIS, "a rebel camp's crate is as solid as it was")
+a:Remove() b:Remove()
+-- the whole way: an infested zone dressed by the city
+local was = GetConVar("lc_dressing"):GetInt()
+_setcvar("lc_dressing", 1)
+local wasRunning = LC.Running
+LC.Running = true
+local at = Vector(-29000, 22000, 0)
+local z = LC.AddZone(at, 500, "infest", 0)
+local wasWalls = _walls
+_walls = {}
+LC.DressingTick()
+local d = LC.Dressed[z]
+local n, solid = 0, 0
+for _, e in ipairs(d and d.ents or {}) do
+    if IsValid(e) and e:GetClass() == "prop_physics" then
+        n = n + 1
+        if e:GetCollisionGroup() ~= DEBRIS then solid = solid + 1 end
+    end
+end
+ok(n > 0 and solid == 0, "every prop the infestation puts out is passable", n .. " props, " .. solid .. " solid")
+_walls = wasWalls
+for _, e in ipairs(d and d.ents or {}) do if IsValid(e) then e:Remove() end end
+LC.Dressed[z] = nil
+for i, o in ipairs(LC.Zones) do if o == z then table.remove(LC.Zones, i) break end end
+LC.Running = wasRunning
+_setcvar("lc_dressing", was)
+end
+Nov14D_InfestJunkTests()
+
+
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")
 ;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)
     -- Everything here is something the owner's server, files or players depend on. The list is

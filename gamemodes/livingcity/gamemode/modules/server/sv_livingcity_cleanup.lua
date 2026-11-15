@@ -251,6 +251,8 @@ local function Prop(model, pos, ang)
     local phys = e.GetPhysicsObject and e:GetPhysicsObject()
     if IsValid(phys) then phys:EnableMotion(false) end
     e.lcHazardProp = true
+    -- (the warning sign and lamp: walked through, like the infestation's junk; the owner, 14 November)
+    if e.SetCollisionGroup then e:SetCollisionGroup(COLLISION_GROUP_DEBRIS or 1) end
     return e
 end
 
