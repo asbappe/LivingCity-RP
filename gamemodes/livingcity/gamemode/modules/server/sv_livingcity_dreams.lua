@@ -941,10 +941,13 @@ function LC.DreamWakeOne(p, why)
         Log("warn", "Dream: no snapshot for " .. p:Nick() .. " (woke them anyway)")
         return false
     end
+    -- (being put back, for a few seconds: a prisoner isn't let out or called an escape until it's done, sv_livingcity_prison.lua)
+    p.lcDreamBack = CurTime() + 6
     timer.Simple(0.3, function()
         if not IsValid(p) then return end
         LC.DreamRestore(p, snap, function(ok)
             if not IsValid(p) then return end
+            p.lcDreamBack = nil
             hook.Run("LivingCityDreamWoke", p, ok, why, mine)
             local quiet = p.lcDreamQuietWake
             p.lcDreamQuietWake = nil
@@ -1044,7 +1047,8 @@ function LC.DreamStart(id, by, vote, also, force)
     local allDream = LC.DreamOnlyEnforcers(who, id) or nil
     S.nextId = (S.nextId or 0) + 1
     local dream = { id = S.nextId, ending = id, pos = pt.pos, yaw = pt.yaw or 0, zone = LC.DreamZone(), list = {}, snaps = {}, npcs = {}, combine = {},
-        made = setmetatable({}, { __mode = "k" }), started = CurTime(), force = force or nil, mood = LC.DreamMood(id), forced = LC.DreamForced(id), test = test or nil, allDream = allDream }
+        made = setmetatable({}, { __mode = "k" }), started = CurTime(), force = force or nil, mood = LC.DreamMood(id), forced = LC.DreamForced(id), test = test or nil, allDream = allDream,
+        prison = S.prisonNow or nil } -- (prison: a prisoner's dream at any hour, not tonight's: LC.PrisonDreamCheck below)
     local spots = LC.EndingRingSpots and LC.EndingRingSpots(pt.pos, 60, #who) or {}
     for i, p in ipairs(who) do
         local ok, err = LC.Try(Enter, p, dream, spots[i] and spots[i].pos or pt.pos)
@@ -1286,9 +1290,13 @@ function LC.DreamDebugLine()
         or ("last try, night " .. tostring(S.last.night) .. ": " .. tostring(S.last.id) .. " didn't happen: " .. tostring(S.last.why))) or "none tried yet on this map"
     local asleep = 0
     for _, p in ipairs(player.GetAll()) do if p.lcSleep then asleep = asleep + 1 end end
+    -- (a prisoner's dream at any hour, LC.PrisonDreamCheck: when one was last tried, and why it didn't happen if it didn't)
+    local pd = S.prisonLast
+    local prison = pd and (" | prison dream: last tried " .. math.max(0, math.floor((CurTime() - pd.at) / 60)) .. " min ago (" .. tostring(pd.who) .. "): "
+        .. tostring(pd.id) .. (pd.ok and "" or (" didn't happen: " .. tostring(pd.why)))) or " | prison dream: none tried yet"
     return "dreams: " .. (why or who) .. " | night " .. tostring(S.night) .. (S.dreamedNight == S.night and " (tried)" or " (not tried yet)")
         .. (S.at and (", due in " .. math.max(0, math.floor(S.at - CurTime())) .. "s") or "") .. (S.missedNight == S.night and ", waiting for a sleeper" or "")
-        .. " | players asleep " .. asleep .. " | " .. last
+        .. " | players asleep " .. asleep .. " | " .. last .. prison
 end
 
 ------------------------------------------------------------------------
@@ -1330,6 +1338,91 @@ function LC.DreamMissedCheck(now)
     return true
 end
 
+------------------------------------------------------------------------
+-- Asleep in the cells: a dream at any hour
+------------------------------------------------------------------------
+
+-- (The owner, 15 November: "an 'off-hours' dream rotation for people in prison: if a person is in prison more
+-- than 5 ish minutes, then they can sleep and just dream any time of the day".) A prisoner with more than five
+-- minutes to serve may lie down at any hour (LC.PrisonerMaySleep, sv_livingcity_rest.lua). Twenty seconds after
+-- they fall asleep a dream starts for whoever is asleep: the city's own pick, as on a night nobody chose one.
+-- Once a sentence each (dreamt, on their LC.Prisoners entry). It is not tonight's dream: S.dreamedNight, S.at and
+-- what the night remembers stay as they were (dream.prison), it waits while a dream or an ending is under way or
+-- tonight's dream is about to start (that one takes them too), and like the city's nightly pick it neither
+-- waits for nor starts lc_ending_cooldown. One that can't be dreamt is tried once more; then they just sleep.
+local PRISON_DREAM_AFTER, PRISON_DREAM_TRIES = 20, 2
+LC.PrisonDreamAfter = PRISON_DREAM_AFTER
+
+hook.Add("LivingCitySleepStarted", "LivingCityPrisonDream", function(ply)
+    local pr = LC.Prisoners and LC.Prisoners[ply]
+    if not pr or pr.dreamt or not (LC.PrisonerMaySleep and LC.PrisonerMaySleep(ply)) then return end
+    pr.dreamAt, pr.dreamTries = CurTime() + PRISON_DREAM_AFTER, 0
+end)
+
+-- What to dream: the city's pick (id, kind). The second try is the next Neutral or Happy one: a nightmare spares
+-- whoever sleeps inside a Combine zone, and a kind can be sat out once earned, and then nobody is asleep for it.
+local function PrisonPick(try)
+    if try > 1 and LC.DreamPlanNext then
+        for _, kind in ipairs({ "neutral", "happy" }) do
+            local id = LC.DreamPlanNext(kind)
+            if id then return id, kind end
+        end
+    end
+    if not LC.DreamAutoPick then return nil end
+    local id, _, kind = LC.DreamAutoPick()
+    return id, kind
+end
+
+-- One try at a prisoner's dream. True, or false and why not (kept for the debug report either way).
+function LC.PrisonDreamTry(ply, pr)
+    pr.dreamTries = (pr.dreamTries or 0) + 1
+    local id, kind = PrisonPick(pr.dreamTries)
+    local ok, why = false, "nothing to dream"
+    if id then
+        S.prisonNow = true
+        local ran, a, b = LC.Try(LC.DreamStart, id, nil, false, nil, true) -- (forced, as the city's nightly pick is: no cooldown waited for or started)
+        S.prisonNow = nil
+        ok, why = ran and a == true, ran and b or a
+        -- (it can't be dreamt here: its turn passes on, as on a night, so the second try isn't the same one again)
+        if not ok and LC.DreamPlanAdvance and LC.DreamPlanNext then
+            kind = kind or (LC.DreamKind and LC.DreamKind(id)) or "neutral"
+            if LC.DreamPlanNext(kind) == id then LC.DreamPlanAdvance(kind) end
+        end
+    end
+    S.prisonLast = { at = CurTime(), who = ply:Nick(), id = id or "nothing", ok = ok, why = (not ok) and tostring(why) or nil }
+    if not ok then Log("info", "A prisoner's dream didn't happen (" .. ply:Nick() .. "): " .. tostring(why)) end
+    return ok, why
+end
+
+-- A prisoner's dream that ran into the hour of tonight's: tonight's waits a few seconds more, until whoever was in it
+-- is back in bed with everything put back (LC.DreamWakeOne takes a moment; taken again sooner, the two would cross).
+hook.Add("LivingCityDreamEnded", "LivingCityPrisonDream", function(dream)
+    if dream and dream.prison and S.at and S.at < CurTime() + 8 then S.at = CurTime() + 8 end
+end)
+
+function LC.PrisonDreamCheck(now)
+    for ply, pr in pairs(LC.Prisoners or {}) do
+        if pr.dreamAt and IsValid(ply) then
+            if ply.lcDreaming then
+                pr.dreamt, pr.dreamAt = true, nil -- (in a dream already, tonight's or another prisoner's: that was theirs)
+            elseif not ply.lcSleep then
+                pr.dreamAt = nil -- (up again: the next time they lie down)
+            elseif now >= pr.dreamAt and not LC.DreamActive and not (LC.EndingBusy and LC.EndingBusy()) and not (S.at and WillDream()) then
+                if not LC.DreamReady() then
+                    -- (no dreams on this server, or no dream point: they just sleep)
+                    pr.dreamt, pr.dreamAt = true, nil
+                    S.prisonLast = { at = now, who = ply:Nick(), id = "nothing", ok = false, why = cvOn:GetBool() and "no dream point on this map" or "dreams are off (lc_dreams 0)" }
+                elseif (LC.PrisonDreamTry(ply, pr) and ply.lcDreaming) or pr.dreamTries >= PRISON_DREAM_TRIES then
+                    pr.dreamt, pr.dreamAt = true, nil
+                else
+                    -- (it couldn't be dreamt, or it began for others asleep and left this prisoner out: the one more try)
+                    pr.dreamAt = now + PRISON_DREAM_AFTER
+                end
+            end
+        end
+    end
+end
+
 timer.Create("LivingCityDreams", 1, 0, function()
     local ok, err = LC.Try(function()
         local now = CurTime()
@@ -1337,6 +1430,8 @@ timer.Create("LivingCityDreams", 1, 0, function()
             S.missedCheck = now + 5
             LC.DreamMissedCheck(now)
         end
+        local okP, errP = LC.Try(LC.PrisonDreamCheck, now)
+        if not okP and LC.Error then LC.Error("prison dream", errP) end
         if S.at and LC.DreamReady() and WillDream() then
             -- the sleepers, warned (and the way out)
             if not S.warned and now >= S.at - math.min(30, cvDelay:GetFloat()) then

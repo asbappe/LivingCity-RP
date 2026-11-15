@@ -1024,6 +1024,33 @@ do
     Quick("vort") Quick("stalker") Quick("zombie")
     Quick("citizen", function() _me.nw.lcj_job, _me.nw.lc_ration_break = "mortuary", true end)
     Quick("resistance", function() _me.nw.lc_squad_n = 2 other.nw.lcf_faction = "vort" Look(other) end)
+    -- asleep in the cells at any hour (the owner, 15 November): a prisoner with more than five minutes still to serve has
+    -- "Lie down and sleep" on F1 (the cell may have no bed to press E on), and nobody else has
+    do
+        local function Sleep()
+            local okL, r = pcall(LC_CL.QuickRoot)
+            for i = 1, 8 do
+                local it = okL and r.items[i]
+                if it and it.label == "Lie down and sleep" then return it end
+            end
+            return nil
+        end
+        _me.nw = { lcf_faction = "citizen", lce_standing = 10, lc_jail_until = CurTime() + 400 }
+        _me.IsAdmin = function() return false end
+        Look(nil)
+        local it = Sleep()
+        seen.sleep = nil
+        if it then it.run() end
+        if not (it and seen.sleep) then problems[#problems + 1] = "a prisoner with over five minutes left: F1 has no 'Lie down and sleep' (or it doesn't ask the server)" end
+        _me.nw.lc_jail_until = CurTime() + 200
+        if Sleep() then problems[#problems + 1] = "'Lie down and sleep' is offered with less than five minutes of the sentence left" end
+        _me.nw.lc_jail_until, _me.nw.lc_sleeping = CurTime() + 400, true
+        if Sleep() then problems[#problems + 1] = "'Lie down and sleep' is offered to a prisoner already asleep" end
+        _me.nw.lc_sleeping, _me.nw.lc_work_detail = nil, true
+        if Sleep() then problems[#problems + 1] = "'Lie down and sleep' is offered out on a work detail" end
+        _me.nw.lc_jail_until, _me.nw.lc_work_detail = nil, nil
+        if Sleep() then problems[#problems + 1] = "'Lie down and sleep' is offered to someone who isn't a prisoner" end
+    end
     -- nothing at all for their side or job (the infested; a plain citizen has Me > now): F2 says so, briefly
     do
         _me.nw = { lcf_faction = "zombie", lce_standing = 10 }

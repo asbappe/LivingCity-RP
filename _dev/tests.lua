@@ -32183,6 +32183,237 @@ function Nov14C_MouthTests()
 end
 Nov14C_MouthTests()
 
+function Nov15_PrisonDreamTests()
+section("15 November: asleep in the cells at any hour, and a prisoner's dream that isn't tonight's")
+local errs0 = #_errors
+local set = _setcvar
+local cvWas = {}
+for _, n in ipairs({ "lc_sleep", "lc_dreams", "lc_dream_rules", "lc_dream_auto", "lc_dream_every_night" }) do cvWas[n] = GetConVar(n).v end
+set("lc_sleep", 1) set("lc_dreams", 1) set("lc_dream_rules", 1) set("lc_dream_auto", 1) set("lc_dream_every_night", 0)
+local realGetAll, realPhase, realReload, realStart, realNight = player.GetAll, LC.DayPhase, LC.EndingReload, LC.DreamStart, LC.IsNight
+local savedWalls = _walls
+_walls = {}
+LC.EndingReload = function() end
+local DS, DP = LC.DreamState, LC.DreamPlan
+local keep = { at = DS.at, queued = DS.queued, missed = DS.missedNight, dreamed = DS.dreamedNight, last = DS.last, lastMood = DS.lastMood,
+    prisonLast = DS.prisonLast, rot = table.Copy(DP.rot or {}), lastKind = DP.lastKind, special = DP.specialNight, adminNight = DP.adminNight }
+local P0 = Vector(-247000, 173000, 0)
+local CELL, OUT, DREAM = P0, P0 + Vector(0, 700, 0), P0 + Vector(9000, 9000, 0)
+local cell = LC.AddPoint(CELL, 0, "cell", 0)
+local rel = LC.AddPoint(OUT, 0, "release", 0)
+local pt = LC.AddPoint(DREAM, 0, "dream")
+local con = newPlayer("PDCon", "citizen")
+local free = newPlayer("PDFree", "citizen")
+_run(0.3)
+player.GetAll = function() return { con, free } end
+local phase = "day"
+LC.DayPhase = function() return phase end
+LC.IsNight = function() return phase == "night" or phase == "dusk" end
+if LC.DreamActive then LC.DreamWake(LC.DreamActive) end
+LC.DreamForget()
+DS.at, DS.missedNight = nil, nil
+local function jail(p, secs)
+    p.lcGraceUntil, p.lcJailOwed = nil, nil
+    p:SetPos(CELL + Vector(40, 0, 0))
+    p.lcPreferCell = cell
+    p.lcExactSentence = true
+    local okJ = LC.Incarcerate(p, secs, "x", nil)
+    p.lcExactSentence = nil
+    return okJ == true and LC.Prisoners[p] ~= nil and LC.Prisoners[p].cell == cell
+end
+local function awake(p)
+    p.lcAwakeSince = CurTime()
+    p:SetNW2Bool("lc_tired", false)
+    p:SetNW2Float("lc_rested_until", CurTime() + 1440) -- (slept not long ago, too)
+end
+local function inCell(p) return p:GetPos():Distance(CELL) < 250 end
+local function atGate(p) -- (at a release point: whichever of the map's the prison chose)
+    for _, r in ipairs(LC.PointsOfKind("release")) do if p:GetPos():Distance(r.pos) < 150 then return true end end
+    return false
+end
+-- someone who isn't a prisoner: as before
+awake(free)
+free:SetPos(CELL + Vector(0, -200, 0))
+local okF, whyF = LC.SleepIn(free, nil)
+ok(okF == false and whyF == "There's no bed here.", "someone who isn't a prisoner still needs a bed", tostring(whyF))
+local bed = ents.Create("lc_bed") bed:SetPos(free:GetPos() + Vector(40, 0, 0)) bed:Spawn()
+okF, whyF = LC.SleepIn(free, bed)
+ok(okF == false and string.find(tostring(whyF), "daylight", 1, true) ~= nil, "and still can't sleep in broad daylight, not tired", tostring(whyF))
+bed:Remove()
+free:SetPos(Vector(-121000, -121000, 0))
+-- a prisoner: only with more than five minutes still to serve
+ok(jail(con, 200), "(in a cell for 200 seconds)")
+awake(con)
+local okS, whyS = LC.SleepIn(con, nil)
+ok(LC.PrisonerMaySleep(con) == false and okS == false and whyS == "There's no bed here.", "a prisoner with less than five minutes left sleeps as anyone does: a bed, at night", tostring(whyS))
+LC.Incarcerate(con, 800, "x", nil) -- (more time on the same sentence)
+local pr = LC.Prisoners[con]
+ok(pr ~= nil and LC.PrisonerMaySleep(con) == true, "with more than five minutes left: they may lie down")
+pr.work = true
+ok(LC.PrisonerMaySleep(con) == false, "(not while out on a work detail)")
+pr.work = nil
+local stood = con:GetPos()
+okS, whyS = LC.SleepIn(con, nil)
+ok(okS == true and con.lcSleep ~= nil and con:GetNW2Bool("lc_sleeping", false), "in broad daylight, not tired and well rested, with no bed in the cell: the prisoner lies down", tostring(whyS))
+ok(con:GetNW2Vector("lc_bed_top", Vector(0, 0, 0)):Distance(stood) < 8 and inCell(con), "on the floor, where they stood", tostring(con:GetNW2Vector("lc_bed_top", Vector(0, 0, 0))))
+ok(pr.dreamAt ~= nil and math.abs(pr.dreamAt - CurTime() - 20) < 0.5, "and a dream is twenty seconds off")
+-- getting up puts it off; lying down again starts the twenty seconds again
+LC.WakeUp(con, "quiet")
+_run(1.5)
+ok(pr.dreamAt == nil and not pr.dreamt and LC.DreamActive == nil, "up again before it came: no dream, and it isn't used up")
+phase = "dusk" -- (the hour the night's bookkeeping would most easily take it for tonight's)
+ok(LC.SleepIn(con, nil) == true and pr.dreamAt ~= nil, "(lying down again, at dusk)")
+-- the dream: the city's own pick, for whoever is asleep; not tonight's
+DS.dreamedNight = DS.night - 1 -- (tonight's dream is still to come)
+local planWas = { lastKind = DP.lastKind, special = DP.specialNight, adminNight = DP.adminNight }
+local untilWas = pr.untilT
+_run(19)
+ok(LC.DreamActive == nil, "not before twenty seconds")
+_run(2)
+if not LC.DreamActive then _run(21) end -- (the stub couldn't build the first pick: the one retry)
+local dream = LC.DreamActive
+ok(dream ~= nil and con.lcDreaming == dream.id and dream.prison == true, "twenty seconds after a prisoner falls asleep, whatever the hour, a dream starts",
+    tostring(dream) .. " " .. tostring(con.lcDreaming) .. " " .. tostring(LC.DreamDebugLine()))
+ok(dream ~= nil and dream.force == true, "started as the city's nightly pick is: the endings' cooldown isn't waited for, nor started")
+ok(pr.dreamt == true and pr.dreamAt == nil, "(once a sentence: marked on their entry)")
+ok(DS.dreamedNight == DS.night - 1 and DS.at == nil and DS.last == keep.last, "it doesn't count as tonight's dream: the night's own is still to come")
+ok(DP.lastKind == planWas.lastKind and DP.specialNight == planWas.special and DP.adminNight == planWas.adminNight, "and the nights' plan remembers nothing of it",
+    tostring(DP.lastKind) .. " " .. tostring(DP.specialNight))
+_run(4)
+ok(LC.Prisoners[con] == pr and not inCell(con), "in the dream, far from the cell, they are still a prisoner (not an escape)", tostring(LC.Prisoners[con]))
+ok(pr.untilT == untilWas, "and the sentence runs on as it was")
+ok(string.find(LC.DreamDebugLine(), "prison dream: last tried 0 min ago (PDCon): ", 1, true) ~= nil and string.find(LC.DreamDebugLine(), "prison dream: none tried yet", 1, true) == nil,
+    "the debug report's dreams line says when a prisoner's dream was last tried", LC.DreamDebugLine())
+if LC.DreamActive then LC.DreamWake(LC.DreamActive) end
+LC.DreamActive = nil
+_run(5)
+ok(LC.Prisoners[con] == pr and inCell(con) and con.lcSleep ~= nil and not con.lcDreaming, "the dream over: back in the cell, asleep where they lay, still a prisoner",
+    tostring(con:GetPos()) .. " " .. tostring(con.lcSleep))
+ok(con:GetNW2Float("lc_jail_until", 0) == pr.untilT, "(their screen's sentence clock is as it was)")
+_run(30)
+ok(LC.DreamActive == nil and not con.lcDreaming, "once a sentence: asleep still, and no second dream")
+-- tonight's dream still happens, and takes the prisoner like anyone asleep
+phase = "night"
+ok(LC.DreamTonightPending() == true, "(tonight's dream is still to come)")
+local okT, whyT = LC.DreamTonight()
+ok(okT == true and LC.DreamActive ~= nil and not LC.DreamActive.prison and con.lcDreaming ~= nil and DS.dreamedNight == DS.night,
+    "tonight's dream happens all the same, with the prisoner in it", tostring(whyT))
+_run(3)
+ok(LC.Prisoners[con] == pr, "(a prisoner in the night's dream is still a prisoner)")
+if LC.DreamActive then LC.DreamWake(LC.DreamActive) end
+LC.DreamActive = nil
+_run(5)
+LC.WakeUp(con, "quiet")
+LC.FreeFromCustody(con)
+ok(not LC.Prisoners[con] and not con.lcSleep, "(woken, and out)")
+-- a dream that can't be built: one more try, then they just sleep
+phase = "day"
+ok(jail(con, 1000), "(a new sentence)")
+pr = LC.Prisoners[con]
+awake(con)
+local seen = {}
+LC.DreamStart = function(id, by, vote, also, force) seen[#seen + 1] = { id = id, force = force, t = CurTime() } return false, "The dream couldn't be built here." end
+local t0 = CurTime()
+ok(LC.SleepIn(con, nil) == true and not pr.dreamt, "(a new sentence has its own dream to come)")
+_run(22)
+ok(#seen == 1 and seen[1].force == true and math.abs(seen[1].t - t0 - 20) < 1.2, "the city's pick is tried twenty seconds in, not waiting for the endings' cooldown",
+    tostring(#seen) .. " " .. tostring(seen[1] and seen[1].t - t0))
+_run(21)
+ok(#seen == 2 and seen[2].id ~= seen[1].id, "it couldn't be built: one more try, and not the same one", tostring(seen[1] and seen[1].id) .. " " .. tostring(seen[2] and seen[2].id))
+_run(45)
+ok(#seen == 2 and pr.dreamt == true and pr.dreamAt == nil, "and no third", tostring(#seen))
+ok(con.lcSleep ~= nil and LC.Prisoners[con] == pr and inCell(con), "the prisoner simply sleeps on")
+ok(string.find(LC.DreamDebugLine(), "didn't happen: The dream couldn't be built here.", 1, true) ~= nil and string.find(LC.DreamDebugLine(), "prison dream: last tried", 1, true) ~= nil,
+    "and the debug report says why the last one didn't happen", LC.DreamDebugLine())
+LC.DreamStart = realStart
+-- not while a dream or an ending is under way, nor with tonight's dream about to start
+pr.dreamt, pr.dreamAt, pr.dreamTries = nil, CurTime() - 1, 0
+local calls = 0
+LC.DreamStart = function() calls = calls + 1 return false, "x" end
+LC.DreamActive = { id = -1, list = {}, snaps = {}, npcs = {}, made = {}, started = CurTime(), test = true }
+LC.PrisonDreamCheck(CurTime())
+LC.DreamActive = nil
+phase = "night"
+DS.at = CurTime() + 30
+LC.PrisonDreamCheck(CurTime())
+DS.at = nil
+phase = "day"
+ok(calls == 0 and pr.dreamAt ~= nil and not pr.dreamt, "it waits while another dream is under way, and while tonight's is about to start", tostring(calls))
+-- it began for others asleep and left the prisoner out (spared, or sitting that kind out): not theirs
+pr.dreamt, pr.dreamAt, pr.dreamTries = nil, CurTime() - 1, 0
+calls = 0
+LC.DreamStart = function() calls = calls + 1 return true, {} end
+LC.PrisonDreamCheck(CurTime())
+ok(calls == 1 and not pr.dreamt and pr.dreamAt ~= nil, "a dream that began without the prisoner in it isn't theirs: one more try", tostring(calls))
+pr.dreamAt = CurTime() - 1
+LC.PrisonDreamCheck(CurTime())
+ok(calls == 2 and pr.dreamt == true and pr.dreamAt == nil, "(and then no more)", tostring(calls))
+LC.DreamStart = realStart
+pr.dreamAt, pr.dreamt = nil, true
+LC.WakeUp(con, "quiet")
+LC.FreeFromCustody(con)
+-- the sentence ends while they dream: let out when they wake
+ok(jail(con, 400), "(a third sentence, a short one)")
+pr = LC.Prisoners[con]
+awake(con)
+ok(LC.SleepIn(con, nil) == true, "(asleep on the cell floor)")
+_run(21)
+if not LC.DreamActive then _run(21) end
+ok(LC.DreamActive ~= nil and con.lcDreaming ~= nil, "(dreaming)", LC.DreamDebugLine())
+pr.untilT = CurTime() + 1
+con:SetNW2Float("lc_jail_until", pr.untilT)
+_run(4)
+ok(LC.Prisoners[con] == pr and con.lcDreaming ~= nil, "the sentence ends while they dream: they dream on, nobody carries them out of it")
+DS.at = CurTime() - 1 -- (the hour of tonight's dream came while they dreamt)
+if LC.DreamActive then LC.DreamWake(LC.DreamActive) end
+ok(DS.at ~= nil and DS.at >= CurTime() + 7.9, "tonight's dream, due meanwhile, waits a few seconds more: they are back in bed first", tostring(DS.at and DS.at - CurTime()))
+DS.at = nil
+LC.DreamActive = nil
+_run(6)
+ok(LC.Prisoners[con] == nil and con:GetNW2Float("lc_jail_until", 0) == 0, "and they are let out as they wake", tostring(LC.Prisoners[con]))
+ok(not con.lcSleep and not con:GetNW2Bool("lc_sleeping", false) and atGate(con), "on their feet, at the release point",
+    tostring(con:GetPos()) .. " " .. tostring(con.lcSleep))
+-- released while asleep (no dream): up first, not left lying at the gate
+ok(jail(con, 400), "(a fourth sentence)")
+pr = LC.Prisoners[con]
+pr.dreamt = true
+awake(con)
+ok(LC.SleepIn(con, nil) == true, "(asleep)")
+LC.ReleasePrisoner(con)
+ok(not LC.Prisoners[con] and not con.lcSleep and atGate(con), "released while asleep: woken and let out", tostring(con:GetPos()))
+-- asking for a work detail gets a sleeper up
+ok(jail(con, 400), "(a fifth sentence)")
+pr = LC.Prisoners[con]
+pr.dreamt = true
+awake(con)
+local guard = LC.Spawners.cop(CELL + Vector(120, 0, 0))
+guard.sim = false
+ok(LC.SleepIn(con, nil) == true, "(asleep)")
+local okW, whyW = LC.AskWorkDetail(con)
+ok(okW == true and not con.lcSleep and not con:GetNW2Bool("lc_sleeping", false), "asking for a work detail gets a sleeper up", tostring(whyW))
+LC.FreeFromCustody(con)
+_run(3)
+ok(LC.WorkDetails[con] == nil and not con:GetNW2Bool("lc_work_detail", false), "(the detail ends with the sentence)")
+if IsValid(guard) then guard:Remove() end
+-- everything as it was
+if LC.DreamActive then LC.DreamWake(LC.DreamActive) end
+LC.DreamActive = nil
+_run(4)
+LC.FreeFromCustody(con)
+LC.DreamStart, LC.IsNight = realStart, realNight
+LC.DreamForget()
+for _, p in ipairs({ pt, rel, cell }) do LC.RemovePoint(p) end
+DS.at, DS.queued, DS.missedNight, DS.dreamedNight, DS.last, DS.lastMood, DS.prisonLast = keep.at, keep.queued, keep.missed, keep.dreamed, keep.last, keep.lastMood, keep.prisonLast
+DS.tries, DS.triesNight = nil, nil
+DP.rot, DP.lastKind, DP.specialNight, DP.adminNight = keep.rot, keep.lastKind, keep.special, keep.adminNight
+player.GetAll, LC.DayPhase, LC.EndingReload = realGetAll, realPhase, realReload
+_walls = savedWalls
+for n, v in pairs(cvWas) do set(n, v) end
+for _, p in ipairs({ con, free }) do p.lcGraceUntil, p.lcJailOwed = nil, nil p:SetPos(Vector(-121000, -121000, 0)) end
+ok(#_errors == errs0, "(no errors in any of it)", _errors[errs0 + 1])
+end
+Nov15_PrisonDreamTests()
+
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")
 ;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)
     -- Everything here is something the owner's server, files or players depend on. The list is
