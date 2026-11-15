@@ -47,12 +47,15 @@ local function Wait(at) return math.max(0, math.ceil((at or 0) - CurTime())) end
 local function Mins(secs) return math.max(1, math.ceil(secs / 60)) end
 local function Tell(ply, kind, title, text, secs) if LC.Notice then LC.Notice(ply, kind, title, text, secs or 8) end end
 -- Mark a kind of place (sv_livingcity_notices.lua's list) without its own notice: true, or false and why.
-local function Mark(ply, kind)
+-- guide: the chevrons on the ground lead there too, as to any objective (the owner, 15 November: "F1 > Get a
+-- union job as a citizen shows a marker on my screen but no waypath finder chevrons"): sv_livingcity_guidance.lua.
+local function Mark(ply, kind, guide)
     local find = LC.WaypointPlaces and LC.WaypointPlaces[kind]
     if not find then return false end
     local pos, label = find(ply)
     if not pos then return false, label end
     if LC.SetWaypoint then LC.SetWaypoint(ply, pos, label, kind == "home" and 260 or 170) end
+    if guide then ply.lcGuide = { pos = pos, untilT = CurTime() + GUIDE_SECS, label = label } end
     if kind == "home" and ply.lcWaypoint and LC.PlayerBlock then ply.lcWaypoint.block = LC.PlayerBlock(ply) end
     return true
 end
@@ -263,13 +266,13 @@ function LC.QuickFindWork(ply)
     if not IsValid(ply) then return false end
     local m = MeInfo(ply)
     if m.work == "intake" then
-        Mark(ply, "intake")
+        Mark(ply, "intake", true)
         Tell(ply, "info", "Find work", "Register at Civil Intake first: no work, rations or room until you're on the register. It's marked on your screen.")
     elseif m.work == "job" then
-        local ok = Mark(ply, "work")
+        local ok = Mark(ply, "work", true)
         Tell(ply, "info", "Find work", "You work as " .. m.job .. ". " .. (ok and "Your workplace is marked. " or "") .. "F4 has your next shift.")
     elseif m.work == "labor" then
-        Mark(ply, "labor")
+        Mark(ply, "labor", true)
         Tell(ply, "info", "Find work", "Labor Assignment gives you a Union job: press E on its terminal. It's marked on your screen. The job board is on F4.")
     else
         Tell(ply, "info", "Find work", "Pick a Union job on the job board: F4 > Jobs.")

@@ -32820,6 +32820,38 @@ function CellQuestionsTests()
 end
 CellQuestionsTests()
 
+function FindWorkTrailTests()
+    section("15 November playtest: F1's find work leads the way with the chevrons, as any objective")
+    local W0 = Vector(-272000, 101000, 0)
+    local p = newPlayer("WorkSeeker", "citizen")
+    _run(0.5)
+    p:SetPos(W0)
+    local was = { pending = LC.IntakePending, job = LC.Job, desk = LC.LaborDesk, place = LC.WaypointPlaces.labor, quest = LC.QuestObjectivePos }
+    LC.IntakePending = function() return false end
+    LC.Job = function() return nil end
+    LC.LaborDesk = function() return true end
+    LC.WaypointPlaces.labor = function() return W0 + Vector(1500, 0, 0), "Labor Assignment" end
+    LC.QuestObjectivePos = function() return nil end
+    p.lcGuide, p.lcWaypoint, p.lcTrail = nil, nil, nil
+    LC.QuickFindWork(p)
+    ok(p.lcWaypoint ~= nil and p.lcGuide ~= nil and p.lcGuide.pos == W0 + Vector(1500, 0, 0), "the terminal is marked, and the trail goes there too")
+    LC.TrailTick(CurTime())
+    local m = _lastnet("lc_trail")
+    local sent = m and util.JSONToTable(m.data[2] or "") or {}
+    ok(p.lcTrail ~= nil and p.lcTrail.guide == true and sent.guide == true, "sent as a guide: their screen keeps it with no quest on")
+    -- a quest's trail is not a guide (dropped on their screen once the quest is over, as before)
+    LC.QuestObjectivePos = function(who) if who == p then return W0 + Vector(0, 1500, 0) end end
+    LC.TrailTick(CurTime() + 1)
+    m = _lastnet("lc_trail")
+    sent = m and util.JSONToTable(m.data[2] or "") or {}
+    ok(p.lcTrail ~= nil and not p.lcTrail.guide and sent.guide == nil, "a quest's trail is the quest's")
+    LC.IntakePending, LC.Job, LC.LaborDesk, LC.WaypointPlaces.labor, LC.QuestObjectivePos = was.pending, was.job, was.desk, was.place, was.quest
+    p.lcGuide, p.lcWaypoint = nil, nil
+    p:SetPos(Vector(0, -500, 0))
+    LC.TrailTick(CurTime() + 2)
+end
+FindWorkTrailTests()
+
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")
 ;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)
     -- Everything here is something the owner's server, files or players depend on. The list is

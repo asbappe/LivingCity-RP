@@ -4971,6 +4971,31 @@ if not ok then return "situation menu: " .. tostring(e) end
 """)
 if err:
     problems = (problems + "\n" if problems else "") + str(err)
+# the way to a place asked for (F1 > find work: the owner, 15 November, "a marker on my screen but no waypath finder
+# chevrons"): a guide trail stays with no quest on; a quest's trail still goes when the quest does
+err = L.execute(r"""
+local qsWas = LC_CL.QuestState
+local ok, e = pcall(function()
+    LC_CL.QuestState = function() return { active = false } end
+    _me:SetPos(Vector(0, 0, 0))
+    LC_CL.SetTrail({ g = { 1000, 0, 0 }, p = { 200, 0, 0, 600, 0, 0, 1000, 0, 0 }, guide = true })
+    _advance(0.3)
+    hook.t.Think.LivingCityTrail()
+    if not LC_CL.Trail() then error("a guide trail was dropped for want of a quest") end
+    local beamsBefore = _calls["render.DrawBeam"] or 0
+    hook.t.PostDrawTranslucentRenderables.LivingCityTrail(false, false)
+    if (_calls["render.DrawBeam"] or 0) - beamsBefore < 10 then error("a guide trail drew hardly any chevrons") end
+    LC_CL.SetTrail({ g = { 1000, 0, 0 }, p = { 200, 0, 0, 600, 0, 0, 1000, 0, 0 } })
+    _advance(0.3)
+    hook.t.Think.LivingCityTrail()
+    if LC_CL.Trail() then error("a quest's trail stayed with no quest on") end
+end)
+LC_CL.QuestState = qsWas
+LC_CL.SetTrail(nil)
+if not ok then return "guide trail: " .. tostring(e) end
+""")
+if err:
+    problems = (problems + "\n" if problems else "") + str(err)
 import re as _re
 _root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 _mods = os.path.join(_root, "gamemodes", "livingcity", "gamemode", "modules")
