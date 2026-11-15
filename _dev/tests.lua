@@ -32252,7 +32252,7 @@ ok(IsValid(mon) and mon:GetClass() == "lc_monitor" and mon.lcFixtureKind == "mon
 if not IsValid(mon) then LC.RemovePoint(mp) LC.SyncFixtures() return end
 LC.MonitorTune(mon) -- (what it does as it spawns)
 ok(cam(mon) == 0 and camPoint(mon) == nil, "no camera placed: it shows none (no signal)")
-local viewer = newPlayer("MonitorViewer", "citizen")
+local viewer = newPlayer("MonitorViewer", "cp") -- (a unit: since 15 November only a unit's E steps it)
 viewer:SetPos(M0 + Vector(100, 0, 0))
 viewer.chat = {}
 local n = #_sounds
@@ -32334,6 +32334,53 @@ ok(not IsValid(mon) and not IsValid(mon2) and #LC.MonitorCameras() == 0, "taken 
 viewer:SetPos(Vector(-30000, 30000, 0))
 end
 Nov15_MonitorTests()
+
+-- 15 November 2026, the owner's answers on the monitors: a second, hanging one; only a unit steps it; the camera is saved with the layout
+function Nov15_MonitorMoreTests()
+section("Combine camera monitors: the hanging one, a unit's E only, and the camera kept with the layout")
+local M1 = Vector(-87000, -66000, 0)
+local function monitorOf(p)
+    for _, e in pairs(LC.Fixtures) do if IsValid(e) and e.lcFixturePoint == p then return e end end
+end
+local was = ENT
+ENT = {}
+assert(loadstring(_ENTSRC["entities/lc_monitor.lua"], "lc_monitor"))()
+local def = ENT
+ENT = was
+ok(def.HangingModels and string.find(def.HangingModels[1] or "", "smallmonitor", 1, true) ~= nil and def.HangingModels[1] ~= def.MonitorModels[1],
+    "the hanging monitor has a model list of its own, the small monitor first", def.HangingModels and def.HangingModels[1])
+local c1 = LC.AddPoint(M1 + Vector(0, 300, 0), 0, "camera", 0)
+local c2 = LC.AddPoint(M1 + Vector(0, 2000, 0), 90, "camera", 0)
+local c3 = LC.AddPoint(M1 + Vector(0, 4000, 0), 180, "camera", 0)
+local hp = LC.AddPoint(M1, 0, "monitor_hang", 0)
+ok(hp ~= nil and hp.kind == "monitor_hang", "the editor can place a hanging monitor")
+LC.SyncFixtures()
+local hang = monitorOf(hp)
+ok(IsValid(hang) and hang:GetClass() == "lc_monitor" and hang.lcFixtureKind == "monitor_hang", "it is the same entity, made by its own editor entry")
+if not IsValid(hang) then for _, q in ipairs({ hp, c1, c2, c3 }) do LC.RemovePoint(q) end LC.SyncFixtures() return end
+ok(LC.MonitorRestore(hang) == 1 and hp.group == 0, "new, with nothing saved: the nearest camera, and nothing written yet", hp.group)
+-- only a unit steps it
+local cit = newPlayer("MonitorCitizen", "citizen")
+local unit = newPlayer("MonitorUnit", "cp")
+cit:SetPos(M1 + Vector(80, 0, 0)) unit:SetPos(M1 + Vector(80, 40, 0))
+cit.chat = {}
+ok(LC.MonitorUse(hang, cit) == false and hang:GetNW2Int("lc_cam", 0) == 1 and #cit.chat == 0, "a citizen's E does nothing to it, and nothing is said")
+ok(LC.MonitorUse(hang, unit) == true and hang:GetNW2Int("lc_cam", 0) == 2, "a unit's E steps it to the next camera")
+-- kept with the layout: the monitor's point remembers the camera's number
+ok(hp.group == 2, "the camera it is on is written on its point", hp.group)
+hang.lcCamPoint = nil -- (as after a restart: the entity is new and knows nothing)
+ok(LC.MonitorRestore(hang) == 2 and select(2, LC.MonitorCamera(hang)) == c2, "made again, it goes back to the camera it was left on, not the nearest")
+-- a camera earlier in the list taken away: the number saved follows the camera
+LC.RemovePoint(c1)
+LC.MonitorsRefresh()
+ok(select(2, LC.MonitorCamera(hang)) == c2 and hp.group == 1, "an earlier camera removed: still the same camera, and its new number is what is saved", hp.group)
+for _, q in ipairs({ hp, c2, c3 }) do LC.RemovePoint(q) end
+LC.SyncFixtures()
+ok(not IsValid(hang) and #LC.MonitorCameras() == 0, "taken away with their points")
+for _, pl in ipairs({ cit, unit }) do pl:SetPos(Vector(-30000, 30000, 0)) end
+end
+Nov15_MonitorMoreTests()
+
 
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")
 ;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)

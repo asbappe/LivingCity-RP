@@ -25,19 +25,27 @@ ENT.RenderGroup = RENDERGROUP_BOTH
 -- as big: the picture is known to sit on its glass. 003 has not been looked at in
 -- the game: to try it, put it first.)
 local MODELS = { "models/props_combine/combine_intmonitor001.mdl", "models/props_combine/combine_intmonitor003.mdl" }
+-- The hanging one (the owner, 15 November: "make a second combine monitor entity using the hanging monitor"):
+-- the editor's "Fixture: Combine monitor, hanging" (monitor_hang), the same entity on the small monitor that
+-- hangs from an arm in Nova Prospekt. Which file that is has not been looked at in the game either: the
+-- first of these this install has is used, and the order is one line to change.
+local HANG = { "models/props_combine/combine_smallmonitor001.mdl", "models/props_combine/combine_intmonitor003.mdl",
+    "models/props_combine/combine_intmonitor001.mdl" }
 local SCALE = 1
 -- A camera sees from this far above its point, tipped this far down, the way the point faces.
 local CAM_UP, CAM_PITCH = 70, 15
 
 ENT.MonitorModels = MODELS
+ENT.HangingModels = HANG
 
 function ENT:Initialize()
     if CLIENT then return end
     local m
-    for _, c in ipairs(MODELS) do
+    local list = self.lcFixtureKind == "monitor_hang" and HANG or MODELS
+    for _, c in ipairs(list) do
         if not util.IsValidModel or util.IsValidModel(c) then m = c break end
     end
-    self:SetModel(m or MODELS[1])
+    self:SetModel(m or list[1])
     self:PhysicsInit(SOLID_VPHYSICS)
     self:SetMoveType(MOVETYPE_VPHYSICS)
     self:SetSolid(SOLID_VPHYSICS)
@@ -46,6 +54,8 @@ function ENT:Initialize()
     if IsValid(phys) then phys:EnableMotion(false) end
     if SCALE ~= 1 then self:SetModelScale(SCALE, 0) end
     if LC and LC.MonitorTune then LC.MonitorTune(self) end -- (it starts on the camera nearest to it)
+    -- (then the camera saved with the layout, once the spawner has said which point made it)
+    timer.Simple(0, function() if IsValid(self) and LC and LC.MonitorRestore then LC.MonitorRestore(self) end end)
 end
 
 if SERVER then
@@ -102,11 +112,38 @@ if SERVER then
         return i
     end
 
+    -- The camera a monitor is on is kept with the layout (the owner, 15 November: "yes please save with the
+    -- layout"): its number in the cameras' list is the monitor point's own number (the "group" every point
+    -- has), 0 for none chosen yet. True when it changed.
+    local function Keep(e, i)
+        local p = IsValid(e) and e.lcFixturePoint
+        if not p or (p.group or 0) == (i or 0) then return false end
+        p.group = i or 0
+        return true
+    end
+
+    -- As it spawns: the camera its point remembers, if that camera is still there; else the nearest.
+    function LC.MonitorRestore(e)
+        if not IsValid(e) then return 0 end
+        local p, cams = e.lcFixturePoint, LC.MonitorCameras()
+        local n = p and (p.group or 0) or 0
+        if n > 0 and cams[n] then
+            Show(e, n, cams[n])
+            return n
+        end
+        return LC.MonitorTune(e, cams)
+    end
+
+    local saving
     function LC.MonitorsRefresh()
         local cams = LC.MonitorCameras()
+        local changed = false
         for _, e in ipairs(LC.EntsOf and LC.EntsOf("lc_monitor") or ents.FindByClass("lc_monitor")) do
-            LC.MonitorTune(e, cams)
+            local i = LC.MonitorTune(e, cams)
+            -- (a camera taken away earlier in the list moves the numbers: what is saved follows)
+            if e.lcFixturePoint and (e.lcFixturePoint.group or 0) > 0 and Keep(e, i) then changed = true end
         end
+        if changed and not saving and LC.SaveData then saving = true LC.SaveData() saving = false end
     end
 
     -- E: the next camera, and after the last the first again.
@@ -120,11 +157,23 @@ if SERVER then
         local i = LC.MonitorCamera(e, cams) % #cams + 1
         Show(e, i, cams[i])
         e:EmitSound(CLICK, 55)
+        if Keep(e, i) and LC.SaveData and not saving then saving = true LC.SaveData() saving = false end
         return i
     end
 
+    -- E on it. Only a unit steps it for now (the owner, 15 November: "stepping cameras for CP only right
+    -- now"); for anyone else it is locked: a sound, nothing said.
+    function LC.MonitorUse(e, ply)
+        if not (IsValid(e) and IsValid(ply) and ply:IsPlayer()) then return false end
+        if not (LC.PlayerIsCP and LC.PlayerIsCP(ply)) then
+            e:EmitSound("buttons/combine_button_locked.wav", 55)
+            return false
+        end
+        return LC.MonitorStep(e) > 0
+    end
+
     function ENT:Use(activator)
-        if IsValid(activator) and activator:IsPlayer() and LC.MonitorStep then LC.MonitorStep(self) end
+        if LC.MonitorUse then LC.MonitorUse(self, activator) end
     end
 
     -- A camera placed or taken away: no monitor is left pointing at nothing.

@@ -55,6 +55,8 @@
 
 **The office with nobody in it (the owner, 11 November).** With no player as the City Administrator and a key set for the hosted model, the city's own Administrator uses the office herself: events, rations, prices, a job bonus, commendations, censures and pardons, with the same waits and announcements, and no bodyguard orders, housing or permits. `lc_brain_admin` (1), `lc_brain_admin_minutes` (12). The whole of it: `director-and-free-talk.md`.
 
+**The owner's answers (15 November).** A second fixture, **"Fixture: Combine monitor, hanging"** (`monitor_hang`): the same entity on the small monitor that hangs from an arm (`combine_smallmonitor001.mdl`, then `combine_intmonitor003.mdl`: the first this install has; neither has been looked at in the game, and the order is one line in `lc_monitor.lua`), placed 84 units up. **Only a unit's E steps a monitor** for now (`LC.MonitorUse`): for anyone else it is locked, a sound and nothing said. **The camera a monitor is on is saved with the layout**: its number in the cameras' list is kept as the monitor point's own number (the `group` every point has; 0: none chosen, the nearest), it follows the camera when an earlier camera is removed, and a monitor made again goes back to it (`LC.MonitorRestore`). A monitor placed while the editor's number is set to N starts on camera N.
+
 ## 15 November (the owner's 14 November night notes): the Administrator is immune to her own
 
 - A player holding the post is never the Combine's enemy: no unit can be set on her (`LC.MakeOneHostile`), striking a unit or a scanner is not remembered or answered, she is never taken in by a unit (the gate and every door of custody refuse), and every unit holds her as one of their own.
