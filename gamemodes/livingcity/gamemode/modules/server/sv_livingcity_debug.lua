@@ -252,6 +252,7 @@ function LC.BuildReport()
             out[#out + 1] = string.format("recordings with a loop mark (the engine would repeat them; announcements now play them once): %d of %d%s",
                 #looped, checked, #looped > 0 and (": " .. table.concat(looped, ", ", 1, math.min(#looped, 30)) .. (#looped > 30 and ", ..." or "")) or "")
         end
+        if LC.ArtReport then out[#out + 1] = LC.ArtReport() end
         local songs = {}
         for _, id in ipairs(LC.EndingOrder or {}) do
             local n = #(LC.EndingSongs and LC.EndingSongs(id) or {})

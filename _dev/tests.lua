@@ -31424,6 +31424,56 @@ function Nov14C_OldTimerTests()
 end
 Nov14C_OldTimerTests()
 
+function Nov14C_MarkArtTests()
+    section("14 November notes (C): the marks' pictures reach every player, whatever the downloads do")
+    local carried, loose = LC.ArtCarried .. "graffiti/", "materials/livingcity/graffiti/"
+    local was = {}
+    for kind, rel in pairs(LC.MarkArt) do
+        for _, path in ipairs({ LC.ArtCarried .. rel, "materials/livingcity/" .. rel }) do was[path] = _files[path] _files[path] = nil end
+    end
+    ok(LC.ArtFile("graffiti/arrow_left.png") == nil and #LC.TagKindsOffered() == 1, "no pictures anywhere on the server: only the lambda, as before")
+    for kind, rel in pairs(LC.MarkArt) do _files[LC.ArtCarried .. rel] = "CARRIED-" .. kind .. "-" .. string.rep("x", 70) end
+    ok(LC.ArtFile("graffiti/arrow_left.png") == carried .. "arrow_left.png", "the gamemode's own copy is found (nothing loose in materials/)")
+    ok(#LC.TagKindsOffered() == 3, "so the can offers the tally and NO RECORD on a server that never got the pictures zip")
+    _files[loose .. "tally.png"] = "THE OWNER'S OWN TALLY"
+    ok(LC.ArtFile("graffiti/tally.png") == loose .. "tally.png", "the owner's own loose picture comes first")
+    local v1 = LC.ArtVersion()
+    local rep = LC.ArtReport()
+    ok(string.find(rep, "1 loose", 1, true) and string.find(rep, "6 from the gamemode", 1, true) and not string.find(rep, "MISSING", 1, true), "the debug report says where they come from: " .. rep)
+    -- a player's game asks for one: it comes in pieces, in order
+    local ply = newPlayer("ArtAsker", "resistance")
+    local chunkWas = LC.ArtChunk
+    LC.ArtChunk = 40
+    net.sent = {}
+    ok(LC.SendArt(ply, "arrow_left") == true, "asked for the left arrow: it is sent")
+    for _ = 1, 6 do _advance(0.4) _runtimers() end
+    local got, n, okEach = {}, 0, true
+    for _, m in ipairs(net.sent) do
+        if m.name == "lc_art" and m.to == ply then
+            n = n + 1
+            if m.data[1] ~= "arrow_left" or m.data[3] ~= 3 or m.data[4] ~= #m.data[5] then okEach = false end
+            got[m.data[2]] = m.data[5] -- (each piece says which it is)
+        end
+    end
+    ok(n == 3 and okEach and table.concat(got) == _files[carried .. "arrow_left.png"], "in " .. n .. " numbered pieces that put together are the picture")
+    net.sent = {}
+    ok(LC.SendArt(ply, "arrow_left") == false, "asked again at once: not sent twice")
+    ok(LC.SendArt(ply, "nonsense") == false and LC.SendArt(ply, "../../cfg/server") == false, "only the marks' pictures can be asked for")
+    net._q = { "tally" }
+    net.recv_lc_art(0, ply)
+    for _ = 1, 3 do _advance(0.4) _runtimers() end
+    local m = _lastnet("lc_art")
+    ok(m and m.data[1] == "tally" and m.data[5] == "THE OWNER'S OWN TALLY", "the request itself (lc_art) sends the owner's own tally")
+    _files[loose .. "tally.png"] = "THE OWNER'S NEW TALLY, LONGER"
+    ok(LC.ArtVersion() ~= v1, "a changed picture is a new version: games that kept the old one ask again")
+    LC.ArtChunk = chunkWas
+    for path in pairs(was) do _files[path] = nil end
+    for kind, rel in pairs(LC.MarkArt) do
+        _files[LC.ArtCarried .. rel], _files["materials/livingcity/" .. rel] = was[LC.ArtCarried .. rel], was["materials/livingcity/" .. rel]
+    end
+end
+Nov14C_MarkArtTests()
+
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")
 ;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)
     -- Everything here is something the owner's server, files or players depend on. The list is

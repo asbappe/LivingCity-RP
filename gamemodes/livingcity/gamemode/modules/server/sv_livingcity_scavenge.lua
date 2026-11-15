@@ -37,6 +37,7 @@
 if CLIENT then return end
 
 util.AddNetworkString("lc_tags")
+util.AddNetworkString("lc_art")
 
 LC = LC or {}
 
@@ -697,10 +698,81 @@ LC.TagKinds = {
 function LC.HasArt(rel)
     return file and file.Exists and file.Exists("materials/livingcity/" .. rel, "GAME") or false
 end
+
+-- The marks' pictures reach every player, whatever the downloads do (the owner, 14 November: the
+-- editor's Resistance marks "all just spray a lambda ... never the proper graffiti texture we
+-- implemented"). A player's game painted the lambda whenever it had not the picture, and it had it
+-- only if the picture was loose in the server's garrysmod/materials/ AND the FastDL had been
+-- synced since. So the gamemode now carries a copy of each mark (gamemodes/livingcity/content/
+-- graffiti/, 190 KB in all), and a game that lacks one asks for it (lc_art) and keeps it in its
+-- data folder. The owner's own loose picture, where there is one, is the one sent.
+LC.ArtCarried = "gamemodes/livingcity/content/"
+LC.MarkArt = { tally = "graffiti/tally.png", norecord = "graffiti/norecord.png", arrow_left = "graffiti/arrow_left.png",
+    arrow_right = "graffiti/arrow_right.png", arrow_up = "graffiti/arrow_up.png", arrow_down = "graffiti/arrow_down.png",
+    freedom = "graffiti/freedom.png" }
+-- Where that picture is on this server (the owner's loose one first, else the gamemode's copy), or nil.
+function LC.ArtFile(rel)
+    if not (rel and file and file.Exists) then return nil end
+    if file.Exists("materials/livingcity/" .. rel, "GAME") then return "materials/livingcity/" .. rel end
+    if file.Exists(LC.ArtCarried .. rel, "GAME") then return LC.ArtCarried .. rel end
+    return nil
+end
+-- Which pictures these are, as one word: a game that kept older ones asks again (lc_art_ver).
+function LC.ArtVersion()
+    local parts = {}
+    for kind, rel in SortedPairs(LC.MarkArt) do
+        local path = LC.ArtFile(rel)
+        local size = 0
+        if path then size = file.Size and file.Size(path, "GAME") or #(file.Read(path, "GAME") or "") end
+        parts[#parts + 1] = kind .. ":" .. tostring(size)
+    end
+    return util.CRC and util.CRC(table.concat(parts, ",")) or tostring(#parts)
+end
+-- For the debug report: how many of the marks' pictures the server has, and from where.
+function LC.ArtReport()
+    local loose, carried, none = 0, 0, {}
+    for kind, rel in SortedPairs(LC.MarkArt) do
+        local path = LC.ArtFile(rel)
+        if not path then none[#none + 1] = kind
+        elseif string.sub(path, 1, 10) == "materials/" then loose = loose + 1 else carried = carried + 1 end
+    end
+    return string.format("mark pictures (spray can, way marks): %d loose in materials/livingcity/graffiti/, %d from the gamemode's own copies%s (sent to a player whose game lacks one)",
+        loose, carried, #none > 0 and (", MISSING: " .. table.concat(none, ", ")) or "")
+end
+-- Send one to a player, in pieces (a net message holds 64 KB). True if it is on its way.
+LC.ArtChunk = 30000
+function LC.SendArt(ply, kind)
+    local rel = LC.MarkArt[kind or ""]
+    local path = rel and LC.ArtFile(rel)
+    if not path or not IsValid(ply) then return false end
+    ply.lcArtSent = ply.lcArtSent or {}
+    if (ply.lcArtSent[kind] or -100) > CurTime() - 20 then return false end -- (asked a moment ago: one copy is enough)
+    local bytes = file.Read(path, "GAME")
+    if not bytes or #bytes == 0 then return false end
+    ply.lcArtSent[kind] = CurTime()
+    local n = math.ceil(#bytes / LC.ArtChunk)
+    for i = 1, n do
+        local piece = string.sub(bytes, (i - 1) * LC.ArtChunk + 1, i * LC.ArtChunk)
+        timer.Simple((i - 1) * 0.3, function()
+            if not IsValid(ply) then return end
+            net.Start("lc_art")
+            net.WriteString(kind)
+            net.WriteUInt(i, 8)
+            net.WriteUInt(n, 8)
+            net.WriteUInt(#piece, 16)
+            net.WriteData(piece, #piece)
+            net.Send(ply)
+        end)
+    end
+    return true
+end
+net.Receive("lc_art", function(_, ply) LC.SendArt(ply, net.ReadString()) end)
+hook.Add("Initialize", "LivingCityMarkArt", function() if SetGlobal2String then SetGlobal2String("lc_art_ver", LC.ArtVersion()) end end)
+
 function LC.TagKindsOffered()
     local out = {}
     for _, k in ipairs(LC.TagKinds) do
-        if not k.art or LC.HasArt(k.art) then out[#out + 1] = k end
+        if not k.art or LC.ArtFile(k.art) then out[#out + 1] = k end
     end
     return out
 end

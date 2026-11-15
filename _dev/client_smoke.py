@@ -2856,8 +2856,28 @@ if removed < 1 then return "graffiti: a removed tag did not come off the wall" e
 local marked = tag(300) marked.k = "tally"
 LC_CL.SetTags({ tag(100), marked })
 if not (LC_CL.tags[2] and LC_CL.tags[2].kind == "tally" and LC_CL.tags[1].kind == nil) then return "graffiti: a tag's kind did not arrive" end
+-- (14 November: a mark whose picture this game lacks is asked of the server, not painted as a lambda;
+--  the picture arrives in pieces, is kept in the data folder, and the mark is painted with it)
+local kept, fileWas = {}, file
+file = { Exists = function(p, where) if where == "DATA" then return kept[p] ~= nil end return false end,
+    Read = function(p) return kept[p] end, Write = function(p, d) kept[p] = d end, CreateDir = function() end, Delete = function(p) kept[p] = nil end }
 for _ = 1, 3 do _advance(1.1) _runtimers() end
-if painted ~= 3 then return "graffiti: the tally was not painted (" .. painted .. ")" end
+if painted ~= 2 then return "graffiti: a mark with no picture yet was painted as something else (" .. painted .. ")" end
+if not LC_CL.ArtAsked.tally then return "graffiti: the tally's picture was not asked of the server" end
+if LC_CL.ArtPiece("tally", 2, 2, "SECOND") ~= false then return "graffiti: half a picture counted as a whole one" end
+if LC_CL.ArtPiece("tally", 1, 2, "FIRST") ~= true or kept["livingcity/art/tally.png"] ~= "FIRSTSECOND" then return "graffiti: the picture's pieces were not put together and kept" end
+if LC_CL.ArtPiece("nonsense", 1, 1, "X") ~= false then return "graffiti: a picture nobody uses was kept" end
+for _ = 1, 3 do _advance(1.1) _runtimers() end
+if painted ~= 3 then return "graffiti: the tally was not painted once its picture came (" .. painted .. ")" end
+-- (and a picture that never comes: the lambda stands in after twenty seconds, as it always did)
+local late = tag(400) late.k = "norecord"
+LC_CL.SetTags({ tag(100), marked, late })
+for _ = 1, 3 do _advance(1.1) _runtimers() end
+if painted ~= 3 then return "graffiti: did not wait for NO RECORD's picture (" .. painted .. ")" end
+for _ = 1, 22 do _advance(1.1) _runtimers() end
+if painted < 4 then return "graffiti: with no picture after twenty seconds, nothing was painted at all" end
+painted = 3
+file = fileWas
 if LC_CL.TagMat("lambda") ~= nil or LC_CL.TagMat(nil) ~= nil then return "graffiti: the lambda has no picture of its own" end
 if not (LC_CL.DreamArt and LC_CL.DreamArt.cheese and LC_CL.DreamArtMade.cheese ~= nil and LC_CL.DreamArtMade.swirl1 ~= nil) then return "dream art: the cheese and swirl materials were not made" end
 local before = _calls["cam.Start3D2D"] or 0
