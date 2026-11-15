@@ -123,7 +123,9 @@ function def.build(g, dream)
             Floor(g, STONE, t.stone.x, t.stone.y, base, BLUE, WHITE)
         else
             local col = (t.kind == "flag" and GREEN) or (t.kind == "finish" and GOLD) or (t.kind == "start" and GREY) or (t.kind == "bridge" and GREY) or BLUE
-            Floor(g, PLATE4, at.x, at.y, base, col, WHITE)
+            local mat = WHITE
+            if col == BLUE then mat, col = LC.DreamSurface("course_lane", BLUE) end -- (the plain lanes; what a colour tells stays)
+            Floor(g, PLATE4, at.x, at.y, base, col, mat)
         end
         if t.kind == "hurdle" then
             -- a bar across the way, low enough to jump and too low to crawl under

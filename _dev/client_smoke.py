@@ -3071,6 +3071,17 @@ painted = 3
 file = fileWas
 if LC_CL.TagMat("lambda") ~= nil or LC_CL.TagMat(nil) ~= nil then return "graffiti: the lambda has no picture of its own" end
 if not (LC_CL.DreamArt and LC_CL.DreamArt.cheese and LC_CL.DreamArtMade.cheese ~= nil and LC_CL.DreamArtMade.swirl1 ~= nil) then return "dream art: the cheese and swirl materials were not made" end
+do -- the dreams' grounds (15 November): a material for each, its picture read only when a floor wears it
+    local n = 0
+    for _ in pairs(LC_CL.DreamArt) do n = n + 1 end
+    if n ~= 33 then return "dream art: " .. n .. " surfaces listed, not 33" end
+    if LC_CL.DreamArtMade.snow ~= nil then return "dream art: a ground's picture was read before any floor wore it" end
+    local fbcWas = ents.FindByClass
+    ents.FindByClass = function(c) if c == "prop_dynamic" then return { { GetMaterial = function() return "!lc_dream_snow" end } } end return {} end
+    LC_CL.DreamArtWanted()
+    ents.FindByClass = fbcWas
+    if LC_CL.DreamArtMade.snow == nil or LC_CL.DreamArtMade.mud ~= nil then return "dream art: the floor in sight did not have its picture read (or another's was)" end
+end
 local before = _calls["cam.Start3D2D"] or 0
 for _, h in pairs(hook.t["PostDrawTranslucentRenderables"] or {}) do h(false, false) end
 if (_calls["cam.Start3D2D"] or 0) ~= before then return "graffiti: drew a letter while real decals exist" end
@@ -4908,6 +4919,17 @@ return bad and ("the scientist's eyes: " .. bad) or nil
 """)
 if err:
     problems = (problems + "\n" if problems else "") + str(err)
+import re as _re
+_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+_mods = os.path.join(_root, "gamemodes", "livingcity", "gamemode", "modules")
+_sv = open(os.path.join(_mods, "server", "sv_livingcity_strangedreams.lua"), encoding="utf-8").read()
+_cl = open(os.path.join(_mods, "client", "cl_livingcity_strangedreams.lua"), encoding="utf-8").read()
+_tab = _sv[_sv.index("LC.DreamSurfaces = {"):_sv.index("function LC.DreamSurface(")]
+for _n in sorted(set(_re.findall(r'= \{ "([a-z0-9_]+)"', _tab))):
+    if not os.path.exists(os.path.join(_root, "materials", "livingcity", "dreams", _n + ".jpg")):
+        problems = (problems + "\n" if problems else "") + "dream ground '%s' has no picture in materials/livingcity/dreams/" % _n
+    if '"%s"' % _n not in _cl:
+        problems = (problems + "\n" if problems else "") + "dream ground '%s' has no material in cl_livingcity_strangedreams.lua" % _n
 print(problems or "no client errors")
 print("zone fills drawn:", filled, "thick edges drawn:", beams)
 ok = not problems and filled >= 2 and beams > 0
