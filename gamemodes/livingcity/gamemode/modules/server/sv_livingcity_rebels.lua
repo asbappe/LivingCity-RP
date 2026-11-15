@@ -41,7 +41,7 @@
       lc_skirmish raid|sweep     start one now (admin)
       lc_units_spot_rebels <u>   how close a unit notices an armed rebel off rebel ground (600; 0 never)
 
-    Lookout posts: the editor's "Point: rebel lookout post" keeps an armed
+    Lookout posts: the editor's "Point: Resistance lookout post" keeps an armed
     fighter standing guard there, facing the way the point faces (whoever
     placed it). Combine coming his way (a unit, Overwatch, a convincing
     uniform, the city's own units) gets a shout and a warning on Freq 7 from
@@ -2030,7 +2030,7 @@ hook.Add("PlayerDeath", "LivingCityRebelFollowers", function(ply)
 end)
 
 ------------------------------------------------------------------------
--- Lookout posts (the editor's "Point: rebel lookout post")
+-- Lookout posts (the editor's "Point: Resistance lookout post")
 ------------------------------------------------------------------------
 
 LC.LookoutPosts = LC.LookoutPosts or {} -- [key] = { npc, nextAt }

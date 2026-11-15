@@ -1,4 +1,4 @@
---[[ The Administrator's power (Living City): placed with the editor ("Her last stand: the Administrator's
+--[[ The Administrator's power (Living City): placed with the editor ("Fixture: Administrator's
      power"). A Combine transformer that powers her bubble shield in her last stand, when the city collapses
      to BLACK (sv_livingcity_collapse.lua). While it stands her shield deflects every bullet, as far as
      lc_black_power_range (1600 units, about 100 feet) from it; destroy it and she can be killed.

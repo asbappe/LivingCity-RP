@@ -1457,14 +1457,14 @@ end
 _me:SetNW2Float("lc_feverdream", 0) _me:SetNW2String("lc_ill", "") _me:SetNW2Float("lcn_hunger", 100) _me:SetHealth(100)
 run("Think")
 local okB, errB = pcall(LC_CL.BuildLayoutBrowser, panel, { { id = "dealer", label = "Fixture: black market dealer" },
-    { id = "zone_rebel", label = "Zone: rebel territory" }, { id = "inspect", label = "Inspect anything" } })
+    { id = "zone_rebel", label = "Zone: Resistance territory" }, { id = "inspect", label = "Inspect anything" } })
 if not okB then problems[#problems + 1] = "layout browser: " .. tostring(errB) end
 if LC_CL.LayoutCount("dealer") ~= 1 or LC_CL.LayoutCount("inspect") ~= nil then problems[#problems + 1] = "layout counts" end
 -- (and arranged by what it's for: rebels, prison, each job)
 local arr = GetConVar("lc_editor_arrange")
 if arr then arr.v = "use" end
 local okU, errU = pcall(LC_CL.BuildLayoutBrowser, panel, { { id = "dealer", label = "Fixture: black market dealer" },
-    { id = "zone_rebel", label = "Zone: rebel territory" }, { id = "work_factory", label = "Workplace: Factory" }, { id = "conveyor", label = "Fixture: factory conveyor" } })
+    { id = "zone_rebel", label = "Zone: Resistance territory" }, { id = "work_factory", label = "Workplace: Factory" }, { id = "conveyor", label = "Fixture: factory conveyor" } })
 if not okU then problems[#problems + 1] = "layout browser, by use: " .. tostring(errU) end
 if arr then arr.v = "type" end
 panel.next = 0 -- (every control is this one mock panel, so their Think functions chain; a real number, not the mock's catch-all)
@@ -1518,10 +1518,36 @@ local okOct, errOct = pcall(function()
     if LC_CL.VoiceSecs("x.mp3", 7, 4) ~= 7 or LC_CL.VoiceSecs("x.mp3", 0, 4) ~= 4 then error("voice length") end
     local was = _me.GetNW2String
     _me.GetNW2String = function(self, k, d) if k == "lcf_faction" then return "resistance" end return was(self, k, d) end
-    if not LC_CL.RankCard(_me, 16, 160, 340) then error("no rank card for a Resistance member") end
+    if not LC_CL.HasRank(_me) then error("a Resistance member isn't someone with a rank") end
     _me.GetNW2String = function(self, k, d) if k == "lcf_faction" then return "citizen" end return was(self, k, d) end
-    if LC_CL.RankCard(_me, 16, 160, 340) then error("a rank card for a plain citizen") end
+    if LC_CL.HasRank(_me) then error("a plain citizen counts as having a rank") end
     _me.GetNW2String = was
+    -- one status box in the upper left (the owner, 14 November: two boxes said side, rank, credits and Civil
+    -- Standing twice): everything either showed is drawn, each fact once, and the second card is gone
+    if LC_CL.RankCard then error("the second card is still there") end
+    local wasS, wasI, wasF, wasDraw, wasGlobal = _me.GetNW2String, _me.GetNW2Int, _me.GetNW2Float, draw.SimpleText, GetGlobal2Bool
+    local strs = { lcf_faction = "resistance", lcj_job = "sanitation", lcd_disguise = "citizen", lcu_band = "resistance", lcd_alias = "#12-345" }
+    _me.GetNW2String = function(self, k, d) if strs[k] then return strs[k] end return wasS(self, k, d) end
+    _me.GetNW2Int = function(self, k, d) if k == "lce_credits" then return 454 elseif k == "lce_standing" then return -990 end return wasI(self, k, d) end
+    _me.GetNW2Float = function(self, k, d) if k == "lc_wanted_until" then return CurTime() + 60 end return wasF(self, k, d) end
+    GetGlobal2Bool = function(k, d) if k == "lc_economy_on" then return true end return wasGlobal(k, d) end
+    local said = {}
+    draw.SimpleText = function(text) said[#said + 1] = tostring(text) end
+    local okB, errB = pcall(function()
+        hook.t.HUDPaint.LivingCityNeedsHUD()
+        hook.t.HUDPaint.LivingCityUndergroundHUD()
+        hook.t.HUDPaint.LivingCityNextStep()
+    end)
+    _me.GetNW2String, _me.GetNW2Int, _me.GetNW2Float, draw.SimpleText, GetGlobal2Bool = wasS, wasI, wasF, wasDraw, wasGlobal
+    if not okB then error("the status box: " .. tostring(errB)) end
+    local all = table.concat(said, "\n")
+    local function Times(pat) local n = 0 for _ in string.gmatch(all, pat) do n = n + 1 end return n end
+    if Times("454") ~= 1 then error("credits are drawn " .. Times("454") .. " times in the upper left:\n" .. all) end
+    if Times("%-990") ~= 1 then error("Civil Standing is drawn " .. Times("%-990") .. " times:\n" .. all) end
+    for _, want in ipairs({ "Loyalty", "Union job: ", "Wearing citizen clothes", "Radio: Freq 7", "Papers: citizen #12%-345", "WANTED" }) do
+        if Times(want) ~= 1 then error("the one box should say '" .. want .. "' once, it says it " .. Times(want) .. " times:\n" .. all) end
+    end
+    if string.find(all, "Jobs, orders and your story", 1, true) then error("the F4 line is still drawn") end
     if type(LC_CL.SubsY(1920, 1080, 2)) ~= "number" then error("subtitle height") end
     if not LC_CL.EndingSameValue("0.360000", "0.36") or LC_CL.EndingSameValue("0.4", "0.36") or not LC_CL.EndingSameValue("12.2:ignite,60.2:hop", "12.2:ignite,60.2:hop") then error("ending settings compared wrong") end
     if not LC_CL.EndingCombineBody({ GetModel = function() return "models/player/police.mdl" end }) then error("a metrocop isn't a Combine body") end
@@ -2727,19 +2753,23 @@ return nil
 """)
 if err:
     problems = (problems + "\n" if problems else "") + "weapon_lc_sprayer (client) " + str(err)
-# the Arrest Baton (the owner, 12 November: "sparks are in a group of 3 and sitting too far back"): one small glow,
-# at the spark point furthest from the hand, put back from your field of view to the view model's
+# the Arrest Baton (the owner, 12 November: "sparks are in a group of 3 and sitting too far back"): one glow,
+# at the spark point furthest from the hand, put back from your field of view to the view model's; and (14
+# November: "it sits on the 'far' side of the baton, barely visible") on your side of the tip, drawn over
+# the baton, big enough to see
 L.globals()._SRC = open(os.path.join(GMDIR, "entities", "weapons", "weapon_lc_baton.lua")).read()
 err = L.execute(r"""
 SWEP = {}
 local ok, err = pcall(function() assert(loadstring(_SRC, "weapon_lc_baton"))() end)
 if not ok then return "load: " .. tostring(err) end
 local def = SWEP
-local dsWas, gvsWas = render.DrawSprite, render.GetViewSetup
+local dsWas, gvsWas, izWas = render.DrawSprite, render.GetViewSetup, cam.IgnoreZ
 local sprites = {}
-render.DrawSprite = function(pos, w) sprites[#sprites + 1] = { pos = pos, w = w } end
+local over = false
+cam.IgnoreZ = function(on) over = on end
+render.DrawSprite = function(pos, w) sprites[#sprites + 1] = { pos = pos, w = w, over = over } end
 render.GetViewSetup = function() return { origin = Vector(0, 0, 0), angles = Angle(0, 0, 0), fov = 90, fov_viewmodel = 54 } end
-local function restore() render.DrawSprite, render.GetViewSetup = dsWas, gvsWas end
+local function restore() render.DrawSprite, render.GetViewSetup, cam.IgnoreZ = dsWas, gvsWas, izWas end
 local k = math.tan(math.rad(27)) / math.tan(math.rad(45))
 local p = LC_CL.BatonTipSpace(Vector(100, -40, -20))
 if math.abs(p.x - 100) > 0.01 or math.abs(p.y + 40 * k) > 0.01 or math.abs(p.z + 20 * k) > 0.01 then restore() return "BatonTipSpace: " .. tostring(p) end
@@ -2756,10 +2786,16 @@ end
 local tip = LC_CL.BatonTipSpace(ATT.spark9b)
 restore()
 if #sprites < 20 then return "the glow isn't drawn every frame: " .. #sprites end
+if over then return "the baton's glow leaves everything after it drawn over the world" end
+local eye, biggest = Vector(0, 0, 0), 0
 for _, s in ipairs(sprites) do
-    if s.pos:Distance(tip) > 1 then return "a spark away from the tip: " .. tostring(s.pos) .. " (tip " .. tostring(tip) .. ")" end
-    if s.w > 3.5 then return "the glow is too big: " .. s.w end
+    if s.pos:Distance(tip) > 2.5 then return "a spark away from the tip: " .. tostring(s.pos) .. " (tip " .. tostring(tip) .. ")" end
+    if s.pos:Distance(eye) > tip:Distance(eye) - 0.8 then return "a spark on the far side of the tip, behind the baton: " .. tostring(s.pos) .. " (tip " .. tostring(tip) .. ")" end
+    if not s.over then return "a spark the baton itself can hide (not drawn over it)" end
+    if s.w > 6 then return "the glow is too big: " .. s.w end
+    biggest = math.max(biggest, s.w)
 end
+if biggest < 4 then return "the glow is too small to see: " .. biggest end
 return nil
 """)
 if err:
@@ -4463,6 +4499,65 @@ _fac = open(os.path.join(GMDIR, "gamemode", "modules", "client", "cl_livingcity_
 if '"Admin: errors (%d)"' not in _fac or 'RunConsoleCommand("lc_errors")' not in _fac:
     problems = (problems + "\n" if problems else "") + "F4 > Factions has no errors button"
 
+# a list that is built again after an action stays where it was scrolled (the owner, 14 November: "When I
+# use a charge cell from my pockets, it scrolls back to the top of the menu"): the pockets, and the admin
+# tools, the way the Commissary and the black market already did
+err = L.execute(r"""
+local scrolls = {}
+local function P(cls)
+    local t = { _cls = cls }
+    if cls == "DScrollPanel" then
+        scrolls[#scrolls + 1] = t
+        local bar = { _n = 0 }
+        bar.SetScroll = function(self, n) self._n = n end
+        bar.GetScroll = function(self) return self._n end
+        bar.SetUp = function() end
+        t._bar = bar
+    end
+    return setmetatable(t, { __index = function(_, k)
+        if string.sub(k, 1, 2) == "lc" or string.sub(k, 1, 1) == "_" then return nil end
+        if k == "IsValid" then return function() return not t._removed end end
+        if k == "Remove" then return function() t._removed = true end end
+        if k == "GetVBar" then return function() return t._bar end end
+        if k == "GetPos" then return function() return 10, 10 end end
+        if k == "GetWide" or k == "GetTall" then return function() return 400 end end
+        return function() return P() end
+    end })
+end
+local vgWas, rU, rD, rDc, rJ = vgui, net.ReadUInt, net.ReadData, util.Decompress, util.JSONToTable
+vgui = { Create = function(cls) return P(cls) end, GetKeyboardFocus = function() return nil end }
+net.ReadUInt = function() return 1 end
+net.ReadData = function() return "x" end
+util.Decompress = function(s) return s end
+local doc
+util.JSONToTable = function() return doc end
+local ok, e = pcall(function()
+    for _, w in ipairs({ { "lci_inv", "the pockets", { items = { bread = 2, water = 1, scrap = 4, cell = 1, lockpick = 1, bandage = 2 }, size = 12, open = true } },
+        { "lc_admintools", "the admin tools", { players = { { name = "Ada", id = 1 } }, target = 1, factions = {}, territory = {} } } }) do
+        local recv = net["recv_" .. w[1]]
+        if not recv then error("no receiver for " .. w[1]) end
+        scrolls = {}
+        doc = w[3]
+        recv()
+        local first = scrolls[#scrolls]
+        if not first then error(w[2] .. " built no list") end
+        first._bar._n = 180 -- (scrolled down to the charge cell)
+        if w[3].open then doc.open = nil end -- (an item used: the server sends the pockets again, not asking to open them)
+        recv()
+        local second = scrolls[#scrolls]
+        if second == first then error(w[2] .. " were not built again") end
+        if second._bar._n ~= 180 then error(w[2] .. " went back to the top after an action (scroll " .. tostring(second._bar._n) .. ", was 180)") end
+        -- opened fresh (the window shut first), it starts at the top
+        for _, sc in ipairs(scrolls) do sc._removed = true end
+    end
+end)
+vgui, net.ReadUInt, net.ReadData, util.Decompress, util.JSONToTable = vgWas, rU, rD, rDc, rJ
+if not ok then return "scroll kept: " .. tostring(e) end
+return nil
+""")
+if err:
+    problems = (problems + "\n" if problems else "") + str(err)
+
 # the official folder for recordings and songs is the server's garrysmod/sound/livingcity/ (CORE.md):
 # what players read in the guide and the sound check must send them there, never to the old sound addon
 _guide = open(os.path.join(GMDIR, "gamemode", "cl_init.lua")).read()
@@ -4478,6 +4573,59 @@ _uses = set(_re.findall(r'"([a-z_0-9]+)"', _lb[_lb.index("local USES"):_lb.index
 _lost = [i for i in _re.findall(r'^\s*\{ id = "([^"]+)",', _tool, _re.M) if i not in _uses and not i.startswith("work_")]
 if _lost:
     problems = (problems + "\n" if problems else "") + "editor modes in no 'what it's for' folder: " + ", ".join(_lost)
+# the editor's list has one naming scheme (the owner, 14 November: "ludicrously uncohesive and need a naming
+# scheme ... not sorted under their respective categories"): a label is "Category: name (hint)", a thing that
+# belongs to one side starts with that side spelt one way, and every section shows its names A to Z
+_modes = _re.findall(r'^\s*\{ id = "([^"]+)",[^\n]*?label = "((?:[^"\\]|\\.)*)"', _tool, _re.M)
+_cats = ("Point: ", "Fixture: ", "Street: ", "Path: ", "Zone: ", "Door: ", "Prop: ")
+_tools = {"inspect", "walker"}
+_side = {"Resistance ": "rspawn rlookout bunk graffiti way_left way_right way_up way_down way_freedom rebelboard interrochair rebelcage workbench zone_rebel",
+         "Combine ": "console forcefield powerbank turret barricade_low barricade barricade_tall dataterm masterterm sspawn sterm lz suppressor zone_combine",
+         "Civil Protection ": "patrol checkpoint cpsupply cpfeed evidlocker door_cp",
+         "Administrator's ": "desk adminpower speech speechcrowd studio door_office",
+         "Union ": "terminal recycler"}
+_bad = []
+for _i, _l in _modes:
+    _name = _l
+    if _i not in _tools:
+        _c = [c for c in _cats if _l.startswith(c)]
+        if not _c:
+            _bad.append("%s has no category ('%s')" % (_i, _l[:40]))
+            continue
+        _name = _l[len(_c[0]):]
+    if _re.match(r"(resistance|rebel|combine|overwatch|civil protection|administrator|union|the) ", _name):
+        _bad.append("%s: '%s' (a side in small letters, or 'the')" % (_i, _name[:40]))
+    for _s, _ids in _side.items():
+        if _i in _ids.split() and not _name.startswith(_s):
+            _bad.append("%s should start with '%s': '%s'" % (_i, _s.strip(), _name[:40]))
+if len(_modes) < 100:
+    _bad.append("only %d editor modes were read" % len(_modes))
+L.globals()["_editor_modes"] = L.table_from([L.table_from({"id": i, "label": l.replace('\\"', '"')}) for i, l in _modes])
+err = L.execute(r"""
+local bad = {}
+for _, arrange in ipairs({ "type", "use" }) do
+    local groups = LC_CL.LayoutGroups(_editor_modes, arrange)
+    local seen = 0
+    for _, g in ipairs(groups) do
+        local last
+        for _, m in ipairs(g.list) do
+            seen = seen + 1
+            local name = LC_CL.LayoutShortName(m)
+            if not string.match(name, "^[%u%d]") then bad[#bad + 1] = arrange .. ": '" .. name .. "' doesn't start with a capital" end
+            if last and string.lower(last) > string.lower(name) then bad[#bad + 1] = arrange .. ", " .. g.title .. ": '" .. name .. "' comes after '" .. last .. "'" end
+            last = name
+            if g.title == "Tools" and arrange == "type" and m.id ~= "inspect" and m.id ~= "walker" then bad[#bad + 1] = m.id .. " is under Tools" end
+            if g.title == "The Resistance and rebel bases" and m.id == "locker" then bad[#bad + 1] = "the citizens' locker is in the Resistance's folder" end
+        end
+    end
+    if seen < #_editor_modes then bad[#bad + 1] = arrange .. ": only " .. seen .. " of " .. #_editor_modes .. " shown" end
+end
+return #bad > 0 and table.concat(bad, "; ") or nil
+""")
+if err:
+    _bad.append(str(err))
+if _bad:
+    problems = (problems + "\n" if problems else "") + "editor names: " + "; ".join(_bad)
 print(problems or "no client errors")
 print("zone fills drawn:", filled, "thick edges drawn:", beams)
 ok = not problems and filled >= 2 and beams > 0
