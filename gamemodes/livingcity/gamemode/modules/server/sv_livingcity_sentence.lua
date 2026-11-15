@@ -377,6 +377,7 @@ function LC.AskWorkDetail(ply)
     if (ply.lcWorkOff or 0) >= (ply.lcWorkCap or 0) then return false, "You've had all the time off this sentence allows." end
     local guard = GuardFor(pr.cell.pos)
     if not guard then return false, "No guard is free to take you out. Ask again in a minute." end
+    if ply.lcSleep and LC.WakeUp then LC.WakeUp(ply, "jump") end -- (asleep in the cell: up, the guard is coming; sv_livingcity_rest.lua)
     local st = LC.NPCs[guard]
     st.workDetail, st.questLock = ply, true
     LC.SetState(guard, st, "event")

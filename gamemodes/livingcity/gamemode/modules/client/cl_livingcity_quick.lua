@@ -267,6 +267,12 @@ local function Context(me, unit, rebel)
         Add("Pick the cage's padlock (needs a lockpick)", function() Send("pickcage") end)
     end
     if me:GetNW2Float("lc_jail_until", 0) > now and not me:GetNW2Bool("lc_work_detail", false) then Add("Ask for a work detail (time off your sentence)", function() Send("workdetail") end) end
+    -- (asleep in the cells at any hour, the owner, 15 November: with more than five minutes still to serve, on the cell's
+    -- bed or, with none, the floor; sv_livingcity_rest.lua)
+    if me:GetNW2Float("lc_jail_until", 0) - now > 300 and not me:GetNW2Bool("lc_work_detail", false)
+        and not me:GetNW2Bool("lc_sleeping", false) and not me:GetNW2Bool("lc_dreaming", false) then
+        Add("Lie down and sleep", function() Send("sleep") end)
+    end
     if me:GetNW2Float("lc_probation_until", 0) > now and not me:GetNW2Bool("lc_probation_checked", false) then Add("Check in for probation (close to a unit)", function() Send("checkin") end) end
     if me:GetNW2Float("lc_gman_rival_until", 0) > now then Add("Call a vote to remove the City Administrator", function() Send("recall") end) end
     if not unit and me:GetNW2Float("lc_wanted_until", 0) > now then Add("Give myself up (near a Civil Protection unit)", function() Send("surrender") end) end

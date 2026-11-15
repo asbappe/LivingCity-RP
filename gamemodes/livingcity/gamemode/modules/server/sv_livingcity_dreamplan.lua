@@ -331,7 +331,9 @@ end)
 local function NightNow() return Phase() == "night" and P.night or P.night + 1 end -- (the night a dream starting now belongs to)
 hook.Add("LivingCityDreamStarted", "LivingCityDreamPlan", function(dream)
     if not dream or dream.test then return end
-    local q = LC.DreamQueued and LC.DreamQueued()
+    -- (dream.prison: a prisoner's dream at any hour, sv_livingcity_dreams.lua. Its turn is taken like any other; it
+    -- isn't the one waiting for tonight, and the night remembers nothing of it)
+    local q = not dream.prison and LC.DreamQueued and LC.DreamQueued() or nil
     local kind = LC.DreamKind and LC.DreamKind(dream.ending) or "neutral"
     if q and q.id == dream.ending then
         if q.source == "admin" then dream.adminBy = q.by P.adminNight = NightNow() end
@@ -340,7 +342,7 @@ hook.Add("LivingCityDreamStarted", "LivingCityDreamPlan", function(dream)
         Advance(kind)
     end
     local ph = Phase()
-    if ph == "night" or ph == "dusk" then
+    if (ph == "night" or ph == "dusk") and not dream.prison then
         if kind == "nightmare" or kind == "propaganda" then P.specialNight = NightNow() end
         P.lastKind = kind
     end

@@ -194,9 +194,20 @@ function LC.ReleaseSpot(pos, who)
     return pos + Vector(0, 0, 4)
 end
 
+-- In a dream (somewhere else entirely), or being put back in the cell from one: still a prisoner, the sentence
+-- running on. (Before 15 November a prisoner who dreamt was an escape the moment the dream took them.)
+local function Dreaming(ply) return ply.lcDreaming ~= nil or (ply.lcDreamBack or 0) > CurTime() end
+
 function LC.ReleasePrisoner(ply)
     local pr = LC.Prisoners[ply]
     if not pr then return false end
+    if IsValid(ply) then
+        -- dreaming: out the moment they wake (the timer below), not carried off out of the dream and then put back
+        -- in the cell with everything else as they wake
+        if Dreaming(ply) then pr.untilT = math.min(pr.untilT, CurTime()) return true end
+        -- asleep: up first (getting up later would put them back where they lay down, in the cell)
+        if ply.lcSleep and LC.WakeUp then LC.WakeUp(ply, "quiet") end
+    end
     LC.Prisoners[ply] = nil
     if LC.Occupied[pr.cell] == ply then LC.Occupied[pr.cell] = nil end
     if not IsValid(ply) then return true end
@@ -283,7 +294,7 @@ timer.Create("LivingCityPrison", 1, 0, function()
             LC.Prisoners[ply] = nil
         elseif now >= pr.untilT then
             LC.ReleasePrisoner(ply)
-        elseif ply:Alive() and not pr.work and not (pr.grace and now < pr.grace) then -- (out on a work detail: the guard watches them)
+        elseif ply:Alive() and not pr.work and not (pr.grace and now < pr.grace) and not Dreaming(ply) then -- (out on a work detail: the guard watches them)
             local pos = ply:GetPos()
             local inside = pos:DistToSqr(pr.cell.pos) < 250 * 250 -- anywhere near your own cell is fine
             if not inside then
@@ -610,6 +621,7 @@ end
 -- (giving a weapon goes through this too: their fists and hands still come through)
 local OWN = { weapon_fists = true, weapon_lc_hands = true }
 hook.Add("PlayerCanPickupWeapon", "LivingCityPrisonBlock", function(ply, wep)
+    if ply.lcDreaming then return end -- (in a dream: what it hands them is the dream's business, sv_livingcity_dreams.lua)
     if LC.Prisoners[ply] and not (IsValid(wep) and OWN[wep:GetClass()]) then return false end
 end)
 
@@ -619,7 +631,7 @@ hook.Add("PlayerSpawn", "LivingCityPrisonRespawn", function(ply)
     if not pr then return end
     pr.grace = CurTime() + 3
     timer.Simple(0.1, function()
-        if IsValid(ply) and LC.Prisoners[ply] then PutInCell(ply, pr.cell) end
+        if IsValid(ply) and LC.Prisoners[ply] and not Dreaming(ply) then PutInCell(ply, pr.cell) end -- (not out of a dream: they wake in the cell)
     end)
 end)
 
