@@ -32758,6 +32758,38 @@ pw:Remove() cop:Remove() civ:Remove()
 end
 Nov15_CardSmallTests()
 
+-- A knocked-over turret: the nearest unit walks over and stands it up (the owner, 15 November)
+function Nov15_TurretRightTests()
+section("15 November card: a turret knocked over by zombies is set right by the nearest unit, who walks over to it; with none, it is found upright again")
+local T0 = Vector(-83000, -83000, 0)
+local tur = ents.Create("npc_turret_floor")
+tur:SetPos(T0) tur:Spawn() tur.lcTurret = true
+tur.GetUp = function(self) local a = self:GetAngles() return math.abs(a.p) > 45 and Vector(1, 0, 0) or Vector(0, 0, 1) end -- (the stub's is always up)
+LC.TurretsUprightTick(CurTime())
+ok(tur.lcStoodAt and tur.lcStoodAt:DistToSqr(T0) < 1, "standing, where it stands is noted")
+tur:SetAngles(Angle(90, 0, 0))
+local cop, cst = LC.SpawnCop(T0 + Vector(1500, 0, 0))
+cst.questLock, cst.adminGuard, cst.unmanaged = nil, nil, nil
+LC.TurretsUprightTick(CurTime())
+ok(tur.lcRighter == cop and cst.dest and cst.dest:DistToSqr(T0) < 70 * 70, "knocked over: a unit 1500 units off sets out for it", tostring(cst.dest))
+ok(tur:GetUp().z < 0.8, "(not stood up from where he is)")
+cop:SetPos(T0 + Vector(60, 0, 0))
+LC.TurretsUprightTick(CurTime())
+ok(tur:GetUp().z > 0.8 and tur.lcRighter == nil, "there: he stands it up")
+cop:Remove()
+-- nobody to come: two minutes, nobody looking, and it is upright again
+tur:SetAngles(Angle(90, 0, 0))
+local seenWas = LC.IsSeen
+LC.IsSeen = function() return false end
+LC.TurretsUprightTick(CurTime())
+ok(tur:GetUp().z < 0.8, "no unit near: still down at first")
+LC.TurretsUprightTick(CurTime() + 130)
+ok(tur:GetUp().z > 0.8, "and after two minutes, found upright again")
+LC.IsSeen = seenWas
+tur:Remove()
+end
+Nov15_TurretRightTests()
+
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")
 ;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)
     -- Everything here is something the owner's server, files or players depend on. The list is

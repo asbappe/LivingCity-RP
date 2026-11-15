@@ -614,23 +614,56 @@ function LC.RightTurret(ent)
     ent:EmitSound("npc/turret_floor/deploy.wav", 65)
     return true
 end
--- the city's own units set one right when they come by it
-timer.Create("LivingCityTurretsUpright", 4, 0, function()
+-- The city's own units set one right: the nearest within RIGHT_REACH walks over to it and stands it up (the
+-- owner, 15 November: "If zombies knock over turrets, I don't think they correct them and set them back up; they
+-- aren't here"; it used to be only a unit already within 500 units). With none to come for RIGHT_ALONE seconds,
+-- it is found upright again, once nobody is looking.
+local RIGHT_REACH, RIGHT_NEAR, RIGHT_ALONE = 3000, 110, 120
+local function Righter(st)
+    return LC.IsSecurity(st) and st.state ~= "hostile" and not st.questLock and not st.adminGuard and not st.unmanaged
+end
+function LC.TurretsUprightTick(now)
     for _, e in ipairs(ents.FindByClass(TURRET)) do
         if IsValid(e) and e.lcTurret then
             if not Tipped(e) then
                 e.lcStoodAt, e.lcStoodYaw = e:GetPos(), e:GetAngles().y
+                e.lcTippedAt, e.lcRighter = nil, nil
             else
-                for npc, st in pairs(LC.NPCs or {}) do
-                    if IsValid(npc) and LC.IsSecurity(st) and st.state ~= "hostile" and npc:GetPos():DistToSqr(e:GetPos()) < 500 * 500 then
-                        LC.RightTurret(e)
-                        npc:EmitSound("npc/metropolice/vo/affirmative.wav", 60)
-                        break
+                e.lcTippedAt = e.lcTippedAt or now
+                local spot = e.lcStoodAt or e:GetPos()
+                local r = e.lcRighter
+                local rst = IsValid(r) and LC.NPCs and LC.NPCs[r]
+                if not (rst and r:Health() > 0 and Righter(rst)) then r, rst = nil, nil end
+                if not r then
+                    local bd
+                    for npc, st in pairs(LC.NPCs or {}) do
+                        if IsValid(npc) and npc:Health() > 0 and Righter(st) then
+                            local d = npc:GetPos():DistToSqr(spot)
+                            if d < RIGHT_REACH * RIGHT_REACH and (not bd or d < bd) then r, rst, bd = npc, st, d end
+                        end
                     end
+                    e.lcRighter = r
+                end
+                if r then
+                    if r:GetPos():DistToSqr(e:GetPos()) < RIGHT_NEAR * RIGHT_NEAR then
+                        LC.RightTurret(e)
+                        r:EmitSound("npc/metropolice/vo/affirmative.wav", 60)
+                        e.lcRighter, e.lcTippedAt = nil, nil
+                    elseif not rst.dest or rst.dest:DistToSqr(spot) > 60 * 60 then
+                        LC.GoTo(r, rst, spot, true) -- (on its way; told again if it wandered off)
+                    end
+                elseif now - e.lcTippedAt > RIGHT_ALONE and not (LC.IsSeen and LC.IsSeen(e:GetPos() + Vector(0, 0, 20))) then
+                    LC.RightTurret(e)
+                    e.lcTippedAt = nil
                 end
             end
         end
     end
+end
+timer.Create("LivingCityTurretsUpright", 4, 0, function()
+    if not LC.Running then return end
+    local ok, err = LC.Try(LC.TurretsUprightTick, CurTime())
+    if not ok and LC.Error then LC.Error("turrets upright", err) end
 end)
 
 hook.Add("PlayerUse", "LivingCityTurrets", function(ply, ent)
