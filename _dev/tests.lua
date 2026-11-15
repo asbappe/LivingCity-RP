@@ -32341,14 +32341,16 @@ ENT = {}
 assert(loadstring(_ENTSRC["entities/lc_monitor.lua"], "lc_monitor"))()
 local def = ENT
 ENT = was
-ok(def.MonitorModels and string.find(def.MonitorModels[1] or "", "models/props_combine/combine_intmonitor", 1, true) ~= nil,
-    "it is one of Half-Life 2's own Combine monitors", def.MonitorModels and def.MonitorModels[1])
+ok(def.MonitorModels and string.find(def.MonitorModels[1] or "", "models/props_combine/combine_smallmonitor", 1, true) ~= nil,
+    "it is Half-Life 2's own small hanging Combine monitor (the only one now: the owner, 15 November)", def.MonitorModels and def.MonitorModels[1])
+-- the wall monitor that came first is gone: it can't be placed, and a saved one is dropped as the layout loads
+ok(LC.AddPoint(M0, 0, "monitor", 0) == nil and not LC.POINT_KINDS.monitor, "the wall monitor can no longer be placed (\"just delete it\")")
 ok(#LC.MonitorCameras() == 0, "(no cameras on the map to begin with)", #LC.MonitorCameras())
-local mp = LC.AddPoint(M0, 0, "monitor", 0)
-ok(mp ~= nil and mp.kind == "monitor", "the editor can place a monitor")
+local mp = LC.AddPoint(M0, 0, "monitor_hang", 0)
+ok(mp ~= nil and mp.kind == "monitor_hang", "the editor can place a monitor")
 LC.SyncFixtures()
 local mon = monitorOf(mp)
-ok(IsValid(mon) and mon:GetClass() == "lc_monitor" and mon.lcFixtureKind == "monitor", "it is a fixture with a class of its own")
+ok(IsValid(mon) and mon:GetClass() == "lc_monitor" and mon.lcFixtureKind == "monitor_hang", "it is a fixture with a class of its own")
 if not IsValid(mon) then LC.RemovePoint(mp) LC.SyncFixtures() return end
 LC.MonitorTune(mon) -- (what it does as it spawns)
 ok(cam(mon) == 0 and camPoint(mon) == nil, "no camera placed: it shows none (no signal)")
@@ -32383,7 +32385,7 @@ def.Use(mon, mon)
 ok(cam(mon) == 1, "only a player's E steps it")
 LC.MonitorStep(mon) -- (on the second, beside it)
 -- a second monitor, placed near the third camera
-local mp2 = LC.AddPoint(M0 + Vector(2400, 0, 0), 0, "monitor", 0)
+local mp2 = LC.AddPoint(M0 + Vector(2400, 0, 0), 0, "monitor_hang", 0)
 LC.SyncFixtures()
 local mon2 = monitorOf(mp2)
 if IsValid(mon2) then LC.MonitorTune(mon2) end -- (what it does as it spawns)
@@ -32447,8 +32449,8 @@ ENT = {}
 assert(loadstring(_ENTSRC["entities/lc_monitor.lua"], "lc_monitor"))()
 local def = ENT
 ENT = was
-ok(def.HangingModels and string.find(def.HangingModels[1] or "", "smallmonitor", 1, true) ~= nil and def.HangingModels[1] ~= def.MonitorModels[1],
-    "the hanging monitor has a model list of its own, the small monitor first", def.HangingModels and def.HangingModels[1])
+ok(def.HangingModels and string.find(def.HangingModels[1] or "", "smallmonitor", 1, true) ~= nil,
+    "the hanging monitor: the small monitor first", def.HangingModels and def.HangingModels[1])
 local c1 = LC.AddPoint(M1 + Vector(0, 300, 0), 0, "camera", 0)
 local c2 = LC.AddPoint(M1 + Vector(0, 2000, 0), 90, "camera", 0)
 local c3 = LC.AddPoint(M1 + Vector(0, 4000, 0), 180, "camera", 0)

@@ -20,28 +20,24 @@ ENT.Spawnable = true
 ENT.AdminOnly = true
 ENT.RenderGroup = RENDERGROUP_BOTH
 
--- Half-Life 2's own Combine wall monitor, at its own size: the first model this
--- install has is used. (001 is the one the small Breencast screen uses, 1.6 times
--- as big: the picture is known to sit on its glass. 003 has not been looked at in
--- the game: to try it, put it first.)
-local MODELS = { "models/props_combine/combine_intmonitor001.mdl", "models/props_combine/combine_intmonitor003.mdl" }
--- The hanging one (the owner, 15 November: "make a second combine monitor entity using the hanging monitor"):
--- the editor's "Fixture: Combine monitor, hanging" (monitor_hang), the same entity on the small monitor that
--- hangs from an arm in Nova Prospekt. Which file that is has not been looked at in the game either: the
--- first of these this install has is used, and the order is one line to change.
+-- The one Combine monitor: the small one that hangs from an arm in Nova Prospekt (the editor's
+-- "Fixture: Combine monitor", point kind monitor_hang). The wall monitor that came first is gone (the owner,
+-- 15 November: "The model is wrong, just delete it and keep the hanging combine monitor entity as the only
+-- one"; the hanging one "looks GREAT"). The first of these this install has is used: the wall models are
+-- only there so an install without the small one never shows an error model.
 local HANG = { "models/props_combine/combine_smallmonitor001.mdl", "models/props_combine/combine_intmonitor003.mdl",
     "models/props_combine/combine_intmonitor001.mdl" }
 local SCALE = 1
 -- A camera sees from this far above its point, tipped this far down, the way the point faces.
 local CAM_UP, CAM_PITCH = 70, 15
 
-ENT.MonitorModels = MODELS
+ENT.MonitorModels = HANG
 ENT.HangingModels = HANG
 
 function ENT:Initialize()
     if CLIENT then return end
     local m
-    local list = self.lcFixtureKind == "monitor_hang" and HANG or MODELS
+    local list = HANG
     for _, c in ipairs(list) do
         if not util.IsValidModel or util.IsValidModel(c) then m = c break end
     end
