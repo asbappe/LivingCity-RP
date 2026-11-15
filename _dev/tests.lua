@@ -33263,7 +33263,6 @@ local c3, s3 = cit(Vector(1600, 900, 0), "working") s3.npcWork = { id = "test" }
 local c4, s4 = cit(Vector(1700, 900, 0), "inline")
 local jailed, js = cit(Vector(1800, 900, 0), "jailed") js.jailUntil = CurTime() + 900
 _setcvar("lc_exercise_muster", 15)
-_setcvar("lc_exercise_npcs", 0)
 -- Overwatch's reserve is spent: the column comes all the same
 local pool = LC.ManpowerPool and LC.ManpowerPool("ota")
 local hadReserve = pool and pool.reserve
@@ -33458,7 +33457,6 @@ ok(LC.ExerciseSession() == nil, "and it runs to its end")
 if LC.ExerciseSession() then LC.EndEvent(false) end
 _run(12)
 LC.ParadeCanHunters = canHunters
-set("lc_exercise_npcs", 10)
 for _, c in ipairs({ c1, c2, c3, c4, jailed, unit }) do if IsValid(c) then c:Remove() end end
 for n, s in pairs(LC.NPCs) do if IsValid(n) and LC.IsSecurity(s) then n:Remove() end end
 for _, p in ipairs(pp) do LC.RemovePoint(p) end
@@ -33555,6 +33553,114 @@ set("lc_stops", stopsWas)
 _walls = savedWalls
 end
 Nov15_EveryoneComesTests()
+
+function EveryoneExerciseTests()
+section("15 November: every citizen comes to the drill and to the parade (not ten), and those at home are called out")
+LC.EndEvent(true)
+local savedWalls = _walls
+_walls = {}
+local set = _setcvar
+local E0 = Vector(-108000, -48000, 0)
+for n, s in pairs(LC.NPCs) do if IsValid(n) and (s.role == "citizen" or LC.IsSecurity(s)) then n:Remove() end end
+for _, p in ipairs(table.Copy(LC.Points)) do if p.kind == "yard" or p.kind == "parade" then LC.RemovePoint(p) end end
+local dayWas = LC.DayPhase
+LC.DayPhase = function() return "day" end
+ok(GetConVar("lc_exercise_npcs"):GetInt() == 0, "lc_exercise_npcs is 0 by default: every one of the city's own")
+ok(LC.ExerciseCallAway ~= nil and LC.ExerciseDraftable ~= nil, "(her address and the ration line can call people the same way)")
+local states = { "idle", "busy", "working", "inline" }
+local people = {}
+for i = 1, 22 do
+    local c, cst = LC.SpawnCitizen(E0 + Vector(-700 - (i % 6) * 60, (math.floor(i / 6) - 2) * 70, 0))
+    people[i] = { c, cst }
+end
+local function mixed()
+    for i, c in ipairs(people) do
+        local cst = c[2]
+        cst.state, cst.untilT, cst.npcWork = states[i % #states + 1], CurTime() + 600, nil
+        if cst.state == "working" then cst.npcWork = { id = "test" } end
+    end
+end
+local function someoneAtHome()
+    local who
+    for _, p in ipairs(LC.People.list) do if p.alive and p.role == "citizen" and not IsValid(p.npc) then who = p break end end
+    who = who or LC.NewPerson("citizen")
+    who.homeUntil = CurTime() + 600
+    return who
+end
+local function count(X)
+    local n, spots, apart = 0, {}, true
+    for _, c in ipairs(people) do
+        local ex = c[2].exCitizen
+        if X.npcs[c[1]] and ex and ex.spot then
+            n = n + 1
+            for _, sp in ipairs(spots) do if sp:DistToSqr(ex.spot) < 30 * 30 then apart = false end end
+            spots[#spots + 1] = ex.spot
+        end
+    end
+    return n, apart, spots
+end
+_setcvar("lc_exercise_muster", 15)
+-- the drill
+local yard = LC.AddPoint(E0, 0, "yard", 0)
+mixed()
+local home1 = someoneAtHome()
+ok(LC.StartEvent("drill"), "the morning drill starts")
+local X = LC.ExerciseSession()
+local n, apart = count(X)
+ok(n == 22 and apart, "all 22 citizens, sitting, working, queuing or idle, are called to the drill, each to a place of their own (it was ten)", n)
+ok(#X.spots >= 80, "the rows have room for a whole city", #X.spots)
+ok((home1.homeUntil or 0) <= CurTime(), "someone at home is free to come out for it")
+local far = 0
+for i = 1, #X.spots do if X.spots[i]:Distance(E0) > 1300 then far = far + 1 end end
+ok(far == 0, "(all of them within the yard)")
+LC.EndEvent(false)
+-- a number above 0 is still the most
+set("lc_exercise_npcs", 5)
+mixed()
+LC.StartEvent("drill")
+local X5 = LC.ExerciseSession()
+ok((count(X5)) == 5, "lc_exercise_npcs 5: five and no more", (count(X5)))
+LC.EndEvent(false)
+set("lc_exercise_npcs", 0)
+LC.RemovePoint(yard)
+-- the parade
+local pp = {}
+for i = 0, 2 do pp[#pp + 1] = LC.AddPoint(E0 + Vector(i * 1500, 4000, 0), 0, "parade", 1) end
+mixed()
+local home2 = someoneAtHome()
+ok(LC.StartEvent("parade"), "the parade starts")
+local XP = LC.ExerciseSession()
+local np, apartP, spotsP = count(XP)
+ok(np == 22 and apartP, "all 22 are called to the parade, each to a place of their own", np)
+local inThird = 0
+for _, sp in ipairs(spotsP) do if sp.x >= E0.x + 999 and sp.x <= E0.x + 2001 and math.abs(sp.y - (E0.y + 4000)) >= 150 then inThird = inThird + 1 end end
+ok(inThird == 22, "all along the middle third of the route", inThird)
+ok((home2.homeUntil or 0) <= CurTime(), "and someone at home is free to come out for it")
+-- room for a whole city along both kerbs
+local more, roomy = {}, true
+for i = 1, 80 do
+    local sp = XP.crowdPoi()
+    if not (sp and sp.x >= E0.x + 999 and sp.x <= E0.x + 2001) then roomy = false end
+    for _, o in ipairs(more) do if sp and o:DistToSqr(sp) < 30 * 30 then roomy = false end end
+    for _, o in ipairs(spotsP) do if sp and o:DistToSqr(sp) < 30 * 30 then roomy = false end end
+    more[#more + 1] = sp
+end
+ok(roomy, "with places for eighty more, none on top of another")
+-- the city stops calling once the head is two thirds of the way along
+ok(XP.crowdAsk == true, "the city keeps calling while the column is short of the two-thirds mark")
+XP.head = 2100
+XP.enlistNext = 0
+_run(0.3)
+ok(XP.crowdAsk == nil, "and stops once its head is there")
+LC.EndEvent(true)
+_run(6)
+LC.DayPhase = dayWas
+for _, c in ipairs(people) do if IsValid(c[1]) then c[1]:Remove() end end
+for n, s in pairs(LC.NPCs) do if IsValid(n) and LC.IsSecurity(s) then n:Remove() end end
+for _, p in ipairs(pp) do LC.RemovePoint(p) end
+_walls = savedWalls
+end
+EveryoneExerciseTests()
 
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")
 ;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)

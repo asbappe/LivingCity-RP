@@ -68,7 +68,7 @@ local cvBeat     = CreateConVar("lc_exercise_beat_dmg", "8", FLAGS, "Damage from
 local cvPay       = CreateConVar("lc_exercise_pay", "5", FLAGS, "Credits a citizen is paid for finishing morning exercise well (0: none)")
 local cvSkipRation = CreateConVar("lc_exercise_skip_ration", "1", FLAGS, "A citizen who skips morning exercise has their next ration withheld")
 local cvBreakfast = CreateConVar("lc_exercise_breakfast", "1", FLAGS, "After morning exercise, citizens of good standing (Trusted and up) get breakfast")
-local cvNPCs     = CreateConVar("lc_exercise_npcs", "10", FLAGS, "How many NPC citizens take part in morning exercise (the city's own first, topped up with new ones out of sight)")
+local cvNPCs     = CreateConVar("lc_exercise_npcs", "0", FLAGS, "The most NPC citizens taking part in morning exercise (0: every one of the city's own; they come whatever they are doing, and by day those at home come out)")
 local cvPace     = CreateConVar("lc_jog_pace", "150", FLAGS, "How fast the pace marker goes round the jogging route (Civil Protection units a second; walking is 110, sprinting 190)")
 local cvBehind   = CreateConVar("lc_jog_behind", "450", FLAGS, "How far behind the pace marker a jogger can fall before the stick")
 local cvJogMin   = CreateConVar("lc_jog_min_speed", "0", FLAGS, "Slowest speed that counts as jogging (0: a bit over your walking speed)")
@@ -522,9 +522,19 @@ local function CallAway(npc, st)
     if LC.Release then LC.Release(npc, st) end
 end
 
--- n: how many in all; poiFor(i): the i-th one's place and { yaw }. topup: with too few about, more of the
--- city's people come out of a doorway near by (out of sight; never a nameless extra).
-local function EnlistCitizens(n, poiFor, topup)
+LC.ExerciseCallAway = CallAway -- (her address and the ration line call people the same way)
+
+-- How many of the city's own take part at the most: lc_exercise_npcs, or (0, the default) every one of them
+-- (the owner, 15 November: "please make sure all the citizen NPCs show up").
+local function Cap()
+    local n = cvNPCs:GetInt()
+    return n > 0 and n or math.huge
+end
+
+-- n: how many in all; poiFor(i): the i-th one's place and { yaw }. most: by day those at home are free to
+-- come out for it too (LC.PeopleCallOut), and up to this many of them do at this ask, from a doorway out of
+-- sight near by (always one of the city's own people, never a nameless extra).
+local function EnlistCitizens(n, poiFor, most)
     X.enlisted = X.enlisted or 0
     local wake = not (LC.DayPhase and LC.DayPhase() == "night")
     local cands = {}
@@ -554,19 +564,20 @@ local function EnlistCitizens(n, poiFor, topup)
             c.st.untilT = CurTime() + 2
         end
     end
-    if not topup then return end
+    if not most or most <= 0 or not wake then return end
     local sp = LC.Spawners and LC.Spawners.citizen
-    local tries = 0
-    while sp and X.enlisted < n and tries < n do
-        tries = tries + 1
-        if LC.PersonAvailable and not LC.PersonAvailable("citizen") then break end
+    if not (sp and LC.PersonAvailable and LC.AlarmSquadSpot) then return end
+    if LC.PeopleCallOut then LC.PeopleCallOut("citizen") end
+    local came = 0
+    while came < most and X.enlisted < n and LC.PersonAvailable("citizen") do
         local pos, data = poiFor(X.enlisted + 1)
         if not pos then break end
-        local from = LC.AlarmSquadSpot and LC.AlarmSquadSpot(pos)
+        local from = LC.AlarmSquadSpot(pos)
         if not from then break end
         local ok, npc, st = LC.Try(sp, from)
         if not (ok and IsValid(npc) and st) then break end
-        if Send(npc, st, pos, data, false) then st.exTemp = true end
+        came = came + 1
+        if Send(npc, st, pos, data, true) then st.exTemp = true end
     end
 end
 
@@ -680,15 +691,24 @@ local function SetupJog()
         posts[#posts + 1] = spot + side
     end
     X.units = Post(posts, "cop")
-    EnlistCitizens(cvNPCs:GetInt(), function(i)
+    EnlistCitizens(Cap(), function(i)
         return route[1] + Vector(math.Rand(-120, 120), math.Rand(-120, 120), 0), { i = 1 }
-    end, true)
+    end, 6)
 end
 
+-- The drill's places: eight rows of five in front of the leader (1 to 40, as ever), and three more to either
+-- side of each row (41 to 88) so there is room for a whole city, not ten.
+local DRILL_SPOTS = 88
 local function DrillSpot(i)
     local y = X.yard
     local fwd, right = Angle(0, y.yaw, 0):Forward(), Angle(0, y.yaw, 0):Right()
     local row, col = math.floor((i - 1) / 5), (i - 1) % 5 - 2
+    if i > 40 then
+        local k = i - 41
+        row = math.floor(k / 6)
+        col = k % 6
+        col = col < 3 and (col - 5) or col
+    end
     return Ground(y.pos + fwd * (220 + row * 100) + right * (col * 100))
 end
 
@@ -697,10 +717,10 @@ local function SetupDrill()
     X.center = X.yard.pos
     X.radius = 900
     X.spots, X.taken = {}, {}
-    for i = 1, 40 do X.spots[i] = DrillSpot(i) end
+    for i = 1, DRILL_SPOTS do X.spots[i] = DrillSpot(i) end
     local fwd, right = Angle(0, X.yard.yaw, 0):Forward(), Angle(0, X.yard.yaw, 0):Right()
-    -- units at the edges of the yard, and one behind the back row
-    X.units = Post({ X.yard.pos + fwd * 300 + right * 380, X.yard.pos + fwd * 300 - right * 380, X.yard.pos + fwd * 780 }, "cop")
+    -- units at the edges of the yard (outside the rows, now that they are wider), and one behind the back row
+    X.units = Post({ X.yard.pos + fwd * 300 + right * 600, X.yard.pos + fwd * 300 - right * 600, X.yard.pos + fwd * 1020 }, "cop")
     -- a player Clinic Medic or Records Clerk leads it, if there is one
     local best, bd
     for _, p in ipairs(player.GetAll()) do
@@ -723,7 +743,7 @@ local function SetupDrill()
             if not X.taken[k] then X.taken[k] = true return X.spots[k], { yaw = X.yard.yaw + 180 } end
         end
     end
-    EnlistCitizens(cvNPCs:GetInt(), X.drillPoi, true)
+    EnlistCitizens(Cap(), X.drillPoi, 6)
     X.enlistNext = CurTime() + 4
 end
 
@@ -1013,11 +1033,12 @@ local function SetupParade()
         guards[#guards + 1] = spot + Vector(-d.y, d.x, 0) * ((i % 2 == 0) and 140 or -140)
     end
     X.units = Post(guards, "cop", GUARD_REACH)
-    -- the crowd: every citizen the city has (and at least lc_exercise_npcs: more of its people come out of a
-    -- doorway near by); the city keeps calling until the column's tail has passed them (the clock, below)
+    -- the crowd: every citizen the city has (lc_exercise_npcs above 0 is the most), those at home too by day,
+    -- a few at a time out of a doorway; the city keeps calling until the head of the column is two thirds of
+    -- the way along (the clock, below)
     X.crowdPoi = CrowdPlaces()
-    EnlistCitizens(math.huge, X.crowdPoi)
-    EnlistCitizens(cvNPCs:GetInt(), X.crowdPoi, true)
+    X.crowdAsk = true
+    EnlistCitizens(Cap(), X.crowdPoi, 6)
     X.enlistNext = CurTime() + 4
 end
 
@@ -2240,14 +2261,15 @@ timer.Create("LivingCityExercise", 0.1, 0, function()
         -- the drill keeps calling the city's own until halfway through (those up late, or done sitting, come too)
         if X.drillPoi and now >= (X.enlistNext or 0) then
             X.enlistNext = now + 4
-            if X.phase == "muster" or (X.cueNo or 0) < math.floor(math.max(2, cvCues:GetInt()) / 2) then EnlistCitizens(cvNPCs:GetInt(), X.drillPoi) end
+            if X.phase == "muster" or (X.cueNo or 0) < math.floor(math.max(2, cvCues:GetInt()) / 2) then EnlistCitizens(Cap(), X.drillPoi, 4) end
         end
         -- the parade keeps calling every citizen until the column's tail has passed them; one frightened off
         -- their place by a fight walks back to it
         if X.crowdPoi and now >= (X.enlistNext or 0) then
             X.enlistNext = now + 4
+            if X.crowdAsk and X.head >= X.total * 2 / 3 then X.crowdAsk = nil end
             if not X.fight then
-                EnlistCitizens(math.huge, X.crowdPoi)
+                if X.crowdAsk then EnlistCitizens(Cap(), X.crowdPoi, 4) end
                 for npc in pairs(X.npcs) do
                     local st = IsValid(npc) and LC.NPCs[npc]
                     local c = st and st.exCitizen
