@@ -31474,6 +31474,29 @@ function Nov14C_MarkArtTests()
 end
 Nov14C_MarkArtTests()
 
+function Nov14C_EerieMusicTests()
+    section("14 November notes (C): no Ravenholm music on the Resistance's own ground")
+    local zonesWas = LC.ZonesOfKindShared
+    local infest = { kind = "infest", pos = Vector(0, 0, 0), r = 300 }
+    local camp = { kind = "rebel", pos = Vector(700, 0, 0), r = 300 } -- (the owner's: a camp right beside an infestation)
+    LC.ZonesOfKindShared = function(kind) return kind == "infest" and { infest } or (kind == "rebel" and { camp } or {}) end
+    ok(LC.ByInfest(Vector(0, 0, 0)) == true, "in the infestation: the eerie pieces")
+    ok(LC.ByInfest(Vector(0, 800, 0)) == true, "on the street beside it (within 700): still eerie")
+    ok(LC.ByInfest(Vector(700, 0, 0)) == false, "in the rebel camp 400 from the infestation's edge: not eerie")
+    ok(LC.ByInfest(Vector(450, 0, 0)) == false, "at the camp's near edge, 150 from the infestation: not eerie either")
+    camp.pos = Vector(100, 0, 0)
+    ok(LC.ByInfest(Vector(100, 0, 0)) == true, "rebel ground that the infestation has reached (in both): eerie, you are in it")
+    ok(LC.ByInfest(Vector(5000, 0, 0)) == false, "far from both: not eerie")
+    local ply = newPlayer("EerieRebel", "resistance")
+    camp.pos = Vector(700, 0, 0)
+    ply:SetPos(Vector(700, 0, 0))
+    ply:SetNW2Bool("lc_by_infest", true)
+    LC.ActionTick(CurTime())
+    ok(ply:GetNW2Bool("lc_by_infest", true) == false, "a player standing in the camp is told so (the music's mood follows)")
+    LC.ZonesOfKindShared = zonesWas
+end
+Nov14C_EerieMusicTests()
+
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")
 ;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)
     -- Everything here is something the owner's server, files or players depend on. The list is
