@@ -32660,6 +32660,61 @@ function DreamSurfaceTests()
 end
 DreamSurfaceTests()
 
+function AddressStandTests()
+section("15 November playtest: her address goes to her speech stand, and a few come to the crowd point")
+LC.EndEvent(true)
+local savedWalls = _walls
+_walls = {}
+local A0 = Vector(-96000, -64000, 0)
+local adm = newPlayer("AddrAdministrator", "admin")
+adm:SetPos(A0 + Vector(-300, 0, 0))
+local stand = LC.AddPoint(A0, 180, "speech", 0)
+local crowd = LC.AddPoint(A0 + Vector(-500, 0, 0), 0, "speechcrowd", 0)
+local cits = {}
+for i = 1, 3 do
+    local c, cst = LC.SpawnCitizen(A0 + Vector(-900, i * 60, 0))
+    cst.state, cst.untilT = "idle", CurTime() + 600
+    cits[i] = { c, cst }
+end
+local t
+for _, x in ipairs(LC.QuestTemplates) do if x.id == "admin_address" then t = x end end
+local spec = t.build(adm)
+ok(spec and spec.stages[1].pos:DistToSqr(A0) < 1, "Address the citizens points at her speech stand", spec and tostring(spec.stages[1].pos))
+ok(spec and string.find(spec.stages[1].text, "speech stand", 1, true) ~= nil, "and says so", spec and spec.stages[1].text)
+spec.id = 71000 + math.random(1, 9999); spec.tmpl = t; spec.faction = LC.QuestFaction(adm)
+spec.expiresPost = CurTime() + 999; spec.data = {}
+LC.Postings[spec.faction] = LC.Postings[spec.faction] or {}
+table.insert(LC.Postings[spec.faction], spec)
+adm.lcqNext = 0
+LC.AcceptPosting(adm, spec.id)
+local q = LC.QuestOf[adm]
+ok(q and q.tmpl.id == "admin_address", "she takes it")
+adm:SetPos(A0 + Vector(30, 0, 0))
+_run(1)
+ok(q and q.stage == 2, "at the stand: on to speaking to them", q and q.stage)
+local came = 0
+for _, c in ipairs(cits) do if c[2].questLock == q and c[2].addressCrowd == q then came = came + 1 end end
+ok(came == 3, "the citizens near by walk to the crowd point to hear her", came)
+_run(12)
+local standing = 0
+for _, c in ipairs(cits) do if c[2].state == "event" and c[1]:GetPos():DistToSqr(crowd.pos) < 300 * 300 then standing = standing + 1 end end
+ok(standing == 3, "and stand there facing her", standing)
+LC.AbandonQuest(adm)
+_run(2)
+local back = 0
+for _, c in ipairs(cits) do if c[2].questLock == nil and c[2].state ~= "event" then back = back + 1 end end
+ok(back == 3, "when it's over they go back to their day", back)
+LC.RemovePoint(stand) LC.RemovePoint(crowd)
+if #LC.PointsOfKind("speech") == 0 then
+    local spec2 = t.build(adm)
+    ok(spec2 == nil or string.find(spec2.stages[1].text, "plaza", 1, true) ~= nil, "with no stand on the map: the plaza, as before", spec2 and spec2.stages[1].text)
+end
+for _, c in ipairs(cits) do if IsValid(c[1]) then c[1]:Remove() end end
+adm:SetPos(Vector(-120000, -120000, 0))
+_walls = savedWalls
+end
+AddressStandTests()
+
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")
 ;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)
     -- Everything here is something the owner's server, files or players depend on. The list is

@@ -2098,14 +2098,36 @@ T{
 T{
     id = "admin_address", factions = { admin = true },
     build = function(ply)
-        local spots = LC.PointsOfKind("idle")
-        local pos = #spots > 0 and Pick(spots).pos or Spot(ply, 300, 2000)
+        -- her speech stand, where one is placed (the owner, 15 November: "I placed an administrator speech point and
+        -- a crowd point, but the quest 'Address the citizens' is pointing me to a random room in a habitation block":
+        -- it took any spot where people idle). With a crowd point too, a few citizens come to it to hear her.
+        local from = IsValid(ply) and ply:GetPos() or Vector(0, 0, 0)
+        local stand, crowd
+        if LC.SpeechPlaces then stand, crowd = LC.SpeechPlaces(from) end
+        if not stand then
+            local bd
+            for _, p in ipairs(LC.PointsOfKind("speech")) do
+                local d = p.pos:DistToSqr(from)
+                if not bd or d < bd then stand, bd = p, d end
+            end
+        end
+        local pos = stand and stand.pos
+        if not pos then
+            local spots = LC.PointsOfKind("idle")
+            pos = #spots > 0 and Pick(spots).pos or Spot(ply, 300, 2000)
+        end
         if not pos then return nil end
+        local go = Goto(pos, stand and "Go to your speech stand (marked)" or "Go to the plaza (marked)", 150)
+        if crowd then
+            go.onDone = function(q)
+                for _, npc in ipairs(LC.SpeechGatherFew and LC.SpeechGatherFew(stand, crowd, 6, q) or {}) do Lock(q, npc) end
+            end
+        end
         return {
             title = "Address the citizens", reward = 20, limit = 360,
-            desc = "The people need to hear their Administrator. Go to the plaza, speak to three of them, then choose how to end it.",
+            desc = "The people need to hear their Administrator. Go to " .. (stand and "your speech stand" or "the plaza") .. ", speak to three of them, then choose how to end it.",
             stages = {
-                Goto(pos, "Go to the plaza (marked)", 150),
+                go,
                 Count("used_npc", 3, "Speak to 3 citizens: press E on each", IsCitizenNPC),
                 Choice("The crowd watches you in silence. How do you end it?", {
                     { text = "Announce additional rations (starts a ration handout).", pick = function(q, p)
