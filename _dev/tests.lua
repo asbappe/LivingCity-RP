@@ -31483,6 +31483,61 @@ end
 Nov14E_MediumScreenTests()
 
 
+-- 15 November 2026: a locker for each side (the owner: "yes please, rebel lockers, CP/Overwatch lockers, and citizen lockers")
+function Nov15_LockerSideTests()
+section("Lockers for each side: the citizens', the Resistance's, Civil Protection's")
+local function has(t, needle) for _, l in ipairs(t or {}) do if string.find(l, needle, 1, true) then return true end end return false end
+local P0 = Vector(-71000, 52000, 0)
+local rebel = newPlayer("LockRebel", "resistance", nil, 150)
+local cit = newPlayer("LockCitizen", "citizen")
+local unit = newPlayer("LockUnit", "cp")
+local unit2 = newPlayer("LockUnit2", "cp")
+for i, p in ipairs({ rebel, cit, unit, unit2 }) do p:SetPos(P0 + Vector(0, 40 * i, 0)) end
+if LC.Standing(cit) < 150 then LC.AddStanding(cit, 150 - LC.Standing(cit)) end
+if LC.Standing(rebel) > -100 then LC.AddStanding(rebel, -100 - LC.Standing(rebel)) end
+local function locker(kind, key)
+    local e = ents.Create("lc_locker")
+    e:SetPos(P0 + Vector(60, 0, 0))
+    e:Spawn()
+    e.lcFixtureKey, e.lcFixtureKind = key, kind
+    return e
+end
+local function put(ply, e, item)
+    ply.lookingAt = e
+    ply.chat = {}
+    LC.GiveItem(ply, item)
+    LC.OpenContainer(ply, e)
+    return LC.ContainerPut(ply, item) and true or false
+end
+-- the Resistance's: its members, whatever their Civil Standing; not a citizen in good standing
+local lr = locker("locker_rebel", "lockside_rebel")
+ok(put(rebel, lr, "bread") and has(rebel.chat, "yours now"), "a Resistance member with a bad Civil Standing claims a Resistance locker", LC.Standing(rebel))
+ok(not put(cit, lr, "bread") and has(cit.chat, "the Resistance's"), "a citizen in good standing is told it is the Resistance's")
+unit.lookingAt, unit.chat = lr, {}
+LC.OpenContainer(unit, lr)
+ok(has(unit.chat, "[Search]"), "a unit who gets to one searches it, as with any locker")
+-- Civil Protection's: units and soldiers only
+local lc = locker("locker_cp", "lockside_cp")
+ok(put(unit, lc, "bread") and has(unit.chat, "yours now"), "a unit claims a Civil Protection locker")
+ok(not put(cit, lc, "bread") and has(cit.chat, "Civil Protection's"), "a citizen in good standing is told it is Civil Protection's")
+ok(not put(rebel, lc, "bread") and has(rebel.chat, "Civil Protection's"), "and so is a Resistance member")
+unit2.lookingAt, unit2.chat = lc, {}
+LC.OpenContainer(unit2, lc)
+ok(has(unit2.chat, "[Search]"), "another unit can look into it (a search)")
+-- the citizens': as before
+local lz = locker(nil, "lockside_cit")
+ok(put(cit, lz, "bread") and has(cit.chat, "yours now"), "a citizen in good standing still claims a plain locker")
+ok(not put(rebel, lz, "bread") and has(rebel.chat, "good standing"), "and someone under the standing it asks for is still turned away")
+-- the editor knows the two new fixtures, each under its own side
+local store = LC.Containers()
+ok(store["locker:lockside_rebel"].side == "resistance" and store["locker:lockside_cp"].side == "cp" and store["locker:lockside_cit"].side == nil, "each locker knows whose it is from the editor point that made it")
+for _, id in ipairs({ "locker:lockside_rebel", "locker:lockside_cp", "locker:lockside_cit" }) do store[id] = nil end
+for _, e in ipairs({ lr, lc, lz }) do if IsValid(e) then e:Remove() end end
+for _, p in ipairs({ rebel, cit, unit, unit2 }) do p.lookingAt = nil p:SetPos(Vector(-30000, 30000, 0)) end
+end
+Nov15_LockerSideTests()
+
+
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")
 ;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)
     -- Everything here is something the owner's server, files or players depend on. The list is

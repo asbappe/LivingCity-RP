@@ -38,13 +38,13 @@ local USES = {
         "toilet", "bath", "fire", "locker", "tv", "screen", "lawboard", "jobboard", "infodesk", "civposter", "citybin", "bin", "zone_block", "door_rent" } },
     { title = "Arriving and leaving the city", ids = { "arrival", "intake", "laborterm", "housingterm", "platform", "spawn" } },
     -- (the landing zone and the suppression device are the Combine's: they were only under arriving and under her last stand)
-    { title = "Civil Protection and the Combine", ids = { "patrol", "checkpoint", "cpsupply", "cpfeed", "evidlocker", "console", "sspawn", "powerbank", "turret",
+    { title = "Civil Protection and the Combine", ids = { "patrol", "checkpoint", "cpsupply", "cpfeed", "evidlocker", "locker_cp", "console", "sspawn", "powerbank", "turret",
         "forcefield", "barricade_low", "barricade", "barricade_tall", "dataterm", "masterterm", "zone_combine", "sterm", "lz", "suppressor", "door_cp", "loudspeaker", "screen_big", "screen_mid" } },
     -- (everything of hers in one folder: her studio and office door were under Civil Protection)
     { title = "The Administrator", ids = { "desk", "adminpower", "suppressor", "speech", "speechcrowd", "studio", "door_office", "zone_combine" } },
     { title = "Prison", ids = { "cell", "release", "prisonwork", "zone_prison", "door_prison" } },
-    { title = "The Resistance and rebel bases", ids = { "zone_rebel", "rspawn", "rlookout", "rebelboard", "interrochair", "rebelcage", "bunk", "workbench", "dealer", "bed", "toilet", "stove",
-        "sit", "sitchair", "lean", "fire", "graffiti", "way_left", "way_right", "way_up", "way_down", "way_freedom" } }, -- (no locker: it is the citizens', for Civil Standing 150 and up; the owner, 14 November)
+    { title = "The Resistance and rebel bases", ids = { "zone_rebel", "rspawn", "rlookout", "rebelboard", "interrochair", "rebelcage", "locker_rebel", "bunk", "workbench", "dealer", "bed", "toilet", "stove",
+        "sit", "sitchair", "lean", "fire", "graffiti", "way_left", "way_right", "way_up", "way_down", "way_freedom" } }, -- (not the plain locker: it is the citizens', for Civil Standing 150 and up; the owner, 14 November)
     { title = "Infestation", ids = { "zone_infest", "zspawn", "hazbarrel" } },
     { title = "Morning exercise", ids = { "yard", "parade" } },
     { title = "Dreams", ids = { "dream", "zone_dream" } }, -- (the owner, 11 November: missing from this view)
@@ -201,7 +201,7 @@ local WANTED = {
 
 local function Glance()
     local pts, fx, zones, doors = 0, 0, #(LC_CL.zones or {}), #(LC_CL.doors or {})
-    local FIX = { vending = true, dispenser = true, terminal = true, stove = true, fire = true, dealer = true, locker = true,
+    local FIX = { vending = true, dispenser = true, terminal = true, stove = true, fire = true, dealer = true, locker = true, locker_rebel = true, locker_cp = true,
         screen = true, lawboard = true, cpfeed = true, evidlocker = true, rebelboard = true, interrochair = true, rebelcage = true, infodesk = true, civposter = true, console = true, workbench = true, recycler = true, dataterm = true, masterterm = true, citybin = true, streetlight = true, loudspeaker = true, screen_big = true, screen_mid = true, tv = true, incinerator = true, hazbarrel = true, transformer = true, forcefield = true, powerbank = true, turret = true, barricade_low = true, barricade = true, barricade_tall = true, intake = true, housingterm = true, laborterm = true, cpsupply = true, conveyor = true, bed = true, toilet = true, bath = true }
     for _, p in ipairs(LC_CL.points or {}) do if FIX[p.kind] then fx = fx + 1 else pts = pts + 1 end end
     local npcs = 0

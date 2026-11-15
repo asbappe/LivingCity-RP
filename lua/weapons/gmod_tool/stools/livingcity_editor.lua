@@ -79,6 +79,8 @@ local MODES = {
     { id = "fire",        label = "Fixture: burning barrel" },
     { id = "dealer",      label = "Fixture: black market dealer" },
     { id = "locker",      label = "Fixture: locker (citizens in good standing keep things in it)" },
+    { id = "locker_rebel", label = "Fixture: Resistance locker (a Resistance member keeps things in it)" },
+    { id = "locker_cp",   label = "Fixture: Civil Protection locker (a unit or soldier keeps things in it)" },
     { id = "screen",      label = "Street: Breencast screen, small (the city's wall screen: shows broadcasts)" },
     { id = "lawboard",    label = "Fixture: law board" },
     { id = "jobboard",    label = "Fixture: job board (its side's jobs: Resistance on rebel ground, Civil Protection on Combine ground, else the Union's)" },
@@ -145,7 +147,7 @@ else
 end
 
 -- sit, bench and lean spots, and fixtures, face the person placing them
-local FACE_PLACER = { rebelcage = true, adminpower = true, bed = true, toilet = true, bath = true, conveyor = true, intake = true, housingterm = true, laborterm = true, cpsupply = true, arrival = true, sit = true, sitchair = true, lean = true, vending = true, dispenser = true, terminal = true, stove = true, dealer = true, locker = true, screen = true, lawboard = true, jobboard = true, infodesk = true, civposter = true, console = true, workbench = true, recycler = true, sspawn = true, rlookout = true, bunk = true, dataterm = true, masterterm = true, citybin = true, streetlight = true, loudspeaker = true, screen_big = true, screen_mid = true, tv = true, incinerator = true, hazbarrel = true, graffiti = true, studio = true, transformer = true, forcefield = true, powerbank = true, turret = true, barricade_low = true, barricade = true, barricade_tall = true, yard = true }
+local FACE_PLACER = { rebelcage = true, adminpower = true, bed = true, toilet = true, bath = true, conveyor = true, intake = true, housingterm = true, laborterm = true, cpsupply = true, arrival = true, sit = true, sitchair = true, lean = true, vending = true, dispenser = true, terminal = true, stove = true, dealer = true, locker = true, locker_rebel = true, locker_cp = true, screen = true, lawboard = true, jobboard = true, infodesk = true, civposter = true, console = true, workbench = true, recycler = true, sspawn = true, rlookout = true, bunk = true, dataterm = true, masterterm = true, citybin = true, streetlight = true, loudspeaker = true, screen_big = true, screen_mid = true, tv = true, incinerator = true, hazbarrel = true, graffiti = true, studio = true, transformer = true, forcefield = true, powerbank = true, turret = true, barricade_low = true, barricade = true, barricade_tall = true, yard = true }
 
 local function ModeIndex(id)
     for i, m in ipairs(MODES) do if m.id == id then return i end end

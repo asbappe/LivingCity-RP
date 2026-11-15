@@ -8,7 +8,13 @@
       Lockers              placed with the editor ("Fixture: locker"). The first
                            person to put something in one claims it; after that
                            it opens for them alone. Press E on it. Give it up
-                           (empty) from the same screen.
+                           (empty) from the same screen. Three kinds (the owner,
+                           15 November: "rebel lockers, CP/Overwatch lockers, and
+                           citizen lockers"): the citizens' (Civil Standing
+                           lc_locker_standing), the Resistance's ("Fixture:
+                           Resistance locker": its members only) and Civil
+                           Protection's ("Fixture: Civil Protection locker":
+                           units and soldiers only).
       Storage crates       bought at the Commissary and set down anywhere from
                            your pockets ("Set down"). Only you open it. Pack it
                            up again when it's empty. lc_crates_per_person (2).
@@ -99,6 +105,8 @@ local function EntityContainer(e)
         local id = "locker:" .. tostring(e.lcFixtureKey or e:EntIndex())
         store[id] = store[id] or { kind = "locker", items = {} }
         store[id].ent = e
+        -- whose it is, from the editor point that made it (read each time, never saved)
+        store[id].side = e.lcFixtureKind == "locker_rebel" and "resistance" or (e.lcFixtureKind == "locker_cp" and "cp" or nil)
         return id, store[id]
     elseif (e:GetClass() == "lc_crate" or e:GetClass() == "lc_stall") and e.lcStorageId then
         local c = store[e.lcStorageId]
@@ -150,7 +158,12 @@ end
 local cvLockerStanding = CreateConVar("lc_locker_standing", "150", FLAGS, "Civil Standing a citizen needs to use a locker (the owner: lockers are for those in good standing; units always can)")
 local function Access(ply, c)
     if c.kind == "bin" then return "open" end
-    if c.kind == "locker" and not RealUnit(ply) and LC.Standing and LC.Standing(ply) < cvLockerStanding:GetInt() then
+    if c.kind == "locker" and c.side == "resistance" then
+        -- the Resistance's own: no Civil Standing asked. A unit who gets to one searches it, as with any locker (below).
+        if not RealUnit(ply) and ply:GetNW2String("lcf_faction", "") ~= "resistance" then return nil, "This locker is the Resistance's." end
+    elseif c.kind == "locker" and c.side == "cp" then
+        if not RealUnit(ply) then return nil, "This locker is Civil Protection's." end
+    elseif c.kind == "locker" and not RealUnit(ply) and LC.Standing and LC.Standing(ply) < cvLockerStanding:GetInt() then
         return nil, string.format("Lockers are for citizens in good standing (Civil Standing %d). Yours is %d.", cvLockerStanding:GetInt(), LC.Standing(ply))
     end
     if not c.owner or c.owner == OwnerKey(ply) then return "open" end

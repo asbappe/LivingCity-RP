@@ -151,3 +151,5 @@ Only the words shown changed. Every point keeps its internal name, so saved layo
 - **Power and the street:** the small Breencast screen, the small TV and the street bin are in, beside the transformer, streetlight, loudspeaker and giant screen.
 
 A medium Breencast screen, when it is added, is `Street: Breencast screen, medium`: it then sits between the giant and the small one.
+
+Added 15 November: `Fixture: Resistance locker` (under "The Resistance and rebel bases") and `Fixture: Civil Protection locker` (under "Civil Protection and the Combine"), beside the citizens' `Fixture: locker`; and the medium screen, `Street: medium Breencast screen`.
