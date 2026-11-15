@@ -119,6 +119,18 @@ function LC.BankLoads(force)
     return out
 end
 
+-- A forcefield just put down (its Initialize calls this): dark at once when it has no power, not lit until
+-- the next check a second later (the owner, 14 November: a field with no power bank showed as on).
+function LC.FieldPlaced(f)
+    if not IsValid(f) or not LC.FieldOff then return false end
+    local ok, off = LC.Try(LC.FieldOff, f)
+    if ok and off and not f:GetNW2Bool("lc_nopower", false) then
+        f:SetNW2Bool("lc_nopower", true)
+        if LC.FieldRulesChanged then LC.FieldRulesChanged(f) end
+    end
+    return ok and off or false
+end
+
 -- How many things a bank is feeding.
 function LC.BankLoad(b)
     local n = 0

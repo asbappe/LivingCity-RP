@@ -31596,6 +31596,40 @@ end
 Nov14D_LoudspeakerTests()
 
 
+function Nov14D_ForcefieldTests()
+section("A forcefield with no power bank shows no field and stops nobody; who a powered one lets through (14 November, group D)")
+local was = GetConVar("lc_forcefield_needs_bank"):GetInt()
+_setcvar("lc_forcefield_needs_bank", 1)
+local at = Vector(-27000, 18000, 0)
+local f = ents.Create("lc_forcefield") f:SetPos(at) f:Spawn()
+f.lcForcefield = true
+f.FieldUp = function(self) return not self:GetNW2Bool("lc_nopower", false) and self:GetNW2Float("lc_short_until", 0) < CurTime() end
+ok(f:FieldUp(), "(the fake game's field knows nothing of its power until it is told)")
+LC.FieldPlaced(f) -- (what the real one's Initialize calls)
+ok(f:GetNW2Bool("lc_nopower", false) == true and not f:FieldUp(), "with no power bank in reach it is dark from the moment it is placed (no field drawn: the client asks FieldUp)")
+local cit = newPlayer("FieldCit14", "citizen")
+ok(hook.Run("ShouldCollide", f, cit) == false, "and it stops nobody")
+LC.CheckpointTick(CurTime())
+ok(not f:FieldUp(), "(still dark after the checkpoints' own check)")
+-- a bank in reach: up, and who passes
+local b = ents.Create("lc_powerbank") b:SetPos(at + Vector(100, 0, 0)) b:Spawn()
+LC.CheckpointTick(CurTime())
+ok(f:FieldUp(), "a power bank beside it: the field is up", tostring(f:GetNW2Bool("lc_nopower", false)))
+ok(hook.Run("ShouldCollide", f, cit) == true, "a citizen is stopped")
+local unit = newPlayer("FieldUnit14", "cp")
+unit:SetNW2Bool("lc_unit", true)
+ok(hook.Run("ShouldCollide", f, unit) == false, "a unit walks through")
+local cop = ents.Create("npc_metropolice") cop:Spawn()
+local stalker = ents.Create("npc_stalker") stalker:Spawn()
+local zombie = ents.Create("npc_zombie") zombie:Spawn()
+ok(hook.Run("ShouldCollide", f, cop) == false and hook.Run("ShouldCollide", f, stalker) == false, "metrocop and stalker NPCs walk through")
+ok(hook.Run("ShouldCollide", f, zombie) == true, "the infected do not")
+cop:Remove() stalker:Remove() zombie:Remove() b:Remove() f:Remove()
+_setcvar("lc_forcefield_needs_bank", was)
+end
+Nov14D_ForcefieldTests()
+
+
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")
 ;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)
     -- Everything here is something the owner's server, files or players depend on. The list is
