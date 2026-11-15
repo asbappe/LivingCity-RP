@@ -30569,11 +30569,12 @@ local act = LC.TargetActions.cagecuff
 ok(type(act) == "function", "F2's action for it is there")
 local lt = newPlayer("B6Lt", "resistance", nil, 900)
 local member = newPlayer("B6Member", "resistance", nil, 150)
+local symp = newPlayer("B6Symp", "resistance", nil, 0)
 local n1, st1 = person(Vector(400, 0, 0))
 lt:SetPos(n1:GetPos() + Vector(60, 0, 0))
-member:SetPos(n1:GetPos() + Vector(-60, 0, 0))
-LC.GiveItem(member, "zipties", 2)
-ok(not act(member, n1) and LC.RebelHeld[n1] == nil and LC.CuffCount(member) == 2, "a Member with cuffs takes nobody (Fighters and above)")
+symp:SetPos(n1:GetPos() + Vector(-60, 0, 0))
+LC.GiveItem(symp, "zipties", 2)
+ok(symp:GetNW2Int("lcf_rank", 1) < 2 and not act(symp, n1) and LC.RebelHeld[n1] == nil and LC.CuffCount(symp) == 2, "a Sympathizer with cuffs takes nobody (Members and above)", symp:GetNW2Int("lcf_rank", 1))
 ok(not act(lt, n1) and LC.RebelHeld[n1] == nil, "a Lieutenant with no cuffs: nothing happens")
 LC.GiveItem(lt, "zipties", 5)
 lt:SetPos(n1:GetPos() + Vector(900, 0, 0))
@@ -30597,10 +30598,17 @@ if IsValid(rb) then
     ok(not act(lt, rb) and LC.RebelHeld[rb] == nil and LC.CuffCount(lt) == 4, "a rebel isn't cuffed by their own")
     rb:Remove()
 end
-LC.CageFree(n1)
-for _, e in ipairs({ n1, n2, cage }) do if IsValid(e) then e:Remove() end end
+-- a Member may cuff too (the owner, 15 November); the cage itself stays with Fighters and above
+local n3, st3 = person(Vector(400, 200, 0))
+member:SetPos(n3:GetPos() + Vector(60, 0, 0))
+LC.GiveItem(member, "zipties", 2)
+ok(member:GetNW2Int("lcf_rank", 1) == 2 and act(member, n3) == true and LC.RebelHeld[n3] ~= nil and LC.CuffCount(member) == 1, "a Member with cuffs takes them for the cage too, and one pair is used",
+    member:GetNW2Int("lcf_rank", 1) .. " " .. tostring(LC.CuffCount(member)))
+ok(not LC.RebelMayHold(member), "opening the cage is still for Fighters and above")
+LC.CageFree(n1) LC.CageFree(n3)
+for _, e in ipairs({ n1, n2, n3, cage }) do if IsValid(e) then e:Remove() end end
 LC.CageForget()
-for _, p in ipairs({ lt, member }) do p:SetPos(Vector(-30000, 30000, 0)) end
+for _, p in ipairs({ lt, member, symp }) do p:SetPos(Vector(-30000, 30000, 0)) end
 end
 Nov14B_CuffTests()
 function Nov14F_DreamNightTests()

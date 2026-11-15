@@ -350,9 +350,9 @@ local function Context(me, unit, rebel)
         -- a citizen or rebel cuffed with the baton (sv_livingcity_arrest.lua)
         Add("Walk them to the cells / let go", function() Send("drag") end, true)
         Add("Pat them down", function() Send("patdown", "", e) end, true)
-    elseif rebel and cls == "npc_citizen" and me:GetNW2Int("lcf_rank", 1) >= 3 and me:GetNW2Int("lc_cuffs", 0) > 0 and not e:GetNW2Bool("lc_prebel", false)
+    elseif rebel and cls == "npc_citizen" and me:GetNW2Int("lcf_rank", 1) >= 2 and me:GetNW2Int("lc_cuffs", 0) > 0 and not e:GetNW2Bool("lc_prebel", false)
         and not e:GetNW2Bool("lc_cuffed", false) and not e:GetNW2Bool("lc_downed_body", false) and not e:GetNW2Bool("lc_body", false) then
-        -- a citizen in front of a Resistance Fighter or above with cuffs in their pockets (the owner, 14 November: "I
+        -- a citizen in front of a Resistance Member or above with cuffs in their pockets (the owner, 14 November: "I
         -- don't see an option to cuff NPCs as a resistance member"): sv_livingcity_rebelhold.lua, LC.TargetActions.cagecuff
         Add("Cuff them (walked to the holding cage)", function() Send("cagecuff", "", e) end, true)
     elseif e:GetNW2Bool("lc_downed_body", false) then
