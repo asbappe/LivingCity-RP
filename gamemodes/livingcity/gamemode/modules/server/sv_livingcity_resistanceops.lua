@@ -804,10 +804,152 @@ local cvSlaves = CreateConVar("lc_vort_slaves", "2", FLAGS, "Shackled vortigaunt
 LC.VortSlaves = LC.VortSlaves or {}
 local nextSlave = 0
 local BROOM_MODEL = "models/props_c17/pushbroom.mdl"
--- where the broom sits, from the vortigaunt's feet, and how far it swings. (The owner, 12 November:
--- held in the claw it stuck out to the side, the claw's own angle being the engine's; now it sits
--- out in front, head on the ground, handle up to the hands, the way a stalker holds it: lc_broom_hold.)
-local BROOM = { body = { pos = Vector(34, -6, 2), ang = Angle(-35, 0, 0) }, swing = 12, tilt = 7, rate = 2.4 }
+-- Where the broom sits. (The owner, 12 November: held in the claw it stuck out to the side, the claw's
+-- own angle being the engine's; it was then put at a fixed spot from the vortigaunt's feet, numbers
+-- made for a stalker's body. The owner, 14 November, with a screenshot: the vortigaunt hunched, the
+-- broom not in its hands but leaning on the floor beside it, head up.) Now it is worked out from the
+-- vortigaunt's own hands every tick: the head rests on the floor ahead and the handle runs up through
+-- the hands, whatever animation it is in. Which way the model lies is read off the model itself (its
+-- longest side is the handle; the heavier end is the head), so there are no numbers to tune.
+local BROOM = { hold = 0.72, swing = 12, rate = 2.4 } -- (hold: how far up the handle the hands are)
+local cvBroomFlip = CreateConVar("lc_vort_broom_flip", "0", FLAGS, "1 turns a street vortigaunt's broom end for end (if the head is in its hands and the handle on the floor)")
+local AXES = { "x", "y", "z" }
+
+-- The broom model's shape: which of its own axes the handle lies along, which the head is wide along,
+-- how long it is, and the point at the head end that rests on the floor. massCentre (the model's own,
+-- or nil) says which end the head is: the heavy one.
+function LC.VortBroomGeo(mins, maxs, massCentre, flip)
+    local function Ext() return { x = maxs.x - mins.x, y = maxs.y - mins.y, z = maxs.z - mins.z } end
+    local ext = Ext()
+    local long = "z"
+    for _, a in ipairs(AXES) do if ext[a] > ext[long] then long = a end end
+    if ext[long] < 30 then -- (no broom's shape to read: a plain upright one)
+        mins, maxs, massCentre, long = Vector(-12, -3, -35), Vector(12, 3, 35), nil, "z"
+        ext = Ext()
+    end
+    local rest = {}
+    for _, a in ipairs(AXES) do if a ~= long then rest[#rest + 1] = a end end
+    local wide, third = rest[1], rest[2]
+    if ext[third] > ext[wide] then wide, third = third, wide end
+    local mid = (mins + maxs) * 0.5
+    local headAtMax = long ~= "z" -- (with nothing to go by: an upright model has its head at the bottom)
+    if massCentre then
+        local d = massCentre[long] - mid[long]
+        if math.abs(d) > ext[long] * 0.03 then headAtMax = d > 0 end
+    end
+    if flip then headAtMax = not headAtMax end
+    local hp = Vector(mid.x, mid.y, mid.z)
+    hp[long] = headAtMax and maxs[long] or mins[long]
+    return { long = long, wide = wide, third = third, len = ext[long], headAtMax = headAtMax, headPoint = hp }
+end
+
+-- An angle from where a model's own forward (x) and up (z) point in the world.
+local function BasisAngle(F, U)
+    local sp = -F.z
+    if math.abs(sp) > 0.9999 then
+        local sg = sp > 0 and 1 or -1
+        return Angle(90 * sg, math.deg(math.atan2(U.y * sg, U.x * sg)), 0)
+    end
+    local left = U:Cross(F)
+    return Angle(math.deg(math.asin(sp)), math.deg(math.atan2(F.y, F.x)), math.deg(math.atan2(left.z, U.z)))
+end
+
+-- Where the broom goes: grip is where the hands are, fwd the way the vortigaunt faces, groundZ the
+-- floor under it, k the swing (-1 to 1: the head pushed out and drawn back along the floor, the
+-- handle sliding through the hands). Returns its position and angle in the world, and where its
+-- head, its hands and its top end up, with the world directions of its own three axes.
+function LC.VortBroomPose(grip, fwd, groundZ, geo, k)
+    local f = Vector(fwd.x, fwd.y, 0)
+    if f:LengthSqr() < 0.01 then f = Vector(1, 0, 0) end
+    f:Normalize()
+    local len = geo.len
+    local h = math.Clamp(grip.z - groundZ - 1, 8, len - 6)
+    local hold = math.Clamp(len * BROOM.hold, h + 4, len - 2)
+    local reach = math.sqrt(hold * hold - h * h) + (k or 0) * BROOM.swing
+    reach = math.Clamp(reach, 6, math.sqrt((len - 2) ^ 2 - h * h))
+    local head = Vector(grip.x, grip.y, groundZ + 1) + f * reach
+    local hands = Vector(grip.x, grip.y, groundZ + 1 + h)
+    local u = hands - head
+    u:Normalize()
+    local W = {}
+    W[geo.long] = u * (geo.headAtMax and -1 or 1)
+    W[geo.wide] = Vector(-f.y, f.x, 0) -- (the head lies across the way it is pushed)
+    local a, b = geo.long, geo.wide
+    local cyclic = (a == "x" and b == "y") or (a == "y" and b == "z") or (a == "z" and b == "x")
+    W[geo.third] = cyclic and W[a]:Cross(W[b]) or W[b]:Cross(W[a])
+    local hp = geo.headPoint
+    local pos = head - (W.x * hp.x + W.y * hp.y + W.z * hp.z)
+    return pos, BasisAngle(W.x, W.z), { head = head, hands = hands, top = head + u * len, x = W.x, y = W.y, z = W.z }
+end
+
+-- The vortigaunt's hands: between its two claws (the model's own points, where its beams start), or
+-- the one it has, or its hand bones; failing all of them, in front of its chest.
+local CLAWS = { { "rightclaw", "ValveBiped.hand1_R" }, { "leftclaw", "ValveBiped.hand1_L" } }
+local function Hands(v)
+    local origin = v:GetPos()
+    local sum, n = Vector(0, 0, 0), 0
+    for _, c in ipairs(CLAWS) do
+        local p
+        local id = v.LookupAttachment and v:LookupAttachment(c[1]) or 0
+        if id and id > 0 and v.GetAttachment then
+            local at = v:GetAttachment(id)
+            p = at and at.Pos or nil
+        end
+        if not p and v.LookupBone and v.GetBonePosition then
+            local bone = v:LookupBone(c[2])
+            if bone then p = v:GetBonePosition(bone) end
+        end
+        -- (a point at its feet or far from it is no hand: bones not set up yet)
+        if p and p.z - origin.z > 6 and p:DistToSqr(origin) < 80 * 80 then sum, n = sum + p, n + 1 end
+    end
+    if n > 0 then return sum * (1 / n), true end
+    return origin + v:GetForward() * 16 + Vector(0, 0, 34), false
+end
+
+-- The heavier end of the model is the head: its mass centre, read off a prop made for a moment.
+local function MassCentre(model, near)
+    local mc
+    LC.Try(function()
+        local probe = ents.Create("prop_physics")
+        if not IsValid(probe) then return end
+        probe:SetModel(model)
+        probe:SetPos(near + Vector(0, 0, 80))
+        if probe.SetCollisionGroup then probe:SetCollisionGroup(COLLISION_GROUP_IN_VEHICLE or 10) end
+        probe:Spawn()
+        local phys = probe.GetPhysicsObject and probe:GetPhysicsObject()
+        if IsValid(phys) then
+            if phys.EnableMotion then phys:EnableMotion(false) end
+            mc = phys.GetMassCenter and phys:GetMassCenter() or nil
+        end
+        probe:Remove()
+    end)
+    return mc
+end
+
+local geoFor = {}
+local function BroomGeo(v, e)
+    local key = (e:GetModel() or BROOM_MODEL) .. (cvBroomFlip:GetBool() and "|flip" or "")
+    local g = geoFor[key]
+    if g then return g end
+    local mins, maxs
+    if e.GetModelBounds then mins, maxs = e:GetModelBounds() end
+    if not (mins and maxs) then mins, maxs = e:OBBMins(), e:OBBMaxs() end
+    g = LC.VortBroomGeo(mins, maxs, MassCentre(e:GetModel() or BROOM_MODEL, v:GetPos()), cvBroomFlip:GetBool())
+    geoFor[key] = g
+    return g
+end
+
+-- Put the broom in the vortigaunt's hands (it stays its child, so it goes where the vortigaunt goes
+-- between one tick and the next).
+local function HoldBroom(v, s, k)
+    local e = s.broom
+    if not IsValid(e) or not e.SetLocalPos then return end
+    local grip = Hands(v)
+    local pos, ang, where = LC.VortBroomPose(grip, v:GetForward(), v:GetPos().z, BroomGeo(v, e), k)
+    e:SetLocalPos(v.WorldToLocal and v:WorldToLocal(pos) or (pos - v:GetPos()))
+    if e.SetLocalAngles then e:SetLocalAngles(v.WorldToLocalAngles and v:WorldToLocalAngles(ang) or ang) end
+    s.broomAt = where
+end
 local SLAVE_MONSTERS = { "npc_headcrab", "npc_headcrab_fast", "npc_headcrab_black", "npc_headcrab_poison",
     "npc_zombie", "npc_zombie_torso", "npc_fastzombie", "npc_fastzombie_torso", "npc_poisonzombie", "npc_zombine" }
 
@@ -829,26 +971,20 @@ local function Broom(v, s)
     e:SetPos(v:GetPos() + Vector(0, 0, 40))
     e:Spawn()
     if e.SetSolid then e:SetSolid(SOLID_NONE) end
-    local fit = BROOM.body
     e:SetParent(v)
-    if e.SetLocalPos then e:SetLocalPos(fit.pos) end
-    if e.SetLocalAngles then e:SetLocalAngles(fit.ang) end
-    s.broom, s.fit = e, fit
+    s.broom = e
     v.lcBroom = e
     if v.DeleteOnRemove then v:DeleteOnRemove(e) end
+    HoldBroom(v, s, 0)
     return e
 end
 
--- The swing: the broom pushed out and back along the ground, the vortigaunt's arms being the
--- engine's (no sweeping animation of its own that can be counted on).
+-- The swing: the head pushed out and drawn back along the floor, the handle through the hands
+-- wherever the vortigaunt's own animation has them.
 local function Swing(v, s, now)
-    local e = s.broom
-    if not IsValid(e) or not e.SetLocalPos then return end
-    local fit = s.fit or BROOM.body
-    local k = math.sin(now * BROOM.rate)
-    e:SetLocalPos(fit.pos + Vector(k * BROOM.swing, 0, 0))
-    e:SetLocalAngles(Angle(fit.ang.p + k * BROOM.tilt, fit.ang.y, fit.ang.r))
+    HoldBroom(v, s, math.sin(now * BROOM.rate))
 end
+LC.VortBroomSwing = Swing -- (for tests)
 
 -- Walked into (a player, or one of the city's people wedged against it): a shuffle to whichever
 -- side is open, then a few steps clear, as the city's people do (sv_livingcity.lua, "Out of the way").

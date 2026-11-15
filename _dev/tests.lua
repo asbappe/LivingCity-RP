@@ -31283,5 +31283,86 @@ for _, p in ipairs(pp) do LC.RemovePoint(p) end
 _walls = savedWalls
 end
 Nov14E_ParadeSeenTests()
+-- 14 November, the owner's notes, group G: a street vortigaunt's broom is in its hands (the owner's
+-- screenshot: the vortigaunt hunched, the broom leaning on the floor beside it, head up). It is worked
+-- out from the hands every tick: head on the floor ahead, the handle up through the hands.
+function Nov14G_VortBroomTests()
+    section("14 November notes, group G: the street vortigaunt holds its broom")
+    local function Near(a, b, tol) return a:Distance(b) < (tol or 0.01) end
+    -- the model's shape, read off its own bounds
+    local up = LC.VortBroomGeo(Vector(-12, -3, -35), Vector(12, 3, 35))
+    ok(up.long == "z" and up.wide == "x" and up.third == "y" and up.len == 70 and not up.headAtMax and up.headPoint.z == -35,
+        "an upright broom: the handle along its height, the head wide across, at the bottom", up.long .. up.wide .. up.third)
+    local lying = LC.VortBroomGeo(Vector(-40, -11, -2), Vector(30, 11, 4))
+    ok(lying.long == "x" and lying.wide == "y" and lying.headAtMax and lying.headPoint.x == 30, "a broom modelled lying down: the handle along its length")
+    local heavy = LC.VortBroomGeo(Vector(-40, -11, -2), Vector(30, 11, 4), Vector(-20, 0, 1))
+    ok(not heavy.headAtMax and heavy.headPoint.x == -40, "the heavy end is the head, whichever end that is")
+    ok(LC.VortBroomGeo(Vector(-40, -11, -2), Vector(30, 11, 4), Vector(-20, 0, 1), true).headAtMax, "and lc_vort_broom_flip turns it end for end")
+    local none = LC.VortBroomGeo(Vector(-2, -2, -2), Vector(2, 2, 2))
+    ok(none.long == "z" and none.len == 70, "no shape to read (the model is missing): a plain upright broom")
+    -- where it goes, for each way the model could lie
+    local function Forward(a)
+        local p, y = math.rad(a.p), math.rad(a.y)
+        return Vector(math.cos(p) * math.cos(y), math.cos(p) * math.sin(y), -math.sin(p))
+    end
+    local function Up(a)
+        local p, y, r = math.rad(a.p), math.rad(a.y), math.rad(a.r)
+        return Vector(math.cos(r) * math.sin(p) * math.cos(y) + math.sin(r) * math.sin(y),
+            math.cos(r) * math.sin(p) * math.sin(y) - math.sin(r) * math.cos(y), math.cos(r) * math.cos(p))
+    end
+    local sideways = LC.VortBroomGeo(Vector(-3, -50, -10), Vector(3, 22, 10), Vector(0, 12, 0))
+    local grip, fwd, floor = Vector(110, 205, 338), Vector(0.6, 0.8, 0), 300
+    for name, geo in pairs({ upright = up, lying = lying, ["heavy end first"] = heavy, sideways = sideways }) do
+        local pos, ang, at = LC.VortBroomPose(grip, fwd, floor, geo, 0)
+        local hp = geo.headPoint
+        local alongHandle = (at.top - at.head):GetNormalized()
+        local off = (at.hands - at.head) - alongHandle * (at.hands - at.head):Dot(alongHandle)
+        ok(math.abs(at.head.z - (floor + 1)) < 0.01 and (at.head - grip):Dot(fwd) > 10, name .. ": the head is on the floor, ahead of the vortigaunt", tostring(at.head))
+        ok(off:Length() < 0.01 and Near(at.hands, grip, 1.01) and at.top.z >= at.hands.z - 0.01, name .. ": the handle runs up through the hands", off:Length())
+        ok(Near(pos + at.x * hp.x + at.y * hp.y + at.z * hp.z, at.head), name .. ": the model's own head end is the end on the floor")
+        ok(Near(at.x:Cross(at.y), at.z) and math.abs(at.x:Length() - 1) < 0.001 and math.abs(at.y:Length() - 1) < 0.001, name .. ": the model is turned, not mirrored or stretched")
+        ok(math.abs(at[geo.wide].z) < 0.001 and math.abs(at[geo.wide]:Dot(fwd)) < 0.001, name .. ": the head lies flat, across the way it is pushed")
+        ok(Near(Forward(ang), at.x, 0.001) and Near(Up(ang), at.z, 0.001), name .. ": the angle given turns the model that way", tostring(ang.p) .. " " .. tostring(ang.y) .. " " .. tostring(ang.r))
+        local _, _, out = LC.VortBroomPose(grip, fwd, floor, geo, 1)
+        local _, _, back = LC.VortBroomPose(grip, fwd, floor, geo, -1)
+        ok((out.head - back.head):Dot(fwd) > 15 and math.abs(out.head.z - back.head.z) < 0.01, name .. ": it sweeps, out and back along the floor")
+    end
+    -- hands held very high or very low: still on the floor, still through the hands
+    local _, _, high = LC.VortBroomPose(Vector(0, 0, 400), Vector(1, 0, 0), 300, up, 0)
+    local _, _, low = LC.VortBroomPose(Vector(0, 0, 302), Vector(1, 0, 0), 300, up, 0)
+    ok(math.abs(high.head.z - 301) < 0.01 and math.abs(low.head.z - 301) < 0.01 and (high.top - high.head):Length() < 70.01, "hands too high or at the floor: the broom is not stretched or sunk")
+    -- on a street sweeper: put where its claws are, not at a fixed spot from its feet
+    local seen = LC.IsSeen
+    LC.IsSeen = function() return false end
+    for _ = 1, 3 do LC.VortSlaveTick(CurTime()) end
+    LC.IsSeen = seen
+    local v = next(LC.VortSlaves)
+    ok(v ~= nil and IsValid(v.lcBroom) and v.lcBroom.parent == v, "a street sweeper has a broom, and it is the vortigaunt's own")
+    if v and IsValid(v.lcBroom) then
+        local e, st = v.lcBroom, LC.VortSlaves[v]
+        local claws = { rightclaw = v:GetPos() + Vector(20, -9, 30), leftclaw = v:GetPos() + Vector(14, 9, 38) }
+        local ids = { rightclaw = 1, leftclaw = 2 }
+        local names = { "rightclaw", "leftclaw" }
+        v.LookupAttachment = function(_, n) return ids[n] or 0 end
+        v.GetAttachment = function(_, id) return names[id] and { Pos = claws[names[id]] } or nil end
+        e.SetLocalPos = function(self, p) self.lcLocal = p end
+        e.SetLocalAngles = function(self, a) self.lcLocalAng = a end
+        LC.VortBroomSwing(v, st, CurTime())
+        local at = st.broomAt
+        local mid = (claws.rightclaw + claws.leftclaw) * 0.5
+        ok(at ~= nil and e.lcLocal ~= nil and e.lcLocalAng ~= nil, "every tick the broom is put where the hands are")
+        ok(at and math.abs(at.hands.x - mid.x) < 0.01 and math.abs(at.hands.y - mid.y) < 0.01 and math.abs(at.hands.z - mid.z) < 1.01,
+            "between its two claws", at and tostring(at.hands))
+        claws.rightclaw, claws.leftclaw = v:GetPos() + Vector(8, -30, 44), v:GetPos() + Vector(8, -18, 40)
+        LC.VortBroomSwing(v, st, CurTime())
+        ok(st.broomAt and math.abs(st.broomAt.hands.y - (v:GetPos().y - 24)) < 0.01, "the hands move (its own sweeping): the broom goes with them")
+        v.LookupAttachment = function() return 0 end
+        LC.VortBroomSwing(v, st, CurTime())
+        ok(st.broomAt and (st.broomAt.hands - v:GetPos()):Dot(v:GetForward()) > 10 and st.broomAt.hands.z > v:GetPos().z + 20,
+            "a model with no claws to find: in front of its chest, never at its feet or off to the side")
+    end
+    for sv in pairs(LC.VortSlaves) do if IsValid(sv) then sv:Remove() end end
+end
+Nov14G_VortBroomTests()
 
 return results.pass, results.fail, table.concat(results.lines, "\n")
