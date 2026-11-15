@@ -178,17 +178,26 @@ end
 -- The infested don't hurt their own (the owner, 13 November: "Infested players should not be able
 -- to harm other infested. but they can shove them out of the way if they get stuck"): one infested
 -- player's blow on another does no damage and pushes them a step away instead.
+-- (The owner, 14 November: "Not only players but players vs npcs": an infested player and the infestation's own
+-- zombies and headcrabs don't hurt each other either. Two NPCs are left to the game.)
+local function Infested(e)
+    if not IsValid(e) then return false end
+    if e:IsPlayer() then return LC.PlayerIsZombie ~= nil and LC.PlayerIsZombie(e) == true end
+    return e.IsNPC ~= nil and e:IsNPC() and LC.InfestedAttacker ~= nil and LC.InfestedAttacker(e) == true -- (sv_livingcity_infestedside.lua)
+end
 function LC.InfestedKin(victim, attacker)
-    return IsValid(victim) and IsValid(attacker) and victim ~= attacker and victim:IsPlayer() and attacker:IsPlayer()
-        and LC.PlayerIsZombie ~= nil and LC.PlayerIsZombie(victim) == true and LC.PlayerIsZombie(attacker) == true
+    return IsValid(victim) and IsValid(attacker) and victim ~= attacker and (victim:IsPlayer() or attacker:IsPlayer())
+        and Infested(victim) and Infested(attacker)
 end
 hook.Add("EntityTakeDamage", "LivingCityInfestedKin", function(victim, dmg)
     local a = dmg and dmg:GetAttacker()
     if not LC.InfestedKin(victim, a) then return end
-    local push = victim:GetPos() - a:GetPos()
-    push.z = 0
-    if push:LengthSqr() < 1 then push = a:GetForward() end
-    push:Normalize()
-    if victim.SetVelocity then victim:SetVelocity(push * 240 + Vector(0, 0, 70)) end
+    if victim:IsPlayer() and victim.SetVelocity then -- (a player is pushed a step away; a zombie or headcrab just isn't hurt)
+        local push = victim:GetPos() - a:GetPos()
+        push.z = 0
+        if push:LengthSqr() < 1 then push = a:GetForward() end
+        push:Normalize()
+        victim:SetVelocity(push * 240 + Vector(0, 0, 70))
+    end
     return true
 end)

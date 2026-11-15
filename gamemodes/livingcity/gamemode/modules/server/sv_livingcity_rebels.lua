@@ -291,6 +291,9 @@ end
 local function SpawnRebel(pos, zone, weapon)
     -- (from the Resistance's reserve: none left, nobody comes: sv_livingcity_manpower.lua)
     if LC.ManpowerCan and not LC.ManpowerCan("rebel") then return end
+    -- (never in their own holding cage: the owner, 14 November. LC.CageAt, sv_livingcity_rebelhold.lua)
+    local cage = LC.CageAt and LC.CageAt(pos)
+    if cage and cage.Outside then pos = cage:Outside() + Vector(0, 0, 2) end
     local npc = ents.Create("npc_citizen")
     if not IsValid(npc) then return end
     npc:SetPos(pos)
