@@ -26,7 +26,7 @@ Tick what works, write a word under what does not. What is not on this card wait
   Notes:
 - [ ] **Knocked-over turret:** does a unit walk over and stand it up?
   Notes:
-- [ ] **Monitors:** two or three hanging monitors on different cameras (E steps them): all live at once, frame rate bearable?
+- [ ] **Monitors:** the wall monitor gone (from the editor list and from the map); two or three hanging monitors on different cameras (E steps them): all live at once, frame rate bearable?
   Notes:
 - [ ] **CP Commissary:** purified water at 2, weapons by rank at the top of the list? Water at 4 from the quartermaster and the dealer? A power bank fills the vest in one press and says so?
   Notes:

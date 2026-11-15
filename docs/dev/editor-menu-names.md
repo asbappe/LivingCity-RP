@@ -156,4 +156,4 @@ Added 15 November: `Fixture: Resistance locker` (under "The Resistance and rebel
 
 Added 15 November: `Fixture: Combine monitor` and `Point: Combine camera` (the camera monitors), both under "Civil Protection and the Combine".
 
-Added 15 November, later: `Fixture: Combine monitor, hanging` beside `Fixture: Combine monitor`, both under "Civil Protection and the Combine".
+Added 15 November, later: `Fixture: Combine monitor, hanging` beside `Fixture: Combine monitor`, both under "Civil Protection and the Combine". **Later still (the owner: "The model is wrong, just delete it and keep the hanging combine monitor entity as the only one"):** the wall monitor is gone; the hanging one is now `Fixture: Combine monitor` (its internal name stays `monitor_hang`), and a wall monitor saved in a layout is dropped when the layout loads.

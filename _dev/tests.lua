@@ -32341,14 +32341,16 @@ ENT = {}
 assert(loadstring(_ENTSRC["entities/lc_monitor.lua"], "lc_monitor"))()
 local def = ENT
 ENT = was
-ok(def.MonitorModels and string.find(def.MonitorModels[1] or "", "models/props_combine/combine_intmonitor", 1, true) ~= nil,
-    "it is one of Half-Life 2's own Combine monitors", def.MonitorModels and def.MonitorModels[1])
+ok(def.MonitorModels and string.find(def.MonitorModels[1] or "", "models/props_combine/combine_smallmonitor", 1, true) ~= nil,
+    "it is Half-Life 2's own small hanging Combine monitor (the only one now: the owner, 15 November)", def.MonitorModels and def.MonitorModels[1])
+-- the wall monitor that came first is gone: it can't be placed, and a saved one is dropped as the layout loads
+ok(LC.AddPoint(M0, 0, "monitor", 0) == nil and not LC.POINT_KINDS.monitor, "the wall monitor can no longer be placed (\"just delete it\")")
 ok(#LC.MonitorCameras() == 0, "(no cameras on the map to begin with)", #LC.MonitorCameras())
-local mp = LC.AddPoint(M0, 0, "monitor", 0)
-ok(mp ~= nil and mp.kind == "monitor", "the editor can place a monitor")
+local mp = LC.AddPoint(M0, 0, "monitor_hang", 0)
+ok(mp ~= nil and mp.kind == "monitor_hang", "the editor can place a monitor")
 LC.SyncFixtures()
 local mon = monitorOf(mp)
-ok(IsValid(mon) and mon:GetClass() == "lc_monitor" and mon.lcFixtureKind == "monitor", "it is a fixture with a class of its own")
+ok(IsValid(mon) and mon:GetClass() == "lc_monitor" and mon.lcFixtureKind == "monitor_hang", "it is a fixture with a class of its own")
 if not IsValid(mon) then LC.RemovePoint(mp) LC.SyncFixtures() return end
 LC.MonitorTune(mon) -- (what it does as it spawns)
 ok(cam(mon) == 0 and camPoint(mon) == nil, "no camera placed: it shows none (no signal)")
@@ -32383,7 +32385,7 @@ def.Use(mon, mon)
 ok(cam(mon) == 1, "only a player's E steps it")
 LC.MonitorStep(mon) -- (on the second, beside it)
 -- a second monitor, placed near the third camera
-local mp2 = LC.AddPoint(M0 + Vector(2400, 0, 0), 0, "monitor", 0)
+local mp2 = LC.AddPoint(M0 + Vector(2400, 0, 0), 0, "monitor_hang", 0)
 LC.SyncFixtures()
 local mon2 = monitorOf(mp2)
 if IsValid(mon2) then LC.MonitorTune(mon2) end -- (what it does as it spawns)
@@ -32447,8 +32449,8 @@ ENT = {}
 assert(loadstring(_ENTSRC["entities/lc_monitor.lua"], "lc_monitor"))()
 local def = ENT
 ENT = was
-ok(def.HangingModels and string.find(def.HangingModels[1] or "", "smallmonitor", 1, true) ~= nil and def.HangingModels[1] ~= def.MonitorModels[1],
-    "the hanging monitor has a model list of its own, the small monitor first", def.HangingModels and def.HangingModels[1])
+ok(def.HangingModels and string.find(def.HangingModels[1] or "", "smallmonitor", 1, true) ~= nil,
+    "the hanging monitor: the small monitor first", def.HangingModels and def.HangingModels[1])
 local c1 = LC.AddPoint(M1 + Vector(0, 300, 0), 0, "camera", 0)
 local c2 = LC.AddPoint(M1 + Vector(0, 2000, 0), 90, "camera", 0)
 local c3 = LC.AddPoint(M1 + Vector(0, 4000, 0), 180, "camera", 0)
@@ -33463,6 +33465,96 @@ for _, p in ipairs(pp) do LC.RemovePoint(p) end
 _walls = savedWalls
 end
 ParadeTests()
+
+-- Everyone comes: her address and the ration line (the owner, 15 November)
+function Nov15_EveryoneComesTests()
+section("15 November: every citizen comes to her address whatever they are doing, three soldiers face the crowd, and the ration line calls the busy too")
+LC.EndEvent(true)
+if LC.SpeechSession() then LC.EndSpeech() end
+local savedWalls = _walls
+_walls = {}
+local set = _setcvar
+local stopsWas = GetConVar("lc_stops"):GetInt()
+set("lc_stops", 0)
+local A0 = Vector(104000, 96000, 0)
+local stand = LC.AddPoint(A0 + Vector(0, 500, 0), 270, "speech", 0)
+local crowd = LC.AddPoint(A0, 90, "speechcrowd", 0)
+local adm = newPlayer("EveryoneAdministrator", "admin")
+adm:SetPos(A0 + Vector(0, 520, 0))
+local function cit(off, state)
+    local c, cst = LC.SpawnCitizen(A0 + off)
+    cst.state, cst.untilT = state, CurTime() + 600
+    return c, cst
+end
+local mine = {}
+for k = 1, 22 do mine[k] = { cit(Vector(-900 - (k % 6) * 60, -300 + math.floor(k / 6) * 80, 0), "idle") } end
+local sitter, sst = cit(Vector(-800, 0, 0), "busy")
+local worker, wst = cit(Vector(-800, 200, 0), "working")
+wst.npcWork = { id = "test" }
+local queuer, qst = cit(Vector(-800, -200, 0), "inline")
+ok(GetConVar("lc_speech_npcs"):GetInt() == 0, "lc_speech_npcs is 0: every one of the city's own is called")
+set("lc_speech_muster", 30)
+ok(LC.CallSpeech(adm, "Citizens, your city thanks you."), "her address is called")
+local S = LC.SpeechSession()
+local came = 0
+for _, m in ipairs(mine) do if S.npcs[m[1]] then came = came + 1 end end
+ok(came == 22, "all of them come, not eighteen", came)
+ok(S.npcs[sitter] and S.npcs[worker] and S.npcs[queuer], "one sitting, one at a job and one in a line come too (before, only the idle were asked)")
+ok(sst.state == "moving" and wst.npcWork == nil and qst.line == nil, "(each drops what they were doing)", sst.state)
+ok((S.cols or 6) >= 6 and (S.cols or 6) <= 12, "the rows widen with the crowd", S.cols)
+local late, lst = cit(Vector(-1000, 0, 0), "busy")
+lst.leaveAt = CurTime() + 9999 -- (not about to go home: someone on their way home is left to it)
+for _ = 1, 4 do _run(4.5) if S.npcs[late] then break end end -- (asked every four seconds: whichever ask finds them free)
+-- (the test city now and then sends its newest unnamed citizen home meanwhile: one on the way home is left to it)
+ok(S.npcs[late] or lst.leaving, "one who sat down after the call is asked again and comes", tostring(lst.state) .. " leaving " .. tostring(lst.leaving))
+-- those at home are free to come out for it
+local homebody
+for _, p in ipairs(LC.People.list) do if p.alive and p.role == "citizen" and not IsValid(p.npc) then homebody = p break end end
+if homebody then
+    homebody.homeUntil = CurTime() + 600
+    ok(LC.PeopleCallOut("citizen") >= 1 and (homebody.homeUntil or 0) <= CurTime(), "someone at home is free to come out for a mandatory call")
+end
+-- three soldiers in a row in front of the stand, facing the crowd
+local guards = LC.SpeechGuards()
+ok(#guards == 3, "three soldiers are posted", #guards)
+local toward = (crowd.pos - stand.pos):GetNormalized()
+local inFront, facing, inRow = 0, 0, 0
+for _, g in ipairs(guards) do
+    local off = g.lcSpeechGuard.pos - stand.pos
+    local out = off:Dot(toward)
+    if out > 60 and out < 200 then inFront = inFront + 1 end
+    if math.abs(out - 110) < 2 then inRow = inRow + 1 end
+    local f = Angle(0, g.lcSpeechGuard.yaw, 0):Forward()
+    if f:Dot(toward) > 0.95 then facing = facing + 1 end
+end
+ok(inFront == 3 and inRow == 3 and facing == 3, "in a row between her and the crowd, facing the crowd", inFront .. " " .. inRow .. " " .. facing)
+ok(LC.NPCs[guards[1]] and LC.NPCs[guards[1]].unmanaged and guards[1]:GetClass() == "npc_combine_s", "they are soldiers of the address's own, not on a beat")
+LC.EndSpeech()
+local gone = 0
+for _, g in ipairs(guards) do if not IsValid(g) then gone = gone + 1 end end
+ok(gone == 3 and sst.state ~= "event", "when it ends the soldiers go and the citizens go back to their day", gone)
+for _, m in ipairs(mine) do if IsValid(m[1]) then m[1]:Remove() end end
+for _, c in ipairs({ sitter, worker, queuer, late }) do if IsValid(c) then c:Remove() end end
+LC.RemovePoint(stand) LC.RemovePoint(crowd)
+adm:Remove()
+
+-- the ration line: someone sitting is called to it during a handout, and the line is filled, not only three
+local R0 = Vector(104000, 106000, 0)
+local slots = {}
+for k = 1, 6 do slots[k] = LC.AddPoint(R0 + Vector(k * 40, 0, 0), 180, "queue", 77) end
+local busy1, b1 = LC.SpawnCitizen(R0 + Vector(900, 100, 0))
+b1.state, b1.untilT = "busy", CurTime() + 600
+local evWas = LC.Event
+LC.Event = "rations"
+ok(LC.Lines[77] ~= nil, "a ration line of six places")
+ok(LC.CallToLine(77) and (b1.lineHeading ~= nil or b1.line ~= nil), "rations being handed out: a citizen sitting somewhere is called to a line (before, only the idle)", tostring(b1.state))
+LC.Event = evWas
+if IsValid(busy1) then busy1:Remove() end
+for _, p in ipairs(slots) do LC.RemovePoint(p) end
+set("lc_stops", stopsWas)
+_walls = savedWalls
+end
+Nov15_EveryoneComesTests()
 
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")
 ;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)

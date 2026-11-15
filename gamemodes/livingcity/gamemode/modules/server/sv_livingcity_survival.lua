@@ -1084,7 +1084,7 @@ LC.Fixtures = LC.Fixtures or {}
 -- ration dispenser is wall-mounted at about chest height; everything else
 -- stands on the floor. (Models have their origin in different places, so the
 -- model's own bounds are used to put its bottom exactly here.)
-local FIXTURE_LIFT = { conveyor = 34, dispenser = 34, screen = 60, cpfeed = 60, rebelboard = 46, lawboard = 30, jobboard = 30, civposter = 50, screen_big = 140, screen_mid = 40, monitor = 44, monitor_hang = 84, loudspeaker = 180, powerbank = 40 }
+local FIXTURE_LIFT = { conveyor = 34, dispenser = 34, screen = 60, cpfeed = 60, rebelboard = 46, lawboard = 30, jobboard = 30, civposter = 50, screen_big = 140, screen_mid = 40, monitor_hang = 84, loudspeaker = 180, powerbank = 40 }
 
 function LC.SeatFixture(e, ground, kind)
     local mins = e:OBBMins()
@@ -1111,7 +1111,7 @@ local FIXTURE_CLASS = {
     laborterm = "lc_intake", -- Labor Assignment: Union work is given out here (sv_livingcity_labor.lua)
     cpsupply = "lc_cpsupply", -- units are issued supplies here (sv_livingcity_cpsupply.lua)
     conveyor = "lc_conveyor", -- the factory line (sv_livingcity_jobgames.lua)
-    monitor = "lc_monitor", monitor_hang = "lc_monitor", -- a Combine monitor, and the hanging one: a camera's view (entities/lc_monitor.lua)
+    monitor_hang = "lc_monitor", -- the Combine monitor (the hanging one): a camera's view (entities/lc_monitor.lua)
     bed = "lc_bed", toilet = "lc_toilet", bath = "lc_bath", -- (sv_livingcity_rest.lua, sv_livingcity_hygiene.lua)
 }
 
