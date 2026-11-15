@@ -30,9 +30,11 @@ Tick what works, write a word under what does not. What is not on this card wait
   Notes:
 - [ ] **The Administrator's tablet and camera:** does the tablet open its own window (not the C menu)? Does the recording scanner look at your face? Order a parade: do you see it?
   Notes:
-- [ ] **The vortigaunt's broom:** in the claws, head on the floor, while it walks and sweeps? (Head in its hands: `lc_vort_broom_flip 1`.)
+- [ ] **The broom and the baton:** is the vortigaunt's broom in its claws, head on the floor, while it walks and sweeps (head in its hands: `lc_vort_broom_flip 1`)? Is the baton's glow at the tip, on your side, the right size?
   Notes:
-- [ ] **The baton's glow:** at the tip, on your side, the right size?
+- [ ] **Rebel ground:** do the way marks show as arrows and FREEDOM THIS WAY within about 20 seconds of joining (not a lambda)? Pots on the tables and dressers? The usual music, not the eerie piece? Do Dr. Magnusson's eyes look at you?
+  Notes:
+- [ ] **The Colonel and the old timer:** does the Colonel stay put beside the quartermaster (or where you place "Point: Resistance Colonel's spot")? Does the old timer have the fisherman's head? Do citizens' mouths move on your recorded lines?
   Notes:
 - [ ] **The stalker and the loudspeakers:** does the stalker stand right at its terminal and work it smoothly? Is the loudspeaker's box flush on the wall? If a loudspeaker still loops a noise, send the debug report while it plays (its "loudspeakers:" line) and say whether the noise is at the speaker or the box.
   Notes:
