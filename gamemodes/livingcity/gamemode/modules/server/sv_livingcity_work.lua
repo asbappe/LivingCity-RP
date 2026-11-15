@@ -1338,6 +1338,18 @@ do
                 GameStage("Work the sealing line: throw split, leaking packs (sickly green) in the reject bin and let the sealed ones pass. E grabs a pack, left click throws it") },
         }
     end
+    -- The counter: checking the cards is the shift (the owner, 15 November: its last step waited at the
+    -- counter until three citizens had been handed rations, and with nobody in the line the shift ran
+    -- out of time). The papers game, with citizens stepping up to the counter.
+    local counter = SHIFTS.kitchen[4]
+    SHIFTS.kitchen[4] = function(ply, job)
+        local spec = counter(ply, job)
+        if spec and GamesOn() then
+            spec = Gamify(spec, 3, "papers", "Check the ration cards: press E on each citizen, then approve, deny, or call a Civil Protection unit",
+                { who = "Citizens", one = "citizen", where = "Rations", title = "Ration cards" })
+        end
+        return spec
+    end
     local short = SHIFTS.factory[3]
     SHIFTS.factory[3] = function(ply, job)
         local spec = short(ply, job)

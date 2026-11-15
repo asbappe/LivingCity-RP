@@ -10,7 +10,7 @@ Tick what works, write a word under what does not. What is not on this card wait
   Notes:
 - [ ] **People stay:** note three named citizens in the morning. Are they still about later, going into their own block and coming back out? Does the street feel lived in, not emptied? (The debug report's "people:" line says how many are out, at home, dead.)
   Notes:
-- [ ] **Rations:** over an hour or two, do the stores stay off 0%? No ration announcement after 18:00?
+- [ ] **Rations:** press Fill the city's ration stores in the editor panel (Survival and economy) once. Does a dispenser give you a ration? An hour or two later, are the stores still well above empty, and was there no ration announcement after 18:00? Type `lc_stock` in the console and send the two lines it prints.
   Notes:
 - [ ] **Armed among soldiers:** as a rebel with a gun out, beside rebel fighters against soldiers. Are you only ever shot at, never cuffed? Do the soldiers shoot the rebel fighters too?
   Notes:

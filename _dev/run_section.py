@@ -307,12 +307,22 @@ def find_target(t, args):
     return s["name"], list(range(s["line"], end + 1)), None, [s["name"]]
 
 
+# A top-level setting the tests after it rely on: _setcvar("name", 0). Only with the value written out.
+# A line that puts a setting back from a local (_setcvar("lc_rebels", rebelsWas)) is not kept: the local is
+# not in the masked copy, so the line blanked the setting for everything after it (job games off, 15 November).
+SETTING_LINE = re.compile(r'^_setcvar\(\s*"[^"]+"\s*,\s*(-?\d+(\.\d+)?|"[^"]*"|true|false)\s*\)\s*(--.*)?$')
+
+
+def setting_line(line):
+    return SETTING_LINE.match(line) is not None
+
+
 def build_mask(t, args, lines):
     start, end = lines[0], lines[-1]
     pre = args.prelude if args.prelude is not None else t.prelude_end
     keep = set(range(1, min(pre, t.n) + 1))
     for k in range(pre + 1, start):                # config defaults set between the sections
-        if t.depth[k] == 0 and re.match(r"^_setcvar\(.*\)\s*(--.*)?$", t.lines[k - 1]):
+        if t.depth[k] == 0 and setting_line(t.lines[k - 1]):
             keep.add(k)
     borrowed, needs, seen = [], [], set()
     visible = set(t.wrapper_chain(start)) if t.unit_at(start) is None or not t.unit_at(start).get("wrapper") \

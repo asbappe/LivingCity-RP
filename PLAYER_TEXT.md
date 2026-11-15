@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version f7e7323. Admin-only console messages and log lines are left out.
+Made from version 1e5bef2. Admin-only console messages and log lines are left out.
 
-12774 lines, from 349 files.
+12776 lines, from 349 files.
 
 ## Contents
 
@@ -347,7 +347,7 @@ Made from version f7e7323. Admin-only console messages and log lines are left ou
 - [the Resistance's way marks](#the-resistances-way-marks-svlivingcitywaymarkslua) (6)
 - [ways to get by](#ways-to-get-by-svlivingcitywayslua) (5)
 - [weeds, the Groundskeeper, and weedkiller (the owner, 2026-11-01)](#weeds-the-groundskeeper-and-weedkiller-the-owner-2026-11-01-svlivingcityweedslua) (12)
-- [occupations](#occupations-svlivingcityworklua) (311)
+- [occupations](#occupations-svlivingcityworklua) (313)
 - [writing, broadcasts, and the law](#writing-broadcasts-and-the-law-svlivingcitywritinglua) (37)
 - [the stalkers of the Combine zones](#the-stalkers-of-the-combine-zones-svlivingcityzonestalkerslua) (9)
 - [acts (shared)](#acts-shared-shlivingcityactslua) (2)
@@ -12336,130 +12336,133 @@ Made from version f7e7323. Admin-only console messages and log lines are left ou
 - "Ilse Brandt"  (text, line 626)
 - "Jonas Petrov"  (text, line 626)
 
+> Note for you (not shown in game): (at the ration counter the same game checks citizens' cards: opts.who, opts.one, opts.where, opts.title)
+
+- "Papers check"  (title, line 695)
+
 > Note for you (not shown in game): part of: start
 
-- "Papers check"  (title, line 693)
-- "[Station] Travelers will walk up to you one at a time. Press E on each one to see their papers and check them against today's rules (listed on your screen). Then choose: approve them, deny them, or call a Civil Protection unit if the papers are forged (look closely at the seal). Right calls pay; wrong ones get you a citation and docked pay."  (chat message, line 700)
+- "[{where}] {who} will walk up to you one at a time. Press E on each one to see their papers and check them against today's rules (listed on your screen). Then choose: approve them, deny them, or call a Civil Protection unit if the papers are forged (look closely at the seal). Right calls pay; wrong ones get you a citation and docked pay."  (chat message, line 702)
 
 > Note for you (not shown in game): part of: hud
 
-- "Travelers checked: %d of %d"  (message, line 702)
-- "Right calls: %d    Citations (mistakes): %d"  (message, line 702)
-- "Today's rules:"  (text, line 702)
-- "Press E on the traveler to see their papers"  (text, line 704)
+- "%s checked: %d of %d"  (message, line 704)
+- "Right calls: %d    Citations (mistakes): %d"  (message, line 704)
+- "Today's rules:"  (text, line 704)
+- "Press E on the {one} to see their papers"  (text, line 706)
 
 > Note for you (not shown in game): part of: finish
 
-- "No citations all shift: 5 credits bonus."  (text, line 728)
-- "%d of %d decisions right."  (message, line 730)
+- "No citations all shift: 5 credits bonus."  (text, line 730)
+- "%d of %d decisions right."  (message, line 732)
 
 > Note for you (not shown in game): The call: "approve", "deny" or "unit". True when it was right.
 
-- "Forged papers: the seal reads {seal}. A Civil Protection unit takes the traveler away."  (text, line 786)
+- "Forged papers: the seal reads {seal}. A Civil Protection unit takes the traveler away."  (text, line 788)
 
 > Note for you (not shown in game): part of: papers decide
 
-- "Denied. The seal was forged, so calling a Civil Protection unit would have paid more."  (text, line 788)
-- "You approved forged papers (the seal read {seal})."  (text, line 792)
-- "They walk through on forged papers. Under their breath: 'Thank you.' Nobody noticed this time."  (text, line 794)
-- "You approved papers that had expired."  (text, line 799)
-- "You approved a traveler whose photo didn't match them."  (text, line 799)
-- "You approved entry from a banned district, {banned}."  (text, line 800)
-- "You approved a traveler with no transit permit stamp."  (text, line 800)
-- "You approved travel for work without a Union stamp."  (text, line 801)
-- "You turned away a traveler whose papers were all in order."  (text, line 805)
-- "Your pay is docked for this."  (on-screen notice, line 812)
-- "[Station] {note}"  (chat message, line 814)
+- "Denied. The seal was forged, so calling a Civil Protection unit would have paid more."  (text, line 790)
+- "You approved forged papers (the seal read {seal})."  (text, line 794)
+- "They walk through on forged papers. Under their breath: 'Thank you.' Nobody noticed this time."  (text, line 796)
+- "You approved papers that had expired."  (text, line 801)
+- "You approved a traveler whose photo didn't match them."  (text, line 801)
+- "You approved entry from a banned district, {banned}."  (text, line 802)
+- "You approved a traveler with no transit permit stamp."  (text, line 802)
+- "You approved travel for work without a Union stamp."  (text, line 803)
+- "You turned away a traveler whose papers were all in order."  (text, line 807)
+- "Your pay is docked for this."  (on-screen notice, line 814)
+- "[Station] {note}"  (chat message, line 816)
 
 > Note for you (not shown in game): part of: street papers
 
-- "Only Civil Protection units check papers."  (text, line 854)
-- "Look at a citizen, up close."  (text, line 856)
-- "Get up close to them."  (text, line 857)
-- "Not this one, not now."  (text, line 858)
-- "You've seen their papers. Pick someone else."  (text, line 860)
+- "Only Civil Protection units check papers."  (text, line 856)
+- "Look at a citizen, up close."  (text, line 858)
+- "Get up close to them."  (text, line 859)
+- "Not this one, not now."  (text, line 860)
+- "You've seen their papers. Pick someone else."  (text, line 862)
 
 > Note for you (not shown in game): part of: street papers decide
 
-- "papers out of order"  (text, line 891)
-- "papers out of order"  (text, line 892)
-- "a forged seal, {seal}"  (text, line 893)
-- "somebody else's photo"  (text, line 893)
-- "a banned district"  (text, line 894)
-- "no transit permit stamp"  (text, line 894)
-- "no Union stamp"  (text, line 894)
-- "out of order"  (text, line 894)
-- "[CP net] Papers out of order (%s): cited. %d credit%s, +%d Civil Standing."  (message, line 895)
-- "[CP net] You wave them on."  (chat message, line 899)
-- "[CP net] Papers in order. You wave them on."  (chat message, line 902)
-- "a citation that didn't stand"  (text, line 905)
-- "[CP net] Their papers were in order: the citation is thrown out (-2 Civil Standing)."  (chat message, line 906)
+- "papers out of order"  (text, line 893)
+- "papers out of order"  (text, line 894)
+- "a forged seal, {seal}"  (text, line 895)
+- "somebody else's photo"  (text, line 895)
+- "a banned district"  (text, line 896)
+- "no transit permit stamp"  (text, line 896)
+- "no Union stamp"  (text, line 896)
+- "out of order"  (text, line 896)
+- "[CP net] Papers out of order (%s): cited. %d credit%s, +%d Civil Standing."  (message, line 897)
+- "[CP net] You wave them on."  (chat message, line 901)
+- "[CP net] Papers in order. You wave them on."  (chat message, line 904)
+- "a citation that didn't stand"  (text, line 907)
+- "[CP net] Their papers were in order: the citation is thrown out (-2 Civil Standing)."  (chat message, line 908)
 
 > Note for you (not shown in game): (F2 with a citizen in front of you: "Check their papers")
 
-- "[CP net] {why}"  (text, line 916)
+- "[CP net] {why}"  (text, line 918)
 
 > Note for you (not shown in game): part of: start
 
-- "the panel"  (text, line 1069)
-- "the terminal"  (text, line 1070)
+- "the panel"  (text, line 1071)
+- "the terminal"  (text, line 1072)
 
 > Note for you (not shown in game): part of: hud
 
-- "Turns used: %d (fewest possible: %d)"  (message, line 1079)
-- "Blackout: this job pays double."  (text, line 1080)
+- "Turns used: %d (fewest possible: %d)"  (message, line 1081)
+- "Blackout: this job pays double."  (text, line 1082)
 
 > Note for you (not shown in game): the breaker trips: a new board (and paid less)
 
-- "[Maintenance] Too slow: the breaker tripped and the wires are scrambled. Start again (this job now pays less)."  (chat message, line 1091)
+- "[Maintenance] Too slow: the breaker tripped and the wires are scrambled. Start again (this job now pays less)."  (chat message, line 1093)
 
 > Note for you (not shown in game): part of: wire try
 
-- "Finished in close to the fewest turns: 2 credits bonus."  (text, line 1142)
-- "Blackout: pay doubled."  (text, line 1143)
-- "Not shocked once."  (text, line 1145)
+- "Finished in close to the fewest turns: 2 credits bonus."  (text, line 1144)
+- "Blackout: pay doubled."  (text, line 1145)
+- "Not shocked once."  (text, line 1147)
 
 > Note for you (not shown in game): Triage (Clinic Medic): patients bleeding out at different rates. Treat them with the medkit (primary fire) before they're gone: the worst first. How fast each gets worse (health a second, roughly): an emergency department's mix, not everyone bleeding out alike (the owner: a broken arm isn't dying like someone bleeding out). 0: stable, in pain, can wait.
 
-- "Gunshot wound, bleeding heavily"  (label, line 1167)
-- "Stab wound"  (label, line 1167)
-- "Electrocuted, heart racing"  (label, line 1168)
-- "Head injury (blunt force)"  (label, line 1168)
-- "Crushed under rubble"  (label, line 1169)
-- "Stunstick beating"  (label, line 1169)
-- "Severe burns"  (label, line 1170)
-- "Smoke inhalation"  (label, line 1170)
-- "Broken arm"  (label, line 1171)
-- "Dislocated shoulder"  (label, line 1171)
+- "Gunshot wound, bleeding heavily"  (label, line 1169)
+- "Stab wound"  (label, line 1169)
+- "Electrocuted, heart racing"  (label, line 1170)
+- "Head injury (blunt force)"  (label, line 1170)
+- "Crushed under rubble"  (label, line 1171)
+- "Stunstick beating"  (label, line 1171)
+- "Severe burns"  (label, line 1172)
+- "Smoke inhalation"  (label, line 1172)
+- "Broken arm"  (label, line 1173)
+- "Dislocated shoulder"  (label, line 1173)
 
 > Note for you (not shown in game): part of: urgency
 
-- "(stable: can wait)"  (text, line 1174)
+- "(stable: can wait)"  (text, line 1176)
 
 > Note for you (not shown in game): part of: start
 
-- "[Clinic] Patients are coming in, and their health keeps dropping. Aim your medkit at a patient and left click to heal them, until each one is almost fully healed. Treat the worst injuries first (critical ones go downhill fast; a broken arm can wait): a patient whose health reaches zero dies."  (chat message, line 1217)
+- "[Clinic] Patients are coming in, and their health keeps dropping. Aim your medkit at a patient and left click to heal them, until each one is almost fully healed. Treat the worst injuries first (critical ones go downhill fast; a broken arm can wait): a patient whose health reaches zero dies."  (chat message, line 1219)
 
 > Note for you (not shown in game): part of: hud
 
-- "Saved: %d    Lost: %d    Waiting: %d"  (message, line 1219)
+- "Saved: %d    Lost: %d    Waiting: %d"  (message, line 1221)
 
 > Note for you (not shown in game): part of: tick
 
-- "[Clinic] A patient has died: {label}."  (chat message, line 1232)
-- "[Clinic] A patient has died: {label}."  (chat message, line 1247)
-- "[Clinic] {or} grabs your wrist on the way out. 'Thank you. Please... don't write down what did this.'"  (chat message, line 1257)
-- "Every patient survived: 6 credits bonus."  (text, line 1269)
-- "%d patients saved, %d lost."  (message, line 1270)
+- "[Clinic] A patient has died: {label}."  (chat message, line 1234)
+- "[Clinic] A patient has died: {label}."  (chat message, line 1249)
+- "[Clinic] {or} grabs your wrist on the way out. 'Thank you. Please... don't write down what did this.'"  (chat message, line 1259)
+- "Every patient survived: 6 credits bonus."  (text, line 1271)
+- "%d patients saved, %d lost."  (message, line 1272)
 
 > Note for you (not shown in game): part of: start
 
-- "[Reclamation] Smash every block in the pile with your crowbar (left click). Each broken block drops a piece of scrap you can pick up, and sometimes something else. You're paid 1 credit per block."  (chat message, line 1323)
+- "[Reclamation] Smash every block in the pile with your crowbar (left click). Each broken block drops a piece of scrap you can pick up, and sometimes something else. You're paid 1 credit per block."  (chat message, line 1325)
 
 > Note for you (not shown in game): part of: hud
 
-- "Blocks broken: %d of %d"  (message, line 1324)
-- "Hit the blocks with the crowbar (left click)"  (text, line 1324)
+- "Blocks broken: %d of %d"  (message, line 1326)
+- "Hit the blocks with the crowbar (left click)"  (text, line 1326)
 
 ## the unit's kick (sv_livingcity_kick.lua)
 
@@ -20564,41 +20567,41 @@ Made from version f7e7323. Admin-only console messages and log lines are left ou
 
 `gamemodes/livingcity/gamemode/modules/server/sv_livingcity_stockpile.lua`
 
-- "The city's ration stores are empty. Distribution is suspended until supplies arrive."  (text, line 87)
-- "Ration stores are running low. Allocations will be slower until supplies arrive."  (short name, line 88)
-- "Ration stores are full. Productive citizens are rewarded."  (text, line 89)
+- "The city's ration stores are empty. Distribution is suspended until supplies arrive."  (text, line 88)
+- "Ration stores are running low. Allocations will be slower until supplies arrive."  (short name, line 89)
+- "Ration stores are full. Productive citizens are rewarded."  (text, line 90)
 
 > Note for you (not shown in game): part of: check level
 
-- "[City] {lvl}"  (chat message, line 100)
+- "[City] {lvl}"  (chat message, line 101)
 
 > Note for you (not shown in game): part of: stock ledger line
 
-- "nothing yet"  (text, line 127)
+- "nothing yet"  (text, line 128)
 
 > Note for you (not shown in game): One ration out of the stores, if there is one.
 
-- "a player's ration"  (text, line 146)
+- "a player's ration"  (text, line 147)
 
 > Note for you (not shown in game): the game's living city npcwork finished moment
 
-- "npc work"  (text, line 172)
+- "npc work"  (text, line 173)
 
-> Note for you (not shown in game): A train's freight, and each convoy load that wasn't stolen: twenty minutes of the city's eating (20 rations for a city of up to lc_stock_eat citizens; 80 for one of 80). The owner, 14 November: "why are rations empty? they are at 0%": a city of 80 ate 240 an hour and its trains, convoys and workers brought about 105, because a delivery was 15 rations whatever the size of the city it fed. (20, not 15: at 15 what came in only just matched what was eaten, and every load the rebels took tipped the stores back toward nothing.)
+> Note for you (not shown in game): A train's freight, and each convoy load that wasn't stolen: twenty minutes of the city's eating (20 rations for a city of up to lc_stock_eat citizens; 80 for one of 80). The owner, 14 November: "why are rations empty? they are at 0%": a city of 80 ate 240 an hour and its trains, convoys and workers brought about 105, because a delivery was 15 rations whatever the size of the city it fed. (20, not 15: at 15 what came in fell short of what was eaten, and the stores would sit on the quarter line where the city's own eating stops, also 15 November, going short and back with every handout.)
 
-- "train freight"  (text, line 188)
+- "train freight"  (text, line 190)
 
 > Note for you (not shown in game): What goes out An NPC served at a ration line takes from the stores only while rations are being handed out. (The owner, 14 November: "Ration supplies are perpetually running low (and out of stock) and I have no idea why." The lines move all day, one person every 20 to 40 seconds a line, and each took a ration: a few lines emptied more than the kitchen, factory and trains brought in, on top of the city eating, which already feeds the citizens out. Outside a handout they only queue.)
 
-- "ration line (handout)"  (text, line 201)
+- "ration line (handout)"  (text, line 203)
 
-> Note for you (not shown in game): the city eats: a ration a minute for every lc_stock_eat (20) people out (it was every fifteen: a full city of 80 ate 6 a minute, more than its kitchen, factory and trains could ever bring in)
+> Note for you (not shown in game): the city eats: a ration a minute for every lc_stock_eat (20) people out (it was every fifteen: a full city of 80 ate 6 a minute, more than its kitchen, factory and trains could ever bring in) In proportion, and never the last quarter (the owner, 15 November: "no rations in game and everyone is starving"). It was rounded up, so three citizens out ate as much as twenty, one a minute: a small city's stores were gone in under four hours and stayed gone. Now three eat nine an hour, and the city's own eating stops at the quarter line: only rations really handed out can take the stores lower.
 
-- "the city eating"  (text, line 211)
+- "the city eating"  (text, line 222)
 
 > Note for you (not shown in game): the console command lc_stock
 
-- "[Miscount] City stores: %d of %d rations (%s)."  (message, line 230)
+- "[Miscount] City stores: %d of %d rations (%s)."  (message, line 241)
 
 ## places to keep things (sv_livingcity_storage.lua)
 
@@ -21150,313 +21153,313 @@ Made from version f7e7323. Admin-only console messages and log lines are left ou
 > Note for you (not shown in game): a transfer order: it looks like paperwork, mostly (one unit in six looks closer, once)
 
 - "A unit looked closely at your transfer order. The stamp's wrong, and he knows it."  (text, line 927)
-- "The Man Inside"  (name, line 955)
+- "The Man Inside"  (name, line 973)
 
 > Note for you (not shown in game): the Resistance doesn't reach out to a unit who's been killing them (the owner, 1 November: it stayed on the board after a dozen dead rebels): three in the last half hour, and it's off the board
 
-- "You arrested her. She was processed by morning, and you were commended. You don't sleep well."  (text, line 964)
-- "You joined the Resistance and burned your uniform in a canal barrel. They now have a fighter who knows exactly how Civil Protection units think."  (text, line 965)
-- "You stay in Civil Protection as a Resistance spy. You still wear the mask, but now you know who you're wearing it for."  (text, line 966)
-- "You walked away from both sides and never answer another note. Some nights you wonder."  (text, line 967)
+- "You arrested her. She was processed by morning, and you were commended. You don't sleep well."  (text, line 982)
+- "You joined the Resistance and burned your uniform in a canal barrel. They now have a fighter who knows exactly how Civil Protection units think."  (text, line 983)
+- "You stay in Civil Protection as a Resistance spy. You still wear the mask, but now you know who you're wearing it for."  (text, line 984)
+- "You walked away from both sides and never answer another note. Some nights you wonder."  (text, line 985)
 
 > Note for you (not shown in game): part of: build
 
-- "A note in your ration packet"  (title, line 974)
-- "Someone slipped a note into your ration packet. It names a place, {GetPos}, and a time: now."  (description, line 975)
-- "Go to the place named in the note (marked)"  (quest step, line 977)
-- "Find whoever left the note (marked) and walk up to them"  (text, line 978)
-- "A woman with the Resistance's lambda tattooed on the inside of her wrist. 'People talk about you, officer. The one who looks the other way. The one who says please.' She doesn't blink. 'We could use someone like that.'"  (quest choice, line 979)
-- "Hear her out."  (text, line 981)
+- "A note in your ration packet"  (title, line 992)
+- "Someone slipped a note into your ration packet. It names a place, {GetPos}, and a time: now."  (description, line 993)
+- "Go to the place named in the note (marked)"  (quest step, line 995)
+- "Find whoever left the note (marked) and walk up to them"  (text, line 996)
+- "A woman with the Resistance's lambda tattooed on the inside of her wrist. 'People talk about you, officer. The one who looks the other way. The one who says please.' She doesn't blink. 'We could use someone like that.'"  (quest choice, line 997)
+- "Hear her out."  (text, line 999)
 
 > Note for you (not shown in game): part of: pick
 
-- "She talks fast and quiet. By the end, you know the names of three rebels, names you shouldn't know."  (quest narration, line 982)
+- "She talks fast and quiet. By the end, you know the names of three rebels, names you shouldn't know."  (quest narration, line 1000)
 
 > Note for you (not shown in game): part of: build
 
-- "Arrest her."  (text, line 985)
+- "Arrest her."  (text, line 1003)
 
 > Note for you (not shown in game): part of: pick
 
-- "Arrest her with the Arrest Baton (right click)"  (text, line 990)
+- "Arrest her with the Arrest Baton (right click)"  (text, line 1008)
 
 > Note for you (not shown in game): part of: build
 
-- "Pretend you never saw her."  (text, line 993)
+- "Pretend you never saw her."  (text, line 1011)
 
 > Note for you (not shown in game): part of: pick
 
-- "You walk away. You keep the note."  (quest narration, line 996)
+- "You walk away. You keep the note."  (quest narration, line 1014)
 
 > Note for you (not shown in game): part of: distract
 
-- "[The Man Inside] The guards are off to look. You've about %d seconds."  (message, line 1027)
+- "[The Man Inside] The guards are off to look. You've about %d seconds."  (message, line 1045)
 
 > Note for you (not shown in game): part of: build
 
-- "Your contact's note: 'Two ways in. Pick one.'"  (quest choice, line 1029)
-- "A forged transfer order: walk them out like it's paperwork."  (text, line 1030)
+- "Your contact's note: 'Two ways in. Pick one.'"  (quest choice, line 1047)
+- "A forged transfer order: walk them out like it's paperwork."  (text, line 1048)
 
 > Note for you (not shown in game): part of: pick
 
-- "A transfer order, stamped and signed, in your pocket. To anyone who glances at it, you're moving a prisoner. Hope nobody looks closer."  (quest narration, line 1033)
+- "A transfer order, stamped and signed, in your pocket. To anyone who glances at it, you're moving a prisoner. Hope nobody looks closer."  (quest narration, line 1051)
 
 > Note for you (not shown in game): part of: build
 
-- "Set a fire at the far end of the block (marked): the guards will go to it."  (text, line 1035)
+- "Set a fire at the far end of the block (marked): the guards will go to it."  (text, line 1053)
 
 > Note for you (not shown in game): part of: pick
 
-- "Get to the spot (marked) and set the fire"  (quest step, line 1037)
+- "Get to the spot (marked) and set the fire"  (quest step, line 1055)
 
 > Note for you (not shown in game): part of: build
 
-- "Call in a false report on the Civil Protection net: they'll all go to look."  (text, line 1044)
+- "Call in a false report on the Civil Protection net: they'll all go to look."  (text, line 1062)
 
 > Note for you (not shown in game): part of: pick
 
-- "Dispatch: shots fired {or}. All units respond."  (text, line 1046)
+- "Dispatch: shots fired {or}. All units respond."  (text, line 1064)
 
 > Note for you (not shown in game): part of: build
 
-- "Proof of good faith"  (title, line 1051)
-- "The Resistance wants proof you're on their side: free a prisoner from the cells and walk them to safety ({where}). Don't let another Civil Protection unit see you."  (description, line 1052)
-- "Go to the cells and press E on the marked prisoner to unlock their cell"  (text, line 1055)
-- "Lead the prisoner to safety ({where}). They follow you: act like it's routine"  (text, line 1056)
-- "A Civil Protection unit saw you walking a prisoner out of the block. He'll remember."  (text, line 1059)
-- "The crossroads"  (title, line 1067)
-- "The Resistance wants to meet you ({where}). Come out of uniform if you can. Come alone either way."  (description, line 1068)
-- "Go to the meeting place ({where})"  (quest step, line 1070)
-- "Find the woman from the note and walk up to her"  (text, line 1071)
-- "She's waiting with a man in a lambda armband who doesn't take his hand off his rifle. 'You've proven yourself. So: do you join us, or stay in Civil Protection where you can do the most good?'"  (quest choice, line 1072)
-- "Come over. Tonight. (You join the Resistance.)"  (text, line 1074)
-- "Stay inside. Be their eyes. (You stay in Civil Protection as their spy.)"  (text, line 1079)
+- "Proof of good faith"  (title, line 1069)
+- "The Resistance wants proof you're on their side: free a prisoner from the cells and walk them to safety ({where}). Don't let another Civil Protection unit see you."  (description, line 1070)
+- "Go to the cells and press E on the marked prisoner to unlock their cell"  (text, line 1073)
+- "Lead the prisoner to safety ({where}). They follow you: act like it's routine"  (text, line 1074)
+- "A Civil Protection unit saw you walking a prisoner out of the block. He'll remember."  (text, line 1077)
+- "The crossroads"  (title, line 1085)
+- "The Resistance wants to meet you ({where}). Come out of uniform if you can. Come alone either way."  (description, line 1086)
+- "Go to the meeting place ({where})"  (quest step, line 1088)
+- "Find the woman from the note and walk up to her"  (text, line 1089)
+- "She's waiting with a man in a lambda armband who doesn't take his hand off his rifle. 'You've proven yourself. So: do you join us, or stay in Civil Protection where you can do the most good?'"  (quest choice, line 1090)
+- "Come over. Tonight. (You join the Resistance.)"  (text, line 1092)
+- "Stay inside. Be their eyes. (You stay in Civil Protection as their spy.)"  (text, line 1097)
 
 > Note for you (not shown in game): part of: pick
 
-- "He finally lets go of the rifle. 'Then you never met us. Watch your job board (F4): we'll send you work there.'"  (quest narration, line 1083)
+- "He finally lets go of the rifle. 'Then you never met us. Watch your job board (F4): we'll send you work there.'"  (quest narration, line 1101)
 
 > Note for you (not shown in game): part of: build
 
-- "Walk away from all of it."  (text, line 1085)
+- "Walk away from all of it."  (text, line 1103)
 
 > Note for you (not shown in game): Inside Work: repeatable secret jobs for a double agent
 
-- "Go to the dead drop (marked)"  (text, line 1102)
-- "Hide the patrol schedule: E on a marked hiding place, then crouch by it"  (text, line 1103)
+- "Go to the dead drop (marked)"  (text, line 1120)
+- "Hide the patrol schedule: E on a marked hiding place, then crouch by it"  (text, line 1121)
 
 > Note for you (not shown in game): part of: on done
 
-- "A Civil Protection unit watched you crouch by that drainpipe. He'll wonder why."  (text, line 1105)
+- "A Civil Protection unit watched you crouch by that drainpipe. He'll wonder why."  (text, line 1123)
 
 > Note for you (not shown in game): part of: ops
 
-- "Leak the schedule"  (title, line 1108)
-- "Leave tomorrow's patrol routes at a Resistance dead drop {GetPos}. Don't let other units see you."  (description, line 1109)
+- "Leak the schedule"  (title, line 1126)
+- "Leave tomorrow's patrol routes at a Resistance dead drop {GetPos}. Don't let other units see you."  (description, line 1127)
 
 > Note for you (not shown in game): part of: stages
 
-- "Find citizen {id} (marked) and press E to warn them before the raid"  (text, line 1118)
+- "Find citizen {id} (marked) and press E to warn them before the raid"  (text, line 1136)
 
 > Note for you (not shown in game): part of: on done
 
-- "They go pale, then they go. By the time the raid comes, the apartment is empty."  (quest narration, line 1134)
+- "They go pale, then they go. By the time the raid comes, the apartment is empty."  (quest narration, line 1152)
 
 > Note for you (not shown in game): part of: stages
 
-- "Warn them first"  (title, line 1138)
-- "Citizen {id} is on tomorrow's raid list. Warn them before Civil Protection gets there, and be quick."  (description, line 1139)
-- "Another Civil Protection unit saw you whispering to someone on the list."  (text, line 1141)
+- "Warn them first"  (title, line 1156)
+- "Citizen {id} is on tomorrow's raid list. Warn them before Civil Protection gets there, and be quick."  (description, line 1157)
+- "Another Civil Protection unit saw you whispering to someone on the list."  (text, line 1159)
 
 > Note for you (not shown in game): part of: tick
 
-- "Lose the evidence"  (title, line 1151)
-- "Evidence against a Resistance cell is lying {GetPos}. Collect it and take it to the Resistance instead of the evidence room."  (description, line 1152)
-- "Find the 2 pieces of evidence and press E on each"  (text, line 1154)
-- "Take the evidence to the marked spot ({where}), not to HQ"  (text, line 1155)
-- "A Civil Protection unit saw you heading the wrong way with an evidence bag."  (text, line 1157)
-- "A quiet release"  (title, line 1166)
-- "Someone in the cells knows too much about the Resistance. Free them and walk them out before they're interrogated."  (description, line 1167)
-- "Press E on the marked prisoner to open their cell"  (text, line 1169)
-- "Lead the prisoner to the marked spot (they follow you). Act like it's routine paperwork"  (text, line 1170)
-- "The desk officer is going to remember that release had no paperwork."  (text, line 1173)
-- "Your sector report is due, and there was Resistance activity near the canals this week. Hand it in, and decide whether to cover for them."  (description, line 1183)
-- "Go to the marked spot to file your sector report"  (quest step, line 1185)
-- "Walk up to a Civil Protection officer and press E to hand in your report"  (quest step, line 1186)
-- "The officer skims your report. 'Canals. Anything to note, Civil Protection unit?'"  (quest choice, line 1187)
-- "Lie: the canals were quiet. Completely quiet."  (text, line 1188)
+- "Lose the evidence"  (title, line 1169)
+- "Evidence against a Resistance cell is lying {GetPos}. Collect it and take it to the Resistance instead of the evidence room."  (description, line 1170)
+- "Find the 2 pieces of evidence and press E on each"  (text, line 1172)
+- "Take the evidence to the marked spot ({where}), not to HQ"  (text, line 1173)
+- "A Civil Protection unit saw you heading the wrong way with an evidence bag."  (text, line 1175)
+- "A quiet release"  (title, line 1184)
+- "Someone in the cells knows too much about the Resistance. Free them and walk them out before they're interrogated."  (description, line 1185)
+- "Press E on the marked prisoner to open their cell"  (text, line 1187)
+- "Lead the prisoner to the marked spot (they follow you). Act like it's routine paperwork"  (text, line 1188)
+- "The desk officer is going to remember that release had no paperwork."  (text, line 1191)
+- "Your sector report is due, and there was Resistance activity near the canals this week. Hand it in, and decide whether to cover for them."  (description, line 1201)
+- "Go to the marked spot to file your sector report"  (quest step, line 1203)
+- "Walk up to a Civil Protection officer and press E to hand in your report"  (quest step, line 1204)
+- "The officer skims your report. 'Canals. Anything to note, Civil Protection unit?'"  (quest choice, line 1205)
+- "Lie: the canals were quiet. Completely quiet."  (text, line 1206)
 
 > Note for you (not shown in game): part of: success
 
-- "He stamps it without looking up. The lie worked."  (quest narration, line 1189)
+- "He stamps it without looking up. The lie worked."  (quest narration, line 1207)
 
 > Note for you (not shown in game): part of: fail
 
-- "He reads it twice, then looks at you for a long moment. He doesn't believe you."  (text, line 1190)
+- "He reads it twice, then looks at you for a long moment. He doesn't believe you."  (text, line 1208)
 
 > Note for you (not shown in game): part of: tick
 
-- "Report it honestly. You can't risk it today."  (text, line 1191)
+- "Report it honestly. You can't risk it today."  (text, line 1209)
 
 > Note for you (not shown in game): part of: pick
 
-- "Because of your report, a Resistance cell in the canals has to move tonight. They'll understand. Probably."  (quest narration, line 1193)
-- "Inside Work"  (name, line 1201)
+- "Because of your report, a Resistance cell in the canals has to move tonight. They'll understand. Probably."  (quest narration, line 1211)
+- "Inside Work"  (name, line 1219)
 
 > Note for you (not shown in game): Mole Hunt: when suspicion catches up with you
 
-- "He picks up your file instead. 'Interesting.' You've been exposed as the mole."  (quest narration, line 1237)
+- "He picks up your file instead. 'Interesting.' You've been exposed as the mole."  (quest narration, line 1255)
 
 > Note for you (not shown in game): Refused: the guards open up, and you go down bleeding on the cell floor. They don't let you die: you're carried out, and the Combine make a stalker of you (the owner, 2026-11-01).
 
-- "[Loyalty test] {or} The guards raise their shotguns."  (chat message, line 1300)
+- "[Loyalty test] {or} The guards raise their shotguns."  (chat message, line 1318)
 
 > Note for you (not shown in game): a timer (regularly)
 
-- "[Loyalty test] You're down on the cell floor, bleeding out. They don't let you die. Someone lifts you by the arms."  (chat message, line 1318)
+- "[Loyalty test] You're down on the cell floor, bleeding out. They don't let you die. Someone lifts you by the arms."  (chat message, line 1336)
 
 > Note for you (not shown in game): part of: ltsetup
 
-- "The Civil Protection unit in front of you is another player, and Internal Affairs is watching them. They've been told to get answers out of you, and then to finish you. Beg for your life, bargain, or refuse to say a word: it's up to you, and to them."  (on-screen notice, line 1361)
-- "The prisoner is a player"  (on-screen notice, line 1363)
-- "The prisoner in front of you is a real person, from the Resistance. Talk to them. Beat answers out of them, then finish it, or refuse."  (on-screen notice, line 1363)
-- "a Resistance prisoner"  (text, line 1375)
-- "[Loyalty test] The cell door shuts behind you. Your weapons are on a table outside. A guard either side of you, shotguns held low."  (chat message, line 1397)
+- "The Civil Protection unit in front of you is another player, and Internal Affairs is watching them. They've been told to get answers out of you, and then to finish you. Beg for your life, bargain, or refuse to say a word: it's up to you, and to them."  (on-screen notice, line 1379)
+- "The prisoner is a player"  (on-screen notice, line 1381)
+- "The prisoner in front of you is a real person, from the Resistance. Talk to them. Beat answers out of them, then finish it, or refuse."  (on-screen notice, line 1381)
+- "a Resistance prisoner"  (text, line 1393)
+- "[Loyalty test] The cell door shuts behind you. Your weapons are on a table outside. A guard either side of you, shotguns held low."  (chat message, line 1415)
 
 > Note for you (not shown in game): a hand raised to a guard: that's the answer
 
-- "You turn on the guard."  (text, line 1410)
+- "You turn on the guard."  (text, line 1428)
 
 > Note for you (not shown in game): No ignoring it: after the loyalty test, the reckoning starts by itself, and so does the debt (the owner: the Resistance would want answers). Whatever job they're on is dropped for it. The soldier conversion, forced: the transhuman conditioning and the Soldier rank, for good.
 
-- "the conversion"  (text, line 1445)
-- "The conversion"  (on-screen notice, line 1446)
-- "You proved your loyalty, so Overwatch wants all of you. They come for you that night: the surgery is done before you wake. A soldier now, and there's no going back."  (on-screen notice, line 1446)
+- "the conversion"  (text, line 1463)
+- "The conversion"  (on-screen notice, line 1464)
+- "You proved your loyalty, so Overwatch wants all of you. They come for you that night: the surgery is done before you wake. A soldier now, and there's no going back."  (on-screen notice, line 1464)
 
 > Note for you (not shown in game): part of: force mole hunt
 
-- "The Resistance wants answers"  (on-screen notice, line 1470)
-- "The debt starts now. They're watching."  (on-screen notice, line 1470)
-- "Overwatch wants proof. A sweep team is waiting for you."  (text, line 1470)
-- "A note in your locker: they know what you did in that cell. They want to see you, now."  (text, line 1470)
+- "The Resistance wants answers"  (on-screen notice, line 1488)
+- "The debt starts now. They're watching."  (on-screen notice, line 1488)
+- "Overwatch wants proof. A sweep team is waiting for you."  (text, line 1488)
+- "A note in your locker: they know what you did in that cell. They want to see you, now."  (text, line 1488)
 
 > Note for you (not shown in game): with Resistance players in the city, the test waits for one of them to be caught (the owner: a real person in the chair); the units go looking meanwhile. Otherwise, or if nobody's caught in time, an NPC.
 
-- "Internal Affairs is bringing a Resistance prisoner in. Carry on, and wait to be called to the cells"  (quest step, line 1495)
-- "Report to the cells (marked)"  (quest step, line 1496)
-- "The loyalty test"  (title, line 1498)
-- "Internal Affairs has a prisoner from the Resistance, and a question about you.{GetPos}"  (description, line 1499)
+- "Internal Affairs is bringing a Resistance prisoner in. Carry on, and wait to be called to the cells"  (quest step, line 1513)
+- "Report to the cells (marked)"  (quest step, line 1514)
+- "The loyalty test"  (title, line 1516)
+- "Internal Affairs has a prisoner from the Resistance, and a question about you.{GetPos}"  (description, line 1517)
 
 > Note for you (not shown in game): part of: test spec
 
-- "The prisoner looks up at you through one swollen eye. The guard on your left speaks without looking at you: 'He knows who the mole is. Get it out of him. Then finish it.' The other guard's shotgun is pointed at the floor. For now."  (quest choice, line 1503)
-- "Interrogate him. With your fists."  (text, line 1505)
+- "The prisoner looks up at you through one swollen eye. The guard on your left speaks without looking at you: 'He knows who the mole is. Get it out of him. Then finish it.' The other guard's shotgun is pointed at the floor. For now."  (quest choice, line 1521)
+- "Interrogate him. With your fists."  (text, line 1523)
 
 > Note for you (not shown in game): part of: pick
 
-- "You close your fists. He knows what's coming."  (quest narration, line 1508)
-- "Beat answers out of him (punch him, 6 times)"  (quest step, line 1510)
-- "He's told you everything he will. Finish it: kill him"  (quest step, line 1511)
+- "You close your fists. He knows what's coming."  (quest narration, line 1526)
+- "Beat answers out of him (punch him, 6 times)"  (quest step, line 1528)
+- "He's told you everything he will. Finish it: kill him"  (quest step, line 1529)
 
 > Note for you (not shown in game): part of: test spec
 
-- "Refuse. You won't do it."  (text, line 1514)
+- "Refuse. You won't do it."  (text, line 1532)
 
 > Note for you (not shown in game): part of: pick
 
-- "You lower your hands."  (text, line 1514)
+- "You lower your hands."  (text, line 1532)
 
 > Note for you (not shown in game): waiting for a real prisoner: the first Resistance player in a cell; or, out of time, an NPC
 
-- "Dispatch: Internal Affairs wants a member of the Resistance taken alive and put in the cells."  (text, line 1523)
+- "Dispatch: Internal Affairs wants a member of the Resistance taken alive and put in the cells."  (text, line 1541)
 
 > Note for you (not shown in game): after the beating, the last of it
 
-- "He gives you a name. It's yours, though he doesn't know it. Then nothing more. 'Finish it,' says the guard."  (quest narration, line 1544)
+- "He gives you a name. It's yours, though he doesn't know it. Then nothing more. 'Finish it,' says the guard."  (quest narration, line 1562)
 
 > Note for you (not shown in game): leaving the cell is refusing
 
-- "You try to leave."  (text, line 1547)
+- "You try to leave."  (text, line 1565)
 
 > Note for you (not shown in game): you killed one of theirs: the Resistance wants a word (the reckoning, next on your board)
 
-- "[Loyalty test] The guard lowers his shotgun. 'Welcome back, officer.' Your weapons are handed back at the door."  (chat message, line 1559)
-- "You took too long."  (text, line 1562)
-- "Mole Hunt"  (name, line 1570)
-- "You passed their test. The prisoner's blood is on your hands, and nobody in Civil Protection doubts you now."  (text, line 1574)
-- "You let the Combine have all of you. The surgery took the rest: a soldier of Overwatch now, and nothing you were before. There's no going back."  (text, line 1575)
-- "The debt is paid. They don't forget what you did in that cell, but they let you back in. The Resistance has its man inside again."  (text, line 1576)
-- "You wouldn't do it. The guards did their duty. They found the mole, in the end."  (text, line 1577)
-- "You wouldn't do it. They shot you down on the cell floor and didn't let you die. What's left of you belongs to the Combine now."  (text, line 1578)
-- "You took off the mask for good. No more lies: you fight with the Resistance in the open now, and Civil Protection will never have you back."  (text, line 1579)
-- "Unit 3-09 was taken in your place. You tell yourself he probably deserved it."  (text, line 1580)
-- "You fled to the Resistance before they could knock. Every Civil Protection unit in the city has your face now."  (text, line 1581)
-- "The mole hunt moves on to another sector. You breathe again. Carefully."  (text, line 1582)
-- "Exposed as the mole, you're stripped of rank and mask. A citizen again, with a file that will never close."  (text, line 1583)
+- "[Loyalty test] The guard lowers his shotgun. 'Welcome back, officer.' Your weapons are handed back at the door."  (chat message, line 1577)
+- "You took too long."  (text, line 1580)
+- "Mole Hunt"  (name, line 1588)
+- "You passed their test. The prisoner's blood is on your hands, and nobody in Civil Protection doubts you now."  (text, line 1592)
+- "You let the Combine have all of you. The surgery took the rest: a soldier of Overwatch now, and nothing you were before. There's no going back."  (text, line 1593)
+- "The debt is paid. They don't forget what you did in that cell, but they let you back in. The Resistance has its man inside again."  (text, line 1594)
+- "You wouldn't do it. The guards did their duty. They found the mole, in the end."  (text, line 1595)
+- "You wouldn't do it. They shot you down on the cell floor and didn't let you die. What's left of you belongs to the Combine now."  (text, line 1596)
+- "You took off the mask for good. No more lies: you fight with the Resistance in the open now, and Civil Protection will never have you back."  (text, line 1597)
+- "Unit 3-09 was taken in your place. You tell yourself he probably deserved it."  (text, line 1598)
+- "You fled to the Resistance before they could knock. Every Civil Protection unit in the city has your face now."  (text, line 1599)
+- "The mole hunt moves on to another sector. You breathe again. Carefully."  (text, line 1600)
+- "Exposed as the mole, you're stripped of rank and mask. A citizen again, with a file that will never close."  (text, line 1601)
 
 > Note for you (not shown in game): after the loyalty test: you killed one of theirs, and the Resistance knows
 
-- "The reckoning"  (title, line 1591)
-- "Word reaches you through a note in your locker: the Resistance knows what you did in that cell. They want to see you ({where}). Until this is settled, they won't work with you."  (description, line 1592)
-- "Go to the meeting place ({where})"  (quest step, line 1594)
+- "The reckoning"  (title, line 1609)
+- "Word reaches you through a note in your locker: the Resistance knows what you did in that cell. They want to see you ({where}). Until this is settled, they won't work with you."  (description, line 1610)
+- "Go to the meeting place ({where})"  (quest step, line 1612)
 
 > Note for you (not shown in game): part of: build
 
-- "Find the woman from the note and walk up to her"  (text, line 1595)
-- "She doesn't sit down. 'He was one of ours. You beat him, and then you killed him, to keep your mask. Maybe you had to.' Her hand doesn't leave her pocket. 'We want answers. Are you still with us? Then you'll pay for him. Or are you theirs now?'"  (quest choice, line 1596)
-- "Pay the debt. Whatever it takes. (It starts at once.)"  (text, line 1598)
+- "Find the woman from the note and walk up to her"  (text, line 1613)
+- "She doesn't sit down. 'He was one of ours. You beat him, and then you killed him, to keep your mask. Maybe you had to.' Her hand doesn't leave her pocket. 'We want answers. Are you still with us? Then you'll pay for him. Or are you theirs now?'"  (quest choice, line 1614)
+- "Pay the debt. Whatever it takes. (It starts at once.)"  (text, line 1616)
 
 > Note for you (not shown in game): part of: pick
 
-- "'Then listen.' She tells you what it will cost."  (quest narration, line 1599)
+- "'Then listen.' She tells you what it will cost."  (quest narration, line 1617)
 
 > Note for you (not shown in game): part of: build
 
-- "Take off the mask for good: leave Civil Protection and fight with the Resistance in the open. (You'll never be a unit, or anyone's man inside, again.)"  (text, line 1602)
-- "Tell her you're done with the Resistance. (You stay with the Combine. They'll want proof, and then all of you.)"  (text, line 1608)
+- "Take off the mask for good: leave Civil Protection and fight with the Resistance in the open. (You'll never be a unit, or anyone's man inside, again.)"  (text, line 1620)
+- "Tell her you're done with the Resistance. (You stay with the Combine. They'll want proof, and then all of you.)"  (text, line 1626)
 
 > Note for you (not shown in game): part of: pick
 
-- "You walk out. Before morning, Overwatch has orders for you: they want proof."  (quest narration, line 1612)
+- "You walk out. Before morning, Overwatch has orders for you: they want proof."  (quest narration, line 1630)
 
 > Note for you (not shown in game): done with the Resistance: the Combine want proof first. In with a sweep team, two of their fighters down, and then the conversion (the owner: they'd push you further before they took all of you)
 
-- "Join the sweep team at the edge of anticitizen territory (marked)"  (quest step, line 1630)
+- "Join the sweep team at the edge of anticitizen territory (marked)"  (quest step, line 1648)
 
 > Note for you (not shown in game): part of: build
 
-- "You told the Resistance you're done with them. Overwatch wants proof: go in with the sweep team on their ground {GetPos}, and put down two of their fighters."  (description, line 1635)
-- "Take down two of the Resistance's fighters there"  (quest step, line 1638)
+- "You told the Resistance you're done with them. Overwatch wants proof: go in with the sweep team on their ground {GetPos}, and put down two of their fighters."  (description, line 1653)
+- "Take down two of the Resistance's fighters there"  (quest step, line 1656)
 
 > Note for you (not shown in game): the blood debt: a life for a life, out of the cells
 
-- "A blood debt"  (title, line 1658)
-- "A life for a life: get one of theirs out of the cells and walk them to safety ({where}). Don't let another Civil Protection unit see you."  (description, line 1659)
+- "A blood debt"  (title, line 1676)
+- "A life for a life: get one of theirs out of the cells and walk them to safety ({where}). Don't let another Civil Protection unit see you."  (description, line 1677)
 
 > Note for you (not shown in game): part of: build
 
-- "Go to the cells and press E on the marked prisoner to unlock their cell"  (text, line 1661)
-- "Lead the prisoner to safety ({where}). They follow you: act like it's routine"  (text, line 1662)
-- "A Civil Protection unit saw you walking a prisoner out. He'll remember."  (text, line 1665)
-- "A blood debt"  (title, line 1673)
-- "Make it right: what Civil Protection seized from the Resistance this week is lying {GetPos}. Get it back to them ({where})."  (description, line 1674)
-- "Find the 3 seized crates and press E on each"  (text, line 1676)
-- "Take them to the Resistance ({where})"  (text, line 1677)
-- "A Civil Protection unit saw you heading the wrong way with seized goods."  (text, line 1679)
+- "Go to the cells and press E on the marked prisoner to unlock their cell"  (text, line 1679)
+- "Lead the prisoner to safety ({where}). They follow you: act like it's routine"  (text, line 1680)
+- "A Civil Protection unit saw you walking a prisoner out. He'll remember."  (text, line 1683)
+- "A blood debt"  (title, line 1691)
+- "Make it right: what Civil Protection seized from the Resistance this week is lying {GetPos}. Get it back to them ({where})."  (description, line 1692)
+- "Find the 3 seized crates and press E on each"  (text, line 1694)
+- "Take them to the Resistance ({where})"  (text, line 1695)
+- "A Civil Protection unit saw you heading the wrong way with seized goods."  (text, line 1697)
 
 > Note for you (not shown in game): the loyalty test, in the cells; a map with no cells has the briefing instead
 
-- "The briefing"  (title, line 1692)
-- "Internal Affairs believes there's a mole in your division, and wants your help finding them. The mole is you."  (description, line 1693)
+- "The briefing"  (title, line 1710)
+- "Internal Affairs believes there's a mole in your division, and wants your help finding them. The mole is you."  (description, line 1711)
 
 > Note for you (not shown in game): part of: build
 
-- "Go to the marked spot for the briefing"  (quest step, line 1695)
-- "Walk up to the Internal Affairs officer"  (text, line 1696)
-- "The officer spreads three files across the hood of an APC. One of them is yours. He hasn't noticed. Yet."  (quest choice, line 1697)
-- "Steer him toward another Civil Protection unit's file, so they take the blame."  (text, line 1698)
-- "Excuse yourself. Run to the Resistance tonight (you'll be wanted for desertion)."  (text, line 1705)
-- "Keep your head down and ride it out."  (text, line 1711)
+- "Go to the marked spot for the briefing"  (quest step, line 1713)
+- "Walk up to the Internal Affairs officer"  (text, line 1714)
+- "The officer spreads three files across the hood of an APC. One of them is yours. He hasn't noticed. Yet."  (quest choice, line 1715)
+- "Steer him toward another Civil Protection unit's file, so they take the blame."  (text, line 1716)
+- "Excuse yourself. Run to the Resistance tonight (you'll be wanted for desertion)."  (text, line 1723)
+- "Keep your head down and ride it out."  (text, line 1729)
 
 ## strange dreams (Happy and Neutral dreams you play) (sv_livingcity_strangedreams.lua)
 
@@ -24736,88 +24739,93 @@ Made from version f7e7323. Admin-only console messages and log lines are left ou
 - "Go to the sealing line at the ration plant (marked)"  (text, line 1337)
 - "Work the sealing line: throw split, leaking packs (sickly green) in the reject bin and let the sealed ones pass. E grabs a pack, left click throws it"  (text, line 1338)
 
+> Note for you (not shown in game): The counter: checking the cards is the shift (the owner, 15 November: its last step waited at the counter until three citizens had been handed rations, and with nobody in the line the shift ran out of time). The papers game, with citizens stepping up to the counter.
+
+- "Check the ration cards: press E on each citizen, then approve, deny, or call a Civil Protection unit"  (text, line 1348)
+- "Ration cards"  (title, line 1349)
+
 > Note for you (not shown in game): The loading dock (two crates, a long walk each way) is the Intake Processor's work now; the factory floor gets more of the line instead (the owner: "an absolute grind").
 
-- "Freight from the dock"  (description, line 1353)
-- "Carry two crates, one at a time, from the loading dock to the station."  (text, line 1353)
+- "Freight from the dock"  (description, line 1365)
+- "Carry two crates, one at a time, from the loading dock to the station."  (text, line 1365)
 
 > Note for you (not shown in game): part of: text
 
-- "Overtime on the line"  (title, line 1365)
-- "The quota went up again. Work the factory line: bad parts in the scrap bin, good ones through. The line doesn't stop for you."  (description, line 1366)
-- "Go to the factory line (marked)"  (text, line 1367)
-- "Overtime on the line"  (title, line 1371)
-- "The quota went up again. Go to the factory line and work it."  (description, line 1371)
-- "Go to the factory line (marked)"  (quest step, line 1372)
-- "Stay at the line for 40 seconds to work it"  (quest step, line 1372)
+- "Overtime on the line"  (title, line 1377)
+- "The quota went up again. Work the factory line: bad parts in the scrap bin, good ones through. The line doesn't stop for you."  (description, line 1378)
+- "Go to the factory line (marked)"  (text, line 1379)
+- "Overtime on the line"  (title, line 1383)
+- "The quota went up again. Go to the factory line and work it."  (description, line 1383)
+- "Go to the factory line (marked)"  (quest step, line 1384)
+- "Stay at the line for 40 seconds to work it"  (quest step, line 1384)
 
 > Note for you (not shown in game): Maintenance: every repair is a wiring panel
 
-- "Rewire it: click the tiles to turn them (right-click turns back) until the current reaches the lamp. Don't turn a tile while it's sparking: it shocks you"  (text, line 1381)
-- "the terminal"  (text, line 1382)
-- "the box"  (text, line 1382)
+- "Rewire it: click the tiles to turn them (right-click turns back) until the current reaches the lamp. Don't turn a tile while it's sparking: it shocks you"  (text, line 1393)
+- "the terminal"  (text, line 1394)
+- "the box"  (text, line 1394)
 
 > Note for you (not shown in game): Clinic Medic: rounds are triage
 
-- "Patients are coming into the clinic faster than you can treat them. Treat the worst hurt first."  (description, line 1396)
+- "Patients are coming into the clinic faster than you can treat them. Treat the worst hurt first."  (description, line 1408)
 
 > Note for you (not shown in game): part of: rounds
 
-- "Go to the clinic (marked)"  (text, line 1398)
-- "Heal the patients with your medkit (left click) before they bleed out. The bar over each one's head shows who's worst"  (text, line 1399)
+- "Go to the clinic (marked)"  (text, line 1410)
+- "Heal the patients with your medkit (left click) before they bleed out. The bar over each one's head shows who's worst"  (text, line 1411)
 
 > Note for you (not shown in game): Reclamation Crew: rubble is something you break up
 
-- "Break up the rubble: hit it with your crowbar (left click)"  (text, line 1408)
+- "Break up the rubble: hit it with your crowbar (left click)"  (text, line 1420)
 
 > Note for you (not shown in game): part of: ticket
 
-- "Check the travelers' papers: press E on each traveler, then approve, deny, or call a Civil Protection unit"  (text, line 1416)
-- "Papers check"  (title, line 1417)
-- "Check the papers and permits of everyone boarding the train. Today's rules are shown next to their papers."  (description, line 1419)
+- "Check the travelers' papers: press E on each traveler, then approve, deny, or call a Civil Protection unit"  (text, line 1428)
+- "Papers check"  (title, line 1429)
+- "Check the papers and permits of everyone boarding the train. Today's rules are shown next to their papers."  (description, line 1431)
 
 > Note for you (not shown in game): Courier: a parcel run against the clock (they aren't letters)
 
-- "an apartment doorway"  (name, line 1434)
+- "an apartment doorway"  (name, line 1446)
 
 > Note for you (not shown in game): part of: desc
 
-- "Parcel run"  (title, line 1443)
-- "Deliver three parcels before time runs out: the faster you are, the more you're paid. They aren't letters, and nobody tells you what's in them."  (description, line 1444)
-- "Go to the post office (marked) to collect the parcels"  (text, line 1446)
-- "Deliver the parcels to the marked spots before time runs out. Civil Protection units stop couriers they get a good look at, so crouch when you pass them"  (text, line 1447)
+- "Parcel run"  (title, line 1455)
+- "Deliver three parcels before time runs out: the faster you are, the more you're paid. They aren't letters, and nobody tells you what's in them."  (description, line 1456)
+- "Go to the post office (marked) to collect the parcels"  (text, line 1458)
+- "Deliver the parcels to the marked spots before time runs out. Civil Protection units stop couriers they get a good look at, so crouch when you pass them"  (text, line 1459)
 
 > Note for you (not shown in game): part of: incinerator
 
-- "Before the fire"  (title, line 1462)
-- "Three bodies go in the incinerator tonight. Search every pocket first. The overseer checks on you now and then: don't get caught keeping anything."  (description, line 1463)
-- "Go to the incinerator (marked)"  (text, line 1465)
-- "Go to the morgue (marked)"  (text, line 1465)
-- "Search each body before it goes in: press E on it, check every pocket, then put it in the fire"  (text, line 1466)
-- "Sort the washed and pressed Civil Protection uniforms back to their own divisions. Civil Protection units leave things in their pockets."  (text, line 1481)
-- "Go to the Nexus laundry (marked)"  (text, line 1482)
-- "Put each uniform in its division's bin (the bins are labelled). Bloodstained ones go to the incident wash. If you close the window, press E to open it again"  (text, line 1482)
-- "File the in-tray: check each form against the register. If it all matches, file it by the first two digits of the citizen number; if anything differs, it goes in Discrepancy."  (text, line 1483)
-- "Go to the civil records office (marked)"  (text, line 1484)
-- "File every form: all matching the register, by the first two digits of the citizen number (37-412 in 25-49); anything different, in Discrepancy. If you close the window, press E to open it again"  (text, line 1484)
-- "Four radio sets on the shelf, all hissing. Tune each one to its station, then adjust its screws until the sound comes through clean."  (text, line 1485)
-- "Go to the radio repair shop (marked)"  (text, line 1486)
-- "Repair the sets: turn the dial to the station, then turn the screws while you listen, until the static is gone. If you close the window, press E to open it again"  (text, line 1486)
+- "Before the fire"  (title, line 1474)
+- "Three bodies go in the incinerator tonight. Search every pocket first. The overseer checks on you now and then: don't get caught keeping anything."  (description, line 1475)
+- "Go to the incinerator (marked)"  (text, line 1477)
+- "Go to the morgue (marked)"  (text, line 1477)
+- "Search each body before it goes in: press E on it, check every pocket, then put it in the fire"  (text, line 1478)
+- "Sort the washed and pressed Civil Protection uniforms back to their own divisions. Civil Protection units leave things in their pockets."  (text, line 1493)
+- "Go to the Nexus laundry (marked)"  (text, line 1494)
+- "Put each uniform in its division's bin (the bins are labelled). Bloodstained ones go to the incident wash. If you close the window, press E to open it again"  (text, line 1494)
+- "File the in-tray: check each form against the register. If it all matches, file it by the first two digits of the citizen number; if anything differs, it goes in Discrepancy."  (text, line 1495)
+- "Go to the civil records office (marked)"  (text, line 1496)
+- "File every form: all matching the register, by the first two digits of the citizen number (37-412 in 25-49); anything different, in Discrepancy. If you close the window, press E to open it again"  (text, line 1496)
+- "Four radio sets on the shelf, all hissing. Tune each one to its station, then adjust its screws until the sound comes through clean."  (text, line 1497)
+- "Go to the radio repair shop (marked)"  (text, line 1498)
+- "Repair the sets: turn the dial to the station, then turn the screws while you listen, until the static is gone. If you close the window, press E to open it again"  (text, line 1498)
 
 > Note for you (not shown in game): (tests: finish a game at once)
 
-- "Union shift"  (name, line 1495)
+- "Union shift"  (name, line 1507)
 
 > Note for you (not shown in game): the game's living city quest complete moment
 
-- "[Rations] You earned %s for that shift. You have %d now: each ration at a dispenser takes one."  (message, line 1542)
-- "a ration card"  (message, line 1543)
-- "ration cards"  (text, line 1543)
-- "Civil rehabilitation"  (name, line 1561)
+- "[Rations] You earned %s for that shift. You have %d now: each ration at a dispenser takes one."  (message, line 1554)
+- "a ration card"  (message, line 1555)
+- "ration cards"  (text, line 1555)
+- "Civil rehabilitation"  (name, line 1573)
 
 > Note for you (not shown in game): part of: build
 
-- "Community service: {desc}"  (title, line 1571)
+- "Community service: {desc}"  (title, line 1583)
 
 ## writing, broadcasts, and the law (sv_livingcity_writing.lua)
 

@@ -11,12 +11,21 @@
 -- returns function(T) -> report, where T = { ok, newPlayer, withRoll }
 return function(T)
     local R = { rows = {}, lines = {} }
+    -- T.only: only the jobs, stories and Union jobs whose name has this in it.
+    -- T.modes: how choices are answered, one run each: "first" (the default), "second", "third", "last",
+    --          "fail" (the first, with the worst roll), or digits ("132": option 1 at the first choice met,
+    --          3 at the second, 2 at the third).
+    -- T.budget: lc_npc_budget for the run (the owner's server keeps 10), given a minute to settle.
+    local MODES = T.modes or { "first" }
+    local function wanted(id) return not T.only or string.find(string.lower(id), string.lower(T.only), 1, true) ~= nil end
+    if T.budget then
+        _setcvar("lc_npc_budget", T.budget)
+        _run(60)
+    end
     -- Jobs that do not finish in the robot's city for a reason that is written down and waits on the owner
     -- (TODO.md, "What the robot players found"). They are shown as KNOWN, and do not fail the run. Take one
     -- out of here when it is settled.
     local KNOWN = {
-        ["shift/kitchen The counter"] = "waits at the counter for three citizens to be served; nobody came in ten minutes",
-        ["inside/proof"] = "called off at once: its target couldn't be found in the robot's city",
     }
     local function say(fmt, ...) R.lines[#R.lines + 1] = string.format(fmt, ...) end
     local USE = IN_USE or 32
@@ -113,7 +122,23 @@ return function(T)
             mem.choiceAt = now + 1
             local pick
             for i, o in ipairs(st.options) do
-                if not o.when or o.when(q) then pick = pick or i if mem.want == "last" then pick = i end end
+                if not o.when or o.when(q) then
+                    pick = pick or i
+                    if mem.want == "last" then pick = i end
+                end
+            end
+            -- "second", "third": that one of those on offer, at every choice (the first when there are fewer).
+            -- Digits ("132"): the first choice met takes option 1, the second option 3, the third option 2, then 1.
+            local nth = ({ second = 2, third = 3 })[mem.want]
+            if string.match(tostring(mem.want), "^%d+$") then
+                R.choiceN = (R.choiceN or 0) + 1
+                nth = tonumber(string.sub(mem.want, R.choiceN, R.choiceN)) or 1
+            end
+            if nth then
+                local n = 0
+                for i, o in ipairs(st.options) do
+                    if not o.when or o.when(q) then n = n + 1 if n == nth then pick = i end end
+                end
             end
             if not pick then return "no choice it offers can be taken" end
             T.withRoll(mem.roll or 20, function() LC.ResolveChoice(p, q.id, pick) end)
@@ -223,6 +248,7 @@ return function(T)
 
     local drive
     local function play(t, f, mode)
+        R.choiceN = 0
         local row = { id = t.id, side = f, mode = mode }
         local p = fresh(f, t)
         -- a job posted only during one of the city's events: the event is on while the robot does it
@@ -273,7 +299,7 @@ return function(T)
 
         local okC, errC = pcall(LC.AcceptPosting, p, spec.id)
         local q = LC.QuestOf[p]
-        local mem = { roll = (mode == "fail") and 1 or 20, want = (mode == "last") and "last" or "first" }
+        local mem = { roll = (mode == "fail") and 1 or 20, want = (mode == "fail") and "first" or mode }
         local path, sig, sigAt, cant = {}, nil, CurTime(), nil
         if not okC then row.result, row.why = "ERROR", "accept: " .. tostring(errC)
         elseif not q then row.result, row.why = "FAILED", "taken, and it did not start"
@@ -356,23 +382,23 @@ return function(T)
     ------------------------------------------------------------------
     -- Every job on the boards, for every side it is offered to
     ------------------------------------------------------------------
-    for _, t in ipairs(LC.QuestTemplates) do
+    for _, t in ipairs(LC.QuestTemplates) do if wanted(t.id) then for _, MODE in ipairs(MODES) do
         local sides = {}
         for f in pairs(t.factions) do sides[#sides + 1] = f end
         table.sort(sides)
         for _, f in ipairs(sides) do
-            local row = playAndTidy(t, f, "first")
+            local row = playAndTidy(t, f, MODE)
             R.rows[#R.rows + 1] = row
             -- The same job with the game's hooks answering in the other order. In the game the order two
             -- pieces of code hear of a key press in is not ours to choose, so a job must go the same either way.
             if row.result ~= "not offered" and row.result ~= "not built" then
                 _HOOK_REVERSE = true
-                local okR, other = pcall(playAndTidy, t, f, "first")
+                local okR, other = pcall(playAndTidy, t, f, MODE)
                 _HOOK_REVERSE = nil
                 if not okR then row.other = "ERROR: " .. tostring(other) else row.other = differs(row, other) end
             end
         end
-    end
+    end end end
 
     ------------------------------------------------------------------
     -- Stories: each chain from its first part to its end
@@ -398,6 +424,7 @@ return function(T)
     end
     local function runChain(chain, mode)
         local rows = {}
+        R.choiceN = 0
         local p, f = storyPlayer(chain)
         if not p then
             rows[1] = { id = chain.id, side = "?", result = "not offered", why = "the robot could not become who this story is for (" .. tostring(chain.special) .. ")" }
@@ -413,6 +440,7 @@ return function(T)
             local cs = LC.ChainState(p, chain.id)
             if cs.done then break end
             local part = cs.part
+            if part == nil then break end -- (turned down, or waiting to come round again: no part to play)
             local row = { id = chain.id .. "/" .. tostring(part), side = f, mode = mode }
             rows[#rows + 1] = row
             if seen[part] then row.result, row.why = "done", "(comes round again: " .. tostring(part) .. ")" row.again = true break end
@@ -433,11 +461,11 @@ return function(T)
         gone(p)
         return rows
     end
-    for _, chain in ipairs(LC.ChainList) do
-        if chain.id ~= "shift" then
-            local rows = runChain(chain, "first")
+    for _, chain in ipairs(LC.ChainList) do for _, MODE in ipairs(MODES) do
+        if chain.id ~= "shift" and wanted(chain.id) then
+            local rows = runChain(chain, MODE)
             _HOOK_REVERSE = true
-            local okR, other = pcall(runChain, chain, "first")
+            local okR, other = pcall(runChain, chain, MODE)
             _HOOK_REVERSE = nil
             for i, row in ipairs(rows) do
                 local o = okR and other[i]
@@ -449,7 +477,7 @@ return function(T)
                 R.rows[#R.rows + 1] = row
             end
         end
-    end
+    end end
 
     ------------------------------------------------------------------
     -- Union jobs: every kind of shift each job has
@@ -458,7 +486,7 @@ return function(T)
     for id in pairs(LCJ and LCJ.ById or {}) do jobs[#jobs + 1] = id end
     table.sort(jobs)
     local shift = LC.Chains and LC.Chains.shift
-    for _, jid in ipairs(shift and jobs or {}) do
+    for _, jid in ipairs(shift and jobs or {}) do if wanted("shift/" .. jid) then
         local played = {}
         for _, reverse in ipairs({ false, true }) do
             for _ = 1, 10 do
@@ -491,7 +519,7 @@ return function(T)
                 gone(p)
             end
         end
-    end
+    end end
 
     ------------------------------------------------------------------
     -- The report
@@ -508,6 +536,7 @@ return function(T)
     say("")
     say("%-11s %-34s %-11s %5s %4s %4s %3s  %s", "side", "job", "result", "secs", "xp", "chat", "ntc", "steps, and why")
     for _, row in ipairs(R.rows) do
+        if row.mode and row.mode ~= "first" then row.id = row.id .. " [" .. row.mode .. "]" end
         say("%-11s %-34s %-11s %5s %4s %4s %3s  %s%s%s%s", row.side, string.sub(row.id, 1, 34), row.result,
             row.secs and string.format("%d", row.secs) or "", row.xp and tostring(row.xp) or "", row.chat and tostring(row.chat) or "",
             row.notices and tostring(row.notices) or "", row.path or "", row.why and ((row.path and "  << " or "") .. row.why) or "",

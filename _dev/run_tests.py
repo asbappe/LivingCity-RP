@@ -171,6 +171,12 @@ L.globals()._GMSRC_INIT = open(os.path.join(GMROOT, "init.lua")).read()
 # the robot players (robots.lua), run by the RobotTests unit
 L.globals()._ROBOTSRC = open(os.path.join(HERE, "robots.lua")).read()
 L.globals()._ROBOTS_ON = bool(os.environ.get("LC_ROBOTS"))
+L.globals()._ROBOT_ONLY = os.environ.get("LC_ROBOT_ONLY") or None
+L.globals()._ROBOT_BUDGET = int(os.environ["LC_ROBOT_BUDGET"]) if os.environ.get("LC_ROBOT_BUDGET") else None
+if os.environ.get("LC_ROBOT_MODES"):
+    L.execute("_ROBOT_MODES = {}")
+    for i, m in enumerate(os.environ["LC_ROBOT_MODES"].split(",")):
+        L.globals()._ROBOT_MODES[i + 1] = m.strip()
 
 # the core snapshot (CORE.md): what the core looked like when the owner last OK'd it
 SNAP = os.path.join(HERE, "core_snapshot.txt")
