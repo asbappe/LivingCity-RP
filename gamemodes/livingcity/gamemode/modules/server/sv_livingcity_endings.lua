@@ -2147,13 +2147,39 @@ TICK.bus = function(now)
         if flying then
             -- straight through walls and buildings, but never up into the sky (you'd see
             -- nothing), down through the ground, or off the edge of the map
-            local top = SkyZ(nextPos)
-            if nextPos.z > top - 220 then nextPos.z = top - 220 end
+            local cap = SkyZ(nextPos) - 220
+            if nextPos.z > cap then
+                -- at the top: it levels off and flies on along under it, aiming no higher (the owner, 15 November: "it
+                -- just keeps pointing up and being stuck ... clipping against a ceiling somewhere. Why can't it clip
+                -- through it and keep flying?"; it kept aiming up at a goal above the top and stood nearly still)
+                if E.goal.z > cap then E.goal = Vector(E.goal.x, E.goal.y, cap) end
+                if E.busDir.z > 0 then
+                    local flat = Vector(E.busDir.x, E.busDir.y, 0)
+                    if flat:LengthSqr() < 0.04 then flat = Angle(0, math.Rand(0, 360), 0):Forward() end
+                    E.busDir = flat:GetNormalized()
+                end
+                nextPos = pos + E.busDir * step
+                if nextPos.z > cap then nextPos.z = cap end
+            end
             local fl = util.TraceLine({ start = nextPos, endpos = nextPos - Vector(0, 0, 4000), mask = MASK_SOLID_BRUSHONLY })
             if not fl.StartSolid and fl.Hit and nextPos.z < fl.HitPos.z + 80 then nextPos.z = fl.HitPos.z + 80 end
             if util.IsInWorld and not util.IsInWorld(nextPos) then
                 E.goal = SkySpot()
                 nextPos = pos
+            end
+            -- hardly getting anywhere for a second and a half (pinned at the top, or the edge of the map): somewhere else,
+            -- flying level
+            if (nextPos - pos):Length() < step * 0.3 then
+                E.busPinned = E.busPinned or now
+                if now - E.busPinned > 1.5 then
+                    E.busPinned = nil
+                    E.goal = SkySpot()
+                    local flat = E.goal - pos
+                    flat.z = 0
+                    if flat:LengthSqr() > 1 then E.busDir = flat:GetNormalized() end
+                end
+            else
+                E.busPinned = nil
             end
         end
         if not flying then

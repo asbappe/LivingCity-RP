@@ -16684,8 +16684,16 @@ for _ = 1, 6 do _run(0.1) end
 local outOfSky = E.bus:GetPos().z < 600
 local highest = -math.huge
 for _ = 1, 4 do _run(0.1) highest = math.max(highest, E.bus:GetPos().z) end
+-- aiming above the top, it levels off and flies on, never pinned there pointing up (the owner, 15 November)
+local from = E.bus:GetPos()
+E.goal = from + Vector(60, 0, 3000)
+E.busDir = Vector(0.05, 0, 1):GetNormalized()
+for _ = 1, 8 do _run(0.1) end
+local went = Vector(E.bus:GetPos().x - from.x, E.bus:GetPos().y - from.y, 0):Length()
+local pitch = E.bus:GetAngles().p
 util.TraceLine = tlWas
 ok(outOfSky and highest <= 600 - 150, "and keeps well under the sky, even where it comes low (if it's ever up in it, straight down out of it)", math.floor(highest))
+ok(went > 400 and math.abs(pitch) < 60, "aiming above the top of the sky, it levels off and flies on (never stuck there pointing up)", math.floor(went) .. " units, pitch " .. math.floor(pitch))
 E.rings[1]:SetPos(E.bus:GetPos())
 _run(0.2)
 ok((E.ringsPopped or 0) >= 1, "and through it goes: pop")
