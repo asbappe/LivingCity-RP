@@ -34,7 +34,7 @@ Tick what works, write a word under what does not. What is not on this card wait
   Notes:
 - [ ] **The victory sting:** never while walking about; only when the Administrator falls or flees?
   Notes:
-- [ ] **The parade and the morning drill:** see the note in the chat (built by a side job; if it landed, a strider, an APC and marchers, march music after a third, everyone cheering; the drill led and joined).
+- [ ] **Drill, address, review:** at dawn do citizens come to the drill (from beds and seats too) and copy the instructor's called moves? "Address the citizens" points at your speech stand, a few citizens gather at the crowd point? The review: three units line up, E on each, and commend, reprimand and reassign show?
   Notes:
 
 ## For whoever adds to this file
