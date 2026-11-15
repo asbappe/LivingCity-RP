@@ -2340,8 +2340,16 @@ end
 local function ReviewDone(q)
     for _, u in ipairs(q.data.line or {}) do
         local st = IsValid(u) and LC.NPCs[u]
-        if st and st.reviewTemp and not st.reassigned then ReviewSendAway(u, st)
-        elseif st then st.reviewSlot = nil end
+        if st and st.reviewTemp and not st.reassigned then
+            ReviewSendAway(u, st)
+        elseif st then
+            st.reviewSlot = nil
+            -- (called off while he was still on his way to the line: he stops coming, and goes back to his beat)
+            if st.state == "moving" and st.poi and st.poi.kind == "fallin" then
+                LC.SetState(u, st, "idle")
+                st.untilT = CurTime() + 1
+            end
+        end
     end
 end
 

@@ -868,6 +868,7 @@ local function SpawnMachines()
         e:SetKeyValue("solid", "6")
         e:Spawn()
         e:Activate()
+        if not IsValid(e) then return end
         e:SetCollisionGroup(COLLISION_GROUP_WEAPON or 11) -- (shots hit it; people and units pass through)
         -- its wheels on the ground and its nose to the front, whichever way the model was built (a
         -- vehicle's length runs along its own Y)
