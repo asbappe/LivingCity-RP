@@ -14,14 +14,19 @@ ENT.Spawnable = true
 ENT.AdminOnly = true
 ENT.RenderGroup = RENDERGROUP_BOTH
 
--- Three sizes (the editor's fixture kinds): the Combine's own monitors for the
--- wall screen and the giant Breencast screen (the ones over the station and the
--- plaza), and an apartment's little TV. The first model this install has is used.
+-- Four sizes (the editor's fixture kinds): the Combine's own monitors for the
+-- wall screen, the giant Breencast screen (the ones over the station and the
+-- plaza) and the medium one (half the giant, for indoors), and an apartment's little TV. The first model this install has is used.
 local SIZES = {
     screen     = { models = { "models/props_combine/combine_intmonitor001.mdl", "models/props_phx/rt_screen.mdl" }, scale = 1.6 },
     screen_big = { models = { "models/props_combine/combine_intmonitor001.mdl", "models/props_phx/rt_screen.mdl" }, scale = 5 },
+    -- (the owner, 14 November: "a medium breencast screen that is 1/2 the size and much lower. I can't place
+    -- the giant one inside any buildings, even this giant administrator's office")
+    screen_mid = { models = { "models/props_combine/combine_intmonitor001.mdl", "models/props_phx/rt_screen.mdl" }, scale = 2.5 },
     tv         = { models = { "models/props_c17/tv_monitor01.mdl" }, scale = 1 },
 }
+
+ENT.ScreenSizes = SIZES
 
 function ENT:Initialize()
     if CLIENT then return end
@@ -70,7 +75,7 @@ if CLIENT then
         self:DrawModel()
         if self:GetNW2Bool("lc_nopower", false) then return end -- the district's power is out (sv_livingcity_power.lua): a dead screen
         local kind = self:GetNW2String("lc_screen_kind", "screen")
-        local far = kind == "screen_big" and 3500 or (kind == "tv" and 700 or 1200)
+        local far = kind == "screen_big" and 3500 or (kind == "screen_mid" and 2200 or (kind == "tv" and 700 or 1200))
         if LocalPlayer():GetPos():DistToSqr(self:GetPos()) > far * far then return end
         if LC_CL and LC_CL.DrawCityScreen then
             local pos, scale, stretch = Place(self)

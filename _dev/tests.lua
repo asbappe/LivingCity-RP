@@ -31365,4 +31365,34 @@ function Nov14G_VortBroomTests()
 end
 Nov14G_VortBroomTests()
 
+function Nov14E_MediumScreenTests()
+section("14 November notes, group E: a medium Breencast screen, half the giant one and low enough for a room")
+local was = ENT
+ENT = {}
+assert(loadstring(_ENTSRC["entities/lc_screen.lua"], "lc_screen"))()
+local def = ENT
+ENT = was
+local S = def.ScreenSizes
+ok(S and S.screen_mid and S.screen_big and S.screen_mid.scale == S.screen_big.scale / 2, "half the size of the giant one", S and S.screen_mid and S.screen_mid.scale)
+ok(S.screen_mid.models[1] == S.screen_big.models[1], "the same Combine monitor")
+local M0 = Vector(-96000, -52000, 0)
+local big = LC.AddPoint(M0, 0, "screen_big", 0)
+local mid = LC.AddPoint(M0 + Vector(600, 0, 0), 90, "screen_mid", 0)
+ok(mid ~= nil and mid.kind == "screen_mid", "the editor can place one")
+LC.SyncFixtures()
+local eBig, eMid
+for _, e in pairs(LC.Fixtures) do
+    if IsValid(e) and e.lcFixturePoint == big then eBig = e end
+    if IsValid(e) and e.lcFixturePoint == mid then eMid = e end
+end
+ok(IsValid(eMid) and eMid:GetClass() == "lc_screen" and eMid.lcFixtureKind == "screen_mid", "it is a city screen like the others (broadcasts and recordings show on it)")
+ok(IsValid(eBig) and IsValid(eMid) and (eMid:GetPos().z - M0.z) <= (eBig:GetPos().z - M0.z) - 90, "and it sits much lower than the giant one",
+    IsValid(eMid) and eMid:GetPos().z)
+LC.RemovePoint(big)
+LC.RemovePoint(mid)
+LC.SyncFixtures()
+ok(not IsValid(eMid), "taken away with its point")
+end
+Nov14E_MediumScreenTests()
+
 return results.pass, results.fail, table.concat(results.lines, "\n")
