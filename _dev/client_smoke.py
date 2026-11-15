@@ -4295,7 +4295,29 @@ hook.t.EntityNetworkedVarChanged.LivingCityLipSync(cop, "lc_talk_until", 0, CurT
 local okT, errT = pcall(hook.t.Think.LivingCityLipSync)
 if not okT then return "lip sync: " .. tostring(errT) end
 if LC.LipSyncFace(cop) ~= false then return "lip sync: a metrocop's mask has no jaw to move" end
-npc:Remove() cop:Remove()
+-- (14 November: "the NPC's mouth doesn't move with the voice lines") a speaker the hook never told us of is
+-- found all the same, and the jaw is set again as the frame is drawn, after the game has smoothed the face back
+local npc2, w2 = Face("models/humans/group01/female_02.mdl", { jaw_drop = 3, right_part = 5, left_part = 6 })
+npc2:SetNW2Float("lc_talk_from", CurTime())
+npc2:SetNW2Float("lc_talk_until", CurTime() + 3)
+local fisWas = ents.FindInSphere
+ents.FindInSphere = function() return { npc2, _me } end
+local draw = hook.t.PreDrawOpaqueRenderables and hook.t.PreDrawOpaqueRenderables.LivingCityLipSync
+if not draw then return "lip sync: the jaw is not set again when the frame is drawn" end
+local heldAtDraw = 0
+for _ = 1, 30 do
+    _advance(0.05)
+    hook.t.Think.LivingCityLipSync()
+    w2[3] = 0 -- (the game smooths the face back to the server's before it draws)
+    draw(false, false)
+    if (w2[3] or 0) > 0.05 then heldAtDraw = heldAtDraw + 1 end
+end
+ents.FindInSphere = fisWas
+if heldAtDraw < 5 then return "lip sync: a speaker nobody announced was not found, or the jaw did not hold at draw time (" .. heldAtDraw .. ")" end
+w2[3] = 0.4
+draw(true, false)
+if w2[3] ~= 0.4 then return "lip sync: worked again for the shadow pass" end
+npc:Remove() cop:Remove() npc2:Remove()
 return nil
 """)
 if err:

@@ -31564,6 +31564,27 @@ function Nov14C_PotsTests()
 end
 Nov14C_PotsTests()
 
+function Nov14C_MouthTests()
+    section("14 November notes (C): a citizen saying a recorded line is marked talking, whatever other hooks do")
+    local npc, st = LC.SpawnCitizen(Vector(-12000, -12000, 0))
+    st.leaveAt = nil
+    npc.sim = false
+    st.gender = "male"
+    local clipWas, hooksWas = LC.AdviceClip, hook.t and hook.t.EntityEmitSound
+    LC.AdviceClip = function(id) return "livingcity/citizens/" .. id .. "_male1.wav" end
+    local forceWas = LC.VoiceForce
+    LC.VoiceForce = "own" -- (one of the citizens who speak in the owner's recordings)
+    if hook.t then hook.t.EntityEmitSound = {} end -- (as if another addon's hook answered first: ours never runs)
+    npc:SetNW2Float("lc_talk_until", 0)
+    local said = LC.LineSay(npc, st, "say_greet_warm", false)
+    ok(said ~= nil and said ~= "", "the warm greeting is said", tostring(said))
+    ok(npc:GetNW2Float("lc_talk_until", 0) > CurTime(), "and the speaker is marked talking for the length of it (players' games work the jaw)")
+    if hook.t then hook.t.EntityEmitSound = hooksWas end
+    LC.AdviceClip, LC.VoiceForce = clipWas, forceWas
+    npc:Remove()
+end
+Nov14C_MouthTests()
+
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")
 ;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)
     -- Everything here is something the owner's server, files or players depend on. The list is

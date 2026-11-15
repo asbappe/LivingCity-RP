@@ -9,6 +9,16 @@
     those near you (LC.LipSyncRange), the jaw and lips are worked in a talking pattern for the
     length of the line, then closed. Only a face that has a jaw (found by name): a metrocop's mask
     or a soldier's helmet has none, and is left alone. Half-Life 2's own clips keep the engine's.
+
+    A recording by itself cannot move a mouth: the game's own lines move it from phoneme data
+    written into each .wav by Valve's Faceposer, and a plain recording has none. So the jaw is
+    worked here. Two things kept it still on the server (the owner, 14 November: "the NPC's mouth
+    doesn't move with the voice lines"):
+      - it was set in Think, and the game then smooths every networked NPC's face back to what the
+        server last sent, just before it draws. It is set again at draw time now
+        (PreDrawOpaqueRenderables), after that smoothing: what is drawn is ours;
+      - a speaker was noticed only through EntityNetworkedVarChanged, which a game does not always
+        call. Whoever is marked talking near you is also looked for four times a second.
 ]]
 
 LC = LC or {}
@@ -91,11 +101,32 @@ hook.Add("EntityNetworkedVarChanged", "LivingCityLipSync", function(ent, name, _
     if type(new) == "number" and new > CurTime() then Start(ent) end
 end)
 
-hook.Add("Think", "LivingCityLipSync", function()
+-- Anyone near you the server has marked talking, whether or not the hook above was called.
+local nextScan = 0
+function LC.LipSyncScan(now)
+    local me = LocalPlayer and LocalPlayer()
+    if not IsValid(me) or not ents.FindInSphere then return 0 end
+    local n = 0
+    for _, ent in ipairs(ents.FindInSphere(me:EyePos(), LC.LipSyncRange)) do
+        if IsValid(ent) and not talking[ent] and ent.GetNW2Float and not (ent.IsPlayer and ent:IsPlayer())
+            and ent:GetNW2Float("lc_talk_until", 0) > now then
+            Start(ent)
+            if talking[ent] then n = n + 1 end
+        end
+    end
+    return n
+end
+
+-- The faces at work: every frame, and again as the frame is drawn (see the top of this file).
+local function Work()
+    local now = CurTime()
+    if now >= nextScan then
+        nextScan = now + 0.25
+        LC.LipSyncScan(now)
+    end
     if next(talking) == nil then return end
     local me = LocalPlayer and LocalPlayer()
     local eye = IsValid(me) and me:EyePos() or nil
-    local now = CurTime()
     local range = LC.LipSyncRange * LC.LipSyncRange
     for ent, t in pairs(talking) do
         if not IsValid(ent) then
@@ -117,4 +148,9 @@ hook.Add("Think", "LivingCityLipSync", function()
             end
         end
     end
+end
+hook.Add("Think", "LivingCityLipSync", Work)
+hook.Add("PreDrawOpaqueRenderables", "LivingCityLipSync", function(depth, sky)
+    if depth or sky then return end -- (once a frame, for the view itself)
+    if next(talking) ~= nil then Work() end
 end)
