@@ -823,6 +823,7 @@ local function EndBusy(npc, st, withExit)
     end
     st.busyKind = nil
 end
+LC.EndBusy = EndBusy -- (called away mid-sit by the morning exercise: sv_livingcity_exercise.lua)
 
 ------------------------------------------------------------------------
 -- Lines
