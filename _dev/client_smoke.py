@@ -4919,6 +4919,30 @@ return bad and ("the scientist's eyes: " .. bad) or nil
 """)
 if err:
     problems = (problems + "\n" if problems else "") + str(err)
+# the panel on the right in a Combine-only zone (the owner, 15 November): "Combine only zone", and while they're
+# walked in, cuffed or in a cell, nothing about leaving before a countdown
+err = L.execute(r"""
+local ok, e = pcall(function()
+    _me.nw.lcf_faction, _me.nw.lc_here = "citizen", "combine"
+    local function find()
+        for _, g in ipairs(LC_CL.ContextGroups(_me)) do if g.kind == "zone" then return g end end
+    end
+    local g = find()
+    if not g or g.title ~= "Combine only zone" then error("Combine-only zone: titled " .. tostring(g and g.title)) end
+    for _, k in ipairs({ "lc_marching", "lc_tied" }) do
+        _me.nw[k] = true
+        if find() then error("Combine-only zone: the countdown line shows with " .. k) end
+        _me.nw[k] = nil
+    end
+    _me.nw.lc_jail_until = CurTime() + 60
+    if find() then error("Combine-only zone: the countdown line shows in a cell") end
+    _me.nw.lc_jail_until = nil
+    _me.nw.lcf_faction, _me.nw.lc_here = nil, nil
+end)
+if not ok then return tostring(e) end
+""")
+if err:
+    problems = (problems + "\n" if problems else "") + str(err)
 import re as _re
 _root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 _mods = os.path.join(_root, "gamemodes", "livingcity", "gamemode", "modules")

@@ -108,6 +108,8 @@ local function Unit(me) return me:GetNW2Bool("lc_unit", false) or me:GetNW2Strin
 local function NotUnit(me) return not Unit(me) end
 local function Fac(id) return function(me) return me:GetNW2String("lcf_faction", "") == id end end
 local function Jailed(me) return me:GetNW2Float("lc_jail_until", 0) > CurTime() end
+-- (walked in, cuffed or in a cell: held, not trespassing. The owner, 15 November)
+local function Trespassing(me) return NotUnit(me) and not (LC.HeldByCombine and LC.HeldByCombine(me)) end
 
 -- { title, line, line... }: a line is its text, or { text, when }
 local DATA = {
@@ -176,8 +178,8 @@ local DATA = {
             "Make things here ({gm_showspare1})",
             "Your stash: {+menu_context} > Getting by",
             "When a curfew starts, be here" },
-        combine = { "Combine only",
-            { "Leave before the countdown runs out, or you're wanted", NotUnit } },
+        combine = { "Combine only zone",
+            { "Leave before the countdown runs out, or you're wanted", Trespassing } },
         prison = { "The prison",
             { "A lockpick from a visitor opens your cell: {+menu_context} > This door > Pick the lock", Jailed } },
     },

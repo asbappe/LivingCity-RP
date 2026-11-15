@@ -348,7 +348,7 @@ LC.HINTS = {
                  zombie = "Home." } },
     home_block = { title = "Your block",
         text = { default = "This is your housing block: come back here when a curfew starts. You can make things here ({gm_showspare1}), and keep anything you don't want found in your stash ({+menu_context} > Getting by)." } },
-    trespass = { title = "Combine only", urgent = true,
+    trespass = { title = "Combine only zone", urgent = true,
         text = "You're trespassing in a Combine-only area. Leave before the countdown on your screen runs out, or you'll be wanted." },
     plainclothes_gun = { title = "Careful", urgent = true,
         text = { resistance = "You're in plain clothes with a gun in your hand. If a Civil Protection unit sees it, your disguise is blown. Switch to your fists or holster the gun ({+menu_context} > Me)." } },
