@@ -4943,6 +4943,34 @@ if not ok then return tostring(e) end
 """)
 if err:
     problems = (problems + "\n" if problems else "") + str(err)
+# a situation's menu (the interrogation: the owner, 15 November, "the window was too small and I couldn't see all
+# the text"): as wide as its longest choice needs, long ones wrapped, and the words under it kept on screen
+err = L.execute(r"""
+local gts, sdraw = surface.GetTextSize, draw.SimpleText
+local ok, e = pcall(function()
+    surface.GetTextSize = function(t) return #tostring(t) * 9, 18 end
+    local long = LC_CL.QuickSituationLayout({ items = { { label = string.rep("word ", 60) }, { label = "Short" } } })
+    if long.W > 640 or long.W < 380 then error("width " .. tostring(long.W)) end
+    if #long.rows[1] < 2 then error("a long choice wasn't wrapped") end
+    for _, line in ipairs(long.rows[1]) do if #line * 9 > long.W - 46 then error("a wrapped line is wider than the menu") end end
+    local mid = LC_CL.QuickSituationLayout({ items = { { label = "Bargain: the truth, for a shorter sentence, in a few more words" } } })
+    if #mid.rows[1] ~= 1 or mid.W < 63 * 9 + 46 then error("a choice that fits a wider menu was wrapped or cut (width " .. tostring(mid.W) .. ")") end
+    local ys = {}
+    draw.SimpleText = function(text, font, x, y) ys[#ys + 1] = tonumber(y) or 0 end
+    LC_CL.OpenSituation({ id = "smoketall", title = "Interrogation", items = { { label = "Tell the truth", run = function() end } },
+        note = string.rep("A very long thing that was said to you in the cell. ", 120) })
+    hook.t.HUDPaint.LivingCityQuick()
+    LC_CL.CloseSituation("smoketall")
+    if #ys == 0 then error("nothing drawn") end
+    local top, bottom = 1e9, 0
+    for _, y in ipairs(ys) do top, bottom = math.min(top, y), math.max(bottom, y) end
+    if bottom > ScrH() - 8 or top < 0 then error("words drawn off the screen (" .. top .. " to " .. bottom .. ")") end
+end)
+surface.GetTextSize, draw.SimpleText = gts, sdraw
+if not ok then return "situation menu: " .. tostring(e) end
+""")
+if err:
+    problems = (problems + "\n" if problems else "") + str(err)
 import re as _re
 _root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 _mods = os.path.join(_root, "gamemodes", "livingcity", "gamemode", "modules")

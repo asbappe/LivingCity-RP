@@ -32758,6 +32758,68 @@ function HeldNotTrespassingTests()
 end
 HeldNotTrespassingTests()
 
+function CellQuestionsTests()
+    section("15 November playtest: a citizen in for a punch is asked about the punch, not the Resistance")
+    local R0 = Vector(-270000, 99000, 0)
+    LC.AddPoint(R0, 0, "cell", 0)
+    LC.AddPoint(R0 + Vector(0, 300, 0), 0, "cell", 0)
+    LC.AddPoint(R0 + Vector(400, 0, 0), 0, "release", 0)
+    LC.AddZone(R0 + Vector(3000, 0, 0), 300, "rebel", 0)
+    local p = newPlayer("PunchedCop", "citizen")
+    local cop = newPlayer("QuestionCop", "cp")
+    _run(0.5)
+    -- a sympathy kept from earlier lives (an admin who was the Resistance an hour ago) makes nobody a rebel now
+    p:SetPData("lcq_sympathy", 6)
+    ok(not LC.InterrogationKnows(p), "a citizen with an old sympathy for the cause knows nothing of it")
+    ok(LC.InterrogationIntel(p, "hideout", true):find("don't know", 1, true) ~= nil, "(the truth about a hideout: they don't know)")
+    LC.Incarcerate(p, 600, "Assaulting Civil Protection")
+    ok(LC.Prisoners[p] ~= nil, "(in a cell for ten minutes)")
+    ok(LC.StartInterrogation(p), "questioned in the cell (ten minutes: the owner's rule)")
+    local it = LC.Interrogations[p]
+    local function ask()
+        it.next = 0
+        LC.InterrogationStep(p, it, CurTime())
+        local m = _lastnet("lc_intr_q")
+        return m and util.JSONToTable(m.data[1] or "") or {}
+    end
+    local q1 = ask()
+    ok(q1.text == "Assaulting Civil Protection. Why?", "the first question is about what they did", tostring(q1.text))
+    cop.chat = {}
+    p.chat = {}
+    LC.InterrogationAnswer(p, "truth")
+    ok(has(p.chat, "I wasn't thinking"), "the truth: they weren't thinking")
+    ok(not has(cop.chat, "[CP net]"), "(nothing for every unit's radio)")
+    local q2 = ask()
+    ok(q2.text == "Who put you up to it?", "then who put them up to it", tostring(q2.text))
+    LC.InterrogationAnswer(p, "truth")
+    ok(LC.Interrogations[p] == nil, "two questions, and it's over")
+    -- telling them everything: there's nothing to tell, and no hideout is marked
+    ok(LC.StartInterrogation(p), "(asked again)")
+    cop.chat, p.chat = {}, {}
+    LC.InterrogationTalk(p)
+    ok(has(p.chat, "It isn't much") and not has(cop.chat, "hideout"), "telling them everything marks no hideout for a citizen")
+    LC.ReleasePrisoner(p)
+    -- the Resistance: still the three questions about the cell
+    local reb = newPlayer("CellRebel", "resistance", nil, 900)
+    _run(0.5)
+    LC.Incarcerate(reb, 600, "Carrying a weapon")
+    ok(LC.StartInterrogation(reb), "(a rebel questioned)")
+    it = LC.Interrogations[reb]
+    local function askR()
+        it.next = 0
+        LC.InterrogationStep(reb, it, CurTime())
+        local m = _lastnet("lc_intr_q")
+        return m and util.JSONToTable(m.data[1] or "") or {}
+    end
+    local r1 = askR()
+    ok(tostring(r1.text):find("hideout", 1, true) ~= nil and LC.InterrogationKnows(reb), "a member of the Resistance is asked about the hideout, as before", tostring(r1.text))
+    if LC.EndInterrogation then LC.EndInterrogation(reb) end
+    LC.ReleasePrisoner(reb)
+    p:SetPData("lcq_sympathy", 0)
+    for _, q in ipairs({ p, reb, cop }) do q:SetPos(Vector(0, -500, 0)) end
+end
+CellQuestionsTests()
+
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")
 ;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)
     -- Everything here is something the owner's server, files or players depend on. The list is
