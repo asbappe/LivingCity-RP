@@ -6,11 +6,6 @@ To add an item: `printf '%s\n' '- [ ] **Topic:** what to try. [needs a person: w
 
 ## A new character's first hour
 
-- [ ] **The right-hand panel:** with the Arrest Baton out, cuffed, in the cage or the chair, or looking at a prisoner or the evidence locker: does it show what you can do, never cover the job tracker or a tip, and fade after a few seconds? [needs a person: its place on screen and its fade]
-- [ ] **Body signs:** hungry below 25 the colour drains, thirsty brings a warm haze and breathing, below 35 health red edges and a heartbeat. Clear without being told? [needs a person: the screen effects by eye]
-- [ ] **Gestures and hands up:** F1 > Gesture > Wave and the others, and F1 > 2, with a camera on yourself: does the body play each one, without sliding? [needs a person: poses on your own body]
-- [ ] **Sleepers:** at night in a housing block and a rebel camp they lie flat on the mattress, eyes shut, no guns; in the morning they stand up beside the bed, not through a wall or in the ceiling. [needs a person: how sleepers lie and get up on the real map]
-- [ ] **Filling a can:** near water you can see it fills; ten feet from water hidden under ground or brush it does not. [needs a person: the real map's water]
 - [ ] **A new face:** forty seconds of black screen, whirring and wet sounds, a clang, a ding. Too long, too short, too gross? [needs a person: feel]
 - [ ] **The pamphlets:** the Civil Orientation pamphlet opens as a folded leaflet, the Resistance one is in a sloppy hand. Any text off the paper, hard to read, or wrong? [needs a person: reading them]
 
@@ -106,3 +101,7 @@ To add an item: `printf '%s\n' '- [ ] **Topic:** what to try. [needs a person: w
 - [ ] **Lowered gun (Resistance):** on rebel ground, does the gun tip down in your view when lowered, and come back up when raised? [needs a person: the view model by eye]
 - [ ] **The Man Inside, part 2, on the real map:** as a unit, `lcq_startchain inside`, take part 1 from F4 and hear her out, then part 2. Is a prisoner marked in the cells? After E on them, do they follow you out and through the doors? Do the guards leave when you set the fire or call the false report? [needs a person: doors, guards and following only show on the real map]
 - [ ] **The counter (Ration Production):** work kitchen shifts until "The counter" comes up. After the forged card, do citizens step up one at a time, and does the card window read well at a ration counter? [needs a person: how the card check looks and reads at the counter]
+- [ ] **Rations:** Fill the city's ration stores once; a dispenser gives a ration; an hour later stores well above empty, no announcement after 18:00; send `lc_stock`. [needs a person: the server over an hour]
+- [ ] **Asleep in the cells:** jailed with over five minutes left, F1 > Lie down and sleep: body on the floor or bed, a dream after about 20 seconds, wake in the cell? [needs a person: how it looks]
+- [ ] **Ranks and the cage:** set yourself Lieutenant (F4 admin tools): career page, the cage opens, Hacker offered; prisoners inside the cage, none in the wall? [needs a person: on the map]
+- [ ] **Rebel ground and the Colonel:** way marks as arrows within 20 seconds, pots on tables, the usual music, the Colonel stays put, mouths move on recorded lines? [needs a person: how it looks]

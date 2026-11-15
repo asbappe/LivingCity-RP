@@ -4,47 +4,37 @@ About twenty minutes on the server. Only things a person has to judge are here: 
 
 Tick what works, write a word under what does not. What is not on this card waits in `PLAYTEST_ARCHIVE.md` (the backlog, about 70 one-line items).
 
-## This card (15 November 2026: your 14 November night notes, fixed, please try)
+## This card (15 November 2026, late: your card notes, fixed, please try)
 
-- [ ] **One status box:** upper left, as a rebel in citizen clothes with a radio. Is it one box, each fact once, easy to read?
+- [ ] **The struggle:** punch a unit, put your fists away. A blow or two of the stick, then the struggle bar (E fast to break free)?
   Notes:
-- [ ] **People stay:** note three named citizens in the morning. Are they still about later, going into their own block and coming back out? Does the street feel lived in, not emptied? (The debug report's "people:" line says how many are out, at home, dead.)
+- [ ] **Hauled in:** walked to the cells through a Combine only zone. No countdown, the right-hand panel quiet?
   Notes:
-- [ ] **Rations:** press Fill the city's ration stores in the editor panel (Survival and economy) once. Does a dispenser give you a ration? An hour or two later, are the stores still well above empty, and was there no ration announcement after 18:00? Type `lc_stock` in the console and send the two lines it prints.
+- [ ] **Questioned in the cell (as a citizen, 10 minute sentence):** every choice whole on screen, the question below it, asked about the charge, not the Resistance?
   Notes:
-- [ ] **Armed among soldiers:** as a rebel with a gun out, beside rebel fighters against soldiers. Are you only ever shot at, never cuffed? Do the soldiers shoot the rebel fighters too?
+- [ ] **Wake from the bus dream:** the screen clear at once (no white for 30 seconds)? Does the bus fly on under the sky without sticking?
   Notes:
-- [ ] **The struggle, and out of custody:** gun away, let a unit take you. Does the struggle bar come up, and can you break free by pressing E fast? Mid-march and in a cell, F4 > Admin tools > Handy > Out of custody: free on the spot?
+- [ ] **F1 > Find work:** chevrons on the ground to Labor Assignment?
   Notes:
-- [ ] **Asleep in the cells:** jailed with more than five minutes left, F1 > Lie down and sleep in daylight. Does the body lie right on the floor or bed, does a dream come after about 20 seconds, and do you wake back in the cell?
+- [ ] **The Harpies dreamt:** a black fog close round you, a thick forest, about 24 armed units in the ring, and are you carried off (not just cut down)?
   Notes:
-- [ ] **Camera monitors:** place two "Point: Combine camera" and a "Fixture: Combine monitor" (and the hanging one). Is the picture on the glass, the right way round, nothing on the back? Are people in the camera's room in it? As a unit, does E step cameras? Is the frame rate bearable? Is the hanging model the one you meant?
+- [ ] **The old timer:** a white man's body under the fisherman's head, head on?
   Notes:
-- [ ] **Ranks:** set yourself Lieutenant from the F4 admin tools. Does the career page say Lieutenant, does the cage open, is Hacker offered?
+- [ ] **The stalker:** leans in once, then types (or stays bent over the keys), never bends in again every two seconds? (If it stands still bent over, it has no typing animation: the debug report's "terminal animation" line says.)
   Notes:
-- [ ] **The cage:** with it clipped into the wall as you place it, do prisoners stand inside it, none in or behind the wall? Any rebel inside it?
+- [ ] **Your bodyguards:** a zombie near you: do they shoot it unasked, keep up with you, and drop it for a target you order killed?
   Notes:
-- [ ] **The lab and cuffs:** are the vest and the bypass charge on the scientist's list at a fair price? F2 on a citizen with cuffs in your pockets: "Cuff them", and they walk to the cage?
+- [ ] **Knocked-over turret:** does a unit walk over and stand it up?
   Notes:
-- [ ] **A dream by itself:** sleep at 21:30 as a rebel on rebel ground. Does a dream come within about half a minute? If not, send the debug report (its "dreams:" line says why).
+- [ ] **Monitors:** two or three hanging monitors on different cameras (E steps them): all live at once, frame rate bearable?
   Notes:
-- [ ] **The Administrator, untouchable:** punch a unit, then order a kill while standing in the line of fire. No reaction, no damage, every guard holding a rifle?
+- [ ] **CP Commissary:** purified water at 2, weapons by rank at the top of the list? Water at 4 from the quartermaster and the dealer? A power bank fills the vest in one press and says so?
   Notes:
-- [ ] **The Administrator's tablet and camera:** does the tablet open its own window (not the C menu)? Does the recording scanner look at your face? Order a parade: do you see it?
+- [ ] **Her glass:** from the floor up, about 15 feet, the transformer only reachable round it?
   Notes:
-- [ ] **The broom and the baton:** is the vortigaunt's broom in its claws, head on the floor, while it walks and sweeps (head in its hands: `lc_vort_broom_flip 1`)? Is the baton's glow at the tip, on your side, the right size?
+- [ ] **The victory sting:** never while walking about; only when the Administrator falls or flees?
   Notes:
-- [ ] **Rebel ground:** do the way marks show as arrows and FREEDOM THIS WAY within about 20 seconds of joining (not a lambda)? Pots on the tables and dressers? The usual music, not the eerie piece? Do Dr. Magnusson's eyes look at you?
-  Notes:
-- [ ] **The Colonel and the old timer:** does the Colonel stay put beside the quartermaster (or where you place "Point: Resistance Colonel's spot")? Do the old timer and the Colonel both have the fisherman's head? Do citizens' mouths move on your recorded lines?
-  Notes:
-- [ ] **The stalker and the loudspeakers:** does the stalker stand right at its terminal and work it smoothly? Is the loudspeaker's box flush on the wall? If a loudspeaker still loops a noise, send the debug report while it plays (its "loudspeakers:" line) and say whether the noise is at the speaker or the box.
-  Notes:
-- [ ] **Weapons in the street:** drop a gun near citizens. Do they leave it alone? Do cremators walk through the infestation's junk?
-  Notes:
-- [ ] **The editor's list:** can you find things now? (Old and new names: `docs/dev/editor-menu-names.md`.)
-  Notes:
-- [ ] **The errors file:** last thing, F4 > Factions > Admin: errors (N). Send the server's errors.txt.
+- [ ] **The parade and the morning drill:** see the note in the chat (built by a side job; if it landed, a strider, an APC and marchers, march music after a third, everyone cheering; the drill led and joined).
   Notes:
 
 ## For whoever adds to this file
