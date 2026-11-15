@@ -140,8 +140,23 @@ local function ApplyFog(scale)
     render.FogColor(r * dark, g * dark, b * dark)
     return true
 end
-hook.Add("SetupWorldFog", "LivingCityWeather", function() return ApplyFog(1) end)
-hook.Add("SetupSkyboxFog", "LivingCityWeather", function(scale) return ApplyFog(scale) end)
+-- A secret ending's night (the Harpies, dreamt or not: sv_livingcity_endings.lua sends night): a black fog close round
+-- you, whatever the weather (the owner, 15 November: "it is full bright, there is no dark fog").
+function LC_CL.EndingNight()
+    local S = LC_CL.Ending and LC_CL.Ending()
+    return S ~= nil and S.client ~= nil and S.client.night == true and S.phase ~= "reset"
+end
+local function NightFog(scale)
+    if not LC_CL.EndingNight() then return nil end
+    render.FogMode(MATERIAL_FOG_LINEAR)
+    render.FogStart(120 * (scale or 1))
+    render.FogEnd(1300 * (scale or 1))
+    render.FogMaxDensity(0.97)
+    render.FogColor(2, 3, 5)
+    return true
+end
+hook.Add("SetupWorldFog", "LivingCityWeather", function() return NightFog(1) or ApplyFog(1) end)
+hook.Add("SetupSkyboxFog", "LivingCityWeather", function(scale) return NightFog(scale) or ApplyFog(scale) end)
 
 -- Rain: streaks falling around you, when there's open sky above you.
 local drops = {}

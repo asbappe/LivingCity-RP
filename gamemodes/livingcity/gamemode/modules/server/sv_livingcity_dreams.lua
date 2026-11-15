@@ -66,6 +66,7 @@ local cvRadius  = CreateConVar("lc_dream_radius", "1500", FLAGS, "How far from t
 local cvNightly = CreateConVar("lc_dream_every_night", "0", FLAGS, "On a night with no ending waiting, dream a random one anyway (when the cooldown allows)")
 local cvMax     = CreateConVar("lc_dream_max_minutes", "5", FLAGS, "A safeguard: any dream still going this many minutes after it began is ended, and everyone in it woken (0: no limit)")
 local cvCombine = CreateConVar("lc_dream_combine", "6", FLAGS, "Civil Protection units a dream brings along for the endings that have the Combine in them (never the city's own)")
+local cvHarpies = CreateConVar("lc_dream_harpies_combine", "24", FLAGS, "The Harpies dreamt: how many of the Combine's units stand in the ring (metrocops with pistols and SMGs, every third an Overwatch soldier)")
 local cvMoods   = CreateConVar("lc_dream_moods", "bus=happy,plane=happy,hard=happy,shalom=happy,bloom=neutral,fire=neutral,base=neutral,harpies=nightmare,marrow=nightmare,water=nightmare,standup=nightmare",
     FLAGS, "Each ending's mood as a dream, for the Administrator's tablet: id=happy, id=neutral or id=nightmare, comma-separated (an ending not listed is neutral)")
 
@@ -1001,14 +1002,22 @@ function LC.DreamCast(E)
     local dream = E and E.dream
     if not dream then return end
     local n = math.max(0, cvCombine:GetInt())
+    -- (the Harpies: the whole of the Combine, as when it was the city's own ending, armed to shoot; the owner,
+    -- 15 November: "there were I think 4 metrocop units in the dream? ... it was so much more epic before")
+    local harpies = E.id == "harpies"
+    if harpies then n = math.max(n, cvHarpies:GetInt()) end
     local spots = n > 0 and LC.EndingRingSpots and LC.EndingRingSpots(dream.pos, 260, n) or {}
     for i = 1, n do
         if LC.EndingRoom and not LC.EndingRoom() then break end
-        local c = ents.Create("npc_metropolice")
+        local soldier = harpies and i % 3 == 0
+        local c = ents.Create(soldier and "npc_combine_s" or "npc_metropolice")
         if IsValid(c) then
             c:SetPos(spots[i] and spots[i].pos or dream.pos)
+            if soldier and c.SetModel then c:SetModel("models/combine_soldier.mdl") end
             c:Spawn()
-            if c.Give then c:Give("weapon_stunstick") end
+            local gun = "weapon_stunstick"
+            if harpies then gun = soldier and "weapon_ar2" or (i % 2 == 0 and "weapon_smg1" or "weapon_pistol") end
+            if c.Give then c:Give(gun) end
             if c.SetCondition then c:SetCondition(COND_NPC_FREEZE or 67) c.lcDreamHeld = true end -- (held still from the start)
             c.lcDreamCast = true
             E.ents[#E.ents + 1] = c
