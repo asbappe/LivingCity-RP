@@ -38,6 +38,7 @@ local MODES = {
     { id = "prisonwork",  label = "Point: prison work spot (where a prisoner's work detail picks up trash)" },
     { id = "speech",      label = "Point: Administrator's speech stand (where the City Administrator speaks to the city; face it toward the crowd)" },
     { id = "speechcrowd", label = "Point: Administrator's speech crowd (where the city gathers for her address; with one placed, attendance is mandatory)" },
+    { id = "adminapc",    label = "Point: Administrator's APC (parked here during her address, near the stand; attacked, she is taken out in it; it drives off the way you face)" },
     { id = "zspawn",      label = "Point: infestation spawn (zombies, infested players)" },
     { id = "rspawn",      label = "Point: Resistance spawn (rebel players)" },
     { id = "colonel",     label = "Point: Resistance Colonel's spot (the ghost only the Resistance sees stands here, facing you; none: beside the quartermaster)" },

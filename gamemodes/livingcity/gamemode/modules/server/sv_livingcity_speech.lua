@@ -420,6 +420,19 @@ local function PostGuards()
 end
 LC.SpeechGuards = function() return S and S.guards or {} end
 LC.SpeechDetail = function() return S and S.detail or {} end
+-- Her security takes them over (an attempt on her life: sv_livingcity_adminsecurity.lua): the row, the detail
+-- and the city's own Administrator, if she stands there, are no longer the address's to remove when it ends.
+function LC.SpeechHandOver()
+    if not S then return {}, nil end
+    local list = {}
+    for _, l in ipairs({ S.guards or {}, S.detail or {} }) do
+        for _, g in ipairs(l) do if IsValid(g) then list[#list + 1] = g end end
+    end
+    S.guards, S.detail = {}, {}
+    local her = S.her
+    S.her = nil
+    return list, her
+end
 local function GuardsThink(now)
     if now < (S.nextGuards or 0) then return end
     S.nextGuards = now + 2
@@ -590,6 +603,7 @@ function LC.EndSpeech()
     if IsValid(S.her) then S.her:Remove() end
     for _, g in ipairs(S.guards or {}) do if IsValid(g) then g:Remove() end end
     for _, g in ipairs(S.detail or {}) do if IsValid(g) then g:Remove() end end
+    hook.Run("LivingCitySpeechEnded", S)
     S = nil
 end
 
