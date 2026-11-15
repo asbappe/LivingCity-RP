@@ -14,9 +14,11 @@ Tick what works, write a word under what does not. What is not on this card wait
   Notes:
 - [ ] **Armed among soldiers:** as a rebel with a gun out, beside rebel fighters against soldiers. Are you only ever shot at, never cuffed? Do the soldiers shoot the rebel fighters too?
   Notes:
-- [ ] **The struggle:** gun away, let a unit take you. Does the struggle bar come up, and can you break free by pressing E fast?
+- [ ] **The struggle, and out of custody:** gun away, let a unit take you. Does the struggle bar come up, and can you break free by pressing E fast? Mid-march and in a cell, F4 > Admin tools > Handy > Out of custody: free on the spot?
   Notes:
-- [ ] **Out of custody:** mid-march and in a cell, F4 > Admin tools > Handy > Out of custody. Free on the spot?
+- [ ] **Asleep in the cells:** jailed with more than five minutes left, F1 > Lie down and sleep in daylight. Does the body lie right on the floor or bed, does a dream come after about 20 seconds, and do you wake back in the cell?
+  Notes:
+- [ ] **Camera monitors:** place two "Point: Combine camera" and a "Fixture: Combine monitor" (and the hanging one). Is the picture on the glass, the right way round, nothing on the back? Are people in the camera's room in it? As a unit, does E step cameras? Is the frame rate bearable? Is the hanging model the one you meant?
   Notes:
 - [ ] **Ranks:** set yourself Lieutenant from the F4 admin tools. Does the career page say Lieutenant, does the cage open, is Hacker offered?
   Notes:
