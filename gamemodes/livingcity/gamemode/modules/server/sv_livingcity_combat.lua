@@ -56,6 +56,10 @@ local function Sees(npc, e)
 end
 
 -- A better shot, able to duck and to fire on the move: once each.
+-- (Keep CAP_MOVE_SHOOT. The owner, 14 November: "They also backpedal when shooting at me which is a nice touch
+-- ... please make sure that stays". Backing away from an enemy who is too close is Half-Life 2's own doing, not
+-- scripted here; this capability is what lets them go on firing while they do it. LC.CombatMoveShoot says so.)
+LC.CombatMoveShoot = true
 function LC.CombatTune(npc, st)
     if st.cmbTuned then return false end
     st.cmbTuned = true

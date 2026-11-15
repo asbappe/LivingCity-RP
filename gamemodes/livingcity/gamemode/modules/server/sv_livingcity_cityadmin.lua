@@ -384,6 +384,7 @@ function LC.AdminDecree(what, arg, target, words)
     if what == "event" then
         if not EVENTS[arg] then return false, "Not an event the office can call." end
         if LC.Event then return false, "An event is already running." end
+        if arg == "rations" and LC.RationsCanStart and not LC.RationsCanStart(true) then return false, "Rations are handed out by day, and only while the stores hold some." end
         local ok, why = Cool(N, "event", 600)
         if not ok then return false, why end
         if not (LC.StartEvent and LC.StartEvent(arg)) then N.lcAdminNext.event = 0 return false, "That can't happen right now (or the map has nowhere for it)." end

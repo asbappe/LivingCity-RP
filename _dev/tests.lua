@@ -7416,13 +7416,13 @@ LC.SetJob(cook, "clerk", true)
 LC.Bump(cook, "shifts")
 ok(LC.Stock() == 220, "a clerk's doesn't")
 hook.Run("LivingCityTrainArrived", nil, {}, "City 14")
-ok(LC.Stock() == 235, "a train brings freight")
+ok(LC.Stock() == 240, "a train brings freight")
 hook.Run("LivingCitySupplyEnded", {}, 2)
-ok(LC.Stock() == 265, "and a convoy, for every load that wasn't stolen")
+ok(LC.Stock() == 280, "and a convoy, for every load that wasn't stolen")
 local n, st = LC.SpawnCitizen(Vector(-32000, 34000, 0))
 st.profile = { job = "kitchen" }
 hook.Run("LivingCityNPCWorkFinished", n, st, "supply")
-ok(LC.Stock() == 269, "the city's own kitchen workers add to it")
+ok(LC.Stock() == 284, "the city's own kitchen workers add to it")
 n:Remove()
 -- rations come out of them
 local eater = newPlayer("StockEater", "citizen")
@@ -30384,6 +30384,113 @@ reb:SetPos(Vector(-121000, -121000, 0))
 ok(#_errors == errs0, "(no errors in any of it)", _errors[errs0 + 1])
 end
 Nov14F_DreamNightTests()
+
+function Nov14F_RationsTests()
+section("14 November night, F2 and F3: rations by day only, never from empty stores, deliveries sized to the city")
+local errs0 = #_errors
+local realHour, realCounts, realHuman = LC.Hour, LC.RoleCounts, LC.HumanAdministrator
+local stockWas = LC.Stock()
+_setcvar("lc_stockpile", 1)
+LC.EndEvent(true)
+LC.StockAdd(200 - LC.Stock())
+-- the hours
+ok(LC.RationsCanStart(true, 7) and LC.RationsCanStart(true, 12) and LC.RationsCanStart(true, 17.9), "the city hands rations out by day (07:00 to 18:00)")
+ok(not LC.RationsCanStart(true, 18) and not LC.RationsCanStart(true, 21) and not LC.RationsCanStart(true, 23.5) and not LC.RationsCanStart(true, 3) and not LC.RationsCanStart(true, 6.9),
+    "never in the evening or at night (the owner, 14 November: rations at 21:00)")
+ok(LC.RationsCanStart(false, 22) == true, "a handout ordered by hand is the Administrator's choice, at any hour")
+LC.Hour = function() return 21.5 end
+local night = {}
+for _ = 1, 300 do night[LC.PickAutoEvent()] = true end
+ok(not night.rations and next(night) ~= nil, "at night the city's own timer never picks a ration handout")
+LC.HumanAdministrator = function() return nil end
+local okD, whyD = LC.AdminDecree("event", "rations")
+ok(okD == false and string.find(tostring(whyD), "by day", 1, true) ~= nil, "the NPC Administrator can't call one at night either", tostring(whyD))
+LC.Hour = function() return 12 end
+local day = {}
+for _ = 1, 300 do day[LC.PickAutoEvent()] = true end
+ok(day.rations == true, "by day it still does")
+-- nothing to give
+LC.StockAdd(-LC.Stock())
+ok(LC.StockLevel() == "empty" and not LC.RationsCanStart(false) and not LC.RationsCanStart(true), "empty stores: no handout, whoever asks")
+local empty = {}
+for _ = 1, 300 do empty[LC.PickAutoEvent()] = true end
+ok(not empty.rations, "the city's timer doesn't pick one with nothing to give")
+ok(LC.StartEvent("rations") == false and LC.Event ~= "rations", "and none starts (the owner: \"rations are empty, how are they being distributed?\")")
+LC.StockAdd(200)
+ok(LC.StartEvent("rations") == true and LC.Event == "rations", "with rations in the stores, by day, it starts as ever")
+LC.EndEvent(true)
+-- deliveries sized to the city
+LC.StockAdd(100 - LC.Stock())
+LC.RoleCounts = { citizen = 14 }
+hook.Run("LivingCityTrainArrived", nil, {}, "City 14")
+ok(LC.Stock() == 120, "a small city (the default): a train brings 20", LC.Stock())
+hook.Run("LivingCitySupplyEnded", {}, 2)
+ok(LC.Stock() == 160, "and a convoy 20 a load", LC.Stock())
+LC.StockAdd(100 - LC.Stock())
+LC.RoleCounts = { citizen = 80 }
+ok(LC.StockEatRate() == 4, "a city of 80 eats four rations a minute (lc_stock_eat 20)")
+hook.Run("LivingCityTrainArrived", nil, {}, "City 14")
+ok(LC.Stock() == 180, "its train brings 80: twenty minutes of its eating", LC.Stock())
+hook.Run("LivingCitySupplyEnded", {}, 2)
+ok(LC.Stock() == 340, "and its convoy 80 a load", LC.Stock())
+-- an hour of the owner's city with nobody doing anything, at the least: two trains, a convoy every five hours with
+-- three of its five loads left (the rebels took two), the workers' 52 an hour, against 240 eaten and a handout's 8:
+-- it holds (it lost about 135 an hour before)
+local inn = 2 * LC.StockDelivery * LC.StockEatRate() + (3 * LC.StockDelivery * LC.StockEatRate()) / 5 + 52
+ok(inn >= 60 * LC.StockEatRate() + 8, "what comes in an hour, at the least, covers what a city of 80 eats and hands out", inn .. " in, " .. (60 * LC.StockEatRate() + 8) .. " out")
+-- stores emptied by the old sums start again from half, once
+local path = "livingcity/" .. game.GetMap() .. "_stock.json"
+local fileWas = _files[path]
+_files[path] = util.TableToJSON({ stock = 0 })
+LC.StockLoad()
+ok(LC.Stock() == 200, "stores saved empty before this start again from half", LC.Stock())
+LC.StockAdd(-LC.Stock())
+LC.StockSave()
+LC.StockLoad()
+ok(LC.Stock() == 0, "once: emptied again and saved, they stay as they are", LC.Stock())
+_files[path] = util.TableToJSON({ stock = 320 })
+LC.StockLoad()
+ok(LC.Stock() == 320, "(stores saved above half are left alone)", LC.Stock())
+_files[path] = fileWas
+LC.Hour, LC.RoleCounts, LC.HumanAdministrator = realHour, realCounts, realHuman
+LC.StockAdd(stockWas - LC.Stock())
+ok(#_errors == errs0, "(no errors in any of it)", _errors[errs0 + 1])
+end
+Nov14F_RationsTests()
+
+function Nov14F_InfestedKinTests()
+section("14 November night, F4: the infested and the infestation's own zombies don't hurt each other")
+local errs0 = #_errors
+local zp, hp = newPlayer("F4Infested", "citizen"), newPlayer("F4Human", "citizen")
+local wasZ = LC.PlayerIsZombie
+LC.PlayerIsZombie = function(p) return p == zp end
+local zb = ents.Create("npc_zombie") zb:SetPos(Vector(-271000, -271000, 0)) zb:Spawn()
+local hc = ents.Create("npc_headcrab") hc:SetPos(Vector(-271100, -271000, 0)) hc:Spawn()
+local cit = ents.Create("npc_citizen") cit:SetPos(Vector(-271200, -271000, 0)) cit:Spawn()
+zp:SetPos(Vector(-271050, -271000, 0))
+local kin = hook.t.EntityTakeDamage.LivingCityInfestedKin
+ok(LC.InfestedKin(zp, zb) and LC.InfestedKin(zb, zp) and LC.InfestedKin(zp, hc), "an infested player and a zombie or headcrab are kin, either way round")
+ok(kin(zp, _dmg(zb, 20)) == true, "a zombie's swipe does an infested player no damage (the owner: \"Not only players but players vs npcs\")")
+ok(kin(zb, _dmg(zp, 20)) == true and kin(hc, _dmg(zp, 20)) == true, "and an infested player's blow does a zombie or a headcrab none")
+ok(kin(hp, _dmg(zb, 20)) == nil and kin(zb, _dmg(hp, 20)) == nil, "a human and a zombie hurt each other as ever")
+ok(kin(cit, _dmg(zp, 20)) == nil and kin(zp, _dmg(cit, 20)) == nil, "so do an infested player and a citizen")
+ok(not LC.InfestedKin(zb, hc), "(two NPCs are left to the game)")
+-- backpedalling while shooting (the engine's own; the gamemode's part is firing on the move): kept
+do
+    local caps = 0
+    local unit = { CapabilitiesAdd = function(_, c) caps = bit.bor(caps, c) end }
+    local had = CAP_MOVE_SHOOT
+    CAP_MOVE_SHOOT = had or 0x2000000 -- (the fake game has no such number)
+    ok(LC.CombatMoveShoot == true and LC.CombatTune(unit, {}) == true and bit.band(caps, CAP_MOVE_SHOOT) ~= 0,
+        "every fighter is still given firing on the move (what lets them backpedal while shooting: the owner, 14 November, \"make sure that stays\")", caps)
+    CAP_MOVE_SHOOT = had
+end
+LC.PlayerIsZombie = wasZ
+for _, e in ipairs({ zb, hc, cit }) do if IsValid(e) then e:Remove() end end
+zp:SetPos(Vector(-121000, -121000, 0)) hp:SetPos(Vector(-121000, -121000, 0))
+ok(#_errors == errs0, "(no errors in any of it)", _errors[errs0 + 1])
+end
+Nov14F_InfestedKinTests()
 
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")
 ;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)
