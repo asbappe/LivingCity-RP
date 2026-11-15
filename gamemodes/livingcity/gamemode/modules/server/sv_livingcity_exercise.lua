@@ -249,7 +249,10 @@ local function Free(npc, st)
 end
 
 -- Units for these posts: the nearest free ones, then fresh ones from out of sight.
-local function Post(posts, prefer)
+-- maxDist: a free unit further from its post than this is left where it is and a fresh one comes
+-- instead (the parade: a column drafted from across the city never formed up; the owner, 14 November,
+-- "I ordered a parade and nothing happened").
+local function Post(posts, prefer, maxDist)
     local pool = {}
     for npc, st in pairs(LC.NPCs or {}) do
         if Free(npc, st) then pool[#pool + 1] = { npc = npc, st = st } end
@@ -258,8 +261,11 @@ local function Post(posts, prefer)
     for _, post in ipairs(posts) do
         local best, bi
         for i, u in ipairs(pool) do
-            local d = u.npc:GetPos():DistToSqr(post) * ((prefer and u.st.role ~= prefer) and 4 or 1)
-            if not best or d < best then best, bi = d, i end
+            local raw = u.npc:GetPos():DistToSqr(post)
+            if not maxDist or raw <= maxDist * maxDist then
+                local d = raw * ((prefer and u.st.role ~= prefer) and 4 or 1)
+                if not best or d < best then best, bi = d, i end
+            end
         end
         local npc, st
         if bi then
@@ -628,9 +634,25 @@ local function SetupDrill()
     end)
 end
 
+local COLUMN_REACH, GUARD_REACH = 1500, 1800 -- how far a free unit may be from its post to be drafted
+
+-- The route to march: any of them, or (a parade someone ordered: LC.ExerciseNear, where they stand)
+-- the one that starts nearest to them.
+local function ParadeRoute()
+    local routes = Routes("parade")
+    local near = LC.ExerciseNear
+    if not near then return Pick(routes) end
+    local best, bd
+    for _, r in ipairs(routes) do
+        local d = r[1].pos:DistToSqr(near)
+        if not bd or d < bd then best, bd = r, d end
+    end
+    return best
+end
+
 local function SetupParade()
     local pts = {}
-    for _, p in ipairs(Pick(Routes("parade"))) do pts[#pts + 1] = p.pos end
+    for _, p in ipairs(ParadeRoute()) do pts[#pts + 1] = p.pos end
     X.route = pts
     X.cum = Cumulative(pts)
     X.total = X.cum[#pts]
@@ -644,7 +666,7 @@ local function SetupParade()
         local rank = math.floor((i - 1) / 2)
         posts[i] = pts[1] - dir * (60 + rank * 70) + side * ((i % 2 == 0) and 40 or -40)
     end
-    X.column = Post(posts, "soldier")
+    X.column = Post(posts, "soldier", COLUMN_REACH)
     for i, u in ipairs(X.column) do
         local st = LC.NPCs[u]
         if st then st.exColumn = { i = 0, offset = side * ((i % 2 == 0) and 40 or -40), delay = math.floor((i - 1) / 2) * 1.6 } end
@@ -656,7 +678,7 @@ local function SetupParade()
         local spot, d = AlongRoute(pts, X.cum, X.total * (i - 0.5) / g)
         guards[#guards + 1] = spot + Vector(-d.y, d.x, 0) * ((i % 2 == 0) and 140 or -140)
     end
-    X.units = Post(guards, "cop")
+    X.units = Post(guards, "cop", GUARD_REACH)
     EnlistCitizens(cvNPCs:GetInt(), function(i)
         local spot, d = AlongRoute(pts, X.cum, X.total * (i - 0.5) / math.max(1, cvNPCs:GetInt()))
         local s = (i % 2 == 0) and 1 or -1
@@ -798,6 +820,13 @@ local function StartRun(now)
         for _, u in ipairs(X.column) do
             local st = LC.NPCs[u]
             if st and st.exColumn then
+                -- one that never reached the form-up (lost on the way) is put with the others, while
+                -- nobody is looking at it or at its place
+                local post = st.holdPos
+                if post and u:GetPos():DistToSqr(post) > 300 * 300 and LC.IsSeen
+                    and not LC.IsSeen(post + Vector(0, 0, 40)) and not LC.IsSeen(u:GetPos() + Vector(0, 0, 40)) then
+                    u:SetPos(post + Vector(0, 0, 4))
+                end
                 st.holdPos = nil
                 timer.Simple(st.exColumn.delay, function()
                     if IsValid(u) and X and X.kind == "parade" and LC.NPCs[u] then
@@ -1267,7 +1296,20 @@ local function ParadeThink(now, dt)
         local st = IsValid(u) and LC.NPCs[u]
         if st and st.exColumn then
             alive = alive + 1
-            if st.exColumn.done then done = done + 1 end
+            local col = st.exColumn
+            if col.done then
+                done = done + 1
+            elseif st.state == "idle" and now - (X.runStart or now) > col.delay + 1 then
+                -- a marcher who has stopped short of a stop (the way there given up) goes on to the
+                -- next one: one of them standing about kept the parade from ever ending
+                col.idleAt = col.idleAt or now
+                if now - col.idleAt > 1.5 then
+                    col.idleAt = nil
+                    LC.ExerciseArrive(u, st, now)
+                end
+            else
+                col.idleAt = nil
+            end
         end
     end
     local function ColumnDist(pos)
@@ -1466,6 +1508,9 @@ hook.Add("PlayerSpawn", "LivingCityExercise", function(ply) ply.lcxBoost = nil p
 hook.Add("PlayerDisconnected", "LivingCityExercise", function(ply)
     if X then X.people[ply] = nil X.absent[ply] = nil if X.leader == ply then X.leader = nil end end
 end)
+
+-- Where the one going on now is held, in words ("near ..."), or nil.
+function LC.ExerciseWhere() return X and X.center and Where(X.center) or nil end
 
 -- What it means, for the person reading the announcement (sv_livingcity_events.lua).
 function LC.ExerciseMeans(kind, ply)

@@ -307,10 +307,18 @@ function LC.AdminDo(ply, what, arg, target)
     end
     if what == "event" then
         if not EVENTS[arg] then return false end
+        -- (a parade she can't have is refused at once, with the reason, and costs her nothing)
+        if arg == "parade" and LC.ExerciseReady and not LC.ExerciseReady("parade") then return false, "This map has no parade route." end
         local ok, why = Cool(ply, "event", 600)
         if not ok then return false, why end
-        if not (LC.StartEvent and LC.StartEvent(arg)) then ply.lcAdminNext.event = 0 return false, "That can't happen right now (or the map has nowhere for it)." end
-        Announce("By order of the City Administrator: " .. EVENTS[arg] .. ".")
+        -- a parade is held on the route that starts nearest to her (sv_livingcity_exercise.lua)
+        LC.ExerciseNear = arg == "parade" and ply:GetPos() or nil
+        local started = LC.StartEvent and LC.StartEvent(arg)
+        LC.ExerciseNear = nil
+        if not started then ply.lcAdminNext.event = 0 return false, "That can't happen right now (or the map has nowhere for it)." end
+        -- and the order says where, so she (and the city) can go and see it
+        local where = arg == "parade" and LC.ExerciseWhere and LC.ExerciseWhere() or nil
+        Announce("By order of the City Administrator: " .. EVENTS[arg] .. (where and (", " .. where) or "") .. ".")
         return true
     elseif what == "rations" then
         if arg ~= "generous" and arg ~= "austere" and arg ~= "normal" then return false end
@@ -463,7 +471,9 @@ end
 net.Receive("lc_admin_do", function(_, ply)
     local what, arg, target = net.ReadString(), net.ReadString(), net.ReadEntity()
     local ok, why = LC.AdminDo(ply, what, arg, target)
-    Say(ply, ok and "[Office] Done." or ("[Office] " .. (why or "No.")))
+    -- (a refusal goes on the screen, where it is seen: house rule 2)
+    if ok or not LC.Notice then Say(ply, ok and "[Office] Done." or ("[Office] " .. (why or "No."))) return end
+    LC.Notice(ply, "warn", "The office", why or "No.", 6)
 end)
 
 function LC.OpenAdminOffice(ply)
