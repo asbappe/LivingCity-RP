@@ -1,6 +1,6 @@
 --[[
     Evidence locker (Living City). Place it with the Living City Editor
-    ("Fixture: evidence locker") so it saves with the map layout. It is a door
+    ("Fixture: Civil Protection evidence locker") so it saves with the map layout. It is a door
     into what Civil Protection has confiscated (sv_livingcity_evidence.lua):
     a unit opens it, anyone else has to pick it or pry it.
 ]]

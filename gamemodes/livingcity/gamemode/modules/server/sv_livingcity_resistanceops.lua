@@ -38,7 +38,7 @@
                       for ten minutes.
       Overwatch drops when sociostability stays red (or the city is in unrest),
                       Overwatch sends soldiers down to a landing zone (editor
-                      "Point: Overwatch landing zone", or a street). Units get
+                      "Point: Combine landing zone", or a street). Units get
                       "Secure the landing zone"; the Resistance "Ambush the
                       landing".
       Foremen         a Trusted citizen (150 standing) can be a Union foreman

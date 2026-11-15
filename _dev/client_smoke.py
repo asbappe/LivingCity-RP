@@ -1457,14 +1457,14 @@ end
 _me:SetNW2Float("lc_feverdream", 0) _me:SetNW2String("lc_ill", "") _me:SetNW2Float("lcn_hunger", 100) _me:SetHealth(100)
 run("Think")
 local okB, errB = pcall(LC_CL.BuildLayoutBrowser, panel, { { id = "dealer", label = "Fixture: black market dealer" },
-    { id = "zone_rebel", label = "Zone: rebel territory" }, { id = "inspect", label = "Inspect anything" } })
+    { id = "zone_rebel", label = "Zone: Resistance territory" }, { id = "inspect", label = "Inspect anything" } })
 if not okB then problems[#problems + 1] = "layout browser: " .. tostring(errB) end
 if LC_CL.LayoutCount("dealer") ~= 1 or LC_CL.LayoutCount("inspect") ~= nil then problems[#problems + 1] = "layout counts" end
 -- (and arranged by what it's for: rebels, prison, each job)
 local arr = GetConVar("lc_editor_arrange")
 if arr then arr.v = "use" end
 local okU, errU = pcall(LC_CL.BuildLayoutBrowser, panel, { { id = "dealer", label = "Fixture: black market dealer" },
-    { id = "zone_rebel", label = "Zone: rebel territory" }, { id = "work_factory", label = "Workplace: Factory" }, { id = "conveyor", label = "Fixture: factory conveyor" } })
+    { id = "zone_rebel", label = "Zone: Resistance territory" }, { id = "work_factory", label = "Workplace: Factory" }, { id = "conveyor", label = "Fixture: factory conveyor" } })
 if not okU then problems[#problems + 1] = "layout browser, by use: " .. tostring(errU) end
 if arr then arr.v = "type" end
 panel.next = 0 -- (every control is this one mock panel, so their Think functions chain; a real number, not the mock's catch-all)
@@ -4537,6 +4537,59 @@ _uses = set(_re.findall(r'"([a-z_0-9]+)"', _lb[_lb.index("local USES"):_lb.index
 _lost = [i for i in _re.findall(r'^\s*\{ id = "([^"]+)",', _tool, _re.M) if i not in _uses and not i.startswith("work_")]
 if _lost:
     problems = (problems + "\n" if problems else "") + "editor modes in no 'what it's for' folder: " + ", ".join(_lost)
+# the editor's list has one naming scheme (the owner, 14 November: "ludicrously uncohesive and need a naming
+# scheme ... not sorted under their respective categories"): a label is "Category: name (hint)", a thing that
+# belongs to one side starts with that side spelt one way, and every section shows its names A to Z
+_modes = _re.findall(r'^\s*\{ id = "([^"]+)",[^\n]*?label = "((?:[^"\\]|\\.)*)"', _tool, _re.M)
+_cats = ("Point: ", "Fixture: ", "Street: ", "Path: ", "Zone: ", "Door: ", "Prop: ")
+_tools = {"inspect", "walker"}
+_side = {"Resistance ": "rspawn rlookout bunk graffiti way_left way_right way_up way_down way_freedom rebelboard interrochair rebelcage workbench zone_rebel",
+         "Combine ": "console forcefield powerbank turret barricade_low barricade barricade_tall dataterm masterterm sspawn sterm lz suppressor zone_combine",
+         "Civil Protection ": "patrol checkpoint cpsupply cpfeed evidlocker door_cp",
+         "Administrator's ": "desk adminpower speech speechcrowd studio door_office",
+         "Union ": "terminal recycler"}
+_bad = []
+for _i, _l in _modes:
+    _name = _l
+    if _i not in _tools:
+        _c = [c for c in _cats if _l.startswith(c)]
+        if not _c:
+            _bad.append("%s has no category ('%s')" % (_i, _l[:40]))
+            continue
+        _name = _l[len(_c[0]):]
+    if _re.match(r"(resistance|rebel|combine|overwatch|civil protection|administrator|union|the) ", _name):
+        _bad.append("%s: '%s' (a side in small letters, or 'the')" % (_i, _name[:40]))
+    for _s, _ids in _side.items():
+        if _i in _ids.split() and not _name.startswith(_s):
+            _bad.append("%s should start with '%s': '%s'" % (_i, _s.strip(), _name[:40]))
+if len(_modes) < 100:
+    _bad.append("only %d editor modes were read" % len(_modes))
+L.globals()["_editor_modes"] = L.table_from([L.table_from({"id": i, "label": l.replace('\\"', '"')}) for i, l in _modes])
+err = L.execute(r"""
+local bad = {}
+for _, arrange in ipairs({ "type", "use" }) do
+    local groups = LC_CL.LayoutGroups(_editor_modes, arrange)
+    local seen = 0
+    for _, g in ipairs(groups) do
+        local last
+        for _, m in ipairs(g.list) do
+            seen = seen + 1
+            local name = LC_CL.LayoutShortName(m)
+            if not string.match(name, "^[%u%d]") then bad[#bad + 1] = arrange .. ": '" .. name .. "' doesn't start with a capital" end
+            if last and string.lower(last) > string.lower(name) then bad[#bad + 1] = arrange .. ", " .. g.title .. ": '" .. name .. "' comes after '" .. last .. "'" end
+            last = name
+            if g.title == "Tools" and arrange == "type" and m.id ~= "inspect" and m.id ~= "walker" then bad[#bad + 1] = m.id .. " is under Tools" end
+            if g.title == "The Resistance and rebel bases" and m.id == "locker" then bad[#bad + 1] = "the citizens' locker is in the Resistance's folder" end
+        end
+    end
+    if seen < #_editor_modes then bad[#bad + 1] = arrange .. ": only " .. seen .. " of " .. #_editor_modes .. " shown" end
+end
+return #bad > 0 and table.concat(bad, "; ") or nil
+""")
+if err:
+    _bad.append(str(err))
+if _bad:
+    problems = (problems + "\n" if problems else "") + "editor names: " + "; ".join(_bad)
 print(problems or "no client errors")
 print("zone fills drawn:", filled, "thick edges drawn:", beams)
 ok = not problems and filled >= 2 and beams > 0

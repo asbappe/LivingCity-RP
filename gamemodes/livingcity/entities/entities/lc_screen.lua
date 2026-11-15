@@ -1,6 +1,6 @@
 --[[
-    City screen (Living City). Place it with the Living City Editor ("Fixture:
-    city screen"). Shows the City Administrator's latest broadcast.
+    City screen (Living City). Place it with the Living City Editor ("Street:
+    Breencast screen, small"). Shows the City Administrator's latest broadcast.
 ]]
 
 AddCSLuaFile()
