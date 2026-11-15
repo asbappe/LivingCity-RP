@@ -171,12 +171,35 @@ LC_CL.TagArt = { tally = "livingcity/graffiti/tally.png", norecord = "livingcity
 LC_CL.TagSize = { arrow_left = 0.21, arrow_right = 0.21, arrow_up = 0.21, arrow_down = 0.21, freedom = 0.21 }
 local TAG_DECAL_SCALE = 0.14 -- (a 512 picture comes out about 72 units across, a little over the lambda's size)
 local tagMats = {}
+-- A picture this game has not got (the download never came: sv_livingcity_scavenge.lua, LC.SendArt)
+-- is asked of the server once and kept in the data folder, data/livingcity/art/<kind>.png. The
+-- server's lc_art_ver says which pictures those are: kept ones from an older set are asked for again.
+local ART_DIR = "livingcity/art/"
+local artAsked, artParts = {}, {}
+LC_CL.ArtAsked = artAsked
+local function ArtKept(kind)
+    if not (file and file.Exists and file.Read) then return nil end
+    local ver = GetGlobal2String and GetGlobal2String("lc_art_ver", "") or ""
+    if ver ~= "" and (file.Read(ART_DIR .. "version.txt", "DATA") or "") ~= ver then return nil end
+    if file.Exists(ART_DIR .. kind .. ".png", "DATA") then return "data/" .. ART_DIR .. kind .. ".png" end
+    return nil
+end
+local function ArtAsk(kind)
+    if artAsked[kind] and CurTime() - artAsked[kind] < 60 then return end
+    artAsked[kind] = CurTime()
+    net.Start("lc_art")
+    net.WriteString(kind)
+    net.SendToServer()
+end
 local function TagMat(kind)
     if not kind or not LC_CL.TagArt[kind] then return nil end
     if tagMats[kind] ~= nil then return tagMats[kind] or nil end
-    tagMats[kind] = false
     local path = LC_CL.TagArt[kind]
-    if not (file and file.Exists and file.Exists("materials/" .. path, "GAME")) then return nil end
+    if not (file and file.Exists and file.Exists("materials/" .. path, "GAME")) then
+        path = ArtKept(kind)
+        if not path then ArtAsk(kind) return nil end -- (not cached as missing: it is on its way)
+    end
+    tagMats[kind] = false
     local pic = Material(path, "smooth mips")
     local tex = pic and pic.IsError and not pic:IsError() and pic.GetTexture and pic:GetTexture("$basetexture")
     if not tex or not CreateMaterial then return nil end
@@ -204,6 +227,8 @@ end
 -- so everyone sees the same one.
 local function PaintTag(t, mats, scale)
     local mat = TagMat(t.kind)
+    -- (its picture was asked for a moment ago: wait for it rather than paint a lambda in its place)
+    if not mat and t.kind and artAsked[t.kind] and CurTime() - artAsked[t.kind] < 20 then return end
     if not mat then
         if #mats == 0 then return end -- (no decal to use: the drawn lambda stands in, below)
         mat = mats[(math.abs(math.floor(t.pos.x * 3 + t.pos.y * 5 + t.pos.z * 7)) % #mats) + 1]
@@ -235,6 +260,37 @@ end
 net.Receive("lc_tags", function()
     local t = ReadCompressed() or {}
     LC_CL.SetTags(t.tags)
+end)
+
+-- A piece of a mark's picture from the server. The last piece in: kept in the data folder, and
+-- every mark of that kind on the walls is painted again with it.
+function LC_CL.ArtPiece(kind, i, n, piece)
+    if not LC_CL.TagArt[kind] or not piece then return false end
+    local got = artParts[kind]
+    if not got or got.n ~= n then got = { n = n, parts = {} } artParts[kind] = got end
+    got.parts[i] = piece
+    for k = 1, n do if not got.parts[k] then return false end end
+    artParts[kind] = nil
+    if file.CreateDir then file.CreateDir("livingcity") file.CreateDir("livingcity/art") end
+    file.Write(ART_DIR .. kind .. ".png", table.concat(got.parts))
+    local ver = GetGlobal2String and GetGlobal2String("lc_art_ver", "") or ""
+    if ver ~= "" and (file.Read(ART_DIR .. "version.txt", "DATA") or "") ~= ver then
+        -- (a new set: what was kept from the old one goes, this one stays)
+        for id in pairs(LC_CL.TagArt) do
+            if id ~= kind and file.Delete then file.Delete(ART_DIR .. id .. ".png") end
+            if id ~= kind then tagMats[id] = nil end
+        end
+        file.Write(ART_DIR .. "version.txt", ver)
+    end
+    tagMats[kind], artAsked[kind] = nil, nil
+    for _, t in ipairs(LC_CL.tags or {}) do
+        if t.kind == kind then ClearTagDecal(t) painted[TagKey(t)] = nil end
+    end
+    return true
+end
+net.Receive("lc_art", function()
+    local kind, i, n, len = net.ReadString(), net.ReadUInt(8), net.ReadUInt(8), net.ReadUInt(16)
+    LC_CL.ArtPiece(kind, i, n, net.ReadData(len))
 end)
 
 -- Paint what isn't up yet; and put back, from time to time, what's near and may

@@ -405,6 +405,9 @@ local function Emit(npc, st, id)
     local clip = Clip(st, id)
     if clip then
         npc:EmitSound(clip, 72)
+        -- (the jaw is marked here too, not only by the hook on emitted sounds: another addon's hook that
+        -- answers first would keep ours from ever hearing of it)
+        if LC.MarkTalking then LC.MarkTalking(npc, clip) end
         return (LC.AnnounceKnownSecs and LC.AnnounceKnownSecs(clip)) or 0
     end
     return 0 -- (not recorded yet: the words only, never Half-Life 2's voice in its place)

@@ -47,7 +47,7 @@ LC.POINT_KINDS = {
     waymark = true, -- a permanent sprayed arrow toward rebel ground; its number is which (sv_livingcity_waymarks.lua)
     dock = true, graffiti = true, rubble = true, pipe = true, -- loading docks, walls that get tagged, rubble piles (Union shifts)
     ladder = true, -- two with the same number: a ladder NPCs can use (sv_livingcity_navgraph.lua)
-    zspawn = true, rspawn = true, -- infested and resistance respawn/spawn points
+    zspawn = true, rspawn = true, colonel = true, -- infested and resistance respawn/spawn points
     rlookout = true, -- an armed rebel stands guard here (sv_livingcity_rebels.lua)
     bunk = true, -- a rebel sleeps here now and then (sv_livingcity_rebellife.lua)
     jogroute = true, yard = true, parade = true, -- morning exercise: the jogging route, the drill yard, the parade route (sv_livingcity_exercise.lua)

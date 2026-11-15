@@ -31883,6 +31883,250 @@ LC.Running, LC.RadioNotice = runWas, radioWas
 end
 Nov14D_ConvoyRaidTests()
 
+function Nov14C_ColonelTests()
+    section("14 November notes (C): the Colonel stays where he stands, and the editor can place him")
+    local saved, anchorWas = {}, LC.ColonelAnchor
+    for npc, st in pairs(LC.NPCs or {}) do if st.quartermaster then saved[npc] = true st.quartermaster = nil end end
+    for i = #LC.Points, 1, -1 do if LC.Points[i].kind == "colonel" then table.remove(LC.Points, i) end end
+    LC.ColonelAnchor = nil
+    local at = Vector(-9000, 7000, 0)
+    local function person(pos)
+        local n, st = LC.SpawnCitizen(pos)
+        st.leaveAt = nil
+        n.sim = false
+        return n, st
+    end
+    local qm, qms = person(at)
+    qms.quartermaster = true
+    local first = LC.ColonelSpot()
+    ok(first and first:Distance(at) < 120, "he is put beside the quartermaster")
+    qm:SetPos(at + Vector(60, 30, 0))
+    qm:SetAngles(Angle(0, 135, 0))
+    local second, yaw2 = LC.ColonelSpot()
+    ok(second and second:Distance(first) < 1, "the quartermaster takes a step and turns: the Colonel has not moved")
+    qm:SetPos(at + Vector(900, 0, 0))
+    local third = LC.ColonelSpot()
+    ok(third and third:Distance(first) > 400 and third:Distance(qm:GetPos()) < 120, "the quartermaster has gone to another part of the camp: only then does he follow")
+    ok(LC.ColonelSpot():Distance(third) < 1, "and stays there again")
+    -- (two quartermasters: he keeps to the one he is beside, whichever the game lists first)
+    local qm2, qms2 = person(at + Vector(5000, 0, 0))
+    qms2.quartermaster = true
+    local steady = true
+    for _ = 1, 6 do if LC.ColonelSpot():Distance(third) > 1 then steady = false end end
+    ok(steady, "a second quartermaster elsewhere does not pull him back and forth")
+    -- the editor's point: he stands exactly there, whatever the quartermaster does
+    local where = at + Vector(0, 2000, 0)
+    local pt = LC.AddPoint(where, 45, "colonel")
+    local placed, pyaw = LC.ColonelSpot()
+    ok(pt and placed and placed:Distance(where) < 1 and pyaw == 45, "Point: Resistance Colonel's spot puts him exactly there, facing the way it was placed")
+    qm:SetPos(at)
+    ok(LC.ColonelSpot():Distance(where) < 1, "and the quartermaster walking about does not move him")
+    LC.RemovePoint(pt)
+    ok(LC.ColonelSpot():Distance(where) > 500, "the point taken away: back beside a quartermaster")
+    qms.quartermaster, qms2.quartermaster = nil, nil
+    qm:Remove() qm2:Remove()
+    for npc in pairs(saved) do if LC.NPCs[npc] then LC.NPCs[npc].quartermaster = true end end
+    LC.ColonelAnchor = anchorWas
+end
+Nov14C_ColonelTests()
+
+function Nov14C_OldTimerTests()
+    section("14 November notes (C): the old-timer wears the fisherman's head, on a body that goes with it")
+    local FACE = "models/lostcoast/fisherman/fisherman.mdl"
+    local existsWas, preWas, validWas = file.Exists, util.PrecacheModel, util.IsValidModel
+    local have, loadedN = true, 0
+    file.Exists = function(p, where) if p == FACE then return have end return existsWas(p, where) end
+    util.PrecacheModel = function(m) if m == FACE then loadedN = loadedN + 1 end end
+    util.IsValidModel = function() return true end
+    for npc, st in pairs(LC.NPCs or {}) do if st.oldtimer then st.oldtimer = nil npc:SetNW2Bool("lc_oldtimer", false) end end
+    for _, p in ipairs(LC.People and LC.People.list or {}) do p.oldtimer = nil end
+    _setcvar("lc_oldtimer_face", "models/other/head.mdl") -- (so the next line is a new face to load)
+    _setcvar("lc_oldtimer_face", FACE)
+    ok(LC.OldTimerFace() == FACE and loadedN >= 1, "the server loads the fisherman's head, so every player's game knows it")
+    local n0 = loadedN
+    LC.OldTimerFace() LC.OldTimerFace()
+    ok(loadedN == n0, "(once, not every tick)")
+    local npc, st = LC.SpawnCitizen(Vector(-9000, -7000, 0))
+    st.leaveAt = nil
+    npc.sim = false
+    npc:SetModel("models/humans/group03/male_03.mdl") -- (the owner's: a dark-skinned man in a beanie)
+    ok(LC.MakeOldTimer(npc) and string.lower(npc:GetModel()) == "models/humans/group01/male_02.mdl", "made the old-timer: a citizen's clothes and hands that go with the old man's head")
+    ok(not npc.lcProfile or npc.lcProfile.model == "models/humans/group01/male_02.mdl", "(kept with the roster, so he is the same after a restart)")
+    npc:SetModel("models/humans/group03/male_07.mdl")
+    LC.OldTimerTick()
+    ok(string.lower(npc:GetModel()) == "models/humans/group01/male_07.mdl", "the old-timer already out in a Resistance outfit is put back in city clothes, the same man")
+    npc:SetModel("models/humans/group01/female_01.mdl")
+    ok(not LC.OldTimerBody(npc) and string.lower(npc:GetModel()) == "models/humans/group01/female_01.mdl", "anyone who is not one of the citizen men is left as they are")
+    have = false
+    npc:SetModel("models/humans/group03/male_03.mdl")
+    ok(LC.OldTimerFace() == nil and not LC.OldTimerBody(npc) and string.lower(npc:GetModel()) == "models/humans/group03/male_03.mdl", "a server without the head: nothing loaded, and he keeps the body he has")
+    st.oldtimer = nil npc:SetNW2Bool("lc_oldtimer", false)
+    if npc.lcProfile then npc.lcProfile.oldtimer = nil end
+    npc:Remove()
+    file.Exists, util.PrecacheModel, util.IsValidModel = existsWas, preWas, validWas
+end
+Nov14C_OldTimerTests()
+
+function Nov14C_MarkArtTests()
+    section("14 November notes (C): the marks' pictures reach every player, whatever the downloads do")
+    local carried, loose = LC.ArtCarried .. "graffiti/", "materials/livingcity/graffiti/"
+    local was = {}
+    for kind, rel in pairs(LC.MarkArt) do
+        for _, path in ipairs({ LC.ArtCarried .. rel, "materials/livingcity/" .. rel }) do was[path] = _files[path] _files[path] = nil end
+    end
+    ok(LC.ArtFile("graffiti/arrow_left.png") == nil and #LC.TagKindsOffered() == 1, "no pictures anywhere on the server: only the lambda, as before")
+    for kind, rel in pairs(LC.MarkArt) do _files[LC.ArtCarried .. rel] = "CARRIED-" .. kind .. "-" .. string.rep("x", 70) end
+    ok(LC.ArtFile("graffiti/arrow_left.png") == carried .. "arrow_left.png", "the gamemode's own copy is found (nothing loose in materials/)")
+    ok(#LC.TagKindsOffered() == 3, "so the can offers the tally and NO RECORD on a server that never got the pictures zip")
+    _files[loose .. "tally.png"] = "THE OWNER'S OWN TALLY"
+    ok(LC.ArtFile("graffiti/tally.png") == loose .. "tally.png", "the owner's own loose picture comes first")
+    local v1 = LC.ArtVersion()
+    local rep = LC.ArtReport()
+    ok(string.find(rep, "1 loose", 1, true) and string.find(rep, "6 from the gamemode", 1, true) and not string.find(rep, "MISSING", 1, true), "the debug report says where they come from: " .. rep)
+    -- a player's game asks for one: it comes in pieces, in order
+    local ply = newPlayer("ArtAsker", "resistance")
+    local chunkWas = LC.ArtChunk
+    LC.ArtChunk = 40
+    net.sent = {}
+    ok(LC.SendArt(ply, "arrow_left") == true, "asked for the left arrow: it is sent")
+    for _ = 1, 6 do _advance(0.4) _runtimers() end
+    local got, n, okEach = {}, 0, true
+    for _, m in ipairs(net.sent) do
+        if m.name == "lc_art" and m.to == ply then
+            n = n + 1
+            if m.data[1] ~= "arrow_left" or m.data[3] ~= 3 or m.data[4] ~= #m.data[5] then okEach = false end
+            got[m.data[2]] = m.data[5] -- (each piece says which it is)
+        end
+    end
+    ok(n == 3 and okEach and table.concat(got) == _files[carried .. "arrow_left.png"], "in " .. n .. " numbered pieces that put together are the picture")
+    net.sent = {}
+    ok(LC.SendArt(ply, "arrow_left") == false, "asked again at once: not sent twice")
+    ok(LC.SendArt(ply, "nonsense") == false and LC.SendArt(ply, "../../cfg/server") == false, "only the marks' pictures can be asked for")
+    net._q = { "tally" }
+    net.recv_lc_art(0, ply)
+    for _ = 1, 3 do _advance(0.4) _runtimers() end
+    local m = _lastnet("lc_art")
+    ok(m and m.data[1] == "tally" and m.data[5] == "THE OWNER'S OWN TALLY", "the request itself (lc_art) sends the owner's own tally")
+    _files[loose .. "tally.png"] = "THE OWNER'S NEW TALLY, LONGER"
+    ok(LC.ArtVersion() ~= v1, "a changed picture is a new version: games that kept the old one ask again")
+    LC.ArtChunk = chunkWas
+    for path in pairs(was) do _files[path] = nil end
+    for kind, rel in pairs(LC.MarkArt) do
+        _files[LC.ArtCarried .. rel], _files["materials/livingcity/" .. rel] = was[LC.ArtCarried .. rel], was["materials/livingcity/" .. rel]
+    end
+end
+Nov14C_MarkArtTests()
+
+function Nov14C_EerieMusicTests()
+    section("14 November notes (C): no Ravenholm music on the Resistance's own ground")
+    local zonesWas = LC.ZonesOfKindShared
+    local infest = { kind = "infest", pos = Vector(0, 0, 0), r = 300 }
+    local camp = { kind = "rebel", pos = Vector(700, 0, 0), r = 300 } -- (the owner's: a camp right beside an infestation)
+    LC.ZonesOfKindShared = function(kind) return kind == "infest" and { infest } or (kind == "rebel" and { camp } or {}) end
+    ok(LC.ByInfest(Vector(0, 0, 0)) == true, "in the infestation: the eerie pieces")
+    ok(LC.ByInfest(Vector(0, 800, 0)) == true, "on the street beside it (within 700): still eerie")
+    ok(LC.ByInfest(Vector(700, 0, 0)) == false, "in the rebel camp 400 from the infestation's edge: not eerie")
+    ok(LC.ByInfest(Vector(450, 0, 0)) == false, "at the camp's near edge, 150 from the infestation: not eerie either")
+    camp.pos = Vector(100, 0, 0)
+    ok(LC.ByInfest(Vector(100, 0, 0)) == true, "rebel ground that the infestation has reached (in both): eerie, you are in it")
+    ok(LC.ByInfest(Vector(5000, 0, 0)) == false, "far from both: not eerie")
+    local ply = newPlayer("EerieRebel", "resistance")
+    camp.pos = Vector(700, 0, 0)
+    ply:SetPos(Vector(700, 0, 0))
+    ply:SetNW2Bool("lc_by_infest", true)
+    LC.ActionTick(CurTime())
+    ok(ply:GetNW2Bool("lc_by_infest", true) == false, "a player standing in the camp is told so (the music's mood follows)")
+    LC.ZonesOfKindShared = zonesWas
+end
+Nov14C_EerieMusicTests()
+
+function Nov14C_PotsTests()
+    section("14 November notes (C): rebel pots stand on the camp's tables and dressers")
+    local runWas, seenWas = LC.Running, LC.IsSeen
+    LC.Running = true
+    LC.IsSeen = function() return false end
+    for _, z in ipairs(LC.ZonesOfKind("rebel")) do LC.RemoveZone(z) end
+    local at = Vector(-46000, 46000, 0)
+    local z = LC.AddZone(at, 500, "rebel", 0)
+    local function furniture(model, off)
+        local e = ents.Create("prop_physics")
+        e:SetModel(model) e:SetPos(at + off) e:Spawn()
+        e.lcDressing = true
+        return e
+    end
+    local tbl = furniture("models/props_c17/furnituretable002a.mdl", Vector(100, 0, 20))
+    local dresser = furniture("models/props_c17/FurnitureDrawer001a.mdl", Vector(-100, 60, 25))
+    local couch = furniture("models/props_c17/furniturecouch002a.mdl", Vector(0, -150, 20))
+    local dressedWas = LC.Dressed[z]
+    LC.Dressed[z] = { want = 3, ents = { couch, tbl, dresser } }
+    ok(LC.IsPotFurniture(tbl) and LC.IsPotFurniture(dresser) and not LC.IsPotFurniture(couch), "a table and a dresser take a pot; a couch does not")
+    LC.EnsureRebelProps()
+    local r = LC.RebelProps[z]
+    ok(r and #r.pots == 2, "the camp has its two pots", r and #r.pots)
+    local on = {}
+    for _, pot in ipairs(r and r.pots or {}) do
+        if IsValid(pot.lcSeat) then
+            on[pot.lcSeat] = pot
+            local p, f = pot:GetPos(), pot.lcSeat:GetPos()
+            if math.abs(p.x - f.x) > 40 or math.abs(p.y - f.y) > 40 or p.z <= f.z then on.bad = true end
+        end
+    end
+    ok(on[tbl] and on[dresser] and not on.bad, "one on the table and one on the dresser: over the middle of it, above it, not on the floor")
+    ok(not on[couch], "(none on the couch)")
+    -- the table is taken away (the dressing is refreshed): its pot comes down, it is not left in the air
+    local pot = on[tbl]
+    local was = pot and pot:GetPos()
+    tbl:Remove()
+    LC.Dressed[z].ents = { couch, dresser }
+    LC.EnsureRebelProps()
+    ok(pot and IsValid(pot) and pot.lcSeat == nil and pot:GetPos().z < was.z, "the table goes: its pot is set down on the floor")
+    -- a new table: the pot on the floor goes up on it, but only while nobody is looking
+    local tbl2 = furniture("models/props_c17/furnituretable001a.mdl", Vector(150, 100, 20))
+    LC.Dressed[z].ents = { couch, dresser, tbl2 }
+    LC.IsSeen = function() return true end
+    LC.EnsureRebelProps()
+    ok(pot.lcSeat == nil, "a player is looking: it does not jump onto the new table")
+    LC.IsSeen = function() return false end
+    LC.EnsureRebelProps()
+    ok(pot.lcSeat == tbl2, "nobody is looking: it stands on the new table")
+    -- the dresser is pushed across the room: its pot goes with it
+    local dp = on[dresser]
+    dresser:SetPos(at + Vector(-300, 200, 25))
+    LC.EnsureRebelProps()
+    ok(dp.lcSeat == dresser and math.abs(dp:GetPos().x - dresser:GetPos().x) < 40 and math.abs(dp:GetPos().y - dresser:GetPos().y) < 40, "the dresser is moved: its pot is on it still")
+    -- a pot a player carried and set down stays where they put it
+    pot.lcPlacedByHand, pot.lcSeat, pot.lcSeatAt = true, nil, nil
+    pot:SetPos(at + Vector(0, 300, 1))
+    LC.EnsureRebelProps()
+    ok(pot.lcSeat == nil and pot:GetPos():Distance(at + Vector(0, 300, 1)) < 2, "a pot a player set down by hand is left where they put it")
+    for _, e in ipairs({ dresser, couch, tbl2 }) do if IsValid(e) then e:Remove() end end
+    LC.Dressed[z] = dressedWas
+    LC.RemoveZone(z)
+    LC.EnsureRebelProps()
+    LC.Running, LC.IsSeen = runWas, seenWas
+end
+Nov14C_PotsTests()
+
+function Nov14C_MouthTests()
+    section("14 November notes (C): a citizen saying a recorded line is marked talking, whatever other hooks do")
+    local npc, st = LC.SpawnCitizen(Vector(-12000, -12000, 0))
+    st.leaveAt = nil
+    npc.sim = false
+    st.gender = "male"
+    local clipWas, hooksWas = LC.AdviceClip, hook.t and hook.t.EntityEmitSound
+    LC.AdviceClip = function(id) return "livingcity/citizens/" .. id .. "_male1.wav" end
+    local forceWas = LC.VoiceForce
+    LC.VoiceForce = "own" -- (one of the citizens who speak in the owner's recordings)
+    if hook.t then hook.t.EntityEmitSound = {} end -- (as if another addon's hook answered first: ours never runs)
+    npc:SetNW2Float("lc_talk_until", 0)
+    local said = LC.LineSay(npc, st, "say_greet_warm", false)
+    ok(said ~= nil and said ~= "", "the warm greeting is said", tostring(said))
+    ok(npc:GetNW2Float("lc_talk_until", 0) > CurTime(), "and the speaker is marked talking for the length of it (players' games work the jaw)")
+    if hook.t then hook.t.EntityEmitSound = hooksWas end
+    LC.AdviceClip, LC.VoiceForce = clipWas, forceWas
+    npc:Remove()
+end
+Nov14C_MouthTests()
 
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")
 ;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)

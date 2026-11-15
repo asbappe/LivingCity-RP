@@ -1444,13 +1444,18 @@ do
         return setmetatable(m, { __index = function() return function() end end })
     end
     _globals.lc_oldtimer_face = "models/lostcoast/fisherman/fisherman.mdl"
-    util.IsValidModel = function() return true end
-    _advance(2) run("Think")
-    if made ~= 1 then problems[#problems + 1] = "the old-timer's face wasn't laid over him" end
+    -- (the owner, 14 November: he kept his own face. The server had never loaded the fisherman, so
+    -- util.IsValidModel said no on every player's game, though the file was there all along)
+    local feWas = file.Exists
     util.IsValidModel = function() return false end
+    file.Exists = function(p) return p == "models/lostcoast/fisherman/fisherman.mdl" end
+    _advance(2) run("Think")
+    if made ~= 1 then problems[#problems + 1] = "the old-timer's face wasn't laid over him (the file is there, the model not loaded yet)" end
+    file.Exists = function() return false end
     made = 0
     _advance(2) run("Think")
     if made ~= 0 then problems[#problems + 1] = "the old-timer's face was made without the model" end
+    file.Exists = feWas
     ents.FindByClass, util.IsValidModel, ClientsideModel = fbWas, ivWas, cmWas2
     _globals.lc_oldtimer_face = ""
 end
@@ -2851,8 +2856,28 @@ if removed < 1 then return "graffiti: a removed tag did not come off the wall" e
 local marked = tag(300) marked.k = "tally"
 LC_CL.SetTags({ tag(100), marked })
 if not (LC_CL.tags[2] and LC_CL.tags[2].kind == "tally" and LC_CL.tags[1].kind == nil) then return "graffiti: a tag's kind did not arrive" end
+-- (14 November: a mark whose picture this game lacks is asked of the server, not painted as a lambda;
+--  the picture arrives in pieces, is kept in the data folder, and the mark is painted with it)
+local kept, fileWas = {}, file
+file = { Exists = function(p, where) if where == "DATA" then return kept[p] ~= nil end return false end,
+    Read = function(p) return kept[p] end, Write = function(p, d) kept[p] = d end, CreateDir = function() end, Delete = function(p) kept[p] = nil end }
 for _ = 1, 3 do _advance(1.1) _runtimers() end
-if painted ~= 3 then return "graffiti: the tally was not painted (" .. painted .. ")" end
+if painted ~= 2 then return "graffiti: a mark with no picture yet was painted as something else (" .. painted .. ")" end
+if not LC_CL.ArtAsked.tally then return "graffiti: the tally's picture was not asked of the server" end
+if LC_CL.ArtPiece("tally", 2, 2, "SECOND") ~= false then return "graffiti: half a picture counted as a whole one" end
+if LC_CL.ArtPiece("tally", 1, 2, "FIRST") ~= true or kept["livingcity/art/tally.png"] ~= "FIRSTSECOND" then return "graffiti: the picture's pieces were not put together and kept" end
+if LC_CL.ArtPiece("nonsense", 1, 1, "X") ~= false then return "graffiti: a picture nobody uses was kept" end
+for _ = 1, 3 do _advance(1.1) _runtimers() end
+if painted ~= 3 then return "graffiti: the tally was not painted once its picture came (" .. painted .. ")" end
+-- (and a picture that never comes: the lambda stands in after twenty seconds, as it always did)
+local late = tag(400) late.k = "norecord"
+LC_CL.SetTags({ tag(100), marked, late })
+for _ = 1, 3 do _advance(1.1) _runtimers() end
+if painted ~= 3 then return "graffiti: did not wait for NO RECORD's picture (" .. painted .. ")" end
+for _ = 1, 22 do _advance(1.1) _runtimers() end
+if painted < 4 then return "graffiti: with no picture after twenty seconds, nothing was painted at all" end
+painted = 3
+file = fileWas
 if LC_CL.TagMat("lambda") ~= nil or LC_CL.TagMat(nil) ~= nil then return "graffiti: the lambda has no picture of its own" end
 if not (LC_CL.DreamArt and LC_CL.DreamArt.cheese and LC_CL.DreamArtMade.cheese ~= nil and LC_CL.DreamArtMade.swirl1 ~= nil) then return "dream art: the cheese and swirl materials were not made" end
 local before = _calls["cam.Start3D2D"] or 0
@@ -4270,7 +4295,29 @@ hook.t.EntityNetworkedVarChanged.LivingCityLipSync(cop, "lc_talk_until", 0, CurT
 local okT, errT = pcall(hook.t.Think.LivingCityLipSync)
 if not okT then return "lip sync: " .. tostring(errT) end
 if LC.LipSyncFace(cop) ~= false then return "lip sync: a metrocop's mask has no jaw to move" end
-npc:Remove() cop:Remove()
+-- (14 November: "the NPC's mouth doesn't move with the voice lines") a speaker the hook never told us of is
+-- found all the same, and the jaw is set again as the frame is drawn, after the game has smoothed the face back
+local npc2, w2 = Face("models/humans/group01/female_02.mdl", { jaw_drop = 3, right_part = 5, left_part = 6 })
+npc2:SetNW2Float("lc_talk_from", CurTime())
+npc2:SetNW2Float("lc_talk_until", CurTime() + 3)
+local fisWas = ents.FindInSphere
+ents.FindInSphere = function() return { npc2, _me } end
+local draw = hook.t.PreDrawOpaqueRenderables and hook.t.PreDrawOpaqueRenderables.LivingCityLipSync
+if not draw then return "lip sync: the jaw is not set again when the frame is drawn" end
+local heldAtDraw = 0
+for _ = 1, 30 do
+    _advance(0.05)
+    hook.t.Think.LivingCityLipSync()
+    w2[3] = 0 -- (the game smooths the face back to the server's before it draws)
+    draw(false, false)
+    if (w2[3] or 0) > 0.05 then heldAtDraw = heldAtDraw + 1 end
+end
+ents.FindInSphere = fisWas
+if heldAtDraw < 5 then return "lip sync: a speaker nobody announced was not found, or the jaw did not hold at draw time (" .. heldAtDraw .. ")" end
+w2[3] = 0.4
+draw(true, false)
+if w2[3] ~= 0.4 then return "lip sync: worked again for the shadow pass" end
+npc:Remove() cop:Remove() npc2:Remove()
 return nil
 """)
 if err:
@@ -4626,6 +4673,50 @@ if err:
     _bad.append(str(err))
 if _bad:
     problems = (problems + "\n" if problems else "") + "editor names: " + "; ".join(_bad)
+# the Resistance's scientist looks at you with his irises showing (the owner, 14 November: "rolling his
+# eyes up so all I can see are the whites"): what his eyes are given is measured from his own eyes
+L.globals()._SCI = open(os.path.join(GMDIR, "entities", "entities", "lc_scientist.lua"), encoding="utf-8").read()
+err = L.execute(r"""
+local entWas, addWas, w2lWas = ENT, AddCSLuaFile, WorldToLocal
+ENT = {}
+AddCSLuaFile = function() end
+-- (the real thing: a place in the world, as seen from a place and a facing; here a facing of none or of yaw 90)
+WorldToLocal = function(pos, _, org, ang)
+    local d = pos - org
+    if ang and ang.y == 90 then return Vector(d.y, -d.x, d.z), Angle(0, 0, 0) end
+    return Vector(d.x, d.y, d.z), Angle(0, 0, 0)
+end
+local fn, e = loadstring(_SCI, "lc_scientist.lua")
+if not fn then return "the scientist: " .. tostring(e) end
+fn()
+local E = ENT
+ENT, AddCSLuaFile = entWas, addWas
+local eyes = { Pos = Vector(5000, -3000, 1264), Ang = Angle(0, 90, 0) } -- (a lab far from the map's middle, facing +y)
+local sci = { LookupAttachment = function(_, n) return n == "eyes" and 1 or 0 end, GetAttachment = function() return eyes end }
+local bad
+local function near(v, x, y, z) return math.abs(v.x - x) < 0.01 and math.abs(v.y - y) < 0.01 and math.abs(v.z - z) < 0.01 end
+if not E.EyeTargetFor then bad = "no EyeTargetFor"
+else
+    local ahead = E.EyeTargetFor(sci, nil)
+    if not near(ahead, 100, 0, 0) then bad = "nobody near: his eyes are not straight ahead" end
+    -- someone standing 100 in front of him, eyes level with his: straight ahead of his own eyes, not a place in the world
+    local t = E.EyeTargetFor(sci, Vector(5000, -2900, 1264))
+    if not bad and not near(t, 100, 0, 0) then bad = "someone in front of him: his eyes were sent to " .. tostring(t) end
+    -- someone far above him (a walkway): the eyes turn up a little, never over into the head
+    t = E.EyeTargetFor(sci, Vector(5000, -2900, 2264))
+    if not bad and not (t.x >= 20 and t.z > 0 and t.z <= t.x * 0.35 + 0.01) then bad = "someone overhead: his eyes roll up (" .. tostring(t) .. ")" end
+    -- someone behind him: forward still, turned as far aside as an eye goes
+    t = E.EyeTargetFor(sci, Vector(5200, -3200, 1264))
+    if not bad and not (t.x >= 20 and math.abs(t.y) <= t.x * 0.6 + 0.01) then bad = "someone behind him: his eyes turn into his head (" .. tostring(t) .. ")" end
+    -- a model with no eyes attachment: straight ahead, no error
+    t = E.EyeTargetFor({ LookupAttachment = function() return 0 end }, Vector(1, 2, 3))
+    if not bad and not near(t, 100, 0, 0) then bad = "no eyes attachment: not straight ahead" end
+end
+WorldToLocal = w2lWas
+return bad and ("the scientist's eyes: " .. bad) or nil
+""")
+if err:
+    problems = (problems + "\n" if problems else "") + str(err)
 print(problems or "no client errors")
 print("zone fills drawn:", filled, "thick edges drawn:", beams)
 ok = not problems and filled >= 2 and beams > 0

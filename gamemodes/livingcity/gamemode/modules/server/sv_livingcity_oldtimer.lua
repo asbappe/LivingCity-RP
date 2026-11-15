@@ -137,10 +137,41 @@ function LC.OldTimer()
     end
 end
 
+-- Is the head he wears on this server (Lost Coast's fisherman comes with Garry's Mod)? Loaded once,
+-- so every player's game is told of it (a model the server never loaded is "not valid" to them).
+local loaded
+function LC.OldTimerFace()
+    local face = cvOld:GetBool() and cvFace:GetString() or ""
+    if face == "" or not (file and file.Exists and file.Exists(face, "GAME")) then return nil end
+    if loaded ~= face then
+        loaded = face
+        if util.PrecacheModel then util.PrecacheModel(face) end
+    end
+    return face
+end
+
+-- His body under that head: a citizen man in citizen's clothes whose hands go with it (the owner,
+-- 10 November: "his body just a standard citizen in citizen clothes"; 14 November: he was "a black
+-- citizen with a beanie"). A Resistance outfit becomes the same man's city clothes; male_03, the one
+-- dark-skinned man, becomes male_02. Without the head on the server he keeps the body he has.
+function LC.OldTimerBody(npc)
+    if not LC.OldTimerFace() then return false end
+    local was = string.lower(npc:GetModel() or "")
+    local n = string.match(was, "/male_(%d+)%.mdl$")
+    if not n then return false end
+    if n == "03" then n = "02" end
+    local want = "models/humans/group01/male_" .. n .. ".mdl"
+    if was == want or (util.IsValidModel and not util.IsValidModel(want)) then return false end
+    npc:SetModel(want)
+    if npc.lcProfile then npc.lcProfile.model = want end
+    return true
+end
+
 function LC.MakeOldTimer(npc)
     local st = Living(npc)
     if not st then return false end
     st.oldtimer = true
+    LC.OldTimerBody(npc)
     npc:SetNW2Bool("lc_oldtimer", true)
     if npc.lcProfile then
         npc.lcProfile.oldtimer = true
@@ -153,7 +184,9 @@ end
 function LC.OldTimerTick()
     SetGlobal2String("lc_oldtimer_face", cvOld:GetBool() and cvFace:GetString() or "")
     if not cvOld:GetBool() then return end
-    if LC.OldTimer() then return end
+    LC.OldTimerFace()
+    local out = LC.OldTimer()
+    if out then LC.OldTimerBody(out) return end
     -- the roster's old-timer, if he's out
     local living
     for _, p in ipairs(LC.People and LC.People.list or {}) do

@@ -40,6 +40,7 @@ local MODES = {
     { id = "speechcrowd", label = "Point: Administrator's speech crowd (where the city gathers for her address; with one placed, attendance is mandatory)" },
     { id = "zspawn",      label = "Point: infestation spawn (zombies, infested players)" },
     { id = "rspawn",      label = "Point: Resistance spawn (rebel players)" },
+    { id = "colonel",     label = "Point: Resistance Colonel's spot (the ghost only the Resistance sees stands here, facing you; none: beside the quartermaster)" },
     { id = "rlookout",    label = "Point: Resistance lookout post (an armed fighter stands guard here; place it from where the Combine would come, so he faces that way)" },
     { id = "bunk",        label = "Point: Resistance bunk (a rebel sleeps here now and then; aim at the middle of the bed from its foot or head, so it lies along the bed)" },
     { id = "sspawn",      label = "Point: Combine scanner launch spot (where flown scanners go up)" },
