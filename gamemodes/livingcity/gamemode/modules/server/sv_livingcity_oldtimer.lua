@@ -153,13 +153,17 @@ end
 -- His body under that head: a citizen man in citizen's clothes whose hands go with it (the owner,
 -- 10 November: "his body just a standard citizen in citizen clothes"; 14 November: he was "a black
 -- citizen with a beanie"). A Resistance outfit becomes the same man's city clothes; male_03, the one
--- dark-skinned man, becomes male_02. Without the head on the server he keeps the body he has.
+-- dark-skinned man, becomes male_02. Without the head on the server he keeps the body he has. Every
+-- dark-skinned body (male_01, male_03, male_05) becomes a white man's, so his hands match the fisherman's
+-- face (the owner, 15 November: "the fisherman model is a old white man and the model for the citizen ...
+-- is a black man. Please use a different citizen model so the skin tones match"; only male_03 was).
+local LIGHTER = { ["01"] = "02", ["03"] = "02", ["05"] = "09" }
 function LC.OldTimerBody(npc)
     if not LC.OldTimerFace() then return false end
     local was = string.lower(npc:GetModel() or "")
     local n = string.match(was, "/male_(%d+)%.mdl$")
     if not n then return false end
-    if n == "03" then n = "02" end
+    n = LIGHTER[n] or n
     local want = "models/humans/group01/male_" .. n .. ".mdl"
     if was == want or (util.IsValidModel and not util.IsValidModel(want)) then return false end
     npc:SetModel(want)

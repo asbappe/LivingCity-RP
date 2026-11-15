@@ -32126,6 +32126,13 @@ function Nov14C_OldTimerTests()
     npc:SetModel("models/humans/group03/male_03.mdl") -- (the owner's: a dark-skinned man in a beanie)
     ok(LC.MakeOldTimer(npc) and string.lower(npc:GetModel()) == "models/humans/group01/male_02.mdl", "made the old-timer: a citizen's clothes and hands that go with the old man's head")
     ok(not npc.lcProfile or npc.lcProfile.model == "models/humans/group01/male_02.mdl", "(kept with the roster, so he is the same after a restart)")
+    -- every dark-skinned body, not only male_03 (the owner, 15 November: his hands didn't match the old white man's face)
+    for _, dark in ipairs({ "01", "05" }) do
+        npc:SetModel("models/humans/group01/male_" .. dark .. ".mdl")
+        LC.OldTimerBody(npc)
+        local now = string.match(string.lower(npc:GetModel()), "male_(%d+)")
+        ok(now ~= "01" and now ~= "03" and now ~= "05", "a dark-skinned body (male_" .. dark .. ") becomes a white man's under the fisherman's head", npc:GetModel())
+    end
     npc:SetModel("models/humans/group03/male_07.mdl")
     LC.OldTimerTick()
     ok(string.lower(npc:GetModel()) == "models/humans/group01/male_07.mdl", "the old-timer already out in a Resistance outfit is put back in city clothes, the same man")
