@@ -184,7 +184,9 @@ local function Clear(pos, radius)
 end
 LC.DressingClear = Clear
 
-local function Prop(model, pos, yaw)
+-- passable: nothing walks into it (the owner, 14 November: cremators stuck on the infestation's junk; "make all
+-- props/junk in the infestation zone not ... impede NPCs nor players"). Debris still rests on the floor.
+local function Prop(model, pos, yaw, passable)
     local e = ents.Create("prop_physics")
     if not IsValid(e) then return nil end
     e:SetModel(model)
@@ -210,8 +212,10 @@ local function Prop(model, pos, yaw)
         end
     end
     e.lcDressing = true
+    if passable and e.SetCollisionGroup then e:SetCollisionGroup(COLLISION_GROUP_DEBRIS or 1) end
     return e
 end
+LC.DressingProp = Prop
 
 local function Radius(model)
     if string.find(model, "couch", 1, true) or string.find(model, "mattress", 1, true) then return 60 end
@@ -270,7 +274,7 @@ local function Dress(z, d)
                 d.table = true
             else
                 local m = Pick(DRESS[z.kind])
-                if ModelOK(m) and Clear(p, Radius(m)) then e = Prop(m, p) end
+                if ModelOK(m) and Clear(p, Radius(m)) then e = Prop(m, p, nil, z.kind == "infest") end
             end
             if IsValid(e) then
                 d.ents[#d.ents + 1] = e

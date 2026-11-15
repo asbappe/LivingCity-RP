@@ -31536,6 +31536,352 @@ for _, e in ipairs({ lr, lc, lz }) do if IsValid(e) then e:Remove() end end
 for _, p in ipairs({ rebel, cit, unit, unit2 }) do p.lookingAt = nil p:SetPos(Vector(-30000, 30000, 0)) end
 end
 Nov15_LockerSideTests()
+function Nov14D_WeaponsTests()
+section("Citizens leave weapons alone, a sympathizer hides one and passes it on, no weapon in custody (14 November, group D)")
+local realFind = ents.FindByClass
+ents.FindByClass = function(c)
+    if c ~= "weapon_*" then return realFind(c) end
+    local o = {}
+    for _, k in ipairs({ "weapon_smg1", "weapon_ar2", "weapon_pistol" }) do for _, e in ipairs(realFind(k)) do o[#o + 1] = e end end
+    return o
+end
+local function gun(cls, pos) local w = ents.Create(cls) w:SetPos(pos) w:Spawn() return w end
+local function inHand(npc, cls)
+    local w = { gone = false }
+    function w:IsValid() return not self.gone end
+    function w:GetClass() return cls end
+    function w:Remove() self.gone = true end
+    npc.GetActiveWeapon = function() return (not w.gone) and w or nil end
+    return w
+end
+local base = Vector(-30000, 26000, 0)
+local T = CurTime() + 100
+
+-- an ordinary citizen: told not to, and one in the hands all the same goes back down
+local n, st = LC.SpawnCitizen(base)
+hook.Run("OnEntityCreated", n)
+_run(1)
+local told = false
+for _, f in ipairs(n.fired or {}) do if f == "DisableWeaponPickup" then told = true end end
+ok(told and n.lcNoPickup == true, "a citizen is told not to pick weapons up (the engine's own habit)")
+st.rebel = nil
+local held = inHand(n, "weapon_ar2")
+local dropped
+n.DropWeapon = function(_, w) dropped = w w.gone = true end
+LC.NPCWeaponsTick(T)
+ok(dropped == held and st.hidGun == nil, "an ordinary citizen found with one in hand puts it back down")
+local lw = gun("weapon_smg1", base + Vector(40, 0, 0))
+LC.NPCWeaponsTick(T + 4)
+ok(IsValid(lw) and st.hidGun == nil, "and walks past one lying loose")
+
+-- a sympathizer: takes it, hidden, kept on the person
+st.rebel = true
+LC.SetState(n, st, "idle")
+LC.NPCWeaponsTick(T + 8)
+ok(not IsValid(lw) and st.hidGun == "weapon_smg1", "a sympathizer passing it takes it and hides it", tostring(st.hidGun))
+ok(n:GetActiveWeapon() == nil, "nothing shows in their hands")
+ok(n.lcProfile == nil or n.lcProfile.hidGun == "weapon_smg1", "it is kept on the person")
+ok(LC.SearchNPCRoll(st) == "a hidden firearm", "a unit's search finds it, every time")
+ok(LC.HiddenGunFound(n, st) and st.hidGun == nil and LC.SearchNPCRoll ~= nil, "and found, it is gone")
+
+-- a unit near: left where it is
+local cop = ents.Create("npc_metropolice") cop:SetPos(base + Vector(200, 0, 0)) cop:Spawn()
+LC.RegisterNPC(cop, "cop")
+local lw2 = gun("weapon_pistol", base + Vector(30, 0, 0))
+LC.NPCWeaponsTick(T + 12)
+ok(IsValid(lw2) and st.hidGun == nil, "with a unit near, a sympathizer leaves it")
+LC.NPCs[cop] = nil cop:Remove()
+LC.NPCWeaponsTick(T + 16)
+ok(not IsValid(lw2) and st.hidGun == "weapon_pistol", "(the unit gone, taken)")
+
+-- the same person later: a new body, the weapon still theirs
+if n.lcProfile then
+    local n2 = ents.Create("npc_citizen") n2:SetPos(base) n2:Spawn()
+    n2.lcProfile = n.lcProfile
+    ok(LC.NPCHiddenGun(n2, { role = "citizen" }) == "weapon_pistol", "the same person back on the street still has it")
+    n2:Remove()
+end
+
+-- passed on: the Resistance's stores
+local crate = ents.Create("lc_crate") crate:SetPos(base + Vector(900, 0, 0)) crate:Spawn()
+local stock0 = crate.lcStock or 0
+ok(LC.HiddenGunDelivered(n, st, crate, "stores") and st.hidGun == nil, "handed in at a Resistance supply crate")
+ok((crate.lcStock or 0) == stock0 + 2, "worth two supplies to the stores", tostring(crate.lcStock))
+ok(not LC.HiddenGunDelivered(n, st, crate, "stores"), "(once)")
+crate:Remove()
+
+-- custody: nothing in the hands, nothing hidden
+local n3, st3 = LC.SpawnCitizen(base + Vector(0, 300, 0))
+local h3 = inHand(n3, "weapon_ar2")
+st3.hidGun = "weapon_pistol"
+ok(LC.NoWeaponsInCustody(n3, st3) and h3.gone and st3.hidGun == nil, "taken into custody: the weapon in hand and the hidden one are both taken")
+local h4 = inHand(n3, "weapon_ar2")
+LC.SetState(n3, st3, "jailed")
+LC.NPCWeaponsTick(T + 20)
+ok(h4.gone, "a prisoner in a cell found with a weapon loses it")
+local h5 = inHand(n3, "weapon_smg1")
+LC.OnNPCReachedCell(n3, st3, T + 21)
+ok(h5.gone, "and it is checked at the cell door")
+local r, rst = LC.SpawnCitizen(base + Vector(0, 600, 0))
+rst.role = "rebel"
+local h6 = inHand(r, "weapon_smg1")
+LC.NoWeaponsInCustody(r, rst)
+ok(h6.gone and rst.cuffWeapon == "weapon_smg1", "a fighter's is taken too, and remembered for when they are freed")
+ok(string.find(LC.NPCWeaponsSummary(), "hidden by sympathizers", 1, true) ~= nil, "the debug report counts it")
+
+ents.FindByClass = realFind
+for _, e in ipairs({ n, n3, r }) do if IsValid(e) then LC.NPCs[e] = nil e:Remove() end end
+end
+Nov14D_WeaponsTests()
+
+
+function Nov14D_InfestJunkTests()
+section("The infestation's junk blocks nobody (14 November, group D)")
+local DEBRIS = COLLISION_GROUP_DEBRIS or 1
+local a = LC.DressingProp("models/props_junk/trashbin01a.mdl", Vector(-29000, 24000, 0), nil, true)
+ok(IsValid(a) and a:GetCollisionGroup() == DEBRIS, "a piece of the infestation's junk is debris: NPCs and players walk through it")
+local b = LC.DressingProp("models/props_junk/wood_crate001a.mdl", Vector(-29000, 24200, 0))
+ok(IsValid(b) and b:GetCollisionGroup() ~= DEBRIS, "a rebel camp's crate is as solid as it was")
+a:Remove() b:Remove()
+-- the whole way: an infested zone dressed by the city
+local was = GetConVar("lc_dressing"):GetInt()
+_setcvar("lc_dressing", 1)
+local wasRunning = LC.Running
+LC.Running = true
+local at = Vector(-29000, 22000, 0)
+local z = LC.AddZone(at, 500, "infest", 0)
+local wasWalls = _walls
+_walls = {}
+LC.DressingTick()
+local d = LC.Dressed[z]
+local n, solid = 0, 0
+for _, e in ipairs(d and d.ents or {}) do
+    if IsValid(e) and e:GetClass() == "prop_physics" then
+        n = n + 1
+        if e:GetCollisionGroup() ~= DEBRIS then solid = solid + 1 end
+    end
+end
+ok(n > 0 and solid == 0, "every prop the infestation puts out is passable", n .. " props, " .. solid .. " solid")
+_walls = wasWalls
+for _, e in ipairs(d and d.ents or {}) do if IsValid(e) then e:Remove() end end
+LC.Dressed[z] = nil
+for i, o in ipairs(LC.Zones) do if o == z then table.remove(LC.Zones, i) break end end
+LC.Running = wasRunning
+_setcvar("lc_dressing", was)
+end
+Nov14D_InfestJunkTests()
+
+
+function Nov14D_StalkerTerminalTests()
+section("A stalker at a terminal: onto the spot, leans in once, then works (14 November, group D)")
+local fake = ents.Create("npc_stalker")
+fake:SetModel("models/test_stalker_parts.mdl")
+fake.seqs = { console_work_pre = 4, console_work_loop = 5, console_work_post = 6 }
+fake.GetSequenceList = function() return { [0] = "idle01", [4] = "console_work_pre", [5] = "console_work_loop", [6] = "console_work_post" } end
+LC.StalkerConsoleSequence(fake, true)
+local entry, loop = LC.StalkerConsoleParts(fake)
+ok(entry == "console_work_pre" and loop == "console_work_loop", "a model with a lean in and a loop: the lean in once, the loop repeated (never the lean in over and over)", tostring(entry) .. " / " .. tostring(loop))
+ok(string.find(LC.StalkerSummary(), "console_work_pre, then console_work_loop", 1, true) ~= nil, "the debug report names both", LC.StalkerSequenceUsed)
+fake:SetModel("models/test_stalker_preonly.mdl")
+fake.seqs = { console_work_pre = 4 }
+fake.GetSequenceList = function() return { [0] = "idle01", [4] = "console_work_pre" } end
+LC.StalkerConsoleSequence(fake, true)
+entry, loop = LC.StalkerConsoleParts(fake)
+ok(entry == "console_work_pre" and loop == nil, "only a lean in: played once, nothing repeated", tostring(entry) .. " / " .. tostring(loop))
+fake:SetModel("models/test_stalker_plain.mdl")
+fake.seqs = { console_work = 7 }
+fake.GetSequenceList = nil
+LC.StalkerConsoleSequence(fake, true)
+entry, loop = LC.StalkerConsoleParts(fake)
+ok(entry == nil and loop == "console_work", "one plain animation: looped as before", tostring(entry) .. " / " .. tostring(loop))
+fake:Remove()
+
+local evWas = LC.Event
+LC.Event = nil
+_setcvar("lc_zone_stalkers", 1)
+local Z = Vector(-195000, 175000, 0)
+local hq = LC.AddZone(Z, 500, "combine", 0)
+local term = LC.AddPoint(Z + Vector(200, 0, 0), 90, "sterm", 0)
+LC.ZoneStalkersStaff(CurTime())
+local res
+for _, r in pairs(LC.ZoneStalkers) do if r.zone == hq then res = r end end
+if res and IsValid(res.npc) then
+    res.npc:SetModel("models/test_stalker_parts2.mdl")
+    res.npc.seqs = { console_work_pre = 4, console_work_loop = 5 }
+    res.npc.GetSequenceList = function() return { [4] = "console_work_pre", [5] = "console_work_loop" } end
+    LC.StalkerConsoleSequence(res.npc, true)
+    for _ = 1, 60 do
+        _run(0.5)
+        LC.ZoneStalkersTick(CurTime())
+        if res.phase == "working" then break end
+    end
+    local kv = IsValid(res.ss) and res.ss.kv or {}
+    ok(res.phase == "working" and kv.m_iszPlay == "console_work_pre" and kv.m_iszPostIdle == "console_work_loop",
+        "at its terminal: the lean in, then the loop", tostring(kv.m_iszPlay) .. " / " .. tostring(kv.m_iszPostIdle))
+    ok(tostring(kv.m_fMoveTo) == "1" and res.ss:GetPos():Distance(term.pos) < 1, "it walks the last steps onto the spot itself and faces the way the spot does", tostring(kv.m_fMoveTo))
+    -- something in the way of the last step: put on the spot, once
+    local first = res.ss
+    res.npc:SetPos(term.pos + Vector(-30, 0, 0))
+    res.ssAt = CurTime() - 9
+    LC.ZoneStalkersThink(CurTime())
+    local kv2 = IsValid(res.ss) and res.ss.kv or {}
+    ok(res.ss ~= first and tostring(kv2.m_fMoveTo) == "4", "still short of it after eight seconds: put on the spot", tostring(kv2.m_fMoveTo))
+    local second = res.ss
+    res.ssAt = CurTime() - 9
+    LC.ZoneStalkersThink(CurTime())
+    ok(res.ss == second, "(once: not again and again)")
+    if IsValid(res.ss) then res.ss:Remove() end
+    LC.ZoneStalkers[res.npc] = nil
+    res.npc:Remove()
+else
+    ok(false, "a resident stalker for the test")
+end
+LC.RemovePoint(term) LC.RemoveZone(hq)
+LC.Event = evWas
+end
+Nov14D_StalkerTerminalTests()
+
+
+function Nov14D_LoudspeakerTests()
+section("Loudspeakers: the box back against the wall, smoke when broken, a spark every 15 seconds when hacked (14 November, group D)")
+local at = Vector(-28000, 20000, 200)
+local sp = ents.Create("lc_loudspeaker") sp:SetPos(at) sp:SetAngles(Angle(0, 0, 0)) sp:Spawn()
+local wasWalls = _walls
+_walls = { { a = Vector(at.x - 10, at.y - 200, 0), b = Vector(at.x - 10, at.y + 200, 0) } }
+local pos, ang = LC.UtilityBoxSpot(sp)
+ok(pos ~= nil and math.abs(pos.x - (at.x - 10 + LC.UtilityBoxOffWall)) < 1.5, "the box is set against the wall behind the loudspeaker, not two feet out from it", tostring(pos))
+ok(pos ~= nil and math.abs(pos.y - at.y) < 1, "(straight below it still)")
+_walls = {}
+local pos2 = LC.UtilityBoxSpot(sp)
+ok(pos2 ~= nil and math.abs(pos2.x - (at.x + 14)) < 1, "with no wall behind it (a loudspeaker on a pole), under the loudspeaker as before", tostring(pos2))
+_walls = wasWalls
+
+-- broken: smoke until it is mended
+local T = CurTime() + 50
+LC.SpeakerShowTick(T)
+ok(not IsValid(sp.lcSmoke), "a working loudspeaker: no smoke")
+LC.BreakStreetFixture(sp)
+LC.SpeakerShowTick(T + 3)
+local smoke = sp.lcSmoke
+ok(IsValid(smoke) and smoke:GetClass() == "env_smokestack", "a broken loudspeaker smokes")
+LC.SpeakerShowTick(T + 6)
+ok(sp.lcSmoke == smoke, "(one column of it, not one more each time)")
+LC.RepairStreetFixture(sp)
+LC.SpeakerShowTick(T + 9)
+ok(not IsValid(smoke) and sp.lcSmoke == nil, "mended: the smoke stops")
+
+-- hacked: one spark every fifteen seconds, no noise that loops
+local sparks, sounds = 0, {}
+local realEffect, realEmit = util.Effect, sp.EmitSound
+util.Effect = function(name) if name == "Sparks" then sparks = sparks + 1 end end
+sp.EmitSound = function(_, snd) sounds[#sounds + 1] = snd end
+sp:SetNW2Float("lc_hacked_until", CurTime() + 600)
+LC.SpeakerShowTick(T + 12)
+local first = sparks
+ok(first >= 1 and #sounds == 1, "a hacked loudspeaker gives a spark", first)
+LC.SpeakerShowTick(T + 15) LC.SpeakerShowTick(T + 18) LC.SpeakerShowTick(T + 24)
+ok(sparks == first and #sounds == 1, "(not again within fifteen seconds)", sparks)
+LC.SpeakerShowTick(T + 27.5)
+ok(sparks == first * 2 and #sounds == 2, "and another fifteen seconds on")
+ok(LC.SpeakerSparkEvery == 15, "(fifteen seconds, as asked)")
+ok(string.find(LC.SpeakerSummary(), "hacked", 1, true) ~= nil, "the debug report counts loudspeakers, broken and hacked", LC.SpeakerSummary())
+util.Effect = realEffect
+sp.EmitSound = realEmit
+sp:Remove()
+end
+Nov14D_LoudspeakerTests()
+
+
+function Nov14D_ForcefieldTests()
+section("A forcefield with no power bank shows no field and stops nobody; who a powered one lets through (14 November, group D)")
+local was = GetConVar("lc_forcefield_needs_bank"):GetInt()
+_setcvar("lc_forcefield_needs_bank", 1)
+local at = Vector(-27000, 18000, 0)
+local f = ents.Create("lc_forcefield") f:SetPos(at) f:Spawn()
+f.lcForcefield = true
+f.FieldUp = function(self) return not self:GetNW2Bool("lc_nopower", false) and self:GetNW2Float("lc_short_until", 0) < CurTime() end
+ok(f:FieldUp(), "(the fake game's field knows nothing of its power until it is told)")
+LC.FieldPlaced(f) -- (what the real one's Initialize calls)
+ok(f:GetNW2Bool("lc_nopower", false) == true and not f:FieldUp(), "with no power bank in reach it is dark from the moment it is placed (no field drawn: the client asks FieldUp)")
+local cit = newPlayer("FieldCit14", "citizen")
+ok(hook.Run("ShouldCollide", f, cit) == false, "and it stops nobody")
+LC.CheckpointTick(CurTime())
+ok(not f:FieldUp(), "(still dark after the checkpoints' own check)")
+-- a bank in reach: up, and who passes
+local b = ents.Create("lc_powerbank") b:SetPos(at + Vector(100, 0, 0)) b:Spawn()
+LC.CheckpointTick(CurTime())
+ok(f:FieldUp(), "a power bank beside it: the field is up", tostring(f:GetNW2Bool("lc_nopower", false)))
+ok(hook.Run("ShouldCollide", f, cit) == true, "a citizen is stopped")
+local unit = newPlayer("FieldUnit14", "cp")
+unit:SetNW2Bool("lc_unit", true)
+ok(hook.Run("ShouldCollide", f, unit) == false, "a unit walks through")
+local cop = ents.Create("npc_metropolice") cop:Spawn()
+local stalker = ents.Create("npc_stalker") stalker:Spawn()
+local zombie = ents.Create("npc_zombie") zombie:Spawn()
+ok(hook.Run("ShouldCollide", f, cop) == false and hook.Run("ShouldCollide", f, stalker) == false, "metrocop and stalker NPCs walk through")
+ok(hook.Run("ShouldCollide", f, zombie) == true, "the infected do not")
+cop:Remove() stalker:Remove() zombie:Remove() b:Remove() f:Remove()
+_setcvar("lc_forcefield_needs_bank", was)
+end
+Nov14D_ForcefieldTests()
+
+
+function Nov14D_ConvoyRaidTests()
+section("The supply drop raided by rebel fighters: the guard down first, then every load, into the stores (14 November, group D)")
+local runWas, radioWas = LC.Running, LC.RadioNotice
+LC.Running = true
+LC.RadioNotice = function() end
+_setcvar("lc_rebel_ops", 1)
+_setcvar("lc_rebel_react", 1)
+if LC.Skirmish then LC.EndSkirmish(LC.Skirmish, "test") end
+local R0 = Vector(-108000, 60000, 0)
+local rz = LC.AddZone(R0, 400, "rebel", 0)
+local propsWas = LC.RebelProps[rz]
+local cache = ents.Create("lc_crate") cache:SetPos(R0) cache:Spawn()
+LC.RebelProps[rz] = { cache = cache, pots = {} }
+local at = R0 + Vector(1500, 0, 0)
+local crate = ents.Create("lc_supply") crate:SetPos(at) crate:Spawn()
+crate:SetNW2Int("lc_loads", 5)
+local guard = ents.Create("npc_combine_s") guard:SetPos(at + Vector(60, 0, 0)) guard:Spawn()
+local supWas = LC.Supply
+LC.Supply = { pos = at, crate = crate, startT = CurTime() - 60, guards = { guard }, props = {}, raided = {}, loads = 5 }
+local launched = LC.RebelReact(CurTime())
+local sk = LC.Skirmish
+ok(launched and sk and sk.purpose == "supply", "the fighters go for the supply drop")
+if sk then
+    sk.zone = sk.zone or rz
+    local reb = ents.Create("npc_citizen") reb:SetPos(at + Vector(-40, 0, 0)) reb:Spawn()
+    sk.rebels = sk.rebels or {}
+    sk.rebels[#sk.rebels + 1] = reb
+    local stock0 = cache.lcStock or 0
+    for _ = 1, 40 do LC.RebelOpTick(CurTime()) end
+    ok(LC.RebelSupplyGuarded(sk) and not sk.achieved and crate:GetNW2Int("lc_loads", 0) == 5, "while its guard stands, the crate is not touched", tostring(sk.progress))
+    guard:Remove()
+    ok(not LC.RebelSupplyGuarded(sk), "(the guard down: nobody guards it)")
+    local unit = newPlayer("ConvoyUnit14", "cp")
+    unit:SetPos(at + Vector(0, 100, 0))
+    local cpWas = LC.PlayerIsCP
+    LC.PlayerIsCP = function(p) return p == unit or cpWas(p) end
+    ok(LC.RebelSupplyGuarded(sk), "a unit standing beside the crate guards it too")
+    unit:SetPos(at + Vector(0, 5000, 0))
+    LC.PlayerIsCP = cpWas
+    for _ = 1, 40 do LC.RebelOpTick(CurTime()) if sk.achieved then break end end
+    ok(sk.achieved == true and crate:GetNW2Int("lc_loads", 0) == 0, "everyone guarding it down: they open it and take every load", tostring(crate:GetNW2Int("lc_loads", 0)))
+    local zc = LC.RebelProps[sk.zone] and LC.RebelProps[sk.zone].cache
+    ok(IsValid(zc) and (zc.lcStock or 0) > (zc == cache and stock0 or 0), "and it goes into the Resistance's stores at home", tostring(IsValid(zc) and zc.lcStock))
+    if IsValid(reb) then reb:Remove() end
+end
+if LC.Skirmish then LC.EndSkirmish(LC.Skirmish, "test") end
+LC.Supply = supWas
+LC.RebelProps[rz] = propsWas
+for n, st in pairs(LC.NPCs) do if IsValid(n) and st.role == "rebel" and st.zone == rz then LC.NPCs[n] = nil n:Remove() end end
+if IsValid(guard) then guard:Remove() end
+crate:Remove() cache:Remove()
+LC.RemoveZone(rz)
+_setcvar("lc_rebel_ops", 0)
+LC.Running, LC.RadioNotice = runWas, radioWas
+end
+Nov14D_ConvoyRaidTests()
 
 
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")

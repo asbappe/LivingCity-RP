@@ -43,12 +43,32 @@ end
 
 -- Where the box goes: straight down from the speaker to the floor, a little out from what it hangs
 -- on, at hip height. nil if there's no floor under it within reach.
+-- Then back against the wall behind it (the owner, 14 November: "the utility box for the loudspeakers is
+-- about 2 feet in front of the wall, please move it back"): the wall is looked for behind the box at hip
+-- height, up to LC.UtilityBoxWallReach back, and the box set LC.UtilityBoxOffWall off its face, facing out.
+-- With no wall there (a loudspeaker on a pole), it stays under the loudspeaker as before.
+LC.UtilityBoxWallReach = 96
+LC.UtilityBoxOffWall = 2
 function LC.UtilityBoxSpot(sp)
     local top = sp:GetPos()
-    local out = sp:GetForward() * 14
+    local fwd = sp:GetForward()
+    local out = fwd * 14
     local tr = util.TraceLine({ start = top + out, endpos = top + out - Vector(0, 0, 900), filter = sp, mask = MASK_SOLID_BRUSHONLY or MASK_SOLID })
     if not tr.Hit or tr.StartSolid then return nil end
-    return tr.HitPos + Vector(0, 0, 36), Angle(0, sp:GetAngles().y, 0)
+    local pos, ang = tr.HitPos + Vector(0, 0, 36), Angle(0, sp:GetAngles().y, 0)
+    local back = Vector(-fwd.x, -fwd.y, 0)
+    if back:LengthSqr() > 0.01 then
+        back:Normalize()
+        local w = util.TraceLine({ start = pos, endpos = pos + back * LC.UtilityBoxWallReach, filter = sp, mask = MASK_SOLID_BRUSHONLY or MASK_SOLID })
+        if w and w.Hit and not w.StartSolid and w.HitPos then
+            local n = w.HitNormal
+            if not n or n:LengthSqr() < 0.01 or math.abs(n.z) > 0.5 then n = -back end
+            if n:Dot(back) > 0 then n = -n end -- (the wall's face, towards the room)
+            pos = w.HitPos + n * LC.UtilityBoxOffWall
+            ang = Angle(0, n:Angle().y, 0)
+        end
+    end
+    return pos, ang
 end
 
 function LC.EnsureUtilityBoxes()
@@ -146,22 +166,75 @@ function LC.SpeakerHackSay(clip, words, heard)
     return out
 end
 
--- a hacked box sparks now and then (how a unit finds one)
-timer.Create("LivingCitySpeakerHackSparks", 6, 0, function()
-    if not cvOn:GetBool() then return end
-    for _, sp in ipairs(LC.HackedSpeakers()) do
-        local box = sp.lcBox
-        if IsValid(box) and math.random() < 0.5 then
-            local ed = EffectData and EffectData()
-            if ed then
-                ed:SetOrigin(box:GetPos() + box:GetUp() * 8)
-                ed:SetMagnitude(1) ed:SetScale(1) ed:SetRadius(2)
-                if util.Effect then util.Effect("Sparks", ed) end
+-- What a loudspeaker shows of itself (the owner, 14 November: "If they are broken, have them smoke. If they
+-- are hacked, have them spark occasionally (like once every 15 seconds)"). A broken one trails thin smoke
+-- until it is mended; a hacked one gives one spark, at the loudspeaker and at its box, every
+-- LC.SpeakerSparkEvery seconds (it was a coin flip every 6). Nothing here loops a sound.
+LC.SpeakerSparkEvery = 15
+local function Spark(pos)
+    local ed = EffectData and EffectData()
+    if not ed then return end
+    ed:SetOrigin(pos)
+    if ed.SetMagnitude then ed:SetMagnitude(1) ed:SetScale(1) ed:SetRadius(2) end
+    if util.Effect then util.Effect("Sparks", ed) end
+end
+function LC.SpeakerSmoke(sp, on)
+    if not IsValid(sp) then return nil end
+    if not on then
+        if IsValid(sp.lcSmoke) then sp.lcSmoke:Remove() end
+        sp.lcSmoke = nil
+        return nil
+    end
+    if IsValid(sp.lcSmoke) then return sp.lcSmoke end
+    local e = ents.Create("env_smokestack")
+    if not IsValid(e) then return nil end
+    e:SetPos(sp.WorldSpaceCenter and sp:WorldSpaceCenter() or sp:GetPos())
+    for k, v in pairs({ InitialState = "1", BaseSpread = "4", SpreadSpeed = "6", Speed = "22", StartSize = "6", EndSize = "26",
+        Rate = "5", JetLength = "70", twist = "4", rendercolor = "60 60 60", renderamt = "110", SmokeMaterial = "particle/SmokeStack.vmt" }) do
+        e:SetKeyValue(k, v)
+    end
+    e:Spawn()
+    e:Activate()
+    if e.SetParent then e:SetParent(sp) end
+    sp.lcSmoke = e
+    if sp.CallOnRemove then sp:CallOnRemove("lc_speakersmoke", function(x) if IsValid(x.lcSmoke) then x.lcSmoke:Remove() end end) end
+    return e
+end
+function LC.SpeakerShowTick(now)
+    now = now or CurTime()
+    for _, sp in ipairs(LC.EntsOf and LC.EntsOf("lc_loudspeaker") or ents.FindByClass("lc_loudspeaker")) do
+        if IsValid(sp) then
+            local broken = sp:GetNW2Bool("lc_broken", false)
+            LC.SpeakerSmoke(sp, broken)
+            if not broken and LC.SpeakerHacked(sp) and cvOn:GetBool() then
+                if now >= (sp.lcNextSpark or 0) then
+                    sp.lcNextSpark = now + LC.SpeakerSparkEvery
+                    Spark(sp.WorldSpaceCenter and sp:WorldSpaceCenter() or sp:GetPos())
+                    local box = sp.lcBox
+                    if IsValid(box) then Spark(box:GetPos() + box:GetUp() * 8) end
+                    sp:EmitSound("ambient/energy/spark" .. math.random(1, 6) .. ".wav", 55, 110, 0.5)
+                end
+            else
+                sp.lcNextSpark = nil
             end
-            box:EmitSound("ambient/energy/spark" .. math.random(1, 6) .. ".wav", 55, 110, 0.5)
         end
     end
+end
+timer.Create("LivingCitySpeakerHackSparks", 3, 0, function()
+    local ok, err = LC.Try(LC.SpeakerShowTick, CurTime())
+    if not ok and LC.Error then LC.Error("loudspeakers", err) end
 end)
+-- For the debug report: how many there are, broken, hacked (which of them make a noise, and why).
+function LC.SpeakerSummary()
+    local n, broken, hacked = 0, 0, 0
+    for _, sp in ipairs(LC.EntsOf and LC.EntsOf("lc_loudspeaker") or ents.FindByClass("lc_loudspeaker")) do
+        if IsValid(sp) then
+            n = n + 1
+            if sp:GetNW2Bool("lc_broken", false) then broken = broken + 1 elseif LC.SpeakerHacked(sp) then hacked = hacked + 1 end
+        end
+    end
+    return string.format("loudspeakers: %d, %d broken (smoking), %d hacked (a spark every %d seconds)", n, broken, hacked, LC.SpeakerSparkEvery)
+end
 timer.Create("LivingCityUtilityBoxes", 15, 0, function()
     local ok, err = LC.Try(LC.EnsureUtilityBoxes)
     if not ok and LC.Error then LC.Error("utility boxes", err) end

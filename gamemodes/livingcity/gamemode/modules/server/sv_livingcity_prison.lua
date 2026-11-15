@@ -657,6 +657,7 @@ end)
 function LC.OnNPCReachedCell(npc, st, now)
     LC.SetState(npc, st, "jailed")
     st.untilT = st.jailUntil or (now + 90)
+    if LC.NoWeaponsInCustody then LC.NoWeaponsInCustody(npc, st) end -- (checked again at the cell door)
     -- (said under their name: unarmed rebels standing in the cells during a raid were taken for raiders who
     -- had spawned there, the owner, 11 November. They are prisoners.)
     if LC.SetNPCStr then LC.SetNPCStr(npc, "lc_doing", "a prisoner, held in the cells") end
@@ -716,7 +717,9 @@ function LC.ArrestNPC(npc, arrester)
     LC.SetState(npc, st, "detained") -- cuffed, standing still
     st.untilT = CurTime() + 10
     st.poi = cell
-    if st.role == "rebel" and LC.DisarmPrisoner then LC.DisarmPrisoner(npc, st) end
+    -- nobody in custody holds a weapon (the owner, 14 November: a prisoner in the cells with a pulse rifle)
+    if LC.NoWeaponsInCustody then LC.NoWeaponsInCustody(npc, st)
+    elseif st.role == "rebel" and LC.DisarmPrisoner then LC.DisarmPrisoner(npc, st) end
     if LC.Fleeing and LC.Fleeing[npc] then LC.Fleeing[npc].untilT = 0 end
     if LC.WalkNPCToPrison and LC.WalkNPCToPrison(npc, st, arrester, cell) then
         hook.Run("LivingCityIncarcerated", npc, st.jailUntil - CurTime(), "NPC arrest", arrester)

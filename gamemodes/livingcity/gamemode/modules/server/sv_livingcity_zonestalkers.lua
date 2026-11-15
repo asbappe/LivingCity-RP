@@ -107,6 +107,44 @@ function LC.StalkerConsoleSequence(npc, fresh)
     return name, id
 end
 
+-- Its parts (the owner, 14 November: "it starts playing an animation where the stalker leans forward but then
+-- it just keeps repeating the first .5 seconds"; the debug report: "terminal animation: console_work_pre").
+-- A model's console animation comes in pieces: the lean in (_pre), the working (_loop), the straightening up
+-- (_post). The lean in was being played and then repeated as if it were the working. Returns the lean in
+-- (nil with none) and what is repeated while it works (nil: only a lean in, played once).
+local ENTRY_TAILS = { "_pre", "_entry", "_enter", "_start", "_intro", "_begin", "_in" }
+local EXIT_TAILS = { "_post", "_exit", "_outro", "_end", "_out" }
+local LOOP_TAILS = { "_loop", "_idle", "_work", "" }
+local function Base(name, tails)
+    local low = string.lower(name)
+    for _, t in ipairs(tails) do
+        if #low > #t and string.sub(low, -#t) == t then return string.sub(name, 1, #name - #t) end
+    end
+end
+local function Has(npc, name)
+    local i = npc.LookupSequence and npc:LookupSequence(name)
+    return i ~= nil and i >= 0
+end
+function LC.StalkerConsoleParts(npc)
+    local name = LC.StalkerConsoleSequence(npc)
+    if not name then return nil end
+    local isEntry = Base(name, ENTRY_TAILS) ~= nil
+    local base = Base(name, ENTRY_TAILS) or Base(name, EXIT_TAILS) or Base(name, { "_loop", "_idle" }) or name
+    local entry, loop
+    for _, t in ipairs(LOOP_TAILS) do
+        if Has(npc, base .. t) then loop = base .. t break end
+    end
+    for _, t in ipairs(ENTRY_TAILS) do
+        if Has(npc, base .. t) then entry = base .. t break end
+    end
+    if not loop then
+        if isEntry then entry = name else loop = name end -- (a lean in and nothing after: once, then it stands)
+    end
+    if entry == loop then entry = nil end
+    LC.StalkerSequenceUsed = entry and loop and (entry .. ", then " .. loop) or (loop or (entry .. " (once)"))
+    return entry, loop
+end
+
 local function StopLoop(r)
     if IsValid(r.ss) then
         r.ss:Fire("CancelSequence")
@@ -115,13 +153,19 @@ local function StopLoop(r)
     r.ss = nil
 end
 
-local function StartLoop(r, pos, yaw)
+-- It walks onto the spot itself and turns the way the spot faces, then leans in once and works (snap: put
+-- there, when it could not walk the last of it). It used to start where it stopped, anywhere within 40
+-- units of the spot: the owner, 14 November, "it needs to be 1.5 feet closer to the terminal".
+local function StartLoop(r, pos, yaw, snap)
     StopLoop(r)
-    local name = LC.StalkerConsoleSequence(r.npc)
-    if not name or not LC.MakeSequence then return false end
-    local flags = (SF_SCRIPT_LOOP_IN_POST_IDLE or 16) + (SF_SCRIPT_NO_COMPLAINTS or 128) + (SF_SCRIPT_ALLOW_DEATH or 64)
-    local ok, ss = LC.Try(LC.MakeSequence, r.npc, pos, yaw, name, name, flags, 0, 0)
-    if ok and IsValid(ss) then r.ss = ss return true end
+    local entry, loop = LC.StalkerConsoleParts(r.npc)
+    if not (entry or loop) or not LC.MakeSequence then return false end
+    local flags = (SF_SCRIPT_NO_COMPLAINTS or 128) + (SF_SCRIPT_ALLOW_DEATH or 64) + (loop and (SF_SCRIPT_LOOP_IN_POST_IDLE or 16) or 0)
+    local ok, ss = LC.Try(LC.MakeSequence, r.npc, pos, yaw, entry or loop, loop, flags, snap and 4 or 1, 0)
+    if ok and IsValid(ss) then
+        r.ss, r.ssAt, r.ssSnap = ss, CurTime(), snap or nil
+        return true
+    end
     return false
 end
 
@@ -447,6 +491,11 @@ local function Idle(r, now)
         SetDoing(r, "working a terminal")
     elseif r.ss == nil or not IsValid(r.ss) then
         StartLoop(r, r.term.pos, r.term.yaw) -- (the loop broke off: again)
+    elseif not r.ssSnap and now - (r.ssAt or now) > 8 then
+        -- still short of the spot after eight seconds (something in the way of the last step): put on it
+        local d = npc:GetPos() - r.term.pos
+        d.z = 0
+        if d:LengthSqr() > 14 * 14 then StartLoop(r, r.term.pos, r.term.yaw, true) end
     end
 end
 

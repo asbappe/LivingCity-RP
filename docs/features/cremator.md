@@ -57,3 +57,5 @@ The flame is green, as the Immolator's was, drawn on the client from the model's
 - **It appears by the infestation.** With no hidden spot at an infestation it takes the nearest path node to it that nobody can see (`LC.CrematorNearestNode`), before anywhere else in the city.
 - **It walks with a cleanup crew only at an infestation** (within 1800 units of one: `LC.CrematorEscortHere`), not across the city.
 - Fixed: "Tried to use a NULL entity" when the worker it walked with was gone between two looks.
+
+**The infestation's junk blocks nobody** (the owner, 14 November: cremators were stuck on it). Every prop the city puts out on infested ground (rubbish bags, bins, boxes, bones) and the warning post's sign and lamp are walked through by NPCs and players alike; they still rest on the floor. A rebel camp's crates and furniture are as solid as before. The infestation control barrel is unchanged.
