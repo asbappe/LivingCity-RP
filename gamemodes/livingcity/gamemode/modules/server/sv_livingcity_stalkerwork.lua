@@ -311,6 +311,7 @@ local function Hang(e, ply, bone)
     if id and id >= 0 and e.FollowBone then
         e:FollowBone(ply, id)
     else
+        if e.RemoveEffects and EF_FOLLOWBONE then e:RemoveEffects(EF_FOLLOWBONE) end -- (no longer carried by a bone)
         e:SetParent(nil)
         e:SetParent(ply)
     end

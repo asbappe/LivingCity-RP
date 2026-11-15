@@ -989,6 +989,7 @@ local function HoldBroomAsSet(v, s, hold)
         e:FollowBone(v, bone)
         s.broomBone = hold.bone
     else
+        if e.RemoveEffects and EF_FOLLOWBONE then e:RemoveEffects(EF_FOLLOWBONE) end -- (no longer carried by a bone)
         e:SetParent(nil)
         e:SetParent(v)
         s.broomBone = ""
@@ -1007,6 +1008,7 @@ local function HoldBroom(v, s, k)
     if hold and hold.tuned then return HoldBroomAsSet(v, s, hold) end
     if s.broomSet then -- (set by hand before, and now back to the built-in: let go of the claw's bone)
         s.broomSet, s.broomBone = nil, nil
+        if e.RemoveEffects and EF_FOLLOWBONE then e:RemoveEffects(EF_FOLLOWBONE) end -- (no longer carried by a bone)
         e:SetParent(nil)
         e:SetParent(v)
     end
