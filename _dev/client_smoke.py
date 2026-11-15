@@ -1518,10 +1518,36 @@ local okOct, errOct = pcall(function()
     if LC_CL.VoiceSecs("x.mp3", 7, 4) ~= 7 or LC_CL.VoiceSecs("x.mp3", 0, 4) ~= 4 then error("voice length") end
     local was = _me.GetNW2String
     _me.GetNW2String = function(self, k, d) if k == "lcf_faction" then return "resistance" end return was(self, k, d) end
-    if not LC_CL.RankCard(_me, 16, 160, 340) then error("no rank card for a Resistance member") end
+    if not LC_CL.HasRank(_me) then error("a Resistance member isn't someone with a rank") end
     _me.GetNW2String = function(self, k, d) if k == "lcf_faction" then return "citizen" end return was(self, k, d) end
-    if LC_CL.RankCard(_me, 16, 160, 340) then error("a rank card for a plain citizen") end
+    if LC_CL.HasRank(_me) then error("a plain citizen counts as having a rank") end
     _me.GetNW2String = was
+    -- one status box in the upper left (the owner, 14 November: two boxes said side, rank, credits and Civil
+    -- Standing twice): everything either showed is drawn, each fact once, and the second card is gone
+    if LC_CL.RankCard then error("the second card is still there") end
+    local wasS, wasI, wasF, wasDraw, wasGlobal = _me.GetNW2String, _me.GetNW2Int, _me.GetNW2Float, draw.SimpleText, GetGlobal2Bool
+    local strs = { lcf_faction = "resistance", lcj_job = "sanitation", lcd_disguise = "citizen", lcu_band = "resistance", lcd_alias = "#12-345" }
+    _me.GetNW2String = function(self, k, d) if strs[k] then return strs[k] end return wasS(self, k, d) end
+    _me.GetNW2Int = function(self, k, d) if k == "lce_credits" then return 454 elseif k == "lce_standing" then return -990 end return wasI(self, k, d) end
+    _me.GetNW2Float = function(self, k, d) if k == "lc_wanted_until" then return CurTime() + 60 end return wasF(self, k, d) end
+    GetGlobal2Bool = function(k, d) if k == "lc_economy_on" then return true end return wasGlobal(k, d) end
+    local said = {}
+    draw.SimpleText = function(text) said[#said + 1] = tostring(text) end
+    local okB, errB = pcall(function()
+        hook.t.HUDPaint.LivingCityNeedsHUD()
+        hook.t.HUDPaint.LivingCityUndergroundHUD()
+        hook.t.HUDPaint.LivingCityNextStep()
+    end)
+    _me.GetNW2String, _me.GetNW2Int, _me.GetNW2Float, draw.SimpleText, GetGlobal2Bool = wasS, wasI, wasF, wasDraw, wasGlobal
+    if not okB then error("the status box: " .. tostring(errB)) end
+    local all = table.concat(said, "\n")
+    local function Times(pat) local n = 0 for _ in string.gmatch(all, pat) do n = n + 1 end return n end
+    if Times("454") ~= 1 then error("credits are drawn " .. Times("454") .. " times in the upper left:\n" .. all) end
+    if Times("%-990") ~= 1 then error("Civil Standing is drawn " .. Times("%-990") .. " times:\n" .. all) end
+    for _, want in ipairs({ "Loyalty", "Union job: ", "Wearing citizen clothes", "Radio: Freq 7", "Papers: citizen #12%-345", "WANTED" }) do
+        if Times(want) ~= 1 then error("the one box should say '" .. want .. "' once, it says it " .. Times(want) .. " times:\n" .. all) end
+    end
+    if string.find(all, "Jobs, orders and your story", 1, true) then error("the F4 line is still drawn") end
     if type(LC_CL.SubsY(1920, 1080, 2)) ~= "number" then error("subtitle height") end
     if not LC_CL.EndingSameValue("0.360000", "0.36") or LC_CL.EndingSameValue("0.4", "0.36") or not LC_CL.EndingSameValue("12.2:ignite,60.2:hop", "12.2:ignite,60.2:hop") then error("ending settings compared wrong") end
     if not LC_CL.EndingCombineBody({ GetModel = function() return "models/player/police.mdl" end }) then error("a metrocop isn't a Combine body") end

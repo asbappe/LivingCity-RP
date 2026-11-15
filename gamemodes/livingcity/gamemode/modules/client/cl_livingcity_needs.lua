@@ -30,11 +30,12 @@ end
 -- Top-left, compact: the bottom-left belongs to the chat.
 LC_CL = LC_CL or {}
 LC_CL.HudX, LC_CL.HudY, LC_CL.HudW = 16, 16, 220
--- The left column, top to bottom: the needs box, the line under it (radio, disguise, papers),
--- then the "What now?" card, then the odd line (recovering, the urge). Each goes under the one
--- above, wherever that ended last frame (they used to be placed under the centre banners, so
--- with no banner up they landed on the needs box).
-function LC_CL.LeftColumnTop() return (LC_CL.HudBottom or LC_CL.HudY) + (LC_CL.UnderLineShown and 18 or 0) end
+-- The left column, top to bottom: the one status box (who you are, credits and standing, the
+-- traits, hunger and thirst when low, a rebel's Union job, radio, disguise and papers), then the
+-- "What now?" card, then the odd line (recovering, the urge). Each goes under the one above,
+-- wherever that ended last frame (they used to be placed under the centre banners, so with no
+-- banner up they landed on the needs box).
+function LC_CL.LeftColumnTop() return LC_CL.HudBottom or LC_CL.HudY end
 function LC_CL.LeftColumnBottom()
     -- (the card's bottom, if it was drawn a moment ago: whichever is drawn first in a frame, the other's last place counts)
     if LC_CL.NextStepAt and CurTime() - LC_CL.NextStepAt < 0.25 then return LC_CL.NextStepBottom end
@@ -63,6 +64,29 @@ function LC_CL.NeedsVisible(ply)
     return h < NEEDS_LOW or t < NEEDS_LOW or ply:GetNW2Float("lcn_parasites", 0) > now or now < lastNeeds.untilT
 end
 
+local BANDS = { union = "Union band", resistance = "Freq 7", cp = "CP net" }
+local DISGUISES = { cp = "Civil Protection uniform", citizen = "citizen clothes", rebel = "Resistance gear" }
+local C_240_200_120 = Color(240, 200, 120)
+local C_255_175_90 = Color(255, 175, 90)
+
+-- The last rows of the status box, each only when there is something to say: a Resistance member's
+-- Union job (the only side with a rank that holds one: a hunted rebel in citizen clothes works a shift
+-- as cover), the radio band, what you are wearing, the papers you carry. { text, color } each.
+function LC_CL.StatusRows(ply)
+    local rows = {}
+    local job = ply:GetNW2String("lcj_job", "")
+    if job ~= "" and ply:GetNW2String("lcf_faction", "") == "resistance" and LCJ and LCJ.ById and LCJ.ById[job] then
+        rows[#rows + 1] = { text = "Union job: " .. LCJ.ById[job].name }
+    end
+    local band = ply:GetNW2String("lcu_band", "")
+    if BANDS[band] then rows[#rows + 1] = { text = "Radio: " .. BANDS[band] .. " (!r)" } end
+    local d = ply:GetNW2String("lcd_disguise", "")
+    if DISGUISES[d] then rows[#rows + 1] = { text = "Wearing " .. DISGUISES[d], color = C_240_200_120 } end
+    local alias = ply:GetNW2String("lcd_alias", "")
+    if alias ~= "" then rows[#rows + 1] = { text = "Papers: citizen " .. alias, color = d ~= "" and C_240_200_120 or nil } end
+    return rows
+end
+
 -- (made once here, not every frame)
 local C_10_12_16_170 = Color(10, 12, 16, 170)
 local C_140_230_120 = Color(140, 230, 120)
@@ -82,14 +106,25 @@ hook.Add("HUDPaint", "LivingCityNeedsHUD", function()
     local xpFrac, xpLabel, xpCol, xpGain
     if LC_CL.XPInfo then xpFrac, xpLabel, xpCol, xpGain = LC_CL.XPInfo() end -- (still asked, so a gain made while quiet isn't shown later)
     if quiet then xpFrac = nil end
-    if not needs and not econ and not ident and not xpFrac and not traits then LC_CL.HudBottom = LC_CL.HudY return end
+    -- one box (the owner, 14 November: "double boxes, both of which show most of the same info"): what the
+    -- rank card under it said a second time (side and rank, credits, Civil Standing) is said here once, and
+    -- what only the card or the line under the box had is a row of this box: wanted, a rebel's Union job,
+    -- the radio band, what you are wearing, your papers
+    local extra = LC_CL.StatusRows(ply)
+    if not needs and not econ and not ident and not xpFrac and not traits and #extra == 0 then LC_CL.HudBottom = LC_CL.HudY return end
 
     local x, y, w = LC_CL.HudX, LC_CL.HudY, LC_CL.HudW
+    local wanted = LC_CL.HasRank and LC_CL.HasRank(ply) and ply:GetNW2Float("lc_wanted_until", 0) > CurTime()
     local rows = (needs and 2 or 0) * 14 + (econ and 14 or 0) + (ident and 14 or 0) + (xpFrac and 14 or 0) + (traits and 14 or 0)
+        + (wanted and 14 or 0) + #extra * 14
     draw.RoundedBox(4, x, y, w, 8 + rows, C_10_12_16_170)
     local ry = y + 4
     if ident then
         draw.SimpleText(ident, "DefaultSmall", x + 6, ry + 6, identCol or INK, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+        ry = ry + 14
+    end
+    if wanted then
+        draw.SimpleText("WANTED", "DefaultSmall", x + 6, ry + 6, C_255_175_90, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
         ry = ry + 14
     end
     if xpFrac then
@@ -125,16 +160,16 @@ hook.Add("HUDPaint", "LivingCityNeedsHUD", function()
             ply:GetNW2Int("lcq_corruption", 0)), "DefaultSmall", x + 6, ry + 6, DIM, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
         ry = ry + 14
     end
+    for _, row in ipairs(extra) do
+        draw.SimpleText(row.text, "DefaultSmall", x + 6, ry + 6, row.color or DIM, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+        ry = ry + 14
+    end
     LC_CL.HudBottom = ry + 4
 end)
-
-local BANDS = { union = "Union band", resistance = "Freq 7", cp = "CP net" }
-local DISGUISES = { cp = "Civil Protection uniform", citizen = "citizen clothes", rebel = "Resistance gear" }
 
 -- (made once here, not every frame)
 local C_140_190_255 = Color(140, 190, 255)
 local C_20_30_45_220 = Color(20, 30, 45, 220)
-local C_240_200_120 = Color(240, 200, 120)
 local C_30_28_24_220 = Color(30, 28, 24, 220)
 local C_60_10_10_220 = Color(60, 10, 10, 220)
 hook.Add("HUDPaint", "LivingCityUndergroundHUD", function()
@@ -143,19 +178,7 @@ hook.Add("HUDPaint", "LivingCityUndergroundHUD", function()
     if LC_CL.DreamQuietHUD and LC_CL.DreamQuietHUD(ply) then return end
     local now = CurTime()
 
-    -- radio, disguise, papers: one quiet line under the needs box
-    local bits = {}
-    local band = ply:GetNW2String("lcu_band", "")
-    if BANDS[band] then bits[#bits + 1] = "Radio: " .. BANDS[band] .. " (!r)" end
-    local d = ply:GetNW2String("lcd_disguise", "")
-    if DISGUISES[d] then bits[#bits + 1] = "Wearing " .. DISGUISES[d] end
-    local alias = ply:GetNW2String("lcd_alias", "")
-    if alias ~= "" then bits[#bits + 1] = "Papers: citizen " .. alias end
-    LC_CL.UnderLineShown = #bits > 0
-    if #bits > 0 then
-        draw.SimpleTextOutlined(table.concat(bits, "  |  "), "DefaultSmall", LC_CL.HudX + 2, (LC_CL.HudBottom or 60) + 2,
-            d ~= "" and C_240_200_120 or INK, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP, 1, color_black)
-    end
+    -- (radio, disguise and papers are rows of the status box now: LC_CL.StatusRows)
 
     -- being stopped or searched
     local stopUntil = ply:GetNW2Float("lcu_stop_until", 0)
