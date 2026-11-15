@@ -1,0 +1,281 @@
+--[[
+    Combine monitor (Living City). Place it with the Living City Editor
+    ("Fixture: Combine monitor"), and the cameras it shows with "Point: Combine
+    camera". A monitor shows what one camera sees; E steps it to the next
+    camera, for everyone looking at it.
+
+    Each live picture draws the world a second time, so only one monitor is
+    live for you at a time: the nearest you face from its front. The others
+    show no signal. In a blacked-out district it is dead, like the city screens.
+]]
+
+AddCSLuaFile()
+
+ENT.Type = "anim"
+ENT.Base = "base_gmodentity"
+ENT.PrintName = "Combine monitor"
+ENT.Author = "Miscount"
+ENT.Category = "Miscount"
+ENT.Spawnable = true
+ENT.AdminOnly = true
+ENT.RenderGroup = RENDERGROUP_BOTH
+
+-- Half-Life 2's own Combine wall monitor, at its own size: the first model this
+-- install has is used. (001 is the one the small Breencast screen uses, 1.6 times
+-- as big: the picture is known to sit on its glass. 003 has not been looked at in
+-- the game: to try it, put it first.)
+local MODELS = { "models/props_combine/combine_intmonitor001.mdl", "models/props_combine/combine_intmonitor003.mdl" }
+local SCALE = 1
+-- A camera sees from this far above its point, tipped this far down, the way the point faces.
+local CAM_UP, CAM_PITCH = 70, 15
+
+ENT.MonitorModels = MODELS
+
+function ENT:Initialize()
+    if CLIENT then return end
+    local m
+    for _, c in ipairs(MODELS) do
+        if not util.IsValidModel or util.IsValidModel(c) then m = c break end
+    end
+    self:SetModel(m or MODELS[1])
+    self:PhysicsInit(SOLID_VPHYSICS)
+    self:SetMoveType(MOVETYPE_VPHYSICS)
+    self:SetSolid(SOLID_VPHYSICS)
+    self:SetUseType(SIMPLE_USE)
+    local phys = self:GetPhysicsObject()
+    if IsValid(phys) then phys:EnableMotion(false) end
+    if SCALE ~= 1 then self:SetModelScale(SCALE, 0) end
+    if LC and LC.MonitorTune then LC.MonitorTune(self) end -- (it starts on the camera nearest to it)
+end
+
+if SERVER then
+    LC = LC or {}
+
+    local WATCH = 800 -- a player this near a monitor is sent what its camera sees (the picture is live within 700)
+    local CLICK = "buttons/lightswitch2.wav"
+
+    -- The cameras, in the order they were placed (the editor's camera points).
+    function LC.MonitorCameras()
+        local out = {}
+        for _, p in ipairs(LC.Points or {}) do
+            if p.kind == "camera" then out[#out + 1] = p end
+        end
+        return out
+    end
+
+    -- Which camera a monitor shows: its number in that list and the point, or 0 and nil.
+    function LC.MonitorCamera(e, cams)
+        local p = IsValid(e) and e.lcCamPoint
+        if not p then return 0, nil end
+        for i, c in ipairs(cams or LC.MonitorCameras()) do
+            if c == p then return i, c end
+        end
+        return 0, nil
+    end
+
+    -- Every viewer sees the same camera on a monitor: its number, and where it looks from.
+    local function Show(e, i, p)
+        e.lcCamPoint = p
+        e.lcCamEye = p and (p.pos + Vector(0, 0, CAM_UP)) or nil
+        e:SetNW2Int("lc_cam", p and i or 0)
+        if p then
+            e:SetNW2Vector("lc_cam_pos", e.lcCamEye)
+            e:SetNW2Float("lc_cam_yaw", p.yaw or 0)
+        end
+    end
+
+    -- A monitor keeps its camera for as long as that camera is there. With none
+    -- (it is new, or its camera was taken away) it goes to the nearest one.
+    -- No cameras on the map: no signal.
+    function LC.MonitorTune(e, cams)
+        if not IsValid(e) then return 0 end
+        cams = cams or LC.MonitorCameras()
+        local i, p = LC.MonitorCamera(e, cams)
+        if not p then
+            local at, bd = e:GetPos(), nil
+            for n, c in ipairs(cams) do
+                local d = c.pos:DistToSqr(at)
+                if not bd or d < bd then i, p, bd = n, c, d end
+            end
+        end
+        Show(e, i, p)
+        return i
+    end
+
+    function LC.MonitorsRefresh()
+        local cams = LC.MonitorCameras()
+        for _, e in ipairs(LC.EntsOf and LC.EntsOf("lc_monitor") or ents.FindByClass("lc_monitor")) do
+            LC.MonitorTune(e, cams)
+        end
+    end
+
+    -- E: the next camera, and after the last the first again.
+    function LC.MonitorStep(e)
+        if not IsValid(e) or e:GetNW2Bool("lc_nopower", false) then return 0 end
+        local cams = LC.MonitorCameras()
+        if #cams == 0 then
+            Show(e, 0, nil)
+            return 0
+        end
+        local i = LC.MonitorCamera(e, cams) % #cams + 1
+        Show(e, i, cams[i])
+        e:EmitSound(CLICK, 55)
+        return i
+    end
+
+    function ENT:Use(activator)
+        if IsValid(activator) and activator:IsPlayer() and LC.MonitorStep then LC.MonitorStep(self) end
+    end
+
+    -- A camera placed or taken away: no monitor is left pointing at nothing.
+    hook.Add("LivingCityLayoutChanged", "LivingCityMonitors", function()
+        local ok, err = LC.Try(LC.MonitorsRefresh)
+        if not ok and LC.Error then LC.Error("monitors", err) end
+    end)
+
+    -- Whoever stands at a monitor also needs the people in its camera's room:
+    -- that room joins their view of the world (as the broadcast camera's does).
+    hook.Add("SetupPlayerVisibility", "LivingCityMonitors", function(ply)
+        local list = LC.EntsOf and LC.EntsOf("lc_monitor") or {}
+        if #list == 0 then return end
+        local at = ply:GetPos()
+        for _, e in ipairs(list) do
+            if IsValid(e) and e.lcCamEye and not e:GetNW2Bool("lc_nopower", false) and e:GetPos():DistToSqr(at) < WATCH * WATCH then
+                AddOriginToPVS(e.lcCamEye)
+            end
+        end
+    end)
+end
+
+if CLIENT then
+    LC_CL = LC_CL or {}
+
+    local SIZE = 512 -- the picture: one 512 x 512 texture, shared (only one monitor is live)
+    local NEAR = 700 -- only a monitor this near is live for you
+    local FAR = 1500 -- past this the glass is left alone (the model only)
+    local RATE = 8   -- pictures a second
+    local FOV = 80
+
+    local rt, mat
+    local drawing = false -- the camera's view is being drawn right now: nothing starts another inside it
+    local live            -- the one monitor that shows its camera for you
+    local nextFrame = 0
+
+    local function Ensure()
+        if mat then return true end
+        if not GetRenderTarget or not CreateMaterial then return false end
+        rt = GetRenderTarget("lc_monitor_rt", SIZE, SIZE)
+        if not rt then return false end
+        mat = CreateMaterial("lc_monitor_mat", "UnlitGeneric", { ["$basetexture"] = rt:GetName(), ["$model"] = "0" })
+        return mat ~= nil
+    end
+
+    -- Where the picture goes: the glass of each model, as fractions of its front
+    -- face (centre across from the viewer's left, centre up from the bottom, how
+    -- wide, how tall), then how far in front of the model's frontmost point. Read
+    -- off the model's own bounds, as lc_screen.lua does. Gives the middle of the
+    -- glass in the world, and its width and height.
+    local GLASS = {}
+    local DEFAULT = { 0.5, 0.5, 0.8, 0.8, 0.5 }
+    local function Glass(self)
+        local mins, maxs = self:GetModelBounds()
+        local k = self:GetModelScale() or 1
+        mins, maxs = mins * k, maxs * k
+        local g = GLASS[string.lower(self:GetModel() or "")] or DEFAULT
+        local wide, tall = maxs.y - mins.y, maxs.z - mins.z
+        return self:LocalToWorld(Vector(maxs.x + g[5], mins.y + wide * g[1], mins.z + tall * g[2])), wide * g[3], tall * g[4]
+    end
+
+    -- The monitor that is live for you: the nearest within reach with a camera
+    -- and power, that you stand in front of and look toward.
+    local function Pick(eye, fwd)
+        local best, bd
+        for _, e in ipairs(ents.FindByClass("lc_monitor")) do
+            if IsValid(e) and e:GetNW2Int("lc_cam", 0) > 0 and e:GetNW2Vector("lc_cam_pos") and not e:GetNW2Bool("lc_nopower", false)
+                and not (e.IsDormant and e:IsDormant()) then
+                local to = e:WorldSpaceCenter() - eye
+                local d = to:LengthSqr()
+                if d < NEAR * NEAR and (not bd or d < bd) and to:Dot(fwd) > 0.5 * math.sqrt(d) and to:Dot(e:GetForward()) < 0 then
+                    best, bd = e, d
+                end
+            end
+        end
+        return best
+    end
+
+    -- One picture of the live monitor's camera, into the texture, a few times a
+    -- second. It runs before the scene is drawn and never inside itself: the
+    -- camera's view draws the whole world again, monitors and all.
+    function LC_CL.MonitorFeed(eye, ang)
+        if drawing or LC_CL.LiveCamRendering or CurTime() < nextFrame then return false end
+        nextFrame = CurTime() + 1 / RATE
+        live = Ensure() and Pick(eye or EyePos(), (ang or EyeAngles()):Forward()) or nil
+        if not live then return false end
+        local at, yaw = live:GetNW2Vector("lc_cam_pos"), live:GetNW2Float("lc_cam_yaw", 0)
+        local _, wide, tall = Glass(live)
+        drawing = true
+        -- (what stays out of the broadcast camera's picture stays out of this one: the editor's
+        -- markers, the infestation's haze: cl_livingcity_livecam.lua)
+        LC_CL.LiveCamRendering = true
+        local pushed = false
+        local ok = LC.Try(function()
+            render.PushRenderTarget(rt)
+            pushed = true
+            render.Clear(0, 0, 0, 255, true, true)
+            -- (the picture is as wide for its height as the glass is, so filling the glass with it doesn't stretch anyone)
+            render.RenderView({
+                origin = at, angles = Angle(CAM_PITCH, yaw, 0),
+                x = 0, y = 0, w = SIZE, h = SIZE, fov = FOV, aspectratio = wide / math.max(tall, 1),
+                drawviewmodel = false, drawviewer = true, drawhud = false, dopostprocess = false, drawmonitors = false,
+            })
+            render.PopRenderTarget()
+            pushed = false
+        end)
+        if pushed then render.PopRenderTarget() end -- (an error mid-picture mustn't leave the game drawing into the texture)
+        drawing = false
+        LC_CL.LiveCamRendering = false
+        if not ok then live = nil end
+        return ok
+    end
+    LC_CL.MonitorLive = function() return live end
+
+    hook.Add("RenderScene", "LivingCityMonitors", function(eye, ang) LC_CL.MonitorFeed(eye, ang) end)
+
+    -- In the picture you are there like everyone else, when you stand in front of the camera.
+    hook.Add("ShouldDrawLocalPlayer", "LivingCityMonitors", function() if drawing then return true end end)
+
+    -- No signal: dark glass and a few thin lines of static that jump about. No words.
+    local function NoSignal(self, h)
+        surface.SetDrawColor(6, 12, 16, 255)
+        surface.DrawRect(-SIZE / 2, -h / 2, SIZE, h)
+        surface.SetDrawColor(120, 170, 190, 36)
+        local t, id = math.floor(CurTime() * 6), self:EntIndex() or 0
+        for i = 1, 4 do
+            local y = ((id * 31 + t * 17 + i * i * 53) % 97) / 97
+            surface.DrawRect(-SIZE / 2, -h / 2 + y * (h - 3), SIZE, 3)
+        end
+    end
+
+    function ENT:Draw()
+        self:DrawModel()
+        if self:GetNW2Bool("lc_nopower", false) then return end -- the district's power is out (sv_livingcity_power.lua): a dead screen
+        local me = LocalPlayer()
+        if not IsValid(me) or me:GetPos():DistToSqr(self:GetPos()) > FAR * FAR then return end
+        local pos, wide, tall = Glass(self)
+        if (EyePos() - pos):Dot(self:GetForward()) <= 0 then return end -- from behind, the model's own back and nothing else
+        local ang = self:GetAngles()
+        ang:RotateAroundAxis(ang:Up(), 90)
+        ang:RotateAroundAxis(ang:Forward(), 90)
+        local k = wide / SIZE
+        local h = tall / k
+        cam.Start3D2D(pos, ang, k)
+            if self == live and not drawing and mat then
+                surface.SetDrawColor(255, 255, 255)
+                surface.SetMaterial(mat)
+                surface.DrawTexturedRect(-SIZE / 2, -h / 2, SIZE, h)
+            else
+                NoSignal(self, h)
+            end
+        cam.End3D2D()
+    end
+end

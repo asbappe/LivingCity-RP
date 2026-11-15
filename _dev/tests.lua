@@ -32226,6 +32226,115 @@ function Nov14C_MouthTests()
 end
 Nov14C_MouthTests()
 
+-- 15 November 2026: Combine camera monitors (the owner: "yes please build the camera monitors")
+function Nov15_MonitorTests()
+section("Combine camera monitors: a monitor shows a camera's view, E steps to the next camera")
+local M0 = Vector(-87000, -61000, 0)
+local function monitorOf(p)
+    for _, e in pairs(LC.Fixtures) do if IsValid(e) and e.lcFixturePoint == p then return e end end
+end
+local function cam(e) return e:GetNW2Int("lc_cam", 0) end
+local function camPoint(e) local _, p = LC.MonitorCamera(e) return p end
+-- the entity's own E (the harness doesn't give entities their scripts' methods)
+local was = ENT
+ENT = {}
+assert(loadstring(_ENTSRC["entities/lc_monitor.lua"], "lc_monitor"))()
+local def = ENT
+ENT = was
+ok(def.MonitorModels and string.find(def.MonitorModels[1] or "", "models/props_combine/combine_intmonitor", 1, true) ~= nil,
+    "it is one of Half-Life 2's own Combine monitors", def.MonitorModels and def.MonitorModels[1])
+ok(#LC.MonitorCameras() == 0, "(no cameras on the map to begin with)", #LC.MonitorCameras())
+local mp = LC.AddPoint(M0, 0, "monitor", 0)
+ok(mp ~= nil and mp.kind == "monitor", "the editor can place a monitor")
+LC.SyncFixtures()
+local mon = monitorOf(mp)
+ok(IsValid(mon) and mon:GetClass() == "lc_monitor" and mon.lcFixtureKind == "monitor", "it is a fixture with a class of its own")
+if not IsValid(mon) then LC.RemovePoint(mp) LC.SyncFixtures() return end
+LC.MonitorTune(mon) -- (what it does as it spawns)
+ok(cam(mon) == 0 and camPoint(mon) == nil, "no camera placed: it shows none (no signal)")
+local viewer = newPlayer("MonitorViewer", "citizen")
+viewer:SetPos(M0 + Vector(100, 0, 0))
+viewer.chat = {}
+local n = #_sounds
+def.Use(mon, viewer)
+ok(cam(mon) == 0 and #_sounds == n, "and E on it changes nothing")
+-- three cameras: the first far off, the second beside the monitor, the third in between
+local c1 = LC.AddPoint(M0 + Vector(5000, 0, 0), 10, "camera", 0)
+ok(c1 ~= nil and c1.kind == "camera", "the editor can place a camera")
+ok(cam(mon) == 1 and camPoint(mon) == c1, "a monitor with no signal takes the first camera placed, at once")
+local c2 = LC.AddPoint(M0 + Vector(200, 0, 0), 20, "camera", 0)
+local c3 = LC.AddPoint(M0 + Vector(2500, 0, 0), 30, "camera", 0)
+ok(#LC.MonitorCameras() == 3 and cam(mon) == 1, "it keeps its camera when more are placed")
+local eye = mon:GetNW2Vector("lc_cam_pos")
+ok(eye and eye:DistToSqr(c1.pos + Vector(0, 0, 70)) < 1 and mon:GetNW2Float("lc_cam_yaw", -1) == 10,
+    "every viewer is told where the camera looks from: above its point, the way the point faces", tostring(eye))
+-- stepping: 1, 2, 3, 1
+n = #_sounds
+viewer.chat = {}
+def.Use(mon, viewer)
+ok(cam(mon) == 2 and camPoint(mon) == c2, "E steps it to the second camera", cam(mon))
+ok(#_sounds == n + 1 and _sounds[#_sounds] == "buttons/lightswitch2.wav", "with a soft click", tostring(_sounds[#_sounds]))
+ok(#viewer.chat == 0, "and no chat line", viewer.chat[1])
+eye = mon:GetNW2Vector("lc_cam_pos")
+ok(eye and eye:DistToSqr(c2.pos + Vector(0, 0, 70)) < 1 and mon:GetNW2Float("lc_cam_yaw", -1) == 20, "and where it looks from follows")
+ok(LC.MonitorStep(mon) == 3 and camPoint(mon) == c3, "then the third")
+ok(LC.MonitorStep(mon) == 1 and camPoint(mon) == c1, "then round to the first again")
+def.Use(mon, mon)
+ok(cam(mon) == 1, "only a player's E steps it")
+LC.MonitorStep(mon) -- (on the second, beside it)
+-- a second monitor, placed near the third camera
+local mp2 = LC.AddPoint(M0 + Vector(2400, 0, 0), 0, "monitor", 0)
+LC.SyncFixtures()
+local mon2 = monitorOf(mp2)
+if IsValid(mon2) then LC.MonitorTune(mon2) end -- (what it does as it spawns)
+ok(IsValid(mon2) and cam(mon2) == 3 and camPoint(mon2) == c3, "a new monitor starts on the camera nearest to it", IsValid(mon2) and cam(mon2))
+ok(cam(mon) == 2, "and the other monitor stays on its own camera")
+-- whoever stands at a monitor is sent the people in its camera's room; nobody else is
+local sent, pvsWas = {}, AddOriginToPVS
+AddOriginToPVS = function(v) sent[#sent + 1] = v end
+local function sentTo(p) for _, v in ipairs(sent) do if v:DistToSqr(p.pos + Vector(0, 0, 70)) < 1 then return true end end return false end
+hook.Run("SetupPlayerVisibility", viewer)
+ok(sentTo(c2) and not sentTo(c3), "a player at a monitor is sent what its camera sees, not what a far monitor's does")
+sent = {}
+viewer:SetPos(M0 + Vector(0, 9000, 0))
+hook.Run("SetupPlayerVisibility", viewer)
+ok(not sentTo(c2) and not sentTo(c3), "a player nowhere near a monitor is sent neither")
+viewer:SetPos(M0 + Vector(100, 0, 0))
+-- the power grid: dead in a blacked-out district, like the city screens
+local t = ents.Create("lc_transformer")
+t:SetPos(M0 + Vector(60, 60, 0))
+t:SetNW2Bool("lc_down", true)
+LC.RefreshPower()
+ok(mon:GetNW2Bool("lc_nopower", false) and IsValid(mon2) and not mon2:GetNW2Bool("lc_nopower", false), "its district blacked out: the monitor is dead, one in another district is not")
+ok(LC.MonitorStep(mon) == 0 and cam(mon) == 2, "E does nothing on a dead monitor")
+sent = {}
+hook.Run("SetupPlayerVisibility", viewer)
+ok(not sentTo(c2), "and nobody is sent its camera's room")
+t:SetNW2Bool("lc_down", false)
+LC.RefreshPower()
+ok(not mon:GetNW2Bool("lc_nopower", true), "the power back: it is on again")
+t:Remove()
+LC.RefreshPower()
+AddOriginToPVS = pvsWas
+-- a camera taken away never leaves a monitor pointing at nothing
+LC.RemovePoint(c2)
+ok(camPoint(mon) == c3 and cam(mon) == 2, "its camera removed: the monitor goes to the nearest one left", cam(mon))
+ok(IsValid(mon2) and camPoint(mon2) == c3 and cam(mon2) == 2, "a monitor on a later camera stays on that camera", IsValid(mon2) and cam(mon2))
+eye = mon:GetNW2Vector("lc_cam_pos")
+ok(eye and eye:DistToSqr(c3.pos + Vector(0, 0, 70)) < 1, "and looks from where that camera is")
+ok(LC.MonitorStep(mon) == 1 and LC.MonitorStep(mon) == 2 and LC.MonitorStep(mon) == 1, "with two cameras left it steps 1, 2, 1")
+LC.RemovePoint(c1)
+LC.RemovePoint(c3)
+ok(cam(mon) == 0 and camPoint(mon) == nil and IsValid(mon2) and cam(mon2) == 0, "the last camera removed: no signal again")
+-- cleaned up
+LC.RemovePoint(mp)
+LC.RemovePoint(mp2)
+LC.SyncFixtures()
+ok(not IsValid(mon) and not IsValid(mon2) and #LC.MonitorCameras() == 0, "taken away with their points")
+viewer:SetPos(Vector(-30000, 30000, 0))
+end
+Nov15_MonitorTests()
+
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")
 ;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)
     -- Everything here is something the owner's server, files or players depend on. The list is
