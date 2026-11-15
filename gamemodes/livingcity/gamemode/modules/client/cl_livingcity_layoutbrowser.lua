@@ -32,7 +32,7 @@ local USES = {
         "toilet", "bath", "fire", "locker", "tv", "screen", "lawboard", "jobboard", "infodesk", "civposter", "citybin", "bin", "zone_block", "door_rent" } },
     { title = "Arriving and leaving the city", ids = { "arrival", "intake", "laborterm", "housingterm", "platform", "spawn", "lz" } },
     { title = "Civil Protection and the Combine", ids = { "patrol", "checkpoint", "cpsupply", "cpfeed", "evidlocker", "console", "sspawn", "powerbank", "turret",
-        "forcefield", "barricade_low", "barricade", "barricade_tall", "dataterm", "masterterm", "zone_combine", "sterm", "door_cp", "door_office", "studio", "loudspeaker", "screen_big" } },
+        "forcefield", "barricade_low", "barricade", "barricade_tall", "dataterm", "masterterm", "zone_combine", "sterm", "door_cp", "door_office", "studio", "loudspeaker", "screen_big", "screen_mid" } },
     { title = "The Administrator's last stand", ids = { "desk", "adminpower", "suppressor", "speech", "speechcrowd", "door_office", "zone_combine" } },
     { title = "Prison", ids = { "cell", "release", "prisonwork", "zone_prison", "door_prison" } },
     { title = "The Resistance and rebel bases", ids = { "zone_rebel", "rspawn", "rlookout", "rebelboard", "interrochair", "rebelcage", "bunk", "workbench", "dealer", "bed", "toilet", "stove",
@@ -40,7 +40,7 @@ local USES = {
     { title = "Infestation", ids = { "zone_infest", "zspawn", "hazbarrel" } },
     { title = "Morning exercise", ids = { "yard", "parade" } },
     { title = "Dreams", ids = { "dream", "zone_dream" } }, -- (the owner, 11 November: missing from this view)
-    { title = "Power and the street", ids = { "transformer", "streetlight", "loudspeaker", "screen_big", "pipe", "rubble", "salvage" } },
+    { title = "Power and the street", ids = { "transformer", "streetlight", "loudspeaker", "screen_big", "screen_mid", "pipe", "rubble", "salvage" } },
     { title = "Paths, ladders and doors", ids = { "node", "link", "ladder", "zone_nogo", "door_locked", "door_open", "door_ignore", "door_force", "door_test" } },
     { title = "Tools", ids = { "prop", "inspect", "walker" } },
 }
@@ -155,7 +155,7 @@ local WANTED = {
 local function Glance()
     local pts, fx, zones, doors = 0, 0, #(LC_CL.zones or {}), #(LC_CL.doors or {})
     local FIX = { vending = true, dispenser = true, terminal = true, stove = true, fire = true, dealer = true, locker = true,
-        screen = true, lawboard = true, cpfeed = true, evidlocker = true, rebelboard = true, interrochair = true, rebelcage = true, infodesk = true, civposter = true, console = true, workbench = true, recycler = true, dataterm = true, masterterm = true, citybin = true, streetlight = true, loudspeaker = true, screen_big = true, tv = true, incinerator = true, hazbarrel = true, transformer = true, forcefield = true, powerbank = true, turret = true, barricade_low = true, barricade = true, barricade_tall = true, intake = true, housingterm = true, laborterm = true, cpsupply = true, conveyor = true, bed = true, toilet = true, bath = true }
+        screen = true, lawboard = true, cpfeed = true, evidlocker = true, rebelboard = true, interrochair = true, rebelcage = true, infodesk = true, civposter = true, console = true, workbench = true, recycler = true, dataterm = true, masterterm = true, citybin = true, streetlight = true, loudspeaker = true, screen_big = true, screen_mid = true, tv = true, incinerator = true, hazbarrel = true, transformer = true, forcefield = true, powerbank = true, turret = true, barricade_low = true, barricade = true, barricade_tall = true, intake = true, housingterm = true, laborterm = true, cpsupply = true, conveyor = true, bed = true, toilet = true, bath = true }
     for _, p in ipairs(LC_CL.points or {}) do if FIX[p.kind] then fx = fx + 1 else pts = pts + 1 end end
     local npcs = 0
     for _, e in ipairs(ents.FindByClass("npc_*")) do if e:GetNW2String("lc_role", "") ~= "" then npcs = npcs + 1 end end

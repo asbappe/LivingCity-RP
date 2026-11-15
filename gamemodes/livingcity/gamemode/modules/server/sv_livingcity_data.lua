@@ -30,7 +30,7 @@ LC.POINT_KINDS = {
     workbench = true, recycler = true, bin = true, salvage = true, -- (sv_livingcity_salvage.lua)
     conveyor = true, -- the factory line (sv_livingcity_jobgames.lua)
     bed = true, toilet = true, bath = true, -- sleep and hygiene (sv_livingcity_rest.lua, sv_livingcity_hygiene.lua)
-    citybin = true, streetlight = true, loudspeaker = true, screen_big = true, tv = true, -- street furniture (sv_livingcity_propaganda.lua)
+    citybin = true, streetlight = true, loudspeaker = true, screen_big = true, screen_mid = true, tv = true, -- street furniture (sv_livingcity_propaganda.lua)
     lz = true, -- where Overwatch drops soldiers (sv_livingcity_resistanceops.lua)
     dataterm = true, masterterm = true, -- the Resistance steal data from these (sv_livingcity_heist.lua)
     sspawn = true, -- where scanners flown from a console go up (sv_livingcity_scanner.lua)
