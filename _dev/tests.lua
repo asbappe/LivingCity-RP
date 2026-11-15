@@ -2046,8 +2046,15 @@ LC.GiveItem(runner2, "lockpick")
 local cr0 = LC.Credits(runner2)
 local hit = _dmg(copA, 10, DMG_CLUB)
 runner2.lcSubdue = { n = 2, t = CurTime() } -- (beaten down: the third blow cuffs them)
+copA:SetPos(runner2:GetPos() + Vector(60, 0, 0)) -- (at arm's reach: nobody is cuffed from across the street)
+local simA = copA.sim
+copA.sim = false
 hook.Run("EntityTakeDamage", runner2, hit)
-ok(LC.Detained[runner2] and runner2.frozen and hit:GetDamage() == 0, "the stick doesn't just beat you: you're cuffed on the street")
+-- (the owner, 14 November: a unit's arrest gives the struggle first; Nov14A_CustodyTests)
+ok(LC.Struggles[runner2] ~= nil and hit:GetDamage() == 0, "the stick doesn't just beat you: he lays hands on you, and you may struggle")
+_run(5)
+copA.sim = simA
+ok(LC.Detained[runner2] and runner2.frozen, "doing nothing about it: you're cuffed on the street")
 ok(not LC.PlayerIsWanted(runner2) and not LC.HasItem(runner2, "lockpick") and LC.Credits(runner2) < cr0, "searched and fined, and no longer wanted")
 local hit2 = _dmg(copA, 10, DMG_CLUB)
 hook.Run("EntityTakeDamage", runner2, hit2)
@@ -4409,6 +4416,7 @@ cop:SetPos(hu:GetPos() + Vector(60, 0, 0))
 ok(LC.CanTie(cop, hu), "hands up: tied face to face, and units carry their own ties")
 LC.TiePlayer(hu, cop)
 ok(LC.IsTied(hu) and not hu:GetNW2Bool("lc_handsup", false), "(tied)")
+LC.ArrestChanceGiven(hu) -- (the owner, 14 November: a unit's arrest follows a struggle lost, or a surrender. Nov14A_CustodyTests)
 local jailed, err = LC.Incarcerate(hu, 60, "test", cop)
 ok(not jailed or (not LC.IsTied(hu) and not hu:GetNW2Bool("lc_tied", false)), "taken into custody, the ties come off", err)
 if jailed then LC.ReleasePrisoner(hu) end
@@ -10708,6 +10716,7 @@ LC.ReportCrime(p, "Theft", 120)
 LC.ReportCrime(p, "Assaulting Civil Protection", 120)
 ok(#LC.RapSheet(p) == 2, "each crime goes on the record once", #LC.RapSheet(p))
 p.chat = {}
+LC.ArrestChanceGiven(p) -- (the owner, 14 November: a unit's arrest follows a struggle lost, or a surrender. Nov14A_CustodyTests)
 ok(LC.Incarcerate(p, 180, "Arrested", unit), "arrested")
 local pr = LC.Prisoners[p]
 local left = pr and pr.untilT - CurTime()
@@ -10817,6 +10826,7 @@ p:RemovePData("lc_rap")
 -- probation
 LC.ReportCrime(p, "Curfew violation", 60)
 LC.ClearWanted(p)
+LC.ArrestChanceGiven(p) -- (the owner, 14 November: a unit's arrest follows a struggle lost, or a surrender. Nov14A_CustodyTests)
 LC.Incarcerate(p, 180, "Arrested", unit)
 p.chat = {}
 LC.ReleasePrisoner(p)
@@ -10857,7 +10867,11 @@ LC.ClearWanted(q)
 -- the cap, and staff sentences exactly as given
 for _, c in ipairs({ "Murder of a Civil Protection officer", "Murder", "Sabotage" }) do LC.ReportCrime(q, c, 60) end
 LC.ClearWanted(q)
+LC.ArrestChanceGiven(q) -- (the owner, 14 November: a unit's arrest follows a struggle lost, or a surrender. Nov14A_CustodyTests)
+local qStanding = LC.Standing(q)
+LC.AddStanding(q, -600 - qStanding) -- (an anticitizen: the whole of lc_sentence_max; less for better standing, Nov14A_CustodyTests)
 LC.Incarcerate(q, 180, "Arrested", unit)
+LC.AddStanding(q, qStanding - LC.Standing(q))
 ok(LC.Prisoners[q] and math.abs(LC.Prisoners[q].untilT - CurTime() - 30 * 60) < 2, "a sentence is 30 minutes at most")
 LC.ReleasePrisoner(q)
 LC.EndProbation(q, true)
@@ -13230,6 +13244,7 @@ unit.chat = {}
 ok(LC.PostBounty(adm, crook, 100) and LC.Bounties[crook].amount == 100, "the Administrator can: 100 credits")
 ok(has(unit.chat, "BOUNTY") and has(crook.chat, "price on your head"), "every unit hears, and so do they")
 local cu0 = LC.Credits(unit)
+LC.ArrestChanceGiven(crook) -- (the owner, 14 November: a unit's arrest follows a struggle lost, or a surrender. Nov14A_CustodyTests)
 LC.Incarcerate(crook, 60, "Arrested", unit)
 ok(LC.Credits(unit) - cu0 == 100 and LC.Bounties[crook] == nil, "the unit who brings them in collects it")
 LC.ReleasePrisoner(crook)
@@ -14478,8 +14493,13 @@ local rear, rst = LC.Spawners.cop(M0 + Vector(-200, 0, 0))
 lst.untilT, rst.untilT = 1e9, 1e9
 local dmg = _dmg(lead, 20, DMG_CLUB)
 con.lcSubdue = { n = 2, t = CurTime() } -- (beaten down: the third blow)
+local simL = lead.sim
+lead.sim = false
 hook.Run("EntityTakeDamage", con, dmg)
-ok(LC.Marching[con] ~= nil, "a stunstick hit starts a march to the cells, not a teleport")
+ok(LC.Struggles[con] ~= nil and not LC.Marching[con], "a stunstick hit: the unit lays hands on them, and they may struggle (the owner, 14 November)")
+_run(5)
+lead.sim = simL
+ok(LC.Marching[con] ~= nil, "doing nothing about it: a march to the cells, not a teleport")
 ok(LC.IsTied(con) and LC.InCustody(con) and not LC.PlayerIsWanted(con) and not LC.Prisoners[con], "tied, in custody, the search called off, not in a cell yet")
 ok(LC.Marching[con] and LC.Marching[con].rear == rear and rst.state == "event", "a second unit comes along")
 ok(has(con.chat, "march") or has(con.chat, "Cuffed"), "and they're told", con.chat[#con.chat])
@@ -14498,7 +14518,9 @@ LC.ReportCrime(con, "Theft", 300)
 local lead2, lst2 = LC.Spawners.cop(M0 + Vector(60, 0, 0))
 lst2.untilT = 1e9
 con.lcSubdue = { n = 2, t = CurTime() }
+lead2.sim = false
 hook.Run("EntityTakeDamage", con, _dmg(lead2, 20, DMG_CLUB))
+_run(5) -- (the struggle, lost by doing nothing)
 ok(LC.Marching[con] ~= nil, "(another march)")
 -- with another unit about, he takes over
 local helper, hst = LC.Spawners.cop(M0 + Vector(-150, 0, 0))
@@ -14512,15 +14534,17 @@ local lead2b = LC.Marching[con] and LC.Marching[con].lead
 if IsValid(lead2b) then LC.NPCs[lead2b] = nil lead2b:Remove() end
 _run(0.5)
 ok(not LC.Marching[con] and LC.IsTied(con) and LC.PlayerIsWanted(con) and not LC.Prisoners[con],
-    "nobody left to take you: free, still tied, and wanted for it")
+    "nobody left to take you: free, still tied, and wanted for it", tostring(LC.Marching[con] ~= nil) .. " lead=" .. tostring(LC.Marching[con] and LC.Marching[con].lead and LC.Marching[con].lead:GetPos()) .. " con=" .. tostring(con:GetPos()) .. " tied=" .. tostring(LC.IsTied(con)) .. " wanted=" .. tostring(LC.PlayerIsWanted(con)) .. " cell=" .. tostring(LC.Prisoners[con] ~= nil))
 Unmarch(con)
 -- nowhere to walk: straight to a cell
 _setcvar("lc_march", 0)
 LC.ReportCrime(con, "Theft", 300)
 local lead3, lst3 = LC.Spawners.cop(M0 + Vector(60, 0, 0))
 con.lcSubdue = { n = 2, t = CurTime() }
+lead3.sim = false
 hook.Run("EntityTakeDamage", con, _dmg(lead3, 20, DMG_CLUB))
-ok(LC.Prisoners[con] ~= nil and not LC.Marching[con], "turned off: straight to a cell, as before")
+_run(5) -- (the struggle, lost by doing nothing)
+ok(LC.Prisoners[con] ~= nil and not LC.Marching[con], "turned off: straight to a cell, as before", tostring(LC.InCustody(con)) .. " struggle=" .. tostring(LC.Struggles[con] ~= nil) .. " " .. tostring(con.chat[#con.chat]))
 _setcvar("lc_march", 1)
 Unmarch(con)
 for _, n in ipairs({ lead, rear, lead3 }) do if IsValid(n) then n:Remove() end end
@@ -23131,7 +23155,9 @@ section("Playtest fixes, 17 October")
     local ml, mls = LC.Spawners.cop(MP + Vector(60, 0, 0))
     mls.untilT = 1e9
     walked.lcSubdue = { n = 2, t = CurTime() } -- (beaten down: the third blow, and cuffed)
+    ml.sim = false
     hook.Run("EntityTakeDamage", walked, _dmg(ml, 20, DMG_CLUB))
+    _run(5) -- (the struggle, lost by doing nothing: the owner, 14 November)
     ok(LC.Marching[walked] ~= nil, "(a march)")
     local goWas = LC.GoTo
     LC.GoTo = function() return true end -- (he says he's going, and stands there a moment)
@@ -23344,7 +23370,9 @@ section("Playtest fixes, 17 October (evening)")
     LC.MakeCopsHostile(runner, runner:GetPos(), 500)
     ok(sst.state == "hostile" and sst.arrestOnly and sst.rel and sst.rel[runner] == D_NU, "a soldier after someone who's hurt nobody holds his fire and runs them down")
     _run(2)
-    ok(LC.InCustody(runner), "and lays hands on them: taken in, not shot")
+    ok(LC.Struggles[runner] ~= nil and LC.Struggles[runner].officer == sol, "and lays hands on them (they may struggle), not a shot fired")
+    _run(5)
+    ok(LC.InCustody(runner), "doing nothing about it: taken in")
     LC.CalmCops(runner)
     LC.NPCs[sol] = nil sol:Remove()
     sol, sst = LC.Spawners.soldier(Q0 + Vector(60, 300, 0))
@@ -23809,7 +23837,9 @@ end)()
     local taken = LC.NPCSubdue(u, ust, runr, CurTime())
     ok(not taken and LC.SubdueHits(runr) == 1 and runr:GetNW2Float("lc_dazed_until", 0) > CurTime(), "running past a unit: a blow of the baton (and dazed), not cuffs")
     for _ = 1, 4 do _run(1.2) if LC.NPCSubdue(u, ust, runr, CurTime()) then break end end
-    ok(LC.Marching[runr] or (LC.Prisoners and LC.Prisoners[runr]) or LC.Detained[runr], "beaten down: cuffed")
+    ok(LC.Struggles[runr] ~= nil, "beaten down: he lays hands on them, and they may still struggle (the owner, 14 November)")
+    _run(5)
+    ok(LC.Marching[runr] or (LC.Prisoners and LC.Prisoners[runr]) or LC.Detained[runr], "doing nothing about it: cuffed")
     if LC.Marching[runr] then LC.Marching[runr] = nil end
     if LC.Prisoners then LC.Prisoners[runr] = nil end
     runr.valid = false
@@ -25238,6 +25268,7 @@ local function March()
     LC.ReportCrime(con, "Theft", 300)
     local lead, lst = LC.Spawners.cop(S0 + Vector(60, 0, 0))
     lst.untilT = 1e9
+    LC.ArrestChanceGiven(con) -- (the owner, 14 November: a unit's arrest follows a struggle lost, or a surrender. Nov14A_CustodyTests)
     local okM = LC.MarchToPrison(con, lead, 60, "Theft")
     ins:SetPos(S0 + Vector(0, 120, 0))
     return okM, lead, lst
@@ -30534,13 +30565,11 @@ local function record(p)
 end
 record(con) setStanding(con, -40)
 local secs, words = LC.SentenceFor(con, 180, "x", cop3)
-ok(secs == 300 and tostring(words):find("the most for your Civil Standing", 1, true) ~= nil, "Civil Standing -40 with a long record: 5 minutes, not 30", tostring(secs) .. " " .. tostring(words))
+ok(secs == 600 and tostring(words):find("the most for your Civil Standing", 1, true) ~= nil, "Civil Standing -40 with a long record: 10 minutes, not 30", tostring(secs) .. " " .. tostring(words))
 record(con) setStanding(con, -100)
-ok(LC.SentenceFor(con, 180, "x", cop3) == 600, "-100: 10 minutes at most")
+ok(LC.SentenceFor(con, 180, "x", cop3) == 1200, "-100: 20 minutes at most")
 record(con) setStanding(con, -300)
-ok(LC.SentenceFor(con, 180, "x", cop3) == 1200, "-300: 20 at most")
-record(con) setStanding(con, -600)
-ok(LC.SentenceFor(con, 180, "x", cop3) == 1800, "-600: the whole of lc_sentence_max (30)")
+ok(LC.SentenceFor(con, 180, "x", cop3) == 1800, "-300: the whole of lc_sentence_max (30)")
 record(con) setStanding(con, -40)
 hook.Run("LivingCityWanted", con, "Curfew violation", 60)
 LC.RapClear(con)

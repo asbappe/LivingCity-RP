@@ -14,9 +14,9 @@
     at most lc_sentence_max (30) minutes, and less for anyone who is not much
     of an anticitizen (the owner, 14 November: "-40 civil standing should not
     be 30 minutes in prison"; the steps are LC.Severity's own): Civil Standing
-    above -50, 5 minutes at most; above -250, 10; above -500, 20; lower, the
-    whole of lc_sentence_max. A pardon by staff wipes the record
-    (LC.RapClear). Nothing on the record: the old
+    above -50, 10 minutes at most; above -250, 20; lower, the whole of
+    lc_sentence_max. Staff taking someone out of custody, or resetting
+    them, wipes the record (LC.RapClear). Nothing on the record: the old
     lc_prison_time. Then the record is cleared. Only an arrest counts:
     staff jailing someone (lc_jail), a story's sentence, a conduct sentence
     and a sentence picked up again after leaving stay exactly as given.
@@ -106,9 +106,8 @@ end
 function LC.SentenceCap(ply)
     local max = cvMax:GetFloat()
     local standing = LC.Standing and IsValid(ply) and LC.Standing(ply) or 0
-    if standing > -50 then return math.min(max, 5) end
-    if standing > -250 then return math.min(max, 10) end
-    if standing > -500 then return math.min(max, 20) end
+    if standing > -50 then return math.min(max, 10) end
+    if standing > -250 then return math.min(max, 20) end
     return max
 end
 
