@@ -34,6 +34,7 @@ LC.POINT_KINDS = {
     lz = true, -- where Overwatch drops soldiers (sv_livingcity_resistanceops.lua)
     dataterm = true, masterterm = true, -- the Resistance steal data from these (sv_livingcity_heist.lua)
     sspawn = true, -- where scanners flown from a console go up (sv_livingcity_scanner.lua)
+    monitor = true, camera = true, -- a Combine monitor and the cameras it steps through (entities/lc_monitor.lua)
     transformer = true, forcefield = true, -- the power grid, and Combine forcefields (sv_livingcity_power.lua)
     powerbank = true, turret = true, barricade_low = true, barricade = true, barricade_tall = true, -- checkpoints (sv_livingcity_checkpoints.lua)
     platform = true, -- where the trains stop (sv_livingcity_trains.lua)

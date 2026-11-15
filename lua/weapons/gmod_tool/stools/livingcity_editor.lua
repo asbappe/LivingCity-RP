@@ -43,6 +43,7 @@ local MODES = {
     { id = "colonel",     label = "Point: Resistance Colonel's spot (the ghost only the Resistance sees stands here, facing you; none: beside the quartermaster)" },
     { id = "rlookout",    label = "Point: Resistance lookout post (an armed fighter stands guard here; place it from where the Combine would come, so he faces that way)" },
     { id = "bunk",        label = "Point: Resistance bunk (a rebel sleeps here now and then; aim at the middle of the bed from its foot or head, so it lies along the bed)" },
+    { id = "camera",      label = "Point: Combine camera (what the monitors show: it looks the way you face)" },
     { id = "sspawn",      label = "Point: Combine scanner launch spot (where flown scanners go up)" },
     { id = "platform",    label = "Point: train platform (trains stop here: new arrivals, people leaving the city)" },
     { id = "arrival",     label = "Point: arrival (where new people step into the city, before Civil Intake; place it from the way they should face, Civil Intake say)" },
@@ -93,6 +94,7 @@ local MODES = {
     { id = "infodesk",    label = "Fixture: Citizen Information desk (a clerk who answers questions; place behind a counter)" },
     { id = "civposter",   label = "Fixture: Civil notice poster (its words fit what's nearest: rations, water, the Commissary...)" },
     { id = "console",     label = "Fixture: Combine console (fly a scanner: prisoners and Civil Protection units)" },
+    { id = "monitor",     label = "Fixture: Combine monitor (shows a camera's view; E steps to the next camera)" },
     { id = "workbench",   label = "Fixture: Resistance lab (a scientist makes guns, ammunition, jammers and radios for the Resistance; one in every rebel base)" },
     { id = "recycler",    label = "Fixture: Union reclamation point (hand in scrap for credits)" },
     { id = "citybin",     label = "Street: bin (searchable; sanitation bin runs stop at it)" },
@@ -148,7 +150,7 @@ else
 end
 
 -- sit, bench and lean spots, and fixtures, face the person placing them
-local FACE_PLACER = { rebelcage = true, adminpower = true, bed = true, toilet = true, bath = true, conveyor = true, intake = true, housingterm = true, laborterm = true, cpsupply = true, arrival = true, sit = true, sitchair = true, lean = true, vending = true, dispenser = true, terminal = true, stove = true, dealer = true, locker = true, locker_rebel = true, locker_cp = true, screen = true, lawboard = true, jobboard = true, infodesk = true, civposter = true, console = true, workbench = true, recycler = true, sspawn = true, rlookout = true, bunk = true, dataterm = true, masterterm = true, citybin = true, streetlight = true, loudspeaker = true, screen_big = true, screen_mid = true, tv = true, incinerator = true, hazbarrel = true, graffiti = true, studio = true, transformer = true, forcefield = true, powerbank = true, turret = true, barricade_low = true, barricade = true, barricade_tall = true, yard = true }
+local FACE_PLACER = { rebelcage = true, adminpower = true, bed = true, toilet = true, bath = true, conveyor = true, intake = true, housingterm = true, laborterm = true, cpsupply = true, arrival = true, sit = true, sitchair = true, lean = true, vending = true, dispenser = true, terminal = true, stove = true, dealer = true, locker = true, locker_rebel = true, locker_cp = true, screen = true, lawboard = true, jobboard = true, infodesk = true, civposter = true, console = true, workbench = true, recycler = true, sspawn = true, rlookout = true, bunk = true, dataterm = true, masterterm = true, citybin = true, streetlight = true, loudspeaker = true, screen_big = true, screen_mid = true, monitor = true, tv = true, incinerator = true, hazbarrel = true, graffiti = true, studio = true, transformer = true, forcefield = true, powerbank = true, turret = true, barricade_low = true, barricade = true, barricade_tall = true, yard = true }
 
 local function ModeIndex(id)
     for i, m in ipairs(MODES) do if m.id == id then return i end end

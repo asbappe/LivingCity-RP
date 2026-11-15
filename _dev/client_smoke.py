@@ -2110,6 +2110,150 @@ for name in sorted(f[:-4] for f in os.listdir(ENTDIR) if f.endswith(".lua")):
     """)
     if err:
         problems = (problems + "\n" if problems else "") + name + " (client) " + str(err)
+# the Combine camera monitors (entities/lc_monitor.lua): the glass is drawn with and without a camera, only the
+# nearest monitor you face from its front is live, and a camera's view is never started from inside itself
+L.globals()._SRC = open(os.path.join(ENTDIR, "lc_monitor.lua")).read()
+err = L.execute(r"""
+local entWas, grtWas, eyeWas, noteWas = ENT, GetRenderTarget, EyePos, LC.ErrorNote
+ENT = {}
+local okL, errL = pcall(function() assert(loadstring(_SRC, "lc_monitor"))() end)
+local def = ENT
+ENT = entWas
+if not okL then return "load: " .. tostring(errL) end
+if not (LC_CL.MonitorFeed and LC_CL.MonitorLive and def.Draw) then return "the picture's functions are missing" end
+local scene, body = hook.t.RenderScene and hook.t.RenderScene.LivingCityMonitors, hook.t.ShouldDrawLocalPlayer and hook.t.ShouldDrawLocalPlayer.LivingCityMonitors
+if not (scene and body) then return "the picture's hooks are missing" end
+local bad
+local function want(cond, what) if not cond and not bad then bad = what end end
+local function n(k) return _calls[k] or 0 end
+GetRenderTarget = function(name) return { GetName = function() return name end } end
+-- the harness's monitors face +x: you stand in front of them, looking back at them
+local meWas = _me:GetPos()
+local eye, look = Vector(300, 0, 64), Angle(0, 180, 0)
+_me:SetPos(Vector(300, 0, 0))
+EyePos = function() return eye end
+local made = {}
+local function monitor(x, y, camNo)
+    local e = ents.Create("lc_monitor")
+    e:SetPos(Vector(x, y, 0))
+    e.Draw, e.DrawModel = def.Draw, function() end
+    if camNo then
+        e:SetNW2Int("lc_cam", camNo)
+        e:SetNW2Vector("lc_cam_pos", Vector(4000, 0, 70))
+        e:SetNW2Float("lc_cam_yaw", 90)
+    end
+    made[#made + 1] = e
+    return e
+end
+local views, seen, inside = 0, nil, nil
+render.RenderView = function(v)
+    views = views + 1
+    seen = v
+    if inside then inside() end
+end
+local ok, e = pcall(function()
+    -- no camera placed: no picture is made, and the glass shows no signal
+    local a = monitor(0, 0, nil)
+    _advance(1)
+    want(LC_CL.MonitorFeed(eye, look) == false and LC_CL.MonitorLive() == nil and views == 0, "a monitor with no camera made a picture")
+    local faces, pics = n("cam.Start3D2D"), n("surface.DrawTexturedRect")
+    a:Draw()
+    want(n("cam.Start3D2D") == faces + 1 and n("surface.DrawTexturedRect") == pics, "no camera: the glass doesn't show no signal")
+    -- three with cameras: the one in front of you, one further off, one out of reach
+    a:SetNW2Int("lc_cam", 1)
+    a:SetNW2Vector("lc_cam_pos", Vector(4000, 0, 70))
+    a:SetNW2Float("lc_cam_yaw", 90)
+    local b, c = monitor(-200, 60, 2), monitor(-900, 0, 1)
+    -- from inside the camera's view nothing starts another, you are in the picture, and no glass shows the picture being made
+    inside = function()
+        inside = nil
+        _advance(1)
+        local had = views
+        LC_CL.MonitorFeed(eye, look)
+        scene(eye, look)
+        want(views == had, "a second view was started from inside the first")
+        want(body() == true, "you are not drawn in the camera's view")
+        want(LC_CL.LiveCamRendering == true, "the editor's markers are drawn into the camera's view")
+        local p = n("surface.DrawTexturedRect")
+        a:Draw()
+        want(n("surface.DrawTexturedRect") == p, "a monitor showed the picture while it was being made")
+    end
+    _advance(1)
+    local push, pop = n("render.PushRenderTarget"), n("render.PopRenderTarget")
+    local made1 = LC_CL.MonitorFeed(eye, look)
+    want(made1 == true and views == 1, "the camera's view was drawn " .. views .. " times for one picture")
+    want(inside == nil, "the camera's view was never drawn")
+    want(n("render.PushRenderTarget") == push + 1 and n("render.PopRenderTarget") == pop + 1, "the picture's texture was not put away again")
+    want(seen and seen.origin and seen.origin:DistToSqr(Vector(4000, 0, 70)) < 1 and seen.angles.y == 90 and seen.angles.p == 15
+        and seen.drawviewmodel == false and seen.w == 512 and seen.h == 512, "the view is not from the camera, tipped down, without your weapon")
+    want(LC_CL.MonitorLive() == a, "the nearest monitor you face is not the live one")
+    want(body() == nil and not LC_CL.LiveCamRendering, "you are still drawn in third person after the picture")
+    pics = n("surface.DrawTexturedRect")
+    a:Draw()
+    want(n("surface.DrawTexturedRect") == pics + 1, "the live monitor doesn't show the picture")
+    faces = n("cam.Start3D2D")
+    b:Draw() c:Draw()
+    want(n("surface.DrawTexturedRect") == pics + 1 and n("cam.Start3D2D") == faces + 2, "another monitor shows a picture too (only one is live)")
+    -- a few pictures a second, not one a frame
+    _advance(1)
+    want(LC_CL.MonitorFeed(eye, look) == true and views == 2, "no second picture a second later")
+    want(LC_CL.MonitorFeed(eye, look) == false and views == 2, "a second picture in the same moment")
+    _advance(0.05)
+    want(LC_CL.MonitorFeed(eye, look) == false and views == 2, "a second picture a twentieth of a second later")
+    _advance(0.1)
+    want(LC_CL.MonitorFeed(eye, look) == true and views == 3, "no new picture after an eighth of a second")
+    -- never inside the broadcast camera's picture either (cl_livingcity_livecam.lua)
+    _advance(1)
+    LC_CL.LiveCamRendering = true
+    want(LC_CL.MonitorFeed(eye, look) == false and views == 3, "a view was started inside the broadcast camera's picture")
+    LC_CL.LiveCamRendering = false
+    -- its district blacked out: dead glass, and the next nearest is live
+    a:SetNW2Bool("lc_nopower", true)
+    _advance(1)
+    want(LC_CL.MonitorFeed(eye, look) == true and LC_CL.MonitorLive() == b, "a dead monitor stayed live")
+    faces = n("cam.Start3D2D")
+    a:Draw()
+    want(n("cam.Start3D2D") == faces, "a monitor without power draws on its glass")
+    a:SetNW2Bool("lc_nopower", false)
+    -- looking away, or standing behind them: none is live, and nothing is drawn on the back
+    _advance(1)
+    views = 0
+    want(LC_CL.MonitorFeed(eye, Angle(0, 0, 0)) == false and LC_CL.MonitorLive() == nil and views == 0, "a picture was made with your back to the monitors")
+    eye = Vector(-150, 0, 64)
+    _me:SetPos(Vector(-150, 0, 0))
+    _advance(1)
+    LC_CL.MonitorFeed(eye, Angle(0, 0, 0))
+    want(LC_CL.MonitorLive() ~= a, "a monitor seen from behind is live")
+    faces = n("cam.Start3D2D")
+    a:Draw()
+    want(n("cam.Start3D2D") == faces, "something is drawn on a monitor's back")
+    eye = Vector(300, 0, 64)
+    _me:SetPos(Vector(300, 0, 0))
+    -- an error while the picture is made: the texture is put away, and the next picture is made as usual
+    LC.ErrorNote = nil
+    render.RenderView = function() error("boom") end
+    _advance(1)
+    push, pop = n("render.PushRenderTarget"), n("render.PopRenderTarget")
+    want(LC_CL.MonitorFeed(eye, look) == false and LC_CL.MonitorLive() == nil, "an error in the camera's view left a monitor live")
+    want(n("render.PushRenderTarget") - push == n("render.PopRenderTarget") - pop, "an error in the camera's view left the game drawing into the texture")
+    LC.ErrorNote = noteWas
+    render.RenderView = function() views = views + 1 end
+    _advance(1)
+    views = 0
+    want(LC_CL.MonitorFeed(eye, look) == true and views == 1 and body() == nil and not LC_CL.LiveCamRendering, "after an error no picture is made any more")
+end)
+LC.ErrorNote = noteWas
+render.RenderView = nil
+GetRenderTarget, EyePos = grtWas, eyeWas
+_me:SetPos(meWas)
+for _, m in ipairs(made) do if IsValid(m) then m:Remove() end end
+_advance(1)
+LC_CL.MonitorFeed() -- (nothing is left live)
+if not ok then return "error: " .. tostring(e) end
+return bad
+""")
+if err:
+    problems = (problems + "\n" if problems else "") + "Combine monitors (client): " + str(err)
 # the radio held up (a weapon, next to Hands): drawn in your view and in your hand, and the soft static
 L.globals()._SRC = open(os.path.join(GMDIR, "entities", "weapons", "weapon_lc_radio.lua")).read()
 err = L.execute(r"""
@@ -4627,7 +4771,7 @@ _modes = _re.findall(r'^\s*\{ id = "([^"]+)",[^\n]*?label = "((?:[^"\\]|\\.)*)"'
 _cats = ("Point: ", "Fixture: ", "Street: ", "Path: ", "Zone: ", "Door: ", "Prop: ")
 _tools = {"inspect", "walker"}
 _side = {"Resistance ": "rspawn rlookout bunk graffiti way_left way_right way_up way_down way_freedom rebelboard interrochair rebelcage workbench zone_rebel",
-         "Combine ": "console forcefield powerbank turret barricade_low barricade barricade_tall dataterm masterterm sspawn sterm lz suppressor zone_combine",
+         "Combine ": "console forcefield powerbank turret barricade_low barricade barricade_tall dataterm masterterm sspawn sterm lz suppressor zone_combine monitor camera",
          "Civil Protection ": "patrol checkpoint cpsupply cpfeed evidlocker door_cp",
          "Administrator's ": "desk adminpower speech speechcrowd studio door_office",
          "Union ": "terminal recycler"}

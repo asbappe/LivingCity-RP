@@ -153,3 +153,5 @@ Only the words shown changed. Every point keeps its internal name, so saved layo
 A medium Breencast screen, when it is added, is `Street: Breencast screen, medium`: it then sits between the giant and the small one.
 
 Added 15 November: `Fixture: Resistance locker` (under "The Resistance and rebel bases") and `Fixture: Civil Protection locker` (under "Civil Protection and the Combine"), beside the citizens' `Fixture: locker`; and the medium screen, `Street: medium Breencast screen`.
+
+Added 15 November: `Fixture: Combine monitor` and `Point: Combine camera` (the camera monitors), both under "Civil Protection and the Combine".
