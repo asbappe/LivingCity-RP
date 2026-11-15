@@ -31340,6 +31340,105 @@ end
 Nov14E_MediumScreenTests()
 
 
+function Nov14D_WeaponsTests()
+section("Citizens leave weapons alone, a sympathizer hides one and passes it on, no weapon in custody (14 November, group D)")
+local realFind = ents.FindByClass
+ents.FindByClass = function(c)
+    if c ~= "weapon_*" then return realFind(c) end
+    local o = {}
+    for _, k in ipairs({ "weapon_smg1", "weapon_ar2", "weapon_pistol" }) do for _, e in ipairs(realFind(k)) do o[#o + 1] = e end end
+    return o
+end
+local function gun(cls, pos) local w = ents.Create(cls) w:SetPos(pos) w:Spawn() return w end
+local function inHand(npc, cls)
+    local w = { gone = false }
+    function w:IsValid() return not self.gone end
+    function w:GetClass() return cls end
+    function w:Remove() self.gone = true end
+    npc.GetActiveWeapon = function() return (not w.gone) and w or nil end
+    return w
+end
+local base = Vector(-30000, 26000, 0)
+local T = CurTime() + 100
+
+-- an ordinary citizen: told not to, and one in the hands all the same goes back down
+local n, st = LC.SpawnCitizen(base)
+hook.Run("OnEntityCreated", n)
+_run(1)
+local told = false
+for _, f in ipairs(n.fired or {}) do if f == "DisableWeaponPickup" then told = true end end
+ok(told and n.lcNoPickup == true, "a citizen is told not to pick weapons up (the engine's own habit)")
+st.rebel = nil
+local held = inHand(n, "weapon_ar2")
+local dropped
+n.DropWeapon = function(_, w) dropped = w w.gone = true end
+LC.NPCWeaponsTick(T)
+ok(dropped == held and st.hidGun == nil, "an ordinary citizen found with one in hand puts it back down")
+local lw = gun("weapon_smg1", base + Vector(40, 0, 0))
+LC.NPCWeaponsTick(T + 4)
+ok(IsValid(lw) and st.hidGun == nil, "and walks past one lying loose")
+
+-- a sympathizer: takes it, hidden, kept on the person
+st.rebel = true
+LC.SetState(n, st, "idle")
+LC.NPCWeaponsTick(T + 8)
+ok(not IsValid(lw) and st.hidGun == "weapon_smg1", "a sympathizer passing it takes it and hides it", tostring(st.hidGun))
+ok(n:GetActiveWeapon() == nil, "nothing shows in their hands")
+ok(n.lcProfile == nil or n.lcProfile.hidGun == "weapon_smg1", "it is kept on the person")
+ok(LC.SearchNPCRoll(st) == "a hidden firearm", "a unit's search finds it, every time")
+ok(LC.HiddenGunFound(n, st) and st.hidGun == nil and LC.SearchNPCRoll ~= nil, "and found, it is gone")
+
+-- a unit near: left where it is
+local cop = ents.Create("npc_metropolice") cop:SetPos(base + Vector(200, 0, 0)) cop:Spawn()
+LC.RegisterNPC(cop, "cop")
+local lw2 = gun("weapon_pistol", base + Vector(30, 0, 0))
+LC.NPCWeaponsTick(T + 12)
+ok(IsValid(lw2) and st.hidGun == nil, "with a unit near, a sympathizer leaves it")
+LC.NPCs[cop] = nil cop:Remove()
+LC.NPCWeaponsTick(T + 16)
+ok(not IsValid(lw2) and st.hidGun == "weapon_pistol", "(the unit gone, taken)")
+
+-- the same person later: a new body, the weapon still theirs
+if n.lcProfile then
+    local n2 = ents.Create("npc_citizen") n2:SetPos(base) n2:Spawn()
+    n2.lcProfile = n.lcProfile
+    ok(LC.NPCHiddenGun(n2, { role = "citizen" }) == "weapon_pistol", "the same person back on the street still has it")
+    n2:Remove()
+end
+
+-- passed on: the Resistance's stores
+local crate = ents.Create("lc_crate") crate:SetPos(base + Vector(900, 0, 0)) crate:Spawn()
+local stock0 = crate.lcStock or 0
+ok(LC.HiddenGunDelivered(n, st, crate, "stores") and st.hidGun == nil, "handed in at a Resistance supply crate")
+ok((crate.lcStock or 0) == stock0 + 2, "worth two supplies to the stores", tostring(crate.lcStock))
+ok(not LC.HiddenGunDelivered(n, st, crate, "stores"), "(once)")
+crate:Remove()
+
+-- custody: nothing in the hands, nothing hidden
+local n3, st3 = LC.SpawnCitizen(base + Vector(0, 300, 0))
+local h3 = inHand(n3, "weapon_ar2")
+st3.hidGun = "weapon_pistol"
+ok(LC.NoWeaponsInCustody(n3, st3) and h3.gone and st3.hidGun == nil, "taken into custody: the weapon in hand and the hidden one are both taken")
+local h4 = inHand(n3, "weapon_ar2")
+LC.SetState(n3, st3, "jailed")
+LC.NPCWeaponsTick(T + 20)
+ok(h4.gone, "a prisoner in a cell found with a weapon loses it")
+local h5 = inHand(n3, "weapon_smg1")
+LC.OnNPCReachedCell(n3, st3, T + 21)
+ok(h5.gone, "and it is checked at the cell door")
+local r, rst = LC.SpawnCitizen(base + Vector(0, 600, 0))
+rst.role = "rebel"
+local h6 = inHand(r, "weapon_smg1")
+LC.NoWeaponsInCustody(r, rst)
+ok(h6.gone and rst.cuffWeapon == "weapon_smg1", "a fighter's is taken too, and remembered for when they are freed")
+ok(string.find(LC.NPCWeaponsSummary(), "hidden by sympathizers", 1, true) ~= nil, "the debug report counts it")
+
+ents.FindByClass = realFind
+for _, e in ipairs({ n, n3, r }) do if IsValid(e) then LC.NPCs[e] = nil e:Remove() end end
+end
+Nov14D_WeaponsTests()
+
+
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")
 ;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)
     -- Everything here is something the owner's server, files or players depend on. The list is

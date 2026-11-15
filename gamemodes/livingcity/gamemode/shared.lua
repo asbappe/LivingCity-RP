@@ -246,6 +246,7 @@ LC_MODULES = {
         "sv_livingcity_jobboards", -- (job boards in the world: whose follows where it stands; E opens your Jobs)
         "sv_livingcity_career", -- (C > My career: rank, XP, the way to the Overwatch)
         "sv_livingcity_evidence", -- (what units confiscate is kept, and burned in public now and then)
+        "sv_livingcity_npcweapons", -- (citizens leave weapons alone, sympathizers hide them; no weapon in custody)
         "sv_livingcity_psyche", -- (the city's minds: traits, needs, thoughts, stress, ties, rumours; pure arithmetic)
         "sv_livingcity_minds", -- (watching the city's minds and writing it down, data/livingcity/minds/)
         "sv_livingcity_mindsact", -- (the minds acting: choices bend, breaks happen in the street, informants and unrest come from them)
