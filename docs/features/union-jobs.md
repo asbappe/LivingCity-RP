@@ -5,7 +5,7 @@
 | # | Job | Shifts |
 |---|---|---|
 | 1 | Sanitation Worker | Litter sweeps, bin rounds (at the map's own bins), graffiti removal |
-| 2 | Ration Production | The sealing line (split packs to the reject bin), supply runs, the count against the register, the counter (forged ration cards). Rations are made, not cooked |
+| 2 | Ration Production | The sealing line (split packs to the reject bin), supply runs, the count against the register, the counter (a forged ration card, then the citizens' cards checked one by one: the papers game, at the counter. The owner, 15 November: it used to wait there until three citizens had been served, and failed when nobody came). Rations are made, not cooked |
 | 3 | Clinic Medic (gets a medkit) | Clinic rounds, house calls |
 | 4 | Factory Worker | Assembly quotas, the loading dock, a foreman who skims |
 | 5 | Courier | Mail rounds, sealed envelopes, parcel runs |

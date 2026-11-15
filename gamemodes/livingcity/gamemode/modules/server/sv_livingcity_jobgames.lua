@@ -690,18 +690,20 @@ end
 
 GAMES.papers = {
     start = function(g)
-        g.title = "Papers check"
+        -- (at the ration counter the same game checks citizens' cards: opts.who, opts.one, opts.where, opts.title)
+        local who, one, where = g.opts.who or "Travelers", g.opts.one or "traveler", g.opts.where or "Station"
+        g.title = g.opts.title or "Papers check"
         g.post = g.ply:GetPos()
         local fwd = g.ply:GetAimVector() fwd.z = 0
         g.facing = fwd:GetNormalized()
         g.rules = Rules()
         g.today = 200 + math.random(0, 150)
         g.done, g.right, g.cites = 0, 0, 0
-        g.ply:ChatPrint("[Station] Travelers will walk up to you one at a time. Press E on each one to see their papers and check them against today's rules (listed on your screen). Then choose: approve them, deny them, or call a Civil Protection unit if the papers are forged (look closely at the seal). Right calls pay; wrong ones get you a citation and docked pay.")
+        g.ply:ChatPrint("[" .. where .. "] " .. who .. " will walk up to you one at a time. Press E on each one to see their papers and check them against today's rules (listed on your screen). Then choose: approve them, deny them, or call a Civil Protection unit if the papers are forged (look closely at the seal). Right calls pay; wrong ones get you a citation and docked pay.")
         g.hud = function(gg)
-            local lines = { string.format("Travelers checked: %d of %d", gg.done, TRAVELERS), string.format("Right calls: %d    Citations (mistakes): %d", gg.right, gg.cites), "Today's rules:" }
+            local lines = { string.format("%s checked: %d of %d", who, gg.done, TRAVELERS), string.format("Right calls: %d    Citations (mistakes): %d", gg.right, gg.cites), "Today's rules:" }
             for _, l in ipairs(RuleLines(gg.rules)) do lines[#lines + 1] = "  " .. l end
-            if gg.current and gg.current.arrived then lines[#lines + 1] = "Press E on the traveler to see their papers" end
+            if gg.current and gg.current.arrived then lines[#lines + 1] = "Press E on the " .. one .. " to see their papers" end
             return lines
         end
         NextTraveler(g)

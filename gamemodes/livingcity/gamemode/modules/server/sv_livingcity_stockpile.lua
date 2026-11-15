@@ -9,8 +9,9 @@
             the city's own kitchen and factory workers (a few a time); a
             train's freight (+15); a supply convoy, for every load that wasn't
             stolen (+15 a load)
-      Out   every ration handed out (one), and the city eating (a little every
-            minute for every lc_stock_eat (20) citizens out)
+      Out   every ration handed out (one), and the city eating (a ration a
+            minute for every lc_stock_eat (20) citizens out, in proportion:
+            three citizens eat nine an hour; never the last quarter)
 
     Running low (under a quarter): allocations come slower, the dispensers
     are sometimes empty, the PA says so, and hungry people listen to the
@@ -183,8 +184,17 @@ timer.Create("LivingCityStock", 60, 0, function()
         -- the city eats: a ration a minute for every lc_stock_eat (20) people out
         -- (it was every fifteen: a full city of 80 ate 6 a minute, more than its
         -- kitchen, factory and trains could ever bring in)
+        -- In proportion, and never the last quarter (the owner, 15 November: "no rations in game and
+        -- everyone is starving"). It was rounded up, so three citizens out ate as much as twenty, one a
+        -- minute: a small city's stores were gone in under four hours and stayed gone. Now three eat nine
+        -- an hour, and the city's own eating stops at the quarter line: only rations really handed out
+        -- can take the stores lower.
         local out = LC.RoleCounts and LC.RoleCounts.citizen or 0
-        LC.StockAdd(-math.ceil(out / math.max(5, cvEat:GetFloat())), "the city eating")
+        LC.StockEatCarry = (LC.StockEatCarry or 0) + out / math.max(5, cvEat:GetFloat())
+        local n = math.floor(LC.StockEatCarry)
+        LC.StockEatCarry = LC.StockEatCarry - n
+        n = math.min(n, math.max(0, LC.Stock() - math.ceil(Max() * 0.25)))
+        if n > 0 then LC.StockAdd(-n, "the city eating") end
         local lvl = LC.StockLevel()
         -- hungry people listen to the Resistance; fed ones keep their heads down
         if lvl == "short" or lvl == "empty" then

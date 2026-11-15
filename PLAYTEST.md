@@ -4,8 +4,10 @@ About twenty minutes on the server. Only things a person has to judge are here: 
 
 Tick what works, write a word under what does not. When the card is done, the next one is cut from `PLAYTEST_ARCHIVE.md` (326 things there still need a person, 79 need the real server).
 
-## This card (14 November 2026)
+## This card (15 November 2026)
 
+- [ ] **Rations (first, and again at the end):** press Fill the city's ration stores in the editor panel (Survival and economy) once. Does a dispenser give you a ration? An hour later, are the stores (under the clock) still well above empty? Type `lc_stock` in the console and send me the two lines it prints.
+  Notes:
 - [ ] **Arriving (a new character, citizen):** make a new character and walk out of the station. Do the cards and tips come one at a time, each readable, never piled up? (archive line 916)
   Notes:
 - [ ] **Talking to a citizen:** E on a citizen. Do the number keys work, are their words under the list, and does walking off close it? (archive line 1932)

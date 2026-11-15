@@ -3,6 +3,9 @@
 
     python3 _dev/robots.py            the table, and what stuck, failed or errored
     python3 _dev/robots.py --quiet    only the summary and the problems
+    python3 _dev/robots.py --only inside --modes first,second,third,last,fail --budget 10
+                                      one job or story (part of its name), each way its choices can go,
+                                      in a city of 10 NPCs like the owner's
 
 A robot is a fake player (robots.lua). It takes each job for each side it is offered to and
 does it: walks there, uses the thing, makes the arrest, searches by hand, answers the choice.
@@ -23,6 +26,9 @@ def run():
     fd, path = tempfile.mkstemp(prefix="lc_robots_", suffix=".txt")
     os.close(fd)
     env = dict(os.environ, LC_ROBOTS=path)
+    for flag, name in (("--only", "LC_ROBOT_ONLY"), ("--modes", "LC_ROBOT_MODES"), ("--budget", "LC_ROBOT_BUDGET")):
+        if flag in sys.argv and sys.argv.index(flag) + 1 < len(sys.argv):
+            env[name] = sys.argv[sys.argv.index(flag) + 1]
     r = subprocess.run([sys.executable, os.path.join(HERE, "run_section.py"), "--unit", "RobotTests"],
                        cwd=os.path.join(HERE, ".."), env=env, capture_output=True, text=True)
     text = open(path).read() if os.path.exists(path) else ""

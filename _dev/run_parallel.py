@@ -199,7 +199,7 @@ def build_shard(t, shard, stop_line, path):
     last = rs.last_code_line(t)
     keep = set(range(1, pre + 1))
     for k in range(pre + 1, start):
-        if t.depth[k] == 0 and re.match(r"^_setcvar\(.*\)\s*(--.*)?$", t.lines[k - 1]):
+        if t.depth[k] == 0 and rs_setting_line(t.lines[k - 1]):
             keep.add(k)
     anchors = []                                   # lines whose wrappers must be kept
     for first, last_re in SETUP:
@@ -295,6 +295,7 @@ def parse(text):
     return regions, order, bool(done)
 
 
+rs_setting_line = rs.setting_line                      # (a setting line kept in a shard: run_section.py says which)
 SHARD_ENV = dict(os.environ, LC_HOUSE_RULES_DONE="1")   # (the house rules are checked once, here, not in every shard)
 
 

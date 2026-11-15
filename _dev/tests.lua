@@ -29940,13 +29940,155 @@ LC.Err = keepErr
 end
 ErrorsFileTests()
 
+function StockEatTests()
+section("The city eats in proportion, and never the last quarter (the owner, 15 November)")
+local set = _setcvar -- (through a local: a line starting _setcvar is replayed as a setting for every later section, run_section.py)
+local keepOn, keepMax, keepEat = GetConVar("lc_stockpile"):GetInt(), GetConVar("lc_stock_max"):GetInt(), GetConVar("lc_stock_eat"):GetInt()
+local keepRunning, keepCounts, keepCarry, keepStock = LC.Running, LC.RoleCounts, LC.StockEatCarry, LC.Stock()
+set("lc_stockpile", 1)
+set("lc_stock_max", 400)
+set("lc_stock_eat", 20)
+LC.Running = true
+local minute = timer.list["LivingCityStock"].fn
+local function hour(citizens)
+    LC.RoleCounts = { citizen = citizens }
+    LC.StockEatCarry = 0
+    local before = LC.Stock()
+    for _ = 1, 60 do minute() end
+    return before - LC.Stock()
+end
+LC.StockAdd(300 - LC.Stock())
+local three = hour(3)
+ok(three == 9, "three citizens out eat nine rations in an hour (it was sixty: one a minute, however few)", three)
+LC.StockAdd(300 - LC.Stock())
+local twenty = hour(20)
+ok(twenty == 60, "twenty eat sixty: a ration a minute for every lc_stock_eat", twenty)
+LC.StockAdd(300 - LC.Stock())
+ok(hour(0) == 0, "nobody out: nothing is eaten")
+LC.StockAdd(300 - LC.Stock())
+local fifty = hour(50)
+ok(fifty == 150, "fifty eat a hundred and fifty", fifty)
+LC.StockAdd(110 - LC.Stock())
+local ate = hour(20)
+ok(ate == 10 and LC.Stock() == 100 and LC.StockLevel() == "normal", "the city's own eating stops at the quarter line", ate .. " eaten, " .. LC.Stock() .. " left")
+ok(hour(80) == 0 and LC.Stock() == 100, "however many are out")
+local eater = newPlayer("QuarterEater", "citizen")
+eater.lcnRationAt = 0
+LC.GiveItem(eater, "ration_card", 5)
+ok(LC.UseDispenser(eater, nil) and LC.Stock() == 99 and LC.StockLevel() == "short", "a ration handed out still takes one, under the line", LC.Stock())
+ok(hour(20) == 0 and LC.Stock() == 99, "and what is under the line the city leaves alone")
+LC.StockAdd(-LC.Stock())
+ok(hour(20) == 0 and LC.Stock() == 0, "empty stays empty: nothing below nothing")
+eater:SetPos(Vector(-30000, 30000, 0))
+LC.Running, LC.RoleCounts, LC.StockEatCarry = keepRunning, keepCounts, keepCarry
+LC.StockAdd(keepStock - LC.Stock())
+set("lc_stock_max", keepMax)
+set("lc_stock_eat", keepEat)
+set("lc_stockpile", keepOn)
+end
+StockEatTests()
+
+function CounterShiftTests()
+section("The kitchen's counter shift: checking ration cards, not waiting for the line (the owner, 15 November)")
+local set = _setcvar -- (through a local: a line starting _setcvar is replayed as a setting for every later section, run_section.py)
+local keepGames = GetConVar("lc_jobgames"):GetInt()
+local function counterShift(who)
+    for _ = 1, 80 do
+        who.lcStoryPostings = nil
+        for _, sp in ipairs(LC.StoryPostings(who)) do
+            if sp.chain == "shift" and string.find(sp.title, "The counter", 1, true) then return sp end
+        end
+    end
+end
+set("lc_jobgames", 0)
+local old = newPlayer("CounterOld", "citizen")
+LC.SetJob(old, "kitchen", true)
+local was = counterShift(old)
+ok(was ~= nil and was.stages[3].event == "served", "with lc_jobgames 0 the old shift is kept: it waits for the line", was and tostring(was.stages[3].event))
+set("lc_jobgames", 1)
+local clerk = newPlayer("CounterClerk", "citizen")
+LC.SetJob(clerk, "kitchen", true)
+local spec = counterShift(clerk)
+ok(spec ~= nil, "the counter shift is still handed out")
+ok(spec ~= nil and #spec.stages == 3 and spec.stages[3].kind == "count" and spec.stages[3].event == "game_done", "its last step is a game, not a wait at the counter",
+    spec and tostring(spec.stages[3].event))
+clerk.lcqNext = 0
+LC.AcceptPosting(clerk, spec.id)
+local q = LC.QuestOf[clerk]
+clerk:SetPos(q.stages[1].pos)
+_run(1)
+ok(q.stages[q.stage].kind == "choice", "at the counter: the forged card, as before")
+clerk.chat = {}
+LC.ResolveChoice(clerk, q.id, 2)
+local g = LC.JobGames[clerk]
+ok(g ~= nil and g.kind == "papers", "then the cards: the papers game starts where they stand", g and g.kind)
+ok(g ~= nil and g.title == "Ration cards" and has(clerk.chat, "[Rations] Citizens will walk up to you"), "worded for the counter, not the station", g and g.title)
+ok(IsValid(g.current and g.current.npc), "the first citizen steps up")
+_run(2)
+ok(not q.done and LC.QuestOf[clerk] == q, "nobody in the ration line, and the shift does not wait on one")
+LC.JobGameFinishForTest(clerk)
+ok(q.done and LC.QuestOf[clerk] == nil, "the cards checked, the shift is done")
+-- the station's own papers check is worded as it was
+local porter = newPlayer("CounterPorter", "citizen")
+porter.chat = {}
+LC.JobGameStart(porter, "papers", nil, {})
+ok(LC.JobGames[porter].title == "Papers check" and has(porter.chat, "[Station] Travelers will walk up to you"), "the station's papers check reads as before")
+LC.JobGameEnd(porter, "quit")
+set("lc_jobgames", keepGames)
+for _, p in ipairs({ old, clerk, porter }) do if LC.QuestOf[p] then LC.AbandonQuest(p) end p:SetPos(Vector(-30000, 30000, 0)) end
+end
+CounterShiftTests()
+
+function StoryPrisonerTests()
+section("A story that frees a prisoner brings its own when the cells are empty (The Man Inside; the owner, 15 November)")
+local unit = newPlayer("InsideUnit", "cp")
+-- nobody jailed that the story could take, and no citizen free to arrest
+local held = {}
+for n, st in pairs(LC.NPCs) do if IsValid(n) and st.state == "jailed" and not st.questLock then st.questLock = held held[n] = st end end
+local keepRandom = LC.QB.RandomCitizen
+LC.QB.RandomCitizen = function() return nil end
+local story = LC.Story(unit)
+story.chains.inside = { part = "proof", data = {}, readyAt = 0 }
+LC.SaveStory(unit)
+unit.lcStoryPostings = nil
+local spec
+for _, sp in ipairs(LC.StoryPostings(unit)) do if sp.chain == "inside" then spec = sp end end
+ok(spec ~= nil and spec.part == "proof", "The Man Inside, part 2, is on the board")
+unit.lcqNext = 0
+LC.AcceptPosting(unit, spec.id)
+local q = LC.QuestOf[unit]
+unit.chat = {}
+LC.ResolveChoice(unit, q.id, 1)
+LC.QB.RandomCitizen = keepRandom
+local st = q and q.stages[q.stage]
+ok(q ~= nil and not q.done and st.kind == "target" and st.action == "free", "with the cells empty and nobody to arrest, it is not called off", has(unit.chat, "Failed") and "failed" or tostring(st and st.kind))
+local who = st and st.npc
+local cellNear = false
+for _, c in ipairs(LC.PointsOfKind("cell")) do if IsValid(who) and who:GetPos():DistToSqr(c.pos) < 40 * 40 then cellNear = true end end
+ok(IsValid(who) and LC.NPCs[who] and LC.NPCs[who].state == "jailed" and cellNear, "a prisoner of the story's own is held in a cell", IsValid(who) and tostring(LC.NPCs[who] and LC.NPCs[who].state))
+ok(IsValid(who) and LC.NPCs[who].questLock == q, "and is the job's: nobody lets them out first")
+unit:SetPos(who:GetPos() + Vector(40, 0, 0))
+LC.NPCs[who].nextUse = 0
+hook.Run("PlayerUse", unit, who)
+ok(q.stages[q.stage].kind == "escort" and LC.NPCs[who].state ~= "jailed", "E opens the cell, and they follow")
+local dest = q.stages[q.stage].pos
+who:SetPos(dest)
+unit:SetPos(dest + Vector(50, 0, 0))
+_run(1.5)
+ok(q.done and not IsValid(who), "walked to safety, the part is done and the prisoner is gone")
+for n, s2 in pairs(held) do if s2.questLock == held then s2.questLock = nil end end
+if LC.QuestOf[unit] then LC.AbandonQuest(unit) end
+unit:SetPos(Vector(-30000, 30000, 0))
+end
+StoryPrisonerTests()
+
 function RobotTests()
 section("Robot players: every job on the boards, taken and done the way a player would (the owner, 14 November)")
 -- (their own run, from the city as the first 505 lines leave it: python3 _dev/robots.py. Inside the long run
 -- the city is whatever the tests before left, and the same job would go differently from one run to the next.)
 if not _ROBOTS_ON then return end
 local robots = assert(loadstring(_ROBOTSRC, "robots.lua"))()
-local rep = robots({ ok = ok, newPlayer = newPlayer, withRoll = withRoll })
+local rep = robots({ ok = ok, newPlayer = newPlayer, withRoll = withRoll, only = _ROBOT_ONLY, modes = _ROBOT_MODES, budget = _ROBOT_BUDGET })
 _ROBOT_REPORT = rep.text
 end
 RobotTests()

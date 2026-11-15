@@ -942,8 +942,26 @@ local function FreePrisonerStage(text)
             for n, s in pairs(LC.NPCs) do if IsValid(n) and s.state == "jailed" and not s.questLock then npc = n break end end
             if not npc then
                 npc = Q.RandomCitizen()
-                if not npc or not LC.ArrestNPC(npc, nil) then return false end
+                if npc and not LC.ArrestNPC(npc, nil) then npc = nil end
             end
+            -- Nobody in the cells and nobody about to put there (a small city, or every cell taken): the
+            -- story brings its own prisoner, held in a cell. (The owner, 15 November, on The Man Inside:
+            -- "buggy as heck": it was called off the moment its way in was chosen, for want of a prisoner.)
+            if not npc then
+                local cells = LC.PointsOfKind("cell")
+                local cell = (LC.FreeCell and LC.FreeCell(nil)) or cells[1]
+                local made, mst
+                if cell then made, mst = Q.SpawnActor(q, "citizen", cell.pos) end
+                if IsValid(made) and mst then
+                    made:SetPos(cell.pos + Vector(0, 0, 4))
+                    if LC.FaceYaw and cell.yaw then LC.FaceYaw(made, cell.yaw) end
+                    if LC.Claim then LC.Claim(made, mst, cell) end
+                    mst.jailUntil = CurTime() + 900
+                    LC.OnNPCReachedCell(made, mst, CurTime())
+                    npc = made
+                end
+            end
+            if not npc then return false end
             Q.Lock(q, npc)
             q.data.target = npc
             st.npc = npc

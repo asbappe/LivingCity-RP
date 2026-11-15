@@ -2088,3 +2088,9 @@ Type them in the server console on the host panel, or in your own game console (
 
 - [ ] **Bug reports, part 2:** with a second admin on, does a card "Report from NAME" show for them? Does a one-word report get "Not sent: write a few words."? [needs the real server: a second admin online; the rules themselves are tested (FeedbackTests)]
   Notes:
+
+- [ ] **The Man Inside, part 2, on the real map:** as a unit, `lcq_startchain inside` in the console, take part 1 from F4 and hear her out, then part 2. Is a prisoner marked in the cells? After E on them, do they follow you out of the cell and through the doors? Do the guards leave when you set the fire or call the false report? [needs a person: doors, guards and following only show on the real map]
+  Notes:
+
+- [ ] **The counter (Ration Production):** take the kitchen job and work shifts until "The counter" comes up. After the forged card, do citizens step up to you one at a time, and does the card window read well at a ration counter? [needs a person: how the card check looks and reads at the counter]
+  Notes:
