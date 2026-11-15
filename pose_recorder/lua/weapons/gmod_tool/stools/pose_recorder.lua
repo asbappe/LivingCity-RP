@@ -58,8 +58,34 @@ function TOOL.BuildCPanel(cp)
     cp:Help("Pose a ragdoll with the physgun (right click freezes a limb), then snap it as a keyframe. "
         .. "Each bone's angle is worked out the way Entity:ManipulateBoneAngles wants it, relative to the model "
         .. "standing in its normal idle, so the pose plays back on a live player or NPC.")
-    cp:Button("Spawn a mannequin (your model, frozen standing)", "pose_recorder_mannequin")
+    local b = cp:Button("Spawn a mannequin (frozen standing)")
+    b.DoClick = function() RunConsoleCommand("pose_recorder_mannequin", GetConVar("pose_recorder_model"):GetString()) end
+    cp:TextEntry("Its model (empty: yours)", "pose_recorder_model")
     cp:Help("Or left click any ragdoll to record that one.")
+
+    -- Another addon's poses, set by hand (lua/pose_recorder/targets.lua): listed when there are any
+    if PR.Targets and #PR.Targets() > 0 then
+        cp:Help("Poses to set by hand: stand one's mannequin, move it with the physgun, then use it.")
+        local poses = List(cp, 130, { "Pose" }, false)
+        local function FillPoses()
+            if not IsValid(poses) then return end
+            poses:Clear()
+            for _, t in ipairs(PR.Targets()) do
+                local line = (not t.can or t.can(LocalPlayer())) and poses:AddLine(t.label)
+                if line then line.prId = t.id end
+            end
+        end
+        hook.Add("PoseRecorderTargetsChanged", poses, FillPoses)
+        FillPoses()
+        b = cp:Button("Stand the picked pose's mannequin")
+        b.DoClick = function()
+            local line = (poses:GetSelected() or {})[1]
+            if not line or not line.prId then PR.Say("Pick a pose in the list first.") return end
+            RunConsoleCommand("pose_recorder_target", line.prId)
+        end
+        cp:Button("Use this pose", "pose_recorder_take")
+        cp:Button("Take the mannequin away", "pose_recorder_target_remove")
+    end
     cp:TextEntry("Name", "pose_recorder_name")
     cp:NumSlider("Beats per minute", "pose_recorder_bpm", 40, 220, 0)
     cp:NumSlider("Beats per new keyframe", "pose_recorder_beats", 0.25, 8, 2)
@@ -101,7 +127,7 @@ function TOOL.BuildCPanel(cp)
     hook.Add("PoseRecorderChanged", keys, FillKeys)
     FillKeys()
     local function ForPicked(fn) return function() PR.picked = Picked(keys) fn() end end
-    local b = cp:Button("Give them the beats per new keyframe (above)")
+    b = cp:Button("Give them the beats per new keyframe (above)")
     b.DoClick = ForPicked(function() PR.SetBeats(GetConVar("pose_recorder_beats"):GetFloat()) end)
     b = cp:Button("Give them the easing for new keyframes (above)")
     b.DoClick = ForPicked(function() PR.SetEase(GetConVar("pose_recorder_ease"):GetString()) end)

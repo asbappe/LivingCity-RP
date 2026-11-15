@@ -373,6 +373,318 @@ ok(key == "custom" or (isinstance(key, tuple) and key[0] == "custom"), "PoseReco
 ok(S.eval("PoseRecorder.Get('custom').frames[1].ease") == "smooth", "PoseRecorder.Get returns it, checked")
 ok(two(S.eval("PoseRecorder.Play(npc, 'nothing')"))[0] is False, "playing an animation that doesn't exist says no")
 
+# ----------------------------------------------------------------------------------------
+# A pose put back on a skeleton, and things held in it
+# ----------------------------------------------------------------------------------------
+M = runtime("server")
+M.execute("""
+    PR = PoseRecorder
+    B = "ValveBiped.Bip01_"
+    SK = { { name = B .. "Pelvis" }, { name = B .. "Spine2", parent = 1 }, { name = B .. "R_UpperArm", parent = 2 },
+        { name = B .. "R_Forearm", parent = 3 }, { name = B .. "R_Hand", parent = 4 }, { name = B .. "L_UpperArm", parent = 2 },
+        { name = B .. "L_Clavicle", parent = 2 }, { name = B .. "R_Finger1", parent = 5 } }
+    REL = { PR.FromAngles(0, 0, 90), PR.FromAngles(-80, 10, 90), PR.FromAngles(20, -70, 15), PR.FromAngles(25, -60, 10),
+        PR.FromAngles(30, -55, 0), PR.FromAngles(20, 70, -15), PR.FromAngles(0, 80, 0), PR.FromAngles(31, -50, 3) }
+    POS = { { 0, 0, 38 }, { 0, 0, 48 }, { 0, -8, 56 }, { 2, -12, 45 }, { 5, -14, 35 }, { 0, 8, 56 }, { 0, 4, 57 }, { 6, -14, 31 } }
+    REC = { true, true, true, true, true, true, false, false }
+    POSE = { [B .. "R_UpperArm"] = { 6, 40, 75 }, [B .. "R_Forearm"] = { 0, -75, 0 }, [B .. "R_Hand"] = { 0, 10, 0 }, [B .. "L_UpperArm"] = { -6, 40, -75 } }
+    function Near(a, b, tol) return math.abs(a - b) <= (tol or 1e-6) end
+    function SameRot(a, b) for i = 1, 3 do for j = 1, 3 do if not Near(a[i][j], b[i][j]) then return false end end end return true end
+    function Dist(a, b) return math.sqrt((a[1] - b[1]) ^ 2 + (a[2] - b[2]) ^ 2 + (a[3] - b[3]) ^ 2) end
+""")
+ok(M.eval("""(function()
+    local rot, pos = PR.Apply(SK, REL, POS, {}, 0)
+    for i = 1, #SK do if not SameRot(rot[i], REL[i]) or Dist(pos[i], POS[i]) > 1e-6 then return false end end
+    return true end)()"""), "Apply with no pose: every bone is where the reference has it")
+ok(M.eval("""(function()
+    local rot = PR.Apply(SK, REL, POS, POSE, 30)
+    local out, face = PR.Delta(SK, REL, rot, REC)
+    if not Near(face, 30, 0.01) then return false end
+    for name, a in pairs(POSE) do for k = 1, 3 do if not Near(out[name][k], a[k], 0.11) then return false end end end
+    for _, name in ipairs({ B .. "Pelvis", B .. "Spine2" }) do for k = 1, 3 do if not Near(out[name][k], 0, 0.11) then return false end end end
+    return out[B .. "L_Clavicle"] == nil end)()"""), "Apply then Delta gives the pose back, facing the same way (a pose goes onto a ragdoll and is read off it unchanged)")
+ok(M.eval("""(function()
+    local rot, pos = PR.Apply(SK, REL, POS, POSE, 30)
+    for i, b in ipairs(SK) do
+        if b.parent and not Near(Dist(pos[i], pos[b.parent]), Dist(POS[i], POS[b.parent]), 1e-6) then return false end
+    end
+    local finger = PR.Mul(rot[5], PR.Mul(PR.T(REL[5]), REL[8]))
+    return SameRot(rot[8], finger) and Dist(pos[1], PR.Rotate(PR.FromAngles(0, 30, 0), POS[1])) < 1e-6 end)()"""),
+   "the posed skeleton keeps its bones' lengths, and a bone with no turn of its own follows its parent")
+ok(M.eval("""(function()
+    local rot, pos = PR.Apply(SK, REL, POS, POSE, 30)
+    local propRot, propPos = PR.FromAngles(12, -140, 33), { 20, 5, 30 }
+    local lp, la = PR.Offset(rot[5], pos[5], propRot, propPos)
+    local p2, r2 = PR.Place(rot[5], pos[5], lp, la)
+    return Dist(p2, propPos) < 1e-6 and SameRot(r2, propRot) end)()"""), "a held thing measured from a bone and put back from it is where it was")
+ok(M.eval("PR.CleanPose({ [B .. 'R_Hand'] = { 370, -190, 12.345 } })[B .. 'R_Hand'][1]") == 10
+   and M.eval("PR.CleanPose({ [B .. 'R_Hand'] = { 370, -190, 12.345 } })[B .. 'R_Hand'][2]") == 170,
+   "CleanPose: angles brought round to within a half turn")
+ok(M.eval("PR.CleanPose({ a = { 0/0, 0, 0 } }) == nil and PR.CleanPose({ ['bad;name'] = { 0, 0, 0 } }) == nil and PR.CleanPose('x') == nil"),
+   "CleanPose turns down what isn't plain numbers on plainly named bones")
+ok(M.eval("""(function()
+    local many = {}
+    for i = 1, 81 do many['b' .. i] = { 0, 0, 0 } end
+    return PR.CleanPose(many) == nil end)()"""), "and a pose with too many bones")
+ok(M.eval("""(function()
+    local p = PR.CleanProps({ broom = { bone = '', pos = { 1, 2, 3 }, ang = { 0, 400, 0 } } })
+    return p and p.broom.bone == nil and p.broom.ang[2] == 40
+        and PR.CleanProps({ broom = { bone = 'x', pos = { 1, 2, 9999 }, ang = { 0, 0, 0 } } }) == nil
+        and PR.CleanProps({ broom = { pos = { 1, 2, 1/0 }, ang = { 0, 0, 0 } } }) == nil
+        and PR.CleanProps({ broom = { bone = 'a;b', pos = { 1, 2, 3 }, ang = { 0, 0, 0 } } }) == nil end)()"""),
+   "CleanProps: a held thing far away, at no real place, or hung from a badly named bone is turned down")
+
+# ----------------------------------------------------------------------------------------
+# Targets: another addon's pose on a mannequin, put in place and measured (a server, a client)
+# ----------------------------------------------------------------------------------------
+TARGETS = open(os.path.join(PR_DIR, "targets.lua")).read()
+AUTO = open(os.path.join(PR_DIR, "..", "autorun", "pose_recorder.lua")).read()
+TS = runtime("server")
+TC = runtime("client")
+SHARED = """
+    PR = PoseRecorder
+    B = "ValveBiped.Bip01_"
+    _set = {}
+    TARGET = {
+        id = "test_sweep", label = "Sweeping", model = "models/vortigaunt.mdl", ref = "sweep",
+        get = function()
+            return { [B .. "R_UpperArm"] = { 6, 40, 75 }, [B .. "R_Forearm"] = Angle(0, -75, 0) },
+                { broom = { model = "models/props_c17/pushbroom.mdl", bone = B .. "R_Hand", pos = Vector(3, 1, -2), ang = { 10, 90, 0 } },
+                  cap = { model = "models/props_junk/cap.mdl", pos = { 12, 0, 70 }, ang = { 0, 45, 0 } } }
+        end,
+        set = function(ply, bones, props)
+            if _refuse then return false, "Not today." end
+            _set[#_set + 1] = { ply = ply, bones = bones, props = props }
+        end,
+        can = function(ply) return not ply.banned end,
+        hang = function(name) return _hang and _hang[name] end,
+    }
+"""
+TS.globals()._auto, TS.globals()._play, TS.globals()._targets, TS.globals()._core = AUTO, PLAY, TARGETS, CORE
+TS.execute("""
+    undo = { Create = function() end, AddEntity = function() end, SetPlayer = function() end, Finish = function() end }
+    AddCSLuaFile = function() end
+    include = function(p)
+        local src = ({ ["pose_recorder/core.lua"] = _core, ["pose_recorder/play.lua"] = _play, ["pose_recorder/targets.lua"] = _targets })[p]
+        return assert(loadstring(src, p))()
+    end
+    local RAG = { "Pelvis", "Spine2", "R_UpperArm", "R_Forearm", "R_Hand", "L_UpperArm" }
+    function _EMT:GetPhysicsObjectCount() return self.cls == "prop_ragdoll" and #RAG or 1 end
+    function _EMT:GetPhysicsObjectNum(i)
+        self.phys = self.phys or {}
+        if not self.phys[i] then
+            local ph = { moving = true }
+            ph.IsValid = function() return true end
+            ph.EnableMotion = function(_, on) ph.moving = on end
+            ph.Wake = function() end
+            ph.SetPos = function(_, p) ph.pos = p end
+            ph.SetAngles = function(_, a) ph.ang = a end
+            self.phys[i] = ph
+        end
+        return self.phys[i]
+    end
+    function _EMT:GetPhysicsObject() return self:GetPhysicsObjectNum(0) end
+    function _EMT:TranslatePhysBoneToBone(i) return i end
+    function _EMT:GetBoneName(i) return "ValveBiped.Bip01_" .. RAG[i + 1] end
+    function _EMT:DeleteOnRemove(e) self.goWith = self.goWith or {} table.insert(self.goWith, e) end
+    assert(loadstring(_auto, "pose_recorder.lua"))()
+    me1, me2 = FakeEnt(1), FakeEnt(2)
+    for _, p in ipairs({ me1, me2 }) do
+        p.EyePos = function() return Vector(0, 0, 64) end
+        p.EyeAngles = function() return Angle(0, 0, 0) end
+    end
+""")
+TS.execute(SHARED)
+ok(TS.eval("PR.AddTarget(TARGET) == true and #PR.Targets() == 1 and PR.Target('test_sweep').ref == 'sweep'"), "AddTarget: another addon's pose is listed")
+ok(TS.eval("PR.AddTarget({ id = 'no model', get = function() end }) == false and PR.AddTarget({ id = 'x', model = 'm.mdl' }) == false and #PR.Targets() == 1"),
+   "a target with a bad id, or no get, is turned down")
+TC.globals()._targets = TARGETS
+TC.execute("""
+    PR = PoseRecorder
+    PR.Say = function(m) _said = m end
+    B = "ValveBiped.Bip01_"
+    local SK = { { name = B .. "Pelvis" }, { name = B .. "Spine2", parent = 1 }, { name = B .. "R_UpperArm", parent = 2 },
+        { name = B .. "R_Forearm", parent = 3 }, { name = B .. "R_Hand", parent = 4 }, { name = B .. "L_UpperArm", parent = 2 },
+        { name = B .. "R_Finger1", parent = 5 } }
+    local REL = { PR.FromAngles(0, 0, 90), PR.FromAngles(-80, 10, 90), PR.FromAngles(20, -70, 15), PR.FromAngles(25, -60, 10),
+        PR.FromAngles(30, -55, 0), PR.FromAngles(20, 70, -15), PR.FromAngles(31, -50, 3) }
+    local POS = { { 0, 0, 38 }, { 0, 0, 48 }, { 0, -8, 56 }, { 2, -12, 45 }, { 5, -14, 35 }, { 0, 8, 56 }, { 6, -14, 31 } }
+    PR.Reference = function(model, seq) _refAsked = model .. "|" .. seq return { bones = SK, rel = REL, pos = POS, seq = 0 } end
+    -- the mannequin and what it holds, as this game sees them: wherever the server put them
+    _placed = { bones = {}, props = {} }
+    local function Matrix(at)
+        return { GetAngles = function() return Angle(at.ang[1], at.ang[2], at.ang[3]) end,
+            GetTranslation = function() return Vector(at.pos[1], at.pos[2], at.pos[3]) end }
+    end
+    local rag = { IsValid = function() return true end, GetModel = function() return "models/vortigaunt.mdl" end }
+    rag.LookupBone = function(_, n) return _placed.bones[n] and n or nil end
+    rag.GetBoneMatrix = function(_, n) return _placed.bones[n] and Matrix(_placed.bones[n]) or nil end
+    function Entity(idx)
+        if idx == _ragIdx then return rag end
+        for name, i in pairs(PR.sel and PR.sel.props or {}) do
+            if i == idx and _placed.props[name] then
+                local at = _placed.props[name]
+                return { IsValid = function() return true end, GetPos = function() return Vector(at.pos[1], at.pos[2], at.pos[3]) end,
+                    GetAngles = function() return Angle(at.ang[1], at.ang[2], at.ang[3]) end }
+            end
+        end
+        return nil
+    end
+    -- (the real one reads the ragdoll's bones off the screen: lua/autorun/pose_recorder.lua)
+    PR.Snapshot = function(refName)
+        local ref = PR.Reference("models/vortigaunt.mdl", refName)
+        local posed, record = {}, {}
+        for i, b in ipairs(ref.bones) do
+            local at = _placed.bones[b.name]
+            if at then posed[i] = PR.FromAngles(at.ang[1], at.ang[2], at.ang[3]) end
+            record[i] = PR.sel.phys[b.name] or false
+        end
+        return PR.Delta(ref.bones, ref.rel, posed, record)
+    end
+    function LocalPlayer() return FakeEnt(1) end
+    assert(loadstring(_targets, "targets.lua"))()
+""")
+TC.execute(SHARED)
+TC.execute("PR.AddTarget(TARGET)")
+client_send(TC, None)
+
+
+def up2(cid):
+    outs = list(TC.globals()._out.values())
+    TC.execute("_out = {}")
+    for m in outs:
+        q = TS.table()
+        for i, v in enumerate(m.data.values()):
+            q[i + 1] = v
+        TS.globals().net._q = q
+        TS.globals().net["recv_" + m.name](100000, TS.globals()._ents[cid])
+    return [m.name for m in outs]
+
+
+def see_placed():
+    """What the server put where, as the client's game would see it."""
+    js = TS.eval("""(function()
+        local m = PR.TargetOf(me1)
+        local out = { bones = {}, props = {} }
+        for name, i in pairs(m.phys) do
+            local ph = m.ent:GetPhysicsObjectNum(i)
+            if ph.pos then out.bones[name] = { pos = { ph.pos.x, ph.pos.y, ph.pos.z }, ang = { ph.ang.p, ph.ang.y, ph.ang.r } } end
+        end
+        for name, e in pairs(m.props) do
+            local p, a = e:GetPos(), e:GetAngles()
+            out.props[name] = { pos = { p.x, p.y, p.z }, ang = { a.p, a.y, a.r } }
+        end
+        return util.TableToJSON(out) end)()""")
+    TC.globals()._placed = TC.globals().util.JSONToTable(js)
+
+
+ok(two(TS.eval("PR.TargetMannequin(me1, 'nothing', Vector(100, 200, 0), 90)"))[0] is None, "no mannequin for a pose that isn't there")
+TS.execute("me2.banned = true")
+ok(two(TS.eval("PR.TargetMannequin(me2, 'test_sweep', Vector(100, 200, 0), 90)"))[0] is None, "or for someone the target says may not")
+TS.execute("me2.banned = nil  _rag = PR.TargetMannequin(me1, 'test_sweep', Vector(100, 200, 0), 90)")
+ok(TS.eval("IsValid(_rag) and _rag:GetClass() == 'prop_ragdoll' and _rag:GetModel() == 'models/vortigaunt.mdl'"), "TargetMannequin: a ragdoll of the target's model")
+ok(TS.eval("""(function()
+    local m = PR.TargetOf(me1)
+    if not (m and IsValid(m.props.broom) and IsValid(m.props.cap) and m.props.broom:GetModel() == 'models/props_c17/pushbroom.mdl') then return false end
+    for i = 0, 5 do if _rag:GetPhysicsObjectNum(i).moving ~= false then return false end end
+    return m.props.broom:GetPhysicsObject().moving == false end)()"""), "every limb frozen, and each held thing a frozen prop")
+TC.globals()._ragIdx = TS.eval("_rag:EntIndex()")
+deliver(TS, [(TC, 1)])
+ok(TC.eval("PR.sel and PR.sel.target == 'test_sweep' and PR.sel.idx == _ragIdx and PR.sel.phys[B .. 'R_Hand'] == true and PR.sel.props.broom ~= nil"),
+   "the player's game is told which mannequin is theirs, its limbs and what it holds")
+ok(TC.eval("_refAsked") == "models/vortigaunt.mdl|sweep", "the pose is worked out on the target's model, on top of its own sequence")
+ok(up2(1) == ["pose_recorder_place"], "and sends where each limb and held thing goes")
+ok(TS.eval("""(function()
+    local m = PR.TargetOf(me1)
+    local hand = _rag:GetPhysicsObjectNum(m.phys[B .. 'R_Hand'])
+    local pelvis = _rag:GetPhysicsObjectNum(m.phys[B .. 'Pelvis'])
+    -- (the pelvis: 38 up from the spot, the model turned to face 90)
+    return hand.pos ~= nil and hand.moving == false and math.abs(pelvis.pos.x - 100) < 0.01 and math.abs(pelvis.pos.y - 200) < 0.01
+        and math.abs(pelvis.pos.z - 38) < 0.01 and math.abs(pelvis.ang.y - 90) < 0.01 end)()"""),
+   "the server puts each limb there, turned to the way the mannequin faces, still frozen")
+see_placed()
+ok(TC.eval("""(function()
+    local cap = _placed.props.cap
+    -- (held from the spot it stands on: 12 ahead and 70 up, with the mannequin facing 90)
+    return math.abs(cap.pos[1] - 100) < 0.01 and math.abs(cap.pos[2] - 212) < 0.01 and math.abs(cap.pos[3] - 70) < 0.01
+        and math.abs(cap.ang[2] - 135) < 0.01 end)()"""), "a thing held from no bone goes where the target says, from the spot the mannequin stands on")
+TC.execute("concommand.list.pose_recorder_take()")
+ok(up2(1) == ["pose_recorder_take"], "pose_recorder_take measures the mannequin and sends the pose")
+ok(TS.eval("""(function()
+    local s = _set[#_set]
+    if not (s and s.ply == me1) then return false end
+    local up, fore = s.bones[B .. 'R_UpperArm'], s.bones[B .. 'R_Forearm']
+    local function Near(a, b) return math.abs(a - b) < 0.11 end
+    return Near(up[1], 6) and Near(up[2], 40) and Near(up[3], 75) and Near(fore[2], -75)
+        and Near(s.bones[B .. 'Spine2'][1], 0) and s.bones[B .. 'R_Finger1'] == nil end)()"""),
+   "the target's set gets the bones a ragdoll is posed by: untouched, the pose it was stood in comes back")
+ok(TS.eval("""(function()
+    local b, c = _set[#_set].props.broom, _set[#_set].props.cap
+    local function Near(a, x) return math.abs(a - x) < 0.02 end
+    return b.bone == B .. 'R_Hand' and Near(b.pos[1], 3) and Near(b.pos[2], 1) and Near(b.pos[3], -2) and Near(b.ang[1], 10) and Near(b.ang[2], 90)
+        and c.bone == nil and Near(c.pos[1], 12) and Near(c.pos[3], 70) and Near(c.ang[2], 45) end)()"""),
+   "and each held thing's place and angle from its bone (or from the spot it stands on), unchanged when nothing was moved")
+said = [m for m in TS.globals().net.sent.values() if m.name == "pose_recorder_told"]
+ok(said and said[-1].data[1] == "Sweeping: set.", "the player is told it's set")
+TS.execute("net.sent = {}")
+# the broom moved by hand (the physgun): 5 units along the hand's own forward
+TC.execute("""
+    local hand, broom = _placed.bones[B .. 'R_Hand'], _placed.props.broom
+    local f = PR.Rotate(PR.FromAngles(hand.ang[1], hand.ang[2], hand.ang[3]), { 5, 0, 0 })
+    broom.pos = { broom.pos[1] + f[1], broom.pos[2] + f[2], broom.pos[3] + f[3] }
+    -- and the forearm bent a further 20 degrees at the elbow (its own yaw)
+    local fore = _placed.bones[B .. 'R_Forearm']
+    local p, y, r = PR.ToAngles(PR.Mul(PR.FromAngles(fore.ang[1], fore.ang[2], fore.ang[3]), PR.FromAngles(0, -20, 0)))
+    fore.ang = { p, y, r }
+    PR.TakeTarget()
+""")
+up2(1)
+ok(TS.eval("math.abs(_set[#_set].props.broom.pos[1] - 8) < 0.02 and math.abs(_set[#_set].props.broom.pos[2] - 1) < 0.02"),
+   "a held thing moved by hand: its new place from the bone is what is set")
+ok(TS.eval("math.abs(_set[#_set].bones[B .. 'R_Forearm'][2] + 95) < 0.11 and math.abs(_set[#_set].bones[B .. 'R_UpperArm'][2] - 40) < 0.11"),
+   "a limb moved by hand: its new turn is what is set, the others as they were")
+# measured from another bone when the target asks (hang)
+TC.execute("_hang = { broom = B .. 'R_Forearm' }  PR.TakeTarget()")
+up2(1)
+ok(TS.eval("_set[#_set].props.broom.bone == B .. 'R_Forearm'"), "hang: a held thing measured from the bone the target names")
+TC.execute("_hang = nil")
+# refusals
+n_set = TS.eval("#_set")
+TS.execute("_refuse = true")
+TC.execute("PR.TakeTarget()")
+up2(1)
+said = [m for m in TS.globals().net.sent.values() if m.name == "pose_recorder_told"]
+ok(TS.eval("#_set") == n_set and said and said[-1].data[1] == "Not today.", "a target's set can refuse, and the player is told why")
+TS.execute("_refuse = nil  net.sent = {}")
+ok(two(TS.eval("PR.TargetTake(me2, 'test_sweep', {}, {})"))[0] is False, "someone with no mannequin of that pose can't set it")
+ok(two(TS.eval("PR.TargetTake(me1, 'test_sweep', { [B .. 'R_Hand'] = { 0/0, 0, 0 } }, {})"))[0] is False and TS.eval("#_set") == n_set,
+   "a pose that isn't plain numbers is turned down")
+TS.execute("PR.TargetTake(me1, 'test_sweep', { [B .. 'R_Hand'] = { 1, 2, 3 }, ['ValveBiped.Bip01_Tail'] = { 9, 9, 9 } }, { hat = { pos = { 0, 0, 0 }, ang = { 0, 0, 0 } } })")
+ok(TS.eval("_set[#_set].bones['ValveBiped.Bip01_Tail'] == nil and _set[#_set].bones[B .. 'R_Hand'][1] == 1 and _set[#_set].props.hat == nil"),
+   "bones the mannequin hasn't got, and things it doesn't hold, are left out")
+ok(TS.eval("""(function()
+    local ok1 = PR.TargetPlace(me1, { [B .. 'R_Hand'] = { pos = { 0, 0, 99999 }, ang = { 0, 0, 0 } } }, {})
+    local hand = _rag:GetPhysicsObjectNum(PR.TargetOf(me1).phys[B .. 'R_Hand'])
+    return hand.pos.z < 1000 and PR.TargetPlace(me2, {}, {}) == false end)()"""), "a limb can't be sent far from its mannequin, or by someone who has none")
+# whatever is let go of stays put; the mannequin goes with its player
+TS.execute("_rag:GetPhysicsObjectNum(3).moving = true  hook.Run('PhysgunDrop', me1, _rag)")
+ok(TS.eval("_rag:GetPhysicsObjectNum(3).moving == false"), "a limb let go of with the physgun stays where it is")
+TS.execute("_broom = PR.TargetOf(me1).props.broom  hook.Run('PlayerDisconnected', me1)")
+ok(TS.eval("not IsValid(_rag) and not IsValid(_broom) and PR.TargetOf(me1) == nil"), "when the player leaves, the mannequin and what it held are removed")
+TS.execute("_r2 = PR.TargetMannequin(me1, 'test_sweep', Vector(0, 0, 0), 0)  _r3 = PR.TargetMannequin(me1, 'test_sweep', Vector(50, 0, 0), 0)")
+ok(TS.eval("not IsValid(_r2) and IsValid(_r3)"), "standing it again moves it: one mannequin each")
+TS.execute("concommand.list.pose_recorder_target_remove(me1)")
+ok(TS.eval("not IsValid(_r3)"), "pose_recorder_target_remove takes it away")
+# a mannequin of any model
+TS.execute("net.sent = {}  concommand.list.pose_recorder_mannequin(me1, nil, { 'models/stalker.mdl' })")
+ok(TS.eval("""(function()
+    for _, e in ipairs(ents.FindByClass('prop_ragdoll')) do if e:GetModel() == 'models/stalker.mdl' then return true end end
+    return false end)()"""), "pose_recorder_mannequin <model>: a mannequin of any model, not only your own")
+TS.execute("concommand.list.pose_recorder_mannequin(me1, nil, {})")
+ok(TS.eval("""(function()
+    for _, e in ipairs(ents.FindByClass('prop_ragdoll')) do if e:GetModel() == 'models/player/kleiner.mdl' then return true end end
+    return false end)()"""), "with no model named: your own, as before")
+
 print("pose recorder tests: %d passed, %d failed" % (passed, len(failed)))
 print("POSE RECORDER TESTS " + ("PASS" if not failed else "FAIL"))
 sys.exit(1 if failed else 0)

@@ -2197,13 +2197,19 @@ end
 
 local function ReviewBow(u, secs)
     if not (u.ManipulateBoneAngles and u.LookupBone) then return end
-    local head, spine = u:LookupBone("ValveBiped.Bip01_Head1"), u:LookupBone("ValveBiped.Bip01_Spine2")
-    if head then u:ManipulateBoneAngles(head, Angle(0, 25, 0)) end
-    if spine then u:ManipulateBoneAngles(spine, Angle(0, 10, 0)) end
+    -- (the numbers are the pose registry's, sh_livingcity_poses.lua "review_bow": the head 0 25 0 and the
+    -- chest 0 10 0, unless the owner has set it by hand with the Miscount Poser)
+    local done = {}
+    for name, a in pairs(LC.PoseBones("review_bow")) do
+        local b = u:LookupBone(name)
+        if b then
+            u:ManipulateBoneAngles(b, a)
+            done[#done + 1] = b
+        end
+    end
     timer.Simple(secs, function()
         if not IsValid(u) then return end
-        if head then u:ManipulateBoneAngles(head, Angle(0, 0, 0)) end
-        if spine then u:ManipulateBoneAngles(spine, Angle(0, 0, 0)) end
+        for _, b in ipairs(done) do u:ManipulateBoneAngles(b, Angle(0, 0, 0)) end
     end)
 end
 

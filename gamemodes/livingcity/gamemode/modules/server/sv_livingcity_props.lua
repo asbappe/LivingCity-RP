@@ -95,6 +95,8 @@ function LC.PersistProp(ply, e)
     if e.lcDressing or e.lcRebelProp or e.lcFixture or e.lcQuest then
         return false, "That one belongs to the city (dressing, a supply crate, a fixture or a job). Spawn your own."
     end
+    -- (what a Miscount Poser mannequin holds is there to be posed, never part of the map)
+    if e.lcPoseStandIn then return false, "That's the Miscount Poser's: it isn't saved with the map." end
     local rec = e.lcPersistId and RecordOf(e.lcPersistId)
     local fresh = rec == nil
     if fresh then

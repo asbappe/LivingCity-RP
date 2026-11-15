@@ -35,6 +35,7 @@ LC_MODULES = {
         "sh_livingcity_perfdebug", -- (staff: the performance debugger, off until turned on)
         "sh_livingcity_npcstr", -- (the people's names, jobs and doings: sent only to players near them)
         "sh_livingcity_acts",
+        "sh_livingcity_poses", -- (every hand-made pose and its numbers, and what the owner has set with the Miscount Poser)
         "sh_livingcity_lowered", -- (guns carried lowered until raised: hold R)
         "sh_livingcity_stamina", -- (running and jumping tire you)
         "sh_livingcity_kart", -- (driving a dream buggy: The Midnight Rally)
@@ -88,6 +89,7 @@ LC_MODULES = {
         "sv_livingcity_economy",
         "sv_livingcity_endings",
         "sv_livingcity_endingtune", -- (the Endings menu: every ending's settings, and the dances tuned live)
+        "sv_livingcity_poses", -- (the hand-made poses the owner has set with the Miscount Poser: kept, and sent to everyone)
         "sv_livingcity_dreams", -- (the secret endings as shared dreams for everyone asleep, with a dream point placed)
         "sv_livingcity_dreamgames", -- (nightmare dreams you play: the maze, the barrel tower, the crumbling floor, freeze)
         "sv_livingcity_propagandadreams", -- (propaganda dreams you play: kneel, roses, mirror, the saviour, the quiz; after dreamgames)
