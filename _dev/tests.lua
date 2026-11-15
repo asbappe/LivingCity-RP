@@ -30383,4 +30383,75 @@ _run(1)
 ok(table.Count(LC.NPCs) == 0, "stopping removes every NPC")
 ok(#_errors == 0, "no errors logged during the whole run", _errors[1])
 
+-- 15 November 2026: people stay (the owner: "they need to be persistent. They stay until they DIE")
+function Nov15_PeopleStayTests()
+section("People stay: no nameless extras, no timed swap-outs, home and back as themselves")
+local P = LC.People
+local function alive(role) local n = 0 for _, p in ipairs(P.list) do if p.alive and p.role == role then n = n + 1 end end return n end
+local was = GetConVar("lc_citizens"):GetInt()
+_setcvar("lc_citizens", 45)
+LC.TopUpPeople()
+ok(alive("citizen") >= 45, "there are at least as many named citizens as the streets want", alive("citizen"))
+_setcvar("lc_citizens", was)
+
+-- nobody is given a time to leave
+local n, st = LC.SpawnCitizen(Vector(-31000, 30000, 0))
+ok(IsValid(n) and st.profile ~= nil, "a citizen on the street is a named person")
+ok(st.leaveAt == nil, "and has no timer that sends them away", tostring(st.leaveAt))
+local who = st.profile
+
+-- going home: at home for a while, not picked to come out, then free again
+local before = 0
+for _, c in pairs(LC.LeaveCounts) do before = before + c end
+LC.StartLeaving(n, st, false, "worn down: gone home")
+ok(who.wentHome ~= nil and who.wentHome >= 240 and who.wentHome <= 480, "someone worn down is home for four to eight minutes", tostring(who.wentHome))
+ok(not who.moving, "going home is not leaving the city")
+n:Remove()
+hook.Run("EntityRemoved", n)
+ok(who.alive == true and who.npc == nil, "indoors, they are still alive and still on the roster")
+ok((who.homeUntil or 0) > os.time(), "and at home for now", tostring(who.homeUntil))
+local picked = false
+for _ = 1, 40 do
+    local p = LC.ClaimProfile("citizen")
+    if p == who then picked = true end
+end
+ok(not picked, "while at home they are not brought out as if they were someone new")
+who.homeUntil = os.time() - 1
+local back = false
+for _, p in ipairs(P.list) do if p.alive and p.role == "citizen" and p ~= who then p.lastSeen = os.time() + 100000 end end
+back = LC.ClaimProfile("citizen") == who
+ok(back, "their time at home over, the same person comes back out")
+for _, p in ipairs(P.list) do if p.lastSeen and p.lastSeen > os.time() + 1000 then p.lastSeen = os.time() end end
+
+-- with everyone out or at home, the streets get nobody rather than a nameless extra
+local held = {}
+for _, p in ipairs(P.list) do
+    if p.alive and p.role == "citizen" and not IsValid(p.npc) and (p.homeUntil or 0) <= os.time() then held[#held + 1] = p p.homeUntil = os.time() + 600 end
+end
+local size = GetConVar("lc_roster_size"):GetInt()
+ok(alive("citizen") >= size and LC.PersonAvailable("citizen") == false, "everyone out or at home: nobody is free to come out")
+for _, p in ipairs(held) do p.homeUntil = nil end
+ok(LC.PersonAvailable("citizen") == true, "and when their time at home is over, they are")
+
+-- the only way out short of dying: despair, with a train in
+local n2, st2 = LC.SpawnCitizen(Vector(-31000, 30400, 0))
+local p2 = st2.profile
+local oldBoard = LC.TrainBoardingPos
+LC.TrainBoardingPos = function() return nil end
+LC.StartLeaving(n2, st2, false, "despair: gone home")
+ok(not p2.moving and p2.wentHome ~= nil, "despair with no train in: they go home")
+st2.leaving = nil
+LC.TrainBoardingPos = function() return Vector(-31000, 30800, 0) end
+LC.StartLeaving(n2, st2, false, "despair: gone home")
+ok(p2.moving == true, "despair with a train in: they board it")
+LC.TrainBoardingPos = oldBoard
+n2:Remove()
+hook.Run("EntityRemoved", n2)
+ok(p2.alive == false and p2.moved ~= nil and not p2.died, "and are gone to another city: off the roster, not dead")
+local n3, st3 = LC.SpawnCitizen(Vector(-31000, 31200, 0))
+ok(st3.profile ~= p2, "someone who moved away does not come back")
+if IsValid(n3) then n3:Remove() hook.Run("EntityRemoved", n3) end
+end
+Nov15_PeopleStayTests()
+
 return results.pass, results.fail, table.concat(results.lines, "\n")

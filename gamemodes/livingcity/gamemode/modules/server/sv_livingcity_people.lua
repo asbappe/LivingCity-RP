@@ -13,11 +13,18 @@
                             contacts are drawn from them
 
     How many of them are out on the streets at once is still set by
-    lc_citizens and lc_cops: the rest are at work, at home, or elsewhere, and
-    take their turn. The roster is saved per map (garrysmod/data/livingcity/
-    <map>_people.json) and survives restarts, so it's the same people next
-    session. A person who is killed stays dead; the city fills the gap with
-    new arrivals.
+    lc_citizens and lc_cops: the rest are at work, at home, or elsewhere. The
+    roster is saved per map (garrysmod/data/livingcity/<map>_people.json) and
+    survives restarts, so it's the same people next session. A person who is
+    killed stays dead; the city fills the gap with new arrivals.
+
+    People stay (the owner, 15 November 2026: "they need to be persistent.
+    They stay until they DIE"). There are always at least as many named
+    citizens as lc_citizens, so nobody on the streets is a nameless extra;
+    nobody is swapped out on a timer (lc_citizen_lifetime is retired); a
+    person who goes indoors (night, curfew, worn down) is at home for a
+    while and then comes back out as themselves. The only ways out of the
+    city are dying, and for someone in despair, the train to another city.
 
     Every Union job is staffed: one person each in a city of about a dozen,
     up to four each from about a hundred (the roster plus the players),
@@ -228,7 +235,10 @@ local function InWorld(p) return IsValid(p.npc) end
 -- Keep the roster at its size: arrivals fill the places of the dead.
 function LC.TopUpPeople()
     if not P.loaded then LC.LoadPeople() end
-    while Alive("citizen") < cvSize:GetInt() do LC.NewPerson("citizen") end
+    -- never fewer named citizens than the streets want: nobody out there is a nameless extra
+    local streets = GetConVar("lc_citizens")
+    local size = math.max(cvSize:GetInt(), streets and streets:GetInt() or 0)
+    while Alive("citizen") < size do LC.NewPerson("citizen") end
     while Alive("cop") < cvCops:GetInt() do LC.NewPerson("cop") end
     LC.StaffRoster()
     -- the dead are remembered, but not forever
@@ -239,6 +249,35 @@ function LC.TopUpPeople()
             if dead > 150 then table.remove(P.list, i) end
         end
     end
+end
+
+-- Going indoors: how long they are at home before they can come back out
+-- (real seconds, low to high), by the reason they went (the start of it).
+local HOME = {
+    { "worn down", 240, 480 },
+    { "despair", 480, 900 },
+    { "let out of prison", 180, 300 },
+    { "the time of day", 60, 120 },
+    { "curfew", 20, 40 },
+}
+function LC.PersonWentHome(p, why)
+    if not p then return end
+    local lo, hi = 90, 180
+    for _, h in ipairs(HOME) do
+        if why and string.sub(why, 1, #h[1]) == h[1] then lo, hi = h[2], h[3] break end
+    end
+    p.wentHome = math.random(lo, hi)
+end
+local function AtHome(p) return (p.homeUntil or 0) > os.time() end
+
+-- Is there anyone of this role who could come out now (alive, indoors, their time at home over)?
+function LC.PersonAvailable(role)
+    if not P.loaded then LC.LoadPeople() end
+    LC.TopUpPeople()
+    for _, p in ipairs(P.list) do
+        if p.alive and p.role == role and not InWorld(p) and not AtHome(p) then return true end
+    end
+    return false
 end
 
 -- Who comes out next: someone not already out there, and whoever has been
@@ -252,7 +291,7 @@ function LC.ClaimProfile(role, want)
     for _, p in ipairs(P.list) do if p.alive and InWorld(p) and p.job then working[p.job] = true end end
     local best, bt
     for _, p in ipairs(P.list) do
-        if p.alive and p.role == role and not InWorld(p) and (not want.rebel or p.rebel)
+        if p.alive and p.role == role and not InWorld(p) and not AtHome(p) and (not want.rebel or p.rebel)
             and (not want.gender or p.gender == want.gender) then
             local t = (p.lastSeen or 0) + math.random() * 30 -- a little shuffle among equals
             if role == "citizen" and p.job and not working[p.job] then t = t - 1e9 end
@@ -273,6 +312,7 @@ end
 function LC.AttachProfile(npc, st, p)
     npc.lcProfile = p
     p.npc = npc
+    p.moving, p.wentHome = nil, nil -- (out again: whatever they were on their way to do last time is over)
     st.profile = p
     LC.SetNPCStr(npc, "lc_pname", p.name)
     npc:SetNW2Int("lc_pid", p.id)
@@ -296,6 +336,13 @@ hook.Add("EntityRemoved", "LivingCityPeople", function(ent)
     if p and p.npc == ent then
         p.npc = nil
         p.lastSeen = os.time()
+        if p.wentHome then p.homeUntil, p.wentHome = os.time() + p.wentHome, nil end
+        -- boarded the train for good (sv_livingcity.lua, StartLeaving): gone from this city, not dead
+        if p.moving and p.alive then
+            p.alive, p.moving, p.moved = false, nil, os.time()
+            LC.Log("info", string.format("%s left for another city by train", p.name))
+            hook.Run("LivingCityPersonMoved", p)
+        end
         MarkDirty()
     end
 end)

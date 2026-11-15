@@ -201,11 +201,16 @@ function LC.BuildReport()
             .. (LC.StaticScanNote and (" (scan failed: " .. tostring(LC.StaticScanNote) .. ")") or "")
     end
     do
-        local alive, dead, rebels = 0, 0, 0
+        local alive, dead, rebels, onStreet, atHome, moved = 0, 0, 0, 0, 0, 0
         for _, p in ipairs(LC.People and LC.People.list or {}) do
-            if p.alive then alive = alive + 1 if p.rebel then rebels = rebels + 1 end else dead = dead + 1 end
+            if p.alive then
+                alive = alive + 1
+                if p.rebel then rebels = rebels + 1 end
+                if IsValid(p.npc) then onStreet = onStreet + 1 elseif (p.homeUntil or 0) > os.time() then atHome = atHome + 1 end
+            elseif p.moved then moved = moved + 1 else dead = dead + 1 end
         end
-        out[#out + 1] = string.format("people: %d alive (%d sympathizers), %d dead remembered", alive, rebels, dead)
+        out[#out + 1] = string.format("people: %d alive (%d sympathizers): %d out now, %d at home for now, the rest indoors and free to come out; %d dead remembered, %d moved to another city",
+            alive, rebels, onStreet, atHome, dead, moved)
     end
     if zones("combine") == 0 then warn[#warn + 1] = "no Combine-only zones: citizens can walk into the nexus, offices and armory (doors by the cells still lock)" end
     if count("zspawn") == 0 and zones("infest") > 0 then warn[#warn + 1] = "no infestation spawn points: zombies appear at random spots inside infestation zones" end
@@ -273,11 +278,12 @@ function LC.BuildReport()
     end
     out[#out + 1] = "setup notes: " .. (#warn > 0 and "" or "none")
     for _, w in ipairs(warn) do out[#out + 1] = "  - " .. w end
-    do -- why people are leaving the city (a developer's question, not a player's)
+    do -- why people went indoors (a developer's question, not a player's). These are trips, not people:
+       -- the same named people come back out; only the dead and those who took the train are gone.
         local parts, total = {}, 0
         for why, n in pairs(LC.LeaveCounts or {}) do total = total + n parts[#parts + 1] = { why, n } end
         table.sort(parts, function(a, b) return a[2] > b[2] end)
-        out[#out + 1] = string.format("people who left since the map started: %d", total)
+        out[#out + 1] = string.format("times a citizen went indoors since the map started: %d (the same people come back out; nobody is thrown away)", total)
         for _, p in ipairs(parts) do out[#out + 1] = string.format("  %d: %s", p[2], p[1]) end
     end
     for g, line in SortedPairs(LC.Lines or {}) do
