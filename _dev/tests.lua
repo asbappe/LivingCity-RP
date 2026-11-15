@@ -30860,4 +30860,26 @@ if IsValid(n3) then n3:Remove() hook.Run("EntityRemoved", n3) end
 end
 Nov15_PeopleStayTests()
 
+function Nov14E_CameraAimTests()
+section("14 November notes, group E: the broadcast camera films the face")
+local who = newPlayer("CamAimSpeaker", "citizen")
+_run(1)
+who:SetPos(Vector(-52000, 21000, 0))
+local was = ENT
+ENT = {}
+assert(loadstring(_ENTSRC["entities/lc_broadcastcam.lua"], "lc_broadcastcam"))()
+local def = ENT
+ENT = was
+local cam = ents.Create("lc_broadcastcam")
+cam:SetPos(who:GetPos() + Vector(92, 0, 70))
+cam:Spawn()
+local aim = def.AimAt(cam, who)
+local eye = who:EyePos()
+ok(aim.z >= eye.z - 0.5, "it points at their face, not a foot below it (was 12 lower)")
+ok(aim.z - who:GetPos().z >= 60, "which is head height on someone standing")
+ok(def.WantPos(cam, who).z >= eye.z, "and it still hangs a little above their eyes")
+cam:Remove()
+end
+Nov14E_CameraAimTests()
+
 return results.pass, results.fail, table.concat(results.lines, "\n")
