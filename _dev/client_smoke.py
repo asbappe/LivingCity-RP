@@ -5192,6 +5192,71 @@ if not ok then return "guide trail: " .. tostring(e) end
 """)
 if err:
     problems = (problems + "\n" if problems else "") + str(err)
+# the parade's march: the first piece this game has is played, the server is told which, and it stops when told
+err = L.execute(r"""
+local ok, e = pcall(function()
+    local think = hook.t.Think.LivingCityParadeMarch
+    if not think then error("no march hook") end
+    sound = sound or {}
+    file = file or {}
+    local was = { sound.PlayFile, file.Exists, net.Start, net.WriteString, net.SendToServer, _globals.lc_parade_music, _globals.lc_parade_music_at, _globals.lc_parade_music_pos }
+    local played, told, stopped, vol = {}, {}, 0, nil
+    local function channel()
+        local ch = { state = 1 }
+        function ch:GetState() return self.state end
+        function ch:SetVolume(v) vol = v end
+        function ch:GetVolume() return vol or 0 end
+        function ch:EnableLooping() end
+        function ch:Play() end
+        function ch:SetPan() end
+        function ch:Stop() stopped = stopped + 1 end
+        function ch:IsValid() return true end
+        return ch
+    end
+    sound.PlayFile = function(path, flags, cb) played[#played + 1] = path cb(channel()) end
+    file.Exists = function(p) return p == "sound/music/hl2_song20_submix0.mp3" end
+    net.Start = function() end
+    net.WriteString = function(x) told[#told + 1] = x end
+    net.SendToServer = function() end
+    think()
+    if #played ~= 0 or LC_CL.ParadeMarch() then error("a march with no parade") end
+    _globals.lc_parade_music = "music/mine.mp3|music/hl2_song22_combinetheme3.mp3|music/hl2_song20_submix0.mp3"
+    _globals.lc_parade_music_at = CurTime()
+    _globals.lc_parade_music_pos = Vector(100, 0, 0)
+    think()
+    if played[1] ~= "sound/music/hl2_song20_submix0.mp3" then error("it did not play the first piece this game has: " .. tostring(played[1])) end
+    if told[1] ~= "music/hl2_song20_submix0.mp3" then error("the server was not told which piece: " .. tostring(told[1])) end
+    think()
+    if #played ~= 1 then error("the march was started twice") end
+    if not (vol and vol > 0) then error("next to the column the march is silent: " .. tostring(vol)) end
+    _globals.lc_parade_music_pos = Vector(90000, 0, 0)
+    for _ = 1, 200 do think() end
+    if not (vol and vol < 0.01) then error("far from the column the march is still heard: " .. tostring(vol)) end
+    -- a fight, then on again: from the beginning
+    _globals.lc_parade_music = ""
+    think()
+    if LC_CL.ParadeMarch() then error("the march went on after the server stopped it") end
+    _globals.lc_parade_music = "music/mine.mp3|music/hl2_song22_combinetheme3.mp3|music/hl2_song20_submix0.mp3"
+    _globals.lc_parade_music_at = CurTime() + 1
+    think()
+    if #played ~= 2 then error("the march did not start again from the beginning: " .. #played) end
+    -- none of the pieces here: nothing plays, and the server hears that
+    _globals.lc_parade_music = ""
+    think()
+    file.Exists = function() return false end
+    _globals.lc_parade_music = "music/mine.mp3"
+    _globals.lc_parade_music_at = CurTime() + 2
+    think()
+    if #played ~= 2 or told[#told] ~= "none" then error("with none of the pieces: " .. #played .. " " .. tostring(told[#told])) end
+    _globals.lc_parade_music = ""
+    think()
+    sound.PlayFile, file.Exists, net.Start, net.WriteString, net.SendToServer = was[1], was[2], was[3], was[4], was[5]
+    _globals.lc_parade_music, _globals.lc_parade_music_at, _globals.lc_parade_music_pos = was[6], was[7], was[8]
+end)
+if not ok then return "parade march: " .. tostring(e) end
+""")
+if err:
+    problems = (problems + "\n" if problems else "") + str(err)
 import re as _re
 _root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 _mods = os.path.join(_root, "gamemodes", "livingcity", "gamemode", "modules")

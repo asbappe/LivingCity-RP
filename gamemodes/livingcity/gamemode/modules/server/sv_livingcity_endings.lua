@@ -4442,6 +4442,7 @@ local RETUNED = {
     { "lc_rebel_damage", { "0.5", "0.50", "0.500000" }, "0.6" }, -- (13 November, the owner: "no threat from rebels at all. Can we boost their damage a tad bit, like 20%?")
     { "lc_ending_minge_forest", { "36" }, "72" }, -- (15 November, the owner: the Harpies' forest "a little bit thinner than I had hoped")
     { "lc_ending_minge_cover", { "12" }, "24" },
+    { "lc_exercise_npcs", { "10" }, "0" }, -- (15 November, the owner: every citizen at the drill and the parade: 0 is every one of them)
     { "lc_speech_npcs", { "18" }, "0" }, -- (15 November, the owner: "make sure all the citizen NPCs show up": 0 is every one of them)
     { "lc_cp_shift_minutes", { "15" }, "30" }, -- (12 November: a unit's shift is back to 30 minutes, the owner asked; sv_livingcity_cpduty.lua)
     { "lc_ending_cooldown", { "60", "45" }, "180" }, -- (1 November: three hours between endings, the owner asked)

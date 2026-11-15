@@ -218,3 +218,91 @@ hook.Add("PostDrawTranslucentRenderables", "LivingCityExercise", function(depth,
         if me:GetNW2Bool("lcx_leader", false) and EX.yard then Beam(EX.yard, GREEN) end
     end
 end)
+
+------------------------------------------------------------------------
+-- The parade's march (the owner, 15 November: "have the combine march music ... play emanating from the
+-- parade marchers"). The server names the pieces to try, in order (lc_parade_music, the Combine march
+-- Half-Life 2 ships and never plays, and one every copy has), where the column is, and when it started
+-- (sv_livingcity_exercise.lua). This game plays the first it has, louder the nearer the column is and from
+-- the side it is on, tells the server which piece that was (for its log), and stops when the server says
+-- so: the parade over, or attacked (after a fight it starts from the beginning again). Never past ten
+-- minutes, whatever happens.
+------------------------------------------------------------------------
+
+local MARCH_NEAR, MARCH_FAR, MARCH_MAX = 500, 3500, 600
+local march, marchPos -- { key, path, ch }
+
+local function Live(ch)
+    if ch == nil then return false end
+    local ok = LC.Try(function() return ch:GetState() end)
+    return ok
+end
+
+local function MarchStop(fade)
+    local m = march
+    march, marchPos = nil, nil
+    if not (m and Live(m.ch)) then return end
+    if fade and LC.SoundGuardFade then LC.SoundGuardFade(m.ch, 1.5) else m.ch:Stop() end
+end
+LC_CL.ParadeMarchStop = MarchStop
+function LC_CL.ParadeMarch() return march end
+
+-- The first of the pieces this game has.
+function LC_CL.ParadeMarchPick(list)
+    for p in string.gmatch(list or "", "[^|]+") do
+        if file.Exists("sound/" .. p, "GAME") then return p end
+    end
+    return nil
+end
+
+local function MarchVolume()
+    local me = LocalPlayer()
+    if not IsValid(me) or not marchPos then return 0, 0 end
+    if me:GetNW2Bool("lc_dreaming", false) then return 0, 0 end
+    local to = marchPos - me:EyePos()
+    local v = math.Clamp(1 - (to:Length() - MARCH_NEAR) / (MARCH_FAR - MARCH_NEAR), 0, 1)
+    local cv = GetConVar("snd_musicvolume")
+    local right = me:EyeAngles():Right()
+    to.z = 0
+    to:Normalize()
+    return v * v * (cv and math.Clamp(cv:GetFloat(), 0, 1) or 1), math.Clamp(right:Dot(to), -1, 1) * 0.6
+end
+
+hook.Add("Think", "LivingCityParadeMarch", function()
+    local list = GetGlobal2String("lc_parade_music", "")
+    local at = GetGlobal2Float("lc_parade_music_at", 0) or 0
+    if list == "" or CurTime() - at > MARCH_MAX then
+        if march then MarchStop(true) end
+        return
+    end
+    local key = list .. "@" .. tostring(at)
+    if not march or march.key ~= key then
+        MarchStop(false)
+        local mine = { key = key, path = LC_CL.ParadeMarchPick(list) }
+        march = mine
+        if net and net.Start then
+            net.Start("lc_parade_music")
+            net.WriteString(mine.path or "none")
+            net.SendToServer()
+        end
+        if mine.path and sound and sound.PlayFile then
+            sound.PlayFile("sound/" .. mine.path, "noblock noplay", function(ch)
+                if not Live(ch) then return end
+                if march ~= mine then ch:Stop() return end
+                mine.ch = ch
+                ch:SetVolume(0)
+                if ch.EnableLooping then ch:EnableLooping(true) end
+                ch:Play()
+            end)
+        end
+        return
+    end
+    -- where the column is now (eased: the server says five times a second)
+    local src = GetGlobal2Vector("lc_parade_music_pos", nil)
+    if src then marchPos = marchPos and LerpVector(math.min(1, FrameTime() * 6), marchPos, src) or src end
+    if Live(march.ch) then
+        local v, pan = MarchVolume()
+        march.ch:SetVolume(v)
+        if march.ch.SetPan then march.ch:SetPan(pan) end
+    end
+end)
