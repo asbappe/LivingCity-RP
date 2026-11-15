@@ -1423,7 +1423,7 @@ function LC.OpenMarket(ply)
     -- his usual stock, and whatever the Commissary is short of (sv_livingcity_market.lua)
     local stock = {} -- (what only the quartermaster has, a dealer doesn't show: qm, sh_livingcity_shop.lua)
     for _, g in ipairs(LC.MarketBlackList and LC.MarketBlackList() or LCS.Black) do
-        if not g.qm or qm then stock[#stock + 1] = g end
+        if (not g.qm or qm) and not g.lab then stock[#stock + 1] = g end -- (lab: the Resistance's lab alone has it)
     end
     for _, g in ipairs(stock) do
         local can, reason = true, nil
@@ -1578,6 +1578,7 @@ function LC.BlackBuy(ply, id)
     if not g then return false end
     local ok, why = LC.MarketAccess(ply)
     if not ok then return false, why end
+    if g.lab then return false end -- (the lab's alone: not on anyone's list, so nobody is told)
     if g.qm and not LC.AtQuartermaster(ply) then return false, "Only the quartermaster has those." end
     local left, next = LC.BlackStockLeft(g)
     if left and left <= 0 then return false, string.format("He's out of those. More in about %d minutes.", math.max(1, math.ceil((next or 60) / 60))) end

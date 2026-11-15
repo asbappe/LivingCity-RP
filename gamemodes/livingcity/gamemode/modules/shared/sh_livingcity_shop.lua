@@ -462,6 +462,10 @@ end
 -- The black market (a dealer placed with the editor, or rebel territory)
 --   weapon    given straight to you
 --   qm        only the Resistance's quartermaster has it, never a dealer
+--   lab       only the Resistance's lab has it (LCS.Lab, below): no dealer and no quartermaster sells it. The
+--             entry stays here for what it is worth: the lab's price and what it sells back for come from it.
+--             (the owner, 14 November: "Rebel scientist needs to sell a charged vest, not the quartermaster",
+--             "combine bypass charges need to be only from the lab too")
 -- Standing doesn't matter here. Credits do. Units who walk up to a dealer
 -- don't buy anything: they bust it.
 ------------------------------------------------------------------------
@@ -472,7 +476,7 @@ LCS.Black = {
     { id = "papers_blank", item = "papers_blank", price = 30, desc = "For people with a steady hand." },
     { id = "ration_forged", item = "ration_forged", price = 10, desc = "One more meal than the Union thinks you deserve." },
     { id = "lockpick", item = "lockpick", price = 35, desc = "Picks, tension wrench, patience not included." },
-    { id = "bypass", item = "bypass", price = 70, desc = "One use: opens a Combine door (or any locked door), holds it open ten seconds, open for thirty. Can trip an alarm. Don't ask where it came from." },
+    { id = "bypass", item = "bypass", price = 70, desc = "One use: opens a Combine door (or any locked door), holds it open ten seconds, open for thirty. Can trip an alarm. Don't ask where it came from.", lab = true },
     { id = "civvies", item = "civvies", price = 15, desc = "Clean, plain, forgettable." },
     { id = "uniform_cp", item = "uniform_cp", price = 160, desc = "Off a Civil Protection unit who won't be needing it." },
     { id = "tablets", item = "tablets", price = 20, desc = "No questions about why you need them." },
@@ -503,7 +507,7 @@ LCS.Black = {
     { id = "gun_smg", item = "gun_smg", price = 200, desc = "It jams. Not often." },
     { id = "gun_shotgun", item = "gun_shotgun", price = 210, desc = "Hard to hide. Hard to argue with." },
     { id = "gun_357", item = "gun_357", price = 240, desc = "Loud, heavy, final." },
-    { id = "armor_vest", item = "armor_vest", price = 90, desc = "Plates and salvaged charge cells. Holds a charge; comes fully charged." },
+    { id = "armor_vest", item = "armor_vest", price = 90, desc = "Plates and salvaged charge cells. Holds a charge; comes fully charged.", lab = true },
     { id = "radio_transmitter", item = "radio_transmitter", price = 70, desc = "Talk on your radio's band, not just listen. Contraband." },
     { id = "jammer", item = "jammer", price = 150, desc = "Four minutes of static on every Civil Protection unit radio nearby." },
 }
@@ -560,14 +564,17 @@ for _, r in ipairs(LCS.Recipes) do LCS.RecipesById[r.id] = r end
 -- The Resistance lab (sv_livingcity_lab.lua): what the scientist makes, for
 -- the Resistance only, and only what the quartermaster doesn't sell (the owner,
 -- 14 November: "anything the quartermaster sells should not appear at all in the
--- lab"; guns, ammunition, the vest, bypass charges, smoke, forged cards, the
--- transmitter, the jammer and the crowbar are the quartermaster's). Bring him the
+-- lab"; guns, ammunition, smoke, forged cards, the transmitter, the jammer and
+-- the crowbar are the quartermaster's; the charged vest and the bypass charge are
+-- the lab's alone, later that day: `lab` in LCS.Black above). Bring him the
 -- materials (needs) and he makes it for nothing; or pay him: 60% of the dealer's
 -- price (never less than it sells back for). secs: how long he takes.
 ------------------------------------------------------------------------
 
 LCS.Lab = {
+    { id = "armor_vest", out = "armor_vest", needs = { scrap = 6, cloth = 4, chemicals = 1 }, secs = 14, desc = "A powered vest, fully charged (charge cells top it up)" },
     { id = "vest_cell", out = "vest_cell", needs = { scrap = 2, chemicals = 2 }, secs = 6, desc = "A charge cell: twenty-five charge into your vest" },
+    { id = "bypass", out = "bypass", needs = { gun_parts = 1, chemicals = 2, scrap = 2 }, secs = 10, desc = "Opens any door once, Combine doors too, and holds it open ten seconds" },
     { id = "firebomb", out = "firebomb", needs = { weedkiller = 2, bottle_empty = 1, cloth = 1 }, secs = 8, desc = "Weedkiller, cooked down, in a bottle with a rag: fire, which armour doesn't keep out" },
     -- (only once you've lived through lc_chip_dreams of the city's dreams: sv_livingcity_bedtime.lua)
     { id = "foil_hat", out = "foil_hat", needs = { scrap = 1, cloth = 1 }, secs = 5, dreamGate = true,

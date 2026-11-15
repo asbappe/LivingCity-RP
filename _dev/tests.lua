@@ -30427,6 +30427,43 @@ if not hadRotate then VM.Rotate = nil end
 end
 Nov14B_CageTests()
 
+function Nov14B_LabSalesTests() -- (the owner, 14 November: "Rebel scientist needs to sell a charged vest, not the quartermaster", "combine bypass charges need to be only from the lab too")
+section("14 November, B5: the charged vest and the bypass charge come from the lab alone")
+ok(LCS.LabById.armor_vest ~= nil and LCS.LabById.bypass ~= nil, "the lab makes the powered vest and the bypass charge")
+ok(LCS.BlackById.armor_vest.lab == true and LCS.BlackById.bypass.lab == true, "both are marked as the lab's on the black market's list (kept there for their price)")
+ok(not LC.QuartermasterStocks("armor_vest") and not LC.QuartermasterStocks("bypass") and LC.QuartermasterStocks("gun_pistol"), "the quartermaster doesn't stock them (he still stocks pistols)")
+local dup = {}
+for _, r in ipairs(LCS.Lab) do if LC.QuartermasterStocks(r.out) then dup[#dup + 1] = r.id end end
+ok(#dup == 0, "nothing is sold by both the lab and the quartermaster", table.concat(dup, ", "))
+local pv, pb = LC.LabPrice(LCS.LabById.armor_vest), LC.LabPrice(LCS.LabById.bypass)
+ok(pv > 0 and pv < 90 and pb > 0 and pb < 70, "the lab's price for each is under the old dealer's (90 and 70)", pv .. ", " .. pb)
+-- nobody's list shows them, and nobody sells them
+local buyer = newPlayer("B5Buyer", "resistance", nil, 400)
+LC.AddCredits(buyer, 1000)
+local wasAccess = LC.MarketAccess
+LC.MarketAccess = function() return true end
+net.sent = {}
+LC.OpenMarket(buyer)
+local m = _lastnet("lcu_market")
+local t
+for _, d in ipairs(m and m.data or {}) do
+    if type(d) == "table" and d.goods then t = d elseif type(d) == "string" and not t then t = util.JSONToTable(d) end
+end
+local seen, pistols = 0, 0
+for _, g in ipairs(t and t.goods or {}) do
+    if g.id == "armor_vest" or g.id == "bypass" then seen = seen + 1 end
+    if g.id == "gun_pistol" then pistols = pistols + 1 end
+end
+ok(t ~= nil and seen == 0 and pistols == 1, "the black market's window lists neither (pistols are still there)", tostring(seen) .. " listed, pistols " .. tostring(pistols))
+local before = LC.Credits(buyer)
+local okV = LC.BlackBuy(buyer, "armor_vest")
+local okB = LC.BlackBuy(buyer, "bypass")
+ok(not okV and not okB and LC.Credits(buyer) == before and not LC.HasItem(buyer, "armor_vest") and not LC.HasItem(buyer, "bypass"), "and a buy sent for one anyway is refused, nothing charged")
+LC.MarketAccess = wasAccess
+buyer:SetPos(Vector(-30000, 30000, 0))
+end
+Nov14B_LabSalesTests()
+
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")
 ;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)
     -- Everything here is something the owner's server, files or players depend on. The list is
