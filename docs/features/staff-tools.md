@@ -10,3 +10,7 @@
 - **Character bans.** `!charban <name> <reason>`: that person, not the player, is gone for good. The character is wiped as if they'd died, and nobody can take the name again. Lifted from the panel.
 
 **Near you (14 November).** The debug report has a "Near you" section: for each player, their position and every NPC within 2000 units (class, role and state, name and job, position, stuck recoveries, beat and route hop), and the last 40 times an NPC near a player jumped more than 260 units in half a second (moved by the code: a stuck NPC put forward on its route, one walked out of sight), appeared, or was taken away, with how far from whom (`LC.NearReport`, `LC.NearWatchTick`). Asked for to find a unit that ran past the owner, vanished and came back where it started.
+
+## 15 November: Out of custody
+
+F4 > Admin tools > Handy > **Out of custody** (`free`, `LC.FreeFromCustody`): takes the chosen player (yourself included) out of every stage of custody at once: a struggle, cuffed and waiting, a march, a street detention, a cell. Cuffs off, wanted and alert cleared, the record for the next sentence wiped, no probation. "Reset XP, credits and standing" now wipes that record too.

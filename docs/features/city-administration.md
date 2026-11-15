@@ -52,3 +52,9 @@
 - **Sweeping:** the push broom is held in front, right way up (`lc_broom_hold`, "34 -6 2 -35 0 0": forward, left, up, pitch, yaw, roll), swings while walking and harder while holding E on grime, and never vanishes. Grime lies along the slope it's on. Every grime spot is checked (on a floor, not in a wall, walkable from the waypoint); after 75 seconds without a sweep the last one or two move near the stalker, so the job can always be finished.
 
 **The office with nobody in it (the owner, 11 November).** With no player as the City Administrator and a key set for the hosted model, the city's own Administrator uses the office herself: events, rations, prices, a job bonus, commendations, censures and pardons, with the same waits and announcements, and no bodyguard orders, housing or permits. `lc_brain_admin` (1), `lc_brain_admin_minutes` (12). The whole of it: `director-and-free-talk.md`.
+
+## 15 November (the owner's 14 November night notes): the Administrator is immune to her own
+
+- A player holding the post is never the Combine's enemy: no unit can be set on her (`LC.MakeOneHostile`), striking a unit or a scanner is not remembered or answered, she is never taken in by a unit (the gate and every door of custody refuse), and every unit holds her as one of their own.
+- No fire from the Combine's NPCs hurts her (units, soldiers, her own guards, scanners, turrets, manhacks and the rest: `LC.AdministratorImmune`, `sv_livingcity_cp.lua`). Her guards, told to kill someone, can fire past her.
+- Her guards spawn with the pulse rifle in their hands (one in five used to spawn with a shotgun and be handed a second gun), and a guard found with empty hands a second later is handed one (`LC.AdminGuardArm`).
