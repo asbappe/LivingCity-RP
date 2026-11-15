@@ -409,6 +409,22 @@ function LC.CageUse(ply, cage)
     SendMenu(ply, cage)
 end
 
+-- F2 > Cuff them, on a citizen in front of a Resistance Fighter or above who has cuffs in their pockets (the
+-- owner, 14 November: "I don't see an option to cuff NPCs as a resistance member, but I have 5 pairs of cuffs in
+-- my pockets"). It is the talk window's "Take them prisoner" done with the cuffs: one pair is used, they walk to
+-- the holding cage and are locked in. Nothing is said when it works: they are seen to go.
+LC.TargetActions = LC.TargetActions or {}
+LC.TargetActions.cagecuff = function(ply, target)
+    if not On() or not LC.RebelMayHold(ply) then return false end
+    if not (IsValid(target) and LC.NPCs and LC.NPCs[target]) or ply:GetPos():DistToSqr(target:GetPos()) > 130 * 130 then return false, "[Resistance] Get closer." end
+    if not (LC.HasItem and LC.HasItem(ply, "zipties")) or H[target] or LC.NPCs[target].role ~= "citizen" then return false end
+    local cage = LC.CageFor(ply, target)
+    if not IsValid(cage) then return false, "[Resistance] There's no cage with room near enough for that." end
+    local _, taken = LC.CageTake(ply, target, cage)
+    if taken and LC.TakeItem then LC.TakeItem(ply, "zipties", 1) end
+    return taken == true
+end
+
 -- "gate", "free" or "chair" (with the one meant). Returns what's said.
 function LC.CageDo(ply, cage, what, npc)
     if not On() or not IsValid(cage) or not LC.RebelMayHold(ply) then return nil end

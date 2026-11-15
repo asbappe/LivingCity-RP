@@ -30512,6 +30512,61 @@ for _, p in ipairs({ m, cit }) do p:SetPos(Vector(-30000, 30000, 0)) end
 end
 Nov14B_SpawnTests()
 
+function Nov14B_CuffTests() -- (the owner, 14 November: "I don't see an option to cuff NPCs as a resistance member, but I have 5 pairs of cuffs in my pockets")
+section("14 November, B6: F2 > Cuff them, for a Resistance Fighter or above with cuffs: to the holding cage")
+_setcvar("lc_rebel_cage", 1)
+_setcvar("lc_rebel_auto", 0)
+_setcvar("lc_rebel_visitor", 0)
+local P0 = Vector(-66000, 41000, 0)
+local cage = ents.Create("lc_rebelcage")
+cage:SetPos(P0)
+cage:Spawn()
+LC.CageForget()
+local function person(off)
+    local n, st = LC.SpawnCitizen(P0 + off)
+    st.leaveAt = nil
+    n.sim = false
+    return n, st
+end
+local act = LC.TargetActions.cagecuff
+ok(type(act) == "function", "F2's action for it is there")
+local lt = newPlayer("B6Lt", "resistance", nil, 900)
+local member = newPlayer("B6Member", "resistance", nil, 150)
+local n1, st1 = person(Vector(400, 0, 0))
+lt:SetPos(n1:GetPos() + Vector(60, 0, 0))
+member:SetPos(n1:GetPos() + Vector(-60, 0, 0))
+LC.GiveItem(member, "zipties", 2)
+ok(not act(member, n1) and LC.RebelHeld[n1] == nil and LC.CuffCount(member) == 2, "a Member with cuffs takes nobody (Fighters and above)")
+ok(not act(lt, n1) and LC.RebelHeld[n1] == nil, "a Lieutenant with no cuffs: nothing happens")
+LC.GiveItem(lt, "zipties", 5)
+lt:SetPos(n1:GetPos() + Vector(900, 0, 0))
+local far, why = act(lt, n1)
+ok(not far and string.find(why or "", "closer", 1, true) ~= nil and LC.CuffCount(lt) == 5, "from too far: told to get closer, no cuffs used", why)
+lt:SetPos(n1:GetPos() + Vector(60, 0, 0))
+ok(act(lt, n1) == true and LC.RebelHeld[n1] ~= nil and st1.questLock == true and LC.CuffCount(lt) == 4, "up close with cuffs: they are taken for the cage, and one pair is used", tostring(LC.CuffCount(lt)))
+n1:SetPos(P0 + Vector(60, 0, 0))
+LC.CageTick(CurTime())
+ok(#LC.CageList(cage) == 1 and st1.state == "detained", "at the cage they are locked in, as from the talk window")
+ok(not act(lt, n1) and LC.CuffCount(lt) == 4, "someone already held isn't cuffed again")
+-- no cage near enough: said so, no cuffs used
+local n2 = person(Vector(9000, 0, 0))
+lt:SetPos(n2:GetPos() + Vector(60, 0, 0))
+local none, whyNone = act(lt, n2)
+ok(not none and string.find(whyNone or "", "no cage", 1, true) ~= nil and LC.CuffCount(lt) == 4, "with no cage within reach: said so, no cuffs used", whyNone)
+-- one of their own isn't theirs to cuff
+local rb = LC.SpawnRebel(P0 + Vector(500, 300, 4), nil)
+if IsValid(rb) then
+    lt:SetPos(rb:GetPos() + Vector(60, 0, 0))
+    ok(not act(lt, rb) and LC.RebelHeld[rb] == nil and LC.CuffCount(lt) == 4, "a rebel isn't cuffed by their own")
+    rb:Remove()
+end
+LC.CageFree(n1)
+for _, e in ipairs({ n1, n2, cage }) do if IsValid(e) then e:Remove() end end
+LC.CageForget()
+for _, p in ipairs({ lt, member }) do p:SetPos(Vector(-30000, 30000, 0)) end
+end
+Nov14B_CuffTests()
+
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")
 ;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)
     -- Everything here is something the owner's server, files or players depend on. The list is
