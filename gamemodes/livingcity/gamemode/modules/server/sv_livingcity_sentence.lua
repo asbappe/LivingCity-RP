@@ -11,7 +11,12 @@
         assaulting Civil Protection or the Administrator       10
         murder                                                  15
         murder of a Civil Protection officer or a soldier      20
-    at most lc_sentence_max (30) minutes. Nothing on the record: the old
+    at most lc_sentence_max (30) minutes, and less for anyone who is not much
+    of an anticitizen (the owner, 14 November: "-40 civil standing should not
+    be 30 minutes in prison"; the steps are LC.Severity's own): Civil Standing
+    above -50, 10 minutes at most; above -250, 20; lower, the whole of
+    lc_sentence_max. Staff taking someone out of custody, or resetting
+    them, wipes the record (LC.RapClear). Nothing on the record: the old
     lc_prison_time. Then the record is cleared. Only an arrest counts:
     staff jailing someone (lc_jail), a story's sentence, a conduct sentence
     and a sentence picked up again after leaving stay exactly as given.
@@ -97,6 +102,22 @@ local function SaveRap(ply)
     if #r == 0 then ply:RemovePData("lc_rap") else ply:SetPData("lc_rap", util.TableToJSON(r)) end
 end
 
+-- The most minutes a sentence can be for this person: by how much of an anticitizen they are.
+function LC.SentenceCap(ply)
+    local max = cvMax:GetFloat()
+    local standing = LC.Standing and IsValid(ply) and LC.Standing(ply) or 0
+    if standing > -50 then return math.min(max, 10) end
+    if standing > -250 then return math.min(max, 20) end
+    return max
+end
+
+-- The record wiped (staff: a reset, or taken out of custody).
+function LC.RapClear(ply)
+    if not IsValid(ply) then return end
+    ply.lcRap = {}
+    SaveRap(ply)
+end
+
 function LC.OnProbation(ply)
     return IsValid(ply) and (ply.lcProbationUntil or 0) > CurTime()
 end
@@ -130,8 +151,12 @@ function LC.SentenceFor(ply, seconds, reason, arrester)
         total = total + c.min
         parts[#parts + 1] = string.format("%s (%d%s)", c.reason, c.min, c.doubled and ", doubled on probation" or "")
     end
-    total = math.min(total, cvMax:GetFloat())
+    local cap = LC.SentenceCap(ply)
     local words = table.concat(parts, ", ")
+    if total > cap then
+        total = cap
+        if cap < cvMax:GetFloat() then words = words .. ", the most for your Civil Standing" end
+    end
     if string.sub(tostring(reason or ""), 1, 11) == "Surrendered" then
         total = math.max(1, math.floor(total / 2)) -- (giving yourself up halves it, as it always has)
         words = words .. ", halved for giving yourself up"
