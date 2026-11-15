@@ -151,6 +151,11 @@ end
 -- from the hand. The engine moves a view model's attachment out to where it would sit at your own field of
 -- view (for muzzle flashes in the world); drawn over the view model, that put the glow well right of and
 -- below the baton, so the point is first put back to the view model's field of view (LC_CL.BatonTipSpace).
+-- (the owner, 14 November: "there is one spark and it sits on the 'far' side of the baton, barely visible".)
+-- The spark point is on the surface of the head, and the furthest one is on the side away from you, so the
+-- baton itself hid most of a small glow. The glow is now drawn at the tip on your side of it (pulled toward
+-- your eye by more than the head is thick), over the baton whatever is in between, and about as big as
+-- Half-Life 2's own stunstick glow.
 if CLIENT then
     LC_CL = LC_CL or {}
     local GLOW = Material("sprites/light_glow02_add")
@@ -215,17 +220,32 @@ if CLIENT then
     end
     LC_CL.BatonTip = Tip
 
+    local NEAR = 1.6 -- (toward your eye from the spark point: past the near side of the baton's head)
+    -- Where the glow goes: the tip, on the side of the baton facing you.
+    function LC_CL.BatonGlowPos(tip)
+        local vs = render and render.GetViewSetup and render.GetViewSetup() or nil
+        local eye = vs and vs.origin or EyePos()
+        local to = eye - tip
+        local len = to:Length()
+        if len < NEAR * 2 then return tip end
+        return tip + to * (NEAR / len)
+    end
+
     function SWEP:PostDrawViewModel(vm)
         if not IsValid(vm) or not render or not render.DrawSprite then return end
         local tip = Tip(vm, self.ViewModelFOV)
         if not tip then return end
-        local s = math.Rand(2.2, 3.4)
+        local at = LC_CL.BatonGlowPos(tip)
+        local over = cam and cam.IgnoreZ
+        if over then cam.IgnoreZ(true) end -- (never hidden by the baton it sits on)
+        local s = math.Rand(4.2, 5.6)
         render.SetMaterial(GLOW)
-        render.DrawSprite(tip, s, s, WHITE)
+        render.DrawSprite(at, s, s, WHITE)
         if math.random() < 0.5 then -- (the crackle: a flick of blue at the same point)
-            local c = math.Rand(0.8, 1.8)
+            local c = math.Rand(1.4, 2.6)
             render.SetMaterial(FLARE)
-            render.DrawSprite(tip + VectorRand() * 0.35, c, c, BLUE)
+            render.DrawSprite(at + VectorRand() * 0.35, c, c, BLUE)
         end
+        if over then cam.IgnoreZ(false) end
     end
 end

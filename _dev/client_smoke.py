@@ -2727,19 +2727,23 @@ return nil
 """)
 if err:
     problems = (problems + "\n" if problems else "") + "weapon_lc_sprayer (client) " + str(err)
-# the Arrest Baton (the owner, 12 November: "sparks are in a group of 3 and sitting too far back"): one small glow,
-# at the spark point furthest from the hand, put back from your field of view to the view model's
+# the Arrest Baton (the owner, 12 November: "sparks are in a group of 3 and sitting too far back"): one glow,
+# at the spark point furthest from the hand, put back from your field of view to the view model's; and (14
+# November: "it sits on the 'far' side of the baton, barely visible") on your side of the tip, drawn over
+# the baton, big enough to see
 L.globals()._SRC = open(os.path.join(GMDIR, "entities", "weapons", "weapon_lc_baton.lua")).read()
 err = L.execute(r"""
 SWEP = {}
 local ok, err = pcall(function() assert(loadstring(_SRC, "weapon_lc_baton"))() end)
 if not ok then return "load: " .. tostring(err) end
 local def = SWEP
-local dsWas, gvsWas = render.DrawSprite, render.GetViewSetup
+local dsWas, gvsWas, izWas = render.DrawSprite, render.GetViewSetup, cam.IgnoreZ
 local sprites = {}
-render.DrawSprite = function(pos, w) sprites[#sprites + 1] = { pos = pos, w = w } end
+local over = false
+cam.IgnoreZ = function(on) over = on end
+render.DrawSprite = function(pos, w) sprites[#sprites + 1] = { pos = pos, w = w, over = over } end
 render.GetViewSetup = function() return { origin = Vector(0, 0, 0), angles = Angle(0, 0, 0), fov = 90, fov_viewmodel = 54 } end
-local function restore() render.DrawSprite, render.GetViewSetup = dsWas, gvsWas end
+local function restore() render.DrawSprite, render.GetViewSetup, cam.IgnoreZ = dsWas, gvsWas, izWas end
 local k = math.tan(math.rad(27)) / math.tan(math.rad(45))
 local p = LC_CL.BatonTipSpace(Vector(100, -40, -20))
 if math.abs(p.x - 100) > 0.01 or math.abs(p.y + 40 * k) > 0.01 or math.abs(p.z + 20 * k) > 0.01 then restore() return "BatonTipSpace: " .. tostring(p) end
@@ -2756,10 +2760,16 @@ end
 local tip = LC_CL.BatonTipSpace(ATT.spark9b)
 restore()
 if #sprites < 20 then return "the glow isn't drawn every frame: " .. #sprites end
+if over then return "the baton's glow leaves everything after it drawn over the world" end
+local eye, biggest = Vector(0, 0, 0), 0
 for _, s in ipairs(sprites) do
-    if s.pos:Distance(tip) > 1 then return "a spark away from the tip: " .. tostring(s.pos) .. " (tip " .. tostring(tip) .. ")" end
-    if s.w > 3.5 then return "the glow is too big: " .. s.w end
+    if s.pos:Distance(tip) > 2.5 then return "a spark away from the tip: " .. tostring(s.pos) .. " (tip " .. tostring(tip) .. ")" end
+    if s.pos:Distance(eye) > tip:Distance(eye) - 0.8 then return "a spark on the far side of the tip, behind the baton: " .. tostring(s.pos) .. " (tip " .. tostring(tip) .. ")" end
+    if not s.over then return "a spark the baton itself can hide (not drawn over it)" end
+    if s.w > 6 then return "the glow is too big: " .. s.w end
+    biggest = math.max(biggest, s.w)
 end
+if biggest < 4 then return "the glow is too small to see: " .. biggest end
 return nil
 """)
 if err:
