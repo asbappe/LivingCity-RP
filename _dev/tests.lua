@@ -24567,6 +24567,8 @@ section("The 1 November playtest: infestations, sweeps, tools, traits, bins, rat
     ok(um:GetNW2String("lcf_faction", "") == "resistance" and not LC.CanJoinFaction(um, "cp") and LC.CanWork(um) ~= false and not LC.PlayerIsWanted(um),
         "unmasked: an ordinary Resistance fighter, never Civil Protection again (and not wanted for it)")
     -- with a Resistance player around, the test waits for one to be caught, and the units go looking
+    -- (nobody an earlier section jailed may still be in a cell: the wait would take them for the catch)
+    for r in pairs(LC.Prisoners or {}) do if IsValid(r) and r:IsPlayer() and LC.FreeFromCustody then LC.FreeFromCustody(r) end end
     local lt2 = newPlayer("LoyaltyUnit2", "cp")
     local rebelP = newPlayer("CaughtRebel", "resistance", nil, 200)
     _run(0.3)

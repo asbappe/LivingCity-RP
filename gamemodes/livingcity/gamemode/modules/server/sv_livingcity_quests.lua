@@ -1273,6 +1273,7 @@ function LC.QuestEvent(name, ply, a, b)
     if st.kind == "count" and st.event == name then
         if st.filter and not st.filter(q, ply, a, b) then return end
         if st.distinct and a ~= nil then
+            st.seen = st.seen or {} -- (a stage counted before it was entered must not stop the server: found 15 November)
             if st.seen[a] then return end
             st.seen[a] = true
         end
