@@ -30327,6 +30327,64 @@ section("The play study: how the owner plays, written down as a model for the ci
 end)()
 
 
+function Nov14F_DreamNightTests()
+section("14 November night, F1: a night's sleep gives a dream when nobody chose one (the city's own pick)")
+local errs0 = #_errors
+local realGetAll, realPhase, realReload = player.GetAll, LC.DayPhase, LC.EndingReload
+local savedWalls = _walls
+_walls = {}
+LC.EndingReload = function() end
+_setcvar("lc_dream_rules", 1) _setcvar("lc_dream_auto", 1) _setcvar("lc_dream_every_night", 0) -- (the owner's server: all defaults)
+local DS = LC.DreamState
+local keep = { at = DS.at, queued = DS.queued, missed = DS.missedNight, dreamed = DS.dreamedNight }
+local reb = newPlayer("F1Rebel", "resistance", nil, 900)
+_run(2)
+local BED, DREAM = Vector(-231000, 231000, 0), Vector(-262000, 262000, 0)
+local pt = LC.AddPoint(DREAM, 0, "dream")
+player.GetAll = function() return { reb } end
+LC.DayPhase = function() return "night" end
+if LC.DreamActive then LC.DreamWake(LC.DreamActive) end
+LC.DreamForget()
+reb:SetPos(BED)
+reb.lcSleep = { t0 = CurTime() - 70, done = CurTime() - 10, last = CurTime(), slept = true }
+reb:SetNW2Bool("lc_sleeping", true)
+ok(LC.DreamQueued() == nil and LC.DreamCityPicks() == true, "(nobody chose tonight's dream: it is the city's to pick)")
+hook.Run("LivingCityDayPhase", "night", "dusk")
+ok(DS.at ~= nil, "(the night coming sets the time of tonight's dream)")
+_run(70)
+ok(LC.DreamActive ~= nil and reb.lcDreaming ~= nil, "a rebel asleep on rebel ground at night dreams, with nobody having chosen a dream", tostring(LC.DreamActive) .. " " .. tostring(reb.lcDreaming))
+ok(string.find(LC.DreamDebugLine(), "the city picks every night", 1, true) ~= nil and string.find(LC.DreamDebugLine(), "last: ", 1, true) ~= nil,
+    "the debug report has a dreams line: who picks, and the last one dreamt", LC.DreamDebugLine())
+if LC.DreamActive then LC.DreamWake(LC.DreamActive) end
+LC.DreamActive = nil
+-- the city's own pick: not held back by the endings' cooldown, and one that can't be dreamt passes its turn on
+local realStart, realCheck = LC.DreamStart, LC.DreamMissedCheck
+local seen = {}
+LC.DreamStart = function(id, by, vote, also, force) seen[#seen + 1] = { id = id, force = force } return false, "The dream couldn't be built here." end
+LC.DreamForget()
+DS.tries, DS.triesNight = nil, nil
+local okT, whyT = LC.DreamTonight()
+ok(okT == false and #seen == 1 and seen[1].force == true, "the city's own pick doesn't wait for the endings' cooldown (it is started the way the Administrator's is)", tostring(seen[1] and seen[1].force))
+ok(DS.missedNight == DS.night and DS.queued == nil, "a pick that can't be dreamt isn't the end of the night: another is tried")
+LC.DreamTonight()
+ok(#seen == 2 and seen[2].id ~= seen[1].id, "and it is the next one, not the same again", tostring(seen[1] and seen[1].id) .. " " .. tostring(seen[2] and seen[2].id))
+LC.DreamTonight()
+ok(DS.missedNight ~= DS.night or DS.tries >= 3, "three tries a night at most")
+DS.missedNight = nil
+ok(string.find(LC.DreamDebugLine(), "didn't happen: The dream couldn't be built here.", 1, true) ~= nil, "and the debug report says why the last one didn't happen", LC.DreamDebugLine())
+LC.DreamStart, LC.DreamMissedCheck = realStart, realCheck
+LC.DreamForget()
+DS.tries, DS.triesNight, DS.last = nil, nil, nil
+reb.lcSleep = nil reb:SetNW2Bool("lc_sleeping", false)
+LC.RemovePoint(pt)
+DS.at, DS.queued, DS.missedNight, DS.dreamedNight = keep.at, keep.queued, keep.missed, keep.dreamed
+player.GetAll, LC.DayPhase, LC.EndingReload = realGetAll, realPhase, realReload
+_walls = savedWalls
+reb:SetPos(Vector(-121000, -121000, 0))
+ok(#_errors == errs0, "(no errors in any of it)", _errors[errs0 + 1])
+end
+Nov14F_DreamNightTests()
+
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")
 ;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)
     -- Everything here is something the owner's server, files or players depend on. The list is

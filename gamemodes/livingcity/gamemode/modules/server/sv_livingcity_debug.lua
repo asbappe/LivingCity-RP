@@ -258,6 +258,7 @@ function LC.BuildReport()
             for _, r in ipairs(LC.DreamMusicList()) do ds[#ds + 1] = r.id .. " " .. (r.own > 0 and tostring(r.own) or (r.fallback and "0 (Half-Life 2's)" or "0")) end
             out[#out + 1] = "dream songs (sound/livingcity/dreams/<codeword>/, or <codeword>1.mp3 there): " .. table.concat(ds, ", ")
         end
+        if LC.DreamDebugLine then out[#out + 1] = LC.DreamDebugLine() end -- (why a night had no dream: sv_livingcity_dreams.lua)
         if LC.SoundGuardReport then -- (sounds refused for starting over and over: sh_livingcity_soundguard.lua)
             local sg = LC.SoundGuardReport()
             out[#out + 1] = "sound guard (stopped for repeating): " .. (#sg > 0 and table.concat(sg, ", ") or "none")

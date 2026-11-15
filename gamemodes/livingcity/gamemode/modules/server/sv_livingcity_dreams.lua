@@ -1125,12 +1125,17 @@ function LC.DreamQueueEnding(id, by, source)
     return true
 end
 function LC.DreamQueued() return S.queued end
+-- Does a night bring a dream: one waiting, lc_dream_every_night, or the city's own pick (lc_dream_auto,
+-- sv_livingcity_dreamplan.lua)? (The owner, 14 November: "I have never once had a dream activate on its own".
+-- The city's pick was left out here, so with nobody choosing one the night's dream was never even tried.)
+local function WillDream() return S.queued ~= nil or cvNightly:GetBool() or (LC.DreamCityPicks ~= nil and LC.DreamCityPicks() == true) end
+LC.DreamWillDream = WillDream
 -- A dream still to come tonight (or under way): lights out keeps everyone in bed for it (sv_livingcity_bedtime.lua).
 function LC.DreamTonightPending()
     if LC.DreamActive then return true end
     if not LC.DreamReady() then return false end
     if LC.DayPhase and LC.DayPhase() == "night" and S.dreamedNight == S.night then return false end
-    return S.queued ~= nil or cvNightly:GetBool()
+    return WillDream()
 end
 
 -- The Administrator's tablet (sv_livingcity_cityadmin.lua): tonight's dream, by mood.
@@ -1167,7 +1172,7 @@ function LC.DreamOffice()
     out.at = S.at and math.max(0, math.floor(S.at - CurTime())) or nil
     out.busy = LC.DreamActive ~= nil or nil
     -- (for the "when" line: is there one to come tonight, and how long after the good night)
-    out.will = (S.queued ~= nil or cvNightly:GetBool() or (LC.DreamCityPicks ~= nil and LC.DreamCityPicks() == true)) or nil
+    out.will = WillDream() or nil
     out.delay = math.max(5, cvDelay:GetFloat())
     out.plan = LC.DreamPlanOffice and LC.DreamPlanOffice() or nil -- (her choice now: a kind, now and then: sv_livingcity_dreamplan.lua)
     return out
@@ -1227,7 +1232,9 @@ local function Nightly()
 end
 local function Pick()
     local q = Nightly()
-    if q then return q.id, IsValid(q.by) and q.by or nil, q.vote, q.source == "admin" end
+    -- (her pick, and the city's own, don't wait for the endings' cooldown or start it: lc_dream_auto promises a dream
+    -- every night, and a dreamt ending used to hold the next three nights' back. lc_dream_every_night's still waits.)
+    if q then return q.id, IsValid(q.by) and q.by or nil, q.vote, q.source == "admin" or q.source == "auto" end
     return nil
 end
 function LC.DreamTonight()
@@ -1249,13 +1256,39 @@ function LC.DreamTonight()
     local ok, why = LC.DreamStart(id, by, vote, nil, force)
     if ok then
         S.queued, S.lastMood = nil, LC.DreamMood(id)
+        S.last = { night = S.night, id = id, ok = true }
     else
         -- nobody was in bed yet: it waits for the first to fall asleep tonight (below)
-        if why == "Nobody is asleep to dream it." then S.missedNight = S.night end
+        if why == "Nobody is asleep to dream it." then S.missedNight = S.night
+        elseif q0 and q0.source == "auto" and why ~= "A dream is already under way." and why ~= "An ending is already under way." then
+            -- the city's own pick can't be dreamt here (it doesn't fit, it couldn't be built): its turn passes on,
+            -- so the same one isn't picked every night, and the next is tried in a moment (three a night at most)
+            local kind = q0.cat or (LC.DreamKind and LC.DreamKind(id)) or "neutral"
+            if LC.DreamPlanAdvance and LC.DreamPlanNext and LC.DreamPlanNext(kind) == id then LC.DreamPlanAdvance(kind) end
+            if S.triesNight ~= S.night then S.triesNight, S.tries = S.night, 0 end
+            S.tries = (S.tries or 0) + 1
+            if S.tries < 3 then S.missedNight = S.night end
+        end
         Log("info", "Tonight's dream didn't happen: " .. tostring(why))
+        S.last = { night = S.night, id = id, ok = false, why = tostring(why) }
         if S.queued and (S.queued.source == "nightly" or S.queued.source == "auto") then S.queued = nil end
     end
     return ok, why
+end
+
+-- The dreams in a line, for the debug report (the owner, 14 November: a night with no dream must say why).
+function LC.DreamDebugLine()
+    local why = (not cvOn:GetBool() and "off (lc_dreams 0)") or (not LC.DreamPoint() and "no dream point on this map") or nil
+    local who = S.queued and ("waiting: " .. tostring(S.queued.id) .. " (" .. tostring(S.queued.source) .. ")")
+        or (LC.DreamCityPicks and LC.DreamCityPicks() and "the city picks every night (lc_dream_auto 1)")
+        or (cvNightly:GetBool() and "a random one every night (lc_dream_every_night 1)") or "nothing chosen, and nothing picks: no dream will come"
+    local last = S.last and (S.last.ok and ("last: " .. tostring(S.last.id) .. ", night " .. tostring(S.last.night))
+        or ("last try, night " .. tostring(S.last.night) .. ": " .. tostring(S.last.id) .. " didn't happen: " .. tostring(S.last.why))) or "none tried yet on this map"
+    local asleep = 0
+    for _, p in ipairs(player.GetAll()) do if p.lcSleep then asleep = asleep + 1 end end
+    return "dreams: " .. (why or who) .. " | night " .. tostring(S.night) .. (S.dreamedNight == S.night and " (tried)" or " (not tried yet)")
+        .. (S.at and (", due in " .. math.max(0, math.floor(S.at - CurTime())) .. "s") or "") .. (S.missedNight == S.night and ", waiting for a sleeper" or "")
+        .. " | players asleep " .. asleep .. " | " .. last
 end
 
 ------------------------------------------------------------------------
@@ -1304,7 +1337,7 @@ timer.Create("LivingCityDreams", 1, 0, function()
             S.missedCheck = now + 5
             LC.DreamMissedCheck(now)
         end
-        if S.at and LC.DreamReady() and (S.queued or cvNightly:GetBool()) then
+        if S.at and LC.DreamReady() and WillDream() then
             -- the sleepers, warned (and the way out)
             if not S.warned and now >= S.at - math.min(30, cvDelay:GetFloat()) then
                 S.warned = true
