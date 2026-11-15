@@ -315,6 +315,38 @@ hook.Add("PlayerSetModel", "LivingCityFactions", function(ply)
     return true
 end)
 
+-- The Resistance's spawn points (the owner, 14 November: "resistance spawn points should be active for resistance
+-- human players based on the last one they were closest to, which survives server restarts"). Every Resistance
+-- player, whatever the rank, comes back at the rspawn nearest to where they last were; it is kept with their saved
+-- data (lc_rspawn), so a restart or a map change doesn't lose it. A point that has since been taken away: any one.
+local function SpawnKey(pos) return string.format("%d %d %d", math.floor(pos.x + 0.5), math.floor(pos.y + 0.5), math.floor(pos.z + 0.5)) end
+function LC.RebelSpawnNote(ply, dead)
+    if not IsValid(ply) or ply:GetNW2String("lcf_faction", "") ~= "resistance" then return nil end
+    if not dead and not ply:Alive() then return nil end
+    if (LC.Prisoners and LC.Prisoners[ply]) or (LC.Dreaming and LC.Dreaming(ply)) then return nil end -- (not where they were taken)
+    local here, best, bd = ply:GetPos(), nil, nil
+    for _, pt in ipairs(LC.PointsOfKind and LC.PointsOfKind("rspawn") or {}) do
+        local d = pt.pos:DistToSqr(here)
+        if not bd or d < bd then best, bd = pt, d end
+    end
+    if not best then return nil end
+    local key = SpawnKey(best.pos)
+    if ply.lcRSpawn ~= key then
+        ply.lcRSpawn = key
+        ply:SetPData("lc_rspawn", key)
+    end
+    return best
+end
+function LC.RebelSpawnFor(ply, pts)
+    local key = ply.lcRSpawn or ply:GetPData("lc_rspawn", "")
+    for _, pt in ipairs(pts) do if SpawnKey(pt.pos) == key then return pt end end
+    return pts[math.random(#pts)]
+end
+timer.Create("LivingCityRebelSpawnNote", 5, 0, function()
+    for _, ply in ipairs(player.GetAll()) do LC.Try(LC.RebelSpawnNote, ply) end
+end)
+hook.Add("DoPlayerDeath", "LivingCityRebelSpawnNote", function(ply) LC.Try(LC.RebelSpawnNote, ply, true) end)
+
 hook.Add("PlayerSpawn", "LivingCityFactions", function(ply)
     if not FactionOf(ply) then return end
     local spawnedAt = ply:GetPos()
@@ -326,10 +358,12 @@ hook.Add("PlayerSpawn", "LivingCityFactions", function(ply)
         -- infested at theirs (or in their nests); citizens never spawn on Combine ground
         local hunted, zombie = LC.PlayerIsHunted(ply), LC.PlayerIsZombie(ply)
         local kind = hunted and "rebel" or (zombie and "infest") or nil
-        local pkind = hunted and "rspawn" or (zombie and "zspawn") or nil
+        local rebel = ply:GetNW2String("lcf_faction", "") == "resistance" and not zombie -- (every rank: LC.RebelSpawnFor, above)
+        local pkind = (hunted or rebel) and "rspawn" or (zombie and "zspawn") or nil
         local pts = pkind and LC.PointsOfKind and LC.PointsOfKind(pkind) or {}
         if #pts > 0 then
-            ply:SetPos(pts[math.random(#pts)].pos + Vector(0, 0, 4))
+            local pt = pkind == "rspawn" and LC.RebelSpawnFor(ply, pts) or pts[math.random(#pts)]
+            ply:SetPos(pt.pos + Vector(0, 0, 4))
         elseif kind then
             local zones = LC.ZonesOfKind and LC.ZonesOfKind(kind) or {}
             if #zones > 0 then

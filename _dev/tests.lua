@@ -30464,6 +30464,54 @@ buyer:SetPos(Vector(-30000, 30000, 0))
 end
 Nov14B_LabSalesTests()
 
+function Nov14B_SpawnTests() -- (the owner, 14 November: "resistance spawn points should be active for resistance human players based on the last one they were closest to, which survives server restarts")
+section("14 November, B4: a Resistance player comes back at the spawn point they were last closest to, and a restart keeps it")
+local A, B = Vector(-52000, 52000, 0), Vector(-47000, 52000, 0)
+local pts = { { kind = "rspawn", pos = A }, { kind = "rspawn", pos = B } }
+local wasPts = LC.PointsOfKind
+LC.PointsOfKind = function(kind, group) if kind == "rspawn" then return pts end return wasPts(kind, group) end
+local m = newPlayer("B4Member", "resistance", nil, 150) -- (a Member: not hunted, and it is theirs too)
+ok(not LC.PlayerIsHunted(m), "(a Member passes for a citizen)")
+m:SetPos(A + Vector(400, 100, 0))
+ok(LC.RebelSpawnNote(m) == pts[1] and m:GetPData("lc_rspawn", "") ~= "", "near the first spawn point: it is remembered, in their saved data")
+local function respawns(p, at, times)
+    local n = 0
+    for _ = 1, times do
+        hook.Run("PlayerSpawn", p)
+        _run(0.2)
+        if p:GetPos():DistToSqr(at + Vector(0, 0, 4)) < 4 then n = n + 1 end
+        p:SetPos(at + Vector(300, 0, 0)) -- (walks a little way off, still nearest to it)
+    end
+    return n
+end
+ok(respawns(m, A, 6) == 6, "six respawns, six times at that point (not any one of them)")
+m.lcRSpawn = nil -- (a restart: only the saved data is left)
+ok(respawns(m, A, 6) == 6, "after a restart it is still that one")
+m:SetPos(B + Vector(-200, 0, 0))
+LC.RebelSpawnNote(m)
+ok(respawns(m, B, 6) == 6, "having gone to the other base, they come back there")
+-- dying far from both: the one nearest to where they fell
+m:SetPos(A + Vector(1500, 0, 0))
+hook.Run("DoPlayerDeath", m)
+hook.Run("PlayerSpawn", m)
+_run(0.2)
+ok(m:GetPos():DistToSqr(A + Vector(0, 0, 4)) < 4, "killed nearer the first: back at the first")
+-- a point that has been taken away: any that is left
+pts = { { kind = "rspawn", pos = B } }
+m.lcRSpawn = nil
+m:SetPos(Vector(-30000, 30000, 0))
+hook.Run("PlayerSpawn", m)
+_run(0.2)
+ok(m:GetPos():DistToSqr(B + Vector(0, 0, 4)) < 4, "their point taken away with the editor: the one that is left")
+-- nobody else is sent there
+local cit = newPlayer("B4Cit", "citizen")
+cit:SetPos(B + Vector(100, 0, 0))
+ok(LC.RebelSpawnNote(cit) == nil and cit:GetPData("lc_rspawn", "") == "", "a citizen standing by one has nothing remembered")
+LC.PointsOfKind = wasPts
+for _, p in ipairs({ m, cit }) do p:SetPos(Vector(-30000, 30000, 0)) end
+end
+Nov14B_SpawnTests()
+
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")
 ;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)
     -- Everything here is something the owner's server, files or players depend on. The list is
