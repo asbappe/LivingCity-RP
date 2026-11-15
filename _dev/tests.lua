@@ -33188,6 +33188,8 @@ local savedWalls = _walls
 _walls = {}
 local D0 = Vector(-100000, -56000, 0)
 for _, p in ipairs(table.Copy(LC.Points)) do if p.kind == "yard" then LC.RemovePoint(p) end end
+-- (citizens left about by earlier tests would fill the drill's ten places before the one who comes late)
+for n, s in pairs(LC.NPCs) do if IsValid(n) and s.role == "citizen" then n:Remove() end end
 local yard = LC.AddPoint(D0, 0, "yard", 0)
 local function cit(off, state)
     local c, cst = LC.SpawnCitizen(D0 + off)
@@ -33233,6 +33235,234 @@ LC.RemovePoint(yard)
 _walls = savedWalls
 end
 DrillCrowdTests()
+
+function ParadeTests()
+section("15 November: the parade is soldiers two abreast, an APC, hunters and a strider, the march, and the whole city cheering")
+LC.EndEvent(true)
+local savedWalls = _walls
+_walls = {}
+local set = _setcvar
+local P0 = Vector(-104000, -52000, 0)
+for _, p in ipairs(table.Copy(LC.Points)) do if p.kind == "parade" then LC.RemovePoint(p) end end
+local pp = {}
+for i = 0, 2 do pp[#pp + 1] = LC.AddPoint(P0 + Vector(i * 1500, 0, 0), 0, "parade", 1) end
+for n, s in pairs(LC.NPCs) do if IsValid(n) and (LC.IsSecurity(s) or s.role == "citizen") then n:Remove() end end
+local canHunters = LC.ParadeCanHunters
+LC.ParadeCanHunters = function() return true end
+-- the city's people, each at something: all of them come; a prisoner and one of the Resistance's own do not
+local function cit(off, state)
+    local c, cst = LC.SpawnCitizen(P0 + off)
+    cst.state, cst.untilT = state, CurTime() + 600
+    return c, cst
+end
+local c1, s1 = cit(Vector(1400, 900, 0), "idle")
+local c2, s2 = cit(Vector(1500, 900, 0), "busy")
+local c3, s3 = cit(Vector(1600, 900, 0), "working") s3.npcWork = { id = "test" }
+local c4, s4 = cit(Vector(1700, 900, 0), "inline")
+local jailed, js = cit(Vector(1800, 900, 0), "jailed") js.jailUntil = CurTime() + 900
+_setcvar("lc_exercise_muster", 15)
+_setcvar("lc_exercise_npcs", 0)
+-- Overwatch's reserve is spent: the column comes all the same
+local pool = LC.ManpowerPool and LC.ManpowerPool("ota")
+local hadReserve = pool and pool.reserve
+if pool then pool.reserve = 0 end
+ok(LC.StartEvent("parade"), "the parade starts")
+if pool then pool.reserve = hadReserve end
+local X = LC.ExerciseSession()
+local soldiers, perRank = 0, {}
+for _, u in ipairs(X.column) do
+    local st = LC.NPCs[u]
+    if st and st.role == "soldier" then soldiers = soldiers + 1 end
+    if st and st.exColumn then perRank[st.exColumn.rank] = (perRank[st.exColumn.rank] or 0) + 1 end
+end
+ok(#X.column == 8 and soldiers == 8, "eight soldiers march, even with the reserve spent (it was three)", #X.column, soldiers)
+ok(perRank[0] == 2 and perRank[1] == 2 and perRank[2] == 2 and perRank[3] == 2, "two abreast, four ranks")
+local kinds, byKind = {}, {}
+for _, m in ipairs(X.machines) do kinds[m.kind] = (kinds[m.kind] or 0) + 1 byKind[m.kind] = m end
+ok(kinds.apc == 1 and kinds.strider == 1 and kinds.hunter == 2, "an APC, a pair of hunters and a strider with them", kinds.apc, kinds.hunter, kinds.strider)
+ok(byKind.apc.ent:GetModel() == "models/combine_apc.mdl" and byKind.strider.ent:GetClass() == "npc_strider" and byKind.hunter.ent:GetClass() == "npc_hunter",
+    "(the APC's own model, a real strider, real hunters)")
+ok(byKind.apc.d > byKind.hunter.d and byKind.hunter.d > byKind.strider.d and byKind.apc.d < X.head - 3 * 70,
+    "in order behind the last rank: the APC, the hunters, the strider", byKind.apc.d, byKind.hunter.d, byKind.strider.d)
+-- the crowd
+ok(X.npcs[c1] and X.npcs[c2] and X.npcs[c3] and X.npcs[c4], "every citizen drops what they are doing and is called to it")
+ok(not X.npcs[jailed] and LC.ExerciseDraftable(jailed, js, true) == false, "not a prisoner")
+ok(LC.ExerciseDraftable(c1, { role = "rebel", state = "idle" }, true) == false, "nor one of the Resistance's own")
+local inThird, sides = 0, {}
+for _, c in ipairs({ s1, s2, s3, s4 }) do
+    local spot = c.exCitizen and c.exCitizen.spot
+    if spot and spot.x >= P0.x + 1000 - 1 and spot.x <= P0.x + 2000 + 1 and math.abs(spot.y - P0.y) >= 150 then inThird = inThird + 1 end
+    if spot then sides[spot.y > P0.y and 1 or 2] = true end
+end
+ok(inThird == 4 and sides[1] and sides[2], "their places are both sides of the middle third of the route, a few steps back", inThird)
+-- nobody in the parade is anyone's enemy
+local function quiet()
+    for _, u in ipairs(X.column) do
+        local st = IsValid(u) and LC.NPCs[u]
+        if st and (st.state == "hostile" or IsValid(u.enemy)) then return false end
+    end
+    for _, m in ipairs(X.machines) do
+        if IsValid(m.ent) and m.kind ~= "apc" then
+            if IsValid(m.ent.enemy) then return false end
+            for _, d in pairs(m.ent.rel) do if d == D_HT then return false end end
+        end
+    end
+    return true
+end
+local wanted = newPlayer("ParadeWanted", "resistance", nil, 200)
+wanted:SetPos(P0 + Vector(200, 300, 0))
+local onlooker = newPlayer("ParadeOnlooker", "citizen")
+onlooker:SetPos(P0 + Vector(1800, 260, 0))
+_run(16)
+ok(X.phase == "run", "it sets off")
+ok((_globals.lc_parade_music or "") == "", "no march yet")
+local apcAt = byKind.apc.ent:GetPos()
+local startedAt, cheered, quietAll = nil, false, quiet()
+for _ = 1, 120 do
+    if not LC.ExerciseSession() then break end
+    _run(0.5)
+    if not startedAt and (_globals.lc_parade_music or "") ~= "" then startedAt = X.head end
+    if (s1.exCheers or 0) > 0 then cheered = true end
+    quietAll = quietAll and quiet()
+    if X.head >= 1700 then break end
+end
+ok(startedAt ~= nil and startedAt >= 1000 and startedAt < 1200, "the march starts as the head passes a third of the route", startedAt)
+local list = _globals.lc_parade_music or ""
+ok(string.find(list, "music/hl2_song22_combinetheme3.mp3", 1, true) == 1 and string.find(list, "music/hl2_song20_submix0.mp3", 1, true) ~= nil,
+    "the pieces to try: the Combine march first, then one every copy has", list)
+ok(quietAll, "marching, nobody in the parade has an enemy (a wanted rebel stood by the route)")
+ok(byKind.apc.ent:GetPos().x > apcAt.x + 500 and byKind.strider.ent:GetPos().x > P0.x and byKind.hunter.ent:GetPos().x > P0.x,
+    "the APC rolls along the route, the hunters and the strider walk it", byKind.apc.ent:GetPos().x - apcAt.x)
+ok(X.npcs[c1] and s1.state == "event", "the crowd stands at its places")
+
+-- someone attacks it
+local sold = X.column[3]
+local head0, at0 = X.head, _globals.lc_parade_music_at
+local hit = _dmg(wanted, 12) hit.inflictor = wanted
+wanted:SetPos(P0 + Vector(1500, 500, 0))
+hook.Run("EntityTakeDamage", sold, hit)
+local F = X.fight
+ok(F ~= nil and F.foes[wanted] ~= nil and F.node == 2, "attacked: the parade fights, and remembers the last route point it reached (the second)", F and F.node)
+ok((_globals.lc_parade_music or "") == "", "the music stops")
+local allOn, walkersOn = true, true
+for _, u in ipairs(X.column) do
+    local st = LC.NPCs[u]
+    if not (st and st.state == "hostile" and st.enemy == wanted) then allOn = false end
+end
+for _, m in ipairs(X.machines) do if m.kind ~= "apc" and m.ent.rel[wanted] ~= D_HT then walkersOn = false end end
+ok(allOn and walkersOn, "the attacker is the enemy of every soldier, the hunters and the strider")
+local stillBy = true
+for _, u in ipairs(X.column) do if LC.NPCs[u].enemy == onlooker then stillBy = false end end
+for _, m in ipairs(X.machines) do if m.kind ~= "apc" and m.ent.rel[onlooker] == D_HT then stillBy = false end end
+ok(stillBy and F.foes[onlooker] == nil, "a bystander is nobody's enemy")
+_run(3)
+ok(X.head == head0 and (byKind.apc.shots or 0) > 0, "the march has stopped, and the APC's gun fires at the attacker", byKind.apc.shots)
+-- what the parade deals harms only the attacker
+local function dealt(victim, by, viaOwner)
+    local d = _dmg(by, 20)
+    if viaOwner then
+        local shot = ents.Create("prop_physics")
+        shot:SetOwner(by)
+        d = _dmg(nil, 20)
+        d.inflictor = shot
+    end
+    local blocked = hook.Run("EntityTakeDamage", victim, d)
+    if viaOwner then d.inflictor:Remove() end
+    return blocked == true and 0 or d:GetDamage()
+end
+local unit = LC.Spawners.cop(P0 + Vector(1500, -400, 0))
+ok(dealt(X.column[1], X.column[2]) == 0, "a soldier's fire does another soldier of the parade no harm")
+ok(dealt(byKind.strider.ent, byKind.apc.ent) == 0, "nor the APC's gun the strider")
+ok(dealt(unit, X.column[2]) == 0 and dealt(unit, byKind.hunter.ent, true) == 0, "nor a unit of the city's (a hunter's dart included)")
+ok(dealt(c1, byKind.strider.ent) == 0 and dealt(onlooker, X.column[1]) == 0, "nor a citizen of the crowd, nor a bystander")
+LC.ExerciseStick = true
+local stick = _dmg(X.column[1], 8)
+ok(hook.t.EntityTakeDamage.LivingCityParade(onlooker, stick) == nil and stick:GetDamage() == 8, "(a marcher's stick on someone not cheering still lands)")
+LC.ExerciseStick = nil
+-- (a soldier's own blow on an unarmed suspect at arm's reach is the city's arrest, as ever: the parade's rule itself lets it through)
+local own = _dmg(X.column[1], 20)
+ok(hook.t.EntityTakeDamage.LivingCityParade(wanted, own) == nil and own:GetDamage() == 20 and dealt(wanted, byKind.apc.ent) > 0, "the attacker is hit")
+hook.Run("EntityTakeDamage", X.column[1], _dmg(unit, 5))
+ok(F.foes[unit] == nil and LC.NPCs[X.column[1]].enemy ~= unit, "a unit whose stray round hits the parade is not its enemy")
+ok(F.foes[X.column[2]] == nil, "(and no soldier of it became one)")
+-- out of sight for half a minute: over
+wanted:SetPos(P0 + Vector(0, 90000, 0))
+_run(28)
+ok(X.fight ~= nil, "unseen for under half a minute: still on")
+for _ = 1, 40 do if not X.fight then break end _run(0.1) end
+ok(X.fight == nil and X.reform ~= nil and X.reform.node == 2 and X.head == 1500 and pp[2].pos.x == P0.x + 1500,
+    "30 seconds unseen: over, and they form up again at the last placed route point they had reached (the second)", X.head)
+local lead
+for _, u in ipairs(X.column) do
+    local col = LC.NPCs[u] and LC.NPCs[u].exColumn
+    if col and col.rank == 0 and col.side < 0 then lead = col end
+end
+ok(lead and lead.post and math.abs(lead.post.x - pp[2].pos.x) < 1 and math.abs(math.abs(lead.post.y - pp[2].pos.y) - 40) < 1,
+    "the front rank's place is at that point itself, a file either side of it", lead and tostring(lead.post))
+for _ = 1, 60 do if not X.reform then break end _run(0.5) end
+ok(X.reform == nil and X.reformed and X.reformed.node == 2, "formed up at the second point of the route", X.reformed and X.reformed.node)
+_run(3)
+local onward, nearNode = 0, 0
+for _, u in ipairs(X.column) do
+    local st = LC.NPCs[u]
+    if st and st.exColumn and st.exColumn.i == 3 and st.state == "moving" then onward = onward + 1 end
+    if u:GetPos().x > P0.x + 1500 - 300 and u:GetPos().x < P0.x + 1500 + 700 and math.abs(u:GetPos().y - P0.y) < 120 then nearNode = nearNode + 1 end
+end
+ok(onward == 8 and nearNode == 8, "and the march goes on from there toward the next", onward, nearNode)
+ok((_globals.lc_parade_music or "") ~= "" and (_globals.lc_parade_music_at or 0) > at0 and X.musicStarts == 2,
+    "the music starts again from the beginning", X.musicStarts)
+ok(quiet(), "nobody is anyone's enemy again")
+-- attacked again, and the attacker dies
+wanted:SetPos(P0 + Vector(1800, 400, 0))
+hook.Run("EntityTakeDamage", byKind.apc.ent, _dmg(wanted, 5))
+ok(X.fight ~= nil, "the APC attacked: the parade fights again")
+wanted.alive = false
+_run(1.5)
+ok(X.fight == nil, "the attacker dead: over at once")
+wanted.alive = true
+wanted:SetPos(Vector(-120000, -120000, 0))
+-- on to the end
+local released
+for _ = 1, 240 do
+    if not LC.ExerciseSession() then break end
+    _run(0.5)
+    if X.crowdPoi == nil and released == nil then released = { tail = X.tail, st = s1.state, ex = s1.exCitizen } end
+end
+ok(released ~= nil and released.tail >= 2000 and released.ex == nil and released.st ~= "event",
+    "once the tail has passed two thirds, the crowd goes back to its day", released and released.tail)
+ok(cheered or (s1.exCheers or 0) > 0, "having cheered while it passed", s1.exCheers)
+ok(LC.ExerciseSession() == nil, "the parade reaches the end and is over by itself")
+ok((_globals.lc_parade_music or "") == "", "the march is silent")
+onlooker:SetPos(Vector(-120000, -120000, 0))
+_run(12)
+local left, stillMembers = 0, 0
+for _, m in ipairs(X.machines) do if IsValid(m.ent) then left = left + 1 end end
+for _, u in ipairs(X.column) do if IsValid(u) and (u.lcParade or (LC.NPCs[u] and LC.NPCs[u].marching)) then stillMembers = stillMembers + 1 end end
+ok(left == 0 and #LC.ParadeLeftovers == 0, "the APC, the hunters and the strider are gone once nobody is looking", left)
+ok(stillMembers == 0, "and the soldiers are of no parade any more")
+-- the line for the debug report
+ok(string.find(LC.ParadeDebugLine(), "parade music: ", 1, true) == 1, "the debug report has a line for the march", LC.ParadeDebugLine())
+
+-- without Episode Two's hunters the parade still runs
+LC.ParadeCanHunters = function() return false end
+for n, s in pairs(LC.NPCs) do if IsValid(n) and LC.IsSecurity(s) then n:Remove() end end
+ok(LC.StartEvent("parade"), "with no hunter to be had, the parade starts all the same")
+local X2 = LC.ExerciseSession()
+local k2 = {}
+for _, m in ipairs(X2.machines) do k2[m.kind] = (k2[m.kind] or 0) + 1 end
+ok(k2.hunter == nil and k2.apc == 1 and k2.strider == 1 and #X2.column == 8, "without them: the soldiers, the APC and the strider")
+for _ = 1, 200 do if not LC.ExerciseSession() then break end _run(0.5) end
+ok(LC.ExerciseSession() == nil, "and it runs to its end")
+if LC.ExerciseSession() then LC.EndEvent(false) end
+_run(12)
+LC.ParadeCanHunters = canHunters
+set("lc_exercise_npcs", 10)
+for _, c in ipairs({ c1, c2, c3, c4, jailed, unit }) do if IsValid(c) then c:Remove() end end
+for n, s in pairs(LC.NPCs) do if IsValid(n) and LC.IsSecurity(s) then n:Remove() end end
+for _, p in ipairs(pp) do LC.RemovePoint(p) end
+_walls = savedWalls
+end
+ParadeTests()
 
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")
 ;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)

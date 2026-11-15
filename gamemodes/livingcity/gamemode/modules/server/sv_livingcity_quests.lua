@@ -2171,6 +2171,8 @@ end
 local function ReviewSendAway(u, st)
     st.questLock, st.reviewSlot = nil, nil
     st.reassigned = true
+    -- (one who came from out of sight and is out of it still, the review called off before he arrived: gone at once)
+    if st.reviewTemp and not (LC.IsSeen and LC.IsSeen(u:GetPos() + Vector(0, 0, 40))) then u:Remove() return end
     st.nextInspect = math.huge
     local to = LC.AlarmSquadSpot and LC.AlarmSquadSpot(u:GetPos())
     if not (to and LC.GoTo(u, st, to, false, nil)) then LC.SetState(u, st, "idle") end

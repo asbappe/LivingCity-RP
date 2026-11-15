@@ -25,12 +25,17 @@
               (lc_drill_mistakes), wandering out of your place, and a unit at
               the edge of the yard steps in with the stick.
 
-      parade  The morning parade. A column of Overwatch soldiers and Civil
-              Protection marches a route ("Point: parade route stop", in order).
-              Citizens line it and cheer: /cheer, /salute, /wave, chanting in
-              chat ("Glory to the Union!"), jumping up and down. Enthusiasm is a
-              meter on screen that drains while the column is near; let it
-              drop too low as it passes, and a unit sees to it.
+      parade  The morning parade. A column of Overwatch soldiers, two abreast,
+              with an APC, a pair of hunters and a strider behind them, marches
+              a route ("Point: parade route stop", in order). A third of the way
+              along, the Combine march plays from the column (lc_parade_music).
+              Every citizen NPC lines the middle third and cheers. Players line
+              it and cheer: /cheer, /salute, /wave, chanting in chat ("Glory to
+              the Union!"), jumping up and down. Enthusiasm is a meter on screen
+              that drains while the column is near; let it drop too low as it
+              passes, and a unit sees to it. Nobody in the parade harms anyone
+              but whoever attacks it: then it stops and fights them, and forms
+              up again at the last route point it had reached.
 
     Everyone has lc_exercise_muster seconds to report. Skipping it: units who
     see you send you there, then use the stick; skip it entirely and it costs
@@ -376,7 +381,12 @@ function LC.ExerciseBeat(npc, ply, why)
         if role == "cop" and math.random() < 0.6 then npc:EmitSound(Pick(COP_BARK), 78) end
     end
     local dmg = math.min(cvBeat:GetFloat(), math.max(0, ply:Health() - 15))
-    if dmg > 0 then ply:TakeDamage(dmg, IsValid(npc) and npc or nil, IsValid(npc) and npc or nil) end
+    if dmg > 0 then
+        LC.ExerciseStick = true -- (the stick is the stick, a marcher's too: the parade's own rule on what it harms lets it by)
+        local okS, errS = LC.Try(ply.TakeDamage, ply, dmg, IsValid(npc) and npc or nil, IsValid(npc) and npc or nil)
+        LC.ExerciseStick = nil
+        if not okS then LC.Error("exercise stick", errS) end
+    end
     ply:ViewPunch(Angle(-14, math.Rand(-8, 8), 0))
     local push = IsValid(npc) and (ply:GetPos() - npc:GetPos()) or Vector(0, 0, 0)
     -- on the jog, a shove on along the route: toward the next marker
@@ -756,11 +766,15 @@ local function ParadeAt(d)
     if d <= 0 then return X.route[1] + X.dir1 * d, X.dir1 end
     return AlongRoute(X.route, X.cum, d)
 end
--- How far along it a spot is (behind the first stop: less than nothing).
+-- How far along it a spot is (behind the first stop: less than nothing), and how far to the side of it.
 local function ParadeAlong(pos)
-    local _, along = OnRoute(X.route, X.cum, pos)
-    if along <= 0 then along = math.min(0, Flat(pos - X.route[1]):Dot(X.dir1)) end
-    return along
+    local off, along = OnRoute(X.route, X.cum, pos)
+    if along <= 0 then
+        local rel = Flat(pos - X.route[1])
+        along = math.min(0, rel:Dot(X.dir1))
+        off = (rel - X.dir1 * rel:Dot(X.dir1)):Length()
+    end
+    return along, off
 end
 local function YawOf(dir) return math.deg(math.atan2(dir.y, dir.x)) end
 
@@ -1903,6 +1917,7 @@ hook.Add("EntityTakeDamage", "LivingCityParade", function(victim, dmg)
     if not by and IsValid(inf) and inf.GetOwner then by = Member(inf:GetOwner()) end
     if not by and IsValid(a) and a.GetOwner then by = Member(a:GetOwner()) end
     if by then
+        if LC.ExerciseStick then return end -- (a marcher's stick on someone not cheering: LC.ExerciseBeat)
         local F = X and X.fight
         if F and F.foes[victim] ~= nil then return end
         dmg:SetDamage(0)
@@ -2058,10 +2073,12 @@ local function ParadeThink(now, dt)
             if col.done then
                 done = done + 1
             else
-                local along = ParadeAlong(u:GetPos()) + (col.rank or 0) * RANK_GAP
-                if along < X.head + 400 and (not front or along > front) then front = along end
+                -- (only a marcher on the route counts: one still on his way to it would put the head anywhere)
+                local along, off = ParadeAlong(u:GetPos())
+                along = along + (col.rank or 0) * RANK_GAP
+                if off < 200 and along < X.head + 400 and (not front or along > front) then front = along end
                 -- one who has dropped behind his rank runs to make it up, and walks again once he has
-                if now >= (col.paceAt or 0) and col.i >= 1 and col.i <= #X.route and st.state == "moving" then
+                if off < 300 and now >= (col.paceAt or 0) and col.i >= 1 and col.i <= #X.route and st.state == "moving" then
                     col.paceAt = now + 1
                     local lag = X.head - along
                     local run = (lag > 150) or (col.run and lag > 30) or false
@@ -2088,6 +2105,11 @@ local function ParadeThink(now, dt)
         X.head = math.min(X.total, X.head + MARCH_PACE * dt) -- (nobody left marching: the rest comes on at a walk)
     elseif front then
         X.head = math.Clamp(front, X.head, X.total)
+        X.noFront = nil
+    else
+        -- (every marcher off the route, finding a way round something: after a moment the rest comes on anyway)
+        X.noFront = X.noFront or now
+        if now - X.noFront > 3 then X.head = math.min(X.total, X.head + MARCH_PACE * dt) end
     end
     if not X.machinesBroken then MachinesStep(now) end
     local tail = X.head - (X.ranks - 1) * RANK_GAP
