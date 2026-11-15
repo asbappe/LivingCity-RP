@@ -93,7 +93,7 @@ local MODES = {
     { id = "rebelcage",   label = "Fixture: Resistance holding cage (chain link; the gate faces you)" },
     { id = "infodesk",    label = "Fixture: Citizen Information desk (a clerk who answers questions; place behind a counter)" },
     { id = "civposter",   label = "Fixture: Civil notice poster (its words fit what's nearest: rations, water, the Commissary...)" },
-    { id = "console",     label = "Fixture: Combine console (fly a scanner: prisoners and Civil Protection units)" },
+    { id = "console",     label = "Fixture: Combine scanner console (fly a scanner: prisoners and Civil Protection units)" },
     { id = "monitor",     label = "Fixture: Combine monitor (shows a camera's view; a unit's E steps to the next camera)" },
     { id = "monitor_hang", label = "Fixture: Combine monitor, hanging (the same, on the small monitor that hangs from an arm)" },
     { id = "workbench",   label = "Fixture: Resistance lab (a scientist makes guns, ammunition, jammers and radios for the Resistance; one in every rebel base)" },

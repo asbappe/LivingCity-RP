@@ -120,6 +120,7 @@ local cvSupGap   = CreateConVar("lc_black_suppressor_gap", "6", FLAGS, "Seconds 
 util.AddNetworkString("lc_suppressor")       -- a shell on its way: where, and how long till it lands
 util.AddNetworkString("lc_collapse_gman")    -- the G-Man, in person, to the Administrator: what he does and says
 util.AddNetworkString("lc_collapse_offer")   -- the G-Man's offer, to the Administrator
+util.AddNetworkString("lc_victory_music")    -- the Administrator beaten: the victory sting (cl_livingcity_atmos.lua)
 util.AddNetworkString("lc_collapse_answer")  -- her answer: "resign", "end" or "refuse"
 
 local TICK = 5
@@ -592,10 +593,19 @@ function LC.CollapsePower() return LC.CollapsePowers()[1] end
 -- Where a transformer's glass screen stands: on the side that faced whoever placed it (its front), in the way of
 -- a shot from there (the owner, 10 November: "they HAVE to go deal with the manhack swarm or the turret swarm
 -- first in order to get around the shield/glass"). lc_adminglass asks this.
+-- It stands on the floor, whatever height the transformer's origin is at (the owner, 15 November: "spawns the shield
+-- about 7 feet in the air and there's a huge gap below it ... from ground level up about 15 feet"): the world's floor
+-- under the spot, else the transformer's own bottom.
 function LC.AdminGlassSpot(power)
     local ang = Angle(0, power:GetAngles().y, 0)
     local front = (power.OBBMaxs and power:OBBMaxs().x or 24) + 34
-    return power:GetPos() + ang:Forward() * front, ang
+    local spot = power:GetPos() + ang:Forward() * front
+    local low = spot.z + ((power.OBBMins and power:OBBMins().z) or 0)
+    local tr = util.TraceLine and util.TraceLine({ start = spot + Vector(0, 0, 40), endpos = spot - Vector(0, 0, 600), mask = MASK_SOLID_BRUSHONLY })
+    local floor = (tr and tr.Hit and tr.HitPos) and tr.HitPos.z or low
+    if floor > spot.z + 40 or floor < low - 600 then floor = low end
+    spot.z = math.min(floor, spot.z)
+    return spot, ang
 end
 
 -- A clear spot `dist` from `at` (nothing solid between), for her beside the transformer or it beside her.
@@ -1613,6 +1623,8 @@ Resolve = function(how, who, by)
     end
     LC.Log("info", "The collapse ended: " .. tostring(how))
     Calm()
+    -- the Administrator beaten (fallen or fled): the victory sting for everyone (cl_livingcity_atmos.lua)
+    if (how == "killed" or how == "fled") and net and net.Start then net.Start("lc_victory_music") net.Broadcast() end
     hook.Run("LivingCityCollapseOver", how, who)
     return true
 end

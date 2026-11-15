@@ -213,6 +213,7 @@ function LC.CanBuy(ply, g)
     end
     if LC.Credits(ply) < LC.GoodsPrice(ply, g) then return false, "Not enough credits." end
     if g.item and LC.CanCarry then local okC, whyC = LC.CanCarry(ply, g.item, g.count or 1) if not okC then return false, whyC end end
+    if g.weapon and ply.HasWeapon and ply:HasWeapon(g.weapon) then return false, "You carry one." end
     return true
 end
 
@@ -245,6 +246,8 @@ function LC.Buy(ply, id)
             e:SetPos(ply:GetPos() + ply:GetForward() * 40 + Vector(0, 0, 20))
             e:Spawn()
         end
+    elseif g.weapon then
+        ply:Give(g.weapon)
     elseif g.ammo then
         ply:GiveAmmo(g.ammo[2], g.ammo[1])
     end
@@ -264,7 +267,14 @@ function LC.OpenShop(ply, viaTerminal)
     local goods = {}
     local counter = LC.PlayerIsCP(ply) and AtUnitCounter(ply)
     local unit = LC.PlayerIsCP(ply)
-    for _, g in ipairs(LCS.Goods) do
+    -- at the unit counter, the unit's own things come first (water, weapons, grenades, rounds), then the Union's goods
+    local list = LCS.Goods
+    if counter then
+        list = {}
+        for _, g in ipairs(LCS.Goods) do if g.cpOnly then list[#list + 1] = g end end
+        for _, g in ipairs(LCS.Goods) do if not g.cpOnly then list[#list + 1] = g end end
+    end
+    for _, g in ipairs(list) do
         if (not g.cpOnly or counter) and not (g.civOnly and unit) then
             local ok, why = LC.CanBuy(ply, g)
             goods[#goods + 1] = {

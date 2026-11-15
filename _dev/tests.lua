@@ -6164,7 +6164,7 @@ ok(LC.PackPowerBank(tu, nb) and not IsValid(nb), "and takes it down again")
 -- vests recharge at a live bank (the owner, 7 November); for anyone else it's tampering
 tu:SetArmor(10) tu:SetNW2Int("lc_vest_cap", 100)
 local okV, msgV = LC.UsePowerBank(tu, bank)
-ok(okV and tu:Armor() == 25 and string.find(msgV, "Vest charging", 1, true) ~= nil, "E on a live power bank charges a unit's vest", msgV .. " armor " .. tu:Armor())
+ok(okV and tu:Armor() == 100 and string.find(msgV, "Vest charged: 100", 1, true) ~= nil and not string.find(msgV, "+", 1, true), "E on a live power bank fills a unit's vest in one press (the owner, 15 November)", msgV .. " armor " .. tu:Armor())
 civ:SetArmor(0) civ:SetNW2Bool("lc_vest", true)
 local okC, msgC = LC.UsePowerBank(civ, bank)
 ok(okC and civ:Armor() > 0 and string.find(msgC, "Tampering", 1, true) ~= nil, "a citizen with a vest pulls charge off it too, and is told it's tampering", msgC)
@@ -32659,6 +32659,49 @@ function DreamSurfaceTests()
     for _, t in ipairs({ g, g2, g3, g4 }) do for _, e in ipairs(t.ents) do if IsValid(e) then e:Remove() end end end
 end
 DreamSurfaceTests()
+
+-- The owner's 15 November card notes, the small ones: purified water, the unit counter's weapons, the Administrator's glass
+function Nov15_CardSmallTests()
+section("15 November card: purified water (2 at the CP Commissary, 4 at the quartermaster and the dealer), weapons at the unit counter, her glass on the floor")
+local it = LCS.Items.water_purified
+ok(it and it.name == "Purified water" and (it.thirst or 0) > 0, "purified water is a drink")
+local cw, bw = LCS.GoodsById.water_cp, LCS.BlackById.water_purified
+ok(cw and cw.price == 2 and cw.cpOnly and cw.item == "water_purified", "the CP Commissary sells purified water for 2 credits")
+ok(bw and bw.price == 4 and not bw.qm and not bw.lab, "the dealer and the quartermaster sell it for 4")
+for _, id in ipairs({ "cp_pistol", "cp_smg", "cp_shotgun", "cp_ar2", "cp_357" }) do
+    local g = LCS.GoodsById[id]
+    ok(g and g.cpOnly and g.weapon and g.minRank and g.price > 0, "the unit counter sells a weapon by rank: " .. id)
+end
+local cop = newPlayer("CardCop", "cp")
+cop:SetNW2Int("lcf_rank", 2)
+LC.AddCredits(cop, 500)
+for _, w in ipairs({ "weapon_pistol" }) do if cop:HasWeapon(w) then cop:StripWeapon(w) end end
+local okB = LC.Buy(cop, "cp_pistol")
+ok(okB and cop:HasWeapon("weapon_pistol"), "a Metrocop buys a pistol at the counter")
+ok(not LC.CanBuy(cop, LCS.GoodsById.cp_pistol), "and not a second while he carries one")
+ok(not LC.CanBuy(cop, LCS.GoodsById.cp_ar2), "a pulse rifle isn't for his rank")
+ok(LC.Buy(cop, "water_cp") and (LC.Inventory(cop).water_purified or 0) >= 1, "he buys purified water")
+local civ = newPlayer("CardCiv", "citizen")
+ok(not LC.CanBuy(civ, LCS.GoodsById.water_cp), "a citizen can't buy at the unit counter")
+-- at the counter the unit's own things come first
+local sentShop
+local realSend = LC.SendCompressed
+LC.SendCompressed = function(msg, tbl, rec) if msg == "lce_shop" then sentShop = tbl end end
+LC.OpenShop(cop, true)
+LC.SendCompressed = realSend
+local first = sentShop and sentShop.goods and sentShop.goods[1]
+ok(first and LCS.GoodsById[first.id] and LCS.GoodsById[first.id].cpOnly, "the unit counter lists the unit's own things first", first and first.id)
+-- the Administrator's glass stands on the floor, however high the transformer's origin (15 feet of it)
+local pw = ents.Create("lc_adminpower")
+pw:SetPos(Vector(-81000, -81000, 112)) pw:Spawn() pw.lcCollapseTemp = true
+local realTrace = util.TraceLine
+util.TraceLine = function(t) if t.mask == MASK_SOLID_BRUSHONLY then return { Hit = true, HitPos = Vector(t.start.x, t.start.y, 0) } end return realTrace(t) end
+local gp = LC.AdminGlassSpot(pw)
+util.TraceLine = realTrace
+ok(gp and math.abs(gp.z) < 1, "her glass stands on the floor, not 7 feet up", gp and tostring(gp))
+pw:Remove() cop:Remove() civ:Remove()
+end
+Nov15_CardSmallTests()
 
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")
 ;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)

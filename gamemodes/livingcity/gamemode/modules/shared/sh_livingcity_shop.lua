@@ -71,6 +71,7 @@ LCS.Items = {
     bottle_empty    = { name = "Empty bottle", model = BOTTLE, fillTo = "bottle_dirty" },
     bottle_dirty    = { name = "Bottle of untreated water", model = BOTTLE, thirst = 45, parasite = 0.4, cooksTo = "bottle_clean", leaves = "bottle_empty" },
     bottle_clean    = { name = "Bottle of boiled water", model = BOTTLE, thirst = 45, leaves = "bottle_empty" },
+    water_purified  = { name = "Purified water", model = BOTTLE, thirst = 45, leaves = "bottle_empty", sell = 1 }, -- (the owner, 15 November: cheap at the CP Commissary, 4 at the quartermaster and the dealer)
     -- rain caught straight from the sky: clean enough as it is (no boiling)
     can_rain        = { name = "Can of rainwater", model = CAN, thirst = 30, leaves = "can_empty" },
     bottle_rain     = { name = "Bottle of rainwater", model = BOTTLE, thirst = 45, leaves = "bottle_empty" },
@@ -350,7 +351,7 @@ LCS.Weights = {
     beer = 0.6, vodka = 0.9, moonshine = 0.9,
     ration = 0.3, water = 0.4, bread = 0.5, milk = 0.6, melon = 3.0, coffee = 0.3, tablets = 0.05, medicine = 0.1,
     raw_bird = 0.6, raw_crow = 0.6, raw_gull = 0.7, cooked_bird = 0.5, raw_headcrab = 1.2, raw_fastcrab = 1.0, raw_poisoncrab = 1.4, cooked_headcrab = 1.0,
-    can_empty = 0.05, can_dirty = 0.4, can_clean = 0.4, bottle_empty = 0.3, bottle_dirty = 0.8, bottle_clean = 0.8,
+    can_empty = 0.05, can_dirty = 0.4, can_clean = 0.4, bottle_empty = 0.3, bottle_dirty = 0.8, bottle_clean = 0.8, water_purified = 0.8,
     radio = 1.0, radio_tuned = 1.0, radio_transmitter = 0.6, permit = 0.02, papers_blank = 0.02, papers_forged = 0.02, papers_dead = 0.02, ration_forged = 0.02,
     uniform_cp = 3.0, cwu_overalls = 1.2, rebel_gear = 3.0, civvies = 1.0,
     lockpick = 0.1, bypass = 0.6, cp_keycard = 0.02, canned_food = 0.5, vegetables = 0.6, raw_fish = 0.7, cooked_fish = 0.6,
@@ -443,6 +444,17 @@ LCS.Goods = {
     { id = "pet_bird", item = "pet_bird", price = 80, minStanding = 100, civOnly = true, desc = "A tame pigeon for your shoulder. Everyone will want one." },
     { id = "storage_crate", item = "storage_crate", price = 40, minStanding = 0, desc = "Somewhere of your own to keep things. Civil Protection units can open it." },
     { id = "fishing_line", item = "fishing_line", price = 15, minStanding = -50, civOnly = true, desc = "Line and a hook. The canal has fish, of a kind." },
+    -- the unit counter's own (the owner, 15 November: "add purified water to the CP Commissary as a very cheap item, like 2
+    -- credits", "there are no weapons in the CP Commissary...I feel like there should be"): a weapon by rank, and its rounds
+    { id = "water_cp", item = "water_purified", price = 2, cpOnly = true, desc = "Purified, sealed, Civil Protection issue." },
+    { id = "cp_pistol", name = "Pistol", weapon = "weapon_pistol", price = 40, cpOnly = true, minRank = 2, desc = "The standard sidearm. Metrocops and up." },
+    { id = "cp_357", name = ".357 revolver", weapon = "weapon_357", price = 150, cpOnly = true, minRank = 3, desc = "Six heavy rounds. Division Leaders and up." },
+    { id = "cp_smg", name = "SMG", weapon = "weapon_smg1", price = 120, cpOnly = true, minRank = 3, desc = "Division Leaders and up." },
+    { id = "cp_shotgun", name = "Shotgun", weapon = "weapon_shotgun", price = 160, cpOnly = true, minRank = 4, desc = "For the Overwatch." },
+    { id = "cp_ar2", name = "Pulse rifle", weapon = "weapon_ar2", price = 300, cpOnly = true, minRank = 5, desc = "Overwatch soldiers and up." },
+    { id = "cp_ammo357", name = ".357 rounds", ammo = { "357", 12 }, price = 15, cpOnly = true, minRank = 3, desc = "Twelve." },
+    { id = "cp_buckshot", name = "Shotgun shells", ammo = { "Buckshot", 24 }, price = 20, cpOnly = true, minRank = 4, desc = "Twenty-four." },
+    { id = "cp_ar2ammo", name = "Pulse rifle ammunition", ammo = { "AR2", 60 }, price = 30, cpOnly = true, minRank = 5, desc = "Two magazines." },
     { id = "gren_smoke", item = "gren_smoke", price = 20, cpOnly = true, desc = "Cover for an advance, or a retreat." },
     { id = "gren_flash", item = "gren_flash", price = 35, cpOnly = true, minRank = 2, desc = "Metrocops and up. Don't look at it." },
     { id = "gas_bomb", item = "gas_bomb", price = 40, cpOnly = true, minRank = 3, desc = "Division Leaders and the Overwatch. For clearing anticitizen holdouts: a choking green cloud, and your mask keeps it out." },
@@ -482,6 +494,7 @@ LCS.Black = {
     { id = "tablets", item = "tablets", price = 20, desc = "No questions about why you need them." },
     { id = "medicine", item = "medicine", price = 18, desc = "Fell off a Commissary truck." },
     { id = "cig_rolled", item = "cig_rolled", count = 5, name = "Hand-rolled cigarettes (5)", price = 10, desc = "Real tobacco. Don't ask from where." },
+    { id = "water_purified", item = "water_purified", price = 4, desc = "Clean water, a bottle of it. Off a Civil Protection pallet." }, -- (the owner, 15 November: 4 credits here and at the quartermaster)
     { id = "beer", item = "beer", price = 8, desc = "Bathtub beer. It's wet, and it works." },
     { id = "moonshine", item = "moonshine", price = 10, desc = "Strong enough to strip paint. Mostly safe." },
     { id = "vodka_black", item = "vodka", price = 70, desc = "Pre-war vodka, for people the Union isn't proud of." },

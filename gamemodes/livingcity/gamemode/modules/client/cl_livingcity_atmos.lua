@@ -243,7 +243,10 @@ local TRACKS = {
     -- occurrence and add some variety"; whichever this install has)
     calm = { "music/hl2_song19.mp3", "music/hl2_song10.mp3", "music/hl2_song2.mp3", "music/hl2_song26.mp3", "music/hl2_song27_trainstation2.mp3",
         "music/hl2_song0.mp3", "music/hl2_song1.mp3", "music/hl2_song8.mp3", "music/hl2_song11.mp3", "music/hl2_song17.mp3",
-        "music/hl2_song23_suitsong3.mp3", "music/hl2_song32.mp3", "music/hl1_song11.mp3", "music/hl1_song20.mp3" },
+        "music/hl2_song23_suitsong3.mp3", "music/hl2_song32.mp3", "music/hl1_song20.mp3" },
+    -- Half-Life's short triumphant theme: only for a big win, the Administrator's fall (the owner, 15 November: "please
+    -- save it for administrator being defeated or some other big victorious happening"; it was among the calm pieces)
+    victory = { "music/hl1_song11.mp3" },
     tense = { "music/hl2_song13.mp3", "music/hl2_song26_trainstation1.mp3", "music/hl2_song30.mp3", "music/hl2_song33.mp3",
         "music/hl2_song28.mp3" },
     -- Ravenholm's and the other eerie pieces: only by an infestation (the owner, 13 November: "ravenholm
@@ -354,6 +357,14 @@ local function PlayMood(mood)
         end
     end)
 end
+
+-- A big win (the server says: the Administrator has fallen or fled, sv_livingcity_collapse.lua): the victory sting, at once.
+net.Receive("lc_victory_music", function()
+    if not cvMusic:GetBool() then return end
+    if Live(playing) then Stop(false) end
+    PlayMood("victory")
+    nextTrack = CurTime() + math.random(QUIET_MIN, QUIET_MAX)
+end)
 
 local lastEvent = ""
 local lastMood = nil

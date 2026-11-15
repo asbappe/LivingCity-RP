@@ -199,24 +199,34 @@ end
 if CLIENT then
     LC_CL = LC_CL or {}
 
-    local SIZE = 512 -- the picture: one 512 x 512 texture, shared (only one monitor is live)
+    -- Up to three monitors are live for you at once, each with its own camera (the owner, 15 November: "can I make 2 or 3
+    -- different ones with different feeds?"; it was one): one 512 x 512 texture each, drawn in turn, 8 pictures a second
+    -- for one, 18 a second shared between two or three.
+    local SIZE = 512 -- each picture: one 512 x 512 texture
     local NEAR = 700 -- only a monitor this near is live for you
     local FAR = 1500 -- past this the glass is left alone (the model only)
-    local RATE = 8   -- pictures a second
+    local RATE = 8   -- pictures a second, for each live monitor
+    local MOST = 18  -- pictures a second, all live monitors together
+    local LIVE = 3   -- monitors live at once
     local FOV = 80
 
-    local rt, mat
-    local drawing = false -- the camera's view is being drawn right now: nothing starts another inside it
-    local live            -- the one monitor that shows its camera for you
+    local rts, mats = {}, {}
+    local drawing = false -- a camera's view is being drawn right now: nothing starts another inside it
+    local lives = {}      -- the monitors that show their camera for you, nearest first
+    local slotOf = {}     -- [monitor] = which texture is its
+    local shown = {}      -- [monitor] = true once its texture holds its own picture
+    local turn = 0
     local nextFrame = 0
 
-    local function Ensure()
-        if mat then return true end
+    local function Ensure(i)
+        if mats[i] then return true end
         if not GetRenderTarget or not CreateMaterial then return false end
-        rt = GetRenderTarget("lc_monitor_rt", SIZE, SIZE)
+        local rt = GetRenderTarget(i == 1 and "lc_monitor_rt" or ("lc_monitor_rt" .. i), SIZE, SIZE)
         if not rt then return false end
-        mat = CreateMaterial("lc_monitor_mat", "UnlitGeneric", { ["$basetexture"] = rt:GetName(), ["$model"] = "0" })
-        return mat ~= nil
+        local mat = CreateMaterial(i == 1 and "lc_monitor_mat" or ("lc_monitor_mat" .. i), "UnlitGeneric", { ["$basetexture"] = rt:GetName(), ["$model"] = "0" })
+        if not mat then return false end
+        rts[i], mats[i] = rt, mat
+        return true
     end
 
     -- Where the picture goes: the glass of each model, as fractions of its front
@@ -235,31 +245,53 @@ if CLIENT then
         return self:LocalToWorld(Vector(maxs.x + g[5], mins.y + wide * g[1], mins.z + tall * g[2])), wide * g[3], tall * g[4]
     end
 
-    -- The monitor that is live for you: the nearest within reach with a camera
-    -- and power, that you stand in front of and look toward.
+    -- The monitors that are live for you: the nearest within reach with a camera
+    -- and power, that you stand in front of and look toward (up to LIVE).
     local function Pick(eye, fwd)
-        local best, bd
+        local found = {}
         for _, e in ipairs(ents.FindByClass("lc_monitor")) do
             if IsValid(e) and e:GetNW2Int("lc_cam", 0) > 0 and e:GetNW2Vector("lc_cam_pos") and not e:GetNW2Bool("lc_nopower", false)
                 and not (e.IsDormant and e:IsDormant()) then
                 local to = e:WorldSpaceCenter() - eye
                 local d = to:LengthSqr()
-                if d < NEAR * NEAR and (not bd or d < bd) and to:Dot(fwd) > 0.5 * math.sqrt(d) and to:Dot(e:GetForward()) < 0 then
-                    best, bd = e, d
+                if d < NEAR * NEAR and to:Dot(fwd) > 0.5 * math.sqrt(d) and to:Dot(e:GetForward()) < 0 then
+                    found[#found + 1] = { e = e, d = d }
                 end
             end
         end
-        return best
+        table.sort(found, function(a, b) return a.d < b.d end)
+        local out = {}
+        for i = 1, math.min(LIVE, #found) do out[i] = found[i].e end
+        return out
     end
 
-    -- One picture of the live monitor's camera, into the texture, a few times a
-    -- second. It runs before the scene is drawn and never inside itself: the
-    -- camera's view draws the whole world again, monitors and all.
+    -- Each live monitor keeps its texture while it stays live; a new one takes a free texture (and shows no
+    -- signal until its first picture is in it).
+    local function Assign(list)
+        local keep, used = {}, {}
+        for _, e in ipairs(list) do keep[e] = true if slotOf[e] then used[slotOf[e]] = true end end
+        for e in pairs(slotOf) do if not keep[e] then slotOf[e], shown[e] = nil, nil end end
+        for _, e in ipairs(list) do
+            if not slotOf[e] then
+                for i = 1, LIVE do if not used[i] then slotOf[e], shown[e], used[i] = i, nil, true break end end
+            end
+        end
+    end
+    local function Forget() lives, slotOf, shown = {}, {}, {} end
+
+    -- One picture of a live monitor's camera, into its texture, the live monitors in turn, a few
+    -- times a second. It runs before the scene is drawn and never inside itself: the camera's view
+    -- draws the whole world again, monitors and all.
     function LC_CL.MonitorFeed(eye, ang)
         if drawing or LC_CL.LiveCamRendering or CurTime() < nextFrame then return false end
-        nextFrame = CurTime() + 1 / RATE
-        live = Ensure() and Pick(eye or EyePos(), (ang or EyeAngles()):Forward()) or nil
-        if not live then return false end
+        lives = Pick(eye or EyePos(), (ang or EyeAngles()):Forward())
+        Assign(lives)
+        nextFrame = CurTime() + 1 / math.min(RATE * math.max(1, #lives), MOST)
+        if #lives == 0 then return false end
+        turn = turn + 1
+        local live = lives[(turn - 1) % #lives + 1]
+        local i = slotOf[live]
+        if not (i and Ensure(i)) then Forget() return false end
         local at, yaw = live:GetNW2Vector("lc_cam_pos"), live:GetNW2Float("lc_cam_yaw", 0)
         local _, wide, tall = Glass(live)
         drawing = true
@@ -268,7 +300,7 @@ if CLIENT then
         LC_CL.LiveCamRendering = true
         local pushed = false
         local ok = LC.Try(function()
-            render.PushRenderTarget(rt)
+            render.PushRenderTarget(rts[i])
             pushed = true
             render.Clear(0, 0, 0, 255, true, true)
             -- (the picture is as wide for its height as the glass is, so filling the glass with it doesn't stretch anyone)
@@ -283,10 +315,13 @@ if CLIENT then
         if pushed then render.PopRenderTarget() end -- (an error mid-picture mustn't leave the game drawing into the texture)
         drawing = false
         LC_CL.LiveCamRendering = false
-        if not ok then live = nil end
-        return ok
+        if not ok then Forget() return false end
+        shown[live] = true
+        return true
     end
-    LC_CL.MonitorLive = function() return live end
+    -- the nearest live monitor (nil: none)
+    LC_CL.MonitorLive = function() return lives[1] end
+    LC_CL.MonitorsLive = function() return lives end
 
     hook.Add("RenderScene", "LivingCityMonitors", function(eye, ang) LC_CL.MonitorFeed(eye, ang) end)
 
@@ -318,9 +353,10 @@ if CLIENT then
         local k = wide / SIZE
         local h = tall / k
         cam.Start3D2D(pos, ang, k)
-            if self == live and not drawing and mat then
+            local i = slotOf[self]
+            if i and shown[self] and not drawing and mats[i] then
                 surface.SetDrawColor(255, 255, 255)
-                surface.SetMaterial(mat)
+                surface.SetMaterial(mats[i])
                 surface.DrawTexturedRect(-SIZE / 2, -h / 2, SIZE, h)
             else
                 NoSignal(self, h)

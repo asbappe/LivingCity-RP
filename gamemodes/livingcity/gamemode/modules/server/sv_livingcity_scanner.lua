@@ -1,7 +1,7 @@
 --[[
     Living City: flying a scanner from a Combine console
 
-    Prison is long. A Combine console (editor: "Fixture: Combine console", put
+    Prison is long. A Combine console (editor: "Fixture: Combine scanner console", put
     one in a cell, or anywhere) lets a prisoner, or a unit, link to one of the
     city's scanners and fly it: the nearest city scanner is taken over (or one
     is put up over the streets if there are none), and your view goes with it.
@@ -665,7 +665,7 @@ end
 function LC.OperatorLink(ply)
     if not LC.IsScannerOperator(ply) then return false, "Civil Protection units only." end
     local desk = LC.OperatorDesk(ply)
-    if not desk then return false, "Get to a terminal: a Combine console, a data terminal, or anywhere in the Nexus." end
+    if not desk then return false, "Get to a terminal: a Combine scanner console, a data terminal, or anywhere in the Nexus." end
     return LC.StartScannerLink(ply, desk ~= "here" and desk or nil)
 end
 

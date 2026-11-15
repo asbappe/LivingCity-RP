@@ -32,7 +32,7 @@
 - **Enforcers in the dreams**: a unit or Administration member asleep for a Nightmare or a propaganda dream is an Enforcer in it: untouchable, free to wake, and with a baton for the dreamers who misbehave (1 XP each, paid on waking). See `endings.md`, Enforcers.
 - **Raiding rebel ground at night**: anyone in a rebel camp attacked by a unit (shot, batoned or otherwise) or arrested wakes everyone asleep there (the rebels' own shots never do), players out of their dreams too, groggy for a minute (`survival-and-credit.md`, Woken in your sleep).
 - **No implant signal**: a rebel who had the chip pulled at the lab is noticed by a unit checking papers or searching them 15% of the time (`lc_chip_notice`): a crime, and the papers fail (`endings.md`, The foil hat and the chip).
-- **Vests at a power bank:** hold E on a live bank to add 15 charge a press. Anyone who isn't a unit commits "Tampering" if a unit sees it; up close, the bank says which applies to you.
+- **Vests at a power bank:** E on a live bank fills the vest in one press (the owner, 15 November; it was 15 a press). Anyone who isn't a unit commits "Tampering" if a unit sees it; up close, the bank says which applies to you.
 - **Prison guards** keep out of cells, the release spot and the prison doors, so a door is never held open by a guard standing in it.
 
 **Arrests in the open** (the owner's playtest, 7 November; `sv_livingcity_arrest.lua`). The Arrest Baton's right click no longer sends anyone straight to a cell.

@@ -1475,19 +1475,23 @@ _globals.lc_colonel_here = false run("Think")
 _me:SetNW2String("lcf_faction", "")
 -- the old-timer's face (cl_livingcity_oldtimerface.lua): with the model, laid over him; without it, nothing
 do
+    local headScale
     local oldNpc = setmetatable({ nw = { lc_oldtimer = true } }, { __index = function(t, k)
         if k == "GetNW2Bool" then return function(self, n, d) local v = self.nw[n] if v == nil then return d end return v end end
         if k == "IsValid" then return function() return true end end
         if k == "GetPos" then return function() return Vector(0, 0, 0) end end
         if k == "LookupBone" then return function() return 6 end end
+        if k == "ManipulateBoneScale" then return function(_, b, v) headScale = v end end
         return function() end
     end })
     local fbWas, ivWas, cmWas2 = ents.FindByClass, util.IsValidModel, ClientsideModel
     local made = 0
+    local headCallback
     ents.FindByClass = function(c) if c == "npc_citizen" then return { oldNpc } end return {} end
     ClientsideModel = function()
         made = made + 1
-        local m = { IsValid = function() return true end, GetBoneCount = function() return 3 end, GetBoneName = function(_, i) return ({ [0] = "ValveBiped.Bip01_Pelvis", "ValveBiped.Bip01_Neck1", "ValveBiped.Bip01_Head1" })[i] end }
+        local m = { IsValid = function() return true end, GetBoneCount = function() return 3 end, GetBoneName = function(_, i) return ({ [0] = "ValveBiped.Bip01_Pelvis", "ValveBiped.Bip01_Neck1", "ValveBiped.Bip01_Head1" })[i] end,
+            AddCallback = function(_, name, fn) if name == "BuildBonePositions" then headCallback = fn end end }
         return setmetatable(m, { __index = function() return function() end end })
     end
     _globals.lc_oldtimer_face = "models/lostcoast/fisherman/fisherman.mdl"
@@ -1498,6 +1502,9 @@ do
     file.Exists = function(p) return p == "models/lostcoast/fisherman/fisherman.mdl" end
     _advance(2) run("Think")
     if made ~= 1 then problems[#problems + 1] = "the old-timer's face wasn't laid over him (the file is there, the model not loaded yet)" end
+    -- (the owner, 15 November: "citizen old timer has no head": his own head shrunk to nothing took the merged one with it)
+    if not (headScale and headScale.x > 0) then problems[#problems + 1] = "the old-timer's own head is shrunk to nothing (the merged head goes with it)" end
+    if not headCallback then problems[#problems + 1] = "the old-timer's merged head isn't put back to full size after the merge" end
     file.Exists = function() return false end
     made = 0
     _advance(2) run("Think")
@@ -2240,10 +2247,15 @@ local ok, e = pcall(function()
     want(n("surface.DrawTexturedRect") == pics + 1, "the live monitor doesn't show the picture")
     faces = n("cam.Start3D2D")
     b:Draw() c:Draw()
-    want(n("surface.DrawTexturedRect") == pics + 1 and n("cam.Start3D2D") == faces + 2, "another monitor shows a picture too (only one is live)")
+    want(n("surface.DrawTexturedRect") == pics + 1 and n("cam.Start3D2D") == faces + 2, "another monitor shows a picture before its own camera's picture is made")
     -- a few pictures a second, not one a frame
     _advance(1)
     want(LC_CL.MonitorFeed(eye, look) == true and views == 2, "no second picture a second later")
+    -- up to three live at once, each its own camera (the owner, 15 November: "2 or 3 different ones with different feeds")
+    want(#LC_CL.MonitorsLive() == 2 and seen and seen.origin and seen.angles.y == 90, "the second monitor in reach isn't live too")
+    pics = n("surface.DrawTexturedRect")
+    b:Draw() c:Draw()
+    want(n("surface.DrawTexturedRect") == pics + 1, "the second live monitor doesn't show its own picture, or the one out of reach does")
     want(LC_CL.MonitorFeed(eye, look) == false and views == 2, "a second picture in the same moment")
     _advance(0.05)
     want(LC_CL.MonitorFeed(eye, look) == false and views == 2, "a second picture a twentieth of a second later")

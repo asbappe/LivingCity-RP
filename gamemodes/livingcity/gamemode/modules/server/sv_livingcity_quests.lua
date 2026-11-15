@@ -2344,7 +2344,7 @@ T{
         if #terms > 0 then
             local e = Pick(terms)
             pos = e:GetPos()
-            what = e:GetClass() == "lc_terminal" and "the civil records terminal" or "the Combine console"
+            what = e:GetClass() == "lc_terminal" and "the civil records terminal" or "the Combine scanner console"
         else
             pos, what = Spot(ply, 500, 2500), "a records terminal"
         end

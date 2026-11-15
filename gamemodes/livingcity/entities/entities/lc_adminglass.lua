@@ -12,7 +12,7 @@ ENT.Author = "Miscount"
 ENT.Spawnable = false
 ENT.RenderGroup = RENDERGROUP_TRANSLUCENT
 
-local W, H, T = 180, 170, 4 -- wide, high, thick
+local W, H, T = 180, 240, 4 -- wide, high (15 feet, from the floor: the owner, 15 November; it was 170), thick
 local MINS, MAXS = Vector(-T / 2, -W / 2, 0), Vector(T / 2, W / 2, H)
 
 function ENT:Initialize()

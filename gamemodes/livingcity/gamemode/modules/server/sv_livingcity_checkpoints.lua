@@ -508,10 +508,10 @@ function LC.PackPowerBank(ply, b)
     return true, "You take the power bank down."
 end
 
--- E on a bank: a unit's vest charges off it (BANK_CHARGE a press, the owner, 7 November), and he reads
--- what it's powering. Anyone else's vest charges too, but that's tampering with Combine property: a
--- unit who sees it books you. (The multitool's primary fire shorts it out.)
-local BANK_CHARGE = 15
+-- E on a bank: a unit's vest charges off it, full in one press (the owner, 15 November: "it shouldn't
+-- say or attempt to only fill it +15"; it was 15 a press from 7 November), and he reads what it's
+-- powering. Anyone else's vest charges too, but that's tampering with Combine property: a unit who
+-- sees it books you. (The multitool's primary fire shorts it out.)
 function LC.UsePowerBank(ply, b)
     local turrets, fields = 0, 0
     for _, t in ipairs(Turrets()) do if LC.TurretSource(t) == b then turrets = turrets + 1 end end
@@ -521,13 +521,13 @@ function LC.UsePowerBank(ply, b)
     local charged = 0
     if live and LC.ChargeVest and LC.HasVest and LC.HasVest(ply) and (ply.lcBankChargeNext or 0) <= CurTime() then
         ply.lcBankChargeNext = CurTime() + 0.9
-        charged = LC.ChargeVest(ply, BANK_CHARGE)
+        charged = LC.ChargeVest(ply, LC.VestCap and LC.VestCap(ply) or 100)
         if charged > 0 then ply:EmitSound("items/battery_pickup.wav", 60, 120) end -- (never the charger's hum: that file loops for ever)
     end
     if LC.PlayerIsCP(ply) then
         local vest = ""
         if live then
-            vest = charged > 0 and string.format(" Vest charging: +%d, now %d. Hold E for more.", charged, ply:Armor())
+            vest = charged > 0 and string.format(" Vest charged: %d.", ply:Armor())
                 or (LC.HasVest and LC.HasVest(ply) and ply:Armor() >= (LC.VestCap and LC.VestCap(ply) or 0)) and " Your vest is full." or ""
         end
         return true, string.format("Power bank: %s. Feeding %d turret%s and %d forcefield%s (it can feed %d powered device%s).%s", live and "live" or "DEAD (no power)",
@@ -536,7 +536,7 @@ function LC.UsePowerBank(ply, b)
     if not live then return false, "Dead. No power." end
     if charged > 0 then
         if LC.SeenBySecurity and LC.SeenBySecurity(ply, 900) and LC.ReportCrime then LC.ReportCrime(ply, "Tampering with a Combine power bank", 120) end
-        return true, string.format("You pull charge off it into your vest: +%d, now %d. Tampering with Combine property: a unit who sees it books you.", charged, ply:Armor())
+        return true, string.format("You charge your vest off it: %d. Tampering with Combine property: a unit who sees it books you.", ply:Armor())
     end
     return false, "It hums. A Combine power bank. Tampering with it is a crime" .. ((LC.HasVest and LC.HasVest(ply)) and " (your vest is full anyway)." or " (a powered vest would charge off it).")
 end

@@ -5,7 +5,9 @@
     Coast's old fisherman (lc_oldtimer_face). Half-Life 2 can't swap heads,
     so this is the usual trick: the fisherman is laid over the citizen,
     following his every bone (bone merge), with everything but his head and
-    neck shrunk to nothing, and the citizen's own head shrunk away beneath it.
+    neck shrunk to nothing, and the citizen's own head shrunk away beneath it
+    (to 0.01, with the fisherman's head put back to full size after the
+    merge: at 0 the merge shrank the fisherman's head too, 15 November).
 
     Only on this player's screen, and only if they have the model (Lost
     Coast's files, which come with Garry's Mod): without it, the citizen
@@ -54,11 +56,24 @@ function LC_CL.HeadOn(body, model, group)
     f:SetParent(body)
     f:AddEffects(EF_BONEMERGE)
     f:SetPos(body:GetPos())
+    local keep = {}
     for i = 0, (f:GetBoneCount() or 0) - 1 do
-        if not Keep(f:GetBoneName(i)) then f:ManipulateBoneScale(i, Vector(0, 0, 0)) end
+        if Keep(f:GetBoneName(i)) then keep[#keep + 1] = i else f:ManipulateBoneScale(i, Vector(0, 0, 0)) end
+    end
+    -- The body's own head is shrunk to almost nothing, never to nothing at all: a bone-merged model copies the
+    -- body's bones as they are, scale and all, so the fisherman's head shrank away with it and he had no head
+    -- (the owner, 15 November: "citizen old timer has no head"). Once his bones are copied, his head and neck
+    -- are put back to full size (a bone shrunk to nothing has lost its direction too, so 0.01, not 0).
+    if f.AddCallback then
+        f:AddCallback("BuildBonePositions", function(e)
+            for _, i in ipairs(keep) do
+                local m = e:GetBoneMatrix(i)
+                if m then m:SetScale(Vector(1, 1, 1)) e:SetBoneMatrix(i, m) end
+            end
+        end)
     end
     local hb = body:LookupBone("ValveBiped.Bip01_Head1")
-    if hb then body:ManipulateBoneScale(hb, Vector(0, 0, 0)) end
+    if hb then body:ManipulateBoneScale(hb, Vector(0.01, 0.01, 0.01)) end
     f.lcModel = model
     return f
 end

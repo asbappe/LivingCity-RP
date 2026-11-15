@@ -65,7 +65,7 @@ Only the words shown changed. Every point keeps its internal name, so saved layo
 - Combine barricade, low
 - Combine barricade, medium
 - Combine barricade, tall
-- Combine console
+- Combine scanner console  (was: Combine console, the owner, 15 November)
 - Combine data terminal
 - Combine forcefield
 - Combine master terminal
