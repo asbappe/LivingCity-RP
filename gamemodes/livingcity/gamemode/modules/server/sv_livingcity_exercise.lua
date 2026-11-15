@@ -1032,12 +1032,14 @@ local KEY_MOVE = { [IN_DUCK or 4] = "crouch", [IN_JUMP or 2] = "jump", [IN_MOVEL
 
 -- A move of the drill, done by an NPC where they stand (the instructor out front, the city's own in the rows).
 -- yaw: the way they face; spot: their place, stepped back to after a step.
-local ARMS_UP = { R_UpperArm = Angle(10, -120, 0), L_UpperArm = Angle(-10, -120, 0), R_Forearm = Angle(0, -20, 0), L_Forearm = Angle(0, -20, 0) }
+-- (both arms up, for the jump: the numbers are the pose registry's, sh_livingcity_poses.lua "drill_arms_up",
+-- so what the owner sets by hand with the Miscount Poser is what the drill does)
+local ARMS_UP = "drill_arms_up"
 local function Pose(npc, pose, secs)
     if not (npc.ManipulateBoneAngles and npc.LookupBone) then return false end
     local done = {}
-    for bone, ang in pairs(pose) do
-        local b = npc:LookupBone("ValveBiped.Bip01_" .. bone)
+    for bone, ang in pairs(LC.PoseBones(pose)) do
+        local b = npc:LookupBone(bone)
         if b then npc:ManipulateBoneAngles(b, ang) done[#done + 1] = b end
     end
     timer.Simple(secs, function()
@@ -1296,16 +1298,22 @@ local GESTURE_CHEER = { cheer = 35, salute = 30, wave = 20, point = 10, nod = 8,
 LC.FlatCheerLate = 0.8
 -- The right arm up to the brow (amount 1 a smart salute, about a half a limp one), down again after a moment:
 -- the same pose as Careless Talk's salute (sv_livingcity_propagandamore.lua).
+-- (the smart salute's numbers are the pose registry's, sh_livingcity_poses.lua "salute_crowd": the upper arm
+-- -35 -75 0 and the forearm 0 -115 0 unless the owner has set it by hand with the Miscount Poser)
 function LC.CrowdSalute(npc, amount, secs)
     if not (IsValid(npc) and npc.ManipulateBoneAngles and npc.LookupBone) then return false end
-    local up, fore = npc:LookupBone("ValveBiped.Bip01_R_UpperArm"), npc:LookupBone("ValveBiped.Bip01_R_Forearm")
-    if up then npc:ManipulateBoneAngles(up, Angle(-35 * amount, -75 * amount, 0)) end
-    if fore then npc:ManipulateBoneAngles(fore, Angle(0, -115 * amount, 0)) end
+    local done = {}
+    for name, a in pairs(LC.PoseBones("salute_crowd")) do
+        local b = npc:LookupBone(name)
+        if b then
+            npc:ManipulateBoneAngles(b, Angle(a.p * amount, a.y * amount, a.r * amount))
+            done[#done + 1] = b
+        end
+    end
     npc.lcSaluteAmt = amount
     timer.Simple(secs or 2.5, function()
         if not IsValid(npc) then return end
-        if up then npc:ManipulateBoneAngles(up, Angle(0, 0, 0)) end
-        if fore then npc:ManipulateBoneAngles(fore, Angle(0, 0, 0)) end
+        for _, b in ipairs(done) do npc:ManipulateBoneAngles(b, Angle(0, 0, 0)) end
         npc.lcSaluteAmt = 0
     end)
     return true

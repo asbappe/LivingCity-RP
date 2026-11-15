@@ -33402,6 +33402,284 @@ adm:Remove() reb:Remove()
 _walls = savedWalls
 end
 Nov15_GrenadeJumpTests()
+-- The Miscount Poser (the owner, 15 November: "I need a way to spawn a simulated NPC that is cuffed (actually, any/all
+-- NPC animations that are custom in this gamemode, including vortigaunt sweep animation/pose, etc)"; "no the broom is
+-- not in its claws"; and then "it might be easier for me to adjust the limbs with the physgun using the pose recorder
+-- tool than using sliders"). Every hand-made pose is in one registry (sh_livingcity_poses.lua); what the owner sets on
+-- the Pose Recorder's mannequin is checked, kept (data/livingcity/poses.json), sent to everyone, and used everywhere.
+function PoseToolTests()
+section("The Miscount Poser: every hand-made pose in one place, set by hand on a mannequin")
+local B = "ValveBiped.Bip01_"
+local function Is(a, p, y, r) return a ~= nil and math.abs(a.p - p) < 0.001 and math.abs(a.y - y) < 0.001 and math.abs(a.r - r) < 0.001 end
+local function At(v, x, y, z) return v ~= nil and math.abs(v.x - x) < 0.001 and math.abs(v.y - y) < 0.001 and math.abs(v.z - z) < 0.001 end
+local keptOverrides, keptFile = LC.PoseOverrides, _files[LC.PoseFile]
+LC.PoseOverridesSet({})
+
+-- with nothing set, every pose is the code's own numbers
+local c = LC.PoseBones("cuffed")
+ok(Is(c[B .. "R_UpperArm"], 6, 40, 75) and Is(c[B .. "L_UpperArm"], -6, 40, -75) and Is(c[B .. "R_Forearm"], 0, -75, 0)
+    and Is(c[B .. "L_Forearm"], 0, -75, 0) and Is(c[B .. "R_Hand"], 0, 10, 0) and Is(c[B .. "L_Hand"], 0, 10, 0) and table.Count(c) == 6,
+    "nothing set: the cuffed pose is the code's own (lc_cuff_pose's default), bone for bone")
+local d, s1, s2, bow = LC.PoseBones("drill_arms_up"), LC.PoseBones("salute_crowd"), LC.PoseBones("salute_talk"), LC.PoseBones("review_bow")
+ok(Is(d[B .. "R_UpperArm"], 10, -120, 0) and Is(d[B .. "L_UpperArm"], -10, -120, 0) and Is(d[B .. "R_Forearm"], 0, -20, 0)
+    and Is(d[B .. "L_Forearm"], 0, -20, 0) and table.Count(d) == 4, "the drill's arms up: as the code had them")
+ok(Is(s1[B .. "R_UpperArm"], -35, -75, 0) and Is(s1[B .. "R_Forearm"], 0, -115, 0) and table.Count(s1) == 2
+    and Is(s2[B .. "R_UpperArm"], -70, -30, -20) and Is(s2[B .. "R_Forearm"], 0, -125, 0) and Is(s2[B .. "R_Hand"], 0, 0, -40) and table.Count(s2) == 3
+    and Is(bow[B .. "Head1"], 0, 25, 0) and Is(bow[B .. "Spine2"], 0, 10, 0) and table.Count(bow) == 2,
+    "the crowd's salute, Careless Talk's salute and the unit's bow: as the code had them")
+local he, hm = LC.PoseBones("hand_eyes"), LC.PoseBones("hand_mouth")
+ok(Is(he[B .. "L_UpperArm"], -30, -80, 20) and Is(he[B .. "L_Forearm"], 0, -120, 0) and Is(he[B .. "L_Hand"], 0, 10, 0)
+    and Is(hm[B .. "L_UpperArm"], -30, -65, 20) and Is(hm[B .. "L_Forearm"], 0, -125, 0) and Is(hm[B .. "L_Hand"], 0, 15, 0),
+    "a hand over the eyes or the mouth: the defaults of lc_handface_eyes and lc_handface_mouth")
+local vb, sb = LC.PoseProp("vort_sweep", "broom"), LC.PoseProp("stalker_sweep", "broom")
+ok(table.Count(LC.PoseBones("vort_sweep")) == 0 and vb.auto == true and vb.tuned == false,
+    "the sweeping vortigaunt: no bone turned, and its broom still worked out from its hands and the floor")
+ok(sb.auto == false and sb.tuned == false and sb.bone == "" and At(sb.pos, 34, -6, 2) and Is(sb.ang, -35, 0, 0), "the stalker's broom: from its feet, lc_broom_hold's default")
+local hp, ha, hb = LC.StalkerBroomHold()
+ok(At(hp, 34, -6, 2) and Is(ha, -35, 0, 0) and hb == "", "what the stalker's work reads is the same")
+local cvWas = GetConVar("lc_broom_hold").v
+_setcvar("lc_broom_hold", "30 0 4 -20 5 180")
+hp, ha, hb = LC.StalkerBroomHold()
+ok(At(hp, 30, 0, 4) and Is(ha, -20, 5, 180) and hb == "" and At(LC.PoseProp("stalker_sweep", "broom").pos, 30, 0, 4), "lc_broom_hold still tunes it (and the mannequin's broom starts there)")
+ok(#LC.PoseList() >= 9 and LC.PoseList()[1].id == "cuffed", "the Poser's list: every pose, cuffed first")
+
+-- who may: superadmins
+local nobody = newPlayer("PoseNobody", "citizen")
+local okN = LC.PoseSet(nobody, "cuffed", { [B .. "R_Hand"] = { 0, 50, 0 } }, nil)
+ok(okN == false and next(LC.PoseOverrides) == nil, "someone who isn't a superadmin can't set a pose")
+
+-- set by hand: it wins, bone by bone; only the pose's own bones; numbers within reach
+net.sent = {}
+local okS, kept = LC.PoseSet(admin, "cuffed", { [B .. "R_UpperArm"] = { 12, 400, -200 }, [B .. "Spine2"] = { 0, 8, 0 },
+    [B .. "R_Thigh"] = { 0, 90, 0 }, [B .. "L_Hand"] = { 0 / 0, 0, 0 }, [B .. "L_Forearm"] = { 0, -75.1, 0 } }, nil)
+c = LC.PoseBones("cuffed")
+ok(okS == true and Is(c[B .. "R_UpperArm"], 12, 40, 160), "set by hand: the bone has the new turn (angles brought round to within a half turn)", tostring(c[B .. "R_UpperArm"] and c[B .. "R_UpperArm"].y))
+ok(Is(c[B .. "L_UpperArm"], -6, 40, -75) and Is(c[B .. "R_Forearm"], 0, -75, 0), "the bones left alone keep the code's numbers")
+ok(Is(c[B .. "Spine2"], 0, 8, 0), "a bone the pose may turn but the code doesn't (the chest) can be set too")
+ok(c[B .. "R_Thigh"] == nil and LC.PoseOverrides.cuffed.bones[B .. "R_Thigh"] == nil, "a bone that isn't the pose's own (a leg) is left out")
+ok(Is(c[B .. "L_Hand"], 0, 10, 0) and LC.PoseOverrides.cuffed.bones[B .. "L_Hand"] == nil, "a turn that isn't a real number is left out")
+ok(LC.PoseOverrides.cuffed.bones[B .. "L_Forearm"] == nil, "a bone measured as the code already has it isn't kept as set")
+ok(LC.PoseTuned("cuffed") and not LC.PoseTuned("review_bow"), "the list knows which are set by hand")
+local told
+for _, m in ipairs(net.sent) do if m.name == "lc_poses" and m.to == nil then told = m end end
+ok(told ~= nil and told.data[1].cuffed ~= nil, "every player's game is told at once")
+ok(LC.PoseSet(admin, "no_such_pose", {}, {}) == false, "a pose that doesn't exist can't be set")
+ok(string.find(LC.PoseText("cuffed"), "R_UpperArm\"] = Angle(12, 40, 160)", 1, true) ~= nil, "Copy the numbers: the pose as text for a coder", LC.PoseText("cuffed"))
+
+-- the brooms' holds
+ok(LC.PoseSet(admin, "stalker_sweep", nil, { broom = { bone = B .. "R_Hand", pos = { 1, 2, 5000 }, ang = { 10, 380, 30 } } }) == true, "the stalker's broom, set by hand")
+hp, ha, hb = LC.StalkerBroomHold()
+ok(At(hp, 1, 2, 120) and Is(ha, 10, 20, 30) and hb == B .. "R_Hand", "the stalker's work reads the hold set by hand (a place too far off is brought within reach), over lc_broom_hold")
+LC.PoseSet(admin, "stalker_sweep", nil, { broom = { bone = B .. "Tail", pos = { 9, 9, 9 }, ang = { 0, 0, 0 } } })
+hp, ha, hb = LC.StalkerBroomHold()
+ok(hb == B .. "R_Hand" and At(hp, 1, 2, 120), "a bone the broom can't hang from is turned down: the hold stays as it was")
+LC.PoseReset(admin, "stalker_sweep")
+hp, ha, hb = LC.StalkerBroomHold()
+ok(hb == "" and At(hp, 30, 0, 4), "reset: the setting's hold again")
+_setcvar("lc_broom_hold", cvWas)
+ok(LC.PoseSet(admin, "vort_sweep", { ["ValveBiped.arm1_R"] = { 15, 0, 0 }, ["Not;A;Bone"] = { 9, 9, 9 } },
+    { broom = { bone = "ValveBiped.hand1_R", pos = { 2, -1, 3 }, ang = { 0, 90, 10 } }, hat = { bone = "", pos = { 0, 0, 0 }, ang = { 0, 0, 0 } } }) == true,
+    "the vortigaunt's broom and an arm, set by hand")
+vb = LC.PoseProp("vort_sweep", "broom")
+ok(vb.tuned and not vb.auto and vb.bone == "ValveBiped.hand1_R" and At(vb.pos, 2, -1, 3) and Is(vb.ang, 0, 90, 10), "its broom hangs from that claw, at that place")
+ok(Is(LC.PoseBones("vort_sweep")["ValveBiped.arm1_R"], 15, 0, 0) and table.Count(LC.PoseBones("vort_sweep")) == 1 and LC.PoseOverrides.vort_sweep.props.hat == nil,
+    "its own bones can be turned; a badly named bone and a thing it doesn't hold are left out")
+-- on a real street sweeper
+local slavesWas = {}
+for sv in pairs(LC.VortSlaves) do slavesWas[sv] = true end
+local seen = LC.IsSeen
+LC.IsSeen = function() return false end
+for _ = 1, 3 do LC.VortSlaveTick(CurTime()) end
+LC.IsSeen = seen
+local v = next(LC.VortSlaves)
+ok(v ~= nil and IsValid(v.lcBroom), "(a street sweeper to try it on)")
+if v and IsValid(v.lcBroom) then
+    local e, st = v.lcBroom, LC.VortSlaves[v]
+    local turns = {}
+    v.LookupBone = function(_, n) return ({ ["ValveBiped.hand1_R"] = 7, ["ValveBiped.arm1_R"] = 5 })[n] end
+    v.ManipulateBoneAngles = function(_, id, a) turns[id] = a end
+    e.SetLocalPos = function(self, p) self.lcLocal = p end
+    e.SetLocalAngles = function(self, a) self.lcLocalAng = a end
+    e.FollowBone = function(self, parent, id) self.lcFollow = { parent, id } end
+    LC.VortBroomSwing(v, st, CurTime())
+    ok(e.lcFollow ~= nil and e.lcFollow[1] == v and e.lcFollow[2] == 7 and At(e.lcLocal, 2, -1, 3) and Is(e.lcLocalAng, 0, 90, 10) and st.broomAt == nil,
+        "a street sweeper's broom follows its claw's own bone, at the place set by hand")
+    LC.VortSlaveTick(CurTime())
+    ok(Is(turns[5], 15, 0, 0), "and its arm is turned as set")
+    -- back to the built-in: worked out from the hands again, the arm let go
+    net._q = { "vort_sweep" }
+    net.recv_lc_pose_reset(0, admin)
+    e.lcLocal = nil
+    LC.VortBroomSwing(v, st, CurTime())
+    LC.VortSlaveTick(CurTime())
+    ok(not LC.PoseTuned("vort_sweep") and st.broomAt ~= nil and e.lcLocal ~= nil and e.parent == v, "Reset this pose: its broom is worked out from its hands and the floor again")
+    ok(Is(turns[5], 0, 0, 0), "and its arm is its own again")
+end
+LC.PoseReset(admin, "vort_sweep")
+for sv, st in pairs(LC.VortSlaves) do
+    if not slavesWas[sv] then
+        if IsValid(st.broom) then st.broom:Remove() end
+        LC.VortSlaves[sv] = nil
+        if IsValid(sv) then sv:Remove() end
+    end
+end
+
+-- the poses the code makes on people read the registry: the crowd's salute
+local sal = ents.Create("npc_citizen")
+local salTurns = {}
+sal.LookupBone = function(_, n) return n end
+sal.ManipulateBoneAngles = function(_, n, a) salTurns[n] = a end
+LC.CrowdSalute(sal, 0.5, 1)
+ok(Is(salTurns[B .. "R_UpperArm"], -17.5, -37.5, 0) and Is(salTurns[B .. "R_Forearm"], 0, -57.5, 0), "a limp salute in a crowd: half the code's own numbers, as before")
+LC.PoseSet(admin, "salute_crowd", { [B .. "R_UpperArm"] = { -40, -80, 10 } }, nil)
+LC.CrowdSalute(sal, 1, 1)
+ok(Is(salTurns[B .. "R_UpperArm"], -40, -80, 10) and Is(salTurns[B .. "R_Forearm"], 0, -115, 0), "set by hand, the next salute uses it")
+_run(2)
+ok(Is(salTurns[B .. "R_UpperArm"], 0, 0, 0), "and the arm comes down again")
+sal:Remove()
+
+-- kept on the server, and read back
+ok(LC.PoseSaveNow() == true and string.find(_files[LC.PoseFile] or "", "cuffed", 1, true) ~= nil and LC.PoseFile == "livingcity/poses.json",
+    "kept in data/livingcity/poses.json")
+LC.PoseOverridesSet({})
+ok(not LC.PoseTuned("cuffed") and Is(LC.PoseBones("cuffed")[B .. "R_UpperArm"], 6, 40, 75), "(wiped, as a restart would)")
+LC.PoseLoad()
+ok(Is(LC.PoseBones("cuffed")[B .. "R_UpperArm"], 12, 40, 160) and Is(LC.PoseBones("salute_crowd")[B .. "R_UpperArm"], -40, -80, 10), "and read back when the server starts")
+net.sent = {}
+local late = newPlayer("PoseLate", "citizen")
+_run(4)
+local toLate
+for _, m in ipairs(net.sent) do if m.name == "lc_poses" and m.to == late then toLate = m end end
+ok(toLate ~= nil and toLate.data[1].cuffed ~= nil, "someone joining is told what is set")
+
+-- Reset this pose (the Poser's button): only a superadmin's
+net._q = { "cuffed" }
+net.recv_lc_pose_reset(0, nobody)
+ok(LC.PoseTuned("cuffed"), "a non-admin's reset is refused")
+net._q = { "cuffed" }
+net.recv_lc_pose_reset(0, admin)
+ok(not LC.PoseTuned("cuffed") and Is(LC.PoseBones("cuffed")[B .. "R_UpperArm"], 6, 40, 75) and LC.PoseBones("cuffed")[B .. "Spine2"] == nil,
+    "Reset this pose: back to the code's own numbers")
+_run(2)
+ok(string.find(_files[LC.PoseFile] or "", "cuffed", 1, true) == nil and string.find(_files[LC.PoseFile] or "", "salute_crowd", 1, true) ~= nil,
+    "and the saved file follows (the others stay set)")
+
+-- the tool, without the Pose Recorder installed: it says so, and nothing else changes
+local toolWas = TOOL
+TOOL = {}
+assert(loadstring(_POSETOOL, "livingcity_pose.lua"))()
+local poser = TOOL
+TOOL = toolWas
+local pick = "vort_sweep"
+poser.GetOwner = function() return admin end
+poser.GetClientInfo = function(_, k) return k == "id" and pick or "" end
+ok(poser.Category == "Miscount" and poser.Name == "#tool.livingcity_pose.name", "the tool: Miscount Poser, in the Miscount category")
+local prWas = PoseRecorder
+PoseRecorder = nil
+local P = Vector(-91000, 91000, 0)
+ok(poser:LeftClick({ HitPos = P }) == false and LC.PoseMannequinOf(admin) == nil and select(2, LC.PoseMannequin(admin, "cuffed", P)) == "The Pose Recorder addon isn't installed.",
+    "without the Pose Recorder addon: no mannequin, and it says why")
+
+-- with the Pose Recorder: its mannequin, in the game's pose, measured and set
+local hooksWas = {}
+for ev, t in pairs(hook.t) do hooksWas[ev] = {} for id in pairs(t) do hooksWas[ev][id] = true end end
+local includeWas, undoWas = include, undo
+local emtWas = {}
+for _, k in ipairs({ "GetPhysicsObjectCount", "GetPhysicsObjectNum", "GetPhysicsObject", "TranslatePhysBoneToBone", "GetBoneName", "DeleteOnRemove" }) do emtWas[k] = _EMT[k] end
+local RAG = { "Pelvis", "Spine2", "Head1", "R_UpperArm", "R_Forearm", "R_Hand", "L_UpperArm", "L_Forearm", "L_Hand", "R_Thigh", "L_Thigh" }
+function _EMT:GetPhysicsObjectCount() return self.cls == "prop_ragdoll" and #RAG or 1 end
+function _EMT:GetPhysicsObjectNum(i)
+    self.lcPhys = self.lcPhys or {}
+    if not self.lcPhys[i] then
+        local ph = { moving = true }
+        ph.IsValid = function() return true end
+        ph.EnableMotion = function(_, on) ph.moving = on end
+        ph.Wake = function() end
+        ph.SetPos = function(_, p) ph.pos = p end
+        ph.SetAngles = function(_, a) ph.ang = a end
+        self.lcPhys[i] = ph
+    end
+    return self.lcPhys[i]
+end
+function _EMT:GetPhysicsObject() return self:GetPhysicsObjectNum(0) end
+function _EMT:TranslatePhysBoneToBone(i) return i end
+function _EMT:GetBoneName(i) return B .. RAG[i + 1] end
+function _EMT:DeleteOnRemove(e) self.lcGoWith = self.lcGoWith or {} table.insert(self.lcGoWith, e) end
+undo = { Create = function() end, AddEntity = function() end, SetPlayer = function() end, Finish = function() end }
+include = function(p) return assert(loadstring(_POSEREC[p], p))() end
+assert(loadstring(_POSEREC["autorun/pose_recorder.lua"], "pose_recorder.lua"))()
+include = includeWas
+local PR = PoseRecorder
+ok(PR ~= nil and PR.AddTarget ~= nil and LC.PoseBridge() == true and PR.Target("livingcity_cuffed") ~= nil and PR.Target("livingcity_vort_sweep").model == "models/vortigaunt_slave.mdl"
+    and #PR.Targets() == #LC.PoseList(), "with the Pose Recorder installed, every pose is one of its targets")
+ok(PR.Target("livingcity_cuffed").can(nobody) == false and PR.Target("livingcity_cuffed").can(admin) == true, "only for superadmins")
+poser.GetOwner = function() return nobody end
+ok(poser:LeftClick({ HitPos = P }) == false and PR.TargetOf(nobody) == nil, "a non-admin's left click stands nothing")
+poser.GetOwner = function() return admin end
+net.sent = {}
+ok(poser:LeftClick({ HitPos = P }) == true, "left click: the picked pose's mannequin where you aim")
+local rag, rid, man = LC.PoseMannequinOf(admin)
+ok(IsValid(rag) and rid == "vort_sweep" and rag:GetClass() == "prop_ragdoll" and rag:GetModel() == "models/vortigaunt_slave.mdl" and rag:GetPos():Distance(P) < 1,
+    "a ragdoll of the pose's model (a shackled vortigaunt), not an NPC that thinks or can be hurt")
+local broom = man and man.props.broom
+ok(IsValid(broom) and broom:GetModel() == "models/props_c17/pushbroom.mdl" and broom:GetPhysicsObject().moving == false and rag:GetPhysicsObjectNum(3).moving == false,
+    "its broom is a prop of its own, and every limb is frozen")
+ok(rag.lcPoseStandIn == true and broom.lcPoseStandIn == true and LC.PersistProp(admin, broom) == false, "a mannequin is never saved with the map")
+local sentTarget
+for _, m in ipairs(net.sent) do if m.name == "pose_recorder_target" and m.to == admin then sentTarget = m end end
+ok(sentTarget ~= nil and sentTarget.data[1] == "livingcity_vort_sweep", "the admin's game is told to put it in the pose the game uses now")
+local bones0, props0 = PR.Target("livingcity_vort_sweep").get()
+ok(props0.broom.model == "models/props_c17/pushbroom.mdl" and props0.broom.bone == "ValveBiped.hand1_R" and next(bones0) == nil, "which is the registry's: nothing turned, the broom by its right claw")
+-- the admin's game sends where the limbs go (worked out there: the Pose Recorder's own tests cover the working out)
+ok(PR.TargetPlace(admin, { [B .. "R_Hand"] = { pos = { 10, -8, 40 }, ang = { 0, 0, 0 } } }, { broom = { pos = { 14, -8, 40 }, ang = { 0, 0, 0 } } }) == true
+    and rag:GetPhysicsObjectNum(5).pos ~= nil and broom:GetPos():Distance(P) > 10, "and the limbs and the broom are put there")
+-- right click: use this pose
+admin.cmds = nil
+ok(poser:RightClick({ Entity = NULL }) == false and admin.cmds == nil, "right click away from the mannequin does nothing")
+ok(poser:RightClick({ Entity = broom }) == true and admin.cmds and admin.cmds[#admin.cmds] == "pose_recorder_take", "right click on the mannequin (or what it holds): the pose is measured in the admin's game")
+-- what the admin's game measured comes in: an arm turned, the broom moved into the left claw, a leg (not this pose's on a person, fine on a vortigaunt)
+net._q = { "livingcity_vort_sweep", 2, B .. "R_Forearm", 5, -30, 0, B .. "Tail", 1, 1, 1, 1, "broom", "ValveBiped.hand1_L", 3, 0.5, -2, 80, 0, 5 }
+net.recv_pose_recorder_take(0, admin)
+vb = LC.PoseProp("vort_sweep", "broom")
+ok(vb.tuned and vb.bone == "ValveBiped.hand1_L" and At(vb.pos, 3, 0.5, -2) and Is(vb.ang, 80, 0, 5), "use this pose: the broom's hold from the claw it was put in is what the game uses now")
+ok(Is(LC.PoseBones("vort_sweep")[B .. "R_Forearm"], 5, -30, 0) and LC.PoseBones("vort_sweep")[B .. "Tail"] == nil, "and the limb that was moved (a bone the mannequin hasn't got is left out)")
+-- a non-admin's own message, sent straight to the server
+net._q = { "livingcity_cuffed", 1, B .. "R_Hand", 0, 77, 0, 0 }
+net.recv_pose_recorder_take(0, nobody)
+ok(not LC.PoseTuned("cuffed"), "a non-admin's message is refused")
+-- clicking again moves it; another pose; reload removes it
+pick = "cuffed"
+ok(poser:LeftClick({ HitPos = P + Vector(200, 0, 0) }) == true and not IsValid(rag) and not IsValid(broom), "left click again: stood there instead (the old one and its broom go)")
+local rag2, rid2 = LC.PoseMannequinOf(admin)
+ok(IsValid(rag2) and rid2 == "cuffed" and rag2:GetModel() == "models/humans/group01/male_07.mdl" and rag2:GetPos():Distance(P + Vector(200, 0, 0)) < 1, "the cuffed pose's mannequin: a citizen")
+local cb = PR.Target("livingcity_cuffed").get()
+ok(cb[B .. "R_UpperArm"][1] == 6 and cb[B .. "R_UpperArm"][2] == 40 and cb[B .. "R_UpperArm"][3] == 75, "stood in the pose the game uses now")
+net._q = { "livingcity_cuffed", 3, B .. "R_UpperArm", 6, 55, 75, B .. "Pelvis", 0, 0, 30, B .. "R_Thigh", 0, 20, 0, 0 }
+net.recv_pose_recorder_take(0, admin)
+c = LC.PoseBones("cuffed")
+ok(Is(c[B .. "R_UpperArm"], 6, 55, 75) and c[B .. "Pelvis"] == nil and c[B .. "R_Thigh"] == nil and Is(c[B .. "L_UpperArm"], -6, 40, -75),
+    "use this pose on the cuffed mannequin: the arm that was moved is set; its hips and legs, which the pose doesn't turn, are not")
+ok(poser:Reload() == true and not IsValid(rag2) and LC.PoseMannequinOf(admin) == nil and poser:Reload() == false, "reload takes the mannequin away")
+ok(poser:LeftClick({ HitPos = P }) == true, "(stood again)")
+local rag3 = LC.PoseMannequinOf(admin)
+hook.t.PlayerDisconnected.PoseRecorderTargets(admin) -- (the Pose Recorder's own part of someone leaving)
+ok(not IsValid(rag3), "and it goes when the admin leaves")
+
+-- as it was
+undo = undoWas
+for k, f in pairs(emtWas) do _EMT[k] = f end
+for _, k in ipairs({ "GetPhysicsObjectCount", "GetPhysicsObjectNum", "TranslatePhysBoneToBone", "GetBoneName", "DeleteOnRemove" }) do if emtWas[k] == nil then _EMT[k] = nil end end
+for ev, t in pairs(hook.t) do
+    for id in pairs(t) do if not (hooksWas[ev] and hooksWas[ev][id]) then hook.Remove(ev, id) end end
+end
+PoseRecorder = prWas
+LC.PoseOverridesSet(keptOverrides)
+_files[LC.PoseFile] = keptFile
+timer.Remove("LivingCityPosesSave")
+nobody:Remove()
+late:Remove()
+end
+PoseToolTests()
 
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")
 ;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)

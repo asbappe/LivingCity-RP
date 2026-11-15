@@ -45,13 +45,23 @@ end
 
 -- On the arms (CORE.md): yaw raises an arm forward (minus is up), pitch takes it out to the side (plus for the left
 -- arm, so minus brings it in), roll twists it; the forearm bends at the elbow on yaw.
-function LC_CL.HandFacePose(kind)
+-- (lc_handface_eyes and lc_handface_mouth give the built-in numbers; what the owner has set by hand with
+-- the Miscount Poser wins, bone by bone: sh_livingcity_poses.lua, "hand_eyes" and "hand_mouth")
+local function Built(kind)
     local p = Nums(kind == "eyes" and cvEyes or cvMouth, 5)
     return {
         [ARM[1]] = Angle(p[2], p[1], p[3]),
         [ARM[2]] = Angle(0, p[4], 0),
         [ARM[3]] = Angle(0, p[5], 0),
     }
+end
+function LC_CL.HandFacePose(kind)
+    local built = Built(kind)
+    return LC.PoseBones and LC.PoseBones(kind == "eyes" and "hand_eyes" or "hand_mouth", built) or built
+end
+if LC.PoseBuilt then
+    LC.PoseBuilt("hand_eyes", function() return Built("eyes") end)
+    LC.PoseBuilt("hand_mouth", function() return Built("mouth") end)
 end
 
 function LC_CL.HandFace(e)

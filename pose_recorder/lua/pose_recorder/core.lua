@@ -373,4 +373,107 @@ function PR.Sanitize(t)
     return out
 end
 
+------------------------------------------------------------------------
+-- A pose put back on a skeleton, and things held in it
+------------------------------------------------------------------------
+
+-- A rotation turning a point: v is { x, y, z }.
+function PR.Rotate(m, v)
+    return {
+        m[1][1] * v[1] + m[1][2] * v[2] + m[1][3] * v[3],
+        m[2][1] * v[1] + m[2][2] * v[2] + m[2][3] * v[3],
+        m[3][1] * v[1] + m[3][2] * v[2] + m[3][3] * v[3],
+    }
+end
+
+--[[ Delta the other way round: where every bone goes when the pose is put on the model.
+     bones, refRel: as Delta takes them
+     refPos:   [i] = { x, y, z }, the bone's place in the reference pose, relative to the model
+     pose:     { [name] = { p, y, r } }, as Delta gives it (a bone it leaves out stays as the reference has it)
+     face:     the yaw the model faces (0: as it stands)
+   Returns rot[i] (each bone's rotation) and pos[i] ({ x, y, z }), both relative to the spot the
+   model stands on. Delta of what this gives is the pose again. ]]
+function PR.Apply(bones, refRel, refPos, pose, face)
+    local I = PR.FromAngles(0, 0, 0)
+    local frame = PR.FromAngles(0, face or 0, 0)
+    local rot, pos = {}, {}
+    for i, b in ipairs(bones) do
+        local r = refRel[i] or I
+        local pr = b.parent and (refRel[b.parent] or I)
+        local base = PR.Mul(b.parent and rot[b.parent] or frame, pr and PR.Mul(PR.T(pr), r) or r)
+        local a = pose and pose[b.name]
+        rot[i] = a and PR.Mul(base, PR.FromAngles(a[1], a[2], a[3])) or base
+        local p = refPos[i] or { 0, 0, 0 }
+        if b.parent then
+            local pp = refPos[b.parent] or { 0, 0, 0 }
+            local w = PR.Rotate(rot[b.parent], PR.Rotate(PR.T(pr), { p[1] - pp[1], p[2] - pp[2], p[3] - pp[3] }))
+            local at = pos[b.parent]
+            pos[i] = { at[1] + w[1], at[2] + w[2], at[3] + w[3] }
+        else
+            pos[i] = PR.Rotate(frame, p)
+        end
+    end
+    return rot, pos
+end
+
+-- Something held (a prop): where it is from a bone, and back. rot is a rotation, pos { x, y, z }.
+-- Offset gives its place and angle ({ x, y, z } and { p, y, r }) as seen from the bone; Place
+-- gives where it is (a place and a rotation) from the bone and that offset.
+function PR.Offset(boneRot, bonePos, rot, pos)
+    local back = PR.T(boneRot)
+    local p, y, r = PR.ToAngles(PR.Mul(back, rot))
+    return PR.Rotate(back, { pos[1] - bonePos[1], pos[2] - bonePos[2], pos[3] - bonePos[3] }), { p, y, r }
+end
+function PR.Place(boneRot, bonePos, pos, ang)
+    local w = PR.Rotate(boneRot, pos)
+    return { bonePos[1] + w[1], bonePos[2] + w[2], bonePos[3] + w[3] }, PR.Mul(boneRot, PR.FromAngles(ang[1], ang[2], ang[3]))
+end
+
+PR.TARGET_LIMITS = {
+    props = 8,      -- things held in one pose
+    reach = 400,    -- units from where the mannequin stands: nothing is put, or measured, further off
+}
+
+local function Three(t)
+    if type(t) ~= "table" or not (Finite(t[1]) and Finite(t[2]) and Finite(t[3])) then return nil end
+    return t[1], t[2], t[3]
+end
+
+-- A pose that came over the network, made safe: { [bone name] = { p, y, r } }, or nil and why.
+function PR.CleanPose(bones)
+    if type(bones) ~= "table" then return nil, "it isn't a pose" end
+    local out, n = {}, 0
+    for name, a in pairs(bones) do
+        n = n + 1
+        if n > PR.LIMITS.bones then return nil, "it has more than " .. PR.LIMITS.bones .. " bones" end
+        if not Text(name, PR.LIMITS.boneName, "^[%w_%-%. ]+$") then return nil, "it has a bad bone name" end
+        local p, y, r = Three(a)
+        if not p then return nil, "it has a bad angle on " .. name end
+        out[name] = { Round2(Wrap(p)) + 0, Round2(Wrap(y)) + 0, Round2(Wrap(r)) + 0 }
+    end
+    return out
+end
+
+-- The same for what is held: { [name] = { bone = "name" or nil, pos = { x, y, z }, ang = { p, y, r } } }.
+function PR.CleanProps(props)
+    if type(props) ~= "table" then return nil, "they aren't props" end
+    local out, n = {}, 0
+    local reach = PR.TARGET_LIMITS.reach
+    for name, o in pairs(props) do
+        n = n + 1
+        if n > PR.TARGET_LIMITS.props then return nil, "more than " .. PR.TARGET_LIMITS.props .. " things are held" end
+        if not Text(name, PR.LIMITS.name, "^[%w_%-]+$") or type(o) ~= "table" then return nil, "a held thing is broken" end
+        local bone = o.bone
+        if bone == "" then bone = nil end
+        if bone ~= nil and not Text(bone, PR.LIMITS.boneName, "^[%w_%-%. ]+$") then return nil, name .. " hangs from a bad bone name" end
+        local x, y, z = Three(o.pos)
+        local p, ya, r = Three(o.ang)
+        if not x or not p then return nil, name .. " has a bad place or angle" end
+        if math.abs(x) > reach or math.abs(y) > reach or math.abs(z) > reach then return nil, name .. " is too far away" end
+        out[name] = { bone = bone, pos = { Round2(x) + 0, Round2(y) + 0, Round2(z) + 0 },
+            ang = { Round2(Wrap(p)) + 0, Round2(Wrap(ya)) + 0, Round2(Wrap(r)) + 0 } }
+    end
+    return out
+end
+
 return PR

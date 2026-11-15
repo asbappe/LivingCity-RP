@@ -17,7 +17,7 @@ Made for [Living City](../README.md) (its secret endings' dances), and useful to
 ## Making one
 
 1. **Tools, Poser, Pose Recorder.**
-2. **Spawn a mannequin** from the tool's panel (your own model, standing, every limb frozen), or **left click** any ragdoll.
+2. **Spawn a mannequin** from the tool's panel (your own model, or any model with a ragdoll typed into "Its model": a vortigaunt, a stalker; standing, every limb frozen), or **left click** any ragdoll.
 3. Pose it with the **physgun** (right click freezes a limb where you leave it).
 4. **Right click** with the Pose Recorder to snap a keyframe. Pose it again, snap again. Each new keyframe gets the panel's "beats per new keyframe" and "easing for new keyframes".
 5. **Reload** plays the loop on the ghost beside the ragdoll at your BPM. Reload again stops it.
@@ -72,7 +72,7 @@ Every file, from a friend, a pack or a player, is checked before it's used: at m
 
 ```json
 {
-  "tool": "Pose Recorder 2.0",
+  "tool": "Pose Recorder 2.1",
   "format": 2,
   "name": "mydance",
   "model": "models/player/kleiner.mdl",
@@ -93,9 +93,31 @@ Versions: a file from the first Pose Recorder has no `"format"`, `"wrap"` or `"e
 
 Playing it back yourself: `PoseRecorder.Evaluate(anim, seconds, { mode = "loop", speed = 1 })` in `lua/pose_recorder/core.lua` gives the pose and how much of it to apply, and `PoseRecorder.Sample(frames, beat, wrap)` the pose at a beat. They have no engine calls in them, so you can copy them into your own code.
 
+## Setting another addon's poses by hand (targets)
+
+An addon that poses people in code (a salute, cuffed arms, a broom held in two hands) can hand its numbers to the Pose Recorder, to be set by eye on a mannequin instead of typed:
+
+```lua
+PoseRecorder.AddTarget({
+    id = "myaddon_salute", label = "Salute",
+    model = "models/humans/group01/male_07.mdl",   -- the mannequin
+    ref = "idle_subtle",                           -- the sequence the pose sits on top of
+    get = function() return bones, props end,      -- the pose as it is now
+    set = function(ply, bones, props) end,         -- (server) the pose as it was set; return false, "why" to refuse
+    can = function(ply) return ply:IsAdmin() end,  -- (optional) who may
+    hang = function(name) return "a bone" end,     -- (optional, client) the bone a held thing is measured from
+})
+```
+
+`bones` is `{ [bone name] = { p, y, r } }`, the same `ManipulateBoneAngles` values as in a file, on top of `ref`. `props` is what is held in the pose: `{ [name] = { model = "models/...", bone = "a bone" (none: the spot the model stands on), pos = { x, y, z }, ang = { p, y, r } } }`.
+
+With any target registered, the tool's panel lists them: **Stand the picked pose's mannequin** puts a ragdoll of the target's model in front of you, already in the pose `get` gives, every limb frozen, each held thing a frozen prop in its place. Move limbs and props with the physgun (whatever you let go of stays where it is), then **Use this pose**: every bone a ragdoll is posed by is measured relative to `ref`, each held thing's place and angle is measured from its bone, and the target's `set` is called on the server with them (checked first: plain numbers, bones the mannequin has, things it holds). One mannequin each; it goes when its player leaves.
+
+From Lua: `PoseRecorder.TargetMannequin(ply, id, pos, yaw)`, `PoseRecorder.TargetOf(ply)`, `PoseRecorder.TargetRemove(ply)` on the server, and `PoseRecorder.Apply(bones, refRel, refPos, pose, face)` in `core.lua` (a pose put back on a skeleton: the other way round from `PoseRecorder.Delta`).
+
 ## Console
 
-Making: `pose_recorder_mannequin`, `pose_recorder_snap`, `pose_recorder_undo`, `pose_recorder_record`, `pose_recorder_preview`, `pose_recorder_clear`, `pose_recorder_copy`, `pose_recorder_save`, `pose_recorder_load`; smoothing: `pose_recorder_key_beats <beats> [keyframe|all]`, `pose_recorder_key_ease <smooth|snappy|bouncy|linear> [keyframe|all]`, `pose_recorder_mirror [keyframe|all]`, `pose_recorder_mirror_add`; playing: `pose_recorder_play_mine`, `pose_play`, `pose_stop`; settings `pose_recorder_name`, `pose_recorder_bpm`, `pose_recorder_beats`, `pose_recorder_ease`, `pose_recorder_wrap`, `pose_recorder_ref`, `pose_recorder_rate`, `pose_recorder_playmode`, `pose_recorder_speed`.
+Making: `pose_recorder_mannequin [model]`, `pose_recorder_target <id>`, `pose_recorder_take`, `pose_recorder_target_remove`, `pose_recorder_snap`, `pose_recorder_undo`, `pose_recorder_record`, `pose_recorder_preview`, `pose_recorder_clear`, `pose_recorder_copy`, `pose_recorder_save`, `pose_recorder_load`; smoothing: `pose_recorder_key_beats <beats> [keyframe|all]`, `pose_recorder_key_ease <smooth|snappy|bouncy|linear> [keyframe|all]`, `pose_recorder_mirror [keyframe|all]`, `pose_recorder_mirror_add`; playing: `pose_recorder_play_mine`, `pose_play`, `pose_stop`; settings `pose_recorder_name`, `pose_recorder_bpm`, `pose_recorder_beats`, `pose_recorder_ease`, `pose_recorder_wrap`, `pose_recorder_ref`, `pose_recorder_rate`, `pose_recorder_playmode`, `pose_recorder_speed`, `pose_recorder_model`.
 
 ## Publishing it to the Workshop (Linux)
 

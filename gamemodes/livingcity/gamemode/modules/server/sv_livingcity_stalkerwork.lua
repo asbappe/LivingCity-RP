@@ -281,10 +281,40 @@ end
 -- toward the hands, from the stalker's feet. lc_broom_hold tunes it in game.
 local cvBroom = CreateConVar("lc_broom_hold", "34 -6 2 -35 0 0", bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED),
     "Where a stalker holds the push broom, from its feet: forward left up pitch yaw roll (roll 180 turns it over)")
-local function BroomHold()
+local function BroomSetting()
     local v = {}
     for w in string.gmatch(cvBroom:GetString(), "%S+") do v[#v + 1] = tonumber(w) or 0 end
     return Vector(v[1] or 34, v[2] or -6, v[3] or 2), Angle(v[4] or -35, v[5] or 0, v[6] or 0)
+end
+-- (the setting is the built-in; a hold the owner has set by hand on the Miscount Poser's mannequin wins,
+-- and may hang the broom from a hand's own bone instead of the feet: sh_livingcity_poses.lua "stalker_sweep")
+if LC.PosePropBuilt then
+    LC.PosePropBuilt("stalker_sweep", "broom", function()
+        local pos, ang = BroomSetting()
+        return { pos = pos, ang = ang }
+    end)
+end
+-- Its place and angle, and the bone it hangs from ("": the stalker's feet).
+local function BroomHold()
+    local pos, ang = BroomSetting()
+    local hold = LC.PoseProp and LC.PoseProp("stalker_sweep", "broom", { pos = pos, ang = ang })
+    if hold and hold.tuned then return hold.pos, hold.ang, hold.bone end
+    return pos, ang, ""
+end
+LC.StalkerBroomHold = BroomHold -- (for tests)
+
+-- What the broom hangs from: the stalker itself (its feet), or one of its bones when the owner set one.
+local function Hang(e, ply, bone)
+    if e.lcHangBone == bone then return end
+    e.lcHangBone = bone
+    local id = bone ~= "" and ply.LookupBone and ply:LookupBone(bone) or nil
+    if id and id >= 0 and e.FollowBone then
+        e:FollowBone(ply, id)
+    else
+        if e.RemoveEffects and EF_FOLLOWBONE then e:RemoveEffects(EF_FOLLOWBONE) end -- (no longer carried by a bone)
+        e:SetParent(nil)
+        e:SetParent(ply)
+    end
 end
 
 -- Something held in the stalker's hands (the push broom), out in front wherever it goes.
@@ -296,7 +326,9 @@ local function InHand(ply, model)
     e:Spawn()
     if e.SetSolid then e:SetSolid(SOLID_NONE) end
     e:SetParent(ply)
-    local pos, ang = BroomHold()
+    e.lcHangBone = ""
+    local pos, ang, bone = BroomHold()
+    Hang(e, ply, bone)
     if e.SetLocalPos then e:SetLocalPos(pos) end
     if e.SetLocalAngles then e:SetLocalAngles(ang) end
     return e
@@ -310,7 +342,8 @@ local function SwayBroom(g)
     local vel = ply.GetVelocity and ply:GetVelocity()
     local moving = vel ~= nil and vel:Length2DSqr() > 20 * 20
     local sweeping = (ply.lcSweepingUntil or 0) > CurTime()
-    local pos, ang = BroomHold()
+    local pos, ang, bone = BroomHold()
+    Hang(e, ply, bone)
     if moving or sweeping then
         local s = math.sin(CurTime() * (sweeping and 7 or 5))
         pos = pos + Vector(s * (sweeping and 14 or 8), 0, 0)

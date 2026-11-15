@@ -162,6 +162,11 @@ L.execute("TOOL = { GetClientInfo = function() return 'idle' end }")
 L.execute(open(os.path.join(TOOLS, "livingcity_editor.lua")).read())
 # the "Save with the gamemode" tool, kept for its test to load (section "Persistent props")
 L.globals()._KEEPTOOL = open(os.path.join(TOOLS, "livingcity_keep.lua")).read()
+# the Miscount Poser, and the Pose Recorder addon whose mannequin it stands (unit PoseToolTests)
+L.globals()._POSETOOL = open(os.path.join(TOOLS, "livingcity_pose.lua")).read()
+L.execute("_POSEREC = {}")
+for rel in ("autorun/pose_recorder.lua", "pose_recorder/core.lua", "pose_recorder/play.lua", "pose_recorder/targets.lua"):
+    L.globals()._POSEREC[rel] = open(os.path.join(HERE, "..", "pose_recorder", "lua", rel)).read()
 
 # the gamemode is loaded by the tests themselves, at the point they test it
 GMROOT = os.path.join(GMDIR, "gamemode")

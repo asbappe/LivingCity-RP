@@ -3749,6 +3749,190 @@ return (not ok) and tostring(e) or nil
 """)
 if err:
     problems = (problems + "\n" if problems else "") + str(err)
+# The Miscount Poser (lua/weapons/gmod_tool/stools/livingcity_pose.lua), the pose registry on the client
+# (sh_livingcity_poses.lua) and the Pose Recorder's targets (pose_recorder/lua/pose_recorder/targets.lua):
+# what the server says is set changes the cuffed pose, the panel builds with and without the Pose Recorder,
+# a mannequin is put in the game's pose and measured, and the tool's line is drawn
+L.globals()["_pr_targets"] = open(os.path.join(PR_DIR, "pose_recorder", "targets.lua")).read()
+L.globals()["_pose_tool"] = open(os.path.join(os.path.dirname(GMDIR), "..", "lua", "weapons", "gmod_tool", "stools", "livingcity_pose.lua")).read()
+err = L.execute(r"""
+local saved = { net.Start, net.SendToServer, net.WriteString, net.WriteUInt, net.WriteFloat, Entity, SetClipboardText, _me.IsSuperAdmin, ClientsideModel, RunConsoleCommand, print }
+local overWas = LC.PoseOverrides
+local ok, e = pcall(function()
+    local B = "ValveBiped.Bip01_"
+    -- nothing set: the cuffed pose is its own setting's numbers
+    LC.PoseOverridesSet({})
+    local c = LC_CL.CuffPose()
+    local up = c[B .. "R_UpperArm"]
+    if not (up and up.p == 6 and up.y == 40 and up.r == 75) or c[B .. "Spine2"] then error("the cuffed pose with nothing set isn't the built-in") end
+    -- the server says what is set: the cuffed pose follows, bone by bone, and the hands over the face too
+    net._q = { { cuffed = { bones = { [B .. "R_UpperArm"] = { 10, 50, 60 }, [B .. "Spine2"] = { 0, 8, 0 } }, props = {} },
+        hand_eyes = { bones = { [B .. "L_Forearm"] = { 0, -100, 0 } }, props = {} } } }
+    net.recv_lc_poses()
+    c = LC_CL.CuffPose()
+    up = c[B .. "R_UpperArm"]
+    if not (up.p == 10 and up.y == 50 and up.r == 60 and c[B .. "Spine2"].y == 8 and c[B .. "L_UpperArm"].y == 40) then error("what the server says is set isn't the cuffed pose") end
+    if LC_CL.HandFacePose("eyes")[B .. "L_Forearm"].y ~= -100 or LC_CL.HandFacePose("mouth")[B .. "L_Forearm"].y ~= -125 then error("the hand over the eyes didn't follow what is set") end
+    -- on someone cuffed: the arms and the chest are turned, and the chest is let go when the pose is reset
+    local turns = {}
+    local was = { _me.LookupBone, _me.ManipulateBoneAngles, _me.nw.lc_tied }
+    _me.LookupBone = function(_, n) return n end
+    _me.ManipulateBoneAngles = function(_, n, a) turns[n] = a end
+    _me.nw.lc_tied = true
+    _advance(1)
+    hook.t.Think.LivingCityCuffed()
+    if not (turns[B .. "Spine2"] and turns[B .. "Spine2"].y == 8 and turns[B .. "R_UpperArm"].y == 50) then error("someone cuffed isn't posed as set") end
+    net._q = { {} }
+    net.recv_lc_poses()
+    _advance(1)
+    hook.t.Think.LivingCityCuffed()
+    if turns[B .. "Spine2"].y ~= 0 or turns[B .. "R_UpperArm"].y ~= 40 then error("reset: someone cuffed isn't back in the built-in pose") end
+    _me.nw.lc_tied = was[3]
+    _advance(1)
+    hook.t.Think.LivingCityCuffed()
+    _me.LookupBone, _me.ManipulateBoneAngles = was[1], was[2]
+
+    -- the tool
+    TOOL = {}
+    language = language or {}
+    language.Add = language.Add or function() end
+    assert(loadstring(_pose_tool, "livingcity_pose.lua"))()
+    local poser = TOOL
+    if poser.Category ~= "Miscount" then error("the Miscount Poser isn't in Q > Tools > Miscount") end
+    CreateClientConVar("livingcity_pose_id", "cuffed")
+    GetConVar("livingcity_pose_id").v = "vort_sweep"
+    if poser.PickedPose() ~= "vort_sweep" then error("the picked pose isn't read") end
+    if poser.BoneLabel("") ~= "Its feet" or poser.BoneLabel("ValveBiped.hand1_R") ~= "hand1_R" or poser.BoneLabel(B .. "R_Hand") ~= "R_Hand" then error("the held-from labels are wrong") end
+    -- its panel: the poses listed, a held thing's bones to pick from, Reset and Copy
+    local lines, choices, buttons, helps, sent, clip = {}, {}, {}, {}, {}, nil
+    local function Panel()
+        lines, choices, buttons, helps = {}, {}, {}, {}
+        local list = { IsValid = function() return true end }
+        list.SetTall, list.SetMultiSelect, list.AddColumn = function() end, function() end, function() end
+        list.Clear = function() lines = {} end
+        list.AddLine = function(_, a, b) local l = { a, b } lines[#lines + 1] = l return l end
+        list.SelectItem = function(self, l) if self.OnRowSelected then self:OnRowSelected(1, l) end end
+        local combo = { IsValid = function() return true end }
+        combo.Clear = function() choices = {} end
+        combo.AddChoice = function(self, label, data, sel) choices[#choices + 1] = { label, data, sel } if sel and self.OnSelect then self:OnSelect(#choices, label, data) end end
+        local vguiWas = vgui.Create
+        vgui.Create = function(cls, ...) if cls == "DListView" then return list end return vguiWas(cls, ...) end
+        local cp = {}
+        cp.Help = function(_, t) helps[#helps + 1] = t end
+        cp.AddItem = function() end
+        cp.ComboBox = function() return combo end
+        cp.Button = function(_, label) local b = { label = label } buttons[label] = b return b end
+        poser.BuildCPanel(cp)
+        vgui.Create = vguiWas
+        return list, combo
+    end
+    assert(loadstring(_pr_targets, "targets.lua"))() -- (the Pose Recorder's own file of targets, as its autorun includes it)
+    local prWas = PoseRecorder
+    PoseRecorder = nil
+    Panel()
+    if helps[1] ~= "The Pose Recorder addon isn't installed." then error("the panel doesn't say the Pose Recorder is missing") end
+    PoseRecorder = prWas
+    local list, combo = Panel()
+    if #helps ~= 0 then error("the panel has text it doesn't need: " .. tostring(helps[1])) end
+    if #lines ~= #LC.PoseList() or lines[1][1] ~= "Cuffed" then error("the panel doesn't list the poses") end
+    if not (#choices == 3 and choices[1][1] == "hand1_R" and choices[1][3] == true and choices[3][1] == "Its feet") then error("the held-from list isn't the vortigaunt's broom's") end
+    combo:OnSelect(2, "hand1_L", "ValveBiped.hand1_L")
+    if LC.PoseHangChoice.vort_sweep.broom ~= "ValveBiped.hand1_L" then error("picking what the broom hangs from isn't kept") end
+    local cur
+    net.Start = function(n) cur = { n } end
+    net.WriteString = function(v) cur[#cur + 1] = v end
+    net.WriteUInt = function(v) cur[#cur + 1] = v end
+    net.WriteFloat = function(v) cur[#cur + 1] = v end
+    net.SendToServer = function() sent[#sent + 1] = cur end
+    buttons["Reset this pose"].DoClick()
+    if not (sent[1] and sent[1][1] == "lc_pose_reset" and sent[1][2] == "vort_sweep") then error("Reset this pose doesn't ask the server") end
+    SetClipboardText = function(t) clip = t end
+    print = function() end
+    buttons["Copy the numbers"].DoClick()
+    print = saved[11]
+    if not (clip and string.find(clip, "vort_sweep", 1, true) and string.find(clip, "broom", 1, true)) then error("Copy the numbers copies nothing useful: " .. tostring(clip)) end
+    -- the list marks what is set by hand when the server says so
+    net._q = { { vort_sweep = { bones = {}, props = { broom = { bone = "ValveBiped.hand1_L", pos = { 1, 2, 3 }, ang = { 0, 0, 0 } } } } } }
+    net.recv_lc_poses()
+    local marked
+    for _, l in ipairs(lines) do if l[1] == "Vortigaunt sweeping" and l[2] == "yes" then marked = true end end
+    if not marked then error("the list doesn't mark a pose set by hand") end
+    local drew = _calls["draw.SimpleTextOutlined"] or 0
+    poser.DrawHUD(poser)
+    if (_calls["draw.SimpleTextOutlined"] or 0) ~= drew + 1 then error("the tool's line isn't drawn") end
+    net._q = { {} }
+    net.recv_lc_poses()
+
+    -- the Pose Recorder's targets: every pose is one, for superadmins; the mannequin is put in the pose and measured
+    local PR = PoseRecorder
+    if not (LC.PoseBridge() and PR.Target("livingcity_cuffed") and #PR.Targets() == #LC.PoseList()) then error("the poses aren't the Pose Recorder's targets") end
+    _me.IsSuperAdmin = function() return false end
+    if PR.Target("livingcity_cuffed").can(_me) then error("a target is open to someone who isn't a superadmin") end
+    _me.IsSuperAdmin = function() return true end
+    if not PR.Target("livingcity_cuffed").can(_me) then error("a target is closed to a superadmin") end
+    -- a fake model with a pelvis, a chest, an arm and a claw; the ragdoll and its broom as this game sees them
+    local BONES = { { B .. "Pelvis", -1 }, { B .. "Spine2", 0 }, { B .. "R_UpperArm", 1 }, { "ValveBiped.hand1_R", 2 } }
+    local REF = { { 0, 0, 90 }, { -80, 0, 90 }, { 80, 10, 0 }, { 70, 20, 0 } }
+    local AT = { { 0, 0, 38 }, { 0, 0, 50 }, { 0, -8, 56 }, { 4, -10, 40 } }
+    local function M(a, v) return { GetAngles = function() return Angle(a[1], a[2], a[3]) end, GetTranslation = function() return Vector(v[1], v[2], v[3]) end } end
+    local function Fake(angles, places)
+        local e = {}
+        e.IsValid = function() return true end
+        e.GetModel = function() return "models/vortigaunt_slave.mdl" end
+        e.GetPos = function() return Vector(0, 0, 0) end
+        e.GetBoneCount = function() return #BONES end
+        e.GetBoneName = function(_, i) return BONES[i + 1][1] end
+        e.GetBoneParent = function(_, i) return BONES[i + 1][2] end
+        e.LookupBone = function(_, n) for i, b in ipairs(BONES) do if b[1] == n then return i - 1 end end end
+        e.GetBoneMatrix = function(_, i) return M(angles[i + 1], places[i + 1]) end
+        e.InvalidateBoneCache, e.SetupBones, e.SetNoDraw, e.SetPos, e.SetAngles = function() end, function() end, function() end, function() end, function() end
+        e.LookupSequence = function() return 3 end
+        e.SelectWeightedSequence = function() return 3 end
+        e.ResetSequence, e.SetCycle, e.SetPlaybackRate, e.Remove = function() end, function() end, function() end, function() end
+        e.ManipulateBoneAngles = function() end
+        return e
+    end
+    ClientsideModel = function() return Fake(REF, AT) end
+    local rag = Fake(REF, AT)
+    -- (the broom: 5 units along the claw bone's own forward, turned as the bone is)
+    local f = PR.Rotate(PR.FromAngles(70, 20, 0), { 5, 0, 0 })
+    local broom = { IsValid = function() return true end, GetPos = function() return Vector(4 + f[1], -10 + f[2], 40 + f[3]) end, GetAngles = function() return Angle(70, 20, 0) end }
+    Entity = function(i) return i == 41 and rag or (i == 42 and broom or nil) end
+    sent = {}
+    net._q = { "livingcity_vort_sweep", "models/vortigaunt_slave.mdl", 41, 100, 200, 0, 90, 4, B .. "Pelvis", B .. "Spine2", B .. "R_UpperArm", "ValveBiped.hand1_R", 1, "broom", 42 }
+    net.recv_pose_recorder_target()
+    if not (PR.sel and PR.sel.target == "livingcity_vort_sweep" and PR.sel.ent == rag) then error("the mannequin isn't picked when the server stands it") end
+    local place = sent[1]
+    if not (place and place[1] == "pose_recorder_place" and place[2] == 41 and place[3] == 4) then error("the mannequin's limbs aren't sent to be put in the pose") end
+    local sawBroom
+    for i, v in ipairs(place) do if v == "broom" then sawBroom = i end end
+    if not sawBroom then error("the broom isn't sent to be put in its place") end
+    -- "use this pose": the broom measured from the claw picked in the panel
+    LC.PoseHangChoice.vort_sweep = { broom = "ValveBiped.hand1_R" }
+    sent = {}
+    concommand.list.pose_recorder_take()
+    local take = sent[1]
+    if not (take and take[1] == "pose_recorder_take" and take[2] == "livingcity_vort_sweep") then error("use this pose sends nothing") end
+    local at
+    for i, v in ipairs(take) do if v == "broom" then at = i end end
+    if not (at and take[at + 1] == "ValveBiped.hand1_R") then error("the broom isn't measured from the claw picked") end
+    if math.abs(take[at + 2] - 5) > 0.01 or math.abs(take[at + 3]) > 0.01 or math.abs(take[at + 4]) > 0.01 or math.abs(take[at + 5]) > 0.01 or math.abs(take[at + 6]) > 0.01 then
+        error("the broom's place from the claw is measured wrong: " .. take[at + 2] .. " " .. take[at + 3] .. " " .. take[at + 4])
+    end
+    -- the Pose Recorder's own panel lists the poses too
+    local cp = setmetatable({}, { __index = function() return function() return setmetatable({}, { __index = function() return function() end end }) end end })
+    TOOL = {}
+    assert(loadstring(_pr_tool, "stool.lua"))()
+    TOOL.BuildCPanel(cp)
+    for _, t in ipairs(PR.Targets()) do PR.RemoveTarget(t.id) end
+    PR.sel = nil
+end)
+net.Start, net.SendToServer, net.WriteString, net.WriteUInt, net.WriteFloat, Entity, SetClipboardText, _me.IsSuperAdmin, ClientsideModel, RunConsoleCommand, print = unpack(saved, 1, 11)
+LC.PoseOverridesSet(overWas)
+return (not ok) and tostring(e) or nil
+""")
+if err:
+    problems = (problems + "\n" if problems else "") + "the Miscount Poser (client) " + str(err)
 # what you can do here (cl_livingcity_context.lua): with the Arrest Baton out, the panel on the right
 # says what it does, with the player's own keys; and the quest trail (cl_livingcity_trail.lua) is
 # drawn from fake points, dropping the ones walked past

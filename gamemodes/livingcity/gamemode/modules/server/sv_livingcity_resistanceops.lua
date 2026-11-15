@@ -975,11 +975,43 @@ local function BroomGeo(v, e)
     return g
 end
 
+-- The broom put in its claws by hand (the owner, 15 November: "no the broom is not in its claws"; the
+-- Miscount Poser's mannequin, sh_livingcity_poses.lua "vort_sweep"): it hangs from that claw's own bone,
+-- at the place and angle measured, so the engine carries it with the claw through every animation. A
+-- model with no such bone: held at that place from its feet.
+local function HoldBroomAsSet(v, s, hold)
+    local e = s.broom
+    local ver = LC.PoseVersion()
+    if s.broomSet == ver then return end
+    s.broomSet = ver
+    local bone = hold.bone ~= "" and v.LookupBone and v:LookupBone(hold.bone) or nil
+    if bone and bone >= 0 and e.FollowBone then
+        e:FollowBone(v, bone)
+        s.broomBone = hold.bone
+    else
+        if e.RemoveEffects and EF_FOLLOWBONE then e:RemoveEffects(EF_FOLLOWBONE) end -- (no longer carried by a bone)
+        e:SetParent(nil)
+        e:SetParent(v)
+        s.broomBone = ""
+    end
+    e:SetLocalPos(hold.pos)
+    if e.SetLocalAngles then e:SetLocalAngles(hold.ang) end
+    s.broomAt = nil
+end
+
 -- Put the broom in the vortigaunt's hands (it stays its child, so it goes where the vortigaunt goes
 -- between one tick and the next).
 local function HoldBroom(v, s, k)
     local e = s.broom
     if not IsValid(e) or not e.SetLocalPos then return end
+    local hold = LC.PoseProp and LC.PoseProp("vort_sweep", "broom")
+    if hold and hold.tuned then return HoldBroomAsSet(v, s, hold) end
+    if s.broomSet then -- (set by hand before, and now back to the built-in: let go of the claw's bone)
+        s.broomSet, s.broomBone = nil, nil
+        if e.RemoveEffects and EF_FOLLOWBONE then e:RemoveEffects(EF_FOLLOWBONE) end -- (no longer carried by a bone)
+        e:SetParent(nil)
+        e:SetParent(v)
+    end
     local grip = Hands(v)
     local pos, ang, where = LC.VortBroomPose(grip, v:GetForward(), v:GetPos().z, BroomGeo(v, e), k)
     e:SetLocalPos(v.WorldToLocal and v:WorldToLocal(pos) or (pos - v:GetPos()))
@@ -1021,6 +1053,28 @@ local function Swing(v, s, now)
     HoldBroom(v, s, math.sin(now * BROOM.rate))
 end
 LC.VortBroomSwing = Swing -- (for tests)
+
+-- Its limbs, when the owner has turned any by hand on the Miscount Poser's mannequin (none are built
+-- in): turned on top of whatever it is doing, and put back when the pose is reset or it is cut loose.
+local function SweepPose(v, s, off)
+    if not (LC.PoseBones and v.ManipulateBoneAngles and v.LookupBone) then return end
+    local ver = LC.PoseVersion()
+    if s.poseSet == ver and not off then return end
+    s.poseSet = ver
+    local pose = off and {} or LC.PoseBones("vort_sweep")
+    for name, id in pairs(s.poseBones or {}) do
+        if not pose[name] then v:ManipulateBoneAngles(id, Angle(0, 0, 0)) end
+    end
+    s.poseBones = {}
+    for name, a in pairs(pose) do
+        local id = v:LookupBone(name)
+        if id and id >= 0 then
+            v:ManipulateBoneAngles(id, a)
+            s.poseBones[name] = id
+        end
+    end
+end
+LC.VortSweepPose = SweepPose -- (for tests)
 
 -- Walked into (a player, or one of the city's people wedged against it): a shuffle to whichever
 -- side is open, then a few steps clear, as the city's people do (sv_livingcity.lua, "Out of the way").
@@ -1144,6 +1198,7 @@ local function SlaveTick(now)
             for _, p in ipairs(player.GetAll()) do v:AddEntityRelationship(p, D_NU, 99) end
             if not s.harmless then s.harmless = true Harmless(v) end
             Broom(v, s)
+            SweepPose(v, s)
             local fleeing = (s.fleeUntil or 0) > now or Flee(v, s, now)
             local walking = v.IsCurrentSchedule and (v:IsCurrentSchedule(SCHED_FORCED_GO) or v:IsCurrentSchedule(SCHED_FORCED_GO_RUN))
             if not fleeing then
@@ -1217,6 +1272,7 @@ function LC.FreeStreetVort(v, by)
     if not IsValid(v) or not v.lcVortSlave then return false end
     local s = LC.VortSlaves[v]
     if s and IsValid(s.broom) then s.broom:Remove() end -- (the broom stays in the Combine's gutter)
+    if s then SweepPose(v, s, true) end
     v.lcBroom = nil
     LC.VortSlaves[v] = nil
     v.lcVortSlave = nil

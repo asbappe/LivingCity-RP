@@ -46,6 +46,7 @@ This file is only an index. The specification of how everything behaves (the agr
 - [Staff tools](docs/features/staff-tools.md): Admin safeguards for a public server, staff menus
 - [Contraband, searches, the underground, and conduct](docs/features/contraband.md): Stop and search, stash, stealth, wanted, the black market, lockpicks, conduct
 - [Pose Recorder (a separate tool)](docs/features/pose-recorder.md): The separate dance and pose tool
+- [The Miscount Poser: the hand-made poses, set by hand](docs/features/pose-tool.md): The tool below the editor, the mannequin and the physgun, which poses it sets, where they are kept
 - [The Resistance's way marks](docs/features/way-marks.md): permanent sprayed arrows and FREEDOM THIS WAY, painted on walls with the editor, pointing to rebel ground
 - [Posters that hint at dreams](docs/features/dream-posters.md): a share of the plain curfew posters foreshadow tonight's dream or remember a recent one
 - [The play study](docs/features/play-study.md): the owner's own play written down (who, where, in what, on which job), as a model for the city's people; F4 > Factions > Admin: play study
