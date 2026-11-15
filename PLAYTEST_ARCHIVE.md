@@ -69,6 +69,7 @@ To add an item: `printf '%s\n' '- [ ] **Topic:** what to try. [needs a person: w
 
 ## Dreams
 
+- [ ] **The dreams' grounds:** after uploading `livingcity_content.zip` and a FastDL sync, test a few dreams from the editor (Freeze, Citizen; Dance Marathon; The Midnight Rally; Ravenholm): is each picture the right size underfoot, not stretched or tiny, and does the mood still fit? [needs a person: how it looks]
 - [ ] **Start and finish of a dream:** a fade to black with a line about the day, the dream's name between black bars, "You made it through" at a win. [needs a person: by eye]
 - [ ] **Dreams, less text:** no status cards, hints or sociostability pill in a dream; the goal line goes after 15 seconds (Tab shows it); one short wake line. [needs a person: what is on screen]
 - [ ] **Dressed dreams:** the ring of props below the edge of each playable dream: does it look right, and is it out of the way? [needs a person: by eye]

@@ -361,8 +361,9 @@ do
         for x = 1, w do for y = 1, h do g.cells[Key(x, y)] = Vector(g.x0 + (x - 0.5) * CELL, g.y0 + (y - 0.5) * CELL, top) end end
         -- the floor
         local fx, fy = math.ceil(w * CELL / PLATE8_S), math.ceil(h * CELL / PLATE8_S)
+        local mat, look = LC.DreamSurface("maze", Color(20, 22, 40))
         for i = 1, fx do for j = 1, fy do
-            Floor(g, PLATE8, g.x0 + (i - 0.5) * PLATE8_S, g.y0 + (j - 0.5) * PLATE8_S, top, Color(20, 22, 40), "models/debug/debugwhite")
+            Floor(g, PLATE8, g.x0 + (i - 0.5) * PLATE8_S, g.y0 + (j - 0.5) * PLATE8_S, top, look, mat)
         end end
         -- the walls: round the outside, and between cells that aren't joined
         local blue = Color(40, 70, 220)
@@ -575,19 +576,20 @@ do
         local function U(u) return c.x + u end
         local steel = Color(110, 90, 70)
         -- the ramps: side by side, each climbing the other way
+        local rampMat, rampLook = LC.DreamSurface("barrels_ramp", steel)
         for k = 0, n - 1 do
             local up = (k % 2 == 0) and 1 or -1 -- (ramp k climbs toward +x, or -x)
             local z0 = base + k * RISE
             for j = 0, 1 do
                 local frac = (j + 0.5) / 2
                 local u = up * (-L + frac * 2 * L)
-                Block(g, PLATE8, Vector(U(u), V(k), z0 + frac * RISE - PLATE_HALF), Angle(-up * math.deg(theta), 0, 0), steel, "models/debug/debugwhite")
+                Block(g, PLATE8, Vector(U(u), V(k), z0 + frac * RISE - PLATE_HALF), Angle(-up * math.deg(theta), 0, 0), rampLook, rampMat)
             end
             -- the landing at its top, joining the next ramp
             if k < n - 1 then
                 local side = up * (L + S / 2)
-                Floor(g, PLATE8, U(side), V(k), z0 + RISE, steel, "models/debug/debugwhite")
-                Floor(g, PLATE8, U(side), V(k + 1), z0 + RISE, steel, "models/debug/debugwhite")
+                Floor(g, PLATE8, U(side), V(k), z0 + RISE, rampLook, rampMat)
+                Floor(g, PLATE8, U(side), V(k + 1), z0 + RISE, rampLook, rampMat)
             end
         end
         -- the start, and the top
@@ -733,8 +735,8 @@ do
         g.tiles = {}
         for i = 1, n do for j = 1, n do
             local even = (i + j) % 2 == 0
-            local col = even and Color(200, 200, 210) or Color(150, 150, 165)
-            local e = Floor(g, model, g.x0 + (i - 0.5) * T, g.y0 + (j - 0.5) * T, g.top, col, "models/debug/debugwhite")
+            local mat, col = LC.DreamSurface("crumble", even and Color(200, 200, 210) or Color(150, 150, 165))
+            local e = Floor(g, model, g.x0 + (i - 0.5) * T, g.y0 + (j - 0.5) * T, g.top, col, mat)
             g.tiles[i .. "_" .. j] = { e = e, i = i, j = j, col = col }
         end end
         g.scanner = Actor(g, SCANNER, Vector(dream.pos.x, dream.pos.y, g.top + 220), 0, 1.5)
@@ -936,8 +938,9 @@ do
         local top = c.z + 2
         g.top = top
         local x0 = c.x - long * PLATE8_S / 2
+        local mat, look = LC.DreamSurface("freeze", Color(70, 75, 80))
         for i = 1, long do for j = 0, 1 do
-            Floor(g, PLATE8, x0 + (i - 0.5) * PLATE8_S, c.y + (j - 0.5) * PLATE8_S, top, Color(70, 75, 80), "models/debug/debugwhite")
+            Floor(g, PLATE8, x0 + (i - 0.5) * PLATE8_S, c.y + (j - 0.5) * PLATE8_S, top, look, mat)
         end end
         g.startX, g.finishX = x0 + 90, x0 + long * PLATE8_S - 160
         -- the finish line (a red strip), and the officer behind it

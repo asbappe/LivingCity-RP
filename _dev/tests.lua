@@ -32226,6 +32226,42 @@ function Nov14C_MouthTests()
 end
 Nov14C_MouthTests()
 
+function DreamSurfaceTests()
+    section("The dreams' grounds: a picture under each dream when it is on the server (15 November)")
+    local W = "models/debug/debugwhite"
+    local green = Color(60, 110, 60)
+    local m, c = LC.DreamSurface("sheep", green)
+    ok(m == W and c == green, "no picture on the server: the plain coloured floor that dream always had", tostring(m))
+    local names, count = {}, 0
+    for _, s in pairs(LC.DreamSurfaces) do if not names[s[1]] then names[s[1]] = true count = count + 1 end end
+    ok(count == 30, "thirty pictures are spoken for", count)
+    for n in pairs(names) do _files["materials/livingcity/dreams/" .. n .. ".jpg"] = "x" end
+    m, c = LC.DreamSurface("sheep", green)
+    ok(m == "!lc_dream_grass" and c.r == 255 and c.g == 255 and c.b == 255, "with it there: the picture, as it is", tostring(m))
+    m, c = LC.DreamSurface("dance", Color(255, 0, 101))
+    ok(m == "!lc_dream_parquet" and c.r == 255 and c.g == 127 and c.b == 178, "a dance floor keeps its lights, at half strength", c.r .. " " .. c.g .. " " .. c.b)
+    m, c = LC.DreamSurface("ravenholm", green)
+    ok(m == "!lc_dream_cobbles" and c.r == 150, "a dark dream's ground is dimmed", c.r)
+    m, c = LC.DreamSurface("molasses", green)
+    ok(m == W and c == green, "a dream with no ground of its own stays as it was")
+    local dream = { pos = Vector(223000, -223000, 0) }
+    local g = { id = "sheep", ents = {} }
+    LC.StrangeKit.Plain(g, dream, 2, function() return green end)
+    ok(g.floor and #g.floor >= 4 and g.floor[1].ent:GetMaterial() == "!lc_dream_grass" and g.floor[1].col.r == 255, "Counting Headcrabs is laid on grass", g.floor and g.floor[1] and g.floor[1].ent:GetMaterial())
+    local g2 = { id = "sheep", ents = {} }
+    LC.StrangeKit.Plain(g2, dream, 2, function() return green end, "its/own")
+    ok(g2.floor[1].ent:GetMaterial() == "its/own" and g2.floor[1].col == green, "a dream that names its own surface (the cheese) keeps it")
+    local g3 = { id = "battleline", ents = {} }
+    LC.PropagandaKit.Hall(g3, dream, 2, Color(70, 62, 52))
+    ok(#g3.ents >= 4 and g3.ents[1]:GetMaterial() == "!lc_dream_mud", "The Battle Line is fought on mud", g3.ents[1] and g3.ents[1]:GetMaterial())
+    for n in pairs(names) do _files["materials/livingcity/dreams/" .. n .. ".jpg"] = nil end
+    local g4 = { id = "battleline", ents = {} }
+    LC.PropagandaKit.Hall(g4, dream, 2, Color(70, 62, 52))
+    ok(g4.ents[1]:GetMaterial() == W, "and on its plain floor again without the picture")
+    for _, t in ipairs({ g, g2, g3, g4 }) do for _, e in ipairs(t.ents) do if IsValid(e) then e:Remove() end end end
+end
+DreamSurfaceTests()
+
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")
 ;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)
     -- Everything here is something the owner's server, files or players depend on. The list is
