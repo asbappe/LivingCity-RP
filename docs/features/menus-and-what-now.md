@@ -23,6 +23,8 @@
 
 The engine's own keys are unchanged (F1 to F4 are still `gm_showhelp`, `gm_showteam`, `gm_showspare1`, `gm_showspare2`): only what each opens changed, so a player who rebinds them keeps their keys. Before 7 November, F1 mixed both quick menus, F2 was the pockets, F3 the job board and F4 the faction screen.
 
+**A list stays where you scrolled it (14 November).** Using, dropping, selling or stashing a thing sends the pockets (F3) again: the list is built where it was, not back at the top (the owner: "When I use a charge cell from my pockets, it scrolls back to the top of the menu"). The stash at home is part of the same window. The Commissary, the quartermaster and the black market already did this; the admin testing tools do now too. A terminal's own screen keeps its page.
+
 ### The quick menus (F1 and F2)
 
 **F1 and F2 open quick menus**, like a voice menu in a team shooter: a short list at the left of the screen, picked with the number keys (1 to 9; 0 goes back or closes), and you keep moving while it's up. Both look the same and work the same; 9 on either is everything else, the full menu.

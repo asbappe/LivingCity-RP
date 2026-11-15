@@ -271,6 +271,43 @@ end }
 -- Inventory (F3 / !inv)
 ------------------------------------------------------------------------
 
+-- A list that is built again after every action (the pockets, the Commissary, the black market, the
+-- admin tools) stays where the reader had scrolled it, not back at the top.
+local function ScrollOf(panel)
+    if not IsValid(panel) or not panel.GetVBar then return nil end
+    local vb = panel:GetVBar()
+    local n = tonumber(vb and vb.GetScroll and vb:GetScroll()) or 0
+    return n > 0 and n or nil
+end
+local function ScrollTo(panel, n)
+    if not n or not IsValid(panel) or not panel.GetVBar then return end
+    -- (a new window knows how long its list is only once it has been laid out, and until then the
+    -- bar holds every scroll at the top: the owner, 13 November, "everytime I buy something from the
+    -- quartermaster, the menu scrolls back to the top". So it is laid out now, and set again over
+    -- the next few frames until it holds.)
+    local function Set()
+        if not IsValid(panel) then return true end
+        local canvas = panel.GetCanvas and panel:GetCanvas()
+        if IsValid(canvas) then
+            canvas:InvalidateLayout(true)
+            if canvas.SizeToChildren then canvas:SizeToChildren(false, true) end
+        end
+        panel:InvalidateLayout(true)
+        local vb = panel:GetVBar()
+        if not (vb and vb.SetScroll) then return true end
+        if IsValid(canvas) and vb.SetUp then vb:SetUp(panel:GetTall(), canvas:GetTall()) end
+        vb:SetScroll(n)
+        local got = tonumber(vb.GetScroll and vb:GetScroll()) or 0
+        return math.abs(got - n) < 2
+    end
+    LC_CL.ScrollSetNow = Set
+    Set() -- (at once too, so the list is not seen at the top for a frame)
+    for _, wait in ipairs({ 0, 0.05, 0.15, 0.35 }) do
+        timer.Simple(wait, function() Set() end)
+    end
+end
+LC_CL.ScrollOf, LC_CL.ScrollTo = ScrollOf, ScrollTo
+
 local invFrame
 local lastInv = { items = {}, size = 12 }
 local function Total(t) local n = 0 for _, c in pairs(t or {}) do n = n + c end return n end
@@ -289,6 +326,9 @@ function LC_CL.SpoilText(hrs)
 end
 
 local function OpenInventory()
+    -- (using, dropping, selling or stowing a thing sends the pockets again: the list stays where it was,
+    -- the owner, 14 November: "When I use a charge cell from my pockets, it scrolls back to the top")
+    local keep = IsValid(invFrame) and ScrollOf(invFrame.lcScroll) or nil
     if IsValid(invFrame) then invFrame:Remove() end
     if not LCS then return end
     invFrame = vgui.Create("DFrame")
@@ -324,6 +364,7 @@ local function OpenInventory()
     end
 
     local scroll = vgui.Create("DScrollPanel", invFrame)
+    invFrame.lcScroll = scroll
     scroll:Dock(FILL)
     scroll:DockMargin(6, 44, 6, 6)
 
@@ -748,6 +789,7 @@ local function OpenInventory()
             b.DoClick = function() Act("wstore", wpn.cls) end
         end
     end
+    ScrollTo(scroll, keep)
 end
 
 net.Receive("lci_inv", function()
@@ -785,38 +827,6 @@ function LC_CL.WrapPlain(text, font, maxW)
     return lines
 end
 
-local function ScrollOf(panel)
-    if not IsValid(panel) or not panel.GetVBar then return nil end
-    local vb = panel:GetVBar()
-    local n = tonumber(vb and vb.GetScroll and vb:GetScroll()) or 0
-    return n > 0 and n or nil
-end
-local function ScrollTo(panel, n)
-    if not n or not IsValid(panel) or not panel.GetVBar then return end
-    -- (a new window knows how long its list is only once it has been laid out, and until then the
-    -- bar holds every scroll at the top: the owner, 13 November, "everytime I buy something from the
-    -- quartermaster, the menu scrolls back to the top". So it is laid out now, and set again over
-    -- the next few frames until it holds.)
-    local function Set()
-        if not IsValid(panel) then return true end
-        local canvas = panel.GetCanvas and panel:GetCanvas()
-        if IsValid(canvas) then
-            canvas:InvalidateLayout(true)
-            if canvas.SizeToChildren then canvas:SizeToChildren(false, true) end
-        end
-        panel:InvalidateLayout(true)
-        local vb = panel:GetVBar()
-        if not (vb and vb.SetScroll) then return true end
-        if IsValid(canvas) and vb.SetUp then vb:SetUp(panel:GetTall(), canvas:GetTall()) end
-        vb:SetScroll(n)
-        local got = tonumber(vb.GetScroll and vb:GetScroll()) or 0
-        return math.abs(got - n) < 2
-    end
-    LC_CL.ScrollSetNow = Set
-    for _, wait in ipairs({ 0, 0.05, 0.15, 0.35 }) do
-        timer.Simple(wait, function() Set() end)
-    end
-end
 -- what's wrong with buying it, beside the name (the price always shows on the button)
 local SHORT = Color(230, 110, 90)
 local MARKET = Color(235, 190, 90) -- (the market's line: restricted, scarce, in demand; sv_livingcity_market.lua)

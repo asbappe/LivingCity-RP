@@ -4463,6 +4463,65 @@ _fac = open(os.path.join(GMDIR, "gamemode", "modules", "client", "cl_livingcity_
 if '"Admin: errors (%d)"' not in _fac or 'RunConsoleCommand("lc_errors")' not in _fac:
     problems = (problems + "\n" if problems else "") + "F4 > Factions has no errors button"
 
+# a list that is built again after an action stays where it was scrolled (the owner, 14 November: "When I
+# use a charge cell from my pockets, it scrolls back to the top of the menu"): the pockets, and the admin
+# tools, the way the Commissary and the black market already did
+err = L.execute(r"""
+local scrolls = {}
+local function P(cls)
+    local t = { _cls = cls }
+    if cls == "DScrollPanel" then
+        scrolls[#scrolls + 1] = t
+        local bar = { _n = 0 }
+        bar.SetScroll = function(self, n) self._n = n end
+        bar.GetScroll = function(self) return self._n end
+        bar.SetUp = function() end
+        t._bar = bar
+    end
+    return setmetatable(t, { __index = function(_, k)
+        if string.sub(k, 1, 2) == "lc" or string.sub(k, 1, 1) == "_" then return nil end
+        if k == "IsValid" then return function() return not t._removed end end
+        if k == "Remove" then return function() t._removed = true end end
+        if k == "GetVBar" then return function() return t._bar end end
+        if k == "GetPos" then return function() return 10, 10 end end
+        if k == "GetWide" or k == "GetTall" then return function() return 400 end end
+        return function() return P() end
+    end })
+end
+local vgWas, rU, rD, rDc, rJ = vgui, net.ReadUInt, net.ReadData, util.Decompress, util.JSONToTable
+vgui = { Create = function(cls) return P(cls) end, GetKeyboardFocus = function() return nil end }
+net.ReadUInt = function() return 1 end
+net.ReadData = function() return "x" end
+util.Decompress = function(s) return s end
+local doc
+util.JSONToTable = function() return doc end
+local ok, e = pcall(function()
+    for _, w in ipairs({ { "lci_inv", "the pockets", { items = { bread = 2, water = 1, scrap = 4, cell = 1, lockpick = 1, bandage = 2 }, size = 12, open = true } },
+        { "lc_admintools", "the admin tools", { players = { { name = "Ada", id = 1 } }, target = 1, factions = {}, territory = {} } } }) do
+        local recv = net["recv_" .. w[1]]
+        if not recv then error("no receiver for " .. w[1]) end
+        scrolls = {}
+        doc = w[3]
+        recv()
+        local first = scrolls[#scrolls]
+        if not first then error(w[2] .. " built no list") end
+        first._bar._n = 180 -- (scrolled down to the charge cell)
+        if w[3].open then doc.open = nil end -- (an item used: the server sends the pockets again, not asking to open them)
+        recv()
+        local second = scrolls[#scrolls]
+        if second == first then error(w[2] .. " were not built again") end
+        if second._bar._n ~= 180 then error(w[2] .. " went back to the top after an action (scroll " .. tostring(second._bar._n) .. ", was 180)") end
+        -- opened fresh (the window shut first), it starts at the top
+        for _, sc in ipairs(scrolls) do sc._removed = true end
+    end
+end)
+vgui, net.ReadUInt, net.ReadData, util.Decompress, util.JSONToTable = vgWas, rU, rD, rDc, rJ
+if not ok then return "scroll kept: " .. tostring(e) end
+return nil
+""")
+if err:
+    problems = (problems + "\n" if problems else "") + str(err)
+
 # the official folder for recordings and songs is the server's garrysmod/sound/livingcity/ (CORE.md):
 # what players read in the guide and the sound check must send them there, never to the old sound addon
 _guide = open(os.path.join(GMDIR, "gamemode", "cl_init.lua")).read()
