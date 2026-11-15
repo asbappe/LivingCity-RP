@@ -33299,10 +33299,25 @@ for _, g in ipairs(guards) do
 end
 ok(inFront == 3 and inRow == 3 and facing == 3, "in a row between her and the crowd, facing the crowd", inFront .. " " .. inRow .. " " .. facing)
 ok(LC.NPCs[guards[1]] and LC.NPCs[guards[1]].unmanaged and guards[1]:GetClass() == "npc_combine_s", "they are soldiers of the address's own, not on a beat")
+-- and a detail round her, within 20 feet, looking outward ("a high security event")
+local detail = LC.SpeechDetail()
+local cops, sols, within, outward = 0, 0, 0, 0
+for _, g in ipairs(detail) do
+    if g:GetClass() == "npc_metropolice" then cops = cops + 1 elseif g:GetClass() == "npc_combine_s" then sols = sols + 1 end
+    local off = g.lcSpeechGuard.pos - stand.pos
+    off.z = 0
+    if off:Length() <= 320 and off:Length() >= 90 then within = within + 1 end
+    if Angle(0, g.lcSpeechGuard.yaw, 0):Forward():Dot(off:GetNormalized()) > 0.95 then outward = outward + 1 end
+end
+ok(#detail == 4 and cops == 2 and sols == 2, "a detail of two Civil Protection units and two soldiers is posted round her", #detail .. " " .. cops .. " " .. sols)
+ok(within == 4 and outward == 4, "each within 20 feet of the stand, facing outward", within .. " " .. outward)
 LC.EndSpeech()
 local gone = 0
 for _, g in ipairs(guards) do if not IsValid(g) then gone = gone + 1 end end
 ok(gone == 3 and sst.state ~= "event", "when it ends the soldiers go and the citizens go back to their day", gone)
+local dgone = 0
+for _, g in ipairs(detail) do if not IsValid(g) then dgone = dgone + 1 end end
+ok(dgone == #detail, "(the detail too)", dgone)
 for _, m in ipairs(mine) do if IsValid(m[1]) then m[1]:Remove() end end
 for _, c in ipairs({ sitter, worker, queuer, late }) do if IsValid(c) then c:Remove() end end
 LC.RemovePoint(stand) LC.RemovePoint(crowd)
@@ -33325,6 +33340,68 @@ set("lc_stops", stopsWas)
 _walls = savedWalls
 end
 Nov15_EveryoneComesTests()
+
+-- A grenade thrown at the Administrator: a soldier throws himself on it (the owner, 15 November)
+function Nov15_GrenadeJumpTests()
+section("15 November: a grenade thrown at the Administrator: the nearest soldier throws himself on it, it hurts nobody else, and he is dead")
+local savedWalls = _walls
+_walls = {}
+local G0 = Vector(112000, 88000, 0)
+local adm = newPlayer("GrenadeAdministrator", "admin")
+adm:SetPos(G0)
+adm:SetHealth(100)
+local reb = newPlayer("GrenadeRebel", "resistance", nil, 900)
+reb:SetPos(G0 + Vector(900, 0, 0))
+local near, nst = LC.SpawnSoldier(G0 + Vector(120, 60, 0))
+local far, fst = LC.SpawnSoldier(G0 + Vector(380, -200, 0))
+local cop, cst = LC.SpawnCop(G0 + Vector(60, 0, 0))
+ok(GetConVar("lc_admin_grenade_jump"):GetBool(), "lc_admin_grenade_jump is on")
+local function grenade(off, owner, class)
+    local g = ents.Create(class or "npc_grenade_frag")
+    g:SetPos(G0 + off)
+    g.lcOwner = owner
+    g:Spawn()
+    LC.AdminGrenadeWatch(g)
+    return g
+end
+-- one of the Combine's own grenades by her: nobody jumps
+local own = grenade(Vector(100, 0, 0), far)
+LC.AdminGrenadeThink(CurTime() + 1)
+ok(not own.lcJumped and IsValid(near), "a grenade of the Combine's own by her: nobody jumps on it")
+own:Remove()
+-- one that lands far from her: nobody jumps
+local wide = grenade(Vector(2500, 0, 0), reb)
+LC.AdminGrenadeThink(CurTime() + 1)
+ok(not wide.lcJumped, "one that lands nowhere near her: nobody jumps")
+wide:Remove()
+-- a rebel's, at her feet
+local nearModel = near:GetModel()
+local g = grenade(Vector(90, 40, 0), reb)
+local rag0 = #ents.FindByClass("prop_ragdoll")
+LC.AdminGrenadeThink(CurTime() + 1)
+ok(g.lcJumped and g.lcDone, "a rebel's grenade at her feet: someone goes for it, and it no longer goes off by itself")
+ok(not IsValid(near) and IsValid(far) and IsValid(cop), "the nearest soldier is the one (not the unit standing nearer, not the soldier further off)")
+local rags = ents.FindByClass("prop_ragdoll")
+ok(#rags == rag0 + 1 and rags[#rags]:GetModel() == nearModel, "he goes down on it limp, as himself", #rags - rag0)
+ok(LC.PlayerIsWanted(reb), "whoever threw it is wanted for it")
+local hp = adm:Health()
+_run(1.2)
+ok(not IsValid(g), "it goes off under him")
+ok(adm:Health() == hp and adm:Alive() and IsValid(far) and far:Health() > 0 and IsValid(cop) and cop:Health() > 0, "and hurts nobody else: not her, not the others")
+-- switched off: left to go off as it would
+local set = _setcvar
+set("lc_admin_grenade_jump", 0)
+local g2 = grenade(Vector(90, 40, 0), reb)
+LC.AdminGrenadeThink(CurTime() + 1)
+ok(not g2.lcJumped and IsValid(far), "lc_admin_grenade_jump 0: nobody jumps")
+set("lc_admin_grenade_jump", 1)
+g2:Remove()
+for _, e in ipairs({ far, cop }) do if IsValid(e) then e:Remove() end end
+for _, r in ipairs(ents.FindByClass("prop_ragdoll")) do if r:GetModel() == nearModel then r:Remove() end end
+adm:Remove() reb:Remove()
+_walls = savedWalls
+end
+Nov15_GrenadeJumpTests()
 
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")
 ;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)

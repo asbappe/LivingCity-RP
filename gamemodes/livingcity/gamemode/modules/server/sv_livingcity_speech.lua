@@ -41,6 +41,7 @@ local cvNPCs    = CreateConVar("lc_speech_npcs", "0", FLAGS, "How many of the ci
 local cvCity    = CreateConVar("lc_speech_city", "1", FLAGS, "With nobody playing the Administrator, the city's own Administrator gives an address on the days with no morning exercise")
 local cvLook    = CreateConVar("lc_speech_lookback", "240", FLAGS, "Minutes of the chronicle the city's own Administrator looks back over for her address")
 local cvCityHr  = CreateConVar("lc_speech_city_hour", "12", FLAGS, "The city hour the city's own Administrator gives her address")
+local cvDetail  = CreateConVar("lc_speech_detail", "4", FLAGS, "Soldiers and Civil Protection units posted round her at an address, within 20 feet, facing outward (0: none, up to 6; the row of three in front of the stand is apart from these)")
 local cvPodium  = CreateConVar("lc_speech_podium", "models/props_combine/breenconsole.mdl", FLAGS, "The podium put in front of the speech stand for an address")
 
 local S -- the address under way, or nil
@@ -363,8 +364,29 @@ end
 -- of 3 combine soldiers stand facing the speech crowd?"). The address's own: never from Overwatch's reserve,
 -- gone when it ends. One drawn off by a fight walks back to his place.
 local GUARD_OUT, GUARD_GAP = 110, 70
+-- The detail round her (the owner, 15 November: "sprinkle a couple of soldiers and metro cops around the radius of
+-- the administrator, within 20 feet. I want it to look like a high security event"): a Civil Protection unit at
+-- each side of her and soldiers behind, each looking outward. ang: round from the way the crowd is; out: how far
+-- from the stand (20 feet is 320 units).
+local DETAIL = {
+    { ang = 80, out = 180, cop = true }, { ang = -80, out = 180, cop = true },
+    { ang = 140, out = 270 }, { ang = -140, out = 270 },
+    { ang = 180, out = 310 }, { ang = 110, out = 300, cop = true },
+}
+local function PostOne(make, weapon, pos, yaw, doing)
+    local ok, npc, st
+    if LC.ManpowerFree then ok, npc, st = LC.Try(LC.ManpowerFree, make, pos + Vector(0, 0, 4), weapon)
+    else ok, npc, st = LC.Try(make, pos + Vector(0, 0, 4), weapon) end
+    if not (ok and IsValid(npc) and st) then return nil end
+    st.unmanaged, st.questLock = true, true
+    LC.SetState(npc, st, "speechguard")
+    npc:SetAngles(Angle(0, yaw, 0))
+    if LC.SetNPCStr then LC.SetNPCStr(npc, "lc_doing", doing) end
+    npc.lcSpeechGuard = { pos = pos, yaw = yaw }
+    return npc
+end
 local function PostGuards()
-    S.guards = {}
+    S.guards, S.detail = {}, {}
     if not LC.SpawnSoldier then return end
     local toward = S.crowd.pos - S.stand.pos
     toward.z = 0
@@ -375,33 +397,44 @@ local function PostGuards()
     for i = -1, 1 do
         local pos = S.stand.pos + toward * GUARD_OUT + side * (i * GUARD_GAP)
         pos = (LC.GroundAt and LC.GroundAt(pos + Vector(0, 0, 30))) or pos
-        local ok, npc, st
-        if LC.ManpowerFree then ok, npc, st = LC.Try(LC.ManpowerFree, LC.SpawnSoldier, pos + Vector(0, 0, 4), "ar2")
-        else ok, npc, st = LC.Try(LC.SpawnSoldier, pos + Vector(0, 0, 4), "ar2") end
-        if ok and IsValid(npc) and st then
-            st.unmanaged, st.questLock = true, true
-            LC.SetState(npc, st, "speechguard")
-            npc:SetAngles(Angle(0, yaw, 0))
-            if LC.SetNPCStr then LC.SetNPCStr(npc, "lc_doing", "guarding the address") end
-            npc.lcSpeechGuard = { pos = pos, yaw = yaw }
-            S.guards[#S.guards + 1] = npc
+        local npc = PostOne(LC.SpawnSoldier, "ar2", pos, yaw, "guarding the address")
+        if npc then S.guards[#S.guards + 1] = npc end
+    end
+    -- the detail round her
+    for k = 1, math.Clamp(cvDetail:GetInt(), 0, #DETAIL) do
+        local d = DETAIL[k]
+        local out = Angle(0, yaw + d.ang, 0):Forward()
+        local reach = d.out
+        -- (a wall in the way: as far out as there is room, or not at all)
+        local tr = util.TraceLine and util.TraceLine({ start = S.stand.pos + Vector(0, 0, 40), endpos = S.stand.pos + Vector(0, 0, 40) + out * reach, mask = MASK_SOLID_BRUSHONLY })
+        if tr and tr.Hit and tr.Fraction then reach = reach * tr.Fraction - 30 end
+        if reach >= 90 then
+            local pos = S.stand.pos + out * reach
+            pos = (LC.GroundAt and LC.GroundAt(pos + Vector(0, 0, 30))) or pos
+            local npc
+            if d.cop and LC.SpawnCop then npc = PostOne(LC.SpawnCop, nil, pos, yaw + d.ang, "guarding the Administrator")
+            else npc = PostOne(LC.SpawnSoldier, "ar2", pos, yaw + d.ang, "guarding the Administrator") end
+            if npc then S.detail[#S.detail + 1] = npc end
         end
     end
 end
 LC.SpeechGuards = function() return S and S.guards or {} end
+LC.SpeechDetail = function() return S and S.detail or {} end
 local function GuardsThink(now)
     if now < (S.nextGuards or 0) then return end
     S.nextGuards = now + 2
-    for _, npc in ipairs(S.guards or {}) do
-        local post = IsValid(npc) and npc:Health() > 0 and npc.lcSpeechGuard
-        if post and not (npc.GetEnemy and IsValid(npc:GetEnemy())) then
-            if npc:GetPos():DistToSqr(post.pos) > 40 * 40 then
-                if npc.SetLastPosition and npc.SetSchedule then
-                    npc:SetLastPosition(post.pos)
-                    npc:SetSchedule(SCHED_FORCED_GO)
+    for _, list in ipairs({ S.guards or {}, S.detail or {} }) do
+        for _, npc in ipairs(list) do
+            local post = IsValid(npc) and npc:Health() > 0 and npc.lcSpeechGuard
+            if post and not (npc.GetEnemy and IsValid(npc:GetEnemy())) then
+                if npc:GetPos():DistToSqr(post.pos) > 40 * 40 then
+                    if npc.SetLastPosition and npc.SetSchedule then
+                        npc:SetLastPosition(post.pos)
+                        npc:SetSchedule(SCHED_FORCED_GO)
+                    end
+                elseif LC.FaceYaw and math.abs((npc:GetAngles().y - post.yaw + 180) % 360 - 180) > 12 then
+                    LC.FaceYaw(npc, post.yaw)
                 end
-            elseif LC.FaceYaw and math.abs((npc:GetAngles().y - post.yaw + 180) % 360 - 180) > 12 then
-                LC.FaceYaw(npc, post.yaw)
             end
         end
     end
@@ -556,6 +589,7 @@ function LC.EndSpeech()
     if IsValid(S.podium) then S.podium:Remove() end
     if IsValid(S.her) then S.her:Remove() end
     for _, g in ipairs(S.guards or {}) do if IsValid(g) then g:Remove() end end
+    for _, g in ipairs(S.detail or {}) do if IsValid(g) then g:Remove() end end
     S = nil
 end
 
