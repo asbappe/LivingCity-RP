@@ -457,6 +457,7 @@ item tainted_ration
 item tainted_ration_short
 item tainted_vegetables
 item tainted_water
+item tainted_water_purified
 item tin_toy
 item transfer_order
 item uniform_clean
@@ -467,6 +468,7 @@ item vendor_stall
 item vest_cell
 item vodka
 item water
+item water_purified
 item weedkiller
 item zipties
 layout file data/livingcity/<map>.json
@@ -683,6 +685,7 @@ setting lc_dream_combine = 6
 setting lc_dream_delay = 60
 setting lc_dream_enforcer_xp = 1
 setting lc_dream_every_night = 0
+setting lc_dream_harpies_combine = 24
 setting lc_dream_max_minutes = 5
 setting lc_dream_min = 6
 setting lc_dream_moods = bus=happy,plane=happy,hard=happy,shalom=happy,bloom=neutral,fire=neutral,base=neutral,harpies=nightmare,marrow=nightmare,water=nightmare,standup=nightmare
@@ -747,10 +750,10 @@ setting lc_ending_marrow_model = models/player/skeleton.mdl
 setting lc_ending_marrow_sections = 45:dance,75:attack,82:rave,112:attack,150:dance,180:attack,188:dance,217:outro,232:end
 setting lc_ending_max = 180
 setting lc_ending_minge_chatter = 1
-setting lc_ending_minge_cover = 12
+setting lc_ending_minge_cover = 24
 setting lc_ending_minge_crowd = 12
 setting lc_ending_minge_end = 120
-setting lc_ending_minge_forest = 36
+setting lc_ending_minge_forest = 72
 setting lc_ending_minge_max = 60
 setting lc_ending_minge_models = models/player/kleiner.mdl
 setting lc_ending_minge_pose = ragdoll
