@@ -331,9 +331,7 @@ local function Begin(S, her, who)
     Screen(S.stand.pos, S.crowd.pos)
     LC.EndSpeech() -- (the crowd is let go; the podium goes)
     Mark(who)
-    if LC.Notice then
-        for _, p in ipairs(player.GetAll()) do LC.Notice(p, "event", "An attempt on the Administrator's life", "The address is over.", 8) end
-    end
+    -- (no notice of its own: the screen, the gunfire, the APC and the lockdown's own call say it; house rule 10)
     if LC.StartEvent and (LC.Event == nil or LC.Event == "") then LC.Try(LC.StartEvent, "lockdown") end
     hook.Run("LivingCityAdminExfil", her, who)
 end
@@ -509,4 +507,22 @@ hook.Add("EntityTakeDamage", "LivingCityAdminExfil", function(ent, dmg)
     end)
     if not her:IsPlayer() then return true end
 end)
+-- (which hook hears a hit first is not promised: one that answered before ours would hide the shot from it. So the
+-- hit itself, once taken, sets it off too.)
+hook.Add("PostEntityTakeDamage", "LivingCityAdminExfil", function(ent, dmg, took)
+    if A or not took or not cvExfil:GetBool() then return end
+    local S = LC.SpeechSession and LC.SpeechSession()
+    if not S or ent ~= S.by then return end
+    local att = dmg:GetAttacker()
+    if not IsValid(att) or not (att:IsPlayer() or att:IsNPC()) or att == ent or Theirs(att) then return end
+    if ent:Alive() then LC.AdminAttempt(ent, att, "shot") end
+end)
 hook.Add("PlayerDisconnected", "LivingCityAdminExfil", function(p) if A and A.her == p then Done(false) end end)
+
+-- The Resistance killing the Administrator at her address is no random killing (sv_livingcity_conduct.lua): it
+-- is the one chance an assassin has.
+hook.Add("LivingCityJudgeKill", "LivingCityAdminExfil", function(attacker, victim)
+    if not IsValid(attacker) or attacker:GetNW2String("lcf_faction", "") ~= "resistance" then return end
+    local S = LC.SpeechSession and LC.SpeechSession()
+    if (S and S.by == victim) or (A and A.her == victim) then return true end
+end)

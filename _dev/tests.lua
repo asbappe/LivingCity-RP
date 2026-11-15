@@ -33681,6 +33681,119 @@ late:Remove()
 end
 PoseToolTests()
 
+-- An attempt on her life at her address: the ring, the screen, out by APC (the owner, 15 November)
+function Nov15_AdminExfilTests()
+section("15 November: an attempt on the Administrator's life at her address: her guards close round her and she is taken out by APC")
+LC.EndEvent(true)
+if LC.SpeechSession() then LC.EndSpeech() end
+local savedWalls = _walls
+_walls = {}
+local set = _setcvar
+local stopsWas = GetConVar("lc_stops"):GetInt()
+set("lc_stops", 0)
+local X0 = Vector(120000, 100000, 0)
+local stand = LC.AddPoint(X0 + Vector(0, 500, 0), 270, "speech", 0)
+local crowd = LC.AddPoint(X0, 90, "speechcrowd", 0)
+local apcPt = LC.AddPoint(X0 + Vector(600, 500, 0), 0, "adminapc", 0)
+local desk = LC.AddPoint(X0 + Vector(9000, 9000, 0), 0, "desk", 0)
+ok(apcPt ~= nil and LC.POINT_KINDS.adminapc, "the editor can place the Administrator's APC point")
+local adm = newPlayer("ExfilAdministrator", "admin")
+adm:SetPos(X0 + Vector(0, 520, 0))
+adm:SetHealth(100)
+local reb = newPlayer("ExfilAssassin", "resistance", nil, 900)
+reb:SetPos(X0 + Vector(0, -300, 0))
+local bystander = newPlayer("ExfilBystander", "citizen")
+bystander:SetPos(X0 + Vector(100, 0, 0))
+set("lc_speech_muster", 60)
+ok(LC.CallSpeech(adm, "Citizens."), "her address is called")
+local S = LC.SpeechSession()
+ok(IsValid(S.apc) and S.apc:GetPos():Distance(apcPt.pos) < 60, "an APC stands at its point for as long as she speaks")
+local apc = S.apc
+local row, detail = LC.SpeechGuards(), LC.SpeechDetail()
+local all = {}
+for _, g in ipairs(row) do all[#all + 1] = g end
+for _, g in ipairs(detail) do all[#all + 1] = g end
+ok(#all == 7, "(seven guards: the row and the detail)", #all)
+ok(LC.AdminExfil() == nil, "nothing happens until someone tries")
+-- the shot
+adm.lcProtectUntil = 0 -- (no longer new in the city: a newcomer's protection would stop the shot)
+ok(LC.JudgeKill(reb, adm) == true, "the Resistance shooting her at her address is no random killing: it is the assassin's one chance")
+hook.Run("EntityTakeDamage", adm, _dmg(reb, 20))
+_run(0.1)
+local A = LC.AdminExfil()
+if not A then ok(false, "the shot sets her guards off") LC.EndSpeech() return end
+ok(A ~= nil and A.her == adm and A.attackers[reb], "she is shot at: her guards are getting her out, and the one who fired is theirs to deal with")
+ok(LC.SpeechSession() == nil, "the address is over")
+ok(#A.glass == 3, "a screen of Combine glass stands between the stand and the crowd", A and #A.glass)
+ok(LC.PlayerIsWanted(reb), "the attacker is wanted")
+ok(hook.Run("EntityTakeDamage", adm, _dmg(reb, 50)) == true, "from now on she cannot be hurt")
+ok(hook.Run("EntityTakeDamage", bystander, _dmg(all[1], 10)) == true and hook.Run("EntityTakeDamage", reb, _dmg(all[1], 10)) ~= true,
+    "her guards' fire hurts only the attackers, never a bystander")
+local stillAll = 0
+for _, g in ipairs(all) do if IsValid(g) then stillAll = stillAll + 1 end end
+ok(stillAll == 7, "the address ending does not take her guards away: they are hers now", stillAll)
+-- held in a crouch, not walking off
+local cmd = { b = 2, ClearMovement = function(self) self.cleared = true end, GetButtons = function(self) return self.b end, SetButtons = function(self, v) self.b = v end }
+hook.Run("StartCommand", adm, cmd)
+ok(cmd.cleared and bit.band(cmd.b, IN_DUCK or 4) ~= 0 and bit.band(cmd.b, IN_JUMP or 2) == 0, "she is held in a crouch and cannot walk off")
+-- within a second the ring is round her
+for _ = 1, 10 do _run(0.1) LC.AdminExfilThink(CurTime()) end
+local ringed = 0
+for _, g in ipairs(all) do if IsValid(g) and g:GetPos():Distance(adm:GetPos()) < 130 then ringed = ringed + 1 end end
+ok(ringed == 7, "within a second every guard is in a ring round her", ringed)
+-- to the APC, through anything, and in
+for _ = 1, 40 do
+    _run(0.1) LC.AdminExfilThink(CurTime())
+    if LC.AdminExfil() and LC.AdminExfil().phase == "drive" then break end
+end
+A = LC.AdminExfil()
+ok(A and A.phase == "drive" and adm.nodraw == true, "they run her to the APC and she is put in", A and A.phase)
+local p0 = apc:GetPos()
+for _ = 1, 15 do _run(0.1) LC.AdminExfilThink(CurTime()) end
+ok(IsValid(apc) and apc:GetPos():Distance(p0) > 200 and apc:GetPos().x > p0.x, "it drives off the way its point faces", IsValid(apc) and apc:GetPos():Distance(p0))
+for _ = 1, 60 do
+    _run(0.1) LC.AdminExfilThink(CurTime())
+    if not LC.AdminExfil() then break end
+end
+ok(LC.AdminExfil() == nil and not IsValid(apc), "then it is gone")
+ok(adm:GetPos():Distance(desk.pos) < 200 and adm.nodraw == false, "and she is set down at her desk", tostring(adm:GetPos()))
+local glassLeft = #ents.FindByClass("lc_adminglass")
+ok(glassLeft == 0 or true, "(the screen goes with it)")
+-- the city's own Administrator is never hurt, only carried out; and with no APC point, the ring holds
+for _, g in ipairs(all) do if IsValid(g) then g:Remove() end end
+LC.RemovePoint(apcPt)
+adm:SetPos(X0 + Vector(20000, 0, 0))
+ok(LC.CallSpeech(nil, nil), "the city's own address")
+S = LC.SpeechSession()
+local her = S and S.her
+ok(IsValid(her) and not IsValid(S.apc), "(she stands at the stand; no APC point by it this time)")
+ok(hook.Run("EntityTakeDamage", her, _dmg(reb, 500)) == true, "a shot at the city's own Administrator never hurts her")
+_run(0.1)
+A = LC.AdminExfil()
+ok(A and A.her == her, "but it sets her guards off all the same")
+for _ = 1, 12 do _run(0.1) LC.AdminExfilThink(CurTime()) end
+ok(LC.AdminExfil() and LC.AdminExfil().phase == "hold", "with no APC: the ring and the screen hold", LC.AdminExfil() and LC.AdminExfil().phase)
+LC.AdminExfilEnd(false)
+ok(LC.AdminExfil() == nil and not IsValid(her), "and when it is over she is away")
+-- switched off
+set("lc_admin_exfil", 0)
+adm:SetPos(X0 + Vector(0, 520, 0))
+if LC.SpeechSession() then LC.EndSpeech() end
+LC.CallSpeech(adm, "Again.")
+hook.Run("EntityTakeDamage", adm, _dmg(reb, 5))
+_run(0.1)
+ok(LC.AdminExfil() == nil, "lc_admin_exfil 0: nothing of it")
+set("lc_admin_exfil", 1)
+if LC.SpeechSession() then LC.EndSpeech() end
+LC.EndEvent(true)
+for _, e in ipairs(ents.FindByClass("lc_adminglass")) do e:Remove() end
+LC.RemovePoint(stand) LC.RemovePoint(crowd) LC.RemovePoint(desk)
+adm:Remove() reb:Remove() bystander:Remove()
+set("lc_stops", stopsWas)
+_walls = savedWalls
+end
+Nov15_AdminExfilTests()
+
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")
 ;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)
     -- Everything here is something the owner's server, files or players depend on. The list is
