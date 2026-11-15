@@ -1325,6 +1325,15 @@ function Arrive(npc, st, now)
         if LC.ExerciseArrive then LC.ExerciseArrive(npc, st, now) else st.untilT = now + 5 end
     elseif k == "speech" then
         if LC.SpeechArrive then LC.SpeechArrive(npc, st, now) else st.untilT = now + 5 end
+    elseif k == "fallin" then
+        -- fallen in for a job of someone's (the Administrator's review of the units): they stand there, facing
+        -- the way poi.yaw says, while the job holds them (st.questLock; it lets them go when it's over)
+        if st.questLock then
+            SetState(npc, st, "event")
+            st.eventUntil = now + 600
+        else
+            st.untilT = now + 2
+        end
     elseif k == "npcwork" then
         if LC.NPCWorkArrive then LC.NPCWorkArrive(npc, st, now) else st.untilT = now + 5 end
     elseif k == "work" then

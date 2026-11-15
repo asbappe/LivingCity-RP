@@ -32715,6 +32715,109 @@ _walls = savedWalls
 end
 AddressStandTests()
 
+function ReviewUnitsTests()
+section("15 November playtest: her review of the units is a line she walks down, and each answer shows")
+LC.EndEvent(true)
+local savedWalls = _walls
+_walls = {}
+local R0 = Vector(-98000, -60000, 0)
+local adm = newPlayer("ReviewAdministrator", "admin")
+adm:SetPos(R0)
+adm.eyeang = Angle(0, 0, 0)
+adm.chat = {}
+for n, s in pairs(LC.NPCs) do if IsValid(n) and LC.IsSecurity(s) then n:Remove() end end
+local units = {}
+for i = 1, 3 do
+    local u, ust = LC.Spawners.cop(R0 + Vector(900, (i - 2) * 300, 0))
+    if ust then ust.state, ust.untilT, ust.routeGroup = "idle", CurTime() + 600, nil end
+    units[#units + 1] = u
+end
+local t
+for _, x in ipairs(LC.QuestTemplates) do if x.id == "admin_review" then t = x end end
+local spec = t.build(adm)
+local talks = 0
+for _, s in ipairs(spec.stages) do if s.kind == "count" then talks = talks + 1 end end
+ok(talks == 0 and #spec.stages == 6, "no longer 'talk to units on the street': three units, each inspected and judged", #spec.stages)
+spec.id = 72000 + math.random(1, 9999); spec.tmpl = t; spec.faction = LC.QuestFaction(adm)
+spec.expiresPost = CurTime() + 999; spec.data = spec.data or {}
+LC.Postings[spec.faction] = LC.Postings[spec.faction] or {}
+table.insert(LC.Postings[spec.faction], spec)
+adm.lcqNext = 0
+local ledger = {}
+local add = LC.LedgerAdd
+LC.LedgerAdd = function(what, d, why) ledger[what] = (ledger[what] or 0) + d return add and add(what, d, why) end
+LC.AcceptPosting(adm, spec.id)
+local q = LC.QuestOf[adm]
+ok(q and q.data.line and #q.data.line == 3, "she takes it, and three units are called to fall in", q and q.data.line and #q.data.line)
+local locked = 0
+for _, u in ipairs(q and q.data.line or {}) do if LC.NPCs[u] and LC.NPCs[u].questLock == q then locked = locked + 1 end end
+ok(locked == 3, "(held by the job, off their beats)", locked)
+_run(10)
+local inLine, front = 0, 0
+for _, u in ipairs(q.data.line) do
+    local st = LC.NPCs[u]
+    if st and st.state == "event" then inLine = inLine + 1 end
+    if u:GetPos().x > R0.x + 100 and u:GetPos().x < R0.x + 300 then front = front + 1 end
+end
+ok(inLine == 3 and front == 3, "they walk over and stand in a line a few steps in front of her", inLine, front)
+-- the first: commend him
+local st1 = q.stages[q.stage]
+local u1 = st1.npc
+ok(st1.kind == "target" and u1 == q.data.line[1], "the first in the line is marked")
+q.data.look[u1] = "sharp"
+_sounds = {}
+LC.QuestEvent("used_npc", adm, u1)
+local ch = q.stages[q.stage]
+ok(ch.kind == "choice" and string.find(ch.prompt, LC.ReviewLook.sharp, 1, true) ~= nil, "E on him: how he looks, and what to do with him", ch.prompt)
+LC.ResolveChoice(adm, q.id, 1)
+ok(has(_sounds, "affirmative") and (ledger.combine or 0) == 1, "commended: he answers, and Civil Protection's strength rises", ledger.combine)
+ok((q.bonus or 0) == 5, "(the answer that fits him earns a little more)", q.bonus)
+_run(3)
+local s1 = LC.NPCs[u1]
+ok(s1 and s1.questLock == nil and s1.state ~= "event", "and after his salute he goes back to his beat", s1 and s1.state)
+-- the second: reassign him
+local u2 = q.stages[q.stage].npc
+ok(u2 == q.data.line[2], "on to the next in the line")
+LC.QuestEvent("used_npc", adm, u2)
+LC.ResolveChoice(adm, q.id, 3)
+local s2 = LC.NPCs[u2]
+ok(s2 and s2.reassigned and s2.questLock == nil, "reassigned: he is marched off his beat", s2 and s2.state)
+ok((ledger.authority or 0) >= 1 and (ledger.combine or 0) == 0, "(her authority up, Civil Protection's strength down)", ledger.authority, ledger.combine)
+-- the third: reprimand him, and it's done
+local u3 = q.stages[q.stage].npc
+LC.QuestEvent("used_npc", adm, u3)
+LC.ResolveChoice(adm, q.id, 2)
+ok(has(_sounds, "rodgerthat"), "reprimanded: he takes it")
+ok(q.done and has(adm.chat, "Complete: Review the Civil Protection units"), "the whole line seen to: the review is done", q.done)
+_run(3)
+local s3 = LC.NPCs[u3]
+ok(s3 and s3.questLock == nil and s3.state ~= "event", "and the last goes back to his beat too")
+-- one called away from the line before she gets to him: the review is what she saw to
+for n, s in pairs(LC.NPCs) do if IsValid(n) and LC.IsSecurity(s) then n:Remove() end end
+for i = 1, 3 do
+    local u, ust = LC.Spawners.cop(R0 + Vector(900, (i - 2) * 300, 0))
+    if ust then ust.state, ust.untilT, ust.routeGroup = "idle", CurTime() + 600, nil end
+end
+local spec2 = t.build(adm)
+spec2.id = 73000 + math.random(1, 9999); spec2.tmpl = t; spec2.faction = LC.QuestFaction(adm)
+spec2.expiresPost = CurTime() + 999; spec2.data = spec2.data or {}
+table.insert(LC.Postings[spec2.faction], spec2)
+adm.lcqNext = 0
+LC.AcceptPosting(adm, spec2.id)
+local q2 = LC.QuestOf[adm]
+_run(10)
+LC.QuestEvent("used_npc", adm, q2.stages[q2.stage].npc)
+LC.ResolveChoice(adm, q2.id, 1)
+for _, u in ipairs(q2.data.line) do if not q2.data.seen[u] and IsValid(u) then u:Remove() end end
+_run(1)
+ok(q2.done and has(adm.chat, "Complete: Review the Civil Protection units"), "the rest of the line called away: what she saw to is the review", q2.done)
+LC.LedgerAdd = add
+for n, s in pairs(LC.NPCs) do if IsValid(n) and LC.IsSecurity(s) then n:Remove() end end
+adm:SetPos(Vector(-120000, -120000, 0))
+_walls = savedWalls
+end
+ReviewUnitsTests()
+
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")
 ;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)
     -- Everything here is something the owner's server, files or players depend on. The list is
