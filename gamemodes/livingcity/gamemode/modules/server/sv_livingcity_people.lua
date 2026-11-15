@@ -71,6 +71,7 @@ function LC.SavePeople()
         out.list[#out.list + 1] = {
             id = p.id, role = p.role, name = p.name, gender = p.gender, model = p.model, job = p.job, home = p.home,
             rebel = p.rebel or nil, alive = p.alive, born = p.born, lastSeen = p.lastSeen, died = p.died, killer = p.killer,
+            moved = p.moved, -- left for another city by train (not dead)
             memory = p.memory, -- how each player's character has treated them (sv_livingcity_talk.lua)
             oldtimer = p.oldtimer or nil, -- the old man who gives advice (sv_livingcity_oldtimer.lua)
             helped = p.helped, -- what each player's character has helped him with (sv_livingcity_oldtimer.lua)
@@ -268,7 +269,8 @@ function LC.PersonWentHome(p, why)
     end
     p.wentHome = math.random(lo, hi)
 end
-local function AtHome(p) return (p.homeUntil or 0) > os.time() end
+-- (the game's clock, and kept in memory only: after a restart everyone is free to come out)
+local function AtHome(p) return (p.homeUntil or 0) > CurTime() end
 
 -- Is there anyone of this role who could come out now (alive, indoors, their time at home over)?
 function LC.PersonAvailable(role)
@@ -336,7 +338,7 @@ hook.Add("EntityRemoved", "LivingCityPeople", function(ent)
     if p and p.npc == ent then
         p.npc = nil
         p.lastSeen = os.time()
-        if p.wentHome then p.homeUntil, p.wentHome = os.time() + p.wentHome, nil end
+        if p.wentHome then p.homeUntil, p.wentHome = CurTime() + p.wentHome, nil end
         -- boarded the train for good (sv_livingcity.lua, StartLeaving): gone from this city, not dead
         if p.moving and p.alive then
             p.alive, p.moving, p.moved = false, nil, os.time()

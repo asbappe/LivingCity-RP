@@ -206,7 +206,7 @@ function LC.BuildReport()
             if p.alive then
                 alive = alive + 1
                 if p.rebel then rebels = rebels + 1 end
-                if IsValid(p.npc) then onStreet = onStreet + 1 elseif (p.homeUntil or 0) > os.time() then atHome = atHome + 1 end
+                if IsValid(p.npc) then onStreet = onStreet + 1 elseif (p.homeUntil or 0) > CurTime() then atHome = atHome + 1 end
             elseif p.moved then moved = moved + 1 else dead = dead + 1 end
         end
         out[#out + 1] = string.format("people: %d alive (%d sympathizers): %d out now, %d at home for now, the rest indoors and free to come out; %d dead remembered, %d moved to another city",

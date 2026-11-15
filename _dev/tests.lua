@@ -2967,7 +2967,7 @@ _setcvar("lc_roster_size", 3)
 _setcvar("lc_roster_cops", 2)
 _setcvar("lc_rebel_pct", 0)
 LC.TopUpPeople()
-ok(#P.list == 5, "the roster is filled to its size, citizens and units", #P.list)
+ok(#P.list == math.max(3, GetConVar("lc_citizens"):GetInt()) + 2, "the roster is filled to its size (never fewer citizens than the streets want), citizens and units", #P.list)
 local n1, s1 = LC.Spawners.citizen(Vector(9000, 9100, 0))
 local prof = s1.profile
 ok(prof and LC.NPCStr(n1, "lc_pname", "") == prof.name and n1:GetModel() == prof.model and prof.model:find("group01"), "a citizen on the street is a named person with their own model")
@@ -2990,7 +2990,7 @@ n3:Remove()
 LC.TopUpPeople()
 local alive = 0
 for _, o in ipairs(P.list) do if o.alive and o.role == "citizen" then alive = alive + 1 end end
-ok(alive == 3, "the city fills the gap with a new arrival", alive)
+ok(alive == math.max(3, GetConVar("lc_citizens"):GetInt()), "the city fills the gap with a new arrival", alive)
 for i = 1, 4 do
     local nn, ss = LC.Spawners.citizen(Vector(9000 + i * 50, 9500, 0))
     ok(ss.profile ~= prof, "and the dead never come back")
@@ -7480,8 +7480,8 @@ ok(s1.npcWork == nil and not IsValid(s1.carry), "they get home and put the suitc
     tostring(s1.state) .. " step " .. tostring(w1 and w1.i) .. "/" .. tostring(w1 and w1.steps and #w1.steps) .. " to " .. tostring(stepAt) .. " at " .. tostring(IsValid(a1) and a1:GetPos()) .. " doing " .. tostring(w1 and w1.steps and w1.steps[w1.i] and w1.steps[w1.i].doing))
 local lv, lvs = LC.SpawnCitizen(P0 + Vector(600, 300, 0))
 lvs.leaveAt = nil
-LC.StartLeaving(lv, lvs, false)
-ok(lvs.dest and lvs.dest:Distance(P0) < 260 and IsValid(lvs.carry), "someone leaving the city while it's in walks to the platform to board")
+LC.StartLeaving(lv, lvs, false, "despair: gone home") -- (since 15 November the only one who leaves the city: people stay)
+ok(lvs.dest and lvs.dest:Distance(P0) < 260 and IsValid(lvs.carry), "someone leaving the city for good while it's in walks to the platform to board")
 _run(92)
 ok(LC.TrainBoardingPos() == nil, "then the train pulls out")
 local lv2, lv2s = LC.SpawnCitizen(P0 + Vector(600, -300, 0))
@@ -10499,6 +10499,8 @@ watcher:SetPos(B0 + Vector(300, 300, 0))
 watcher.chat = {}
 local plat = LC.AddPoint(B0 + Vector(-600, 0, 0), 0, "platform", 0)
 local door = LC.AddPoint(B0 + Vector(0, 2400, 0), 0, "spawn", 0)
+-- (people free to step off: an earlier test may have left a tiny roster, and nobody nameless comes any more)
+_setcvar("lc_roster_size", math.max(GetConVar("lc_roster_size"):GetInt(), 30)) LC.TopUpPeople()
 local okA, arrivals = LC.TrainArrive(true)
 arrivals = arrivals or {}
 local a1 = arrivals[1]
@@ -23189,8 +23191,8 @@ section("Playtest fixes, 17 October")
     gst.leaveAt = CurTime() - 1
     LC.StartLeaving(goer, gst, false)
     local okr, rep = pcall(LC.BuildReport)
-    ok(okr and string.find(rep or "", "people who left since the map started", 1, true) and string.find(rep or "", "their time out was up", 1, true),
-        "the debug report says why people have been leaving the city")
+    ok(okr and string.find(rep or "", "times a citizen went indoors since the map started", 1, true) and string.find(rep or "", "their part was over", 1, true),
+        "the debug report says why people have been going indoors")
     LC.NPCs[goer] = nil goer:Remove()
     -- A clothes pack's battle helmet or welding mask: only on the Resistance in the open
     local wearer, wst = LC.Spawners.citizen(Vector(-97000, 158000, 0))
@@ -30409,14 +30411,14 @@ ok(not who.moving, "going home is not leaving the city")
 n:Remove()
 hook.Run("EntityRemoved", n)
 ok(who.alive == true and who.npc == nil, "indoors, they are still alive and still on the roster")
-ok((who.homeUntil or 0) > os.time(), "and at home for now", tostring(who.homeUntil))
+ok((who.homeUntil or 0) > CurTime(), "and at home for now", tostring(who.homeUntil))
 local picked = false
 for _ = 1, 40 do
     local p = LC.ClaimProfile("citizen")
     if p == who then picked = true end
 end
 ok(not picked, "while at home they are not brought out as if they were someone new")
-who.homeUntil = os.time() - 1
+who.homeUntil = CurTime() - 1
 local back = false
 for _, p in ipairs(P.list) do if p.alive and p.role == "citizen" and p ~= who then p.lastSeen = os.time() + 100000 end end
 back = LC.ClaimProfile("citizen") == who
@@ -30426,7 +30428,7 @@ for _, p in ipairs(P.list) do if p.lastSeen and p.lastSeen > os.time() + 1000 th
 -- with everyone out or at home, the streets get nobody rather than a nameless extra
 local held = {}
 for _, p in ipairs(P.list) do
-    if p.alive and p.role == "citizen" and not IsValid(p.npc) and (p.homeUntil or 0) <= os.time() then held[#held + 1] = p p.homeUntil = os.time() + 600 end
+    if p.alive and p.role == "citizen" and not IsValid(p.npc) and (p.homeUntil or 0) <= CurTime() then held[#held + 1] = p p.homeUntil = CurTime() + 600 end
 end
 local size = GetConVar("lc_roster_size"):GetInt()
 ok(alive("citizen") >= size and LC.PersonAvailable("citizen") == false, "everyone out or at home: nobody is free to come out")
