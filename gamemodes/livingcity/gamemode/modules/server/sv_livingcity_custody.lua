@@ -436,7 +436,8 @@ hook.Add("LivingCityIncarcerated", "LivingCityCustody", function(ply, secs, reas
         timer.Simple(12, function()
             if IsValid(ply) and LC.Prisoners and LC.Prisoners[ply] then
                 LC.StartInterrogation(ply)
-                if sev >= 4 then timer.Simple(50, function() if IsValid(ply) and LC.Prisoners and LC.Prisoners[ply] then LC.Cripple(ply) end end) end
+                -- (the rough end of it is still only for someone who could know something: a rebel)
+                if sev >= 4 and LC.CanInterrogate(ply) then timer.Simple(50, function() if IsValid(ply) and LC.Prisoners and LC.Prisoners[ply] then LC.Cripple(ply) end end) end
             end
         end)
     end
