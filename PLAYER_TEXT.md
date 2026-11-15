@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version bfa0799. Admin-only console messages and log lines are left out.
+Made from version cb5d787. Admin-only console messages and log lines are left out.
 
-12787 lines, from 350 files.
+12788 lines, from 350 files.
 
 ## Contents
 
@@ -306,7 +306,7 @@ Made from version bfa0799. Admin-only console messages and log lines are left ou
 - [flying a scanner from a Combine console](#flying-a-scanner-from-a-combine-console-svlivingcityscannerlua) (46)
 - [getting by](#getting-by-svlivingcityscavengelua) (86)
 - [Combine-only areas](#combine-only-areas-svlivingcitysecuritylua) (10)
-- [sentences that fit the crimes, the work detail, probation](#sentences-that-fit-the-crimes-the-work-detail-probation-svlivingcitysentencelua) (59)
+- [sentences that fit the crimes, the work detail, probation](#sentences-that-fit-the-crimes-the-work-detail-probation-svlivingcitysentencelua) (60)
 - [jobs that come with supply drops, and Union work orders that](#jobs-that-come-with-supply-drops-and-union-work-orders-that-svlivingcitysidejobslua) (104)
 - [character slots](#character-slots-svlivingcityslotslua) (20)
 - [small-server mode (the owner, 10 November: "yes please")](#small-server-mode-the-owner-10-november-yes-please-svlivingcitysmallserverlua) (2)
@@ -1930,7 +1930,7 @@ Made from version bfa0799. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): on screen
 
-- "The Colonel"  (drawn on screen, line 105)
+- "The Colonel"  (drawn on screen, line 127)
 
 ## cl_livingcity_context.lua (cl_livingcity_context.lua)
 
@@ -19524,128 +19524,132 @@ Made from version bfa0799. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): What a crime is worth
 
-- "civil protection"  (text, line 65)
+- "civil protection"  (text, line 68)
 
 > Note for you (not shown in game): Minutes on a sentence for one crime, and the kind it is.
 
-- "murder of a unit"  (text, line 71)
-- "attempted murder"  (text, line 74)
-- "civil protection"  (text, line 75)
+- "murder of a unit"  (text, line 74)
+- "attempted murder"  (text, line 77)
+- "civil protection"  (text, line 78)
 
 > Note for you (not shown in game): part of: crime minutes
 
-- "assaulting Civil Protection"  (text, line 76)
-- "aiding an escape"  (text, line 81)
-- "probation violation"  (text, line 81)
-- "violent or resisting"  (text, line 82)
+- "assaulting Civil Protection"  (text, line 79)
+- "aiding an escape"  (text, line 84)
+- "probation violation"  (text, line 84)
+- "violent or resisting"  (text, line 85)
+
+> Note for you (not shown in game): nothing in the last 30 minutes: the old lc_prison_time, but never a short one for the Resistance
+
+- "a member of the Resistance: %d minutes"  (message, line 170)
 
 > Note for you (not shown in game): part of: sentence for
 
-- ", doubled on probation"  (message, line 152)
-- ", the most for your Civil Standing"  (text, line 158)
-- ", halved for giving yourself up"  (text, line 162)
+- ", doubled on probation"  (message, line 177)
+- ", longer for the Resistance"  (text, line 182)
+- ", halved for giving yourself up"  (text, line 187)
 
 > Note for you (not shown in game): the game's living city incarcerated moment
 
-- "In a cell"  (on-screen notice, line 175)
-- "Want time off? F1 > Ask for a work detail: a guard walks you out to pick up trash, {GetInt} seconds off for each piece."  (on-screen notice, line 175)
+- "In a cell"  (on-screen notice, line 200)
+- "Want time off? F1 > Ask for a work detail: a guard walks you out to pick up trash, {GetInt} seconds off for each piece."  (on-screen notice, line 200)
 
 > Note for you (not shown in game): At the work spot: what the work is.
 
-- "[Prison] A push broom, and the cell block floor. Sweep up each patch of grime (hold E on it): {GetInt} seconds off your sentence for each. Stay close to the guard."  (chat message, line 238)
+- "[Prison] A push broom, and the cell block floor. Sweep up each patch of grime (hold E on it): {GetInt} seconds off your sentence for each. Stay close to the guard."  (chat message, line 263)
 
 > Note for you (not shown in game): part of: start work
 
-- "Work detail"  (on-screen notice, line 239)
-- "Sweep the floor: hold E on each patch of grime. Wander off and it's an escape."  (on-screen notice, line 239)
-- "[Prison] This toilet's blocked. Unclog it (E on it): {GetInt} seconds off your sentence. {or}"  (chat message, line 245)
-- "Work detail"  (on-screen notice, line 247)
-- "Unclog the toilet: E on it. Wander off and it's an escape."  (on-screen notice, line 247)
-- "[Prison] Pick up the trash: E on each piece. {GetInt} seconds off your sentence for each. Stay close to the guard."  (chat message, line 251)
-- "Work detail"  (on-screen notice, line 252)
-- "Pick up the trash (E on each piece). Wander off and it's an escape."  (on-screen notice, line 252)
+- "Work detail"  (on-screen notice, line 264)
+- "Sweep the floor: hold E on each patch of grime. Wander off and it's an escape."  (on-screen notice, line 264)
+- "[Prison] This toilet's blocked. Unclog it (E on it): {GetInt} seconds off your sentence. {or}"  (chat message, line 270)
+- "Work detail"  (on-screen notice, line 272)
+- "Unclog the toilet: E on it. Wander off and it's an escape."  (on-screen notice, line 272)
+- "[Prison] Pick up the trash: E on each piece. {GetInt} seconds off your sentence for each. Stay close to the guard."  (chat message, line 276)
+- "Work detail"  (on-screen notice, line 277)
+- "Pick up the trash (E on each piece). Wander off and it's an escape."  (on-screen notice, line 277)
 
 > Note for you (not shown in game): part of: ask work detail
 
-- "There are no work details in this prison."  (text, line 346)
-- "Only prisoners get a work detail."  (text, line 348)
-- "You're on a work detail already."  (text, line 349)
-- "Not with less than a minute left."  (text, line 351)
-- "You've had all the time off this sentence allows."  (text, line 352)
-- "No guard is free to take you out. Ask again in a minute."  (text, line 354)
-- "[Prison] A guard is coming to take you out on a work detail. Wait by your cell."  (chat message, line 372)
+- "There are no work details in this prison."  (text, line 371)
+- "Only prisoners get a work detail."  (text, line 373)
+- "You're on a work detail already."  (text, line 374)
+- "Not with less than a minute left."  (text, line 376)
+- "You've had all the time off this sentence allows."  (text, line 377)
+- "No guard is free to take you out. Ask again in a minute."  (text, line 379)
+- "[Prison] A guard is coming to take you out on a work detail. Wait by your cell."  (chat message, line 397)
 
 > Note for you (not shown in game): the guard's down: you're where you are, and the prison's rules again
 
-- "[Prison] Your guard is down."  (chat message, line 390)
-- "[Prison] The guard has other things to deal with. Back to your cell."  (chat message, line 396)
-- "Back in your cell."  (text, line 397)
+- "[Prison] Your guard is down."  (chat message, line 415)
+- "[Prison] The guard has other things to deal with. Back to your cell."  (chat message, line 421)
+- "Back in your cell."  (text, line 422)
 
 > Note for you (not shown in game): part of: detail step
 
-- "[Prison] The guard unlocks your cell and walks you out to the work detail."  (chat message, line 404)
-- "[Prison] No guard could get to you. Ask again later."  (chat message, line 407)
-- "[Prison] Swept. %d seconds off your sentence (%s left)."  (message, line 441)
+- "[Prison] The guard unlocks your cell and walks you out to the work detail."  (chat message, line 429)
+- "[Prison] No guard could get to you. Ask again later."  (chat message, line 432)
+- "[Prison] Swept. %d seconds off your sentence (%s left)."  (message, line 466)
 
 > Note for you (not shown in game): ended with the last patch: that one counts too
 
-- "[Prison] Swept. %d seconds off your sentence."  (message, line 447)
+- "[Prison] Swept. %d seconds off your sentence."  (message, line 472)
 
 > Note for you (not shown in game): part of: detail step
 
-- "[Prison] That'll do. The guard walks you back to your cell."  (chat message, line 457)
-- "Back in your cell. The door locks behind you."  (text, line 462)
-- "Back in your cell. The door locks behind you."  (text, line 464)
+- "[Prison] That'll do. The guard walks you back to your cell."  (chat message, line 482)
+- "Back in your cell. The door locks behind you."  (text, line 487)
+- "Back in your cell. The door locks behind you."  (text, line 489)
 
 > Note for you (not shown in game): part of: pick up prison trash
 
-- "[Prison] Picked up. %d seconds off your sentence (%s left)."  (message, line 481)
+- "[Prison] Picked up. %d seconds off your sentence (%s left)."  (message, line 506)
 
 > Note for you (not shown in game): part of: prison toilet use
 
-- "[Prison] Not that one. The blocked toilet's where the guard is waiting."  (chat message, line 505)
+- "[Prison] Not that one. The blocked toilet's where the guard is waiting."  (chat message, line 530)
 
 > Note for you (not shown in game): part of: end probation
 
-- "[Civil Protection] You never checked in. Failure to report for probation."  (chat message, line 567)
-- "Failure to report for probation"  (text, line 568)
-- "[Civil Protection] Your probation is over. Stay out of trouble."  (chat message, line 570)
+- "[Civil Protection] You never checked in. Failure to report for probation."  (chat message, line 592)
+- "Failure to report for probation"  (text, line 593)
+- "[Civil Protection] Your probation is over. Stay out of trouble."  (chat message, line 595)
 
 > Note for you (not shown in game): the game's living city released moment
 
-- "You're on probation for %d minutes. Check in with a Civil Protection unit (F1 > Check in for probation, standing close to one). Any offence counts double. Stay out of rebel territory and away from the Resistance."  (message, line 585)
-- "[Civil Protection] {msg}"  (chat message, line 587)
-- "On probation"  (on-screen notice, line 588)
+- "You're on probation for %d minutes. Check in with a Civil Protection unit (F1 > Check in for probation, standing close to one). Any offence counts double. Stay out of rebel territory and away from the Resistance."  (message, line 610)
+- "[Civil Protection] {msg}"  (chat message, line 612)
+- "On probation"  (on-screen notice, line 613)
 
 > Note for you (not shown in game): part of: probation check in
 
-- "You're not on probation."  (text, line 602)
-- "You've checked in already."  (text, line 603)
-- "Find a Civil Protection unit and stand close to them to check in."  (text, line 605)
-- "[Civil Protection] {Nick} checked in for probation."  (chat message, line 609)
-- "[Civil Protection] Checked in. Keep your nose clean until your probation is over."  (chat message, line 610)
+- "You're not on probation."  (text, line 627)
+- "You've checked in already."  (text, line 628)
+- "Find a Civil Protection unit and stand close to them to check in."  (text, line 630)
+- "[Civil Protection] {Nick} checked in for probation."  (chat message, line 634)
+- "[Civil Protection] Checked in. Keep your nose clean until your probation is over."  (chat message, line 635)
 
 > Note for you (not shown in game): A probation violation: on the record (doubled, being on probation) and wanted.
 
-- "[Civil Protection] Probation violation: {what}."  (chat message, line 619)
-- "Probation violation: {what}"  (text, line 620)
-- "Probation violation: {Nick}, {what}."  (text, line 621)
+- "[Civil Protection] Probation violation: {what}."  (chat message, line 644)
+- "Probation violation: {what}"  (text, line 645)
+- "Probation violation: {Nick}, {what}."  (text, line 646)
 
 > Note for you (not shown in game): part of: add trait
 
-- "helping the Resistance"  (text, line 635)
+- "helping the Resistance"  (text, line 660)
 
 > Note for you (not shown in game): part of: probation tick
 
-- "in rebel territory"  (text, line 649)
+- "in rebel territory"  (text, line 674)
 
 > Note for you (not shown in game): The menu's actions (F1): ask for a work detail, check in for probation.
 
-- "[Prison] {why}"  (chat message, line 704)
+- "[Prison] {why}"  (chat message, line 729)
 
 > Note for you (not shown in game): typing in chat
 
-- "[Civil Protection] {why}"  (chat message, line 708)
+- "[Civil Protection] {why}"  (chat message, line 733)
 
 ## jobs that come with supply drops, and Union work orders that (sv_livingcity_sidejobs.lua)
 

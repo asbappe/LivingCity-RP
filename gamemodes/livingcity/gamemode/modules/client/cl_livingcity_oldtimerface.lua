@@ -45,20 +45,28 @@ local function Restore(npc)
     end
 end
 
-local function Dress(npc, model)
+-- That head laid over any citizen-boned model (an NPC, or a model on this screen only such as the Colonel):
+-- returns the head, or nil. The body's own head is shrunk away beneath it.
+function LC_CL.HeadOn(body, model, group)
     if util.PrecacheModel then util.PrecacheModel(model) end
-    local f = ClientsideModel(model, RENDERGROUP_OPAQUE)
-    if not IsValid(f) then return end
-    f:SetParent(npc)
+    local f = ClientsideModel(model, group or RENDERGROUP_OPAQUE)
+    if not IsValid(f) then return nil end
+    f:SetParent(body)
     f:AddEffects(EF_BONEMERGE)
-    f:SetPos(npc:GetPos())
+    f:SetPos(body:GetPos())
     for i = 0, (f:GetBoneCount() or 0) - 1 do
         if not Keep(f:GetBoneName(i)) then f:ManipulateBoneScale(i, Vector(0, 0, 0)) end
     end
-    local hb = npc:LookupBone("ValveBiped.Bip01_Head1")
-    if hb then npc:ManipulateBoneScale(hb, Vector(0, 0, 0)) end
-    faces[npc] = f
+    local hb = body:LookupBone("ValveBiped.Bip01_Head1")
+    if hb then body:ManipulateBoneScale(hb, Vector(0, 0, 0)) end
     f.lcModel = model
+    return f
+end
+
+local function Dress(npc, model)
+    local f = LC_CL.HeadOn(npc, model)
+    if not f then return end
+    faces[npc] = f
 end
 
 hook.Add("Think", "LivingCityOldTimerFace", function()

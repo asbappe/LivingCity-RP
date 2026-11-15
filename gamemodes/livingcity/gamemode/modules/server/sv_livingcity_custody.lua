@@ -428,9 +428,11 @@ hook.Add("LivingCityIncarcerated", "LivingCityCustody", function(ply, secs, reas
         end)
         return
     end
-    -- only someone who could know something is questioned: a rebel (a Resistance
-    -- fighter, or anyone hunted as one). A citizen locked up for a fight knows nothing.
-    if sev >= 2 and LC.CanInterrogate(ply) then
+    -- who is questioned (the owner, 15 November: "if it's just a petty crime with a 3-5 minute jail sentence no
+    -- interrogation warranted. If it's a resistance member and/or the sentence is 10 minutes or over, then
+    -- questioning/interrogation is warranted"): a rebel (a Resistance member, or anyone hunted or dressed as
+    -- one), and anyone whose sentence is 10 minutes or more. It was a rebel on a second arrest or later only.
+    if LC.CanInterrogate(ply) or (tonumber(secs) or 0) >= 600 then
         timer.Simple(12, function()
             if IsValid(ply) and LC.Prisoners and LC.Prisoners[ply] then
                 LC.StartInterrogation(ply)

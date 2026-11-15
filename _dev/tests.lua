@@ -31163,7 +31163,7 @@ local charge = mm and mm.reason or (LC.Prisoners[con] and LC.Prisoners[con].reas
 ok(charge == "Resisting Civil Protection", "the charge is not an old one left on their name", tostring(charge))
 con:SetNW2Bool("lc_handsup", false)
 LC.FreeFromCustody(con)
--- the most a sentence can be goes by Civil Standing
+-- a sentence adds up the offences of the last 30 minutes; the Resistance get longer (the owner, 15 November)
 _setcvar("lc_sentences", 1)
 _setcvar("lc_sentence_max", 30)
 local function setStanding(p, v) LC.AddStanding(p, v - LC.Standing(p)) end
@@ -31173,18 +31173,52 @@ local function record(p)
         hook.Run("LivingCityWanted", p, r, 60)
     end
 end
+local function age(p, mins) for _, c in ipairs(LC.RapSheet(p)) do c.at = os.time() - mins * 60 end end
 record(con) setStanding(con, -40)
 local secs, words = LC.SentenceFor(con, 180, "x", cop3)
-ok(secs == 600 and tostring(words):find("the most for your Civil Standing", 1, true) ~= nil, "Civil Standing -40 with a long record: 10 minutes, not 30", tostring(secs) .. " " .. tostring(words))
-record(con) setStanding(con, -100)
-ok(LC.SentenceFor(con, 180, "x", cop3) == 1200, "-100: 20 minutes at most")
-record(con) setStanding(con, -300)
-ok(LC.SentenceFor(con, 180, "x", cop3) == 1800, "-300: the whole of lc_sentence_max (30)")
-record(con) setStanding(con, -40)
+ok(secs == 1800 and not tostring(words):find("Civil Standing", 1, true), "three grave offences in the last half hour: the whole of lc_sentence_max, whatever the Civil Standing", tostring(secs) .. " " .. tostring(words))
+record(con) age(con, 31)
+ok(LC.SentenceFor(con, 180, "x", cop3) == 180 and #LC.RapSheet(con) == 0, "the same offences from more than 30 minutes ago count for nothing: the plain lc_prison_time", #LC.RapSheet(con))
+record(con) age(con, 31)
 hook.Run("LivingCityWanted", con, "Curfew violation", 60)
-LC.RapClear(con)
-hook.Run("LivingCityWanted", con, "Curfew violation", 60)
-ok(LC.SentenceFor(con, 180, "x", cop3) == 180, "(a short record is what it adds up to, as before: one petty crime, 3 minutes)")
+ok(LC.SentenceFor(con, 600, "x", cop3) == 180, "an old record and one petty crime just now: 3 minutes")
+hook.Run("LivingCityWanted", con, "Sabotage", 60)
+age(con, 31)
+hook.Run("LivingCityWanted", con, "Sabotage", 60)
+ok(LC.SentenceFor(con, 180, "x", cop3) == 480, "an old offence done again counts from now (sabotage: 8 minutes)")
+-- the Resistance: twice as long, 10 minutes at least, still no more than the most
+LC.RapClear(reb)
+hook.Run("LivingCityWanted", reb, "Curfew violation", 60)
+local rs, rw = LC.SentenceFor(reb, 180, "x", cop3)
+ok(rs == 600 and tostring(rw):find("longer for the Resistance", 1, true) ~= nil, "a Resistance member with one petty crime: 10 minutes, and told why", tostring(rs) .. " " .. tostring(rw))
+LC.RapClear(reb)
+hook.Run("LivingCityWanted", reb, "Assaulting Civil Protection", 60)
+ok(LC.SentenceFor(reb, 180, "x", cop3) == 1200, "assaulting a unit (10): 20 minutes for the Resistance")
+record(reb)
+ok(LC.SentenceFor(reb, 180, "x", cop3) == 1800, "and never more than lc_sentence_max")
+LC.RapClear(reb)
+ok(LC.SentenceFor(reb, 180, "x", cop3) == 600, "a Resistance member with nothing on the record: 10 minutes, not lc_prison_time")
+LC.RapClear(reb) LC.RapClear(con)
+-- who is questioned in the cell: the Resistance, and anyone in for 10 minutes or more (the owner, 15 November)
+local function jailedAndAsked(p, secs)
+    fresh(p)
+    LC.RapClear(p)
+    p:SetPos(C0 + Vector(0, 1400, 0))
+    p.lcExactSentence = true
+    local inCell = LC.Incarcerate(p, secs, "x", nil) == true
+    p.lcExactSentence = nil
+    _run(14)
+    local asked = LC.Interrogations[p] ~= nil
+    if LC.EndInterrogation then LC.EndInterrogation(p) end
+    LC.FreeFromCustody(p)
+    return inCell, asked
+end
+local inC, asked = jailedAndAsked(con, 240)
+ok(inC and not asked, "a citizen in for four minutes is left alone: no questioning", tostring(inC) .. " " .. tostring(asked))
+inC, asked = jailedAndAsked(con, 600)
+ok(inC and asked, "a citizen in for ten minutes is questioned", tostring(inC) .. " " .. tostring(asked))
+inC, asked = jailedAndAsked(reb, 240)
+ok(inC and asked, "a Resistance member is questioned whatever the sentence, on a first arrest too", tostring(inC) .. " " .. tostring(asked))
 -- escaping and walking back in does not shorten a sentence
 fresh(con)
 LC.RapClear(con)

@@ -1416,6 +1416,26 @@ ClientsideModel = function()
 end
 run("Think") run("HUDPaint")
 if colonelMade == 0 then problems[#problems + 1] = "the Colonel wasn't drawn for a Resistance player" end
+-- his head (the owner, 15 November: "Fisherman's head please"): on a citizen's body, when this game has the model
+do
+    local usableWas = LC_CL.OldTimerFaceUsable
+    _globals.lc_oldtimer_face = "models/lostcoast/fisherman/fisherman.mdl"
+    LC_CL.OldTimerFaceUsable = function() return true end
+    if LC_CL.ColonelHead("models/Humans/Group01/male_07.mdl") ~= "models/lostcoast/fisherman/fisherman.mdl" then problems[#problems + 1] = "the Colonel on a citizen's body doesn't get the fisherman's head" end
+    if LC_CL.ColonelHead("models/odessa.mdl") ~= nil then problems[#problems + 1] = "the Colonel as Odessa lost his own head" end
+    LC_CL.OldTimerFaceUsable = function() return false end
+    if LC_CL.ColonelHead("models/Humans/Group01/male_07.mdl") ~= nil then problems[#problems + 1] = "the Colonel was given a head this game can't draw" end
+    LC_CL.OldTimerFaceUsable = usableWas
+    -- made afresh with the model there: two models, the body and the head
+    _globals.lc_colonel_here = false run("Think")
+    _globals.lc_colonel_model = "models/Humans/Group01/male_07.mdl"
+    LC_CL.OldTimerFaceUsable = function() return true end
+    local before = colonelMade
+    _globals.lc_colonel_here = true run("Think")
+    if colonelMade - before ~= 2 then problems[#problems + 1] = "the Colonel's head wasn't laid over him (models made: " .. tostring(colonelMade - before) .. ")" end
+    LC_CL.OldTimerFaceUsable = usableWas
+    _globals.lc_oldtimer_face = ""
+end
 do
     local r0, g0, _, a0, f0, s0 = LC_CL.ColonelLook(0, 5)
     local r1, _, _, a1, f1, s1 = LC_CL.ColonelLook(1, 0)

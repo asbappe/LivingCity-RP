@@ -34,7 +34,7 @@ Tick what works, write a word under what does not. What is not on this card wait
   Notes:
 - [ ] **Rebel ground:** do the way marks show as arrows and FREEDOM THIS WAY within about 20 seconds of joining (not a lambda)? Pots on the tables and dressers? The usual music, not the eerie piece? Do Dr. Magnusson's eyes look at you?
   Notes:
-- [ ] **The Colonel and the old timer:** does the Colonel stay put beside the quartermaster (or where you place "Point: Resistance Colonel's spot")? Does the old timer have the fisherman's head? Do citizens' mouths move on your recorded lines?
+- [ ] **The Colonel and the old timer:** does the Colonel stay put beside the quartermaster (or where you place "Point: Resistance Colonel's spot")? Do the old timer and the Colonel both have the fisherman's head? Do citizens' mouths move on your recorded lines?
   Notes:
 - [ ] **The stalker and the loudspeakers:** does the stalker stand right at its terminal and work it smoothly? Is the loudspeaker's box flush on the wall? If a loudspeaker still loops a noise, send the debug report while it plays (its "loudspeakers:" line) and say whether the noise is at the speaker or the box.
   Notes:
