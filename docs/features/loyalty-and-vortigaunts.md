@@ -20,7 +20,7 @@
 
 **Changes from the 7 November playtest.** The city's collared vortigaunts sweep for real, a push broom in hand, pacing a short stretch; they step aside when a person or NPC walks into them, and new sweeping spots keep out of doorways. A shackled vortigaunt never zaps: it runs from any headcrab or zombie within 400 units.
 
-**The 12 November playtest (the owner: "fix all of it please").** The street vortigaunt's push broom sits out in front, head on the ground, handle up to its hands (held in the claw, it stuck out to the side).
+**The 12 November playtest (the owner: "fix all of it please").** The street vortigaunt's push broom sits out in front, head on the ground, handle up to its hands (held in the claw, it stuck out to the side). **14 November (the owner's screenshot: the broom leaning on the floor beside it, not in its hands):** that fixed spot was measured from its feet, with numbers made for a stalker's body. The broom is now placed from the vortigaunt's own hands ten times a second (between its two claws, the model's `rightclaw` and `leftclaw` points, else its hand bones, else in front of its chest): the head rests on the floor ahead, the handle runs up through the hands, and it sweeps out and back along the floor, whatever animation the vortigaunt is in. Which way the broom model lies is read off the model (its longest side is the handle, its heavier end the head), so there is nothing to tune; `lc_vort_broom_flip 1` turns it end for end if the head ever ends up in the hands.
 
 ## Vortigaunts are chosen at the start of a new life (14 November)
 
