@@ -117,6 +117,7 @@ On the night shift (`cp_nightshift`) or a patrol job (`cp_patrol`), 40 seconds i
 - **Stopping to fight.** One being walked somewhere by the city who can see an enemy within 2200 units, with a gun in hand, is no longer marched on: it fights, for up to a minute a journey, then goes on. (Being given the next step of its way again and again is why they fired a round or two at each other and walked past; against a player they had been left alone to fight.) One with a stick still closes in.
 - **A line of fire.** One that knows of an enemy within 3000 units but can't see them goes for a line of fire or closes in, every four seconds, instead of standing facing a wall.
 - **Cover.** Hurt by an enemy, it takes cover from them three times in ten (seven in ten below half health), at most once in seven seconds.
+- **Backpedalling while shooting: keep it (the owner, 14 November: "a nice touch ... please make sure that stays").** A unit or rebel that backs away from you while firing is not scripted by the gamemode: backing off from an enemy who is too close is Half-Life 2's own NPC behaviour. What the gamemode adds is the ability to go on firing while moving (`CAP_MOVE_SHOOT`, given once to every fighter by `LC.CombatTune`). Do not remove that capability, and do not give fighters a schedule that pins them to a spot while an enemy is in sight (a test checks the capability is still given).
 - **Better shots.** Each is given very good weapon handling once, may duck, and fires on the move.
 
 ## Flashbangs that hold (11 November)

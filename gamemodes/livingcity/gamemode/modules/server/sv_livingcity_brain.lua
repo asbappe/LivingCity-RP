@@ -458,6 +458,7 @@ function LC.DirectorApply(d, now)
         if not EVENTS[ev] then return false, "not an event it may start" end
         if LC.Event then return false, "an event is already running" end
         if (B.lastEvent or -1e9) > now - EVENT_GAP then return false, "it started an event too recently" end
+        if ev == "rations" and LC.RationsCanStart and not LC.RationsCanStart(true) then return false, "rations are handed out by day, and only while the stores hold some" end
         if not LC.StartEvent or LC.StartEvent(ev) == false then return false, "the event could not start" end
         B.lastEvent = now
         return true, "started " .. ev
