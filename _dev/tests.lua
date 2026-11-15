@@ -30882,4 +30882,37 @@ cam:Remove()
 end
 Nov14E_CameraAimTests()
 
+function Nov14E_AdminNoJobTests()
+section("14 November notes, group E: the Administrator holds no Union job, and a parade gives her none")
+local savedWalls = _walls
+_walls = {}
+LC.EndEvent(true)
+local P0 = Vector(-84000, -64000, 0)
+local pp = {}
+for i = 0, 2 do pp[#pp + 1] = LC.AddPoint(P0 + Vector(i * 800, 0, 0), 0, "parade", 1) end
+local adm = newPlayer("ParadeAdministrator", "admin")
+adm:SetPos(P0 + Vector(400, 200, 0))
+_run(4)
+-- a job carried over from an earlier life as a citizen or a rebel
+adm:SetNW2String("lcj_job", "sanitation")
+adm:SetPData("lcj_job", "sanitation")
+LC.ReconcileAppearance(adm)
+ok(LC.Job(adm) == nil and adm:GetPData("lcj_job", "") == "", "taking the post, the Union job goes (and the saved one)")
+ok(not LC.CanWork(adm), "the Administrator is not the Union's to employ")
+local step = LC.NextStep(adm)
+ok(not step or (step.key ~= "job" and step.key ~= "shift" and step.key ~= "free" and step.key ~= "on_job"),
+    "her next step is never a Union job", step and step.key)
+adm.lcAdminNext = nil
+ok(LC.AdminDo(adm, "event", "parade") and LC.Event == "parade", "she orders a parade")
+_run(3)
+ok(LC.Job(adm) == nil and adm:GetNW2String("lcj_job", "") == "", "which gives her no job")
+ok(not (LC.QuestOf and LC.QuestOf[adm]), "and no quest or objective")
+local X = LC.ExerciseSession()
+ok(X and not X.people[adm] and not X.absent[adm], "nor a place in it to report to")
+LC.EndEvent(true)
+for _, p in ipairs(pp) do LC.RemovePoint(p) end
+_walls = savedWalls
+end
+Nov14E_AdminNoJobTests()
+
 return results.pass, results.fail, table.concat(results.lines, "\n")
