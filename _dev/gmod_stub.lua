@@ -4,7 +4,12 @@ local now = 0
 function CurTime() return now end
 function FrameTime() return 0.1 end
 function SysTime() return os.clock() end
-function _advance(dt) now = now + dt end
+-- Time moves in tenths of a second, kept on a grid of thousandths: adding 0.1 over and over drifts, and
+-- then "five steps of 0.1" is a hair short of "half a second", so a timer due on the step fired a step
+-- late or not, by how much time had gone before (a test that waited exactly as long as a timer takes
+-- passed or failed by what ran ahead of it). Timers also get a hair of grace (TIME_EPS, below).
+function _advance(dt) now = math.floor((now + dt) * 1000 + 0.5) / 1000 end
+local TIME_EPS = 1e-6
 
 -- Vector / Angle / Color
 local VMT = {}
@@ -156,16 +161,16 @@ function timer.Remove(name) timer.list[name] = nil end
 function timer.Simple(d, fn) table.insert(timer.simple, { at = now + d, fn = fn }) end
 function _runtimers()
     local due = {}
-    for name, t in pairs(timer.list) do if now >= t.next then due[#due + 1] = name end end
+    for name, t in pairs(timer.list) do if now + TIME_EPS >= t.next then due[#due + 1] = name end end
     table.sort(due, function(a, b) return (timer.list[a].seq or 0) < (timer.list[b].seq or 0) end)
     for _, name in ipairs(due) do
         local t = timer.list[name]
-        if t and now >= t.next then t.next = now + t.delay; t.fn() end
+        if t and now + TIME_EPS >= t.next then t.next = now + t.delay; t.fn() end
     end
     local due = {}
     for i = #timer.simple, 1, -1 do
         local s = timer.simple[i]
-        if now >= s.at then table.insert(due, s) table.remove(timer.simple, i) end
+        if now + TIME_EPS >= s.at then table.insert(due, s) table.remove(timer.simple, i) end
     end
     for _, s in ipairs(due) do s.fn() end
 end

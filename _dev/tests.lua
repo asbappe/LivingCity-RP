@@ -7876,6 +7876,10 @@ section("The Colonel: only the Resistance can see him")
 local CB = T0 + Vector(3000, 3000, 0)
 local qm, qms = person(Vector(3000, 3000, 0))
 qms.quartermaster = true
+-- (this one is the only quartermaster while the Colonel is looked at: with another about, left by an earlier
+-- test or brought by the city, he stood by that one as often as not, and everything after it went with him)
+local otherQMs = {}
+for n, s in pairs(LC.NPCs) do if n ~= qm and s.quartermaster then s.quartermaster = nil otherQMs[#otherQMs + 1] = s end end
 local fighter = newPlayer("ColonelFighter", "resistance") fighter:SetPos(CB + Vector(0, 60, 0))
 local nosy = newPlayer("ColonelNosy", "citizen") nosy:SetPos(CB + Vector(0, -150, 0))
 ok(LC.ColonelTick() and LC.ColonelPos and LC.ColonelPos:Distance(qm:GetPos()) < 120, "he stands by the quartermaster")
@@ -7948,6 +7952,7 @@ for _, p in ipairs({ fighter, nosy, copNear }) do p:SetPos(Vector(-30000, 30000,
 for _, e in ipairs({ clerk, old, dsp }) do if IsValid(e) then e:Remove() end end
 for _, p in ipairs({ learner, doer, quick, hearer, newbie, vet, stranger, asker2, visitor, buyer, reader }) do p:SetPos(Vector(-30000, 30000, 0)) end
 
+for _, s in ipairs(otherQMs) do s.quartermaster = true end
 section("Resistance lookouts")
 local boss = newPlayer("LookoutBoss", "resistance", nil, 150)
 boss:SetPos(T0 + Vector(0, -400, 0))
@@ -13312,12 +13317,22 @@ end
 LedgerTests()
 function SpeechTests()
 -- Her address, attended (the owner, 13 November): the city gathers, absentees get the stick till they black out
+-- (no random stops while this runs: now and then the unit beside the absentee stopped and cuffed them instead,
+-- and someone in cuffs is let off the muster, so the beating stopped at one blow. Through a local: a line
+-- starting _setcvar is replayed as a setting for every later section.)
+local setSpeech, stopsWas = _setcvar, GetConVar("lc_stops"):GetInt()
+setSpeech("lc_stops", 0)
 _setcvar("lc_ledger", 1)
 local SP0 = Vector(-60000, 64000, 0)
 local stand = LC.AddPoint(SP0 + Vector(0, 400, 0), 270, "speech", 0)
 local crowd = LC.AddPoint(SP0, 90, "speechcrowd", 0)
 local adm = newPlayer("SpeechAdministrator", "admin")
 local skip = newPlayer("SpeechSkipper", "citizen")
+-- (A unit standing beside the absentee takes them for someone crowding it: "move back", a shove, and after
+-- about twelve seconds "Obstructing Civil Protection", wanted, and marched to the cells, which lets them off
+-- the muster. That is the game as it is today, put to the owner in TODO.md. Here the crowding is held off,
+-- so this tests the muster alone.)
+skip.lcBump = { n = 0, last = CurTime() + 1e6 }
 local good = newPlayer("SpeechAttender", "citizen")
 _run(0.5)
 adm:SetPos(SP0 + Vector(3000, 0, 0))
@@ -13354,10 +13369,24 @@ ok(S.warned[skip], "halfway through: a unit who sees someone skipping it warns t
 _run(14)
 ok(L.morale == m0 + 6 and S.spoken, "the muster over: she speaks (morale up as before)")
 for _ = 1, 16 do -- (the unit at their side: how fast one runs over is the engine's business)
-    if skip:GetPos():DistToSqr(crowd.pos) > 800 * 800 then cop:SetPos(skip:GetPos() + Vector(40, 0, 0)) cst.state = "idle" end
+    -- (whichever unit warned them is the one after them: with other units about, left by earlier tests, it
+    -- was not always this one, and the test's own unit stood by while the real one was still walking over)
+    local after = S and S.chaser and IsValid(S.chaser[skip]) and S.chaser[skip] or cop
+    if skip:GetPos():DistToSqr(crowd.pos) > 800 * 800 then
+        after:SetPos(skip:GetPos() + Vector(40, 0, 0))
+        if LC.NPCs[after] then LC.NPCs[after].state = "idle" end
+    end
     _run(1)
 end
-ok(skip:GetPos():DistToSqr(crowd.pos) < 800 * 800, "beaten until they blacked out: they came to in the crowd", skip:GetPos())
+local Snow = LC.SpeechSession()
+ok(skip:GetPos():DistToSqr(crowd.pos) < 800 * 800, "beaten until they blacked out: they came to in the crowd",
+    string.format("at %s | session %s | blows %s | chaser %s | next blow in %.1f, next strike in %.1f | health %d | alive %s", tostring(skip:GetPos()), tostring(Snow ~= nil),
+        tostring(Snow and Snow.beaten and Snow.beaten[skip]), tostring(Snow and Snow.chaser and IsValid(Snow.chaser[skip])),
+        (skip.lcxBeatNext or 0) - CurTime(), (skip.lcSpeechNext or 0) - CurTime(), skip:Health(), tostring(skip:Alive()))
+        .. " | wanted " .. tostring(LC.PlayerIsWanted(skip)) .. " for " .. tostring(LC.LocalWanted[skip] and (LC.LocalWanted[skip].reason or LC.LocalWanted[skip].why))
+        .. " | must attend " .. tostring(LC.ExerciseEligible(skip)) .. " (faction " .. skip:GetNW2String("lcf_faction", "") .. ", unit " .. tostring(LC.PlayerIsCP(skip))
+        .. ", custody " .. tostring(LC.InCustody and LC.InCustody(skip)) .. ", tied " .. tostring(LC.IsTied and LC.IsTied(skip)) .. ", down " .. tostring(LC.IsDowned and LC.IsDowned(skip))
+        .. ", disguised " .. tostring(LC.DisguisedAsCP and LC.DisguisedAsCP(skip)) .. ", stalker " .. tostring(LC.PlayerIsStalker and LC.PlayerIsStalker(skip)) .. ")")
 ok(skip:Health() < 100, "(and it hurt)", skip:Health())
 _run(15)
 ok(LC.SpeechSession() == nil and not IsValid(S.podium), "after it the crowd breaks up and the podium goes")
@@ -13423,6 +13452,7 @@ LC.RemovePoint(stand) LC.RemovePoint(crowd)
 for _, x in ipairs({ adm, skip, good }) do x:SetPos(SP0 + Vector(30000, 0, 0)) end
 for _, n in ipairs({ cop, loyal }) do if IsValid(n) then n:Remove() end end
 _setcvar("lc_ledger", 0)
+setSpeech("lc_stops", stopsWas)
 end
 SpeechTests()
 section("Posters that hint at dreams (the owner, 12 November)")
@@ -19388,9 +19418,15 @@ do
     Press(a)
     ok(gr.pl[a].item == nil and gr.pl[a].boost > CurTime() and a:GetNW2Float("lc_kart_max", 0) == math.floor(LCK.Base * 1.5), "Jump uses it: a boost", a:GetNW2Float("lc_kart_max", 0))
     gr.pl[a].item = "melon"
+    -- (a rival driver may drop one of its own in the same moment: count the player's, the one nearest them)
+    local had = #gr.traps
     Press(a)
-    ok(#gr.traps == 1, "a melon, dropped behind", #gr.traps)
-    local trap = gr.traps[1]
+    ok(#gr.traps >= had + 1 and gr.pl[a].item == nil, "a melon, dropped behind", #gr.traps - had)
+    local trap
+    for i = had + 1, #gr.traps do
+        local t = gr.traps[i]
+        if not trap or t.pos:DistToSqr(a:GetPos()) < trap.pos:DistToSqr(a:GetPos()) then trap = t end
+    end
     _run(0.7)
     if trap then b:SetPos(trap.pos) end
     _run(0.1)
@@ -24596,8 +24632,9 @@ section("The 1 November playtest: infestations, sweeps, tools, traits, bins, rat
     local crab = ents.Create("npc_headcrab")
     crab:SetPos(sl:GetPos() + Vector(120, 0, 0))
     crab:Spawn()
+    LC.VortSlaves[sl].fleeUntil = 0 -- (not still running from something an earlier test left about: this headcrab is what it runs from)
     LC.VortSlaveTick(CurTime())
-    ok(sl.sched == SCHED_FORCED_GO_RUN and (LC.VortSlaves[sl].fleeUntil or 0) > CurTime(), "a headcrab near: it runs, no vortessence (the collar)")
+    ok(sl.sched == SCHED_FORCED_GO_RUN and (LC.VortSlaves[sl].fleeUntil or 0) > CurTime(), "a headcrab near: it runs, no vortessence (the collar)", tostring(sl.sched))
     crab:Remove()
     _walls = wallsWere
     -- gunfire: citizens who hear it run from it, or drop and cover their heads first
@@ -24740,6 +24777,8 @@ section("The 1 November playtest: infestations, sweeps, tools, traits, bins, rat
     ok(not IsValid(w), "a sprayed weed is gone (a bush takes a few seconds)")
     LC.SetJob(gk, "", true)
     LC.GiveItem(gk, "bread", 1)
+    -- (the canister may have run dry on that weed, when tools wear out: one in hand for this)
+    if not LC.HasItem(gk, "weedkiller") then LC.GiveItem(gk, "weedkiller", 1) end
     ok(LC.PoisonFood(gk) and LC.HasItem(gk, "tainted_bread") and not LC.HasItem(gk, "weedkiller") and LCS.Items.tainted_bread.name == LCS.Items.bread.name,
         "weedkiller into food: it looks exactly the same")
     gk:SetHealth(100)
@@ -24811,8 +24850,11 @@ section("The 1 November playtest: infestations, sweeps, tools, traits, bins, rat
     ok(post and #post == 3 and hasBarrel, "a Combine warning post (sign, lamp, and an infestation control barrel) at the edge of the infestation", post and #post)
     for _, e in ipairs(post or {}) do e:Remove() end
     cln:SetPos(patch.pos)
+    -- (a citizen with no job: the Union hands out work at random, and a sprayer's kit has weedkiller in it)
+    LC.SetJob(ctz, "", true)
+    while LC.HasItem(ctz, "weedkiller") do LC.TakeItem(ctz, "weedkiller") end
     local okN, whyN = LC.SprayNest(ctz, n1)
-    ok(not okN and string.find(whyN or "", "weedkiller", 1, true), "spraying a growth needs weedkiller")
+    ok(not okN and string.find(whyN or "", "weedkiller", 1, true), "spraying a growth needs weedkiller", tostring(whyN))
     LC.ClearNest(n1, cln)
     ok(table.HasValue(LC.Zones, patch), "one growth gone: the patch is still there")
     local okV, whyV = LC.VacuumNest(cln, n2)
@@ -26356,6 +26398,7 @@ local it = LCS.Items.rebel_pamphlet
 ok(it ~= nil and it.contraband == true and it.use == "rebelpamphlet", "the pamphlet is an item, and contraband")
 ok(LCS.BlackById.rebel_pamphlet ~= nil and LCS.BlackById.rebel_pamphlet.qm == true and LCS.BlackById.rebel_pamphlet.count == 5, "the quartermaster sells them, five at a time (no dealer does)")
 local seenWas, crimeWas, snitchWas, rollWas = LC.SeenBySecurity, LC.ReportCrime, LC.IsSnitch, LC.RebelPamphletRoll
+LC.IsSnitch = function() return false end -- (nobody here informs until the test names one: with informants on, a citizen was one at random)
 local seen, crimes = false, {}
 LC.SeenBySecurity = function() return seen end
 LC.ReportCrime = function(p, why) crimes[#crimes + 1] = { p, why } end
@@ -28695,7 +28738,7 @@ function RebelEventTests()
     ok(okR and sk and #sk.rebels >= 4, "a raid still sets out with its fighters", tostring(why) .. " " .. (sk and #sk.rebels or 0))
     ok(sk and sk.swapped >= 3 and sk.spawned == 0 and LC.CityNPCCount() <= before,
         "citizens nobody could see made way for them: the city's NPC count didn't go up", sk and (sk.swapped .. " swapped, " .. LC.CityNPCCount() .. " NPCs"))
-    _run(2)
+    _run(2.6) -- (the markers go out on a two-second timer: exactly two seconds caught it or not by what ran before)
     ok(MarkFor(res, "OUR FIGHTERS") ~= nil, "the Resistance see where their fighters are from the moment they set out")
     ok(MarkFor(unit, "ANTICITIZEN ATTACK") == nil, "Civil Protection don't, yet: nothing has happened")
     local dockAt, dockNear
