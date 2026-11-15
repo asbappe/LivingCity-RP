@@ -471,35 +471,75 @@ local function Tell(ply, msg) if IsValid(ply) then ply:ChatPrint("[" .. (X and N
 -- NPC citizens join in
 ------------------------------------------------------------------------
 
-local function EnlistCitizens(n, poiFor)
-    local got = 0
+-- Who can be called to it (the owner, 15 November, at the drill: "no one is partaking ... all the citizens are
+-- just mosying around"). Only those idle or walking about used to be asked, once, at the start: at dawn nearly
+-- everyone is in bed, sitting somewhere, in a line or at a job, so nobody came. Now a citizen of the city's own
+-- comes whatever they are doing (by day out of bed too; at night nobody is taken out of bed), and the city keeps
+-- asking while it is on, so those up later come too. Not one in a job of a player's, on the way home, held,
+-- fighting, or already in something scripted.
+local DRAFT = { idle = true, moving = true, busy = true, inline = true, working = true }
+local function Draftable(npc, st, wake)
+    if not IsValid(npc) or st.role ~= "citizen" or st.test or st.unmanaged or st.questLock or st.leaving or st.exCitizen then return false end
+    if st.carry and not st.npcWork then return false end
+    if st.state == "abed" then return wake == true end
+    return DRAFT[st.state] == true
+end
+LC.ExerciseDraftable = Draftable
+
+-- Whatever they were doing, they drop it.
+local function CallAway(npc, st)
+    if st.state == "abed" and LC.NPCBedUp then LC.NPCBedUp(npc, st) end
+    if st.state == "busy" and LC.EndBusy then LC.EndBusy(npc, st, false) end
+    if st.line and LC.LeaveLine then LC.LeaveLine(npc, st) end
+    if st.npcWork and LC.NPCWorkReset then LC.NPCWorkReset(npc, st) end
+    if LC.Release then LC.Release(npc, st) end
+end
+
+-- n: how many in all; poiFor(i): the i-th one's place and { yaw }. topup: with too few about, more of the
+-- city's people come out of a doorway near by (out of sight; never a nameless extra).
+local function EnlistCitizens(n, poiFor, topup)
+    X.enlisted = X.enlisted or 0
+    local wake = not (LC.DayPhase and LC.DayPhase() == "night")
+    local cands = {}
     for npc, st in pairs(LC.NPCs or {}) do
-        if got >= n then break end
-        if IsValid(npc) and st.role == "citizen" and (st.state == "idle" or st.state == "moving") and not st.unmanaged and not st.questLock
-            and not st.test and not st.leaving and not st.line and not st.npcWork and not st.carry then
-            local pos, data = poiFor(got + 1, npc)
-            if pos and LC.GoTo and LC.GoTo(npc, st, pos, X.kind == "jog", { kind = "exercise", pos = pos, yaw = data and data.yaw }) then
-                st.exCitizen = data or {}
-                X.npcs[npc] = true
-                got = got + 1
-            end
+        if not X.npcs[npc] and Draftable(npc, st, wake) then
+            cands[#cands + 1] = { npc = npc, st = st, d = X.center and npc:GetPos():DistToSqr(X.center) or 0 }
         end
     end
-    -- not enough of them about: more come out of a doorway near by (out of sight)
+    table.sort(cands, function(a, b) return a.d < b.d end)
+    local function Send(npc, st, pos, data, far)
+        if not (LC.GoTo and LC.GoTo(npc, st, pos, X.kind == "jog" or far, { kind = "exercise", pos = pos, yaw = data and data.yaw })) then return false end
+        data = data or {}
+        data.spot = pos
+        st.exCitizen = data
+        X.npcs[npc] = true
+        X.enlisted = X.enlisted + 1
+        return true
+    end
+    for _, c in ipairs(cands) do
+        if X.enlisted >= n then break end
+        local pos, data = poiFor(X.enlisted + 1, c.npc)
+        if not pos then break end
+        local was = c.st.state
+        CallAway(c.npc, c.st)
+        if not Send(c.npc, c.st, pos, data, c.d > 1500 * 1500) and was ~= "idle" and was ~= "moving" then
+            LC.SetState(c.npc, c.st, "idle")
+            c.st.untilT = CurTime() + 2
+        end
+    end
+    if not topup then return end
     local sp = LC.Spawners and LC.Spawners.citizen
-    for _ = got + 1, n do
-        local pos, data = poiFor(got + 1)
-        if not (pos and sp) then break end
-        local from = (LC.AlarmSquadSpot and LC.AlarmSquadSpot(pos)) or nil
+    local tries = 0
+    while sp and X.enlisted < n and tries < n do
+        tries = tries + 1
+        if LC.PersonAvailable and not LC.PersonAvailable("citizen") then break end
+        local pos, data = poiFor(X.enlisted + 1)
+        if not pos then break end
+        local from = LC.AlarmSquadSpot and LC.AlarmSquadSpot(pos)
         if not from then break end
         local ok, npc, st = LC.Try(sp, from)
         if not (ok and IsValid(npc) and st) then break end
-        if LC.GoTo and LC.GoTo(npc, st, pos, X.kind == "jog", { kind = "exercise", pos = pos, yaw = data and data.yaw }) then
-            st.exCitizen = data or {}
-            st.exTemp = true
-            X.npcs[npc] = true
-            got = got + 1
-        end
+        if Send(npc, st, pos, data, false) then st.exTemp = true end
     end
 end
 
@@ -592,7 +632,7 @@ local function SetupJog()
     X.units = Post(posts, "cop")
     EnlistCitizens(cvNPCs:GetInt(), function(i)
         return route[1] + Vector(math.Rand(-120, 120), math.Rand(-120, 120), 0), { i = 1 }
-    end)
+    end, true)
 end
 
 local function DrillSpot(i)
@@ -627,11 +667,14 @@ local function SetupDrill()
     end
     X.cues, X.cueNo = {}, 0
     X.nextCue = 0
-    EnlistCitizens(cvNPCs:GetInt(), function(i)
-        local spot = X.spots[#X.spots - i + 1] -- (the back rows: the players get the front)
-        X.taken[#X.spots - i + 1] = true
-        return spot, { yaw = X.yard.yaw + 180 }
-    end)
+    -- the city's own take the back rows (the players get the front): the last free place each
+    X.drillPoi = function()
+        for k = #X.spots, 1, -1 do
+            if not X.taken[k] then X.taken[k] = true return X.spots[k], { yaw = X.yard.yaw + 180 } end
+        end
+    end
+    EnlistCitizens(cvNPCs:GetInt(), X.drillPoi, true)
+    X.enlistNext = CurTime() + 4
 end
 
 local COLUMN_REACH, GUARD_REACH = 1500, 1800 -- how far a free unit may be from its post to be drafted
@@ -684,7 +727,7 @@ local function SetupParade()
         local s = (i % 2 == 0) and 1 or -1
         local yaw = (Vector(d.y, -d.x, 0) * s):Angle().y
         return spot + Vector(-d.y, d.x, 0) * (170 * s), { yaw = yaw, cheer = true }
-    end)
+    end, true)
 end
 
 ------------------------------------------------------------------------
@@ -987,6 +1030,57 @@ local MOVE_SAY = { crouch = "Crouch!", jump = "Jump!", spin = "Turn around, all 
 local KEY_MOVE = { [IN_DUCK or 4] = "crouch", [IN_JUMP or 2] = "jump", [IN_MOVELEFT or 512] = "step_left", [IN_MOVERIGHT or 1024] = "step_right",
     [IN_FORWARD or 8] = "step_forward", [IN_BACK or 16] = "step_back" }
 
+-- A move of the drill, done by an NPC where they stand (the instructor out front, the city's own in the rows).
+-- yaw: the way they face; spot: their place, stepped back to after a step.
+local ARMS_UP = { R_UpperArm = Angle(10, -120, 0), L_UpperArm = Angle(-10, -120, 0), R_Forearm = Angle(0, -20, 0), L_Forearm = Angle(0, -20, 0) }
+local function Pose(npc, pose, secs)
+    if not (npc.ManipulateBoneAngles and npc.LookupBone) then return false end
+    local done = {}
+    for bone, ang in pairs(pose) do
+        local b = npc:LookupBone("ValveBiped.Bip01_" .. bone)
+        if b then npc:ManipulateBoneAngles(b, ang) done[#done + 1] = b end
+    end
+    timer.Simple(secs, function()
+        if not IsValid(npc) then return end
+        for _, b in ipairs(done) do npc:ManipulateBoneAngles(b, Angle(0, 0, 0)) end
+    end)
+    return #done > 0
+end
+local STEP = { step_left = { 0, -1 }, step_right = { 0, 1 }, step_forward = { 1, 0 }, step_back = { -1, 0 } }
+local function DoMove(npc, move, yaw, spot)
+    if not IsValid(npc) then return end
+    yaw = yaw or npc:GetAngles().y
+    if move == "spin" then
+        LC.FaceYaw(npc, yaw + 120)
+        timer.Simple(0.35, function() if IsValid(npc) then LC.FaceYaw(npc, yaw + 240) end end)
+        timer.Simple(0.7, function() if IsValid(npc) then LC.FaceYaw(npc, yaw) end end)
+    elseif move == "crouch" then
+        if LC.PlayGesture then LC.PlayGesture(npc, { "Crouch_idleD", "crouchidle_panicked4", "ACT_COWER" }, 1.5) end
+    elseif move == "jump" then
+        Pose(npc, ARMS_UP, 0.7)
+        if LC.PlayGesture then LC.PlayGesture(npc, { "jump_holding_jump", "ACT_JUMP" }, 1) end
+    elseif STEP[move] and spot then
+        local s, a = STEP[move], Angle(0, yaw, 0)
+        npc:SetLastPosition(spot + a:Forward() * (s[1] * 45) + a:Right() * (s[2] * 45))
+        npc:SetSchedule(SCHED_FORCED_GO)
+        timer.Simple(1.3, function()
+            if not IsValid(npc) then return end
+            npc:SetLastPosition(spot)
+            npc:SetSchedule(SCHED_FORCED_GO)
+            timer.Simple(1.1, function() if IsValid(npc) then LC.FaceYaw(npc, yaw) end end)
+        end)
+    end
+end
+LC.DrillDoMove = DoMove
+-- The instructor calls it out loud (Half-Life 2's own citizen voices: "Get down!", "Behind you!", "Let's go!").
+local CALL = { crouch = { "getdown02" }, spin = { "behindyou01" } }
+local CALL_ANY = { "letsgo01", "letsgo02" }
+local function Call(npc, move)
+    local st = LC.NPCs[npc]
+    local s = "vo/npc/" .. ((st and st.gender == "female") and "female01" or "male01") .. "/" .. Pick(CALL[move] or CALL_ANY) .. ".wav"
+    if file.Exists("sound/" .. s, "GAME") then npc:EmitSound(s, 80) end
+end
+
 local function Mistake(p, r, why)
     r.mistakes = r.mistakes + 1
     r.total = r.total + 1
@@ -1011,25 +1105,26 @@ local function Cue(move, now)
     net.WriteFloat(now + win)
     net.WriteBool(IsValid(X.leader))
     net.Broadcast()
+    -- the instructor calls it and does it himself, out front (the owner, 15 November: "a single fitness
+    -- instructor just standing there doing nothing")
     if IsValid(X.instructor) then
         X.instructor:EmitSound("buttons/blip1.wav", 70)
-        if move == "spin" then
-            local yaw = X.yard.yaw
-            LC.FaceYaw(X.instructor, yaw + 180)
-            timer.Simple(0.8, function() if X and IsValid(X.instructor) then LC.FaceYaw(X.instructor, yaw) end end)
-        end
+        Call(X.instructor, move)
+        DoMove(X.instructor, move, X.yard.yaw, X.yard.pos + Vector(0, 0, 4))
+        X.instructorMoves = (X.instructorMoves or 0) + 1
     end
-    -- the NPCs in the rows have a go (mostly right)
+    -- the city's own in the rows copy it, a beat behind (mostly right)
     for npc in pairs(X.npcs) do
         local st = IsValid(npc) and LC.NPCs[npc]
-        if st and st.state == "event" and math.random() < 0.85 and st.exCitizen then
-            local yaw = st.exCitizen.yaw
-            if move == "spin" and yaw then
-                LC.FaceYaw(npc, yaw + 180)
-                timer.Simple(0.8, function() if IsValid(npc) then LC.FaceYaw(npc, yaw) end end)
-            elseif move == "crouch" and LC.PlayGesture then
-                LC.PlayGesture(npc, { "Crouch_idleD", "crouchidle_panicked4", "ACT_COWER" }, 1.5)
-            end
+        local c = st and st.exCitizen
+        if c and st.state == "event" then
+            local m = math.random() < 0.85 and move or Pick(MOVES)
+            timer.Simple(math.Rand(0.25, 0.7), function()
+                if X and IsValid(npc) and st.exCitizen == c and st.state == "event" then
+                    DoMove(npc, m, c.yaw, c.spot)
+                    c.moves = (c.moves or 0) + 1
+                end
+            end)
         end
     end
 end
@@ -1110,6 +1205,10 @@ local function DrillThink(now)
         local beatT = rope.start + rope.n * rope.interval
         if now >= beatT + 0.2 then
             rope.n = rope.n + 1
+            for npc in pairs(X.npcs) do -- (the city's own skip too)
+                local st = IsValid(npc) and LC.NPCs[npc]
+                if st and st.state == "event" and st.exCitizen and math.random() < 0.9 then DoMove(npc, "jump") end
+            end
             for p, r in pairs(X.people) do
                 if IsValid(p) and p:Alive() then
                     local j = r.lastJump
@@ -1381,6 +1480,11 @@ timer.Create("LivingCityExercise", 0.1, 0, function()
         if not LC.Running or (LC.Event ~= X.kind) then return LC.ExerciseFinish() end
         local dt = math.Clamp(now - lastTick, 0, 0.5)
         lastTick = now
+        -- the drill keeps calling the city's own until halfway through (those up late, or done sitting, come too)
+        if X.drillPoi and now >= (X.enlistNext or 0) then
+            X.enlistNext = now + 4
+            if X.phase == "muster" or (X.cueNo or 0) < math.floor(math.max(2, cvCues:GetInt()) / 2) then EnlistCitizens(cvNPCs:GetInt(), X.drillPoi) end
+        end
         if X.phase == "muster" then
             -- people arriving
             if now >= X.musterEnds then return StartRun(now) end

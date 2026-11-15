@@ -32818,6 +32818,59 @@ _walls = savedWalls
 end
 ReviewUnitsTests()
 
+function DrillCrowdTests()
+section("15 November playtest: the city's own come to the drill whatever they were doing, and do the moves with the instructor")
+LC.EndEvent(true)
+local savedWalls = _walls
+_walls = {}
+local D0 = Vector(-100000, -56000, 0)
+for _, p in ipairs(table.Copy(LC.Points)) do if p.kind == "yard" then LC.RemovePoint(p) end end
+local yard = LC.AddPoint(D0, 0, "yard", 0)
+local function cit(off, state)
+    local c, cst = LC.SpawnCitizen(D0 + off)
+    cst.state, cst.untilT = state, CurTime() + 600
+    return c, cst
+end
+local sitter, sst = cit(Vector(-600, 0, 0), "busy")
+local worker, wst = cit(Vector(-600, 200, 0), "working")
+wst.npcWork = { id = "test" }
+local queuer, qst = cit(Vector(-600, -200, 0), "inline")
+_setcvar("lc_exercise_muster", 15)
+ok(LC.StartEvent("drill"), "the morning drill starts")
+local X = LC.ExerciseSession()
+ok(X and X.npcs[sitter] and X.npcs[worker] and X.npcs[queuer], "a citizen sitting, one at a job and one in a line all come (before, only the idle were asked)")
+ok(sst.state == "moving" and wst.npcWork == nil and qst.line == nil, "(each drops what they were doing and walks over)", sst.state)
+local late, lst = cit(Vector(-700, 0, 0), "busy")
+_run(5)
+ok(X.npcs[late], "one done sitting after it began is called too")
+_run(12)
+ok(X.phase == "run" and IsValid(X.instructor), "the instructor runs it")
+local placed = 0
+for _, c in ipairs({ sst, wst, qst }) do if c.state == "event" and c.exCitizen and c.exCitizen.spot then placed = placed + 1 end end
+ok(placed == 3, "they stand in their places in the rows", placed)
+local m0 = X.instructorMoves or 0
+X.nextCue = math.huge
+LC.DrillCue("crouch", CurTime())
+_run(1)
+ok((X.instructorMoves or 0) == m0 + 1, "the instructor does the move himself as he calls it")
+local copied = 0
+for _, c in ipairs({ sst, wst, qst }) do if (c.exCitizen and c.exCitizen.moves or 0) >= 1 then copied = copied + 1 end end
+ok(copied == 3, "and the rows copy it a beat behind", copied)
+local before = sitter:GetPos()
+LC.DrillDoMove(sitter, "step_right", 0, before)
+_run(1)
+ok(sitter:GetPos():Distance(before) > 10, "a step is a real step", sitter:GetPos():Distance(before))
+_run(2.5)
+ok(sitter:GetPos():Distance(before) < 10, "and back to their place")
+LC.EndEvent(false)
+ok(sst.exCitizen == nil and sst.state ~= "event", "afterwards they go back to their day")
+for _, c in ipairs({ sitter, worker, queuer, late }) do if IsValid(c) then c:Remove() end end
+if IsValid(X.instructor) then X.instructor:Remove() end
+LC.RemovePoint(yard)
+_walls = savedWalls
+end
+DrillCrowdTests()
+
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")
 ;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)
     -- Everything here is something the owner's server, files or players depend on. The list is
