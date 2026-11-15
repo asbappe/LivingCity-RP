@@ -137,11 +137,30 @@ function LC.StalkerConsoleParts(npc)
     for _, t in ipairs(ENTRY_TAILS) do
         if Has(npc, base .. t) then entry = base .. t break end
     end
+    -- (no loop by its usual names: any other sequence of the same animation that isn't its lean in or its
+    -- straightening up, or one that sounds like typing; the owner, 15 November: "there should be an animation
+    -- for typing that can loop once the current animation is done")
+    if not loop and npc.GetSequenceList then
+        local lowBase = string.lower(base)
+        local best, bs
+        for _, seq in pairs(npc:GetSequenceList() or {}) do
+            local nm = tostring(seq)
+            local low = string.lower(nm)
+            local sc
+            if low ~= string.lower(entry or "") and not Base(nm, ENTRY_TAILS) and not Base(nm, EXIT_TAILS)
+                and not string.find(low, "death", 1, true) and not string.find(low, "attack", 1, true) then
+                if #low > #lowBase and string.sub(low, 1, #lowBase) == lowBase then sc = 3
+                elseif string.find(low, "typ", 1, true) or string.find(low, "keyboard", 1, true) then sc = 2 end
+            end
+            if sc and Has(npc, nm) and (not bs or sc > bs) then best, bs = nm, sc end
+        end
+        if best then loop = best if isEntry then entry = name end end
+    end
     if not loop then
-        if isEntry then entry = name else loop = name end -- (a lean in and nothing after: once, then it stands)
+        if isEntry then entry = name else loop = name end -- (a lean in and nothing after: once, then it stays leaning in)
     end
     if entry == loop then entry = nil end
-    LC.StalkerSequenceUsed = entry and loop and (entry .. ", then " .. loop) or (loop or (entry .. " (once)"))
+    LC.StalkerSequenceUsed = entry and loop and (entry .. ", then " .. loop) or (loop or (entry .. " (once, then held there)"))
     return entry, loop
 end
 
@@ -151,6 +170,29 @@ local function StopLoop(r)
         if SafeRemoveEntityDelayed then SafeRemoveEntityDelayed(r.ss, 0.5) else r.ss:Remove() end
     end
     r.ss = nil
+    if r.holding and IsValid(r.npc) then
+        if r.npc.SetPlaybackRate then r.npc:SetPlaybackRate(1) end
+        r.npc:SetSchedule(SCHED_IDLE_STAND)
+    end
+    r.holding = nil
+end
+
+-- Leaned in over the terminal, with no working animation to follow: it stays there, bent over the keys, the
+-- lean in's last moment held (it used to start the lean in all over again every couple of seconds: the owner,
+-- 15 November). Kept each second while it works.
+local function Hold(r)
+    local npc = r.npc
+    local entry = LC.StalkerConsoleParts(npc)
+    local id = entry and npc.LookupSequence and npc:LookupSequence(entry)
+    if not (id and id >= 0) then return false end
+    if not r.holding then
+        npc:SetSchedule(SCHED_NPC_FREEZE or SCHED_IDLE_STAND)
+        r.holding = entry
+    end
+    if npc.GetSequence and npc:GetSequence() ~= id and npc.ResetSequence then npc:ResetSequence(id) end
+    if npc.SetCycle then npc:SetCycle(0.98) end
+    if npc.SetPlaybackRate then npc:SetPlaybackRate(0) end
+    return true
 end
 
 -- It walks onto the spot itself and turns the way the spot faces, then leans in once and works (snap: put
@@ -159,11 +201,17 @@ end
 local function StartLoop(r, pos, yaw, snap)
     StopLoop(r)
     local entry, loop = LC.StalkerConsoleParts(r.npc)
+    -- (the lean in once at each terminal it comes to: again after it broke off, only the working)
+    if r.leaned and r.leaned == r.term then
+        if not loop then return Hold(r) end
+        entry = nil
+    end
     if not (entry or loop) or not LC.MakeSequence then return false end
     local flags = (SF_SCRIPT_NO_COMPLAINTS or 128) + (SF_SCRIPT_ALLOW_DEATH or 64) + (loop and (SF_SCRIPT_LOOP_IN_POST_IDLE or 16) or 0)
     local ok, ss = LC.Try(LC.MakeSequence, r.npc, pos, yaw, entry or loop, loop, flags, snap and 4 or 1, 0)
     if ok and IsValid(ss) then
         r.ss, r.ssAt, r.ssSnap = ss, CurTime(), snap or nil
+        if entry then r.leaned = r.term end
         return true
     end
     return false
@@ -475,6 +523,8 @@ local function Idle(r, now)
         return
     end
     if npc:GetPos():DistToSqr(r.term.pos) > 40 * 40 then
+        r.leaned = nil
+        if r.holding then StopLoop(r) end
         if r.phase ~= "toterm" or now - (r.nextLook or 0) > 4 then
             r.phase, r.nextLook = "toterm", now
             Walk(npc, r.term.pos)
@@ -484,13 +534,15 @@ local function Idle(r, now)
         return
     end
     if r.phase ~= "working" then
-        r.phase = "working"
+        r.phase, r.leaned = "working", nil
         npc:SetSchedule(SCHED_IDLE_STAND)
         if LC.FaceYaw then LC.FaceYaw(npc, r.term.yaw) else npc:SetAngles(Angle(0, r.term.yaw, 0)) end
         StartLoop(r, r.term.pos, r.term.yaw)
         SetDoing(r, "working a terminal")
+    elseif r.holding then
+        Hold(r) -- (bent over the keys: kept so)
     elseif r.ss == nil or not IsValid(r.ss) then
-        StartLoop(r, r.term.pos, r.term.yaw) -- (the loop broke off: again)
+        StartLoop(r, r.term.pos, r.term.yaw) -- (the loop broke off, or the lean in is done with nothing after: the working, never the lean in again)
     elseif not r.ssSnap and now - (r.ssAt or now) > 8 then
         -- still short of the spot after eight seconds (something in the way of the last step): put on it
         local d = npc:GetPos() - r.term.pos

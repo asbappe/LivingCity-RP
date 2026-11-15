@@ -31841,6 +31841,36 @@ if res and IsValid(res.npc) then
     res.ssAt = CurTime() - 9
     LC.ZoneStalkersThink(CurTime())
     ok(res.ss == second, "(once: not again and again)")
+    -- the sequence broke off (or ended): the working again, never the lean in (the owner, 15 November: "it keeps
+    -- looping after about 2 seconds to where it bends over the terminal again")
+    res.ss:Remove()
+    LC.ZoneStalkersThink(CurTime())
+    local kv3 = IsValid(res.ss) and res.ss.kv or {}
+    ok(IsValid(res.ss) and kv3.m_iszPlay == "console_work_loop" and kv3.m_iszPostIdle == "console_work_loop", "broken off: the working again, not the lean in", tostring(kv3.m_iszPlay))
+    -- a model with only a lean in: once, then it stays bent over the keys (held), never leaning in again
+    if IsValid(res.ss) then res.ss:Remove() end
+    res.npc:SetModel("models/test_stalker_preonly2.mdl")
+    res.npc.seqs = { console_work_pre = 4 }
+    res.npc.GetSequenceList = function() return { [4] = "console_work_pre" } end
+    LC.StalkerConsoleSequence(res.npc, true)
+    res.phase = "idle"
+    LC.ZoneStalkersThink(CurTime())
+    local lean = res.ss
+    ok(IsValid(lean) and lean.kv.m_iszPlay == "console_work_pre", "only a lean in: it leans in")
+    lean:Remove()
+    LC.ZoneStalkersThink(CurTime())
+    ok(res.holding == "console_work_pre" and not IsValid(res.ss), "and after it, holds there instead of leaning in again", tostring(res.holding))
+    LC.ZoneStalkersThink(CurTime())
+    ok(res.holding and not IsValid(res.ss), "(still held a second later)")
+    -- a typing animation by another name: found and looped after the lean in
+    local fk = ents.Create("npc_stalker")
+    fk:SetModel("models/test_stalker_typing.mdl")
+    fk.seqs = { console_work_pre = 4, keyboard_typing = 9 }
+    fk.GetSequenceList = function() return { [0] = "idle01", [4] = "console_work_pre", [9] = "keyboard_typing" } end
+    LC.StalkerConsoleSequence(fk, true)
+    local e4, l4 = LC.StalkerConsoleParts(fk)
+    ok(e4 == "console_work_pre" and l4 == "keyboard_typing", "a typing animation by another name is the working", tostring(e4) .. " / " .. tostring(l4))
+    fk:Remove()
     if IsValid(res.ss) then res.ss:Remove() end
     LC.ZoneStalkers[res.npc] = nil
     res.npc:Remove()
