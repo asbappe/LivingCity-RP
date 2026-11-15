@@ -60,6 +60,47 @@ function LC.PrisonAvailable()
     return LC.CountPointsOfKind("cell") > 0
 end
 
+-- Three separate checks stand between a unit NPC and a player's wrists (the owner, 14 November:
+-- "magically cuffed while shooting at them ... 3 different alternate checks"):
+--   1. the units' own choice: nobody armed and fighting is "subdued" (LC.Subdued, LC.NPCSubdue, the hit
+--      that would have been an arrest): they are fought instead;
+--   2. the gate (LC.NPCTakesIn): it refuses the armed and fighting, and anyone on their feet gets the
+--      struggle first (sv_livingcity_arrest.lua): press E to break free and run;
+--   3. the doors of custody themselves (the march, the street detention, the cell): each asks
+--      LC.CustodyAllowed, which refuses a unit NPC anyone armed and fighting, and anyone who has not had
+--      their chance (lost a struggle, gave themselves up, is down, or is already cuffed). A refusal is
+--      written to the errors file: it means some path skipped checks 1 and 2.
+-- The Administrator is never taken in by her own units at all.
+local CHANCE_SECS = 30
+function LC.ArrestChanceGiven(ply, inHand)
+    if not IsValid(ply) then return end
+    ply.lcHadChanceAt = CurTime()
+    if inHand then ply.lcInHandAt = CurTime() end -- (down where they lie, or walked in cuffed: theirs already)
+end
+function LC.CustodyAllowed(ply, arrester, how)
+    if not IsValid(ply) or not ply:IsPlayer() then return true end
+    local st = IsValid(arrester) and LC.NPCs and LC.NPCs[arrester]
+    if not st then return true end -- (staff, a player officer, a story, a conduct sentence: not a unit's arrest)
+    local why
+    if LC.IsAdministrator and LC.IsAdministrator(ply) then
+        why = "the Administrator"
+    elseif (ply.lcInHandAt or -1e9) > CurTime() - 2 then
+        return true
+    elseif LC.ArmedAndFighting and LC.ArmedAndFighting(ply) then
+        why = "armed and fighting"
+    else
+        local struggles = GetConVar("lc_arrest_struggle")
+        if (ply.lcHadChanceAt or -1e9) > CurTime() - CHANCE_SECS then return true end
+        if (LC.IsDowned and LC.IsDowned(ply)) or (LC.IsTied and LC.IsTied(ply)) then return true end
+        if struggles and not struggles:GetBool() then return true end -- (struggles are off: the old way)
+        why = "no chance to struggle or run"
+    end
+    if why ~= "the Administrator" and LC.Error then
+        LC.Error("custody refused", string.format("%s was not taken in (%s): %s", ply:Nick(), tostring(how or "arrest"), why))
+    end
+    return false, why
+end
+
 local function FreeCell(who)
     local free = LC.FreePoints({ cell = true }, who)
     -- the cell they were walked to (sv_livingcity_march.lua), if it's still free
@@ -90,6 +131,7 @@ end
 
 function LC.Incarcerate(ply, seconds, reason, arrester)
     if not IsValid(ply) or not ply:IsPlayer() then return false, "not a player" end
+    if not LC.CustodyAllowed(ply, arrester, "a cell") then return false, "not taken in" end
     seconds = math.max(10, tonumber(seconds) or cvTime:GetInt())
 
     local pr = LC.Prisoners[ply]
@@ -105,6 +147,14 @@ function LC.Incarcerate(ply, seconds, reason, arrester)
     -- an arrest: the sentence adds up their record since the last one (sv_livingcity_sentence.lua)
     local sentenced
     if LC.SentenceFor then seconds, sentenced = LC.SentenceFor(ply, seconds, reason, arrester) end
+    -- caught again after an escape: what was left of the sentence they ran from is still to serve (the
+    -- owner, 14 November: escaped a 30 minute sentence, walked back in, and it was 3)
+    local owed = LC.JailOwed(ply)
+    if owed > 0 and IsValid(arrester) and not ply.lcExactSentence then
+        seconds = seconds + owed
+        sentenced = (sentenced and (sentenced .. ", and ") or "") .. "the " .. string.NiceTime(owed) .. " you ran from"
+    end
+    ply.lcJailOwed = nil
 
     local weps = {}
     for _, w in ipairs(ply:GetWeapons()) do weps[#weps + 1] = w:GetClass() end
@@ -201,10 +251,18 @@ function LC.ReturnToCell(ply, msg)
     return true
 end
 
+-- Seconds of a sentence someone ran from, still to serve if they are caught within the hour.
+function LC.JailOwed(ply)
+    local o = IsValid(ply) and ply.lcJailOwed
+    if not o or CurTime() - o.at > 3600 then return 0 end
+    return math.floor(o.secs)
+end
+
 function LC.EscapePrisoner(ply) return Escape(ply) end -- a breakout (sv_livingcity_resistanceops.lua)
 Escape = function(ply)
     local pr = LC.Prisoners[ply]
     if not pr then return end
+    ply.lcJailOwed = { secs = math.max(0, pr.untilT - CurTime()), at = CurTime() }
     LC.Prisoners[ply] = nil
     if LC.Occupied[pr.cell] == ply then LC.Occupied[pr.cell] = nil end
     ply:SetNW2Float("lc_jail_until", 0)
@@ -270,6 +328,7 @@ end
 
 function LC.DetainOnTheSpot(ply, cop, reason)
     if not IsValid(ply) or LC.Detained[ply] or LC.Prisoners[ply] then return false end
+    if not LC.CustodyAllowed(ply, cop, "a street detention") then return false end
     local secs = math.max(5, cvStreet:GetFloat())
     -- the longer they were wanted, the longer they're held (the owner, 2 November: the v2.7 detentions)
     local since = ply.lcWantedSince
@@ -303,6 +362,30 @@ function LC.DetainOnTheSpot(ply, cop, reason)
     return true
 end
 
+-- Out of custody at once, whatever stage of it they are in (staff: F4 > Admin tools > Out of custody; the
+-- owner, 14 November: "I have no escape otherwise"). Held in a struggle, cuffed and waiting, being marched,
+-- kneeling on the street, in a cell: all of it ends, the cuffs come off, and nobody is looking for them.
+function LC.FreeFromCustody(ply)
+    if not IsValid(ply) or not ply:IsPlayer() then return false end
+    if LC.StruggleCancel then LC.StruggleCancel(ply) end
+    if LC.ArrestHoldEnd then LC.ArrestHoldEnd(ply) end
+    if LC.MarchRelease then LC.MarchRelease(ply) end
+    if LC.Detained[ply] then EndDetention(ply, LC.Detained[ply]) end
+    if LC.EndInterrogation and LC.Interrogations and LC.Interrogations[ply] then LC.EndInterrogation(ply, nil) end
+    if LC.Prisoners[ply] then
+        if ply.RemovePData then ply:RemovePData("lc_probation_due") end -- (let out by staff: no probation)
+        LC.ReleasePrisoner(ply)
+    end
+    if LC.IsTied and LC.IsTied(ply) and LC.Untie then LC.Untie(ply, nil, true) end
+    ply.lcJailOwed, ply.lcSubdue, ply.lcStillSince, ply.lcHadChanceAt = nil, nil, nil, nil
+    ply:SetNW2Float("lc_dazed_until", 0)
+    if LC.RapClear then LC.RapClear(ply) end
+    LC.ClearWanted(ply)
+    LC.CalmCops(ply)
+    if LC.SetAlert then LC.Try(LC.SetAlert, ply, 0) end
+    return true
+end
+
 timer.Create("LivingCityDetention", 0.5, 0, function()
     local now = CurTime()
     for ply, d in pairs(LC.Detained) do
@@ -328,13 +411,16 @@ hook.Add("PlayerDisconnected", "LivingCityDetention", function(ply) LC.Detained[
 function LC.Surrender(ply, unit)
     if not IsValid(ply) or not ply:Alive() or LC.InCustody(ply) then return false, "Not now." end
     if LC.PlayerIsCP(ply) then return false, "Civil Protection units don't surrender." end
+    -- (E on a unit in the middle of a firefight is not giving up: a gun in hand, or a shot just fired)
+    if LC.ArmedAndFighting and LC.ArmedAndFighting(ply) then return false, "Not now." end
     local barred = LC.InsiderBarred and LC.InsiderBarred(ply, "surrender") -- (a caught mole: sv_livingcity_insider.lua)
     if barred then return false, barred end
-    local reason = ply:GetNW2String("lc_wanted_reason", "")
+    local reason = LC.WantedReason(ply)
     -- giving yourself up for running: the same beating and "you can go" (sv_livingcity_running.lua)
     if LC.RunningBeating and LC.RunningBeating(unit, ply, reason) then return true end
     reason = "Surrendered" .. (reason ~= "" and (": " .. reason) or "")
     ply.lcSurrendered = true
+    LC.ArrestChanceGiven(ply) -- (their own choice)
     if IsValid(unit) then unit:EmitSound(LC.Pick(LC.Sounds.COP_ARREST), 78) end
     ply:ChatPrint("[Civil Protection] You put your hands up.")
     local done
@@ -387,6 +473,8 @@ end
 function LC.Subdued(ply)
     if not IsValid(ply) or not ply:Alive() or Flying(ply) then return false end
     if LC.IsDowned and LC.IsDowned(ply) then return true end
+    -- (check 1: nobody armed and fighting is subdued, hurt or standing still: they stand still to aim)
+    if LC.ArmedAndFighting and LC.ArmedAndFighting(ply) then ply.lcStillSince = nil return false end
     if ply:Health() < 20 then return true end
     if LC.SubdueHits(ply) >= math.max(1, cvSubdue:GetInt()) then return true end
     -- given up: standing still for them, a second or more
@@ -410,6 +498,9 @@ end
 -- of the baton (a swing a second at most). True when they've been taken in.
 function LC.NPCSubdue(unit, st, ply, now)
     if not IsValid(ply) or not ply:IsPlayer() or Flying(ply) then return false end
+    if LC.Struggles and LC.Struggles[ply] then return false end -- (another unit has hold of them: stand by)
+    if (ply.lcBrokeFree or 0) > now then return false end -- (just shoved free: a head start)
+    if LC.ArmedAndFighting and LC.ArmedAndFighting(ply) then return false end -- (check 1: fought, not cuffed)
     if LC.Subdued(ply) then return LC.NPCTakesIn(unit, ply) end
     if (st.nextSubdue or 0) > now then return false end
     st.nextSubdue = now + 1.1
@@ -431,6 +522,7 @@ function LC.NPCSubdue(unit, st, ply, now)
 end
 
 -- Security NPCs arrest instead of kill.
+local GRAB = 200 -- (a unit this close can lay hands on someone)
 hook.Add("EntityTakeDamage", "LivingCityNPCArrest", function(victim, dmg)
     if not victim:IsPlayer() or not cvArrests:GetBool() then return end
     local attacker = dmg:GetAttacker()
@@ -443,6 +535,12 @@ hook.Add("EntityTakeDamage", "LivingCityNPCArrest", function(victim, dmg)
     if st.enemy ~= victim and not LC.PlayerIsWanted(victim) then return end
     if LC.AlertLevel and LC.AlertLevel(victim) >= 3 then return end -- lethal force authorized
     if Flying(victim) or victim.lcSubdueHit then return end
+    -- (held by a unit already: nobody beats or shoots them while he has hold of them)
+    if LC.Struggles and LC.Struggles[victim] then dmg:SetDamage(0) return true end
+    if LC.ArmedAndFighting and LC.ArmedAndFighting(victim) then return end -- (check 1: a fight is a fight)
+    -- (hands are laid on from arm's reach, never from across the street: someone shot down from afar goes
+    -- down, and a unit walks over: sv_livingcity_rp.lua)
+    if attacker:GetPos():DistToSqr(victim:GetPos()) > GRAB * GRAB then return end
 
     local inflictor = dmg:GetInflictor()
     local club = dmg:IsDamageType(DMG_CLUB) or (IsValid(inflictor) and inflictor:GetClass() == "weapon_stunstick")
@@ -463,11 +561,29 @@ function LC.NPCTakesIn(unit, victim)
     if not IsValid(unit) or not IsValid(victim) or not victim:Alive() or not cvArrests:GetBool() then return false end
     if LC.Prisoners[victim] or LC.Detained[victim] or (LC.Marching and LC.Marching[victim]) then return false end
     if victim.lcDreaming then return false end -- (in a shared dream, somewhere else entirely: never marched off from inside one)
-    local reason = victim:GetNW2String("lc_wanted_reason", "")
-    if reason == "" then reason = "Resisting Civil Protection" end
+    if LC.IsAdministrator and LC.IsAdministrator(victim) then return false end -- (never by her own units)
+    -- check 2, the gate: never the armed and fighting, and anyone on their feet gets to struggle first
+    if LC.ArmedAndFighting and LC.ArmedAndFighting(victim) then return false end
+    if LC.Struggles and LC.Struggles[victim] then return false end
+    if (victim.lcBrokeFree or 0) > CurTime() then return false end
     -- caught running, the first or second time this hour: a beating and "you can go", not the cells
     -- (the owner, 7 November; sv_livingcity_running.lua)
-    if LC.RunningBeating and LC.RunningBeating(unit, victim, reason) then return true end
+    local reason = LC.WantedReason(victim)
+    if LC.RunningBeating and LC.RunningBeating(unit, victim, reason ~= "" and reason or "Resisting Civil Protection") then return true end
+    if victim:IsPlayer() and LC.ArrestWillStruggle and LC.BeginArrestStruggle and LC.ArrestWillStruggle(victim, unit) then
+        LC.BeginArrestStruggle(unit, victim)
+        return true -- (he has hold of them: what comes of it is LC.NPCCuffs, or a shove and away)
+    end
+    if victim:IsPlayer() then LC.ArrestChanceGiven(victim) end -- (down, hands up, or cuffed already: nothing to struggle with)
+    return LC.NPCCuffs(unit, victim)
+end
+
+-- The cuffs go on (the struggle is lost, or there was none to have).
+function LC.NPCCuffs(unit, victim)
+    if not IsValid(unit) or not IsValid(victim) or not victim:Alive() then return false end
+    if LC.Prisoners[victim] or LC.Detained[victim] or (LC.Marching and LC.Marching[victim]) then return false end
+    local reason = LC.WantedReason(victim)
+    if reason == "" then reason = "Resisting Civil Protection" end
     local done
     if LC.PrisonAvailable() then
         -- walked there by the unit who took you down, and another (sv_livingcity_march.lua)

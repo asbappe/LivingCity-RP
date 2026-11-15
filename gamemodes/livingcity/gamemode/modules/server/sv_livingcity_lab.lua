@@ -236,7 +236,7 @@ end
 -- the quartermaster sells should not appear at all in the lab"): not listed, not made.
 function LC.QuartermasterStocks(item)
     for _, g in ipairs(LC.MarketBlackList and LC.MarketBlackList() or LCS.Black or {}) do
-        if g.item == item then return true end
+        if g.item == item and not g.lab then return true end -- (lab: listed for its price only; the lab's alone)
     end
     return false
 end

@@ -7,8 +7,9 @@
 
       In    a kitchen shift (+12) or a factory shift (+8), worked by a player;
             the city's own kitchen and factory workers (a few a time); a
-            train's freight (+15); a supply convoy, for every load that wasn't
-            stolen (+15 a load)
+            train's freight, and a supply convoy for every load that wasn't
+            stolen: twenty minutes of the city's eating each (+20 for a
+            city of up to lc_stock_eat citizens, +80 for one of 80)
       Out   every ration handed out (one), and the city eating (a ration a
             minute for every lc_stock_eat (20) citizens out, in proportion:
             three citizens eat nine an hour; never the last quarter)
@@ -42,18 +43,28 @@ local function Publish()
     SetGlobal2Bool("lc_stock_on", cvOn:GetBool())
 end
 
+-- (v 2: saved since deliveries were sized to the city, 15 November. Stores saved before that had been eaten
+-- down to nothing by a city bigger than its deliveries were made for: they start again from half, once.)
+local SAVE_V = 2
 local function Load()
     stock = math.floor(Max() / 2)
     local t = LC.SafeReadJSON(Path())
-    if istable(t) and tonumber(t.stock) then stock = math.Clamp(tonumber(t.stock), 0, Max()) end
+    if istable(t) and tonumber(t.stock) then
+        stock = math.Clamp(tonumber(t.stock), 0, Max())
+        if (tonumber(t.v) or 1) < SAVE_V and stock < math.floor(Max() / 2) then
+            stock, dirty = math.floor(Max() / 2), true
+            if LC.Log then LC.Log("info", "City stores: started again from half (they were saved before deliveries were sized to the city)") end
+        end
+    end
     Publish()
 end
+LC.StockLoad = Load
 
 function LC.StockSave()
     dirty = false
     if not file or not file.Write or stock == nil then return end
     if file.CreateDir then file.CreateDir("livingcity") end
-    LC.SafeWrite(Path(), util.TableToJSON({ stock = stock }))
+    LC.SafeWrite(Path(), util.TableToJSON({ stock = stock, v = SAVE_V }))
 end
 
 function LC.Stock()
@@ -162,8 +173,22 @@ hook.Add("LivingCityNPCWorkFinished", "LivingCityStock", function(npc, st, id)
     if y and st and st.profile and (st.profile.job == "kitchen" or st.profile.job == "factory") then LC.StockAdd(y, "npc work") end
 end)
 
-hook.Add("LivingCityTrainArrived", "LivingCityStock", function() LC.StockAdd(15, "train freight") end)
-hook.Add("LivingCitySupplyEnded", "LivingCityStock", function(s, left) if (left or 0) > 0 then LC.StockAdd(left * 15, "convoy") end end)
+-- What the city eats a minute: a ration for every lc_stock_eat citizens out (the timer below), one at least.
+local function EatRate()
+    local out = LC.RoleCounts and LC.RoleCounts.citizen or 0
+    return math.max(1, math.ceil(out / math.max(5, cvEat:GetFloat())))
+end
+LC.StockEatRate = EatRate
+-- A train's freight, and each convoy load that wasn't stolen: twenty minutes of the city's eating (20 rations
+-- for a city of up to lc_stock_eat citizens; 80 for one of 80). The owner, 14 November: "why are rations empty?
+-- they are at 0%": a city of 80 ate 240 an hour and its trains, convoys and workers brought about 105, because
+-- a delivery was 15 rations whatever the size of the city it fed. (20, not 15: at 15 what came in fell short
+-- of what was eaten, and the stores would sit on the quarter line where the city's own eating stops, also
+-- 15 November, going short and back with every handout.)
+local DELIVERY = 20
+LC.StockDelivery = DELIVERY
+hook.Add("LivingCityTrainArrived", "LivingCityStock", function() LC.StockAdd(DELIVERY * EatRate(), "train freight") end)
+hook.Add("LivingCitySupplyEnded", "LivingCityStock", function(s, left) if (left or 0) > 0 then LC.StockAdd(left * DELIVERY * EatRate(), "convoy") end end)
 
 ------------------------------------------------------------------------
 -- What goes out

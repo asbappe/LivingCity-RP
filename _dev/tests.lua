@@ -332,14 +332,18 @@ con:SetPos(Vector(2000, -2000, 0))
 
 -- NPC arrests instead of kills (straight to a cell here: being marched there is tested in MarchTests)
 _setcvar("lc_march", 0)
-local cop2, cst2 = LC.Spawners.cop(Vector(-200, -200, 0))
+local cop2, cst2 = LC.Spawners.cop(con:GetPos() + Vector(60, 0, 0)) -- (at arm's reach: nobody is cuffed from across the street)
 cst2.untilT = 1e9
+cop2.sim = false
 local dmg = _dmg(cop2, 20, DMG_CLUB)
 con.lcSubdue = { n = 2, t = CurTime() } -- (two blows already: cuffed once they're subdued, lc_subdue_hits)
 hook.Run("EntityTakeDamage", con, dmg)
-ok(LC.Prisoners[con] ~= nil, "a stunstick hit from a cop arrests a wanted player (once they're subdued)")
-con.lcViolentUntil = nil
+-- (the owner, 14 November: every arrest by a unit gives the struggle first; Nov14A_CustodyTests)
+ok(LC.Struggles[con] ~= nil and not LC.Prisoners[con], "a stunstick hit from a cop on a wanted player (once they're subdued): he lays hands on them, and they may struggle")
 ok(dmg:GetDamage() == 0, "instead of hurting them")
+_run(5)
+ok(LC.Prisoners[con] ~= nil, "doing nothing about it: arrested")
+con.lcViolentUntil = nil
 LC.ReleasePrisoner(con)
 _setcvar("lc_march", 1)
 
@@ -2042,8 +2046,15 @@ LC.GiveItem(runner2, "lockpick")
 local cr0 = LC.Credits(runner2)
 local hit = _dmg(copA, 10, DMG_CLUB)
 runner2.lcSubdue = { n = 2, t = CurTime() } -- (beaten down: the third blow cuffs them)
+copA:SetPos(runner2:GetPos() + Vector(60, 0, 0)) -- (at arm's reach: nobody is cuffed from across the street)
+local simA = copA.sim
+copA.sim = false
 hook.Run("EntityTakeDamage", runner2, hit)
-ok(LC.Detained[runner2] and runner2.frozen and hit:GetDamage() == 0, "the stick doesn't just beat you: you're cuffed on the street")
+-- (the owner, 14 November: a unit's arrest gives the struggle first; Nov14A_CustodyTests)
+ok(LC.Struggles[runner2] ~= nil and hit:GetDamage() == 0, "the stick doesn't just beat you: he lays hands on you, and you may struggle")
+_run(5)
+copA.sim = simA
+ok(LC.Detained[runner2] and runner2.frozen, "doing nothing about it: you're cuffed on the street")
 ok(not LC.PlayerIsWanted(runner2) and not LC.HasItem(runner2, "lockpick") and LC.Credits(runner2) < cr0, "searched and fined, and no longer wanted")
 local hit2 = _dmg(copA, 10, DMG_CLUB)
 hook.Run("EntityTakeDamage", runner2, hit2)
@@ -2967,7 +2978,7 @@ _setcvar("lc_roster_size", 3)
 _setcvar("lc_roster_cops", 2)
 _setcvar("lc_rebel_pct", 0)
 LC.TopUpPeople()
-ok(#P.list == 5, "the roster is filled to its size, citizens and units", #P.list)
+ok(#P.list == math.max(3, GetConVar("lc_citizens"):GetInt()) + 2, "the roster is filled to its size (never fewer citizens than the streets want), citizens and units", #P.list)
 local n1, s1 = LC.Spawners.citizen(Vector(9000, 9100, 0))
 local prof = s1.profile
 ok(prof and LC.NPCStr(n1, "lc_pname", "") == prof.name and n1:GetModel() == prof.model and prof.model:find("group01"), "a citizen on the street is a named person with their own model")
@@ -2990,7 +3001,7 @@ n3:Remove()
 LC.TopUpPeople()
 local alive = 0
 for _, o in ipairs(P.list) do if o.alive and o.role == "citizen" then alive = alive + 1 end end
-ok(alive == 3, "the city fills the gap with a new arrival", alive)
+ok(alive == math.max(3, GetConVar("lc_citizens"):GetInt()), "the city fills the gap with a new arrival", alive)
 for i = 1, 4 do
     local nn, ss = LC.Spawners.citizen(Vector(9000 + i * 50, 9500, 0))
     ok(ss.profile ~= prof, "and the dead never come back")
@@ -4405,6 +4416,7 @@ cop:SetPos(hu:GetPos() + Vector(60, 0, 0))
 ok(LC.CanTie(cop, hu), "hands up: tied face to face, and units carry their own ties")
 LC.TiePlayer(hu, cop)
 ok(LC.IsTied(hu) and not hu:GetNW2Bool("lc_handsup", false), "(tied)")
+LC.ArrestChanceGiven(hu) -- (the owner, 14 November: a unit's arrest follows a struggle lost, or a surrender. Nov14A_CustodyTests)
 local jailed, err = LC.Incarcerate(hu, 60, "test", cop)
 ok(not jailed or (not LC.IsTied(hu) and not hu:GetNW2Bool("lc_tied", false)), "taken into custody, the ties come off", err)
 if jailed then LC.ReleasePrisoner(hu) end
@@ -7416,13 +7428,13 @@ LC.SetJob(cook, "clerk", true)
 LC.Bump(cook, "shifts")
 ok(LC.Stock() == 220, "a clerk's doesn't")
 hook.Run("LivingCityTrainArrived", nil, {}, "City 14")
-ok(LC.Stock() == 235, "a train brings freight")
+ok(LC.Stock() == 240, "a train brings freight")
 hook.Run("LivingCitySupplyEnded", {}, 2)
-ok(LC.Stock() == 265, "and a convoy, for every load that wasn't stolen")
+ok(LC.Stock() == 280, "and a convoy, for every load that wasn't stolen")
 local n, st = LC.SpawnCitizen(Vector(-32000, 34000, 0))
 st.profile = { job = "kitchen" }
 hook.Run("LivingCityNPCWorkFinished", n, st, "supply")
-ok(LC.Stock() == 269, "the city's own kitchen workers add to it")
+ok(LC.Stock() == 284, "the city's own kitchen workers add to it")
 n:Remove()
 -- rations come out of them
 local eater = newPlayer("StockEater", "citizen")
@@ -7480,8 +7492,8 @@ ok(s1.npcWork == nil and not IsValid(s1.carry), "they get home and put the suitc
     tostring(s1.state) .. " step " .. tostring(w1 and w1.i) .. "/" .. tostring(w1 and w1.steps and #w1.steps) .. " to " .. tostring(stepAt) .. " at " .. tostring(IsValid(a1) and a1:GetPos()) .. " doing " .. tostring(w1 and w1.steps and w1.steps[w1.i] and w1.steps[w1.i].doing))
 local lv, lvs = LC.SpawnCitizen(P0 + Vector(600, 300, 0))
 lvs.leaveAt = nil
-LC.StartLeaving(lv, lvs, false)
-ok(lvs.dest and lvs.dest:Distance(P0) < 260 and IsValid(lvs.carry), "someone leaving the city while it's in walks to the platform to board")
+LC.StartLeaving(lv, lvs, false, "despair: gone home") -- (since 15 November the only one who leaves the city: people stay)
+ok(lvs.dest and lvs.dest:Distance(P0) < 260 and IsValid(lvs.carry), "someone leaving the city for good while it's in walks to the platform to board")
 _run(92)
 ok(LC.TrainBoardingPos() == nil, "then the train pulls out")
 local lv2, lv2s = LC.SpawnCitizen(P0 + Vector(600, -300, 0))
@@ -10504,6 +10516,8 @@ watcher:SetPos(B0 + Vector(300, 300, 0))
 watcher.chat = {}
 local plat = LC.AddPoint(B0 + Vector(-600, 0, 0), 0, "platform", 0)
 local door = LC.AddPoint(B0 + Vector(0, 2400, 0), 0, "spawn", 0)
+-- (people free to step off: an earlier test may have left a tiny roster, and nobody nameless comes any more)
+_setcvar("lc_roster_size", math.max(GetConVar("lc_roster_size"):GetInt(), 30)) LC.TopUpPeople()
 local okA, arrivals = LC.TrainArrive(true)
 arrivals = arrivals or {}
 local a1 = arrivals[1]
@@ -10709,6 +10723,7 @@ LC.ReportCrime(p, "Theft", 120)
 LC.ReportCrime(p, "Assaulting Civil Protection", 120)
 ok(#LC.RapSheet(p) == 2, "each crime goes on the record once", #LC.RapSheet(p))
 p.chat = {}
+LC.ArrestChanceGiven(p) -- (the owner, 14 November: a unit's arrest follows a struggle lost, or a surrender. Nov14A_CustodyTests)
 ok(LC.Incarcerate(p, 180, "Arrested", unit), "arrested")
 local pr = LC.Prisoners[p]
 local left = pr and pr.untilT - CurTime()
@@ -10818,6 +10833,7 @@ p:RemovePData("lc_rap")
 -- probation
 LC.ReportCrime(p, "Curfew violation", 60)
 LC.ClearWanted(p)
+LC.ArrestChanceGiven(p) -- (the owner, 14 November: a unit's arrest follows a struggle lost, or a surrender. Nov14A_CustodyTests)
 LC.Incarcerate(p, 180, "Arrested", unit)
 p.chat = {}
 LC.ReleasePrisoner(p)
@@ -10858,7 +10874,11 @@ LC.ClearWanted(q)
 -- the cap, and staff sentences exactly as given
 for _, c in ipairs({ "Murder of a Civil Protection officer", "Murder", "Sabotage" }) do LC.ReportCrime(q, c, 60) end
 LC.ClearWanted(q)
+LC.ArrestChanceGiven(q) -- (the owner, 14 November: a unit's arrest follows a struggle lost, or a surrender. Nov14A_CustodyTests)
+local qStanding = LC.Standing(q)
+LC.AddStanding(q, -600 - qStanding) -- (an anticitizen: the whole of lc_sentence_max; less for better standing, Nov14A_CustodyTests)
 LC.Incarcerate(q, 180, "Arrested", unit)
+LC.AddStanding(q, qStanding - LC.Standing(q))
 ok(LC.Prisoners[q] and math.abs(LC.Prisoners[q].untilT - CurTime() - 30 * 60) < 2, "a sentence is 30 minutes at most")
 LC.ReleasePrisoner(q)
 LC.EndProbation(q, true)
@@ -13231,6 +13251,7 @@ unit.chat = {}
 ok(LC.PostBounty(adm, crook, 100) and LC.Bounties[crook].amount == 100, "the Administrator can: 100 credits")
 ok(has(unit.chat, "BOUNTY") and has(crook.chat, "price on your head"), "every unit hears, and so do they")
 local cu0 = LC.Credits(unit)
+LC.ArrestChanceGiven(crook) -- (the owner, 14 November: a unit's arrest follows a struggle lost, or a surrender. Nov14A_CustodyTests)
 LC.Incarcerate(crook, 60, "Arrested", unit)
 ok(LC.Credits(unit) - cu0 == 100 and LC.Bounties[crook] == nil, "the unit who brings them in collects it")
 LC.ReleasePrisoner(crook)
@@ -14504,8 +14525,13 @@ local rear, rst = LC.Spawners.cop(M0 + Vector(-200, 0, 0))
 lst.untilT, rst.untilT = 1e9, 1e9
 local dmg = _dmg(lead, 20, DMG_CLUB)
 con.lcSubdue = { n = 2, t = CurTime() } -- (beaten down: the third blow)
+local simL = lead.sim
+lead.sim = false
 hook.Run("EntityTakeDamage", con, dmg)
-ok(LC.Marching[con] ~= nil, "a stunstick hit starts a march to the cells, not a teleport")
+ok(LC.Struggles[con] ~= nil and not LC.Marching[con], "a stunstick hit: the unit lays hands on them, and they may struggle (the owner, 14 November)")
+_run(5)
+lead.sim = simL
+ok(LC.Marching[con] ~= nil, "doing nothing about it: a march to the cells, not a teleport")
 ok(LC.IsTied(con) and LC.InCustody(con) and not LC.PlayerIsWanted(con) and not LC.Prisoners[con], "tied, in custody, the search called off, not in a cell yet")
 ok(LC.Marching[con] and LC.Marching[con].rear == rear and rst.state == "event", "a second unit comes along")
 ok(has(con.chat, "march") or has(con.chat, "Cuffed"), "and they're told", con.chat[#con.chat])
@@ -14524,7 +14550,9 @@ LC.ReportCrime(con, "Theft", 300)
 local lead2, lst2 = LC.Spawners.cop(M0 + Vector(60, 0, 0))
 lst2.untilT = 1e9
 con.lcSubdue = { n = 2, t = CurTime() }
+lead2.sim = false
 hook.Run("EntityTakeDamage", con, _dmg(lead2, 20, DMG_CLUB))
+_run(5) -- (the struggle, lost by doing nothing)
 ok(LC.Marching[con] ~= nil, "(another march)")
 -- with another unit about, he takes over
 local helper, hst = LC.Spawners.cop(M0 + Vector(-150, 0, 0))
@@ -14538,15 +14566,17 @@ local lead2b = LC.Marching[con] and LC.Marching[con].lead
 if IsValid(lead2b) then LC.NPCs[lead2b] = nil lead2b:Remove() end
 _run(0.5)
 ok(not LC.Marching[con] and LC.IsTied(con) and LC.PlayerIsWanted(con) and not LC.Prisoners[con],
-    "nobody left to take you: free, still tied, and wanted for it")
+    "nobody left to take you: free, still tied, and wanted for it", tostring(LC.Marching[con] ~= nil) .. " lead=" .. tostring(LC.Marching[con] and LC.Marching[con].lead and LC.Marching[con].lead:GetPos()) .. " con=" .. tostring(con:GetPos()) .. " tied=" .. tostring(LC.IsTied(con)) .. " wanted=" .. tostring(LC.PlayerIsWanted(con)) .. " cell=" .. tostring(LC.Prisoners[con] ~= nil))
 Unmarch(con)
 -- nowhere to walk: straight to a cell
 _setcvar("lc_march", 0)
 LC.ReportCrime(con, "Theft", 300)
 local lead3, lst3 = LC.Spawners.cop(M0 + Vector(60, 0, 0))
 con.lcSubdue = { n = 2, t = CurTime() }
+lead3.sim = false
 hook.Run("EntityTakeDamage", con, _dmg(lead3, 20, DMG_CLUB))
-ok(LC.Prisoners[con] ~= nil and not LC.Marching[con], "turned off: straight to a cell, as before")
+_run(5) -- (the struggle, lost by doing nothing)
+ok(LC.Prisoners[con] ~= nil and not LC.Marching[con], "turned off: straight to a cell, as before", tostring(LC.InCustody(con)) .. " struggle=" .. tostring(LC.Struggles[con] ~= nil) .. " " .. tostring(con.chat[#con.chat]))
 _setcvar("lc_march", 1)
 Unmarch(con)
 for _, n in ipairs({ lead, rear, lead3 }) do if IsValid(n) then n:Remove() end end
@@ -23163,7 +23193,9 @@ section("Playtest fixes, 17 October")
     local ml, mls = LC.Spawners.cop(MP + Vector(60, 0, 0))
     mls.untilT = 1e9
     walked.lcSubdue = { n = 2, t = CurTime() } -- (beaten down: the third blow, and cuffed)
+    ml.sim = false
     hook.Run("EntityTakeDamage", walked, _dmg(ml, 20, DMG_CLUB))
+    _run(5) -- (the struggle, lost by doing nothing: the owner, 14 November)
     ok(LC.Marching[walked] ~= nil, "(a march)")
     local goWas = LC.GoTo
     LC.GoTo = function() return true end -- (he says he's going, and stands there a moment)
@@ -23225,8 +23257,8 @@ section("Playtest fixes, 17 October")
     gst.leaveAt = CurTime() - 1
     LC.StartLeaving(goer, gst, false)
     local okr, rep = pcall(LC.BuildReport)
-    ok(okr and string.find(rep or "", "people who left since the map started", 1, true) and string.find(rep or "", "their time out was up", 1, true),
-        "the debug report says why people have been leaving the city")
+    ok(okr and string.find(rep or "", "times a citizen went indoors since the map started", 1, true) and string.find(rep or "", "their part was over", 1, true),
+        "the debug report says why people have been going indoors")
     LC.NPCs[goer] = nil goer:Remove()
     -- A clothes pack's battle helmet or welding mask: only on the Resistance in the open
     local wearer, wst = LC.Spawners.citizen(Vector(-97000, 158000, 0))
@@ -23376,7 +23408,9 @@ section("Playtest fixes, 17 October (evening)")
     LC.MakeCopsHostile(runner, runner:GetPos(), 500)
     ok(sst.state == "hostile" and sst.arrestOnly and sst.rel and sst.rel[runner] == D_NU, "a soldier after someone who's hurt nobody holds his fire and runs them down")
     _run(2)
-    ok(LC.InCustody(runner), "and lays hands on them: taken in, not shot")
+    ok(LC.Struggles[runner] ~= nil and LC.Struggles[runner].officer == sol, "and lays hands on them (they may struggle), not a shot fired")
+    _run(5)
+    ok(LC.InCustody(runner), "doing nothing about it: taken in")
     LC.CalmCops(runner)
     LC.NPCs[sol] = nil sol:Remove()
     sol, sst = LC.Spawners.soldier(Q0 + Vector(60, 300, 0))
@@ -23841,7 +23875,9 @@ end)()
     local taken = LC.NPCSubdue(u, ust, runr, CurTime())
     ok(not taken and LC.SubdueHits(runr) == 1 and runr:GetNW2Float("lc_dazed_until", 0) > CurTime(), "running past a unit: a blow of the baton (and dazed), not cuffs")
     for _ = 1, 4 do _run(1.2) if LC.NPCSubdue(u, ust, runr, CurTime()) then break end end
-    ok(LC.Marching[runr] or (LC.Prisoners and LC.Prisoners[runr]) or LC.Detained[runr], "beaten down: cuffed")
+    ok(LC.Struggles[runr] ~= nil, "beaten down: he lays hands on them, and they may still struggle (the owner, 14 November)")
+    _run(5)
+    ok(LC.Marching[runr] or (LC.Prisoners and LC.Prisoners[runr]) or LC.Detained[runr], "doing nothing about it: cuffed")
     if LC.Marching[runr] then LC.Marching[runr] = nil end
     if LC.Prisoners then LC.Prisoners[runr] = nil end
     runr.valid = false
@@ -25276,6 +25312,7 @@ local function March()
     LC.ReportCrime(con, "Theft", 300)
     local lead, lst = LC.Spawners.cop(S0 + Vector(60, 0, 0))
     lst.untilT = 1e9
+    LC.ArrestChanceGiven(con) -- (the owner, 14 November: a unit's arrest follows a struggle lost, or a surrender. Nov14A_CustodyTests)
     local okM = LC.MarchToPrison(con, lead, 60, "Theft")
     ins:SetPos(S0 + Vector(0, 120, 0))
     return okM, lead, lst
@@ -30510,6 +30547,983 @@ section("The play study: how the owner plays, written down as a model for the ci
     p:SetPos(Vector(-121000, -121000, 0))
     other:SetPos(Vector(-121000, -121000, 0))
 end)()
+
+
+function Nov14B_RankTests() -- (the owner, 14 November: "I set myself to Lieutenant via the admin tools ... it still says I am a member")
+section("14 November, B1: a rank or XP given by staff carries the Resistance's trust, and the cage opens for a Lieutenant")
+_setcvar("lc_fighter_trust_jobs", 3)
+_setcvar("lc_rebel_cage", 1)
+local adm = newPlayer("B1Admin", "resistance") adm.admin = true
+ok(adm:GetNW2Int("lcf_rank", 1) == 1 and (LC.ResistanceTrust(adm)) == 0, "a new member: Sympathizer, no jobs done for them yet")
+local good, msg = LC.AdminTool(adm, adm, "xp", 1000)
+ok(good == true and adm:GetNW2Int("lcf_rank", 1) == 4 and string.find(msg or "", "Lieutenant", 1, true) ~= nil, "+1000 XP from the admin tools: a Lieutenant, and the admin is told so", msg)
+ok(LC.RebelMayHold(adm) == true, "the cage opens for them")
+ok(LC.CanJoinFaction(adm, "resistance", "hacker") == true, "and the Hacker's role is open to them")
+LC.AdminTool(adm, adm, "resetme")
+ok(adm:GetNW2Int("lcf_rank", 1) == 1, "reset: a Sympathizer again")
+good, msg = LC.AdminTool(adm, adm, "rank", 4)
+ok(good == true and adm:GetNW2Int("lcf_rank", 1) == 4 and string.find(msg or "", "is now Lieutenant", 1, true) ~= nil, "set to rank 4 by the admin tools: a Lieutenant", msg)
+-- XP earned without the jobs is held as before, and the career page says why
+local raw = newPlayer("B1Raw", "resistance")
+raw:SetPData("lcf_xp_resistance", 1000)
+LC.AddXP(raw, 0)
+ok(raw:GetNW2Int("lcf_rank", 1) == 2 and not LC.RebelMayHold(raw), "XP earned without the jobs still stops at Member (trust before a gun is as it was)")
+local info = LC.CareerInfo(raw)
+ok(string.find(info.steps[1] or "", "3 more", 1, true) ~= nil and string.find(info.steps[1] or "", "Earn 0", 1, true) == nil, "the career page says what holds them back: three more jobs, not 'Earn 0 more XP'", info.steps[1])
+LC.AdminTool(adm, raw, "xp", 50)
+ok(raw:GetNW2Int("lcf_rank", 1) == 4, "XP from staff on top of a Fighter's XP gives the trust with it")
+local low = newPlayer("B1Low", "resistance")
+LC.AdminTool(adm, low, "xp", 200)
+ok(low:GetNW2Int("lcf_rank", 1) == 2 and (LC.ResistanceTrust(low)) == 0, "below a Fighter's XP nothing but the XP changes")
+-- the console's own commands do the same
+local con = newPlayer("B1Con", "resistance")
+con:SetPData("lcf_xp_resistance", 900)
+LC.StaffTrust(con) LC.AddXP(con, 0, "by staff")
+ok(con:GetNW2Int("lcf_rank", 1) == 4, "LC.StaffTrust: what lcf_setxp and lcf_promote call")
+for _, p in ipairs({ adm, raw, low, con }) do p:SetPos(Vector(-30000, 30000, 0)) end
+end
+Nov14B_RankTests()
+
+function Nov14B_CageTests() -- (the owner, 14 November: "Rebel NPCs are spawning inside the cage prison cell ... make sure that prisoners don't spawn outside the map brushes/walls")
+section("14 November, B2: nobody held is stood in the map's wall, and rebels stay out of the cage")
+_setcvar("lc_rebel_cage", 1)
+local VM = getmetatable(Vector(0, 0, 0))
+local hadRotate = VM.Rotate
+if not hadRotate then
+    function VM:Rotate(a) local r = math.rad(a.y or 0) local x, y = self.x, self.y self.x, self.y = x * math.cos(r) - y * math.sin(r), x * math.sin(r) + y * math.cos(r) end
+end
+local was = ENT
+ENT = {}
+assert(loadstring(_ENTSRC["entities/lc_rebelcage.lua"], "lc_rebelcage"))()
+local def = ENT
+ENT = was
+local P0 = Vector(-61000, 47000, 0)
+local cage = ents.Create("lc_rebelcage")
+cage:SetPos(P0)
+cage:Spawn()
+cage.lcHalf = 60
+for _, k in ipairs({ "Inside", "Holds", "Slot", "Outside" }) do cage[k] = def[k] end
+LC.CageForget()
+-- in the open every place is where it always was, inside the panels
+local allIn = true
+for i = 1, 8 do if not cage:Holds(cage:Slot(i)) then allIn = false end end
+ok(allIn and not cage:Holds(cage:Outside()), "in the open: eight places inside the four panels, and the way out is outside them")
+-- the map's wall runs through the back of the cage (the cage clips into it)
+local wall = { a = Vector(P0.x - 15, P0.y - 500, 0), b = Vector(P0.x - 15, P0.y + 500, 0) }
+table.insert(_walls, wall)
+local behind = 0
+for i = 1, 8 do if cage:Slot(i).x < P0.x - 15 then behind = behind + 1 end end
+ok(behind == 0, "with the wall through the back of the cage nobody is stood behind it", behind .. " behind the wall")
+local s1 = cage:Slot(1)
+ok(cage:Holds(s1) and s1.z == P0.z + 2, "a place pulled in from the wall is still in the cage, on its floor")
+for i = #_walls, 1, -1 do if _walls[i] == wall then table.remove(_walls, i) end end
+-- LC.CageAt, and the things that ask it
+ok(LC.CageAt(P0 + Vector(20, -20, 0)) == cage and LC.CageAt(P0 + Vector(300, 0, 0)) == nil and LC.CageAt(P0 + Vector(0, 0, 400)) == nil, "LC.CageAt: the cage a spot is in; not beside it, not the floor above")
+local z = { kind = "rebel", pos = P0, r = 50, radius = 50 }
+local inCage = 0
+local wasR = LCZ.RandomInside
+LCZ.RandomInside = function() return P0 + Vector(10, 10, 0) end
+for _ = 1, 5 do if LC.SpotInZone(z) then inCage = inCage + 1 end end
+LCZ.RandomInside = function() return P0 + Vector(400, 10, 0) end
+local out = LC.SpotInZone(z)
+LCZ.RandomInside = wasR
+ok(inCage == 0, "LC.SpotInZone never gives a spot in the cage (so nobody is spawned, stood or sent there)", inCage .. " of 5")
+ok(out ~= nil, "and beside the cage it gives spots as before")
+_setcvar("lc_manpower", 0)
+local npc, st = LC.SpawnRebel(P0 + Vector(10, 0, 4), nil)
+ok(IsValid(npc) and not cage:Holds(npc:GetPos()), "a rebel asked for in the cage appears outside its gate")
+-- one who got in some other way is walked out; someone held stays
+npc:SetPos(P0 + Vector(5, 5, 0))
+local held, hst = LC.SpawnCitizen(P0 + Vector(400, 0, 0))
+hst.leaveAt = nil
+LC.RebelHeld[held] = { cage = cage, st = hst, at = CurTime(), slot = 1 }
+held:SetPos(cage:Slot(1))
+local moved = LC.CageSweep()
+ok(moved == 1 and not cage:Holds(npc:GetPos()) and cage:Holds(held:GetPos()), "the sweep stands a stray outside the gate and leaves the prisoner where they are", tostring(moved))
+LC.RebelHeld[held] = nil
+if IsValid(npc) then npc:Remove() end
+if IsValid(held) then held:Remove() end
+cage:Remove()
+LC.CageForget()
+if not hadRotate then VM.Rotate = nil end
+end
+Nov14B_CageTests()
+
+function Nov14B_LabSalesTests() -- (the owner, 14 November: "Rebel scientist needs to sell a charged vest, not the quartermaster", "combine bypass charges need to be only from the lab too")
+section("14 November, B5: the charged vest and the bypass charge come from the lab alone")
+ok(LCS.LabById.armor_vest ~= nil and LCS.LabById.bypass ~= nil, "the lab makes the powered vest and the bypass charge")
+ok(LCS.BlackById.armor_vest.lab == true and LCS.BlackById.bypass.lab == true, "both are marked as the lab's on the black market's list (kept there for their price)")
+ok(not LC.QuartermasterStocks("armor_vest") and not LC.QuartermasterStocks("bypass") and LC.QuartermasterStocks("gun_pistol"), "the quartermaster doesn't stock them (he still stocks pistols)")
+local dup = {}
+for _, r in ipairs(LCS.Lab) do if LC.QuartermasterStocks(r.out) then dup[#dup + 1] = r.id end end
+ok(#dup == 0, "nothing is sold by both the lab and the quartermaster", table.concat(dup, ", "))
+local pv, pb = LC.LabPrice(LCS.LabById.armor_vest), LC.LabPrice(LCS.LabById.bypass)
+ok(pv > 0 and pv < 90 and pb > 0 and pb < 70, "the lab's price for each is under the old dealer's (90 and 70)", pv .. ", " .. pb)
+-- nobody's list shows them, and nobody sells them
+local buyer = newPlayer("B5Buyer", "resistance", nil, 400)
+LC.AddCredits(buyer, 1000)
+local wasAccess = LC.MarketAccess
+LC.MarketAccess = function() return true end
+net.sent = {}
+LC.OpenMarket(buyer)
+local m = _lastnet("lcu_market")
+local t
+for _, d in ipairs(m and m.data or {}) do
+    if type(d) == "table" and d.goods then t = d elseif type(d) == "string" and not t then t = util.JSONToTable(d) end
+end
+local seen, pistols = 0, 0
+for _, g in ipairs(t and t.goods or {}) do
+    if g.id == "armor_vest" or g.id == "bypass" then seen = seen + 1 end
+    if g.id == "gun_pistol" then pistols = pistols + 1 end
+end
+ok(t ~= nil and seen == 0 and pistols == 1, "the black market's window lists neither (pistols are still there)", tostring(seen) .. " listed, pistols " .. tostring(pistols))
+local before = LC.Credits(buyer)
+local okV = LC.BlackBuy(buyer, "armor_vest")
+local okB = LC.BlackBuy(buyer, "bypass")
+ok(not okV and not okB and LC.Credits(buyer) == before and not LC.HasItem(buyer, "armor_vest") and not LC.HasItem(buyer, "bypass"), "and a buy sent for one anyway is refused, nothing charged")
+LC.MarketAccess = wasAccess
+buyer:SetPos(Vector(-30000, 30000, 0))
+end
+Nov14B_LabSalesTests()
+
+function Nov14B_SpawnTests() -- (the owner, 14 November: "resistance spawn points should be active for resistance human players based on the last one they were closest to, which survives server restarts")
+section("14 November, B4: a Resistance player comes back at the spawn point they were last closest to, and a restart keeps it")
+local A, B = Vector(-52000, 52000, 0), Vector(-47000, 52000, 0)
+local pts = { { kind = "rspawn", pos = A }, { kind = "rspawn", pos = B } }
+local wasPts = LC.PointsOfKind
+LC.PointsOfKind = function(kind, group) if kind == "rspawn" then return pts end return wasPts(kind, group) end
+local m = newPlayer("B4Member", "resistance", nil, 150) -- (a Member: not hunted, and it is theirs too)
+ok(not LC.PlayerIsHunted(m), "(a Member passes for a citizen)")
+m:SetPos(A + Vector(400, 100, 0))
+ok(LC.RebelSpawnNote(m) == pts[1] and m:GetPData("lc_rspawn", "") ~= "", "near the first spawn point: it is remembered, in their saved data")
+local function respawns(p, at, times)
+    local n = 0
+    for _ = 1, times do
+        hook.Run("PlayerSpawn", p)
+        _run(0.2)
+        if p:GetPos():DistToSqr(at + Vector(0, 0, 4)) < 4 then n = n + 1 end
+        p:SetPos(at + Vector(300, 0, 0)) -- (walks a little way off, still nearest to it)
+    end
+    return n
+end
+ok(respawns(m, A, 6) == 6, "six respawns, six times at that point (not any one of them)")
+m.lcRSpawn = nil -- (a restart: only the saved data is left)
+ok(respawns(m, A, 6) == 6, "after a restart it is still that one")
+m:SetPos(B + Vector(-200, 0, 0))
+LC.RebelSpawnNote(m)
+ok(respawns(m, B, 6) == 6, "having gone to the other base, they come back there")
+-- dying far from both: the one nearest to where they fell
+m:SetPos(A + Vector(1500, 0, 0))
+hook.Run("DoPlayerDeath", m)
+hook.Run("PlayerSpawn", m)
+_run(0.2)
+ok(m:GetPos():DistToSqr(A + Vector(0, 0, 4)) < 4, "killed nearer the first: back at the first")
+-- a point that has been taken away: any that is left
+pts = { { kind = "rspawn", pos = B } }
+m.lcRSpawn = nil
+m:SetPos(Vector(-30000, 30000, 0))
+hook.Run("PlayerSpawn", m)
+_run(0.2)
+ok(m:GetPos():DistToSqr(B + Vector(0, 0, 4)) < 4, "their point taken away with the editor: the one that is left")
+-- nobody else is sent there
+local cit = newPlayer("B4Cit", "citizen")
+cit:SetPos(B + Vector(100, 0, 0))
+ok(LC.RebelSpawnNote(cit) == nil and cit:GetPData("lc_rspawn", "") == "", "a citizen standing by one has nothing remembered")
+LC.PointsOfKind = wasPts
+for _, p in ipairs({ m, cit }) do p:SetPos(Vector(-30000, 30000, 0)) end
+end
+Nov14B_SpawnTests()
+
+function Nov14B_CuffTests() -- (the owner, 14 November: "I don't see an option to cuff NPCs as a resistance member, but I have 5 pairs of cuffs in my pockets")
+section("14 November, B6: F2 > Cuff them, for a Resistance Fighter or above with cuffs: to the holding cage")
+_setcvar("lc_rebel_cage", 1)
+_setcvar("lc_rebel_auto", 0)
+_setcvar("lc_rebel_visitor", 0)
+local P0 = Vector(-66000, 41000, 0)
+local cage = ents.Create("lc_rebelcage")
+cage:SetPos(P0)
+cage:Spawn()
+LC.CageForget()
+local function person(off)
+    local n, st = LC.SpawnCitizen(P0 + off)
+    st.leaveAt = nil
+    n.sim = false
+    return n, st
+end
+local act = LC.TargetActions.cagecuff
+ok(type(act) == "function", "F2's action for it is there")
+local lt = newPlayer("B6Lt", "resistance", nil, 900)
+local member = newPlayer("B6Member", "resistance", nil, 150)
+local symp = newPlayer("B6Symp", "resistance", nil, 0)
+local n1, st1 = person(Vector(400, 0, 0))
+lt:SetPos(n1:GetPos() + Vector(60, 0, 0))
+symp:SetPos(n1:GetPos() + Vector(-60, 0, 0))
+LC.GiveItem(symp, "zipties", 2)
+ok(symp:GetNW2Int("lcf_rank", 1) < 2 and not act(symp, n1) and LC.RebelHeld[n1] == nil and LC.CuffCount(symp) == 2, "a Sympathizer with cuffs takes nobody (Members and above)", symp:GetNW2Int("lcf_rank", 1))
+ok(not act(lt, n1) and LC.RebelHeld[n1] == nil, "a Lieutenant with no cuffs: nothing happens")
+LC.GiveItem(lt, "zipties", 5)
+lt:SetPos(n1:GetPos() + Vector(900, 0, 0))
+local far, why = act(lt, n1)
+ok(not far and string.find(why or "", "closer", 1, true) ~= nil and LC.CuffCount(lt) == 5, "from too far: told to get closer, no cuffs used", why)
+lt:SetPos(n1:GetPos() + Vector(60, 0, 0))
+ok(act(lt, n1) == true and LC.RebelHeld[n1] ~= nil and st1.questLock == true and LC.CuffCount(lt) == 4, "up close with cuffs: they are taken for the cage, and one pair is used", tostring(LC.CuffCount(lt)))
+n1:SetPos(P0 + Vector(60, 0, 0))
+LC.CageTick(CurTime())
+ok(#LC.CageList(cage) == 1 and st1.state == "detained", "at the cage they are locked in, as from the talk window")
+ok(not act(lt, n1) and LC.CuffCount(lt) == 4, "someone already held isn't cuffed again")
+-- no cage near enough: said so, no cuffs used
+local n2 = person(Vector(9000, 0, 0))
+lt:SetPos(n2:GetPos() + Vector(60, 0, 0))
+local none, whyNone = act(lt, n2)
+ok(not none and string.find(whyNone or "", "no cage", 1, true) ~= nil and LC.CuffCount(lt) == 4, "with no cage within reach: said so, no cuffs used", whyNone)
+-- one of their own isn't theirs to cuff
+local rb = LC.SpawnRebel(P0 + Vector(500, 300, 4), nil)
+if IsValid(rb) then
+    lt:SetPos(rb:GetPos() + Vector(60, 0, 0))
+    ok(not act(lt, rb) and LC.RebelHeld[rb] == nil and LC.CuffCount(lt) == 4, "a rebel isn't cuffed by their own")
+    rb:Remove()
+end
+-- a Member may cuff too (the owner, 15 November); the cage itself stays with Fighters and above
+local n3, st3 = person(Vector(400, 200, 0))
+member:SetPos(n3:GetPos() + Vector(60, 0, 0))
+LC.GiveItem(member, "zipties", 2)
+ok(member:GetNW2Int("lcf_rank", 1) == 2 and act(member, n3) == true and LC.RebelHeld[n3] ~= nil and LC.CuffCount(member) == 1, "a Member with cuffs takes them for the cage too, and one pair is used",
+    member:GetNW2Int("lcf_rank", 1) .. " " .. tostring(LC.CuffCount(member)))
+ok(not LC.RebelMayHold(member), "opening the cage is still for Fighters and above")
+LC.CageFree(n1) LC.CageFree(n3)
+for _, e in ipairs({ n1, n2, n3, cage }) do if IsValid(e) then e:Remove() end end
+LC.CageForget()
+for _, p in ipairs({ lt, member, symp }) do p:SetPos(Vector(-30000, 30000, 0)) end
+end
+Nov14B_CuffTests()
+function Nov14F_DreamNightTests()
+section("14 November night, F1: a night's sleep gives a dream when nobody chose one (the city's own pick)")
+local errs0 = #_errors
+local realGetAll, realPhase, realReload = player.GetAll, LC.DayPhase, LC.EndingReload
+local savedWalls = _walls
+_walls = {}
+LC.EndingReload = function() end
+_setcvar("lc_dream_rules", 1) _setcvar("lc_dream_auto", 1) _setcvar("lc_dream_every_night", 0) -- (the owner's server: all defaults)
+local DS = LC.DreamState
+local keep = { at = DS.at, queued = DS.queued, missed = DS.missedNight, dreamed = DS.dreamedNight }
+local reb = newPlayer("F1Rebel", "resistance", nil, 900)
+_run(2)
+local BED, DREAM = Vector(-231000, 231000, 0), Vector(-262000, 262000, 0)
+local pt = LC.AddPoint(DREAM, 0, "dream")
+player.GetAll = function() return { reb } end
+LC.DayPhase = function() return "night" end
+if LC.DreamActive then LC.DreamWake(LC.DreamActive) end
+LC.DreamForget()
+reb:SetPos(BED)
+reb.lcSleep = { t0 = CurTime() - 70, done = CurTime() - 10, last = CurTime(), slept = true }
+reb:SetNW2Bool("lc_sleeping", true)
+ok(LC.DreamQueued() == nil and LC.DreamCityPicks() == true, "(nobody chose tonight's dream: it is the city's to pick)")
+hook.Run("LivingCityDayPhase", "night", "dusk")
+ok(DS.at ~= nil, "(the night coming sets the time of tonight's dream)")
+_run(70)
+ok(LC.DreamActive ~= nil and reb.lcDreaming ~= nil, "a rebel asleep on rebel ground at night dreams, with nobody having chosen a dream", tostring(LC.DreamActive) .. " " .. tostring(reb.lcDreaming))
+ok(string.find(LC.DreamDebugLine(), "the city picks every night", 1, true) ~= nil and string.find(LC.DreamDebugLine(), "last: ", 1, true) ~= nil,
+    "the debug report has a dreams line: who picks, and the last one dreamt", LC.DreamDebugLine())
+if LC.DreamActive then LC.DreamWake(LC.DreamActive) end
+LC.DreamActive = nil
+-- the city's own pick: not held back by the endings' cooldown, and one that can't be dreamt passes its turn on
+local realStart, realCheck = LC.DreamStart, LC.DreamMissedCheck
+local seen = {}
+LC.DreamStart = function(id, by, vote, also, force) seen[#seen + 1] = { id = id, force = force } return false, "The dream couldn't be built here." end
+LC.DreamForget()
+DS.tries, DS.triesNight = nil, nil
+local okT, whyT = LC.DreamTonight()
+ok(okT == false and #seen == 1 and seen[1].force == true, "the city's own pick doesn't wait for the endings' cooldown (it is started the way the Administrator's is)", tostring(seen[1] and seen[1].force))
+ok(DS.missedNight == DS.night and DS.queued == nil, "a pick that can't be dreamt isn't the end of the night: another is tried")
+LC.DreamTonight()
+ok(#seen == 2 and seen[2].id ~= seen[1].id, "and it is the next one, not the same again", tostring(seen[1] and seen[1].id) .. " " .. tostring(seen[2] and seen[2].id))
+LC.DreamTonight()
+ok(DS.missedNight ~= DS.night or DS.tries >= 3, "three tries a night at most")
+DS.missedNight = nil
+ok(string.find(LC.DreamDebugLine(), "didn't happen: The dream couldn't be built here.", 1, true) ~= nil, "and the debug report says why the last one didn't happen", LC.DreamDebugLine())
+LC.DreamStart, LC.DreamMissedCheck = realStart, realCheck
+LC.DreamForget()
+DS.tries, DS.triesNight, DS.last = nil, nil, nil
+reb.lcSleep = nil reb:SetNW2Bool("lc_sleeping", false)
+LC.RemovePoint(pt)
+DS.at, DS.queued, DS.missedNight, DS.dreamedNight = keep.at, keep.queued, keep.missed, keep.dreamed
+player.GetAll, LC.DayPhase, LC.EndingReload = realGetAll, realPhase, realReload
+_walls = savedWalls
+reb:SetPos(Vector(-121000, -121000, 0))
+ok(#_errors == errs0, "(no errors in any of it)", _errors[errs0 + 1])
+end
+Nov14F_DreamNightTests()
+
+function Nov14F_RationsTests()
+section("14 November night, F2 and F3: rations by day only, never from empty stores, deliveries sized to the city")
+local errs0 = #_errors
+local realHour, realCounts, realHuman = LC.Hour, LC.RoleCounts, LC.HumanAdministrator
+local stockWas = LC.Stock()
+_setcvar("lc_stockpile", 1)
+LC.EndEvent(true)
+LC.StockAdd(200 - LC.Stock())
+-- the hours
+ok(LC.RationsCanStart(true, 7) and LC.RationsCanStart(true, 12) and LC.RationsCanStart(true, 17.9), "the city hands rations out by day (07:00 to 18:00)")
+ok(not LC.RationsCanStart(true, 18) and not LC.RationsCanStart(true, 21) and not LC.RationsCanStart(true, 23.5) and not LC.RationsCanStart(true, 3) and not LC.RationsCanStart(true, 6.9),
+    "never in the evening or at night (the owner, 14 November: rations at 21:00)")
+ok(LC.RationsCanStart(false, 22) == true, "a handout ordered by hand is the Administrator's choice, at any hour")
+LC.Hour = function() return 21.5 end
+local night = {}
+for _ = 1, 300 do night[LC.PickAutoEvent()] = true end
+ok(not night.rations and next(night) ~= nil, "at night the city's own timer never picks a ration handout")
+LC.HumanAdministrator = function() return nil end
+local okD, whyD = LC.AdminDecree("event", "rations")
+ok(okD == false and string.find(tostring(whyD), "by day", 1, true) ~= nil, "the NPC Administrator can't call one at night either", tostring(whyD))
+LC.Hour = function() return 12 end
+local day = {}
+for _ = 1, 300 do day[LC.PickAutoEvent()] = true end
+ok(day.rations == true, "by day it still does")
+-- nothing to give
+LC.StockAdd(-LC.Stock())
+ok(LC.StockLevel() == "empty" and not LC.RationsCanStart(false) and not LC.RationsCanStart(true), "empty stores: no handout, whoever asks")
+local empty = {}
+for _ = 1, 300 do empty[LC.PickAutoEvent()] = true end
+ok(not empty.rations, "the city's timer doesn't pick one with nothing to give")
+ok(LC.StartEvent("rations") == false and LC.Event ~= "rations", "and none starts (the owner: \"rations are empty, how are they being distributed?\")")
+LC.StockAdd(200)
+ok(LC.StartEvent("rations") == true and LC.Event == "rations", "with rations in the stores, by day, it starts as ever")
+LC.EndEvent(true)
+-- deliveries sized to the city
+LC.StockAdd(100 - LC.Stock())
+LC.RoleCounts = { citizen = 14 }
+hook.Run("LivingCityTrainArrived", nil, {}, "City 14")
+ok(LC.Stock() == 120, "a small city (the default): a train brings 20", LC.Stock())
+hook.Run("LivingCitySupplyEnded", {}, 2)
+ok(LC.Stock() == 160, "and a convoy 20 a load", LC.Stock())
+LC.StockAdd(100 - LC.Stock())
+LC.RoleCounts = { citizen = 80 }
+ok(LC.StockEatRate() == 4, "a city of 80 eats four rations a minute (lc_stock_eat 20)")
+hook.Run("LivingCityTrainArrived", nil, {}, "City 14")
+ok(LC.Stock() == 180, "its train brings 80: twenty minutes of its eating", LC.Stock())
+hook.Run("LivingCitySupplyEnded", {}, 2)
+ok(LC.Stock() == 340, "and its convoy 80 a load", LC.Stock())
+-- an hour of the owner's city with nobody doing anything, at the least: two trains, a convoy every five hours with
+-- three of its five loads left (the rebels took two), the workers' 52 an hour, against 240 eaten and a handout's 8:
+-- it holds (it lost about 135 an hour before)
+local inn = 2 * LC.StockDelivery * LC.StockEatRate() + (3 * LC.StockDelivery * LC.StockEatRate()) / 5 + 52
+ok(inn >= 60 * LC.StockEatRate() + 8, "what comes in an hour, at the least, covers what a city of 80 eats and hands out", inn .. " in, " .. (60 * LC.StockEatRate() + 8) .. " out")
+-- stores emptied by the old sums start again from half, once
+local path = "livingcity/" .. game.GetMap() .. "_stock.json"
+local fileWas = _files[path]
+_files[path] = util.TableToJSON({ stock = 0 })
+LC.StockLoad()
+ok(LC.Stock() == 200, "stores saved empty before this start again from half", LC.Stock())
+LC.StockAdd(-LC.Stock())
+LC.StockSave()
+LC.StockLoad()
+ok(LC.Stock() == 0, "once: emptied again and saved, they stay as they are", LC.Stock())
+_files[path] = util.TableToJSON({ stock = 320 })
+LC.StockLoad()
+ok(LC.Stock() == 320, "(stores saved above half are left alone)", LC.Stock())
+_files[path] = fileWas
+LC.Hour, LC.RoleCounts, LC.HumanAdministrator = realHour, realCounts, realHuman
+LC.StockAdd(stockWas - LC.Stock())
+ok(#_errors == errs0, "(no errors in any of it)", _errors[errs0 + 1])
+end
+Nov14F_RationsTests()
+
+function Nov14F_InfestedKinTests()
+section("14 November night, F4: the infested and the infestation's own zombies don't hurt each other")
+local errs0 = #_errors
+local zp, hp = newPlayer("F4Infested", "citizen"), newPlayer("F4Human", "citizen")
+local wasZ = LC.PlayerIsZombie
+LC.PlayerIsZombie = function(p) return p == zp end
+local zb = ents.Create("npc_zombie") zb:SetPos(Vector(-271000, -271000, 0)) zb:Spawn()
+local hc = ents.Create("npc_headcrab") hc:SetPos(Vector(-271100, -271000, 0)) hc:Spawn()
+local cit = ents.Create("npc_citizen") cit:SetPos(Vector(-271200, -271000, 0)) cit:Spawn()
+zp:SetPos(Vector(-271050, -271000, 0))
+local kin = hook.t.EntityTakeDamage.LivingCityInfestedKin
+ok(LC.InfestedKin(zp, zb) and LC.InfestedKin(zb, zp) and LC.InfestedKin(zp, hc), "an infested player and a zombie or headcrab are kin, either way round")
+ok(kin(zp, _dmg(zb, 20)) == true, "a zombie's swipe does an infested player no damage (the owner: \"Not only players but players vs npcs\")")
+ok(kin(zb, _dmg(zp, 20)) == true and kin(hc, _dmg(zp, 20)) == true, "and an infested player's blow does a zombie or a headcrab none")
+ok(kin(hp, _dmg(zb, 20)) == nil and kin(zb, _dmg(hp, 20)) == nil, "a human and a zombie hurt each other as ever")
+ok(kin(cit, _dmg(zp, 20)) == nil and kin(zp, _dmg(cit, 20)) == nil, "so do an infested player and a citizen")
+ok(not LC.InfestedKin(zb, hc), "(two NPCs are left to the game)")
+-- backpedalling while shooting (the engine's own; the gamemode's part is firing on the move): kept
+do
+    local caps = 0
+    local unit = { CapabilitiesAdd = function(_, c) caps = bit.bor(caps, c) end }
+    local had = CAP_MOVE_SHOOT
+    CAP_MOVE_SHOOT = had or 0x2000000 -- (the fake game has no such number)
+    ok(LC.CombatMoveShoot == true and LC.CombatTune(unit, {}) == true and bit.band(caps, CAP_MOVE_SHOOT) ~= 0,
+        "every fighter is still given firing on the move (what lets them backpedal while shooting: the owner, 14 November, \"make sure that stays\")", caps)
+    CAP_MOVE_SHOOT = had
+end
+LC.PlayerIsZombie = wasZ
+for _, e in ipairs({ zb, hc, cit }) do if IsValid(e) then e:Remove() end end
+zp:SetPos(Vector(-121000, -121000, 0)) hp:SetPos(Vector(-121000, -121000, 0))
+ok(#_errors == errs0, "(no errors in any of it)", _errors[errs0 + 1])
+end
+Nov14F_InfestedKinTests()
+function Nov14A_CustodyTests()
+section("14 November, group A: never cuffed while armed and fighting, always a struggle, three checks")
+local C0 = Vector(-262000, 91000, 0)
+local cellC = LC.AddPoint(C0 + Vector(1400, 0, 0), 0, "cell", 0)
+LC.AddPoint(C0 + Vector(1400, 400, 0), 0, "release", 0)
+local errs0 = #_errors
+_setcvar("lc_arrest_struggle", 1)
+local function fresh(p)
+    p.lcFiredAt, p.lcAttackedSecurityAt, p.lcBrokeFree, p.lcHadChanceAt, p.lcInHandAt, p.lcStillSince, p.lcSubdue = nil, nil, nil, nil, nil, nil, nil
+    p.lcGraceUntil, p.lcViolentUntil, p.lcJailOwed = nil, nil, nil
+    if LC.Struggles[p] then LC.StruggleCancel(p) end
+end
+local function hands(p)
+    if not p:HasWeapon("weapon_fists") then p:Give("weapon_fists") end
+    p:SelectWeapon("weapon_fists")
+end
+local reb = newPlayer("A1Rebel", "resistance", nil, 900)
+_run(0.3)
+reb:SetPos(C0)
+local sol, sst = LC.Spawners.soldier(C0 + Vector(60, 0, 0))
+sol.sim = false
+sst.untilT = 1e9
+fresh(reb)
+-- armed and fighting: what counts
+hands(reb)
+ok(not LC.ArmedAndFighting(reb), "bare hands and nothing done: not armed and fighting")
+reb:Give("weapon_smg1") reb:SelectWeapon("weapon_smg1")
+ok(LC.ArmedAndFighting(reb), "a gun in hand: armed and fighting")
+hands(reb)
+hook.Run("EntityFireBullets", reb, { Src = reb:GetPos() })
+ok(LC.ArmedAndFighting(reb), "a shot just fired: armed and fighting, gun put away or not")
+reb.lcFiredAt = CurTime() - 20
+ok(not LC.ArmedAndFighting(reb), "(20 seconds after the last shot, hands empty: no longer)")
+reb.lcAttackedSecurityAt = CurTime()
+ok(LC.ArmedAndFighting(reb), "a unit just hurt: armed and fighting")
+fresh(reb)
+-- check 1: standing still with a gun out is aiming, not giving up
+LC.ReportCrime(reb, "Assaulting Civil Protection", 300)
+reb:SelectWeapon("weapon_smg1")
+reb.lcStillSince = CurTime() - 10
+ok(not LC.Subdued(reb), "check 1: standing still with a gun out is not 'subdued'")
+ok(LC.NPCSubdue(sol, sst, reb, CurTime()) == false and not LC.Marching[reb] and not LC.Struggles[reb], "check 1: a unit beside them does not lay hands on them")
+-- check 2: the gate refuses
+ok(LC.NPCTakesIn(sol, reb) == false and not LC.InCustody(reb) and not LC.Struggles[reb], "check 2: the gate refuses anyone armed and fighting")
+-- check 3: every door of custody refuses, and says so in the errors file
+local e1 = #_errors
+ok(LC.MarchToPrison(reb, sol, 180, "x") == false and not LC.Marching[reb], "check 3: no march to the cells")
+ok(LC.DetainOnTheSpot(reb, sol, "x") == false and not LC.Detained[reb], "check 3: no street detention")
+ok(LC.Incarcerate(reb, 180, "x", sol) == false and not LC.Prisoners[reb], "check 3: no cell")
+ok(#_errors > e1 and tostring(_errors[#_errors]):find("custody refused", 1, true) ~= nil, "(and each refusal is written down: a path skipped the first two checks)", tostring(_errors[#_errors]))
+for i = #_errors, e1 + 1, -1 do table.remove(_errors, i) end
+-- E on a unit in a firefight is not a surrender
+ok(LC.Surrender(reb, sol) == false and not LC.InCustody(reb), "pressing E on a unit with a gun out is not giving up")
+-- the hit that used to be an arrest is just a hit
+local function hit(by, who, amount, club)
+    local d = _dmg(by, amount, club and DMG_CLUB or nil)
+    return hook.Run("EntityTakeDamage", who, d), d
+end
+sst.enemy = reb
+reb:SetHealth(25)
+local blocked = hit(sol, reb, 10)
+ok(blocked ~= true and not LC.InCustody(reb) and not LC.Struggles[reb], "hurt badly with a gun out: shot, not cuffed")
+reb:SetHealth(100)
+-- no longer fighting, on their feet: the struggle, never straight into cuffs
+fresh(reb)
+hands(reb)
+reb.lcStillSince = CurTime() - 10
+ok(LC.NPCTakesIn(sol, reb) == true and LC.Struggles[reb] ~= nil and LC.Struggles[reb].officer == sol and not LC.Marching[reb],
+    "a unit laying hands on someone on their feet: the struggle first, no cuffs yet")
+local sm = _lastnet("lc_struggle")
+ok(sm and sm.to == reb and sm.data[1] == true and sm.data[2] == "resist" and sm.data[3] == "the soldier", "they see the struggle bar, against the soldier", sm and tostring(sm.data[3]))
+ok(reb:GetNW2Float("lc_struggle_until", 0) > CurTime(), "(held where they stand while it lasts)")
+local blocked2, d2 = hit(sol, reb, 10)
+ok(blocked2 == true and d2:GetDamage() == 0, "nobody shoots or beats them while a unit has hold of them")
+-- press hard: free, a head start, and wanted for it
+for _ = 1, 48 do _netcall("lc_struggle_press", reb) _run(0.08) end
+_run(1)
+ok(LC.Struggles[reb] == nil and not LC.InCustody(reb) and (reb.lcBrokeFree or 0) > CurTime(), "pressing E hard enough: free, and not in custody")
+ok(LC.NPCTakesIn(sol, reb) == false and LC.NPCSubdue(sol, sst, reb, CurTime()) == false, "(a head start: no unit grabs them again at once)")
+-- do nothing: cuffed and walked in, and then (only then) the doors open
+fresh(reb)
+LC.ReportCrime(reb, "Curfew violation", 300)
+reb:SetPos(C0)
+sol:SetPos(C0 + Vector(60, 0, 0))
+sst.stunnedUntil = 0
+ok(LC.NPCTakesIn(sol, reb) == true and LC.Struggles[reb] ~= nil, "caught again: another struggle")
+_run(5)
+ok(LC.Struggles[reb] == nil and (LC.Marching[reb] ~= nil or LC.Prisoners[reb] ~= nil), "doing nothing: cuffed and taken in", tostring(LC.InCustody(reb)))
+local m = LC.Marching[reb]
+ok((m and m.reason or (LC.Prisoners[reb] and LC.Prisoners[reb].reason)) == "Curfew violation", "the charge is what they were wanted for")
+LC.FreeFromCustody(reb)
+ok(not LC.InCustody(reb) and not LC.IsTied(reb) and LC.WantedReason(reb) == "", "(and staff can take them out of it: below)")
+-- drawing a gun while held: he lets go, and it is a fight
+fresh(reb)
+reb:SetPos(C0) sol:SetPos(C0 + Vector(60, 0, 0)) sst.stunnedUntil = 0 sst.marching, sst.questLock = nil, nil
+hands(reb)
+ok(LC.NPCTakesIn(sol, reb) == true and LC.Struggles[reb] ~= nil, "held again")
+if not reb:HasWeapon("weapon_smg1") then reb:Give("weapon_smg1") end
+reb:SelectWeapon("weapon_smg1")
+_run(0.5)
+ok(LC.Struggles[reb] == nil and not LC.InCustody(reb), "a gun drawn while held: the struggle ends, nobody is cuffed")
+-- someone with their hands up goes quietly: no struggle, straight to the cuffs
+fresh(reb)
+hands(reb)
+reb:SetPos(C0) sol:SetPos(C0 + Vector(60, 0, 0))
+reb:SetNW2Bool("lc_handsup", true)
+ok(LC.NPCTakesIn(sol, reb) == true and LC.Struggles[reb] == nil and LC.InCustody(reb), "hands up: taken in with no struggle (their own choice)")
+reb:SetNW2Bool("lc_handsup", false)
+LC.FreeFromCustody(reb)
+-- from across the street nobody is cuffed by a bullet
+fresh(reb)
+sst.marching, sst.questLock = nil, nil
+sst.enemy = reb
+LC.ReportCrime(reb, "Curfew violation", 300)
+reb:SetPos(C0) sol:SetPos(C0 + Vector(900, 0, 0))
+reb:SetHealth(25)
+local far = hit(sol, reb, 10)
+ok(far ~= true and not LC.InCustody(reb) and not LC.Struggles[reb], "shot from across the street: no cuffs appear on them")
+reb:SetHealth(100)
+
+section("14 November, group A: units shoot back at the fighters shooting them")
+local npcR, rstR = LC.Spawners.rebel(C0 + Vector(0, 600, 0))
+local unitH, ustH = LC.Spawners.soldier(C0 + Vector(200, 600, 0))
+npcR.sim, unitH.sim = false, false
+local other = newPlayer("A1Other", "citizen")
+LC.SetState(unitH, ustH, "hostile") ustH.enemy = other -- (already after someone else: he used to ignore the fighter)
+local rels = {}
+local addWas = unitH.AddEntityRelationship
+unitH.AddEntityRelationship = function(self, e, d, pr) rels[e] = d if addWas then return addWas(self, e, d, pr) end end
+hit(npcR, unitH, 5)
+ok(rels[npcR] == D_HT and ustH.rebelFoes and ustH.rebelFoes[npcR] ~= nil, "a unit hit by a fighter hates that fighter, whoever else he was after")
+ok(ustH.enemy == other, "(and keeps the enemy he had)")
+ustH.rebelFoes[npcR] = CurTime() - 1
+rstR.foe = nil
+LC.UnitRebelFoesTick(CurTime())
+ok(rels[npcR] == D_NU and ustH.rebelFoes[npcR] == nil, "left alone by that fighter for a while: back to ignoring each other")
+unitH.AddEntityRelationship = addWas
+npcR:Remove() unitH:Remove()
+
+section("14 November, group A: the Administrator is immune to her own")
+local adm = newPlayer("A2Admin", "admin")
+_run(0.3)
+adm:SetPos(C0 + Vector(0, -600, 0))
+local cop, cst = LC.Spawners.cop(C0 + Vector(60, -600, 0))
+cop.sim = false
+ok(LC.IsAdministrator(adm), "(she is the Administrator)")
+hit(adm, cop, 5)
+ok(cst.enemy ~= adm and cst.state ~= "hostile" and cst.provokedBy ~= adm and not LC.PlayerIsWanted(adm), "she strikes a unit: nobody turns on her, nothing is remembered", tostring(cst.state))
+LC.MakeCopsHostile(adm, adm:GetPos(), nil)
+ok(cst.enemy ~= adm and cst.state ~= "hostile", "no unit can be set on her")
+cst.enemy = adm
+adm:SetHealth(15)
+ok(LC.NPCTakesIn(cop, adm) == false and not LC.InCustody(adm) and not LC.Struggles[adm], "she is never taken in by a unit")
+ok(LC.Incarcerate(adm, 180, "x", cop) == false and LC.MarchToPrison(adm, cop, 180, "x") == false and LC.DetainOnTheSpot(adm, cop, "x") == false,
+    "(not by any door of custody either)")
+local stopped, dd = hit(cop, adm, 30)
+ok(stopped == true and dd:GetDamage() == 0, "a unit's blow or bullet does her no harm")
+local guardShot = _dmg(sol, 40)
+ok(hook.Run("EntityTakeDamage", adm, guardShot) == true and guardShot:GetDamage() == 0, "nor a soldier's (a guard firing past her)")
+local cit = newPlayer("A2Cit", "citizen")
+local byPlayer = _dmg(cit, 10)
+ok(LC.AdministratorImmune(adm, byPlayer) ~= true and byPlayer:GetDamage() == 10, "(a person can still hurt her)")
+adm:SetHealth(100)
+LC.RefreshRelations()
+ok(cst.rel and cst.rel[adm] == D_LI, "every unit holds her as one of their own")
+-- her guards come armed
+local bare = { GetActiveWeapon = function() return NULL end, Give = function(self, c) self.got = c end, IsValid = function() return true end }
+ok(LC.AdminGuardArm(bare) == true and bare.got == "weapon_ar2", "a guard with empty hands is handed a pulse rifle")
+local armed = { GetActiveWeapon = function() return sol end, Give = function(self, c) self.got = c end, IsValid = function() return true end }
+ok(LC.AdminGuardArm(armed) == false and armed.got == nil, "(one who has his rifle is left alone)")
+
+section("14 November, group A: the charge is the true one, a fair sentence, no way to shorten it, out of custody")
+-- the old charge does not stay on their name
+local con = newPlayer("A3Con", "citizen")
+_run(0.3)
+con:SetPos(C0 + Vector(0, 1400, 0))
+local cop3, cst3 = LC.Spawners.cop(C0 + Vector(60, 1400, 0))
+cop3.sim = false
+LC.ReportCrime(con, "Carrying a weapon (a crowbar)", 60)
+ok(LC.WantedReason(con) == "Carrying a weapon (a crowbar)", "wanted: the reason is known")
+LC.ClearWanted(con)
+ok(LC.WantedReason(con) == "" and con:GetNW2String("lc_wanted_reason", "x") == "", "no longer wanted: the reason is gone with it")
+con:SetNW2String("lc_wanted_reason", "Carrying a weapon (a crowbar)") -- (as it used to be left)
+con:SetNW2Bool("lc_handsup", true)
+cst3.enemy = con
+ok(LC.NPCTakesIn(cop3, con) == true and LC.InCustody(con), "taken in while not wanted for anything")
+local mm = LC.Marching[con]
+local charge = mm and mm.reason or (LC.Prisoners[con] and LC.Prisoners[con].reason)
+ok(charge == "Resisting Civil Protection", "the charge is not an old one left on their name", tostring(charge))
+con:SetNW2Bool("lc_handsup", false)
+LC.FreeFromCustody(con)
+-- the most a sentence can be goes by Civil Standing
+_setcvar("lc_sentences", 1)
+_setcvar("lc_sentence_max", 30)
+local function setStanding(p, v) LC.AddStanding(p, v - LC.Standing(p)) end
+local function record(p)
+    LC.RapClear(p)
+    for _, r in ipairs({ "Murder of a Civil Protection officer", "Assaulting Civil Protection", "Sabotage" }) do
+        hook.Run("LivingCityWanted", p, r, 60)
+    end
+end
+record(con) setStanding(con, -40)
+local secs, words = LC.SentenceFor(con, 180, "x", cop3)
+ok(secs == 600 and tostring(words):find("the most for your Civil Standing", 1, true) ~= nil, "Civil Standing -40 with a long record: 10 minutes, not 30", tostring(secs) .. " " .. tostring(words))
+record(con) setStanding(con, -100)
+ok(LC.SentenceFor(con, 180, "x", cop3) == 1200, "-100: 20 minutes at most")
+record(con) setStanding(con, -300)
+ok(LC.SentenceFor(con, 180, "x", cop3) == 1800, "-300: the whole of lc_sentence_max (30)")
+record(con) setStanding(con, -40)
+hook.Run("LivingCityWanted", con, "Curfew violation", 60)
+LC.RapClear(con)
+hook.Run("LivingCityWanted", con, "Curfew violation", 60)
+ok(LC.SentenceFor(con, 180, "x", cop3) == 180, "(a short record is what it adds up to, as before: one petty crime, 3 minutes)")
+-- escaping and walking back in does not shorten a sentence
+fresh(con)
+LC.RapClear(con)
+con:SetPos(C0 + Vector(0, 1400, 0))
+con.lcExactSentence = true
+ok(LC.Incarcerate(con, 1000, "x", nil) == true and LC.Prisoners[con] ~= nil, "(in a cell for 1000 seconds)")
+con.lcExactSentence = nil
+LC.EscapePrisoner(con)
+ok(not LC.Prisoners[con] and LC.JailOwed(con) > 990, "escaped: what was left is still owed", tostring(LC.JailOwed(con)))
+con.lcGraceUntil = nil
+con:SetNW2Bool("lc_handsup", true)
+con:SetPos(C0 + Vector(1380, 0, 0)) cop3:SetPos(C0 + Vector(1340, 0, 0)) -- (at the cells: straight in)
+ok(LC.NPCTakesIn(cop3, con) == true and LC.Prisoners[con] ~= nil, "caught again", tostring(LC.InCustody(con)))
+local left = LC.Prisoners[con] and (LC.Prisoners[con].untilT - CurTime()) or 0
+ok(left > 990 + 300 and LC.JailOwed(con) == 0, "the new sentence is the escape (6 minutes) and the time they ran from, not 3 minutes", tostring(left))
+con:SetNW2Bool("lc_handsup", false)
+-- staff: out of custody at once, from every stage
+ok(select(1, LC.AdminTool(admin, con, "free")) == true and not LC.InCustody(con) and not LC.PlayerIsWanted(con) and #LC.RapSheet(con) == 0,
+    "Admin tools > Out of custody: out of a cell, not wanted, nothing on the record")
+ok((con.lcProbationUntil or 0) <= CurTime(), "(and no probation for it)")
+fresh(con)
+con:SetPos(C0 + Vector(0, 1400, 0)) cop3:SetPos(C0 + Vector(60, 1400, 0))
+cst3.marching, cst3.questLock = nil, nil
+con:SetNW2Bool("lc_handsup", true)
+LC.ReportCrime(con, "Curfew violation", 300)
+ok(LC.NPCTakesIn(cop3, con) == true and LC.Marching[con] ~= nil and LC.IsTied(con), "(being marched, cuffed)", tostring(LC.InCustody(con)))
+con:SetNW2Bool("lc_handsup", false)
+LC.AdminTool(admin, con, "free")
+ok(not LC.Marching[con] and not LC.IsTied(con) and not LC.InCustody(con) and not cst3.marching, "out of a march: cuffs off, the unit goes back to his day")
+_run(12)
+ok(not LC.InCustody(con), "(and it does not go ahead a few seconds later)")
+LC.ReportCrime(con, "Curfew violation", 300)
+ok(LC.NPCTakesIn(cop3, con) == true and LC.Struggles[con] ~= nil, "(held in a struggle)")
+LC.AdminTool(admin, con, "free")
+ok(LC.Struggles[con] == nil and con:GetNW2Float("lc_struggle_until", 0) == 0, "out of a struggle")
+setStanding(con, 0)
+ok(#_errors == errs0, "(no errors in any of it)", _errors[errs0 + 1])
+for _, e in ipairs({ sol, cop, cop3 }) do if IsValid(e) then e:Remove() end end
+for _, p in ipairs({ reb, adm, cit, con, other }) do p:SetPos(Vector(-121000, -121000, 0)) end
+end
+Nov14A_CustodyTests()
+
+
+-- 15 November 2026: people stay (the owner: "they need to be persistent. They stay until they DIE")
+function Nov15_PeopleStayTests()
+section("People stay: no nameless extras, no timed swap-outs, home and back as themselves")
+local P = LC.People
+local function alive(role) local n = 0 for _, p in ipairs(P.list) do if p.alive and p.role == role then n = n + 1 end end return n end
+local was = GetConVar("lc_citizens"):GetInt()
+local set = _setcvar -- (through an alias: the runners keep a written-out setting line for every later section)
+set("lc_citizens", 45)
+LC.TopUpPeople()
+ok(alive("citizen") >= 45, "there are at least as many named citizens as the streets want", alive("citizen"))
+set("lc_citizens", was)
+
+-- nobody is given a time to leave
+local n, st = LC.SpawnCitizen(Vector(-31000, 30000, 0))
+ok(IsValid(n) and st.profile ~= nil, "a citizen on the street is a named person")
+ok(st.leaveAt == nil, "and has no timer that sends them away", tostring(st.leaveAt))
+local who = st.profile
+
+-- going home: at home for a while, not picked to come out, then free again
+local before = 0
+for _, c in pairs(LC.LeaveCounts) do before = before + c end
+LC.StartLeaving(n, st, false, "worn down: gone home")
+ok(who.wentHome ~= nil and who.wentHome >= 240 and who.wentHome <= 480, "someone worn down is home for four to eight minutes", tostring(who.wentHome))
+ok(not who.moving, "going home is not leaving the city")
+n:Remove()
+hook.Run("EntityRemoved", n)
+ok(who.alive == true and who.npc == nil, "indoors, they are still alive and still on the roster")
+ok((who.homeUntil or 0) > CurTime(), "and at home for now", tostring(who.homeUntil))
+local picked = false
+for _ = 1, 40 do
+    local p = LC.ClaimProfile("citizen")
+    if p == who then picked = true end
+end
+ok(not picked, "while at home they are not brought out as if they were someone new")
+who.homeUntil = CurTime() - 1
+local back = false
+for _, p in ipairs(P.list) do if p.alive and p.role == "citizen" and p ~= who then p.lastSeen = os.time() + 100000 end end
+back = LC.ClaimProfile("citizen") == who
+ok(back, "their time at home over, the same person comes back out")
+for _, p in ipairs(P.list) do if p.lastSeen and p.lastSeen > os.time() + 1000 then p.lastSeen = os.time() end end
+
+-- with everyone out or at home, the streets get nobody rather than a nameless extra
+local held = {}
+for _, p in ipairs(P.list) do
+    if p.alive and p.role == "citizen" and not IsValid(p.npc) and (p.homeUntil or 0) <= CurTime() then held[#held + 1] = p p.homeUntil = CurTime() + 600 end
+end
+local size = GetConVar("lc_roster_size"):GetInt()
+ok(alive("citizen") >= size and LC.PersonAvailable("citizen") == false, "everyone out or at home: nobody is free to come out")
+for _, p in ipairs(held) do p.homeUntil = nil end
+ok(LC.PersonAvailable("citizen") == true, "and when their time at home is over, they are")
+
+-- the only way out short of dying: despair, with a train in
+local n2, st2 = LC.SpawnCitizen(Vector(-31000, 30400, 0))
+local p2 = st2.profile
+local oldBoard = LC.TrainBoardingPos
+LC.TrainBoardingPos = function() return nil end
+LC.StartLeaving(n2, st2, false, "despair: gone home")
+ok(not p2.moving and p2.wentHome ~= nil, "despair with no train in: they go home")
+st2.leaving = nil
+LC.TrainBoardingPos = function() return Vector(-31000, 30800, 0) end
+LC.StartLeaving(n2, st2, false, "despair: gone home")
+ok(p2.moving == true, "despair with a train in: they board it")
+LC.TrainBoardingPos = oldBoard
+n2:Remove()
+hook.Run("EntityRemoved", n2)
+ok(p2.alive == false and p2.moved ~= nil and not p2.died, "and are gone to another city: off the roster, not dead")
+local n3, st3 = LC.SpawnCitizen(Vector(-31000, 31200, 0))
+ok(st3.profile ~= p2, "someone who moved away does not come back")
+if IsValid(n3) then n3:Remove() hook.Run("EntityRemoved", n3) end
+end
+Nov15_PeopleStayTests()
+
+function Nov14E_CameraAimTests()
+section("14 November notes, group E: the broadcast camera films the face")
+local who = newPlayer("CamAimSpeaker", "citizen")
+_run(1)
+who:SetPos(Vector(-52000, 21000, 0))
+local was = ENT
+ENT = {}
+assert(loadstring(_ENTSRC["entities/lc_broadcastcam.lua"], "lc_broadcastcam"))()
+local def = ENT
+ENT = was
+local cam = ents.Create("lc_broadcastcam")
+cam:SetPos(who:GetPos() + Vector(92, 0, 70))
+cam:Spawn()
+local aim = def.AimAt(cam, who)
+local eye = who:EyePos()
+ok(aim.z >= eye.z - 0.5, "it points at their face, not a foot below it (was 12 lower)")
+ok(aim.z - who:GetPos().z >= 60, "which is head height on someone standing")
+ok(def.WantPos(cam, who).z >= eye.z, "and it still hangs a little above their eyes")
+cam:Remove()
+end
+Nov14E_CameraAimTests()
+
+function Nov14E_AdminNoJobTests()
+section("14 November notes, group E: the Administrator holds no Union job, and a parade gives her none")
+local savedWalls = _walls
+_walls = {}
+LC.EndEvent(true)
+local P0 = Vector(-84000, -64000, 0)
+local pp = {}
+for i = 0, 2 do pp[#pp + 1] = LC.AddPoint(P0 + Vector(i * 800, 0, 0), 0, "parade", 1) end
+local adm = newPlayer("ParadeAdministrator", "admin")
+adm:SetPos(P0 + Vector(400, 200, 0))
+_run(4)
+-- a job carried over from an earlier life as a citizen or a rebel
+adm:SetNW2String("lcj_job", "sanitation")
+adm:SetPData("lcj_job", "sanitation")
+LC.ReconcileAppearance(adm)
+ok(LC.Job(adm) == nil and adm:GetPData("lcj_job", "") == "", "taking the post, the Union job goes (and the saved one)")
+ok(not LC.CanWork(adm), "the Administrator is not the Union's to employ")
+local step = LC.NextStep(adm)
+ok(not step or (step.key ~= "job" and step.key ~= "shift" and step.key ~= "free" and step.key ~= "on_job"),
+    "her next step is never a Union job", step and step.key)
+adm.lcAdminNext = nil
+ok(LC.AdminDo(adm, "event", "parade") and LC.Event == "parade", "she orders a parade")
+_run(3)
+ok(LC.Job(adm) == nil and adm:GetNW2String("lcj_job", "") == "", "which gives her no job")
+ok(not (LC.QuestOf and LC.QuestOf[adm]), "and no quest or objective")
+local X = LC.ExerciseSession()
+ok(X and not X.people[adm] and not X.absent[adm], "nor a place in it to report to")
+LC.EndEvent(true)
+for _, p in ipairs(pp) do LC.RemovePoint(p) end
+_walls = savedWalls
+end
+Nov14E_AdminNoJobTests()
+
+function Nov14E_ParadeSeenTests()
+section("14 November notes, group E: a parade the Administrator orders is one she can see")
+local savedWalls = _walls
+_walls = {}
+LC.EndEvent(true)
+local P0 = Vector(-90000, -58000, 0)
+local adm = newPlayer("SeenParadeAdministrator", "admin")
+_run(2)
+for _, p in ipairs(table.Copy(LC.Points)) do if p.kind == "parade" then LC.RemovePoint(p) end end
+-- no route on the map: refused at once, with the reason, and nothing spent
+adm.lcAdminNext = nil
+local okN, whyN = LC.AdminDo(adm, "event", "parade")
+ok(okN == false and whyN == "This map has no parade route.", "no parade route: refused with the reason", whyN)
+ok(not (adm.lcAdminNext and (adm.lcAdminNext.event or 0) > CurTime()), "and the refusal costs her no wait")
+-- two routes: hers is the one that starts nearest
+local pp = {}
+for i = 0, 2 do pp[#pp + 1] = LC.AddPoint(P0 + Vector(i * 800, 9000, 0), 0, "parade", 1) end
+for i = 0, 2 do pp[#pp + 1] = LC.AddPoint(P0 + Vector(i * 800, 0, 0), 0, "parade", 2) end
+adm:SetPos(P0 + Vector(-200, 150, 0))
+-- the only free soldier is across the city
+for n, s in pairs(LC.NPCs) do if IsValid(n) and LC.IsSecurity(s) then n:Remove() end end
+local farSoldier = LC.Spawners.soldier(P0 + Vector(0, 30000, 0))
+_setcvar("lc_exercise_muster", 15)
+local said = {}
+local notice = LC.Notice
+LC.Notice = function(p, kind, title, text, ...)
+    if title == "The City Administrator" then said[#said + 1] = text end
+    return notice(p, kind, title, text, ...)
+end
+local okP = LC.AdminDo(adm, "event", "parade")
+LC.Notice = notice
+ok(okP and LC.Event == "parade", "with a route, the parade is ordered")
+local X = LC.ExerciseSession()
+ok(X and X.center:DistToSqr(P0) < 1, "on the route that starts nearest to her", X and tostring(X.center))
+local where = LC.ExerciseWhere()
+ok(where ~= nil and said[1] ~= nil and string.find(said[1], "a Combine parade, " .. where, 1, true) ~= nil, "and the order says where it is", said[1])
+ok(LC.ExerciseNear == nil, "(where she stood is not kept for the next morning's)")
+ok(X and #X.column >= 2, "a column forms up", X and #X.column)
+local drafted, close = false, true
+for _, u in ipairs(X and X.column or {}) do
+    if u == farSoldier then drafted = true end
+    if IsValid(u) and u:GetPos():Distance(P0) > 2600 then close = false end
+end
+ok(not drafted and close, "from units near the start or fresh ones: nobody is called from across the city")
+_run(16)
+ok(X.phase == "run", "it sets off")
+-- one marcher gives up his way and stands about: he goes on to the next stop
+_run(3)
+local u1 = X.column[1]
+local st1 = IsValid(u1) and LC.NPCs[u1]
+if st1 and st1.exColumn and not st1.exColumn.done then
+    local at = st1.exColumn.i
+    LC.SetState(u1, st1, "idle")
+    st1.untilT = CurTime() + 600
+    _run(4)
+    ok(st1.exColumn.done or st1.exColumn.i > at or st1.state == "moving", "a marcher who stopped is sent on", st1.state)
+end
+for _ = 1, 90 do
+    if not LC.ExerciseSession() then break end
+    _run(1)
+end
+local byItself = LC.ExerciseSession() == nil
+if LC.ExerciseSession() then LC.EndEvent(false) end
+ok(byItself, "the column reaches the end, and the parade is over by itself")
+LC.EndEvent(true)
+if IsValid(farSoldier) then farSoldier:Remove() end
+for _, p in ipairs(pp) do LC.RemovePoint(p) end
+_walls = savedWalls
+end
+Nov14E_ParadeSeenTests()
+-- 14 November, the owner's notes, group G: a street vortigaunt's broom is in its hands (the owner's
+-- screenshot: the vortigaunt hunched, the broom leaning on the floor beside it, head up). It is worked
+-- out from the hands every tick: head on the floor ahead, the handle up through the hands.
+function Nov14G_VortBroomTests()
+    section("14 November notes, group G: the street vortigaunt holds its broom")
+    local function Near(a, b, tol) return a:Distance(b) < (tol or 0.01) end
+    -- the model's shape, read off its own bounds
+    local up = LC.VortBroomGeo(Vector(-12, -3, -35), Vector(12, 3, 35))
+    ok(up.long == "z" and up.wide == "x" and up.third == "y" and up.len == 70 and not up.headAtMax and up.headPoint.z == -35,
+        "an upright broom: the handle along its height, the head wide across, at the bottom", up.long .. up.wide .. up.third)
+    local lying = LC.VortBroomGeo(Vector(-40, -11, -2), Vector(30, 11, 4))
+    ok(lying.long == "x" and lying.wide == "y" and lying.headAtMax and lying.headPoint.x == 30, "a broom modelled lying down: the handle along its length")
+    local heavy = LC.VortBroomGeo(Vector(-40, -11, -2), Vector(30, 11, 4), Vector(-20, 0, 1))
+    ok(not heavy.headAtMax and heavy.headPoint.x == -40, "the heavy end is the head, whichever end that is")
+    ok(LC.VortBroomGeo(Vector(-40, -11, -2), Vector(30, 11, 4), Vector(-20, 0, 1), true).headAtMax, "and lc_vort_broom_flip turns it end for end")
+    local none = LC.VortBroomGeo(Vector(-2, -2, -2), Vector(2, 2, 2))
+    ok(none.long == "z" and none.len == 70, "no shape to read (the model is missing): a plain upright broom")
+    -- where it goes, for each way the model could lie
+    local function Forward(a)
+        local p, y = math.rad(a.p), math.rad(a.y)
+        return Vector(math.cos(p) * math.cos(y), math.cos(p) * math.sin(y), -math.sin(p))
+    end
+    local function Up(a)
+        local p, y, r = math.rad(a.p), math.rad(a.y), math.rad(a.r)
+        return Vector(math.cos(r) * math.sin(p) * math.cos(y) + math.sin(r) * math.sin(y),
+            math.cos(r) * math.sin(p) * math.sin(y) - math.sin(r) * math.cos(y), math.cos(r) * math.cos(p))
+    end
+    local sideways = LC.VortBroomGeo(Vector(-3, -50, -10), Vector(3, 22, 10), Vector(0, 12, 0))
+    local grip, fwd, floor = Vector(110, 205, 338), Vector(0.6, 0.8, 0), 300
+    for name, geo in pairs({ upright = up, lying = lying, ["heavy end first"] = heavy, sideways = sideways }) do
+        local pos, ang, at = LC.VortBroomPose(grip, fwd, floor, geo, 0)
+        local hp = geo.headPoint
+        local alongHandle = (at.top - at.head):GetNormalized()
+        local off = (at.hands - at.head) - alongHandle * (at.hands - at.head):Dot(alongHandle)
+        ok(math.abs(at.head.z - (floor + 1)) < 0.01 and (at.head - grip):Dot(fwd) > 10, name .. ": the head is on the floor, ahead of the vortigaunt", tostring(at.head))
+        ok(off:Length() < 0.01 and Near(at.hands, grip, 1.01) and at.top.z >= at.hands.z - 0.01, name .. ": the handle runs up through the hands", off:Length())
+        ok(Near(pos + at.x * hp.x + at.y * hp.y + at.z * hp.z, at.head), name .. ": the model's own head end is the end on the floor")
+        ok(Near(at.x:Cross(at.y), at.z) and math.abs(at.x:Length() - 1) < 0.001 and math.abs(at.y:Length() - 1) < 0.001, name .. ": the model is turned, not mirrored or stretched")
+        ok(math.abs(at[geo.wide].z) < 0.001 and math.abs(at[geo.wide]:Dot(fwd)) < 0.001, name .. ": the head lies flat, across the way it is pushed")
+        ok(Near(Forward(ang), at.x, 0.001) and Near(Up(ang), at.z, 0.001), name .. ": the angle given turns the model that way", tostring(ang.p) .. " " .. tostring(ang.y) .. " " .. tostring(ang.r))
+        local _, _, out = LC.VortBroomPose(grip, fwd, floor, geo, 1)
+        local _, _, back = LC.VortBroomPose(grip, fwd, floor, geo, -1)
+        ok((out.head - back.head):Dot(fwd) > 15 and math.abs(out.head.z - back.head.z) < 0.01, name .. ": it sweeps, out and back along the floor")
+    end
+    -- hands held very high or very low: still on the floor, still through the hands
+    local _, _, high = LC.VortBroomPose(Vector(0, 0, 400), Vector(1, 0, 0), 300, up, 0)
+    local _, _, low = LC.VortBroomPose(Vector(0, 0, 302), Vector(1, 0, 0), 300, up, 0)
+    ok(math.abs(high.head.z - 301) < 0.01 and math.abs(low.head.z - 301) < 0.01 and (high.top - high.head):Length() < 70.01, "hands too high or at the floor: the broom is not stretched or sunk")
+    -- on a street sweeper: put where its claws are, not at a fixed spot from its feet
+    local seen = LC.IsSeen
+    LC.IsSeen = function() return false end
+    for _ = 1, 3 do LC.VortSlaveTick(CurTime()) end
+    LC.IsSeen = seen
+    local v = next(LC.VortSlaves)
+    ok(v ~= nil and IsValid(v.lcBroom) and v.lcBroom.parent == v, "a street sweeper has a broom, and it is the vortigaunt's own")
+    if v and IsValid(v.lcBroom) then
+        local e, st = v.lcBroom, LC.VortSlaves[v]
+        local claws = { rightclaw = v:GetPos() + Vector(20, -9, 30), leftclaw = v:GetPos() + Vector(14, 9, 38) }
+        local ids = { rightclaw = 1, leftclaw = 2 }
+        local names = { "rightclaw", "leftclaw" }
+        v.LookupAttachment = function(_, n) return ids[n] or 0 end
+        v.GetAttachment = function(_, id) return names[id] and { Pos = claws[names[id]] } or nil end
+        e.SetLocalPos = function(self, p) self.lcLocal = p end
+        e.SetLocalAngles = function(self, a) self.lcLocalAng = a end
+        LC.VortBroomSwing(v, st, CurTime())
+        local at = st.broomAt
+        local mid = (claws.rightclaw + claws.leftclaw) * 0.5
+        ok(at ~= nil and e.lcLocal ~= nil and e.lcLocalAng ~= nil, "every tick the broom is put where the hands are")
+        ok(at and math.abs(at.hands.x - mid.x) < 0.01 and math.abs(at.hands.y - mid.y) < 0.01 and math.abs(at.hands.z - mid.z) < 1.01,
+            "between its two claws", at and tostring(at.hands))
+        claws.rightclaw, claws.leftclaw = v:GetPos() + Vector(8, -30, 44), v:GetPos() + Vector(8, -18, 40)
+        LC.VortBroomSwing(v, st, CurTime())
+        ok(st.broomAt and math.abs(st.broomAt.hands.y - (v:GetPos().y - 24)) < 0.01, "the hands move (its own sweeping): the broom goes with them")
+        v.LookupAttachment = function() return 0 end
+        LC.VortBroomSwing(v, st, CurTime())
+        ok(st.broomAt and (st.broomAt.hands - v:GetPos()):Dot(v:GetForward()) > 10 and st.broomAt.hands.z > v:GetPos().z + 20,
+            "a model with no claws to find: in front of its chest, never at its feet or off to the side")
+    end
+    for sv in pairs(LC.VortSlaves) do if IsValid(sv) then sv:Remove() end end
+end
+Nov14G_VortBroomTests()
+
+function Nov14E_MediumScreenTests()
+section("14 November notes, group E: a medium Breencast screen, half the giant one and low enough for a room")
+local was = ENT
+ENT = {}
+assert(loadstring(_ENTSRC["entities/lc_screen.lua"], "lc_screen"))()
+local def = ENT
+ENT = was
+local S = def.ScreenSizes
+ok(S and S.screen_mid and S.screen_big and S.screen_mid.scale == S.screen_big.scale / 2, "half the size of the giant one", S and S.screen_mid and S.screen_mid.scale)
+ok(S.screen_mid.models[1] == S.screen_big.models[1], "the same Combine monitor")
+local M0 = Vector(-96000, -52000, 0)
+local big = LC.AddPoint(M0, 0, "screen_big", 0)
+local mid = LC.AddPoint(M0 + Vector(600, 0, 0), 90, "screen_mid", 0)
+ok(mid ~= nil and mid.kind == "screen_mid", "the editor can place one")
+LC.SyncFixtures()
+local eBig, eMid
+for _, e in pairs(LC.Fixtures) do
+    if IsValid(e) and e.lcFixturePoint == big then eBig = e end
+    if IsValid(e) and e.lcFixturePoint == mid then eMid = e end
+end
+ok(IsValid(eMid) and eMid:GetClass() == "lc_screen" and eMid.lcFixtureKind == "screen_mid", "it is a city screen like the others (broadcasts and recordings show on it)")
+ok(IsValid(eBig) and IsValid(eMid) and (eMid:GetPos().z - M0.z) <= (eBig:GetPos().z - M0.z) - 90, "and it sits much lower than the giant one",
+    IsValid(eMid) and eMid:GetPos().z)
+LC.RemovePoint(big)
+LC.RemovePoint(mid)
+LC.SyncFixtures()
+ok(not IsValid(eMid), "taken away with its point")
+end
+Nov14E_MediumScreenTests()
 
 
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")

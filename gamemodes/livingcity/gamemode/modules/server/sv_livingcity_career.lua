@@ -138,7 +138,12 @@ function LC.CareerInfo(ply)
         Step("Nothing you fail locks you out: a story part that failed comes back to your board to try again.")
         t.canReassess, t.reassessIn = LC.CanReassess(ply)
     else
-        if nextR then
+        -- (the Resistance's trust: with the XP and not the jobs, the page said "Earn 0 more XP". The owner, 14 November)
+        local have, need = 0, 0
+        if f.id == "resistance" and LC.ResistanceTrust then have, need = LC.ResistanceTrust(ply) end
+        if nextR and have < need and xp >= (nextR.xp or 0) then
+            Step(string.format("You have the XP for %s. Finish %d more of the Resistance's jobs from your board (F4) and they'll arm you.", nextR.name, need - have))
+        elseif nextR then
             Step(string.format("Earn %s more XP to make %s: the jobs and stories on your board (F4) are the way.", Fmt(math.max(0, (nextR.xp or 0) - xp)), nextR.name))
         else
             Step("You hold the top rank.")

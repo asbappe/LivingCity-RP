@@ -307,10 +307,18 @@ function LC.AdminDo(ply, what, arg, target)
     end
     if what == "event" then
         if not EVENTS[arg] then return false end
+        -- (a parade she can't have is refused at once, with the reason, and costs her nothing)
+        if arg == "parade" and LC.ExerciseReady and not LC.ExerciseReady("parade") then return false, "This map has no parade route." end
         local ok, why = Cool(ply, "event", 600)
         if not ok then return false, why end
-        if not (LC.StartEvent and LC.StartEvent(arg)) then ply.lcAdminNext.event = 0 return false, "That can't happen right now (or the map has nowhere for it)." end
-        Announce("By order of the City Administrator: " .. EVENTS[arg] .. ".")
+        -- a parade is held on the route that starts nearest to her (sv_livingcity_exercise.lua)
+        LC.ExerciseNear = arg == "parade" and ply:GetPos() or nil
+        local started = LC.StartEvent and LC.StartEvent(arg)
+        LC.ExerciseNear = nil
+        if not started then ply.lcAdminNext.event = 0 return false, "That can't happen right now (or the map has nowhere for it)." end
+        -- and the order says where, so she (and the city) can go and see it
+        local where = arg == "parade" and LC.ExerciseWhere and LC.ExerciseWhere() or nil
+        Announce("By order of the City Administrator: " .. EVENTS[arg] .. (where and (", " .. where) or "") .. ".")
         return true
     elseif what == "rations" then
         if arg ~= "generous" and arg ~= "austere" and arg ~= "normal" then return false end
@@ -384,6 +392,7 @@ function LC.AdminDecree(what, arg, target, words)
     if what == "event" then
         if not EVENTS[arg] then return false, "Not an event the office can call." end
         if LC.Event then return false, "An event is already running." end
+        if arg == "rations" and LC.RationsCanStart and not LC.RationsCanStart(true) then return false, "Rations are handed out by day, and only while the stores hold some." end
         local ok, why = Cool(N, "event", 600)
         if not ok then return false, why end
         if not (LC.StartEvent and LC.StartEvent(arg)) then N.lcAdminNext.event = 0 return false, "That can't happen right now (or the map has nowhere for it)." end
@@ -462,7 +471,9 @@ end
 net.Receive("lc_admin_do", function(_, ply)
     local what, arg, target = net.ReadString(), net.ReadString(), net.ReadEntity()
     local ok, why = LC.AdminDo(ply, what, arg, target)
-    Say(ply, ok and "[Office] Done." or ("[Office] " .. (why or "No.")))
+    -- (a refusal goes on the screen, where it is seen: house rule 2)
+    if ok or not LC.Notice then Say(ply, ok and "[Office] Done." or ("[Office] " .. (why or "No."))) return end
+    LC.Notice(ply, "warn", "The office", why or "No.", 6)
 end)
 
 function LC.OpenAdminOffice(ply)
@@ -483,14 +494,26 @@ end
 
 LC.AdminGuards = LC.AdminGuards or {} -- [npc] = administrator
 
+-- A guard with empty hands is given his rifle. True when he had to be.
+function LC.AdminGuardArm(npc)
+    if not IsValid(npc) or not npc.Give or not npc.GetActiveWeapon then return false end
+    if IsValid(npc:GetActiveWeapon()) then return false end
+    npc:Give("weapon_ar2")
+    return true
+end
+
 local function SpawnGuard(admin)
     local p = admin:GetPos() - admin:GetForward() * 120
     p = LC.GroundAt and LC.GroundAt(p + Vector(0, 0, 40)) or p
     if not LC.SpawnSoldier then return nil end
-    local npc, st = LC.ManpowerFree(LC.SpawnSoldier, p + Vector(0, 0, 4)) -- (the Administrator's guard: never from Overwatch's reserve)
+    -- (the Administrator's guard: never from Overwatch's reserve. Spawned with the pulse rifle in his hands:
+    -- one in five came with a shotgun and was then handed a second gun, and "one of them spawned without a
+    -- weapon": the owner, 14 November)
+    local npc, st = LC.ManpowerFree(LC.SpawnSoldier, p + Vector(0, 0, 4), "ar2")
     if not IsValid(npc) or not st then return nil end
     if not util.IsValidModel or util.IsValidModel("models/combine_super_soldier.mdl") then npc:SetModel("models/combine_super_soldier.mdl") end
-    if npc.Give then npc:Give("weapon_ar2") end
+    LC.AdminGuardArm(npc)
+    timer.Simple(1, function() LC.AdminGuardArm(npc) end) -- (and looked at again once he has settled)
     local hp = npc:Health() * 2
     if npc.SetMaxHealth then npc:SetMaxHealth(hp) end
     npc:SetHealth(hp)

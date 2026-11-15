@@ -10,7 +10,7 @@
 
     With nothing to do, a stalker stands at a Combine terminal working it, with
     the stalker's own console animation from Episode One:
-      - a "Point: stalker terminal" placed with the editor in front of one of
+      - a "Point: Combine stalker terminal" placed with the editor in front of one of
         the map's terminals (stand where the stalker should stand, facing the
         terminal, and aim at the floor at your feet), or else
       - one of the map's own Combine consoles in the zone, read from the map file

@@ -294,8 +294,24 @@ function LC.EndEvent(silent)
     hook.Run("LivingCityEventEnded", was)
 end
 
+-- A ration handout keeps to the day (the owner, 14 November: "Ration distribution needs to take place before bed
+-- time, never in the middle of the night"), and there is none while the stores are empty ("rations are empty,
+-- how are they being distributed?"). auto: the city's own timer, the NPC Administrator or the director asking,
+-- who keep to the hours (07:00 to 18:00, so it is over well before the good night at 21:00); a handout a player
+-- orders by hand may be at any hour, but not from empty stores either. True, or false and why not.
+LC.RationHours = { 7, 18 }
+function LC.RationsCanStart(auto, h)
+    if LC.StockOn and LC.StockOn() and LC.StockLevel and LC.StockLevel() == "empty" then return false, "the stores are empty" end
+    if auto then
+        h = h or (LC.Hour and LC.Hour()) or 12
+        if h < LC.RationHours[1] or h >= LC.RationHours[2] then return false, "rations are handed out by day" end
+    end
+    return true
+end
+
 function LC.StartEvent(name, minutes)
     if not DEFAULT_MINUTES[name] then return false end
+    if name == "rations" and not LC.RationsCanStart(false) then return false end -- (nothing to hand out)
     if LC.EndingBusy and LC.EndingBusy() then return false end -- (the world is ending: sv_livingcity_endings.lua)
     if LC.ExerciseKinds and LC.ExerciseKinds[name] and not (LC.ExerciseReady and LC.ExerciseReady(name)) then return false end -- (no route or yard on this map)
     if LC.Event then LC.EndEvent(true) end
@@ -346,15 +362,17 @@ local function PickAuto()
         -- a curfew in daylight only as a punishment, when the city's in unrest
         if w[1] == "curfew" and LC.IsNight and not LC.IsNight() and (LC.Socio or "green") == "green"
             and not (LC.CityState and LC.CityState() == "unrest") then weights[i] = 0 end
+        if w[1] == "rations" and not LC.RationsCanStart(true) then weights[i] = 0 end -- (by day only, and never from empty stores)
         total = total + weights[i]
     end
     local r = math.random() * total
     for i, w in ipairs(AUTO_WEIGHTS) do
         r = r - weights[i]
-        if r <= 0 then return w[1] end
+        if r <= 0 and weights[i] > 0 then return w[1] end
     end
-    return "rations"
+    return LC.RationsCanStart(true) and "rations" or "sweep"
 end
+LC.PickAutoEvent = PickAuto
 
 ------------------------------------------------------------------------
 -- Curfew enforcement
@@ -686,6 +704,8 @@ timer.Create("LivingCityEvents", 0.5, 0, function()
                 hook.Run("LivingCityEventSoon", pendingAuto, math.max(0, nextAuto - now))
             end
             if now > nextAuto then
+                -- (a handout chosen a minute or two ago that has run into the evening, or into empty stores: something else)
+                if pendingAuto == "rations" and not LC.RationsCanStart(true) then pendingAuto = nil end
                 LC.StartEvent(pendingAuto or PickAuto())
                 pendingAuto, LC.PendingEvent = nil, nil
                 nextAuto = now + cvInterval:GetFloat() * 60 * (LC.SmallEventMul and LC.SmallEventMul() or 1)

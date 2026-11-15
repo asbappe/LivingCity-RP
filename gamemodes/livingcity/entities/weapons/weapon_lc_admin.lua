@@ -2,7 +2,8 @@
     The City Administrator's tablet (Living City, sv_livingcity_cityadmin.lua)
 
       Left click   point at someone: your Overwatch bodyguard kills them, at once
-      Right click  the office: city events, rations, prices, a job bonus, and acts for citizens
+      Right click  the office: city events, rations, prices, a job bonus, and acts for citizens,
+                   in a window of its own (cl_livingcity_cityadmin.lua, LC_CL.AdminOffice)
 ]]
 
 AddCSLuaFile()
@@ -43,11 +44,8 @@ function SWEP:PrimaryAttack()
     if not IsValid(owner) or not LC then return end
     local t = Aimed(owner)
     if not t then return end
-    if LC.AdminOrderKill and LC.AdminOrderKill(owner, t) then
-        owner:ChatPrint("[Office] \"Neutralize.\" Your bodyguard opens fire.")
-    else
-        owner:ChatPrint("[Office] You have no bodyguard with you right now.")
-    end
+    local sent = LC.AdminOrderKill and LC.AdminOrderKill(owner, t)
+    owner:ChatPrint(sent and "[Office] \"Neutralize.\" Your bodyguard opens fire." or "[Office] You have no bodyguard with you right now.")
 end
 
 function SWEP:SecondaryAttack()

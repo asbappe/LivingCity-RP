@@ -14,13 +14,13 @@
 - **Curfew leniency**: a minute longer to get home (Trusted and Exemplary), and an Exemplary citizen is waved through once a curfew.
 - **A slip forgiven**: once an in-game day, a minor offence by an Exemplary citizen (a curfew slip, loitering, defacing, trespass) is a warning instead of wanted.
 - **Public praise**: every `lc_loyalty_praise_minutes` (20) the Administrator commends an Exemplary citizen by name, on everyone's screen (and 5 standing), and their papers carry a **MODEL CITIZEN** stamp.
-- **Lockers** are for citizens in good standing: below `lc_locker_standing` (150) a citizen can't open one (units always can).
+- **Lockers** are for citizens in good standing: below `lc_locker_standing` (150) a citizen can't open one (units always can). In the editor's by-use view the locker is under "Citizens' daily life" only: it was also listed under "The Resistance and rebel bases", where nobody with a rebel's Civil Standing could open one (the owner, 14 November).
 - **Block Warden**, a Union job for loyal citizens only, Civil Standing 100 (was Exemplary, 400; the owner asked), and not even listed on the board below it (players, never NPCs, and never handed out): walk two corners of your own block, have a word with a neighbour, and report them or not. A report that holds up (45%) pays 10 credits and 15 standing; one that doesn't costs 10 standing.
 `lc_loyalty_rewards 0` turns all of it off.
 
 **Changes from the 7 November playtest.** The city's collared vortigaunts sweep for real, a push broom in hand, pacing a short stretch; they step aside when a person or NPC walks into them, and new sweeping spots keep out of doorways. A shackled vortigaunt never zaps: it runs from any headcrab or zombie within 400 units.
 
-**The 12 November playtest (the owner: "fix all of it please").** The street vortigaunt's push broom sits out in front, head on the ground, handle up to its hands (held in the claw, it stuck out to the side).
+**The 12 November playtest (the owner: "fix all of it please").** The street vortigaunt's push broom sits out in front, head on the ground, handle up to its hands (held in the claw, it stuck out to the side). **14 November (the owner's screenshot: the broom leaning on the floor beside it, not in its hands):** that fixed spot was measured from its feet, with numbers made for a stalker's body. The broom is now placed from the vortigaunt's own hands ten times a second (between its two claws, the model's `rightclaw` and `leftclaw` points, else its hand bones, else in front of its chest): the head rests on the floor ahead, the handle runs up through the hands, and it sweeps out and back along the floor, whatever animation the vortigaunt is in. Which way the broom model lies is read off the model (its longest side is the handle, its heavier end the head), so there is nothing to tune; `lc_vort_broom_flip 1` turns it end for end if the head ever ends up in the hands.
 
 ## Vortigaunts are chosen at the start of a new life (14 November)
 

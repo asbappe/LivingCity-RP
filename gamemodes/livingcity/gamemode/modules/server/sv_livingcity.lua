@@ -47,7 +47,7 @@ function LC.ZombieTarget()
 end
 local cvAutostart = CreateConVar("lc_autostart", "0", FLAGS, "Start Miscount automatically on map load")
 local cvSpawnDist = CreateConVar("lc_spawn_mindist", "900", FLAGS, "Random spawns happen at least this far from players")
-local cvLifetime  = CreateConVar("lc_citizen_lifetime", "600", FLAGS, "Average seconds a citizen stays before going home (0 = forever)")
+local cvLifetime  = CreateConVar("lc_citizen_lifetime", "600", FLAGS, "Retired (15 November 2026): citizens are lasting people now and are no longer swapped out on a timer. Kept so old configs load.")
 local cvArrestChance = CreateConVar("lc_npc_arrest_chance", "8", FLAGS, "Percent chance an inspection ends with the citizen being taken to a cell")
 local cvBudget    = CreateConVar("lc_npc_budget", "100", FLAGS, "Hard cap on Miscount NPCs, whatever the individual targets say")
 local cvLodDist   = CreateConVar("lc_lod_distance", "3500", FLAGS, "NPCs farther than this from every player think less often")
@@ -1240,9 +1240,16 @@ end
 LC.LeaveCounts = LC.LeaveCounts or {}
 
 local function StartLeaving(npc, st, run, why)
+    local named = st.role == "citizen" and st.profile ~= nil
+    -- the one way out of the city short of dying: in despair, with a train in, they board it for good
+    local board = LC.TrainBoardingPos and LC.TrainBoardingPos()
+    local moving = named and board and not st.leaving and why and string.sub(why, 1, 7) == "despair"
     if not st.leaving then
-        why = why or st.leaveWhy or "other"
+        why = moving and "despair: left for another city by train" or why or st.leaveWhy or "other"
         LC.LeaveCounts[why] = (LC.LeaveCounts[why] or 0) + 1
+        -- a named person is at home for a while, then comes back out as themselves (sv_livingcity_people.lua)
+        if named and not moving and LC.PersonWentHome then LC.PersonWentHome(st.profile, why) end
+        if moving then st.profile.moving = true end
     end
     st.leaving = true
     LeaveLine(npc, st)
@@ -1253,9 +1260,10 @@ local function StartLeaving(npc, st, run, why)
     local ev = LC.Event
     -- (and at night, to bed: sv_livingcity_rest.lua)
     local night = st.role == "citizen" and LC.CitizensSleep and LC.CitizensSleep() and LC.IsNight and LC.IsNight()
-    if (ev == "curfew" or ev == "lockdown" or night) and GoHome(npc, st, run) then return true end
+    -- (and anyone who lives here goes home to their own block: they are not leaving the city)
+    if (ev == "curfew" or ev == "lockdown" or night or (named and not moving and not st.profile.moving)) and GoHome(npc, st, run) then return true end
     -- a train's in: leaving the city means boarding it, suitcase and all (sv_livingcity_trains.lua)
-    local board = LC.TrainBoardingPos and LC.TrainBoardingPos()
+    if named and not moving and not st.profile.moving then board = nil end -- (no block to go home to: out by a doorway, never onto the train)
     if board and GoTo(npc, st, board, run, { kind = "spawn", pos = board, yaw = math.random(0, 359) }) then
         if LC.NPCCarry then LC.NPCCarry(npc, st, "models/props_c17/suitcase001a.mdl") end
         LC.SetNPCStr(npc, "lc_doing", "leaving the city by train")
@@ -1336,15 +1344,14 @@ end
 
 local function Register(npc, role)
     local now = CurTime()
-    local life = cvLifetime:GetFloat()
     local st = {
         role = role, state = "idle", untilT = now + math.Rand(1, 4),
         lastPos = npc:GetPos(), lastMoved = now,
         nextChat = now + math.Rand(10, 30), nextInspect = now + math.Rand(20, 50),
         nextWarn = 0, nextUse = 0, nextBark = 0, nextFollow = 0, recoveries = 0, errors = 0,
         born = now,
-        leaveAt = (role == "citizen" and life > 0) and now + life * math.Rand(0.6, 1.4) or nil,
-        leaveWhy = "their time out was up (lc_citizen_lifetime: a citizen stays about that long, then others come)",
+        -- (no leaveAt: people stay out until they have a reason of their own to go in; the owner, 15 November 2026)
+        leaveWhy = "their part was over (someone brought in for a job, an event or a convoy)",
     }
     npc:SetName("lc_npc_" .. npc:EntIndex())
     npc:SetNW2String("lc_role", role)
@@ -1587,7 +1594,8 @@ function LC.SpotInZone(z)
         local top = LCZ.RandomInside(z, 0.85) + Vector(0, 0, 64)
         -- (a patch of territory one floor deep: on its floor, not the street under a roof)
         local tr = util.TraceLine({ start = top, endpos = top - Vector(0, 0, z.h and (z.h + 64) or 400), mask = MASK_NPCSOLID_BRUSHONLY })
-        if tr.Hit and tr.HitNormal.z > 0.7 and (not z.h or LCZ.Contains(z, tr.HitPos)) and ClearSpot(tr.HitPos) then
+        -- (never inside the Resistance's holding cage: LC.CageAt, sv_livingcity_rebelhold.lua)
+        if tr.Hit and tr.HitNormal.z > 0.7 and (not z.h or LCZ.Contains(z, tr.HitPos)) and ClearSpot(tr.HitPos) and not (LC.CageAt and LC.CageAt(tr.HitPos)) then
             -- dry ground first: down in the water, or a channel below the zone's floor, only if there's nothing else
             if (LC.InWater and LC.InWater(tr.HitPos)) or tr.HitPos.z < LCZ.FloorAt(z, tr.HitPos) - 14 then wet = wet or tr.HitPos else return tr.HitPos end
         end
@@ -1810,7 +1818,10 @@ local function MaintainPopulation()
         rebel = LC.RebelTarget and LC.RebelTarget() or 0, -- sv_livingcity_rebels.lua
     }
     for _, role in ipairs(ROLE_ORDER) do
-        if SPAWNERS[role] and (counts[role] or 0) < targets[role] then
+        -- everyone on the street is somebody: with every named citizen already out, or at home
+        -- for now, nobody comes (never a nameless extra): sv_livingcity_people.lua
+        local someone = role ~= "citizen" or not LC.PersonAvailable or LC.PersonAvailable("citizen")
+        if SPAWNERS[role] and (counts[role] or 0) < targets[role] and someone then
             local pos, extra = FindSpawnPos(role)
             if pos and SPAWNERS[role](pos, extra) then return end
         end
@@ -2173,13 +2184,20 @@ local function Pursue(npc, st, e, now)
     -- after someone who's harmed nobody: run them down and lay hands on them (no shots).
     -- If they turn violent (hurt anyone, a gun in hand, the alert climbs), weapons free.
     if st.arrestOnly then
-        if not e:IsPlayer() or LC.Violent(e) then
+        -- (armed and fighting: a gun or a grenade in hand, a shot just fired: fought, never cuffed. The owner, 14 November)
+        if not e:IsPlayer() or LC.Violent(e) or (LC.ArmedAndFighting and LC.ArmedAndFighting(e)) then
             st.arrestOnly = nil
             if e:IsPlayer() then SetRel(npc, st, e, D_HT) end
             npc:SetEnemy(e)
             if LC.ArmForAlert then LC.ArmForAlert(npc, st, e) end
         else
             local epos = e:GetPos()
+            -- (a unit has hold of them, and they're struggling: he holds on, the others stand by. sv_livingcity_arrest.lua)
+            local held = LC.Struggles and LC.Struggles[e]
+            if held then
+                if held.officer == npc and not npc:IsCurrentSchedule(SCHED_IDLE_STAND) then npc:SetSchedule(SCHED_IDLE_STAND) end
+                return
+            end
             -- (laid hands on only once they're subdued: beaten, down, or standing still for it)
             if npc:GetPos():DistToSqr(epos) < 90 * 90 and LC.NPCSubdue and LC.NPCSubdue(npc, st, e, now) then return end
             if (st.nextShout or 0) < now then
@@ -2538,8 +2556,9 @@ end
 
 function LC.RefreshRelations()
     -- each player is looked at once, not once per NPC
-    local players, zombie, combine, wanted = player.GetAll(), {}, {}, {}
+    local players, zombie, combine, wanted, admin = player.GetAll(), {}, {}, {}, {}
     for i, ply in ipairs(players) do
+        admin[i] = LC.IsAdministrator and LC.IsAdministrator(ply) or false
         zombie[i] = LC.PlayerIsZombie and LC.PlayerIsZombie(ply) or false
         combine[i] = not zombie[i] and LooksCombine(ply) or false
         wanted[i] = not zombie[i] and LC.PlayerIsWanted and LC.PlayerIsWanted(ply) or false
@@ -2559,6 +2578,9 @@ function LC.RefreshRelations()
                 elseif security then
                     if z then
                         SetRel(npc, st, ply, D_HT)
+                    elseif admin[i] then
+                        SetRel(npc, st, ply, D_LI) -- the Administrator: never an enemy
+                        if st.enemy == ply then st.enemy = nil end
                     elseif role == "scanner" and combine[i] then
                         SetRel(npc, st, ply, D_LI) -- one of ours
                     elseif st.enemy ~= ply and not wanted[i] then
@@ -2752,6 +2774,8 @@ end
 -- level calls for it.
 function LC.MakeOneHostile(npc, st, target)
     local now = CurTime()
+    -- the Administrator is never the Combine's enemy, whatever she does (the owner, 14 November: "immune to it all")
+    if IsValid(target) and target:IsPlayer() and LC.IsAdministrator and LC.IsAdministrator(target) then return end
     -- walking a prisoner in (sv_livingcity_march.lua): he only lets go of him to
     -- fight whoever attacks him, not to chase someone else
     if st.marching and not (IsValid(target) and st.provokedBy == target and (st.provokedUntil or 0) > now) then return end
@@ -3015,6 +3039,9 @@ hook.Add("EntityTakeDamage", "LivingCityDamage", function(victim, dmg)
 
     -- Civil Protection players can rough up citizens without the NPC cops caring
     if LC.PlayerIsCP(attacker) and st.role == "citizen" then return end
+
+    -- the Administrator strikes one of her own: nobody remembers it, nobody answers it (the owner, 14 November)
+    if (IsSecurity(st) or st.role == "scanner") and LC.IsAdministrator and LC.IsAdministrator(attacker) then return end
 
     -- a unit that gets hurt remembers who did it, however far away they were
     if IsSecurity(st) or st.role == "scanner" then

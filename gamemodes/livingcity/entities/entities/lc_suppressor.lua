@@ -1,5 +1,5 @@
 --[[ The suppression device (Living City): the Overwatch Nexus's mortar (Half-Life 2, Follow Freeman!), placed
-     with the editor ("Fixture: the suppression device"). In sociostability BLACK it shells rebels under open sky near
+     with the editor ("Fixture: Combine suppression device"). In sociostability BLACK it shells rebels under open sky near
      a Combine zone, one shell at a time (sv_livingcity_collapse.lua), and the shells come from it: a flash and the
      launch sound here, the ring and the incoming whistle where it lands. Rebels can blow it up (the owner, 10 November:
      "the rebels can find it on the map and blow it up to stop the mortar fire"): it sparks and smokes as it goes, and

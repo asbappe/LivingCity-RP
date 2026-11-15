@@ -1,4 +1,4 @@
---[[ Transformer (Living City): placed with the editor ("Fixture: transformer").
+--[[ Transformer (Living City): placed with the editor ("Street: transformer").
      It powers the district around it (sv_livingcity_power.lua): streetlights,
      loudspeakers, city screens, forcefields and Combine door locks. Sabotage it
      (a multitool, or enough damage) and the district goes dark until a
