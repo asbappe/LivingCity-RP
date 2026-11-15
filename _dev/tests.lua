@@ -13349,11 +13349,6 @@ local stand = LC.AddPoint(SP0 + Vector(0, 400, 0), 270, "speech", 0)
 local crowd = LC.AddPoint(SP0, 90, "speechcrowd", 0)
 local adm = newPlayer("SpeechAdministrator", "admin")
 local skip = newPlayer("SpeechSkipper", "citizen")
--- (A unit standing beside the absentee takes them for someone crowding it: "move back", a shove, and after
--- about twelve seconds "Obstructing Civil Protection", wanted, and marched to the cells, which lets them off
--- the muster. That is the game as it is today, put to the owner in TODO.md. Here the crowding is held off,
--- so this tests the muster alone.)
-skip.lcBump = { n = 0, last = CurTime() + 1e6 }
 local good = newPlayer("SpeechAttender", "citizen")
 _run(0.5)
 adm:SetPos(SP0 + Vector(3000, 0, 0))
@@ -13387,6 +13382,20 @@ _run(4)
 ok(not S.warned[skip], "early in the muster, nobody is chased yet")
 _run(3)
 ok(S.warned[skip], "halfway through: a unit who sees someone skipping it warns them")
+-- the unit sent after them never takes them for crowding it (the owner, 15 November): it stood by them, said
+-- "move back", shoved them, and after twelve seconds had them wanted for obstruction and marched to the cells
+local sent = S.chaser and S.chaser[skip]
+ok(IsValid(sent) and LC.SpeechChaser(skip) == sent, "the unit who warned them is the one sent after them")
+skip.lcBump = nil
+for i = 1, 8 do LC.CopProvoked(sent, LC.NPCs[sent], skip, CurTime() + i * 3) end
+ok(skip.lcBump == nil and not LC.PlayerIsWanted(skip), "that unit, standing by them, never takes them for crowding it")
+local bystander = ents.Create("npc_metropolice")
+bystander:SetPos(skip:GetPos() + Vector(30, 0, 0))
+bystander:Spawn()
+LC.CopProvoked(bystander, { role = "cop", state = "idle" }, skip, CurTime() + 100)
+ok(skip.lcBump ~= nil and skip.lcBump.n == 1, "another unit still tells them to move back")
+skip.lcBump = nil
+bystander:Remove()
 _run(14)
 ok(L.morale == m0 + 6 and S.spoken, "the muster over: she speaks (morale up as before)")
 for _ = 1, 16 do -- (the unit at their side: how fast one runs over is the engine's business)
@@ -13409,6 +13418,7 @@ ok(skip:GetPos():DistToSqr(crowd.pos) < 800 * 800, "beaten until they blacked ou
         .. ", custody " .. tostring(LC.InCustody and LC.InCustody(skip)) .. ", tied " .. tostring(LC.IsTied and LC.IsTied(skip)) .. ", down " .. tostring(LC.IsDowned and LC.IsDowned(skip))
         .. ", disguised " .. tostring(LC.DisguisedAsCP and LC.DisguisedAsCP(skip)) .. ", stalker " .. tostring(LC.PlayerIsStalker and LC.PlayerIsStalker(skip)) .. ")")
 ok(skip:Health() < 100, "(and it hurt)", skip:Health())
+ok(not has(skip.chat, "Obstructing Civil Protection") and not LC.InCustody(skip), "and nobody had them arrested for standing where the unit put itself")
 _run(15)
 ok(LC.SpeechSession() == nil and not IsValid(S.podium), "after it the crowd breaks up and the podium goes")
 ok(lst.state ~= "event", "(the citizens go back to their day)")
