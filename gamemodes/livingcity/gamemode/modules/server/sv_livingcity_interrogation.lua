@@ -55,10 +55,29 @@ local REACH = 260        -- a unit asking must stay this close
 local function Pick(t) return t[math.random(#t)] end
 local function Name(p) return (LC.CharacterName and LC.CharacterName(p)) or (IsValid(p) and p:Nick()) or "someone" end
 local function Place(pos) return (LC.DescribePlace and LC.DescribePlace(pos)) or "somewhere in the city" end
+-- Who knows the Resistance's secrets: what they are now, a member of the Resistance (or hunted on sight by
+-- their rank), and nothing remembered from before (the owner, 15 November, questioned as a rebel as a citizen
+-- after switching sides as an admin: a sympathy kept from earlier lives made a citizen "know").
 local function Rebel(ply)
     return ply:GetNW2String("lcf_faction", "") == "resistance" or (LC.PlayerIsHunted and LC.PlayerIsHunted(ply)) == true
-        or (LC.Trait and LC.Trait(ply, "sympathy") or 0) >= 3
 end
+LC.InterrogationKnows = Rebel
+
+-- Anyone else questioned (a sentence of 10 minutes or more: sv_livingcity_custody.lua) is asked about what they
+-- did, not about the Resistance (the owner, 15 November: "why interrogate me I just punched an officer and am
+-- just a citizen").
+local function CitizenQs(ply)
+    local pr = LC.Prisoners and LC.Prisoners[ply]
+    local charge = string.gsub(tostring(pr and pr.reason or ""), "^Surrendered:?%s*", "")
+    return {
+        { key = "why", text = charge ~= "" and (charge .. ". Why?") or "Why did you do it?", own = true },
+        { key = "who", text = "Who put you up to it?", own = true },
+    }
+end
+LC.InterrogationCitizenQuestions = CitizenQs
+-- The questions in this session: the Resistance's three for a rebel (or one dressed as one) and for any unit
+-- asking in person, or what they did for anyone else.
+local function Qs(it) return it.qs or QS end
 
 local FAKE_FIRST = { "Viktor", "Anya", "Pavel", "Mira", "Tomas", "Lena", "Gregor", "Ilse", "Marek", "Dasha" }
 local FAKE_LAST = { "Halloran", "Brecht", "Novak", "Sorel", "Kaminski", "Varga", "Lindqvist", "Orlov", "Petrov", "Duval" }
@@ -67,6 +86,10 @@ local FAKE_LAST = { "Halloran", "Brecht", "Novak", "Sorel", "Kaminski", "Varga",
 -- Returns the words, and a place to mark (or nil).
 function LC.InterrogationIntel(prisoner, key, truth)
     local knows = Rebel(prisoner)
+    if key == "why" then
+        return truth and "\"I wasn't thinking. It won't happen again.\"" or "\"It wasn't like that. I was set upon.\""
+    end
+    if key == "who" and truth then return "\"Nobody. It was just me.\"" end -- (a lie: a name, as below)
     if key == "hideout" or key == "supplies" then
         if truth then
             if not knows then return "\"I don't know anything about that. I swear.\"" end
@@ -140,7 +163,7 @@ local function Ask(ply, it, q)
     it.waiting = { q = q, untilT = CurTime() + ANSWER_SECS }
     it.asked = it.asked or {}
     it.asked[q] = true
-    local text = QS[q].text
+    local text = Qs(it)[q].text
     ply:ChatPrint("[Interrogation] \"" .. text .. "\"")
     if IsValid(it.cop) then it.cop:EmitSound("npc/metropolice/vo/" .. Pick({ "apply", "isaidmovealong", "keepmoving" }) .. ".wav", 70) end
     Send(ply, "lc_intr_q", { q = q, text = text, resolve = it.resolve or 0, bargain = not it.bargained, secs = ANSWER_SECS,
@@ -157,6 +180,7 @@ local function Deliver(ply, it, q, words, pos, who)
         PushCP(ply, it)
         return
     end
+    if Qs(it)[q].own then return end -- (what one citizen did is nothing for every unit's radio)
     local units = {}
     for _, p in ipairs(player.GetAll()) do
         if LC.PlayerIsCP(p) then
@@ -215,7 +239,7 @@ function LC.InterrogationAnswer(ply, choice)
         ply:ChatPrint("[Interrogation] You say nothing. The baton comes down.")
         if IsValid(it.byPlayer) then it.byPlayer:ChatPrint("[Interrogation] " .. Name(ply) .. " says nothing.") PushCP(ply, it) end
     elseif choice == "lie" then
-        local words, pos = LC.InterrogationIntel(ply, QS[q].key, false)
+        local words, pos = LC.InterrogationIntel(ply, Qs(it)[q].key, false)
         if not IsValid(it.byPlayer) and math.random() < CATCH + CATCH_MORE * (it.lies or 0) then
             it.lies = (it.lies or 0) + 1
             it.resolve = (it.resolve or 0) - 1
@@ -230,7 +254,7 @@ function LC.InterrogationAnswer(ply, choice)
             Deliver(ply, it, q, words, pos)
         end
     else -- truth, or a bargain
-        local words, pos, who = LC.InterrogationIntel(ply, QS[q].key, true)
+        local words, pos, who = LC.InterrogationIntel(ply, Qs(it)[q].key, true)
         if choice == "bargain" then
             it.bargained = true
             local pr = LC.Prisoners and LC.Prisoners[ply]
@@ -250,7 +274,7 @@ function LC.InterrogationAnswer(ply, choice)
     -- one of the city's: all three asked, it's over
     if not IsValid(it.byPlayer) then
         local all = true
-        for i = 1, #QS do if not (it.asked and it.asked[i]) then all = false end end
+        for i = 1, #Qs(it) do if not (it.asked and it.asked[i]) then all = false end end
         if all then
             Finish(ply, it, "[Interrogation] \"That will be all.\" The Civil Protection unit leaves.")
         end
@@ -274,8 +298,9 @@ function LC.InterrogationStep(ply, it, now)
         return
     end
     if now < (it.next or 0) then return end
+    if not it.q and not (LC.CanInterrogate and LC.CanInterrogate(ply)) then it.qs = CitizenQs(ply) end
     it.q = (it.q or 0) + 1
-    if it.q > #QS then return Finish(ply, it, "[Interrogation] \"That will be all.\" The Civil Protection unit leaves.") end
+    if it.q > #Qs(it) then return Finish(ply, it, "[Interrogation] \"That will be all.\" The Civil Protection unit leaves.") end
     if it.q == 1 then Hit(ply, it, 1) end -- (to show he means it)
     Ask(ply, it, it.q)
 end
@@ -303,7 +328,7 @@ function LC.StartPlayerInterrogation(cp, prisoner)
         prisoner:SetNW2Bool("lc_interrogated", true)
         hook.Run("LivingCityInterrogation", prisoner)
     end
-    it.byPlayer, it.untilT, it.waiting = cp, CurTime() + 600, nil
+    it.byPlayer, it.untilT, it.waiting, it.qs = cp, CurTime() + 600, nil, nil
     prisoner:ChatPrint("[Interrogation] " .. Name(cp) .. " steps into your cell. \"You will answer my questions.\"")
     PushCP(prisoner, it)
     return true

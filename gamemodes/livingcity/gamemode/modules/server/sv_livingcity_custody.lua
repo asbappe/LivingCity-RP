@@ -131,7 +131,10 @@ function LC.InterrogationTalk(ply)
     local it = LC.Interrogations[ply]
     if not it then return false, "Nobody's asking." end
     it.talked = true
-    local zones = LC.ZonesOfKind and LC.ZonesOfKind("rebel") or {}
+    -- (only someone who knows has a hideout to give: a citizen in for a punch tells them all they have, which is
+    -- nothing. The owner, 15 November. sv_livingcity_interrogation.lua)
+    local knows = not LC.InterrogationKnows or LC.InterrogationKnows(ply)
+    local zones = knows and LC.ZonesOfKind and LC.ZonesOfKind("rebel") or {}
     local where
     if #zones > 0 then
         local z = Pick(zones)
@@ -154,7 +157,7 @@ function LC.InterrogationTalk(ply)
         ply:SetNW2Float("lc_traitor_until", CurTime() + 1800)
         if LC.RadioNotice then LC.RadioNotice("resistance", ply:Nick() .. " talked in custody. Don't trust them.") end
     end
-    EndInterrogation(ply, "[Interrogation] You tell them" .. (where and where ~= "" and (" about the place " .. where) or " what you know") .. ". The Civil Protection unit nods, and leaves.")
+    EndInterrogation(ply, "[Interrogation] You tell them" .. (where and where ~= "" and (" about the place " .. where) or (knows and " what you know" or " everything. It isn't much")) .. ". The Civil Protection unit nods, and leaves.")
     return true
 end
 

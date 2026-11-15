@@ -47,7 +47,13 @@ local function BuildQuestion(t)
     qWin = f
     if LC_CL.SetTheme then LC_CL.SetTheme(f, "custody") end -- (being questioned looks the same whoever you are)
     f:SetTitle("Interrogation")
-    f:SetSize(math.min(ScrW() - 40, 460), 330)
+    -- (sized to its words, all of them on screen: the owner, 15 November, "the interrogation window was too small
+    -- and I couldn't see all the text")
+    local said = tostring(t.by or "The unit") .. ": \"" .. tostring(t.text or "") .. "\""
+    local w = math.min(ScrW() - 40, 520)
+    local lines = LC_CL.QuickWrapLines and #LC_CL.QuickWrapLines(said, "DermaDefault", w - 24) or 3
+    local rows = 4 + (t.bargain and 1 or 0)
+    f:SetSize(w, math.min(ScrH() - 40, 24 + 8 + math.max(1, lines) * 16 + 2 + 20 + rows * 35 + 14))
     f:Center()
     f:MakePopup()
     f:ShowCloseButton(false)
@@ -59,7 +65,7 @@ local function BuildQuestion(t)
     q:SetWrap(true)
     q:SetAutoStretchVertical(true)
     q:SetTextColor(ACC)
-    q:SetText(tostring(t.by or "The unit") .. ": \"" .. tostring(t.text or "") .. "\"")
+    q:SetText(said)
     local info = vgui.Create("DPanel", f)
     info:Dock(TOP)
     info:SetTall(20)

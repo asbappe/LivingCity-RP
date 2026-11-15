@@ -1233,12 +1233,94 @@ local function Fit(text, font, width)
     return text .. "..."
 end
 
+-- words wrapped to a width, in a font: their lines
+local function WrapLines(text, font, width)
+    surface.SetFont(font)
+    local out, line = {}, ""
+    for raw in string.gmatch(tostring(text or "") .. "\n", "([^\n]*)\n") do
+        for word in string.gmatch(raw, "%S+") do
+            local try = line == "" and word or (line .. " " .. word)
+            if line ~= "" and surface.GetTextSize(try) > width then
+                out[#out + 1] = line
+                line = word
+            else
+                line = try
+            end
+        end
+        -- (a new line in the words starts a new row)
+        if line ~= "" then out[#out + 1] = line end
+        line = ""
+    end
+    return out
+end
+LC_CL.QuickWrapLines = WrapLines
+
+-- A situation's menu (the interrogation above all: the owner, 15 November, "the interrogation window was too
+-- small and I couldn't see all the text in the popup") is as wide as its longest choice needs, up to most of
+-- the screen, and a choice longer than that wraps onto another row instead of being cut short. F1 and F2 are
+-- as they were. Worked out once per page and screen width.
+local ROW, ROW_MORE = 26, 18
+local function SituationLayout(page)
+    local sw = ScrW()
+    local L = page.lcLayout
+    if L and L.sw == sw then return L end
+    surface.SetFont("LCQuickItem")
+    local most = math.max(380, math.min(sw - 48, 640))
+    local want = 380
+    for i = 1, 9 do
+        local it = page.items[i]
+        if it then want = math.max(want, surface.GetTextSize(it.label .. (it.page and "  >" or "")) + 50) end
+    end
+    local W = math.min(most, want)
+    local rows = {}
+    for i = 1, 9 do
+        local it = page.items[i]
+        if it then
+            rows[i] = WrapLines(it.label .. (it.page and "  >" or ""), "LCQuickItem", W - 46)
+            if #rows[i] == 0 then rows[i] = { "" } end
+        end
+    end
+    L = { sw = sw, W = W, rows = rows }
+    page.lcLayout = L
+    return L
+end
+LC_CL.QuickSituationLayout = SituationLayout
+
 hook.Add("HUDPaint", "LivingCityQuick", function()
     if not open then return end
     local page = open.page
     local accent = page.accent or ACCENT.default
-    local W, H = 380, 34 + 9 * 26 + 26
-    local x, y = 24, math.floor(ScrH() * 0.5 - H / 2)
+    local L = open.kind == "situation" and SituationLayout(page) or nil
+    local W = L and L.W or 380
+    local heights, listH = {}, 0
+    for i = 1, 9 do
+        local rows = L and L.rows[i]
+        heights[i] = ROW + (rows and (#rows - 1) * ROW_MORE or 0)
+        listH = listH + heights[i]
+    end
+    local H = 34 + listH + 26
+    -- what was just said (a situation's menu: the chair, the interrogation), under the list: wrapped to the width
+    local note = open.note
+    if type(note) == "function" then
+        local ok, said = LC.Try(note)
+        note = ok and said or nil
+    end
+    local noteLines = nil
+    if note and note ~= "" then
+        if open.noteFor ~= note or open.noteW ~= W then
+            open.noteFor, open.noteW = note, W
+            open.noteLines = WrapLines(note, "LCQuickItem", W - 24)
+        end
+        noteLines = open.noteLines
+    end
+    -- on screen, all of it: moved up when the words under it would run off the bottom, and with more words than
+    -- the screen holds, the newest of them (as a scroll to the end)
+    local sh = ScrH()
+    local shown = noteLines and #noteLines or 0
+    if shown > 0 and H + 18 + shown * 20 > sh - 16 then shown = math.max(1, math.floor((sh - 16 - H - 18) / 20)) end
+    local total = H + (shown > 0 and (18 + shown * 20) or 0)
+    local x, y = 24, math.floor(sh * 0.5 - H / 2)
+    if y + total > sh - 8 then y = math.max(8, sh - 8 - total) end
     -- (your side's look behind it: cl_livingcity_theme.lua; as it was with lc_ui_theme 0)
     if LC_CL.ThemeOn and LC_CL.ThemeOn() and LC_CL.PaintThemePanel then
         LC_CL.PaintThemePanel(x, y, W, H, 30)
@@ -1248,53 +1330,36 @@ hook.Add("HUDPaint", "LivingCityQuick", function()
     end
     draw.RoundedBox(0, x, y + 28, W, 2, accent)
     draw.SimpleText(page.title or "", "LCQuickTitle", x + 12, y + 15, accent, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+    local ry = y + 34
     for i = 1, 9 do
         local it = page.items[i]
-        local ry = y + 34 + (i - 1) * 26
         if it then
             local col = it.disabled and DIM or (it.ctx and CONTEXT or INK)
             draw.SimpleText(tostring(i), "LCQuickNum", x + 16, ry + 12, accent, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
-            it.fit = it.fit or Fit(it.label .. (it.page and "  >" or ""), "LCQuickItem", W - 46)
-            draw.SimpleText(it.fit, "LCQuickItem", x + 34, ry + 12, col, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+            local rows = L and L.rows[i]
+            if rows then
+                for k, line in ipairs(rows) do
+                    draw.SimpleText(line, "LCQuickItem", x + 34, ry + 12 + (k - 1) * ROW_MORE, col, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+                end
+            else
+                it.fit = it.fit or Fit(it.label .. (it.page and "  >" or ""), "LCQuickItem", W - 46)
+                draw.SimpleText(it.fit, "LCQuickItem", x + 34, ry + 12, col, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+            end
         elseif page.empty and page.empty[i] then
             draw.SimpleText(page.empty[i], "DermaDefault", x + 16, ry + 12, DIM, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
         else
             draw.SimpleText(tostring(i), "LCQuickNum", x + 16, ry + 12, DIM, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
         end
+        ry = ry + heights[i]
     end
     draw.SimpleText(#open.stack > 0 and "0  Back" or "0  Close", "DermaDefault", x + 12, y + H - 13, DIM, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
     local key = input and input.LookupBinding and input.LookupBinding("+menu_context")
     draw.SimpleText((key and string.upper(key) or "C") .. ": the full menu", "DermaDefault", x + W - 12, y + H - 13, DIM, TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
-    -- what was just said (a situation's menu: the chair), under the list
-    local note = open.note
-    if type(note) == "function" then
-        local ok, said = LC.Try(note)
-        note = ok and said or nil
-    end
-    if note and note ~= "" then
-        if open.noteFor ~= note then
-            open.noteFor, open.noteLines = note, {}
-            surface.SetFont("LCQuickItem")
-            local line = ""
-            for raw in string.gmatch(note .. "\n", "([^\n]*)\n") do
-              for word in string.gmatch(raw, "%S+") do
-                local try = line == "" and word or (line .. " " .. word)
-                if surface.GetTextSize(try) > W - 24 and line ~= "" then
-                    open.noteLines[#open.noteLines + 1] = line
-                    line = word
-                else
-                    line = try
-                end
-              end
-              -- (a new line in the words starts a new row)
-              if line ~= "" then open.noteLines[#open.noteLines + 1] = line end
-              line = ""
-            end
-        end
-        local n = #open.noteLines
-        draw.RoundedBox(4, x, y + H + 6, W, 12 + n * 20, BG)
-        for i, l in ipairs(open.noteLines) do
-            draw.SimpleText(l, "LCQuickItem", x + 12, y + H + 12 + (i - 1) * 20, INK, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+    if shown > 0 then
+        local n = #noteLines
+        draw.RoundedBox(4, x, y + H + 6, W, 12 + shown * 20, BG)
+        for i = n - shown + 1, n do
+            draw.SimpleText(noteLines[i], "LCQuickItem", x + 12, y + H + 12 + (i - (n - shown) - 1) * 20, INK, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
         end
     end
 end)

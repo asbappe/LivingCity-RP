@@ -4931,6 +4931,83 @@ return bad and ("the scientist's eyes: " .. bad) or nil
 """)
 if err:
     problems = (problems + "\n" if problems else "") + str(err)
+# the panel on the right in a Combine-only zone (the owner, 15 November): "Combine only zone", and while they're
+# walked in, cuffed or in a cell, nothing about leaving before a countdown
+err = L.execute(r"""
+local ok, e = pcall(function()
+    _me.nw.lcf_faction, _me.nw.lc_here = "citizen", "combine"
+    local function find()
+        for _, g in ipairs(LC_CL.ContextGroups(_me)) do if g.kind == "zone" then return g end end
+    end
+    local g = find()
+    if not g or g.title ~= "Combine only zone" then error("Combine-only zone: titled " .. tostring(g and g.title)) end
+    for _, k in ipairs({ "lc_marching", "lc_tied" }) do
+        _me.nw[k] = true
+        if find() then error("Combine-only zone: the countdown line shows with " .. k) end
+        _me.nw[k] = nil
+    end
+    _me.nw.lc_jail_until = CurTime() + 60
+    if find() then error("Combine-only zone: the countdown line shows in a cell") end
+    _me.nw.lc_jail_until = nil
+    _me.nw.lcf_faction, _me.nw.lc_here = nil, nil
+end)
+if not ok then return tostring(e) end
+""")
+if err:
+    problems = (problems + "\n" if problems else "") + str(err)
+# a situation's menu (the interrogation: the owner, 15 November, "the window was too small and I couldn't see all
+# the text"): as wide as its longest choice needs, long ones wrapped, and the words under it kept on screen
+err = L.execute(r"""
+local gts, sdraw = surface.GetTextSize, draw.SimpleText
+local ok, e = pcall(function()
+    surface.GetTextSize = function(t) return #tostring(t) * 9, 18 end
+    local long = LC_CL.QuickSituationLayout({ items = { { label = string.rep("word ", 60) }, { label = "Short" } } })
+    if long.W > 640 or long.W < 380 then error("width " .. tostring(long.W)) end
+    if #long.rows[1] < 2 then error("a long choice wasn't wrapped") end
+    for _, line in ipairs(long.rows[1]) do if #line * 9 > long.W - 46 then error("a wrapped line is wider than the menu") end end
+    local mid = LC_CL.QuickSituationLayout({ items = { { label = "Bargain: the truth, for a shorter sentence, in a few more words" } } })
+    if #mid.rows[1] ~= 1 or mid.W < 63 * 9 + 46 then error("a choice that fits a wider menu was wrapped or cut (width " .. tostring(mid.W) .. ")") end
+    local ys = {}
+    draw.SimpleText = function(text, font, x, y) ys[#ys + 1] = tonumber(y) or 0 end
+    LC_CL.OpenSituation({ id = "smoketall", title = "Interrogation", items = { { label = "Tell the truth", run = function() end } },
+        note = string.rep("A very long thing that was said to you in the cell. ", 120) })
+    hook.t.HUDPaint.LivingCityQuick()
+    LC_CL.CloseSituation("smoketall")
+    if #ys == 0 then error("nothing drawn") end
+    local top, bottom = 1e9, 0
+    for _, y in ipairs(ys) do top, bottom = math.min(top, y), math.max(bottom, y) end
+    if bottom > ScrH() - 8 or top < 0 then error("words drawn off the screen (" .. top .. " to " .. bottom .. ")") end
+end)
+surface.GetTextSize, draw.SimpleText = gts, sdraw
+if not ok then return "situation menu: " .. tostring(e) end
+""")
+if err:
+    problems = (problems + "\n" if problems else "") + str(err)
+# the way to a place asked for (F1 > find work: the owner, 15 November, "a marker on my screen but no waypath finder
+# chevrons"): a guide trail stays with no quest on; a quest's trail still goes when the quest does
+err = L.execute(r"""
+local qsWas = LC_CL.QuestState
+local ok, e = pcall(function()
+    LC_CL.QuestState = function() return { active = false } end
+    _me:SetPos(Vector(0, 0, 0))
+    LC_CL.SetTrail({ g = { 1000, 0, 0 }, p = { 200, 0, 0, 600, 0, 0, 1000, 0, 0 }, guide = true })
+    _advance(0.3)
+    hook.t.Think.LivingCityTrail()
+    if not LC_CL.Trail() then error("a guide trail was dropped for want of a quest") end
+    local beamsBefore = _calls["render.DrawBeam"] or 0
+    hook.t.PostDrawTranslucentRenderables.LivingCityTrail(false, false)
+    if (_calls["render.DrawBeam"] or 0) - beamsBefore < 10 then error("a guide trail drew hardly any chevrons") end
+    LC_CL.SetTrail({ g = { 1000, 0, 0 }, p = { 200, 0, 0, 600, 0, 0, 1000, 0, 0 } })
+    _advance(0.3)
+    hook.t.Think.LivingCityTrail()
+    if LC_CL.Trail() then error("a quest's trail stayed with no quest on") end
+end)
+LC_CL.QuestState = qsWas
+LC_CL.SetTrail(nil)
+if not ok then return "guide trail: " .. tostring(e) end
+""")
+if err:
+    problems = (problems + "\n" if problems else "") + str(err)
 import re as _re
 _root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 _mods = os.path.join(_root, "gamemodes", "livingcity", "gamemode", "modules")

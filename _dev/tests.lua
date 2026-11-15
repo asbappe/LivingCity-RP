@@ -278,11 +278,12 @@ _run(40)
 ok(not has(citizen.chat, "Warning 1 of 3") and (LC.EventGraceEnds or 0) > CurTime(), "curfew gives a grace period to get home before anyone is warned")
 ok(LC.CurfewGrace() >= 60, "and it's never shorter than a minute")
 citizen.lcViolentUntil = CurTime() + 1e6 -- (taken for violent: the unit chases rather than laying hands on them, so the wanted status can be checked)
+citizen.lcArmedViolentUntil = CurTime() + 1e6 -- (violent with a weapon: a punch alone still gets the struggle, sv_livingcity_law.lua)
 _run(80)
 ok(has(citizen.chat, "Warning 1 of 3") and has(citizen.chat, "Warning 3 of 3"), "an officer who sees you gives three warnings")
 ok(LC.PlayerIsWanted(citizen), "then you're wanted", table.concat(citizen.chat, " | ") .. " cop=" .. tostring(cst.state))
 LC.ClearWanted(citizen)
-citizen.lcViolentUntil = nil
+citizen.lcViolentUntil, citizen.lcArmedViolentUntil = nil, nil
 citizen:SetPos(Vector(3000, 3000, 0))
 citizen.chat = {}
 _run(20)
@@ -323,6 +324,7 @@ if pz then
     _run(2)
     ok(LC.Prisoners[con] ~= nil, "a step past the edge of the prison area isn't an escape")
     con.lcViolentUntil = CurTime() + 1e6 -- (taken for violent: units chase with sticks rather than laying hands on him, for the stunstick test below)
+    con.lcArmedViolentUntil = CurTime() + 1e6 -- (with a weapon: a punch alone still gets the struggle, sv_livingcity_law.lua)
     con:SetPos(pz.pos + Vector(pz.r + 600, 0, 0))
     _run(2)
     ok(not LC.Prisoners[con], "but well beyond it is")
@@ -343,7 +345,7 @@ ok(LC.Struggles[con] ~= nil and not LC.Prisoners[con], "a stunstick hit from a c
 ok(dmg:GetDamage() == 0, "instead of hurting them")
 _run(5)
 ok(LC.Prisoners[con] ~= nil, "doing nothing about it: arrested")
-con.lcViolentUntil = nil
+con.lcViolentUntil, con.lcArmedViolentUntil = nil, nil
 LC.ReleasePrisoner(con)
 _setcvar("lc_march", 1)
 
@@ -1478,11 +1480,12 @@ ok(LC.Stops[frisked] ~= nil and has(frisked.chat, "Stand still for inspection"),
 copN.sim = true
 local standing0 = LC.Standing(frisked)
 frisked.lcViolentUntil = CurTime() + 1e6 -- (taken for violent: chased, not cuffed on the spot, so the wanted status can be checked)
+frisked.lcArmedViolentUntil = CurTime() + 1e6 -- (with a weapon: a punch alone still gets the struggle)
 _run(8)
 ok(LC.Stops[frisked] == nil, "the stop finishes")
 ok(not LC.HasItem(frisked, "uniform_cp") and has(frisked.chat, "Confiscated: Civil Protection uniform"), "contraband is found and confiscated")
 ok(LC.PlayerIsWanted(frisked) and LC.Standing(frisked) < standing0, "and you're wanted, with less standing")
-frisked.lcViolentUntil = nil
+frisked.lcViolentUntil, frisked.lcArmedViolentUntil = nil, nil
 ok(frisked.lcStopNext > CurTime() + 300, "and won't be stopped again for a while")
 LC.ClearWanted(frisked)
 LC.CalmCops(frisked)
@@ -9614,6 +9617,7 @@ ok(joined >= 1 and has(caller.chat, "in your squad"), "and join the caller's squ
 local perp = newPlayer("BackupPerp", "citizen")
 perp:SetPos(B + Vector(300, 0, 0))
 perp.lcViolentUntil = CurTime() + 1e6 -- (taken for violent: the units close in to fight, not to cuff)
+perp.lcArmedViolentUntil = CurTime() + 1e6 -- (with a weapon: a punch alone still gets the struggle)
 LC.ReportCrime(perp, "Test", 60)
 _run(2)
 local onIt = false
@@ -32804,6 +32808,208 @@ LC.IsSeen = seenWas
 tur:Remove()
 end
 Nov15_TurretRightTests()
+function PunchStruggleTests()
+    section("15 November playtest: a punch at a unit still gets the struggle, never a beating")
+    local C0 = Vector(-266000, 95000, 0)
+    LC.AddPoint(C0 + Vector(1400, 0, 0), 0, "cell", 0)
+    LC.AddPoint(C0 + Vector(1400, 400, 0), 0, "release", 0)
+    local set = _setcvar
+    set("lc_arrest_struggle", 1)
+    local p = newPlayer("PunchCit", "citizen", nil, 900)
+    _run(0.3)
+    p:SetPos(C0)
+    local cop, cst = LC.Spawners.cop(C0 + Vector(60, 0, 0))
+    cop.sim = false
+    cst.untilT = 1e9
+    if not p:HasWeapon("weapon_fists") then p:Give("weapon_fists") end
+    p:SelectWeapon("weapon_fists")
+    ok(LC.BareHandedHit(p, _dmg(p, 10, DMG_CLUB)), "fists in hand: a bare-handed blow")
+    -- the punch
+    hook.Run("EntityTakeDamage", cop, _dmg(p, 10, DMG_CLUB))
+    ok(p.lcAttackedSecurityAt == nil and not LC.ArmedAndFighting(p), "a punch at a unit is not 'armed and fighting'")
+    ok(LC.Violent(p) and LC.TakenUnarmed(p), "violent (a punch), but taken the unarmed way")
+    ok(LC.PlayerIsWanted(p), "(wanted for it)")
+    ok(cst.enemy == p and cst.arrestOnly == true, "the unit runs them down to cuff them, not a fight", tostring(cst.arrestOnly))
+    -- hands out, standing still: his baton gives way to the struggle at once
+    if not p:HasWeapon("weapon_lc_hands") then p:Give("weapon_lc_hands") end
+    p:SelectWeapon("weapon_lc_hands")
+    p.lcStillSince = CurTime() - 5
+    local blocked = hook.Run("EntityTakeDamage", p, _dmg(cop, 10, DMG_CLUB))
+    ok(blocked == true and LC.Struggles[p] ~= nil and LC.Struggles[p].officer == cop, "hit by his baton with their hands out: the struggle, not a beating")
+    local sm = _lastnet("lc_struggle")
+    ok(sm and sm.to == p and sm.data[1] == true and sm.data[2] == "resist", "they see the struggle (press E to break free)")
+    LC.StruggleCancel(p)
+    -- a unit already fighting them goes back to the stick and the struggle once it's just bare hands
+    p:SetPos(C0 + Vector(500, 0, 0))
+    p.lcStillSince = nil
+    cst.arrestOnly = nil
+    cst.nextPursue = 0
+    if LC.SetState then LC.SetState(cop, cst, "hostile") end
+    cst.enemy = p
+    _run(1.5)
+    ok(cst.arrestOnly == true, "a unit that was fighting them switches to cuffing", tostring(cst.arrestOnly) .. " " .. tostring(cst.state))
+    -- a gun is a fight, as before
+    p:Give("weapon_smg1") p:SelectWeapon("weapon_smg1")
+    ok(not LC.TakenUnarmed(p), "a gun in hand: not unarmed")
+    cst.nextPursue = 0
+    _run(1.5)
+    ok(not cst.arrestOnly, "and the unit fights them")
+    hook.Run("EntityTakeDamage", cop, _dmg(p, 10))
+    ok(p.lcAttackedSecurityAt ~= nil and (p.lcArmedViolentUntil or 0) > CurTime(), "a unit hurt with a gun in hand: armed and fighting, as before")
+    p:SelectWeapon("weapon_lc_hands")
+    ok(not LC.TakenUnarmed(p), "(and for two minutes after, even with the gun put away)")
+    -- clean up
+    if LC.Struggles[p] then LC.StruggleCancel(p) end
+    if LC.FreeFromCustody then LC.FreeFromCustody(p) end
+    if LC.ClearWanted then LC.ClearWanted(p) end
+    if LC.ResetHeat then LC.ResetHeat(p) end
+    p.lcAttackedSecurityAt, p.lcArmedViolentUntil, p.lcViolentUntil, p.lcSubdue = nil, nil, nil, nil
+    if IsValid(cop) then cop:Remove() end
+    p:SetPos(Vector(0, -500, 0))
+end
+PunchStruggleTests()
+
+function HeldNotTrespassingTests()
+    section("15 November playtest: walked in under arrest, nobody is trespassing")
+    local zc = Vector(-268000, 97000, 0)
+    LC.AddZone(zc, 300, "combine", 0)
+    local p = newPlayer("HauledCit", "citizen")
+    _run(0.5)
+    p:SetPos(zc)
+    p.chat = {}
+    local function tick() LC.CombineZoneTick(CurTime()) return p:GetNW2Float("lc_trespass_until", 0) end
+    p:SetNW2Bool("lc_tied", true)
+    ok(tick() == 0 and not has(p.chat, "restricted area"), "cuffed in a Combine-only zone: no countdown, no warning")
+    ok(LC.HeldByCombine(p), "(held by the Combine, as both sides see it)")
+    p:SetNW2Bool("lc_tied", false)
+    p:SetNW2Bool("lc_marching", true)
+    ok(tick() == 0, "walked to the cells: none either")
+    p:SetNW2Bool("lc_marching", false)
+    p:SetNW2Float("lc_struggle_until", CurTime() + 4)
+    ok(tick() == 0, "held in a struggle: none")
+    p:SetNW2Float("lc_struggle_until", 0)
+    p:SetNW2Float("lc_jail_until", CurTime() + 60)
+    ok(tick() == 0, "in a cell: none")
+    p:SetNW2Float("lc_jail_until", 0)
+    ok(not LC.HeldByCombine(p) and tick() > CurTime() and has(p.chat, "restricted area"), "free and there: the countdown, as before")
+    p:SetNW2Bool("lc_tied", true)
+    ok(tick() == 0, "taken in after the countdown started: it stops")
+    _run(12)
+    ok(not LC.PlayerIsWanted(p), "and they're never wanted for trespassing while held")
+    p:SetNW2Bool("lc_tied", false)
+    p:SetPos(Vector(0, -500, 0))
+    tick()
+end
+HeldNotTrespassingTests()
+
+function CellQuestionsTests()
+    section("15 November playtest: a citizen in for a punch is asked about the punch, not the Resistance")
+    local R0 = Vector(-270000, 99000, 0)
+    LC.AddPoint(R0, 0, "cell", 0)
+    LC.AddPoint(R0 + Vector(0, 300, 0), 0, "cell", 0)
+    LC.AddPoint(R0 + Vector(400, 0, 0), 0, "release", 0)
+    LC.AddZone(R0 + Vector(3000, 0, 0), 300, "rebel", 0)
+    local p = newPlayer("PunchedCop", "citizen")
+    local cop = newPlayer("QuestionCop", "cp")
+    _run(0.5)
+    -- a sympathy kept from earlier lives (an admin who was the Resistance an hour ago) makes nobody a rebel now
+    p:SetPData("lcq_sympathy", 6)
+    ok(not LC.InterrogationKnows(p), "a citizen with an old sympathy for the cause knows nothing of it")
+    ok(LC.InterrogationIntel(p, "hideout", true):find("don't know", 1, true) ~= nil, "(the truth about a hideout: they don't know)")
+    LC.Incarcerate(p, 600, "Assaulting Civil Protection")
+    ok(LC.Prisoners[p] ~= nil, "(in a cell for ten minutes)")
+    ok(LC.StartInterrogation(p), "questioned in the cell (ten minutes: the owner's rule)")
+    local it = LC.Interrogations[p]
+    local function ask()
+        it.next = 0
+        LC.InterrogationStep(p, it, CurTime())
+        local m = _lastnet("lc_intr_q")
+        return m and util.JSONToTable(m.data[1] or "") or {}
+    end
+    local q1 = ask()
+    ok(q1.text == "Assaulting Civil Protection. Why?", "the first question is about what they did", tostring(q1.text))
+    cop.chat = {}
+    p.chat = {}
+    LC.InterrogationAnswer(p, "truth")
+    ok(has(p.chat, "I wasn't thinking"), "the truth: they weren't thinking")
+    ok(not has(cop.chat, "[CP net]"), "(nothing for every unit's radio)")
+    local q2 = ask()
+    ok(q2.text == "Who put you up to it?", "then who put them up to it", tostring(q2.text))
+    LC.InterrogationAnswer(p, "truth")
+    ok(LC.Interrogations[p] == nil, "two questions, and it's over")
+    -- telling them everything: there's nothing to tell, and no hideout is marked
+    ok(LC.StartInterrogation(p), "(asked again)")
+    cop.chat, p.chat = {}, {}
+    LC.InterrogationTalk(p)
+    ok(has(p.chat, "It isn't much") and not has(cop.chat, "hideout"), "telling them everything marks no hideout for a citizen")
+    LC.ReleasePrisoner(p)
+    -- the Resistance: still the three questions about the cell
+    local reb = newPlayer("CellRebel", "resistance", nil, 900)
+    _run(0.5)
+    LC.Incarcerate(reb, 600, "Carrying a weapon")
+    ok(LC.StartInterrogation(reb), "(a rebel questioned)")
+    it = LC.Interrogations[reb]
+    local function askR()
+        it.next = 0
+        LC.InterrogationStep(reb, it, CurTime())
+        local m = _lastnet("lc_intr_q")
+        return m and util.JSONToTable(m.data[1] or "") or {}
+    end
+    local r1 = askR()
+    ok(tostring(r1.text):find("hideout", 1, true) ~= nil and LC.InterrogationKnows(reb), "a member of the Resistance is asked about the hideout, as before", tostring(r1.text))
+    if LC.EndInterrogation then LC.EndInterrogation(reb) end
+    LC.ReleasePrisoner(reb)
+    p:SetPData("lcq_sympathy", 0)
+    for _, q in ipairs({ p, reb, cop }) do q:SetPos(Vector(0, -500, 0)) end
+end
+CellQuestionsTests()
+
+function FindWorkTrailTests()
+    section("15 November playtest: F1's find work leads the way with the chevrons, as any objective")
+    local W0 = Vector(-272000, 101000, 0)
+    local p = newPlayer("WorkSeeker", "citizen")
+    _run(0.5)
+    p:SetPos(W0)
+    local was = { pending = LC.IntakePending, job = LC.Job, desk = LC.LaborDesk, place = LC.WaypointPlaces.labor, quest = LC.QuestObjectivePos }
+    LC.IntakePending = function() return false end
+    LC.Job = function() return nil end
+    LC.LaborDesk = function() return true end
+    LC.WaypointPlaces.labor = function() return W0 + Vector(1500, 0, 0), "Labor Assignment" end
+    LC.QuestObjectivePos = function() return nil end
+    p.lcGuide, p.lcWaypoint, p.lcTrail = nil, nil, nil
+    LC.QuickFindWork(p)
+    ok(p.lcWaypoint ~= nil and p.lcGuide ~= nil and p.lcGuide.pos == W0 + Vector(1500, 0, 0), "the terminal is marked, and the trail goes there too")
+    LC.TrailTick(CurTime())
+    local m = _lastnet("lc_trail")
+    local sent = m and util.JSONToTable(m.data[2] or "") or {}
+    ok(p.lcTrail ~= nil and p.lcTrail.guide == true and sent.guide == true, "sent as a guide: their screen keeps it with no quest on")
+    -- a quest's trail is not a guide (dropped on their screen once the quest is over, as before)
+    LC.QuestObjectivePos = function(who) if who == p then return W0 + Vector(0, 1500, 0) end end
+    LC.TrailTick(CurTime() + 1)
+    m = _lastnet("lc_trail")
+    sent = m and util.JSONToTable(m.data[2] or "") or {}
+    ok(p.lcTrail ~= nil and not p.lcTrail.guide and sent.guide == nil, "a quest's trail is the quest's")
+    LC.IntakePending, LC.Job, LC.LaborDesk, LC.WaypointPlaces.labor, LC.QuestObjectivePos = was.pending, was.job, was.desk, was.place, was.quest
+    p.lcGuide, p.lcWaypoint = nil, nil
+    p:SetPos(Vector(0, -500, 0))
+    LC.TrailTick(CurTime() + 2)
+end
+FindWorkTrailTests()
+
+function DreamWakeScreenTests()
+    section("15 November playtest: waking from a dream clears the screen at once")
+    local p = newPlayer("WhiteWaker", "citizen")
+    _run(0.3)
+    local fades = {}
+    p.ScreenFade = function(_, flags, col, t, hold) fades[#fades + 1] = { flags = flags, t = t, hold = hold } end
+    ok(LC.DreamClearScreen(p) and fades[1] and fades[1].flags == ((SCREENFADE and SCREENFADE.PURGE) or 16) and fades[1].hold == 0,
+        "the dream's white-out (held a minute as 'the city resets') is purged")
+    fades = {}
+    LC.DreamWakeOne(p, "end")
+    ok(fades[1] ~= nil and fades[1].flags == ((SCREENFADE and SCREENFADE.PURGE) or 16), "waking from a dream purges it")
+    p.ScreenFade = nil
+end
+DreamWakeScreenTests()
 
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")
 ;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)

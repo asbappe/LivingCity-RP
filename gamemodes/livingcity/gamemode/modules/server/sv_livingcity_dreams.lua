@@ -901,10 +901,20 @@ end
 hook.Add("CanExitVehicle", "LivingCityDreamSeat", function(veh) if IsValid(veh) and veh.lcDreamSeat then return false end end)
 hook.Add("CanPlayerEnterVehicle", "LivingCityDreamSeat", function(p, veh) if IsValid(veh) and veh.lcDreamSeat and p.lcDreamSeat ~= veh then return false end end)
 
+-- Whatever a dream left on someone's screen, gone at once: the ending's white-out as "the city resets" is held
+-- for a minute (sv_livingcity_endings.lua), and outlasted the dream by most of it (the owner, 15 November: "when I
+-- woke from the broken bus dream, everything is white ... after like 30 seconds it went away").
+function LC.DreamClearScreen(p)
+    if not IsValid(p) or not p.ScreenFade then return false end
+    p:ScreenFade(SCREENFADE and SCREENFADE.PURGE or 16, Color(0, 0, 0, 0), 0, 0)
+    return true
+end
+
 -- Wake one dreamer: out of it, and everything put back.
 function LC.DreamWakeOne(p, why)
     if not IsValid(p) then return false end
     LC.DreamUnseat(p) -- (sat in one of a dream's chairs: out of it first)
+    LC.DreamClearScreen(p)
     local sid = Sid(p)
     local snap = LC.DreamSnaps[sid] or LC.DreamLoad(sid)
     local dream = LC.DreamActive
@@ -949,6 +959,7 @@ function LC.DreamWakeOne(p, why)
         LC.DreamRestore(p, snap, function(ok)
             if not IsValid(p) then return end
             p.lcDreamBack = nil
+            LC.DreamClearScreen(p) -- (and again once they're back, before anything that wakes them adds its own)
             hook.Run("LivingCityDreamWoke", p, ok, why, mine)
             local quiet = p.lcDreamQuietWake
             p.lcDreamQuietWake = nil

@@ -25,6 +25,8 @@ local function MayEnter(ply)
     if not ply:Alive() then return true end
     if LC.PlayerIsCP(ply) or ply:IsAdmin() and ply:GetNW2Bool("lc_build", false) then return true end
     if LC.InCustody and LC.InCustody(ply) then return true end
+    if LC.HeldByCombine and LC.HeldByCombine(ply) then return true end -- (cuffed, in a struggle: held, not trespassing)
+    if LC.Struggles and LC.Struggles[ply] then return true end
     if LC.EscortCovers and LC.EscortCovers(ply) then return true end -- with a Civil Protection escort (sv_livingcity_escort.lua)
     if LC.FoolsSecurity and LC.FoolsSecurity(ply) then return true end
     if LC.PlayerIsZombie(ply) then return true end -- the infested don't read signs
