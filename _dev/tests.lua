@@ -31340,6 +31340,53 @@ end
 Nov14E_MediumScreenTests()
 
 
+function Nov14C_ColonelTests()
+    section("14 November notes (C): the Colonel stays where he stands, and the editor can place him")
+    local saved, anchorWas = {}, LC.ColonelAnchor
+    for npc, st in pairs(LC.NPCs or {}) do if st.quartermaster then saved[npc] = true st.quartermaster = nil end end
+    for i = #LC.Points, 1, -1 do if LC.Points[i].kind == "colonel" then table.remove(LC.Points, i) end end
+    LC.ColonelAnchor = nil
+    local at = Vector(-9000, 7000, 0)
+    local function person(pos)
+        local n, st = LC.SpawnCitizen(pos)
+        st.leaveAt = nil
+        n.sim = false
+        return n, st
+    end
+    local qm, qms = person(at)
+    qms.quartermaster = true
+    local first = LC.ColonelSpot()
+    ok(first and first:Distance(at) < 120, "he is put beside the quartermaster")
+    qm:SetPos(at + Vector(60, 30, 0))
+    qm:SetAngles(Angle(0, 135, 0))
+    local second, yaw2 = LC.ColonelSpot()
+    ok(second and second:Distance(first) < 1, "the quartermaster takes a step and turns: the Colonel has not moved")
+    qm:SetPos(at + Vector(900, 0, 0))
+    local third = LC.ColonelSpot()
+    ok(third and third:Distance(first) > 400 and third:Distance(qm:GetPos()) < 120, "the quartermaster has gone to another part of the camp: only then does he follow")
+    ok(LC.ColonelSpot():Distance(third) < 1, "and stays there again")
+    -- (two quartermasters: he keeps to the one he is beside, whichever the game lists first)
+    local qm2, qms2 = person(at + Vector(5000, 0, 0))
+    qms2.quartermaster = true
+    local steady = true
+    for _ = 1, 6 do if LC.ColonelSpot():Distance(third) > 1 then steady = false end end
+    ok(steady, "a second quartermaster elsewhere does not pull him back and forth")
+    -- the editor's point: he stands exactly there, whatever the quartermaster does
+    local where = at + Vector(0, 2000, 0)
+    local pt = LC.AddPoint(where, 45, "colonel")
+    local placed, pyaw = LC.ColonelSpot()
+    ok(pt and placed and placed:Distance(where) < 1 and pyaw == 45, "Point: Resistance Colonel's spot puts him exactly there, facing the way it was placed")
+    qm:SetPos(at)
+    ok(LC.ColonelSpot():Distance(where) < 1, "and the quartermaster walking about does not move him")
+    LC.RemovePoint(pt)
+    ok(LC.ColonelSpot():Distance(where) > 500, "the point taken away: back beside a quartermaster")
+    qms.quartermaster, qms2.quartermaster = nil, nil
+    qm:Remove() qm2:Remove()
+    for npc in pairs(saved) do if LC.NPCs[npc] then LC.NPCs[npc].quartermaster = true end end
+    LC.ColonelAnchor = anchorWas
+end
+Nov14C_ColonelTests()
+
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")
 ;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)
     -- Everything here is something the owner's server, files or players depend on. The list is
