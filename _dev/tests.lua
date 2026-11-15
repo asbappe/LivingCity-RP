@@ -32852,6 +32852,21 @@ function FindWorkTrailTests()
 end
 FindWorkTrailTests()
 
+function DreamWakeScreenTests()
+    section("15 November playtest: waking from a dream clears the screen at once")
+    local p = newPlayer("WhiteWaker", "citizen")
+    _run(0.3)
+    local fades = {}
+    p.ScreenFade = function(_, flags, col, t, hold) fades[#fades + 1] = { flags = flags, t = t, hold = hold } end
+    ok(LC.DreamClearScreen(p) and fades[1] and fades[1].flags == ((SCREENFADE and SCREENFADE.PURGE) or 16) and fades[1].hold == 0,
+        "the dream's white-out (held a minute as 'the city resets') is purged")
+    fades = {}
+    LC.DreamWakeOne(p, "end")
+    ok(fades[1] ~= nil and fades[1].flags == ((SCREENFADE and SCREENFADE.PURGE) or 16), "waking from a dream purges it")
+    p.ScreenFade = nil
+end
+DreamWakeScreenTests()
+
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")
 ;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)
     -- Everything here is something the owner's server, files or players depend on. The list is
