@@ -8,7 +8,9 @@
     every so often, so no sequence can run out and freeze him), now and then
     fiddles with his bench, turns his head to whoever is nearest, and looks at
     them with open eyes that blink (the owner, 14 November: they stood "with
-    their eyes squinting"). He reaches out to hand something over only when
+    their eyes squinting"; and later that day, with only the whites showing:
+    where the eyes look is given from his own eyes now, not from the map's
+    origin: EyeTarget below). He reaches out to hand something over only when
     he really does (ENT:HandOver: what you bought, or what he kept for you),
     never just for being spoken to, and doesn't fiddle with the bench while
     someone is at his elbow (the owner, 14 November).
@@ -151,6 +153,23 @@ if CLIENT then
         ent.lcLids, ent.lcLidsModel = t, ent:GetModel()
         return t
     end
+    -- Where his eyes point, as the game wants it for anything that is not an NPC: a place measured
+    -- from his own eyes (the "eyes" attachment: forward, left, up), not a place in the world. He was
+    -- given the world's (the owner, 14 November: "rolling his eyes up so all I can see are the
+    -- whites"): thousands of units off in whatever direction the map's numbers happened to say.
+    -- at: a place in the world to look at, or nil for straight ahead. Never further up, down or
+    -- aside than a living eye turns, so the iris always shows.
+    local AHEAD = Vector(100, 0, 0)
+    local function EyeTarget(ent, at)
+        if not at then return AHEAD end
+        local id = ent.LookupAttachment and ent:LookupAttachment("eyes") or 0
+        local a = id and id > 0 and ent:GetAttachment(id) or nil
+        if not (a and a.Pos and a.Ang and WorldToLocal) then return AHEAD end
+        local v = WorldToLocal(at, Angle(0, 0, 0), a.Pos, a.Ang)
+        local x = math.max(v.x, 20)
+        return Vector(x, math.Clamp(v.y, -x * 0.6, x * 0.6), math.Clamp(v.z, -x * 0.35, x * 0.35))
+    end
+    ENT.EyeTargetFor = EyeTarget
     function ENT:Draw()
         if self:GetNW2Float("lc_away_until", 0) > CurTime() then return end
         local now = CurTime()
@@ -163,11 +182,9 @@ if CLIENT then
         end
         if self.SetEyeTarget then
             local lp = LocalPlayer()
-            if IsValid(lp) and lp:GetPos():DistToSqr(self:GetPos()) < 400 * 400 then
-                self:SetEyeTarget(lp:EyePos())
-            else
-                self:SetEyeTarget(self:GetPos() + self:GetForward() * 100 + Vector(0, 0, 64))
-            end
+            local at
+            if IsValid(lp) and lp:GetPos():DistToSqr(self:GetPos()) < 400 * 400 then at = lp:EyePos() end
+            self:SetEyeTarget(EyeTarget(self, at))
         end
         self:DrawModel()
     end

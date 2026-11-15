@@ -4651,6 +4651,50 @@ if err:
     _bad.append(str(err))
 if _bad:
     problems = (problems + "\n" if problems else "") + "editor names: " + "; ".join(_bad)
+# the Resistance's scientist looks at you with his irises showing (the owner, 14 November: "rolling his
+# eyes up so all I can see are the whites"): what his eyes are given is measured from his own eyes
+L.globals()._SCI = open(os.path.join(GMDIR, "entities", "entities", "lc_scientist.lua"), encoding="utf-8").read()
+err = L.execute(r"""
+local entWas, addWas, w2lWas = ENT, AddCSLuaFile, WorldToLocal
+ENT = {}
+AddCSLuaFile = function() end
+-- (the real thing: a place in the world, as seen from a place and a facing; here a facing of none or of yaw 90)
+WorldToLocal = function(pos, _, org, ang)
+    local d = pos - org
+    if ang and ang.y == 90 then return Vector(d.y, -d.x, d.z), Angle(0, 0, 0) end
+    return Vector(d.x, d.y, d.z), Angle(0, 0, 0)
+end
+local fn, e = loadstring(_SCI, "lc_scientist.lua")
+if not fn then return "the scientist: " .. tostring(e) end
+fn()
+local E = ENT
+ENT, AddCSLuaFile = entWas, addWas
+local eyes = { Pos = Vector(5000, -3000, 1264), Ang = Angle(0, 90, 0) } -- (a lab far from the map's middle, facing +y)
+local sci = { LookupAttachment = function(_, n) return n == "eyes" and 1 or 0 end, GetAttachment = function() return eyes end }
+local bad
+local function near(v, x, y, z) return math.abs(v.x - x) < 0.01 and math.abs(v.y - y) < 0.01 and math.abs(v.z - z) < 0.01 end
+if not E.EyeTargetFor then bad = "no EyeTargetFor"
+else
+    local ahead = E.EyeTargetFor(sci, nil)
+    if not near(ahead, 100, 0, 0) then bad = "nobody near: his eyes are not straight ahead" end
+    -- someone standing 100 in front of him, eyes level with his: straight ahead of his own eyes, not a place in the world
+    local t = E.EyeTargetFor(sci, Vector(5000, -2900, 1264))
+    if not bad and not near(t, 100, 0, 0) then bad = "someone in front of him: his eyes were sent to " .. tostring(t) end
+    -- someone far above him (a walkway): the eyes turn up a little, never over into the head
+    t = E.EyeTargetFor(sci, Vector(5000, -2900, 2264))
+    if not bad and not (t.x >= 20 and t.z > 0 and t.z <= t.x * 0.35 + 0.01) then bad = "someone overhead: his eyes roll up (" .. tostring(t) .. ")" end
+    -- someone behind him: forward still, turned as far aside as an eye goes
+    t = E.EyeTargetFor(sci, Vector(5200, -3200, 1264))
+    if not bad and not (t.x >= 20 and math.abs(t.y) <= t.x * 0.6 + 0.01) then bad = "someone behind him: his eyes turn into his head (" .. tostring(t) .. ")" end
+    -- a model with no eyes attachment: straight ahead, no error
+    t = E.EyeTargetFor({ LookupAttachment = function() return 0 end }, Vector(1, 2, 3))
+    if not bad and not near(t, 100, 0, 0) then bad = "no eyes attachment: not straight ahead" end
+end
+WorldToLocal = w2lWas
+return bad and ("the scientist's eyes: " .. bad) or nil
+""")
+if err:
+    problems = (problems + "\n" if problems else "") + str(err)
 print(problems or "no client errors")
 print("zone fills drawn:", filled, "thick edges drawn:", beams)
 ok = not problems and filled >= 2 and beams > 0
