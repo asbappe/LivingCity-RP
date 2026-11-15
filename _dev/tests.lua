@@ -2031,6 +2031,9 @@ local runner2 = newPlayer("Runaway", "citizen")
 runner2:SetPos(copA:GetPos() + Vector(2000, 0, 0))
 local d0 = copA:GetPos():Distance(runner2:GetPos())
 LC.ReportCrime(runner2, "Assault", 120)
+-- (with a weapon used: the combat AI's. Bare hands get the stick and the struggle instead, the owner, 15 November:
+-- PunchStruggleTests)
+runner2.lcArmedViolentUntil = CurTime() + 1e6
 LC.MakeCopsHostile(runner2, runner2:GetPos(), 2500)
 ok(copAst.state == "hostile" and copA.enemyMemory ~= nil, "a hostile unit is told where the suspect is")
 _run(5)
@@ -2069,6 +2072,7 @@ for _ = 1, 7 do _run(10) if not LC.Detained[runner2] then break end end -- (held
 ok(not LC.Detained[runner2] and not runner2.frozen and has(runner2.chat, "Released with a warning"), "then you're let go with a warning")
 for _, c in ipairs(savedCells) do LC.AddPoint(c.pos, c.yaw, "cell", 0) end
 ok(LC.PrisonAvailable(), "cells back for the rest of the tests")
+runner2.lcArmedViolentUntil = nil
 runner2:SetPos(FAR)
 
 ----------------------------------------------------------------------
@@ -21561,8 +21565,9 @@ ok(g.pl[a].lives == 2 and g.pl[b].lives == 3, "it swings: standing, knocked down
 b.crouch = nil
 a:SetPos(g.foePos + Vector(60, 0, 0))
 g.foeHP, g.phase, g.nextSwing = 1, "fight", CurTime() + 100
+g.pl[a].punchAt = 0 -- (the last punch was a moment ago: no wait between them for this one)
 Press(a, ATTACK)
-ok(g.phase == "ko", "knockout")
+ok(g.phase == "ko", "knockout", tostring(g.phase) .. " hp=" .. tostring(g.foeHP))
 _run(4.2)
 ok(g.foeI == 2 and g.foeDef.name == "The Soda Machine", "round 2: the soda machine")
 Stop(d)
@@ -23451,8 +23456,13 @@ section("Playtest fixes, 17 October (evening)")
     brawler:SetPos(Q0 + Vector(0, 300, 0))
     LC.ReportCrime(brawler, "Assault", 120)
     ok(LC.Violent(brawler), "an assault is violent")
+    -- (bare hands: still the stick and the struggle, the owner, 15 November: "I punched a metrocop ... no struggle")
     LC.MakeCopsHostile(brawler, brawler:GetPos(), 1000)
-    ok(sst.enemy == brawler and not sst.arrestOnly, "and the violent get no such courtesy")
+    ok(sst.enemy == brawler and sst.arrestOnly, "with bare hands, still run down for the struggle")
+    LC.CalmCops(brawler)
+    brawler:Give("weapon_pistol") brawler:SelectWeapon("weapon_pistol")
+    LC.MakeCopsHostile(brawler, brawler:GetPos(), 1000)
+    ok(sst.enemy == brawler and not sst.arrestOnly, "and the violent with a gun get no such courtesy")
     LC.CalmCops(brawler)
     LC.NPCs[sol] = nil sol:Remove()
     runner.valid, brawler.valid = false, false
