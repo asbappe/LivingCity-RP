@@ -179,6 +179,7 @@ if SERVER then
         PR.mannequins[ply] = m
         net.Start("pose_recorder_target")
         net.WriteString(id)
+        net.WriteString(rag:GetModel() or t.model) -- (the model it really is: the pose is worked out on the same one)
         net.WriteUInt(rag:EntIndex(), 16)
         net.WriteFloat(pos.x) net.WriteFloat(pos.y) net.WriteFloat(pos.z)
         net.WriteFloat(yaw)
@@ -323,6 +324,7 @@ net.Receive("pose_recorder_told", function() PR.Say(net.ReadString()) end)
 
 net.Receive("pose_recorder_target", function()
     local id = net.ReadString()
+    local model = net.ReadString()
     local idx = net.ReadUInt(16)
     local origin = { net.ReadFloat(), net.ReadFloat(), net.ReadFloat() }
     local yaw = net.ReadFloat()
@@ -332,7 +334,8 @@ net.Receive("pose_recorder_target", function()
         local name = net.ReadString()
         props[name] = net.ReadUInt(16)
     end
-    PR.sel = { idx = idx, ent = Entity and Entity(idx) or nil, phys = phys, target = id, props = props, origin = origin, yaw = yaw }
+    PR.sel = { idx = idx, ent = Entity and Entity(idx) or nil, phys = phys, target = id, props = props, origin = origin, yaw = yaw,
+        model = model ~= "" and model or nil }
     PR.PlaceTarget()
     hook.Run("PoseRecorderChanged")
 end)
@@ -351,7 +354,7 @@ function PR.PlaceTarget()
     if not t then return false end
     local bones, props = PR.TargetPose(t)
     if not bones then PR.Say("That pose couldn't be read: " .. tostring(props)) return false end
-    local ref = PR.Reference(t.model, t.ref)
+    local ref = PR.Reference(sel.model or t.model, t.ref)
     if not ref or not ref.bones then PR.Say("Couldn't load the model to pose it.") return false end
     local rot, pos = PR.Apply(ref.bones, ref.rel, ref.pos, bones, 0)
     local by = Named(ref)
@@ -397,7 +400,7 @@ end
 local function Standing(sel, t, face)
     local frame = PR.FromAngles(0, face or sel.yaw or 0, 0)
     local ent = sel.ent
-    local ref = PR.Reference(t.model, t.ref)
+    local ref = PR.Reference(sel.model or t.model, t.ref)
     if ref and ref.bones and IsValid(ent) then
         for i, b in ipairs(ref.bones) do
             if not b.parent and sel.phys[b.name] and ref.pos[i] then

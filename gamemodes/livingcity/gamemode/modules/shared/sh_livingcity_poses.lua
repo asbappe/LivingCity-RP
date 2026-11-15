@@ -269,7 +269,7 @@ LC.PoseAdd({
 -- out from its hands and the floor every tick until the owner puts it in its claws by hand; then it
 -- hangs from that claw. The place given here is only where the mannequin's broom starts.
 LC.PoseAdd({
-    id = "vort_sweep", label = "Vortigaunt sweeping", model = "models/vortigaunt_slave.mdl", ref = "sweep",
+    id = "vort_sweep", label = "Vortigaunt sweeping", model = "models/vortigaunt_slave.mdl", modelElse = "models/vortigaunt.mdl", ref = "sweep",
     any = "^ValveBiped%.[%w_]+$", -- (its own skeleton, not a person's: whichever of its bones the mannequin can turn)
     props = {
         broom = { model = BROOM_MODEL, auto = true, bone = "ValveBiped.hand1_R", pos = Vector(4, 0, 0), ang = Angle(0, 0, 0),
@@ -363,8 +363,12 @@ function LC.PoseBridge()
     if not (PR and PR.AddTarget) then return false end
     for _, def in ipairs(LC.PoseList()) do
         local id = def.id
+        -- (a server without the shackled vortigaunt's model: the plain one, as the street sweepers themselves fall back.
+        -- Only the server is asked: a player's game says no to a model it hasn't loaded yet, and is told the model anyway)
+        local model = def.model
+        if SERVER and def.modelElse and util.IsValidModel and not util.IsValidModel(model) then model = def.modelElse end
         PR.AddTarget({
-            id = LC.PoseTargetId(id), label = "Miscount: " .. def.label, model = def.model, ref = def.ref,
+            id = LC.PoseTargetId(id), label = "Miscount: " .. def.label, model = model, ref = def.ref,
             can = May,
             get = function() return LC.PoseForRecorder(id) end,
             -- (server) what was measured on the mannequin: checked there, kept, sent to everyone
