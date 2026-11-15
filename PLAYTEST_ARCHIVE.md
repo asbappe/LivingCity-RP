@@ -93,3 +93,13 @@ To add an item: `printf '%s\n' '- [ ] **Topic:** what to try. [needs a person: w
 - [ ] **Her last stand on your layout:** re-place any transformer placed before 10 November (numbered 1, 2, 3); with several Resistance players on, does the server hold up with many manhacks? [needs the real server: your layout and real load]
 
 ## Added since the cut
+- [ ] **Arriving (a new character, citizen):** walk out of the station. Do the cards and tips come one at a time, each readable, never piled up? [needs a person: pacing of the first minutes]
+- [ ] **Talking to a citizen:** E on a citizen. Do the number keys work, are their words under the list, and does walking off close it? [needs a person: the feel of the talk window]
+- [ ] **A first job:** a hold E job from F4 (Bin round, Graffiti removal, The count, a leaking pipe). Does the bar fill, and is the thing easy to find and aim at? [needs a person: aim and finding by eye]
+- [ ] **Chevrons:** on the way to a job, any straight line of the trail through a wall? [needs the real server: the real map]
+- [ ] **The announcer:** over 5 minutes, at most one of the map's own Overwatch lines, and none on top of a city announcement? [needs the real server: the recordings]
+- [ ] **Searching:** stop a citizen and search them (baton, reload). Do the numbers check the spots, do found things show, does "Done searching: check their papers" work? [needs a person: the feel of the search]
+- [ ] **Cuffed arms:** cuff a citizen. Arms behind the back, wrists together? [needs a person: the pose by eye]
+- [ ] **Resupply scanner:** radio out, right click, Request resupply under open sky. Does the scanner come down over about three seconds, the crate twice as big? [needs a person: timing and size by eye]
+- [ ] **Heartbeat:** below 35 health it starts; die and respawn. Silent? Any other sound still going? [needs a person: by ear]
+- [ ] **Lowered gun (Resistance):** on rebel ground, does the gun tip down in your view when lowered, and come back up when raised? [needs a person: the view model by eye]
