@@ -8,14 +8,27 @@
     neck shrunk to nothing, and the citizen's own head shrunk away beneath it.
 
     Only on this player's screen, and only if they have the model (Lost
-    Coast installed): without it, the citizen keeps his own face, never an
-    error model.
+    Coast's files, which come with Garry's Mod): without it, the citizen
+    keeps his own face, never an error model.
+
+    "Have the model" is asked of the files, not of util.IsValidModel (the
+    owner, 14 November: he was "a black citizen with a beanie", his own
+    face): on a player's game that says no for any model the server has not
+    loaded yet, and nothing in the city is ever the fisherman, so the face
+    was never put on. LC_CL.OldTimerFaceUsable.
 ]]
 
 LC_CL = LC_CL or {}
 
 local faces = {} -- [npc] = the head model laid over him
 local nextLook = 0
+
+-- Can this game draw that head? Its file is there (in a mounted game, loaded or not).
+function LC_CL.OldTimerFaceUsable(model)
+    if not model or model == "" then return false end
+    if file and file.Exists and file.Exists(model, "GAME") then return true end
+    return util.IsValidModel(model) and true or false
+end
 
 local function Keep(name)
     name = string.lower(name or "")
@@ -33,6 +46,7 @@ local function Restore(npc)
 end
 
 local function Dress(npc, model)
+    if util.PrecacheModel then util.PrecacheModel(model) end
     local f = ClientsideModel(model, RENDERGROUP_OPAQUE)
     if not IsValid(f) then return end
     f:SetParent(npc)
@@ -52,7 +66,7 @@ hook.Add("Think", "LivingCityOldTimerFace", function()
     if now < nextLook then return end
     nextLook = now + 1
     local model = GetGlobal2String("lc_oldtimer_face", "")
-    local usable = model ~= "" and util.IsValidModel(model)
+    local usable = LC_CL.OldTimerFaceUsable(model)
     -- forget anyone who's gone, isn't him any more, or wears a face we no longer use
     for npc, f in pairs(faces) do
         if not IsValid(npc) or not npc:GetNW2Bool("lc_oldtimer", false) or not usable or not IsValid(f) or f.lcModel ~= model then Restore(npc) end

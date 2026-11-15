@@ -31387,6 +31387,43 @@ function Nov14C_ColonelTests()
 end
 Nov14C_ColonelTests()
 
+function Nov14C_OldTimerTests()
+    section("14 November notes (C): the old-timer wears the fisherman's head, on a body that goes with it")
+    local FACE = "models/lostcoast/fisherman/fisherman.mdl"
+    local existsWas, preWas, validWas = file.Exists, util.PrecacheModel, util.IsValidModel
+    local have, loadedN = true, 0
+    file.Exists = function(p, where) if p == FACE then return have end return existsWas(p, where) end
+    util.PrecacheModel = function(m) if m == FACE then loadedN = loadedN + 1 end end
+    util.IsValidModel = function() return true end
+    for npc, st in pairs(LC.NPCs or {}) do if st.oldtimer then st.oldtimer = nil npc:SetNW2Bool("lc_oldtimer", false) end end
+    for _, p in ipairs(LC.People and LC.People.list or {}) do p.oldtimer = nil end
+    _setcvar("lc_oldtimer_face", "models/other/head.mdl") -- (so the next line is a new face to load)
+    _setcvar("lc_oldtimer_face", FACE)
+    ok(LC.OldTimerFace() == FACE and loadedN >= 1, "the server loads the fisherman's head, so every player's game knows it")
+    local n0 = loadedN
+    LC.OldTimerFace() LC.OldTimerFace()
+    ok(loadedN == n0, "(once, not every tick)")
+    local npc, st = LC.SpawnCitizen(Vector(-9000, -7000, 0))
+    st.leaveAt = nil
+    npc.sim = false
+    npc:SetModel("models/humans/group03/male_03.mdl") -- (the owner's: a dark-skinned man in a beanie)
+    ok(LC.MakeOldTimer(npc) and string.lower(npc:GetModel()) == "models/humans/group01/male_02.mdl", "made the old-timer: a citizen's clothes and hands that go with the old man's head")
+    ok(not npc.lcProfile or npc.lcProfile.model == "models/humans/group01/male_02.mdl", "(kept with the roster, so he is the same after a restart)")
+    npc:SetModel("models/humans/group03/male_07.mdl")
+    LC.OldTimerTick()
+    ok(string.lower(npc:GetModel()) == "models/humans/group01/male_07.mdl", "the old-timer already out in a Resistance outfit is put back in city clothes, the same man")
+    npc:SetModel("models/humans/group01/female_01.mdl")
+    ok(not LC.OldTimerBody(npc) and string.lower(npc:GetModel()) == "models/humans/group01/female_01.mdl", "anyone who is not one of the citizen men is left as they are")
+    have = false
+    npc:SetModel("models/humans/group03/male_03.mdl")
+    ok(LC.OldTimerFace() == nil and not LC.OldTimerBody(npc) and string.lower(npc:GetModel()) == "models/humans/group03/male_03.mdl", "a server without the head: nothing loaded, and he keeps the body he has")
+    st.oldtimer = nil npc:SetNW2Bool("lc_oldtimer", false)
+    if npc.lcProfile then npc.lcProfile.oldtimer = nil end
+    npc:Remove()
+    file.Exists, util.PrecacheModel, util.IsValidModel = existsWas, preWas, validWas
+end
+Nov14C_OldTimerTests()
+
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")
 ;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)
     -- Everything here is something the owner's server, files or players depend on. The list is

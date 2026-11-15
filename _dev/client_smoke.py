@@ -1444,13 +1444,18 @@ do
         return setmetatable(m, { __index = function() return function() end end })
     end
     _globals.lc_oldtimer_face = "models/lostcoast/fisherman/fisherman.mdl"
-    util.IsValidModel = function() return true end
-    _advance(2) run("Think")
-    if made ~= 1 then problems[#problems + 1] = "the old-timer's face wasn't laid over him" end
+    -- (the owner, 14 November: he kept his own face. The server had never loaded the fisherman, so
+    -- util.IsValidModel said no on every player's game, though the file was there all along)
+    local feWas = file.Exists
     util.IsValidModel = function() return false end
+    file.Exists = function(p) return p == "models/lostcoast/fisherman/fisherman.mdl" end
+    _advance(2) run("Think")
+    if made ~= 1 then problems[#problems + 1] = "the old-timer's face wasn't laid over him (the file is there, the model not loaded yet)" end
+    file.Exists = function() return false end
     made = 0
     _advance(2) run("Think")
     if made ~= 0 then problems[#problems + 1] = "the old-timer's face was made without the model" end
+    file.Exists = feWas
     ents.FindByClass, util.IsValidModel, ClientsideModel = fbWas, ivWas, cmWas2
     _globals.lc_oldtimer_face = ""
 end
