@@ -35,7 +35,28 @@
     The other way out the owner described (every Combine there running her to
     her office as a shield) is not built: TODO.md.
 
-    lc_admin_grenade_jump 1/0, lc_admin_exfil 1/0
+    What sets it off (the owner, 15 November: "any bullet or projectile landing
+    within 20 feet of obviously hitting her counts"): a hit on her; a bullet
+    from anyone not of the Combine that lands within 320 units of her or passes
+    that near her; a bolt, rocket, energy ball or grenade that comes that near.
+    The hit itself is a close call, never a kill ("make it a close call, but
+    she is still escorted all the same").
+
+    Whoever does it ("wanted as the most egregious violation, instant -999
+    standing, crime never forgotten for that character"): Civil Standing set
+    to -999 at once, wanted for attempted murder of the City Administrator
+    (the longest sentence there is), and it is kept with the character: free,
+    they are wanted for the rest of that character's life (a new character
+    starts clean; staff wiping a record forgets it).
+
+    Keep back ("anyone attempting to walk up to her is warned once and killed
+    if they get too close"): at her address a player not of the Combine, or one
+    of the Resistance's fighters, who comes inside the warning line hears one
+    "final warning" from the nearest guard; inside the inner line her guards
+    shoot them until they are dead. Staff in build mode, anyone in custody and
+    the city's own citizens are left alone.
+
+    lc_admin_grenade_jump 1/0, lc_admin_exfil 1/0, lc_speech_keepback 1/0
     Hooks: LivingCityAdminAttempt (her, who, how): someone tried to kill her.
            LivingCityAdminExfil (her, who): her guards are getting her out.
 ]]
@@ -54,6 +75,9 @@ local AIR = 0.6
 local SHIT = "npc/metropolice/vo/shit.wav"
 local BOUNCER = "npc/combine_soldier/vo/bouncerbouncer.wav"
 local GRENADES = { npc_grenade_frag = true, lc_grenade = true }
+-- (what counts as shot at her without hitting: these coming within NEAR_MISS of her)
+local PROJECTILES = { npc_grenade_frag = true, lc_grenade = true, crossbow_bolt = true, rpg_missile = true, grenade_ar2 = true, prop_combine_ball = true }
+local NEAR_MISS = 320 -- 20 feet
 
 local watch = {} -- [grenade] = when it was thrown
 LC.AdminGrenades = watch
@@ -183,16 +207,16 @@ function LC.GrenadeJump(npc, g, her)
     npc:Remove()
     timer.Simple(t + 0.2, function() Boom(g, rag, at) end)
     -- an attempt on her life
-    if IsValid(who) and who:IsPlayer() and LC.ReportCrime then LC.ReportCrime(who, "Threat to the City Administrator", 300) end
+    if LC.AdminAttacker then LC.AdminAttacker(who) end
     hook.Run("LivingCityAdminAttempt", her, who, "grenade")
     return true
 end
 
 function LC.AdminGrenadeWatch(g)
-    if IsValid(g) and GRENADES[g:GetClass()] then watch[g] = CurTime() end
+    if IsValid(g) and PROJECTILES[g:GetClass()] then watch[g] = CurTime() end
 end
 hook.Add("OnEntityCreated", "LivingCityAdminGrenade", function(e)
-    if not cvJump:GetBool() or not IsValid(e) or not GRENADES[e:GetClass()] then return end
+    if not IsValid(e) or not PROJECTILES[e:GetClass()] then return end
     watch[e] = CurTime()
 end)
 
@@ -201,7 +225,10 @@ function LC.AdminGrenadeThink(now)
     for g, since in pairs(watch) do
         if not IsValid(g) or g.lcJumped or now - since > 12 then
             watch[g] = nil
-        elseif cvJump:GetBool() and now - since > 0.15 then
+        elseif not GRENADES[g:GetClass()] or not cvJump:GetBool() then
+            -- a bolt, a rocket, an energy ball (or a grenade with the jump off): near her at her address, it is an attempt
+            if LC.AdminNearMiss and LC.AdminNearMiss(g:GetPos(), Thrower(g)) then watch[g] = nil end
+        elseif now - since > 0.15 then
             local at = g:GetPos()
             local vel = g.GetVelocity and g:GetVelocity() or Vector(0, 0, 0)
             if vel:Length() < SLOW or now - since > AIR then
@@ -222,6 +249,47 @@ hook.Add("Think", "LivingCityAdminGrenade", function()
     nextLook = now + 0.1
     local ok, err = LC.Try(LC.AdminGrenadeThink, now)
     if not ok and LC.Error then LC.Error("admin grenade", err) end
+end)
+
+------------------------------------------------------------------------
+-- Whoever tries to kill her: the worst crime there is, and never forgotten
+------------------------------------------------------------------------
+
+local CRIME = "Attempted murder of the City Administrator"
+LC.AdminCrime = CRIME
+
+-- Who her guards' fire may hurt (attackers, and whoever came too close): nobody else, ever.
+LC.AdminTargets = LC.AdminTargets or setmetatable({}, { __mode = "k" })
+
+function LC.AdminNeverForgotten(ply)
+    return IsValid(ply) and ply:IsPlayer() and ply.GetPData ~= nil and (ply:GetPData("lc_regicide", "") or "") ~= ""
+end
+function LC.AdminForget(ply)
+    if not IsValid(ply) or not ply.RemovePData then return end
+    ply:RemovePData("lc_regicide")
+    ply:SetNW2Bool("lc_regicide", false)
+end
+-- Civil Standing to -999 at once, wanted for it, and it is kept with the character. True when it was a player's doing.
+function LC.AdminAttacker(who)
+    if not (IsValid(who) and who:IsPlayer()) or Theirs(who) then return false end
+    if LC.AddStanding and LC.Standing then
+        local st = LC.Standing(who)
+        if st > -999 then LC.AddStanding(who, -999 - st, "an attempt on the Administrator's life") end
+    end
+    if who.SetPData then who:SetPData("lc_regicide", tostring(os.time())) end
+    who:SetNW2Bool("lc_regicide", true)
+    if LC.ReportCrime then LC.ReportCrime(who, CRIME, 3600) end
+    return true
+end
+-- Never forgotten: free, they are wanted, for as long as that character lives.
+hook.Add("LivingCityIsWanted", "LivingCityAdminSecurity", function(ply)
+    if not LC.AdminNeverForgotten(ply) then return end
+    if (LC.InCustody and LC.InCustody(ply)) or (LC.HeldByCombine and LC.HeldByCombine(ply)) then return end
+    return true
+end)
+hook.Add("LivingCityNewCharacter", "LivingCityAdminSecurity", function(ply) LC.AdminForget(ply) end)
+hook.Add("PlayerInitialSpawn", "LivingCityAdminSecurity", function(ply)
+    timer.Simple(2, function() if IsValid(ply) then ply:SetNW2Bool("lc_regicide", LC.AdminNeverForgotten(ply)) end end)
 end)
 
 ------------------------------------------------------------------------
@@ -278,7 +346,8 @@ end)
 local function Mark(who)
     if not (A and IsValid(who)) or A.attackers[who] or Theirs(who) then return end
     A.attackers[who] = true
-    if who:IsPlayer() and LC.ReportCrime then LC.ReportCrime(who, "Threat to the City Administrator", 300) end
+    LC.AdminTargets[who] = true
+    LC.AdminAttacker(who)
     if LC.MakeCopsHostile then LC.Try(LC.MakeCopsHostile, who, who:GetPos(), 2500) end
     for _, g in ipairs(A.guards) do
         if IsValid(g) then
@@ -489,13 +558,19 @@ end)
 -- one chance; the city's own is never hurt).
 hook.Add("EntityTakeDamage", "LivingCityAdminExfil", function(ent, dmg)
     local att = dmg:GetAttacker()
+    -- her address's guards (and, while they have her, her own) hurt only who they are after, and monsters
+    if IsValid(att) and (att.lcSpeechGuard or (A and A.guardSet[att])) and IsValid(ent) and not LC.AdminTargets[ent]
+        and not (LC.IsMonster and LC.IsMonster(ent)) then
+        return true
+    end
     if A then
         if ent == A.her then return true end
-        if IsValid(att) and A.guardSet[att] and not A.attackers[ent] then return true end
         if (A.guardSet[ent] or ent == A.apc) and IsValid(att) and (att:IsPlayer() or att:IsNPC()) then Mark(att) end
         if ent == A.apc then return true end
         return
     end
+    -- (a guard of her address shot at: they may shoot back)
+    if IsValid(ent) and ent.lcSpeechGuard and IsValid(att) and (att:IsPlayer() or att:IsNPC()) and not Theirs(att) then LC.AdminTargets[att] = true end
     if not cvExfil:GetBool() then return end
     local S = LC.SpeechSession and LC.SpeechSession()
     if not S or not IsValid(ent) or (ent ~= S.by and ent ~= S.her) then return end
@@ -506,6 +581,138 @@ hook.Add("EntityTakeDamage", "LivingCityAdminExfil", function(ent, dmg)
         if IsValid(her) and (not her:IsPlayer() or her:Alive()) then LC.AdminAttempt(her, att, "shot") end
     end)
     if not her:IsPlayer() then return true end
+    -- a close call, never a kill: the hit leaves her a breath at least, and she is taken out all the same
+    local hp = her:Health()
+    if dmg:GetDamage() >= hp then dmg:SetDamage(math.max(0, hp - 1)) end
+end)
+
+-- A shot that does not hit her: a bullet that lands within 20 feet of her, or passes that near, is an attempt
+-- all the same; so is a bolt, a rocket or an energy ball that comes that near (LC.AdminGrenadeThink).
+function LC.AdminNearMiss(pos, who)
+    if A or not cvExfil:GetBool() then return false end
+    local S = LC.SpeechSession and LC.SpeechSession()
+    if not S then return false end
+    local her = (IsValid(S.by) and S.by) or (IsValid(S.her) and S.her) or nil
+    if not her or who == her or Theirs(who) or (IsValid(who) and who.lcSpeechGuard) then return false end
+    if pos:DistToSqr(her:GetPos() + Vector(0, 0, 40)) > NEAR_MISS * NEAR_MISS then return false end
+    return LC.AdminAttempt(her, who, "near miss")
+end
+function LC.AdminBulletCheck(shooter, data)
+    if A or not cvExfil:GetBool() or not IsValid(shooter) or not (shooter:IsPlayer() or shooter:IsNPC()) then return false end
+    local S = LC.SpeechSession and LC.SpeechSession()
+    if not S or Theirs(shooter) or shooter.lcSpeechGuard then return false end
+    local her = (IsValid(S.by) and S.by) or (IsValid(S.her) and S.her) or nil
+    local src, dir = data and data.Src, data and data.Dir
+    if not (her and src and dir) or shooter == her then return false end
+    local far = src + dir * (data.Distance or 8192)
+    local hit = far
+    if util.TraceLine then
+        local tr = util.TraceLine({ start = src, endpos = far, filter = shooter, mask = MASK_SHOT or MASK_SOLID })
+        if tr and tr.Hit and tr.HitPos then hit = tr.HitPos end
+    end
+    -- where it lands, or the nearest it comes to her on the way
+    local target = her:GetPos() + Vector(0, 0, 40)
+    local seg = hit - src
+    local len2 = seg:LengthSqr()
+    local t = len2 > 0 and math.Clamp((target - src):Dot(seg) / len2, 0, 1) or 0
+    local nearest = src + seg * t
+    if hit:DistToSqr(target) > NEAR_MISS * NEAR_MISS and nearest:DistToSqr(target) > NEAR_MISS * NEAR_MISS then return false end
+    timer.Simple(0, function() if IsValid(her) and IsValid(shooter) then LC.AdminAttempt(her, shooter, "near miss") end end)
+    return true
+end
+hook.Add("EntityFireBullets", "LivingCityAdminExfil", function(ent, data)
+    LC.Try(LC.AdminBulletCheck, ent, data) -- (nothing is answered: the bullet flies as it would)
+end)
+
+------------------------------------------------------------------------
+-- Keep back: nobody walks up to her at her address
+------------------------------------------------------------------------
+
+local cvKeep = CreateConVar("lc_speech_keepback", "1", FLAGS, "At her address, anyone not of the Combine who walks up to her is warned once by a guard and shot if they come closer (0: off)")
+local WARNING = "npc/metropolice/vo/finalwarning.wav"
+
+-- The warning line and the inner line, from her: inside her row of guards is too close (nearer in when the
+-- crowd stands close to the stand, so nobody in the crowd is ever inside them).
+function LC.SpeechLines(S)
+    local gap = (S.crowd.pos - S.stand.pos):Length2D()
+    local warn = math.Clamp(gap - 170, 110, 230)
+    return warn, math.max(60, warn - 100)
+end
+local function LeftAlone(e, her)
+    if e == her or Theirs(e) or e.lcSpeechGuard then return true end
+    if e:IsPlayer() then
+        if not e:Alive() then return true end
+        if e:GetNW2Bool("lc_build", false) or (LC.EditorHeld and LC.EditorHeld(e)) then return true end -- (staff at work)
+        if LC.HeldByCombine and LC.HeldByCombine(e) then return true end
+        if e.GetMoveType and MOVETYPE_NOCLIP and e:GetMoveType() == MOVETYPE_NOCLIP then return true end
+        return false
+    end
+    local st = LC.NPCs and LC.NPCs[e]
+    return not (st and st.role == "rebel" and e:Health() > 0) -- (of the city's NPCs, only the Resistance's fighters)
+end
+function LC.AdminPerimeterThink(now)
+    local S = LC.SpeechSession and LC.SpeechSession()
+    if not S or A or not cvKeep:GetBool() then return end
+    local her = (IsValid(S.by) and S.by) or (IsValid(S.her) and S.her) or nil
+    if not her then return end
+    local guards = {}
+    for _, l in ipairs({ S.guards or {}, S.detail or {} }) do
+        for _, g in ipairs(l) do if IsValid(g) and g:Health() > 0 then guards[#guards + 1] = g end end
+    end
+    if #guards == 0 then return end
+    local function Nearest(pos)
+        local best, bd
+        for _, g in ipairs(guards) do
+            local d = g:GetPos():DistToSqr(pos)
+            if not bd or d < bd then best, bd = g, d end
+        end
+        return best
+    end
+    S.warnedOff, S.intruders = S.warnedOff or {}, S.intruders or {}
+    local warn, kill = LC.SpeechLines(S)
+    local at = her:GetPos()
+    for _, e in ipairs(ents.FindInSphere(at, warn)) do
+        if IsValid(e) and (e:IsPlayer() or e:IsNPC()) and not LeftAlone(e, her) then
+            local d = e:GetPos():DistToSqr(at)
+            if d < kill * kill then
+                if not S.intruders[e] then
+                    S.intruders[e] = now
+                    LC.AdminTargets[e] = true
+                    for _, g in ipairs(guards) do
+                        if g.AddEntityRelationship then g:AddEntityRelationship(e, D_HT or 1, 99) end
+                        if g.SetEnemy then g:SetEnemy(e) end
+                    end
+                end
+            elseif not S.warnedOff[e] then
+                S.warnedOff[e] = true
+                local g = Nearest(e:GetPos())
+                g:EmitSound(WARNING, 90, 100)
+                if LC.FaceYaw then LC.FaceYaw(g, (e:GetPos() - g:GetPos()):Angle().y) end
+            end
+        end
+    end
+    -- whoever came too close is shot until dead, wherever they run to within sight of the stand
+    if now < (S.nextKeepShot or 0) then return end
+    for e in pairs(S.intruders) do
+        local alive = IsValid(e) and ((e:IsPlayer() and e:Alive()) or (e:IsNPC() and e:Health() > 0))
+        if not alive then
+            S.intruders[e] = nil
+        elseif e:GetPos():DistToSqr(at) < 900 * 900 then
+            local g = Nearest(e:GetPos())
+            g:EmitSound("Weapon_AR2.NPC_Single")
+            if e.TakeDamage then e:TakeDamage(34, g, g) end
+            S.nextKeepShot = now + 0.35
+        end
+    end
+end
+local nextKeep = 0
+hook.Add("Think", "LivingCityAdminKeepBack", function()
+    local now = CurTime()
+    if now < nextKeep then return end
+    nextKeep = now + 0.25
+    if not (LC.SpeechSession and LC.SpeechSession()) then return end
+    local ok, err = LC.Try(LC.AdminPerimeterThink, now)
+    if not ok and LC.Error then LC.Error("admin keep back", err) end
 end)
 -- (which hook hears a hit first is not promised: one that answered before ours would hide the shot from it. So the
 -- hit itself, once taken, sets it off too.)

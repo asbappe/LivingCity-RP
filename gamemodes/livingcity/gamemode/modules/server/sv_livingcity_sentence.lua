@@ -70,6 +70,8 @@ local UNIT_WORDS = { "civil protection", "overwatch", "officer", "soldier", "uni
 -- Minutes on a sentence for one crime, and the kind it is.
 function LC.CrimeMinutes(reason)
     local r = string.lower(tostring(reason or ""))
+    -- (the worst there is: the longest sentence there can be; the owner, 15 November: "the most egregious violation")
+    if string.find(r, "murder of the city administrator", 1, true) then return 60, "an attempt on the Administrator's life" end
     if string.find(r, "murder", 1, true) and not string.find(r, "attempted", 1, true) then
         if Has(r, UNIT_WORDS) then return 20, "murder of a unit" end
         return 15, "murder"
@@ -131,6 +133,7 @@ end
 -- The record wiped (staff: a reset, or taken out of custody).
 function LC.RapClear(ply)
     if not IsValid(ply) then return end
+    if LC.AdminForget then LC.AdminForget(ply) end -- (staff wiping a record: the attempt on her life too)
     ply.lcRap = {}
     SaveRap(ply)
 end
