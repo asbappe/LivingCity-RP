@@ -206,6 +206,7 @@ LC_MODULES = {
         "sv_livingcity_ledger2", -- (what the districts and numbers do on the streets: checkpoints, ambushes, prices; and the acts)
         "sv_livingcity_speech", -- (her address, attended: the city gathers, absentees beaten, the podium; after ledger)
         "sv_livingcity_adminsecurity", -- (a grenade thrown at her: a soldier throws himself on it; after speech)
+        "sv_livingcity_adminquestioning", -- (the would-be assassin in the cells: she leads the questioning, stunstick in hand; after adminsecurity)
         "sv_livingcity_speechanswer", -- (Colonel Cubbage answers her address from the camp and on Freq 7; after speech)
         "sv_livingcity_smallserver", -- (small-server mode: with few players, the city carries more of the story)
         "sv_livingcity_status", -- (things other people can see: fine clothes, home decor, a radio set, a pet bird)

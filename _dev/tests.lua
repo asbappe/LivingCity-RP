@@ -34399,6 +34399,231 @@ _walls = savedWalls
 end
 Nov16_MicSpeechTests()
 
+function Nov16_AdminQuestioningTests()
+section("16 November: the would-be assassin is questioned by the Administrator herself, stunstick in hand")
+LC.EndEvent(true)
+local savedWalls = _walls
+_walls = {}
+local R0 = Vector(-330000, 141000, 0)
+local pts = {
+    LC.AddPoint(R0, 0, "cell", 0), LC.AddPoint(R0 + Vector(0, 600, 0), 0, "cell", 0),
+    LC.AddPoint(R0 + Vector(900, 0, 0), 0, "release", 0),
+}
+local function has(list, needle)
+    for _, v in ipairs(list or {}) do if string.find(tostring(v), needle, 1, true) then return true end end
+    return false
+end
+local function lastQ()
+    local m = _lastnet("lc_intr_q")
+    return m and util.JSONToTable(m.data[1] or "") or {}
+end
+local ledger = {}
+local add = LC.LedgerAdd
+LC.LedgerAdd = function(what, d, why) ledger[what] = (ledger[what] or 0) + d return add and add(what, d, why) end
+local Q = LC.AdminQuestioning
+local BATON = "weapon_lc_baton"
+local function jail(p, reason)
+    for _, c in ipairs(pts) do if c.kind == "cell" and not LC.Occupied[c] then p.lcPreferCell = c break end end
+    LC.Incarcerate(p, 900, reason or LC.AdminCrime)
+    return LC.Prisoners[p] and LC.Prisoners[p].cell.pos
+end
+
+-- someone nobody has marked: questioned as before
+local cop = newPlayer("AQCop", "cp")
+local plain = newPlayer("AQPlainRebel", "resistance", nil, 900)
+_run(0.5)
+jail(plain, "Carrying a weapon")
+ok(LC.Prisoners[plain] ~= nil and not LC.AdminQuestioningHolds(plain) and not LC.AdminQuestioningStart(plain),
+    "a prisoner who never tried to kill her is nothing of hers")
+_run(13)
+ok(LC.Interrogations[plain] ~= nil and not LC.Interrogations[plain].admin, "and is questioned by a unit in the cell, as before")
+LC.EndInterrogation(plain)
+LC.ReleasePrisoner(plain)
+
+-- a player is the Administrator
+local adm = newPlayer("AQAdministrator", "admin")
+adm:SetPos(R0 + Vector(5000, 0, 0))
+local reb = newPlayer("AQAssassin", "resistance", nil, 900)
+_run(0.5)
+reb:SetPData("lc_regicide", "1")
+adm.chat = {}
+local cell = jail(reb)
+local door = ents.Create("prop_door_rotating")
+door:SetPos(cell + Vector(120, 0, 0))
+door:Spawn()
+ok(cell ~= nil and LC.AdminQuestioningHolds(reb), "whoever tried to kill her, put in a cell, is hers to question")
+_run(13)
+ok(LC.Interrogations[reb] == nil and not LC.StartInterrogation(reb), "no unit comes to question them")
+cop:SetPos(cell + Vector(60, 0, 0))
+local okCop, whyCop = LC.StartPlayerInterrogation(cop, reb)
+ok(not okCop and whyCop == "Someone else is questioning them.", "and a unit who tries is told someone else is", tostring(whyCop))
+local posting
+for _, x in ipairs(LC.Postings[LC.QuestFaction(adm)] or {}) do
+    if x.tmpl and x.tmpl.id == "admin_assassin" and not x.dead then posting = x end
+end
+ok(posting ~= nil and has(adm.chat, "New job: Question the would-be assassin"), "she is told once: a job on her board")
+adm.chat = {}
+_run(3)
+ok(not has(adm.chat, "New job"), "(once)")
+adm.lcqNext = 0
+ok(posting and LC.AcceptPosting(adm, posting.id), "(she takes it)")
+local q = LC.QuestOf[adm]
+local st1 = q and q.stages[q.stage]
+ok(st1 and st1.kind == "goto" and st1.pos:DistToSqr(cell) < 1, "taking it marks the cell for her")
+ok(not adm:HasWeapon(BATON) and not door.lcHeldOpen, "(no stunstick yet, and the door is shut)")
+adm:SetPos(cell + Vector(80, 0, 0))
+_run(2)
+local it = LC.Interrogations[reb]
+ok(adm:HasWeapon(BATON) and door.lcHeldOpen == true, "at the cell she is handed a stunstick and the door is opened for her")
+ok(it and it.byPlayer == adm and it.admin == true, "and the interrogation is hers to lead")
+local cp = _lastnet("lc_intr_cp")
+local panel = cp and util.JSONToTable(cp.data[1] or "") or {}
+ok(panel.questions and #panel.questions == 3 and panel.questions[1] == "Who sent you?", "her own questions are on her menu", panel.questions and panel.questions[1])
+LC.PlayerInterrogationDo(adm, "ask", 1)
+ok(lastQ().text == "Who sent you?", "her question reaches the prisoner, on the questioning menu they know", tostring(lastQ().text))
+adm.chat = {}
+LC.InterrogationAnswer(reb, "silent")
+ok(has(adm.chat, "says nothing") and it.resolve == 2, "silence comes back to her, and costs the prisoner", it.resolve)
+reb:SetHealth(12)
+ok(LC.AdminQuestioningBlow(adm, reb) == true and it.resolve == 1, "a blow of her stunstick weakens their resolve", it.resolve)
+ok(reb:Health() >= 1 and reb:Alive(), "and never kills", reb:Health())
+for _ = 1, 12 do LC.AdminQuestioningBlow(adm, reb) end
+ok(reb:Health() >= 1 and reb:Alive(), "(however many)", reb:Health())
+ok(LC.AdminQuestioningBlow(cop, reb) == false, "(anyone else's stunstick is only a stunstick)")
+it.resolve = 1
+LC.PlayerInterrogationDo(adm, "ask", 2)
+reb.chat, adm.chat = {}, {}
+LC.InterrogationAnswer(reb, "lie")
+ok(has(reb.chat, "You tell her the truth"), "with one resolve left a lie can't be held: the truth comes out")
+ok(has(adm.chat, "[Interrogation] "), "and the answer comes back to her")
+ledger = {}
+LC.PlayerInterrogationDo(adm, "ask", 3)
+LC.InterrogationAnswer(reb, "truth")
+ok(LC.Interrogations[reb] == nil and not LC.AdminQuestioningHolds(reb), "her questions done, it is over")
+ok(ledger.authority == 3, "they broke: her authority rises", ledger.authority)
+ok(not adm:HasWeapon(BATON) and not door.lcHeldOpen, "her stunstick is taken back, and the door shuts")
+_run(2)
+ok(q and q.done and has(adm.chat, "Complete: Question the would-be assassin"), "and her job is done")
+ok(not LC.AdminQuestioningStart(reb), "once per stay in the cells")
+LC.ReleasePrisoner(reb)
+
+-- F2 at the cell begins it too; walking away ends it
+reb:SetPos(R0)
+jail(reb)
+ok(LC.AdminQuestioningHolds(reb), "(a new stay: hers again)")
+LC.AdminQuestioningTick(CurTime() + 13)
+adm:SetPos(reb:GetPos() + Vector(80, 0, 0))
+ledger = {}
+ok(LC.StartPlayerInterrogation(adm, reb) == true and adm:HasWeapon(BATON), "F2 at the cell begins it too")
+it = LC.Interrogations[reb]
+adm:SetPos(R0 + Vector(5000, 0, 0))
+reb.chat = {}
+LC.InterrogationStep(reb, it, CurTime())
+ok(LC.Interrogations[reb] == nil and has(reb.chat, "The Administrator walks away"), "she leaves the cell: it is over")
+ok(not adm:HasWeapon(BATON) and ledger.authority == nil, "(her stunstick back; nothing asked, nothing changed)", ledger.authority)
+LC.ReleasePrisoner(reb)
+-- one who had a stunstick of her own keeps it
+reb:SetPos(R0)
+jail(reb)
+LC.AdminQuestioningTick(CurTime() + 13)
+adm:Give(BATON)
+adm:SetPos(reb:GetPos() + Vector(80, 0, 0))
+LC.StartPlayerInterrogation(adm, reb)
+LC.PlayerInterrogationDo(adm, "done")
+ok(LC.Interrogations[reb] == nil and adm:HasWeapon(BATON), "a stunstick she had anyway stays hers")
+adm:StripWeapon(BATON)
+LC.ReleasePrisoner(reb)
+reb:RemovePData("lc_regicide")
+
+-- nobody plays her: the city's own comes, with two soldiers
+local isAdm, spot = LC.IsAdministrator, LC.AlarmSquadSpot
+LC.IsAdministrator = function() return false end
+LC.AlarmSquadSpot = function(p) return p + Vector(500, 0, 0) end
+local cit = newPlayer("AQLoner", "citizen")
+_run(0.5)
+cit:SetPData("lc_regicide", "1")
+local done
+local cell2 = jail(cit)
+ok(not LC.AdminQuestioningStart(cit), "(taken up when they were brought in)")
+Q[cit].after = function() done = true end
+LC.AdminQuestioningTick(CurTime() + 13)
+local A = Q[cit]
+local party = A and A.party or {}
+ok(A and A.stage == "coming" and #party == 3 and party[1].npc.lcAdminHer == true, "nobody plays her: the city's own Administrator comes", A and A.stage, #party)
+local soldiers = 0
+for i = 2, 3 do if party[i] and LC.NPCs[party[i].npc] and LC.NPCs[party[i].npc].role == "soldier" then soldiers = soldiers + 1 end end
+ok(soldiers == 2 and IsValid(party[1].npc.lcStick), "with two soldiers, stunstick in hand", soldiers)
+ok(party[1].npc:GetPos():DistToSqr(cell2) > 300 * 300, "(from out of sight)")
+for _ = 1, 160 do _run(0.5) if A.stage == "asking" then break end end
+ok(A.stage == "asking" and party[1].npc:GetPos():DistToSqr(cell2) < 120 * 120, "and walks in to the cell", A.stage)
+local it2 = LC.Interrogations[cit]
+ok(it2 and it2.admin == true and not IsValid(it2.byPlayer), "she leads it, through the cell questioning's own code")
+local function ask2()
+    it2.next = 0
+    LC.InterrogationStep(cit, it2, CurTime())
+    return lastQ()
+end
+local a1 = ask2()
+ok(a1.text == "You tried to kill me. Why?" and a1.by == "The Administrator", "a prisoner who is not Resistance is asked why", tostring(a1.text), tostring(a1.by))
+LC.InterrogationAnswer(cit, "silent")
+local a2 = ask2()
+ok(a2.text == "Who put you up to it?", "then who put them up to it", tostring(a2.text))
+ledger, cit.chat = {}, {}
+LC.InterrogationAnswer(cit, "silent")
+ok(LC.Interrogations[cit] == nil and has(cit.chat, "The Administrator leaves"), "her questions done, she leaves")
+ok(ledger.authority == -1, "they held out to the end: her authority falls a little", ledger.authority)
+ok(done == true, "and what custody had waiting for them comes after her")
+ok(cit:Health() >= 1 and cit:Alive(), "(alive)")
+local left = 3
+for _ = 1, 220 do
+    _run(0.5)
+    left = 0
+    for _, w in ipairs(party) do if IsValid(w.npc) then left = left + 1 end end
+    if left == 0 then break end
+end
+ok(left == 0, "they walk out and are gone", left)
+LC.ReleasePrisoner(cit)
+-- no way in to be found: placed at the cell door
+LC.AlarmSquadSpot = function() return nil end
+cit:SetPos(R0)
+local cell3 = jail(cit)
+LC.AdminQuestioningTick(CurTime() + 13)
+A = Q[cit]
+party = A and A.party or {}
+local near = 0
+for _, w in ipairs(party) do if IsValid(w.npc) and w.npc:GetPos():DistToSqr(cell3) < 200 * 200 then near = near + 1 end end
+ok(#party == 3 and near == 3, "no way in found: she and her soldiers are placed at the cell door", near)
+_run(1)
+ok(A.stage == "asking", "(and she begins)", A.stage)
+-- the prisoner leaves the server: it is over, and they go
+hook.Run("PlayerDisconnected", cit)
+cit:Remove()
+_run(2)
+ok(Q[cit] == nil and LC.Interrogations[cit] == nil, "either of them leaves the server: it is over")
+for _ = 1, 60 do
+    _run(0.5)
+    left = 0
+    for _, w in ipairs(party) do if IsValid(w.npc) then left = left + 1 end end
+    if left == 0 then break end
+end
+ok(left == 0, "(and her party goes)", left)
+-- a prisoner who is not a player is left to the usual
+local npcP = LC.Spawners.citizen(R0 + Vector(0, 1500, 0))
+ok(LC.AdminQuestioningStart(npcP) == false, "a prisoner who is not a player is left to the usual")
+if IsValid(npcP) then npcP:Remove() end
+
+LC.IsAdministrator, LC.AlarmSquadSpot, LC.LedgerAdd = isAdm, spot, add
+for _, x in ipairs(LC.Postings[LC.QuestFaction(adm)] or {}) do if x.tmpl and x.tmpl.id == "admin_assassin" then x.dead = true end end
+for _, p in ipairs({ plain, reb, adm, cop }) do
+    if LC.Prisoners[p] then LC.ReleasePrisoner(p) end
+    p:SetPos(Vector(-120000, -120000, 0))
+end
+if IsValid(door) then door:Remove() end
+for _, p in ipairs(pts) do LC.RemovePoint(p) end
+_walls = savedWalls
+end
+Nov16_AdminQuestioningTests()
+
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")
 ;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)
     -- Everything here is something the owner's server, files or players depend on. The list is
