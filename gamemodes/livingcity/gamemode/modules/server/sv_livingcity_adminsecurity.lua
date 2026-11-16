@@ -220,8 +220,11 @@ function LC.GrenadeJump(npc, g, her)
     if pend then pend.hero = true end
     timer.Simple(t + 0.2, function() Boom(g, rag, at) end)
     -- an attempt on her life
-    if LC.AdminAttacker then LC.AdminAttacker(who) end
-    hook.Run("LivingCityAdminAttempt", her, who, "grenade")
+    -- (one of the Combine's own threw it: smothered all the same, but it is no attempt on her life)
+    if not Theirs(who) then
+        if LC.AdminAttacker then LC.AdminAttacker(who) end
+        hook.Run("LivingCityAdminAttempt", her, who, "grenade")
+    end
     return true
 end
 
@@ -245,8 +248,12 @@ function LC.AdminGrenadeThink(now)
             local at = g:GetPos()
             local vel = g.GetVelocity and g:GetVelocity() or Vector(0, 0, 0)
             if vel:Length() < SLOW or now - since > AIR then
+                -- (whoever threw it, a Combine player too: the owner, 16 November, "no matter who threw it, because all
+                -- grenades should do damage to her". Not a Combine NPC's: those cannot hurt her at all, "NPC
+                -- combine/overwatch/CP grenades should not hurt her", LC.AdministratorImmune.)
                 local her = Her(at)
-                if her and not Theirs(Thrower(g)) then
+                local who = Thrower(g)
+                if her and not (IsValid(who) and who:IsNPC() and Theirs(who)) then
                     local npc = Jumper(at)
                     if npc then LC.GrenadeJump(npc, g, her) end
                 end

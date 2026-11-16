@@ -33593,10 +33593,7 @@ local function grenade(off, owner, class)
     return g
 end
 -- one of the Combine's own grenades by her: nobody jumps
-local own = grenade(Vector(100, 0, 0), far)
-LC.AdminGrenadeThink(CurTime() + 1)
-ok(not own.lcJumped and IsValid(near), "a grenade of the Combine's own by her: nobody jumps on it")
-own:Remove()
+-- (a grenade of the Combine's own by her is smothered too, further down: the owner, 16 November)
 -- one that lands far from her: nobody jumps
 local wide = grenade(Vector(2500, 0, 0), reb)
 LC.AdminGrenadeThink(CurTime() + 1)
@@ -33625,6 +33622,25 @@ LC.AdminGrenadeThink(CurTime() + 1)
 ok(not g2.lcJumped and IsValid(far), "lc_admin_grenade_jump 0: nobody jumps")
 set("lc_admin_grenade_jump", 1)
 g2:Remove()
+-- one of the Combine's own grenades by her: smothered all the same, and nobody is marked for it
+local unitP = newPlayer("GrenadeUnit", "cp")
+local ragsBefore = #ents.FindByClass("prop_ragdoll")
+local own = grenade(Vector(90, 40, 0), unitP)
+LC.AdminGrenadeThink(CurTime() + 1)
+-- (whichever soldier is nearest: by now her own elite guards have come to her side, and one of them may be the one)
+ok(own.lcJumped and own.lcDone and #ents.FindByClass("prop_ragdoll") > ragsBefore, "a grenade thrown by a unit player by her: a soldier throws himself on it all the same")
+ok(not LC.AdminNeverForgotten(unitP) and not LC.PlayerIsWanted(unitP), "(and the unit who threw it is not marked for an attempt)")
+_run(1.2)
+unitP:Remove()
+-- a Combine NPC's grenade cannot hurt her at all: nobody need die for it
+local cop2 = LC.SpawnCop(G0 + Vector(200, 100, 0))
+local sol2 = LC.SpawnSoldier(G0 + Vector(140, 0, 0))
+local theirs = grenade(Vector(90, 40, 0), cop2)
+LC.AdminGrenadeThink(CurTime() + 1)
+ok(not theirs.lcJumped, "a Combine NPC's grenade by her: nobody jumps (it cannot hurt her)")
+ok(LC.AdministratorImmune(adm, _dmg(cop2, 80)) == true, "(a Combine NPC's grenade does her no harm)")
+theirs:Remove()
+for _, e in ipairs({ cop2, sol2 }) do if IsValid(e) then e:Remove() end end
 for _, e in ipairs({ far, cop }) do if IsValid(e) then e:Remove() end end
 for _, r in ipairs(ents.FindByClass("prop_ragdoll")) do if r:GetModel() == nearModel then r:Remove() end end
 adm:Remove() reb:Remove()
