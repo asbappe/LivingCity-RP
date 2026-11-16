@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version f03ac15. Admin-only console messages and log lines are left out.
+Made from version b5697c2. Admin-only console messages and log lines are left out.
 
-12914 lines, from 355 files.
+12919 lines, from 356 files.
 
 ## Contents
 
@@ -154,6 +154,7 @@ Made from version f03ac15. Admin-only console messages and log lines are left ou
 - [sv_livingcity.lua](#svlivingcitylua-svlivingcitylua) (51)
 - [the actions menu (server side)](#the-actions-menu-server-side-svlivingcityactionslua) (8)
 - [acts (server). See sh_livingcity_acts.lua for the list](#acts-server-see-shlivingcityactslua-for-the-list-svlivingcityactslua) (7)
+- [the hunt for whoever tried to kill the Administrator](#the-hunt-for-whoever-tried-to-kill-the-administrator-svlivingcityadminhuntlua) (5)
 - [the would-be assassin is hers to question (the owner, 16 November)](#the-would-be-assassin-is-hers-to-question-the-owner-16-november-svlivingcityadminquestioninglua) (13)
 - [the Administrator's security (the owner, 15 November)](#the-administrators-security-the-owner-15-november-svlivingcityadminsecuritylua) (8)
 - [testing tools for admins](#testing-tools-for-admins-svlivingcityadmintoolslua) (50)
@@ -5331,81 +5332,81 @@ Made from version f03ac15. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: cop provoked
 
-- "[Civil Protection] The Civil Protection unit shoves you back. Move along."  (chat message, line 2328)
-- "[Civil Protection] A crack across the ribs with the stick. Last warning."  (chat message, line 2329)
-- "[Civil Protection] You were warned. Obstructing Civil Protection."  (chat message, line 2333)
-- "Obstructing Civil Protection"  (text, line 2334)
+- "[Civil Protection] The Civil Protection unit shoves you back. Move along."  (chat message, line 2487)
+- "[Civil Protection] A crack across the ribs with the stick. Last warning."  (chat message, line 2488)
+- "[Civil Protection] You were warned. Obstructing Civil Protection."  (chat message, line 2492)
+- "Obstructing Civil Protection"  (text, line 2493)
 
 > Note for you (not shown in game): A city scanner that has a fugitive in sight (wanted, or a hunted rebel who isn't passing as a citizen) tells the units where they are: a flash, a report to every unit on duty, and the nearby units come after them.
 
-- "a wanted citizen"  (text, line 2491)
+- "a wanted citizen"  (text, line 2650)
 
 > Note for you (not shown in game): part of: scanner tip off
 
-- "A scanner's flash. You've been photographed, and Civil Protection has the picture."  (chat message, line 2496)
-- "[CP net] Scanner report: %s%s."  (message, line 2500)
+- "A scanner's flash. You've been photographed, and Civil Protection has the picture."  (chat message, line 2655)
+- "[CP net] Scanner report: %s%s."  (message, line 2659)
 
 > Note for you (not shown in game): part of: start
 
-- "This map has no AI nodes or navmesh and nothing placed yet. Lay some path nodes or points with the Miscount Editor, then start again."  (chat message, line 2736)
-- "Started. Map nav: %d spots (%s). Your layout: %d points, %d path nodes."  (message, line 2743)
+- "This map has no AI nodes or navmesh and nothing placed yet. Lay some path nodes or points with the Miscount Editor, then start again."  (chat message, line 2895)
+- "Started. Map nav: %d spots (%s). Your layout: %d points, %d path nodes."  (message, line 2902)
 
 > Note for you (not shown in game): part of: stop
 
-- "Stopped and removed all Miscount NPCs."  (chat message, line 2760)
+- "Stopped and removed all Miscount NPCs."  (chat message, line 2919)
 
 > Note for you (not shown in game): part of: spawn test walker
 
-- "your path network (%d hops)"  (message, line 2789)
-- "the map's own navigation"  (text, line 2789)
-- "Test walker heading out using {how}."  (chat message, line 2790)
+- "your path network (%d hops)"  (message, line 2948)
+- "the map's own navigation"  (text, line 2948)
+- "Test walker heading out using {how}."  (chat message, line 2949)
 
 > Note for you (not shown in game): part of: test arrived
 
-- "Test walker arrived in %.1f seconds. This route works."  (message, line 2795)
+- "Test walker arrived in %.1f seconds. This route works."  (message, line 2954)
 
 > Note for you (not shown in game): part of: test stuck
 
-- "Test walker stuck at %s on hop %d/%d"  (message, line 2802)
-- "Test walker got stuck after %.1f seconds, on hop %d of %d (marked red)."  (message, line 2803)
-- "Add a path node here and link it toward the destination, or check for a door it can't open."  (text, line 2806)
+- "Test walker stuck at %s on hop %d/%d"  (message, line 2961)
+- "Test walker got stuck after %.1f seconds, on hop %d of %d (marked red)."  (message, line 2962)
+- "Add a path node here and link it toward the destination, or check for a door it can't open."  (text, line 2965)
 
 > Note for you (not shown in game): guarding a supply drop (sv_livingcity_convoy.lua): he answers, without leaving his post
 
-- "[Civil Protection] "Supply point secure. Hold the perimeter until the load moves on.""  (chat message, line 3034)
+- "[Civil Protection] "Supply point secure. Hold the perimeter until the load moves on.""  (chat message, line 3194)
 
 > Note for you (not shown in game): pressing E on something
 
-- "[Civil Protection] "{Pick}""  (chat message, line 3038)
+- "[Civil Protection] "{Pick}""  (chat message, line 3198)
 
 > Note for you (not shown in game): a Civil Protection player stops a citizen: they freeze and apologise
 
-- "[Civil Protection] Stopped. With the Arrest Baton out: R to search them, right click to detain."  (chat message, line 3056)
+- "[Civil Protection] Stopped. With the Arrest Baton out: R to search them, right click to detain."  (chat message, line 3216)
 
 > Note for you (not shown in game): a crime, and every cop comes for you (a scanner is city property, not a person) (one report per few seconds for a scanner: every bullet of a burst isn't a new offence)
 
-- "Damaging city property"  (text, line 3113)
-- "Assaulting Civil Protection"  (text, line 3116)
-- "Assaulting a citizen"  (text, line 3116)
+- "Damaging city property"  (text, line 3273)
+- "Assaulting Civil Protection"  (text, line 3276)
+- "Assaulting a citizen"  (text, line 3276)
 
 > Note for you (not shown in game): Console commands
 
-- "Civil Protection has stood down."  (chat message, line 3152)
+- "Civil Protection has stood down."  (chat message, line 3312)
 
 > Note for you (not shown in game): the console command lc_addpoint
 
-- "Kinds: idle, sit, sitchair, lean, queue, patrol, checkpoint, spawn, cell, release"  (chat message, line 3159)
-- "Added %s point (%d total on this map)."  (message, line 3162)
+- "Kinds: idle, sit, sitchair, lean, queue, patrol, checkpoint, spawn, cell, release"  (chat message, line 3319)
+- "Added %s point (%d total on this map)."  (message, line 3322)
 
 > Note for you (not shown in game): the console command lc_removepoint
 
-- "Removed nearest {kind} point."  (text, line 3168)
-- "No point within 150 Civil Protection units."  (chat message, line 3168)
+- "Removed nearest {kind} point."  (text, line 3328)
+- "No point within 150 Civil Protection units."  (chat message, line 3328)
 
 > Note for you (not shown in game): the console command lc_status
 
-- "citizens %d/%d, cops %d/%d, soldiers %d/%d, scanners %d/%d, zombies %d/%d, rebels %d/%d"  (message, line 3179)
-- "map nav %d (%s) \| points %d \| path nodes %d, links %d, unlinked %d \| zones %d \| lines %d \| patrol beats %d"  (message, line 3183)
+- "citizens %d/%d, cops %d/%d, soldiers %d/%d, scanners %d/%d, zombies %d/%d, rebels %d/%d"  (message, line 3339)
+- "map nav %d (%s) \| points %d \| path nodes %d, links %d, unlinked %d \| zones %d \| lines %d \| patrol beats %d"  (message, line 3343)
 
 ## the actions menu (server side) (sv_livingcity_actions.lua)
 
@@ -5446,6 +5447,25 @@ Made from version f03ac15. Admin-only console messages and log lines are left ou
 > Note for you (not shown in game): the chat command /act
 
 - "Poses: /sit /kneel /lie /lean /cower /pose 1-4 (/stand to get up). Gestures: /wave /salute /bow /nod /shake /point /beckon /halt /cheer /laugh"  (chat message, line 113)
+
+## the hunt for whoever tried to kill the Administrator (sv_livingcity_adminhunt.lua)
+
+`gamemodes/livingcity/gamemode/modules/server/sv_livingcity_adminhunt.lua`
+
+
+> Note for you (not shown in game): part of: admin hunt send
+
+- "Hunt for %s: a squad of %d sent to %s"  (message, line 227)
+- "a Resistance hideout"  (message, line 228)
+- "where they were last seen"  (message, line 228)
+
+> Note for you (not shown in game): (walking a prisoner in, standing over one cuffed on the street, or in a fight: when that is done)
+
+- "a squad of the hunt for the Administrator's attacker going back"  (text, line 264)
+
+> Note for you (not shown in game): part of: start hunt
+
+- "Dispatch: all units, {Name} tried to kill the Administrator. Overwatch is hunting them. Take them alive."  (text, line 315)
 
 ## the would-be assassin is hers to question (the owner, 16 November) (sv_livingcity_adminquestioning.lua)
 
@@ -9040,7 +9060,7 @@ Made from version f03ac15. Admin-only console messages and log lines are left ou
 - "Every wasted minute is stolen from your fellow citizens."  (text, line 69)
 - "Groups will be dispersed; drink your tea at home."  (text, line 70)
 - "The scanners keep you safe; a loyal citizen has nothing to hide."  (text, line 71)
-- "They're locked for your safety; only traitors try the handle."  (text, line 72)
+- "They're locked for your safety; only traitors wonder what's inside."  (text, line 72)
 - "Respect your neighbours' rest; noise complaints are investigated."  (text, line 73)
 - "When an officer tells you to pick it up, you pick it up."  (text, line 74)
 
@@ -14702,7 +14722,7 @@ Made from version f03ac15. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: learn ladder
 
-- "Learned a ladder (#%d) from a climb: %s up to %s"  (message, line 639)
+- "Learned a ladder (#%d) from a climb: %s up to %s"  (message, line 641)
 
 ## what now? (sv_livingcity_nextstep.lua)
 
