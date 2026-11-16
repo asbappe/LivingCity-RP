@@ -414,6 +414,46 @@ local function Retire(r)
     if IsValid(r.npc) then r.npc:Remove() end
 end
 
+-- Someone the city has made a stalker where they stood (one of its own that tried to kill the Administrator,
+-- after her questioning: sv_livingcity_adminquestioning.lua). One of the zone's own from then on: the Combine
+-- zone it stands in, or the nearest. It leaves the cell for its work somewhere in the zone once nobody is
+-- looking (or after 45 seconds anyway); with no Combine zone to work in, or lc_zone_stalkers 0, it is taken away.
+function LC.ZoneStalkerAdopt(pos, yaw)
+    local npc = SpawnStalker(pos)
+    if not npc then return nil end
+    if yaw then npc:SetAngles(Angle(0, yaw, 0)) end
+    local zone = InCombine(pos)
+    if not zone then
+        local bd
+        for _, z in ipairs(Zones()) do
+            local d = z.pos and z.pos:DistToSqr(pos)
+            if d and (not bd or d < bd) then zone, bd = z, d end
+        end
+    end
+    local now = CurTime()
+    if zone and cvCount:GetInt() > 0 then
+        residents[npc] = { npc = npc, zone = zone, phase = "idle", born = now, lastPos = npc:GetPos(), lastMoved = now }
+    end
+    local name, tries = "LivingCityStalkerAdopt" .. npc:EntIndex(), 0
+    timer.Create(name, 3, 15, function()
+        tries = tries + 1
+        if not IsValid(npc) then timer.Remove(name) return end
+        if tries < 15 and LC.IsSeen(npc:GetPos() + UP) then return end
+        timer.Remove(name)
+        local r = residents[npc]
+        local to = r and HiddenSpot(r.zone)
+        if to then
+            npc:SetPos(to + Vector(0, 0, 4))
+            r.lastPos, r.lastMoved = npc:GetPos(), CurTime()
+        elseif r then
+            Retire(r)
+        else
+            npc:Remove()
+        end
+    end)
+    return npc
+end
+
 -- Keep every zone staffed: out of sight, one at a time, a while after one is lost.
 function LC.ZoneStalkersStaff(now)
     local want = math.max(0, cvCount:GetInt())

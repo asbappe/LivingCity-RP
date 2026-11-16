@@ -2,7 +2,8 @@
     Living City: the would-be assassin is hers to question (the owner, 16 November)
 
     "if/when the would-be assassin is ever captured, the interrogation for the would-be assassin is a special
-    interrogation led by the administrator, and she is given a stunstick for it".
+    interrogation led by the administrator, and she is given a stunstick for it". And: "please make sure that
+    the NPC/player is turned into a stalker after the interrogation by the administrator."
 
     A player marked for an attempt on her life (LC.AdminNeverForgotten, sv_livingcity_adminsecurity.lua) who
     is put in a cell is not questioned by a unit. Instead, once per stay in the cells:
@@ -21,14 +22,27 @@
         puts the same questions through the cell questioning's own code, and they go and are removed out of
         sight.
 
+    One of the city's own that tried to kill her (npc.lcRegicide, set where the attempt is marked) and is put
+    in a cell is hers too. A player Administrator gets the same job and questions it the way a prison guard
+    questions a prisoner who isn't a player (sv_livingcity_prisonguard.lua), with her questions; the city's
+    own comes with her soldiers, and her stunstick is heard three times.
+
     What comes of it is what a unit's questioning gives (sv_livingcity_interrogation.lua): the truth from a
     member of the Resistance is marked for every unit; anyone else has nothing to give and is asked why. And
     the state of the city: her authority +3 when they break (any truth), -1 when every question was put and
-    they gave nothing. What custody had waiting for them (the stalker's chair, the broken feet) comes after.
+    they gave nothing.
 
-    Nothing here listens to a hook that someone else could answer first: sv_livingcity_custody.lua calls
-    LC.AdminQuestioningStart when they are brought in and the session's own onEnd when it is over, and the
-    stunstick calls LC.AdminQuestioningBlow before it does any damage.
+    Then they are made a stalker, whoever they are and however it ended (lc_stalkers 1): a player by the
+    stalker's chair custody has (LC.StalkerScene), ten seconds after she is done and once her party has gone;
+    one of the city's own is replaced where it stands by a stalker of the Combine zones
+    (LC.ZoneStalkerAdopt, sv_livingcity_zonestalkers.lua). If a player Administrator never takes the job, the
+    same when the ten minutes are up. Until then they are not let out: a player's sentence does not run out,
+    one of the city's own is held as a job's prisoner is. With lc_stalkers 0 nobody is made a stalker: what
+    custody had waiting for a player (the broken feet) comes instead.
+
+    Nothing here listens to a hook that someone else could answer first: sv_livingcity_custody.lua and
+    sv_livingcity_prison.lua call in when they are brought in, the sessions' own onEnd when it is over, and
+    the stunstick calls LC.AdminQuestioningBlow before it does any damage.
 ]]
 
 if CLIENT then return end
@@ -41,7 +55,10 @@ local WAIT = 12          -- seconds in the cell before anything is arranged (as 
 local OFFER_SECS = 600   -- a player Administrator has this long to take it
 local COME_SECS = 60     -- the city's own: on foot this long at most, then placed at the cell door
 local NEAR = 500         -- she begins this close to the prisoner (walking 520 away ends it: sv_livingcity_interrogation.lua)
+local AWAY = 520
 local BROKE, HELD = 3, 1 -- her authority: up when they break, down when they hold out to the end
+local THEN_SECS = 10     -- after her questioning, and with her party gone: this long before they are made a stalker
+local BLOWS = 3          -- the city's own on one of the city's own: her stunstick this many times
 
 -- Her questions. A member of the Resistance (or anyone hunted or dressed as one):
 LC.AdminQuestions = {
@@ -58,9 +75,11 @@ local function Questions(ply)
     return (LC.CanInterrogate and LC.CanInterrogate(ply)) and LC.AdminQuestions or LC.AdminQuestionsNobody
 end
 
-LC.AdminQuestioning = LC.AdminQuestioning or {} -- [prisoner] = { stage = due / waiting / coming / asking, ... }
+-- [prisoner] = { stage = due / waiting / coming / asking, npc = true for one of the city's own, ... }
+LC.AdminQuestioning = LC.AdminQuestioning or {}
 local Q = LC.AdminQuestioning
-local Gone = {} -- parties on their way out
+local Gone = {}  -- parties on their way out
+local Later = {} -- questioned (or never fetched): what follows
 local TEMPLATE
 
 local function PlayerAdministrator()
@@ -70,7 +89,25 @@ local function PlayerAdministrator()
     return nil
 end
 
-function LC.AdminQuestioningHolds(ply) return Q[ply] ~= nil end
+function LC.AdminQuestioningHolds(who) return Q[who] ~= nil end
+
+-- What holds them in a cell: a player's record (LC.Prisoners), or the state of one of the city's own while jailed.
+local function Held(who, A)
+    if not IsValid(who) then return nil end
+    if A.npc then
+        local st = LC.NPCs and LC.NPCs[who]
+        return st ~= nil and st == A.st and st.state == "jailed" and st or nil
+    end
+    return LC.Prisoners and LC.Prisoners[who] or nil
+end
+local function Living(who, A)
+    if A.npc then return who:Health() > 0 end
+    return who:Alive()
+end
+local function StalkersOn()
+    local cv = GetConVar("lc_stalkers")
+    return not cv or cv:GetBool()
+end
 
 -- The job comes off her board when nobody is waiting for her any more.
 local function Withdraw()
@@ -98,11 +135,16 @@ local function DoorBy(cell)
     return best
 end
 
+local function CellPos(who, A, rec)
+    local point = not A.npc and rec.cell or nil
+    return point and point.pos or who:GetPos(), point and point.yaw or who:GetAngles().y
+end
+
 -- Three places: hers, a step from the prisoner towards the door, and a soldier each side of the door.
-local function Spots(ply, pr)
-    local cell = pr.cell and pr.cell.pos or ply:GetPos()
+local function Spots(who, A, rec)
+    local cell, yaw = CellPos(who, A, rec)
     local door = DoorBy(cell)
-    local dir, reach = Angle(0, pr.cell and pr.cell.yaw or 0, 0):Forward(), 110
+    local dir, reach = Angle(0, yaw or 0, 0):Forward(), 110
     if IsValid(door) then
         local at = door.WorldSpaceCenter and door:WorldSpaceCenter() or door:GetPos()
         local d = Vector(at.x - cell.x, at.y - cell.y, 0)
@@ -199,15 +241,18 @@ local function Step(w, now)
     return false
 end
 
+-- Her party goes: back the way it came, and removed out of sight. Returns what is leaving (or nil).
 local function Leave(A)
     local party = A.party
     A.party = nil
-    if not party then return end
+    if not party then return nil end
     for _, w in ipairs(party) do
         w.there = not A.from
         if A.from and IsValid(w.npc) then Go(w, A.from) end
     end
-    Gone[#Gone + 1] = { party = party, untilT = CurTime() + (A.from and 90 or 20) }
+    local L = { party = party, untilT = CurTime() + (A.from and 90 or 20) }
+    Gone[#Gone + 1] = L
+    return L
 end
 
 local function LeavingTick(now)
@@ -229,6 +274,65 @@ local function LeavingTick(now)
 end
 
 ------------------------------------------------------------------------
+-- What follows: a stalker
+------------------------------------------------------------------------
+
+-- One of the city's own: gone from its people (not dead, and not coming back), and a stalker stands where it
+-- stood, one of the Combine zones' own from then on (sv_livingcity_zonestalkers.lua).
+local function TurnNPC(npc)
+    local pos, yaw = npc:GetPos(), npc:GetAngles().y
+    local p = npc.lcProfile
+    if p and p.alive then p.alive, p.moved = false, os.time() end
+    npc:Remove() -- (the city tidies up after one of its own that is gone: its cell is free again)
+    local stalker = LC.ZoneStalkerAdopt and LC.ZoneStalkerAdopt(pos, yaw)
+    if IsValid(stalker) then stalker:EmitSound("npc/stalker/breathing3.wav", 70) end
+    return stalker
+end
+
+local function Then(who, A)
+    local rec = Held(who, A)
+    if A.npc then
+        if A.st.questLock == A then A.st.questLock = nil end
+        if rec and StalkersOn() then TurnNPC(who) end
+        return
+    end
+    if not rec then return end
+    if StalkersOn() and LC.StalkerScene then
+        LC.StalkerScene(who) -- (the stalker's chair, as custody has it: sv_livingcity_custody.lua)
+    elseif A.after then
+        LC.Try(A.after)
+    end
+end
+
+-- Not let out before she has been, or before what follows is done.
+local function KeepIn(ply, pr, now)
+    if pr.untilT < now + 60 then
+        pr.untilT = now + 60
+        ply:SetNW2Float("lc_jail_until", pr.untilT)
+    end
+end
+
+local function LaterTick(now)
+    for i = #Later, 1, -1 do
+        local T = Later[i]
+        local who, A = T.who, T.A
+        local rec = Held(who, A)
+        if rec and not A.npc then KeepIn(who, rec, now) end
+        if T.fired then
+            -- (in the stalker's chair: kept in until it is done)
+            if not rec or not who.lcStalkerScene then table.remove(Later, i) end
+        else
+            local party = false
+            for _, w in ipairs(T.L and T.L.party or {}) do if IsValid(w.npc) then party = true end end
+            if now >= T.at and (not party or now >= T.cap) then
+                Then(who, A)
+                if not A.npc and IsValid(who) and who.lcStalkerScene then T.fired = true else table.remove(Later, i) end
+            end
+        end
+    end
+end
+
+------------------------------------------------------------------------
 -- How it ends
 ------------------------------------------------------------------------
 
@@ -240,19 +344,14 @@ local function TakeBack(A)
     if A.held and adm:HasWeapon(A.held) then adm:SelectWeapon(A.held) end
 end
 
--- The session's onEnd (sv_livingcity_custody.lua, EndInterrogation): however it ended.
-local function Over(ply, it)
-    local A = Q[ply]
-    if not A then return end
-    Q[ply] = nil
-    local pr = IsValid(ply) and LC.Prisoners and LC.Prisoners[ply]
-    if pr then pr.adminQ = "done" end
+-- Over, however it ended (or it never began: released, escaped, gone, or she never came). broke: they told the
+-- truth; all: every question was put. wait: seconds before what follows.
+local function Finish(who, A, broke, all, wait)
+    if Q[who] ~= A then return end
+    Q[who] = nil
+    local rec = Held(who, A)
+    if rec and not A.npc then rec.adminQ = "done" end
     ShutDoor(A)
-    -- what came of it, for the state of the city
-    it = it or {}
-    local broke = (it.truths or 0) > 0 or it.talked == true
-    local all = it.qs ~= nil
-    for i = 1, #(it.qs or {}) do if not (it.asked and it.asked[i]) then all = false end end
     A.broke = broke
     if LC.LedgerAdd then
         if broke then LC.LedgerAdd("authority", BROKE, nil) elseif all then LC.LedgerAdd("authority", -HELD, nil) end
@@ -264,25 +363,35 @@ local function Over(ply, it)
         net.WriteString("{\"done\":true}")
         net.Send(adm)
         local q = LC.QuestOf and LC.QuestOf[adm]
-        if q and q.tmpl == TEMPLATE and q.data and q.data.prisoner == ply then
+        if q and q.tmpl == TEMPLATE and q.data and q.data.prisoner == who then
             q.data.asked = true
             if broke then q.bonus = (q.bonus or 0) + 10 end
         end
     end
-    Leave(A)
+    local L = Leave(A)
     Withdraw()
-    if A.after then LC.Try(A.after) end
+    local now = CurTime()
+    Later[#Later + 1] = { who = who, A = A, at = now + (wait or 0), L = L, cap = now + 60 }
+end
+local function Drop(who, A) Finish(who, A, nil, false, 0) end
+
+-- A player's session's onEnd (sv_livingcity_custody.lua, EndInterrogation).
+local function Over(ply, it)
+    local A = Q[ply]
+    if not A then return end
+    it = it or {}
+    local broke = (it.truths or 0) > 0 or it.talked == true
+    local all = it.qs ~= nil
+    for i = 1, #(it.qs or {}) do if not (it.asked and it.asked[i]) then all = false end end
+    Finish(ply, A, broke, all, THEN_SECS)
 end
 
--- It never began (released, escaped, gone, or she never came): what custody had waiting comes now.
-local function Drop(ply, A)
-    Q[ply] = nil
-    local pr = IsValid(ply) and LC.Prisoners and LC.Prisoners[ply]
-    if pr then pr.adminQ = "done" end
-    ShutDoor(A)
-    Leave(A)
-    Withdraw()
-    if A.after then LC.Try(A.after) end
+-- The onEnd of a player Administrator's questioning of one of the city's own (sv_livingcity_prisonguard.lua).
+local function OverNPC(who, A, s)
+    s = s or A.s or {}
+    local all = true
+    for i = 1, #LC.AdminQuestions do if not (s.asked and s.asked[i]) then all = false end end
+    Finish(who, A, s.last == "truth", all, THEN_SECS)
 end
 
 ------------------------------------------------------------------------
@@ -290,13 +399,20 @@ end
 ------------------------------------------------------------------------
 
 -- She is at the cell: the door, the stunstick, and her questions.
-function LC.AdminQuestioningLead(adm, ply)
-    local A = Q[ply]
-    local pr = IsValid(ply) and LC.Prisoners and LC.Prisoners[ply]
-    if not (A and pr and A.stage == "waiting") or not (LC.IsAdministrator and LC.IsAdministrator(adm)) then return false end
-    if LC.Interrogations[ply] then return false end
+function LC.AdminQuestioningLead(adm, who)
+    local A = Q[who]
+    local rec = A and Held(who, A)
+    if not (rec and A.stage == "waiting") or not (LC.IsAdministrator and LC.IsAdministrator(adm)) then return false end
+    if not A.npc and LC.Interrogations[who] then return false end
     -- (the prisoner out of the cell, on a work detail: not until she is with them, or it would end as she began)
-    if adm:GetPos():DistToSqr(ply:GetPos()) > NEAR * NEAR then return false end
+    if adm:GetPos():DistToSqr(who:GetPos()) > NEAR * NEAR then return false end
+    if A.npc then
+        -- one of the city's own: questioned the way a guard questions it, with her questions
+        if not LC.NPCInterrogationStart then return false end
+        local opts = { qs = LC.AdminQuestions, admin = true, onEnd = function(_, s) OverNPC(who, A, s) end }
+        if not LC.NPCInterrogationStart(adm, who, nil, opts) then return false end
+        A.s = LC.NPCInterrogations[adm]
+    end
     A.stage, A.by = "asking", adm
     local held = adm.GetActiveWeapon and adm:GetActiveWeapon()
     A.held = IsValid(held) and held:GetClass() or nil
@@ -305,31 +421,40 @@ function LC.AdminQuestioningLead(adm, ply)
         A.gave = true
     end
     adm:SelectWeapon(BATON)
-    local _, door = Spots(ply, pr)
+    local _, door = Spots(who, A, rec)
     OpenDoor(A, door)
-    local it = { hits = 0, resolve = 3, byPlayer = adm, led = true, untilT = CurTime() + 600, qs = Questions(ply),
-        admin = true, asker = ASKER, onEnd = Over }
-    A.it = it
-    LC.Interrogations[ply] = it
-    ply:SetNW2Bool("lc_interrogated", true)
-    if LC.InterrogationPushCP then LC.InterrogationPushCP(ply, it) end
+    if not A.npc then
+        local it = { hits = 0, resolve = 3, byPlayer = adm, led = true, untilT = CurTime() + 600, qs = Questions(who),
+            admin = true, asker = ASKER, onEnd = Over }
+        A.it = it
+        LC.Interrogations[who] = it
+        who:SetNW2Bool("lc_interrogated", true)
+        if LC.InterrogationPushCP then LC.InterrogationPushCP(who, it) end
+    end
     Withdraw()
     return true
 end
 
 -- A swing of her stunstick at the prisoner (weapon_lc_baton.lua asks before it does any damage): a blow of the
--- questioning, as the menu's, and never more than that.
+-- questioning, as the menu's, and never more than that. Past the most the questioning allows, a swing is only a
+-- swing: nothing more, and nothing said about it.
 function LC.AdminQuestioningBlow(adm, target)
     local it = LC.Interrogations and LC.Interrogations[target]
-    if not (it and it.admin and it.byPlayer == adm) then return false end
-    -- (past the most the questioning allows, a swing is only a swing: nothing more, and nothing said about it)
-    if LC.PlayerInterrogationDo and (it.hits or 0) < (LC.InterrogationMaxHits or 8) then LC.PlayerInterrogationDo(adm, "baton") end
-    return true
+    if it and it.admin and it.byPlayer == adm then
+        if LC.PlayerInterrogationDo and (it.hits or 0) < (LC.InterrogationMaxHits or 8) then LC.PlayerInterrogationDo(adm, "baton") end
+        return true
+    end
+    local s = LC.NPCInterrogations and LC.NPCInterrogations[adm]
+    if s and s.admin and s.npc == target then
+        if LC.NPCInterrogationDo and (s.hits or 0) < (LC.NPCInterrogationMaxHits or 6) then LC.NPCInterrogationDo(adm, "baton") end
+        return true
+    end
+    return false
 end
 
 local function Waiting()
-    for ply, A in pairs(Q) do
-        if A.stage == "waiting" and not A.job and IsValid(ply) and LC.Prisoners and LC.Prisoners[ply] then return ply, A end
+    for who, A in pairs(Q) do
+        if A.stage == "waiting" and not A.job and Held(who, A) then return who, A end
     end
     return nil
 end
@@ -343,26 +468,26 @@ TEMPLATE = {
         if not A or (A.by and A.by ~= q.owner) then return false, "the prisoner is gone" end
     end,
     build = function()
-        local ply = Waiting()
-        local pr = ply and LC.Prisoners[ply]
-        if not pr then return nil end
-        local cell = pr.cell and pr.cell.pos or ply:GetPos()
+        local who, A = Waiting()
+        local rec = who and Held(who, A)
+        if not rec then return nil end
+        local cell = CellPos(who, A, rec)
         return {
-            title = "Question the would-be assassin", reward = 20, limit = 600, data = { prisoner = ply },
+            title = "Question the would-be assassin", reward = 20, limit = 600, data = { prisoner = who },
             desc = "They tried to kill you and they're in the cells; question them yourself.",
             stages = {
                 { kind = "goto", pos = cell, r = 200, text = "Go to their cell (marked)",
-                  onEnter = function(q) local A = Q[q.data.prisoner] if A then A.job = q end end,
+                  onEnter = function(q) local W = Q[q.data.prisoner] if W then W.job = q end end,
                   onDone = function(q) if IsValid(q.owner) then LC.AdminQuestioningLead(q.owner, q.data.prisoner) end end },
                 { kind = "count", event = "admin_questioned", need = 1, text = "Ask your questions" },
             },
             -- (given up or out of time with the questions still going: they stop)
             onFinish = function(q)
-                local A = Q[q.data.prisoner]
-                if not A then return end
-                if A.job == q then A.job = nil end
-                if A.stage == "asking" and A.by == q.owner and not q.data.asked and LC.PlayerInterrogationDo then
-                    LC.PlayerInterrogationDo(A.by, "done")
+                local W = Q[q.data.prisoner]
+                if not W then return end
+                if W.job == q then W.job = nil end
+                if W.stage == "asking" and W.by == q.owner and not q.data.asked and LC.PlayerInterrogationDo then
+                    LC.PlayerInterrogationDo(W.by, "done")
                 end
             end,
         }
@@ -377,12 +502,12 @@ end
 -- Nobody plays her
 ------------------------------------------------------------------------
 
-local function Summon(ply, A, pr, now)
-    if LC.Running == false then return Drop(ply, A) end -- (the city is stopped: nobody comes)
-    local spots, door = Spots(ply, pr)
+local function Summon(who, A, rec, now)
+    if LC.Running == false then return Drop(who, A) end -- (the city is stopped: nobody comes)
+    local spots, door = Spots(who, A, rec)
     local from = LC.AlarmSquadSpot and LC.AlarmSquadSpot(spots[2]) or nil
-    local her = Her(from or spots[1], (ply:GetPos() - spots[1]):Angle().y)
-    if not her then return Drop(ply, A) end
+    local her = Her(from or spots[1], (who:GetPos() - spots[1]):Angle().y)
+    if not her then return Drop(who, A) end
     A.party = { { npc = her, spot = spots[1], there = not from } }
     local sp = LC.Spawners and LC.Spawners.soldier
     for i = 2, 3 do
@@ -407,36 +532,43 @@ local function Summon(ply, A, pr, now)
     Withdraw()
 end
 
-local function Coming(ply, A, now)
+local function Coming(who, A, now)
     local all = true
     for _, w in ipairs(A.party) do if not Step(w, now) then all = false end end
     if not all and now < A.arriveBy then return end
-    if not IsValid(A.party[1].npc) then return Drop(ply, A) end
+    if not IsValid(A.party[1].npc) then return Drop(who, A) end
     for _, w in ipairs(A.party) do
         local npc = w.npc
         if IsValid(npc) then
             if npc:GetPos():DistToSqr(w.spot) > 80 * 80 then npc:SetPos(w.spot + Vector(0, 0, 4)) end
             w.route, w.there = nil, true
             npc:SetSchedule(SCHED_IDLE_STAND)
-            if LC.Face then LC.Face(npc, ply:GetPos()) end
+            if LC.Face then LC.Face(npc, who:GetPos()) end
         end
     end
+    if A.npc then
+        -- one of the city's own in the cell: nobody to answer on a menu. Her stunstick is heard, and she is done.
+        A.stage, A.blows, A.nextBlow = "asking", 0, now + 3
+        return
+    end
     -- her questions, through the cell questioning's own code (sv_livingcity_interrogation.lua)
-    local it = { hits = 0, resolve = 3, untilT = now + 150, next = now + 3, qs = Questions(ply), admin = true,
+    local it = { hits = 0, resolve = 3, untilT = now + 150, next = now + 3, qs = Questions(who), admin = true,
         asker = ASKER, onEnd = Over }
     A.stage, A.it = "asking", it
-    LC.Interrogations[ply] = it
-    ply:SetNW2Bool("lc_interrogated", true)
+    LC.Interrogations[who] = it
+    who:SetNW2Bool("lc_interrogated", true)
 end
 
 ------------------------------------------------------------------------
 -- Brought in, and what happens then
 ------------------------------------------------------------------------
 
--- Called by sv_livingcity_custody.lua when someone is put in a cell. after: what custody had waiting for them.
--- True when they are hers to question (a unit's questioning does not happen).
+-- Called by sv_livingcity_custody.lua when a player is put in a cell. after: what custody had waiting for them
+-- besides the stalker's chair (it comes only with lc_stalkers 0). True when they are hers to question (a unit's
+-- questioning does not happen).
 function LC.AdminQuestioningStart(ply, after)
     if not (IsValid(ply) and ply:IsPlayer() and LC.AdminNeverForgotten and LC.AdminNeverForgotten(ply)) then return false end
+    if LC.PlayerIsStalker and LC.PlayerIsStalker(ply) then return false end -- (Combine property already)
     local pr = LC.Prisoners and LC.Prisoners[ply]
     if not pr or pr.adminQ or Q[ply] then return false end -- (once per stay in the cells)
     pr.adminQ = "due"
@@ -444,20 +576,55 @@ function LC.AdminQuestioningStart(ply, after)
     return true
 end
 
+-- Called by sv_livingcity_prison.lua when one of the city's own that tried to kill her (npc.lcRegicide) reaches
+-- its cell. Once per stay; it is not let out until she has been (held as a job's prisoner is: st.questLock).
+function LC.AdminQuestioningStartNPC(npc, st)
+    if not (IsValid(npc) and st and npc.lcRegicide == true) or Q[npc] then return false end
+    local cv = GetConVar("lc_custody_punish")
+    if cv and not cv:GetBool() then return false end
+    local stay = st.jailUntil or true
+    if st.adminQ == stay then return false end
+    st.adminQ = stay
+    local A = { stage = "due", at = CurTime() + WAIT, npc = true, st = st }
+    if st.questLock == nil then st.questLock = A end
+    Q[npc] = A
+    return true
+end
+
 function LC.AdminQuestioningTick(now)
     now = now or CurTime()
-    for ply, A in pairs(Q) do
-        local pr = IsValid(ply) and LC.Prisoners and LC.Prisoners[ply] or nil
-        local it = LC.Interrogations and LC.Interrogations[ply]
-        if A.stage == "asking" then
-            if it ~= A.it then
-                Over(ply, A.it) -- (ended some way that told nobody)
-            elseif not pr or (A.party and not IsValid(A.party[1].npc)) then
-                LC.EndInterrogation(ply)
+    for who, A in pairs(Q) do
+        local rec = Held(who, A)
+        if rec and not A.npc then KeepIn(who, rec, now) end
+        if A.stage == "asking" and A.npc then
+            if A.party then
+                -- the city's own on one of the city's own: her stunstick, a few times
+                if not rec or not IsValid(A.party[1].npc) or A.blows >= BLOWS then
+                    if now >= A.nextBlow then Finish(who, A, nil, false, THEN_SECS) end
+                elseif now >= A.nextBlow then
+                    A.blows, A.nextBlow = A.blows + 1, now + 4
+                    who:EmitSound("weapons/stunstick/stunstick_impact" .. math.random(1, 4) .. ".wav", 70)
+                    who:SetHealth(math.max(10, who:Health() - 6))
+                end
+            else
+                local adm = A.by
+                if not (IsValid(adm) and LC.NPCInterrogations and LC.NPCInterrogations[adm] == A.s) then
+                    -- (she left the server, or it ended some way that told nobody)
+                    if adm ~= nil and LC.NPCInterrogations and LC.NPCInterrogations[adm] == A.s then LC.NPCInterrogations[adm] = nil end
+                    OverNPC(who, A, A.s)
+                elseif not rec or not adm:Alive() or adm:GetPos():DistToSqr(who:GetPos()) > AWAY * AWAY then
+                    LC.NPCInterrogationDo(adm, "done")
+                end
             end
-        elseif not pr then
-            Drop(ply, A)
-        elseif not ply:Alive() then
+        elseif A.stage == "asking" then
+            if (LC.Interrogations and LC.Interrogations[who]) ~= A.it then
+                Over(who, A.it) -- (ended some way that told nobody)
+            elseif not rec or (A.party and not IsValid(A.party[1].npc)) then
+                LC.EndInterrogation(who)
+            end
+        elseif not rec then
+            Drop(who, A)
+        elseif not Living(who, A) then
             -- (dead in the cell: dying doesn't end a sentence, and it doesn't get them out of this)
         elseif A.stage == "due" then
             if now >= A.at then
@@ -465,27 +632,28 @@ function LC.AdminQuestioningTick(now)
                     A.stage, A.dropAt = "waiting", now + OFFER_SECS
                     if LC.PostDirective then LC.PostDirective(TEMPLATE.id) end
                 else
-                    Summon(ply, A, pr, now)
+                    Summon(who, A, rec, now)
                 end
             end
         elseif A.stage == "waiting" then
             if not PlayerAdministrator() then
-                Summon(ply, A, pr, now) -- (she left the server: the city's own comes)
+                Summon(who, A, rec, now) -- (she left the server: the city's own comes)
             elseif A.job and not A.job.done then
                 -- (at the cell with the prisoner out of it, on a work detail: it begins when she is with them)
-                if (A.job.stage or 1) > 1 and IsValid(A.job.owner) then LC.AdminQuestioningLead(A.job.owner, ply) end
+                if (A.job.stage or 1) > 1 and IsValid(A.job.owner) then LC.AdminQuestioningLead(A.job.owner, who) end
             elseif now > A.dropAt then
-                Drop(ply, A)
+                Drop(who, A)
             end
         elseif A.stage == "coming" then
-            Coming(ply, A, now)
+            Coming(who, A, now)
         end
     end
     LeavingTick(now)
+    LaterTick(now)
 end
 
 timer.Create("LivingCityAdminQuestioning", 0.5, 0, function()
-    if next(Q) == nil and #Gone == 0 then return end
+    if next(Q) == nil and #Gone == 0 and #Later == 0 then return end
     local ok, err = LC.Try(LC.AdminQuestioningTick)
     if not ok and LC.Error then LC.Error("admin questioning", err) end
 end)
