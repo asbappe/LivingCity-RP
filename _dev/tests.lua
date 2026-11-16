@@ -33995,6 +33995,7 @@ ok(glassLeft == 0 or true, "(the screen goes with it)")
 -- the city's own Administrator is never hurt, only carried out; and with no APC point, the ring holds
 for _, g in ipairs(all) do if IsValid(g) then g:Remove() end end
 LC.RemovePoint(apcPt)
+LC.RemovePoint(desk) -- (with a desk to run to it would be the shield run: Nov16_ShieldRunTests)
 adm:SetPos(X0 + Vector(20000, 0, 0))
 ok(LC.CallSpeech(nil, nil), "the city's own address")
 S = LC.SpeechSession()
@@ -34005,7 +34006,7 @@ _run(0.1)
 A = LC.AdminExfil()
 ok(A and A.her == her, "but it sets her guards off all the same")
 for _ = 1, 12 do _run(0.1) LC.AdminExfilThink(CurTime()) end
-ok(LC.AdminExfil() and LC.AdminExfil().phase == "hold", "with no APC: the ring and the screen hold", LC.AdminExfil() and LC.AdminExfil().phase)
+ok(LC.AdminExfil() and LC.AdminExfil().phase == "hold", "with no APC and no desk to run to: the ring and the screen hold", LC.AdminExfil() and LC.AdminExfil().phase)
 LC.AdminExfilEnd(false)
 ok(LC.AdminExfil() == nil and not IsValid(her), "and when it is over she is away")
 -- switched off
@@ -34020,7 +34021,7 @@ set("lc_admin_exfil", 1)
 if LC.SpeechSession() then LC.EndSpeech() end
 LC.EndEvent(true)
 for _, e in ipairs(ents.FindByClass("lc_adminglass")) do e:Remove() end
-LC.RemovePoint(stand) LC.RemovePoint(crowd) LC.RemovePoint(desk)
+LC.RemovePoint(stand) LC.RemovePoint(crowd)
 hook.Run("LivingCityNewCharacter", reb, "x", "test")
 ok(not LC.AdminNeverForgotten(reb), "a new character starts clean")
 adm:Remove() reb:Remove() bystander:Remove()
@@ -34398,6 +34399,222 @@ set("lc_stops", stopsWas)
 _walls = savedWalls
 end
 Nov16_MicSpeechTests()
+
+-- The shield run: with no APC by the stand every Combine there runs her to her office (the owner, 15 and 16 November)
+function Nov16_ShieldRunTests()
+section("16 November: the shield run: with no APC by the stand every Combine there runs the Administrator to her office")
+LC.EndEvent(true)
+if LC.SpeechSession() then LC.EndSpeech() end
+if LC.AdminExfil() then LC.AdminExfilEnd(false) end
+local savedWalls = _walls
+_walls = {}
+local set = _setcvar
+local stopsWas = GetConVar("lc_stops"):GetInt()
+set("lc_stops", 0)
+set("lc_speech_muster", 60)
+local R0 = Vector(168000, 148000, 0)
+local stand = LC.AddPoint(R0 + Vector(0, 500, 0), 270, "speech", 0)
+local crowd = LC.AddPoint(R0, 90, "speechcrowd", 0)
+local adm = newPlayer("ShieldAdministrator", "admin")
+local reb = newPlayer("ShieldAssassin", "resistance", nil, 900)
+local bystander = newPlayer("ShieldBystander", "citizen")
+_run(0.3) -- (a new player is put at their side's spawn a moment after joining: then to where the test wants them)
+adm:SetPos(R0 + Vector(0, 520, 0))
+adm:SetHealth(100)
+adm.lcProtectUntil = 0
+reb:SetPos(R0 + Vector(0, -300, 0))
+bystander:SetPos(R0 + Vector(100, 0, 0))
+local function Tick(n)
+    for _ = 1, n do _run(0.1) LC.AdminExfilThink(CurTime()) end
+end
+local function Attempt(her)
+    hook.Run("EntityTakeDamage", her, _dmg(reb, 20))
+    _run(0.1)
+    return LC.AdminExfil()
+end
+
+-- no APC and no desk: they hold, as before
+ok(#LC.PointsOfKind("desk") == 0, "(no Administrator's desk in the city yet)", #LC.PointsOfKind("desk"))
+ok(LC.CallSpeech(adm, "Citizens."), "her address is called")
+local old = {}
+for _, g in ipairs(LC.SpeechGuards()) do old[#old + 1] = g end
+for _, g in ipairs(LC.SpeechDetail()) do old[#old + 1] = g end
+local A = Attempt(adm)
+if not A then ok(false, "the shot sets her guards off") LC.EndSpeech() return end
+Tick(12)
+ok(LC.AdminExfil() and LC.AdminExfil().phase == "hold", "no APC by the stand and no desk to run to: the ring and the screen hold", LC.AdminExfil() and LC.AdminExfil().phase)
+LC.AdminExfilEnd(false)
+for _, e in ipairs(ents.FindByClass("lc_adminglass")) do e:Remove() end
+for _, g in ipairs(old) do if IsValid(g) then g:Remove() end end
+
+-- a desk, and the way to it: along the stand's street, then round a corner
+local mid = R0 + Vector(1500, 520, 0)
+local desk = LC.AddPoint(R0 + Vector(1500, 2500, 0), 0, "desk", 0)
+local routeWas = LC.BuildRoute
+LC.BuildRoute = function(from, to, role)
+    if to:DistToSqr(desk.pos) < 4 then return { mid, to } end
+    return routeWas(from, to, role)
+end
+local door = ents.Create("prop_door_rotating")
+door:SetPos(R0 + Vector(900, 520, 0))
+door:Spawn()
+if LC.RebuildDoorGrid then LC.RebuildDoorGrid() end
+-- one of the city's units by the stand, and one by the way, far from the shooting
+local cop, cst = LC.SpawnCop(R0 + Vector(300, 900, 0))
+local far, fst = LC.SpawnSoldier(R0 + Vector(1700, 1800, 0), "ar2")
+ok(IsValid(cop) and IsValid(far) and cst and fst, "(a unit by the stand, and a soldier by the way)")
+if not (IsValid(cop) and IsValid(far) and cst and fst) then return end
+fst.untilT = CurTime() + 600 -- (he stands where he is until then)
+cop.SetMoveType = function(self, m) self.movetype = m end
+cop.GetMoveType = function(self) return self.movetype or 3 end
+local copGroup = cop:GetCollisionGroup()
+local farState, farLock = fst.state, fst.questLock
+
+adm:SetPos(R0 + Vector(0, 520, 0))
+adm:SetHealth(100)
+ok(LC.CallSpeech(adm, "Citizens."), "her address is called again")
+local all = {}
+for _, g in ipairs(LC.SpeechGuards()) do all[#all + 1] = g end
+for _, g in ipairs(LC.SpeechDetail()) do all[#all + 1] = g end
+ok(#all == 7, "(seven guards: the row and the detail)", #all)
+all[1].seqs = { RunAIMALL1 = 7 } -- (his model has the soldiers' run with the rifle up)
+local hp0, by0 = reb:Health(), bystander:Health()
+A = Attempt(adm)
+if not A then ok(false, "the shot sets her guards off") LC.EndSpeech() return end
+ok(A.phase == "close" and #A.glass == 3, "the first second is as it was: the ring closes and the glass is up", A.phase)
+Tick(10)
+A = LC.AdminExfil()
+ok(A and A.phase == "run" and A.run ~= nil, "no APC by the stand, and a desk: the ring closes, then they run her to it", A and A.phase)
+if not (A and A.run) then LC.AdminExfilEnd(false) LC.EndSpeech() return end
+local R = A.run
+ok(#R.path == 2 and R.path[1]:Distance(mid) < 1, "the way is the city's own route to her desk", #R.path)
+local m1 = R.set[all[1]]
+ok(m1 and IsValid(m1.ss) and m1.ss:GetClass() == "scripted_sequence" and m1.ss.kv.m_iszPostIdle == "RunAIMALL1",
+    "a soldier is held in his run, rifle up, by a scripted sequence, so his legs run while the script moves him")
+local ss1 = m1 and m1.ss
+ok(R.set[cop] ~= nil and A.guardSet[cop] == true, "a unit of the city's near the stand falls in")
+ok(cst.state == "event" and cst.questLock == true, "(the city leaves him alone meanwhile)", cst.state)
+ok(cop:GetCollisionGroup() == (COLLISION_GROUP_DEBRIS or 1) and cop:GetMoveType() == (MOVETYPE_NONE or 0),
+    "those of the shell go through people and NPCs, and are not the game's to move")
+ok(R.set[cop].slot > 7, "he falls in on the outside", R.set[cop].slot)
+ok(R.set[far] == nil, "(a soldier far from the stand is not in it yet)")
+
+-- all the way: never still, her in the middle, crouched, unhurt; the door opens ahead of them
+local minHer, minGuard, maxOut, doorAt, last = 1e9, 1e9, 0, nil, {}
+local function Where()
+    local t = { her = adm:GetPos() }
+    for i, g in ipairs(all) do t[i] = IsValid(g) and g:GetPos() or nil end
+    return t
+end
+Tick(3) -- (everyone is in his place by now)
+last = Where()
+local hurtHer, uncrouched, ticks = false, false, 0
+for _ = 1, 200 do
+    _run(0.1) LC.AdminExfilThink(CurTime())
+    local now = LC.AdminExfil()
+    if not (now and now.phase == "run") then break end
+    ticks = ticks + 1
+    local w = Where()
+    minHer = math.min(minHer, w.her:Distance(last.her))
+    for i, g in ipairs(all) do
+        if w[i] and last[i] then
+            minGuard = math.min(minGuard, w[i]:Distance(last[i]))
+            maxOut = math.max(maxOut, w[i]:Distance(w.her))
+        end
+    end
+    last = w
+    if door.isOpen and not doorAt then doorAt = w.her:Distance(door:GetPos()) end
+    if ticks % 10 == 0 then
+        if hook.Run("EntityTakeDamage", adm, _dmg(reb, 50)) ~= true then hurtHer = true end
+        local cmd = { b = 2, ClearMovement = function() end, GetButtons = function(self) return self.b end, SetButtons = function(self, v) self.b = v end }
+        hook.Run("StartCommand", adm, cmd)
+        if bit.band(cmd.b, IN_DUCK or 4) == 0 then uncrouched = true end
+    end
+end
+ok(ticks > 40, "(a run of some seconds)", ticks)
+ok(minHer > 25, "the shell moves every tick and never stands still", minHer)
+ok(minGuard > 3, "nor does anyone in it", minGuard)
+ok(maxOut < 140, "she is in the middle of them all the way", maxOut)
+ok(not hurtHer and not uncrouched and adm:Health() == 100, "crouched, and nothing hurts her")
+ok(doorAt ~= nil and doorAt > 60, "a door on the way is opened ahead of them", doorAt)
+ok(R.set[far] ~= nil, "a unit near the shell as it passes falls in too")
+ok(R.shots > 0 and R.hits > 0 and reb:Health() < hp0, "an attacker in sight is shot at on the move, and hit", R.shots)
+ok(bystander:Health() == by0, "a bystander is not", bystander:Health())
+
+-- at her desk
+ok(LC.AdminExfil() == nil, "it ends")
+ok(adm:GetPos():Distance(desk.pos) < 100, "she is set down at her desk", adm:GetPos():Distance(desk.pos))
+ok(#ents.FindByClass("lc_adminglass") == 0, "the glass is gone")
+ok(cst.state == "hostile" and cst.questLock == nil, "the city's unit has his own state back (he was after the attacker)", cst.state)
+ok(cop:GetCollisionGroup() == copGroup and cop:GetMoveType() == 3, "and is solid, and the game's to move, as he was")
+ok(fst.state == "idle" and fst.questLock == farLock, "the soldier who fell in on the way is back to his beat", fst.state .. " (was " .. tostring(farState) .. ")")
+local near = 0
+for _, g in ipairs(all) do if IsValid(g) and g:GetPos():Distance(desk.pos) < 200 then near = near + 1 end end
+ok(near == 7 and IsValid(cop) and IsValid(far), "the address's guards are there with her, and the city's units", near)
+_run(1)
+ok(not IsValid(ss1), "(the sequence that held the soldier in his run is gone)")
+_run(31)
+near = 0
+for _, g in ipairs(all) do if IsValid(g) then near = near + 1 end end
+ok(near == 0, "the address's guards fight on thirty seconds and go", near)
+
+-- an APC point by the stand: the APC, as it was
+local apcPt = LC.AddPoint(R0 + Vector(600, 500, 0), 0, "adminapc", 0)
+adm:SetPos(R0 + Vector(0, 520, 0))
+if LC.SpeechSession() then LC.EndSpeech() end
+ok(LC.CallSpeech(adm, "Citizens."), "her address, with an APC by the stand")
+A = Attempt(adm)
+Tick(10)
+ok(LC.AdminExfil() and LC.AdminExfil().phase == "carry" and LC.AdminExfil().run == nil, "with an APC point by the stand it is still the APC", LC.AdminExfil() and LC.AdminExfil().phase)
+LC.AdminExfilEnd(false)
+LC.RemovePoint(apcPt)
+for _, e in ipairs(ents.FindByClass("lc_adminglass")) do e:Remove() end
+
+-- the city's own Administrator, and no route: straight to her desk, and away
+LC.BuildRoute = function(from, to, role)
+    if to:DistToSqr(desk.pos) < 4 then return false end
+    return routeWas(from, to, role)
+end
+if LC.SpeechSession() then LC.EndSpeech() end
+adm:SetPos(R0 + Vector(20000, 0, 0))
+ok(LC.CallSpeech(nil, nil), "the city's own address")
+local S = LC.SpeechSession()
+local her = S and S.her
+if IsValid(her) then
+    her.seqs = { crouchRUNALL1 = 4 }
+    A = Attempt(her)
+    Tick(10)
+    A = LC.AdminExfil()
+    ok(A and A.phase == "run" and #A.run.path == 1, "no route can be built: straight to her desk", A and A.phase)
+    ok(A and A.run and A.run.her and IsValid(A.run.her.ss) and A.run.her.ss.kv.m_iszPostIdle == "crouchRUNALL1", "the city's own runs crouched in the middle")
+    local p0 = her:GetPos()
+    Tick(5)
+    ok(IsValid(her) and her:GetPos():Distance(p0) > 150, "she is run along with them", IsValid(her) and her:GetPos():Distance(p0))
+    for _ = 1, 200 do
+        _run(0.1) LC.AdminExfilThink(CurTime())
+        if not LC.AdminExfil() then break end
+    end
+    ok(LC.AdminExfil() == nil and not IsValid(her), "and at her desk she is away, as before")
+else
+    ok(false, "(the city's own Administrator stands at the stand)")
+end
+
+if LC.AdminExfil() then LC.AdminExfilEnd(false) end
+if LC.SpeechSession() then LC.EndSpeech() end
+LC.BuildRoute = routeWas
+LC.EndEvent(true)
+for _, e in ipairs(ents.FindByClass("lc_adminglass")) do e:Remove() end
+if LC.OpenedDoors then LC.OpenedDoors[door] = nil end
+door:Remove()
+if LC.RebuildDoorGrid then LC.RebuildDoorGrid() end
+for _, g in ipairs({ cop, far }) do if IsValid(g) then g:Remove() end end
+LC.RemovePoint(stand) LC.RemovePoint(crowd) LC.RemovePoint(desk)
+hook.Run("LivingCityNewCharacter", reb, "x", "test")
+adm:Remove() reb:Remove() bystander:Remove()
+set("lc_stops", stopsWas)
+_walls = savedWalls
+end
+Nov16_ShieldRunTests()
 
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")
 ;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)

@@ -31,9 +31,18 @@
       - her guards' fire hurts only the attackers.
     A player Administrator can be killed by the first shot (the assassin's one
     chance); the city's own at her address is never hurt, only carried out.
-    With no APC point by the stand: the ring and the screen for twelve seconds.
-    The other way out the owner described (every Combine there running her to
-    her office as a shield) is not built: TODO.md.
+    With no APC point by the stand, the shield run (the owner, 15 November:
+    "ALL the combine forming a shield around her back to her office ...
+    literally unstoppable ... never stop moving"): the ring, her guards and
+    every Combine NPC of the city within 1200 units of the stand, or of the
+    shell as it passes, run her to the editor's Administrator's desk point at
+    450 units a second, as one body moved by script along the city's own
+    routes (straight there where they have none): through doors (opened ahead
+    of them where they may be), walls, props and people, legs running, firing
+    at any marked attacker in sight within 1500 units. At her desk she is set
+    down, the address's guards fight on thirty seconds and go, the city's
+    units get back what was changed on them and return to their beats.
+    With no desk point either: the ring and the screen for twelve seconds.
 
     What sets it off (the owner, 15 November: "any bullet or projectile landing
     within 20 feet of obviously hitting her counts"): a hit on her; a bullet
@@ -325,6 +334,7 @@ local HOLD_SECS = 12     -- with no APC: the ring and the screen this long
 
 local A -- the exit under way, or nil
 function LC.AdminExfil() return A end
+local StartRun, RunThink, EndRun -- (the shield run, further down)
 
 -- What her next address will make of it: kept with the state of the city (LC.Ledger) until she has said it.
 --   hero: a soldier died on a grenade for her; caught: the attacker is dead or in the cells; by: who (SteamID64s).
@@ -389,6 +399,23 @@ hook.Add("LivingCitySpeechEnded", "LivingCityAdminSecurity", function(S)
     if S and IsValid(S.apc) and not (A and A.apc == S.apc) then S.apc:Remove() end
 end)
 
+-- The city's units go after him: all but those running her out (the shield run), who shoot from where they are.
+local function Rouse(who)
+    if not LC.MakeCopsHostile then return end
+    local R = A.run
+    if not R then
+        LC.Try(LC.MakeCopsHostile, who, who:GetPos(), 2500)
+        return
+    end
+    if not LC.MakeOneHostile or (LC.EditorHeld and LC.EditorHeld(who)) then return end
+    local at = who:GetPos()
+    for npc, st in pairs(LC.NPCs or {}) do
+        if IsValid(npc) and not R.set[npc] and LC.IsSecurity(st) and st.enemy ~= who and npc:GetPos():DistToSqr(at) < 2500 * 2500 then
+            LC.Try(LC.MakeOneHostile, npc, st, who)
+        end
+    end
+end
+
 -- An attacker: wanted, and every one of her guards on him.
 local function Mark(who)
     if not (A and IsValid(who)) or A.attackers[who] or Theirs(who) then return end
@@ -397,7 +424,7 @@ local function Mark(who)
     LC.AdminAttacker(who)
     local pend = LC.AdminAttemptPending()
     if pend and who:IsPlayer() and who.SteamID64 then pend.by[tostring(who:SteamID64())] = true end
-    if LC.MakeCopsHostile then LC.Try(LC.MakeCopsHostile, who, who:GetPos(), 2500) end
+    Rouse(who)
     for _, g in ipairs(A.guards) do
         if IsValid(g) then
             if g.AddEntityRelationship then g:AddEntityRelationship(who, D_HT or 1, 99) end
@@ -479,6 +506,7 @@ local function Done(deliver)
     local a = A
     if not a then return end
     A = nil
+    EndRun(a) -- (the shield run: everyone gets back what was changed on him)
     for _, g in ipairs(a.glass) do if IsValid(g) then g:Remove() end end
     if IsValid(a.apc) then
         if a.apc.StopSound then a.apc:StopSound("vehicles/apc/apc_cruise_loop3.wav") end
@@ -494,7 +522,7 @@ local function Done(deliver)
     local her = a.her
     if not IsValid(her) then return end
     if not her:IsPlayer() then
-        her:Remove() -- (the city's own: away in the APC)
+        her:Remove() -- (the city's own: away in the APC, or in her office)
         return
     end
     her:SetNW2Bool("lc_exfil", false)
@@ -504,7 +532,8 @@ local function Done(deliver)
         local desk = LC.PointsOfKind and LC.PointsOfKind("desk")[1]
         local to = desk and desk.pos or a.at
         her:SetPos((LC.FreeSpawnPos and LC.FreeSpawnPos(to + Vector(0, 0, 8))) or to)
-        if her.ScreenFade then her:ScreenFade(SCREENFADE and SCREENFADE.IN or 1, Color(0, 0, 0, 255), 1.5, 0.3) end
+        -- (out of the APC her screen comes up from black; run there, she saw the way)
+        if her.ScreenFade and not a.ran then her:ScreenFade(SCREENFADE and SCREENFADE.IN or 1, Color(0, 0, 0, 255), 1.5, 0.3) end
         hook.Run("LivingCityAdminMoved", her, to)
     end
     -- (a few seconds more before anything can hurt her again)
@@ -540,6 +569,372 @@ local function MoveGuards(centre, dt)
     end
 end
 
+------------------------------------------------------------------------
+-- The shield run: no APC by the stand, so every Combine there runs her to her office
+------------------------------------------------------------------------
+-- (the owner, 15 November: "crowd the administrator and have her crouch (or force the human player to crouch)
+-- and use the prison escort concept but at 5x speed with ALL the combine forming a shield around her back to
+-- her office ... literally unstoppable and go straight through doors all of them without a hitch, all in a
+-- group, while shooting at the attackers and never stop moving and go through other NPCs")
+--
+-- Her in the middle, her guards in rings of eight round her, the city's units falling in on the outside. The
+-- whole shell is one body moved along the way by script every tick: nobody walks, so nothing in the way (a
+-- door, a corner, a crowd) can stop it. Their legs: each is held in his run by a scripted sequence, the way
+-- someone on a bench is held in his sitting (LC.MakeSequence), and is not the game's to move meanwhile
+-- (MOVETYPE_NONE: the run's own steps, and the game's smoothing of an NPC's steps, would fight the script).
+-- Their fire on the way is the script's too: a sound, a tracer, and a hit only on a marked attacker in sight.
+
+local JOIN_REACH = 1200 -- a unit of the city's this near the stand, or the shell as it passes, falls in
+local DOOR_AHEAD = 250  -- a door this far on along the way is opened for them
+local FIRE_REACH = 1500 -- an attacker this near, and in sight, is shot at
+local RUN = {
+    hold = 3600, -- (the city leaves a unit in the shell alone this long at most: the "event" state, sv_livingcity.lua)
+    -- scripted_sequence: no interruptions (32), whatever he was doing (64), no teleport at the end (128),
+    -- loop (256), no complaints (2048), may die (4096)
+    flags = 32 + 64 + 128 + 256 + 2048 + 4096,
+    rate = 1.5, -- (their legs a little faster than a run: the shell covers ground at about twice one)
+    hit = 0.4,  -- (how many of their shots on the move find him)
+    joins = { idle = true, moving = true, busy = true, hostile = true }, -- (what a unit may be called from)
+    keeps = { hostile = true, adminguard = true, speechguard = true },   -- (the states handed back as they were)
+    -- the model's own run, weapon up: the first of these it has (a sequence's name, or an activity's)
+    rifle = { "RunAIMALL1", "ACT_RUN_AIM_RIFLE", "ACT_RUN_AIM", "ACT_RUN_RIFLE", "ACT_RUN" },
+    pistol = { "ACT_RUN_AIM_PISTOL", "ACT_RUN_PISTOL", "ACT_RUN_AIM", "ACT_RUN" },
+    her = { "crouchRUNALL1", "ACT_RUN_CROUCH", "Crouch_walk_all", "ACT_WALK_CROUCH", "run_protected_all", "ACT_RUN_PROTECTED", "ACT_RUN" },
+    -- sound, tracer, damage, seconds between one man's shots
+    guns = {
+        weapon_ar2 = { "Weapon_AR2.NPC_Single", "AR2Tracer", 8, 0.3 },
+        weapon_smg1 = { "Weapon_SMG1.NPC_Single", "Tracer", 5, 0.25 },
+        weapon_pistol = { "Weapon_Pistol.NPC_Single", "Tracer", 8, 0.5 },
+        weapon_shotgun = { "Weapon_Shotgun.NPC_Single", "Tracer", 30, 1 },
+    },
+}
+
+-- The floor under a spot, near the height the way is at there (not a roof above it, nor a pit below).
+local function Floor(p, z)
+    local g = LC.GroundAt and LC.GroundAt(Vector(p.x, p.y, z)) or nil
+    if g and math.abs(g.z - z) < 80 then z = g.z end
+    return Vector(p.x, p.y, z)
+end
+
+local function RunSeq(g, list)
+    for _, c in ipairs(list) do
+        if string.sub(c, 1, 4) == "ACT_" then
+            local name = LC.BusySeqName and LC.BusySeqName(g, c)
+            if name then return name end
+        elseif g.LookupSequence then
+            local s = g:LookupSequence(c)
+            if s and s >= 0 then return c end
+        end
+    end
+    return nil
+end
+
+-- One of the shell under the script's hand: people and NPCs go through him (bullets still find him), the game
+-- does not move him, and his legs run. What is changed on him is kept in m, and put back by Give.
+local function Take(m, list)
+    local g = m.ent
+    if g.GetCollisionGroup and g.SetCollisionGroup then
+        m.group = g:GetCollisionGroup()
+        g:SetCollisionGroup(COLLISION_GROUP_DEBRIS or 1)
+    end
+    if g.GetMoveType and g.SetMoveType then
+        m.move = g:GetMoveType()
+        g:SetMoveType(MOVETYPE_NONE or 0)
+    end
+    if IsValid(g.lcGesture) then
+        g.lcGesture:Fire("CancelSequence")
+        g.lcGesture:Remove()
+    end
+    local seq = LC.MakeSequence and RunSeq(g, list)
+    if not seq then return end -- (then the parade's way, in RunThink)
+    if (g:GetName() or "") == "" then g:SetName("lc_shield_" .. g:EntIndex()) end
+    local ok, ss = LC.Try(LC.MakeSequence, g, g:GetPos(), g:GetAngles().y, seq, seq, RUN.flags, 0, 0)
+    if ok and IsValid(ss) then m.ss = ss end
+end
+local function Give(m)
+    if IsValid(m.ss) then
+        m.ss:Fire("CancelSequence")
+        SafeRemoveEntityDelayed(m.ss, 0.5)
+    end
+    local g = m.ent
+    if not IsValid(g) then return end
+    if m.group and g.SetCollisionGroup then g:SetCollisionGroup(m.group) end
+    if m.move and g.SetMoveType then g:SetMoveType(m.move) end
+    if g.SetPlaybackRate then g:SetPlaybackRate(1) end
+end
+
+-- A unit of the city's that falls in: not one in something scripted, walking a prisoner in, or a player's job's.
+local function MayJoin(npc, st)
+    return IsValid(npc) and LC.IsSecurity(st) and RUN.joins[st.state] == true and npc:Health() > 0
+        and not (st.test or st.questLock or st.marching or npc.lcGrenadeJumper)
+end
+
+-- One more in the shell: his place is the next one out, and it is his until it is over.
+local function Enlist(g, now, joined)
+    local R = A.run
+    if R.set[g] then return end
+    R.slots = R.slots + 1
+    local m = { ent = g, slot = R.slots, joined = joined }
+    R.set[g] = m
+    R.members[#R.members + 1] = m
+    local st = LC.NPCs and LC.NPCs[g]
+    if st then
+        -- (the city leaves him alone meanwhile)
+        m.st, m.state, m.lock, m.evUntil = st, st.state, st.questLock, st.eventUntil
+        if st.state == "busy" and LC.EndBusy then LC.EndBusy(g, st, false) end
+        if LC.Release then LC.Release(g, st) end
+        st.questLock, st.eventUntil = true, now + RUN.hold
+        LC.SetState(g, st, "event")
+    end
+    if joined then A.guardSet[g] = true end -- (his fire hurts only her attackers; whoever hurts him is one)
+    local wep = g.GetActiveWeapon and g:GetActiveWeapon()
+    local cls = IsValid(wep) and wep:GetClass() or ""
+    Take(m, (cls == "weapon_ar2" or cls == "weapon_smg1" or cls == "weapon_shotgun") and RUN.rifle or RUN.pistol)
+end
+
+-- The spot this far on along the way.
+local function Ahead(R, far)
+    local at, leg = R.at, R.leg
+    while leg <= #R.path do
+        local to = R.path[leg] - at
+        local d = to:Length()
+        if d >= far then return at + to * (far / d) end
+        far, at, leg = far - d, R.path[leg], leg + 1
+    end
+    return at
+end
+
+-- A door on the way opens for them as it does for a unit walking up to it (sv_livingcity_doors.lua: the
+-- Combine's own doors too, shut and locked again behind them). One a player locked, or tagged locked, stays
+-- shut: they go through it all the same.
+local function OpenDoor(door, now)
+    if not (LC.IsRealDoor and LC.IsRealDoor(door) and LC.OpenedDoors and LC.Relock) then return false end
+    if LC.OpenedDoors[door] then
+        LC.OpenedDoors[door] = math.max(LC.OpenedDoors[door], now + 8)
+        return true
+    end
+    local tag = LC.EffectiveDoorTag and LC.EffectiveDoorTag(door) or nil
+    if tag == "locked" or tag == "open" or tag == "ignore" then return false end
+    local locked = door.GetInternalVariable ~= nil and door:GetInternalVariable("m_bLocked") == true
+    if locked and not (LC.UnitsOnlyDoorTag and LC.UnitsOnlyDoorTag(tag)) then return false end
+    if locked then
+        LC.Relock[door] = true
+        door:Fire("Unlock")
+    end
+    door:Fire("Open")
+    LC.OpenedDoors[door] = now + 8
+    return true
+end
+
+local function Sees(R, from, who)
+    if not util.TraceLine then return true end
+    local tr = util.TraceLine({ start = from, endpos = who:WorldSpaceCenter(), mask = MASK_SHOT or MASK_SOLID,
+        filter = function(e) return e ~= A.her and not R.set[e] end }) -- (not through each other: past them)
+    return not tr or not tr.Hit or tr.Entity == who or (tr.Fraction or 0) >= 0.98
+end
+
+-- Shooting on the move: whoever has a gun ready and one of her attackers in sight fires, two of them at most at
+-- a time. A hit is real and on him only (the rule under "Who is hurt"); the rest is the sound and the tracer.
+local function Volley(R, now, centre)
+    local targets = {}
+    for who in pairs(A.attackers) do
+        if IsValid(who) and who:GetPos():DistToSqr(centre) < FIRE_REACH * FIRE_REACH then
+            if who:IsPlayer() then
+                if who:Alive() and not (LC.HeldByCombine and LC.HeldByCombine(who)) then targets[#targets + 1] = who end
+            elseif who:Health() > 0 then
+                targets[#targets + 1] = who
+            end
+        end
+    end
+    local n = #R.members
+    if #targets == 0 or n == 0 then return end
+    local fired = 0
+    for _ = 1, n do
+        R.turn = R.turn % n + 1
+        local m = R.members[R.turn]
+        local g = m.ent
+        if IsValid(g) and g:Health() > 0 and now >= (m.nextShot or 0) then
+            local wep = g.GetActiveWeapon and g:GetActiveWeapon()
+            local G = RUN.guns[IsValid(wep) and wep:GetClass() or ""]
+            if not G then
+                m.nextShot = now + 5 -- (a stunstick: nothing to fire)
+            else
+                m.nextShot = now + G[4] * math.Rand(0.6, 1.4)
+                local who = targets[math.random(#targets)]
+                local src = g:GetPos() + Vector(0, 0, 56)
+                if Sees(R, src, who) then
+                    local to = who:WorldSpaceCenter()
+                    local hit = math.random() < RUN.hit
+                    -- (he turns to fire, and is back facing the way they go a moment later)
+                    m.faceUntil, m.faceYaw = now + 0.4, math.deg(math.atan2(to.y - src.y, to.x - src.x))
+                    g:EmitSound(G[1], 85, math.random(96, 104))
+                    if util.Effect and EffectData then
+                        if IsValid(wep) and wep.LookupAttachment then
+                            local id = wep:LookupAttachment("muzzle")
+                            local at = id and id > 0 and wep:GetAttachment(id)
+                            if at and at.Pos then src = at.Pos end
+                        end
+                        local fx = EffectData()
+                        fx:SetStart(src)
+                        fx:SetOrigin(hit and to or (to + VectorRand() * 60))
+                        fx:SetScale(6000)
+                        util.Effect(G[2], fx)
+                    end
+                    R.shots = R.shots + 1
+                    if hit then
+                        R.hits = R.hits + 1
+                        if DamageInfo and who.TakeDamageInfo then
+                            local d = DamageInfo()
+                            d:SetDamage(G[3])
+                            d:SetAttacker(g)
+                            d:SetInflictor(IsValid(wep) and wep or g)
+                            d:SetDamageType(DMG_BULLET or 2)
+                            d:SetDamagePosition(to)
+                            who:TakeDamageInfo(d)
+                        elseif who.TakeDamage then
+                            who:TakeDamage(G[3], g, g)
+                        end
+                    end
+                    fired = fired + 1
+                    if fired >= 2 then break end
+                end
+            end
+        end
+    end
+end
+
+-- It sets off: the way to her desk (the city's own routes; straight there where they have none), and everyone
+-- of hers in his place. False with no desk to run to.
+function StartRun(now)
+    local desk = LC.PointsOfKind and LC.PointsOfKind("desk")[1]
+    if not desk then return false end
+    local her = A.her
+    local from = her:GetPos()
+    local path = {}
+    if LC.BuildRoute then
+        local ok, route = LC.Try(LC.BuildRoute, from, desk.pos, "soldier")
+        if ok and type(route) == "table" then
+            for _, p in ipairs(route) do path[#path + 1] = p end
+        end
+    end
+    if #path == 0 or path[#path]:DistToSqr(desk.pos) > 24 * 24 then path[#path + 1] = desk.pos end
+    local first = path[1] - from
+    local R = { path = path, leg = 1, at = from, yaw = math.deg(math.atan2(first.y, first.x)), desk = desk.pos,
+        members = {}, set = {}, slots = 0, turn = 0, shots = 0, hits = 0, doors = {}, nextJoin = 0, nextDoor = 0, nextFire = 0 }
+    A.run = R
+    for _, g in ipairs(A.guards) do
+        if IsValid(g) and g:Health() > 0 then Enlist(g, now, false) end
+    end
+    R.per = math.Clamp(R.slots, 1, 8)
+    if not her:IsPlayer() then -- (the city's own: crouched and running, as a player is held crouched)
+        R.her = { ent = her }
+        Take(R.her, RUN.her)
+    end
+    return true
+end
+
+-- A tick of it. True when she is at her desk.
+function RunThink(now, dt)
+    local R, her = A.run, A.her
+    -- on along the way, never stopping
+    local left = CARRY_SPEED * dt
+    while left > 0 and R.leg <= #R.path do
+        local to = R.path[R.leg] - R.at
+        local d = to:Length()
+        if d <= left then
+            R.at, R.leg, left = R.path[R.leg], R.leg + 1, left - d
+        else
+            R.at, left = R.at + to * (left / d), 0
+        end
+    end
+    local toNext = R.path[R.leg] and (R.path[R.leg] - R.at) or nil
+    if toNext and toNext.x * toNext.x + toNext.y * toNext.y > 1 then -- (the shell turns with the way it goes)
+        -- (half a second to come round a corner: faster, and those on the outside of it would be swung back)
+        R.yaw = R.yaw + math.Clamp(math.AngleDifference(math.deg(math.atan2(toNext.y, toNext.x)), R.yaw), -180 * dt, 180 * dt)
+    end
+    local centre = Floor(R.at, R.at.z)
+    her:SetPos(centre)
+    if not her:IsPlayer() then her:SetAngles(Angle(0, R.yaw, 0)) end
+    local turn = math.rad(R.yaw)
+    for _, m in ipairs(R.members) do
+        local g = m.ent
+        if IsValid(g) and g:Health() > 0 then
+            local st = m.st
+            if st and st.state ~= "event" then -- (something of the city's took him back: he is the shell's until it is over)
+                st.eventUntil = now + RUN.hold
+                LC.SetState(g, st, "event")
+            end
+            -- his place: her own guards share the first ring; past it, eight to a ring, each ring further out
+            local k, ring, per = m.slot - 1, 0, R.per
+            if m.slot > R.per then
+                k = m.slot - R.per - 1
+                ring, per = 1 + math.floor(k / 8), 8
+            end
+            local a = turn + (k % 8) / per * math.pi * 2 + ring * 0.4
+            local p = g:GetPos()
+            local to = centre + Vector(math.cos(a), math.sin(a), 0) * (RING + ring * 40) - p
+            to.z = 0
+            local d = to:Length()
+            if d > 0.5 then p = p + to * (math.min(d, (CARRY_SPEED + GUARD_SPEED) * dt) / d) end
+            g:SetPos(Floor(p, p.z + math.Clamp(centre.z - p.z, -600 * dt, 600 * dt)))
+            g:SetAngles(Angle(0, (m.faceUntil or 0) > now and m.faceYaw or R.yaw, 0))
+            if m.ss then
+                if g.SetPlaybackRate then g:SetPlaybackRate(RUN.rate) end
+            elseif g.SetIdealActivity and ACT_RUN and now >= (m.actAt or 0) then
+                -- (no sequence could be made for him: the parade's way, sv_livingcity_exercise.lua)
+                m.actAt = now + 0.5
+                if not g.GetIdealActivity or g:GetIdealActivity() ~= ACT_RUN then g:SetIdealActivity(ACT_RUN) end
+            end
+        end
+    end
+    if R.leg > #R.path then return true end
+    -- the city's units near the stand, or near the shell as it passes, fall in on the outside
+    if now >= R.nextJoin then
+        R.nextJoin = now + 0.3
+        for npc, st in pairs(LC.NPCs or {}) do
+            if not R.set[npc] and MayJoin(npc, st) then
+                local p = npc:GetPos()
+                if p:DistToSqr(A.at) < JOIN_REACH * JOIN_REACH or p:DistToSqr(centre) < JOIN_REACH * JOIN_REACH then Enlist(npc, now, true) end
+            end
+        end
+    end
+    if now >= R.nextDoor then
+        R.nextDoor = now + 0.15
+        for _, e in ipairs(ents.FindInSphere(Ahead(R, DOOR_AHEAD * 0.5) + Vector(0, 0, 40), DOOR_AHEAD * 0.65)) do
+            if IsValid(e) and R.doors[e] == nil and LC.IsDoorEntity and LC.IsDoorEntity(e) then R.doors[e] = OpenDoor(e, now) end
+        end
+    end
+    if now >= R.nextFire then
+        R.nextFire = now + 0.12
+        Volley(R, now, centre)
+    end
+    return false
+end
+
+-- Over (at her desk, or cut short): everyone gets back what was changed on him. The city's units go back to
+-- their beats; the address's own and her elites are Done's to see to.
+function EndRun(a)
+    local R = a.run
+    if not R then return end
+    a.run = nil
+    local now = CurTime()
+    if R.her then Give(R.her) end
+    for _, m in ipairs(R.members) do
+        Give(m)
+        local g, st = m.ent, m.st
+        if IsValid(g) and g:Health() > 0 then
+            -- (set down where there is room to stand: the way went through walls)
+            if LC.FreeSpawnPos then g:SetPos(LC.FreeSpawnPos(g:GetPos()) or g:GetPos()) end
+            if st and LC.NPCs and LC.NPCs[g] == st then
+                st.questLock, st.eventUntil = m.lock, m.evUntil
+                local back = RUN.keeps[m.state] and m.state or "idle"
+                LC.SetState(g, st, back)
+                if back == "idle" then st.untilT = now + 1 end
+            end
+        end
+    end
+end
+
 function LC.AdminExfilThink(now)
     if not A then return end
     local her = A.her
@@ -549,10 +944,20 @@ function LC.AdminExfilThink(now)
     local t = now - A.t0
     if A.phase == "close" then
         MoveGuards(her:GetPos(), dt)
-        if t >= CLOSE_SECS then A.phase = IsValid(A.apc) and "carry" or "hold" end
+        if t >= CLOSE_SECS then
+            -- an APC by the stand: out by APC. None, and a desk to run to: the shield run. Neither: they hold.
+            if IsValid(A.apc) then A.phase = "carry"
+            elseif StartRun(now) then A.phase = "run"
+            else A.phase = "hold" end
+        end
     elseif A.phase == "hold" then
         MoveGuards(her:GetPos(), dt)
         if t >= HOLD_SECS then return Done(false) end
+    elseif A.phase == "run" then
+        if RunThink(now, dt) then
+            A.ran = true
+            return Done(true)
+        end
     elseif A.phase == "carry" then
         if not IsValid(A.apc) then A.phase = "hold" return end
         -- to the APC's side, straight there, through whatever is in the way
