@@ -34644,6 +34644,39 @@ _walls = savedWalls
 end
 Nov16_AdminQuestioningTests()
 
+-- Frag grenades for the Combine (the owner, 16 November)
+function Nov16_FragTests()
+section("16 November: frag grenades at the CP Commissary, and one as a soldier's standard issue")
+local g = LCS.GoodsById.cp_frag
+ok(g and g.cpOnly and g.weapon == "weapon_frag" and g.minRank == 2 and g.price > 0, "the unit counter sells a frag grenade, Metrocops and up")
+local F0 = Vector(152000, 132000, 0)
+local cop = newPlayer("FragCop", "cp")
+cop:SetNW2Int("lcf_rank", 2)
+LC.AddCredits(cop, 1000)
+if cop:HasWeapon("weapon_frag") then cop:StripWeapon("weapon_frag") end
+ok(LC.Buy(cop, "cp_frag") and cop:HasWeapon("weapon_frag"), "a Metrocop buys one")
+ok(LC.CanBuy(cop, g) == true, "and may buy more (not one only, as with a rifle)")
+local recruit = newPlayer("FragRecruit", "cp")
+recruit:SetNW2Int("lcf_rank", 1)
+LC.AddCredits(recruit, 1000)
+ok(not LC.CanBuy(recruit, g), "not a Recruit")
+local civ = newPlayer("FragCiv", "citizen")
+ok(not LC.CanBuy(civ, g), "nor a citizen")
+-- a soldier's standard issue
+local sold = LC.SpawnSoldier(F0)
+ok(IsValid(sold) and sold.kv and sold.kv.NumGrenades == "1", "one of the city's soldiers carries one frag grenade as standard", sold and sold.kv and sold.kv.NumGrenades)
+local elite = LC.SpawnSoldier(F0 + Vector(100, 0, 0), "elite")
+ok(not IsValid(elite) or (elite.kv and elite.kv.NumGrenades == "2"), "(an elite's two are as they were)")
+local hasFrag = false
+for _, f in ipairs(LCF.Factions or {}) do
+    if f.id == "cp" then for _, r in ipairs(f.ranks) do if r.name == "Combine Soldier" then for _, w in ipairs(r.loadout) do if w == "weapon_frag" then hasFrag = true end end end end end
+end
+ok(hasFrag, "a player of the Combine Soldier rank is issued one too (as before)")
+for _, e in ipairs({ sold, elite }) do if IsValid(e) then e:Remove() end end
+cop:Remove() recruit:Remove() civ:Remove()
+end
+Nov16_FragTests()
+
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")
 ;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)
     -- Everything here is something the owner's server, files or players depend on. The list is
