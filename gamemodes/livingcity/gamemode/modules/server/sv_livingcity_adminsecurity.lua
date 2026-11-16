@@ -306,6 +306,7 @@ end
 hook.Add("LivingCityIsWanted", "LivingCityAdminSecurity", function(ply)
     if not LC.AdminNeverForgotten(ply) then return end
     if (LC.InCustody and LC.InCustody(ply)) or (LC.HeldByCombine and LC.HeldByCombine(ply)) then return end
+    if LC.PlayerIsStalker and LC.PlayerIsStalker(ply) then return end -- (made a stalker for it: the Combine's own property now)
     return true
 end)
 hook.Add("LivingCityNewCharacter", "LivingCityAdminSecurity", function(ply) LC.AdminForget(ply) end)
@@ -401,6 +402,7 @@ local function Mark(who)
     if not (A and IsValid(who)) or A.attackers[who] or Theirs(who) then return end
     A.attackers[who] = true
     LC.AdminTargets[who] = true
+    if who:IsNPC() then who.lcRegicide = true end -- (put in a cell, it is hers to question, then a stalker: sv_livingcity_adminquestioning.lua)
     LC.AdminAttacker(who)
     local pend = LC.AdminAttemptPending()
     if pend and who:IsPlayer() and who.SteamID64 then pend.by[tostring(who:SteamID64())] = true end

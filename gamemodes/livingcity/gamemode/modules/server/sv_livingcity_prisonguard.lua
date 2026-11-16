@@ -90,6 +90,7 @@ LC.PrisonGuardJailOne = JailOne
 ------------------------------------------------------------------------
 LC.NPCInterrogations = LC.NPCInterrogations or {} -- [guard] = session
 local MAX_HITS, REACH = 6, 260
+LC.NPCInterrogationMaxHits = MAX_HITS
 local FAKE = { "Viktor Halloran", "Anya Brecht", "Pavel Novak", "Mira Sorel", "Tomas Varga", "Lena Orlov", "Gregor Duval" }
 local function Place(pos) return (LC.DescribePlace and LC.DescribePlace(pos)) or "somewhere in the city" end
 local function NameOf(npc) return (LC.NPCStr and LC.NPCStr(npc, "lc_pname", "") ~= "" and LC.NPCStr(npc, "lc_pname", "")) or "the prisoner" end
@@ -121,7 +122,7 @@ end
 
 local function Push(guard, s)
     if not IsValid(guard) then return end
-    local qs = LC.InterrogationQuestions or {}
+    local qs = s.qs or LC.InterrogationQuestions or {}
     net.Start("lc_intr_cp")
     net.WriteString(util.TableToJSON({ who = NameOf(s.npc), resolve = s.resolve, hits = s.hits, waiting = s.waiting and s.waiting.q or 0,
         answers = s.answers, asked = s.asked, canCall = s.last ~= nil and s.last ~= "silent" and not s.called or nil,
@@ -130,7 +131,9 @@ local function Push(guard, s)
 end
 
 -- Start questioning npc (someone held in the cells). q: the job it belongs to (the truth ends it).
-function LC.NPCInterrogationStart(guard, npc, q)
+-- opts: fields for a new session (qs: other questions than the unit's; onEnd(guard, s): called when it is over,
+-- however it ended. The Administrator's questioning of one that tried to kill her: sv_livingcity_adminquestioning.lua).
+function LC.NPCInterrogationStart(guard, npc, q, opts)
     if not IsValid(guard) or not IsValid(npc) then return false end
     local st = LC.NPCs and LC.NPCs[npc]
     if not st or st.state ~= "jailed" then return false, "They aren't held in a cell." end
@@ -142,6 +145,7 @@ function LC.NPCInterrogationStart(guard, npc, q)
         for _, t in ipairs({ "brave", "proud", "tough", "stubborn" }) do if prof[t] or (prof.traits and prof.traits[t]) then resolve = resolve + 1 end end
         s = { npc = npc, q = q, resolve = math.min(5, resolve + math.random(0, 1)), hits = 0, asked = {}, answers = {},
               knows = st.rebelPrisoner or st.role == "rebel" or math.random() < 0.55 }
+        for k, v in pairs(opts or {}) do s[k] = v end
         LC.NPCInterrogations[guard] = s
     end
     guard:ChatPrint("[Interrogation] You step into " .. NameOf(npc) .. "'s cell. \"You will answer my questions.\"")
@@ -155,12 +159,13 @@ local function End(guard, s, why)
         net.Start("lc_intr_cp") net.WriteString(util.TableToJSON({ done = true })) net.Send(guard)
         if why then guard:ChatPrint("[Interrogation] " .. why) end
     end
+    if s.onEnd then LC.Try(s.onEnd, guard, s) end
 end
 
 -- The prisoner answers question qn (after a moment).
 local function Answer(guard, s, qn)
     s.waiting = nil
-    local key = (LC.InterrogationQuestions[qn] or {}).key or "hideout"
+    local key = ((s.qs or LC.InterrogationQuestions)[qn] or {}).key or "hideout"
     local kind
     if s.resolve <= 0 then kind = "truth" else kind = math.random() < 0.5 and "silent" or "lie" end
     s.last, s.called = kind, nil
@@ -196,7 +201,7 @@ function LC.NPCInterrogationDo(guard, what, n)
     end
     if what == "ask" then
         if s.waiting then guard:ChatPrint("[Interrogation] Wait for an answer.") return true end
-        local qd = LC.InterrogationQuestions and LC.InterrogationQuestions[n]
+        local qd = (s.qs or LC.InterrogationQuestions or {})[n]
         if not qd then return true end
         s.asked[n] = true
         guard:ChatPrint("[Interrogation] \"" .. qd.text .. "\"")

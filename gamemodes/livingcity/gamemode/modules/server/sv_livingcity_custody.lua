@@ -430,15 +430,14 @@ hook.Add("LivingCityIncarcerated", "LivingCityCustody", function(ply, secs, reas
     local sev = LC.Severity(ply, reason)
     ply:SetPData("lc_jailcount", LC.JailCount(ply) + 1)
     if not cvOn:GetBool() then return end
-    -- Whoever tried to kill the Administrator is hers to question, not a unit's (the owner, 16 November). What
-    -- else was due to them here, the stalker's chair or the broken feet, comes when she is done with them.
+    -- Whoever tried to kill the Administrator is hers to question, not a unit's, and is made a stalker when she
+    -- is done with them, whoever they are (the owner, 16 November). What else was due to them here is dropped
+    -- for that; only with lc_stalkers 0 do the broken feet come instead, for those they were due to.
     -- Called from here and not from a hook of its own: hook order is not promised. sv_livingcity_adminquestioning.lua
     if LC.AdminQuestioningStart then
-        local stalker = sev >= 6 and cvStalker:GetBool() and LC.Heinous(ply, reason)
         local feet = sev >= 4 and LC.CanInterrogate(ply)
         if LC.AdminQuestioningStart(ply, function()
-            if not (IsValid(ply) and LC.Prisoners and LC.Prisoners[ply]) then return end
-            if stalker then LC.StalkerScene(ply) elseif feet then LC.Cripple(ply) end
+            if feet and IsValid(ply) and LC.Prisoners and LC.Prisoners[ply] then LC.Cripple(ply) end
         end) then return end
     end
     if sev >= 6 and cvStalker:GetBool() and LC.Heinous(ply, reason) then

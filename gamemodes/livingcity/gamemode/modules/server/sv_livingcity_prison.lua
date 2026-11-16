@@ -673,6 +673,8 @@ function LC.OnNPCReachedCell(npc, st, now)
     -- (said under their name: unarmed rebels standing in the cells during a raid were taken for raiders who
     -- had spawned there, the owner, 11 November. They are prisoners.)
     if LC.SetNPCStr then LC.SetNPCStr(npc, "lc_doing", "a prisoner, held in the cells") end
+    -- (one that tried to kill the Administrator is hers to question: sv_livingcity_adminquestioning.lua)
+    if npc.lcRegicide and LC.AdminQuestioningStartNPC then LC.AdminQuestioningStartNPC(npc, st) end
 end
 
 -- Cells sit behind doors that lock themselves, which NPCs can't walk through,
