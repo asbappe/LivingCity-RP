@@ -289,8 +289,8 @@ local function TurnNPC(npc)
     return stalker
 end
 
-local function Then(who, A)
-    local rec = Held(who, A)
+-- rec: what holds them, still the stay she questioned them in (nil: let out, escaped or gone since).
+local function Then(who, A, rec)
     if A.npc then
         if A.st.questLock == A then A.st.questLock = nil end
         if rec and StalkersOn() then TurnNPC(who) end
@@ -317,15 +317,19 @@ local function LaterTick(now)
         local T = Later[i]
         local who, A = T.who, T.A
         local rec = Held(who, A)
+        if rec ~= T.rec then rec = nil end -- (another stay in the cells by now: not this one's business)
         if rec and not A.npc then KeepIn(who, rec, now) end
-        if T.fired then
+        if not rec then
+            Then(who, A, nil)
+            table.remove(Later, i)
+        elseif T.fired then
             -- (in the stalker's chair: kept in until it is done)
             if not rec or not who.lcStalkerScene then table.remove(Later, i) end
         else
             local party = false
             for _, w in ipairs(T.L and T.L.party or {}) do if IsValid(w.npc) then party = true end end
             if now >= T.at and (not party or now >= T.cap) then
-                Then(who, A)
+                Then(who, A, rec)
                 if not A.npc and IsValid(who) and who.lcStalkerScene then T.fired = true else table.remove(Later, i) end
             end
         end
@@ -371,7 +375,7 @@ local function Finish(who, A, broke, all, wait)
     local L = Leave(A)
     Withdraw()
     local now = CurTime()
-    Later[#Later + 1] = { who = who, A = A, at = now + (wait or 0), L = L, cap = now + 60 }
+    Later[#Later + 1] = { who = who, A = A, rec = rec, at = now + (wait or 0), L = L, cap = now + 60 }
 end
 local function Drop(who, A) Finish(who, A, nil, false, 0) end
 
