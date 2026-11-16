@@ -6,7 +6,7 @@
     Two points in the editor: the speech stand (where she stands, behind a podium put there for the address)
     and the speech crowd (where the city gathers to listen). With both on the map:
 
-      - A player Administrator's F2 > Me > The city's levers > Give a speech... calls the city: Overwatch
+      - A player Administrator's F2 > Me > Administrator > Give a speech... calls the city: Overwatch
         announces it (speech_soon, his custom voice), every citizen is told where to go, NPC citizens walk
         there and stand in rows facing the stand, and she is taken behind the podium. Her words are spoken
         when the muster is over (lc_speech_muster seconds).

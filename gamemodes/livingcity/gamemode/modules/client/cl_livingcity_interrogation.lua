@@ -137,6 +137,7 @@ local function BuildCP()
             local st = cpState or {}
             local text = (st.questions or {})[i] or ("Question " .. i)
             if st.asked and st.asked[i] then text = text .. " (asked)" end
+            if s.SetVisible then s:SetVisible(not st.questions or st.questions[i] ~= nil) end
             if s.GetText and s:GetText() ~= text and s.SetText then s:SetText(text) end
         end
     end
@@ -203,7 +204,7 @@ end
 
 local function CPQuick(st)
     local items = {}
-    for i = 1, 3 do
+    for i = 1, st.questions and #st.questions or 3 do -- (as many as there are: the Administrator's may be two)
         local text = (st.questions or {})[i] or ("Question " .. i)
         if st.asked and st.asked[i] then text = text .. " (asked)" end
         items[#items + 1] = { label = "Ask: " .. text, run = function() Do("ask", i) end }

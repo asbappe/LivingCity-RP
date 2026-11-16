@@ -85,6 +85,9 @@ local function EndInterrogation(ply, text)
         ply:SetNW2Bool("lc_interrogated", false)
         if text then ply:ChatPrint(text) end
     end
+    -- (whoever set it up hears how it ended, called from here and not by a hook: the Administrator's own
+    -- questioning, sv_livingcity_adminquestioning.lua)
+    if it.onEnd then LC.Try(it.onEnd, ply, it) end
 end
 
 LC.EndInterrogation = EndInterrogation
@@ -99,6 +102,7 @@ end
 
 function LC.StartInterrogation(ply)
     if LC.Interrogations[ply] or not (LC.Prisoners and LC.Prisoners[ply]) then return false end
+    if LC.AdminQuestioningHolds and LC.AdminQuestioningHolds(ply) then return false end -- (hers to question, not a unit's)
     if LC.Running == false then return false end -- (the city was stopped while the unit was on his way: nobody comes)
     local pr = LC.Prisoners[ply]
     local cellPos = pr.cell and pr.cell.pos or ply:GetPos()
@@ -157,7 +161,7 @@ function LC.InterrogationTalk(ply)
         ply:SetNW2Float("lc_traitor_until", CurTime() + 1800)
         if LC.RadioNotice then LC.RadioNotice("resistance", ply:Nick() .. " talked in custody. Don't trust them.") end
     end
-    EndInterrogation(ply, "[Interrogation] You tell them" .. (where and where ~= "" and (" about the place " .. where) or (knows and " what you know" or " everything. It isn't much")) .. ". The Civil Protection unit nods, and leaves.")
+    EndInterrogation(ply, "[Interrogation] You tell them" .. (where and where ~= "" and (" about the place " .. where) or (knows and " what you know" or " everything. It isn't much")) .. ". " .. (it.asker or "The Civil Protection unit") .. " nods, and leaves.")
     return true
 end
 
@@ -166,7 +170,7 @@ local function InterrogationTick(now)
         if not IsValid(ply) or not (LC.Prisoners and LC.Prisoners[ply]) or not ply:Alive() then
             EndInterrogation(ply, nil)
         elseif now > it.untilT then
-            EndInterrogation(ply, "[Interrogation] \"We'll talk again.\" The Civil Protection unit leaves. You said nothing.")
+            EndInterrogation(ply, "[Interrogation] \"We'll talk again.\" " .. (it.asker or "The Civil Protection unit") .. " leaves. You said nothing.")
             if ply:GetNW2String("lcf_faction", "") == "resistance" and LC.AddXP then LC.AddXP(ply, 15, "said nothing under interrogation") end
         elseif LC.InterrogationStep then
             LC.InterrogationStep(ply, it, now) -- (question by question: sv_livingcity_interrogation.lua)
@@ -426,6 +430,17 @@ hook.Add("LivingCityIncarcerated", "LivingCityCustody", function(ply, secs, reas
     local sev = LC.Severity(ply, reason)
     ply:SetPData("lc_jailcount", LC.JailCount(ply) + 1)
     if not cvOn:GetBool() then return end
+    -- Whoever tried to kill the Administrator is hers to question, not a unit's (the owner, 16 November). What
+    -- else was due to them here, the stalker's chair or the broken feet, comes when she is done with them.
+    -- Called from here and not from a hook of its own: hook order is not promised. sv_livingcity_adminquestioning.lua
+    if LC.AdminQuestioningStart then
+        local stalker = sev >= 6 and cvStalker:GetBool() and LC.Heinous(ply, reason)
+        local feet = sev >= 4 and LC.CanInterrogate(ply)
+        if LC.AdminQuestioningStart(ply, function()
+            if not (IsValid(ply) and LC.Prisoners and LC.Prisoners[ply]) then return end
+            if stalker then LC.StalkerScene(ply) elseif feet then LC.Cripple(ply) end
+        end) then return end
+    end
     if sev >= 6 and cvStalker:GetBool() and LC.Heinous(ply, reason) then
         timer.Simple(20, function()
             if IsValid(ply) and LC.Prisoners and LC.Prisoners[ply] then LC.StalkerScene(ply) end
