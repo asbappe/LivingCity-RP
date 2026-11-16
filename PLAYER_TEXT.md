@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version 5c10e23. Admin-only console messages and log lines are left out.
+Made from version 9704fee. Admin-only console messages and log lines are left out.
 
-12858 lines, from 354 files.
+12889 lines, from 354 files.
 
 ## Contents
 
@@ -158,7 +158,7 @@ Made from version 5c10e23. Admin-only console messages and log lines are left ou
 - [testing tools for admins](#testing-tools-for-admins-svlivingcityadmintoolslua) (50)
 - [citizens who show you the way](#citizens-who-show-you-the-way-svlivingcityadvicelua) (24)
 - [Half-Life 2's ammo limits](#half-life-2s-ammo-limits-svlivingcityammolua) (4)
-- [custom announcements, for Overwatch and for the Administrator](#custom-announcements-for-overwatch-and-for-the-administrator-svlivingcityannouncerlua) (53)
+- [custom announcements, for Overwatch and for the Administrator](#custom-announcements-for-overwatch-and-for-the-administrator-svlivingcityannouncerlua) (54)
 - [arrests in the open (the owner's playtest, 7 November)](#arrests-in-the-open-the-owners-playtest-7-november-svlivingcityarrestlua) (54)
 - [the time of day, the weather, and the city's music](#the-time-of-day-the-weather-and-the-citys-music-svlivingcityatmoslua) (1)
 - [The Battle Line, a propaganda dream (sv_livingcity_battleline.lua)](#the-battle-line-a-propaganda-dream-svlivingcitybattlelinelua-svlivingcitybattlelinelua) (48)
@@ -315,8 +315,8 @@ Made from version 5c10e23. Admin-only console messages and log lines are left ou
 - [small-server mode (the owner, 10 November: "yes please")](#small-server-mode-the-owner-10-november-yes-please-svlivingcitysmallserverlua) (2)
 - [snitches among the citizens, and burning an informant](#snitches-among-the-citizens-and-burning-an-informant-svlivingcitysnitcheslua) (32)
 - [utility boxes at the loudspeakers, and the Resistance's hackers on the PA](#utility-boxes-at-the-loudspeakers-and-the-resistances-hackers-on-the-pa-svlivingcityspeakerhacklua) (16)
-- [sv_livingcity_speech.lua](#svlivingcityspeechlua-svlivingcityspeechlua) (74)
-- [the Resistance answers her speeches](#the-resistance-answers-her-speeches-svlivingcityspeechanswerlua) (33)
+- [sv_livingcity_speech.lua](#svlivingcityspeechlua-svlivingcityspeechlua) (94)
+- [the Resistance answers her speeches](#the-resistance-answers-her-speeches-svlivingcityspeechanswerlua) (43)
 - [squad sizes and backup by radio (sv_livingcity_squads.lua)](#squad-sizes-and-backup-by-radio-svlivingcitysquadslua-svlivingcitysquadslua) (19)
 - [staff tools](#staff-tools-svlivingcitystafflua) (48)
 - [the stalker's lot](#the-stalkers-lot-svlivingcitystalkerworklua) (57)
@@ -5456,19 +5456,19 @@ Made from version 5c10e23. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): Whoever tries to kill her: the worst crime there is, and never forgotten
 
-- "Attempted murder of the City Administrator"  (text, line 258)
+- "Attempted murder of the City Administrator"  (text, line 270)
 
 > Note for you (not shown in game): (after the crime is booked, which costs standing of its own: -999 it is, whatever it was)
 
-- "an attempt on the Administrator's life"  (text, line 281)
+- "an attempt on the Administrator's life"  (text, line 293)
 
 > Note for you (not shown in game): A shot that does not hit her: a bullet that lands within 20 feet of her, or passes that near, is an attempt all the same; so is a bolt, a rocket or an energy ball that comes that near (LC.AdminGrenadeThink).
 
-- "near miss"  (text, line 599)
+- "near miss"  (text, line 653)
 
 > Note for you (not shown in game): where it lands, or the nearest it comes to her on the way
 
-- "near miss"  (text, line 621)
+- "near miss"  (text, line 675)
 
 ## testing tools for admins (sv_livingcity_admintools.lua)
 
@@ -5645,104 +5645,105 @@ Made from version 5c10e23. Admin-only console messages and log lines are left ou
 
 `gamemodes/livingcity/gamemode/modules/server/sv_livingcity_announcer.lua`
 
-- "Morning exercise"  (text, line 181)
-- "Morning exercise"  (text, line 181)
-- "Morning parade"  (text, line 181)
-- "Power failure"  (text, line 182)
-- "Power restored"  (text, line 182)
-- "Overwatch response"  (text, line 182)
-- "Overwatch response"  (text, line 183)
-- "Prison breakout"  (text, line 183)
-- "Overwatch deployment"  (text, line 183)
-- "Housing block inspection"  (text, line 184)
-- "Resistance activity"  (text, line 184)
-- "City announcement"  (text, line 185)
-- "City announcement"  (text, line 185)
-- "City announcement"  (text, line 185)
-- "City announcement"  (text, line 185)
-- "City announcement"  (text, line 186)
+- "Morning exercise"  (text, line 184)
+- "Morning exercise"  (text, line 184)
+- "Morning parade"  (text, line 184)
+- "Power failure"  (text, line 185)
+- "Power restored"  (text, line 185)
+- "Overwatch response"  (text, line 185)
 - "Overwatch response"  (text, line 186)
-- "Civil collapse"  (text, line 186)
-- "The Nexus"  (text, line 187)
-- "The Administrator"  (text, line 187)
-- "Order restored"  (text, line 187)
-- "The suppression device"  (text, line 187)
-- "The Administrator's address"  (text, line 188)
-- "The Administrator's address"  (text, line 190)
+- "Prison breakout"  (text, line 186)
+- "Overwatch deployment"  (text, line 186)
+- "Housing block inspection"  (text, line 187)
+- "Resistance activity"  (text, line 187)
+- "City announcement"  (text, line 188)
+- "City announcement"  (text, line 188)
+- "City announcement"  (text, line 188)
+- "City announcement"  (text, line 188)
+- "City announcement"  (text, line 189)
+- "Overwatch response"  (text, line 189)
+- "Civil collapse"  (text, line 189)
+- "The Nexus"  (text, line 190)
+- "The Administrator"  (text, line 190)
+- "Order restored"  (text, line 190)
+- "The suppression device"  (text, line 190)
+- "The Administrator's address"  (text, line 191)
+- "The Administrator"  (text, line 191)
+- "The Administrator's address"  (text, line 193)
 
 > Note for you (not shown in game): part of: announce unused
 
-- ": doesn't start with a trigger (a typo?)"  (text, line 256)
-- ": {t} is no longer said (a surprise, or it answers violence)"  (text, line 258)
-- ": plays as Overwatch (a tone word only means something to the Administrator: is this her recording?)"  (text, line 260)
+- ": doesn't start with a trigger (a typo?)"  (text, line 259)
+- ": {t} is no longer said (a surprise, or it answers violence)"  (text, line 261)
+- ": plays as Overwatch (a tone word only means something to the Administrator: is this her recording?)"  (text, line 263)
 
 > Note for you (not shown in game): part of: say
 
-- "[{or}] "{text}""  (chat message, line 433)
-- "[{or}] "{text}""  (chat message, line 449)
+- "[{or}] "{text}""  (chat message, line 436)
+- "[{or}] "{text}""  (chat message, line 452)
 
 > Note for you (not shown in game): a timer (regularly)
 
-- "Sound files"  (on-screen notice, line 626)
-- "recording(s) can't be played (an MP3 renamed .wav, or a WAV that isn't 16-bit 44100 Hz). Type lc_announce_clips in the console to see which, and how to fix each."  (on-screen notice, line 626)
+- "Sound files"  (on-screen notice, line 629)
+- "recording(s) can't be played (an MP3 renamed .wav, or a WAV that isn't 16-bit 44100 Hz). Type lc_announce_clips in the console to see which, and how to fix each."  (on-screen notice, line 629)
 
 > Note for you (not shown in game): the console command lc_announce_clips
 
-- "[Miscount] {v}: {or}"  (text, line 653)
-- "[Miscount]   check {v}/{why}"  (text, line 654)
-- "[Miscount]   CAN'T PLAY {why}"  (text, line 657)
-- "[Miscount] {v}: {parts}"  (text, line 665)
-- "[Miscount] Players' computers play these, so each needs the files: {or}sv_allowdownload {or}, sv_downloadurl "{or}" (a Workshop addon is the reliable way). Each player can type lc_sound_check to test their own."  (text, line 668)
-- "[Miscount] {total} custom announcements found. Folders: sound/livingcity/overwatch/, administrator/, radio/ (or the same under sound/{ROOT}), flat: a file's name starts with its trigger (curfew1.wav), and the Administrator's tone is in it (curfew_firm1.wav); lc_announce_rescan after adding files."  (text, line 672)
+- "[Miscount] {v}: {or}"  (text, line 656)
+- "[Miscount]   check {v}/{why}"  (text, line 657)
+- "[Miscount]   CAN'T PLAY {why}"  (text, line 660)
+- "[Miscount] {v}: {parts}"  (text, line 668)
+- "[Miscount] Players' computers play these, so each needs the files: {or}sv_allowdownload {or}, sv_downloadurl "{or}" (a Workshop addon is the reliable way). Each player can type lc_sound_check to test their own."  (text, line 671)
+- "[Miscount] {total} custom announcements found. Folders: sound/livingcity/overwatch/, administrator/, radio/ (or the same under sound/{ROOT}), flat: a file's name starts with its trigger (curfew1.wav), and the Administrator's tone is in it (curfew_firm1.wav); lc_announce_rescan after adding files."  (text, line 675)
 
 > Note for you (not shown in game): part of: voice missing
 
-- "Dream lines"  (text, line 688)
-- "dream1 (optional)"  (text, line 709)
+- "Dream lines"  (text, line 691)
+- "dream1 (optional)"  (text, line 712)
 
 > Note for you (not shown in game): what named people say (sv_livingcity_lines.lua): citizens a man's take and a woman's, units one voice
 
-- "Named citizens' lines"  (text, line 729)
-- "Units' lines"  (text, line 730)
+- "Named citizens' lines"  (text, line 732)
+- "Units' lines"  (text, line 733)
 
 > Note for you (not shown in game): part of: voice missing
 
-- "Citizen Information clerk"  (text, line 745)
-- "The old-timer"  (text, line 748)
+- "Citizen Information clerk"  (text, line 748)
+- "The old-timer"  (text, line 751)
 
 > Note for you (not shown in game): Colonel Cubbage answering her speeches (sv_livingcity_speechanswer.lua): answer_<piece>
 
-- "Colonel Cubbage"  (text, line 754)
+- "Colonel Cubbage"  (text, line 757)
 
 > Note for you (not shown in game): what the Resistance's people say to you (sv_livingcity_rebelvoice.lua): a man's take and a woman's
 
-- "The Resistance's people"  (text, line 757)
+- "The Resistance's people"  (text, line 760)
 
 > Note for you (not shown in game): One row of lc_voice_missing as lines short enough to arrive in chat (at most about 200 characters each).
 
-- "[Miscount] {name} (sound/livingcity/{folder}),"  (text, line 764)
-- "nothing missing"  (text, line 765)
+- "[Miscount] {name} (sound/livingcity/{folder}),"  (text, line 767)
+- "nothing missing"  (text, line 768)
 
 > Note for you (not shown in game): also as a file, one missing recording to a line (folder/name), for _dev/tools/elevenlabs_batch.py --missing: it then makes only what the server lacks (the owner, 11 November: "I already have loads of these")
 
-- "[Miscount] The whole list is also in data/livingcity/voice_missing.txt ({lines} lines)."  (text, line 792)
+- "[Miscount] The whole list is also in data/livingcity/voice_missing.txt ({lines} lines)."  (text, line 795)
 
 > Note for you (not shown in game): (in pieces: a chat line over 255 characters never arrives, so the long rows went missing in game)
 
-- "[Miscount] {total} voice lines with no recording yet. Without one, the words still show (Half-Life 2's own Overwatch lines only with lc_announce_stock 1). Name a file for its line (curfew1.wav, ravenholm_defeat1.wav); a .txt with the same name is its subtitle. Everything to record, with suggested words: VOICE_LINES.md, in the gamemode's folder."  (text, line 798)
+- "[Miscount] {total} voice lines with no recording yet. Without one, the words still show (Half-Life 2's own Overwatch lines only with lc_announce_stock 1). Name a file for its line (curfew1.wav, ravenholm_defeat1.wav); a .txt with the same name is its subtitle. Everything to record, with suggested words: VOICE_LINES.md, in the gamemode's folder."  (text, line 801)
 
 > Note for you (not shown in game): the console command lc_announce_rescan
 
-- "[Miscount] {AnnounceRescan} custom announcements found."  (text, line 804)
+- "[Miscount] {AnnounceRescan} custom announcements found."  (text, line 807)
 
 > Note for you (not shown in game): the console command lc_announce_say
 
-- "[Miscount] lc_announce_say <overwatch\|administrator> <trigger> [warm\|firm\|stern\|furious]"  (text, line 810)
-- "[Miscount] Nothing in sound/{ROOT}{voice}/{trig}/ to say (or it's off)."  (text, line 813)
+- "[Miscount] lc_announce_say <overwatch\|administrator> <trigger> [warm\|firm\|stern\|furious]"  (text, line 813)
+- "[Miscount] Nothing in sound/{ROOT}{voice}/{trig}/ to say (or it's off)."  (text, line 816)
 
 > Note for you (not shown in game): the console command lc_announce_tier
 
-- "[Miscount] {trig}: she would be {t} about it now (sociostability {or}, {Heat} violent things in ten minutes){or}."  (text, line 821)
+- "[Miscount] {trig}: she would be {t} about it now (sociostability {or}, {Heat} violent things in ten minutes){or}."  (text, line 824)
 
 ## arrests in the open (the owner's playtest, 7 November) (sv_livingcity_arrest.lua)
 
@@ -20159,78 +20160,101 @@ Made from version 5c10e23. Admin-only console messages and log lines are left ou
 - "the city's people are at ease (the minds: stress low)"  (text, line 100)
 - "You look well: rested, fed and calm. Good. Keep it so."  (text, line 101)
 
+> Note for you (not shown in game): After an attempt on her life her whole next address is about it (the owner, 16 November: "lines for her next speech: she will need to ham this up and take full advantage of it from every angle"): herself the martyr, the shot aimed at everyone, her guards (or the soldier who died on the grenade), the enemy, the hunt (or the traitor dealt with), what it will cost the city, and that she is not going anywhere. In this order, then her slogan.
+
+- "after an attempt on her life: the opening"  (text, line 106)
+- "Citizens. Look at me. I am still here. Not long ago, on this very spot, someone tried to kill your Administrator."  (text, line 107)
+- "after an attempt on her life: herself"  (text, line 108)
+- "I felt how close it came. I will carry that moment for the rest of my life. And do you know what I thought of? Not myself. I thought of you, and of who would look after you if I were gone."  (text, line 109)
+- "after an attempt on her life: it was aimed at everyone"  (text, line 110)
+- "That shot was not meant for me alone. It was aimed at your rations, your homes and your safety. Whoever strikes at me strikes at every one of you."  (text, line 111)
+- "after an attempt on her life: a soldier died on the grenade"  (text, line 112)
+- "A soldier threw himself on a grenade that was meant for me. He did not hesitate. Ask yourselves whether you would have done the same, and remember him tonight."  (text, line 113)
+- "after an attempt on her life: her guards (no soldier died)"  (text, line 114)
+- "My guards did not hesitate. They put themselves between me and death, as they do for you every day. Thank them when you pass them. Loudly."  (text, line 115)
+- "after an attempt on her life: who did it"  (text, line 116)
+- "And who did this? A coward. One of the so-called Resistance, who call themselves your liberators and shoot at a woman giving a speech. That is their courage. That is all they have to offer you."  (text, line 117)
+- "after an attempt on her life: the attacker is dead or in the cells"  (text, line 118)
+- "The traitor has been dealt with. There was no mercy, and there will be none for the next one."  (text, line 119)
+- "after an attempt on her life: the attacker is still free"  (text, line 120)
+- "The traitor is still among you. Someone here knows the face, the name, the door. Tell Civil Protection and your block will eat well. Stay silent and your block will answer for it."  (text, line 121)
+- "after an attempt on her life: what it costs the city"  (text, line 122)
+- "I never wanted checkpoints. I never wanted searches or curfews. But I will not apologise for keeping this city safe, and neither should you. Blame the ones who made it necessary."  (text, line 123)
+- "after an attempt on her life: she is not going anywhere"  (text, line 124)
+- "They wanted me afraid. They wanted this stand empty. I will stand here again tomorrow, and the day after, for as long as you need me. I am not going anywhere."  (text, line 125)
+
 > Note for you (not shown in game): (the owner's own slogan, 14 November: "THIS IS GOLD, SAVE THIS SOMEWHERE AS A SLOGAN"; never reword it)
 
-- "her slogan, before the closing, every time"  (text, line 103)
-- "Love your neighbour, hate the traitor."  (text, line 104)
-- "the closing"  (text, line 105)
-- "Now go back to your work, and remember: this city is only as strong as each one of you. Glory to the Union."  (text, line 106)
+- "her slogan, before the closing, every time"  (text, line 127)
+- "Love your neighbour, hate the traitor."  (text, line 128)
+- "the closing"  (text, line 129)
+- "Now go back to your work, and remember: this city is only as strong as each one of you. Glory to the Union."  (text, line 130)
 
 > Note for you (not shown in game): The announcement and her speeches, as recordings (sv_livingcity_announcer.lua finds them by name).
 
-- "Attention, all residents: the City Administrator will address the city. Report to the assembly point immediately. Attendance is mandatory."  (text, line 188)
-- "My dear citizens, I am going to speak to you all in a few minutes. Come and gather in front of the stand. I would so hate to miss anyone."  (text, line 189)
+- "Attention, all residents: the City Administrator will address the city. Report to the assembly point immediately. Attendance is mandatory."  (text, line 220)
+- "My dear citizens, I am going to speak to you all in a few minutes. Come and gather in front of the stand. I would so hate to miss anyone."  (text, line 221)
 
 > Note for you (not shown in game): Both points, the crowd's and the nearest stand to it: nil when the map has no crowd point.
 
-- "the speech stand"  (text, line 211)
+- "the speech stand"  (text, line 243)
 
 > Note for you (not shown in game): part of: dress
 
-- "The City Administrator"  (text, line 267)
-- "City Administrator"  (text, line 268)
+- "The City Administrator"  (text, line 299)
+- "City Administrator"  (text, line 300)
 
 > Note for you (not shown in game): part of: post guards
 
-- "guarding the address"  (text, line 400)
+- "guarding the address"  (text, line 432)
 
 > Note for you (not shown in game): (a wall in the way: as far out as there is room, or not at all)
 
-- "guarding the Administrator"  (text, line 415)
-- "guarding the Administrator"  (text, line 416)
+- "guarding the Administrator"  (text, line 447)
+- "guarding the Administrator"  (text, line 448)
 
 > Note for you (not shown in game): part of: tell
 
-- "[{title}] {text}"  (chat message, line 502)
+- "[{title}] {text}"  (chat message, line 534)
 
 > Note for you (not shown in game): Call the city to an address. by: the player Administrator (nil: the city's own). text: her words (a player's), or nil (the city's own picks a topic). Returns true, or false and why.
 
-- "The city is already gathering for an address."  (text, line 508)
-- "There's no speech crowd point in this city. (Staff: Miscount Editor > Point: Administrator's speech crowd.)"  (text, line 510)
+- "The city is already gathering for an address."  (text, line 540)
+- "There's no speech crowd point in this city. (Staff: Miscount Editor > Point: Administrator's speech crowd.)"  (text, line 542)
 
 > Note for you (not shown in game): (rows of six for a small crowd; up to twelve across when the whole city comes)
 
-- "Your address"  (chat message, line 531)
-- "The city is gathering in front of the stand. You speak in %d seconds."  (message, line 531)
+- "Your address"  (chat message, line 564)
+- "The city is gathering in front of the stand. You speak in %d seconds."  (message, line 564)
 
 > Note for you (not shown in game): the call: Overwatch's custom voice for a player's speech, her own for the city's
 
-- "The Administrator's address"  (chat message, line 539)
-- "All citizens report to {where} now. Attendance is mandatory."  (chat message, line 539)
+- "The Administrator's address"  (chat message, line 572)
+- "All citizens report to {where} now. Attendance is mandatory."  (chat message, line 572)
 
 > Note for you (not shown in game): The next piece of her speech: its recording from her at the podium, its words in chat. Returns seconds it takes.
 
-- "[The City Administrator, from the stand] {words}"  (chat message, line 569)
+- "[The City Administrator, from the stand] {words}"  (chat message, line 602)
 
 > Note for you (not shown in game): Out cold, then they come to in the crowd.
 
-- "Out cold"  (text, line 615)
-- "The stick again, and again. Everything goes black."  (text, line 615)
+- "Out cold"  (text, line 649)
+- "The stick again, and again. Everything goes black."  (text, line 649)
 
 > Note for you (not shown in game): a timer (regularly)
 
-- "You come to"  (chat message, line 621)
-- "Standing in the crowd in front of the stand, held up by the people either side of you. Your head is pounding."  (chat message, line 621)
+- "You come to"  (chat message, line 655)
+- "Standing in the crowd in front of the stand, held up by the people either side of you. Your head is pounding."  (chat message, line 655)
 
 > Note for you (not shown in game): part of: hunt
 
-- "Civil Protection"  (chat message, line 664)
-- "The Administrator is addressing the city. Report to {pos}. Now."  (chat message, line 664)
+- "Civil Protection"  (chat message, line 698)
+- "The Administrator is addressing the city. Report to {pos}. Now."  (chat message, line 698)
 
 > Note for you (not shown in game): part of: speech think
 
-- "The Administrator's address"  (chat message, line 704)
-- "The address is cancelled. Go about your business."  (chat message, line 704)
+- "The Administrator's address"  (chat message, line 738)
+- "The address is cancelled. Go about your business."  (chat message, line 738)
 
 ## the Resistance answers her speeches (sv_livingcity_speechanswer.lua)
 
@@ -20262,25 +20286,35 @@ Made from version 5c10e23. Admin-only console messages and log lines are left ou
 - "You've nothing to fear from her, she says. Tell that to the ones she's taken."  (text, line 68)
 - "She feels your restlessness, she says. Good. Let her feel it."  (text, line 69)
 - "Rested, fed and calm, she says. Look around you. Does that look like anyone you know?"  (text, line 70)
-- "Love your neighbour, hate the traitor, she says. We agree. Ask yourself who sold this city."  (text, line 71)
-- "That's all from me. Keep your heads down, your eyes open, and your door unlocked for a friend. We're closer than she thinks."  (text, line 72)
+- "She's still here, she says. We noticed."  (text, line 71)
+- "She thought of you in that moment. She thinks of you every time she cuts your rations, too."  (text, line 72)
+- "A shot at her is a shot at you, is it? Her soldiers' shots at you were never shots at her."  (text, line 73)
+- "A soldier died for her. He was somebody's son before they took his face. Remember that tonight instead."  (text, line 74)
+- "Thank her guards loudly, she says. They'll be listening for who doesn't."  (text, line 75)
+- "A coward, she says, from behind a wall of rifles and a sheet of glass."  (text, line 76)
+- "They got one of ours. She says there was no mercy. There was no trial either."  (text, line 77)
+- "She's offering bread for a name. Remember who made you hungry enough to think about it."  (text, line 78)
+- "She never wanted checkpoints. She only built them, manned them and kept them."  (text, line 79)
+- "She isn't going anywhere, she says. We'll see about that."  (text, line 80)
+- "Love your neighbour, hate the traitor, she says. We agree. Ask yourself who sold this city."  (text, line 81)
+- "That's all from me. Keep your heads down, your eyes open, and your door unlocked for a friend. We're closer than she thinks."  (text, line 82)
 
 > Note for you (not shown in game): part of: say
 
-- "[Freq 7] Colonel Cubbage:"  (text, line 152)
-- "[Colonel Cubbage, at the camp]"  (text, line 152)
+- "[Freq 7] Colonel Cubbage:"  (text, line 162)
+- "[Colonel Cubbage, at the camp]"  (text, line 162)
 
 > Note for you (not shown in game): He answers now (pieces: what she said, or nil). True, or false and why not.
 
-- "He's already speaking."  (text, line 184)
-- "Off (lc_speech_answer 0)."  (text, line 185)
-- "There's no Resistance camp."  (text, line 188)
-- "The Combine are in the camp."  (text, line 189)
+- "He's already speaking."  (text, line 194)
+- "Off (lc_speech_answer 0)."  (text, line 195)
+- "There's no Resistance camp."  (text, line 198)
+- "The Combine are in the camp."  (text, line 199)
 
 > Note for you (not shown in game): part of: speech answer
 
-- "Colonel Cubbage answers her"  (on-screen notice, line 208)
-- "He's speaking at the camp now, and on Freq 7."  (on-screen notice, line 208)
+- "Colonel Cubbage answers her"  (on-screen notice, line 218)
+- "He's speaking at the camp now, and on Freq 7."  (on-screen notice, line 218)
 
 ## squad sizes and backup by radio (sv_livingcity_squads.lua) (sv_livingcity_squads.lua)
 

@@ -34248,6 +34248,91 @@ _walls = savedWalls
 end
 EveryoneExerciseTests()
 
+-- After an attempt: her word to the city, and her next address all about it (the owner, 16 November)
+function Nov16_AttemptAftermathTests()
+section("16 November: after an attempt on her life the city hears of it, and her next address is all about it")
+LC.EndEvent(true)
+if LC.SpeechSession() then LC.EndSpeech() end
+if LC.AdminExfil() then LC.AdminExfilEnd(false) end
+LC.AdminAttemptSpoken()
+local savedWalls = _walls
+_walls = {}
+local set = _setcvar
+local stopsWas = GetConVar("lc_stops"):GetInt()
+set("lc_stops", 0)
+-- the pieces, and that the Colonel can answer each of them, and that they are hers to record
+local ids = { "open", "martyr", "you", "hero", "guards", "enemy", "caught", "hunt", "measures", "resolve" }
+local have, answered, listed = 0, 0, 0
+local trig = {}
+for _, t in ipairs(LC.AnnounceTriggers) do trig[t] = true end
+for _, id in ipairs(ids) do
+    if LC.SpeechPiece["attempt_" .. id] then have = have + 1 end
+    if LC.SpeechAnswerLines["attempt_" .. id] then answered = answered + 1 end
+    if trig["speech_attempt_" .. id] and LC.AnnounceHersOnly["speech_attempt_" .. id] then listed = listed + 1 end
+end
+ok(have == 10 and answered == 10 and listed == 10, "ten pieces for it, each one hers to record and each with an answer of the Colonel's", have .. " " .. answered .. " " .. listed)
+ok(trig.attempt and not LC.AnnounceHersOnly.attempt, "and an announcement of it, in her voice or Overwatch's")
+-- what she makes of it
+local a1 = LC.SpeechCompose({}, {}, nil, { hero = true })
+local order = {}
+for _, p in ipairs(a1) do order[#order + 1] = p.id end
+ok(table.concat(order, " ") == "attempt_open attempt_martyr attempt_you attempt_hero attempt_enemy attempt_hunt attempt_measures attempt_resolve slogan close",
+    "a soldier died on the grenade, the attacker still free: every angle, in order, then her slogan", table.concat(order, " "))
+local a2, tense = LC.SpeechCompose({}, {}, nil, { caught = true })
+ok(a2[4].id == "attempt_guards" and a2[6].id == "attempt_caught" and tense == true, "no soldier died and the attacker is dealt with: her guards, and no mercy; stern throughout")
+ok(LC.SpeechCompose({}, {}, nil)[1].id == "open", "(with no attempt, her usual address)")
+local words = LC.SpeechAnswerCompose(a1)
+ok(words[2].id == "attempt_open" and #words == 5, "the Colonel answers it", words[2] and words[2].id)
+-- an attempt at her address is remembered, the city hears of it, and her next address of her own is about it
+local Q0 = Vector(136000, 116000, 0)
+local stand = LC.AddPoint(Q0 + Vector(0, 600, 0), 270, "speech", 0)
+local crowd = LC.AddPoint(Q0, 90, "speechcrowd", 0)
+local reb = newPlayer("AftermathRebel", "resistance", nil, 900)
+reb:SetPos(Q0 + Vector(0, -900, 0))
+local announced = {}
+local trigWas = LC.TriggerAnnouncements
+LC.TriggerAnnouncements = function(t, o) announced[#announced + 1] = t return trigWas and trigWas(t, o) end
+set("lc_speech_muster", 5)
+set("lc_speech_after", 5)
+ok(LC.AdminAttemptPending() == nil, "(nothing to speak of yet)")
+ok(LC.CallSpeech(nil, nil), "the city's own address")
+local S = LC.SpeechSession()
+local her = S.her
+ok(S.pieces[1].id == "open" and not S.attempt, "(an ordinary one)")
+hook.Run("EntityTakeDamage", her, _dmg(reb, 50))
+_run(0.1)
+local pend = LC.AdminAttemptPending()
+ok(pend ~= nil and pend.by[tostring(reb:SteamID64())] and not pend.caught and not pend.hero, "she is shot at: it is kept for her next address, with who did it")
+for _ = 1, 25 do _run(1) end
+local heard = false
+for _, t in ipairs(announced) do if t == "attempt" then heard = true end end
+ok(heard, "about twenty seconds later the city hears of it")
+if LC.AdminExfil() then LC.AdminExfilEnd(false) end
+hook.Run("LivingCityIncarcerated", reb, 600, "x")
+ok(LC.AdminAttemptPending().caught == true, "the attacker taken to the cells since: she will say so")
+LC.EndEvent(true)
+ok(LC.CallSpeech(nil, nil), "her next address")
+S = LC.SpeechSession()
+ok(S.attempt and S.pieces[1].id == "attempt_open" and S.pieces[6].id == "attempt_caught" and S.tense, "is all about it", S.pieces[1] and S.pieces[1].id)
+ok(LC.AdminAttemptPending() ~= nil, "(not forgotten until she has said it)")
+for _ = 1, 400 do
+    _run(1)
+    if not LC.SpeechSession() or LC.SpeechSession().queue == nil and LC.SpeechSession().spoken then break end
+end
+ok(LC.AdminAttemptPending() == nil, "said: her address after that is an ordinary one again")
+if LC.SpeechSession() then LC.EndSpeech() end
+ok(LC.SpeechCompose({}, {}, nil, LC.AdminAttemptPending())[1].id == "open", "(as it was)")
+LC.TriggerAnnouncements = trigWas
+LC.EndEvent(true)
+for _, e in ipairs(ents.FindByClass("lc_adminglass")) do e:Remove() end
+hook.Run("LivingCityNewCharacter", reb, "x", "test")
+LC.RemovePoint(stand) LC.RemovePoint(crowd)
+reb:Remove()
+set("lc_stops", stopsWas)
+_walls = savedWalls
+end
+Nov16_AttemptAftermathTests()
+
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")
 ;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)
     -- Everything here is something the owner's server, files or players depend on. The list is

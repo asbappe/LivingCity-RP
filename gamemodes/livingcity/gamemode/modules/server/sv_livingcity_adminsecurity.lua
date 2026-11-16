@@ -448,6 +448,8 @@ local function Begin(S, her, who)
     Screen(S.stand.pos, S.crowd.pos)
     LC.EndSpeech() -- (the crowd is let go; the podium goes)
     LC.AdminAttemptRemember()
+    -- (the city's own does not speak again today: her next address is tomorrow's)
+    if LC.Ledger then LC.SpeechCityDay = LC.Ledger().day or 0 end
     Mark(who)
     -- her word to the city, once she is away (or Overwatch's, with a player in the post)
     timer.Simple(ANNOUNCE_AFTER, function()

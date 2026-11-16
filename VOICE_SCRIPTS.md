@@ -331,6 +331,16 @@ Folder: `cubbage/`. Odessa Cubbage, alive and well, answering her address from t
 | [ ] | `answer_mood_afraid1` | her `speech_mood_afraid` | [defiant, dry, a speaker enjoying himself] You've nothing to fear from her, she says. Tell that to the ones she's taken. |
 | [ ] | `answer_mood_restless1` | her `speech_mood_restless` | [defiant, dry, a speaker enjoying himself] She feels your restlessness, she says. Good. Let her feel it. |
 | [ ] | `answer_mood_content1` | her `speech_mood_content` | [defiant, dry, a speaker enjoying himself] Rested, fed and calm, she says. Look around you. Does that look like anyone you know? |
+| [x] | `answer_attempt_open1` | her `speech_attempt_open` | [defiant, dry, a speaker enjoying himself] She's still here, she says. We noticed. |
+| [x] | `answer_attempt_martyr1` | her `speech_attempt_martyr` | [defiant, dry, a speaker enjoying himself] She thought of you in that moment. She thinks of you every time she cuts your rations, too. |
+| [x] | `answer_attempt_you1` | her `speech_attempt_you` | [defiant, dry, a speaker enjoying himself] A shot at her is a shot at you, is it? Her soldiers' shots at you were never shots at her. |
+| [x] | `answer_attempt_hero1` | her `speech_attempt_hero` | [defiant, dry, a speaker enjoying himself] A soldier died for her. He was somebody's son before they took his face. Remember that tonight instead. |
+| [x] | `answer_attempt_guards1` | her `speech_attempt_guards` | [defiant, dry, a speaker enjoying himself] Thank her guards loudly, she says. They'll be listening for who doesn't. |
+| [x] | `answer_attempt_enemy1` | her `speech_attempt_enemy` | [defiant, dry, a speaker enjoying himself] A coward, she says, from behind a wall of rifles and a sheet of glass. |
+| [x] | `answer_attempt_caught1` | her `speech_attempt_caught` | [defiant, dry, a speaker enjoying himself] They got one of ours. She says there was no mercy. There was no trial either. |
+| [x] | `answer_attempt_hunt1` | her `speech_attempt_hunt` | [defiant, dry, a speaker enjoying himself] She's offering bread for a name. Remember who made you hungry enough to think about it. |
+| [x] | `answer_attempt_measures1` | her `speech_attempt_measures` | [defiant, dry, a speaker enjoying himself] She never wanted checkpoints. She only built them, manned them and kept them. |
+| [x] | `answer_attempt_resolve1` | her `speech_attempt_resolve` | [defiant, dry, a speaker enjoying himself] She isn't going anywhere, she says. We'll see about that. |
 | [x] | `answer_slogan1` | her `speech_slogan` | [defiant, dry, a speaker enjoying himself] Love your neighbour, hate the traitor, she says. We agree. Ask yourself who sold this city. |
 | [ ] | `answer_close1` | (his closing) | [defiant, dry, a speaker enjoying himself] That's all from me. Keep your heads down, your eyes open, and your door unlocked for a friend. We're closer than she thinks. |
 
@@ -411,6 +421,7 @@ Folder: `overwatch/`. Overwatch: cold and clinical, a dispatcher, the same voice
 | [ ] | `black_crushed1` | The uprising is crushed (time ran out) | [cold, clinical, flat dispatcher] Incursion contained. Sociostability restoring. Remain indoors. |
 | [ ] | `suppressor_down1` | The suppression device is destroyed | [cold, clinical, flat dispatcher] Alert: Nexus suppression device offline. All units, contain and repair. |
 | [ ] | `speech_soon1` | Her address is called: the city must gather (Overwatch's when a player Administrator calls it from her tablet; hers when the city gives it) | [cold, clinical, flat dispatcher] Attention, all residents: the City Administrator will address the city. Report to the assembly point immediately. Attendance is mandatory. |
+| [x] | `attempt1` | An attempt on her life at her address, about 20 seconds after it (hers with nobody playing her, Overwatch's with a player in the post) | [cold, clinical, flat dispatcher] Attention, all units: an attempt has been made on the life of the City Administrator. The Administrator is secure. All sectors are sealed. Locate and apprehend the assailant. |
 
 ## The radio
 
