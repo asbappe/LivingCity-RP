@@ -34478,6 +34478,15 @@ for _, g in ipairs(LC.SpeechGuards()) do all[#all + 1] = g end
 for _, g in ipairs(LC.SpeechDetail()) do all[#all + 1] = g end
 ok(#all == 7, "(seven guards: the row and the detail)", #all)
 all[1].seqs = { RunAIMALL1 = 7 } -- (his model has the soldiers' run with the rifle up)
+-- (what the game has and the test world has not: the state of an NPC held by a sequence, the run as an activity)
+local actWas, scriptWas = ACT_RUN, NPC_STATE_SCRIPT
+ACT_RUN, NPC_STATE_SCRIPT = ACT_RUN or 10, NPC_STATE_SCRIPT or 4
+all[1].GetNPCState = function() return NPC_STATE_SCRIPT end
+all[1].SetPoseParameter = function(self, k, v) self.pose = self.pose or {} self.pose[k] = v end
+all[1].SetPlaybackRate = function(self, r) self.rate = r end
+all[2].seqs = { RunAIMALL1 = 7 }
+all[2].GetNPCState = function() return 1 end -- (the sequence never takes this one)
+all[2].SetIdealActivity = function(self, a) self.ideal = a end
 local hp0, by0 = reb:Health(), bystander:Health()
 A = Attempt(adm)
 if not A then ok(false, "the shot sets her guards off") LC.EndSpeech() return end
@@ -34532,6 +34541,9 @@ for _ = 1, 200 do
     end
 end
 ok(ticks > 40, "(a run of some seconds)", ticks)
+ok(all[1].pose and all[1].pose.move_yaw ~= nil and all[1].rate == 1, "his legs went the way the shell went, a little faster than a run (and are his own again)", all[1].rate)
+ok(R.set[all[2]].ss == nil and all[2].ideal == ACT_RUN, "one the sequence did not take was given the run as his activity instead")
+ACT_RUN, NPC_STATE_SCRIPT = actWas, scriptWas
 ok(minHer > 25, "the shell moves every tick and never stands still", minHer)
 ok(minGuard > 3, "nor does anyone in it", minGuard)
 ok(maxOut < 140, "she is in the middle of them all the way", maxOut)
@@ -34553,6 +34565,7 @@ for _, g in ipairs(all) do if IsValid(g) and g:GetPos():Distance(desk.pos) < 200
 ok(near == 7 and IsValid(cop) and IsValid(far), "the address's guards are there with her, and the city's units", near)
 _run(1)
 ok(not IsValid(ss1), "(the sequence that held the soldier in his run is gone)")
+ok(fst.state == "moving" and fst.dest ~= nil and fst.dest:Distance(R0 + Vector(1700, 1800, 0)) < 60, "and he sets off back to where he was called from", fst.state)
 _run(31)
 near = 0
 for _, g in ipairs(all) do if IsValid(g) then near = near + 1 end end

@@ -649,7 +649,7 @@ local function Take(m, list)
     if not seq then return end -- (then the parade's way, in RunThink)
     if (g:GetName() or "") == "" then g:SetName("lc_shield_" .. g:EntIndex()) end
     local ok, ss = LC.Try(LC.MakeSequence, g, g:GetPos(), g:GetAngles().y, seq, seq, RUN.flags, 0, 0)
-    if ok and IsValid(ss) then m.ss = ss end
+    if ok and IsValid(ss) then m.ss, m.check = ss, CurTime() + 1 end
 end
 local function Give(m)
     if IsValid(m.ss) then
@@ -666,7 +666,7 @@ end
 -- A unit of the city's that falls in: not one in something scripted, walking a prisoner in, or a player's job's.
 local function MayJoin(npc, st)
     return IsValid(npc) and LC.IsSecurity(st) and RUN.joins[st.state] == true and npc:Health() > 0
-        and not (st.test or st.questLock or st.marching or npc.lcGrenadeJumper)
+        and not (st.test or st.questLock or st.eventNPC or st.marching or npc.lcGrenadeJumper)
 end
 
 -- One more in the shell: his place is the next one out, and it is his until it is over.
@@ -674,7 +674,7 @@ local function Enlist(g, now, joined)
     local R = A.run
     if R.set[g] then return end
     R.slots = R.slots + 1
-    local m = { ent = g, slot = R.slots, joined = joined }
+    local m = { ent = g, slot = R.slots, joined = joined, from = g:GetPos() }
     R.set[g] = m
     R.members[#R.members + 1] = m
     local st = LC.NPCs and LC.NPCs[g]
@@ -877,7 +877,17 @@ function RunThink(now, dt)
             local d = to:Length()
             if d > 0.5 then p = p + to * (math.min(d, (CARRY_SPEED + GUARD_SPEED) * dt) / d) end
             g:SetPos(Floor(p, p.z + math.Clamp(centre.z - p.z, -600 * dt, 600 * dt)))
-            g:SetAngles(Angle(0, (m.faceUntil or 0) > now and m.faceYaw or R.yaw, 0))
+            local face = (m.faceUntil or 0) > now and m.faceYaw or R.yaw
+            g:SetAngles(Angle(0, face, 0))
+            -- (his legs go the way the shell goes, whichever way he is turned: the run's own blend)
+            if g.SetPoseParameter then g:SetPoseParameter("move_yaw", math.AngleDifference(R.yaw, face)) end
+            if m.ss and m.check and now >= m.check then -- (once: did the sequence take him? If not, the parade's way)
+                m.check = nil
+                if g.GetNPCState and NPC_STATE_SCRIPT and g:GetNPCState() ~= NPC_STATE_SCRIPT then
+                    if IsValid(m.ss) then m.ss:Remove() end
+                    m.ss = nil
+                end
+            end
             if m.ss then
                 if g.SetPlaybackRate then g:SetPlaybackRate(RUN.rate) end
             elseif g.SetIdealActivity and ACT_RUN and now >= (m.actAt or 0) then
@@ -929,7 +939,14 @@ function EndRun(a)
                 st.questLock, st.eventUntil = m.lock, m.evUntil
                 local back = RUN.keeps[m.state] and m.state or "idle"
                 LC.SetState(g, st, back)
-                if back == "idle" then st.untilT = now + 1 end
+                if back == "idle" then
+                    -- a moment to come out of his run, then back to where he was called from
+                    st.untilT = now + 3
+                    local from = m.from
+                    timer.Simple(1, function()
+                        if IsValid(g) and g:Health() > 0 and LC.NPCs[g] == st and st.state == "idle" and LC.GoTo then LC.Try(LC.GoTo, g, st, from, false) end
+                    end)
+                end
             end
         end
     end
