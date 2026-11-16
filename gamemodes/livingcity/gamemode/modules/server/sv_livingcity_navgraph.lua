@@ -580,7 +580,9 @@ end
 -- climbing: goal is someone who's on a ladder right now, partway up it. The
 -- far end isn't any nearer to them than the foot is (they're in the middle),
 -- so what counts is that it goes their way and they're by it.
-function LC.LadderToward(pos, goal, climbing)
+-- far: looked for further off (a unit after a suspect who keeps running: LC.ChaseWay, sv_livingcity.lua).
+function LC.LadderToward(pos, goal, climbing, far)
+    local reach1, reach2 = far and 2000 or 1200, far and 4000 or 1500
     local best, bestNear, bestFar
     for _, l in ipairs(LC.Ladders) do
         for _, pair in ipairs({ { l.a, l.b }, { l.b, l.a } }) do
@@ -596,7 +598,7 @@ function LC.LadderToward(pos, goal, climbing)
                 end
                 if goesTheirWay then
                     local d1, d2 = pos:Distance(here), there:Distance(goal)
-                    if d1 < 1200 and d2 < 1500 and (not best or d1 + d2 < best) then
+                    if d1 < reach1 and d2 < reach2 and (not best or d1 + d2 < best) then
                         best, bestNear, bestFar = d1 + d2, here, there
                     end
                 end
@@ -696,11 +698,13 @@ function LC.LadderHop(npc, goal)
 end
 
 -- NPCs that walk without a planned route (rebels heading somewhere, anyone
--- chasing) get the same help.
+-- chasing) get the same help. (Not a unit after a suspect: his chase walks him
+-- to the ladder and sends him up or down it in his turn, LC.ChaseWay in sv_livingcity.lua.)
 timer.Create("LivingCityLadders", 0.5, 0, function()
     if #LC.Ladders == 0 then return end
     for npc, st in pairs(LC.NPCs or {}) do
-        if IsValid(npc) and st.state ~= "moving" then
+        if IsValid(npc) and st.state ~= "moving"
+            and not (st.state == "hostile" and LC.ChaseWay and (st.role == "cop" or st.role == "soldier")) then
             local goal = st.goingTo
             if not goal and npc.GetEnemy and IsValid(npc:GetEnemy()) then goal = npc:GetEnemy():GetPos() end
             if goal then LC.LadderHop(npc, goal) end
