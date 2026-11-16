@@ -76,6 +76,9 @@ function SWEP:PrimaryAttack()
         IdleAfter(self, 0.7)
         self:EmitSound("Weapon_StunStick.Melee_Hit")
         if SERVER and IsValid(tr.Entity) then
+            -- (the Administrator's stunstick on the would-be assassin she is questioning: a blow of the
+            -- questioning, which never kills. sv_livingcity_adminquestioning.lua)
+            if LC and LC.AdminQuestioningBlow and LC.AdminQuestioningBlow(owner, tr.Entity) then return end
             local dmg = DamageInfo()
             dmg:SetDamage(15)
             dmg:SetDamageType(DMG_CLUB)

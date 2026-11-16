@@ -50,6 +50,7 @@ local CATCH_MORE = 0.15  -- more for each lie after the first
 local LIE_COST = 120     -- seconds on the sentence for a lie seen through
 local TRUTH_PAY = 15     -- standing for each truth after the first (the first pays the offer)
 local MAX_HITS = 8
+LC.InterrogationMaxHits = MAX_HITS
 local REACH = 260        -- a unit asking must stay this close
 
 local function Pick(t) return t[math.random(#t)] end
@@ -78,6 +79,11 @@ LC.InterrogationCitizenQuestions = CitizenQs
 -- The questions in this session: the Resistance's three for a rebel (or one dressed as one) and for any unit
 -- asking in person, or what they did for anyone else.
 local function Qs(it) return it.qs or QS end
+-- Who is asking, in what the prisoner reads: a unit, or the Administrator herself (it.admin: the would-be
+-- assassin's questioning, sv_livingcity_adminquestioning.lua).
+local function He(it) return it.admin and "She" or "He" end
+local function Him(it) return it.admin and "her" or "him" end
+local function Texts(it) local t = {} for i, q in ipairs(Qs(it)) do t[i] = q.text end return t end
 
 local FAKE_FIRST = { "Viktor", "Anya", "Pavel", "Mira", "Tomas", "Lena", "Gregor", "Ilse", "Marek", "Dasha" }
 local FAKE_LAST = { "Halloran", "Brecht", "Novak", "Sorel", "Kaminski", "Varga", "Lindqvist", "Orlov", "Petrov", "Duval" }
@@ -144,7 +150,7 @@ local function PushCP(ply, it)
     if not IsValid(it.byPlayer) then return end
     Send(it.byPlayer, "lc_intr_cp", { who = Name(ply), resolve = it.resolve or 0, hits = it.hits or 0,
         waiting = it.waiting and it.waiting.q or 0, answers = it.answers or {}, asked = it.asked or {},
-        questions = { QS[1].text, QS[2].text, QS[3].text } })
+        questions = Texts(it) })
 end
 LC.InterrogationPushCP = PushCP
 
@@ -167,7 +173,7 @@ local function Ask(ply, it, q)
     ply:ChatPrint("[Interrogation] \"" .. text .. "\"")
     if IsValid(it.cop) then it.cop:EmitSound("npc/metropolice/vo/" .. Pick({ "apply", "isaidmovealong", "keepmoving" }) .. ".wav", 70) end
     Send(ply, "lc_intr_q", { q = q, text = text, resolve = it.resolve or 0, bargain = not it.bargained, secs = ANSWER_SECS,
-        by = IsValid(it.byPlayer) and Name(it.byPlayer) or "a Civil Protection unit" })
+        by = IsValid(it.byPlayer) and Name(it.byPlayer) or it.asker or "a Civil Protection unit" })
     PushCP(ply, it)
 end
 
@@ -178,18 +184,18 @@ local function Deliver(ply, it, q, words, pos, who)
     if IsValid(it.byPlayer) then
         it.byPlayer:ChatPrint("[Interrogation] " .. Name(ply) .. ": " .. words)
         PushCP(ply, it)
-        return
+        if not it.admin then return end -- (what the Administrator is told is marked for every unit, as below)
     end
     if Qs(it)[q].own then return end -- (what one citizen did is nothing for every unit's radio)
     local units = {}
     for _, p in ipairs(player.GetAll()) do
         if LC.PlayerIsCP(p) then
             units[#units + 1] = p
-            p:ChatPrint("[CP net] A prisoner talked under interrogation: " .. words)
+            if p ~= it.byPlayer then p:ChatPrint("[CP net] A prisoner talked under interrogation: " .. words) end
         end
     end
     if pos and LC.SendCompressed and #units > 0 then
-        LC.SendCompressed("lc_cpmark", { name = QS[q].key == "supplies" and "SUPPLIES (INFORMANT)" or "HIDEOUT (INFORMANT)",
+        LC.SendCompressed("lc_cpmark", { name = Qs(it)[q].key == "supplies" and "SUPPLIES (INFORMANT)" or "HIDEOUT (INFORMANT)",
             x = pos.x, y = pos.y, z = pos.z, secs = 300 }, units)
     end
 end
@@ -228,7 +234,8 @@ function LC.InterrogationAnswer(ply, choice)
     it.waiting = nil
     it.next = CurTime() + math.Rand(3, 5)
     if choice == "bargain" and it.bargained then choice = "truth" end
-    if choice == "silent" and (it.resolve or 0) <= 0 then
+    -- (her stunstick: with one resolve left a lie can't be held either, sv_livingcity_adminquestioning.lua)
+    if (choice == "silent" and (it.resolve or 0) <= 0) or (choice == "lie" and it.admin and (it.resolve or 0) <= 1) then
         ply:ChatPrint("[Interrogation] You can't take any more. It comes out of you.")
         choice = "truth"
     end
@@ -246,11 +253,11 @@ function LC.InterrogationAnswer(ply, choice)
             Hit(ply, it, 2)
             local pr = LC.Prisoners and LC.Prisoners[ply]
             if pr then pr.untilT = pr.untilT + LIE_COST ply:SetNW2Float("lc_jail_until", pr.untilT) end
-            ply:ChatPrint("[Interrogation] " .. words .. " ... \"Liar.\" He doesn't believe you. Two more minutes in the cell.")
+            ply:ChatPrint("[Interrogation] " .. words .. " ... \"Liar.\" " .. He(it) .. " doesn't believe you. Two more minutes in the cell.")
         else
             it.lies = (it.lies or 0) + 1
             it.liesBelieved = (it.liesBelieved or 0) + 1
-            ply:ChatPrint("[Interrogation] You tell him " .. words .. " He writes it down.")
+            ply:ChatPrint("[Interrogation] You tell " .. Him(it) .. " " .. words .. " " .. He(it) .. " writes it down.")
             Deliver(ply, it, q, words, pos)
         end
     else -- truth, or a bargain
@@ -268,15 +275,15 @@ function LC.InterrogationAnswer(ply, choice)
         it.truths = (it.truths or 0) + 1
         if it.toldOnce and LC.AddStanding then LC.AddStanding(ply, TRUTH_PAY, "cooperated under interrogation") end
         Talked(ply, it)
-        ply:ChatPrint("[Interrogation] You tell him the truth: " .. words)
+        ply:ChatPrint("[Interrogation] You tell " .. Him(it) .. " the truth: " .. words)
         Deliver(ply, it, q, words, pos, who)
     end
-    -- one of the city's: all three asked, it's over
-    if not IsValid(it.byPlayer) then
+    -- one of the city's (or the Administrator, whoever plays her): all three asked, it's over
+    if not IsValid(it.byPlayer) or it.admin then
         local all = true
         for i = 1, #Qs(it) do if not (it.asked and it.asked[i]) then all = false end end
         if all then
-            Finish(ply, it, "[Interrogation] \"That will be all.\" The Civil Protection unit leaves.")
+            Finish(ply, it, "[Interrogation] \"That will be all.\" " .. (it.asker or "The Civil Protection unit") .. " leaves.")
         end
     end
     return true
@@ -284,11 +291,13 @@ end
 
 -- One of the city's interrogators, each tick (sv_livingcity_custody.lua).
 function LC.InterrogationStep(ply, it, now)
+    -- (it.led: led by a player and nobody else, e.g. the Administrator; when they leave the server it's over)
+    if it.led and not IsValid(it.byPlayer) then return Finish(ply, it, "[Interrogation] " .. (it.asker or "The unit") .. " walks away.") end
     if IsValid(it.byPlayer) then
         -- a unit asking in person: he has to stay with them
         if not it.byPlayer:Alive() or it.byPlayer:GetPos():DistToSqr(ply:GetPos()) > REACH * REACH * 4 then
             it.byPlayer:ChatPrint("[Interrogation] You walked away from " .. Name(ply) .. ".")
-            return Finish(ply, it, "[Interrogation] The unit walks away.")
+            return Finish(ply, it, "[Interrogation] " .. (it.asker or "The unit") .. " walks away.")
         end
         if it.waiting and now > it.waiting.untilT then LC.InterrogationAnswer(ply, "silent") end
         return
@@ -298,9 +307,9 @@ function LC.InterrogationStep(ply, it, now)
         return
     end
     if now < (it.next or 0) then return end
-    if not it.q and not (LC.CanInterrogate and LC.CanInterrogate(ply)) then it.qs = CitizenQs(ply) end
+    if not it.q and not it.qs and not (LC.CanInterrogate and LC.CanInterrogate(ply)) then it.qs = CitizenQs(ply) end
     it.q = (it.q or 0) + 1
-    if it.q > #Qs(it) then return Finish(ply, it, "[Interrogation] \"That will be all.\" The Civil Protection unit leaves.") end
+    if it.q > #Qs(it) then return Finish(ply, it, "[Interrogation] \"That will be all.\" " .. (it.asker or "The Civil Protection unit") .. " leaves.") end
     if it.q == 1 then Hit(ply, it, 1) end -- (to show he means it)
     Ask(ply, it, it.q)
 end
@@ -313,6 +322,11 @@ function LC.StartPlayerInterrogation(cp, prisoner)
     if not IsValid(cp) or not LC.PlayerIsCP(cp) then return false, "Civil Protection only." end
     if not IsValid(prisoner) or not prisoner:IsPlayer() or not (LC.Prisoners and LC.Prisoners[prisoner]) then return false, "Look at someone in a cell." end
     if cp:GetPos():DistToSqr(prisoner:GetPos()) > REACH * REACH then return false, "Get closer to them." end
+    -- (whoever tried to kill the Administrator is hers to question: she begins it here too, and nobody else does)
+    if LC.AdminQuestioningHolds and LC.AdminQuestioningHolds(prisoner) then
+        if LC.AdminQuestioningLead(cp, prisoner) then return true end
+        return false, "Someone else is questioning them."
+    end
     local it = LC.Interrogations[prisoner]
     if it and IsValid(it.byPlayer) and it.byPlayer ~= cp then return false, "Someone else is questioning them." end
     if it then
@@ -342,7 +356,7 @@ function LC.PlayerInterrogationDo(cp, what, n)
     if not it then return false end
     if what == "ask" then
         if it.waiting then cp:ChatPrint("[Interrogation] Wait for an answer.") return false end
-        if not QS[n] then return false end
+        if not Qs(it)[n] then return false end
         Ask(prisoner, it, n)
     elseif what == "baton" then
         if (it.hits or 0) >= MAX_HITS then cp:ChatPrint("[Interrogation] Any more and you'll kill them.") return false end
