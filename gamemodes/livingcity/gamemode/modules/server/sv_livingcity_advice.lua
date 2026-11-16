@@ -24,7 +24,7 @@
     Recordings, if you make them: garrysmod/sound/livingcity/citizens/,
     named for the line and the voice, advice_bins_male1.wav,
     advice_bins_female1.wav (more takes: 2, 3...). Without one they say the
-    words with Half-Life 2's own citizen voice. Every line: VOICE_LINES.md,
+    words with Half-Life 2's own citizen voice. Every line: VOICE_SCRIPTS.md,
     section 5 (LC.AdviceLines below is the list).
 
     Settings: lc_citizen_advice (1; 0 is Chat as before), lc_citizen_lead

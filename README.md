@@ -2,7 +2,7 @@
 
 A Combine-occupied city for Garry's Mod: ambient citizens and Civil Protection running real routines, plus factions and ranks, radiant quests with dice, personal story chains, twelve Union jobs, hunger and thirst, social credit, a Commissary, contraband and a black market, stop-and-search, disguises and forged papers, radios, prisons, curfews, and an in-game editor for all of it. Its own gamemode, for singleplayer and servers.
 
-**Voice lines to record or generate** (announcements in both voices, the radio, the G-Man, the dreams): [`VOICE_LINES.md`](VOICE_LINES.md), made from the code by `python3 _dev/voice_lines.py`.
+**Voice lines to record or generate** (announcements in both voices, the radio, the G-Man, the dreams): [`VOICE_SCRIPTS.md`](VOICE_SCRIPTS.md), made from the code by `python3 _dev/voice_lines.py`.
 
 ## Where everything is described
 

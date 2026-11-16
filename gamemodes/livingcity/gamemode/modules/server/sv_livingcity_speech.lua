@@ -15,7 +15,7 @@
         Her speech is stitched together from short recordings of hers (LC.SpeechCompose): an opening, up to
         three pieces on what happened lately (the chronicle's last lc_speech_lookback minutes, and the state
         of the city), one on the city's mood (the minds), and a closing. Each piece is speech_<id>1.wav in
-        sound/livingcity/administrator/ (VOICE_LINES.md lists them all, with words); its words show either way.
+        sound/livingcity/administrator/ (VOICE_SCRIPTS.md lists them all, with words); its words show either way.
       - Citizens found away from it by a unit (from halfway through the muster to the end): a warning, then
         the stick, again and again until they black out (lc_speech_beatings), and they come to standing in
         the crowd.
@@ -51,7 +51,7 @@ function LC.SpeechSession() return S end
 -- speeches that can be dynamically stitched together regarding how the past few days went, any big events").
 -- Each piece is a recording of hers, speech_<id>1.wav (in her usual tone; a stern take, speech_<id>_stern1.wav,
 -- is used when the city is tense). part: open, event (the chronicle), state (the state of the city), mood
--- (the minds), close. when: what brings it up (for VOICE_LINES.md).
+-- (the minds), close. when: what brings it up (for VOICE_SCRIPTS.md).
 LC.SpeechPieces = {
     { id = "open", part = "open", when = "the opening", tier = 1,
       words = "Citizens. Thank you for coming to hear me. Let us talk about the days behind us." },

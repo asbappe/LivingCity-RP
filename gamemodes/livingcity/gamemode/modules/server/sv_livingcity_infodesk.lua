@@ -17,7 +17,7 @@
     below zero. Someone wanted is told to stay where they are, nothing more.
 
     Recordings, if you make them: garrysmod/sound/livingcity/clerk/, named
-    for the line (rations1.wav, greet_curt1.wav). Every line: VOICE_LINES.md
+    for the line (rations1.wav, greet_curt1.wav). Every line: VOICE_SCRIPTS.md
     section 6 (LC.InfoDeskLines below). Without one, a terminal's chime.
 
     Setting: lc_infodesk (1; 0 and the clerk only shrugs).

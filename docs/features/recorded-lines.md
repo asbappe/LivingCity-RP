@@ -1,6 +1,6 @@
 # What named people say, recorded
 
-Asked for by the owner, 11 November: "architect and design natural sounding lines so that we can pre record NPC lines and cover as much situational dialogs as possible with the least amount of lines". Code: `sv_livingcity_lines.lua` (the bank and playing it), used by `sv_livingcity_brain.lua` (free talk, the director) and `sv_livingcity_mindsact.lua` (breaks). Tests: LinesTests (26). The list to record: `VOICE_LINES.md`, sections 10 and 11. **The text to paste into ElevenLabs, with voice descriptions: `VOICE_SCRIPTS.md`.**
+Asked for by the owner, 11 November: "architect and design natural sounding lines so that we can pre record NPC lines and cover as much situational dialogs as possible with the least amount of lines". Code: `sv_livingcity_lines.lua` (the bank and playing it), used by `sv_livingcity_brain.lua` (free talk, the director) and `sv_livingcity_mindsact.lua` (breaks). Tests: LinesTests (26). The list to record: `VOICE_SCRIPTS.md`, sections 10 and 11. **The text to paste into ElevenLabs, with voice descriptions: `VOICE_SCRIPTS.md`.**
 
 ## The idea
 
@@ -106,7 +106,7 @@ The lines are the tables `LC.StreetLines` and `LC.UnitLines` at the top of `sv_l
 
 **The 12 November playtest (the owner: "fix all of it please").** **Small talk (12 November):** twelve casual lines, `say_small_*` (squeaky shoes, the pigeon that hates you, the tiles in the hallway...), a man's and a woman's take each in `sound/livingcity/citizens/`; two of the city's people chatting pick one most of the time when nothing presses (`LC.CueTopic`), and the other laughs, agrees or answers with another; the Careless Talk diners use them too (`LC.SpySmallTalk`). **Mouths move:** anyone (not a player) playing a sound from `sound/livingcity/` is marked talking for the line's length (`LC.MarkTalking`, NW2 `lc_talk_from`/`lc_talk_until`); `cl_livingcity_lipsync.lua` works the jaw and lips of faces within 900 units, then puts the face back. Masked faces (metrocops, soldiers) have no jaw and are left alone. Half-Life 2's own clips keep the engine's lip sync.
 
-**The Resistance's people (from the to-do list, 13 November playtest).** What fighters, lookouts, the quartermaster and the medic say to you in chat (`LC.ResistanceLines`, sv_livingcity_rebelvoice.lua) plays from the one saying it once recorded: `garrysmod/sound/livingcity/resistance/<id>_male1.wav` and `_female1.wav`. VOICE_LINES.md section 13; `lc_voice_missing` lists what's left.
+**The Resistance's people (from the to-do list, 13 November playtest).** What fighters, lookouts, the quartermaster and the medic say to you in chat (`LC.ResistanceLines`, sv_livingcity_rebelvoice.lua) plays from the one saying it once recorded: `garrysmod/sound/livingcity/resistance/<id>_male1.wav` and `_female1.wav`. VOICE_SCRIPTS.md; `lc_voice_missing` lists what's left.
 
 ## Mouths with the recordings, and who greets you warmly (the owner's 14 November notes)
 

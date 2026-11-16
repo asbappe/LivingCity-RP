@@ -8,7 +8,7 @@
     The full explanation still goes into chat, to read if you need it.
 
     Recordings, if you make them: garrysmod/sound/livingcity/machines/, named
-    for the line (dispenser_nocard1.wav). Every line: VOICE_LINES.md section 8
+    for the line (dispenser_nocard1.wav). Every line: VOICE_SCRIPTS.md
     (LC.MachineLines below). Without one, the machine's beep.
 
     Setting: lc_machine_voice (1; 0 and the messages are cards as before).

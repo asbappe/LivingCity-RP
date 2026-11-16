@@ -32,7 +32,7 @@
       Whatever you do, another can is put on the bin and knocked off for you. Try all three before
       the time is up and you wake Unbroken (LC.DreamOutcome); otherwise it costs nothing.
       Half-Life 2's own recordings are used for his lines until the owner records theirs
-      (VOICE_LINES.md). Unseen in game yet: the swing, the sizes, where the stick sits on the can.
+      (VOICE_SCRIPTS.md). Unseen in game yet: the swing, the sizes, where the stick sits on the can.
 ]]
 
 if CLIENT then return end
@@ -531,7 +531,7 @@ do
 end
 
 ------------------------------------------------------------------------
--- Every line said in this dream (to record: VOICE_LINES.md)
+-- Every line said in this dream (to record: VOICE_SCRIPTS.md)
 ------------------------------------------------------------------------
 
 LC.StrangeAddCues({

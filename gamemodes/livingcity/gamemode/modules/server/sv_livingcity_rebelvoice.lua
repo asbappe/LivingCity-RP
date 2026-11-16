@@ -8,7 +8,7 @@
     'words'", with the narration around it) and, when the owner has recorded it, plays it from the one
     saying it: garrysmod/sound/livingcity/resistance/<id>_male1.wav or <id>_female1.wav (.mp3 and .ogg
     too; more takes as 2, 3...). Without a recording, the Half-Life 2 sound the caller plays as before.
-    Every line: VOICE_LINES.md, section 13 (python3 _dev/voice_lines.py).
+    Every line: VOICE_SCRIPTS.md (python3 _dev/voice_lines.py).
 ]]
 
 if CLIENT then return end

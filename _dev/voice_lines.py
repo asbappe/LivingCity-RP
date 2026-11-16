@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
-"""Makes VOICE_LINES.md: every voice line the gamemode looks for, in one place, for the owner to record or
+"""Makes VOICE_SCRIPTS.md: every voice line the gamemode looks for, in one place, for the owner to record or
 generate (the owner, 10 November: "consolidate all the missing voice lines that still need to be recorded/
-generated ... all in a single document"). The lists come from the code itself (the announcer's triggers and
-tones, the radio's, the G-Man's collapse lines, every dream line), so it's never out of date: rerun it after
-adding lines. Never edit VOICE_LINES.md by hand.
+generated ... all in a single document"), written the way ElevenLabs wants each line. The lists come from the
+code itself (the announcer's triggers and tones, the radio's, the G-Man's collapse lines, every dream line), so
+it's never out of date: rerun it after adding lines. Never edit VOICE_SCRIPTS.md by hand.
+
+One file since 16 November (the owner: "We previously were using VOICE_SCRIPTS, what happened? please
+consolidate"): there used to be a second, VOICE_LINES.md, with the same lines as a plain checklist. It is no
+longer written; its layout is still built in memory, because the scripts are made from it.
 
     python3 _dev/voice_lines.py
 
@@ -29,7 +33,7 @@ def load_done():
     done = set()
     if os.path.exists(DONE):
         done |= {l.strip() for l in open(DONE, encoding="utf-8") if l.strip() and not l.startswith("#")}
-    for name in ("VOICE_LINES.md", "VOICE_SCRIPTS.md"):
+    for name in ("VOICE_LINES.md", "VOICE_SCRIPTS.md"):  # (the first is gone since 16 November; an old copy's ticks are still read once)
         path = os.path.join(ROOT, name)
         if not os.path.exists(path):
             continue
@@ -37,7 +41,7 @@ def load_done():
             if line.lower().startswith("| [x] |"):
                 done |= set(_TICK.findall(line.split("|")[2] + "|" + (line.split("|")[3] if line.count("|") > 4 else "")))
     with open(DONE, "w", encoding="utf-8") as f:
-        f.write("# Recorded already (kept by python3 _dev/voice_lines.py; tick a row [x] in VOICE_LINES.md or VOICE_SCRIPTS.md, or add a file name here)\n")
+        f.write("# Recorded already (kept by python3 _dev/voice_lines.py; tick a row [x] in VOICE_SCRIPTS.md, or add a file name here)\n")
         for n in sorted(done):
             f.write(n + "\n")
     return done
@@ -72,10 +76,68 @@ def file_stem(token, tone=False):
         n = re.sub(r"_(firm|stern|furious)$", "", n)
     return n
 
+# Lines added after the server's list was made are not on it, so "not missing" used to read as "the server has
+# it": a new line was ticked as done, and her new lines never showed at all (16 November). _dev/voice_seen.txt
+# keeps what there was when the server's list (_dev/voice_missing.txt) came in: a row with a name that is not
+# in it is new, and stays unticked until the owner sends a newer list.
+SEEN = os.path.join(HERE, "voice_seen.txt")
+NEW_ROWS = [0]
+
+def row_names(line):
+    cells = line.split("|")
+    toks = _TICK.findall("|".join(cells[2:4]))
+    return {x for t in toks if not t.startswith("npc/") and "<" not in t for x in (file_stem(t), file_stem(t, True))}
+
+def missing_hash():
+    import hashlib
+    if not os.path.exists(SERVER_MISSING):
+        return ""
+    return hashlib.sha1(open(SERVER_MISSING, "rb").read()).hexdigest()
+
+def load_seen():
+    """What there was when the server's list came in (None: unknown, every row is taken as known)."""
+    if os.path.exists(SEEN):
+        lines = open(SEEN, encoding="utf-8").read().split("\n")
+        if lines and lines[0].strip() == "# list " + missing_hash():
+            return {l.strip() for l in lines[1:] if l.strip()}
+        if lines and lines[0].startswith("# list "):
+            return None  # (a newer list from the server: it covers everything there is now; save_seen writes it)
+    # the first time: the checklist as it was when the server's list was last put in the repository
+    import subprocess
+    try:
+        h = subprocess.run(["git", "log", "-1", "--format=%H", "--", "_dev/voice_missing.txt"], cwd=ROOT, capture_output=True, text=True).stdout.strip()
+        old = subprocess.run(["git", "show", h + ":VOICE_LINES.md"], cwd=ROOT, capture_output=True, text=True).stdout
+    except Exception:
+        return None
+    if not h or not old:
+        return None
+    names = set()
+    for line in old.split("\n"):
+        if line.startswith("| ["):
+            names |= row_names(line)
+    return names
+
+def save_seen(seen, lines):
+    """Kept for next time. With a newer list from the server (seen is None), everything there is now is covered."""
+    if seen is None:
+        seen = set()
+        for line in lines:
+            if line.startswith("| ["):
+                seen |= row_names(line)
+    with open(SEEN, "w", encoding="utf-8") as f:
+        f.write("# list " + missing_hash() + "\n" + "\n".join(sorted(seen)) + "\n")
+
+_SEEN = []
+def seen_set():
+    if not _SEEN:
+        _SEEN.append(load_seen())
+    return _SEEN[0]
+
 def tick_server(lines, miss, folder_of):
     """Rows ticked from the server's list. folder_of(heading) gives a section's folder (or None: leave it)."""
     if miss is None:
         return lines
+    seen = seen_set()
     out, folder = [], None
     for line in lines:
         if line.startswith("## "):
@@ -83,7 +145,10 @@ def tick_server(lines, miss, folder_of):
         elif folder and (line.startswith("| [ ] |") or line.lower().startswith("| [x] |")):
             cells = line.split("|")
             line = "| [ ] |" + line[len("| [ ] |"):]  # (the server's word decides, over an older tick)
-            if folder == "announce":
+            names = row_names(line)
+            if seen is not None and names and not names <= seen:
+                NEW_ROWS[0] += 1  # (added since the server's list: it was never asked about this one)
+            elif folder == "announce":
                 trig = _TICK.findall(cells[2])
                 if trig and trig[0] not in miss["overwatch/"] and trig[0] not in miss["administrator/"]:
                     line = "| [x] |" + line[len("| [ ] |"):]
@@ -108,7 +173,7 @@ def scripts_folder(heading):
     for key, f in (("administrator's announcements", "administrator/"), ("what named citizens say", "citizens/"), ("what units say", "units/"),
                    ("not real clips", "gman/"), ("cubbage", "cubbage/"), ("overwatch's announcements", "overwatch/"), ("## the radio", "radio/"),
                    ("the dreams' lines", "dreams/voice/"), ("citizens showing the way", "citizens/"), ("information clerk", "clerk/"),
-                   ("the old-timer", "oldtimer/"), ("machines", "machines/"), ("the resistance's people", "resistance/")):
+                   ("the old-timer", "oldtimer/"), ("machines", "machines/"), ("the resistance's people", "resistance/"), ("## the colonel", "colonel/")):
         if key in h:
             return f
     return None
@@ -181,10 +246,14 @@ def more_scripts(doc, rows=()):
     out += ["", "## Citizens showing the way", "", "Folder: `citizens/`. The citizen voices (man and woman) above: paste each line twice.", "",
             "| Done | Man's file | Woman's file | When | Paste |", "|---|---|---|---|---|"]
     out += [l for l in s5 if l.startswith("| [")]
-    for num, title in ((6, "The Citizen Information clerk"), (7, "The old-timer"), (8, "Machines")):
+    for num, title in ((6, "The Citizen Information clerk"), (7, "The old-timer"), (8, "Machines"), (9, "The Colonel")):
         sx = section(doc, num)
         out += ["", "## " + title, "", intro(sx), "", "| Done | File | When | Paste |", "|---|---|---|---|"]
         out += [l for l in sx if l.startswith("| [")]
+    # the G-Man's real clips: nothing to record, kept here for reference (where each file goes)
+    s3 = section(doc, 3)
+    if s3:
+        out += ["", "## The G-Man: his real clips (nothing to record: where each file goes)", ""] + s3
     return out
 
 def summary(miss):
@@ -550,10 +619,11 @@ def main():
             count += 1
     done = load_done()
     doc[:] = tick_server(tick(doc, done), load_missing(), lines_folder)
-    text = "\n".join(doc).rstrip("\n") + "\n"
-    with open(OUT, "w", encoding="utf-8") as f:
-        f.write(text)
-    print("wrote VOICE_LINES.md: %d lines" % count)
+    # One file since 16 November (the owner: "We previously were using VOICE_SCRIPTS ... please consolidate"):
+    # VOICE_LINES.md, the same lines as a plain checklist, is no longer written. Its layout is still built here,
+    # in memory, because the scripts are made from it; an old copy on disk is removed (its ticks were read above).
+    if os.path.exists(OUT):
+        os.remove(OUT)
     scripts(doc, street, units, group_of, order, done, rows)
 
 
@@ -564,8 +634,13 @@ GMAN_TAG = "[slow, breathy, unsettling calm, odd pauses and emphasis]"
 def scripts(doc, street, units, group_of, order, done=frozenset(), rows=()):
     """VOICE_SCRIPTS.md: the same lines as text to paste into ElevenLabs, with voice descriptions."""
     out = ["# Voice scripts: what to paste into ElevenLabs", "",
-           "**Made from the code by `python3 _dev/voice_lines.py`: never edit it by hand.** The lines of `VOICE_LINES.md` that are generated speech "
-           "(named citizens, units, the Administrator, and the G-Man's made-up lines), written the way ElevenLabs wants them, with a voice description for each voice.", "",
+           "**Every voice line the gamemode looks for, in this one file** (the owner, 10 November; one file since 16 November). "
+           "**Made from the code by `python3 _dev/voice_lines.py`: never edit it by hand**, rerun it. Each line is written the way ElevenLabs wants it, "
+           "with a voice description for each voice. Tick them off as you go.", "",
+           "- **Formats:** `.wav` (signed 16-bit PCM, 44100 Hz, mono), `.mp3` or `.ogg`. More than one take: `...1`, `...2` and so on; one is picked at random.",
+           "- **Different words from the ones suggested?** Put them in a `.txt` file with the same name beside the recording (`curfew1.txt` beside `curfew1.wav`): that is what shows in chat or on screen.",
+           "- **After adding files:** press FastDL sync on the host panel, then change the map (players download new sounds when they join).",
+           "- **Without a recording** the moment is silent (or Half-Life 2's own voice, for Overwatch, with `lc_announce_stock` 1), and the words still show.", "",
            "## How to use it", "",
            "- **Model:** Eleven v4 (or v3). A direction in **square brackets** changes how what follows is said: `[whispers] Careful.` It is not read out. "
            "Put it just before the words it changes. Your own wording works (`[tired, flat]`), as do reactions (`[sighs]`, `[exhales]`, `[short laugh]`) and `[pause]`. "
@@ -741,10 +816,16 @@ def scripts(doc, street, units, group_of, order, done=frozenset(), rows=()):
                 out.append("| [ ] | `%s_%s1` | [tired, wary, plain] %s |" % (r[1], g, r[3]))
                 n += 1
     out += more_scripts(doc, rows)
+    NEW_ROWS[0] = 0
     out[:] = tick_server(tick(out, done), load_missing(), scripts_folder)
     # what's left, near the top (after "How to use it")
     at = next((i for i, l in enumerate(out) if l.startswith("## How to use it")), 1)
-    out[at:at] = summary(load_missing())
+    block = summary(load_missing())
+    if NEW_ROWS[0] and block:
+        k = max(i for i, l in enumerate(block) if l.startswith("- **")) + 1 if any(l.startswith("- **") for l in block) else len(block)
+        block[k:k] = ["- **added since the server's list was made**: %d more rows (unticked below; run `lc_voice_missing` again after uploading and they are checked too)" % NEW_ROWS[0]]
+    out[at:at] = block
+    save_seen(seen_set(), doc)
     with open(os.path.join(os.path.dirname(OUT), "VOICE_SCRIPTS.md"), "w", encoding="utf-8") as fh:
         fh.write("\n".join(out).rstrip("\n") + "\n")
     print("wrote VOICE_SCRIPTS.md: %d lines to paste" % n)

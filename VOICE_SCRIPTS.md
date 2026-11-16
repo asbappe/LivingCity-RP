@@ -1,6 +1,11 @@
 # Voice scripts: what to paste into ElevenLabs
 
-**Made from the code by `python3 _dev/voice_lines.py`: never edit it by hand.** The lines of `VOICE_LINES.md` that are generated speech (named citizens, units, the Administrator, and the G-Man's made-up lines), written the way ElevenLabs wants them, with a voice description for each voice.
+**Every voice line the gamemode looks for, in this one file** (the owner, 10 November; one file since 16 November). **Made from the code by `python3 _dev/voice_lines.py`: never edit it by hand**, rerun it. Each line is written the way ElevenLabs wants it, with a voice description for each voice. Tick them off as you go.
+
+- **Formats:** `.wav` (signed 16-bit PCM, 44100 Hz, mono), `.mp3` or `.ogg`. More than one take: `...1`, `...2` and so on; one is picked at random.
+- **Different words from the ones suggested?** Put them in a `.txt` file with the same name beside the recording (`curfew1.txt` beside `curfew1.wav`): that is what shows in chat or on screen.
+- **After adding files:** press FastDL sync on the host panel, then change the map (players download new sounds when they join).
+- **Without a recording** the moment is silent (or Half-Life 2's own voice, for Overwatch, with `lc_announce_stock` 1), and the words still show.
 
 
 ## Still to record (the server's `lc_voice_missing`)
@@ -19,6 +24,7 @@ Ticked [x] below: the server already has it. Left to record, 357 files:
 - **machines** (`machines/`): 10 missing
 - **Colonel Cubbage** (`cubbage/`): 24 missing
 - **the Resistance's people** (`resistance/`): nothing missing
+- **added since the server's list was made**: 85 more rows (unticked below; run `lc_voice_missing` again after uploading and they are checked too)
 
 Run `lc_voice_missing` on the server after uploading, and give Claude the list (or `data/livingcity/voice_missing.txt`) to update the ticks. The Colonel's own lines (the ghost) aren't checked by it.
 
@@ -123,6 +129,7 @@ Folder: `administrator/`. **Use the voice her existing recordings were made with
 | [ ] | `suppressor_down_furious1.wav` | The suppression device is destroyed | [furious, barely controlled, clipped] They have silenced the Nexus. It changes nothing. |
 | [ ] | `speech_soon1.wav` | Her address is called: the city must gather (Overwatch's when a player Administrator calls it from her tablet; hers when the city gives it) | [warm, motherly, smiling] My dear citizens, I am going to speak to you all in a few minutes. Come and gather in front of the stand. I would so hate to miss anyone. |
 | [ ] | `speech_open1.wav` | Her speech, the opening | [warm, motherly, smiling] Citizens. Thank you for coming to hear me. Let us talk about the days behind us. |
+| [ ] | `speech_slogan1.wav` | Her speech her slogan, before the closing, every time | [warm, motherly, smiling] Love your neighbour, hate the traitor. |
 | [ ] | `speech_ev_deaths_firm1.wav` | Her speech, on what happened lately: when people were killed lately | [firm, composed, still kind] Blood has been spilled in our streets. Every life lost to violence is stolen from all of us. Violence solves nothing. It only invites more. |
 | [ ] | `speech_ev_arrests_firm1.wav` | Her speech, on what happened lately: when people were taken to the cells | [firm, composed, still kind] Civil Protection has been busy. No one taken to the cells was taken at random. They chose disorder, and disorder has a price. |
 | [ ] | `speech_ev_informers1.wav` | Her speech, on what happened lately: when citizens informed (she knows who) | [warm, motherly, smiling] To those of you who came forward and told us what you saw: thank you. You know who you are, and so do I. Your loyalty will not be forgotten. |
@@ -146,6 +153,17 @@ Folder: `administrator/`. **Use the voice her existing recordings were made with
 | [ ] | `speech_mood_restless_firm1.wav` | Her speech, on the city's mood: when the city's people are restless (the minds: unrest high) | [firm, composed, still kind] There is a restlessness in this city. I feel it. Restlessness can be turned into work, or into ruin. Choose work. |
 | [ ] | `speech_mood_content1.wav` | Her speech, on the city's mood: when the city's people are at ease (the minds: stress low) | [warm, motherly, smiling] You look well: rested, fed and calm. Good. Keep it so. |
 | [ ] | `speech_close1.wav` | Her speech, the closing | [warm, motherly, smiling] Now go back to your work, and remember: this city is only as strong as each one of you. Glory to the Union. |
+| [ ] | `attempt_furious1.wav` | An attempt on her life at her address, about 20 seconds after it (hers with nobody playing her, Overwatch's with a player in the post) | [furious, barely controlled, clipped] Citizens, this is your Administrator. A moment ago someone in this city tried to kill me. I am alive. I am unharmed. And I am not going anywhere. Go to your homes and let Civil Protection do its work. I will speak to you all very soon, and I will have a great deal to say. |
+| [ ] | `speech_attempt_open_stern1.wav` | Her speech after an attempt on her life: the opening | [stern, cold, slowly] Citizens. Look at me. I am still here. Not long ago, on this very spot, someone tried to kill your Administrator. |
+| [ ] | `speech_attempt_martyr_stern1.wav` | Her speech after an attempt on her life: herself | [stern, cold, slowly] I felt how close it came. I will carry that moment for the rest of my life. And do you know what I thought of? Not myself. I thought of you, and of who would look after you if I were gone. |
+| [ ] | `speech_attempt_you_stern1.wav` | Her speech after an attempt on her life: it was aimed at everyone | [stern, cold, slowly] That shot was not meant for me alone. It was aimed at your rations, your homes and your safety. Whoever strikes at me strikes at every one of you. |
+| [ ] | `speech_attempt_hero_stern1.wav` | Her speech after an attempt on her life: a soldier died on the grenade | [stern, cold, slowly] A soldier threw himself on a grenade that was meant for me. He did not hesitate. Ask yourselves whether you would have done the same, and remember him tonight. |
+| [ ] | `speech_attempt_guards_stern1.wav` | Her speech after an attempt on her life: her guards (no soldier died) | [stern, cold, slowly] My guards did not hesitate. They put themselves between me and death, as they do for you every day. Thank them when you pass them. Loudly. |
+| [ ] | `speech_attempt_enemy_stern1.wav` | Her speech after an attempt on her life: who did it | [stern, cold, slowly] And who did this? A coward. One of the so-called Resistance, who call themselves your liberators and shoot at a woman giving a speech. That is their courage. That is all they have to offer you. |
+| [ ] | `speech_attempt_caught_stern1.wav` | Her speech after an attempt on her life: the attacker is dead or in the cells | [stern, cold, slowly] The traitor has been dealt with. There was no mercy, and there will be none for the next one. |
+| [ ] | `speech_attempt_hunt_stern1.wav` | Her speech after an attempt on her life: the attacker is still free | [stern, cold, slowly] The traitor is still among you. Someone here knows the face, the name, the door. Tell Civil Protection and your block will eat well. Stay silent and your block will answer for it. |
+| [ ] | `speech_attempt_measures_stern1.wav` | Her speech after an attempt on her life: what it costs the city | [stern, cold, slowly] I never wanted checkpoints. I never wanted searches or curfews. But I will not apologise for keeping this city safe, and neither should you. Blame the ones who made it necessary. |
+| [ ] | `speech_attempt_resolve_stern1.wav` | Her speech after an attempt on her life: she is not going anywhere | [stern, cold, slowly] They wanted me afraid. They wanted this stand empty. I will stand here again tomorrow, and the day after, for as long as you need me. I am not going anywhere. |
 
 ## What named citizens say
 
@@ -331,17 +349,17 @@ Folder: `cubbage/`. Odessa Cubbage, alive and well, answering her address from t
 | [ ] | `answer_mood_afraid1` | her `speech_mood_afraid` | [defiant, dry, a speaker enjoying himself] You've nothing to fear from her, she says. Tell that to the ones she's taken. |
 | [ ] | `answer_mood_restless1` | her `speech_mood_restless` | [defiant, dry, a speaker enjoying himself] She feels your restlessness, she says. Good. Let her feel it. |
 | [ ] | `answer_mood_content1` | her `speech_mood_content` | [defiant, dry, a speaker enjoying himself] Rested, fed and calm, she says. Look around you. Does that look like anyone you know? |
-| [x] | `answer_attempt_open1` | her `speech_attempt_open` | [defiant, dry, a speaker enjoying himself] She's still here, she says. We noticed. |
-| [x] | `answer_attempt_martyr1` | her `speech_attempt_martyr` | [defiant, dry, a speaker enjoying himself] She thought of you in that moment. She thinks of you every time she cuts your rations, too. |
-| [x] | `answer_attempt_you1` | her `speech_attempt_you` | [defiant, dry, a speaker enjoying himself] A shot at her is a shot at you, is it? Her soldiers' shots at you were never shots at her. |
-| [x] | `answer_attempt_hero1` | her `speech_attempt_hero` | [defiant, dry, a speaker enjoying himself] A soldier died for her. He was somebody's son before they took his face. Remember that tonight instead. |
-| [x] | `answer_attempt_guards1` | her `speech_attempt_guards` | [defiant, dry, a speaker enjoying himself] Thank her guards loudly, she says. They'll be listening for who doesn't. |
-| [x] | `answer_attempt_enemy1` | her `speech_attempt_enemy` | [defiant, dry, a speaker enjoying himself] A coward, she says, from behind a wall of rifles and a sheet of glass. |
-| [x] | `answer_attempt_caught1` | her `speech_attempt_caught` | [defiant, dry, a speaker enjoying himself] They got one of ours. She says there was no mercy. There was no trial either. |
-| [x] | `answer_attempt_hunt1` | her `speech_attempt_hunt` | [defiant, dry, a speaker enjoying himself] She's offering bread for a name. Remember who made you hungry enough to think about it. |
-| [x] | `answer_attempt_measures1` | her `speech_attempt_measures` | [defiant, dry, a speaker enjoying himself] She never wanted checkpoints. She only built them, manned them and kept them. |
-| [x] | `answer_attempt_resolve1` | her `speech_attempt_resolve` | [defiant, dry, a speaker enjoying himself] She isn't going anywhere, she says. We'll see about that. |
-| [x] | `answer_slogan1` | her `speech_slogan` | [defiant, dry, a speaker enjoying himself] Love your neighbour, hate the traitor, she says. We agree. Ask yourself who sold this city. |
+| [ ] | `answer_attempt_open1` | her `speech_attempt_open` | [defiant, dry, a speaker enjoying himself] She's still here, she says. We noticed. |
+| [ ] | `answer_attempt_martyr1` | her `speech_attempt_martyr` | [defiant, dry, a speaker enjoying himself] She thought of you in that moment. She thinks of you every time she cuts your rations, too. |
+| [ ] | `answer_attempt_you1` | her `speech_attempt_you` | [defiant, dry, a speaker enjoying himself] A shot at her is a shot at you, is it? Her soldiers' shots at you were never shots at her. |
+| [ ] | `answer_attempt_hero1` | her `speech_attempt_hero` | [defiant, dry, a speaker enjoying himself] A soldier died for her. He was somebody's son before they took his face. Remember that tonight instead. |
+| [ ] | `answer_attempt_guards1` | her `speech_attempt_guards` | [defiant, dry, a speaker enjoying himself] Thank her guards loudly, she says. They'll be listening for who doesn't. |
+| [ ] | `answer_attempt_enemy1` | her `speech_attempt_enemy` | [defiant, dry, a speaker enjoying himself] A coward, she says, from behind a wall of rifles and a sheet of glass. |
+| [ ] | `answer_attempt_caught1` | her `speech_attempt_caught` | [defiant, dry, a speaker enjoying himself] They got one of ours. She says there was no mercy. There was no trial either. |
+| [ ] | `answer_attempt_hunt1` | her `speech_attempt_hunt` | [defiant, dry, a speaker enjoying himself] She's offering bread for a name. Remember who made you hungry enough to think about it. |
+| [ ] | `answer_attempt_measures1` | her `speech_attempt_measures` | [defiant, dry, a speaker enjoying himself] She never wanted checkpoints. She only built them, manned them and kept them. |
+| [ ] | `answer_attempt_resolve1` | her `speech_attempt_resolve` | [defiant, dry, a speaker enjoying himself] She isn't going anywhere, she says. We'll see about that. |
+| [ ] | `answer_slogan1` | her `speech_slogan` | [defiant, dry, a speaker enjoying himself] Love your neighbour, hate the traitor, she says. We agree. Ask yourself who sold this city. |
 | [ ] | `answer_close1` | (his closing) | [defiant, dry, a speaker enjoying himself] That's all from me. Keep your heads down, your eyes open, and your door unlocked for a friend. We're closer than she thinks. |
 
 ## The Resistance's people
@@ -350,32 +368,32 @@ Folder: `resistance/`. Fighters, lookouts, the quartermaster and the medic speak
 
 | Done | File | Paste |
 |---|---|---|
-| [x] | `busy_male1` | [tired, wary, plain] I'm busy. Ask someone else. |
-| [x] | `busy_female1` | [tired, wary, plain] I'm busy. Ask someone else. |
-| [x] | `head_back_male1` | [tired, wary, plain] Right. I'll head back. |
-| [x] | `head_back_female1` | [tired, wary, plain] Right. I'll head back. |
-| [x] | `medic_broke_male1` | [tired, wary, plain] You don't have the credits, friend. Sorry. |
-| [x] | `medic_broke_female1` | [tired, wary, plain] You don't have the credits, friend. Sorry. |
-| [x] | `medic_charge_male1` | [tired, wary, plain] I hate to charge, but these don't grow on trees. |
-| [x] | `medic_charge_female1` | [tired, wary, plain] I hate to charge, but these don't grow on trees. |
-| [x] | `medic_fine_male1` | [tired, wary, plain] You look fine to me. Come back when you're bleeding. |
-| [x] | `medic_fine_female1` | [tired, wary, plain] You look fine to me. Come back when you're bleeding. |
-| [x] | `medic_hurt_male1` | [tired, wary, plain] Hurt? I can patch you up. |
-| [x] | `medic_hurt_female1` | [tired, wary, plain] Hurt? I can patch you up. |
-| [x] | `meet_there_male1` | [tired, wary, plain] We'll meet you there. |
-| [x] | `meet_there_female1` | [tired, wary, plain] We'll meet you there. |
-| [x] | `not_earned_male1` | [tired, wary, plain] Who are you? Get someone who's earned it to ask me. |
-| [x] | `not_earned_female1` | [tired, wary, plain] Who are you? Get someone who's earned it to ask me. |
-| [x] | `on_watch_male1` | [tired, wary, plain] I'm on watch. Find someone else. |
-| [x] | `on_watch_female1` | [tired, wary, plain] I'm on watch. Find someone else. |
-| [x] | `parade_male1` | [tired, wary, plain] Any more and you're a parade. |
-| [x] | `parade_female1` | [tired, wary, plain] Any more and you're a parade. |
-| [x] | `qm_chip_male1` | [tired, wary, plain] Is that a Combine chip? Don't wave it about. Take it to the lab, the doc will decode it. |
-| [x] | `qm_chip_female1` | [tired, wary, plain] Is that a Combine chip? Don't wave it about. Take it to the lab, the doc will decode it. |
-| [x] | `qm_greet_male1` | [tired, wary, plain] What do you need? |
-| [x] | `qm_greet_female1` | [tired, wary, plain] What do you need? |
-| [x] | `qm_stranger_male1` | [tired, wary, plain] I don't know you. But if you've brought something for the fight, I'll take it. |
-| [x] | `qm_stranger_female1` | [tired, wary, plain] I don't know you. But if you've brought something for the fight, I'll take it. |
+| [ ] | `busy_male1` | [tired, wary, plain] I'm busy. Ask someone else. |
+| [ ] | `busy_female1` | [tired, wary, plain] I'm busy. Ask someone else. |
+| [ ] | `head_back_male1` | [tired, wary, plain] Right. I'll head back. |
+| [ ] | `head_back_female1` | [tired, wary, plain] Right. I'll head back. |
+| [ ] | `medic_broke_male1` | [tired, wary, plain] You don't have the credits, friend. Sorry. |
+| [ ] | `medic_broke_female1` | [tired, wary, plain] You don't have the credits, friend. Sorry. |
+| [ ] | `medic_charge_male1` | [tired, wary, plain] I hate to charge, but these don't grow on trees. |
+| [ ] | `medic_charge_female1` | [tired, wary, plain] I hate to charge, but these don't grow on trees. |
+| [ ] | `medic_fine_male1` | [tired, wary, plain] You look fine to me. Come back when you're bleeding. |
+| [ ] | `medic_fine_female1` | [tired, wary, plain] You look fine to me. Come back when you're bleeding. |
+| [ ] | `medic_hurt_male1` | [tired, wary, plain] Hurt? I can patch you up. |
+| [ ] | `medic_hurt_female1` | [tired, wary, plain] Hurt? I can patch you up. |
+| [ ] | `meet_there_male1` | [tired, wary, plain] We'll meet you there. |
+| [ ] | `meet_there_female1` | [tired, wary, plain] We'll meet you there. |
+| [ ] | `not_earned_male1` | [tired, wary, plain] Who are you? Get someone who's earned it to ask me. |
+| [ ] | `not_earned_female1` | [tired, wary, plain] Who are you? Get someone who's earned it to ask me. |
+| [ ] | `on_watch_male1` | [tired, wary, plain] I'm on watch. Find someone else. |
+| [ ] | `on_watch_female1` | [tired, wary, plain] I'm on watch. Find someone else. |
+| [ ] | `parade_male1` | [tired, wary, plain] Any more and you're a parade. |
+| [ ] | `parade_female1` | [tired, wary, plain] Any more and you're a parade. |
+| [ ] | `qm_chip_male1` | [tired, wary, plain] Is that a Combine chip? Don't wave it about. Take it to the lab, the doc will decode it. |
+| [ ] | `qm_chip_female1` | [tired, wary, plain] Is that a Combine chip? Don't wave it about. Take it to the lab, the doc will decode it. |
+| [ ] | `qm_greet_male1` | [tired, wary, plain] What do you need? |
+| [ ] | `qm_greet_female1` | [tired, wary, plain] What do you need? |
+| [ ] | `qm_stranger_male1` | [tired, wary, plain] I don't know you. But if you've brought something for the fight, I'll take it. |
+| [ ] | `qm_stranger_female1` | [tired, wary, plain] I don't know you. But if you've brought something for the fight, I'll take it. |
 
 ## Overwatch's announcements
 
@@ -421,7 +439,7 @@ Folder: `overwatch/`. Overwatch: cold and clinical, a dispatcher, the same voice
 | [ ] | `black_crushed1` | The uprising is crushed (time ran out) | [cold, clinical, flat dispatcher] Incursion contained. Sociostability restoring. Remain indoors. |
 | [ ] | `suppressor_down1` | The suppression device is destroyed | [cold, clinical, flat dispatcher] Alert: Nexus suppression device offline. All units, contain and repair. |
 | [ ] | `speech_soon1` | Her address is called: the city must gather (Overwatch's when a player Administrator calls it from her tablet; hers when the city gives it) | [cold, clinical, flat dispatcher] Attention, all residents: the City Administrator will address the city. Report to the assembly point immediately. Attendance is mandatory. |
-| [x] | `attempt1` | An attempt on her life at her address, about 20 seconds after it (hers with nobody playing her, Overwatch's with a player in the post) | [cold, clinical, flat dispatcher] Attention, all units: an attempt has been made on the life of the City Administrator. The Administrator is secure. All sectors are sealed. Locate and apprehend the assailant. |
+| [ ] | `attempt1` | An attempt on her life at her address, about 20 seconds after it (hers with nobody playing her, Overwatch's with a player in the post) | [cold, clinical, flat dispatcher] Attention, all units: an attempt has been made on the life of the City Administrator. The Administrator is secure. All sectors are sealed. Locate and apprehend the assailant. |
 
 ## The radio
 
@@ -917,3 +935,97 @@ The ration dispenser and the vending machines, in a flat machine voice (a Combin
 | [ ] | `dispenser_withheld1.wav` | Ration dispenser | Allocation withheld. Noncompliance is recorded. |
 | [ ] | `vending_blackout1.wav` | Vending machine | Power failure. Service unavailable. |
 | [ ] | `vending_credits1.wav` | Vending machine | Insufficient credits. |
+
+## The Colonel
+
+The old fighter at the Resistance camp (an old man's face, `lc_colonel_model`; Odessa Cubbage himself answers her speeches, section 12): weary, dry, kind underneath, a ghost who doesn't quite know it at first. Folder: **`garrysmod/sound/livingcity/colonel/`**. Only the player he's talking to hears these. Without a recording he's silent and the words show. `job_unit` names a unit's designation where it says %s: record it without the number ("Designation... still walking around").
+
+| Done | File | When | Paste |
+|---|---|---|---|
+| [x] | `ask11.wav` | What's happening to you? (by how ghostly he looks) | Happening? I'm old. Old men look how they look. Ask me something useful. |
+| [x] | `ask21.wav` | What's happening to you? (by how ghostly he looks) | You're tired, and the light's bad in here. That's all it is. Don't stare, it's rude. |
+| [x] | `ask31.wav` | What's happening to you? (by how ghostly he looks) | You've seen the others don't answer me. I saw it too, a long time ago. I stopped asking why. Leave it alone a while longer. |
+| [x] | `ask41.wav` | What's happening to you? (by how ghostly he looks) | All right. You've earned it. I didn't get out of the first camp. They burned it with us inside, my brother and me both. Nobody here can see me but the ones who keep coming back. I don't know what that makes me. I know I'm still here, and I know you can hear me. That'll have to do for the pair of us. |
+| [x] | `debrief_clean1.wav` | Debrief me | Clean. Nobody saw you, nobody followed you home. That's how it's done. |
+| [x] | `debrief_failed1.wav` | Debrief me | We lost that one. Learn why before you try again. |
+| [x] | `debrief_messy1.wav` | Debrief me | You got it done, and half the city knows your face. Next time, slower. |
+| [x] | `debrief_none1.wav` | Debrief me | Nothing to report? Then go and do something worth reporting. |
+| [x] | `greet1.wav` | Greeting (by how well he knows you) | Another one. Sit, if you like. Nobody else does. |
+| [x] | `greet_back1.wav` | Greeting (by how well he knows you) | You came back. Most don't. |
+| [x] | `greet_known1.wav` | Greeting (by how well he knows you) | You've worked it out by now, haven't you. Nobody else can see me. I didn't get out of the first camp. None of us did, not really. But you keep coming, so I keep telling you what I know. |
+| [x] | `greet_trust1.wav` | Greeting (by how well he knows you) | The quartermaster won't look at me, you know. Hasn't for years. Sit. |
+| [x] | `intel_march1.wav` | What's the word? | They're walking one of ours to the cells. Right now. You can still get to them. |
+| [x] | `intel_quiet1.wav` | What's the word? | Quiet. Too quiet. Rest while you can. |
+| [x] | `intel_supply1.wav` | What's the word? | Supply drop coming in. Guarded, but not well. Go. |
+| [x] | `intel_sweep1.wav` | What's the word? | They're coming into our ground. Now. Clear what you can carry and go. |
+| [x] | `intel_sympathizer1.wav` | What's the word? | That one. They're with us, they just don't know it yet. Ask them to keep watch. |
+| [x] | `job_medicine1.wav` | What he needs (end of his greeting) | Our wounded are in a bad way. Three of the Union's medicines would see them through. |
+| [x] | `job_tags1.wav` | What he needs (end of his greeting) | They took my brother's tags when they took him. They keep things like that on their own ground. I'd like them back. |
+| [x] | `job_unit1.wav` | What he needs (end of his greeting) | One more thing. The unit who lit the first camp. Designation %s. Still walking around. |
+| [x] | `job_unit_none1.wav` | What he needs (end of his greeting) | There's a unit I'd like to see in the ground. When he's back on the streets, I'll tell you his number. |
+| [x] | `nothing1.wav` | Between answers | That's not what I need. |
+| [x] | `thanks_medicine1.wav` | You helped | That'll keep them breathing. Good. You think of others. That's rarer than courage. |
+| [x] | `thanks_tags1.wav` | You helped | His. His name, scratched in by hand. Here. He'd want you to have this. It never missed for him. |
+| [x] | `thanks_unit1.wav` | You helped | Is it done? ...It is. I can feel it. Thank you. I don't think I'll need anything else. |
+| [x] | `whisper_base1.wav` | Heard anything strange? | The master core, the big one from their nexus. Get it to our scientist and let him crack it open. All their screens change. |
+| [x] | `whisper_bloom1.wav` | Heard anything strange? | Let the weeds take the streets, every crack full, and leave them be. The city starts to dance. |
+| [x] | `whisper_fire1.wav` | Heard anything strange? | Set fifteen fires burning at once. Then watch what the city does. |
+| [x] | `whisper_hard1.wav` | Heard anything strange? | Kill the city's lights and keep them dead for a quarter of an hour. Somebody starts a party in the dark, and nobody can stop it. |
+| [x] | `whisper_harpies1.wav` | Heard anything strange? | When the streets run red fast enough, a dozen dead in a few minutes, something comes down out of the sky. Something with wings. |
+| [x] | `whisper_marrow1.wav` | Heard anything strange? | When the dead pile up faster than they can be carried off, or the infested hold half the city, the bones get restless. |
+| [x] | `whisper_none1.wav` | Heard anything strange? | Nothing you haven't heard from me already. |
+| [x] | `whisper_plane1.wav` | Heard anything strange? | Do the morning drill, five of you or more, and do it perfectly. Not one mistake. Then look up. |
+| [x] | `whisper_shalom1.wav` | Heard anything strange? | Six people dancing in a ring, in this city. Imagine it. They say the whole city joins in. |
+| [x] | `whisper_standup1.wav` | Heard anything strange? | Keep the city red for three quarters of an hour straight. The crowd starts wanting a show. |
+| [x] | `whisper_water1.wav` | Heard anything strange? | There's a priest who'd swallow anything holy. Feed him the master core and pray for rain. A lot of rain. |
+
+## The G-Man: his real clips (nothing to record: where each file goes)
+
+
+Nothing here needs a new voice: every line is one of his real clips (Half-Life 2, the Episodes, Half-Life: Alyx), as it is or spliced ("Mr. Freeman" cut out). Each has a setting pointing at its file; a `.txt` beside a clip gives its exact words on screen.
+
+
+Every clip the gamemode plays for the G-Man: when it plays, the file it looks for, and where it comes from.
+
+- **Where the files go:** on the server, under `garrysmod/sound/`, at the path in the table (for example `garrysmod/sound/vo/episode_1/npc/gman/gman_notforlong.wav`).
+- **After adding files:** press FastDL sync, then change the map. Players download any of these the server has when they join.
+- **Format:** WAV, signed 16-bit PCM, 44100 Hz, mono (Audacity: File > Export > WAV). Not .ogg.
+- **Missing a file?** That moment is silent, but the words still show on screen.
+- **Changing a file:** each clip has a setting (last column) to point it at another file.
+
+| # | When it plays | Who hears it | What he says | File (under `garrysmod/sound/`) | Where it comes from | On your server now? | Setting |
+|---|---|---|---|---|---|---|---|
+| 1 | The G-Man's vote, when time stops | Everyone | "Is it really that time again?" | `vo/citadel/gman_exit02.wav` | Half-Life 2 (`sound/vo/citadel`) | Yes | `lc_ending_gman_lines` |
+| 2 | The vote says no | Everyone | "Not this time..." | `vo/episode_1/npc/gman/gman_notthistime.wav` | Episode One pre-load (`sound/vo/episode_1/npc/gman`) | No: download it | `lc_gman_line_vote_no` |
+| 3 | The Administrator refuses a sealed directive, the first time | The Administrator | "Not for long..." | `vo/episode_1/npc/gman/gman_notforlong.wav` | Episode One pre-load | No: download it | `lc_gman_line_refused` |
+| 4 | The Administrator refuses again (the harsher one) | The Administrator | "We'll see about that." | `vo/episode_1/npc/gman/gman_wellseeaboutthat.wav` | Episode One (`sound/vo/episode_1/intro` or `npc/gman`) | No: download it | `lc_gman_line_refused_again` |
+| 5 | 5 minutes left on a waiting directive (the last call; an envelope beside him, and the bar turns red) | The Administrator | "Come back. Come back here, now." | `vo/episode_1/npc/gman/gman_comebacknow.wav` | Episode One pre-load: `gman_comebacknow`, **cut "Oh no, Freeman"** so it starts at "Come back" | No: download and splice | `lc_gman_line_last_call` |
+| 6 | The Administrator closes the envelopes without answering (once a directive) | The Administrator | "Get back here..." | `vo/episode_1/npc/gman/gman_getbackhere.wav` | Episode One pre-load: `gman_getbackhere` | No: download it | `lc_gman_line_walk_away` |
+| 7 | After a refusal, he picks a rival who could run for the office; they can then call a recall vote | The rival | "A previous hire has been unable, or unwilling, to perform the tasks laid before him. We have struggled to find a suitable replacement. Until now." | `livingcity/gman/gman_replacement.wav` | Half-Life: Alyx: `04_00302` to `04_00304`, **joined into one file** | No: download and join | `lc_gman_line_rival` |
+| 8 | A new City Administrator (elected, or by recall) | The new Administrator | "I've received some interesting offers for your services. ... These are extraordinary times." | `vo/citadel/gman_exit05.wav` | Half-Life 2. Optional: **cut "Ordinarily, I wouldn't contemplate them"**, save it as `livingcity/gman/gman_offers.wav`, and point the setting at that | Yes (uncut) | `lc_gman_line_elected` |
+| 9 | Someone first looks at one of his weapon crates (each player, once a round of crates) | That player | "The right man in the wrong place can make all the difference in the world." | `vo/gman_misc/gman_03.wav` | Half-Life 2 (`sound/vo/gman_misc`) | Yes | `lc_gman_line_crates` |
+| 10 | A glimpse of him about the city, as a directive warms up | Whoever sees him (the sound is from where he stands) | (his inhale) | `vo/episode_1/npc/gman/gman_inhale.wav` | Episode One (`sound/vo/episode_1/npc/gman`) | No: download it (or leave it out: the glimpse is silent) | `lc_gman_line_glimpse` |
+
+**To download (6 files):** `gman_notthistime`, `gman_notforlong`, `gman_wellseeaboutthat`, `gman_comebacknow` (spliced), `gman_getbackhere`, `gman_inhale`, into `garrysmod/sound/vo/episode_1/npc/gman/`; and the Half-Life: Alyx `04_00302` to `04_00304` joined into `garrysmod/sound/livingcity/gman/gman_replacement.wav`.
+
+Dreams (the riddles, the rumours) have no voice: his words on screen, over the dark.
+
+### The collapse (sociostability BLACK): his lines to the Administrator
+
+Added 10 November. He stands in front of the Administrator (only she sees him) and says these. **Nothing needs recording:** point each setting at any real G-Man clip, stock or one you've spliced (cut out "Mr. Freeman" and so on). **The words on screen:** put a `.txt` file with the same name next to the clip (for example `black_gman_wise.txt` beside `black_gman_wise.wav`) holding exactly what the clip says, and that's what shows; with no `.txt`, the words below show. With no clip, the moment is silent and the words still show. `lc_voice_missing` lists which ones the server doesn't have yet.
+
+| # | When it plays | What it says now (on screen) | File (under `garrysmod/sound/`) by default | Setting |
+|---|---|---|---|---|
+| 11 | He appears in front of her (she can't move while he talks) | "Is it really that time again?" | `vo/citadel/gman_exit02.wav` (Half-Life 2, on your server) | `lc_black_gman_arrive` |
+| 12 | Five seconds later | "I've received some interesting offers for your services. Ordinarily, I wouldn't contemplate them. These are extraordinary times." | `vo/citadel/gman_exit05.wav` (Half-Life 2, on your server) | `lc_black_gman_ways` |
+| 13 | His window opens (step down, end it, refuse) | "Step aside. Or end it ... yourself. Choose." | `livingcity/gman/black_gman_choose.wav` | `lc_black_gman_choose` |
+| 14 | Half her time to answer is gone | "Time is a luxury you no longer have, Administrator." | `livingcity/gman/black_gman_press.wav` | `lc_black_gman_press` |
+| 15 | 30 seconds left to answer | "Choose. Or I will ... choose for you." (Half-Life 2's ending has a line about taking the liberty of choosing for you: a good one to splice) | `livingcity/gman/black_gman_lastcall.wav` | `lc_black_gman_lastcall` |
+| 16 | She shuts his window or walks away from him (10 seconds to come back and press E on him) | "Get back here..." | `vo/episode_1/npc/gman/gman_getbackhere.wav` (row 6: splice "get back here ... get back here now" without "Freeman", with a `.txt` of its words) | `lc_gman_line_walk_away` (shared with row 6) |
+| 17 | She steps down | "A wise choice, Administrator." | `livingcity/gman/black_gman_wise.wav` | `lc_black_gman_wise` |
+| 18 | She ends it herself | "... As you wish." | `livingcity/gman/black_gman_asyouwish.wav` | `lc_black_gman_asyouwish` |
+| 19 | She refuses (or doesn't come back in time) | "Not for long..." | row 3's file | `lc_gman_line_refused` (shared with row 3) |
+| 20 | His first step: weapon crates about the city | "The right man in the wrong place can make all the difference in the world." | row 9's file | `lc_gman_line_crates` (shared with row 9) |
+| 21 | His second step: people waking armed | "Your citizens sleep poorly. They wake ... prepared." | `livingcity/gman/black_gman_sleep.wav` | `lc_black_gman_sleep` |
+| 22 | His third step: the grid failing | "Even the lights are leaving you." | `livingcity/gman/black_gman_dark.wav` | `lc_black_gman_dark` |
+| 23 | His fourth step: her last stand | "It ends where it began, Administrator. In your office." | `livingcity/gman/black_gman_office.wav` | `lc_black_gman_office` |

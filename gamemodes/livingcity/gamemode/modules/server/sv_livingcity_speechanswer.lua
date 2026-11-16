@@ -26,7 +26,7 @@
 
     Recordings, if you make them: garrysmod/sound/livingcity/cubbage/, named for the line
     (answer_open1.wav, answer_ev_deaths1.wav, answer_close1.wav; .wav, .mp3 or .ogg). Every line:
-    VOICE_LINES.md. Without one, his words are in chat only.
+    VOICE_SCRIPTS.md. Without one, his words are in chat only.
 ]]
 
 if CLIENT then return end

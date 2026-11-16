@@ -59,7 +59,7 @@
 
     Recordings, if you make them: garrysmod/sound/livingcity/colonel/,
     named for the line (greet1.wav, whisper_base1.wav). Every line:
-    VOICE_LINES.md section 9 (LC.ColonelLines). Only the player he's talking
+    VOICE_SCRIPTS.md (LC.ColonelLines). Only the player he's talking
     to hears them. Without one, nothing: he's in your head.
 
     Setting: lc_colonel (1; 0 and he's gone).

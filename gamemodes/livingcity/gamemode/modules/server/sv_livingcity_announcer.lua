@@ -799,7 +799,7 @@ concommand.Add("lc_voice_missing", function(ply)
         for _, line in ipairs(LC.VoiceMissingLines(r)) do Reply(ply, line) end
     end
     Reply(ply, "[Miscount] " .. total .. " voice lines with no recording yet. Without one, the words still show (Half-Life 2's own Overwatch lines only with lc_announce_stock 1). " ..
-        "Name a file for its line (curfew1.wav, ravenholm_defeat1.wav); a .txt with the same name is its subtitle. Everything to record, with suggested words: VOICE_LINES.md, in the gamemode's folder.")
+        "Name a file for its line (curfew1.wav, ravenholm_defeat1.wav); a .txt with the same name is its subtitle. Everything to record, with suggested words: VOICE_SCRIPTS.md, in the gamemode's folder.")
 end)
 
 concommand.Add("lc_announce_rescan", function(ply)

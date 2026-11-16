@@ -24,7 +24,7 @@
     used and nothing needs recording). Without a recording the line is words only (never
     Half-Life 2's voice in its place), and once any are recorded the named citizens of that sex speak ONLY
     with their recorded voice (LC.OwnVoice, below).
-    VOICE_LINES.md lists them all (python3 _dev/voice_lines.py); lc_voice_missing says which are not there yet.
+    VOICE_SCRIPTS.md lists them all (python3 _dev/voice_lines.py); lc_voice_missing says which are not there yet.
 ]]
 
 LC = LC or {}

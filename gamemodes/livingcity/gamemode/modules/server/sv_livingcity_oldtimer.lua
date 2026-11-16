@@ -23,7 +23,7 @@
     restart; if he dies, someone else grows old.
 
     Recordings, if you make them: garrysmod/sound/livingcity/oldtimer/,
-    named for the line (bins1.wav). Every line: VOICE_LINES.md section 7
+    named for the line (bins1.wav). Every line: VOICE_SCRIPTS.md
     (LC.OldTimerLines below). Without one, Half-Life 2's own citizen voice.
 
     His face (the owner, 10 November: "make his face the old man from Lost
