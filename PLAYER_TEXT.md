@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version 85aedc6. Admin-only console messages and log lines are left out.
+Made from version f03ac15. Admin-only console messages and log lines are left out.
 
-12908 lines, from 355 files.
+12914 lines, from 355 files.
 
 ## Contents
 
@@ -155,7 +155,7 @@ Made from version 85aedc6. Admin-only console messages and log lines are left ou
 - [the actions menu (server side)](#the-actions-menu-server-side-svlivingcityactionslua) (8)
 - [acts (server). See sh_livingcity_acts.lua for the list](#acts-server-see-shlivingcityactslua-for-the-list-svlivingcityactslua) (7)
 - [the would-be assassin is hers to question (the owner, 16 November)](#the-would-be-assassin-is-hers-to-question-the-owner-16-november-svlivingcityadminquestioninglua) (13)
-- [the Administrator's security (the owner, 15 November)](#the-administrators-security-the-owner-15-november-svlivingcityadminsecuritylua) (4)
+- [the Administrator's security (the owner, 15 November)](#the-administrators-security-the-owner-15-november-svlivingcityadminsecuritylua) (8)
 - [testing tools for admins](#testing-tools-for-admins-svlivingcityadmintoolslua) (50)
 - [citizens who show you the way](#citizens-who-show-you-the-way-svlivingcityadvicelua) (24)
 - [Half-Life 2's ammo limits](#half-life-2s-ammo-limits-svlivingcityammolua) (4)
@@ -233,7 +233,7 @@ Made from version 85aedc6. Admin-only console messages and log lines are left ou
 - [help for the outnumbered side](#help-for-the-outnumbered-side-svlivingcityimbalancelua) (24)
 - [the infested, a hidden side (the owner, 13 November playtest: off the F4 menu and every](#the-infested-a-hidden-side-the-owner-13-november-playtest-off-the-f4-menu-and-every-svlivingcityinfestedsidelua) (2)
 - [Citizen Information](#citizen-information-svlivingcityinfodesklua) (36)
-- [the Resistance Insider (a Civil Protection unit secretly with the Resistance)](#the-resistance-insider-a-civil-protection-unit-secretly-with-the-resistance-svlivingcityinsiderlua) (65)
+- [the Resistance Insider (a Civil Protection unit secretly with the Resistance)](#the-resistance-insider-a-civil-protection-unit-secretly-with-the-resistance-svlivingcityinsiderlua) (67)
 - [Civil Intake (becoming somebody)](#civil-intake-becoming-somebody-svlivingcityintakelua) (84)
 - [the arrival search (the owner, 10 November)](#the-arrival-search-the-owner-10-november-svlivingcityintaketutorlua) (30)
 - [a deeper interrogation (the owner, 10 November: "I LOVE the](#a-deeper-interrogation-the-owner-10-november-i-love-the-svlivingcityinterrogationlua) (56)
@@ -5487,19 +5487,29 @@ Made from version 85aedc6. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): Whoever tries to kill her: the worst crime there is, and never forgotten
 
-- "Attempted murder of the City Administrator"  (text, line 278)
+- "Attempted murder of the City Administrator"  (text, line 368)
 
 > Note for you (not shown in game): (after the crime is booked, which costs standing of its own: -999 it is, whatever it was)
 
-- "an attempt on the Administrator's life"  (text, line 301)
+- "an attempt on the Administrator's life"  (text, line 391)
+
+> Note for you (not shown in game): The close call is used up, and she is told (in the dark).
+
+- "A close call"  (on-screen notice, line 1107)
+- "You were hit at your address. Your guards got you out. {or}"  (on-screen notice, line 1107)
+
+> Note for you (not shown in game): part of: close hit
+
+- "A close call"  (on-screen notice, line 1361)
+- "You are badly hit. Your guards are getting you out."  (on-screen notice, line 1361)
 
 > Note for you (not shown in game): A shot that does not hit her: a bullet that lands within 20 feet of her, or passes that near, is an attempt all the same; so is a bolt, a rocket or an energy ball that comes that near (LC.AdminGrenadeThink).
 
-- "near miss"  (text, line 663)
+- "near miss"  (text, line 1424)
 
 > Note for you (not shown in game): where it lands, or the nearest it comes to her on the way
 
-- "near miss"  (text, line 685)
+- "near miss"  (text, line 1446)
 
 ## testing tools for admins (sv_livingcity_admintools.lua)
 
@@ -11905,38 +11915,40 @@ Made from version 85aedc6. Admin-only console messages and log lines are left ou
 - "[Freq 7] {name} leans in and says the codeword. This unit is the Resistance's friend inside. Keep it to yourself."  (chat message, line 357)
 - "[Inside] You say the codeword. They know now."  (chat message, line 358)
 
-> Note for you (not shown in game): Caught: out of the system for good
+> Note for you (not shown in game): Caught: out of the system for good rogue: a unit who was never the Resistance's man inside and turned on the Administrator (an attempt on her life: sv_livingcity_adminsecurity.lua): the same end, told in words that are true of them.
 
-- "Treason: a mole in Civil Protection"  (text, line 374)
+- "Treason: a mole in Civil Protection"  (text, line 376)
 
 > Note for you (not shown in game): part of: burn insider
 
-- "They know you were the Resistance's man inside. You're wanted, and there's no surrendering. You'll never wear the mask again, nor work for the city or the Union: you're Resistance now, for good."  (on-screen notice, line 376)
-- "Dispatch: all units, a traitor in our ranks. Shoot on sight. No surrender accepted."  (text, line 379)
+- "You turned on the Administrator."  (text, line 378)
+- "They know you were the Resistance's man inside."  (text, line 378)
+- "You're wanted, and there's no surrendering. You'll never wear the mask again, nor work for the city or the Union: you're Resistance now, for good."  (on-screen notice, line 379)
+- "Dispatch: all units, a traitor in our ranks. Shoot on sight. No surrender accepted."  (text, line 382)
 
 > Note for you (not shown in game): Unmasked (the reckoning, sv_livingcity_stories.lua): no longer undercover, an ordinary Resistance fighter; never Civil Protection (or anyone's man inside) again. Not wanted for it.
 
-- "Out of the mask"  (on-screen notice, line 390)
-- "You're Resistance now, in the open. Civil Protection will never have you back."  (on-screen notice, line 390)
+- "Out of the mask"  (on-screen notice, line 393)
+- "You're Resistance now, in the open. Civil Protection will never have you back."  (on-screen notice, line 393)
 
 > Note for you (not shown in game): unmasked: just never a unit (or any Combine role) again
 
-- "You took off the mask for good. Civil Protection will never have you back: only the Resistance."  (text, line 403)
-- "They know what you did. There's no surrendering for you."  (text, line 406)
-- "The Union won't have a traitor on its books."  (text, line 407)
-- "You're known as a traitor. Only the Resistance will have you now."  (text, line 408)
+- "You took off the mask for good. Civil Protection will never have you back: only the Resistance."  (text, line 406)
+- "They know what you did. There's no surrendering for you."  (text, line 409)
+- "The Union won't have a traitor on its books."  (text, line 410)
+- "You're known as a traitor. Only the Resistance will have you now."  (text, line 411)
 
 > Note for you (not shown in game): newly recruited: the leaders hear of it
 
-- "[Freq 7] For the leaders only: we have a friend inside Civil Protection now. {p}. Keep it close."  (chat message, line 442)
+- "[Freq 7] For the leaders only: we have a friend inside Civil Protection now. {p}. Keep it close."  (chat message, line 445)
 
 > Note for you (not shown in game): A leader coming on hears who's inside, once.
 
-- "[Freq 7] For the leaders only: our friends inside Civil Protection: {names}."  (chat message, line 480)
+- "[Freq 7] For the leaders only: our friends inside Civil Protection: {names}."  (chat message, line 483)
 
 > Note for you (not shown in game): From the menus (and chat, as a backup)
 
-- "[Inside] {why}"  (chat message, line 489)
+- "[Inside] {why}"  (chat message, line 492)
 
 ## Civil Intake (becoming somebody) (sv_livingcity_intake.lua)
 
@@ -15895,48 +15907,48 @@ Made from version 85aedc6. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): a timer (regularly)
 
-- "A close call"  (on-screen notice, line 135)
-- "You wake up in the infirmary, sore and empty-handed: what was in your pockets is gone. You don't remember the fight, or who started it; leave it be. {or}"  (on-screen notice, line 136)
+- "A close call"  (on-screen notice, line 154)
+- "You wake up in the infirmary, sore and empty-handed: what was in your pockets is gone. You don't remember the fight, or who started it; leave it be. {or}"  (on-screen notice, line 155)
 
 > Note for you (not shown in game): Careers for life Why this person can't take up another faction (nil if they can).
 
-- "Combine property doesn't choose. Only death ends a stalker."  (text, line 171)
-- "The conditioning can't be undone: this person is Overwatch for life. Another character (!characters) can be someone else."  (text, line 174)
-- "stepped into the light"  (text, line 198)
-- "was taken out of the city by staff"  (text, line 198)
-- "died infested"  (text, line 198)
+- "Combine property doesn't choose. Only death ends a stalker."  (text, line 190)
+- "The conditioning can't be undone: this person is Overwatch for life. Another character (!characters) can be someone else."  (text, line 193)
+- "stepped into the light"  (text, line 217)
+- "was taken out of the city by staff"  (text, line 217)
+- "died infested"  (text, line 217)
 
 > Note for you (not shown in game): a timer (regularly)
 
-- "An inheritance"  (on-screen notice, line 224)
-- "A relative you barely knew has left you %d credits. It isn't much. It's yours."  (message, line 224)
+- "An inheritance"  (on-screen notice, line 243)
+- "A relative you barely knew has left you %d credits. It isn't much. It's yours."  (message, line 243)
 
 > Note for you (not shown in game): Retiring someone
 
-- "Not while you're dead."  (text, line 234)
-- "Not while you're wanted."  (text, line 235)
-- "Not while you're in custody."  (text, line 236)
-- "Not in the middle of a fight."  (text, line 237)
-- "A stalker doesn't retire. There's only the one way out."  (text, line 238)
+- "Not while you're dead."  (text, line 253)
+- "Not while you're wanted."  (text, line 254)
+- "Not while you're in custody."  (text, line 255)
+- "Not in the middle of a fight."  (text, line 256)
+- "A stalker doesn't retire. There's only the one way out."  (text, line 257)
 
 > Note for you (not shown in game): part of: retire character
 
-- "has left the city for good. Somebody new takes their place."  (text, line 243)
+- "has left the city for good. Somebody new takes their place."  (text, line 262)
 
 > Note for you (not shown in game): part of: levy
 
-- "Union levy"  (on-screen notice, line 258)
-- "%d credits redistributed: holdings above %d are shared with the Union. Spend it, or lose it slowly."  (message, line 258)
+- "Union levy"  (on-screen notice, line 277)
+- "%d credits redistributed: holdings above %d are shared with the Union. Spend it, or lose it slowly."  (message, line 277)
 
 > Note for you (not shown in game): Things wear out (the owner, 1 November: so credits keep moving), and a legacy that shows A tool used is a little worn: one use in lc_wear_uses (10, on average) is its last. (A job's own weedkiller is topped up by the job: LC.IssueWeedkiller.)
 
-- "Your {id} is worn out."  (text, line 284)
+- "Your {id} is worn out."  (text, line 303)
 
 > Note for you (not shown in game): A title for a player with many lives behind them (shown under their name), never power or money.
 
-- "Legend of the canals"  (text, line 289)
-- "Ghost of the old city"  (text, line 289)
-- "Old hand"  (text, line 289)
+- "Legend of the canals"  (text, line 308)
+- "Ghost of the old city"  (text, line 308)
+- "Old hand"  (text, line 308)
 
 ## street furniture, and the city's voice (sv_livingcity_propaganda.lua)
 

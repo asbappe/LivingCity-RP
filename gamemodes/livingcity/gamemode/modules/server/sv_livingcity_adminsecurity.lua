@@ -156,7 +156,7 @@ local function Turn(who)
     if not IsValid(who) then return false end
     if not Theirs(who) then return true end
     if not who:IsPlayer() or (LC.IsAdministrator and LC.IsAdministrator(who)) or not LC.BurnInsider then return false end
-    LC.Try(LC.BurnInsider, who)
+    LC.Try(LC.BurnInsider, who, not (LC.IsInsider and LC.IsInsider(who))) -- (a unit who was never the Insider is told so in words that are true)
     return not Theirs(who)
 end
 LC.AdminTurn = Turn

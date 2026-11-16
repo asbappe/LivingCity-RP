@@ -364,7 +364,9 @@ end
 -- Caught: out of the system for good
 ------------------------------------------------------------------------
 
-function LC.BurnInsider(ply)
+-- rogue: a unit who was never the Resistance's man inside and turned on the Administrator (an attempt on her
+-- life: sv_livingcity_adminsecurity.lua): the same end, told in words that are true of them.
+function LC.BurnInsider(ply, rogue)
     if not IsValid(ply) then return end
     local cid = ply:GetNW2String("lc_cid", "")
     if cid ~= "" then ply:SetPData("lc_burned", cid) end
@@ -373,7 +375,8 @@ function LC.BurnInsider(ply)
     if LC.SetFaction then LC.SetFaction(ply, "resistance", nil, true, true) end
     if LC.ReportCrime then LC.ReportCrime(ply, "Treason: a mole in Civil Protection", 900) end
     if LC.Notice then
-        LC.Notice(ply, "warn", "Exposed", "They know you were the Resistance's man inside. You're wanted, and there's no surrendering. "
+        LC.Notice(ply, "warn", rogue and "Traitor" or "Exposed", (rogue and "You turned on the Administrator. " or "They know you were the Resistance's man inside. ")
+            .. "You're wanted, and there's no surrendering. "
             .. "You'll never wear the mask again, nor work for the city or the Union: you're Resistance now, for good.", 14)
     end
     if LC.RadioNotice then LC.RadioNotice("cp", "Dispatch: all units, a traitor in our ranks. Shoot on sight. No surrender accepted.") end
