@@ -34629,6 +34629,208 @@ _walls = savedWalls
 end
 Nov16_ShieldRunTests()
 
+-- A hit that would kill her at her address uses up a close call: told at the hit, and in her office she faints
+-- and a medic sees to her (the owner, 16 November)
+function Nov16_AdminCloseCallTests()
+section("16 November: a hit that would kill the Administrator at her address uses up a close call: she faints in her office and a medic heals her")
+LC.EndEvent(true)
+if LC.SpeechSession() then LC.EndSpeech() end
+if LC.AdminExfil() then LC.AdminExfilEnd(false) end
+local savedWalls = _walls
+_walls = {}
+local set = _setcvar
+local stopsWas = GetConVar("lc_stops"):GetInt()
+local callsWas, permaWas = GetConVar("lc_close_calls"):GetInt(), GetConVar("lc_permadeath"):GetInt()
+set("lc_stops", 0)
+set("lc_speech_muster", 60)
+set("lc_close_calls", 3)
+set("lc_permadeath", 1)
+local K0 = Vector(188000, 168000, 0)
+local stand = LC.AddPoint(K0 + Vector(0, 500, 0), 270, "speech", 0)
+local crowd = LC.AddPoint(K0, 90, "speechcrowd", 0)
+local desk = LC.AddPoint(K0 + Vector(1000, 520, 0), 0, "desk", 0)
+local door = ents.Create("prop_door_rotating")
+door:SetPos(K0 + Vector(700, 520, 0))
+door:Spawn()
+door.mapid = 9616
+LC.SetDoorTag(door, "office")
+LC.ApplyDoorState(door)
+if LC.RebuildDoorGrid then LC.RebuildDoorGrid() end
+ok(door.locked == true and not door.isOpen, "(the Administrator's office door: shut and locked)")
+local adm = newPlayer("CloseCallAdministrator", "admin")
+local reb = newPlayer("CloseCallAssassin", "resistance", nil, 900)
+_run(0.3)
+adm:SetPos(K0 + Vector(0, 520, 0))
+adm.lcProtectUntil = 0
+reb:SetPos(K0 + Vector(0, -300, 0))
+adm.GodEnable = function(self) self.god = true end
+adm.GodDisable = function(self) self.god = false end
+local fades = {}
+adm.ScreenFade = function(self, flags, col) fades[#fades + 1] = { flags = flags, col = col } end
+local notes, realNotice = {}, LC.Notice
+LC.Notice = function(p, kind, title, text, secs)
+    if p == adm and title == "A close call" then notes[#notes + 1] = tostring(title) .. ": " .. tostring(text) end
+    return realNotice(p, kind, title, text, secs)
+end
+local mine = hook.t.EntityTakeDamage.LivingCityAdminExfil
+local function Held()
+    local cmd = { b = 2, ClearMovement = function(self) self.cleared = true end, GetButtons = function(self) return self.b end, SetButtons = function(self, v) self.b = v end }
+    hook.Run("StartCommand", adm, cmd)
+    return cmd.cleared == true
+end
+local function Pockets()
+    local n = 0
+    for _, c in pairs(LC.Inventory(adm)) do n = n + c end
+    return n
+end
+LC.GiveItem(adm, "ration", 2)
+local pockets = Pockets()
+ok(LC.CloseCallsLeft(adm) == 3 and pockets >= 2, "(three close calls, and something in her pockets)", LC.CloseCallsLeft(adm))
+
+-- a hit that would not kill: no close call
+ok(LC.CallSpeech(adm, "Citizens."), "her address is called")
+adm:SetHealth(100)
+local shot = _dmg(reb, 20)
+hook.Run("EntityTakeDamage", adm, shot)
+_run(0.1)
+local A = LC.AdminExfil()
+ok(A and shot:GetDamage() == 20 and A.closeCall == nil and #notes == 0, "a hit that would not kill her is no close call: nothing is said")
+LC.AdminExfilEnd(true)
+ok(LC.AdminCloseCallScene() == nil and LC.CloseCallsLeft(adm) == 3, "and she does not faint when she is set down", LC.CloseCallsLeft(adm))
+for _, e in ipairs(ents.FindByClass("lc_adminglass")) do e:Remove() end
+_run(5)
+
+-- a hit that would kill: cut to a breath, a close call, and she is told at once
+adm:SetPos(K0 + Vector(0, 520, 0))
+if LC.SpeechSession() then LC.EndSpeech() end
+ok(LC.CallSpeech(adm, "Citizens."), "her address again")
+adm:SetHealth(40)
+fades = {}
+shot = _dmg(reb, 500)
+hook.Run("EntityTakeDamage", adm, shot)
+ok(shot:GetDamage() == 39, "a hit that would kill her is cut to leave her a breath", shot:GetDamage())
+ok(#notes == 1 and string.find(notes[1], "A close call: You are badly hit", 1, true) ~= nil, "she is told at once: a close call", notes[1])
+ok(#fades == 1 and fades[1].col.r > 100 and fades[1].col.g == 0, "and her screen goes red for a moment")
+adm:SetHealth(1) -- (the game takes the cut hit off her)
+_run(0.1)
+A = LC.AdminExfil()
+ok(A and A.closeCall == true, "her guards are getting her out, and the close call is the exit's to use up")
+if not A then LC.EndSpeech() LC.Notice = realNotice return end
+ok(LC.CloseCallsLeft(adm) == 3, "(not counted yet: she sees the whole way out first)")
+for _ = 1, 100 do
+    _run(0.1) LC.AdminExfilThink(CurTime())
+    if not LC.AdminExfil() then break end
+end
+ok(A.ran == true and LC.AdminExfil() == nil, "they run her to her office")
+local C = LC.AdminCloseCallScene()
+local spot = K0 + Vector(850, 520, 0)
+ok(C ~= nil and adm:GetPos():Distance(spot) < 60, "she is set down inside it, half way between its door and her desk", adm:GetPos():Distance(spot))
+if not C then LC.Notice = realNotice return end
+ok(Held() and adm.god == true and mine(adm, _dmg(reb, 50)) == true, "she faints: held still, and nothing can hurt her")
+ok(#fades == 2 and bit.band(fades[2].flags, SCREENFADE.OUT) ~= 0 and fades[2].col.r == 0, "her screen fades to black")
+_run(2)
+ok(LC.CloseCallsLeft(adm) == 2 and adm:GetNW2Int("lc_close_calls", -1) == 2, "in the dark the close call is used up", LC.CloseCallsLeft(adm))
+ok(#notes == 2 and string.find(notes[2], "A close call: You were hit at your address. Your guards got you out. 2 close calls left.", 1, true) ~= nil,
+    "and she is told, with how many are left", notes[2])
+ok(Pockets() == pockets and adm.lcCloseCall == nil, "her pockets are as they were, and she will not wake in the infirmary", Pockets())
+ok(adm:GetNW2Float("lc_recovering_until", 0) > CurTime() and adm:GetMaxHealth() == 80, "she is recovering (20 less health for a while)", adm:GetMaxHealth())
+local med = C.medic
+local mst = IsValid(med) and LC.NPCs[med]
+ok(IsValid(med) and mst and mst.role == "citizen" and med:GetPos():Distance(adm:GetPos()) < 100, "a medic, one of the city's people, is beside her")
+ok(mst and mst.questLock == true and mst.state == "event", "(the scene's own: the city leaves them alone)")
+ok(Held() and adm:Health() == 1, "(still out)")
+_run(5.2)
+ok(adm:Health() == 80 and not Held(), "the medic has seen to her: her health is back, and she can move", adm:Health())
+ok(#fades == 3 and bit.band(fades[3].flags, SCREENFADE.IN) ~= 0, "her screen comes back")
+_run(1.5)
+ok(door.isOpen == true, "the medic goes: the office door opens for them, this once")
+ok(IsValid(med) and med.goal ~= nil and med.goal:Distance(K0 + Vector(530, 520, 0)) < 40, "out through it", IsValid(med) and med.goal and tostring(med.goal - K0))
+_run(3)
+ok(adm.god == false and mine(adm, _dmg(reb, 5)) ~= true, "a few seconds later she can be hurt again")
+_run(40)
+ok(LC.AdminCloseCallScene() == nil and not IsValid(med), "the medic is gone, and it is over")
+ok(door.isOpen == false and door.locked == true, "the door is shut and locked again, as it was")
+ok(#notes == 2, "(nothing else was said)", #notes)
+
+-- the last one
+adm:SetPData("lc_close_used", 2)
+adm:SetNW2Float("lc_recovering_until", 0)
+adm:SetMaxHealth(100)
+adm:SetPos(K0 + Vector(0, 520, 0))
+if LC.SpeechSession() then LC.EndSpeech() end
+ok(LC.CloseCallsLeft(adm) == 1 and LC.CallSpeech(adm, "Citizens."), "her address, with one close call left")
+adm:SetHealth(30)
+hook.Run("EntityTakeDamage", adm, _dmg(reb, 500))
+_run(0.1)
+ok(LC.AdminExfil() and LC.AdminExfil().closeCall == true, "(badly hit again)")
+-- cut short where she stands: counted, healed and freed all the same
+LC.AdminExfilEnd(false)
+ok(LC.AdminCloseCallScene() ~= nil, "the exit over where she stands: she faints there")
+LC.AdminCloseCallEnd()
+ok(LC.AdminCloseCallScene() == nil and LC.CloseCallsLeft(adm) == 0 and not Held() and adm:Health() == adm:GetMaxHealth(),
+    "the scene cut short: the close call is counted, and she is healed and freed all the same", LC.CloseCallsLeft(adm))
+ok(string.find(notes[#notes], "That was the last one: the next death is the end of you.", 1, true) ~= nil, "she is told it was her last", notes[#notes])
+for _, e in ipairs(ents.FindByClass("lc_adminglass")) do e:Remove() end
+_run(5)
+
+-- none left: the hit stands
+adm:SetPos(K0 + Vector(0, 520, 0))
+if LC.SpeechSession() then LC.EndSpeech() end
+ok(LC.CloseCallsLeft(adm) == 0 and LC.CallSpeech(adm, "Citizens."), "her address, with none left")
+adm:SetHealth(30)
+local said = #notes
+shot = _dmg(reb, 500)
+hook.Run("EntityTakeDamage", adm, shot)
+ok(shot:GetDamage() == 500 and #notes == said, "with no close call left the hit is not cut: her death is what it would be anywhere", shot:GetDamage())
+adm.alive = false -- (the game kills her)
+_run(0.1)
+ok(LC.AdminExfil() == nil, "and nobody is taken out")
+adm.alive = true
+if LC.SpeechSession() then LC.EndSpeech() end
+
+-- close calls not counted on the server: she simply lives, as before
+set("lc_close_calls", 0)
+ok(LC.CallSpeech(adm, "Citizens."), "her address, on a server with close calls off")
+adm:SetHealth(30)
+shot = _dmg(reb, 500)
+hook.Run("EntityTakeDamage", adm, shot)
+_run(0.1)
+ok(shot:GetDamage() == 29 and #notes == said and LC.AdminExfil() and LC.AdminExfil().closeCall == nil, "close calls off: the hit leaves her a breath and no close call is in it", shot:GetDamage())
+LC.AdminExfilEnd(true)
+ok(LC.AdminCloseCallScene() == nil, "and she does not faint")
+set("lc_close_calls", 3)
+set("lc_permadeath", 0)
+if LC.SpeechSession() then LC.EndSpeech() end
+adm:SetPData("lc_close_used", 0)
+adm:SetPos(K0 + Vector(0, 520, 0))
+ok(LC.CallSpeech(adm, "Citizens."), "her address, on a server where dying is not the end")
+adm:SetHealth(30)
+shot = _dmg(reb, 500)
+hook.Run("EntityTakeDamage", adm, shot)
+_run(0.1)
+ok(shot:GetDamage() == 29 and #notes == said and LC.AdminExfil() and LC.AdminExfil().closeCall == nil, "permanent death off: the same", shot:GetDamage())
+LC.AdminExfilEnd(false)
+
+LC.Notice = realNotice
+if LC.AdminCloseCallScene() then LC.AdminCloseCallEnd() end
+if LC.SpeechSession() then LC.EndSpeech() end
+LC.EndEvent(true)
+for _, e in ipairs(ents.FindByClass("lc_adminglass")) do e:Remove() end
+LC.SetDoorTag(door, nil)
+if LC.OpenedDoors then LC.OpenedDoors[door] = nil end
+if LC.Relock then LC.Relock[door] = nil end
+door:Remove()
+if LC.RebuildDoorGrid then LC.RebuildDoorGrid() end
+LC.RemovePoint(stand) LC.RemovePoint(crowd) LC.RemovePoint(desk)
+hook.Run("LivingCityNewCharacter", reb, "x", "test")
+adm:Remove() reb:Remove()
+set("lc_close_calls", callsWas)
+set("lc_permadeath", permaWas)
+set("lc_stops", stopsWas)
+_walls = savedWalls
+end
+Nov16_AdminCloseCallTests()
+
 function Nov16_AdminQuestioningTests()
 section("16 November: the would-be assassin is questioned by the Administrator herself, stunstick in hand")
 LC.EndEvent(true)

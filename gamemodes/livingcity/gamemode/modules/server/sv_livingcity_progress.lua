@@ -98,6 +98,25 @@ function LC.UseCloseCall(ply)
     return left
 end
 
+-- A close call lived through (the Administrator badly hit at her address and got out by her guards:
+-- sv_livingcity_adminsecurity.lua): one fewer left, counted as any other, but nobody died: the pockets stay and
+-- nobody wakes in the infirmary. Recovering starts at once (the same 20 less health, for as long).
+-- How many are left now.
+function LC.CloseCallSurvived(ply)
+    local used = (tonumber(ply:GetPData("lc_close_used", 0)) or 0) + 1
+    ply:SetPData("lc_close_used", used)
+    ply:SetPData("lc_close_at", LC.LivedSeconds and LC.LivedSeconds(ply) or 0)
+    local left = LC.CloseCallsLeft(ply)
+    hook.Run("LivingCityCloseCall", ply, left)
+    local already = ply:GetNW2Float("lc_recovering_until", 0) > CurTime()
+    ply:SetNW2Float("lc_recovering_until", CurTime() + cvRecover:GetFloat() * 60)
+    if not already then
+        ply:SetMaxHealth(math.max(30, ply:GetMaxHealth() - RECOVER_HP))
+        ply:SetHealth(math.min(ply:Health(), ply:GetMaxHealth()))
+    end
+    return left
+end
+
 -- Where a close call wakes you: the clinic (an editor "work" point for the Clinic Medic job), the one
 -- nearest where you fell, so the infirmary the notice speaks of is real (the owner, 13 November playtest:
 -- a unit woke at Combine HQ). The Resistance, vortigaunts, stalkers and the infested wake where their

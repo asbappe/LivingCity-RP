@@ -49,7 +49,14 @@
     from anyone not of the Combine that lands within 320 units of her or passes
     that near her; a bolt, rocket, energy ball or grenade that comes that near.
     The hit itself is a close call, never a kill ("make it a close call, but
-    she is still escorted all the same").
+    she is still escorted all the same"), and uses one of her close calls up
+    (the owner, 16 November: "it should use up a close call, just please make
+    sure the player is aware of that when and after it happens"): she is told
+    at the hit; set down in her office, between its door and her desk, she
+    faints, her screen goes dark, she is told how many are left, a medic of
+    the city's heals her and leaves by the office door, opened for them once.
+    With none left the hit stands. Where close calls are not counted
+    (lc_close_calls 0, lc_permadeath 0) she simply lives.
 
     Whoever does it ("wanted as the most egregious violation, instant -999
     standing, crime never forgotten for that character"): Civil Standing set
@@ -335,6 +342,8 @@ local HOLD_SECS = 12     -- with no APC: the ring and the screen this long
 local A -- the exit under way, or nil
 function LC.AdminExfil() return A end
 local StartRun, RunThink, EndRun -- (the shield run, further down)
+local C -- her close call's scene under way (she faints, a medic sees to her), or nil
+local Faint, OfficeDoor, OfficeSpot -- (that scene, further down)
 
 -- What her next address will make of it: kept with the state of the city (LC.Ledger) until she has said it.
 --   hero: a soldier died on a grenade for her; caught: the attacker is dead or in the cells; by: who (SteamID64s).
@@ -468,6 +477,9 @@ local function Begin(S, her, who)
     for _, g in ipairs(guards) do A.guardSet[g] = true end
     S.apc = nil
     if her:IsPlayer() then
+        -- (the hit that set it off would have killed her: a close call, used up when she is set down)
+        A.closeCall = (her.lcAdminCloseHit ~= nil and now - her.lcAdminCloseHit < 2) or nil
+        her.lcAdminCloseHit = nil
         if her.GodEnable then her:GodEnable() end
         her:SetNW2Bool("lc_exfil", true)
     else
@@ -528,14 +540,22 @@ local function Done(deliver)
     her:SetNW2Bool("lc_exfil", false)
     if her.SetNoDraw then her:SetNoDraw(false) end
     if her.SetNotSolid then her:SetNotSolid(false) end
+    -- badly hit when it began (a close call): where she is set down she faints, and a medic sees to her
+    local fainting = a.closeCall and her:Alive()
+    local door
     if deliver then
         local desk = LC.PointsOfKind and LC.PointsOfKind("desk")[1]
         local to = desk and desk.pos or a.at
+        if fainting and desk then -- (inside her office, between its door and her desk)
+            door = OfficeDoor(desk.pos)
+            if door then to = OfficeSpot(door, desk.pos) end
+        end
         her:SetPos((LC.FreeSpawnPos and LC.FreeSpawnPos(to + Vector(0, 0, 8))) or to)
         -- (out of the APC her screen comes up from black; run there, she saw the way)
-        if her.ScreenFade and not a.ran then her:ScreenFade(SCREENFADE and SCREENFADE.IN or 1, Color(0, 0, 0, 255), 1.5, 0.3) end
+        if her.ScreenFade and not a.ran and not fainting then her:ScreenFade(SCREENFADE and SCREENFADE.IN or 1, Color(0, 0, 0, 255), 1.5, 0.3) end
         hook.Run("LivingCityAdminMoved", her, to)
     end
+    if fainting then return Faint(her, door) end -- (nothing can hurt her until that is over)
     -- (a few seconds more before anything can hurt her again)
     timer.Simple(4, function() if IsValid(her) and her.GodDisable and not (A and A.her == her) then her:GodDisable() end end)
 end
@@ -818,6 +838,10 @@ function StartRun(now)
         end
     end
     if #path == 0 or path[#path]:DistToSqr(desk.pos) > 24 * 24 then path[#path + 1] = desk.pos end
+    if A.closeCall then -- (badly hit: the run ends inside her office, short of her desk, where she faints)
+        local door = OfficeDoor(desk.pos)
+        if door then path[#path] = OfficeSpot(door, desk.pos) end
+    end
     local first = path[1] - from
     local R = { path = path, leg = 1, at = from, yaw = math.deg(math.atan2(first.y, first.x)), desk = desk.pos,
         members = {}, set = {}, slots = 0, turn = 0, shots = 0, hits = 0, doors = {}, nextJoin = 0, nextDoor = 0, nextFire = 0 }
@@ -952,6 +976,210 @@ function EndRun(a)
     end
 end
 
+------------------------------------------------------------------------
+-- A close call at her address: in her office she faints, and a medic sees to her
+------------------------------------------------------------------------
+-- (the owner, 16 November: "it should use up a close call, just please make sure the player is aware of that
+-- when and after it happens and that they see the whole scene unfold as they are escorted/rescued away from the
+-- speech point; maybe when they get to their office and inside (between the administrator door and their desk)
+-- they faint and fade to black and get the close call text on screen, then a medic NPC spawns in their office
+-- and heals them, then leaves the office (able to open the administrator door this one time: when leaving)")
+--
+-- By the second, from when she is set down: 0 she is held still and her screen goes dark; 1.5 the close call is
+-- counted (LC.CloseCallSurvived: her pockets stay, no infirmary) and she is told, and a medic is beside her;
+-- 3 and 4.8 the sound of treatment; 6 her health is back; 6.5 her screen comes back and she can move; 7.5 the
+-- medic goes, the office door opening for them this once; 10.5 she can be hurt again. The medic is gone once out
+-- of sight (at 20 whatever). Where the exit ends anywhere else (no APC and no desk: the ring holds, then lets
+-- go) it happens there, and the medic walks off.
+
+local SCENE = { dark = 1.5, heal = 6, wake = 6.5, go = 7.5, guard = 4, last = 20 }
+
+-- Her office's door: the editor's "Door: Administrator's office" nearest her desk (within 1500 units of it).
+function OfficeDoor(desk)
+    local best, bd
+    for id, tag in pairs(LC.DoorTags or {}) do
+        if tag == "office" and ents.GetMapCreatedEntity then
+            local d = ents.GetMapCreatedEntity(id)
+            if IsValid(d) then
+                local dist = d:WorldSpaceCenter():DistToSqr(desk)
+                if dist < 1500 * 1500 and (not bd or dist < bd) then best, bd = d, dist end
+            end
+        end
+    end
+    return best
+end
+-- Inside it: half way between that door and her desk, on the floor.
+function OfficeSpot(door, desk)
+    local c = door:WorldSpaceCenter()
+    return Ground(Vector((c.x + desk.x) / 2, (c.y + desk.y) / 2, desk.z))
+end
+
+-- The close call is used up, and she is told (in the dark).
+local function SceneCount(c)
+    c.counted = true
+    local her = c.her
+    local left = LC.CloseCallSurvived and LC.CloseCallSurvived(her) or 0
+    c.left = left
+    if LC.Notice then
+        LC.Notice(her, "bad", "A close call", "You were hit at your address. Your guards got you out. " ..
+            (left > 0 and string.format("%d close call%s left.", left, left == 1 and "" or "s") or "That was the last one: the next death is the end of you."), 12)
+    end
+end
+local function SceneHeal(c)
+    c.healed = true
+    c.her:SetHealth(c.her:GetMaxHealth()) -- (full, less what recovering takes)
+end
+local function SceneWake(c, now)
+    c.woke, c.held, c.wokeAt = true, false, now
+    local her = c.her
+    if her.ScreenFade then
+        her:ScreenFade(bit.bor(SCREENFADE and SCREENFADE.IN or 1, SCREENFADE and SCREENFADE.PURGE or 16), Color(0, 0, 0, 255), 1.5, 0)
+    end
+end
+
+-- A medic beside her: one of the city's people, in what the clinic's medics wear (their own clothes where the
+-- server has no look for the Clinic Medic). Nothing happens without one: she is healed all the same.
+local function SceneMedic(c, now)
+    if not LC.SpawnCitizen then return end
+    local her = c.her
+    local at = her:GetPos()
+    local side = IsValid(c.door) and (c.door:WorldSpaceCenter() - at) or her:GetForward()
+    side.z = 0
+    if side:LengthSqr() < 1 then side = Vector(1, 0, 0) end
+    side:Normalize()
+    local pos = Ground(at + side * 48)
+    pos = (LC.FreeSpawnPos and LC.FreeSpawnPos(pos + Vector(0, 0, 4))) or pos
+    local ok, npc, st = LC.Try(LC.SpawnCitizen, pos)
+    if not (ok and IsValid(npc) and st) then return end
+    -- (the scene's own: not one of the city's numbers, and the city leaves them alone)
+    st.unmanaged, st.questLock, st.eventUntil = true, true, now + 120
+    LC.SetState(npc, st, "event")
+    if LC.OutfitFor then
+        local key = "p" .. tostring(st.profile and st.profile.id or npc:EntIndex())
+        local path, skin, bg = LC.OutfitFor("medic", key, LC.FaceOf and LC.FaceOf(npc:GetModel()) or nil, false, st.gender)
+        if path and (not util.IsValidModel or util.IsValidModel(path)) then
+            npc:SetModel(path)
+            if npc.SetBodyGroups then npc:SetBodyGroups("000000000000000") end
+            if LC.ApplyLook then LC.ApplyLook(npc, skin, bg) end
+        end
+    end
+    npc:SetAngles(Angle(0, math.deg(math.atan2(-side.y, -side.x)), 0))
+    if LC.PlayGesture then LC.PlayGesture(npc, { "ACT_CIT_HEAL", "Crouch_idleD", "ACT_COVER_LOW" }, 5) end
+    c.medic = npc
+end
+
+-- The office door opens for the medic, this once: shut and locked again behind them by the doors' own code, as
+-- when the Administrator uses it (sv_livingcity_doors.lua).
+local function SceneDoor(door, now)
+    if not (LC.OpenedDoors and LC.Relock) then return end
+    if not LC.OpenedDoors[door] then
+        if door.GetInternalVariable and door:GetInternalVariable("m_bLocked") == true then
+            LC.Relock[door] = true
+            door:Fire("Unlock")
+        end
+        door:Fire("Open", "", 0.1)
+    end
+    LC.OpenedDoors[door] = math.max(LC.OpenedDoors[door] or 0, now + 4)
+end
+
+local function SceneEnd()
+    local c = C
+    if not c then return end
+    C = nil
+    timer.Remove("LivingCityAdminCloseCall")
+    if IsValid(c.medic) then c.medic:Remove() end
+    local her = c.her
+    if not (IsValid(her) and her:Alive()) then return end
+    -- (cut short: she is counted, healed and freed all the same)
+    if not c.counted then SceneCount(c) end
+    if not c.healed then SceneHeal(c) end
+    if not c.woke then SceneWake(c, CurTime()) end
+    if c.safe then
+        timer.Simple(SCENE.guard, function()
+            if IsValid(her) and her.GodDisable and not (A and A.her == her) and not (C and C.her == her) then her:GodDisable() end
+        end)
+    end
+end
+
+local function Scene(now)
+    local c = C
+    if not c then return end
+    local her = c.her
+    if not IsValid(her) or not her:Alive() then return SceneEnd() end
+    local t = now - c.t0
+    if t >= SCENE.dark and not c.counted then
+        SceneCount(c)
+        SceneMedic(c, now)
+    end
+    if t >= 3 and not c.s1 then
+        c.s1 = true
+        her:EmitSound("items/medshot4.wav", 70, 100)
+    end
+    if t >= 4.8 and not c.s2 then
+        c.s2 = true
+        her:EmitSound("items/smallmedkit1.wav", 70, 100)
+    end
+    if t >= SCENE.heal and not c.healed then SceneHeal(c) end
+    if t >= SCENE.wake and not c.woke then SceneWake(c, now) end
+    if c.woke and c.safe and now >= c.wokeAt + SCENE.guard then
+        c.safe = false
+        if her.GodDisable and not (A and A.her == her) then her:GodDisable() end
+    end
+    local med = c.medic
+    if IsValid(med) and t >= SCENE.go then
+        if not c.out then
+            if IsValid(med.lcGesture) then
+                med.lcGesture:Fire("CancelSequence")
+                med.lcGesture:Remove()
+            end
+            local from = her:GetPos()
+            local door = IsValid(c.door) and c.door:WorldSpaceCenter() or nil
+            local away = (door or med:GetPos()) - from
+            away.z = 0
+            if away:LengthSqr() < 1 then away = Vector(1, 0, 0) end
+            away:Normalize()
+            -- (through the door and on a little; with no door, off the way they stand from her)
+            c.out = door and Ground(Vector(door.x, door.y, from.z) + away * 170) or Ground(med:GetPos() + away * 350)
+        end
+        local p = med:GetPos()
+        local out = p:DistToSqr(c.out) < 80 * 80
+        if not out and now >= (c.nextGo or 0) then
+            c.nextGo = now + 1.5
+            if IsValid(c.door) then SceneDoor(c.door, now) end
+            med:SetLastPosition(c.out)
+            med:SetSchedule(SCHED_FORCED_GO)
+        end
+        if t >= SCENE.last or ((out or t >= SCENE.go + 6) and not (LC.IsSeen and LC.IsSeen(p + Vector(0, 0, 40)))) then med:Remove() end
+    end
+    if c.woke and not c.safe and not IsValid(c.medic) then return SceneEnd() end
+end
+
+-- She faints where she was set down (door: her office's, when she is in it).
+function Faint(her, door)
+    if C then SceneEnd() end
+    C = { her = her, door = door, t0 = CurTime(), held = true, safe = true }
+    if her.GodEnable then her:GodEnable() end
+    if her.ScreenFade then
+        her:ScreenFade(bit.bor(SCREENFADE and SCREENFADE.OUT or 2, SCREENFADE and SCREENFADE.STAYOUT or 8), Color(0, 0, 0, 255), SCENE.dark, 0)
+    end
+    timer.Create("LivingCityAdminCloseCall", 0.1, 0, function()
+        local ok, err = LC.Try(Scene, CurTime())
+        if not ok then
+            if LC.Error then LC.Error("admin close call", err) end
+            LC.Try(SceneEnd) -- (never left in the dark)
+        end
+    end)
+end
+function LC.AdminCloseCallScene() return C end
+LC.AdminCloseCallEnd = SceneEnd
+-- Held still while she is out.
+hook.Add("StartCommand", "LivingCityAdminCloseCall", function(ply, cmd)
+    if not (C and C.held and ply == C.her) then return end
+    cmd:ClearMovement()
+    cmd:SetButtons(IN_DUCK or 4)
+end)
+hook.Add("PlayerDisconnected", "LivingCityAdminCloseCall", function(p) if C and C.her == p then SceneEnd() end end)
+
 function LC.AdminExfilThink(now)
     if not A then return end
     local her = A.her
@@ -1031,6 +1259,28 @@ hook.Add("StartCommand", "LivingCityAdminExfil", function(ply, cmd)
     cmd:SetButtons(bit.bor(bit.band(cmd:GetButtons(), bit.bnot(IN_JUMP or 2)), IN_DUCK or 4))
 end)
 
+-- A hit on a player Administrator that sets her guards off: one that would kill her is a close call, never a
+-- kill: it leaves her a breath, and she is taken out all the same. Where close calls are counted (lc_close_calls
+-- above 0, lc_permadeath 1) it uses one of hers up (the owner, 16 November: "it should use up a close call, just
+-- please make sure the player is aware of that when and after it happens"): she is told at once, and again when
+-- she is set down (the scene above). With none left the hit stands, as it would anywhere. Where they are not
+-- counted she simply lives, as before.
+local function CloseCallsCount()
+    local calls, perma = GetConVar("lc_close_calls"), GetConVar("lc_permadeath")
+    return LC.CloseCallsLeft ~= nil and calls ~= nil and calls:GetInt() > 0 and (perma == nil or perma:GetBool())
+end
+local function CloseHit(her, dmg)
+    local hp = her:Health()
+    if (dmg:GetDamage() or 0) < hp then return end
+    if CloseCallsCount() then
+        if LC.CloseCallsLeft(her) <= 0 then return end
+        her.lcAdminCloseHit = CurTime()
+        if LC.Notice then LC.Notice(her, "bad", "A close call", "You are badly hit. Your guards are getting you out.", 6) end
+        if her.ScreenFade then her:ScreenFade(SCREENFADE and SCREENFADE.IN or 1, Color(150, 0, 0, 170), 1.5, 0.3) end
+    end
+    dmg:SetDamage(math.max(0, hp - 1))
+end
+
 -- Who is hurt: she no longer; by her guards' fire only the attackers; whoever hurts her guards is an attacker.
 -- Before any of it: a shot at her at her address is what sets it off (a player takes that shot: the assassin's
 -- one chance; the city's own is never hurt).
@@ -1041,6 +1291,7 @@ hook.Add("EntityTakeDamage", "LivingCityAdminExfil", function(ent, dmg)
         and not (LC.IsMonster and LC.IsMonster(ent)) then
         return true
     end
+    if C and C.safe and ent == C.her then return true end -- (fainted in her office: not until she is up)
     if A then
         if ent == A.her then return true end
         if (A.guardSet[ent] or ent == A.apc) and IsValid(att) and (att:IsPlayer() or att:IsNPC()) then Mark(att) end
@@ -1059,9 +1310,7 @@ hook.Add("EntityTakeDamage", "LivingCityAdminExfil", function(ent, dmg)
         if IsValid(her) and (not her:IsPlayer() or her:Alive()) then LC.AdminAttempt(her, att, "shot") end
     end)
     if not her:IsPlayer() then return true end
-    -- a close call, never a kill: the hit leaves her a breath at least, and she is taken out all the same
-    local hp = her:Health()
-    if dmg:GetDamage() >= hp then dmg:SetDamage(math.max(0, hp - 1)) end
+    CloseHit(her, dmg)
 end)
 
 -- A shot that does not hit her: a bullet that lands within 20 feet of her, or passes that near, is an attempt
