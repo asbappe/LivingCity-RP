@@ -50,6 +50,7 @@ local CATCH_MORE = 0.15  -- more for each lie after the first
 local LIE_COST = 120     -- seconds on the sentence for a lie seen through
 local TRUTH_PAY = 15     -- standing for each truth after the first (the first pays the offer)
 local MAX_HITS = 8
+LC.InterrogationMaxHits = MAX_HITS
 local REACH = 260        -- a unit asking must stay this close
 
 local function Pick(t) return t[math.random(#t)] end

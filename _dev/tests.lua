@@ -34487,8 +34487,10 @@ ok(has(adm.chat, "says nothing") and it.resolve == 2, "silence comes back to her
 reb:SetHealth(12)
 ok(LC.AdminQuestioningBlow(adm, reb) == true and it.resolve == 1, "a blow of her stunstick weakens their resolve", it.resolve)
 ok(reb:Health() >= 1 and reb:Alive(), "and never kills", reb:Health())
+adm.chat = {}
 for _ = 1, 12 do LC.AdminQuestioningBlow(adm, reb) end
-ok(reb:Health() >= 1 and reb:Alive(), "(however many)", reb:Health())
+ok(reb:Health() >= 1 and reb:Alive() and it.hits == 8, "(however many: past eight a swing is only a swing)", reb:Health(), it.hits)
+ok(not has(adm.chat, "Any more"), "(and she isn't told so at every swing)")
 ok(LC.AdminQuestioningBlow(cop, reb) == false, "(anyone else's stunstick is only a stunstick)")
 it.resolve = 1
 LC.PlayerInterrogationDo(adm, "ask", 2)
@@ -34512,6 +34514,8 @@ reb:SetPos(R0)
 jail(reb)
 ok(LC.AdminQuestioningHolds(reb), "(a new stay: hers again)")
 LC.AdminQuestioningTick(CurTime() + 13)
+adm:SetPos(R0 + Vector(5000, 0, 0))
+ok(LC.AdminQuestioningLead(adm, reb) == false and not adm:HasWeapon(BATON), "(not from across the city: she has to be with them)")
 adm:SetPos(reb:GetPos() + Vector(80, 0, 0))
 ledger = {}
 ok(LC.StartPlayerInterrogation(adm, reb) == true and adm:HasWeapon(BATON), "F2 at the cell begins it too")

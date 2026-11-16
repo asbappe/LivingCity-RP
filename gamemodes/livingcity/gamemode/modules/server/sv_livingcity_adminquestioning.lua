@@ -1,7 +1,8 @@
 --[[
-    Living City: the would-be assassin is hers to question (the owner, 16 November: "if/when the would-be
-    assassin is ever captured, the interrogation for the would-be assassin is a special interrogation led by
-    the administrator, and she is given a stunstick for it").
+    Living City: the would-be assassin is hers to question (the owner, 16 November)
+
+    "if/when the would-be assassin is ever captured, the interrogation for the would-be assassin is a special
+    interrogation led by the administrator, and she is given a stunstick for it".
 
     A player marked for an attempt on her life (LC.AdminNeverForgotten, sv_livingcity_adminsecurity.lua) who
     is put in a cell is not questioned by a unit. Instead, once per stay in the cells:
@@ -39,6 +40,7 @@ local ASKER = "The Administrator"
 local WAIT = 12          -- seconds in the cell before anything is arranged (as a unit's questioning)
 local OFFER_SECS = 600   -- a player Administrator has this long to take it
 local COME_SECS = 60     -- the city's own: on foot this long at most, then placed at the cell door
+local NEAR = 500         -- she begins this close to the prisoner (walking 520 away ends it: sv_livingcity_interrogation.lua)
 local BROKE, HELD = 3, 1 -- her authority: up when they break, down when they hold out to the end
 
 -- Her questions. A member of the Resistance (or anyone hunted or dressed as one):
@@ -293,6 +295,8 @@ function LC.AdminQuestioningLead(adm, ply)
     local pr = IsValid(ply) and LC.Prisoners and LC.Prisoners[ply]
     if not (A and pr and A.stage == "waiting") or not (LC.IsAdministrator and LC.IsAdministrator(adm)) then return false end
     if LC.Interrogations[ply] then return false end
+    -- (the prisoner out of the cell, on a work detail: not until she is with them, or it would end as she began)
+    if adm:GetPos():DistToSqr(ply:GetPos()) > NEAR * NEAR then return false end
     A.stage, A.by = "asking", adm
     local held = adm.GetActiveWeapon and adm:GetActiveWeapon()
     A.held = IsValid(held) and held:GetClass() or nil
@@ -318,7 +322,8 @@ end
 function LC.AdminQuestioningBlow(adm, target)
     local it = LC.Interrogations and LC.Interrogations[target]
     if not (it and it.admin and it.byPlayer == adm) then return false end
-    if LC.PlayerInterrogationDo then LC.PlayerInterrogationDo(adm, "baton") end
+    -- (past the most the questioning allows, a swing is only a swing: nothing more, and nothing said about it)
+    if LC.PlayerInterrogationDo and (it.hits or 0) < (LC.InterrogationMaxHits or 8) then LC.PlayerInterrogationDo(adm, "baton") end
     return true
 end
 
@@ -442,7 +447,7 @@ end
 function LC.AdminQuestioningTick(now)
     now = now or CurTime()
     for ply, A in pairs(Q) do
-        local pr = IsValid(ply) and ply:Alive() and LC.Prisoners and LC.Prisoners[ply] or nil
+        local pr = IsValid(ply) and LC.Prisoners and LC.Prisoners[ply] or nil
         local it = LC.Interrogations and LC.Interrogations[ply]
         if A.stage == "asking" then
             if it ~= A.it then
@@ -452,6 +457,8 @@ function LC.AdminQuestioningTick(now)
             end
         elseif not pr then
             Drop(ply, A)
+        elseif not ply:Alive() then
+            -- (dead in the cell: dying doesn't end a sentence, and it doesn't get them out of this)
         elseif A.stage == "due" then
             if now >= A.at then
                 if PlayerAdministrator() then
@@ -464,7 +471,10 @@ function LC.AdminQuestioningTick(now)
         elseif A.stage == "waiting" then
             if not PlayerAdministrator() then
                 Summon(ply, A, pr, now) -- (she left the server: the city's own comes)
-            elseif now > A.dropAt and not (A.job and not A.job.done) then
+            elseif A.job and not A.job.done then
+                -- (at the cell with the prisoner out of it, on a work detail: it begins when she is with them)
+                if (A.job.stage or 1) > 1 and IsValid(A.job.owner) then LC.AdminQuestioningLead(A.job.owner, ply) end
+            elseif now > A.dropAt then
                 Drop(ply, A)
             end
         elseif A.stage == "coming" then
