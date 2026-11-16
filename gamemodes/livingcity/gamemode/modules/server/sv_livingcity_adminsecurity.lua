@@ -56,6 +56,15 @@
     shoot them until they are dead. Staff in build mode, anyone in custody and
     the city's own citizens are left alone.
 
+    After it (the owner, 16 November: "an administrator announcement response
+    to the assassination attempt and as lines for her next speech"): about 20
+    seconds later the city hears of it (the announcement "attempt": hers with
+    nobody playing her, Overwatch's with a player in the post), and it is kept
+    with the state of the city until her next address of her own, which is
+    then all about it (LC.SpeechPieces, the attempt_ pieces): whether a soldier
+    died on the grenade, and whether the attacker is dead or in the cells by
+    then.
+
     lc_admin_grenade_jump 1/0, lc_admin_exfil 1/0, lc_speech_keepback 1/0
     Hooks: LivingCityAdminAttempt (her, who, how): someone tried to kill her.
            LivingCityAdminExfil (her, who): her guards are getting her out.
@@ -205,6 +214,9 @@ function LC.GrenadeJump(npc, g, her)
         if SafeRemoveEntityDelayed then SafeRemoveEntityDelayed(rag, 90) end
     end
     npc:Remove()
+    LC.AdminHeroAt = CurTime() -- (a soldier died for her: her next address says so)
+    local pend = LC.AdminAttemptPending and LC.AdminAttemptPending()
+    if pend then pend.hero = true end
     timer.Simple(t + 0.2, function() Boom(g, rag, at) end)
     -- an attempt on her life
     if LC.AdminAttacker then LC.AdminAttacker(who) end
@@ -313,6 +325,39 @@ local HOLD_SECS = 12     -- with no APC: the ring and the screen this long
 local A -- the exit under way, or nil
 function LC.AdminExfil() return A end
 
+-- What her next address will make of it: kept with the state of the city (LC.Ledger) until she has said it.
+--   hero: a soldier died on a grenade for her; caught: the attacker is dead or in the cells; by: who (SteamID64s).
+local ANNOUNCE_AFTER = 20
+function LC.AdminAttemptPending()
+    local L = LC.Ledger and LC.Ledger()
+    return L and L.attempt or nil
+end
+function LC.AdminAttemptSpoken()
+    local L = LC.Ledger and LC.Ledger()
+    if L then L.attempt = nil end
+end
+function LC.AdminAttemptRemember()
+    local L = LC.Ledger and LC.Ledger()
+    if not L then return nil end
+    local a = L.attempt or { by = {} }
+    a.by = a.by or {}
+    a.t = os.time()
+    a.caught = nil
+    if LC.AdminHeroAt and CurTime() - LC.AdminHeroAt < 5 then a.hero = true end
+    L.attempt = a
+    return a
+end
+local function Caught(sid)
+    local a = LC.AdminAttemptPending()
+    if a and a.by and sid and a.by[tostring(sid)] then a.caught = true end
+end
+hook.Add("PlayerDeath", "LivingCityAdminAttempt", function(victim) if IsValid(victim) and victim.SteamID64 then Caught(victim:SteamID64()) end end)
+hook.Add("LivingCityIncarcerated", "LivingCityAdminAttempt", function(ply) if IsValid(ply) and ply.SteamID64 then Caught(ply:SteamID64()) end end)
+hook.Add("OnNPCKilled", "LivingCityAdminAttempt", function(npc)
+    local a = LC.AdminAttemptPending()
+    if a and IsValid(npc) and LC.AdminTargets[npc] then a.caught = true end
+end)
+
 local function Ground(p) return (LC.GroundAt and LC.GroundAt(p + Vector(0, 0, 40))) or p end
 
 local function ApcPoint(stand)
@@ -349,6 +394,8 @@ local function Mark(who)
     A.attackers[who] = true
     LC.AdminTargets[who] = true
     LC.AdminAttacker(who)
+    local pend = LC.AdminAttemptPending()
+    if pend and who:IsPlayer() and who.SteamID64 then pend.by[tostring(who:SteamID64())] = true end
     if LC.MakeCopsHostile then LC.Try(LC.MakeCopsHostile, who, who:GetPos(), 2500) end
     for _, g in ipairs(A.guards) do
         if IsValid(g) then
@@ -400,7 +447,12 @@ local function Begin(S, her, who)
     end
     Screen(S.stand.pos, S.crowd.pos)
     LC.EndSpeech() -- (the crowd is let go; the podium goes)
+    LC.AdminAttemptRemember()
     Mark(who)
+    -- her word to the city, once she is away (or Overwatch's, with a player in the post)
+    timer.Simple(ANNOUNCE_AFTER, function()
+        if LC.TriggerAnnouncements then LC.Try(LC.TriggerAnnouncements, "attempt", { force = true }) end
+    end)
     -- (no notice of its own: the screen, the gunfire, the APC and the lockdown's own call say it; house rule 10)
     if LC.StartEvent and (LC.Event == nil or LC.Event == "") then LC.Try(LC.StartEvent, "lockdown") end
     hook.Run("LivingCityAdminExfil", her, who)

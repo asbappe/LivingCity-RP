@@ -99,6 +99,30 @@ LC.SpeechPieces = {
       words = "There is a restlessness in this city. I feel it. Restlessness can be turned into work, or into ruin. Choose work." },
     { id = "mood_content", part = "mood", when = "the city's people are at ease (the minds: stress low)", tier = 1,
       words = "You look well: rested, fed and calm. Good. Keep it so." },
+    -- After an attempt on her life her whole next address is about it (the owner, 16 November: "lines for her next
+    -- speech: she will need to ham this up and take full advantage of it from every angle"): herself the martyr, the
+    -- shot aimed at everyone, her guards (or the soldier who died on the grenade), the enemy, the hunt (or the traitor
+    -- dealt with), what it will cost the city, and that she is not going anywhere. In this order, then her slogan.
+    { id = "attempt_open", part = "attempt", when = "after an attempt on her life: the opening", tier = 3,
+      words = "Citizens. Look at me. I am still here. Not long ago, on this very spot, someone tried to kill your Administrator." },
+    { id = "attempt_martyr", part = "attempt", when = "after an attempt on her life: herself", tier = 3,
+      words = "I felt how close it came. I will carry that moment for the rest of my life. And do you know what I thought of? Not myself. I thought of you, and of who would look after you if I were gone." },
+    { id = "attempt_you", part = "attempt", when = "after an attempt on her life: it was aimed at everyone", tier = 3,
+      words = "That shot was not meant for me alone. It was aimed at your rations, your homes and your safety. Whoever strikes at me strikes at every one of you." },
+    { id = "attempt_hero", part = "attempt", when = "after an attempt on her life: a soldier died on the grenade", tier = 3,
+      words = "A soldier threw himself on a grenade that was meant for me. He did not hesitate. Ask yourselves whether you would have done the same, and remember him tonight." },
+    { id = "attempt_guards", part = "attempt", when = "after an attempt on her life: her guards (no soldier died)", tier = 3,
+      words = "My guards did not hesitate. They put themselves between me and death, as they do for you every day. Thank them when you pass them. Loudly." },
+    { id = "attempt_enemy", part = "attempt", when = "after an attempt on her life: who did it", tier = 3,
+      words = "And who did this? A coward. One of the so-called Resistance, who call themselves your liberators and shoot at a woman giving a speech. That is their courage. That is all they have to offer you." },
+    { id = "attempt_caught", part = "attempt", when = "after an attempt on her life: the attacker is dead or in the cells", tier = 3,
+      words = "The traitor has been dealt with. There was no mercy, and there will be none for the next one." },
+    { id = "attempt_hunt", part = "attempt", when = "after an attempt on her life: the attacker is still free", tier = 3,
+      words = "The traitor is still among you. Someone here knows the face, the name, the door. Tell Civil Protection and your block will eat well. Stay silent and your block will answer for it." },
+    { id = "attempt_measures", part = "attempt", when = "after an attempt on her life: what it costs the city", tier = 3,
+      words = "I never wanted checkpoints. I never wanted searches or curfews. But I will not apologise for keeping this city safe, and neither should you. Blame the ones who made it necessary." },
+    { id = "attempt_resolve", part = "attempt", when = "after an attempt on her life: she is not going anywhere", tier = 3,
+      words = "They wanted me afraid. They wanted this stand empty. I will stand here again tomorrow, and the day after, for as long as you need me. I am not going anywhere." },
     -- (the owner's own slogan, 14 November: "THIS IS GOLD, SAVE THIS SOMEWHERE AS A SLOGAN"; never reword it)
     { id = "slogan", part = "slogan", when = "her slogan, before the closing, every time", tier = 1,
       words = "Love your neighbour, hate the traitor." },
@@ -154,8 +178,16 @@ function LC.SpeechMood()
 end
 -- Her speech, as pieces in order: an opening, up to three on what happened (the weightiest), one on the mood,
 -- a closing. state: the state of the city (LC.Ledger()); events: LC.SpeechEvents; mood: LC.SpeechMood.
-function LC.SpeechCompose(state, events, mood)
+function LC.SpeechCompose(state, events, mood, attempt)
     state = state or {}
+    -- attempt: there was one on her life since she last spoke ({ hero = a soldier died on the grenade, caught = the
+    -- attacker is dead or in the cells }; LC.AdminAttemptPending): her whole address is about it, stern throughout.
+    if attempt then
+        return { PIECE.attempt_open, PIECE.attempt_martyr, PIECE.attempt_you,
+            attempt.hero and PIECE.attempt_hero or PIECE.attempt_guards, PIECE.attempt_enemy,
+            attempt.caught and PIECE.attempt_caught or PIECE.attempt_hunt,
+            PIECE.attempt_measures, PIECE.attempt_resolve, PIECE.slogan, PIECE.close }, true
+    end
     local w = {}
     for id, v in pairs(events or {}) do w[id] = v end
     if (state.resistance or 50) >= 65 then w.unrest = (w.unrest or 0) + 4 end
@@ -512,8 +544,9 @@ function LC.CallSpeech(by, text)
     S = { by = IsValid(by) and by or nil, text = text, stand = stand, crowd = crowd, startT = now,
           speakAt = now + cvMuster:GetFloat(), npcs = {}, beaten = {}, warned = {} }
     if not S.by then
-        local pieces, tense = LC.SpeechCompose(LC.Ledger and LC.Ledger() or {}, LC.SpeechEvents(os.time() - cvLook:GetFloat() * 60), LC.SpeechMood())
-        S.pieces, S.tense = pieces, tense
+        local attempt = LC.AdminAttemptPending and LC.AdminAttemptPending() or nil
+        local pieces, tense = LC.SpeechCompose(LC.Ledger and LC.Ledger() or {}, LC.SpeechEvents(os.time() - cvLook:GetFloat() * 60), LC.SpeechMood(), attempt)
+        S.pieces, S.tense, S.attempt = pieces, tense, attempt ~= nil or nil
         local words = {}
         for _, p in ipairs(pieces) do words[#words + 1] = p.words end
         S.text = table.concat(words, " ")
@@ -584,6 +617,7 @@ local function SpeakOn(now)
         return
     end
     S.queue = nil
+    if S.attempt and LC.AdminAttemptSpoken then LC.AdminAttemptSpoken() end -- (said: her next address is an ordinary one)
     if LC.SpeechCrowd then LC.SpeechCrowd(S.crowd.pos, cvRadius:GetFloat() + 150) end
     S.endAt = now + cvAfter:GetFloat()
 end
