@@ -718,7 +718,8 @@ local function MineItems(me)
         end)
     end
     if GetGlobal2String("lc_ledger", "") ~= "" then out[#out + 1] = Page("The state of the city", CityPage) end
-    if me:GetNW2String("lcf_faction", "") == "admin" then out[#out + 1] = Page("Administrator", LeversPage) -- (the owner, 16 November: it was "The city's levers (speeches, amnesty, crackdowns, rations)") end
+    -- (named "Administrator": the owner, 16 November; it was "The city's levers (speeches, amnesty, crackdowns, rations)")
+    if me:GetNW2String("lcf_faction", "") == "admin" then out[#out + 1] = Page("Administrator", LeversPage) end
     return out
 end
 local function MinePage()
