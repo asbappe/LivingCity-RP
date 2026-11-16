@@ -272,13 +272,14 @@ end
 -- Civil Standing to -999 at once, wanted for it, and it is kept with the character. True when it was a player's doing.
 function LC.AdminAttacker(who)
     if not (IsValid(who) and who:IsPlayer()) or Theirs(who) then return false end
-    if LC.AddStanding and LC.Standing then
-        local st = LC.Standing(who)
-        if st > -999 then LC.AddStanding(who, -999 - st, "an attempt on the Administrator's life") end
-    end
     if who.SetPData then who:SetPData("lc_regicide", tostring(os.time())) end
     who:SetNW2Bool("lc_regicide", true)
     if LC.ReportCrime then LC.ReportCrime(who, CRIME, 3600) end
+    -- (after the crime is booked, which costs standing of its own: -999 it is, whatever it was)
+    if LC.AddStanding and LC.Standing then
+        local st = LC.Standing(who)
+        if st ~= -999 then LC.AddStanding(who, -999 - st, "an attempt on the Administrator's life") end
+    end
     return true
 end
 -- Never forgotten: free, they are wanted, for as long as that character lives.

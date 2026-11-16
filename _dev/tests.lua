@@ -33611,7 +33611,8 @@ ok(g.lcJumped and g.lcDone, "a rebel's grenade at her feet: someone goes for it,
 ok(not IsValid(near) and IsValid(far) and IsValid(cop), "the nearest soldier is the one (not the unit standing nearer, not the soldier further off)")
 local rags = ents.FindByClass("prop_ragdoll")
 ok(#rags == rag0 + 1 and rags[#rags]:GetModel() == nearModel, "he goes down on it limp, as himself", #rags - rag0)
-ok(LC.PlayerIsWanted(reb), "whoever threw it is wanted for it")
+ok(LC.PlayerIsWanted(reb) and LC.Standing(reb) == -999 and LC.AdminNeverForgotten(reb), "whoever threw it: wanted, Civil Standing -999, never forgotten", LC.Standing(reb))
+hook.Run("LivingCityNewCharacter", reb, "x", "test")
 local hp = adm:Health()
 _run(1.2)
 ok(not IsValid(g), "it goes off under him")
@@ -33954,6 +33955,10 @@ ok(A ~= nil and A.her == adm and A.attackers[reb], "she is shot at: her guards a
 ok(LC.SpeechSession() == nil, "the address is over")
 ok(#A.glass == 3, "a screen of Combine glass stands between the stand and the crowd", A and #A.glass)
 ok(LC.PlayerIsWanted(reb), "the attacker is wanted")
+ok(LC.Standing(reb) == -999, "their Civil Standing is -999 at once", LC.Standing(reb))
+ok(LC.CrimeMinutes(LC.AdminCrime) >= 60, "it is the worst crime there is: the longest sentence")
+LC.ClearWanted(reb)
+ok(LC.AdminNeverForgotten(reb) and LC.PlayerIsWanted(reb), "and it is never forgotten: still wanted when the wanted notice has run out")
 ok(hook.Run("EntityTakeDamage", adm, _dmg(reb, 50)) == true, "from now on she cannot be hurt")
 ok(hook.Run("EntityTakeDamage", bystander, _dmg(all[1], 10)) == true and hook.Run("EntityTakeDamage", reb, _dmg(all[1], 10)) ~= true,
     "her guards' fire hurts only the attackers, never a bystander")
@@ -34016,11 +34021,125 @@ if LC.SpeechSession() then LC.EndSpeech() end
 LC.EndEvent(true)
 for _, e in ipairs(ents.FindByClass("lc_adminglass")) do e:Remove() end
 LC.RemovePoint(stand) LC.RemovePoint(crowd) LC.RemovePoint(desk)
+hook.Run("LivingCityNewCharacter", reb, "x", "test")
+ok(not LC.AdminNeverForgotten(reb), "a new character starts clean")
 adm:Remove() reb:Remove() bystander:Remove()
 set("lc_stops", stopsWas)
 _walls = savedWalls
 end
 Nov15_AdminExfilTests()
+
+-- What sets it off, the close call, and keeping back (the owner's answers, 15 November)
+function Nov15_AdminTriggerTests()
+section("15 November: a near miss sets her guards off, a hit is a close call, and nobody walks up to her at her address")
+LC.EndEvent(true)
+if LC.SpeechSession() then LC.EndSpeech() end
+if LC.AdminExfil() then LC.AdminExfilEnd(false) end
+local savedWalls = _walls
+_walls = {}
+local set = _setcvar
+local stopsWas = GetConVar("lc_stops"):GetInt()
+set("lc_stops", 0)
+local T0 = Vector(128000, 108000, 0)
+local stand = LC.AddPoint(T0 + Vector(0, 600, 0), 270, "speech", 0)
+local crowd = LC.AddPoint(T0, 90, "speechcrowd", 0)
+local adm = newPlayer("TriggerAdministrator", "admin")
+adm:SetPos(T0 + Vector(0, 620, 0))
+adm.lcProtectUntil = 0
+local reb = newPlayer("TriggerRebel", "resistance", nil, 900)
+reb:SetPos(T0 + Vector(0, -900, 0))
+local cit = newPlayer("TriggerCitizen", "citizen")
+cit:SetPos(T0 + Vector(0, 0, 0))
+local unit = newPlayer("TriggerUnit", "cp")
+set("lc_speech_muster", 120)
+local function call()
+    if LC.AdminExfil() then LC.AdminExfilEnd(false) end
+    if LC.SpeechSession() then LC.EndSpeech() end
+    adm:SetPos(T0 + Vector(0, 620, 0))
+    adm:SetHealth(100)
+    LC.EndEvent(true)
+    return LC.CallSpeech(adm, "Citizens.")
+end
+ok(call(), "her address")
+local herAt = adm:GetPos()
+-- a bullet that lands far from her: nothing
+ok(not LC.AdminBulletCheck(reb, { Src = herAt + Vector(3000, 0, 40), Dir = Vector(1, 0, 0), Distance = 2000 }), "a shot nowhere near her is nothing")
+ok(not LC.AdminBulletCheck(unit, { Src = herAt + Vector(100, 0, 40), Dir = Vector(1, 0, 0), Distance = 100 }), "nor is a unit's shot beside her")
+-- one that lands within 20 feet of her
+ok(LC.AdminBulletCheck(reb, { Src = herAt + Vector(2000, 0, 40), Dir = Vector(-1, 0, 0), Distance = 1800 }), "a bullet that lands within 20 feet of her is an attempt, hit or not")
+_run(0.1)
+ok(LC.AdminExfil() ~= nil and LC.AdminExfil().attackers[reb], "her guards are getting her out, and the one who fired is theirs")
+-- one that passes close by her and flies on
+ok(call(), "(again)")
+herAt = adm:GetPos()
+ok(LC.AdminBulletCheck(reb, { Src = herAt + Vector(-2000, 150, 40), Dir = Vector(1, 0, 0), Distance = 6000 }), "one that passes within 20 feet of her and flies on counts too")
+_run(0.1)
+ok(LC.AdminExfil() ~= nil, "(set off)")
+-- a crossbow bolt that comes that near
+ok(call(), "(again)")
+local bolt = ents.Create("crossbow_bolt")
+bolt:SetPos(adm:GetPos() + Vector(200, 0, 40))
+bolt.lcOwner = reb
+bolt:Spawn()
+LC.AdminGrenadeWatch(bolt)
+LC.AdminGrenadeThink(CurTime() + 1)
+ok(LC.AdminExfil() ~= nil, "a bolt that comes within 20 feet of her is an attempt")
+bolt:Remove()
+-- a hit is a close call, never a kill
+ok(call(), "(again)")
+adm:SetHealth(30)
+local shot = _dmg(reb, 500)
+hook.Run("EntityTakeDamage", adm, shot)
+ok(shot:GetDamage() == 29, "a hit that would kill her is a close call: it leaves her a breath", shot:GetDamage())
+_run(0.1)
+ok(LC.AdminExfil() ~= nil and LC.AdminExfil().her == adm, "and she is taken out all the same")
+-- keep back
+ok(call(), "(again)")
+local S = LC.SpeechSession()
+local warn, kill = LC.SpeechLines(S)
+ok(warn > kill and kill >= 60 and warn <= 230, "a warning line and an inner line round her", warn .. " " .. kill)
+herAt = adm:GetPos()
+cit:SetHealth(100)
+cit:SetPos(herAt + Vector(0, -(warn + 60), 0))
+unit:SetPos(herAt + Vector(40, -30, 0))
+LC.AdminPerimeterThink(CurTime())
+ok(not (S.warnedOff and S.warnedOff[cit]), "outside the warning line: left alone")
+cit:SetPos(herAt + Vector(0, -(warn - 20), 0))
+LC.AdminPerimeterThink(CurTime())
+ok(S.warnedOff[cit] and not S.intruders[cit] and cit:Health() == 100, "inside it: warned once, not touched")
+ok(not S.warnedOff[unit] and not S.intruders[unit], "a unit standing by her is never warned")
+cit:SetPos(herAt + Vector(0, -(kill - 15), 0))
+LC.AdminPerimeterThink(CurTime())
+ok(S.intruders[cit] ~= nil and LC.AdminTargets[cit], "inside the inner line: her guards are on them")
+local hp0 = cit:Health()
+for k = 1, 8 do LC.AdminPerimeterThink(CurTime() + k) end
+ok(cit:Health() < hp0, "and they are shot", cit:Health())
+ok(LC.AdminExfil() == nil, "(walking up is no attempt on her life: she stays)")
+-- staff in build mode are left alone
+local builder = newPlayer("TriggerBuilder", "citizen")
+builder:SetNW2Bool("lc_build", true)
+builder:SetPos(herAt + Vector(0, -30, 0))
+LC.AdminPerimeterThink(CurTime() + 20)
+ok(not S.intruders[builder] and not S.warnedOff[builder], "staff in build mode walk where they like")
+-- her address's guards hurt nobody they are not after
+local g1 = LC.SpeechGuards()[1]
+ok(hook.Run("EntityTakeDamage", builder, _dmg(g1, 10)) == true, "a guard's stray shot hurts nobody else")
+set("lc_speech_keepback", 0)
+local late = newPlayer("TriggerLate", "citizen")
+late:SetPos(herAt + Vector(0, -20, 0))
+LC.AdminPerimeterThink(CurTime() + 30)
+ok(not S.intruders[late], "lc_speech_keepback 0: nobody is warned or shot for walking up")
+set("lc_speech_keepback", 1)
+LC.EndSpeech()
+LC.EndEvent(true)
+for _, e in ipairs(ents.FindByClass("lc_adminglass")) do e:Remove() end
+hook.Run("LivingCityNewCharacter", reb, "x", "test")
+LC.RemovePoint(stand) LC.RemovePoint(crowd)
+for _, p in ipairs({ adm, reb, cit, unit, builder, late }) do if IsValid(p) then p:Remove() end end
+set("lc_stops", stopsWas)
+_walls = savedWalls
+end
+Nov15_AdminTriggerTests()
 function EveryoneExerciseTests()
 section("15 November: every citizen comes to the drill and to the parade (not ten), and those at home are called out")
 LC.EndEvent(true)
