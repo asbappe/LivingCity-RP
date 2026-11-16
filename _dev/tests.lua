@@ -33629,7 +33629,8 @@ local own = grenade(Vector(90, 40, 0), unitP)
 LC.AdminGrenadeThink(CurTime() + 1)
 -- (whichever soldier is nearest: by now her own elite guards have come to her side, and one of them may be the one)
 ok(own.lcJumped and own.lcDone and #ents.FindByClass("prop_ragdoll") > ragsBefore, "a grenade thrown by a unit player by her: a soldier throws himself on it all the same")
-ok(not LC.AdminNeverForgotten(unitP) and not LC.PlayerIsWanted(unitP), "(and the unit who threw it is not marked for an attempt)")
+ok(not LC.AdminNeverForgotten(unitP) and not LC.PlayerIsWanted(unitP) and unitP:GetNW2String("lcf_faction", "") == "cp",
+    "(the unit who threw it is let off: it is their first in sixty minutes. A second is in Nov16_AdminRogueUnitTests)")
 _run(1.2)
 unitP:Remove()
 -- a Combine NPC's grenade cannot hurt her at all: nobody need die for it
@@ -34846,6 +34847,181 @@ set("lc_stops", stopsWas)
 _walls = savedWalls
 end
 Nov16_AdminCloseCallTests()
+
+-- One of the Combine's own, a player, turns on her: only a hit counts; their grenade by her is let off once in
+-- sixty minutes; only a grenade that explodes is jumped on (the owner, 16 November)
+function Nov16_AdminRogueUnitTests()
+section("16 November: a unit player who hits the Administrator is thrown out and marked; their grenade by her is let off once in sixty minutes; only a grenade that explodes is jumped on")
+LC.EndEvent(true)
+if LC.SpeechSession() then LC.EndSpeech() end
+if LC.AdminExfil() then LC.AdminExfilEnd(false) end
+local savedWalls = _walls
+_walls = {}
+local set = _setcvar
+local stopsWas = GetConVar("lc_stops"):GetInt()
+set("lc_stops", 0)
+set("lc_speech_muster", 60)
+local U0 = Vector(208000, 188000, 0)
+local stand = LC.AddPoint(U0 + Vector(0, 500, 0), 270, "speech", 0)
+local crowd = LC.AddPoint(U0, 90, "speechcrowd", 0)
+local adm = newPlayer("RogueAdministrator", "admin")
+local reb = newPlayer("RogueRebel", "resistance", nil, 900)
+local names = { "unit", "ins", "third", "fourth", "fifth", "thrower", "second" }
+local u = {}
+for _, n in ipairs(names) do u[n] = newPlayer("Rogue_" .. n, "cp") end
+_run(0.3)
+adm:SetPos(U0 + Vector(0, 520, 0))
+adm.lcProtectUntil = 0
+reb:SetPos(U0 + Vector(0, -900, 0))
+for i, n in ipairs(names) do u[n]:SetPos(U0 + Vector(150 * i, -100, 0)) end
+LC.StoryFlag(u.ins, "insider", true)
+ok(LC.PlayerIsCP(u.unit) and LC.IsInsider(u.ins), "(a unit, and an Insider)")
+local function Faction(p) return p:GetNW2String("lcf_faction", "") end
+local function Traitor(p)
+    return Faction(p) == "resistance" and LC.PlayerIsWanted(p) and LC.Standing(p) == -999 and LC.AdminNeverForgotten(p)
+end
+local function Loyal(p) return Faction(p) == "cp" and not LC.PlayerIsWanted(p) and not LC.AdminNeverForgotten(p) end
+local function call()
+    if LC.AdminExfil() then LC.AdminExfilEnd(false) end
+    if LC.SpeechSession() then LC.EndSpeech() end
+    for _, e in ipairs(ents.FindByClass("lc_adminglass")) do e:Remove() end
+    adm:SetPos(U0 + Vector(0, 520, 0))
+    adm:SetHealth(100)
+    return LC.CallSpeech(adm, "Citizens.")
+end
+ok(call(), "her address is called")
+local herAt = adm:GetPos()
+
+-- a near miss of theirs is nothing; so is a Combine NPC's hit
+ok(not LC.AdminBulletCheck(u.unit, { Src = herAt + Vector(100, 0, 40), Dir = Vector(1, 0, 0), Distance = 100 }), "a unit player's shot beside her is nothing")
+ok(not LC.AdminNearMiss(herAt + Vector(50, 0, 40), u.unit), "nor their bolt or rocket passing by")
+local cop = LC.SpawnCop(U0 + Vector(300, 300, 0))
+hook.Run("EntityTakeDamage", adm, _dmg(cop, 20))
+_run(0.1)
+ok(LC.AdminExfil() == nil and Loyal(u.unit), "nothing starts: not from those, not from a Combine NPC's hit on her")
+
+-- their hit on her: an attempt like anyone's, and they are thrown out before they are marked
+adm:SetHealth(30)
+local shot = _dmg(u.unit, 500)
+hook.Run("EntityTakeDamage", adm, shot)
+ok(Faction(u.unit) == "resistance" and LC.InsiderBurned(u.unit), "a unit player's hit on her: thrown out of the Combine at once, the way a caught Insider is", Faction(u.unit))
+ok(shot:GetDamage() == 29, "(the same cut to a hit that would kill)", shot:GetDamage())
+_run(0.1)
+local A = LC.AdminExfil()
+ok(A ~= nil and A.her == adm and A.attackers[u.unit] == true and #A.glass == 3, "her guards get her out, and the one who fired is on their list")
+if not A then LC.EndSpeech() return end
+ok(Traitor(u.unit) and LC.AdminTargets[u.unit] == true, "wanted, Civil Standing -999, never forgotten, and her guards may fire on them", LC.Standing(u.unit))
+
+-- while they have her: one stray round brands nobody, a second within ten seconds does
+ok(hook.Run("EntityTakeDamage", adm, _dmg(u.third, 10)) == true, "while they have her a unit player's hit does her no harm")
+ok(Loyal(u.third) and not A.attackers[u.third], "and one stray round brands nobody")
+_run(11)
+hook.Run("EntityTakeDamage", adm, _dmg(u.third, 10))
+ok(Loyal(u.third) and not A.attackers[u.third], "nor does another eleven seconds later")
+_run(1)
+hook.Run("EntityTakeDamage", adm, _dmg(u.third, 10))
+ok(Traitor(u.third) and A.attackers[u.third] == true, "a second within ten seconds: thrown out and marked", Faction(u.third))
+local guard = A.guards[1]
+hook.Run("EntityTakeDamage", guard, _dmg(u.fourth, 10))
+_run(1)
+hook.Run("EntityTakeDamage", guard, _dmg(u.fourth, 10))
+ok(Loyal(u.fourth) and not A.attackers[u.fourth], "a unit player's hits on her guards never count")
+
+-- an Insider the same; and the hit heard only after it landed
+ok(call(), "(her address again)")
+hook.Run("EntityTakeDamage", adm, _dmg(u.ins, 20))
+_run(0.1)
+A = LC.AdminExfil()
+ok(A ~= nil and A.attackers[u.ins] == true and Traitor(u.ins) and not LC.IsInsider(u.ins) and LC.InsiderBurned(u.ins), "an Insider's hit on her: the same", Faction(u.ins))
+ok(call(), "(and again)")
+hook.Run("PostEntityTakeDamage", adm, _dmg(u.fifth, 20), true)
+A = LC.AdminExfil()
+ok(A ~= nil and A.attackers[u.fifth] == true and Traitor(u.fifth), "(a hit another hook hid from the first listener counts all the same)", Faction(u.fifth))
+
+-- grenades: only one that explodes is jumped on
+local function grenade(off, owner, class, kind)
+    local g = ents.Create(class or "npc_grenade_frag")
+    g:SetPos(adm:GetPos() + off)
+    g.lcOwner = owner
+    g.lcKind = kind
+    g:Spawn()
+    LC.AdminGrenadeWatch(g)
+    return g
+end
+ok(call(), "(her address once more)")
+local gas = grenade(Vector(90, 40, 0), reb, "lc_grenade", "gas")
+LC.AdminGrenadeThink(CurTime() + 1)
+ok(not gas.lcJumped, "a gas grenade by her: nobody throws himself on it")
+ok(LC.AdminExfil() ~= nil and LC.AdminExfil().attackers[reb] == true, "but landing by her at her address, from someone not of the Combine, it is an attempt")
+gas:Remove()
+LC.AdminExfilEnd(false)
+if LC.SpeechSession() then LC.EndSpeech() end
+for _, e in ipairs(ents.FindByClass("lc_adminglass")) do e:Remove() end
+hook.Run("LivingCityNewCharacter", reb, "x", "test")
+_run(31) -- (the address's guards have gone)
+local soldiers = {}
+for i = 1, 7 do soldiers[i] = LC.SpawnSoldier(adm:GetPos() + Vector(100 + 30 * i, 120, 0)) end
+-- (whichever soldier is nearest goes: one of these, or one of her own elite guards come to her side)
+local function Fallen() return #ents.FindByClass("prop_ragdoll") end
+local n0 = Fallen()
+local fire = grenade(Vector(90, 40, 0), reb, "lc_grenade", "fire")
+local smoke = grenade(Vector(80, 40, 0), reb, "lc_grenade", "smoke")
+LC.AdminGrenadeThink(CurTime() + 1)
+ok(not fire.lcJumped and not smoke.lcJumped and Fallen() == n0, "a firebomb or a smoke grenade by her: nobody jumps either")
+fire:Remove() smoke:Remove()
+local frag = grenade(Vector(90, 40, 0), reb)
+LC.AdminGrenadeThink(CurTime() + 1)
+ok(frag.lcJumped == true and Fallen() == n0 + 1, "a frag grenade by her: a soldier throws himself on it")
+_run(1.2)
+
+-- a unit player's grenade by her: the first in sixty minutes is let off, a second makes them a traitor
+local t = u.thrower
+local first = grenade(Vector(90, 40, 0), t)
+LC.AdminGrenadeThink(CurTime() + 1)
+ok(first.lcJumped == true and Loyal(t), "a unit player's frag by her: smothered, and the first in sixty minutes is let off")
+_run(1.2)
+local cover = grenade(Vector(90, 40, 0), t, "lc_grenade", "smoke")
+local flash = grenade(Vector(80, 40, 0), t, "lc_grenade", "flash")
+LC.AdminGrenadeThink(CurTime() + 1)
+ok(Loyal(t) and not cover.lcJumped, "their smoke or flash by her never counts")
+cover:Remove() flash:Remove()
+local gas2 = grenade(Vector(90, 40, 0), t, "lc_grenade", "gas")
+LC.AdminGrenadeThink(CurTime() + 1)
+ok(not gas2.lcJumped and Traitor(t) and LC.InsiderBurned(t), "a second within sixty minutes (gas, this time): thrown out and marked", Faction(t))
+gas2:Remove()
+local s = u.second
+local a1 = grenade(Vector(90, 40, 0), s)
+LC.AdminGrenadeThink(CurTime() + 1)
+_run(1.2)
+ok(Loyal(s) and s.lcAdminGrenadeAt ~= nil, "(another unit's first: let off)")
+s.lcAdminGrenadeAt = CurTime() - 3700 -- (that was over an hour ago)
+local a2 = grenade(Vector(90, 40, 0), s)
+LC.AdminGrenadeThink(CurTime() + 1)
+_run(1.2)
+ok(a2.lcJumped == true and Loyal(s), "one more than sixty minutes later is let off again")
+local a3 = grenade(Vector(90, 40, 0), s, "lc_grenade", "fire")
+LC.AdminGrenadeThink(CurTime() + 1)
+ok(Traitor(s), "and a firebomb straight after it is the second: a traitor", Faction(s))
+a3:Remove()
+ok(IsValid(a1) == false and Fallen() == n0 + 4, "(each frag took a soldier with it, and nothing else did)", Fallen() - n0)
+
+if LC.AdminExfil() then LC.AdminExfilEnd(false) end
+if LC.SpeechSession() then LC.EndSpeech() end
+LC.EndEvent(true)
+for _, e in ipairs(ents.FindByClass("lc_adminglass")) do e:Remove() end
+for _, e in ipairs(soldiers) do if IsValid(e) then e:Remove() end end
+if IsValid(cop) then cop:Remove() end
+for _, r in ipairs(ents.FindByClass("prop_ragdoll")) do r:Remove() end
+LC.RemovePoint(stand) LC.RemovePoint(crowd)
+for _, n in ipairs(names) do
+    hook.Run("LivingCityNewCharacter", u[n], "x", "test")
+    u[n]:Remove()
+end
+adm:Remove() reb:Remove()
+set("lc_stops", stopsWas)
+_walls = savedWalls
+end
+Nov16_AdminRogueUnitTests()
 
 function Nov16_AdminQuestioningTests()
 section("16 November: the would-be assassin is questioned by the Administrator herself, stunstick in hand")

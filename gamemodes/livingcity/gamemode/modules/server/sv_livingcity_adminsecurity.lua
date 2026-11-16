@@ -48,6 +48,17 @@
     within 20 feet of obviously hitting her counts"): a hit on her; a bullet
     from anyone not of the Combine that lands within 320 units of her or passes
     that near her; a bolt, rocket, energy ball or grenade that comes that near.
+    One of the Combine's own (the owner, 16 November: "what if the insider
+    attempts it? or even a metrocop or combine unit gone rogue? ... it would
+    only count if the bullet actually hit the administrator by them"): a unit
+    player's near miss is nothing; their hit on her at her address is an
+    attempt like anyone's, and they are thrown out of the Combine first, the
+    way a caught Insider is (LC.BurnInsider), then marked. While her guards
+    have her, a unit player's second hit on her within ten seconds does the
+    same. Their grenade by her: the first in sixty minutes is let off, a
+    second makes them a traitor (smoke and a flash never count). A Combine
+    NPC never counts. Only a grenade that explodes is jumped on: a firebomb,
+    gas, smoke or a flash is left to do what it does.
     The hit itself is a close call, never a kill ("make it a close call, but
     she is still escorted all the same"), and uses one of her close calls up
     (the owner, 16 November: "it should use up a close call, just please make
@@ -132,6 +143,56 @@ local function Her(pos)
     local S = LC.SpeechSession and LC.SpeechSession()
     if S and IsValid(S.her) and S.her:GetPos():DistToSqr(pos) < NEAR_HER * NEAR_HER then return S.her end
     return nil
+end
+
+-- One of the Combine's own, a player, who turns on her (the owner, 16 November: "what if the insider attempts
+-- it? or even a metrocop or combine unit gone rogue? (both of these by a human player obviously) I guess for
+-- these it would only count if the bullet actually hit the administrator by them"): thrown out of the Combine
+-- the way a caught Insider is (LC.BurnInsider, sv_livingcity_insider.lua: out of the system for good, the
+-- Resistance's from then on, wanted for treason, the dispatch on the units' radio), an Insider and any other
+-- unit alike. From then on they are no longer one of theirs: they can be marked for the attempt, and her guards
+-- fire on them. True when who may be marked now (never one of theirs, or just thrown out).
+local function Turn(who)
+    if not IsValid(who) then return false end
+    if not Theirs(who) then return true end
+    if not who:IsPlayer() or (LC.IsAdministrator and LC.IsAdministrator(who)) or not LC.BurnInsider then return false end
+    LC.Try(LC.BurnInsider, who)
+    return not Theirs(who)
+end
+LC.AdminTurn = Turn
+-- Whoever tried: marked for it (standing -999, wanted, never forgotten), and at her address her guards get her out.
+local function Attempted(her, who, how)
+    if LC.AdminAttacker then LC.AdminAttacker(who) end
+    hook.Run("LivingCityAdminAttempt", her, who, how)
+end
+
+-- Which grenades a soldier throws himself on: the ones that explode (the owner, 16 November: "firebombs nor
+-- poison gas grenades, someone jumping on those doesn't really do anything since it's not an explosion").
+-- Half-Life 2's frag grenade, and any kind of the gamemode's own that is not one of these.
+local NO_BLAST = { smoke = true, flash = true, gas = true, fire = true }
+local COVER = { smoke = true, flash = true } -- (units use these for cover: never held against them)
+local function Explosive(g)
+    local cls = g:GetClass()
+    return cls == "npc_grenade_frag" or (cls == "lc_grenade" and not NO_BLAST[g.lcKind or "smoke"])
+end
+LC.AdminGrenadeExplosive = Explosive
+
+-- A unit player's grenade by her (the owner, 16 November: "make it so one grenade is an exception (one every 60
+-- minutes), but a second triggers the assassin designation for the thrower"): the first in sixty minutes is let
+-- off; a second from the same player within sixty minutes of it makes them a traitor. A frag, a firebomb and gas
+-- count; smoke and a flash never. Each grenade is counted once. True when this one is the second.
+local GRENADE_GRACE = 3600
+local function UnitPlayer(who)
+    return IsValid(who) and who:IsPlayer() and Theirs(who) and not (LC.IsAdministrator and LC.IsAdministrator(who))
+end
+local function UnitGrenade(who, g, now)
+    if g.lcAdminCounted then return false end
+    g.lcAdminCounted = true
+    if g:GetClass() == "lc_grenade" and COVER[g.lcKind or "smoke"] then return false end
+    local first = who.lcAdminGrenadeAt
+    if first and now - first < GRENADE_GRACE then return true end
+    who.lcAdminGrenadeAt = now
+    return false
 end
 
 -- The one who goes: the nearest soldier within reach (a Civil Protection unit only with no soldier there).
@@ -235,11 +296,12 @@ function LC.GrenadeJump(npc, g, her)
     local pend = LC.AdminAttemptPending and LC.AdminAttemptPending()
     if pend then pend.hero = true end
     timer.Simple(t + 0.2, function() Boom(g, rag, at) end)
-    -- an attempt on her life
-    -- (one of the Combine's own threw it: smothered all the same, but it is no attempt on her life)
-    if not Theirs(who) then
-        if LC.AdminAttacker then LC.AdminAttacker(who) end
-        hook.Run("LivingCityAdminAttempt", her, who, "grenade")
+    -- an attempt on her life, whoever threw it. One of the Combine's own, a player: smothered all the same, the
+    -- first in sixty minutes let off, a second making them a traitor (thrown out, then marked like anyone).
+    if IsValid(who) and Theirs(who) then
+        if UnitPlayer(who) and UnitGrenade(who, g, CurTime()) and Turn(who) then Attempted(her, who, "grenade") end
+    else
+        Attempted(her, who, "grenade")
     end
     return true
 end
@@ -252,18 +314,30 @@ hook.Add("OnEntityCreated", "LivingCityAdminGrenade", function(e)
     watch[e] = CurTime()
 end)
 
--- Each grenade in the air or on the ground: by her, landed, and not the Combine's own, somebody goes.
+local function Landed(g, now, since)
+    local vel = g.GetVelocity and g:GetVelocity() or Vector(0, 0, 0)
+    return vel:Length() < SLOW or now - since > AIR
+end
+
+-- Each grenade in the air or on the ground: an explosive one by her, landed, and not a Combine NPC's: somebody goes.
 function LC.AdminGrenadeThink(now)
     for g, since in pairs(watch) do
         if not IsValid(g) or g.lcJumped or now - since > 12 then
             watch[g] = nil
-        elseif not GRENADES[g:GetClass()] or not cvJump:GetBool() then
-            -- a bolt, a rocket, an energy ball (or a grenade with the jump off): near her at her address, it is an attempt
-            if LC.AdminNearMiss and LC.AdminNearMiss(g:GetPos(), Thrower(g)) then watch[g] = nil end
+        elseif not GRENADES[g:GetClass()] or not cvJump:GetBool() or not Explosive(g) then
+            -- a bolt, a rocket, an energy ball, or a grenade nobody jumps on (a firebomb, gas, smoke or a flash, left
+            -- to do what it does; any grenade with the jump off): near her at her address it is an attempt, from
+            -- anyone not of the Combine. A unit player's by her counts toward their one in sixty minutes.
+            local who = Thrower(g)
+            if LC.AdminNearMiss and LC.AdminNearMiss(g:GetPos(), who) then
+                watch[g] = nil
+            elseif GRENADES[g:GetClass()] and not g.lcAdminCounted and UnitPlayer(who) and now - since > 0.15 and Landed(g, now, since) then
+                local her = Her(g:GetPos())
+                if her and UnitGrenade(who, g, now) and Turn(who) then Attempted(her, who, "grenade") end
+            end
         elseif now - since > 0.15 then
             local at = g:GetPos()
-            local vel = g.GetVelocity and g:GetVelocity() or Vector(0, 0, 0)
-            if vel:Length() < SLOW or now - since > AIR then
+            if Landed(g, now, since) then
                 -- (whoever threw it, a Combine player too: the owner, 16 November, "no matter who threw it, because all
                 -- grenades should do damage to her". Not a Combine NPC's: those cannot hurt her at all, "NPC
                 -- combine/overwatch/CP grenades should not hurt her", LC.AdministratorImmune.)
@@ -479,7 +553,7 @@ local function Begin(S, her, who)
         end
     end
     local now = CurTime()
-    A = { her = her, attackers = {}, guards = guards, guardSet = {}, glass = {}, t0 = now, last = now, phase = "close",
+    A = { her = her, attackers = {}, guards = guards, guardSet = {}, glass = {}, strays = {}, t0 = now, last = now, phase = "close",
           apc = IsValid(S.apc) and S.apc or nil, at = her:GetPos() }
     for _, g in ipairs(guards) do A.guardSet[g] = true end
     S.apc = nil
@@ -1300,7 +1374,17 @@ hook.Add("EntityTakeDamage", "LivingCityAdminExfil", function(ent, dmg)
     end
     if C and C.safe and ent == C.her then return true end -- (fainted in her office: not until she is up)
     if A then
-        if ent == A.her then return true end
+        if ent == A.her then
+            -- (one of the Combine's own, a player, hitting her while they have her: no harm, and one stray round in
+            -- a firefight brands nobody. A second from the same player within ten seconds does.)
+            if UnitPlayer(att) and (dmg:GetDamage() or 0) > 0 then
+                local now, last = CurTime(), A.strays[att]
+                A.strays[att] = now
+                if last and now > last and now - last < 10 and Turn(att) then Mark(att) end
+            end
+            return true
+        end
+        -- (her guards or the APC hit: whoever did it is an attacker, but never one of the Combine's own)
         if (A.guardSet[ent] or ent == A.apc) and IsValid(att) and (att:IsPlayer() or att:IsNPC()) then Mark(att) end
         if ent == A.apc then return true end
         return
@@ -1310,8 +1394,14 @@ hook.Add("EntityTakeDamage", "LivingCityAdminExfil", function(ent, dmg)
     if not cvExfil:GetBool() then return end
     local S = LC.SpeechSession and LC.SpeechSession()
     if not S or not IsValid(ent) or (ent ~= S.by and ent ~= S.her) then return end
-    if not IsValid(att) or not (att:IsPlayer() or att:IsNPC()) or att == ent or Theirs(att) then return end
+    if not IsValid(att) or not (att:IsPlayer() or att:IsNPC()) or att == ent then return end
     if (dmg:GetDamage() or 0) <= 0 then return end
+    -- one of the Combine's own: an NPC's fire never counts (it cannot hurt her: sv_livingcity_cp.lua). A player's
+    -- hit on her is an attempt like anyone's, and they are thrown out before they are marked for it.
+    if Theirs(att) then
+        if not att:IsPlayer() then return end
+        Turn(att)
+    end
     local her = ent
     timer.Simple(0, function()
         if IsValid(her) and (not her:IsPlayer() or her:Alive()) then LC.AdminAttempt(her, att, "shot") end
@@ -1455,7 +1545,11 @@ hook.Add("PostEntityTakeDamage", "LivingCityAdminExfil", function(ent, dmg, took
     local S = LC.SpeechSession and LC.SpeechSession()
     if not S or ent ~= S.by then return end
     local att = dmg:GetAttacker()
-    if not IsValid(att) or not (att:IsPlayer() or att:IsNPC()) or att == ent or Theirs(att) then return end
+    if not IsValid(att) or not (att:IsPlayer() or att:IsNPC()) or att == ent then return end
+    if Theirs(att) then
+        if not att:IsPlayer() then return end
+        Turn(att) -- (a unit player's hit: thrown out, then an attempt like anyone's)
+    end
     if ent:Alive() then LC.AdminAttempt(ent, att, "shot") end
 end)
 hook.Add("PlayerDisconnected", "LivingCityAdminExfil", function(p) if A and A.her == p then Done(false) end end)
