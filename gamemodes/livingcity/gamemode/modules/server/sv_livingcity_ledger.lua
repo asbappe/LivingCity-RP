@@ -381,7 +381,10 @@ function LC.GiveSpeech(ply, text)
     local s = Load()
     if s.speechDay == s.day then return false, "You've spoken to the city today. Tomorrow." end
     text = string.Trim(tostring(text or ""))
-    if #text < 10 then return false, "Say something to the city (at least a sentence)." end
+    -- (no words written: she speaks into her microphone, and the whole city hears it; the owner, 16 November: "most
+    -- of the human players would have a microphone and use that instead of typing". Writing it is the other way.)
+    local mic = text == ""
+    if not mic and #text < 10 then return false, "Say something to the city (at least a sentence)." end
     -- with a speech crowd point on the map, the city gathers first (sv_livingcity_speech.lua)
     if LC.SpeechPlaces and LC.SpeechPlaces(ply:GetPos()) then
         local ok, why = LC.CallSpeech(ply, text)
@@ -393,7 +396,8 @@ function LC.GiveSpeech(ply, text)
     local stand = SpeechStand(ply:GetPos())
     if stand and ply:GetPos():DistToSqr(stand.pos) > 400 * 400 then return false, "Speak from the speech stand: F2 > Me > The city's levers > Go to the speech stand." end
     s.speechDay = s.day
-    Deliver(ply, text, ply:GetPos())
+    Deliver(ply, text, ply:GetPos(), mic)
+    if mic and LC.SpeechMicOpen then LC.SpeechMicOpen(ply, ply:GetPos()) end
     return true
 end
 

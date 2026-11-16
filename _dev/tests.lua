@@ -34303,10 +34303,18 @@ hook.Run("EntityTakeDamage", her, _dmg(reb, 50))
 _run(0.1)
 local pend = LC.AdminAttemptPending()
 ok(pend ~= nil and pend.by[tostring(reb:SteamID64())] and not pend.caught and not pend.hero, "she is shot at: it is kept for her next address, with who did it")
-for _ = 1, 25 do _run(1) end
+ok(LC.AdminAnnounceAfter[1] == 180 and LC.AdminAnnounceAfter[2] == 300, "the city hears of it three to five minutes later (not twenty seconds)")
 local heard = false
 for _, t in ipairs(announced) do if t == "attempt" then heard = true end end
-ok(heard, "about twenty seconds later the city hears of it")
+ok(not heard, "(not at once)")
+LC.AdminAnnounceAfter = { 2, 3 }
+LC.AdminExfilEnd(false)
+ok(LC.CallSpeech(nil, nil), "(another address, for the test's shorter wait)")
+hook.Run("EntityTakeDamage", LC.SpeechSession().her, _dmg(reb, 50))
+for _ = 1, 6 do _run(1) end
+LC.AdminAnnounceAfter = { 180, 300 }
+for _, t in ipairs(announced) do if t == "attempt" then heard = true end end
+ok(heard, "and then it does")
 if LC.AdminExfil() then LC.AdminExfilEnd(false) end
 hook.Run("LivingCityIncarcerated", reb, 600, "x")
 ok(LC.AdminAttemptPending().caught == true, "the attacker taken to the cells since: she will say so")
@@ -34332,6 +34340,64 @@ set("lc_stops", stopsWas)
 _walls = savedWalls
 end
 Nov16_AttemptAftermathTests()
+
+-- Her address into her microphone: the whole city hears it; writing it is the other way (the owner, 16 November)
+function Nov16_MicSpeechTests()
+section("16 November: a player Administrator's address is spoken into her microphone and heard across the whole city; writing it is the other way")
+LC.EndEvent(true)
+if LC.SpeechSession() then LC.EndSpeech() end
+if LC.AdminExfil() then LC.AdminExfilEnd(false) end
+local savedWalls = _walls
+_walls = {}
+local set = _setcvar
+local stopsWas = GetConVar("lc_stops"):GetInt()
+set("lc_stops", 0)
+local ledgerWas = GetConVar("lc_ledger"):GetInt()
+set("lc_ledger", 1)
+local M0 = Vector(144000, 124000, 0)
+local stand = LC.AddPoint(M0 + Vector(0, 600, 0), 270, "speech", 0)
+local crowd = LC.AddPoint(M0, 90, "speechcrowd", 0)
+local adm = newPlayer("MicAdministrator", "admin")
+adm:SetPos(M0 + Vector(0, 620, 0))
+local near = newPlayer("MicNear", "citizen")
+near:SetPos(M0 + Vector(50, 0, 0))
+local far = newPlayer("MicFar", "citizen")
+far:SetPos(M0 + Vector(30000, 30000, 0))
+local hears = hook.t.PlayerCanHearPlayersVoice.LivingCityVoice
+local L = LC.Ledger()
+L.speechDay = -1
+set("lc_speech_muster", 4)
+set("lc_speech_mic_secs", 20)
+ok(GetConVar("lc_speech_mic_secs") ~= nil, "lc_speech_mic_secs: how long her microphone carries")
+L.morale = 50 -- (room to rise)
+local m0 = L.morale
+ok(LC.GiveSpeech(adm, "") == true and LC.SpeechSession() and LC.SpeechSession().text == "", "a speech with no words written is called: she will speak into her microphone")
+ok(not LC.SpeechMicHeard(far, adm), "while the city gathers her microphone is only as near as her voice")
+_run(5)
+ok(LC.SpeechSession() and LC.SpeechSession().spoken, "the city has gathered: she is on")
+ok(LC.SpeechMicHeard(near, adm) and LC.SpeechMicHeard(far, adm), "the whole city hears her microphone, the far side of the map too")
+local can, positional = hears(far, adm)
+ok(can == true and positional == false, "(as if she stood beside them)")
+ok(not LC.SpeechMicHeard(adm, near), "(only hers: nobody else's voice carries)")
+ok(LC.Ledger().morale > m0, "it counts as her address (morale up)", LC.Ledger().morale - m0)
+_run(22)
+ok(not LC.SpeechMicHeard(far, adm), "after lc_speech_mic_secs her microphone is her own again")
+for _ = 1, 30 do _run(1) if not LC.SpeechSession() then break end end
+ok(LC.SpeechSession() == nil, "and the address ends")
+-- writing it still works
+L.speechDay = -1
+ok(LC.GiveSpeech(adm, "Citizens, your city thanks you for your work.") == true and LC.SpeechSession().text ~= "", "a written speech works as before")
+LC.EndSpeech()
+ok(LC.GiveSpeech(adm, "Hi") ~= true, "(a few letters is still not a speech)")
+LC.EndEvent(true)
+LC.RemovePoint(stand) LC.RemovePoint(crowd)
+for _, p in ipairs({ adm, near, far }) do if IsValid(p) then p:Remove() end end
+set("lc_speech_mic_secs", 120)
+set("lc_ledger", ledgerWas)
+set("lc_stops", stopsWas)
+_walls = savedWalls
+end
+Nov16_MicSpeechTests()
 
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")
 ;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)

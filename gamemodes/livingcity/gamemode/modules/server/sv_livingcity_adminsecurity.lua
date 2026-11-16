@@ -57,8 +57,9 @@
     the city's own citizens are left alone.
 
     After it (the owner, 16 November: "an administrator announcement response
-    to the assassination attempt and as lines for her next speech"): about 20
-    seconds later the city hears of it (the announcement "attempt": hers with
+    to the assassination attempt and as lines for her next speech"; "20 seconds
+    is way too soon; it should be like 3-5 minutes"): three to five minutes
+    later the city hears of it (the announcement "attempt": hers with
     nobody playing her, Overwatch's with a player in the post), and it is kept
     with the state of the city until her next address of her own, which is
     then all about it (LC.SpeechPieces, the attempt_ pieces): whether a soldier
@@ -327,7 +328,7 @@ function LC.AdminExfil() return A end
 
 -- What her next address will make of it: kept with the state of the city (LC.Ledger) until she has said it.
 --   hero: a soldier died on a grenade for her; caught: the attacker is dead or in the cells; by: who (SteamID64s).
-local ANNOUNCE_AFTER = 20
+LC.AdminAnnounceAfter = { 180, 300 } -- (seconds after an attempt: somewhere between these)
 function LC.AdminAttemptPending()
     local L = LC.Ledger and LC.Ledger()
     return L and L.attempt or nil
@@ -452,7 +453,7 @@ local function Begin(S, her, who)
     if LC.Ledger then LC.SpeechCityDay = LC.Ledger().day or 0 end
     Mark(who)
     -- her word to the city, once she is away (or Overwatch's, with a player in the post)
-    timer.Simple(ANNOUNCE_AFTER, function()
+    timer.Simple(math.Rand(LC.AdminAnnounceAfter[1], LC.AdminAnnounceAfter[2]), function()
         if LC.TriggerAnnouncements then LC.Try(LC.TriggerAnnouncements, "attempt", { force = true }) end
     end)
     -- (no notice of its own: the screen, the gunfire, the APC and the lockdown's own call say it; house rule 10)

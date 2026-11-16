@@ -34,6 +34,7 @@ LC = LC or {}
 
 local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
 local cvMuster  = CreateConVar("lc_speech_muster", "120", FLAGS, "Seconds the city has to gather before the Administrator's address begins")
+local cvMic     = CreateConVar("lc_speech_mic_secs", "120", FLAGS, "Seconds a player Administrator's microphone is heard across the whole city at her address, once the city has gathered")
 local cvAfter   = CreateConVar("lc_speech_after", "45", FLAGS, "Seconds the crowd stays after she has spoken")
 local cvRadius  = CreateConVar("lc_speech_radius", "650", FLAGS, "How close to the speech crowd point counts as being at the address")
 local cvBeats   = CreateConVar("lc_speech_beatings", "3", FLAGS, "Blows with the stick before someone who skipped the address blacks out (and comes to in the crowd)")
@@ -561,7 +562,8 @@ function LC.CallSpeech(by, text)
         S.by:SetPos((LC.FreeSpawnPos and LC.FreeSpawnPos(stand.pos + Vector(0, 0, 8))) or stand.pos)
         if S.by.SetEyeAngles then S.by:SetEyeAngles(Angle(0, stand.yaw or 0, 0)) end
         hook.Run("LivingCityAdminMoved", S.by, stand.pos)
-        Tell(S.by, "Your address", string.format("The city is gathering in front of the stand. You speak in %d seconds.", math.floor(cvMuster:GetFloat())), 8)
+        Tell(S.by, "Your address", text == "" and string.format("The city is gathering. In %d seconds the whole city hears your microphone, for %d seconds.", math.floor(cvMuster:GetFloat()), math.floor(cvMic:GetFloat()))
+            or string.format("The city is gathering in front of the stand. You speak in %d seconds.", math.floor(cvMuster:GetFloat())), 8)
     end
     -- the call: Overwatch's custom voice for a player's speech, her own for the city's
     local voice = S.by and "overwatch" or "administrator"
@@ -589,9 +591,33 @@ local function Speak()
         if LC.SpeechDeliver then LC.SpeechDeliver(nil, S.text, S.crowd.pos, true) end
         return
     end
+    if S.text == "" and by then
+        -- her microphone: the whole city hears it for lc_speech_mic_secs; the crowd answers at the end
+        if LC.SpeechDeliver then LC.SpeechDeliver(by, "", S.crowd.pos, true) end
+        LC.SpeechMicOpen(by, S.crowd.pos)
+        S.cheerAt = CurTime() + cvMic:GetFloat()
+        S.endAt = S.cheerAt + math.min(cvAfter:GetFloat(), 15)
+        return
+    end
     if LC.SpeechDeliver then LC.SpeechDeliver(by, S.text, S.crowd.pos) end
     if LC.SpeechCrowd then LC.SpeechCrowd(S.crowd.pos, cvRadius:GetFloat() + 150) end
     S.endAt = CurTime() + cvAfter:GetFloat()
+end
+
+-- Her microphone at an address (a player Administrator who wrote no words): for lc_speech_mic_secs everyone in the
+-- city hears her, wherever they are (the owner, 16 November: "make the microphone broadcast across the whole city").
+-- sv_livingcity_rp.lua asks, in the one place that decides who hears whose voice.
+local mic -- { by, pos, untilT }
+function LC.SpeechMicOpen(by, pos)
+    if not (IsValid(by) and pos) then return false end
+    mic = { by = by, pos = pos, untilT = CurTime() + cvMic:GetFloat() }
+    return true
+end
+function LC.SpeechMicClose() mic = nil end
+function LC.SpeechMicHeard(listener, talker)
+    if not mic or talker ~= mic.by then return false end
+    if CurTime() >= mic.untilT or not IsValid(mic.by) then mic = nil return false end
+    return IsValid(listener)
 end
 -- The next piece of her speech: its recording from her at the podium, its words in chat. Returns seconds it takes.
 local function SayPiece(p)
@@ -625,6 +651,7 @@ end
 function LC.EndSpeech()
     if not S then return end
     local now = CurTime()
+    if mic and mic.by == S.by then mic = nil end
     for npc in pairs(S.npcs or {}) do
         local st = IsValid(npc) and LC.NPCs[npc]
         if st and (st.state == "event" or st.state == "moving") then
@@ -747,6 +774,10 @@ function LC.SpeechThink(now)
     GuardsThink(now)
     if now >= S.startT + cvMuster:GetFloat() * 0.5 then Hunt(now) end
     if not S.spoken and now >= S.speakAt then Speak() end
+    if S and S.cheerAt and now >= S.cheerAt then
+        S.cheerAt = nil
+        if LC.SpeechCrowd then LC.SpeechCrowd(S.crowd.pos, cvRadius:GetFloat() + 150) end
+    end
     if S and S.queue then SpeakOn(now) end
     if S.endAt and now >= S.endAt then LC.EndSpeech() end
 end

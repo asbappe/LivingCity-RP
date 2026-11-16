@@ -356,6 +356,7 @@ end)
 -- Voice: heard near you, and from where you are.
 hook.Add("PlayerCanHearPlayersVoice", "LivingCityVoice", function(listener, talker)
     if LC.LiveSpeaker and talker == LC.LiveSpeaker then return end -- on air: the broadcast decides (sv_livingcity_propaganda.lua)
+    if LC.SpeechMicHeard and LC.SpeechMicHeard(listener, talker) then return true, false end -- her address, into her microphone (sv_livingcity_speech.lua)
     if LC.RadioVoice then -- (talking into a radio: the band, and whoever is right beside them)
         local hear, near = LC.RadioVoice(listener, talker)
         if hear ~= nil then return hear, near end
