@@ -34861,11 +34861,13 @@ _run(1.5)
 
 -- wanted, and has harmed nobody: run down and cuffed, down the ladder too
 local quiet = newPlayer("SewerWalker", "citizen")
-quiet:SetPos(P0 + Vector(1100, 200, -300))
+quiet:SetPos(P0 + Vector(2600, 200, -300)) -- (and well on from the ladder's foot by now: a suspect keeps running)
 LC.ReportCrime(quiet, "Loitering", 600)
 cop:SetPos(P0)
 LC.MakeOneHostile(cop, cst, quiet)
 ok(cst.arrestOnly == true, "(a unit after someone wanted who has harmed nobody: no shots)")
+ok(not LC.LadderToward(P0, quiet:GetPos()) and LC.LadderToward(P0, quiet:GetPos(), false, true) ~= nil,
+    "(further from the ladder than a squad follower looks: a chase looks further)")
 _run(4)
 ok(cop:GetPos().z < -200, "he goes down the ladder after them as well", tostring(cop:GetPos()))
 Clear(quiet)
@@ -34993,7 +34995,7 @@ ok(LC.AdminHunts[plain] == nil and LC.AdminHunts[killer] == nil and #squads == 0
 cop.chat = {}
 LC.AdminAttacker(killer)
 _run(4)
-ok(LC.AdminHunts[killer] ~= nil and LC.AdminHunted(killer), "a player who tried to kill her, free in the city, is hunted")
+ok(LC.AdminHuntOf(killer) ~= nil and LC.AdminHunted(killer), "a player who tried to kill her, free in the city, is hunted")
 ok(heard(cop, "tried to kill the Administrator") == 1, "the units' radio hears it, once", heard(cop, "tried to kill the Administrator"))
 ok(#(killer.chat or {}) == 0 or heard(killer, "Overwatch is hunting") == 0, "and nothing is put on the assassin's own screen about it")
 ok(#squads == 0, "(no squad the same second)")

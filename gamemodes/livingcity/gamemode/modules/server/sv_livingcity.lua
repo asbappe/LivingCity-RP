@@ -2226,6 +2226,7 @@ do
     local CHASE_ASK = 2     -- seconds between one unit's requests for a route
     local CHASE_NONE = 6    -- no way found: this long before he asks again
     local CHASE_STILL = 1.5 -- this long without getting anywhere: the run has failed
+    local CHASE_LEG = 4     -- this long without getting anywhere on a route: that leg can't be walked
     local LADDER_TURN = 0.8 -- seconds between two units off the same ladder
     local LADDER_MT = MOVETYPE_LADDER or 9
     local turns = {} -- [the ladder's far end] = when the last unit came off it
@@ -2252,17 +2253,22 @@ do
     end
 
     -- True: he's on his way round (to a ladder, up it, or along a route), and the straight run is left alone.
-    -- sees: he has them in sight. ranged: he has a gun out (and may as well shoot from where he is).
+    -- sees: he has them in sight. ranged: he has a gun out (one who sees them shoots from where he is).
     function LC.ChaseWay(npc, st, e, epos, now, sees, ranged)
+        if os.getenv("LC_TEMP_NOCHASEWAY") then return false end
         local pos = npc:GetPos()
         local dz = math.abs(epos.z - pos.z)
         local running = npc:IsCurrentSchedule(SCHED_FORCED_GO_RUN) or npc:IsCurrentSchedule(SCHED_FORCED_GO)
         if not st.chaseAt or pos:DistToSqr(st.chaseAt) > 24 * 24 then st.chaseAt, st.chaseMoved = pos, now end
+        if sees and ranged then
+            DropRoute(st)
+            return false
+        end
 
-        -- on another level, and a ladder goes their way
-        if dz > 64 and LC.LadderToward and not (sees and ranged) then
+        -- on another level, and a ladder goes their way (looked for further off than a follower's: a suspect keeps running)
+        if dz > 64 and LC.LadderToward then
             local climbing = e.GetMoveType ~= nil and e:GetMoveType() == LADDER_MT
-            local near, far = LC.LadderToward(pos, epos, climbing)
+            local near, far = LC.LadderToward(pos, epos, climbing, true)
             if near then
                 DropRoute(st)
                 local dx, dy = pos.x - near.x, pos.y - near.y
@@ -2298,7 +2304,7 @@ do
             -- they've moved on from where it ended: the way to where they are now
             st.chaseAskAt = now + CHASE_ASK
             local route = Ask(pos, epos, st.role)
-            if route then r = { pts = route, hop = 1, to = epos, tries = 0 } else r = nil end
+            if route then r = { pts = route, hop = 1, to = epos } else r = nil end
             st.chaseRoute = r
         end
         if r then
@@ -2310,7 +2316,7 @@ do
                 elseif pos:DistToSqr(target) >= 96 * 96 then
                     break
                 end
-                r.hop, r.tries = r.hop + 1, 0
+                r.hop = r.hop + 1
                 target = r.pts[r.hop]
                 running = false
             end
@@ -2319,16 +2325,13 @@ do
                 st.chasePos = nil
                 return false
             end
-            if not running or st.chaseGoal ~= target then
-                if st.chaseGoal == target then r.tries = r.tries + 1 end
-                if r.tries > 4 then
-                    -- this leg can't be walked: the straight run again, and no new route for a while
-                    DropRoute(st)
-                    st.chaseAskAt = now + CHASE_NONE
-                    return false
-                end
-                Run(npc, st, target)
+            if now - (st.chaseMoved or now) > CHASE_LEG then
+                -- this leg can't be walked: the straight run again, and no new route for a while
+                DropRoute(st)
+                st.chaseAskAt = now + CHASE_NONE
+                return false
             end
+            if not running or st.chaseGoal ~= target then Run(npc, st, target) end
             return true
         end
 
@@ -2341,7 +2344,8 @@ do
             local route = Ask(pos, epos, st.role)
             st.chaseAskAt = now + (route and CHASE_ASK or CHASE_NONE)
             if route then
-                st.chaseRoute = { pts = route, hop = 1, to = epos, tries = 0 }
+                st.chaseRoute = { pts = route, hop = 1, to = epos }
+                st.chaseMoved = now
                 Run(npc, st, route[1])
                 return true
             end

@@ -66,6 +66,14 @@ LC.AdminHunts = LC.AdminHunts or {}           -- [ply] = { ply, started, nextSqu
 LC.AdminHuntSquads = LC.AdminHuntSquads or {} -- { { hunt, units = { { npc, slot, n } }, place, placeAt, pts, untilT, pending }, ... }
 local leaving = {}                            -- [npc] = { since, started }: soldiers on their way home
 LC.AdminHuntLeaving = leaving
+-- What the hunt remembers of a player between hunts (kept here, not on the player: a shared dream puts
+-- back what the server keeps on them): { look, flag, told, mark, flash }
+local notes = setmetatable({}, { __mode = "k" })
+local function Note(ply)
+    local n = notes[ply]
+    if not n then n = {} notes[ply] = n end
+    return n
+end
 
 local function Interval() return math.max(0.5, cvMins:GetFloat()) * 60 end
 
@@ -300,8 +308,9 @@ end
 local function StartHunt(ply, now)
     local h = { ply = ply, started = now, nextSquad = now + FIRST }
     LC.AdminHunts[ply] = h
-    if now - (ply.lcHuntTold or -1e9) > TOLD_EVERY then
-        ply.lcHuntTold = now
+    local note = Note(ply)
+    if now - (note.told or -1e9) > TOLD_EVERY then
+        note.told = now
         if LC.RadioNotice then
             LC.RadioNotice("cp", "Dispatch: all units, " .. Name(ply) .. " tried to kill the Administrator. Overwatch is hunting them. Take them alive.")
         end
@@ -341,9 +350,10 @@ end
 -- Does anyone of the Combine's see them right now? A unit with a line to them, or a scanner's flash.
 local function SeenNow(ply, now)
     if LC.FoolsSecurity and LC.FoolsSecurity(ply) then return false end -- (in a stolen uniform, nobody knows them)
+    local note = Note(ply)
     local flash = ply.GetNW2Float and ply:GetNW2Float("lc_spotted_until", 0) or 0
-    local flashed = flash ~= (ply.lcHuntFlash or 0) and flash > now
-    ply.lcHuntFlash = flash
+    local flashed = flash ~= (note.flash or 0) and flash > now
+    note.flash = flash
     if flashed then return true end
     return LC.SeenBySecurity ~= nil and LC.SeenBySecurity(ply, 1500) == true
 end
@@ -377,6 +387,8 @@ local function Drive(sq, now)
             alive = alive + 1
             if not pts or #pts == 0 or u.n >= #pts then
                 done = done + 1
+            elseif st.marching or st.questLock then
+                -- (walking a prisoner in, sv_livingcity_march.lua: left to it)
             elseif st.state == "idle" or st.state == "moving" then
                 local pt = pts[(u.slot + u.n) % #pts + 1]
                 if npc:GetPos():DistToSqr(pt) < 160 * 160 then
@@ -420,9 +432,10 @@ function LC.AdminHuntTick(now)
             -- (the mark itself is kept with the character, a read of the server's database: looked at every
             -- few seconds for those who carry its flag, at once when the flag changes, seldom for everyone else)
             local flagged = ply.GetNW2Bool ~= nil and ply:GetNW2Bool("lc_regicide", false) or false
-            if not LC.AdminHunts[ply] and (now >= (ply.lcHuntLook or 0) or flagged ~= ply.lcHuntFlag) then
-                ply.lcHuntFlag = flagged
-                ply.lcHuntLook = now + (flagged and LOOK_EVERY or LOOK_SLOW)
+            local note = Note(ply)
+            if not LC.AdminHunts[ply] and (now >= (note.look or 0) or flagged ~= note.flag) then
+                note.flag = flagged
+                note.look = now + (flagged and LOOK_EVERY or LOOK_SLOW)
                 if LC.AdminHunted(ply) then StartHunt(ply, now) end
             end
         end
@@ -432,8 +445,9 @@ function LC.AdminHuntTick(now)
     for ply, h in pairs(LC.AdminHunts) do
         -- (an attempt just made, a new mark or the old one made again: they were seen where they stand)
         local t = MarkTime(ply)
-        local fresh = t ~= ply.lcHuntMark and os.time() - t < 60
-        ply.lcHuntMark = t
+        local note = Note(ply)
+        local fresh = t ~= note.mark and os.time() - t < 60
+        note.mark = t
         if fresh or SeenNow(ply, now) then Sighted(h, now) end
     end
 
