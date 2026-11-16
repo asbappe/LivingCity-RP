@@ -4,7 +4,7 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version be1a2e6. Admin-only console messages and log lines are left out.
+Made from version 72e852b. Admin-only console messages and log lines are left out.
 
 12919 lines, from 356 files.
 
@@ -9060,7 +9060,7 @@ Made from version be1a2e6. Admin-only console messages and log lines are left ou
 - "Every wasted minute is stolen from your fellow citizens."  (text, line 69)
 - "Groups will be dispersed; drink your tea at home."  (text, line 70)
 - "The scanners keep you safe; a loyal citizen has nothing to hide."  (text, line 71)
-- "They're locked for your safety; only traitors try the handle."  (text, line 72)
+- "They're locked for your safety; only traitors wonder what's inside."  (text, line 72)
 - "Respect your neighbours' rest; noise complaints are investigated."  (text, line 73)
 - "When an officer tells you to pick it up, you pick it up."  (text, line 74)
 

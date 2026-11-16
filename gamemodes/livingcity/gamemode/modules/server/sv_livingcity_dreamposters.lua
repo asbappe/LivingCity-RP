@@ -69,7 +69,7 @@ local HINTS = {
     clocks = { "BE ON TIME", "Every wasted minute is stolen from your fellow citizens." },
     tea = { "NO GATHERINGS OF MORE THAN THREE", "Groups will be dispersed; drink your tea at home." },
     photo = { "SMILE, YOU'RE ON CAMERA", "The scanners keep you safe; a loyal citizen has nothing to hide." },
-    doors = { "SOME DOORS STAY LOCKED", "They're locked for your safety; only traitors try the handle." },
+    doors = { "SOME DOORS STAY LOCKED", "They're locked for your safety; only traitors wonder what's inside." },
     shh = { "QUIET HOURS ARE IN EFFECT", "Respect your neighbours' rest; noise complaints are investigated." },
     can = { "PICK IT UP", "When an officer tells you to pick it up, you pick it up." },
     -- Nightmares

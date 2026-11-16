@@ -251,7 +251,7 @@ POSTERS.push(...more.POSTERS);
 // the posters that hint at dreams (dream_<codeword>; never painted over one by one: dream_x is for all)
 Object.assign(ART, dreams.ART);
 POSTERS.push(...dreams.POSTERS);
-for (const f of ['./dreams2.js', './dreams3.js', './dreams4.js', './slogan.js']) if (fs.existsSync(path.join(__dirname, f))) { const d = require(f); Object.assign(ART, d.ART); POSTERS.push(...d.POSTERS); }
+for (const f of ['./dreams2.js', './dreams3.js', './dreams4.js', './dreams5.js', './dreams6.js', './dreams7.js', './slogan.js']) if (fs.existsSync(path.join(__dirname, f))) { const d = require(f); Object.assign(ART, d.ART); POSTERS.push(...d.POSTERS); }
 
 function page(p, defaced) {
   const dark = p.accent === 'cyan';
