@@ -35046,6 +35046,18 @@ local add = LC.LedgerAdd
 LC.LedgerAdd = function(what, d, why) ledger[what] = (ledger[what] or 0) + d return add and add(what, d, why) end
 local Q = LC.AdminQuestioning
 local BATON = "weapon_lc_baton"
+local set = _setcvar
+local adopt, adopted = LC.ZoneStalkerAdopt, {}
+LC.ZoneStalkerAdopt = function(pos, yaw)
+    local e = adopt(pos, yaw)
+    adopted[#adopted + 1] = { pos = pos, class = IsValid(e) and e:GetClass() or "" }
+    return e
+end
+local function stalkerAt(pos)
+    local c = 0
+    for _, a in ipairs(adopted) do if a.class == "npc_stalker" and a.pos:DistToSqr(pos) < 100 * 100 then c = c + 1 end end
+    return c
+end
 local function jail(p, reason)
     for _, c in ipairs(pts) do if c.kind == "cell" and not LC.Occupied[c] then p.lcPreferCell = c break end end
     LC.Incarcerate(p, 900, reason or LC.AdminCrime)
@@ -35062,6 +35074,9 @@ ok(LC.Prisoners[plain] ~= nil and not LC.AdminQuestioningHolds(plain) and not LC
 _run(13)
 ok(LC.Interrogations[plain] ~= nil and not LC.Interrogations[plain].admin, "and is questioned by a unit in the cell, as before")
 LC.EndInterrogation(plain)
+LC.AdminQuestioningTick(CurTime() + 700)
+_run(1)
+ok(not plain.lcStalkerScene and not LC.PlayerIsStalker(plain), "and is not made a stalker for it")
 LC.ReleasePrisoner(plain)
 
 -- a player is the Administrator
@@ -35160,7 +35175,27 @@ LC.StartPlayerInterrogation(adm, reb)
 LC.PlayerInterrogationDo(adm, "done")
 ok(LC.Interrogations[reb] == nil and adm:HasWeapon(BATON), "a stunstick she had anyway stays hers")
 adm:StripWeapon(BATON)
-LC.ReleasePrisoner(reb)
+-- she is done with them, however it ended: the stalker's chair
+ok(not reb.lcStalkerScene and not LC.PlayerIsStalker(reb), "(not at once)")
+LC.AdminQuestioningTick(CurTime() + 11)
+ok(reb.lcStalkerScene == true, "ten seconds after she is done with them: the stalker's chair")
+for _ = 1, 40 do _run(0.5) if LC.PlayerIsStalker(reb) then break end end
+ok(LC.PlayerIsStalker(reb) and LC.Prisoners[reb] == nil, "and they are a stalker")
+ok(not LC.AdminQuestioningStart(reb), "(a stalker is Combine property already: not hers again)")
+LC.FreeStalker(reb)
+-- she never takes the job: the same when the ten minutes are up, and they are not let out before
+reb:SetPos(R0)
+jail(reb)
+LC.AdminQuestioningTick(CurTime() + 13)
+ok(Q[reb] ~= nil and Q[reb].stage == "waiting", "(a citizen now, and hers again: offered)", Q[reb] and Q[reb].stage)
+LC.Prisoners[reb].untilT = CurTime() + 3
+_run(1)
+ok(LC.Prisoners[reb] ~= nil and LC.Prisoners[reb].untilT > CurTime() + 30, "their sentence does not run out before she has been")
+LC.AdminQuestioningTick(CurTime() + 13 + 602)
+ok(Q[reb] == nil and reb.lcStalkerScene == true, "she never takes the job: when the ten minutes are up, the stalker's chair")
+for _ = 1, 40 do _run(0.5) if LC.PlayerIsStalker(reb) then break end end
+ok(LC.PlayerIsStalker(reb), "and they are a stalker, a citizen too")
+LC.FreeStalker(reb)
 reb:RemovePData("lc_regicide")
 
 -- nobody plays her: the city's own comes, with two soldiers
@@ -35200,7 +35235,7 @@ ledger, cit.chat = {}, {}
 LC.InterrogationAnswer(cit, "silent")
 ok(LC.Interrogations[cit] == nil and has(cit.chat, "The Administrator leaves"), "her questions done, she leaves")
 ok(ledger.authority == -1, "they held out to the end: her authority falls a little", ledger.authority)
-ok(done == true, "and what custody had waiting for them comes after her")
+ok(done == nil and not cit.lcStalkerScene, "(what follows waits until she and her soldiers have gone)")
 ok(cit:Health() >= 1 and cit:Alive(), "(alive)")
 local left = 3
 for _ = 1, 220 do
@@ -35210,11 +35245,15 @@ for _ = 1, 220 do
     if left == 0 then break end
 end
 ok(left == 0, "they walk out and are gone", left)
-LC.ReleasePrisoner(cit)
--- no way in to be found: placed at the cell door
+for _ = 1, 80 do _run(0.5) if LC.PlayerIsStalker(cit) then break end end
+ok(LC.PlayerIsStalker(cit) and done == nil, "then they are made a stalker: a citizen too")
+LC.FreeStalker(cit)
+-- no way in to be found: placed at the cell door. And with lc_stalkers 0 nobody is made a stalker
 LC.AlarmSquadSpot = function() return nil end
+set("lc_stalkers", 0)
 cit:SetPos(R0)
 local cell3 = jail(cit)
+Q[cit].after = function() done = true end
 LC.AdminQuestioningTick(CurTime() + 13)
 A = Q[cit]
 party = A and A.party or {}
@@ -35223,25 +35262,98 @@ for _, w in ipairs(party) do if IsValid(w.npc) and w.npc:GetPos():DistToSqr(cell
 ok(#party == 3 and near == 3, "no way in found: she and her soldiers are placed at the cell door", near)
 _run(1)
 ok(A.stage == "asking", "(and she begins)", A.stage)
--- the prisoner leaves the server: it is over, and they go
-hook.Run("PlayerDisconnected", cit)
-cit:Remove()
-_run(2)
-ok(Q[cit] == nil and LC.Interrogations[cit] == nil, "either of them leaves the server: it is over")
+LC.EndInterrogation(cit)
 for _ = 1, 60 do
     _run(0.5)
     left = 0
     for _, w in ipairs(party) do if IsValid(w.npc) then left = left + 1 end end
     if left == 0 then break end
 end
-ok(left == 0, "(and her party goes)", left)
--- a prisoner who is not a player is left to the usual
-local npcP = LC.Spawners.citizen(R0 + Vector(0, 1500, 0))
-ok(LC.AdminQuestioningStart(npcP) == false, "a prisoner who is not a player is left to the usual")
-if IsValid(npcP) then npcP:Remove() end
+ok(left == 0, "(cut short: her party goes)", left)
+LC.AdminQuestioningTick(CurTime() + 11)
+ok(done == true and not cit.lcStalkerScene and not LC.PlayerIsStalker(cit), "lc_stalkers 0: nobody is made a stalker, and what custody had waiting comes instead")
+set("lc_stalkers", 1)
+LC.ReleasePrisoner(cit)
+-- the prisoner leaves the server: it is over, and they go
+cit:SetPos(R0)
+jail(cit)
+LC.AdminQuestioningTick(CurTime() + 13)
+A = Q[cit]
+party = A and A.party or {}
+_run(1)
+hook.Run("PlayerDisconnected", cit)
+cit:Remove()
+_run(2)
+ok(Q[cit] == nil and LC.Interrogations[cit] == nil, "either of them leaves the server: it is over")
+for _, w in ipairs(party) do if IsValid(w.npc) then w.npc:Remove() end end
 
-LC.IsAdministrator, LC.AlarmSquadSpot, LC.LedgerAdd = isAdm, spot, add
+-- one of the city's own that tried to kill her: hers too, and a stalker after
+local function jailNPC(cellPoint)
+    local n, nst = LC.Spawners.citizen(cellPoint.pos + Vector(0, 900, 0))
+    if not n then n, nst = LC.Spawners.cop(cellPoint.pos + Vector(0, 900, 0)) end
+    n:SetPos(cellPoint.pos + Vector(0, 0, 4))
+    nst.jailUntil = CurTime() + 120
+    return n, nst
+end
+local plainN, plainSt = jailNPC(pts[2])
+LC.OnNPCReachedCell(plainN, plainSt, CurTime())
+ok(not LC.AdminQuestioningHolds(plainN) and plainSt.questLock == nil, "one of the city's own that never tried to kill her is left to the usual")
+plainN:Remove()
+-- (a player Administrator)
+LC.IsAdministrator = isAdm
+local n1, nst1 = jailNPC(pts[1])
+n1.lcRegicide = true
+LC.OnNPCReachedCell(n1, nst1, CurTime())
+ok(LC.AdminQuestioningHolds(n1) and nst1.questLock ~= nil, "one that tried to kill her, in a cell, is hers to question, and is not let out before")
+adm.chat = {}
+adm:SetPos(R0 + Vector(5000, 0, 0))
+LC.AdminQuestioningTick(CurTime() + 13)
+posting = nil
+for _, x in ipairs(LC.Postings[LC.QuestFaction(adm)] or {}) do
+    if x.tmpl and x.tmpl.id == "admin_assassin" and not x.dead then posting = x end
+end
+adm.lcqNext = 0
+ok(posting ~= nil and has(adm.chat, "New job: Question the would-be assassin") and LC.AcceptPosting(adm, posting.id), "a player Administrator gets the same job")
+adm:SetPos(n1:GetPos() + Vector(80, 0, 0))
+_run(2)
+local s = LC.NPCInterrogations[adm]
+cp = _lastnet("lc_intr_cp")
+panel = cp and util.JSONToTable(cp.data[1] or "") or {}
+ok(s ~= nil and s.npc == n1 and adm:HasWeapon(BATON), "she questions it the way a guard questions a prisoner who isn't a player, stunstick in hand")
+ok(panel.questions and panel.questions[1] == "Who sent you?" and #panel.questions == 3, "with her own questions", panel.questions and panel.questions[1])
+n1:SetHealth(14)
+ok(LC.AdminQuestioningBlow(adm, n1) == true and n1:Health() >= 10, "(a blow of her stunstick never kills it)", n1:Health())
+if s then s.resolve = 0 end
+ledger = {}
+LC.PlayerInterrogationDo(adm, "ask", 1)
+_run(2)
+ok(LC.NPCInterrogations[adm] == nil and ledger.authority == 3, "broken, it tells her the truth: her authority rises", ledger.authority)
+ok(not adm:HasWeapon(BATON) and IsValid(n1), "(her stunstick back; the prisoner still in its cell for now)")
+local at1 = n1:GetPos()
+LC.AdminQuestioningTick(CurTime() + 11)
+ok(not IsValid(n1) and stalkerAt(at1) == 1, "ten seconds on it is gone, and a stalker stands where it stood", stalkerAt(at1))
+_run(1)
+if LC.QuestOf[adm] then LC.AbandonQuest(adm) end
+-- (nobody plays her)
+LC.IsAdministrator = function() return false end
+local n2, nst2 = jailNPC(pts[2])
+n2.lcRegicide = true
+LC.OnNPCReachedCell(n2, nst2, CurTime())
+LC.AdminQuestioningTick(CurTime() + 13)
+A = Q[n2]
+party = A and A.party or {}
+ok(A ~= nil and #party == 3 and party[1].npc.lcAdminHer == true, "nobody plays her: the city's own comes to it with her two soldiers", #party)
+_sounds = {}
+local at2 = n2:GetPos()
+for _ = 1, 80 do _run(0.5) if not Q[n2] then break end end
+ok(Q[n2] == nil and has(_sounds, "stunstick_impact") and IsValid(n2) and n2:Health() >= 10, "her stunstick is heard, and she is done with it")
+for _ = 1, 400 do _run(0.1) if not IsValid(n2) then break end end
+ok(not IsValid(n2) and stalkerAt(at2) == 1, "she and her soldiers gone, it is a stalker too", stalkerAt(at2))
+for _, w in ipairs(party) do if IsValid(w.npc) then w.npc:Remove() end end
+
+LC.IsAdministrator, LC.AlarmSquadSpot, LC.LedgerAdd, LC.ZoneStalkerAdopt = isAdm, spot, add, adopt
 for _, x in ipairs(LC.Postings[LC.QuestFaction(adm)] or {}) do if x.tmpl and x.tmpl.id == "admin_assassin" then x.dead = true end end
+set("lc_stalkers", 1)
 for _, p in ipairs({ plain, reb, adm, cop }) do
     if LC.Prisoners[p] then LC.ReleasePrisoner(p) end
     p:SetPos(Vector(-120000, -120000, 0))
@@ -35251,6 +35363,39 @@ for _, p in ipairs(pts) do LC.RemovePoint(p) end
 _walls = savedWalls
 end
 Nov16_AdminQuestioningTests()
+
+-- Frag grenades for the Combine (the owner, 16 November)
+function Nov16_FragTests()
+section("16 November: frag grenades at the CP Commissary, and one as a soldier's standard issue")
+local g = LCS.GoodsById.cp_frag
+ok(g and g.cpOnly and g.weapon == "weapon_frag" and g.minRank == 2 and g.price > 0, "the unit counter sells a frag grenade, Metrocops and up")
+local F0 = Vector(152000, 132000, 0)
+local cop = newPlayer("FragCop", "cp")
+cop:SetNW2Int("lcf_rank", 2)
+LC.AddCredits(cop, 1000)
+if cop:HasWeapon("weapon_frag") then cop:StripWeapon("weapon_frag") end
+ok(LC.Buy(cop, "cp_frag") and cop:HasWeapon("weapon_frag"), "a Metrocop buys one")
+ok(LC.CanBuy(cop, g) == true, "and may buy more (not one only, as with a rifle)")
+local recruit = newPlayer("FragRecruit", "cp")
+recruit:SetNW2Int("lcf_rank", 1)
+LC.AddCredits(recruit, 1000)
+ok(not LC.CanBuy(recruit, g), "not a Recruit")
+local civ = newPlayer("FragCiv", "citizen")
+ok(not LC.CanBuy(civ, g), "nor a citizen")
+-- a soldier's standard issue
+local sold = LC.SpawnSoldier(F0)
+ok(IsValid(sold) and sold.kv and sold.kv.NumGrenades == "1", "one of the city's soldiers carries one frag grenade as standard", sold and sold.kv and sold.kv.NumGrenades)
+local elite = LC.SpawnSoldier(F0 + Vector(100, 0, 0), "elite")
+ok(not IsValid(elite) or (elite.kv and elite.kv.NumGrenades == "2"), "(an elite's two are as they were)")
+local hasFrag = false
+for _, f in ipairs(LCF.Factions or {}) do
+    if f.id == "cp" then for _, r in ipairs(f.ranks) do if r.name == "Combine Soldier" then for _, w in ipairs(r.loadout) do if w == "weapon_frag" then hasFrag = true end end end end end
+end
+ok(hasFrag, "a player of the Combine Soldier rank is issued one too (as before)")
+for _, e in ipairs({ sold, elite }) do if IsValid(e) then e:Remove() end end
+cop:Remove() recruit:Remove() civ:Remove()
+end
+Nov16_FragTests()
 
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")
 ;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)

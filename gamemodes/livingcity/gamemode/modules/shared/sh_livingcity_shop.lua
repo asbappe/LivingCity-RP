@@ -455,6 +455,8 @@ LCS.Goods = {
     { id = "cp_ammo357", name = ".357 rounds", ammo = { "357", 12 }, price = 15, cpOnly = true, minRank = 3, desc = "Twelve." },
     { id = "cp_buckshot", name = "Shotgun shells", ammo = { "Buckshot", 24 }, price = 20, cpOnly = true, minRank = 4, desc = "Twenty-four." },
     { id = "cp_ar2ammo", name = "Pulse rifle ammunition", ammo = { "AR2", 60 }, price = 30, cpOnly = true, minRank = 5, desc = "Two magazines." },
+    -- (the owner, 16 November: "please add standard explosive grenades to the CP Commissary": one at a time, five carried at most)
+    { id = "cp_frag", name = "Frag grenade", weapon = "weapon_frag", ammo = { "Grenade", 1 }, max = 5, price = 60, cpOnly = true, minRank = 2, desc = "One. Mind where it lands. Metrocops and up." },
     { id = "gren_smoke", item = "gren_smoke", price = 20, cpOnly = true, desc = "Cover for an advance, or a retreat." },
     { id = "gren_flash", item = "gren_flash", price = 35, cpOnly = true, minRank = 2, desc = "Metrocops and up. Don't look at it." },
     { id = "gas_bomb", item = "gas_bomb", price = 40, cpOnly = true, minRank = 3, desc = "Division Leaders and the Overwatch. For clearing anticitizen holdouts: a choking green cloud, and your mask keeps it out." },

@@ -213,7 +213,10 @@ function LC.CanBuy(ply, g)
     end
     if LC.Credits(ply) < LC.GoodsPrice(ply, g) then return false, "Not enough credits." end
     if g.item and LC.CanCarry then local okC, whyC = LC.CanCarry(ply, g.item, g.count or 1) if not okC then return false, whyC end end
-    if g.weapon and ply.HasWeapon and ply:HasWeapon(g.weapon) then return false, "You carry one." end
+    -- (a grenade is a weapon and its own ammunition: more of them, up to what can be carried)
+    if g.weapon and g.ammo then
+        if ply.HasWeapon and ply:HasWeapon(g.weapon) and ply.GetAmmoCount and ply:GetAmmoCount(g.ammo[1]) >= (g.max or 5) then return false, "You carry one." end
+    elseif g.weapon and ply.HasWeapon and ply:HasWeapon(g.weapon) then return false, "You carry one." end
     return true
 end
 
@@ -247,7 +250,7 @@ function LC.Buy(ply, id)
             e:Spawn()
         end
     elseif g.weapon then
-        ply:Give(g.weapon)
+        if g.ammo and ply:HasWeapon(g.weapon) then ply:GiveAmmo(g.ammo[2], g.ammo[1]) else ply:Give(g.weapon) end
     elseif g.ammo then
         ply:GiveAmmo(g.ammo[2], g.ammo[1])
     end
