@@ -105,3 +105,4 @@ To add an item: `printf '%s\n' '- [ ] **Topic:** what to try. [needs a person: w
 - [ ] **Asleep in the cells:** jailed with over five minutes left, F1 > Lie down and sleep: body on the floor or bed, a dream after about 20 seconds, wake in the cell? [needs a person: how it looks]
 - [ ] **Ranks and the cage:** set yourself Lieutenant (F4 admin tools): career page, the cage opens, Hacker offered; prisoners inside the cage, none in the wall? [needs a person: on the map]
 - [ ] **Rebel ground and the Colonel:** way marks as arrows within 20 seconds, pots on tables, the usual music, the Colonel stays put, mouths move on recorded lines? [needs a person: how it looks]
+- [ ] **The 21 new dream posters (16 November):** find a few in the city (or look at the sheet sent in chat): does each picture read at a glance, and is any one wrong for its dream? [needs a person: how it looks]
