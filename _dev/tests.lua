@@ -35397,6 +35397,359 @@ cop:Remove() recruit:Remove() civ:Remove()
 end
 Nov16_FragTests()
 
+-- Units pursue through ladders and where the straight run has no way (the owner, 16 November)
+function Nov16_PursuitTests()
+section("16 November: units pursue through ladders and where the straight run has no way")
+local P0 = Vector(168000, -152000, 0)
+local savedWalls = _walls
+local squadsWas = GetConVar("lc_squads"):GetInt()
+_setcvar("lc_squads", 0) -- (each unit's own chase)
+local made = {}
+local function Unit(pos)
+    local npc, st = LC.SpawnCop(pos)
+    st.unmanaged, st.leaveAt, st.routeGroup = true, nil, nil
+    npc.sim = true
+    made[#made + 1] = npc
+    return npc, st
+end
+local function Clear(p)
+    if LC.Prisoners[p] then LC.ReleasePrisoner(p) end
+    LC.ClearWanted(p)
+    LC.CalmCops(p)
+    p.lcArmedViolentUntil, p.lcViolentUntil = nil, nil
+    p:SetPos(Vector(-140000, 140000, 0))
+end
+
+-- the suspect is down a ladder, a wall and a floor away: the straight run can't get there
+_walls = { { a = P0 + Vector(600, -3000, 0), b = P0 + Vector(600, 3000, 0) } }
+local top, foot = P0 + Vector(450, 0, 0), P0 + Vector(700, 0, -300)
+LC.AddPoint(top, 0, "ladder", 9161)
+LC.AddPoint(foot, 0, "ladder", 9161)
+LC.ApplyLadders()
+local cop, cst = Unit(P0)
+local runner = newPlayer("SewerRunner", "citizen")
+runner:SetPos(P0 + Vector(1100, 0, -300))
+LC.ReportCrime(runner, "Assault", 600)
+runner.lcArmedViolentUntil = CurTime() + 1e6 -- (weapons used: the combat AI's chase)
+LC.MakeOneHostile(cop, cst, runner)
+ok(cst.state == "hostile" and not cst.arrestOnly, "(a unit after an armed suspect who is down a ladder)")
+_run(1)
+ok(cop:GetPos():Distance(top) < cop:GetPos():Distance(P0 + Vector(600, 0, 0)) or cop:GetPos().z < -200,
+    "he makes for the ladder, not the wall between them", tostring(cop:GetPos()))
+_run(5)
+ok(cop:GetPos().z < -200, "and goes down it after them", tostring(cop:GetPos()))
+ok(cst.state == "hostile" and cop:GetPos():Distance(runner:GetPos()) < 620, "the chase carries on at the other end",
+    string.format("%s %.0f", tostring(cst.state), cop:GetPos():Distance(runner:GetPos())))
+
+-- two units at the head of the ladder: one at a time
+local a, ast = Unit(top + Vector(-20, 30, 0))
+local b, bst = Unit(top + Vector(-20, -30, 0))
+LC.MakeOneHostile(a, ast, runner)
+LC.MakeOneHostile(b, bst, runner)
+_run(0.6)
+local down = (a:GetPos().z < -200 and 1 or 0) + (b:GetPos().z < -200 and 1 or 0)
+ok(down == 1, "two units at the ladder: one goes, the other waits his turn", down)
+_run(3)
+ok(a:GetPos().z < -200 and b:GetPos().z < -200, "then the other", string.format("%.0f %.0f", a:GetPos().z, b:GetPos().z))
+a:Remove() b:Remove()
+
+-- someone on the ladder still: the unit waits at its end
+cop:SetPos(P0)
+LC.MakeOneHostile(cop, cst, runner)
+runner:SetPos(P0 + Vector(600, 0, -150))
+runner.movetype = MOVETYPE_LADDER or 9
+_run(4)
+ok(cop:GetPos().z > -60 and cop:GetPos():Distance(top) < 120, "a suspect still on the ladder: he waits at its end", tostring(cop:GetPos()))
+runner.movetype = MOVETYPE_WALK
+runner:SetPos(P0 + Vector(1100, 0, -300))
+_run(2.5)
+ok(cop:GetPos().z < -200, "and goes down the moment they are off it", tostring(cop:GetPos()))
+Clear(runner)
+_run(1.5)
+
+-- wanted, and has harmed nobody: run down and cuffed, down the ladder too
+local quiet = newPlayer("SewerWalker", "citizen")
+quiet:SetPos(P0 + Vector(2600, 200, -300)) -- (and well on from the ladder's foot by now: a suspect keeps running)
+LC.ReportCrime(quiet, "Loitering", 600)
+cop:SetPos(P0)
+LC.MakeOneHostile(cop, cst, quiet)
+ok(cst.arrestOnly == true, "(a unit after someone wanted who has harmed nobody: no shots)")
+ok(not LC.LadderToward(P0, quiet:GetPos()) and LC.LadderToward(P0, quiet:GetPos(), false, true) ~= nil,
+    "(further from the ladder than a squad follower looks: a chase looks further)")
+_run(4)
+ok(cop:GetPos().z < -200, "he goes down the ladder after them as well", tostring(cop:GetPos()))
+Clear(quiet)
+_run(1.5)
+for i = #LC.Points, 1, -1 do if LC.Points[i].kind == "ladder" and LC.Points[i].group == 9161 then LC.RemovePoint(LC.Points[i]) end end
+LC.ApplyLadders()
+
+-- off his beat, and the straight run has no way: the city's own routes take him round
+local R0 = P0 + Vector(0, 20000, 0)
+_walls = { { a = R0 + Vector(600, -500, 0), b = R0 + Vector(600, 500, 0) } }
+local graphWas, statsWas, badWas = LC.NavGraph, LC.NavStats, LC.BadLinks
+local function N(x, y) return { pos = R0 + Vector(x, y, 0), adj = {}, comp = 1 } end
+local A, B, C, D = N(300, 0), N(300, 800), N(900, 800), N(900, 0)
+local function Link(x, y) local d = x.pos:Distance(y.pos) x.adj[#x.adj + 1] = { y, d } y.adj[#y.adj + 1] = { x, d } end
+Link(A, B) Link(B, C) Link(C, D)
+LC.NavGraph = { nodes = { A, B, C, D }, main = 1, links = 3 }
+LC.NavGraphReady()
+LC.ApplyLadders()
+local asked = 0
+local build = LC.BuildRoute
+LC.BuildRoute = function(from, to, role)
+    if role == "cop" and from:DistToSqr(R0) < 3000 * 3000 then asked = asked + 1 end
+    return build(from, to, role)
+end
+cop:SetPos(R0 + Vector(250, 0, 0))
+cst.routeGroup = 4242 -- (a beat of his own, somewhere else)
+local far = newPlayer("CanalRunner", "citizen")
+far:SetPos(R0 + Vector(950, 0, 0))
+LC.ReportCrime(far, "Assault", 600)
+far.lcArmedViolentUntil = CurTime() + 1e6
+LC.MakeOneHostile(cop, cst, far)
+_run(1)
+ok(asked == 0, "(a run that is still getting somewhere asks for no route)", asked)
+_run(4)
+ok(cst.chaseRoute ~= nil and asked >= 1, "a run that gets nowhere: he asks the city's routes for the way", asked)
+local askedBy = asked
+_run(10)
+ok(cop:GetPos():Distance(far:GetPos()) < 620 and cop:GetPos().x > R0.x + 600, "and gets round to them",
+    string.format("%.0f %s", cop:GetPos():Distance(far:GetPos()), tostring(cop:GetPos())))
+ok(asked - askedBy <= 5, "without a path search every tick (at most one every two seconds)", asked - askedBy)
+
+-- how long a chase lasts is as it was: the trail lost, he goes back to his beat
+far:SetPos(R0 + Vector(250, 0, 0)) -- (the wall between them again, out of his sight)
+cop:SetPos(R0 + Vector(950, 0, 0))
+far.lcWantedSeen = CurTime() - 1000
+ok(LC.WantedLost(far), "(nobody has seen them for longer than lc_wanted_lost)")
+_run(2)
+ok(cst.state ~= "hostile" and cst.chaseRoute == nil and cst.enemy == nil, "the trail lost: he gives it up as before", tostring(cst.state))
+far.lcWantedSeen = CurTime()
+LC.MakeOneHostile(cop, cst, far)
+far:SetPos(cop:GetPos() + Vector(3600, 0, 0))
+_run(1.5)
+ok(cst.state ~= "hostile", "and the leash is as it was: too far off, he lets them go", tostring(cst.state))
+
+LC.BuildRoute = build
+Clear(far)
+LC.NavGraph = graphWas
+LC.NavGraphReady()
+if statsWas then LC.NavStats = statsWas end
+if badWas then LC.BadLinks = badWas end
+LC.ApplyLadders()
+for _, n in ipairs(made) do if IsValid(n) then n:Remove() end end
+runner:Remove() quiet:Remove() far:Remove()
+_walls = savedWalls
+_setcvar("lc_squads", squadsWas)
+end
+Nov16_PursuitTests()
+
+-- The hunt for whoever tried to kill the Administrator (the owner, 16 November)
+function Nov16_AdminHuntTests()
+section("16 November: whoever tried to kill the Administrator is hunted, hideout by hideout")
+local H0 = Vector(-176000, 152000, 0)
+local AWAY = H0 + Vector(0, -30000, 0) -- (nowhere near a unit)
+local savedWalls = _walls
+_walls = {}
+local set = _setcvar
+local function heard(p, needle)
+    local n = 0
+    for _, v in ipairs(p.chat or {}) do if string.find(tostring(v), needle, 1, true) then n = n + 1 end end
+    return n
+end
+ok(GetConVar("lc_admin_hunt"):GetInt() == 1 and GetConVar("lc_admin_hunt_minutes"):GetFloat() == 4,
+    "the hunt is on by default, a squad every four minutes")
+local minsWas = GetConVar("lc_admin_hunt_minutes"):GetFloat()
+set("lc_admin_hunt_minutes", 1) -- (a minute between squads, to keep this short)
+-- on foot, from a spot near where they are sent; two hideouts of our own, taken in turn
+local land, qrf, sweep, stalker = LC.QRFLandSpot, LC.QRFSpot, LC.NextSweepZone, LC.PlayerIsStalker
+LC.QRFLandSpot = function() return nil end
+LC.QRFSpot = function(pos) return pos + Vector(700, 0, 0) end
+local zA = LC.AddZone(H0 + Vector(5000, 0, 0), 400, "rebel", 0)
+local zB = LC.AddZone(H0 + Vector(0, 5000, 0), 400, "rebel", 0)
+local rota, turn = { zA, zB }, 0
+LC.NextSweepZone = function() turn = turn % #rota + 1 return rota[turn] end
+local manpowerWas = GetConVar("lc_manpower"):GetInt()
+set("lc_manpower", 1)
+local pool = LC.ManpowerPool("ota")
+local reserveWas = pool.reserve
+pool.reserve = 12
+local squads = LC.AdminHuntSquads
+local function sim() -- (the soldiers walk in this pretend world)
+    for _, sq in ipairs(squads) do for _, u in ipairs(sq.units) do if IsValid(u.npc) then u.npc.sim = true end end end
+end
+local function soldiers()
+    local n = 0
+    for _, sq in ipairs(squads) do for _, u in ipairs(sq.units) do if IsValid(u.npc) and u.npc:Health() > 0 then n = n + 1 end end end
+    return n
+end
+local function free(p) -- (out, and the head start over)
+    if LC.Prisoners[p] then LC.ReleasePrisoner(p) end
+    p.lcGraceUntil = nil
+    p:SetPos(AWAY)
+end
+
+local cop = newPlayer("HuntCop", "cp")
+cop:SetPos(AWAY + Vector(0, -9000, 0))
+local plain = newPlayer("HuntNobody", "citizen")
+plain:SetPos(AWAY + Vector(400, 0, 0))
+local killer = newPlayer("HuntAssassin", "citizen")
+killer:StripWeapons()
+killer:SetPos(H0)
+_run(4)
+ok(LC.AdminHunts[plain] == nil and LC.AdminHunts[killer] == nil and #squads == 0, "nobody marked: no hunt, no squads")
+
+-- the attempt: marked, and hunted from that moment
+cop.chat = {}
+LC.AdminAttacker(killer)
+_run(4)
+ok(LC.AdminHuntOf(killer) ~= nil and LC.AdminHunted(killer), "a player who tried to kill her, free in the city, is hunted")
+ok(heard(cop, "tried to kill the Administrator") == 1, "the units' radio hears it, once", heard(cop, "tried to kill the Administrator"))
+ok(#(killer.chat or {}) == 0 or heard(killer, "Overwatch is hunting") == 0, "and nothing is put on the assassin's own screen about it")
+ok(#squads == 0, "(no squad the same second)")
+killer:SetPos(AWAY) -- (they get away, unseen)
+_run(16)
+sim()
+local s1 = squads[1]
+ok(#squads == 1 and s1 and #s1.units == 4, "a squad of four Overwatch soldiers is sent", s1 and #s1.units)
+ok(s1 and s1.place and s1.place.seen and s1.place.pos:Distance(H0) < 50, "to where they were last seen")
+ok(pool.reserve == 8, "out of Overwatch's reserve, as any deployment is", pool.reserve)
+local allSoldiers = true
+for _, u in ipairs(s1 and s1.units or {}) do local st = LC.NPCs[u.npc] if not st or st.role ~= "soldier" or not st.unmanaged then allSoldiers = false end end
+ok(allSoldiers, "(soldiers, on top of the city's own numbers)")
+
+-- they search it, then a hideout, then the next
+local atSeen = false
+for _ = 1, 60 do
+    _run(1) sim()
+    for _, u in ipairs(s1.units) do if IsValid(u.npc) and u.npc:GetPos():Distance(H0) < 200 then atSeen = true end end
+    if s1.place.zone then break end
+end
+ok(atSeen, "the soldiers go there and look about")
+ok(s1.place.zone == zA, "nothing found: on to a Resistance hideout", tostring(s1.place.zone))
+local inA = false
+for _ = 1, 150 do
+    _run(1) sim()
+    for _, u in ipairs(s1.units) do if IsValid(u.npc) and LCZ.Near(zA, u.npc:GetPos(), 0) then inA = true end end
+    if s1.place.zone ~= zA then break end
+end
+ok(inA, "they walk its points")
+ok(#squads >= 2 or s1.place.zone == zB, "and move on to the next hideout", tostring(s1.place.zone == zB))
+-- a second squad at the next interval, and never a third
+for _ = 1, 80 do if #squads >= 2 then break end _run(1) sim() end
+local s2 = squads[2]
+ok(#squads == 2 and s2 and s2.place and s2.place.zone ~= nil, "the next squad, an interval on, goes to a hideout too (nobody has seen them for a while)")
+local most = #squads
+for _ = 1, 70 do _run(1) sim() most = math.max(most, #squads) end
+ok(most == 2, "at most two squads out at a time", most)
+
+-- seen is known: every soldier of the hunt comes for them, to take them alive
+local someone = s2.units[1].npc
+killer:SetPos(someone:GetPos() + Vector(260, 0, 0))
+_run(2)
+local told, alive, noShots = 0, 0, true
+for _, sq in ipairs(squads) do
+    for _, u in ipairs(sq.units) do
+        local st = IsValid(u.npc) and LC.NPCs[u.npc]
+        if st then
+            alive = alive + 1
+            if st.state == "hostile" and st.enemy == killer then told = told + 1 end
+            if st.enemy == killer and not st.arrestOnly then noShots = false end
+        end
+    end
+end
+ok(alive > 0 and told == alive, "a soldier sees them: every soldier of the hunt is told, and comes", told .. "/" .. alive)
+ok(noShots, "to lay hands on them: someone unarmed is run down and cuffed, not shot")
+ok(LC.AdminHunts[killer].seenPos:Distance(killer:GetPos()) < 50 and squads[1].place.seen, "and that is where the squads look now")
+
+-- in a cell: over. The squads go home, back into the reserve
+local out = soldiers()
+local before = pool.reserve
+LC.Incarcerate(killer, 600, LC.AdminCrime)
+ok(LC.Prisoners[killer] ~= nil and LC.AdminHunts[killer] == nil, "arrested and in a cell: the hunt is over")
+for _ = 1, 30 do _run(1) if next(LC.AdminHuntLeaving) == nil then break end end
+ok(#squads == 0 and next(LC.AdminHuntLeaving) == nil, "its squads go home")
+ok(pool.reserve == before + out, "alive, they are back in Overwatch's reserve", string.format("%s + %s -> %s", before, out, pool.reserve))
+_run(25)
+ok(LC.AdminHunts[killer] == nil and #squads == 0, "nothing while they are in a cell")
+
+-- out again (a breakout): it starts again, at a hideout while nobody has seen them
+cop.chat = {}
+free(killer)
+_run(4)
+ok(LC.AdminHunts[killer] ~= nil, "free again: hunted again")
+ok(heard(cop, "tried to kill the Administrator") == 0, "(the radio is not told a second time so soon)")
+_run(17) sim()
+ok(#squads == 1 and squads[1].place.zone ~= nil, "nobody has seen them: the squad goes to a hideout")
+
+-- a stalker is the Combine's own: no hunt
+LC.PlayerIsStalker = function(p) return p == killer or (stalker ~= nil and stalker(p)) end
+_run(2)
+ok(LC.AdminHunts[killer] == nil and #squads == 0, "made a stalker: no hunt")
+LC.PlayerIsStalker = stalker
+_run(4)
+ok(LC.AdminHunts[killer] ~= nil, "(not one: hunted)")
+
+-- the setting
+set("lc_admin_hunt", 0)
+_run(2)
+ok(LC.AdminHunts[killer] == nil and #squads == 0, "lc_admin_hunt 0: no hunt, and any squad out goes home")
+_run(20)
+ok(#squads == 0, "and none is sent")
+set("lc_admin_hunt", 1)
+_run(4)
+ok(LC.AdminHunts[killer] ~= nil, "(1: hunted again)")
+
+-- the reserve spent: it waits, and goes on with what comes back
+for _ = 1, 20 do _run(1) if next(LC.AdminHuntLeaving) == nil then break end end
+pool.reserve = 0
+_run(20)
+ok(LC.AdminHunts[killer] ~= nil and #squads == 0, "Overwatch's reserve empty: nobody to send, and the hunt waits")
+pool.reserve = 2
+for _ = 1, 35 do _run(1) if #squads > 0 then break end end
+ok(#squads == 1 and #squads[1].units == 2 and pool.reserve == 0, "two soldiers back in reserve: a squad of two goes", squads[1] and #squads[1].units)
+
+-- two hunted at once: one hunt each, two squads between them
+pool.reserve = 12
+local second = newPlayer("HuntAssassinTwo", "citizen")
+second:StripWeapons()
+second:SetPos(AWAY + Vector(0, 3000, 0))
+second:SetPData("lc_regicide", "1") -- (marked long ago: a rejoin)
+second:SetNW2Bool("lc_regicide", true) -- (as joining sets it: sv_livingcity_adminsecurity.lua)
+_run(22)
+ok(LC.AdminHunts[killer] ~= nil and LC.AdminHunts[second] ~= nil and LC.AdminHunts[second] ~= LC.AdminHunts[killer], "a second would-be assassin: a hunt of their own")
+local mine, theirs = 0, 0
+for _, sq in ipairs(squads) do
+    if sq.hunt == LC.AdminHunts[killer] then mine = mine + 1 elseif sq.hunt == LC.AdminHunts[second] then theirs = theirs + 1 end
+end
+ok(#squads == 2 and mine == 1 and theirs == 1, "the two squads are shared: one each", mine .. " and " .. theirs)
+most = 0
+for _ = 1, 70 do _run(1) most = math.max(most, #squads) end
+ok(most == 2, "still never more than two out", most)
+
+-- the mark cleared, and gone from the server: over
+LC.AdminForget(second)
+_run(2)
+ok(LC.AdminHunts[second] == nil and LC.AdminHunts[killer] ~= nil, "the mark cleared: that hunt is over")
+ok(#squads == 2 and squads[1].hunt == LC.AdminHunts[killer] and squads[2].hunt == LC.AdminHunts[killer], "(its squad goes to the hunt that is left)")
+killer.alive = false
+_run(2)
+ok(LC.AdminHunts[killer] == nil and #squads == 0, "dead: over")
+killer.alive = true
+
+LC.AdminForget(killer)
+for _ = 1, 30 do _run(1) if next(LC.AdminHuntLeaving) == nil then break end end
+LC.QRFLandSpot, LC.QRFSpot, LC.NextSweepZone, LC.PlayerIsStalker = land, qrf, sweep, stalker
+LC.RemoveZone(zA) LC.RemoveZone(zB)
+LC.ClearWanted(killer) LC.CalmCops(killer)
+pool.reserve = reserveWas
+set("lc_manpower", manpowerWas)
+set("lc_admin_hunt_minutes", minsWas)
+for _, p in ipairs({ cop, plain, killer, second }) do p:Remove() end
+_walls = savedWalls
+end
+Nov16_AdminHuntTests()
+
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")
 ;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)
     -- Everything here is something the owner's server, files or players depend on. The list is

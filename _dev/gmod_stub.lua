@@ -78,6 +78,9 @@ function istable(x) return type(x) == "table" end
 function isstring(x) return type(x) == "string" end
 function isnumber(x) return type(x) == "number" end
 function isbool(x) return type(x) == "boolean" end
+-- (the game has it; without it a job whose targets had gone and were to be brought back failed with
+-- "something went wrong", now and then: sv_livingcity_quests.lua, SpawnTargets)
+function isfunction(x) return type(x) == "function" end
 bit = require("bit")
 
 FCVAR_ARCHIVE, FCVAR_REPLICATED = 128, 8192

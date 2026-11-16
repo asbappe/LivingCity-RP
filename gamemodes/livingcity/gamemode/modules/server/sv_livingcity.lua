@@ -2190,6 +2190,7 @@ local function CalmOne(npc, st, now)
     npc:ClearEnemyMemory()
     npc:SetSchedule(SCHED_IDLE_STAND)
     st.enemy, st.provokedBy, st.arrestOnly = nil, nil, nil
+    st.chaseRoute, st.chaseGoal, st.chaseAt, st.chaseMoved, st.chaseAskAt = nil, nil, nil, nil, nil
     if st.armed then
         -- back to the stick (unless there's a judgment waiver on: then the pistol stays out)
         st.armed = nil
@@ -2198,6 +2199,160 @@ local function CalmOne(npc, st, now)
     SetState(npc, st, "idle"); st.untilT = now + 2
 end
 LC.CalmOne = CalmOne
+
+------------------------------------------------------------------------
+-- The way to a suspect the straight run can't get to
+--
+-- A chase was only ever a straight run at the suspect, by the engine's own
+-- pathfinding. That knows nothing of the ladders (the editor's, the map's,
+-- the ones learned from climbs), nor of the drawn paths and the doors joined
+-- for units, which is how everyone else gets about. So a suspect down a
+-- ladder, or anywhere the map's own nodes don't reach, was never followed:
+-- the run failed, the unit stood where he was, and half a minute later
+-- dispatch had lost them (the owner, 16 November: "down a ladder and into the
+-- sewers, the combine never pursue, ever").
+--
+--   A ladder that goes their way is walked to and climbed, each unit as his
+--   turn comes (the way a squad follower does it: sv_livingcity_rebels.lua),
+--   and the chase carries on from its other end.
+--   A run that gets nowhere asks the city's own routes for the way (the
+--   drawn paths, the nodegraph with its ladders and unit doors), at most
+--   once every CHASE_ASK seconds a unit, and walks it.
+--
+-- How long a chase lasts is as it was: the leash, lc_wanted_lost, the rebel
+-- territory rule.
+------------------------------------------------------------------------
+do
+    local CHASE_ASK = 2     -- seconds between one unit's requests for a route
+    local CHASE_NONE = 6    -- no way found: this long before he asks again
+    local CHASE_STILL = 1.5 -- this long without getting anywhere: the run has failed
+    local CHASE_LEG = 4     -- this long without getting anywhere on a route: that leg can't be walked
+    local LADDER_TURN = 0.8 -- seconds between two units off the same ladder
+    local LADDER_MT = MOVETYPE_LADDER or 9
+    local turns = {} -- [the ladder's far end] = when the last unit came off it
+
+    local function Run(npc, st, to)
+        st.chaseGoal = to
+        npc:SetLastPosition(to)
+        npc:SetSchedule(SCHED_FORCED_GO_RUN)
+    end
+
+    local function DropRoute(st) st.chaseRoute = nil end
+
+    -- The city's way from a unit to the suspect: a list of spots, or nil.
+    -- (Into rebel territory when the chase goes there: the drawn paths keep units off that ground otherwise.)
+    local function Ask(pos, epos, role)
+        local route
+        if LC.InRebelZone and LC.InRebelZone(epos) and LC.EditorRoute then
+            route = LC.EditorRoute(pos, epos, role, true)
+            if not route and LC.NavRoute then route = LC.NavRoute(pos, epos, role) end
+        elseif LC.BuildRoute then
+            route = LC.BuildRoute(pos, epos, role)
+        end
+        return istable(route) and #route > 0 and route or nil
+    end
+
+    -- True: he's on his way round (to a ladder, up it, or along a route), and the straight run is left alone.
+    -- sees: he has them in sight. ranged: he has a gun out (one who sees them shoots from where he is).
+    function LC.ChaseWay(npc, st, e, epos, now, sees, ranged)
+        if os.getenv("LC_TEMP_NOCHASEWAY") then return false end
+        local pos = npc:GetPos()
+        local dz = math.abs(epos.z - pos.z)
+        local running = npc:IsCurrentSchedule(SCHED_FORCED_GO_RUN) or npc:IsCurrentSchedule(SCHED_FORCED_GO)
+        if not st.chaseAt or pos:DistToSqr(st.chaseAt) > 24 * 24 then st.chaseAt, st.chaseMoved = pos, now end
+        if sees and ranged then
+            DropRoute(st)
+            return false
+        end
+
+        -- on another level, and a ladder goes their way (looked for further off than a follower's: a suspect keeps running)
+        if dz > 64 and LC.LadderToward then
+            local climbing = e.GetMoveType ~= nil and e:GetMoveType() == LADDER_MT
+            local near, far = LC.LadderToward(pos, epos, climbing, true)
+            if near then
+                DropRoute(st)
+                local dx, dy = pos.x - near.x, pos.y - near.y
+                if dx * dx + dy * dy < 90 * 90 and math.abs(pos.z - near.z) < 72 then
+                    local key = string.format("%d:%d:%d", far.x, far.y, far.z)
+                    if climbing or now - (turns[key] or -100) < LADDER_TURN then
+                        -- they're still on it (and may be coming back), or the man ahead has only just got off it
+                        if running then npc:SetSchedule(SCHED_IDLE_STAND) end
+                    elseif LC.LadderHop and LC.LadderHop(npc, epos) then
+                        turns[key] = now
+                        st.chasePos, st.chaseGoal, st.lastArrestGoal = nil, nil, nil
+                        st.chaseAt, st.chaseMoved = npc:GetPos(), now
+                    else
+                        return false
+                    end
+                elseif not running or not st.chaseGoal or st.chaseGoal:DistToSqr(near) > 60 * 60 then
+                    Run(npc, st, near)
+                end
+                return true
+            end
+        end
+
+        -- close, on their level: no route wanted
+        local d2 = pos:DistToSqr(epos)
+        if dz <= 64 and (d2 < 300 * 300 or (sees and d2 < 600 * 600)) then
+            DropRoute(st)
+            return false
+        end
+
+        -- along the route he was given
+        local r = st.chaseRoute
+        if r and r.to:DistToSqr(epos) > 500 * 500 and now >= (st.chaseAskAt or 0) then
+            -- they've moved on from where it ended: the way to where they are now
+            st.chaseAskAt = now + CHASE_ASK
+            local route = Ask(pos, epos, st.role)
+            if route then r = { pts = route, hop = 1, to = epos } else r = nil end
+            st.chaseRoute = r
+        end
+        if r then
+            local target = r.pts[r.hop]
+            while target do
+                if LC.LadderHop and LC.LadderHop(npc, target) then
+                    pos = npc:GetPos()
+                    st.chaseAt, st.chaseMoved = pos, now
+                elseif pos:DistToSqr(target) >= 96 * 96 then
+                    break
+                end
+                r.hop = r.hop + 1
+                target = r.pts[r.hop]
+                running = false
+            end
+            if not target then
+                DropRoute(st)
+                st.chasePos = nil
+                return false
+            end
+            if now - (st.chaseMoved or now) > CHASE_LEG then
+                -- this leg can't be walked: the straight run again, and no new route for a while
+                DropRoute(st)
+                st.chaseAskAt = now + CHASE_NONE
+                return false
+            end
+            if not running or st.chaseGoal ~= target then Run(npc, st, target) end
+            return true
+        end
+
+        -- the straight run got nowhere: ask for the way
+        if now - (st.chaseMoved or now) >= CHASE_STILL and now >= (st.chaseAskAt or 0) then
+            -- (a squad's follower standing with his leader stays with him: sv_livingcity_squadai.lua)
+            local squad = LC.Squads and LC.Squads[e]
+            local lead = squad and squad.leader
+            if IsValid(lead) and lead ~= npc and pos:DistToSqr(lead:GetPos()) < 300 * 300 then return false end
+            local route = Ask(pos, epos, st.role)
+            st.chaseAskAt = now + (route and CHASE_ASK or CHASE_NONE)
+            if route then
+                st.chaseRoute = { pts = route, hop = 1, to = epos }
+                st.chaseMoved = now
+                Run(npc, st, route[1])
+                return true
+            end
+        end
+        return false
+    end
+end
 
 -- Hostile units actually go after their target. The engine's combat AI only
 -- engages what it can see, and a walking schedule ignores enemies entirely,
@@ -2241,6 +2396,8 @@ local function Pursue(npc, st, e, now)
                 local lines = STOP_LINES[st.role] or STOP_LINES.cop
                 npc:EmitSound(lines[math.random(#lines)], 80)
             end
+            -- (down a ladder, or where the straight run has no way: round by the ladder or the city's routes)
+            if LC.ChaseWay(npc, st, e, epos, now, false, false) then return end
             st.chasePos = epos
             npc:SetLastPosition(epos)
             if not npc:IsCurrentSchedule(SCHED_FORCED_GO_RUN) or (st.lastArrestGoal or Vector(0, 0, 0)):DistToSqr(epos) > 60 * 60 then
@@ -2273,6 +2430,8 @@ local function Pursue(npc, st, e, now)
     -- as a squad (sv_livingcity_squadai.lua): just hurt, the combat AI has them; a
     -- follower keeps with the leader rather than running at the target alone
     if LC.SquadHurt and LC.SquadHurt(st, now) then return end
+    -- (down a ladder, or where the straight run has no way: each unit round by the ladder or the city's routes)
+    if LC.ChaseWay(npc, st, e, epos, now, sees, st.armed == true or st.role == "soldier") then return end
     if LC.SquadFollow and LC.SquadFollow(npc, st, e, now, sees) then return end
     if sees and d2 < 600 * 600 then
         -- in sight and close: let the combat AI close in and swing
@@ -2836,6 +2995,7 @@ function LC.MakeOneHostile(npc, st, target)
     SetState(npc, st, "hostile")
     st.enemy = target
     st.nextPursue, st.chasePos, st.lostSince = 0, nil, nil
+    st.chaseRoute, st.chaseGoal, st.chaseAt, st.chaseMoved, st.chaseAskAt = nil, nil, nil, nil, nil
     -- someone wanted who's done nobody any harm, or has only used their fists: run them down and cuff them
     -- (the struggle first), no shooting
     st.arrestOnly = target:IsPlayer() and LC.Violent and (not LC.Violent(target) or (LC.TakenUnarmed and LC.TakenUnarmed(target))) or nil
