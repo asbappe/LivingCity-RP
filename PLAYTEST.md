@@ -4,37 +4,37 @@ About twenty minutes on the server. Only things a person has to judge are here: 
 
 Tick what works, write a word under what does not. What is not on this card waits in `PLAYTEST_ARCHIVE.md` (the backlog, about 70 one-line items).
 
-## This card (15 November 2026, late: your card notes, fixed, please try)
+## This card (16 November 2026: the card notes and the night's builds, please try)
 
 - [ ] **The struggle:** punch a unit, put your fists away. A blow or two of the stick, then the struggle bar (E fast to break free)?
   Notes:
-- [ ] **Hauled in:** walked to the cells through a Combine only zone. No countdown, the right-hand panel quiet?
+- [ ] **Hauled in and questioned:** walked to the cells through a Combine only zone: no countdown, the right-hand panel quiet? In the cell (as a citizen, 10 minute sentence): every choice whole on screen, asked about the charge, not the Resistance?
   Notes:
-- [ ] **Questioned in the cell (as a citizen, 10 minute sentence):** every choice whole on screen, the question below it, asked about the charge, not the Resistance?
-  Notes:
-- [ ] **Wake from the bus dream:** the screen clear at once (no white for 30 seconds)? Does the bus fly on under the sky without sticking?
+- [ ] **The bus dream:** does the bus fly on under the sky without sticking, and is the screen clear at once when you wake (no white)?
   Notes:
 - [ ] **F1 > Find work:** chevrons on the ground to Labor Assignment?
   Notes:
-- [ ] **The Harpies dreamt:** a black fog close round you, a thick forest, about 24 armed units in the ring, and are you carried off (not just cut down)?
+- [ ] **The Harpies dreamt:** a black fog close round you, a thick forest, about 24 armed units in the ring, and are you carried off?
   Notes:
-- [ ] **The old timer:** a white man's body under the fisherman's head, head on?
+- [ ] **The old timer and the stalker:** a white man's body under the fisherman's head, head on? The stalker leans in once, then types (or stays bent over the keys), never bending in again every two seconds?
   Notes:
-- [ ] **The stalker:** leans in once, then types (or stays bent over the keys), never bends in again every two seconds? (If it stands still bent over, it has no typing animation: the debug report's "terminal animation" line says.)
+- [ ] **Your bodyguards and the turrets:** a zombie near you: do they shoot it unasked, keep up with you, and drop it for a target you order killed? Does a unit walk over and stand up a knocked-over turret?
   Notes:
-- [ ] **Your bodyguards:** a zombie near you: do they shoot it unasked, keep up with you, and drop it for a target you order killed?
+- [ ] **Monitors:** the wall monitor gone (from the editor and from the map); two or three hanging monitors on different cameras, all live at once, frame rate bearable?
   Notes:
-- [ ] **Knocked-over turret:** does a unit walk over and stand it up?
+- [ ] **CP Commissary:** purified water at 2, weapons by rank at the top? Water at 4 from the quartermaster and the dealer? A power bank fills the vest in one press?
   Notes:
-- [ ] **Monitors:** the wall monitor gone (from the editor list and from the map); two or three hanging monitors on different cameras (E steps them): all live at once, frame rate bearable?
+- [ ] **Her glass and the sting:** the transformer's glass from the floor up, about 15 feet? The victory sting never while walking about?
   Notes:
-- [ ] **CP Commissary:** purified water at 2, weapons by rank at the top of the list? Water at 4 from the quartermaster and the dealer? A power bank fills the vest in one press and says so?
+- [ ] **Everyone comes:** at dawn, does the whole city come to the drill (from beds and seats too) and copy the instructor? At your address, does everyone come and the rows fit? Does the ration line fill during a handout? The review: three units line up, E on each?
   Notes:
-- [ ] **Her glass:** from the floor up, about 15 feet, the transformer only reachable round it?
+- [ ] **Your address, guarded:** three soldiers in a row facing the crowd, a metrocop each side and two soldiers behind, looking outward? As a citizen, walk up to her: one "Final warning!", then shot inside the row?
   Notes:
-- [ ] **The victory sting:** never while walking about; only when the Administrator falls or flees?
+- [ ] **An attempt on your life (place "Point: Administrator's APC" near the stand, facing the way out):** is the APC parked the right way round? A rebel's shot near you (or a hit: a close call): the glass up, the ring round you within a second, a crouch, run to the APC, driven off, at your desk? A grenade at your feet: a soldier dives on it ("Shit!", "Bouncer!"), a harmless blast, his body thrown? The attacker at -999 standing and wanted for good?
   Notes:
-- [ ] **Drill, address, review:** at dawn do citizens come to the drill (from beds and seats too) and copy the instructor's called moves? "Address the citizens" points at your speech stand, a few citizens gather at the crowd point? The review: three units line up, E on each, and commend, reprimand and reassign show?
+- [ ] **The parade:** eight soldiers two abreast, an APC (nose forward?), two hunters, a strider that walks, the march from a third of the way (the debug report's "parade music:" line says which piece), everyone cheering along the middle third? Shoot at it: it stops, only you are fired on, and after 30 seconds unseen it re-forms at the last route node and the music starts over?
+  Notes:
+- [ ] **The Miscount Poser (Q > Tools > Miscount, below the editor; update the Pose Recorder addon first):** left click a cuffed mannequin and the vortigaunt with its broom; pose with the physgun; right click to use the pose. Does a cuffed player and a sweeping vortigaunt change at once, and is it kept after a restart?
   Notes:
 
 ## For whoever adds to this file
