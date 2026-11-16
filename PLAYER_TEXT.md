@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version 1bcf79e. Admin-only console messages and log lines are left out.
+Made from version b76528a. Admin-only console messages and log lines are left out.
 
-12891 lines, from 354 files.
+12890 lines, from 354 files.
 
 ## Contents
 
@@ -126,7 +126,7 @@ Made from version 1bcf79e. Admin-only console messages and log lines are left ou
 - [cl_livingcity_patsearch.lua](#cllivingcitypatsearchlua-cllivingcitypatsearchlua) (15)
 - [cl_livingcity_perfdebug.lua](#cllivingcityperfdebuglua-cllivingcityperfdebuglua) (63)
 - [cl_livingcity_quests.lua](#cllivingcityquestslua-cllivingcityquestslua) (34)
-- [cl_livingcity_quick.lua](#cllivingcityquicklua-cllivingcityquicklua) (287)
+- [cl_livingcity_quick.lua](#cllivingcityquicklua-cllivingcityquicklua) (286)
 - [cl_livingcity_rebelhold.lua](#cllivingcityrebelholdlua-cllivingcityrebelholdlua) (8)
 - [the Resistance's medic, his offer (sv_livingcity_rebelmedic.lua). A quick menu](#the-resistances-medic-his-offer-svlivingcityrebelmediclua-a-quick-menu-cllivingcityrebelmediclua) (5)
 - [apartment doors (client)](#apartment-doors-client-cllivingcityrentlua) (12)
@@ -4375,7 +4375,6 @@ Made from version 1bcf79e. Admin-only console messages and log lines are left ou
 > Note for you (not shown in game): part of: mine items
 
 - "The state of the city"  (text, line 720)
-- "The city's levers (speeches, amnesty, crackdowns, rations)"  (text, line 721)
 
 > Note for you (not shown in game): part of: me page
 
@@ -13000,7 +12999,7 @@ Made from version 1bcf79e. Admin-only console messages and log lines are left ou
 
 - "Only the City Administrator speaks from the stand."  (text, line 346)
 - "There's no speech stand in this city. (Staff: Miscount Editor > Point: Administrator's speech stand.)"  (text, line 348)
-- "[The office] You're at the speech stand. F2 > Me > The city's levers > Give a speech, when you're ready."  (chat message, line 351)
+- "[The office] You're at the speech stand. F2 > Me > Administrator > Give a speech, when you're ready."  (chat message, line 351)
 
 > Note for you (not shown in game): Her words to the city: on the screens and in chat, the crowd's cheer, and what it does to the numbers. by: the player Administrator, or nil (the city's own, sv_livingcity_speech.lua). at: where she spoke.
 
@@ -13024,7 +13023,7 @@ Made from version 1bcf79e. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: give speech
 
-- "Speak from the speech stand: F2 > Me > The city's levers > Go to the speech stand."  (text, line 397)
+- "Speak from the speech stand: F2 > Me > Administrator > Go to the speech stand."  (text, line 397)
 
 > Note for you (not shown in game): part of: amnesty
 
