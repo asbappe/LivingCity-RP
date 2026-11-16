@@ -34789,6 +34789,151 @@ cop:Remove() recruit:Remove() civ:Remove()
 end
 Nov16_FragTests()
 
+-- Units pursue through ladders and where the straight run has no way (the owner, 16 November)
+function Nov16_PursuitTests()
+section("16 November: units pursue through ladders and where the straight run has no way")
+local P0 = Vector(168000, -152000, 0)
+local savedWalls = _walls
+local squadsWas = GetConVar("lc_squads"):GetInt()
+_setcvar("lc_squads", 0) -- (each unit's own chase)
+local made = {}
+local function Unit(pos)
+    local npc, st = LC.SpawnCop(pos)
+    st.unmanaged, st.leaveAt, st.routeGroup = true, nil, nil
+    npc.sim = true
+    made[#made + 1] = npc
+    return npc, st
+end
+local function Clear(p)
+    if LC.Prisoners[p] then LC.ReleasePrisoner(p) end
+    LC.ClearWanted(p)
+    LC.CalmCops(p)
+    p.lcArmedViolentUntil, p.lcViolentUntil = nil, nil
+    p:SetPos(Vector(-140000, 140000, 0))
+end
+
+-- the suspect is down a ladder, a wall and a floor away: the straight run can't get there
+_walls = { { a = P0 + Vector(600, -3000, 0), b = P0 + Vector(600, 3000, 0) } }
+local top, foot = P0 + Vector(450, 0, 0), P0 + Vector(700, 0, -300)
+LC.AddPoint(top, 0, "ladder", 9161)
+LC.AddPoint(foot, 0, "ladder", 9161)
+LC.ApplyLadders()
+local cop, cst = Unit(P0)
+local runner = newPlayer("SewerRunner", "citizen")
+runner:SetPos(P0 + Vector(1100, 0, -300))
+LC.ReportCrime(runner, "Assault", 600)
+runner.lcArmedViolentUntil = CurTime() + 1e6 -- (weapons used: the combat AI's chase)
+LC.MakeOneHostile(cop, cst, runner)
+ok(cst.state == "hostile" and not cst.arrestOnly, "(a unit after an armed suspect who is down a ladder)")
+_run(1)
+ok(cop:GetPos():Distance(top) < cop:GetPos():Distance(P0 + Vector(600, 0, 0)) or cop:GetPos().z < -200,
+    "he makes for the ladder, not the wall between them", tostring(cop:GetPos()))
+_run(5)
+ok(cop:GetPos().z < -200, "and goes down it after them", tostring(cop:GetPos()))
+ok(cst.state == "hostile" and cop:GetPos():Distance(runner:GetPos()) < 620, "the chase carries on at the other end",
+    string.format("%s %.0f", tostring(cst.state), cop:GetPos():Distance(runner:GetPos())))
+
+-- two units at the head of the ladder: one at a time
+local a, ast = Unit(top + Vector(-20, 30, 0))
+local b, bst = Unit(top + Vector(-20, -30, 0))
+LC.MakeOneHostile(a, ast, runner)
+LC.MakeOneHostile(b, bst, runner)
+_run(0.6)
+local down = (a:GetPos().z < -200 and 1 or 0) + (b:GetPos().z < -200 and 1 or 0)
+ok(down == 1, "two units at the ladder: one goes, the other waits his turn", down)
+_run(3)
+ok(a:GetPos().z < -200 and b:GetPos().z < -200, "then the other", string.format("%.0f %.0f", a:GetPos().z, b:GetPos().z))
+a:Remove() b:Remove()
+
+-- someone on the ladder still: the unit waits at its end
+cop:SetPos(P0)
+LC.MakeOneHostile(cop, cst, runner)
+runner:SetPos(P0 + Vector(600, 0, -150))
+runner.movetype = MOVETYPE_LADDER or 9
+_run(4)
+ok(cop:GetPos().z > -60 and cop:GetPos():Distance(top) < 120, "a suspect still on the ladder: he waits at its end", tostring(cop:GetPos()))
+runner.movetype = MOVETYPE_WALK
+runner:SetPos(P0 + Vector(1100, 0, -300))
+_run(2.5)
+ok(cop:GetPos().z < -200, "and goes down the moment they are off it", tostring(cop:GetPos()))
+Clear(runner)
+_run(1.5)
+
+-- wanted, and has harmed nobody: run down and cuffed, down the ladder too
+local quiet = newPlayer("SewerWalker", "citizen")
+quiet:SetPos(P0 + Vector(1100, 200, -300))
+LC.ReportCrime(quiet, "Loitering", 600)
+cop:SetPos(P0)
+LC.MakeOneHostile(cop, cst, quiet)
+ok(cst.arrestOnly == true, "(a unit after someone wanted who has harmed nobody: no shots)")
+_run(4)
+ok(cop:GetPos().z < -200, "he goes down the ladder after them as well", tostring(cop:GetPos()))
+Clear(quiet)
+_run(1.5)
+for i = #LC.Points, 1, -1 do if LC.Points[i].kind == "ladder" and LC.Points[i].group == 9161 then LC.RemovePoint(LC.Points[i]) end end
+LC.ApplyLadders()
+
+-- off his beat, and the straight run has no way: the city's own routes take him round
+local R0 = P0 + Vector(0, 20000, 0)
+_walls = { { a = R0 + Vector(600, -500, 0), b = R0 + Vector(600, 500, 0) } }
+local graphWas, statsWas, badWas = LC.NavGraph, LC.NavStats, LC.BadLinks
+local function N(x, y) return { pos = R0 + Vector(x, y, 0), adj = {}, comp = 1 } end
+local A, B, C, D = N(300, 0), N(300, 800), N(900, 800), N(900, 0)
+local function Link(x, y) local d = x.pos:Distance(y.pos) x.adj[#x.adj + 1] = { y, d } y.adj[#y.adj + 1] = { x, d } end
+Link(A, B) Link(B, C) Link(C, D)
+LC.NavGraph = { nodes = { A, B, C, D }, main = 1, links = 3 }
+LC.NavGraphReady()
+LC.ApplyLadders()
+local asked = 0
+local build = LC.BuildRoute
+LC.BuildRoute = function(from, to, role)
+    if role == "cop" and from:DistToSqr(R0) < 3000 * 3000 then asked = asked + 1 end
+    return build(from, to, role)
+end
+cop:SetPos(R0 + Vector(250, 0, 0))
+cst.routeGroup = 4242 -- (a beat of his own, somewhere else)
+local far = newPlayer("CanalRunner", "citizen")
+far:SetPos(R0 + Vector(950, 0, 0))
+LC.ReportCrime(far, "Assault", 600)
+far.lcArmedViolentUntil = CurTime() + 1e6
+LC.MakeOneHostile(cop, cst, far)
+_run(1)
+ok(asked == 0, "(a run that is still getting somewhere asks for no route)", asked)
+_run(4)
+ok(cst.chaseRoute ~= nil and asked >= 1, "a run that gets nowhere: he asks the city's routes for the way", asked)
+local askedBy = asked
+_run(10)
+ok(cop:GetPos():Distance(far:GetPos()) < 620 and cop:GetPos().x > R0.x + 600, "and gets round to them",
+    string.format("%.0f %s", cop:GetPos():Distance(far:GetPos()), tostring(cop:GetPos())))
+ok(asked - askedBy <= 5, "without a path search every tick (at most one every two seconds)", asked - askedBy)
+
+-- how long a chase lasts is as it was: the trail lost, he goes back to his beat
+far:SetPos(R0 + Vector(250, 0, 0)) -- (the wall between them again, out of his sight)
+cop:SetPos(R0 + Vector(950, 0, 0))
+far.lcWantedSeen = CurTime() - 1000
+ok(LC.WantedLost(far), "(nobody has seen them for longer than lc_wanted_lost)")
+_run(2)
+ok(cst.state ~= "hostile" and cst.chaseRoute == nil and cst.enemy == nil, "the trail lost: he gives it up as before", tostring(cst.state))
+far.lcWantedSeen = CurTime()
+LC.MakeOneHostile(cop, cst, far)
+far:SetPos(cop:GetPos() + Vector(3600, 0, 0))
+_run(1.5)
+ok(cst.state ~= "hostile", "and the leash is as it was: too far off, he lets them go", tostring(cst.state))
+
+LC.BuildRoute = build
+Clear(far)
+LC.NavGraph = graphWas
+LC.NavGraphReady()
+if statsWas then LC.NavStats = statsWas end
+if badWas then LC.BadLinks = badWas end
+LC.ApplyLadders()
+for _, n in ipairs(made) do if IsValid(n) then n:Remove() end end
+runner:Remove() quiet:Remove() far:Remove()
+_walls = savedWalls
+_setcvar("lc_squads", squadsWas)
+end
+Nov16_PursuitTests()
+
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")
 ;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)
     -- Everything here is something the owner's server, files or players depend on. The list is
