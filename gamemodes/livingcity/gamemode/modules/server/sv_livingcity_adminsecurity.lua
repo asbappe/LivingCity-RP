@@ -457,7 +457,8 @@ hook.Add("PlayerDeath", "LivingCityAdminAttempt", function(victim) if IsValid(vi
 hook.Add("LivingCityIncarcerated", "LivingCityAdminAttempt", function(ply) if IsValid(ply) and ply.SteamID64 then Caught(ply:SteamID64()) end end)
 hook.Add("OnNPCKilled", "LivingCityAdminAttempt", function(npc)
     local a = LC.AdminAttemptPending()
-    if a and IsValid(npc) and LC.AdminTargets[npc] then a.caught = true end
+    -- (a fighter of an ordered attack falling is not the assassin caught: sv_livingcity_adminplot.lua)
+    if a and IsValid(npc) and LC.AdminTargets[npc] and not npc.lcAdminPlot then a.caught = true end
 end)
 
 local function Ground(p) return (LC.GroundAt and LC.GroundAt(p + Vector(0, 0, 40))) or p end
