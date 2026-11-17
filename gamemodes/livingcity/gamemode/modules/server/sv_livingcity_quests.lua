@@ -3611,7 +3611,7 @@ end
 
 -- Post a directive right now, on every board it belongs on that has someone to
 -- take it, whatever else is there; tell them. focus: what it's about (a zone).
--- Returns the postings made.
+-- quiet: nobody is told (it is only on the board). Returns the postings made.
 -- Jobs to protect something that is on its way (a dropship's landing, a supply drop). The owner,
 -- 11 November: "those jobs/quests are time sensitive and only show on the board for 60 seconds: if at
 -- least one human player picks it up, then there is a further 60 second delay from their taking the
@@ -3667,7 +3667,7 @@ function LC.ProtectWaitTick(now)
 end
 timer.Create("LivingCityProtectWait", 1, 0, function() LC.ProtectWaitTick(CurTime()) end)
 
-function LC.PostDirective(tid, focus)
+function LC.PostDirective(tid, focus, quiet)
     if not cvOn:GetBool() then return {} end
     local t
     for _, x in ipairs(LC.QuestTemplates) do if x.id == tid then t = x end end
@@ -3702,7 +3702,7 @@ function LC.PostDirective(tid, focus)
                     made[#made + 1] = spec
                     local board = BOARDS[f] or "Jobs"
                     local room = math.max(cvSquad:GetInt(), spec.squad or 0)
-                    for _, p in ipairs(people) do
+                    for _, p in ipairs(quiet and {} or people) do
                         p:ChatPrint(string.format("[%s] New job: %s. Take it from your job board (F4). Up to %d people can work on it together.", board, spec.title, room))
                     end
                 end

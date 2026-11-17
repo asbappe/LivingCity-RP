@@ -16,6 +16,10 @@
     minutes, then it's called off. One plan at a time, one every
     lc_rebel_plan_minutes (15). And someone always talks: lc_rebel_plan_leak
     (15%) of plans reach Civil Protection beforehand, the target and the time.
+    While the Administrator's address is on, her life is a target too (the
+    owner, 17 November; sv_livingcity_adminplot.lua): no raid goes for that one.
+    Whoever joined is under orders from the moment they join, and the fighters
+    come out round the stand when one of them makes the attempt.
 
     Bounties. The City Administrator, or a unit of Division Leader rank or
     higher, can put a price on a wanted person's head (F2 > Me > Bounties: 50
@@ -98,6 +102,9 @@ function LC.OpTargets()
     end
     if LC.Supply and LC.Supply.pos then out[#out + 1] = { label = "Hit the supply drop " .. Where(LC.Supply.pos), kind = "supply", pos = LC.Supply.pos, data = {} } end
     if LC.OverwatchDrop and LC.OverwatchDrop.pos then out[#out + 1] = { label = "Ambush the Overwatch landing " .. Where(LC.OverwatchDrop.pos), kind = "ambush", pos = LC.OverwatchDrop.pos, data = {} } end
+    -- (her life, while her address is on: sv_livingcity_adminplot.lua)
+    local her = LC.AdminPlotTarget and LC.AdminPlotTarget()
+    if her then out[#out + 1] = her end
     return out
 end
 
@@ -174,7 +181,10 @@ function LC.CancelOp(ply)
 end
 
 local function Fire(plan)
-    if LC.Skirmish then
+    -- (her life at her address: no raid goes, so no fight elsewhere holds it up. The fighters come out when one
+    -- of those who joined makes the attempt: sv_livingcity_adminplot.lua)
+    local own = plan.kind == "regicide"
+    if LC.Skirmish and not own then
         plan.waiting = true
         if CurTime() - plan.fireAt > WAIT_MAX then
             LC.OpPlan = nil
@@ -182,13 +192,15 @@ local function Fire(plan)
         end
         return
     end
-    local ok = LC.LaunchRebelOp and LC.LaunchRebelOp(plan.kind, plan.pos, plan.data)
+    local ok
+    if own then ok = LC.AdminPlotGo ~= nil and LC.AdminPlotGo(plan)
+    else ok = LC.LaunchRebelOp and LC.LaunchRebelOp(plan.kind, plan.pos, plan.data) end
     LC.OpPlan = nil
     if not ok then
         Radio("resistance", "The fighters couldn't get there. The operation is off: " .. plan.label .. ".")
         return
     end
-    if LC.Skirmish then LC.Skirmish.planned = plan end
+    if LC.Skirmish and not own then LC.Skirmish.planned = plan end
     plan.started = CurTime()
     for p in pairs(plan.joined) do
         if IsValid(p) then
@@ -200,9 +212,8 @@ local function Fire(plan)
 end
 LC.FireOp = Fire
 
-hook.Add("LivingCityRebelOpDone", "LivingCityOpPlan", function(purpose, sk)
-    local plan = sk and sk.planned
-    if not plan then return end
+-- It worked: everyone who joined and was there is paid, the planner a little more. How many were there.
+function LC.OpPay(plan)
     local paid = 0
     for p in pairs(plan.joined) do
         if IsValid(p) and p:Alive() and p:GetPos():DistToSqr(plan.pos) < 1500 * 1500 then
@@ -212,6 +223,13 @@ hook.Add("LivingCityRebelOpDone", "LivingCityOpPlan", function(purpose, sk)
         end
     end
     if IsValid(plan.by) and LC.AddXP then LC.AddXP(plan.by, PLANNER_XP, "planned an operation that worked") end
+    return paid
+end
+
+hook.Add("LivingCityRebelOpDone", "LivingCityOpPlan", function(purpose, sk)
+    local plan = sk and sk.planned
+    if not plan then return end
+    local paid = LC.OpPay(plan)
     Radio("resistance", string.format("The operation worked: %s. %d of ours were there.", plan.label, paid))
 end)
 

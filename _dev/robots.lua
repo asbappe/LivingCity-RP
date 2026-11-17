@@ -271,6 +271,19 @@ return function(T)
         elseif k == "count" and st.event == "served" then
             if st.pos then stand(p, st.pos) end -- (the line is served while you stand by it)
             mem.waiting = true
+        elseif k == "count" and st.event == "admin_attempt" then
+            -- her address: from the crowd, a shot at her, as the game runs one (the bullet, then the hit)
+            if now < (mem.useAt or 0) then return end
+            mem.useAt = now + 2
+            local S = LC.SpeechSession and LC.SpeechSession()
+            local her = S and ((IsValid(S.by) and S.by) or (IsValid(S.her) and S.her)) or nil
+            if not her then return end -- (her guards have her, or it is over: the job is done or calls itself off)
+            stand(p, S.crowd.pos)
+            p.lcProtectUntil = 0 -- (no longer new in the city)
+            local src = p:GetPos() + Vector(0, 0, 60)
+            local to = her:GetPos() + Vector(0, 0, 40) - src
+            hook.Run("EntityFireBullets", p, { Src = src, Dir = to:GetNormalized(), Distance = to:Length() + 50 })
+            hook.Run("EntityTakeDamage", her, _dmg(p, 20))
         elseif k == "count" and st.event == "game_done" then
             mem.game = true
             local g = LC.JobGames and LC.JobGames[p]
@@ -300,6 +313,33 @@ return function(T)
         return tonumber(p:GetPData("lcf_xp_" .. f, 0)) or 0
     end
 
+    -- A job offered only while something is on in the city that is not one of its events: the robot's city
+    -- is given it while the job is played. id -> function() -> what puts the city back.
+    local STAGED = {
+        -- her address (the city's own Administrator), at a stand and a crowd point of the robot's own
+        res_regicide = function()
+            local at = Vector(-90000, 90000, 0)
+            local stand0 = LC.AddPoint(at + Vector(0, 500, 0), 270, "speech", 0)
+            local crowd0 = LC.AddPoint(at, 90, "speechcrowd", 0)
+            if LC.SpeechSession() then LC.EndSpeech() end
+            LC.CallSpeech(nil, nil)
+            return function()
+                if LC.AdminExfil() then
+                    local guards = LC.AdminExfil().guards
+                    LC.AdminExfilEnd(false)
+                    for _, g in ipairs(guards) do if IsValid(g) then g:Remove() end end
+                end
+                if LC.SpeechSession() then LC.EndSpeech() end
+                LC.AdminPlotEnd()
+                if LC.Event == "lockdown" then LC.EndEvent(true) end
+                LC.AdminAttemptSpoken()
+                for _, e in ipairs(ents.FindByClass("lc_adminglass")) do e:Remove() end
+                LC.RemovePoint(stand0)
+                LC.RemovePoint(crowd0)
+            end
+        end,
+    }
+
     local drive
     local function play(t, f, mode)
         R.choiceN = 0
@@ -316,6 +356,11 @@ return function(T)
             _run(1)
         end
         row.event = event
+        if STAGED[t.id] then
+            local okS, undo = pcall(STAGED[t.id])
+            if not okS then row.result, row.why = "ERROR", "setting the city up for it: " .. tostring(undo) return row, p end
+            row.undo = undo
+        end
         local okA, avail = pcall(function() return not t.available or t.available(p) end)
         if not okA then row.result, row.why = "ERROR", "available: " .. tostring(avail) return row, p end
         if not avail then row.result, row.why = "not offered", "its own conditions are not met in the robot's city" return row, p end
@@ -418,6 +463,11 @@ return function(T)
     end
     local function playAndTidy(t, f, mode)
         local row, p = play(t, f, mode)
+        if row.undo then
+            local okU, errU = pcall(row.undo)
+            if not okU then row.errors = "putting the city back: " .. tostring(errU) end
+            row.undo = nil
+        end
         if row.event and LC.Event == row.event and LC.EndEvent then pcall(LC.EndEvent, true) end
         if LC.QuestOf[p] then pcall(LC.AbandonQuest, p) end
         if p and p:IsValid() then pcall(hook.Run, "PlayerDisconnected", p) p:Remove() end

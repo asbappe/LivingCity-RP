@@ -209,6 +209,7 @@ LC_MODULES = {
         "sv_livingcity_adminheli", -- (her attack helicopter: parked by the stand, her way out by air, her ride to the stand; after adminsecurity)
         "sv_livingcity_adminquestioning", -- (the would-be assassin in the cells: she leads the questioning, stunstick in hand; after adminsecurity)
         "sv_livingcity_adminhunt", -- (the would-be assassin at large: Overwatch squads hunt them, hideout by hideout; after adminsecurity)
+        "sv_livingcity_adminplot", -- (an attempt on her life under orders: Resistance fighters come out round the stand; after adminsecurity, opplan and quests)
         "sv_livingcity_speechanswer", -- (Colonel Cubbage answers her address from the camp and on Freq 7; after speech)
         "sv_livingcity_smallserver", -- (small-server mode: with few players, the city carries more of the story)
         "sv_livingcity_status", -- (things other people can see: fine clothes, home decor, a radio set, a pet bird)
