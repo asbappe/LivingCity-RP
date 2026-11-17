@@ -36,6 +36,8 @@ About 135 jobs: every job on the boards for each side it is offered to, every pa
 
 Not yet: the 36 jobs that need a situation in the city (a supply drop, a hijacked screen, a prison break, a sweep or a raid under way, night, a special role), dreams, endings, and the job games themselves (a game inside a job is ended the way an admin's test ends it; the games have their own tests). Three steps the robot cannot do yet: healing and preaching with The Blessing (they need wounded people), looting a supply drop, the mole hunt's loyalty test. A wound is patched with the game's own medkit, which the fake game does not have: the robot gives its effect to whoever it stands over.
 
+A job that needs something on in the city that is not one of its events can be given it while the robot plays it (the `STAGED` table in `robots.lua`). The first is `res_regicide` (17 November, Kill the Administrator): the city's own Administrator is called to an address at a stand and a crowd point of the robot's own, the robot fires at her from the crowd (the bullet, then the hit), and the city is put back afterwards.
+
 ## What the first runs found
 
 1. **Five "hold E on it" steps depended on which code heard E first** (fixed the same day, with the owner's yes): posting flyers (`res_propaganda`), patching the leak (`cit_pipe`), counting the ration packs and scrubbing graffiti and emptying bins (Union shifts). The things those steps put down carry the job's mark, and the older hook for job items (`LivingCityQuestItems`, sv_livingcity_quests.lua) swallowed the key press whenever it ran before the search hook (`LivingCityQuestSearch`). It now leaves a thing that is being searched to the search hook.
