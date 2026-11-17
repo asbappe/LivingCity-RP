@@ -185,6 +185,17 @@ if LC.QuestTemplates then
     for i = #LC.QuestTemplates, 1, -1 do if LC.QuestTemplates[i].id == JOB then table.remove(LC.QuestTemplates, i) end end
     LC.QuestTemplates[#LC.QuestTemplates + 1] = TEMPLATE
 end
+-- On the board from the moment the city is called, whatever else is on it. Nobody is told in words: the call
+-- to her address is heard by everyone.
+hook.Add("LivingCitySpeechCalled", "LivingCityAdminPlot", function()
+    if LC.PostDirective then LC.Try(LC.PostDirective, JOB, nil, true) end
+end)
+-- Her address is over (or her guards have begun): a job nobody took comes off the board.
+hook.Add("LivingCitySpeechEnded", "LivingCityAdminPlot", function()
+    for _, p in ipairs(LC.Postings and LC.Postings.resistance or {}) do
+        if p.tmpl == TEMPLATE and not p.q then p.dead = true end
+    end
+end)
 
 ------------------------------------------------------------------------
 -- Where they come out

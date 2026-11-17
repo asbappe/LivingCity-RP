@@ -35749,6 +35749,403 @@ _walls = savedWalls
 end
 Nov16_AdminHuntTests()
 
+-- The plot against her: an attempt under orders is a coordinated attack, a lone wolf's is not (the owner, 17 November)
+function Nov17_AdminPlotTests()
+section("17 November: an attempt on the Administrator under orders brings Resistance fighters round the stand; a lone wolf's brings nobody")
+LC.EndEvent(true)
+if LC.SpeechSession() then LC.EndSpeech() end
+if LC.AdminExfil() then LC.AdminExfilEnd(false) end
+LC.AdminPlotEnd()
+local savedWalls = _walls
+local set = _setcvar
+local stopsWas, huntWas, manWas = GetConVar("lc_stops"):GetInt(), GetConVar("lc_admin_hunt"):GetInt(), GetConVar("lc_manpower"):GetInt()
+local leakWas, gapWas = GetConVar("lc_rebel_plan_leak"):GetFloat(), GetConVar("lc_rebel_plan_minutes"):GetFloat()
+set("lc_stops", 0)
+set("lc_admin_hunt", 0) -- (the hunt is its own unit's: no squads here)
+set("lc_manpower", 1)
+set("lc_rebel_plan_leak", 0)
+set("lc_rebel_plan_minutes", 0)
+set("lc_speech_muster", 60)
+local X0 = Vector(152000, -144000, 0)
+local function at(x, y) return X0 + Vector(x, y, 0) end
+-- a square with a wall round it: the stand and the crowd inside, doorways outside the wall (nobody inside can
+-- see those) and four spots inside in plain view
+_walls = {
+    { a = at(-900, -900), b = at(900, -900) }, { a = at(-900, 1400), b = at(900, 1400) },
+    { a = at(-900, -900), b = at(-900, 1400) }, { a = at(900, -900), b = at(900, 1400) },
+}
+local stand = LC.AddPoint(at(0, 500), 270, "speech", 0)
+local crowd = LC.AddPoint(at(0, 0), 90, "speechcrowd", 0)
+local points = { stand, crowd }
+local HIDDEN = { { 1100, 500 }, { 1100, 1000 }, { 1100, 0 }, { 1100, -400 }, { -1100, 500 }, { -1100, 1000 }, { -1100, 0 }, { -1100, -400 },
+    { 0, 1600 }, { 500, 1600 }, { -500, 1600 }, { 0, -950 }, { 300, -950 }, { -300, -950 } }
+local OPEN = { { 600, 500 }, { -600, 500 }, { 0, -600 }, { 400, 900 } }
+for _, o in ipairs(HIDDEN) do points[#points + 1] = LC.AddPoint(at(o[1], o[2]), 0, "spawn", 0) end
+for _, o in ipairs(OPEN) do points[#points + 1] = LC.AddPoint(at(o[1], o[2]), 0, "spawn", 0) end
+local pool = LC.ManpowerPool("rebel")
+local reserveWas = pool.reserve
+pool.reserve = 20
+local returned, baseReturn = 0, LC.ManpowerReturn
+LC.ManpowerReturn = function(npc) if npc and npc.lcAdminPlot then returned = returned + 1 end return baseReturn(npc) end
+
+local function heard(p, needle)
+    local n = 0
+    for _, v in ipairs(p.chat or {}) do if string.find(string.lower(tostring(v)), string.lower(needle), 1, true) then n = n + 1 end end
+    return n
+end
+local function xp(p) return tonumber(p:GetPData("lcf_xp_resistance", 0)) or 0 end
+local function inCrowd(p, x, y)
+    p:SetPos(at(x, y))
+    p.aim = Vector(0, 1, 0) -- (looking at the stand)
+    p.lcProtectUntil = 0    -- (no longer new in the city)
+    p.chat = {}
+end
+local adm = newPlayer("PlotAdministrator", "admin")
+adm:SetPos(at(40000, 0))
+local reb = newPlayer("PlotAssassin", "resistance", nil, 900)
+local wolf = newPlayer("PlotLoneWolf", "resistance", nil, 900)
+local cit = newPlayer("PlotBystander", "citizen")
+local cop = newPlayer("PlotUnit", "cp")
+inCrowd(reb, 0, -300) inCrowd(wolf, 150, -300) inCrowd(cit, -150, -300) inCrowd(cop, 300, 200)
+-- every word put on a screen by a notice from here on
+local notices, baseNotice = {}, LC.Notice
+LC.Notice = function(who, kind, title, text, ...) notices[#notices + 1] = tostring(title) .. " " .. tostring(text) return baseNotice(who, kind, title, text, ...) end
+
+-- (and every line that reaches anyone's screen while the attack's own code runs: their coming, their fight, their going)
+local function lines()
+    local n = #notices
+    for _, p in ipairs(player.GetAll()) do n = n + #(p.chat or {}) end
+    return n
+end
+local during, baseStart, baseThink = 0, LC.AdminPlotStart, LC.AdminPlotThink
+LC.AdminPlotStart = function(...) local n = lines() local r = baseStart(...) during = during + (lines() - n) return r end
+LC.AdminPlotThink = function(...) local n = lines() local r = baseThink(...) during = during + (lines() - n) return r end
+local function paid(p) -- (what the job's own line says it paid)
+    for i = #(p.chat or {}), 1, -1 do
+        local n = string.match(tostring(p.chat[i]), "Complete: Kill the Administrator %(%+(%d+) XP%)")
+        if n then return tonumber(n) end
+    end
+    return 0
+end
+local function posted(p)
+    for _, x in ipairs((LC.RefreshBoard(p))) do
+        if x.tmpl and x.tmpl.id == "res_regicide" and not x.dead then return x end
+    end
+    return nil
+end
+local function attackers()
+    local n = 0
+    for npc in pairs(LC.NPCs) do if IsValid(npc) and npc.lcAdminPlot then n = n + 1 end end
+    return n
+end
+-- her address over and everything of it gone, the assassin free and forgotten
+local function tidy()
+    if LC.AdminExfil() then
+        local guards = LC.AdminExfil().guards
+        LC.AdminExfilEnd(false)
+        for _, g in ipairs(guards) do if IsValid(g) then g:Remove() end end
+    end
+    if LC.SpeechSession() then LC.EndSpeech() end
+    LC.AdminPlotEnd()
+    LC.EndEvent(true)
+    LC.AdminAttemptSpoken()
+    for _, e in ipairs(ents.FindByClass("lc_adminglass")) do e:Remove() end
+    for _, p in ipairs({ reb, wolf }) do
+        if LC.Prisoners[p] then LC.ReleasePrisoner(p) end
+        LC.AdminForget(p)
+        LC.ClearWanted(p)
+        if LC.QuestOf[p] then LC.AbandonQuest(p) end
+        p.lcqNext = 0
+    end
+end
+local function address()
+    tidy()
+    LC.CallSpeech(nil, nil)
+    local S = LC.SpeechSession()
+    return S and S.her
+end
+local function take(p)
+    local j = posted(p)
+    p.lcqNext = 0
+    return j ~= nil and LC.AcceptPosting(p, j.id) == true
+end
+
+-- the job: on the Resistance's board while her address is on, and nobody else's
+ok(posted(reb) == nil, "with no address on, Kill the Administrator is not on the Resistance's board")
+local her = address()
+ok(IsValid(her), "(the city is called to her address)")
+local job = posted(reb)
+ok(job ~= nil and job.title == "Kill the Administrator" and job.desc == "At her address. Our fighters open fire when you do.",
+    "from the call it is on the Resistance's board: a title and one short line", job and job.desc)
+ok(posted(cit) == nil and posted(cop) == nil and posted(adm) == nil, "and on nobody else's: not the citizens', the units' or her own")
+ok(heard(reb, "New job") == 0 and heard(wolf, "Kill the Administrator") == 0, "(nobody is told in words that it is there)")
+local st1 = job and job.stages[1]
+ok(job and #job.stages == 1 and st1.kind == "count" and st1.event == "admin_attempt" and st1.pos:Distance(stand.pos) < 1,
+    "its one step is making the attempt, marked at the stand: never a place to stand and wait")
+local found = 0
+for _, t in ipairs(LC.QuestTemplates) do
+    if t.id == "res_regicide" then
+        found = found + 1
+        ok(t.factions.resistance and table.Count(t.factions) == 1 and not t.violent, "(the Resistance's alone; no squad of its own comes with it)")
+    end
+end
+ok(found == 1, "(one such job)", found)
+
+-- a lone wolf: her guards get her out, he is marked, and nobody comes
+local r0 = pool.reserve
+LC.AdminAttempt(her, wolf, "shot")
+ok(LC.AdminExfil() ~= nil and LC.AdminNeverForgotten(wolf), "a lone wolf's attempt: her guards get her out and he is marked, as before")
+_run(2)
+ok(LC.AdminPlot() == nil and attackers() == 0, "and no fighter comes: he is on his own", attackers())
+ok(posted(reb) == nil, "(the job nobody took is off the board with her address)")
+
+-- under orders: the job taken, the attempt made
+her = address()
+ok(take(reb), "a member of the Resistance takes the job")
+ok(LC.AdminPlotHolds(reb) == "job" and LC.AdminPlotHolds(wolf) == nil and LC.AdminPlotHolds(cit) == nil, "holding it is what makes an attempt an ordered one")
+local xp0, cr0 = xp(reb), LC.Credits(reb)
+reb.chat, cit.chat, cop.chat, wolf.chat = {}, {}, {}, {}
+notices = {}
+r0 = pool.reserve
+LC.AdminAttempt(her, reb, "shot")
+local A = LC.AdminExfil()
+local P = LC.AdminPlot()
+local fighters = {}
+for _, f in ipairs(P and P.fighters or {}) do fighters[#fighters + 1] = f end
+ok(#fighters == 7 or #fighters == 8, "seven or eight fighters come out round the stand", #fighters)
+ok(pool.reserve == r0 - #fighters, "each out of the Resistance's reserve, as any fighter sent", pool.reserve)
+local seen, hers, own, apart, quarters, nq = 0, 0, 0, true, {}, 0
+for i, f in ipairs(fighters) do
+    local fst = LC.NPCs[f]
+    if LC.IsSeen(f:GetPos() + Vector(0, 0, 50)) then seen = seen + 1 end
+    if LC.AdminTargets[f] then hers = hers + 1 end
+    if fst and fst.role == "rebel" and fst.unmanaged and f:GetClass() == "npc_citizen" and f:GetNW2Bool("lc_prebel", false) then own = own + 1 end
+    for j = i + 1, #fighters do if f:GetPos():Distance(fighters[j]:GetPos()) < 250 then apart = false end end
+    local d = f:GetPos() - stand.pos
+    local quarter = math.floor((math.atan2(d.y, d.x) + math.pi) / (2 * math.pi) * 4) % 4
+    if not quarters[quarter] then quarters[quarter] = true nq = nq + 1 end
+end
+ok(seen == 0, "none of them where a player can see as they appear", seen)
+ok(nq == 4 and apart, "from every side of the stand, and no two together", nq)
+ok(own == #fighters, "the Resistance's own fighters, on top of the city's numbers", own)
+ok(hers == #fighters, "every one of them is someone her guards may hurt (LC.AdminTargets)", hers)
+ok(A and A.attackers[reb] and LC.AdminNeverForgotten(reb) and LC.Standing(reb) == -999 and LC.PlayerIsWanted(reb),
+    "the assassin's own punishment is as it was: marked, -999, wanted")
+ok(LC.QuestOf[reb] == nil and xp(reb) >= xp0 + 60 and LC.Credits(reb) > cr0 and heard(reb, "Complete: Kill the Administrator") == 1,
+    "the job is done and paid as the attempt is made", xp(reb) - xp0)
+ok(LC.AdminPlotHolds(reb) == nil, "and it is over: nothing is held any more")
+
+-- whom they fight, and whom they cannot hurt
+local guard = A and A.guards[1]
+local f1 = fighters[1]
+cop:SetPos(at(40000, 500)) -- (the unit has run for it)
+f1:SetPos(at(200, 300)) -- (one of them has come in through a doorway: her guards are in front of him)
+LC.AdminPlotThink(CurTime())
+local fst = LC.NPCs[f1]
+local foe = fst and fst.foe
+local foeSt = IsValid(foe) and LC.NPCs[foe]
+ok(foeSt and LC.IsSecurity(foeSt) and f1.rel[foe] == D_HT and f1:GetEnemy() == foe, "a fighter who sees her guards fires on them", tostring(foe))
+ok(IsValid(foe) and foe.rel[f1] == D_HT, "and the guard he fires on is his enemy too")
+ok(fst.state == "event" and not fst.raid, "(the attack's own to move: no raid, no shout, no dispatch line)")
+-- a unit player is theirs to fight as well (south of the wall, where no guard is in sight)
+cop:SetPos(at(0, -1700))
+local f2 = fighters[2]
+local f2From = LC.NPCs[f2].plotFrom
+f2:SetPos(at(100, -1600))
+_run(2.5)
+LC.AdminPlotThink(CurTime())
+ok(LC.NPCs[f2] and LC.NPCs[f2].foe == cop and LC.NPCs[f2].rel[cop] == D_HT, "so is a unit player they can see")
+f2:SetPos(f2From) -- (and back behind his own wall)
+cop:SetPos(at(300, 200))
+ok(IsValid(guard) and hook.Run("EntityTakeDamage", f1, _dmg(guard, 10)) ~= true and hook.Run("EntityTakeDamage", cit, _dmg(guard, 10)) == true,
+    "her guards' fire hurts the fighters, and still never a bystander")
+local npcCitizen = LC.Spawners.citizen and LC.Spawners.citizen(at(-200, -350))
+ok(hook.Run("EntityTakeDamage", cit, _dmg(f1, 10)) == true and hook.Run("EntityTakeDamage", reb, _dmg(f1, 10)) == true,
+    "a fighter's fire never hurts a citizen or one of the Resistance")
+ok(IsValid(npcCitizen) and hook.Run("EntityTakeDamage", npcCitizen, _dmg(f1, 10)) == true, "nor one of the city's own citizens")
+ok(hook.Run("EntityTakeDamage", cop, _dmg(f1, 10)) ~= true, "a unit it does")
+f1.lcAdminPlot = nil
+ok(hook.Run("EntityTakeDamage", cit, _dmg(f1, 10)) ~= true, "(that is the attack's own rule: any other fighter's stray round is as it was)")
+f1.lcAdminPlot = true
+if IsValid(npcCitizen) then npcCitizen:Remove() end
+-- nobody of the Resistance, no citizen and never her is among those they may fight
+local wrong = 0
+for _ = 1, 6 do
+    LC.AdminPlotThink(CurTime())
+    for _, f in ipairs(fighters) do
+        local e = IsValid(f) and LC.NPCs[f] and LC.NPCs[f].foe
+        if e and e ~= f and (e == reb or e == wolf or e == cit or e == her or e == adm) then wrong = wrong + 1 end
+    end
+    _run(0.5)
+end
+ok(wrong == 0, "none of them takes a citizen, a Resistance player or her for a foe", wrong)
+
+-- one falls: lost to the reserve, and not the assassin caught
+local pend = LC.AdminAttemptPending()
+local dead = fighters[#fighters]
+dead:SetHealth(0)
+hook.Run("OnNPCKilled", dead, guard, guard)
+dead:Remove()
+ok(pend ~= nil and not pend.caught, "a fighter falling is not the assassin caught: her next address still calls the traitor free")
+ok(returned == 0, "(the dead are lost to the reserve)")
+
+-- she is gone: they fight on a little, then break off and leave out of sight
+_run(5)
+LC.AdminExfilEnd(false)
+LC.AdminPlotThink(CurTime())
+ok(LC.AdminPlot() ~= nil and LC.AdminPlot().phase == "fight" and IsValid(fighters[2]), "she is away: they fight on a little while")
+f1:SetPos(at(200, 300)) -- (still in the square, in plain view)
+_run(42)
+LC.AdminPlotThink(CurTime())
+P = LC.AdminPlot()
+local left = 0
+for _, f in ipairs(fighters) do if IsValid(f) then left = left + 1 end end
+ok(P ~= nil and P.phase == "leave" and left == 1 and IsValid(f1), "forty seconds in they break off: those nobody can see are gone, the one being watched is still running", left)
+ok(LC.NPCs[f1] and f1.rel[foe] ~= D_HT and f1.goal ~= nil and f1.goal:Distance(LC.NPCs[f1].plotFrom) < 5, "he has let his enemy be and runs back the way he came")
+f1:SetPos(LC.NPCs[f1].plotFrom) -- (through his doorway, out of sight)
+_run(2)
+ok(not IsValid(f1) and LC.AdminPlot() == nil and attackers() == 0, "out of sight he is gone too, and it is over")
+ok(returned == #fighters - 1, "the living are back in the Resistance's reserve, as after any skirmish", returned)
+local said = {}
+for _, needle in ipairs({ "fighter", "our people", "ambush", "coordinated" }) do
+    for _, p in ipairs({ cit, cop, wolf, reb }) do
+        for _, v in ipairs(p.chat or {}) do if string.find(string.lower(tostring(v)), needle, 1, true) then said[#said + 1] = p:Nick() .. ": " .. tostring(v) end end
+    end
+    for _, n in ipairs(notices) do if string.find(string.lower(n), needle, 1, true) then said[#said + 1] = "notice: " .. n end end
+end
+ok(#said == 0 and during == 0, "nothing about the attack was put on anyone's screen: no chat line, no notice, from their coming to their going", during .. " " .. table.concat(said, " | "))
+ok(heard(reb, "Kill the Administrator") == 1, "(the assassin read one line of it: the job's own, done)", table.concat(reb.chat or {}, " | "))
+
+-- short of fighters: fewer; none left: nobody, and the job still pays
+her = address()
+ok(take(reb), "(the job again, at her next address)")
+pool.reserve = 3
+LC.AdminAttempt(her, reb, "shot")
+P = LC.AdminPlot()
+ok(P ~= nil and #P.fighters == 3 and pool.reserve == 0, "a reserve of three sends three", P and #P.fighters)
+her = address()
+ok(take(reb), "(and again)")
+pool.reserve = 0
+xp0 = xp(reb)
+LC.AdminAttempt(her, reb, "shot")
+ok(LC.AdminPlot() == nil and attackers() == 0, "an empty reserve sends nobody")
+ok(LC.QuestOf[reb] == nil and xp(reb) >= xp0 + 60, "(the attempt was made all the same: the job is paid)")
+pool.reserve = 20
+
+-- her address ends with nothing tried: the job is called off
+her = address()
+ok(take(reb), "(taken once more)")
+LC.EndSpeech()
+_run(1.5)
+ok(LC.QuestOf[reb] == nil and heard(reb, "Failed: Kill the Administrator") == 1 and attackers() == 0, "her address over with nothing tried: the job is called off")
+
+-- a player in the post, shot in the game's own way; and dying of it pays more
+tidy()
+adm:SetPos(at(0, 520))
+adm:SetHealth(100)
+adm.lcProtectUntil = 0
+ok(LC.CallSpeech(adm, "Citizens."), "(a player Administrator's address)")
+ok(take(reb), "(the job is on the board for hers too)")
+xp0 = xp(reb)
+hook.Run("EntityTakeDamage", adm, _dmg(reb, 20))
+_run(0.1)
+P = LC.AdminPlot()
+ok(LC.AdminExfil() ~= nil and P ~= nil and #P.fighters >= 7 and LC.QuestOf[reb] == nil, "a shot at a player Administrator by the one who holds the job: the same", P and #P.fighters)
+local plain = paid(reb)
+ok(plain >= 60 and xp(reb) - xp0 >= 60, "(sixty for the attempt)", plain)
+tidy()
+adm:SetPos(at(0, 520))
+set("lc_admin_exfil", 0) -- (her guards' exit switched off: a hit that kills her is a kill)
+LC.CallSpeech(adm, "Again.")
+ok(take(reb), "(once more)")
+reb.chat = {}
+adm.alive = false
+hook.Run("PlayerDeath", adm, reb, reb)
+ok(LC.QuestOf[reb] == nil and paid(reb) >= plain + 40, "she dies of it: forty more", paid(reb))
+ok(LC.AdminPlot() ~= nil, "(and the fighters come for her guards all the same)")
+adm.alive = true
+set("lc_admin_exfil", 1)
+
+-- the leader's order: the planning board (F2 > Resistance > Operations)
+tidy()
+adm:SetPos(at(40000, 0))
+local leader = newPlayer("PlotLieutenant", "resistance", nil, 900)
+local member = newPlayer("PlotMember", "resistance", nil, 150)
+inCrowd(leader, 100, -200) inCrowd(member, -100, -200)
+local function target()
+    for i, o in ipairs(LC.OpTargets()) do if o.kind == "regicide" then return i, o end end
+    return nil
+end
+ok(LC.CanPlanOp(leader) and target() == nil, "a Lieutenant's planning board does not list her with no address on")
+her = address()
+local idx, tgt = target()
+ok(idx ~= nil and tgt.label == "Kill the Administrator at her address" and tgt.pos:Distance(stand.pos) < 1, "while her address is on it does", tgt and tgt.label)
+leader.lcOpTargets = LC.OpTargets()
+LC.OpPlan = nil
+local planned, whyNot = LC.PlanOp(leader, idx, 2)
+if not planned and string.find(tostring(whyNot), "Too soon", 1, true) then
+    -- (an earlier unit planned an operation in the last minutes: the plan as the menu makes it)
+    LC.OpPlan = { by = leader, label = tgt.label, kind = tgt.kind, pos = tgt.pos, data = tgt.data, fireAt = CurTime() + 120, joined = { [leader] = true } }
+    planned = true
+end
+local plan = LC.OpPlan
+ok(planned and plan and plan.kind == "regicide", "the leader plans it as any operation: a target, and when", tostring(whyNot))
+ok(LC.AdminPlotHolds(leader) == "order" and LC.AdminPlotHolds(member) == nil, "whoever is in on it is under orders from then on")
+LC.JoinOp(member)
+ok(LC.AdminPlotHolds(member) == "order", "a member joins it: under orders too")
+LC.JoinOp(member)
+ok(LC.AdminPlotHolds(member) == nil, "backing out drops it")
+LC.JoinOp(member)
+member.chat = {}
+LC.FireOp(plan)
+ok(LC.OpPlan == nil and heard(member, "Go: Kill the Administrator at her address") == 1 and LC.AdminPlotHolds(member) == "order",
+    "at its hour no raid goes: those who joined are pointed to the stand, and the order stands")
+local mxp, mcr, lxp = xp(member), LC.Credits(member), xp(leader)
+pool.reserve = 20
+member.chat, leader.chat = {}, {}
+LC.AdminAttempt(her, member, "shot")
+P = LC.AdminPlot()
+ok(P ~= nil and #P.fighters >= 7 and pool.reserve == 20 - #P.fighters, "one of them makes the attempt: the fighters come", P and #P.fighters)
+ok(xp(member) >= mxp + 25 and LC.Credits(member) == mcr + 15 and xp(leader) >= lxp + 35,
+    "those who joined and are there are paid as for any planned operation, the planner a little more", xp(leader) - lxp)
+ok(LC.AdminPlotHolds(member) == nil and LC.AdminPlotHolds(leader) == nil, "and the order is done")
+ok(heard(member, "worked") == 0 and heard(leader, "fighter") == 0, "(nothing is said of it on the radio)")
+-- an order nobody acted on: over with her address; and no longer theirs as someone new
+her = address()
+LC.OpPlan = { by = leader, label = tgt.label, kind = "regicide", pos = stand.pos, data = {}, fireAt = CurTime() + 120, joined = { [leader] = true, [member] = true } }
+plan = LC.OpPlan
+hook.Run("LivingCityNewCharacter", member, "x", "test")
+ok(LC.AdminPlotHolds(member) == nil and LC.AdminPlotHolds(leader) == "order", "a new character is under nobody's orders")
+LC.FireOp(plan)
+LC.EndSpeech()
+_run(1.5)
+ok(LC.AdminPlotHolds(leader) == nil, "her address over: the order no longer stands")
+LC.OpPlan = { by = leader, label = tgt.label, kind = "regicide", pos = stand.pos, data = {}, fireAt = CurTime(), joined = { [leader] = true } }
+plan = LC.OpPlan
+LC.FireOp(plan)
+ok(LC.OpPlan == nil and LC.AdminPlotHolds(leader) == nil and attackers() == 0, "its hour with no address on: it is off, and nobody comes")
+
+-- back as it was
+tidy()
+LC.Notice = baseNotice
+LC.AdminPlotStart, LC.AdminPlotThink = baseStart, baseThink
+LC.ManpowerReturn = baseReturn
+pool.reserve = reserveWas
+for _, pt in ipairs(points) do LC.RemovePoint(pt) end
+for _, p in ipairs({ adm, reb, wolf, cit, cop, leader, member }) do
+    hook.Run("PlayerDisconnected", p)
+    p:Remove()
+end
+set("lc_stops", stopsWas)
+set("lc_admin_hunt", huntWas)
+set("lc_manpower", manWas)
+set("lc_rebel_plan_leak", leakWas)
+set("lc_rebel_plan_minutes", gapWas)
+set("lc_speech_muster", 120)
+_walls = savedWalls
+end
+Nov17_AdminPlotTests()
+
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")
 ;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)
     -- Everything here is something the owner's server, files or players depend on. The list is
