@@ -685,6 +685,18 @@ hook.Add("LivingCitySpeechEnded", "LivingCityAdminHeli", function(S)
     if not ok then Note(err) end
 end)
 
+-- Whoever hits it while it takes her out is one of her attackers, as with the APC (never one of the Combine's
+-- own: the exit sees to that). It takes no harm.
+hook.Add("EntityTakeDamage", "LivingCityAdminHeli", function(ent, dmg)
+    if not (Out and ent == Out.ent) then return end
+    local A = LC.AdminExfil and LC.AdminExfil() or nil
+    local att = dmg:GetAttacker()
+    if A and A.heli == Out and IsValid(att) and (att:IsPlayer() or att:IsNPC()) and LC.AdminAttempt then
+        LC.Try(LC.AdminAttempt, A.her, att, "helicopter")
+    end
+    return true
+end)
+
 -- Riding to the stand she cannot move (the exit holds her itself: sv_livingcity_adminsecurity.lua).
 hook.Add("StartCommand", "LivingCityAdminHeli", function(ply, cmd)
     local seat = Seated[ply]
