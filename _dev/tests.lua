@@ -35911,7 +35911,10 @@ LC.AdminAttempt(her, reb, "shot")
 local A = LC.AdminExfil()
 local P = LC.AdminPlot()
 local fighters = {}
-for _, f in ipairs(P and P.fighters or {}) do fighters[#fighters + 1] = f end
+for _, f in ipairs(P and P.fighters or {}) do
+    fighters[#fighters + 1] = f
+    f.sim = false -- (they stand where they are in this pretend world; a check puts one where it wants him)
+end
 ok(#fighters == 7 or #fighters == 8, "seven or eight fighters come out round the stand", #fighters)
 ok(pool.reserve == r0 - #fighters, "each out of the Resistance's reserve, as any fighter sent", pool.reserve)
 local seen, hers, own, apart, quarters, nq = 0, 0, 0, true, {}, 0
@@ -35947,14 +35950,17 @@ local foeSt = IsValid(foe) and LC.NPCs[foe]
 ok(foeSt and LC.IsSecurity(foeSt) and f1.rel[foe] == D_HT and f1:GetEnemy() == foe, "a fighter who sees her guards fires on them", tostring(foe))
 ok(IsValid(foe) and foe.rel[f1] == D_HT, "and the guard he fires on is his enemy too")
 ok(fst.state == "event" and not fst.raid, "(the attack's own to move: no raid, no shout, no dispatch line)")
--- a unit player is theirs to fight as well (south of the wall, where no guard is in sight)
+-- a unit player is theirs to fight as well (the two of them south of the wall, where no guard is in sight)
 cop:SetPos(at(0, -1700))
 local f2 = fighters[2]
 local f2From = LC.NPCs[f2].plotFrom
-f2:SetPos(at(100, -1600))
-_run(2.5)
+f2:SetPos(at(60, -1700))
+LC.NPCs[f2].foe, LC.NPCs[f2].plotLook = f2, 0 -- (whoever he was after from his doorway: nobody now)
 LC.AdminPlotThink(CurTime())
-ok(LC.NPCs[f2] and LC.NPCs[f2].foe == cop and LC.NPCs[f2].rel[cop] == D_HT, "so is a unit player they can see")
+local e2 = LC.NPCs[f2] and LC.NPCs[f2].foe
+ok(e2 == cop and LC.NPCs[f2].rel[cop] == D_HT, "so is a unit player they can see",
+    (e2 == f2 and "nobody" or tostring(e2 and e2.cls)) .. " at " .. tostring(IsValid(e2) and (e2:GetPos() - X0)) .. ", he at " .. tostring(f2:GetPos() - X0)
+    .. ", sees the unit " .. tostring(LC.RebelCanSee(f2, cop, 2500)) .. ", a foe to them " .. tostring(LC.RebelLooksCombine(cop)))
 f2:SetPos(f2From) -- (and back behind his own wall)
 cop:SetPos(at(300, 200))
 ok(IsValid(guard) and hook.Run("EntityTakeDamage", f1, _dmg(guard, 10)) ~= true and hook.Run("EntityTakeDamage", cit, _dmg(guard, 10)) == true,
@@ -35980,6 +35986,21 @@ for _ = 1, 6 do
 end
 ok(wrong == 0, "none of them takes a citizen, a Resistance player or her for a foe", wrong)
 
+-- every one of them is at it: fighting one of the Combine, or (nobody in sight from behind his wall) running in
+for _, f in ipairs(fighters) do if LC.NPCs[f] then LC.NPCs[f].goingTo = nil end end
+LC.AdminPlotThink(CurTime())
+local idle = 0
+for _, f in ipairs(fighters) do
+    local s = IsValid(f) and LC.NPCs[f]
+    if s then
+        local e = s.foe
+        local fighting = IsValid(e) and e ~= f and (e == cop or (LC.NPCs[e] ~= nil and LC.IsSecurity(LC.NPCs[e])))
+        local running = f.goal ~= nil and f.sched == SCHED_FORCED_GO_RUN
+        if not fighting and not running then idle = idle + 1 end
+    end
+end
+ok(idle == 0, "every one of them is fighting one of the Combine, or running in toward them", idle)
+
 -- one falls: lost to the reserve, and not the assassin caught
 local pend = LC.AdminAttemptPending()
 local dead = fighters[#fighters]
@@ -36001,7 +36022,8 @@ P = LC.AdminPlot()
 local left = 0
 for _, f in ipairs(fighters) do if IsValid(f) then left = left + 1 end end
 ok(P ~= nil and P.phase == "leave" and left == 1 and IsValid(f1), "forty seconds in they break off: those nobody can see are gone, the one being watched is still running", left)
-ok(LC.NPCs[f1] and f1.rel[foe] ~= D_HT and f1.goal ~= nil and f1.goal:Distance(LC.NPCs[f1].plotFrom) < 5, "he has let his enemy be and runs back the way he came")
+ok(LC.NPCs[f1] and LC.NPCs[f1].foe == f1 and not IsValid(f1:GetEnemy()) and f1.goal ~= nil and f1.goal:Distance(LC.NPCs[f1].plotFrom) < 5
+    and f1.sched == SCHED_FORCED_GO_RUN, "he has let his enemy be and runs back the way he came", tostring(f1.goal and (f1.goal - X0)))
 f1:SetPos(LC.NPCs[f1].plotFrom) -- (through his doorway, out of sight)
 _run(2)
 ok(not IsValid(f1) and LC.AdminPlot() == nil and attackers() == 0, "out of sight he is gone too, and it is over")
