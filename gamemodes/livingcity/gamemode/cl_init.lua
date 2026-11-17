@@ -61,7 +61,7 @@ local GUIDE = {
     } },
     { "Death, and close calls", {
         "Each character has three close calls. When you die, you use one up: you wake in the infirmary with your pockets emptied, and your character doesn't remember the fight, so don't go after whoever did it.",
-        "A used close call comes back after a few hours of playing that character. If you die with no close calls left, that character is gone for good. !characters shows how many close calls you have left.",
+        "A used close call comes back after a few hours of playing that character. Die with no close calls left and a roll decides it: an even chance that character is gone for good. !characters shows how many close calls you have left.",
         "When a character is gone for good, you come back as someone new, with a new name and citizen number, and only a little inherited from the old one.",
         "Some things are permanent for a character: the Overwatch conditioning, and being made a stalker. To be someone else, play another character or retire this one (!characters).",
         "The Union taxes hoarded credits: every half hour it takes a tenth of whatever you hold above 2000 credits. Spend them.",
@@ -128,7 +128,7 @@ local GUIDE = {
         "Everyone works: the Union gives a registered citizen a job if they don't have one (ask for a different one on F4 > Jobs). Being idle gets noticed.",
         "Curfew: you get one minute to reach your housing block (a fresh minute each time you respawn during curfew). A travel permit gets you past one curfew stop.",
         "Morning exercise (every second dawn; citizens must attend): go where the arrow on your HUD points. The drill: stay on your ring and copy every move (crouch, jump, turn around, step), and jump on every beat when the rope comes out. The parade: cheer the column as it marches past (/cheer, /salute, chant in chat, jump) and keep your enthusiasm bar up. Skipping it costs Civil Standing and your next ration (a reprimand on screen); doing it well earns some, and a few credits, plus breakfast if your standing is Trusted or better.",
-        "The Administrator's address: when she calls the city to the speech stand, every citizen must go and listen. Units who find you elsewhere warn you once, then use the stick until you black out, and you come to in the crowd. Keep your distance from her: her guards warn you once, then shoot. Anyone who tries to kill her is wanted for the rest of their life.",
+        "The Administrator's address: when she calls the city to the speech stand, every citizen must go and listen. Units who find you elsewhere warn you once, then use the stick until you black out, and you come to in the crowd. Keep your distance from her: her guards warn you once, then shoot. Anyone who tries to kill her is hunted by Overwatch, and wanted for the rest of their life.",
         "Full stomach (hunger 85 or more): 15% more XP from jobs and shifts.",
         "Top left: your credits and Civil Standing, and under them your loyalty, sympathy and corruption (what your choices in jobs and stories have made of you; they open up choices later).",
         "Combine-only areas (the Nexus, offices, armory, prison) are off limits. The doors near the cells are locked.",

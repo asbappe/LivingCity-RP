@@ -223,7 +223,7 @@ end)
 -- The death card (sv_livingcity_life.lua) goes out first, while everything of
 -- theirs is still there to tell.
 hook.Add("PlayerDeath", "LivingCityCharacter", function(ply, inflictor, attacker)
-    local function Card(gone, note) if LC.RecordDeath then LC.RecordDeath(ply, gone, attacker, note) end end
+    local function Card(gone, note, dice) if LC.RecordDeath then LC.RecordDeath(ply, gone, attacker, note, dice) end end
     -- (lcEndOfLife: an ending that is final whatever the setting, like a stalker stepping into the light)
     if (not Enabled() and not ply.lcEndOfLife) or ply.lcNoPermadeath then
         Card(false, "Permanent death is off here: you come back as yourself.")
@@ -261,7 +261,15 @@ hook.Add("PlayerDeath", "LivingCityCharacter", function(ply, inflictor, attacker
         Card(false, left > 0 and string.format("A close call: %d left.", left) or "A close call: the last one.")
         return
     end
-    Card(true)
+    -- no close calls left: their life hangs by a thread, and a roll they watch decides it (the owner,
+    -- 17 November; sv_livingcity_progress.lua). Not a stalker's or an infested's death, nor a forced end.
+    local dice = LC.LastChance and LC.LastChance(ply)
+    if dice and dice.lives then
+        LC.LastChanceSurvived(ply)
+        Card(false, nil, dice)
+        return
+    end
+    Card(true, nil, dice)
     LC.NewCharacter(ply, ply.lcEndOfLife or "death")
 end)
 

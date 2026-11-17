@@ -102,7 +102,8 @@ function GM:PlayerSpray(ply) return true end
 -- The death card is up meanwhile (lc_respawn_secs, sv_livingcity_life.lua).
 function GM:PlayerDeath(ply, inflictor, attacker)
     self.BaseClass.PlayerDeath(self, ply, inflictor, attacker)
-    ply.NextSpawnTime = CurTime() + (LC and LC.RespawnWait and LC.RespawnWait() or 6)
+    ply.NextSpawnTime = CurTime() + (LC and LC.RespawnWait and LC.RespawnWait() or 6) + (ply.lcDiceSecs or 0) -- (the roll plays first)
+    ply.lcDiceSecs = nil
 end
 
 function GM:ShowHelp(ply)

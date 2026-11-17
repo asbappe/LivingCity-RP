@@ -98,7 +98,7 @@ function LC.StandingRows(ply)
     end
     if LC.CloseCallsLeft then
         local left = LC.CloseCallsLeft(ply)
-        Row("You", "Close calls", left, "Times you can go down and live. Out of them, the next death is the end of this person (they come back every few hours).", left == 0)
+        Row("You", "Close calls", left, "Times you can go down and live. Out of them, your life hangs on a roll (they come back every few hours).", left == 0)
     end
     if LC.Legacy then
         local lg = LC.Legacy(ply) or {}

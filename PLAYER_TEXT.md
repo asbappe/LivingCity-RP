@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version b5697c2. Admin-only console messages and log lines are left out.
+Made from version febabbf. Admin-only console messages and log lines are left out.
 
-12919 lines, from 356 files.
+12925 lines, from 356 files.
 
 ## Contents
 
@@ -115,7 +115,7 @@ Made from version b5697c2. Admin-only console messages and log lines are left ou
 - [cl_livingcity_labor.lua](#cllivingcitylaborlua-cllivingcitylaborlua) (20)
 - [cl_livingcity_lagwatch.lua](#cllivingcitylagwatchlua-cllivingcitylagwatchlua) (27)
 - [cl_livingcity_layoutbrowser.lua](#cllivingcitylayoutbrowserlua-cllivingcitylayoutbrowserlua) (35)
-- [cl_livingcity_life.lua](#cllivingcitylifelua-cllivingcitylifelua) (11)
+- [cl_livingcity_life.lua](#cllivingcitylifelua-cllivingcitylifelua) (17)
 - [cl_livingcity_market.lua](#cllivingcitymarketlua-cllivingcitymarketlua) (17)
 - [cl_livingcity_moregames.lua](#cllivingcitymoregameslua-cllivingcitymoregameslua) (44)
 - [cl_livingcity_needs.lua](#cllivingcityneedslua-cllivingcityneedslua) (88)
@@ -154,9 +154,9 @@ Made from version b5697c2. Admin-only console messages and log lines are left ou
 - [sv_livingcity.lua](#svlivingcitylua-svlivingcitylua) (51)
 - [the actions menu (server side)](#the-actions-menu-server-side-svlivingcityactionslua) (8)
 - [acts (server). See sh_livingcity_acts.lua for the list](#acts-server-see-shlivingcityactslua-for-the-list-svlivingcityactslua) (7)
-- [the hunt for whoever tried to kill the Administrator](#the-hunt-for-whoever-tried-to-kill-the-administrator-svlivingcityadminhuntlua) (5)
+- [the hunt for whoever tried to kill the Administrator](#the-hunt-for-whoever-tried-to-kill-the-administrator-svlivingcityadminhuntlua) (4)
 - [the would-be assassin is hers to question (the owner, 16 November)](#the-would-be-assassin-is-hers-to-question-the-owner-16-november-svlivingcityadminquestioninglua) (13)
-- [the Administrator's security (the owner, 15 November)](#the-administrators-security-the-owner-15-november-svlivingcityadminsecuritylua) (8)
+- [the Administrator's security (the owner, 15 November)](#the-administrators-security-the-owner-15-november-svlivingcityadminsecuritylua) (9)
 - [testing tools for admins](#testing-tools-for-admins-svlivingcityadmintoolslua) (50)
 - [citizens who show you the way](#citizens-who-show-you-the-way-svlivingcityadvicelua) (24)
 - [Half-Life 2's ammo limits](#half-life-2s-ammo-limits-svlivingcityammolua) (4)
@@ -1012,7 +1012,7 @@ Made from version b5697c2. Admin-only console messages and log lines are left ou
 - "Warnings and announcements appear on screen as well as in chat: people talking to you appear as subtitles, everything else as cards at the top. C > Settings turns the cards off."  (text, line 60)
 - "Death, and close calls"  (text, line 62)
 - "Each character has three close calls. When you die, you use one up: you wake in the infirmary with your pockets emptied, and your character doesn't remember the fight, so don't go after whoever did it."  (text, line 63)
-- "A used close call comes back after a few hours of playing that character. If you die with no close calls left, that character is gone for good. !characters shows how many close calls you have left."  (text, line 64)
+- "A used close call comes back after a few hours of playing that character. Die with no close calls left and a roll decides it: an even chance that character is gone for good. !characters shows how many close calls you have left."  (text, line 64)
 - "When a character is gone for good, you come back as someone new, with a new name and citizen number, and only a little inherited from the old one."  (text, line 65)
 - "Some things are permanent for a character: the Overwatch conditioning, and being made a stalker. To be someone else, play another character or retire this one (!characters)."  (text, line 66)
 - "The Union taxes hoarded credits: every half hour it takes a tenth of whatever you hold above 2000 credits. Spend them."  (text, line 67)
@@ -1075,7 +1075,7 @@ Made from version b5697c2. Admin-only console messages and log lines are left ou
 - "Everyone works: the Union gives a registered citizen a job if they don't have one (ask for a different one on F4 > Jobs). Being idle gets noticed."  (text, line 128)
 - "Curfew: you get one minute to reach your housing block (a fresh minute each time you respawn during curfew). A travel permit gets you past one curfew stop."  (text, line 129)
 - "Morning exercise (every second dawn; citizens must attend): go where the arrow on your HUD points. The drill: stay on your ring and copy every move (crouch, jump, turn around, step), and jump on every beat when the rope comes out. The parade: cheer the column as it marches past (/cheer, /salute, chant in chat, jump) and keep your enthusiasm bar up. Skipping it costs Civil Standing and your next ration (a reprimand on screen); doing it well earns some, and a few credits, plus breakfast if your standing is Trusted or better."  (text, line 130)
-- "The Administrator's address: when she calls the city to the speech stand, every citizen must go and listen. Units who find you elsewhere warn you once, then use the stick until you black out, and you come to in the crowd. Keep your distance from her: her guards warn you once, then shoot. Anyone who tries to kill her is wanted for the rest of their life."  (text, line 131)
+- "The Administrator's address: when she calls the city to the speech stand, every citizen must go and listen. Units who find you elsewhere warn you once, then use the stick until you black out, and you come to in the crowd. Keep your distance from her: her guards warn you once, then shoot. Anyone who tries to kill her is hunted by Overwatch, and wanted for the rest of their life."  (text, line 131)
 - "Full stomach (hunger 85 or more): 15% more XP from jobs and shifts."  (text, line 132)
 - "Top left: your credits and Civil Standing, and under them your loyalty, sympathy and corruption (what your choices in jobs and stories have made of you; they open up choices later)."  (text, line 133)
 - "Combine-only areas (the Nexus, offices, armory, prison) are off limits. The doors near the cells are locked."  (text, line 134)
@@ -1360,20 +1360,20 @@ Made from version b5697c2. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): Build mode
 
-- "[Miscount] Build mode ON: spawn menu (Q), context menu (C), physgun, toolgun and noclip. The Miscount Editor is under Q > Tools > Miscount. Type !build again to go back to playing."  (chat message, line 133)
+- "[Miscount] Build mode ON: spawn menu (Q), context menu (C), physgun, toolgun and noclip. The Miscount Editor is under Q > Tools > Miscount. Type !build again to go back to playing."  (chat message, line 134)
 
 > Note for you (not shown in game): part of: lcset build
 
-- "[Miscount] Build mode OFF. You're just a person in the city now."  (chat message, line 138)
+- "[Miscount] Build mode OFF. You're just a person in the city now."  (chat message, line 139)
 
 > Note for you (not shown in game): typing in chat
 
-- "[Miscount] Build mode is for admins."  (chat message, line 160)
+- "[Miscount] Build mode is for admins."  (chat message, line 161)
 
 > Note for you (not shown in game): Arriving
 
-- "[Miscount] Welcome to the city. F1: what you can do (and the guide). F2: what your side and job can do. F3 pockets, F4 your jobs, career and factions."  (chat message, line 177)
-- "[Miscount] You're an admin: !build switches to build mode for the editor, physgun and noclip."  (chat message, line 179)
+- "[Miscount] Welcome to the city. F1: what you can do (and the guide). F2: what your side and job can do. F3 pockets, F4 your jobs, career and factions."  (chat message, line 178)
+- "[Miscount] You're an admin: !build switches to build mode for the editor, physgun and noclip."  (chat message, line 180)
 
 ## cl_livingcity.lua (cl_livingcity.lua)
 
@@ -3289,28 +3289,37 @@ Made from version b5697c2. Admin-only console messages and log lines are left ou
 `gamemodes/livingcity/gamemode/modules/client/cl_livingcity_life.lua`
 
 
+> Note for you (not shown in game): part of: draw dice
+
+- "You have no "close calls" left."  (text, line 61)
+- "Your life hangs by a thread."  (text, line 62)
+- "You did not survive the assassination attempt."  (text, line 66)
+- "You did not survive."  (text, line 66)
+
 > Note for you (not shown in game): "3 hours 12 minutes", "2 days 5 hours", "40 minutes", "less than a minute"
 
-- "less than a minute"  (text, line 59)
+- "less than a minute"  (text, line 100)
 
 > Note for you (not shown in game): The lines under the name, in order.
 
-- "Lived {secs} in the city."  (text, line 75)
+- "Lived {secs} in the city."  (text, line 116)
 
 > Note for you (not shown in game): part of: death lines
 
-- "Lived at least {secs} in the city."  (text, line 77)
-- "Lived in the city since before anyone kept count."  (text, line 79)
-- "Nobody knew {her} name."  (text, line 83)
-- "One person knew {her} name."  (text, line 85)
-- "people knew {her} name."  (text, line 87)
+- "Lived at least {secs} in the city."  (text, line 118)
+- "Lived in the city since before anyone kept count."  (text, line 120)
+- "Nobody knew {her} name."  (text, line 124)
+- "One person knew {her} name."  (text, line 126)
+- "people knew {her} name."  (text, line 128)
 
 > Note for you (not shown in game): the game's post draw hud moment
 
-- "Citizen {cid}"  (drawn on screen, line 125)
-- "You died."  (drawn on screen, line 129)
-- "That person is gone."  (drawn on screen, line 142)
-- "Click to go on."  (drawn on screen, line 146)
+- "Click to go on."  (text, line 173)
+- "Citizen {cid}"  (drawn on screen, line 189)
+- "You died."  (drawn on screen, line 193)
+- "That person is gone."  (drawn on screen, line 206)
+- "New Life Rule: your next character knows nothing of this; no revenge."  (drawn on screen, line 209)
+- "Click to go on."  (drawn on screen, line 214)
 
 ## cl_livingcity_market.lua (cl_livingcity_market.lua)
 
@@ -4760,7 +4769,7 @@ Made from version b5697c2. Admin-only console messages and log lines are left ou
 - "%s credits   \|   standing %s%s"  (message, line 52)
 - "\|   playing now"  (message, line 53)
 - "%d close call%s left"  (message, line 55)
-- "No close calls left: the next death is the end"  (drawn on screen, line 55)
+- "No close calls left"  (drawn on screen, line 55)
 
 > Note for you (not shown in game): Realistic or Relaxed survival (sv_livingcity_survivalmode.lua)
 
@@ -5455,17 +5464,13 @@ Made from version b5697c2. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: admin hunt send
 
-- "Hunt for %s: a squad of %d sent to %s"  (message, line 227)
-- "a Resistance hideout"  (message, line 228)
-- "where they were last seen"  (message, line 228)
+- "Hunt for %s: a squad of %d sent to %s"  (message, line 222)
+- "a Resistance hideout"  (message, line 223)
+- "where they were last seen"  (message, line 223)
 
 > Note for you (not shown in game): (walking a prisoner in, standing over one cuffed on the street, or in a fight: when that is done)
 
-- "a squad of the hunt for the Administrator's attacker going back"  (text, line 264)
-
-> Note for you (not shown in game): part of: start hunt
-
-- "Dispatch: all units, {Name} tried to kill the Administrator. Overwatch is hunting them. Take them alive."  (text, line 315)
+- "a squad of the hunt for the Administrator's attacker going back"  (text, line 259)
 
 ## the would-be assassin is hers to question (the owner, 16 November) (sv_livingcity_adminquestioning.lua)
 
@@ -5515,21 +5520,22 @@ Made from version b5697c2. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): The close call is used up, and she is told (in the dark).
 
-- "A close call"  (on-screen notice, line 1107)
-- "You were hit at your address. Your guards got you out. {or}"  (on-screen notice, line 1107)
+- "A close call"  (on-screen notice, line 1112)
+- "You were hit at your address. Your guards got you out. {or}"  (on-screen notice, line 1112)
 
 > Note for you (not shown in game): part of: close hit
 
-- "A close call"  (on-screen notice, line 1361)
-- "You are badly hit. Your guards are getting you out."  (on-screen notice, line 1361)
+- "No close calls left"  (on-screen notice, line 1411)
+- "A close call"  (on-screen notice, line 1411)
+- "You are badly hit. Your guards are getting you out."  (on-screen notice, line 1411)
 
 > Note for you (not shown in game): A shot that does not hit her: a bullet that lands within 20 feet of her, or passes that near, is an attempt all the same; so is a bolt, a rocket or an energy ball that comes that near (LC.AdminGrenadeThink).
 
-- "near miss"  (text, line 1424)
+- "near miss"  (text, line 1474)
 
 > Note for you (not shown in game): where it lands, or the nearest it comes to her on the way
 
-- "near miss"  (text, line 1446)
+- "near miss"  (text, line 1496)
 
 ## testing tools for admins (sv_livingcity_admintools.lua)
 
@@ -6755,44 +6761,44 @@ Made from version b5697c2. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): Whole words that are never fine in a name.
 
-- "Choose a realistic name for a person living in this city and era: an ordinary name, first and last if you like. No celebrities, characters from games, films or shows, memes or joke names."  (text, line 313)
+- "Choose a realistic name for a person living in this city and era: an ordinary name, first and last if you like. No celebrities, characters from games, films or shows, memes or joke names."  (text, line 321)
 
 > Note for you (not shown in game): Returns true, the cleaned-up name; or false, why not.
 
-- "Names are between 3 and 26 characters long."  (text, line 325)
-- "Names use letters only: no numbers or symbols."  (text, line 326)
-- "A name is one to three words: a first name, and a surname if you like."  (text, line 329)
+- "Names are between 3 and 26 characters long."  (text, line 333)
+- "Names use letters only: no numbers or symbols."  (text, line 334)
+- "A name is one to three words: a first name, and a surname if you like."  (text, line 337)
 
 > Note for you (not shown in game): part of: validate character name
 
-- "Each part of your name needs at least two letters."  (text, line 332)
-- "That doesn't read like a real name."  (text, line 333)
-- "That doesn't read like a real name."  (text, line 334)
-- "That name isn't allowed. {REMINDER}"  (text, line 336)
-- "That name looks like a celebrity, a character or a joke. {REMINDER}"  (text, line 342)
+- "Each part of your name needs at least two letters."  (text, line 340)
+- "That doesn't read like a real name."  (text, line 341)
+- "That doesn't read like a real name."  (text, line 342)
+- "That name isn't allowed. {REMINDER}"  (text, line 344)
+- "That name looks like a celebrity, a character or a joke. {REMINDER}"  (text, line 350)
 
 > Note for you (not shown in game): a new life: first, a citizen or a vortigaunt? (sv_livingcity_vortstart.lua)
 
-- "[Civil Intake] Who you are goes on your registration form, at the Civil Intake terminal."  (chat message, line 390)
+- "[Civil Intake] Who you are goes on your registration form, at the Civil Intake terminal."  (chat message, line 398)
 
 > Note for you (not shown in game): the game answering something done in a window (lcc_submit)
 
-- "One moment."  (text, line 410)
+- "One moment."  (text, line 418)
 
 > Note for you (not shown in game): a new name and face is no way out of trouble
 
-- "Not while you're wanted or in custody."  (text, line 414)
+- "Not while you're wanted or in custody."  (text, line 422)
 
 > Note for you (not shown in game): the game answering something done in a window (lcc_submit)
 
-- "Choose one of the faces shown."  (text, line 421)
-- "Someone in the city already has that name."  (text, line 424)
-- "That person can't come back. Choose another name."  (text, line 425)
-- "[Miscount] You are %s, citizen %s."  (message, line 438)
+- "Choose one of the faces shown."  (text, line 429)
+- "Someone in the city already has that name."  (text, line 432)
+- "That person can't come back. Choose another name."  (text, line 433)
+- "[Miscount] You are %s, citizen %s."  (message, line 446)
 
 > Note for you (not shown in game): the console command lc_setname
 
-- "[Miscount] Staff changed your name to {name}."  (chat message, line 478)
+- "[Miscount] Staff changed your name to {name}."  (chat message, line 486)
 
 ## checkpoints, turrets, and holding the infestation back (sv_livingcity_checkpoints.lua)
 
@@ -8049,44 +8055,44 @@ Made from version b5697c2. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: use cpsupply
 
-- "[CP Commissary] Your next issue is in %d seconds. The Civil Protection unit counter is open."  (message, line 170)
-- "[CP Commissary] Issued: {got}."  (chat message, line 176)
-- "[CP Commissary] You're fully supplied. The Civil Protection unit counter is open."  (chat message, line 178)
+- "[CP Commissary] Your next issue is in %d seconds. The Civil Protection unit counter is open."  (message, line 171)
+- "[CP Commissary] Issued: {got}."  (chat message, line 177)
+- "[CP Commissary] You're fully supplied. The Civil Protection unit counter is open."  (chat message, line 179)
 
 > Note for you (not shown in game): the daily kit, on top of the issue (and whatever the wait for the next one)
 
-- "[CP Commissary] Today's kit: {kit}."  (chat message, line 184)
+- "[CP Commissary] Today's kit: {kit}."  (chat message, line 185)
 
 > Note for you (not shown in game): A unit's cuffs, back up to three, free (the owner, 12 November: "CP units should get them automatically when going to a CP Commissary"). How many were given.
 
-- "Cuffs issued"  (on-screen notice, line 194)
-- "%d pair%s of cuffs: you carry %d again."  (message, line 194)
+- "Cuffs issued"  (on-screen notice, line 195)
+- "%d pair%s of cuffs: you carry %d again."  (message, line 195)
 
 > Note for you (not shown in game): (never Half-Life 2's charger hum: that file loops for ever, and did: the owner, 11 November, "the charging sound NEVER STOPS")
 
-- "[CP Commissary] Your vest is charging. Stay here until it's full."  (chat message, line 222)
-- "[CP Commissary] Vest charged ({want})."  (chat message, line 227)
+- "[CP Commissary] Your vest is charging. Stay here until it's full."  (chat message, line 240)
+- "[CP Commissary] Vest charged ({want})."  (chat message, line 245)
 
 > Note for you (not shown in game): A Resistance hacker's multitool on the Commissary (the owner, 1 November): ten seconds at it, unseen, and it hands out what it would to a unit, off the books: bandages, pistol rounds, a vest cell, now and then a smoke grenade. Then it's locked down for lc_cpsupply_hack_minutes (10). Seen at it: wanted.
 
-- "It's locked down after the last time. Not yet."  (text, line 256)
-- "Get up close to it."  (text, line 257)
-- "Tampering with a Civil Protection terminal"  (text, line 259)
-- "A unit saw you at it. You're wanted."  (text, line 260)
+- "It's locked down after the last time. Not yet."  (text, line 274)
+- "Get up close to it."  (text, line 275)
+- "Tampering with a Civil Protection terminal"  (text, line 277)
+- "A unit saw you at it. You're wanted."  (text, line 278)
 
 > Note for you (not shown in game): part of: hack cpsupply
 
-- "Into the Commissary's issue system..."  (progress bar, line 263)
-- "You pull the multitool away."  (text, line 263)
+- "Into the Commissary's issue system..."  (progress bar, line 281)
+- "You pull the multitool away."  (text, line 281)
 
 > Note for you (not shown in game): part of: done
 
-- "Tampering with a Civil Protection terminal"  (text, line 265)
-- "a box of pistol rounds"  (text, line 271)
-- "a vest cell"  (text, line 272)
-- "a smoke grenade"  (text, line 273)
-- "[Resistance] The Commissary thinks you're a unit, for a moment: {or}. It locks itself down behind you."  (chat message, line 275)
-- "the Combine's own supplies"  (text, line 276)
+- "Tampering with a Civil Protection terminal"  (text, line 283)
+- "a box of pistol rounds"  (text, line 289)
+- "a vest cell"  (text, line 290)
+- "a smoke grenade"  (text, line 291)
+- "[Resistance] The Commissary thinks you're a unit, for a moment: {or}. It locks itself down behind you."  (chat message, line 293)
+- "the Combine's own supplies"  (text, line 294)
 
 ## headcrab hunts for the Resistance's supply crate (sv_livingcity_crabhunt.lua)
 
@@ -13208,7 +13214,7 @@ Made from version b5697c2. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): !bob
 
-- "[Miscount] The camera sway is off for everyone on this server."  (chat message, line 475)
+- "[Miscount] The camera sway is off for everyone on this server."  (chat message, line 486)
 
 ## what named people say, recorded (the owner, 11 November: "architect and design natural (sv_livingcity_lines.lua)
 
@@ -15927,48 +15933,48 @@ Made from version b5697c2. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): a timer (regularly)
 
-- "A close call"  (on-screen notice, line 154)
-- "You wake up in the infirmary, sore and empty-handed: what was in your pockets is gone. You don't remember the fight, or who started it; leave it be. {or}"  (on-screen notice, line 155)
+- "A close call"  (on-screen notice, line 204)
+- "You wake up in the infirmary, sore and empty-handed: what was in your pockets is gone. You don't remember the fight, or who started it; leave it be. {or}"  (on-screen notice, line 205)
 
 > Note for you (not shown in game): Careers for life Why this person can't take up another faction (nil if they can).
 
-- "Combine property doesn't choose. Only death ends a stalker."  (text, line 190)
-- "The conditioning can't be undone: this person is Overwatch for life. Another character (!characters) can be someone else."  (text, line 193)
-- "stepped into the light"  (text, line 217)
-- "was taken out of the city by staff"  (text, line 217)
-- "died infested"  (text, line 217)
+- "Combine property doesn't choose. Only death ends a stalker."  (text, line 240)
+- "The conditioning can't be undone: this person is Overwatch for life. Another character (!characters) can be someone else."  (text, line 243)
+- "stepped into the light"  (text, line 267)
+- "was taken out of the city by staff"  (text, line 267)
+- "died infested"  (text, line 267)
 
 > Note for you (not shown in game): a timer (regularly)
 
-- "An inheritance"  (on-screen notice, line 243)
-- "A relative you barely knew has left you %d credits. It isn't much. It's yours."  (message, line 243)
+- "An inheritance"  (on-screen notice, line 293)
+- "A relative you barely knew has left you %d credits. It isn't much. It's yours."  (message, line 293)
 
 > Note for you (not shown in game): Retiring someone
 
-- "Not while you're dead."  (text, line 253)
-- "Not while you're wanted."  (text, line 254)
-- "Not while you're in custody."  (text, line 255)
-- "Not in the middle of a fight."  (text, line 256)
-- "A stalker doesn't retire. There's only the one way out."  (text, line 257)
+- "Not while you're dead."  (text, line 303)
+- "Not while you're wanted."  (text, line 304)
+- "Not while you're in custody."  (text, line 305)
+- "Not in the middle of a fight."  (text, line 306)
+- "A stalker doesn't retire. There's only the one way out."  (text, line 307)
 
 > Note for you (not shown in game): part of: retire character
 
-- "has left the city for good. Somebody new takes their place."  (text, line 262)
+- "has left the city for good. Somebody new takes their place."  (text, line 312)
 
 > Note for you (not shown in game): part of: levy
 
-- "Union levy"  (on-screen notice, line 277)
-- "%d credits redistributed: holdings above %d are shared with the Union. Spend it, or lose it slowly."  (message, line 277)
+- "Union levy"  (on-screen notice, line 327)
+- "%d credits redistributed: holdings above %d are shared with the Union. Spend it, or lose it slowly."  (message, line 327)
 
 > Note for you (not shown in game): Things wear out (the owner, 1 November: so credits keep moving), and a legacy that shows A tool used is a little worn: one use in lc_wear_uses (10, on average) is its last. (A job's own weedkiller is topped up by the job: LC.IssueWeedkiller.)
 
-- "Your {id} is worn out."  (text, line 303)
+- "Your {id} is worn out."  (text, line 353)
 
 > Note for you (not shown in game): A title for a player with many lives behind them (shown under their name), never power or money.
 
-- "Legend of the canals"  (text, line 308)
-- "Ghost of the old city"  (text, line 308)
-- "Old hand"  (text, line 308)
+- "Legend of the canals"  (text, line 358)
+- "Ghost of the old city"  (text, line 358)
+- "Old hand"  (text, line 358)
 
 ## street furniture, and the city's voice (sv_livingcity_propaganda.lua)
 
@@ -20767,7 +20773,7 @@ Made from version b5697c2. Admin-only console messages and log lines are left ou
 > Note for you (not shown in game): part of: standing rows
 
 - "Close calls"  (text, line 101)
-- "Times you can go down and live. Out of them, the next death is the end of this person (they come back every few hours)."  (text, line 101)
+- "Times you can go down and live. Out of them, your life hangs on a roll (they come back every few hours)."  (text, line 101)
 - "Lives lived"  (text, line 106)
 - "Every person you've been before this one. Titles come with many lives behind you; never power or money."  (text, line 107)
 - "Who you live with: the same block, each other's crates and lockers, the head's apartment keys. F2 > Me (More) > My household."  (text, line 112)
