@@ -117,10 +117,10 @@ local POINT_COLORS = {
     infodesk = Color(120, 190, 240), civposter = Color(210, 210, 160),
     dream = Color(200, 160, 255), -- (the shared dreams: sv_livingcity_dreams.lua)
     sterm = Color(150, 200, 255), -- (a Combine zone's stalker works a terminal here)
-    speechcrowd = Color(230, 200, 120), adminapc = Color(230, 200, 120), -- (where the city gathers for her address: sv_livingcity_speech.lua)
+    speechcrowd = Color(230, 200, 120), adminapc = Color(230, 200, 120), adminheli = Color(230, 200, 120), -- (where the city gathers for her address: sv_livingcity_speech.lua)
 }
 local POINT_NAMES = {
-    jogroute = "JOGGING ROUTE", yard = "EXERCISE YARD", parade = "PARADE ROUTE", waymark = "WAY MARK", dream = "DREAM POINT", sterm = "STALKER TERMINAL", speechcrowd = "SPEECH CROWD", adminapc = "ADMINISTRATOR'S APC",
+    jogroute = "JOGGING ROUTE", yard = "EXERCISE YARD", parade = "PARADE ROUTE", waymark = "WAY MARK", dream = "DREAM POINT", sterm = "STALKER TERMINAL", speechcrowd = "SPEECH CROWD", adminapc = "ADMINISTRATOR'S APC", adminheli = "ADMINISTRATOR'S HELICOPTER",
     idle = "LOITER", sit = "SIT", sitchair = "BENCH", lean = "LEAN", queue = "LINE", patrol = "PATROL",
     checkpoint = "CHECKPOINT", spawn = "SPAWN/EXIT", cell = "CELL", release = "RELEASE",
     work = "WORKPLACE", vending = "VENDING", dispenser = "RATIONS", terminal = "COMMISSARY", stove = "STOVE", fire = "FIRE",

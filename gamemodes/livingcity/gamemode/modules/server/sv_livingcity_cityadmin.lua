@@ -777,7 +777,8 @@ local function GuardTick(now)
                         local hp = hold.pos - hold.fwd * 40 + hold.right * (i % 2 == 0 and 50 or -50)
                         if npc:GetPos():DistToSqr(hp) > 80 * 80 then GoTo(npc, hp, npc:GetPos():DistToSqr(hp) > 450 * 450) end
                     end
-                    local dd = hold and 0 or npc:GetPos():DistToSqr(admin:GetPos())
+                    -- (while she is aboard her helicopter, sv_livingcity_adminheli.lua, they wait on the ground, as when told to hold)
+                    local dd = (hold or admin.lcAloft) and 0 or npc:GetPos():DistToSqr(admin:GetPos())
                     -- stuck (a door, a corner: the owner, 2 November): not moving for 4 seconds while
                     -- more than 250 units behind (more at Far), and they're brought to the Administrator's side
                     local stuckAt = math.max(250, d.go + 90)
