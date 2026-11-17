@@ -36102,7 +36102,33 @@ do
     LC.AdminExfilEnd(false)
     LC.AdminHeliThink(CurTime())
     ok(not IsValid(heli), "(the exit over, the helicopter it did not use is gone)")
+    Clean(guards)
+    adm:SetPos(AT_DOOR)
+    LC.CallSpeech(adm, "Citizens.")
+    ok(LC.AdminHeli().ride == nil and adm:GetPos():Distance(stand.pos) < 100 and #Helis() == 1 and IsValid(LC.SpeechSession().heli),
+        "nor can it fetch her from her door: she is put at the stand as ever, and the one helicopter is the parked one", #Helis())
     util.TraceLine, util.TraceHull = lineWas, hullWas
+    Clean(Guards())
+    -- her office high above the stand: it flies higher than it otherwise would, to hover nearest her door
+    local groundWas = _groundFn
+    _groundFn = function(x) return x > H0.x + 4000 and 1400 or 0 end
+    door:SetPos(H0 + Vector(4700, 520, 1400))
+    adm:SetPos(AT_STAND)
+    LC.CallSpeech(adm, "Citizens.")
+    heli = LC.SpeechSession().heli
+    guards = Guards()
+    A = Attempt(adm)
+    last = nil
+    Tick(600, function()
+        if not LC.AdminExfil() then return true end
+        if IsValid(heli) then last = heli:GetPos() end
+        return false
+    end)
+    ok(last and last.z > 1200 and math.abs(last.z - 1400) < 200 and (last - door:GetPos()):Length2D() < 200,
+        "her office door high above the stand: it flies higher than usual, to hover nearest it", last and tostring(last - H0))
+    ok(math.abs(adm:GetPos().z - 1400) < 20 and (adm:GetPos() - FRONT):Length2D() < 60, "and she stands in front of it, up there", tostring(adm:GetPos() - H0))
+    door:SetPos(H0 + Vector(4700, 520, 0))
+    _groundFn = groundWas
     Clean(guards)
 end
 

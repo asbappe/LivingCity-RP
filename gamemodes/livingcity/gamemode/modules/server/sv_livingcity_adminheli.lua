@@ -78,6 +78,7 @@ local SPEAK_AFTER = 6       -- her address speaks no sooner than this after she 
 local P            -- the helicopter parked for an address: { ent, pt, S (its address; nil: kept for the exit under way) }
 local R            -- her ride to the stand under way: { her, S, pt, ent, f, t0 }
 local Out          -- the one the exit took (A.heli, sv_livingcity_adminsecurity.lua)
+local making       -- (the one being made for a ride, until it is known the ride can be flown)
 local Flights = {} -- helicopters flying off by themselves
 local Seated = {}  -- [her] = what was changed on her when she was put aboard
 
@@ -183,6 +184,22 @@ local function HoverNear(spot, flyZ, hull, from, skip)
         end
     end
     return best, bestTop
+end
+
+-- Its way between where it stands on the ground (base) and the open sky nearest a spot: straight up over base
+-- (top), across to over where it hovers (over), and down (hover). Of the heights it may fly at, the one that
+-- lets it hover nearest the spot (the lowest, when they are as good). Nil when it cannot fly it untouched.
+local function Way(base, spot, hull, skip)
+    local best
+    for _, z in ipairs(Heights(base, hull, skip)) do
+        local top = Vector(base.x, base.y, z)
+        if Clear(base + Vector(0, 0, LIFT_CLEAR), top, hull.slim, skip) then
+            local hover, over = HoverNear(spot, z, hull, top, skip)
+            local d = hover and hover:DistToSqr(spot)
+            if d and (not best or d < best.d - 1) then best = { d = d, top = top, over = over, hover = hover } end
+        end
+    end
+    return best
 end
 
 -- The edge of the sky: the furthest it can be flown to, straight, from a spot at that height. Nil when boxed in.
@@ -386,14 +403,8 @@ end
 local function PlanExit(ent, target)
     local hull = HullOf(ent)
     local rest = ent:GetPos()
-    for _, z in ipairs(Heights(rest, hull, ent)) do
-        local top0 = Vector(rest.x, rest.y, z)
-        if Clear(rest + Vector(0, 0, LIFT_CLEAR), top0, hull.slim, ent) then
-            local hover, top1 = HoverNear(target, z, hull, top0, ent)
-            if hover then return { hull = hull, rest = rest, top0 = top0, top1 = top1, hover = hover } end
-        end
-    end
-    return nil
+    local w = Way(rest, target, hull, ent)
+    return w and { hull = hull, rest = rest, top0 = w.top, top1 = w.over, hover = w.hover } or nil
 end
 
 local function Take(A)
@@ -502,14 +513,8 @@ end
 local function PlanRide(ent, pt, at)
     local hull = HullOf(ent)
     local pad = Rest(pt, hull)
-    for _, z in ipairs(Heights(pad, hull, ent)) do
-        local topL = Vector(pad.x, pad.y, z)
-        if Clear(topL, pad + Vector(0, 0, LIFT_CLEAR), hull.slim, ent) then
-            local hover, topH = HoverNear(at, z, hull, topL, ent)
-            if hover then return { hull = hull, pad = pad, topL = topL, topH = topH, hover = hover, far = FarOut(topH, hull, ent) } end
-        end
-    end
-    return nil
+    local w = Way(pad, at, hull, ent)
+    return w and { hull = hull, pad = pad, topL = w.top, topH = w.over, hover = w.hover, far = FarOut(w.over, hull, ent) } or nil
 end
 
 -- On her feet beside it, facing the stand.
@@ -572,12 +577,9 @@ local function Fetch(S)
     if not out or at:DistToSqr(c) > DOOR_REACH * DOOR_REACH or (at - c):Dot(out) <= 0 then return false end -- (not at her door, or inside her office)
     local ent = Make(pt.pos, pt.yaw or 0)
     if not ent then return false end
-    local ok, p = LC.Try(PlanRide, ent, pt, at)
-    if not ok or not p then
-        ent:Remove()
-        if not ok then Note(p) end
-        return false
-    end
+    making = ent
+    local p = PlanRide(ent, pt, at)
+    if not p then return false end
     local now = CurTime()
     local yawIn = p.far and YawTo(p.far, p.topH, pt.yaw or 0) or (pt.yaw or 0)
     local yawGo = YawTo(p.topH, p.topL, yawIn)
@@ -607,9 +609,13 @@ end
 -- She has called her address: is she fetched? True when a helicopter is on its way to her (she is then not put
 -- at the stand: it brings her). False: she is put at the stand as ever.
 function LC.AdminHeliFetch(S)
+    making = nil
     local ok, went = LC.Try(Fetch, S)
     if not ok then Note(went) end
-    return ok and went == true
+    local coming = ok and went == true
+    if not coming and IsValid(making) then making:Remove() end -- (the one made to measure the way with: not needed)
+    making = nil
+    return coming
 end
 
 ------------------------------------------------------------------------
