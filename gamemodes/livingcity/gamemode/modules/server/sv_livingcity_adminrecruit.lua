@@ -14,8 +14,8 @@
                this from the attempt on, and it is kept with the character (so it holds over a
                reconnect) until it has been done, once, or is off for good.
     They go    Owed, they step onto rebel ground: the nearest of the Resistance's own people
-               there who can see them (within 700 units, not one in a fight or in cuffs) says
-               the line to them. No waiting: getting there is getting away.
+               there who can see them (within 700 units; not one in a fight, in cuffs or
+               asleep) says the line to them. No waiting: getting there is getting away.
     Or he      Otherwise, once they have got away (two minutes since the attempt, and no unit
     comes      has seen them for the last minute: ply.lcWantedSeen, sv_livingcity_law.lua), a
                contact comes out of one of the city's doorways or walking spots near them that
@@ -23,13 +23,14 @@
                come from), walks up to them and says the line. He is one of the city's own
                fighters out of the Resistance's reserve (LC.SpawnRebel), unarmed and in plain
                clothes (LC.SquadCasual: a citizen, to the units), nobody's enemy and nobody's to
-               move meanwhile. Then he walks back the way he came and is taken out of the city
-               once nobody can see him: back in the reserve.
+               move meanwhile. He stays by them a few seconds, then walks back the way he came
+               and is taken out of the city once nobody can see him: back in the reserve.
     Never      while a unit can see either of them (a unit of the city's within 1500 units with
     watched    a clear line, or one of the Combine's players): then nobody is sent, and one on
                his way turns back. It is tried again three minutes later; so it is when there
-               is nowhere unseen to come from, or nobody left in the reserve. Three contacts at
-               most. Stepping onto rebel ground stays open for as long as it is owed.
+               is nowhere unseen to come from, nobody left in the reserve, or he has not
+               reached them in ninety seconds. Three contacts at most in one stay on the
+               server. Stepping onto rebel ground stays open for as long as it is owed.
     The line   one, spoken: "We saw what you did. You're with us now." (LC.ResistanceLines,
                sv_livingcity_rebelvoice.lua: in chat as any of their lines, and from the one
                saying it once it is recorded.) Nothing else is put on anyone's screen.
@@ -38,10 +39,13 @@
                Resistance (LC.SetFaction), at the rank their experience gives. Where they
                stand, and with no line of its own about it, as when a team cuts a vortigaunt
                loose (sv_livingcity_vortstart.lua). The faction screen could not do it: nobody
-               wanted may change sides there, and they are wanted for life.
+               wanted may change sides there, and they are wanted for life. (Coming to as one of
+               the Resistance, they are put in plain clothes and told so in its two usual lines,
+               as any member is: sv_livingcity_underground.lua. That is not this file's doing.)
     Off for    caught (in cuffs or a cell), dead, or no longer someone it is for (one of the
     good       Resistance or the Combine by another road, a rat, burned, the mark cleared). A
-               new character starts clean.
+               new character starts clean. Someone marked before this was built is owed
+               nothing until they try again.
 
     Kept with the character (PData): lc_adminrecruit = when the attempt was (owed), "done" or "over".
     Hooks heard: LivingCityAdminExfil and LivingCityAdminAttempt (an attempt: who), PlayerDeath,
@@ -274,13 +278,14 @@ local function Recruit(ply, npc, now)
     if LC.Log then LC.Log("info", string.format("%s, who tried to kill the Administrator alone and got away, is taken in by the Resistance", ply:Nick())) end
 end
 
--- On rebel ground: the nearest of the Resistance's own people who can see them (not one in a fight, in cuffs, or
--- on his way out of the city).
+-- On rebel ground: the nearest of the Resistance's own people who can see them (not one in a fight, in cuffs or
+-- asleep, nor a fighter of an ordered attack or a contact).
 local function Greeter(ply)
     local pos, best, bd = ply:GetPos(), nil, nil
     for npc, st in pairs(LC.NPCs or {}) do
         if IsValid(npc) and st.role == "rebel" and npc:Health() > 0 and not st.test and not TAKEN[st.state] and not st.jailUntil
-            and not st.foe and not npc.lcAdminPlot and not npc.lcAdminRecruit then
+            and not st.foe and not npc.lcAdminPlot and not npc.lcAdminRecruit
+            and not (LC.RebelAsleep and LC.RebelAsleep(st)) then
             local d = npc:GetPos():DistToSqr(pos)
             if d < SEE * SEE and (not bd or d < bd) and Sees(npc, ply, SEE) then best, bd = npc, d end
         end

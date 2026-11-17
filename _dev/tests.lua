@@ -37023,6 +37023,7 @@ ok(LC.ResistanceLines.saw_you == "We saw what you did. You're with us now.", "th
 local stand = LC.AddPoint(at(0, 500), 270, "speech", 0)
 local crowd = LC.AddPoint(at(0, 0), 90, "speechcrowd", 0)
 local points = { stand, crowd }
+points[#points + 1] = LC.AddPoint(at(-30000, -30000), 0, "cell", 0) -- (a cell that is free, whatever the tests before this left in the others)
 -- the square: a doorway on each side of it. Someone standing in it looking north sees the northern one only.
 for _, o in ipairs({ { 0, 800 }, { 0, -800 }, { 800, 0 }, { -800, 0 } }) do points[#points + 1] = LC.AddPoint(SQUARE + Vector(o[1], o[2], 0), 0, "spawn", 0) end
 -- the camp, and one of the Resistance's people at home in it
@@ -37101,8 +37102,9 @@ local function address()
     local S = LC.SpeechSession()
     return S and S.her
 end
-local function leave(p) -- (gone from the server)
+local function leave(p) -- (gone from the server: a dropped connection, which nobody holds against them, sv_livingcity_conduct.lua)
     hook.Run("PlayerDisconnected", p)
+    p:RemovePData("lc_combatlog")
     p.valid = false
 end
 local function rejoin(p) -- (and back, the same character)
@@ -37207,9 +37209,15 @@ wolf:SetPos(CAMP)
 _run(3)
 ok(heard(wolf, "We saw what you did") == 0 and LC.AdminRecruitOwed(wolf) ~= nil, "on rebel ground with a unit on his heels: nobody says anything yet")
 wolfSeen = false
+local asleepWas = LC.RebelAsleep
+LC.RebelAsleep = function(st) if st == hostSt then return true end return asleepWas(st) end
+hostHome()
+_run(2)
+ok(heard(wolf, "We saw what you did") == 0 and LC.AdminRecruitOwed(wolf) ~= nil, "the unit lost, the only one of theirs in sight asleep: still nothing")
+LC.RebelAsleep = asleepWas
 hostHome()
 _run(1)
-ok(heard(wolf, SAID) == 1 and heard(wolf, "[Resistance]") == 1, "the unit lost: the nearest of the Resistance's people there says it to him, one line", table.concat(wolf.chat, " | "))
+ok(heard(wolf, SAID) == 1 and heard(wolf, "[Resistance]") == 1, "awake: the nearest of the Resistance's people there says it to him, one line", table.concat(wolf.chat, " | "))
 ok(LC.AdminRecruitOwed(wolf) == nil and faction(wolf) == "citizen", "(said, and a moment yet before it takes)")
 local xp0 = tonumber(wolf:GetPData("lcf_xp_resistance", 0)) or 0
 _run(2)
@@ -37357,7 +37365,7 @@ ok(kept(third) == "" and not LC.AdminNeverForgotten(third), "a new character: no
 away(third)
 LC.AdminAttacker(third)
 _run(1)
-ok(LC.AdminRecruitOwed(third) ~= nil, "(and may be owed it in their own right)", faction(third) .. " " .. kept(third) .. " " .. tostring(LC.AdminNeverForgotten(third)))
+ok(LC.AdminRecruitOwed(third) ~= nil, "(and may be owed it in their own right)", kept(third) .. (LC.Prisoners[third] and ", in a cell" or ""))
 
 -- nothing but the line
 ok(during == 4, "this feature's own code put the one line on a screen each time it was said (four times, to three people), and nothing else: no notice, no second line", during)
