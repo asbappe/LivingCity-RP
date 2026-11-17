@@ -165,6 +165,7 @@ function LC.UseCPSupply(ply, ent)
         ply:ChatPrint("[CP Commissary] Issued: " .. (v == 1 and "a ration packet for your voucher" or (v .. " ration packets for your vouchers")) .. ".")
     end
     LC.CPSupplyCuffs(ply) -- (cuffs back up to three, whatever the wait for the next issue)
+    LC.CPSupplyGrenade(ply) -- (and an Overwatch soldier's grenade)
     local wait = (ply.lcSupplyNext or 0) - CurTime()
     if wait > 0 then
         ply:ChatPrint(string.format("[CP Commissary] Your next issue is in %d seconds. The Civil Protection unit counter is open.", math.ceil(wait)))
@@ -196,6 +197,23 @@ function LC.CPSupplyCuffs(ply)
     return n
 end
 
+-- An Overwatch soldier's grenade, back up to one, free (the owner, 17 November: "automatically re-fillable at
+-- the CP COmmissary for OVERWATCH soldiers, metrocops do not get grenades automatically"). The soldiers are the
+-- ranks whose issue has a grenade in it (the Combine Soldier and the Elite Soldier: sh_livingcity_factions.lua),
+-- and whoever holds a role on top of one. Nothing is said: it is in their hand. Whether one was given.
+function LC.CPSupplyGrenade(ply)
+    if not (IsValid(ply) and ply:Alive() and Unit(ply)) or not (LCF and LCF.ById) then return false end
+    local f = LCF.ById[ply:GetNW2String("lcf_faction", "")]
+    local rank = f and f.ranks and f.ranks[ply:GetNW2Int("lcf_rank", 1)]
+    if not (rank and rank.overwatch and istable(rank.loadout) and table.HasValue(rank.loadout, "weapon_frag")) then return false end
+    if not (ply.HasWeapon and ply.GetAmmoCount and ply.Give and ply.GiveAmmo) then return false end
+    local has = ply:HasWeapon("weapon_frag")
+    if has and ply:GetAmmoCount("Grenade") >= 1 then return false end
+    if not has then ply:Give("weapon_frag") end
+    if ply:GetAmmoCount("Grenade") < 1 then ply:GiveAmmo(1, "Grenade", true) end
+    return true
+end
+
 -- Standing at one charges a unit's vest, up to their issue (the owner, 7 November: "automatic recharging of
 -- the vest at a CP Commissary would be wonderful too"). Not with the power out.
 function LC.CPSupplyRechargeTick()
@@ -210,7 +228,7 @@ function LC.CPSupplyRechargeTick()
                 if IsValid(e) and not e:GetNW2Bool("lc_nopower", false) and e:GetPos():DistToSqr(ply:GetPos()) < 120 * 120 then at = true break end
             end
         end
-        if at then LC.CPSupplyCuffs(ply) end -- (walking up to it is enough for the cuffs)
+        if at then LC.CPSupplyCuffs(ply) LC.CPSupplyGrenade(ply) end -- (walking up to it is enough for the cuffs, and a soldier's grenade)
         local want = at and ArmourFor(ply) or 0
         if at and ply:Armor() < want then
             ply:SetArmor(math.min(want, ply:Armor() + math.ceil(rate)))

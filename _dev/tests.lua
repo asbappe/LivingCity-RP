@@ -35813,6 +35813,45 @@ _walls = savedWalls
 end
 Nov16_AdminHuntTests()
 
+function Nov17_OverwatchGrenadeTests()
+section("An Overwatch soldier's grenade is topped up at the CP Commissary (the owner, 17 November)")
+local sol = newPlayer("GrenadeSoldier", "cp", nil, 2000)
+sol:SetPData("lcf_transhuman", "1") LC.SetFaction(sol, "cp", nil, true)
+local eli = newPlayer("GrenadeElite", "cp", nil, 3000)
+eli:SetPData("lcf_transhuman", "1") LC.SetFaction(eli, "cp", nil, true)
+local cop = newPlayer("GrenadeMetrocop", "cp", nil, 150)
+local cit = newPlayer("GrenadeCitizen", "citizen")
+_run(0.3)
+ok(LCF.RankOf(sol).name == "Combine Soldier" and LCF.RankOf(eli).name == "Elite Soldier" and LCF.RankOf(cop).name == "Metrocop", "(a Combine Soldier, an Elite Soldier and a Metrocop)", LCF.RankOf(sol).name)
+local function Throw(p) p:StripWeapon("weapon_frag") p:SetAmmo(0, "Grenade") end
+for _, p in ipairs({ sol, eli, cop, cit }) do Throw(p) end
+ok(LC.CPSupplyGrenade(sol) == true and sol:HasWeapon("weapon_frag") and sol:GetAmmoCount("Grenade") == 1, "a soldier who has thrown theirs is given one at the Commissary, free", sol:GetAmmoCount("Grenade"))
+ok(LC.CPSupplyGrenade(sol) == false and sol:GetAmmoCount("Grenade") == 1, "and not past one")
+sol:SetAmmo(0, "Grenade")
+ok(LC.CPSupplyGrenade(sol) == true and sol:GetAmmoCount("Grenade") == 1, "(the grenade gone but its pouch still on them: the same)")
+ok(LC.CPSupplyGrenade(eli) == true and eli:GetAmmoCount("Grenade") == 1, "an Elite Soldier too")
+ok(LC.CPSupplyGrenade(cop) == false and not cop:HasWeapon("weapon_frag") and cop:GetAmmoCount("Grenade") == 0, "a Metrocop is given none: theirs are bought")
+ok(LC.CPSupplyGrenade(cit) == false and not cit:HasWeapon("weapon_frag"), "nor is anyone else")
+-- a soldier who bought more keeps them, and is given none
+sol:SetAmmo(3, "Grenade")
+ok(LC.CPSupplyGrenade(sol) == false and sol:GetAmmoCount("Grenade") == 3, "one who carries more is given none, and keeps what they have")
+-- walking up to a Commissary is enough
+Throw(sol) Throw(cop)
+local sup = ents.Create("lc_cpsupply")
+sup:SetPos(Vector(-190000, 90000, 0)) sup:Spawn()
+sol:SetPos(Vector(-190000, 90040, 0))
+cop:SetPos(Vector(-190000, 90050, 0))
+sol.chat, cop.chat = {}, {}
+LC.CPSupplyRechargeTick()
+ok(sol:HasWeapon("weapon_frag") and sol:GetAmmoCount("Grenade") == 1 and not cop:HasWeapon("weapon_frag"), "standing at one: the soldier has a grenade again, the Metrocop none")
+local said = false
+for _, m in ipairs(sol.chat or {}) do if string.find(string.lower(m), "grenade", 1, true) then said = true end end
+ok(not said, "and nothing is said about it")
+sup:Remove()
+for _, p in ipairs({ sol, eli, cop, cit }) do p:Remove() end
+end
+Nov17_OverwatchGrenadeTests()
+
 function Nov17_LastChanceTests()
 section("No close calls left: a roll decides it (the owner, 17 November)")
 local set = _setcvar
