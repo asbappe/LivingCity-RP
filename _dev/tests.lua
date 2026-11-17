@@ -36994,6 +36994,402 @@ _walls = savedWalls
 end
 Nov17_AdminPlotTests()
 
+function Nov17_AdminRecruitTests()
+section("17 November: a lone wolf who tried to kill the Administrator and got away is taken in by the Resistance")
+LC.EndEvent(true)
+if LC.SpeechSession() then LC.EndSpeech() end
+if LC.AdminExfil() then LC.AdminExfilEnd(false) end
+LC.AdminPlotEnd()
+LC.AdminRecruitEnd()
+local savedWalls = _walls
+_walls = {}
+local set = _setcvar
+local stopsWas, huntWas, manWas = GetConVar("lc_stops"):GetInt(), GetConVar("lc_admin_hunt"):GetInt(), GetConVar("lc_manpower"):GetInt()
+set("lc_stops", 0)
+set("lc_admin_hunt", 0) -- (the hunt is its own unit's: no squads here)
+set("lc_manpower", 1)
+set("lc_speech_muster", 60)
+local W0 = Vector(-184000, -168000, 0)
+local function at(x, y) return W0 + Vector(x, y, 0) end
+local AWAY = at(60000, 0)       -- (nowhere near anyone)
+local BARRACKS = at(-60000, 0)  -- (where the unit is when he is not about)
+local SQUARE = at(0, -20000)    -- (a square in the city: doorways round it)
+local CAMP = at(0, 30000)       -- (the Resistance's ground)
+local SAID = "[Resistance] 'We saw what you did. You're with us now.'"
+local KEY = "lc_adminrecruit"
+ok(LC.ResistanceLines.saw_you == "We saw what you did. You're with us now.", "the line is one of the Resistance's own lines: it can be recorded", LC.ResistanceLines.saw_you)
+
+-- her address, for the attempts
+local stand = LC.AddPoint(at(0, 500), 270, "speech", 0)
+local crowd = LC.AddPoint(at(0, 0), 90, "speechcrowd", 0)
+local points = { stand, crowd }
+-- the square: a doorway on each side of it. Someone standing in it looking north sees the northern one only.
+for _, o in ipairs({ { 0, 800 }, { 0, -800 }, { 800, 0 }, { -800, 0 } }) do points[#points + 1] = LC.AddPoint(SQUARE + Vector(o[1], o[2], 0), 0, "spawn", 0) end
+-- the camp, and one of the Resistance's people at home in it
+local camp = LC.AddZone(CAMP, 500, "rebel", 0)
+local pool = LC.ManpowerPool("rebel")
+local reserveWas = pool.reserve
+pool.reserve = 20
+local host, hostSt = LC.SpawnRebel(CAMP + Vector(150, 0, 0), camp)
+host.sim = false
+hostSt.unmanaged, hostSt.questLock = true, true -- (he stays as he is for this)
+local function hostHome() -- (at home, awake, with nobody to fight: whatever the camp's own life has had him do meanwhile)
+    host:SetPos(CAMP + Vector(150, 0, 0))
+    hostSt.foe = nil
+    if hostSt.state == "detained" or hostSt.state == "jailed" or hostSt.state == "escorted" then LC.SetState(host, hostSt, "idle") end
+end
+
+local function heard(p, needle)
+    local n = 0
+    for _, v in ipairs(p.chat or {}) do if string.find(tostring(v), needle, 1, true) then n = n + 1 end end
+    return n
+end
+local function kept(p) return p:GetPData(KEY, "") or "" end
+local function faction(p) return p:GetNW2String("lcf_faction", "") end
+local everyone = {}
+local function person(name, side, xp)
+    local p = newPlayer(name, side or "citizen", nil, xp)
+    p:StripWeapons()
+    p.testHome = (side == "cp") and BARRACKS or (AWAY + Vector(#everyone * 300, 0, 0))
+    p:SetPos(p.testHome)
+    p.aim = Vector(0, 1, 0)
+    p.lcProtectUntil = 0 -- (no longer new in the city)
+    p.chat = {}
+    everyone[#everyone + 1] = p
+    return p
+end
+-- every word put on a screen by a notice, and every line of chat, while this feature's own code runs
+local notices, baseNotice = {}, LC.Notice
+LC.Notice = function(who, kind, title, text, ...) notices[#notices + 1] = tostring(title) .. " " .. tostring(text) return baseNotice(who, kind, title, text, ...) end
+local function lines()
+    local n = #notices
+    for _, p in ipairs(player.GetAll()) do n = n + #(p.chat or {}) end
+    return n
+end
+local during, baseThink, baseAttempt, baseJoin = 0, LC.AdminRecruitThink, LC.AdminRecruitAttempt, LC.AdminRecruitJoin
+LC.AdminRecruitThink = function(...) local n = lines() local r = baseThink(...) during = during + (lines() - n) return r end
+LC.AdminRecruitAttempt = function(...) local n = lines() local r = baseAttempt(...) during = during + (lines() - n) return r end
+LC.AdminRecruitJoin = function(...) local n = lines() local r = baseJoin(...) during = during + (lines() - n) return r end
+-- every contact sent: was the spot he came out of in anyone's sight, and what he carried
+local sent, baseSpawn = {}, LC.SpawnRebel
+LC.SpawnRebel = function(pos, zone, weapon, ...)
+    local seen = LC.IsSeen(pos + Vector(0, 0, 50))
+    local npc, st = baseSpawn(pos, zone, weapon, ...)
+    if weapon == "" and IsValid(npc) then sent[#sent + 1] = { npc = npc, seen = seen, pos = pos } end
+    return npc, st
+end
+local function contacts()
+    local n = 0
+    for npc in pairs(LC.NPCs) do if IsValid(npc) and npc.lcAdminRecruit then n = n + 1 end end
+    return n
+end
+local function tidy() -- (her address over and everything of it gone; the marks stay)
+    if LC.AdminExfil() then
+        local guards = LC.AdminExfil().guards
+        LC.AdminExfilEnd(false)
+        for _, g in ipairs(guards) do if IsValid(g) then g:Remove() end end
+    end
+    if LC.SpeechSession() then LC.EndSpeech() end
+    LC.AdminPlotEnd()
+    LC.EndEvent(true)
+    LC.AdminAttemptSpoken()
+    for _, e in ipairs(ents.FindByClass("lc_adminglass")) do e:Remove() end
+end
+local function address()
+    tidy()
+    LC.CallSpeech(nil, nil)
+    local S = LC.SpeechSession()
+    return S and S.her
+end
+local function leave(p) -- (gone from the server)
+    hook.Run("PlayerDisconnected", p)
+    p.valid = false
+end
+local function rejoin(p) -- (and back, the same character)
+    p.valid = true
+    hook.Run("PlayerInitialSpawn", p)
+    p.lcProtectUntil = 0
+end
+local function away(p) -- (they get away: out of every unit's sight, the units no longer after them)
+    p:SetPos(p.testHome)
+    LC.CalmCops(p)
+end
+
+local wolf = person("RecruitWolf")          -- goes to the Resistance
+local stayer = person("RecruitStayer")      -- stays in the city: the Resistance comes
+local fighter = person("RecruitFighter", "resistance", 900) -- one of the Resistance, with the job
+local loner = person("RecruitLoner", "resistance", 900)     -- one of the Resistance, with no job
+local unit = person("RecruitUnit", "cp")
+local rat = person("RecruitRat")
+local pawn = person("RecruitPawn")          -- (a citizen who somehow holds the job)
+local held = person("RecruitHeld")
+local dead = person("RecruitDead")
+rat:SetPData("lc_scar", "1")
+
+-- a lone wolf's attempt at her address
+local her = address()
+ok(IsValid(her), "(the city is called to her address)")
+wolf:SetPos(at(0, -300))
+ok(LC.AdminRecruitOwed(wolf) == nil and kept(wolf) == "", "before anything: nothing is owed to anyone")
+LC.AdminAttempt(her, wolf, "shot")
+ok(LC.AdminExfil() ~= nil and LC.AdminNeverForgotten(wolf), "a citizen with no job and no order shoots at her: her guards get her out and he is marked, as before")
+ok(LC.AdminRecruitOwed(wolf) ~= nil and tonumber(kept(wolf)) ~= nil, "a lone wolf: the Resistance owes him its welcome from that moment, kept with the character", kept(wolf))
+-- one of the Resistance joins in on her guards with no job: a lone wolf too, but theirs already
+loner:SetPos(at(100, -300))
+LC.AdminAttempt(her, loner, "shot")
+_run(1)
+ok(LC.AdminNeverForgotten(loner) and LC.AdminRecruitOwed(loner) == nil and kept(loner) == "", "one of the Resistance who tries alone is marked, and owed nothing: theirs already")
+away(wolf) away(loner)
+
+-- under orders: the job taken, the attempt made
+her = address()
+local job
+for _, x in ipairs((LC.RefreshBoard(fighter))) do if x.tmpl and x.tmpl.id == "res_regicide" and not x.dead then job = x end end
+fighter.lcqNext = 0
+ok(job ~= nil and LC.AcceptPosting(fighter, job.id) == true and LC.AdminPlotHolds(fighter) == "job", "(a member of the Resistance takes Kill the Administrator)")
+_run(1)
+fighter:SetPos(at(0, -300))
+LC.AdminAttempt(her, fighter, "shot")
+ok(LC.QuestOf[fighter] == nil and LC.AdminPlotHolds(fighter) == nil, "(an ordered attempt: the job is done)")
+-- a citizen joins in on her guards beside them: no job of his own, so a lone wolf (and no hook says so: he is found by his mark)
+stayer:SetPos(at(200, -300))
+LC.AdminAttempt(her, stayer, "shot")
+ok(LC.AdminNeverForgotten(stayer) and LC.AdminRecruitOwed(stayer) == nil, "(a citizen joins in on her guards: marked)")
+_run(1)
+ok(LC.AdminRecruitOwed(stayer) ~= nil and tonumber(kept(stayer)) ~= nil, "a citizen who joins in with no job of his own is a lone wolf too: owed")
+ok(LC.AdminRecruitOwed(fighter) == nil and kept(fighter) == "", "whoever held the job is owed nothing: that was the Resistance's own attack")
+away(stayer) away(fighter)
+tidy()
+
+-- held when the attempt was made is what counts, whichever piece of code hears of the attempt first
+local holdsWas, pawnHolds = LC.AdminPlotHolds, true
+LC.AdminPlotHolds = function(p) if p == pawn then return pawnHolds and "job" or nil end return holdsWas(p) end
+_run(1)
+pawnHolds = false -- (the attempt ended the job, and that was heard first)
+LC.AdminAttacker(pawn)
+hook.Run("LivingCityAdminExfil", her, pawn)
+_run(4)
+ok(LC.AdminNeverForgotten(pawn) and LC.AdminRecruitOwed(pawn) == nil and kept(pawn) == "", "the job held a moment before the attempt: under orders, owed nothing")
+LC.AdminPlotHolds = holdsWas
+
+-- nobody else: a unit, a marked rat
+ok(LC.AdminAttacker(unit) == false and LC.AdminRecruitAttempt(unit) == false, "a unit is never marked for it, and owed nothing")
+unit:SetPData("lc_regicide", tostring(os.time())) unit:SetNW2Bool("lc_regicide", true) -- (were one of the Combine's marked all the same)
+ok(LC.AdminRecruitAttempt(unit) == false, "one of the Combine is not someone the Resistance comes for")
+_run(4)
+ok(LC.AdminRecruitOwed(unit) == nil and kept(unit) == "", "(nor a few seconds later)")
+LC.AdminForget(unit)
+LC.AdminAttacker(rat)
+hook.Run("LivingCityAdminExfil", her, rat)
+_run(4)
+ok(LC.AdminNeverForgotten(rat) and LC.AdminRecruitOwed(rat) == nil and kept(rat) == "", "a marked rat who tries is owed nothing: the Resistance will never take them")
+away(rat)
+
+-- caught, or dead: off for good
+LC.AdminAttacker(held) LC.AdminAttacker(dead)
+_run(1)
+ok(LC.AdminRecruitOwed(held) ~= nil and LC.AdminRecruitOwed(dead) ~= nil, "(two more lone wolves, owed)")
+away(held) away(dead)
+local jailed = LC.Incarcerate(held, 600, "test", nil)
+ok(jailed == true and LC.AdminRecruitOwed(held) == nil and kept(held) == "over", "caught and put in a cell: it is off for good", kept(held))
+LC.ReleasePrisoner(held)
+held.lcGraceUntil = nil
+local answer = hook.t.PlayerDeath.LivingCityAdminRecruit(dead, dead, dead) -- (this feature's own ear for a death, and nothing else's)
+ok(LC.AdminRecruitOwed(dead) == nil and kept(dead) == "over" and answer == nil, "dead: off for good (and the death is left for everyone else to hear)", kept(dead))
+
+-- way one: he goes to the Resistance
+ok(faction(wolf) == "citizen" and heard(wolf, "We saw what you did") == 0, "(the lone wolf, free in the city: nothing said yet)")
+wolf.chat = {}
+hostHome()
+local seenWas, wolfSeen = LC.SeenBySecurity, true
+LC.SeenBySecurity = function(p, d) if p == wolf and wolfSeen then return true end return seenWas(p, d) end
+wolf:SetPos(CAMP)
+_run(3)
+ok(heard(wolf, "We saw what you did") == 0 and LC.AdminRecruitOwed(wolf) ~= nil, "on rebel ground with a unit on his heels: nobody says anything yet")
+wolfSeen = false
+hostHome()
+_run(1)
+ok(heard(wolf, SAID) == 1 and heard(wolf, "[Resistance]") == 1, "the unit lost: the nearest of the Resistance's people there says it to him, one line", table.concat(wolf.chat, " | "))
+ok(LC.AdminRecruitOwed(wolf) == nil and faction(wolf) == "citizen", "(said, and a moment yet before it takes)")
+local xp0 = tonumber(wolf:GetPData("lcf_xp_resistance", 0)) or 0
+_run(2)
+ok(faction(wolf) == "resistance" and wolf:GetPData("lcf_res_proven", "") == "1", "a moment later he is one of the Resistance, as after a story's invitation", faction(wolf))
+ok(kept(wolf) == "done", "and it is done, kept with the character", kept(wolf))
+ok(wolf:GetPos():Distance(CAMP) < 5, "where he stands", tostring(wolf:GetPos() - CAMP))
+ok((tonumber(wolf:GetPData("lcf_xp_resistance", 0)) or 0) == xp0, "at the rank his own experience gives: nothing more is handed to him")
+ok(heard(wolf, "You are now") == 0 and heard(wolf, "[Resistance]") == 1, "with no second line about it", table.concat(wolf.chat, " | "))
+_run(10)
+ok(heard(wolf, "We saw what you did") == 1 and contacts() == 0, "said once; and nobody was sent for him", heard(wolf, "We saw what you did"))
+LC.SeenBySecurity = seenWas
+-- the others in front of the same man: nothing
+for _, p in ipairs({ loner, fighter, rat, held, dead, pawn }) do p.chat = {} p:SetPos(CAMP + Vector(0, 60, 0)) end
+hostHome()
+_run(3)
+local said = 0
+for _, p in ipairs({ loner, fighter, rat, held, dead, pawn }) do said = said + heard(p, "We saw what you did") end
+ok(said == 0, "nothing is said to the one under orders, the one of the Resistance, the rat, the one who was caught, or the one who died", said)
+ok(faction(rat) == "citizen" and faction(held) == "citizen" and faction(pawn) == "citizen", "(and none of them is taken in)")
+for _, p in ipairs({ loner, fighter, rat, held, dead, pawn }) do away(p) end
+
+-- way two: he stays in the city, and the Resistance comes to him
+local rec = LC.AdminRecruitOwed(stayer)
+ok(rec ~= nil and rec.tries == 0, "(the other lone wolf: still owed)")
+stayer.chat = {}
+stayer:SetPos(SQUARE)
+stayer.aim = Vector(0, 1, 0)
+stayer.lcWantedSeen = rec.at -- (the units saw him last as he made the attempt)
+local early = 0
+local function wait(untilT) -- (time passes: how many contacts were about, second by second)
+    while CurTime() < untilT do _run(1) early = early + contacts() end
+end
+wait(rec.at + 112)
+ok(early == 0 and #sent == 0, "under two minutes since the attempt: nobody comes yet", early)
+stayer.lcWantedSeen = CurTime() -- (a unit catches sight of him, and loses him again)
+local glimpsed = CurTime()
+wait(glimpsed + 52)
+ok(CurTime() - rec.at > 150 and early == 0 and #sent == 0 and rec.tries == 0, "two minutes on, but seen by a unit under a minute ago: nobody yet", early)
+-- a unit has him in sight when the time comes: nobody is sent
+unit:SetPos(SQUARE + Vector(0, 600, 0))
+wait(glimpsed + 70)
+ok(early == 0 and #sent == 0 and rec.tries == 0, "a minute unseen, with a unit looking at him now: nobody is sent", early)
+ok(rec.nextTry - CurTime() > 100 and rec.nextTry - CurTime() <= 180, "it is tried again three minutes later", rec.nextTry - CurTime())
+unit:SetPos(BARRACKS)
+wait(CurTime() + 30)
+ok(early == 0, "(not before)", early)
+rec.nextTry = CurTime() + 2 -- (those minutes pass)
+local r0 = pool.reserve
+_run(4)
+local c1 = rec.npc
+local c1st = IsValid(c1) and LC.NPCs[c1]
+ok(IsValid(c1) and #sent == 1 and sent[1].npc == c1 and rec.tries == 1, "the unit gone: a contact comes", #sent)
+ok(#sent == 1 and sent[1].seen == false and sent[1].pos:Distance(SQUARE) > 390, "out of a doorway nobody can see, a walk away", #sent == 1 and sent[1].pos:Distance(SQUARE))
+ok(c1st and c1st.role == "rebel" and c1:GetClass() == "npc_citizen" and pool.reserve == r0 - 1, "one of the city's own Resistance fighters, out of its reserve", pool.reserve)
+ok(IsValid(c1) and c1.kv.additionalequipment == "" and c1st.casual == true, "with no gun, and in plain clothes: a citizen, to the units")
+ok(c1st and c1st.state == "event" and c1st.unmanaged and not c1st.raid, "(the Resistance's own to move: no raid, no shout)")
+ok(heard(stayer, "We saw what you did") == 0, "(he has said nothing yet: he is still on his way)")
+-- a unit shoots at him: he does not turn on it
+local cop = LC.Spawners.cop(AWAY + Vector(0, -8000, 0))
+cop.sim = false
+hook.Run("EntityTakeDamage", c1, _dmg(cop, 5))
+ok(c1st and c1st.state == "event" and c1st.foe == c1 and c1:GetEnemy() ~= cop, "hit by a unit he does not fight back: nobody's enemy")
+cop:Remove()
+-- a unit comes into the square while he is on his way: he turns back, and it is tried again later
+unit:SetPos(SQUARE + Vector(0, 1200, 0))
+_run(1)
+ok(rec.npc == nil and LC.AdminRecruitLeaving[c1] ~= nil and heard(stayer, "We saw what you did") == 0, "a unit walks into the square: the contact turns back with nothing said")
+ok(rec.nextTry - CurTime() > 170, "and it is tried again three minutes later", rec.nextTry - CurTime())
+unit:SetPos(BARRACKS)
+local gone = false
+for _ = 1, 40 do _run(1) if not IsValid(c1) then gone = true break end end
+ok(gone and pool.reserve == r0, "he goes back the way he came and is taken out of the city once nobody can see him: back in the reserve", pool.reserve)
+rec.nextTry = CurTime() + 2 -- (those minutes pass)
+_run(4)
+local c2 = rec.npc
+ok(IsValid(c2) and c2 ~= c1 and #sent == 2 and sent[2].seen == false and rec.tries == 2, "three minutes on: another contact, from out of sight again", #sent)
+local from2 = IsValid(c2) and c2:GetPos()
+local spoke = false
+for _ = 1, 40 do _run(0.5) if heard(stayer, "We saw what you did") > 0 then spoke = true break end end
+ok(spoke and heard(stayer, SAID) == 1 and heard(stayer, "[Resistance]") == 1, "he walks up to him and says it, one line", table.concat(stayer.chat, " | "))
+ok(IsValid(c2) and c2:GetPos():Distance(SQUARE) <= 110 and c2:GetPos():Distance(from2) > 300, "from close by: he came all the way", IsValid(c2) and c2:GetPos():Distance(SQUARE))
+_run(2)
+ok(faction(stayer) == "resistance" and stayer:GetPData("lcf_res_proven", "") == "1" and stayer:GetPos():Distance(SQUARE) < 5,
+    "a moment later he is one of the Resistance, where he stands", faction(stayer))
+ok(kept(stayer) == "done" and LC.AdminRecruitOwed(stayer) == nil, "and it is done, kept with the character", kept(stayer))
+ok(heard(stayer, "You are now") == 0 and heard(stayer, "[Resistance]") == 1, "with no second line about it", table.concat(stayer.chat, " | "))
+-- the contact: watched, he walks back the way he came; unseen, he is gone
+local back = IsValid(c2) and (c2:GetPos() - SQUARE) or Vector(0, -1, 0)
+back.z = 0
+stayer.aim = back:GetNormalized() -- (the new man turns to look at him)
+local near0 = IsValid(c2) and c2:GetPos():Distance(SQUARE) or 0
+_run(10)
+ok(IsValid(c2) and c2:GetPos():Distance(SQUARE) > near0 + 200, "the contact walks off, watched all the way", IsValid(c2) and c2:GetPos():Distance(SQUARE))
+stayer.aim = -stayer.aim -- (and looks away)
+_run(4)
+ok(not IsValid(c2) and contacts() == 0 and next(LC.AdminRecruitLeaving) == nil and pool.reserve == r0, "out of sight he is taken out of the city: back in the reserve", pool.reserve)
+_run(10)
+ok(heard(stayer, "We saw what you did") == 1 and #sent == 2, "said once: nobody comes again", #sent)
+
+-- kept over a reconnect: owed, and done
+local third = person("RecruitThird")
+LC.AdminAttacker(third)
+_run(1)
+ok(LC.AdminRecruitOwed(third) ~= nil, "(a third lone wolf, owed)")
+away(third)
+local owedAt = kept(third)
+leave(third)
+ok(LC.AdminRecruitOwed(third) == nil and kept(third) == owedAt and tonumber(owedAt) ~= nil, "gone from the server: what is owed stays with the character")
+_run(2)
+rejoin(third)
+_run(4)
+ok(LC.AdminRecruitOwed(third) ~= nil and LC.AdminRecruitOwed(third).tries == 0, "back on the server: still owed")
+third.chat = {}
+hostHome()
+third:SetPos(CAMP)
+_run(1)
+ok(heard(third, SAID) == 1, "he walks in among the Resistance: spoken to")
+-- gone from the server in the moment before it takes: nothing is lost
+leave(third)
+_run(3)
+ok(faction(third) == "citizen" and kept(third) == owedAt, "gone from the server in the moment between the line and being taken in: still owed", kept(third))
+rejoin(third)
+hostHome()
+third:SetPos(CAMP)
+_run(4)
+ok(heard(third, SAID) == 2, "back, among the Resistance: it is said to him again", heard(third, SAID))
+_run(2)
+ok(faction(third) == "resistance" and kept(third) == "done", "and this time he is taken in")
+-- once for a character: put out of the Resistance by staff and marked for another attempt, nothing comes of it
+LC.SetFaction(third, "citizen", nil, true, true)
+LC.AdminAttacker(third)
+hook.Run("LivingCityAdminExfil", her, third)
+_run(4)
+ok(faction(third) == "citizen" and LC.AdminRecruitOwed(third) == nil and kept(third) == "done", "once for a character: another attempt is owed nothing")
+leave(third)
+_run(1)
+rejoin(third)
+hostHome()
+third:SetPos(CAMP)
+_run(5)
+ok(LC.AdminRecruitOwed(third) == nil and heard(third, "We saw what you did") == 2 and faction(third) == "citizen", "nor after a reconnect: that it was done is kept too")
+-- a new character starts clean
+hook.Run("LivingCityNewCharacter", third, "x", "test")
+ok(kept(third) == "" and not LC.AdminNeverForgotten(third), "a new character: nothing is kept of it")
+away(third)
+LC.AdminAttacker(third)
+_run(1)
+ok(LC.AdminRecruitOwed(third) ~= nil, "(and may be owed it in their own right)", faction(third) .. " " .. kept(third) .. " " .. tostring(LC.AdminNeverForgotten(third)))
+
+-- nothing but the line
+ok(during == 4, "this feature's own code put the one line on a screen each time it was said (four times, to three people), and nothing else: no notice, no second line", during)
+
+-- back as it was
+tidy()
+LC.AdminRecruitEnd()
+LC.Notice = baseNotice
+LC.AdminRecruitThink, LC.AdminRecruitAttempt, LC.AdminRecruitJoin = baseThink, baseAttempt, baseJoin
+LC.SpawnRebel = baseSpawn
+if IsValid(host) then host:Remove() end
+LC.RemoveZone(camp)
+for _, pt in ipairs(points) do LC.RemovePoint(pt) end
+pool.reserve = reserveWas
+for _, p in ipairs(everyone) do
+    if LC.Prisoners[p] then LC.ReleasePrisoner(p) end
+    LC.AdminForget(p)
+    p:RemovePData(KEY)
+    LC.ClearWanted(p)
+    LC.CalmCops(p)
+    if LC.QuestOf[p] then LC.AbandonQuest(p) end
+    hook.Run("PlayerDisconnected", p)
+    p:Remove()
+end
+set("lc_stops", stopsWas)
+set("lc_admin_hunt", huntWas)
+set("lc_manpower", manWas)
+set("lc_speech_muster", 120)
+_walls = savedWalls
+end
+Nov17_AdminRecruitTests()
+
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")
 ;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)
     -- Everything here is something the owner's server, files or players depend on. The list is

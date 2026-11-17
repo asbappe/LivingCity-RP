@@ -24,7 +24,7 @@ Ticked [x] below: the server already has it. Left to record, 357 files:
 - **machines** (`machines/`): 10 missing
 - **Colonel Cubbage** (`cubbage/`): 24 missing
 - **the Resistance's people** (`resistance/`): nothing missing
-- **added since the server's list was made**: 91 more rows (unticked below; run `lc_voice_missing` again after uploading and they are checked too)
+- **added since the server's list was made**: 93 more rows (unticked below; run `lc_voice_missing` again after uploading and they are checked too)
 
 Run `lc_voice_missing` on the server after uploading, and give Claude the list (or `data/livingcity/voice_missing.txt`) to update the ticks. The Colonel's own lines (the ghost) aren't checked by it.
 
@@ -399,6 +399,8 @@ Folder: `resistance/`. Fighters, lookouts, the quartermaster and the medic speak
 | [ ] | `qm_greet_female1` | [tired, wary, plain] What do you need? |
 | [ ] | `qm_stranger_male1` | [tired, wary, plain] I don't know you. But if you've brought something for the fight, I'll take it. |
 | [ ] | `qm_stranger_female1` | [tired, wary, plain] I don't know you. But if you've brought something for the fight, I'll take it. |
+| [ ] | `saw_you_male1` | [tired, wary, plain] We saw what you did. You're with us now. |
+| [ ] | `saw_you_female1` | [tired, wary, plain] We saw what you did. You're with us now. |
 
 ## Overwatch's announcements
 

@@ -242,9 +242,14 @@ local function Over(ply, now)
 end
 
 -- What a story's invitation does (JoinLater, sv_livingcity_stories.lua): proven, and one of the Resistance. Where
--- they stand and with no line of its own: the one spoken to them has said it.
+-- they stand and with no line of its own: the one spoken to them has said it. Only now is it kept as done: gone
+-- from the server in the moment between, they are still owed it when they come back.
 function LC.AdminRecruitJoin(ply)
     if not (IsValid(ply) and ply:IsPlayer()) then return false end
+    local n = notes[ply]
+    if not (n and n.joining) then return false end -- (a new character since the line was said: not theirs)
+    n.joining = nil
+    ply:SetPData(KEY, "done")
     if LC.ResistanceInvite then LC.ResistanceInvite(ply) end
     if Faction(ply) ~= "citizen" or not LC.SetFaction then return false end
     LC.SetFaction(ply, "resistance", nil, true, true)
@@ -255,12 +260,15 @@ end
 local function Recruit(ply, npc, now)
     local rec = owed[ply]
     owed[ply] = nil
-    Note(ply).closed = true
-    ply:SetPData(KEY, "done")
+    local n = Note(ply)
+    n.closed, n.joining = true, true
     -- (the contact has done what he came for; or they walked in among the Resistance while he was on his way)
     if rec and IsValid(rec.npc) then Away(rec.npc, rec.from, now, false, rec.npc == npc and LINGER or 0) end
-    local d = ply:GetPos() - npc:GetPos()
-    if d.x ~= 0 or d.y ~= 0 then npc:SetAngles(Angle(0, math.deg(math.atan2(d.y, d.x)), 0)) end
+    if npc.lcAdminRecruit then -- (the contact stops where he is and turns to them; one of theirs at home is left as he is)
+        if npc.SetSchedule and SCHED_IDLE_STAND then npc:SetSchedule(SCHED_IDLE_STAND) end
+        local d = ply:GetPos() - npc:GetPos()
+        if d.x ~= 0 or d.y ~= 0 then npc:SetAngles(Angle(0, math.deg(math.atan2(d.y, d.x)), 0)) end
+    end
     if LC.ResistanceSay then LC.ResistanceSay(ply, npc, LINE) end
     timer.Simple(JOIN_AFTER, function() LC.Try(LC.AdminRecruitJoin, ply) end)
     if LC.Log then LC.Log("info", string.format("%s, who tried to kill the Administrator alone and got away, is taken in by the Resistance", ply:Nick())) end
