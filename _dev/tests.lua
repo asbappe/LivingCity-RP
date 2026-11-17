@@ -35604,7 +35604,7 @@ cop.chat = {}
 LC.AdminAttacker(killer)
 _run(4)
 ok(LC.AdminHuntOf(killer) ~= nil and LC.AdminHunted(killer), "a player who tried to kill her, free in the city, is hunted")
-ok(heard(cop, "tried to kill the Administrator") == 1, "the units' radio hears it, once", heard(cop, "tried to kill the Administrator"))
+ok(heard(cop, "tried to kill the Administrator") == 0 and heard(cop, "hunting") == 0, "the units' radio is told nothing in words (the owner, 17 November: no more text)", table.concat(cop.chat or {}, " | "))
 ok(#(killer.chat or {}) == 0 or heard(killer, "Overwatch is hunting") == 0, "and nothing is put on the assassin's own screen about it")
 ok(#squads == 0, "(no squad the same second)")
 killer:SetPos(AWAY) -- (they get away, unseen)
@@ -35678,7 +35678,6 @@ cop.chat = {}
 free(killer)
 _run(4)
 ok(LC.AdminHunts[killer] ~= nil, "free again: hunted again")
-ok(heard(cop, "tried to kill the Administrator") == 0, "(the radio is not told a second time so soon)")
 _run(17) sim()
 ok(#squads == 1 and squads[1].place.zone ~= nil, "nobody has seen them: the squad goes to a hideout")
 

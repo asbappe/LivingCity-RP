@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version 72e852b. Admin-only console messages and log lines are left out.
+Made from version 8ab852d. Admin-only console messages and log lines are left out.
 
-12919 lines, from 356 files.
+12918 lines, from 356 files.
 
 ## Contents
 
@@ -154,7 +154,7 @@ Made from version 72e852b. Admin-only console messages and log lines are left ou
 - [sv_livingcity.lua](#svlivingcitylua-svlivingcitylua) (51)
 - [the actions menu (server side)](#the-actions-menu-server-side-svlivingcityactionslua) (8)
 - [acts (server). See sh_livingcity_acts.lua for the list](#acts-server-see-shlivingcityactslua-for-the-list-svlivingcityactslua) (7)
-- [the hunt for whoever tried to kill the Administrator](#the-hunt-for-whoever-tried-to-kill-the-administrator-svlivingcityadminhuntlua) (5)
+- [the hunt for whoever tried to kill the Administrator](#the-hunt-for-whoever-tried-to-kill-the-administrator-svlivingcityadminhuntlua) (4)
 - [the would-be assassin is hers to question (the owner, 16 November)](#the-would-be-assassin-is-hers-to-question-the-owner-16-november-svlivingcityadminquestioninglua) (13)
 - [the Administrator's security (the owner, 15 November)](#the-administrators-security-the-owner-15-november-svlivingcityadminsecuritylua) (8)
 - [testing tools for admins](#testing-tools-for-admins-svlivingcityadmintoolslua) (50)
@@ -5455,17 +5455,13 @@ Made from version 72e852b. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: admin hunt send
 
-- "Hunt for %s: a squad of %d sent to %s"  (message, line 227)
-- "a Resistance hideout"  (message, line 228)
-- "where they were last seen"  (message, line 228)
+- "Hunt for %s: a squad of %d sent to %s"  (message, line 222)
+- "a Resistance hideout"  (message, line 223)
+- "where they were last seen"  (message, line 223)
 
 > Note for you (not shown in game): (walking a prisoner in, standing over one cuffed on the street, or in a fight: when that is done)
 
-- "a squad of the hunt for the Administrator's attacker going back"  (text, line 264)
-
-> Note for you (not shown in game): part of: start hunt
-
-- "Dispatch: all units, {Name} tried to kill the Administrator. Overwatch is hunting them. Take them alive."  (text, line 315)
+- "a squad of the hunt for the Administrator's attacker going back"  (text, line 259)
 
 ## the would-be assassin is hers to question (the owner, 16 November) (sv_livingcity_adminquestioning.lua)
 
