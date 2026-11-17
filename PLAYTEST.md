@@ -1,38 +1,40 @@
 # Playtest card
 
-About twenty minutes on the server. Only things a person has to judge are here: how it looks, sounds and feels. Everything a test can prove is proved by the tests and by the robot players, and is not asked of you.
+About half an hour on the server. Only things a person has to judge are here: how it looks, sounds and feels. Everything a test can prove is proved by the tests and by the robot players, and is not asked of you.
 
 Tick what works, write a word under what does not. What is not on this card waits in `PLAYTEST_ARCHIVE.md` (the backlog, about 70 one-line items).
 
-## This card (16 November 2026: the card notes and the night's builds, please try)
+## This card (17 November 2026: everything built since your 15 November notes, in the order of one session)
 
-- [ ] **The struggle:** punch a unit, put your fists away. A blow or two of the stick, then the struggle bar (E fast to break free)?
+- [ ] **Small fixes from your notes:** F1 > Find work: chevrons on the ground to Labor Assignment? The wall monitor gone, two or three hanging monitors live on different cameras? The transformer's glass from the floor up, about 15 feet? The victory sting never while walking about?
   Notes:
-- [ ] **Hauled in and questioned:** walked to the cells through a Combine only zone: no countdown, the right-hand panel quiet? In the cell (as a citizen, 10 minute sentence): every choice whole on screen, asked about the charge, not the Resistance?
+- [ ] **Punched, cuffed, questioned:** punch a unit, put your fists away: a blow or two, then the struggle bar (E fast)? Walked to the cells through a Combine only zone: no countdown? In the cell as a citizen: every choice whole on screen, asked about the charge, not the Resistance?
   Notes:
-- [ ] **The bus dream:** does the bus fly on under the sky without sticking, and is the screen clear at once when you wake (no white)?
+- [ ] **The two dreams:** the bus flies on under the sky without sticking, and the screen is clear at once when you wake? The Harpies: black fog close round you, a thick forest, about 24 armed units in the ring, and you are carried off?
   Notes:
-- [ ] **F1 > Find work:** chevrons on the ground to Labor Assignment?
+- [ ] **The old timer and the stalker:** a white man's body under the fisherman's head, head on? The stalker leans in once, then types, never bending in again every two seconds?
   Notes:
-- [ ] **The Harpies dreamt:** a black fog close round you, a thick forest, about 24 armed units in the ring, and are you carried off?
+- [ ] **Your bodyguards and the turrets:** a zombie near you: do they shoot it unasked, keep up with you, and drop it for a target you order killed? Does a unit stand a knocked-over turret back up?
   Notes:
-- [ ] **The old timer and the stalker:** a white man's body under the fisherman's head, head on? The stalker leans in once, then types (or stays bent over the keys), never bending in again every two seconds?
+- [ ] **CP Commissary:** purified water at 2, weapons by rank at the top, a frag grenade for Metrocops and up? A power bank fills the vest in one press? As a Combine Soldier, throw your grenade and walk up to it: one in hand again, free (a Metrocop gets none)?
   Notes:
-- [ ] **Your bodyguards and the turrets:** a zombie near you: do they shoot it unasked, keep up with you, and drop it for a target you order killed? Does a unit walk over and stand up a knocked-over turret?
+- [ ] **Everyone comes:** at dawn, the whole city at the drill, copying the instructor? At your address, everyone there and the rows fitting? The ration line full during a handout? The review: three units line up, E on each?
   Notes:
-- [ ] **Monitors:** the wall monitor gone (from the editor and from the map); two or three hanging monitors on different cameras, all live at once, frame rate bearable?
+- [ ] **Your address, guarded, and your microphone:** three soldiers in a row facing the crowd, a metrocop each side, two soldiers behind? As a citizen walking up to her: one "Final warning!", then shot? F2 > Administrator > "Give a speech into your microphone": heard all over the city, and it stops when the time is up?
   Notes:
-- [ ] **CP Commissary:** purified water at 2, weapons by rank at the top? Water at 4 from the quartermaster and the dealer? A power bank fills the vest in one press?
+- [ ] **An attempt on your life:** a rebel's shot near you (or a hit): the glass up, the ring round you within a second, a crouch? With "Point: Administrator's APC" by the stand: run to it, driven off, at your desk (is the APC the right way round)? With no point: run to your office through the doors, firing only at the attacker? A grenade at your feet: a soldier dives on it ("Shit!", "Bouncer!"), his body thrown? Hit: in your office you faint, the screen goes black, a medic heals you and leaves by your door?
   Notes:
-- [ ] **Her glass and the sting:** the transformer's glass from the floor up, about 15 feet? The victory sting never while walking about?
+- [ ] **Her helicopter (place "Point: Administrator's helicopter" near the stand; the street needs open sky):** parked during the address, rotors still, the right way round, sitting on the ground? After an attempt: rushed to it, rotors and engine on, flown to your office door, set down in front of it? Call an address from just outside your office door: does it fly in, pick you up, and set you down by the stand before you speak? How is your view from inside, and how loud is it?
   Notes:
-- [ ] **Everyone comes:** at dawn, does the whole city come to the drill (from beds and seats too) and copy the instructor? At your address, does everyone come and the rows fit? Does the ration line fill during a handout? The review: three units line up, E on each?
+- [ ] **By a thread:** with no close calls left (`!characters`), die: the dark screen, `You have no "close calls" left.`, `Your life hangs by a thread.`, the number running and stopping? Green: awake in the infirmary? Red: "You did not survive.", the death card with the New Life Rule line? Is 11 seconds the right pace? As the Administrator hit at her address with none left: the same roll in your office?
   Notes:
-- [ ] **Your address, guarded:** three soldiers in a row facing the crowd, a metrocop each side and two soldiers behind, looking outward? As a citizen, walk up to her: one "Final warning!", then shot inside the row?
+- [ ] **The attacker, afterwards:** at -999 standing and wanted for good? Do Overwatch squads come for you (dropship or on foot), hideout after hideout, until you are arrested? Wanted for anything, go down a ladder into the sewers: do the units follow you down? Once `overwatch/hunt1` is recorded: do units hear Dispatch on their radios, with nothing on screen?
   Notes:
-- [ ] **An attempt on your life (place "Point: Administrator's APC" near the stand, facing the way out):** is the APC parked the right way round? A rebel's shot near you (or a hit: a close call): the glass up, the ring round you within a second, a crouch, run to the APC, driven off, at your desk? A grenade at your feet: a soldier dives on it ("Shit!", "Bouncer!"), a harmless blast, his body thrown? The attacker at -999 standing and wanted for good?
+- [ ] **The would-be assassin, caught:** as the Administrator, F4 > "Question the would-be assassin": a stunstick in hand, your questions, and afterwards the prisoner seen again as a stalker? With nobody playing her: does the city's own Administrator come with two soldiers (and say her questions aloud once they are recorded)?
   Notes:
-- [ ] **The parade:** eight soldiers two abreast, an APC (nose forward?), two hunters, a strider that walks, the march from a third of the way (the debug report's "parade music:" line says which piece), everyone cheering along the middle third? Shoot at it: it stops, only you are fired on, and after 30 seconds unseen it re-forms at the last route node and the music starts over?
+- [ ] **A coordinated attack:** as a Resistance member during her address, take "Kill the Administrator" from the board (or a leader plans it: F2 > Resistance > Operations) and shoot at her: do seven or eight fighters come out round the stand from places nobody was looking, fire only at the Combine, and leave when she is gone? With no job held (a lone wolf): nobody comes?
+  Notes:
+- [ ] **The parade:** eight soldiers two abreast, an APC (nose forward?), two hunters, a strider that walks, the march (the debug report's "parade music:" line says which piece), everyone cheering along the middle third? Shoot at it: it stops, only you are fired on, and after 30 seconds unseen it re-forms at the last route node, the music from the start?
   Notes:
 - [ ] **The Miscount Poser (Q > Tools > Miscount, below the editor; update the Pose Recorder addon first):** left click a cuffed mannequin and the vortigaunt with its broom; pose with the physgun; right click to use the pose. Does a cuffed player and a sweeping vortigaunt change at once, and is it kept after a restart?
   Notes:

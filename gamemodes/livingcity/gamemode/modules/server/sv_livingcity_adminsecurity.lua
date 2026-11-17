@@ -642,7 +642,7 @@ local function Done(deliver)
     end
     if fainting then -- (nothing can hurt her until that is over)
         local by
-        for who in pairs(a.attackers) do if IsValid(who) and not by then by = who end end
+        for who in pairs(a.attackers) do if IsValid(who) and (not by or (who:IsPlayer() and not by:IsPlayer())) then by = who end end
         return Faint(her, door, a.thread, by)
     end
     -- (a few seconds more before anything can hurt her again)
@@ -1135,6 +1135,7 @@ local function SceneDeath(c)
         local line, said = LC.DeathCause(her, IsValid(c.by) and c.by or nil)
         if line then her.lcDownCause = { line, said } end
     end
+    if LC.AdminPlotDied then LC.Try(LC.AdminPlotDied) end -- (an ordered attempt: she died of it after all, sv_livingcity_adminplot.lua)
     her.lcEndOfLife = "death"
     her.lcDeathRule = true
     her:Kill()

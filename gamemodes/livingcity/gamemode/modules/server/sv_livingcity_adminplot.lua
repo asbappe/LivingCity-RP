@@ -550,11 +550,28 @@ function LC.AdminPlotAttempt(her, who, killed)
         if not okS and LC.Error then LC.Error("the attack at the Administrator's address", err) end
     end
     if q then
-        if killed then q.bonus = (q.bonus or 0) + KILL_BONUS end
+        if killed then q.bonus = (q.bonus or 0) + KILL_BONUS else LC.AdminPlotPaid[who] = CurTime() end
         LC.Try(LC.QuestEvent, "admin_attempt", who)
     end
     if plan then EndOrder(plan, true) end
     return true
+end
+
+-- She died of it after all, later: hit with no close calls left she is taken out alive, and the roll in her office
+-- went against her (the owner, 17 November; sv_livingcity_adminsecurity.lua says so here). Whoever was paid for the
+-- job at that address in the last ten minutes gets what they would have had if she had died at the stand. Nothing
+-- is said. How many were paid.
+LC.AdminPlotPaid = LC.AdminPlotPaid or setmetatable({}, { __mode = "k" }) -- [holder] = when the job paid them
+function LC.AdminPlotDied()
+    local n, now = 0, CurTime()
+    for who, at in pairs(LC.AdminPlotPaid) do
+        LC.AdminPlotPaid[who] = nil
+        if IsValid(who) and who:IsPlayer() and now - at <= 600 and LC.AddXP then
+            LC.AddXP(who, KILL_BONUS, "Kill the Administrator")
+            n = n + 1
+        end
+    end
+    return n
 end
 
 -- At her address: her address is on and it is her, or her guards are getting her out.

@@ -34891,6 +34891,16 @@ ok(adm:GetNW2String("lc_cid", "") ~= acid, "and she comes back as someone new")
 LC.SendCompressed = realSend
 LC.LastChanceShow = realShow
 LC.LastChanceRoll = rollWas
+-- an ordered attempt (sv_livingcity_adminplot.lua): the job paid at the attempt, and pays its "she died of it" share now
+local xpWas = reb:GetNW2Int("lcf_xp", 0)
+local gave, realXP = {}, LC.AddXP
+LC.AddXP = function(p, n, why) gave[#gave + 1] = { p = p, n = n } return realXP(p, n, why) end
+LC.AdminPlotPaid[reb] = CurTime()
+ok(LC.AdminPlotDied() == 1 and #gave == 1 and gave[1].p == reb and gave[1].n == 40, "whoever held the job to kill her is paid the rest when she dies of it after all", #gave)
+ok(LC.AdminPlotDied() == 0 and #gave == 1, "(once)")
+LC.AdminPlotPaid[reb] = CurTime() - 700
+ok(LC.AdminPlotDied() == 0 and #gave == 1 and LC.AdminPlotPaid[reb] == nil, "(and not for a death long after)")
+LC.AddXP = realXP
 
 LC.Notice = realNotice
 if LC.AdminCloseCallScene() then LC.AdminCloseCallEnd() end
