@@ -29,7 +29,8 @@
                 is short, none when it is empty: sv_livingcity_manpower.lua) come out
                 round the stand at once, each from one of the city's own walking spots or
                 doorways that no player can see at that moment, one from each direction
-                first and never two close together. They are the city's own fighters
+                first and never two close together (where there are too few such spots, two
+                or three from one, a step apart). They are the city's own fighters
                 (LC.SpawnRebel: the same people, guns and health) and fire on her guards,
                 the units there and the Combine's players; never on citizens or the
                 Resistance, whom their fire cannot hurt. Her guards may hurt them
@@ -42,8 +43,10 @@
     Told        nobody, in words. The fighters arriving are the news.
 
     Hooks heard: LivingCityAdminExfil (her guards are getting her out: who set it off),
-    LivingCityAdminAttempt (a grenade by her), and her own hurt and death at her address.
-    Nothing is answered to any of them.
+    LivingCityAdminAttempt (a grenade by her), her own hurt and death at her address, and
+    LivingCitySpeechCalled and LivingCitySpeechEnded (the job goes on the board, and comes
+    off it). Nothing is answered to any of them. No settings: the numbers are the constants
+    below.
 ]]
 
 if CLIENT then return end
@@ -61,6 +64,7 @@ local FIGHTERS = { 7, 8 }      -- how many come (fewer when the reserve is short
 local RING_MIN, RING_MAX = 400, 1500 -- how far from the stand they come out
 local LEVEL = 300              -- and how far above or below it
 local APART = 260              -- never two of them closer together than this
+local BESIDE = 90              -- (few such spots there: a second and a third man this far from one already chosen)
 local SECTORS = 8              -- one from each of these directions first
 local CHECKS = 300             -- spots looked at, at most
 local NEAR_PLAYER = 250        -- never this near a player, seen or not
@@ -222,8 +226,10 @@ end
 
 -- Up to `want` spots round `centre`: the city's doorways (where its people come out) and its own walking
 -- spots, between RING_MIN and RING_MAX of it and about on its level. One from each of eight directions first,
--- then round again, and never two within APART of each other: all round, not in one clump. Fewer than asked
--- when the place has no more that nobody can see.
+-- then round again, and never two within APART of each other: all round, not in one clump. Where the place has
+-- too few of those (one doorway, a path with few points), a second and then a third man comes out beside one
+-- already chosen, a step away and as unseen as he is: never more than three at one spot. Fewer than asked when
+-- there is no more room nobody can see.
 function LC.AdminPlotSpots(centre, want)
     local bySector, taken, n = {}, {}, 0
     local function add(p)
@@ -264,6 +270,26 @@ function LC.AdminPlotSpots(centre, want)
                     if Hidden(p, centre) then
                         out[#out + 1] = p
                         more = true
+                        break
+                    end
+                end
+            end
+        end
+    end
+    -- still short: beside the ones chosen, once round and then once more
+    local first = #out
+    for ring = 1, 2 do
+        for i = 1, first do
+            if #out >= want or checks >= CHECKS then break end
+            local a = math.random() * math.pi * 2
+            for k = 0, 3 do
+                local q = out[i] + Vector(math.cos(a + k * math.pi / 2), math.sin(a + k * math.pi / 2), 0) * (BESIDE * ring)
+                local free = true
+                for _, o in ipairs(out) do if o:DistToSqr(q) < (BESIDE * 0.9) ^ 2 then free = false break end end
+                if free and checks < CHECKS then
+                    checks = checks + 1
+                    if Hidden(q, centre) then
+                        out[#out + 1] = q
                         break
                     end
                 end

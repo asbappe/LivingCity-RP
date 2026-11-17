@@ -36038,6 +36038,23 @@ end
 ok(#said == 0 and during == 0, "nothing about the attack was put on anyone's screen: no chat line, no notice, from their coming to their going", during .. " " .. table.concat(said, " | "))
 ok(heard(reb, "Kill the Administrator") == 1, "(the assassin read one line of it: the job's own, done)", table.concat(reb.chat or {}, " | "))
 
+-- a place with few doorways: two or three come out of each, a step apart, still where nobody can see
+local few = LC.AdminPlotSpots(at(0, 9000), 8) -- (nothing of the city's within reach of there)
+ok(#few == 0, "(nowhere of the city's to come from: nobody)", #few)
+local lone = { LC.AddPoint(at(1100, 9500), 0, "spawn", 0), LC.AddPoint(at(-1100, 9500), 0, "spawn", 0), LC.AddPoint(at(0, 10600), 0, "spawn", 0) }
+few = LC.AdminPlotSpots(at(0, 9500), 8)
+local crowded, tight = 0, false
+for i, a in ipairs(few) do
+    local near = 0
+    for j, b in ipairs(few) do
+        if a:Distance(b) < 250 then near = near + 1 end
+        if i ~= j and a:Distance(b) < 80 then tight = true end
+    end
+    if near > 3 then crowded = crowded + 1 end
+end
+ok(#few == 8 and crowded == 0 and not tight, "three doorways: all eight still come, two or three from each and a step apart", #few)
+for _, pt in ipairs(lone) do LC.RemovePoint(pt) end
+
 -- short of fighters: fewer; none left: nobody, and the job still pays
 her = address()
 ok(take(reb), "(the job again, at her next address)")
