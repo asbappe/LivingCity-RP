@@ -30,6 +30,8 @@ LC.ResistanceLines = {
     medic_fine = "You look fine to me. Come back when you're bleeding.",
     medic_charge = "I hate to charge, but these don't grow on trees.",
     medic_broke = "You don't have the credits, friend. Sorry.",
+    -- (to a lone wolf who tried to kill the Administrator and got away: sv_livingcity_adminrecruit.lua)
+    saw_you = "We saw what you did. You're with us now.",
 }
 
 local clips -- [id_gender] = { paths }
