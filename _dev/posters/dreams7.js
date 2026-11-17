@@ -85,12 +85,14 @@ ART.dream_shh = () => {
   for (let x = 14; x < 720; x += 58) for (let y = 20; y < 600; y += 66) s += R(x, y, 34, 42, x === 594 && y === 152 ? C.warm : q() < 0.5 ? '#111c2a' : '#0e1622');
   s += rays(360, 300, 30, 700, C.cyanD, 0, 360, 'opacity=".22"');
   s += P('M172,524 L548,524 L566,610 L154,610Z', KNIT) + P('M420,524 L548,524 L566,610 L440,610Z', KNITD) + G('translate(165,40) scale(2.3)', adminBust());
-  // her finger to her lips: a small hand seen from its side, flat shapes, no outline
+  // her finger to her lips: her left hand (the arm at our right), its back to us, so the other
+  // knuckles run to our left of the finger and the thumb tucks in at our right
   const HAND = '#eedcc3', HANDD = '#a3835f';
-  s += P('M362,392 L408,390 L436,610 L374,610Z', KNIT) + P('M392,391 L408,390 L436,610 L418,610Z', KNITD) + R(358, 386, 54, 12, KNITD, 'rx="5"');
+  s += P('M322,390 L366,388 L452,610 L384,610Z', KNIT) + P('M350,389 L366,388 L452,610 L432,610Z', KNITD) + R(318, 384, 52, 12, KNITD, 'rx="5"');
   s += R(357, 275, 16, 70, HANDD, 'rx="7"') + R(352, 272, 16, 72, HAND, 'rx="8"');
-  s += R(352, 334, 58, 56, HAND, 'rx="15"') + R(396, 340, 14, 46, HANDD, 'rx="7" opacity=".55"');
-  s += L('M374,350 h30 M374,362 h31 M374,374 h29', HANDD, 2.5) + P('M356,378 L370,352 L384,346 L390,354 L378,366 L370,386Z', HAND) + L('M357,377 L370,352 L384,346', HANDD, 2.2);
+  s += R(366, 344, 13, 34, HANDD, 'rx="6"') + R(364, 342, 12, 34, HAND, 'rx="6"');
+  s += [319, 333, 346].map(x => `<circle cx="${x}" cy="342" r="9" fill="${HAND}"/>`).join('') + R(310, 338, 60, 50, HAND, 'rx="13"');
+  s += L('M326,340 v9 M340,340 v9', HANDD, 2.2) + R(310, 372, 60, 16, HANDD, 'rx="8" opacity=".35"');
   return s;
 };
 
