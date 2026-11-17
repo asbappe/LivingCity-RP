@@ -35813,6 +35813,39 @@ _walls = savedWalls
 end
 Nov16_AdminHuntTests()
 
+function Nov17_AdminQuestionVoiceTests()
+section("Her questions to the would-be assassin can be recorded (the owner, 17 November: the voice file)")
+local have = {}
+for _, t in ipairs(LC.AnnounceTriggers) do have[t] = true end
+local all = true
+for _, list in ipairs({ LC.AdminQuestions, LC.AdminQuestionsNobody }) do
+    for _, q in ipairs(list) do
+        if not (have["question_" .. q.key] and LC.AnnounceHersOnly["question_" .. q.key] and LC.AnnounceBaseTier["question_" .. q.key] == 3) then all = false end
+    end
+end
+ok(all and #LC.AdminQuestions + #LC.AdminQuestionsNobody == 5, "each of her five questions has a recording of hers to look for, in her stern tone, and none of Overwatch's")
+local pris = newPlayer("VoicedPrisoner", "citizen")
+local her = ents.Create("npc_citizen")
+her:Spawn()
+local heard = {}
+her.EmitSound = function(_, path) heard[#heard + 1] = path end
+local it = { qs = LC.AdminQuestions, admin = true }
+LC.AdminQuestioning[pris] = { it = it, party = { { npc = her } } }
+local realPick, asked = LC.PickAnnounceClip, {}
+LC.PickAnnounceClip = function(voice, trig, chance, tier) asked[#asked + 1] = voice .. "/" .. trig .. "/" .. tostring(tier) return nil end
+ok(LC.AdminQuestionSpoken(pris, it, 1) == false and #heard == 0 and asked[1] == "administrator/question_names/3", "not recorded: she says nothing aloud (the words are on the panel as before)", asked[1])
+LC.PickAnnounceClip = function(voice, trig) return "livingcity/administrator/" .. trig .. "_stern1.wav" end
+ok(LC.AdminQuestionSpoken(pris, it, 2) == true and heard[1] == "livingcity/administrator/question_supplies_stern1.wav", "recorded: the city's own Administrator says it where she stands", heard[1])
+it.byPlayer = pris
+ok(LC.AdminQuestionSpoken(pris, it, 3) == false and #heard == 1, "a player in the post speaks for herself: no recording")
+it.byPlayer = nil
+ok(LC.AdminQuestionSpoken(pris, { qs = LC.AdminQuestions, admin = true }, 1) == false, "(nor for a questioning that is not hers)")
+LC.PickAnnounceClip = realPick
+LC.AdminQuestioning[pris] = nil
+her:Remove() pris:Remove()
+end
+Nov17_AdminQuestionVoiceTests()
+
 function Nov17_OverwatchGrenadeTests()
 section("An Overwatch soldier's grenade is topped up at the CP Commissary (the owner, 17 November)")
 local sol = newPlayer("GrenadeSoldier", "cp", nil, 2000)

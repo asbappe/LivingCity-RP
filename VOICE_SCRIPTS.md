@@ -24,7 +24,7 @@ Ticked [x] below: the server already has it. Left to record, 357 files:
 - **machines** (`machines/`): 10 missing
 - **Colonel Cubbage** (`cubbage/`): 24 missing
 - **the Resistance's people** (`resistance/`): nothing missing
-- **added since the server's list was made**: 85 more rows (unticked below; run `lc_voice_missing` again after uploading and they are checked too)
+- **added since the server's list was made**: 90 more rows (unticked below; run `lc_voice_missing` again after uploading and they are checked too)
 
 Run `lc_voice_missing` on the server after uploading, and give Claude the list (or `data/livingcity/voice_missing.txt`) to update the ticks. The Colonel's own lines (the ghost) aren't checked by it.
 
@@ -164,6 +164,11 @@ Folder: `administrator/`. **Use the voice her existing recordings were made with
 | [ ] | `speech_attempt_hunt_stern1.wav` | Her speech after an attempt on her life: the attacker is still free | [stern, cold, slowly] The traitor is still among you. Someone here knows the face, the name, the door. Tell Civil Protection and your block will eat well. Stay silent and your block will answer for it. |
 | [ ] | `speech_attempt_measures_stern1.wav` | Her speech after an attempt on her life: what it costs the city | [stern, cold, slowly] I never wanted checkpoints. I never wanted searches or curfews. But I will not apologise for keeping this city safe, and neither should you. Blame the ones who made it necessary. |
 | [ ] | `speech_attempt_resolve_stern1.wav` | Her speech after an attempt on her life: she is not going anywhere | [stern, cold, slowly] They wanted me afraid. They wanted this stand empty. I will stand here again tomorrow, and the day after, for as long as you need me. I am not going anywhere. |
+| [ ] | `question_names_stern1.wav` | The city's own Administrator questions whoever tried to kill her, in the cells: asked of a member of the Resistance | [stern, cold, slowly] Who sent you? |
+| [ ] | `question_supplies_stern1.wav` | The city's own Administrator questions whoever tried to kill her, in the cells: asked of a member of the Resistance | [stern, cold, slowly] Who armed you? |
+| [ ] | `question_hideout_stern1.wav` | The city's own Administrator questions whoever tried to kill her, in the cells: asked of a member of the Resistance | [stern, cold, slowly] Where do they meet? |
+| [ ] | `question_why_stern1.wav` | The city's own Administrator questions whoever tried to kill her, in the cells: asked of anyone else | [stern, cold, slowly] You tried to kill me. Why? |
+| [ ] | `question_who_stern1.wav` | The city's own Administrator questions whoever tried to kill her, in the cells: asked of anyone else | [stern, cold, slowly] Who put you up to it? |
 
 ## What named citizens say
 

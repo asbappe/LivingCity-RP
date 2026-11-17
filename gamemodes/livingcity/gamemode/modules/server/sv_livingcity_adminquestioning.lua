@@ -91,6 +91,21 @@ end
 
 function LC.AdminQuestioningHolds(who) return Q[who] ~= nil end
 
+-- Her questions in her own voice, where the owner has recorded them (sound/livingcity/administrator/
+-- question_<key>_stern1.wav and so on: VOICE_SCRIPTS.md; the announcer finds them, sv_livingcity_announcer.lua).
+-- The city's own Administrator only: a player in the post speaks for herself. Nothing new is shown: the words are
+-- on the questioning's own panel already. Whether a recording was played.
+function LC.AdminQuestionSpoken(ply, it, q)
+    local A = Q[ply]
+    if not (A and A.it == it and A.party and A.party[1] and IsValid(A.party[1].npc)) or IsValid(it.byPlayer) then return false end
+    local def = it.qs and it.qs[q]
+    if not (def and def.key and LC.PickAnnounceClip) then return false end
+    local path = LC.PickAnnounceClip("administrator", "question_" .. def.key, false, 3)
+    if not path then return false end
+    A.party[1].npc:EmitSound(path, 75, 100)
+    return true
+end
+
 -- What holds them in a cell: a player's record (LC.Prisoners), or the state of one of the city's own while jailed.
 local function Held(who, A)
     if not IsValid(who) then return nil end

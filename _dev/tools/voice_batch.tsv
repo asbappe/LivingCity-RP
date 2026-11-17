@@ -43,6 +43,11 @@ administrator	livingcity/administrator/speech_attempt_caught_stern1	[stern, cold
 administrator	livingcity/administrator/speech_attempt_hunt_stern1	[stern, cold, slowly] The traitor is still among you. Someone here knows the face, the name, the door. Tell Civil Protection and your block will eat well. Stay silent and your block will answer for it.
 administrator	livingcity/administrator/speech_attempt_measures_stern1	[stern, cold, slowly] I never wanted checkpoints. I never wanted searches or curfews. But I will not apologise for keeping this city safe, and neither should you. Blame the ones who made it necessary.
 administrator	livingcity/administrator/speech_attempt_resolve_stern1	[stern, cold, slowly] They wanted me afraid. They wanted this stand empty. I will stand here again tomorrow, and the day after, for as long as you need me. I am not going anywhere.
+administrator	livingcity/administrator/question_names_stern1	[stern, cold, slowly] Who sent you?
+administrator	livingcity/administrator/question_supplies_stern1	[stern, cold, slowly] Who armed you?
+administrator	livingcity/administrator/question_hideout_stern1	[stern, cold, slowly] Where do they meet?
+administrator	livingcity/administrator/question_why_stern1	[stern, cold, slowly] You tried to kill me. Why?
+administrator	livingcity/administrator/question_who_stern1	[stern, cold, slowly] Who put you up to it?
 man	livingcity/citizens/say_open_listen_male1	[low, urgent] Listen.
 woman	livingcity/citizens/say_open_listen_female1	[low, urgent] Listen.
 man	livingcity/citizens/say_open_look_male1	[tired, flat] Look.

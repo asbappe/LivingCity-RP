@@ -370,6 +370,8 @@ for i, q in ipairs(LC.QuizQuestions or {}) do W("quizq", "quiz_q" .. i, tostring
 for id, l in pairs(LC.StreetLines or {}) do W("street", id, l[2], l[1], l[3] or l[1]) end
 for id, l in pairs(LC.UnitLines or {}) do W("unitline", id, l[2], l[1], l[3] or l[1], table.concat(l[4] or {}, ", ")) end
 for _, t in ipairs(LC.SpeechPieces or {}) do W("speech", t.id, t.part, t.when, t.words) end
+for _, q in ipairs(LC.AdminQuestions or {}) do W("question", q.key, q.text, "res") end
+for _, q in ipairs(LC.AdminQuestionsNobody or {}) do W("question", q.key, q.text, "nobody") end
 for key, g in pairs(LC.CollapseGmanLines or {}) do
     local cv = GetConVar(g[1])
     W("gman", key, g[1], cv and cv:GetString() or "", g[2])
@@ -402,6 +404,10 @@ def main():
     PART = {"open": "Her speech, the opening", "close": "Her speech, the closing", "event": "Her speech, on what happened lately: when",
             "state": "Her speech, on the state of the city: when", "mood": "Her speech, on the city's mood: when"}
     SPEECH_WORDS.update({"speech_" + r[1]: (PART.get(r[2], "Her speech") + ("" if r[2] in ("open", "close") else " " + r[3]), r[4]) for r in rows if r[0] == "speech"})
+    # her questions to whoever tried to kill her (sv_livingcity_adminquestioning.lua): hers only, said in the cells
+    QWHEN = {"res": "The city's own Administrator questions whoever tried to kill her, in the cells: asked of a member of the Resistance",
+             "nobody": "The city's own Administrator questions whoever tried to kill her, in the cells: asked of anyone else"}
+    SPEECH_WORDS.update({"question_" + r[1]: (QWHEN.get(r[3], "Her questioning"), r[2]) for r in rows if r[0] == "question"})
     triggers = [(r[1], int(r[2]), r[3]) for r in rows if r[0] == "trigger"]
     tiers = [r[1] for r in rows if r[0] == "tier"]
     gman = {r[1]: (r[2], r[3], r[4]) for r in rows if r[0] == "gman"}

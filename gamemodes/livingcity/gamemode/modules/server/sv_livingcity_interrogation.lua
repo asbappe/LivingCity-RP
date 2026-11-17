@@ -172,6 +172,7 @@ local function Ask(ply, it, q)
     local text = Qs(it)[q].text
     ply:ChatPrint("[Interrogation] \"" .. text .. "\"")
     if IsValid(it.cop) then it.cop:EmitSound("npc/metropolice/vo/" .. Pick({ "apply", "isaidmovealong", "keepmoving" }) .. ".wav", 70) end
+    if it.admin and LC.AdminQuestionSpoken then LC.AdminQuestionSpoken(ply, it, q) end -- (her own voice, where recorded: sv_livingcity_adminquestioning.lua)
     Send(ply, "lc_intr_q", { q = q, text = text, resolve = it.resolve or 0, bargain = not it.bargained, secs = ANSWER_SECS,
         by = IsValid(it.byPlayer) and Name(it.byPlayer) or it.asker or "a Civil Protection unit" })
     PushCP(ply, it)
