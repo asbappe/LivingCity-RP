@@ -146,7 +146,9 @@ function LC.PlanOp(ply, index, minutes)
     LC.OpPlan = plan
     nextPlan = CurTime() + cvGap:GetFloat() * 60
     Radio("resistance", string.format("%s plans an operation: %s, in %d minutes. Join it: F2 > Resistance > Operations.", Name(ply), o.label, minutes))
-    if math.random() < math.Clamp(cvLeak:GetFloat(), 0, 1) then
+    -- (the plan to kill the Administrator never leaks: the owner, 17 November, "Keep as minimal a chance of
+    -- CP/overwatch/administrator finding out about it")
+    if o.kind ~= "regicide" and math.random() < math.Clamp(cvLeak:GetFloat(), 0, 1) then
         plan.leaked = true
         TellUnits(string.format("[CP net] Intelligence: the anticitizens plan to %s, in about %d minutes.", string.lower(string.sub(o.label, 1, 1)) .. string.sub(o.label, 2), minutes))
     end
@@ -159,6 +161,10 @@ function LC.JoinOp(ply)
     local plan = LC.OpPlan
     if not plan then return false, "Nothing is planned right now." end
     if Faction(ply) ~= "resistance" then return false, "Only the Resistance." end
+    -- (the plan to kill the Administrator: Fighters and up, as the job is; sv_livingcity_adminplot.lua)
+    if plan.kind == "regicide" and not plan.joined[ply] and LC.AdminPlotMinRank and ply:GetNW2Int("lcf_rank", 1) < LC.AdminPlotMinRank() then
+        return false, "Fighters and up only."
+    end
     if plan.joined[ply] then
         plan.joined[ply] = nil
         ply:ChatPrint("[Freq 7] You've backed out of the operation.")

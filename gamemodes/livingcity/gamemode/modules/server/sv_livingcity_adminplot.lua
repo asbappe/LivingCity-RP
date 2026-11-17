@@ -10,9 +10,16 @@
     The job     "Kill the Administrator" is on the Resistance's board (Operations), and
                 nobody else's, from the moment the city is called to her address until
                 someone tries. Its one step is making the attempt at her address. Taken
-                by one, joined by others as any job is. It pays when the attempt is made
-                (60 experience, the board's usual credits; 40 more if she dies of it) and
-                ends there. It also ends when her address is over, and as any job does:
+                by one, joined by others as any job is: Fighters and up, and nobody below
+                that rank sees it on the board (the owner, 17 November: "fighters and up
+                only"). It pays when the attempt is made (the owner: "xp should be 250 for
+                trying, 250 more if successful, plus a 100 credit stipend, but ONLY if it
+                is a job from the resistance job board": 250 experience, 100 credits in
+                all, 250 more experience if she dies of it, then or after the roll in her
+                office) and ends there. Nobody is told it has gone up, and the planned
+                order never leaks to Civil Protection (the owner: "it should just go on
+                the board. Keep as minimal a chance of CP/overwatch/administrator finding
+                out about it"). It also ends when her address is over, and as any job does:
                 dropped, arrested, a new character, gone from the server.
     The order   A Resistance leader's planning board (F2 > Resistance > Operations: plan
                 or join, sv_livingcity_opplan.lua) lists "Kill the Administrator at her
@@ -58,8 +65,10 @@ local KIND = "regicide"        -- the planned operation's kind (sv_livingcity_op
 local TITLE = "Kill the Administrator"
 local LINE = "At her address. Our fighters open fire when you do."
 local LABEL = "Kill the Administrator at her address"
-local REWARD = 60              -- experience, when the attempt is made (a jailbreak is 50)
-local KILL_BONUS = 40          -- more, if she dies of it
+local REWARD = 250             -- experience, when the attempt is made (the owner, 17 November)
+local KILL_BONUS = 250         -- more, if she dies of it
+local STIPEND = 100            -- credits with the job, in all (the board's usual pay for a job is part of it)
+local MIN_RANK = 3             -- Fighters and up (Sympathizer, Member, Fighter, Lieutenant, Commander)
 local FIGHTERS = { 7, 8 }      -- how many come (fewer when the reserve is short)
 local RING_MIN, RING_MAX = 400, 1500 -- how far from the stand they come out
 local LEVEL = 300              -- and how far above or below it
@@ -82,6 +91,7 @@ local TEMPLATE
 function LC.AdminPlot() return P end
 
 local function Faction(p) return p:GetNW2String("lcf_faction", "") end
+local function RankIndex(p) return p:GetNW2Int("lcf_rank", 1) end
 local function Administrator(p) return LC.IsAdministrator ~= nil and LC.IsAdministrator(p) == true end
 local function Exit() return LC.AdminExfil and LC.AdminExfil() or nil end
 local function Living(e)
@@ -170,7 +180,8 @@ hook.Add("LivingCityIncarcerated", "LivingCityAdminPlot", function(ply) Released
 
 TEMPLATE = {
     id = JOB, factions = { resistance = true }, first = true, recheck = true,
-    available = function() return LC.AdminPlotOpen() end,
+    available = function(ply) return LC.AdminPlotOpen() and (not IsValid(ply) or RankIndex(ply) >= MIN_RANK) end,
+    sees = function(ply) return IsValid(ply) and RankIndex(ply) >= MIN_RANK end, -- (not on the board of anyone below a Fighter)
     -- (her address over, and nobody getting her out: there is nothing left to try. No reason in words: it shows.)
     over = function()
         if not AtAddress() and not Exit() then return false end
@@ -556,6 +567,16 @@ function LC.AdminPlotAttempt(her, who, killed)
     if plan then EndOrder(plan, true) end
     return true
 end
+
+-- The stipend: 100 credits in all for the job from the board (never for the order, nor for a lone wolf). The board's
+-- usual pay for a finished job (lc_directive_pay, sv_livingcity_economy.lua) is part of it, so this adds the rest.
+hook.Add("LivingCityQuestComplete", "LivingCityAdminPlot", function(ply, q)
+    if not (IsValid(ply) and q and q.tmpl == TEMPLATE and LC.AddCredits) then return end
+    local eco, usual = GetConVar("lc_economy"), GetConVar("lc_directive_pay")
+    local had = (not eco or eco:GetBool()) and usual and usual:GetInt() or 0
+    if STIPEND - had > 0 then LC.AddCredits(ply, STIPEND - had, "paid quietly") end
+end)
+function LC.AdminPlotMinRank() return MIN_RANK end
 
 -- She died of it after all, later: hit with no close calls left she is taken out alive, and the roll in her office
 -- went against her (the owner, 17 November; sv_livingcity_adminsecurity.lua says so here). Whoever was paid for the

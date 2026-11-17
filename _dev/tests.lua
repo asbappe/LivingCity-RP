@@ -34896,7 +34896,7 @@ local xpWas = reb:GetNW2Int("lcf_xp", 0)
 local gave, realXP = {}, LC.AddXP
 LC.AddXP = function(p, n, why) gave[#gave + 1] = { p = p, n = n } return realXP(p, n, why) end
 LC.AdminPlotPaid[reb] = CurTime()
-ok(LC.AdminPlotDied() == 1 and #gave == 1 and gave[1].p == reb and gave[1].n == 40, "whoever held the job to kill her is paid the rest when she dies of it after all", #gave)
+ok(LC.AdminPlotDied() == 1 and #gave == 1 and gave[1].p == reb and gave[1].n == 250, "whoever held the job to kill her is paid the rest (250) when she dies of it after all", gave[1] and gave[1].n)
 ok(LC.AdminPlotDied() == 0 and #gave == 1, "(once)")
 LC.AdminPlotPaid[reb] = CurTime() - 700
 ok(LC.AdminPlotDied() == 0 and #gave == 1 and LC.AdminPlotPaid[reb] == nil, "(and not for a death long after)")
@@ -36708,8 +36708,28 @@ _run(2)
 ok(LC.AdminPlot() == nil and attackers() == 0, "and no fighter comes: he is on his own", attackers())
 ok(posted(reb) == nil, "(the job nobody took is off the board with her address)")
 
--- under orders: the job taken, the attempt made
+-- Fighters and up only (the owner, 17 November): below that rank it is not on their board, and not theirs to take
 her = address()
+local low = newPlayer("PlotLowRank", "resistance", nil, 150)
+_run(0.3)
+local sentLow, realSendB = nil, LC.SendCompressed
+LC.SendCompressed = function(msg, tbl, rec) if msg == "lcq_board" and rec and rec[1] == low then sentLow = tbl end return realSendB(msg, tbl, rec) end
+LC.SendBoard(low)
+LC.SendCompressed = realSendB
+local onLow = false
+for _, x in ipairs(sentLow and sentLow.postings or {}) do if x.title == "Kill the Administrator" then onLow = true end end
+ok(LCF.RankOf(low).name == "Member" and sentLow ~= nil and not onLow, "a Member's board does not show Kill the Administrator", LCF.RankOf(low).name)
+low.chat = {}
+ok(not take(low) and LC.QuestOf[low] == nil and LC.AdminPlotHolds(low) == nil and #low.chat == 0, "nor can they take it, and nothing is said")
+local sentReb
+LC.SendCompressed = function(msg, tbl, rec) if msg == "lcq_board" and rec and rec[1] == reb then sentReb = tbl end return realSendB(msg, tbl, rec) end
+LC.SendBoard(reb)
+LC.SendCompressed = realSendB
+local onReb = false
+for _, x in ipairs(sentReb and sentReb.postings or {}) do if x.title == "Kill the Administrator" then onReb = true end end
+ok(onReb, "a Lieutenant's board shows it")
+low:Remove()
+-- under orders: the job taken, the attempt made
 ok(take(reb), "a member of the Resistance takes the job")
 ok(LC.AdminPlotHolds(reb) == "job" and LC.AdminPlotHolds(wolf) == nil and LC.AdminPlotHolds(cit) == nil, "holding it is what makes an attempt an ordered one")
 local xp0, cr0 = xp(reb), LC.Credits(reb)
@@ -36743,8 +36763,9 @@ ok(own == #fighters, "the Resistance's own fighters, on top of the city's number
 ok(hers == #fighters, "every one of them is someone her guards may hurt (LC.AdminTargets)", hers)
 ok(A and A.attackers[reb] and LC.AdminNeverForgotten(reb) and LC.Standing(reb) == -999 and LC.PlayerIsWanted(reb),
     "the assassin's own punishment is as it was: marked, -999, wanted")
-ok(LC.QuestOf[reb] == nil and xp(reb) >= xp0 + 60 and LC.Credits(reb) > cr0 and heard(reb, "Complete: Kill the Administrator") == 1,
-    "the job is done and paid as the attempt is made", xp(reb) - xp0)
+ok(LC.QuestOf[reb] == nil and xp(reb) >= xp0 + 250 and paid(reb) == 250 and heard(reb, "Complete: Kill the Administrator") == 1,
+    "the job is done and paid as the attempt is made: 250 experience for trying", xp(reb) - xp0)
+ok(LC.Credits(reb) == cr0 + 100, "and a stipend of 100 credits in all (the board's usual pay is part of it)", LC.Credits(reb) - cr0)
 ok(LC.AdminPlotHolds(reb) == nil, "and it is over: nothing is held any more")
 
 -- whom they fight, and whom they cannot hurt
@@ -36877,7 +36898,7 @@ pool.reserve = 0
 xp0 = xp(reb)
 LC.AdminAttempt(her, reb, "shot")
 ok(LC.AdminPlot() == nil and attackers() == 0, "an empty reserve sends nobody")
-ok(LC.QuestOf[reb] == nil and xp(reb) >= xp0 + 60, "(the attempt was made all the same: the job is paid)")
+ok(LC.QuestOf[reb] == nil and xp(reb) >= xp0 + 250, "(the attempt was made all the same: the job is paid)")
 pool.reserve = 20
 
 -- her address ends with nothing tried: the job is called off
@@ -36900,7 +36921,7 @@ _run(0.1)
 P = LC.AdminPlot()
 ok(LC.AdminExfil() ~= nil and P ~= nil and #P.fighters >= 7 and LC.QuestOf[reb] == nil, "a shot at a player Administrator by the one who holds the job: the same", P and #P.fighters)
 local plain = paid(reb)
-ok(plain >= 60 and xp(reb) - xp0 >= 60, "(sixty for the attempt)", plain)
+ok(plain == 250 and xp(reb) - xp0 >= 250, "(250 for the attempt)", plain)
 tidy()
 adm:SetPos(at(0, 520))
 set("lc_admin_exfil", 0) -- (her guards' exit switched off: a hit that kills her is a kill)
@@ -36918,7 +36939,8 @@ set("lc_admin_exfil", 1)
 tidy()
 adm:SetPos(at(40000, 0))
 local leader = newPlayer("PlotLieutenant", "resistance", nil, 900)
-local member = newPlayer("PlotMember", "resistance", nil, 150)
+local member = newPlayer("PlotFighter", "resistance", nil, 400)
+local lowly = newPlayer("PlotMember", "resistance", nil, 150)
 inCrowd(leader, 100, -200) inCrowd(member, -100, -200)
 local function target()
     for i, o in ipairs(LC.OpTargets()) do if o.kind == "regicide" then return i, o end end
@@ -36939,8 +36961,11 @@ end
 local plan = LC.OpPlan
 ok(planned and plan and plan.kind == "regicide", "the leader plans it as any operation: a target, and when", tostring(whyNot))
 ok(LC.AdminPlotHolds(leader) == "order" and LC.AdminPlotHolds(member) == nil, "whoever is in on it is under orders from then on")
+local okLow, whyLow = LC.JoinOp(lowly)
+ok(LCF.RankOf(lowly).name == "Member" and okLow == false and whyLow == "Fighters and up only." and LC.AdminPlotHolds(lowly) == nil, "a Member cannot join that plan: Fighters and up", tostring(whyLow))
+ok(plan.leaked == nil and heard(cop, "anticitizens plan") == 0, "(and the plan has not leaked to Civil Protection)")
 LC.JoinOp(member)
-ok(LC.AdminPlotHolds(member) == "order", "a member joins it: under orders too")
+ok(LCF.RankOf(member).name == "Fighter" and LC.AdminPlotHolds(member) == "order", "a Fighter joins it: under orders too")
 LC.JoinOp(member)
 ok(LC.AdminPlotHolds(member) == nil, "backing out drops it")
 LC.JoinOp(member)

@@ -3775,10 +3775,13 @@ function LC.SendBoard(ply)
         end
     end
     for _, p in ipairs(list) do
-        out[#out + 1] = {
-            id = p.id, title = p.title, desc = p.desc, reward = p.reward, violent = p.violent == true,
-            limit = p.limit, taken = p.q and #Members(p.q) or 0, max = math.max(cvSquad:GetInt(), p.squad or 0), mine = mine ~= nil and mine.posting == p,
-        }
+        -- (a job for some of a side only is not on the others' board at all: tmpl.sees, the job to kill the Administrator)
+        if not (p.tmpl and p.tmpl.sees and not p.tmpl.sees(ply)) then
+            out[#out + 1] = {
+                id = p.id, title = p.title, desc = p.desc, reward = p.reward, violent = p.violent == true,
+                limit = p.limit, taken = p.q and #Members(p.q) or 0, max = math.max(cvSquad:GetInt(), p.squad or 0), mine = mine ~= nil and mine.posting == p,
+            }
+        end
     end
     local jobs
     if not stalker and LC.CanWork and LC.CanWork(ply) and LCJ then
@@ -3840,6 +3843,8 @@ function LC.AcceptPosting(ply, pid)
     end
     if not posting or posting.dead then ply:ChatPrint("[Miscount] That job is no longer available.") return false end
     if posting.story and posting.owner ~= ply then return false end
+    -- (not theirs to take, nor to join. Nothing is said: it is not on their board, so only a stale list can ask.)
+    if posting.tmpl and posting.tmpl.sees and not posting.tmpl.sees(ply) then return false end
     -- (a job for a certain hour, still on the board after it: the night shift at midday, the owner, 11 November)
     if posting.tmpl and posting.tmpl.recheck and posting.tmpl.available and not posting.q and not posting.tmpl.available(ply) then
         ply:ChatPrint("[Miscount] " .. (posting.tmpl.recheckWhy or "That job is no longer available."))

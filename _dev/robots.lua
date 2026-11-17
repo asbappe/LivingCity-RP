@@ -317,7 +317,8 @@ return function(T)
     -- is given it while the job is played. id -> function() -> what puts the city back.
     local STAGED = {
         -- her address (the city's own Administrator), at a stand and a crowd point of the robot's own
-        res_regicide = function()
+        res_regicide = function(p)
+            if IsValid(p) then p:SetNW2Int("lcf_rank", 3) end -- (Fighters and up: the owner, 17 November)
             local at = Vector(-90000, 90000, 0)
             local stand0 = LC.AddPoint(at + Vector(0, 500, 0), 270, "speech", 0)
             local crowd0 = LC.AddPoint(at, 90, "speechcrowd", 0)
@@ -357,7 +358,7 @@ return function(T)
         end
         row.event = event
         if STAGED[t.id] then
-            local okS, undo = pcall(STAGED[t.id])
+            local okS, undo = pcall(STAGED[t.id], p)
             if not okS then row.result, row.why = "ERROR", "setting the city up for it: " .. tostring(undo) return row, p end
             row.undo = undo
         end

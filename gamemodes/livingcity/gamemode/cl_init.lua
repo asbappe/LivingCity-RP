@@ -154,7 +154,7 @@ local GUIDE = {
         "Realistic survival: you can catch a cold in the rain, a stomach bug from raw meat or dirty water, and a fever from a cold left alone (no running, no fists, and at midday it knocks you down into a fever dream that breaks it). Union medicine from the Commissary cures a cold or a fever.",
         "The Resistance: an old fighter they call the Colonel keeps watch at the camp. He knows what's coming before the radio does.",
         "After the City Administrator gives an address, Colonel Cubbage answers her a few minutes later from the Resistance's camp, point by point. Stand near him, or tune a radio to Freq 7, to hear it.",
-        "While she gives her address the Resistance's board offers Kill the Administrator (its leaders can plan it: F2 > Resistance > Operations). Hold either, and our fighters open fire when you do.",
+        "While she gives her address the Resistance's board offers its Fighters and up Kill the Administrator (its leaders can plan it: F2 > Resistance > Operations). Hold either, and our fighters open fire when you do.",
         "Some of the city's posters hint at a dream: tonight's, or one the city had lately. Read them closely (E) and guess.",
         "Somewhere in the city is an old man who's seen it all. Find him, visit him, share a meal: the better he knows you, the more he'll tell you.",
         "The Resistance (Member rank and up) can ask a sympathizer to keep watch: they warn everyone on Freq 7 when Civil Protection units approach.",
