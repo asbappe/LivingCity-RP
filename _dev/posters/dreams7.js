@@ -78,19 +78,23 @@ ART.dream_doors = () => {
   return s;
 };
 
-// Shh!
+// Shh! (the owner, 17 November: no hand; a citizen with a zip across the mouth, zipped shut)
 ART.dream_shh = () => {
   let s = R(0, 0, 720, 610, DARK);
   const q = rng(17);
   for (let x = 14; x < 720; x += 58) for (let y = 20; y < 600; y += 66) s += R(x, y, 34, 42, x === 594 && y === 152 ? C.warm : q() < 0.5 ? '#111c2a' : '#0e1622');
   s += rays(360, 300, 30, 700, C.cyanD, 0, 360, 'opacity=".22"');
-  s += P('M172,524 L548,524 L566,610 L154,610Z', KNIT) + P('M420,524 L548,524 L566,610 L440,610Z', KNITD) + G('translate(165,40) scale(2.3)', adminBust());
-  // her finger to her lips: a small hand seen from its side, flat shapes, no outline
-  const HAND = '#eedcc3', HANDD = '#a3835f';
-  s += P('M362,392 L408,390 L436,610 L374,610Z', KNIT) + P('M392,391 L408,390 L436,610 L418,610Z', KNITD) + R(358, 386, 54, 12, KNITD, 'rx="5"');
-  s += R(357, 275, 16, 70, HANDD, 'rx="7"') + R(352, 272, 16, 72, HAND, 'rx="8"');
-  s += R(352, 334, 58, 56, HAND, 'rx="15"') + R(396, 340, 14, 46, HANDD, 'rx="7" opacity=".55"');
-  s += L('M374,350 h30 M374,362 h31 M374,374 h29', HANDD, 2.5) + P('M356,378 L370,352 L384,346 L390,354 L378,366 L370,386Z', HAND) + L('M357,377 L370,352 L384,346', HANDD, 2.2);
+  // a citizen, the mouth zipped shut
+  s += P('M140,610 L170,486 L306,444 L414,444 L550,486 L580,610Z', C.blue) + P('M414,444 L550,486 L580,610 L452,610 L430,500Z', C.blueD) + P('M312,444 L408,444 L374,530 L346,530Z', C.blueD);
+  s += R(324, 384, 72, 66, C.steel2) + P('M324,400 L396,400 L396,424 L324,412Z', C.steel);
+  s += R(238, 220, 26, 60, C.steel2, 'rx="10"') + R(456, 220, 26, 60, C.steel, 'rx="10"');
+  s += P('M290,104 L430,104 L468,190 L458,322 L410,404 L310,404 L262,322 L252,190Z', C.paper) + P('M400,104 L430,104 L468,190 L458,322 L410,404 L384,404 L420,320 L428,200Z', C.steel, 'opacity=".55"');
+  s += P('M252,190 L258,150 L462,150 L468,190 L452,200 L268,200Z', '#3a2f28') + P('M256,160 L282,72 L438,72 L464,160Z', C.blue) + P('M380,72 L438,72 L464,160 L400,160Z', C.blueD) + R(238, 154, 244, 20, C.blueD, 'rx="4"') + R(238, 168, 244, 6, C.ink);
+  s += R(292, 214, 46, 7, C.ink) + R(382, 214, 46, 7, C.ink) + R(298, 234, 36, 13, C.ink) + R(386, 234, 36, 13, C.ink) + R(310, 237, 10, 7, C.paper) + R(398, 237, 10, 7, C.paper);
+  s += P('M360,250 L374,302 L348,302Z', C.steel2);
+  s += R(284, 328, 152, 30, C.ink, 'rx="5"');
+  for (let i = 0; i < 12; i++) s += R(292 + i * 10, i % 2 ? 337 : 341, 6, 12, C.steel2);
+  s += R(410, 330, 26, 26, C.steel2, 'rx="5"') + R(416, 337, 14, 12, C.ink, 'rx="3"') + R(417, 350, 12, 34, C.cyan, 'rx="5"') + R(420, 370, 6, 9, C.ink, 'rx="3"');
   return s;
 };
 
