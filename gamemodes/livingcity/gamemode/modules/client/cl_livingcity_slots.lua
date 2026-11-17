@@ -52,7 +52,7 @@ local function Card(parent, i, s, active, can, why)
         draw.SimpleText(string.format("%s credits   |   standing %s%s", tostring(s.credits or "?"), tostring(s.standing or "?"),
             active and "   |   playing now" or ""), "DermaDefault", 0, 52, DIM)
         if s.close then
-            draw.SimpleText(s.close > 0 and string.format("%d close call%s left", s.close, s.close == 1 and "" or "s") or "No close calls left: the next death is the end",
+            draw.SimpleText(s.close > 0 and string.format("%d close call%s left", s.close, s.close == 1 and "" or "s") or "No close calls left",
                 "DermaDefault", 0, 68, s.close > 0 and DIM or Color(230, 120, 100))
         end
     end

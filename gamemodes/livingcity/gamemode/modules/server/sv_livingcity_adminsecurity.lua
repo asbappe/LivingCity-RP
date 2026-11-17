@@ -562,7 +562,8 @@ local function Begin(S, her, who)
     if her:IsPlayer() then
         -- (the hit that set it off would have killed her: a close call, used up when she is set down)
         A.closeCall = (her.lcAdminCloseHit ~= nil and now - her.lcAdminCloseHit < 2) or nil
-        her.lcAdminCloseHit = nil
+        A.thread = (A.closeCall and her.lcAdminThread) or nil -- (none left: a roll in her office decides it)
+        her.lcAdminCloseHit, her.lcAdminThread = nil, nil
         if her.GodEnable then her:GodEnable() end
         her:SetNW2Bool("lc_exfil", true)
     else
@@ -638,7 +639,11 @@ local function Done(deliver)
         if her.ScreenFade and not a.ran and not fainting then her:ScreenFade(SCREENFADE and SCREENFADE.IN or 1, Color(0, 0, 0, 255), 1.5, 0.3) end
         hook.Run("LivingCityAdminMoved", her, to)
     end
-    if fainting then return Faint(her, door) end -- (nothing can hurt her until that is over)
+    if fainting then -- (nothing can hurt her until that is over)
+        local by
+        for who in pairs(a.attackers) do if IsValid(who) and not by then by = who end end
+        return Faint(her, door, a.thread, by)
+    end
     -- (a few seconds more before anything can hurt her again)
     timer.Simple(4, function() if IsValid(her) and her.GodDisable and not (A and A.her == her) then her:GodDisable() end end)
 end
@@ -1105,8 +1110,31 @@ local function SceneCount(c)
     c.left = left
     if LC.Notice then
         LC.Notice(her, "bad", "A close call", "You were hit at your address. Your guards got you out. " ..
-            (left > 0 and string.format("%d close call%s left.", left, left == 1 and "" or "s") or "That was the last one: the next death is the end of you."), 12)
+            (left > 0 and string.format("%d close call%s left.", left, left == 1 and "" or "s") or "That was the last one."), 12)
     end
+end
+-- None left, and the roll went against her: she dies there, as anyone does for good, and her card carries the
+-- reminder (cl_livingcity_life.lua). The energizer's way (sv_livingcity_stalkerwork.lua): no second roll.
+local function SceneDeath(c)
+    C = nil
+    timer.Remove("LivingCityAdminCloseCall")
+    if IsValid(c.medic) then c.medic:Remove() end
+    local her = c.her
+    if not (IsValid(her) and her:Alive()) then return end
+    if her.GodDisable then her:GodDisable() end
+    if her.ScreenFade then -- (her own dark goes as the card's comes: never left in it)
+        her:ScreenFade(bit.bor(SCREENFADE and SCREENFADE.IN or 1, SCREENFADE and SCREENFADE.PURGE or 16), Color(0, 0, 0, 255), 0.1, 0)
+    end
+    if LC.DeathCause then
+        her.lcDownCause = nil
+        local line, said = LC.DeathCause(her, IsValid(c.by) and c.by or nil)
+        if line then her.lcDownCause = { line, said } end
+    end
+    her.lcEndOfLife = "death"
+    her.lcDeathRule = true
+    her:Kill()
+    her.lcEndOfLife = nil
+    her.lcDeathRule = nil
 end
 local function SceneHeal(c)
     c.healed = true
@@ -1116,7 +1144,7 @@ local function SceneWake(c, now)
     c.woke, c.held, c.wokeAt = true, false, now
     local her = c.her
     if her.ScreenFade then
-        her:ScreenFade(bit.bor(SCREENFADE and SCREENFADE.IN or 1, SCREENFADE and SCREENFADE.PURGE or 16), Color(0, 0, 0, 255), 1.5, 0)
+        her:ScreenFade(bit.bor(SCREENFADE and SCREENFADE.IN or 1, SCREENFADE and SCREENFADE.PURGE or 16), Color(0, 0, 0, 255), c.thread and 5 or 1.5, 0) -- (by a thread: she wakes slowly)
     end
 end
 
@@ -1174,7 +1202,7 @@ local function SceneEnd()
     local her = c.her
     if not (IsValid(her) and her:Alive()) then return end
     -- (cut short: she is counted, healed and freed all the same)
-    if not c.counted then SceneCount(c) end
+    if not c.counted and not c.thread then SceneCount(c) end -- (by a thread: there was none to count)
     if not c.healed then SceneHeal(c) end
     if not c.woke then SceneWake(c, CurTime()) end
     if c.safe then
@@ -1190,6 +1218,23 @@ local function Scene(now)
     local her = c.her
     if not IsValid(her) or not her:Alive() then return SceneEnd() end
     local t = now - c.t0
+    if c.thread and not c.rolled then
+        -- none left: in the dark the roll is made and plays on her screen, and nothing else happens until it has
+        if t < SCENE.dark then return end
+        if not c.dice then
+            c.dice = (LC.LastChance and LC.LastChance(her)) or { lives = true, secs = 0 } -- (switched off meanwhile: she lives)
+            c.diceEnd = now + (c.dice.secs or 0)
+            if c.dice.roll and LC.LastChanceShow then LC.LastChanceShow(her, c.dice, "attempt") end
+        end
+        if now < c.diceEnd then return end
+        c.rolled = true
+        if not c.dice.lives then return SceneDeath(c) end
+        -- she lives: no close call is counted (there was none), and it goes on from the medic
+        c.counted = true
+        c.t0 = now - SCENE.dark
+        t = SCENE.dark
+        SceneMedic(c, now)
+    end
     if t >= SCENE.dark and not c.counted then
         SceneCount(c)
         SceneMedic(c, now)
@@ -1238,9 +1283,9 @@ local function Scene(now)
 end
 
 -- She faints where she was set down (door: her office's, when she is in it).
-function Faint(her, door)
+function Faint(her, door, thread, by)
     if C then SceneEnd() end
-    C = { her = her, door = door, t0 = CurTime(), held = true, safe = true }
+    C = { her = her, door = door, t0 = CurTime(), held = true, safe = true, thread = thread or nil, by = by }
     if her.GodEnable then her:GodEnable() end
     if her.ScreenFade then
         her:ScreenFade(bit.bor(SCREENFADE and SCREENFADE.OUT or 2, SCREENFADE and SCREENFADE.STAYOUT or 8), Color(0, 0, 0, 255), SCENE.dark, 0)
@@ -1346,8 +1391,11 @@ end)
 -- kill: it leaves her a breath, and she is taken out all the same. Where close calls are counted (lc_close_calls
 -- above 0, lc_permadeath 1) it uses one of hers up (the owner, 16 November: "it should use up a close call, just
 -- please make sure the player is aware of that when and after it happens"): she is told at once, and again when
--- she is set down (the scene above). With none left the hit stands, as it would anywhere. Where they are not
--- counted she simply lives, as before.
+-- she is set down (the scene above). With none left her life hangs by a thread (the owner, 17 November: "She is
+-- still rushed out ... roll a dice as to whether the administrator dies or not if no close calls left"): the hit
+-- leaves her a breath all the same, and the roll is made and shown in her office (LC.LastChance,
+-- sv_livingcity_progress.lua); with lc_last_chance 0 the hit stands, as it would anywhere. Where close calls are
+-- not counted she simply lives, as before.
 local function CloseCallsCount()
     local calls, perma = GetConVar("lc_close_calls"), GetConVar("lc_permadeath")
     return LC.CloseCallsLeft ~= nil and calls ~= nil and calls:GetInt() > 0 and (perma == nil or perma:GetBool())
@@ -1356,9 +1404,11 @@ local function CloseHit(her, dmg)
     local hp = her:Health()
     if (dmg:GetDamage() or 0) < hp then return end
     if CloseCallsCount() then
-        if LC.CloseCallsLeft(her) <= 0 then return end
+        local thread = LC.CloseCallsLeft(her) <= 0
+        if thread and not (LC.LastChanceApplies and LC.LastChanceApplies(her)) then return end
         her.lcAdminCloseHit = CurTime()
-        if LC.Notice then LC.Notice(her, "bad", "A close call", "You are badly hit. Your guards are getting you out.", 6) end
+        her.lcAdminThread = thread or nil
+        if LC.Notice then LC.Notice(her, "bad", thread and "No close calls left" or "A close call", "You are badly hit. Your guards are getting you out.", 6) end
         if her.ScreenFade then her:ScreenFade(SCREENFADE and SCREENFADE.IN or 1, Color(150, 0, 0, 170), 1.5, 0.3) end
     end
     dmg:SetDamage(math.max(0, hp - 1))

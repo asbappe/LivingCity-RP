@@ -102,6 +102,7 @@ _setcvar("lc_dressing", 0)
 _realHintScan = LC.HintScan -- tips: looked at on their own, later (the look-around is slow against the fake entity list)
 LC.HintScan = function() end
 LC.EvidenceAuto = false -- (confiscated contraband burned by itself: tested on its own, in EvidenceTests)
+LC.LastChanceRoll = function() return 1 end -- (a death with no close calls left is the end unless a test says otherwise: the roll that can save them is tested on its own, Nov17_LastChanceTests)
 
 ----------------------------------------------------------------------
 section("Load")
@@ -34786,11 +34787,13 @@ ok(LC.AdminCloseCallScene() ~= nil, "the exit over where she stands: she faints 
 LC.AdminCloseCallEnd()
 ok(LC.AdminCloseCallScene() == nil and LC.CloseCallsLeft(adm) == 0 and not Held() and adm:Health() == adm:GetMaxHealth(),
     "the scene cut short: the close call is counted, and she is healed and freed all the same", LC.CloseCallsLeft(adm))
-ok(string.find(notes[#notes], "That was the last one: the next death is the end of you.", 1, true) ~= nil, "she is told it was her last", notes[#notes])
+ok(string.find(notes[#notes], "Your guards got you out. That was the last one.", 1, true) ~= nil, "she is told it was her last", notes[#notes])
 for _, e in ipairs(ents.FindByClass("lc_adminglass")) do e:Remove() end
 _run(5)
 
--- none left: the hit stands
+-- none left, and the roll switched off (lc_last_chance 0): the hit stands
+local lastWas = GetConVar("lc_last_chance"):GetInt()
+set("lc_last_chance", 0)
 adm:SetPos(K0 + Vector(0, 520, 0))
 if LC.SpeechSession() then LC.EndSpeech() end
 ok(LC.CloseCallsLeft(adm) == 0 and LC.CallSpeech(adm, "Citizens."), "her address, with none left")
@@ -34804,6 +34807,7 @@ _run(0.1)
 ok(LC.AdminExfil() == nil, "and nobody is taken out")
 adm.alive = true
 if LC.SpeechSession() then LC.EndSpeech() end
+set("lc_last_chance", lastWas)
 
 -- close calls not counted on the server: she simply lives, as before
 set("lc_close_calls", 0)
@@ -34827,6 +34831,66 @@ hook.Run("EntityTakeDamage", adm, shot)
 _run(0.1)
 ok(shot:GetDamage() == 29 and #notes == said and LC.AdminExfil() and LC.AdminExfil().closeCall == nil, "permanent death off: the same", shot:GetDamage())
 LC.AdminExfilEnd(false)
+
+-- none left: her life hangs by a thread (the owner, 17 November). She is taken out all the same, and a roll
+-- she watches in her office decides it
+set("lc_permadeath", 1)
+if LC.SpeechSession() then LC.EndSpeech() end
+adm:SetPData("lc_close_used", 3)
+adm:SetMaxHealth(100)
+local shown, realShow = {}, LC.LastChanceShow
+LC.LastChanceShow = function(p, d, why) shown[#shown + 1] = { p = p, d = d, why = why } end
+local rollWas = LC.LastChanceRoll
+LC.LastChanceRoll = function() return 90 end
+adm:SetPos(K0 + Vector(0, 520, 0))
+ok(LC.CloseCallsLeft(adm) == 0 and LC.CallSpeech(adm, "Citizens."), "her address, with none left and the roll on")
+adm:SetHealth(30)
+said = #notes
+shot = _dmg(reb, 500)
+hook.Run("EntityTakeDamage", adm, shot)
+_run(0.1)
+local T = LC.AdminExfil()
+ok(shot:GetDamage() == 29 and T and T.closeCall == true and T.thread == true, "none left: the hit leaves her a breath, and she is taken out all the same", shot:GetDamage())
+LC.AdminExfilEnd(true)
+local TC = LC.AdminCloseCallScene()
+ok(TC and TC.thread == true and TC.by == reb and Held() and adm.god == true, "in her office she faints, as for a close call")
+_run(1.8)
+ok(#shown == 1 and shown[1].p == adm and shown[1].d.roll == 90 and shown[1].d.need == 51 and shown[1].d.lives == true and shown[1].why == "attempt",
+    "in the dark the roll is made and shown to her", #shown)
+ok(LC.CloseCallsLeft(adm) == 0 and #notes == said and Held() and not IsValid(TC.medic), "nothing is counted or said, and nothing else happens while it plays")
+_run(LC.LastChanceSecs)
+ok(LC.AdminCloseCallScene() == TC and IsValid(TC.medic) and Held(), "it went her way: a medic is beside her")
+_run(5.5)
+ok(adm:Health() == adm:GetMaxHealth() and not Held() and adm:Alive(), "she is seen to, and wakes", adm:Health())
+ok(tonumber(adm:GetPData("lc_close_used", 0)) == 3 and #notes == said, "no close call was used (there was none), and she was told nothing more")
+_run(16)
+ok(LC.AdminCloseCallScene() == nil and adm.god == false, "the scene ends, and she can be hurt again")
+
+-- and against her: she dies in her office, for good, and her card carries the reminder
+if LC.SpeechSession() then LC.EndSpeech() end
+LC.LastChanceRoll = function() return 2 end
+local cards, realSend = {}, LC.SendCompressed
+LC.SendCompressed = function(msg, tbl, rec) if msg == "lc_obituary" then cards[#cards + 1] = tbl end return realSend(msg, tbl, rec) end
+adm:SetPos(K0 + Vector(0, 520, 0))
+ok(LC.CallSpeech(adm, "Citizens."), "her address once more, with none left")
+adm:SetHealth(30)
+shot = _dmg(reb, 500)
+hook.Run("EntityTakeDamage", adm, shot)
+_run(0.1)
+LC.AdminExfilEnd(true)
+local acid = adm:GetNW2String("lc_cid", "")
+_run(1.8)
+ok(#shown == 2 and shown[2].d.roll == 2 and shown[2].d.lives == false and adm:Alive(), "the roll is shown: it goes against her")
+_run(LC.LastChanceSecs)
+local dc = cards[#cards]
+ok(not adm:Alive() and LC.AdminCloseCallScene() == nil, "when it has played she dies where she lies")
+ok(dc and dc.gone == true and dc.rule == true and dc.dark == true and dc.dice == nil, "her card: gone, in the dark she was in, with the reminder (and no second roll)", dc and tostring(dc.gone))
+ok(adm.lcEndOfLife == nil and adm.lcDeathRule == nil and adm.god == false, "(nothing of it is left on her)")
+adm.alive = true adm:Spawn() _run(0.5)
+ok(adm:GetNW2String("lc_cid", "") ~= acid, "and she comes back as someone new")
+LC.SendCompressed = realSend
+LC.LastChanceShow = realShow
+LC.LastChanceRoll = rollWas
 
 LC.Notice = realNotice
 if LC.AdminCloseCallScene() then LC.AdminCloseCallEnd() end
@@ -35748,6 +35812,107 @@ for _, p in ipairs({ cop, plain, killer, second }) do p:Remove() end
 _walls = savedWalls
 end
 Nov16_AdminHuntTests()
+
+function Nov17_LastChanceTests()
+section("No close calls left: a roll decides it (the owner, 17 November)")
+local set = _setcvar
+local callsWas, permaWas, lastWas = GetConVar("lc_close_calls"):GetInt(), GetConVar("lc_permadeath"):GetInt(), GetConVar("lc_last_chance"):GetInt()
+local rollWas = LC.LastChanceRoll
+set("lc_close_calls", 3)
+set("lc_permadeath", 1)
+ok(lastWas == 50, "lc_last_chance: an even chance, unless the owner changes it", lastWas)
+local cards, realSend = {}, LC.SendCompressed
+LC.SendCompressed = function(msg, tbl, rec) if msg == "lc_obituary" then cards[#cards + 1] = tbl end return realSend(msg, tbl, rec) end
+local notes, realNotice = {}, LC.Notice
+LC.Notice = function(q, kind, title, text, secs) notes[#notes + 1] = { p = q, title = title, text = text } return realNotice(q, kind, title, text, secs) end
+local p = newPlayer("ThreadCitizen", "citizen")
+_run(0.3)
+p:SetPos(Vector(-186000, -76000, 0))
+local cid = p:GetNW2String("lc_cid", "")
+p:SetPData("lc_close_used", 3)
+ok(LC.CloseCallsLeft(p) == 0 and LC.LastChanceApplies(p), "a person with no close calls left: their next death hangs by a thread")
+-- the roll: 1 to 100; at an even chance it takes 51 to live
+LC.LastChanceRoll = function() return 51 end
+local d = LC.LastChance(p)
+ok(d and d.roll == 51 and d.need == 51 and d.lives == true and d.secs == LC.LastChanceSecs, "51 lives at an even chance", d and d.need)
+LC.LastChanceRoll = function() return 50 end
+ok(LC.LastChance(p).lives == false, "50 does not")
+LC.LastChanceRoll = function() return 250 end
+ok(LC.LastChance(p).roll == 100, "(a roll is never over 100)")
+set("lc_last_chance", 100)
+LC.LastChanceRoll = function() return 1 end
+ok(LC.LastChance(p).lives == true, "at 100 nobody dies of it")
+set("lc_last_chance", 50)
+-- who gets none
+local wasZ = LC.PlayerIsZombie
+LC.PlayerIsZombie = function(q) return q == p or wasZ(q) end
+ok(not LC.LastChanceApplies(p) and LC.LastChance(p) == nil, "one of the infested gets no roll: nobody would treat them")
+LC.PlayerIsZombie = wasZ
+local wasS = LC.PlayerIsStalker
+LC.PlayerIsStalker = function(q) return q == p or wasS(q) end
+ok(LC.LastChance(p) == nil, "nor a stalker")
+LC.PlayerIsStalker = wasS
+p.lcEndOfLife = "executed"
+ok(LC.LastChance(p) == nil, "nor an end that is final whatever is left (an execution, the energizer)")
+p.lcEndOfLife = nil
+set("lc_close_calls", 0)
+ok(LC.LastChance(p) == nil, "nor anyone where close calls are not counted: every death is the end there, as it was")
+set("lc_close_calls", 3)
+
+-- it goes their way
+LC.LastChanceRoll = function() return 77 end
+LC.GiveItem(p, "ration", 1)
+p:Kill() _run(0.5)
+local c = cards[#cards]
+ok(c and c.gone == false and c.dice and c.dice.roll == 77 and c.dice.need == 51 and c.dice.lives == true and c.rule == nil,
+    "the roll goes their way: the card carries it, and they are not gone", c and tostring(c.gone))
+ok(c and c.wait == LC.RespawnWait() + LC.LastChanceSecs, "the card waits for the roll to play out", c and c.wait)
+p.alive = true p:Spawn() _run(2)
+ok(p:GetNW2String("lc_cid", "") == cid and cid ~= "", "they pulled through: still the same person")
+ok(LC.CloseCallsLeft(p) == 0 and tonumber(p:GetPData("lc_close_used", 0)) == 3 and not LC.HasItem(p, "ration"),
+    "no close call is used (there was none), and the pockets are gone as after any")
+ok(p:GetNW2Float("lc_recovering_until", 0) > CurTime(), "and they are still recovering for a while")
+local told = false
+for _, n in ipairs(notes) do
+    if n.p == p and n.title == "A close call" and string.find(n.text, "leave it be. No close calls left.", 1, true) then told = true end
+end
+ok(told, "waking in the infirmary, they are told there are none left")
+
+-- it goes against them
+LC.LastChanceRoll = function() return 3 end
+p:Kill() _run(0.5)
+c = cards[#cards]
+ok(c and c.gone == true and c.dice and c.dice.roll == 3 and c.dice.lives == false and c.rule == true and c.dark == nil,
+    "the roll goes against them: gone, the roll on the card, and the reminder with it", c and tostring(c.gone))
+p.alive = true p:Spawn() _run(0.5)
+ok(p:GetNW2String("lc_cid", "") ~= cid, "and they come back as someone new")
+
+-- with one left it is a close call, and nothing is rolled
+cid = p:GetNW2String("lc_cid", "")
+LC.LastChanceRoll = function() return 100 end
+p:Kill() _run(0.5)
+c = cards[#cards]
+ok(c and c.gone == false and c.dice == nil and LC.CloseCallsLeft(p) == 2, "with a close call left it is a close call, and nothing is rolled", LC.CloseCallsLeft(p))
+p.alive = true p:Spawn() _run(0.5)
+
+-- the roll switched off: that death is the end, as it was
+p:SetPData("lc_close_used", 3)
+set("lc_last_chance", 0)
+p:Kill() _run(0.5)
+c = cards[#cards]
+ok(c and c.gone == true and c.dice == nil and c.rule == nil, "lc_last_chance 0: no roll and no reminder, that death is the end")
+p.alive = true p:Spawn() _run(0.5)
+ok(p:GetNW2String("lc_cid", "") ~= cid, "(someone new)")
+
+LC.Notice = realNotice
+LC.SendCompressed = realSend
+LC.LastChanceRoll = rollWas
+set("lc_last_chance", lastWas)
+set("lc_close_calls", callsWas)
+set("lc_permadeath", permaWas)
+p:Remove()
+end
+Nov17_LastChanceTests()
 
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")
 ;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)
