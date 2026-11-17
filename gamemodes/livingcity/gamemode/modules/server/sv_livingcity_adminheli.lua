@@ -237,13 +237,18 @@ local function Rotors(ent, on)
     if not IsValid(ent) or ent.lcRotors == on then return end
     ent.lcRotors = on
     if on then
-        for _, name in ipairs(ROTOR_SEQS) do
-            local seq = ent.LookupSequence and ent:LookupSequence(name)
-            if seq and seq >= 0 then
-                ent:Fire("SetDefaultAnimation", name)
-                ent:Fire("SetAnimation", name)
-                break
-            end
+        local name
+        for _, n in ipairs(ROTOR_SEQS) do
+            local seq = ent.LookupSequence and ent:LookupSequence(n)
+            if seq and seq >= 0 then name = n break end
+        end
+        if not name and ACT_IDLE and ent.SelectWeightedSequence and ent.GetSequenceName then -- (none by those names: its idle, whatever it is called)
+            local seq = ent:SelectWeightedSequence(ACT_IDLE)
+            if seq and seq >= 0 then name = ent:GetSequenceName(seq) end
+        end
+        if name and name ~= "" then
+            ent:Fire("SetDefaultAnimation", name)
+            ent:Fire("SetAnimation", name)
         end
         ent:Fire("SetPlaybackRate", "1")
         ent:EmitSound(ROTOR_SOUND, 100, 100)
