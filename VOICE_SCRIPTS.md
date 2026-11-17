@@ -24,7 +24,7 @@ Ticked [x] below: the server already has it. Left to record, 357 files:
 - **machines** (`machines/`): 10 missing
 - **Colonel Cubbage** (`cubbage/`): 24 missing
 - **the Resistance's people** (`resistance/`): nothing missing
-- **added since the server's list was made**: 90 more rows (unticked below; run `lc_voice_missing` again after uploading and they are checked too)
+- **added since the server's list was made**: 91 more rows (unticked below; run `lc_voice_missing` again after uploading and they are checked too)
 
 Run `lc_voice_missing` on the server after uploading, and give Claude the list (or `data/livingcity/voice_missing.txt`) to update the ticks. The Colonel's own lines (the ghost) aren't checked by it.
 
@@ -445,6 +445,7 @@ Folder: `overwatch/`. Overwatch: cold and clinical, a dispatcher, the same voice
 | [ ] | `suppressor_down1` | The suppression device is destroyed | [cold, clinical, flat dispatcher] Alert: Nexus suppression device offline. All units, contain and repair. |
 | [ ] | `speech_soon1` | Her address is called: the city must gather (Overwatch's when a player Administrator calls it from her tablet; hers when the city gives it) | [cold, clinical, flat dispatcher] Attention, all residents: the City Administrator will address the city. Report to the assembly point immediately. Attendance is mandatory. |
 | [ ] | `attempt1` | An attempt on her life at her address, three to five minutes after it (hers with nobody playing her, Overwatch's with a player in the post) | [cold, clinical, flat dispatcher] Attention, all units: an attempt has been made on the life of the City Administrator. The Administrator is secure. All sectors are sealed. Locate and apprehend the assailant. |
+| [ ] | `hunt1` | A hunt for whoever tried to kill her begins: Dispatch to the units, heard on their radios only, in sound only (never the PA, no words on screen); give it the unit lines' radio sound | [cold, clinical, flat dispatcher] All units: an attempt was made on the Administrator's life. The suspect is at large. Take them alive. |
 
 ## The radio
 

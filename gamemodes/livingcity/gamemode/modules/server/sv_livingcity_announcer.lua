@@ -130,12 +130,17 @@ LC.AnnounceTriggers = {
     -- her questions to whoever tried to kill her, asked in the cells by the city's own Administrator (hers only, never
     -- announced: sv_livingcity_adminquestioning.lua picks the recording and she says it where she stands)
     "question_names", "question_supplies", "question_hideout", "question_why", "question_who",
+    -- Dispatch to the units when a hunt for whoever tried to kill her begins: Overwatch's only, never over the PA, heard
+    -- on the units' radios in sound alone and only where it is recorded (sv_livingcity_adminhunt.lua)
+    "hunt",
 }
 -- Lines only she says (Overwatch has none of these): lc_voice_missing doesn't ask him for them.
 LC.AnnounceHersOnly = {}
 for _, t in ipairs(LC.AnnounceTriggers) do
     if (string.sub(t, 1, 7) == "speech_" and t ~= "speech_soon") or string.sub(t, 1, 9) == "question_" then LC.AnnounceHersOnly[t] = true end
 end
+-- Lines only Overwatch says, and never over the PA: lc_voice_missing doesn't ask her for them.
+LC.AnnounceHisOnly = { hunt = true }
 -- No longer said (a sweep, a raid or a supply convoy is a surprise; a lockdown
 -- answers violence): files named for these are left alone, never mistaken for
 -- the event itself (lockdown_soon1.wav is not a lockdown line).
@@ -156,7 +161,7 @@ local BASE_TIER = {
     breakout = 4, socio_black = 4, black_stand = 4, black_fallen = 4, suppressor_down = 4, black_crushed = 3,
     jog = 1, drill = 1, parade = 1, -- (she loves a bit of exercise)
     attempt = 4, speech_attempt_open = 3, speech_attempt_martyr = 3, speech_attempt_you = 3, speech_attempt_hero = 3, speech_attempt_guards = 3, speech_attempt_enemy = 3, speech_attempt_caught = 3, speech_attempt_hunt = 3, speech_attempt_measures = 3, speech_attempt_resolve = 3,
-    question_names = 3, question_supplies = 3, question_hideout = 3, question_why = 3, question_who = 3,
+    question_names = 3, question_supplies = 3, question_hideout = 3, question_why = 3, question_who = 3, hunt = 3,
     speech_soon = 1, speech_open = 1, speech_slogan = 1, speech_ev_deaths = 2, speech_ev_arrests = 2, speech_ev_informers = 1, speech_ev_informer_hurt = 3, speech_ev_taken = 3, speech_ev_escape = 3, speech_ev_posters = 2, speech_ev_theft = 2, speech_ev_defiance = 2, speech_ev_sabotage = 3, speech_ev_heavyhand = 2, speech_ev_drink = 1, speech_ev_kindness = 1, speech_ev_despair = 1, speech_unrest = 3, speech_hunger = 1, speech_order = 2, speech_morale = 1, speech_calm = 1, speech_mood_afraid = 1, speech_mood_restless = 2, speech_mood_content = 1, speech_close = 1,
 }
 LC.AnnounceBaseTier = BASE_TIER -- (read only: the voice lines list, _dev/voice_lines.py)
@@ -699,6 +704,7 @@ function LC.VoiceMissing()
         local m = {}
         for _, t in ipairs(LC.AnnounceTriggers) do
             if v == "overwatch" and LC.AnnounceHersOnly[t] then goto nextTrig end
+            if v == "administrator" and LC.AnnounceHisOnly[t] then goto nextTrig end
             local n = 0
             for k = 1, (v == "administrator" and #TIERS or 1) do n = n + #Scan(v, t, k) end
             if n == 0 then m[#m + 1] = t end

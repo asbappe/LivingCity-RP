@@ -35663,12 +35663,25 @@ killer:SetPos(H0)
 _run(4)
 ok(LC.AdminHunts[plain] == nil and LC.AdminHunts[killer] == nil and #squads == 0, "nobody marked: no hunt, no squads")
 
+-- Dispatch's recording for a hunt (the owner, 17 November): Overwatch's only, in sound only
+ok(LC.AnnounceHisOnly.hunt == true and LC.AnnounceHersOnly.hunt == nil, "the hunt's Dispatch line is Overwatch's only")
+ok(LC.AdminHuntDispatch() == 0, "not recorded: nothing is played")
+local dispatch, realPick, realEmit = {}, LC.PickAnnounceClip, cop.EmitSound
+LC.PickAnnounceClip = function(voice, trig, ...)
+    if voice == "overwatch" and trig == "hunt" then return "livingcity/overwatch/hunt1.wav" end
+    return realPick(voice, trig, ...)
+end
+cop.EmitSound = function(self, path, ...)
+    if string.find(tostring(path), "overwatch/hunt", 1, true) then dispatch[#dispatch + 1] = path end
+    if realEmit then return realEmit(self, path, ...) end
+end
 -- the attempt: marked, and hunted from that moment
 cop.chat = {}
 LC.AdminAttacker(killer)
 _run(4)
 ok(LC.AdminHuntOf(killer) ~= nil and LC.AdminHunted(killer), "a player who tried to kill her, free in the city, is hunted")
 ok(heard(cop, "tried to kill the Administrator") == 0 and heard(cop, "hunting") == 0, "the units' radio is told nothing in words (the owner, 17 November: no more text)", table.concat(cop.chat or {}, " | "))
+ok(#dispatch == 1 and dispatch[1] == "livingcity/overwatch/hunt1.wav", "recorded: Dispatch's line is heard on the unit's radio, once, in sound alone", #dispatch)
 ok(#(killer.chat or {}) == 0 or heard(killer, "Overwatch is hunting") == 0, "and nothing is put on the assassin's own screen about it")
 ok(#squads == 0, "(no squad the same second)")
 killer:SetPos(AWAY) -- (they get away, unseen)
@@ -35742,6 +35755,9 @@ cop.chat = {}
 free(killer)
 _run(4)
 ok(LC.AdminHunts[killer] ~= nil, "free again: hunted again")
+ok(#dispatch == 1, "(Dispatch's recording is not played a second time so soon)", #dispatch)
+LC.PickAnnounceClip = realPick
+cop.EmitSound = realEmit
 _run(17) sim()
 ok(#squads == 1 and squads[1].place.zone ~= nil, "nobody has seen them: the squad goes to a hideout")
 

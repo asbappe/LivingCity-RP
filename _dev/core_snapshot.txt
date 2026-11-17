@@ -31,6 +31,7 @@ announce trigger day
 announce trigger drill
 announce trigger dusk
 announce trigger ended
+announce trigger hunt
 announce trigger jog
 announce trigger lockdown
 announce trigger night
@@ -38,6 +39,11 @@ announce trigger outbreak
 announce trigger overwatch_drop
 announce trigger parade
 announce trigger power_restored
+announce trigger question_hideout
+announce trigger question_names
+announce trigger question_supplies
+announce trigger question_who
+announce trigger question_why
 announce trigger raid
 announce trigger rations
 announce trigger rations_soon

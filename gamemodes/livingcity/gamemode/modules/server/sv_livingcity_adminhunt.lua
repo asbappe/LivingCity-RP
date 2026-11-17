@@ -33,7 +33,12 @@
              Free again (a breakout, a rejoin), it starts again.
     Told     nobody, in words (the owner, 17 November: no line on the radio, "I have
              specifically asked to stop dumping more text on the screen"). The squads
-             arriving are the news.
+             arriving are the news. In sound, where it is recorded (the owner's yes the
+             same day to "a recorded Dispatch line for the start of a hunt, with no name
+             in it and sound only on the units' radios (no text)"): Overwatch's
+             sound/livingcity/overwatch/hunt1.wav plays on each unit's radio when a
+             hunt starts, at most once in ten minutes for the same person. Not
+             recorded: nothing.
 
       lc_admin_hunt 1/0            the hunt (1)
       lc_admin_hunt_minutes <m>    minutes between the squads sent after one assassin (4)
@@ -57,6 +62,7 @@ local STAY = 3          -- a squad is out this many intervals, then goes home
 local FRESH = 120       -- a sighting older than this is no longer where to look
 local PLACE_SECS = 240  -- at most this long at one place
 local LOOK = 3          -- seconds a soldier looks about at each point
+local TOLD_EVERY = 600  -- Dispatch's recording for one person's hunt at most this often
 local REACH = 8500      -- a soldier this near a sighting goes straight for them (further: he walks there)
 local LOOK_EVERY = 3    -- seconds between looks at whether someone marked is free to be hunted
 local LOOK_SLOW = 30    -- and at whether someone who does not carry the mark's flag is marked after all
@@ -67,7 +73,7 @@ LC.AdminHuntSquads = LC.AdminHuntSquads or {} -- { { hunt, units = { { npc, slot
 local leaving = {}                            -- [npc] = { since, started }: soldiers on their way home
 LC.AdminHuntLeaving = leaving
 -- What the hunt remembers of a player between hunts (kept here, not on the player: a shared dream puts
--- back what the server keeps on them): { look, flag, mark, flash }
+-- back what the server keeps on them): { look, flag, told, mark, flash }
 local notes = setmetatable({}, { __mode = "k" })
 local function Note(ply)
     local n = notes[ply]
@@ -300,9 +306,31 @@ local function EndHunt(ply, h, now)
     hook.Run("LivingCityAdminHunt", ply, false)
 end
 
+-- Dispatch's recording, on the radio of every unit who can hear the Combine's band (not where it is jammed, and
+-- not the one hunted): in sound only, from their own radio, to them alone. How many heard it (0: not recorded).
+function LC.AdminHuntDispatch(hunted)
+    local path = LC.PickAnnounceClip and LC.PickAnnounceClip("overwatch", "hunt")
+    if not path then return 0 end
+    local n = 0
+    for _, p in ipairs(player.GetAll()) do
+        if p ~= hunted and p:Alive() and LC.HearsBand and LC.HearsBand(p, "cp") and not (LC.Jammed and LC.Jammed(p:GetPos())) then
+            local only = RecipientFilter and RecipientFilter() or nil
+            if only then only:AddPlayer(p) end
+            p:EmitSound(path, 60, 100, 1, CHAN_AUTO or 0, 0, 0, only)
+            n = n + 1
+        end
+    end
+    return n
+end
+
 local function StartHunt(ply, now)
     local h = { ply = ply, started = now, nextSquad = now + FIRST }
     LC.AdminHunts[ply] = h
+    local note = Note(ply)
+    if now - (note.told or -1e9) > TOLD_EVERY then
+        note.told = now
+        LC.AdminHuntDispatch(ply)
+    end
     if LC.Log then LC.Log("info", "Hunt for " .. ply:Nick() .. " (an attempt on the Administrator's life) begins") end
     hook.Run("LivingCityAdminHunt", ply, true)
     return h
