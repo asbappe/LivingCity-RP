@@ -61,7 +61,7 @@ local GUIDE = {
     } },
     { "Death, and close calls", {
         "Each character has three close calls. When you die, you use one up: you wake in the infirmary with your pockets emptied, and your character doesn't remember the fight, so don't go after whoever did it.",
-        "A used close call comes back after a few hours of playing that character. If you die with no close calls left, that character is gone for good. !characters shows how many close calls you have left.",
+        "A used close call comes back after a few hours of playing that character. Die with no close calls left and a roll decides it: an even chance that character is gone for good. !characters shows how many close calls you have left.",
         "When a character is gone for good, you come back as someone new, with a new name and citizen number, and only a little inherited from the old one.",
         "Some things are permanent for a character: the Overwatch conditioning, and being made a stalker. To be someone else, play another character or retire this one (!characters).",
         "The Union taxes hoarded credits: every half hour it takes a tenth of whatever you hold above 2000 credits. Spend them.",
