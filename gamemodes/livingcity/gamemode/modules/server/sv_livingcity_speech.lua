@@ -559,9 +559,13 @@ function LC.CallSpeech(by, text)
     if cvNPCs:GetInt() > 0 then coming = math.min(coming, cvNPCs:GetInt()) end
     S.cols = math.Clamp(math.ceil(math.sqrt(coming * 1.6)), 6, 12)
     if S.by then
-        S.by:SetPos((LC.FreeSpawnPos and LC.FreeSpawnPos(stand.pos + Vector(0, 0, 8))) or stand.pos)
-        if S.by.SetEyeAngles then S.by:SetEyeAngles(Angle(0, stand.yaw or 0, 0)) end
-        hook.Run("LivingCityAdminMoved", S.by, stand.pos)
+        -- (called from outside her office door, with a helicopter's point by the stand, she is fetched instead:
+        -- sv_livingcity_adminheli.lua)
+        if not (LC.AdminHeliFetch and LC.AdminHeliFetch(S)) then
+            S.by:SetPos((LC.FreeSpawnPos and LC.FreeSpawnPos(stand.pos + Vector(0, 0, 8))) or stand.pos)
+            if S.by.SetEyeAngles then S.by:SetEyeAngles(Angle(0, stand.yaw or 0, 0)) end
+            hook.Run("LivingCityAdminMoved", S.by, stand.pos)
+        end
         Tell(S.by, "Your address", text == "" and string.format("The city is gathering. In %d seconds the whole city hears your microphone, for %d seconds.", math.floor(cvMuster:GetFloat()), math.floor(cvMic:GetFloat()))
             or string.format("The city is gathering in front of the stand. You speak in %d seconds.", math.floor(cvMuster:GetFloat())), 8)
     end

@@ -35986,6 +35986,552 @@ p:Remove()
 end
 Nov17_LastChanceTests()
 
+function Nov17_AdminHeliTests()
+section("17 November: the Administrator's attack helicopter: parked by the stand, her way out by air after an attempt, and her ride from her office door to the stand")
+LC.EndEvent(true)
+if LC.SpeechSession() then LC.EndSpeech() end
+if LC.AdminExfil() then LC.AdminExfilEnd(false) end
+local savedWalls = _walls
+_walls = {}
+local set = _setcvar
+local stopsWas, musterWas = GetConVar("lc_stops"):GetInt(), GetConVar("lc_speech_muster"):GetFloat()
+local callsWas, permaWas = GetConVar("lc_close_calls"):GetInt(), GetConVar("lc_permadeath"):GetInt()
+set("lc_stops", 0)
+set("lc_speech_muster", 60)
+set("lc_close_calls", 3)
+set("lc_permadeath", 1)
+local HELI, ROTOR = "models/combine_helicopter.mdl", "npc/attack_helicopter/aheli_rotor_loop1.wav"
+local H0 = Vector(236000, 204000, 0)
+local stand = LC.AddPoint(H0 + Vector(0, 500, 0), 270, "speech", 0)
+local crowd = LC.AddPoint(H0, 90, "speechcrowd", 0)
+local heliPt = LC.AddPoint(H0 + Vector(700, 500, 0), 90, "adminheli", 0)
+local desk = LC.AddPoint(H0 + Vector(5000, 520, 0), 0, "desk", 0)
+ok(heliPt ~= nil and LC.POINT_KINDS.adminheli, "the editor can place the Administrator's helicopter point")
+ok(#LC.PointsOfKind("desk") == 1, "(one Administrator's desk in the city: this one)", #LC.PointsOfKind("desk"))
+-- her office: its door 300 units west of her desk, so outside it is further west
+local door = ents.Create("prop_door_rotating")
+door:SetPos(H0 + Vector(4700, 520, 0))
+door:Spawn()
+door.mapid = 9717
+LC.SetDoorTag(door, "office")
+LC.ApplyDoorState(door)
+if LC.RebuildDoorGrid then LC.RebuildDoorGrid() end
+local FRONT = H0 + Vector(4644, 520, 0)   -- in front of it, outside
+local INSIDE = H0 + Vector(4850, 520, 0)  -- half way between it and her desk
+local AT_STAND = H0 + Vector(0, 520, 0)
+local AT_DOOR = H0 + Vector(4580, 560, 0) -- where she waits for her ride
+local adm = newPlayer("HeliAdministrator", "admin")
+local reb = newPlayer("HeliAssassin", "resistance", nil, 900)
+local bystander = newPlayer("HeliBystander", "citizen")
+_run(0.3)
+adm:SetPos(AT_STAND)
+adm:SetHealth(100)
+adm.lcProtectUntil = 0
+reb:SetPos(H0 + Vector(0, -300, 0))
+bystander:SetPos(H0 + Vector(100, 0, 0))
+adm.GodEnable = function(self) self.god = true end
+adm.GodDisable = function(self) self.god = false end
+
+-- whatever the helicopter's own code puts on a screen while it runs: a notice, a chat line, anything sent
+local shown, inHeli = {}, 0
+local realNotice, realStart = LC.Notice, net.Start
+LC.Notice = function(p, kind, title, ...)
+    if inHeli > 0 then shown[#shown + 1] = "notice: " .. tostring(title) end
+    return realNotice(p, kind, title, ...)
+end
+net.Start = function(name, ...)
+    if inHeli > 0 then shown[#shown + 1] = "sent: " .. tostring(name) end
+    return realStart(name, ...)
+end
+for _, p in ipairs({ adm, reb, bystander }) do
+    local chatWas = p.ChatPrint
+    p.ChatPrint = function(self, m)
+        if inHeli > 0 then shown[#shown + 1] = "chat: " .. tostring(m) end
+        return chatWas(self, m)
+    end
+end
+local fnWas, hookWas = {}, {}
+for _, n in ipairs({ "AdminHeliThink", "AdminHeliFetch", "AdminHeliTake", "AdminHeliExit" }) do
+    local f = LC[n]
+    fnWas[n] = f
+    LC[n] = function(...)
+        inHeli = inHeli + 1
+        local a, b = f(...)
+        inHeli = inHeli - 1
+        return a, b
+    end
+end
+for _, ev in ipairs({ "LivingCitySpeechCalled", "LivingCitySpeechEnded" }) do
+    local f = hook.t[ev].LivingCityAdminHeli
+    hookWas[ev] = f
+    hook.t[ev].LivingCityAdminHeli = function(...)
+        inHeli = inHeli + 1
+        f(...)
+        inHeli = inHeli - 1
+    end
+end
+ok(fnWas.AdminHeliThink ~= nil and hookWas.LivingCitySpeechCalled ~= nil and hookWas.LivingCitySpeechEnded ~= nil, "(the helicopter's module is loaded)")
+
+local function Rotor()
+    local n = 0
+    for _, s in ipairs(_sounds) do if s == ROTOR then n = n + 1 end end
+    return n
+end
+local function Guards()
+    local l = {}
+    for _, g in ipairs(LC.SpeechGuards()) do l[#l + 1] = g end
+    for _, g in ipairs(LC.SpeechDetail()) do l[#l + 1] = g end
+    return l
+end
+local function Helis()
+    local l = {}
+    for _, e in ipairs(ents.FindByClass("prop_dynamic")) do if e.lcAdminHeli then l[#l + 1] = e end end
+    return l
+end
+-- a tenth of a second at a time, as the game's ticks do it: the exit's, then the helicopter's own
+local function Tick(n, done)
+    for _ = 1, n do
+        _run(0.1)
+        LC.AdminExfilThink(CurTime())
+        LC.AdminHeliThink(CurTime())
+        if done and done() then return true end
+    end
+    return false
+end
+local function Attempt(her, dmg)
+    hook.Run("EntityTakeDamage", her, _dmg(reb, dmg or 20))
+    _run(0.1)
+    return LC.AdminExfil()
+end
+local function Cmd()
+    local cmd = { b = 3, ClearMovement = function(self) self.cleared = true end, GetButtons = function(self) return self.b end, SetButtons = function(self, v) self.b = v end }
+    hook.Run("StartCommand", adm, cmd)
+    return cmd
+end
+local function Clean(guards)
+    if LC.AdminExfil() then LC.AdminExfilEnd(false) end
+    if LC.AdminCloseCallScene() then LC.AdminCloseCallEnd() end
+    if LC.SpeechSession() then LC.EndSpeech() end
+    for _, e in ipairs(Helis()) do e:Remove() end
+    LC.AdminHeliThink(CurTime())
+    for _, e in ipairs(ents.FindByClass("lc_adminglass")) do e:Remove() end
+    for _, e in ipairs(ents.FindByClass("prop_dynamic")) do if e:GetModel() == "models/combine_apc.mdl" then e:Remove() end end
+    for _, g in ipairs(guards or {}) do if IsValid(g) then g:Remove() end end
+    LC.EndEvent(true)
+    adm:SetHealth(100)
+    _run(5) -- (the few seconds after an exit in which nothing can hurt her)
+end
+
+-- parked for her address: on its point, facing its way, rotors still, silent
+local rotorWas = Rotor()
+ok(LC.CallSpeech(adm, "Citizens."), "her address is called from the stand")
+local S = LC.SpeechSession()
+local heli = S and S.heli
+ok(IsValid(heli) and heli:GetClass() == "prop_dynamic" and heli:GetModel() == HELI and not heli:IsNPC(),
+    "an attack helicopter stands by for as long as she speaks: a prop, not an NPC", IsValid(heli) and heli:GetClass())
+if not IsValid(heli) then LC.EndSpeech() return end
+ok((heli:GetPos() - heliPt.pos):Length2D() < 5 and heli:GetPos().z > 0 and heli:GetPos().z < 260 and heli:GetAngles().y == 90,
+    "on its point, on the ground, facing the way the point faces", tostring(heli:GetPos()))
+ok(heli.lcRotors == false and Rotor() == rotorWas and heli.notsolid ~= true, "its rotors still, silent, and solid")
+ok(adm:GetPos():Distance(stand.pos) < 100 and LC.AdminHeli().ride == nil, "called from the stand, she is at the stand as ever: nothing comes for her")
+LC.EndSpeech()
+ok(not IsValid(heli) and LC.AdminHeli().parked == nil, "her address over, it is gone, as the APC is")
+-- a point too far from the stand is not this stand's
+local farPt = LC.AddPoint(H0 + Vector(0, 3000, 0), 0, "adminheli", 0)
+LC.RemovePoint(heliPt)
+LC.CallSpeech(adm, "Citizens.")
+ok(LC.SpeechSession() ~= nil and LC.SpeechSession().heli == nil and #Helis() == 0, "a helicopter point further from the stand than an APC's may be: no helicopter")
+LC.EndSpeech()
+LC.RemovePoint(farPt)
+heliPt = LC.AddPoint(H0 + Vector(700, 500, 0), 90, "adminheli", 0)
+-- the city's own Administrator: it is parked for her too, and she arrives as she always has
+ok(LC.CallSpeech(nil, nil), "the city's own address")
+S = LC.SpeechSession()
+ok(S and IsValid(S.her) and IsValid(S.heli) and LC.AdminHeli().ride == nil and S.heli.lcRotors == false, "it stands by for the city's own Administrator too; nothing fetches her")
+LC.EndSpeech()
+
+-- the exit: an attempt, and she is run to it, put aboard and flown to her office door
+adm:SetPos(AT_STAND)
+ok(LC.CallSpeech(adm, "Citizens."), "her address again")
+S = LC.SpeechSession()
+heli = S.heli
+local guards = Guards()
+local A = Attempt(adm)
+if not A then ok(false, "the shot sets her guards off") Clean(guards) return end
+ok(IsValid(heli) and LC.SpeechSession() == nil, "an attempt on her life: her address is over, and the helicopter stays")
+Tick(10)
+A = LC.AdminExfil()
+ok(A and A.phase == "heli" and A.heli ~= nil and A.heli.ent == heli, "the ring closed, they take her to the helicopter", A and A.phase)
+local ringed = 0
+for _, g in ipairs(guards) do if IsValid(g) and g:GetPos():Distance(adm:GetPos()) < 130 then ringed = ringed + 1 end end
+ok(ringed == #guards and #guards == 7, "every guard in the ring round her, as to the APC", ringed)
+local cmd = Cmd()
+ok(cmd.cleared and bit.band(cmd.b, IN_DUCK or 4) ~= 0 and bit.band(cmd.b, IN_JUMP or 2) == 0, "she is held in a crouch, as to the APC")
+ok(heli.lcRotors == false and adm.nodraw ~= true, "(not aboard yet: its rotors are still)")
+local from = adm:GetPos()
+Tick(3)
+ok(math.abs(adm:GetPos():Distance(from) - 135) < 25, "they run her there at the APC's speed (450 units a second)", adm:GetPos():Distance(from))
+rotorWas = Rotor()
+ok(Tick(40, function() return adm.nodraw == true end), "she is put aboard")
+ok(adm:GetPos():Distance(heliPt.pos) < 200 and heli.lcRotors == true and Rotor() == rotorWas + 1 and heli.notsolid == true,
+    "at its side: the rotors start, with the engine's sound; from here nothing collides with it")
+ok(adm.movetype == MOVETYPE_NONE and adm.notsolid == true and adm.lcAloft == true, "she is its passenger: unseen, in nobody's way, not the game's to move")
+local top, rode, lowAfterTop = 0, true, nil
+local hover
+Tick(400, function()
+    if not LC.AdminExfil() then return true end
+    if IsValid(heli) then
+        local z = heli:GetPos().z
+        top = math.max(top, z)
+        hover = heli:GetPos()
+        if adm.nodraw == true and adm:GetPos():Distance(heli:GetPos()) > 60 then rode = false end
+    end
+    return false
+end)
+ok(LC.AdminExfil() == nil, "the flight ends")
+ok(top > 800 and rode, "it lifts, and flies over the rooftops with her in it", top)
+ok(hover and (hover - door:GetPos()):Length2D() < 200 and hover.z > 120 and hover.z < 400, "it comes down to hover low by her office door", tostring(hover))
+ok(adm:GetPos():Distance(FRONT) < 60 and adm:GetPos().x < door:GetPos().x, "and she stands right in front of her office door, outside it", tostring(adm:GetPos() - H0))
+ok(adm.nodraw == false and adm.notsolid == false and adm.movetype == MOVETYPE_WALK and adm.lcAloft == nil and LC.AdminHeli().seated[adm] == nil,
+    "seen again, and free to move")
+ok(LC.AdminCloseCallScene() == nil and A.ran ~= true, "(not badly hit: no close call scene; and nobody ran)")
+cmd = Cmd()
+ok(not cmd.cleared, "nothing holds her any more")
+_run(5)
+ok(adm.god == false, "a few seconds on she can be hurt again")
+ok(IsValid(heli) and #LC.AdminHeli().flights == 1, "the helicopter is still in the air")
+local away = 0
+ok(Tick(400, function()
+    if IsValid(heli) then away = math.max(away, heli:GetPos():Distance(door:GetPos())) end
+    return not IsValid(heli)
+end), "it climbs away and is gone")
+ok(away > 700 and #LC.AdminHeli().flights == 0 and #Helis() == 0, "up and away from her door, and no helicopter is left anywhere", away)
+Clean(guards)
+
+-- badly hit (a close call): she is set down inside her office, and the scene plays as after the shield run
+adm:SetPos(AT_STAND)
+ok(LC.CallSpeech(adm, "Citizens."), "her address, and a hit that would kill her")
+heli = LC.SpeechSession().heli
+guards = Guards()
+adm:SetHealth(40)
+A = Attempt(adm, 500)
+adm:SetHealth(1)
+ok(A and A.closeCall == true, "(a close call: the exit's to use up)")
+Tick(600, function() return not LC.AdminExfil() end)
+local C = LC.AdminCloseCallScene()
+ok(LC.AdminExfil() == nil and A.heli ~= nil and A.ran ~= true, "badly hit, she is flown out the same")
+ok(C ~= nil and C.her == adm and adm:GetPos():Distance(INSIDE) < 60, "and set down inside her office, short of her desk: she faints there, as after the shield run", tostring(adm:GetPos() - H0))
+ok(adm.nodraw == false and adm.movetype == MOVETYPE_WALK and adm.lcAloft == nil, "(out of the helicopter: seen, and the game's to move again)")
+for _ = 1, 25 do
+    if LC.CloseCallsLeft(adm) == 2 then break end
+    _run(1)
+end
+ok(LC.CloseCallsLeft(adm) == 2, "the close call is used up in the scene, as ever", LC.CloseCallsLeft(adm))
+Clean(guards)
+adm:SetPData("lc_close_used", 0)
+
+-- both by the stand: the helicopter takes her, the APC stands by; cut short in the air, nothing is left behind
+local apcPt = LC.AddPoint(H0 + Vector(600, 900, 0), 0, "adminapc", 0)
+adm:SetPos(AT_STAND)
+ok(LC.CallSpeech(adm, "Citizens."), "her address with both an APC and a helicopter by the stand")
+S = LC.SpeechSession()
+heli = S.heli
+local apc = S.apc
+ok(IsValid(apc) and IsValid(heli), "both stand by")
+guards = Guards()
+A = Attempt(adm)
+Tick(10)
+ok(A and A.phase == "heli" and IsValid(A.apc), "an attempt: the helicopter is the one that takes her", A and A.phase)
+ok(Tick(120, function() return adm.nodraw == true and IsValid(heli) and heli:GetPos().z > 500 end), "(aboard and in the air)")
+ok(not A.attackers[bystander] and hook.Run("EntityTakeDamage", heli, _dmg(bystander, 10)) == true and A.attackers[bystander] == true,
+    "whoever hits the helicopter while it takes her out becomes an attacker, as with the APC; it takes no harm")
+ok(hook.Run("EntityTakeDamage", heli, _dmg(guards[1], 10)) == true and not A.attackers[guards[1]], "(never one of the Combine's own)")
+LC.AdminExfilEnd(true) -- (the exit cut short: whatever ends it)
+LC.AdminHeliThink(CurTime())
+ok(LC.AdminExfil() == nil and adm:GetPos():Distance(desk.pos) < 200, "cut short in the air: she is set down as the exit sets her down (at her desk)")
+ok(adm.nodraw == false and adm.movetype == MOVETYPE_WALK and adm.lcAloft == nil and not IsValid(heli) and not IsValid(apc) and #Helis() == 0,
+    "never left aboard, hidden or frozen; and the helicopter and the APC are gone")
+Clean(guards)
+
+-- no helicopter point: all of it is as it was
+LC.RemovePoint(heliPt)
+adm:SetPos(AT_DOOR)
+ok(LC.CallSpeech(adm, "Citizens."), "her address with no helicopter point, called from outside her office door")
+S = LC.SpeechSession()
+ok(S.heli == nil and #Helis() == 0 and LC.AdminHeli().ride == nil and adm:GetPos():Distance(stand.pos) < 100, "no helicopter: she is put at the stand as ever")
+guards = Guards()
+A = Attempt(adm)
+Tick(10)
+ok(A and A.phase == "carry" and A.heli == nil, "an attempt: out by APC, as before", A and A.phase)
+Clean(guards)
+LC.RemovePoint(apcPt)
+adm:SetPos(AT_STAND)
+LC.CallSpeech(adm, "Citizens.")
+guards = Guards()
+A = Attempt(adm)
+Tick(10)
+ok(A and A.phase == "run" and A.heli == nil, "with no APC either: the shield run, as before", A and A.phase)
+Clean(guards)
+heliPt = LC.AddPoint(H0 + Vector(700, 500, 0), 90, "adminheli", 0)
+
+-- the world in the way: her office is a building, and the sky has a height. It never touches either.
+do
+    local lineWas, hullWas = util.TraceLine, util.TraceHull
+    local X1, X2, Y1, Y2, ROOF, SKY = H0.x + 4700, H0.x + 5400, H0.y + 120, H0.y + 920, 500, 2400
+    local function Over(x, y, r) return x + r > X1 and x - r < X2 and y + r > Y1 and y - r < Y2 end
+    util.TraceLine = function(t)
+        local s, e = t.start, t.endpos
+        if e.z > s.z and s.x == e.x and s.y == e.y then
+            if Over(s.x, s.y, 0) and s.z < ROOF then return { Hit = true, HitSky = false, HitPos = Vector(s.x, s.y, ROOF), Fraction = 0.5 } end
+            return { Hit = true, HitSky = true, HitPos = Vector(s.x, s.y, SKY), Fraction = 0.5 }
+        end
+        return lineWas(t)
+    end
+    util.TraceHull = function(t)
+        local s, e, r, down = t.start, t.endpos, t.maxs.x, -t.mins.z
+        if s.x == e.x and s.y == e.y and e.z < s.z and Over(s.x, s.y, r) then
+            if s.z - down < ROOF then return { Hit = true, StartSolid = true, HitPos = s, Fraction = 0 } end
+            if e.z - down < ROOF then
+                local f = (s.z - down - ROOF) / (s.z - e.z)
+                return { Hit = true, HitPos = Vector(s.x, s.y, ROOF + down), Fraction = f }
+            end
+        end
+        if s.z + t.maxs.z >= SKY or e.z + t.maxs.z >= SKY then return { Hit = true, HitSky = true, HitPos = s, Fraction = 0 } end
+        return hullWas(t)
+    end
+    adm:SetPos(AT_STAND)
+    ok(LC.CallSpeech(adm, "Citizens."), "her address, with her office a building 500 high and the sky at 2400")
+    heli = LC.SpeechSession().heli
+    guards = Guards()
+    A = Attempt(adm)
+    local touched, last, highest = false, nil, 0
+    Tick(600, function()
+        if not LC.AdminExfil() then return true end
+        if IsValid(heli) then
+            local p = heli:GetPos()
+            last, highest = p, math.max(highest, p.z)
+            if Over(p.x, p.y, 220) and p.z - 40 < ROOF then touched = true end
+        end
+        return false
+    end)
+    ok(LC.AdminExfil() == nil and last ~= nil and not touched, "it flies to her door without once touching the building")
+    ok(highest > ROOF + 300 and highest + 96 < SKY, "over its roof, and under the sky", highest)
+    ok(last and not Over(last.x, last.y, 220) and last.z < ROOF and last:Distance(FRONT) < 500,
+        "and hovers in the open sky nearest her door, as low and as near as it fits: beside the building, below its roof", last and tostring(last - H0))
+    ok(adm:GetPos():Distance(FRONT) < 60, "she stands in front of her door all the same", tostring(adm:GetPos() - H0))
+    Clean(guards)
+    -- a roof over the helicopter itself: it cannot fly, so it is the shield run
+    util.TraceLine = function(t)
+        local s, e = t.start, t.endpos
+        if e.z > s.z and s.x == e.x and s.y == e.y and (s - heliPt.pos):Length2D() < 50 then
+            return { Hit = true, HitSky = false, HitPos = Vector(s.x, s.y, s.z + 300), Fraction = 0.5 }
+        end
+        return lineWas(t)
+    end
+    util.TraceHull = hullWas
+    adm:SetPos(AT_STAND)
+    LC.CallSpeech(adm, "Citizens.")
+    heli = LC.SpeechSession().heli
+    guards = Guards()
+    A = Attempt(adm)
+    Tick(10)
+    ok(A and A.phase == "run" and A.heli == nil and IsValid(heli) and heli.lcRotors == false, "a roof over the helicopter: it stays where it stands, and they run her to her office", A and A.phase)
+    LC.AdminExfilEnd(false)
+    LC.AdminHeliThink(CurTime())
+    ok(not IsValid(heli), "(the exit over, the helicopter it did not use is gone)")
+    Clean(guards)
+    adm:SetPos(AT_DOOR)
+    LC.CallSpeech(adm, "Citizens.")
+    ok(LC.AdminHeli().ride == nil and adm:GetPos():Distance(stand.pos) < 100 and #Helis() == 1 and IsValid(LC.SpeechSession().heli),
+        "nor can it fetch her from her door: she is put at the stand as ever, and the one helicopter is the parked one", #Helis())
+    util.TraceLine, util.TraceHull = lineWas, hullWas
+    Clean(Guards())
+    -- her office high above the stand: it flies higher than it otherwise would, to hover nearest her door
+    local groundWas = _groundFn
+    _groundFn = function(x) return x > H0.x + 4000 and 1400 or 0 end
+    door:SetPos(H0 + Vector(4700, 520, 1400))
+    adm:SetPos(AT_STAND)
+    LC.CallSpeech(adm, "Citizens.")
+    heli = LC.SpeechSession().heli
+    guards = Guards()
+    A = Attempt(adm)
+    last = nil
+    Tick(600, function()
+        if not LC.AdminExfil() then return true end
+        if IsValid(heli) then last = heli:GetPos() end
+        return false
+    end)
+    ok(last and last.z > 1200 and math.abs(last.z - 1400) < 200 and (last - door:GetPos()):Length2D() < 200,
+        "her office door high above the stand: it flies higher than usual, to hover nearest it", last and tostring(last - H0))
+    ok(math.abs(adm:GetPos().z - 1400) < 20 and (adm:GetPos() - FRONT):Length2D() < 60, "and she stands in front of it, up there", tostring(adm:GetPos() - H0))
+    door:SetPos(H0 + Vector(4700, 520, 0))
+    _groundFn = groundWas
+    Clean(guards)
+end
+
+-- the ride: she calls her address from outside her office door, and it comes for her
+set("lc_speech_muster", 5) -- (far less than the ride takes: her address has to wait for her)
+adm:SetPos(AT_DOOR)
+adm.god = false
+-- (her own guards are done with the assassin: they follow her again)
+for npc, who in pairs(LC.AdminGuards) do
+    if who == adm and LC.NPCs[npc] then LC.NPCs[npc].adminTarget = nil end
+end
+rotorWas = Rotor()
+ok(LC.CallSpeech(adm, "Citizens."), "her address, called from outside her office door")
+S = LC.SpeechSession()
+local ride = LC.AdminHeli().ride
+ok(ride ~= nil and ride.her == adm and adm:GetPos():Distance(AT_DOOR) < 5, "a helicopter is coming for her: she is left where she stands")
+if not ride then Clean(Guards()) return end
+heli = ride.ent
+ok(IsValid(heli) and S.heli == nil and #Helis() == 1, "(the one helicopter: none stands at the point meanwhile)")
+ok(heli:GetPos():Distance(adm:GetPos()) > 5000 and heli:GetPos().z > 800 and heli.lcRotors == true and Rotor() == rotorWas + 1 and heli.notsolid == true,
+    "it flies in from the far edge of the sky, rotors turning", heli:GetPos():Distance(adm:GetPos()))
+ok(not Cmd().cleared and adm.nodraw ~= true, "she is free while she waits")
+local spokeEarly, nearest = false, math.huge
+ok(Tick(400, function()
+    if S.spoken then spokeEarly = true end
+    nearest = math.min(nearest, heli:GetPos():Distance(adm:GetPos()))
+    return LC.AdminHeli().seated[adm] ~= nil
+end), "she is put aboard")
+ok(nearest < 260 and (heli:GetPos() - AT_DOOR):Length2D() < 200 and heli:GetPos().z > 120 and heli:GetPos().z < 400, "it came down to hover right by her first", nearest)
+ok(adm.nodraw == true and adm.notsolid == true and adm.god == true and adm.movetype == MOVETYPE_NONE and adm:GetPos():Distance(heli:GetPos()) < 60,
+    "inside it: unseen, nothing can hurt her, and she goes where it goes")
+cmd = Cmd()
+ok(cmd.cleared and cmd.b == 0, "she cannot move")
+rode, top = true, 0
+local elites, elitesUp = 0, false
+ok(Tick(400, function()
+    if S.spoken then spokeEarly = true end
+    if LC.AdminHeli().ride == nil then return true end
+    top = math.max(top, heli:GetPos().z)
+    if adm:GetPos():Distance(heli:GetPos()) > 60 then rode = false end
+    for npc, who in pairs(LC.AdminGuards) do
+        if who == adm and IsValid(npc) then
+            elites = elites + 1
+            if npc:GetPos().z > 200 then elitesUp = true end
+        end
+    end
+    return false
+end), "it flies her to its point by the stand and sets down")
+ok(rode and top > 800, "(her view rode with it, over the rooftops)", top)
+ok(elites > 0 and not elitesUp, "her own guards wait on the ground while she is in the air: none is brought up to her side", elites)
+ok(IsValid(heli) and (heli:GetPos() - heliPt.pos):Length2D() < 5 and heli:GetPos().z < 260 and heli:GetAngles().y == 90 and heli.lcRotors == false and heli.notsolid == false,
+    "it stands on its point, facing its way, rotors stopped")
+ok(LC.SpeechSession() == S and S.heli == heli and LC.AdminHeli().parked ~= nil and LC.AdminHeli().parked.ent == heli, "the address's own helicopter from here: an attempt would use it")
+local beside = adm:GetPos() - heliPt.pos
+ok(beside:Length2D() > 60 and beside:Length2D() < 200 and math.abs(adm:GetPos().z) < 20, "she is on her feet beside it", tostring(beside))
+ok(adm.nodraw == false and adm.notsolid == false and adm.movetype == MOVETYPE_WALK and adm.god == false and adm.lcAloft == nil,
+    "seen, solid, free to move, and she can be hurt")
+ok(not Cmd().cleared, "nothing holds her")
+ok(not spokeEarly and S.spoken == nil, "her address did not speak while she was on her way (it was due after five seconds)")
+_run(8)
+ok(LC.SpeechSession() == S and S.spoken ~= nil, "it speaks once she is down")
+local withHer = 0
+for npc, who in pairs(LC.AdminGuards) do
+    if who == adm and IsValid(npc) and npc:GetPos():Distance(adm:GetPos()) < 400 then withHer = withHer + 1 end
+end
+ok(withHer > 0, "and her own guards are at her side again", withHer)
+ok(IsValid(heli), "(the helicopter stands by while she speaks)")
+LC.EndSpeech()
+ok(not IsValid(heli), "and goes with her address")
+Clean()
+
+-- a ride that fails half way: she is put by its point at once
+adm:SetPos(AT_DOOR)
+ok(LC.CallSpeech(adm, "Citizens."), "her address from her door again")
+S = LC.SpeechSession()
+ride = LC.AdminHeli().ride
+heli = ride and ride.ent
+ok(Tick(400, function() return adm.nodraw == true and heli:GetPos().z > 600 and (heli:GetPos() - AT_DOOR):Length2D() > 800 end), "(aboard, in the air, on the way)")
+heli:Remove() -- (whatever goes wrong)
+LC.AdminHeliThink(CurTime())
+beside = adm:GetPos() - heliPt.pos
+ok(LC.AdminHeli().ride == nil and beside:Length2D() < 200 and math.abs(adm:GetPos().z) < 20, "the helicopter lost in the air: she is put by its point at once", tostring(beside))
+ok(adm.nodraw == false and adm.notsolid == false and adm.movetype == MOVETYPE_WALK and adm.god == false and adm.lcAloft == nil and not Cmd().cleared,
+    "never left aboard, hidden or frozen")
+ok(LC.SpeechSession() == S and IsValid(S.heli) and S.heli.lcRotors == false, "her address goes on, a helicopter parked at its point")
+LC.EndSpeech()
+Clean()
+-- it takes too long: the same
+adm:SetPos(AT_DOOR)
+LC.CallSpeech(adm, "Citizens.")
+S = LC.SpeechSession()
+ride = LC.AdminHeli().ride
+heli = ride and ride.ent
+Tick(30)
+ride.t0 = CurTime() - 80
+LC.AdminHeliThink(CurTime())
+ok(LC.AdminHeli().ride == nil and (adm:GetPos() - heliPt.pos):Length2D() < 200 and S.heli == heli and (heli:GetPos() - heliPt.pos):Length2D() < 5 and heli.lcRotors == false,
+    "a ride that takes too long (she was still waiting at her door): she and the helicopter are at its point at once")
+LC.EndSpeech()
+Clean()
+-- an attempt on her life while she rides: on the ground by her helicopter at once, and the exit takes her from there
+adm:SetPos(AT_DOOR)
+LC.CallSpeech(adm, "Citizens.")
+S = LC.SpeechSession()
+ride = LC.AdminHeli().ride
+heli = ride and ride.ent
+guards = Guards()
+Tick(400, function() return adm.nodraw == true and heli:GetPos().z > 600 end)
+ok(LC.AdminAttempt(adm, reb, "shot") == true, "an attempt on her life while she rides")
+A = LC.AdminExfil()
+ok(A and LC.AdminHeli().ride == nil and (adm:GetPos() - heliPt.pos):Length2D() < 200 and math.abs(adm:GetPos().z) < 20 and A.at:Distance(adm:GetPos()) < 5,
+    "she is on the ground by its point at once, and the exit goes on from there", tostring(adm:GetPos() - heliPt.pos))
+ok(adm.nodraw == false and adm.movetype == MOVETYPE_WALK and adm.god == true, "seen again; the exit keeps her from harm")
+ok(IsValid(heli) and (heli:GetPos() - heliPt.pos):Length2D() < 5 and heli.lcRotors == false, "the helicopter is on its point")
+Tick(10)
+ok(LC.AdminExfil() and LC.AdminExfil().phase == "heli" and LC.AdminExfil().heli.ent == heli, "and it is what takes her out", LC.AdminExfil() and LC.AdminExfil().phase)
+Tick(600, function() return not LC.AdminExfil() end)
+ok(LC.AdminExfil() == nil and adm:GetPos():Distance(FRONT) < 60 and adm.nodraw == false and adm.movetype == MOVETYPE_WALK, "to her office door")
+Clean(guards)
+-- from inside her office, or away from her door, nothing comes: she is put at the stand
+adm:SetPos(INSIDE)
+LC.CallSpeech(adm, "Citizens.")
+S = LC.SpeechSession()
+ok(LC.AdminHeli().ride == nil and adm:GetPos():Distance(stand.pos) < 100 and IsValid(S.heli) and S.heli.lcRotors == false, "called from inside her office: she is put at the stand, the helicopter parked")
+LC.EndSpeech()
+adm:SetPos(AT_DOOR - Vector(600, 0, 0))
+LC.CallSpeech(adm, "Citizens.")
+ok(LC.AdminHeli().ride == nil and adm:GetPos():Distance(stand.pos) < 100, "called from further than 400 units from her door: the same")
+LC.EndSpeech()
+Clean()
+
+-- the city's own Administrator is flown out too, and is away
+ok(LC.CallSpeech(nil, nil), "the city's own address, and an attempt")
+S = LC.SpeechSession()
+local her = S.her
+heli = S.heli
+guards = Guards()
+hook.Run("EntityTakeDamage", her, _dmg(reb, 500))
+_run(0.1)
+Tick(600, function() return not LC.AdminExfil() end)
+ok(LC.AdminExfil() == nil and not IsValid(her) and IsValid(heli) and (heli:GetPos() - door:GetPos()):Length2D() < 200, "she is flown to her office door, and is away")
+Clean(guards)
+
+-- nothing of it is told in words
+ok(#shown == 0, "all of it put nothing on anyone's screen: no notice, no chat line, nothing sent", table.concat(shown, " | "))
+
+LC.Notice, net.Start = realNotice, realStart
+for _, p in ipairs({ adm, reb, bystander }) do p.ChatPrint = nil end
+for n, f in pairs(fnWas) do LC[n] = f end
+for ev, f in pairs(hookWas) do hook.t[ev].LivingCityAdminHeli = f end
+LC.SetDoorTag(door, nil)
+if LC.OpenedDoors then LC.OpenedDoors[door] = nil end
+if LC.Relock then LC.Relock[door] = nil end
+door:Remove()
+if LC.RebuildDoorGrid then LC.RebuildDoorGrid() end
+LC.RemovePoint(stand) LC.RemovePoint(crowd) LC.RemovePoint(desk) LC.RemovePoint(heliPt)
+hook.Run("LivingCityNewCharacter", reb, "x", "test")
+adm:Remove() reb:Remove() bystander:Remove()
+set("lc_close_calls", callsWas)
+set("lc_permadeath", permaWas)
+set("lc_speech_muster", musterWas)
+set("lc_stops", stopsWas)
+_walls = savedWalls
+end
+Nov17_AdminHeliTests()
+
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")
 ;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)
     -- Everything here is something the owner's server, files or players depend on. The list is

@@ -677,6 +677,10 @@ local function MoveGuards(centre, dt)
     end
 end
 
+-- What her helicopter borrows of the exit (sv_livingcity_adminheli.lua): the ring, how fast she is run to what
+-- takes her out, how near the stand its point has to be, and her office's door.
+LC.AdminExfilKit = { ring = MoveGuards, speed = CARRY_SPEED, reach = APC_REACH, door = function(desk) return OfficeDoor(desk) end }
+
 ------------------------------------------------------------------------
 -- The shield run: no APC by the stand, so every Combine there runs her to her office
 ------------------------------------------------------------------------
@@ -1318,8 +1322,10 @@ function LC.AdminExfilThink(now)
     if A.phase == "close" then
         MoveGuards(her:GetPos(), dt)
         if t >= CLOSE_SECS then
-            -- an APC by the stand: out by APC. None, and a desk to run to: the shield run. Neither: they hold.
-            if IsValid(A.apc) then A.phase = "carry"
+            -- a helicopter by the stand: out by air (sv_livingcity_adminheli.lua). An APC: out by APC. Neither, and
+            -- a desk to run to: the shield run. None of them: they hold.
+            if LC.AdminHeliTake and LC.AdminHeliTake(A) then A.phase = "heli"
+            elseif IsValid(A.apc) then A.phase = "carry"
             elseif StartRun(now) then A.phase = "run"
             else A.phase = "hold" end
         end
@@ -1331,6 +1337,10 @@ function LC.AdminExfilThink(now)
             A.ran = true
             return Done(true)
         end
+    elseif A.phase == "heli" then
+        -- (run to the helicopter, put aboard and flown to her office door: all of it sv_livingcity_adminheli.lua's)
+        local over, deliver = LC.AdminHeliExit(A, now, dt)
+        if over then return Done(deliver) end
     elseif A.phase == "carry" then
         if not IsValid(A.apc) then A.phase = "hold" return end
         -- to the APC's side, straight there, through whatever is in the way
