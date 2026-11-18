@@ -66,6 +66,9 @@ LC.GiveJobTools = GiveTools
 -- (with a Labor Assignment terminal in the city, a job is changed only there: viaDesk is that terminal asking)
 LC.LABOR_GO = "Go to a Labor Assignment terminal to change your assignment."
 function LC.SetJob(ply, id, force, viaDesk)
+    -- (sent for by their leader: that word first, before any work is taken; sv_livingcity_adminplot.lua)
+    local first = not force and id ~= "" and LC.AdminPlotBusy and LC.AdminPlotBusy(ply)
+    if first then return false, first end
     local job = LCJ.ById[id]
     if id ~= "" and not job then return false, "That job doesn't exist." end
     if job and LCJ.Closed(job) and not force then return false, "That job is closed right now. Pick a different one." end
