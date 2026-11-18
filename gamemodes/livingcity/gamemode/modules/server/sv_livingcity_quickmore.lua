@@ -7,7 +7,9 @@
       the Resistance    Freq 7 >: a message on the band, call for backup (every Resistance player
                         hears it and sees where you are; a couple of idle fighters nearby come and
                         stay with you), send my position, guide me to rebel ground or the lab
-      its leader        Resistance > Order: kill the Administrator >: the Fighters and up by name,
+      the Resistance    Resistance: one row, "Fund: 120 credits" (the owner, 18 November;
+                        sv_livingcity_resistancefund.lua)
+      its leader        Resistance > Order: kill the Administrator (300 each) >: the Fighters and up by name,
                         and what each has of it; a name sends for them, says they have spoken,
                         or takes it back (the owner, 18 November; sv_livingcity_adminplot.lua).
                         Sent to the leader alone.
@@ -500,9 +502,13 @@ function LC.QuickInfo(ply)
     if f == "resistance" then
         local tx = false
         if LC.TransmitBands then for _, b in ipairs(LC.TransmitBands(ply)) do if b == "resistance" then tx = true end end end
-        t.reb = { backup = Wait(ply.lcRebBackupNext), pos = Wait(ply.lcRebPosNext), tx = tx, radio = (not LC.RadioBand) or LC.RadioBand(ply) == "resistance" }
-        -- (their leader alone: who may be given the order to kill the Administrator, and who has it; sv_livingcity_adminplot.lua)
+        t.reb = { backup = Wait(ply.lcRebBackupNext), pos = Wait(ply.lcRebPosNext), tx = tx, radio = (not LC.RadioBand) or LC.RadioBand(ply) == "resistance",
+            -- (what the Resistance's fund holds, for every member: sv_livingcity_resistancefund.lua)
+            fund = LC.ResistanceFund and LC.ResistanceFund() or nil }
+        -- (their leader alone: who may be given the order to kill the Administrator, who has it, and what each one
+        -- sent for costs; sv_livingcity_adminplot.lua)
         t.plot = LC.AdminPlotList and LC.AdminPlotList(ply) or nil
+        t.plotcost = t.plot and LC.AdminPlotCost and LC.AdminPlotCost() or nil
     end
     if IsCitizen(ply) then t.me = MeInfo(ply) end
     if f == "admin" then
@@ -555,8 +561,12 @@ local ACTIONS = {
     arrest = function(ply, _, target) return LC.AdminOrderArrest(ply, target) end,
     guards = function(ply, arg) return LC.AdminGuardOrder(ply, arg) end,
     sweep = function(ply, arg) return LC.OfficerCallSweep(ply, arg) end,
-    -- (the Resistance's leader picks a name: sent for, spoken with, or taken back. No reason is ever said.)
-    plotorder = function(ply, arg) return LC.AdminPlotPick ~= nil and LC.AdminPlotPick(ply, arg) end,
+    -- (the Resistance's leader picks a name: sent for, spoken with, or taken back. No reason is ever said, but one:
+    -- neither the Resistance's fund nor the leader can pay for sending for them.)
+    plotorder = function(ply, arg)
+        if not LC.AdminPlotPick then return false end
+        return LC.AdminPlotPick(ply, arg)
+    end,
 }
 LC.QuickMoreActions = ACTIONS
 

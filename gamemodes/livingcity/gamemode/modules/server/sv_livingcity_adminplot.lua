@@ -57,10 +57,28 @@
                 It is kept with the character (PData lc_adminplot_order: "word" sent for,
                 "1" under the order) over a reconnect and a restart of the server, and
                 they come back pointed at whoever leads now.
+    Its price   The owner, 18 November: "the resistance leader can only order this if
+                they've saved up enough money themselves to put into this extra pay, or
+                have gathered enough funds in a Resistance fund". Each member sent for
+                costs lc_resistance_order_cost credits (300; 0: free), charged at the
+                moment they are sent for: out of the Resistance's fund when it holds
+                enough (sv_livingcity_resistancefund.lua), else out of the leader's own
+                credits; when neither can pay, nobody is sent for and the leader reads
+                one line. A leader who picks themselves pays the same. Where it came
+                from is kept with the order (PData lc_adminplot_price: "300:fund", or
+                "300:<the leader's SteamID64>:<their citizen number>"), so a reconnect
+                or a restart loses nothing. An order that ends before that member has
+                made the attempt (taken back, arrested, someone new, out of the
+                Resistance, below a Fighter, an hour gone by unspoken, nobody leading)
+                gives it back where it came from: the fund, or the leader who paid if
+                they are still that person, of the Resistance and playing, else the
+                fund. Made, the attempt spends it for good. Nothing is said of any of
+                it. The job on the board costs nothing.
     Under it    Each member's order is their own: it ends when they make the attempt
-                (paid what the job pays), when the leader takes it back, when they are
-                arrested, are someone new, are out of the Resistance or below a Fighter.
-                It does not need the leader to stay.
+                (paid what the job pays; anyone after the first at one address, half),
+                when the leader takes it back, when they are arrested, are someone new,
+                are out of the Resistance or below a Fighter. It does not need the
+                leader to stay.
     The job     "Kill the Administrator" is on the Resistance's board (Operations), and
                 nobody else's, from the moment the city is called to her address until
                 someone tries, and only while nobody leads: with a Commander or a
@@ -76,6 +94,13 @@
                 on the board. Keep as minimal a chance of CP/overwatch/administrator
                 finding out about it"). It also ends when her address is over, and as any
                 job does: dropped, arrested, a new character, gone from the server.
+    Half after  The owner, 18 November: "Only the first should be paid that high, the
+    the first   rest maybe 1/2 or less." At one address the first under orders whose
+                attempt counts (the job or the order) is paid in full. Anyone else
+                under the leader's order whose attempt counts there (a hit on her, or
+                marked by her guards as an attacker once they have her) is paid half of
+                each part: 125 experience, 50 credits, and 125 more if she dies of it.
+                Her next address starts again. The fighters still come once.
     Ordered     An attempt on her life at her address (LC.AdminAttempt,
                 sv_livingcity_adminsecurity.lua) by someone who holds the job or the
                 order. Anyone else's (a lone wolf, a rogue unit, a citizen) brings
@@ -104,9 +129,10 @@
     LivingCityRankChanged, PlayerDisconnected and PlayerInitialSpawn (an order or a summons
     is no longer theirs, or its leader no longer one), LivingCityQuestComplete and
     LivingCityQuestFailed (a job of theirs is over: the one they were sent for begins), and
-    KeyPress (E at each other). Nothing is answered to any of them. No settings: the
-    numbers are the constants below. The leader's list reaches F2, and the name picked
-    comes back, by F2's own way (sv_livingcity_quickmore.lua). The job is given and taken
+    KeyPress (E at each other). Nothing is answered to any of them. One setting,
+    lc_resistance_order_cost (300); the other numbers are the constants below. The
+    leader's list and the price reach F2, and the name picked comes back, by F2's own
+    way (sv_livingcity_quickmore.lua). The job is given and taken
     back by LC.GiveQuest and LC.WithdrawQuest (sv_livingcity_quests.lua), and every door
     that work comes through asks LC.AdminPlotBusy.
 ]]
@@ -123,6 +149,8 @@ local JOB_TITLE = "A word with %s"            -- the job they are put in: its ti
 local JOB_LINE = "Speak with %s, in private." -- and its one line
 local BUSY = "%s wants a word with you first." -- what every other door that work comes through says until then
 local ORDER_KEY = "lc_adminplot_order" -- PData: "word" (sent for by a leader, not spoken with yet) or "1" (under the order)
+local PRICE_KEY = "lc_adminplot_price" -- PData, with the order until the attempt: what was paid for it and out of what ("300:fund", or "300:<the leader's SteamID64>:<their citizen number>")
+local SHORT = "Neither the fund nor you can pay %d credits." -- all a leader reads when the price cannot be paid
 local LEADER, DEPUTY = 5, 4    -- who gives the order: a Commander; a Lieutenant when no Commander is playing
 local WITHIN = 130             -- how near E at each other counts as having spoken
 local WATCH = 2                -- seconds between two looks at everyone sent for
@@ -130,6 +158,7 @@ local CAP = 3600               -- nobody is kept from other work by it longer th
 local REWARD = 250             -- experience, when the attempt is made (the owner, 17 November)
 local KILL_BONUS = 250         -- more, if she dies of it
 local STIPEND = 100            -- credits with the job, in all (the board's usual pay for a job is part of it)
+local LATER = 0.5              -- of each part, for anyone under the order after the first at one address (the owner, 18 November)
 local MIN_RANK = 3             -- Fighters and up (Sympathizer, Member, Fighter, Lieutenant, Commander)
 local FIGHTERS = { 7, 8 }      -- how many come (fewer when the reserve is short)
 local RING_MIN, RING_MAX = 400, 1500 -- how far from the stand they come out
@@ -146,10 +175,14 @@ local HOLD = 3600              -- (the city leaves a fighter of the attack alone
 local UP = Vector(0, 0, 50)
 local TAKEN = { detained = true, escorted = true, jailed = true }
 
+local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
+local cvCost = CreateConVar("lc_resistance_order_cost", "300", FLAGS, "Credits for each member the Resistance's leader sends for to kill the Administrator: out of the Resistance's fund, else the leader's own (0: free)")
+
 local P       -- the attack under way, or nil
 local state = setmetatable({}, { __mode = "k" })   -- [player] = "word", "order" or false: what is kept with the character, once read
 local words = setmetatable({}, { __mode = "k" })   -- [player sent for] = { leader, since, q (their job), tries }
 local leaving = setmetatable({}, { __mode = "k" }) -- [player] = true from the moment they are going from the server
+local lesser = setmetatable({}, { __mode = "k" })  -- [player paid for an attempt after the first] = the part they had (her death pays them that part too)
 local nextWatch = 0 -- when everyone sent for is looked at next
 local led     -- whether anyone who may give the order was playing, when last looked (the job on the board follows it)
 local TEMPLATE
@@ -287,9 +320,53 @@ local function Unjob(ply, rec)
     if rec and istable(rec.q) and rec.q ~= q and not rec.q.done then Withdraw(rec.q) end
 end
 
--- Free of it altogether, the record and the job: taken back, or no longer theirs. Nothing is said.
+-- The price of sending for one member (the owner, 18 November): lc_resistance_order_cost credits, 0 for free.
+function LC.AdminPlotCost() return math.max(0, math.floor(cvCost:GetFloat())) end
+
+-- Charged at the moment they are sent for: out of the Resistance's fund when it holds enough, else out of the
+-- leader's own credits. What is kept with the order (where it came from), "" when it costs nothing, or nil:
+-- neither can pay. Nothing is said.
+local function Charge(leader)
+    local cost = LC.AdminPlotCost()
+    if cost <= 0 then return "" end
+    if LC.ResistanceFundTake and LC.ResistanceFundTake(cost, "the leader's order") then return cost .. ":fund" end
+    if LC.Credits and LC.AddCredits and LC.Credits(leader) >= cost then
+        LC.AddCredits(leader, -cost)
+        return string.format("%d:%s:%s", cost, tostring(leader:SteamID64() or ""), leader:GetNW2String("lc_cid", ""))
+    end
+    return nil
+end
+-- The order ended before the attempt: the price goes back where it came from. The fund; or the leader who paid it
+-- out of their own credits, if they are still that person, of the Resistance and playing; else the fund.
+local function Refund(ply)
+    if not ply.GetPData then return end
+    local kept = ply:GetPData(PRICE_KEY, "") or ""
+    if kept == "" then return end
+    ply:RemovePData(PRICE_KEY)
+    local n, rest = string.match(kept, "^(%d+):(.*)$")
+    n = tonumber(n) or 0
+    if n <= 0 then return end
+    local from, cid = string.match(rest, "^(.*):([^:]*)$") -- (who paid, and as whom; nil when it was the fund)
+    if rest ~= "fund" and from and LC.AddCredits then
+        for _, p in ipairs(player.GetAll()) do
+            if Ours(p) and tostring(p:SteamID64() or "") == from and p:GetNW2String("lc_cid", "") == cid then
+                LC.AddCredits(p, n)
+                return
+            end
+        end
+    end
+    if LC.ResistanceFundAdd then LC.ResistanceFundAdd(n, "an order ended before the attempt") end
+end
+-- The attempt is made: the price is spent for good.
+local function Spend(ply)
+    if IsValid(ply) and ply.RemovePData then ply:RemovePData(PRICE_KEY) end
+end
+
+-- Free of it altogether, the record and the job: taken back, or no longer theirs. What was paid for it goes back
+-- where it came from. Nothing is said.
 local function Free(ply)
     if not (IsValid(ply) and ply:IsPlayer()) then return end
+    Refund(ply)
     local rec = words[ply]
     words[ply] = nil
     state[ply] = false
@@ -464,11 +541,17 @@ end
 -- The leader picks a name that has nothing: that member is sent for. They read one line, alone, that says who and
 -- not what about, and are put in the job to speak with the leader; the order is theirs once they have. Nothing is
 -- said to anyone else or on the radio. A leader who picks themselves has the order at once, and reads nothing.
--- True: sent for. False: nothing new (sent for or under the order already). Nil: not theirs to give, or not
--- someone it can be given to (nothing is said of that either).
+-- True: sent for. False: nothing new (sent for or under the order already). False and a line: neither the
+-- Resistance's fund nor the leader can pay for it (the one thing a leader is ever told). Nil: not theirs to give,
+-- or not someone it can be given to (nothing is said of that either).
 function LC.AdminPlotAssign(leader, member)
     if not LC.AdminPlotLeader(leader) or not Fighter(member) then return nil end
     if Has(member) then return false end
+    -- the price, a leader's own order too: the fund's when it holds enough, else the leader's, else nobody is sent for
+    Refund(member) -- (they hold nothing: a price still kept with them is an order's that ended unseen, and goes back first)
+    local paid = Charge(leader)
+    if not paid then return false, string.format(SHORT, LC.AdminPlotCost()) end
+    if paid ~= "" then member:SetPData(PRICE_KEY, paid) else member:RemovePData(PRICE_KEY) end
     if member == leader then
         state[member] = "order"
         if member.SetPData then member:SetPData(ORDER_KEY, "1") end
@@ -503,14 +586,18 @@ function LC.AdminPlotTakeBack(leader, member)
 end
 -- The name picked on F2, as its number on the list and what the list showed of them: "give" (nothing), "spoken"
 -- (sent for) or "back" (under the order). A list out of date does no harm: each does only what it says
--- (sv_livingcity_quickmore.lua). True when it was theirs to pick.
+-- (sv_livingcity_quickmore.lua). True when it was theirs to pick; false and a line when the price cannot be paid.
 function LC.AdminPlotPick(leader, arg)
     local id, what = string.match(tostring(arg or ""), "^(%d+):(%a+)$")
     id = tonumber(id)
     if not id then return false end
     for _, p in ipairs(player.GetAll()) do
         if p:EntIndex() == id then
-            if what == "give" then return LC.AdminPlotAssign(leader, p) ~= nil end
+            if what == "give" then
+                local sent, short = LC.AdminPlotAssign(leader, p)
+                if sent == false and short then return false, short end
+                return sent ~= nil
+            end
             if what == "spoken" then return LC.AdminPlotSpoken(leader, p) ~= nil end
             if what == "back" then return LC.AdminPlotTakeBack(leader, p) ~= nil end
             return false
@@ -594,8 +681,13 @@ local function Unpost()
         if p.tmpl == TEMPLATE and not p.q then p.dead = true end
     end
 end
--- Her address is over (or her guards have begun).
-hook.Add("LivingCitySpeechEnded", "LivingCityAdminPlot", function() Unpost() end)
+-- Her address is over (or her guards have begun: then it is the same address still, and whoever tries from here
+-- on is not the first at it).
+hook.Add("LivingCitySpeechEnded", "LivingCityAdminPlot", function(S)
+    Unpost()
+    local A = Exit()
+    if istable(S) and S.plotPaid and A then A.plotPaid = true end
+end)
 -- Leaders come and go (they join, leave, are promoted): with one playing the job nobody took comes off the
 -- board, and with none left it is back while her address is on. Nobody is told either way.
 local function Board()
@@ -942,7 +1034,9 @@ end
 ------------------------------------------------------------------------
 
 -- Someone tried to kill her at her address. Under orders: the fighters come, and the job and the order are
--- done and paid. Anyone else: nothing. True when it was an ordered one.
+-- done and paid: the first at this address in full, anyone under the leader's order after them a part (the owner,
+-- 18 November: "Only the first should be paid that high, the rest maybe 1/2 or less"). Anyone else: nothing. True
+-- when it was an ordered one.
 function LC.AdminPlotAttempt(her, who, killed)
     if not (IsValid(who) and who:IsPlayer()) or not IsValid(her) then return false end
     local q, own = JobOf(who), Has(who) == "order"
@@ -951,8 +1045,9 @@ function LC.AdminPlotAttempt(her, who, killed)
     local _, S = AtAddress()
     local A = Exit()
     local again = (S and S.plotted) or (A and A.plotted)
-    if S then S.plotted = true end
-    if A then A.plotted = true end
+    local part = ((S and S.plotPaid) or (A and A.plotPaid)) and LATER or 1 -- (someone under orders was paid here already)
+    if S then S.plotted, S.plotPaid = true, true end
+    if A then A.plotted, A.plotPaid = true, true end
     if not again then
         local okS, err = LC.Try(LC.AdminPlotStart, her, who)
         if not okS and LC.Error then LC.Error("the attack at the Administrator's address", err) end
@@ -963,12 +1058,16 @@ function LC.AdminPlotAttempt(her, who, killed)
     end
     if own then
         -- (under a leader's order: whoever makes the attempt is paid what the job pays, the owner, 18 November: "yes it
-        -- should pay the extra". Their order is done; another member's stands.)
+        -- should pay the extra". Their order is done, and what was paid for it is spent; another member's stands.)
+        Spend(who)
         Off(who)
         if not q then
-            if LC.AddXP then LC.AddXP(who, REWARD + (killed and KILL_BONUS or 0), TITLE) end
-            if LC.AddCredits then LC.AddCredits(who, STIPEND, "paid quietly") end
-            if not killed then LC.AdminPlotPaid[who] = CurTime() end
+            if LC.AddXP then LC.AddXP(who, math.floor(REWARD * part) + (killed and math.floor(KILL_BONUS * part) or 0), TITLE) end
+            if LC.AddCredits then LC.AddCredits(who, math.floor(STIPEND * part), "paid quietly") end
+            if not killed then
+                LC.AdminPlotPaid[who] = CurTime()
+                lesser[who] = part < 1 and part or nil
+            end
         end
     end
     return true
@@ -986,15 +1085,17 @@ end)
 
 -- She died of it after all, later: hit with no close calls left she is taken out alive, and the roll in her office
 -- went against her (the owner, 17 November; sv_livingcity_adminsecurity.lua says so here). Whoever was paid for the
--- job at that address in the last ten minutes gets what they would have had if she had died at the stand. Nothing
--- is said. How many were paid.
+-- job at that address in the last ten minutes gets what they would have had if she had died at the stand (anyone
+-- paid a part for the attempt, that part of it). Nothing is said. How many were paid.
 LC.AdminPlotPaid = LC.AdminPlotPaid or setmetatable({}, { __mode = "k" }) -- [holder] = when the job paid them
 function LC.AdminPlotDied()
     local n, now = 0, CurTime()
     for who, at in pairs(LC.AdminPlotPaid) do
         LC.AdminPlotPaid[who] = nil
+        local part = lesser[who] or 1
+        lesser[who] = nil
         if IsValid(who) and who:IsPlayer() and now - at <= 600 and LC.AddXP then
-            LC.AddXP(who, KILL_BONUS, "Kill the Administrator")
+            LC.AddXP(who, math.floor(KILL_BONUS * part), "Kill the Administrator")
             n = n + 1
         end
     end
@@ -1051,14 +1152,18 @@ function LC.AdminPlotThink(now)
         nextWatch = now + WATCH
         LC.AdminPlotWatch(now)
     end
-    -- someone under orders who joined in once her guards had begun (marked by them as an attacker)
+    -- someone under orders who joined in once her guards had begun (marked by them as an attacker): the first brings
+    -- the fighters; anyone else under the leader's order who joins in after is paid their part, and their order is done
     local A = Exit()
     if A and P then A.plotted = true end -- (once for an exit, however it was set off)
-    if A and not A.plotted then
+    if A then
         for who in pairs(A.attackers or {}) do
-            if IsValid(who) and who:IsPlayer() and LC.AdminPlotHolds(who) then
-                LC.AdminPlotAttempt(A.her, who)
-                break
+            if IsValid(who) and who:IsPlayer() then
+                if not A.plotted then
+                    if LC.AdminPlotHolds(who) then LC.AdminPlotAttempt(A.her, who) end
+                elseif Has(who) == "order" then
+                    LC.AdminPlotAttempt(A.her, who)
+                end
             end
         end
     end

@@ -4305,6 +4305,41 @@ local ok, e = pcall(function()
     end
     Info({ reb = { tx = false, backup = 0, pos = 0 } })
     if #LC_CL.QuickRoleRoot().items[3].page().items ~= had then error("no longer the leader: the order is still on their Resistance page") end
+    -- the Resistance's fund (the owner, 18 November): one row for every member, "Fund: 120 credits", under the page's
+    -- entries and above the fighters left; and the leader's entry carries what each member sent for costs
+    local manWas = LC_CL.Manpower
+    LC_CL.Manpower = { "Fighters: 5 of 12", "Next recruit in 4 min" }
+    res = LC_CL.QuickRoleRoot().items[3].page()
+    if not (res.empty and res.empty[7] == "Fighters: 5 of 12" and res.empty[8] == "Next recruit in 4 min") then error("the Resistance page with no word of the fund: the fighters left are not where they were") end
+    for i = 1, 9 do
+        if res.empty[i] and string.find(res.empty[i], "Fund", 1, true) then error("the Resistance page shows a fund the server never sent") end
+    end
+    Info({ reb = { tx = false, backup = 0, pos = 0, fund = 120 } })
+    res = LC_CL.QuickRoleRoot().items[3].page()
+    if #res.items ~= had then error("a member's Resistance page: the fund's row moved its entries: " .. Labels(res)) end
+    if not (res.empty and res.empty[had + 1] == "Fund: 120 credits") then error("a member's Resistance page: no row for the fund: " .. tostring(res.empty and res.empty[had + 1])) end
+    local from = math.max(7, had + 2)
+    if not (res.empty[from] == "Fighters: 5 of 12" and res.empty[from + 1] == "Next recruit in 4 min") then error("a member's Resistance page: the fighters left are not under the fund's row") end
+    for i = 1, had do
+        if res.items[i].label ~= was[i] then error("a member's Resistance page: the fund's row changed what was there: " .. Labels(res)) end
+        if string.find(res.items[i].label, "each", 1, true) then error("a member's Resistance page shows a price") end
+    end
+    Info({ reb = { tx = false, backup = 0, pos = 0, fund = 0 } })
+    res = LC_CL.QuickRoleRoot().items[3].page()
+    if res.empty[had + 1] ~= "Fund: 0 credits" then error("an empty fund is not shown as one: " .. tostring(res.empty[had + 1])) end
+    Info({ reb = { tx = false, backup = 0, pos = 0, fund = 120 }, plotcost = 300, plot = { { id = 1004, name = "Ada Leader" }, { id = 1007, name = "Ben Fighter", has = "order" } } })
+    res = LC_CL.QuickRoleRoot().items[3].page()
+    ord = res.items[had + 1]
+    if not (#res.items == had + 1 and ord and ord.label == "Order: kill the Administrator (300 each)" and ord.page) then error("the leader's entry does not carry the price: " .. Labels(res)) end
+    if not (res.empty[had + 1] == nil and res.empty[had + 2] == "Fund: 120 credits") then error("the leader's Resistance page: the fund's row is not under the order") end
+    if had + 3 <= 9 and res.empty[had + 3] ~= "Fighters: 5 of 12" then error("the leader's Resistance page: the fighters left are not under the fund's row") end
+    p = ord.page()
+    if not (p.title == "ORDER: KILL THE ADMINISTRATOR" and #p.items == 2 and p.items[2].label == "Ben Fighter  (ordered)") then error("the leader's list, with a price on its entry: " .. Labels(p)) end
+    Info({ reb = { tx = false, backup = 0, pos = 0, fund = 120 }, plotcost = 0, plot = { { id = 1004, name = "Ada Leader" } } })
+    ord = LC_CL.QuickRoleRoot().items[3].page().items[had + 1]
+    if not (ord and ord.label == "Order: kill the Administrator") then error("an order that costs nothing shows a price: " .. tostring(ord and ord.label)) end
+    LC_CL.Manpower = manWas
+    Info({ reb = { tx = false, backup = 0, pos = 0 } })
 
     -- a plain citizen: their own lines straight on F2 (the owner, 18 November: no "Me" step), with what the server says
     _me.nw = { lcf_faction = "citizen", lce_standing = 120, lc_unreg = true }
