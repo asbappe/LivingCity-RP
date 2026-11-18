@@ -1445,6 +1445,10 @@ hook.Add("EntityTakeDamage", "LivingCityAdminExfil", function(ent, dmg)
                 local now, last = CurTime(), A.strays[att]
                 A.strays[att] = now
                 if last and now > last and now - last < 10 and Turn(att) then Mark(att) end
+            elseif IsValid(att) and att ~= ent and (att:IsPlayer() or att:IsNPC()) and (dmg:GetDamage() or 0) > 0 then
+                -- (anyone else who hits her while they have her is an attacker too, as one who hits her guards is.
+                -- It was not so until 18 November: only her guards being hit marked a second shooter.)
+                Mark(att)
             end
             return true
         end
