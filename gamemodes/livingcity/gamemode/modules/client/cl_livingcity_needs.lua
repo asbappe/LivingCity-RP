@@ -65,7 +65,27 @@ function LC_CL.NeedsVisible(ply)
 end
 
 local BANDS = { union = "Union band", resistance = "Freq 7", cp = "CP net" }
-local DISGUISES = { cp = "Civil Protection uniform", citizen = "citizen clothes", rebel = "Resistance gear" }
+-- What they are dressed as, always in the box (the owner, 18 November: "a very small HUD element in the upper left
+-- in that little box that shows role/credits/standing that shows what you are dressed as (this would be useful
+-- universally), it could say 'Citizen clothes', 'Resistant Clothes' or 'CP Uniform', etc. I guess overwatch wouldn't
+-- need it as they cannot disguise and can't take off their armor").
+local CLOTHES = { cp = "CP uniform", citizen = "Citizen clothes", rebel = "Resistance clothes" }
+local DISGUISES = { cp = "Civil Protection uniform", citizen = "citizen clothes", rebel = "Resistance gear" } -- (the pockets' "Take off the ..." button)
+-- The words, and whether it is a disguise (shown in amber). nil: nothing to say (the Overwatch, a stalker, a
+-- vortigaunt, the infested, the Administrator).
+function LC_CL.Clothes(ply)
+    local d = ply:GetNW2String("lcd_disguise", "")
+    if CLOTHES[d] then return CLOTHES[d], true end
+    local f = ply:GetNW2String("lcf_faction", "")
+    if f == "citizen" then return CLOTHES.citizen, false end
+    if f == "resistance" then
+        if ply:GetNW2String("lcf_special", "") == "vortigaunt" then return nil end
+        -- (Sympathizers and Members dress as citizens do; Fighters and up wear the Resistance's own)
+        return ply:GetNW2Int("lcf_rank", 1) >= 3 and CLOTHES.rebel or CLOTHES.citizen, false
+    end
+    if f == "cp" and not (LCF and LCF.IsOverwatch and LCF.IsOverwatch(ply)) then return CLOTHES.cp, false end
+    return nil
+end
 local C_240_200_120 = Color(240, 200, 120)
 local C_255_175_90 = Color(255, 175, 90)
 
@@ -81,7 +101,8 @@ function LC_CL.StatusRows(ply)
     local band = ply:GetNW2String("lcu_band", "")
     if BANDS[band] then rows[#rows + 1] = { text = "Radio: " .. BANDS[band] .. " (!r)" } end
     local d = ply:GetNW2String("lcd_disguise", "")
-    if DISGUISES[d] then rows[#rows + 1] = { text = "Wearing " .. DISGUISES[d], color = C_240_200_120 } end
+    local clothes, worn = LC_CL.Clothes(ply)
+    if clothes then rows[#rows + 1] = { text = clothes, color = worn and C_240_200_120 or nil } end
     local alias = ply:GetNW2String("lcd_alias", "")
     if alias ~= "" then rows[#rows + 1] = { text = "Papers: citizen " .. alias, color = d ~= "" and C_240_200_120 or nil } end
     return rows

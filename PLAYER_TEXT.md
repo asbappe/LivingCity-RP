@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version e7e9ec9. Admin-only console messages and log lines are left out.
+Made from version f9eca94. Admin-only console messages and log lines are left out.
 
-12938 lines, from 358 files.
+12940 lines, from 358 files.
 
 ## Contents
 
@@ -118,7 +118,7 @@ Made from version e7e9ec9. Admin-only console messages and log lines are left ou
 - [cl_livingcity_life.lua](#cllivingcitylifelua-cllivingcitylifelua) (17)
 - [cl_livingcity_market.lua](#cllivingcitymarketlua-cllivingcitymarketlua) (17)
 - [cl_livingcity_moregames.lua](#cllivingcitymoregameslua-cllivingcitymoregameslua) (44)
-- [cl_livingcity_needs.lua](#cllivingcityneedslua-cllivingcityneedslua) (88)
+- [cl_livingcity_needs.lua](#cllivingcityneedslua-cllivingcityneedslua) (90)
 - [cl_livingcity_nextstep.lua](#cllivingcitynextsteplua-cllivingcitynextsteplua) (24)
 - [cl_livingcity_notices.lua](#cllivingcitynoticeslua-cllivingcitynoticeslua) (16)
 - [cl_livingcity_outfits.lua](#cllivingcityoutfitslua-cllivingcityoutfitslua) (14)
@@ -3487,183 +3487,188 @@ Made from version e7e9ec9. Admin-only console messages and log lines are left ou
 > Note for you (not shown in game): eating or drinking (a jump up), not the slow drain
 
 - "Union band"  (text, line 67)
-- "Civil Protection uniform"  (text, line 68)
-- "citizen clothes"  (text, line 68)
-- "Resistance gear"  (text, line 68)
+
+> Note for you (not shown in game): What they are dressed as, always in the box (the owner, 18 November: "a very small HUD element in the upper left in that little box that shows role/credits/standing that shows what you are dressed as (this would be useful universally), it could say 'Citizen clothes', 'Resistant Clothes' or 'CP Uniform', etc. I guess overwatch wouldn't need it as they cannot disguise and can't take off their armor").
+
+- "Citizen clothes"  (text, line 72)
+- "Resistance clothes"  (text, line 72)
+- "Civil Protection uniform"  (text, line 73)
+- "citizen clothes"  (text, line 73)
+- "Resistance gear"  (text, line 73)
 
 > Note for you (not shown in game): The last rows of the status box, each only when there is something to say: a Resistance member's Union job (the only side with a rank that holds one: a hunted rebel in citizen clothes works a shift as cover), the radio band, what you are wearing, the papers you carry. { text, color } each.
 
-- "Union job: {name}"  (text, line 79)
-- "Radio: {band} (!r)"  (text, line 82)
+- "Union job: {name}"  (text, line 99)
+- "Radio: {band} (!r)"  (text, line 102)
 
 > Note for you (not shown in game): part of: status rows
 
-- "Papers: citizen {alias}"  (text, line 86)
+- "Papers: citizen {alias}"  (text, line 107)
 
 > Note for you (not shown in game): loyalty, sympathy, corruption: what your choices have made of you (they open up choices in jobs and stories)
 
-- "Loyalty %d   Sympathy %d   Corruption %d"  (message, line 159)
+- "Loyalty %d   Sympathy %d   Corruption %d"  (message, line 180)
 
 > Note for you (not shown in game): Breen's water, and coffee
 
-- "Everything feels... pleasant. What were you doing?"  (chat message, line 225)
+- "Everything feels... pleasant. What were you doing?"  (chat message, line 246)
 
 > Note for you (not shown in game): the game answering something done in a window (lcn_effect)
 
-- "Real coffee. For a moment you remember what mornings used to be."  (chat message, line 228)
+- "Real coffee. For a moment you remember what mornings used to be."  (chat message, line 249)
 
 > Note for you (not shown in game): the game's render screenspace effects moment
 
-- "$pp_colour_addr"  (text, line 245)
-- "$pp_colour_addg"  (text, line 245)
-- "$pp_colour_addb"  (text, line 245)
-- "$pp_colour_brightness"  (text, line 246)
-- "$pp_colour_contrast"  (text, line 246)
-- "$pp_colour_colour"  (text, line 247)
-- "$pp_colour_mulr"  (text, line 247)
-- "$pp_colour_mulg"  (text, line 247)
-- "$pp_colour_mulb"  (text, line 247)
-- "$pp_colour_addr"  (text, line 253)
-- "$pp_colour_addg"  (text, line 253)
-- "$pp_colour_addb"  (text, line 253)
-- "$pp_colour_brightness"  (text, line 254)
-- "$pp_colour_contrast"  (text, line 254)
-- "$pp_colour_colour"  (text, line 254)
-- "$pp_colour_mulr"  (text, line 255)
-- "$pp_colour_mulg"  (text, line 255)
-- "$pp_colour_mulb"  (text, line 255)
+- "$pp_colour_addr"  (text, line 266)
+- "$pp_colour_addg"  (text, line 266)
+- "$pp_colour_addb"  (text, line 266)
+- "$pp_colour_brightness"  (text, line 267)
+- "$pp_colour_contrast"  (text, line 267)
+- "$pp_colour_colour"  (text, line 268)
+- "$pp_colour_mulr"  (text, line 268)
+- "$pp_colour_mulg"  (text, line 268)
+- "$pp_colour_mulb"  (text, line 268)
+- "$pp_colour_addr"  (text, line 274)
+- "$pp_colour_addg"  (text, line 274)
+- "$pp_colour_addb"  (text, line 274)
+- "$pp_colour_brightness"  (text, line 275)
+- "$pp_colour_contrast"  (text, line 275)
+- "$pp_colour_colour"  (text, line 275)
+- "$pp_colour_mulr"  (text, line 276)
+- "$pp_colour_mulg"  (text, line 276)
+- "$pp_colour_mulb"  (text, line 276)
 
 > Note for you (not shown in game): Meat and fish: the city hours left before it goes off, as the pockets screen says it.
 
-- "spoils within the hour"  (text, line 324)
-- "spoils in %dh"  (message, line 325)
+- "spoils within the hour"  (text, line 345)
+- "spoils in %dh"  (message, line 346)
 
 > Note for you (not shown in game): weight and large things, against what you can carry
 
-- "%.1f / %.0f kg     large %d / %d"  (message, line 358)
-- "Too much to carry: you're slowed down"  (drawn on screen, line 360)
+- "%.1f / %.0f kg     large %d / %d"  (message, line 379)
+- "Too much to carry: you're slowed down"  (drawn on screen, line 381)
 
 > Note for you (not shown in game): part of: open inventory
 
-- "Take off the {or}"  (label or button, line 376)
-- "Change into citizen clothes"  (label or button, line 383)
-- "Your papers say you are citizen {alias}."  (label or button, line 391)
-- "Drink from the water (it may not be clean)"  (label or button, line 400)
-- "Empty. Nothing to find."  (label or button, line 430)
-- "Nothing for sale right now."  (text, line 430)
-- "Nothing on it. Put things up for sale from your pockets below (Sell)."  (text, line 431)
-- "Empty. Put things in from your pockets below."  (text, line 431)
-- "Buy ({price})"  (label or button, line 459)
+- "Take off the {or}"  (label or button, line 397)
+- "Change into citizen clothes"  (label or button, line 404)
+- "Your papers say you are citizen {alias}."  (label or button, line 412)
+- "Drink from the water (it may not be clean)"  (label or button, line 421)
+- "Empty. Nothing to find."  (label or button, line 451)
+- "Nothing for sale right now."  (text, line 451)
+- "Nothing on it. Put things up for sale from your pockets below (Sell)."  (text, line 452)
+- "Empty. Put things in from your pockets below."  (text, line 452)
+- "Buy ({price})"  (label or button, line 480)
 
 > Note for you (not shown in game): part of: do click
 
-- "How many credits for one {name}?"  (text, line 476)
+- "How many credits for one {name}?"  (text, line 497)
 
 > Note for you (not shown in game): part of: open inventory
 
-- "Collect the takings (%d)"  (message, line 492)
-- "Closed by the Union: reopen"  (label or button, line 500)
-- "Give up the locker (empty it first)"  (label or button, line 509)
-- "Pack up the stall (empty it first)"  (text, line 510)
-- "Pack up the crate (empty it first)"  (text, line 510)
-- ""{or}..."{or}"  (label or button, line 534)
-- "Your pockets are empty."  (label or button, line 549)
-- "Hide it at home. (A raid on your block can still find it.)"  (text, line 592)
-- "Put one on the stall, at a price you set"  (tooltip, line 599)
+- "Collect the takings (%d)"  (message, line 513)
+- "Closed by the Union: reopen"  (label or button, line 521)
+- "Give up the locker (empty it first)"  (label or button, line 530)
+- "Pack up the stall (empty it first)"  (text, line 531)
+- "Pack up the crate (empty it first)"  (text, line 531)
+- ""{or}..."{or}"  (label or button, line 555)
+- "Your pockets are empty."  (label or button, line 570)
+- "Hide it at home. (A raid on your block can still find it.)"  (text, line 613)
+- "Put one on the stall, at a price you set"  (tooltip, line 620)
 
 > Note for you (not shown in game): part of: do click
 
-- "How many credits for one {name}?"  (text, line 601)
+- "How many credits for one {name}?"  (text, line 622)
 
 > Note for you (not shown in game): part of: open inventory
 
-- "Put in"  (text, line 605)
-- "Into {or}"  (text, line 605)
-- "Set down"  (text, line 606)
+- "Put in"  (text, line 626)
+- "Into {or}"  (text, line 626)
+- "Set down"  (text, line 627)
 
 > Note for you (not shown in game): (a grenade is thrown from the Grenades weapon, not from your pockets; the owner, 1 November)
 
-- "Eat it"  (text, line 614)
-- "Swallow the motherlode whole. You have a feeling about what happens next."  (text, line 614)
-- "Hand one to the person in front of you"  (text, line 616)
-- "Look at a locked door first. Or type !pick, or bind a key to lc_pick."  (text, line 617)
+- "Eat it"  (text, line 635)
+- "Swallow the motherlode whole. You have a feeling about what happens next."  (text, line 635)
+- "Hand one to the person in front of you"  (text, line 637)
+- "Look at a locked door first. Or type !pick, or bind a key to lc_pick."  (text, line 638)
 
 > Note for you (not shown in game): (the owner, 13 November) a rebel or citizen can cut the gas mask out of a Civil Protection uniform
 
-- "Scavenge gas mask"  (label or button, line 624)
-- "Cut the gas mask out of the uniform (five seconds, keep still). The uniform is no good after."  (tooltip, line 625)
+- "Scavenge gas mask"  (label or button, line 645)
+- "Cut the gas mask out of the uniform (five seconds, keep still). The uniform is no good after."  (tooltip, line 646)
 
 > Note for you (not shown in game): part of: open inventory
 
-- "Call for help"  (label or button, line 634)
-- "Calls Civil Protection to where you are. You'll be asked what's wrong."  (tooltip, line 635)
+- "Call for help"  (label or button, line 655)
+- "Calls Civil Protection to where you are. You'll be asked what's wrong."  (tooltip, line 656)
 
 > Note for you (not shown in game): part of: do click
 
-- "Call for help"  (text, line 637)
-- "What's wrong?"  (text, line 637)
+- "Call for help"  (text, line 658)
+- "What's wrong?"  (text, line 658)
 
 > Note for you (not shown in game): part of: open inventory
 
-- "Become someone else. Clears your wanted status if no Civil Protection unit is watching."  (text, line 643)
-- "Out of sight of any Civil Protection unit."  (text, line 644)
-- "Visit a Civil Protection Commissary to be issued supplies: grenades for your rank, ammunition, armour, bandages and your ration."  (label or button, line 666)
-- "Mark the nearest Civil Protection Commissary on my screen"  (label or button, line 671)
+- "Become someone else. Clears your wanted status if no Civil Protection unit is watching."  (text, line 664)
+- "Out of sight of any Civil Protection unit."  (text, line 665)
+- "Visit a Civil Protection Commissary to be issued supplies: grenades for your rank, ammunition, armour, bandages and your ration."  (label or button, line 687)
+- "Mark the nearest Civil Protection Commissary on my screen"  (label or button, line 692)
 
 > Note for you (not shown in game): the lab (sv_livingcity_lab.lua) makes the Resistance's guns; everyone else buys them
 
-- "Guns, ammunition, jammers, radios: the scientist in the lab makes them (mark the lab)"  (label or button, line 684)
+- "Guns, ammunition, jammers, radios: the scientist in the lab makes them (mark the lab)"  (label or button, line 705)
 
 > Note for you (not shown in game): part of: paint
 
-- "(at a workbench)"  (text, line 716)
-- "(out of sight)"  (text, line 716)
+- "(at a workbench)"  (text, line 737)
+- "(out of sight)"  (text, line 737)
 
 > Note for you (not shown in game): part of: open inventory
 
-- "Nothing hidden here yet."  (label or button, line 744)
+- "Nothing hidden here yet."  (label or button, line 765)
 
 > Note for you (not shown in game): what's in your hands: a crowbar, a gun (not what your faction issued you)
 
-- "On you: {name}{TEXT_ALIGN_CENTER}"  (label, line 778)
+- "On you: {name}{TEXT_ALIGN_CENTER}"  (label, line 799)
 
 > Note for you (not shown in game): part of: open inventory
 
-- "Stash it"  (label or button, line 787)
-- "Hide it at home, magazine and all. (A raid on your block can still find it.)"  (tooltip, line 788)
+- "Stash it"  (label or button, line 808)
+- "Hide it at home, magazine and all. (A raid on your block can still find it.)"  (tooltip, line 809)
 
 > Note for you (not shown in game): the Civil Protection Commissary's counter, on its own screen (cl_livingcity_screens.lua), if this player has them on; the Union Commissary's terminal too (the owner, 12 November: "it doesn't have the in-game floating menu like the CP Commissary, can we change that and put it over the console")
 
-- "{price} credits{g}{or}"  (text, line 853)
+- "{price} credits{g}{or}"  (text, line 874)
 
 > Note for you (not shown in game): turning in what you carry (sv_livingcity_economy.lua, LC.CPTurnIn)
 
-- "TURN IN  (what you carry that isn't your issue)"  (text, line 858)
-- "Turn in all: %s x%d   %d credits"  (message, line 862)
+- "TURN IN  (what you carry that isn't your issue)"  (text, line 879)
+- "Turn in all: %s x%d   %d credits"  (message, line 883)
 
 > Note for you (not shown in game): the game answering something done in a window (lce_shop)
 
-- "the unit counter"  (text, line 866)
-- "goods by Civil Standing"  (text, line 866)
+- "the unit counter"  (text, line 887)
+- "goods by Civil Standing"  (text, line 887)
 
 > Note for you (not shown in game): (the same in the window, for players with the screens in the world off)
 
-- "Turn in all: %s x%d   (%d credits)"  (message, line 924)
+- "Turn in all: %s x%d   (%d credits)"  (message, line 945)
 
 > Note for you (not shown in game): the game answering something done in a window (lcu_market)
 
-- "He sells nothing to strangers. But he'll buy arms and what the fight needs, or take them as a gift."  (label or button, line 1028)
-- "He sells nothing to strangers. Bring him guns, ammunition, gun parts, scrap, rags or chemicals and he'll buy them, or take them as a gift."  (label or button, line 1028)
-- "Sell for {price}"  (text, line 1048)
+- "He sells nothing to strangers. But he'll buy arms and what the fight needs, or take them as a gift."  (label or button, line 1049)
+- "He sells nothing to strangers. Bring him guns, ammunition, gun parts, scrap, rags or chemicals and he'll buy them, or take them as a gift."  (label or button, line 1049)
+- "Sell for {price}"  (text, line 1069)
 
 > Note for you (not shown in game): (giving it for the cause: no credits, and, for someone not of the Resistance, their sympathy)
 
-- "give one to the cause"  (text, line 1056)
-- "Sell all for {n}"  (text, line 1063)
+- "give one to the cause"  (text, line 1077)
+- "Sell all for {n}"  (text, line 1084)
 
 > Note for you (not shown in game): on screen
 
-- "Out of breath"  (drawn on screen, line 1110)
+- "Out of breath"  (drawn on screen, line 1131)
 
 ## cl_livingcity_nextstep.lua (cl_livingcity_nextstep.lua)
 
@@ -5547,7 +5552,7 @@ Made from version e7e9ec9. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): (not recorded yet: a word of greeting in his own voice, as the camp's medic gives, so that it is heard)
 
-- "%s, who tried to kill the Administrator alone and got away, is taken in by the Resistance"  (message, line 352)
+- "%s, who tried to kill the Administrator alone and got away, is taken in by the Resistance"  (message, line 366)
 
 ## the Administrator's security (the owner, 15 November) (sv_livingcity_adminsecurity.lua)
 
@@ -23875,9 +23880,9 @@ Made from version e7e9ec9. Admin-only console messages and log lines are left ou
 
 - "You're already in your own clothes."  (chat message, line 1858)
 
-> Note for you (not shown in game): a timer (regularly)
+> Note for you (not shown in game): (one line, not two: the owner, 18 November, "merge the pair of lines to a single line")
 
-- "[Resistance] You're in plain clothes. F2 > Gear up when it's time to fight."  (chat message, line 1869)
+- "[Resistance] You're in plain clothes: keep your gun out of sight. F2 > Gear up when it's time to fight."  (chat message, line 1870)
 
 ## powered vests ("suit power") (sv_livingcity_vest.lua)
 

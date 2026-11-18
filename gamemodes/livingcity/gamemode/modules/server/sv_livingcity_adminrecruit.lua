@@ -252,8 +252,10 @@ end
 -- from the server in the moment between, they are still owed it when they come back.
 -- Where they arrive (the owner, 18 November: "have them spawn in resistance territory, whichever zone the leader is in;
 -- if there is no leader or they aren't in a zone, then maybe wherever a lieutenant is or the zone furthest away (via
--- path node distance) from a combine zone"). The leader: a Commander who is playing and stands on rebel ground; then
--- a Lieutenant; then the rebel zone the longest walk, by the city's path nodes, from the nearest Combine zone (as the
+-- path node distance) from a combine zone"; "If there is a player commander, then please use them. If not, then sure
+-- use Colonel Cubbage as the leader"). The leader: a Commander who is playing and stands on rebel ground; then
+-- Colonel Cubbage, at the camp where he stands to answer her (LC.ColonelSpot, sv_livingcity_colonel.lua); then a
+-- Lieutenant; then the rebel zone the longest walk, by the city's path nodes, from the nearest Combine zone (as the
 -- crow flies where the paths do not say). In that zone: the Resistance's spawn point nearest whoever they are brought
 -- to (or nearest its middle), else a free spot there. nil: no rebel ground on the map, and they stay where they stand.
 local function Middle(z)
@@ -269,7 +271,7 @@ function LC.AdminRecruitSpot(ply)
     local zones = LC.ZonesOfKindShared("rebel") or {}
     if #zones == 0 then return nil end
     local zone, by
-    for _, rank in ipairs({ 5, 4 }) do
+    local function Leading(rank)
         for _, p in ipairs(player.GetAll()) do
             if not zone and p ~= ply and p:Alive() and Faction(p) == "resistance" and p:GetNW2Int("lcf_rank", 1) == rank
                 and not (LC.Prisoners and LC.Prisoners[p]) then
@@ -279,6 +281,18 @@ function LC.AdminRecruitSpot(ply)
             end
         end
     end
+    Leading(5)
+    if not zone and LC.ColonelSpot then
+        local okC, camp = LC.Try(LC.ColonelSpot)
+        if okC and camp then
+            for _, z in ipairs(zones) do
+                if not zone and LCZ.Contains(z, camp, 0) then zone, by = z, camp end
+            end
+            -- (his camp drawn outside any rebel zone: beside him all the same)
+            if not zone then return (LC.FreeSpawnPos and LC.FreeSpawnPos(camp + Vector(0, 0, 8))) or camp end
+        end
+    end
+    if not zone then Leading(4) end
     if not zone then
         local best
         for _, z in ipairs(zones) do

@@ -1603,7 +1603,7 @@ local okOct, errOct = pcall(function()
     local function Times(pat) local n = 0 for _ in string.gmatch(all, pat) do n = n + 1 end return n end
     if Times("454") ~= 1 then error("credits are drawn " .. Times("454") .. " times in the upper left:\n" .. all) end
     if Times("%-990") ~= 1 then error("Civil Standing is drawn " .. Times("%-990") .. " times:\n" .. all) end
-    for _, want in ipairs({ "Loyalty", "Union job: ", "Wearing citizen clothes", "Radio: Freq 7", "Papers: citizen #12%-345", "WANTED" }) do
+    for _, want in ipairs({ "Loyalty", "Union job: ", "Citizen clothes", "Radio: Freq 7", "Papers: citizen #12%-345", "WANTED" }) do
         if Times(want) ~= 1 then error("the one box should say '" .. want .. "' once, it says it " .. Times(want) .. " times:\n" .. all) end
     end
     if string.find(all, "Jobs, orders and your story", 1, true) then error("the F4 line is still drawn") end

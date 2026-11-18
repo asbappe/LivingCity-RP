@@ -37266,6 +37266,8 @@ LC.ZonesOfKindShared = function(kind)
     if kind == "rebel" then return { camp, far } elseif kind == "combine" then return { comb } end
     return realZones(kind)
 end
+local realColonel = LC.ColonelSpot
+LC.ColonelSpot = function() return nil end -- (no camp of the Colonel's in this world, until it is given one below)
 local s1 = LC.AdminRecruitSpot(wolf)
 ok(s1 ~= nil and s1:Distance(at(0, 60000)) < 100, "nobody leading: the rebel ground furthest from the Combine's", tostring(s1))
 local rs = LC.AddPoint(at(200, 60000), 0, "rspawn", 0)
@@ -37282,10 +37284,23 @@ ok(LCF.RankOf(cmd).name == "Commander" and s1 ~= nil and s1:Distance(at(200, 600
 cmd:SetPos(at(40000, -40000))
 s1 = LC.AdminRecruitSpot(wolf)
 ok(s1 ~= nil and s1:Distance(lt:GetPos()) < 100, "a leader who is not on rebel ground is passed over", tostring(s1))
+-- no Commander on rebel ground: Colonel Cubbage leads (the owner, 18 November), before any Lieutenant
+LC.ColonelSpot = function() return at(100, 60000), 0 end
+s1 = LC.AdminRecruitSpot(wolf)
+ok(s1 ~= nil and s1:Distance(at(200, 60000)) < 100, "no Commander: by Colonel Cubbage's camp, before the Lieutenant's zone (at its spawn point)", tostring(s1))
+cmd:SetPos(CAMP + Vector(200, 0, 0))
+s1 = LC.AdminRecruitSpot(wolf)
+ok(s1 ~= nil and s1:Distance(cmd:GetPos()) < 100, "a Commander who is playing comes before the Colonel", tostring(s1))
+cmd:SetPos(at(40000, -40000))
+LC.ColonelSpot = function() return at(30000, 30000), 0 end
+s1 = LC.AdminRecruitSpot(wolf)
+ok(s1 ~= nil and s1:Distance(at(30000, 30000)) < 100, "(his camp outside any drawn rebel zone: beside him all the same)", tostring(s1))
+LC.ColonelSpot = function() return nil end
 LC.ZonesOfKindShared = function(kind) if kind == "rebel" then return {} end return realZones(kind) end
 ok(LC.AdminRecruitSpot(wolf) == nil, "no rebel ground at all: they stay where they stand")
 LC.ZonesOfKindShared = realZones
 LC.RemovePoint(rs) LC.RemoveZone(far) LC.RemoveZone(comb)
+LC.ColonelSpot = realColonel
 lt:SetPos(at(40000, -41000))
 ok(heard(wolf, "You are now") == 0 and heard(wolf, "[Resistance]") == 1, "with no second line about it", table.concat(wolf.chat, " | "))
 _run(10)

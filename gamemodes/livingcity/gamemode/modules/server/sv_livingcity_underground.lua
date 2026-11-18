@@ -366,7 +366,7 @@ end
 -- Resistance members have clothes of their own to change into: no item needed.
 local OWN_CLOTHES = { plain = "citizen", gear = "rebel" }
 
-function LC.Wear(ply, id)
+function LC.Wear(ply, id, quiet) -- (quiet: whoever dressed them says the one line there is to say)
     local it = LCS.Items[id]
     if OWN_CLOTHES[id] then it = { wear = OWN_CLOTHES[id], own = true } end
     if not it or not it.wear or not (it.own or LC.HasItem(ply, id)) then return false end
@@ -398,7 +398,7 @@ function LC.Wear(ply, id)
     elseif it.wear == "rebel" then
         ply:ChatPrint("[Disguise] Resistance colours. The fighters in rebel territory will take you for one of them, for a while. Out on the streets, Civil Protection units will take you for one of them too.")
     elseif it.own then
-        ply:ChatPrint("[Disguise] Plain clothes. You're just another citizen. Keep your gun out of sight: a Civil Protection unit who sees it will know. (F2 > Gear up to change back.)")
+        if not quiet then ply:ChatPrint("[Disguise] Plain clothes. You're just another citizen. Keep your gun out of sight: a Civil Protection unit who sees it will know. (F2 > Gear up to change back.)") end
     else
         ply:ChatPrint("[Disguise] Union blue, like everyone else. Nobody looks twice at a citizen. Until they check your face.")
     end
@@ -1865,8 +1865,9 @@ hook.Add("PlayerSpawn", "LivingCityPlainClothes", function(ply)
     timer.Simple(2.5, function()
         if not IsValid(ply) or not ply:Alive() or ply:GetNW2String("lcf_faction", "") ~= "resistance" then return end
         if ply:GetNW2String("lcf_special", "") ~= "" or LC.Disguise(ply) then return end
-        if LC.Wear(ply, "plain") then
-            ply:ChatPrint("[Resistance] You're in plain clothes. F2 > Gear up when it's time to fight.")
+        -- (one line, not two: the owner, 18 November, "merge the pair of lines to a single line")
+        if LC.Wear(ply, "plain", true) then
+            ply:ChatPrint("[Resistance] You're in plain clothes: keep your gun out of sight. F2 > Gear up when it's time to fight.")
         end
     end)
 end)
