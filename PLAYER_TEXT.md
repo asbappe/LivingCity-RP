@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version b3ed87d. Admin-only console messages and log lines are left out.
+Made from version 9447cb3. Admin-only console messages and log lines are left out.
 
-12932 lines, from 357 files.
+12937 lines, from 358 files.
 
 ## Contents
 
@@ -155,8 +155,9 @@ Made from version b3ed87d. Admin-only console messages and log lines are left ou
 - [the actions menu (server side)](#the-actions-menu-server-side-svlivingcityactionslua) (8)
 - [acts (server). See sh_livingcity_acts.lua for the list](#acts-server-see-shlivingcityactslua-for-the-list-svlivingcityactslua) (7)
 - [the hunt for whoever tried to kill the Administrator](#the-hunt-for-whoever-tried-to-kill-the-administrator-svlivingcityadminhuntlua) (4)
-- [the plot against the Administrator, a coordinated attack and not a lone wolf](#the-plot-against-the-administrator-a-coordinated-attack-and-not-a-lone-wolf-svlivingcityadminplotlua) (6)
+- [the plot against the Administrator, a coordinated attack and not a lone wolf](#the-plot-against-the-administrator-a-coordinated-attack-and-not-a-lone-wolf-svlivingcityadminplotlua) (7)
 - [the would-be assassin is hers to question (the owner, 16 November)](#the-would-be-assassin-is-hers-to-question-the-owner-16-november-svlivingcityadminquestioninglua) (13)
+- [a lone wolf who tried to kill the Administrator and got away is taken in by the Resistance](#a-lone-wolf-who-tried-to-kill-the-administrator-and-got-away-is-taken-in-by-the-resistance-svlivingcityadminrecruitlua) (2)
 - [the Administrator's security (the owner, 15 November)](#the-administrators-security-the-owner-15-november-svlivingcityadminsecuritylua) (9)
 - [testing tools for admins](#testing-tools-for-admins-svlivingcityadmintoolslua) (50)
 - [citizens who show you the way](#citizens-who-show-you-the-way-svlivingcityadvicelua) (24)
@@ -267,7 +268,7 @@ Made from version b3ed87d. Admin-only console messages and log lines are left ou
 - [citizens and the weapons lying about, and no weapon in custody](#citizens-and-the-weapons-lying-about-and-no-weapon-in-custody-svlivingcitynpcweaponslua) (5)
 - [the city does its own work](#the-city-does-its-own-work-svlivingcitynpcworklua) (49)
 - [the old-timer](#the-old-timer-svlivingcityoldtimerlua) (50)
-- [the Resistance plans its own operations, and the Combine](#the-resistance-plans-its-own-operations-and-the-combine-svlivingcityopplanlua) (41)
+- [the Resistance plans its own operations, and the Combine](#the-resistance-plans-its-own-operations-and-the-combine-svlivingcityopplanlua) (42)
 - [clothes that show the job](#clothes-that-show-the-job-svlivingcityoutfitslua) (8)
 - [the Civil Orientation pamphlet](#the-civil-orientation-pamphlet-svlivingcitypamphletlua) (16)
 - [sv_livingcity_patdown.lua](#svlivingcitypatdownlua-svlivingcitypatdownlua) (60)
@@ -300,7 +301,7 @@ Made from version b3ed87d. Admin-only console messages and log lines are left ou
 - [the Resistance pamphlet](#the-resistance-pamphlet-svlivingcityrebelpamphletlua) (40)
 - [sv_livingcity_rebelrule.lua](#svlivingcityrebelrulelua-svlivingcityrebelrulelua) (47)
 - [the Resistance on the street](#the-resistance-on-the-street-svlivingcityrebelslua) (82)
-- [what the Resistance's people say to you, recordable (the owner, 13 November playtest:](#what-the-resistances-people-say-to-you-recordable-the-owner-13-november-playtest-svlivingcityrebelvoicelua) (13)
+- [what the Resistance's people say to you, recordable (the owner, 13 November playtest:](#what-the-resistances-people-say-to-you-recordable-the-owner-13-november-playtest-svlivingcityrebelvoicelua) (14)
 - [who you are now, and what goes with it (the owner, 7 November: "when I become a metrocop](#who-you-are-now-and-what-goes-with-it-the-owner-7-november-when-i-become-a-metrocop-svlivingcityreconcilelua) (3)
 - [the Resistance's operations, and what the city does about them](#the-resistances-operations-and-what-the-city-does-about-them-svlivingcityresistanceopslua) (105)
 - [escalation](#escalation-svlivingcityresponselua) (24)
@@ -1101,7 +1102,7 @@ Made from version b3ed87d. Admin-only console messages and log lines are left ou
 - "Realistic survival: you can catch a cold in the rain, a stomach bug from raw meat or dirty water, and a fever from a cold left alone (no running, no fists, and at midday it knocks you down into a fever dream that breaks it). Union medicine from the Commissary cures a cold or a fever."  (text, line 154)
 - "The Resistance: an old fighter they call the Colonel keeps watch at the camp. He knows what's coming before the radio does."  (text, line 155)
 - "After the City Administrator gives an address, Colonel Cubbage answers her a few minutes later from the Resistance's camp, point by point. Stand near him, or tune a radio to Freq 7, to hear it."  (text, line 156)
-- "While she gives her address the Resistance's board offers Kill the Administrator (its leaders can plan it: F2 > Resistance > Operations). Hold either, and our fighters open fire when you do."  (text, line 157)
+- "While she gives her address the Resistance's board offers its Fighters and up Kill the Administrator (its leaders can plan it: F2 > Resistance > Operations). Hold either, and our fighters open fire when you do. Someone who tries it alone and gets away is taken in by the Resistance."  (text, line 157)
 - "Some of the city's posters hint at a dream: tonight's, or one the city had lately. Read them closely (E) and guess."  (text, line 158)
 - "Somewhere in the city is an old man who's seen it all. Find him, visit him, share a meal: the better he knows you, the more he'll tell you."  (text, line 159)
 - "The Resistance (Member rank and up) can ask a sympathizer to keep watch: they warn everyone on Freq 7 when Civil Protection units approach."  (text, line 160)
@@ -5478,21 +5479,25 @@ Made from version b3ed87d. Admin-only console messages and log lines are left ou
 
 `gamemodes/livingcity/gamemode/modules/server/sv_livingcity_adminplot.lua`
 
-- "Kill the Administrator"  (text, line 58)
-- "At her address. Our fighters open fire when you do."  (text, line 59)
-- "Kill the Administrator at her address"  (text, line 60)
+- "Kill the Administrator"  (text, line 65)
+- "At her address. Our fighters open fire when you do."  (text, line 66)
+- "Kill the Administrator at her address"  (text, line 67)
 
 > Note for you (not shown in game): part of: break off
 
-- "The attack at the Administrator's address breaks off: %d of %d fighters left"  (message, line 450)
+- "The attack at the Administrator's address breaks off: %d of %d fighters left"  (message, line 461)
 
 > Note for you (not shown in game): part of: admin plot start
 
-- "An ordered attempt on the Administrator by %s: %d Resistance fighters come out round the stand"  (message, line 513)
+- "An ordered attempt on the Administrator by %s: %d Resistance fighters come out round the stand"  (message, line 524)
+
+> Note for you (not shown in game): The stipend: 100 credits in all for the job from the board (never for the order, nor for a lone wolf). The board's usual pay for a finished job (lc_directive_pay, sv_livingcity_economy.lua) is part of it, so this adds the rest.
+
+- "paid quietly"  (text, line 577)
 
 > Note for you (not shown in game): She died of it after all, later: hit with no close calls left she is taken out alive, and the roll in her office went against her (the owner, 17 November; sv_livingcity_adminsecurity.lua says so here). Whoever was paid for the job at that address in the last ten minutes gets what they would have had if she had died at the stand. Nothing is said. How many were paid.
 
-- "Kill the Administrator"  (text, line 570)
+- "Kill the Administrator"  (text, line 591)
 
 ## the would-be assassin is hers to question (the owner, 16 November) (sv_livingcity_adminquestioning.lua)
 
@@ -5526,6 +5531,19 @@ Made from version b3ed87d. Admin-only console messages and log lines are left ou
 - "They tried to kill you and they're in the cells; question them yourself."  (description, line 496)
 - "Go to their cell (marked)"  (text, line 498)
 - "Ask your questions"  (text, line 501)
+
+## a lone wolf who tried to kill the Administrator and got away is taken in by the Resistance (sv_livingcity_adminrecruit.lua)
+
+`gamemodes/livingcity/gamemode/modules/server/sv_livingcity_adminrecruit.lua`
+
+
+> Note for you (not shown in game): (on top of the city's own numbers, and nobody else's to move, lead or send home meanwhile)
+
+- "A Resistance contact is sent to %s, who tried to kill the Administrator alone and got away"  (message, line 232)
+
+> Note for you (not shown in game): (not recorded yet: a word of greeting in his own voice, as the camp's medic gives, so that it is heard)
+
+- "%s, who tried to kill the Administrator alone and got away, is taken in by the Resistance"  (message, line 283)
 
 ## the Administrator's security (the owner, 15 November) (sv_livingcity_adminsecurity.lua)
 
@@ -15142,67 +15160,77 @@ Made from version b3ed87d. Admin-only console messages and log lines are left ou
 - "Too soon after the last one. (%s)"  (message, line 140)
 - "That target isn't there any more. Look again."  (text, line 144)
 - "%s plans an operation: %s, in %d minutes. Join it: F2 > Resistance > Operations."  (message, line 148)
-- "[CP net] Intelligence: the anticitizens plan to %s, in about %d minutes."  (message, line 151)
+
+> Note for you (not shown in game): (the plan to kill the Administrator never leaks: the owner, 17 November, "Keep as minimal a chance of CP/overwatch/administrator finding out about it")
+
+- "[CP net] Intelligence: the anticitizens plan to %s, in about %d minutes."  (message, line 153)
 
 > Note for you (not shown in game): part of: join op
 
-- "Nothing is planned right now."  (text, line 160)
-- "Only the Resistance."  (text, line 161)
-- "[Freq 7] You've backed out of the operation."  (chat message, line 164)
-- "[Freq 7] You're in: {label}. You'll be pointed there when it starts."  (chat message, line 167)
+- "Nothing is planned right now."  (text, line 162)
+- "Only the Resistance."  (text, line 163)
+
+> Note for you (not shown in game): (the plan to kill the Administrator: Fighters and up, as the job is; sv_livingcity_adminplot.lua)
+
+- "Fighters and up only."  (text, line 166)
+- "[Freq 7] You've backed out of the operation."  (chat message, line 170)
+
+> Note for you (not shown in game): part of: join op
+
+- "[Freq 7] You're in: {label}. You'll be pointed there when it starts."  (chat message, line 173)
 
 > Note for you (not shown in game): part of: cancel op
 
-- "Only whoever planned it can call it off."  (text, line 176)
-- "The operation is called off: {label}."  (text, line 178)
+- "Only whoever planned it can call it off."  (text, line 182)
+- "The operation is called off: {label}."  (text, line 184)
 
 > Note for you (not shown in game): (her life at her address: no raid goes, so no fight elsewhere holds it up. The fighters come out when one of those who joined makes the attempt: sv_livingcity_adminplot.lua)
 
-- "The streets are too hot. The operation is called off: {label}."  (text, line 191)
+- "The streets are too hot. The operation is called off: {label}."  (text, line 197)
 
 > Note for you (not shown in game): part of: fire
 
-- "The fighters couldn't get there. The operation is off: {label}."  (text, line 200)
-- "The operation"  (text, line 207)
-- "[Freq 7] Go: {label}. It's marked on your screen."  (chat message, line 208)
+- "The fighters couldn't get there. The operation is off: {label}."  (text, line 206)
+- "The operation"  (text, line 213)
+- "[Freq 7] Go: {label}. It's marked on your screen."  (chat message, line 214)
 
 > Note for you (not shown in game): It worked: everyone who joined and was there is paid, the planner a little more. How many were there.
 
-- "a planned operation"  (text, line 221)
-- "a planned operation"  (text, line 222)
+- "a planned operation"  (text, line 227)
+- "a planned operation"  (text, line 228)
 
 > Note for you (not shown in game): part of: op pay
 
-- "planned an operation that worked"  (text, line 225)
+- "planned an operation that worked"  (text, line 231)
 
 > Note for you (not shown in game): the game's living city rebel op done moment
 
-- "The operation worked: %s. %d of ours were there."  (message, line 233)
+- "The operation worked: %s. %d of ours were there."  (message, line 239)
 
 > Note for you (not shown in game): Bounties
 
-- "No bounties here."  (text, line 243)
-- "Only the Administrator, or a Division Leader and up, puts a price on a head."  (text, line 247)
+- "No bounties here."  (text, line 249)
+- "Only the Administrator, or a Division Leader and up, puts a price on a head."  (text, line 253)
 
 > Note for you (not shown in game): part of: post bounty
 
-- "Only on someone wanted."  (text, line 268)
-- "There's a price on them already."  (text, line 269)
-- "You posted one just now. (%ds)"  (message, line 270)
-- "[CP net] BOUNTY: %d credits for bringing in %s (%s). Posted by %s."  (message, line 274)
-- "[Miscount] There's a price on your head: %d credits to the unit who brings you in."  (message, line 275)
-- "A price on your head"  (on-screen notice, line 276)
-- "credits to the unit who brings you in."  (on-screen notice, line 276)
+- "Only on someone wanted."  (text, line 274)
+- "There's a price on them already."  (text, line 275)
+- "You posted one just now. (%ds)"  (message, line 276)
+- "[CP net] BOUNTY: %d credits for bringing in %s (%s). Posted by %s."  (message, line 280)
+- "[Miscount] There's a price on your head: %d credits to the unit who brings you in."  (message, line 281)
+- "A price on your head"  (on-screen notice, line 282)
+- "credits to the unit who brings you in."  (on-screen notice, line 282)
 
 > Note for you (not shown in game): the game's living city incarcerated moment
 
-- "brought in a wanted person with a price on their head"  (text, line 287)
-- "[CP net] %s collected the bounty on %s: %d credits."  (message, line 288)
-- "[CP net] %s was brought in. The bounty lapses."  (message, line 290)
+- "brought in a wanted person with a price on their head"  (text, line 293)
+- "[CP net] %s collected the bounty on %s: %d credits."  (message, line 294)
+- "[CP net] %s was brought in. The bounty lapses."  (message, line 296)
 
 > Note for you (not shown in game): typing in chat
 
-- "[Miscount] {why}"  (chat message, line 340)
+- "[Miscount] {why}"  (chat message, line 346)
 
 ## clothes that show the job (sv_livingcity_outfits.lua)
 
@@ -17802,51 +17830,51 @@ Made from version b3ed87d. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: radio jobs
 
-- "Hold your radio up first (switch to the radio transmitter, next to Hands)."  (text, line 3818)
+- "Hold your radio up first (switch to the radio transmitter, next to Hands)."  (text, line 3821)
 
 > Note for you (not shown in game): part of: accept posting
 
-- "[Miscount] Finish or abandon your current job first."  (chat message, line 3830)
-- "[Miscount] You have to wait before taking another job. Next job in {CurTime}s."  (chat message, line 3832)
-- "[Miscount] That job is no longer available."  (chat message, line 3841)
+- "[Miscount] Finish or abandon your current job first."  (chat message, line 3833)
+- "[Miscount] You have to wait before taking another job. Next job in {CurTime}s."  (chat message, line 3835)
+- "[Miscount] That job is no longer available."  (chat message, line 3844)
 
 > Note for you (not shown in game): (a job for a certain hour, still on the board after it: the night shift at midday, the owner, 11 November)
 
-- "[Miscount] {or}"  (chat message, line 3845)
-- "[Miscount] Stalkers can only do stalker work. You can't take this job."  (chat message, line 3849)
+- "[Miscount] {or}"  (chat message, line 3850)
+- "[Miscount] Stalkers can only do stalker work. You can't take this job."  (chat message, line 3854)
 
 > Note for you (not shown in game): part of: accept posting
 
-- "[Miscount] That job has enough people."  (chat message, line 3856)
-- "has joined the job."  (quest narration, line 3859)
-- "[{board}] {title}. {or}"  (chat message, line 3881)
-- "Quest accepted: %s [%s] by %s"  (message, line 3883)
+- "[Miscount] That job has enough people."  (chat message, line 3861)
+- "has joined the job."  (quest narration, line 3864)
+- "[{board}] {title}. {or}"  (chat message, line 3886)
+- "Quest accepted: %s [%s] by %s"  (message, line 3888)
 
 > Note for you (not shown in game): part of: abandon quest
 
-- "left the job."  (quest narration, line 3897)
+- "left the job."  (quest narration, line 3902)
 
 > Note for you (not shown in game): part of: resolve choice
 
-- "%s check: rolled %d + %d skill = %d, needed %d. %s"  (message, line 3915)
+- "%s check: rolled %d + %d skill = %d, needed %d. %s"  (message, line 3920)
 
 > Note for you (not shown in game): the console command lcq_startchain
 
-- "[Story] Chains: {ids}. Usage: lcq_startchain <chain> [player]"  (text, line 3967)
-- "[Story] Player not found."  (text, line 3969)
-- "[Story] {name} is ready on {Nick}'s board (F4)."  (text, line 3974)
+- "[Story] Chains: {ids}. Usage: lcq_startchain <chain> [player]"  (text, line 3972)
+- "[Story] Player not found."  (text, line 3974)
+- "[Story] {name} is ready on {Nick}'s board (F4)."  (text, line 3979)
 
 > Note for you (not shown in game): the console command lcq_story
 
-- "[Story] Player not found."  (text, line 3981)
-- "[Story] %s: loyalty %d, sympathy %d, corruption %d"  (message, line 3983)
-- "counters: {or}"  (text, line 3987)
-- "ended ({done})"  (text, line 3989)
-- "at {part}"  (text, line 3989)
+- "[Story] Player not found."  (text, line 3986)
+- "[Story] %s: loyalty %d, sympathy %d, corruption %d"  (message, line 3988)
+- "counters: {or}"  (text, line 3992)
+- "ended ({done})"  (text, line 3994)
+- "at {part}"  (text, line 3994)
 
 > Note for you (not shown in game): the console command lcq_resetstory
 
-- "[Story] Your story has been reset."  (chat message, line 4001)
+- "[Story] Your story has been reset."  (chat message, line 4006)
 
 ## searching things with your hands, as a job's step (the owner, 14 November: "go to each (sv_livingcity_questsearch.lua)
 
@@ -18796,6 +18824,10 @@ Made from version b3ed87d. Admin-only console messages and log lines are left ou
 - "You look fine to me. Come back when you're bleeding."  (text, line 30)
 - "I hate to charge, but these don't grow on trees."  (text, line 31)
 - "You don't have the credits, friend. Sorry."  (text, line 32)
+
+> Note for you (not shown in game): (to a lone wolf who tried to kill the Administrator and got away: sv_livingcity_adminrecruit.lua)
+
+- "We saw what you did. You're with us now."  (text, line 34)
 
 ## who you are now, and what goes with it (the owner, 7 November: "when I become a metrocop (sv_livingcity_reconcile.lua)
 

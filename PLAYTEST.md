@@ -4,7 +4,7 @@ About half an hour on the server. Only things a person has to judge are here: ho
 
 Tick what works, write a word under what does not. What is not on this card waits in `PLAYTEST_ARCHIVE.md` (the backlog, about 70 one-line items).
 
-## This card (17 November 2026: everything built since your 15 November notes, in the order of one session)
+## This card (18 November 2026: everything built since your 15 November notes, in the order of one session)
 
 - [ ] **Small fixes from your notes:** F1 > Find work: chevrons on the ground to Labor Assignment? The wall monitor gone, two or three hanging monitors live on different cameras? The transformer's glass from the floor up, about 15 feet? The victory sting never while walking about?
   Notes:
@@ -32,7 +32,9 @@ Tick what works, write a word under what does not. What is not on this card wait
   Notes:
 - [ ] **The would-be assassin, caught:** as the Administrator, F4 > "Question the would-be assassin": a stunstick in hand, your questions, and afterwards the prisoner seen again as a stalker? With nobody playing her: does the city's own Administrator come with two soldiers (and say her questions aloud once they are recorded)?
   Notes:
-- [ ] **A coordinated attack:** as a Resistance member during her address, take "Kill the Administrator" from the board (or a leader plans it: F2 > Resistance > Operations) and shoot at her: do seven or eight fighters come out round the stand from places nobody was looking, fire only at the Combine, and leave when she is gone? With no job held (a lone wolf): nobody comes?
+- [ ] **A coordinated attack:** as a Resistance Fighter or higher during her address, take "Kill the Administrator" from the board (or a leader plans it: F2 > Resistance > Operations) and shoot at her: do seven or eight fighters come out round the stand from places nobody was looking, fire only at the Combine, and leave when she is gone? Paid 250 experience and 100 credits? As a Member: is the job missing from your board?
+  Notes:
+- [ ] **A lone wolf, taken in:** as a citizen with no job held, shoot at her and get away (nobody comes to help). Stay out of the units' sight about two minutes: does a man in plain clothes walk up, say "We saw what you did. You're with us now.", and are you in the Resistance where you stand? Or walk into rebel ground first: does one of theirs say it there?
   Notes:
 - [ ] **The parade:** eight soldiers two abreast, an APC (nose forward?), two hunters, a strider that walks, the march (the debug report's "parade music:" line says which piece), everyone cheering along the middle third? Shoot at it: it stops, only you are fired on, and after 30 seconds unseen it re-forms at the last route node, the music from the start?
   Notes:
