@@ -343,10 +343,11 @@ local function Refund(ply)
     local kept = ply:GetPData(PRICE_KEY, "") or ""
     if kept == "" then return end
     ply:RemovePData(PRICE_KEY)
-    local n, from, cid = string.match(kept, "^(%d+):([^:]*):?(.*)$")
+    local n, rest = string.match(kept, "^(%d+):(.*)$")
     n = tonumber(n) or 0
     if n <= 0 then return end
-    if from ~= "fund" and LC.AddCredits then
+    local from, cid = string.match(rest, "^(.*):([^:]*)$") -- (who paid, and as whom; nil when it was the fund)
+    if rest ~= "fund" and from and LC.AddCredits then
         for _, p in ipairs(player.GetAll()) do
             if Ours(p) and tostring(p:SteamID64() or "") == from and p:GetNW2String("lc_cid", "") == cid then
                 LC.AddCredits(p, n)

@@ -37987,6 +37987,482 @@ _walls = savedWalls
 end
 Nov17_AdminRecruitTests()
 
+function Nov18_ResistanceFundTests()
+section("18 November: the Resistance's fund (half of every take from supplies raided and people saved), and the price of the leader's order")
+-- The owner, 18 November: "the resistance leader can only order this if they've saved up enough money themselves to
+-- put into this extra pay, or have gathered enough funds in a Resistance fund ... various successful missions where
+-- supplies are raided or people saved (who then donate small amounts of credits that they may have saved) would all
+-- be spit between the partakers of the activities and a general resistance fund".
+local set = _setcvar
+LC.EndEvent(true)
+if LC.SpeechSession() then LC.EndSpeech() end
+if LC.AdminExfil() then LC.AdminExfilEnd(false) end
+LC.AdminPlotEnd()
+local fundWas = LC.ResistanceFund()
+local costWas = GetConVar("lc_resistance_order_cost"):GetInt()
+local stopsWas, huntWas, manWas = GetConVar("lc_stops"):GetInt(), GetConVar("lc_admin_hunt"):GetInt(), GetConVar("lc_manpower"):GetInt()
+set("lc_stops", 0)
+set("lc_admin_hunt", 0)
+set("lc_manpower", 1)
+set("lc_speech_muster", 60)
+-- (whoever an earlier unit left leading the Resistance is a Fighter while this one runs, and put back at its end)
+local strays = {}
+for _, p in ipairs(player.GetAll()) do
+    if p:GetNW2String("lcf_faction", "") == "resistance" and p:GetNW2Int("lcf_rank", 1) >= 4 then
+        strays[p] = p:GetNW2Int("lcf_rank", 1)
+        p:SetNW2Int("lcf_rank", 3)
+    end
+end
+local F0 = Vector(-118000, 92000, 0)
+local fund = LC.ResistanceFund
+local function setFund(n) LC.ResistanceFundTake(fund()) LC.ResistanceFundAdd(n) end
+local function xp(p) return tonumber(p:GetPData("lcf_xp_resistance", 0)) or 0 end
+local function rebel(name, x) local p = newPlayer(name, "resistance", nil, x or 400) p.chat, p.lcProtectUntil = {}, 0 return p end
+local function share(p) -- (what the last "your share" line on their screen says they had)
+    for i = #(p.chat or {}), 1, -1 do
+        local n = string.match(tostring(p.chat[i]), "^%[Credits%] %+(%d+) %(your share%)$")
+        if n then return tonumber(n) end
+    end
+    return 0
+end
+local function gone(p) hook.Run("PlayerDisconnected", p) p:Remove() end
+local function back(p, name) -- (the same person joins again: a new connection, the same saved data)
+    local n = _makeplayer(name, p:GetPos())
+    n.sid, n.pdata = p.sid, p.pdata
+    hook.Run("PlayerInitialSpawn", n)
+    if n:GetNW2String("lcf_faction", "") ~= "resistance" then LC.SetFaction(n, "resistance", nil, true) end
+    n.chat, n.lcProtectUntil = {}, 0
+    return n
+end
+local jobPay = GetConVar("lc_economy"):GetBool() and GetConVar("lc_directive_pay"):GetInt() or 0 -- (what the board pays for any job)
+local made = {} -- (everyone this unit made, to leave at its end)
+local function keep(p) made[#made + 1] = p return p end
+
+------------------------------------------------------------------------
+-- the fund itself
+------------------------------------------------------------------------
+ok(costWas == 300, "the one setting: lc_resistance_order_cost is 300", costWas)
+setFund(0)
+ok(fund() == 0 and LC.ResistanceFundAdd(50, "test") == 50 and fund() == 50, "credits go into the Resistance's fund")
+ok(LC.ResistanceFundTake(20, "test") == true and fund() == 30, "and come out of it")
+ok(LC.ResistanceFundTake(31) == false and fund() == 30, "never more than it holds: false, and nothing is taken")
+ok(LC.ResistanceFundAdd(10.9) == 40 and LC.ResistanceFundAdd(-5) == 40 and LC.ResistanceFundAdd(0) == 40, "a whole number of credits; adding less than one adds nothing", fund())
+do
+    local saved = util.JSONToTable(file.Read("livingcity/" .. game.GetMap() .. "_city.json", "DATA") or "") or {}
+    ok(saved.fund == 40, "it is written with the state of the city the moment it changes", tostring(saved.fund))
+    LC.LedgerReload()
+    ok(fund() == 40, "and is there after a restart or a map change (read back from the file)", fund())
+    LC.LedgerSave()
+    LC.LedgerReload()
+    ok(fund() == 40 and LC.Ledger().supply ~= nil, "(the city's own save keeps it, with the rest of the state of the city)")
+end
+
+------------------------------------------------------------------------
+-- supplies raided
+------------------------------------------------------------------------
+local supWas = LC.Supply
+local crate = ents.Create("lc_supply") crate:SetPos(F0) crate:Spawn()
+local function drop(loads) -- (a supply drop down at F0, its crate holding that many loads)
+    crate:SetNW2Int("lc_loads", loads)
+    LC.Supply = { pos = F0, crate = crate, startT = CurTime() - 60, guards = {}, props = {}, raided = {}, loads = loads }
+    return LC.Supply
+end
+local looter, a, b, far = keep(rebel("FundLooter")), keep(rebel("FundJoinerA")), keep(rebel("FundJoinerB")), keep(rebel("FundJoinerFar"))
+local cit = keep(newPlayer("FundCitizen", "citizen"))
+_run(3) -- (they have arrived: nothing of a first spawn moves them from here on)
+cit.chat = {}
+for _, p in ipairs({ a, b, far, cit }) do p:SetPos(F0 + Vector(9000, 0, 0)) end
+do
+    drop(5)
+    looter:SetPos(F0 + Vector(40, 0, 0))
+    setFund(0)
+    local c0, n0 = LC.Credits(looter), LC.InvCount(looter)
+    ok(LC.LootSupply(looter, crate), "(one of ours pries a load out of a supply convoy's crate)")
+    _run(8.5)
+    ok(crate:GetNW2Int("lc_loads", 0) == 4 and LC.InvCount(looter) > n0, "what the load holds is theirs, as before", table.concat(looter.chat, " | "))
+    ok(fund() == 10 and LC.Credits(looter) == c0 + 10 and share(looter) == 10,
+        "a load out of a supply convoy: a take of 20 on top, half to the fund and half to the one who pried it", fund() .. " " .. (LC.Credits(looter) - c0))
+    local cc = LC.Credits(cit)
+    cit.chat = {}
+    hook.Run("LivingCitySupplyLooted", cit, { "Bread" })
+    ok(fund() == 10 and LC.Credits(cit) == cc and #cit.chat == 0, "(a load taken by someone who is not of the Resistance: nothing to the fund or to them)",
+        fund() .. " " .. table.concat(cit.chat, " | "))
+    -- our fighters get into the crate: the city's own operation, nobody's plan
+    hook.Run("LivingCityRebelOpDone", "supply", { purpose = "supply" })
+    ok(fund() == 30, "our fighters' own raid on a supply drop: a take of 40, half to the fund; the other half is the fighters'", fund())
+    hook.Run("LivingCityRebelOpDone", "supply", { purpose = "supply" })
+    ok(fund() == 30, "(a crate already cleaned out is no success)", fund())
+    LC.Supply = { pos = F0, startT = CurTime(), guards = {}, props = {}, raided = {}, loads = 5 }
+    hook.Run("LivingCityRebelOpDone", "supply", { purpose = "supply" })
+    LC.Supply = nil
+    hook.Run("LivingCityRebelOpDone", "supply", { purpose = "supply" })
+    ok(fund() == 30, "(nor one with no crate down yet, or with the drop gone)", fund())
+    -- a planned operation: those who joined and were there share the other half
+    drop(5)
+    a:SetPos(F0 + Vector(100, 0, 0)) b:SetPos(F0 + Vector(-100, 0, 0)) far:SetPos(F0 + Vector(4000, 0, 0))
+    for _, p in ipairs({ a, b, far }) do p.chat = {} end
+    local plan = { by = a, label = "Hit the supply drop", kind = "supply", pos = F0, data = {}, joined = { [a] = true, [b] = true, [far] = true } }
+    local ca, cb, cf, xa, xb = LC.Credits(a), LC.Credits(b), LC.Credits(far), xp(a), xp(b)
+    hook.Run("LivingCityRebelOpDone", "supply", { purpose = "supply", planned = plan })
+    ok(fund() == 50 and LC.Credits(a) - ca == 15 + 10 and LC.Credits(b) - cb == 15 + 10 and share(a) == 10 and share(b) == 10,
+        "a planned raid on a supply drop that worked: half to the fund, the other half shared equally among those who joined and were there",
+        fund() .. " " .. (LC.Credits(a) - ca) .. " " .. (LC.Credits(b) - cb))
+    ok(LC.Credits(far) == cf and share(far) == 0, "(someone who joined and was not there has no share)")
+    ok(xp(a) - xa == 35 and xp(b) - xb == 25, "what a planned operation pays already is unchanged: 15 credits and 25 experience each, the planner 10 more",
+        (xp(a) - xa) .. " " .. (xp(b) - xb))
+    drop(5)
+    far:SetPos(F0 + Vector(0, 100, 0))
+    ca = LC.Credits(a)
+    hook.Run("LivingCityRebelOpDone", "supply", { purpose = "supply", planned = plan })
+    ok(fund() == 72 and LC.Credits(a) - ca == 15 + 6 and share(far) == 6, "what does not divide equally stays with the fund: three share 20, 6 each and 22 to the fund", fund())
+    for _, p in ipairs({ a, b, far }) do p.chat = {} end
+    hook.Run("LivingCityRebelOpDone", "screen", { purpose = "screen", planned = plan })
+    hook.Run("LivingCityRebelOpDone", "heist", { purpose = "heist" })
+    hook.Run("LivingCityRebelOpDone", "ambush", { purpose = "ambush" })
+    ok(fund() == 72 and share(a) == 0 and share(b) == 0,
+        "(an operation with no supplies taken and nobody saved, a screen, a terminal, an ambush, gives the fund nothing and nobody a share)", fund())
+end
+LC.Supply = supWas
+crate:Remove()
+
+-- a job of one of the kinds that count, finished (the real template, one step of this test's own)
+local function job(owner, id, mates, hold)
+    local tmpl
+    for _, t in ipairs(LC.QuestTemplates) do if t.id == id then tmpl = t end end
+    if not tmpl then return nil end
+    for _, p in ipairs({ owner, unpack(mates or {}) }) do
+        if LC.QuestOf[p] then LC.AbandonQuest(p) end
+        p.lcqNext = 0
+    end
+    local q = LC.GiveQuest(owner, { tmpl = tmpl, title = "Fund test " .. id, reward = 30, limit = 600,
+        stages = { { kind = "count", event = "fund_test", need = 1, untallied = true, text = "Do it." } } })
+    if not q then return nil end
+    for _, m in ipairs(mates or {}) do
+        q.members[#q.members + 1] = m
+        LC.QuestOf[m] = q
+    end
+    if not hold then LC.QuestEvent("fund_test", owner) end
+    return q
+end
+do
+    setFund(0)
+    for _, p in ipairs({ a, b }) do p.chat = {} end
+    local ca, xa = LC.Credits(a), xp(a)
+    local q = job(a, "res_supplyrun")
+    ok(q ~= nil and q.done and fund() == 15 and LC.Credits(a) - ca == jobPay + 15 and share(a) == 15,
+        "a crate of the Union's supplies stolen and brought home (the job): a take of 30, half to the fund, half to whoever did it", fund() .. " " .. (LC.Credits(a) - ca))
+    ok(xp(a) - xa >= 30, "(what the job pays is unchanged)", xp(a) - xa)
+    ca = LC.Credits(a)
+    local cb = LC.Credits(b)
+    q = job(a, "res_supplyrun", { b })
+    ok(q ~= nil and fund() == 15 + 16 and LC.Credits(a) - ca == jobPay + 7 and LC.Credits(b) - cb == jobPay + 7,
+        "two on the job share that half equally (7 each of 15, the odd one to the fund), each counted once", fund() .. " " .. (LC.Credits(a) - ca) .. " " .. (LC.Credits(b) - cb))
+    ca = LC.Credits(a)
+    q = job(a, "res_propaganda")
+    ok(q ~= nil and q.done and fund() == 31 and LC.Credits(a) - ca == jobPay, "(any other job gives the fund nothing, and pays what it paid)", fund())
+end
+
+------------------------------------------------------------------------
+-- people saved
+------------------------------------------------------------------------
+local inmate, breaker, mate = keep(rebel("FundInmate", 150)), keep(rebel("FundBreaker")), keep(rebel("FundMate"))
+do
+    LC.AddCredits(inmate, 55)
+    local jailed = LC.Incarcerate(inmate, 600, "Test") and LC.Prisoners[inmate] ~= nil
+    setFund(0)
+    breaker.chat = {}
+    local ci, cby, xby = LC.Credits(inmate), LC.Credits(breaker), xp(breaker)
+    if jailed then LC.BreakOut(inmate, breaker) else hook.Run("LivingCityBreakout", inmate, breaker) end
+    local d = fund()
+    ok(d >= 5 and d <= 15 and LC.Credits(breaker) == cby + d and share(breaker) == d,
+        "a prisoner got out of the cells: someone saved gives a small sum (10 to 30), half to the fund and half to whoever got the cell open", d)
+    ok(LC.Credits(inmate) == ci and ci > 0, "a freed player's own pockets are untouched: nothing is taken from them", LC.Credits(inmate) - ci)
+    ok(xp(breaker) - xby == (jailed and 50 or 0), "(the 50 experience a prison break pays is unchanged)", xp(breaker) - xby)
+    if LC.Prisoners[inmate] then LC.ReleasePrisoner(inmate) end
+    LC.ClearWanted(inmate)
+    -- on the job with others: they share it; the one let out never does
+    local q = job(breaker, "res_breakout", { mate, inmate }, true)
+    local f0, cm = fund(), LC.Credits(mate)
+    cby, ci = LC.Credits(breaker), LC.Credits(inmate)
+    hook.Run("LivingCityBreakout", inmate, breaker)
+    local got, each = fund() - f0, LC.Credits(breaker) - cby
+    local take = got + 2 * each
+    ok(q ~= nil and each >= 2 and LC.Credits(mate) - cm == each and take >= 10 and take <= 30 and take % 2 == 0 and each == math.floor(take / 4),
+        "those on that job with them share its half equally", got .. " " .. each)
+    ok(LC.Credits(inmate) == ci, "(the one let out has no share of their own rescue)")
+    if q then LC.WithdrawQuest(q) end
+    -- let out by our fighters' own operation: counted once the operation says it worked
+    a:SetPos(F0 + Vector(100, 0, 0)) b:SetPos(F0 + Vector(-100, 0, 0)) inmate:SetPos(F0)
+    local plan = { by = a, label = "Break them out", kind = "breakout", pos = F0, data = {}, joined = { [a] = true, [b] = true, [inmate] = true } }
+    f0, ci = fund(), LC.Credits(inmate)
+    local ca = LC.Credits(a)
+    hook.Run("LivingCityBreakout", inmate, nil)
+    ok(fund() == f0 and LC.Credits(a) == ca, "(let out by our fighters' own operation, nobody named: nothing yet)")
+    hook.Run("LivingCityRebelOpDone", "breakout", { purpose = "breakout", planned = plan })
+    got, each = fund() - f0, LC.Credits(a) - ca - 15
+    take = got + 2 * each
+    ok(each >= 2 and take >= 10 and take <= 30 and take % 2 == 0 and each == math.floor(take / 4) and LC.Credits(inmate) == ci + 15,
+        "the operation says it worked: half to the fund, the other half among those who joined the plan and were there (never the one let out)", got .. " " .. each)
+    f0 = fund()
+    hook.Run("LivingCityRebelOpDone", "breakout", { purpose = "breakout", planned = plan })
+    ok(fund() == f0, "(an operation that let nobody out is no success)")
+    f0 = fund()
+    hook.Run("LivingCityRebelOpDone", "breakout", {})
+    hook.Run("LivingCityBreakout", inmate, nil)
+    _run(1.5)
+    hook.Run("LivingCityRebelOpDone", "breakout", {})
+    ok(fund() == f0, "(nor is a breakout nobody named counted by an operation long after)")
+    -- a vortigaunt cut loose
+    local vort = ents.Create("npc_vortigaunt") vort:SetPos(F0 + Vector(300, 0, 0)) vort:Spawn()
+    f0, cby = fund(), LC.Credits(breaker)
+    hook.Run("LivingCityVortFreed", vort, breaker)
+    d = fund() - f0
+    ok(d >= 5 and d <= 15 and LC.Credits(breaker) == cby + d, "a vortigaunt cut loose by one of ours: the same", d)
+    f0 = fund()
+    local cc = LC.Credits(cit)
+    hook.Run("LivingCityVortFreed", vort, nil)
+    hook.Run("LivingCityVortFreed", vort, cit)
+    ok(fund() == f0 and LC.Credits(cit) == cc, "(freed by the city's own team, or by someone who is not of the Resistance: nothing)")
+    ci, cby = LC.Credits(inmate), LC.Credits(breaker)
+    hook.Run("LivingCityVortFreed", inmate, breaker) -- (a player who was a shackled vortigaunt)
+    ok(fund() > f0 and LC.Credits(inmate) == ci and LC.Credits(breaker) > cby, "(a player cut loose: the same, and nothing out of their pockets)")
+    vort:Remove()
+    -- the jobs where one of the city's own is saved
+    for _, id in ipairs({ "res_jailbreak", "res_rescue", "res_freevort" }) do
+        f0, cby = fund(), LC.Credits(breaker)
+        q = job(breaker, id)
+        d = fund() - f0
+        ok(q ~= nil and q.done and d >= 5 and d <= 15 and LC.Credits(breaker) - cby == jobPay + d, "a job where someone is saved, finished (" .. id .. "): the same, on top of what it pays", d)
+    end
+end
+
+------------------------------------------------------------------------
+-- the leader's order has a price
+------------------------------------------------------------------------
+local notices, baseNotice = {}, LC.Notice
+LC.Notice = function(who, kind, title, text, ...) notices[#notices + 1] = { p = who, t = tostring(title) .. ": " .. tostring(text) } return baseNotice(who, kind, title, text, ...) end
+local KEY, PRICE = "lc_adminplot_order", "lc_adminplot_price"
+local function kept(p) return p:GetPData(KEY, "") end
+local function price(p) return p:GetPData(PRICE, "") end
+local function pick(by, p, what) -- (as F2 sends it: done, or not and the one line why)
+    local did, why = LC.QuickMore(by, "plotorder", p:EntIndex() .. ":" .. what)
+    return did == true, why
+end
+local function under(by, p) pick(by, p, "give") pick(by, p, "spoken") return LC.AdminPlotHolds(p) == "order" end
+local sentFor = LC.AdminPlotSentFor
+local commander = rebel("FundCommander", 1800)
+local f1, f2, f3, spender = keep(rebel("FundFighterOne")), keep(rebel("FundFighterTwo")), keep(rebel("FundFighterThree")), keep(rebel("FundSpender"))
+local function who(p) return "300:" .. tostring(p:SteamID64()) .. ":" .. p:GetNW2String("lc_cid", "") end
+local function quiet() for _, p in ipairs(player.GetAll()) do p.chat = {} end notices = {} end
+ok(LC.AdminPlotLeader(commander) and LC.AdminPlotCost() == 300, "(a Commander leads; each member sent for costs 300)")
+do
+    -- out of the fund when it holds enough
+    setFund(500)
+    quiet()
+    local c0 = LC.Credits(commander)
+    ok(pick(commander, f1, "give") and sentFor(f1) == commander, "(the leader sends for a member)")
+    ok(fund() == 200 and LC.Credits(commander) == c0 and price(f1) == "300:fund", "the price is charged the moment they are sent for: out of the Resistance's fund when it holds enough", fund() .. " " .. price(f1))
+    ok(#notices == 0 and #commander.chat == 0 and #f1.chat == 1, "(and nothing is said of it: the member reads their one line, the leader nothing)", table.concat(commander.chat, " | "))
+    ok(pick(commander, f1, "give") and pick(commander, f1, "spoken") and fund() == 200 and LC.AdminPlotHolds(f1) == "order" and price(f1) == "300:fund",
+        "(sent for again, or spoken with: charged once)", fund())
+    -- out of the leader's own credits when the fund is short
+    LC.AddCredits(commander, 400 - LC.Credits(commander))
+    quiet()
+    ok(pick(commander, f2, "give") and sentFor(f2) == commander and fund() == 200 and LC.Credits(commander) == 100,
+        "the fund short of it: out of the leader's own credits, all of it", fund() .. " " .. LC.Credits(commander))
+    ok(price(f2) == who(commander) and #commander.chat == 0 and #notices == 0, "(kept with the order: who paid. Nothing is said)", price(f2))
+    -- neither can pay: refused, with one short reason
+    quiet()
+    local sent, why = pick(commander, f3, "give")
+    ok(sent == false and why == "Neither the fund nor you can pay 300 credits.", "neither the fund nor the leader can pay: refused, with one short reason", tostring(why))
+    ok(sentFor(f3) == nil and kept(f3) == "" and price(f3) == "" and LC.QuestOf[f3] == nil and #f3.chat == 0, "nobody is sent for, and they read nothing")
+    ok(fund() == 200 and LC.Credits(commander) == 100, "and nothing is charged", fund() .. " " .. LC.Credits(commander))
+    ok(#notices == 1 and notices[1].p == commander and string.find(notices[1].t, "Neither the fund nor you can pay 300 credits.", 1, true) ~= nil and #commander.chat == 0,
+        "the leader reads that one line, and nobody anything else", notices[1] and notices[1].t)
+    -- a leader ordering themselves pays the same
+    setFund(300)
+    ok(pick(commander, commander, "give") and LC.AdminPlotHolds(commander) == "order" and fund() == 0 and price(commander) == "300:fund", "a leader who picks themselves pays the same", fund())
+    ok(pick(commander, commander, "back") and LC.AdminPlotHolds(commander) == nil and fund() == 300 and price(commander) == "", "(and has it back with the order given up)", fund())
+    setFund(0)
+    LC.AddCredits(commander, 350 - LC.Credits(commander))
+    ok(pick(commander, commander, "give") and LC.Credits(commander) == 50 and price(commander) == who(commander) and pick(commander, commander, "back") and LC.Credits(commander) == 350,
+        "(out of their own credits when the fund is short, and back to them)", LC.Credits(commander))
+    sent, why = pick(commander, f3, "give")
+    ok(sent and fund() == 0 and LC.Credits(commander) == 50 and pick(commander, f3, "back") and LC.Credits(commander) == 350, "(the same for another member)")
+
+    -- getting it back: taken back by the leader
+    setFund(200)
+    quiet()
+    ok(pick(commander, f1, "back") and LC.AdminPlotHolds(f1) == nil and fund() == 500 and price(f1) == "", "the leader takes an order back: the price goes back where it came from, the fund", fund())
+    local c1 = LC.Credits(commander)
+    ok(pick(commander, f2, "back") and sentFor(f2) == nil and fund() == 500 and LC.Credits(commander) == c1 + 300 and price(f2) == "", "or the leader, who paid it out of their own credits", LC.Credits(commander) - c1)
+    ok(#notices == 0 and #commander.chat == 0 and #f1.chat == 0 and #f2.chat == 0, "(nothing is said of it)")
+    ok(pick(commander, f1, "back") and fund() == 500 and LC.Credits(commander) == c1 + 300, "(once)")
+    -- what else ends an order before the attempt: an arrest, a new character, leaving the Resistance, falling below a Fighter
+    local e1, e2, e3, e4, e5 = keep(rebel("FundArrested")), keep(rebel("FundReborn")), keep(rebel("FundLeaver")), keep(rebel("FundDemoted")), keep(rebel("FundWaiting"))
+    setFund(1500)
+    ok(under(commander, e1) and under(commander, e2) and under(commander, e3) and under(commander, e4) and pick(commander, e5, "give") and fund() == 0,
+        "(four under the order and one sent for, all out of the fund)", fund())
+    if not LC.Incarcerate(e1, 60, "test") then hook.Run("LivingCityIncarcerated", e1, 60, "test") end
+    ok(LC.AdminPlotHolds(e1) == nil and fund() == 300 and price(e1) == "", "arrested before the attempt: it goes back", fund())
+    if LC.Prisoners[e1] then LC.ReleasePrisoner(e1) end
+    LC.NewCharacter(e2, "test")
+    ok(LC.AdminPlotHolds(e2) == nil and fund() == 600 and price(e2) == "", "someone new: it goes back", fund())
+    LC.SetFaction(e3, "citizen", nil, true)
+    ok(fund() == 900 and price(e3) == "", "out of the Resistance: it goes back", fund())
+    e4:SetPData("lcf_xp_resistance", 150)
+    LC.AddXP(e4, 0)
+    ok(fund() == 1200 and price(e4) == "", "below a Fighter: it goes back", fund())
+    LC.AdminPlotWatch(CurTime() + 3500)
+    ok(sentFor(e5) == commander and fund() == 1200, "(sent for fifty-eight minutes: still)")
+    LC.AdminPlotWatch(CurTime() + 3601)
+    ok(sentFor(e5) == nil and fund() == 1500 and price(e5) == "", "sent for an hour and never spoken with: it goes back", fund())
+    ok(fund() == 1500, "(each of them once)")
+    -- the price that was paid goes back, whatever the setting says by then
+    set("lc_resistance_order_cost", 500)
+    ok(LC.AdminPlotCost() == 500 and under(commander, f1) and fund() == 1000 and price(f1) == "500:fund", "(the setting changed: the next order costs that)", fund())
+    set("lc_resistance_order_cost", 120)
+    ok(pick(commander, f1, "back") and fund() == 1500, "(and what was paid is what goes back)", fund())
+    -- at 0 an order is free
+    set("lc_resistance_order_cost", 0)
+    setFund(0)
+    LC.AddCredits(commander, -LC.Credits(commander))
+    ok(under(commander, f1) and price(f1) == "" and fund() == 0 and pick(commander, f1, "back") and fund() == 0 and LC.Credits(commander) == 0, "at 0 an order is free: nothing is charged, kept or given back")
+    set("lc_resistance_order_cost", 300)
+end
+do
+    -- a reconnect, theirs or the leader's, loses nothing: it still goes back where it came from
+    setFund(300)
+    LC.AddCredits(commander, 300 - LC.Credits(commander))
+    local r1, r2 = rebel("FundAwayOne"), rebel("FundAwayTwo")
+    ok(under(commander, r1) and price(r1) == "300:fund" and under(commander, r2) and price(r2) == who(commander) and fund() == 0 and LC.Credits(commander) == 0,
+        "(one order out of the fund, one out of the leader's own credits)")
+    gone(r1)
+    gone(r2)
+    ok(fund() == 0 and LC.Credits(commander) == 0, "leaving the server ends no order, and gives nothing back")
+    r1, r2 = keep(back(r1, "FundAwayOne")), keep(back(r2, "FundAwayTwo"))
+    gone(commander)
+    commander = back(commander, "FundCommander")
+    ok(LC.AdminPlotLeader(commander) and LC.AdminPlotHolds(r1) == "order" and LC.AdminPlotHolds(r2) == "order" and price(r1) == "300:fund" and price(r2) == who(commander),
+        "they leave the server and come back, and so does the leader: the orders stand, and so does where each price came from", price(r1) .. " " .. price(r2))
+    ok(pick(commander, r1, "back") and fund() == 300 and pick(commander, r2, "back") and LC.Credits(commander) == 300, "taken back then: each goes back where it came from, the fund and the leader",
+        fund() .. " " .. LC.Credits(commander))
+    -- the leader who paid can no longer be found: the fund has it
+    setFund(0)
+    ok(pick(commander, r2, "give") and LC.Credits(commander) == 0 and price(r2) == who(commander) and sentFor(r2) == commander, "(sent for, out of the leader's own credits)")
+    gone(commander)
+    ok(not LC.AdminPlotLeading() and sentFor(r2) == nil and kept(r2) == "" and price(r2) == "" and fund() == 300,
+        "the leader gone and nobody leading: the one sent for is free, and the price goes to the fund when the leader who paid cannot be found", fund())
+    commander = back(commander, "FundCommander")
+    ok(LC.Credits(commander) == 0, "(the leader has not had it twice)")
+    -- someone who paid and is no longer of the Resistance is not found either
+    LC.AddCredits(commander, 300)
+    setFund(0)
+    ok(under(commander, r2) and LC.Credits(commander) == 0 and price(r2) == who(commander), "(under the order, out of the leader's own credits)")
+    LC.SetFaction(commander, "citizen", nil, true)
+    if not LC.Incarcerate(r2, 60, "test") then hook.Run("LivingCityIncarcerated", r2, 60, "test") end
+    ok(LC.AdminPlotHolds(r2) == nil and fund() == 300 and LC.Credits(commander) == 0, "the leader who paid has left the Resistance: the price goes to the fund", fund())
+    if LC.Prisoners[r2] then LC.ReleasePrisoner(r2) end
+    LC.SetFaction(commander, "resistance", nil, true)
+    commander:SetPData("lcf_xp_resistance", 1800)
+    LC.AddXP(commander, 0)
+end
+
+------------------------------------------------------------------------
+-- what F2 is sent
+------------------------------------------------------------------------
+do
+    setFund(120)
+    local t = LC.QuickInfo(f1)
+    ok(t.reb ~= nil and t.reb.fund == 120 and t.plot == nil and t.plotcost == nil, "every member's F2 is sent what the fund holds (\"Fund: 120 credits\"); the price goes only with the leader's list", t.reb and t.reb.fund)
+    t = LC.QuickInfo(commander)
+    ok(LC.AdminPlotLeader(commander) and t.reb.fund == 120 and t.plot ~= nil and t.plotcost == 300, "the leader's: the fund, the list, and what each one sent for costs (\"(300 each)\")", tostring(t.plotcost))
+    t = LC.QuickInfo(cit)
+    ok(t.reb == nil and t.plot == nil and t.plotcost == nil, "(nobody outside the Resistance is sent either)")
+    LC.QuickInfoSend(commander)
+    local m = _lastnet("lc_quick_info")
+    local got = m and util.JSONToTable(m.data[1]) or {}
+    ok(m ~= nil and (m.to == commander or (type(m.to) == "table" and table.HasValue(m.to, commander))) and got.reb ~= nil and got.reb.fund == 120 and got.plotcost == 300,
+        "and that is what reaches their game", m and m.data[1])
+    LC.QuickInfoSend(f1)
+    m = _lastnet("lc_quick_info")
+    got = m and util.JSONToTable(m.data[1]) or {}
+    ok(got.reb ~= nil and got.reb.fund == 120 and got.plot == nil and got.plotcost == nil, "(a member's: the fund, and no price)")
+end
+
+------------------------------------------------------------------------
+-- her address: the job on the board costs nothing; made, the attempt spends what an order cost
+------------------------------------------------------------------------
+do
+    setFund(300)
+    ok(under(commander, spender) and fund() == 0 and price(spender) == "300:fund", "(one member under the order, paid for out of the fund)")
+    gone(commander) -- (nobody leads: the job is on the board)
+    local X0 = Vector(-128000, 112000, 0)
+    local stand = LC.AddPoint(X0 + Vector(0, 500, 0), 270, "speech", 0)
+    local crowd = LC.AddPoint(X0, 90, "speechcrowd", 0)
+    local pool = LC.ManpowerPool("rebel")
+    local reserveWas = pool.reserve
+    pool.reserve = 0 -- (no fighters to send: the job and the order pay all the same)
+    local holder = keep(rebel("FundJobHolder"))
+    holder:SetPos(X0 + Vector(0, -300, 0)) spender:SetPos(X0 + Vector(150, -300, 0))
+    LC.CallSpeech(nil, nil)
+    local S = LC.SpeechSession()
+    local her = S and S.her
+    local job1
+    for _, x in ipairs((LC.RefreshBoard(holder))) do
+        if x.tmpl and x.tmpl.id == "res_regicide" and not x.dead then job1 = x end
+    end
+    setFund(700)
+    holder.lcqNext = 0
+    local ch = LC.Credits(holder)
+    ok(IsValid(her) and not LC.AdminPlotLeading() and job1 ~= nil and LC.AcceptPosting(holder, job1.id) == true and LC.AdminPlotHolds(holder) == "job",
+        "(her address on and nobody leading: a Fighter takes Kill the Administrator from the board)")
+    ok(fund() == 700 and LC.Credits(holder) == ch and price(holder) == "", "the job from the board costs nothing: not the fund, not whoever takes it", fund())
+    -- the member under the order makes the attempt: what the order cost is spent
+    local xs, cs = xp(spender), LC.Credits(spender)
+    ok(IsValid(her) and LC.AdminPlotAttempt(her, spender) == true and LC.AdminPlotHolds(spender) == nil and kept(spender) == "", "(the one under the order makes the attempt)")
+    ok(fund() == 700 and price(spender) == "", "made, the attempt spends what the order cost for good: nothing goes back", fund())
+    ok(xp(spender) - xs >= 250 and xp(spender) - xs < 300 and LC.Credits(spender) == cs + 100, "(and it pays them as it did: 250 experience, 100 credits)", (xp(spender) - xs) .. " " .. (LC.Credits(spender) - cs))
+    LC.AdminPlotWatch()
+    LC.NewCharacter(spender, "test")
+    ok(fund() == 700, "(nor does anything that happens to them later give it back)", fund())
+    -- the job is never halved, whoever went first
+    holder.chat = {}
+    ch = LC.Credits(holder)
+    ok(IsValid(her) and LC.AdminPlotAttempt(her, holder) == true and LC.QuestOf[holder] == nil, "(the one who holds the job tries after them, at the same address)")
+    local paidXP
+    for i = #holder.chat, 1, -1 do paidXP = paidXP or tonumber(string.match(tostring(holder.chat[i]), "Complete: Kill the Administrator %(%+(%d+) XP%)")) end
+    ok(paidXP == 250 and LC.Credits(holder) == ch + 100, "the job from the board is paid what it always paid, first or not: 250 experience, 100 credits", tostring(paidXP) .. " " .. (LC.Credits(holder) - ch))
+    ok(fund() == 700, "(and the fund has nothing to do with it)", fund())
+    if LC.AdminExfil() then LC.AdminExfilEnd(false) end
+    if LC.SpeechSession() then LC.EndSpeech() end
+    LC.AdminPlotEnd()
+    LC.EndEvent(true)
+    for p in pairs(LC.AdminPlotPaid) do LC.AdminPlotPaid[p] = nil end
+    pool.reserve = reserveWas
+    LC.RemovePoint(stand) LC.RemovePoint(crowd)
+end
+
+-- back as it was
+LC.Notice = baseNotice
+for _, p in ipairs(made) do
+    if IsValid(p) then
+        if LC.QuestOf[p] then LC.AbandonQuest(p) end
+        if LC.Prisoners[p] then LC.ReleasePrisoner(p) end
+        LC.ClearWanted(p)
+        gone(p)
+    end
+end
+for p, r in pairs(strays) do if IsValid(p) then p:SetNW2Int("lcf_rank", r) end end
+set("lc_resistance_order_cost", costWas)
+set("lc_stops", stopsWas)
+set("lc_admin_hunt", huntWas)
+set("lc_manpower", manWas)
+set("lc_speech_muster", 120)
+setFund(fundWas)
+end
+Nov18_ResistanceFundTests()
+
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")
 ;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)
     -- Everything here is something the owner's server, files or players depend on. The list is
