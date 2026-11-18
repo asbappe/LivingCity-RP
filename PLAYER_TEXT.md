@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version a5b6f7e. Admin-only console messages and log lines are left out.
+Made from version 3847d9c. Admin-only console messages and log lines are left out.
 
-12979 lines, from 359 files.
+12987 lines, from 360 files.
 
 ## Contents
 
@@ -126,7 +126,7 @@ Made from version a5b6f7e. Admin-only console messages and log lines are left ou
 - [cl_livingcity_patsearch.lua](#cllivingcitypatsearchlua-cllivingcitypatsearchlua) (15)
 - [cl_livingcity_perfdebug.lua](#cllivingcityperfdebuglua-cllivingcityperfdebuglua) (63)
 - [cl_livingcity_quests.lua](#cllivingcityquestslua-cllivingcityquestslua) (34)
-- [cl_livingcity_quick.lua](#cllivingcityquicklua-cllivingcityquicklua) (278)
+- [cl_livingcity_quick.lua](#cllivingcityquicklua-cllivingcityquicklua) (279)
 - [cl_livingcity_rebelhold.lua](#cllivingcityrebelholdlua-cllivingcityrebelholdlua) (8)
 - [the Resistance's medic, his offer (sv_livingcity_rebelmedic.lua). A quick menu](#the-resistances-medic-his-offer-svlivingcityrebelmediclua-a-quick-menu-cllivingcityrebelmediclua) (5)
 - [apartment doors (client)](#apartment-doors-client-cllivingcityrentlua) (12)
@@ -155,7 +155,7 @@ Made from version a5b6f7e. Admin-only console messages and log lines are left ou
 - [the actions menu (server side)](#the-actions-menu-server-side-svlivingcityactionslua) (8)
 - [acts (server). See sh_livingcity_acts.lua for the list](#acts-server-see-shlivingcityactslua-for-the-list-svlivingcityactslua) (7)
 - [the hunt for whoever tried to kill the Administrator](#the-hunt-for-whoever-tried-to-kill-the-administrator-svlivingcityadminhuntlua) (4)
-- [the plot against the Administrator, a coordinated attack and not a lone wolf](#the-plot-against-the-administrator-a-coordinated-attack-and-not-a-lone-wolf-svlivingcityadminplotlua) (11)
+- [the plot against the Administrator, a coordinated attack and not a lone wolf](#the-plot-against-the-administrator-a-coordinated-attack-and-not-a-lone-wolf-svlivingcityadminplotlua) (14)
 - [the would-be assassin is hers to question (the owner, 16 November)](#the-would-be-assassin-is-hers-to-question-the-owner-16-november-svlivingcityadminquestioninglua) (13)
 - [a lone wolf who tried to kill the Administrator and got away is taken in by the Resistance](#a-lone-wolf-who-tried-to-kill-the-administrator-and-got-away-is-taken-in-by-the-resistance-svlivingcityadminrecruitlua) (2)
 - [the Administrator's security (the owner, 15 November)](#the-administrators-security-the-owner-15-november-svlivingcityadminsecuritylua) (9)
@@ -304,6 +304,7 @@ Made from version a5b6f7e. Admin-only console messages and log lines are left ou
 - [the Resistance on the street](#the-resistance-on-the-street-svlivingcityrebelslua) (82)
 - [what the Resistance's people say to you, recordable (the owner, 13 November playtest:](#what-the-resistances-people-say-to-you-recordable-the-owner-13-november-playtest-svlivingcityrebelvoicelua) (14)
 - [who you are now, and what goes with it (the owner, 7 November: "when I become a metrocop](#who-you-are-now-and-what-goes-with-it-the-owner-7-november-when-i-become-a-metrocop-svlivingcityreconcilelua) (3)
+- [the Resistance's fund](#the-resistances-fund-svlivingcityresistancefundlua) (4)
 - [the Resistance's operations, and what the city does about them](#the-resistances-operations-and-what-the-city-does-about-them-svlivingcityresistanceopslua) (105)
 - [escalation](#escalation-svlivingcityresponselua) (24)
 - [sleep](#sleep-svlivingcityrestlua) (23)
@@ -1103,7 +1104,7 @@ Made from version a5b6f7e. Admin-only console messages and log lines are left ou
 - "Realistic survival: you can catch a cold in the rain, a stomach bug from raw meat or dirty water, and a fever from a cold left alone (no running, no fists, and at midday it knocks you down into a fever dream that breaks it). Union medicine from the Commissary cures a cold or a fever."  (text, line 154)
 - "The Resistance: an old fighter they call the Colonel keeps watch at the camp. He knows what's coming before the radio does."  (text, line 155)
 - "After the City Administrator gives an address, Colonel Cubbage answers her a few minutes later from the Resistance's camp, point by point. Stand near him, or tune a radio to Freq 7, to hear it."  (text, line 156)
-- "While she gives her address the Resistance's board offers its Fighters and up Kill the Administrator (with a leader playing, the leader orders it instead: F2 > Resistance). Hold either, and our fighters open fire when you do. Someone who tries it alone and gets away is taken in by the Resistance."  (text, line 157)
+- "While she gives her address the Resistance's board offers its Fighters and up Kill the Administrator (with a leader playing, the leader orders it instead: F2 > Resistance, 300 credits each from the Resistance's fund or the leader's own). Hold either, and our fighters open fire when you do. The fund grows when convoys are raided and people are freed. Someone who tries it alone and gets away is taken in by the Resistance."  (text, line 157)
 - "Some of the city's posters hint at a dream: tonight's, or one the city had lately. Read them closely (E) and guess."  (text, line 158)
 - "Somewhere in the city is an old man who's seen it all. Find him, visit him, share a meal: the better he knows you, the more he'll tell you."  (text, line 159)
 - "The Resistance (Member rank and up) can ask a sympathizer to keep watch: they warn everyone on Freq 7 when Civil Protection units approach."  (text, line 160)
@@ -4074,551 +4075,555 @@ Made from version a5b6f7e. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): Pages
 
-- "What do you yell?"  (chat message, line 69)
-- "What do you whisper?"  (chat message, line 70)
-- "Describe what I do (/me)..."  (menu option, line 71)
-- "An action"  (chat message, line 71)
-- "What do you do? (e.g. leans against the wall)"  (chat message, line 71)
-- "Describe the scene (/it)..."  (menu option, line 72)
-- "The scene"  (chat message, line 72)
-- "What happens? (e.g. A siren starts up somewhere.)"  (chat message, line 72)
-- "On my radio..."  (menu option, line 73)
-- "What do you say on the radio?"  (text, line 73)
-- "Roll the dice (1 to 100)"  (menu option, line 74)
+- "What do you yell?"  (chat message, line 71)
+- "What do you whisper?"  (chat message, line 72)
+- "Describe what I do (/me)..."  (menu option, line 73)
+- "An action"  (chat message, line 73)
+- "What do you do? (e.g. leans against the wall)"  (chat message, line 73)
+- "Describe the scene (/it)..."  (menu option, line 74)
+- "The scene"  (chat message, line 74)
+- "What happens? (e.g. A siren starts up somewhere.)"  (chat message, line 74)
+- "On my radio..."  (menu option, line 75)
+- "What do you say on the radio?"  (text, line 75)
+- "Roll the dice (1 to 100)"  (menu option, line 76)
 
 > Note for you (not shown in game): part of: talk page
 
-- "Tell everyone nearby my name"  (menu option, line 75)
+- "Tell everyone nearby my name"  (menu option, line 77)
 
 > Note for you (not shown in game): Out of character, on F1's main page (the owner, 10 November: "F1 > 6 > Out of character > 1. Nearby or 2. Server-wide")
 
-- "Out of character, nearby"  (chat message, line 83)
-- "Not your character speaking, to the people near you"  (chat message, line 83)
-- "Out of character, server-wide"  (chat message, line 84)
-- "Not your character speaking, to the whole server"  (chat message, line 84)
+- "Out of character, nearby"  (chat message, line 85)
+- "Not your character speaking, to the people near you"  (chat message, line 85)
+- "Out of character, server-wide"  (chat message, line 86)
+- "Not your character speaking, to the whole server"  (chat message, line 86)
 
 > Note for you (not shown in game): (saved on the server with a debug report; one a minute: sv_livingcity_feedback.lua)
 
-- "Report a bug or feedback..."  (menu option, line 86)
-- "Report a bug or feedback"  (text, line 87)
-- "What happened, or what would you change?"  (text, line 87)
-- "[Miscount] Not sent: write a few words."  (chat message, line 89)
+- "Report a bug or feedback..."  (menu option, line 88)
+- "Report a bug or feedback"  (text, line 89)
+- "What happened, or what would you change?"  (text, line 89)
+- "[Miscount] Not sent: write a few words."  (chat message, line 91)
 
 > Note for you (not shown in game): part of: pose page
 
-- "Lie down"  (menu option, line 100)
-- "Stand: pose 1"  (menu option, line 101)
-- "Stand: pose 2"  (menu option, line 102)
-- "Stand up"  (menu option, line 103)
+- "Lie down"  (menu option, line 102)
+- "Stand: pose 1"  (menu option, line 103)
+- "Stand: pose 2"  (menu option, line 104)
+- "Stand up"  (menu option, line 105)
 
 > Note for you (not shown in game): part of: voice page
 
-- "All the voice lines..."  (menu option, line 137)
+- "All the voice lines..."  (menu option, line 139)
 
 > Note for you (not shown in game): The planning board (sv_livingcity_opplan.lua): what's planned, join it; or plan one: a target, then when.
 
-- "Back out of the operation"  (menu option, line 170)
-- "Join the operation"  (menu option, line 170)
-- "Call it off"  (menu option, line 171)
+- "Back out of the operation"  (menu option, line 172)
+- "Join the operation"  (menu option, line 172)
+- "Call it off"  (menu option, line 173)
 
 > Note for you (not shown in game): part of: ops page
 
-- "Planned by %s. %s. %d joined."  (message, line 173)
-- "Waiting for the streets to quiet"  (message, line 173)
-- "In {or} min"  (text, line 173)
+- "Planned by %s. %s. %d joined."  (message, line 175)
+- "Waiting for the streets to quiet"  (message, line 175)
+- "In {or} min"  (text, line 175)
 
 > Note for you (not shown in game): page
 
-- "In 2 minutes"  (menu option, line 179)
-- "In 5 minutes"  (menu option, line 180)
-- "In 10 minutes"  (menu option, line 181)
+- "In 2 minutes"  (menu option, line 181)
+- "In 5 minutes"  (menu option, line 182)
+- "In 10 minutes"  (menu option, line 183)
 
 > Note for you (not shown in game): part of: ops page
 
-- "Nothing to hit right now: no terminal, screen, prisoner or drop."  (text, line 186)
-- "Too soon after the last one: %d min."  (message, line 187)
-- "Nothing planned. {or}"  (text, line 189)
+- "Nothing to hit right now: no terminal, screen, prisoner or drop."  (text, line 188)
+- "Too soon after the last one: %d min."  (message, line 189)
+- "Nothing planned. {or}"  (text, line 191)
 
 > Note for you (not shown in game): The leader's order to kill the Administrator (the owner, 18 November; sv_livingcity_adminplot.lua): its list of names is further down, with F2's own actions.
 
-- "Order: kill the Administrator"  (text, line 196)
-- "Donate food to the supply crate"  (menu option, line 202)
-- "Decode a data chip (at the lab)"  (menu option, line 203)
+- "Order: kill the Administrator"  (text, line 198)
+- "Donate food to the supply crate"  (menu option, line 204)
+- "Decode a data chip (at the lab)"  (menu option, line 205)
 
 > Note for you (not shown in game): part of: resistance page
 
-- "Write down what you see (needs paper)"  (menu option, line 204)
-- "Hack the Combine door I'm looking at"  (menu option, line 206)
-- "Operations: plan or join"  (text, line 207)
-- "The cell's rules (the leader's clipboard)"  (menu option, line 208)
+- "Write down what you see (needs paper)"  (menu option, line 206)
+- "Hack the Combine door I'm looking at"  (menu option, line 208)
+- "Operations: plan or join"  (text, line 209)
+- "The cell's rules (the leader's clipboard)"  (menu option, line 210)
+
+> Note for you (not shown in game): (the owner, 18 November: what the Resistance's fund holds, one row for every member, above the fighters left)
+
+- "Fund: %d credits"  (message, line 224)
 
 > Note for you (not shown in game): The Combine's manpower, for the Administrator (units see it on the unit tools).
 
-- "No manpower report yet."  (text, line 219)
+- "No manpower report yet."  (text, line 231)
 
 > Note for you (not shown in game): part of: squad page
 
-- "Act casual (guns away, plain clothes)"  (menu option, line 225)
-- "Guns out"  (menu option, line 226)
-- "Go on ahead: meet me at the job's marker"  (menu option, line 227)
+- "Act casual (guns away, plain clothes)"  (menu option, line 237)
+- "Guns out"  (menu option, line 238)
+- "Go on ahead: meet me at the job's marker"  (menu option, line 239)
 
 > Note for you (not shown in game): part of: staff page
 
-- "Staff panel (logs, tickets, warnings, bans)"  (menu option, line 234)
-- "Admin testing tools"  (menu option, line 235)
-- "Build mode: off (back to playing)"  (menu option, line 236)
-- "Build mode: on"  (menu option, line 236)
-- "Path mapping: on / off"  (menu option, line 237)
+- "Staff panel (logs, tickets, warnings, bans)"  (menu option, line 246)
+- "Admin testing tools"  (menu option, line 247)
+- "Build mode: off (back to playing)"  (menu option, line 248)
+- "Build mode: on"  (menu option, line 248)
+- "Path mapping: on / off"  (menu option, line 249)
 
 > Note for you (not shown in game): (the owner, 12 November: the editor's stop button is out of reach in a dream, with the tool gun taken away)
 
-- "Stop the dream under way (wake everyone in it)"  (menu option, line 239)
+- "Stop the dream under way (wake everyone in it)"  (menu option, line 251)
 
 > Note for you (not shown in game): (a unit's cuffs are issue, three, topped up at a CP Commissary: with none left, Cuff is still there, greyed with why; the owner, 12 November: "I stopped someone and pressed F2 and I don't see a cuff option")
 
-- "(No cuffs: the CP Commissary gives you more)"  (label, line 255)
+- "(No cuffs: the CP Commissary gives you more)"  (label, line 267)
 
 > Note for you (not shown in game): crime between citizens and debts (sv_livingcity_streetcrime.lua)
 
-- "Lend {n} money..."  (label, line 349)
+- "Lend {n} money..."  (label, line 361)
 
 > Note for you (not shown in game): part of: page
 
-- "10 credits (12 back)"  (menu option, line 351)
-- "25 credits (30 back)"  (menu option, line 352)
-- "50 credits (60 back)"  (menu option, line 353)
+- "10 credits (12 back)"  (menu option, line 363)
+- "25 credits (30 back)"  (menu option, line 364)
+- "50 credits (60 back)"  (menu option, line 365)
 
 > Note for you (not shown in game): a citizen in front of a unit: their papers, without the search first (sv_livingcity_jobgames.lua, LC.StreetPapers)
 
-- "Cuff them (walked to the cells)"  (text, line 361)
+- "Cuff them (walked to the cells)"  (text, line 373)
 
 > Note for you (not shown in game): part of: full
 
-- "Everything else (full menu)"  (menu option, line 403)
+- "Everything else (full menu)"  (menu option, line 415)
 
 > Note for you (not shown in game): "  (squad 2 of 3)": how many you lead and may lead now (the owner, 9 November: squads shrink as more players join a side)
 
-- "(squad %d of %d)"  (message, line 425)
+- "(squad %d of %d)"  (message, line 437)
 
 > Note for you (not shown in game): The leader's list for the order to kill the Administrator: the Resistance's Fighters and up by name, and what each has of it. A name with nothing sends for that member (the server tells them, alone, and puts them in the job to speak with the leader); "(sent for)" picked says they have spoken, and the order is theirs; "(ordered)" picked takes it back. What is sent is what the list showed, so a list out of date does only what it says.
 
-- "(sent for)"  (text, line 445)
+- "(sent for)"  (text, line 457)
 
 > Note for you (not shown in game): "in 40s", "in 3m": nil when it's open now
 
-- "in {secs}s"  (text, line 463)
-- "in {secs}m"  (text, line 463)
+- "in {secs}s"  (text, line 475)
+- "in {secs}m"  (text, line 475)
 
 > Note for you (not shown in game): The Insider: the same as C > Civil Protection > Inside, each greyed with why not now.
 
-- "Commissary only"  (text, line 484)
-- "no weedkiller"  (text, line 485)
+- "Commissary only"  (text, line 496)
+- "no weedkiller"  (text, line 497)
 
 > Note for you (not shown in game): part of: inside page
 
-- "Tip off Freq 7..."  (text, line 487)
+- "Tip off Freq 7..."  (text, line 499)
 
 > Note for you (not shown in game): can
 
-- "Tip off Freq 7"  (text, line 487)
-- "What do you tell the Resistance? (The next planned sweep, if any, goes with it.)"  (text, line 487)
+- "Tip off Freq 7"  (text, line 499)
+- "What do you tell the Resistance? (The next planned sweep, if any, goes with it.)"  (text, line 499)
 
 > Note for you (not shown in game): part of: inside page
 
-- "Lose a wanted person's record..."  (text, line 488)
+- "Lose a wanted person's record..."  (text, line 500)
 
 > Note for you (not shown in game): can
 
-- "Lose a record"  (text, line 488)
-- "Whose record goes missing? (Their name.)"  (text, line 488)
+- "Lose a record"  (text, line 500)
+- "Whose record goes missing? (Their name.)"  (text, line 500)
 
 > Note for you (not shown in game): part of: inside page
 
-- "nobody's wanted"  (text, line 488)
-- "Supplies for a dead drop"  (text, line 489)
-- "Copy the city's records"  (text, line 490)
-- "Foul the mask filters"  (text, line 491)
-- "Spike the station's food"  (text, line 492)
-- "Let {slipT} slip away"  (text, line 496)
-- "not yet"  (text, line 496)
-- "Reveal myself to {who}"  (text, line 498)
-- "Reveal myself"  (text, line 498)
-- "look at someone close"  (text, line 498)
-- "Slip away first."  (text, line 499)
+- "nobody's wanted"  (text, line 500)
+- "Supplies for a dead drop"  (text, line 501)
+- "Copy the city's records"  (text, line 502)
+- "Foul the mask filters"  (text, line 503)
+- "Spike the station's food"  (text, line 504)
+- "Let {slipT} slip away"  (text, line 508)
+- "not yet"  (text, line 508)
+- "Reveal myself to {who}"  (text, line 510)
+- "Reveal myself"  (text, line 510)
+- "look at someone close"  (text, line 510)
+- "Slip away first."  (text, line 511)
 
 > Note for you (not shown in game): The Resistance's band: in the spirit of a unit's dispatch, but nobody gives orders. Finding the way to the Resistance's places: what's done on the spot. (Freq 7's message, backup and position went to the radio's own menu, the owner, 13 November: "all non-local communication to be through the transmitter".)
 
-- "Guide me to the nearest rebel ground"  (menu option, line 507)
-- "Guide me to the nearest lab"  (menu option, line 508)
-- "Freq 7 (messages, backup, your position): get your radio transmitter out and right click it."  (text, line 509)
+- "Guide me to the nearest rebel ground"  (menu option, line 519)
+- "Guide me to the nearest lab"  (menu option, line 520)
+- "Freq 7 (messages, backup, your position): get your radio transmitter out and right click it."  (text, line 521)
 
 > Note for you (not shown in game): A citizen's own: work, rations, home, standing (each marks the way, and says the rest). Your dreams (sv_livingcity_dreamskip.lua): the kinds you've earned the right to sit out, each on or off.
 
-- "Happy dreams"  (text, line 518)
-- "Neutral dreams"  (text, line 518)
-- "Propaganda dreams"  (text, line 518)
-- ": sitting them out (dream them again)"  (text, line 521)
-- ": dreaming them (sit them out)"  (text, line 521)
+- "Happy dreams"  (text, line 530)
+- "Neutral dreams"  (text, line 530)
+- "Propaganda dreams"  (text, line 530)
+- ": sitting them out (dream them again)"  (text, line 533)
+- ": dreaming them (sit them out)"  (text, line 533)
 
 > Note for you (not shown in game): part of: my dreams page
 
-- "Nothing to sit out yet. Happy or Neutral dreams: live through {need} of that kind."  (text, line 528)
-- "Nightmares and propaganda: a citizen with Exemplary standing ({or})."  (text, line 529)
+- "Nothing to sit out yet. Happy or Neutral dreams: live through {need} of that kind."  (text, line 540)
+- "Nightmares and propaganda: a citizen with Exemplary standing ({or})."  (text, line 541)
 
 > Note for you (not shown in game): how far along (the kinds not earned yet), under whatever is listed
 
-- "%s dreams lived through: %d of %d."  (message, line 535)
+- "%s dreams lived through: %d of %d."  (message, line 547)
 
 > Note for you (not shown in game): My debts (sv_livingcity_streetcrime.lua): a loan on offer, what I owe (repay), what I'm owed (report it when it's overdue).
 
-- "Take %s's loan of %d"  (message, line 547)
-- "Turn the loan down"  (menu option, line 548)
+- "Take %s's loan of %d"  (message, line 559)
+- "Turn the loan down"  (menu option, line 560)
 
 > Note for you (not shown in game): part of: debts page
 
-- "due in {left} min"  (text, line 551)
-- "Report %s's unpaid debt (%d) to Civil Protection"  (message, line 554)
-- "%s owes you %d%s."  (message, line 555)
-- ", due in {left} min"  (text, line 555)
-- "No debts. F1 on someone: lend them money."  (text, line 557)
+- "due in {left} min"  (text, line 563)
+- "Report %s's unpaid debt (%d) to Civil Protection"  (message, line 566)
+- "%s owes you %d%s."  (message, line 567)
+- ", due in {left} min"  (text, line 567)
+- "No debts. F1 on someone: lend them money."  (text, line 569)
 
 > Note for you (not shown in game): My stall business (sv_livingcity_employment.lua): a job offer waiting, who I work for, who works for me.
 
-- "Work {offer}'s stall"  (menu option, line 566)
-- "Turn the job down"  (menu option, line 567)
-- "Quit working {employer}'s stall"  (menu option, line 569)
+- "Work {offer}'s stall"  (menu option, line 578)
+- "Turn the job down"  (menu option, line 579)
+- "Quit working {employer}'s stall"  (menu option, line 581)
 
 > Note for you (not shown in game): part of: business page
 
-- "Let a worker go"  (text, line 571)
-- "Working your stalls: {workers}."  (text, line 576)
-- "Make goods to sell (F3 > crafting): a rag doll, a tin toy, a patched coat."  (text, line 579)
-- "Passers-by buy them from your stall at a fair price. With a stall, F1 on someone: offer them a job."  (text, line 580)
+- "Let a worker go"  (text, line 583)
+- "Working your stalls: {workers}."  (text, line 588)
+- "Make goods to sell (F3 > crafting): a rag doll, a tin toy, a patched coat."  (text, line 591)
+- "Passers-by buy them from your stall at a fair price. With a stall, F1 on someone: offer them a job."  (text, line 592)
 
 > Note for you (not shown in game): My household (sv_livingcity_households.lua): who's in it, an invitation waiting, leave, name it, send someone away.
 
-- "Join {inv}'s household"  (menu option, line 592)
+- "Join {inv}'s household"  (menu option, line 604)
 
 > Note for you (not shown in game): part of: household page
 
-- "Leave {name}"  (menu option, line 596)
-- "Name the household..."  (menu option, line 598)
+- "Leave {name}"  (menu option, line 608)
+- "Name the household..."  (menu option, line 610)
 
 > Note for you (not shown in game): item
 
-- "The household's name"  (chat message, line 598)
-- "What your household is called"  (chat message, line 598)
+- "The household's name"  (chat message, line 610)
+- "What your household is called"  (chat message, line 610)
 
 > Note for you (not shown in game): part of: household page
 
-- "Send someone away"  (text, line 599)
-- "You're not in a household. Look at someone and F1 > Invite them into your household."  (text, line 612)
-- "A household shares a block, crates and lockers, and the head's apartment keys."  (text, line 613)
+- "Send someone away"  (text, line 611)
+- "You're not in a household. Look at someone and F1 > Invite them into your household."  (text, line 624)
+- "A household shares a block, crates and lockers, and the head's apartment keys."  (text, line 625)
 
 > Note for you (not shown in game): The state of the city (sv_livingcity_ledger.lua): the five numbers in words, the districts and who holds them.
 
-- "very high"  (text, line 621)
-- "very low"  (text, line 622)
+- "very high"  (text, line 633)
+- "very low"  (text, line 634)
 
 > Note for you (not shown in game): part of: city page
 
-- "Day %d. Supply %s, morale %s."  (message, line 627)
-- "Civil Protection %s, the Resistance %s."  (message, line 628)
-- "The Administrator's authority: %s."  (message, line 629)
-- "the Resistance's"  (text, line 633)
-- "the Combine's"  (text, line 633)
-- "Read this morning's bulletin"  (menu option, line 638)
-- "No bulletin yet today"  (menu option, line 638)
+- "Day %d. Supply %s, morale %s."  (message, line 639)
+- "Civil Protection %s, the Resistance %s."  (message, line 640)
+- "The Administrator's authority: %s."  (message, line 641)
+- "the Resistance's"  (text, line 645)
+- "the Combine's"  (text, line 645)
+- "Read this morning's bulletin"  (menu option, line 650)
+- "No bulletin yet today"  (menu option, line 650)
 
 > Note for you (not shown in game): item
 
-- "[City Bulletin]"  (chat message, line 639)
+- "[City Bulletin]"  (chat message, line 651)
 
 > Note for you (not shown in game): part of: levers page
 
-- "Go to the speech stand"  (menu option, line 645)
+- "Go to the speech stand"  (menu option, line 657)
 
 > Note for you (not shown in game): (into her microphone; in writing is the other way: the owner, 16 November)
 
-- "Give a speech (done today)"  (menu option, line 647)
-- "Give a speech into your microphone (the city gathers first; morale +6, authority +3)"  (text, line 647)
-- "Give a speech into your microphone (morale +6, authority +3)"  (text, line 647)
-- "Give a speech in writing..."  (menu option, line 650)
-- "Your words to the whole city. They are called to the stand, and you speak once they have gathered."  (chat message, line 651)
-- "Your words to the whole city, from the stand"  (chat message, line 651)
-- "Declare an amnesty (done today)"  (menu option, line 653)
-- "Declare an amnesty (morale +6, authority -8, Resistance +3)"  (menu option, line 653)
-- "Order a crackdown on a district (authority +5, morale -6, Resistance +4)"  (text, line 654)
+- "Give a speech (done today)"  (menu option, line 659)
+- "Give a speech into your microphone (the city gathers first; morale +6, authority +3)"  (text, line 659)
+- "Give a speech into your microphone (morale +6, authority +3)"  (text, line 659)
+- "Give a speech in writing..."  (menu option, line 662)
+- "Your words to the whole city. They are called to the stand, and you speak once they have gathered."  (chat message, line 663)
+- "Your words to the whole city, from the stand"  (chat message, line 663)
+- "Declare an amnesty (done today)"  (menu option, line 665)
+- "Declare an amnesty (morale +6, authority -8, Resistance +3)"  (menu option, line 665)
+- "Order a crackdown on a district (authority +5, morale -6, Resistance +4)"  (text, line 666)
 
 > Note for you (not shown in game): page
 
-- "No housing blocks in this city."  (text, line 659)
+- "No housing blocks in this city."  (text, line 671)
 
 > Note for you (not shown in game): part of: levers page
 
-- "Order extra rations (supply -15, morale +8)"  (menu option, line 661)
+- "Order extra rations (supply -15, morale +8)"  (menu option, line 673)
 
 > Note for you (not shown in game): Prices on heads (sv_livingcity_opplan.lua): the wanted, and 50 or 100 credits on one.
 
-- "%s: %d credits on them already"  (message, line 673)
+- "%s: %d credits on them already"  (message, line 685)
 
 > Note for you (not shown in game): part of: bounty page
 
-- "Nobody is wanted right now."  (text, line 684)
+- "Nobody is wanted right now."  (text, line 696)
 
 > Note for you (not shown in game): A Civil Protection shift (sv_livingcity_cpduty.lua): the quota so far, the work, the reviews.
 
-- "No reviews yet: one comes at the end of each shift."  (text, line 693)
+- "No reviews yet: one comes at the end of each shift."  (text, line 705)
 
 > Note for you (not shown in game): part of: shift page
 
-- "Checkpoint papers duty"  (menu option, line 700)
-- "Inspect the residence of {name}, {block}"  (menu option, line 702)
-- "Report it clean (the Resistance's friend inside)"  (menu option, line 703)
-- "Get an inspection order"  (menu option, line 705)
-- "My last reviews"  (text, line 707)
-- "Report in now: review, and start the next shift"  (menu option, line 709)
-- "Go on a break (no shift until I'm back)"  (menu option, line 710)
-- "Shift: %d min left."  (message, line 712)
-- "Searches %d of %d, papers duty %d of %d,"  (message, line 713)
-- "inspections %d of %d, arrests %d."  (message, line 714)
+- "Checkpoint papers duty"  (menu option, line 712)
+- "Inspect the residence of {name}, {block}"  (menu option, line 714)
+- "Report it clean (the Resistance's friend inside)"  (menu option, line 715)
+- "Get an inspection order"  (menu option, line 717)
+- "My last reviews"  (text, line 719)
+- "Report in now: review, and start the next shift"  (menu option, line 721)
+- "Go on a break (no shift until I'm back)"  (menu option, line 722)
+- "Shift: %d min left."  (message, line 724)
+- "Searches %d of %d, papers duty %d of %d,"  (message, line 725)
+- "inspections %d of %d, arrests %d."  (message, line 726)
 
 > Note for you (not shown in game): What everyone has about themselves (the owner, 10 November: never only in the C menu): where they stand, survival, their dreams. On a citizen's Me page, and a page of its own for everyone else. Dreams and survival, one page: the survival switch (when you have one) above the dreams you can sit out.
 
-- "Survival: Relaxed (switch to Realistic: more pay)"  (menu option, line 726)
-- "Survival: Realistic (switch to Relaxed)"  (menu option, line 727)
+- "Survival: Relaxed (switch to Realistic: more pay)"  (menu option, line 738)
+- "Survival: Realistic (switch to Relaxed)"  (menu option, line 739)
 
 > Note for you (not shown in game): A unit's shift: on F2 itself (the owner, 18 November: it was under Me).
 
-- "Back on duty (start a shift)"  (menu option, line 736)
-- "My shift"  (text, line 737)
-- "Bounties on the wanted"  (text, line 738)
+- "Back on duty (start a shift)"  (menu option, line 748)
+- "My shift"  (text, line 749)
+- "Bounties on the wanted"  (text, line 750)
 
 > Note for you (not shown in game): Only what's about you (the owner, 18 November, the menu audit: Me was where everything that didn't fit went): where you stand, dreams and survival, and a citizen's or a rebel's household.
 
-- "Where I stand (every number explained)"  (menu option, line 746)
+- "Where I stand (every number explained)"  (menu option, line 758)
 
 > Note for you (not shown in game): part of: mine items
 
-- "Household, stall and debts (something waits)"  (text, line 752)
-- "Household, stall and debts"  (text, line 752)
+- "Household, stall and debts (something waits)"  (text, line 764)
+- "Household, stall and debts"  (text, line 764)
 
 > Note for you (not shown in game): page
 
-- "My household (an invitation waits)"  (text, line 754)
-- "My household"  (text, line 754)
-- "My stall business (a job offer waits)"  (text, line 755)
-- "My stall business"  (text, line 755)
-- "My debts"  (text, line 756)
+- "My household (an invitation waits)"  (text, line 766)
+- "My household"  (text, line 766)
+- "My stall business (a job offer waits)"  (text, line 767)
+- "My stall business"  (text, line 767)
+- "My debts"  (text, line 768)
 
 > Note for you (not shown in game): part of: mine items
 
-- "Dreams and survival"  (text, line 760)
+- "Dreams and survival"  (text, line 772)
 
 > Note for you (not shown in game): A citizen's own, straight on F2 (the owner, 18 November, the menu audit: it was one "Me" button that opened another menu): work, rations, home, standing, household, dreams and survival.
 
-- "Find work"  (text, line 772)
-- "Find work: Civil Intake first"  (text, line 773)
-- "My work: {or}"  (text, line 774)
-- "Find work: Labor Assignment"  (text, line 775)
-- "Find work: the job board (F4)"  (text, line 776)
+- "Find work"  (text, line 784)
+- "Find work: Civil Intake first"  (text, line 785)
+- "My work: {or}"  (text, line 786)
+- "Find work: Labor Assignment"  (text, line 787)
+- "Find work: the job board (F4)"  (text, line 788)
 
 > Note for you (not shown in game): part of: citizen items
 
-- "My rations"  (text, line 777)
-- "My rations: ready now"  (text, line 778)
-- "My rations: next in {ration} min"  (text, line 779)
-- ", {cards} card{or}"  (text, line 780)
-- "My home and rent"  (text, line 781)
-- "My home: apartment, %dh %02dm paid"  (message, line 782)
-- "My home: {or}"  (text, line 783)
-- "Find a home (Housing Allocation)"  (text, line 784)
-- "My standing: {GetNW2Int}{next}"  (text, line 786)
-- "(next: %s at %d)"  (message, line 787)
+- "My rations"  (text, line 789)
+- "My rations: ready now"  (text, line 790)
+- "My rations: next in {ration} min"  (text, line 791)
+- ", {cards} card{or}"  (text, line 792)
+- "My home and rent"  (text, line 793)
+- "My home: apartment, %dh %02dm paid"  (message, line 794)
+- "My home: {or}"  (text, line 795)
+- "Find a home (Housing Allocation)"  (text, line 796)
+- "My standing: {GetNW2Int}{next}"  (text, line 798)
+- "(next: %s at %d)"  (message, line 799)
 
 > Note for you (not shown in game): The Administrator's two Elites. How close they follow, and what they do when there's trouble, are her standing orders (the owner, 8 November): given any time, the one in force marked (now).
 
-- "As they always have"  (text, line 803)
-- "As always"  (text, line 803)
-- "Stay with me (shoot, but keep beside me)"  (text, line 804)
-- "Stay with me"  (text, line 804)
-- "Stand between us (cover me from threats)"  (text, line 805)
-- "Stand between us"  (text, line 805)
-- "Hold fire unless fired on"  (text, line 806)
-- "Hold fire"  (text, line 806)
+- "As they always have"  (text, line 815)
+- "As always"  (text, line 815)
+- "Stay with me (shoot, but keep beside me)"  (text, line 816)
+- "Stay with me"  (text, line 816)
+- "Stand between us (cover me from threats)"  (text, line 817)
+- "Stand between us"  (text, line 817)
+- "Hold fire unless fired on"  (text, line 818)
+- "Hold fire"  (text, line 818)
 
 > Note for you (not shown in game): part of: guards page
 
-- "no guards now"  (text, line 820)
-- "As always"  (text, line 821)
-- "Follow me{or}"  (text, line 825)
-- "Hold here{or}"  (text, line 826)
-- "Follow distance: {dist}"  (text, line 827)
-- "When there's trouble: {mode}"  (text, line 828)
+- "no guards now"  (text, line 832)
+- "As always"  (text, line 833)
+- "Follow me{or}"  (text, line 837)
+- "Hold here{or}"  (text, line 838)
+- "Follow distance: {dist}"  (text, line 839)
+- "When there's trouble: {mode}"  (text, line 840)
 
 > Note for you (not shown in game): Tonight's dream, as the tablet has it: she chooses only a kind, now and then (sv_livingcity_dreamplan.lua).
 
-- "No word from the office yet: try again in a moment."  (text, line 835)
-- "The city can't dream yet."  (text, line 836)
+- "No word from the office yet: try again in a moment."  (text, line 847)
+- "The city can't dream yet."  (text, line 848)
 
 > Note for you (not shown in game): (when the next one is: this page is asked for again every two seconds, so the countdown runs)
 
-- "The city is dreaming right now."  (text, line 841)
-- "Chosen for tonight: {or}. You'll be in it."  (text, line 844)
-- "Take back tonight's choice"  (menu option, line 845)
-- "A Nightmare tonight (a punishment)"  (menu option, line 847)
+- "The city is dreaming right now."  (text, line 853)
+- "Chosen for tonight: {or}. You'll be in it."  (text, line 856)
+- "Take back tonight's choice"  (menu option, line 857)
+- "A Nightmare tonight (a punishment)"  (menu option, line 859)
 
 > Note for you (not shown in game): part of: dream page
 
-- "A propaganda dream tonight"  (menu option, line 848)
-- "You can't choose tonight's dream."  (text, line 850)
-- "Dreams I didn't choose: skipping (join them)"  (menu option, line 853)
-- "Dreams I didn't choose: joining (skip them)"  (menu option, line 853)
-- "You choose a kind, once every %d nights; the city picks which, and the nights between are Happy or Neutral."  (message, line 854)
+- "A propaganda dream tonight"  (menu option, line 860)
+- "You can't choose tonight's dream."  (text, line 862)
+- "Dreams I didn't choose: skipping (join them)"  (menu option, line 865)
+- "Dreams I didn't choose: joining (skip them)"  (menu option, line 865)
+- "You choose a kind, once every %d nights; the city picks which, and the nights between are Happy or Neutral."  (message, line 866)
 
 > Note for you (not shown in game): A senior unit's call: the city's own sweep and raid, when the pacing allows.
 
-- "Sweep: {sweep}"  (text, line 866)
-- "Raid: {raid}"  (text, line 867)
+- "Sweep: {sweep}"  (text, line 878)
+- "Raid: {raid}"  (text, line 879)
 
 > Note for you (not shown in game): part of: sweep page
 
-- "Contraband sweep (inspections)"  (text, line 870)
-- "not now"  (text, line 870)
-- "Block raid (a housing block)"  (text, line 871)
-- "not now"  (text, line 871)
+- "Contraband sweep (inspections)"  (text, line 882)
+- "not now"  (text, line 882)
+- "Block raid (a housing block)"  (text, line 883)
+- "not now"  (text, line 883)
 
 > Note for you (not shown in game): F1: what everyone has
 
-- "Lower my hands"  (menu option, line 882)
-- "Put my hands up"  (menu option, line 882)
+- "Lower my hands"  (menu option, line 894)
+- "Put my hands up"  (menu option, line 894)
 
 > Note for you (not shown in game): slot 1: the next step, and the way to everywhere (cl_livingcity_nextstep.lua)
 
-- "What now?"  (text, line 884)
-- "My papers"  (menu option, line 888)
-- "My pockets (F3)"  (menu option, line 890)
-- "Out of character"  (text, line 891)
+- "What now?"  (text, line 896)
+- "My papers"  (menu option, line 900)
+- "My pockets (F3)"  (menu option, line 902)
+- "Out of character"  (text, line 903)
 
 > Note for you (not shown in game): part of: quick root
 
-- "Jobs, career, factions (F4)"  (menu option, line 893)
+- "Jobs, career, factions (F4)"  (menu option, line 905)
 
 > Note for you (not shown in game): more in front of you than fits: the first, then all of them on a page of their own
 
-- "More with them..."  (label, line 901)
+- "More with them..."  (label, line 913)
 
 > Note for you (not shown in game): F2: what your side, rank and job have The Administrator's F2 pages (the owner, 18 November, the menu audit: her speeches, amnesty, crackdowns and rations were three menus deep, under Me > Administrator).
 
-- "Broadcast to the whole city..."  (menu option, line 922)
-- "What does the city hear?"  (text, line 922)
+- "Broadcast to the whole city..."  (menu option, line 934)
+- "What does the city hear?"  (text, line 934)
 
 > Note for you (not shown in game): part of: orders page
 
-- "Order {t}'s arrest"  (text, line 936)
-- "already wanted"  (text, line 936)
-- "Bounties on the wanted"  (text, line 940)
-- "Combine manpower"  (text, line 941)
-- "Nothing here for your side or job right now."  (text, line 945)
-- "F1 has what everyone can do."  (text, line 945)
+- "Order {t}'s arrest"  (text, line 948)
+- "already wanted"  (text, line 948)
+- "Bounties on the wanted"  (text, line 952)
+- "Combine manpower"  (text, line 953)
+- "Nothing here for your side or job right now."  (text, line 957)
+- "F1 has what everyone can do."  (text, line 957)
 
 > Note for you (not shown in game): the Administrator first: the server marks her a unit too (her side counts as the Combine's), which used to give her a unit's F2 instead of her own (found in the menu audit, 18 November)
 
-- "Speak to the city"  (text, line 959)
-- "City orders"  (text, line 960)
-- "Open my tablet (the office)"  (menu option, line 963)
-- "The city's laws"  (menu option, line 964)
+- "Speak to the city"  (text, line 971)
+- "City orders"  (text, line 972)
+- "Open my tablet (the office)"  (menu option, line 975)
+- "The city's laws"  (menu option, line 976)
 
 > Note for you (not shown in game): part of: quick role root
 
-- "Tonight's dream"  (text, line 965)
-- "Command the guards"  (text, line 966)
+- "Tonight's dream"  (text, line 977)
+- "Command the guards"  (text, line 978)
 
 > Note for you (not shown in game): (the owner, 7 November: 1 Voice lines, 2 Unit tools, 3 Kick, 4 Call for backup, 5 BOLO, 6 Send my 10-20; then, 13 November: what goes to HQ (backup, the BOLO, the 10-20, records, sweeps, directives) is only on the radio's own menu, right click with the radio up. F2 keeps what's done on the spot.)
 
-- "Unit tools"  (menu option, line 973)
-- "Kick ({or})"  (menu option, line 975)
-- "Voice lines"  (text, line 977)
-- "HQ calls (radio)"  (menu option, line 980)
+- "Unit tools"  (menu option, line 985)
+- "Kick ({or})"  (menu option, line 987)
+- "Voice lines"  (text, line 989)
+- "HQ calls (radio)"  (menu option, line 992)
 
 > Note for you (not shown in game): the Resistance's man inside, beside a prisoner being marched to the cells (sv_livingcity_insider.lua): right after the six, only while it's there; greyed while someone can see
 
-- "Let {slipT} slip away{or}"  (menu option, line 996)
+- "Let {slipT} slip away{or}"  (menu option, line 1008)
 
 > Note for you (not shown in game): (a Division Leader's sweep or raid, their directives and the records terminal: on the Radio menu now)
 
-- "Gear up (Resistance clothes)"  (menu option, line 1011)
-- "Change into citizen clothes"  (menu option, line 1011)
-- "Black market"  (menu option, line 1012)
-- "Squad orders"  (text, line 1014)
-- "Find the way (rebel ground, the lab)"  (text, line 1015)
+- "Gear up (Resistance clothes)"  (menu option, line 1023)
+- "Change into citizen clothes"  (menu option, line 1023)
+- "Black market"  (menu option, line 1024)
+- "Squad orders"  (text, line 1026)
+- "Find the way (rebel ground, the lab)"  (text, line 1027)
 
 > Note for you (not shown in game): part of: quick role root
 
-- "Reach out through the vortessence"  (menu option, line 1019)
-- "My work: the Stalker's Lot (F4)"  (menu option, line 1021)
+- "Reach out through the vortessence"  (menu option, line 1031)
+- "My work: the Stalker's Lot (F4)"  (menu option, line 1033)
 
 > Note for you (not shown in game): a worker's job tools: one line, or "My job" when there's more than one
 
-- "Send my escort away"  (menu option, line 1030)
-- "Ask for a Civil Protection escort"  (menu option, line 1030)
-- "Back to work (end the ration break)"  (menu option, line 1032)
-- "Take a ration break"  (menu option, line 1033)
+- "Send my escort away"  (menu option, line 1042)
+- "Ask for a Civil Protection escort"  (menu option, line 1042)
+- "Back to work (end the ration break)"  (menu option, line 1044)
+- "Take a ration break"  (menu option, line 1045)
 
 > Note for you (not shown in game): part of: quick role root
 
-- "Take a body cart, or leave it"  (menu option, line 1034)
-- "Stop being a Union foreman"  (menu option, line 1036)
-- "Become a Union foreman"  (menu option, line 1036)
-- "My job"  (text, line 1040)
+- "Take a body cart, or leave it"  (menu option, line 1046)
+- "Stop being a Union foreman"  (menu option, line 1048)
+- "Become a Union foreman"  (menu option, line 1048)
+- "My job"  (text, line 1052)
 
 > Note for you (not shown in game): in a cell: what you're in for, and how long is left
 
-- "My sentence: %d:%02d left"  (message, line 1047)
+- "My sentence: %d:%02d left"  (message, line 1059)
 
 > Note for you (not shown in game): A situation's menu put away by the player (0, walking off, another menu), not by the server or a choice: its onClose runs (the search ends, the interrogation is done), once.
 
-- "[Miscount] situation close: {err} /"  (text, line 1097)
+- "[Miscount] situation close: {err} /"  (text, line 1109)
 
 > Note for you (not shown in game): part of: quick radio root
 
-- "Request resupply (a scanner brings what you're short of)"  (menu option, line 1182)
-- "Call for backup{SquadTag}"  (menu option, line 1183)
-- "Send my 10-20"  (menu option, line 1184)
+- "Request resupply (a scanner brings what you're short of)"  (menu option, line 1194)
+- "Call for backup{SquadTag}"  (menu option, line 1195)
+- "Send my 10-20"  (menu option, line 1196)
 
 > Note for you (not shown in game): item
 
-- "What should Civil Protection units look out for?"  (text, line 1185)
+- "What should Civil Protection units look out for?"  (text, line 1197)
 
 > Note for you (not shown in game): part of: quick radio root
 
-- "Records check (the records terminal)"  (menu option, line 1186)
-- "My directives (the job board)"  (menu option, line 1187)
-- "Call a sweep"  (text, line 1189)
-- "Call in an Overwatch squad"  (text, line 1195)
-- "next in %d:%02d"  (message, line 1195)
-- "Message on Freq 7..."  (text, line 1199)
+- "Records check (the records terminal)"  (menu option, line 1198)
+- "My directives (the job board)"  (menu option, line 1199)
+- "Call a sweep"  (text, line 1201)
+- "Call in an Overwatch squad"  (text, line 1207)
+- "next in %d:%02d"  (message, line 1207)
+- "Message on Freq 7..."  (text, line 1211)
 
 > Note for you (not shown in game): can
 
-- "What do you say on Freq 7?"  (text, line 1199)
+- "What do you say on Freq 7?"  (text, line 1211)
 
 > Note for you (not shown in game): part of: quick radio root
 
-- "no transmitter"  (text, line 1199)
-- "Call for backup{SquadTag}"  (text, line 1200)
-- "no Freq 7 radio"  (text, line 1200)
-- "no transmitter"  (text, line 1200)
-- "Send my position"  (text, line 1201)
-- "no transmitter"  (text, line 1201)
-- "Jobs over the radio"  (menu option, line 1202)
-- "Switch frequency (now {or})"  (menu option, line 1205)
-- "Nothing to send on this band."  (text, line 1209)
+- "no transmitter"  (text, line 1211)
+- "Call for backup{SquadTag}"  (text, line 1212)
+- "no Freq 7 radio"  (text, line 1212)
+- "no transmitter"  (text, line 1212)
+- "Send my position"  (text, line 1213)
+- "no transmitter"  (text, line 1213)
+- "Jobs over the radio"  (menu option, line 1214)
+- "Switch frequency (now {or})"  (menu option, line 1217)
+- "Nothing to send on this band."  (text, line 1221)
 
 > Note for you (not shown in game): on screen
 
-- "+menu_context"  (text, line 1433)
-- ": the full menu"  (drawn on screen, line 1434)
+- "+menu_context"  (text, line 1445)
+- ": the full menu"  (drawn on screen, line 1446)
 
 ## cl_livingcity_rebelhold.lua (cl_livingcity_rebelhold.lua)
 
@@ -5496,32 +5501,41 @@ Made from version a5b6f7e. Admin-only console messages and log lines are left ou
 
 `gamemodes/livingcity/gamemode/modules/server/sv_livingcity_adminplot.lua`
 
-- "Kill the Administrator"  (text, line 119)
-- "At her address. Our fighters open fire when you do."  (text, line 120)
-- "[Freq 7] %s wants a word with you, in private."  (text, line 121)
-- "A word with %s"  (text, line 122)
-- "Speak with %s, in private."  (text, line 123)
-- "%s wants a word with you first."  (text, line 124)
+- "Kill the Administrator"  (text, line 145)
+- "At her address. Our fighters open fire when you do."  (text, line 146)
+- "[Freq 7] %s wants a word with you, in private."  (text, line 147)
+- "A word with %s"  (text, line 148)
+- "Speak with %s, in private."  (text, line 149)
+- "%s wants a word with you first."  (text, line 150)
+- "Neither the fund nor you can pay %d credits."  (text, line 153)
+
+> Note for you (not shown in game): Charged at the moment they are sent for: out of the Resistance's fund when it holds enough, else out of the leader's own credits. What is kept with the order (where it came from), "" when it costs nothing, or nil: neither can pay. Nothing is said.
+
+- "the leader's order"  (text, line 332)
+
+> Note for you (not shown in game): part of: refund
+
+- "an order ended before the attempt"  (text, line 358)
 
 > Note for you (not shown in game): part of: break off
 
-- "The attack at the Administrator's address breaks off: %d of %d fighters left"  (message, line 858)
+- "The attack at the Administrator's address breaks off: %d of %d fighters left"  (message, line 950)
 
 > Note for you (not shown in game): part of: admin plot start
 
-- "An ordered attempt on the Administrator by %s: %d Resistance fighters come out round the stand"  (message, line 921)
+- "An ordered attempt on the Administrator by %s: %d Resistance fighters come out round the stand"  (message, line 1013)
 
-> Note for you (not shown in game): (under a leader's order: whoever makes the attempt is paid what the job pays, the owner, 18 November: "yes it should pay the extra". Their order is done; another member's stands.)
+> Note for you (not shown in game): (under a leader's order: whoever makes the attempt is paid what the job pays, the owner, 18 November: "yes it should pay the extra". Their order is done, and what was paid for it is spent; another member's stands.)
 
-- "paid quietly"  (text, line 970)
+- "paid quietly"  (text, line 1066)
 
 > Note for you (not shown in game): The stipend: 100 credits in all for the job from the board (the order's is paid where the attempt is made; never a lone wolf). The board's usual pay for a finished job (lc_directive_pay, sv_livingcity_economy.lua) is part of it, so this adds the rest.
 
-- "paid quietly"  (text, line 984)
+- "paid quietly"  (text, line 1083)
 
-> Note for you (not shown in game): She died of it after all, later: hit with no close calls left she is taken out alive, and the roll in her office went against her (the owner, 17 November; sv_livingcity_adminsecurity.lua says so here). Whoever was paid for the job at that address in the last ten minutes gets what they would have had if she had died at the stand. Nothing is said. How many were paid.
+> Note for you (not shown in game): part of: admin plot died
 
-- "Kill the Administrator"  (text, line 997)
+- "Kill the Administrator"  (text, line 1098)
 
 ## the would-be assassin is hers to question (the owner, 16 November) (sv_livingcity_adminquestioning.lua)
 
@@ -5595,11 +5609,11 @@ Made from version a5b6f7e. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): A shot that does not hit her: a bullet that lands within 20 feet of her, or passes that near, is an attempt all the same; so is a bolt, a rocket or an energy ball that comes that near (LC.AdminGrenadeThink).
 
-- "near miss"  (text, line 1486)
+- "near miss"  (text, line 1490)
 
 > Note for you (not shown in game): where it lands, or the nearest it comes to her on the way
 
-- "near miss"  (text, line 1508)
+- "near miss"  (text, line 1512)
 
 ## testing tools for admins (sv_livingcity_admintools.lua)
 
@@ -17981,205 +17995,205 @@ Made from version a5b6f7e. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: guide resistance
 
-- "Only the Resistance knows the way."  (text, line 94)
-- "There's no rebel ground in this city yet."  (text, line 97)
-- "Rebel ground"  (text, line 98)
-- "The way to our ground is marked, with a trail on the ground to follow."  (chat message, line 99)
-- "No cell has a lab yet."  (text, line 103)
-- "The way to the lab is marked, with a trail on the ground to follow."  (chat message, line 107)
+- "Only the Resistance knows the way."  (text, line 96)
+- "There's no rebel ground in this city yet."  (text, line 99)
+- "Rebel ground"  (text, line 100)
+- "The way to our ground is marked, with a trail on the ground to follow."  (chat message, line 101)
+- "No cell has a lab yet."  (text, line 105)
+- "The way to the lab is marked, with a trail on the ground to follow."  (chat message, line 109)
 
 > Note for you (not shown in game): The Resistance: Freq 7 Everyone on our side, and anyone else listening to Freq 7.
 
-- "[Freq 7] {text}"  (chat message, line 120)
+- "[Freq 7] {text}"  (chat message, line 122)
 
 > Note for you (not shown in game): Why no fighters can come (nil: they can).
 
-- "Members and up can lead fighters."  (text, line 151)
-- "we can't spare fighters: only %d left in reserve"  (message, line 156)
+- "Members and up can lead fighters."  (text, line 153)
+- "we can't spare fighters: only %d left in reserve"  (message, line 158)
 
 > Note for you (not shown in game): part of: rebel call backup
 
-- "Only the Resistance calls on Freq 7 for backup."  (text, line 163)
-- "Not now."  (text, line 164)
+- "Only the Resistance calls on Freq 7 for backup."  (text, line 165)
+- "Not now."  (text, line 166)
 
 > Note for you (not shown in game): (the owner, 9 November: calling for backup takes a Freq 7 radio)
 
-- "You need a Freq 7 radio to call for backup."  (text, line 166)
+- "You need a Freq 7 radio to call for backup."  (text, line 168)
 
 > Note for you (not shown in game): (the owner, 13 November: "no one should be able to broadcast on freq7 without a transmitter")
 
-- "You need a radio transmitter too: a Freq 7 radio only listens."  (text, line 168)
+- "You need a radio transmitter too: a Freq 7 radio only listens."  (text, line 170)
 
 > Note for you (not shown in game): (no psychic calls: the transmitter in hand, the owner, 13 November; its left click calls backup)
 
-- "Get your radio transmitter out first (next to Hands), then left click it or use its menu (right click)."  (text, line 170)
-- "Your last call is still out. Again in %d seconds."  (message, line 172)
-- "needs backup {where}. Their position is marked."  (text, line 175)
-- "Backup: {Name}"  (text, line 176)
+- "Get your radio transmitter out first (next to Hands), then left click it or use its menu (right click)."  (text, line 172)
+- "Your last call is still out. Again in %d seconds."  (message, line 174)
+- "needs backup {where}. Their position is marked."  (text, line 177)
+- "Backup: {Name}"  (text, line 178)
 
 > Note for you (not shown in game): part of: rebel call backup
 
-- "Every Resistance player has heard, and sees where you are for a minute and a half."  (text, line 194)
-- "%d fighter%s %s on the way, and stay%s with you (E on one sends them home)."  (message, line 196)
-- "%d of them come%s out of rebel territory: give them a minute to reach you."  (message, line 197)
-- "Your squad: %d of %d."  (message, line 198)
-- "No fighters are coming: {whyNot}."  (text, line 200)
-- "No fighters are free, nearby or in rebel territory."  (text, line 202)
-- "Backup called"  (chat message, line 204)
+- "Every Resistance player has heard, and sees where you are for a minute and a half."  (text, line 196)
+- "%d fighter%s %s on the way, and stay%s with you (E on one sends them home)."  (message, line 198)
+- "%d of them come%s out of rebel territory: give them a minute to reach you."  (message, line 199)
+- "Your squad: %d of %d."  (message, line 200)
+- "No fighters are coming: {whyNot}."  (text, line 202)
+- "No fighters are free, nearby or in rebel territory."  (text, line 204)
+- "Backup called"  (chat message, line 206)
 
 > Note for you (not shown in game): Sends on Freq 7: a Freq 7 radio and a radio transmitter (a Fighter and up are issued both: sv_livingcity_crafting.lua).
 
-- "Only the Resistance."  (text, line 217)
+- "Only the Resistance."  (text, line 219)
 
 > Note for you (not shown in game): part of: rebel send position
 
-- "Not now."  (text, line 218)
-- "You need a Freq 7 radio and a radio transmitter to send your position."  (text, line 219)
-- "Get your radio transmitter out first (next to Hands), then right click it for its menu."  (text, line 220)
-- "Again in %d seconds."  (message, line 222)
-- "is {GetPos}."  (text, line 224)
-- "Your position is marked for the Resistance (%d) for a minute and a half."  (message, line 226)
-- "Your position is out on Freq 7. No one else from the Resistance is on right now."  (chat message, line 226)
+- "Not now."  (text, line 220)
+- "You need a Freq 7 radio and a radio transmitter to send your position."  (text, line 221)
+- "Get your radio transmitter out first (next to Hands), then right click it for its menu."  (text, line 222)
+- "Again in %d seconds."  (message, line 224)
+- "is {GetPos}."  (text, line 226)
+- "Your position is marked for the Resistance (%d) for a minute and a half."  (message, line 228)
+- "Your position is out on Freq 7. No one else from the Resistance is on right now."  (chat message, line 228)
 
 > Note for you (not shown in game): The next Civil Standing milestone above theirs: standing, what it brings.
 
-- "a CWU business license at the Commissary"  (text, line 239)
-- "Union foreman (F2)"  (text, line 239)
-- "rent-free housing"  (text, line 240)
+- "a CWU business license at the Commissary"  (text, line 241)
+- "Union foreman (F2)"  (text, line 241)
+- "rent-free housing"  (text, line 242)
 
 > Note for you (not shown in game): home
 
-- "your block"  (text, line 260)
+- "your block"  (text, line 262)
 
 > Note for you (not shown in game): part of: quick find work
 
-- "Find work"  (chat message, line 274)
-- "Register at Civil Intake first: no work, rations or room until you're on the register. It's marked on your screen."  (chat message, line 274)
-- "Find work"  (chat message, line 277)
-- "You work as {job}. {or}F4 has your next shift."  (chat message, line 277)
-- "Find work"  (chat message, line 280)
-- "Labor Assignment gives you a Union job: press E on its terminal. It's marked on your screen. The job board is on F4."  (chat message, line 280)
+- "Find work"  (chat message, line 276)
+- "Register at Civil Intake first: no work, rations or room until you're on the register. It's marked on your screen."  (chat message, line 276)
+- "Find work"  (chat message, line 279)
+- "You work as {job}. {or}F4 has your next shift."  (chat message, line 279)
 - "Find work"  (chat message, line 282)
-- "Pick a Union job on the job board: F4 > Jobs."  (chat message, line 282)
+- "Labor Assignment gives you a Union job: press E on its terminal. It's marked on your screen. The job board is on F4."  (chat message, line 282)
+- "Find work"  (chat message, line 284)
+- "Pick a Union job on the job board: F4 > Jobs."  (chat message, line 284)
 
 > Note for you (not shown in game): part of: quick rations
 
-- "Your ration is ready now."  (text, line 290)
-- "Your next ration is in %d minute%s."  (message, line 290)
-- "Your ration isn't ready yet."  (text, line 290)
-- "You have no ration card: each Union shift you finish earns one."  (text, line 291)
-- "You have %d ration card%s (the dispenser takes one)."  (message, line 291)
-- "My rations"  (chat message, line 293)
-- "The nearest dispenser is marked."  (text, line 293)
+- "Your ration is ready now."  (text, line 292)
+- "Your next ration is in %d minute%s."  (message, line 292)
+- "Your ration isn't ready yet."  (text, line 292)
+- "You have no ration card: each Union shift you finish earns one."  (text, line 293)
+- "You have %d ration card%s (the dispenser takes one)."  (message, line 293)
+- "My rations"  (chat message, line 295)
+- "The nearest dispenser is marked."  (text, line 295)
 
 > Note for you (not shown in game): part of: quick home
 
-- "My apartment"  (text, line 301)
-- "Rent is %d credits a period: right click the door with your hands out to pay ahead."  (message, line 304)
-- "My home"  (chat message, line 305)
-- "Your apartment, %s: %dh %02dm left.%s It's marked on your screen."  (message, line 305)
-- "My home"  (chat message, line 310)
-- "You live in {or}: no rent for a room the city gives you. It's marked on your screen. An apartment of your own: right click a door that's for rent, with your hands out."  (chat message, line 310)
-- "My home"  (chat message, line 315)
-- "No room yet. Register at Civil Intake first, then ask Housing Allocation. Civil Intake is marked on your screen."  (chat message, line 315)
-- "My home"  (chat message, line 319)
-- "No room yet. {or}"  (chat message, line 319)
+- "My apartment"  (text, line 303)
+- "Rent is %d credits a period: right click the door with your hands out to pay ahead."  (message, line 306)
+- "My home"  (chat message, line 307)
+- "Your apartment, %s: %dh %02dm left.%s It's marked on your screen."  (message, line 307)
+- "My home"  (chat message, line 312)
+- "You live in {or}: no rent for a room the city gives you. It's marked on your screen. An apartment of your own: right click a door that's for rent, with your hands out."  (chat message, line 312)
+- "My home"  (chat message, line 317)
+- "No room yet. Register at Civil Intake first, then ask Housing Allocation. Civil Intake is marked on your screen."  (chat message, line 317)
+- "My home"  (chat message, line 321)
+- "No room yet. {or}"  (chat message, line 321)
 
 > Note for you (not shown in game): part of: quick standing
 
-- "Civil Standing %d."  (message, line 326)
-- "You are WANTED{or}. Give yourself up to a unit, or keep out of sight."  (text, line 328)
-- "Not wanted."  (text, line 330)
-- "No fines owed (a street fine is taken on the spot)."  (text, line 332)
-- "Next: %s at %d."  (message, line 333)
-- "My standing"  (chat message, line 334)
+- "Civil Standing %d."  (message, line 328)
+- "You are WANTED{or}. Give yourself up to a unit, or keep out of sight."  (text, line 330)
+- "Not wanted."  (text, line 332)
+- "No fines owed (a street fine is taken on the spot)."  (text, line 334)
+- "Next: %s at %d."  (message, line 335)
+- "My standing"  (chat message, line 336)
 
 > Note for you (not shown in game): A prisoner: My sentence
 
-- "You're not serving a sentence."  (text, line 344)
-- "My sentence"  (chat message, line 346)
-- "You're in for: %s. %d:%02d left. Stay in your cell: leaving it is escaping."  (message, line 346)
-- "breaking the city's laws"  (message, line 347)
+- "You're not serving a sentence."  (text, line 346)
+- "My sentence"  (chat message, line 348)
+- "You're in for: %s. %d:%02d left. Stay in your cell: leaving it is escaping."  (message, line 348)
+- "breaking the city's laws"  (message, line 349)
 
 > Note for you (not shown in game): Why the Administrator can't order this person's arrest (nil: they can).
 
-- "Only the City Administrator."  (text, line 359)
-- "Look at the person you want arrested."  (text, line 360)
-- "Not one of the city's own."  (text, line 361)
-- "Not a member of staff."  (text, line 362)
-- "They're already in a cell."  (text, line 363)
-- "They're already wanted."  (text, line 364)
+- "Only the City Administrator."  (text, line 361)
+- "Look at the person you want arrested."  (text, line 362)
+- "Not one of the city's own."  (text, line 363)
+- "Not a member of staff."  (text, line 364)
+- "They're already in a cell."  (text, line 365)
+- "They're already wanted."  (text, line 366)
 
 > Note for you (not shown in game): part of: admin arrest why not
 
-- "Not yet: in %d minute%s."  (message, line 366)
+- "Not yet: in %d minute%s."  (message, line 368)
 
 > Note for you (not shown in game): part of: admin order arrest
 
-- "They're too far away to point out."  (text, line 373)
-- "By order of the Administrator"  (text, line 374)
-- "Not now."  (text, line 374)
-- "By order of the Administrator: arrest on sight"  (text, line 378)
-- "The City Administrator has ordered your arrest. Every unit has your description."  (chat message, line 380)
-- "Order of arrest"  (chat message, line 381)
-- "is wanted, by your order, and every unit has a BOLO."  (chat message, line 381)
+- "They're too far away to point out."  (text, line 375)
+- "By order of the Administrator"  (text, line 376)
+- "Not now."  (text, line 376)
+- "By order of the Administrator: arrest on sight"  (text, line 380)
+- "The City Administrator has ordered your arrest. Every unit has your description."  (chat message, line 382)
+- "Order of arrest"  (chat message, line 383)
+- "is wanted, by your order, and every unit has a BOLO."  (chat message, line 383)
 
 > Note for you (not shown in game): The bodyguard (sv_livingcity_cityadmin.lua): "follow" (as always), or "hold" here; how close they follow ("close", "medium" as always, "far"); and what they do when there's trouble ("always" as they always have, "stay" with me, stand "between" us, "holdfire" unless fired on). The last two kinds are her standing orders: she can give them with no guards about, for whoever comes next.
 
-- "Close: right at your shoulder."  (text, line 391)
-- "Medium: a few steps behind you, as they always have."  (text, line 392)
-- "Far: well back, giving you room."  (text, line 393)
-- "As they always have: whoever hurts you is theirs, and they fight as soldiers do."  (text, line 396)
-- "Stay with me: they shoot from their place beside you and never chase."  (text, line 397)
-- "Stand between us: each one puts himself between you and a threat."  (text, line 398)
-- "Hold fire unless fired on: they start nothing, and answer only whoever hurts you or one of them."  (text, line 399)
+- "Close: right at your shoulder."  (text, line 393)
+- "Medium: a few steps behind you, as they always have."  (text, line 394)
+- "Far: well back, giving you room."  (text, line 395)
+- "As they always have: whoever hurts you is theirs, and they fight as soldiers do."  (text, line 398)
+- "Stay with me: they shoot from their place beside you and never chase."  (text, line 399)
+- "Stand between us: each one puts himself between you and a threat."  (text, line 400)
+- "Hold fire unless fired on: they start nothing, and answer only whoever hurts you or one of them."  (text, line 401)
 
 > Note for you (not shown in game): part of: admin guard order
 
-- "Only the City Administrator."  (text, line 403)
-- "Your guards"  (chat message, line 407)
-- "Your guards"  (chat message, line 418)
-- "You have no guards with you right now."  (text, line 423)
-- "Your guards"  (chat message, line 426)
-- "They hold here until you call them to you. Anyone who hurts you is still theirs."  (chat message, line 426)
-- "Your guards"  (chat message, line 429)
-- "They're with you again."  (chat message, line 429)
+- "Only the City Administrator."  (text, line 405)
+- "Your guards"  (chat message, line 409)
+- "Your guards"  (chat message, line 420)
+- "You have no guards with you right now."  (text, line 425)
+- "Your guards"  (chat message, line 428)
+- "They hold here until you call them to you. Anyone who hurts you is still theirs."  (chat message, line 428)
+- "Your guards"  (chat message, line 431)
+- "They're with you again."  (chat message, line 431)
 
 > Note for you (not shown in game): Senior units: call a sweep or a raid (the city's own events, sv_livingcity_events.lua)
 
-- "a contraband sweep (civil status inspections)"  (text, line 441)
-- "a block raid (a housing block inspection)"  (text, line 441)
+- "a contraband sweep (civil status inspections)"  (text, line 443)
+- "a block raid (a housing block inspection)"  (text, line 443)
 
 > Note for you (not shown in game): Why this unit can't call one now (nil: they can).
 
-- "No such order."  (text, line 452)
-- "Division Leaders and up only."  (text, line 453)
-- "Not while the city dreams."  (text, line 454)
-- "Not while the city has something on."  (text, line 455)
-- "The city has something planned in a minute or two."  (text, line 456)
-- "Dispatch allows another in %d minute%s."  (message, line 458)
+- "No such order."  (text, line 454)
+- "Division Leaders and up only."  (text, line 455)
+- "Not while the city dreams."  (text, line 456)
+- "Not while the city has something on."  (text, line 457)
+- "The city has something planned in a minute or two."  (text, line 458)
+- "Dispatch allows another in %d minute%s."  (message, line 460)
 
 > Note for you (not shown in game): the city's own pace: at least half the usual time between events since the last one ended
 
-- "Too soon after the last one: in %d minute%s."  (message, line 464)
+- "Too soon after the last one: in %d minute%s."  (message, line 466)
 
 > Note for you (not shown in game): part of: officer call sweep
 
-- "That can't happen right now (or the map has nowhere for it)."  (text, line 472)
-- "[CP net] {who} orders {kind}. All units."  (chat message, line 476)
-- "Dispatch confirms: {kind}, now."  (chat message, line 478)
+- "That can't happen right now (or the map has nowhere for it)."  (text, line 474)
+- "[CP net] {who} orders {kind}. All units."  (chat message, line 478)
+- "Dispatch confirms: {kind}, now."  (chat message, line 480)
 
 > Note for you (not shown in game): part of: quick info
 
-- "Someone can see you."  (text, line 497)
+- "Someone can see you."  (text, line 499)
 
 > Note for you (not shown in game): part of: office
 
-- "Only the City Administrator."  (text, line 551)
+- "Only the City Administrator."  (text, line 557)
 
 > Note for you (not shown in game): part of: quick more
 
-- "Not now"  (chat message, line 572)
+- "Not now"  (chat message, line 582)
 
 ## talking to HQ over the radio, and the resupply scanner (sv_livingcity_radiohq.lua)
 
@@ -18911,6 +18925,24 @@ Made from version a5b6f7e. Admin-only console messages and log lines are left ou
 > Note for you (not shown in game): part of: reconcile appearance
 
 - "saved job"  (text, line 54)
+
+## the Resistance's fund (sv_livingcity_resistancefund.lua)
+
+`gamemodes/livingcity/gamemode/modules/server/sv_livingcity_resistancefund.lua`
+
+- "your share"  (text, line 79)
+
+> Note for you (not shown in game): Written at once: what is paid out of it is kept with a player's own record, and the two must agree after a crash.
+
+- "The Resistance's fund: %+d (%s), now %d"  (message, line 102)
+
+> Note for you (not shown in game): the game's living city rebel op done moment
+
+- "an operation"  (text, line 197)
+
+> Note for you (not shown in game): the game's living city vort freed moment
+
+- "a vortigaunt freed"  (text, line 228)
 
 ## the Resistance's operations, and what the city does about them (sv_livingcity_resistanceops.lua)
 
