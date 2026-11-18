@@ -33,7 +33,8 @@
                server. Stepping onto rebel ground stays open for as long as it is owed.
     The line   one, spoken: "We saw what you did. You're with us now." (LC.ResistanceLines,
                sv_livingcity_rebelvoice.lua: in chat as any of their lines, and from the one
-               saying it once it is recorded.) Nothing else is put on anyone's screen.
+               saying it once it is recorded; until then he says "Hi" aloud, in Half-Life 2's
+               own voice, as the camp's medic does.) Nothing else is put on anyone's screen.
     With us    what a story's invitation does (The Pamphleteer's "join", sv_livingcity_stories.lua):
                a moment after the line they are proven (LC.ResistanceInvite) and one of the
                Resistance (LC.SetFaction), at the rank their experience gives. Where they
@@ -273,7 +274,11 @@ local function Recruit(ply, npc, now)
         local d = ply:GetPos() - npc:GetPos()
         if d.x ~= 0 or d.y ~= 0 then npc:SetAngles(Angle(0, math.deg(math.atan2(d.y, d.x)), 0)) end
     end
-    if LC.ResistanceSay then LC.ResistanceSay(ply, npc, LINE) end
+    -- (not recorded yet: a word of greeting in his own voice, as the camp's medic gives, so that it is heard)
+    if not (LC.ResistanceSay and LC.ResistanceSay(ply, npc, LINE)) then
+        local st = LC.NPCs and LC.NPCs[npc]
+        npc:EmitSound("vo/npc/" .. (st and st.gender == "female" and "female" or "male") .. "01/hi0" .. math.random(1, 2) .. ".wav", 70)
+    end
     timer.Simple(JOIN_AFTER, function() LC.Try(LC.AdminRecruitJoin, ply) end)
     if LC.Log then LC.Log("info", string.format("%s, who tried to kill the Administrator alone and got away, is taken in by the Resistance", ply:Nick())) end
 end

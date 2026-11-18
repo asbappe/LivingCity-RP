@@ -37216,8 +37216,12 @@ _run(2)
 ok(heard(wolf, "We saw what you did") == 0 and LC.AdminRecruitOwed(wolf) ~= nil, "the unit lost, the only one of theirs in sight asleep: still nothing")
 LC.RebelAsleep = asleepWas
 hostHome()
+local aloud, emitWas = {}, host.EmitSound
+host.EmitSound = function(self, path, ...) if string.find(tostring(path), "vo/npc/male01/hi0", 1, true) then aloud[#aloud + 1] = tostring(path) end end
 _run(1)
+host.EmitSound = emitWas
 ok(heard(wolf, SAID) == 1 and heard(wolf, "[Resistance]") == 1, "awake: the nearest of the Resistance's people there says it to him, one line", table.concat(wolf.chat, " | "))
+ok(#aloud == 1, "not recorded yet: he says a word of greeting aloud, once, so that it is heard", #aloud)
 ok(LC.AdminRecruitOwed(wolf) == nil and faction(wolf) == "citizen", "(said, and a moment yet before it takes)")
 local xp0 = tonumber(wolf:GetPData("lcf_xp_resistance", 0)) or 0
 _run(2)
