@@ -26268,6 +26268,9 @@ _setcvar("lc_zone_stalkers", 0)
 LC.ZoneStalkersStaff(now + 130)
 ok(not IsValid(res.npc), "lc_zone_stalkers 0: none")
 _setcvar("lc_zone_stalkers", 1)
+-- (the loudspeaker's utility box goes with it, as in the game: it is only made here when the fifteen-second timer
+-- that makes them ticked while this one stood. Left behind, it sent the lab's repair job to a box nobody opens.)
+if IsValid(spk.lcBox) then spk.lcBox:Remove() end
 lamp:Remove() spk:Remove()
 LC.RemoveZone(hq)
 LC.ZoneStalkersTick(CurTime())
