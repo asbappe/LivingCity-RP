@@ -548,6 +548,7 @@ function LC.AdminPlotAssign(leader, member)
     if not LC.AdminPlotLeader(leader) or not Fighter(member) then return nil end
     if Has(member) then return false end
     -- the price, a leader's own order too: the fund's when it holds enough, else the leader's, else nobody is sent for
+    Refund(member) -- (they hold nothing: a price still kept with them is an order's that ended unseen, and goes back first)
     local paid = Charge(leader)
     if not paid then return false, string.format(SHORT, LC.AdminPlotCost()) end
     if paid ~= "" then member:SetPData(PRICE_KEY, paid) else member:RemovePData(PRICE_KEY) end

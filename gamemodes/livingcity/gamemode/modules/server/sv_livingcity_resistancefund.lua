@@ -171,7 +171,7 @@ local function There(sk)
     return out
 end
 
--- An error here never spoils the success itself: it is written down, and the fund is as it was.
+-- An error here never spoils the success itself, nor what it pays already: it is written in the errors file.
 local function Heard(what, fn, ...)
     local okH, err = LC.Try(fn, ...)
     if not okH and LC.Error then LC.Error("the Resistance's fund (" .. what .. ")", err) end
