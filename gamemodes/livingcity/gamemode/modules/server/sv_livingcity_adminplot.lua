@@ -7,27 +7,41 @@
     the place, maybe like 7 or 8, so it looks like a coordinated rebel attack and not a
     lone wolf. However if it is just a lone wolf, then none of that happens."
 
+    The order   The owner, 18 November: "a resistance human player with the role of
+                resistance leader can assign the quest to certain resistance members of
+                their discretion and it advises them to speak with that player in
+                private." The leader is a Commander who is playing; a Lieutenant when no
+                Commander is ("Commanders, else Lieutenants"). Their F2 > Resistance has
+                "Order: kill the Administrator": the Resistance's players who are Fighters
+                or higher, the leader among them. A name gives that member the order; a
+                name that has it takes it back. At any time, her address on or not. The
+                member reads one line, alone: "[Freq 7] <the leader> wants a word with
+                you, in private." Nothing when it is taken back, nothing to anyone else,
+                nothing on the radio, nothing a unit could hear of. A leader who picks
+                themselves reads nothing. Each member's order is their own: it ends when
+                they make the attempt, when the leader takes it back, when they are
+                arrested, are someone new, are out of the Resistance or below a Fighter.
+                It is kept with the character (PData lc_adminplot_order) over a
+                reconnect, and does not need the leader to stay. Whoever makes the
+                attempt under it is paid what the job pays.
+                It replaced the plan on the planning board of 17 November, which the whole
+                Resistance heard of on its radio (the owner: "Assignment replaces the
+                radio plan").
     The job     "Kill the Administrator" is on the Resistance's board (Operations), and
                 nobody else's, from the moment the city is called to her address until
-                someone tries. Its one step is making the attempt at her address. Taken
-                by one and only one (the owner, 18 November): Fighters and up, and nobody below
-                that rank sees it on the board (the owner, 17 November: "fighters and up
-                only"). It pays when the attempt is made (the owner: "xp should be 250 for
-                trying, 250 more if successful, plus a 100 credit stipend, but ONLY if it
-                is a job from the resistance job board": 250 experience, 100 credits in
-                all, 250 more experience if she dies of it, then or after the roll in her
-                office) and ends there. Nobody is told it has gone up, and the planned
-                order never leaks to Civil Protection (the owner: "it should just go on
-                the board. Keep as minimal a chance of CP/overwatch/administrator finding
-                out about it"). It also ends when her address is over, and as any job does:
-                dropped, arrested, a new character, gone from the server.
-    The order   A Resistance leader's planning board (F2 > Resistance > Operations: plan
-                or join, sv_livingcity_opplan.lua) lists "Kill the Administrator at her
-                address" while her address is on. No raid goes for that one: whoever
-                joined is under orders from the moment they join. At its hour those who
-                joined are pointed to the stand, as for any operation, and the order
-                stands until her address is over. When one of them makes the attempt,
-                those who joined and are there are paid as for any planned operation.
+                someone tries, and only while nobody leads: with a Commander or a
+                Lieutenant playing it is not offered, and the order comes from them alone
+                (whoever holds it already keeps it). Its one step is making the attempt at
+                her address. Taken by one and only one (the owner, 18 November): Fighters
+                and up, and nobody below that rank sees it on the board (the owner,
+                17 November: "fighters and up only"). It pays when the attempt is made
+                (the owner: "xp should be 250 for trying, 250 more if successful, plus a
+                100 credit stipend": 250 experience, 100 credits in all, 250 more
+                experience if she dies of it, then or after the roll in her office) and
+                ends there. Nobody is told it has gone up (the owner: "it should just go
+                on the board. Keep as minimal a chance of CP/overwatch/administrator
+                finding out about it"). It also ends when her address is over, and as any
+                job does: dropped, arrested, a new character, gone from the server.
     Ordered     An attempt on her life at her address (LC.AdminAttempt,
                 sv_livingcity_adminsecurity.lua) by someone who holds the job or the
                 order. Anyone else's (a lone wolf, a rogue unit, a citizen) brings
@@ -52,8 +66,10 @@
     Hooks heard: LivingCityAdminExfil (her guards are getting her out: who set it off),
     LivingCityAdminAttempt (a grenade by her), her own hurt and death at her address, and
     LivingCitySpeechCalled and LivingCitySpeechEnded (the job goes on the board, and comes
-    off it). Nothing is answered to any of them. No settings: the numbers are the constants
-    below.
+    off it), and LivingCityNewCharacter, LivingCityIncarcerated, LivingCityFactionChanged
+    and LivingCityRankChanged (an order is no longer theirs). Nothing is answered to any of
+    them. No settings: the numbers are the constants below. The leader's list reaches F2,
+    and the name picked comes back, by F2's own way (sv_livingcity_quickmore.lua).
 ]]
 
 if CLIENT then return end
@@ -61,10 +77,11 @@ if CLIENT then return end
 LC = LC or {}
 
 local JOB = "res_regicide"
-local KIND = "regicide"        -- the planned operation's kind (sv_livingcity_opplan.lua)
 local TITLE = "Kill the Administrator"
 local LINE = "At her address. Our fighters open fire when you do."
-local LABEL = "Kill the Administrator at her address"
+local WORD = "[Freq 7] %s wants a word with you, in private." -- all the chosen member reads: who, and not what about
+local ORDER_KEY = "lc_adminplot_order" -- PData, "1": this character is under a leader's order
+local LEADER, DEPUTY = 5, 4    -- who gives the order: a Commander; a Lieutenant when no Commander is playing
 local REWARD = 250             -- experience, when the attempt is made (the owner, 17 November)
 local KILL_BONUS = 250         -- more, if she dies of it
 local STIPEND = 100            -- credits with the job, in all (the board's usual pay for a job is part of it)
@@ -85,13 +102,16 @@ local UP = Vector(0, 0, 50)
 local TAKEN = { detained = true, escorted = true, jailed = true }
 
 local P       -- the attack under way, or nil
-local order   -- the leader's order, standing since its hour came (the plan), or nil
+local ordered = setmetatable({}, { __mode = "k" }) -- [player] = under a leader's order (true or false), as kept with the character
+local led     -- whether anyone who may give the order was playing, when last looked (the job on the board follows it)
 local TEMPLATE
 
 function LC.AdminPlot() return P end
 
 local function Faction(p) return p:GetNW2String("lcf_faction", "") end
 local function RankIndex(p) return p:GetNW2Int("lcf_rank", 1) end
+local function Name(p) return (LC.CharacterName and LC.CharacterName(p)) or p:Nick() end
+local function Ours(p) return IsValid(p) and p:IsPlayer() and Faction(p) == "resistance" end
 local function Administrator(p) return LC.IsAdministrator ~= nil and LC.IsAdministrator(p) == true end
 local function Exit() return LC.AdminExfil and LC.AdminExfil() or nil end
 local function Living(e)
@@ -110,27 +130,50 @@ local function AtAddress()
     return her, S
 end
 
--- Her address is on, and nobody has tried yet: the job is on the board, the target on the planning board.
+-- Her address is on, and nobody has tried yet: the job is on the board (while nobody leads).
 function LC.AdminPlotOpen()
     local her, S = AtAddress()
     return her ~= nil and not S.plotted and Exit() == nil
 end
 
 ------------------------------------------------------------------------
--- Who is under orders
+-- Who leads, and who is under orders
 ------------------------------------------------------------------------
+
+-- May they give the order? A Commander; a Lieutenant when no Commander is playing (the owner, 18 November:
+-- "Commanders, else Lieutenants").
+function LC.AdminPlotLeader(ply)
+    if not Ours(ply) then return false end
+    local r = RankIndex(ply)
+    if r >= LEADER then return true end
+    if r < DEPUTY then return false end
+    for _, p in ipairs(player.GetAll()) do
+        if p ~= ply and Ours(p) and RankIndex(p) >= LEADER then return false end
+    end
+    return true
+end
+-- Is anyone playing who may give it? Then the job is not on the board: the order comes from them alone.
+function LC.AdminPlotLeading()
+    for _, p in ipairs(player.GetAll()) do
+        if Ours(p) and RankIndex(p) >= DEPUTY then return true end
+    end
+    return false
+end
 
 local function JobOf(ply)
     local q = LC.QuestOf and LC.QuestOf[ply]
     if q and not q.done and q.tmpl == TEMPLATE then return q end
     return nil
 end
+-- Under a leader's order: kept with the character, and theirs only as a Fighter or higher of the Resistance.
 local function OrderOf(ply)
-    if Faction(ply) ~= "resistance" then return nil end
-    local plan = LC.OpPlan
-    if plan and plan.kind == KIND and plan.joined[ply] then return plan end
-    if order and order.joined[ply] then return order end
-    return nil
+    if not Ours(ply) or RankIndex(ply) < MIN_RANK then return false end
+    local has = ordered[ply]
+    if has == nil then
+        has = ply.GetPData ~= nil and ply:GetPData(ORDER_KEY, "") == "1"
+        ordered[ply] = has
+    end
+    return has
 end
 -- "job", "order" or nil: what makes an attempt of theirs an ordered one.
 function LC.AdminPlotHolds(ply)
@@ -140,39 +183,65 @@ function LC.AdminPlotHolds(ply)
     return nil
 end
 
--- The leader's order is done with: made (those who joined and are there are paid), or over.
-local function EndOrder(plan, made)
-    if LC.OpPlan == plan then LC.OpPlan = nil end
-    if order == plan then order = nil end
-    if made and LC.OpPay then LC.Try(LC.OpPay, plan) end
-    if LC.OpSyncMenu then
-        for _, p in ipairs(player.GetAll()) do LC.Try(LC.OpSyncMenu, p) end
-    end
+-- Their order is done with: the attempt made, taken back, or no longer theirs. Nothing is said.
+local function EndOrder(ply)
+    if not (IsValid(ply) and ply:IsPlayer()) then return end
+    ordered[ply] = false
+    if ply.RemovePData then ply:RemovePData(ORDER_KEY) end
 end
 
--- The planning board's target, while her address is on (LC.OpTargets).
-function LC.AdminPlotTarget()
-    if not LC.AdminPlotOpen() then return nil end
-    local _, S = AtAddress()
-    return { label = LABEL, kind = KIND, pos = S.stand.pos, data = {} }
+-- The leader's list (F2 > Resistance > Order: kill the Administrator): the Resistance's players who are Fighters
+-- or higher, the leader among them, and who has the order. Nil for anyone who may not give it.
+function LC.AdminPlotList(leader)
+    if not LC.AdminPlotLeader(leader) then return nil end
+    local out = {}
+    for _, p in ipairs(player.GetAll()) do
+        if Ours(p) and RankIndex(p) >= MIN_RANK then
+            out[#out + 1] = { id = p:EntIndex(), name = Name(p), has = OrderOf(p) or nil }
+        end
+    end
+    table.sort(out, function(a, b)
+        if a.name ~= b.name then return a.name < b.name end
+        return a.id < b.id
+    end)
+    return out
 end
--- Its hour has come (sv_livingcity_opplan.lua, Fire): with her address still on, the order stands until it is
--- over, and those who joined are pointed to the stand. False: there is nothing left to go to.
-function LC.AdminPlotGo(plan)
-    if not LC.AdminPlotOpen() then return false end
-    order = plan
+
+-- The leader picks a name: that member has the order from now on, or (they had it) no longer. The member reads
+-- one line, alone, that says who and not what about. Nothing is said when it is taken back, to anyone else or
+-- on the radio; a leader who picks themselves reads nothing. True: given. False: taken back. Nil: not theirs to
+-- give, or not someone it can be given to (nothing is said of that either).
+function LC.AdminPlotAssign(leader, member)
+    if not LC.AdminPlotLeader(leader) then return nil end
+    if not Ours(member) or RankIndex(member) < MIN_RANK then return nil end
+    if OrderOf(member) then
+        EndOrder(member)
+        return false
+    end
+    ordered[member] = true
+    if member.SetPData then member:SetPData(ORDER_KEY, "1") end
+    if member ~= leader then member:ChatPrint(string.format(WORD, Name(leader))) end
     return true
 end
-
--- No longer theirs: a new character, or in a cell (backing out is the planning board's own: LC.JoinOp).
-local function Released(ply)
-    if not IsValid(ply) then return end
-    local plan = LC.OpPlan
-    if plan and plan.kind == KIND then plan.joined[ply] = nil end
-    if order then order.joined[ply] = nil end
+-- The name picked on F2, by its number on the list (sv_livingcity_quickmore.lua). True when it was theirs to pick.
+function LC.AdminPlotPick(leader, id)
+    id = tonumber(id)
+    if not id then return false end
+    for _, p in ipairs(player.GetAll()) do
+        if p:EntIndex() == id then return LC.AdminPlotAssign(leader, p) ~= nil end
+    end
+    return false
 end
-hook.Add("LivingCityNewCharacter", "LivingCityAdminPlot", function(ply) Released(ply) end)
-hook.Add("LivingCityIncarcerated", "LivingCityAdminPlot", function(ply) Released(ply) end)
+
+-- No longer theirs: someone new, in a cell, out of the Resistance, or below a Fighter.
+hook.Add("LivingCityNewCharacter", "LivingCityAdminPlot", function(ply) EndOrder(ply) end)
+hook.Add("LivingCityIncarcerated", "LivingCityAdminPlot", function(ply) EndOrder(ply) end)
+hook.Add("LivingCityFactionChanged", "LivingCityAdminPlot", function(ply, fid)
+    if fid ~= "resistance" then EndOrder(ply) end
+end)
+hook.Add("LivingCityRankChanged", "LivingCityAdminPlot", function(ply, fid, rank)
+    if fid == "resistance" and (tonumber(rank) or 1) < MIN_RANK then EndOrder(ply) end
+end)
 
 ------------------------------------------------------------------------
 -- The job, on the Resistance's board
@@ -180,8 +249,10 @@ hook.Add("LivingCityIncarcerated", "LivingCityAdminPlot", function(ply) Released
 
 TEMPLATE = {
     id = JOB, factions = { resistance = true }, first = true, recheck = true,
-    available = function(ply) return LC.AdminPlotOpen() and (not IsValid(ply) or RankIndex(ply) >= MIN_RANK) end,
-    sees = function(ply) return IsValid(ply) and RankIndex(ply) >= MIN_RANK end, -- (not on the board of anyone below a Fighter)
+    -- (only while nobody leads: with a Commander or a Lieutenant playing, the order comes from them alone)
+    available = function(ply) return LC.AdminPlotOpen() and not LC.AdminPlotLeading() and (not IsValid(ply) or RankIndex(ply) >= MIN_RANK) end,
+    -- (not on the board of anyone below a Fighter, nor of anyone while someone leads; whoever holds it keeps it)
+    sees = function(ply) return IsValid(ply) and RankIndex(ply) >= MIN_RANK and (JobOf(ply) ~= nil or not LC.AdminPlotLeading()) end,
     solo = true, -- (one holder at a time: the owner, 18 November, "maybe only one can at a time")
     -- (her address over, and nobody getting her out: there is nothing left to try. No reason in words: it shows.)
     over = function()
@@ -206,12 +277,26 @@ end
 hook.Add("LivingCitySpeechCalled", "LivingCityAdminPlot", function()
     if LC.PostDirective then LC.Try(LC.PostDirective, JOB, nil, true) end
 end)
--- Her address is over (or her guards have begun): a job nobody took comes off the board.
-hook.Add("LivingCitySpeechEnded", "LivingCityAdminPlot", function()
+-- A job nobody took comes off the board.
+local function Unpost()
     for _, p in ipairs(LC.Postings and LC.Postings.resistance or {}) do
         if p.tmpl == TEMPLATE and not p.q then p.dead = true end
     end
-end)
+end
+-- Her address is over (or her guards have begun).
+hook.Add("LivingCitySpeechEnded", "LivingCityAdminPlot", function() Unpost() end)
+-- Leaders come and go (they join, leave, are promoted): with one playing the job nobody took comes off the
+-- board, and with none left it is back while her address is on. Nobody is told either way.
+local function Board()
+    local now = LC.AdminPlotLeading()
+    if now == led then return end
+    led = now
+    if now then
+        Unpost()
+    elseif LC.AdminPlotOpen() and LC.PostDirective then
+        LC.Try(LC.PostDirective, JOB, nil, true)
+    end
+end
 
 ------------------------------------------------------------------------
 -- Where they come out
@@ -549,8 +634,8 @@ end
 -- done and paid. Anyone else: nothing. True when it was an ordered one.
 function LC.AdminPlotAttempt(her, who, killed)
     if not (IsValid(who) and who:IsPlayer()) or not IsValid(her) then return false end
-    local q, plan = JobOf(who), OrderOf(who)
-    if not q and not plan then return false end
+    local q, own = JobOf(who), OrderOf(who)
+    if not q and not own then return false end
     -- once for an address, and once for an exit
     local _, S = AtAddress()
     local A = Exit()
@@ -565,16 +650,15 @@ function LC.AdminPlotAttempt(her, who, killed)
         if killed then q.bonus = (q.bonus or 0) + KILL_BONUS else LC.AdminPlotPaid[who] = CurTime() end
         LC.Try(LC.QuestEvent, "admin_attempt", who)
     end
-    if plan then
+    if own then
         -- (under a leader's order: whoever makes the attempt is paid what the job pays, the owner, 18 November: "yes it
-        -- should pay the extra". The others who joined and are there get what any planned operation pays, as before.)
+        -- should pay the extra". Their order is done; another member's stands.)
+        EndOrder(who)
         if not q then
-            plan.joined[who] = nil
             if LC.AddXP then LC.AddXP(who, REWARD + (killed and KILL_BONUS or 0), TITLE) end
             if LC.AddCredits then LC.AddCredits(who, STIPEND, "paid quietly") end
             if not killed then LC.AdminPlotPaid[who] = CurTime() end
         end
-        EndOrder(plan, true)
     end
     return true
 end
@@ -587,7 +671,6 @@ hook.Add("LivingCityQuestComplete", "LivingCityAdminPlot", function(ply, q)
     local had = (not eco or eco:GetBool()) and usual and usual:GetInt() or 0
     if STIPEND - had > 0 then LC.AddCredits(ply, STIPEND - had, "paid quietly") end
 end)
-function LC.AdminPlotMinRank() return MIN_RANK end
 
 -- She died of it after all, later: hit with no close calls left she is taken out alive, and the roll in her office
 -- went against her (the owner, 17 November; sv_livingcity_adminsecurity.lua says so here). Whoever was paid for the
@@ -650,6 +733,11 @@ end)
 
 function LC.AdminPlotThink(now)
     now = now or CurTime()
+    Board()
+    -- (an order is a Fighter's or higher's of the Resistance: whoever is neither any more has none)
+    for p, has in pairs(ordered) do
+        if has and IsValid(p) and not (Ours(p) and RankIndex(p) >= MIN_RANK) then EndOrder(p) end
+    end
     -- someone under orders who joined in once her guards had begun (marked by them as an attacker)
     local A = Exit()
     if A and P then A.plotted = true end -- (once for an exit, however it was set off)
@@ -661,8 +749,6 @@ function LC.AdminPlotThink(now)
             end
         end
     end
-    -- the leader's order, past its hour: it stood until her address was over
-    if order and not AtAddress() and not A then EndOrder(order, false) end
     if not P then return end
     local alive = {}
     for i = #P.fighters, 1, -1 do
@@ -695,12 +781,8 @@ function LC.AdminPlotThink(now)
 end
 
 timer.Create("LivingCityAdminPlot", 0.5, 0, function()
-    if not P and not order and not Exit() then return end
     local okT, err = LC.Try(LC.AdminPlotThink, CurTime())
     if not okT and LC.Error then LC.Error("admin plot", err) end
 end)
 
-hook.Add("LivingCityStopped", "LivingCityAdminPlot", function()
-    LC.AdminPlotEnd()
-    order = nil
-end)
+hook.Add("LivingCityStopped", "LivingCityAdminPlot", function() LC.AdminPlotEnd() end)

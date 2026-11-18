@@ -24,6 +24,8 @@
            a citizen's Me >, My sentence in a cell, the Administrator's tablet, laws, dream,
            guards and order of arrest, a Division Leader's Call a sweep >. What's greyed, and
            why, comes from the server (lc_quick_info, sv_livingcity_quickmore.lua).
+           18 November (the owner): the Resistance's leader has Order: kill the Administrator >
+           on the Resistance page, a list of names (sv_livingcity_adminplot.lua).
 
     9 on either is everything else: the full menu (cl_livingcity_actions.lua), also on C.
     A ">" opens a page of its own (voice lines, talking, poses).
@@ -191,6 +193,11 @@ local function OpsPage()
     return { title = "OPERATIONS", items = items, empty = rows }
 end
 
+-- The leader's order to kill the Administrator (the owner, 18 November; sv_livingcity_adminplot.lua): its list of
+-- names is further down, with F2's own actions.
+local PLOT = "Order: kill the Administrator"
+local PlotPage
+
 local function ResistancePage()
     local me = LocalPlayer()
     local items = {
@@ -202,8 +209,11 @@ local function ResistancePage()
     if me:HasWeapon("weapon_lc_multitool") then items[#items + 1] = Item("Hack the Combine door I'm looking at", function() Send("hack") end) end
     items[#items + 1] = Page("Operations: plan or join", OpsPage)
     items[#items + 1] = Item("The cell's rules (the leader's clipboard)", function() Send("rebelrules") end)
+    -- (the Resistance's leader alone: the server sends the list to nobody else. Last, so nothing above it moves.)
+    local leads = (LC_CL.QuickInfo or {}).plot ~= nil
+    if leads then items[#items + 1] = Page(PLOT, PlotPage) end
     -- (the owner, 7 November: losses you can see; the fighters we have left, under the rest)
-    return { title = "RESISTANCE", items = items, empty = ManpowerRows(7) }
+    return { title = "RESISTANCE", items = items, empty = ManpowerRows(leads and (#items + 1) or 7) }
 end
 
 -- The Combine's manpower, for the Administrator (units see it on the unit tools).
@@ -425,6 +435,18 @@ local function QM(cmd, arg, target)
     net.WriteString(arg or "")
     net.WriteEntity(IsValid(target) and target or NULL)
     net.SendToServer()
+end
+-- The leader's list for the order to kill the Administrator: the Resistance's Fighters and up by name, and who has
+-- it. A name gives that member the order; a name that has it takes it back (the server tells the member, alone).
+function PlotPage()
+    local items = {}
+    for _, w in ipairs((LC_CL.QuickInfo or {}).plot or {}) do
+        local id = tostring(math.floor(tonumber(w.id) or 0))
+        items[#items + 1] = Item(tostring(w.name) .. (w.has and "  (ordered)" or ""), function() QM("plotorder", id) end)
+    end
+    local title = string.upper(PLOT)
+    if LC_CL.SituationPaged then return LC_CL.SituationPaged(title, items) end
+    return { title = title, items = items }
 end
 local function AdminDo(what, arg)
     net.Start("lc_admin_do")

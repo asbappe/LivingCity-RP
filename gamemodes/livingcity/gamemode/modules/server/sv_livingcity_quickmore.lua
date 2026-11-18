@@ -7,7 +7,10 @@
       the Resistance    Freq 7 >: a message on the band, call for backup (every Resistance player
                         hears it and sees where you are; a couple of idle fighters nearby come and
                         stay with you), send my position, guide me to rebel ground or the lab
-      a citizen         Me >: find work, my rations, my home and rent, my standing
+      its leader        Resistance > Order: kill the Administrator >: the Fighters and up by name,
+                        and who has the order; a name gives it or takes it back (the owner,
+                        18 November; sv_livingcity_adminplot.lua). Sent to the leader alone.
+      a citizen        Me >: find work, my rations, my home and rent, my standing
       a prisoner        My sentence: what you're in for and how long is left
       the Administrator open my tablet, the laws, tonight's dream, command the guards (follow,
                         hold here, how close, what they do when there's trouble), order the arrest of whoever you're looking at
@@ -497,6 +500,8 @@ function LC.QuickInfo(ply)
         local tx = false
         if LC.TransmitBands then for _, b in ipairs(LC.TransmitBands(ply)) do if b == "resistance" then tx = true end end end
         t.reb = { backup = Wait(ply.lcRebBackupNext), pos = Wait(ply.lcRebPosNext), tx = tx, radio = (not LC.RadioBand) or LC.RadioBand(ply) == "resistance" }
+        -- (their leader alone: who may be given the order to kill the Administrator, and who has it; sv_livingcity_adminplot.lua)
+        t.plot = LC.AdminPlotList and LC.AdminPlotList(ply) or nil
     end
     if IsCitizen(ply) then t.me = MeInfo(ply) end
     if f == "admin" then
@@ -549,6 +554,8 @@ local ACTIONS = {
     arrest = function(ply, _, target) return LC.AdminOrderArrest(ply, target) end,
     guards = function(ply, arg) return LC.AdminGuardOrder(ply, arg) end,
     sweep = function(ply, arg) return LC.OfficerCallSweep(ply, arg) end,
+    -- (the Resistance's leader picks a name: the order given, or taken back. No reason is ever said.)
+    plotorder = function(ply, arg) return LC.AdminPlotPick ~= nil and LC.AdminPlotPick(ply, arg) end,
 }
 LC.QuickMoreActions = ACTIONS
 
