@@ -190,7 +190,7 @@ local GUIDE = {
         "Down and bleeding? A Union medic may come running to help, as long as you're not wanted and there's no firefight.",
     } },
     { "The war for the city", {
-        "Rebel territory and the infestation spread if nobody fights them (across a floor, or down the stairs to the next floor), and shrink when people fight them.",
+        "Rebel territory and the infestation spread if nobody fights them (across a floor, or down the stairs to the next floor), and shrink when people fight them. A badly infested block spreads it to the next.",
         "A message appears on screen when you enter either one. C > The city > Who holds the city (or F4) shows how much each side controls.",
         "When unrest is high (the Resistance is strong): more inspections and raids, and ration cuts. At full compliance, the rebels go quiet.",
         "Civil Protection units: anything that goes to HQ is only over the radio. Get your radio transmitter out (next to Hands) and right click: Request resupply, Call for backup (brings the nearest units running), Send my 10-20 (marks your location for other units), Issue a BOLO, a records check, your directives.",

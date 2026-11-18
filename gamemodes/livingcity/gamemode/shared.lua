@@ -190,6 +190,7 @@ LC_MODULES = {
         "sv_livingcity_colonel",
         "sv_livingcity_territory",
         "sv_livingcity_territorypaths", -- (territory grows along the path nodes)
+        "sv_livingcity_districtinfest", -- (how infested each district is, and its leaking to the next)
         "sv_livingcity_trains",
         "sv_livingcity_underground",
         "sv_livingcity_patsearch", -- (a unit's search as a short pat-down: sv_livingcity_underground.lua starts it)

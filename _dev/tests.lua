@@ -37525,6 +37525,84 @@ section("Core contract: nothing load-bearing changes without the owner knowing (
         #diff .. " differences: " .. table.concat(diff, " | ", 1, math.min(#diff, 15)))
 end)()
 
+function DistrictInfestTests()
+section("Infestation per district, and leaking next door (the owner, 18 November)")
+_setcvar("lc_territory_spread", 1)
+_setcvar("lc_zombies", 0)
+local B0 = Vector(-36000, 36000, 0)
+local mine = {}
+local function Z(z) if z then mine[#mine + 1] = z end return z end
+Z(LC.AddZone(B0, 200, "block", 91))
+Z(LC.AddZone(B0 + Vector(2500, 0, 0), 200, "block", 92))
+Z(LC.AddZone(B0 + Vector(0, 2600, 0), 200, "block", 93))
+Z(LC.AddZone(B0 + Vector(9000, 9000, 0), 200, "block", 94))
+LC.DistrictInfestForget()
+ok(LC.DistrictInfest(91) == 0 and LC.DistrictInfestWord(LC.DistrictInfest(91)) == nil, "a district with no infestation scores 0 and says nothing", LC.DistrictInfest(91))
+local seed = Z(LC.AddZone(B0 + Vector(-900, 0, 0), 300, "infest", 0))
+LC.DistrictInfestForget()
+ok(LC.DistrictInfest(91) == LC.DistrictInfestConst.POINTS_PLACED, "an infestation placed by a district counts for it", LC.DistrictInfest(91))
+ok(LC.DistrictInfest(92) == 0, "and not for the district next door", LC.DistrictInfest(92))
+local g1 = LC.GrowTerritory(seed, B0 + Vector(-900, 700, 0), 250)
+local g2 = LC.GrowTerritory(seed, B0 + Vector(-900, -700, 0), 250)
+local g3 = LC.GrowTerritory(seed, B0 + Vector(-1500, 0, 0), 250)
+LC.DistrictInfestForget()
+local v = LC.DistrictInfest(91)
+ok(g1 and g2 and g3 and v == LC.DistrictInfestConst.POINTS_PLACED + 3 * LC.DistrictInfestConst.PATCH, "each patch it grows adds to it", v)
+ok(LC.DistrictInfestWord(v) == "badly infested" and LC.DistrictInfestWord(30) == "infested" and LC.DistrictInfestWord(80) == "overrun", "words for it")
+local found = false
+for _, l in ipairs(LC.LedgerLines()) do if string.find(l, "Block 91", 1, true) and string.find(l, "badly infested", 1, true) then found = true end end
+ok(found, "F2's state of the city says it after the district")
+local nb = LC.DistrictNeighbours(91)
+ok(#nb == 2 and table.HasValue(nb, 92) and table.HasValue(nb, 93), "next door is the two nearest blocks", table.concat(nb, ","))
+
+section("A badly infested district leaks to the one next door")
+local savedWander, savedContain = LC.RandomWanderPos, LC.ContainmentBlocks
+LC.RandomWanderPos = function(role, near)
+    if not near then return savedWander(role) end -- (everyone else wandering meanwhile)
+    local a = math.random() * math.pi * 2
+    return near + Vector(math.cos(a), math.sin(a), 0) * math.random(800, 1000)
+end
+LC.ContainmentBlocks = function() return true end
+local z, m = LC.DistrictLeak(91)
+ok(not z, "never past a checkpoint with power", m)
+LC.ContainmentBlocks = function() return false end
+local before = LC.GrownCount("infest")
+z, m = LC.DistrictLeak(91)
+if z then Z(z) end
+LC.DistrictInfestForget()
+ok(z and (m == 92 or m == 93) and LC.DistrictInfest(m) > 0, "the infestation turns up in a district next door", m)
+ok(z and z.seed == seed and LC.GrownCount("infest") == before + 1, "as a patch of the infestation it came from (fought the same way)")
+local s = LC.Ledger and LC.Ledger() or {}
+local said = false
+for _, l in ipairs(s.news or {}) do if string.find(l, "has spread from", 1, true) then said = true end end
+ok(said, "the next City Bulletin says where it came from")
+-- on its own, when it's due
+LC.DistrictLeakAt[91] = CurTime() - 1
+before = LC.GrownCount("infest")
+_run(31)
+ok(LC.GrownCount("infest") == before + 1, "left alone, it leaks on its own when due", LC.GrownCount("infest") - before)
+ok((LC.DistrictLeakAt[91] or 0) > CurTime() + 60, "and not again straight away")
+local lines = LC.DistrictInfestStatus()
+ok(#lines > 0 and string.find(lines[1], "infestation", 1, true), "lc_territory and the admin panel list the scores", lines[1])
+LC.RandomWanderPos, LC.ContainmentBlocks = savedWander, savedContain
+
+section("Clearing it brings the score down")
+for _, g in ipairs({ g1, g2, g3 }) do LC.RecedeTerritory(g, "test") end
+LC.DistrictInfestForget()
+ok(LC.DistrictInfest(91) == LC.DistrictInfestConst.POINTS_PLACED, "patches gone, the score drops", LC.DistrictInfest(91))
+LC.QuietInfestation(seed.pos, 600)
+LC.DistrictInfestForget()
+ok(LC.DistrictInfest(91) == 0, "a cleared infestation counts nothing while it's quiet", LC.DistrictInfest(91))
+LC.DistrictLeakAt[91] = CurTime() - 1
+_run(31)
+ok(LC.DistrictLeakAt[91] == nil, "and a district below the mark stops leaking")
+LC.InfestQuiet = {}
+for _, q in ipairs(LC.ZonesOfKind("infest")) do if q.seed == seed then LC.RecedeTerritory(q, "test") end end
+for _, q in ipairs(mine) do if table.HasValue(LC.Zones, q) and not q.grown then LC.RemoveZone(q) end end
+LC.DistrictInfestForget()
+end
+DistrictInfestTests()
+
 ----------------------------------------------------------------------
 section("Stop")
 LC.Stop(admin)

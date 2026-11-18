@@ -108,11 +108,13 @@ end
 local Add = LC.LedgerAdd
 
 local function News(line)
+    if not line then return end
     local s = Load()
     s.news[#s.news + 1] = line
     while #s.news > 12 do table.remove(s.news, 1) end
     dirty = true
 end
+LC.LedgerNews = News -- (a line for the next City Bulletin)
 
 ------------------------------------------------------------------------
 -- Districts
@@ -254,8 +256,9 @@ function LC.LedgerLines()
     for _, k in ipairs(NUMS) do lines[#lines + 1] = string.format("%s: %s (%d).", NAMES[k], Word(s[k] or 50), s[k] or 50) end
     for _, n in ipairs(LC.BlockNumbers and LC.BlockNumbers() or {}) do
         local owner, mark = LC.DistrictOwner(n)
-        lines[#lines + 1] = string.format("%s: %s%s.", BName(n), owner == "contested" and "contested" or (owner == "resistance" and "the Resistance's" or "the Combine's"),
-            mark == "liberated" and " (liberated)" or (mark == "crackdown" and " (under a crackdown)" or ""))
+        local sick = LC.DistrictInfestWord and LC.DistrictInfestWord(LC.DistrictInfest(n)) -- (sv_livingcity_districtinfest.lua)
+        lines[#lines + 1] = string.format("%s: %s%s%s.", BName(n), owner == "contested" and "contested" or (owner == "resistance" and "the Resistance's" or "the Combine's"),
+            mark == "liberated" and " (liberated)" or (mark == "crackdown" and " (under a crackdown)" or ""), sick and (", " .. sick) or "")
     end
     return lines
 end

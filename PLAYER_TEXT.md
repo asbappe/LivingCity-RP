@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version f9eca94. Admin-only console messages and log lines are left out.
+Made from version 96942ce. Admin-only console messages and log lines are left out.
 
-12940 lines, from 358 files.
+12948 lines, from 359 files.
 
 ## Contents
 
@@ -197,6 +197,7 @@ Made from version f9eca94. Admin-only console messages and log lines are left ou
 - [debugging](#debugging-svlivingcitydebuglua) (82)
 - [the desperate Combine (sv_livingcity_desperation.lua)](#the-desperate-combine-svlivingcitydesperationlua-svlivingcitydesperationlua) (12)
 - [sv_livingcity_directives.lua](#svlivingcitydirectiveslua-svlivingcitydirectiveslua) (56)
+- [how infested each district is, and its leaking to the next](#how-infested-each-district-is-and-its-leaking-to-the-next-svlivingcitydistrictinfestlua) (8)
 - [doors](#doors-svlivingcitydoorslua) (9)
 - [The Fitness Test (a Happy dream you play)](#the-fitness-test-a-happy-dream-you-play-svlivingcitydreamcourselua) (14)
 - [Enforcers in the dreams](#enforcers-in-the-dreams-svlivingcitydreamenforcerslua) (19)
@@ -1137,7 +1138,7 @@ Made from version f9eca94. Admin-only console messages and log lines are left ou
 - "The city's NPCs work Union jobs too: fixing lights and loudspeakers, scrubbing graffiti, hauling bodies, carrying crates and mail. Look at someone to see what they're doing. Broken things are left for a while first, so players get the first chance to fix them."  (text, line 189)
 - "Down and bleeding? A Union medic may come running to help, as long as you're not wanted and there's no firefight."  (text, line 190)
 - "The war for the city"  (text, line 192)
-- "Rebel territory and the infestation spread if nobody fights them (across a floor, or down the stairs to the next floor), and shrink when people fight them."  (text, line 193)
+- "Rebel territory and the infestation spread if nobody fights them (across a floor, or down the stairs to the next floor), and shrink when people fight them. A badly infested block spreads it to the next."  (text, line 193)
 - "A message appears on screen when you enter either one. C > The city > Who holds the city (or F4) shows how much each side controls."  (text, line 194)
 - "When unrest is high (the Resistance is strong): more inspections and raids, and ration cuts. At full compliance, the rebels go quiet."  (text, line 195)
 - "Civil Protection units: anything that goes to HQ is only over the radio. Get your radio transmitter out (next to Hands) and right click: Request resupply, Call for backup (brings the nearest units running), Send my 10-20 (marks your location for other units), Issue a BOLO, a records check, your directives."  (text, line 196)
@@ -5693,19 +5694,19 @@ Made from version f9eca94. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): the console command lc_admintools
 
-- "Admins only."  (chat message, line 227)
+- "Admins only."  (chat message, line 228)
 
 > Note for you (not shown in game): the game answering something done in a window (lc_admintools_do)
 
-- "[Admin tools] {msg}"  (chat message, line 235)
+- "[Admin tools] {msg}"  (chat message, line 236)
 
 > Note for you (not shown in game): typing in chat
 
-- "Admins only."  (chat message, line 254)
-- "Admins only."  (chat message, line 259)
-- "Usage: !{cmd} <number> [player]"  (chat message, line 264)
-- "Player not found: {name}"  (chat message, line 271)
-- "[Admin tools] {msg}"  (chat message, line 274)
+- "Admins only."  (chat message, line 255)
+- "Admins only."  (chat message, line 260)
+- "Usage: !{cmd} <number> [player]"  (chat message, line 265)
+- "Player not found: {name}"  (chat message, line 272)
+- "[Admin tools] {msg}"  (chat message, line 275)
 
 ## citizens who show you the way (sv_livingcity_advice.lua)
 
@@ -8748,6 +8749,31 @@ Made from version f9eca94. Admin-only console messages and log lines are left ou
 > Note for you (not shown in game): A new Administrator (elected, or by recall): he pays a visit; and if he's forcing the old one's hand, he brings the directive to the new one soon
 
 - "I've received some interesting offers for your services. / These are extraordinary times."  (text, line 842)
+
+## how infested each district is, and its leaking to the next (sv_livingcity_districtinfest.lua)
+
+`gamemodes/livingcity/gamemode/modules/server/sv_livingcity_districtinfest.lua`
+
+
+> Note for you (not shown in game): Words for a score (nil: nothing worth saying).
+
+- "badly infested"  (text, line 92)
+
+> Note for you (not shown in game): Leak district n's infestation to a neighbour now. Returns the patch and where it went, or nil and why not.
+
+- "no territory"  (text, line 132)
+- "no infestation of its own"  (text, line 134)
+- "it's as big as it gets (lc_infest_max, lc_territory_city_max)"  (text, line 135)
+
+> Note for you (not shown in game): part of: district leak
+
+- "The infestation has spread from %s to %s."  (message, line 145)
+- "nowhere next door it could take (a checkpoint with power, ground just cleared, or no open ground)"  (text, line 152)
+
+> Note for you (not shown in game): For lc_territory: a line per district with any infestation.
+
+- ", leaks next door in about %d min"  (message, line 186)
+- ", leaks next door soon"  (text, line 186)
 
 ## doors (sv_livingcity_doors.lua)
 
@@ -13086,104 +13112,104 @@ Made from version f9eca94. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: district push
 
-- "%s is %s now."  (message, line 161)
-- "in {or} hands"  (text, line 161)
+- "%s is %s now."  (message, line 163)
+- "in {or} hands"  (text, line 163)
 
 > Note for you (not shown in game): What moves it
 
-- "The Resistance struck %s."  (message, line 172)
-- "in {where}"  (text, line 172)
-- "the city"  (message, line 172)
+- "The Resistance struck %s."  (message, line 174)
+- "in {where}"  (text, line 174)
+- "the city"  (message, line 174)
 
 > Note for you (not shown in game): the game's living city block raided moment
 
-- "Civil Protection raided %s%s."  (message, line 177)
-- ": {n} things confiscated"  (text, line 177)
+- "Civil Protection raided %s%s."  (message, line 179)
+- ": {n} things confiscated"  (text, line 179)
 
 > Note for you (not shown in game): the game's living city collapse over moment
 
-- "The Administrator has fallen.{or}"  (text, line 212)
-- "The uprising is crushed. A week of crackdowns in every district."  (text, line 216)
+- "The Administrator has fallen.{or}"  (text, line 214)
+- "The uprising is crushed. A week of crackdowns in every district."  (text, line 218)
 
 > Note for you (not shown in game): Words for a number.
 
-- "very high"  (text, line 245)
-- "very low"  (text, line 247)
+- "very high"  (text, line 247)
+- "very low"  (text, line 249)
 
 > Note for you (not shown in game): part of: ledger lines
 
-- "the Resistance's"  (text, line 257)
-- "the Combine's"  (text, line 257)
-- "(under a crackdown)"  (text, line 258)
+- "the Resistance's"  (text, line 260)
+- "the Combine's"  (text, line 260)
+- "(under a crackdown)"  (text, line 261)
 
 > Note for you (not shown in game): part of: bulletin
 
-- "City Bulletin, day %d."  (message, line 264)
-- "Supply %s. Morale %s."  (message, line 266)
-- "Under a crackdown: {crack}."  (text, line 271)
-- "[City Bulletin] {text}"  (chat message, line 277)
+- "City Bulletin, day %d."  (message, line 267)
+- "Supply %s. Morale %s."  (message, line 269)
+- "Under a crackdown: {crack}."  (text, line 274)
+- "[City Bulletin] {text}"  (chat message, line 280)
 
 > Note for you (not shown in game): the liberation ends: the Combine come back for it (on the next morning someone's here to see it)
 
-- "is the Combine's to retake. Civil Protection moves in."  (text, line 294)
+- "is the Combine's to retake. Civil Protection moves in."  (text, line 297)
 
 > Note for you (not shown in game): The days the city missed while the server was empty (up to a week), drifted through quietly.
 
-- "%d day%s passed while the streets were quiet."  (message, line 313)
+- "%d day%s passed while the streets were quiet."  (message, line 316)
 
 > Note for you (not shown in game): part of: go to speech stand
 
-- "Only the City Administrator speaks from the stand."  (text, line 346)
-- "There's no speech stand in this city. (Staff: Miscount Editor > Point: Administrator's speech stand.)"  (text, line 348)
-- "[The office] You're at the speech stand. F2 > Me > Administrator > Give a speech, when you're ready."  (chat message, line 351)
+- "Only the City Administrator speaks from the stand."  (text, line 349)
+- "There's no speech stand in this city. (Staff: Miscount Editor > Point: Administrator's speech stand.)"  (text, line 351)
+- "[The office] You're at the speech stand. F2 > Me > Administrator > Give a speech, when you're ready."  (chat message, line 354)
 
 > Note for you (not shown in game): Her words to the city: on the screens and in chat, the crowd's cheer, and what it does to the numbers. by: the player Administrator, or nil (the city's own, sv_livingcity_speech.lua). at: where she spoke.
 
-- "The City Administrator"  (text, line 360)
-- "[The City Administrator, from the stand] {text}"  (chat message, line 364)
+- "The City Administrator"  (text, line 363)
+- "[The City Administrator, from the stand] {text}"  (chat message, line 367)
 
 > Note for you (not shown in game): part of: deliver
 
-- "heard the Administrator speak"  (text, line 369)
-- "%s addressed the city%s."  (message, line 374)
-- "before a crowd of {heard}"  (text, line 374)
+- "heard the Administrator speak"  (text, line 372)
+- "%s addressed the city%s."  (message, line 377)
+- "before a crowd of {heard}"  (text, line 377)
 
 > Note for you (not shown in game): part of: give speech
 
-- "Only the City Administrator gives speeches."  (text, line 380)
-- "You've spoken to the city today. Tomorrow."  (text, line 382)
+- "Only the City Administrator gives speeches."  (text, line 383)
+- "You've spoken to the city today. Tomorrow."  (text, line 385)
 
 > Note for you (not shown in game): (no words written: she speaks into her microphone, and the whole city hears it; the owner, 16 November: "most of the human players would have a microphone and use that instead of typing". Writing it is the other way.)
 
-- "Say something to the city (at least a sentence)."  (text, line 387)
+- "Say something to the city (at least a sentence)."  (text, line 390)
 
 > Note for you (not shown in game): part of: give speech
 
-- "Speak from the speech stand: F2 > Me > Administrator > Go to the speech stand."  (text, line 397)
+- "Speak from the speech stand: F2 > Me > Administrator > Go to the speech stand."  (text, line 400)
 
 > Note for you (not shown in game): part of: amnesty
 
-- "Only the City Administrator grants an amnesty."  (text, line 405)
-- "One amnesty a day."  (text, line 407)
-- "The Administrator declared an amnesty{or}."  (text, line 414)
-- "[The City Administrator] An amnesty: the wanted are forgiven. Do not make the city regret it."  (chat message, line 415)
+- "Only the City Administrator grants an amnesty."  (text, line 408)
+- "One amnesty a day."  (text, line 410)
+- "The Administrator declared an amnesty{or}."  (text, line 417)
+- "[The City Administrator] An amnesty: the wanted are forgiven. Do not make the city regret it."  (chat message, line 418)
 
 > Note for you (not shown in game): part of: crackdown
 
-- "Only the City Administrator orders a crackdown."  (text, line 421)
-- "Which district?"  (text, line 423)
-- "A crackdown on {block}."  (text, line 428)
-- "[The City Administrator] A crackdown on {block}. Residents: cooperate."  (chat message, line 430)
+- "Only the City Administrator orders a crackdown."  (text, line 424)
+- "Which district?"  (text, line 426)
+- "A crackdown on {block}."  (text, line 431)
+- "[The City Administrator] A crackdown on {block}. Residents: cooperate."  (chat message, line 433)
 
 > Note for you (not shown in game): part of: extra rations
 
-- "Only the City Administrator orders extra rations."  (text, line 436)
-- "The stores are too low for extra rations."  (text, line 438)
-- "The Administrator ordered extra rations."  (text, line 440)
+- "Only the City Administrator orders extra rations."  (text, line 439)
+- "The stores are too low for extra rations."  (text, line 441)
+- "The Administrator ordered extra rations."  (text, line 443)
 
 > Note for you (not shown in game): typing in chat
 
-- "[The office] {why}"  (chat message, line 514)
+- "[The office] {why}"  (chat message, line 517)
 
 ## the state of the city, phase two (the owner, 10 November: (sv_livingcity_ledger2.lua)
 
@@ -23309,75 +23335,75 @@ Made from version f9eca94. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: grow territory
 
-- "it's as big as it gets (lc_territory_max, lc_infest_max, lc_territory_city_max)"  (text, line 431)
+- "it's as big as it gets (lc_territory_max, lc_infest_max, lc_territory_city_max)"  (text, line 463)
 
 > Note for you (not shown in game): no path nodes in it or near it: a round patch out past its edge, the way it always grew
 
-- "nowhere to grow: no path nodes lead out of it, and no open floor round its edge is big enough for a round patch (lay path nodes out of it in the editor)"  (text, line 447)
+- "nowhere to grow: no path nodes lead out of it, and no open floor round its edge is big enough for a round patch (lay path nodes out of it in the editor)"  (text, line 479)
 
 > Note for you (not shown in game): someone moves in
 
-- "Territory: %s grew at %s (%s), %d patches now"  (message, line 463)
-- "along %d path node link%s: %d cells in %d rectangles"  (message, line 464)
+- "Territory: %s grew at %s (%s), %d patches now"  (message, line 495)
+- "along %d path node link%s: %d cells in %d rectangles"  (message, line 496)
 
 > Note for you (not shown in game): part of: recede territory
 
-- "somewhere in the city"  (text, line 509)
-- "Dispatch: {who} has retaken anticitizen ground{place}."  (text, line 514)
-- "Dispatch: anticitizen ground{place} is retaken."  (text, line 514)
-- "We've lost the ground{place}."  (text, line 515)
-- "Dispatch: {who} has contained the infestation{place}."  (text, line 517)
-- "Dispatch: infestation{place} is contained."  (text, line 517)
-- "has retaken ground from the Resistance{place}."  (text, line 520)
-- "has contained the infestation{place}."  (text, line 521)
-- "[City] {line}"  (chat message, line 522)
+- "somewhere in the city"  (text, line 541)
+- "Dispatch: {who} has retaken anticitizen ground{place}."  (text, line 546)
+- "Dispatch: anticitizen ground{place} is retaken."  (text, line 546)
+- "We've lost the ground{place}."  (text, line 547)
+- "Dispatch: {who} has contained the infestation{place}."  (text, line 549)
+- "Dispatch: infestation{place} is contained."  (text, line 549)
+- "has retaken ground from the Resistance{place}."  (text, line 552)
+- "has contained the infestation{place}."  (text, line 553)
+- "[City] {line}"  (chat message, line 554)
 
 > Note for you (not shown in game): a patch with nobody left in it falls straight away
 
-- "cleared out"  (text, line 578)
+- "cleared out"  (text, line 610)
 
 > Note for you (not shown in game): a timer (regularly)
 
-- "pushed back"  (text, line 582)
+- "pushed back"  (text, line 614)
 
 > Note for you (not shown in game): part of: pay containment
 
-- "+{credits} credits"  (text, line 611)
-- "{ammo} rounds"  (text, line 617)
-- "[Civil Protection] Containment pay: %d infested put down. %s."  (message, line 622)
+- "+{credits} credits"  (text, line 643)
+- "{ammo} rounds"  (text, line 649)
+- "[Civil Protection] Containment pay: %d infested put down. %s."  (message, line 654)
 
 > Note for you (not shown in game): only while unchallenged, and only from where someone actually holds it
 
-- "it was fought over in the last {GetInt} minutes (lc_territory_calm)"  (text, line 673)
-- "no Resistance fighters are in it to hold it"  (text, line 675)
-- "nothing infested is in it to spread it"  (text, line 675)
-- "it's as big as it gets (lc_territory_max, lc_infest_max, lc_territory_city_max)"  (text, line 677)
+- "it was fought over in the last {GetInt} minutes (lc_territory_calm)"  (text, line 705)
+- "no Resistance fighters are in it to hold it"  (text, line 707)
+- "nothing infested is in it to spread it"  (text, line 707)
+- "it's as big as it gets (lc_territory_max, lc_infest_max, lc_territory_city_max)"  (text, line 709)
 
 > Note for you (not shown in game): Grow one territory of this kind now, whatever the clock says (the admin tools and lc_territory_grow). Returns the patch, or nil and why not.
 
-- "no {or} zones are placed"  (text, line 713)
+- "no {or} zones are placed"  (text, line 745)
 
 > Note for you (not shown in game): part of: territory status
 
-- "%s %s: %d patch%s grown (most %d), next growth %s, %d hit%s since the last push-back%s"  (message, line 737)
-- "Rebel ground"  (message, line 738)
-- "in {due}"  (text, line 739)
-- "due now"  (message, line 739)
-- ". Last try didn't grow: {lastWhy}"  (text, line 740)
+- "%s %s: %d patch%s grown (most %d), next growth %s, %d hit%s since the last push-back%s"  (message, line 769)
+- "Rebel ground"  (message, line 770)
+- "in {due}"  (text, line 771)
+- "due now"  (message, line 771)
+- ". Last try didn't grow: {lastWhy}"  (text, line 772)
 
 > Note for you (not shown in game): Commands
 
-- "[Miscount] No rebel or infestation zones placed."  (chat message, line 756)
+- "[Miscount] No rebel or infestation zones placed."  (chat message, line 788)
 
 > Note for you (not shown in game): the console command lc_territory_grow
 
-- "[Miscount] Usage: lc_territory_grow rebel\|infest"  (chat message, line 763)
-- "[Miscount] Grew {kind} territory {or}{or}"  (text, line 765)
-- "[Miscount] Couldn't grow: {why}"  (text, line 767)
+- "[Miscount] Usage: lc_territory_grow rebel\|infest"  (chat message, line 796)
+- "[Miscount] Grew {kind} territory {or}{or}"  (text, line 798)
+- "[Miscount] Couldn't grow: {why}"  (text, line 800)
 
 > Note for you (not shown in game): the console command lc_territory_reset
 
-- "[Miscount] Took back {n} grown patch{or}. Only the zones you placed are left."  (chat message, line 778)
+- "[Miscount] Took back {n} grown patch{or}. Only the zones you placed are left."  (chat message, line 811)
 
 ## territory grows along the path nodes (sv_livingcity_territorypaths.lua)
 
