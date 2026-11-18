@@ -36568,13 +36568,19 @@ LC.AdminPlotEnd()
 local savedWalls = _walls
 local set = _setcvar
 local stopsWas, huntWas, manWas = GetConVar("lc_stops"):GetInt(), GetConVar("lc_admin_hunt"):GetInt(), GetConVar("lc_manpower"):GetInt()
-local leakWas, gapWas = GetConVar("lc_rebel_plan_leak"):GetFloat(), GetConVar("lc_rebel_plan_minutes"):GetFloat()
 set("lc_stops", 0)
 set("lc_admin_hunt", 0) -- (the hunt is its own unit's: no squads here)
 set("lc_manpower", 1)
-set("lc_rebel_plan_leak", 0)
-set("lc_rebel_plan_minutes", 0)
 set("lc_speech_muster", 60)
+-- (18 November: the job is on the board only while nobody leads the Resistance. A Commander or a Lieutenant an
+-- earlier unit left playing is a Fighter while this one runs, and put back at its end.)
+local strays = {}
+for _, p in ipairs(player.GetAll()) do
+    if p:GetNW2String("lcf_faction", "") == "resistance" and p:GetNW2Int("lcf_rank", 1) >= 4 then
+        strays[p] = p:GetNW2Int("lcf_rank", 1)
+        p:SetNW2Int("lcf_rank", 3)
+    end
+end
 local X0 = Vector(152000, -144000, 0)
 local function at(x, y) return X0 + Vector(x, y, 0) end
 -- a square with a wall round it: the stand and the crowd inside, doorways outside the wall (nobody inside can
@@ -36611,8 +36617,8 @@ local function inCrowd(p, x, y)
 end
 local adm = newPlayer("PlotAdministrator", "admin")
 adm:SetPos(at(40000, 0))
-local reb = newPlayer("PlotAssassin", "resistance", nil, 900)
-local wolf = newPlayer("PlotLoneWolf", "resistance", nil, 900)
+local reb = newPlayer("PlotAssassin", "resistance", nil, 400)  -- (Fighters: nobody leads, so the job is on the board)
+local wolf = newPlayer("PlotLoneWolf", "resistance", nil, 400)
 local cit = newPlayer("PlotBystander", "citizen")
 local cop = newPlayer("PlotUnit", "cp")
 inCrowd(reb, 0, -300) inCrowd(wolf, 150, -300) inCrowd(cit, -150, -300) inCrowd(cop, 300, 200)
@@ -36665,6 +36671,9 @@ local function tidy()
         LC.ClearWanted(p)
         if LC.QuestOf[p] then LC.AbandonQuest(p) end
         p.lcqNext = 0
+        -- (what the job paid would make a Lieutenant of them in time, and a leader: Fighters again)
+        p:SetPData("lcf_xp_resistance", 400)
+        LC.AddXP(p, 0)
     end
 end
 local function address()
@@ -36677,6 +36686,15 @@ local function take(p)
     local j = posted(p)
     p.lcqNext = 0
     return j ~= nil and LC.AcceptPosting(p, j.id) == true
+end
+-- is Kill the Administrator on the board as it is sent to them?
+local function onBoard(p)
+    local sent, realSend = nil, LC.SendCompressed
+    LC.SendCompressed = function(msg, tbl, rec) if msg == "lcq_board" and rec and rec[1] == p then sent = tbl end return realSend(msg, tbl, rec) end
+    LC.SendBoard(p)
+    LC.SendCompressed = realSend
+    for _, x in ipairs(sent and sent.postings or {}) do if x.title == "Kill the Administrator" then return true end end
+    return false
 end
 
 -- the job: on the Resistance's board while her address is on, and nobody else's
@@ -36727,7 +36745,7 @@ LC.SendBoard(reb)
 LC.SendCompressed = realSendB
 local onReb = false
 for _, x in ipairs(sentReb and sentReb.postings or {}) do if x.title == "Kill the Administrator" then onReb = true end end
-ok(onReb, "a Lieutenant's board shows it")
+ok(onReb and LCF.RankOf(reb).name == "Fighter", "a Fighter's board shows it", LCF.RankOf(reb).name)
 low:Remove()
 -- under orders: the job taken, the attempt made
 ok(take(reb), "a member of the Resistance takes the job")
@@ -36937,69 +36955,191 @@ ok(LC.AdminPlot() ~= nil, "(and the fighters come for her guards all the same)")
 adm.alive = true
 set("lc_admin_exfil", 1)
 
--- the leader's order: the planning board (F2 > Resistance > Operations)
+-- the leader's order (the owner, 18 November): given by name from F2, and a word in private
 tidy()
 adm:SetPos(at(40000, 0))
-local leader = newPlayer("PlotLieutenant", "resistance", nil, 900)
-local member = newPlayer("PlotFighter", "resistance", nil, 400)
-local lowly = newPlayer("PlotMember", "resistance", nil, 150)
-inCrowd(leader, 100, -200) inCrowd(member, -100, -200)
-local function target()
-    for i, o in ipairs(LC.OpTargets()) do if o.kind == "regicide" then return i, o end end
+do
+local KEY = "lc_adminplot_order"
+local function kept(p) return p:GetPData(KEY, "") end
+local function pick(by, p) return LC.QuickMore(by, "plotorder", tostring(p:EntIndex())) == true end -- (as F2 sends it)
+local function listed(by, p) -- (their line on the leader's list, or nil)
+    for _, w in ipairs(LC.AdminPlotList(by) or {}) do if w.id == p:EntIndex() then return w end end
     return nil
 end
-ok(LC.CanPlanOp(leader) and target() == nil, "a Lieutenant's planning board does not list her with no address on")
-her = address()
-local idx, tgt = target()
-ok(idx ~= nil and tgt.label == "Kill the Administrator at her address" and tgt.pos:Distance(stand.pos) < 1, "while her address is on it does", tgt and tgt.label)
-leader.lcOpTargets = LC.OpTargets()
-LC.OpPlan = nil
-local planned, whyNot = LC.PlanOp(leader, idx, 2)
-if not planned and string.find(tostring(whyNot), "Too soon", 1, true) then
-    -- (an earlier unit planned an operation in the last minutes: the plan as the menu makes it)
-    LC.OpPlan = { by = leader, label = tgt.label, kind = tgt.kind, pos = tgt.pos, data = tgt.data, fireAt = CurTime() + 120, joined = { [leader] = true } }
-    planned = true
+local radioed, baseRadio = 0, LC.RadioNotice
+LC.RadioNotice = function(...) radioed = radioed + 1 return baseRadio(...) end
+local function gone(p) hook.Run("PlayerDisconnected", p) p:Remove() end
+local function fighter(name) local p = newPlayer(name, "resistance", nil, 400) p.chat = {} return p end
+
+-- who may give it: a Commander; a Lieutenant when no Commander is playing; nobody else
+ok(LC.AdminPlotLeading() == false and LC.AdminPlotLeader(reb) == false and LC.AdminPlotList(reb) == nil, "with only Fighters playing nobody leads, and nobody has the list")
+local leader = newPlayer("PlotLieutenant", "resistance", nil, 900)
+local member, second = fighter("PlotFighter"), fighter("PlotSecond")
+local lowly = newPlayer("PlotMember", "resistance", nil, 150)
+inCrowd(leader, 100, -200) inCrowd(member, -100, -200) inCrowd(second, -200, -200) inCrowd(lowly, 200, -200)
+ok(LCF.RankOf(leader).name == "Lieutenant" and LC.AdminPlotLeader(leader) == true and LC.AdminPlotLeading() == true,
+    "a Lieutenant may give the order while no Commander is playing", LCF.RankOf(leader).name)
+ok(LC.AdminPlotLeader(member) == false and LC.AdminPlotLeader(lowly) == false and LC.AdminPlotLeader(cit) == false
+    and LC.AdminPlotLeader(cop) == false and LC.AdminPlotLeader(adm) == false, "nobody else may: not a Fighter, a Member, a citizen, a unit or her")
+ok(LC.QuickInfo(leader).plot ~= nil and listed(leader, member) ~= nil, "(and the Lieutenant has the list on F2)")
+local commander = newPlayer("PlotCommander", "resistance", nil, 1800)
+inCrowd(commander, 0, -200)
+ok(LCF.RankOf(commander).name == "Commander" and LC.AdminPlotLeader(commander) == true and LC.AdminPlotLeader(leader) == false,
+    "with a Commander playing it is the Commander's alone: the Lieutenant may not", LCF.RankOf(commander).name)
+ok(LC.AdminPlotList(leader) == nil and LC.QuickInfo(leader).plot == nil and not pick(leader, member) and LC.AdminPlotHolds(member) == nil and #member.chat == 0,
+    "(the Lieutenant's F2 has no list now, and a name sent all the same gives nothing)")
+
+-- the list: Fighters and up by name, the leader among them
+ok(listed(commander, commander) and listed(commander, leader) and listed(commander, member) and listed(commander, second)
+    and listed(commander, reb) and listed(commander, wolf), "the leader's list has the Resistance's Fighters and up, the leader among them")
+ok(listed(commander, lowly) == nil and listed(commander, cit) == nil and listed(commander, cop) == nil and listed(commander, adm) == nil,
+    "and nobody else: no Member, no citizen, no unit, not her")
+local row = listed(commander, member)
+ok(row and row.name == LC.CharacterName(member) and row.has == nil, "(each by their name; nobody has the order yet)", row and row.name)
+local f2 = LC.QuickInfo(commander).plot
+ok(f2 ~= nil and #f2 == #LC.AdminPlotList(commander), "F2 sends the list to the leader")
+ok(LC.QuickInfo(member).plot == nil and LC.QuickInfo(lowly).plot == nil and LC.QuickInfo(cit).plot == nil and LC.QuickInfo(cop).plot == nil,
+    "and to nobody else")
+
+-- a name gives the order: one private line to that member, and nothing to anyone else
+ok(LC.SpeechSession() == nil, "(no address is on: the leader prepares)")
+local everyone = { commander, leader, member, second, lowly, reb, wolf, cit, cop, adm }
+local function hush() for _, p in ipairs(everyone) do p.chat = {} end notices = {} radioed = 0 end
+local function read(except) -- (lines on every screen but theirs)
+    local n = #notices
+    for _, p in ipairs(everyone) do if p ~= except then n = n + #(p.chat or {}) end end
+    return n
 end
-local plan = LC.OpPlan
-ok(planned and plan and plan.kind == "regicide", "the leader plans it as any operation: a target, and when", tostring(whyNot))
-ok(LC.AdminPlotHolds(leader) == "order" and LC.AdminPlotHolds(member) == nil, "whoever is in on it is under orders from then on")
-local okLow, whyLow = LC.JoinOp(lowly)
-ok(LCF.RankOf(lowly).name == "Member" and okLow == false and whyLow == "Fighters and up only." and LC.AdminPlotHolds(lowly) == nil, "a Member cannot join that plan: Fighters and up", tostring(whyLow))
-ok(plan.leaked == nil and heard(cop, "anticitizens plan") == 0, "(and the plan has not leaked to Civil Protection)")
-LC.JoinOp(member)
-ok(LCF.RankOf(member).name == "Fighter" and LC.AdminPlotHolds(member) == "order", "a Fighter joins it: under orders too")
-LC.JoinOp(member)
-ok(LC.AdminPlotHolds(member) == nil, "backing out drops it")
-LC.JoinOp(member)
-member.chat = {}
-LC.FireOp(plan)
-ok(LC.OpPlan == nil and heard(member, "Go: Kill the Administrator at her address") == 1 and LC.AdminPlotHolds(member) == "order",
-    "at its hour no raid goes: those who joined are pointed to the stand, and the order stands")
-local mxp, mcr, lxp = xp(member), LC.Credits(member), xp(leader)
+hush()
+ok(pick(commander, member) and LC.AdminPlotHolds(member) == "order", "the leader picks a name on F2: that member is under orders")
+local line = member.chat[1]
+ok(#member.chat == 1 and line == "[Freq 7] " .. LC.CharacterName(commander) .. " wants a word with you, in private.",
+    "the member reads one line: who wants a word with them, in private", table.concat(member.chat, " | "))
+ok(line and not string.find(string.lower(line), "administrator", 1, true) and not string.find(string.lower(line), "kill", 1, true), "(and not what about)")
+ok(read(member) == 0 and radioed == 0, "nobody else reads anything: not the leader, another member, a citizen, a unit or her; nothing on the radio", read(member) .. " " .. radioed)
+ok(kept(member) == "1" and listed(commander, member).has == true and listed(commander, second).has == nil, "the list shows who has it")
+-- taken back: nothing is said
+hush()
+ok(pick(commander, member) and LC.AdminPlotHolds(member) == nil and kept(member) == "" and listed(commander, member).has == nil, "the same name again takes it back")
+ok(read(nil) == 0 and radioed == 0, "and nothing is said, to them or to anyone", read(nil))
+-- only to Fighters and up of the Resistance, and only by the leader
+ok(not pick(commander, lowly) and not pick(commander, cit) and not pick(commander, cop) and not pick(commander, adm)
+    and LC.AdminPlotHolds(lowly) == nil and LC.AdminPlotHolds(cit) == nil and LC.AdminPlotHolds(cop) == nil and kept(lowly) == "" and kept(cit) == "",
+    "a Member, a citizen, a unit or she cannot be given it")
+ok(not pick(member, second) and not pick(lowly, second) and not pick(cit, second) and not pick(cop, second) and LC.AdminPlotHolds(second) == nil,
+    "and nobody but the leader gives it")
+ok(read(nil) == 0, "(nothing is said of any of that)", read(nil))
+ok(pick(commander, commander) and LC.AdminPlotHolds(commander) == "order" and read(nil) == 0, "a leader who picks themselves has it, and reads nothing")
+pick(commander, commander)
+ok(LC.AdminPlotHolds(commander) == nil, "(and gives it up the same way)")
+
+-- the attempt: the fighters come, the one who made it is paid what the job pays, and only their order is done
+pick(commander, member) pick(commander, second)
+her = address()
+ok(IsValid(her) and LC.AdminPlotHolds(member) == "order" and LC.AdminPlotHolds(second) == "order", "(two members under orders, given before her address was called)")
+local mxp, mcr, sxp, scr = xp(member), LC.Credits(member), xp(second), LC.Credits(second)
 pool.reserve = 20
-member.chat, leader.chat = {}, {}
+hush()
 LC.AdminAttempt(her, member, "shot")
 P = LC.AdminPlot()
 ok(P ~= nil and #P.fighters >= 7 and pool.reserve == 20 - #P.fighters, "one of them makes the attempt: the fighters come", P and #P.fighters)
 ok(xp(member) >= mxp + 250 and xp(member) < mxp + 300 and LC.Credits(member) == mcr + 100,
-    "whoever makes the attempt under the order is paid what the job pays: 250 experience, 100 credits (the owner, 18 November)", xp(member) - mxp)
-ok(xp(leader) >= lxp + 35 and xp(leader) < lxp + 100, "the others who joined and are there are paid as for any planned operation, the planner a little more", xp(leader) - lxp)
-ok(LC.AdminPlotHolds(member) == nil and LC.AdminPlotHolds(leader) == nil, "and the order is done")
-ok(heard(member, "worked") == 0 and heard(leader, "fighter") == 0, "(nothing is said of it on the radio)")
--- an order nobody acted on: over with her address; and no longer theirs as someone new
-her = address()
-LC.OpPlan = { by = leader, label = tgt.label, kind = "regicide", pos = stand.pos, data = {}, fireAt = CurTime() + 120, joined = { [leader] = true, [member] = true } }
-plan = LC.OpPlan
-hook.Run("LivingCityNewCharacter", member, "x", "test")
-ok(LC.AdminPlotHolds(member) == nil and LC.AdminPlotHolds(leader) == "order", "a new character is under nobody's orders")
-LC.FireOp(plan)
-LC.EndSpeech()
+    "whoever makes the attempt under the order is paid what the job pays: 250 experience, 100 credits", (xp(member) - mxp) .. " " .. (LC.Credits(member) - mcr))
+ok(LC.AdminPlotHolds(member) == nil and kept(member) == "", "their order is done")
+ok(LC.AdminPlotHolds(second) == "order" and xp(second) == sxp and LC.Credits(second) == scr, "another member's stands, and pays them nothing yet")
+ok(radioed == 0 and heard(commander, "Freq 7") == 0 and heard(commander, "operation") == 0 and heard(commander, LC.CharacterName(member)) == 0
+    and heard(second, "fighter") == 0, "(nothing of it on the radio, and no word of it to the leader: the city's own alarm is all anyone reads)", radioed .. " " .. table.concat(commander.chat, " | "))
+mxp = xp(member)
+ok(LC.AdminPlotDied() >= 1 and xp(member) >= mxp + 250, "and 250 more if she dies of it after all (the roll in her office)", xp(member) - mxp)
+tidy()
 _run(1.5)
-ok(LC.AdminPlotHolds(leader) == nil, "her address over: the order no longer stands")
-LC.OpPlan = { by = leader, label = tgt.label, kind = "regicide", pos = stand.pos, data = {}, fireAt = CurTime(), joined = { [leader] = true } }
-plan = LC.OpPlan
-LC.FireOp(plan)
-ok(LC.OpPlan == nil and LC.AdminPlotHolds(leader) == nil and attackers() == 0, "its hour with no address on: it is off, and nobody comes")
+ok(LC.AdminPlotHolds(second) == "order", "her address over with nothing tried by them: their order stands for her next")
+
+-- kept with the character: gone from the server and back, with the leader who gave it gone too
+local savedData, sid = second.pdata, second.sid
+gone(second)
+gone(commander)
+ok(LC.AdminPlotLeader(leader) == true, "(the Commander gone: the Lieutenant gives the orders again)")
+local back = _makeplayer("PlotSecond", at(-200, -200))
+back.sid, back.pdata = sid, savedData -- (the same person, the same saved data)
+hook.Run("PlayerInitialSpawn", back)
+if back:GetNW2String("lcf_faction", "") ~= "resistance" then LC.SetFaction(back, "resistance", nil, true) end
+inCrowd(back, -200, -200)
+everyone = { leader, member, back, lowly, reb, wolf, cit, cop, adm }
+ok(LCF.RankOf(back).name == "Fighter" and LC.AdminPlotHolds(back) == "order" and listed(leader, back) and listed(leader, back).has == true,
+    "they leave the server and come back: the order is still theirs, and whoever leads now sees it", LCF.RankOf(back).name)
+-- (and it is the order still: their attempt at her next address brings the fighters, and pays)
+her = address()
+sxp, scr = xp(back), LC.Credits(back)
+pool.reserve = 20
+LC.AdminAttempt(her, back, "shot")
+P = LC.AdminPlot()
+ok(P ~= nil and #P.fighters >= 7 and xp(back) >= sxp + 250 and LC.Credits(back) == scr + 100 and LC.AdminPlotHolds(back) == nil and kept(back) == "",
+    "their attempt at her next address: the fighters come, they are paid, and it is done", P and #P.fighters)
+tidy()
+
+-- what else ends it: an arrest, a new character, leaving the Resistance, falling below a Fighter
+local e1, e2, e3, e4 = fighter("PlotArrested"), fighter("PlotReborn"), fighter("PlotLeaver"), fighter("PlotDemoted")
+for _, p in ipairs({ e1, e2, e3, e4 }) do pick(leader, p) end
+ok(LC.AdminPlotHolds(e1) == "order" and LC.AdminPlotHolds(e2) == "order" and LC.AdminPlotHolds(e3) == "order" and LC.AdminPlotHolds(e4) == "order",
+    "(four more under orders, the Lieutenant's this time)")
+if not LC.Incarcerate(e1, 60, "test") then hook.Run("LivingCityIncarcerated", e1, 60, "test") end -- (no cell free in this pretend city: as the cells say it)
+ok(LC.AdminPlotHolds(e1) == nil and kept(e1) == "", "arrested: the order is no longer theirs")
+if LC.Prisoners[e1] then LC.ReleasePrisoner(e1) end
+ok(LC.AdminPlotHolds(e1) == nil, "(nor once they are out)")
+LC.NewCharacter(e2, "test")
+ok(LC.AdminPlotHolds(e2) == nil and kept(e2) == "", "someone new is under nobody's orders")
+LC.SetFaction(e3, "citizen", nil, true)
+ok(LC.AdminPlotHolds(e3) == nil and kept(e3) == "", "out of the Resistance: no longer theirs")
+LC.SetFaction(e3, "resistance", nil, true)
+ok(LCF.RankOf(e3).name == "Fighter" and LC.AdminPlotHolds(e3) == nil, "(nor when they come back to it)", LCF.RankOf(e3).name)
+e4:SetPData("lcf_xp_resistance", 150)
+LC.AddXP(e4, 0)
+ok(LCF.RankOf(e4).name == "Member" and LC.AdminPlotHolds(e4) == nil and kept(e4) == "", "below a Fighter: no longer theirs", LCF.RankOf(e4).name)
+e4:SetPData("lcf_xp_resistance", 400)
+LC.AddXP(e4, 0)
+ok(LCF.RankOf(e4).name == "Fighter" and LC.AdminPlotHolds(e4) == nil, "(nor when they are a Fighter again)", LCF.RankOf(e4).name)
+pick(leader, e3)
+e3:SetNW2Int("lcf_rank", 2) -- (however they came to be less than a Fighter)
+LC.AdminPlotThink(CurTime())
+ok(LC.AdminPlotHolds(e3) == nil and kept(e3) == "", "(the city looks twice a second: whoever is no Fighter of the Resistance any more has none)")
+e3:SetNW2Int("lcf_rank", 3)
+
+-- the job on the board: only while nobody leads
+her = address()
+ok(LC.AdminPlotLeading() and posted(reb) == nil and not onBoard(reb) and not onBoard(wolf) and not take(reb),
+    "while a leader is playing the job is not on any Fighter's board, nor theirs to take: the order comes from the leader alone")
+local hers = 0
+for _, o in ipairs(LC.OpTargets()) do if o.kind == "regicide" or string.find(o.label, "Administrator", 1, true) then hers = hers + 1 end end
+ok(LC.CanPlanOp(leader) and hers == 0 and LC.AdminPlotTarget == nil and LC.AdminPlotGo == nil, "and her life is no longer a target on the planning board, with her address on", hers)
+gone(leader)
+gone(member) -- (what the order paid has made a Lieutenant of them)
+_run(1)
+local job2 = posted(reb)
+ok(not LC.AdminPlotLeading() and job2 ~= nil and onBoard(reb) and onBoard(wolf), "the leaders gone: it is on the Fighters' board again, as before")
+ok(heard(reb, "New job") == 0 and heard(wolf, "Kill the Administrator") == 0, "(and nobody is told so)")
+local late = newPlayer("PlotLateLieutenant", "resistance", nil, 900)
+reb.chat, reb.lcqNext = {}, 0
+ok(job2 ~= nil and LC.AcceptPosting(reb, job2.id) ~= true and LC.QuestOf[reb] == nil and #reb.chat == 0 and not onBoard(reb),
+    "a leader joins: at once it is not theirs to take nor on their board, and nothing is said", table.concat(reb.chat, " | "))
+_run(1)
+ok(posted(reb) == nil, "and the job nobody took is off the board")
+gone(late)
+_run(1)
+ok(take(reb) and LC.AdminPlotHolds(reb) == "job", "(that leader gone again, a Fighter takes it)")
+late = newPlayer("PlotLateLieutenant", "resistance", nil, 900)
+_run(1)
+ok(LC.AdminPlotLeading() and LC.QuestOf[reb] ~= nil and LC.AdminPlotHolds(reb) == "job" and onBoard(reb) and not onBoard(wolf),
+    "whoever holds the job when a leader joins keeps it; it is on nobody else's board")
+xp0 = xp(reb)
+pool.reserve = 20
+LC.AdminAttempt(her, reb, "shot")
+ok(LC.AdminPlot() ~= nil and LC.QuestOf[reb] == nil and xp(reb) >= xp0 + 250, "and their attempt is the job's still: the fighters come, and it pays", xp(reb) - xp0)
+
+LC.RadioNotice = baseRadio
+tidy()
+for _, p in ipairs({ back, lowly, e1, e2, e3, e4, late }) do gone(p) end
+end
 
 -- back as it was
 tidy()
@@ -37008,15 +37148,14 @@ LC.AdminPlotStart, LC.AdminPlotThink = baseStart, baseThink
 LC.ManpowerReturn = baseReturn
 pool.reserve = reserveWas
 for _, pt in ipairs(points) do LC.RemovePoint(pt) end
-for _, p in ipairs({ adm, reb, wolf, cit, cop, leader, member }) do
+for _, p in ipairs({ adm, reb, wolf, cit, cop }) do
     hook.Run("PlayerDisconnected", p)
     p:Remove()
 end
+for p, r in pairs(strays) do if IsValid(p) then p:SetNW2Int("lcf_rank", r) end end
 set("lc_stops", stopsWas)
 set("lc_admin_hunt", huntWas)
 set("lc_manpower", manWas)
-set("lc_rebel_plan_leak", leakWas)
-set("lc_rebel_plan_minutes", gapWas)
 set("lc_speech_muster", 120)
 _walls = savedWalls
 end
@@ -37037,6 +37176,15 @@ set("lc_stops", 0)
 set("lc_admin_hunt", 0) -- (the hunt is its own unit's: no squads here)
 set("lc_manpower", 1)
 set("lc_speech_muster", 60)
+-- (18 November: the job to kill her is on the board only while nobody leads the Resistance. A Commander or a
+-- Lieutenant an earlier unit left playing is a Fighter while this one runs, and put back at its end.)
+local strays = {}
+for _, p in ipairs(player.GetAll()) do
+    if p:GetNW2String("lcf_faction", "") == "resistance" and p:GetNW2Int("lcf_rank", 1) >= 4 then
+        strays[p] = p:GetNW2Int("lcf_rank", 1)
+        p:SetNW2Int("lcf_rank", 3)
+    end
+end
 local W0 = Vector(-184000, -168000, 0)
 local function at(x, y) return W0 + Vector(x, y, 0) end
 local AWAY = at(60000, 0)       -- (nowhere near anyone)
@@ -37147,8 +37295,8 @@ end
 
 local wolf = person("RecruitWolf")          -- goes to the Resistance
 local stayer = person("RecruitStayer")      -- stays in the city: the Resistance comes
-local fighter = person("RecruitFighter", "resistance", 900) -- one of the Resistance, with the job
-local loner = person("RecruitLoner", "resistance", 900)     -- one of the Resistance, with no job
+local fighter = person("RecruitFighter", "resistance", 400) -- one of the Resistance, with the job (Fighters both: nobody leads)
+local loner = person("RecruitLoner", "resistance", 400)     -- one of the Resistance, with no job
 local unit = person("RecruitUnit", "cp")
 local rat = person("RecruitRat")
 local pawn = person("RecruitPawn")          -- (a citizen who somehow holds the job)
@@ -37453,6 +37601,7 @@ for _, p in ipairs(everyone) do
     hook.Run("PlayerDisconnected", p)
     p:Remove()
 end
+for p, r in pairs(strays) do if IsValid(p) then p:SetNW2Int("lcf_rank", r) end end
 set("lc_stops", stopsWas)
 set("lc_admin_hunt", huntWas)
 set("lc_manpower", manWas)

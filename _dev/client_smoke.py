@@ -4226,6 +4226,43 @@ local ok, e = pcall(function()
     p.items[1].run()
     undo()
     if sentQM ~= "guide" then error("Freq 7: guide me sent " .. tostring(sentQM)) end
+    -- the Resistance's leader (the owner, 18 November): Order: kill the Administrator > is last on the Resistance
+    -- page, only when the server sent them the list; its page is the names, with who has it; a name sends F2's own
+    -- action with that name's number
+    local res = root.items[3].page()
+    for i = 1, 9 do
+        local it = res.items[i]
+        if it and string.find(tostring(it.label), "Administrator", 1, true) then error("a Member's Resistance page has the leader's order: " .. Labels(res)) end
+    end
+    local had, was = #res.items, {}
+    for i = 1, had do was[i] = res.items[i].label end
+    Info({ reb = { tx = false, backup = 0, pos = 0 }, plot = { { id = 1004, name = "Ada Leader" }, { id = 1007, name = "Ben Fighter", has = true } } })
+    res = LC_CL.QuickRoleRoot().items[3].page()
+    local ord = res.items[had + 1]
+    if not (#res.items == had + 1 and ord and ord.label == "Order: kill the Administrator" and ord.page) then error("the leader's Resistance page: " .. Labels(res)) end
+    for i = 1, had do
+        if res.items[i].label ~= was[i] then error("the leader's Resistance page moved what was there: " .. Labels(res)) end
+    end
+    if not (res.empty and res.empty[had + 1] == nil) then error("the leader's Resistance page: the fighters left are written over the order") end
+    p = ord.page()
+    if not (#p.items == 2 and p.items[1].label == "Ada Leader" and p.items[2].label == "Ben Fighter  (ordered)") then error("the leader's list: " .. Labels(p)) end
+    local sentCmd, sentArg
+    do
+        local ws, st, name, n = net.WriteString, net.Start, nil, 0
+        net.Start = function(nm) name, n = nm, 0 return st and st(nm) end
+        net.WriteString = function(s)
+            if name == "lc_quickmore" then
+                n = n + 1
+                if n == 1 then sentCmd = s elseif n == 2 then sentArg = s end
+            end
+            return ws and ws(s)
+        end
+        p.items[2].run()
+        net.WriteString, net.Start = ws, st
+    end
+    if not (sentCmd == "plotorder" and sentArg == "1007") then error("the leader picks a name: sent " .. tostring(sentCmd) .. " " .. tostring(sentArg)) end
+    Info({ reb = { tx = false, backup = 0, pos = 0 } })
+    if #LC_CL.QuickRoleRoot().items[3].page().items ~= had then error("no longer the leader: the order is still on their Resistance page") end
 
     -- a plain citizen: Me >, with what the server says
     _me.nw = { lcf_faction = "citizen", lce_standing = 120, lc_unreg = true }
