@@ -3779,7 +3779,8 @@ function LC.SendBoard(ply)
         if not (p.tmpl and p.tmpl.sees and not p.tmpl.sees(ply)) then
             out[#out + 1] = {
                 id = p.id, title = p.title, desc = p.desc, reward = p.reward, violent = p.violent == true,
-                limit = p.limit, taken = p.q and #Members(p.q) or 0, max = math.max(cvSquad:GetInt(), p.squad or 0), mine = mine ~= nil and mine.posting == p,
+                limit = p.limit, taken = p.q and #Members(p.q) or 0, max = (p.tmpl and p.tmpl.solo) and 1 or math.max(cvSquad:GetInt(), p.squad or 0), -- (solo: one holder)
+                mine = mine ~= nil and mine.posting == p,
             }
         end
     end
@@ -3858,7 +3859,7 @@ function LC.AcceptPosting(ply, pid)
     if posting.q then
         if posting.story then return false end
         local q = posting.q
-        if #Members(q) >= math.max(cvSquad:GetInt(), posting.squad or 0) then ply:ChatPrint("[Miscount] That job has enough people.") return false end
+        if #Members(q) >= ((posting.tmpl and posting.tmpl.solo) and 1 or math.max(cvSquad:GetInt(), posting.squad or 0)) then ply:ChatPrint("[Miscount] That job has enough people.") return false end
         table.insert(q.members, ply)
         LC.QuestOf[ply] = q
         Narrate(q, ply:Nick() .. " has joined the job.")

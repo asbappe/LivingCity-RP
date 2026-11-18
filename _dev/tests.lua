@@ -36731,6 +36731,8 @@ ok(onReb, "a Lieutenant's board shows it")
 low:Remove()
 -- under orders: the job taken, the attempt made
 ok(take(reb), "a member of the Resistance takes the job")
+wolf.chat = {}
+ok(not take(wolf) and LC.QuestOf[wolf] == nil and heard(wolf, "That job has enough people") == 1, "one holder at a time: a second cannot join it", table.concat(wolf.chat or {}, " | "))
 ok(LC.AdminPlotHolds(reb) == "job" and LC.AdminPlotHolds(wolf) == nil and LC.AdminPlotHolds(cit) == nil, "holding it is what makes an attempt an ordered one")
 local xp0, cr0 = xp(reb), LC.Credits(reb)
 reb.chat, cit.chat, cop.chat, wolf.chat = {}, {}, {}, {}
@@ -36979,8 +36981,9 @@ member.chat, leader.chat = {}, {}
 LC.AdminAttempt(her, member, "shot")
 P = LC.AdminPlot()
 ok(P ~= nil and #P.fighters >= 7 and pool.reserve == 20 - #P.fighters, "one of them makes the attempt: the fighters come", P and #P.fighters)
-ok(xp(member) >= mxp + 25 and LC.Credits(member) == mcr + 15 and xp(leader) >= lxp + 35,
-    "those who joined and are there are paid as for any planned operation, the planner a little more", xp(leader) - lxp)
+ok(xp(member) >= mxp + 250 and xp(member) < mxp + 300 and LC.Credits(member) == mcr + 100,
+    "whoever makes the attempt under the order is paid what the job pays: 250 experience, 100 credits (the owner, 18 November)", xp(member) - mxp)
+ok(xp(leader) >= lxp + 35 and xp(leader) < lxp + 100, "the others who joined and are there are paid as for any planned operation, the planner a little more", xp(leader) - lxp)
 ok(LC.AdminPlotHolds(member) == nil and LC.AdminPlotHolds(leader) == nil, "and the order is done")
 ok(heard(member, "worked") == 0 and heard(leader, "fighter") == 0, "(nothing is said of it on the radio)")
 -- an order nobody acted on: over with her address; and no longer theirs as someone new
@@ -37252,8 +37255,38 @@ local xp0 = tonumber(wolf:GetPData("lcf_xp_resistance", 0)) or 0
 _run(2)
 ok(faction(wolf) == "resistance" and wolf:GetPData("lcf_res_proven", "") == "1", "a moment later he is one of the Resistance, as after a story's invitation", faction(wolf))
 ok(kept(wolf) == "done", "and it is done, kept with the character", kept(wolf))
-ok(wolf:GetPos():Distance(CAMP) < 5, "where he stands", tostring(wolf:GetPos() - CAMP))
-ok((tonumber(wolf:GetPData("lcf_xp_resistance", 0)) or 0) == xp0, "at the rank his own experience gives: nothing more is handed to him")
+ok(LC.InRebelZone(wolf:GetPos()), "on the Resistance's own ground", tostring(wolf:GetPos() - CAMP))
+ok(xp0 == 0 and (tonumber(wolf:GetPData("lcf_xp_resistance", 0)) or 0) == LCF.Get("resistance").ranks[2].xp - 5 and LCF.RankOf(wolf).name == "Sympathizer",
+    "a Sympathizer, one job short of a Member", wolf:GetPData("lcf_xp_resistance", 0))
+-- where they arrive (the owner, 18 November): by the leader; else by a Lieutenant; else the rebel ground furthest from the Combine's
+local far = LC.AddZone(at(0, 60000), 500, "rebel", 0)
+local comb = LC.AddZone(at(0, 20000), 500, "combine", 0)
+local realZones = LC.ZonesOfKindShared
+LC.ZonesOfKindShared = function(kind)
+    if kind == "rebel" then return { camp, far } elseif kind == "combine" then return { comb } end
+    return realZones(kind)
+end
+local s1 = LC.AdminRecruitSpot(wolf)
+ok(s1 ~= nil and s1:Distance(at(0, 60000)) < 100, "nobody leading: the rebel ground furthest from the Combine's", tostring(s1))
+local rs = LC.AddPoint(at(200, 60000), 0, "rspawn", 0)
+s1 = LC.AdminRecruitSpot(wolf)
+ok(s1 ~= nil and s1:Distance(at(200, 60000)) < 100, "at the Resistance's spawn point there, when it has one", tostring(s1))
+local lt = person("RecruitLieutenant", "resistance", 900)
+lt:SetPos(CAMP + Vector(-200, 0, 0))
+s1 = LC.AdminRecruitSpot(wolf)
+ok(LCF.RankOf(lt).name == "Lieutenant" and s1 ~= nil and s1:Distance(lt:GetPos()) < 100, "a Lieutenant on rebel ground: by him", tostring(s1))
+local cmd = person("RecruitCommander", "resistance", 1800)
+cmd:SetPos(at(-200, 60000))
+s1 = LC.AdminRecruitSpot(wolf)
+ok(LCF.RankOf(cmd).name == "Commander" and s1 ~= nil and s1:Distance(at(200, 60000)) < 100, "the leader on rebel ground: his zone, before the Lieutenant's (at its spawn point)", tostring(s1))
+cmd:SetPos(at(40000, -40000))
+s1 = LC.AdminRecruitSpot(wolf)
+ok(s1 ~= nil and s1:Distance(lt:GetPos()) < 100, "a leader who is not on rebel ground is passed over", tostring(s1))
+LC.ZonesOfKindShared = function(kind) if kind == "rebel" then return {} end return realZones(kind) end
+ok(LC.AdminRecruitSpot(wolf) == nil, "no rebel ground at all: they stay where they stand")
+LC.ZonesOfKindShared = realZones
+LC.RemovePoint(rs) LC.RemoveZone(far) LC.RemoveZone(comb)
+lt:SetPos(at(40000, -41000))
 ok(heard(wolf, "You are now") == 0 and heard(wolf, "[Resistance]") == 1, "with no second line about it", table.concat(wolf.chat, " | "))
 _run(10)
 ok(heard(wolf, "We saw what you did") == 1 and contacts() == 0, "said once; and nobody was sent for him", heard(wolf, "We saw what you did"))
@@ -37329,8 +37362,9 @@ for _ = 1, 40 do _run(0.5) if heard(stayer, "We saw what you did") > 0 then spok
 ok(spoke and heard(stayer, SAID) == 1 and heard(stayer, "[Resistance]") == 1, "he walks up to him and says it, one line", table.concat(stayer.chat, " | "))
 ok(IsValid(c2) and c2:GetPos():Distance(SQUARE) <= 110 and c2:GetPos():Distance(from2) > 300, "from close by: he came all the way", IsValid(c2) and c2:GetPos():Distance(SQUARE))
 _run(2)
-ok(faction(stayer) == "resistance" and stayer:GetPData("lcf_res_proven", "") == "1" and stayer:GetPos():Distance(SQUARE) < 5,
-    "a moment later he is one of the Resistance, where he stands", faction(stayer))
+ok(faction(stayer) == "resistance" and stayer:GetPData("lcf_res_proven", "") == "1" and LC.InRebelZone(stayer:GetPos()),
+    "a moment later he is one of the Resistance, and on its own ground", faction(stayer))
+stayer:SetPos(SQUARE) -- (for what follows: someone still standing in the square, watching the contact go)
 ok(kept(stayer) == "done" and LC.AdminRecruitOwed(stayer) == nil, "and it is done, kept with the character", kept(stayer))
 ok(heard(stayer, "You are now") == 0 and heard(stayer, "[Resistance]") == 1, "with no second line about it", table.concat(stayer.chat, " | "))
 -- the contact: watched, he walks back the way he came; unseen, he is gone

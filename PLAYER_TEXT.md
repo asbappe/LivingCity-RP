@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version 9447cb3. Admin-only console messages and log lines are left out.
+Made from version e7e9ec9. Admin-only console messages and log lines are left out.
 
-12937 lines, from 358 files.
+12938 lines, from 358 files.
 
 ## Contents
 
@@ -155,7 +155,7 @@ Made from version 9447cb3. Admin-only console messages and log lines are left ou
 - [the actions menu (server side)](#the-actions-menu-server-side-svlivingcityactionslua) (8)
 - [acts (server). See sh_livingcity_acts.lua for the list](#acts-server-see-shlivingcityactslua-for-the-list-svlivingcityactslua) (7)
 - [the hunt for whoever tried to kill the Administrator](#the-hunt-for-whoever-tried-to-kill-the-administrator-svlivingcityadminhuntlua) (4)
-- [the plot against the Administrator, a coordinated attack and not a lone wolf](#the-plot-against-the-administrator-a-coordinated-attack-and-not-a-lone-wolf-svlivingcityadminplotlua) (7)
+- [the plot against the Administrator, a coordinated attack and not a lone wolf](#the-plot-against-the-administrator-a-coordinated-attack-and-not-a-lone-wolf-svlivingcityadminplotlua) (8)
 - [the would-be assassin is hers to question (the owner, 16 November)](#the-would-be-assassin-is-hers-to-question-the-owner-16-november-svlivingcityadminquestioninglua) (13)
 - [a lone wolf who tried to kill the Administrator and got away is taken in by the Resistance](#a-lone-wolf-who-tried-to-kill-the-administrator-and-got-away-is-taken-in-by-the-resistance-svlivingcityadminrecruitlua) (2)
 - [the Administrator's security (the owner, 15 November)](#the-administrators-security-the-owner-15-november-svlivingcityadminsecuritylua) (9)
@@ -5485,19 +5485,23 @@ Made from version 9447cb3. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: break off
 
-- "The attack at the Administrator's address breaks off: %d of %d fighters left"  (message, line 461)
+- "The attack at the Administrator's address breaks off: %d of %d fighters left"  (message, line 462)
 
 > Note for you (not shown in game): part of: admin plot start
 
-- "An ordered attempt on the Administrator by %s: %d Resistance fighters come out round the stand"  (message, line 524)
+- "An ordered attempt on the Administrator by %s: %d Resistance fighters come out round the stand"  (message, line 525)
 
-> Note for you (not shown in game): The stipend: 100 credits in all for the job from the board (never for the order, nor for a lone wolf). The board's usual pay for a finished job (lc_directive_pay, sv_livingcity_economy.lua) is part of it, so this adds the rest.
+> Note for you (not shown in game): (under a leader's order: whoever makes the attempt is paid what the job pays, the owner, 18 November: "yes it should pay the extra". The others who joined and are there get what any planned operation pays, as before.)
 
-- "paid quietly"  (text, line 577)
+- "paid quietly"  (text, line 574)
+
+> Note for you (not shown in game): The stipend: 100 credits in all for the job from the board (the order's is paid where the attempt is made; never a lone wolf). The board's usual pay for a finished job (lc_directive_pay, sv_livingcity_economy.lua) is part of it, so this adds the rest.
+
+- "paid quietly"  (text, line 588)
 
 > Note for you (not shown in game): She died of it after all, later: hit with no close calls left she is taken out alive, and the roll in her office went against her (the owner, 17 November; sv_livingcity_adminsecurity.lua says so here). Whoever was paid for the job at that address in the last ten minutes gets what they would have had if she had died at the stand. Nothing is said. How many were paid.
 
-- "Kill the Administrator"  (text, line 591)
+- "Kill the Administrator"  (text, line 602)
 
 ## the would-be assassin is hers to question (the owner, 16 November) (sv_livingcity_adminquestioning.lua)
 
@@ -5539,11 +5543,11 @@ Made from version 9447cb3. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): (on top of the city's own numbers, and nobody else's to move, lead or send home meanwhile)
 
-- "A Resistance contact is sent to %s, who tried to kill the Administrator alone and got away"  (message, line 232)
+- "A Resistance contact is sent to %s, who tried to kill the Administrator alone and got away"  (message, line 233)
 
 > Note for you (not shown in game): (not recorded yet: a word of greeting in his own voice, as the camp's medic gives, so that it is heard)
 
-- "%s, who tried to kill the Administrator alone and got away, is taken in by the Resistance"  (message, line 283)
+- "%s, who tried to kill the Administrator alone and got away, is taken in by the Resistance"  (message, line 352)
 
 ## the Administrator's security (the owner, 15 November) (sv_livingcity_adminsecurity.lua)
 
@@ -17830,51 +17834,51 @@ Made from version 9447cb3. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: radio jobs
 
-- "Hold your radio up first (switch to the radio transmitter, next to Hands)."  (text, line 3821)
+- "Hold your radio up first (switch to the radio transmitter, next to Hands)."  (text, line 3822)
 
 > Note for you (not shown in game): part of: accept posting
 
-- "[Miscount] Finish or abandon your current job first."  (chat message, line 3833)
-- "[Miscount] You have to wait before taking another job. Next job in {CurTime}s."  (chat message, line 3835)
-- "[Miscount] That job is no longer available."  (chat message, line 3844)
+- "[Miscount] Finish or abandon your current job first."  (chat message, line 3834)
+- "[Miscount] You have to wait before taking another job. Next job in {CurTime}s."  (chat message, line 3836)
+- "[Miscount] That job is no longer available."  (chat message, line 3845)
 
 > Note for you (not shown in game): (a job for a certain hour, still on the board after it: the night shift at midday, the owner, 11 November)
 
-- "[Miscount] {or}"  (chat message, line 3850)
-- "[Miscount] Stalkers can only do stalker work. You can't take this job."  (chat message, line 3854)
+- "[Miscount] {or}"  (chat message, line 3851)
+- "[Miscount] Stalkers can only do stalker work. You can't take this job."  (chat message, line 3855)
 
 > Note for you (not shown in game): part of: accept posting
 
-- "[Miscount] That job has enough people."  (chat message, line 3861)
-- "has joined the job."  (quest narration, line 3864)
-- "[{board}] {title}. {or}"  (chat message, line 3886)
-- "Quest accepted: %s [%s] by %s"  (message, line 3888)
+- "[Miscount] That job has enough people."  (chat message, line 3862)
+- "has joined the job."  (quest narration, line 3865)
+- "[{board}] {title}. {or}"  (chat message, line 3887)
+- "Quest accepted: %s [%s] by %s"  (message, line 3889)
 
 > Note for you (not shown in game): part of: abandon quest
 
-- "left the job."  (quest narration, line 3902)
+- "left the job."  (quest narration, line 3903)
 
 > Note for you (not shown in game): part of: resolve choice
 
-- "%s check: rolled %d + %d skill = %d, needed %d. %s"  (message, line 3920)
+- "%s check: rolled %d + %d skill = %d, needed %d. %s"  (message, line 3921)
 
 > Note for you (not shown in game): the console command lcq_startchain
 
-- "[Story] Chains: {ids}. Usage: lcq_startchain <chain> [player]"  (text, line 3972)
-- "[Story] Player not found."  (text, line 3974)
-- "[Story] {name} is ready on {Nick}'s board (F4)."  (text, line 3979)
+- "[Story] Chains: {ids}. Usage: lcq_startchain <chain> [player]"  (text, line 3973)
+- "[Story] Player not found."  (text, line 3975)
+- "[Story] {name} is ready on {Nick}'s board (F4)."  (text, line 3980)
 
 > Note for you (not shown in game): the console command lcq_story
 
-- "[Story] Player not found."  (text, line 3986)
-- "[Story] %s: loyalty %d, sympathy %d, corruption %d"  (message, line 3988)
-- "counters: {or}"  (text, line 3992)
-- "ended ({done})"  (text, line 3994)
-- "at {part}"  (text, line 3994)
+- "[Story] Player not found."  (text, line 3987)
+- "[Story] %s: loyalty %d, sympathy %d, corruption %d"  (message, line 3989)
+- "counters: {or}"  (text, line 3993)
+- "ended ({done})"  (text, line 3995)
+- "at {part}"  (text, line 3995)
 
 > Note for you (not shown in game): the console command lcq_resetstory
 
-- "[Story] Your story has been reset."  (chat message, line 4006)
+- "[Story] Your story has been reset."  (chat message, line 4007)
 
 ## searching things with your hands, as a job's step (the owner, 14 November: "go to each (sv_livingcity_questsearch.lua)
 

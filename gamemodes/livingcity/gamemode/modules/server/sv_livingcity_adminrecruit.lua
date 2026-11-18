@@ -70,6 +70,7 @@ local RUN_BEYOND = 500        -- further from them than this, he hurries
 local SEE = 700               -- on rebel ground: one of theirs this near, who can see them
 local WATCH = 1500            -- a unit this near with a clear line sees them
 local JOIN_AFTER = 1.5        -- seconds from the line to being one of them (as a story's invitation)
+local SHORT = 5               -- experience short of a Member they are given (the least a job pays: one job makes them one)
 local LINGER = 4              -- seconds he stays by them once he has said it
 local LEAVE_MAX = 120         -- a contact still watched this long after turning back goes anyway
 local HELD_SECS = 5           -- the job or the order, held this recently, was held when the attempt was made
@@ -249,6 +250,61 @@ end
 -- What a story's invitation does (JoinLater, sv_livingcity_stories.lua): proven, and one of the Resistance. Where
 -- they stand and with no line of its own: the one spoken to them has said it. Only now is it kept as done: gone
 -- from the server in the moment between, they are still owed it when they come back.
+-- Where they arrive (the owner, 18 November: "have them spawn in resistance territory, whichever zone the leader is in;
+-- if there is no leader or they aren't in a zone, then maybe wherever a lieutenant is or the zone furthest away (via
+-- path node distance) from a combine zone"). The leader: a Commander who is playing and stands on rebel ground; then
+-- a Lieutenant; then the rebel zone the longest walk, by the city's path nodes, from the nearest Combine zone (as the
+-- crow flies where the paths do not say). In that zone: the Resistance's spawn point nearest whoever they are brought
+-- to (or nearest its middle), else a free spot there. nil: no rebel ground on the map, and they stay where they stand.
+local function Middle(z)
+    if z.box then
+        local c = (z.box.mins + z.box.maxs) * 0.5
+        c.z = z.box.mins.z + 16
+        return c
+    end
+    return z.pos
+end
+function LC.AdminRecruitSpot(ply)
+    if not (LC.ZonesOfKindShared and LCZ and LCZ.Contains) then return nil end
+    local zones = LC.ZonesOfKindShared("rebel") or {}
+    if #zones == 0 then return nil end
+    local zone, by
+    for _, rank in ipairs({ 5, 4 }) do
+        for _, p in ipairs(player.GetAll()) do
+            if not zone and p ~= ply and p:Alive() and Faction(p) == "resistance" and p:GetNW2Int("lcf_rank", 1) == rank
+                and not (LC.Prisoners and LC.Prisoners[p]) then
+                for _, z in ipairs(zones) do
+                    if not zone and LCZ.Contains(z, p:GetPos(), 0) then zone, by = z, p:GetPos() end
+                end
+            end
+        end
+    end
+    if not zone then
+        local best
+        for _, z in ipairs(zones) do
+            local m, near = Middle(z), math.huge
+            for _, c in ipairs(LC.ZonesOfKindShared("combine") or {}) do
+                local cm = Middle(c)
+                local d = m and cm and LC.NavWalkDistance and LC.NavWalkDistance(m, cm)
+                if not d and m and cm then d = m:Distance(cm) end -- (no path nodes, or no way between them)
+                if d then near = math.min(near, d) end
+            end
+            if m and (not best or near > best) then best, zone = near, z end
+        end
+        if not zone then return nil end
+        by = Middle(zone)
+    end
+    local spot, sd
+    for _, pt in ipairs(LC.PointsOfKind and LC.PointsOfKind("rspawn") or {}) do
+        if LCZ.Contains(zone, pt.pos, 0) then
+            local d = pt.pos:DistToSqr(by)
+            if not sd or d < sd then spot, sd = pt.pos, d end
+        end
+    end
+    spot = spot or by
+    return (LC.FreeSpawnPos and LC.FreeSpawnPos(spot + Vector(0, 0, 8))) or spot
+end
+
 function LC.AdminRecruitJoin(ply)
     if not (IsValid(ply) and ply:IsPlayer()) then return false end
     local n = notes[ply]
@@ -257,7 +313,20 @@ function LC.AdminRecruitJoin(ply)
     ply:SetPData(KEY, "done")
     if LC.ResistanceInvite then LC.ResistanceInvite(ply) end
     if Faction(ply) ~= "citizen" or not LC.SetFaction then return false end
+    -- a Sympathizer, one job short of a Member (the owner, 18 November: "they join as a sympathizer automatically; but
+    -- make it so they get enough experience to be just 1 quest/job away from a member")
+    local f = LCF and LCF.Get and LCF.Get("resistance")
+    local need = f and f.ranks and f.ranks[2] and f.ranks[2].xp
+    if need and (tonumber(ply:GetPData("lcf_xp_resistance", 0)) or 0) < need - SHORT then ply:SetPData("lcf_xp_resistance", need - SHORT) end
     LC.SetFaction(ply, "resistance", nil, true, true)
+    -- and on the Resistance's own ground, by their leader (set again once the spawn has settled, as SetFaction does)
+    local to = LC.AdminRecruitSpot(ply)
+    if to then
+        local function There() if IsValid(ply) and ply:Alive() and Faction(ply) == "resistance" then ply:SetPos(to) end end
+        There()
+        timer.Simple(0.05, There)
+        timer.Simple(0.4, There)
+    end
     return true
 end
 

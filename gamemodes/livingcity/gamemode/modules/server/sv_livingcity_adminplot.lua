@@ -10,7 +10,7 @@
     The job     "Kill the Administrator" is on the Resistance's board (Operations), and
                 nobody else's, from the moment the city is called to her address until
                 someone tries. Its one step is making the attempt at her address. Taken
-                by one, joined by others as any job is: Fighters and up, and nobody below
+                by one and only one (the owner, 18 November): Fighters and up, and nobody below
                 that rank sees it on the board (the owner, 17 November: "fighters and up
                 only"). It pays when the attempt is made (the owner: "xp should be 250 for
                 trying, 250 more if successful, plus a 100 credit stipend, but ONLY if it
@@ -182,6 +182,7 @@ TEMPLATE = {
     id = JOB, factions = { resistance = true }, first = true, recheck = true,
     available = function(ply) return LC.AdminPlotOpen() and (not IsValid(ply) or RankIndex(ply) >= MIN_RANK) end,
     sees = function(ply) return IsValid(ply) and RankIndex(ply) >= MIN_RANK end, -- (not on the board of anyone below a Fighter)
+    solo = true, -- (one holder at a time: the owner, 18 November, "maybe only one can at a time")
     -- (her address over, and nobody getting her out: there is nothing left to try. No reason in words: it shows.)
     over = function()
         if not AtAddress() and not Exit() then return false end
@@ -564,11 +565,21 @@ function LC.AdminPlotAttempt(her, who, killed)
         if killed then q.bonus = (q.bonus or 0) + KILL_BONUS else LC.AdminPlotPaid[who] = CurTime() end
         LC.Try(LC.QuestEvent, "admin_attempt", who)
     end
-    if plan then EndOrder(plan, true) end
+    if plan then
+        -- (under a leader's order: whoever makes the attempt is paid what the job pays, the owner, 18 November: "yes it
+        -- should pay the extra". The others who joined and are there get what any planned operation pays, as before.)
+        if not q then
+            plan.joined[who] = nil
+            if LC.AddXP then LC.AddXP(who, REWARD + (killed and KILL_BONUS or 0), TITLE) end
+            if LC.AddCredits then LC.AddCredits(who, STIPEND, "paid quietly") end
+            if not killed then LC.AdminPlotPaid[who] = CurTime() end
+        end
+        EndOrder(plan, true)
+    end
     return true
 end
 
--- The stipend: 100 credits in all for the job from the board (never for the order, nor for a lone wolf). The board's
+-- The stipend: 100 credits in all for the job from the board (the order's is paid where the attempt is made; never a lone wolf). The board's
 -- usual pay for a finished job (lc_directive_pay, sv_livingcity_economy.lua) is part of it, so this adds the rest.
 hook.Add("LivingCityQuestComplete", "LivingCityAdminPlot", function(ply, q)
     if not (IsValid(ply) and q and q.tmpl == TEMPLATE and LC.AddCredits) then return end
