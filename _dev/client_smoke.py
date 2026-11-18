@@ -1669,6 +1669,37 @@ local okMG, errMG = pcall(function()
     run("PreDrawHalos")
 end)
 if not okMG then problems[#problems + 1] = "more job games: " .. tostring(errMG) end
+-- a job with no time limit has no clock on the tracker (a leader's summons: the owner, 18 November); its title and
+-- its one line are drawn as any job's are, and a job with a limit keeps its clock
+local okNL, errNL = pcall(function()
+    local rU, rD, rDc, rJ, wasDraw = net.ReadUInt, net.ReadData, util.Decompress, util.JSONToTable, draw.SimpleText
+    local doc, said
+    net.ReadUInt = function() return 1 end
+    net.ReadData = function() return "x" end
+    util.Decompress = function(s) return s end
+    util.JSONToTable = function() return doc end
+    draw.SimpleText = function(text) said[#said + 1] = tostring(text) end
+    local function Tracker(d)
+        doc, said = d, {}
+        net.recv_lcq_state()
+        hook.t.HUDPaint.LivingCityQuestsTracker()
+        return table.concat(said, "\n")
+    end
+    local okT, errT = pcall(function()
+        local all = Tracker({ active = true, id = 1, title = "A word with Ada Leader", board = "Operations", objective = "Speak with Ada Leader, in private.",
+            left = 0, nolimit = true, step = 1, steps = 1, owner = true })
+        if not (string.find(all, "A word with Ada Leader", 1, true) and string.find(all, "Speak with Ada Leader, in private.", 1, true)) then
+            error("its title and its one line are not drawn:\n" .. all)
+        end
+        if string.find(all, "%d%d:%d%d") then error("a job with no time limit shows a clock:\n" .. all) end
+        all = Tracker({ active = true, id = 2, title = "Count the crates", board = "Operations", objective = "Count them.", left = 125, step = 1, steps = 1, owner = true })
+        if not string.find(all, "%d%d:%d%d") then error("a job with a time limit has lost its clock:\n" .. all) end
+        Tracker({ active = false })
+    end)
+    net.ReadUInt, net.ReadData, util.Decompress, util.JSONToTable, draw.SimpleText = rU, rD, rDc, rJ, wasDraw
+    if not okT then error(errT) end
+end)
+if not okNL then problems[#problems + 1] = "a job with no time limit: " .. tostring(errNL) end
 -- a unit's search as a pat-down (cl_livingcity_patsearch.lua): the unit's window builds, updates, paints; the panel
 -- for the person searched; both close; a window that can't be built hands back to the old search
 local psSaved = { net.ReadString, util.JSONToTable, vgui, net.SendToServer, net.Start, net.WriteUInt }
@@ -4227,8 +4258,9 @@ local ok, e = pcall(function()
     undo()
     if sentQM ~= "guide" then error("Freq 7: guide me sent " .. tostring(sentQM)) end
     -- the Resistance's leader (the owner, 18 November): Order: kill the Administrator > is last on the Resistance
-    -- page, only when the server sent them the list; its page is the names, with who has it; a name sends F2's own
-    -- action with that name's number
+    -- page, only when the server sent them the list; its page is the names, with what each has of it; a name sends
+    -- F2's own action with that name's number and what the list showed: nothing (send for them), sent for (they
+    -- have spoken), under the order (take it back)
     local res = root.items[3].page()
     for i = 1, 9 do
         local it = res.items[i]
@@ -4236,7 +4268,8 @@ local ok, e = pcall(function()
     end
     local had, was = #res.items, {}
     for i = 1, had do was[i] = res.items[i].label end
-    Info({ reb = { tx = false, backup = 0, pos = 0 }, plot = { { id = 1004, name = "Ada Leader" }, { id = 1007, name = "Ben Fighter", has = true } } })
+    Info({ reb = { tx = false, backup = 0, pos = 0 }, plot = { { id = 1004, name = "Ada Leader" }, { id = 1007, name = "Ben Fighter", has = "order" },
+        { id = 1009, name = "Cal Fighter", has = "word" } } })
     res = LC_CL.QuickRoleRoot().items[3].page()
     local ord = res.items[had + 1]
     if not (#res.items == had + 1 and ord and ord.label == "Order: kill the Administrator" and ord.page) then error("the leader's Resistance page: " .. Labels(res)) end
@@ -4245,9 +4278,11 @@ local ok, e = pcall(function()
     end
     if not (res.empty and res.empty[had + 1] == nil) then error("the leader's Resistance page: the fighters left are written over the order") end
     p = ord.page()
-    if not (#p.items == 2 and p.items[1].label == "Ada Leader" and p.items[2].label == "Ben Fighter  (ordered)") then error("the leader's list: " .. Labels(p)) end
-    local sentCmd, sentArg
-    do
+    if not (#p.items == 3 and p.items[1].label == "Ada Leader" and p.items[2].label == "Ben Fighter  (ordered)" and p.items[3].label == "Cal Fighter  (sent for)") then
+        error("the leader's list: " .. Labels(p))
+    end
+    for i, want in ipairs({ "1004:give", "1007:back", "1009:spoken" }) do
+        local sentCmd, sentArg
         local ws, st, name, n = net.WriteString, net.Start, nil, 0
         net.Start = function(nm) name, n = nm, 0 return st and st(nm) end
         net.WriteString = function(s)
@@ -4257,10 +4292,10 @@ local ok, e = pcall(function()
             end
             return ws and ws(s)
         end
-        p.items[2].run()
+        p.items[i].run()
         net.WriteString, net.Start = ws, st
+        if not (sentCmd == "plotorder" and sentArg == want) then error("the leader picks name " .. i .. ": sent " .. tostring(sentCmd) .. " " .. tostring(sentArg) .. ", not " .. want) end
     end
-    if not (sentCmd == "plotorder" and sentArg == "1007") then error("the leader picks a name: sent " .. tostring(sentCmd) .. " " .. tostring(sentArg)) end
     Info({ reb = { tx = false, backup = 0, pos = 0 } })
     if #LC_CL.QuickRoleRoot().items[3].page().items ~= had then error("no longer the leader: the order is still on their Resistance page") end
 
