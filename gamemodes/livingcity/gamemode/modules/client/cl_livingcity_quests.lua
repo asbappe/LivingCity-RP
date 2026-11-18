@@ -527,7 +527,10 @@ hook.Add("HUDPaint", "LivingCityQuestsTracker", function()
     draw.RoundedBox(0, x, y, 3, h, ACCENT)
     draw.SimpleText(string.upper(state.board or "") .. string.format("   step %d/%d", state.step or 1, state.steps or 1), "DermaDefault", x + 12, y + 8, DIM)
     draw.SimpleText(state.title or "", "DermaDefaultBold", x + 12, y + 24, INK)
-    draw.SimpleText(string.FormattedTime(left, "%02i:%02i"), "DermaDefault", x + bw - 10, y + 8, left < 60 and RED or DIM, TEXT_ALIGN_RIGHT)
+    -- (a job with no time limit has no clock: a leader's summons, sv_livingcity_adminplot.lua)
+    if not state.nolimit then
+        draw.SimpleText(string.FormattedTime(left, "%02i:%02i"), "DermaDefault", x + bw - 10, y + 8, left < 60 and RED or DIM, TEXT_ALIGN_RIGHT)
+    end
 
     local ly = y + 44
     for _, l in ipairs(lines) do

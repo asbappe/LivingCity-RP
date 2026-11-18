@@ -279,6 +279,9 @@ end
 -- ok, why, and the job asked for (nil: the Union's choice).
 function LC.LaborCanAct(ply, action, arg)
     if not IsValid(ply) then return false end
+    -- (sent for by their leader: that word first, before any work is taken; sv_livingcity_adminplot.lua)
+    local first = LC.AdminPlotBusy and LC.AdminPlotBusy(ply)
+    if first then return false, first end
     if LC.IntakePending and LC.IntakePending(ply) then return false, "You're not registered. Register at Civil Intake first." end
     if not (LC.CanWork and LC.CanWork(ply)) then return false, "The Union only gives work to citizens." end
     if LC.HasItem and not LC.HasItem(ply, "id_papers") and not ply.lcIdentity then

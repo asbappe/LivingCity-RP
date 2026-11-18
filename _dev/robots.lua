@@ -319,6 +319,15 @@ return function(T)
         -- her address (the city's own Administrator), at a stand and a crowd point of the robot's own
         res_regicide = function(p)
             if IsValid(p) then p:SetNW2Int("lcf_rank", 3) end -- (Fighters and up: the owner, 17 November)
+            -- (and on the board only while nobody leads the Resistance, the owner, 18 November: a Commander or a
+            -- Lieutenant playing in the robot's city is a Fighter while the job is played)
+            local led = {}
+            for _, o in ipairs(player.GetAll()) do
+                if o ~= p and o:GetNW2String("lcf_faction", "") == "resistance" and o:GetNW2Int("lcf_rank", 1) >= 4 then
+                    led[o] = o:GetNW2Int("lcf_rank", 1)
+                    o:SetNW2Int("lcf_rank", 3)
+                end
+            end
             local at = Vector(-90000, 90000, 0)
             local stand0 = LC.AddPoint(at + Vector(0, 500, 0), 270, "speech", 0)
             local crowd0 = LC.AddPoint(at, 90, "speechcrowd", 0)
@@ -337,6 +346,7 @@ return function(T)
                 for _, e in ipairs(ents.FindByClass("lc_adminglass")) do e:Remove() end
                 LC.RemovePoint(stand0)
                 LC.RemovePoint(crowd0)
+                for o, r in pairs(led) do if IsValid(o) then o:SetNW2Int("lcf_rank", r) end end
             end
         end,
     }

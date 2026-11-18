@@ -7,27 +7,75 @@
     the place, maybe like 7 or 8, so it looks like a coordinated rebel attack and not a
     lone wolf. However if it is just a lone wolf, then none of that happens."
 
+    The order   The owner, 18 November: "a resistance human player with the role of
+                resistance leader can assign the quest to certain resistance members of
+                their discretion and it advises them to speak with that player in
+                private." The leader is a Commander who is playing; a Lieutenant when no
+                Commander is ("Commanders, else Lieutenants"). Their F2 > Resistance has
+                "Order: kill the Administrator": the Resistance's players who are Fighters
+                or higher, the leader among them. At any time, her address on or not.
+                A name sends for that member; the same name again says they have spoken;
+                once more takes it back. Nothing when it is taken back, nothing to anyone
+                else, nothing on the radio, nothing a unit could hear of. A leader who
+                picks themselves has the order at once and reads nothing.
+                It replaced the plan on the planning board of 17 November, which the whole
+                Resistance heard of on its radio (the owner: "Assignment replaces the
+                radio plan").
+    Sent for    The owner, 18 November: the private line "should trigger a quest/job that
+                the player is auto-enrolled in and becomes active with no time limit; it
+                should need to be fulfilled before being able to take any other
+                job/quest/work: this also means it needs to be FOOLPROOF and have triple
+                layers of checks to make sure it doesn't glitch out or get stuck and
+                un-finishable". The member reads one line, alone: "[Freq 7] <the leader>
+                wants a word with you, in private.", and is put straight in a job of their
+                own: "A word with <the leader>", "Speak with <the leader>, in private.",
+                no time limit, its marker on the leader, nothing paid. It is done by an
+                act, never by standing anywhere: the member presses E at the leader within
+                reach, or the leader at the member, or the leader picks their name again.
+                Who else is near is never asked: "in private" is theirs to see to. Only
+                then is the order theirs. Until then every door that work comes through
+                is shut to them ("<the leader> wants a word with you first."): the board
+                (a job, a story's part, a Union shift, a job over the radio, a foreman's
+                work order), a Union job and the Labor Assignment terminal, planning or
+                joining an operation, a stall owner's offer. They cannot drop it.
+                Someone sent for while they hold another job keeps that job and is put in
+                this one the moment it ends.
+    Never stuck 1. What happens to them or the leader ends it at once, with no line, no
+                mark against them and no wait: the leader takes it back; the member is
+                arrested, someone new, out of the Resistance or below a Fighter; the
+                leader is gone from the server, dead for good, out of the Resistance or
+                a leader no more (then it is whoever leads now they speak with, title
+                and marker following; with nobody leading they are free).
+                2. Every two seconds everyone sent for is looked at: what is kept with
+                the character and the job must agree. A record with no job (the quest
+                system lost it): the job is put back, and if that fails twice the record
+                goes. A job with no record: ended. A leader no longer one: as above.
+                Older than an hour: ended, whatever became of the leader.
+                3. The leader's list takes it back by the record, whatever has become of
+                the job. Everything here runs in LC.Try: an error frees whoever it was
+                about and is written in the errors file.
+                It is kept with the character (PData lc_adminplot_order: "word" sent for,
+                "1" under the order) over a reconnect and a restart of the server, and
+                they come back pointed at whoever leads now.
+    Under it    Each member's order is their own: it ends when they make the attempt
+                (paid what the job pays), when the leader takes it back, when they are
+                arrested, are someone new, are out of the Resistance or below a Fighter.
+                It does not need the leader to stay.
     The job     "Kill the Administrator" is on the Resistance's board (Operations), and
                 nobody else's, from the moment the city is called to her address until
-                someone tries. Its one step is making the attempt at her address. Taken
-                by one and only one (the owner, 18 November): Fighters and up, and nobody below
-                that rank sees it on the board (the owner, 17 November: "fighters and up
-                only"). It pays when the attempt is made (the owner: "xp should be 250 for
-                trying, 250 more if successful, plus a 100 credit stipend, but ONLY if it
-                is a job from the resistance job board": 250 experience, 100 credits in
-                all, 250 more experience if she dies of it, then or after the roll in her
-                office) and ends there. Nobody is told it has gone up, and the planned
-                order never leaks to Civil Protection (the owner: "it should just go on
-                the board. Keep as minimal a chance of CP/overwatch/administrator finding
-                out about it"). It also ends when her address is over, and as any job does:
-                dropped, arrested, a new character, gone from the server.
-    The order   A Resistance leader's planning board (F2 > Resistance > Operations: plan
-                or join, sv_livingcity_opplan.lua) lists "Kill the Administrator at her
-                address" while her address is on. No raid goes for that one: whoever
-                joined is under orders from the moment they join. At its hour those who
-                joined are pointed to the stand, as for any operation, and the order
-                stands until her address is over. When one of them makes the attempt,
-                those who joined and are there are paid as for any planned operation.
+                someone tries, and only while nobody leads: with a Commander or a
+                Lieutenant playing it is not offered, and the order comes from them alone
+                (whoever holds it already keeps it). Its one step is making the attempt at
+                her address. Taken by one and only one (the owner, 18 November): Fighters
+                and up, and nobody below that rank sees it on the board (the owner,
+                17 November: "fighters and up only"). It pays when the attempt is made
+                (the owner: "xp should be 250 for trying, 250 more if successful, plus a
+                100 credit stipend": 250 experience, 100 credits in all, 250 more
+                experience if she dies of it, then or after the roll in her office) and
+                ends there. Nobody is told it has gone up (the owner: "it should just go
+                on the board. Keep as minimal a chance of CP/overwatch/administrator
+                finding out about it"). It also ends when her address is over, and as any
+                job does: dropped, arrested, a new character, gone from the server.
     Ordered     An attempt on her life at her address (LC.AdminAttempt,
                 sv_livingcity_adminsecurity.lua) by someone who holds the job or the
                 order. Anyone else's (a lone wolf, a rogue unit, a citizen) brings
@@ -52,8 +100,15 @@
     Hooks heard: LivingCityAdminExfil (her guards are getting her out: who set it off),
     LivingCityAdminAttempt (a grenade by her), her own hurt and death at her address, and
     LivingCitySpeechCalled and LivingCitySpeechEnded (the job goes on the board, and comes
-    off it). Nothing is answered to any of them. No settings: the numbers are the constants
-    below.
+    off it), LivingCityNewCharacter, LivingCityIncarcerated, LivingCityFactionChanged,
+    LivingCityRankChanged, PlayerDisconnected and PlayerInitialSpawn (an order or a summons
+    is no longer theirs, or its leader no longer one), LivingCityQuestComplete and
+    LivingCityQuestFailed (a job of theirs is over: the one they were sent for begins), and
+    KeyPress (E at each other). Nothing is answered to any of them. No settings: the
+    numbers are the constants below. The leader's list reaches F2, and the name picked
+    comes back, by F2's own way (sv_livingcity_quickmore.lua). The job is given and taken
+    back by LC.GiveQuest and LC.WithdrawQuest (sv_livingcity_quests.lua), and every door
+    that work comes through asks LC.AdminPlotBusy.
 ]]
 
 if CLIENT then return end
@@ -61,10 +116,17 @@ if CLIENT then return end
 LC = LC or {}
 
 local JOB = "res_regicide"
-local KIND = "regicide"        -- the planned operation's kind (sv_livingcity_opplan.lua)
 local TITLE = "Kill the Administrator"
 local LINE = "At her address. Our fighters open fire when you do."
-local LABEL = "Kill the Administrator at her address"
+local WORD_LINE = "[Freq 7] %s wants a word with you, in private." -- all the chosen member is told: who, and not what about
+local JOB_TITLE = "A word with %s"            -- the job they are put in: its title,
+local JOB_LINE = "Speak with %s, in private." -- and its one line
+local BUSY = "%s wants a word with you first." -- what every other door that work comes through says until then
+local ORDER_KEY = "lc_adminplot_order" -- PData: "word" (sent for by a leader, not spoken with yet) or "1" (under the order)
+local LEADER, DEPUTY = 5, 4    -- who gives the order: a Commander; a Lieutenant when no Commander is playing
+local WITHIN = 130             -- how near E at each other counts as having spoken
+local WATCH = 2                -- seconds between two looks at everyone sent for
+local CAP = 3600               -- nobody is kept from other work by it longer than this, whatever became of the leader
 local REWARD = 250             -- experience, when the attempt is made (the owner, 17 November)
 local KILL_BONUS = 250         -- more, if she dies of it
 local STIPEND = 100            -- credits with the job, in all (the board's usual pay for a job is part of it)
@@ -85,13 +147,19 @@ local UP = Vector(0, 0, 50)
 local TAKEN = { detained = true, escorted = true, jailed = true }
 
 local P       -- the attack under way, or nil
-local order   -- the leader's order, standing since its hour came (the plan), or nil
+local state = setmetatable({}, { __mode = "k" })   -- [player] = "word", "order" or false: what is kept with the character, once read
+local words = setmetatable({}, { __mode = "k" })   -- [player sent for] = { leader, since, q (their job), tries }
+local leaving = setmetatable({}, { __mode = "k" }) -- [player] = true from the moment they are going from the server
+local nextWatch = 0 -- when everyone sent for is looked at next
+local led     -- whether anyone who may give the order was playing, when last looked (the job on the board follows it)
 local TEMPLATE
 
 function LC.AdminPlot() return P end
 
 local function Faction(p) return p:GetNW2String("lcf_faction", "") end
 local function RankIndex(p) return p:GetNW2Int("lcf_rank", 1) end
+local function Name(p) return (LC.CharacterName and LC.CharacterName(p)) or p:Nick() end
+local function Ours(p) return IsValid(p) and p:IsPlayer() and not leaving[p] and Faction(p) == "resistance" end
 local function Administrator(p) return LC.IsAdministrator ~= nil and LC.IsAdministrator(p) == true end
 local function Exit() return LC.AdminExfil and LC.AdminExfil() or nil end
 local function Living(e)
@@ -110,69 +178,381 @@ local function AtAddress()
     return her, S
 end
 
--- Her address is on, and nobody has tried yet: the job is on the board, the target on the planning board.
+-- Her address is on, and nobody has tried yet: the job is on the board (while nobody leads).
 function LC.AdminPlotOpen()
     local her, S = AtAddress()
     return her ~= nil and not S.plotted and Exit() == nil
 end
 
 ------------------------------------------------------------------------
--- Who is under orders
+-- Who leads, and who is under orders
 ------------------------------------------------------------------------
+
+local function Fighter(p) return Ours(p) and RankIndex(p) >= MIN_RANK end
+
+-- May they give the order? A Commander; a Lieutenant when no Commander is playing (the owner, 18 November:
+-- "Commanders, else Lieutenants").
+function LC.AdminPlotLeader(ply)
+    if not Ours(ply) then return false end
+    local r = RankIndex(ply)
+    if r >= LEADER then return true end
+    if r < DEPUTY then return false end
+    for _, p in ipairs(player.GetAll()) do
+        if p ~= ply and Ours(p) and RankIndex(p) >= LEADER then return false end
+    end
+    return true
+end
+-- Is anyone playing who may give it? Then the job is not on the board: the order comes from them alone.
+function LC.AdminPlotLeading()
+    for _, p in ipairs(player.GetAll()) do
+        if Ours(p) and RankIndex(p) >= DEPUTY then return true end
+    end
+    return false
+end
+-- A leader for this member to speak with: someone else who may give the order and is playing now.
+local function Leads(l, member) return l ~= member and LC.AdminPlotLeader(l) end
+local function LeaderFor(member)
+    for _, p in ipairs(player.GetAll()) do
+        if Leads(p, member) then return p end
+    end
+    return nil
+end
 
 local function JobOf(ply)
     local q = LC.QuestOf and LC.QuestOf[ply]
     if q and not q.done and q.tmpl == TEMPLATE then return q end
     return nil
 end
-local function OrderOf(ply)
-    if Faction(ply) ~= "resistance" then return nil end
-    local plan = LC.OpPlan
-    if plan and plan.kind == KIND and plan.joined[ply] then return plan end
-    if order and order.joined[ply] then return order end
-    return nil
+-- What is kept with the character: "word" (sent for by a leader, and not spoken with yet), "order" (under the
+-- order) or false. Theirs only as a Fighter or higher of the Resistance.
+local function Has(ply)
+    if not Fighter(ply) then return false end
+    local has = state[ply]
+    if has == nil then
+        local kept = ply.GetPData and ply:GetPData(ORDER_KEY, "") or ""
+        has = (kept == "1" and "order") or (kept == "word" and "word") or false
+        state[ply] = has
+    end
+    return has
 end
--- "job", "order" or nil: what makes an attempt of theirs an ordered one.
+-- "job", "order" or nil: what makes an attempt of theirs an ordered one. (Sent for and not spoken with yet: nil.)
 function LC.AdminPlotHolds(ply)
     if not (IsValid(ply) and ply:IsPlayer()) then return nil end
     if JobOf(ply) then return "job" end
-    if OrderOf(ply) then return "order" end
+    if Has(ply) == "order" then return "order" end
     return nil
 end
+-- Sent for, and not spoken with yet: the leader they are to speak with (true while nobody is named yet), or nil.
+function LC.AdminPlotSentFor(ply)
+    if not (IsValid(ply) and ply:IsPlayer()) or Has(ply) ~= "word" then return nil end
+    local rec = words[ply]
+    return rec and rec.leader or true
+end
 
--- The leader's order is done with: made (those who joined and are there are paid), or over.
-local function EndOrder(plan, made)
-    if LC.OpPlan == plan then LC.OpPlan = nil end
-    if order == plan then order = nil end
-    if made and LC.OpPay then LC.Try(LC.OpPay, plan) end
-    if LC.OpSyncMenu then
-        for _, p in ipairs(player.GetAll()) do LC.Try(LC.OpSyncMenu, p) end
+------------------------------------------------------------------------
+-- Sent for: the job to speak with the leader (the owner, 18 November)
+------------------------------------------------------------------------
+
+-- The record (what is kept with the character) is what counts; the job is how the member sees it, and what
+-- keeps other work shut. Never on a board (it is not among the templates), no time limit, nothing paid, and not
+-- theirs to drop (kept: LC.DropQuest).
+local WORD = { id = "res_word", factions = { resistance = true }, kept = true }
+
+-- Its title, its one line and its marker are the leader's.
+local function Point(q, l)
+    local st = q.stages and q.stages[1]
+    if not st or st.npc == l then return end
+    st.npc = l
+    q.title = string.format(JOB_TITLE, Name(l))
+    st.text = string.format(JOB_LINE, Name(l))
+end
+
+-- The job is taken out of the quest system without a word; by hand if that fails, so it is never left on them.
+local function Withdraw(q)
+    if not istable(q) then return end
+    if LC.WithdrawQuest then LC.Try(LC.WithdrawQuest, q) end
+    q.done = true
+    if LC.ActiveQuests then LC.ActiveQuests[q] = nil end
+    for p, held in pairs(LC.QuestOf or {}) do
+        if held == q then
+            LC.QuestOf[p] = nil
+            if IsValid(p) and LC.SendQuestState then LC.Try(LC.SendQuestState, p) end
+        end
     end
 end
-
--- The planning board's target, while her address is on (LC.OpTargets).
-function LC.AdminPlotTarget()
-    if not LC.AdminPlotOpen() then return nil end
-    local _, S = AtAddress()
-    return { label = LABEL, kind = KIND, pos = S.stand.pos, data = {} }
+-- Whatever of the job they have, gone.
+local function Unjob(ply, rec)
+    local q = LC.QuestOf and LC.QuestOf[ply]
+    if istable(q) and q.tmpl == WORD then Withdraw(q) end
+    if rec and istable(rec.q) and rec.q ~= q and not rec.q.done then Withdraw(rec.q) end
 end
--- Its hour has come (sv_livingcity_opplan.lua, Fire): with her address still on, the order stands until it is
--- over, and those who joined are pointed to the stand. False: there is nothing left to go to.
-function LC.AdminPlotGo(plan)
-    if not LC.AdminPlotOpen() then return false end
-    order = plan
+
+-- Free of it altogether, the record and the job: taken back, or no longer theirs. Nothing is said.
+local function Free(ply)
+    if not (IsValid(ply) and ply:IsPlayer()) then return end
+    local rec = words[ply]
+    words[ply] = nil
+    state[ply] = false
+    if ply.RemovePData then ply:RemovePData(ORDER_KEY) end
+    Unjob(ply, rec)
+end
+
+-- They have spoken (E on the leader, the leader's E on them, or the leader's list): the job is done and the order
+-- is theirs. Nothing is said: the job leaves their screen with the sound a finished job makes.
+local function Spoken(ply)
+    if not (IsValid(ply) and ply:IsPlayer()) then return false end
+    local rec = words[ply]
+    words[ply] = nil
+    state[ply] = "order"
+    if ply.SetPData then ply:SetPData(ORDER_KEY, "1") end
+    Unjob(ply, rec)
+    if ply.EmitSound then ply:EmitSound("buttons/bell1.wav", 60) end
     return true
 end
 
--- No longer theirs: a new character, or in a cell (backing out is the planning board's own: LC.JoinOp).
-local function Released(ply)
-    if not IsValid(ply) then return end
-    local plan = LC.OpPlan
-    if plan and plan.kind == KIND then plan.joined[ply] = nil end
-    if order then order.joined[ply] = nil end
+-- Put in the job, or back in it. The job; or nil, and true when that is no failure: they hold another job, and
+-- this one waits for it to end.
+local function Enrol(ply, rec)
+    local held = LC.QuestOf and LC.QuestOf[ply]
+    if istable(held) and held.done then -- (a finished job still on them is nobody's: off)
+        LC.QuestOf[ply] = nil
+        held = nil
+    end
+    if istable(held) and held.tmpl == WORD then
+        Point(held, rec.leader)
+        return held
+    end
+    if held then return nil, true end
+    if not LC.GiveQuest then return nil end
+    local l = rec.leader
+    return LC.GiveQuest(ply, {
+        tmpl = WORD, title = string.format(JOB_TITLE, Name(l)), reward = 0, limit = false,
+        -- (one step, and an act: E on the leader, the leader's E on them, or the leader's list. Never a place to
+        -- stand, and nothing about who else is near: "in private" is theirs to see to.)
+        stages = { { kind = "count", event = "plot_word", need = 1, untallied = true, text = string.format(JOB_LINE, Name(l)), npc = l } },
+    })
 end
-hook.Add("LivingCityNewCharacter", "LivingCityAdminPlot", function(ply) Released(ply) end)
-hook.Add("LivingCityIncarcerated", "LivingCityAdminPlot", function(ply) Released(ply) end)
+
+-- One of those sent for, looked at: the record and the job must agree.
+local function Watch1(ply, now)
+    if leaving[ply] then return end
+    if state[ply] and not Fighter(ply) then return Free(ply) end -- (neither a Fighter nor of the Resistance any more)
+    if Has(ply) ~= "word" then
+        words[ply] = nil
+        return
+    end
+    local rec = words[ply]
+    if not rec then -- (back from what is kept with the character: a reconnect, the server started again)
+        rec = { since = now, tries = 0 }
+        words[ply] = rec
+    end
+    -- the leader has gone, or leads no more: whoever leads now; nobody: free
+    if not Leads(rec.leader, ply) then
+        local l = LeaderFor(ply)
+        if not l then return Free(ply) end
+        rec.leader = l
+    end
+    -- nobody is kept from other work longer than this, whatever became of the leader
+    if now - rec.since > CAP then return Free(ply) end
+    local q, waits = Enrol(ply, rec)
+    if q then
+        rec.q, rec.tries = q, 0
+        if LC.SendQuestState then LC.SendQuestState(ply) end -- (the marker follows the leader)
+    elseif waits then
+        rec.q = nil
+    else
+        -- the quest system would not take it: once more at the next look, then free
+        rec.q = nil
+        rec.tries = (rec.tries or 0) + 1
+        if rec.tries >= 2 then return Free(ply) end
+    end
+end
+
+-- Everyone sent for, looked at: every couple of seconds, and at once when something happens to a member or a
+-- leader. An error frees whoever it was about, and is written down: nobody is left locked.
+function LC.AdminPlotWatch(now)
+    now = now or CurTime()
+    for _, p in ipairs(player.GetAll()) do
+        local okW, err = LC.Try(Watch1, p, now)
+        if not okW then
+            if LC.Error then LC.Error("a leader's summons", err) end
+            if not LC.Try(Free, p) then state[p], words[p] = false, nil end
+        end
+    end
+    -- a job with no record behind it: ended
+    for q in pairs(LC.ActiveQuests or {}) do
+        if q.tmpl == WORD and not q.done then
+            local p = q.owner
+            local rec = IsValid(p) and words[p] or nil
+            if not (rec and state[p] == "word" and rec.q == q) then LC.Try(Withdraw, q) end
+        end
+    end
+end
+local function Look() LC.Try(LC.AdminPlotWatch) end
+
+-- No other work until that word is had (the owner, 18 November: "it should need to be fulfilled before being
+-- able to take any other job/quest/work"). What every door that work comes through says instead, or nil. By the
+-- record, not the job: a job the quest system has lost shuts the doors all the same until it is put back.
+function LC.AdminPlotBusy(ply)
+    if not (IsValid(ply) and ply:IsPlayer()) or Has(ply) ~= "word" then return nil end
+    local rec = words[ply]
+    if not (rec and Leads(rec.leader, ply)) then
+        -- (nobody named to speak with at this moment: looked into now, so no door is shut on nobody's account)
+        if not LC.Try(Watch1, ply, CurTime()) then LC.Try(Free, ply) end
+        rec = words[ply]
+        if Has(ply) ~= "word" or not (rec and Leads(rec.leader, ply)) then return nil end
+    end
+    return string.format(BUSY, Name(rec.leader))
+end
+
+-- Pressing E at each other, within reach: the member at the leader, or the leader at the member.
+local function At(a, b)
+    if not (IsValid(a) and IsValid(b)) or a == b or not a:Alive() or not b:Alive() then return false end
+    local to = b:GetPos() - a:GetPos()
+    if to:LengthSqr() > WITHIN * WITHIN then return false end
+    local tr = a:GetEyeTrace()
+    if tr and tr.Entity == b then return true end
+    -- (not looking straight at them: roughly their way will do)
+    local aim = a:GetAimVector()
+    local flat, way = Vector(to.x, to.y, 0), Vector(aim.x, aim.y, 0)
+    if flat:LengthSqr() < 1 or way:LengthSqr() < 0.01 then return true end
+    flat:Normalize()
+    way:Normalize()
+    return flat:Dot(way) >= 0.6
+end
+local function Pressed(ply)
+    if not (IsValid(ply) and ply:IsPlayer()) then return end
+    local rec = words[ply]
+    if rec and Has(ply) == "word" and Leads(rec.leader, ply) and At(ply, rec.leader) then
+        Spoken(ply)
+        return
+    end
+    for member, r in pairs(words) do
+        if r.leader == ply and IsValid(member) and Has(member) == "word" and LC.AdminPlotLeader(ply) and At(ply, member) then
+            Spoken(member)
+            return
+        end
+    end
+end
+hook.Add("KeyPress", "LivingCityAdminPlot", function(ply, key)
+    if key ~= IN_USE or next(words) == nil then return end
+    local okP, err = LC.Try(Pressed, ply)
+    if not okP and LC.Error then LC.Error("a word with the leader", err) end
+end)
+
+------------------------------------------------------------------------
+-- The leader's list
+------------------------------------------------------------------------
+
+-- F2 > Resistance > Order: kill the Administrator: the Resistance's players who are Fighters or higher, the leader
+-- among them, and what each has ("word": sent for; "order"). Nil for anyone who may not give it.
+function LC.AdminPlotList(leader)
+    if not LC.AdminPlotLeader(leader) then return nil end
+    local out = {}
+    for _, p in ipairs(player.GetAll()) do
+        if Fighter(p) then
+            out[#out + 1] = { id = p:EntIndex(), name = Name(p), has = Has(p) or nil }
+        end
+    end
+    table.sort(out, function(a, b)
+        if a.name ~= b.name then return a.name < b.name end
+        return a.id < b.id
+    end)
+    return out
+end
+
+-- The leader picks a name that has nothing: that member is sent for. They read one line, alone, that says who and
+-- not what about, and are put in the job to speak with the leader; the order is theirs once they have. Nothing is
+-- said to anyone else or on the radio. A leader who picks themselves has the order at once, and reads nothing.
+-- True: sent for. False: nothing new (sent for or under the order already). Nil: not theirs to give, or not
+-- someone it can be given to (nothing is said of that either).
+function LC.AdminPlotAssign(leader, member)
+    if not LC.AdminPlotLeader(leader) or not Fighter(member) then return nil end
+    if Has(member) then return false end
+    if member == leader then
+        state[member] = "order"
+        if member.SetPData then member:SetPData(ORDER_KEY, "1") end
+        return true
+    end
+    local rec = { leader = leader, since = CurTime(), tries = 0 }
+    state[member] = "word"
+    if member.SetPData then member:SetPData(ORDER_KEY, "word") end
+    words[member] = rec
+    member:ChatPrint(string.format(WORD_LINE, Name(leader)))
+    local okE, q, waits = LC.Try(Enrol, member, rec)
+    if okE and q then
+        rec.q = q
+    elseif not (okE and waits) then
+        rec.tries = 1 -- (the quest system would not take it: the watch tries once more, then frees them)
+    end
+    return true
+end
+-- The leader marks someone sent for as spoken with (their name on the list again). True: the order is theirs now.
+-- False: they were not waiting on a word. Nil: not a leader's to say.
+function LC.AdminPlotSpoken(leader, member)
+    if not LC.AdminPlotLeader(leader) or not (IsValid(member) and member:IsPlayer()) then return nil end
+    if Has(member) ~= "word" then return false end
+    return Spoken(member)
+end
+-- The leader takes it back, whatever they had of it (their name on the list once more). It always works: by the
+-- record, whatever has become of the job. Nothing is said. Nil: not a leader's to take.
+function LC.AdminPlotTakeBack(leader, member)
+    if not LC.AdminPlotLeader(leader) or not (IsValid(member) and member:IsPlayer()) then return nil end
+    Free(member)
+    return true
+end
+-- The name picked on F2, as its number on the list and what the list showed of them: "give" (nothing), "spoken"
+-- (sent for) or "back" (under the order). A list out of date does no harm: each does only what it says
+-- (sv_livingcity_quickmore.lua). True when it was theirs to pick.
+function LC.AdminPlotPick(leader, arg)
+    local id, what = string.match(tostring(arg or ""), "^(%d+):(%a+)$")
+    id = tonumber(id)
+    if not id then return false end
+    for _, p in ipairs(player.GetAll()) do
+        if p:EntIndex() == id then
+            if what == "give" then return LC.AdminPlotAssign(leader, p) ~= nil end
+            if what == "spoken" then return LC.AdminPlotSpoken(leader, p) ~= nil end
+            if what == "back" then return LC.AdminPlotTakeBack(leader, p) ~= nil end
+            return false
+        end
+    end
+    return false
+end
+
+-- No longer theirs: someone new, in a cell, out of the Resistance, or below a Fighter. And whatever happens to a
+-- leader (gone from the server, dead for good, out of the Resistance, a leader no more) is looked into at once:
+-- those sent for by them speak with whoever leads now, or are free.
+local function Off(ply)
+    if not LC.Try(Free, ply) and IsValid(ply) then state[ply], words[ply] = false, nil end
+end
+hook.Add("LivingCityNewCharacter", "LivingCityAdminPlot", function(ply)
+    Off(ply)
+    Look()
+end)
+hook.Add("LivingCityIncarcerated", "LivingCityAdminPlot", function(ply) Off(ply) end)
+hook.Add("LivingCityFactionChanged", "LivingCityAdminPlot", function(ply, fid)
+    if fid ~= "resistance" then Off(ply) end
+    Look()
+end)
+hook.Add("LivingCityRankChanged", "LivingCityAdminPlot", function(ply, fid, rank)
+    if fid == "resistance" and (tonumber(rank) or 1) < MIN_RANK then Off(ply) end
+    Look()
+end)
+-- Gone from the server: what is kept with their character stays (they come back still sent for, or still under
+-- the order); as a leader they lead nobody from this moment.
+hook.Add("PlayerDisconnected", "LivingCityAdminPlot", function(ply)
+    if not IsValid(ply) then return end
+    leaving[ply] = true
+    words[ply], state[ply] = nil, nil
+    Look()
+end)
+hook.Add("PlayerInitialSpawn", "LivingCityAdminPlot", function(ply) leaving[ply] = nil end)
+-- A job of theirs is over: someone sent for while they held it is put in this one now.
+local function Next(ply)
+    if not (IsValid(ply) and state[ply] == "word") then return end
+    timer.Simple(0, Look)
+end
+hook.Add("LivingCityQuestFailed", "LivingCityAdminPlot", function(ply) Next(ply) end)
 
 ------------------------------------------------------------------------
 -- The job, on the Resistance's board
@@ -180,8 +560,10 @@ hook.Add("LivingCityIncarcerated", "LivingCityAdminPlot", function(ply) Released
 
 TEMPLATE = {
     id = JOB, factions = { resistance = true }, first = true, recheck = true,
-    available = function(ply) return LC.AdminPlotOpen() and (not IsValid(ply) or RankIndex(ply) >= MIN_RANK) end,
-    sees = function(ply) return IsValid(ply) and RankIndex(ply) >= MIN_RANK end, -- (not on the board of anyone below a Fighter)
+    -- (only while nobody leads: with a Commander or a Lieutenant playing, the order comes from them alone)
+    available = function(ply) return LC.AdminPlotOpen() and not LC.AdminPlotLeading() and (not IsValid(ply) or RankIndex(ply) >= MIN_RANK) end,
+    -- (not on the board of anyone below a Fighter, nor of anyone while someone leads; whoever holds it keeps it)
+    sees = function(ply) return IsValid(ply) and RankIndex(ply) >= MIN_RANK and (JobOf(ply) ~= nil or not LC.AdminPlotLeading()) end,
     solo = true, -- (one holder at a time: the owner, 18 November, "maybe only one can at a time")
     -- (her address over, and nobody getting her out: there is nothing left to try. No reason in words: it shows.)
     over = function()
@@ -206,12 +588,26 @@ end
 hook.Add("LivingCitySpeechCalled", "LivingCityAdminPlot", function()
     if LC.PostDirective then LC.Try(LC.PostDirective, JOB, nil, true) end
 end)
--- Her address is over (or her guards have begun): a job nobody took comes off the board.
-hook.Add("LivingCitySpeechEnded", "LivingCityAdminPlot", function()
+-- A job nobody took comes off the board.
+local function Unpost()
     for _, p in ipairs(LC.Postings and LC.Postings.resistance or {}) do
         if p.tmpl == TEMPLATE and not p.q then p.dead = true end
     end
-end)
+end
+-- Her address is over (or her guards have begun).
+hook.Add("LivingCitySpeechEnded", "LivingCityAdminPlot", function() Unpost() end)
+-- Leaders come and go (they join, leave, are promoted): with one playing the job nobody took comes off the
+-- board, and with none left it is back while her address is on. Nobody is told either way.
+local function Board()
+    local now = LC.AdminPlotLeading()
+    if now == led then return end
+    led = now
+    if now then
+        Unpost()
+    elseif LC.AdminPlotOpen() and LC.PostDirective then
+        LC.Try(LC.PostDirective, JOB, nil, true)
+    end
+end
 
 ------------------------------------------------------------------------
 -- Where they come out
@@ -549,8 +945,8 @@ end
 -- done and paid. Anyone else: nothing. True when it was an ordered one.
 function LC.AdminPlotAttempt(her, who, killed)
     if not (IsValid(who) and who:IsPlayer()) or not IsValid(her) then return false end
-    local q, plan = JobOf(who), OrderOf(who)
-    if not q and not plan then return false end
+    local q, own = JobOf(who), Has(who) == "order"
+    if not q and not own then return false end
     -- once for an address, and once for an exit
     local _, S = AtAddress()
     local A = Exit()
@@ -565,16 +961,15 @@ function LC.AdminPlotAttempt(her, who, killed)
         if killed then q.bonus = (q.bonus or 0) + KILL_BONUS else LC.AdminPlotPaid[who] = CurTime() end
         LC.Try(LC.QuestEvent, "admin_attempt", who)
     end
-    if plan then
+    if own then
         -- (under a leader's order: whoever makes the attempt is paid what the job pays, the owner, 18 November: "yes it
-        -- should pay the extra". The others who joined and are there get what any planned operation pays, as before.)
+        -- should pay the extra". Their order is done; another member's stands.)
+        Off(who)
         if not q then
-            plan.joined[who] = nil
             if LC.AddXP then LC.AddXP(who, REWARD + (killed and KILL_BONUS or 0), TITLE) end
             if LC.AddCredits then LC.AddCredits(who, STIPEND, "paid quietly") end
             if not killed then LC.AdminPlotPaid[who] = CurTime() end
         end
-        EndOrder(plan, true)
     end
     return true
 end
@@ -582,12 +977,12 @@ end
 -- The stipend: 100 credits in all for the job from the board (the order's is paid where the attempt is made; never a lone wolf). The board's
 -- usual pay for a finished job (lc_directive_pay, sv_livingcity_economy.lua) is part of it, so this adds the rest.
 hook.Add("LivingCityQuestComplete", "LivingCityAdminPlot", function(ply, q)
+    Next(ply) -- (sent for while they held this job: put in that one now)
     if not (IsValid(ply) and q and q.tmpl == TEMPLATE and LC.AddCredits) then return end
     local eco, usual = GetConVar("lc_economy"), GetConVar("lc_directive_pay")
     local had = (not eco or eco:GetBool()) and usual and usual:GetInt() or 0
     if STIPEND - had > 0 then LC.AddCredits(ply, STIPEND - had, "paid quietly") end
 end)
-function LC.AdminPlotMinRank() return MIN_RANK end
 
 -- She died of it after all, later: hit with no close calls left she is taken out alive, and the roll in her office
 -- went against her (the owner, 17 November; sv_livingcity_adminsecurity.lua says so here). Whoever was paid for the
@@ -650,6 +1045,12 @@ end)
 
 function LC.AdminPlotThink(now)
     now = now or CurTime()
+    Board()
+    -- everyone sent for or under the order, looked at: still theirs, and the job and the record agree
+    if now >= nextWatch then
+        nextWatch = now + WATCH
+        LC.AdminPlotWatch(now)
+    end
     -- someone under orders who joined in once her guards had begun (marked by them as an attacker)
     local A = Exit()
     if A and P then A.plotted = true end -- (once for an exit, however it was set off)
@@ -661,8 +1062,6 @@ function LC.AdminPlotThink(now)
             end
         end
     end
-    -- the leader's order, past its hour: it stood until her address was over
-    if order and not AtAddress() and not A then EndOrder(order, false) end
     if not P then return end
     local alive = {}
     for i = #P.fighters, 1, -1 do
@@ -695,12 +1094,8 @@ function LC.AdminPlotThink(now)
 end
 
 timer.Create("LivingCityAdminPlot", 0.5, 0, function()
-    if not P and not order and not Exit() then return end
     local okT, err = LC.Try(LC.AdminPlotThink, CurTime())
     if not okT and LC.Error then LC.Error("admin plot", err) end
 end)
 
-hook.Add("LivingCityStopped", "LivingCityAdminPlot", function()
-    LC.AdminPlotEnd()
-    order = nil
-end)
+hook.Add("LivingCityStopped", "LivingCityAdminPlot", function() LC.AdminPlotEnd() end)

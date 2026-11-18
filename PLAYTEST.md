@@ -6,7 +6,7 @@ Tick what works, write a word under what does not. What is not on this card wait
 
 ## This card (18 November 2026: everything built since your 15 November notes, in the order of one session)
 
-- [ ] **Small fixes from your notes:** F1 > Find work: chevrons on the ground to Labor Assignment? The wall monitor gone, two or three hanging monitors live on different cameras? The transformer's glass from the floor up, about 15 feet? The victory sting never while walking about?
+- [ ] **Small fixes from your notes:** the upper-left box: a row for what you are dressed as (Citizen clothes, Resistance clothes, CP uniform; amber when it is a disguise)? Coming back as a Resistance member: one line about plain clothes, not two? F1 > Find work: chevrons on the ground to Labor Assignment? The wall monitor gone, two or three hanging monitors live on different cameras? The transformer's glass from the floor up, about 15 feet? The victory sting never while walking about?
   Notes:
 - [ ] **Punched, cuffed, questioned:** punch a unit, put your fists away: a blow or two, then the struggle bar (E fast)? Walked to the cells through a Combine only zone: no countdown? In the cell as a citizen: every choice whole on screen, asked about the charge, not the Resistance?
   Notes:
@@ -32,7 +32,9 @@ Tick what works, write a word under what does not. What is not on this card wait
   Notes:
 - [ ] **The would-be assassin, caught:** as the Administrator, F4 > "Question the would-be assassin": a stunstick in hand, your questions, and afterwards the prisoner seen again as a stalker? With nobody playing her: does the city's own Administrator come with two soldiers (and say her questions aloud once they are recorded)?
   Notes:
-- [ ] **A coordinated attack:** as a Resistance Fighter or higher during her address, take "Kill the Administrator" from the board (or a leader plans it: F2 > Resistance > Operations) and shoot at her: do seven or eight fighters come out round the stand from places nobody was looking, fire only at the Combine, and leave when she is gone? Paid 250 experience and 100 credits? Can a second Fighter take it while you hold it (he should not)? As a Member: is the job missing from your board?
+- [ ] **The leader's order, by name:** as a Commander (or a Lieutenant with no Commander on): F2 > Resistance > "Order: kill the Administrator": a list of your Fighters and up; pick one. Are they told "[Freq 7] <you> wants a word with you, in private." and put into the job "A word with <you>", with no clock, unable to take any other job, shift or story until it is done? Does pressing E on each other (or picking the name again) finish it, with the bell and nothing said? Pick the name a third time: taken back? Is "Kill the Administrator at her address" gone from the planning board?
+  Notes:
+- [ ] **A coordinated attack:** under the leader's order, or with no leader playing as a Resistance Fighter or higher who takes "Kill the Administrator" from the board during her address, shoot at her: do seven or eight fighters come out round the stand from places nobody was looking, fire only at the Combine, and leave when she is gone? Paid 250 experience and 100 credits? Can a second Fighter take it while you hold it (he should not)? As a Member: is the job missing from your board?
   Notes:
 - [ ] **A lone wolf, taken in:** as a citizen with no job held, shoot at her and get away (nobody comes to help). Stay out of the units' sight about two minutes: does a man in plain clothes walk up and say "We saw what you did. You're with us now."? Are you then on Resistance ground (by a Commander or Lieutenant who is playing, else the camp furthest from the Combine), a Sympathizer who becomes a Member after one job? Or walk into rebel ground first: does one of theirs say it there?
   Notes:
