@@ -36588,6 +36588,11 @@ set("lc_stops", 0)
 set("lc_admin_hunt", 0) -- (the hunt is its own unit's: no squads here)
 set("lc_manpower", 1)
 set("lc_speech_muster", 60)
+-- (18 November: each member a leader sends for has a price, lc_resistance_order_cost. The Resistance's fund holds
+-- plenty while this unit runs, so every order in it is paid for out of the fund and nobody's own credits move; the
+-- price itself, who pays it and where it goes back is Nov18_ResistanceFundTests' own.)
+local fundWas = LC.ResistanceFund()
+LC.ResistanceFundAdd(1000000)
 -- (18 November: the job is on the board only while nobody leads the Resistance. A Commander or a Lieutenant an
 -- earlier unit left playing is a Fighter while this one runs, and put back at its end.)
 local strays = {}
@@ -37263,6 +37268,56 @@ ok(LC.AdminPlotHolds(e3) == nil and kept(e3) == "", "(everyone is looked at ever
 e3:SetNW2Int("lcf_rank", 3)
 for _, p in ipairs({ e1, e2, e3, e4 }) do gone(p) end
 
+-- half after the first (the owner, 18 November: "Only the first should be paid that high, the rest maybe 1/2 or
+-- less"): at one address the first under orders whose attempt counts is paid in full, and anyone else under the
+-- leader's order whose attempt counts there half of each part; her next address starts again
+do
+local h1, h2, h3, h4 = fighter("PlotFirstShot"), fighter("PlotSecondShot"), fighter("PlotNextFirst"), fighter("PlotNextSecond")
+ok(under(leader, h1) and under(leader, h2) and under(leader, h3) and under(leader, h4), "(four more under the Lieutenant's order)")
+for p in pairs(LC.AdminPlotPaid) do LC.AdminPlotPaid[p] = nil end -- (whoever an earlier address paid is nothing to this one)
+her = address()
+local x1, c1, x2, c2 = xp(h1), LC.Credits(h1), xp(h2), LC.Credits(h2)
+pool.reserve = 20
+LC.AdminAttempt(her, h1, "shot")
+P = LC.AdminPlot()
+local came = P and #P.fighters or 0
+ok(came >= 7 and xp(h1) - x1 >= 250 and xp(h1) - x1 < 300 and LC.Credits(h1) == c1 + 100 and LC.AdminPlotHolds(h1) == nil,
+    "the first under orders whose attempt counts at an address is paid in full: 250 experience, 100 credits", (xp(h1) - x1) .. " " .. (LC.Credits(h1) - c1))
+ok(xp(h2) == x2 and LC.Credits(h2) == c2 and LC.AdminPlotHolds(h2) == "order", "(another under the order has nothing of that)")
+-- her guards have her: a second member joins in, and they mark them as an attacker (sv_livingcity_adminsecurity.lua)
+ok(LC.AdminExfil() ~= nil and LC.AdminAttempt(LC.AdminExfil().her, h2, "shot") and LC.AdminExfil().attackers[h2] == true, "(a second joins in once her guards have her)")
+LC.AdminPlotThink()
+ok(xp(h2) - x2 >= 125 and xp(h2) - x2 < 150 and LC.Credits(h2) == c2 + 50,
+    "the second under the order whose attempt counts at the same address is paid half of each part: 125 experience, 50 credits", (xp(h2) - x2) .. " " .. (LC.Credits(h2) - c2))
+ok(LC.AdminPlotHolds(h2) == nil and kept(h2) == "", "and their order is done too")
+ok(attackers() == came and pool.reserve == 20 - came, "(the fighters come once for an address, however many try)", attackers())
+LC.AdminPlotThink()
+ok(xp(h2) - x2 < 150 and LC.Credits(h2) == c2 + 50, "(once)")
+x1, x2 = xp(h1), xp(h2)
+ok(LC.AdminPlotDied() == 2 and xp(h1) - x1 >= 250 and xp(h1) - x1 < 300 and xp(h2) - x2 >= 125 and xp(h2) - x2 < 150,
+    "she dies of it after all: 250 more for the first, half of that for the second", (xp(h1) - x1) .. " " .. (xp(h2) - x2))
+-- her next address starts again; and the same with her guards' exit switched off (a grenade by her is how it is heard)
+tidy()
+set("lc_admin_exfil", 0)
+her = address()
+local x3, c3, x4, c4 = xp(h3), LC.Credits(h3), xp(h4), LC.Credits(h4)
+pool.reserve = 20
+hook.Run("LivingCityAdminAttempt", her, h3, "grenade")
+ok(LC.AdminPlot() ~= nil and xp(h3) - x3 >= 250 and xp(h3) - x3 < 300 and LC.Credits(h3) == c3 + 100 and LC.AdminPlotHolds(h3) == nil,
+    "her next address starts again: the first there is paid in full", (xp(h3) - x3) .. " " .. (LC.Credits(h3) - c3))
+hook.Run("LivingCityAdminAttempt", her, h4, "grenade")
+ok(xp(h4) - x4 >= 125 and xp(h4) - x4 < 150 and LC.Credits(h4) == c4 + 50 and LC.AdminPlotHolds(h4) == nil,
+    "and whoever under the order tries after them there, half", (xp(h4) - x4) .. " " .. (LC.Credits(h4) - c4))
+set("lc_admin_exfil", 1)
+tidy()
+for _, p in ipairs({ h1, h2, h3, h4 }) do -- (what it paid has made Lieutenants of some: gone, so the Lieutenant leads alone again)
+    LC.AdminForget(p) LC.ClearWanted(p)
+    if LC.Prisoners[p] then LC.ReleasePrisoner(p) end
+    gone(p)
+end
+for p in pairs(LC.AdminPlotPaid) do LC.AdminPlotPaid[p] = nil end
+end
+
 -- sent for, layer 1: what happens to them, or to the leader, ends it at once and without a word
 local s1, s2, s3, s4, s5 = fighter("PlotSentArrested"), fighter("PlotSentReborn"), fighter("PlotSentLeaver"), fighter("PlotSentDemoted"), fighter("PlotSentBack")
 local sent = { s1, s2, s3, s4, s5 }
@@ -37462,6 +37517,8 @@ set("lc_stops", stopsWas)
 set("lc_admin_hunt", huntWas)
 set("lc_manpower", manWas)
 set("lc_speech_muster", 120)
+LC.ResistanceFundTake(LC.ResistanceFund())
+LC.ResistanceFundAdd(fundWas)
 _walls = savedWalls
 end
 Nov17_AdminPlotTests()

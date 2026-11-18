@@ -25,7 +25,9 @@
            guards and order of arrest, a Division Leader's Call a sweep >. What's greyed, and
            why, comes from the server (lc_quick_info, sv_livingcity_quickmore.lua).
            18 November (the owner): the Resistance's leader has Order: kill the Administrator >
-           on the Resistance page, a list of names (sv_livingcity_adminplot.lua).
+           on the Resistance page, a list of names (sv_livingcity_adminplot.lua), with what each
+           one sent for costs, "(300 each)"; and every member has one row there for what the
+           Resistance's fund holds, "Fund: 120 credits" (sv_livingcity_resistancefund.lua).
 
     9 on either is everything else: the full menu (cl_livingcity_actions.lua), also on C.
     A ">" opens a page of its own (voice lines, talking, poses).
@@ -206,11 +208,21 @@ local function ResistancePage()
     if me:HasWeapon("weapon_lc_multitool") then items[#items + 1] = Item("Hack the Combine door I'm looking at", function() Send("hack") end) end
     items[#items + 1] = Page("Operations: plan or join", OpsPage)
     items[#items + 1] = Item("The cell's rules (the leader's clipboard)", function() Send("rebelrules") end)
-    -- (the Resistance's leader alone: the server sends the list to nobody else. Last, so nothing above it moves.)
-    local leads = (LC_CL.QuickInfo or {}).plot ~= nil
-    if leads then items[#items + 1] = Page(PLOT, PlotPage) end
+    -- (the Resistance's leader alone: the server sends the list to nobody else. Last, so nothing above it moves.
+    -- With it, what each member sent for costs: the owner, 18 November.)
+    local info = LC_CL.QuickInfo or {}
+    local leads = info.plot ~= nil
+    if leads then
+        local cost = math.floor(tonumber(info.plotcost) or 0)
+        items[#items + 1] = Page(cost > 0 and string.format("%s (%d each)", PLOT, cost) or PLOT, PlotPage)
+    end
     -- (the owner, 7 November: losses you can see; the fighters we have left, under the rest)
-    return { title = "RESISTANCE", items = items, empty = ManpowerRows(leads and (#items + 1) or 7) }
+    local fund = tonumber((info.reb or {}).fund)
+    if not fund then return { title = "RESISTANCE", items = items, empty = ManpowerRows(leads and (#items + 1) or 7) } end
+    -- (the owner, 18 November: what the Resistance's fund holds, one row for every member, above the fighters left)
+    local rows = ManpowerRows(math.max(7, #items + 2))
+    rows[#items + 1] = string.format("Fund: %d credits", math.floor(fund))
+    return { title = "RESISTANCE", items = items, empty = rows }
 end
 
 -- The Combine's manpower, for the Administrator (units see it on the unit tools).
