@@ -34,9 +34,9 @@
 
     The news comes the city's own way: each city morning a City Bulletin on
     the city screens and the PA's chat line (no windows), what changed and why;
-    and anyone can read the state of the city on F2 > Me (More) > The state of the city.
+    and anyone can read the state of the city on F1 > What now? > The state of the city.
 
-    The Administrator's tools (F2 > Me > Administrator), each with its cost:
+    The Administrator's tools (F2 > Speak to the city, and City orders), each with its cost:
       - a speech: at a speech stand (editor: "Point: Administrator's speech stand"; she's taken
         there), words to the city on the screens. Morale +6, authority +3; the
         citizens near the stand +2 standing. Once a city day.
@@ -351,7 +351,7 @@ function LC.GoToSpeechStand(ply)
     if not p then return false, "There's no speech stand in this city. (Staff: Miscount Editor > Point: Administrator's speech stand.)" end
     ply:SetPos((LC.FreeSpawnPos and LC.FreeSpawnPos(p.pos + Vector(0, 0, 8))) or p.pos)
     if ply.SetEyeAngles then ply:SetEyeAngles(Angle(0, p.yaw or 0, 0)) end
-    ply:ChatPrint("[The office] You're at the speech stand. F2 > Me > Administrator > Give a speech, when you're ready.")
+    ply:ChatPrint("[The office] You're at the speech stand. F2 > Speak to the city > Give a speech, when you're ready.")
     -- her guards come with her (sv_livingcity_admguard.lua or wherever they follow her)
     hook.Run("LivingCityAdminMoved", ply, p.pos)
     return true
@@ -397,7 +397,7 @@ function LC.GiveSpeech(ply, text)
         return true
     end
     local stand = SpeechStand(ply:GetPos())
-    if stand and ply:GetPos():DistToSqr(stand.pos) > 400 * 400 then return false, "Speak from the speech stand: F2 > Me > Administrator > Go to the speech stand." end
+    if stand and ply:GetPos():DistToSqr(stand.pos) > 400 * 400 then return false, "Speak from the speech stand: F2 > Speak to the city > Go to the speech stand." end
     s.speechDay = s.day
     Deliver(ply, text, ply:GetPos(), mic)
     if mic and LC.SpeechMicOpen then LC.SpeechMicOpen(ply, ply:GetPos()) end
@@ -456,7 +456,8 @@ local function Sync()
     local d = {}
     for _, n in ipairs(LC.BlockNumbers and LC.BlockNumbers() or {}) do
         local owner, mark = LC.DistrictOwner(n)
-        d[#d + 1] = { n = n, name = BName(n), owner = owner, mark = mark }
+        local sick = LC.DistrictInfestWord and LC.DistrictInfestWord(LC.DistrictInfest(n)) -- (sv_livingcity_districtinfest.lua)
+        d[#d + 1] = { n = n, name = BName(n), owner = owner, mark = mark, sick = sick }
     end
     SetGlobal2String("lc_ledger", util.TableToJSON({ day = s.day, supply = s.supply, morale = s.morale, combine = s.combine, resistance = s.resistance,
         authority = s.authority, districts = d, spoke = s.speechDay == s.day or nil, amnesty = s.amnestyDay == s.day or nil,
@@ -495,7 +496,7 @@ timer.Create("LivingCityLedger", 5, 0, function()
 end)
 hook.Add("ShutDown", "LivingCityLedger", function() if L then Save() end end)
 
--- The menu's actions (F2 > Me).
+-- The menu's actions (her F2: Speak to the city, City orders).
 local function Wrap()
     if LC.MenuActions then
         LC.MenuActions.speechstand, LC.MenuActions.speech, LC.MenuActions.amnesty, LC.MenuActions.crackdown, LC.MenuActions.extrarations = true, true, true, true, true

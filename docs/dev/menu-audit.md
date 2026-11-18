@@ -1,5 +1,7 @@
 # F1 and F2 menu audit (18 November)
 
+**Done (18 November): the owner said "Yes to all"; changes 1 to 8 are built.** Item 9 needed nothing: Overwatch soldiers are Civil Protection ranks and already had a unit's F2 (this audit looked at a faction id that does not exist). Found while building: the Administrator had been shown a unit's F2, not her own; fixed.
+
 Taken from the code itself (the client smoke test's menus, for 13 kinds of player), not from the docs. **Nothing has changed yet.** Each numbered change below waits for the owner's yes or no.
 
 ## What's there now (short)

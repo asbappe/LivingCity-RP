@@ -3,7 +3,7 @@
     (the owner, 10 November: "too many numbers, yes please to your
     suggestion").
 
-    F2 > Me > My standing (or Where I stand) (and C > You > Where I stand) opens one window:
+    F2 > My standing (or F2 > Me > Where I stand) (and C > You > Where I stand) opens one window:
     Civil Standing and its tier, credits, ration cards, rank and experience,
     the three traits (loyalty, sympathy, corruption), wanted or not and how
     to give yourself up, the record since your last sentence and what it
@@ -93,8 +93,8 @@ function LC.StandingRows(ply)
     if LC.SurvivalMode and GetConVar("lc_survival_modes") and GetConVar("lc_survival_modes"):GetBool() then
         local relaxed = LC.Relaxed(ply)
         Row("You", "Survival", relaxed and "Relaxed" or "Realistic",
-            relaxed and "Slow hunger and thirst; no parasites, toilet, washing or food going off. (Realistic pays 20% more.) Switch: F2 > Me, every 3 hours."
-            or "Every need, as the city really is. 20% more shift pay and experience, and the title Hardened. Switch: F2 > Me, every 3 hours.")
+            relaxed and "Slow hunger and thirst; no parasites, toilet, washing or food going off. (Realistic pays 20% more.) Switch: F2 > Dreams and survival, every 3 hours."
+            or "Every need, as the city really is. 20% more shift pay and experience, and the title Hardened. Switch: F2 > Dreams and survival, every 3 hours.")
     end
     if LC.CloseCallsLeft then
         local left = LC.CloseCallsLeft(ply)
@@ -109,7 +109,7 @@ function LC.StandingRows(ply)
     if LC.HouseholdOf then
         local _, h = LC.HouseholdOf(ply)
         Row("You", "Household", h and h.name or "None",
-            "Who you live with: the same block, each other's crates and lockers, the head's apartment keys. F2 > Me (More) > My household.")
+            "Who you live with: the same block, each other's crates and lockers, the head's apartment keys. F2 > Household, stall and debts > My household.")
     end
     if LC.DreamSkipEarned then
         local kinds = {}
@@ -117,7 +117,7 @@ function LC.StandingRows(ply)
             if LC.DreamSkipEarned(ply, k[1]) == true then kinds[#kinds + 1] = k[2] end
         end
         Row("You", "Dreams you may sit out", #kinds > 0 and table.concat(kinds, ", ") or "None yet",
-            "Happy or Neutral dreams after living through 2 of that kind; nightmares and propaganda with Exemplary standing (citizens). Choose in F2 > Me (More) > My dreams.")
+            "Happy or Neutral dreams after living through 2 of that kind; nightmares and propaganda with Exemplary standing (citizens). Choose in F2 > Dreams and survival.")
     end
     return rows
 end

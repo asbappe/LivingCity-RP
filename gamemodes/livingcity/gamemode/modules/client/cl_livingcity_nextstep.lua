@@ -139,8 +139,10 @@ function LC_CL.WhatNowPage()
     items[#items + 1] = Item("Ways to get by (everything you could do)", function() Send("ways") end)
     if LocalPlayer():IsAdmin() then items[#items + 1] = Item("The city's stories (staff: the chronicle, secrets included)", function() Send("news") end) end
     items[#items + 1] = Page("Places in the city", LC_CL.PlacesPage)
+    -- the state of the city: news for everyone (the owner, 18 November: it was under F2 > Me)
+    if GetGlobal2String("lc_ledger", "") ~= "" and LC_CL.QuickCityPage then items[#items + 1] = Page("The state of the city", LC_CL.QuickCityPage) end
     local mode = cvShow:GetInt()
-    items[#items + 1] = Item(mode == 2 and "Keep it on screen: always (change)" or (mode == 1 and "Keep it on screen: new life and urgent (change)" or "Keep it on screen: never (change)"),
+    items[#items + 1] = Item(mode == 2 and "What stays on screen: always" or (mode == 1 and "What stays on screen: new life and urgent" or "What stays on screen: never"),
         function() RunConsoleCommand("lc_whatnow_show", tostring((mode + 1) % 3)) end)
     return { title = "WHAT NOW?", items = items }
 end

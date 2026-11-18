@@ -107,3 +107,6 @@ To add an item: `printf '%s\n' '- [ ] **Topic:** what to try. [needs a person: w
 - [ ] **Rebel ground and the Colonel:** way marks as arrows within 20 seconds, pots on tables, the usual music, the Colonel stays put, mouths move on recorded lines? [needs a person: how it looks]
 - [ ] **The 21 new dream posters (16 November):** find a few in the city (or look at the sheet sent in chat): does each picture read at a glance, and is any one wrong for its dream? [needs a person: how it looks]
 - [ ] **Infestation per district:** leave an infestation alone until its block reads "badly infested" on F2 > The state of the city; does it turn up in the next block after about 20 minutes, and does a powered checkpoint stop it? [needs a person: the pace on the real map]
+- [ ] **The tidied F1 and F2:** as a citizen, a unit, a rebel and the Administrator, does every F2 entry sit where you would look for it, and does F1 > What now? > The state of the city read well? [needs a person: whether it feels right]
+- [ ] **Stand poses:** F1 > Pose > "Stand: pose 1" and "pose 2": what do they look like, so they can be named for it? [needs a person: to see them]
+- [ ] **Testing alone:** C > Help > Admin testing tools > Testing alone: try the assassination test (her address, the job, the attempt) and the collapse with only you on. [needs a person: the real game]

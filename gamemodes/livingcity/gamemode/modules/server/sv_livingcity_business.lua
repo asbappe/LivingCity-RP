@@ -264,7 +264,7 @@ function LC.ApartmentInfo(ply)
         #holders > 0 and table.concat(holders, ", ") or "just you")
 end
 
--- Their apartment, for F2 > Me > My home (sv_livingcity_quickmore.lua): { pos, left (seconds), where }, or nil.
+-- Their apartment, for F2 > My home (sv_livingcity_quickmore.lua): { pos, left (seconds), where }, or nil.
 function LC.ApartmentSummary(ply)
     local mine = IsValid(ply) and MyRentals(ply) or {}
     if #mine == 0 then return nil end
