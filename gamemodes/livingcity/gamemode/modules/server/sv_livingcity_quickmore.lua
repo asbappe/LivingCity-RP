@@ -8,8 +8,9 @@
                         hears it and sees where you are; a couple of idle fighters nearby come and
                         stay with you), send my position, guide me to rebel ground or the lab
       its leader        Resistance > Order: kill the Administrator >: the Fighters and up by name,
-                        and who has the order; a name gives it or takes it back (the owner,
-                        18 November; sv_livingcity_adminplot.lua). Sent to the leader alone.
+                        and what each has of it; a name sends for them, says they have spoken,
+                        or takes it back (the owner, 18 November; sv_livingcity_adminplot.lua).
+                        Sent to the leader alone.
       a citizen        Me >: find work, my rations, my home and rent, my standing
       a prisoner        My sentence: what you're in for and how long is left
       the Administrator open my tablet, the laws, tonight's dream, command the guards (follow,
@@ -554,7 +555,7 @@ local ACTIONS = {
     arrest = function(ply, _, target) return LC.AdminOrderArrest(ply, target) end,
     guards = function(ply, arg) return LC.AdminGuardOrder(ply, arg) end,
     sweep = function(ply, arg) return LC.OfficerCallSweep(ply, arg) end,
-    -- (the Resistance's leader picks a name: the order given, or taken back. No reason is ever said.)
+    -- (the Resistance's leader picks a name: sent for, spoken with, or taken back. No reason is ever said.)
     plotorder = function(ply, arg) return LC.AdminPlotPick ~= nil and LC.AdminPlotPick(ply, arg) end,
 }
 LC.QuickMoreActions = ACTIONS

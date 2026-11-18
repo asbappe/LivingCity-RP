@@ -36955,28 +36955,69 @@ ok(LC.AdminPlot() ~= nil, "(and the fighters come for her guards all the same)")
 adm.alive = true
 set("lc_admin_exfil", 1)
 
--- the leader's order (the owner, 18 November): given by name from F2, and a word in private
+-- the leader's order (the owner, 18 November): sent for by name from F2, a word with the leader, then the order
 tidy()
 adm:SetPos(at(40000, 0))
 do
 local KEY = "lc_adminplot_order"
 local function kept(p) return p:GetPData(KEY, "") end
-local function pick(by, p) return LC.QuickMore(by, "plotorder", tostring(p:EntIndex())) == true end -- (as F2 sends it)
+local function pick(by, p, what) return LC.QuickMore(by, "plotorder", p:EntIndex() .. ":" .. what) == true end -- (as F2 sends it)
 local function listed(by, p) -- (their line on the leader's list, or nil)
     for _, w in ipairs(LC.AdminPlotList(by) or {}) do if w.id == p:EntIndex() then return w end end
     return nil
 end
+local function word(p) -- (the job to speak with the leader, if they are in it)
+    local q = LC.QuestOf[p]
+    if q and not q.done and q.tmpl and q.tmpl.id == "res_word" then return q end
+    return nil
+end
+local function tracker(p) -- (what their screen is sent of their job)
+    local sent, realSend = nil, LC.SendCompressed
+    LC.SendCompressed = function(msg, tbl, rec) if msg == "lcq_state" and rec and rec[1] == p then sent = tbl end return realSend(msg, tbl, rec) end
+    p.lcQStateKey = nil
+    LC.SendQuestState(p)
+    LC.SendCompressed = realSend
+    return sent or {}
+end
+local function press(a, b) -- (a walks up to b and presses E at them)
+    a:SetPos(b:GetPos() + Vector(60, 0, 0))
+    a.lookingAt = b
+    hook.Run("KeyPress", a, IN_USE)
+    a.lookingAt = nil
+end
 local radioed, baseRadio = 0, LC.RadioNotice
 LC.RadioNotice = function(...) radioed = radioed + 1 return baseRadio(...) end
 local function gone(p) hook.Run("PlayerDisconnected", p) p:Remove() end
-local function fighter(name) local p = newPlayer(name, "resistance", nil, 400) p.chat = {} return p end
+local function fighter(name) local p = newPlayer(name, "resistance", nil, 400) p.chat, p.lcProtectUntil = {}, 0 return p end
+local function back(p, name) -- (the same person joins again: a new connection, the same saved data)
+    local n = _makeplayer(name, p:GetPos())
+    n.sid, n.pdata = p.sid, p.pdata
+    hook.Run("PlayerInitialSpawn", n)
+    if n:GetNW2String("lcf_faction", "") ~= "resistance" then LC.SetFaction(n, "resistance", nil, true) end
+    n.chat, n.lcProtectUntil = {}, 0
+    return n
+end
+local sentFor = LC.AdminPlotSentFor
+local name = LC.CharacterName
+-- a job on the Resistance's board that anyone of theirs can take (nothing of the city's own: it is only there to be taken)
+local nextPost = 990000
+local function posting()
+    nextPost = nextPost + 1
+    local p = { id = nextPost, title = "Count the crates", desc = "", reward = 5, limit = 600, faction = "resistance", expiresPost = CurTime() + 900,
+        tmpl = { id = "test_crates", factions = { resistance = true } }, data = {},
+        stages = { { kind = "count", event = "test_crates", need = 1, text = "Count them." } } }
+    LC.Postings.resistance = LC.Postings.resistance or {}
+    table.insert(LC.Postings.resistance, 1, p)
+    return p
+end
+local function failed(p) return heard(p, "Failed:") end
 
 -- who may give it: a Commander; a Lieutenant when no Commander is playing; nobody else
 ok(LC.AdminPlotLeading() == false and LC.AdminPlotLeader(reb) == false and LC.AdminPlotList(reb) == nil, "with only Fighters playing nobody leads, and nobody has the list")
 local leader = newPlayer("PlotLieutenant", "resistance", nil, 900)
-local member, second = fighter("PlotFighter"), fighter("PlotSecond")
+local member, second, third = fighter("PlotFighter"), fighter("PlotSecond"), fighter("PlotThird")
 local lowly = newPlayer("PlotMember", "resistance", nil, 150)
-inCrowd(leader, 100, -200) inCrowd(member, -100, -200) inCrowd(second, -200, -200) inCrowd(lowly, 200, -200)
+inCrowd(leader, 100, -200) inCrowd(member, -100, -200) inCrowd(second, -200, -200) inCrowd(third, -300, -200) inCrowd(lowly, 200, -200)
 ok(LCF.RankOf(leader).name == "Lieutenant" and LC.AdminPlotLeader(leader) == true and LC.AdminPlotLeading() == true,
     "a Lieutenant may give the order while no Commander is playing", LCF.RankOf(leader).name)
 ok(LC.AdminPlotLeader(member) == false and LC.AdminPlotLeader(lowly) == false and LC.AdminPlotLeader(cit) == false
@@ -36986,8 +37027,8 @@ local commander = newPlayer("PlotCommander", "resistance", nil, 1800)
 inCrowd(commander, 0, -200)
 ok(LCF.RankOf(commander).name == "Commander" and LC.AdminPlotLeader(commander) == true and LC.AdminPlotLeader(leader) == false,
     "with a Commander playing it is the Commander's alone: the Lieutenant may not", LCF.RankOf(commander).name)
-ok(LC.AdminPlotList(leader) == nil and LC.QuickInfo(leader).plot == nil and not pick(leader, member) and LC.AdminPlotHolds(member) == nil and #member.chat == 0,
-    "(the Lieutenant's F2 has no list now, and a name sent all the same gives nothing)")
+ok(LC.AdminPlotList(leader) == nil and LC.QuickInfo(leader).plot == nil and not pick(leader, member, "give") and sentFor(member) == nil and #member.chat == 0,
+    "(the Lieutenant's F2 has no list now, and a name sent all the same does nothing)")
 
 -- the list: Fighters and up by name, the leader among them
 ok(listed(commander, commander) and listed(commander, leader) and listed(commander, member) and listed(commander, second)
@@ -36995,15 +37036,15 @@ ok(listed(commander, commander) and listed(commander, leader) and listed(command
 ok(listed(commander, lowly) == nil and listed(commander, cit) == nil and listed(commander, cop) == nil and listed(commander, adm) == nil,
     "and nobody else: no Member, no citizen, no unit, not her")
 local row = listed(commander, member)
-ok(row and row.name == LC.CharacterName(member) and row.has == nil, "(each by their name; nobody has the order yet)", row and row.name)
+ok(row and row.name == name(member) and row.has == nil, "(each by their name; nobody has anything of it yet)", row and row.name)
 local f2 = LC.QuickInfo(commander).plot
 ok(f2 ~= nil and #f2 == #LC.AdminPlotList(commander), "F2 sends the list to the leader")
 ok(LC.QuickInfo(member).plot == nil and LC.QuickInfo(lowly).plot == nil and LC.QuickInfo(cit).plot == nil and LC.QuickInfo(cop).plot == nil,
     "and to nobody else")
 
--- a name gives the order: one private line to that member, and nothing to anyone else
+-- a name sends for that member: one private line, and a job of their own at once
 ok(LC.SpeechSession() == nil, "(no address is on: the leader prepares)")
-local everyone = { commander, leader, member, second, lowly, reb, wolf, cit, cop, adm }
+local everyone = { commander, leader, member, second, third, lowly, reb, wolf, cit, cop, adm }
 local function hush() for _, p in ipairs(everyone) do p.chat = {} end notices = {} radioed = 0 end
 local function read(except) -- (lines on every screen but theirs)
     local n = #notices
@@ -37011,32 +37052,128 @@ local function read(except) -- (lines on every screen but theirs)
     return n
 end
 hush()
-ok(pick(commander, member) and LC.AdminPlotHolds(member) == "order", "the leader picks a name on F2: that member is under orders")
+ok(pick(commander, member, "give") and sentFor(member) == commander, "the leader picks a name on F2: that member is sent for")
 local line = member.chat[1]
-ok(#member.chat == 1 and line == "[Freq 7] " .. LC.CharacterName(commander) .. " wants a word with you, in private.",
+ok(#member.chat == 1 and line == "[Freq 7] " .. name(commander) .. " wants a word with you, in private.",
     "the member reads one line: who wants a word with them, in private", table.concat(member.chat, " | "))
 ok(line and not string.find(string.lower(line), "administrator", 1, true) and not string.find(string.lower(line), "kill", 1, true), "(and not what about)")
 ok(read(member) == 0 and radioed == 0, "nobody else reads anything: not the leader, another member, a citizen, a unit or her; nothing on the radio", read(member) .. " " .. radioed)
-ok(kept(member) == "1" and listed(commander, member).has == true and listed(commander, second).has == nil, "the list shows who has it")
+local q = word(member)
+local tr = tracker(member)
+ok(q ~= nil and q.title == "A word with " .. name(commander) and #q.stages == 1 and q.stages[1].text == "Speak with " .. name(commander) .. ", in private.",
+    "and they are in a job of their own at once, with nothing to accept: a title and one line", q and q.title)
+ok(tr.active == true and tr.title == (q and q.title) and tr.objective == (q and q.stages[1].text) and tr.ent == commander:EntIndex(),
+    "on their screen as any job is, its marker on the leader", tostring(tr.title) .. " / " .. tostring(tr.ent))
+ok(tr.nolimit == true and q ~= nil and q.expires - CurTime() > 86400 * 365, "it has no time limit: no clock on their screen")
+ok(q ~= nil and q.reward == 0 and q.stages[1].kind == "count" and q.stages[1].secs == nil, "(nothing paid; its one step is an act, never a place to stand)")
+ok(LC.AdminPlotHolds(member) == nil and kept(member) == "word" and listed(commander, member).has == "word" and listed(commander, second).has == nil,
+    "the order is not theirs yet: the list shows them as sent for")
+_run(6)
+ok(word(member) == q and sentFor(member) == commander, "(and it stands as time goes by)")
+hush()
+ok(LC.AdminPlotAssign(commander, member) == false and pick(commander, member, "give") and word(member) == q and read(nil) == 0,
+    "sent for a second time: nothing new, no second line, the same job")
+
+-- until that word is had, every door that work comes through is shut, with one short reason
+local first = name(commander) .. " wants a word with you first."
+ok(LC.AdminPlotBusy(member) == first and LC.AdminPlotBusy(second) == nil and LC.AdminPlotBusy(cit) == nil and LC.AdminPlotBusy(commander) == nil,
+    "until then no other work for them, and them alone: one short reason", tostring(LC.AdminPlotBusy(member)))
+local post = posting()
+member.chat, member.lcqNext = {}, 0
+ok(LC.AcceptPosting(member, post.id) == false and word(member) == q and post.q == nil and #member.chat == 1 and member.chat[1] == "[Miscount] " .. first,
+    "door 1, the board (a job taken or joined, a story's part, a Union shift, a job over the radio, a foreman's work order): shut", table.concat(member.chat, " | "))
+local story = (LC.StoryPostings(member) or {})[1]
+ok(story == nil or (LC.AcceptPosting(member, story.id) == false and word(member) == q), "(a story's part comes through that door: shut)")
+local union
+for _, o in ipairs(LCJ.Occupations) do union = union or o.id end
+local okW, whyW = LC.SetJob(member, union)
+ok(okW == false and whyW == first and member:GetNW2String("lcj_job", "") == "", "door 2, a Union job from F4: shut", tostring(whyW))
+okW, whyW = LC.LaborCanAct(member, "assign")
+ok(okW == false and whyW == first, "door 3, the Labor Assignment terminal: shut", tostring(whyW))
+local planWas = LC.OpPlan
+LC.OpPlan = { by = commander, label = "Raid the data terminal", kind = "heist", pos = at(0, 0), data = {}, fireAt = CurTime() + 600, joined = { [commander] = true } }
+okW, whyW = LC.JoinOp(member)
+ok(okW == false and whyW == first and LC.OpPlan.joined[member] == nil, "door 4, joining a planned operation: shut", tostring(whyW))
+LC.OpPlan.joined[member] = true
+ok(LC.JoinOp(member) == true and LC.OpPlan.joined[member] == nil, "(backing out of one they had joined is theirs still)")
+LC.OpPlan = nil
+member.lcJobOffer = { from = cit, at = CurTime() }
+okW, whyW = LC.AcceptJob(member, true)
+ok(okW == false and whyW == first and member.lcJobOffer ~= nil and member:GetPData("lc_employer", "") == "", "door 5, a stall owner's job offer: shut, and the offer waits", tostring(whyW))
+member.lcJobOffer = nil
+member.chat = {}
+ok(LC.ManhuntWayOut(member) == false and #member.chat == 0, "(the job a hunted fighter is handed, to go to ground, is not handed to them either, and nothing is said)")
+-- (planning an operation: someone who may plan one, sent for)
+hush()
+ok(pick(commander, leader, "give") and sentFor(leader) == commander and LC.CanPlanOp(leader) == true, "(the Lieutenant is sent for too)")
+leader.lcOpTargets = { { label = "Raid the data terminal", kind = "heist", pos = at(0, 0), data = {} } }
+okW, whyW = LC.PlanOp(leader, 1, 2)
+ok(okW == false and whyW == name(commander) .. " wants a word with you first." and LC.OpPlan == nil, "door 4 again, planning an operation: shut", tostring(whyW))
+leader.lcOpTargets = nil
+LC.OpPlan = planWas
+-- and it is not theirs to drop
+member.chat = {}
+ok(LC.DropQuest(member) == false and word(member) == q, "they cannot drop it")
+_netcall("lcq_abandon", member)
+hook.Run("PlayerSay", member, "!abandon", false)
+ok(word(member) == q and sentFor(member) == commander and #member.chat == 0, "(not by the board's button, not by typing it; and nothing is said)", table.concat(member.chat, " | "))
+
+-- way 1: the member presses E at the leader, within reach
+hush()
+member:SetPos(commander:GetPos() + Vector(600, 0, 0))
+member.lookingAt = commander
+hook.Run("KeyPress", member, IN_USE)
+member.lookingAt = nil
+ok(word(member) == q, "(E from across the square is not a word with anyone)")
+press(member, second)
+ok(word(member) == q, "(nor is E at someone else)")
+cop:SetPos(commander:GetPos() + Vector(0, 40, 0)) -- (a unit right beside the leader: who else is near is never asked)
+press(member, commander)
+ok(word(member) == nil and LC.QuestOf[member] == nil and sentFor(member) == nil and LC.AdminPlotHolds(member) == "order" and kept(member) == "1",
+    "way 1: the member presses E at the leader, within reach: the job is done and the order is theirs")
+ok(tracker(member).active == false and read(nil) == 0 and radioed == 0, "it leaves their screen, and nothing is said: no line, to them or anyone", read(nil))
+ok(LC.AdminPlotBusy(member) == nil and listed(commander, member).has == "order" and (member.lcqNext or 0) <= CurTime(), "other work is theirs again, with no wait; the list shows them under the order")
+cop:SetPos(at(300, 200))
+-- way 2: the leader presses E at the member
+ok(pick(commander, second, "give") and word(second) ~= nil, "(another member is sent for)")
+second.aim = Vector(-1, 0, 0)
+commander:SetPos(second:GetPos() + Vector(60, 0, 0))
+commander.aim = Vector(1, 0, 0) -- (looking the other way)
+hook.Run("KeyPress", commander, IN_USE)
+ok(word(second) ~= nil, "(E with their back to them is not a word)")
+commander.aim = Vector(-1, 0, 0) -- (their way, near enough)
+hook.Run("KeyPress", commander, IN_USE)
+ok(word(second) == nil and LC.AdminPlotHolds(second) == "order" and kept(second) == "1", "way 2: the leader presses E at the member: done, and the order is theirs")
+commander.aim = Vector(0, 1, 0)
+-- way 3: the leader's list
+ok(pick(commander, third, "give") and word(third) ~= nil and LC.AdminPlotHolds(third) == nil, "(a third is sent for)")
+ok(not LC.AdminPlotSpoken(member, third) and not pick(leader, third, "spoken") and word(third) ~= nil, "(nobody but the leader says so)")
+hush()
+ok(pick(commander, third, "spoken") and word(third) == nil and LC.AdminPlotHolds(third) == "order" and kept(third) == "1" and read(nil) == 0,
+    "way 3: the leader picks their name on the list again: done, the order is theirs, and nothing is said")
+ok(pick(commander, third, "spoken") and LC.AdminPlotHolds(third) == "order" and pick(commander, third, "give") and LC.AdminPlotHolds(third) == "order" and word(third) == nil,
+    "(a list out of date does no harm: spoken with, or sent for, again changes nothing)")
+ok(pick(commander, wolf, "spoken") and sentFor(wolf) == nil and LC.AdminPlotHolds(wolf) == nil, "(and nobody is under the order who was never sent for)")
 -- taken back: nothing is said
 hush()
-ok(pick(commander, member) and LC.AdminPlotHolds(member) == nil and kept(member) == "" and listed(commander, member).has == nil, "the same name again takes it back")
+ok(pick(commander, third, "back") and LC.AdminPlotHolds(third) == nil and kept(third) == "" and listed(commander, third).has == nil, "their name once more takes it back")
 ok(read(nil) == 0 and radioed == 0, "and nothing is said, to them or to anyone", read(nil))
 -- only to Fighters and up of the Resistance, and only by the leader
-ok(not pick(commander, lowly) and not pick(commander, cit) and not pick(commander, cop) and not pick(commander, adm)
-    and LC.AdminPlotHolds(lowly) == nil and LC.AdminPlotHolds(cit) == nil and LC.AdminPlotHolds(cop) == nil and kept(lowly) == "" and kept(cit) == "",
-    "a Member, a citizen, a unit or she cannot be given it")
-ok(not pick(member, second) and not pick(lowly, second) and not pick(cit, second) and not pick(cop, second) and LC.AdminPlotHolds(second) == nil,
-    "and nobody but the leader gives it")
+ok(not pick(commander, lowly, "give") and not pick(commander, cit, "give") and not pick(commander, cop, "give") and not pick(commander, adm, "give")
+    and sentFor(lowly) == nil and sentFor(cit) == nil and sentFor(cop) == nil and kept(lowly) == "" and kept(cit) == "" and LC.QuestOf[lowly] == nil,
+    "a Member, a citizen, a unit or she cannot be sent for")
+ok(not pick(member, wolf, "give") and not pick(lowly, wolf, "give") and not pick(cit, wolf, "give") and not pick(cop, wolf, "give") and sentFor(wolf) == nil,
+    "and nobody but the leader sends for anyone")
 ok(read(nil) == 0, "(nothing is said of any of that)", read(nil))
-ok(pick(commander, commander) and LC.AdminPlotHolds(commander) == "order" and read(nil) == 0, "a leader who picks themselves has it, and reads nothing")
-pick(commander, commander)
+ok(pick(commander, commander, "give") and LC.AdminPlotHolds(commander) == "order" and word(commander) == nil and read(nil) == 0,
+    "a leader who picks themselves has the order at once, and reads nothing")
+pick(commander, commander, "back")
 ok(LC.AdminPlotHolds(commander) == nil, "(and gives it up the same way)")
 
 -- the attempt: the fighters come, the one who made it is paid what the job pays, and only their order is done
-pick(commander, member) pick(commander, second)
 her = address()
-ok(IsValid(her) and LC.AdminPlotHolds(member) == "order" and LC.AdminPlotHolds(second) == "order", "(two members under orders, given before her address was called)")
+ok(IsValid(her) and LC.AdminPlotHolds(member) == "order" and LC.AdminPlotHolds(second) == "order", "(two members under the order, given before her address was called)")
+ok(sentFor(leader) == commander and LC.AdminPlotHolds(leader) == nil, "(and one sent for who has not spoken yet: not under it)")
 local mxp, mcr, sxp, scr = xp(member), LC.Credits(member), xp(second), LC.Credits(second)
 pool.reserve = 20
 hush()
@@ -37047,42 +37184,46 @@ ok(xp(member) >= mxp + 250 and xp(member) < mxp + 300 and LC.Credits(member) == 
     "whoever makes the attempt under the order is paid what the job pays: 250 experience, 100 credits", (xp(member) - mxp) .. " " .. (LC.Credits(member) - mcr))
 ok(LC.AdminPlotHolds(member) == nil and kept(member) == "", "their order is done")
 ok(LC.AdminPlotHolds(second) == "order" and xp(second) == sxp and LC.Credits(second) == scr, "another member's stands, and pays them nothing yet")
-ok(radioed == 0 and heard(commander, "Freq 7") == 0 and heard(commander, "operation") == 0 and heard(commander, LC.CharacterName(member)) == 0
+ok(radioed == 0 and heard(commander, "Freq 7") == 0 and heard(commander, "The operation") == 0 and heard(commander, name(member)) == 0
     and heard(second, "fighter") == 0, "(nothing of it on the radio, and no word of it to the leader: the city's own alarm is all anyone reads)", radioed .. " " .. table.concat(commander.chat, " | "))
 mxp = xp(member)
 ok(LC.AdminPlotDied() >= 1 and xp(member) >= mxp + 250, "and 250 more if she dies of it after all (the roll in her office)", xp(member) - mxp)
+-- someone sent for who has not spoken is no more than a lone wolf
+her = address()
+pool.reserve = 20
+local lxp = xp(leader)
+LC.AdminAttempt(her, leader, "shot")
+ok(LC.AdminPlot() == nil and attackers() == 0 and xp(leader) < lxp + 250, "an attempt by someone sent for who has not spoken yet: nobody comes, nothing is paid")
 tidy()
 _run(1.5)
+LC.AdminForget(leader) LC.ClearWanted(leader)
+if LC.Prisoners[leader] then LC.ReleasePrisoner(leader) end
 ok(LC.AdminPlotHolds(second) == "order", "her address over with nothing tried by them: their order stands for her next")
+gone(member) -- (what the order paid has made a Lieutenant of them)
+pick(commander, leader, "back")
 
 -- kept with the character: gone from the server and back, with the leader who gave it gone too
-local savedData, sid = second.pdata, second.sid
 gone(second)
 gone(commander)
-ok(LC.AdminPlotLeader(leader) == true, "(the Commander gone: the Lieutenant gives the orders again)")
-local back = _makeplayer("PlotSecond", at(-200, -200))
-back.sid, back.pdata = sid, savedData -- (the same person, the same saved data)
-hook.Run("PlayerInitialSpawn", back)
-if back:GetNW2String("lcf_faction", "") ~= "resistance" then LC.SetFaction(back, "resistance", nil, true) end
-inCrowd(back, -200, -200)
-everyone = { leader, member, back, lowly, reb, wolf, cit, cop, adm }
-ok(LCF.RankOf(back).name == "Fighter" and LC.AdminPlotHolds(back) == "order" and listed(leader, back) and listed(leader, back).has == true,
-    "they leave the server and come back: the order is still theirs, and whoever leads now sees it", LCF.RankOf(back).name)
--- (and it is the order still: their attempt at her next address brings the fighters, and pays)
+ok(LC.AdminPlotLeader(leader) == true, "(the Commander gone: the Lieutenant leads again)")
+second = back(second, "PlotSecond")
+inCrowd(second, -200, -200)
+everyone = { leader, second, third, lowly, reb, wolf, cit, cop, adm }
+ok(LCF.RankOf(second).name == "Fighter" and LC.AdminPlotHolds(second) == "order" and listed(leader, second) and listed(leader, second).has == "order",
+    "under the order, they leave the server and come back: it is still theirs, and whoever leads now sees it", LCF.RankOf(second).name)
 her = address()
-sxp, scr = xp(back), LC.Credits(back)
+sxp, scr = xp(second), LC.Credits(second)
 pool.reserve = 20
-LC.AdminAttempt(her, back, "shot")
+LC.AdminAttempt(her, second, "shot")
 P = LC.AdminPlot()
-ok(P ~= nil and #P.fighters >= 7 and xp(back) >= sxp + 250 and LC.Credits(back) == scr + 100 and LC.AdminPlotHolds(back) == nil and kept(back) == "",
+ok(P ~= nil and #P.fighters >= 7 and xp(second) >= sxp + 250 and LC.Credits(second) == scr + 100 and LC.AdminPlotHolds(second) == nil and kept(second) == "",
     "their attempt at her next address: the fighters come, they are paid, and it is done", P and #P.fighters)
 tidy()
 
--- what else ends it: an arrest, a new character, leaving the Resistance, falling below a Fighter
+-- what else ends the order: an arrest, a new character, leaving the Resistance, falling below a Fighter
+local function under(by, p) pick(by, p, "give") pick(by, p, "spoken") return LC.AdminPlotHolds(p) == "order" end
 local e1, e2, e3, e4 = fighter("PlotArrested"), fighter("PlotReborn"), fighter("PlotLeaver"), fighter("PlotDemoted")
-for _, p in ipairs({ e1, e2, e3, e4 }) do pick(leader, p) end
-ok(LC.AdminPlotHolds(e1) == "order" and LC.AdminPlotHolds(e2) == "order" and LC.AdminPlotHolds(e3) == "order" and LC.AdminPlotHolds(e4) == "order",
-    "(four more under orders, the Lieutenant's this time)")
+ok(under(leader, e1) and under(leader, e2) and under(leader, e3) and under(leader, e4), "(four more under the order, the Lieutenant's this time)")
 if not LC.Incarcerate(e1, 60, "test") then hook.Run("LivingCityIncarcerated", e1, 60, "test") end -- (no cell free in this pretend city: as the cells say it)
 ok(LC.AdminPlotHolds(e1) == nil and kept(e1) == "", "arrested: the order is no longer theirs")
 if LC.Prisoners[e1] then LC.ReleasePrisoner(e1) end
@@ -37099,11 +37240,161 @@ ok(LCF.RankOf(e4).name == "Member" and LC.AdminPlotHolds(e4) == nil and kept(e4)
 e4:SetPData("lcf_xp_resistance", 400)
 LC.AddXP(e4, 0)
 ok(LCF.RankOf(e4).name == "Fighter" and LC.AdminPlotHolds(e4) == nil, "(nor when they are a Fighter again)", LCF.RankOf(e4).name)
-pick(leader, e3)
+ok(under(leader, e3), "(under it again)")
 e3:SetNW2Int("lcf_rank", 2) -- (however they came to be less than a Fighter)
-LC.AdminPlotThink(CurTime())
-ok(LC.AdminPlotHolds(e3) == nil and kept(e3) == "", "(the city looks twice a second: whoever is no Fighter of the Resistance any more has none)")
+LC.AdminPlotWatch()
+ok(LC.AdminPlotHolds(e3) == nil and kept(e3) == "", "(everyone is looked at every two seconds: whoever is no Fighter of the Resistance any more has none)")
 e3:SetNW2Int("lcf_rank", 3)
+for _, p in ipairs({ e1, e2, e3, e4 }) do gone(p) end
+
+-- sent for, layer 1: what happens to them, or to the leader, ends it at once and without a word
+local s1, s2, s3, s4, s5 = fighter("PlotSentArrested"), fighter("PlotSentReborn"), fighter("PlotSentLeaver"), fighter("PlotSentDemoted"), fighter("PlotSentBack")
+local sent = { s1, s2, s3, s4, s5 }
+for _, p in ipairs(sent) do pick(leader, p, "give") end
+local all = true
+for _, p in ipairs(sent) do if not (word(p) and sentFor(p) == leader and #p.chat == 1) then all = false end end
+ok(all, "(five sent for by the Lieutenant, each in the job, each told the one line)")
+local function free(p) return word(p) == nil and LC.QuestOf[p] == nil and sentFor(p) == nil and kept(p) == "" and LC.AdminPlotBusy(p) == nil and failed(p) == 0 end
+if not LC.Incarcerate(s1, 60, "test") then hook.Run("LivingCityIncarcerated", s1, 60, "test") end
+ok(free(s1), "arrested: the job is gone and they are free of it, with no Failed line", table.concat(s1.chat, " | "))
+if LC.Prisoners[s1] then LC.ReleasePrisoner(s1) end
+LC.NewCharacter(s2, "test")
+ok(free(s2), "someone new: gone", table.concat(s2.chat, " | "))
+LC.SetFaction(s3, "citizen", nil, true)
+ok(free(s3), "out of the Resistance: gone", table.concat(s3.chat, " | "))
+s4:SetPData("lcf_xp_resistance", 150)
+LC.AddXP(s4, 0)
+ok(free(s4), "below a Fighter: gone", table.concat(s4.chat, " | "))
+s5.chat = {}
+ok(pick(leader, s5, "back") and free(s5) and #s5.chat == 0 and tracker(s5).active == false, "the leader takes it back (their name, as the list shows it): gone, and nothing is said")
+for _, p in ipairs({ s1, s2, s3, s4 }) do gone(p) end
+
+-- the leader goes: whoever leads now, title and marker following; nobody: free
+local c2 = newPlayer("PlotCommanderTwo", "resistance", nil, 1800)
+c2.chat = {}
+ok(LC.AdminPlotLeader(c2) and not LC.AdminPlotLeader(leader), "(a Commander joins: the Lieutenant leads no more)")
+ok(pick(c2, s5, "give") and sentFor(s5) == c2 and word(s5) ~= nil and word(s5).title == "A word with " .. name(c2), "(someone is sent for by the Commander)")
+s5.chat = {}
+gone(c2)
+local w5 = word(s5)
+ok(w5 ~= nil and sentFor(s5) == leader and w5.title == "A word with " .. name(leader) and w5.stages[1].text == "Speak with " .. name(leader) .. ", in private."
+    and tracker(s5).ent == leader:EntIndex() and LC.AdminPlotBusy(s5) == name(leader) .. " wants a word with you first.",
+    "the leader leaves the server with another leading: it is that one they speak with now, title and marker following", w5 and w5.title)
+ok(#s5.chat == 0, "(and nothing more is said)", table.concat(s5.chat, " | "))
+c2 = newPlayer("PlotCommanderThree", "resistance", nil, 1800)
+LC.AdminPlotWatch()
+ok(sentFor(s5) == c2 and word(s5) == w5 and w5.title == "A word with " .. name(c2), "the leader is a leader no more (a Commander has joined): the same", w5.title)
+LC.NewCharacter(c2, "test")
+ok(sentFor(s5) == leader and word(s5) == w5 and w5.title == "A word with " .. name(leader), "the leader dies for good: the same", w5.title)
+gone(c2)
+c2 = newPlayer("PlotCommanderFour", "resistance", nil, 1800)
+LC.AdminPlotWatch()
+LC.SetFaction(c2, "citizen", nil, true)
+ok(sentFor(s5) == leader and word(s5) == w5, "the leader leaves the Resistance: the same")
+gone(c2)
+press(s5, leader)
+ok(LC.AdminPlotHolds(s5) == "order" and word(s5) == nil, "(and a word with the one who leads now is the word: the order is theirs)")
+pick(leader, s5, "back")
+s5.chat = {}
+ok(pick(leader, s5, "give") and word(s5) ~= nil, "(sent for again)")
+s5.chat = {}
+leader:SetPData("lcf_xp_resistance", 400)
+LC.AddXP(leader, 0)
+ok(LCF.RankOf(leader).name == "Fighter" and not LC.AdminPlotLeading() and free(s5) and #s5.chat == 0 and tracker(s5).active == false,
+    "nobody leads any more: the job ends and they are free, and nothing is said", LCF.RankOf(leader).name .. " " .. table.concat(s5.chat, " | "))
+leader:SetPData("lcf_xp_resistance", 900)
+LC.AddXP(leader, 0)
+ok(LC.AdminPlotLeader(leader) and sentFor(s5) == nil, "(the Lieutenant again; nobody is sent for by that alone)")
+
+-- layer 2: everyone sent for is looked at every two seconds: the record and the job must agree
+s5.chat = {}
+pick(leader, s5, "give")
+w5 = word(s5)
+LC.QuestOf[s5], LC.ActiveQuests[w5], w5.done = nil, nil, true -- (the quest system has lost it: a reset, a clean-up)
+ok(word(s5) == nil and LC.AdminPlotBusy(s5) ~= nil, "(the job lost by the quest system: the doors stay shut by the record)")
+_run(2.5)
+ok(word(s5) ~= nil and word(s5) ~= w5 and sentFor(s5) == leader and tracker(s5).nolimit == true, "a record with no job: the job is put back")
+LC.AbandonQuest(s5) -- (dropped on their behalf by something else of the city's)
+LC.AdminPlotWatch()
+ok(word(s5) ~= nil and sentFor(s5) == leader, "(again, however it went)")
+s5.chat = {}
+local realGive, errsWas, byWas, logged = LC.GiveQuest, LC.Err.list, LC.Err.by, #_errors
+LC.GiveQuest = function() return nil end
+w5 = word(s5)
+LC.QuestOf[s5], LC.ActiveQuests[w5], w5.done = nil, nil, true
+LC.AdminPlotWatch()
+ok(sentFor(s5) == leader and kept(s5) == "word", "the quest system will not take it back: once more at the next look")
+LC.AdminPlotWatch()
+ok(free(s5), "and failing twice, the record goes: they are free, never locked out of work by a job that is not there")
+LC.GiveQuest = realGive
+-- a job with no record behind it
+s5.chat = {}
+pick(leader, s5, "give")
+local orphan = LC.GiveQuest(wolf, { tmpl = word(s5).tmpl, title = "A word with nobody", limit = false, stages = { { kind = "count", event = "plot_word", need = 1, text = "x" } } })
+wolf.chat = {}
+ok(orphan ~= nil and LC.QuestOf[wolf] == orphan, "(a job of that kind on someone nobody sent for)")
+LC.AdminPlotWatch()
+ok(LC.QuestOf[wolf] == nil and orphan.done == true and #wolf.chat == 0 and word(s5) ~= nil, "a job with no record: ended, without a word; the others' are left alone")
+-- a leader no longer one, however it came about
+leader:SetNW2Int("lcf_rank", 3)
+LC.AdminPlotWatch()
+ok(free(s5), "a leader no longer one, with nobody else leading, found at the next look: free")
+leader:SetNW2Int("lcf_rank", 4)
+-- nobody is kept from other work longer than an hour
+s5.chat = {}
+pick(leader, s5, "give")
+LC.AdminPlotWatch(CurTime() + 3500)
+ok(word(s5) ~= nil, "(fifty-eight minutes sent for: still)")
+LC.AdminPlotWatch(CurTime() + 3601)
+ok(free(s5) and #s5.chat == 1, "sent for longer than an hour: ended, whatever became of the leader", table.concat(s5.chat, " | "))
+
+-- layer 3: the leader's list always takes it back, and an error frees whoever it was about
+LC.Err.list, LC.Err.by = {}, {}
+s5.chat = {}
+pick(leader, s5, "give")
+word(s5).ents = 5 -- (the job itself is broken: taking it out of the quest system fails)
+ok(pick(leader, s5, "back") and free(s5) and #s5.chat == 1, "the job broken: the leader's list takes it back all the same")
+pick(leader, s5, "give")
+w5 = word(s5)
+LC.QuestOf[s5], LC.ActiveQuests[w5], w5.done = nil, nil, true
+LC.GiveQuest = function() error("the quest system is broken") end
+LC.AdminPlotWatch()
+LC.GiveQuest = realGive
+ok(free(s5) and #LC.Err.list >= 1 and #_errors == logged + 1, "an error while it is looked at frees them, and is written in the errors file", #LC.Err.list .. " " .. (#_errors - logged))
+LC.Err.list, LC.Err.by = errsWas, byWas
+for i = #_errors, logged + 1, -1 do table.remove(_errors, i) end -- (that one was this check's own doing)
+
+-- a reconnect keeps it: back in the job, pointed at whoever leads now (the same after the server starts again)
+s5.chat = {}
+pick(leader, s5, "give")
+gone(s5)
+local lost = 0
+for x in pairs(LC.ActiveQuests) do if x.tmpl and x.tmpl.id == "res_word" then lost = lost + 1 end end
+ok(lost == 0 and s5.pdata[KEY] == "word", "sent for, they leave the server: no job is left behind, and it is kept with the character")
+s5 = back(s5, "PlotSentBack")
+_run(2.5)
+ok(word(s5) ~= nil and sentFor(s5) == leader and word(s5).title == "A word with " .. name(leader) and tracker(s5).nolimit == true and heard(s5, "wants a word") == 0,
+    "and back: in the job again, pointed at whoever leads now, and not told twice", table.concat(s5.chat, " | "))
+press(s5, leader)
+ok(LC.AdminPlotHolds(s5) == "order", "(and done as before)")
+pick(leader, s5, "back")
+-- sent for while they hold another job: that job is kept, and this one begins the moment it ends
+local held = posting()
+s5.chat, s5.lcqNext = {}, 0
+ok(LC.AcceptPosting(s5, held.id) == true and LC.QuestOf[s5] ~= nil and LC.QuestOf[s5].tmpl.id == "test_crates", "(a fighter with a job of their own)")
+local theirs = LC.QuestOf[s5]
+s5.chat = {}
+ok(pick(leader, s5, "give") and heard(s5, "wants a word with you, in private") == 1 and LC.QuestOf[s5] == theirs and not theirs.done and sentFor(s5) == leader,
+    "sent for while holding another job: told at once, and the job they hold is kept")
+local other = posting()
+ok(LC.AdminPlotBusy(s5) ~= nil and LC.AcceptPosting(s5, other.id) == false and LC.QuestOf[s5] == theirs, "(no other work meanwhile)")
+LC.QuestEvent("test_crates", s5)
+_run(0.6)
+ok(theirs.done == true and word(s5) ~= nil and sentFor(s5) == leader, "the moment that job ends they are in this one")
+press(leader, s5)
+ok(LC.AdminPlotHolds(s5) == "order" and word(s5) == nil, "(and done as before)")
+pick(leader, s5, "back")
+held.dead, other.dead, post.dead = true, true, true
 
 -- the job on the board: only while nobody leads
 her = address()
@@ -37113,11 +37404,10 @@ local hers = 0
 for _, o in ipairs(LC.OpTargets()) do if o.kind == "regicide" or string.find(o.label, "Administrator", 1, true) then hers = hers + 1 end end
 ok(LC.CanPlanOp(leader) and hers == 0 and LC.AdminPlotTarget == nil and LC.AdminPlotGo == nil, "and her life is no longer a target on the planning board, with her address on", hers)
 gone(leader)
-gone(member) -- (what the order paid has made a Lieutenant of them)
 _run(1)
 local job2 = posted(reb)
-ok(not LC.AdminPlotLeading() and job2 ~= nil and onBoard(reb) and onBoard(wolf), "the leaders gone: it is on the Fighters' board again, as before")
-ok(heard(reb, "New job") == 0 and heard(wolf, "Kill the Administrator") == 0, "(and nobody is told so)")
+ok(not LC.AdminPlotLeading() and job2 ~= nil and onBoard(reb) and onBoard(wolf), "the leader gone: it is on the Fighters' board again, as before")
+ok(heard(reb, "New job: Kill") == 0 and heard(wolf, "Kill the Administrator") == 0, "(and nobody is told so)")
 local late = newPlayer("PlotLateLieutenant", "resistance", nil, 900)
 reb.chat, reb.lcqNext = {}, 0
 ok(job2 ~= nil and LC.AcceptPosting(reb, job2.id) ~= true and LC.QuestOf[reb] == nil and #reb.chat == 0 and not onBoard(reb),
@@ -37138,9 +37428,8 @@ ok(LC.AdminPlot() ~= nil and LC.QuestOf[reb] == nil and xp(reb) >= xp0 + 250, "a
 
 LC.RadioNotice = baseRadio
 tidy()
-for _, p in ipairs({ back, lowly, e1, e2, e3, e4, late }) do gone(p) end
+for _, p in ipairs({ second, third, lowly, s5, late }) do gone(p) end
 end
-
 -- back as it was
 tidy()
 LC.Notice = baseNotice

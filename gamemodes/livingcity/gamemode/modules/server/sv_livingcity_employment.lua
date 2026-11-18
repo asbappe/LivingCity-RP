@@ -86,6 +86,10 @@ function LC.OfferJob(owner, target)
 end
 
 function LC.AcceptJob(ply, yes)
+    -- (sent for by their leader: that word first, before any work is taken, and the offer waits for it;
+    -- sv_livingcity_adminplot.lua)
+    local first = yes and LC.AdminPlotBusy and LC.AdminPlotBusy(ply)
+    if first then return false, first end
     local o = ply.lcJobOffer
     ply.lcJobOffer = nil
     if not o or CurTime() - o.at > OFFER_SECS or not IsValid(o.from) then Sync(ply) return false, "There's no offer waiting." end

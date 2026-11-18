@@ -823,7 +823,8 @@ function SendState(ply)
     local forgetting = (ply.lcForgetUntil or 0) > CurTime()
     local t = {
         active = true, id = q.id, title = q.title, board = q.board, objective = LC.FitPronouns(q, st and st.text or "", st),
-        left = math.max(0, math.floor(q.expires - CurTime())), members = #Members(q),
+        left = q.noLimit and 0 or math.max(0, math.floor(q.expires - CurTime())), members = #Members(q),
+        nolimit = q.noLimit or nil, -- (a job with no time limit: the tracker shows no clock; LC.GiveQuest)
         narration = q.narration, step = q.stage, steps = #q.stages, owner = q.owner == ply,
     }
     if st then
@@ -861,6 +862,46 @@ function SendStateAll(q)
     for _, p in ipairs(Members(q)) do SendState(p) end
 end
 LC.SendQuestState = function(ply) SendState(ply) end
+
+-- A job given to one player outright: no board, nothing to accept, and no wait since their last one (a leader's
+-- summons, sv_livingcity_adminplot.lua). spec: tmpl (with an id), title, stages, and what a template's build may
+-- give (desc, reward, data, tick, onFinish); limit in seconds, or false for no time limit. Nothing is said: whoever
+-- gives it says what there is to say. The job, or nil (they hold one already, or jobs are off).
+function LC.GiveQuest(ply, spec)
+    if not cvOn:GetBool() or not (IsValid(ply) and ply:IsPlayer()) or LC.QuestOf[ply] then return nil end
+    if not (istable(spec) and istable(spec.tmpl) and spec.tmpl.id and istable(spec.stages) and spec.stages[1]) then return nil end
+    local q = {
+        id = nextId, tmpl = spec.tmpl, title = spec.title or "", desc = spec.desc, reward = spec.reward or 0,
+        board = BOARDS[LC.QuestFaction(ply)] or "Jobs", owner = ply, members = { ply }, stages = spec.stages, stage = 1,
+        -- (no time limit: thirty years on, and no clock on the tracker)
+        expires = CurTime() + (spec.limit == false and 1e9 or (spec.limit or 300)), noLimit = spec.limit == false or nil,
+        ents = {}, marked = {}, data = spec.data or {}, tick = spec.tick, onFinish = spec.onFinish,
+    }
+    nextId = nextId + 1
+    LC.QuestOf[ply] = q
+    LC.ActiveQuests[q] = true
+    EnterStage(q)
+    if q.done then return nil end
+    return q
+end
+
+-- A job taken back by whoever gave it: gone without a word, a mark against them or a wait before their next one.
+-- Neither done nor failed, so nothing that listens for either hears of it.
+function LC.WithdrawQuest(q)
+    if not istable(q) or q.done then return false end
+    q.done = true
+    LC.ActiveQuests[q] = nil
+    if q.posting then q.posting.q = nil; q.posting.dead = true end
+    Unlock(q)
+    for _, e in ipairs(q.ents or {}) do if IsValid(e) then e:Remove() end end
+    for p, held in pairs(LC.QuestOf) do
+        if held == q then
+            LC.QuestOf[p] = nil
+            if IsValid(p) then SendState(p) end
+        end
+    end
+    return true
+end
 
 ------------------------------------------------------------------------
 -- Ticking quests
@@ -2718,6 +2759,7 @@ T{
 LC.GoGroundAgain = 180
 function LC.ManhuntWayOut(ply)
     if not IsValid(ply) or not ply:Alive() or LC.QuestOf[ply] then return false end
+    if LC.AdminPlotBusy and LC.AdminPlotBusy(ply) then return false end -- (sent for by their leader: that first, and no line about this)
     if LC.QuestFaction(ply) ~= "resistance" or not LC.AlertLevel or LC.AlertLevel(ply) < 3 then return false end
     if (ply.lcGoGroundAt or -1e9) + LC.GoGroundAgain > CurTime() then return false end
     local t
@@ -3831,7 +3873,9 @@ LC.TargetActions.radiojobs = function(ply) return LC.RadioJobs(ply) end
 
 function LC.AcceptPosting(ply, pid)
     if not cvOn:GetBool() then return false end
-    if LC.QuestOf[ply] then ply:ChatPrint("[Miscount] Finish or abandon your current job first.") return false end
+    -- (sent for by their leader: that word first, whatever else they hold or do not; sv_livingcity_adminplot.lua)
+    local first = LC.AdminPlotBusy and LC.AdminPlotBusy(ply) or nil
+    if first or LC.QuestOf[ply] then ply:ChatPrint("[Miscount] " .. (first or "Finish or abandon your current job first.")) return false end
     if (ply.lcqNext or 0) > CurTime() then
         ply:ChatPrint("[Miscount] You have to wait before taking another job. Next job in " .. math.ceil(ply.lcqNext - CurTime()) .. "s.")
         return false
@@ -3892,6 +3936,15 @@ function LC.AcceptPosting(ply, pid)
     return true
 end
 
+-- The player asks to drop their job (the board's button, !abandon). A job that is not theirs to drop stays, and
+-- nothing is said (tmpl.kept: a leader's summons, which only the leader takes back; sv_livingcity_adminplot.lua).
+function LC.DropQuest(ply)
+    local q = IsValid(ply) and LC.QuestOf[ply]
+    if not q or (q.tmpl and q.tmpl.kept) then return false end
+    LC.AbandonQuest(ply)
+    return true
+end
+
 function LC.AbandonQuest(ply)
     local q = LC.QuestOf[ply]
     if not q then return end
@@ -3933,7 +3986,7 @@ function LC.ResolveChoice(ply, qid, idx)
 end
 
 net.Receive("lcq_accept", function(_, ply) LC.AcceptPosting(ply, net.ReadUInt(32)); LC.SendBoard(ply) end)
-net.Receive("lcq_abandon", function(_, ply) LC.AbandonQuest(ply) end)
+net.Receive("lcq_abandon", function(_, ply) LC.DropQuest(ply) end)
 net.Receive("lcq_choice", function(_, ply)
     local qid, idx = net.ReadUInt(32), net.ReadUInt(8)
     LC.ResolveChoice(ply, qid, idx)
@@ -3950,7 +4003,7 @@ concommand.Add("lcq_board", function(ply) if IsValid(ply) then LC.SendBoard(ply)
 hook.Add("PlayerSay", "LivingCityQuestsChat", function(ply, text)
     local t = string.lower(string.Trim(text))
     if t == "!jobs" or t == "!quests" or t == "!board" or t == "!directives" then LC.SendBoard(ply) return "" end
-    if t == "!abandon" then LC.AbandonQuest(ply) return "" end
+    if t == "!abandon" then LC.DropQuest(ply) return "" end
 end)
 
 ------------------------------------------------------------------------

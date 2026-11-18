@@ -436,13 +436,17 @@ local function QM(cmd, arg, target)
     net.WriteEntity(IsValid(target) and target or NULL)
     net.SendToServer()
 end
--- The leader's list for the order to kill the Administrator: the Resistance's Fighters and up by name, and who has
--- it. A name gives that member the order; a name that has it takes it back (the server tells the member, alone).
+-- The leader's list for the order to kill the Administrator: the Resistance's Fighters and up by name, and what each
+-- has of it. A name with nothing sends for that member (the server tells them, alone, and puts them in the job to
+-- speak with the leader); "(sent for)" picked says they have spoken, and the order is theirs; "(ordered)" picked
+-- takes it back. What is sent is what the list showed, so a list out of date does only what it says.
 function PlotPage()
     local items = {}
     for _, w in ipairs((LC_CL.QuickInfo or {}).plot or {}) do
         local id = tostring(math.floor(tonumber(w.id) or 0))
-        items[#items + 1] = Item(tostring(w.name) .. (w.has and "  (ordered)" or ""), function() QM("plotorder", id) end)
+        local mark, what = "", "give"
+        if w.has == "word" then mark, what = "  (sent for)", "spoken" elseif w.has == "order" then mark, what = "  (ordered)", "back" end
+        items[#items + 1] = Item(tostring(w.name) .. mark, function() QM("plotorder", id .. ":" .. what) end)
     end
     local title = string.upper(PLOT)
     if LC_CL.SituationPaged then return LC_CL.SituationPaged(title, items) end

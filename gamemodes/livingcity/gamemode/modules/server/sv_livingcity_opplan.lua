@@ -129,6 +129,9 @@ LC.OpSyncMenu = SyncMenu
 function LC.PlanOp(ply, index, minutes)
     local ok, why = LC.CanPlanOp(ply)
     if not ok then return false, why end
+    -- (sent for by their leader: that word first, before any work is taken; sv_livingcity_adminplot.lua)
+    local first = LC.AdminPlotBusy and LC.AdminPlotBusy(ply)
+    if first then return false, first end
     if LC.OpPlan then return false, "There's an operation planned already: join it." end
     if CurTime() < nextPlan then return false, string.format("Too soon after the last one. (%s)", string.NiceTime(nextPlan - CurTime())) end
     minutes = tonumber(minutes) or 5
@@ -152,6 +155,9 @@ function LC.JoinOp(ply)
     local plan = LC.OpPlan
     if not plan then return false, "Nothing is planned right now." end
     if Faction(ply) ~= "resistance" then return false, "Only the Resistance." end
+    -- (sent for by their leader: no joining until that word is had; backing out is theirs still)
+    local first = not plan.joined[ply] and LC.AdminPlotBusy and LC.AdminPlotBusy(ply)
+    if first then return false, first end
     if plan.joined[ply] then
         plan.joined[ply] = nil
         ply:ChatPrint("[Freq 7] You've backed out of the operation.")
