@@ -72,8 +72,6 @@ local function TalkPage()
         Item("Describe the scene (/it)...", function() Say("The scene", "What happens? (e.g. A siren starts up somewhere.)", "/it ") end),
         Item("On my radio...", function() Ask("Radio", "What do you say on the radio?", "r") end),
         Item("Roll the dice (1 to 100)", function() RunConsoleCommand("say", "/roll") end),
-        Item("Out of character, nearby...", function() Say("Out of character", "Said out of character, to people nearby", "/looc ") end),
-        Item("Out of character, everyone...", function() Say("Out of character", "Said out of character, to the whole server", "// ") end),
         Item("Tell everyone nearby my name", function() Send("recognize", "all") end),
     } }
 end
@@ -201,7 +199,6 @@ local PlotPage
 local function ResistancePage()
     local me = LocalPlayer()
     local items = {
-        Item("Find the lab (mark it)", function() Send("waypoint", "lab") end),
         Item("Donate food to the supply crate", function() Send("donate") end),
         Item("Decode a data chip (at the lab)", function() Send("decode") end),
         Item("Write down what you see (needs paper)", function() Send("scout") end),
@@ -633,14 +630,15 @@ local function CityPage()
     }
     for _, d in ipairs(l.districts or {}) do
         if #rows < 9 then
-            rows[#rows + 1] = string.format("%s: %s%s", tostring(d.name), d.owner == "contested" and "contested" or (d.owner == "resistance" and "the Resistance's" or "the Combine's"),
-                d.mark == "liberated" and " (liberated)" or (d.mark == "crackdown" and " (crackdown)" or ""))
+            rows[#rows + 1] = string.format("%s: %s%s%s", tostring(d.name), d.owner == "contested" and "contested" or (d.owner == "resistance" and "the Resistance's" or "the Combine's"),
+                d.mark == "liberated" and " (liberated)" or (d.mark == "crackdown" and " (crackdown)" or ""), d.sick and (", " .. d.sick) or "")
         end
     end
     local b = GetGlobal2String("lc_city_bulletin", "")
     return { title = "THE STATE OF THE CITY", items = { Item(b ~= "" and "Read this morning's bulletin" or "No bulletin yet today", function()
         if b ~= "" then chat.AddText(Color(200, 200, 160), "[City Bulletin] ", Color(230, 230, 230), b) end end) }, empty = rows }
 end
+LC_CL.QuickCityPage = CityPage -- (on F1 > What now?: cl_livingcity_nextstep.lua)
 local function LeversPage()
     local l = util.JSONToTable(GetGlobal2String("lc_ledger", "") or "") or {}
     local items = {}
@@ -719,23 +717,39 @@ end
 
 -- What everyone has about themselves (the owner, 10 November: never only in the C menu): where they
 -- stand, survival, their dreams. On a citizen's Me page, and a page of its own for everyone else.
+-- Dreams and survival, one page: the survival switch (when you have one) above the dreams you can sit out.
+local function DreamsSurvivalPage()
+    local me = LocalPlayer()
+    local p = MyDreamsPage()
+    p.title = "DREAMS AND SURVIVAL"
+    if me:GetNW2String("lc_survival", "") ~= "" then
+        table.insert(p.items, 1, Item(me:GetNW2String("lc_survival", "") == "relaxed" and "Survival: Relaxed (switch to Realistic: more pay)"
+            or "Survival: Realistic (switch to Relaxed)", function() Send("survival") end))
+        if p.empty then local e = {} for i, r in pairs(p.empty) do e[i + 1] = r end p.empty = e end
+    end
+    return p
+end
+
+-- A unit's shift: on F2 itself (the owner, 18 November: it was under Me).
+local function ShiftItems(me)
+    local out = {}
+    if me:GetNW2Bool("lc_offduty", false) then out[#out + 1] = Item("Back on duty (start a shift)", function() Send("shiftbreak") end)
+    elseif me:GetNW2String("lc_shift", "") ~= "" then out[#out + 1] = Page("My shift", ShiftPage) end
+    if me:GetNW2String("lc_bounty_menu", "") ~= "" then out[#out + 1] = Page("Bounties on the wanted", BountyPage) end
+    return out
+end
+
+-- Only what's about you (the owner, 18 November, the menu audit: Me was where everything that didn't
+-- fit went): where you stand, dreams and survival, and a citizen's or a rebel's household.
 local function MineItems(me)
     local out = {
         Item("Where I stand (every number explained)", function() if LC_CL.OpenStandingPanel then LC_CL.OpenStandingPanel() else QM("standing") end end),
     }
-    if me:GetNW2String("lc_shift", "") ~= "" then table.insert(out, 1, Page("My shift: quota, papers duty, inspections", ShiftPage)) end
-    if me:GetNW2Bool("lc_offduty", false) then table.insert(out, 1, Item("Back on duty (start a shift)", function() Send("shiftbreak") end)) end
-    if me:GetNW2String("lc_bounty_menu", "") ~= "" then table.insert(out, 2, Page("Bounties on the wanted", BountyPage)) end
-    if me:GetNW2String("lc_survival", "") ~= "" then
-        out[#out + 1] = Item(me:GetNW2String("lc_survival", "") == "relaxed" and "Survival: Relaxed (switch to Realistic: more pay)"
-            or "Survival: Realistic (switch to Relaxed)", function() Send("survival") end)
-    end
-    out[#out + 1] = Page("My dreams (which to sit out)", MyDreamsPage)
     local hf = me:GetNW2String("lcf_faction", "")
     if hf == "" or hf == "citizen" or hf == "resistance" then
         local bz = util.JSONToTable(me:GetNW2String("lc_business", "") or "") or {}
         local waiting = me:GetNW2String("lc_house_invite", "") ~= "" or bz.offer
-        out[#out + 1] = Page(waiting and "My household and stall business (something waits)" or "My household and stall business", function()
+        out[#out + 1] = Page(waiting and "Household, stall and debts (something waits)" or "Household, stall and debts", function()
             return { title = "HOUSEHOLD AND BUSINESS", items = {
                 Page(me:GetNW2String("lc_house_invite", "") ~= "" and "My household (an invitation waits)" or "My household", HouseholdPage),
                 Page(bz.offer and "My stall business (a job offer waits)" or "My stall business", BusinessPage),
@@ -743,16 +757,16 @@ local function MineItems(me)
             } }
         end)
     end
-    if GetGlobal2String("lc_ledger", "") ~= "" then out[#out + 1] = Page("The state of the city", CityPage) end
-    -- (named "Administrator": the owner, 16 November; it was "The city's levers (speeches, amnesty, crackdowns, rations)")
-    if me:GetNW2String("lcf_faction", "") == "admin" then out[#out + 1] = Page("Administrator", LeversPage) end
+    out[#out + 1] = Page("Dreams and survival", DreamsSurvivalPage)
     return out
 end
 local function MinePage()
     return { title = "ME", items = MineItems(LocalPlayer()) }
 end
 
-local function MePage()
+-- A citizen's own, straight on F2 (the owner, 18 November, the menu audit: it was one "Me" button
+-- that opened another menu): work, rations, home, standing, household, dreams and survival.
+local function CitizenItems()
     local me = LocalPlayer()
     local m = Info("me")
     local work = "Find work"
@@ -770,20 +784,16 @@ local function MePage()
     elseif m.home == "none" then home = "Find a home (Housing Allocation)" end
     local wanted = m.wanted or me:GetNW2Float("lc_wanted_until", 0) > CurTime()
     local standing = "My standing: " .. tostring(m.standing or me:GetNW2Int("lce_standing", 0)) .. (wanted and ", WANTED" or "")
-    local rows = {}
-    if m.next then rows[6] = string.format("Next: %s at %d.", tostring(m.nextWhat or ""), m.next) end
+    if m.next and not wanted then standing = standing .. string.format(" (next: %s at %d)", tostring(m.nextWhat or ""), m.next) end
     local items = {
         Item(work, function() if m.work == "board" then Hub("jobs") else QM("work") end end),
         Item(rations, function() QM("rations") end),
         Item(home, function() QM("home") end),
         Item(standing, function() if LC_CL.OpenStandingPanel then LC_CL.OpenStandingPanel() else QM("standing") end end), -- (every number explained: cl_livingcity_standingpanel.lua)
     }
-    -- the rest, one line (the next milestone keeps line 6, as it always has): survival, dreams, the city, household, business
-    local more = {}
-    for i, it in ipairs(MineItems(me)) do if i > 1 then more[#more + 1] = it end end -- (where I stand is the line above)
-    if #more > 0 then items[#items + 1] = Page("More: survival, dreams, the city, household, business", function() return { title = "MORE ABOUT ME", items = more } end) end
-    if m.next then rows = { [6] = string.format("Next: %s at %d.", tostring(m.nextWhat or ""), m.next) } end
-    return { title = "ME", items = items, empty = rows }
+    items[4].id = "standing"
+    for i, it in ipairs(MineItems(me)) do if i > 1 then items[#items + 1] = it end end -- (where I stand is the line above)
+    return items
 end
 
 -- The Administrator's two Elites. How close they follow, and what they do when there's trouble,
@@ -900,6 +910,38 @@ end
 -- F2: what your side, rank and job have
 ------------------------------------------------------------------------
 
+-- The Administrator's F2 pages (the owner, 18 November, the menu audit: her speeches, amnesty,
+-- crackdowns and rations were three menus deep, under Me > Administrator).
+local function SpeakPage()
+    local p = LeversPage()
+    local items = {}
+    for _, it in ipairs(p.items) do
+        local l = tostring(it.label)
+        if string.find(l, "speech", 1, true) then items[#items + 1] = it end
+    end
+    items[#items + 1] = Item("Broadcast to the whole city...", function() Ask("Broadcast", "What does the city hear?", "broadcast") end)
+    return { title = "SPEAK TO THE CITY", items = items }
+end
+local function OrdersPage()
+    local me = LocalPlayer()
+    local p = LeversPage()
+    local items = {}
+    for _, it in ipairs(p.items) do
+        local l = tostring(it.label)
+        if not string.find(l, "speech", 1, true) then items[#items + 1] = it end
+    end
+    local t = Looking(me, 1500)
+    if t and not t:IsAdmin() and not t:GetNW2Bool("lc_unit", false) and not COMBINE[t:GetNW2String("lcf_faction", "")] then
+        local wanted = t:GetNW2Float("lc_wanted_until", 0) > CurTime()
+        local arrest = Can("Order " .. Name(t) .. "'s arrest", function() QM("arrest", "", t) end, (wanted and "already wanted") or Later(Info("adm").arrest))
+        arrest.id = "arrest"
+        items[#items + 1] = arrest
+    end
+    if me:GetNW2String("lc_bounty_menu", "") ~= "" then items[#items + 1] = Page("Bounties on the wanted", BountyPage) end
+    if #(LC_CL.Manpower or {}) > 0 then items[#items + 1] = Page("Combine manpower", ManpowerPage) end
+    return { title = "CITY ORDERS", items = items }
+end
+
 local EMPTY = { "Nothing here for your side or job right now.", "F1 has what everyone can do." }
 
 function LC_CL.QuickRoleRoot()
@@ -909,20 +951,33 @@ function LC_CL.QuickRoleRoot()
     local title, accent = fac and fac.name or "", ACCENT.default
     local items, usual, late, over = {}, {}, {}, {}
     local function Add(it) if not it then return end if #items < 8 then items[#items + 1] = it else over[#over + 1] = it end end
-    if unit then
+    if f == "admin" then
+        -- the Administrator first: the server marks her a unit too (her side counts as the Combine's),
+        -- which used to give her a unit's F2 instead of her own (found in the menu audit, 18 November)
+        title, accent = "CITY ADMINISTRATOR", ACCENT.cp
+        Add(Page("Sociostability", SocioPage))
+        Add(Page("Speak to the city", SpeakPage))
+        local orders = Page("City orders", OrdersPage)
+        orders.id = "orders"
+        Add(orders)
+        Add(Item("Open my tablet (the office)", function() QM("office") end))
+        Add(Item("The city's laws", function() Send("laws") end))
+        Add(Page("Tonight's dream", DreamPage))
+        Add(Page("Command the guards", GuardsPage))
+    elseif unit then
         title = me:GetNW2String("lcf_title", "") ~= "" and me:GetNW2String("lcf_title", "") or ((LCF and LCF.IsOverwatch and LCF.IsOverwatch(me)) and "OVERWATCH" or "CIVIL PROTECTION")
         accent = ACCENT.cp
         -- (the owner, 7 November: 1 Voice lines, 2 Unit tools, 3 Kick, 4 Call for backup, 5 BOLO, 6 Send my 10-20; then,
         -- 13 November: what goes to HQ (backup, the BOLO, the 10-20, records, sweeps, directives) is only on the radio's
         -- own menu, right click with the radio up. F2 keeps what's done on the spot.)
-        local tools = Item("Unit tools (everything a unit has)", function() if LC_CL.OpenUnitTools then LC_CL.OpenUnitTools() end end)
+        local tools = Item("Unit tools", function() if LC_CL.OpenUnitTools then LC_CL.OpenUnitTools() end end)
         tools.id = "unittools"
         local kick = Item("Kick (" .. (LC_CL.KickKeyName and LC_CL.KickKeyName() or "G") .. ")", function() Send("kick") end)
         kick.id = "kick"
         Add(Page("Voice lines", VoicePage))
         Add(tools)
         Add(kick)
-        local radio = Item("HQ calls: get your radio out, right click (backup, resupply, BOLO, 10-20)", function()
+        local radio = Item("HQ calls (radio)", function()
             if LC_CL.OpenRadioQuick and LocalPlayer():HasWeapon("weapon_lc_radio") then
                 RunConsoleCommand("use", "weapon_lc_radio")
                 timer.Simple(0.3, function() if LC_CL.OpenRadioQuick then LC_CL.OpenRadioQuick() end end)
@@ -930,6 +985,8 @@ function LC_CL.QuickRoleRoot()
         end)
         radio.id = "radio"
         Add(radio)
+        -- the shift and bounties: on F2 itself (the owner, 18 November: they were under Me)
+        for _, it in ipairs(ShiftItems(me)) do Add(it) end
         -- the Resistance's man inside, beside a prisoner being marched to the cells (sv_livingcity_insider.lua):
         -- right after the six, only while it's there; greyed while someone can see
         local slipT, slipWhy = nil, nil
@@ -958,45 +1015,31 @@ function LC_CL.QuickRoleRoot()
         local band = Page("Find the way (rebel ground, the lab)", Freq7Page)
         band.id = "findway"
         Add(band)
-    elseif f == "admin" then
-        -- only the Administrator sets sociostability (the owner, 7 November)
-        Add(Page("Sociostability", SocioPage))
-        Add(Item("Broadcast to the whole city...", function() Ask("Broadcast", "What does the city hear?", "broadcast") end))
-        if #(LC_CL.Manpower or {}) > 0 then Add(Page("Combine manpower", ManpowerPage)) end
-        -- (the owner, later on 7 November) the tablet, the laws, tonight's dream, the guards, an order of arrest
-        Add(Item("Open my tablet (the office)", function() QM("office") end))
-        Add(Item("The city's laws", function() Send("laws") end))
-        Add(Page("Tonight's dream", DreamPage))
-        Add(Page("Command the guards", GuardsPage))
-        local t = Looking(me, 1500)
-        if t and not t:IsAdmin() and not t:GetNW2Bool("lc_unit", false) and not COMBINE[t:GetNW2String("lcf_faction", "")] then
-            local wanted = t:GetNW2Float("lc_wanted_until", 0) > CurTime()
-            local arrest = Can("Order " .. Name(t) .. "'s arrest", function() QM("arrest", "", t) end, (wanted and "already wanted") or Later(Info("adm").arrest))
-            arrest.id = "arrest"
-            Add(arrest)
-        end
     elseif f == "vort" then
         Add(Item("Reach out through the vortessence", function() Send("vortcall") end))
     elseif f == "stalker" then
         Add(Item("My work: the Stalker's Lot (F4)", function() Hub("jobs") end))
     end
-    -- a worker's job tools
+    -- a citizen's own, first (the owner, 18 November: straight on F2, no "Me" step)
+    if f == "citizen" or f == "" then for _, it in ipairs(CitizenItems()) do Add(it) end end
+    -- a worker's job tools: one line, or "My job" when there's more than one
+    local jobits = {}
     local job = me:GetNW2String("lcj_job", "")
     if not unit and job ~= "" then
         local esc = me:GetNW2String("lc_escort_phase", "") ~= "" or me:GetNW2Bool("lc_escort_wait", false)
-        Add(Item(esc and "Send my escort away" or "Ask for a Civil Protection escort", function() Send("escort") end))
+        jobits[#jobits + 1] = Item(esc and "Send my escort away" or "Ask for a Civil Protection escort", function() Send("escort") end)
     end
-    if me:GetNW2Bool("lc_ration_break", false) then Add(Item("Back to work (end the ration break)", function() Send("back") end))
-    elseif job ~= "" and GetGlobal2String("lc_event", "") == "rations" then Add(Item("Take a ration break", function() Send("rationbreak") end)) end
-    if job == "mortuary" then Add(Item("Take a body cart, or leave it", function() Send("bodycart") end)) end
+    if me:GetNW2Bool("lc_ration_break", false) then jobits[#jobits + 1] = Item("Back to work (end the ration break)", function() Send("back") end)
+    elseif job ~= "" and GetGlobal2String("lc_event", "") == "rations" then jobits[#jobits + 1] = Item("Take a ration break", function() Send("rationbreak") end) end
+    if job == "mortuary" then jobits[#jobits + 1] = Item("Take a body cart, or leave it", function() Send("bodycart") end) end
     if (f == "citizen" or f == "") and me:GetNW2Int("lce_standing", 0) >= 150 then
-        Add(Item(me:GetNW2Bool("lc_foreman", false) and "Stop being a Union foreman" or "Become a Union foreman", function() Send("foreman") end))
+        jobits[#jobits + 1] = Item(me:GetNW2Bool("lc_foreman", false) and "Stop being a Union foreman" or "Become a Union foreman", function() Send("foreman") end)
     end
-    -- a citizen's own (the owner, later on 7 November): work, rations, home, standing
-    if f == "citizen" or f == "" then
-        local mine = Page("Me: work, rations, home, standing", MePage)
-        mine.id = "me"
-        Add(mine)
+    if #jobits == 1 then Add(jobits[1])
+    elseif #jobits > 1 then
+        local jp = Page("My job", function() return { title = "MY JOB", items = jobits } end)
+        jp.id = "myjob"
+        Add(jp)
     end
     -- in a cell: what you're in for, and how long is left
     local jail = me:GetNW2Float("lc_jail_until", 0) - CurTime()
@@ -1006,7 +1049,7 @@ function LC_CL.QuickRoleRoot()
         Add(sentence)
     end
     -- staff
-    if me:IsAdmin() then usual[#usual + 1] = Page("Staff", StaffPage) end
+    if me:IsAdmin() and f ~= "admin" then usual[#usual + 1] = Page("Staff", StaffPage) end -- (the Administrator's is inside her Me)
     -- then what only your side does to what's in front of you, then your usual ones
     for _, it in ipairs(Context(me, unit, rebel)) do if it.role then Add(it) end end
     for _, it in ipairs(late) do Add(it) end
@@ -1014,7 +1057,11 @@ function LC_CL.QuickRoleRoot()
     if f ~= "citizen" and f ~= "" and f ~= "zombie" and f ~= "stalker" then -- (the infested and stalkers have none of it)
         -- everyone else: where they stand, survival, their dreams (never only in the C menu), after
         -- everything already on F2, so nothing there moves
-        local mine = Page(me:GetNW2String("lc_shift", "") ~= "" and "Me: my shift, where I stand, survival" or "Me: where I stand, survival, dreams", MinePage)
+        local mine = Page("Me", (f == "admin" and me:IsAdmin()) and function()
+            local pg = MinePage()
+            pg.items[#pg.items + 1] = Page("Staff", StaffPage)
+            return pg
+        end or MinePage)
         mine.id = "me"
         Add(mine)
     end
@@ -1023,9 +1070,7 @@ function LC_CL.QuickRoleRoot()
         -- a unit's My shift is on its Me page, past Records terminal)
         local moved = { items[8] }
         for _, it in ipairs(over) do moved[#moved + 1] = it end
-        local names = {}
-        for i = 1, math.min(2, #moved) do names[#names + 1] = string.match(tostring(moved[i].label), "^[^:(]+") or moved[i].label end
-        items[8] = Page("More: " .. string.Trim(table.concat(names, ", ")) .. "...", function() return { title = "MORE", items = moved } end)
+        items[8] = Page("More...", function() return { title = "MORE", items = moved } end)
         items[8].id = "more"
     end
     local empty = #items == 0

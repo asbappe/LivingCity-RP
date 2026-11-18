@@ -50,16 +50,16 @@
 
 ## A unit's shift: the quota, papers duty, inspections, the review (the owner, 10 November)
 
-Something for Civil Protection to do when no rebels are about. Every Civil Protection player on duty works shifts of `lc_cp_shift_minutes` (30 again since 12 November, the owner: "just make the shift back to 30 minutes then"; it was 15 from 10 November), each with a quota. **F2 > Me > My shift** shows the time left and the quota so far, and holds the work:
+Something for Civil Protection to do when no rebels are about. Every Civil Protection player on duty works shifts of `lc_cp_shift_minutes` (30 again since 12 November, the owner: "just make the shift back to 30 minutes then"; it was 15 from 10 November), each with a quota. **F2 > My shift** shows the time left and the quota so far, and holds the work:
 
 - **Searches** (`lc_cp_quota_searches`, 3): anyone searched counts, a player (the pat-down) or one of the city's people.
-- **Checkpoint papers duty** (`lc_cp_quota_papers`, 1): F2 > Me > My shift > Checkpoint papers duty. Travelers walk up one at a time; E on each shows their papers beside today's rules (expiry, the photo, a banned district, the stamps); approve, deny or call it in. It's the Intake Processor's papers check, done by a unit. Seeing most of them through (3 of 5) counts.
-- **A residence inspection** (`lc_cp_quota_inspections`, 1): F2 > Me > My shift > Get an inspection order names a resident (a housed citizen or rebel who's online) and their block. Go to the block and F2 > Me > My shift > Inspect the residence (8 seconds). Their stash is gone through: each contraband item is found 4 times in 5, confiscated, and the resident is charged exactly as a block raid charges (standing lost, wanted); they're told their residence was inspected, clean or not. The unit gets 5 experience for each thing found.
+- **Checkpoint papers duty** (`lc_cp_quota_papers`, 1): F2 > My shift > Checkpoint papers duty. Travelers walk up one at a time; E on each shows their papers beside today's rules (expiry, the photo, a banned district, the stamps); approve, deny or call it in. It's the Intake Processor's papers check, done by a unit. Seeing most of them through (3 of 5) counts.
+- **A residence inspection** (`lc_cp_quota_inspections`, 1): F2 > My shift > Get an inspection order names a resident (a housed citizen or rebel who's online) and their block. Go to the block and F2 > My shift > Inspect the residence (8 seconds). Their stash is gone through: each contraband item is found 4 times in 5, confiscated, and the resident is charged exactly as a block raid charges (standing lost, wanted); they're told their residence was inspected, clean or not. The unit gets 5 experience for each thing found.
   An Insider also sees **Report it clean** there (see `resistance-insider.md`).
 - **Arrests** aren't in the quota, but count toward the review.
-- **The performance review** at the end of the shift: a grade from the quota met (A all of it, B two thirds, C a third, D less), arrests adding a little, and experience for it (A 30, B 20, C 10), which is what promotes a unit. The last five reviews are kept: F2 > Me > My shift > My last reviews.
-- **No waiting out the clock** (the owner, 10 November: "adjust it so CP units do not have to take breaks between shifts if they so choose"): with the checklist done, F2 > Me > My shift > "Report in now" gives the review at once and starts the next shift; otherwise the next shift starts the moment one ends.
-- **A break, if they want one:** My shift > "Go on a break": no shift and no review until F2 > Me > "Back on duty", which starts a fresh shift (the one they were on is dropped).
+- **The performance review** at the end of the shift: a grade from the quota met (A all of it, B two thirds, C a third, D less), arrests adding a little, and experience for it (A 30, B 20, C 10), which is what promotes a unit. The last five reviews are kept: F2 > My shift > My last reviews.
+- **No waiting out the clock** (the owner, 10 November: "adjust it so CP units do not have to take breaks between shifts if they so choose"): with the checklist done, F2 > My shift > "Report in now" gives the review at once and starts the next shift; otherwise the next shift starts the moment one ends.
+- **A break, if they want one:** My shift > "Go on a break": no shift and no review until F2 > "Back on duty", which starts a fresh shift (the one they were on is dropped).
 - `lc_cp_duty` 0 turns it off.
 
 

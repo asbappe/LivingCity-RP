@@ -217,6 +217,13 @@ if not okP then problems[#problems + 1] = "admin panel: " .. tostring(errP) end
 if made < 20 then problems[#problems + 1] = "admin panel built only " .. made .. " controls" end
 okP, errP = pcall(net["recv_lc_admintools"]) -- again: it replaces itself where it was
 if not okP then problems[#problems + 1] = "admin panel rebuild: " .. tostring(errP) end
+-- testing alone (the owner, 18 November): the superadmins' section, before and during an address, a collapse and an event
+for _, solo in ipairs({ { address = false, places = true, event = "", collapse = "" }, { address = true, places = true, event = "drill", collapse = "stand" },
+        { address = false, places = false, event = "", collapse = "" } }) do
+    util.JSONToTable = function() return { target = "STEAM_0:1|Me", faction = "cp", xp = { cp = 300 }, players = { { id = "STEAM_0:1|Me", name = "Me" } }, solo = solo } end
+    okP, errP = pcall(net["recv_lc_admintools"])
+    if not okP then problems[#problems + 1] = "admin panel, testing alone: " .. tostring(errP) end
+end
 -- the CP toolset: the mask's view, the records terminal and the voice menu
 _me.nw.lcf_faction, _me.nw.lcf_title = "cp", "CP 04-12"
 _me.alive = true
@@ -4299,16 +4306,16 @@ local ok, e = pcall(function()
     Info({ reb = { tx = false, backup = 0, pos = 0 } })
     if #LC_CL.QuickRoleRoot().items[3].page().items ~= had then error("no longer the leader: the order is still on their Resistance page") end
 
-    -- a plain citizen: Me >, with what the server says
+    -- a plain citizen: their own lines straight on F2 (the owner, 18 November: no "Me" step), with what the server says
     _me.nw = { lcf_faction = "citizen", lce_standing = 120, lc_unreg = true }
     Info({ me = { work = "intake", ration = 240, cards = 2, home = "none", standing = 120, next = 150, nextWhat = "Union foreman (F2)" } })
     root = LC_CL.QuickRoleRoot()
-    local mine, mn = Find(root, "me")
-    if mn ~= 1 or root.empty then error("a plain citizen: Me > should be 1, and no 'nothing here': " .. Labels(root)) end
-    p = mine.page()
+    p = root
+    if root.empty or Find(root, "me") then error("a plain citizen's F2: their own lines, no Me page and no 'nothing here': " .. Labels(root)) end
     if not (string.find(p.items[1].label, "Civil Intake first", 1, true) and string.find(p.items[2].label, "next in 4 min, 2 cards", 1, true)
-        and string.find(p.items[3].label, "Housing", 1, true) and string.find(p.items[4].label, "120", 1, true)) then error("Me: " .. Labels(p)) end
-    if not (p.empty and p.empty[6] and string.find(p.empty[6], "foreman", 1, true)) then error("Me: no next milestone") end
+        and string.find(p.items[3].label, "Housing", 1, true) and string.find(p.items[4].label, "120", 1, true)) then error("a citizen's F2: " .. Labels(p)) end
+    if not string.find(p.items[4].label, "foreman", 1, true) then error("a citizen's F2: no next milestone: " .. Labels(p)) end
+    if not (p.items[5] and string.find(p.items[5].label, "Household", 1, true) and p.items[6] and p.items[6].label == "Dreams and survival") then error("a citizen's F2: household, then dreams and survival: " .. Labels(p)) end
     undo = Watch()
     for i = 1, 4 do p.items[i].run() end
     undo()
@@ -4329,11 +4336,14 @@ local ok, e = pcall(function()
     cit.nw.lcf_faction = "citizen"
     _me.GetEyeTrace = function() return { Hit = true, HitPos = Vector(60, 0, 60), Entity = cit } end
     root = LC_CL.QuickRoleRoot()
-    if root.items[1].label ~= "Sociostability" or not string.find(root.items[2].label, "Broadcast", 1, true) then error("the Administrator's F2 moved: " .. Labels(root)) end
+    -- (the owner, 18 November, the menu audit: her speeches and orders on F2 itself, not under Me)
+    if root.items[1].label ~= "Sociostability" or root.items[2].label ~= "Speak to the city" or root.items[3].label ~= "City orders" then error("the Administrator's F2 moved: " .. Labels(root)) end
+    if not string.find(Labels(root.items[2].page()), "Broadcast", 1, true) then error("Speak to the city has no broadcast: " .. Labels(root.items[2].page())) end
     local want = { "Open my tablet", "The city's laws", "Tonight's dream", "Command the guards" }
     local all = Labels(root)
     for _, w in ipairs(want) do if not string.find(all, w, 1, true) then error("the Administrator's F2 has no '" .. w .. "': " .. all) end end
-    local ar = Find(root, "arrest")
+    local function Arrest() local o = Find(LC_CL.QuickRoleRoot(), "orders") return o and Find(o.page(), "arrest") end
+    local ar = Arrest()
     if not ar or ar.disabled then error("the Administrator can't order this citizen's arrest: " .. all) end
     undo = Watch()
     ar.run()
@@ -4375,10 +4385,10 @@ local ok, e = pcall(function()
         if dp.items[3].label ~= "Far  (now)" or dp.items[2].label ~= "Medium" or not string.find(mp.items[4].label, "(now)", 1, true) or string.find(mp.items[1].label, "(now)", 1, true) then error("the order in force isn't marked: " .. Labels(dp) .. " / " .. Labels(mp)) end
     end
     Info({ adm = { arrest = 200, guards = 2 } })
-    ar = Find(LC_CL.QuickRoleRoot(), "arrest")
+    ar = Arrest()
     if not (ar and ar.disabled and string.find(ar.label, "in 4m", 1, true)) then error("order of arrest isn't greyed while it cools down") end
     cit.nw.lcf_faction = "cp"
-    if Find(LC_CL.QuickRoleRoot(), "arrest") then error("the Administrator can order a unit's arrest") end
+    if Arrest() then error("the Administrator can order a unit's arrest") end
     _me.GetEyeTrace = function() return { Hit = false, HitPos = Vector(0, 0, 0) } end
     LC_CL.QuickInfo, LC_CL.Insider = {}, nil
     _me.nw = {}

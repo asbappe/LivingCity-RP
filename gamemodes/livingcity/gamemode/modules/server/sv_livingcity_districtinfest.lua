@@ -21,7 +21,7 @@
     tells Civil Protection where it spread, as for any growth; the next City
     Bulletin says where it came from.
 
-    Read in the world and on F2 > Me (More) > The state of the city (a word
+    Read in the world and on F1 > What now? > The state of the city (a word
     after the district: infested, badly infested, overrun); no meter on screen
     (house rule 10). lc_territory (admin) lists the scores.
 ]]

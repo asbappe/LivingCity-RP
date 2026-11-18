@@ -162,6 +162,60 @@ local ACTIONS = {
         if n == 0 then return true, "Every save file reads fine." end
         return true, n .. " save file(s) may be saved over again (each unreadable one is kept as <name>.unreadable.txt when it is)."
     end,
+    -- Testing alone (the owner, 18 November: "I am the only player and just need ways to test these things in game
+    -- before attempting to bring in other players"): what one player can't set off by themselves (superadmins).
+    solo = function(t, v, admin)
+        if IsValid(admin) and not admin:IsSuperAdmin() then return false, "Superadmins only." end
+        v = tostring(v or "")
+        if v == "bot" then
+            if #player.GetAll() >= game.MaxPlayers() then return false, "The server is full." end
+            RunConsoleCommand("bot")
+            return true, "A stand-in player (a bot) joins in a moment: pick it under Acting on to give it a faction or a rank."
+        elseif v == "address" or v == "assassin" then
+            local note = ""
+            if v == "assassin" then
+                local f = LCF and LCF.Get and LCF.Get("resistance")
+                if not f or not LC.SetFaction then return false, "No Resistance here." end
+                if t:GetNW2String("lcf_faction", "") ~= "resistance" then LC.SetFaction(t, "resistance") end
+                local r = (LC.AdminPlotMinRank and LC.AdminPlotMinRank()) or 3
+                if f.ranks[r] then t:SetPData("lcf_xp_resistance", math.max(tonumber(t:GetPData("lcf_xp_resistance", 0)) or 0, f.ranks[r].xp or 0)) Recompute(t, "by staff") end
+                note = " " .. t:Nick() .. " is a " .. RankName(t, f) .. ": take Kill the Administrator from the Resistance's board (F4 > Jobs) while she speaks."
+            end
+            if not LC.CallSpeech then return false, "No address on this server." end
+            if LC.SpeechSession and LC.SpeechSession() then return true, "Her address is already on." .. note end
+            local ok, why = LC.CallSpeech(nil, nil)
+            if not ok then return false, tostring(why) end
+            return true, "The city's own Administrator is called to the stand; she speaks once the city has gathered (lc_speech_muster)." .. note
+        elseif v == "endaddress" then
+            if not (LC.SpeechSession and LC.SpeechSession()) then return false, "No address is on." end
+            LC.EndSpeech()
+            return true, "The address is over."
+        elseif v == "black" or v == "next" or v == "stand" or v == "mebarney" or v == "mefreeman" or v == "off" then
+            if not LC.CollapseTest then return false, "No collapse on this server." end
+            LC.CollapseTester = IsValid(admin) and admin or t
+            return LC.CollapseTest(v)
+        elseif v == "leak" then
+            if not LC.DistrictLeak then return false, "No districts here." end
+            local best, bv
+            for _, n in ipairs(LC.BlockNumbers and LC.BlockNumbers() or {}) do
+                local d = LC.DistrictInfest(n)
+                if d > 0 and (not bv or d > bv) then best, bv = n, d end
+            end
+            if not best then return false, "No district has any infestation (grow some first)." end
+            local z, m = LC.DistrictLeak(best)
+            if not z then return false, "It couldn't leak: " .. tostring(m) .. "." end
+            return true, string.format("The infestation leaked from %s to %s.", LC.BlockName and LC.BlockName(best) or best, LC.BlockName and LC.BlockName(m) or m)
+        elseif string.sub(v, 1, 6) == "event:" then
+            if not LC.Running then return false, "Start the city first." end
+            if not (LC.StartEvent and LC.StartEvent(string.sub(v, 7))) then return false, "That event can't start now (another may be on)." end
+            return true, "Started: " .. string.sub(v, 7) .. "."
+        elseif v == "endevent" then
+            if GetGlobal2String("lc_event", "") == "" then return false, "No event is on." end
+            LC.EndEvent(false)
+            return true, "The event is over."
+        end
+        return false, "Unknown test."
+    end,
     item = function(t, v)
         local it = LCS and LCS.Items and LCS.Items[v or ""]
         if not it or not LC.GiveItem then return false, "No such item." end
@@ -194,6 +248,11 @@ local function Snapshot(admin, target)
     for _, p in ipairs(player.GetAll()) do data.players[#data.players + 1] = { id = p:SteamID() .. "|" .. p:Nick(), name = p:Nick() } end
     data.evidence = LC.EvidenceStatus and LC.EvidenceStatus() or nil -- (the confiscated contraband: sv_livingcity_evidence.lua)
     -- how the city's territory is doing (superadmins can grow it from the panel)
+    if admin:IsSuperAdmin() then
+        local sp = LC.SpeechSession and LC.SpeechSession()
+        data.solo = { address = sp and true or false, places = (LC.SpeechPlaces and LC.SpeechPlaces()) and true or false,
+            event = GetGlobal2String("lc_event", ""), collapse = GetGlobal2String("lc_collapse_stage", "") }
+    end
     if admin:IsSuperAdmin() and LC.TerritoryStatus then
         data.superadmin = true
         data.territory = LC.TerritoryStatus()

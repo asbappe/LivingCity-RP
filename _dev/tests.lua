@@ -38044,6 +38044,39 @@ LC.DistrictInfestForget()
 end
 DistrictInfestTests()
 
+function AdminSoloTests()
+section("Testing alone: what one player can't set off, from the admin panel (the owner, 18 November)")
+local solo = newPlayer("SoloTester", "citizen")
+solo.admin, solo.superadmin = true, false
+local okS, msg = LC.AdminTool(solo, solo, "solo", "black")
+ok(not okS and string.find(tostring(msg), "Superadmins", 1, true), "superadmins only", msg)
+solo.superadmin = true
+local ranCmd
+local rcc = RunConsoleCommand
+RunConsoleCommand = function(c, ...) ranCmd = c end
+okS, msg = LC.AdminTool(solo, solo, "solo", "bot")
+RunConsoleCommand = rcc
+ok(okS and ranCmd == "bot", "a stand-in player is a bot the server adds", msg)
+local hadCall, hadPlaces = LC.CallSpeech, LC.SpeechPlaces
+local called
+LC.CallSpeech = function(by, text) called = { by = by } return true end
+okS, msg = LC.AdminTool(solo, solo, "solo", "assassin")
+ok(okS and called and called.by == nil, "the assassination test calls the city's own Administrator to her address", msg)
+ok(solo:GetNW2String("lcf_faction", "") == "resistance" and solo:GetNW2Int("lcf_rank", 0) >= ((LC.AdminPlotMinRank and LC.AdminPlotMinRank()) or 3), "and makes them a Fighter, who may take the job", solo:GetNW2Int("lcf_rank", 0))
+ok(string.find(tostring(msg), "Kill the Administrator", 1, true) ~= nil, "and says which job to take")
+LC.CallSpeech = hadCall
+local endEv = GetGlobal2String("lc_event", "")
+if endEv ~= "" then LC.EndEvent(true) end
+okS, msg = LC.AdminTool(solo, solo, "solo", "event:curfew")
+ok(okS and GetGlobal2String("lc_event", "") == "curfew", "a city event starts from the panel", msg)
+okS, msg = LC.AdminTool(solo, solo, "solo", "endevent")
+ok(okS and GetGlobal2String("lc_event", "") == "", "and ends from it", msg)
+okS, msg = LC.AdminTool(solo, solo, "solo", "nonsense")
+ok(not okS, "an unknown test is refused")
+LC.SetFaction(solo, "citizen")
+end
+AdminSoloTests()
+
 ----------------------------------------------------------------------
 section("Stop")
 LC.Stop(admin)

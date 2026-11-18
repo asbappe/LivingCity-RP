@@ -183,6 +183,45 @@ local function Build()
         fl:Dock(FILL)
         fl:SetWrap(true)
     end
+    -- testing alone: what one player can't set off by themselves (superadmins; the owner, 18 November)
+    if state.solo then
+        local so2 = Section(scroll, "Testing alone  (what one player can't set off)")
+        local r1 = Row(so2)
+        Label(r1, "Stand-in:", 70)
+        Btn(r1, "Add a stand-in player (a bot)", function() Do("solo", "bot") end, 200)
+        local r2 = Row(so2)
+        Label(r2, "Her address:", 70)
+        if state.solo.address then
+            Btn(r2, "End the address", function() Do("solo", "endaddress") end, 130)
+        elseif state.solo.places then
+            Btn(r2, "Address now", function() Do("solo", "address") end, 110)
+            Btn(r2, "Assassination test (me: Fighter, and her address)", function() Do("solo", "assassin") end, 300)
+        else
+            Label(r2, "Place the speech stand and crowd points in the editor first.", 420)
+        end
+        local r3 = Row(so2)
+        Label(r3, "Collapse:", 70)
+        if state.solo.collapse == "" then
+            Btn(r3, "BLACK now", function() Do("solo", "black") end, 100)
+            Btn(r3, "Her last stand now", function() Do("solo", "stand") end, 140)
+        else
+            Btn(r3, "G-Man's next step", function() Do("solo", "next") end, 130)
+            Btn(r3, "Me as Barney", function() Do("solo", "mebarney") end, 100)
+            Btn(r3, "Me as Freeman", function() Do("solo", "mefreeman") end, 110)
+            Btn(r3, "End it", function() Do("solo", "off") end, 70)
+        end
+        local r4 = Row(so2)
+        Label(r4, "Events:", 70)
+        if state.solo.event ~= "" then
+            Btn(r4, "End the " .. state.solo.event, function() Do("solo", "endevent") end, 160)
+        else
+            for _, e in ipairs({ "parade", "drill", "raid", "sweep", "curfew", "lockdown" }) do Btn(r4, e, function() Do("solo", "event:" .. e) end, 66) end
+        end
+        local r5 = Row(so2)
+        Label(r5, "Also:", 70)
+        Btn(r5, "Secret endings menu", function() if LC_CL.EndingsMenu then LC_CL.EndingsMenu() end end, 150)
+        Btn(r5, "Leak the infestation now", function() Do("solo", "leak") end, 170)
+    end
     -- territory: grow it now, for testing (superadmins; it grows along the path nodes)
     if state.superadmin then
         local tr = Row(cs)

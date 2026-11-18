@@ -18,7 +18,7 @@
     (15%) of plans reach Civil Protection beforehand, the target and the time.
 
     Bounties. The City Administrator, or a unit of Division Leader rank or
-    higher, can put a price on a wanted person's head (F2 > Me > Bounties: 50
+    higher, can put a price on a wanted person's head (F2 > Bounties: 50
     or 100 credits). Every unit hears of it, and so does the person. A unit
     player who brings them in collects it (and 10 experience); taken in by
     the city's own units, or no longer wanted, the bounty lapses.
