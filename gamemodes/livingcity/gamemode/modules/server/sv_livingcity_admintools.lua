@@ -197,6 +197,7 @@ local function Snapshot(admin, target)
     if admin:IsSuperAdmin() and LC.TerritoryStatus then
         data.superadmin = true
         data.territory = LC.TerritoryStatus()
+        for _, l in ipairs(LC.DistrictInfestStatus and LC.DistrictInfestStatus() or {}) do data.territory[#data.territory + 1] = l end -- (how infested each district is)
     end
     if admin:IsSuperAdmin() and LC.SafeFileBlocked then
         local names = {}

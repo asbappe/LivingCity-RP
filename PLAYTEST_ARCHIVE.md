@@ -106,3 +106,4 @@ To add an item: `printf '%s\n' '- [ ] **Topic:** what to try. [needs a person: w
 - [ ] **Ranks and the cage:** set yourself Lieutenant (F4 admin tools): career page, the cage opens, Hacker offered; prisoners inside the cage, none in the wall? [needs a person: on the map]
 - [ ] **Rebel ground and the Colonel:** way marks as arrows within 20 seconds, pots on tables, the usual music, the Colonel stays put, mouths move on recorded lines? [needs a person: how it looks]
 - [ ] **The 21 new dream posters (16 November):** find a few in the city (or look at the sheet sent in chat): does each picture read at a glance, and is any one wrong for its dream? [needs a person: how it looks]
+- [ ] **Infestation per district:** leave an infestation alone until its block reads "badly infested" on F2 > The state of the city; does it turn up in the next block after about 20 minutes, and does a powered checkpoint stop it? [needs a person: the pace on the real map]

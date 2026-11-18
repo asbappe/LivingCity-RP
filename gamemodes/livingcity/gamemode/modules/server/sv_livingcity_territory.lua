@@ -417,6 +417,38 @@ function LC.InfestQuietAt(pos)
 end
 
 LC.TerritoryGrowthSpot = GrowthSpot
+
+-- Somewhere on open ground near `near` (another district, sv_livingcity_districtinfest.lua)
+-- that the infestation of `seed` could leak to: the same checks as growing, without
+-- having to touch the edge (spores carry), but never past a checkpoint with power.
+-- ok(p): an extra test of the spot (which district it is in). Returns pos, r or nil.
+function LC.TerritoryLeakSpot(seed, near, ok)
+    local family = Family(seed)
+    local newR = math.Clamp(seed.r * math.Rand(0.55, 0.8), 200, 500)
+    for _ = 1, 40 do
+        local p = LC.RandomWanderPos and LC.RandomWanderPos("citizen", near)
+        p = p and Floor(p + Vector(0, 0, 8))
+        local fitR = p and FitRadius(p, newR)
+        if p and fitR and (not ok or ok(p)) then
+            -- from the nearest of its ground
+            local from, fd
+            for _, z in ipairs(family) do
+                local d = z.pos:DistToSqr(p)
+                if not fd or d < fd then from, fd = z, d end
+            end
+            local inside = false
+            for _, z in ipairs(LC.Zones) do
+                if z.kind == seed.kind and LCZ.Contains(z, p, 50) then inside = true break end
+            end
+            if from and not inside and ClearOfOthers(p, fitR, seed.kind) and not LC.InfestQuietAt(p)
+                and not (LC.ContainmentBlocks and LC.ContainmentBlocks(from.pos, p, fitR))
+                and (not LC.NavReachable or LC.NavReachable(from.pos, p)) then
+                return p, fitR
+            end
+        end
+    end
+    return nil
+end
 function LC.TerritoryCanGrow(seed)
     return ClusterGrown(ClusterOf(seed)) < MaxFor(seed.kind) and LC.GrownCount(seed.kind) < cvCityMax:GetInt()
 end
@@ -755,6 +787,7 @@ concommand.Add("lc_territory", function(ply)
     local lines = LC.TerritoryStatus()
     if #lines == 0 then return Say(ply, "[Miscount] No rebel or infestation zones placed.") end
     for _, l in ipairs(lines) do Say(ply, "[Miscount] " .. l) end
+    for _, l in ipairs(LC.DistrictInfestStatus and LC.DistrictInfestStatus() or {}) do Say(ply, "[Miscount] " .. l) end -- (sv_livingcity_districtinfest.lua)
 end)
 
 concommand.Add("lc_territory_grow", function(ply, _, args)
