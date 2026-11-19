@@ -70,7 +70,7 @@ function LC.IsSnitch(npc)
     if not st or st.role ~= "citizen" then return false end
     -- a named citizen: from who they are (sv_livingcity_mindsact.lua); anyone else, the roll
     if st.snitch == nil and LC.MindsIsInformer then st.snitch = LC.MindsIsInformer(npc, st) end
-    if st.snitch == nil then st.snitch = math.random() < math.Clamp(cvChance:GetFloat() * (LC.LedgerSnitchMul or 1), 0, 1) end -- (the Administrator's authority: sv_livingcity_ledger.lua)
+    if st.snitch == nil then st.snitch = math.random() < math.Clamp(cvChance:GetFloat() * (LC.LedgerSnitchMul or 1) * (LC.RebelStandingSnitchMul and LC.RebelStandingSnitchMul() or 1), 0, 1) end -- (the Administrator's authority: sv_livingcity_ledger.lua)
     return st.snitch == true
 end
 

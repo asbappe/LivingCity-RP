@@ -218,7 +218,7 @@ function LC.NewPerson(role, want)
         p.job = RandomJob()
         local blocks = BlockNumbers()
         if #blocks > 0 then p.home = Pick(blocks) end
-        p.rebel = want.rebel == true or math.random() * 100 < cvRebel:GetFloat() or nil
+        p.rebel = want.rebel == true or math.random() * 100 < cvRebel:GetFloat() * (LC.RebelStandingSympathyMul and LC.RebelStandingSympathyMul() or 1) or nil
     end
     P.list[#P.list + 1] = p
     MarkDirty()

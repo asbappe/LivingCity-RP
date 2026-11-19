@@ -317,6 +317,10 @@ local function Context(me, unit, rebel)
     local close = tr and tr.HitPos and tr.HitPos:DistToSqr(me:EyePos()) < 150 * 150
     if not (IsValid(e) and close) then return out end
     local cls = e:GetClass() or ""
+    -- informing (sv_livingcity_inform.lua): a unit in front of you, and something to tell him
+    if me:GetNW2Bool("lc_inform_can", false) and (cls == "npc_metropolice" or (e:IsPlayer() and e:GetNW2Bool("lc_unit", false))) then
+        Add("Inform", function() Send("informunit", "", e) end)
+    end
     -- one of the city's people (the owner, 19 November: these were only in the C menu)
     if cls == "npc_citizen" and not unit and not e:GetNW2Bool("lc_cuffed", false) and not e:GetNW2Bool("lc_downed_body", false) and not e:GetNW2Bool("lc_body", false) then
         Add("Ask their name", function() Send("askname", "", e) end)
@@ -1002,6 +1006,27 @@ local function OrdersPage()
     local me = LocalPlayer()
     local p = LeversPage()
     local items = {}
+    -- a killing by the Resistance to answer, and an exchange they offer (sv_livingcity_rebelanswer.lua)
+    local rk = util.JSONToTable(GetGlobal2String("lc_rk_answer", "") or "")
+    if istable(rk) and rk.name then
+        items[#items + 1] = Page("Answer the killing of " .. tostring(rk.name), function()
+            local function Do(what) return function() net.Start("lc_rk_do") net.WriteString(what) net.SendToServer() end end
+            local its = {
+                { label = "A reprisal: the firing squad" .. (rk.reprisal and "" or " (nobody to shoot, or no wall)"), run = Do("reprisal"), disabled = not rk.reprisal },
+                { label = "A raid on rebel ground" .. (rk.raid and "" or " (they hold no ground)"), run = Do("raid"), disabled = not rk.raid },
+                { label = "The high ground: an amnesty", run = Do("high") },
+            }
+            if rk.exchange then its[#its + 1] = { label = "Offer them an exchange", run = Do("exchange") } end
+            return { title = "YOUR ANSWER", items = its }
+        end)
+    end
+    local xc = util.JSONToTable(GetGlobal2String("lc_xchg", "") or "")
+    if istable(xc) and xc.from == "resistance" then
+        items[#items + 1] = Page("The Resistance offer " .. tostring(xc.a) .. " for " .. tostring(xc.b), function()
+            local function Answer(yes) return function() net.Start("lc_xchg_do") net.WriteBool(yes) net.SendToServer() end end
+            return { title = "AN EXCHANGE", items = { { label = "Accept", run = Answer(true) }, { label = "Refuse", run = Answer(false) } } }
+        end)
+    end
     for _, it in ipairs(p.items) do
         local l = tostring(it.label)
         if not string.find(l, "speech", 1, true) then items[#items + 1] = it end
@@ -1014,7 +1039,11 @@ local function OrdersPage()
         items[#items + 1] = arrest
     end
     if me:GetNW2String("lc_bounty_menu", "") ~= "" then items[#items + 1] = Page("Bounties on the wanted", BountyPage) end
+    -- a public execution at the wall (sv_livingcity_firingsquad.lua): the server sends who may be shot
+    items[#items + 1] = Item("Firing squad...", function() net.Start("lc_fsquad_ask") net.SendToServer() end)
     if #(LC_CL.Manpower or {}) > 0 then items[#items + 1] = Page("Combine manpower", ManpowerPage) end
+    -- (more than nine: the rest on a page of their own)
+    if #items > 9 and LC_CL.SituationPaged then return LC_CL.SituationPaged("CITY ORDERS", items) end
     return { title = "CITY ORDERS", items = items }
 end
 

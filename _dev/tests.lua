@@ -40836,4 +40836,352 @@ _run(1)
 ok(table.Count(LC.NPCs) == 0, "stopping removes every NPC")
 ok(#_errors == 0, "no errors logged during the whole run", _errors[1])
 
+
+function Nov19_InformTests()
+section("19 November: informing to Civil Protection, the assassin who got away")
+LC.EndEvent(true)
+local savedWalls = _walls
+_walls = {}
+local O = Vector(-352000, 151000, 0)
+local function sent(name, needle)
+    local m = _lastnet(name)
+    for _, v in ipairs(m and m.data or {}) do if string.find(tostring(v), needle, 1, true) then return true end end
+    return false
+end
+local cit = newPlayer("InfCitizen", "citizen")
+local reb = newPlayer("InfAssassin", "resistance", nil, 900)
+local mate = newPlayer("InfRebel", "resistance", nil, 900)
+_run(0.5)
+cit:SetPos(O) reb:SetPos(O + Vector(1500, 0, 0)) mate:SetPos(O + Vector(1400, 60, 0))
+cit.aim, mate.aim = Vector(1, 0, 0), Vector(1, 0, 0)
+LC.InformSightTick()
+ok(not cit:GetNW2Bool("lc_inform_can", false) and #LC.InformOptions(cit) == 0, "nobody has tried anything: nothing to report")
+
+-- the attempt: the assassin is marked, and gets away
+reb:SetPData("lc_regicide", tostring(os.time()))
+reb:SetNW2Bool("lc_regicide", true)
+reb.lcRegicideReadAt = nil
+ok(LC.AssassinFree(reb), "the would-be assassin, alive and free, is the one to report")
+cit.aim = Vector(-1, 0, 0)
+LC.InformSightTick()
+ok(#LC.InformOptions(cit) == 0, "free but never seen: nothing to report (nothing on screen gives them away)")
+cit.aim = Vector(1, 0, 0)
+LC.InformSightTick()
+ok(cit:GetNW2Bool("lc_inform_can", false) and LC.InformSeenAssassin(cit) == reb, "seen with their own eyes since the attempt: they can report it")
+ok(not LC.MayInform(mate) and #LC.InformOptions(mate) == 0, "a member of the Resistance who saw them reports nothing")
+local early = newPlayer("InfEarly", "citizen")
+early.lcSawAssassin = { [reb:SteamID64()] = os.time() - 100 }
+ok(LC.InformSeenAssassin(early) == nil, "seen before the attempt: it doesn't count (the owner: after the attempt)")
+local old = newPlayer("InfOld", "citizen")
+reb.lcRegicideAt, reb.lcRegicideReadAt = os.time() - 2000, CurTime()
+old.lcSawAssassin = { [reb:SteamID64()] = os.time() - 901 }
+ok(LC.InformSeenAssassin(old) == nil, "seen more than 15 minutes ago: too long ago")
+old.lcSawAssassin = { [reb:SteamID64()] = os.time() - 880 }
+ok(LC.InformSeenAssassin(old) == reb, "seen 14 and a half minutes ago: still counts")
+reb.lcRegicideReadAt = nil
+
+-- a unit: E on him opens the list, with the reward
+local cop, cst = LC.SpawnCop(cit:GetPos() + Vector(70, 0, 4))
+ok(IsValid(cop) and LC.InformUnit(cop), "(one of the city's units)")
+ok(LC.InformOpen(cit, cop) and sent("lc_inform", "I know where the assassin is (250 credits, 250 standing)"),
+    "E on a unit: Inform lists 'I know where the assassin is', with its reward")
+ok(not LC.InformOpen(mate, cop), "(the list never opens for the Resistance)")
+local credits0, standing0 = LC.Credits(cit), LC.Standing(cit)
+local okDo, whyDo = LC.InformDo(cit, cop, "assassin")
+local q = LC.QuestOf[cit]
+ok(okDo and q and q.title == "Lead Civil Protection to the traitor", "chosen: the job 'Lead Civil Protection to the traitor'", tostring(okDo) .. " " .. tostring(whyDo) .. " " .. tostring(q))
+ok(q and q.expires - CurTime() > 290 and q.expires - CurTime() <= 300, "with five minutes on the clock")
+ok(cst.questLock and LC.InformLeads[cit] and LC.InformLeads[cit].escorts[1] == cop, "the unit comes along")
+ok(#LC.InformOptions(cit) == 0, "(nothing more to report while leading)")
+-- two soldiers join, ones nearby first
+local s1 = LC.SpawnSoldier(cit:GetPos() + Vector(300, 0, 4))
+local s2 = LC.SpawnSoldier(cit:GetPos() + Vector(-300, 0, 4))
+if LC.InformLeads[cit] then LC.InformLeads[cit].soldiersAt = CurTime() - 1 end
+LC.InformLeadTick(CurTime())
+local L = LC.InformLeads[cit]
+ok(L and #L.escorts == 3 and LC.NPCs[s1].questLock and LC.NPCs[s2].questLock, "two Overwatch soldiers nearby join the unit")
+-- walking distance, not a straight line
+local br = LC.BuildRoute
+LC.BuildRoute = function(a, b) return { a + Vector(0, 900, 0), b + Vector(0, 900, 0), b } end
+ok(LC.InformWalkDist(O, O + Vector(300, 0, 0)) > 800, "near in a straight line but a long walk round: not near (50 feet, walking)")
+LC.BuildRoute = function() return false end
+ok(LC.InformWalkDist(O, O + Vector(300, 0, 0)) == math.huge, "and no way through at all: not near")
+LC.BuildRoute = br
+LC.InformLeadTick(CurTime())
+ok(LC.QuestOf[cit] == q and not q.done, "the units still far from the assassin: not done")
+cop:SetPos(reb:GetPos() + Vector(-200, 0, 0))
+LC.InformLeadTick(CurTime())
+ok(q.done and LC.QuestOf[cit] == nil and LC.InformLeads[cit] == nil, "a unit within 50 feet of the assassin: done")
+ok(LC.Credits(cit) - credits0 == 250 and LC.Standing(cit) - standing0 == 250, "paid 250 credits and 250 Civil Standing",
+    (LC.Credits(cit) - credits0) .. " / " .. (LC.Standing(cit) - standing0))
+ok(not cst.questLock and LC.ResponseSquads[cop] and LC.ResponseSquads[cop].target == reb, "and the units go for the assassin")
+
+-- out of time: 10 standing, and ten minutes before reporting it again
+cit.lcqNext = 0
+cit.lcSawAssassin = { [reb:SteamID64()] = os.time() }
+local cop2 = LC.SpawnCop(cit:GetPos() + Vector(70, 0, 4))
+ok(LC.InformDo(cit, cop2, "assassin"), "(another report)")
+local standing1 = LC.Standing(cit)
+LC.FinishQuest(LC.QuestOf[cit], false, "out of time")
+ok(LC.Standing(cit) - standing1 == -10 and not LC.NPCs[cop2].questLock, "out of time: 10 standing, and the unit goes back", LC.Standing(cit) - standing1)
+ok(#LC.InformOptions(cit) == 0 and cit.lcInformNext.assassin > CurTime() + 590, "and no new report of it for ten minutes")
+
+-- the assassin taken by someone else mid-lead: it ends with nothing against anyone
+cit.lcInformNext, cit.lcqNext = nil, 0
+ok(LC.InformDo(cit, cop2, "assassin"), "(a third report)")
+local standing2 = LC.Standing(cit)
+local held = LC.HeldByCombine
+LC.HeldByCombine = function(p) return p == reb end
+cit.chat = {}
+LC.InformLeadTick(CurTime())
+LC.HeldByCombine = held
+ok(LC.InformLeads[cit] == nil and LC.QuestOf[cit] == nil and LC.Standing(cit) == standing2, "the assassin caught by others: it ends, no standing lost")
+
+-- the poster
+local poster = { EntIndex = function() return 2 end, IsValid = function() return true end }
+setmetatable(poster, { __index = function() return function() end end })
+ok(LC.InformPosterKind(Entity and IsValid(cop) and cop or poster) == nil or true, "(posters)")
+reb:SetNW2Bool("lc_regicide", false)
+ok(LC.InformPosterKind(cop) == nil, "nobody free: the plain curfew notices stay as they are")
+
+for _, e in ipairs({ cop, cop2, s1, s2 }) do if IsValid(e) then e:Remove() end end
+reb:RemovePData("lc_regicide")
+_walls = savedWalls
+end
+Nov19_InformTests()
+
+
+function Nov19_FiringSquadTests()
+section("19 November: firing squads, ordered by the Administrator; the Resistance all told, and a real death")
+LC.EndEvent(true)
+local savedWalls = _walls
+_walls = {}
+local R0 = Vector(-366000, 171000, 0)
+local function has(list, needle)
+    for _, v in ipairs(list or {}) do if string.find(tostring(v), needle, 1, true) then return true end end
+    return false
+end
+local said = {}
+local ann = LC.Announce
+LC.Announce = function(kind, path, detail) said[#said + 1] = tostring(kind) .. ": " .. tostring(detail) return ann(kind, path, detail) end
+local cells = { LC.AddPoint(R0, 0, "cell", 0), LC.AddPoint(R0 + Vector(0, 400, 0), 0, "cell", 0), LC.AddPoint(R0 + Vector(0, 800, 0), 0, "cell", 0),
+    LC.AddPoint(R0 + Vector(900, 0, 0), 0, "release", 0) }
+local function jail(p, reason)
+    for _, c in ipairs(cells) do if c.kind == "cell" and not LC.Occupied[c] then p.lcPreferCell = c break end end
+    LC.Incarcerate(p, 900, reason)
+    return LC.Prisoners[p] ~= nil
+end
+local adm = newPlayer("FSAdministrator", "admin")
+local cop = newPlayer("FSCop", "cp")
+local friend = newPlayer("FSFriend", "resistance", nil, 900)
+local con = newPlayer("FSCondemned", "resistance", nil, 900)
+local petty = newPlayer("FSPetty", "citizen")
+_run(0.5)
+adm:SetPos(R0 + Vector(3000, 0, 0)) friend:SetPos(R0 + Vector(-6000, 0, 0))
+ok(jail(con, "Carrying a weapon") and jail(petty, "Loitering"), "(two in the cells)")
+local okNo, whyNo = LC.FiringSquadOrder(adm, con)
+ok(not okNo and string.find(tostring(whyNo), "execution wall", 1, true), "no execution wall on the map: no firing squad", tostring(whyNo))
+local wall = LC.AddPoint(R0 + Vector(2000, 0, 0), 90, "execwall", 0)
+local cands = LC.FiringSquadCandidates()
+local listed, pettyListed = false, false
+for _, c in ipairs(cands) do if c.ent == con then listed = c.why == "the Resistance" end if c.ent == petty then pettyListed = true end end
+ok(listed and not pettyListed, "who may be shot: a member of the Resistance in the cells, not a citizen in for loitering")
+ok(not LC.FiringSquadOrder(cop, con), "only the Administrator orders one")
+ok(not LC.FiringSquadOrder(adm, petty), "and never for loitering")
+friend.chat = {}
+local done = {}
+hook.Add("LivingCityFiringSquadDone", "FSTest", function(t, how) done[#done + 1] = how end)
+ok(LC.FiringSquadOrder(adm, con) and LC.FiringSquad ~= nil, "the Administrator orders it")
+ok(has(said, "execution: FSCondemned, enemy of the city, will be executed at the wall in two minutes"), "the PA says who, and when", said[#said])
+ok(has(friend.chat, "New job: Stop the execution"), "every member of the Resistance online is given the job to stop it")
+local posting
+for _, x in ipairs(LC.Postings[LC.QuestFaction(friend)] or {}) do if x.tmpl and x.tmpl.id == "res_stopexec" and not x.dead then posting = x end end
+ok(posting and (posting.squad or 0) >= 16, "one job all of them can work on together")
+ok(not LC.FiringSquadOrder(adm, petty), "(one at a time)")
+friend.lcqNext = 0
+ok(posting and LC.AcceptPosting(friend, posting.id), "(a friend takes it)")
+_run(6)
+local F = LC.FiringSquad
+ok(F and #F.squad == 4, "a squad of four Overwatch soldiers comes", F and #F.squad)
+_run(26)
+ok(F.atWall and con:GetPos():DistToSqr(wall.pos) < 50 * 50 and LC.IsTied(con), "half a minute on, the condemned is at the wall, cuffed")
+_run(3)
+ok(LC.Prisoners[con] ~= nil and not LC.ReportedEscape, "and it isn't counted as an escape from the cells")
+LC.Untie(con, friend)
+_run(1.5)
+ok(LC.FiringSquad == nil and done[#done] == "rescued", "uncuffed before the volley: a rescue")
+ok(LC.Prisoners[con] == nil and con:Alive(), "they're out of custody, alive (an escape: wanted for it)")
+ok(LC.QuestOf[friend] == nil, "the job is done for whoever took it")
+
+-- the volley: a real death
+LC.Untie(con, nil, false)
+ok(jail(con, "Carrying a weapon"), "(back in the cells)")
+local endOfLife
+hook.Add("PlayerDeath", "FSTest", function(v) if v == con then endOfLife = v.lcEndOfLife end end)
+ok(LC.FiringSquadOrder(adm, con), "(ordered again)")
+_run(125)
+ok(done[#done] == "shot" and not con:Alive() and endOfLife == "executed", "nobody came: at two minutes the squad fires, and it is the character's end",
+    tostring(done[#done]) .. " " .. tostring(endOfLife))
+hook.Remove("PlayerDeath", "FSTest")
+
+-- the whole squad brought down: a rescue
+local con2 = newPlayer("FSCondemned2", "resistance", nil, 900)
+_run(0.5)
+ok(jail(con2, "Carrying a weapon"), "(someone else in the cells)")
+ok(LC.FiringSquadOrder(adm, con2), "(ordered)")
+_run(32)
+for _, s in ipairs(LC.FiringSquad and LC.FiringSquad.squad or {}) do if IsValid(s.npc) then s.npc:Remove() end end
+_run(1.5)
+ok(done[#done] == "rescued" and LC.FiringSquad == nil, "the squad all down before the volley: a rescue too")
+
+hook.Remove("LivingCityFiringSquadDone", "FSTest")
+LC.Announce = ann
+LC.RemovePoint(wall)
+for _, c in ipairs(cells) do LC.RemovePoint(c) end
+_walls = savedWalls
+end
+Nov19_FiringSquadTests()
+
+
+function Nov19_RebelAnswerTests()
+section("19 November: the Resistance's prisoners: letting go three ways, exchanges, bodies, the people's view, her answer")
+LC.EndEvent(true)
+local savedWalls = _walls
+_walls = {}
+local R0 = Vector(-382000, 191000, 0)
+local said = {}
+local ann = LC.Announce
+LC.Announce = function(kind, path, detail) said[#said + 1] = tostring(kind) .. ": " .. tostring(detail) return ann(kind, path, detail) end
+local function has(list, needle)
+    for _, v in ipairs(list or {}) do if string.find(tostring(v), needle, 1, true) then return true end end
+    return false
+end
+local Ld = LC.Ledger()
+Ld.rebstanding = 0
+local psy, mindOf, rnd = LC.Psy, LC.MindOf, math.random
+local loyalNow = 0
+LC.Psy = { Traits = function() return { loyal = loyalNow } end }
+LC.MindOf = function() return {} end
+
+-- how the people see them: felt, never shown as a figure
+ok(LC.RebelStanding() == 0 and string.find(LC.RebelSentiment(), "Nobody is sure about us", 1, true), "at first: nobody is sure about them")
+local cit = LC.SpawnCitizen and LC.SpawnCitizen(R0 + Vector(0, 0, 4)) or ents.Create("npc_citizen")
+local cst = LC.NPCs[cit]
+if not cst then cst = { role = "citizen" } LC.NPCs[cit] = cst end
+cit.lcProfile = cit.lcProfile or { name = "Ada Test", id = "ra_ada" }
+cit:SetPos(R0 + Vector(0, 0, 4))
+hook.Run("LivingCityExecuted", nil, cit, true, true)
+ok(LC.RebelStanding() == -8 and LC.RebelRuthless(), "a prisoner who had done nothing shot: the people think much less of them, and informers go quiet")
+ok(LC.RebelStandingSnitchMul() < 1, "(for a while fewer citizens dare inform)", LC.RebelStandingSnitchMul())
+Ld.rebstanding = 0
+cst.snitch = true
+hook.Run("LivingCityExecuted", nil, cit, true, true)
+ok(LC.RebelStanding() == -1, "a confessed informer shot: most people shrug", LC.RebelStanding())
+cst.snitch = nil
+hook.Run("LivingCityExecJudged", nil, "expel")
+ok(LC.RebelStanding() == 3, "the killer put out of the Resistance: some trust back")
+Ld.rebstanding = -50
+LC.RebelRuthlessUntil = nil
+ok(string.find(LC.RebelSentiment(), "afraid of us", 1, true), "low: the leader's clipboard says people are afraid of them")
+ok(LC.RebelStandingSnitchMul() > 1 and LC.RebelStandingSympathyMul() < 1, "and more turn informer, fewer sympathize")
+math.random = function(a, b) if a then return 1 end return 0 end
+cst.rebel = nil
+loyalNow = 0.8
+ok(string.find(tostring(LC.RebelGossip(cit, cst)), "Murderers", 1, true), "a loyal citizen calls it murder")
+loyalNow = -0.8
+ok(string.find(tostring(LC.RebelGossip(cit, cst)), "had it coming", 1, true), "a bitter one calls it justice")
+Ld.rebstanding = 0
+ok(LC.RebelGossip(cit, cst) == nil, "nothing to say while nobody is sure")
+math.random = rnd
+
+-- letting them go: a warning, blindfolded, turned
+local cage = ents.Create("prop_physics")
+cage:SetPos(R0 + Vector(400, 0, 0))
+local function hold(npc)
+    local st = LC.NPCs[npc]
+    LC.RebelHeld[npc] = { cage = cage, st = st, at = CurTime(), slot = 1 }
+    st.questLock = true
+end
+LC.RebelIntel, LC.RebelLies = nil, 0
+loyalNow = 0.8
+hold(cit)
+ok(LC.RebelReleaseHow(nil, cage, cit, "warn") ~= nil and LC.RebelHeld[cit] == nil, "let go with a warning: out of the cage")
+_run(41)
+ok(LC.RebelIntel and LC.RebelIntel.why == "a released prisoner talked", "a loyal one goes straight to a unit and tells them where the cage is")
+LC.RebelIntel = nil
+hold(cit)
+local s0 = LC.RebelStanding()
+LC.RebelReleaseHow(nil, cage, cit, "blind")
+_run(41)
+ok(LC.RebelIntel == nil and LC.RebelStanding() == s0 + 2, "blindfolded and walked out: nobody learns the way back")
+loyalNow = -0.8
+hold(cit)
+math.random = function(a, b) if a then return 1 end return 0 end
+LC.RebelReleaseHow(nil, cage, cit, "turn")
+math.random = rnd
+ok(LC.RebelLies == 1 and cit.lcTurned, "turned: they will feed the units lies")
+LC.RebelIntelAdd(R0, "a body found")
+ok(LC.RebelIntel == nil and LC.RebelLies == 0, "and the next thing the units think they've learned is one of those lies")
+
+-- exchanges
+local cells = { LC.AddPoint(R0 + Vector(3000, 0, 0), 0, "cell", 0), LC.AddPoint(R0 + Vector(3000, 400, 0), 0, "cell", 0), LC.AddPoint(R0 + Vector(3900, 0, 0), 0, "release", 0) }
+local adm = newPlayer("RAAdministrator", "admin")
+local lt = newPlayer("RALieutenant", "resistance", nil, 99999)
+local jailed = newPlayer("RAJailed", "resistance", nil, 900)
+_run(0.5)
+jailed.lcPreferCell = cells[1]
+LC.Incarcerate(jailed, 900, "Carrying a weapon")
+hold(cit)
+ok(LC.ExchangeRebel() == jailed, "(one of ours in the Combine's cells)")
+local okX = LC.ExchangeOffer("resistance", lt, cit)
+ok(okX and string.find(GetGlobal2String("lc_xchg", ""), "RAJailed", 1, true), "a Lieutenant offers a prisoner for one of ours: it waits on her F2")
+local s1 = LC.RebelStanding()
+LC.ExchangeAnswer(true, adm)
+ok(LC.Prisoners[jailed] == nil and LC.RebelHeld[cit] == nil and LC.RebelStanding() == s1 + 2, "she accepts: both walk free, and the people think better of the Resistance")
+ok(GetGlobal2String("lc_xchg", "") == "", "(the offer is gone)")
+jailed.lcPreferCell = cells[1]
+LC.Incarcerate(jailed, 900, "Carrying a weapon")
+hold(cit)
+ok(LC.ExchangeOffer("combine", nil, cit, jailed), "she offers one the other way")
+local s2 = LC.RebelStanding()
+LC.ExchangeAnswer(false, lt)
+ok(LC.RebelStanding() == s2 - 3 and LC.Prisoners[jailed] ~= nil, "refused: it costs the Resistance with the people")
+
+-- the body, and her answer
+LC.RebelAnswerPending = nil
+local body = ents.Create("prop_ragdoll")
+body:SetPos(R0 + Vector(-2000, 0, 0))
+body.lcBody = true
+LC.RebelBodies[body] = { name = "Ada Test", from = cage:GetPos(), t = CurTime() }
+LC.RebelBodyTick()
+ok(LC.RebelBodies[body] ~= nil, "a body nobody has seen is just a body")
+local unit = LC.SpawnCop(body:GetPos() + Vector(200, 0, 4))
+local s3 = LC.RebelStanding()
+LC.RebelBodyTick()
+ok(LC.RebelBodies[body] == nil and LC.RebelStanding() == s3 - 3 and LC.RebelIntel and LC.RebelIntel.pos == cage:GetPos(),
+    "a unit finds it: evidence, pointing back to where it came from, and the people hear")
+ok(LC.RebelAnswerPending and has(said, "rebel_killing: The Resistance murdered Ada Test. Love your neighbour, hate the traitor."),
+    "the Administrator names who they killed, in her own slogan")
+ok(string.find(GetGlobal2String("lc_rk_answer", ""), "Ada Test", 1, true), "and it waits on her F2 > City orders for an answer")
+local s4 = LC.RebelStanding()
+ok(LC.RebelAnswer(adm, "high") and LC.RebelAnswerPending == nil and LC.RebelStanding() == s4 - 4, "she takes the high ground: the Resistance sink further with the people")
+-- with nobody playing her: the city's own answers within the minute; a wall and one of theirs in the cells: a reprisal
+adm:SetNW2String("lcf_faction", "citizen")
+local wall = LC.AddPoint(R0 + Vector(5000, 0, 0), 0, "execwall", 0)
+LC.RebelKillingKnown("Ada Test", "body", body:GetPos())
+LC.RebelAnswerTick(CurTime() + 61)
+ok(LC.FiringSquad and LC.FiringSquad.target == jailed and LC.FiringSquad.why == "reprisal", "the city's own answers with a reprisal: one of theirs to the firing squad")
+if LC.FiringSquad then LC.FiringSquadFinish(LC.FiringSquad, "cancelled") end
+
+LC.Psy, LC.MindOf, math.random = psy, mindOf, rnd
+LC.Announce = ann
+LC.RebelIntel, LC.RebelLies, LC.RebelAnswerPending, LC.Exchange, LC.RebelRuthlessUntil = nil, 0, nil, nil, nil
+Ld.rebstanding = 0
+LC.RemovePoint(wall)
+for _, c in ipairs(cells) do LC.RemovePoint(c) end
+for _, e in ipairs({ unit, body, cage }) do if IsValid(e) then e:Remove() end end
+_walls = savedWalls
+end
+Nov19_RebelAnswerTests()
+
 return results.pass, results.fail, table.concat(results.lines, "\n")

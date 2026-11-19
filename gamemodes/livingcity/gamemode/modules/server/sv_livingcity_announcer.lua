@@ -135,6 +135,10 @@ LC.AnnounceTriggers = {
     "hunt",
     -- headcrab canisters on a district the Resistance hold, as they come in (sv_livingcity_shelling.lua)
     "shelled",
+    -- a public execution at the wall, two minutes ahead (sv_livingcity_firingsquad.lua)
+    "execution",
+    -- the Administrator names whoever the Resistance killed, once the Combine know of it (sv_livingcity_rebelanswer.lua)
+    "rebel_killing",
 }
 -- Lines only she says (Overwatch has none of these): lc_voice_missing doesn't ask him for them.
 LC.AnnounceHersOnly = {}
@@ -160,7 +164,7 @@ local BASE_TIER = {
     rations = 1, supply = 1, ended = 1, rations_soon = 1,
     dawn = 1, day = 1, dusk = 1, night = 1, ambient = 1, welcome = 1, power_restored = 1, train_arrival = 1, socio_green = 1,
     sweep = 2, curfew = 2, curfew_soon = 2, blackout = 2, territory_grew = 2, socio_yellow = 2, outbreak = 2,
-    lockdown = 3, raid = 3, shelled = 3, skirmish_raid = 3, skirmish_sweep = 3, response = 3, block_raided = 3, overwatch_drop = 3, socio_red = 3,
+    lockdown = 3, raid = 3, shelled = 3, execution = 4, rebel_killing = 3, skirmish_raid = 3, skirmish_sweep = 3, response = 3, block_raided = 3, overwatch_drop = 3, socio_red = 3,
     breakout = 4, socio_black = 4, black_stand = 4, black_fallen = 4, suppressor_down = 4, black_crushed = 3,
     jog = 1, drill = 1, parade = 1, -- (she loves a bit of exercise)
     attempt = 4, speech_attempt_open = 3, speech_attempt_martyr = 3, speech_attempt_you = 3, speech_attempt_hero = 3, speech_attempt_guards = 3, speech_attempt_enemy = 3, speech_attempt_caught = 3, speech_attempt_hunt = 3, speech_attempt_measures = 3, speech_attempt_resolve = 3,
@@ -198,7 +202,7 @@ local TITLES = {
     jog = "Morning exercise", drill = "Morning exercise", parade = "Morning parade",
     outbreak = "Outbreak", blackout = "Power failure", power_restored = "Power restored", skirmish_raid = "Overwatch response",
     skirmish_sweep = "Overwatch response", breakout = "Prison breakout", overwatch_drop = "Overwatch deployment",
-    block_raided = "Housing block inspection", shelled = "Sector sterilization", territory_grew = "Resistance activity", train_arrival = "Arrivals",
+    block_raided = "Housing block inspection", shelled = "Sector sterilization", execution = "Public execution", rebel_killing = "The Administrator", territory_grew = "Resistance activity", train_arrival = "Arrivals",
     welcome = "Welcome", dawn = "City announcement", day = "City announcement", dusk = "City announcement", night = "City announcement",
     ambient = "City announcement", response = "Overwatch response", socio_black = "Civil collapse",
     black_stand = "The Nexus", black_fallen = "The Administrator", black_crushed = "Order restored", suppressor_down = "The suppression device",

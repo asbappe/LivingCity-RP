@@ -210,6 +210,9 @@ LC_MODULES = {
         "sv_livingcity_adminsecurity", -- (a grenade thrown at her: a soldier throws himself on it; after speech)
         "sv_livingcity_adminheli", -- (her attack helicopter: parked by the stand, her way out by air, her ride to the stand; after adminsecurity)
         "sv_livingcity_adminquestioning", -- (the would-be assassin in the cells: she leads the questioning, stunstick in hand; after adminsecurity)
+        "sv_livingcity_inform", -- (informing to Civil Protection: the assassin who got away, and later more kinds)
+        "sv_livingcity_firingsquad", -- (firing squads: the Administrator orders a prisoner shot at the execution wall)
+        "sv_livingcity_rebelanswer", -- (the Resistance's prisoners: three ways to let go, exchanges, bodies, the people's view, her answer)
         "sv_livingcity_adminhunt", -- (the would-be assassin at large: Overwatch squads hunt them, hideout by hideout; after adminsecurity)
         "sv_livingcity_resistancefund", -- (the Resistance's fund: half of every take from supplies raided and people saved, kept with the ledger; before adminplot, whose order it pays for)
         "sv_livingcity_fundgear", -- (what the fund buys: its players' guns and rounds; its record, the screen in the camp, donations; after resistancefund)
@@ -343,6 +346,8 @@ LC_MODULES = {
         "cl_livingcity_ways",
         "cl_livingcity_chronicle", -- (staff: F1 > What now? > The city's stories)
         "cl_livingcity_rebelhold", -- (the holding cage's quick menu)
+        "cl_livingcity_inform", -- (informing: the list of what you can report to a unit)
+        "cl_livingcity_firingsquad", -- (firing squads: her list of who may be shot)
         "cl_livingcity_cuffed", -- (cuffed people: arms behind the back, and the cuffs drawn on their wrists)
         "cl_livingcity_gasmask", -- (gas masks drawn on faces, and a left hand over the eyes or mouth)
         "cl_livingcity_patdown", -- (the quick menu that comes with cuffing someone)
