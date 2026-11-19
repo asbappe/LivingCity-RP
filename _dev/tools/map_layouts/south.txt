@@ -1,0 +1,50 @@
+# The south half of the ring: from the south end of the ring's west run, round the south of the
+# city, to the first canal. One module on each line, in the order you walk them.
+#
+# NOT FITTED TO THE MAP YET (19 November): the route below was drawn without the owner's VMF.
+# Run it with --against c18_lc.vmf before using it; until then it is a showroom of the modules.
+#
+#   start X Y       the middle of the gate the chain begins at (on the 64 grid)
+#   heading S       the way it heads from there: E, N, W or S
+#   rim 784         where the walls' concrete ends (784: the east canal's; 968: the ring's west end)
+#   end X Y N       (optional) where it must come out, and heading which way: the tool fails if it does not
+#   left / right    a turn
+#   straight 1024   plain canal that long (any multiple of 64); add "bridge" for a street over it
+#   NAME            a module; add "flip" to put its side room on the other side of the canal
+#                   (python3 map_build.py module   lists them)
+
+start -3136 1664
+heading S
+rim 784
+end 6144 2112 N
+
+# out from under the west road's end, and west, clear of the city
+right
+straight 512
+left
+
+# south, down the city's west side (left: the city)
+drain
+straight 768
+ash
+straight 512
+vort flip
+straight 1024
+left
+
+# east, along the south of the city (left: the city and Ravenholm; right: outside)
+straight 1536
+shanty
+underpass
+straight 704
+overflow 704
+cistern
+straight 1920 bridge
+left
+
+# north, up the city's east side to the first canal
+straight 1024
+sludge flip
+straight 1024 bridge
+relay
+straight 1216

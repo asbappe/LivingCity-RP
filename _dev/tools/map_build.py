@@ -1009,9 +1009,10 @@ def against(vmf, path, expected):
 
 def main():
     import map_forest
+    import map_modules
     import map_raven
     import map_ring
-    pieces = {"canal": canal, "ring": map_ring.ring, "forest_bunker": map_forest.forest_bunker, "forest_cave": map_forest.forest_cave, "ravenholm": map_raven.ravenholm}
+    pieces = {"chain": map_modules.chain, "module": map_modules.module, "canal": canal, "ring": map_ring.ring, "forest_bunker": map_forest.forest_bunker, "forest_cave": map_forest.forest_cave, "ravenholm": map_raven.ravenholm}
     ap = argparse.ArgumentParser(description="Write a new piece of map as its own VMF (never touches the owner's VMF).")
     ap.add_argument("piece", choices=sorted(pieces))
     ap.add_argument("--out", help="the VMF to write (default: lc_PIECE.vmf)")
@@ -1021,6 +1022,11 @@ def main():
     ap.add_argument("--first-node", type=int, default=None, help="the first path node id to use (default: 4000 canal, 4400 and 4600 the forests, 5000 the ring, 5300 ravenholm; the map's own stop at 3043)")
     ap.add_argument("--preview", help="forests: also write a picture of the piece from above to this file (needs Pillow)")
     ap.add_argument("--against", help="the owner's own VMF: also check that nothing in the piece runs into anything in it (apart from the brush the piece replaces)")
+    ap.add_argument("--layout", default="map_layouts/south.txt", help="chain: the layout to build (a text file: where it starts, then a module a line)")
+    ap.add_argument("--name", default="", help="module: which one (leave out to list them)")
+    ap.add_argument("--heading", choices=["E", "N", "W", "S"], default=None, help="chain, module: the way it heads from its start (default: the layout's; east)")
+    ap.add_argument("--rim", type=int, default=None, help="chain, module: where the walls' concrete ends (default 784, the east canal's; the ring's west end is 968)")
+    ap.add_argument("--flip", action="store_true", help="module: its side room on the other side of the canal")
     ap.add_argument("--test", action="store_true", help="write lc_PIECE_test.vmf instead: the piece made to compile and walk by itself (a spawn point, a sun, "
                     "and for the canal a wall where the road comes in). Never put the test file in the real map.")
     args = ap.parse_args()
@@ -1037,7 +1043,7 @@ def main():
         for p in clashes:
             print("  PROBLEM: " + p)        # (the piece's own function has already printed its own)
         problems += clashes
-    out = args.out or "lc_%s%s.vmf" % (args.piece, "_test" if args.test else "")
+    out = args.out or getattr(args, "out_name", None) or "lc_%s%s.vmf" % (args.piece, "_test" if args.test else "")
     with open(out, "w") as f:
         f.write(vmf.text())
     print("  written: " + out)

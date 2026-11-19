@@ -157,8 +157,9 @@ class Channel:
         self.vmf.detail(saddles, MAT["beam"], vis=self.vis + ": banks, pipes and trim")
         taken += saddles
 
-    def mud(self, seed, skip=()):
-        """Mud and silt: a second, displaced skin over the floor; mud where it rises above the concrete."""
+    def mud(self, seed, skip=(), bump=None):
+        """Mud and silt: a second, displaced skin over the floor; mud where it rises above the concrete.
+        bump(x, y): extra height at a place (a heap), added everywhere, the banks' feet too."""
         cells, fz = self.cells, self.floor_z
         for (bi, bj) in sorted(set((i // 4, j // 4) for (i, j) in cells if self.kind((i, j)) in ("floor", "gap"))):
             x0, y0 = bi * 256, bj * 256
@@ -173,7 +174,9 @@ class Channel:
                         h = -16.0
                     else:
                         h = -7 + 17 * noise(x / 170.0, y / 170.0, seed) + 9 * noise(x / 60.0, y / 60.0, seed + 1) + (9 if d == BANK else 0)
-                        shown = shown or h > 0
+                    if bump:
+                        h += bump(x, y)
+                    shown = shown or h > 0
                     grid[(i, j)] = (fz + h, 128 + 127 * noise(x / 110.0, y / 110.0, seed + 2))
             if not shown:
                 continue
