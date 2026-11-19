@@ -20,9 +20,12 @@ north); then only the roadway runs on to x 1472, and a bare strip of road (34874
 there in empty space. That empty space is where this piece stands.
 
 The piece, all in the map's own coordinates:
-- THE GATE: the owner's wall and rails again, as one mover (lc_raven_gate) that sinks into the
-  street, with the unseen wall the owner has round it (gone while the gate is open). The owner deletes
-  65929, 51870, 62363, 15623 and 33530.
+- THE GATE: the owner's wall, made to open as they asked: "every individual brush in the wall part
+  (not the frame) could move left or right and be like a custom combine gate". Its four brushes
+  again (the slab, split in two; the two rails; the black outline above), every texture laid as
+  theirs, each a mover that slides sideways into its pillar: the rails first, then the halves. With
+  the unseen wall the owner has round it (gone while the gate is open). The owner deletes 65929,
+  51870, 62363, 15623 and 33530; the pillars stay.
 - THE APPROACH: walls, pavements and road edges along the unfinished last stretch of the owner's
   street (x 1024..1472), so it has sides.
 - THE QUARTER (a plan whose corner is at 1472 -2613, so its rows lie on the street's own lines).
@@ -40,15 +43,18 @@ The piece, all in the map's own coordinates:
 - THE TUNNEL HOUSE, on the north side of the approach: a door, 45 steps down north, and a tunnel
   (z 304..448) straight north under the city to the sewer wall, 1,966 long. A vent duct of the
   owner's crosses 4 units behind that wall from x 1256 east, so the tunnel's last 128 are a passage
-  36 wide along the west side, and the hatch (lc_raven_hatch) is in the wall's west end. The piece
-  carries the whole wall again with that hatch in it: the owner deletes 28290.
+  36 wide along the west side. In the sewer wall's west end is THE HATCH (lc_raven_hatch): a steel
+  door anyone opens by hand. Across the tunnel 145 before the narrow passage is THE COMBINE DOOR:
+  two leaves of the Combine's metal that only the wiring parts; it is what seals the tunnel, and
+  opening it opens the hatch too. The piece carries the whole sewer wall again with the hatch in
+  it: the owner deletes 28290.
 - The owner also deletes 34874 (the bare strip): the approach's south side stands where it starts.
 
 Nothing in the gamemode knows of this yet. Who may open the gate and the hatch is the gamemode's to
-say: the map only has lc_raven_gate_open / _shut and lc_raven_hatch_open / _shut (logic_relays: fire
-Trigger), and fires lc_raven_gate_opened, lc_raven_hatch_opened and their _closed for it to hear.
+say: the map only has lc_raven_gate_open / _shut and lc_raven_door_open / _shut (logic_relays: fire
+Trigger), and fires lc_raven_gate_opened, lc_raven_door_opened and their _closed for it to hear.
 While the gate is open zombies and headcrabs are made in the quarter and walk out through it; while
-the hatch is open, in the tunnel house, and walk to the sewer (the makers are in their own visgroup:
+the Combine door is open, in the tunnel, and walk to the sewer (the makers are in their own visgroup:
 delete it if the gamemode is to send them itself).
 """
 
@@ -78,7 +84,8 @@ DELETE = ("65929", "51870", "62363", "15623", "33530", "28290", "34874")   # the
 # (65929, 51870, 62363: the Combine wall and its two rails. 15623: the unseen wall round it, which would still stop
 #  everyone when the gate is down; the gate carries its own, that goes when it opens. 33530: a thin black sheet standing in
 #  the wall, to z 1128. 28290: the sewer wall. 34874: the bare strip of road hanging south of the street's end.)
-STANDS_IN = ("20571", "20578", "34853")   # the pavement and roadway the owner's wall itself stands in, as the gate does: they stay
+STANDS_IN = ("20571", "20578", "34853", "49820", "52305")   # the pavement and roadway the owner's wall itself stands in, and the two pillars its
+#                                                              black outline's ends reach into: the gate's pieces do the same, and these stay
 
 
 class TownPlan(Plan):
@@ -225,10 +232,24 @@ def ravenholm(args):
     # the sewer wall again (the owner's brush 28290), with the hatch's opening in its west end
     WB((1252, wall_y, 239, 1536, wall_y + 8, CEIL), R["sewer_wall"])
     WB((TX1, wall_y, 239, 1252, wall_y + 8, 307), R["sewer_wall"], top=tf)
-    hatch = [((TX1, wall_y + 2, 307, 1252, wall_y + 6, CEIL), R["steel"])]
-    vmf.brush_entity("func_button", {"targetname": "lc_raven_hatch", "movedir": "-90 0 0", "speed": "30", "lip": "8", "wait": "-1", "spawnflags": "0", "sounds": "0",
-                                     "health": "0", "rendermode": "0", "renderamt": "255", "rendercolor": "255 255 255"}, hatch, R["steel"], gv)
-    crusher(vmf, "lc_raven_hatch", (TX1, wall_y + 1, 293, 1252, wall_y + 7, 309), gv, "lc_raven_hatch_crush")
+    # The owner: "I was hoping the connection to the existing sewer would have a purely hatch to climb through as you did, but
+    # also a combine door that can be triggered". So two things. THE HATCH, in the sewer wall: a steel door anyone opens by
+    # hand (a func_door as the owner's own: Use opens and shuts it). THE COMBINE DOOR, across the tunnel 145 before the narrow
+    # passage: two leaves of the Combine's metal that only the wiring parts (lc_raven_door_open); it is what seals the tunnel.
+    # When it opens it also opens the hatch, so what comes down the tunnel can get out.
+    vmf.brush_entity("func_door", {
+        "targetname": "lc_raven_hatch", "movedir": "-90 0 0", "speed": "60", "lip": "8", "wait": "-1", "spawnflags": "288", "spawnpos": "0", "dmg": "0", "forceclosed": "0",
+        "health": "0", "ignoredebris": "0", "loopmovesound": "0", "noise1": "doors/doormove1.wav", "noise2": "doors/doormove2.wav", "locked_sentence": "0",
+        "unlocked_sentence": "0", "renderamt": "255", "rendercolor": "255 255 255", "renderfx": "0", "rendermode": "0", "disableshadows": "1"},
+        [((TX1, wall_y + 2, 307, 1252, wall_y + 6, CEIL), R["steel"])], R["steel"], gv)
+    DY, DX = 120, (TX1 + TX2) // 2
+    for name, x1, x2, way, edge in (("lc_raven_tdoor_w", TX1, DX, "0 180 0", (DX - 2, DY + 3, FLOOR, DX + 14, DY + 13, CEIL)),
+                                    ("lc_raven_tdoor_e", DX, TX2, "0 0 0", (DX - 14, DY + 3, FLOOR, DX + 2, DY + 13, CEIL))):
+        vmf.brush_entity("func_button", {"targetname": name, "movedir": way, "speed": "24", "lip": "8", "wait": "-1", "spawnflags": "0", "sounds": "0", "health": "0",
+                                         "rendermode": "0", "renderamt": "255", "rendercolor": "255 255 255"}, [((x1, DY + 2, FLOOR, x2, DY + 14, CEIL), R["gate"])], R["gate"], gv)
+        crusher(vmf, name, edge, gv, "lc_raven_door_crush")
+    vmf.detail([(TX1, DY - 4, FLOOR, TX1 + 8, DY + 20, CEIL), (TX2 - 8, DY - 4, FLOOR, TX2, DY + 20, CEIL), (TX1 + 8, DY - 4, CEIL - 12, TX2 - 8, DY + 20, CEIL)],
+               "metal/metalcombine002", vis=gv)
 
     def city_door(pos, yaw, vis):
         """The city's own door, as the owner's map has it 134 times (hinged at pos; yaw 0 it runs north from there, 270 east)."""
@@ -245,13 +266,39 @@ def ravenholm(args):
         if (y // 320) % 3:
             lamp((1312, y, CEIL - 16), "255 190 130 60")       # (a dim one every 320 of tunnel, a third of it left dark)
 
-    # --- the gate: the owner's wall and its two rails, as one mover that sinks into the street (never in the test file:
-    # it stands in the owner's street, a thousand units outside this piece) ------------------------------------------------
+    # --- the gate. The owner: "I was hoping the wall I had could be converted into a functioning gate made of the brushes, so
+    # every individual brush in the wall part (not the frame) could move left or right and be like a custom combine gate".
+    # Their wall part is four brushes: the slab (65929), two rails on its city face (51870 low on the south half, 62363 high
+    # on the north half) and a thin sheet above it that draws a black outline (33530). Here they are again, every face's
+    # texture laid exactly as theirs, each a mover that slides along the wall into the pillar on its own side: the two rails
+    # part first, then the slab, split in two where the rails meet, with the outline's halves riding over it. The frame (the
+    # pillars) is the owner's and stays. (Never in the test file: it stands a thousand units outside this piece.) ------------
     if not test:
-        vmf.brush_entity("func_button", {"targetname": "lc_raven_gate", "movedir": "90 0 0", "speed": "36", "lip": "8", "wait": "-1", "spawnflags": "0", "sounds": "0",
-                                         "health": "0", "rendermode": "0", "renderamt": "255", "rendercolor": "255 255 255"},
-                         [((93, -2526, 648, 107, -2188, 944), R["gate"]), ((77, -2526, 708, 93, -2357, 740), R["gate_rail"]),
-                          ((77, -2357, 840, 93, -2188, 856), R["gate_rail"])], R["gate"], gv)
+        nd, pipe, MID = MAT["nodraw"], "metal/metalpipe001a", -2357
+        slab = ({"west": R["gate"], "east": R["gate"], "top": R["gate"], "north": pipe, "south": pipe, "bottom": nd},
+                {"west": ("[0 1 0 243.481] 0.375", "[0 0 -1 -370] 0.8097"), "east": ("[0 1 0 243.481] 0.375", "[0 0 -1 -370] 0.8097"),
+                 "top": ("[0 1 0 109.222] 0.25", "[1 0 0 141.222] 0.25")})
+        line = {"west": "/BLACK_OUTLINE", "east": nd, "top": nd, "bottom": nd, "north": nd, "south": nd}
+        rail = {"west": R["gate_rail"], "east": pipe, "top": R["gate_rail"], "bottom": R["gate_rail"], "north": R["gate_rail"], "south": R["gate_rail"]}
+
+        def mover(name, way, lip, speed, piece):
+            vmf.brush_entity("func_button", {"targetname": name, "movedir": way, "speed": speed, "lip": lip, "wait": "-1", "spawnflags": "0", "sounds": "0", "health": "0",
+                                             "rendermode": "0", "renderamt": "255", "rendercolor": "255 255 255"}, [piece], R["gate"], gv)
+        SOUTH, NORTH = "0 270 0", "0 90 0"
+        mover("lc_raven_leaf_s", SOUTH, 8, 36, ((93, -2526, 648, 107, MID, 944),) + slab)
+        mover("lc_raven_leaf_n", NORTH, 8, 36, ((93, MID, 648, 107, -2188, 944),) + slab)
+        mover("lc_raven_top_s", SOUTH, 40, 36, ((98, -2558, 944, 102, MID, 1128), line, {"west": ("[0 -1 0 2.77832] 0.25", "[0 0 -1 0] 0.25")}))
+        mover("lc_raven_top_n", NORTH, 46, 36, ((98, MID, 944, 102, -2150, 1128), line, {"west": ("[0 -1 0 2.77832] 0.25", "[0 0 -1 0] 0.25")}))
+        mover("lc_raven_rail_s", SOUTH, 8, 60, ((77, -2526, 708, 93, MID, 740), rail, {
+            "west": ("[0 1 0 243.481] 0.375", "[0 0 -1 -441] 0.0625"), "top": ("[0 1 0 109.222] 0.25", "[1 0 0 137.222] 0.25"),
+            "bottom": ("[0 1 0 109.222] 0.25", "[1 0 0 137.222] 0.25"), "north": ("[-1 0 0 -137.222] 0.25", "[0 0 -1 -494] 0.25")}))
+        mover("lc_raven_rail_n", NORTH, 8, 60, ((77, MID, 840, 93, -2188, 856), rail, {
+            "west": ("[0 1 0 287.277] 0.38", "[0 0 -1 -438.999] 0.06"), "top": ("[0 1 0 287.277] 0.38", "[1 0 0 -275.907] 0.06"),
+            "bottom": ("[0 1 0 287.277] 0.38", "[1 0 0 -275.907] 0.06"), "south": ("[-1 0 0 -225.857] 0.38", "[0 0 -1 -438.999] 0.06")}))
+        # (each travels 161: all of a half but the 8 that stays showing at its pillar. Closing, the two halves kill or delete
+        #  what stands between them, as the other great doors do.)
+        crusher(vmf, "lc_raven_leaf_s", (94, MID - 2, 648, 106, MID + 14, 944), gv, "lc_raven_gate_crush")
+        crusher(vmf, "lc_raven_leaf_n", (94, MID - 14, 648, 106, MID + 2, 944), gv, "lc_raven_gate_crush")
         # the unseen wall the owner has round it (so nobody gets over): there while the gate is shut, gone while it is open
         vmf.brush_entity("func_brush", {"targetname": "lc_raven_gate_clip", "Solidity": "0", "StartDisabled": "0", "solidbsp": "0", "spawnflags": "2", "rendermode": "0",
                                         "renderamt": "255", "rendercolor": "255 255 255", "vrad_brush_cast_shadows": "0", "disableshadows": "1", "invert_exclusion": "0"},
@@ -259,7 +306,7 @@ def ravenholm(args):
         vmf.boxes.pop()      # (not held to the fit check: it is the owner's own unseen wall again, which stands in their pillars and houses as theirs does)
         # where what is made here walks to: the city's side of the gate; the sewer beyond the hatch
         vmf.point("info_target", (-300, -2421, Z + 16), {"targetname": "lc_raven_rally"}, mv, outside=True)
-        vmf.point("info_target", (1376, 760, 323), {"targetname": "lc_raven_hatch_rally"}, mv, outside=True)
+        vmf.point("info_target", (1376, 760, 323), {"targetname": "lc_raven_door_rally"}, mv, outside=True)
 
     # --- the wiring. The relays and sounds stand inside the quarter (a sound can be told what to play from). ---------------
     def sound(name, message, source, pos, loops=False):
@@ -267,17 +314,22 @@ def ravenholm(args):
                                            "radius": "3000", "spawnflags": "16" if loops else "48", "cspinup": "0", "fadeinsecs": "0", "fadeoutsecs": "0", "lfomodpitch": "0",
                                            "lfomodvol": "0", "lforate": "0", "lfotype": "0", "preset": "0", "spindown": "0", "spinup": "0", "volstart": "0"}, gv)
 
-    def relays(name, door, took, at, makers, crush=None, clip=None):
-        """name_open and name_shut (one live at a time), name_opened and name_closed for the gamemode to hear."""
-        sound(name + "_move", "Streetwar.d3_c17_11_garage_move1", door, at, loops=True)
-        sound(name + "_stop", "Streetwar.d3_c17_11_garage_stop1", door, (at[0], at[1] + 16, at[2]))
-        opening = [("OnTrigger", name + "_open", "Disable", "", 0), ("OnTrigger", door, "PressIn", "", 0.5), ("OnTrigger", name + "_move", "PlaySound", "", 0.5),
+    def relays(name, moves, took, at, makers, source, crush=None, clip=None, also=()):
+        """name_open and name_shut (one live at a time), name_opened and name_closed for the gamemode to hear.
+        moves: (what moves, how long after the first); also: more to fire as it opens."""
+        sound(name + "_move", "Streetwar.d3_c17_11_garage_move1", source, at, loops=True)
+        sound(name + "_stop", "Streetwar.d3_c17_11_garage_stop1", source, (at[0], at[1] + 16, at[2]))
+        opening = [("OnTrigger", name + "_open", "Disable", "", 0), ("OnTrigger", name + "_move", "PlaySound", "", 0.5),
                    ("OnTrigger", name + "_opened", "Trigger", "", 0.5), ("OnTrigger", name + "_move", "StopSound", "", 0.5 + took),
                    ("OnTrigger", name + "_stop", "PlaySound", "", 0.5 + took), ("OnTrigger", makers, "Enable", "", 0.5 + took), ("OnTrigger", name + "_shut", "Enable", "", took + 2)]
-        shutting = [("OnTrigger", name + "_shut", "Disable", "", 0), ("OnTrigger", makers, "Disable", "", 0), ("OnTrigger", door, "PressOut", "", 0.5),
+        shutting = [("OnTrigger", name + "_shut", "Disable", "", 0), ("OnTrigger", makers, "Disable", "", 0),
                     ("OnTrigger", name + "_move", "PlaySound", "", 0.5), ("OnTrigger", name + "_move", "StopSound", "", 0.5 + took),
                     ("OnTrigger", name + "_stop", "PlaySound", "", 0.5 + took), ("OnTrigger", name + "_closed", "Trigger", "", 0.5 + took),
                     ("OnTrigger", name + "_open", "Enable", "", took + 2)]
+        for what, wait in moves:
+            opening.append(("OnTrigger", what, "PressIn", "", 0.5 + wait))
+            shutting.append(("OnTrigger", what, "PressOut", "", 0.5 + wait))
+        opening += [("OnTrigger", what, action, "", 0.5) for what, action in also]
         if crush:
             shutting += [("OnTrigger", crush, "Enable", "", 0.5), ("OnTrigger", crush, "Disable", "", 0.9 + took)]
         if clip:
@@ -287,8 +339,10 @@ def ravenholm(args):
         vmf.point("logic_relay", (at[0], at[1], at[2] + 32), {"targetname": name + "_shut", "StartDisabled": "1", "spawnflags": "0"}, gv, connections=shutting)
         vmf.point("logic_relay", (at[0], at[1], at[2] + 48), {"targetname": name + "_opened", "StartDisabled": "0", "spawnflags": "0"}, gv)
         vmf.point("logic_relay", (at[0], at[1], at[2] + 64), {"targetname": name + "_closed", "StartDisabled": "0", "spawnflags": "0"}, gv)
-    relays("lc_raven_gate", "lc_raven_gate", 8.0, W(40, 190, Z + 96), "lc_raven_maker", clip="lc_raven_gate_clip")
-    relays("lc_raven_hatch", "lc_raven_hatch", 4.5, (1312, ys + 60, ZS + 60), "lc_raven_hatch_maker", crush="lc_raven_hatch_crush")
+    relays("lc_raven_gate", [("lc_raven_rail_*", 0), ("lc_raven_leaf_*", 0.8), ("lc_raven_top_*", 0.8)], 5.3, W(40, 190, Z + 96), "lc_raven_maker", "lc_raven_leaf_s",
+           crush="lc_raven_gate_crush", clip="lc_raven_gate_clip")
+    relays("lc_raven_door", [("lc_raven_tdoor_*", 0)], 3.7, (1312, ys + 60, ZS + 60), "lc_raven_door_maker", "lc_raven_tdoor_w", crush="lc_raven_door_crush",
+           also=[("lc_raven_hatch", "Open")])
 
     # --- what is made while a way is open: zombies and headcrabs, sent walking to that way's far side ----------------------
     def makers(name, child, march, goal, spots):
@@ -302,7 +356,7 @@ def ravenholm(args):
     makers("lc_raven_maker", "lc_raven_zombie", "lc_raven_march", "lc_raven_rally",
            [(W(990, 200, Z + 8), "npc_zombie"), (W(930, -600, Z + 8), "npc_zombie"), (W(860, -990, Z + 8), "npc_fastzombie"), (W(500, 896, Z + 8), "npc_headcrab"),
             (W(400, -576, Z + 8), "npc_headcrab")])
-    makers("lc_raven_hatch_maker", "lc_raven_hatch_zombie", "lc_raven_hatch_march", "lc_raven_hatch_rally",
+    makers("lc_raven_door_maker", "lc_raven_door_zombie", "lc_raven_door_march", "lc_raven_door_rally",
            [((1312, yb + 200, FLOOR + 8), "npc_zombie"), ((1312, yb + 420, FLOOR + 8), "npc_headcrab")])
 
     # --- the four buildings to go into (the owner: "little abandoned in-buildings and old shops and such along the street").
@@ -552,9 +606,10 @@ def ravenholm(args):
     print("  it fills x %d to %d, y %d to %d, z %d to %d; the roadway is z %d, the pavements %d" % (min(xs), max(xs), min(ys_), max(ys_), 239, SKY + 16, Z, ZS))
     print("  facades: %d plinths, %d windows (glass on black), %d boarded doorways; 4 buildings to go into (a shop, a cafe, a second shop, a tenement of two floors), 9 doors" % (
         len(plinths), windows, doorways))
-    print("  the gate: the owner's wall at x 93..107, y -2526..-2188 again, as a mover that sinks into the street (lc_raven_gate_open, _shut)")
-    print("  the tunnel: from a house at (1312 %d), %d steps down, then %d north at z %d to the sewer wall at y %d; the hatch is x %d..1252 (lc_raven_hatch_open, _shut)" % (
-        ys, STEPS, slot_y - yb, FLOOR, wall_y, TX1))
+    print("  the gate: the owner's own four brushes (the slab in two halves, two rails, the outline above), each sliding 161 along the wall into its pillar "
+          "(lc_raven_gate_open, _shut)")
+    print("  the tunnel: from a house at (1312 %d), %d steps down, then %d north at z %d to the sewer wall at y %d; a Combine door across it at y %d (lc_raven_door_open, _shut); "
+          "a hatch opened by hand in the sewer wall, x %d..1252" % (ys, STEPS, slot_y - yb, FLOOR, wall_y, DY, TX1))
     print("  the owner deletes brushes 65929, 51870, 62363 (the wall and its rails), 15623 (the unseen wall round it), 33530 (a black sheet in it), 28290 (the sewer wall) "
           "and 34874 (the bare strip of road)")
     if problems:

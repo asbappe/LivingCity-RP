@@ -183,7 +183,7 @@ class Vmf:
         return ('%seditor\n%s{\n%s\t"color" "%s"\n%s\t"visgroupid" "%d"\n%s\t"visgroupshown" "1"\n%s\t"visgroupautoshown" "1"\n%s}\n'
                 % (indent, indent, indent, colour, indent, self.vis(vis), indent, indent, indent))
 
-    def box_text(self, box, sides, top, bottom, vis, indent="\t", faces=None, disp=None, tex=0.25):
+    def box_text(self, box, sides, top, bottom, vis, indent="\t", faces=None, disp=None, tex=0.25, axes=None):
         """A box brush. sides, top, bottom: materials; faces: {face name: material} for any that differ;
         disp: {face name: (power, target(i, j) -> (x, y, z), alpha(i, j) or None)} to displace a face.
         Corners are written clockwise seen from outside, as Hammer++ does (its vertices_plus), and a
@@ -198,6 +198,8 @@ class Vmf:
             p = face_corners(box, name)
             mat = (faces or {}).get(name) or (top if name == "top" else bottom if name == "bottom" else sides)
             u, v = (a.replace("0.25", _num(tex)) for a in FACE_AXES[name])
+            if axes and name in axes:
+                u, v = axes[name]        # (a face's texture laid exactly as given: to copy a brush of the owner's)
             s += '%s\tside\n%s\t{\n%s\t\t"id" "%d"\n%s\t\t"plane" "%s"\n' % (t, t, t, self.new_id(), t, " ".join("(%d %d %d)" % q for q in p[:3]))
             s += '%s\t\tvertices_plus\n%s\t\t{\n%s%s\t\t}\n' % (t, t, "".join('%s\t\t\t"v" "%d %d %d"\n' % ((t,) + q) for q in p), t)
             s += ('%s\t\t"material" "%s"\n%s\t\t"uaxis" "%s"\n%s\t\t"vaxis" "%s"\n%s\t\t"rotation" "0"\n%s\t\t"lightmapscale" "%d"\n%s\t\t"smoothing_groups" "0"\n'
@@ -299,11 +301,14 @@ class Vmf:
             s += '\t"%s" "%s"\n' % (k, v)
         s += self.wires(connections)
         for b in boxes:
-            mat, fc = sides, faces
-            if len(b) == 2:      # (a box, its own material) or (a box, {face: material})
+            mat, fc, ax = sides, faces, None
+            if len(b) == 3:      # (a box, {face: material}, {face: (uaxis, vaxis)})
+                b, own, ax = b
+                fc = own
+            elif len(b) == 2:    # (a box, its own material) or (a box, {face: material})
                 b, own = b
                 mat, fc = (own, faces) if isinstance(own, str) else (sides, own)
-            s += self.box_text(b, mat, top or mat, mat, vis, faces=fc)
+            s += self.box_text(b, mat, top or mat, mat, vis, faces=fc, axes=ax)
             self.boxes.append((b, False))
         s += self.editor(vis, "220 30 220") + "}\n"
         self.ents.append(s)
