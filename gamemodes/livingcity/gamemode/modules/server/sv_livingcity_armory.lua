@@ -67,7 +67,7 @@ local KEY = "lc_goodwill"
 local GAP = 1                -- seconds between one trade and the next
 local OPEN_GAP = 0.3
 local MAX_EACH = 10          -- of one of his things in one trade
-local MAX_ROWS = 40
+local MAX_ROWS = 100         -- of either side in one trade's message
 local FRESH = 0.5            -- a gun this new is one the game is handing them (a Give), not one lying about
 local SHORT = "You don't have that much."
 local HEAVY = "That's more than you can carry."
@@ -578,7 +578,9 @@ net.Receive("lc_barter", function(_, ply)
     elseif op == 2 then
         local offer = { credits = net.ReadUInt(32) or 0, yours = {}, his = {} }
         for _, side in ipairs({ "yours", "his" }) do
-            for _ = 1, math.min(net.ReadUInt(8) or 0, MAX_ROWS) do
+            local rows = net.ReadUInt(8) or 0
+            if rows > MAX_ROWS then return end -- (more than anyone could pick: not a trade the view sent)
+            for _ = 1, rows do
                 local id = net.ReadString() or ""
                 offer[side][id] = (offer[side][id] or 0) + (net.ReadUInt(16) or 0)
             end
