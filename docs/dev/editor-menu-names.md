@@ -56,6 +56,7 @@ Only the words shown changed. Every point keeps its internal name, so saved layo
 - Bed  (was shown without the capital)
 - Black market dealer  (was shown without the capital)
 - Burning barrel  (was shown without the capital)
+- Card table  (new, 19 November)
 - Citizen Information desk
 - Civil Intake
 - Civil notice poster
@@ -85,6 +86,7 @@ Only the words shown changed. Every point keeps its internal name, so saved layo
 - Resistance interrogation chair
 - Resistance lab
 - Resistance notice board
+- Resistance still  (new, 19 November)
 - Stove  (was shown without the capital)
 - Toilet  (was shown without the capital)
 - Union Commissary terminal  (was: commissary terminal)
