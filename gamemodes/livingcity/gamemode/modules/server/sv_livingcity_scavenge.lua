@@ -285,7 +285,7 @@ end
 -- Rebel gardens and supply crates
 ------------------------------------------------------------------------
 
-LC.RebelProps = LC.RebelProps or {} -- [zone] = { cache = ent, pots = { ents } }
+LC.RebelProps = LC.RebelProps or {} -- [zone] = { cache = ent, pots = { ents }, bank = ent (the monitors) }
 
 local function Prop(model, pos, kind)
     local e = ents.Create("prop_physics")
@@ -453,12 +453,20 @@ local function EnsureRebelProps()
             end
             if IsValid(r.cache) then r.stock = r.cache.lcStock end
             LC.SeatPots(z, r)
+            -- the headquarters' security monitors (the owner, 19 November: "a good setting for the Resistance
+            -- Leader"): where the players last left them, else by the notice board (sv_livingcity_sceneprops.lua)
+            if not IsValid(r.bank) and LC.SecurityBankFor and CurTime() >= (r.bankNext or 0) then
+                r.bankNext = CurTime() + 30
+                r.bank = LC.SecurityBankFor(z, LC.CampSaved and LC.CampSaved(z))
+                if IsValid(r.bank) then r.bank.lcCampZone = z end -- (carried, it's saved with this camp's things)
+            end
         end
     end
     for z, r in pairs(LC.RebelProps) do
         if not live[z] then
             if IsValid(r.cache) then r.cache:Remove() end
             for _, p in ipairs(r.pots) do if IsValid(p) then p:Remove() end end
+            if IsValid(r.bank) then r.bank:Remove() end
             LC.RebelProps[z] = nil
         end
     end
@@ -688,6 +696,7 @@ hook.Add("LivingCityStopped", "LivingCityRebelSupplies", function()
     for _, r in pairs(LC.RebelProps) do
         if IsValid(r.cache) then r.cache:Remove() end
         for _, p in ipairs(r.pots) do if IsValid(p) then p:Remove() end end
+        if IsValid(r.bank) then r.bank:Remove() end
     end
     LC.RebelProps = {}
 end)

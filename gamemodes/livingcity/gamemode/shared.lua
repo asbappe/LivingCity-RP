@@ -239,6 +239,7 @@ LC_MODULES = {
         "sv_livingcity_squads", -- (squad sizes by players on a side, E on a unit to lead it, backup out of rebel territory)
         "sv_livingcity_pacing", -- (who is in a fight; the Combine's action music)
         "sv_livingcity_campmove",
+        "sv_livingcity_sceneprops", -- (the ration plant's counter and the Resistance headquarters' monitors)
         "sv_livingcity_funding",
         "sv_livingcity_resistancemoney", -- (the still, the dealer's drink, his rent, the paymaster, the card table; after funding, resistancefund and quests)
         "sv_livingcity_work",
