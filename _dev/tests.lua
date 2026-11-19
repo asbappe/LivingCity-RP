@@ -39118,6 +39118,9 @@ do
     LC.SeenBySecurity, LC.MakeCopsHostile, LC.ReportCrime = seenWas, hostileWas, crimeWas
     local each = math.floor(math.floor(take * 0.5) / 2)
     ok(LC.Paymaster == nil and P.robbed, "his escort gone, E on him: he hands the satchel over")
+    local other = {}
+    for _, l in ipairs(rebel.chat) do if not string.find(l, "(your share)", 1, true) and not string.find(l, "[Credits]", 1, true) and not string.find(l, "complete", 1, true) and not string.find(l, "XP", 1, true) then other[#other + 1] = l end end
+    ok(#other == 0, "nothing new is said: their share, and the job's own end", table.concat(other, " | "))
     ok(fund() - 100 == take - 2 * each and share(rebel) == each and share(helper) == each,
         "half to the fund, half shared among ours who took part (the one who took it and the one who went for his escort)", (fund() - 100) .. " " .. share(rebel) .. " " .. share(helper) .. " of " .. take)
     ok(LC.Credits(helper) - h0 == each, "(the helper had only their share)")
@@ -39135,7 +39138,9 @@ do
     ok(IsValid(P.satchel), "killed, he drops his satchel")
     for _, p in ipairs(LC.Postings.resistance or {}) do if p.tmpl and p.tmpl.id == "res_paymaster" and not p.q then ok(true, "(the job is still up while the satchel lies there)") break end end
     local sat = P.satchel
+    cit.chat = {}
     hook.Run("PlayerUse", cit, sat)
+    ok(#cit.chat == 0, "(and nothing is said: the credits are simply theirs)", table.concat(cit.chat, " | "))
     ok(LC.Credits(cit) - cc == P.wages and fund() == f0 and not IsValid(sat), "a citizen who takes it keeps the whole satchel; the fund gets nothing", (LC.Credits(cit) - cc) .. " " .. (fund() - f0))
     local left = 0
     for _, p in ipairs(LC.Postings.resistance or {}) do if p.tmpl and p.tmpl.id == "res_paymaster" and not p.dead then left = left + 1 end end
