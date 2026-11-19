@@ -801,9 +801,36 @@ def self_along(plan, axis, v):
     return (plan.origin[0] if axis == "x" else plan.origin[1]) + v
 
 
+def against(vmf, path, expected):
+    """Does anything in the piece run into anything in the owner's map? (Boxes against boxes: a brush of theirs that is
+    not a box may be reported though it only comes near.) expected: ids of their brushes the piece replaces."""
+    import map_survey
+    theirs = []
+    root = map_survey.read_vmf(path)
+    for top in root.kids:
+        for k in (top.kids if top.name in ("world", "entity") else []):
+            if k.name == "solid":
+                b = map_survey.make_brush(k, "x")
+                if b:
+                    theirs.append(b)
+    grid = map_survey.Grid(512)
+    for b in theirs:
+        grid.add(b)
+    hits = {}
+    for box, _ in vmf.boxes:
+        for b in grid.near((box[0] + box[3]) / 2.0, (box[1] + box[4]) / 2.0, max(box[3] - box[0], box[4] - box[1]) / 2.0):
+            if b.id not in expected and all(box[k] < b.maxs[k] - 0.5 and box[k + 3] > b.mins[k] + 0.5 for k in range(3)):
+                hits[b.id] = (b.mins, b.maxs)
+    if not hits:
+        print("  checked against %s: nothing in the piece runs into anything in it%s" % (path.split("/")[-1], (" (but brush %s, which it replaces)" % ", ".join(sorted(expected))) if expected else ""))
+        return []
+    return ["it runs into %d brushes of the map's: %s" % (len(hits), "; ".join("id %s at x %d..%d y %d..%d z %d..%d" % ((i,) + tuple(int(v) for pair in zip(m[0], m[1]) for v in pair)) for i, m in sorted(hits.items())[:5]))]
+
+
 def main():
     import map_forest
-    pieces = {"canal": canal, "forest_bunker": map_forest.forest_bunker, "forest_cave": map_forest.forest_cave}
+    import map_ring
+    pieces = {"canal": canal, "ring": map_ring.ring, "forest_bunker": map_forest.forest_bunker, "forest_cave": map_forest.forest_cave}
     ap = argparse.ArgumentParser(description="Write a new piece of map as its own VMF (never touches the owner's VMF).")
     ap.add_argument("piece", choices=sorted(pieces))
     ap.add_argument("--out", help="the VMF to write (default: lc_PIECE.vmf)")
@@ -812,13 +839,18 @@ def main():
     ap.add_argument("--road-sky", type=int, default=2784, help="canal: the height of the sky over the road it joins (default 2784)")
     ap.add_argument("--first-node", type=int, default=None, help="the first path node id to use (default: 4000 canal, 4400 and 4800 the forests; the map's own stop at 3043)")
     ap.add_argument("--preview", help="forests: also write a picture of the piece from above to this file (needs Pillow)")
+    ap.add_argument("--against", help="the owner's own VMF: also check that nothing in the piece runs into anything in it (apart from the brush the piece replaces)")
     ap.add_argument("--test", action="store_true", help="write lc_PIECE_test.vmf instead: the piece made to compile and walk by itself (a spawn point, a sun, "
                     "and for the canal a wall where the road comes in). Never put the test file in the real map.")
     args = ap.parse_args()
     if args.piece == "canal":
         args.origin = args.origin or (3328, 1856)
         args.first_node = args.first_node or 4000
+    if args.piece == "ring":
+        args.first_node = args.first_node or 5000
     vmf, problems = pieces[args.piece](args)
+    if args.against:
+        problems += against(vmf, args.against, getattr(args, "expect_overlap", {"15074"} if args.piece == "canal" else set()))
     out = args.out or "lc_%s%s.vmf" % (args.piece, "_test" if args.test else "")
     with open(out, "w") as f:
         f.write(vmf.text())

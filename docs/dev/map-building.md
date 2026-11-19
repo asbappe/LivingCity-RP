@@ -6,6 +6,8 @@ The owner, 19 November: "It is SO labor intensive to do all the menial map build
 
 ```bash
 python3 map_build.py canal                                   # lc_canal.vmf
+python3 map_build.py ring                                    # lc_ring.vmf: the canal round the north of the city (map_ring.py)
+python3 map_build.py ring --against c18_lc.vmf               # ...and check nothing in it runs into anything in the owner's map
 python3 map_build.py forest_bunker --preview bunker.png      # lc_forest_bunker.vmf, and a picture from above
 python3 map_build.py forest_cave --preview cave.png          # lc_forest_cave.vmf, cave.png and cave_cave.png
 ```
@@ -32,17 +34,25 @@ python3 map_build.py forest_cave --preview cave.png          # lc_forest_cave.vm
 - **Gates:** east at x 7936, y 4160..4672; north at y 5696, x 5888..6400. (The first version sent had a capped east arm and a barred tunnel mouth instead: this one replaces it.)
 - Fills x 3264..7936, y 1856..5696.
 
+**`ring`** (`map_ring.py`; the owner, 19 November, once the canal was right: "can we now make a canal that would go all the way around the city and still meet up at the two aforementioned points out of the city? can you make it scale/fit perfectly?"). Read as: one canal from the east road's end round the NORTH of the city to the west road's end (their earlier "semicircle"); a south half was offered, not built.
+- **Where it joins, to the unit:** the first canal's north gate (x 5888..6400 at y 5696, floor z 400); the west road's end (the opening x -2608, y 1920..2560, the road's surface z 840, its sky z 2336); a gate in its north wall for the cave forest (x 1024..1536 at y 8320).
+- **The route (about 20,000 units, all on the 64 grid, origin 0 0):** north from the gate to y 8064; west along y 7552..8064 (44 clear of the six leftover rooms, which reach y 7444); a jog south to y 6976..7488 between x -2560 and 512, to break the long view; a weir at x -3072; west to x -4800; south down x -4800..-4288 (the city reaches x -4120 there); east along y 2752..3264 (its north wall 48 clear of a city wall at y 3376: the first try was 64 further north and ran into it, which the fit check caught); south down x -3392..-2880 past the road's end, where the quay is.
+- **The climb:** the west road is 184 higher than the east one, so the ring is two `Plan`s on one grid: east of the weir as the first canal (floor 400, wall's top 656, lid 1168), west of it 184 higher (floor 584, wall's top 840, lid 1352). The weir is 22 steps the canal's full width; a sky wall stands on the low lid where the lids step.
+- **The west road's end:** the owner removes brush 14734 (the sky wall, x -2624..-2608) and 15630 (the invisible wall before it). The brush is 16 thick and its city face is off the 64 grid, so the piece carries a 16-unit strip in its place (floor, a wall each side, lid) and the road's sky above its own. Then a quay, a low wall, a landing and 31 steps north down into the canal, and a footbridge to a barred doorway, as at the east end.
+- **Dressing** (`Channel`, the first canal's rules made reusable): 23 banks, 8 corner fills, 70 ribs, 30 drain stubs, 4 pairs of pipes, 181 mud patches, 190 path nodes from id 5000. `--test` closes the road's opening and adds a spawn on the quay.
+- **`--against FILE`** (any piece): fails if any box of the piece runs into any brush of the owner's map, apart from the one it replaces (canal: 15074; ring: 14734). All four pieces pass against the 19 November copy of `c18_lc.vmf`.
+
 **`forest_bunker`** ("forest (bunker, pond)", `BunkerForest`): gate in its **west** wall, meeting the canal's east gate. Fills x 7936..12288, y 960..5312, z 80..1952.
 - A valley 4096 square inside a ridge 440 high; 302 trees (Episode Two pines, some leafy ones round the pond), 170 ferns and bushes, rocks, fallen wood; a dirt trail from the gate past the pond to the bunker.
 - **The pond:** about 1280 x 960, surface z 394, up to 62 deep, an island 42 above the water with a tree; cattails on the shore.
 - **The bunker:** under a mound against the north ridge, its concrete roof level with the mound's top. A doorway (floor z 424), stairs down 128, a main room, a bunk room (west, dark) and a generator and store room (east, a failing light); beds, lockers, a desk, shelves, a generator, drums. A wrecked truck and barriers outside. 142 path nodes from id 4400.
 
-**`forest_cave`** ("forest (cave, stream)", `CaveForest`): gate in its **south** wall, meeting the canal's north gate. Fills x 5504..9856, y 5696..10048.
+**`forest_cave`** ("forest (cave, stream)", `CaveForest`): gate in its **south** wall, meeting the ring's north gate (it first sat on the canal's north gate, at 5632 5824: the ring now starts there, so its default moved). Fills x 640..4992, y 8320..12672.
 - The same valley and planting (323 trees); a trail from the gate to a ford and on to the cave.
 - **The cave:** in a hill against the north ridge. Its skin is 26 displaced faces hung on a square tube (a floor, a roof and two walls for each 256 of its 1280 length, a dome at the end, five pieces of rock face round the mouth), all from one function so every shared edge meets. Mouth about 416 wide and 251 high, floor z 430; a chamber 488 high about 800 in. The hillside is deliberately torn along the mouth's line (21 ground corners have two heights) so the mouth is a hole in the hill; the rock face covers the tear. Stalactites, cave rocks, 2 dim lights.
 - **The stream:** level water (Source water cannot slope), surface z 414, in a bed carved from a spring in the cave's chamber, out of the mouth and across the valley to a sink pool. 145 path nodes from id 4800.
 
-**Counts:** with all three the map has about 2,815 path nodes (the engine's limit is 4,096) and about 230 displacements.
+**Counts:** with all four the map has about 2,970 path nodes (the engine's limit is 4,096) and about 470 displacements, and reaches from y -8040 to 12672 (the engine's limit is 16,384 each way).
 
 ## What the owner's compiles and walks have found (fix the cause, and add a check for its kind)
 

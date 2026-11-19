@@ -898,7 +898,7 @@ class CaveForest(Forest):
 
 
 def forest_cave(args):
-    f = CaveForest("forest (cave, stream)", tuple(args.origin or (5632, 5824)), args.floor, 47, args.first_node or 4800, ("south", 256))
+    f = CaveForest("forest (cave, stream)", tuple(args.origin or (768, 8448)), args.floor, 47, args.first_node or 4800, ("south", 256))
     f.test = bool(getattr(args, "test", False))
     f.setup()
     f.shell()
