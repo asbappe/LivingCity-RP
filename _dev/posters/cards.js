@@ -1,11 +1,14 @@
-// The Resistance's deck for the card table (cl_livingcity_cards.lua): thirteen faces, one for each rank of
-// high card (2 to 14, the ace high), and the back. A deck made by hand in a back room: stencils cut with a
-// knife, black paint and the lambda's orange on the card of Union ration boxes.
+// The Resistance's deck for the card table (cl_livingcity_cards.lua): thirteen faces, one for each rank
+// (2 to 14, the ace high), four suits and the back. A deck made by hand in a back room: stencils cut with a
+// knife, black paint and orange on the card of Union ration boxes.
 //   2 the can, 3 a ration, 4 a headcrab, 5 a manhack, 6 a barnacle, 7 a scanner, 8 Civil Protection,
 //   9 an Overwatch Elite, 10 a strider, J a vortigaunt, Q the Administrator, K the Colonel, A the Free Man
-// Run: node cards.js OUTDIR [SHEET.png]   (writes 2.png to 14.png and back.png, 256 x 356, see-through
-// corners, for materials/livingcity/cards/; SHEET is all of them on one picture, to look at). Then
-// python3 cards_shrink.py OUTDIR, which makes the files small.
+// A face is ink alone on nothing; the card under it is its suit's (the owner, 19 November: one set of faces
+// and four suit pictures, not four sets): suit1 the Resistance, suit2 the Combine, suit3 the Union, suit4 the
+// vortigaunts. The game lays the face over the suit.
+// Run: node cards.js OUTDIR   (writes 2.png to 14.png, suit1.png to suit4.png and back.png, 256 x 356,
+// see-through corners, for materials/livingcity/cards/). Then python3 cards_shrink.py OUTDIR [SHEET.png],
+// which makes the files small (SHEET: every face on a suit, the suits and the back on one picture, to look at).
 const fs = require('fs'), path = require('path');
 const { chromium } = require('playwright');
 const W = 256, H = 356;
@@ -107,13 +110,29 @@ function wear(dark) {
   return out + `<rect width="${W}" height="${H}" filter="url(#grain)"/>`;
 }
 
+// a face: the picture and its rank in two corners, in ink alone on nothing (the suit's card goes under it in game)
 function face(rank) {
   const idx = INDEX[rank] || String(rank), art = ART[idx]();
-  const corner = `<text x="31" y="52" text-anchor="middle" font-family="Liberation Sans, DejaVu Sans, sans-serif" font-weight="700" font-size="${idx.length > 1 ? 34 : 42}" ${idx.length > 1 ? 'letter-spacing="-3"' : ''} fill="${K}">${idx}</text>` +
-    `<g transform="translate(31,74) scale(.2)">${f(LAMBDA, O)}</g>`;
-  return `<g clip-path="url(#card)"><rect width="${W}" height="${H}" fill="${P}"/>` +
-    `<rect x="10" y="10" width="${W - 20}" height="${H - 20}" rx="11" fill="none" stroke="${K}" stroke-width="2" opacity=".5"/>` +
-    `<g filter="url(#cut)"><g transform="translate(${W / 2},${H / 2 + 4}) scale(.9)">${art}</g>${corner}<g transform="rotate(180 ${W / 2} ${H / 2})">${corner}</g></g>` +
+  const corner = `<text x="31" y="52" text-anchor="middle" font-family="Liberation Sans, DejaVu Sans, sans-serif" font-weight="700" font-size="${idx.length > 1 ? 34 : 42}" ${idx.length > 1 ? 'letter-spacing="-3"' : ''} fill="${K}">${idx}</text>`;
+  return `<g clip-path="url(#card)"><g filter="url(#cut)"><g transform="translate(${W / 2},${H / 2 + 4}) scale(.9)">${art}</g>${corner}<g transform="rotate(180 ${W / 2} ${H / 2})">${corner}</g></g></g>`;
+}
+
+// the four suits: the card itself (its paper, its line, wear) with the suit's mark under each rank and faint in the
+// middle. 1 the Resistance, 2 the Combine, 3 the Union, 4 the vortigaunts. Each mark is drawn around 0,0, about 100 across.
+const SUITS = [
+  { paper: '#e6dcc0', col: O, mark: col => f(LAMBDA, col) },
+  { paper: '#d5dcdc', col: '#2c6a82', mark: col => s('M36,-36 A50,50 0 1 0 36,36', 17, col, 'stroke-linecap="butt"') + s('M40,0 L-6,0 L-6,24', 15, col, 'stroke-linecap="butt" stroke-linejoin="miter"') },
+  { paper: '#e2d9b4', col: '#a87c14', mark: col => `<circle cx="0" cy="0" r="30" fill="none" stroke="${col}" stroke-width="15"/>` +
+      [0, 45, 90, 135, 180, 225, 270, 315].map(a => `<rect x="-9" y="-54" width="18" height="20" fill="${col}" transform="rotate(${a})"/>`).join('') + c(0, 0, 8, col) },
+  { paper: '#d6dfc2', col: '#4c8527', mark: col => `<path d="M-54,6 Q0,-42 54,6 Q0,50 -54,6 Z" fill="none" stroke="${col}" stroke-width="11" stroke-linejoin="round"/>` + c(0, 6, 17, col) +
+      c(-24, -40, 6, col) + c(0, -48, 6, col) + c(24, -40, 6, col) },
+];
+function suit(n) {
+  const S = SUITS[n - 1];
+  const corner = `<g transform="translate(31,76) scale(.24)">${S.mark(S.col)}</g>`;
+  return `<g clip-path="url(#card)"><rect width="${W}" height="${H}" fill="${S.paper}"/>` +
+    `<rect x="10" y="10" width="${W - 20}" height="${H - 20}" rx="11" fill="none" stroke="${S.col}" stroke-width="3" opacity=".75"/>` +
+    `<g filter="url(#cut)"><g transform="translate(${W / 2},${H / 2 + 4}) scale(1.9)" opacity=".13">${S.mark(S.col)}</g>${corner}<g transform="rotate(180 ${W / 2} ${H / 2})">${corner}</g></g>` +
     wear(false) + '</g>' +
     `<rect x="1" y="1" width="${W - 2}" height="${H - 2}" rx="18" fill="none" stroke="#2a241c" stroke-width="2" opacity=".7"/>`;
 }
@@ -147,14 +166,11 @@ const page = body => `<!doctype html><html><head><style>html,body{margin:0;backg
     await pg.screenshot({ path: path.join(out, rank + '.png'), omitBackground: true });
     names.push(rank + '.png');
   }
+  for (let n = 1; n <= 4; n++) {
+    await pg.setContent(page(svg(suit(n), 20 + n)));
+    await pg.screenshot({ path: path.join(out, 'suit' + n + '.png'), omitBackground: true });
+  }
   await pg.setContent(page(svg(back(), 1)));
   await pg.screenshot({ path: path.join(out, 'back.png'), omitBackground: true });
-  names.push('back.png');
-  if (process.argv[3]) { // (all fourteen on one picture, to look at)
-    const imgs = names.map(n => `<img src="data:image/png;base64,${fs.readFileSync(path.join(out, n)).toString('base64')}" style="margin:8px">`).join('');
-    await pg.setViewportSize({ width: 7 * (W + 16) + 16, height: 2 * (H + 16) + 16 });
-    await pg.setContent(`<!doctype html><html><body style="margin:8px;background:#2b2622;font-size:0">${imgs}</body></html>`);
-    await pg.screenshot({ path: process.argv[3] });
-  }
   await browser.close();
 })();

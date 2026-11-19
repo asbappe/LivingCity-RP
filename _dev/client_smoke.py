@@ -2481,10 +2481,20 @@ local ok, e = pcall(function()
     if not net.recv_lc_cards then error("the card window is not listening") end
     local tbl = ents.Create("lc_cardtable")
     -- the table as the server sends it: you, line, chooser, stake, what you can cover, pot, wait, then each seat
-    local function Table(you, line, chooser, stake, mask, pot, seats)
+    -- (more, for Twenty-one: { game, a hand is on, you may take a card, seconds left, each seat's cards }; suits
+    -- are given in turn: seat i's high card is suit i, a hand's cards 1, 2, 3...)
+    local function Table(you, line, chooser, stake, mask, pot, seats, more)
         made, texts = {}, {}
         net._q = { tbl, you, line, chooser, stake, mask, pot, 0, #seats }
         for _, st in ipairs(seats) do for _, v in ipairs(st) do net._q[#net._q + 1] = v end end
+        more = more or { 1, false, false, 0, {} }
+        for i = 1, 4 do net._q[#net._q + 1] = more[i] end
+        for i = 1, #seats do
+            local cards = more[5][i] or {}
+            net._q[#net._q + 1] = i
+            net._q[#net._q + 1] = #cards
+            for k, c in ipairs(cards) do net._q[#net._q + 1] = c net._q[#net._q + 1] = c > 0 and k or 0 end
+        end
         net.recv_lc_cards()
         for _, p in ipairs(made) do if rawget(p, "Paint") then p.Paint(p, 260, 36) end end
         local by = {}
@@ -2516,7 +2526,8 @@ local ok, e = pcall(function()
     m = sent[#sent]
     if not (m and m.name == "lc_cards_deal" and m.data[1] == tbl and m.data[2] == 1) then error("Deal does not reach the server") end
     local allowed = { ["High card"] = true, ["Stake"] = true, ["Deal"] = true, ["5"] = true, ["10"] = true, ["25"] = true, [""] = true,
-        ["+21"] = true, ["Pot 30"] = true, ["Out of hands this hour"] = true, ["Short of the stake"] = true }
+        ["+21"] = true, ["Pot 30"] = true, ["Out of hands this hour"] = true, ["Short of the stake"] = true,
+        ["Twenty-one"] = true, ["Card"] = true, ["Stay"] = true, ["19"] = true, ["20"] = true, ["24"] = true }
     for _, n in ipairs(names) do allowed[n] = true end
     local function Words() for _, s in ipairs(texts) do if not allowed[s] then error("unexpected words in the card window: " .. tostring(s)) end end end
     Words()
@@ -2534,7 +2545,7 @@ local ok, e = pcall(function()
         if by["Deal"]._enabled ~= false then error("Deal is not greyed: " .. words) end
         Words()
     end
-    -- with the deck's pictures on the server, each card is its picture: the ace, and the back for a seat with no card
+    -- with the deck's pictures on the server, each card is its face laid over its suit's card, and the back for a seat with no card
     do
         local feWas, matWas, smWas, dtWas, sdWas = file.Exists, Material, surface.SetMaterial, surface.DrawTexturedRect, surface.SetDrawColor
         local drawn = {}
@@ -2548,10 +2559,39 @@ local ok, e = pcall(function()
         file.Exists, Material, surface.SetMaterial, surface.DrawTexturedRect, surface.SetDrawColor = feWas, matWas, smWas, dtWas, sdWas
         for k in pairs(LC_CL.CardArt) do LC_CL.CardArt[k] = nil end
         if not okA then error("the deck's pictures: " .. tostring(errA)) end
-        for _, n in ipairs({ "14", "2", "back", "11" }) do
+        if drawn["livingcity/cards/suit3.png"] then error("a suit's card drawn under a card that is face down") end
+        for _, n in ipairs({ "14", "2", "back", "11", "suit1", "suit2", "suit4" }) do
             if not drawn["livingcity/cards/" .. n .. ".png"] then error("a card's picture is not drawn: " .. n) end
         end
     end
+    -- the game: two buttons for whoever sat first, and the one picked reaches the server
+    f, by = Table(1, 0, true, 2, 7, 0, Seats({}, {}, nil))
+    if not (by["High card"] and by["Twenty-one"]) then error("the two games are not offered to whoever sat first") end
+    by["Twenty-one"].DoClick()
+    m = sent[#sent]
+    if not (m and m.name == "lc_cards_deal" and m.data[1] == tbl and m.data[2] == 4 and m.data[3] == 2) then error("the game picked does not reach the server") end
+    -- a hand of Twenty-one, yours to play: the title, what your hand is worth, Card and Stay where Deal was, the
+    -- others face down (no number under them), and no stake or game buttons while it is on
+    f, by = Table(1, 0, true, 2, 7, 30, Seats({}, {}, 1), { 2, true, true, 20, { { 14, 8 }, { 0, 0 }, { 0, 0, 0 }, { 0, 0 } } })
+    if f._title ~= "Twenty-one" then error("the window's title in Twenty-one: " .. tostring(f._title)) end
+    if not (by["19"] and by["Card"] and by["Stay"]) then error("your hand, Card and Stay are not shown: " .. table.concat(texts, ", ")) end
+    if by["Deal"] or by["5"] or by["High card"] then error("Deal, the stake or the game offered during a hand") end
+    by["Card"].DoClick()
+    m = sent[#sent]
+    if not (m and m.data[2] == 3 and m.data[3] == 1) then error("Card does not reach the server") end
+    by["Stay"].DoClick()
+    m = sent[#sent]
+    if not (m and m.data[2] == 3 and m.data[3] == 2) then error("Stay does not reach the server") end
+    Words()
+    -- waiting for the others: no Card or Stay, Deal greyed
+    f, by = Table(1, 0, false, 2, 7, 30, Seats({}, {}, 1, 2), { 2, true, false, 12, { { 0, 0 }, { 10, 13 }, { 0, 0 }, { 0, 0 } } })
+    if by["Card"] or by["Stay"] then error("Card and Stay once you have stayed") end
+    if by["Deal"].Think then by["Deal"].Think(by["Deal"]) end
+    if by["Deal"]._enabled ~= false then error("Deal during a hand of Twenty-one") end
+    -- it is over: every hand face up with what it is worth, the winner's take in its place
+    f, by = Table(1, 0, false, 2, 7, 30, Seats({}, { 21 }, 1), { 2, false, false, 0, { { 14, 8 }, { 10, 13 }, { 9, 5, 10 }, { 13, 10 } } })
+    if not (by["+21"] and by["20"] and by["24"] and by["Pot 30"]) then error("the end of a hand of Twenty-one: " .. table.concat(texts, ", ")) end
+    Words()
     -- closing it stands you up; the server's word closes it
     f, by = Table(1, 0, false, 2, 7, 0, Seats({}, {}, nil))
     f.OnClose()
