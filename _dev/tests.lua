@@ -40341,6 +40341,33 @@ cit:Remove()
 end
 Nov19_NoPackLoopTests()
 
+function Nov19_PosterTiltTests()
+section("What is put up by hand hangs a little crooked (the owner, 19 November)")
+local tilts, zero = {}, false
+for i = 1, 200 do
+    local t = LC.PosterTilt()
+    tilts[#tilts + 1] = t
+    if math.abs(t) < LC.PosterTiltRange[1] - 1e-6 or math.abs(t) > LC.PosterTiltRange[2] + 1e-6 then zero = true end
+end
+local left, right = 0, 0
+for _, t in ipairs(tilts) do if t < 0 then left = left + 1 else right = right + 1 end end
+ok(not zero and left > 40 and right > 40, "a tilt is between 1.5 and 5 degrees, left or right, never straight", left .. " left, " .. right .. " right")
+local p = newPlayer("TiltHanger", "citizen")
+_run(0.3)
+p:SetPos(Vector(-150500, 151000, 0))
+local e = LC.HangPoster and select(1, LC.HangPoster(p, "informants", Vector(-150500, 151100, 60), Vector(0, -1, 0)))
+if IsValid(e) then
+    local a, flat = e:GetAngles(), Vector(0, -1, 0):Angle()
+    ok(math.abs(a.r - flat.r) >= 1.5 - 1e-6 and math.abs(a.r - flat.r) <= 5 + 1e-6 and math.abs(a.y - flat.y) < 1e-6 and math.abs(a.p - flat.p) < 1e-6,
+        "a hung poster faces out of the wall as before, only turned a little about it", tostring(a))
+    e:Remove()
+else
+    ok(false, "a poster is hung for the check", tostring(e))
+end
+p:Remove()
+end
+Nov19_PosterTiltTests()
+
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")
 ;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)
     -- Everything here is something the owner's server, files or players depend on. The list is
