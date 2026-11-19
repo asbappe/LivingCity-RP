@@ -49,6 +49,7 @@ announce trigger raid
 announce trigger rations
 announce trigger rations_soon
 announce trigger response
+announce trigger shelled
 announce trigger skirmish_raid
 announce trigger skirmish_sweep
 announce trigger socio_black
