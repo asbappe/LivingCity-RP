@@ -42,6 +42,7 @@ LC.POINT_KINDS = {
     intake = true, housingterm = true, arrival = true, -- Civil Intake, Housing Allocation, where new people arrive (sv_livingcity_intake.lua)
     laborterm = true, -- Labor Assignment: Union work is given out and changed here (sv_livingcity_labor.lua)
     cpsupply = true, -- the Civil Protection Commissary (sv_livingcity_cpsupply.lua)
+    fundtv = true, -- the Resistance fund screen (sv_livingcity_fundgear.lua)
     studio = true, -- where Dr. Breen speaks when no player is Director of Propaganda (sv_livingcity_propaganda.lua)
     desk = true, adminpower = true, suppressor = true, -- her last stand: her desk, and the transformer powering her shield (sv_livingcity_collapse.lua)
     incinerator = true, -- where the dead go (sv_livingcity_mortuary.lua)

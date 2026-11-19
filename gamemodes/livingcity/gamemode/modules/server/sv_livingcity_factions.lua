@@ -261,13 +261,22 @@ local function ApplyBody(ply)
     if slow then ply:SetJumpPower(gm.cvJump:GetInt()) end
 end
 
+-- The rounds everyone is given on spawn, of each kind. (A Resistance player's rounds for their rank's own guns,
+-- and the guns, are bought by the Resistance's fund: sv_livingcity_fundgear.lua.)
+LC.SpawnRounds = { { "Pistol", 90 }, { "SMG1", 180 }, { "Buckshot", 24 }, { "AR2", 60 }, { "357", 12 } }
+
 -- keep: a promotion changes the loadout, it doesn't empty your hands. Only top
 -- up what's missing (the medic's medkit, the builder's tools, what you were holding).
 local function GiveLoadout(ply, keep)
     local prof = Profile(ply)
     if not prof then return end
     if not keep then ply:StripWeapons() end
-    for _, cls in ipairs(prof.loadout or {}) do
+    local kit, rounds = prof.loadout or {}, nil
+    if LC.FundIssue then -- (the Resistance's: what its fund can pay for; an error here gives the usual kit)
+        local okF, k, r = LC.Try(LC.FundIssue, ply, kit, keep)
+        if okF and istable(k) then kit, rounds = k, r end
+    end
+    for _, cls in ipairs(kit) do
         if not (keep and ply:HasWeapon(cls)) then ply:Give(cls) end
     end
     if cvAdminTools:GetBool() and LC.IsBuilder(ply) then -- only in build mode
@@ -276,12 +285,11 @@ local function GiveLoadout(ply, keep)
     end
     if LC.GiveJobTools then LC.GiveJobTools(ply) end
     if keep then return end
-    ply:GiveAmmo(90, "Pistol", true)
-    ply:GiveAmmo(180, "SMG1", true)
-    ply:GiveAmmo(24, "Buckshot", true)
-    ply:GiveAmmo(60, "AR2", true)
-    ply:GiveAmmo(12, "357", true)
-    local first = prof.loadout and prof.loadout[1]
+    for _, r in ipairs(LC.SpawnRounds) do
+        local n = istable(rounds) and rounds[r[1]] or r[2]
+        if n > 0 then ply:GiveAmmo(n, r[1], true) end
+    end
+    local first = kit[1]
     if first then ply:SelectWeapon(first) end
     if LC.GiveHands then LC.GiveHands(ply, true) end -- start with your hands down; what you carry is a key away
 end
@@ -296,6 +304,7 @@ end
 function LC.IsIssuedWeapon(ply, cls)
     local prof = Profile(ply)
     for _, c in ipairs(prof and prof.loadout or {}) do if c == cls then return true end end
+    if LC.FundIssuedWeapon and LC.FundIssuedWeapon(ply, cls) then return true end -- (a cheaper gun the fund bought in place of one)
     return false
 end
 
