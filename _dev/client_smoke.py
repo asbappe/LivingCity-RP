@@ -2444,9 +2444,10 @@ return nil
 """)
 if err:
     problems = (problems + "\n" if problems else "") + "weapon_lc_radio (client) " + str(err)
-# the card table's window (cl_livingcity_cards.lua, sv_livingcity_resistancemoney.lua): it opens, shows the cards and
-# the result, greys out a bet the table won't take, and a bet and Deal reach the server; and the still steams while
-# it brews (entities/lc_still.lua)
+# the card table's window (cl_livingcity_cards.lua, sv_livingcity_resistancemoney.lua): it opens with the seats, the
+# stake buttons for whoever sat first (one they can't cover greyed), shows the cards, the pot and the winner's take,
+# says the one line when you can't, and the stake, Deal and closing reach the server; and the still steams while it
+# brews (entities/lc_still.lua)
 L.globals()._SRC = open(os.path.join(ENTDIR, "lc_still.lua")).read()
 err = L.execute(r"""
 local made, sent, texts = {}, {}, {}
@@ -2465,7 +2466,7 @@ local function P()
     end })
 end
 local vgWas, stsWas, startWas, weWas, wuWas = vgui, net.SendToServer, net.Start, net.WriteEntity, net.WriteUInt
-local reWas, ruWas = net.ReadEntity, net.ReadUInt
+local reWas, ruWas, rbWas, rsWas = net.ReadEntity, net.ReadUInt, net.ReadBool, net.ReadString
 local cur
 local ok, e = pcall(function()
     vgui = { Create = function() return P() end, GetKeyboardFocus = function() return nil end }
@@ -2475,37 +2476,71 @@ local ok, e = pcall(function()
     net.SendToServer = function() sent[#sent + 1] = cur end
     net.ReadEntity = function() return table.remove(net._q, 1) end
     net.ReadUInt = function() return table.remove(net._q, 1) end
+    net.ReadBool = function() return table.remove(net._q, 1) == true end
+    net.ReadString = function() return table.remove(net._q, 1) end
     if not net.recv_lc_cards then error("the card window is not listening") end
     local tbl = ents.Create("lc_cardtable")
-    -- opened, nothing dealt yet, the table taking 5 and 10 but not 25
-    net._q = { tbl, 0, 0, 0, 3 }
-    net.recv_lc_cards()
-    local f = LC_CL.CardsFrame()
+    -- the table as the server sends it: you, line, chooser, stake, what you can cover, pot, wait, then each seat
+    local function Table(you, line, chooser, stake, mask, pot, seats)
+        made, texts = {}, {}
+        net._q = { tbl, you, line, chooser, stake, mask, pot, 0, #seats }
+        for _, st in ipairs(seats) do for _, v in ipairs(st) do net._q[#net._q + 1] = v end end
+        net.recv_lc_cards()
+        for _, p in ipairs(made) do if rawget(p, "Paint") then p.Paint(p, 260, 36) end end
+        local by = {}
+        for _, p in ipairs(made) do if p._text then by[p._text] = p end end
+        return LC_CL.CardsFrame(), by
+    end
+    local names = { "Mira Hollis", "Anton Brandt", "Ilse Kowal", "Yuri Novak" }
+    local function Seats(cards, won, dealt, me)
+        local out = {}
+        for i, n in ipairs(names) do out[i] = { n, i == (me or 1), cards[i] or 0, won[i] or 0, i == dealt } end
+        return out
+    end
+    -- sat down first, no stake yet, able to cover 5 and 10 but not 25
+    local f, by = Table(1, 0, true, 0, 3, 0, Seats({}, {}, nil))
     if not (f and f:IsValid()) then error("E on the card table opens no window") end
     if f._title ~= "High card" then error("the window's title: " .. tostring(f._title)) end
-    local by = {}
-    for _, p in ipairs(made) do if p._text then by[p._text] = p end end
-    if not (by["5"] and by["10"] and by["25"] and by["Deal"]) then error("the bets and Deal are missing") end
-    if by["25"]._enabled ~= false or by["5"]._enabled ~= true then error("a bet the table won't take is not greyed out") end
-    for _, p in ipairs(made) do if rawget(p, "Paint") then p.Paint(p, 70, 96) end end
+    for _, n in ipairs(names) do if not by[n] then error("a seat is missing: " .. n) end end
+    if not (by["5"] and by["10"] and by["25"] and by["Deal"] and by["Stake"]) then error("the stakes and Deal are missing") end
+    if by["25"]._enabled ~= false or by["5"]._enabled ~= true then error("a stake you can't cover is not greyed out") end
+    if by["Deal"]._enabled ~= false then error("Deal before the stake is picked") end
     by["10"].DoClick()
-    if by["Deal"].Think then by["Deal"].Think(by["Deal"]) end
-    by["Deal"].DoClick()
     local m = sent[#sent]
-    if not (m and m.name == "lc_cards_deal" and m.data[1] == tbl and m.data[2] == 10) then error("Deal does not reach the server with the bet picked") end
-    -- the hand: an ace for you, a seven for the house
-    made, texts = {}, {}
-    net._q = { tbl, 14, 7, 1, 7 }
-    net.recv_lc_cards()
-    f = LC_CL.CardsFrame()
-    for _, p in ipairs(made) do if rawget(p, "Paint") then p.Paint(p, 70, 96) end end
-    local won = false
-    for _, s in ipairs(texts) do if s == "You win" then won = true end end
-    if not won then error("the result is not shown: " .. table.concat(texts, ", ")) end
-    -- the window's words, and nothing more
-    local allowed = { ["You"] = true, ["House"] = true, ["You win"] = true, ["House wins"] = true, [""] = true, ["5"] = true, ["10"] = true, ["25"] = true, ["Deal"] = true }
-    for _, s in ipairs(texts) do if not allowed[s] then error("unexpected words in the card window: " .. tostring(s)) end end
-    f:Remove()
+    if not (m and m.name == "lc_cards_deal" and m.data[1] == tbl and m.data[2] == 2 and m.data[3] == 2) then error("the stake picked does not reach the server") end
+    -- the stake is 10: Deal
+    f, by = Table(1, 0, true, 2, 3, 0, Seats({}, {}, nil))
+    if by["Deal"].Think then by["Deal"].Think(by["Deal"]) end
+    if by["Deal"]._enabled ~= true then error("Deal is greyed with a stake picked") end
+    by["Deal"].DoClick()
+    m = sent[#sent]
+    if not (m and m.name == "lc_cards_deal" and m.data[1] == tbl and m.data[2] == 1) then error("Deal does not reach the server") end
+    local allowed = { ["High card"] = true, ["Stake"] = true, ["Deal"] = true, ["5"] = true, ["10"] = true, ["25"] = true, [""] = true,
+        ["+21"] = true, ["Pot 30"] = true, ["Out of hands this hour"] = true, ["Short of the stake"] = true }
+    for _, n in ipairs(names) do allowed[n] = true end
+    local function Words() for _, s in ipairs(texts) do if not allowed[s] then error("unexpected words in the card window: " .. tostring(s)) end end end
+    Words()
+    -- the hand, as the second at the table sees it: the cards, the pot, who won what; the stake as a number
+    f, by = Table(1, 0, false, 2, 7, 30, Seats({ 14, 2, 3, 4 }, { 21 }, 1, 2))
+    if not (by["+21"] and by["Pot 30"]) then error("the result is not shown: " .. table.concat(texts, ", ")) end
+    if by["5"] or by["25"] then error("the stake buttons for someone who did not sit first") end
+    if not by["10"] then error("the stake is not shown") end
+    Words()
+    -- the one line when you can't, and Deal greyed
+    for line, words in ipairs({ "Out of hands this hour", "Short of the stake" }) do
+        f, by = Table(1, line, false, 2, 7, 0, Seats({}, {}, nil))
+        if not by[words] then error("the line is missing: " .. words) end
+        if by["Deal"].Think then by["Deal"].Think(by["Deal"]) end
+        if by["Deal"]._enabled ~= false then error("Deal is not greyed: " .. words) end
+        Words()
+    end
+    -- closing it stands you up; the server's word closes it
+    f, by = Table(1, 0, false, 2, 7, 0, Seats({}, {}, nil))
+    f.OnClose()
+    m = sent[#sent]
+    if not (m and m.name == "lc_cards_deal" and m.data[1] == tbl and m.data[2] == 0) then error("closing the window does not stand you up") end
+    Table(0, 0, false, 0, 0, 0, {})
+    if LC_CL.CardsFrame() ~= nil then error("the window stays open once you are stood up") end
     -- the still: steam and a hiss while it brews, quiet after
     local entWas = ENT
     ENT = {}
@@ -2524,7 +2559,7 @@ local ok, e = pcall(function()
     tbl:Remove()
 end)
 vgui, net.SendToServer, net.Start, net.WriteEntity, net.WriteUInt = vgWas, stsWas, startWas, weWas, wuWas
-net.ReadEntity, net.ReadUInt = reWas, ruWas
+net.ReadEntity, net.ReadUInt, net.ReadBool, net.ReadString = reWas, ruWas, rbWas, rsWas
 if not ok then return tostring(e) end
 return nil
 """)

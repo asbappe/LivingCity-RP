@@ -1,8 +1,8 @@
 --[[
     Card table (Living City). Place it with the Living City Editor ("Fixture: card table") in a back room on
-    rebel ground; anywhere else it does nothing. E opens one small window: a bet, and high card against the
-    house, the house's take going to the Resistance's fund. See sv_livingcity_resistancemoney.lua and
-    cl_livingcity_cards.lua.
+    rebel ground; anywhere else it does nothing. E sits you down and opens one small window: a pot game for up
+    to four, the highest card taking 70 per cent of the pot and the Resistance's fund the rest. See
+    sv_livingcity_resistancemoney.lua and cl_livingcity_cards.lua.
 ]]
 
 AddCSLuaFile()
