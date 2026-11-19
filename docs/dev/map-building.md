@@ -1,23 +1,55 @@
-# Building pieces of map (`_dev/tools/map_build.py`)
+# Building pieces of map (`_dev/tools/map_build.py`, `map_forest.py`)
 
 The owner, 19 November: "It is SO labor intensive to do all the menial map building ... I wanted to add more of an 'edge of city' or even outside of city area to the map for the resistance to hide in the woods outside the city, or in the canals." They use **Hammer++**. Their map in progress is `c18_lc.vmf` (27 MB, a decompile of `rp_c18_ug` they are changing; on their Google Drive, see `docs/dev/map-survey.md`).
 
-**The rule:** the tool writes a NEW, separate VMF for each piece. It never opens or changes the owner's VMF. The owner brings a piece in with a `func_instance` at 0 0 0 (a new version is then just a new file) or with Paste Special at no offset, looks, and compiles. A chat cannot compile or see the map in 3D: the owner is the eyes, and only their compile proves a piece is sealed.
+**The rule:** the tools write a NEW, separate VMF for each piece. They never open or change the owner's VMF. The owner brings a piece in with a `func_instance` at 0 0 0 (a new version is then just a new file) or with Paste Special at no offset, looks, and compiles. A chat cannot compile or see the map in 3D: the owner is the eyes, and only their compile proves a piece is sealed. **Nothing here has been opened in Hammer or compiled yet** (19 November): the first load of each file is the real test.
 
 ```bash
-python3 map_build.py canal          # writes lc_canal.vmf
+python3 map_build.py canal                                   # lc_canal.vmf
+python3 map_build.py forest_bunker --preview bunker.png      # lc_forest_bunker.vmf, and a picture from above
+python3 map_build.py forest_cave --preview cave.png          # lc_forest_cave.vmf, cave.png and cave_cave.png
 ```
 
-**How a piece is made:** it is drawn on a 64-unit grid from above (`Plan.paint`): each square is open under the sky, open under a ceiling ("low"), or nothing. From that come a floor block under every open square, a sky lid over it, and a solid block in every square touching an open one (corners too), so it is sealed by construction; alike squares are joined into the biggest rectangles. Walls have three looks by height (canal concrete, upper wall, sky). Stairs, beams, bars and low walls are `func_detail`. Materials are all ones the owner's VMF already uses (`MAT`, at the top). Everything is in visgroups ("LC canal: walls and floors", "details", "path nodes", "props").
+`--origin X Y` moves a piece, `--floor Z` sets a forest's gate floor (400), `--first-node N` its first path node id.
 
-**It checks itself** before writing: every corner on the grid, and a flood from the air inside that must not reach the outside with the piece's one opening stopped up (taking away any sealing brush makes the check fail: tried). Then `map_survey.py` on the piece, and on the piece and the map together, for the pictures.
+## How a piece is made
 
-**The first piece, `canal`** (the owner: start at the skybox brush that ends the road, 640 x 16 x 2136 at 3648 1864 1716, brush id 15074; "a standard HL2 Route Kanal size ... not filled with water, that runs for a bit then turns and maybe even forks and maybe dumps out to a forest"). Read as: the canal runs **east**, across the road's end like a T (along the brush's 640 side), away from the city. If they meant straight on north, it is a different layout, not a setting.
-- Joins at 3328 1856 (the road is x 3328..3968, its surface z 656, its sky z 2784). The owner removes brush 15074 (the sky wall) and 15616 (the invisible wall before it); the piece brings a sky plug for the road above its own lower sky (z 1184).
-- A quay at road level (640 x 256), a low wall, a landing and 31 steps (8 x 12) down; the canal 512 wide, floor z 400 (256 deep), walls to z 912, sky lid z 1168.
-- East 3072, north 2048, then a fork: east arm 1536 (capped: the forest joins here later), north arm 768 to a barred tunnel mouth. A low bay (256 x 384, 192 high) off the north run to hide in. Two beams across. 125 path nodes (ids from 4000; the map's own stop at 3043), 8 cubemaps, 9 physics props.
-- It fills x 3264..8000, y 1856..5760: checked empty in the owner's map on 19 November (the six leftover rooms start at y 5876).
+- **Boxes on a grid (`Plan`):** a piece is drawn on 64-unit squares from above (`Plan.paint`): each square is open under the sky, open under a ceiling ("low"), or nothing. From that come a floor block under every open square, a lid over it, and a solid block in every square touching an open one (corners too), so it is sealed by construction; alike squares are joined into the biggest rectangles. Walls have looks by height (`bands`). Used for the canal and the bunker.
+- **Displaced ground and skin (`Vmf.box_text(disp=...)`):** a box face can be displaced, every point of its grid moved to any place. Box corners are written clockwise seen from outside, with Hammer++'s `vertices_plus`; a displaced face's rows run from its first corner to its second and its columns to its fourth. **This was checked against the owner's own VMF:** with that reading, all 473 edge points that its 74 displacements share meet exactly; with rows and columns swapped, 98 do not.
+- **Gates:** every piece ends in the same culvert, 512 wide and 256 high (`GATE_WIDE`, `GATE_HIGH`), on the plane where the next piece begins, closed by a black wall and bars in a visgroup of its own ("... gate's cap (delete to join)"). To join two pieces, delete the cap on each side. Each piece is sealed by itself with its caps in.
+- **Checks before writing:** every corner on the 1-unit grid; a flood from the air inside must not reach outside (taking away any sealing brush makes it fail: tried); for forests, every ground patch meets its neighbours, the ground stays inside the shell, the cave's skin meets itself everywhere it should, and folded quads are counted. `map_survey.py` on the pieces and the owner's map together showed no piece overlapping another or the city (apart from the two brushes the owner is to delete).
+- **Assets:** every model and material name in the three files was checked against file lists of Half-Life 2, Episode One and Episode Two (the Garry's Mod spawnlists, and decompiled QC and VMT trees: `github.com/Facepunch/garrysmod` `settings/spawnlist_default`, `github.com/Pinsplash/ValveQCs`, `github.com/Pinsplash/ValveVMTs`), and every `prop_static` model was checked to be compiled as a static prop. Canal and bunker surfaces use materials already in the owner's VMF. How any of it looks is unchecked.
 
-**Not built yet:** the forest (displacement ground, trees), anything that isn't a box (sloped banks, curves), lights (the map's sun does the canal), soundscapes, hints and areaportals for the new area.
+## The pieces (all sent 19 November; where each sits by default)
 
-**The owner's next idea (19 November, after the canal was sent, before testing it):** run the canal and/or forest in a half ring round the north of the city to a second road's end in the west: the skybox brush 16 x 640 x 1504 at -2616 2240 1584 (brush id 14734, x -2624..-2608, y 1920..2560; the invisible wall before it is 15630). That road runs east-west, its surface is z 840 (184 higher than the east road's 656), its sky z 2336. Checked in their VMF: free just west of the brush; the city reaches x -3056 south of it, -2768 just north, -4120 at y 3072..4096 and about -3430 above that; its north edge is y 6288 (the six leftover rooms, to be deleted, reach y 7444 between x 820 and 5704). So a ring would run north from the canal's north arm to about y 6500..7000, west to about x -4800, south to y 2240 and east to the brush: about 18,000 units, inside the engine's limit of 16,384 each way. Not built: waiting for their test of the first piece.
+**`canal`** (the owner: start at the skybox brush that ends the road, 640 x 16 x 2136 at 3648 1864 1716, brush id 15074; "a standard HL2 Route Kanal size ... not filled with water, that runs for a bit then turns and maybe even forks"). Read as: the canal runs **east**, across the road's end like a T; if they meant straight on north, it is a different layout.
+- Joins the road at 3328 1856 (road x 3328..3968, surface z 656, sky z 2784). The owner removes brush 15074 (the sky wall) and 15616 (the invisible wall before it); the piece brings a sky plug for the road above its own lower sky.
+- A quay, a low wall, a landing and 31 steps down; the canal 512 wide, floor z 400, walls to z 912, sky lid z 1168. East 3072, north 2048, a fork; a low bay off the north run; two beams; 122 path nodes from id 4000; 9 physics props.
+- **Gates:** east at x 7936, y 4160..4672; north at y 5696, x 5888..6400. (The first version sent had a capped east arm and a barred tunnel mouth instead: this one replaces it.)
+- Fills x 3264..7936, y 1856..5696.
+
+**`forest_bunker`** ("forest (bunker, pond)", `BunkerForest`): gate in its **west** wall, meeting the canal's east gate. Fills x 7936..12288, y 960..5312, z 80..1952.
+- A valley 4096 square inside a ridge 440 high; 302 trees (Episode Two pines, some leafy ones round the pond), 170 ferns and bushes, rocks, fallen wood; a dirt trail from the gate past the pond to the bunker.
+- **The pond:** about 1280 x 960, surface z 394, up to 62 deep, an island 42 above the water with a tree; cattails on the shore.
+- **The bunker:** under a mound against the north ridge, its concrete roof level with the mound's top. A doorway (floor z 424), stairs down 128, a main room, a bunk room (west, dark) and a generator and store room (east, a failing light); beds, lockers, a desk, shelves, a generator, drums. A wrecked truck and barriers outside. 142 path nodes from id 4400.
+
+**`forest_cave`** ("forest (cave, stream)", `CaveForest`): gate in its **south** wall, meeting the canal's north gate. Fills x 5504..9856, y 5696..10048.
+- The same valley and planting (323 trees); a trail from the gate to a ford and on to the cave.
+- **The cave:** in a hill against the north ridge. Its skin is 26 displaced faces hung on a square tube (a floor, a roof and two walls for each 256 of its 1280 length, a dome at the end, five pieces of rock face round the mouth), all from one function so every shared edge meets. Mouth about 416 wide and 251 high, floor z 430; a chamber 488 high about 800 in. The hillside is deliberately torn along the mouth's line (21 ground corners have two heights) so the mouth is a hole in the hill; the rock face covers the tear. Stalactites, cave rocks, 2 dim lights.
+- **The stream:** level water (Source water cannot slope), surface z 414, in a bed carved from a spring in the cave's chamber, out of the mouth and across the valley to a sink pool. 145 path nodes from id 4800.
+
+**Counts:** with all three the map has about 2,815 path nodes (the engine's limit is 4,096) and about 230 displacements.
+
+## Known weak points (tell the owner; fix from what they see)
+
+- The rock face round the cave's mouth is the likeliest to show seams, where it meets the hillside. Rocks are placed to dress its edges.
+- Each forest is one open room to the compiler: everything in it is drawn at once. Trees fade out between 2800 and 3400 units.
+- The forests have no lights of their own outside (the map's sun and sky do it) and show the map's own 3D skybox (the city) over their ridges.
+- Props inside the bunker were placed without knowing their sizes: some may sit in a wall.
+- Players without Episode Two will see errors and missing textures in the forests.
+
+## The owner's next idea (19 November)
+
+Run the canal and/or forest in a half ring round the north of the city to a second road's end in the west: the skybox brush 16 x 640 x 1504 at -2616 2240 1584 (brush id 14734, x -2624..-2608, y 1920..2560; the invisible wall before it is 15630). That road runs east-west, its surface is z 840 (184 higher than the east road's 656), its sky z 2336. Checked in their VMF: free just west of the brush; the city reaches x -3056 south of it, -2768 just north, -4120 at y 3072..4096 and about -3430 above that; its north edge is y 6288 (the six leftover rooms, to be deleted, are between x 820 and 3536, y 5876 to 7444). The cave forest now sits north-east of that; a ring would pass south of it or through it. Not built.
+
+**Not built yet:** anything that isn't a box or a displaced face (sloped concrete banks, curves), soundscapes, fog, hints and areaportals for the new areas, a 3D skybox of forest for the forests.
