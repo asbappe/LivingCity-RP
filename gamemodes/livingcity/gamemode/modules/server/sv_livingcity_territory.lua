@@ -449,6 +449,30 @@ function LC.TerritoryLeakSpot(seed, near, ok)
     end
     return nil
 end
+-- Somewhere in the open near `near` that a shell can come down on (headcrab shelling,
+-- sv_livingcity_shelling.lua): open floor with sky above it, clear of what a patch keeps
+-- clear of, not on infested ground already nor on ground just cleared. A shell flies over
+-- checkpoints. ok(p): an extra test of the spot. Returns pos, r or nil.
+local function OpenSky(p)
+    local tr = util.TraceLine({ start = p + Vector(0, 0, 32), endpos = p + Vector(0, 0, 4096), mask = MASK_SOLID_BRUSHONLY })
+    return not tr or not tr.Hit or tr.HitSky == true
+end
+function LC.TerritoryShellSpot(seed, near, ok)
+    local newR = math.Clamp((seed and seed.r or 400) * math.Rand(0.55, 0.8), 200, 500)
+    for _ = 1, 40 do
+        local p = LC.RandomWanderPos and LC.RandomWanderPos("citizen", near)
+        p = p and Floor(p + Vector(0, 0, 8))
+        local fitR = p and FitRadius(p, newR)
+        if p and fitR and (not ok or ok(p)) and OpenSky(p) then
+            local inside = false
+            for _, z in ipairs(LC.Zones) do
+                if z.kind == "infest" and LCZ.Contains(z, p, 50) then inside = true break end
+            end
+            if not inside and ClearOfOthers(p, fitR, "infest") and not LC.InfestQuietAt(p) then return p, fitR end
+        end
+    end
+    return nil
+end
 function LC.TerritoryCanGrow(seed)
     return ClusterGrown(ClusterOf(seed)) < MaxFor(seed.kind) and LC.GrownCount(seed.kind) < cvCityMax:GetInt()
 end
@@ -788,6 +812,7 @@ concommand.Add("lc_territory", function(ply)
     if #lines == 0 then return Say(ply, "[Miscount] No rebel or infestation zones placed.") end
     for _, l in ipairs(lines) do Say(ply, "[Miscount] " .. l) end
     for _, l in ipairs(LC.DistrictInfestStatus and LC.DistrictInfestStatus() or {}) do Say(ply, "[Miscount] " .. l) end -- (sv_livingcity_districtinfest.lua)
+    for _, l in ipairs(LC.ShellingStatus and LC.ShellingStatus() or {}) do Say(ply, "[Miscount] " .. l) end -- (sv_livingcity_shelling.lua)
 end)
 
 concommand.Add("lc_territory_grow", function(ply, _, args)

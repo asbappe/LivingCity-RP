@@ -39459,6 +39459,139 @@ LC.SetFaction(solo, "citizen")
 end
 AdminSoloTests()
 
+function ShellingTests()
+section("Headcrab shelling: canisters on a district the Resistance hold (the owner, 18 November)")
+_setcvar("lc_territory_spread", 1)
+_setcvar("lc_zombies", 0)
+_setcvar("lc_ledger", 1)
+local C = LC.ShellingConst
+local function Shelled() local c = 0 for _, q in ipairs(LC.ZonesOfKind("infest")) do if q.grown and q.why == "shelled" then c = c + 1 end end return c end
+local B0 = Vector(-52000, -52000, 0)
+local mine = {}
+local function Z(z) if z then mine[#mine + 1] = z end return z end
+Z(LC.AddZone(B0, 200, "block", 81))
+Z(LC.AddZone(B0 + Vector(6000, 0, 0), 200, "block", 82))
+local seed = Z(LC.AddZone(B0 + Vector(0, -2200, 0), 300, "infest", 0))
+LC.DistrictInfestForget()
+local savedWander = LC.RandomWanderPos
+LC.RandomWanderPos = function(role, near)
+    if not near then return savedWander(role) end -- (everyone else wandering meanwhile)
+    local a = math.random() * math.pi * 2
+    return near + Vector(math.cos(a), math.sin(a), 0) * math.random(700, 1100)
+end
+LC.DistrictPush(81, -200)
+ok(not table.HasValue(LC.ShellTargets(), 81), "a district in the Combine's hands is never a target")
+LC.DistrictPush(81, 200)
+ok(LC.DistrictOwner(81) == "resistance" and table.HasValue(LC.ShellTargets(), 81), "one in the Resistance's hands is")
+
+-- staff, from the panel's call: canisters on their way, landing apart, each a patch
+local canisters = {}
+local savedCreate = ents.Create
+ents.Create = function(cls) local e = savedCreate(cls) if cls == "env_headcrabcanister" then canisters[#canisters + 1] = e end return e end
+local before, grownBefore = LC.DistrictInfest(81), Shelled()
+LC.ShellNext = 0
+local k, why = LC.ShellDistrict(81, nil)
+ok(k == C.SHELLS, "a shelling sends its canisters", tostring(k) .. " " .. tostring(why))
+ok(LC.ShellNext > CurTime() + 60, "and the next has to wait")
+_run(((k or 1) - 1) * C.GAP + 0.5) -- (all fired; the first lands at FLIGHT)
+ents.Create = savedCreate
+local fired, apart, mine81 = 0, true, true
+for i, c in ipairs(canisters) do
+    if c.fired and table.HasValue(c.fired, "FireCanister") then fired = fired + 1 end
+    if LC.LedgerBlockAt(c:GetPos()) ~= 81 then mine81 = false end
+    for j = i + 1, #canisters do if c:GetPos():Distance(canisters[j]:GetPos()) < 600 then apart = false end end
+end
+ok(#canisters == C.SHELLS and fired == C.SHELLS, "Half-Life 2's own headcrab canisters, fired", #canisters .. " " .. fired)
+ok(mine81 and apart, "all in that district, spread apart")
+ok(tonumber(canisters[1].kv.HeadcrabCount) == C.CRABS and canisters[1].kv.FlightTime ~= nil, "each with its headcrabs")
+ok(Shelled() == grownBefore, "nothing grows before they land")
+-- one canister's headcrabs come out by themselves (the game's own)
+_run(C.FLIGHT)
+local crab = ents.Create("npc_headcrab")
+crab:SetPos(canisters[1]:GetPos() + Vector(30, 0, 0))
+_run(1)
+ok(LC.NPCs[crab] and LC.NPCs[crab].role == "zombie", "a canister's headcrabs are the infestation's own (counted and cleared like any)")
+LC.DistrictInfestForget()
+ok(Shelled() == grownBefore + C.SHELLS, "each canister down leaves a patch of the infestation", Shelled() - grownBefore)
+local after = LC.DistrictInfest(81)
+ok(after >= before + C.SHELLS * LC.DistrictInfestConst.PATCH - 1, "the district's infestation rises for everyone", before .. " -> " .. after)
+local ofSeed = 0
+for _, q in ipairs(LC.ZonesOfKind("infest")) do if q.grown and q.seed == seed and q.why == "shelled" then ofSeed = ofSeed + 1 end end
+ok(ofSeed == C.SHELLS, "patches of the nearest infestation (fought the same way)", ofSeed)
+-- the others' never came out: let out where they landed
+local crabsBefore = 0
+for _, st in pairs(LC.NPCs) do if st.role == "zombie" then crabsBefore = crabsBefore + 1 end end
+_run(C.ADOPT + 1)
+local crabsAfter = 0
+for _, st in pairs(LC.NPCs) do if st.role == "zombie" then crabsAfter = crabsAfter + 1 end end
+ok(crabsAfter >= crabsBefore + (C.SHELLS - 1) * C.CRABS, "a canister that let none out has them let out where it came down", crabsAfter - crabsBefore)
+
+section("Headcrab shelling: her order, and the city's own")
+local adm = newPlayer("ShellAdministrator", "admin")
+local cit = newPlayer("ShellCitizen", "citizen")
+local okO, whyO = LC.OrderShelling(cit, 81)
+ok(not okO and whyO, "only the City Administrator orders it", whyO)
+okO, whyO = LC.OrderShelling(adm, 81)
+ok(not okO and string.find(tostring(whyO), "ready", 1, true), "not before the canisters are ready", whyO)
+LC.ShellNext = 0
+okO, whyO = LC.OrderShelling(adm, 82)
+ok(not okO and string.find(tostring(whyO), "Resistance", 1, true), "never a district the Resistance don't hold", whyO)
+local s = LC.Ledger()
+local m0, r0 = s.morale, s.resistance
+local savedTrace = util.TraceLine
+util.TraceLine = function(t) if t.endpos.z > t.start.z + 1000 then return { Hit = true, HitSky = false, HitPos = t.start, Fraction = 0 } end return savedTrace(t) end
+okO, whyO = LC.OrderShelling(adm, 81)
+util.TraceLine = savedTrace
+ok(not okO and string.find(tostring(whyO), "open", 1, true), "never under a roof (only where there's sky above)", whyO)
+LC.ShellNext = 0
+okO, whyO = LC.OrderShelling(adm, 81)
+ok(okO, "her order on a Resistance district goes ahead", whyO)
+ok(s.morale == math.max(0, m0 + C.MORALE) and s.resistance == math.max(0, r0 + C.RESIST), "at a cost to morale and the Resistance", s.morale .. " " .. s.resistance)
+ok(GetGlobal2Float("lc_shell_next", 0) > CurTime(), "her F2 knows when the next is ready")
+_run(C.SHELLS * C.GAP + C.FLIGHT + C.ADOPT + 2)
+-- the city's own: while the Resistance hold a district and nobody is the Administrator
+LC.ShellNext, LC.ShellCityAt = 0, nil
+_run(61)
+ok(LC.ShellCityAt == nil, "not while a player is the Administrator (she decides)")
+LC.SetFaction(adm, "citizen")
+_run(61)
+ok(LC.ShellCityAt and LC.ShellCityAt > CurTime(), "with none, the city's own plans one", tostring(LC.ShellCityAt))
+local shelled
+hook.Add("LivingCityShelled", "ShellTest", function(n) shelled = n end)
+LC.ShellCityAt = CurTime() - 1
+_setcvar("lc_shelling", 0)
+_run(61)
+ok(shelled == nil and LC.ShellCityAt == nil, "lc_shelling 0: the city's own never shells")
+_setcvar("lc_shelling", 1)
+_run(61)
+LC.ShellCityAt = CurTime() - 1
+_run(61)
+ok(shelled == 81, "when due, the city's own shell the Resistance's district", tostring(shelled))
+hook.Remove("LivingCityShelled", "ShellTest")
+local lines = LC.ShellingStatus()
+ok(#lines > 0 and string.find(lines[1], "Shelling", 1, true), "lc_territory says when the next can come", lines[1])
+_run(C.SHELLS * C.GAP + C.FLIGHT + C.ADOPT + 2)
+
+-- the admin panel's button (testing alone)
+local solo = newPlayer("ShellSolo", "citizen")
+solo.admin, solo.superadmin = true, true
+LC.ShellNext = CurTime() + 999
+local okS, msg = LC.AdminTool(solo, solo, "solo", "shell")
+ok(okS and string.find(tostring(msg), "canister", 1, true), "F4 > Admin testing tools: shell a district now, without waiting", msg)
+_run(C.SHELLS * C.GAP + C.FLIGHT + C.ADOPT + 2)
+
+-- clean up
+LC.RandomWanderPos = savedWander
+LC.DistrictPush(81, -100)
+for _, q in ipairs(LC.ZonesOfKind("infest")) do if q.seed == seed then LC.RecedeTerritory(q, "test") end end
+for npc, st in pairs(LC.NPCs) do if st.role == "zombie" and IsValid(npc) and npc:GetPos():Distance(B0) < 4000 then npc:Remove() LC.NPCs[npc] = nil end end
+for _, q in ipairs(mine) do if table.HasValue(LC.Zones, q) and not q.grown then LC.RemoveZone(q) end end
+LC.ShellNext, LC.ShellCityAt = 0, nil
+LC.DistrictInfestForget()
+_setcvar("lc_ledger", 0)
+end
+ShellingTests()
+
 ----------------------------------------------------------------------
 section("Stop")
 LC.Stop(admin)

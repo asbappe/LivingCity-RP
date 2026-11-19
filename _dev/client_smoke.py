@@ -4452,6 +4452,24 @@ local ok, e = pcall(function()
     ar.run()
     undo()
     if sentQM ~= "arrest" then error("order of arrest sent " .. tostring(sentQM)) end
+    -- headcrab shelling (sv_livingcity_shelling.lua): the Resistance's districts only, sent by number; greyed until the canisters are ready
+    local ledWas, nextWas, jsonWas = _globals.lc_ledger, _globals.lc_shell_next, util.JSONToTable
+    _globals.lc_ledger, _globals.lc_shell_next = "{}", 0
+    util.JSONToTable = function() return { districts = { { n = 7, name = "Block 7", owner = "resistance" }, { n = 8, name = "Block 8", owner = "combine" } } } end
+    local orders = Find(LC_CL.QuickRoleRoot(), "orders")
+    local sh = orders and Find(orders.page(), "shell")
+    if not (sh and sh.page) then error("City orders has no shelling: " .. Labels(orders and orders.page() or root)) end
+    local sp = sh.page()
+    if not (sp.items[1] and sp.items[1].label == "Block 7" and not sp.items[2]) then error("shelling should list the Resistance's districts only: " .. Labels(sp)) end
+    local saSh, gotSh = LC_CL.SendAction, nil
+    LC_CL.SendAction = function(cmd, rest) gotSh = { cmd, rest } end
+    sp.items[1].run()
+    LC_CL.SendAction = saSh
+    if not (gotSh and gotSh[1] == "shell" and gotSh[2] == "7") then error("shelling sent " .. tostring(gotSh and gotSh[1]) .. " " .. tostring(gotSh and gotSh[2])) end
+    _globals.lc_shell_next = CurTime() + 600
+    sh = Find(Find(LC_CL.QuickRoleRoot(), "orders").page(), "shell")
+    if not (sh and sh.disabled) then error("shelling should wait for the canisters: " .. tostring(sh and sh.label)) end
+    _globals.lc_ledger, _globals.lc_shell_next, util.JSONToTable = ledWas, nextWas, jsonWas
     for n = 1, 8 do
         local it = root.items[n]
         if it and it.page then

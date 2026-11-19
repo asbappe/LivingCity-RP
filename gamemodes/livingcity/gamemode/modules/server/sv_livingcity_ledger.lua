@@ -514,6 +514,7 @@ hook.Add("PlayerSay", "LivingCityLedger", function(ply, text)
     elseif cmd == "amnesty" then ok, why = LC.Amnesty(ply)
     elseif cmd == "crackdown" then ok, why = LC.Crackdown(ply, rest)
     elseif cmd == "extrarations" then ok, why = LC.ExtraRations(ply)
+    elseif cmd == "shell" and LC.OrderShelling then ok, why = LC.OrderShelling(ply, rest) -- (sv_livingcity_shelling.lua)
     else return end
     if not ok and why then ply:ChatPrint("[The office] " .. why) end
     return ""
