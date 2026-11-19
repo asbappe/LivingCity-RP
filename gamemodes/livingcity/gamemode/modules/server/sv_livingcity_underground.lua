@@ -1448,6 +1448,7 @@ function LC.OpenMarket(ply)
     for _, id in ipairs(ids) do
         local it = LCS.Items[id]
         local price = LC.SellPrice and LC.SellPrice(ply, id) or (it and it.sell)
+        if qm and LC.QuartermasterBuyPrice then price = LC.QuartermasterBuyPrice(ply, id) end -- (what he pays, out of the fund: sv_livingcity_armory.lua)
         if it and price and not (qm and DECODED[id]) then
             -- (the quartermaster pays more for what's in demand: sv_livingcity_market.lua)
             local hot = qm and it.sell and price > it.sell and LC.MarketBuybackMul and LC.MarketBuybackMul(id) > 1 and "In demand: he pays more" or nil
@@ -1458,12 +1459,15 @@ function LC.OpenMarket(ply)
     for _, w in ipairs(ply:GetWeapons()) do
         local cls = w:GetClass()
         local price = LCS.SellWeapons[cls]
+        if price and qm and LC.QuartermasterBuyPrice then price = LC.QuartermasterBuyPrice(ply, "w:" .. cls) end
         if price and not (LC.IsIssuedWeapon and LC.IsIssuedWeapon(ply, cls)) then
             sell[#sell + 1] = { id = "w:" .. cls, name = (string.gsub(string.gsub(cls, "^weapon_", ""), "_", " ")), n = 1, price = price, weapon = true, donate = giveTo or nil }
         end
     end
-    -- (gift: credits for the Resistance's fund, at the quartermaster: sv_livingcity_fundgear.lua)
-    LC.SendCompressed("lcu_market", { credits = credits, goods = goods, sell = sell, quartermaster = qm, gift = qm and LC.FundTalkGift or nil }, { ply })
+    -- (gift: credits for the Resistance's fund, at the quartermaster: sv_livingcity_fundgear.lua; barter: his Barter
+    -- button, sv_livingcity_armory.lua)
+    LC.SendCompressed("lcu_market", { credits = credits, goods = goods, sell = sell, quartermaster = qm, gift = qm and LC.FundTalkGift or nil,
+        barter = (qm and LC.BarterOpen ~= nil) or nil }, { ply })
     return true
 end
 
@@ -1480,16 +1484,21 @@ function LC.OpenQuartermasterVisit(ply)
     for _, id in ipairs(ids) do
         local it = LCS.Items[id]
         local price = LC.SellPrice and LC.SellPrice(ply, id) or (it and it.sell)
-        if it and Arms(id) and price then sell[#sell + 1] = { id = id, name = it.name, n = inv[id], price = price, donate = true } end
+        local wanted = Arms(id)
+        -- (what he pays, out of the fund; the gun run's crate too: sv_livingcity_armory.lua)
+        if LC.QuartermasterBuyPrice then price = LC.QuartermasterBuyPrice(ply, id) wanted = price ~= nil end
+        if it and wanted and price then sell[#sell + 1] = { id = id, name = it.name, n = inv[id], price = price, donate = Arms(id) or nil } end
     end
     for _, w in ipairs(ply:GetWeapons()) do
         local cls = w:GetClass()
         local price = LCS.SellWeapons[cls]
+        if price and LC.QuartermasterBuyPrice then price = LC.QuartermasterBuyPrice(ply, "w:" .. cls) end
         if price and not (LC.IsIssuedWeapon and LC.IsIssuedWeapon(ply, cls)) then
             sell[#sell + 1] = { id = "w:" .. cls, name = (string.gsub(string.gsub(cls, "^weapon_", ""), "_", " ")), n = 1, price = price, weapon = true, donate = true }
         end
     end
-    LC.SendCompressed("lcu_market", { credits = LC.Credits and LC.Credits(ply) or 0, goods = {}, sell = sell, quartermaster = true, visitor = true, gift = LC.FundTalkGift }, { ply })
+    LC.SendCompressed("lcu_market", { credits = LC.Credits and LC.Credits(ply) or 0, goods = {}, sell = sell, quartermaster = true, visitor = true, gift = LC.FundTalkGift,
+        barter = LC.BarterOpen ~= nil or nil }, { ply })
     return true
 end
 
@@ -1590,6 +1599,8 @@ function LC.BlackBuy(ply, id)
     if LC.Credits(ply) < price then return false, "Not enough credits." end
     if g.item then local okC, whyC = LC.CanCarry(ply, g.item, g.count or 1) if not okC then return false, whyC end end
     LC.AddCredits(ply, -price)
+    -- (paid to the quartermaster: into the Resistance's fund, the owner, 19 November; sv_livingcity_armory.lua)
+    if LC.QuartermasterPaid and LC.AtQuartermaster(ply) then LC.QuartermasterPaid(ply, price) end
     if g.item then LC.GiveItem(ply, g.item, g.count or 1) elseif g.weapon then ply:Give(g.weapon)
     elseif g.entity then -- (a Commissary good he picked up in a shortage: a health vial, a medical kit)
         local e = ents.Create(g.entity)
@@ -1646,7 +1657,15 @@ end)
 
 net.Receive("lcu_sell", function(_, ply)
     local id = net.ReadString()
-    local ok, why = LC.DealerSell(ply, id, net.ReadBool())
+    local all = net.ReadBool()
+    -- (at the quartermaster's he pays out of the Resistance's fund, or barters for what it can't pay, and a gun
+    -- goes in the armory: sv_livingcity_armory.lua)
+    if LC.QuartermasterBuy and LC.QuartermasterDealer and LC.QuartermasterDealer(ply) then
+        local okB, _, _, bartering = LC.Try(LC.QuartermasterBuy, ply, id, all)
+        if not (okB and bartering) then LC.OpenMarket(ply) end
+        return
+    end
+    local ok, why = LC.DealerSell(ply, id, all)
     if not ok and why then ply:ChatPrint("[Black market] " .. why) end
     LC.OpenMarket(ply)
 end)

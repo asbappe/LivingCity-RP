@@ -987,6 +987,20 @@ net.Receive("lcu_market", function()
         draw.SimpleText(t.quartermaster and "THE QUARTERMASTER" or "BLACK MARKET", "DermaLarge", 16, 28, ILLEGAL)
         draw.SimpleText(string.format("%d credits", t.credits or 0), "DermaDefault", w - 16, 38, ACCENT, TEXT_ALIGN_RIGHT)
     end
+    -- the quartermaster's barter, below it all (the owner, 19 November: "a button below it all or wherever it fits
+    -- that says 'Barter' and opens a bartering menu"; cl_livingcity_barter.lua)
+    if t.quartermaster and t.barter then
+        local bb = vgui.Create("DButton", marketFrame)
+        bb:Dock(BOTTOM)
+        bb:DockMargin(6, 0, 6, 6)
+        bb:SetTall(30)
+        bb:SetText("Barter")
+        bb.DoClick = function()
+            net.Start("lc_barter")
+            net.WriteUInt(1, 2)
+            net.SendToServer()
+        end
+    end
     local scroll = vgui.Create("DScrollPanel", marketFrame)
     scroll:Dock(FILL)
     scroll:DockMargin(6, 40, 6, 6)

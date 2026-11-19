@@ -226,11 +226,11 @@ LCS.Items = {
     ammo_buckshot   = { name = "Box of shells", model = "models/items/boxbuckshot.mdl", use = "ammo", useLabel = "Load", ammo = { "Buckshot", 12 },
                         contraband = true, conceal = 0.3, sell = 20, arms = true, desc = "Hand-packed shells" },
     gun_pistol      = { name = "Pistol", model = "models/weapons/w_pistol.mdl", use = "arm", useLabel = "Draw", weapon = "weapon_pistol",
-                        contraband = true, conceal = 0.25, sell = 45, arms = true, desc = "Put together on a kitchen table. It fires" },
+                        contraband = true, conceal = 0.25, sell = 45, arms = true, resistanceSplit = true, desc = "Put together on a kitchen table. It fires" },
     gun_shotgun     = { name = "Shotgun", model = "models/weapons/w_shotgun.mdl", use = "arm", useLabel = "Draw", weapon = "weapon_shotgun",
-                        contraband = true, conceal = 0.05, sell = 80, arms = true, desc = "Hard to hide. Hard to argue with" },
+                        contraband = true, conceal = 0.05, sell = 80, arms = true, resistanceSplit = true, desc = "Hard to hide. Hard to argue with" },
     gun_smg         = { name = "SMG", model = "models/weapons/w_smg1.mdl", use = "arm", useLabel = "Draw", weapon = "weapon_smg1",
-                        contraband = true, conceal = 0.1, sell = 75, arms = true, desc = "It jams. Not often" },
+                        contraband = true, conceal = 0.1, sell = 75, arms = true, resistanceSplit = true, desc = "It jams. Not often" },
     smokebomb       = { name = "Smoke bomb", model = "models/props_junk/popcan01a.mdl", use = "throw", useLabel = "Throw", grenade = "smoke",
                         contraband = true, conceal = 0.5, sell = 8, desc = "A can of chemicals and a fuse. Thick white smoke" },
     gren_smoke      = { name = "Smoke grenade", model = "models/weapons/w_grenade.mdl", use = "throw", useLabel = "Throw", grenade = "smoke",
@@ -320,7 +320,13 @@ LCS.Items = {
     ammo_357        = { name = "Box of .357 rounds", model = "models/items/357ammo.mdl", use = "ammo", useLabel = "Load", ammo = { "357", 6 },
                         contraband = true, conceal = 0.4, sell = 20, arms = true, desc = "Six heavy rounds, hand-loaded" },
     gun_357         = { name = "Revolver", model = "models/weapons/w_357.mdl", use = "arm", useLabel = "Draw", weapon = "weapon_357",
-                        contraband = true, conceal = 0.2, sell = 90, arms = true, desc = "Machined at a workbench. Loud, heavy, final" },
+                        contraband = true, conceal = 0.2, sell = 90, arms = true, resistanceSplit = true, desc = "Machined at a workbench. Loud, heavy, final" },
+    -- (a unit's pulse rifle picked up while you carry one already goes in the pockets, as the four guns above do:
+    -- the owner, 19 November, sv_livingcity_armory.lua. Nobody sells one: at the dealer, half the unit counter's 300,
+    -- what one in hand fetches. resistanceSplit, on all five: one of ours selling it to the dealer keeps half, the
+    -- fund has the other half)
+    gun_ar2         = { name = "Pulse rifle", model = "models/weapons/w_irifle.mdl", use = "arm", useLabel = "Draw", weapon = "weapon_ar2",
+                        contraband = true, conceal = 0.05, sell = 150, arms = true, resistanceSplit = true, kg = 3.4, bulky = true },
     keepsake        = { name = "Wedding ring", model = "models/props_lab/box01a.mdl", sell = 20,
                         desc = "It belonged to somebody" },
 }

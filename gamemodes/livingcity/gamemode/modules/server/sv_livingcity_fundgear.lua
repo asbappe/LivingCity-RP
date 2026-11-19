@@ -15,6 +15,8 @@
     The gear   Each time a Resistance player is issued their rank's guns and rounds (on spawn, and the
                guns a promotion adds), the fund buys each gun and its rounds at the price a player pays
                the quartermaster, times lc_resistance_issue_rate (50, per cent; 0: free, as before).
+               A gun the armory holds (guns sold or given to the quartermaster, sv_livingcity_armory.lua)
+               comes off its shelf first, at no cost; the fund buys only what it lacks.
                A gun the quartermaster doesn't sell is priced at the unit counter's (the pulse rifle,
                300, and its rounds). The dearest gun first, with its rounds, then the next. A gun it
                can't pay for: the best cheaper gun it can pay for instead (pulse rifle, revolver,
@@ -194,9 +196,9 @@ function LC.ResistanceFundRecord(n, why, who)
     if SetGlobal2Int then SetGlobal2Int("lc_fund", LC.ResistanceFund and LC.ResistanceFund() or 0) end
 end
 
--- An entry that moves nothing, written at once.
-local function Note(line)
-    LC.ResistanceFundRecord(0, line)
+-- An entry that moves nothing, written at once (who: the players it was for, named if they are ours).
+local function Note(line, who)
+    LC.ResistanceFundRecord(0, line, who)
     if LC.LedgerSave then LC.Try(LC.LedgerSave) end
 end
 
@@ -249,26 +251,33 @@ function LC.FundIssue(ply, kit, keep)
     for _, cls in ipairs(kit) do inKit[cls] = true end
     local budget = LC.ResistanceFund()
     local spent, rounds, got, bought, standIns, without, anyRounds = 0, {}, {}, {}, {}, {}, false
+    local fromArmory = {} -- (guns off the armory's shelf, first and at no cost: sv_livingcity_armory.lua)
     local function Has(cls) return got[cls] or (keep and ply:HasWeapon(cls)) end
+    local function Shelf(cls) return LC.ArmoryCount and LC.ArmoryCount(cls) or 0 end
     for _, cls in ipairs(guns) do rounds[GUNS[cls].ammo] = 0 end -- (the rank's own kinds: what the fund buys, and no more)
     if not keep then issued[ply] = nil end
     for _, cls in ipairs(guns) do
         if not Has(cls) then
             local pick, cap = cls, LC.FundGunPrice(cls)
-            if Cost(cap) > budget - spent then
+            local free = Shelf(cls) > 0
+            if not free and Cost(cap) > budget - spent then
                 pick = nil
                 local bestP
                 for c in pairs(GUNS) do
                     local p = LC.FundGunPrice(c)
-                    if p < cap and not Has(c) and Cost(p) <= budget - spent and (not bestP or p > bestP or (p == bestP and c < pick)) then pick, bestP = c, p end
+                    if p < cap and not Has(c) and (Shelf(c) > 0 or Cost(p) <= budget - spent) and (not bestP or p > bestP or (p == bestP and c < pick)) then pick, bestP = c, p end
                 end
-                if pick then standIns[#standIns + 1] = { pick, cls } else without[#without + 1] = GUNS[cls].name end
+                if pick then free = Shelf(pick) > 0 standIns[#standIns + 1] = { pick, cls } else without[#without + 1] = GUNS[cls].name end
             end
             if pick then
-                spent = spent + Cost(LC.FundGunPrice(pick))
+                if free and LC.ArmoryTake and LC.ArmoryTake(pick, 1) then
+                    fromArmory[#fromArmory + 1] = pick
+                else
+                    spent = spent + Cost(LC.FundGunPrice(pick))
+                    bought[#bought + 1] = pick
+                end
                 got[pick] = true
                 out[#out + 1] = pick
-                bought[#bought + 1] = pick
                 if not inKit[pick] then issued[ply] = issued[ply] or {} issued[ply][pick] = true end
                 if not keep and rounds[GUNS[pick].ammo] then -- (a kind of round the rank's guns don't use comes as before)
                     local kind = GUNS[pick].ammo
@@ -279,7 +288,7 @@ function LC.FundIssue(ply, kit, keep)
             end
         end
     end
-    local none = not keep and #bought == 0
+    local none = not keep and #bought == 0 and #fromArmory == 0
     if none and not inKit.weapon_crowbar then out[#out + 1] = "weapon_crowbar" end -- (nothing it could pay for: the crowbar, which costs it nothing)
     -- what it paid, one entry; what they went without, at no cost
     if spent > 0 then
@@ -289,6 +298,9 @@ function LC.FundIssue(ply, kit, keep)
         else what = "Ammunition" end
         LC.ResistanceFundTake(spent, what .. " for " .. WHO, { ply })
     end
+    -- what came off the armory's shelf, at no cost: "A pistol from the armory, for a fighter (Kerr)"
+    if #fromArmory == 1 then Note(Cap(GUNS[fromArmory[1]].name) .. " from the armory, for " .. WHO, { ply })
+    elseif #fromArmory > 1 then Note(Cap(WHO) .. " armed from the armory", { ply }) end
     if none then
         Note(Cap(WHO) .. " went out with only a crowbar. The fund was empty.")
     else

@@ -2018,15 +2018,23 @@ T{
                 Narrate(q, "You arrived without the supplies, so there's no reward. Somebody's going to want to know where they went.")
                 return
             end
-            LC.TakeItem(p, carried)
             if partsRun then
+                LC.TakeItem(p, carried)
                 LC.GiveItem(p, "gun_parts", 3)
                 LC.GiveItem(p, "chemicals", 1)
                 Narrate(q, "Inside: 3 gun parts and some chemicals, now in your pockets. Craft them into something worth selling.")
             else
-                if LC.AddCredits then LC.AddCredits(p, 60, "gun run") end
                 if LC.AddTrait then LC.AddTrait(p, "sympathy", 1) end
-                Narrate(q, "The quartermaster counts the guns, then counts out sixty credits. 'Same again, soon.'")
+                -- (his sixty come out of the Resistance's fund and the guns go in its armory; when the fund can't pay,
+                -- the crate stays in your pockets and his barter opens with it: sv_livingcity_armory.lua)
+                local paid
+                if LC.QuartermasterGunRun then paid = LC.QuartermasterGunRun(p, carried)
+                else
+                    LC.TakeItem(p, carried)
+                    if LC.AddCredits then LC.AddCredits(p, 60, "gun run") end
+                    paid = true
+                end
+                if paid then Narrate(q, "The quartermaster counts the guns, then counts out sixty credits. 'Same again, soon.'") end
             end
         end
         return {
