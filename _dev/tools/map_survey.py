@@ -437,6 +437,35 @@ def paint(pic, brushes, ents, band=None):
                 break
 
 
+def dead_floor(brushes, nodes, band, cell=128, reach=512):
+    """Squares of floor on a level with no ground path node within reach: where the city's people can't walk to."""
+    lo = band[0]
+    floor, wall = set(), set()
+    for b in brushes:
+        if b.kind in NOT_DRAWN:
+            continue
+        is_floor = lo - 48 <= b.maxs[2] <= lo + STEP
+        is_wall = not is_floor and b.mins[2] < lo + PLAYER_TALL and b.maxs[2] > lo + STEP
+        if not (is_floor or is_wall):
+            continue
+        target = floor if is_floor else wall
+        # (the squares whose middle the brush covers, by its box)
+        for gx in range(int(math.ceil((b.mins[0] - cell / 2) / cell)), int(math.floor((b.maxs[0] - cell / 2) / cell)) + 1):
+            for gy in range(int(math.ceil((b.mins[1] - cell / 2) / cell)), int(math.floor((b.maxs[1] - cell / 2) / cell)) + 1):
+                target.add((gx, gy))
+    walk = floor - wall
+    near = set()
+    r = int(reach // cell)
+    for n in nodes:
+        if lo - 96 <= n[2] <= band[1] + 64:
+            cx, cy = int(n[0] // cell), int(n[1] // cell)
+            for dx in range(-r, r + 1):
+                for dy in range(-r, r + 1):
+                    if dx * dx + dy * dy <= r * r:
+                        near.add((cx + dx, cy + dy))
+    return walk, walk - near
+
+
 def paint_study(pic, trail, jumps, lows, band=None):
     def inside(p):
         return not band or band[0] - 40 <= p[2] <= band[1]
@@ -548,9 +577,9 @@ def survey(args):
     P("  Brush entities: " + ", ".join("%s %d" % kv for kv in ent_brush_n.most_common(14)))
     P("  Point entities, most first: " + ", ".join("%s %d" % kv for kv in Counter(c for c, _ in ents).most_common(30)))
     P("  Models placed, most first: " + ", ".join("%s x%d" % (m.replace("models/", ""), n) for m, n in models.most_common(20)))
-    nodes = [pos for cls, pos in ents if cls.startswith("info_node") and "hint" not in cls and "link" not in cls]
-    P("  For the city's people: %d path nodes (info_node...), %d hints, %d npc clips, %d player clips, %d spawn points." % (
-        len(nodes), sum(n for c, n in classes.items() if c.startswith("info_node_hint") or c == "info_hint"), kinds["npcclip"], kinds["playerclip"],
+    nodes = [pos for cls, pos in ents if cls in ("info_node", "info_node_climb")] # (ground nodes: what people walk on)
+    P("  For the city's people: %d ground path nodes (info_node), %d air nodes, %d hints, %d npc clips, %d player clips, %d spawn points." % (
+        len(nodes), classes["info_node_air"], sum(n for c, n in classes.items() if c.startswith("info_node_hint") or c == "info_hint"), kinds["npcclip"], kinds["playerclip"],
         sum(n for c, n in classes.items() if c.startswith("info_player"))))
 
     P("")
@@ -593,7 +622,10 @@ def survey(args):
     P("  Box brushes a hair apart (a gap under 2 units between faces that overlap): %d. The widest faces first:" % len(gaps))
     for area, g, ax, mid, ia, ib in gaps[:40]:
         P("    gap %.2f along %s at (%d %d %d), ids %s and %s, %d sq units of face" % (g, ax, mid[0], mid[1], mid[2], ia, ib, area))
-    outside = [(c, p) for c, p in ents if any(p[i] < mins[i] - 1 or p[i] > maxs[i] + 1 for i in range(3))]
+    # (the sky's own brushes count as the world here: the 3D skybox's camera sits inside them)
+    amin = tuple(min(b.mins[i] for b in brushes) for i in range(3))
+    amax = tuple(max(b.maxs[i] for b in brushes) for i in range(3))
+    outside = [(c, p) for c, p in ents if any(p[i] < amin[i] - 1 or p[i] > amax[i] + 1 for i in range(3))]
     P("  Point entities outside the world's bounds (a classic leak): %d" % len(outside))
     for c, p in outside[:30]:
         P("    %s at (%d %d %d)" % (c, p[0], p[1], p[2]))
@@ -664,9 +696,10 @@ def survey(args):
     P("")
     P("== THE PICTURES ==")
     P("  Grey: brushes from above, lighter is higher (greenish: displacements). Light grey blocks on a level: walls. Dots: blue path nodes,")
-    P("  green spawn points, yellow doors, red NPCs, purple triggers, pale lights." + (" Orange squares: where the study's player was (brighter:" if args.study else ""))
+    P("  green spawn points, yellow doors, red NPCs, purple triggers, pale lights. Red squares on a level: floor with no ground path node")
+    P("  within 512 units (the city's people can't walk there; a roof at that height shows red too).")
     if args.study:
-        P("  longer). Cyan dots: jumps. Pink dots: crouches.")
+        P("  Orange squares: where the study's player was (brighter: longer). Cyan dots: jumps. Pink dots: crouches.")
     lo2, hi2 = (mins[0], mins[1]), (maxs[0], maxs[1])
     pic = Picture(lo2, hi2, args.size)
     paint(pic, sorted(brushes, key=lambda b: b.maxs[2]), ents)
@@ -678,10 +711,15 @@ def survey(args):
         band = (z, z + 96)
         pic = Picture(lo2, hi2, args.size)
         paint(pic, brushes, ents, band)
+        walk, dead = dead_floor(brushes, nodes, band)
+        for cx, cy in dead:
+            pic.square(cx * 128, cy * 128, 128, (220, 40, 40, 90))
         if args.study:
             paint_study(pic, trail, jumps, lows, band)
         pic.frame("%s: level %d, feet at z %d to %d" % (os.path.basename(args.vmf), i, z, z + 96))
-        P("  %s: level %d, feet at z %d to %d" % (os.path.basename(pic.save(os.path.join(args.out, "map_level_%d" % i))), i, z, z + 96))
+        here = sum(1 for n in nodes if z - 96 <= n[2] <= z + 160)
+        P("  %s: level %d, feet at z %d to %d: %d ground nodes; about %d of %d floor squares (128 units) have no node within 512 units (red)" % (
+            os.path.basename(pic.save(os.path.join(args.out, "map_level_%d" % i))), i, z, z + 96, here, len(dead), len(walk)))
 
     with open(os.path.join(args.out, "survey.txt"), "w") as f:
         f.write("\n".join(out) + "\n")
