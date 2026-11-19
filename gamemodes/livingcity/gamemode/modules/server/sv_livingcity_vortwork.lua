@@ -202,7 +202,7 @@ T{
             data = { target = v },
             stages = {
                 Goto(v:GetPos(), "Find your kin, collared, sweeping the street (marked)", 220),
-                Count("vort_freed", 1, "Cut it loose: look at it up close and unshackle it (C > Resistance), with no unit watching"),
+                Count("vort_freed", 1, "Cut it loose: look at it up close and unshackle it (F2), with no unit watching"),
             },
         }
     end,

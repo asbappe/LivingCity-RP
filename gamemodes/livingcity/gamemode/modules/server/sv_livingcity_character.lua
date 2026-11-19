@@ -230,7 +230,7 @@ hook.Add("PlayerDeath", "LivingCityCharacter", function(ply, inflictor, attacker
         return
     end
     if ply:GetNW2Bool("lc_build", false) then
-        ply:ChatPrint("[Miscount] You died in build mode, so you keep this character. C > Help > Build mode to leave build mode and play for real.")
+        ply:ChatPrint("[Miscount] You died in build mode, so you keep this character. F2 > Staff > Build mode to leave build mode and play for real.")
         Card(false, "Build mode: you keep this character.")
         return
     end

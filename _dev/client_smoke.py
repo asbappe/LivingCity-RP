@@ -1031,6 +1031,21 @@ do
     Quick("vort") Quick("stalker") Quick("zombie")
     Quick("citizen", function() _me.nw.lcj_job, _me.nw.lc_ration_break = "mortuary", true end)
     Quick("resistance", function() _me.nw.lc_squad_n = 2 other.nw.lcf_faction = "vort" Look(other) end)
+    -- the Resistance's supply crate (19 November): anyone but a unit gives it food from F1, which the hints and the guide name
+    do
+        local crate = ents.Create("prop_physics") crate.nw.lc_label_kind = "cache"
+        local function Donate(faction)
+            _me.nw = { lcf_faction = faction, lce_standing = 200 }
+            _me.IsAdmin = function() return false end
+            Look(crate)
+            local okD, r = pcall(LC_CL.QuickRoot)
+            for i = 1, 8 do local it = okD and r.items[i] if it and it.label == "Donate food to the crate" then return true end end
+            return false
+        end
+        if not Donate("citizen") then problems[#problems + 1] = "F1 looking at the supply crate: no 'Donate food to the crate' for a citizen" end
+        if Donate("cp") then problems[#problems + 1] = "F1 looking at the supply crate: a unit is offered 'Donate food to the crate'" end
+        Look(nil)
+    end
     -- asleep in the cells at any hour (the owner, 15 November): a prisoner with more than five minutes still to serve has
     -- "Lie down and sleep" on F1 (the cell may have no bed to press E on), and nobody else has
     do
