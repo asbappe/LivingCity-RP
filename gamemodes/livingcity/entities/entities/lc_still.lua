@@ -16,12 +16,17 @@ ENT.Spawnable = true
 ENT.AdminOnly = true
 ENT.RenderGroup = RENDERGROUP_BOTH
 
-local MODELS = { "models/props_c17/furnitureboiler001a.mdl", "models/props_c17/oildrum001.mdl" }
+-- (the owner, 19 November: "please use models/props_forest/sawmill_boiler.mdl for the moonshine entity prop"; Episode 2's,
+-- which Garry's Mod ships; the older boiler and a drum only if a server somehow lacks it)
+local MODELS = { "models/props_forest/sawmill_boiler.mdl", "models/props_c17/furnitureboiler001a.mdl", "models/props_c17/oildrum001.mdl" }
+ENT.Models = MODELS
 
 function ENT:Initialize()
     if CLIENT then return end
-    local m = MODELS[1]
-    if util.IsValidModel and not util.IsValidModel(m) then m = MODELS[2] end
+    local m = MODELS[#MODELS]
+    for _, c in ipairs(MODELS) do
+        if not util.IsValidModel or util.IsValidModel(c) then m = c break end
+    end
     self:SetModel(m)
     self:PhysicsInit(SOLID_VPHYSICS)
     self:SetMoveType(MOVETYPE_VPHYSICS)

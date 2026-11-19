@@ -10,7 +10,7 @@ Nothing is said about any of it beyond what was there: no notice, hint, chat lin
 
 The owner: "The still. Moonshine brewed at the camp or lab from water, bottles and ration food over time, then sold to the black market dealer."
 
-- **A fixture**, "Fixture: Resistance still" in the editor (point kind `still`, entity `lc_still`, a boiler), meant for a camp or beside the lab. Saved with the layout like any fixture.
+- **A fixture**, "Fixture: Resistance still" in the editor (point kind `still`, entity `lc_still`, the sawmill boiler `models/props_forest/sawmill_boiler.mdl` since 19 November at the owner's ask; the older boiler only if a server lacks it), meant for a camp or beside the lab. Saved with the layout like any fixture.
 - **A Resistance member presses E with the makings in their pockets:** a ration packet (or a short ration), 2 water (any bottle or can of water, untreated included: the still boils it) and an empty bottle for each bottle made, 4. They are taken, and it brews by itself for **5 minutes**. Nobody has to stay (house rule 9): it steams and hisses quietly while it works. **E when it is done takes the 4 bottles of moonshine** (any member may take them). Anyone else's E does nothing.
 - Lacking something, one line: "You need a ration packet, 2 water and 8 empty bottles."
 - **Moonshine is contraband**, as it always was: a unit's search takes it.
