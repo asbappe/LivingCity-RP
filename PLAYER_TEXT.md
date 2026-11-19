@@ -4,7 +4,7 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version 28f0ed8. Admin-only console messages and log lines are left out.
+Made from version a36440f. Admin-only console messages and log lines are left out.
 
 13096 lines, from 363 files.
 
@@ -10277,12 +10277,12 @@ Made from version 28f0ed8. Admin-only console messages and log lines are left ou
 > Note for you (not shown in game): the console command lc_ending_reset_cooldown
 
 - "Secret ending cooldown cleared."  (text, line 4429)
-- "harpies=2,shalom=2"  (text, line 4479)
-- "harpies=4,shalom=2"  (text, line 4479)
-- "3.5:bomb,14.7:screen,34:zig,126:move,174:justice,212:boom,224:end"  (text, line 4480)
-- "3.5:bomb,9.5:screen,34:zig,126:move,174:justice,212:boom,224:end"  (text, line 4480)
-- "2.2=CAPTAIN: What happen ?\|3.5=MECHANIC: Somebody set up us the bomb.\|6.5=OPERATOR: We get signal.\|9.5=CAPTAIN: What !\|12.5=OPERATOR: Main screen turn on.\|14.7=CAPTAIN: It's you !!\|16.4=CATS: How are you gentlemen !!\|18.4=CATS: All your base are belong to us.\|20.4=CATS: You are on the way to destruction.\|21.6=CAPTAIN: What you say !!\|23.0=CATS: You have no chance to survive make your time.\|26.0=CATS: Ha ha ha ha ....\|34=CAPTAIN: Take off every 'ZIG' !!\|126=CAPTAIN: Move 'ZIG'.\|174=CAPTAIN: For great justice."  (text, line 4481)
-- "2.15=CAPTAIN: What happen ?\|3.55=MECHANIC: Somebody set up us the bomb.\|4.65=OPERATOR: We get signal.\|6.5=CAPTAIN: What !\|9.5=OPERATOR: Main screen turn on.\|11.7=CAPTAIN: It's you !!\|12.55=CATS: How are you gentlemen !!\|14.7=CATS: All your base are belong to us.\|18.45=CATS: You are on the way to destruction.\|20.6=CAPTAIN: What you say !!\|21.65=CATS: You have no chance to survive make your time.\|26.0=CATS: Ha ha ha ha ....\|34=CAPTAIN: Take off every 'ZIG' !!\|126=CAPTAIN: Move 'ZIG'.\|174=CAPTAIN: For great justice."  (text, line 4481)
+- "harpies=2,shalom=2"  (text, line 4480)
+- "harpies=4,shalom=2"  (text, line 4480)
+- "3.5:bomb,14.7:screen,34:zig,126:move,174:justice,212:boom,224:end"  (text, line 4481)
+- "3.5:bomb,9.5:screen,34:zig,126:move,174:justice,212:boom,224:end"  (text, line 4481)
+- "2.2=CAPTAIN: What happen ?\|3.5=MECHANIC: Somebody set up us the bomb.\|6.5=OPERATOR: We get signal.\|9.5=CAPTAIN: What !\|12.5=OPERATOR: Main screen turn on.\|14.7=CAPTAIN: It's you !!\|16.4=CATS: How are you gentlemen !!\|18.4=CATS: All your base are belong to us.\|20.4=CATS: You are on the way to destruction.\|21.6=CAPTAIN: What you say !!\|23.0=CATS: You have no chance to survive make your time.\|26.0=CATS: Ha ha ha ha ....\|34=CAPTAIN: Take off every 'ZIG' !!\|126=CAPTAIN: Move 'ZIG'.\|174=CAPTAIN: For great justice."  (text, line 4482)
+- "2.15=CAPTAIN: What happen ?\|3.55=MECHANIC: Somebody set up us the bomb.\|4.65=OPERATOR: We get signal.\|6.5=CAPTAIN: What !\|9.5=OPERATOR: Main screen turn on.\|11.7=CAPTAIN: It's you !!\|12.55=CATS: How are you gentlemen !!\|14.7=CATS: All your base are belong to us.\|18.45=CATS: You are on the way to destruction.\|20.6=CAPTAIN: What you say !!\|21.65=CATS: You have no chance to survive make your time.\|26.0=CATS: Ha ha ha ha ....\|34=CAPTAIN: Take off every 'ZIG' !!\|126=CAPTAIN: Move 'ZIG'.\|174=CAPTAIN: For great justice."  (text, line 4482)
 
 ## escorts through Combine doors (sv_livingcity_escort.lua)
 
@@ -11217,51 +11217,54 @@ Made from version 28f0ed8. Admin-only console messages and log lines are left ou
 
 `gamemodes/livingcity/gamemode/modules/server/sv_livingcity_fundgear.lua`
 
-- "You don't have that much."  (text, line 72)
+
+> Note for you (not shown in game): A donation earns sympathy toward joining (the owner, 19 November: "yes yes yes, scaling (without allowing abuse) to the amount donated"): one for every SYMP_PER credits given, at most SYMP_DAY in a real day, for someone who is not of the Resistance or the Combine; kept with the character (what they gave, what it has earned, the day's count).
+
+- "You don't have that much."  (text, line 84)
 
 > Note for you (not shown in game): The guns the fund buys, the rounds each takes, and what the record calls it.
 
-- "a pulse rifle"  (name, line 78)
+- "a pulse rifle"  (name, line 90)
 
 > Note for you (not shown in game): What the record says for a change some other code made (its "why").
 
-- "A load from a supply convoy"  (text, line 88)
-- "A supply drop raided"  (text, line 89)
-- "A crate of the Union's supplies, brought home"  (text, line 90)
-- "A gift from someone we got out"  (text, line 91)
-- "the leader's order"  (text, line 92)
-- "An order, paid for"  (text, line 92)
-- "an order ended before the attempt"  (text, line 93)
-- "An order called off, paid back"  (text, line 93)
-- "What the cells had put by"  (text, line 94)
+- "A load from a supply convoy"  (text, line 100)
+- "A supply drop raided"  (text, line 101)
+- "A crate of the Union's supplies, brought home"  (text, line 102)
+- "A gift from someone we got out"  (text, line 103)
+- "the leader's order"  (text, line 104)
+- "An order, paid for"  (text, line 104)
+- "an order ended before the attempt"  (text, line 105)
+- "An order called off, paid back"  (text, line 105)
+- "What the cells had put by"  (text, line 106)
 
 > Note for you (not shown in game): part of: names
 
-- "and {list}"  (text, line 158)
+- "and {list}"  (text, line 170)
 
 > Note for you (not shown in game): part of: names of
 
-- "({names} and others)"  (text, line 176)
+- "({names} and others)"  (text, line 188)
 
 > Note for you (not shown in game): what it paid, one entry; what they went without, at no cost
 
-- "and ammunition"  (text, line 287)
-- "Guns and ammunition"  (text, line 288)
+- "and ammunition"  (text, line 317)
+- "Guns and ammunition"  (text, line 318)
 
 > Note for you (not shown in game): part of: fund issue
 
-- "went out with only a crowbar. The fund was empty."  (text, line 293)
-- "%s got %s, not %s. The fund was short."  (message, line 295)
-- "%s went without %s. The fund was short."  (message, line 296)
+- "went out with only a crowbar. The fund was empty."  (text, line 323)
+- "%s got %s, not %s. The fund was short."  (message, line 325)
+- "%s went without %s. The fund was short."  (message, line 326)
 
 > Note for you (not shown in game): A donation: at the screen they last opened (atQM false), or from the quartermaster's window (atQM true).
 
-- "too fast"  (text, line 333)
+- "too fast"  (text, line 363)
 
 > Note for you (not shown in game): part of: fund donate
 
-- "too far"  (text, line 340)
-- "too far"  (text, line 342)
+- "too far"  (text, line 370)
+- "too far"  (text, line 372)
 
 ## the Resistance's money (besides raiding supply drops) (sv_livingcity_funding.lua)
 

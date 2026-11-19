@@ -3,6 +3,7 @@ announce folder sound/livingcity/announce/<voice>/
 announce radio trigger freq7
 announce radio trigger freq7_curfew
 announce radio trigger freq7_dropship
+announce radio trigger freq7_fund
 announce radio trigger freq7_incursion
 announce radio trigger freq7_lockdown
 announce radio trigger freq7_raid
@@ -1138,6 +1139,7 @@ setting lc_rent_hours = 3
 setting lc_rent_max = 1
 setting lc_rent_price = 50
 setting lc_request_cooldown = 60
+setting lc_resistance_issue_rate = 22
 setting lc_resistance_join_sympathy = 5
 setting lc_resistance_order_cost = 300
 setting lc_resistance_plainclothes = 1

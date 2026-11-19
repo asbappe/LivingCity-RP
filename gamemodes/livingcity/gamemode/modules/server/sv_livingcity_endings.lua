@@ -4471,6 +4471,7 @@ local RETUNED = {
     { "lc_rebel_errand_minutes", { "4" }, "12" },
     { "lc_birds", { "6" }, "4" },
     { "lc_scavenge_refill", { "600" }, "1800" },
+    { "lc_resistance_issue_rate", { "50" }, "22" }, -- (a Fighter's kit about 50, not 239: the owner, 19 November)
     { "lc_fridge_refill", { "240" }, "900" },
     { "lc_ending_marrow_max", { "40", "60" }, "80" },
     { "lc_ending_base_bombs", { "30" }, "60" },
