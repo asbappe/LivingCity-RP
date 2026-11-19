@@ -52,7 +52,7 @@ local function BuildFactions(menu, data)
         tools:Dock(BOTTOM)
         tools:SetTall(28)
         tools:DockMargin(4, 4, 4, 2)
-        tools:SetText("Admin: testing tools (XP, ranks, credits, standing)")
+        tools:SetText("Admin: testing tools (XP, ranks, credits, testing alone)")
         tools.DoClick = function() RunConsoleCommand("lc_admintools") if LC_CL and LC_CL.CloseHub then LC_CL.CloseHub() end end
         -- what has gone wrong on the server and in players' games, grouped, to copy and send (sh_livingcity_errors.lua)
         local errs = vgui.Create("DButton", menu)
