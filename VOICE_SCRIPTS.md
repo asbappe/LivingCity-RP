@@ -24,7 +24,7 @@ Ticked [x] below: the server already has it. Left to record, 357 files:
 - **machines** (`machines/`): 10 missing
 - **Colonel Cubbage** (`cubbage/`): 24 missing
 - **the Resistance's people** (`resistance/`): nothing missing
-- **added since the server's list was made**: 93 more rows (unticked below; run `lc_voice_missing` again after uploading and they are checked too)
+- **added since the server's list was made**: 105 more rows (unticked below; run `lc_voice_missing` again after uploading and they are checked too)
 
 Run `lc_voice_missing` on the server after uploading, and give Claude the list (or `data/livingcity/voice_missing.txt`) to update the ticks. The Colonel's own lines (the ghost) aren't checked by it.
 
@@ -366,6 +366,10 @@ Folder: `cubbage/`. Odessa Cubbage, alive and well, answering her address from t
 | [ ] | `answer_attempt_resolve1` | her `speech_attempt_resolve` | [defiant, dry, a speaker enjoying himself] She isn't going anywhere, she says. We'll see about that. |
 | [ ] | `answer_slogan1` | her `speech_slogan` | [defiant, dry, a speaker enjoying himself] Love your neighbour, hate the traitor, she says. We agree. Ask yourself who sold this city. |
 | [ ] | `answer_close1` | (his closing) | [defiant, dry, a speaker enjoying himself] That's all from me. Keep your heads down, your eyes open, and your door unlocked for a friend. We're closer than she thinks. |
+| [ ] | `answer_fund_crowbars1` | (after his closing, while the Resistance's fund is under 50 credits for ten minutes; tired, pleading) | [tired, pleading, plain] One more thing. Some of ours are going out with crowbars, some with nothing at all. Give what you can, at the camp. |
+| [ ] | `answer_fund_empty1` | (after his closing, while the Resistance's fund is under 50 credits for ten minutes; tired, pleading) | [tired, pleading, plain] One more thing. Our fund is empty, and our fighters are going out with crowbars. If you have credits, bring them to the camp. |
+| [ ] | `answer_fund_nothing1` | (after his closing, while the Resistance's fund is under 50 credits for ten minutes; tired, pleading) | [tired, pleading, plain] Before I go. We have almost nothing left to arm anyone with. Whatever you can give, give it at the screen in our camp. |
+| [ ] | `answer_fund_promises1` | (after his closing, while the Resistance's fund is under 50 credits for ten minutes; tired, pleading) | [tired, pleading, plain] And one last word. I can't arm people with speeches. If you have credits to spare, the fund needs them. |
 
 ## The Resistance's people
 
@@ -464,6 +468,10 @@ Folder: **`garrysmod/sound/livingcity/radio/`**. One voice of your choosing (a U
 | [ ] | `freq7_incursion1.wav` | Freq 7 warns: the Combine are in rebel ground | Combine in our territory. Everyone to your posts. |
 | [ ] | `freq7_lockdown1.wav` | Freq 7 warns: lockdown | Lockdown. Stay put, stay quiet, wait it out. |
 | [ ] | `freq7_dropship1.wav` | Freq 7 warns: a dropship | Dropship incoming. Find cover. |
+| [ ] | `freq7_fund1.wav` | Freq 7 asks for the Resistance's fund (under 50 credits for ten minutes; at most every twenty minutes). Tired, pleading, plain | This is Frequency 7. The fund is empty. Our fighters are going out with crowbars. If you have credits, take them to the camp. |
+| [ ] | `freq7_fund2.wav` | The same, another take | Frequency 7. We can't arm anyone on promises. Whatever credits you can spare, the fund needs them. |
+| [ ] | `freq7_fund3.wav` | The same, another take | This is Frequency 7. There's nothing left for guns or rounds. Give what you can at the screen in the camp. |
+| [ ] | `freq7_fund4.wav` | The same, another take | Frequency 7. Some of ours are going out with nothing but a crowbar. Every credit helps. Bring it to the camp. |
 
 ## The dreams' lines
 
@@ -958,6 +966,10 @@ The old fighter at the Resistance camp (an old man's face, `lc_colonel_model`; O
 | [x] | `debrief_failed1.wav` | Debrief me | We lost that one. Learn why before you try again. |
 | [x] | `debrief_messy1.wav` | Debrief me | You got it done, and half the city knows your face. Next time, slower. |
 | [x] | `debrief_none1.wav` | Debrief me | Nothing to report? Then go and do something worth reporting. |
+| [ ] | `fund_crowbar1.wav` | The Resistance's fund under 50 credits for ten minutes: said instead of his greeting (tired, pleading) | Another fighter just went out with nothing but a crowbar. Every credit at that screen helps. |
+| [ ] | `fund_empty1.wav` | The Resistance's fund under 50 credits for ten minutes: said instead of his greeting (tired, pleading) | The fund is empty. Our fighters are going out with crowbars. Give what you can at the screen in the camp. |
+| [ ] | `fund_promises1.wav` | The Resistance's fund under 50 credits for ten minutes: said instead of his greeting (tired, pleading) | I can't arm anyone on promises. If you have credits, the fund needs them. |
+| [ ] | `fund_rounds1.wav` | The Resistance's fund under 50 credits for ten minutes: said instead of his greeting (tired, pleading) | There's nothing left for rounds. Not a credit. Whatever you can spare, put it in at the screen. |
 | [x] | `greet1.wav` | Greeting (by how well he knows you) | Another one. Sit, if you like. Nobody else does. |
 | [x] | `greet_back1.wav` | Greeting (by how well he knows you) | You came back. Most don't. |
 | [x] | `greet_known1.wav` | Greeting (by how well he knows you) | You've worked it out by now, haven't you. Nobody else can see me. I didn't get out of the first camp. None of us did, not really. But you keep coming, so I keep telling you what I know. |

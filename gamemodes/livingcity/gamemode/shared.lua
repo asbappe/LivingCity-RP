@@ -215,6 +215,7 @@ LC_MODULES = {
         "sv_livingcity_adminplot", -- (an attempt on her life under orders: Resistance fighters come out round the stand; after adminsecurity, opplan and quests)
         "sv_livingcity_adminrecruit", -- (a lone wolf who tried and got away is taken in by the Resistance; after adminsecurity and adminplot)
         "sv_livingcity_speechanswer", -- (Colonel Cubbage answers her address from the camp and on Freq 7; after speech)
+        "sv_livingcity_fundplea", -- (the fund low for ten minutes: the Colonel, Cubbage's answer and Freq 7 ask for it; after fundgear, colonel and speechanswer)
         "sv_livingcity_smallserver", -- (small-server mode: with few players, the city carries more of the story)
         "sv_livingcity_status", -- (things other people can see: fine clothes, home decor, a radio set, a pet bird)
         "sv_livingcity_households", -- (households: the same block, shared crates and lockers, keys, known to each other)

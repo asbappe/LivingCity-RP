@@ -13635,6 +13635,8 @@ function SpeechAnswerTests()
 local CA0 = Vector(-83000, 63000, 0)
 local spotWas, sessWas = LC.ColonelSpot, LC.SpeechSession
 LC.ColonelSpot = function() return CA0, 90 end
+local fundLowWas = LC.FundLow -- (his plea for the Resistance's fund, after his closing, is Nov19_FundPleaTests' own)
+LC.FundLow = function() return false end
 -- what he says: an answer to each thing she spoke about, between his opening and closing
 local P = LC.SpeechPiece
 local said = LC.SpeechAnswerCompose({ P.open, P.ev_deaths, P.hunger, P.mood_afraid, P.close })
@@ -13684,7 +13686,7 @@ _setcvar("lc_speech_answer", 1)
 _setcvar("lc_speech_answer_delay", 240)
 ok(GetConVar("lc_colonel_model"):GetString() ~= "models/odessa.mdl", "and the ghost by the quartermaster wears another old man's face")
 for _, x in ipairs({ near, far }) do x:SetPos(CA0 + Vector(50000, 0, 0)) end
-LC.ColonelSpot, LC.SpeechSession = spotWas, sessWas
+LC.ColonelSpot, LC.SpeechSession, LC.FundLow = spotWas, sessWas, fundLowWas
 end
 SpeechAnswerTests()
 function Ledger2Tests()
@@ -34303,7 +34305,10 @@ ok(table.concat(order, " ") == "attempt_open attempt_martyr attempt_you attempt_
 local a2, tense = LC.SpeechCompose({}, {}, nil, { caught = true })
 ok(a2[4].id == "attempt_guards" and a2[6].id == "attempt_caught" and tense == true, "no soldier died and the attacker is dealt with: her guards, and no mercy; stern throughout")
 ok(LC.SpeechCompose({}, {}, nil)[1].id == "open", "(with no attempt, her usual address)")
+local fundLowWas = LC.FundLow -- (his plea for the Resistance's fund, after his closing, is Nov19_FundPleaTests' own)
+LC.FundLow = function() return false end
 local words = LC.SpeechAnswerCompose(a1)
+LC.FundLow = fundLowWas
 ok(words[2].id == "attempt_open" and #words == 5, "the Colonel answers it", words[2] and words[2].id)
 -- an attempt at her address is remembered, the city hears of it, and her next address of her own is about it
 local Q0 = Vector(136000, 116000, 0)
@@ -38767,6 +38772,165 @@ set("lc_resistance_issue_rate", rateWas)
 setFund(fundWas)
 end
 Nov19_FundGearTests()
+
+function Nov19_FundPleaTests()
+section("19 November: the fund low for ten minutes: the Colonel, Colonel Cubbage and Freq 7 ask for it")
+-- The owner, 19 November: "please also add some lines for the resistance leader/cubbage if the fund is down to 0 for
+-- more than 10 minutes, or if it's hovering extremely low (under 50) for that long, basically begging for donations
+-- both to any player interacting and his speeches/announcements".
+local fund = LC.ResistanceFund
+local function setFund(n) LC.ResistanceFundTake(fund()) LC.ResistanceFundAdd(n) end
+local function book() return LC.Ledger() end
+local function lowNow() book().fundLowSince = os.time() - 601 end -- (under 50 for ten minutes and a second)
+local function sent(msg, to)
+    for i = #net.sent, 1, -1 do local m = net.sent[i] if m.name == msg and (to == nil or m.to == to) then return m end end
+end
+local function plea(lines, text) -- which of these plea lines the text is, or nil
+    for id, w in pairs(lines) do if string.sub(id, 1, 5) == "fund_" and string.find(tostring(text), w, 1, true) then return id end end
+end
+local fundWas = fund()
+
+-- when it is low
+setFund(500)
+LC.FundPleaWatch()
+ok(book().fundLowSince == nil and not LC.FundLow(), "50 or more: not low")
+setFund(30)
+LC.FundPleaWatch()
+local t0 = tonumber(book().fundLowSince)
+ok(t0 ~= nil and math.abs(t0 - os.time()) <= 2, "under 50: the moment it went under is kept with the fund", tostring(t0))
+ok(not LC.FundLow(t0 + 599), "not low yet before ten minutes")
+ok(LC.FundLow(t0 + 600), "low after ten minutes under 50")
+setFund(0)
+LC.FundPleaWatch()
+ok(tonumber(book().fundLowSince) == t0 and LC.FundLow(t0 + 600), "at 0 too, the clock going on from when it first went under")
+do
+    local saved = util.JSONToTable(file.Read("livingcity/" .. game.GetMap() .. "_city.json", "DATA") or "") or {}
+    ok(tonumber(saved.fundLowSince) == t0, "kept in the ledger's file, so a restart doesn't reset the clock", tostring(saved.fundLowSince))
+    LC.LedgerReload()
+    ok(LC.FundLow(t0 + 600), "(read back after one)")
+end
+setFund(50)
+ok(not LC.FundLow(t0 + 6000), "back to 50: not low, at once")
+LC.FundPleaWatch()
+ok(book().fundLowSince == nil, "and the clock is cleared")
+setFund(10)
+LC.FundPleaWatch(t0 + 7000)
+ok(not LC.FundLow(t0 + 7599) and LC.FundLow(t0 + 7600), "the next time it drops, the ten minutes start again")
+
+-- a player talking to the Colonel
+do
+    local CB = Vector(-125000, 99000, 0)
+    local hereWas, posWas = LC.ColonelHere, LC.ColonelPos
+    LC.ColonelHere, LC.ColonelPos = true, CB
+    local r = newPlayer("PleaFighter", "resistance", nil, 400)
+    r:SetPos(CB + Vector(40, 0, 0))
+    local function said(p) -- (the words in his window: every string it was sent)
+        local m, out = sent("lc_dialog", p), {}
+        for _, v in ipairs(m and m.data or {}) do if isstring(v) then out[#out + 1] = v end end
+        return table.concat(out, "|")
+    end
+    setFund(0)
+    lowNow()
+    net.sent = {}
+    ok(LC.OpenColonel(r), "(E on the Colonel)")
+    local greet = LC.ColonelLines[LC.ColonelGreeting(r)]
+    local p1 = plea(LC.ColonelLines, said(r))
+    ok(p1 ~= nil and not string.find(said(r), greet, 1, true), "the fund low for ten minutes: the Colonel asks for it, in place of his greeting", said(r))
+    net.sent = {}
+    LC.OpenColonel(r)
+    ok(plea(LC.ColonelLines, said(r)) == nil and string.find(said(r), greet, 1, true), "at most once a player in a few minutes: his usual greeting the next time", said(r))
+    local r2 = newPlayer("PleaFighter2", "resistance", nil, 400)
+    r2:SetPos(CB + Vector(-40, 0, 0))
+    net.sent = {}
+    LC.OpenColonel(r2)
+    local p2 = plea(LC.ColonelLines, said(r2))
+    ok(p2 ~= nil and p2 ~= p1, "someone else talking to him hears it, and never the same line twice running", tostring(p1) .. " " .. tostring(p2))
+    _advance(301)
+    net.sent = {}
+    LC.OpenColonel(r)
+    local p3 = plea(LC.ColonelLines, said(r))
+    ok(p3 ~= nil and p3 ~= p2, "a few minutes on, he asks again", tostring(p3))
+    setFund(500)
+    LC.FundPleaWatch()
+    _advance(301)
+    net.sent = {}
+    LC.OpenColonel(r)
+    ok(plea(LC.ColonelLines, said(r)) == nil, "the fund at 50 or more: his usual greeting")
+    LC.ColonelHere, LC.ColonelPos = hereWas, posWas
+    for _, p in ipairs({ r, r2 }) do hook.Run("PlayerDisconnected", p) p:Remove() end
+end
+
+-- Colonel Cubbage's answer to her address
+do
+    local P = LC.SpeechPiece
+    setFund(0)
+    lowNow()
+    local a = LC.SpeechAnswerCompose({ P.open, P.ev_deaths, P.close })
+    local last = a[#a].id
+    ok(a[#a - 1].id == "close" and string.sub(last, 1, 5) == "fund_" and LC.SpeechAnswerLines[last] == a[#a].words,
+        "while it's low, Colonel Cubbage's answer to her address ends with one more piece: asking for it", last)
+    local b = LC.SpeechAnswerCompose({ P.open, P.ev_deaths, P.close })
+    ok(b[#b].id ~= last and string.sub(b[#b].id, 1, 5) == "fund_", "(never the same line twice running)", b[#b].id)
+    local spotWas = LC.ColonelSpot
+    local CA = Vector(-127000, 101000, 0)
+    LC.ColonelSpot = function() return CA, 90 end
+    local near = newPlayer("PleaListener", "citizen")
+    near:SetPos(CA + Vector(200, 0, 0))
+    near.chat = {}
+    ok(LC.SpeechAnswer({ P.open, P.ev_arrests, P.close }), "(he stands up to answer her)")
+    for _ = 1, 120 do LC.SpeechAnswerThink(CurTime()) _advance(1) end
+    local heard
+    for _, l in ipairs(near.chat) do heard = heard or plea(LC.SpeechAnswerLines, l) and l end
+    ok(heard and string.find(heard, "[Colonel Cubbage, at the camp] ", 1, true) == 1 and LC.SpeechAnswerState() == nil,
+        "heard as the rest of his answer is, near him, in his own words and nothing more", tostring(heard))
+    LC.ColonelSpot = spotWas
+    hook.Run("PlayerDisconnected", near) near:Remove()
+    setFund(500)
+    LC.FundPleaWatch()
+    local c = LC.SpeechAnswerCompose({ P.open, P.ev_deaths, P.close })
+    ok(c[#c].id == "close", "not otherwise: he ends with his closing")
+end
+
+-- Freq 7
+do
+    local warnWas = LC.Freq7Warn
+    local casts = {}
+    LC.Freq7Warn = function(name) casts[#casts + 1] = name return true end
+    LC.FundPlea.nextCast = 0
+    setFund(0)
+    lowNow()
+    local t = CurTime() + 100000
+    ok(LC.FundPleaBroadcast(t) == true and casts[1] == "fund", "while it's low, Freq 7 cuts in with its call to give, its own warning's way (freq7_fund)")
+    ok(LC.FundPleaBroadcast(t + 60) == false and LC.FundPleaBroadcast(t + 1199) == false and #casts == 1, "at most once in twenty minutes")
+    ok(LC.FundPleaBroadcast(t + 1200) == true and #casts == 2, "and again after twenty")
+    setFund(500)
+    LC.FundPleaWatch()
+    ok(LC.FundPleaBroadcast(t + 5000) == false and #casts == 2, "not when it isn't low")
+    LC.Freq7Warn = warnWas
+    LC.FundPlea.nextCast = 0
+    setFund(0)
+    lowNow()
+    ok(LC.FundPleaBroadcast(t + 9000) == false and LC.FundPlea.nextCast == t + 9060, "with no recording of it, nothing, and it tries again in a minute")
+    ok(table.HasValue(LC.AnnounceExtra.radio, "freq7_fund"), "freq7_fund is one of the radio's recordings (lc_announce_clips lists it)")
+    LC.FundPlea.nextCast = 0
+end
+
+-- the lines can be recorded: all in VOICE_SCRIPTS.md
+do
+    local fh = io and io.open("../VOICE_SCRIPTS.md", "r")
+    local doc = fh and fh:read("*a") or ""
+    if fh then fh:close() end
+    local missing = {}
+    for id, w in pairs(LC.ColonelLines) do if string.sub(id, 1, 5) == "fund_" and not string.find(doc, "`" .. id .. "1.wav`", 1, true) then missing[#missing + 1] = "colonel/" .. id end end
+    for id, w in pairs(LC.SpeechAnswerLines) do if string.sub(id, 1, 5) == "fund_" and not string.find(doc, "`answer_" .. id .. "1", 1, true) then missing[#missing + 1] = "cubbage/" .. id end end
+    for i = 1, 4 do if not string.find(doc, "`freq7_fund" .. i .. ".wav`", 1, true) then missing[#missing + 1] = "radio/freq7_fund" .. i end end
+    ok(doc ~= "" and #missing == 0, "every plea line is in VOICE_SCRIPTS.md, to be recorded (four for the Colonel, four for Cubbage, four takes for Freq 7)", table.concat(missing, ", "))
+end
+
+setFund(fundWas)
+LC.FundPleaWatch()
+end
+Nov19_FundPleaTests()
 
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")
 ;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)

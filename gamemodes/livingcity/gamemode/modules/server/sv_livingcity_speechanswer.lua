@@ -80,6 +80,11 @@ LC.SpeechAnswerLines = {
     attempt_resolve = "She isn't going anywhere, she says. We'll see about that.",
     slogan = "Love your neighbour, hate the traitor, she says. We agree. Ask yourself who sold this city.",
     close = "That's all from me. Keep your heads down, your eyes open, and your door unlocked for a friend. We're closer than she thinks.",
+    -- after his closing, while the Resistance's fund has been under 50 credits for ten minutes (sv_livingcity_fundplea.lua)
+    fund_empty = "One more thing. Our fund is empty, and our fighters are going out with crowbars. If you have credits, bring them to the camp.",
+    fund_nothing = "Before I go. We have almost nothing left to arm anyone with. Whatever you can give, give it at the screen in our camp.",
+    fund_promises = "And one last word. I can't arm people with speeches. If you have credits to spare, the fund needs them.",
+    fund_crowbars = "One more thing. Some of ours are going out with crowbars, some with nothing at all. Give what you can, at the camp.",
 }
 
 -- His answer to an address: a list of { id, words } (an opening, up to three answers, a closing).
@@ -96,10 +101,13 @@ function LC.SpeechAnswerCompose(pieces)
     local out = { { id = "open", words = L.open } }
     for _, p in ipairs(pieces or {}) do
         local id = istable(p) and p.id or p
-        if id ~= "open" and id ~= "close" and L[id] and #out < 4 then out[#out + 1] = { id = id, words = L[id] } end
+        if id ~= "open" and id ~= "close" and L[id] and #out < 4 and string.sub(tostring(id), 1, 5) ~= "fund_" then out[#out + 1] = { id = id, words = L[id] } end
     end
     if #out == 1 then out[#out + 1] = { id = "calm", words = L.calm } end
     out[#out + 1] = { id = "close", words = L.close }
+    -- the Resistance's fund low for a while: he ends by asking for it (sv_livingcity_fundplea.lua)
+    local plea = LC.FundPleaPiece and LC.FundPleaPiece("cubbage")
+    if plea and L[plea] then out[#out + 1] = { id = plea, words = L[plea] } end
     return out
 end
 
