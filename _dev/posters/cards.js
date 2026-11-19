@@ -92,6 +92,7 @@ const INDEX = { 11: 'J', 12: 'Q', 13: 'K', 14: 'A' };
 
 const DEFS = `
   <clipPath id="card"><rect x="1" y="1" width="${W - 2}" height="${H - 2}" rx="18"/></clipPath>
+  <mask id="combine" maskUnits="userSpaceOnUse" x="0" y="0" width="600" height="600"><path d="M185,0 L600,210 L600,595 L210,595 L0,180 L195,372 L375,197 Z" fill="#fff"/><circle cx="356" cy="366" r="163" fill="#000"/></mask>
   <clipPath id="screen"><rect x="-72" y="-92" width="144" height="164" rx="6"/></clipPath>
   <filter id="cut" x="-10%" y="-10%" width="120%" height="120%"><feTurbulence type="fractalNoise" baseFrequency="0.06" numOctaves="2" seed="4"/><feDisplacementMap in="SourceGraphic" scale="3.2"/></filter>
   <filter id="grain" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.022" numOctaves="2" seed="SEED"/><feColorMatrix values="0 0 0 0 0.25  0 0 0 0 0.18  0 0 0 0 0.1  0 0 0 0.75 -0.33"/></filter>
@@ -121,7 +122,8 @@ function face(rank) {
 // middle. 1 the Resistance, 2 the Combine, 3 the Union, 4 the vortigaunts. Each mark is drawn around 0,0, about 100 across.
 const SUITS = [
   { paper: '#e6dcc0', col: O, mark: col => f(LAMBDA, col) },
-  { paper: '#d5dcdc', col: '#2c6a82', mark: col => s('M36,-36 A50,50 0 1 0 36,36', 17, col, 'stroke-linecap="butt"') + s('M40,0 L-6,0 L-6,24', 15, col, 'stroke-linecap="butt" stroke-linejoin="miter"') },
+  // (the Combine's own emblem, as in the game: the two spikes and the eye in its ring)
+  { paper: '#d5dcdc', col: '#2c6a82', mark: col => `<g transform="scale(.19) translate(-300,-300)"><rect width="600" height="600" fill="${col}" mask="url(#combine)"/><circle cx="356" cy="366" r="127" fill="${col}"/></g>` },
   { paper: '#e2d9b4', col: '#a87c14', mark: col => `<circle cx="0" cy="0" r="30" fill="none" stroke="${col}" stroke-width="15"/>` +
       [0, 45, 90, 135, 180, 225, 270, 315].map(a => `<rect x="-9" y="-54" width="18" height="20" fill="${col}" transform="rotate(${a})"/>`).join('') + c(0, 0, 8, col) },
   { paper: '#d6dfc2', col: '#4c8527', mark: col => `<path d="M-54,6 Q0,-42 54,6 Q0,50 -54,6 Z" fill="none" stroke="${col}" stroke-width="11" stroke-linejoin="round"/>` + c(0, 6, 17, col) +
