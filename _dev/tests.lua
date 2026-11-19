@@ -26566,7 +26566,10 @@ LC.IsSnitch = function(n) return n == n3 end
 ok(LC.GiveRebelPamphlet(reb, n3) == true and not st3.rebel and have() == before - 2 and #crimes == 1, "an informant takes it like anyone")
 LC.NPCs[n1], LC.NPCs[n2], LC.NPCs[n3] = nil, nil, nil
 _run(21)
-ok(#crimes == 2 and crimes[2][1] == reb, "and Civil Protection hears of it a little later", #crimes)
+-- Only the informant's report counts: what earlier tests leave running may report something else meanwhile.
+local told = 0
+for i = 2, #crimes do if crimes[i][1] == reb and crimes[i][2] == "Distributing seditious material" then told = told + 1 end end
+ok(told == 1, "and Civil Protection hears of it a little later", #crimes)
 
 -- the city walking past the ones lying about
 for _, e in ipairs(LC.RebelPamphlets) do if IsValid(e) then e:Remove() end end
