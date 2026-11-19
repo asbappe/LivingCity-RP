@@ -131,6 +131,7 @@ function hook.Remove(ev, id)
     if hook.t[ev] then hook.t[ev][id] = nil end
     if hook.seq[ev] then hook.seq[ev][id] = nil end
 end
+function hook.GetTable() return hook.t end -- (as the game's: event -> { name -> function })
 function hook.Run(ev, ...)
     local hs = hook.t[ev]
     if not hs then return end
