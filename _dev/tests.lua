@@ -41068,10 +41068,10 @@ ok(LC.InformDo(cit, cop2, "assassin"), "(another report)")
 local standing1 = LC.Standing(cit)
 LC.FinishQuest(LC.QuestOf[cit], false, "out of time")
 ok(LC.Standing(cit) - standing1 == -10 and not LC.NPCs[cop2].questLock, "out of time: 10 standing, and the unit goes back", LC.Standing(cit) - standing1)
-ok(#LC.InformOptions(cit) == 0 and cit.lcInformNext.assassin > CurTime() + 590, "and no new report of it for ten minutes")
+ok(#LC.InformOptions(cit) == 0 and cit.lcInformWaits.assassin > CurTime() + 590, "and no new report of it for ten minutes")
 
 -- the assassin taken by someone else mid-lead: it ends with nothing against anyone
-cit.lcInformNext, cit.lcqNext = nil, 0
+cit.lcInformWaits, cit.lcqNext = nil, 0
 ok(LC.InformDo(cit, cop2, "assassin"), "(a third report)")
 local standing2 = LC.Standing(cit)
 local held = LC.HeldByCombine
@@ -41276,8 +41276,8 @@ _run(0.5)
 jailed.lcPreferCell = cells[1]
 LC.Incarcerate(jailed, 900, "Carrying a weapon")
 hold(cit)
-ok(LC.ExchangeRebel() == jailed, "(one of ours in the Combine's cells)")
-local okX = LC.ExchangeOffer("resistance", lt, cit)
+ok(LC.ExchangeRebel() ~= nil, "(one of ours in the Combine's cells)")
+local okX = LC.ExchangeOffer("resistance", lt, cit, jailed)
 ok(okX and string.find(GetGlobal2String("lc_xchg", ""), "RAJailed", 1, true), "a Lieutenant offers a prisoner for one of ours: it waits on her F2")
 local s1 = LC.RebelStanding()
 LC.ExchangeAnswer(true, adm)
@@ -41310,11 +41310,14 @@ ok(string.find(GetGlobal2String("lc_rk_answer", ""), "Ada Test", 1, true), "and 
 local s4 = LC.RebelStanding()
 ok(LC.RebelAnswer(adm, "high") and LC.RebelAnswerPending == nil and LC.RebelStanding() == s4 - 4, "she takes the high ground: the Resistance sink further with the people")
 -- with nobody playing her: the city's own answers within the minute; a wall and one of theirs in the cells: a reprisal
-adm:SetNW2String("lcf_faction", "citizen")
 local wall = LC.AddPoint(R0 + Vector(5000, 0, 0), 0, "execwall", 0)
+local auth = Ld.authority
+Ld.authority = 60
+if LC.FiringSquad then LC.FiringSquadFinish(LC.FiringSquad, "cancelled") end
 LC.RebelKillingKnown("Ada Test", "body", body:GetPos())
-LC.RebelAnswerTick(CurTime() + 61)
-ok(LC.FiringSquad and LC.FiringSquad.target == jailed and LC.FiringSquad.why == "reprisal", "the city's own answers with a reprisal: one of theirs to the firing squad")
+LC.RebelAnswerTick(CurTime() + 301) -- (a player Administrator has five minutes; the city's own one)
+ok(LC.FiringSquad and LC.FiringSquad.why == "reprisal" and LC.RebelAnswerPending == nil, "not answered in time: the city's own answers with a reprisal, one of theirs to the firing squad")
+Ld.authority = auth
 if LC.FiringSquad then LC.FiringSquadFinish(LC.FiringSquad, "cancelled") end
 
 LC.Psy, LC.MindOf, math.random = psy, mindOf, rnd

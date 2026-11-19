@@ -163,7 +163,7 @@ function LC.InformOptions(ply)
     if not On() or not LC.MayInform(ply) or LC.InformLeads[ply] then return out end
     local busy = LC.QuestOf and LC.QuestOf[ply] ~= nil
     for _, k in ipairs(LC.InformKinds) do
-        local wait = ply.lcInformNext and ply.lcInformNext[k.id]
+        local wait = ply.lcInformWaits and ply.lcInformWaits[k.id]
         if not (wait and wait > CurTime()) then
             local ok, what = LC.Try(k.available, ply)
             if ok and what then
@@ -350,8 +350,8 @@ Finished = function(ply, q, success)
     else
         Release(L, false)
         if LC.AddStanding then LC.AddStanding(ply, FAIL_STANDING, "a wasted report") end
-        ply.lcInformNext = ply.lcInformNext or {}
-        ply.lcInformNext[L.kind] = CurTime() + FAIL_WAIT
+        ply.lcInformWaits = ply.lcInformWaits or {}
+        ply.lcInformWaits[L.kind] = CurTime() + FAIL_WAIT
         hook.Run("LivingCityInformed", ply, L.kind, L.target, false)
     end
 end
