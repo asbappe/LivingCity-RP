@@ -426,8 +426,7 @@ local function DropSatchel(P, pos)
     e:Spawn()
     local phys = e:GetPhysicsObject()
     if IsValid(phys) then phys:EnableMotion(false) end
-    e.lcDressing = true -- (not pocketed as a thing: taken with E, below)
-    e.lcPaySatchel = true
+    e.lcPaySatchel = true -- (taken with E, below; never set dressing, which E leaves alone: sv_livingcity_war.lua)
     P.satchel, P.droppedAt = e, CurTime()
     Mark(e)
 end
