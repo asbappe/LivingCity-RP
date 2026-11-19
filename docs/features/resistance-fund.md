@@ -19,6 +19,7 @@ The owner, 19 November: "I think the funds should be for the equipment issued to
   - **A citizen broken out and led to safety, a fugitive brought home, a shackled vortigaunt led home** (the board jobs `res_jailbreak`, `res_rescue` and `res_freevort`, finished): everyone on the job.
 - **Not counted** (no supplies taken, nobody saved, or nobody's doing): a data terminal raided, a screen hijacked, an Overwatch landing ambushed; the supply run from a contact (`res_supply`), smuggling, scavenging; a prisoner who slips away from a march by themselves; someone uncuffed; someone healed or got back on their feet.
 - **Donations** (19 November): anyone can give credits to the fund, at the screen in the camp or in the quartermaster's window (below).
+- **The Resistance's own money (19 November)** also feeds it: half of what the dealer pays a member for moonshine, skimmed machine parts and forged cards, the dealer's rent on rebel ground, half the Union paymaster's satchel, and the card table's take (`docs/features/resistance-money.md`).
 
 ## What it pays for
 
@@ -33,6 +34,7 @@ The owner, 19 November: "I think the funds should be for the equipment issued to
   - Where it came from is kept with the order (PData `lc_adminplot_price`: `300:fund`, or `300:<the leader's SteamID64>:<their citizen number>`), so a reconnect or a restart of the server loses nothing.
   - **The job on the board (`res_regicide`, while nobody leads) costs nothing.**
 - **Half after the first.** At one address the first under orders whose attempt counts (the job's holder, or a member under the order) is paid in full: 250 experience, 100 credits, and 250 more if she dies of it. Anyone else under the leader's order whose attempt counts at that same address is paid half of each part: 125, 50 and 125. Her next address starts again. The job from the board is never halved. (`docs/features/city.md`, "An ordered attempt is a coordinated attack".)
+- **The armory, and the quartermaster's trade** (19 November, `docs/features/armory-and-barter.md`): guns sold or given to the quartermaster go in the Resistance's armory (kept with the fund in the ledger, `armory`), and the fighters' issue takes its guns from there first, at no cost to the fund. What players pay him goes into the fund ("Sold at the quartermaster's"); what he buys from them comes out of it (5 a gun, the gun run's 60, everything else at what he paid before), and what the fund can't pay he makes up in barter.
 - **Not food.** Food comes from supply raids, donations and scavenging, as it always has; the quartermaster's prices are not cheaper for members (the owner, 19 November: "no to cheaper quartermaster prices").
 
 ## The record

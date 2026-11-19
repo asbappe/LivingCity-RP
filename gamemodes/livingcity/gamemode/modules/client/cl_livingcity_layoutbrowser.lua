@@ -43,7 +43,7 @@ local USES = {
     -- (everything of hers in one folder: her studio and office door were under Civil Protection)
     { title = "The Administrator", ids = { "desk", "adminpower", "suppressor", "speech", "speechcrowd", "adminapc", "adminheli", "studio", "door_office", "zone_combine" } },
     { title = "Prison", ids = { "cell", "release", "prisonwork", "zone_prison", "door_prison" } },
-    { title = "The Resistance and rebel bases", ids = { "zone_rebel", "rspawn", "colonel", "rlookout", "rebelboard", "fundtv", "interrochair", "rebelcage", "locker_rebel", "bunk", "workbench", "dealer", "bed", "toilet", "stove",
+    { title = "The Resistance and rebel bases", ids = { "zone_rebel", "rspawn", "colonel", "rlookout", "rebelboard", "fundtv", "interrochair", "rebelcage", "locker_rebel", "bunk", "workbench", "dealer", "still", "cardtable", "bed", "toilet", "stove",
         "sit", "sitchair", "lean", "fire", "graffiti", "way_left", "way_right", "way_up", "way_down", "way_freedom" } }, -- (no locker: it is the citizens', for Civil Standing 150 and up; the owner, 14 November)
     { title = "Infestation", ids = { "zone_infest", "zspawn", "hazbarrel" } },
     { title = "Morning exercise", ids = { "yard", "parade" } },
@@ -201,7 +201,7 @@ local WANTED = {
 
 local function Glance()
     local pts, fx, zones, doors = 0, 0, #(LC_CL.zones or {}), #(LC_CL.doors or {})
-    local FIX = { vending = true, dispenser = true, terminal = true, stove = true, fire = true, dealer = true, locker = true, locker_rebel = true, locker_cp = true,
+    local FIX = { vending = true, dispenser = true, terminal = true, stove = true, fire = true, dealer = true, still = true, cardtable = true, locker = true, locker_rebel = true, locker_cp = true,
         screen = true, lawboard = true, cpfeed = true, evidlocker = true, rebelboard = true, interrochair = true, rebelcage = true, infodesk = true, civposter = true, console = true, workbench = true, recycler = true, dataterm = true, masterterm = true, citybin = true, streetlight = true, loudspeaker = true, screen_big = true, screen_mid = true, monitor_hang = true, tv = true, incinerator = true, hazbarrel = true, transformer = true, forcefield = true, powerbank = true, turret = true, barricade_low = true, barricade = true, barricade_tall = true, intake = true, housingterm = true, laborterm = true, cpsupply = true, fundtv = true, conveyor = true, bed = true, toilet = true, bath = true }
     for _, p in ipairs(LC_CL.points or {}) do if FIX[p.kind] then fx = fx + 1 else pts = pts + 1 end end
     local npcs = 0

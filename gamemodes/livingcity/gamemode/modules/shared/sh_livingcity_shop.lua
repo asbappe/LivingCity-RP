@@ -46,7 +46,7 @@ LCS.Items = {
     vodka           = { name = "Pre-war vodka", model = "models/props_junk/glassjug01.mdl", use = "vice", useLabel = "Drink", vice = "drink", strength = 2, quench = -6,
                         desc = "A Commissary privilege for exemplary citizens. Strong" },
     moonshine       = { name = "Moonshine", model = "models/props_junk/glassjug01.mdl", use = "vice", useLabel = "Drink", vice = "drink", strength = 3, quench = -10, badChance = 0.2,
-                        contraband = true, conceal = 0.4, desc = "Very strong, very cheap, and one jar in five is a bad batch" },
+                        contraband = true, conceal = 0.4, resistanceSplit = true, desc = "Very strong, very cheap, and one jar in five is a bad batch" },
     stimulant       = { name = "Stimulant shot", model = "models/props_lab/jar01a.mdl", use = "vice", useLabel = "Take", vice = "stim", kg = 0.05,
                         contraband = true, conceal = 0.7, desc = "Combine-issue, for units on double shifts. Fifteen minutes you couldn't sleep through if you tried: lights out waits, and tonight's dream goes by without you. Then the crash. One at a time: no second shot until you've slept and dreamt properly" },
     -- The lab's foil hat (the owner, 8 November; sv_livingcity_bedtime.lua): put it on and sleep in it, and no dream reaches you once.
@@ -99,6 +99,8 @@ LCS.Items = {
     --   contraband   illegal to carry: searches look for it
     --   conceal      base chance it slips past a search (Guile adds to it)
     --   sell         what the dealer pays for it
+    --   resistanceSplit  a Resistance member who sells it to the dealer has half of what he pays, the
+    --                rest goes to the Resistance's fund (LC.DealerSplit, sv_livingcity_resistancemoney.lua)
     --   radio        "union" (public band, early event notices) or
     --                "resistance" (Freq 7, plus intercepted CP dispatch)
     --   permit       excuses you from one curfew or lockdown stop
@@ -132,7 +134,7 @@ LCS.Items = {
                         contraband = true, conceal = 0.5, sell = 25,
                         desc = "Genuine papers. Their owner won't be needing them" },
     ration_forged   = { name = "Forged ration card", model = "models/props_c17/paper01.mdl", rationCard = true,
-                        contraband = true, conceal = 0.65, sell = 4,
+                        contraband = true, conceal = 0.65, sell = 4, resistanceSplit = true,
                         desc = "One extra ration from any dispenser, whatever your standing" },
     uniform_cp      = { name = "Civil Protection uniform", model = "models/props_c17/BriefCase001a.mdl", wear = "cp",
                         contraband = true, conceal = 0, sell = 50,
@@ -226,11 +228,11 @@ LCS.Items = {
     ammo_buckshot   = { name = "Box of shells", model = "models/items/boxbuckshot.mdl", use = "ammo", useLabel = "Load", ammo = { "Buckshot", 12 },
                         contraband = true, conceal = 0.3, sell = 20, arms = true, desc = "Hand-packed shells" },
     gun_pistol      = { name = "Pistol", model = "models/weapons/w_pistol.mdl", use = "arm", useLabel = "Draw", weapon = "weapon_pistol",
-                        contraband = true, conceal = 0.25, sell = 45, arms = true, desc = "Put together on a kitchen table. It fires" },
+                        contraband = true, conceal = 0.25, sell = 45, arms = true, resistanceSplit = true, desc = "Put together on a kitchen table. It fires" },
     gun_shotgun     = { name = "Shotgun", model = "models/weapons/w_shotgun.mdl", use = "arm", useLabel = "Draw", weapon = "weapon_shotgun",
-                        contraband = true, conceal = 0.05, sell = 80, arms = true, desc = "Hard to hide. Hard to argue with" },
+                        contraband = true, conceal = 0.05, sell = 80, arms = true, resistanceSplit = true, desc = "Hard to hide. Hard to argue with" },
     gun_smg         = { name = "SMG", model = "models/weapons/w_smg1.mdl", use = "arm", useLabel = "Draw", weapon = "weapon_smg1",
-                        contraband = true, conceal = 0.1, sell = 75, arms = true, desc = "It jams. Not often" },
+                        contraband = true, conceal = 0.1, sell = 75, arms = true, resistanceSplit = true, desc = "It jams. Not often" },
     smokebomb       = { name = "Smoke bomb", model = "models/props_junk/popcan01a.mdl", use = "throw", useLabel = "Throw", grenade = "smoke",
                         contraband = true, conceal = 0.5, sell = 8, desc = "A can of chemicals and a fuse. Thick white smoke" },
     gren_smoke      = { name = "Smoke grenade", model = "models/weapons/w_grenade.mdl", use = "throw", useLabel = "Throw", grenade = "smoke",
@@ -313,14 +315,20 @@ LCS.Items = {
                         desc = "The approaches to the Combine's own ground. The quartermaster pays well for it" },
     intel_records   = { name = "Copied city records", model = "models/props_c17/paper01.mdl", kg = 0, contraband = true, conceal = 0.85, sell = 60, intel = true,
                         desc = "The city's own records, copied out by someone inside: names, routes, who's being watched. The best intel there is" },
-    union_goods     = { name = "Union machine parts", model = "models/props_lab/box01a.mdl", contraband = true, conceal = 0.4, sell = 8, arms = true,
+    union_goods     = { name = "Union machine parts", model = "models/props_lab/box01a.mdl", contraband = true, conceal = 0.4, sell = 8, arms = true, resistanceSplit = true,
                         desc = "Finished parts, skimmed off the factory line. The dealer moves them; the quartermaster pays more (they end up in guns)" },
     vest_cell       = { name = "Charge cell", model = "models/items/battery.mdl", use = "charge", useLabel = "Charge your vest", charge = 25,
                         contraband = true, conceal = 0.5, sell = 8, desc = "A salvaged suit cell: twenty-five charge into a powered vest you're wearing" },
     ammo_357        = { name = "Box of .357 rounds", model = "models/items/357ammo.mdl", use = "ammo", useLabel = "Load", ammo = { "357", 6 },
                         contraband = true, conceal = 0.4, sell = 20, arms = true, desc = "Six heavy rounds, hand-loaded" },
     gun_357         = { name = "Revolver", model = "models/weapons/w_357.mdl", use = "arm", useLabel = "Draw", weapon = "weapon_357",
-                        contraband = true, conceal = 0.2, sell = 90, arms = true, desc = "Machined at a workbench. Loud, heavy, final" },
+                        contraband = true, conceal = 0.2, sell = 90, arms = true, resistanceSplit = true, desc = "Machined at a workbench. Loud, heavy, final" },
+    -- (a unit's pulse rifle picked up while you carry one already goes in the pockets, as the four guns above do:
+    -- the owner, 19 November, sv_livingcity_armory.lua. Nobody sells one: at the dealer, half the unit counter's 300,
+    -- what one in hand fetches. resistanceSplit, on all five: one of ours selling it to the dealer keeps half, the
+    -- fund has the other half)
+    gun_ar2         = { name = "Pulse rifle", model = "models/weapons/w_irifle.mdl", use = "arm", useLabel = "Draw", weapon = "weapon_ar2",
+                        contraband = true, conceal = 0.05, sell = 150, arms = true, resistanceSplit = true, kg = 3.4, bulky = true },
     keepsake        = { name = "Wedding ring", model = "models/props_lab/box01a.mdl", sell = 20,
                         desc = "It belonged to somebody" },
 }
@@ -475,6 +483,8 @@ end
 ------------------------------------------------------------------------
 -- The black market (a dealer placed with the editor, or rebel territory)
 --   weapon    given straight to you
+--   bootleg   a drink sold only from what players have sold the black market (LC.BootlegLeft)
+--   gone      no longer sold: none left in the city (kept, so the Commissary's own never shows up here)
 --   qm        only the Resistance's quartermaster has it, never a dealer
 --   lab       only the Resistance's lab has it (LCS.Lab, below): no dealer and no quartermaster sells it. The
 --             entry stays here for what it is worth: the lab's price and what it sells back for come from it.
@@ -497,9 +507,11 @@ LCS.Black = {
     { id = "medicine", item = "medicine", price = 18, desc = "Fell off a Commissary truck." },
     { id = "cig_rolled", item = "cig_rolled", count = 5, name = "Hand-rolled cigarettes (5)", price = 10, desc = "Real tobacco. Don't ask from where." },
     { id = "water_purified", item = "water_purified", price = 4, desc = "Clean water, a bottle of it. Off a Civil Protection pallet." }, -- (the owner, 15 November: 4 credits here and at the quartermaster)
-    { id = "beer", item = "beer", price = 8, desc = "Bathtub beer. It's wet, and it works." },
-    { id = "moonshine", item = "moonshine", price = 10, desc = "Strong enough to strip paint. Mostly safe." },
-    { id = "vodka_black", item = "vodka", price = 70, desc = "Pre-war vodka, for people the Union isn't proud of." },
+    -- (drink only from what players sold him, and none of the pre-war vodka is left: the owner, 19 November, "the black
+    -- market dealer doesn't sell alcohol unless the resistance is doing so"; sv_livingcity_resistancemoney.lua)
+    { id = "beer", item = "beer", price = 8, bootleg = true, desc = "Bathtub beer. It's wet, and it works." },
+    { id = "moonshine", item = "moonshine", price = 10, bootleg = true, desc = "Strong enough to strip paint. Mostly safe." },
+    { id = "vodka_black", item = "vodka", price = 70, gone = true, desc = "Pre-war vodka, for people the Union isn't proud of." },
     { id = "stimulant", item = "stimulant", price = 40, stock = "stim", desc = "Stolen from a Civil Protection depot, a few at a time. Keeps you up past lights out, and the night's dream goes by without you." }, -- (40 and a limited supply: the owner, 8 November)
     { id = "crowbar", name = "Crowbar", weapon = "weapon_crowbar", price = 50, desc = "Every revolution starts somewhere." },
     { id = "multitool", name = "Multitool", weapon = "weapon_lc_multitool", price = 250, desc = "Opens Combine locks, screens and terminals. Very illegal. Don't get searched." },

@@ -217,6 +217,7 @@ LC_MODULES = {
         "sv_livingcity_adminrecruit", -- (a lone wolf who tried and got away is taken in by the Resistance; after adminsecurity and adminplot)
         "sv_livingcity_speechanswer", -- (Colonel Cubbage answers her address from the camp and on Freq 7; after speech)
         "sv_livingcity_fundplea", -- (the fund low for ten minutes: the Colonel, Cubbage's answer and Freq 7 ask for it; after fundgear, colonel and speechanswer)
+        "sv_livingcity_armory", -- (a gun you carry already goes in your pockets; the armory; the quartermaster paid and paying through the fund; barter and goodwill; after fundgear and underground)
         "sv_livingcity_smallserver", -- (small-server mode: with few players, the city carries more of the story)
         "sv_livingcity_status", -- (things other people can see: fine clothes, home decor, a radio set, a pet bird)
         "sv_livingcity_households", -- (households: the same block, shared crates and lockers, keys, known to each other)
@@ -239,6 +240,7 @@ LC_MODULES = {
         "sv_livingcity_pacing", -- (who is in a fight; the Combine's action music)
         "sv_livingcity_campmove",
         "sv_livingcity_funding",
+        "sv_livingcity_resistancemoney", -- (the still, the dealer's drink, his rent, the paymaster, the card table; after funding, resistancefund and quests)
         "sv_livingcity_work",
         "sv_livingcity_labor", -- (after work: Labor Assignment, where Union work is given out and changed)
         "sv_livingcity_reconcile", -- (a new faction or rank: the old job, its clothes and kit go)
@@ -295,6 +297,7 @@ LC_MODULES = {
         "cl_livingcity_jobgames", -- (the job games' panel, the papers window)
         "cl_livingcity_grigori", -- (his window; the vest's charge on screen)
         "cl_livingcity_fundtv", -- (the Resistance fund screen's window: the record, donating)
+        "cl_livingcity_barter", -- (the quartermaster's barter: his things and yours, the totals, the Goodwill bar, Trade)
         "cl_livingcity_rest", -- (drooping eyelids, the stink's flies, sleeping, what you still have to do)
         "cl_livingcity_moregames", -- (their panels, and the outline on what the game wants you to look at)
         "cl_livingcity_patsearch", -- (the pat-down window a unit's search opens, and the panel for the person searched)
@@ -373,6 +376,7 @@ LC_MODULES = {
         "cl_livingcity_writing",
         "cl_livingcity_context", -- (what you can do here: the panel on the right)
         "cl_livingcity_trail", -- (the quest trail on the ground)
+        "cl_livingcity_cards", -- (the card table's window: sv_livingcity_resistancemoney.lua)
     },
 }
 
