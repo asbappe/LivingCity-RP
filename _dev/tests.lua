@@ -9913,6 +9913,12 @@ PathMapTests()
 ----------------------------------------------------------------------
 section("Custom announcements: Overwatch and the Administrator")
 function AnnouncerTests()
+-- (a player Administrator left by the opening, borrowed into a shard that runs this with other tests, would make Overwatch
+-- speak in her place: set aside while these run, and put back after)
+local asideAdmins = {}
+for _, p in ipairs(player.GetAll()) do
+    if LC.IsAdministrator and LC.IsAdministrator(p) then asideAdmins[#asideAdmins + 1] = p LC.SetFaction(p, "citizen", nil, true) end
+end
 local A = "sound/livingcity/announce/"
 LC.AnnounceCalm() LC.SocioOverride = { level = "green", untilT = CurTime() + 1e6 } LC.Socio = "green" SetGlobal2String("lc_socio", "green") -- (earlier sections left violence and moods behind)
 LC.AnnounceForceVoice = "overwatch" _setcvar("lc_announce_quiet", 0) -- (Overwatch's turn every time, and no minor ones held back, till the tests below say otherwise)
@@ -10176,6 +10182,7 @@ LC.AnnounceRescan()
 ok(#LC.AnnounceClips("overwatch", "curfew") == 0, "take the files away and the city goes back to its built-in voice")
 watcher:SetPos(Vector(-120000, -120000, 0))
 LC.SocioOverride = nil
+for _, p in ipairs(asideAdmins) do if IsValid(p) then LC.SetFaction(p, "admin", nil, true) end end
 end
 AnnouncerTests()
 
