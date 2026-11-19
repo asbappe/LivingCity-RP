@@ -54,7 +54,9 @@ end
 -- pitch takes it out to the side (minus for the right arm, plus for the left: so plus right, minus left brings it
 -- in), roll twists it; a forearm bends at the elbow on yaw (minus, the way an elbow bends). The twist turns the
 -- upper arms inward (plus right, minus left), so that bend runs across the back, not out to the sides.
-function LC_CL.CuffPose()
+-- (lc_cuff_pose gives the built-in numbers; whatever the owner has set by hand with the Miscount Poser
+-- wins, bone by bone, and may turn the chest and the head too: sh_livingcity_poses.lua, "cuffed")
+local function Built()
     local p = Nums(cvPose, 5)
     local back, inw, twist, bend, hand = p[1], p[2], p[3], p[4], p[5]
     return {
@@ -66,6 +68,11 @@ function LC_CL.CuffPose()
         ["ValveBiped.Bip01_L_Hand"] = Angle(0, hand, 0),
     }
 end
+function LC_CL.CuffPose()
+    local built = Built()
+    return LC.PoseBones and LC.PoseBones("cuffed", built) or built
+end
+if LC.PoseBuilt then LC.PoseBuilt("cuffed", Built) end
 
 local function SetPose(e, pose)
     if not e.LookupBone or not e.ManipulateBoneAngles then return end
@@ -76,11 +83,13 @@ local function SetPose(e, pose)
 end
 
 local ZERO = Angle(0, 0, 0)
+local turned = {} -- (every bone the pose has turned on anyone: one the owner has since let go of is put back too)
 local function Unpose(e)
     posed[e] = nil
     if not IsValid(e) then return end
     local z = {}
     for name in pairs(LC_CL.CuffPose()) do z[name] = ZERO end
+    for name in pairs(turned) do z[name] = ZERO end
     SetPose(e, z)
 end
 
@@ -98,8 +107,19 @@ hook.Add("Think", "LivingCityCuffed", function()
         for _, e in ipairs(ents.FindByClass("npc_*")) do if LC_CL.IsCuffed(e) then found[e] = true end end
     end
     local pose = LC_CL.CuffPose()
-    local changed = cvPose:GetString() ~= lastPose
-    lastPose = cvPose:GetString()
+    local key = cvPose:GetString() .. "|" .. (LC.PoseVersion and LC.PoseVersion() or 0)
+    local changed = key ~= lastPose
+    lastPose = key
+    if changed then
+        -- (a bone the pose no longer turns goes back to the model's own)
+        for name in pairs(turned) do
+            if not pose[name] then
+                for e in pairs(posed) do if IsValid(e) then SetPose(e, { [name] = ZERO }) end end
+                turned[name] = nil
+            end
+        end
+    end
+    for name in pairs(pose) do turned[name] = true end
     for e in pairs(found) do
         -- (set again each time: other poses, an act or a dream, may have turned the same bones back)
         if not fiddling[e] then SetPose(e, pose) end

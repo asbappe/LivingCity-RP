@@ -178,7 +178,7 @@ function LC.ElectionTick(now)
     if LC.SetFaction then LC.SetFaction(best, "admin", nil, true) end
     hook.Run("LivingCityAdministratorChosen", best, "elected")
 end
-timer.Create("LivingCityElection", 2, 0, function() pcall(LC.ElectionTick, CurTime()) end)
+timer.Create("LivingCityElection", 2, 0, function() LC.Try(LC.ElectionTick, CurTime()) end)
 
 ------------------------------------------------------------------------
 -- The recall (the owner, 2 November): someone the G-Man has chosen (sv_livingcity_directives.lua,
@@ -238,7 +238,7 @@ function LC.RecallTick(now)
     end
     return yes > no
 end
-timer.Create("LivingCityRecall", 2, 0, function() pcall(LC.RecallTick, CurTime()) end)
+timer.Create("LivingCityRecall", 2, 0, function() LC.Try(LC.RecallTick, CurTime()) end)
 
 ------------------------------------------------------------------------
 -- The office
@@ -307,10 +307,18 @@ function LC.AdminDo(ply, what, arg, target)
     end
     if what == "event" then
         if not EVENTS[arg] then return false end
+        -- (a parade she can't have is refused at once, with the reason, and costs her nothing)
+        if arg == "parade" and LC.ExerciseReady and not LC.ExerciseReady("parade") then return false, "This map has no parade route." end
         local ok, why = Cool(ply, "event", 600)
         if not ok then return false, why end
-        if not (LC.StartEvent and LC.StartEvent(arg)) then ply.lcAdminNext.event = 0 return false, "That can't happen right now (or the map has nowhere for it)." end
-        Announce("By order of the City Administrator: " .. EVENTS[arg] .. ".")
+        -- a parade is held on the route that starts nearest to her (sv_livingcity_exercise.lua)
+        LC.ExerciseNear = arg == "parade" and ply:GetPos() or nil
+        local started = LC.StartEvent and LC.StartEvent(arg)
+        LC.ExerciseNear = nil
+        if not started then ply.lcAdminNext.event = 0 return false, "That can't happen right now (or the map has nowhere for it)." end
+        -- and the order says where, so she (and the city) can go and see it
+        local where = arg == "parade" and LC.ExerciseWhere and LC.ExerciseWhere() or nil
+        Announce("By order of the City Administrator: " .. EVENTS[arg] .. (where and (", " .. where) or "") .. ".")
         return true
     elseif what == "rations" then
         if arg ~= "generous" and arg ~= "austere" and arg ~= "normal" then return false end
@@ -384,6 +392,7 @@ function LC.AdminDecree(what, arg, target, words)
     if what == "event" then
         if not EVENTS[arg] then return false, "Not an event the office can call." end
         if LC.Event then return false, "An event is already running." end
+        if arg == "rations" and LC.RationsCanStart and not LC.RationsCanStart(true) then return false, "Rations are handed out by day, and only while the stores hold some." end
         local ok, why = Cool(N, "event", 600)
         if not ok then return false, why end
         if not (LC.StartEvent and LC.StartEvent(arg)) then N.lcAdminNext.event = 0 return false, "That can't happen right now (or the map has nowhere for it)." end
@@ -462,7 +471,9 @@ end
 net.Receive("lc_admin_do", function(_, ply)
     local what, arg, target = net.ReadString(), net.ReadString(), net.ReadEntity()
     local ok, why = LC.AdminDo(ply, what, arg, target)
-    Say(ply, ok and "[Office] Done." or ("[Office] " .. (why or "No.")))
+    -- (a refusal goes on the screen, where it is seen: house rule 2)
+    if ok or not LC.Notice then Say(ply, ok and "[Office] Done." or ("[Office] " .. (why or "No."))) return end
+    LC.Notice(ply, "warn", "The office", why or "No.", 6)
 end)
 
 function LC.OpenAdminOffice(ply)
@@ -483,14 +494,26 @@ end
 
 LC.AdminGuards = LC.AdminGuards or {} -- [npc] = administrator
 
+-- A guard with empty hands is given his rifle. True when he had to be.
+function LC.AdminGuardArm(npc)
+    if not IsValid(npc) or not npc.Give or not npc.GetActiveWeapon then return false end
+    if IsValid(npc:GetActiveWeapon()) then return false end
+    npc:Give("weapon_ar2")
+    return true
+end
+
 local function SpawnGuard(admin)
     local p = admin:GetPos() - admin:GetForward() * 120
     p = LC.GroundAt and LC.GroundAt(p + Vector(0, 0, 40)) or p
     if not LC.SpawnSoldier then return nil end
-    local npc, st = LC.ManpowerFree(LC.SpawnSoldier, p + Vector(0, 0, 4)) -- (the Administrator's guard: never from Overwatch's reserve)
+    -- (the Administrator's guard: never from Overwatch's reserve. Spawned with the pulse rifle in his hands:
+    -- one in five came with a shotgun and was then handed a second gun, and "one of them spawned without a
+    -- weapon": the owner, 14 November)
+    local npc, st = LC.ManpowerFree(LC.SpawnSoldier, p + Vector(0, 0, 4), "ar2")
     if not IsValid(npc) or not st then return nil end
     if not util.IsValidModel or util.IsValidModel("models/combine_super_soldier.mdl") then npc:SetModel("models/combine_super_soldier.mdl") end
-    if npc.Give then npc:Give("weapon_ar2") end
+    LC.AdminGuardArm(npc)
+    timer.Simple(1, function() LC.AdminGuardArm(npc) end) -- (and looked at again once he has settled)
     local hp = npc:Health() * 2
     if npc.SetMaxHealth then npc:SetMaxHealth(hp) end
     npc:SetHealth(hp)
@@ -546,6 +569,7 @@ local AIM_RANGE = 800      -- (a gun pointed at her from this close counts)
 local KEEP_PLACE = 60      -- ("stay with me": this far from their place and they're called back)
 local COVER = 110          -- ("stand between us": this far out from her toward the threat, at most)
 local FOE_SECS = 60        -- (whoever hurt her or one of them is remembered this long)
+local LEASH = 450          -- (fighting by themselves: this far from her and they break off to catch up)
 
 local function PrefKey(admin) return (IsValid(admin) and admin.SteamID64) and admin:SteamID64() or tostring(admin) end
 function LC.AdminGuardPref(admin)
@@ -707,7 +731,16 @@ local function GuardTick(now)
             local pref = LC.AdminGuardPref(admin)
             local mode = LC.AdminGuardModes[pref.mode or ""] and pref.mode or "always"
             local hold = admin.lcGuardHold
-            local threats = (mode == "stay" or mode == "between") and #mine > 0 and LC.AdminGuardThreats(admin, mine) or nil
+            local threats = (mode == "stay" or mode == "between" or mode == "always") and #mine > 0 and LC.AdminGuardThreats(admin, mine) or nil
+            -- (as they always have, they now also shoot by themselves at anything hostile near her: a zombie, a
+            -- rebel with a gun, whoever hurt her; the owner, 15 November: "they should shoot at zombies for instance,
+            -- rather than requiring me to command them, but they should always follow me and take my orders to kill
+            -- someone/something above all else as a priority". Her order still comes first, and following her second.)
+            local hostiles = {}
+            if mode == "always" and threats then
+                for _, th in ipairs(threats) do if th.hostile then hostiles[#hostiles + 1] = th.e end end
+                threats = nil
+            end
             local trouble = threats ~= nil and #threats > 0
             local covering = {}
             local d = GUARD_DIST[pref.dist] or GUARD_DIST.medium
@@ -735,12 +768,17 @@ local function GuardTick(now)
                 elseif targeted then
                     Engage(npc, t)
                 else
+                    -- (always: the nearest hostile, a different one each when there are several, while they keep up with her)
+                    local foe = #hostiles > 0 and hostiles[((i - 1) % #hostiles) + 1] or nil
+                    if foe then Engage(npc, foe) end
+                    local go = foe and math.max(d.go, LEASH) or d.go
                     -- (F2 > Command the guards > Hold here: they keep to that spot instead, and walk back to it)
                     if hold then
                         local hp = hold.pos - hold.fwd * 40 + hold.right * (i % 2 == 0 and 50 or -50)
                         if npc:GetPos():DistToSqr(hp) > 80 * 80 then GoTo(npc, hp, npc:GetPos():DistToSqr(hp) > 450 * 450) end
                     end
-                    local dd = hold and 0 or npc:GetPos():DistToSqr(admin:GetPos())
+                    -- (while she is aboard her helicopter, sv_livingcity_adminheli.lua, they wait on the ground, as when told to hold)
+                    local dd = (hold or admin.lcAloft) and 0 or npc:GetPos():DistToSqr(admin:GetPos())
                     -- stuck (a door, a corner: the owner, 2 November): not moving for 4 seconds while
                     -- more than 250 units behind (more at Far), and they're brought to the Administrator's side
                     local stuckAt = math.max(250, d.go + 90)
@@ -750,7 +788,7 @@ local function GuardTick(now)
                     if stuck then npc.lcGuardStill = now end
                     if dd > 900 * 900 or stuck then
                         npc:SetPos(admin:GetPos() - admin:GetForward() * 90 + admin:GetRight() * (i % 2 == 0 and 50 or -50) + Vector(0, 0, 4))
-                    elseif dd > d.go * d.go or (st and st.makeWayBack and now >= st.makeWayBack and not hold) then
+                    elseif dd > go * go or (st and st.makeWayBack and now >= st.makeWayBack and not hold) then
                         GoTo(npc, LC.AdminGuardSpot(admin, i, #mine), dd > 450 * 450)
                     end
                     if st and st.makeWayBack and now >= st.makeWayBack then st.makeWayBack = nil end -- (stepped aside: back to their place)
@@ -762,7 +800,7 @@ end
 LC.AdminGuardTick = GuardTick
 timer.Create("LivingCityAdminGuards", 0.5, 0, function()
     if not LC.Running then return end
-    local ok, err = pcall(GuardTick, CurTime())
+    local ok, err = LC.Try(GuardTick, CurTime())
     if not ok and LC.Error then LC.Error("admin guards", err) end
 end)
 

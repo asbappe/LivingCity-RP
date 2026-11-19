@@ -55,6 +55,11 @@ local cvWait   = CreateConVar("lc_arrest_wait", "60", FLAGS, "Seconds someone cu
 local MARGIN = 2          -- presses more than the ratio asks, to break free
 local PRESS_GAP = 0.06    -- (no faster than this: a macro gains nothing)
 local NPC_RATE = { citizen = 5.5, rebel = 7.5 } -- an NPC's presses a second
+-- A unit NPC holding a player down (LC.NPCTakesIn, sv_livingcity_prison.lua; the owner, 14 November: every
+-- arrest by the city's units gives the struggle). At 1.25 and 4 seconds: about 4 presses a second gets
+-- away from a metrocop, 6 from a soldier.
+local UNIT_RATE = { cop = 2.6, soldier = 3.6 }
+local UNIT_HEAD_START = 5 -- seconds no unit lays hands on someone who has just shoved one off
 local THERE, CLOSE = 170, 600 -- (as sv_livingcity_march.lua)
 local CELL_NEAR = 220     -- walked this close to a cell (or into the prison): put in it
 local UNIT_RANGE = 3000   -- the furthest a unit is called from
@@ -66,6 +71,8 @@ local function Name(e)
     if not IsValid(e) then return "someone" end
     if e:IsPlayer() then return e:Nick() end
     local st = LC.NPCs and LC.NPCs[e]
+    if st and st.role == "cop" then return "the unit" end
+    if st and st.role == "soldier" then return "the soldier" end
     return (st and st.role == "rebel") and "the rebel" or "the citizen"
 end
 local function Tell(ply, msg) if IsValid(ply) and ply:IsPlayer() then ply:ChatPrint("[Miscount] " .. msg) end end
@@ -606,11 +613,16 @@ local function Resolve(target, s, why)
         end
         return
     end
+    if why == "fight" then return end -- (they drew or fired while held by a unit NPC: he lets go, and it is a fight)
     local free = LC.StruggleWouldWin(s)
     hook.Run("LivingCityArrestStruggled", target, officer, not free)
     if not free then
         -- held: cuffed
-        if target:IsPlayer() then
+        if target:IsPlayer() and not officer:IsPlayer() then
+            -- by one of the city's units: walked to the cells, as any arrest of theirs (sv_livingcity_prison.lua)
+            if LC.ArrestChanceGiven then LC.ArrestChanceGiven(target) end
+            if LC.NPCCuffs then LC.NPCCuffs(officer, target) end
+        elseif target:IsPlayer() then
             if CuffPlayer(target, officer) then -- (LC.TiePlayer takes the unit's pair)
                 Tell(officer, target:Nick() .. " is cuffed. Drag them to the cells yourself (F1 > Drag them along), or leave them: a unit is called to walk them in.")
                 target:ChatPrint("[Miscount] They hold you down and get the cuffs on.")
@@ -629,7 +641,7 @@ local function Resolve(target, s, why)
     -- free: a shove, and away
     LC.ShoveOff(target, officer)
     if target:IsPlayer() then
-        target.lcBrokeFree = CurTime() + 2.5
+        target.lcBrokeFree = CurTime() + (officer:IsPlayer() and 2.5 or UNIT_HEAD_START)
         Notice(target, "warn", "You broke free", "You shove the officer back. Run!")
         if LC.ReportCrime then LC.ReportCrime(target, "Resisting arrest", 120) end
         Tell(officer, target:Nick() .. " shoves you back and breaks free!")
@@ -645,13 +657,30 @@ local function Resolve(target, s, why)
     end
 end
 
+-- Called off (staff taking someone out of custody: LC.FreeFromCustody). True when there was one.
+function LC.StruggleCancel(target)
+    local s = LC.Struggles[target]
+    if not s then return false end
+    Resolve(target, s, "fight")
+    return true
+end
+function LC.ArrestHoldEnd(ply)
+    local h = LC.ArrestHolds[ply]
+    if not h then return false end
+    EndHold(ply, h)
+    return true
+end
+
 -- Does this one get a chance to struggle?
-local function WillStruggle(target)
+local function WillStruggle(target, byUnit)
     if not cvOn:GetBool() then return false end
     if target:IsPlayer() then
         if LC.IsTied and LC.IsTied(target) then return false end
         if LC.IsDowned and LC.IsDowned(target) then return false end
         if target:GetNW2Bool("lc_handsup", false) then return false end -- (hands up: going quietly)
+        -- one of the city's units (byUnit): anyone still on their feet gets the chance, hurt or beaten or not
+        -- (the owner, 14 November: "I have a chance to struggle/run")
+        if IsValid(byUnit) and not byUnit:IsPlayer() then return true end
         if target:Health() < 20 then return false end
         local hits = GetConVar("lc_subdue_hits")
         if LC.SubdueHits and LC.SubdueHits(target) >= math.max(1, hits and hits:GetInt() or 3) then return false end -- beaten down
@@ -682,6 +711,13 @@ function LC.BeginArrestStruggle(officer, target)
     else
         target:SetNW2Float("lc_struggle_until", s.endT) -- (held where they stand: sh_livingcity_custody.lua)
         Notice(target, "warn", "Resist arrest?", "Press E as fast as you can to break free and run. Do nothing and you're cuffed.")
+        if not officer:IsPlayer() then
+            -- a unit NPC: he holds on at his own rate, standing where he is
+            local ost = LC.NPCs and LC.NPCs[officer]
+            s.orate = UNIT_RATE[ost and ost.role or "cop"] or UNIT_RATE.cop
+            if officer.SetSchedule and SCHED_IDLE_STAND then officer:SetSchedule(SCHED_IDLE_STAND) end
+            if LC.Face then LC.Face(officer, target:GetPos()) end
+        end
     end
     target:EmitSound("physics/body/body_medium_impact_soft" .. math.random(1, 7) .. ".wav", 70)
     Notice(officer, "info", "They're struggling", "Press E as fast as you can to hold " .. Name(target) .. " down.")
@@ -693,8 +729,10 @@ end
 local function StruggleTick(now)
     for target, s in pairs(LC.Struggles) do
         local o = s.officer
-        if not IsValid(target) or not IsValid(o) or not o:Alive() or (target:IsPlayer() and not target:Alive()) then
+        if not IsValid(target) or not Up(o) or (o:IsPlayer() and not o:Alive()) or (target:IsPlayer() and not target:Alive()) then
             Resolve(target, s, "gone")
+        elseif s.orate and LC.ArmedAndFighting and LC.ArmedAndFighting(target) then
+            Resolve(target, s, "fight")
         elseif o:GetPos():DistToSqr(target:GetPos()) > 220 * 220 then
             Resolve(target, s, "gone") -- (the officer let go of them)
         else
@@ -702,6 +740,11 @@ local function StruggleTick(now)
                 local dt = now - (s.lastSim or now)
                 s.lastSim = now
                 s.r = s.r + s.rate * dt * math.Rand(0.7, 1.3)
+            end
+            if s.orate then
+                local dt = now - (s.lastOSim or now)
+                s.lastOSim = now
+                s.o = s.o + s.orate * dt * math.Rand(0.7, 1.3)
             end
             if now >= s.endT then
                 Resolve(target, s)
@@ -797,7 +840,7 @@ end
 
 timer.Create("LivingCityArrest", 0.2, 0, function()
     if not (next(LC.Struggles) or next(LC.NPCCustody) or next(LC.ArrestHolds) or next(LC.Fleeing)) then return end
-    local ok, err = pcall(function()
+    local ok, err = LC.Try(function()
         local now = CurTime()
         StruggleTick(now)
         for npc, c in pairs(LC.NPCCustody) do CustodyTick(npc, c, now) end
@@ -810,7 +853,7 @@ end)
 -- Leaving, dying, or removed mid-arrest.
 hook.Add("PlayerDisconnected", "LivingCityArrest", function(ply)
     local h = LC.ArrestHolds[ply]
-    if h then pcall(TakeInPlayer, ply, h) end -- (left with the cuffs on: on the books, as if they'd got there)
+    if h then LC.Try(TakeInPlayer, ply, h) end -- (left with the cuffs on: on the books, as if they'd got there)
     local s = LC.Struggles[ply]
     if s then LC.Struggles[ply] = nil end
 end)

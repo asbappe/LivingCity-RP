@@ -11,11 +11,11 @@
     Theft. Once every two minutes for a thief; the same mark, once in five.
 
     Debts. F1 on someone > "Lend (name) money": 10, 25 or 50 credits; they
-    accept on F2 > Me (More) > My debts (or turn it down). It's due back in
+    accept on F2 > Household, stall and debts > My debts (or turn it down). It's due back in
     lc_debt_hours (2) with a fifth more on top. The borrower repays on the
     same page (the lender needn't be about: it's waiting for them). Overdue,
     the lender can report it to Civil Protection (Debt default: a petty crime
-    and 10 standing off the borrower) from their own F2 > Me (More) > My debts.
+    and 10 standing off the borrower) from their own F2 > Household, stall and debts > My debts.
     Kept on the characters (who owes whom, how much, by when).
 
     Deals that go bad. Buying from a black market dealer (not the
@@ -140,7 +140,7 @@ function LC.OfferLoan(lender, borrower, n)
     if lender:GetPos():DistToSqr(borrower:GetPos()) > 250 * 250 then return false, "Face to face." end
     if (LC.Credits and LC.Credits(lender) or 0) < n then return false, "You haven't that much." end
     borrower.lcLoanOffer = { from = lender, n = n, at = CurTime() }
-    borrower:ChatPrint(string.format("[Miscount] %s offers to lend you %d credits, %d back within %d hours. F2 > Me (More) > My debts.", Name(lender), n, math.ceil(n * 1.2), cvDebt:GetInt()))
+    borrower:ChatPrint(string.format("[Miscount] %s offers to lend you %d credits, %d back within %d hours. F2 > Household, stall and debts > My debts.", Name(lender), n, math.ceil(n * 1.2), cvDebt:GetInt()))
     lender:ChatPrint("[Miscount] You've offered " .. Name(borrower) .. " a loan of " .. n .. ".")
     SyncDebts(borrower)
     return true
@@ -292,7 +292,7 @@ hook.Add("LivingCityNewCharacter", "LivingCityDebts", function(p)
     p:RemovePData("lc_debts") p:RemovePData("lc_lent") p:RemovePData("lc_employer") p:RemovePData("lc_employer_name")
 end)
 
-timer.Create("LivingCityDebtsSync", 30, 0, function() for _, p in ipairs(player.GetAll()) do pcall(SyncDebts, p) end end)
+timer.Create("LivingCityDebtsSync", 30, 0, function() for _, p in ipairs(player.GetAll()) do LC.Try(SyncDebts, p) end end)
 
 hook.Add("PlayerSay", "LivingCityStreetCrime", function(ply, text)
     local cmd, rest = string.match(string.Trim(tostring(text or "")), "^[!/](%a+)%s*(.*)$")

@@ -163,7 +163,7 @@ function LC.GrigoriMove(g, now, force)
 end
 
 timer.Create("LivingCityGrigori", 5, 0, function()
-    local ok, err = pcall(LC.GrigoriTick, CurTime())
+    local ok, err = LC.Try(LC.GrigoriTick, CurTime())
     if not ok and LC.Error then LC.Error("grigori", err) end
 end)
 hook.Add("LivingCityStopped", "LivingCityGrigori", function()

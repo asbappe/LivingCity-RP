@@ -233,7 +233,7 @@ hook.Add("PlayerSay", "LivingCitySlotsChat", function(ply, text)
     local t = string.lower(string.Trim(text or ""))
     if t == "!characters" or t == "!chars" or t == "!charselect" or t == "/characters" then
         if cvSlots:GetInt() < 2 then
-            ply:ChatPrint("Character slots are off on this server. C > Me > Change my name and face.")
+            ply:ChatPrint("Character slots are off on this server. F4 > Me and settings > Change my name and face.")
         else
             LC.SendSlots(ply)
         end

@@ -28,12 +28,14 @@ GM.TeamBased = false
 
 LC_MODULES = {
     shared = {
-        "sh_livingcity_cache", -- (first: quick lookups the rest use)
+        "sh_livingcity_errors", -- (before everything: what goes wrong is written down, LC.Try)
+        "sh_livingcity_cache", -- (quick lookups the rest use)
         "sh_livingcity_soundguard", -- (every sound through the guard against sounds stuck looping: before anything plays one)
         "sh_livingcity_net", -- (big and frequent sends to players, made safe: before anything sends)
         "sh_livingcity_perfdebug", -- (staff: the performance debugger, off until turned on)
         "sh_livingcity_npcstr", -- (the people's names, jobs and doings: sent only to players near them)
         "sh_livingcity_acts",
+        "sh_livingcity_poses", -- (every hand-made pose and its numbers, and what the owner has set with the Miscount Poser)
         "sh_livingcity_lowered", -- (guns carried lowered until raised: hold R)
         "sh_livingcity_stamina", -- (running and jumping tire you)
         "sh_livingcity_kart", -- (driving a dream buggy: The Midnight Rally)
@@ -71,6 +73,7 @@ LC_MODULES = {
         "sv_livingcity_custody",
         "sv_livingcity_data",
         "sv_livingcity_debug",
+        "sv_livingcity_feedback", -- (players' bug reports and feedback, each saved with a debug report)
         "sv_livingcity_lagwatch", -- (staff: the lag monitor)
         "sv_livingcity_perfdebug", -- (staff: the performance debugger)
         "sv_livingcity_nextstep", -- (what now? everyone always has a next step)
@@ -86,6 +89,7 @@ LC_MODULES = {
         "sv_livingcity_economy",
         "sv_livingcity_endings",
         "sv_livingcity_endingtune", -- (the Endings menu: every ending's settings, and the dances tuned live)
+        "sv_livingcity_poses", -- (the hand-made poses the owner has set with the Miscount Poser: kept, and sent to everyone)
         "sv_livingcity_dreams", -- (the secret endings as shared dreams for everyone asleep, with a dream point placed)
         "sv_livingcity_dreamgames", -- (nightmare dreams you play: the maze, the barrel tower, the crumbling floor, freeze)
         "sv_livingcity_propagandadreams", -- (propaganda dreams you play: kneel, roses, mirror, the saviour, the quiz; after dreamgames)
@@ -186,6 +190,8 @@ LC_MODULES = {
         "sv_livingcity_colonel",
         "sv_livingcity_territory",
         "sv_livingcity_territorypaths", -- (territory grows along the path nodes)
+        "sv_livingcity_districtinfest", -- (how infested each district is, and its leaking to the next)
+        "sv_livingcity_shelling", -- (the Combine shell a Resistance district with headcrab canisters; after districtinfest)
         "sv_livingcity_trains",
         "sv_livingcity_underground",
         "sv_livingcity_patsearch", -- (a unit's search as a short pat-down: sv_livingcity_underground.lua starts it)
@@ -201,7 +207,16 @@ LC_MODULES = {
         "sv_livingcity_ledger", -- (the state of the city, day to day: five numbers, districts with an owner, the bulletin, her levers)
         "sv_livingcity_ledger2", -- (what the districts and numbers do on the streets: checkpoints, ambushes, prices; and the acts)
         "sv_livingcity_speech", -- (her address, attended: the city gathers, absentees beaten, the podium; after ledger)
+        "sv_livingcity_adminsecurity", -- (a grenade thrown at her: a soldier throws himself on it; after speech)
+        "sv_livingcity_adminheli", -- (her attack helicopter: parked by the stand, her way out by air, her ride to the stand; after adminsecurity)
+        "sv_livingcity_adminquestioning", -- (the would-be assassin in the cells: she leads the questioning, stunstick in hand; after adminsecurity)
+        "sv_livingcity_adminhunt", -- (the would-be assassin at large: Overwatch squads hunt them, hideout by hideout; after adminsecurity)
+        "sv_livingcity_resistancefund", -- (the Resistance's fund: half of every take from supplies raided and people saved, kept with the ledger; before adminplot, whose order it pays for)
+        "sv_livingcity_fundgear", -- (what the fund buys: its players' guns and rounds; its record, the screen in the camp, donations; after resistancefund)
+        "sv_livingcity_adminplot", -- (an attempt on her life under orders: Resistance fighters come out round the stand; after adminsecurity, opplan and quests)
+        "sv_livingcity_adminrecruit", -- (a lone wolf who tried and got away is taken in by the Resistance; after adminsecurity and adminplot)
         "sv_livingcity_speechanswer", -- (Colonel Cubbage answers her address from the camp and on Freq 7; after speech)
+        "sv_livingcity_fundplea", -- (the fund low for ten minutes: the Colonel, Cubbage's answer and Freq 7 ask for it; after fundgear, colonel and speechanswer)
         "sv_livingcity_smallserver", -- (small-server mode: with few players, the city carries more of the story)
         "sv_livingcity_status", -- (things other people can see: fine clothes, home decor, a radio set, a pet bird)
         "sv_livingcity_households", -- (households: the same block, shared crates and lockers, keys, known to each other)
@@ -244,6 +259,7 @@ LC_MODULES = {
         "sv_livingcity_jobboards", -- (job boards in the world: whose follows where it stands; E opens your Jobs)
         "sv_livingcity_career", -- (C > My career: rank, XP, the way to the Overwatch)
         "sv_livingcity_evidence", -- (what units confiscate is kept, and burned in public now and then)
+        "sv_livingcity_npcweapons", -- (citizens leave weapons alone, sympathizers hide them; no weapon in custody)
         "sv_livingcity_psyche", -- (the city's minds: traits, needs, thoughts, stress, ties, rumours; pure arithmetic)
         "sv_livingcity_minds", -- (watching the city's minds and writing it down, data/livingcity/minds/)
         "sv_livingcity_mindsact", -- (the minds acting: choices bend, breaks happen in the street, informants and unrest come from them)
@@ -278,6 +294,7 @@ LC_MODULES = {
         "cl_livingcity_nextstep", -- (what now? the next step on screen, F1 slot 1)
         "cl_livingcity_jobgames", -- (the job games' panel, the papers window)
         "cl_livingcity_grigori", -- (his window; the vest's charge on screen)
+        "cl_livingcity_fundtv", -- (the Resistance fund screen's window: the record, donating)
         "cl_livingcity_rest", -- (drooping eyelids, the stink's flies, sleeping, what you still have to do)
         "cl_livingcity_moregames", -- (their panels, and the outline on what the game wants you to look at)
         "cl_livingcity_patsearch", -- (the pat-down window a unit's search opens, and the panel for the person searched)

@@ -30,11 +30,12 @@ end
 -- Top-left, compact: the bottom-left belongs to the chat.
 LC_CL = LC_CL or {}
 LC_CL.HudX, LC_CL.HudY, LC_CL.HudW = 16, 16, 220
--- The left column, top to bottom: the needs box, the line under it (radio, disguise, papers),
--- then the "What now?" card, then the odd line (recovering, the urge). Each goes under the one
--- above, wherever that ended last frame (they used to be placed under the centre banners, so
--- with no banner up they landed on the needs box).
-function LC_CL.LeftColumnTop() return (LC_CL.HudBottom or LC_CL.HudY) + (LC_CL.UnderLineShown and 18 or 0) end
+-- The left column, top to bottom: the one status box (who you are, credits and standing, the
+-- traits, hunger and thirst when low, a rebel's Union job, radio, disguise and papers), then the
+-- "What now?" card, then the odd line (recovering, the urge). Each goes under the one above,
+-- wherever that ended last frame (they used to be placed under the centre banners, so with no
+-- banner up they landed on the needs box).
+function LC_CL.LeftColumnTop() return LC_CL.HudBottom or LC_CL.HudY end
 function LC_CL.LeftColumnBottom()
     -- (the card's bottom, if it was drawn a moment ago: whichever is drawn first in a frame, the other's last place counts)
     if LC_CL.NextStepAt and CurTime() - LC_CL.NextStepAt < 0.25 then return LC_CL.NextStepBottom end
@@ -63,6 +64,50 @@ function LC_CL.NeedsVisible(ply)
     return h < NEEDS_LOW or t < NEEDS_LOW or ply:GetNW2Float("lcn_parasites", 0) > now or now < lastNeeds.untilT
 end
 
+local BANDS = { union = "Union band", resistance = "Freq 7", cp = "CP net" }
+-- What they are dressed as, always in the box (the owner, 18 November: "a very small HUD element in the upper left
+-- in that little box that shows role/credits/standing that shows what you are dressed as (this would be useful
+-- universally), it could say 'Citizen clothes', 'Resistant Clothes' or 'CP Uniform', etc. I guess overwatch wouldn't
+-- need it as they cannot disguise and can't take off their armor").
+local CLOTHES = { cp = "CP uniform", citizen = "Citizen clothes", rebel = "Resistance clothes" }
+local DISGUISES = { cp = "Civil Protection uniform", citizen = "citizen clothes", rebel = "Resistance gear" } -- (the pockets' "Take off the ..." button)
+-- The words, and whether it is a disguise (shown in amber). nil: nothing to say (the Overwatch, a stalker, a
+-- vortigaunt, the infested, the Administrator).
+function LC_CL.Clothes(ply)
+    local d = ply:GetNW2String("lcd_disguise", "")
+    if CLOTHES[d] then return CLOTHES[d], true end
+    local f = ply:GetNW2String("lcf_faction", "")
+    if f == "citizen" then return CLOTHES.citizen, false end
+    if f == "resistance" then
+        if ply:GetNW2String("lcf_special", "") == "vortigaunt" then return nil end
+        -- (Sympathizers and Members dress as citizens do; Fighters and up wear the Resistance's own)
+        return ply:GetNW2Int("lcf_rank", 1) >= 3 and CLOTHES.rebel or CLOTHES.citizen, false
+    end
+    if f == "cp" and not (LCF and LCF.IsOverwatch and LCF.IsOverwatch(ply)) then return CLOTHES.cp, false end
+    return nil
+end
+local C_240_200_120 = Color(240, 200, 120)
+local C_255_175_90 = Color(255, 175, 90)
+
+-- The last rows of the status box, each only when there is something to say: a Resistance member's
+-- Union job (the only side with a rank that holds one: a hunted rebel in citizen clothes works a shift
+-- as cover), the radio band, what you are wearing, the papers you carry. { text, color } each.
+function LC_CL.StatusRows(ply)
+    local rows = {}
+    local job = ply:GetNW2String("lcj_job", "")
+    if job ~= "" and ply:GetNW2String("lcf_faction", "") == "resistance" and LCJ and LCJ.ById and LCJ.ById[job] then
+        rows[#rows + 1] = { text = "Union job: " .. LCJ.ById[job].name }
+    end
+    local band = ply:GetNW2String("lcu_band", "")
+    if BANDS[band] then rows[#rows + 1] = { text = "Radio: " .. BANDS[band] .. " (!r)" } end
+    local d = ply:GetNW2String("lcd_disguise", "")
+    local clothes, worn = LC_CL.Clothes(ply)
+    if clothes then rows[#rows + 1] = { text = clothes, color = worn and C_240_200_120 or nil } end
+    local alias = ply:GetNW2String("lcd_alias", "")
+    if alias ~= "" then rows[#rows + 1] = { text = "Papers: citizen " .. alias, color = d ~= "" and C_240_200_120 or nil } end
+    return rows
+end
+
 -- (made once here, not every frame)
 local C_10_12_16_170 = Color(10, 12, 16, 170)
 local C_140_230_120 = Color(140, 230, 120)
@@ -82,14 +127,25 @@ hook.Add("HUDPaint", "LivingCityNeedsHUD", function()
     local xpFrac, xpLabel, xpCol, xpGain
     if LC_CL.XPInfo then xpFrac, xpLabel, xpCol, xpGain = LC_CL.XPInfo() end -- (still asked, so a gain made while quiet isn't shown later)
     if quiet then xpFrac = nil end
-    if not needs and not econ and not ident and not xpFrac and not traits then LC_CL.HudBottom = LC_CL.HudY return end
+    -- one box (the owner, 14 November: "double boxes, both of which show most of the same info"): what the
+    -- rank card under it said a second time (side and rank, credits, Civil Standing) is said here once, and
+    -- what only the card or the line under the box had is a row of this box: wanted, a rebel's Union job,
+    -- the radio band, what you are wearing, your papers
+    local extra = LC_CL.StatusRows(ply)
+    if not needs and not econ and not ident and not xpFrac and not traits and #extra == 0 then LC_CL.HudBottom = LC_CL.HudY return end
 
     local x, y, w = LC_CL.HudX, LC_CL.HudY, LC_CL.HudW
+    local wanted = LC_CL.HasRank and LC_CL.HasRank(ply) and ply:GetNW2Float("lc_wanted_until", 0) > CurTime()
     local rows = (needs and 2 or 0) * 14 + (econ and 14 or 0) + (ident and 14 or 0) + (xpFrac and 14 or 0) + (traits and 14 or 0)
+        + (wanted and 14 or 0) + #extra * 14
     draw.RoundedBox(4, x, y, w, 8 + rows, C_10_12_16_170)
     local ry = y + 4
     if ident then
         draw.SimpleText(ident, "DefaultSmall", x + 6, ry + 6, identCol or INK, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+        ry = ry + 14
+    end
+    if wanted then
+        draw.SimpleText("WANTED", "DefaultSmall", x + 6, ry + 6, C_255_175_90, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
         ry = ry + 14
     end
     if xpFrac then
@@ -125,16 +181,16 @@ hook.Add("HUDPaint", "LivingCityNeedsHUD", function()
             ply:GetNW2Int("lcq_corruption", 0)), "DefaultSmall", x + 6, ry + 6, DIM, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
         ry = ry + 14
     end
+    for _, row in ipairs(extra) do
+        draw.SimpleText(row.text, "DefaultSmall", x + 6, ry + 6, row.color or DIM, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+        ry = ry + 14
+    end
     LC_CL.HudBottom = ry + 4
 end)
-
-local BANDS = { union = "Union band", resistance = "Freq 7", cp = "CP net" }
-local DISGUISES = { cp = "Civil Protection uniform", citizen = "citizen clothes", rebel = "Resistance gear" }
 
 -- (made once here, not every frame)
 local C_140_190_255 = Color(140, 190, 255)
 local C_20_30_45_220 = Color(20, 30, 45, 220)
-local C_240_200_120 = Color(240, 200, 120)
 local C_30_28_24_220 = Color(30, 28, 24, 220)
 local C_60_10_10_220 = Color(60, 10, 10, 220)
 hook.Add("HUDPaint", "LivingCityUndergroundHUD", function()
@@ -143,19 +199,7 @@ hook.Add("HUDPaint", "LivingCityUndergroundHUD", function()
     if LC_CL.DreamQuietHUD and LC_CL.DreamQuietHUD(ply) then return end
     local now = CurTime()
 
-    -- radio, disguise, papers: one quiet line under the needs box
-    local bits = {}
-    local band = ply:GetNW2String("lcu_band", "")
-    if BANDS[band] then bits[#bits + 1] = "Radio: " .. BANDS[band] .. " (!r)" end
-    local d = ply:GetNW2String("lcd_disguise", "")
-    if DISGUISES[d] then bits[#bits + 1] = "Wearing " .. DISGUISES[d] end
-    local alias = ply:GetNW2String("lcd_alias", "")
-    if alias ~= "" then bits[#bits + 1] = "Papers: citizen " .. alias end
-    LC_CL.UnderLineShown = #bits > 0
-    if #bits > 0 then
-        draw.SimpleTextOutlined(table.concat(bits, "  |  "), "DefaultSmall", LC_CL.HudX + 2, (LC_CL.HudBottom or 60) + 2,
-            d ~= "" and C_240_200_120 or INK, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP, 1, color_black)
-    end
+    -- (radio, disguise and papers are rows of the status box now: LC_CL.StatusRows)
 
     -- being stopped or searched
     local stopUntil = ply:GetNW2Float("lcu_stop_until", 0)
@@ -248,6 +292,43 @@ end }
 -- Inventory (F3 / !inv)
 ------------------------------------------------------------------------
 
+-- A list that is built again after every action (the pockets, the Commissary, the black market, the
+-- admin tools) stays where the reader had scrolled it, not back at the top.
+local function ScrollOf(panel)
+    if not IsValid(panel) or not panel.GetVBar then return nil end
+    local vb = panel:GetVBar()
+    local n = tonumber(vb and vb.GetScroll and vb:GetScroll()) or 0
+    return n > 0 and n or nil
+end
+local function ScrollTo(panel, n)
+    if not n or not IsValid(panel) or not panel.GetVBar then return end
+    -- (a new window knows how long its list is only once it has been laid out, and until then the
+    -- bar holds every scroll at the top: the owner, 13 November, "everytime I buy something from the
+    -- quartermaster, the menu scrolls back to the top". So it is laid out now, and set again over
+    -- the next few frames until it holds.)
+    local function Set()
+        if not IsValid(panel) then return true end
+        local canvas = panel.GetCanvas and panel:GetCanvas()
+        if IsValid(canvas) then
+            canvas:InvalidateLayout(true)
+            if canvas.SizeToChildren then canvas:SizeToChildren(false, true) end
+        end
+        panel:InvalidateLayout(true)
+        local vb = panel:GetVBar()
+        if not (vb and vb.SetScroll) then return true end
+        if IsValid(canvas) and vb.SetUp then vb:SetUp(panel:GetTall(), canvas:GetTall()) end
+        vb:SetScroll(n)
+        local got = tonumber(vb.GetScroll and vb:GetScroll()) or 0
+        return math.abs(got - n) < 2
+    end
+    LC_CL.ScrollSetNow = Set
+    Set() -- (at once too, so the list is not seen at the top for a frame)
+    for _, wait in ipairs({ 0, 0.05, 0.15, 0.35 }) do
+        timer.Simple(wait, function() Set() end)
+    end
+end
+LC_CL.ScrollOf, LC_CL.ScrollTo = ScrollOf, ScrollTo
+
 local invFrame
 local lastInv = { items = {}, size = 12 }
 local function Total(t) local n = 0 for _, c in pairs(t or {}) do n = n + c end return n end
@@ -266,6 +347,9 @@ function LC_CL.SpoilText(hrs)
 end
 
 local function OpenInventory()
+    -- (using, dropping, selling or stowing a thing sends the pockets again: the list stays where it was,
+    -- the owner, 14 November: "When I use a charge cell from my pockets, it scrolls back to the top")
+    local keep = IsValid(invFrame) and ScrollOf(invFrame.lcScroll) or nil
     if IsValid(invFrame) then invFrame:Remove() end
     if not LCS then return end
     invFrame = vgui.Create("DFrame")
@@ -301,6 +385,7 @@ local function OpenInventory()
     end
 
     local scroll = vgui.Create("DScrollPanel", invFrame)
+    invFrame.lcScroll = scroll
     scroll:Dock(FILL)
     scroll:DockMargin(6, 44, 6, 6)
 
@@ -316,7 +401,7 @@ local function OpenInventory()
         b:Dock(TOP)
         b:DockMargin(0, 0, 0, 8)
         b:SetTall(30)
-        b:SetText("Change into plain clothes")
+        b:SetText("Change into citizen clothes")
         b.DoClick = function() Act("wear", "plain") end
     end
     if lastInv.alias then
@@ -562,6 +647,17 @@ local function OpenInventory()
                 b.DoClick = function() Act("scavengemask", id) end
                 btnW = btnW + 138
             end
+            -- (the owner, 19 November: leaving one lying about was only in the C menu)
+            if id == "rebel_pamphlet" and LocalPlayer():GetNW2String("lcf_faction", "") == "resistance" then
+                local b = vgui.Create("DButton", row)
+                b:Dock(RIGHT)
+                b:DockMargin(4, 4, 4, 4)
+                b:SetWide(80)
+                b:SetText("Leave here")
+                b:SetTooltip("For someone to find")
+                b.DoClick = function() if LC_CL.SendAction then LC_CL.SendAction("leavepamphlet") end end
+                btnW = btnW + 88
+            end
             if id == "request_device" then -- (the owner, 7 November: a Call for help button here, where the call box is)
                 local b = vgui.Create("DButton", row)
                 b:Dock(RIGHT)
@@ -725,6 +821,7 @@ local function OpenInventory()
             b.DoClick = function() Act("wstore", wpn.cls) end
         end
     end
+    ScrollTo(scroll, keep)
 end
 
 net.Receive("lci_inv", function()
@@ -762,38 +859,6 @@ function LC_CL.WrapPlain(text, font, maxW)
     return lines
 end
 
-local function ScrollOf(panel)
-    if not IsValid(panel) or not panel.GetVBar then return nil end
-    local vb = panel:GetVBar()
-    local n = tonumber(vb and vb.GetScroll and vb:GetScroll()) or 0
-    return n > 0 and n or nil
-end
-local function ScrollTo(panel, n)
-    if not n or not IsValid(panel) or not panel.GetVBar then return end
-    -- (a new window knows how long its list is only once it has been laid out, and until then the
-    -- bar holds every scroll at the top: the owner, 13 November, "everytime I buy something from the
-    -- quartermaster, the menu scrolls back to the top". So it is laid out now, and set again over
-    -- the next few frames until it holds.)
-    local function Set()
-        if not IsValid(panel) then return true end
-        local canvas = panel.GetCanvas and panel:GetCanvas()
-        if IsValid(canvas) then
-            canvas:InvalidateLayout(true)
-            if canvas.SizeToChildren then canvas:SizeToChildren(false, true) end
-        end
-        panel:InvalidateLayout(true)
-        local vb = panel:GetVBar()
-        if not (vb and vb.SetScroll) then return true end
-        if IsValid(canvas) and vb.SetUp then vb:SetUp(panel:GetTall(), canvas:GetTall()) end
-        vb:SetScroll(n)
-        local got = tonumber(vb.GetScroll and vb:GetScroll()) or 0
-        return math.abs(got - n) < 2
-    end
-    LC_CL.ScrollSetNow = Set
-    for _, wait in ipairs({ 0, 0.05, 0.15, 0.35 }) do
-        timer.Simple(wait, function() Set() end)
-    end
-end
 -- what's wrong with buying it, beside the name (the price always shows on the button)
 local SHORT = Color(230, 110, 90)
 local MARKET = Color(235, 190, 90) -- (the market's line: restricted, scarce, in demand; sv_livingcity_market.lua)
@@ -994,6 +1059,17 @@ net.Receive("lcu_market", function()
         l:SetTextColor(DIM)
         l:SetText(#(t.sell or {}) > 0 and "He sells nothing to strangers. But he'll buy arms and what the fight needs, or take them as a gift." or "He sells nothing to strangers. Bring him guns, ammunition, gun parts, scrap, rags or chemicals and he'll buy them, or take them as a gift.")
     end
+    -- credits for the Resistance's fund, from anyone at his post (the owner, 19 November: "a way for random citizens
+    -- and resistance fighters to donate credits somehow in a simple manner"; sv_livingcity_fundgear.lua)
+    if t.quartermaster and tonumber(t.gift) then
+        local gift = tonumber(t.gift)
+        Row(string.format("%d credits for the cause", gift), nil, "Donate", (t.credits or 0) >= gift, function()
+            net.Start("lc_fund_donate")
+            net.WriteUInt(gift, 16)
+            net.WriteBool(true)
+            net.SendToServer()
+        end)
+    end
     for _, g in ipairs(t.goods or {}) do
         -- the price always shows; what's wrong sits beside the name (the owner, 7 November: "idk what the price is")
         Row(g.name, g.desc, g.price .. " credits", g.ok == true, function()
@@ -1053,7 +1129,7 @@ hook.Add("CreateClientsideRagdoll", "LivingCityNoDuplicates", function(ent, rag)
     if not IsValid(ent) or not IsValid(rag) then return end
     if CARCASS_CLASSES[ent:GetClass()] or ent:GetNW2Bool("lc_noragdoll", false) then
         rag:SetNoDraw(true)
-        timer.Simple(0, function() if IsValid(rag) then pcall(rag.Remove, rag) end end)
+        timer.Simple(0, function() if IsValid(rag) then LC.Try(rag.Remove, rag) end end)
     end
 end)
 

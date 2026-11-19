@@ -656,6 +656,7 @@ LC.EndingSlaughter = Slaughter
 LC.MingeMore = 1.5
 LC.MingeKillAt, LC.MingeRiseAt, LC.MingeScatterAt = 5, 3, 1.5
 LC.MingeCarrySecs = 6
+LC.MingeForYouAt = 15 -- (seconds into the leaping when the players are among those they go for)
 LC.MingeCarryUp = 78 -- (how high over it they're held)
 local function Drop(p, hp)
     if not IsValid(p) or not p.lcMingeCarried then return end
@@ -1111,8 +1112,8 @@ LC.EndingChatter = function(kind) if E then return Chatter(Speaker(), kind) end 
 -- forest"). Half-Life 2: Episode Two's pines; Half-Life 2's own trees on a server without Episode Two. The trees
 -- stand in a band at the edge, where the mingebags lurk; rocks, logs and bushes nearer in give them something
 -- to hide behind and come out from (LC.MingeCover: a lurking one picks the dark side of one).
-local cvForest = CreateConVar("lc_ending_minge_forest", "36", FLAGS, "The Harpies dreamt: how many trees stand round the dream zone (0: none, the bare room)")
-local cvForestCover = CreateConVar("lc_ending_minge_cover", "12", FLAGS, "The Harpies dreamt: how many rocks, logs and bushes the mingebags hide behind")
+local cvForest = CreateConVar("lc_ending_minge_forest", "72", FLAGS, "The Harpies dreamt: how many trees stand round the dream zone (0: none, the bare room)")
+local cvForestCover = CreateConVar("lc_ending_minge_cover", "24", FLAGS, "The Harpies dreamt: how many rocks, logs and bushes the mingebags hide behind")
 local cvTrees = CreateConVar("lc_ending_minge_trees",
     "models/props_foliage/tree_pine04.mdl,models/props_foliage/tree_pine05.mdl,models/props_foliage/tree_pine06.mdl,models/props_foliage/tree_pine_large.mdl",
     FLAGS, "The Harpies dreamt: the forest's trees (Episode Two's pines; any missing are skipped)")
@@ -1149,12 +1150,14 @@ function LC.MingeForest(centre, r)
     local n = cvForest:GetInt()
     for i = 1, (#tm > 0 and n or 0) do
         local a = (i / n) * math.pi * 2 + math.Rand(-0.12, 0.12)
-        Plant(trees, tm[math.random(#tm)], r * math.Rand(0.72, 0.98), a, math.Rand(0.8, 1.15))
+        -- (thicker: twice as many and bigger, the owner, 15 November: "the trees and rocks were a little bit thinner than
+        -- I had hoped"; 36 at 0.8 to 1.15 before)
+        Plant(trees, tm[math.random(#tm)], r * math.Rand(0.68, 0.98), a, math.Rand(1.0, 1.45))
     end
     local c = cvForestCover:GetInt()
     for i = 1, (#cm > 0 and c or 0) do
         local a = (i / c) * math.pi * 2 + math.Rand(-0.25, 0.25)
-        Plant(cover, cm[math.random(#cm)], r * math.Rand(0.45, 0.7), a, math.Rand(0.7, 1))
+        Plant(cover, cm[math.random(#cm)], r * math.Rand(0.45, 0.7), a, math.Rand(0.9, 1.3))
     end
     E.forest, E.cover = trees, cover
     return trees, cover
@@ -1213,6 +1216,10 @@ SETUP.harpies = function()
             E.folk[#E.folk + 1] = c
         end
     end
+    -- the dark, a black fog close round everyone, on the dreamers' own screens (the owner, 15 November: "it is full
+    -- bright, there is no dark fog"; a dream can't put the city's lights out, others are awake in it)
+    E.client = E.client or {}
+    E.client.night = true
     -- and every light in the city goes out
     E.dark = not E.dream
     if not E.dream then LC.EndingDark = true end
@@ -1229,8 +1236,14 @@ TICK.harpies = function(now)
     local targets = {}
     for _, n in ipairs(E.combine or {}) do if IsValid(n) and not n.lcEndTaken then targets[#targets + 1] = n end end -- (not one being carried off)
     if #targets == 0 then for _, c in ipairs(E.folk or {}) do if IsValid(c) and not c.lcEndTaken then targets[#targets + 1] = c end end end
-    if #targets == 0 then for _, p in ipairs(living) do targets[#targets + 1] = p end end
-    local tier = targets[1] and (targets[1]:IsPlayer() and 3 or (table.HasValue(E.combine or {}, targets[1]) and 1 or 2)) or 3
+    local tier = targets[1] and (table.HasValue(E.combine or {}, targets[1]) and 1 or 2) or 3
+    -- (and the players too, LC.MingeForYouAt seconds into the leaping: they used to come last, after every unit and
+    -- every citizen, so nobody was ever carried off, only cut down at the very end: the owner, 15 November)
+    local forYou = t >= swell + RUSH + LC.MingeForYouAt
+    if #targets == 0 or forYou then
+        for _, p in ipairs(living) do targets[#targets + 1] = p end
+        if forYou and #living > 0 then tier = 3 end
+    end
     local centre = E.lz
     local mode = t < swell and "lurk" or (t < swell + RUSH and "rush" or "leap")
     local firing = t >= swell + RUSH - 3 -- (the Combine open fire first: that's what sets them off)
@@ -1382,7 +1395,17 @@ TICK.harpies = function(now)
     -- the last five seconds: whoever still stands is killed where they stand
     if t >= fin - LC.MingeKillAt and not E.minged then
         E.minged = true
-        for _, p in ipairs(living) do Slaughter(p, "There's nowhere left. The mingebags got you.") end
+        for _, p in ipairs(living) do
+            -- (carried off by the nearest with its hands free, where there is one: else cut down where they stand)
+            local m, md
+            for _, x in ipairs(E.minges or {}) do
+                if IsValid(x) and x.lcMinge and not x.lcMinge.carry then
+                    local d = x:GetPos():DistToSqr(p:GetPos())
+                    if not md or d < md then m, md = x, d end
+                end
+            end
+            if not (m and LC.MingeCarry(p, m, LC.MingeKillAt - LC.MingeRiseAt)) then Slaughter(p, "There's nowhere left. The mingebags got you.") end
+        end
         for _, list in ipairs({ E.combine or {}, E.folk or {} }) do
             for _, n in ipairs(list) do
                 if IsValid(n) then
@@ -2147,13 +2170,39 @@ TICK.bus = function(now)
         if flying then
             -- straight through walls and buildings, but never up into the sky (you'd see
             -- nothing), down through the ground, or off the edge of the map
-            local top = SkyZ(nextPos)
-            if nextPos.z > top - 220 then nextPos.z = top - 220 end
+            local cap = SkyZ(nextPos) - 220
+            if nextPos.z > cap then
+                -- at the top: it levels off and flies on along under it, aiming no higher (the owner, 15 November: "it
+                -- just keeps pointing up and being stuck ... clipping against a ceiling somewhere. Why can't it clip
+                -- through it and keep flying?"; it kept aiming up at a goal above the top and stood nearly still)
+                if E.goal.z > cap then E.goal = Vector(E.goal.x, E.goal.y, cap) end
+                if E.busDir.z > 0 then
+                    local flat = Vector(E.busDir.x, E.busDir.y, 0)
+                    if flat:LengthSqr() < 0.04 then flat = Angle(0, math.Rand(0, 360), 0):Forward() end
+                    E.busDir = flat:GetNormalized()
+                end
+                nextPos = pos + E.busDir * step
+                if nextPos.z > cap then nextPos.z = cap end
+            end
             local fl = util.TraceLine({ start = nextPos, endpos = nextPos - Vector(0, 0, 4000), mask = MASK_SOLID_BRUSHONLY })
             if not fl.StartSolid and fl.Hit and nextPos.z < fl.HitPos.z + 80 then nextPos.z = fl.HitPos.z + 80 end
             if util.IsInWorld and not util.IsInWorld(nextPos) then
                 E.goal = SkySpot()
                 nextPos = pos
+            end
+            -- hardly getting anywhere for a second and a half (pinned at the top, or the edge of the map): somewhere else,
+            -- flying level
+            if (nextPos - pos):Length() < step * 0.3 then
+                E.busPinned = E.busPinned or now
+                if now - E.busPinned > 1.5 then
+                    E.busPinned = nil
+                    E.goal = SkySpot()
+                    local flat = E.goal - pos
+                    flat.z = 0
+                    if flat:LengthSqr() > 1 then E.busDir = flat:GetNormalized() end
+                end
+            else
+                E.busPinned = nil
             end
         end
         if not flying then
@@ -4172,7 +4221,7 @@ local function GoTo(phase)
         end
         All("[???] So be it. " .. LC.Endings[E.id].say)
         if E.dream and LC.DreamCast then LC.DreamCast(E) end -- (a dream brings its own Combine units: never the city's)
-        local ok, err = pcall(SETUP[E.id])
+        local ok, err = LC.Try(SETUP[E.id])
         if not ok then LC.Error("ending setup " .. E.id, err) end
         hook.Run("LivingCityEndingStarted", E.id)
     elseif phase == "reset" then
@@ -4208,7 +4257,7 @@ end
 function LC.CancelEnding()
     if not E then return false end
     local dream = E.dream
-    if dream and LC.SoundGuardDreamEnd then pcall(LC.SoundGuardDreamEnd, dream) end -- (its sounds, before what made them goes: sh_livingcity_soundguard.lua)
+    if dream and LC.SoundGuardDreamEnd then LC.Try(LC.SoundGuardDreamEnd, dream) end -- (its sounds, before what made them goes: sh_livingcity_soundguard.lua)
     Freeze(false)
     Clear()
     E = nil
@@ -4242,7 +4291,7 @@ end
 
 timer.Create("LivingCityEndings", 0.1, 0, function()
     if not E then return end
-    local ok, err = pcall(function()
+    local ok, err = LC.Try(function()
         local now = CurTime()
         if E.phase == "pending" then
             if now - E.phaseT >= cvPause:GetFloat() then GoTo("gman") end
@@ -4391,6 +4440,10 @@ end)
 -- a value someone chose themselves is left alone).
 local RETUNED = {
     { "lc_rebel_damage", { "0.5", "0.50", "0.500000" }, "0.6" }, -- (13 November, the owner: "no threat from rebels at all. Can we boost their damage a tad bit, like 20%?")
+    { "lc_ending_minge_forest", { "36" }, "72" }, -- (15 November, the owner: the Harpies' forest "a little bit thinner than I had hoped")
+    { "lc_ending_minge_cover", { "12" }, "24" },
+    { "lc_exercise_npcs", { "10" }, "0" }, -- (15 November, the owner: every citizen at the drill and the parade: 0 is every one of them)
+    { "lc_speech_npcs", { "18" }, "0" }, -- (15 November, the owner: "make sure all the citizen NPCs show up": 0 is every one of them)
     { "lc_cp_shift_minutes", { "15" }, "30" }, -- (12 November: a unit's shift is back to 30 minutes, the owner asked; sv_livingcity_cpduty.lua)
     { "lc_ending_cooldown", { "60", "45" }, "180" }, -- (1 November: three hours between endings, the owner asked)
     { "lc_afk_minutes", { "5" }, "20" }, -- (2 November: away at 20 minutes, the owner asked; sv_livingcity_cityadmin.lua)
@@ -4418,6 +4471,7 @@ local RETUNED = {
     { "lc_rebel_errand_minutes", { "4" }, "12" },
     { "lc_birds", { "6" }, "4" },
     { "lc_scavenge_refill", { "600" }, "1800" },
+    { "lc_resistance_issue_rate", { "50" }, "22" }, -- (a Fighter's kit about 50, not 239: the owner, 19 November)
     { "lc_fridge_refill", { "240" }, "900" },
     { "lc_ending_marrow_max", { "40", "60" }, "80" },
     { "lc_ending_base_bombs", { "30" }, "60" },

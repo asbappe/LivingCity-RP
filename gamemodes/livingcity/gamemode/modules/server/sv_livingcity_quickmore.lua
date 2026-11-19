@@ -7,7 +7,13 @@
       the Resistance    Freq 7 >: a message on the band, call for backup (every Resistance player
                         hears it and sees where you are; a couple of idle fighters nearby come and
                         stay with you), send my position, guide me to rebel ground or the lab
-      a citizen         Me >: find work, my rations, my home and rent, my standing
+      the Resistance    Resistance: one row, "Fund: 120 credits" (the owner, 18 November;
+                        sv_livingcity_resistancefund.lua)
+      its leader        Resistance > Order: kill the Administrator (300 each) >: the Fighters and up by name,
+                        and what each has of it; a name sends for them, says they have spoken,
+                        or takes it back (the owner, 18 November; sv_livingcity_adminplot.lua).
+                        Sent to the leader alone.
+      a citizen        Me >: find work, my rations, my home and rent, my standing
       a prisoner        My sentence: what you're in for and how long is left
       the Administrator open my tablet, the laws, tonight's dream, command the guards (follow,
                         hold here, how close, what they do when there's trouble), order the arrest of whoever you're looking at
@@ -47,12 +53,15 @@ local function Wait(at) return math.max(0, math.ceil((at or 0) - CurTime())) end
 local function Mins(secs) return math.max(1, math.ceil(secs / 60)) end
 local function Tell(ply, kind, title, text, secs) if LC.Notice then LC.Notice(ply, kind, title, text, secs or 8) end end
 -- Mark a kind of place (sv_livingcity_notices.lua's list) without its own notice: true, or false and why.
-local function Mark(ply, kind)
+-- guide: the chevrons on the ground lead there too, as to any objective (the owner, 15 November: "F1 > Get a
+-- union job as a citizen shows a marker on my screen but no waypath finder chevrons"): sv_livingcity_guidance.lua.
+local function Mark(ply, kind, guide)
     local find = LC.WaypointPlaces and LC.WaypointPlaces[kind]
     if not find then return false end
     local pos, label = find(ply)
     if not pos then return false, label end
     if LC.SetWaypoint then LC.SetWaypoint(ply, pos, label, kind == "home" and 260 or 170) end
+    if guide then ply.lcGuide = { pos = pos, untilT = CurTime() + GUIDE_SECS, label = label } end
     if kind == "home" and ply.lcWaypoint and LC.PlayerBlock then ply.lcWaypoint.block = LC.PlayerBlock(ply) end
     return true
 end
@@ -263,13 +272,13 @@ function LC.QuickFindWork(ply)
     if not IsValid(ply) then return false end
     local m = MeInfo(ply)
     if m.work == "intake" then
-        Mark(ply, "intake")
+        Mark(ply, "intake", true)
         Tell(ply, "info", "Find work", "Register at Civil Intake first: no work, rations or room until you're on the register. It's marked on your screen.")
     elseif m.work == "job" then
-        local ok = Mark(ply, "work")
+        local ok = Mark(ply, "work", true)
         Tell(ply, "info", "Find work", "You work as " .. m.job .. ". " .. (ok and "Your workplace is marked. " or "") .. "F4 has your next shift.")
     elseif m.work == "labor" then
-        Mark(ply, "labor")
+        Mark(ply, "labor", true)
         Tell(ply, "info", "Find work", "Labor Assignment gives you a Union job: press E on its terminal. It's marked on your screen. The job board is on F4.")
     else
         Tell(ply, "info", "Find work", "Pick a Union job on the job board: F4 > Jobs.")
@@ -368,7 +377,7 @@ function LC.AdminOrderArrest(admin, target)
     admin.lcArrestNext = CurTime() + ARREST_GAP
     if LC.AddBOLO and LC.RecordKey then
         admin.lcBoloNext = nil -- (the Administrator's order is its own call)
-        pcall(LC.AddBOLO, admin, LC.RecordKey(target), "By order of the Administrator: arrest on sight", 15)
+        LC.Try(LC.AddBOLO, admin, LC.RecordKey(target), "By order of the Administrator: arrest on sight", 15)
     end
     Tell(target, "warn", "Wanted", "The City Administrator has ordered your arrest. Every unit has your description.", 10)
     Tell(admin, "info", "Order of arrest", Name(target) .. " is wanted, by your order, and every unit has a BOLO.")
@@ -493,7 +502,13 @@ function LC.QuickInfo(ply)
     if f == "resistance" then
         local tx = false
         if LC.TransmitBands then for _, b in ipairs(LC.TransmitBands(ply)) do if b == "resistance" then tx = true end end end
-        t.reb = { backup = Wait(ply.lcRebBackupNext), pos = Wait(ply.lcRebPosNext), tx = tx, radio = (not LC.RadioBand) or LC.RadioBand(ply) == "resistance" }
+        t.reb = { backup = Wait(ply.lcRebBackupNext), pos = Wait(ply.lcRebPosNext), tx = tx, radio = (not LC.RadioBand) or LC.RadioBand(ply) == "resistance",
+            -- (what the Resistance's fund holds, for every member: sv_livingcity_resistancefund.lua)
+            fund = LC.ResistanceFund and LC.ResistanceFund() or nil }
+        -- (their leader alone: who may be given the order to kill the Administrator, who has it, and what each one
+        -- sent for costs; sv_livingcity_adminplot.lua)
+        t.plot = LC.AdminPlotList and LC.AdminPlotList(ply) or nil
+        t.plotcost = t.plot and LC.AdminPlotCost and LC.AdminPlotCost() or nil
     end
     if IsCitizen(ply) then t.me = MeInfo(ply) end
     if f == "admin" then
@@ -509,7 +524,7 @@ end
 
 function LC.QuickInfoSend(ply)
     if not IsValid(ply) then return end
-    local ok, t = pcall(LC.QuickInfo, ply)
+    local ok, t = LC.Try(LC.QuickInfo, ply)
     if not ok then
         if LC.Error then LC.Error("quick info", t) end
         t = {}
@@ -546,6 +561,12 @@ local ACTIONS = {
     arrest = function(ply, _, target) return LC.AdminOrderArrest(ply, target) end,
     guards = function(ply, arg) return LC.AdminGuardOrder(ply, arg) end,
     sweep = function(ply, arg) return LC.OfficerCallSweep(ply, arg) end,
+    -- (the Resistance's leader picks a name: sent for, spoken with, or taken back. No reason is ever said, but one:
+    -- neither the Resistance's fund nor the leader can pay for sending for them.)
+    plotorder = function(ply, arg)
+        if not LC.AdminPlotPick then return false end
+        return LC.AdminPlotPick(ply, arg)
+    end,
 }
 LC.QuickMoreActions = ACTIONS
 
@@ -553,7 +574,7 @@ LC.QuickMoreActions = ACTIONS
 function LC.QuickMore(ply, cmd, arg, target)
     local fn = ACTIONS[tostring(cmd or "")]
     if not fn or not IsValid(ply) then return false end
-    local ok, a, b = pcall(fn, ply, arg, target)
+    local ok, a, b = LC.Try(fn, ply, arg, target)
     if not ok then
         if LC.Error then LC.Error("quick action " .. tostring(cmd), a) end
         return false

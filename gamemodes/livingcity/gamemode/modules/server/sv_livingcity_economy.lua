@@ -116,19 +116,45 @@ end)
 
 local SECRET_BOARDS = { Operations = true, Urges = true }
 
+-- Which of the Resistance's jobs pay credits. The owner, 19 November: "Only jobs that bring in money: Raids, convoy
+-- hits, supply runs and rescues pay credits as now. Resistance jobs that bring in nothing (headcrab hunts, deliveries,
+-- scouting and the like) pay experience only. Citizen and Civil Protection jobs keep paying, since the Union pays
+-- them." A job done on the Resistance's side pays credits only when its template (or its story) says brings = true;
+-- with no word, experience only. The Union's own work (a shift, community service) is the Union's, whoever does it.
+local UNION_WORK = { shift = true, rehab = true }
+function LC.QuestBringsNothing(p, q)
+    if not (istable(q) and IsValid(p) and p:IsPlayer()) or UNION_WORK[q.chain] then return false end
+    if (q.side or (LC.QuestFaction and LC.QuestFaction(p))) ~= "resistance" then return false end -- (q.side: a posting, for its board)
+    local def = (q.chain and LC.Chains and LC.Chains[q.chain]) or q.tmpl
+    return not (istable(def) and def.brings == true)
+end
+
+-- What finishing a job pays in credits, by the board's rule: the credits, and the words said with them (nil: none).
+-- q: the job (its chain and board), or a posting made to look like one (what the job board shows: LC.PostingPay,
+-- sv_livingcity_quests.lua). What a job pays of its own on top is its own.
+function LC.QuestCredits(p, q)
+    if not cvOn:GetBool() or not istable(q) or q.chain == "rehab" or LC.QuestBringsNothing(p, q) then return 0 end
+    if q.chain == "shift" then
+        -- (more for the loyal: sv_livingcity_loyalty.lua; and for Realistic survival: sv_livingcity_survivalmode.lua)
+        return math.floor(cvShiftPay:GetInt() * (LC.LoyalPayMul and LC.LoyalPayMul(p) or 1) * (LC.SurvivalPayMul and LC.SurvivalPayMul(p) or 1) + 0.5), "shift complete"
+    elseif q.chain == "insidework" or SECRET_BOARDS[q.board] then
+        if q.board == "Urges" then return 0 end
+        return cvJobPay:GetInt(), "paid quietly"
+    elseif q.chain then
+        return cvJobPay:GetInt()
+    end
+    return cvJobPay:GetInt(), tostring(q.board or "Jobs") .. " complete"
+end
+
 hook.Add("LivingCityQuestComplete", "LivingCityEconomy", function(p, q)
     if not cvOn:GetBool() or not IsValid(p) then return end
+    local n, why = LC.QuestCredits(p, q)
+    if n > 0 then LC.AddCredits(p, n, why) end
     if q.chain == "rehab" then
         LC.AddStanding(p, 40, "Community service")
     elseif q.chain == "shift" then
-        LC.AddCredits(p, math.floor(cvShiftPay:GetInt() * (LC.LoyalPayMul and LC.LoyalPayMul(p) or 1) * (LC.SurvivalPayMul and LC.SurvivalPayMul(p) or 1) + 0.5), "shift complete") -- (more for the loyal: sv_livingcity_loyalty.lua; and for Realistic survival: sv_livingcity_survivalmode.lua)
         LC.AddStanding(p, 5, "Union shift completed")
-    elseif q.chain == "insidework" or SECRET_BOARDS[q.board] then
-        if q.board ~= "Urges" then LC.AddCredits(p, cvJobPay:GetInt(), "paid quietly") end
-    elseif q.chain then
-        LC.AddCredits(p, cvJobPay:GetInt())
-    else
-        LC.AddCredits(p, cvJobPay:GetInt(), q.board .. " complete")
+    elseif not (q.chain == "insidework" or SECRET_BOARDS[q.board]) and not q.chain then
         LC.AddStanding(p, 3)
     end
 end)
@@ -213,6 +239,10 @@ function LC.CanBuy(ply, g)
     end
     if LC.Credits(ply) < LC.GoodsPrice(ply, g) then return false, "Not enough credits." end
     if g.item and LC.CanCarry then local okC, whyC = LC.CanCarry(ply, g.item, g.count or 1) if not okC then return false, whyC end end
+    -- (a grenade is a weapon and its own ammunition: more of them, up to what can be carried)
+    if g.weapon and g.ammo then
+        if ply.HasWeapon and ply:HasWeapon(g.weapon) and ply.GetAmmoCount and ply:GetAmmoCount(g.ammo[1]) >= (g.max or 5) then return false, "You carry one." end
+    elseif g.weapon and ply.HasWeapon and ply:HasWeapon(g.weapon) then return false, "You carry one." end
     return true
 end
 
@@ -245,6 +275,8 @@ function LC.Buy(ply, id)
             e:SetPos(ply:GetPos() + ply:GetForward() * 40 + Vector(0, 0, 20))
             e:Spawn()
         end
+    elseif g.weapon then
+        if g.ammo and ply:HasWeapon(g.weapon) then ply:GiveAmmo(g.ammo[2], g.ammo[1]) else ply:Give(g.weapon) end
     elseif g.ammo then
         ply:GiveAmmo(g.ammo[2], g.ammo[1])
     end
@@ -264,7 +296,14 @@ function LC.OpenShop(ply, viaTerminal)
     local goods = {}
     local counter = LC.PlayerIsCP(ply) and AtUnitCounter(ply)
     local unit = LC.PlayerIsCP(ply)
-    for _, g in ipairs(LCS.Goods) do
+    -- at the unit counter, the unit's own things come first (water, weapons, grenades, rounds), then the Union's goods
+    local list = LCS.Goods
+    if counter then
+        list = {}
+        for _, g in ipairs(LCS.Goods) do if g.cpOnly then list[#list + 1] = g end end
+        for _, g in ipairs(LCS.Goods) do if not g.cpOnly then list[#list + 1] = g end end
+    end
+    for _, g in ipairs(list) do
         if (not g.cpOnly or counter) and not (g.civOnly and unit) then
             local ok, why = LC.CanBuy(ply, g)
             goods[#goods + 1] = {

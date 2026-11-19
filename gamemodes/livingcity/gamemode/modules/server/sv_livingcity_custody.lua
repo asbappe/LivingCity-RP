@@ -85,6 +85,9 @@ local function EndInterrogation(ply, text)
         ply:SetNW2Bool("lc_interrogated", false)
         if text then ply:ChatPrint(text) end
     end
+    -- (whoever set it up hears how it ended, called from here and not by a hook: the Administrator's own
+    -- questioning, sv_livingcity_adminquestioning.lua)
+    if it.onEnd then LC.Try(it.onEnd, ply, it) end
 end
 
 LC.EndInterrogation = EndInterrogation
@@ -99,13 +102,15 @@ end
 
 function LC.StartInterrogation(ply)
     if LC.Interrogations[ply] or not (LC.Prisoners and LC.Prisoners[ply]) then return false end
+    if LC.AdminQuestioningHolds and LC.AdminQuestioningHolds(ply) then return false end -- (hers to question, not a unit's)
+    if LC.Running == false then return false end -- (the city was stopped while the unit was on his way: nobody comes)
     local pr = LC.Prisoners[ply]
     local cellPos = pr.cell and pr.cell.pos or ply:GetPos()
     local cop
     local spawner = LC.Spawners and LC.Spawners.cop
     if spawner then
         local spot = (LC.ReleaseSpot and LC.ReleaseSpot(cellPos + ply:GetForward() * 50, ply)) or (cellPos + Vector(50, 0, 4))
-        local ok, npc, st = pcall(LC.ManpowerFree, spawner, spot) -- (the interrogator: never from the reserve)
+        local ok, npc, st = LC.Try(LC.ManpowerFree, spawner, spot) -- (the interrogator: never from the reserve)
         if ok and IsValid(npc) and st then
             st.unmanaged = true
             st.interrogator = true
@@ -130,7 +135,10 @@ function LC.InterrogationTalk(ply)
     local it = LC.Interrogations[ply]
     if not it then return false, "Nobody's asking." end
     it.talked = true
-    local zones = LC.ZonesOfKind and LC.ZonesOfKind("rebel") or {}
+    -- (only someone who knows has a hideout to give: a citizen in for a punch tells them all they have, which is
+    -- nothing. The owner, 15 November. sv_livingcity_interrogation.lua)
+    local knows = not LC.InterrogationKnows or LC.InterrogationKnows(ply)
+    local zones = knows and LC.ZonesOfKind and LC.ZonesOfKind("rebel") or {}
     local where
     if #zones > 0 then
         local z = Pick(zones)
@@ -153,7 +161,7 @@ function LC.InterrogationTalk(ply)
         ply:SetNW2Float("lc_traitor_until", CurTime() + 1800)
         if LC.RadioNotice then LC.RadioNotice("resistance", ply:Nick() .. " talked in custody. Don't trust them.") end
     end
-    EndInterrogation(ply, "[Interrogation] You tell them" .. (where and where ~= "" and (" about the place " .. where) or " what you know") .. ". The Civil Protection unit nods, and leaves.")
+    EndInterrogation(ply, "[Interrogation] You tell them" .. (where and where ~= "" and (" about the place " .. where) or (knows and " what you know" or " everything. It isn't much")) .. ". " .. (it.asker or "The Civil Protection unit") .. " nods, and leaves.")
     return true
 end
 
@@ -162,7 +170,7 @@ local function InterrogationTick(now)
         if not IsValid(ply) or not (LC.Prisoners and LC.Prisoners[ply]) or not ply:Alive() then
             EndInterrogation(ply, nil)
         elseif now > it.untilT then
-            EndInterrogation(ply, "[Interrogation] \"We'll talk again.\" The Civil Protection unit leaves. You said nothing.")
+            EndInterrogation(ply, "[Interrogation] \"We'll talk again.\" " .. (it.asker or "The Civil Protection unit") .. " leaves. You said nothing.")
             if ply:GetNW2String("lcf_faction", "") == "resistance" and LC.AddXP then LC.AddXP(ply, 15, "said nothing under interrogation") end
         elseif LC.InterrogationStep then
             LC.InterrogationStep(ply, it, now) -- (question by question: sv_livingcity_interrogation.lua)
@@ -261,11 +269,11 @@ function LC.MakeStalker(ply)
         ply:RemovePData("lc_jail_left")
     end
     -- whatever they were doing, and whatever they had, goes with who they were
-    if LC.QuestOf and LC.QuestOf[ply] and LC.AbandonQuest then pcall(LC.AbandonQuest, ply) end
+    if LC.QuestOf and LC.QuestOf[ply] and LC.AbandonQuest then LC.Try(LC.AbandonQuest, ply) end
     if LC.Inventory and LC.TakeItem then
         for id, n in pairs(table.Copy(LC.Inventory(ply) or {})) do LC.TakeItem(ply, id, n) end
     end
-    if LC.SetJob then pcall(LC.SetJob, ply, "", true) end
+    if LC.SetJob then LC.Try(LC.SetJob, ply, "", true) end
     if LC.Feed then LC.Feed(ply, 100, 100) end
     LC.SetFaction(ply, "stalker", nil, true)
     ply:StripWeapons()
@@ -422,19 +430,32 @@ hook.Add("LivingCityIncarcerated", "LivingCityCustody", function(ply, secs, reas
     local sev = LC.Severity(ply, reason)
     ply:SetPData("lc_jailcount", LC.JailCount(ply) + 1)
     if not cvOn:GetBool() then return end
+    -- Whoever tried to kill the Administrator is hers to question, not a unit's, and is made a stalker when she
+    -- is done with them, whoever they are (the owner, 16 November). What else was due to them here is dropped
+    -- for that; only with lc_stalkers 0 do the broken feet come instead, for those they were due to.
+    -- Called from here and not from a hook of its own: hook order is not promised. sv_livingcity_adminquestioning.lua
+    if LC.AdminQuestioningStart then
+        local feet = sev >= 4 and LC.CanInterrogate(ply)
+        if LC.AdminQuestioningStart(ply, function()
+            if feet and IsValid(ply) and LC.Prisoners and LC.Prisoners[ply] then LC.Cripple(ply) end
+        end) then return end
+    end
     if sev >= 6 and cvStalker:GetBool() and LC.Heinous(ply, reason) then
         timer.Simple(20, function()
             if IsValid(ply) and LC.Prisoners and LC.Prisoners[ply] then LC.StalkerScene(ply) end
         end)
         return
     end
-    -- only someone who could know something is questioned: a rebel (a Resistance
-    -- fighter, or anyone hunted as one). A citizen locked up for a fight knows nothing.
-    if sev >= 2 and LC.CanInterrogate(ply) then
+    -- who is questioned (the owner, 15 November: "if it's just a petty crime with a 3-5 minute jail sentence no
+    -- interrogation warranted. If it's a resistance member and/or the sentence is 10 minutes or over, then
+    -- questioning/interrogation is warranted"): a rebel (a Resistance member, or anyone hunted or dressed as
+    -- one), and anyone whose sentence is 10 minutes or more. It was a rebel on a second arrest or later only.
+    if LC.CanInterrogate(ply) or (tonumber(secs) or 0) >= 600 then
         timer.Simple(12, function()
             if IsValid(ply) and LC.Prisoners and LC.Prisoners[ply] then
                 LC.StartInterrogation(ply)
-                if sev >= 4 then timer.Simple(50, function() if IsValid(ply) and LC.Prisoners and LC.Prisoners[ply] then LC.Cripple(ply) end end) end
+                -- (the rough end of it is still only for someone who could know something: a rebel)
+                if sev >= 4 and LC.CanInterrogate(ply) then timer.Simple(50, function() if IsValid(ply) and LC.Prisoners and LC.Prisoners[ply] then LC.Cripple(ply) end end) end
             end
         end)
     end

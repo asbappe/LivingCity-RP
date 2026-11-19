@@ -136,6 +136,7 @@ local function TakeIn(ply, m, how)
     Finish(ply, m)
     if not IsValid(ply) then return end
     if LC.Untie then LC.Untie(ply, nil, true) end
+    if LC.ArrestChanceGiven then LC.ArrestChanceGiven(ply, true) end -- (walked in cuffed: the chance was at the arrest)
     ply.lcPreferCell = m.cell -- (the cell they were walked to, if it's still free)
     local ok = LC.Incarcerate(ply, m.seconds, m.reason, m.arrester)
     ply.lcPreferCell = nil
@@ -173,6 +174,8 @@ function LC.MarchToPrison(ply, arrester, seconds, reason)
     local st = IsValid(arrester) and LC.NPCs and LC.NPCs[arrester]
     if not IsUnit(st) or st.test or not Up(arrester) then return false end
     if not (LC.PrisonAvailable and LC.PrisonAvailable()) or not LC.TiePlayer or not LC.GoTo then return false end
+    -- (check 3: never the armed and fighting, never anyone who has had no chance to struggle: sv_livingcity_prison.lua)
+    if LC.CustodyAllowed and not LC.CustodyAllowed(ply, arrester, "a march to the cells") then return false end
     local dest, cell = Destination(ply:GetPos(), ply)
     if not dest or dest:DistToSqr(ply:GetPos()) < THERE * THERE then return false end
 
@@ -331,7 +334,7 @@ end
 
 timer.Create("LivingCityMarch", 0.1, 0, function()
     if not next(LC.Marching) then return end
-    local ok, err = pcall(Tick, CurTime())
+    local ok, err = LC.Try(Tick, CurTime())
     if not ok and LC.Error then LC.Error("march", err) end
 end)
 
@@ -350,7 +353,7 @@ end)
 -- Leaving mid-march: they're on the books, as if they'd got there.
 hook.Add("PlayerDisconnected", "LivingCityMarch", function(ply)
     local m = LC.Marching[ply]
-    if m then pcall(TakeIn, ply, m) end
+    if m then LC.Try(TakeIn, ply, m) end
 end)
 
 hook.Add("PlayerDeath", "LivingCityMarch", function(ply)

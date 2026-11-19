@@ -132,7 +132,7 @@ end
 
 timer.Create("LivingCityNPCVices", 3, 0, function()
     if LC.TimeStopped then return end
-    local ok, err = pcall(LC.NPCViceTick, CurTime())
+    local ok, err = LC.Try(LC.NPCViceTick, CurTime())
     if not ok and LC.Error then LC.Error("npc vices", err) end
 end)
 

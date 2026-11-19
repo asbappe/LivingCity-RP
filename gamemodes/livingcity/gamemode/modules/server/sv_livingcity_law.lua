@@ -71,6 +71,15 @@ end
 function LC.ClearWanted(ply)
     LC.LocalWanted[ply] = nil
     ply:SetNW2Float("lc_wanted_until", 0)
+    ply:SetNW2String("lc_wanted_reason", "") -- (the owner, 14 November: jailed for "a crowbar" they had not carried since)
+end
+
+-- What they are wanted for right now ("" when they are not): never an old charge left on their name.
+function LC.WantedReason(ply)
+    if not IsValid(ply) then return "" end
+    local w = LC.LocalWanted[ply]
+    if not w or CurTime() >= w.untilT then return "" end
+    return tostring(w.reason or "")
 end
 
 -- Violent: hurt someone (a person, one of the city's people, a unit) in the last two minutes,
@@ -89,11 +98,59 @@ function LC.Violent(ply)
     local cls = IsValid(w) and w.GetClass and w:GetClass()
     return cls ~= nil and GUNS[cls] == true
 end
+-- Armed and fighting (the owner, 14 November: a soldier "walked up to me and cuffed me" in the middle of
+-- a firefight): a gun or a grenade in hand, or a shot fired or a unit hurt in the last FIGHTING_SECS
+-- seconds. Nobody like that is ever cuffed by one of the city's units: they are fought
+-- (sv_livingcity_prison.lua). Someone down, or already cuffed, is not fighting.
+local FIGHTING_SECS = 12
+local ARMS = { weapon_frag = true, weapon_slam = true, weapon_lc_grenades = true }
+LC.FightingArms = ARMS
+function LC.ArmedAndFighting(ply)
+    if not IsValid(ply) or not ply:IsPlayer() or not ply:Alive() then return false end
+    if (LC.IsDowned and LC.IsDowned(ply)) or (LC.IsTied and LC.IsTied(ply)) then return false end
+    local since = CurTime() - FIGHTING_SECS
+    if (ply.lcFiredAt or -1e9) > since or (ply.lcAttackedSecurityAt or -1e9) > since then return true end
+    local w = ply.GetActiveWeapon and ply:GetActiveWeapon()
+    local cls = IsValid(w) and w.GetClass and w:GetClass()
+    if not cls then return false end
+    return GUNS[cls] == true or ARMS[cls] == true or (LCL ~= nil and LCL.Guns ~= nil and LCL.Guns[cls] == true)
+end
+hook.Add("EntityFireBullets", "LivingCityFighting", function(ent)
+    if IsValid(ent) and ent:IsPlayer() then ent.lcFiredAt = CurTime() end
+end)
+
+-- Bare hands are not a weapon (the owner's playtest, 15 November: "I punched a metrocop and they hit me a
+-- few times with their batons while I had just my hands out ... no struggle"). Someone who has only used
+-- their fists is still taken the unarmed way: run down, a blow or two of the stick, and the struggle
+-- (sv_livingcity_prison.lua), never fought like a gunman. A gun, a grenade, a blade or a crowbar is a weapon.
+local BARE = { weapon_fists = true, weapon_lc_hands = true }
+LC.BareHandWeapons = BARE
+function LC.BareHandedHit(attacker, dmg)
+    if not IsValid(attacker) or not attacker:IsPlayer() then return false end
+    local inf = dmg and dmg.GetInflictor and dmg:GetInflictor()
+    if IsValid(inf) and inf ~= attacker then return BARE[inf:GetClass()] == true end
+    local w = attacker.GetActiveWeapon and attacker:GetActiveWeapon()
+    local cls = IsValid(w) and w.GetClass and w:GetClass()
+    return cls == nil or BARE[cls] == true
+end
+-- Taken the unarmed way: nothing in hand that fights, no weapon used on anyone in the last two minutes, no
+-- sector-wide search (alert 2 and up: pistols out) and not hunted on sight. Units run such a person down and
+-- lay hands on them, with the struggle first, even after a punch (sv_livingcity.lua, Pursue).
+function LC.TakenUnarmed(ply)
+    if not IsValid(ply) or not ply:IsPlayer() or not ply:Alive() then return false end
+    if LC.ArmedAndFighting(ply) then return false end
+    if (ply.lcArmedViolentUntil or 0) > CurTime() then return false end
+    if LC.AlertLevel and LC.AlertLevel(ply) >= 2 then return false end
+    if LC.PlayerIsHunted and LC.PlayerIsHunted(ply) then return false end
+    return true
+end
+
 hook.Add("EntityTakeDamage", "LivingCityViolence", function(victim, dmg)
     local a = dmg:GetAttacker()
     if IsValid(a) and a:IsPlayer() and a ~= victim and IsValid(victim) and (victim:IsPlayer() or victim:IsNPC())
         and not (LC.IsMonster and LC.IsMonster(victim)) and dmg:GetDamage() > 0 then
         a.lcViolentUntil = CurTime() + 120
+        if not LC.BareHandedHit(a, dmg) then a.lcArmedViolentUntil = CurTime() + 120 end
     end
 end)
 
@@ -178,17 +235,26 @@ end
 -- The infested don't hurt their own (the owner, 13 November: "Infested players should not be able
 -- to harm other infested. but they can shove them out of the way if they get stuck"): one infested
 -- player's blow on another does no damage and pushes them a step away instead.
+-- (The owner, 14 November: "Not only players but players vs npcs": an infested player and the infestation's own
+-- zombies and headcrabs don't hurt each other either. Two NPCs are left to the game.)
+local function Infested(e)
+    if not IsValid(e) then return false end
+    if e:IsPlayer() then return LC.PlayerIsZombie ~= nil and LC.PlayerIsZombie(e) == true end
+    return e.IsNPC ~= nil and e:IsNPC() and LC.InfestedAttacker ~= nil and LC.InfestedAttacker(e) == true -- (sv_livingcity_infestedside.lua)
+end
 function LC.InfestedKin(victim, attacker)
-    return IsValid(victim) and IsValid(attacker) and victim ~= attacker and victim:IsPlayer() and attacker:IsPlayer()
-        and LC.PlayerIsZombie ~= nil and LC.PlayerIsZombie(victim) == true and LC.PlayerIsZombie(attacker) == true
+    return IsValid(victim) and IsValid(attacker) and victim ~= attacker and (victim:IsPlayer() or attacker:IsPlayer())
+        and Infested(victim) and Infested(attacker)
 end
 hook.Add("EntityTakeDamage", "LivingCityInfestedKin", function(victim, dmg)
     local a = dmg and dmg:GetAttacker()
     if not LC.InfestedKin(victim, a) then return end
-    local push = victim:GetPos() - a:GetPos()
-    push.z = 0
-    if push:LengthSqr() < 1 then push = a:GetForward() end
-    push:Normalize()
-    if victim.SetVelocity then victim:SetVelocity(push * 240 + Vector(0, 0, 70)) end
+    if victim:IsPlayer() and victim.SetVelocity then -- (a player is pushed a step away; a zombie or headcrab just isn't hurt)
+        local push = victim:GetPos() - a:GetPos()
+        push.z = 0
+        if push:LengthSqr() < 1 then push = a:GetForward() end
+        push:Normalize()
+        victim:SetVelocity(push * 240 + Vector(0, 0, 70))
+    end
     return true
 end)

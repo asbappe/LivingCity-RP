@@ -28,7 +28,7 @@ LC = LC or {}
 util.AddNetworkString("lc_trail")
 
 local cvOn = CreateConVar("lc_trail", "1", FCVAR_ARCHIVE,
-    "The quest trail on the ground, leading to the quest's objective: 1 players can have it (each can hide theirs in C > Settings), 0 off for everyone", 0, 1)
+    "The quest trail on the ground, leading to the quest's objective: 1 players can have it (each can hide theirs in F4 > Me and settings), 0 off for everyone", 0, 1)
 
 local cvStraight = CreateConVar("lc_trail_straight", "1", FCVAR_ARCHIVE,
     "The quest trail skips path points you could walk straight past (1), or follows every one (0)", 0, 1)
@@ -203,7 +203,7 @@ LC.TrailNoWay = LC.TrailNoWay or 0
 function LC.TrailRoute(from, to, role)
     local pts = Planned(from, to, role, false) or Planned(from, to, role, true)
     if not pts then
-        local ok, r = pcall(NavMeshPath, from, to)
+        local ok, r = LC.Try(NavMeshPath, from, to)
         if ok and type(r) == "table" and #r > 1 then pts = r end
     end
     if not pts then
@@ -276,12 +276,14 @@ function LC.SendTrail(ply, trail)
         flat[#flat + 1] = math.floor(p.z)
     end
     local g = trail.goal
-    LC.SendCompressed("lc_trail", { g = { math.floor(g.x), math.floor(g.y), math.floor(g.z) }, p = flat }, { ply })
+    -- (guide: a place they asked the way to, not a quest's: their screen keeps it with no quest on. The owner,
+    -- 15 November: "F1 > Get a union job ... shows a marker on my screen but no waypath finder chevrons")
+    LC.SendCompressed("lc_trail", { g = { math.floor(g.x), math.floor(g.y), math.floor(g.z) }, p = flat, guide = trail.guide or nil }, { ply })
 end
 
-function LC.TrailRefresh(ply, goal, now)
+function LC.TrailRefresh(ply, goal, now, guide)
     local from = ply:GetPos()
-    local trail = { goal = goal, from = from, at = now or CurTime(), pts = LC.TrailRoute(from, goal, RoleOf(ply)) }
+    local trail = { goal = goal, from = from, at = now or CurTime(), pts = LC.TrailRoute(from, goal, RoleOf(ply)), guide = guide or nil }
     ply.lcTrail = trail
     LC.SendTrail(ply, trail)
     return trail
@@ -312,22 +314,24 @@ function LC.TrailTick(now)
     now = now or CurTime()
     local budget = BUDGET
     for _, ply in ipairs(player.GetAll()) do
-        local goal = LC.TrailWanted(ply) and ((LC.QuestObjectivePos and LC.QuestObjectivePos(ply)) or LC.GuideGoal(ply)) or nil
+        local qgoal = LC.TrailWanted(ply) and LC.QuestObjectivePos and LC.QuestObjectivePos(ply) or nil
+        local goal = qgoal or (LC.TrailWanted(ply) and LC.GuideGoal(ply)) or nil
+        local guide = goal ~= nil and qgoal == nil
         local trail = ply.lcTrail
         if not goal or ply:GetPos():DistToSqr(goal) < ARRIVE * ARRIVE then
             if trail then
                 ply.lcTrail = nil
                 LC.SendTrail(ply, nil)
             end
-        elseif budget > 0 and LC.TrailNeedsRefresh(trail, ply:GetPos(), goal, now) then
+        elseif budget > 0 and (LC.TrailNeedsRefresh(trail, ply:GetPos(), goal, now) or (trail and (trail.guide or false) ~= guide)) then
             budget = budget - 1
-            LC.TrailRefresh(ply, goal, now)
+            LC.TrailRefresh(ply, goal, now, guide)
         end
     end
 end
 
 timer.Create("LivingCityTrail", 1, 0, function()
-    local ok, err = pcall(LC.TrailTick, CurTime())
+    local ok, err = LC.Try(LC.TrailTick, CurTime())
     if not ok and LC.Error then LC.Error("quest trail", err) end
 end)
 
@@ -343,7 +347,7 @@ end
 
 timer.Create("LivingCityWhereAmI", 1, 0, function()
     for _, ply in ipairs(player.GetAll()) do
-        local ok, kind = pcall(LC.WhereKind, ply)
+        local ok, kind = LC.Try(LC.WhereKind, ply)
         kind = (ok and kind) or ""
         if ply:GetNW2String("lc_here", "") ~= kind then ply:SetNW2String("lc_here", kind) end
     end

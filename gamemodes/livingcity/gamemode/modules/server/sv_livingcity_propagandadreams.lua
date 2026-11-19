@@ -399,8 +399,9 @@ local function Hall(g, dream, maxLong, col)
     local c = dream.pos
     local top = c.z + 2
     local x0 = c.x - long * PLATE8_S / 2
+    local mat, look = LC.DreamSurface(g.id, col or PLUM) -- (the dream's own ground, where it has one)
     for i = 1, long do for j = 0, 1 do
-        Floor(g, PLATE8, x0 + (i - 0.5) * PLATE8_S, c.y + (j - 0.5) * PLATE8_S, top, col or PLUM, "models/debug/debugwhite")
+        Floor(g, PLATE8, x0 + (i - 0.5) * PLATE8_S, c.y + (j - 0.5) * PLATE8_S, top, look, mat)
     end end
     g.top = top
     g.bounds = { mins = Vector(x0 - 60, c.y - PLATE8_S - 60, top - 160), maxs = Vector(x0 + long * PLATE8_S + 60, c.y + PLATE8_S + 60, top + 400) }
@@ -569,7 +570,8 @@ do
         g.midY, g.halfW = c.y, PLATE8_S - 60
         -- the carpet, down the middle to her pedestal
         local n = math.floor((x1 - x0) / PLATE4_S)
-        for i = 1, n do Floor(g, PLATE4, x0 + (i - 0.5) * PLATE4_S, c.y, top + 1, ROSE, "models/debug/debugwhite") end
+        local velvet, red = LC.DreamSurface("roses_carpet", ROSE)
+        for i = 1, n do Floor(g, PLATE4, x0 + (i - 0.5) * PLATE4_S, c.y, top + 1, red, velvet) end
         Her(g, x1 - 110, c.y, top, 180)
         g.lineX = x0 + (x1 - x0) / 2 -- (past this, on your knees)
         g.feetX = x1 - 230 -- (her feet)

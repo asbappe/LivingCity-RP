@@ -433,14 +433,25 @@ end)
 
 -- Called as someone dies (sv_livingcity_character.lua), before anything of
 -- theirs is cleared away. gone: this person is over (permanent death). note:
--- for a death that isn't, why not.
-function LC.RecordDeath(ply, gone, attacker, note)
+-- for a death that isn't, why not. dice: the roll that decided it (no close calls left: LC.LastChance), which
+-- plays on their screen before the card and holds the respawn back that long. A death the roll went against
+-- (dice, or ply.lcDeathRule set by whoever showed them the roll already) carries the reminder that the next
+-- person knows nothing of it.
+function LC.RecordDeath(ply, gone, attacker, note, dice)
     if not IsValid(ply) then return nil end
     local lived = LC.FlushLived(ply)
     ply.lcLivedMark = nil
     local name = LC.CharacterName and LC.CharacterName(ply) or ply:Nick()
     local cid = ply:GetNW2String("lc_cid", "")
     local card = { gone = gone and true or false, name = name, cid = cid, wait = LC.RespawnWait(), note = note }
+    if dice then
+        card.dice = { roll = dice.roll, need = dice.need, lives = dice.lives and true or false, secs = dice.secs or 0 }
+        card.wait = card.wait + (dice.secs or 0)
+        ply.lcDiceSecs = dice.secs or 0 -- (init.lua: the respawn waits for the roll too)
+    end
+    if gone and (dice or ply.lcDeathRule) then card.rule = true end
+    if ply.lcDeathRule then card.dark = true end -- (they watched the roll alive: their screen is dark already)
+    ply.lcDeathRule = nil
     if gone then
         local line, said = LC.DeathCause(ply, attacker)
         card.lived = math.floor(lived)

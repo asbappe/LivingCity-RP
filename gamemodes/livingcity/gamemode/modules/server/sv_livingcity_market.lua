@@ -494,7 +494,7 @@ local function FlushAnnounce()
     end
     if paRestrict and CurTime() - lastPA >= PA_GAP and LC.Announce then
         lastPA = CurTime()
-        pcall(LC.Announce, "ambient", nil, paRestrict)
+        LC.Try(LC.Announce, "ambient", nil, paRestrict)
     end
     paRestrict = nil
 end

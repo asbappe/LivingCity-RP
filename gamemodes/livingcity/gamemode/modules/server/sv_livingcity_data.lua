@@ -24,22 +24,25 @@ LC.NextNodeId = LC.NextNodeId or 1
 
 LC.POINT_KINDS = {
     idle = true, sit = true, sitchair = true, lean = true, queue = true,
-    patrol = true, checkpoint = true, spawn = true, cell = true, release = true, prisonwork = true, speech = true, speechcrowd = true,
-    work = true, vending = true, dispenser = true, terminal = true, stove = true, fire = true, dealer = true, locker = true, screen = true, lawboard = true, jobboard = true, cpfeed = true, evidlocker = true, rebelboard = true, interrochair = true, rebelcage = true, console = true,
+    patrol = true, checkpoint = true, spawn = true, cell = true, release = true, prisonwork = true, speech = true, speechcrowd = true, adminapc = true, adminheli = true,
+    work = true, vending = true, dispenser = true, terminal = true, stove = true, fire = true, dealer = true, locker = true, locker_rebel = true, locker_cp = true, screen = true, lawboard = true, jobboard = true, cpfeed = true, evidlocker = true, rebelboard = true, interrochair = true, rebelcage = true, console = true,
     infodesk = true, civposter = true,
     workbench = true, recycler = true, bin = true, salvage = true, -- (sv_livingcity_salvage.lua)
     conveyor = true, -- the factory line (sv_livingcity_jobgames.lua)
     bed = true, toilet = true, bath = true, -- sleep and hygiene (sv_livingcity_rest.lua, sv_livingcity_hygiene.lua)
-    citybin = true, streetlight = true, loudspeaker = true, screen_big = true, tv = true, -- street furniture (sv_livingcity_propaganda.lua)
+    citybin = true, streetlight = true, loudspeaker = true, screen_big = true, screen_mid = true, tv = true, -- street furniture (sv_livingcity_propaganda.lua)
     lz = true, -- where Overwatch drops soldiers (sv_livingcity_resistanceops.lua)
     dataterm = true, masterterm = true, -- the Resistance steal data from these (sv_livingcity_heist.lua)
     sspawn = true, -- where scanners flown from a console go up (sv_livingcity_scanner.lua)
+    -- (the wall monitor, kind "monitor", is gone: the owner, 15 November, "just delete it"; a saved one is dropped as the layout loads)
+    monitor_hang = true, camera = true, -- the Combine monitor (the hanging one) and the cameras it steps through (entities/lc_monitor.lua)
     transformer = true, forcefield = true, -- the power grid, and Combine forcefields (sv_livingcity_power.lua)
     powerbank = true, turret = true, barricade_low = true, barricade = true, barricade_tall = true, -- checkpoints (sv_livingcity_checkpoints.lua)
     platform = true, -- where the trains stop (sv_livingcity_trains.lua)
     intake = true, housingterm = true, arrival = true, -- Civil Intake, Housing Allocation, where new people arrive (sv_livingcity_intake.lua)
     laborterm = true, -- Labor Assignment: Union work is given out and changed here (sv_livingcity_labor.lua)
     cpsupply = true, -- the Civil Protection Commissary (sv_livingcity_cpsupply.lua)
+    fundtv = true, -- the Resistance fund screen (sv_livingcity_fundgear.lua)
     studio = true, -- where Dr. Breen speaks when no player is Director of Propaganda (sv_livingcity_propaganda.lua)
     desk = true, adminpower = true, suppressor = true, -- her last stand: her desk, and the transformer powering her shield (sv_livingcity_collapse.lua)
     incinerator = true, -- where the dead go (sv_livingcity_mortuary.lua)
@@ -47,7 +50,7 @@ LC.POINT_KINDS = {
     waymark = true, -- a permanent sprayed arrow toward rebel ground; its number is which (sv_livingcity_waymarks.lua)
     dock = true, graffiti = true, rubble = true, pipe = true, -- loading docks, walls that get tagged, rubble piles (Union shifts)
     ladder = true, -- two with the same number: a ladder NPCs can use (sv_livingcity_navgraph.lua)
-    zspawn = true, rspawn = true, -- infested and resistance respawn/spawn points
+    zspawn = true, rspawn = true, colonel = true, -- infested and resistance respawn/spawn points
     rlookout = true, -- an armed rebel stands guard here (sv_livingcity_rebels.lua)
     bunk = true, -- a rebel sleeps here now and then (sv_livingcity_rebellife.lua)
     jogroute = true, yard = true, parade = true, -- morning exercise: the jogging route, the drill yard, the parade route (sv_livingcity_exercise.lua)
@@ -241,7 +244,7 @@ function LC.ArchiveJogPoints()
     local any = false
     for _, p in ipairs(LC.Points) do if p.kind == "jogroute" then any = true break end end
     if not any then return 0 end
-    if LC.BackupLayout then pcall(LC.BackupLayout, "before the jogging routes were removed") end
+    if LC.BackupLayout then LC.Try(LC.BackupLayout, "before the jogging routes were removed") end
     local keep, seen, n = {}, {}, 0
     for _, p in ipairs(LC.Points) do
         if p.kind ~= "jogroute" then

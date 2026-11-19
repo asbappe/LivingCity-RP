@@ -37,6 +37,7 @@
 if CLIENT then return end
 
 util.AddNetworkString("lc_tags")
+util.AddNetworkString("lc_art")
 
 LC = LC or {}
 
@@ -98,12 +99,12 @@ timer.Create("LivingCityTasks", 0.25, 0, function()
             tasks[ply] = nil
         elseif not ply:Alive() then
             -- died mid-task: cancelled, so anything held for it is settled
-            local ok, err = pcall(EndTask, ply, false)
+            local ok, err = LC.Try(EndTask, ply, false)
             if not ok then LC.Error("task", err) end
         elseif ply:GetPos():DistToSqr(t.anchor) > t.maxMove * t.maxMove or ply:Health() < t.hp then
             EndTask(ply, false)
         elseif now >= t.untilT then
-            local ok, err = pcall(EndTask, ply, true)
+            local ok, err = LC.Try(EndTask, ply, true)
             if not ok then LC.Error("task", err) end
         end
     end
@@ -337,6 +338,67 @@ function LC.SweepCache(cache)
     return true
 end
 
+-- Pots stand on the camp's tables and dressers, not on the floor (the owner, 14 November: "In
+-- rebel zones, please make the pots spawn on top of tables and the dressers"). The furniture is the
+-- camp's own dressing (sv_livingcity_war.lua: LC.Dressed, any zone of the territory): a table
+-- (furnituretable...) or a dresser (furnituredrawer...), one pot on each.
+local function IsPotFurniture(e)
+    local m = IsValid(e) and string.lower(e:GetModel() or "") or ""
+    return string.find(m, "furnituretable", 1, true) ~= nil or string.find(m, "furnituredrawer", 1, true) ~= nil
+end
+LC.IsPotFurniture = IsPotFurniture
+-- The top of a piece of furniture: the middle of it, at its highest.
+local function TopOf(e)
+    if e.WorldSpaceAABB then
+        local mins, maxs = e:WorldSpaceAABB()
+        if mins and maxs then return Vector((mins.x + maxs.x) / 2, (mins.y + maxs.y) / 2, maxs.z) end
+    end
+    return e:GetPos() + Vector(0, 0, e.OBBMaxs and e:OBBMaxs().z or 30)
+end
+-- A table or dresser of z's territory with no pot on it yet, or nil.
+function LC.PotSeat(z, pots)
+    local taken = {}
+    for _, p in ipairs(pots or {}) do if IsValid(p) and IsValid(p.lcSeat) then taken[p.lcSeat] = true end end
+    local parts = LC.RebelPartsOf and LC.RebelPartsOf(z) or { z }
+    for _, part in ipairs(parts) do
+        local d = LC.Dressed and LC.Dressed[part]
+        for _, e in ipairs(d and d.ents or {}) do
+            if IsPotFurniture(e) and not taken[e] then return e end
+        end
+    end
+    return nil
+end
+-- Stand a pot on it. (It remembers which, and where that was: if the furniture goes or is moved,
+-- the pot is seated again or set down on the floor, never left in the air.)
+function LC.SeatPot(pot, furn)
+    if not (IsValid(pot) and IsValid(furn)) then return false end
+    local lift = pot.OBBMins and -pot:OBBMins().z or 0
+    pot:SetPos(TopOf(furn) + Vector(0, 0, math.max(0, lift) + 0.5))
+    pot.lcSeat, pot.lcSeatAt = furn, furn:GetPos()
+    return true
+end
+-- Every pot of a camp: one whose furniture has gone or moved comes down to the floor; one on the
+-- floor that nobody set there by hand goes up on a free table or dresser, when no one is looking.
+function LC.SeatPots(z, r)
+    for _, pot in ipairs(r.pots or {}) do
+        if IsValid(pot) then
+            if pot.lcSeat and (not IsValid(pot.lcSeat) or pot.lcSeat:GetPos():DistToSqr(pot.lcSeatAt or pot.lcSeat:GetPos()) > 16 * 16) then
+                local furn = pot.lcSeat
+                pot.lcSeat, pot.lcSeatAt = nil, nil
+                if not (IsValid(furn) and LC.SeatPot(pot, furn)) then
+                    local ground = LC.GroundAt and LC.GroundAt(pot:GetPos()) or pot:GetPos()
+                    pot:SetPos(ground + Vector(0, 0, math.max(0, pot.OBBMins and -pot:OBBMins().z or 0) + 1))
+                end
+            end
+            -- (a pot a player carried and set down stays where they put it: sv_livingcity_campmove.lua)
+            if not pot.lcSeat and not pot.lcPlacedByHand and not (LC.IsSeen and LC.IsSeen(pot:GetPos() + Vector(0, 0, 30))) then
+                local furn = LC.PotSeat(z, r.pots)
+                if furn and not (LC.IsSeen and LC.IsSeen(TopOf(furn) + Vector(0, 0, 10))) then LC.SeatPot(pot, furn) end
+            end
+        end
+    end
+end
+
 local function EnsureRebelProps()
     if not LC.Running then return end
     local live = {}
@@ -356,11 +418,22 @@ local function EnsureRebelProps()
                         if IsValid(r.cache) then SetStock(r.cache, r.stock or 4) r.cache:SetAngles(Angle(0, it.yaw or 0, 0)) end
                     elseif it.prop == "pot" and #r.pots < 2 then
                         local pot = Prop("models/props_junk/terracotta01.mdl", p, "pot")
-                        if IsValid(pot) then SetPot(pot, "empty") r.pots[#r.pots + 1] = pot end
+                        if IsValid(pot) then SetPot(pot, "empty") pot.lcPlacedByHand = it.hand or nil r.pots[#r.pots + 1] = pot end
                     end
                 end
                 need = (IsValid(r.cache) and 0 or 1) + math.max(0, 2 - #r.pots)
             end
+            -- (a new pot goes straight onto a table or dresser of the camp, when there is one free)
+            while #r.pots < 2 do
+                local furn = LC.PotSeat(z, r.pots)
+                if not furn or (LC.IsSeen and LC.IsSeen(TopOf(furn) + Vector(0, 0, 10))) then break end
+                local pot = Prop("models/props_junk/terracotta01.mdl", furn:GetPos(), "pot")
+                if not IsValid(pot) then break end
+                SetPot(pot, "empty")
+                LC.SeatPot(pot, furn)
+                r.pots[#r.pots + 1] = pot
+            end
+            need = (IsValid(r.cache) and 0 or 1) + math.max(0, 2 - #r.pots)
             if need > 0 then
                 -- on the zone's own floor (a rooftop camp keeps its crate on the roof: sv_livingcity_war.lua)
                 local spots = LC.ZoneFloorSpots and LC.ZoneFloorSpots(z, need * 2)
@@ -379,6 +452,7 @@ local function EnsureRebelProps()
                 end
             end
             if IsValid(r.cache) then r.stock = r.cache.lcStock end
+            LC.SeatPots(z, r)
         end
     end
     for z, r in pairs(LC.RebelProps) do
@@ -579,7 +653,7 @@ end
 -- pots ripen, crates refill
 local nextTrickle = 0
 timer.Create("LivingCityRebelSupplies", 5, 0, function()
-    local ok, err = pcall(function()
+    local ok, err = LC.Try(function()
         EnsureRebelProps()
         local now = CurTime()
         for _, r in pairs(LC.RebelProps) do
@@ -697,10 +771,81 @@ LC.TagKinds = {
 function LC.HasArt(rel)
     return file and file.Exists and file.Exists("materials/livingcity/" .. rel, "GAME") or false
 end
+
+-- The marks' pictures reach every player, whatever the downloads do (the owner, 14 November: the
+-- editor's Resistance marks "all just spray a lambda ... never the proper graffiti texture we
+-- implemented"). A player's game painted the lambda whenever it had not the picture, and it had it
+-- only if the picture was loose in the server's garrysmod/materials/ AND the FastDL had been
+-- synced since. So the gamemode now carries a copy of each mark (gamemodes/livingcity/content/
+-- graffiti/, 190 KB in all), and a game that lacks one asks for it (lc_art) and keeps it in its
+-- data folder. The owner's own loose picture, where there is one, is the one sent.
+LC.ArtCarried = "gamemodes/livingcity/content/"
+LC.MarkArt = { tally = "graffiti/tally.png", norecord = "graffiti/norecord.png", arrow_left = "graffiti/arrow_left.png",
+    arrow_right = "graffiti/arrow_right.png", arrow_up = "graffiti/arrow_up.png", arrow_down = "graffiti/arrow_down.png",
+    freedom = "graffiti/freedom.png" }
+-- Where that picture is on this server (the owner's loose one first, else the gamemode's copy), or nil.
+function LC.ArtFile(rel)
+    if not (rel and file and file.Exists) then return nil end
+    if file.Exists("materials/livingcity/" .. rel, "GAME") then return "materials/livingcity/" .. rel end
+    if file.Exists(LC.ArtCarried .. rel, "GAME") then return LC.ArtCarried .. rel end
+    return nil
+end
+-- Which pictures these are, as one word: a game that kept older ones asks again (lc_art_ver).
+function LC.ArtVersion()
+    local parts = {}
+    for kind, rel in SortedPairs(LC.MarkArt) do
+        local path = LC.ArtFile(rel)
+        local size = 0
+        if path then size = file.Size and file.Size(path, "GAME") or #(file.Read(path, "GAME") or "") end
+        parts[#parts + 1] = kind .. ":" .. tostring(size)
+    end
+    return util.CRC and util.CRC(table.concat(parts, ",")) or tostring(#parts)
+end
+-- For the debug report: how many of the marks' pictures the server has, and from where.
+function LC.ArtReport()
+    local loose, carried, none = 0, 0, {}
+    for kind, rel in SortedPairs(LC.MarkArt) do
+        local path = LC.ArtFile(rel)
+        if not path then none[#none + 1] = kind
+        elseif string.sub(path, 1, 10) == "materials/" then loose = loose + 1 else carried = carried + 1 end
+    end
+    return string.format("mark pictures (spray can, way marks): %d loose in materials/livingcity/graffiti/, %d from the gamemode's own copies%s (sent to a player whose game lacks one)",
+        loose, carried, #none > 0 and (", MISSING: " .. table.concat(none, ", ")) or "")
+end
+-- Send one to a player, in pieces (a net message holds 64 KB). True if it is on its way.
+LC.ArtChunk = 30000
+function LC.SendArt(ply, kind)
+    local rel = LC.MarkArt[kind or ""]
+    local path = rel and LC.ArtFile(rel)
+    if not path or not IsValid(ply) then return false end
+    ply.lcArtSent = ply.lcArtSent or {}
+    if (ply.lcArtSent[kind] or -100) > CurTime() - 20 then return false end -- (asked a moment ago: one copy is enough)
+    local bytes = file.Read(path, "GAME")
+    if not bytes or #bytes == 0 then return false end
+    ply.lcArtSent[kind] = CurTime()
+    local n = math.ceil(#bytes / LC.ArtChunk)
+    for i = 1, n do
+        local piece = string.sub(bytes, (i - 1) * LC.ArtChunk + 1, i * LC.ArtChunk)
+        timer.Simple((i - 1) * 0.3, function()
+            if not IsValid(ply) then return end
+            net.Start("lc_art")
+            net.WriteString(kind)
+            net.WriteUInt(i, 8)
+            net.WriteUInt(n, 8)
+            net.WriteUInt(#piece, 16)
+            net.WriteData(piece, #piece)
+            net.Send(ply)
+        end)
+    end
+    return true
+end
+net.Receive("lc_art", function(_, ply) LC.SendArt(ply, net.ReadString()) end)
+hook.Add("Initialize", "LivingCityMarkArt", function() if SetGlobal2String then SetGlobal2String("lc_art_ver", LC.ArtVersion()) end end)
+
 function LC.TagKindsOffered()
     local out = {}
     for _, k in ipairs(LC.TagKinds) do
-        if not k.art or LC.HasArt(k.art) then out[#out + 1] = k end
+        if not k.art or LC.ArtFile(k.art) then out[#out + 1] = k end
     end
     return out
 end

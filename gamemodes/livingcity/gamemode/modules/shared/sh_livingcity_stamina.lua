@@ -113,11 +113,11 @@ if CLIENT then
         if IsValid(me) and not pants[me] and me.StopSound then me:StopSound(BREATH) end
     end
     timer.Create("LivingCityBreath", 0.25, 0, function()
-        local ok, err = pcall(LCS.BreathTick, CurTime())
+        local ok, err = LC.Try(LCS.BreathTick, CurTime())
         if not ok then print("[Miscount] panting: " .. tostring(err)) end
     end)
     timer.Create("LivingCityBreathWatchdog", 1, 0, function()
-        local ok, err = pcall(LCS.BreathWatchdog, CurTime())
+        local ok, err = LC.Try(LCS.BreathWatchdog, CurTime())
         if not ok then print("[Miscount] panting watchdog: " .. tostring(err)) end
     end)
     hook.Add("ShutDown", "LivingCityBreath", function() for ply in pairs(pants) do StopPant(ply) end end)
@@ -168,7 +168,7 @@ function LCS.Tick(now, dt)
     end
 end
 timer.Create("LivingCityStamina", 0.2, 0, function()
-    local ok, err = pcall(LCS.Tick, CurTime(), 0.2)
+    local ok, err = LC.Try(LCS.Tick, CurTime(), 0.2)
     if not ok and LC.Error then LC.Error("stamina", err) end
 end)
 

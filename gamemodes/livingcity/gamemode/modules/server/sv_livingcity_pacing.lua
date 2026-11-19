@@ -99,11 +99,20 @@ function LC.InAction(ply)
 end
 
 -- In or within this far of an infestation: the eerie music's ground (cl_livingcity_atmos.lua).
+-- Never on the Resistance's own ground, though it lie right beside one (the owner, 14 November:
+-- "end of ravenholm music playing while standing in rebel territory, please fix": their camp is
+-- some 300 units from an infestation, well inside the 700): standing on rebel ground counts only
+-- if you are in the infestation itself. The music there is the city's usual (calm, or tense at
+-- night and when the city is yellow or red), and the action pieces in a fight.
 LC.EerieRange = 700
 function LC.ByInfest(pos)
     if not pos or not LC.ZonesOfKindShared or not LCZ or not LCZ.Near then return false end
+    local range = LC.EerieRange
+    for _, z in ipairs(LC.ZonesOfKindShared("rebel") or {}) do
+        if LCZ.Near(z, pos, 0) then range = 0 break end
+    end
     for _, z in ipairs(LC.ZonesOfKindShared("infest") or {}) do
-        if LCZ.Near(z, pos, LC.EerieRange) then return true end
+        if LCZ.Near(z, pos, range) then return true end
     end
     return false
 end
@@ -121,6 +130,6 @@ function LC.ActionTick(now)
     end
 end
 timer.Create("LivingCityAction", 2, 0, function()
-    local ok, err = pcall(LC.ActionTick, CurTime())
+    local ok, err = LC.Try(LC.ActionTick, CurTime())
     if not ok and LC.Error then LC.Error("pacing", err) end
 end)

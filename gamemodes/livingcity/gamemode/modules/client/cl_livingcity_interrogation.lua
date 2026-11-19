@@ -47,7 +47,13 @@ local function BuildQuestion(t)
     qWin = f
     if LC_CL.SetTheme then LC_CL.SetTheme(f, "custody") end -- (being questioned looks the same whoever you are)
     f:SetTitle("Interrogation")
-    f:SetSize(math.min(ScrW() - 40, 460), 330)
+    -- (sized to its words, all of them on screen: the owner, 15 November, "the interrogation window was too small
+    -- and I couldn't see all the text")
+    local said = tostring(t.by or "The unit") .. ": \"" .. tostring(t.text or "") .. "\""
+    local w = math.min(ScrW() - 40, 520)
+    local lines = LC_CL.QuickWrapLines and #LC_CL.QuickWrapLines(said, "DermaDefault", w - 24) or 3
+    local rows = 4 + (t.bargain and 1 or 0)
+    f:SetSize(w, math.min(ScrH() - 40, 24 + 8 + math.max(1, lines) * 16 + 2 + 20 + rows * 35 + 14))
     f:Center()
     f:MakePopup()
     f:ShowCloseButton(false)
@@ -59,7 +65,7 @@ local function BuildQuestion(t)
     q:SetWrap(true)
     q:SetAutoStretchVertical(true)
     q:SetTextColor(ACC)
-    q:SetText(tostring(t.by or "The unit") .. ": \"" .. tostring(t.text or "") .. "\"")
+    q:SetText(said)
     local info = vgui.Create("DPanel", f)
     info:Dock(TOP)
     info:SetTall(20)
@@ -131,6 +137,7 @@ local function BuildCP()
             local st = cpState or {}
             local text = (st.questions or {})[i] or ("Question " .. i)
             if st.asked and st.asked[i] then text = text .. " (asked)" end
+            if s.SetVisible then s:SetVisible(not st.questions or st.questions[i] ~= nil) end
             if s.GetText and s:GetText() ~= text and s.SetText then s:SetText(text) end
         end
     end
@@ -197,7 +204,7 @@ end
 
 local function CPQuick(st)
     local items = {}
-    for i = 1, 3 do
+    for i = 1, st.questions and #st.questions or 3 do -- (as many as there are: the Administrator's may be two)
         local text = (st.questions or {})[i] or ("Question " .. i)
         if st.asked and st.asked[i] then text = text .. " (asked)" end
         items[#items + 1] = { label = "Ask: " .. text, run = function() Do("ask", i) end }

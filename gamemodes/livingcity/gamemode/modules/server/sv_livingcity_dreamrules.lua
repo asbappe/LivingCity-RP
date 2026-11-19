@@ -133,7 +133,7 @@ hook.Add("LivingCitySkirmish", "LivingCityDreamRules", function(kind)
 end)
 -- the night's dream, remembered (for "not two propaganda dreams in a row")
 hook.Add("LivingCityDreamStarted", "LivingCityDreamRules", function(dream)
-    if dream.test then return end -- (a test from the editor)
+    if dream.test or dream.prison then return end -- (a test from the editor; a prisoner's dream at any hour: not the night's)
     local ph = Phase()
     if ph == "night" or ph == "dusk" then D.lastKind = LC.DreamKind(dream.ending) end
 end)

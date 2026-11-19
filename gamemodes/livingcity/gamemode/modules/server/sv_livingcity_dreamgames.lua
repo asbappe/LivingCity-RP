@@ -361,8 +361,9 @@ do
         for x = 1, w do for y = 1, h do g.cells[Key(x, y)] = Vector(g.x0 + (x - 0.5) * CELL, g.y0 + (y - 0.5) * CELL, top) end end
         -- the floor
         local fx, fy = math.ceil(w * CELL / PLATE8_S), math.ceil(h * CELL / PLATE8_S)
+        local mat, look = LC.DreamSurface("maze", Color(20, 22, 40))
         for i = 1, fx do for j = 1, fy do
-            Floor(g, PLATE8, g.x0 + (i - 0.5) * PLATE8_S, g.y0 + (j - 0.5) * PLATE8_S, top, Color(20, 22, 40), "models/debug/debugwhite")
+            Floor(g, PLATE8, g.x0 + (i - 0.5) * PLATE8_S, g.y0 + (j - 0.5) * PLATE8_S, top, look, mat)
         end end
         -- the walls: round the outside, and between cells that aren't joined
         local blue = Color(40, 70, 220)
@@ -575,19 +576,20 @@ do
         local function U(u) return c.x + u end
         local steel = Color(110, 90, 70)
         -- the ramps: side by side, each climbing the other way
+        local rampMat, rampLook = LC.DreamSurface("barrels_ramp", steel)
         for k = 0, n - 1 do
             local up = (k % 2 == 0) and 1 or -1 -- (ramp k climbs toward +x, or -x)
             local z0 = base + k * RISE
             for j = 0, 1 do
                 local frac = (j + 0.5) / 2
                 local u = up * (-L + frac * 2 * L)
-                Block(g, PLATE8, Vector(U(u), V(k), z0 + frac * RISE - PLATE_HALF), Angle(-up * math.deg(theta), 0, 0), steel, "models/debug/debugwhite")
+                Block(g, PLATE8, Vector(U(u), V(k), z0 + frac * RISE - PLATE_HALF), Angle(-up * math.deg(theta), 0, 0), rampLook, rampMat)
             end
             -- the landing at its top, joining the next ramp
             if k < n - 1 then
                 local side = up * (L + S / 2)
-                Floor(g, PLATE8, U(side), V(k), z0 + RISE, steel, "models/debug/debugwhite")
-                Floor(g, PLATE8, U(side), V(k + 1), z0 + RISE, steel, "models/debug/debugwhite")
+                Floor(g, PLATE8, U(side), V(k), z0 + RISE, rampLook, rampMat)
+                Floor(g, PLATE8, U(side), V(k + 1), z0 + RISE, rampLook, rampMat)
             end
         end
         -- the start, and the top
@@ -733,8 +735,8 @@ do
         g.tiles = {}
         for i = 1, n do for j = 1, n do
             local even = (i + j) % 2 == 0
-            local col = even and Color(200, 200, 210) or Color(150, 150, 165)
-            local e = Floor(g, model, g.x0 + (i - 0.5) * T, g.y0 + (j - 0.5) * T, g.top, col, "models/debug/debugwhite")
+            local mat, col = LC.DreamSurface("crumble", even and Color(200, 200, 210) or Color(150, 150, 165))
+            local e = Floor(g, model, g.x0 + (i - 0.5) * T, g.y0 + (j - 0.5) * T, g.top, col, mat)
             g.tiles[i .. "_" .. j] = { e = e, i = i, j = j, col = col }
         end end
         g.scanner = Actor(g, SCANNER, Vector(dream.pos.x, dream.pos.y, g.top + 220), 0, 1.5)
@@ -936,8 +938,9 @@ do
         local top = c.z + 2
         g.top = top
         local x0 = c.x - long * PLATE8_S / 2
+        local mat, look = LC.DreamSurface("freeze", Color(70, 75, 80))
         for i = 1, long do for j = 0, 1 do
-            Floor(g, PLATE8, x0 + (i - 0.5) * PLATE8_S, c.y + (j - 0.5) * PLATE8_S, top, Color(70, 75, 80), "models/debug/debugwhite")
+            Floor(g, PLATE8, x0 + (i - 0.5) * PLATE8_S, c.y + (j - 0.5) * PLATE8_S, top, look, mat)
         end end
         g.startX, g.finishX = x0 + 90, x0 + long * PLATE8_S - 160
         -- the finish line (a red strip), and the officer behind it
@@ -992,7 +995,7 @@ do
                 end
             end
         end
-        local okZ, errZ = pcall(Zombies, g, dt, players, now)
+        local okZ, errZ = LC.Try(Zombies, g, dt, players, now)
         if not okZ and LC.Error then LC.Error("freeze zombies", errZ) end
         if g.lasers then
             local keep = {}
@@ -1021,7 +1024,7 @@ local function Tick()
     local dream = LC.DreamActive
     local g = dream and dream.game
     if not g or g.stopped then timer.Remove("LivingCityDreamGames") return end
-    local ok, err = pcall(function()
+    local ok, err = LC.Try(function()
         local now = CurTime()
         local dt = math.Clamp(now - (g.last or now), 0, 0.25)
         g.last = now
@@ -1135,7 +1138,7 @@ function LC.DreamGameStart(dream)
     local players = LC.DreamersOf and LC.DreamersOf(dream) or dream.list
     -- the Administrator, asleep with the others, may star in it herself (sv_livingcity_propagandadreams.lua)
     if def.starring and LC.DreamStarOf then g.star = LC.DreamStarOf(players) end
-    local ok, err = pcall(def.build, g, dream)
+    local ok, err = LC.Try(def.build, g, dream)
     if not ok or err == false then
         for _, e in ipairs(g.ents) do if IsValid(e) then e:Remove() end end
         dream.game = nil
@@ -1143,7 +1146,7 @@ function LC.DreamGameStart(dream)
         return false, "The dream couldn't be built here."
     end
     g.started = #players
-    do local okD, errD = pcall(LC.DreamDress, g) if not okD and LC.Error then LC.Error("dream dressing", errD) end end
+    do local okD, errD = LC.Try(LC.DreamDress, g) if not okD and LC.Error then LC.Error("dream dressing", errD) end end
     local hello = def.hello and def.hello(g) or {}
     -- (the arena's box: the dreamers' screens leave out any city NPC wandering inside it, cl_livingcity_dreamgames.lua)
     if g.bounds and hello.bounds == nil then
@@ -1216,7 +1219,7 @@ end
 function LC.DreamGameLeave(p, dream)
     if not IsValid(p) then return end
     local g = dream and dream.game
-    if g and g.def and g.def.leave then pcall(g.def.leave, g, p) end -- (a dream's own way out: gravity back, sv_livingcity_strangedreams.lua)
+    if g and g.def and g.def.leave then LC.Try(g.def.leave, g, p) end -- (a dream's own way out: gravity back, sv_livingcity_strangedreams.lua)
     if g and g.pl[p] and not g.pl[p].done then
         g.pl[p].done, g.pl[p].how = true, g.pl[p].how or "woke"
         Send(g, { k = "stop", how = "woke" }, p)
@@ -1274,10 +1277,10 @@ function LC.DreamGameStop(dream, why)
     g.stopped = true
     timer.Remove("LivingCityDreamGames")
     if g.def.stop then -- (what a dream changed outside its arena, put back: the Freeze dream's lights)
-        local okS, errS = pcall(g.def.stop, g)
+        local okS, errS = LC.Try(g.def.stop, g)
         if not okS and LC.Error then LC.Error("dream game stop", errS) end
     end
-    if LC.SoundGuardDreamEnd then pcall(LC.SoundGuardDreamEnd, dream) end -- (its sounds, before what made them goes: sh_livingcity_soundguard.lua)
+    if LC.SoundGuardDreamEnd then LC.Try(LC.SoundGuardDreamEnd, dream) end -- (its sounds, before what made them goes: sh_livingcity_soundguard.lua)
     for p, s in pairs(g.pl) do
         if IsValid(p) and not s.done then Send(g, { k = "stop", how = why or "over" }, p) end
     end

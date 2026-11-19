@@ -116,6 +116,7 @@ LC.Chain{
             if not pos then return nil end
             local go = Goto(pos, "Go to the street the Overseer has marked", 180)
             go.onDone = function(q) if IsValid(q.owner) and LC.JobGameStart then LC.JobGameStart(q.owner, "sweep", q, { depot = pos }) end end
+            go.game, go.gameOpts = "sweep", { depot = pos } -- (what the job board reads its pay from: LC.PostingPay)
             return {
                 title = "Grime", reward = 10, limit = 600,
                 desc = "The Overseer wants a street swept, and you're the broom. The collar hums at your neck the whole time.",
@@ -155,12 +156,14 @@ LC.Chain{
         whisper = { num = 3, build = function(ply)
             local pos = Q.Spot(ply, 300, 1500)
             if not pos then return nil end
-            local hold = Hold(pos, 20, "Reach out through the vortessence: stay still here, unseen, for 20 seconds", 140)
+            -- reaching out is the needle game: catch the vortessence as it passes, and never while the scanner looks
+            local go = Q.GameGo(pos, "Find a quiet corner (marked)", "hack", { what = "the vortessence", title = "The vortessence", crime = "Unsanctioned vortal activity", pos = pos }, 140)
+            local hold = Q.GameStage("Reach out through the vortessence")
             hold.onDone = function(q) if IsValid(q.owner) then Call(q.owner) end end
             return {
                 title = "A whisper in the vortessence", reward = 20, limit = 600,
                 desc = "Some nights the collar flickers, and the vortessence stirs behind it. Find somewhere quiet " .. Place(pos, ply:GetPos()) .. ", and reach out.",
-                stages = { Goto(pos, "Find a quiet corner (marked)", 140), hold },
+                stages = { go, hold },
                 onFinish = function(q, success) if success then q.chainEnd = "called" end end,
             }
         end },
@@ -188,7 +191,7 @@ local function NearestSlave(pos)
 end
 
 T{
-    id = "res_vort_kin", factions = { resistance = true },
+    id = "res_vort_kin", brings = true, factions = { resistance = true },
     available = function(ply) return FreeVort(ply) and NearestSlave(ply:GetPos()) ~= nil end,
     build = function(ply)
         local v = NearestSlave(ply:GetPos())
@@ -206,7 +209,7 @@ T{
 }
 
 T{
-    id = "res_vort_sense", factions = { resistance = true },
+    id = "res_vort_sense", brings = false, factions = { resistance = true },
     available = function(ply) return FreeVort(ply) end,
     build = function(ply)
         local cps = LC.PointsOfKind and LC.PointsOfKind("checkpoint") or {}
@@ -226,8 +229,9 @@ T{
             title = "Read the Combine", reward = 35, limit = 600,
             desc = "The vortessence sees what eyes don't: who stands where, and when they change. Watch the checkpoint " .. Place(target, ply:GetPos()) .. " from a little way off, unseen, and bring what it shows you to the quartermaster.",
             stages = {
-                Goto(spot, "Find somewhere to watch from (marked), out of the units' sight", 200),
-                Hold(spot, 20, "Still yourself and let the vortessence read the checkpoint (20 seconds, unseen)", 160),
+                Q.GameGo(spot, "Find somewhere to watch from (marked), out of the units' sight", "hack",
+                    { what = "the vortessence", title = "The vortessence", crime = "Unsanctioned vortal activity", pos = spot }, 200),
+                Q.GameStage("Let the vortessence read the checkpoint"),
             },
             onFinish = function(q, success)
                 if not success or not IsValid(q.owner) then return end
@@ -460,12 +464,12 @@ end
 
 timer.Create("LivingCityVortKin", 2, 0, function()
     local now = CurTime()
-    local ok, err = pcall(VortTalk, now)
+    local ok, err = LC.Try(VortTalk, now)
     if not ok and LC.Error then LC.Error("vortigaunt talk", err) end
-    ok, err = pcall(Commune, now)
+    ok, err = LC.Try(Commune, now)
     if not ok and LC.Error then LC.Error("vortigaunt commune", err) end
 end)
 timer.Create("LivingCityVortLife", 1, 0, function()
-    local ok, err = pcall(VortLife, CurTime())
+    local ok, err = LC.Try(VortLife, CurTime())
     if not ok and LC.Error then LC.Error("vortigaunt life", err) end
 end)

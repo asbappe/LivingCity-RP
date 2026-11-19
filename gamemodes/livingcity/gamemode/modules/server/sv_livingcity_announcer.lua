@@ -125,10 +125,24 @@ LC.AnnounceTriggers = {
     "speech_soon", -- her address: the call to gather (sv_livingcity_speech.lua)
     -- her own address, stitched from pieces (hers only; sv_livingcity_speech.lua, LC.SpeechPieces)
     "speech_open", "speech_slogan", "speech_ev_deaths", "speech_ev_arrests", "speech_ev_informers", "speech_ev_informer_hurt", "speech_ev_taken", "speech_ev_escape", "speech_ev_posters", "speech_ev_theft", "speech_ev_defiance", "speech_ev_sabotage", "speech_ev_heavyhand", "speech_ev_drink", "speech_ev_kindness", "speech_ev_despair", "speech_unrest", "speech_hunger", "speech_order", "speech_morale", "speech_calm", "speech_mood_afraid", "speech_mood_restless", "speech_mood_content", "speech_close",
+    "attempt", -- an attempt on her life: her word to the city, or Overwatch's (sv_livingcity_adminsecurity.lua)
+    "speech_attempt_open", "speech_attempt_martyr", "speech_attempt_you", "speech_attempt_hero", "speech_attempt_guards", "speech_attempt_enemy", "speech_attempt_caught", "speech_attempt_hunt", "speech_attempt_measures", "speech_attempt_resolve", -- her next address, all about it
+    -- her questions to whoever tried to kill her, asked in the cells by the city's own Administrator (hers only, never
+    -- announced: sv_livingcity_adminquestioning.lua picks the recording and she says it where she stands)
+    "question_names", "question_supplies", "question_hideout", "question_why", "question_who",
+    -- Dispatch to the units when a hunt for whoever tried to kill her begins: Overwatch's only, never over the PA, heard
+    -- on the units' radios in sound alone and only where it is recorded (sv_livingcity_adminhunt.lua)
+    "hunt",
+    -- headcrab canisters on a district the Resistance hold, as they come in (sv_livingcity_shelling.lua)
+    "shelled",
 }
 -- Lines only she says (Overwatch has none of these): lc_voice_missing doesn't ask him for them.
 LC.AnnounceHersOnly = {}
-for _, t in ipairs(LC.AnnounceTriggers) do if string.sub(t, 1, 7) == "speech_" and t ~= "speech_soon" then LC.AnnounceHersOnly[t] = true end end
+for _, t in ipairs(LC.AnnounceTriggers) do
+    if (string.sub(t, 1, 7) == "speech_" and t ~= "speech_soon") or string.sub(t, 1, 9) == "question_" then LC.AnnounceHersOnly[t] = true end
+end
+-- Lines only Overwatch says, and never over the PA: lc_voice_missing doesn't ask her for them.
+LC.AnnounceHisOnly = { hunt = true }
 -- No longer said (a sweep, a raid or a supply convoy is a surprise; a lockdown
 -- answers violence): files named for these are left alone, never mistaken for
 -- the event itself (lockdown_soon1.wav is not a lockdown line).
@@ -137,7 +151,8 @@ LC.AnnounceVoices = { "overwatch", "administrator" }
 LC.AnnounceTierNames = { "warm", "firm", "stern", "furious" }
 -- Other voices with folders of their own, and their triggers: [voice] = { trigger, ... }
 LC.AnnounceExtra = { radio = { "static", "union", "freq7", "freq7_song", "jam",
-    "freq7_sweep", "freq7_raid", "freq7_curfew", "freq7_supply", "freq7_incursion", "freq7_lockdown", "freq7_dropship" } } -- (Freq 7: sv_livingcity_freq7.lua)
+    "freq7_sweep", "freq7_raid", "freq7_curfew", "freq7_supply", "freq7_incursion", "freq7_lockdown", "freq7_dropship",
+    "freq7_fund" } } -- (Freq 7: sv_livingcity_freq7.lua; freq7_fund, asking for the Resistance's fund: sv_livingcity_fundplea.lua)
 local TIERS = LC.AnnounceTierNames
 
 -- the tone she usually takes for each thing (1 warm .. 4 furious)
@@ -145,9 +160,11 @@ local BASE_TIER = {
     rations = 1, supply = 1, ended = 1, rations_soon = 1,
     dawn = 1, day = 1, dusk = 1, night = 1, ambient = 1, welcome = 1, power_restored = 1, train_arrival = 1, socio_green = 1,
     sweep = 2, curfew = 2, curfew_soon = 2, blackout = 2, territory_grew = 2, socio_yellow = 2, outbreak = 2,
-    lockdown = 3, raid = 3, skirmish_raid = 3, skirmish_sweep = 3, response = 3, block_raided = 3, overwatch_drop = 3, socio_red = 3,
+    lockdown = 3, raid = 3, shelled = 3, skirmish_raid = 3, skirmish_sweep = 3, response = 3, block_raided = 3, overwatch_drop = 3, socio_red = 3,
     breakout = 4, socio_black = 4, black_stand = 4, black_fallen = 4, suppressor_down = 4, black_crushed = 3,
     jog = 1, drill = 1, parade = 1, -- (she loves a bit of exercise)
+    attempt = 4, speech_attempt_open = 3, speech_attempt_martyr = 3, speech_attempt_you = 3, speech_attempt_hero = 3, speech_attempt_guards = 3, speech_attempt_enemy = 3, speech_attempt_caught = 3, speech_attempt_hunt = 3, speech_attempt_measures = 3, speech_attempt_resolve = 3,
+    question_names = 3, question_supplies = 3, question_hideout = 3, question_why = 3, question_who = 3, hunt = 3,
     speech_soon = 1, speech_open = 1, speech_slogan = 1, speech_ev_deaths = 2, speech_ev_arrests = 2, speech_ev_informers = 1, speech_ev_informer_hurt = 3, speech_ev_taken = 3, speech_ev_escape = 3, speech_ev_posters = 2, speech_ev_theft = 2, speech_ev_defiance = 2, speech_ev_sabotage = 3, speech_ev_heavyhand = 2, speech_ev_drink = 1, speech_ev_kindness = 1, speech_ev_despair = 1, speech_unrest = 3, speech_hunger = 1, speech_order = 2, speech_morale = 1, speech_calm = 1, speech_mood_afraid = 1, speech_mood_restless = 2, speech_mood_content = 1, speech_close = 1,
 }
 LC.AnnounceBaseTier = BASE_TIER -- (read only: the voice lines list, _dev/voice_lines.py)
@@ -181,11 +198,11 @@ local TITLES = {
     jog = "Morning exercise", drill = "Morning exercise", parade = "Morning parade",
     outbreak = "Outbreak", blackout = "Power failure", power_restored = "Power restored", skirmish_raid = "Overwatch response",
     skirmish_sweep = "Overwatch response", breakout = "Prison breakout", overwatch_drop = "Overwatch deployment",
-    block_raided = "Housing block inspection", territory_grew = "Resistance activity", train_arrival = "Arrivals",
+    block_raided = "Housing block inspection", shelled = "Sector sterilization", territory_grew = "Resistance activity", train_arrival = "Arrivals",
     welcome = "Welcome", dawn = "City announcement", day = "City announcement", dusk = "City announcement", night = "City announcement",
     ambient = "City announcement", response = "Overwatch response", socio_black = "Civil collapse",
     black_stand = "The Nexus", black_fallen = "The Administrator", black_crushed = "Order restored", suppressor_down = "The suppression device",
-    speech_soon = "The Administrator's address",
+    speech_soon = "The Administrator's address", attempt = "The Administrator",
 }
 for _, t in ipairs(LC.AnnounceTriggers) do if string.sub(t, 1, 7) == "speech_" then TITLES[t] = "The Administrator's address" end end
 LC.AnnounceTitles = TITLES -- (read only: the voice lines list, _dev/voice_lines.py)
@@ -690,6 +707,7 @@ function LC.VoiceMissing()
         local m = {}
         for _, t in ipairs(LC.AnnounceTriggers) do
             if v == "overwatch" and LC.AnnounceHersOnly[t] then goto nextTrig end
+            if v == "administrator" and LC.AnnounceHisOnly[t] then goto nextTrig end
             local n = 0
             for k = 1, (v == "administrator" and #TIERS or 1) do n = n + #Scan(v, t, k) end
             if n == 0 then m[#m + 1] = t end
@@ -796,7 +814,7 @@ concommand.Add("lc_voice_missing", function(ply)
         for _, line in ipairs(LC.VoiceMissingLines(r)) do Reply(ply, line) end
     end
     Reply(ply, "[Miscount] " .. total .. " voice lines with no recording yet. Without one, the words still show (Half-Life 2's own Overwatch lines only with lc_announce_stock 1). " ..
-        "Name a file for its line (curfew1.wav, ravenholm_defeat1.wav); a .txt with the same name is its subtitle. Everything to record, with suggested words: VOICE_LINES.md, in the gamemode's folder.")
+        "Name a file for its line (curfew1.wav, ravenholm_defeat1.wav); a .txt with the same name is its subtitle. Everything to record, with suggested words: VOICE_SCRIPTS.md, in the gamemode's folder.")
 end)
 
 concommand.Add("lc_announce_rescan", function(ply)

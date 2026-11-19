@@ -76,6 +76,37 @@ end
 
 local GAMES = {}
 
+-- Community service is unpaid (sv_livingcity_work.lua): the work still counts. So is a Resistance job that brings
+-- nothing in (the owner, 19 November: experience only; LC.QuestBringsNothing, sv_livingcity_economy.lua).
+local function Unpaid(q, ply)
+    if not istable(q) then return false end
+    if isstring(q.title) and string.find(q.title, "Community service", 1, true) then return true end
+    return LC.QuestBringsNothing ~= nil and LC.QuestBringsNothing(ply, q)
+end
+-- What a game pays, with Realistic survival's share on top (sv_livingcity_survivalmode.lua).
+local function Mul(ply, pay)
+    if pay > 0 and LC.SurvivalPayMul and IsValid(ply) then return math.floor(pay * LC.SurvivalPayMul(ply) + 0.5) end
+    return pay
+end
+
+-- What a game can pay this player, the least and the most, for the job boards (every job lists its credits: the owner,
+-- 19 November; LC.PostingPay, sv_livingcity_quests.lua). Each game says it beside its own pay (payRange: { lo, hi },
+-- or a function of the game's opts and where it starts, giving lo, hi and what can be found besides, paid as it is).
+-- q: the job (its title), when known.
+function LC.JobGamePay(ply, kind, opts, q, from)
+    local def = GAMES[kind]
+    if not def or Unpaid(q, ply) then return 0, 0 end
+    local r, lo, hi, besides = def.payRange, 0, 0, 0
+    if isfunction(r) then
+        local okR, a, b, c = LC.Try(r, opts or {}, from)
+        if okR then lo, hi, besides = tonumber(a) or 0, tonumber(b) or 0, tonumber(c) or 0 end
+    elseif istable(r) then
+        lo, hi = tonumber(r[1]) or 0, tonumber(r[2]) or 0
+    end
+    lo, hi = math.max(0, math.floor(lo)), math.max(0, math.floor(hi))
+    return Mul(ply, lo), Mul(ply, hi) + math.max(0, math.floor(besides))
+end
+
 -- Start a game for this player. opts: what the shift worked out (where).
 function LC.JobGameStart(ply, kind, q, opts)
     local def = GAMES[kind]
@@ -83,7 +114,7 @@ function LC.JobGameStart(ply, kind, q, opts)
     if LC.JobGames[ply] then LC.JobGameEnd(ply, "replaced") end
     local g = { kind = kind, ply = ply, q = q, opts = opts or {}, startT = CurTime(), props = {}, pay = 0, notes = {} }
     LC.JobGames[ply] = g
-    local ok, err = pcall(def.start, g)
+    local ok, err = LC.Try(def.start, g)
     if not ok then
         LC.JobGames[ply] = nil
         if LC.Error then LC.Error("job game " .. kind, err) end
@@ -100,14 +131,13 @@ function LC.JobGameEnd(ply, how)
     if not g then return end
     LC.JobGames[ply] = nil
     local def = GAMES[g.kind]
-    if def.finish then pcall(def.finish, g, how) end
+    if def.finish then LC.Try(def.finish, g, how) end
     for _, e in ipairs(g.props) do if IsValid(e) then e:Remove() end end
     Hud(ply, nil)
     if how == "done" or how == "test" then
         local pay = math.max(0, math.floor(g.pay))
-        -- community service is unpaid (sv_livingcity_work.lua): the work still counts
-        if g.q and g.q.title and string.find(g.q.title, "Community service", 1, true) then pay = 0 end
-        if pay > 0 and LC.SurvivalPayMul then pay = math.floor(pay * LC.SurvivalPayMul(ply) + 0.5) end -- (Realistic survival: sv_livingcity_survivalmode.lua)
+        if Unpaid(g.q, ply) then pay = 0 end
+        pay = Mul(ply, pay)
         if pay > 0 and LC.AddCredits then LC.AddCredits(ply, pay, g.title) end
         if IsValid(ply) and LC.Notice then
             local text = (#g.notes > 0 and (table.concat(g.notes, " ") .. " ") or "") .. (pay > 0 and string.format("You earned %d extra credits for this work, on top of your normal shift pay.", pay) or "No extra credits for this work.")
@@ -125,7 +155,7 @@ timer.Create("LivingCityJobGames", 0.1, 0, function()
         elseif ply.lcRationBreak then
             -- (on a ration break: the game waits too)
         else
-            local ok, err = pcall(GAMES[g.kind].tick, g, now)
+            local ok, err = LC.Try(GAMES[g.kind].tick, g, now)
             if not ok then
                 if LC.Error then LC.Error("job game " .. g.kind, err) end
                 LC.JobGameEnd(ply, "done")
@@ -213,6 +243,9 @@ local function Push(g, now)
 end
 
 GAMES.sweep = {
+    -- a credit for each piece in the cart and one more for a long throw, 5 for under three minutes; the rubbish can hide
+    -- coins besides (two finds at most, 3 to 8 each)
+    payRange = function(opts) local n = #(opts.spots or {}) return 0, 2 * n + 5, math.min(2, n) * 8 end,
     start = function(g)
         g.title = "Street sweep"
         local depot = g.opts.depot or g.ply:GetPos()
@@ -402,6 +435,8 @@ local function FindConveyor(g)
 end
 
 GAMES.line = {
+    -- 2 for each faulty one binned, 1 for each good one passed, 6 for no mistakes
+    payRange = function() return 0, 2 * TOTAL_PARTS + 6 end,
     start = function(g)
         local L = LineOf(g)
         g.title = L.title
@@ -689,19 +724,23 @@ local function NextTraveler(g)
 end
 
 GAMES.papers = {
+    -- 5 at most for each traveler (a forgery handed to a unit), 5 for no citations
+    payRange = function() return 0, 5 * TRAVELERS + 5 end,
     start = function(g)
-        g.title = "Papers check"
+        -- (at the ration counter the same game checks citizens' cards: opts.who, opts.one, opts.where, opts.title)
+        local who, one, where = g.opts.who or "Travelers", g.opts.one or "traveler", g.opts.where or "Station"
+        g.title = g.opts.title or "Papers check"
         g.post = g.ply:GetPos()
         local fwd = g.ply:GetAimVector() fwd.z = 0
         g.facing = fwd:GetNormalized()
         g.rules = Rules()
         g.today = 200 + math.random(0, 150)
         g.done, g.right, g.cites = 0, 0, 0
-        g.ply:ChatPrint("[Station] Travelers will walk up to you one at a time. Press E on each one to see their papers and check them against today's rules (listed on your screen). Then choose: approve them, deny them, or call a Civil Protection unit if the papers are forged (look closely at the seal). Right calls pay; wrong ones get you a citation and docked pay.")
+        g.ply:ChatPrint("[" .. where .. "] " .. who .. " will walk up to you one at a time. Press E on each one to see their papers and check them against today's rules (listed on your screen). Then choose: approve them, deny them, or call a Civil Protection unit if the papers are forged (look closely at the seal). Right calls pay; wrong ones get you a citation and docked pay.")
         g.hud = function(gg)
-            local lines = { string.format("Travelers checked: %d of %d", gg.done, TRAVELERS), string.format("Right calls: %d    Citations (mistakes): %d", gg.right, gg.cites), "Today's rules:" }
+            local lines = { string.format("%s checked: %d of %d", who, gg.done, TRAVELERS), string.format("Right calls: %d    Citations (mistakes): %d", gg.right, gg.cites), "Today's rules:" }
             for _, l in ipairs(RuleLines(gg.rules)) do lines[#lines + 1] = "  " .. l end
-            if gg.current and gg.current.arrived then lines[#lines + 1] = "Press E on the traveler to see their papers" end
+            if gg.current and gg.current.arrived then lines[#lines + 1] = "Press E on the " .. one .. " to see their papers" end
             return lines
         end
         NextTraveler(g)
@@ -1064,6 +1103,8 @@ local function SendWires(g, zap)
 end
 
 GAMES.wiring = {
+    -- 3 to 6 by the shocks, 2 for close to the fewest turns, doubled in a blackout (LC.WireTry)
+    payRange = { 1, 16 },
     start = function(g)
         g.title = "Rewiring"
         g.what = g.opts.what or "the panel"
@@ -1143,7 +1184,7 @@ function LC.WireTry(ply, k, ccw)
         if g.dark then base = base * 2 g.notes[#g.notes + 1] = "Blackout: pay doubled." end
         g.pay = base
         if g.shocks == 0 then g.notes[#g.notes + 1] = "Not shocked once." end
-        if g.opts.onFixed then pcall(g.opts.onFixed) end
+        if g.opts.onFixed then LC.Try(g.opts.onFixed) end
         LC.JobGameEnd(ply, "done")
         return true
     end
@@ -1177,6 +1218,8 @@ local function Urgency(inj)
 end
 
 GAMES.triage = {
+    -- 4 for each patient saved (five at most), 6 when nobody is lost
+    payRange = { 0, 5 * 4 + 6 },
     start = function(g)
         g.title = "Triage"
         local center = g.opts.center or g.ply:GetPos()
@@ -1243,7 +1286,7 @@ GAMES.triage = {
                         if hp <= 0 then
                             p.done, g.lost = true, g.lost + 1
                             npc:SetNW2Bool("lc_patient", false)
-                            if npc.TakeDamage then pcall(npc.TakeDamage, npc, 100, game.GetWorld and game.GetWorld() or npc) end
+                            if npc.TakeDamage then LC.Try(npc.TakeDamage, npc, 100, game.GetWorld and game.GetWorld() or npc) end
                             g.ply:ChatPrint("[Clinic] A patient has died: " .. p.injury.label .. ".")
                         end
                     end
@@ -1296,6 +1339,8 @@ end
 if #CHUNKS == 0 then CHUNKS = { "models/props_junk/cinderblock01a.mdl" } end
 
 GAMES.rubble = {
+    -- a credit for each block in the pile (4 to 6)
+    payRange = { 4, 6 },
     start = function(g)
         g.title = "Rubble"
         local pos = g.opts.pos or (g.ply:GetPos() + g.ply:GetForward() * 80)
@@ -1396,7 +1441,7 @@ function LC.JobGameAct(ply, action, arg)
     local def = g and GAMES[g.kind]
     if g and action == "closed" then g.panelOpen = nil return true end -- (they shut it: E brings it back)
     if not def or not def.act then return nil end
-    local ok, r = pcall(def.act, g, tostring(action or ""), arg)
+    local ok, r = LC.Try(def.act, g, tostring(action or ""), arg)
     if not ok then if LC.Error then LC.Error("job game " .. g.kind, r) end return nil end
     g.nextHud = 0
     return r
@@ -1407,7 +1452,7 @@ function LC.JobGameUse(ply, ent)
     local g = LC.JobGames[ply]
     local def = g and GAMES[g.kind]
     if not def or not def.use or not IsValid(ent) then return nil end
-    local ok, r = pcall(def.use, g, ent)
+    local ok, r = LC.Try(def.use, g, ent)
     if not ok then if LC.Error then LC.Error("job game " .. g.kind, r) end return nil end
     g.nextHud = 0
     return r

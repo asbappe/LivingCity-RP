@@ -110,6 +110,29 @@ end
 local cvTrust = CreateConVar("lc_fighter_trust_jobs", "3", bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED), "Jobs a Resistance member must finish for it before they're trusted as a Fighter (with the XP)")
 function LC.ResistanceTrust(ply) return LC.Counter and LC.Counter(ply, "res_jobs") or 0, math.max(0, cvTrust:GetInt()) end
 
+-- Trusted outright (the owner, 14 November: set to Lieutenant by the admin tools, and still a Member who the cage
+-- turned away). Staff who give a rank or the XP for one that carries arms give the trust with it, as a story that
+-- makes someone a Fighter does (sv_livingcity_stories.lua); the rank is then what the XP says.
+function LC.ResistanceTrustGive(ply)
+    if not IsValid(ply) or not LC.Bump then return false end
+    local have, need = LC.ResistanceTrust(ply)
+    if have >= need then return false end
+    LC.Bump(ply, "res_jobs", need - have)
+    return true
+end
+-- The XP the first rank that carries arms asks (Fighter: 400), or nil.
+function LC.ResistanceArmedXP()
+    local f = LCF.Get("resistance")
+    for _, r in ipairs(f and f.ranks or {}) do if r.hunted then return r.xp or 0 end end
+end
+-- What staff call after writing someone's XP: the trust, when the XP is a Fighter's or more.
+function LC.StaffTrust(ply)
+    local f = IsValid(ply) and LCF.Get(ply:GetNW2String("lcf_faction", ""))
+    local need = LC.ResistanceArmedXP()
+    if not f or f.id ~= "resistance" or not need then return end
+    if (tonumber(ply:GetPData("lcf_xp_resistance", 0)) or 0) >= need then LC.ResistanceTrustGive(ply) end
+end
+
 -- Proving yourself before you join (the owner, 9 November: "we don't want anyone to just walk into the resistance, they
 -- need to prove themselves as citizens"): lc_resistance_join_sympathy (5) sympathy first, earned by helping them (jobs and
 -- quests that help them, food for their supply crate, arms sold to their quartermaster, a ration or arms handed to one of
@@ -238,13 +261,22 @@ local function ApplyBody(ply)
     if slow then ply:SetJumpPower(gm.cvJump:GetInt()) end
 end
 
+-- The rounds everyone is given on spawn, of each kind. (A Resistance player's rounds for their rank's own guns,
+-- and the guns, are bought by the Resistance's fund: sv_livingcity_fundgear.lua.)
+LC.SpawnRounds = { { "Pistol", 90 }, { "SMG1", 180 }, { "Buckshot", 24 }, { "AR2", 60 }, { "357", 12 } }
+
 -- keep: a promotion changes the loadout, it doesn't empty your hands. Only top
 -- up what's missing (the medic's medkit, the builder's tools, what you were holding).
 local function GiveLoadout(ply, keep)
     local prof = Profile(ply)
     if not prof then return end
     if not keep then ply:StripWeapons() end
-    for _, cls in ipairs(prof.loadout or {}) do
+    local kit, rounds = prof.loadout or {}, nil
+    if LC.FundIssue then -- (the Resistance's: what its fund can pay for; an error here gives the usual kit)
+        local okF, k, r = LC.Try(LC.FundIssue, ply, kit, keep)
+        if okF and istable(k) then kit, rounds = k, r end
+    end
+    for _, cls in ipairs(kit) do
         if not (keep and ply:HasWeapon(cls)) then ply:Give(cls) end
     end
     if cvAdminTools:GetBool() and LC.IsBuilder(ply) then -- only in build mode
@@ -253,12 +285,11 @@ local function GiveLoadout(ply, keep)
     end
     if LC.GiveJobTools then LC.GiveJobTools(ply) end
     if keep then return end
-    ply:GiveAmmo(90, "Pistol", true)
-    ply:GiveAmmo(180, "SMG1", true)
-    ply:GiveAmmo(24, "Buckshot", true)
-    ply:GiveAmmo(60, "AR2", true)
-    ply:GiveAmmo(12, "357", true)
-    local first = prof.loadout and prof.loadout[1]
+    for _, r in ipairs(LC.SpawnRounds) do
+        local n = istable(rounds) and rounds[r[1]] or r[2]
+        if n > 0 then ply:GiveAmmo(n, r[1], true) end
+    end
+    local first = kit[1]
     if first then ply:SelectWeapon(first) end
     if LC.GiveHands then LC.GiveHands(ply, true) end -- start with your hands down; what you carry is a key away
 end
@@ -273,6 +304,7 @@ end
 function LC.IsIssuedWeapon(ply, cls)
     local prof = Profile(ply)
     for _, c in ipairs(prof and prof.loadout or {}) do if c == cls then return true end end
+    if LC.FundIssuedWeapon and LC.FundIssuedWeapon(ply, cls) then return true end -- (a cheaper gun the fund bought in place of one)
     return false
 end
 
@@ -292,6 +324,38 @@ hook.Add("PlayerSetModel", "LivingCityFactions", function(ply)
     return true
 end)
 
+-- The Resistance's spawn points (the owner, 14 November: "resistance spawn points should be active for resistance
+-- human players based on the last one they were closest to, which survives server restarts"). Every Resistance
+-- player, whatever the rank, comes back at the rspawn nearest to where they last were; it is kept with their saved
+-- data (lc_rspawn), so a restart or a map change doesn't lose it. A point that has since been taken away: any one.
+local function SpawnKey(pos) return string.format("%d %d %d", math.floor(pos.x + 0.5), math.floor(pos.y + 0.5), math.floor(pos.z + 0.5)) end
+function LC.RebelSpawnNote(ply, dead)
+    if not IsValid(ply) or ply:GetNW2String("lcf_faction", "") ~= "resistance" then return nil end
+    if not dead and not ply:Alive() then return nil end
+    if (LC.Prisoners and LC.Prisoners[ply]) or (LC.Dreaming and LC.Dreaming(ply)) then return nil end -- (not where they were taken)
+    local here, best, bd = ply:GetPos(), nil, nil
+    for _, pt in ipairs(LC.PointsOfKind and LC.PointsOfKind("rspawn") or {}) do
+        local d = pt.pos:DistToSqr(here)
+        if not bd or d < bd then best, bd = pt, d end
+    end
+    if not best then return nil end
+    local key = SpawnKey(best.pos)
+    if ply.lcRSpawn ~= key then
+        ply.lcRSpawn = key
+        ply:SetPData("lc_rspawn", key)
+    end
+    return best
+end
+function LC.RebelSpawnFor(ply, pts)
+    local key = ply.lcRSpawn or ply:GetPData("lc_rspawn", "")
+    for _, pt in ipairs(pts) do if SpawnKey(pt.pos) == key then return pt end end
+    return pts[math.random(#pts)]
+end
+timer.Create("LivingCityRebelSpawnNote", 5, 0, function()
+    for _, ply in ipairs(player.GetAll()) do LC.Try(LC.RebelSpawnNote, ply) end
+end)
+hook.Add("DoPlayerDeath", "LivingCityRebelSpawnNote", function(ply) LC.Try(LC.RebelSpawnNote, ply, true) end)
+
 hook.Add("PlayerSpawn", "LivingCityFactions", function(ply)
     if not FactionOf(ply) then return end
     local spawnedAt = ply:GetPos()
@@ -303,10 +367,12 @@ hook.Add("PlayerSpawn", "LivingCityFactions", function(ply)
         -- infested at theirs (or in their nests); citizens never spawn on Combine ground
         local hunted, zombie = LC.PlayerIsHunted(ply), LC.PlayerIsZombie(ply)
         local kind = hunted and "rebel" or (zombie and "infest") or nil
-        local pkind = hunted and "rspawn" or (zombie and "zspawn") or nil
+        local rebel = ply:GetNW2String("lcf_faction", "") == "resistance" and not zombie -- (every rank: LC.RebelSpawnFor, above)
+        local pkind = (hunted or rebel) and "rspawn" or (zombie and "zspawn") or nil
         local pts = pkind and LC.PointsOfKind and LC.PointsOfKind(pkind) or {}
         if #pts > 0 then
-            ply:SetPos(pts[math.random(#pts)].pos + Vector(0, 0, 4))
+            local pt = pkind == "rspawn" and LC.RebelSpawnFor(ply, pts) or pts[math.random(#pts)]
+            ply:SetPos(pt.pos + Vector(0, 0, 4))
         elseif kind then
             local zones = LC.ZonesOfKind and LC.ZonesOfKind(kind) or {}
             if #zones > 0 then
@@ -597,7 +663,8 @@ end)
 
 local function SendMenu(ply)
     local data = { current = ply:GetNW2String("lcf_faction", ""), special = ply:GetNW2String("lcf_special", ""), factions = {},
-        admin = ply:IsAdmin() or nil }
+        admin = ply:IsAdmin() or nil,
+        errors = ply:IsAdmin() and LC.ErrorsCount and LC.ErrorsCount() or nil } -- (sh_livingcity_errors.lua: the errors file)
     for _, f in ipairs(LCF.Factions) do
       -- (the owner: a stalker is a punishment, never a choice: not on the screen, unless it's what you are)
       -- (nor the shackled vortigaunts, for a human: a vortigaunt is chosen at the start of a new life, the owner,
@@ -994,6 +1061,7 @@ AdminCmd("lcf_setxp", function(target, args, out)
     local xp = tonumber(args[2])
     if not f or not xp then return out("Usage: lcf_setxp <name> <xp>") end
     target:SetPData("lcf_xp_" .. f.id, math.max(0, xp))
+    LC.StaffTrust(target)
     LC.AddXP(target, 0)
     out(target:Nick() .. " now has " .. xp .. " XP in " .. f.name .. ".")
 end)
@@ -1004,6 +1072,7 @@ local function Step(target, dir, out)
     local idx = math.Clamp(target:GetNW2Int("lcf_rank", 1) + dir, 1, #f.ranks)
     if f.ranks[idx].overwatch then target:SetPData("lcf_transhuman", "1") end -- (staff can skip the story)
     target:SetPData("lcf_xp_" .. f.id, f.ranks[idx].xp or 0)
+    LC.StaffTrust(target)
     LC.AddXP(target, 0, "by staff")
     out(target:Nick() .. " is now " .. f.ranks[idx].name .. ".")
 end

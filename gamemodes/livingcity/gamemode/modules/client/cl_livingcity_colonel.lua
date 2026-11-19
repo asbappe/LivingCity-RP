@@ -14,6 +14,13 @@
     0 he's a solid old man with a shadow. As it climbs he loses the shadow,
     turns see-through and cold-tinted, and starts to fade in and out and
     flicker. LC_CL.ColonelLook(g, t) gives the look for a ghostliness.
+
+    His face (the owner, 15 November: "Fisherman's head please"): on a
+    citizen's body he wears the Lost Coast fisherman's head, the same head
+    and the same trick as the old-timer's (cl_livingcity_oldtimerface.lua,
+    lc_oldtimer_face), and it fades and flickers with him. A game without
+    that model, or a body that is not a citizen's (lc_colonel_model set to
+    Odessa, say), keeps its own head.
 ]]
 
 LC_CL = LC_CL or {}
@@ -42,8 +49,17 @@ local function Mine()
 end
 
 local function Remove()
+    if IsValid(colonel) and IsValid(colonel.lcHead) then colonel.lcHead:Remove() end
     if IsValid(colonel) then colonel:Remove() end
     colonel = nil
+end
+
+-- The head he wears, if this game can draw it and his body is a citizen's: the model, or nil.
+function LC_CL.ColonelHead(body)
+    local head = GetGlobal2String and GetGlobal2String("lc_oldtimer_face", "") or ""
+    if head == "" or not string.find(string.lower(body or ""), "humans/group0", 1, true) then return nil end
+    if not (LC_CL.OldTimerFaceUsable and LC_CL.OldTimerFaceUsable(head)) then return nil end
+    return head
 end
 
 hook.Add("Think", "LivingCityColonel", function()
@@ -60,6 +76,8 @@ hook.Add("Think", "LivingCityColonel", function()
         if not seq or seq < 0 then seq = colonel:LookupSequence("idle_subtle") end
         if seq and seq >= 0 then colonel:ResetSequence(seq) end
         colonel.lcCycle = 0
+        local head = LC_CL.ColonelHead(colonel.lcModel)
+        if head and LC_CL.HeadOn then colonel.lcHead = LC_CL.HeadOn(colonel, head, RENDERGROUP_TRANSLUCENT) end
     end
     colonel:SetPos(pos)
     colonel:SetAngles(Angle(0, GetGlobal2Float("lc_colonel_yaw", 0), 0))
@@ -76,6 +94,10 @@ hook.Add("Think", "LivingCityColonel", function()
     colonel:DrawShadow(shadow)
     colonel:SetRenderMode(a >= 255 and RENDERMODE_NORMAL or RENDERMODE_TRANSCOLOR)
     colonel:SetColor(Color(r, g, b, a))
+    if IsValid(colonel.lcHead) then -- (his head fades and flickers with him)
+        colonel.lcHead:SetRenderMode(a >= 255 and RENDERMODE_NORMAL or RENDERMODE_TRANSCOLOR)
+        colonel.lcHead:SetColor(Color(r, g, b, a))
+    end
     -- he looks at you
     local me = LocalPlayer()
     local d = me:EyePos() - (pos + Vector(0, 0, 64))

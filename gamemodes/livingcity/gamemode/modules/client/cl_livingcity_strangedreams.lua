@@ -36,27 +36,52 @@ LC_CL.DreamArt = {
     swirl1 = { "livingcity/dreams/swirl1.jpg", 0.25 },
     swirl2 = { "livingcity/dreams/swirl2.jpg", 0.25 },
 }
+-- The dreams' grounds (15 November; LC.DreamSurfaces, sv_livingcity_strangedreams.lua): thirty more,
+-- each read only when a floor that wears it is there to be seen (the third entry), since thirty
+-- pictures read at once would be about 160 MB in every player's game.
+for _, name in ipairs({ "snow", "mud", "dirt", "sand", "grass", "field", "meadow", "petals", "track", "rubber",
+    "parquet", "checker", "tiles", "marble", "mosaic", "oldmosaic", "terrazzo", "worntile", "velvet", "satin",
+    "damask", "quatrefoil", "gingham", "carpet", "wallpaper", "cobbles", "rust", "pebbles", "moon", "marbled" }) do
+    LC_CL.DreamArt[name] = { "livingcity/dreams/" .. name .. ".jpg", 0.25, true }
+end
 LC_CL.DreamArtMade = {}
+-- Reads one picture into its material (once: a picture that isn't there stays plain white).
+function LC_CL.LoadDreamArt(name)
+    local a = LC_CL.DreamArt[name]
+    if not a or LC_CL.DreamArtMade[name] ~= nil then return LC_CL.DreamArtMade[name] or false end
+    local tex
+    if file and file.Exists and file.Exists("materials/" .. a[1], "GAME") then
+        local pic = Material(a[1], "noclamp smooth mips")
+        tex = pic and pic.IsError and not pic:IsError() and pic.GetTexture and pic:GetTexture("$basetexture") or nil
+    end
+    local m = a.mat
+    if m and m.SetTexture and tex then
+        m:SetTexture("$basetexture", tex)
+        if Matrix and m.SetMatrix then
+            local mx = Matrix()
+            if mx and mx.Scale then mx:Scale(Vector(a[2], a[2], 1)) m:SetMatrix("$basetexturetransform", mx) end
+        end
+    end
+    LC_CL.DreamArtMade[name] = tex and true or false
+    return LC_CL.DreamArtMade[name]
+end
 function LC_CL.MakeDreamArt()
     if not CreateMaterial then return end
     for name, a in pairs(LC_CL.DreamArt) do
-        local tex
-        if file and file.Exists and file.Exists("materials/" .. a[1], "GAME") then
-            local pic = Material(a[1], "noclamp smooth mips")
-            tex = pic and pic.IsError and not pic:IsError() and pic.GetTexture and pic:GetTexture("$basetexture") or nil
-        end
-        local m = CreateMaterial("lc_dream_" .. name, "VertexLitGeneric", { ["$basetexture"] = "models/debug/debugwhite", ["$model"] = 1 })
-        if m and m.SetTexture and tex then
-            m:SetTexture("$basetexture", tex)
-            if Matrix and m.SetMatrix then
-                local mx = Matrix()
-                if mx and mx.Scale then mx:Scale(Vector(a[2], a[2], 1)) m:SetMatrix("$basetexturetransform", mx) end
-            end
-        end
-        LC_CL.DreamArtMade[name] = tex and true or false
+        a.mat = CreateMaterial("lc_dream_" .. name, "VertexLitGeneric", { ["$basetexture"] = "models/debug/debugwhite", ["$model"] = 1 })
+        if not a[3] then LC_CL.LoadDreamArt(name) end
     end
 end
 LC_CL.MakeDreamArt()
+-- Once a second: the picture of any dream floor in the world that hasn't been read yet.
+function LC_CL.DreamArtWanted()
+    if not (ents and ents.FindByClass) then return end
+    for _, e in ipairs(ents.FindByClass("prop_dynamic") or {}) do
+        local m = e.GetMaterial and e:GetMaterial() or ""
+        if string.sub(m, 1, 10) == "!lc_dream_" then LC_CL.LoadDreamArt(string.sub(m, 11)) end
+    end
+end
+if timer and timer.Create then timer.Create("LivingCityDreamArt", 1, 0, function() LC.Try(LC_CL.DreamArtWanted) end) end
 local glow = Material("sprites/light_glow02_add")
 local beam = Material("cable/rope")
 local beamMat = Material("sprites/physbeama")
@@ -107,7 +132,7 @@ LC_CL.DreamEcho = Echo
 function LC_CL.DreamIntro(lines)
     lines = lines or {}
     local me = LocalPlayer()
-    if IsValid(me) and me.SetDSP then pcall(me.SetDSP, me, LC_CL.DreamEchoDSP, false) end
+    if IsValid(me) and me.SetDSP then LC.Try(me.SetDSP, me, LC_CL.DreamEchoDSP, false) end
     Echo(lines[1], 0.4)
     Echo(lines[2] or lines[1], 3.0)
     Echo(lines[1], 5.6, 82)

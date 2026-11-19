@@ -8,6 +8,7 @@ administrator	livingcity/administrator/black_crushed_stern1	[stern, cold, slowly
 administrator	livingcity/administrator/suppressor_down_furious1	[furious, barely controlled, clipped] They have silenced the Nexus. It changes nothing.
 administrator	livingcity/administrator/speech_soon1	[warm, motherly, smiling] My dear citizens, I am going to speak to you all in a few minutes. Come and gather in front of the stand. I would so hate to miss anyone.
 administrator	livingcity/administrator/speech_open1	[warm, motherly, smiling] Citizens. Thank you for coming to hear me. Let us talk about the days behind us.
+administrator	livingcity/administrator/speech_slogan1	[warm, motherly, smiling] Love your neighbour, hate the traitor.
 administrator	livingcity/administrator/speech_ev_deaths_firm1	[firm, composed, still kind] Blood has been spilled in our streets. Every life lost to violence is stolen from all of us. Violence solves nothing. It only invites more.
 administrator	livingcity/administrator/speech_ev_arrests_firm1	[firm, composed, still kind] Civil Protection has been busy. No one taken to the cells was taken at random. They chose disorder, and disorder has a price.
 administrator	livingcity/administrator/speech_ev_informers1	[warm, motherly, smiling] To those of you who came forward and told us what you saw: thank you. You know who you are, and so do I. Your loyalty will not be forgotten.
@@ -31,6 +32,23 @@ administrator	livingcity/administrator/speech_mood_afraid1	[warm, motherly, smil
 administrator	livingcity/administrator/speech_mood_restless_firm1	[firm, composed, still kind] There is a restlessness in this city. I feel it. Restlessness can be turned into work, or into ruin. Choose work.
 administrator	livingcity/administrator/speech_mood_content1	[warm, motherly, smiling] You look well: rested, fed and calm. Good. Keep it so.
 administrator	livingcity/administrator/speech_close1	[warm, motherly, smiling] Now go back to your work, and remember: this city is only as strong as each one of you. Glory to the Union.
+administrator	livingcity/administrator/attempt_furious1	[furious, barely controlled, clipped] Citizens, this is your Administrator. A moment ago someone in this city tried to kill me. I am alive. I am unharmed. And I am not going anywhere. Go to your homes and let Civil Protection do its work. I will speak to you all very soon, and I will have a great deal to say.
+administrator	livingcity/administrator/speech_attempt_open_stern1	[stern, cold, slowly] Citizens. Look at me. I am still here. Not long ago, on this very spot, someone tried to kill your Administrator.
+administrator	livingcity/administrator/speech_attempt_martyr_stern1	[stern, cold, slowly] I felt how close it came. I will carry that moment for the rest of my life. And do you know what I thought of? Not myself. I thought of you, and of who would look after you if I were gone.
+administrator	livingcity/administrator/speech_attempt_you_stern1	[stern, cold, slowly] That shot was not meant for me alone. It was aimed at your rations, your homes and your safety. Whoever strikes at me strikes at every one of you.
+administrator	livingcity/administrator/speech_attempt_hero_stern1	[stern, cold, slowly] A soldier threw himself on a grenade that was meant for me. He did not hesitate. Ask yourselves whether you would have done the same, and remember him tonight.
+administrator	livingcity/administrator/speech_attempt_guards_stern1	[stern, cold, slowly] My guards did not hesitate. They put themselves between me and death, as they do for you every day. Thank them when you pass them. Loudly.
+administrator	livingcity/administrator/speech_attempt_enemy_stern1	[stern, cold, slowly] And who did this? A coward. One of the so-called Resistance, who call themselves your liberators and shoot at a woman giving a speech. That is their courage. That is all they have to offer you.
+administrator	livingcity/administrator/speech_attempt_caught_stern1	[stern, cold, slowly] The traitor has been dealt with. There was no mercy, and there will be none for the next one.
+administrator	livingcity/administrator/speech_attempt_hunt_stern1	[stern, cold, slowly] The traitor is still among you. Someone here knows the face, the name, the door. Tell Civil Protection and your block will eat well. Stay silent and your block will answer for it.
+administrator	livingcity/administrator/speech_attempt_measures_stern1	[stern, cold, slowly] I never wanted checkpoints. I never wanted searches or curfews. But I will not apologise for keeping this city safe, and neither should you. Blame the ones who made it necessary.
+administrator	livingcity/administrator/speech_attempt_resolve_stern1	[stern, cold, slowly] They wanted me afraid. They wanted this stand empty. I will stand here again tomorrow, and the day after, for as long as you need me. I am not going anywhere.
+administrator	livingcity/administrator/question_names_stern1	[stern, cold, slowly] Who sent you?
+administrator	livingcity/administrator/question_supplies_stern1	[stern, cold, slowly] Who armed you?
+administrator	livingcity/administrator/question_hideout_stern1	[stern, cold, slowly] Where do they meet?
+administrator	livingcity/administrator/question_why_stern1	[stern, cold, slowly] You tried to kill me. Why?
+administrator	livingcity/administrator/question_who_stern1	[stern, cold, slowly] Who put you up to it?
+administrator	livingcity/administrator/shelled_stern1	[stern, cold, slowly] Some of our city was given over to troublemakers. We are taking it back. Stay indoors, and keep well away from the canisters.
 man	livingcity/citizens/say_open_listen_male1	[low, urgent] Listen.
 woman	livingcity/citizens/say_open_listen_female1	[low, urgent] Listen.
 man	livingcity/citizens/say_open_look_male1	[tired, flat] Look.

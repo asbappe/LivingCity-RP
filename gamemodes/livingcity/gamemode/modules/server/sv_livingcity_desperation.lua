@@ -205,7 +205,7 @@ local function Supply(npc, st, d)
     if st.elite then
         npc:SetKeyValue("NumGrenades", tostring(math.floor(LC.DesperationEliteBalls * (1 + d) + 0.5)))
     elseif st.role == "soldier" then
-        npc:SetKeyValue("NumGrenades", tostring(math.floor(LC.DesperationFrags * d + 0.5)))
+        npc:SetKeyValue("NumGrenades", tostring(math.max(1, math.floor(LC.DesperationFrags * d + 0.5)))) -- (never fewer than his standard one)
     elseif st.role == "cop" and st.hasPistol and st.sidearm ~= "weapon_smg1" and LC.DesperateSidearm(st) == "weapon_smg1" then
         -- the pistol's swapped for an SMG
         st.sidearm = "weapon_smg1"
@@ -282,8 +282,8 @@ function LC.DesperationFight()
     return done
 end
 
-timer.Create("LivingCityDesperation", 5, 0, function() pcall(LC.DesperationTick) end)
-timer.Create("LivingCityDesperationFight", 2, 0, function() if LC.Running then pcall(LC.DesperationFight) end end)
+timer.Create("LivingCityDesperation", 5, 0, function() LC.Try(LC.DesperationTick) end)
+timer.Create("LivingCityDesperationFight", 2, 0, function() if LC.Running then LC.Try(LC.DesperationFight) end end)
 
 -- Up to 10% more damage to players from Combine units.
 hook.Add("EntityTakeDamage", "LivingCityDesperation", function(victim, dmg)

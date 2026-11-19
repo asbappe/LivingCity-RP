@@ -104,10 +104,10 @@ function LC.VoiceFetch(text, cb)
         if done then return end
         done = true
         if err then V.lastError = string.sub(tostring(err), 1, 200) end
-        local ok, e = pcall(cb, bytes, err)
+        local ok, e = LC.Try(cb, bytes, err)
         if not ok and LC.Error then LC.Error("voice (answer)", e) end
     end
-    local sent, e = pcall(LC.VoiceHTTP, {
+    local sent, e = LC.Try(LC.VoiceHTTP, {
         url = URL .. V.id .. "?output_format=" .. FORMAT, method = "POST", type = "application/json", timeout = 30,
         body = LC.BrainJSON({ text = text, model_id = cvModel:GetString() }),
         headers = { ["xi-api-key"] = V.key, ["Accept"] = "audio/mpeg" },

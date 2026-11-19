@@ -104,6 +104,38 @@ function LC.DreamArt(name)
     return "models/debug/debugwhite"
 end
 
+-- The ground each dream stands on (the owner, 15 November: "sure add them please"): free surfaces from
+-- Poly Haven and a marbled paper from Wikimedia Commons, each a picture in materials/livingcity/dreams/
+-- like the cheese (where each came from: SOURCES.txt there). The second entry is the colour laid over
+-- the picture: none for the picture as it is, "soft" for the dream's own plate colours at half
+-- strength (a dance floor keeps its lights). A server without the picture keeps the plain coloured
+-- floor that dream always had. (roses_carpet, barrels_ramp, course_lane: one part of that dream.)
+local DIM, DARK = Color(150, 150, 150), Color(110, 110, 120)
+LC.DreamSurfaces = {
+    freeze = { "snow" }, maze = { "worntile" }, crumble = { "oldmosaic" }, barrels_ramp = { "rust" },
+    battleline = { "mud" }, rally = { "checker" }, course_lane = { "track" },
+    adore = { "quatrefoil" }, roses = { "marble" }, roses_carpet = { "velvet" }, mirror = { "mosaic" },
+    saviour = { "marble", Color(190, 190, 190) }, quiz = { "terrazzo" }, harvest = { "field" },
+    spy = { "wallpaper" }, newsreel = { "carpet" }, massgames = { "track" }, scrap = { "rust" },
+    flowers = { "meadow" }, duck = { "sand" }, ravenholm = { "cobbles", DIM },
+    chairs = { "tiles" }, flying = { "marbled" }, melons = { "petals" }, horse = { "dirt", DIM },
+    boxing = { "rubber" }, exam = { "terrazzo" }, dance = { "parquet", "soft" }, conga = { "parquet", "soft" },
+    sheep = { "grass" }, clocks = { "moon", "soft" }, tea = { "gingham" }, derby = { "dirt" },
+    doors = { "damask", Color(190, 170, 220) }, shh = { "satin", "soft" }, bubbles = { "pebbles", "soft" },
+    watchers = { "wallpaper", DARK },
+}
+-- The surface and the colour for a dream's ground: its picture, or the plain floor in col as before.
+function LC.DreamSurface(id, col)
+    local s = LC.DreamSurfaces[id]
+    local mat = s and LC.DreamArt(s[1]) or "models/debug/debugwhite"
+    if mat == "models/debug/debugwhite" then return mat, col end
+    if s[2] == "soft" then
+        if not col then return mat, Color(255, 255, 255) end
+        return mat, Color(math.floor((col.r + 255) / 2), math.floor((col.g + 255) / 2), math.floor((col.b + 255) / 2))
+    end
+    return mat, s[2] or Color(255, 255, 255)
+end
+
 -- A square floor of n by n plates round the dream point, its top at top; plates coloured by col(i, j)
 -- (mat: its surface, plain white if not given).
 local function Plain(g, dream, maxN, col, mat)
@@ -113,11 +145,13 @@ local function Plain(g, dream, maxN, col, mat)
     local top = c.z + 2
     local x0, y0 = c.x - n * PLATE8_S / 2, c.y - n * PLATE8_S / 2
     for i = 1, n do for j = 1, n do
-        local f = Floor(g, PLATE8, x0 + (i - 0.5) * PLATE8_S, y0 + (j - 0.5) * PLATE8_S, top, col(i, j), mat or "models/debug/debugwhite")
+        local m, c1 = mat, col(i, j)
+        if not m then m, c1 = LC.DreamSurface(g.id, c1) end -- (the dream's own ground, where it has one)
+        local f = Floor(g, PLATE8, x0 + (i - 0.5) * PLATE8_S, y0 + (j - 0.5) * PLATE8_S, top, c1, m)
         if IsValid(f) then
             f.lcKeepLook = true -- (the floor stays readable)
             g.floor = g.floor or {}
-            g.floor[#g.floor + 1] = { ent = f, col = col(i, j), odd = (i + j) % 2 == 1 }
+            g.floor[#g.floor + 1] = { ent = f, col = c1, odd = (i + j) % 2 == 1 }
         end
     end end
     g.top, g.n = top, n

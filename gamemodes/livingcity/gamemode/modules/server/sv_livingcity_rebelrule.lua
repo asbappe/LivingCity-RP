@@ -99,7 +99,7 @@ local function Save()
     if file.CreateDir then file.CreateDir("livingcity") end
     file.Write(FILE, util.TableToJSON(R, true))
 end
-pcall(Load)
+LC.Try(Load)
 
 -- The highest-ranked Resistance player on, a Fighter or above (nil: nobody). except: not this one.
 function LC.RebelChief(except)
@@ -129,7 +129,7 @@ function LC.RebelRuleSet(ply, key)
     else
         return false
     end
-    pcall(Save)
+    LC.Try(Save)
     if LC.ChronicleSendFeeds then LC.ChronicleSendFeeds(nil, true) end
     hook.Run("LivingCityRebelRules", ply, key)
     return true

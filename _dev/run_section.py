@@ -245,6 +245,23 @@ class Tests:
 
 
 
+def whole_file_error(t):
+    """tests.lua as one piece. Lua allows 200 local variables in a function, and the file's main
+    level is one function. A masked copy (one section, one shard) has fewer and still loads, so
+    nothing else notices when the whole file stops loading: it had, for a day, on 14 November,
+    and run_tests.py (the reference) could not run at all. -> the error, or None."""
+    try:
+        from lupa import luajit21 as lj
+    except Exception:
+        return None
+    L = lj.LuaRuntime()
+    L.globals()._S = t.src
+    return L.eval('(function() local f, e = loadstring(_S, "tests.lua") return e end)()')
+
+
+WHOLE_FIX = "put the new test in its own scope: function NameTests() ... end NameTests(), or ;(function() ... end)()"
+
+
 def last_code_line(t):
     last = t.n
     while last > 0 and not t.lines[last - 1].strip():
@@ -290,12 +307,22 @@ def find_target(t, args):
     return s["name"], list(range(s["line"], end + 1)), None, [s["name"]]
 
 
+# A top-level setting the tests after it rely on: _setcvar("name", 0). Only with the value written out.
+# A line that puts a setting back from a local (_setcvar("lc_rebels", rebelsWas)) is not kept: the local is
+# not in the masked copy, so the line blanked the setting for everything after it (job games off, 15 November).
+SETTING_LINE = re.compile(r'^_setcvar\(\s*"[^"]+"\s*,\s*(-?\d+(\.\d+)?|"[^"]*"|true|false)\s*\)\s*(--.*)?$')
+
+
+def setting_line(line):
+    return SETTING_LINE.match(line) is not None
+
+
 def build_mask(t, args, lines):
     start, end = lines[0], lines[-1]
     pre = args.prelude if args.prelude is not None else t.prelude_end
     keep = set(range(1, min(pre, t.n) + 1))
     for k in range(pre + 1, start):                # config defaults set between the sections
-        if t.depth[k] == 0 and re.match(r"^_setcvar\(.*\)\s*(--.*)?$", t.lines[k - 1]):
+        if t.depth[k] == 0 and setting_line(t.lines[k - 1]):
             keep.add(k)
     borrowed, needs, seen = [], [], set()
     visible = set(t.wrapper_chain(start)) if t.unit_at(start) is None or not t.unit_at(start).get("wrapper") \
@@ -415,6 +442,10 @@ def main():
     t = Tests()
     if t.final_depth != 0:
         sys.exit("block depth does not return to 0 (%d): run_section.py cannot read tests.lua" % t.final_depth)
+    whole = whole_file_error(t)
+    if whole:
+        print("TESTS.LUA DOES NOT LOAD WHOLE (run_tests.py cannot run it): %s" % whole)
+        print("  " + WHOLE_FIX)
     if args.index:
         rows = listing(t)
         with open(INDEX, "w") as f:

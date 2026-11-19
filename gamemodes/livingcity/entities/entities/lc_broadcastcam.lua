@@ -32,7 +32,11 @@ local function Head(p)
     if eye.z - p:GetPos().z < 30 then return p:GetPos() + Vector(0, 0, 64) end
     return eye
 end
-local function Chest(p) return Head(p) - Vector(0, 0, 12) end
+-- What it points at: their face. It was 12 units lower (the owner, 14 November: "it is pointing
+-- its camera at my stomach ... just a foot higher").
+local AIM_BELOW_HEAD = 0
+local function Aim(p) return Head(p) - Vector(0, 0, AIM_BELOW_HEAD) end
+ENT.AimAt = function(_, p) return Aim(p) end
 
 if SERVER then
     function ENT:Initialize()
@@ -79,7 +83,7 @@ if SERVER then
         local rate = (CurTime() - self.born < 4) and 2.4 or SPEED -- coming in, it's quicker about it
         local newPos = LerpVector(math.min(1, dt * rate), pos, self.goal)
         self:SetPos(newPos)
-        local face = (Chest(p) - newPos):Angle()
+        local face = (Aim(p) - newPos):Angle()
         self:SetAngles(LerpAngle(math.min(1, dt * TURN), self:GetAngles(), face))
         self:NextThink(CurTime() + dt)
         return true

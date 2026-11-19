@@ -55,6 +55,6 @@ end
 
 timer.Create("LivingCityJobBoards", 15, 0, function()
     for _, b in ipairs(LC.EntsOf and LC.EntsOf("lc_jobboard") or ents.FindByClass("lc_jobboard")) do
-        if IsValid(b) then pcall(Refresh, b) end
+        if IsValid(b) then LC.Try(Refresh, b) end
     end
 end)

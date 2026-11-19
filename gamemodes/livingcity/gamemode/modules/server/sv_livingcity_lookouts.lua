@@ -126,7 +126,7 @@ end
 
 timer.Create("LivingCityLookouts", 2, 0, function()
     if next(LC.Lookouts) == nil then return end
-    local ok, err = pcall(LC.LookoutTick, CurTime())
+    local ok, err = LC.Try(LC.LookoutTick, CurTime())
     if not ok and LC.Error then LC.Error("lookouts", err) end
 end)
 

@@ -149,7 +149,7 @@ local function RationReady(ply)
     if LC.StockLevel and LC.StockLevel() == "empty" then return false end
     return CurTime() >= (ply.lcnRationAt or 0)
 end
-LC.RationReady = RationReady -- (F2 > Me > My rations: sv_livingcity_quickmore.lua)
+LC.RationReady = RationReady -- (F2 > My rations: sv_livingcity_quickmore.lua)
 
 local function Cheapest(ply, what)
     local credits = LC.Credits and LC.Credits(ply) or 0
@@ -228,7 +228,9 @@ function LC.NextStep(ply)
         return { key = "home", text = "Find your block", why = "You live in " .. (LC.BlockName and LC.BlockName(LC.PlayerBlock(ply)) or "your block") .. ". It's where you sleep, keep things, and shelter at curfew.", way = "home" }
     end
 
-    if civ then
+    -- (the City Administrator eats, drinks and sleeps like anyone, but holds no Union job and is never
+    -- told to get one: the owner, 14 November, as Administrator: "my objective is a sanitation worker?")
+    if civ and f ~= "admin" then
         if LC.QuestOf and LC.QuestOf[ply] then
             local q = LC.QuestOf[ply]
             return { key = "on_job", text = "Finish what you're doing", why = (q.title and (q.title .. ": ") or "") .. "its next step is on your screen, and on F4." }
@@ -288,7 +290,7 @@ LC.PushNextStep = Push
 
 timer.Create("LivingCityNextStep", 2, 0, function()
     for _, ply in ipairs(player.GetAll()) do
-        local ok, err = pcall(Push, ply)
+        local ok, err = LC.Try(Push, ply)
         if not ok and LC.Error then LC.Error("next step", err) end
     end
 end)
@@ -306,5 +308,5 @@ end
 hook.Add("LivingCityRationCollected", "LivingCityNextStep", function(ply)
     local cid = ply:GetNW2String("lc_cid", "")
     if cid ~= "" then ply:SetPData("lc_first_ration", cid) end
-    timer.Simple(0, function() if IsValid(ply) then pcall(Push, ply) end end)
+    timer.Simple(0, function() if IsValid(ply) then LC.Try(Push, ply) end end)
 end)

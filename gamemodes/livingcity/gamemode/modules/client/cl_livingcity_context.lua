@@ -108,6 +108,8 @@ local function Unit(me) return me:GetNW2Bool("lc_unit", false) or me:GetNW2Strin
 local function NotUnit(me) return not Unit(me) end
 local function Fac(id) return function(me) return me:GetNW2String("lcf_faction", "") == id end end
 local function Jailed(me) return me:GetNW2Float("lc_jail_until", 0) > CurTime() end
+-- (walked in, cuffed or in a cell: held, not trespassing. The owner, 15 November)
+local function Trespassing(me) return NotUnit(me) and not (LC.HeldByCombine and LC.HeldByCombine(me)) end
 
 -- { title, line, line... }: a line is its text, or { text, when }
 local DATA = {
@@ -174,10 +176,10 @@ local DATA = {
             { "Kills here push the infestation back", Unit } },
         home = { "Your block",
             "Make things here ({gm_showspare1})",
-            "Your stash: {+menu_context} > Getting by",
+            "Your stash: F2 > My home",
             "When a curfew starts, be here" },
-        combine = { "Combine only",
-            { "Leave before the countdown runs out, or you're wanted", NotUnit } },
+        combine = { "Combine only zone",
+            { "Leave before the countdown runs out, or you're wanted", Trespassing } },
         prison = { "The prison",
             { "A lockpick from a visitor opens your cell: {+menu_context} > This door > Pick the lock", Jailed } },
     },
@@ -203,7 +205,7 @@ local DATA = {
         pickup = { "This step", "{+use} on the marked item to take it" },
         collect = { "This step", "{+use} on each marked item" },
         _any = { "This step",
-            { "Follow the chevrons on the ground (hide them: {+menu_context} > Settings)", function() return LC_CL.TrailActive and LC_CL.TrailActive() end } },
+            { "Follow the chevrons on the ground (hide them: F4 > Me and settings)", function() return LC_CL.TrailActive and LC_CL.TrailActive() end } },
     },
 }
 
@@ -282,10 +284,10 @@ local function Collect(me, ctx, kind, key, out, budget)
     for _, l in ipairs(e.lines) do
         if budget.left <= 0 then break end
         local ok, yes = true, true
-        if l.when then ok, yes = pcall(l.when, me, ctx) end
+        if l.when then ok, yes = LC.Try(l.when, me, ctx) end
         local text = l.t
         if ok and yes and type(text) == "function" then
-            ok, text = pcall(text, me, ctx)
+            ok, text = LC.Try(text, me, ctx)
             yes = ok and type(text) == "string" and text ~= ""
         end
         if ok and yes then
@@ -300,7 +302,7 @@ local function Collect(me, ctx, kind, key, out, budget)
             if #group.lines < MAX_PER_GROUP then
                 group.lines[#group.lines + 1] = LC_CL.ContextText(text)
                 if l.style then
-                    local okS, st = pcall(l.style, me, ctx)
+                    local okS, st = LC.Try(l.style, me, ctx)
                     if okS and (st == "bright" or st == "faint") then
                         group.style = group.style or {}
                         group.style[#group.lines] = st
@@ -322,7 +324,7 @@ function LC_CL.ContextGroups(me)
     if IsValid(w) and w.GetClass then
         ctx.weapon = w:GetClass()
         if ctx.weapon == "gmod_tool" and w.GetMode then
-            local ok, mode = pcall(w.GetMode, w)
+            local ok, mode = LC.Try(w.GetMode, w)
             if ok and mode then ctx.weapon = "tool:" .. tostring(mode) end
         end
     end

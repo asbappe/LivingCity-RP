@@ -26,7 +26,14 @@ LC = LC or {}
 
 local function FactionOf(ply) return LCF and LCF.Get and LCF.Get(ply:GetNW2String("lcf_faction", "")) or nil end
 local function XP(ply, fid) return tonumber(ply:GetPData("lcf_xp_" .. fid, 0)) or 0 end
-local function Recompute(ply, why) if LC.AddXP then LC.AddXP(ply, 0, why) end end
+-- (the Resistance's trust goes with a Fighter's XP or more when staff give it: the owner, 14 November, set to
+-- Lieutenant and still a Member. LC.StaffTrust, sv_livingcity_factions.lua)
+local function Recompute(ply, why)
+    if why and LC.StaffTrust then LC.StaffTrust(ply) end
+    if LC.AddXP then LC.AddXP(ply, 0, why) end
+end
+-- The rank they hold now, by name (what the admin is told: never a rank the player did not get).
+local function RankName(ply, f) local r = f.ranks[ply:GetNW2Int("lcf_rank", 1)] return r and r.name or "?" end
 
 local function ResetAllXP(ply)
     for _, f in ipairs(LCF and LCF.Factions or {}) do ply:SetPData("lcf_xp_" .. f.id, 0) end
@@ -54,7 +61,7 @@ local ACTIONS = {
         local n = math.floor(tonumber(v) or 0)
         t:SetPData("lcf_xp_" .. f.id, math.max(0, XP(t, f.id) + n))
         Recompute(t, "by staff")
-        return true, string.format("%s: %d XP in %s.", t:Nick(), XP(t, f.id), f.name)
+        return true, string.format("%s: %d XP in %s (%s).", t:Nick(), XP(t, f.id), f.name, RankName(t, f))
     end,
     rank = function(t, v)
         local f = FactionOf(t)
@@ -64,7 +71,7 @@ local ACTIONS = {
         if f.ranks[i].overwatch then t:SetPData("lcf_transhuman", "1") end -- (staff skip the Overwatch Candidate story)
         t:SetPData("lcf_xp_" .. f.id, f.ranks[i].xp or 0)
         Recompute(t, "by staff")
-        return true, string.format("%s is now %s (%d XP).", t:Nick(), f.ranks[i].name, f.ranks[i].xp or 0)
+        return true, string.format("%s is now %s (%d XP).", t:Nick(), RankName(t, f), f.ranks[i].xp or 0)
     end,
     resetxp = function(t)
         ResetAllXP(t)
@@ -93,6 +100,7 @@ local ACTIONS = {
         ResetAllXP(t)
         SetCredits(t, 0)
         SetStanding(t, 0)
+        if LC.RapClear then LC.RapClear(t) end -- (and nothing left on their record for a later sentence)
         return true, t:Nick() .. ": XP, credits and standing all back to 0."
     end,
     faction = function(t, v)
@@ -104,8 +112,14 @@ local ACTIONS = {
     clearwanted = function(t)
         if LC.ClearWanted then LC.ClearWanted(t) end
         if LC.CalmCops then LC.CalmCops(t) end
-        if LC.SetAlert then pcall(LC.SetAlert, t, 0) end
+        if LC.SetAlert then LC.Try(LC.SetAlert, t, 0) end
         return true, t:Nick() .. " is no longer wanted."
+    end,
+    -- out of custody at once: a struggle, the cuffs, a march, a street detention, a cell (sv_livingcity_prison.lua)
+    free = function(t)
+        if not LC.FreeFromCustody then return false, "No prison here." end
+        LC.FreeFromCustody(t)
+        return true, t:Nick() .. " is out of custody."
     end,
     pardon = function(t)
         if not LC.PardonStrikes then return false, "No conduct tracking here." end
@@ -148,6 +162,69 @@ local ACTIONS = {
         if n == 0 then return true, "Every save file reads fine." end
         return true, n .. " save file(s) may be saved over again (each unreadable one is kept as <name>.unreadable.txt when it is)."
     end,
+    -- Testing alone (the owner, 18 November: "I am the only player and just need ways to test these things in game
+    -- before attempting to bring in other players"): what one player can't set off by themselves (superadmins).
+    solo = function(t, v, admin)
+        if IsValid(admin) and not admin:IsSuperAdmin() then return false, "Superadmins only." end
+        v = tostring(v or "")
+        if v == "bot" then
+            if #player.GetAll() >= game.MaxPlayers() then return false, "The server is full." end
+            RunConsoleCommand("bot")
+            return true, "A stand-in player (a bot) joins in a moment: pick it under Acting on to give it a faction or a rank."
+        elseif v == "address" or v == "assassin" then
+            local note = ""
+            if v == "assassin" then
+                local f = LCF and LCF.Get and LCF.Get("resistance")
+                if not f or not LC.SetFaction then return false, "No Resistance here." end
+                if t:GetNW2String("lcf_faction", "") ~= "resistance" then LC.SetFaction(t, "resistance") end
+                local r = (LC.AdminPlotMinRank and LC.AdminPlotMinRank()) or 3
+                if f.ranks[r] then t:SetPData("lcf_xp_resistance", math.max(tonumber(t:GetPData("lcf_xp_resistance", 0)) or 0, f.ranks[r].xp or 0)) Recompute(t, "by staff") end
+                note = " " .. t:Nick() .. " is a " .. RankName(t, f) .. ": take Kill the Administrator from the Resistance's board (F4 > Jobs) while she speaks."
+            end
+            if not LC.CallSpeech then return false, "No address on this server." end
+            if LC.SpeechSession and LC.SpeechSession() then return true, "Her address is already on." .. note end
+            local ok, why = LC.CallSpeech(nil, nil)
+            if not ok then return false, tostring(why) end
+            return true, "The city's own Administrator is called to the stand; she speaks once the city has gathered (lc_speech_muster)." .. note
+        elseif v == "endaddress" then
+            if not (LC.SpeechSession and LC.SpeechSession()) then return false, "No address is on." end
+            LC.EndSpeech()
+            return true, "The address is over."
+        elseif v == "black" or v == "next" or v == "stand" or v == "mebarney" or v == "mefreeman" or v == "off" then
+            if not LC.CollapseTest then return false, "No collapse on this server." end
+            LC.CollapseTester = IsValid(admin) and admin or t
+            return LC.CollapseTest(v)
+        elseif v == "leak" then
+            if not LC.DistrictLeak then return false, "No districts here." end
+            local best, bv
+            for _, n in ipairs(LC.BlockNumbers and LC.BlockNumbers() or {}) do
+                local d = LC.DistrictInfest(n)
+                if d > 0 and (not bv or d > bv) then best, bv = n, d end
+            end
+            if not best then return false, "No district has any infestation (grow some first)." end
+            local z, m = LC.DistrictLeak(best)
+            if not z then return false, "It couldn't leak: " .. tostring(m) .. "." end
+            return true, string.format("The infestation leaked from %s to %s.", LC.BlockName and LC.BlockName(best) or best, LC.BlockName and LC.BlockName(m) or m)
+        elseif v == "shell" then
+            -- (sv_livingcity_shelling.lua: a district the Resistance hold, else the one you stand in; no waiting for the canisters)
+            if not LC.ShellDistrict then return false, "No shelling on this server." end
+            local n = (LC.ShellTargets and LC.ShellTargets() or {})[1] or (LC.LedgerBlockAt and IsValid(admin) and LC.LedgerBlockAt(admin:GetPos()))
+            if not n then return false, "No district here (place housing blocks in the editor)." end
+            local k, landed, covered = LC.ShellDistrict(n, nil)
+            if not k then return false, tostring(landed) end
+            return true, string.format("Shelling %s: %d canister(s) coming down, %d lot(s) of headcrabs under cover; in about %d seconds.", LC.BlockName and LC.BlockName(n) or n,
+                landed, covered, LC.ShellingConst.FLIGHT)
+        elseif string.sub(v, 1, 6) == "event:" then
+            if not LC.Running then return false, "Start the city first." end
+            if not (LC.StartEvent and LC.StartEvent(string.sub(v, 7))) then return false, "That event can't start now (another may be on)." end
+            return true, "Started: " .. string.sub(v, 7) .. "."
+        elseif v == "endevent" then
+            if GetGlobal2String("lc_event", "") == "" then return false, "No event is on." end
+            LC.EndEvent(false)
+            return true, "The event is over."
+        end
+        return false, "Unknown test."
+    end,
     item = function(t, v)
         local it = LCS and LCS.Items and LCS.Items[v or ""]
         if not it or not LC.GiveItem then return false, "No such item." end
@@ -163,7 +240,7 @@ function LC.AdminTool(admin, target, action, value)
     if not IsValid(target) or not target:IsPlayer() then return false, "Nobody to do that to." end
     local fn = ACTIONS[action or ""]
     if not fn then return false, "Unknown action." end
-    local ok, a, b = pcall(fn, target, value, admin)
+    local ok, a, b = LC.Try(fn, target, value, admin)
     if not ok then return false, "That failed: " .. tostring(a) end
     if a and action ~= "refresh" and IsValid(admin) and LC.Log then
         LC.Log("info", string.format("admin tools: %s used %s %s on %s", admin:Nick(), action, tostring(value or ""), target:Nick()))
@@ -180,9 +257,15 @@ local function Snapshot(admin, target)
     for _, p in ipairs(player.GetAll()) do data.players[#data.players + 1] = { id = p:SteamID() .. "|" .. p:Nick(), name = p:Nick() } end
     data.evidence = LC.EvidenceStatus and LC.EvidenceStatus() or nil -- (the confiscated contraband: sv_livingcity_evidence.lua)
     -- how the city's territory is doing (superadmins can grow it from the panel)
+    if admin:IsSuperAdmin() then
+        local sp = LC.SpeechSession and LC.SpeechSession()
+        data.solo = { address = sp and true or false, places = (LC.SpeechPlaces and LC.SpeechPlaces()) and true or false,
+            event = GetGlobal2String("lc_event", ""), collapse = GetGlobal2String("lc_collapse_stage", "") }
+    end
     if admin:IsSuperAdmin() and LC.TerritoryStatus then
         data.superadmin = true
         data.territory = LC.TerritoryStatus()
+        for _, l in ipairs(LC.DistrictInfestStatus and LC.DistrictInfestStatus() or {}) do data.territory[#data.territory + 1] = l end -- (how infested each district is)
     end
     if admin:IsSuperAdmin() and LC.SafeFileBlocked then
         local names = {}

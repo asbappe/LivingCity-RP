@@ -3,7 +3,13 @@
 
     The editor's mode list, grouped (points, fixtures, paths, zones, doors,
     tools) into sections that fold away, each line showing how many of that
-    thing are placed on this map. Click a line to use it. "Find" marks every
+    thing are placed on this map.
+
+    How things are named (the owner, 14 November: "need a naming scheme"): a
+    label is "Category: name (hint)". The list shows the name with a capital
+    first letter, A to Z. A thing that belongs to one side starts with that
+    side, always spelt the same: Administrator's, Civil Protection, Combine,
+    Resistance, Union. A thing for everyone has no side in its name. Click a line to use it. "Find" marks every
     one of them on your screen, through walls, with how far away it is; "Go"
     takes you to the next one (admins). At the top: the layout at a glance,
     and what's missing that the city would like to have.
@@ -30,17 +36,19 @@ local CATS = {
 local USES = {
     { title = "Citizens' daily life", ids = { "idle", "sit", "sitchair", "lean", "queue", "dispenser", "vending", "terminal", "stove", "bed",
         "toilet", "bath", "fire", "locker", "tv", "screen", "lawboard", "jobboard", "infodesk", "civposter", "citybin", "bin", "zone_block", "door_rent" } },
-    { title = "Arriving and leaving the city", ids = { "arrival", "intake", "laborterm", "housingterm", "platform", "spawn", "lz" } },
-    { title = "Civil Protection and the Combine", ids = { "patrol", "checkpoint", "cpsupply", "cpfeed", "evidlocker", "console", "sspawn", "powerbank", "turret",
-        "forcefield", "barricade_low", "barricade", "barricade_tall", "dataterm", "masterterm", "zone_combine", "sterm", "door_cp", "door_office", "studio", "loudspeaker", "screen_big" } },
-    { title = "The Administrator's last stand", ids = { "desk", "adminpower", "suppressor", "speech", "speechcrowd", "door_office", "zone_combine" } },
+    { title = "Arriving and leaving the city", ids = { "arrival", "intake", "laborterm", "housingterm", "platform", "spawn" } },
+    -- (the landing zone and the suppression device are the Combine's: they were only under arriving and under her last stand)
+    { title = "Civil Protection and the Combine", ids = { "patrol", "checkpoint", "cpsupply", "cpfeed", "evidlocker", "locker_cp", "console", "sspawn", "powerbank", "turret",
+        "forcefield", "barricade_low", "barricade", "barricade_tall", "dataterm", "masterterm", "zone_combine", "sterm", "lz", "suppressor", "door_cp", "loudspeaker", "screen_big", "screen_mid", "monitor_hang", "camera" } },
+    -- (everything of hers in one folder: her studio and office door were under Civil Protection)
+    { title = "The Administrator", ids = { "desk", "adminpower", "suppressor", "speech", "speechcrowd", "adminapc", "adminheli", "studio", "door_office", "zone_combine" } },
     { title = "Prison", ids = { "cell", "release", "prisonwork", "zone_prison", "door_prison" } },
-    { title = "The Resistance and rebel bases", ids = { "zone_rebel", "rspawn", "rlookout", "rebelboard", "interrochair", "rebelcage", "bunk", "workbench", "dealer", "bed", "toilet", "stove",
-        "sit", "sitchair", "lean", "fire", "locker", "graffiti", "way_left", "way_right", "way_up", "way_down", "way_freedom" } },
+    { title = "The Resistance and rebel bases", ids = { "zone_rebel", "rspawn", "colonel", "rlookout", "rebelboard", "fundtv", "interrochair", "rebelcage", "locker_rebel", "bunk", "workbench", "dealer", "bed", "toilet", "stove",
+        "sit", "sitchair", "lean", "fire", "graffiti", "way_left", "way_right", "way_up", "way_down", "way_freedom" } }, -- (no locker: it is the citizens', for Civil Standing 150 and up; the owner, 14 November)
     { title = "Infestation", ids = { "zone_infest", "zspawn", "hazbarrel" } },
     { title = "Morning exercise", ids = { "yard", "parade" } },
     { title = "Dreams", ids = { "dream", "zone_dream" } }, -- (the owner, 11 November: missing from this view)
-    { title = "Power and the street", ids = { "transformer", "streetlight", "loudspeaker", "screen_big", "pipe", "rubble", "salvage" } },
+    { title = "Power and the street", ids = { "transformer", "streetlight", "loudspeaker", "screen", "screen_big", "screen_mid", "tv", "citybin", "pipe", "rubble", "salvage" } },
     { title = "Paths, ladders and doors", ids = { "node", "link", "ladder", "zone_nogo", "door_locked", "door_open", "door_ignore", "door_force", "door_test" } },
     { title = "Tools", ids = { "prop", "inspect", "walker" } },
 }
@@ -79,10 +87,49 @@ local function Matches(id, p)
     return p.kind == id
 end
 
+-- The name as the list shows it: the label without its category, first letter a capital (so a
+-- thing with no side in its name sorts and reads like the rest: "Bed", "Loiter spot").
 local function Short(m)
     local s = string.gsub(m.label, "^%a+: ", "")
-    return s
+    return string.upper(string.sub(s, 1, 1)) .. string.sub(s, 2)
 end
+LC_CL.LayoutShortName = Short
+-- The sections of the list as they are shown, each with its entries A to Z by that name:
+-- arrange is "type" (points, fixtures...) or "use" (what it's for). { { title, list = { mode, ... } }, ... }
+function LC_CL.LayoutGroups(modes, arrange)
+    local byId = {}
+    for _, m in ipairs(modes) do byId[m.id] = m end
+    local out = {}
+    if arrange == "use" then
+        for _, o in ipairs(LCJ and LCJ.Occupations or {}) do
+          -- (no workplace to place for the Block Warden or Infestation Cleanup; Cleanup still has its barrels and zones)
+          local list = {}
+          if not o.noWorkplace then list[1] = byId["work_" .. o.id] end
+          for _, id in ipairs(JOB_EXTRAS[o.id] or {}) do if byId[id] then list[#list + 1] = byId[id] end end
+          if #list > 0 then out[#out + 1] = { title = "Job: " .. o.name, list = list, sorted = true } end
+        end
+        for _, u in ipairs(USES) do
+            local list = {}
+            for _, id in ipairs(u.ids) do if byId[id] then list[#list + 1] = byId[id] end end
+            table.insert(out, #out + 1, { title = u.title, list = list })
+        end
+        -- (daily life first, the jobs after it)
+        local jobs = {}
+        for i = #out, 1, -1 do if string.StartWith(out[i].title, "Job: ") then table.insert(jobs, 1, table.remove(out, i)) end end
+        for i, j in ipairs(jobs) do table.insert(out, 1 + i, j) end
+    else
+        for _, c in ipairs(CATS) do
+            local list = {}
+            for _, m in ipairs(modes) do if CatOf(m) == c.key then list[#list + 1] = m end end
+            out[#out + 1] = { title = c.title, list = list }
+        end
+    end
+    for _, g in ipairs(out) do
+        table.sort(g.list, function(a, b) return string.lower(Short(a)) < string.lower(Short(b)) end) -- A to Z
+    end
+    return out
+end
+
 
 -- How many of this are on the map (nil: not something you place).
 function LC_CL.LayoutCount(id)
@@ -154,8 +201,8 @@ local WANTED = {
 
 local function Glance()
     local pts, fx, zones, doors = 0, 0, #(LC_CL.zones or {}), #(LC_CL.doors or {})
-    local FIX = { vending = true, dispenser = true, terminal = true, stove = true, fire = true, dealer = true, locker = true,
-        screen = true, lawboard = true, cpfeed = true, evidlocker = true, rebelboard = true, interrochair = true, rebelcage = true, infodesk = true, civposter = true, console = true, workbench = true, recycler = true, dataterm = true, masterterm = true, citybin = true, streetlight = true, loudspeaker = true, screen_big = true, tv = true, incinerator = true, hazbarrel = true, transformer = true, forcefield = true, powerbank = true, turret = true, barricade_low = true, barricade = true, barricade_tall = true, intake = true, housingterm = true, laborterm = true, cpsupply = true, conveyor = true, bed = true, toilet = true, bath = true }
+    local FIX = { vending = true, dispenser = true, terminal = true, stove = true, fire = true, dealer = true, locker = true, locker_rebel = true, locker_cp = true,
+        screen = true, lawboard = true, cpfeed = true, evidlocker = true, rebelboard = true, interrochair = true, rebelcage = true, infodesk = true, civposter = true, console = true, workbench = true, recycler = true, dataterm = true, masterterm = true, citybin = true, streetlight = true, loudspeaker = true, screen_big = true, screen_mid = true, monitor_hang = true, tv = true, incinerator = true, hazbarrel = true, transformer = true, forcefield = true, powerbank = true, turret = true, barricade_low = true, barricade = true, barricade_tall = true, intake = true, housingterm = true, laborterm = true, cpsupply = true, fundtv = true, conveyor = true, bed = true, toilet = true, bath = true }
     for _, p in ipairs(LC_CL.points or {}) do if FIX[p.kind] then fx = fx + 1 else pts = pts + 1 end end
     local npcs = 0
     for _, e in ipairs(ents.FindByClass("npc_*")) do if e:GetNW2String("lc_role", "") ~= "" then npcs = npcs + 1 end end
@@ -205,42 +252,10 @@ function LC_CL.BuildLayoutBrowser(panel, modes)
     local Fill
     arrange.OnSelect = function(_, _, _, v) RunConsoleCommand("lc_editor_arrange", v) timer.Simple(0.1, function() if IsValid(holder) then Fill() end end) end
 
-    local byId = {}
-    for _, m in ipairs(modes) do byId[m.id] = m end
-    local function Groups()
-        local out = {}
-        if cvArrange:GetString() == "use" then
-            for _, o in ipairs(LCJ and LCJ.Occupations or {}) do
-              -- (no workplace to place for the Block Warden or Infestation Cleanup; Cleanup still has its barrels and zones)
-              local list = {}
-              if not o.noWorkplace then list[1] = byId["work_" .. o.id] end
-              for _, id in ipairs(JOB_EXTRAS[o.id] or {}) do if byId[id] then list[#list + 1] = byId[id] end end
-              if #list > 0 then out[#out + 1] = { title = "Job: " .. o.name, list = list, sorted = true } end
-            end
-            for _, u in ipairs(USES) do
-                local list = {}
-                for _, id in ipairs(u.ids) do if byId[id] then list[#list + 1] = byId[id] end end
-                table.insert(out, #out + 1, { title = u.title, list = list })
-            end
-            -- (daily life first, the jobs after it)
-            local jobs = {}
-            for i = #out, 1, -1 do if string.StartWith(out[i].title, "Job: ") then table.insert(jobs, 1, table.remove(out, i)) end end
-            for i, j in ipairs(jobs) do table.insert(out, 1 + i, j) end
-        else
-            for _, c in ipairs(CATS) do
-                local list = {}
-                for _, m in ipairs(modes) do if CatOf(m) == c.key then list[#list + 1] = m end end
-                out[#out + 1] = { title = c.title, list = list }
-            end
-        end
-        return out
-    end
-
     Fill = function()
     holder:Clear()
-    for i, c in ipairs(Groups()) do
+    for i, c in ipairs(LC_CL.LayoutGroups(modes, cvArrange:GetString())) do
         local list = c.list
-        table.sort(list, function(a, b) return string.lower(Short(a)) < string.lower(Short(b)) end) -- A to Z
         if #list > 0 then
             local cat = vgui.Create("DCollapsibleCategory")
             cat:SetExpanded(i == 1)

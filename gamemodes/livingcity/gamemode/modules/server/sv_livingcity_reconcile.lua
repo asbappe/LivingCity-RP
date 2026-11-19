@@ -82,7 +82,7 @@ end
 local function Later(ply, secs)
     timer.Simple(secs, function()
         if not IsValid(ply) then return end
-        local ok, err = pcall(LC.ReconcileAppearance, ply)
+        local ok, err = LC.Try(LC.ReconcileAppearance, ply)
         if not ok and LC.Error then LC.Error("reconcile", err) end
     end)
 end

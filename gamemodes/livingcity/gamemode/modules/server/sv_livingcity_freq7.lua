@@ -14,7 +14,9 @@
       Warnings         when something's coming for the Resistance (a sweep, a
                        raid, curfew, a supply convoy, an incursion into rebel
                        ground, a lockdown, a dropship) the warning cuts in at
-                       once, even mid-song, and a song follows it
+                       once, even mid-song, and a song follows it; and, at most
+                       every twenty minutes while the Resistance's fund is low,
+                       a call to give to it (freq7_fund: sv_livingcity_fundplea.lua)
       The hunt         the Combine find it after a while on one frequency and
                        jam it: a harsh whine there, and the broadcast is dark
                        for a minute or so, then back on another of the seven.
@@ -32,7 +34,7 @@
       freq7_song_<anything>.ogg   the songs (.ogg or .wav: the server can
                                   tell how long those run)
       freq7_<warning>1.wav        sweep, raid, curfew, supply, incursion,
-                                  lockdown, dropship
+                                  lockdown, dropship, fund (takes 1 to 4)
       jam1.wav                    the jamming whine (a stock sound otherwise)
 
       lc_freq7_hold 18            minutes it holds a frequency on green

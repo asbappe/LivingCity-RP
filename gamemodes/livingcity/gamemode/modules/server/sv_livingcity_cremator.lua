@@ -129,7 +129,7 @@ function LC.CrematorModelsFound()
     for _, m in ipairs(LC.CREMATOR_MODEL_CANDIDATES) do if not Has(m, "/player") then Add(m) end end
     if #out == 0 then
         local found = {}
-        pcall(Search, "models/", 2, found)
+        LC.Try(Search, "models/", 2, found)
         table.sort(found, function(a, b)
             local pa, pb = Has(a, "/player"), Has(b, "/player")
             if pa ~= pb then return pb end
@@ -407,7 +407,7 @@ hook.Add("Think", "LivingCityCrematorPace", function()
     local dt = FrameTime()
     for npc, r in pairs(residents) do
         if IsValid(npc) then
-            local ok, err = pcall(LC.CrematorBoost, r, dt)
+            local ok, err = LC.Try(LC.CrematorBoost, r, dt)
             if not ok and LC.Error then LC.Error("cremator pace", err) end
         end
     end
@@ -962,7 +962,7 @@ end
 
 timer.Create("LivingCityCremators", 0.5, 0, function()
     if not LC.Running then return end
-    local ok, err = pcall(LC.CrematorsTick, CurTime())
+    local ok, err = LC.Try(LC.CrematorsTick, CurTime())
     if not ok and LC.Error then LC.Error("cremators", err) end
 end)
 

@@ -345,7 +345,7 @@ local function Shun(ply, now)
                 local away = npc:GetPos() - pos away.z = 0
                 if away:LengthSqr() < 1 then away = VectorRand() away.z = 0 end
                 local to = npc:GetPos() + away:GetNormalized() * 280
-                pcall(LC.GoTo, npc, st, to, false, nil)
+                LC.Try(LC.GoTo, npc, st, to, false, nil)
                 if math.random() < 0.4 then npc:EmitSound(Pick(NPC_SAY), 65) end
             end
         end
@@ -384,7 +384,7 @@ function LC.HygieneTick(now)
 end
 
 timer.Create("LivingCityHygiene", 5, 0, function()
-    local ok, err = pcall(LC.HygieneTick, CurTime())
+    local ok, err = LC.Try(LC.HygieneTick, CurTime())
     if not ok and LC.Error then LC.Error("hygiene", err) end
 end)
 

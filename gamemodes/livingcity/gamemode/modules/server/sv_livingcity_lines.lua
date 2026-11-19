@@ -24,7 +24,7 @@
     used and nothing needs recording). Without a recording the line is words only (never
     Half-Life 2's voice in its place), and once any are recorded the named citizens of that sex speak ONLY
     with their recorded voice (LC.OwnVoice, below).
-    VOICE_LINES.md lists them all (python3 _dev/voice_lines.py); lc_voice_missing says which are not there yet.
+    VOICE_SCRIPTS.md lists them all (python3 _dev/voice_lines.py); lc_voice_missing says which are not there yet.
 ]]
 
 LC = LC or {}
@@ -405,6 +405,9 @@ local function Emit(npc, st, id)
     local clip = Clip(st, id)
     if clip then
         npc:EmitSound(clip, 72)
+        -- (the jaw is marked here too, not only by the hook on emitted sounds: another addon's hook that
+        -- answers first would keep ours from ever hearing of it)
+        if LC.MarkTalking then LC.MarkTalking(npc, clip) end
         return (LC.AnnounceKnownSecs and LC.AnnounceKnownSecs(clip)) or 0
     end
     return 0 -- (not recorded yet: the words only, never Half-Life 2's voice in its place)
@@ -498,7 +501,7 @@ function LC.HL2LinesDump()
 end
 concommand.Add("lc_hl2_lines", function(ply)
     if IsValid(ply) and not (LC.CanEdit and LC.CanEdit(ply)) then return end
-    local ok, n = pcall(LC.HL2LinesDump)
+    local ok, n = LC.Try(LC.HL2LinesDump)
     local msg = ok and ("wrote data/livingcity/hl2_lines.txt: " .. tostring(n) .. " clips. Bring it back to Claude.") or ("could not list them: " .. tostring(n))
     if IsValid(ply) then ply:ChatPrint("[Miscount] " .. msg) else print("[Miscount] " .. msg) end
 end)

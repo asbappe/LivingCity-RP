@@ -20,11 +20,13 @@
 AddCSLuaFile()
 AddCSLuaFile("pose_recorder/core.lua")
 AddCSLuaFile("pose_recorder/play.lua")
+AddCSLuaFile("pose_recorder/targets.lua")
 include("pose_recorder/core.lua")
 
 local PR = PoseRecorder
-PR.Version = "2.0"
+PR.Version = "2.1"
 include("pose_recorder/play.lua")
+include("pose_recorder/targets.lua") -- (another addon's poses, set by hand on a mannequin)
 
 if SERVER then
     util.AddNetworkString("pose_recorder_select")
@@ -46,20 +48,26 @@ if SERVER then
         return true
     end
 
-    -- A mannequin: your own model as a ragdoll, standing in front of you, every limb frozen
-    -- where it is, ready to pose with the physgun (right click to freeze a limb again).
-    concommand.Add("pose_recorder_mannequin", function(ply)
-        if not IsValid(ply) then return end
-        local model = ply:GetModel()
-        if hook.Run("PlayerSpawnRagdoll", ply, model) == false then return end
-        local tr = util.TraceLine({ start = ply:EyePos(), endpos = ply:EyePos() + Angle(0, ply:EyeAngles().y, 0):Forward() * 110, filter = ply })
-        local spot = tr.HitPos - Angle(0, ply:EyeAngles().y, 0):Forward() * 20
+    -- Where a mannequin goes: on the floor a little in front of you, facing you.
+    function PR.Spot(ply)
+        local fwd = Angle(0, ply:EyeAngles().y, 0):Forward()
+        local tr = util.TraceLine({ start = ply:EyePos(), endpos = ply:EyePos() + fwd * 110, filter = ply })
+        local spot = tr.HitPos - fwd * 20
         local down = util.TraceLine({ start = spot + Vector(0, 0, 40), endpos = spot - Vector(0, 0, 200), filter = ply })
+        return (down.Hit and down.HitPos or spot) + Vector(0, 0, 2), ply:EyeAngles().y + 180
+    end
+
+    -- A mannequin: a model as a ragdoll, standing there, every limb frozen where it is, ready
+    -- to pose with the physgun (right click to freeze a limb again). Any model with a ragdoll:
+    -- a person, a vortigaunt, a stalker.
+    function PR.Mannequin(ply, model, pos, yaw)
+        if not IsValid(ply) or type(model) ~= "string" or model == "" then return nil end
+        if util.IsValidRagdoll and not util.IsValidRagdoll(model) then return nil end
         local rag = ents.Create("prop_ragdoll")
-        if not IsValid(rag) then return end
+        if not IsValid(rag) then return nil end
         rag:SetModel(model)
-        rag:SetPos((down.Hit and down.HitPos or spot) + Vector(0, 0, 2))
-        rag:SetAngles(Angle(0, ply:EyeAngles().y + 180, 0))
+        rag:SetPos(pos)
+        rag:SetAngles(Angle(0, yaw or 0, 0))
         rag:Spawn()
         rag:Activate()
         for i = 0, rag:GetPhysicsObjectCount() - 1 do
@@ -72,7 +80,18 @@ if SERVER then
         undo.SetPlayer(ply)
         undo.Finish()
         hook.Run("PlayerSpawnedRagdoll", ply, model, rag)
-        PR.Select(ply, rag)
+        return rag
+    end
+
+    -- pose_recorder_mannequin [model]: your own model in front of you, or the one named.
+    concommand.Add("pose_recorder_mannequin", function(ply, _, args)
+        if not IsValid(ply) then return end
+        local model = args and args[1] and string.Trim(args[1]) or ""
+        if model == "" then model = ply:GetModel() end
+        if hook.Run("PlayerSpawnRagdoll", ply, model) == false then return end
+        local pos, yaw = PR.Spot(ply)
+        local rag = PR.Mannequin(ply, model, pos, yaw)
+        if IsValid(rag) then PR.Select(ply, rag) end
     end)
     return
 end
@@ -88,6 +107,7 @@ local cvRef   = CreateClientConVar("pose_recorder_ref", "idle_all_01", true, fal
 local cvRate  = CreateClientConVar("pose_recorder_rate", "10", true, false, "Pose Recorder: samples a second while recording")
 local cvEase  = CreateClientConVar("pose_recorder_ease", "smooth", true, false, "Pose Recorder: how each new keyframe eases into the next: smooth, snappy, bouncy or linear")
 local cvWrap  = CreateClientConVar("pose_recorder_wrap", "1", true, false, "Pose Recorder: 1 the last keyframe eases back into the first, 0 the loop stops on the last")
+CreateClientConVar("pose_recorder_model", "", true, false, "Pose Recorder: the model a new mannequin is (empty: your own)")
 
 PR.sel = PR.sel or nil      -- { ent, phys = { [name] = true } }
 PR.frames = PR.frames or {} -- the keyframes, or the recording's samples
@@ -136,23 +156,34 @@ local function Reference(model, seqName)
     cm:SetPlaybackRate(0)
     cm:InvalidateBoneCache()
     cm:SetupBones()
-    local rel = {}
+    -- (each bone's turn, and its place and parent too: enough to put a pose back on the model)
+    local rel, pos, bones = {}, {}, {}
     for i = 0, cm:GetBoneCount() - 1 do
+        local parent = cm.GetBoneParent and cm:GetBoneParent(i)
+        bones[i + 1] = { name = cm.GetBoneName and cm:GetBoneName(i) or tostring(i), parent = (parent and parent >= 0) and (parent + 1) or nil }
         local m = cm:GetBoneMatrix(i)
-        if m then local a = m:GetAngles() rel[i + 1] = PR.FromAngles(a.p, a.y, a.r) end
+        if m then
+            local a = m:GetAngles()
+            rel[i + 1] = PR.FromAngles(a.p, a.y, a.r)
+            local v = m.GetTranslation and m:GetTranslation()
+            if v then pos[i + 1] = { v.x, v.y, v.z } end
+        end
     end
     cm:Remove()
-    refs[key] = { rel = rel, seq = seq }
+    refs[key] = { rel = rel, seq = seq, pos = pos, bones = bones }
     return refs[key]
 end
 PR.Reference = Reference
 
--- The ragdoll as it's posed right now: an angle for every bone you can pose.
-function PR.Snapshot()
+-- The ragdoll as it's posed right now: an angle for every bone you can pose. refName: the
+-- sequence to measure from (none: the panel's "Relative to").
+function PR.Snapshot(refName)
     local sel = PR.sel
+    -- (a mannequin stood a moment ago may only now have reached this game)
+    if sel and sel.idx and not IsValid(sel.ent) and Entity then sel.ent = Entity(sel.idx) end
     local ent = sel and sel.ent
     if not IsValid(ent) then return nil, "Pick a ragdoll first (left click on one), or spawn a mannequin." end
-    local ref = Reference(ent:GetModel(), cvRef:GetString())
+    local ref = Reference(ent:GetModel(), refName or cvRef:GetString())
     if not ref then return nil, "Couldn't load the model to measure it." end
     ent:InvalidateBoneCache()
     ent:SetupBones()

@@ -166,7 +166,7 @@ function LC_CL.OpenUnitTools()
     end
 
     s = Section("Scanner")
-    Button(s, "Fly a scanner", "From a Combine console, a data terminal, or anywhere in the Nexus. Photographs earn XP; rebels go out as BOLOs.", Do("scanner"))
+    Button(s, "Fly a scanner", "From a Combine scanner console, a data terminal, or anywhere in the Nexus. Photographs earn XP; rebels go out as BOLOs.", Do("scanner"))
 
     if me:GetNW2String("lcf_special", "") == "ow_commander" then
         local left = me:GetNW2Float("lc_cmd_drop_at", 0) - CurTime()

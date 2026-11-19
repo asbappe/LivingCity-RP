@@ -4,15 +4,15 @@
 
     A citizen (or a Resistance member, on paper a citizen) can take others
     into their household: F1, looking at them, "Invite (name) into my
-    household"; they accept on F2 > Me (More) > My household within two minutes.
+    household"; they accept on F2 > Household, stall and debts > My household within two minutes.
     Members of a household:
       - live in the same block as its head (moved there when they join)
       - share their storage crates and lockers: each can open the others'
       - have keys to the head's apartment, if they rent one
       - know each other by name
     and the household has a name ("the Vornholt household", the head's
-    surname, which the head can change), shown on F2 > Me (More) > My household and
-    in Where I stand. Anyone can leave (F2 > Me (More) > My household > Leave); the
+    surname, which the head can change), shown on F2 > Household, stall and debts > My household and
+    in Where I stand. Anyone can leave (F2 > Household, stall and debts > My household > Leave); the
     head can send someone away; a household of one is no household. Up to
     lc_household_max (6) people. Kept in data/livingcity/households.json,
     each character in one household at most.
@@ -90,11 +90,11 @@ local function MoveIn(ply, h)
         ply:SetPData("lc_housed_how", "household")
         ply.lcIntakeState = nil
     end
-    if IsValid(head) and ply ~= head and LC.GiveKey then pcall(LC.GiveKey, head, Name(ply), true) end
+    if IsValid(head) and ply ~= head and LC.GiveKey then LC.Try(LC.GiveKey, head, Name(ply), true) end
     -- they know each other
     for cid in pairs(h.members) do
         local o = ByCID(cid)
-        if IsValid(o) and o ~= ply and LC.Introduce then pcall(LC.Introduce, ply, o) pcall(LC.Introduce, o, ply) end
+        if IsValid(o) and o ~= ply and LC.Introduce then LC.Try(LC.Introduce, ply, o) LC.Try(LC.Introduce, o, ply) end
     end
 end
 
@@ -114,8 +114,8 @@ function LC.HouseholdInvite(head, target)
     end
     target.lcHouseInvite = { from = head, at = CurTime() }
     target:SetNW2String("lc_house_invite", Name(head))
-    target:ChatPrint("[Miscount] " .. Name(head) .. " asks you to join their household. F2 > Me (More) > My household to accept.")
-    if LC.Notice then LC.Notice(target, "info", "A household", Name(head) .. " asks you to join their household: the same block, shared crates, keys. F2 > Me (More) > My household to accept.", 10) end
+    target:ChatPrint("[Miscount] " .. Name(head) .. " asks you to join their household. F2 > Household, stall and debts > My household to accept.")
+    if LC.Notice then LC.Notice(target, "info", "A household", Name(head) .. " asks you to join their household: the same block, shared crates, keys. F2 > Household, stall and debts > My household to accept.", 10) end
     head:ChatPrint("[Miscount] You've asked " .. Name(target) .. " to join your household.")
     return true
 end

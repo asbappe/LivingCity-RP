@@ -95,7 +95,7 @@ timer.Create("LivingCityTagsFound", 5, 0, function()
     if not cvOn:GetBool() then return end
     for _, t in ipairs(LC.Tags or {}) do
         if not t.found and t.pos then
-            local ok, seen = pcall(SeesTag, t)
+            local ok, seen = LC.Try(SeesTag, t)
             if ok and seen then Found(t) end
         end
     end

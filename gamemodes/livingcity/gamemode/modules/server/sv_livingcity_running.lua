@@ -270,7 +270,7 @@ timer.Create("LivingCityRunning", 0.5, 0, function()
     local now = CurTime()
     local dt = last > 0 and math.min(now - last, 1) or 0.5
     last = now
-    local ok, err = pcall(LC.RunningTick, now, dt)
+    local ok, err = LC.Try(LC.RunningTick, now, dt)
     if not ok and LC.Error then LC.Error("running", err) end
 end)
 

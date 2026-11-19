@@ -184,7 +184,9 @@ local function Clear(pos, radius)
 end
 LC.DressingClear = Clear
 
-local function Prop(model, pos, yaw)
+-- passable: nothing walks into it (the owner, 14 November: cremators stuck on the infestation's junk; "make all
+-- props/junk in the infestation zone not ... impede NPCs nor players"). Debris still rests on the floor.
+local function Prop(model, pos, yaw, passable)
     local e = ents.Create("prop_physics")
     if not IsValid(e) then return nil end
     e:SetModel(model)
@@ -210,8 +212,10 @@ local function Prop(model, pos, yaw)
         end
     end
     e.lcDressing = true
+    if passable and e.SetCollisionGroup then e:SetCollisionGroup(COLLISION_GROUP_DEBRIS or 1) end
     return e
 end
+LC.DressingProp = Prop
 
 local function Radius(model)
     if string.find(model, "couch", 1, true) or string.find(model, "mattress", 1, true) then return 60 end
@@ -270,14 +274,14 @@ local function Dress(z, d)
                 d.table = true
             else
                 local m = Pick(DRESS[z.kind])
-                if ModelOK(m) and Clear(p, Radius(m)) then e = Prop(m, p) end
+                if ModelOK(m) and Clear(p, Radius(m)) then e = Prop(m, p, nil, z.kind == "infest") end
             end
             if IsValid(e) then
                 d.ents[#d.ents + 1] = e
                 if z.kind == "infest" and util.Decal then
                     -- and the stains to go with it
                     local g = LC.GroundAt and LC.GroundAt(p) or p
-                    pcall(util.Decal, "Blood", g + Vector(math.Rand(-30, 30), math.Rand(-30, 30), 10), g - Vector(0, 0, 20))
+                    LC.Try(util.Decal, "Blood", g + Vector(math.Rand(-30, 30), math.Rand(-30, 30), 10), g - Vector(0, 0, 20))
                 end
             end
         end
@@ -357,7 +361,7 @@ end
 LC.DressingTick = DressingTick
 
 timer.Create("LivingCityDressing", 5, 0, function()
-    local ok, err = pcall(DressingTick)
+    local ok, err = LC.Try(DressingTick)
     if not ok then LC.Error("dressing", err) end
 end)
 
@@ -515,7 +519,7 @@ local function OutbreakCheck()
 end
 
 timer.Create("LivingCityCityState", 20, 0, function()
-    local ok, err = pcall(function()
+    local ok, err = LC.Try(function()
         if not LC.Running then return end
         LC.RefreshCityState()
         OutbreakCheck()
@@ -822,7 +826,7 @@ local function BackupTick(now)
 end
 
 timer.Create("LivingCityBackup", 1, 0, function()
-    local ok, err = pcall(BackupTick, CurTime())
+    local ok, err = LC.Try(BackupTick, CurTime())
     if not ok then LC.Error("backup", err) end
 end)
 

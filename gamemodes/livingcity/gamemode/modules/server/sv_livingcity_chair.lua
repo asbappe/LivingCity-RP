@@ -141,7 +141,7 @@ local function Seat(s)
     if LC.MakeSequence and LC.BusySeqName and SF_SCRIPT_LOOP_IN_POST_IDLE then
         local loop = LC.BusySeqName(npc, "ACT_BUSY_SIT_CHAIR")
         if loop then
-            local ok, ss = pcall(LC.MakeSequence, npc, pos, yaw, LC.BusySeqName(npc, "ACT_BUSY_SIT_CHAIR_ENTRY") or loop, loop,
+            local ok, ss = LC.Try(LC.MakeSequence, npc, pos, yaw, LC.BusySeqName(npc, "ACT_BUSY_SIT_CHAIR_ENTRY") or loop, loop,
                 SF_SCRIPT_LOOP_IN_POST_IDLE + SF_SCRIPT_NO_COMPLAINTS + SF_SCRIPT_ALLOW_DEATH, 1, 0)
             if ok and IsValid(ss) then st.ss, st.busyKind = ss, "sitchair" end
         end
@@ -401,6 +401,6 @@ end
 
 timer.Create("LivingCityChair", 1, 0, function()
     if LC.TimeStopped or not next(S) then return end
-    local ok, err = pcall(LC.ChairTick, CurTime())
+    local ok, err = LC.Try(LC.ChairTick, CurTime())
     if not ok and LC.Error then LC.Error("chair", err) end
 end)

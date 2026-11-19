@@ -262,7 +262,7 @@ function LC.CPReportClean(ply)
             end
             if had then
                 p:ChatPrint("[Inside] There was contraband there. You wrote it up clean. If a raid finds it soon, your report won't hold up.")
-                if LC.AddTrait then pcall(LC.AddTrait, p, "sympathy", 1) end
+                if LC.AddTrait then LC.Try(LC.AddTrait, p, "sympathy", 1) end
                 p.lcCleanReport = { block = o.block, at = CurTime() }
             end
             hook.Run("LivingCityResidenceInspected", p, t, 0)
@@ -332,7 +332,7 @@ function LC.CPReportIn(ply)
     if not s then return false, "You're not on a shift." end
     local q = Quota()
     for k, n in pairs(q) do
-        if (s[k] or 0) < n then return false, "Finish the checklist first (F2 > Me > My shift), or wait for the end of the shift." end
+        if (s[k] or 0) < n then return false, "Finish the checklist first (F2 > My shift), or wait for the end of the shift." end
     end
     LC.CPReview(ply)
     Shift(ply)
@@ -355,7 +355,7 @@ function LC.CPBreak(ply)
         ply.lcShift, ply.lcInspectOrder = nil, nil
         ply:SetNW2Bool("lc_offduty", true)
         ply:SetNW2String("lc_shift", "")
-        ply:ChatPrint("[CP net] On a break: no shift until you're back on duty (F2 > Me > Back on duty). The shift you were on is dropped.")
+        ply:ChatPrint("[CP net] On a break: no shift until you're back on duty (F2 > Back on duty). The shift you were on is dropped.")
     end
     return true
 end
@@ -382,15 +382,15 @@ function LC.CPShiftTell(ply, s, now)
     if not LC.Notice then return true end
     if first then
         -- (the owner, 12 November: "it says when a shift starts, but 2 happen in a row": never twice within
-        -- START_QUIET seconds; the new shift is still on F2 > Me > My shift)
+        -- START_QUIET seconds; the new shift is still on F2 > My shift)
         if now - (ply.lcShiftStartToldAt or -1e9) < START_QUIET then return false end
         ply.lcShiftStartToldAt = now
-        LC.Notice(ply, "info", "Shift started", string.format("%d minutes. Your quota: %s. It's all on F2 > Me > My shift; a review and experience at the end.",
+        LC.Notice(ply, "info", "Shift started", string.format("%d minutes. Your quota: %s. It's all on F2 > My shift; a review and experience at the end.",
             math.max(1, math.ceil(left / 60)), QuotaLine(s)), 10)
     elseif stage == 2 then
-        LC.Notice(ply, "info", "Half your shift gone", string.format("%d minutes left. So far: %s. (F2 > Me > My shift)", math.ceil(left / 60), QuotaLine(s)), 8)
+        LC.Notice(ply, "info", "Half your shift gone", string.format("%d minutes left. So far: %s. (F2 > My shift)", math.ceil(left / 60), QuotaLine(s)), 8)
     else
-        LC.Notice(ply, "warn", "Two minutes of your shift left", "So far: " .. QuotaLine(s) .. ". (F2 > Me > My shift)", 8)
+        LC.Notice(ply, "warn", "Two minutes of your shift left", "So far: " .. QuotaLine(s) .. ". (F2 > My shift)", 8)
     end
     return true
 end
@@ -432,7 +432,7 @@ local function Tick()
 end
 LC.CPDutyTick = Tick
 timer.Create("LivingCityCPDuty", 5, 0, function()
-    local ok, err = pcall(Tick)
+    local ok, err = LC.Try(Tick)
     if not ok and LC.Error then LC.Error("cp duty", err) end
 end)
 

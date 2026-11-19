@@ -176,11 +176,11 @@ function LC.MedicTendNPCs(now)
 end
 
 timer.Create("LivingCityRebelMedics", 10, 0, function()
-    local ok, err = pcall(LC.EnsureMedics)
+    local ok, err = LC.Try(LC.EnsureMedics)
     if not ok and LC.Error then LC.Error("rebel medics", err) end
 end)
 timer.Create("LivingCityRebelMedicTend", 2, 0, function()
     if not cvOn:GetBool() or not LC.Running then return end
-    local ok, err = pcall(LC.MedicTendNPCs, CurTime())
+    local ok, err = LC.Try(LC.MedicTendNPCs, CurTime())
     if not ok and LC.Error then LC.Error("rebel medic tending", err) end
 end)

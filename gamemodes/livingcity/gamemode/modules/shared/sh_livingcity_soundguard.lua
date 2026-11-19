@@ -71,7 +71,7 @@ local function Who(owner)
         return string.format("at %d %d %d", math.floor(owner.x / 64), math.floor(owner.y / 64), math.floor(owner.z / 64))
     end
     if owner ~= nil and owner.EntIndex then
-        local ok, i = pcall(owner.EntIndex, owner)
+        local ok, i = LC.Try(owner.EntIndex, owner)
         if ok and i then return "ent " .. tostring(i) end
     end
     return tostring(owner)
@@ -138,7 +138,7 @@ if EMT and EMT.EmitSound and not EMT.lcRawEmitSound then
     EMT.lcRawEmitSound, EMT.lcRawStopSound = rawEmit, rawStop
     EMT.EmitSound = function(self, snd, ...)
         if not LC.SoundGuardCheck(self, snd) then
-            if rawStop then pcall(rawStop, self, snd) end -- (and the copies already going: stuck, most likely)
+            if rawStop then LC.Try(rawStop, self, snd) end -- (and the copies already going: stuck, most likely)
             return
         end
         Track(self, snd)
@@ -160,7 +160,7 @@ if CreateSound and not LC.SoundGuardRawCreate then
     CreateSound = function(ent, snd, ...)
         local key = Who(ent) .. "|" .. tostring(Clean(snd))
         if not LC.SoundGuardCheck(ent, snd, nil, true) then
-            for p, k in pairs(patches) do if k == key and p.Stop then pcall(p.Stop, p) end end
+            for p, k in pairs(patches) do if k == key and p.Stop then LC.Try(p.Stop, p) end end
             return STUB
         end
         local p = rawCreate(ent, snd, ...)
@@ -189,7 +189,7 @@ if SERVER then
     function LC.SoundGuardTrack(e, snd, patch)
         local d = LC.DreamActive
         if not d or type(snd) ~= "string" then return end
-        local ok, inside = pcall(InDream, d, e)
+        local ok, inside = LC.Try(InDream, d, e)
         if not ok or not inside then return end
         local h = heard[d.id]
         if not h then h = { list = {}, set = {}, patches = {} } heard[d.id] = h end
@@ -202,9 +202,9 @@ if SERVER then
     local function Stop(e, snd)
         if type(e) == "Vector" or type(e) == "string" then
             local w = game and game.GetWorld and game.GetWorld()
-            if IsValid(w) and w.StopSound then pcall(w.StopSound, w, snd) end
+            if IsValid(w) and w.StopSound then LC.Try(w.StopSound, w, snd) end
         elseif IsValid(e) and e.StopSound then
-            pcall(e.StopSound, e, snd)
+            LC.Try(e.StopSound, e, snd)
         end
     end
     -- The dream is over (who: everyone in it; one dreamer waking: just them). Every sound it started,
@@ -221,7 +221,7 @@ if SERVER then
             if #send < 250 then send[#send + 1] = { i, r.snd } end
         end
         if whole then
-            for _, p in ipairs(h.patches) do if p and p.Stop then pcall(p.Stop, p) n = n + 1 end end
+            for _, p in ipairs(h.patches) do if p and p.Stop then LC.Try(p.Stop, p) n = n + 1 end end
             heard[dream.id] = nil
         end
         local to = {}
@@ -297,9 +297,9 @@ if CLIENT then
     function LC.SoundGuardClientEnd(list)
         for _, r in ipairs(list or {}) do
             local e = (r[1] or 0) > 0 and Entity and Entity(r[1]) or (game and game.GetWorld and game.GetWorld())
-            if IsValid(e) and e.StopSound then pcall(e.StopSound, e, r[2]) end
+            if IsValid(e) and e.StopSound then LC.Try(e.StopSound, e, r[2]) end
             local me = LocalPlayer and LocalPlayer()
-            if IsValid(me) and me.StopSound then pcall(me.StopSound, me, r[2]) end
+            if IsValid(me) and me.StopSound then LC.Try(me.StopSound, me, r[2]) end
         end
         for ch in pairs(dreamChans) do LC.SoundGuardFade(ch, 1.5) dreamChans[ch] = nil end
     end
@@ -354,7 +354,7 @@ function LC.SoundLoops(snd)
     if loopKnown[s] ~= nil then return loopKnown[s] end
     local loops = false
     if string.sub(s, -4) == ".wav" and file and file.Open then
-        local ok, res = pcall(function()
+        local ok, res = LC.Try(function()
             local f = file.Open("sound/" .. s, "rb", "GAME")
             if not f then return false end
             -- the marks sit before or after the sound itself: the head, and the tail of a long file
@@ -411,7 +411,7 @@ function LC.SoundLoopSecs(ply, snd)
 end
 local function RawStop(ply, snd)
     local stop = EMT and (EMT.lcRawStopSound or EMT.StopSound)
-    if stop then pcall(stop, ply, snd) end
+    if stop then LC.Try(stop, ply, snd) end
 end
 function LC.SoundLoopWatch(ply, snd)
     if not (ply and ply.IsPlayer and IsValid(ply) and ply:IsPlayer()) then return false end
@@ -450,7 +450,7 @@ if EMT and EMT.EmitSound and not EMT.lcLoopEmit then
     local guarded = EMT.EmitSound
     EMT.lcLoopEmit = true
     EMT.EmitSound = function(self, snd, ...)
-        local ok = pcall(LC.SoundLoopWatch, self, snd)
+        local ok = LC.Try(LC.SoundLoopWatch, self, snd)
         return guarded(self, snd, ...)
     end
 end

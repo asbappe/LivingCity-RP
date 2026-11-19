@@ -35,6 +35,9 @@ function ENT:Initialize()
     self:EnableCustomCollisions(true)
     self:SetCustomCollisionCheck(true)
     if SERVER then self:SetUseType(SIMPLE_USE) end
+    -- It starts as its power says, not lit for a moment and then dark (the owner, 14 November: a field with no
+    -- power bank "had the forcefield as on"): with no bank in reach there is no field from the first frame.
+    if SERVER and LC and LC.FieldPlaced then LC.FieldPlaced(self) end -- (sv_livingcity_checkpoints.lua)
     -- the field is much bigger than the post it hangs from: draw it whenever any of it is in view
     if CLIENT then self:SetRenderBounds(Vector(-24, -w - 24, 0), Vector(24, w + 24, h + 24)) end -- (the posts at both ends too)
 end
@@ -85,7 +88,10 @@ if CLIENT then
     -- A post at each end of the field: the same post, the far one turned round
     -- to face it (so the emitters point at each other), the field strung between.
     ENT.PostYaw = { 0, 180 } -- (left end, right end)
+    -- (a post with a dark skin wears it while the field is down: nothing lit on a field with no power)
     local function DrawPost(self, side, yaw)
+        local skin = (not self:FieldUp() and self.SkinCount and (self:SkinCount() or 1) > 1) and 1 or 0
+        if self.GetSkin and self:GetSkin() ~= skin then self:SetSkin(skin) end
         self:SetRenderOrigin(self:LocalToWorld(Vector(0, side * self.HalfWidth, 0)))
         self:SetRenderAngles(self:LocalToWorldAngles(Angle(0, yaw, 0)))
         self:SetupBones()

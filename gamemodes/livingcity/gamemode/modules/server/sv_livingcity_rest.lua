@@ -42,6 +42,13 @@
     On top of all that, lights out (sv_livingcity_bedtime.lua): everyone is due
     in bed at the good night, whatever they slept in the day.
 
+    Asleep in the cells (the owner, 15 November: "if a person is in prison
+    more than 5 ish minutes, then they can sleep and just dream any time of
+    the day"): a prisoner with more than five minutes still to serve may lie
+    down at any hour, tired or not (F1 > Lie down and sleep, or E on the
+    cell's bed), on the floor where they stand when no bed is within reach.
+    The sentence runs on. The dream that follows: sv_livingcity_dreams.lua.
+
       lc_sleep 0/1, lc_sleep_seconds (60), lc_tired_days (1),
       lc_citizens_sleep 0/1 (1)
 ]]
@@ -173,6 +180,16 @@ function LC.BedLie(a)
     return b and b.top and b or nil
 end
 
+-- Asleep in the cells at any hour (the owner, 15 November): a prisoner in their cell (not out on a work detail)
+-- with more than five minutes still to serve. The dream that follows is sv_livingcity_dreams.lua's.
+local CELL_SLEEP_LEFT = 300
+LC.CellSleepLeft = CELL_SLEEP_LEFT
+function LC.PrisonerMaySleep(ply)
+    local pr = IsValid(ply) and LC.Prisoners and LC.Prisoners[ply]
+    if not pr or pr.work then return false end
+    return (pr.untilT or 0) - CurTime() > CELL_SLEEP_LEFT
+end
+
 -- Sleep in a bed. True, or false and why not. You lie still (you can't move) till you press Jump.
 function LC.SleepIn(ply, ent)
     if not cvOn:GetBool() or not IsValid(ply) or not ply:Alive() then return false end
@@ -180,10 +197,17 @@ function LC.SleepIn(ply, ent)
     if ply:GetNW2String("lcf_faction", "") == "stalker" then return false, "A stalker doesn't sleep. It doesn't get tired either: it only works." end
     if LC.Wired and LC.Wired(ply) then return false, "You're far too wired to sleep: the stimulant has your heart racing. (It wears off in a while.)" end
     local where, bed = BedAt(ply, ent)
+    -- a prisoner with a while to serve: at any hour, and with no bed within reach (or someone in it), on the cell's
+    -- floor where they stand
+    local cell = LC.PrisonerMaySleep(ply)
+    if cell and (not where or not LC.BedFree(LC.BedKey(bed), ply)) and ply:IsOnGround() then
+        bed = { pos = ply:GetPos(), point = true, yaw = ply:EyeAngles().y }
+        where = bed.pos
+    end
     if not where then return false, "There's no bed here." end
     local key = LC.BedKey(bed)
     if not LC.BedFree(key, ply) then return false, "Someone's already asleep in this bed." end
-    local drowsy = LC.IsDrowsy(ply) -- (from the first warning on: the owner, 7 November)
+    local drowsy = cell or LC.IsDrowsy(ply) -- (from the first warning on: the owner, 7 November)
     if not LC.IsNight() and not drowsy then return false, "You're not tired, and it's broad daylight. Beds are for the night (or once you're getting tired)." end
     -- rested for a day after a night's sleep, but you can sleep again 18 in-game hours after (the owner, 7 November)
     if LC.IsRested(ply) and not drowsy then
@@ -274,7 +298,7 @@ timer.Create("LivingCitySleepers", 0.5, 0, function()
     local now = CurTime()
     for _, ply in ipairs(player.GetAll()) do
         if ply.lcSleep then
-            local ok, err = pcall(SleepStep, ply, now)
+            local ok, err = LC.Try(SleepStep, ply, now)
             if not ok and LC.Error then LC.Error("rest", err) end
         end
     end
@@ -392,7 +416,7 @@ function LC.RestTick(now)
 end
 
 timer.Create("LivingCityRest", 5, 0, function()
-    local ok, err = pcall(LC.RestTick, CurTime())
+    local ok, err = LC.Try(LC.RestTick, CurTime())
     if not ok and LC.Error then LC.Error("rest", err) end
 end)
 

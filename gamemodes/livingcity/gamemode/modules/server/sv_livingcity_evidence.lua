@@ -432,7 +432,7 @@ end
 local function Ignite(b, now)
     b.phase, b.endAt = "burning", now + BURN
     if sound and sound.Play then sound.Play("ambient/fire/ignite.wav", b.pos, 85) end
-    pcall(function()
+    LC.Try(function()
         local f = ents.Create("env_fire")
         if not IsValid(f) then return end
         f:SetPos(b.pos)
@@ -445,7 +445,7 @@ local function Ignite(b, now)
         f:Fire("StartFire", "", 0)
         b.fx[#b.fx + 1] = f
     end)
-    pcall(function()
+    LC.Try(function()
         local s = ents.Create("env_smokestack")
         if not IsValid(s) then return end
         s:SetPos(b.pos + Vector(0, 0, 30))
@@ -534,7 +534,7 @@ function LC.EvidenceTick(now)
     if LC.EvidenceStartBurn("auto") then LC.EvidenceAfterAt = nil end
 end
 timer.Create("LivingCityEvidence", 1, 0, function()
-    local ok, err = pcall(LC.EvidenceTick, CurTime())
+    local ok, err = LC.Try(LC.EvidenceTick, CurTime())
     if not ok and LC.Error then LC.Error("evidence", err) end
 end)
 

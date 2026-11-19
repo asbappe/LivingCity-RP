@@ -173,7 +173,7 @@ function LC.VortRescueTick(now)
 end
 
 timer.Create("LivingCityVortRescue", 1, 0, function()
-    local ok, err = pcall(LC.VortRescueTick, CurTime())
+    local ok, err = LC.Try(LC.VortRescueTick, CurTime())
     if not ok and LC.Error then LC.Error("vortigaunt rescue", err) end
 end)
 

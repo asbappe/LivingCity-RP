@@ -40,6 +40,19 @@ hook.Add("SetupMove", "LivingCityDazed", function(ply, mv)
     if mv:KeyDown(IN_SPEED) then mv:SetButtons(bit.band(mv:GetButtons(), bit.bnot(IN_SPEED))) end
 end)
 
+-- Held by the Combine right now, as both sides can see it: being walked to the cells, in a cell, cuffed,
+-- detained on the street, or held in a struggle. Nobody held like that is "trespassing" in a Combine-only
+-- zone (the owner, 15 November: "I am being hauled in and it's not applicable"): sv_livingcity_security.lua,
+-- cl_livingcity_context.lua.
+LC = LC or {}
+function LC.HeldByCombine(ply)
+    if not IsValid(ply) or not ply.GetNW2Bool then return false end
+    local now = CurTime()
+    return ply:GetNW2Bool("lc_marching", false) or ply:GetNW2Bool("lc_tied", false)
+        or ply:GetNW2Float("lc_jail_until", 0) > now or ply:GetNW2Float("lc_detained_until", 0) > now
+        or ply:GetNW2Float("lc_struggle_until", 0) > now
+end
+
 -- Struggling against an arrest (sv_livingcity_arrest.lua): held where you stand till it's decided.
 hook.Add("SetupMove", "LivingCityStruggle", function(ply, mv)
     if ply:GetNW2Float("lc_struggle_until", 0) <= CurTime() then return end

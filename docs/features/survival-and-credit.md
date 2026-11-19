@@ -45,7 +45,7 @@ Each character chooses how hard staying alive is:
 
 - **Realistic** (where everyone starts; everything as it has always been): hunger, thirst, parasites, the toilet and washing, food going off. For taking it on: **20% more shift pay** (the Union shift and the shift games' pay, `lc_realistic_bonus` 0.2) **and 20% more experience**, and the title **"Hardened"** under your name (before any title your lives have earned, "Hardened, Old hand").
 - **Relaxed:** hunger and thirst come on at a third of the speed (`lc_relaxed_needs` 0.33); no parasites (nothing catches), no toilet or washing, nothing in your pockets goes off. Switching to Relaxed clears any parasites, urge and dirt you had.
-- **Where to choose:** the characters screen (C > Your characters: the "Survival" button on the character you're playing) or F2 > Me ("Survival: Realistic (switch to Relaxed)"). Switching is allowed once every `lc_survival_switch_hours` (3). Each character keeps its own choice.
+- **Where to choose:** the characters screen (C > Your characters: the "Survival" button on the character you're playing) or F2 > Dreams and survival ("Survival: Realistic (switch to Relaxed)"). Switching is allowed once every `lc_survival_switch_hours` (3). Each character keeps its own choice.
 - `lc_survival_modes` 0: everyone Realistic, with no bonus and no title, exactly as before.
 
 **Catching something (the owner, 10 November: "a framework for illness that can be contracted such as a bad cough and vomitting and other things; it shouldn't be horrifically annoying and can fit into the Realistic survival mechanics").** Realistic survival only: Relaxed characters never fall ill. Each illness passes by itself, and once over it you can't catch it again for half an hour. (`sv_livingcity_illness.lua`; add one with a row in `LC.Illnesses`.)
@@ -57,3 +57,6 @@ Each character chooses how hard staying alive is:
 
 
 **Filling a can by water (the owner, 14 November: "just a few feet near water").** Within about 110 units of water (at your feet or a step down from the bank) counts, not only standing in it (`LC.NearWater`, sv_livingcity_survival.lua).
+Since 14 November (the owner: a can filled ten feet away, with water under the ground they stood on) the water must also be in view: the line from your eye to it crosses no wall or floor of the map.
+
+**Guns drawn from the pockets survive a restart (the owner, 14 November: "my pistol and SMG are gone ... why do I still have grenades").** Only the pockets are saved, and drawing a gun takes it out of them. Leaving the server (a restart, a map change, a disconnect), the guns in your hands that have a pocket item (pistol, SMG, shotgun, revolver, crowbar) go back in your pockets, past the weight limit if need be, to be drawn again. Not the ones your rank hands out, and not in a dream (`LC.PocketHeldGuns`, sv_livingcity_survival.lua). A server crash still loses them. Guns lost before this change are not brought back.

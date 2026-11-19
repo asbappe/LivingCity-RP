@@ -31,7 +31,7 @@
                                     2 people waking from sleep with weapons in their hands
                                     3 the grid failing, the whole city dark for a few minutes
                                     4 the last stand
-      Last stand  Where her transformer is (lc_adminpower, the editor's "Her last stand: the
+      Last stand  Where her transformer is (lc_adminpower, the editor's "Fixture:
                   Administrator's power"): at her desk if it's within reach of it, else beside it (none
                   placed: the G-Man brings one beside her desk). The Administrator (a player, brought
                   there, or the city's own, with a pulse rifle), lc_black_admin_health (600) health,
@@ -120,6 +120,7 @@ local cvSupGap   = CreateConVar("lc_black_suppressor_gap", "6", FLAGS, "Seconds 
 util.AddNetworkString("lc_suppressor")       -- a shell on its way: where, and how long till it lands
 util.AddNetworkString("lc_collapse_gman")    -- the G-Man, in person, to the Administrator: what he does and says
 util.AddNetworkString("lc_collapse_offer")   -- the G-Man's offer, to the Administrator
+util.AddNetworkString("lc_victory_music")    -- the Administrator beaten: the victory sting (cl_livingcity_atmos.lua)
 util.AddNetworkString("lc_collapse_answer")  -- her answer: "resign", "end" or "refuse"
 
 local TICK = 5
@@ -285,9 +286,13 @@ end
 ------------------------------------------------------------------------
 
 LC.ChaosYellowRate = 0.25 * 0.05
+LC.ChaosRedRate = 0.1
 function LC.ChaosStep(level, secs)
     local unit = secs / math.max(60, cvMinutes:GetFloat() * 60)
-    if level == "red" then LC.Chaos = LC.Chaos + unit
+    -- (red at a tenth: the owner, 14 November, "collapse 30% but we did 1 attack on a checkpoint: it should be
+    -- at like 7% at most", then "change an hour of red to add 20%". The nine minutes of red after one attack
+    -- filled 30%, now 3%; five hours of red fill it.)
+    if level == "red" then LC.Chaos = LC.Chaos + unit * LC.ChaosRedRate
     -- (yellow at 5% of the quarter it was: the owner, 14 November, "yellow needs to crawl it forward at 5% of
     -- what it does now; a 1 hour session of yellow filled it, which is absurd". 30 minutes of red still
     -- fills it; yellow alone would take 40 hours.)
@@ -572,7 +577,7 @@ local function SpawnHer(pos)
     return npc
 end
 
--- The transformers powering her shield: the editor's "Her last stand: the Administrator's power" (lc_adminpower),
+-- The transformers powering her shield: the editor's "Fixture: Administrator's power" (lc_adminpower),
 -- 2 or 3 of them (the owner, 10 November), in the order of their numbers (1, 2, 3).
 function LC.CollapsePowers()
     local out = {}
@@ -588,10 +593,19 @@ function LC.CollapsePower() return LC.CollapsePowers()[1] end
 -- Where a transformer's glass screen stands: on the side that faced whoever placed it (its front), in the way of
 -- a shot from there (the owner, 10 November: "they HAVE to go deal with the manhack swarm or the turret swarm
 -- first in order to get around the shield/glass"). lc_adminglass asks this.
+-- It stands on the floor, whatever height the transformer's origin is at (the owner, 15 November: "spawns the shield
+-- about 7 feet in the air and there's a huge gap below it ... from ground level up about 15 feet"): the world's floor
+-- under the spot, else the transformer's own bottom.
 function LC.AdminGlassSpot(power)
     local ang = Angle(0, power:GetAngles().y, 0)
     local front = (power.OBBMaxs and power:OBBMaxs().x or 24) + 34
-    return power:GetPos() + ang:Forward() * front, ang
+    local spot = power:GetPos() + ang:Forward() * front
+    local low = spot.z + ((power.OBBMins and power:OBBMins().z) or 0)
+    local tr = util.TraceLine and util.TraceLine({ start = spot + Vector(0, 0, 40), endpos = spot - Vector(0, 0, 600), mask = MASK_SOLID_BRUSHONLY })
+    local floor = (tr and tr.Hit and tr.HitPos) and tr.HitPos.z or low
+    if floor > spot.z + 40 or floor < low - 600 then floor = low end
+    spot.z = math.min(floor, spot.z)
+    return spot, ang
 end
 
 -- A clear spot `dist` from `at` (nothing solid between), for her beside the transformer or it beside her.
@@ -618,7 +632,7 @@ function LC.ReadStaticProps(path)
     if not (file and file.Open) then return out end
     local f = file.Open(path, "rb", "GAME")
     if not f then return out, false end
-    pcall(function()
+    LC.Try(function()
         if f:Read(4) ~= "VBSP" then return end
         f:ReadLong() -- (the BSP version: 19 to 20 for Half-Life 2 and Garry's Mod maps)
         -- lump 35, the game lump: each lump's entry is offset, length, version, and four bytes
@@ -1104,7 +1118,7 @@ function LC.CollapseFloatTick(now)
     local z = C.floatZ + math.sin(now * 1.5) * 4
     if math.abs(p.z - z) > 1 then boss:SetPos(Vector(p.x, p.y, z)) end
 end
-timer.Create("LivingCityCollapseFloat", 0.1, 0, function() if C.stage == "stand" then pcall(LC.CollapseFloatTick, CurTime()) end end)
+timer.Create("LivingCityCollapseFloat", 0.1, 0, function() if C.stage == "stand" then LC.Try(LC.CollapseFloatTick, CurTime()) end end)
 
 -- The transformer hit (lc_adminpower's OnTakeDamage). Shows it's working: sparks on every hit, smoke from
 -- three quarters, a small blast at half, a big one when it goes, and her shield with it.
@@ -1609,6 +1623,8 @@ Resolve = function(how, who, by)
     end
     LC.Log("info", "The collapse ended: " .. tostring(how))
     Calm()
+    -- the Administrator beaten (fallen or fled): the victory sting for everyone (cl_livingcity_atmos.lua)
+    if (how == "killed" or how == "fled") and net and net.Start then net.Start("lc_victory_music") net.Broadcast() end
     hook.Run("LivingCityCollapseOver", how, who)
     return true
 end
@@ -1815,7 +1831,7 @@ function LC.SuppressorTick(now)
     local ts = LC.SuppressorTargets()
     if #ts > 0 then LC.SuppressorFire(ts[math.random(#ts)]) else C.nextShell = now + 2 end
 end
-timer.Create("LivingCitySuppressor", 0.25, 0, function() if C.stage then pcall(LC.SuppressorTick, CurTime()) end end)
+timer.Create("LivingCitySuppressor", 0.25, 0, function() if C.stage then LC.Try(LC.SuppressorTick, CurTime()) end end)
 
 ------------------------------------------------------------------------
 -- The clock
@@ -1863,10 +1879,10 @@ function LC.CollapseGmanTick(now)
         LC.CollapseWalkAway(adm, "walked")
     end
 end
-timer.Create("LivingCityCollapseGman", 0.5, 0, function() if C.stage == "offer" then pcall(LC.CollapseGmanTick, CurTime()) end end)
+timer.Create("LivingCityCollapseGman", 0.5, 0, function() if C.stage == "offer" then LC.Try(LC.CollapseGmanTick, CurTime()) end end)
 
-timer.Create("LivingCityCollapse", TICK, 0, function() if LC.Running ~= false then pcall(LC.CollapseTick, CurTime()) end end)
-timer.Create("LivingCityCollapseStand", 1, 0, function() if C.stage == "stand" then pcall(LC.CollapseStandTick, CurTime()) end end)
+timer.Create("LivingCityCollapse", TICK, 0, function() if LC.Running ~= false then LC.Try(LC.CollapseTick, CurTime()) end end)
+timer.Create("LivingCityCollapseStand", 1, 0, function() if C.stage == "stand" then LC.Try(LC.CollapseStandTick, CurTime()) end end)
 
 ------------------------------------------------------------------------
 -- Admins: test every part (the editor's "The collapse" section)

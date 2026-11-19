@@ -71,6 +71,7 @@ LCS.Items = {
     bottle_empty    = { name = "Empty bottle", model = BOTTLE, fillTo = "bottle_dirty" },
     bottle_dirty    = { name = "Bottle of untreated water", model = BOTTLE, thirst = 45, parasite = 0.4, cooksTo = "bottle_clean", leaves = "bottle_empty" },
     bottle_clean    = { name = "Bottle of boiled water", model = BOTTLE, thirst = 45, leaves = "bottle_empty" },
+    water_purified  = { name = "Purified water", model = BOTTLE, thirst = 45, leaves = "bottle_empty", sell = 1 }, -- (the owner, 15 November: cheap at the CP Commissary, 4 at the quartermaster and the dealer)
     -- rain caught straight from the sky: clean enough as it is (no boiling)
     can_rain        = { name = "Can of rainwater", model = CAN, thirst = 30, leaves = "can_empty" },
     bottle_rain     = { name = "Bottle of rainwater", model = BOTTLE, thirst = 45, leaves = "bottle_empty" },
@@ -248,7 +249,7 @@ LCS.Items = {
     zipties         = { name = "Cuffs", model = "models/props_lab/box01a.mdl", sell = 1, -- (1, not 4: a unit's own never run out)
                         desc = "Tie someone's hands: up close, looking at them, C > their name > Cuff them. Only someone with their hands up, knocked down, stopped by a unit, or taken from behind. Cuffed, they can't use anything; Drag walks them along, Uncuff lets them go. Units carry their own" },
     request_device  = { name = "Civil Protection call box", model = "models/props_lab/reciever01b.mdl", sell = 6,
-                        desc = "A little handset that calls Civil Protection to where you are and tells them what's wrong: Call for help, beside it in your pockets (F3), or C > Getting by > Request Civil Protection" },
+                        desc = "A little handset that calls Civil Protection to where you are and tells them what's wrong: Call for help, beside it in your pockets (F3)" },
     ------------------------------------------------------------------------
     -- Carrying and keeping things (sv_livingcity_storage.lua)
     --   bag      extra kilograms and large things you can carry while you have it
@@ -350,7 +351,7 @@ LCS.Weights = {
     beer = 0.6, vodka = 0.9, moonshine = 0.9,
     ration = 0.3, water = 0.4, bread = 0.5, milk = 0.6, melon = 3.0, coffee = 0.3, tablets = 0.05, medicine = 0.1,
     raw_bird = 0.6, raw_crow = 0.6, raw_gull = 0.7, cooked_bird = 0.5, raw_headcrab = 1.2, raw_fastcrab = 1.0, raw_poisoncrab = 1.4, cooked_headcrab = 1.0,
-    can_empty = 0.05, can_dirty = 0.4, can_clean = 0.4, bottle_empty = 0.3, bottle_dirty = 0.8, bottle_clean = 0.8,
+    can_empty = 0.05, can_dirty = 0.4, can_clean = 0.4, bottle_empty = 0.3, bottle_dirty = 0.8, bottle_clean = 0.8, water_purified = 0.8,
     radio = 1.0, radio_tuned = 1.0, radio_transmitter = 0.6, permit = 0.02, papers_blank = 0.02, papers_forged = 0.02, papers_dead = 0.02, ration_forged = 0.02,
     uniform_cp = 3.0, cwu_overalls = 1.2, rebel_gear = 3.0, civvies = 1.0,
     lockpick = 0.1, bypass = 0.6, cp_keycard = 0.02, canned_food = 0.5, vegetables = 0.6, raw_fish = 0.7, cooked_fish = 0.6,
@@ -443,6 +444,19 @@ LCS.Goods = {
     { id = "pet_bird", item = "pet_bird", price = 80, minStanding = 100, civOnly = true, desc = "A tame pigeon for your shoulder. Everyone will want one." },
     { id = "storage_crate", item = "storage_crate", price = 40, minStanding = 0, desc = "Somewhere of your own to keep things. Civil Protection units can open it." },
     { id = "fishing_line", item = "fishing_line", price = 15, minStanding = -50, civOnly = true, desc = "Line and a hook. The canal has fish, of a kind." },
+    -- the unit counter's own (the owner, 15 November: "add purified water to the CP Commissary as a very cheap item, like 2
+    -- credits", "there are no weapons in the CP Commissary...I feel like there should be"): a weapon by rank, and its rounds
+    { id = "water_cp", item = "water_purified", price = 2, cpOnly = true, desc = "Purified, sealed, Civil Protection issue." },
+    { id = "cp_pistol", name = "Pistol", weapon = "weapon_pistol", price = 40, cpOnly = true, minRank = 2, desc = "The standard sidearm. Metrocops and up." },
+    { id = "cp_357", name = ".357 revolver", weapon = "weapon_357", price = 150, cpOnly = true, minRank = 3, desc = "Six heavy rounds. Division Leaders and up." },
+    { id = "cp_smg", name = "SMG", weapon = "weapon_smg1", price = 120, cpOnly = true, minRank = 3, desc = "Division Leaders and up." },
+    { id = "cp_shotgun", name = "Shotgun", weapon = "weapon_shotgun", price = 160, cpOnly = true, minRank = 4, desc = "For the Overwatch." },
+    { id = "cp_ar2", name = "Pulse rifle", weapon = "weapon_ar2", price = 300, cpOnly = true, minRank = 5, desc = "Overwatch soldiers and up." },
+    { id = "cp_ammo357", name = ".357 rounds", ammo = { "357", 12 }, price = 15, cpOnly = true, minRank = 3, desc = "Twelve." },
+    { id = "cp_buckshot", name = "Shotgun shells", ammo = { "Buckshot", 24 }, price = 20, cpOnly = true, minRank = 4, desc = "Twenty-four." },
+    { id = "cp_ar2ammo", name = "Pulse rifle ammunition", ammo = { "AR2", 60 }, price = 30, cpOnly = true, minRank = 5, desc = "Two magazines." },
+    -- (the owner, 16 November: "please add standard explosive grenades to the CP Commissary": one at a time, five carried at most)
+    { id = "cp_frag", name = "Frag grenade", weapon = "weapon_frag", ammo = { "Grenade", 1 }, max = 5, price = 60, cpOnly = true, minRank = 2, desc = "One. Mind where it lands. Metrocops and up." },
     { id = "gren_smoke", item = "gren_smoke", price = 20, cpOnly = true, desc = "Cover for an advance, or a retreat." },
     { id = "gren_flash", item = "gren_flash", price = 35, cpOnly = true, minRank = 2, desc = "Metrocops and up. Don't look at it." },
     { id = "gas_bomb", item = "gas_bomb", price = 40, cpOnly = true, minRank = 3, desc = "Division Leaders and the Overwatch. For clearing anticitizen holdouts: a choking green cloud, and your mask keeps it out." },
@@ -462,6 +476,10 @@ end
 -- The black market (a dealer placed with the editor, or rebel territory)
 --   weapon    given straight to you
 --   qm        only the Resistance's quartermaster has it, never a dealer
+--   lab       only the Resistance's lab has it (LCS.Lab, below): no dealer and no quartermaster sells it. The
+--             entry stays here for what it is worth: the lab's price and what it sells back for come from it.
+--             (the owner, 14 November: "Rebel scientist needs to sell a charged vest, not the quartermaster",
+--             "combine bypass charges need to be only from the lab too")
 -- Standing doesn't matter here. Credits do. Units who walk up to a dealer
 -- don't buy anything: they bust it.
 ------------------------------------------------------------------------
@@ -472,12 +490,13 @@ LCS.Black = {
     { id = "papers_blank", item = "papers_blank", price = 30, desc = "For people with a steady hand." },
     { id = "ration_forged", item = "ration_forged", price = 10, desc = "One more meal than the Union thinks you deserve." },
     { id = "lockpick", item = "lockpick", price = 35, desc = "Picks, tension wrench, patience not included." },
-    { id = "bypass", item = "bypass", price = 70, desc = "One use: opens a Combine door (or any locked door), holds it open ten seconds, open for thirty. Can trip an alarm. Don't ask where it came from." },
+    { id = "bypass", item = "bypass", price = 70, desc = "One use: opens a Combine door (or any locked door), holds it open ten seconds, open for thirty. Can trip an alarm. Don't ask where it came from.", lab = true },
     { id = "civvies", item = "civvies", price = 15, desc = "Clean, plain, forgettable." },
     { id = "uniform_cp", item = "uniform_cp", price = 160, desc = "Off a Civil Protection unit who won't be needing it." },
     { id = "tablets", item = "tablets", price = 20, desc = "No questions about why you need them." },
     { id = "medicine", item = "medicine", price = 18, desc = "Fell off a Commissary truck." },
     { id = "cig_rolled", item = "cig_rolled", count = 5, name = "Hand-rolled cigarettes (5)", price = 10, desc = "Real tobacco. Don't ask from where." },
+    { id = "water_purified", item = "water_purified", price = 4, desc = "Clean water, a bottle of it. Off a Civil Protection pallet." }, -- (the owner, 15 November: 4 credits here and at the quartermaster)
     { id = "beer", item = "beer", price = 8, desc = "Bathtub beer. It's wet, and it works." },
     { id = "moonshine", item = "moonshine", price = 10, desc = "Strong enough to strip paint. Mostly safe." },
     { id = "vodka_black", item = "vodka", price = 70, desc = "Pre-war vodka, for people the Union isn't proud of." },
@@ -503,7 +522,7 @@ LCS.Black = {
     { id = "gun_smg", item = "gun_smg", price = 200, desc = "It jams. Not often." },
     { id = "gun_shotgun", item = "gun_shotgun", price = 210, desc = "Hard to hide. Hard to argue with." },
     { id = "gun_357", item = "gun_357", price = 240, desc = "Loud, heavy, final." },
-    { id = "armor_vest", item = "armor_vest", price = 90, desc = "Plates and salvaged charge cells. Holds a charge; comes fully charged." },
+    { id = "armor_vest", item = "armor_vest", price = 90, desc = "Plates and salvaged charge cells. Holds a charge; comes fully charged.", lab = true },
     { id = "radio_transmitter", item = "radio_transmitter", price = 70, desc = "Talk on your radio's band, not just listen. Contraband." },
     { id = "jammer", item = "jammer", price = 150, desc = "Four minutes of static on every Civil Protection unit radio nearby." },
 }
@@ -560,14 +579,17 @@ for _, r in ipairs(LCS.Recipes) do LCS.RecipesById[r.id] = r end
 -- The Resistance lab (sv_livingcity_lab.lua): what the scientist makes, for
 -- the Resistance only, and only what the quartermaster doesn't sell (the owner,
 -- 14 November: "anything the quartermaster sells should not appear at all in the
--- lab"; guns, ammunition, the vest, bypass charges, smoke, forged cards, the
--- transmitter, the jammer and the crowbar are the quartermaster's). Bring him the
+-- lab"; guns, ammunition, smoke, forged cards, the transmitter, the jammer and
+-- the crowbar are the quartermaster's; the charged vest and the bypass charge are
+-- the lab's alone, later that day: `lab` in LCS.Black above). Bring him the
 -- materials (needs) and he makes it for nothing; or pay him: 60% of the dealer's
 -- price (never less than it sells back for). secs: how long he takes.
 ------------------------------------------------------------------------
 
 LCS.Lab = {
+    { id = "armor_vest", out = "armor_vest", needs = { scrap = 6, cloth = 4, chemicals = 1 }, secs = 14, desc = "A powered vest, fully charged (charge cells top it up)" },
     { id = "vest_cell", out = "vest_cell", needs = { scrap = 2, chemicals = 2 }, secs = 6, desc = "A charge cell: twenty-five charge into your vest" },
+    { id = "bypass", out = "bypass", needs = { gun_parts = 1, chemicals = 2, scrap = 2 }, secs = 10, desc = "Opens any door once, Combine doors too, and holds it open ten seconds" },
     { id = "firebomb", out = "firebomb", needs = { weedkiller = 2, bottle_empty = 1, cloth = 1 }, secs = 8, desc = "Weedkiller, cooked down, in a bottle with a rag: fire, which armour doesn't keep out" },
     -- (only once you've lived through lc_chip_dreams of the city's dreams: sv_livingcity_bedtime.lua)
     { id = "foil_hat", out = "foil_hat", needs = { scrap = 1, cloth = 1 }, secs = 5, dreamGate = true,

@@ -166,7 +166,7 @@ local function Unload(s, ground, side)
             if Free(cand) then gp = cand break end
         end
         gp = gp or (ground + side * 260 + Vector(0, 0, 4))
-        local ok, npc, st = pcall(function() return (LC.Spawners and LC.Spawners.soldier or spawner)(gp) end)
+        local ok, npc, st = LC.Try(function() return (LC.Spawners and LC.Spawners.soldier or spawner)(gp) end)
         if ok and IsValid(npc) and st then
             st.unmanaged = true
             st.supplyGuard = true
@@ -181,7 +181,7 @@ local function Unload(s, ground, side)
     s.dropAt = LC.SupplyDropOff(s, ground + side * 140)
     for i = 1, cvPorters:GetInt() do
         local gp = (LC.GroundAt and LC.GroundAt(ground + side * 140 + across * (i % 2 == 0 and 110 or -110))) or (ground + side * 140)
-        local ok, npc, st = pcall(function() return (LC.Spawners and LC.Spawners.cop or spawner)(gp + Vector(0, 0, 4)) end)
+        local ok, npc, st = LC.Try(function() return (LC.Spawners and LC.Spawners.cop or spawner)(gp + Vector(0, 0, 4)) end)
         if ok and IsValid(npc) and st then
             st.unmanaged = true
             st.supplyGuard = true
@@ -493,13 +493,13 @@ timer.Create("LivingCitySupplyCrew", 0.5, 0, function()
     for _, npc in ipairs(s.porters or {}) do
         local st = IsValid(npc) and npc:Health() > 0 and LC.NPCs and LC.NPCs[npc]
         if st and st.supplyPorter then
-            local ok, err = pcall(PorterStep, s, npc, st, now)
+            local ok, err = LC.Try(PorterStep, s, npc, st, now)
             if not ok and LC.Error then LC.Error("supply porter", err) end
         end
     end
     if (s.guardNext or 0) <= now then
         s.guardNext = now + 1
-        local ok, err = pcall(GuardStep, s, now)
+        local ok, err = LC.Try(GuardStep, s, now)
         if not ok and LC.Error then LC.Error("supply guard", err) end
     end
 end)

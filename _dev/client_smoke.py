@@ -217,6 +217,13 @@ if not okP then problems[#problems + 1] = "admin panel: " .. tostring(errP) end
 if made < 20 then problems[#problems + 1] = "admin panel built only " .. made .. " controls" end
 okP, errP = pcall(net["recv_lc_admintools"]) -- again: it replaces itself where it was
 if not okP then problems[#problems + 1] = "admin panel rebuild: " .. tostring(errP) end
+-- testing alone (the owner, 18 November): the superadmins' section, before and during an address, a collapse and an event
+for _, solo in ipairs({ { address = false, places = true, event = "", collapse = "" }, { address = true, places = true, event = "drill", collapse = "stand" },
+        { address = false, places = false, event = "", collapse = "" } }) do
+    util.JSONToTable = function() return { target = "STEAM_0:1|Me", faction = "cp", xp = { cp = 300 }, players = { { id = "STEAM_0:1|Me", name = "Me" } }, solo = solo } end
+    okP, errP = pcall(net["recv_lc_admintools"])
+    if not okP then problems[#problems + 1] = "admin panel, testing alone: " .. tostring(errP) end
+end
 -- the CP toolset: the mask's view, the records terminal and the voice menu
 _me.nw.lcf_faction, _me.nw.lcf_title = "cp", "CP 04-12"
 _me.alive = true
@@ -1024,6 +1031,33 @@ do
     Quick("vort") Quick("stalker") Quick("zombie")
     Quick("citizen", function() _me.nw.lcj_job, _me.nw.lc_ration_break = "mortuary", true end)
     Quick("resistance", function() _me.nw.lc_squad_n = 2 other.nw.lcf_faction = "vort" Look(other) end)
+    -- asleep in the cells at any hour (the owner, 15 November): a prisoner with more than five minutes still to serve has
+    -- "Lie down and sleep" on F1 (the cell may have no bed to press E on), and nobody else has
+    do
+        local function Sleep()
+            local okL, r = pcall(LC_CL.QuickRoot)
+            for i = 1, 8 do
+                local it = okL and r.items[i]
+                if it and it.label == "Lie down and sleep" then return it end
+            end
+            return nil
+        end
+        _me.nw = { lcf_faction = "citizen", lce_standing = 10, lc_jail_until = CurTime() + 400 }
+        _me.IsAdmin = function() return false end
+        Look(nil)
+        local it = Sleep()
+        seen.sleep = nil
+        if it then it.run() end
+        if not (it and seen.sleep) then problems[#problems + 1] = "a prisoner with over five minutes left: F1 has no 'Lie down and sleep' (or it doesn't ask the server)" end
+        _me.nw.lc_jail_until = CurTime() + 200
+        if Sleep() then problems[#problems + 1] = "'Lie down and sleep' is offered with less than five minutes of the sentence left" end
+        _me.nw.lc_jail_until, _me.nw.lc_sleeping = CurTime() + 400, true
+        if Sleep() then problems[#problems + 1] = "'Lie down and sleep' is offered to a prisoner already asleep" end
+        _me.nw.lc_sleeping, _me.nw.lc_work_detail = nil, true
+        if Sleep() then problems[#problems + 1] = "'Lie down and sleep' is offered out on a work detail" end
+        _me.nw.lc_jail_until, _me.nw.lc_work_detail = nil, nil
+        if Sleep() then problems[#problems + 1] = "'Lie down and sleep' is offered to someone who isn't a prisoner" end
+    end
     -- nothing at all for their side or job (the infested; a plain citizen has Me > now): F2 says so, briefly
     do
         _me.nw = { lcf_faction = "zombie", lce_standing = 10 }
@@ -1118,7 +1152,10 @@ do
                 ranks = { { name = "Recruit", xp = 0 }, { name = "Metrocop", xp = 150 }, { name = "Combine Soldier", xp = 2000, overwatch = true } }, steps = { "Earn more XP." } })
             if LC_CL.HubTab() ~= "jobs" then error("the tabs' content moved F4 off the tab it opened on") end
             -- every tab shows, and the last one looked at is where F4 opens next time
-            for _, t in ipairs({ "career", "factions" }) do
+            -- (the owner, 19 November: Me and settings, built here with what was only in the C menu)
+            local okMe, errMe = pcall(LC_CL.HubFill, "me", LC_CL.HubBuildMe)
+            if not okMe then error("F4's Me and settings tab: " .. tostring(errMe)) end
+            for _, t in ipairs({ "career", "me", "factions" }) do
                 LC_CL.OpenHub(t, true)
                 if LC_CL.HubTab() ~= t then error("F4's " .. t .. " tab didn't show") end
             end
@@ -1416,6 +1453,26 @@ ClientsideModel = function()
 end
 run("Think") run("HUDPaint")
 if colonelMade == 0 then problems[#problems + 1] = "the Colonel wasn't drawn for a Resistance player" end
+-- his head (the owner, 15 November: "Fisherman's head please"): on a citizen's body, when this game has the model
+do
+    local usableWas = LC_CL.OldTimerFaceUsable
+    _globals.lc_oldtimer_face = "models/lostcoast/fisherman/fisherman.mdl"
+    LC_CL.OldTimerFaceUsable = function() return true end
+    if LC_CL.ColonelHead("models/Humans/Group01/male_07.mdl") ~= "models/lostcoast/fisherman/fisherman.mdl" then problems[#problems + 1] = "the Colonel on a citizen's body doesn't get the fisherman's head" end
+    if LC_CL.ColonelHead("models/odessa.mdl") ~= nil then problems[#problems + 1] = "the Colonel as Odessa lost his own head" end
+    LC_CL.OldTimerFaceUsable = function() return false end
+    if LC_CL.ColonelHead("models/Humans/Group01/male_07.mdl") ~= nil then problems[#problems + 1] = "the Colonel was given a head this game can't draw" end
+    LC_CL.OldTimerFaceUsable = usableWas
+    -- made afresh with the model there: two models, the body and the head
+    _globals.lc_colonel_here = false run("Think")
+    _globals.lc_colonel_model = "models/Humans/Group01/male_07.mdl"
+    LC_CL.OldTimerFaceUsable = function() return true end
+    local before = colonelMade
+    _globals.lc_colonel_here = true run("Think")
+    if colonelMade - before ~= 2 then problems[#problems + 1] = "the Colonel's head wasn't laid over him (models made: " .. tostring(colonelMade - before) .. ")" end
+    LC_CL.OldTimerFaceUsable = usableWas
+    _globals.lc_oldtimer_face = ""
+end
 do
     local r0, g0, _, a0, f0, s0 = LC_CL.ColonelLook(0, 5)
     local r1, _, _, a1, f1, s1 = LC_CL.ColonelLook(1, 0)
@@ -1428,43 +1485,55 @@ _globals.lc_colonel_here = false run("Think")
 _me:SetNW2String("lcf_faction", "")
 -- the old-timer's face (cl_livingcity_oldtimerface.lua): with the model, laid over him; without it, nothing
 do
+    local headScale
     local oldNpc = setmetatable({ nw = { lc_oldtimer = true } }, { __index = function(t, k)
         if k == "GetNW2Bool" then return function(self, n, d) local v = self.nw[n] if v == nil then return d end return v end end
         if k == "IsValid" then return function() return true end end
         if k == "GetPos" then return function() return Vector(0, 0, 0) end end
         if k == "LookupBone" then return function() return 6 end end
+        if k == "ManipulateBoneScale" then return function(_, b, v) headScale = v end end
         return function() end
     end })
     local fbWas, ivWas, cmWas2 = ents.FindByClass, util.IsValidModel, ClientsideModel
     local made = 0
+    local headCallback
     ents.FindByClass = function(c) if c == "npc_citizen" then return { oldNpc } end return {} end
     ClientsideModel = function()
         made = made + 1
-        local m = { IsValid = function() return true end, GetBoneCount = function() return 3 end, GetBoneName = function(_, i) return ({ [0] = "ValveBiped.Bip01_Pelvis", "ValveBiped.Bip01_Neck1", "ValveBiped.Bip01_Head1" })[i] end }
+        local m = { IsValid = function() return true end, GetBoneCount = function() return 3 end, GetBoneName = function(_, i) return ({ [0] = "ValveBiped.Bip01_Pelvis", "ValveBiped.Bip01_Neck1", "ValveBiped.Bip01_Head1" })[i] end,
+            AddCallback = function(_, name, fn) if name == "BuildBonePositions" then headCallback = fn end end }
         return setmetatable(m, { __index = function() return function() end end })
     end
     _globals.lc_oldtimer_face = "models/lostcoast/fisherman/fisherman.mdl"
-    util.IsValidModel = function() return true end
-    _advance(2) run("Think")
-    if made ~= 1 then problems[#problems + 1] = "the old-timer's face wasn't laid over him" end
+    -- (the owner, 14 November: he kept his own face. The server had never loaded the fisherman, so
+    -- util.IsValidModel said no on every player's game, though the file was there all along)
+    local feWas = file.Exists
     util.IsValidModel = function() return false end
+    file.Exists = function(p) return p == "models/lostcoast/fisherman/fisherman.mdl" end
+    _advance(2) run("Think")
+    if made ~= 1 then problems[#problems + 1] = "the old-timer's face wasn't laid over him (the file is there, the model not loaded yet)" end
+    -- (the owner, 15 November: "citizen old timer has no head": his own head shrunk to nothing took the merged one with it)
+    if not (headScale and headScale.x > 0) then problems[#problems + 1] = "the old-timer's own head is shrunk to nothing (the merged head goes with it)" end
+    if not headCallback then problems[#problems + 1] = "the old-timer's merged head isn't put back to full size after the merge" end
+    file.Exists = function() return false end
     made = 0
     _advance(2) run("Think")
     if made ~= 0 then problems[#problems + 1] = "the old-timer's face was made without the model" end
+    file.Exists = feWas
     ents.FindByClass, util.IsValidModel, ClientsideModel = fbWas, ivWas, cmWas2
     _globals.lc_oldtimer_face = ""
 end
 _me:SetNW2Float("lc_feverdream", 0) _me:SetNW2String("lc_ill", "") _me:SetNW2Float("lcn_hunger", 100) _me:SetHealth(100)
 run("Think")
 local okB, errB = pcall(LC_CL.BuildLayoutBrowser, panel, { { id = "dealer", label = "Fixture: black market dealer" },
-    { id = "zone_rebel", label = "Zone: rebel territory" }, { id = "inspect", label = "Inspect anything" } })
+    { id = "zone_rebel", label = "Zone: Resistance territory" }, { id = "inspect", label = "Inspect anything" } })
 if not okB then problems[#problems + 1] = "layout browser: " .. tostring(errB) end
 if LC_CL.LayoutCount("dealer") ~= 1 or LC_CL.LayoutCount("inspect") ~= nil then problems[#problems + 1] = "layout counts" end
 -- (and arranged by what it's for: rebels, prison, each job)
 local arr = GetConVar("lc_editor_arrange")
 if arr then arr.v = "use" end
 local okU, errU = pcall(LC_CL.BuildLayoutBrowser, panel, { { id = "dealer", label = "Fixture: black market dealer" },
-    { id = "zone_rebel", label = "Zone: rebel territory" }, { id = "work_factory", label = "Workplace: Factory" }, { id = "conveyor", label = "Fixture: factory conveyor" } })
+    { id = "zone_rebel", label = "Zone: Resistance territory" }, { id = "work_factory", label = "Workplace: Factory" }, { id = "conveyor", label = "Fixture: factory conveyor" } })
 if not okU then problems[#problems + 1] = "layout browser, by use: " .. tostring(errU) end
 if arr then arr.v = "type" end
 panel.next = 0 -- (every control is this one mock panel, so their Think functions chain; a real number, not the mock's catch-all)
@@ -1518,10 +1587,36 @@ local okOct, errOct = pcall(function()
     if LC_CL.VoiceSecs("x.mp3", 7, 4) ~= 7 or LC_CL.VoiceSecs("x.mp3", 0, 4) ~= 4 then error("voice length") end
     local was = _me.GetNW2String
     _me.GetNW2String = function(self, k, d) if k == "lcf_faction" then return "resistance" end return was(self, k, d) end
-    if not LC_CL.RankCard(_me, 16, 160, 340) then error("no rank card for a Resistance member") end
+    if not LC_CL.HasRank(_me) then error("a Resistance member isn't someone with a rank") end
     _me.GetNW2String = function(self, k, d) if k == "lcf_faction" then return "citizen" end return was(self, k, d) end
-    if LC_CL.RankCard(_me, 16, 160, 340) then error("a rank card for a plain citizen") end
+    if LC_CL.HasRank(_me) then error("a plain citizen counts as having a rank") end
     _me.GetNW2String = was
+    -- one status box in the upper left (the owner, 14 November: two boxes said side, rank, credits and Civil
+    -- Standing twice): everything either showed is drawn, each fact once, and the second card is gone
+    if LC_CL.RankCard then error("the second card is still there") end
+    local wasS, wasI, wasF, wasDraw, wasGlobal = _me.GetNW2String, _me.GetNW2Int, _me.GetNW2Float, draw.SimpleText, GetGlobal2Bool
+    local strs = { lcf_faction = "resistance", lcj_job = "sanitation", lcd_disguise = "citizen", lcu_band = "resistance", lcd_alias = "#12-345" }
+    _me.GetNW2String = function(self, k, d) if strs[k] then return strs[k] end return wasS(self, k, d) end
+    _me.GetNW2Int = function(self, k, d) if k == "lce_credits" then return 454 elseif k == "lce_standing" then return -990 end return wasI(self, k, d) end
+    _me.GetNW2Float = function(self, k, d) if k == "lc_wanted_until" then return CurTime() + 60 end return wasF(self, k, d) end
+    GetGlobal2Bool = function(k, d) if k == "lc_economy_on" then return true end return wasGlobal(k, d) end
+    local said = {}
+    draw.SimpleText = function(text) said[#said + 1] = tostring(text) end
+    local okB, errB = pcall(function()
+        hook.t.HUDPaint.LivingCityNeedsHUD()
+        hook.t.HUDPaint.LivingCityUndergroundHUD()
+        hook.t.HUDPaint.LivingCityNextStep()
+    end)
+    _me.GetNW2String, _me.GetNW2Int, _me.GetNW2Float, draw.SimpleText, GetGlobal2Bool = wasS, wasI, wasF, wasDraw, wasGlobal
+    if not okB then error("the status box: " .. tostring(errB)) end
+    local all = table.concat(said, "\n")
+    local function Times(pat) local n = 0 for _ in string.gmatch(all, pat) do n = n + 1 end return n end
+    if Times("454") ~= 1 then error("credits are drawn " .. Times("454") .. " times in the upper left:\n" .. all) end
+    if Times("%-990") ~= 1 then error("Civil Standing is drawn " .. Times("%-990") .. " times:\n" .. all) end
+    for _, want in ipairs({ "Loyalty", "Union job: ", "Citizen clothes", "Radio: Freq 7", "Papers: citizen #12%-345", "WANTED" }) do
+        if Times(want) ~= 1 then error("the one box should say '" .. want .. "' once, it says it " .. Times(want) .. " times:\n" .. all) end
+    end
+    if string.find(all, "Jobs, orders and your story", 1, true) then error("the F4 line is still drawn") end
     if type(LC_CL.SubsY(1920, 1080, 2)) ~= "number" then error("subtitle height") end
     if not LC_CL.EndingSameValue("0.360000", "0.36") or LC_CL.EndingSameValue("0.4", "0.36") or not LC_CL.EndingSameValue("12.2:ignite,60.2:hop", "12.2:ignite,60.2:hop") then error("ending settings compared wrong") end
     if not LC_CL.EndingCombineBody({ GetModel = function() return "models/player/police.mdl" end }) then error("a metrocop isn't a Combine body") end
@@ -1584,6 +1679,37 @@ local okMG, errMG = pcall(function()
     run("PreDrawHalos")
 end)
 if not okMG then problems[#problems + 1] = "more job games: " .. tostring(errMG) end
+-- a job with no time limit has no clock on the tracker (a leader's summons: the owner, 18 November); its title and
+-- its one line are drawn as any job's are, and a job with a limit keeps its clock
+local okNL, errNL = pcall(function()
+    local rU, rD, rDc, rJ, wasDraw = net.ReadUInt, net.ReadData, util.Decompress, util.JSONToTable, draw.SimpleText
+    local doc, said
+    net.ReadUInt = function() return 1 end
+    net.ReadData = function() return "x" end
+    util.Decompress = function(s) return s end
+    util.JSONToTable = function() return doc end
+    draw.SimpleText = function(text) said[#said + 1] = tostring(text) end
+    local function Tracker(d)
+        doc, said = d, {}
+        net.recv_lcq_state()
+        hook.t.HUDPaint.LivingCityQuestsTracker()
+        return table.concat(said, "\n")
+    end
+    local okT, errT = pcall(function()
+        local all = Tracker({ active = true, id = 1, title = "A word with Ada Leader", board = "Operations", objective = "Speak with Ada Leader, in private.",
+            left = 0, nolimit = true, step = 1, steps = 1, owner = true })
+        if not (string.find(all, "A word with Ada Leader", 1, true) and string.find(all, "Speak with Ada Leader, in private.", 1, true)) then
+            error("its title and its one line are not drawn:\n" .. all)
+        end
+        if string.find(all, "%d%d:%d%d") then error("a job with no time limit shows a clock:\n" .. all) end
+        all = Tracker({ active = true, id = 2, title = "Count the crates", board = "Operations", objective = "Count them.", left = 125, step = 1, steps = 1, owner = true })
+        if not string.find(all, "%d%d:%d%d") then error("a job with a time limit has lost its clock:\n" .. all) end
+        Tracker({ active = false })
+    end)
+    net.ReadUInt, net.ReadData, util.Decompress, util.JSONToTable, draw.SimpleText = rU, rD, rDc, rJ, wasDraw
+    if not okT then error(errT) end
+end)
+if not okNL then problems[#problems + 1] = "a job with no time limit: " .. tostring(errNL) end
 -- a unit's search as a pat-down (cl_livingcity_patsearch.lua): the unit's window builds, updates, paints; the panel
 -- for the person searched; both close; a window that can't be built hands back to the old search
 local psSaved = { net.ReadString, util.JSONToTable, vgui, net.SendToServer, net.Start, net.WriteUInt }
@@ -2079,6 +2205,210 @@ for name in sorted(f[:-4] for f in os.listdir(ENTDIR) if f.endswith(".lua")):
     """)
     if err:
         problems = (problems + "\n" if problems else "") + name + " (client) " + str(err)
+# the Resistance fund screen (entities/lc_fundtv.lua, cl_livingcity_fundtv.lua, 19 November): the fund's number on its
+# glass, nothing on a dead screen, and E's window with the number, the record and the Donate buttons
+L.globals()._SRC = open(os.path.join(ENTDIR, "lc_fundtv.lua")).read()
+err = L.execute(r"""
+local entWas, drawWas, vguiWas = ENT, draw.SimpleText, vgui
+ENT = {}
+local okL, errL = pcall(function() assert(loadstring(_SRC, "lc_fundtv"))() end)
+local def = ENT
+ENT = entWas
+if not okL then return "load: " .. tostring(errL) end
+local e = ents.Create("lc_fundtv")
+e:SetPos(Vector(40, 0, 0))
+e.Draw, e.DrawModel = def.Draw, function() end
+_globals.lc_fund = 1234
+local said = {}
+draw.SimpleText = function(text, ...) said[#said + 1] = tostring(text) end
+local okD, errD = pcall(function() e:Draw() end)
+local lit = table.concat(said, "|")
+said = {}
+e:SetNW2Bool("lc_nopower", true)
+local okD2, errD2 = pcall(function() e:Draw() end)
+local dark = #said
+draw.SimpleText = drawWas
+_globals.lc_fund = nil
+e:Remove()
+if not okD then return "draw: " .. tostring(errD) end
+if not okD2 then return "draw, no power: " .. tostring(errD2) end
+if lit ~= "1234|credits" then return "the screen should show the number and 'credits', it showed: " .. lit end
+if dark ~= 0 then return "a screen with no power still shows the fund" end
+-- the window: what the server sends (the fund, two entries, the three amounts, a refusal)
+local made, texts, clicks = 0, {}, {}
+local panel
+panel = setmetatable({}, { __index = function(t, k)
+    if k == "SetText" or k == "SetTitle" then return function(_, s) texts[#texts + 1] = tostring(s) return t end end
+    if k == "GetWide" or k == "GetTall" then return function() return 10 end end
+    return function() return t end
+end, __newindex = function(_, k, v) if k == "DoClick" then clicks[#clicks + 1] = v end end })
+vgui = { Create = function() made = made + 1 return panel end }
+local rU, rI, rS = net.ReadUInt, net.ReadInt, net.ReadString
+local function nx() return table.remove(net._q, 1) end
+net.ReadUInt, net.ReadInt, net.ReadString = nx, nx, nx
+net._q = { 1234, 2, 50, "A donation", -239, "Guns and ammunition for a fighter (Kerr)", 3, 10, 50, 100, "You don't have that much." }
+local okW, errW = pcall(net["recv_lc_fundtv"])
+net.ReadUInt, net.ReadInt, net.ReadString = rU, rI, rS
+vgui = vguiWas
+if not okW then return "window: " .. tostring(errW) end
+local all = table.concat(texts, "|")
+for _, want in ipairs({ "Resistance fund", "1234 credits", "+50  A donation", "-239  Guns and ammunition for a fighter (Kerr)", "Donate 10", "Donate 50", "Donate 100", "You don't have that much." }) do
+    if not string.find(all, want, 1, true) then return "the window is missing \"" .. want .. "\": " .. all end
+end
+if #clicks ~= 3 then return "the window should have three Donate buttons, it has " .. #clicks end
+return nil
+""")
+if err:
+    problems = (problems + "\n" if problems else "") + "lc_fundtv (the fund screen) " + str(err)
+# the Combine camera monitors (entities/lc_monitor.lua): the glass is drawn with and without a camera, only the
+# nearest monitor you face from its front is live, and a camera's view is never started from inside itself
+L.globals()._SRC = open(os.path.join(ENTDIR, "lc_monitor.lua")).read()
+err = L.execute(r"""
+local entWas, grtWas, eyeWas, noteWas = ENT, GetRenderTarget, EyePos, LC.ErrorNote
+ENT = {}
+local okL, errL = pcall(function() assert(loadstring(_SRC, "lc_monitor"))() end)
+local def = ENT
+ENT = entWas
+if not okL then return "load: " .. tostring(errL) end
+if not (LC_CL.MonitorFeed and LC_CL.MonitorLive and def.Draw) then return "the picture's functions are missing" end
+local scene, body = hook.t.RenderScene and hook.t.RenderScene.LivingCityMonitors, hook.t.ShouldDrawLocalPlayer and hook.t.ShouldDrawLocalPlayer.LivingCityMonitors
+if not (scene and body) then return "the picture's hooks are missing" end
+local bad
+local function want(cond, what) if not cond and not bad then bad = what end end
+local function n(k) return _calls[k] or 0 end
+GetRenderTarget = function(name) return { GetName = function() return name end } end
+-- the harness's monitors face +x: you stand in front of them, looking back at them
+local meWas = _me:GetPos()
+local eye, look = Vector(300, 0, 64), Angle(0, 180, 0)
+_me:SetPos(Vector(300, 0, 0))
+EyePos = function() return eye end
+local made = {}
+local function monitor(x, y, camNo)
+    local e = ents.Create("lc_monitor")
+    e:SetPos(Vector(x, y, 0))
+    e.Draw, e.DrawModel = def.Draw, function() end
+    if camNo then
+        e:SetNW2Int("lc_cam", camNo)
+        e:SetNW2Vector("lc_cam_pos", Vector(4000, 0, 70))
+        e:SetNW2Float("lc_cam_yaw", 90)
+    end
+    made[#made + 1] = e
+    return e
+end
+local views, seen, inside = 0, nil, nil
+render.RenderView = function(v)
+    views = views + 1
+    seen = v
+    if inside then inside() end
+end
+local ok, e = pcall(function()
+    -- no camera placed: no picture is made, and the glass shows no signal
+    local a = monitor(0, 0, nil)
+    _advance(1)
+    want(LC_CL.MonitorFeed(eye, look) == false and LC_CL.MonitorLive() == nil and views == 0, "a monitor with no camera made a picture")
+    local faces, pics = n("cam.Start3D2D"), n("surface.DrawTexturedRect")
+    a:Draw()
+    want(n("cam.Start3D2D") == faces + 1 and n("surface.DrawTexturedRect") == pics, "no camera: the glass doesn't show no signal")
+    -- three with cameras: the one in front of you, one further off, one out of reach
+    a:SetNW2Int("lc_cam", 1)
+    a:SetNW2Vector("lc_cam_pos", Vector(4000, 0, 70))
+    a:SetNW2Float("lc_cam_yaw", 90)
+    local b, c = monitor(-200, 60, 2), monitor(-900, 0, 1)
+    -- from inside the camera's view nothing starts another, you are in the picture, and no glass shows the picture being made
+    inside = function()
+        inside = nil
+        _advance(1)
+        local had = views
+        LC_CL.MonitorFeed(eye, look)
+        scene(eye, look)
+        want(views == had, "a second view was started from inside the first")
+        want(body() == true, "you are not drawn in the camera's view")
+        want(LC_CL.LiveCamRendering == true, "the editor's markers are drawn into the camera's view")
+        local p = n("surface.DrawTexturedRect")
+        a:Draw()
+        want(n("surface.DrawTexturedRect") == p, "a monitor showed the picture while it was being made")
+    end
+    _advance(1)
+    local push, pop = n("render.PushRenderTarget"), n("render.PopRenderTarget")
+    local made1 = LC_CL.MonitorFeed(eye, look)
+    want(made1 == true and views == 1, "the camera's view was drawn " .. views .. " times for one picture")
+    want(inside == nil, "the camera's view was never drawn")
+    want(n("render.PushRenderTarget") == push + 1 and n("render.PopRenderTarget") == pop + 1, "the picture's texture was not put away again")
+    want(seen and seen.origin and seen.origin:DistToSqr(Vector(4000, 0, 70)) < 1 and seen.angles.y == 90 and seen.angles.p == 15
+        and seen.drawviewmodel == false and seen.w == 512 and seen.h == 512, "the view is not from the camera, tipped down, without your weapon")
+    want(LC_CL.MonitorLive() == a, "the nearest monitor you face is not the live one")
+    want(body() == nil and not LC_CL.LiveCamRendering, "you are still drawn in third person after the picture")
+    pics = n("surface.DrawTexturedRect")
+    a:Draw()
+    want(n("surface.DrawTexturedRect") == pics + 1, "the live monitor doesn't show the picture")
+    faces = n("cam.Start3D2D")
+    b:Draw() c:Draw()
+    want(n("surface.DrawTexturedRect") == pics + 1 and n("cam.Start3D2D") == faces + 2, "another monitor shows a picture before its own camera's picture is made")
+    -- a few pictures a second, not one a frame
+    _advance(1)
+    want(LC_CL.MonitorFeed(eye, look) == true and views == 2, "no second picture a second later")
+    -- up to three live at once, each its own camera (the owner, 15 November: "2 or 3 different ones with different feeds")
+    want(#LC_CL.MonitorsLive() == 2 and seen and seen.origin and seen.angles.y == 90, "the second monitor in reach isn't live too")
+    pics = n("surface.DrawTexturedRect")
+    b:Draw() c:Draw()
+    want(n("surface.DrawTexturedRect") == pics + 1, "the second live monitor doesn't show its own picture, or the one out of reach does")
+    want(LC_CL.MonitorFeed(eye, look) == false and views == 2, "a second picture in the same moment")
+    _advance(0.05)
+    want(LC_CL.MonitorFeed(eye, look) == false and views == 2, "a second picture a twentieth of a second later")
+    _advance(0.1)
+    want(LC_CL.MonitorFeed(eye, look) == true and views == 3, "no new picture after an eighth of a second")
+    -- never inside the broadcast camera's picture either (cl_livingcity_livecam.lua)
+    _advance(1)
+    LC_CL.LiveCamRendering = true
+    want(LC_CL.MonitorFeed(eye, look) == false and views == 3, "a view was started inside the broadcast camera's picture")
+    LC_CL.LiveCamRendering = false
+    -- its district blacked out: dead glass, and the next nearest is live
+    a:SetNW2Bool("lc_nopower", true)
+    _advance(1)
+    want(LC_CL.MonitorFeed(eye, look) == true and LC_CL.MonitorLive() == b, "a dead monitor stayed live")
+    faces = n("cam.Start3D2D")
+    a:Draw()
+    want(n("cam.Start3D2D") == faces, "a monitor without power draws on its glass")
+    a:SetNW2Bool("lc_nopower", false)
+    -- looking away, or standing behind them: none is live, and nothing is drawn on the back
+    _advance(1)
+    views = 0
+    want(LC_CL.MonitorFeed(eye, Angle(0, 0, 0)) == false and LC_CL.MonitorLive() == nil and views == 0, "a picture was made with your back to the monitors")
+    eye = Vector(-150, 0, 64)
+    _me:SetPos(Vector(-150, 0, 0))
+    _advance(1)
+    LC_CL.MonitorFeed(eye, Angle(0, 0, 0))
+    want(LC_CL.MonitorLive() ~= a, "a monitor seen from behind is live")
+    faces = n("cam.Start3D2D")
+    a:Draw()
+    want(n("cam.Start3D2D") == faces, "something is drawn on a monitor's back")
+    eye = Vector(300, 0, 64)
+    _me:SetPos(Vector(300, 0, 0))
+    -- an error while the picture is made: the texture is put away, and the next picture is made as usual
+    LC.ErrorNote = nil
+    render.RenderView = function() error("boom") end
+    _advance(1)
+    push, pop = n("render.PushRenderTarget"), n("render.PopRenderTarget")
+    want(LC_CL.MonitorFeed(eye, look) == false and LC_CL.MonitorLive() == nil, "an error in the camera's view left a monitor live")
+    want(n("render.PushRenderTarget") - push == n("render.PopRenderTarget") - pop, "an error in the camera's view left the game drawing into the texture")
+    LC.ErrorNote = noteWas
+    render.RenderView = function() views = views + 1 end
+    _advance(1)
+    views = 0
+    want(LC_CL.MonitorFeed(eye, look) == true and views == 1 and body() == nil and not LC_CL.LiveCamRendering, "after an error no picture is made any more")
+end)
+LC.ErrorNote = noteWas
+render.RenderView = nil
+GetRenderTarget, EyePos = grtWas, eyeWas
+_me:SetPos(meWas)
+for _, m in ipairs(made) do if IsValid(m) then m:Remove() end end
+_advance(1)
+LC_CL.MonitorFeed() -- (nothing is left live)
+if not ok then return "error: " .. tostring(e) end
+return bad
+""")
+if err:
+    problems = (problems + "\n" if problems else "") + "Combine monitors (client): " + str(err)
 # the radio held up (a weapon, next to Hands): drawn in your view and in your hand, and the soft static
 L.globals()._SRC = open(os.path.join(GMDIR, "entities", "weapons", "weapon_lc_radio.lua")).read()
 err = L.execute(r"""
@@ -2219,6 +2549,32 @@ local ok, e = pcall(function()
         util.JSONToTable = j2t
         if not okO then error("the office: " .. tostring(errO)) end
     end
+    -- the tablet has a window of its own (the owner, 14 November: not a C menu), every act a button
+    local frames, vc, dmWas = 0, vgui.Create, DermaMenu
+    vgui.Create = function(c, ...) if c == "DFrame" then frames = frames + 1 end return vc(c, ...) end
+    DermaMenu = function() error("the tablet opened a drop-down menu") end
+    local j2t2 = util.JSONToTable
+    util.JSONToTable = function() return office end
+    net._q = { 1, "x" }
+    local okW, errW = pcall(net["recv_lc_admin_office"])
+    util.JSONToTable, vgui.Create, DermaMenu = j2t2, vc, dmWas
+    if not okW then error("the office window: " .. tostring(errW)) end
+    if frames < 1 then error("the tablet opens a window of its own") end
+    local got = {}
+    local pages = LC_CL.AdminOfficePages({ jobs = { { id = "sanitation", name = "Sanitation Worker" } }, people = { { idx = 1, name = "Someone", wanted = true } } },
+        function(what, arg) got[#got + 1] = what .. ":" .. tostring(arg) end)
+    local byId = {}
+    for _, pg in ipairs(pages) do byId[pg.id] = pg end
+    if not (byId.city and byId.orders and byId.work and byId.people) then error("the office's tabs") end
+    local function Press(pg, text) for _, r in ipairs(pg.rows) do if r.text == text then r.act() return true end end return false end
+    if not Press(byId.city, "A Combine parade") or got[#got] ~= "event:parade" then error("the parade button orders a parade: " .. tostring(got[#got])) end
+    if Press(byId.city, "Sanitation Worker") then error("a job bonus is not among the events") end
+    if not Press(byId.work, "Sanitation Worker") or got[#got] ~= "bonus:sanitation" then error("the job bonus has its own tab") end
+    local n = 0
+    for _, r in ipairs(byId.people.rows) do for _, a in ipairs(r.acts or {}) do a[2]() n = n + 1 end end
+    if n ~= 5 then error("a person's five acts: " .. n) end
+    LC_CL.AdminOfficeClose()
+    if LC_CL.AdminOfficeOpen() then error("the tablet's window shuts") end
 end)
 return (not ok) and tostring(e) or nil
 """)
@@ -2701,19 +3057,23 @@ return nil
 """)
 if err:
     problems = (problems + "\n" if problems else "") + "weapon_lc_sprayer (client) " + str(err)
-# the Arrest Baton (the owner, 12 November: "sparks are in a group of 3 and sitting too far back"): one small glow,
-# at the spark point furthest from the hand, put back from your field of view to the view model's
+# the Arrest Baton (the owner, 12 November: "sparks are in a group of 3 and sitting too far back"): one glow,
+# at the spark point furthest from the hand, put back from your field of view to the view model's; and (14
+# November: "it sits on the 'far' side of the baton, barely visible") on your side of the tip, drawn over
+# the baton, big enough to see
 L.globals()._SRC = open(os.path.join(GMDIR, "entities", "weapons", "weapon_lc_baton.lua")).read()
 err = L.execute(r"""
 SWEP = {}
 local ok, err = pcall(function() assert(loadstring(_SRC, "weapon_lc_baton"))() end)
 if not ok then return "load: " .. tostring(err) end
 local def = SWEP
-local dsWas, gvsWas = render.DrawSprite, render.GetViewSetup
+local dsWas, gvsWas, izWas = render.DrawSprite, render.GetViewSetup, cam.IgnoreZ
 local sprites = {}
-render.DrawSprite = function(pos, w) sprites[#sprites + 1] = { pos = pos, w = w } end
+local over = false
+cam.IgnoreZ = function(on) over = on end
+render.DrawSprite = function(pos, w) sprites[#sprites + 1] = { pos = pos, w = w, over = over } end
 render.GetViewSetup = function() return { origin = Vector(0, 0, 0), angles = Angle(0, 0, 0), fov = 90, fov_viewmodel = 54 } end
-local function restore() render.DrawSprite, render.GetViewSetup = dsWas, gvsWas end
+local function restore() render.DrawSprite, render.GetViewSetup, cam.IgnoreZ = dsWas, gvsWas, izWas end
 local k = math.tan(math.rad(27)) / math.tan(math.rad(45))
 local p = LC_CL.BatonTipSpace(Vector(100, -40, -20))
 if math.abs(p.x - 100) > 0.01 or math.abs(p.y + 40 * k) > 0.01 or math.abs(p.z + 20 * k) > 0.01 then restore() return "BatonTipSpace: " .. tostring(p) end
@@ -2730,10 +3090,16 @@ end
 local tip = LC_CL.BatonTipSpace(ATT.spark9b)
 restore()
 if #sprites < 20 then return "the glow isn't drawn every frame: " .. #sprites end
+if over then return "the baton's glow leaves everything after it drawn over the world" end
+local eye, biggest = Vector(0, 0, 0), 0
 for _, s in ipairs(sprites) do
-    if s.pos:Distance(tip) > 1 then return "a spark away from the tip: " .. tostring(s.pos) .. " (tip " .. tostring(tip) .. ")" end
-    if s.w > 3.5 then return "the glow is too big: " .. s.w end
+    if s.pos:Distance(tip) > 2.5 then return "a spark away from the tip: " .. tostring(s.pos) .. " (tip " .. tostring(tip) .. ")" end
+    if s.pos:Distance(eye) > tip:Distance(eye) - 0.8 then return "a spark on the far side of the tip, behind the baton: " .. tostring(s.pos) .. " (tip " .. tostring(tip) .. ")" end
+    if not s.over then return "a spark the baton itself can hide (not drawn over it)" end
+    if s.w > 6 then return "the glow is too big: " .. s.w end
+    biggest = math.max(biggest, s.w)
 end
+if biggest < 4 then return "the glow is too small to see: " .. biggest end
 return nil
 """)
 if err:
@@ -2789,10 +3155,41 @@ if removed < 1 then return "graffiti: a removed tag did not come off the wall" e
 local marked = tag(300) marked.k = "tally"
 LC_CL.SetTags({ tag(100), marked })
 if not (LC_CL.tags[2] and LC_CL.tags[2].kind == "tally" and LC_CL.tags[1].kind == nil) then return "graffiti: a tag's kind did not arrive" end
+-- (14 November: a mark whose picture this game lacks is asked of the server, not painted as a lambda;
+--  the picture arrives in pieces, is kept in the data folder, and the mark is painted with it)
+local kept, fileWas = {}, file
+file = { Exists = function(p, where) if where == "DATA" then return kept[p] ~= nil end return false end,
+    Read = function(p) return kept[p] end, Write = function(p, d) kept[p] = d end, CreateDir = function() end, Delete = function(p) kept[p] = nil end }
 for _ = 1, 3 do _advance(1.1) _runtimers() end
-if painted ~= 3 then return "graffiti: the tally was not painted (" .. painted .. ")" end
+if painted ~= 2 then return "graffiti: a mark with no picture yet was painted as something else (" .. painted .. ")" end
+if not LC_CL.ArtAsked.tally then return "graffiti: the tally's picture was not asked of the server" end
+if LC_CL.ArtPiece("tally", 2, 2, "SECOND") ~= false then return "graffiti: half a picture counted as a whole one" end
+if LC_CL.ArtPiece("tally", 1, 2, "FIRST") ~= true or kept["livingcity/art/tally.png"] ~= "FIRSTSECOND" then return "graffiti: the picture's pieces were not put together and kept" end
+if LC_CL.ArtPiece("nonsense", 1, 1, "X") ~= false then return "graffiti: a picture nobody uses was kept" end
+for _ = 1, 3 do _advance(1.1) _runtimers() end
+if painted ~= 3 then return "graffiti: the tally was not painted once its picture came (" .. painted .. ")" end
+-- (and a picture that never comes: the lambda stands in after twenty seconds, as it always did)
+local late = tag(400) late.k = "norecord"
+LC_CL.SetTags({ tag(100), marked, late })
+for _ = 1, 3 do _advance(1.1) _runtimers() end
+if painted ~= 3 then return "graffiti: did not wait for NO RECORD's picture (" .. painted .. ")" end
+for _ = 1, 22 do _advance(1.1) _runtimers() end
+if painted < 4 then return "graffiti: with no picture after twenty seconds, nothing was painted at all" end
+painted = 3
+file = fileWas
 if LC_CL.TagMat("lambda") ~= nil or LC_CL.TagMat(nil) ~= nil then return "graffiti: the lambda has no picture of its own" end
 if not (LC_CL.DreamArt and LC_CL.DreamArt.cheese and LC_CL.DreamArtMade.cheese ~= nil and LC_CL.DreamArtMade.swirl1 ~= nil) then return "dream art: the cheese and swirl materials were not made" end
+do -- the dreams' grounds (15 November): a material for each, its picture read only when a floor wears it
+    local n = 0
+    for _ in pairs(LC_CL.DreamArt) do n = n + 1 end
+    if n ~= 33 then return "dream art: " .. n .. " surfaces listed, not 33" end
+    if LC_CL.DreamArtMade.snow ~= nil then return "dream art: a ground's picture was read before any floor wore it" end
+    local fbcWas = ents.FindByClass
+    ents.FindByClass = function(c) if c == "prop_dynamic" then return { { GetMaterial = function() return "!lc_dream_snow" end } } end return {} end
+    LC_CL.DreamArtWanted()
+    ents.FindByClass = fbcWas
+    if LC_CL.DreamArtMade.snow == nil or LC_CL.DreamArtMade.mud ~= nil then return "dream art: the floor in sight did not have its picture read (or another's was)" end
+end
 local before = _calls["cam.Start3D2D"] or 0
 for _, h in pairs(hook.t["PostDrawTranslucentRenderables"] or {}) do h(false, false) end
 if (_calls["cam.Start3D2D"] or 0) ~= before then return "graffiti: drew a letter while real decals exist" end
@@ -3448,6 +3845,190 @@ return (not ok) and tostring(e) or nil
 """)
 if err:
     problems = (problems + "\n" if problems else "") + str(err)
+# The Miscount Poser (lua/weapons/gmod_tool/stools/livingcity_pose.lua), the pose registry on the client
+# (sh_livingcity_poses.lua) and the Pose Recorder's targets (pose_recorder/lua/pose_recorder/targets.lua):
+# what the server says is set changes the cuffed pose, the panel builds with and without the Pose Recorder,
+# a mannequin is put in the game's pose and measured, and the tool's line is drawn
+L.globals()["_pr_targets"] = open(os.path.join(PR_DIR, "pose_recorder", "targets.lua")).read()
+L.globals()["_pose_tool"] = open(os.path.join(os.path.dirname(GMDIR), "..", "lua", "weapons", "gmod_tool", "stools", "livingcity_pose.lua")).read()
+err = L.execute(r"""
+local saved = { net.Start, net.SendToServer, net.WriteString, net.WriteUInt, net.WriteFloat, Entity, SetClipboardText, _me.IsSuperAdmin, ClientsideModel, RunConsoleCommand, print }
+local overWas = LC.PoseOverrides
+local ok, e = pcall(function()
+    local B = "ValveBiped.Bip01_"
+    -- nothing set: the cuffed pose is its own setting's numbers
+    LC.PoseOverridesSet({})
+    local c = LC_CL.CuffPose()
+    local up = c[B .. "R_UpperArm"]
+    if not (up and up.p == 6 and up.y == 40 and up.r == 75) or c[B .. "Spine2"] then error("the cuffed pose with nothing set isn't the built-in") end
+    -- the server says what is set: the cuffed pose follows, bone by bone, and the hands over the face too
+    net._q = { { cuffed = { bones = { [B .. "R_UpperArm"] = { 10, 50, 60 }, [B .. "Spine2"] = { 0, 8, 0 } }, props = {} },
+        hand_eyes = { bones = { [B .. "L_Forearm"] = { 0, -100, 0 } }, props = {} } } }
+    net.recv_lc_poses()
+    c = LC_CL.CuffPose()
+    up = c[B .. "R_UpperArm"]
+    if not (up.p == 10 and up.y == 50 and up.r == 60 and c[B .. "Spine2"].y == 8 and c[B .. "L_UpperArm"].y == 40) then error("what the server says is set isn't the cuffed pose") end
+    if LC_CL.HandFacePose("eyes")[B .. "L_Forearm"].y ~= -100 or LC_CL.HandFacePose("mouth")[B .. "L_Forearm"].y ~= -125 then error("the hand over the eyes didn't follow what is set") end
+    -- on someone cuffed: the arms and the chest are turned, and the chest is let go when the pose is reset
+    local turns = {}
+    local was = { _me.LookupBone, _me.ManipulateBoneAngles, _me.nw.lc_tied }
+    _me.LookupBone = function(_, n) return n end
+    _me.ManipulateBoneAngles = function(_, n, a) turns[n] = a end
+    _me.nw.lc_tied = true
+    _advance(1)
+    hook.t.Think.LivingCityCuffed()
+    if not (turns[B .. "Spine2"] and turns[B .. "Spine2"].y == 8 and turns[B .. "R_UpperArm"].y == 50) then error("someone cuffed isn't posed as set") end
+    net._q = { {} }
+    net.recv_lc_poses()
+    _advance(1)
+    hook.t.Think.LivingCityCuffed()
+    if turns[B .. "Spine2"].y ~= 0 or turns[B .. "R_UpperArm"].y ~= 40 then error("reset: someone cuffed isn't back in the built-in pose") end
+    _me.nw.lc_tied = was[3]
+    _advance(1)
+    hook.t.Think.LivingCityCuffed()
+    _me.LookupBone, _me.ManipulateBoneAngles = was[1], was[2]
+
+    -- the tool
+    TOOL = {}
+    language = language or {}
+    language.Add = language.Add or function() end
+    assert(loadstring(_pose_tool, "livingcity_pose.lua"))()
+    local poser = TOOL
+    if poser.Category ~= "Miscount" then error("the Miscount Poser isn't in Q > Tools > Miscount") end
+    CreateClientConVar("livingcity_pose_id", "cuffed")
+    GetConVar("livingcity_pose_id").v = "vort_sweep"
+    if poser.PickedPose() ~= "vort_sweep" then error("the picked pose isn't read") end
+    if poser.BoneLabel("") ~= "Its feet" or poser.BoneLabel("ValveBiped.hand1_R") ~= "hand1_R" or poser.BoneLabel(B .. "R_Hand") ~= "R_Hand" then error("the held-from labels are wrong") end
+    -- its panel: the poses listed, a held thing's bones to pick from, Reset and Copy
+    local lines, choices, buttons, helps, sent, clip = {}, {}, {}, {}, {}, nil
+    local function Panel()
+        lines, choices, buttons, helps = {}, {}, {}, {}
+        local list = { IsValid = function() return true end }
+        list.SetTall, list.SetMultiSelect, list.AddColumn = function() end, function() end, function() end
+        list.Clear = function() lines = {} end
+        list.AddLine = function(_, a, b) local l = { a, b } lines[#lines + 1] = l return l end
+        list.SelectItem = function(self, l) if self.OnRowSelected then self:OnRowSelected(1, l) end end
+        local combo = { IsValid = function() return true end }
+        combo.Clear = function() choices = {} end
+        combo.AddChoice = function(self, label, data, sel) choices[#choices + 1] = { label, data, sel } if sel and self.OnSelect then self:OnSelect(#choices, label, data) end end
+        local vguiWas = vgui.Create
+        vgui.Create = function(cls, ...) if cls == "DListView" then return list end return vguiWas(cls, ...) end
+        local cp = {}
+        cp.Help = function(_, t) helps[#helps + 1] = t end
+        cp.AddItem = function() end
+        cp.ComboBox = function() return combo end
+        cp.Button = function(_, label) local b = { label = label } buttons[label] = b return b end
+        poser.BuildCPanel(cp)
+        vgui.Create = vguiWas
+        return list, combo
+    end
+    assert(loadstring(_pr_targets, "targets.lua"))() -- (the Pose Recorder's own file of targets, as its autorun includes it)
+    local prWas = PoseRecorder
+    PoseRecorder = nil
+    Panel()
+    if helps[1] ~= "The Pose Recorder addon isn't installed." then error("the panel doesn't say the Pose Recorder is missing") end
+    PoseRecorder = prWas
+    local list, combo = Panel()
+    if #helps ~= 0 then error("the panel has text it doesn't need: " .. tostring(helps[1])) end
+    if #lines ~= #LC.PoseList() or lines[1][1] ~= "Cuffed" then error("the panel doesn't list the poses") end
+    if not (#choices == 3 and choices[1][1] == "hand1_R" and choices[1][3] == true and choices[3][1] == "Its feet") then error("the held-from list isn't the vortigaunt's broom's") end
+    combo:OnSelect(2, "hand1_L", "ValveBiped.hand1_L")
+    if LC.PoseHangChoice.vort_sweep.broom ~= "ValveBiped.hand1_L" then error("picking what the broom hangs from isn't kept") end
+    local cur
+    net.Start = function(n) cur = { n } end
+    net.WriteString = function(v) cur[#cur + 1] = v end
+    net.WriteUInt = function(v) cur[#cur + 1] = v end
+    net.WriteFloat = function(v) cur[#cur + 1] = v end
+    net.SendToServer = function() sent[#sent + 1] = cur end
+    buttons["Reset this pose"].DoClick()
+    if not (sent[1] and sent[1][1] == "lc_pose_reset" and sent[1][2] == "vort_sweep") then error("Reset this pose doesn't ask the server") end
+    SetClipboardText = function(t) clip = t end
+    print = function() end
+    buttons["Copy the numbers"].DoClick()
+    print = saved[11]
+    if not (clip and string.find(clip, "vort_sweep", 1, true) and string.find(clip, "broom", 1, true)) then error("Copy the numbers copies nothing useful: " .. tostring(clip)) end
+    -- the list marks what is set by hand when the server says so
+    net._q = { { vort_sweep = { bones = {}, props = { broom = { bone = "ValveBiped.hand1_L", pos = { 1, 2, 3 }, ang = { 0, 0, 0 } } } } } }
+    net.recv_lc_poses()
+    local marked
+    for _, l in ipairs(lines) do if l[1] == "Vortigaunt sweeping" and l[2] == "yes" then marked = true end end
+    if not marked then error("the list doesn't mark a pose set by hand") end
+    local drew = _calls["draw.SimpleTextOutlined"] or 0
+    poser.DrawHUD(poser)
+    if (_calls["draw.SimpleTextOutlined"] or 0) ~= drew + 1 then error("the tool's line isn't drawn") end
+    net._q = { {} }
+    net.recv_lc_poses()
+
+    -- the Pose Recorder's targets: every pose is one, for superadmins; the mannequin is put in the pose and measured
+    local PR = PoseRecorder
+    if not (LC.PoseBridge() and PR.Target("livingcity_cuffed") and #PR.Targets() == #LC.PoseList()) then error("the poses aren't the Pose Recorder's targets") end
+    _me.IsSuperAdmin = function() return false end
+    if PR.Target("livingcity_cuffed").can(_me) then error("a target is open to someone who isn't a superadmin") end
+    _me.IsSuperAdmin = function() return true end
+    if not PR.Target("livingcity_cuffed").can(_me) then error("a target is closed to a superadmin") end
+    -- a fake model with a pelvis, a chest, an arm and a claw; the ragdoll and its broom as this game sees them
+    local BONES = { { B .. "Pelvis", -1 }, { B .. "Spine2", 0 }, { B .. "R_UpperArm", 1 }, { "ValveBiped.hand1_R", 2 } }
+    local REF = { { 0, 0, 90 }, { -80, 0, 90 }, { 80, 10, 0 }, { 70, 20, 0 } }
+    local AT = { { 0, 0, 38 }, { 0, 0, 50 }, { 0, -8, 56 }, { 4, -10, 40 } }
+    local function M(a, v) return { GetAngles = function() return Angle(a[1], a[2], a[3]) end, GetTranslation = function() return Vector(v[1], v[2], v[3]) end } end
+    local function Fake(angles, places)
+        local e = {}
+        e.IsValid = function() return true end
+        e.GetModel = function() return "models/vortigaunt_slave.mdl" end
+        e.GetPos = function() return Vector(0, 0, 0) end
+        e.GetBoneCount = function() return #BONES end
+        e.GetBoneName = function(_, i) return BONES[i + 1][1] end
+        e.GetBoneParent = function(_, i) return BONES[i + 1][2] end
+        e.LookupBone = function(_, n) for i, b in ipairs(BONES) do if b[1] == n then return i - 1 end end end
+        e.GetBoneMatrix = function(_, i) return M(angles[i + 1], places[i + 1]) end
+        e.InvalidateBoneCache, e.SetupBones, e.SetNoDraw, e.SetPos, e.SetAngles = function() end, function() end, function() end, function() end, function() end
+        e.LookupSequence = function() return 3 end
+        e.SelectWeightedSequence = function() return 3 end
+        e.ResetSequence, e.SetCycle, e.SetPlaybackRate, e.Remove = function() end, function() end, function() end, function() end
+        e.ManipulateBoneAngles = function() end
+        return e
+    end
+    ClientsideModel = function() return Fake(REF, AT) end
+    local rag = Fake(REF, AT)
+    -- (the broom: 5 units along the claw bone's own forward, turned as the bone is)
+    local f = PR.Rotate(PR.FromAngles(70, 20, 0), { 5, 0, 0 })
+    local broom = { IsValid = function() return true end, GetPos = function() return Vector(4 + f[1], -10 + f[2], 40 + f[3]) end, GetAngles = function() return Angle(70, 20, 0) end }
+    Entity = function(i) return i == 41 and rag or (i == 42 and broom or nil) end
+    sent = {}
+    net._q = { "livingcity_vort_sweep", "models/vortigaunt_slave.mdl", 41, 100, 200, 0, 90, 4, B .. "Pelvis", B .. "Spine2", B .. "R_UpperArm", "ValveBiped.hand1_R", 1, "broom", 42 }
+    net.recv_pose_recorder_target()
+    if not (PR.sel and PR.sel.target == "livingcity_vort_sweep" and PR.sel.ent == rag) then error("the mannequin isn't picked when the server stands it") end
+    local place = sent[1]
+    if not (place and place[1] == "pose_recorder_place" and place[2] == 41 and place[3] == 4) then error("the mannequin's limbs aren't sent to be put in the pose") end
+    local sawBroom
+    for i, v in ipairs(place) do if v == "broom" then sawBroom = i end end
+    if not sawBroom then error("the broom isn't sent to be put in its place") end
+    -- "use this pose": the broom measured from the claw picked in the panel
+    LC.PoseHangChoice.vort_sweep = { broom = "ValveBiped.hand1_R" }
+    sent = {}
+    concommand.list.pose_recorder_take()
+    local take = sent[1]
+    if not (take and take[1] == "pose_recorder_take" and take[2] == "livingcity_vort_sweep") then error("use this pose sends nothing") end
+    local at
+    for i, v in ipairs(take) do if v == "broom" then at = i end end
+    if not (at and take[at + 1] == "ValveBiped.hand1_R") then error("the broom isn't measured from the claw picked") end
+    if math.abs(take[at + 2] - 5) > 0.01 or math.abs(take[at + 3]) > 0.01 or math.abs(take[at + 4]) > 0.01 or math.abs(take[at + 5]) > 0.01 or math.abs(take[at + 6]) > 0.01 then
+        error("the broom's place from the claw is measured wrong: " .. take[at + 2] .. " " .. take[at + 3] .. " " .. take[at + 4])
+    end
+    -- the Pose Recorder's own panel lists the poses too
+    local cp = setmetatable({}, { __index = function() return function() return setmetatable({}, { __index = function() return function() end end }) end end })
+    TOOL = {}
+    assert(loadstring(_pr_tool, "stool.lua"))()
+    TOOL.BuildCPanel(cp)
+    for _, t in ipairs(PR.Targets()) do PR.RemoveTarget(t.id) end
+    PR.sel = nil
+end)
+net.Start, net.SendToServer, net.WriteString, net.WriteUInt, net.WriteFloat, Entity, SetClipboardText, _me.IsSuperAdmin, ClientsideModel, RunConsoleCommand, print = unpack(saved, 1, 11)
+LC.PoseOverridesSet(overWas)
+return (not ok) and tostring(e) or nil
+""")
+if err:
+    problems = (problems + "\n" if problems else "") + "the Miscount Poser (client) " + str(err)
 # what you can do here (cl_livingcity_context.lua): with the Arrest Baton out, the panel on the right
 # says what it does, with the player's own keys; and the quest trail (cl_livingcity_trail.lua) is
 # drawn from fake points, dropping the ones walked past
@@ -3741,19 +4322,105 @@ local ok, e = pcall(function()
     p.items[1].run()
     undo()
     if sentQM ~= "guide" then error("Freq 7: guide me sent " .. tostring(sentQM)) end
+    -- the Resistance's leader (the owner, 18 November): Order: kill the Administrator > is last on the Resistance
+    -- page, only when the server sent them the list; its page is the names, with what each has of it; a name sends
+    -- F2's own action with that name's number and what the list showed: nothing (send for them), sent for (they
+    -- have spoken), under the order (take it back)
+    local res = root.items[3].page()
+    for i = 1, 9 do
+        local it = res.items[i]
+        if it and string.find(tostring(it.label), "Administrator", 1, true) then error("a Member's Resistance page has the leader's order: " .. Labels(res)) end
+    end
+    local had, was = #res.items, {}
+    for i = 1, had do was[i] = res.items[i].label end
+    Info({ reb = { tx = false, backup = 0, pos = 0 }, plot = { { id = 1004, name = "Ada Leader" }, { id = 1007, name = "Ben Fighter", has = "order" },
+        { id = 1009, name = "Cal Fighter", has = "word" } } })
+    res = LC_CL.QuickRoleRoot().items[3].page()
+    local ord = res.items[had + 1]
+    if not (#res.items == had + 1 and ord and ord.label == "Order: kill the Administrator" and ord.page) then error("the leader's Resistance page: " .. Labels(res)) end
+    for i = 1, had do
+        if res.items[i].label ~= was[i] then error("the leader's Resistance page moved what was there: " .. Labels(res)) end
+    end
+    if not (res.empty and res.empty[had + 1] == nil) then error("the leader's Resistance page: the fighters left are written over the order") end
+    p = ord.page()
+    if not (#p.items == 3 and p.items[1].label == "Ada Leader" and p.items[2].label == "Ben Fighter  (ordered)" and p.items[3].label == "Cal Fighter  (sent for)") then
+        error("the leader's list: " .. Labels(p))
+    end
+    for i, want in ipairs({ "1004:give", "1007:back", "1009:spoken" }) do
+        local sentCmd, sentArg
+        local ws, st, name, n = net.WriteString, net.Start, nil, 0
+        net.Start = function(nm) name, n = nm, 0 return st and st(nm) end
+        net.WriteString = function(s)
+            if name == "lc_quickmore" then
+                n = n + 1
+                if n == 1 then sentCmd = s elseif n == 2 then sentArg = s end
+            end
+            return ws and ws(s)
+        end
+        p.items[i].run()
+        net.WriteString, net.Start = ws, st
+        if not (sentCmd == "plotorder" and sentArg == want) then error("the leader picks name " .. i .. ": sent " .. tostring(sentCmd) .. " " .. tostring(sentArg) .. ", not " .. want) end
+    end
+    Info({ reb = { tx = false, backup = 0, pos = 0 } })
+    if #LC_CL.QuickRoleRoot().items[3].page().items ~= had then error("no longer the leader: the order is still on their Resistance page") end
+    -- the Resistance's fund (the owner, 18 November): one row for every member, "Fund: 120 credits", under the page's
+    -- entries and above the fighters left; and the leader's entry carries what each member sent for costs
+    local manWas = LC_CL.Manpower
+    LC_CL.Manpower = { "Fighters: 5 of 12", "Next recruit in 4 min" }
+    res = LC_CL.QuickRoleRoot().items[3].page()
+    if not (res.empty and res.empty[7] == "Fighters: 5 of 12" and res.empty[8] == "Next recruit in 4 min") then error("the Resistance page with no word of the fund: the fighters left are not where they were") end
+    for i = 1, 9 do
+        if res.empty[i] and string.find(res.empty[i], "Fund", 1, true) then error("the Resistance page shows a fund the server never sent") end
+    end
+    Info({ reb = { tx = false, backup = 0, pos = 0, fund = 120 } })
+    res = LC_CL.QuickRoleRoot().items[3].page()
+    if #res.items ~= had then error("a member's Resistance page: the fund's row moved its entries: " .. Labels(res)) end
+    if not (res.empty and res.empty[had + 1] == "Fund: 120 credits") then error("a member's Resistance page: no row for the fund: " .. tostring(res.empty and res.empty[had + 1])) end
+    local from = math.max(7, had + 2)
+    if not (res.empty[from] == "Fighters: 5 of 12" and res.empty[from + 1] == "Next recruit in 4 min") then error("a member's Resistance page: the fighters left are not under the fund's row") end
+    for i = 1, had do
+        if res.items[i].label ~= was[i] then error("a member's Resistance page: the fund's row changed what was there: " .. Labels(res)) end
+        if string.find(res.items[i].label, "each", 1, true) then error("a member's Resistance page shows a price") end
+    end
+    Info({ reb = { tx = false, backup = 0, pos = 0, fund = 0 } })
+    res = LC_CL.QuickRoleRoot().items[3].page()
+    if res.empty[had + 1] ~= "Fund: 0 credits" then error("an empty fund is not shown as one: " .. tostring(res.empty[had + 1])) end
+    Info({ reb = { tx = false, backup = 0, pos = 0, fund = 120 }, plotcost = 300, plot = { { id = 1004, name = "Ada Leader" }, { id = 1007, name = "Ben Fighter", has = "order" } } })
+    res = LC_CL.QuickRoleRoot().items[3].page()
+    ord = res.items[had + 1]
+    if not (#res.items == had + 1 and ord and ord.label == "Order: kill the Administrator (300 each)" and ord.page) then error("the leader's entry does not carry the price: " .. Labels(res)) end
+    if not (res.empty[had + 1] == nil and res.empty[had + 2] == "Fund: 120 credits") then error("the leader's Resistance page: the fund's row is not under the order") end
+    if had + 3 <= 9 and res.empty[had + 3] ~= "Fighters: 5 of 12" then error("the leader's Resistance page: the fighters left are not under the fund's row") end
+    p = ord.page()
+    if not (p.title == "ORDER: KILL THE ADMINISTRATOR" and #p.items == 2 and p.items[2].label == "Ben Fighter  (ordered)") then error("the leader's list, with a price on its entry: " .. Labels(p)) end
+    Info({ reb = { tx = false, backup = 0, pos = 0, fund = 120 }, plotcost = 0, plot = { { id = 1004, name = "Ada Leader" } } })
+    ord = LC_CL.QuickRoleRoot().items[3].page().items[had + 1]
+    if not (ord and ord.label == "Order: kill the Administrator") then error("an order that costs nothing shows a price: " .. tostring(ord and ord.label)) end
+    LC_CL.Manpower = manWas
+    Info({ reb = { tx = false, backup = 0, pos = 0 } })
 
-    -- a plain citizen: Me >, with what the server says
+    -- F1 > What now?: the time and the weather, and the city's laws (the owner, 19 November: only in the C menu before)
+    do
+        local wn = LC_CL.WhatNowPage()
+        local all = Labels(wn)
+        if not (string.find(all, "The time and the weather", 1, true) and string.find(all, "The city's laws", 1, true)) then error("F1 > What now?: " .. all) end
+    end
+    -- a plain citizen: their own lines straight on F2 (the owner, 18 November: no "Me" step), with what the server says
     _me.nw = { lcf_faction = "citizen", lce_standing = 120, lc_unreg = true }
     Info({ me = { work = "intake", ration = 240, cards = 2, home = "none", standing = 120, next = 150, nextWhat = "Union foreman (F2)" } })
     root = LC_CL.QuickRoleRoot()
-    local mine, mn = Find(root, "me")
-    if mn ~= 1 or root.empty then error("a plain citizen: Me > should be 1, and no 'nothing here': " .. Labels(root)) end
-    p = mine.page()
+    p = root
+    if root.empty or Find(root, "me") then error("a plain citizen's F2: their own lines, no Me page and no 'nothing here': " .. Labels(root)) end
     if not (string.find(p.items[1].label, "Civil Intake first", 1, true) and string.find(p.items[2].label, "next in 4 min, 2 cards", 1, true)
-        and string.find(p.items[3].label, "Housing", 1, true) and string.find(p.items[4].label, "120", 1, true)) then error("Me: " .. Labels(p)) end
-    if not (p.empty and p.empty[6] and string.find(p.empty[6], "foreman", 1, true)) then error("Me: no next milestone") end
+        and string.find(p.items[3].label, "Housing", 1, true) and string.find(p.items[4].label, "120", 1, true)) then error("a citizen's F2: " .. Labels(p)) end
+    if not string.find(p.items[4].label, "foreman", 1, true) then error("a citizen's F2: no next milestone: " .. Labels(p)) end
+    if not (p.items[5] and string.find(p.items[5].label, "Household", 1, true) and p.items[6] and p.items[6].label == "Dreams and survival") then error("a citizen's F2: household, then dreams and survival: " .. Labels(p)) end
     undo = Watch()
-    for i = 1, 4 do p.items[i].run() end
+    for _, i in ipairs({ 1, 2, 4 }) do p.items[i].run() end
+    -- (the owner, 19 November: My home is a page, with what was only in the C menu)
+    local hp = p.items[3].page and p.items[3].page()
+    if not (hp and #hp.items == 6 and hp.items[4].label == "Open my stash" and string.find(hp.items[6].label, "Give up", 1, true)) then error("F2 > My home: " .. (hp and Labels(hp) or "not a page")) end
+    for i = 1, 4 do hp.items[i].run() end
     undo()
     -- in a cell: My sentence
     _me.nw.lc_jail_until = CurTime() + 125
@@ -3772,16 +4439,37 @@ local ok, e = pcall(function()
     cit.nw.lcf_faction = "citizen"
     _me.GetEyeTrace = function() return { Hit = true, HitPos = Vector(60, 0, 60), Entity = cit } end
     root = LC_CL.QuickRoleRoot()
-    if root.items[1].label ~= "Sociostability" or not string.find(root.items[2].label, "Broadcast", 1, true) then error("the Administrator's F2 moved: " .. Labels(root)) end
+    -- (the owner, 18 November, the menu audit: her speeches and orders on F2 itself, not under Me)
+    if root.items[1].label ~= "Sociostability" or root.items[2].label ~= "Speak to the city" or root.items[3].label ~= "City orders" then error("the Administrator's F2 moved: " .. Labels(root)) end
+    if not string.find(Labels(root.items[2].page()), "Broadcast", 1, true) then error("Speak to the city has no broadcast: " .. Labels(root.items[2].page())) end
     local want = { "Open my tablet", "The city's laws", "Tonight's dream", "Command the guards" }
     local all = Labels(root)
     for _, w in ipairs(want) do if not string.find(all, w, 1, true) then error("the Administrator's F2 has no '" .. w .. "': " .. all) end end
-    local ar = Find(root, "arrest")
+    local function Arrest() local o = Find(LC_CL.QuickRoleRoot(), "orders") return o and Find(o.page(), "arrest") end
+    local ar = Arrest()
     if not ar or ar.disabled then error("the Administrator can't order this citizen's arrest: " .. all) end
     undo = Watch()
     ar.run()
     undo()
     if sentQM ~= "arrest" then error("order of arrest sent " .. tostring(sentQM)) end
+    -- headcrab shelling (sv_livingcity_shelling.lua): the Resistance's districts only, sent by number; greyed until the canisters are ready
+    local ledWas, nextWas, jsonWas = _globals.lc_ledger, _globals.lc_shell_next, util.JSONToTable
+    _globals.lc_ledger, _globals.lc_shell_next = "{}", 0
+    util.JSONToTable = function() return { districts = { { n = 7, name = "Block 7", owner = "resistance" }, { n = 8, name = "Block 8", owner = "combine" } } } end
+    local orders = Find(LC_CL.QuickRoleRoot(), "orders")
+    local sh = orders and Find(orders.page(), "shell")
+    if not (sh and sh.page) then error("City orders has no shelling: " .. Labels(orders and orders.page() or root)) end
+    local sp = sh.page()
+    if not (sp.items[1] and sp.items[1].label == "Block 7" and not sp.items[2]) then error("shelling should list the Resistance's districts only: " .. Labels(sp)) end
+    local saSh, gotSh = LC_CL.SendAction, nil
+    LC_CL.SendAction = function(cmd, rest) gotSh = { cmd, rest } end
+    sp.items[1].run()
+    LC_CL.SendAction = saSh
+    if not (gotSh and gotSh[1] == "shell" and gotSh[2] == "7") then error("shelling sent " .. tostring(gotSh and gotSh[1]) .. " " .. tostring(gotSh and gotSh[2])) end
+    _globals.lc_shell_next = CurTime() + 600
+    sh = Find(Find(LC_CL.QuickRoleRoot(), "orders").page(), "shell")
+    if not (sh and sh.disabled) then error("shelling should wait for the canisters: " .. tostring(sh and sh.label)) end
+    _globals.lc_ledger, _globals.lc_shell_next, util.JSONToTable = ledWas, nextWas, jsonWas
     for n = 1, 8 do
         local it = root.items[n]
         if it and it.page then
@@ -3818,10 +4506,10 @@ local ok, e = pcall(function()
         if dp.items[3].label ~= "Far  (now)" or dp.items[2].label ~= "Medium" or not string.find(mp.items[4].label, "(now)", 1, true) or string.find(mp.items[1].label, "(now)", 1, true) then error("the order in force isn't marked: " .. Labels(dp) .. " / " .. Labels(mp)) end
     end
     Info({ adm = { arrest = 200, guards = 2 } })
-    ar = Find(LC_CL.QuickRoleRoot(), "arrest")
+    ar = Arrest()
     if not (ar and ar.disabled and string.find(ar.label, "in 4m", 1, true)) then error("order of arrest isn't greyed while it cools down") end
     cit.nw.lcf_faction = "cp"
-    if Find(LC_CL.QuickRoleRoot(), "arrest") then error("the Administrator can order a unit's arrest") end
+    if Arrest() then error("the Administrator can order a unit's arrest") end
     _me.GetEyeTrace = function() return { Hit = false, HitPos = Vector(0, 0, 0) } end
     LC_CL.QuickInfo, LC_CL.Insider = {}, nil
     _me.nw = {}
@@ -3968,7 +4656,7 @@ local okM, errM = pcall(function()
     net.recv_lcu_market()
     -- a stranger at the quartermaster (the owner, 9 November): nothing to buy, arms to sell or give
     sent = {}
-    doc = { credits = 5, goods = {}, quartermaster = true, visitor = true,
+    doc = { credits = 15, goods = {}, quartermaster = true, visitor = true, gift = 10, -- (gift: 10 credits for the fund, 19 November)
         sell = { { id = "gun_pistol", name = "Pistol", n = 1, price = 45, donate = true }, { id = "w:weapon_smg1", name = "smg1", n = 1, price = 60, weapon = true, donate = true } } }
     net.recv_lcu_market()
     for _, pnl in ipairs(made) do
@@ -3979,6 +4667,9 @@ local okM, errM = pcall(function()
     local gave = false
     for _, m in ipairs(sent) do if m and m.name == "lcu_donate" then gave = true end end
     if not gave then error("the quartermaster's Donate button doesn't reach the server") end
+    local fundGift = false
+    for _, m in ipairs(sent) do if m and m.name == "lc_fund_donate" then fundGift = true end end
+    if not fundGift then error("the quartermaster's 10 credits for the cause don't reach the server") end
 end)
 vgui, net.SendToServer, net.Start, net.WriteString = vgWas, stsWas, startWas, wsWas
 net.ReadUInt, net.ReadData, util.Decompress, util.JSONToTable = rU, rD, rDc, rJ
@@ -4208,7 +4899,29 @@ hook.t.EntityNetworkedVarChanged.LivingCityLipSync(cop, "lc_talk_until", 0, CurT
 local okT, errT = pcall(hook.t.Think.LivingCityLipSync)
 if not okT then return "lip sync: " .. tostring(errT) end
 if LC.LipSyncFace(cop) ~= false then return "lip sync: a metrocop's mask has no jaw to move" end
-npc:Remove() cop:Remove()
+-- (14 November: "the NPC's mouth doesn't move with the voice lines") a speaker the hook never told us of is
+-- found all the same, and the jaw is set again as the frame is drawn, after the game has smoothed the face back
+local npc2, w2 = Face("models/humans/group01/female_02.mdl", { jaw_drop = 3, right_part = 5, left_part = 6 })
+npc2:SetNW2Float("lc_talk_from", CurTime())
+npc2:SetNW2Float("lc_talk_until", CurTime() + 3)
+local fisWas = ents.FindInSphere
+ents.FindInSphere = function() return { npc2, _me } end
+local draw = hook.t.PreDrawOpaqueRenderables and hook.t.PreDrawOpaqueRenderables.LivingCityLipSync
+if not draw then return "lip sync: the jaw is not set again when the frame is drawn" end
+local heldAtDraw = 0
+for _ = 1, 30 do
+    _advance(0.05)
+    hook.t.Think.LivingCityLipSync()
+    w2[3] = 0 -- (the game smooths the face back to the server's before it draws)
+    draw(false, false)
+    if (w2[3] or 0) > 0.05 then heldAtDraw = heldAtDraw + 1 end
+end
+ents.FindInSphere = fisWas
+if heldAtDraw < 5 then return "lip sync: a speaker nobody announced was not found, or the jaw did not hold at draw time (" .. heldAtDraw .. ")" end
+w2[3] = 0.4
+draw(true, false)
+if w2[3] ~= 0.4 then return "lip sync: worked again for the shadow pass" end
+npc:Remove() cop:Remove() npc2:Remove()
 return nil
 """)
 if err:
@@ -4380,6 +5093,122 @@ if err:
 if "LC_CL.StudyMenu" not in open(os.path.join(GMDIR, "gamemode", "modules", "client", "cl_livingcity_factions.lua")).read():
     problems = (problems + "\n" if problems else "") + "F4 > Factions has no play study button"
 
+# the errors file (sh_livingcity_errors.lua): a player's game writes down its own errors and sends each to
+# the server once, with how many times; the list opens in the report window with no chat line; F4 has its button
+err = L.execute(r"""
+if not (LC and LC.Try and LC.ErrorsSendOne) then return "errors: the player's side didn't load" end
+local keep = { st = net.Start, ws = net.WriteString, wu = net.WriteUInt, ss = net.SendToServer, add = chat.AddText, rcc = RunConsoleCommand, json = util.JSONToTable, rd = net.ReadData, ru = net.ReadUInt }
+local sent, cur, said, ran = {}, nil, 0, nil
+net.Start = function(n) cur = { name = n } end
+net.WriteString = function(s) cur[#cur + 1] = s end
+net.WriteUInt = function(v) cur[#cur + 1] = v end
+net.SendToServer = function() sent[#sent + 1] = cur end
+chat.AddText = function() said = said + 1 end
+RunConsoleCommand = function(c) ran = c end
+local ok, e = pcall(function()
+    local a, b = LC.Try(function() return 5 end)
+    if not (a == true and b == 5) then error("LC.Try doesn't give back what pcall gives") end
+    local function boom() error("smoke swallowed") end
+    for _ = 1, 3 do LC.Try(boom) end
+    local fn = hook.t.OnLuaError and hook.t.OnLuaError.LivingCityClientErrors
+    if not fn then error("no OnLuaError hook") end
+    fn("gamemodes/livingcity/gamemode/modules/client/cl_x.lua:9: smoke hud broke", "client", { { File = "gamemodes/livingcity/gamemode/modules/client/cl_x.lua", Line = 9, Function = "Paint" } }, "Miscount")
+    fn("addons/other/thing.lua:1: smoke not ours", "client", { { File = "addons/other/thing.lua", Line = 1, Function = "f" } }, "other")
+    local n = 0
+    while LC.ErrorsSendOne() and n < 10 do n = n + 1 end
+    local byText = {}
+    for _, m in ipairs(sent) do if m.name == "lc_clerror" then byText[#byText + 1] = m end end
+    if #byText ~= 2 then error("expected 2 errors sent, got " .. #byText) end
+    local sw, hud
+    for _, m in ipairs(byText) do
+        if string.find(m[2], "smoke swallowed", 1, true) then sw = m end
+        if string.find(m[2], "smoke hud broke", 1, true) then hud = m end
+    end
+    if not (sw and sw[1] == "hidden" and sw[3] == 3) then error("the swallowed error wasn't sent as hidden, 3 times") end
+    if not (hud and hud[1] == "client" and hud[3] == 1 and string.find(hud[2], "cl_x.lua:9 in Paint", 1, true)) then error("the game's error wasn't sent with its trace") end
+    LC.Try(boom)
+    if LC.ErrorsSendOne() then error("the same error was sent again inside a minute") end
+    -- the window
+    local recv = net["recv_lc_report"]
+    if not recv then error("no report window") end
+    net.ReadUInt = function() return 2 end
+    net.ReadData = function() return "{}" end
+    util.JSONToTable = function() return { text = "MISCOUNT ERRORS", file = "garrysmod/data/livingcity/errors.txt", errors = true, clear = true } end
+    recv()
+    if said ~= 0 then error("opening the errors list printed a chat line") end
+    util.JSONToTable = function() return { text = "MISCOUNT DEBUG REPORT", file = "garrysmod/data/livingcity/reports/r.txt" } end
+    recv()
+    if said ~= 1 then error("the debug report no longer says it was copied") end
+end)
+net.Start, net.WriteString, net.WriteUInt, net.SendToServer, chat.AddText, RunConsoleCommand, util.JSONToTable, net.ReadData, net.ReadUInt = keep.st, keep.ws, keep.wu, keep.ss, keep.add, keep.rcc, keep.json, keep.rd, keep.ru
+if not ok then return "errors file: " .. tostring(e) end
+return nil
+""")
+if err:
+    problems = (problems + "\n" if problems else "") + str(err)
+_fac = open(os.path.join(GMDIR, "gamemode", "modules", "client", "cl_livingcity_factions.lua")).read()
+if '"Admin: errors (%d)"' not in _fac or 'RunConsoleCommand("lc_errors")' not in _fac:
+    problems = (problems + "\n" if problems else "") + "F4 > Factions has no errors button"
+
+# a list that is built again after an action stays where it was scrolled (the owner, 14 November: "When I
+# use a charge cell from my pockets, it scrolls back to the top of the menu"): the pockets, and the admin
+# tools, the way the Commissary and the black market already did
+err = L.execute(r"""
+local scrolls = {}
+local function P(cls)
+    local t = { _cls = cls }
+    if cls == "DScrollPanel" then
+        scrolls[#scrolls + 1] = t
+        local bar = { _n = 0 }
+        bar.SetScroll = function(self, n) self._n = n end
+        bar.GetScroll = function(self) return self._n end
+        bar.SetUp = function() end
+        t._bar = bar
+    end
+    return setmetatable(t, { __index = function(_, k)
+        if string.sub(k, 1, 2) == "lc" or string.sub(k, 1, 1) == "_" then return nil end
+        if k == "IsValid" then return function() return not t._removed end end
+        if k == "Remove" then return function() t._removed = true end end
+        if k == "GetVBar" then return function() return t._bar end end
+        if k == "GetPos" then return function() return 10, 10 end end
+        if k == "GetWide" or k == "GetTall" then return function() return 400 end end
+        return function() return P() end
+    end })
+end
+local vgWas, rU, rD, rDc, rJ = vgui, net.ReadUInt, net.ReadData, util.Decompress, util.JSONToTable
+vgui = { Create = function(cls) return P(cls) end, GetKeyboardFocus = function() return nil end }
+net.ReadUInt = function() return 1 end
+net.ReadData = function() return "x" end
+util.Decompress = function(s) return s end
+local doc
+util.JSONToTable = function() return doc end
+local ok, e = pcall(function()
+    for _, w in ipairs({ { "lci_inv", "the pockets", { items = { bread = 2, water = 1, scrap = 4, cell = 1, lockpick = 1, bandage = 2 }, size = 12, open = true } },
+        { "lc_admintools", "the admin tools", { players = { { name = "Ada", id = 1 } }, target = 1, factions = {}, territory = {} } } }) do
+        local recv = net["recv_" .. w[1]]
+        if not recv then error("no receiver for " .. w[1]) end
+        scrolls = {}
+        doc = w[3]
+        recv()
+        local first = scrolls[#scrolls]
+        if not first then error(w[2] .. " built no list") end
+        first._bar._n = 180 -- (scrolled down to the charge cell)
+        if w[3].open then doc.open = nil end -- (an item used: the server sends the pockets again, not asking to open them)
+        recv()
+        local second = scrolls[#scrolls]
+        if second == first then error(w[2] .. " were not built again") end
+        if second._bar._n ~= 180 then error(w[2] .. " went back to the top after an action (scroll " .. tostring(second._bar._n) .. ", was 180)") end
+        -- opened fresh (the window shut first), it starts at the top
+        for _, sc in ipairs(scrolls) do sc._removed = true end
+    end
+end)
+vgui, net.ReadUInt, net.ReadData, util.Decompress, util.JSONToTable = vgWas, rU, rD, rDc, rJ
+if not ok then return "scroll kept: " .. tostring(e) end
+return nil
+""")
+if err:
+    problems = (problems + "\n" if problems else "") + str(err)
+
 # the official folder for recordings and songs is the server's garrysmod/sound/livingcity/ (CORE.md):
 # what players read in the guide and the sound check must send them there, never to the old sound addon
 _guide = open(os.path.join(GMDIR, "gamemode", "cl_init.lua")).read()
@@ -4395,6 +5224,314 @@ _uses = set(_re.findall(r'"([a-z_0-9]+)"', _lb[_lb.index("local USES"):_lb.index
 _lost = [i for i in _re.findall(r'^\s*\{ id = "([^"]+)",', _tool, _re.M) if i not in _uses and not i.startswith("work_")]
 if _lost:
     problems = (problems + "\n" if problems else "") + "editor modes in no 'what it's for' folder: " + ", ".join(_lost)
+# the editor's list has one naming scheme (the owner, 14 November: "ludicrously uncohesive and need a naming
+# scheme ... not sorted under their respective categories"): a label is "Category: name (hint)", a thing that
+# belongs to one side starts with that side spelt one way, and every section shows its names A to Z
+_modes = _re.findall(r'^\s*\{ id = "([^"]+)",[^\n]*?label = "((?:[^"\\]|\\.)*)"', _tool, _re.M)
+_cats = ("Point: ", "Fixture: ", "Street: ", "Path: ", "Zone: ", "Door: ", "Prop: ")
+_tools = {"inspect", "walker"}
+_side = {"Resistance ": "rspawn rlookout bunk graffiti way_left way_right way_up way_down way_freedom rebelboard interrochair rebelcage workbench zone_rebel",
+         "Combine ": "console forcefield powerbank turret barricade_low barricade barricade_tall dataterm masterterm sspawn sterm lz suppressor zone_combine monitor camera",
+         "Civil Protection ": "patrol checkpoint cpsupply cpfeed evidlocker door_cp",
+         "Administrator's ": "desk adminpower speech speechcrowd studio door_office",
+         "Union ": "terminal recycler"}
+_bad = []
+for _i, _l in _modes:
+    _name = _l
+    if _i not in _tools:
+        _c = [c for c in _cats if _l.startswith(c)]
+        if not _c:
+            _bad.append("%s has no category ('%s')" % (_i, _l[:40]))
+            continue
+        _name = _l[len(_c[0]):]
+    if _re.match(r"(resistance|rebel|combine|overwatch|civil protection|administrator|union|the) ", _name):
+        _bad.append("%s: '%s' (a side in small letters, or 'the')" % (_i, _name[:40]))
+    for _s, _ids in _side.items():
+        if _i in _ids.split() and not _name.startswith(_s):
+            _bad.append("%s should start with '%s': '%s'" % (_i, _s.strip(), _name[:40]))
+if len(_modes) < 100:
+    _bad.append("only %d editor modes were read" % len(_modes))
+L.globals()["_editor_modes"] = L.table_from([L.table_from({"id": i, "label": l.replace('\\"', '"')}) for i, l in _modes])
+err = L.execute(r"""
+local bad = {}
+for _, arrange in ipairs({ "type", "use" }) do
+    local groups = LC_CL.LayoutGroups(_editor_modes, arrange)
+    local seen = 0
+    for _, g in ipairs(groups) do
+        local last
+        for _, m in ipairs(g.list) do
+            seen = seen + 1
+            local name = LC_CL.LayoutShortName(m)
+            if not string.match(name, "^[%u%d]") then bad[#bad + 1] = arrange .. ": '" .. name .. "' doesn't start with a capital" end
+            if last and string.lower(last) > string.lower(name) then bad[#bad + 1] = arrange .. ", " .. g.title .. ": '" .. name .. "' comes after '" .. last .. "'" end
+            last = name
+            if g.title == "Tools" and arrange == "type" and m.id ~= "inspect" and m.id ~= "walker" then bad[#bad + 1] = m.id .. " is under Tools" end
+            if g.title == "The Resistance and rebel bases" and m.id == "locker" then bad[#bad + 1] = "the citizens' locker is in the Resistance's folder" end
+        end
+    end
+    if seen < #_editor_modes then bad[#bad + 1] = arrange .. ": only " .. seen .. " of " .. #_editor_modes .. " shown" end
+end
+return #bad > 0 and table.concat(bad, "; ") or nil
+""")
+if err:
+    _bad.append(str(err))
+if _bad:
+    problems = (problems + "\n" if problems else "") + "editor names: " + "; ".join(_bad)
+# the Resistance's scientist looks at you with his irises showing (the owner, 14 November: "rolling his
+# eyes up so all I can see are the whites"): what his eyes are given is measured from his own eyes
+L.globals()._SCI = open(os.path.join(GMDIR, "entities", "entities", "lc_scientist.lua"), encoding="utf-8").read()
+err = L.execute(r"""
+local entWas, addWas, w2lWas = ENT, AddCSLuaFile, WorldToLocal
+ENT = {}
+AddCSLuaFile = function() end
+-- (the real thing: a place in the world, as seen from a place and a facing; here a facing of none or of yaw 90)
+WorldToLocal = function(pos, _, org, ang)
+    local d = pos - org
+    if ang and ang.y == 90 then return Vector(d.y, -d.x, d.z), Angle(0, 0, 0) end
+    return Vector(d.x, d.y, d.z), Angle(0, 0, 0)
+end
+local fn, e = loadstring(_SCI, "lc_scientist.lua")
+if not fn then return "the scientist: " .. tostring(e) end
+fn()
+local E = ENT
+ENT, AddCSLuaFile = entWas, addWas
+local eyes = { Pos = Vector(5000, -3000, 1264), Ang = Angle(0, 90, 0) } -- (a lab far from the map's middle, facing +y)
+local sci = { LookupAttachment = function(_, n) return n == "eyes" and 1 or 0 end, GetAttachment = function() return eyes end }
+local bad
+local function near(v, x, y, z) return math.abs(v.x - x) < 0.01 and math.abs(v.y - y) < 0.01 and math.abs(v.z - z) < 0.01 end
+if not E.EyeTargetFor then bad = "no EyeTargetFor"
+else
+    local ahead = E.EyeTargetFor(sci, nil)
+    if not near(ahead, 100, 0, 0) then bad = "nobody near: his eyes are not straight ahead" end
+    -- someone standing 100 in front of him, eyes level with his: straight ahead of his own eyes, not a place in the world
+    local t = E.EyeTargetFor(sci, Vector(5000, -2900, 1264))
+    if not bad and not near(t, 100, 0, 0) then bad = "someone in front of him: his eyes were sent to " .. tostring(t) end
+    -- someone far above him (a walkway): the eyes turn up a little, never over into the head
+    t = E.EyeTargetFor(sci, Vector(5000, -2900, 2264))
+    if not bad and not (t.x >= 20 and t.z > 0 and t.z <= t.x * 0.35 + 0.01) then bad = "someone overhead: his eyes roll up (" .. tostring(t) .. ")" end
+    -- someone behind him: forward still, turned as far aside as an eye goes
+    t = E.EyeTargetFor(sci, Vector(5200, -3200, 1264))
+    if not bad and not (t.x >= 20 and math.abs(t.y) <= t.x * 0.6 + 0.01) then bad = "someone behind him: his eyes turn into his head (" .. tostring(t) .. ")" end
+    -- a model with no eyes attachment: straight ahead, no error
+    t = E.EyeTargetFor({ LookupAttachment = function() return 0 end }, Vector(1, 2, 3))
+    if not bad and not near(t, 100, 0, 0) then bad = "no eyes attachment: not straight ahead" end
+end
+WorldToLocal = w2lWas
+return bad and ("the scientist's eyes: " .. bad) or nil
+""")
+if err:
+    problems = (problems + "\n" if problems else "") + str(err)
+# the panel on the right in a Combine-only zone (the owner, 15 November): "Combine only zone", and while they're
+# walked in, cuffed or in a cell, nothing about leaving before a countdown
+err = L.execute(r"""
+local ok, e = pcall(function()
+    _me.nw.lcf_faction, _me.nw.lc_here = "citizen", "combine"
+    local function find()
+        for _, g in ipairs(LC_CL.ContextGroups(_me)) do if g.kind == "zone" then return g end end
+    end
+    local g = find()
+    if not g or g.title ~= "Combine only zone" then error("Combine-only zone: titled " .. tostring(g and g.title)) end
+    for _, k in ipairs({ "lc_marching", "lc_tied" }) do
+        _me.nw[k] = true
+        if find() then error("Combine-only zone: the countdown line shows with " .. k) end
+        _me.nw[k] = nil
+    end
+    _me.nw.lc_jail_until = CurTime() + 60
+    if find() then error("Combine-only zone: the countdown line shows in a cell") end
+    _me.nw.lc_jail_until = nil
+    _me.nw.lcf_faction, _me.nw.lc_here = nil, nil
+end)
+if not ok then return tostring(e) end
+""")
+if err:
+    problems = (problems + "\n" if problems else "") + str(err)
+# a situation's menu (the interrogation: the owner, 15 November, "the window was too small and I couldn't see all
+# the text"): as wide as its longest choice needs, long ones wrapped, and the words under it kept on screen
+err = L.execute(r"""
+local gts, sdraw = surface.GetTextSize, draw.SimpleText
+local ok, e = pcall(function()
+    surface.GetTextSize = function(t) return #tostring(t) * 9, 18 end
+    local long = LC_CL.QuickSituationLayout({ items = { { label = string.rep("word ", 60) }, { label = "Short" } } })
+    if long.W > 640 or long.W < 380 then error("width " .. tostring(long.W)) end
+    if #long.rows[1] < 2 then error("a long choice wasn't wrapped") end
+    for _, line in ipairs(long.rows[1]) do if #line * 9 > long.W - 46 then error("a wrapped line is wider than the menu") end end
+    local mid = LC_CL.QuickSituationLayout({ items = { { label = "Bargain: the truth, for a shorter sentence, in a few more words" } } })
+    if #mid.rows[1] ~= 1 or mid.W < 63 * 9 + 46 then error("a choice that fits a wider menu was wrapped or cut (width " .. tostring(mid.W) .. ")") end
+    local ys = {}
+    draw.SimpleText = function(text, font, x, y) ys[#ys + 1] = tonumber(y) or 0 end
+    LC_CL.OpenSituation({ id = "smoketall", title = "Interrogation", items = { { label = "Tell the truth", run = function() end } },
+        note = string.rep("A very long thing that was said to you in the cell. ", 120) })
+    hook.t.HUDPaint.LivingCityQuick()
+    LC_CL.CloseSituation("smoketall")
+    if #ys == 0 then error("nothing drawn") end
+    local top, bottom = 1e9, 0
+    for _, y in ipairs(ys) do top, bottom = math.min(top, y), math.max(bottom, y) end
+    if bottom > ScrH() - 8 or top < 0 then error("words drawn off the screen (" .. top .. " to " .. bottom .. ")") end
+end)
+surface.GetTextSize, draw.SimpleText = gts, sdraw
+if not ok then return "situation menu: " .. tostring(e) end
+""")
+if err:
+    problems = (problems + "\n" if problems else "") + str(err)
+# the way to a place asked for (F1 > find work: the owner, 15 November, "a marker on my screen but no waypath finder
+# chevrons"): a guide trail stays with no quest on; a quest's trail still goes when the quest does
+err = L.execute(r"""
+local qsWas = LC_CL.QuestState
+local ok, e = pcall(function()
+    LC_CL.QuestState = function() return { active = false } end
+    _me:SetPos(Vector(0, 0, 0))
+    LC_CL.SetTrail({ g = { 1000, 0, 0 }, p = { 200, 0, 0, 600, 0, 0, 1000, 0, 0 }, guide = true })
+    _advance(0.3)
+    hook.t.Think.LivingCityTrail()
+    if not LC_CL.Trail() then error("a guide trail was dropped for want of a quest") end
+    local beamsBefore = _calls["render.DrawBeam"] or 0
+    hook.t.PostDrawTranslucentRenderables.LivingCityTrail(false, false)
+    if (_calls["render.DrawBeam"] or 0) - beamsBefore < 10 then error("a guide trail drew hardly any chevrons") end
+    LC_CL.SetTrail({ g = { 1000, 0, 0 }, p = { 200, 0, 0, 600, 0, 0, 1000, 0, 0 } })
+    _advance(0.3)
+    hook.t.Think.LivingCityTrail()
+    if LC_CL.Trail() then error("a quest's trail stayed with no quest on") end
+end)
+LC_CL.QuestState = qsWas
+LC_CL.SetTrail(nil)
+if not ok then return "guide trail: " .. tostring(e) end
+""")
+if err:
+    problems = (problems + "\n" if problems else "") + str(err)
+# every job's pay beside its experience on the board (the owner, 19 November), and the admin's button that copies the
+# pay of every job: drawn for an admin only, it asks the server, and the answer goes on the clipboard with a click
+err = L.execute(r"""
+local was = { vgui, util.JSONToTable, net.Start, net.SendToServer, SetClipboardText, surface.PlaySound }
+local ok, e = pcall(function()
+    local texts, started, copied, clicks = {}, {}, nil, 0
+    local function P()
+        local t = {}
+        return setmetatable(t, { __index = function(_, k)
+            if string.sub(k, 1, 2) == "lc" or string.sub(k, 1, 1) == "_" then return nil end
+            if k == "SetText" then return function(self, s) rawset(self, "_text", tostring(s)) texts[#texts + 1] = tostring(s) end end
+            if k == "IsValid" then return function() return true end end
+            if k == "GetWide" or k == "GetTall" then return function() return 380 end end
+            return function() return P() end
+        end })
+    end
+    vgui = { Create = function() return P() end, GetKeyboardFocus = function() return nil end }
+    net.Start = function(n) started[#started + 1] = n end
+    net.SendToServer = function() end
+    SetClipboardText = function(t) copied = t end
+    surface.PlaySound = function() clicks = clicks + 1 end
+    local function Board(admin)
+        texts = {}
+        LC_CL.QuestBoardCopy = nil
+        util.JSONToTable = function() return { board = "Operations", faction = "resistance", active = false, traits = {}, wait = 0, admin = admin,
+            postings = {
+                { id = 1, title = "Steal a crate", desc = "x", reward = 35, limit = 480, taken = 0, max = 3, credits = { 15, 25 }, fund = { 15, 15 } },
+                { id = 2, title = "Hunt headcrabs", desc = "x", reward = 40, limit = 600, taken = 0, max = 3, credits = { 0, 0 } },
+                { id = 3, title = "Patrol", desc = "x", reward = 30, limit = 300, taken = 0, max = 3, credits = { 10, 10 } } } } end
+        net._q = { 1 }
+        net["recv_lcq_board"]()
+    end
+    local function Has(prefix) for _, t in ipairs(texts) do if string.sub(t, 1, #prefix) == prefix then return true end end return false end
+    Board(nil)
+    if not Has("35 XP, 15-25 credits, fund +15   |") then error("a job's line doesn't show its credits and its fund share: " .. table.concat(texts, " / ")) end
+    if not Has("30 XP, 10 credits   |") then error("a job's line doesn't show its credits") end
+    if not Has("40 XP   |") then error("a job that pays no credits shows more than its experience") end
+    for _, t in ipairs(texts) do if string.find(t, "0 credits", 1, true) == 1 or string.find(t, " 0 credits", 1, true) then error("a line says 0 credits: " .. t) end end
+    if Has("Copy to clipboard") or LC_CL.QuestBoardCopy then error("the copy button was drawn for a player who is not an admin") end
+    Board(true)
+    local copy = LC_CL.QuestBoardCopy
+    if not (copy and Has("Copy to clipboard")) then error("the copy button wasn't drawn for an admin") end
+    started = {}
+    rawget(copy, "DoClick")()
+    if started[1] ~= "lcq_paylist" then error("the copy button didn't ask the server: " .. tostring(started[1])) end
+    util.JSONToTable = function() return { text = "Job pay on rp_c18_ug, 2026-11-19 12:00\nResistance | Steal a crate | +35 XP | 15-25 credits | fund +15" } end
+    net._q = { 1 }
+    net["recv_lcq_paylist"]()
+    if not (copied and string.find(copied, "Resistance | Steal a crate", 1, true)) then error("the list didn't go on the clipboard") end
+    if clicks ~= 1 then error("copying should make one click, made " .. clicks) end
+    LC_CL.CloseHub()
+end)
+vgui, util.JSONToTable, net.Start, net.SendToServer, SetClipboardText, surface.PlaySound = was[1], was[2], was[3], was[4], was[5], was[6]
+LC_CL.QuestBoardCopy = nil
+if not ok then return "job pay on the board: " .. tostring(e) end
+""")
+if err:
+    problems = (problems + "\n" if problems else "") + str(err)
+# the parade's march: the first piece this game has is played, the server is told which, and it stops when told
+err = L.execute(r"""
+local ok, e = pcall(function()
+    local think = hook.t.Think.LivingCityParadeMarch
+    if not think then error("no march hook") end
+    sound = sound or {}
+    file = file or {}
+    local was = { sound.PlayFile, file.Exists, net.Start, net.WriteString, net.SendToServer, _globals.lc_parade_music, _globals.lc_parade_music_at, _globals.lc_parade_music_pos }
+    local played, told, stopped, vol = {}, {}, 0, nil
+    local function channel()
+        local ch = { state = 1 }
+        function ch:GetState() return self.state end
+        function ch:SetVolume(v) vol = v end
+        function ch:GetVolume() return vol or 0 end
+        function ch:EnableLooping() end
+        function ch:Play() end
+        function ch:SetPan() end
+        function ch:Stop() stopped = stopped + 1 end
+        function ch:IsValid() return true end
+        return ch
+    end
+    sound.PlayFile = function(path, flags, cb) played[#played + 1] = path cb(channel()) end
+    file.Exists = function(p) return p == "sound/music/hl2_song20_submix0.mp3" end
+    net.Start = function() end
+    net.WriteString = function(x) told[#told + 1] = x end
+    net.SendToServer = function() end
+    think()
+    if #played ~= 0 or LC_CL.ParadeMarch() then error("a march with no parade") end
+    _globals.lc_parade_music = "music/mine.mp3|music/hl2_song22_combinetheme3.mp3|music/hl2_song20_submix0.mp3"
+    _globals.lc_parade_music_at = CurTime()
+    _globals.lc_parade_music_pos = Vector(100, 0, 0)
+    think()
+    if played[1] ~= "sound/music/hl2_song20_submix0.mp3" then error("it did not play the first piece this game has: " .. tostring(played[1])) end
+    if told[1] ~= "music/hl2_song20_submix0.mp3" then error("the server was not told which piece: " .. tostring(told[1])) end
+    think()
+    if #played ~= 1 then error("the march was started twice") end
+    if not (vol and vol > 0) then error("next to the column the march is silent: " .. tostring(vol)) end
+    _globals.lc_parade_music_pos = Vector(90000, 0, 0)
+    for _ = 1, 200 do think() end
+    if not (vol and vol < 0.01) then error("far from the column the march is still heard: " .. tostring(vol)) end
+    -- a fight, then on again: from the beginning
+    _globals.lc_parade_music = ""
+    think()
+    if LC_CL.ParadeMarch() then error("the march went on after the server stopped it") end
+    _globals.lc_parade_music = "music/mine.mp3|music/hl2_song22_combinetheme3.mp3|music/hl2_song20_submix0.mp3"
+    _globals.lc_parade_music_at = CurTime() + 1
+    think()
+    if #played ~= 2 then error("the march did not start again from the beginning: " .. #played) end
+    -- none of the pieces here: nothing plays, and the server hears that
+    _globals.lc_parade_music = ""
+    think()
+    file.Exists = function() return false end
+    _globals.lc_parade_music = "music/mine.mp3"
+    _globals.lc_parade_music_at = CurTime() + 2
+    think()
+    if #played ~= 2 or told[#told] ~= "none" then error("with none of the pieces: " .. #played .. " " .. tostring(told[#told])) end
+    _globals.lc_parade_music = ""
+    think()
+    sound.PlayFile, file.Exists, net.Start, net.WriteString, net.SendToServer = was[1], was[2], was[3], was[4], was[5]
+    _globals.lc_parade_music, _globals.lc_parade_music_at, _globals.lc_parade_music_pos = was[6], was[7], was[8]
+end)
+if not ok then return "parade march: " .. tostring(e) end
+""")
+if err:
+    problems = (problems + "\n" if problems else "") + str(err)
+import re as _re
+_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+_mods = os.path.join(_root, "gamemodes", "livingcity", "gamemode", "modules")
+_sv = open(os.path.join(_mods, "server", "sv_livingcity_strangedreams.lua"), encoding="utf-8").read()
+_cl = open(os.path.join(_mods, "client", "cl_livingcity_strangedreams.lua"), encoding="utf-8").read()
+_tab = _sv[_sv.index("LC.DreamSurfaces = {"):_sv.index("function LC.DreamSurface(")]
+for _n in sorted(set(_re.findall(r'= \{ "([a-z0-9_]+)"', _tab))):
+    if not os.path.exists(os.path.join(_root, "materials", "livingcity", "dreams", _n + ".jpg")):
+        problems = (problems + "\n" if problems else "") + "dream ground '%s' has no picture in materials/livingcity/dreams/" % _n
+    if '"%s"' % _n not in _cl:
+        problems = (problems + "\n" if problems else "") + "dream ground '%s' has no material in cl_livingcity_strangedreams.lua" % _n
 print(problems or "no client errors")
 print("zone fills drawn:", filled, "thick edges drawn:", beams)
 ok = not problems and filled >= 2 and beams > 0

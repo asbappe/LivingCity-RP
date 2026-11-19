@@ -82,7 +82,7 @@ if SERVER then
         local phys = self:GetPhysicsObject()
         if IsValid(phys) then phys:EnableMotion(false) end
         -- (a moment later: the editor seats the chair on the floor after it spawns)
-        timer.Simple(0.5, function() if IsValid(self) then pcall(MakeLamp, self) end end)
+        timer.Simple(0.5, function() if IsValid(self) then LC.Try(MakeLamp, self) end end)
     end
 
     function ENT:SetLamp(on)

@@ -6,7 +6,7 @@
       - Neutral dreams: the same, after 2 Neutral dreams.
       - Nightmares and propaganda dreams: only a citizen with Exemplary
         standing (lc_dream_skip_standing, 400), the city's favoured.
-    Chosen per kind in F2 > Me (More) > My dreams (also C > Settings > Shared dreams, or /dream skip happy,
+    Chosen per kind in F2 > Dreams and survival (also C > Settings > Shared dreams, or /dream skip happy,
     /dream skip neutral, /dream skip nightmare, /dream skip propaganda;
     the same again to dream them again). Whoever has earned it but hasn't
     chosen it sees a small note as the screen goes black for a dream.
@@ -71,14 +71,14 @@ function LC.DreamSkipHint(p, id, mood)
     if not cvOn:GetBool() or not IsValid(p) or not p.GetPData then return nil end
     local kind = Kind(id, mood)
     if Prefs(p)[kind] or not LC.DreamSkipEarned(p, kind) then return nil end
-    return string.format("You've earned the right to sit out %s dreams: F2 > Me (More) > My dreams.", KINDS[kind] == "Nightmares" and "nightmare" or string.lower(KINDS[kind]))
+    return string.format("You've earned the right to sit out %s dreams: F2 > Dreams and survival.", KINDS[kind] == "Nightmares" and "nightmare" or string.lower(KINDS[kind]))
 end
 
 local function Sync(p)
     local pr = Prefs(p)
     local earned = {}
     for k in pairs(KINDS) do earned[k] = LC.DreamSkipEarned(p, k) == true end
-    -- (lived, need: how far along they are, for F2 > Me > My dreams)
+    -- (lived, need: how far along they are, for F2 > Dreams and survival)
     local lived = { happy = LC.DreamsLivedOfKind(p, "happy"), neutral = LC.DreamsLivedOfKind(p, "neutral") }
     p:SetNW2String("lc_dream_sitout", util.TableToJSON({ on = pr, earned = earned, lived = lived, need = cvAfter:GetInt(), standing = cvStanding:GetInt() }) or "")
 end
@@ -117,7 +117,7 @@ hook.Add("PlayerInitialSpawn", "LivingCityDreamSkip", function(p)
 end)
 -- (standing moves all the time: what's earned is looked at again now and then)
 timer.Create("LivingCityDreamSkip", 30, 0, function()
-    for _, p in ipairs(player.GetAll()) do pcall(Sync, p) end
+    for _, p in ipairs(player.GetAll()) do LC.Try(Sync, p) end
 end)
 hook.Add("LivingCityNewCharacter", "LivingCityDreamSkip", function(p)
     if not IsValid(p) then return end

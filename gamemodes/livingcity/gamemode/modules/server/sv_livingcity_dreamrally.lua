@@ -144,7 +144,8 @@ function def.build(g, dream)
     local H = n * PLATE8_S / 2
     local x0, y0 = c.x - H, c.y - H
     for i = 1, n do for j = 1, n do
-        local f = Floor(g, PLATE8, x0 + (i - 0.5) * PLATE8_S, y0 + (j - 0.5) * PLATE8_S, top, (i + j) % 2 == 0 and Color(38, 40, 52) or Color(46, 48, 62), "models/debug/debugwhite")
+        local mat, look = LC.DreamSurface("rally", (i + j) % 2 == 0 and Color(38, 40, 52) or Color(46, 48, 62))
+        local f = Floor(g, PLATE8, x0 + (i - 0.5) * PLATE8_S, y0 + (j - 0.5) * PLATE8_S, top, look, mat)
         if IsValid(f) then f.lcKeepLook = true end
     end end
     g.c, g.top, g.H = c, top, H

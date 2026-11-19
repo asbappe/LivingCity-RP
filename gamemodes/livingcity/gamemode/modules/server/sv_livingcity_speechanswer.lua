@@ -26,7 +26,7 @@
 
     Recordings, if you make them: garrysmod/sound/livingcity/cubbage/, named for the line
     (answer_open1.wav, answer_ev_deaths1.wav, answer_close1.wav; .wav, .mp3 or .ogg). Every line:
-    VOICE_LINES.md. Without one, his words are in chat only.
+    VOICE_SCRIPTS.md. Without one, his words are in chat only.
 ]]
 
 if CLIENT then return end
@@ -68,8 +68,25 @@ LC.SpeechAnswerLines = {
     mood_afraid = "You've nothing to fear from her, she says. Tell that to the ones she's taken.",
     mood_restless = "She feels your restlessness, she says. Good. Let her feel it.",
     mood_content = "Rested, fed and calm, she says. Look around you. Does that look like anyone you know?",
+    attempt_open = "She's still here, she says. We noticed.",
+    attempt_martyr = "She thought of you in that moment. She thinks of you every time she cuts your rations, too.",
+    attempt_you = "A shot at her is a shot at you, is it? Her soldiers' shots at you were never shots at her.",
+    attempt_hero = "A soldier died for her. He was somebody's son before they took his face. Remember that tonight instead.",
+    attempt_guards = "Thank her guards loudly, she says. They'll be listening for who doesn't.",
+    attempt_enemy = "A coward, she says, from behind a wall of rifles and a sheet of glass.",
+    attempt_caught = "They got one of ours. She says there was no mercy. There was no trial either.",
+    attempt_hunt = "She's offering bread for a name. Remember who made you hungry enough to think about it.",
+    attempt_measures = "She never wanted checkpoints. She only built them, manned them and kept them.",
+    attempt_resolve = "She isn't going anywhere, she says. We'll see about that.",
     slogan = "Love your neighbour, hate the traitor, she says. We agree. Ask yourself who sold this city.",
     close = "That's all from me. Keep your heads down, your eyes open, and your door unlocked for a friend. We're closer than she thinks.",
+    -- after his closing, while the Resistance's fund has been under 50 credits for ten minutes (sv_livingcity_fundplea.lua)
+    fund_empty = "One more thing. Our fund is empty, and our fighters are going out with crowbars. If you have credits, bring them to the camp.",
+    fund_nothing = "Before I go. We have almost nothing left to arm anyone with. Whatever you can give, give it at the screen in our camp.",
+    fund_promises = "And one last word. I can't arm people with speeches. If you have credits to spare, the fund needs them.",
+    fund_crowbars = "One more thing. Some of ours are going out with crowbars, some with nothing at all. Give what you can, at the camp.",
+    -- not part of an answer: on Freq 7 a minute after a shelling (sv_livingcity_shelling.lua)
+    shelled = "They dropped headcrabs on our own people rather than face us. Remember that the next time she talks about order. Clear them out, and help your neighbours do the same.",
 }
 
 -- His answer to an address: a list of { id, words } (an opening, up to three answers, a closing).
@@ -86,10 +103,13 @@ function LC.SpeechAnswerCompose(pieces)
     local out = { { id = "open", words = L.open } }
     for _, p in ipairs(pieces or {}) do
         local id = istable(p) and p.id or p
-        if id ~= "open" and id ~= "close" and L[id] and #out < 4 then out[#out + 1] = { id = id, words = L[id] } end
+        if id ~= "open" and id ~= "close" and L[id] and #out < 4 and string.sub(tostring(id), 1, 5) ~= "fund_" then out[#out + 1] = { id = id, words = L[id] } end
     end
     if #out == 1 then out[#out + 1] = { id = "calm", words = L.calm } end
     out[#out + 1] = { id = "close", words = L.close }
+    -- the Resistance's fund low for a while: he ends by asking for it (sv_livingcity_fundplea.lua)
+    local plea = LC.FundPleaPiece and LC.FundPleaPiece("cubbage")
+    if plea and L[plea] then out[#out + 1] = { id = plea, words = L[plea] } end
     return out
 end
 
@@ -241,7 +261,7 @@ function LC.SpeechAnswerWatch(now)
 end
 
 timer.Create("LivingCitySpeechAnswer", 1, 0, function()
-    local ok, err = pcall(function()
+    local ok, err = LC.Try(function()
         LC.SpeechAnswerWatch(CurTime())
         LC.SpeechAnswerThink(CurTime())
     end)

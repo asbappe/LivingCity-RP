@@ -113,7 +113,7 @@ function LC.ManpowerSideOf(role) return ROLE_SIDE[role] end
 -- Spawns inside fn take nobody from a pool (characters with rules of their own).
 function LC.ManpowerFree(fn, ...)
     freeDepth = freeDepth + 1
-    local res = { pcall(fn, ...) }
+    local res = { LC.Try(fn, ...) }
     freeDepth = freeDepth - 1
     if not res[1] then error(res[2], 0) end
     return unpack(res, 2)
@@ -435,7 +435,7 @@ end)
 
 local lastTick, nextSend, nextSave = nil, 0, 0
 timer.Create("LivingCityManpower", 5, 0, function()
-    local ok, err = pcall(function()
+    local ok, err = LC.Try(function()
         local now = CurTime()
         local dt = lastTick and math.Clamp(now - lastTick, 0, 60) or 0
         lastTick = now

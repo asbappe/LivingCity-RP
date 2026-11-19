@@ -477,14 +477,15 @@ do
         n.salute = amount
         local e = n.e
         if not IsValid(e) or not e.ManipulateBoneAngles or not e.LookupBone then return end
-        local up, fore = e:LookupBone("ValveBiped.Bip01_R_UpperArm"), e:LookupBone("ValveBiped.Bip01_R_Forearm")
         -- (the owner, 13 November: "the salute poses in careless talk had their arms inside their torso".
         -- The arm went forward and in across the chest. Now it goes out to the side first (pitch, minus
         -- for the right arm), up level with the shoulder, and only the forearm folds in to the brow.)
-        if up then e:ManipulateBoneAngles(up, Angle(-70 * amount, -30 * amount, -20 * amount)) end
-        if fore then e:ManipulateBoneAngles(fore, Angle(0, -125 * amount, 0)) end
-        local hand = e:LookupBone("ValveBiped.Bip01_R_Hand")
-        if hand then e:ManipulateBoneAngles(hand, Angle(0, 0, -40 * amount)) end
+        -- (the numbers are the pose registry's, sh_livingcity_poses.lua "salute_talk": the upper arm -70 -30 -20,
+        -- the forearm 0 -125 0, the hand 0 0 -40, unless the owner has set it by hand with the Miscount Poser)
+        for name, a in pairs(LC.PoseBones("salute_talk")) do
+            local b = e:LookupBone(name)
+            if b then e:ManipulateBoneAngles(b, Angle(a.p * amount, a.y * amount, a.r * amount)) end
+        end
     end
     local function Rifle(g, n, on)
         if on and not IsValid(n.rifle) and LC.BattleLineHolding then n.rifle = LC.BattleLineHolding(g, n.e) end

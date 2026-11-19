@@ -95,6 +95,30 @@ function LC.IsAdministrator(ply)
     return IsValid(ply) and ply:IsPlayer() and Faction(ply) == "admin"
 end
 
+-- Nothing of the Combine's ever hurts the Administrator (the owner, 14 November: "the administrator CANNOT be
+-- arrested, shot at by combine, or retaliated against by them. They are immune to it all"; and her guards,
+-- told to kill a citizen, shot her because she stood in the way). The city's units and soldiers, her own
+-- guards, scanners, and the Combine's machines: their fire passes her by.
+local COMBINE_CLASS = { npc_combine_s = true, npc_metropolice = true, npc_cscanner = true, npc_clawscanner = true,
+    npc_manhack = true, npc_turret_floor = true, npc_turret_ceiling = true, npc_turret_ground = true, npc_rollermine = true,
+    npc_hunter = true, npc_strider = true, npc_helicopter = true, npc_combinegunship = true, npc_combinedropship = true,
+    npc_combine_camera = true, npc_stalker = true }
+function LC.IsCombineNPC(ent)
+    if not IsValid(ent) or ent:IsPlayer() then return false end
+    local st = LC.NPCs and LC.NPCs[ent]
+    if st then return st.role == "cop" or st.role == "soldier" or st.role == "scanner" end
+    return COMBINE_CLASS[ent:GetClass()] == true
+end
+function LC.AdministratorImmune(victim, dmg)
+    if not LC.IsAdministrator(victim) then return end
+    local a, i = dmg:GetAttacker(), dmg:GetInflictor()
+    if LC.IsCombineNPC(a) or LC.IsCombineNPC(i) then
+        dmg:SetDamage(0)
+        return true
+    end
+end
+hook.Add("EntityTakeDamage", "LivingCityAdministratorImmune", function(victim, dmg) return LC.AdministratorImmune(victim, dmg) end)
+
 -- The player who is the city's Administrator right now, or nil (nobody plays her).
 function LC.HumanAdministrator()
     for _, p in ipairs(player.GetAll()) do
@@ -1217,7 +1241,7 @@ function LC.FacingTick(now)
 end
 if timer and timer.Create then
     timer.Create("LivingCityFacingHolds", 0.3, 0, function()
-        local ok, err = pcall(LC.FacingTick, CurTime())
+        local ok, err = LC.Try(LC.FacingTick, CurTime())
         if not ok and LC.Error then LC.Error("facing holds", err) end
     end)
 end

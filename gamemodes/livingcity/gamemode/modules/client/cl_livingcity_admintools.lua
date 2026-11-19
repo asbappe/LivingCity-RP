@@ -74,6 +74,8 @@ end
 
 local function Build()
     local x, y
+    -- (every button sends the window again: it stays where it was scrolled, like the pockets)
+    local keep = IsValid(frame) and LC_CL.ScrollOf and LC_CL.ScrollOf(frame.lcScroll) or nil
     if IsValid(frame) then x, y = frame:GetPos() frame:Remove() end
     frame = vgui.Create("DFrame")
     if LC_CL.SetTheme then LC_CL.SetTheme(frame, "staff") end -- (out of character: cl_livingcity_theme.lua)
@@ -92,6 +94,7 @@ local function Build()
     who.OnSelect = function(_, _, _, id) state.target = id Do("refresh") end
 
     local scroll = vgui.Create("DScrollPanel", frame)
+    frame.lcScroll = scroll
     scroll:Dock(FILL)
 
     local f = LCF and LCF.Get and LCF.Get(state.faction or "")
@@ -142,6 +145,7 @@ local function Build()
     local so = Section(scroll, "Handy")
     local orow = Row(so)
     Btn(orow, "Clear wanted", function() Do("clearwanted") end, 110)
+    Btn(orow, "Out of custody", function() Do("free") end, 120)
     Btn(orow, "Feed and heal", function() Do("needs") end, 110)
     Btn(orow, "Clear conduct strikes", function() Do("pardon") end, 150)
     local ir = Row(so)
@@ -179,6 +183,57 @@ local function Build()
         fl:Dock(FILL)
         fl:SetWrap(true)
     end
+    -- staff tools that were only in the C menu (the owner, 19 November)
+    local st = Section(scroll, "Staff tools")
+    local sr2 = Row(st)
+    Btn(sr2, "Dreams (tonight's, wake everyone, put things back)", function() if LC_CL.DreamsMenu then LC_CL.DreamsMenu() end end, 300)
+    Btn(sr2, "Performance debugger", function() if LC_CL.PerfDebugMenu then LC_CL.PerfDebugMenu() end end, 160)
+    local sr3 = Row(st)
+    local lagOn = LC_CL.LagWatchOn and LC_CL.LagWatchOn()
+    Btn(sr3, lagOn and "Lag monitor: on (turn off)" or "Lag monitor: off (turn on)", function()
+        if LC_CL.SetLagWatch then LC_CL.SetLagWatch() end
+        timer.Simple(0.2, function() Do("refresh") end)
+    end, 200)
+    -- testing alone: what one player can't set off by themselves (superadmins; the owner, 18 November)
+    if state.solo then
+        local so2 = Section(scroll, "Testing alone  (what one player can't set off)")
+        local r1 = Row(so2)
+        Label(r1, "Stand-in:", 70)
+        Btn(r1, "Add a stand-in player (a bot)", function() Do("solo", "bot") end, 200)
+        local r2 = Row(so2)
+        Label(r2, "Her address:", 70)
+        if state.solo.address then
+            Btn(r2, "End the address", function() Do("solo", "endaddress") end, 130)
+        elseif state.solo.places then
+            Btn(r2, "Address now", function() Do("solo", "address") end, 110)
+            Btn(r2, "Assassination test (me: Fighter, and her address)", function() Do("solo", "assassin") end, 300)
+        else
+            Label(r2, "Place the speech stand and crowd points in the editor first.", 420)
+        end
+        local r3 = Row(so2)
+        Label(r3, "Collapse:", 70)
+        if state.solo.collapse == "" then
+            Btn(r3, "BLACK now", function() Do("solo", "black") end, 100)
+            Btn(r3, "Her last stand now", function() Do("solo", "stand") end, 140)
+        else
+            Btn(r3, "G-Man's next step", function() Do("solo", "next") end, 130)
+            Btn(r3, "Me as Barney", function() Do("solo", "mebarney") end, 100)
+            Btn(r3, "Me as Freeman", function() Do("solo", "mefreeman") end, 110)
+            Btn(r3, "End it", function() Do("solo", "off") end, 70)
+        end
+        local r4 = Row(so2)
+        Label(r4, "Events:", 70)
+        if state.solo.event ~= "" then
+            Btn(r4, "End the " .. state.solo.event, function() Do("solo", "endevent") end, 160)
+        else
+            for _, e in ipairs({ "parade", "drill", "raid", "sweep", "curfew", "lockdown" }) do Btn(r4, e, function() Do("solo", "event:" .. e) end, 66) end
+        end
+        local r5 = Row(so2)
+        Label(r5, "Also:", 70)
+        Btn(r5, "Secret endings menu", function() if LC_CL.EndingsMenu then LC_CL.EndingsMenu() end end, 150)
+        Btn(r5, "Leak the infestation now", function() Do("solo", "leak") end, 170)
+        Btn(r5, "Shell a district now", function() Do("solo", "shell") end, 150)
+    end
     -- territory: grow it now, for testing (superadmins; it grows along the path nodes)
     if state.superadmin then
         local tr = Row(cs)
@@ -198,6 +253,7 @@ local function Build()
     local rr2 = Row(sr2)
     local wipe = Btn(rr2, "Reset XP, credits and standing to 0", function() Do("resetme") end, 260)
     wipe:SetTextColor(Color(200, 60, 50))
+    if LC_CL.ScrollTo then LC_CL.ScrollTo(scroll, keep) end
 end
 
 net.Receive("lc_admintools", function()

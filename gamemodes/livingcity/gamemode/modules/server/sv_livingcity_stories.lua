@@ -474,7 +474,6 @@ LC.Chain{
                 desc = "The Union wants you to keep watch " .. Place(s, ply:GetPos()) .. ", then report what you saw to Civil Protection.",
                 stages = {
                     Goto(s, "Go to the marked lookout spot", 180),
-                    Hold(s, 15, "Stay near the spot for 15 seconds and watch who comes and goes", 260),
                     Count("used_npc", 1, "Report what you saw: find any Civil Protection unit and press E on him", Q.IsCopNPC),
                 },
             }
@@ -598,7 +597,8 @@ LC.Chain{
                 -- (the owner, 7 November: a choice popping up mid-fight took over the cursor in a zombie-infested
                 -- zone) no choice window here: a zombine in his uniform comes at you, the screen says who it must be,
                 -- and what you do decides it. Kill him (mercy), or walk out of the infestation (left).
-                local fight = Count("killed", 3, "Fight your way through: kill 3 zombies or headcrabs", function(_, _, npc) return Q.IsZombieNPC(npc) end)
+                local fight = Q.Spawns(Count("killed", 3, "Fight your way through: kill 3 zombies or headcrabs", function(_, _, npc) return Q.IsZombieNPC(npc) end),
+                    { role = "zombie", pos = z.pos, r = z.r or 400 })
                 -- (400 past its edge, and you've left the infestation: grown ground by its cells, LCZ.Near)
                 local him = {
                     kind = "count", event = "killed", need = 1, untallied = true,
@@ -724,7 +724,7 @@ LC.Chain{
 ------------------------------------------------------------------------
 
 LC.Chain{
-    id = "flock", name = "Father Grigori's Flock", special = "chaplain",
+    id = "flock", name = "Father Grigori's Flock", special = "chaplain", brings = false, -- (experience only: the owner, 19 November)
     unlock = function() return true end,
     start = "lost",
     endings = {
@@ -748,7 +748,19 @@ LC.Chain{
         mass = { num = 2, build = function(ply)
             local pos, r, where = Q.SafeHouse(ply)
             if not pos then return nil end
-            local hold = Hold(pos, 60, "Hold a secret mass: stay at the chapel for 60 seconds, out of sight of Civil Protection", math.max(220, r))
+            -- the faithful gather, and each is blessed in turn (E on each), out of the units' sight
+            local hold = Count("used_npc", 3, "Bless each of the faithful: press E on them", function(q, _, npc)
+                for _, f in ipairs(q.data.flock or {}) do if f == npc then return true end end
+                return false
+            end)
+            hold.mass = true
+            hold.poll = function(q, st)
+                if not q.data.flock then return end
+                local n = 0
+                for _, f in ipairs(q.data.flock or {}) do if IsValid(f) then n = n + 1 end end
+                if n < st.need then st.need = n end
+                if (st.got or 0) >= st.need then Q.Advance(q) end -- (nobody came, or one was lost on the way)
+            end
             hold.onEnter = function(q)
                 q.data.flock = {}
                 for _ = 1, 3 do
@@ -792,7 +804,7 @@ LC.Chain{
                 tick = function(q)
                     if q.data.seen or not IsValid(q.owner) then return end
                     local st = q.stages[q.stage]
-                    if st and st.kind == "hold" and LC.SeenBySecurity(q.owner, 900) then
+                    if st and st.mass and LC.SeenBySecurity(q.owner, 900) then
                         q.data.seen = true
                         Narrate(q, "Boots on the stairs: Civil Protection saw the mass. You're wanted for unlawful worship.")
                         LC.ReportCrime(q.owner, "Unlawful worship", 240)
@@ -930,8 +942,26 @@ local function FreePrisonerStage(text)
             for n, s in pairs(LC.NPCs) do if IsValid(n) and s.state == "jailed" and not s.questLock then npc = n break end end
             if not npc then
                 npc = Q.RandomCitizen()
-                if not npc or not LC.ArrestNPC(npc, nil) then return false end
+                if npc and not LC.ArrestNPC(npc, nil) then npc = nil end
             end
+            -- Nobody in the cells and nobody about to put there (a small city, or every cell taken): the
+            -- story brings its own prisoner, held in a cell. (The owner, 15 November, on The Man Inside:
+            -- "buggy as heck": it was called off the moment its way in was chosen, for want of a prisoner.)
+            if not npc then
+                local cells = LC.PointsOfKind("cell")
+                local cell = (LC.FreeCell and LC.FreeCell(nil)) or cells[1]
+                local made, mst
+                if cell then made, mst = Q.SpawnActor(q, "citizen", cell.pos) end
+                if IsValid(made) and mst then
+                    made:SetPos(cell.pos + Vector(0, 0, 4))
+                    if LC.FaceYaw and cell.yaw then LC.FaceYaw(made, cell.yaw) end
+                    if LC.Claim then LC.Claim(made, mst, cell) end
+                    mst.jailUntil = CurTime() + 900
+                    LC.OnNPCReachedCell(made, mst, CurTime())
+                    npc = made
+                end
+            end
+            if not npc then return false end
             Q.Lock(q, npc)
             q.data.target = npc
             st.npc = npc
@@ -1087,14 +1117,15 @@ local OPS = {}
 OPS[#OPS + 1] = function(ply)
     local s = Q.Spot(ply, 500, 2500)
     if not s then return nil end
-    local hold = Hold(s, 4, "Crouch at the dead drop for 4 seconds to leave the patrol schedule", 90, true)
+    local go = Q.GameGo(s, "Go to the dead drop (marked)", "drop", { pos = s }, 150)
+    local hold = Q.GameStage("Hide the patrol schedule: E on a marked hiding place, then crouch by it")
     hold.onDone = function(q)
         if LC.SeenBySecurity(q.owner, 800) then Suspect(q, q.owner, "A Civil Protection unit watched you crouch by that drainpipe. He'll wonder why.") end
     end
     return {
         title = "Leak the schedule", reward = 25, limit = 420,
         desc = "Leave tomorrow's patrol routes at a Resistance dead drop " .. Place(s, ply:GetPos()) .. ". Don't let other units see you.",
-        stages = { Goto(s, "Go to the dead drop (marked)", 150), hold },
+        stages = { go, hold },
     }
 end
 
@@ -1615,17 +1646,17 @@ LC.Chain{
             if #zones == 0 then return nil end
             local z = zones[math.random(#zones)]
             local go = Goto(z.pos, "Join the sweep team at the edge of anticitizen territory (marked)", math.max(500, (z.r or 300) + 300))
-            go.onEnter = function() if not LC.Skirmish and LC.StartCombineSweep then pcall(LC.StartCombineSweep, z) end end
+            go.onEnter = function() if not LC.Skirmish and LC.StartCombineSweep then LC.Try(LC.StartCombineSweep, z) end end
             local zr = (z.r or 300) + 800
             return {
                 title = "Proof", reward = 40, limit = 900,
                 desc = "You told the Resistance you're done with them. Overwatch wants proof: go in with the sweep team on their ground " .. Place(z.pos, ply:GetPos()) .. ", and put down two of their fighters.",
                 stages = {
                     go,
-                    Count("killed", 2, "Take down two of the Resistance's fighters there", function(_, _, npc)
+                    Q.Spawns(Count("killed", 2, "Take down two of the Resistance's fighters there", function(_, _, npc)
                         local st = LC.NPCs[npc]
                         return st ~= nil and st.role == "rebel" and IsValid(npc) and npc:GetPos():DistToSqr(z.pos) < zr * zr
-                    end),
+                    end), { role = "rebel", pos = z.pos, r = z.r or 300, arg = z }),
                 },
                 onFinish = function(q, success)
                     if not success then return end

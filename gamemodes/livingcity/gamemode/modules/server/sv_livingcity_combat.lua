@@ -56,6 +56,10 @@ local function Sees(npc, e)
 end
 
 -- A better shot, able to duck and to fire on the move: once each.
+-- (Keep CAP_MOVE_SHOOT. The owner, 14 November: "They also backpedal when shooting at me which is a nice touch
+-- ... please make sure that stays". Backing away from an enemy who is too close is Half-Life 2's own doing, not
+-- scripted here; this capability is what lets them go on firing while they do it. LC.CombatMoveShoot says so.)
+LC.CombatMoveShoot = true
 function LC.CombatTune(npc, st)
     if st.cmbTuned then return false end
     st.cmbTuned = true
@@ -99,7 +103,7 @@ function LC.CombatTick(now)
     if not cvOn:GetBool() then return end
     for npc, st in pairs(LC.NPCs or {}) do
         if IsValid(npc) and LC.CombatRoles[st.role] and npc:Health() > 0 then
-            local ok, err = pcall(LC.CombatStep, npc, st, now)
+            local ok, err = LC.Try(LC.CombatStep, npc, st, now)
             if not ok and LC.Error then LC.Error("combat", err) end
         end
     end
@@ -125,7 +129,7 @@ end
 hook.Add("EntityTakeDamage", "LivingCityCombat", function(victim, dmg)
     local st = IsValid(victim) and LC.NPCs and LC.NPCs[victim]
     if not st or not LC.CombatRoles[st.role] then return end
-    local ok, err = pcall(LC.CombatHurt, victim, st, dmg:GetAttacker(), dmg:GetDamage(), CurTime())
+    local ok, err = LC.Try(LC.CombatHurt, victim, st, dmg:GetAttacker(), dmg:GetDamage(), CurTime())
     if not ok and LC.Error then LC.Error("combat cover", err) end
 end)
 

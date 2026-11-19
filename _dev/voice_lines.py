@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
-"""Makes VOICE_LINES.md: every voice line the gamemode looks for, in one place, for the owner to record or
+"""Makes VOICE_SCRIPTS.md: every voice line the gamemode looks for, in one place, for the owner to record or
 generate (the owner, 10 November: "consolidate all the missing voice lines that still need to be recorded/
-generated ... all in a single document"). The lists come from the code itself (the announcer's triggers and
-tones, the radio's, the G-Man's collapse lines, every dream line), so it's never out of date: rerun it after
-adding lines. Never edit VOICE_LINES.md by hand.
+generated ... all in a single document"), written the way ElevenLabs wants each line. The lists come from the
+code itself (the announcer's triggers and tones, the radio's, the G-Man's collapse lines, every dream line), so
+it's never out of date: rerun it after adding lines. Never edit VOICE_SCRIPTS.md by hand.
+
+One file since 16 November (the owner: "We previously were using VOICE_SCRIPTS, what happened? please
+consolidate"): there used to be a second, VOICE_LINES.md, with the same lines as a plain checklist. It is no
+longer written; its layout is still built in memory, because the scripts are made from it.
 
     python3 _dev/voice_lines.py
 
@@ -29,7 +33,7 @@ def load_done():
     done = set()
     if os.path.exists(DONE):
         done |= {l.strip() for l in open(DONE, encoding="utf-8") if l.strip() and not l.startswith("#")}
-    for name in ("VOICE_LINES.md", "VOICE_SCRIPTS.md"):
+    for name in ("VOICE_LINES.md", "VOICE_SCRIPTS.md"):  # (the first is gone since 16 November; an old copy's ticks are still read once)
         path = os.path.join(ROOT, name)
         if not os.path.exists(path):
             continue
@@ -37,7 +41,7 @@ def load_done():
             if line.lower().startswith("| [x] |"):
                 done |= set(_TICK.findall(line.split("|")[2] + "|" + (line.split("|")[3] if line.count("|") > 4 else "")))
     with open(DONE, "w", encoding="utf-8") as f:
-        f.write("# Recorded already (kept by python3 _dev/voice_lines.py; tick a row [x] in VOICE_LINES.md or VOICE_SCRIPTS.md, or add a file name here)\n")
+        f.write("# Recorded already (kept by python3 _dev/voice_lines.py; tick a row [x] in VOICE_SCRIPTS.md, or add a file name here)\n")
         for n in sorted(done):
             f.write(n + "\n")
     return done
@@ -72,10 +76,68 @@ def file_stem(token, tone=False):
         n = re.sub(r"_(firm|stern|furious)$", "", n)
     return n
 
+# Lines added after the server's list was made are not on it, so "not missing" used to read as "the server has
+# it": a new line was ticked as done, and her new lines never showed at all (16 November). _dev/voice_seen.txt
+# keeps what there was when the server's list (_dev/voice_missing.txt) came in: a row with a name that is not
+# in it is new, and stays unticked until the owner sends a newer list.
+SEEN = os.path.join(HERE, "voice_seen.txt")
+NEW_ROWS = [0]
+
+def row_names(line):
+    cells = line.split("|")
+    toks = _TICK.findall("|".join(cells[2:4]))
+    return {x for t in toks if not t.startswith("npc/") and "<" not in t for x in (file_stem(t), file_stem(t, True))}
+
+def missing_hash():
+    import hashlib
+    if not os.path.exists(SERVER_MISSING):
+        return ""
+    return hashlib.sha1(open(SERVER_MISSING, "rb").read()).hexdigest()
+
+def load_seen():
+    """What there was when the server's list came in (None: unknown, every row is taken as known)."""
+    if os.path.exists(SEEN):
+        lines = open(SEEN, encoding="utf-8").read().split("\n")
+        if lines and lines[0].strip() == "# list " + missing_hash():
+            return {l.strip() for l in lines[1:] if l.strip()}
+        if lines and lines[0].startswith("# list "):
+            return None  # (a newer list from the server: it covers everything there is now; save_seen writes it)
+    # the first time: the checklist as it was when the server's list was last put in the repository
+    import subprocess
+    try:
+        h = subprocess.run(["git", "log", "-1", "--format=%H", "--", "_dev/voice_missing.txt"], cwd=ROOT, capture_output=True, text=True).stdout.strip()
+        old = subprocess.run(["git", "show", h + ":VOICE_LINES.md"], cwd=ROOT, capture_output=True, text=True).stdout
+    except Exception:
+        return None
+    if not h or not old:
+        return None
+    names = set()
+    for line in old.split("\n"):
+        if line.startswith("| ["):
+            names |= row_names(line)
+    return names
+
+def save_seen(seen, lines):
+    """Kept for next time. With a newer list from the server (seen is None), everything there is now is covered."""
+    if seen is None:
+        seen = set()
+        for line in lines:
+            if line.startswith("| ["):
+                seen |= row_names(line)
+    with open(SEEN, "w", encoding="utf-8") as f:
+        f.write("# list " + missing_hash() + "\n" + "\n".join(sorted(seen)) + "\n")
+
+_SEEN = []
+def seen_set():
+    if not _SEEN:
+        _SEEN.append(load_seen())
+    return _SEEN[0]
+
 def tick_server(lines, miss, folder_of):
     """Rows ticked from the server's list. folder_of(heading) gives a section's folder (or None: leave it)."""
     if miss is None:
         return lines
+    seen = seen_set()
     out, folder = [], None
     for line in lines:
         if line.startswith("## "):
@@ -83,7 +145,10 @@ def tick_server(lines, miss, folder_of):
         elif folder and (line.startswith("| [ ] |") or line.lower().startswith("| [x] |")):
             cells = line.split("|")
             line = "| [ ] |" + line[len("| [ ] |"):]  # (the server's word decides, over an older tick)
-            if folder == "announce":
+            names = row_names(line)
+            if seen is not None and names and not names <= seen:
+                NEW_ROWS[0] += 1  # (added since the server's list: it was never asked about this one)
+            elif folder == "announce":
                 trig = _TICK.findall(cells[2])
                 if trig and trig[0] not in miss["overwatch/"] and trig[0] not in miss["administrator/"]:
                     line = "| [x] |" + line[len("| [ ] |"):]
@@ -108,7 +173,7 @@ def scripts_folder(heading):
     for key, f in (("administrator's announcements", "administrator/"), ("what named citizens say", "citizens/"), ("what units say", "units/"),
                    ("not real clips", "gman/"), ("cubbage", "cubbage/"), ("overwatch's announcements", "overwatch/"), ("## the radio", "radio/"),
                    ("the dreams' lines", "dreams/voice/"), ("citizens showing the way", "citizens/"), ("information clerk", "clerk/"),
-                   ("the old-timer", "oldtimer/"), ("machines", "machines/"), ("the resistance's people", "resistance/")):
+                   ("the old-timer", "oldtimer/"), ("machines", "machines/"), ("the resistance's people", "resistance/"), ("## the colonel", "colonel/")):
         if key in h:
             return f
     return None
@@ -181,10 +246,14 @@ def more_scripts(doc, rows=()):
     out += ["", "## Citizens showing the way", "", "Folder: `citizens/`. The citizen voices (man and woman) above: paste each line twice.", "",
             "| Done | Man's file | Woman's file | When | Paste |", "|---|---|---|---|---|"]
     out += [l for l in s5 if l.startswith("| [")]
-    for num, title in ((6, "The Citizen Information clerk"), (7, "The old-timer"), (8, "Machines")):
+    for num, title in ((6, "The Citizen Information clerk"), (7, "The old-timer"), (8, "Machines"), (9, "The Colonel")):
         sx = section(doc, num)
         out += ["", "## " + title, "", intro(sx), "", "| Done | File | When | Paste |", "|---|---|---|---|"]
         out += [l for l in sx if l.startswith("| [")]
+    # the G-Man's real clips: nothing to record, kept here for reference (where each file goes)
+    s3 = section(doc, 3)
+    if s3:
+        out += ["", "## The G-Man: his real clips (nothing to record: where each file goes)", ""] + s3
     return out
 
 def summary(miss):
@@ -246,6 +315,7 @@ WORDS = {
     "breakout": ("Prisoners break out", "Alert: unauthorized departure from detention. All residents, report sightings to Civil Protection.", "Some people have run from where they belong. If you see them, tell a unit. Now."),
     "overwatch_drop": ("Overwatch soldiers are dropped in", "Overwatch deployment in progress. Residents, clear the landing zone.", "Overwatch soldiers are arriving. Make way for them."),
     "block_raided": ("A housing block is raided", "Housing block inspection in progress. Remain in your unit.", "We're checking one of our housing blocks. Stay in your room and it'll be quick."),
+    "shelled": ("Headcrab canisters come down on a district the Resistance hold (as they come in)", "Biotic ordnance deployed on an anticivil sector. Residents, remain indoors. Do not approach the canisters.", "Some of our city was given over to troublemakers. We are taking it back. Stay indoors, and keep well away from the canisters."),
     "territory_grew": ("The Resistance gains ground", "Alert: anticivil activity expanding. Avoid unregistered areas.", "Some troublemakers are spreading out. Don't go near them, and don't listen to them."),
     "train_arrival": ("A train arrives", "Attention: new arrivals at the platform. Proceed to Civil Intake.", "Welcome to the city, all you new faces! Civil Intake is just this way."),
     "welcome": ("Someone joins the server (just for them)", "Attention, new resident: report to Civil Intake for registration.", "Hello, and welcome to the city! You're going to love it here."),
@@ -257,6 +327,8 @@ WORDS = {
     "black_fallen": ("She's dead (always Overwatch's: she can't announce her own death)", "Administrator biosignal lost. City administration suspended. All units, fall back to the Nexus.", None),
     "black_crushed": ("The uprising is crushed (time ran out)", "Incursion contained. Sociostability restoring. Remain indoors.", "It is over. The city is mine again, and I will remember every one of you."),
     "suppressor_down": ("The suppression device is destroyed", "Alert: Nexus suppression device offline. All units, contain and repair.", "They have silenced the Nexus. It changes nothing."),
+    "hunt": ("A hunt for whoever tried to kill her begins: Dispatch to the units, heard on their radios only, in sound only (never the PA, no words on screen); give it the unit lines' radio sound", "All units: an attempt was made on the Administrator's life. The suspect is at large. Take them alive.", None),
+    "attempt": ("An attempt on her life at her address, three to five minutes after it (hers with nobody playing her, Overwatch's with a player in the post)", "Attention, all units: an attempt has been made on the life of the City Administrator. The Administrator is secure. All sectors are sealed. Locate and apprehend the assailant.", "Citizens, this is your Administrator. A moment ago someone in this city tried to kill me. I am alive. I am unharmed. And I am not going anywhere. Go to your homes and let Civil Protection do its work. I will speak to you all very soon, and I will have a great deal to say."),
     "speech_soon": ("Her address is called: the city must gather (Overwatch's when a player Administrator calls it from her tablet; hers when the city gives it)", "Attention, all residents: the City Administrator will address the city. Report to the assembly point immediately. Attendance is mandatory.", "My dear citizens, I am going to speak to you all in a few minutes. Come and gather in front of the stand. I would so hate to miss anyone."),
 }
 
@@ -275,7 +347,22 @@ RADIO = [
     ("freq7_incursion", "Freq 7 warns: the Combine are in rebel ground", "\"Combine in our territory. Everyone to your posts.\""),
     ("freq7_lockdown", "Freq 7 warns: lockdown", "\"Lockdown. Stay put, stay quiet, wait it out.\""),
     ("freq7_dropship", "Freq 7 warns: a dropship", "\"Dropship incoming. Find cover.\""),
+    # (the Resistance's fund under 50 credits for ten minutes: at most every twenty minutes, one take of these at random;
+    # sv_livingcity_fundplea.lua. A fourth item names the file: they are takes of one trigger)
+    ("freq7_fund", "Freq 7 asks for the Resistance's fund (under 50 credits for ten minutes; at most every twenty minutes). Tired, pleading, plain", "\"This is Frequency 7. The fund is empty. Our fighters are going out with crowbars. If you have credits, take them to the camp.\"", "freq7_fund1.wav"),
+    ("freq7_fund", "The same, another take", "\"Frequency 7. We can't arm anyone on promises. Whatever credits you can spare, the fund needs them.\"", "freq7_fund2.wav"),
+    ("freq7_fund", "The same, another take", "\"This is Frequency 7. There's nothing left for guns or rounds. Give what you can at the screen in the camp.\"", "freq7_fund3.wav"),
+    ("freq7_fund", "The same, another take", "\"Frequency 7. Some of ours are going out with nothing but a crowbar. Every credit helps. Bring it to the camp.\"", "freq7_fund4.wav"),
 ]
+
+
+def CUB_WHAT(i):
+    """What one of Colonel Cubbage's lines answers (section 12 and the scripts)."""
+    if i.startswith("fund_"):
+        return "(after his closing, while the Resistance's fund is under 50 credits for ten minutes; tired, pleading)"
+    if i == "shelled":
+        return "(on Freq 7, a minute after the Combine shell a district with headcrab canisters; angry, steady)"
+    return {"open": "(his opening)", "close": "(his closing)"}.get(i, "her `speech_%s`" % i)
 
 
 def dump():
@@ -300,6 +387,8 @@ for i, q in ipairs(LC.QuizQuestions or {}) do W("quizq", "quiz_q" .. i, tostring
 for id, l in pairs(LC.StreetLines or {}) do W("street", id, l[2], l[1], l[3] or l[1]) end
 for id, l in pairs(LC.UnitLines or {}) do W("unitline", id, l[2], l[1], l[3] or l[1], table.concat(l[4] or {}, ", ")) end
 for _, t in ipairs(LC.SpeechPieces or {}) do W("speech", t.id, t.part, t.when, t.words) end
+for _, q in ipairs(LC.AdminQuestions or {}) do W("question", q.key, q.text, "res") end
+for _, q in ipairs(LC.AdminQuestionsNobody or {}) do W("question", q.key, q.text, "nobody") end
 for key, g in pairs(LC.CollapseGmanLines or {}) do
     local cv = GetConVar(g[1])
     W("gman", key, g[1], cv and cv:GetString() or "", g[2])
@@ -332,6 +421,10 @@ def main():
     PART = {"open": "Her speech, the opening", "close": "Her speech, the closing", "event": "Her speech, on what happened lately: when",
             "state": "Her speech, on the state of the city: when", "mood": "Her speech, on the city's mood: when"}
     SPEECH_WORDS.update({"speech_" + r[1]: (PART.get(r[2], "Her speech") + ("" if r[2] in ("open", "close") else " " + r[3]), r[4]) for r in rows if r[0] == "speech"})
+    # her questions to whoever tried to kill her (sv_livingcity_adminquestioning.lua): hers only, said in the cells
+    QWHEN = {"res": "The city's own Administrator questions whoever tried to kill her, in the cells: asked of a member of the Resistance",
+             "nobody": "The city's own Administrator questions whoever tried to kill her, in the cells: asked of anyone else"}
+    SPEECH_WORDS.update({"question_" + r[1]: (QWHEN.get(r[3], "Her questioning"), r[2]) for r in rows if r[0] == "question"})
     triggers = [(r[1], int(r[2]), r[3]) for r in rows if r[0] == "trigger"]
     tiers = [r[1] for r in rows if r[0] == "tier"]
     gman = {r[1]: (r[2], r[3], r[4]) for r in rows if r[0] == "gman"}
@@ -384,10 +477,11 @@ def main():
         "|---|---|---|---|",
     ]
     extra = {r[2] for r in rows if r[0] == "extra" and r[1] == "radio"}
-    for trig, when, words in RADIO:
+    for row in RADIO:
+        trig, when, words = row[:3]
         if extra and trig not in extra:
             continue
-        name = "freq7_1.wav" if trig == "freq7" else ("freq7_song_<anything>.ogg" if trig == "freq7_song" else "%s1.wav" % trig)
+        name = row[3] if len(row) > 3 else ("freq7_1.wav" if trig == "freq7" else ("freq7_song_<anything>.ogg" if trig == "freq7_song" else "%s1.wav" % trig))
         doc.append("| [ ] | `%s` | %s | %s |" % (name, when, words))
         count += 1
     doc += [
@@ -463,7 +557,8 @@ def main():
            "Which machine")
     def colonel_when(i):
         for k, v in (("greet", "Greeting (by how well he knows you)"), ("job_", "What he needs (end of his greeting)"), ("thanks_", "You helped"),
-                     ("intel_", "What's the word?"), ("debrief_", "Debrief me"), ("whisper_", "Heard anything strange?"), ("ask", "What's happening to you? (by how ghostly he looks)")):
+                     ("intel_", "What's the word?"), ("debrief_", "Debrief me"), ("whisper_", "Heard anything strange?"), ("ask", "What's happening to you? (by how ghostly he looks)"),
+                     ("fund_", "The Resistance's fund under 50 credits for ten minutes: said instead of his greeting (tired, pleading)")):
             if i.startswith(k): return v
         return "Between answers"
     rs = sorted([r for r in rows if r[0] == "colonel"], key=lambda r: r[1])
@@ -525,7 +620,7 @@ def main():
             doc.append("| [ ] | `%s1.wav` | %s | %s |" % (r[1], r[2], r[3]))
             count += 1
     order12 = [r[1] for r in rows if r[0] == "speech"]
-    cub = sorted([r for r in rows if r[0] == "cubbage"], key=lambda r: (0 if r[1] == "open" else (2 if r[1] == "close" else 1),
+    cub = sorted([r for r in rows if r[0] == "cubbage"], key=lambda r: (0 if r[1] == "open" else (3 if r[1].startswith("fund_") else (2 if r[1] == "close" else 1)),
                                                                        order12.index(r[1]) if r[1] in order12 else 99, r[1]))
     doc.extend(["", "## 12. Colonel Cubbage answers her speeches", "",
                 "Odessa Cubbage, alive and well, at the Resistance's camp a few minutes after her address: defiant, dry, a speaker who enjoys "
@@ -534,7 +629,7 @@ def main():
                 "the words show in chat.",
                 "", "| Done | File | Answers | Says |", "|---|---|---|---|"])
     for r in cub:
-        doc.append("| [ ] | `answer_%s1.wav` | %s | %s |" % (r[1], {"open": "(his opening)", "close": "(his closing)"}.get(r[1], "her `speech_%s`" % r[1]), r[3]))
+        doc.append("| [ ] | `answer_%s1.wav` | %s | %s |" % (r[1], CUB_WHAT(r[1]), r[3]))
         count += 1
     res = sorted([r for r in rows if r[0] == "resistance"], key=lambda r: r[1])
     doc.extend(["", "## 13. The Resistance's people", "",
@@ -549,10 +644,11 @@ def main():
             count += 1
     done = load_done()
     doc[:] = tick_server(tick(doc, done), load_missing(), lines_folder)
-    text = "\n".join(doc).rstrip("\n") + "\n"
-    with open(OUT, "w", encoding="utf-8") as f:
-        f.write(text)
-    print("wrote VOICE_LINES.md: %d lines" % count)
+    # One file since 16 November (the owner: "We previously were using VOICE_SCRIPTS ... please consolidate"):
+    # VOICE_LINES.md, the same lines as a plain checklist, is no longer written. Its layout is still built here,
+    # in memory, because the scripts are made from it; an old copy on disk is removed (its ticks were read above).
+    if os.path.exists(OUT):
+        os.remove(OUT)
     scripts(doc, street, units, group_of, order, done, rows)
 
 
@@ -563,8 +659,13 @@ GMAN_TAG = "[slow, breathy, unsettling calm, odd pauses and emphasis]"
 def scripts(doc, street, units, group_of, order, done=frozenset(), rows=()):
     """VOICE_SCRIPTS.md: the same lines as text to paste into ElevenLabs, with voice descriptions."""
     out = ["# Voice scripts: what to paste into ElevenLabs", "",
-           "**Made from the code by `python3 _dev/voice_lines.py`: never edit it by hand.** The lines of `VOICE_LINES.md` that are generated speech "
-           "(named citizens, units, the Administrator, and the G-Man's made-up lines), written the way ElevenLabs wants them, with a voice description for each voice.", "",
+           "**Every voice line the gamemode looks for, in this one file** (the owner, 10 November; one file since 16 November). "
+           "**Made from the code by `python3 _dev/voice_lines.py`: never edit it by hand**, rerun it. Each line is written the way ElevenLabs wants it, "
+           "with a voice description for each voice. Tick them off as you go.", "",
+           "- **Formats:** `.wav` (signed 16-bit PCM, 44100 Hz, mono), `.mp3` or `.ogg`. More than one take: `...1`, `...2` and so on; one is picked at random.",
+           "- **Different words from the ones suggested?** Put them in a `.txt` file with the same name beside the recording (`curfew1.txt` beside `curfew1.wav`): that is what shows in chat or on screen.",
+           "- **After adding files:** press FastDL sync on the host panel, then change the map (players download new sounds when they join).",
+           "- **Without a recording** the moment is silent (or Half-Life 2's own voice, for Overwatch, with `lc_announce_stock` 1), and the words still show.", "",
            "## How to use it", "",
            "- **Model:** Eleven v4 (or v3). A direction in **square brackets** changes how what follows is said: `[whispers] Careful.` It is not read out. "
            "Put it just before the words it changes. Your own wording works (`[tired, flat]`), as do reactions (`[sighs]`, `[exhales]`, `[short laugh]`) and `[pause]`. "
@@ -715,7 +816,7 @@ def scripts(doc, street, units, group_of, order, done=frozenset(), rows=()):
     cub = [r for r in rows if r[0] == "cubbage"]
     if cub:
         order12 = [r[1] for r in rows if r[0] == "speech"]
-        cub.sort(key=lambda r: (0 if r[1] == "open" else (2 if r[1] == "close" else 1), order12.index(r[1]) if r[1] in order12 else 99, r[1]))
+        cub.sort(key=lambda r: (0 if r[1] == "open" else (3 if r[1].startswith("fund_") else (2 if r[1] == "close" else 1)), order12.index(r[1]) if r[1] in order12 else 99, r[1]))
         out += ["", "## Colonel Cubbage answers her speeches", "",
                 "Folder: `cubbage/`. Odessa Cubbage, alive and well, answering her address from the Resistance's camp: a well-spoken, defiant "
                 "older man who enjoys taking her apart. Voice: `A British man in his fifties, rich and theatrical baritone, educated, dry and "
@@ -723,9 +824,9 @@ def scripts(doc, street, units, group_of, order, done=frozenset(), rows=()):
                 "studio recording.` (Describes a kind of voice: no game or actor named.)", "",
                 "| Done | File | Answers | Paste |", "|---|---|---|---|"]
         for r in cub:
-            what = {"open": "(his opening)", "close": "(his closing)"}.get(r[1], "her `speech_%s`" % r[1])
-            out.append("| [ ] | `answer_%s1` | %s | [defiant, dry, a speaker enjoying himself] %s |" % (r[1], what, r[3]))
-            batch.append(("cubbage", "livingcity/cubbage/answer_" + r[1] + "1", "[defiant, dry, a speaker enjoying himself] " + r[3]))
+            tag = "[tired, pleading, plain]" if r[1].startswith("fund_") else ("[angry, steady, low]" if r[1] == "shelled" else "[defiant, dry, a speaker enjoying himself]")
+            out.append("| [ ] | `answer_%s1` | %s | %s %s |" % (r[1], CUB_WHAT(r[1]), tag, r[3]))
+            batch.append(("cubbage", "livingcity/cubbage/answer_" + r[1] + "1", tag + " " + r[3]))
             n += 1
     res = sorted([r for r in rows if r[0] == "resistance"], key=lambda r: r[1])
     if res:
@@ -740,10 +841,16 @@ def scripts(doc, street, units, group_of, order, done=frozenset(), rows=()):
                 out.append("| [ ] | `%s_%s1` | [tired, wary, plain] %s |" % (r[1], g, r[3]))
                 n += 1
     out += more_scripts(doc, rows)
+    NEW_ROWS[0] = 0
     out[:] = tick_server(tick(out, done), load_missing(), scripts_folder)
     # what's left, near the top (after "How to use it")
     at = next((i for i, l in enumerate(out) if l.startswith("## How to use it")), 1)
-    out[at:at] = summary(load_missing())
+    block = summary(load_missing())
+    if NEW_ROWS[0] and block:
+        k = max(i for i, l in enumerate(block) if l.startswith("- **")) + 1 if any(l.startswith("- **") for l in block) else len(block)
+        block[k:k] = ["- **added since the server's list was made**: %d more rows (unticked below; run `lc_voice_missing` again after uploading and they are checked too)" % NEW_ROWS[0]]
+    out[at:at] = block
+    save_seen(seen_set(), doc)
     with open(os.path.join(os.path.dirname(OUT), "VOICE_SCRIPTS.md"), "w", encoding="utf-8") as fh:
         fh.write("\n".join(out).rstrip("\n") + "\n")
     print("wrote VOICE_SCRIPTS.md: %d lines to paste" % n)

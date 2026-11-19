@@ -140,8 +140,23 @@ local function ApplyFog(scale)
     render.FogColor(r * dark, g * dark, b * dark)
     return true
 end
-hook.Add("SetupWorldFog", "LivingCityWeather", function() return ApplyFog(1) end)
-hook.Add("SetupSkyboxFog", "LivingCityWeather", function(scale) return ApplyFog(scale) end)
+-- A secret ending's night (the Harpies, dreamt or not: sv_livingcity_endings.lua sends night): a black fog close round
+-- you, whatever the weather (the owner, 15 November: "it is full bright, there is no dark fog").
+function LC_CL.EndingNight()
+    local S = LC_CL.Ending and LC_CL.Ending()
+    return S ~= nil and S.client ~= nil and S.client.night == true and S.phase ~= "reset"
+end
+local function NightFog(scale)
+    if not LC_CL.EndingNight() then return nil end
+    render.FogMode(MATERIAL_FOG_LINEAR)
+    render.FogStart(120 * (scale or 1))
+    render.FogEnd(1300 * (scale or 1))
+    render.FogMaxDensity(0.97)
+    render.FogColor(2, 3, 5)
+    return true
+end
+hook.Add("SetupWorldFog", "LivingCityWeather", function() return NightFog(1) or ApplyFog(1) end)
+hook.Add("SetupSkyboxFog", "LivingCityWeather", function(scale) return NightFog(scale) or ApplyFog(scale) end)
 
 -- Rain: streaks falling around you, when there's open sky above you.
 local drops = {}
@@ -243,7 +258,10 @@ local TRACKS = {
     -- occurrence and add some variety"; whichever this install has)
     calm = { "music/hl2_song19.mp3", "music/hl2_song10.mp3", "music/hl2_song2.mp3", "music/hl2_song26.mp3", "music/hl2_song27_trainstation2.mp3",
         "music/hl2_song0.mp3", "music/hl2_song1.mp3", "music/hl2_song8.mp3", "music/hl2_song11.mp3", "music/hl2_song17.mp3",
-        "music/hl2_song23_suitsong3.mp3", "music/hl2_song32.mp3", "music/hl1_song11.mp3", "music/hl1_song20.mp3" },
+        "music/hl2_song23_suitsong3.mp3", "music/hl2_song32.mp3", "music/hl1_song20.mp3" },
+    -- Half-Life's short triumphant theme: only for a big win, the Administrator's fall (the owner, 15 November: "please
+    -- save it for administrator being defeated or some other big victorious happening"; it was among the calm pieces)
+    victory = { "music/hl1_song11.mp3" },
     tense = { "music/hl2_song13.mp3", "music/hl2_song26_trainstation1.mp3", "music/hl2_song30.mp3", "music/hl2_song33.mp3",
         "music/hl2_song28.mp3" },
     -- Ravenholm's and the other eerie pieces: only by an infestation (the owner, 13 November: "ravenholm
@@ -302,7 +320,7 @@ LC_CL.MusicMood = Mood
 -- errors on some builds (the error that started with the music). Ask it directly.
 local function Live(ch)
     if ch == nil then return false end
-    local ok = pcall(function() return ch:GetState() end)
+    local ok = LC.Try(function() return ch:GetState() end)
     return ok
 end
 
@@ -354,6 +372,14 @@ local function PlayMood(mood)
         end
     end)
 end
+
+-- A big win (the server says: the Administrator has fallen or fled, sv_livingcity_collapse.lua): the victory sting, at once.
+net.Receive("lc_victory_music", function()
+    if not cvMusic:GetBool() then return end
+    if Live(playing) then Stop(false) end
+    PlayMood("victory")
+    nextTrack = CurTime() + math.random(QUIET_MIN, QUIET_MAX)
+end)
 
 local lastEvent = ""
 local lastMood = nil

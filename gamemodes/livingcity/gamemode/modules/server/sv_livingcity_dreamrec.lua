@@ -351,7 +351,7 @@ local function Hook(name, fn)
     HOOKS[#HOOKS + 1] = name
     hook.Add(name, "LivingCityDreamRec", function(...)
         if not R then return end
-        local ok, err = pcall(fn, ...)
+        local ok, err = LC.Try(fn, ...)
         if not ok and LC.Error then LC.Error("dream recorder", err) end
         -- (never a return value: the recorder watches, it decides nothing)
     end)
@@ -365,7 +365,7 @@ local function Stop(why)
     timer.Remove("LivingCityDreamRec")
     if r.started then
         Add("end", why or "the dream ended")
-        pcall(Flush, "end", why or "")
+        LC.Try(Flush, "end", why or "")
     end
     R = nil
     for _, name in ipairs(HOOKS) do hook.Remove(name, "LivingCityDreamRec") end
@@ -388,7 +388,7 @@ local function Tick()
         if R.over > 12 then Stop("the dream was gone") return end
     end
     if R.dream then
-        local ok, err = pcall(function()
+        local ok, err = LC.Try(function()
             You()
             local st = DreamState()
             Diff("state", R.state, st, R.firstState)
@@ -404,7 +404,7 @@ local function Tick()
         end
     end
     if R.ticks % 2 == 0 then
-        local ok, err = pcall(Flush)
+        local ok, err = LC.Try(Flush)
         if not ok and LC.Error then LC.Error("dream recorder", err) end
     end
 end
@@ -536,7 +536,7 @@ function LC.DreamRecBegin(p, id)
     if noticeWas then
         noticeMine = function(ply, kind, title, text, secs, ...)
             if R and (ply == nil or ply == R.ply or (istable(ply) and table.HasValue(ply, R.ply))) then
-                pcall(Add, "notice", "[" .. tostring(kind) .. (secs and (", " .. tostring(secs) .. "s") or "") .. "] " .. tostring(title) .. ": " .. tostring(text))
+                LC.Try(Add, "notice", "[" .. tostring(kind) .. (secs and (", " .. tostring(secs) .. "s") or "") .. "] " .. tostring(title) .. ": " .. tostring(text))
             end
             return noticeWas(ply, kind, title, text, secs, ...)
         end

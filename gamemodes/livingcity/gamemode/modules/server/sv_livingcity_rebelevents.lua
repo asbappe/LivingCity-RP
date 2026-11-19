@@ -400,7 +400,7 @@ end
 ------------------------------------------------------------------------
 
 timer.Create("LivingCityRebelEvents", 2, 0, function()
-    local ok, err = pcall(function()
+    local ok, err = LC.Try(function()
         if not LC.Running then return end
         local now = CurTime()
         local sk = LC.Skirmish

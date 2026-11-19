@@ -7,7 +7,15 @@
     health for lc_close_call_recover minutes, 10), and you don't remember the
     fight or who started it (play it that way: no going back for revenge).
     A used close call comes back after lc_close_call_regen hours (3) of that
-    person's life. The death after the last one is the end of them.
+    person's life. The death after the last one hangs by a thread (the owner,
+    17 November: "roll a dice as to whether [they die] or not if no close
+    calls left"; "please build this into the standard for all deaths with no
+    close calls remaining ... The only exception being infested and stalkers
+    just die when they die, no one would save them or medically treat them"):
+    a roll of 1 to 100, shown on their dark screen (cl_livingcity_life.lua).
+    lc_last_chance (50) is the chance in 100 to pull through: they wake in
+    the infirmary as after a close call, with none used. Fail it and that is
+    the end of them. 0: no roll, that death is the end, as it was.
 
     Some deaths are the end whatever's left: a stalker's (death is the only
     way out), and stepping into the energizer. Retiring someone yourself
@@ -39,6 +47,7 @@ local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
 local cvCalls      = CreateConVar("lc_close_calls", "3", FLAGS, "Close calls each person gets: deaths that aren't the end (0: every death is final)")
 local cvRegen      = CreateConVar("lc_close_call_regen", "3", FLAGS, "Hours of a person's life before a used close call comes back (0: never)")
 local cvRecover    = CreateConVar("lc_close_call_recover", "10", FLAGS, "Minutes someone is still recovering after a close call (20 less health)")
+local cvLast       = CreateConVar("lc_last_chance", "50", FLAGS, "Dying with no close calls left: the chance in 100 to pull through, on a roll they watch (0: no roll, that death is the end)")
 local cvInheritPct = CreateConVar("lc_inherit_pct", "25", FLAGS, "Percent of a person's savings the next one inherits")
 local cvInheritMax = CreateConVar("lc_inherit_max", "200", FLAGS, "Most credits the next person inherits")
 local cvLevyAt     = CreateConVar("lc_levy_threshold", "2000", FLAGS, "Credits above which the Union takes a levy (0: no levy)")
@@ -83,6 +92,47 @@ function LC.DeathIsFinal(ply)
     return LC.CloseCallsLeft(ply) <= 0
 end
 
+-- No close calls left, and they are dying: the roll. nil when this death gets none (the setting at 0, close
+-- calls not counted here, a stalker or one of the infested, or an end that is final whatever is left: an
+-- execution, the energizer). Else { roll = 1..100, need = the least that lives, lives, secs = how long the
+-- roll plays on their screen }.
+LC.LastChanceSecs = 11.5
+LC.LastChanceRoll = LC.LastChanceRoll or function() return math.random(1, 100) end
+function LC.LastChanceApplies(ply)
+    if math.Clamp(cvLast:GetInt(), 0, 100) <= 0 or cvCalls:GetInt() <= 0 then return false end
+    if not IsValid(ply) or ply.lcEndOfLife then return false end
+    return not ((LC.PlayerIsStalker and LC.PlayerIsStalker(ply)) or (LC.PlayerIsZombie and LC.PlayerIsZombie(ply)))
+end
+function LC.LastChance(ply)
+    if not LC.LastChanceApplies(ply) then return nil end
+    local pct = math.Clamp(cvLast:GetInt(), 0, 100)
+    local roll = math.Clamp(math.floor(tonumber(LC.LastChanceRoll()) or 1), 1, 100)
+    local need = 101 - pct
+    return { roll = roll, need = need, lives = roll >= need, secs = LC.LastChanceSecs }
+end
+
+-- The roll played on the screen of someone still alive (her office, after an attempt on the Administrator).
+util.AddNetworkString("lc_last_chance")
+function LC.LastChanceShow(ply, dice, why)
+    if not (IsValid(ply) and dice) then return end
+    net.Start("lc_last_chance")
+    net.WriteUInt(dice.roll, 7)
+    net.WriteUInt(dice.need, 7)
+    net.WriteBool(dice.lives and true or false)
+    net.WriteFloat(dice.secs or LC.LastChanceSecs)
+    net.WriteString(why or "")
+    net.Send(ply)
+end
+
+-- They pulled through on the roll: as after a close call (the pockets gone, the infirmary, still recovering:
+-- PlayerSpawn below), but none is used up, for there was none.
+function LC.LastChanceSurvived(ply)
+    if LC.Inventory and LC.TakeItem then
+        for id, n in pairs(table.Copy(LC.Inventory(ply))) do LC.TakeItem(ply, id, n) end
+    end
+    ply.lcCloseCall = true
+end
+
 -- A close call: one fewer left, the pockets gone. The rest happens as they
 -- get up again (PlayerSpawn below). How many are left now.
 function LC.UseCloseCall(ply)
@@ -95,6 +145,25 @@ function LC.UseCloseCall(ply)
     ply.lcCloseCall = true
     local left = LC.CloseCallsLeft(ply)
     hook.Run("LivingCityCloseCall", ply, left)
+    return left
+end
+
+-- A close call lived through (the Administrator badly hit at her address and got out by her guards:
+-- sv_livingcity_adminsecurity.lua): one fewer left, counted as any other, but nobody died: the pockets stay and
+-- nobody wakes in the infirmary. Recovering starts at once (the same 20 less health, for as long).
+-- How many are left now.
+function LC.CloseCallSurvived(ply)
+    local used = (tonumber(ply:GetPData("lc_close_used", 0)) or 0) + 1
+    ply:SetPData("lc_close_used", used)
+    ply:SetPData("lc_close_at", LC.LivedSeconds and LC.LivedSeconds(ply) or 0)
+    local left = LC.CloseCallsLeft(ply)
+    hook.Run("LivingCityCloseCall", ply, left)
+    local already = ply:GetNW2Float("lc_recovering_until", 0) > CurTime()
+    ply:SetNW2Float("lc_recovering_until", CurTime() + cvRecover:GetFloat() * 60)
+    if not already then
+        ply:SetMaxHealth(math.max(30, ply:GetMaxHealth() - RECOVER_HP))
+        ply:SetHealth(math.min(ply:Health(), ply:GetMaxHealth()))
+    end
     return left
 end
 
@@ -134,7 +203,7 @@ hook.Add("PlayerSpawn", "LivingCityCloseCall", function(ply)
             if not IsValid(ply) then return end
             Notice(ply, "bad", "A close call",
                 "You wake up in the infirmary, sore and empty-handed: what was in your pockets is gone. You don't remember the fight, or who started it; leave it be. " ..
-                (left > 0 and string.format("%d close call%s left.", left, left == 1 and "" or "s") or "That was the last one: the next death is the end of you."), 12)
+                (left > 0 and string.format("%d close call%s left.", left, left == 1 and "" or "s") or "No close calls left."), 12)
         end)
     end
     -- still recovering: a little less to give (after the faction sets the body up)

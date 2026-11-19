@@ -59,7 +59,7 @@
 
     Recordings, if you make them: garrysmod/sound/livingcity/colonel/,
     named for the line (greet1.wav, whisper_base1.wav). Every line:
-    VOICE_LINES.md section 9 (LC.ColonelLines). Only the player he's talking
+    VOICE_SCRIPTS.md (LC.ColonelLines). Only the player he's talking
     to hears them. Without one, nothing: he's in your head.
 
     Setting: lc_colonel (1; 0 and he's gone).
@@ -117,26 +117,67 @@ LC.ColonelLines = {
     whisper_water = "There's a priest who'd swallow anything holy. Feed him the master core and pray for rain. A lot of rain.",
     whisper_standup = "Keep the city red for three quarters of an hour straight. The crowd starts wanting a show.",
     whisper_none = "Nothing you haven't heard from me already.",
+    -- in place of his greeting while the Resistance's fund has been under 50 credits for ten minutes (sv_livingcity_fundplea.lua)
+    fund_empty = "The fund is empty. Our fighters are going out with crowbars. Give what you can at the screen in the camp.",
+    fund_promises = "I can't arm anyone on promises. If you have credits, the fund needs them.",
+    fund_rounds = "There's nothing left for rounds. Not a credit. Whatever you can spare, put it in at the screen.",
+    fund_crowbar = "Another fighter just went out with nothing but a crowbar. Every credit at that screen helps.",
 }
-local WHISPERS = { "harpies", "plane", "hard", "shalom", "fire", "base", "marrow", "bloom", "water", "standup" }
+local WHISPERS ={ "harpies", "plane", "hard", "shalom", "fire", "base", "marrow", "bloom", "water", "standup" }
 local JOBS = { "medicine", "tags", "unit" }
 
 ------------------------------------------------------------------------
 -- Where he is (by the quartermaster, or in the middle of rebel ground), and whether he's "there"
 ------------------------------------------------------------------------
 
-local function Quartermaster()
+local function Quartermasters()
+    local out = {}
     for npc, st in pairs(LC.NPCs or {}) do
-        if IsValid(npc) and st.quartermaster and not st.medic and npc:Health() > 0 then return npc end
+        if IsValid(npc) and st.quartermaster and not st.medic and npc:Health() > 0 then out[#out + 1] = npc end
     end
+    return out
 end
 
-function LC.ColonelSpot()
-    local qm = Quartermaster()
-    if IsValid(qm) then
-        local pos = qm:GetPos() + qm:GetRight() * 80
-        return pos, qm:GetAngles().y
+-- A place to stand beside the quartermaster: his right, his left, then behind him, the first with
+-- nothing of the map between it and him, set down on the floor.
+local function Beside(qm)
+    local from = qm:GetPos() + Vector(0, 0, 40)
+    local right = qm:GetRight()
+    local back = qm.GetForward and qm:GetForward() * -1 or right
+    for _, off in ipairs({ right * 80, right * -80, back * 80 }) do
+        local to = from + off
+        local tr = util.TraceLine({ start = from, endpos = to, mask = MASK_SOLID_BRUSHONLY })
+        if not (tr and tr.Hit) then
+            local pos = qm:GetPos() + off
+            return LC.GroundAt and LC.GroundAt(pos + Vector(0, 0, 20)) or pos
+        end
     end
+    return qm:GetPos() + right * 80
+end
+
+-- Where he stands, and he stays there (the owner, 14 November: "he's teleporting around": he was
+-- put 80 units to the quartermaster's right every two seconds, so each step and turn of the
+-- quartermaster's moved him). The editor's own point for him first (Point: Resistance Colonel's
+-- spot; he's drawn on players' screens only, so a physgun has nothing to hold: the point is how
+-- he's moved). Else a spot beside a quartermaster, kept (LC.ColonelAnchor) for as long as any
+-- quartermaster is within LC.ColonelLeash of it; else the middle of rebel ground.
+LC.ColonelLeash = 350
+function LC.ColonelSpot()
+    local pt = LC.PointsOfKind and LC.PointsOfKind("colonel")[1]
+    if pt and pt.pos then LC.ColonelAnchor = nil return pt.pos, pt.yaw or 0 end
+    local qms = Quartermasters()
+    local a = LC.ColonelAnchor
+    if a then
+        for _, qm in ipairs(qms) do
+            if qm:GetPos():DistToSqr(a.pos) < LC.ColonelLeash * LC.ColonelLeash then return a.pos, a.yaw end
+        end
+    end
+    local qm = qms[1]
+    if IsValid(qm) then
+        LC.ColonelAnchor = { pos = Beside(qm), yaw = qm:GetAngles().y }
+        return LC.ColonelAnchor.pos, LC.ColonelAnchor.yaw
+    end
+    LC.ColonelAnchor = nil
     for _, z in ipairs(LC.ZonesOfKindShared and LC.ZonesOfKindShared("rebel") or {}) do
         local c = z.box and ((z.box.mins + z.box.maxs) * 0.5) or z.pos
         if c then return Vector(c.x, c.y, (z.box and z.box.mins.z) or c.z), 0 end
@@ -331,6 +372,7 @@ function LC.OpenColonel(ply)
         Save(ply)
     end
     SendGhost(ply)
+    g = LC.FundPleaLine and LC.FundPleaLine(ply, "colonel") or g -- (the fund low for a while: he asks for it instead; sv_livingcity_fundplea.lua)
     Say(ply, g)
     local job = JobLine(ply)
     Menu(ply, LC.ColonelLines[g] .. (job and ("\n\n" .. job) or ""))

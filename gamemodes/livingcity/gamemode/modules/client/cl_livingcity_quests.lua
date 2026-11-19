@@ -47,15 +47,44 @@ end
 -- The board, built into F4's Jobs tab (cl_livingcity_hub.lua). Its buttons shut the window, as the board's did.
 local function Close() if LC_CL.CloseHub then LC_CL.CloseHub() end end
 
+-- What a job pays, beside its experience (the owner, 19 November: every job lists its credits, and what it puts in the
+-- Resistance's fund): ", 10 credits", ", 10-30 credits, fund +5-15". Nothing for none.
+local function Range(r)
+    local a, b = math.floor(tonumber(r[1]) or 0), math.floor(tonumber(r[2]) or 0)
+    return a == b and tostring(a) or (a .. "-" .. b)
+end
+local function PayText(p)
+    local s = ""
+    if istable(p.credits) and (tonumber(p.credits[2]) or 0) > 0 then s = s .. ", " .. Range(p.credits) .. " credits" end
+    if istable(p.fund) and (tonumber(p.fund[2]) or 0) > 0 then s = s .. ", fund +" .. Range(p.fund) end
+    return s
+end
+LC_CL.QuestPayText = PayText
+
 local function BuildBoard(parent, data)
     local head = vgui.Create("DPanel", parent)
     head:Dock(TOP)
     head:SetTall(40)
+    -- (an admin's only, as the server says: the pay of every job the server knows, as plain text to paste somewhere and
+    -- weigh. The owner, 19 November: "can you please add a 'copy to clipboard' button that shows only for admins?")
+    local copy
+    if data.admin then
+        copy = vgui.Create("DButton", head)
+        copy:Dock(RIGHT)
+        copy:DockMargin(0, 8, 8, 8)
+        copy:SetWide(130)
+        copy:SetText("Copy to clipboard")
+        copy.DoClick = function()
+            net.Start("lcq_paylist")
+            net.SendToServer()
+        end
+    end
+    LC_CL.QuestBoardCopy = copy
     head.Paint = function(self, w, h)
         draw.SimpleText(string.upper(data.board or ""), "DermaLarge", 12, 4, ACCENT)
         local t = data.traits or {}
         draw.SimpleText(Trait("Loyalty", t.loyalty) .. "     " .. Trait("Sympathy", t.sympathy) .. "     " .. Trait("Corruption", t.corruption),
-            "DermaDefault", w - 12, 14, DIM, TEXT_ALIGN_RIGHT)
+            "DermaDefault", w - 12 - (copy and 146 or 0), 14, DIM, TEXT_ALIGN_RIGHT)
     end
 
     local scroll = vgui.Create("DScrollPanel", parent)
@@ -248,7 +277,7 @@ local function BuildBoard(parent, data)
         meta:Dock(TOP)
         meta:DockMargin(0, 6, 0, 0)
         meta:SetTextColor(p.violent and RED or ACCENT)
-        meta:SetText(string.format("%d XP   |   %d minutes%s%s", p.reward or 0, math.ceil((p.limit or 300) / 60),
+        meta:SetText(string.format("%d XP%s   |   %d minutes%s%s", p.reward or 0, PayText(p), math.ceil((p.limit or 300) / 60),
             p.violent and "   |   violent" or "", (not p.story and p.taken > 0) and string.format("   |   %d/%d on it", p.taken, p.max) or ((not p.story and (p.max or 1) > 1) and string.format("   |   up to %d together", p.max) or "")))
         meta:SizeToContents()
 
@@ -292,6 +321,14 @@ net.Receive("lcq_board", function()
     if not data then return end
     data.postings = data.postings or {}
     if LC_CL.HubFill then LC_CL.HubFill("jobs", function(p) BuildBoard(p, data) end) end
+end)
+
+-- The list an admin asked for: on the clipboard, with a click and not a word.
+net.Receive("lcq_paylist", function()
+    local data = ReadCompressed()
+    if not (data and isstring(data.text)) then return end
+    SetClipboardText(data.text)
+    surface.PlaySound("buttons/button14.wav")
 end)
 
 ------------------------------------------------------------------------
@@ -527,7 +564,10 @@ hook.Add("HUDPaint", "LivingCityQuestsTracker", function()
     draw.RoundedBox(0, x, y, 3, h, ACCENT)
     draw.SimpleText(string.upper(state.board or "") .. string.format("   step %d/%d", state.step or 1, state.steps or 1), "DermaDefault", x + 12, y + 8, DIM)
     draw.SimpleText(state.title or "", "DermaDefaultBold", x + 12, y + 24, INK)
-    draw.SimpleText(string.FormattedTime(left, "%02i:%02i"), "DermaDefault", x + bw - 10, y + 8, left < 60 and RED or DIM, TEXT_ALIGN_RIGHT)
+    -- (a job with no time limit has no clock: a leader's summons, sv_livingcity_adminplot.lua)
+    if not state.nolimit then
+        draw.SimpleText(string.FormattedTime(left, "%02i:%02i"), "DermaDefault", x + bw - 10, y + 8, left < 60 and RED or DIM, TEXT_ALIGN_RIGHT)
+    end
 
     local ly = y + 44
     for _, l in ipairs(lines) do

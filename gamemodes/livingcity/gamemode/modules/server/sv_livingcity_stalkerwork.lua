@@ -228,6 +228,7 @@ hook.Add("LivingCityNewCharacter", "LivingCityStalkerWork", function(ply) Unbuil
 local function GameGo(pos, text, kind, opts)
     local go = Goto(pos, text, 200)
     go.onDone = function(q) if IsValid(q.owner) then LC.JobGameStart(q.owner, kind, q, opts) end end
+    go.game, go.gameOpts = kind, opts -- (what the job board reads its pay from: LC.PostingPay)
     return go
 end
 local function GameStage(text) return Count("game_done", 1, text) end
@@ -281,10 +282,40 @@ end
 -- toward the hands, from the stalker's feet. lc_broom_hold tunes it in game.
 local cvBroom = CreateConVar("lc_broom_hold", "34 -6 2 -35 0 0", bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED),
     "Where a stalker holds the push broom, from its feet: forward left up pitch yaw roll (roll 180 turns it over)")
-local function BroomHold()
+local function BroomSetting()
     local v = {}
     for w in string.gmatch(cvBroom:GetString(), "%S+") do v[#v + 1] = tonumber(w) or 0 end
     return Vector(v[1] or 34, v[2] or -6, v[3] or 2), Angle(v[4] or -35, v[5] or 0, v[6] or 0)
+end
+-- (the setting is the built-in; a hold the owner has set by hand on the Miscount Poser's mannequin wins,
+-- and may hang the broom from a hand's own bone instead of the feet: sh_livingcity_poses.lua "stalker_sweep")
+if LC.PosePropBuilt then
+    LC.PosePropBuilt("stalker_sweep", "broom", function()
+        local pos, ang = BroomSetting()
+        return { pos = pos, ang = ang }
+    end)
+end
+-- Its place and angle, and the bone it hangs from ("": the stalker's feet).
+local function BroomHold()
+    local pos, ang = BroomSetting()
+    local hold = LC.PoseProp and LC.PoseProp("stalker_sweep", "broom", { pos = pos, ang = ang })
+    if hold and hold.tuned then return hold.pos, hold.ang, hold.bone end
+    return pos, ang, ""
+end
+LC.StalkerBroomHold = BroomHold -- (for tests)
+
+-- What the broom hangs from: the stalker itself (its feet), or one of its bones when the owner set one.
+local function Hang(e, ply, bone)
+    if e.lcHangBone == bone then return end
+    e.lcHangBone = bone
+    local id = bone ~= "" and ply.LookupBone and ply:LookupBone(bone) or nil
+    if id and id >= 0 and e.FollowBone then
+        e:FollowBone(ply, id)
+    else
+        if e.RemoveEffects and EF_FOLLOWBONE then e:RemoveEffects(EF_FOLLOWBONE) end -- (no longer carried by a bone)
+        e:SetParent(nil)
+        e:SetParent(ply)
+    end
 end
 
 -- Something held in the stalker's hands (the push broom), out in front wherever it goes.
@@ -296,7 +327,9 @@ local function InHand(ply, model)
     e:Spawn()
     if e.SetSolid then e:SetSolid(SOLID_NONE) end
     e:SetParent(ply)
-    local pos, ang = BroomHold()
+    e.lcHangBone = ""
+    local pos, ang, bone = BroomHold()
+    Hang(e, ply, bone)
     if e.SetLocalPos then e:SetLocalPos(pos) end
     if e.SetLocalAngles then e:SetLocalAngles(ang) end
     return e
@@ -310,7 +343,8 @@ local function SwayBroom(g)
     local vel = ply.GetVelocity and ply:GetVelocity()
     local moving = vel ~= nil and vel:Length2DSqr() > 20 * 20
     local sweeping = (ply.lcSweepingUntil or 0) > CurTime()
-    local pos, ang = BroomHold()
+    local pos, ang, bone = BroomHold()
+    Hang(e, ply, bone)
     if moving or sweeping then
         local s = math.sin(CurTime() * (sweeping and 7 or 5))
         pos = pos + Vector(s * (sweeping and 14 or 8), 0, 0)
@@ -338,6 +372,7 @@ end
 local SCRUB_N = 6
 local SCRUB_WAIT = 75 -- seconds without a sweep before a patch nobody can find comes to the stalker
 LC.JobGameDefine("scrub", {
+    payRange = { 0, 0 }, -- (a stalker's work pays nothing of its own)
     start = function(g)
         g.title = g.opts.prisoner and "The cell block floor" or "The holding floor" -- (a prisoner's work detail sweeps it too: sv_livingcity_sentence.lua)
         g.stains, g.swept, g.lastSweep = {}, 0, CurTime()
@@ -401,6 +436,7 @@ end)
 local CELL = "models/items/combine_rifle_ammo01.mdl"
 local SEAM = "models/props_lab/tpplug.mdl"
 LC.JobGameDefine("assemble", {
+    payRange = { 0, 0 },
     start = function(g)
         g.title = "The frame"
         g.frame = LC.StalkerEnergizer(g.ply, g.opts.pos, 0)
@@ -500,14 +536,14 @@ local TechGone
 -- hiss of a welder), then go.
 function LC.StalkerTechnician(ply, pos)
     if not IsValid(ply) or not (LC.Spawners and LC.Spawners.cop) then return nil end
-    local ok, npc, st = pcall(LC.ManpowerFree, LC.Spawners.cop, pos) -- (a technician, not a street unit: never from the reserve)
+    local ok, npc, st = LC.Try(LC.ManpowerFree, LC.Spawners.cop, pos) -- (a technician, not a street unit: never from the reserve)
     if not (ok and IsValid(npc) and st) then return nil end
     st.unmanaged, st.questLock = true, true
     if LC.SetState then LC.SetState(npc, st, "event") end
     st.eventUntil = CurTime() + TECH_SECS
     LC.SetNPCStr(npc, "lc_pname", "Overwatch technician")
     npc.lcTechFor = ply
-    if LC.NPCCarry then pcall(LC.NPCCarry, npc, st, HarnessModel()) end
+    if LC.NPCCarry then LC.Try(LC.NPCCarry, npc, st, HarnessModel()) end
     if LC.Face then LC.Face(npc, ply:GetPos()) end
     local name = "LivingCityTech" .. npc:EntIndex()
     local working, ticks = false, 0
@@ -521,7 +557,7 @@ function LC.StalkerTechnician(ply, pos)
                 return
             end
             working = true
-            if LC.NPCDropCarry then pcall(LC.NPCDropCarry, npc, st) end -- (the harness goes on the stalker now)
+            if LC.NPCDropCarry then LC.Try(LC.NPCDropCarry, npc, st) end -- (the harness goes on the stalker now)
         end
         local behind = ply:GetPos() - ply:GetForward() * 38
         if npc:GetPos():DistToSqr(behind) > 60 * 60 then
@@ -543,7 +579,7 @@ TechGone = function(npc)
     timer.Remove("LivingCityTech" .. npc:EntIndex())
     local st = LC.NPCs and LC.NPCs[npc]
     if st then
-        if LC.NPCDropCarry then pcall(LC.NPCDropCarry, npc, st) end
+        if LC.NPCDropCarry then LC.Try(LC.NPCDropCarry, npc, st) end
         st.unmanaged, st.questLock, st.eventUntil = nil, nil, 0
     end
     if LC.StartLeaving and st then LC.StartLeaving(npc, st, false, "an Overwatch technician going back") else npc:Remove() end
@@ -572,15 +608,14 @@ LC.Chain{
             go.onEnter = function(q) if IsValid(q.owner) then q.data.tech = LC.StalkerTechnician(q.owner, pos) end end
             return {
                 title = "Processing", reward = 0, limit = 600,
-                desc = "They brought you up from below with a number where your name was, and a voice that can only scream. Report where you're kept: a technician is waiting there with the harness. Stand still while they finish you.",
+                desc = "They brought you up from below with a number where your name was, and a voice that can only scream. Report where you're kept: a technician is waiting there with the harness.",
                 stages = {
                     Then(go, function(q)
                         if IsValid(q.owner) and not IsValid(q.data.tech) then q.data.tech = LC.StalkerTechnician(q.owner, pos) end
-                        Narrate(q, "The Overwatch technician has been waiting for you, the harness in their hands. They step round behind you.")
-                    end),
-                    Then(Hold(pos, 20, "Stand still while the technician fits the harness", 160), function(q)
-                        TechGone(q.data.tech)
-                        Narrate(q, "Cold metal on your spine. A click. Your legs are yours to walk with, and nothing else.")
+                        -- (it's done to you as you arrive: no standing about for it)
+                        local tech = q.data.tech
+                        timer.Simple(5, function() TechGone(tech) end)
+                        Narrate(q, "The technician steps round behind you. Cold metal on your spine. A click. Your legs are yours to walk with, and nothing else.")
                     end),
                 },
             }
@@ -626,6 +661,7 @@ LC.Chain{
             local go = Goto(site, "Go to the frame they've set up, beside the power transformer", 200)
             go.onEnter = function(q) if IsValid(q.owner) then LC.StalkerEnergizer(q.owner, site, 0, yaw, partner) end end
             go.onDone = function(q) if IsValid(q.owner) then LC.JobGameStart(q.owner, "assemble", q, { pos = site }) end end
+            go.game, go.gameOpts = "assemble", { pos = site }
             return {
                 title = "The frame", reward = 0, limit = 900,
                 desc = "A second power transformer, to stand beside the city's own. A frame of black metal, waiting for you.",
@@ -645,6 +681,7 @@ LC.Chain{
             local go = Goto(site, "Go back to the transformer you built", 200)
             go.onEnter = function(q) if IsValid(q.owner) then LC.StalkerEnergizer(q.owner, site, 2, yaw, partner) end end
             go.onDone = function(q) if IsValid(q.owner) then LC.JobGameStart(q.owner, "wiring", q, { pos = site, what = "the terminal" }) end end
+            go.game, go.gameOpts = "wiring", { pos = site, what = "the terminal" }
             return {
                 title = "The charge", reward = 0, limit = 900,
                 desc = "It needs its first charge. Then it's finished, and so are you, one way or another.",

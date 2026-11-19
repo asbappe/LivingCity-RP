@@ -3,15 +3,23 @@
     (the owner, 10 November).
 
     Sentences. Every crime you're booked for (LC.ReportCrime) goes on your
-    record until your next sentence, each kind once. Arrested, your sentence
-    is what's on it, added up (LC.CrimeMinutes):
+    record, each kind once, and stays there for 30 minutes (the owner, 15
+    November: "sentences should be scaled by offenses within the past 30
+    minutes, OR if they are a resistance member, it is automatically a longer
+    sentence"). Arrested, your sentence is what's on it from the last 30
+    minutes, added up (LC.CrimeMinutes):
         petty (curfew, contraband, running, theft...)          3 minutes
         assaulting a citizen, resisting, escaping, obstructing  6
         weapons, sabotage, treason, firebombing                 8
         assaulting Civil Protection or the Administrator       10
         murder                                                  15
         murder of a Civil Protection officer or a soldier      20
-    at most lc_sentence_max (30) minutes. Nothing on the record: the old
+    at most lc_sentence_max (30) minutes. A member of the Resistance gets
+    twice that, and never less than 10 minutes (still at most
+    lc_sentence_max). (For one day, 15 November, the most went by Civil
+    Standing instead: that is gone, the 30 minutes do the job.)
+    Staff taking someone out of custody, or resetting
+    them, wipes the record (LC.RapClear). Nothing on the record: the old
     lc_prison_time. Then the record is cleared. Only an arrest counts:
     staff jailing someone (lc_jail), a story's sentence, a conduct sentence
     and a sentence picked up again after leaving stay exactly as given.
@@ -62,6 +70,8 @@ local UNIT_WORDS = { "civil protection", "overwatch", "officer", "soldier", "uni
 -- Minutes on a sentence for one crime, and the kind it is.
 function LC.CrimeMinutes(reason)
     local r = string.lower(tostring(reason or ""))
+    -- (the worst there is: the longest sentence there can be; the owner, 15 November: "the most egregious violation")
+    if string.find(r, "murder of the city administrator", 1, true) then return 60, "an attempt on the Administrator's life" end
     if string.find(r, "murder", 1, true) and not string.find(r, "attempted", 1, true) then
         if Has(r, UNIT_WORDS) then return 20, "murder of a unit" end
         return 15, "murder"
@@ -80,7 +90,7 @@ function LC.CrimeMinutes(reason)
 end
 
 ------------------------------------------------------------------------
--- The record since the last sentence (kept with the character)
+-- The record of the last 30 minutes (kept with the character)
 ------------------------------------------------------------------------
 
 local function Rap(ply)
@@ -97,6 +107,37 @@ local function SaveRap(ply)
     if #r == 0 then ply:RemovePData("lc_rap") else ply:SetPData("lc_rap", util.TableToJSON(r)) end
 end
 
+-- How long an offence counts toward a sentence, and what a member of the Resistance gets (the owner, 15
+-- November). Wall-clock seconds, because the record is kept with the character over restarts.
+local WINDOW = 30 * 60
+local REBEL_TIMES, REBEL_LEAST = 2, 10
+LC.SentenceWindow = WINDOW
+
+-- What is still on the record: offences older than the window drop off (one saved before offences were
+-- timed has no time, and counts as old).
+local function Recent(ply)
+    local r, now, changed = Rap(ply), os.time(), false
+    for i = #r, 1, -1 do
+        if now - (tonumber(r[i].at) or 0) > WINDOW then table.remove(r, i) changed = true end
+    end
+    if changed then SaveRap(ply) end
+    return r
+end
+LC.RapRecent = Recent
+
+-- The most minutes a sentence can be (kept for callers: it went by Civil Standing for a day).
+function LC.SentenceCap(ply)
+    return cvMax:GetFloat()
+end
+
+-- The record wiped (staff: a reset, or taken out of custody).
+function LC.RapClear(ply)
+    if not IsValid(ply) then return end
+    if LC.AdminForget then LC.AdminForget(ply) end -- (staff wiping a record: the attempt on her life too)
+    ply.lcRap = {}
+    SaveRap(ply)
+end
+
 function LC.OnProbation(ply)
     return IsValid(ply) and (ply.lcProbationUntil or 0) > CurTime()
 end
@@ -105,12 +146,13 @@ hook.Add("LivingCityWanted", "LivingCitySentence", function(ply, reason, seconds
     if not IsValid(ply) or not ply.IsPlayer or not ply:IsPlayer() or not cvOn:GetBool() then return end
     if reason == nil or reason == "" then return end
     if LC.Prisoners and LC.Prisoners[ply] then return end
-    local r = Rap(ply)
-    for _, c in ipairs(r) do if c.reason == reason then return end end -- (each kind once)
+    local r = Recent(ply)
+    -- (each kind once: done again, it counts from now)
+    for _, c in ipairs(r) do if c.reason == reason then c.at = os.time() SaveRap(ply) return end end
     local mins = LC.CrimeMinutes(reason)
     local doubled = LC.OnProbation(ply)
     if doubled then mins = mins * 2 end
-    r[#r + 1] = { reason = reason, min = mins, doubled = doubled or nil }
+    r[#r + 1] = { reason = reason, min = mins, doubled = doubled or nil, at = os.time() }
     SaveRap(ply)
 end)
 
@@ -123,15 +165,26 @@ function LC.SentenceFor(ply, seconds, reason, arrester)
     if not cvOn:GetBool() or not IsValid(ply) then return seconds end
     if ply.lcExactSentence then return seconds end -- (staff: exactly as given)
     if not IsValid(arrester) or (arrester:IsPlayer() and not LC.PlayerIsCP(arrester)) then return seconds end -- (only an arrest)
-    local r = Rap(ply)
-    if #r == 0 then return seconds end
+    local r = Recent(ply)
+    local rebel = ply:GetNW2String("lcf_faction", "") == "resistance"
+    if #r == 0 then
+        -- nothing in the last 30 minutes: the old lc_prison_time, but never a short one for the Resistance
+        if rebel and (tonumber(seconds) or 0) < REBEL_LEAST * 60 then
+            return REBEL_LEAST * 60, string.format("a member of the Resistance: %d minutes", REBEL_LEAST)
+        end
+        return seconds
+    end
     local total, parts = 0, {}
     for _, c in ipairs(r) do
         total = total + c.min
         parts[#parts + 1] = string.format("%s (%d%s)", c.reason, c.min, c.doubled and ", doubled on probation" or "")
     end
-    total = math.min(total, cvMax:GetFloat())
     local words = table.concat(parts, ", ")
+    if rebel then
+        total = math.max(REBEL_LEAST, total * REBEL_TIMES)
+        words = words .. ", longer for the Resistance"
+    end
+    total = math.min(total, LC.SentenceCap(ply))
     if string.sub(tostring(reason or ""), 1, 11) == "Surrendered" then
         total = math.max(1, math.floor(total / 2)) -- (giving yourself up halves it, as it always has)
         words = words .. ", halved for giving yourself up"
@@ -327,6 +380,7 @@ function LC.AskWorkDetail(ply)
     if (ply.lcWorkOff or 0) >= (ply.lcWorkCap or 0) then return false, "You've had all the time off this sentence allows." end
     local guard = GuardFor(pr.cell.pos)
     if not guard then return false, "No guard is free to take you out. Ask again in a minute." end
+    if ply.lcSleep and LC.WakeUp then LC.WakeUp(ply, "jump") end -- (asleep in the cell: up, the guard is coming; sv_livingcity_rest.lua)
     local st = LC.NPCs[guard]
     st.workDetail, st.questLock = ply, true
     LC.SetState(guard, st, "event")
@@ -660,7 +714,7 @@ end
 local nextProb = 0
 timer.Create("LivingCitySentence", 0.2, 0, function()
     local now = CurTime()
-    local ok, err = pcall(function()
+    local ok, err = LC.Try(function()
         if next(DETAILS) then LC.SentenceTick(now) end
         if now >= nextProb then
             nextProb = now + 2

@@ -48,7 +48,7 @@
 
       (8 November: nobody can opt out of any dream, or wake themselves until out of it; Enforcers excepted.)
       Players: C > Settings > Shared dreams ("Wake up" in a dream, once out of it), or
-      /dream off, /dream on, /dream wake. Admins: C > Help > Dreams (what's waiting, dream it
+      /dream off, /dream on, /dream wake. Admins: F4 > Factions > Admin: testing tools > Dreams (what's waiting, dream it
       now, wake everyone, put back anyone's things), lc_dream_restore <name>, lc_dream_now.
 ]]
 
@@ -66,6 +66,7 @@ local cvRadius  = CreateConVar("lc_dream_radius", "1500", FLAGS, "How far from t
 local cvNightly = CreateConVar("lc_dream_every_night", "0", FLAGS, "On a night with no ending waiting, dream a random one anyway (when the cooldown allows)")
 local cvMax     = CreateConVar("lc_dream_max_minutes", "5", FLAGS, "A safeguard: any dream still going this many minutes after it began is ended, and everyone in it woken (0: no limit)")
 local cvCombine = CreateConVar("lc_dream_combine", "6", FLAGS, "Civil Protection units a dream brings along for the endings that have the Combine in them (never the city's own)")
+local cvHarpies = CreateConVar("lc_dream_harpies_combine", "24", FLAGS, "The Harpies dreamt: how many of the Combine's units stand in the ring (metrocops with pistols and SMGs, every third an Overwatch soldier)")
 local cvMoods   = CreateConVar("lc_dream_moods", "bus=happy,plane=happy,hard=happy,shalom=happy,bloom=neutral,fire=neutral,base=neutral,harpies=nightmare,marrow=nightmare,water=nightmare,standup=nightmare",
     FLAGS, "Each ending's mood as a dream, for the Administrator's tablet: id=happy, id=neutral or id=nightmare, comma-separated (an ending not listed is neutral)")
 
@@ -730,7 +731,7 @@ LC.DreamFields = FIELDS
 function LC.DreamCheck(p, snap)
     local bad = {}
     for _, f in ipairs(FIELDS) do
-        local ok, same = pcall(f.check, p, snap)
+        local ok, same = LC.Try(f.check, p, snap)
         if not ok or not same then bad[#bad + 1] = f.id end
     end
     return bad
@@ -740,11 +741,11 @@ local function ApplyFields(p, snap, only)
     if only then want = {} for _, id in ipairs(only) do want[id] = true end end
     for _, f in ipairs(FIELDS) do
         if not want or want[f.id] then
-            local ok, err = pcall(f.apply, p, snap)
+            local ok, err = LC.Try(f.apply, p, snap)
             if not ok and LC.Error then LC.Error("dream restore " .. f.id, err) end
         end
     end
-    if LC.SendInv then pcall(LC.SendInv, p) end
+    if LC.SendInv then LC.Try(LC.SendInv, p) end
 end
 
 local function Admins(fn) for _, a in ipairs(player.GetAll()) do if a:IsAdmin() then fn(a) end end end
@@ -773,7 +774,7 @@ function LC.DreamRestore(p, snap, done)
         if tries > 2 then
             Log("warn", "Dream: " .. p:Nick() .. " still differs after putting it back (" .. table.concat(bad, ", ") .. "): the snapshot is kept")
             Admins(function(a) Notice(a, "warn", "Dream", p:Nick() .. "'s things don't all match after the dream (" .. table.concat(bad, ", ") ..
-                "). The snapshot is kept: C > Help > Dreams, Put back.", 15) end)
+                "). The snapshot is kept: F4 > Factions > Admin: testing tools > Dreams, Put back.", 15) end)
             if done then done(false, bad) end
             return
         end
@@ -822,7 +823,7 @@ local function Enter(p, dream, spot)
     -- their sleeping body stays in the bed, to be woken if it's hurt or the camp is raided (sv_livingcity_bedtime.lua)
     p.lcDreamBedPos = p:GetPos()
     if LC.DreamBodyMake then
-        local okB, errB = pcall(LC.DreamBodyMake, p, snap)
+        local okB, errB = LC.Try(LC.DreamBodyMake, p, snap)
         if not okB and LC.Error then LC.Error("dream body", errB) end
     end
     p:SetPos(spot)
@@ -900,10 +901,20 @@ end
 hook.Add("CanExitVehicle", "LivingCityDreamSeat", function(veh) if IsValid(veh) and veh.lcDreamSeat then return false end end)
 hook.Add("CanPlayerEnterVehicle", "LivingCityDreamSeat", function(p, veh) if IsValid(veh) and veh.lcDreamSeat and p.lcDreamSeat ~= veh then return false end end)
 
+-- Whatever a dream left on someone's screen, gone at once: the ending's white-out as "the city resets" is held
+-- for a minute (sv_livingcity_endings.lua), and outlasted the dream by most of it (the owner, 15 November: "when I
+-- woke from the broken bus dream, everything is white ... after like 30 seconds it went away").
+function LC.DreamClearScreen(p)
+    if not IsValid(p) or not p.ScreenFade then return false end
+    p:ScreenFade(SCREENFADE and SCREENFADE.PURGE or 16, Color(0, 0, 0, 0), 0, 0)
+    return true
+end
+
 -- Wake one dreamer: out of it, and everything put back.
 function LC.DreamWakeOne(p, why)
     if not IsValid(p) then return false end
     LC.DreamUnseat(p) -- (sat in one of a dream's chairs: out of it first)
+    LC.DreamClearScreen(p)
     local sid = Sid(p)
     local snap = LC.DreamSnaps[sid] or LC.DreamLoad(sid)
     local dream = LC.DreamActive
@@ -913,7 +924,7 @@ function LC.DreamWakeOne(p, why)
         if E and E.dream and E.dream.id == p.lcDreaming then Leave(p) end
         if dream and dream.game and dream.id == p.lcDreaming and LC.DreamGameLeave then LC.DreamGameLeave(p, dream) end
         -- (every sound the dream started, stopped on their computer: sh_livingcity_soundguard.lua)
-        if mine and LC.SoundGuardDreamEnd then pcall(LC.SoundGuardDreamEnd, mine, p) end
+        if mine and LC.SoundGuardDreamEnd then LC.Try(LC.SoundGuardDreamEnd, mine, p) end
     end
     p.lcDreaming = nil
     p.lcDreamBed = nil
@@ -941,10 +952,14 @@ function LC.DreamWakeOne(p, why)
         Log("warn", "Dream: no snapshot for " .. p:Nick() .. " (woke them anyway)")
         return false
     end
+    -- (being put back, for a few seconds: a prisoner isn't let out or called an escape until it's done, sv_livingcity_prison.lua)
+    p.lcDreamBack = CurTime() + 6
     timer.Simple(0.3, function()
         if not IsValid(p) then return end
         LC.DreamRestore(p, snap, function(ok)
             if not IsValid(p) then return end
+            p.lcDreamBack = nil
+            LC.DreamClearScreen(p) -- (and again once they're back, before anything that wakes them adds its own)
             hook.Run("LivingCityDreamWoke", p, ok, why, mine)
             local quiet = p.lcDreamQuietWake
             p.lcDreamQuietWake = nil
@@ -981,7 +996,7 @@ function LC.DreamWake(dream)
     if not dream then return end
     -- (every sound it started, stopped, before what made them is gone: sh_livingcity_soundguard.lua)
     if LC.SoundGuardDreamEnd then
-        local okS, errS = pcall(LC.SoundGuardDreamEnd, dream)
+        local okS, errS = LC.Try(LC.SoundGuardDreamEnd, dream)
         if not okS and LC.Error then LC.Error("dream sounds", errS) end
     end
     CleanUp(dream)
@@ -998,14 +1013,22 @@ function LC.DreamCast(E)
     local dream = E and E.dream
     if not dream then return end
     local n = math.max(0, cvCombine:GetInt())
+    -- (the Harpies: the whole of the Combine, as when it was the city's own ending, armed to shoot; the owner,
+    -- 15 November: "there were I think 4 metrocop units in the dream? ... it was so much more epic before")
+    local harpies = E.id == "harpies"
+    if harpies then n = math.max(n, cvHarpies:GetInt()) end
     local spots = n > 0 and LC.EndingRingSpots and LC.EndingRingSpots(dream.pos, 260, n) or {}
     for i = 1, n do
         if LC.EndingRoom and not LC.EndingRoom() then break end
-        local c = ents.Create("npc_metropolice")
+        local soldier = harpies and i % 3 == 0
+        local c = ents.Create(soldier and "npc_combine_s" or "npc_metropolice")
         if IsValid(c) then
             c:SetPos(spots[i] and spots[i].pos or dream.pos)
+            if soldier and c.SetModel then c:SetModel("models/combine_soldier.mdl") end
             c:Spawn()
-            if c.Give then c:Give("weapon_stunstick") end
+            local gun = "weapon_stunstick"
+            if harpies then gun = soldier and "weapon_ar2" or (i % 2 == 0 and "weapon_smg1" or "weapon_pistol") end
+            if c.Give then c:Give(gun) end
             if c.SetCondition then c:SetCondition(COND_NPC_FREEZE or 67) c.lcDreamHeld = true end -- (held still from the start)
             c.lcDreamCast = true
             E.ents[#E.ents + 1] = c
@@ -1044,10 +1067,11 @@ function LC.DreamStart(id, by, vote, also, force)
     local allDream = LC.DreamOnlyEnforcers(who, id) or nil
     S.nextId = (S.nextId or 0) + 1
     local dream = { id = S.nextId, ending = id, pos = pt.pos, yaw = pt.yaw or 0, zone = LC.DreamZone(), list = {}, snaps = {}, npcs = {}, combine = {},
-        made = setmetatable({}, { __mode = "k" }), started = CurTime(), force = force or nil, mood = LC.DreamMood(id), forced = LC.DreamForced(id), test = test or nil, allDream = allDream }
+        made = setmetatable({}, { __mode = "k" }), started = CurTime(), force = force or nil, mood = LC.DreamMood(id), forced = LC.DreamForced(id), test = test or nil, allDream = allDream,
+        prison = S.prisonNow or nil } -- (prison: a prisoner's dream at any hour, not tonight's: LC.PrisonDreamCheck below)
     local spots = LC.EndingRingSpots and LC.EndingRingSpots(pt.pos, 60, #who) or {}
     for i, p in ipairs(who) do
-        local ok, err = pcall(Enter, p, dream, spots[i] and spots[i].pos or pt.pos)
+        local ok, err = LC.Try(Enter, p, dream, spots[i] and spots[i].pos or pt.pos)
         if ok and err then dream.list[#dream.list + 1] = p elseif not ok and LC.Error then LC.Error("dream enter", err) end
     end
     if #dream.list == 0 then return false, "Nobody could be got ready to dream (their snapshots couldn't be saved)." end
@@ -1089,15 +1113,15 @@ function LC.DreamJoinLate(p, dream)
     local g = dream.game
     -- (an ending's Enforcers are set to watching as it starts: one arriving late sleeps on)
     if not g and dream.forced and LC.DreamEnforcerRole and LC.DreamEnforcerRole(p, dream.ending) then return false end
-    local ok, err = pcall(Enter, p, dream, dream.pos + Vector(math.Rand(-50, 50), math.Rand(-50, 50), 4))
+    local ok, err = LC.Try(Enter, p, dream, dream.pos + Vector(math.Rand(-50, 50), math.Rand(-50, 50), 4))
     if not ok or not err then
         if not ok and LC.Error then LC.Error("dream join", err) end
         return false
     end
     dream.list[#dream.list + 1] = p
     local okJ, errJ = true, nil
-    if g then okJ, errJ = pcall(LC.DreamGameJoin, g, p)
-    elseif LC.EndingSendTo then okJ, errJ = pcall(LC.EndingSendTo, p) end -- (their screen: the ending as it is now)
+    if g then okJ, errJ = LC.Try(LC.DreamGameJoin, g, p)
+    elseif LC.EndingSendTo then okJ, errJ = LC.Try(LC.EndingSendTo, p) end -- (their screen: the ending as it is now)
     if not okJ or errJ == false then
         -- (this dream can't take a latecomer after all: they wake at once with everything, and sleep on)
         if not okJ and LC.Error then LC.Error("dream join", errJ) end
@@ -1125,12 +1149,17 @@ function LC.DreamQueueEnding(id, by, source)
     return true
 end
 function LC.DreamQueued() return S.queued end
+-- Does a night bring a dream: one waiting, lc_dream_every_night, or the city's own pick (lc_dream_auto,
+-- sv_livingcity_dreamplan.lua)? (The owner, 14 November: "I have never once had a dream activate on its own".
+-- The city's pick was left out here, so with nobody choosing one the night's dream was never even tried.)
+local function WillDream() return S.queued ~= nil or cvNightly:GetBool() or (LC.DreamCityPicks ~= nil and LC.DreamCityPicks() == true) end
+LC.DreamWillDream = WillDream
 -- A dream still to come tonight (or under way): lights out keeps everyone in bed for it (sv_livingcity_bedtime.lua).
 function LC.DreamTonightPending()
     if LC.DreamActive then return true end
     if not LC.DreamReady() then return false end
     if LC.DayPhase and LC.DayPhase() == "night" and S.dreamedNight == S.night then return false end
-    return S.queued ~= nil or cvNightly:GetBool()
+    return WillDream()
 end
 
 -- The Administrator's tablet (sv_livingcity_cityadmin.lua): tonight's dream, by mood.
@@ -1167,7 +1196,7 @@ function LC.DreamOffice()
     out.at = S.at and math.max(0, math.floor(S.at - CurTime())) or nil
     out.busy = LC.DreamActive ~= nil or nil
     -- (for the "when" line: is there one to come tonight, and how long after the good night)
-    out.will = (S.queued ~= nil or cvNightly:GetBool() or (LC.DreamCityPicks ~= nil and LC.DreamCityPicks() == true)) or nil
+    out.will = WillDream() or nil
     out.delay = math.max(5, cvDelay:GetFloat())
     out.plan = LC.DreamPlanOffice and LC.DreamPlanOffice() or nil -- (her choice now: a kind, now and then: sv_livingcity_dreamplan.lua)
     return out
@@ -1227,7 +1256,9 @@ local function Nightly()
 end
 local function Pick()
     local q = Nightly()
-    if q then return q.id, IsValid(q.by) and q.by or nil, q.vote, q.source == "admin" end
+    -- (her pick, and the city's own, don't wait for the endings' cooldown or start it: lc_dream_auto promises a dream
+    -- every night, and a dreamt ending used to hold the next three nights' back. lc_dream_every_night's still waits.)
+    if q then return q.id, IsValid(q.by) and q.by or nil, q.vote, q.source == "admin" or q.source == "auto" end
     return nil
 end
 function LC.DreamTonight()
@@ -1249,13 +1280,43 @@ function LC.DreamTonight()
     local ok, why = LC.DreamStart(id, by, vote, nil, force)
     if ok then
         S.queued, S.lastMood = nil, LC.DreamMood(id)
+        S.last = { night = S.night, id = id, ok = true }
     else
         -- nobody was in bed yet: it waits for the first to fall asleep tonight (below)
-        if why == "Nobody is asleep to dream it." then S.missedNight = S.night end
+        if why == "Nobody is asleep to dream it." then S.missedNight = S.night
+        elseif q0 and q0.source == "auto" and why ~= "A dream is already under way." and why ~= "An ending is already under way." then
+            -- the city's own pick can't be dreamt here (it doesn't fit, it couldn't be built): its turn passes on,
+            -- so the same one isn't picked every night, and the next is tried in a moment (three a night at most)
+            local kind = q0.cat or (LC.DreamKind and LC.DreamKind(id)) or "neutral"
+            if LC.DreamPlanAdvance and LC.DreamPlanNext and LC.DreamPlanNext(kind) == id then LC.DreamPlanAdvance(kind) end
+            if S.triesNight ~= S.night then S.triesNight, S.tries = S.night, 0 end
+            S.tries = (S.tries or 0) + 1
+            if S.tries < 3 then S.missedNight = S.night end
+        end
         Log("info", "Tonight's dream didn't happen: " .. tostring(why))
+        S.last = { night = S.night, id = id, ok = false, why = tostring(why) }
         if S.queued and (S.queued.source == "nightly" or S.queued.source == "auto") then S.queued = nil end
     end
     return ok, why
+end
+
+-- The dreams in a line, for the debug report (the owner, 14 November: a night with no dream must say why).
+function LC.DreamDebugLine()
+    local why = (not cvOn:GetBool() and "off (lc_dreams 0)") or (not LC.DreamPoint() and "no dream point on this map") or nil
+    local who = S.queued and ("waiting: " .. tostring(S.queued.id) .. " (" .. tostring(S.queued.source) .. ")")
+        or (LC.DreamCityPicks and LC.DreamCityPicks() and "the city picks every night (lc_dream_auto 1)")
+        or (cvNightly:GetBool() and "a random one every night (lc_dream_every_night 1)") or "nothing chosen, and nothing picks: no dream will come"
+    local last = S.last and (S.last.ok and ("last: " .. tostring(S.last.id) .. ", night " .. tostring(S.last.night))
+        or ("last try, night " .. tostring(S.last.night) .. ": " .. tostring(S.last.id) .. " didn't happen: " .. tostring(S.last.why))) or "none tried yet on this map"
+    local asleep = 0
+    for _, p in ipairs(player.GetAll()) do if p.lcSleep then asleep = asleep + 1 end end
+    -- (a prisoner's dream at any hour, LC.PrisonDreamCheck: when one was last tried, and why it didn't happen if it didn't)
+    local pd = S.prisonLast
+    local prison = pd and (" | prison dream: last tried " .. math.max(0, math.floor((CurTime() - pd.at) / 60)) .. " min ago (" .. tostring(pd.who) .. "): "
+        .. tostring(pd.id) .. (pd.ok and "" or (" didn't happen: " .. tostring(pd.why)))) or " | prison dream: none tried yet"
+    return "dreams: " .. (why or who) .. " | night " .. tostring(S.night) .. (S.dreamedNight == S.night and " (tried)" or " (not tried yet)")
+        .. (S.at and (", due in " .. math.max(0, math.floor(S.at - CurTime())) .. "s") or "") .. (S.missedNight == S.night and ", waiting for a sleeper" or "")
+        .. " | players asleep " .. asleep .. " | " .. last .. prison
 end
 
 ------------------------------------------------------------------------
@@ -1297,14 +1358,101 @@ function LC.DreamMissedCheck(now)
     return true
 end
 
+------------------------------------------------------------------------
+-- Asleep in the cells: a dream at any hour
+------------------------------------------------------------------------
+
+-- (The owner, 15 November: "an 'off-hours' dream rotation for people in prison: if a person is in prison more
+-- than 5 ish minutes, then they can sleep and just dream any time of the day".) A prisoner with more than five
+-- minutes to serve may lie down at any hour (LC.PrisonerMaySleep, sv_livingcity_rest.lua). Twenty seconds after
+-- they fall asleep a dream starts for whoever is asleep: the city's own pick, as on a night nobody chose one.
+-- Once a sentence each (dreamt, on their LC.Prisoners entry). It is not tonight's dream: S.dreamedNight, S.at and
+-- what the night remembers stay as they were (dream.prison), it waits while a dream or an ending is under way or
+-- tonight's dream is about to start (that one takes them too), and like the city's nightly pick it neither
+-- waits for nor starts lc_ending_cooldown. One that can't be dreamt is tried once more; then they just sleep.
+local PRISON_DREAM_AFTER, PRISON_DREAM_TRIES = 20, 2
+LC.PrisonDreamAfter = PRISON_DREAM_AFTER
+
+hook.Add("LivingCitySleepStarted", "LivingCityPrisonDream", function(ply)
+    local pr = LC.Prisoners and LC.Prisoners[ply]
+    if not pr or pr.dreamt or not (LC.PrisonerMaySleep and LC.PrisonerMaySleep(ply)) then return end
+    pr.dreamAt, pr.dreamTries = CurTime() + PRISON_DREAM_AFTER, 0
+end)
+
+-- What to dream: the city's pick (id, kind). The second try is the next Neutral or Happy one: a nightmare spares
+-- whoever sleeps inside a Combine zone, and a kind can be sat out once earned, and then nobody is asleep for it.
+local function PrisonPick(try)
+    if try > 1 and LC.DreamPlanNext then
+        for _, kind in ipairs({ "neutral", "happy" }) do
+            local id = LC.DreamPlanNext(kind)
+            if id then return id, kind end
+        end
+    end
+    if not LC.DreamAutoPick then return nil end
+    local id, _, kind = LC.DreamAutoPick()
+    return id, kind
+end
+
+-- One try at a prisoner's dream. True, or false and why not (kept for the debug report either way).
+function LC.PrisonDreamTry(ply, pr)
+    pr.dreamTries = (pr.dreamTries or 0) + 1
+    local id, kind = PrisonPick(pr.dreamTries)
+    local ok, why = false, "nothing to dream"
+    if id then
+        S.prisonNow = true
+        local ran, a, b = LC.Try(LC.DreamStart, id, nil, false, nil, true) -- (forced, as the city's nightly pick is: no cooldown waited for or started)
+        S.prisonNow = nil
+        ok, why = ran and a == true, ran and b or a
+        -- (it can't be dreamt here: its turn passes on, as on a night, so the second try isn't the same one again)
+        if not ok and LC.DreamPlanAdvance and LC.DreamPlanNext then
+            kind = kind or (LC.DreamKind and LC.DreamKind(id)) or "neutral"
+            if LC.DreamPlanNext(kind) == id then LC.DreamPlanAdvance(kind) end
+        end
+    end
+    S.prisonLast = { at = CurTime(), who = ply:Nick(), id = id or "nothing", ok = ok, why = (not ok) and tostring(why) or nil }
+    if not ok then Log("info", "A prisoner's dream didn't happen (" .. ply:Nick() .. "): " .. tostring(why)) end
+    return ok, why
+end
+
+-- A prisoner's dream that ran into the hour of tonight's: tonight's waits a few seconds more, until whoever was in it
+-- is back in bed with everything put back (LC.DreamWakeOne takes a moment; taken again sooner, the two would cross).
+hook.Add("LivingCityDreamEnded", "LivingCityPrisonDream", function(dream)
+    if dream and dream.prison and S.at and S.at < CurTime() + 8 then S.at = CurTime() + 8 end
+end)
+
+function LC.PrisonDreamCheck(now)
+    for ply, pr in pairs(LC.Prisoners or {}) do
+        if pr.dreamAt and IsValid(ply) then
+            if ply.lcDreaming then
+                pr.dreamt, pr.dreamAt = true, nil -- (in a dream already, tonight's or another prisoner's: that was theirs)
+            elseif not ply.lcSleep then
+                pr.dreamAt = nil -- (up again: the next time they lie down)
+            elseif now >= pr.dreamAt and not LC.DreamActive and not (LC.EndingBusy and LC.EndingBusy()) and not (S.at and WillDream()) then
+                if not LC.DreamReady() then
+                    -- (no dreams on this server, or no dream point: they just sleep)
+                    pr.dreamt, pr.dreamAt = true, nil
+                    S.prisonLast = { at = now, who = ply:Nick(), id = "nothing", ok = false, why = cvOn:GetBool() and "no dream point on this map" or "dreams are off (lc_dreams 0)" }
+                elseif (LC.PrisonDreamTry(ply, pr) and ply.lcDreaming) or pr.dreamTries >= PRISON_DREAM_TRIES then
+                    pr.dreamt, pr.dreamAt = true, nil
+                else
+                    -- (it couldn't be dreamt, or it began for others asleep and left this prisoner out: the one more try)
+                    pr.dreamAt = now + PRISON_DREAM_AFTER
+                end
+            end
+        end
+    end
+end
+
 timer.Create("LivingCityDreams", 1, 0, function()
-    local ok, err = pcall(function()
+    local ok, err = LC.Try(function()
         local now = CurTime()
         if S.missedNight and now >= (S.missedCheck or 0) then
             S.missedCheck = now + 5
             LC.DreamMissedCheck(now)
         end
-        if S.at and LC.DreamReady() and (S.queued or cvNightly:GetBool()) then
+        local okP, errP = LC.Try(LC.PrisonDreamCheck, now)
+        if not okP and LC.Error then LC.Error("prison dream", errP) end
+        if S.at and LC.DreamReady() and WillDream() then
             -- the sleepers, warned (and the way out)
             if not S.warned and now >= S.at - math.min(30, cvDelay:GetFloat()) then
                 S.warned = true
@@ -1329,7 +1477,7 @@ timer.Create("LivingCityDreams", 1, 0, function()
             -- the screen goes black, and the day's mood in a line (sv_livingcity_dreamplan.lua)
             if S.moodFor ~= S.at and now >= S.at - (LC.DreamMoodLead or 7) and not LC.DreamActive then
                 S.moodFor = S.at
-                if LC.DreamMoodSend then pcall(LC.DreamMoodSend, Nightly(), S.at + 1) end
+                if LC.DreamMoodSend then LC.Try(LC.DreamMoodSend, Nightly(), S.at + 1) end
             end
             if now >= S.at and not (LC.EndingBusy and LC.EndingBusy()) and not LC.DreamActive then LC.DreamTonight() end
         end
@@ -1342,9 +1490,9 @@ timer.Create("LivingCityDreams", 1, 0, function()
             Log("warn", string.format("Dream: %s still going after %d minutes: ended by the safeguard", tostring(dream.ending), math.floor(maxSecs / 60)))
             for _, p in ipairs(LC.DreamersOf(dream)) do Notice(p, "info", "The dream fades", "It loosens its grip, and you wake.", 6) end
             dream.timedOut = true
-            if dream.game and not dream.game.stopped and LC.DreamGameStop then pcall(LC.DreamGameStop, dream, "time limit") end
+            if dream.game and not dream.game.stopped and LC.DreamGameStop then LC.Try(LC.DreamGameStop, dream, "time limit") end
             local E0 = LC.EndingAny and LC.EndingAny()
-            if E0 and E0.dream == dream and LC.CancelEnding then pcall(LC.CancelEnding) end
+            if E0 and E0.dream == dream and LC.CancelEnding then LC.Try(LC.CancelEnding) end
             if LC.DreamActive == dream then LC.DreamWake(dream) end
             if LC.DreamActive == dream then LC.DreamActive = nil end -- (whatever happened, the next one isn't held up)
             return
@@ -1436,7 +1584,7 @@ end)
 local function Blocked(p, what)
     if (p.lcDreamToldAt or 0) > CurTime() then return end
     p.lcDreamToldAt = CurTime() + 5
-    Notice(p, "info", "Dreaming", (what or "That") .. " will have to wait until you wake up. (C > Settings > Shared dreams: wake up.)", 5)
+    Notice(p, "info", "Dreaming", (what or "That") .. " will have to wait until you wake up. (F1 > Wake up from the dream.)", 5)
 end
 -- (their hands excepted: Give goes through this hook too, and a dreamer is given just their hands; and what the
 -- dream itself hands them, LC.DreamGive: The Battle Line's rifle, an Enforcer's baton. Until 12 November this hook
@@ -1516,7 +1664,7 @@ function LC.SetDreamOptOut(p, out)
     if not IsValid(p) then return end
     if p:GetPData("lc_dream_optout", "0") == "1" then p:SetPData("lc_dream_optout", "0") end
     p:SetNW2Bool("lc_dream_optout", false)
-    Notice(p, "info", "Shared dreams", "Everyone asleep dreams the city's dreams. You can sit out Happy (or Neutral) dreams after living through 2 of them, and Nightmares and propaganda with Exemplary standing: F2 > Me (More) > My dreams (or C > Settings > Shared dreams). Otherwise only a stimulant before bed (or, with luck, the lab's foil hat) keeps one out.", 10)
+    Notice(p, "info", "Shared dreams", "Everyone asleep dreams the city's dreams. You can sit out Happy (or Neutral) dreams after living through 2 of them, and Nightmares and propaganda with Exemplary standing: F2 > Dreams and survival (or C > Settings > Shared dreams). Otherwise only a stimulant before bed (or, with luck, the lab's foil hat) keeps one out.", 10)
 end
 
 local function DreamCommand(p, rest)
@@ -1550,7 +1698,7 @@ hook.Add("PlayerInitialSpawn", "LivingCityDreams", function(p)
         local snap = LC.DreamSnaps[sid] or LC.DreamLoad(sid)
         if not snap then return end
         if snap.applied then
-            Log("info", "Dream: " .. p:Nick() .. " has an old dream snapshot, already put back once (an admin can put it back again: C > Help > Dreams)")
+            Log("info", "Dream: " .. p:Nick() .. " has an old dream snapshot, already put back once (an admin can put it back again: F4 > Factions > Admin: testing tools > Dreams)")
             return
         end
         Log("info", "Dream: " .. p:Nick() .. " left in the middle of a dream: putting everything back")
@@ -1652,15 +1800,15 @@ net.Receive("lc_dream_act", function(_, p)
     SendStatus(p)
 end)
 
--- Stop whatever dream is under way, for everyone in it (staff: F1 > Staff, F1 in a dream, C > Help > Dreams).
+-- Stop whatever dream is under way, for everyone in it (staff: F1 > Staff, F1 in a dream, F4 > Factions > Admin: testing tools > Dreams).
 -- Everything it made goes, its sounds stop, and everyone wakes with everything put back. True, or false; and the words.
 function LC.DreamStopAll(by)
     local dream = LC.DreamActive
     local E = LC.EndingAny and LC.EndingAny()
     if not dream and not (E and E.dream) then return false, "Nobody is dreaming." end
     Log("info", "Dream: stopped by " .. (IsValid(by) and by:Nick() or "the server"))
-    if E and E.dream and LC.CancelEnding then pcall(LC.CancelEnding) end
-    if dream and dream.game and not dream.game.stopped and LC.DreamGameStop then pcall(LC.DreamGameStop, dream, "admin") end
+    if E and E.dream and LC.CancelEnding then LC.Try(LC.CancelEnding) end
+    if dream and dream.game and not dream.game.stopped and LC.DreamGameStop then LC.Try(LC.DreamGameStop, dream, "admin") end
     if LC.DreamActive == dream and dream then LC.DreamWake(dream) end
     if LC.DreamActive == dream then LC.DreamActive = nil end -- (whatever happened, the next one isn't held up)
     return true, "Everyone in the dream is woken."

@@ -74,7 +74,7 @@ function LC_CL.SetTrail(t)
     if not t or type(t.p) ~= "table" or #t.p < 3 then trail = nil return end
     local pts = {}
     for i = 1, #t.p - 2, 3 do pts[#pts + 1] = Vector(t.p[i], t.p[i + 1], t.p[i + 2]) end
-    trail = { pts = pts, goal = (type(t.g) == "table" and #t.g == 3) and Vector(t.g[1], t.g[2], t.g[3]) or pts[#pts] }
+    trail = { pts = pts, goal = (type(t.g) == "table" and #t.g == 3) and Vector(t.g[1], t.g[2], t.g[3]) or pts[#pts], guide = t.guide == true }
     local me = LocalPlayer()
     if IsValid(me) then LC_CL.TrailPrune(trail, me:GetPos()) end
 end
@@ -160,9 +160,10 @@ hook.Add("Think", "LivingCityTrail", function()
     nextThink = now + 0.1
     local me = LocalPlayer()
     if not IsValid(me) then return end
-    -- the quest is over (or its last message went astray): no trail
+    -- the quest is over (or its last message went astray): no trail. (Not a guide to a place asked for, F1's
+    -- find work or F2's way to rebel ground: that one is kept with no quest on. The owner, 15 November.)
     local q = LC_CL.QuestState and LC_CL.QuestState()
-    if q and not q.active then trail = nil return end
+    if q and not q.active and not trail.guide then trail = nil return end
     local pos = me:GetPos()
     LC_CL.TrailPrune(trail, pos)
     if #trail.pts <= 1 and pos:DistToSqr(trail.goal) < ARRIVED * ARRIVED then trail = nil end

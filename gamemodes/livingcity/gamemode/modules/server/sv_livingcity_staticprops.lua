@@ -216,7 +216,7 @@ function LC.StaticFixtureNear(pos, kind, dist)
 end
 
 hook.Add("InitPostEntity", "LivingCityStaticProps", function()
-    timer.Simple(2, function() local ok, err = pcall(LC.ScanStaticProps) if not ok then LC.Error("staticprops", err) end end)
+    timer.Simple(2, function() local ok, err = LC.Try(LC.ScanStaticProps) if not ok then LC.Error("staticprops", err) end end)
 end)
 
 concommand.Add("lc_scanprops", function(ply)

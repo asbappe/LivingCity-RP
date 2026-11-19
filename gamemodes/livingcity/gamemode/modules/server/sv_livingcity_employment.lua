@@ -12,11 +12,11 @@
 
     Hiring. A stall owner (with a business license) can offer another citizen
     a job: F1, looking at them, "Offer (name) a job at my stall"; they accept
-    on F2 > Me (More) > My stall business. A worker can open their employer's stalls
+    on F2 > Household, stall and debts > My stall business. A worker can open their employer's stalls
     and stock them; the till stays the owner's. Every lc_wage_minutes (10) a
     worker who's been at one of the stalls is paid lc_wage (10) credits, out of
     the till, else out of the owner's own pocket (if they're about), else not
-    at all (and told so). Either can end it on F2 > Me (More) > My stall business.
+    at all (and told so). Either can end it on F2 > Household, stall and debts > My stall business.
 
       lc_stall_customers_minutes (3), lc_wage (10), lc_wage_minutes (10)
 ]]
@@ -79,13 +79,17 @@ function LC.OfferJob(owner, target)
     if owner:GetPos():DistToSqr(target:GetPos()) > 250 * 250 then return false, "Ask them face to face." end
     if LC.EmployerOf(target) then return false, Name(target) .. " works for someone already." end
     target.lcJobOffer = { from = owner, at = CurTime() }
-    target:ChatPrint(string.format("[Miscount] %s offers you a job at their stall: %d credits every %d minutes you're there. F2 > Me (More) > My stall business to accept.", Name(owner), cvWage:GetInt(), cvWageM:GetInt()))
+    target:ChatPrint(string.format("[Miscount] %s offers you a job at their stall: %d credits every %d minutes you're there. F2 > Household, stall and debts > My stall business to accept.", Name(owner), cvWage:GetInt(), cvWageM:GetInt()))
     owner:ChatPrint("[Miscount] You've offered " .. Name(target) .. " a job.")
     Sync(target)
     return true
 end
 
 function LC.AcceptJob(ply, yes)
+    -- (sent for by their leader: that word first, before any work is taken, and the offer waits for it;
+    -- sv_livingcity_adminplot.lua)
+    local first = yes and LC.AdminPlotBusy and LC.AdminPlotBusy(ply)
+    if first then return false, first end
     local o = ply.lcJobOffer
     ply.lcJobOffer = nil
     if not o or CurTime() - o.at > OFFER_SECS or not IsValid(o.from) then Sync(ply) return false, "There's no offer waiting." end
@@ -208,7 +212,7 @@ end
 
 local nextCust, nextPay = 0, 0
 timer.Create("LivingCityEmployment", 30, 0, function()
-    local ok, err = pcall(function()
+    local ok, err = LC.Try(function()
         local now = CurTime()
         WageTick()
         if now >= nextPay then

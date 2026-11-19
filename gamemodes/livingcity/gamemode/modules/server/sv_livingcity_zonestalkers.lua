@@ -10,7 +10,7 @@
 
     With nothing to do, a stalker stands at a Combine terminal working it, with
     the stalker's own console animation from Episode One:
-      - a "Point: stalker terminal" placed with the editor in front of one of
+      - a "Point: Combine stalker terminal" placed with the editor in front of one of
         the map's terminals (stand where the stalker should stand, facing the
         terminal, and aim at the floor at your feet), or else
       - one of the map's own Combine consoles in the zone, read from the map file
@@ -107,21 +107,113 @@ function LC.StalkerConsoleSequence(npc, fresh)
     return name, id
 end
 
+-- Its parts (the owner, 14 November: "it starts playing an animation where the stalker leans forward but then
+-- it just keeps repeating the first .5 seconds"; the debug report: "terminal animation: console_work_pre").
+-- A model's console animation comes in pieces: the lean in (_pre), the working (_loop), the straightening up
+-- (_post). The lean in was being played and then repeated as if it were the working. Returns the lean in
+-- (nil with none) and what is repeated while it works (nil: only a lean in, played once).
+local ENTRY_TAILS = { "_pre", "_entry", "_enter", "_start", "_intro", "_begin", "_in" }
+local EXIT_TAILS = { "_post", "_exit", "_outro", "_end", "_out" }
+local LOOP_TAILS = { "_loop", "_idle", "_work", "" }
+local function Base(name, tails)
+    local low = string.lower(name)
+    for _, t in ipairs(tails) do
+        if #low > #t and string.sub(low, -#t) == t then return string.sub(name, 1, #name - #t) end
+    end
+end
+local function Has(npc, name)
+    local i = npc.LookupSequence and npc:LookupSequence(name)
+    return i ~= nil and i >= 0
+end
+function LC.StalkerConsoleParts(npc)
+    local name = LC.StalkerConsoleSequence(npc)
+    if not name then return nil end
+    local isEntry = Base(name, ENTRY_TAILS) ~= nil
+    local base = Base(name, ENTRY_TAILS) or Base(name, EXIT_TAILS) or Base(name, { "_loop", "_idle" }) or name
+    local entry, loop
+    for _, t in ipairs(LOOP_TAILS) do
+        if Has(npc, base .. t) then loop = base .. t break end
+    end
+    for _, t in ipairs(ENTRY_TAILS) do
+        if Has(npc, base .. t) then entry = base .. t break end
+    end
+    -- (no loop by its usual names: any other sequence of the same animation that isn't its lean in or its
+    -- straightening up, or one that sounds like typing; the owner, 15 November: "there should be an animation
+    -- for typing that can loop once the current animation is done")
+    if not loop and npc.GetSequenceList then
+        local lowBase = string.lower(base)
+        local best, bs
+        for _, seq in pairs(npc:GetSequenceList() or {}) do
+            local nm = tostring(seq)
+            local low = string.lower(nm)
+            local sc
+            if low ~= string.lower(entry or "") and not Base(nm, ENTRY_TAILS) and not Base(nm, EXIT_TAILS)
+                and not string.find(low, "death", 1, true) and not string.find(low, "attack", 1, true) then
+                if #low > #lowBase and string.sub(low, 1, #lowBase) == lowBase then sc = 3
+                elseif string.find(low, "typ", 1, true) or string.find(low, "keyboard", 1, true) then sc = 2 end
+            end
+            if sc and Has(npc, nm) and (not bs or sc > bs) then best, bs = nm, sc end
+        end
+        if best then loop = best if isEntry then entry = name end end
+    end
+    if not loop then
+        if isEntry then entry = name else loop = name end -- (a lean in and nothing after: once, then it stays leaning in)
+    end
+    if entry == loop then entry = nil end
+    LC.StalkerSequenceUsed = entry and loop and (entry .. ", then " .. loop) or (loop or (entry .. " (once, then held there)"))
+    return entry, loop
+end
+
 local function StopLoop(r)
     if IsValid(r.ss) then
         r.ss:Fire("CancelSequence")
         if SafeRemoveEntityDelayed then SafeRemoveEntityDelayed(r.ss, 0.5) else r.ss:Remove() end
     end
     r.ss = nil
+    if r.holding and IsValid(r.npc) then
+        if r.npc.SetPlaybackRate then r.npc:SetPlaybackRate(1) end
+        r.npc:SetSchedule(SCHED_IDLE_STAND)
+    end
+    r.holding = nil
 end
 
-local function StartLoop(r, pos, yaw)
+-- Leaned in over the terminal, with no working animation to follow: it stays there, bent over the keys, the
+-- lean in's last moment held (it used to start the lean in all over again every couple of seconds: the owner,
+-- 15 November). Kept each second while it works.
+local function Hold(r)
+    local npc = r.npc
+    local entry = LC.StalkerConsoleParts(npc)
+    local id = entry and npc.LookupSequence and npc:LookupSequence(entry)
+    if not (id and id >= 0) then return false end
+    if not r.holding then
+        npc:SetSchedule(SCHED_NPC_FREEZE or SCHED_IDLE_STAND)
+        r.holding = entry
+    end
+    if npc.GetSequence and npc:GetSequence() ~= id and npc.ResetSequence then npc:ResetSequence(id) end
+    if npc.SetCycle then npc:SetCycle(0.98) end
+    if npc.SetPlaybackRate then npc:SetPlaybackRate(0) end
+    return true
+end
+
+-- It walks onto the spot itself and turns the way the spot faces, then leans in once and works (snap: put
+-- there, when it could not walk the last of it). It used to start where it stopped, anywhere within 40
+-- units of the spot: the owner, 14 November, "it needs to be 1.5 feet closer to the terminal".
+local function StartLoop(r, pos, yaw, snap)
     StopLoop(r)
-    local name = LC.StalkerConsoleSequence(r.npc)
-    if not name or not LC.MakeSequence then return false end
-    local flags = (SF_SCRIPT_LOOP_IN_POST_IDLE or 16) + (SF_SCRIPT_NO_COMPLAINTS or 128) + (SF_SCRIPT_ALLOW_DEATH or 64)
-    local ok, ss = pcall(LC.MakeSequence, r.npc, pos, yaw, name, name, flags, 0, 0)
-    if ok and IsValid(ss) then r.ss = ss return true end
+    local entry, loop = LC.StalkerConsoleParts(r.npc)
+    -- (the lean in once at each terminal it comes to: again after it broke off, only the working)
+    if r.leaned and r.leaned == r.term then
+        if not loop then return Hold(r) end
+        entry = nil
+    end
+    if not (entry or loop) or not LC.MakeSequence then return false end
+    local flags = (SF_SCRIPT_NO_COMPLAINTS or 128) + (SF_SCRIPT_ALLOW_DEATH or 64) + (loop and (SF_SCRIPT_LOOP_IN_POST_IDLE or 16) or 0)
+    local ok, ss = LC.Try(LC.MakeSequence, r.npc, pos, yaw, entry or loop, loop, flags, snap and 4 or 1, 0)
+    if ok and IsValid(ss) then
+        r.ss, r.ssAt, r.ssSnap = ss, CurTime(), snap or nil
+        if entry then r.leaned = r.term end
+        return true
+    end
     return false
 end
 
@@ -322,6 +414,46 @@ local function Retire(r)
     if IsValid(r.npc) then r.npc:Remove() end
 end
 
+-- Someone the city has made a stalker where they stood (one of its own that tried to kill the Administrator,
+-- after her questioning: sv_livingcity_adminquestioning.lua). One of the zone's own from then on: the Combine
+-- zone it stands in, or the nearest. It leaves the cell for its work somewhere in the zone once nobody is
+-- looking (or after 45 seconds anyway); with no Combine zone to work in, or lc_zone_stalkers 0, it is taken away.
+function LC.ZoneStalkerAdopt(pos, yaw)
+    local npc = SpawnStalker(pos)
+    if not npc then return nil end
+    if yaw then npc:SetAngles(Angle(0, yaw, 0)) end
+    local zone = InCombine(pos)
+    if not zone then
+        local bd
+        for _, z in ipairs(Zones()) do
+            local d = z.pos and z.pos:DistToSqr(pos)
+            if d and (not bd or d < bd) then zone, bd = z, d end
+        end
+    end
+    local now = CurTime()
+    if zone and cvCount:GetInt() > 0 then
+        residents[npc] = { npc = npc, zone = zone, phase = "idle", born = now, lastPos = npc:GetPos(), lastMoved = now }
+    end
+    local name, tries = "LivingCityStalkerAdopt" .. npc:EntIndex(), 0
+    timer.Create(name, 3, 15, function()
+        tries = tries + 1
+        if not IsValid(npc) then timer.Remove(name) return end
+        if tries < 15 and LC.IsSeen(npc:GetPos() + UP) then return end
+        timer.Remove(name)
+        local r = residents[npc]
+        local to = r and HiddenSpot(r.zone)
+        if to then
+            npc:SetPos(to + Vector(0, 0, 4))
+            r.lastPos, r.lastMoved = npc:GetPos(), CurTime()
+        elseif r then
+            Retire(r)
+        else
+            npc:Remove()
+        end
+    end)
+    return npc
+end
+
 -- Keep every zone staffed: out of sight, one at a time, a while after one is lost.
 function LC.ZoneStalkersStaff(now)
     local want = math.max(0, cvCount:GetInt())
@@ -431,6 +563,8 @@ local function Idle(r, now)
         return
     end
     if npc:GetPos():DistToSqr(r.term.pos) > 40 * 40 then
+        r.leaned = nil
+        if r.holding then StopLoop(r) end
         if r.phase ~= "toterm" or now - (r.nextLook or 0) > 4 then
             r.phase, r.nextLook = "toterm", now
             Walk(npc, r.term.pos)
@@ -440,13 +574,20 @@ local function Idle(r, now)
         return
     end
     if r.phase ~= "working" then
-        r.phase = "working"
+        r.phase, r.leaned = "working", nil
         npc:SetSchedule(SCHED_IDLE_STAND)
         if LC.FaceYaw then LC.FaceYaw(npc, r.term.yaw) else npc:SetAngles(Angle(0, r.term.yaw, 0)) end
         StartLoop(r, r.term.pos, r.term.yaw)
         SetDoing(r, "working a terminal")
+    elseif r.holding then
+        Hold(r) -- (bent over the keys: kept so)
     elseif r.ss == nil or not IsValid(r.ss) then
-        StartLoop(r, r.term.pos, r.term.yaw) -- (the loop broke off: again)
+        StartLoop(r, r.term.pos, r.term.yaw) -- (the loop broke off, or the lean in is done with nothing after: the working, never the lean in again)
+    elseif not r.ssSnap and now - (r.ssAt or now) > 8 then
+        -- still short of the spot after eight seconds (something in the way of the last step): put on it
+        local d = npc:GetPos() - r.term.pos
+        d.z = 0
+        if d:LengthSqr() > 14 * 14 then StartLoop(r, r.term.pos, r.term.yaw, true) end
     end
 end
 
@@ -543,7 +684,7 @@ end)
 
 timer.Create("LivingCityZoneStalkers", 1, 0, function()
     if not LC.Running then return end
-    local ok, err = pcall(LC.ZoneStalkersTick, CurTime())
+    local ok, err = LC.Try(LC.ZoneStalkersTick, CurTime())
     if not ok and LC.Error then LC.Error("zone stalkers", err) end
 end)
 

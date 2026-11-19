@@ -13,9 +13,11 @@
                       the objective for a while to pull it off; units can stop
                       them. And they answer what the Combine do: an Overwatch
                       landing or a supply drop gets a team sent at it (an
-                      ambush; a raid on the crate, two loads gone and food for
-                      the stores) lc_rebel_react of the time (0.5), straight
-                      away, whenever no other fight is on.
+                      ambush; a raid on the crate: once its guard, porters and
+                      any unit beside it are down they open it and take every
+                      load, two supplies each for the stores at home)
+                      lc_rebel_react of the time (0.5), straight away, whenever
+                      no other fight is on.
       Prison break    the Resistance can break one of their own out of a cell
                       (Operations board): get to the cell, hold it open while
                       the alarm goes. Units get "Prison break".
@@ -38,7 +40,7 @@
                       for ten minutes.
       Overwatch drops when sociostability stays red (or the city is in unrest),
                       Overwatch sends soldiers down to a landing zone (editor
-                      "Point: Overwatch landing zone", or a street). Units get
+                      "Point: Combine landing zone", or a street). Units get
                       "Secure the landing zone"; the Resistance "Ambush the
                       landing".
       Foremen         a Trusted citizen (150 standing) can be a Union foreman
@@ -308,7 +310,7 @@ function LC.HijackStart(screen, by)
         screen:SetNW2Float("lc_hijacked_until", 0)
         LC.RebelSurgeUntil = CurTime() + 600
         LC.SocioOverride = { level = "yellow", untilT = CurTime() + 600, by = "Resistance broadcast" }
-        if LC.RefreshSocio then pcall(LC.RefreshSocio, false, true) end
+        if LC.RefreshSocio then LC.Try(LC.RefreshSocio, false, true) end
         for _, p in ipairs(player.GetAll()) do p:ChatPrint("[City] The Resistance's message ran for a full minute. People are talking.") end
         if IsValid(screen.lcHijacker) and screen.lcHijacker:IsPlayer() and LC.AddXP then LC.AddXP(screen.lcHijacker, 40, "screen hijack") end
         hook.Run("LivingCityHijackDone", screen)
@@ -403,7 +405,14 @@ function LC.StartOverwatchDrop(pos)
             at = spot + Vector(math.cos(a) * (50 + clear + i * 12), math.sin(a) * (50 + clear + i * 12), 6)
             if LC.GroundAt then at = LC.GroundAt(at) + Vector(0, 0, 6) end
         end
-        local ok, npc, st = pcall(sp, at, (elite and i == 1) and "elite" or nil)
+        -- The drop brings its own soldiers: Overwatch's reserve is topped up for each one as they step off (it
+        -- was added when the drop was called, and in the minute or two the dropship waits other soldiers took it:
+        -- the owner, 14 November, the dropship's door opened and nobody came out).
+        if LC.ManpowerCan and LC.ManpowerPool and not LC.ManpowerCan("ota") then
+            local p = LC.ManpowerPool("ota")
+            p.reserve = p.reserve + 1
+        end
+        local ok, npc, st = LC.Try(sp, at, (elite and i == 1) and "elite" or nil)
         if ok and IsValid(npc) and st and door then
             npc:SetAngles(Angle(0, door.dir:Angle().y, 0))
             -- the deploy: Half-Life 2's soldiers jump or step down out of the container
@@ -426,9 +435,11 @@ function LC.StartOverwatchDrop(pos)
     end
     local n = cvDropN:GetInt()
     d.expected = n
+    d.deploy = function(i) Deploy(pos, i, n, false, nil) end -- (on the ground at the landing zone: LC.OverwatchDropTopUp)
     local function Land()
         if LC.OverwatchDrop ~= d or d.landT then return end
         d.landT, d.untilT = CurTime(), CurTime() + 300
+        d.deployDue = CurTime() + 25 + n * 1.5 -- (flown in, landed, and every one out by now)
         local ship = LC.FlyDropship and LC.FlyDropship({ pos = pos, hold = 8 + n * 1.5, troops = true, -- (the soldiers come out of its container, which never leaves its claws)
             onLanded = function(_, ground, container, door)
                 if IsValid(container) and not door then clear = 130 end
@@ -446,6 +457,18 @@ function LC.StartOverwatchDrop(pos)
     if #posted > 0 and LC.ProtectWait then LC.ProtectWait({ "cp_securelz" }, posted, Land, "The dropship") else timer.Simple(6, Land) end
     hook.Run("LivingCityOverwatchDrop", d)
     return true, d
+end
+
+-- Whoever didn't come off the dropship (or didn't come at all) is put on the ground at the landing zone
+-- (the owner, 14 November: "SPAWN THEM, RESEND THE DROPSHIP AND RESPAWN THEM, OR JUST SPAWN THEM AT THE
+-- LANDING ZONE"). nil while they're still on their way; else how many were put there.
+function LC.OverwatchDropTopUp(d, missing)
+    d = d or LC.OverwatchDrop
+    if not d or LC.OverwatchDrop ~= d or not d.deploy then return 0 end
+    if not d.landT or CurTime() < (d.deployDue or 0) then return nil end
+    local before = #d.soldiers
+    for k = 1, math.max(0, missing or 0) do d.deploy(before + k) end
+    return #d.soldiers - before
 end
 
 function LC.EndOverwatchDrop()
@@ -500,6 +523,14 @@ local function DropTick(now)
         -- after the landing was due. (It was "nobody alive 45 seconds after the call", which a slow dropship
         -- made true before anyone had set foot on the ground: the party was "lost" with nobody there.)
         local land = d.landT
+        -- the door opened and fewer came out than were on board: the rest are put on the ground, once
+        if land and not d.toppedUp and d.deployDue and now > d.deployDue then
+            d.toppedUp = true
+            local short = (d.expected or 0) - #d.soldiers
+            if short > 0 then LC.OverwatchDropTopUp(d, short) end
+            alive = 0
+            for _, s in ipairs(d.soldiers) do if IsValid(s) and s:Health() > 0 then alive = alive + 1 end end
+        end
         local lost = land ~= nil and alive == 0 and ((#d.soldiers > 0 and now - land > 20) or now - land > 120)
         if now > d.untilT or lost then
             if lost then
@@ -545,21 +576,53 @@ local function Achieve(sk)
     elseif purpose == "ambush" then
         Radio("resistance", "Our fighters hit the landing zone.")
     elseif purpose == "supply" then
+        -- the guard down, they open the crate and take all of it (the owner, 14 November: "can they open the
+        -- crates and raid the supplies (which automatically go into the resistance crates/network) when
+        -- they've killed all the nearby CP units and guards?"). It was two loads, guard or no guard.
         local sup, took = LC.Supply, 0
         if sup and IsValid(sup.crate) then
-            local left = sup.crate:GetNW2Int("lc_loads", 0)
-            took = math.min(2, left)
-            if took > 0 then sup.crate:SetNW2Int("lc_loads", left - took) end
+            took = sup.crate:GetNW2Int("lc_loads", 0)
+            if took > 0 then sup.crate:SetNW2Int("lc_loads", 0) end
+            -- the one nearest it is seen at it
+            local at, best, bd = sup.crate:GetPos()
+            for _, npc in ipairs(sk.rebels or {}) do
+                if IsValid(npc) and npc:Health() > 0 then
+                    local d = npc:GetPos():DistToSqr(at)
+                    if not bd or d < bd then best, bd = npc, d end
+                end
+            end
+            if best and LC.PlayGesture then LC.PlayGesture(best, { "ACT_PICKUP_GROUND", "pickup", "ACT_GMOD_GESTURE_ITEM_PLACE" }, 2) end
+            if took > 0 then sup.crate:EmitSound("physics/wood/wood_crate_impact_hard" .. math.random(1, 3) .. ".wav", 70) end
         end
-        -- and food for the stores at home
+        -- and it goes into the stores at home: two supplies for each load (never fewer than the three it always was)
         local rp = sk.zone and LC.RebelProps and LC.RebelProps[sk.zone]
-        if rp and IsValid(rp.cache) and LC.AddToCache then LC.AddToCache(rp.cache, 3) end
+        if rp and IsValid(rp.cache) and LC.AddToCache then LC.AddToCache(rp.cache, math.max(3, took * 2)) end
         Radio("resistance", took > 0 and string.format("Our fighters got into the supply drop: %d load%s gone, and food for the stores.", took, took == 1 and "" or "s")
             or "Our fighters hit the supply drop. Cleaned out already.")
         TellUnits("[CP net] Anticitizens looted the supply drop " .. Where(sk.target) .. ".")
     end
     hook.Run("LivingCityRebelOpDone", purpose, sk)
 end
+
+-- A supply drop's guard and porters, and any unit beside the crate: while one of them stands the fighters
+-- fight, and the crate is opened only once they are all down.
+local GUARD_NEAR = 350
+local function SupplyGuarded(sk)
+    local sup = LC.Supply
+    if not sup then return false end
+    for _, g in ipairs(sup.guards or {}) do
+        if IsValid(g) and g:Health() > 0 then return true end
+    end
+    local at = IsValid(sup.crate) and sup.crate:GetPos() or sk.target
+    for npc, st in pairs(LC.NPCs or {}) do
+        if (st.role == "cop" or st.role == "soldier") and IsValid(npc) and npc:Health() > 0 and npc:GetPos():DistToSqr(at) < GUARD_NEAR * GUARD_NEAR then return true end
+    end
+    for _, p in ipairs(player.GetAll()) do
+        if p:Alive() and LC.PlayerIsCP and LC.PlayerIsCP(p) and p:GetPos():DistToSqr(at) < GUARD_NEAR * GUARD_NEAR then return true end
+    end
+    return false
+end
+LC.RebelSupplyGuarded = SupplyGuarded
 
 local function OpTick(now)
     local sk = LC.Skirmish
@@ -570,7 +633,7 @@ local function OpTick(now)
     for _, npc in ipairs(sk.rebels or {}) do
         if IsValid(npc) and npc:Health() > 0 and npc:GetPos():DistToSqr(sk.target) < 280 * 280 then near = near + 1 end
     end
-    if near > 0 then
+    if near > 0 and not (sk.purpose == "supply" and SupplyGuarded(sk)) then
         sk.progress = (sk.progress or 0) + 1
         if not sk.alarmed and sk.progress >= math.floor((NEED[sk.purpose] or 20) / 2) then
             sk.alarmed = true
@@ -585,6 +648,8 @@ local function OpTick(now)
         if sk.progress >= (NEED[sk.purpose] or 20) then Achieve(sk) end
     end
 end
+
+LC.RebelOpTick = OpTick
 
 local function NearestRebelZone(pos)
     local best, bd
@@ -684,7 +749,7 @@ function LC.AssignWork(foreman, target)
         for _, x in ipairs(LC.QuestTemplates or {}) do if x.id == id then t = x end end
     end
     if not t then return false, "No work orders to hand out." end
-    local okB, spec = pcall(t.build, target)
+    local okB, spec = LC.Try(t.build, target)
     if not okB or not spec then return false, "Nothing to send them to right now." end
     assignSerial = assignSerial + 1
     spec.id, spec.tmpl, spec.faction, spec.data = assignSerial, t, "citizen", spec.data or {}
@@ -775,10 +840,184 @@ local cvSlaves = CreateConVar("lc_vort_slaves", "2", FLAGS, "Shackled vortigaunt
 LC.VortSlaves = LC.VortSlaves or {}
 local nextSlave = 0
 local BROOM_MODEL = "models/props_c17/pushbroom.mdl"
--- where the broom sits, from the vortigaunt's feet, and how far it swings. (The owner, 12 November:
--- held in the claw it stuck out to the side, the claw's own angle being the engine's; now it sits
--- out in front, head on the ground, handle up to the hands, the way a stalker holds it: lc_broom_hold.)
-local BROOM = { body = { pos = Vector(34, -6, 2), ang = Angle(-35, 0, 0) }, swing = 12, tilt = 7, rate = 2.4 }
+-- Where the broom sits. (The owner, 12 November: held in the claw it stuck out to the side, the claw's
+-- own angle being the engine's; it was then put at a fixed spot from the vortigaunt's feet, numbers
+-- made for a stalker's body. The owner, 14 November, with a screenshot: the vortigaunt hunched, the
+-- broom not in its hands but leaning on the floor beside it, head up.) Now it is worked out from the
+-- vortigaunt's own hands every tick: the head rests on the floor ahead and the handle runs up through
+-- the hands, whatever animation it is in. Which way the model lies is read off the model itself (its
+-- longest side is the handle; the heavier end is the head), so there are no numbers to tune.
+local BROOM = { hold = 0.72, swing = 12, rate = 2.4 } -- (hold: how far up the handle the hands are)
+local cvBroomFlip = CreateConVar("lc_vort_broom_flip", "0", FLAGS, "1 turns a street vortigaunt's broom end for end (if the head is in its hands and the handle on the floor)")
+local AXES = { "x", "y", "z" }
+
+-- The broom model's shape: which of its own axes the handle lies along, which the head is wide along,
+-- how long it is, and the point at the head end that rests on the floor. massCentre (the model's own,
+-- or nil) says which end the head is: the heavy one.
+function LC.VortBroomGeo(mins, maxs, massCentre, flip)
+    local function Ext() return { x = maxs.x - mins.x, y = maxs.y - mins.y, z = maxs.z - mins.z } end
+    local ext = Ext()
+    local long = "z"
+    for _, a in ipairs(AXES) do if ext[a] > ext[long] then long = a end end
+    if ext[long] < 30 then -- (no broom's shape to read: a plain upright one)
+        mins, maxs, massCentre, long = Vector(-12, -3, -35), Vector(12, 3, 35), nil, "z"
+        ext = Ext()
+    end
+    local rest = {}
+    for _, a in ipairs(AXES) do if a ~= long then rest[#rest + 1] = a end end
+    local wide, third = rest[1], rest[2]
+    if ext[third] > ext[wide] then wide, third = third, wide end
+    local mid = (mins + maxs) * 0.5
+    local headAtMax = long ~= "z" -- (with nothing to go by: an upright model has its head at the bottom)
+    if massCentre then
+        local d = massCentre[long] - mid[long]
+        if math.abs(d) > ext[long] * 0.03 then headAtMax = d > 0 end
+    end
+    if flip then headAtMax = not headAtMax end
+    local hp = Vector(mid.x, mid.y, mid.z)
+    hp[long] = headAtMax and maxs[long] or mins[long]
+    return { long = long, wide = wide, third = third, len = ext[long], headAtMax = headAtMax, headPoint = hp }
+end
+
+-- An angle from where a model's own forward (x) and up (z) point in the world.
+local function BasisAngle(F, U)
+    local sp = -F.z
+    if math.abs(sp) > 0.9999 then
+        local sg = sp > 0 and 1 or -1
+        return Angle(90 * sg, math.deg(math.atan2(U.y * sg, U.x * sg)), 0)
+    end
+    local left = U:Cross(F)
+    return Angle(math.deg(math.asin(sp)), math.deg(math.atan2(F.y, F.x)), math.deg(math.atan2(left.z, U.z)))
+end
+
+-- Where the broom goes: grip is where the hands are, fwd the way the vortigaunt faces, groundZ the
+-- floor under it, k the swing (-1 to 1: the head pushed out and drawn back along the floor, the
+-- handle sliding through the hands). Returns its position and angle in the world, and where its
+-- head, its hands and its top end up, with the world directions of its own three axes.
+function LC.VortBroomPose(grip, fwd, groundZ, geo, k)
+    local f = Vector(fwd.x, fwd.y, 0)
+    if f:LengthSqr() < 0.01 then f = Vector(1, 0, 0) end
+    f:Normalize()
+    local len = geo.len
+    local h = math.Clamp(grip.z - groundZ - 1, 8, len - 6)
+    local hold = math.Clamp(len * BROOM.hold, h + 4, len - 2)
+    local reach = math.sqrt(hold * hold - h * h) + (k or 0) * BROOM.swing
+    reach = math.Clamp(reach, 6, math.sqrt((len - 2) ^ 2 - h * h))
+    local head = Vector(grip.x, grip.y, groundZ + 1) + f * reach
+    local hands = Vector(grip.x, grip.y, groundZ + 1 + h)
+    local u = hands - head
+    u:Normalize()
+    local W = {}
+    W[geo.long] = u * (geo.headAtMax and -1 or 1)
+    W[geo.wide] = Vector(-f.y, f.x, 0) -- (the head lies across the way it is pushed)
+    local a, b = geo.long, geo.wide
+    local cyclic = (a == "x" and b == "y") or (a == "y" and b == "z") or (a == "z" and b == "x")
+    W[geo.third] = cyclic and W[a]:Cross(W[b]) or W[b]:Cross(W[a])
+    local hp = geo.headPoint
+    local pos = head - (W.x * hp.x + W.y * hp.y + W.z * hp.z)
+    return pos, BasisAngle(W.x, W.z), { head = head, hands = hands, top = head + u * len, x = W.x, y = W.y, z = W.z }
+end
+
+-- The vortigaunt's hands: between its two claws (the model's own points, where its beams start), or
+-- the one it has, or its hand bones; failing all of them, in front of its chest.
+local CLAWS = { { "rightclaw", "ValveBiped.hand1_R" }, { "leftclaw", "ValveBiped.hand1_L" } }
+local function Hands(v)
+    local origin = v:GetPos()
+    local sum, n = Vector(0, 0, 0), 0
+    for _, c in ipairs(CLAWS) do
+        local p
+        local id = v.LookupAttachment and v:LookupAttachment(c[1]) or 0
+        if id and id > 0 and v.GetAttachment then
+            local at = v:GetAttachment(id)
+            p = at and at.Pos or nil
+        end
+        if not p and v.LookupBone and v.GetBonePosition then
+            local bone = v:LookupBone(c[2])
+            if bone then p = v:GetBonePosition(bone) end
+        end
+        -- (a point at its feet or far from it is no hand: bones not set up yet)
+        if p and p.z - origin.z > 6 and p:DistToSqr(origin) < 80 * 80 then sum, n = sum + p, n + 1 end
+    end
+    if n > 0 then return sum * (1 / n), true end
+    return origin + v:GetForward() * 16 + Vector(0, 0, 34), false
+end
+
+-- The heavier end of the model is the head: its mass centre, read off a prop made for a moment.
+local function MassCentre(model, near)
+    local mc
+    LC.Try(function()
+        local probe = ents.Create("prop_physics")
+        if not IsValid(probe) then return end
+        probe:SetModel(model)
+        probe:SetPos(near + Vector(0, 0, 80))
+        if probe.SetCollisionGroup then probe:SetCollisionGroup(COLLISION_GROUP_IN_VEHICLE or 10) end
+        probe:Spawn()
+        local phys = probe.GetPhysicsObject and probe:GetPhysicsObject()
+        if IsValid(phys) then
+            if phys.EnableMotion then phys:EnableMotion(false) end
+            mc = phys.GetMassCenter and phys:GetMassCenter() or nil
+        end
+        probe:Remove()
+    end)
+    return mc
+end
+
+local geoFor = {}
+local function BroomGeo(v, e)
+    local key = (e:GetModel() or BROOM_MODEL) .. (cvBroomFlip:GetBool() and "|flip" or "")
+    local g = geoFor[key]
+    if g then return g end
+    local mins, maxs
+    if e.GetModelBounds then mins, maxs = e:GetModelBounds() end
+    if not (mins and maxs) then mins, maxs = e:OBBMins(), e:OBBMaxs() end
+    g = LC.VortBroomGeo(mins, maxs, MassCentre(e:GetModel() or BROOM_MODEL, v:GetPos()), cvBroomFlip:GetBool())
+    geoFor[key] = g
+    return g
+end
+
+-- The broom put in its claws by hand (the owner, 15 November: "no the broom is not in its claws"; the
+-- Miscount Poser's mannequin, sh_livingcity_poses.lua "vort_sweep"): it hangs from that claw's own bone,
+-- at the place and angle measured, so the engine carries it with the claw through every animation. A
+-- model with no such bone: held at that place from its feet.
+local function HoldBroomAsSet(v, s, hold)
+    local e = s.broom
+    local ver = LC.PoseVersion()
+    if s.broomSet == ver then return end
+    s.broomSet = ver
+    local bone = hold.bone ~= "" and v.LookupBone and v:LookupBone(hold.bone) or nil
+    if bone and bone >= 0 and e.FollowBone then
+        e:FollowBone(v, bone)
+        s.broomBone = hold.bone
+    else
+        if e.RemoveEffects and EF_FOLLOWBONE then e:RemoveEffects(EF_FOLLOWBONE) end -- (no longer carried by a bone)
+        e:SetParent(nil)
+        e:SetParent(v)
+        s.broomBone = ""
+    end
+    e:SetLocalPos(hold.pos)
+    if e.SetLocalAngles then e:SetLocalAngles(hold.ang) end
+    s.broomAt = nil
+end
+
+-- Put the broom in the vortigaunt's hands (it stays its child, so it goes where the vortigaunt goes
+-- between one tick and the next).
+local function HoldBroom(v, s, k)
+    local e = s.broom
+    if not IsValid(e) or not e.SetLocalPos then return end
+    local hold = LC.PoseProp and LC.PoseProp("vort_sweep", "broom")
+    if hold and hold.tuned then return HoldBroomAsSet(v, s, hold) end
+    if s.broomSet then -- (set by hand before, and now back to the built-in: let go of the claw's bone)
+        s.broomSet, s.broomBone = nil, nil
+        if e.RemoveEffects and EF_FOLLOWBONE then e:RemoveEffects(EF_FOLLOWBONE) end -- (no longer carried by a bone)
+        e:SetParent(nil)
+        e:SetParent(v)
+    end
+    local grip = Hands(v)
+    local pos, ang, where = LC.VortBroomPose(grip, v:GetForward(), v:GetPos().z, BroomGeo(v, e), k)
+    e:SetLocalPos(v.WorldToLocal and v:WorldToLocal(pos) or (pos - v:GetPos()))
+    if e.SetLocalAngles then e:SetLocalAngles(v.WorldToLocalAngles and v:WorldToLocalAngles(ang) or ang) end
+    s.broomAt = where
+end
 local SLAVE_MONSTERS = { "npc_headcrab", "npc_headcrab_fast", "npc_headcrab_black", "npc_headcrab_poison",
     "npc_zombie", "npc_zombie_torso", "npc_fastzombie", "npc_fastzombie_torso", "npc_poisonzombie", "npc_zombine" }
 
@@ -800,26 +1039,42 @@ local function Broom(v, s)
     e:SetPos(v:GetPos() + Vector(0, 0, 40))
     e:Spawn()
     if e.SetSolid then e:SetSolid(SOLID_NONE) end
-    local fit = BROOM.body
     e:SetParent(v)
-    if e.SetLocalPos then e:SetLocalPos(fit.pos) end
-    if e.SetLocalAngles then e:SetLocalAngles(fit.ang) end
-    s.broom, s.fit = e, fit
+    s.broom = e
     v.lcBroom = e
     if v.DeleteOnRemove then v:DeleteOnRemove(e) end
+    HoldBroom(v, s, 0)
     return e
 end
 
--- The swing: the broom pushed out and back along the ground, the vortigaunt's arms being the
--- engine's (no sweeping animation of its own that can be counted on).
+-- The swing: the head pushed out and drawn back along the floor, the handle through the hands
+-- wherever the vortigaunt's own animation has them.
 local function Swing(v, s, now)
-    local e = s.broom
-    if not IsValid(e) or not e.SetLocalPos then return end
-    local fit = s.fit or BROOM.body
-    local k = math.sin(now * BROOM.rate)
-    e:SetLocalPos(fit.pos + Vector(k * BROOM.swing, 0, 0))
-    e:SetLocalAngles(Angle(fit.ang.p + k * BROOM.tilt, fit.ang.y, fit.ang.r))
+    HoldBroom(v, s, math.sin(now * BROOM.rate))
 end
+LC.VortBroomSwing = Swing -- (for tests)
+
+-- Its limbs, when the owner has turned any by hand on the Miscount Poser's mannequin (none are built
+-- in): turned on top of whatever it is doing, and put back when the pose is reset or it is cut loose.
+local function SweepPose(v, s, off)
+    if not (LC.PoseBones and v.ManipulateBoneAngles and v.LookupBone) then return end
+    local ver = LC.PoseVersion()
+    if s.poseSet == ver and not off then return end
+    s.poseSet = ver
+    local pose = off and {} or LC.PoseBones("vort_sweep")
+    for name, id in pairs(s.poseBones or {}) do
+        if not pose[name] then v:ManipulateBoneAngles(id, Angle(0, 0, 0)) end
+    end
+    s.poseBones = {}
+    for name, a in pairs(pose) do
+        local id = v:LookupBone(name)
+        if id and id >= 0 then
+            v:ManipulateBoneAngles(id, a)
+            s.poseBones[name] = id
+        end
+    end
+end
+LC.VortSweepPose = SweepPose -- (for tests)
 
 -- Walked into (a player, or one of the city's people wedged against it): a shuffle to whichever
 -- side is open, then a few steps clear, as the city's people do (sv_livingcity.lua, "Out of the way").
@@ -884,7 +1139,7 @@ local swingTick = 0
 timer.Create("LivingCityVortSweep", 0.1, 0, function()
     if next(LC.VortSlaves) == nil then return end
     local now = CurTime()
-    local ok, err = pcall(function()
+    local ok, err = LC.Try(function()
         for v, s in pairs(LC.VortSlaves) do if IsValid(v) and (s.fleeUntil or 0) < now then Swing(v, s, now) end end
         swingTick = swingTick + 1
         if swingTick % 3 == 0 then SlaveMakeWay(now) end
@@ -943,6 +1198,7 @@ local function SlaveTick(now)
             for _, p in ipairs(player.GetAll()) do v:AddEntityRelationship(p, D_NU, 99) end
             if not s.harmless then s.harmless = true Harmless(v) end
             Broom(v, s)
+            SweepPose(v, s)
             local fleeing = (s.fleeUntil or 0) > now or Flee(v, s, now)
             local walking = v.IsCurrentSchedule and (v:IsCurrentSchedule(SCHED_FORCED_GO) or v:IsCurrentSchedule(SCHED_FORCED_GO_RUN))
             if not fleeing then
@@ -1016,6 +1272,7 @@ function LC.FreeStreetVort(v, by)
     if not IsValid(v) or not v.lcVortSlave then return false end
     local s = LC.VortSlaves[v]
     if s and IsValid(s.broom) then s.broom:Remove() end -- (the broom stays in the Combine's gutter)
+    if s then SweepPose(v, s, true) end
     v.lcBroom = nil
     LC.VortSlaves[v] = nil
     v.lcVortSlave = nil
@@ -1095,7 +1352,7 @@ function LC.VortChargeShow(ply, v)
     local name = LC.VortChargeSequence(v)
     if name and LC.MakeSequence then
         local flags = (SF_SCRIPT_NO_COMPLAINTS or 128) + (SF_SCRIPT_ALLOW_DEATH or 64)
-        local ok, ss = pcall(LC.MakeSequence, v, v:GetPos(), v:GetAngles().y, name, name, flags, 0, 0)
+        local ok, ss = LC.Try(LC.MakeSequence, v, v:GetPos(), v:GetAngles().y, name, name, flags, 0, 0)
         if ok and IsValid(ss) then
             timer.Simple(secs + 0.3, function()
                 if not IsValid(ss) then return end
@@ -1179,7 +1436,7 @@ end)
 
 local nextOps, nextSmuggle, nextReact = 0, 0, 0
 timer.Create("LivingCityResistanceOps", 1, 0, function()
-    local ok, err = pcall(function()
+    local ok, err = LC.Try(function()
         local now = CurTime()
         OpTick(now)
         DropTick(now)

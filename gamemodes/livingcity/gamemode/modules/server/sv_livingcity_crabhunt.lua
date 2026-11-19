@@ -128,7 +128,7 @@ end
 
 LC.QuestTemplates[#LC.QuestTemplates + 1] = {
     -- (not a "violent" job: no squad of fighters, it isn't a fight with the Combine)
-    id = "res_crabhunt", factions = { resistance = true }, squad = 4,
+    id = "res_crabhunt", brings = false, factions = { resistance = true }, squad = 4,
     available = function() return CH.Available() end,
     build = function(ply, focus)
         local zones = LC.ZonesOfKind and LC.ZonesOfKind("infest") or {}
@@ -251,6 +251,6 @@ function CH.Check(now)
 end
 
 timer.Create("LivingCityCrabHunt", 30, 0, function()
-    local ok, err = pcall(CH.Check)
+    local ok, err = LC.Try(CH.Check)
     if not ok and LC.Error then LC.Error("headcrab hunt", err) end
 end)

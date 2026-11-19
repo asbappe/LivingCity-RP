@@ -111,6 +111,6 @@ local function Praise(now)
 end
 LC.LoyalPraise = function(now) nextPraise = 0 Praise(now or CurTime()) end -- (for tests)
 timer.Create("LivingCityLoyalty", 10, 0, function()
-    local ok, err = pcall(Praise, CurTime())
+    local ok, err = LC.Try(Praise, CurTime())
     if not ok and LC.Error then LC.Error("loyalty", err) end
 end)

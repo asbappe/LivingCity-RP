@@ -2,7 +2,7 @@
 
 A Combine-occupied city for Garry's Mod: ambient citizens and Civil Protection running real routines, plus factions and ranks, radiant quests with dice, personal story chains, twelve Union jobs, hunger and thirst, social credit, a Commissary, contraband and a black market, stop-and-search, disguises and forged papers, radios, prisons, curfews, and an in-game editor for all of it. Its own gamemode, for singleplayer and servers.
 
-**Voice lines to record or generate** (announcements in both voices, the radio, the G-Man, the dreams): [`VOICE_LINES.md`](VOICE_LINES.md), made from the code by `python3 _dev/voice_lines.py`.
+**Voice lines to record or generate** (announcements in both voices, the radio, the G-Man, the dreams): [`VOICE_SCRIPTS.md`](VOICE_SCRIPTS.md), made from the code by `python3 _dev/voice_lines.py`.
 
 ## Where everything is described
 
@@ -46,6 +46,7 @@ This file is only an index. The specification of how everything behaves (the agr
 - [Staff tools](docs/features/staff-tools.md): Admin safeguards for a public server, staff menus
 - [Contraband, searches, the underground, and conduct](docs/features/contraband.md): Stop and search, stash, stealth, wanted, the black market, lockpicks, conduct
 - [Pose Recorder (a separate tool)](docs/features/pose-recorder.md): The separate dance and pose tool
+- [The Miscount Poser: the hand-made poses, set by hand](docs/features/pose-tool.md): The tool below the editor, the mannequin and the physgun, which poses it sets, where they are kept
 - [The Resistance's way marks](docs/features/way-marks.md): permanent sprayed arrows and FREEDOM THIS WAY, painted on walls with the editor, pointing to rebel ground
 - [Posters that hint at dreams](docs/features/dream-posters.md): a share of the plain curfew posters foreshadow tonight's dream or remember a recent one
 - [The play study](docs/features/play-study.md): the owner's own play written down (who, where, in what, on which job), as a model for the city's people; F4 > Factions > Admin: play study
@@ -57,3 +58,4 @@ This file is only an index. The specification of how everything behaves (the agr
 - [The radio to HQ, and the resupply scanner](docs/features/radio-hq-and-resupply.md): a unit's calls to HQ only with the radio out, its right click's Radio menu, and the shield scanner's resupply crate.
 - [Gas masks, the gas and the flashbang](docs/features/gas-masks.md): masks off uniforms and the dead, who puts one on in the gas, hands over mouths and eyes, running from the gas.
 - [Half-Life 2's ammo limits](docs/features/ammo-limits.md): pistol 150, SMG 225, shotgun 30 and the rest instead of Garry's Mod's 9999, kept through deaths, respawns, close calls and dreams.
+- [The Resistance's fund](docs/features/resistance-fund.md): half of every take from supplies raided and people saved, the other half to those who took part; it pays for the leader's order to kill the Administrator (300 each), and later shooters are paid half.

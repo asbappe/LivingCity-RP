@@ -377,8 +377,8 @@ end
 function LC.DirectiveHeat(id, now)
     local d = D[id]
     if not d then return 0, false end
-    local okA, a = pcall(d.admin, now or Now())
-    local okC, c = pcall(d.city, now or Now())
+    local okA, a = LC.Try(d.admin, now or Now())
+    local okC, c = LC.Try(d.city, now or Now())
     a = okA and Parts(a) or 0
     c = okC and Parts(c) or 0
     return math.max(a, c), a >= 1 or c >= 1, a >= 1 and "administrator" or "city"
@@ -569,7 +569,7 @@ end
 LC.GmanDropCrates = DropCrates -- (the collapse uses them too: sv_livingcity_collapse.lua)
 local function Spread()
     local seeds = LC.TerritorySeeds and LC.TerritorySeeds("infest") or {}
-    if #seeds > 0 and LC.GrowTerritory then pcall(LC.GrowTerritory, seeds[math.random(#seeds)], nil, nil, "something unseen") end
+    if #seeds > 0 and LC.GrowTerritory then LC.Try(LC.GrowTerritory, seeds[math.random(#seeds)], nil, nil, "something unseen") end
 end
 
 -- what each refusal brings, in stages, and when he comes back
@@ -589,7 +589,7 @@ local function Escalate(id, level, now)
         At(4, function() if LC.ForceBlackout then LC.ForceBlackout("on") S.esc.blackout = true end All("[City] The grid is failing, block by block.") end)
     else
         At(0.5, function() DropCrates(crates + 2) S.esc.spreading = true if LC.ForceBlackout then LC.ForceBlackout("on") S.esc.blackout = true end end)
-        At(3, function() if LC.StartEvent then pcall(LC.StartEvent, "outbreak") end All("[City] They're out of the infestation, in the streets.") end)
+        At(3, function() if LC.StartEvent then LC.Try(LC.StartEvent, "outbreak") end All("[City] They're out of the infestation, in the streets.") end)
     end
 end
 
@@ -641,7 +641,7 @@ function LC.DirectiveTick(now)
     -- the G-Man's hand
     local esc = S.esc
     if esc then
-        for _, st in ipairs(esc.steps or {}) do if not st.done and now >= st.t then st.done = true pcall(st.fn) end end
+        for _, st in ipairs(esc.steps or {}) do if not st.done and now >= st.t then st.done = true LC.Try(st.fn) end end
         if esc.spreading and esc.spreads < 8 and now >= (esc.nextSpread or 0) then
             esc.nextSpread = now + 60
             esc.spreads = esc.spreads + 1
@@ -691,7 +691,7 @@ function LC.DirectiveTick(now)
     end
 end
 timer.Create("LivingCityDirectives", 2, 0, function()
-    local ok, err = pcall(LC.DirectiveTick, CurTime())
+    local ok, err = LC.Try(LC.DirectiveTick, CurTime())
     if not ok and LC.Error then LC.Error("sealed directives", err) end
 end)
 
@@ -734,7 +734,7 @@ function LC.GmanDreamLines()
     table.sort(dreamLines)
     return dreamLines
 end
-timer.Simple(0, function() pcall(LC.GmanDreamLines) end)
+timer.Simple(0, function() LC.Try(LC.GmanDreamLines) end)
 local function DreamLine()
     local list = LC.GmanDreamLines()
     if #list > 0 then return list[math.random(#list)] end
@@ -757,7 +757,7 @@ timer.Create("LivingCityGmanDreams", 3, 0, function()
     local now = Now()
     for _, p in ipairs(player.GetAll()) do
         local asleep = p:GetNW2Bool("lc_sleeping", false)
-        if asleep and not p.lcWasAsleep then pcall(LC.GmanDream, p, now) end
+        if asleep and not p.lcWasAsleep then LC.Try(LC.GmanDream, p, now) end
         p.lcWasAsleep = asleep
         -- awake, now and then: a whisper (after a refusal)
         if not asleep and S.esc and S.esc.rumour and Rumoured(p) and now >= (p.lcGmanWhisper or 0) then
@@ -863,6 +863,6 @@ function LC.GmanGlimpseTick(now)
     end
 end
 timer.Create("LivingCityGmanGlimpses", 60, 0, function()
-    local ok, err = pcall(LC.GmanGlimpseTick, CurTime())
+    local ok, err = LC.Try(LC.GmanGlimpseTick, CurTime())
     if not ok and LC.Error then LC.Error("G-Man glimpses", err) end
 end)

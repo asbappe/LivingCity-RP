@@ -403,7 +403,7 @@ end
 
 hook.Add("EntityFireBullets", "LivingCityBattleLine", function(ent, data)
     if not IsValid(ent) or not ent:IsPlayer() or ent.lcDreamGame ~= ID or not data then return end
-    if data.Src and data.Dir then pcall(LC.BattleLineShot, ent, data.Src, data.Dir) end
+    if data.Src and data.Dir then LC.Try(LC.BattleLineShot, ent, data.Src, data.Dir) end
 end)
 -- (dreamers can't hurt each other in it)
 hook.Add("EntityTakeDamage", "LivingCityBattleLine", function(victim, dmg)
@@ -481,7 +481,7 @@ function def.tick(g, dt, players)
     for p in pairs(g.enf or {}) do if IsValid(p) and p.lcDreaming == g.dream.id then Arm(p) end end -- (Enforcers too)
     if now >= (g.clearAt or 0) then
         g.clearAt = now + 1
-        local okC, errC = pcall(LC.BattleLineClearField, g)
+        local okC, errC = LC.Try(LC.BattleLineClearField, g)
         if not okC and LC.Error then LC.Error("battle line field", errC) end
     end
     if g.phase == "calm" and t >= T.calm then g.phase, g.dirty, g.spawnAt, g.giantAt, g.tauntAt = "battle", true, now, now + 30, now + 3 end

@@ -47,7 +47,7 @@ function LC.ZombieTarget()
 end
 local cvAutostart = CreateConVar("lc_autostart", "0", FLAGS, "Start Miscount automatically on map load")
 local cvSpawnDist = CreateConVar("lc_spawn_mindist", "900", FLAGS, "Random spawns happen at least this far from players")
-local cvLifetime  = CreateConVar("lc_citizen_lifetime", "600", FLAGS, "Average seconds a citizen stays before going home (0 = forever)")
+local cvLifetime  = CreateConVar("lc_citizen_lifetime", "600", FLAGS, "Retired (15 November 2026): citizens are lasting people now and are no longer swapped out on a timer. Kept so old configs load.")
 local cvArrestChance = CreateConVar("lc_npc_arrest_chance", "8", FLAGS, "Percent chance an inspection ends with the citizen being taken to a cell")
 local cvBudget    = CreateConVar("lc_npc_budget", "100", FLAGS, "Hard cap on Miscount NPCs, whatever the individual targets say")
 local cvLodDist   = CreateConVar("lc_lod_distance", "3500", FLAGS, "NPCs farther than this from every player think less often")
@@ -95,6 +95,7 @@ function LC.Log(level, msg)
 end
 
 function LC.Error(where, err)
+    if LC.ErrorNote then LC.Try(LC.ErrorNote, "caught", err, nil, nil, 1, tostring(where)) end -- (sh_livingcity_errors.lua: the errors file)
     LC.Log("error", where .. ": " .. tostring(err))
     ErrorNoHalt("[Miscount] " .. where .. ": " .. tostring(err) .. "\n")
 end
@@ -415,7 +416,7 @@ local function ReadNodegraph()
     if not f then return {}, nil end
     local nodes, byIndex = {}, {}
     local links
-    local ok = pcall(function()
+    local ok = LC.Try(function()
         if f:ReadLong() ~= 37 then error("unsupported nodegraph version") end
         f:ReadLong() -- map revision
         local n = f:ReadLong()
@@ -434,7 +435,7 @@ local function ReadNodegraph()
             end
         end
         -- the links: whoever can walk between which nodes
-        local okL = pcall(function()
+        local okL = LC.Try(function()
             local count = f:ReadLong()
             if not count or count < 0 or count > 200000 then error("no links") end
             local list = {}
@@ -771,7 +772,7 @@ function LC.PlayGesture(npc, candidates, holdSecs)
             if seq and seq >= 0 then name = c end
         end
         if name then
-            local ok, ss = pcall(MakeSequence, npc, npc:GetPos(), npc:GetAngles().y, name, nil,
+            local ok, ss = LC.Try(MakeSequence, npc, npc:GetPos(), npc:GetAngles().y, name, nil,
                 SF_SCRIPT_NO_COMPLAINTS + SF_SCRIPT_ALLOW_DEATH, 0, 0)
             if ok and IsValid(ss) then
                 npc.lcGesture = ss -- cancelled if they're attacked mid-animation
@@ -796,7 +797,7 @@ local function StartBusy(npc, st, p)
     local loop = SeqName(npc, names[2])
     if not loop then return false end
     local entry = SeqName(npc, names[1])
-    local ok, ss = pcall(MakeSequence, npc, p.pos, p.yaw or 0, entry or loop, loop,
+    local ok, ss = LC.Try(MakeSequence, npc, p.pos, p.yaw or 0, entry or loop, loop,
         SF_SCRIPT_LOOP_IN_POST_IDLE + SF_SCRIPT_NO_COMPLAINTS + SF_SCRIPT_ALLOW_DEATH, 1, 0)
     if not ok or not IsValid(ss) then return false end
     st.ss = ss
@@ -815,13 +816,14 @@ local function EndBusy(npc, st, withExit)
     if withExit and IsValid(npc) and st.busyKind then
         local exit = SeqName(npc, BUSY[st.busyKind][3])
         if exit then
-            local ok, ss2 = pcall(MakeSequence, npc, npc:GetPos(), npc:GetAngles().y, exit, nil,
+            local ok, ss2 = LC.Try(MakeSequence, npc, npc:GetPos(), npc:GetAngles().y, exit, nil,
                 SF_SCRIPT_NO_COMPLAINTS + SF_SCRIPT_ALLOW_DEATH, 0, 0.2)
             if ok and IsValid(ss2) then SafeRemoveEntityDelayed(ss2, 6) end
         end
     end
     st.busyKind = nil
 end
+LC.EndBusy = EndBusy -- (called away mid-sit by the morning exercise: sv_livingcity_exercise.lua)
 
 ------------------------------------------------------------------------
 -- Lines
@@ -1024,9 +1026,12 @@ local function LineThink(now)
         end
         -- rations being handed out and the line short: people are called to it from across the city
         -- (the owner, 7 November: the line stood empty, and the supervision job couldn't be done)
+        -- (and until the line is full, not only up to three: everyone is to come for theirs, the owner, 15 November)
         if LC.Event == "rations" and now > (line.nextCall or 0) then
-            line.nextCall = now + 6
-            if #line.q + Coming(g) < math.min(#line.slots, 3) then LC.CallToLine(g) end
+            line.nextCall = now + 4
+            for _ = 1, 3 do
+                if #line.q + Coming(g) >= #line.slots or not LC.CallToLine(g) then break end
+            end
         end
         if now > (line.nextOrient or 0) then
             line.nextOrient = now + 10
@@ -1110,16 +1115,35 @@ function LC.CallToLine(g)
     if not front then return false end
     local now = CurTime()
     local best, bd
+    -- (not only the idle: whoever has not had theirs, whatever they are doing, by day out of bed too; the owner,
+    -- 15 November: the citizens "seem to not show up to scripted events like this ... nor the ration line". The
+    -- same rule as the morning exercise's, LC.ExerciseDraftable.)
+    local wake = not (LC.DayPhase and LC.DayPhase() == "night")
     for npc, st in pairs(LC.NPCs) do
-        if IsValid(npc) and st.role == "citizen" and st.state == "idle" and not st.test and not st.questLock and not st.leaving
-            and not st.line and not st.lineHeading and not (st.servedUntil and now < st.servedUntil) and now > (st.lineNoWay or 0) then
+        local can = IsValid(npc) and st.role == "citizen" and not st.test and not st.questLock and not st.leaving
+        if can then
+            if LC.ExerciseDraftable then can = LC.ExerciseDraftable(npc, st, wake) else can = st.state == "idle" end
+        end
+        if can and not st.line and not st.lineHeading and not (st.servedUntil and now < st.servedUntil) and now > (st.lineNoWay or 0) then
             local d = npc:GetPos():DistToSqr(front)
             if not bd or d < bd then best, bd = npc, d end
         end
     end
     if not best then return false end
     local st = LC.NPCs[best]
+    local was = st.state
+    if was ~= "idle" and was ~= "moving" then
+        -- (they drop what they were doing)
+        if LC.ExerciseCallAway then LC.ExerciseCallAway(best, st)
+        else
+            if was == "abed" and LC.NPCBedUp then LC.NPCBedUp(best, st) end
+            if was == "busy" then EndBusy(best, st, false) end
+            if st.npcWork and LC.NPCWorkReset then LC.NPCWorkReset(best, st) end
+            Release(best, st)
+        end
+    end
     if JoinLine(best, st, true) then return true end
+    if was ~= "idle" and was ~= "moving" and st.state ~= "idle" then SetState(best, st, "idle") st.untilT = now + 2 end
     st.lineNoWay = now + 120 -- (no way there from where they are: somebody else next time)
     return false
 end
@@ -1239,9 +1263,16 @@ end
 LC.LeaveCounts = LC.LeaveCounts or {}
 
 local function StartLeaving(npc, st, run, why)
+    local named = st.role == "citizen" and st.profile ~= nil
+    -- the one way out of the city short of dying: in despair, with a train in, they board it for good
+    local board = LC.TrainBoardingPos and LC.TrainBoardingPos()
+    local moving = named and board and not st.leaving and why and string.sub(why, 1, 7) == "despair"
     if not st.leaving then
-        why = why or st.leaveWhy or "other"
+        why = moving and "despair: left for another city by train" or why or st.leaveWhy or "other"
         LC.LeaveCounts[why] = (LC.LeaveCounts[why] or 0) + 1
+        -- a named person is at home for a while, then comes back out as themselves (sv_livingcity_people.lua)
+        if named and not moving and LC.PersonWentHome then LC.PersonWentHome(st.profile, why) end
+        if moving then st.profile.moving = true end
     end
     st.leaving = true
     LeaveLine(npc, st)
@@ -1252,9 +1283,10 @@ local function StartLeaving(npc, st, run, why)
     local ev = LC.Event
     -- (and at night, to bed: sv_livingcity_rest.lua)
     local night = st.role == "citizen" and LC.CitizensSleep and LC.CitizensSleep() and LC.IsNight and LC.IsNight()
-    if (ev == "curfew" or ev == "lockdown" or night) and GoHome(npc, st, run) then return true end
+    -- (and anyone who lives here goes home to their own block: they are not leaving the city)
+    if (ev == "curfew" or ev == "lockdown" or night or (named and not moving and not st.profile.moving)) and GoHome(npc, st, run) then return true end
     -- a train's in: leaving the city means boarding it, suitcase and all (sv_livingcity_trains.lua)
-    local board = LC.TrainBoardingPos and LC.TrainBoardingPos()
+    if named and not moving and not st.profile.moving then board = nil end -- (no block to go home to: out by a doorway, never onto the train)
     if board and GoTo(npc, st, board, run, { kind = "spawn", pos = board, yaw = math.random(0, 359) }) then
         if LC.NPCCarry then LC.NPCCarry(npc, st, "models/props_c17/suitcase001a.mdl") end
         LC.SetNPCStr(npc, "lc_doing", "leaving the city by train")
@@ -1316,6 +1348,15 @@ function Arrive(npc, st, now)
         if LC.ExerciseArrive then LC.ExerciseArrive(npc, st, now) else st.untilT = now + 5 end
     elseif k == "speech" then
         if LC.SpeechArrive then LC.SpeechArrive(npc, st, now) else st.untilT = now + 5 end
+    elseif k == "fallin" then
+        -- fallen in for a job of someone's (the Administrator's review of the units): they stand there, facing
+        -- the way poi.yaw says, while the job holds them (st.questLock; it lets them go when it's over)
+        if st.questLock then
+            SetState(npc, st, "event")
+            st.eventUntil = now + 600
+        else
+            st.untilT = now + 2
+        end
     elseif k == "npcwork" then
         if LC.NPCWorkArrive then LC.NPCWorkArrive(npc, st, now) else st.untilT = now + 5 end
     elseif k == "work" then
@@ -1335,15 +1376,14 @@ end
 
 local function Register(npc, role)
     local now = CurTime()
-    local life = cvLifetime:GetFloat()
     local st = {
         role = role, state = "idle", untilT = now + math.Rand(1, 4),
         lastPos = npc:GetPos(), lastMoved = now,
         nextChat = now + math.Rand(10, 30), nextInspect = now + math.Rand(20, 50),
         nextWarn = 0, nextUse = 0, nextBark = 0, nextFollow = 0, recoveries = 0, errors = 0,
         born = now,
-        leaveAt = (role == "citizen" and life > 0) and now + life * math.Rand(0.6, 1.4) or nil,
-        leaveWhy = "their time out was up (lc_citizen_lifetime: a citizen stays about that long, then others come)",
+        -- (no leaveAt: people stay out until they have a reason of their own to go in; the owner, 15 November 2026)
+        leaveWhy = "their part was over (someone brought in for a job, an event or a convoy)",
     }
     npc:SetName("lc_npc_" .. npc:EntIndex())
     npc:SetNW2String("lc_role", role)
@@ -1520,7 +1560,9 @@ local function SpawnSoldier(pos, kind)
     npc:SetPos(pos)
     npc:SetAngles(Angle(0, math.random(0, 359), 0))
     npc:SetKeyValue("additionalequipment", gun)
-    npc:SetKeyValue("NumGrenades", kind == "elite" and "2" or "0")
+    -- (a soldier carries one frag grenade as standard: the owner, 16 November, "a single explosive grenade to the
+    -- combine soldier standard issue"; none before. The Combine's NPCs cannot hurt the Administrator with them.)
+    npc:SetKeyValue("NumGrenades", kind == "elite" and "2" or "1")
     npc:SetKeyValue("spawnflags", tostring(BaseFlags()))
     npc:Spawn()
     npc:Activate()
@@ -1586,7 +1628,8 @@ function LC.SpotInZone(z)
         local top = LCZ.RandomInside(z, 0.85) + Vector(0, 0, 64)
         -- (a patch of territory one floor deep: on its floor, not the street under a roof)
         local tr = util.TraceLine({ start = top, endpos = top - Vector(0, 0, z.h and (z.h + 64) or 400), mask = MASK_NPCSOLID_BRUSHONLY })
-        if tr.Hit and tr.HitNormal.z > 0.7 and (not z.h or LCZ.Contains(z, tr.HitPos)) and ClearSpot(tr.HitPos) then
+        -- (never inside the Resistance's holding cage: LC.CageAt, sv_livingcity_rebelhold.lua)
+        if tr.Hit and tr.HitNormal.z > 0.7 and (not z.h or LCZ.Contains(z, tr.HitPos)) and ClearSpot(tr.HitPos) and not (LC.CageAt and LC.CageAt(tr.HitPos)) then
             -- dry ground first: down in the water, or a channel below the zone's floor, only if there's nothing else
             if (LC.InWater and LC.InWater(tr.HitPos)) or tr.HitPos.z < LCZ.FloorAt(z, tr.HitPos) - 14 then wet = wet or tr.HitPos else return tr.HitPos end
         end
@@ -1809,7 +1852,10 @@ local function MaintainPopulation()
         rebel = LC.RebelTarget and LC.RebelTarget() or 0, -- sv_livingcity_rebels.lua
     }
     for _, role in ipairs(ROLE_ORDER) do
-        if SPAWNERS[role] and (counts[role] or 0) < targets[role] then
+        -- everyone on the street is somebody: with every named citizen already out, or at home
+        -- for now, nobody comes (never a nameless extra): sv_livingcity_people.lua
+        local someone = role ~= "citizen" or not LC.PersonAvailable or LC.PersonAvailable("citizen")
+        if SPAWNERS[role] and (counts[role] or 0) < targets[role] and someone then
             local pos, extra = FindSpawnPos(role)
             if pos and SPAWNERS[role](pos, extra) then return end
         end
@@ -2144,6 +2190,7 @@ local function CalmOne(npc, st, now)
     npc:ClearEnemyMemory()
     npc:SetSchedule(SCHED_IDLE_STAND)
     st.enemy, st.provokedBy, st.arrestOnly = nil, nil, nil
+    st.chaseRoute, st.chaseGoal, st.chaseAt, st.chaseMoved, st.chaseAskAt = nil, nil, nil, nil, nil
     if st.armed then
         -- back to the stick (unless there's a judgment waiver on: then the pistol stays out)
         st.armed = nil
@@ -2152,6 +2199,160 @@ local function CalmOne(npc, st, now)
     SetState(npc, st, "idle"); st.untilT = now + 2
 end
 LC.CalmOne = CalmOne
+
+------------------------------------------------------------------------
+-- The way to a suspect the straight run can't get to
+--
+-- A chase was only ever a straight run at the suspect, by the engine's own
+-- pathfinding. That knows nothing of the ladders (the editor's, the map's,
+-- the ones learned from climbs), nor of the drawn paths and the doors joined
+-- for units, which is how everyone else gets about. So a suspect down a
+-- ladder, or anywhere the map's own nodes don't reach, was never followed:
+-- the run failed, the unit stood where he was, and half a minute later
+-- dispatch had lost them (the owner, 16 November: "down a ladder and into the
+-- sewers, the combine never pursue, ever").
+--
+--   A ladder that goes their way is walked to and climbed, each unit as his
+--   turn comes (the way a squad follower does it: sv_livingcity_rebels.lua),
+--   and the chase carries on from its other end.
+--   A run that gets nowhere asks the city's own routes for the way (the
+--   drawn paths, the nodegraph with its ladders and unit doors), at most
+--   once every CHASE_ASK seconds a unit, and walks it.
+--
+-- How long a chase lasts is as it was: the leash, lc_wanted_lost, the rebel
+-- territory rule.
+------------------------------------------------------------------------
+do
+    local CHASE_ASK = 2     -- seconds between one unit's requests for a route
+    local CHASE_NONE = 6    -- no way found: this long before he asks again
+    local CHASE_STILL = 1.5 -- this long without getting anywhere: the run has failed
+    local CHASE_LEG = 4     -- this long without getting anywhere on a route: that leg can't be walked
+    local LADDER_TURN = 0.8 -- seconds between two units off the same ladder
+    local LADDER_MT = MOVETYPE_LADDER or 9
+    local turns = {} -- [the ladder's far end] = when the last unit came off it
+
+    local function Run(npc, st, to)
+        st.chaseGoal = to
+        npc:SetLastPosition(to)
+        npc:SetSchedule(SCHED_FORCED_GO_RUN)
+    end
+
+    local function DropRoute(st) st.chaseRoute = nil end
+
+    -- The city's way from a unit to the suspect: a list of spots, or nil.
+    -- (Into rebel territory when the chase goes there: the drawn paths keep units off that ground otherwise.)
+    local function Ask(pos, epos, role)
+        local route
+        if LC.InRebelZone and LC.InRebelZone(epos) and LC.EditorRoute then
+            route = LC.EditorRoute(pos, epos, role, true)
+            if not route and LC.NavRoute then route = LC.NavRoute(pos, epos, role) end
+        elseif LC.BuildRoute then
+            route = LC.BuildRoute(pos, epos, role)
+        end
+        return istable(route) and #route > 0 and route or nil
+    end
+
+    -- True: he's on his way round (to a ladder, up it, or along a route), and the straight run is left alone.
+    -- sees: he has them in sight. ranged: he has a gun out (one who sees them shoots from where he is).
+    function LC.ChaseWay(npc, st, e, epos, now, sees, ranged)
+        if os.getenv("LC_TEMP_NOCHASEWAY") then return false end
+        local pos = npc:GetPos()
+        local dz = math.abs(epos.z - pos.z)
+        local running = npc:IsCurrentSchedule(SCHED_FORCED_GO_RUN) or npc:IsCurrentSchedule(SCHED_FORCED_GO)
+        if not st.chaseAt or pos:DistToSqr(st.chaseAt) > 24 * 24 then st.chaseAt, st.chaseMoved = pos, now end
+        if sees and ranged then
+            DropRoute(st)
+            return false
+        end
+
+        -- on another level, and a ladder goes their way (looked for further off than a follower's: a suspect keeps running)
+        if dz > 64 and LC.LadderToward then
+            local climbing = e.GetMoveType ~= nil and e:GetMoveType() == LADDER_MT
+            local near, far = LC.LadderToward(pos, epos, climbing, true)
+            if near then
+                DropRoute(st)
+                local dx, dy = pos.x - near.x, pos.y - near.y
+                if dx * dx + dy * dy < 90 * 90 and math.abs(pos.z - near.z) < 72 then
+                    local key = string.format("%d:%d:%d", far.x, far.y, far.z)
+                    if climbing or now - (turns[key] or -100) < LADDER_TURN then
+                        -- they're still on it (and may be coming back), or the man ahead has only just got off it
+                        if running then npc:SetSchedule(SCHED_IDLE_STAND) end
+                    elseif LC.LadderHop and LC.LadderHop(npc, epos) then
+                        turns[key] = now
+                        st.chasePos, st.chaseGoal, st.lastArrestGoal = nil, nil, nil
+                        st.chaseAt, st.chaseMoved = npc:GetPos(), now
+                    else
+                        return false
+                    end
+                elseif not running or not st.chaseGoal or st.chaseGoal:DistToSqr(near) > 60 * 60 then
+                    Run(npc, st, near)
+                end
+                return true
+            end
+        end
+
+        -- close, on their level: no route wanted
+        local d2 = pos:DistToSqr(epos)
+        if dz <= 64 and (d2 < 300 * 300 or (sees and d2 < 600 * 600)) then
+            DropRoute(st)
+            return false
+        end
+
+        -- along the route he was given
+        local r = st.chaseRoute
+        if r and r.to:DistToSqr(epos) > 500 * 500 and now >= (st.chaseAskAt or 0) then
+            -- they've moved on from where it ended: the way to where they are now
+            st.chaseAskAt = now + CHASE_ASK
+            local route = Ask(pos, epos, st.role)
+            if route then r = { pts = route, hop = 1, to = epos } else r = nil end
+            st.chaseRoute = r
+        end
+        if r then
+            local target = r.pts[r.hop]
+            while target do
+                if LC.LadderHop and LC.LadderHop(npc, target) then
+                    pos = npc:GetPos()
+                    st.chaseAt, st.chaseMoved = pos, now
+                elseif pos:DistToSqr(target) >= 96 * 96 then
+                    break
+                end
+                r.hop = r.hop + 1
+                target = r.pts[r.hop]
+                running = false
+            end
+            if not target then
+                DropRoute(st)
+                st.chasePos = nil
+                return false
+            end
+            if now - (st.chaseMoved or now) > CHASE_LEG then
+                -- this leg can't be walked: the straight run again, and no new route for a while
+                DropRoute(st)
+                st.chaseAskAt = now + CHASE_NONE
+                return false
+            end
+            if not running or st.chaseGoal ~= target then Run(npc, st, target) end
+            return true
+        end
+
+        -- the straight run got nowhere: ask for the way
+        if now - (st.chaseMoved or now) >= CHASE_STILL and now >= (st.chaseAskAt or 0) then
+            -- (a squad's follower standing with his leader stays with him: sv_livingcity_squadai.lua)
+            local squad = LC.Squads and LC.Squads[e]
+            local lead = squad and squad.leader
+            if IsValid(lead) and lead ~= npc and pos:DistToSqr(lead:GetPos()) < 300 * 300 then return false end
+            local route = Ask(pos, epos, st.role)
+            st.chaseAskAt = now + (route and CHASE_ASK or CHASE_NONE)
+            if route then
+                st.chaseRoute = { pts = route, hop = 1, to = epos }
+                st.chaseMoved = now
+                Run(npc, st, route[1])
+                return true
+            end
+        end
+        return false
+    end
+end
 
 -- Hostile units actually go after their target. The engine's combat AI only
 -- engages what it can see, and a walking schedule ignores enemies entirely,
@@ -2172,13 +2373,22 @@ local function Pursue(npc, st, e, now)
     -- after someone who's harmed nobody: run them down and lay hands on them (no shots).
     -- If they turn violent (hurt anyone, a gun in hand, the alert climbs), weapons free.
     if st.arrestOnly then
-        if not e:IsPlayer() or LC.Violent(e) then
+        -- (armed and fighting: a gun or a grenade in hand, a shot just fired: fought, never cuffed. The owner, 14 November)
+        -- (bare hands are not a weapon: a punch still gets the stick and the struggle, the owner, 15 November)
+        local unarmed = LC.TakenUnarmed and LC.TakenUnarmed(e)
+        if not e:IsPlayer() or (LC.Violent(e) and not unarmed) or (LC.ArmedAndFighting and LC.ArmedAndFighting(e)) then
             st.arrestOnly = nil
             if e:IsPlayer() then SetRel(npc, st, e, D_HT) end
             npc:SetEnemy(e)
             if LC.ArmForAlert then LC.ArmForAlert(npc, st, e) end
         else
             local epos = e:GetPos()
+            -- (a unit has hold of them, and they're struggling: he holds on, the others stand by. sv_livingcity_arrest.lua)
+            local held = LC.Struggles and LC.Struggles[e]
+            if held then
+                if held.officer == npc and not npc:IsCurrentSchedule(SCHED_IDLE_STAND) then npc:SetSchedule(SCHED_IDLE_STAND) end
+                return
+            end
             -- (laid hands on only once they're subdued: beaten, down, or standing still for it)
             if npc:GetPos():DistToSqr(epos) < 90 * 90 and LC.NPCSubdue and LC.NPCSubdue(npc, st, e, now) then return end
             if (st.nextShout or 0) < now then
@@ -2186,6 +2396,8 @@ local function Pursue(npc, st, e, now)
                 local lines = STOP_LINES[st.role] or STOP_LINES.cop
                 npc:EmitSound(lines[math.random(#lines)], 80)
             end
+            -- (down a ladder, or where the straight run has no way: round by the ladder or the city's routes)
+            if LC.ChaseWay(npc, st, e, epos, now, false, false) then return end
             st.chasePos = epos
             npc:SetLastPosition(epos)
             if not npc:IsCurrentSchedule(SCHED_FORCED_GO_RUN) or (st.lastArrestGoal or Vector(0, 0, 0)):DistToSqr(epos) > 60 * 60 then
@@ -2194,6 +2406,16 @@ local function Pursue(npc, st, e, now)
             end
             return
         end
+    elseif e:IsPlayer() and LC.TakenUnarmed and LC.TakenUnarmed(e) and LC.PlayerIsWanted and LC.PlayerIsWanted(e)
+        and not (LC.PlayerIsZombie and LC.PlayerIsZombie(e)) then
+        -- fought, and now just bare hands (the owner, 15 November: beaten with the batons "while I had just my
+        -- hands out"): back to running them down, the stick, and the struggle, not a beating
+        st.arrestOnly = true
+        SetRel(npc, st, e, D_NU)
+        npc:SetEnemy(NULL)
+        if st.role == "cop" and npc.SelectWeapon and not st.armed then npc:SelectWeapon("weapon_stunstick") end
+        st.nextPursue = now
+        return
     end
     local epos = e:GetPos()
     if npc.UpdateEnemyMemory then npc:UpdateEnemyMemory(e, epos) end
@@ -2208,6 +2430,8 @@ local function Pursue(npc, st, e, now)
     -- as a squad (sv_livingcity_squadai.lua): just hurt, the combat AI has them; a
     -- follower keeps with the leader rather than running at the target alone
     if LC.SquadHurt and LC.SquadHurt(st, now) then return end
+    -- (down a ladder, or where the straight run has no way: each unit round by the ladder or the city's routes)
+    if LC.ChaseWay(npc, st, e, epos, now, sees, st.armed == true or st.role == "soldier") then return end
     if LC.SquadFollow and LC.SquadFollow(npc, st, e, now, sees) then return end
     if sees and d2 < 600 * 600 then
         -- in sight and close: let the combat AI close in and swing
@@ -2236,6 +2460,10 @@ function LC.CopProvoked(npc, st, ply, now)
     -- escorting or who called them for backup
     if LC.InInfest and LC.InInfest(ply:GetPos()) then return end
     if st and (st.workEscort == ply or st.backupFor == ply) then return end
+    -- nor to the one they were sent after (the owner, 15 November): the unit fetching someone who skipped the
+    -- Administrator's address or the morning exercise stands by them, and took them for crowding it: "move
+    -- back", a shove, then wanted for obstruction and marched to the cells (which let them off the muster)
+    if (LC.SpeechChaser and LC.SpeechChaser(ply) == npc) or (st and st.exChase == ply and now - (st.exChaseT or -1e9) < 30) then return end
     -- a unit posted at the desks, and anyone in the arrival search, aren't "crowding" (sv_livingcity_intaketutor.lua)
     if (st and (st.tutorPost or st.tutorBusy)) or (LC.TutorFlows and LC.TutorFlows[ply]) then return end
     local b = ply.lcBump
@@ -2537,8 +2765,9 @@ end
 
 function LC.RefreshRelations()
     -- each player is looked at once, not once per NPC
-    local players, zombie, combine, wanted = player.GetAll(), {}, {}, {}
+    local players, zombie, combine, wanted, admin = player.GetAll(), {}, {}, {}, {}
     for i, ply in ipairs(players) do
+        admin[i] = LC.IsAdministrator and LC.IsAdministrator(ply) or false
         zombie[i] = LC.PlayerIsZombie and LC.PlayerIsZombie(ply) or false
         combine[i] = not zombie[i] and LooksCombine(ply) or false
         wanted[i] = not zombie[i] and LC.PlayerIsWanted and LC.PlayerIsWanted(ply) or false
@@ -2558,6 +2787,9 @@ function LC.RefreshRelations()
                 elseif security then
                     if z then
                         SetRel(npc, st, ply, D_HT)
+                    elseif admin[i] then
+                        SetRel(npc, st, ply, D_LI) -- the Administrator: never an enemy
+                        if st.enemy == ply then st.enemy = nil end
                     elseif role == "scanner" and combine[i] then
                         SetRel(npc, st, ply, D_LI) -- one of ours
                     elseif st.enemy ~= ply and not wanted[i] then
@@ -2624,7 +2856,7 @@ local function Think()
             local fn = THINKERS[st.role] or (LC.Thinkers and LC.Thinkers[st.role])
             if (st.gasFleeUntil or 0) > now then fn = nil end -- (running from the gas: sv_livingcity_gasmask.lua)
             if fn then
-                local ok, err = pcall(fn, npc, st, now)
+                local ok, err = LC.Try(fn, npc, st, now)
                 if not ok then
                     st.errors = (st.errors or 0) + 1
                     LC.Error(st.role .. " in state " .. tostring(st.state), err)
@@ -2636,7 +2868,7 @@ local function Think()
 end
 timer.Create("LivingCityThink", 0.1, 0, function()
     local t0 = SysTime()
-    local ok, err = pcall(Think)
+    local ok, err = LC.Try(Think)
     if not ok then LC.Error("main loop", err) end
     local dt = (SysTime() - t0) * 1000
     local perf = LC.Perf
@@ -2751,6 +2983,8 @@ end
 -- level calls for it.
 function LC.MakeOneHostile(npc, st, target)
     local now = CurTime()
+    -- the Administrator is never the Combine's enemy, whatever she does (the owner, 14 November: "immune to it all")
+    if IsValid(target) and target:IsPlayer() and LC.IsAdministrator and LC.IsAdministrator(target) then return end
     -- walking a prisoner in (sv_livingcity_march.lua): he only lets go of him to
     -- fight whoever attacks him, not to chase someone else
     if st.marching and not (IsValid(target) and st.provokedBy == target and (st.provokedUntil or 0) > now) then return end
@@ -2761,8 +2995,10 @@ function LC.MakeOneHostile(npc, st, target)
     SetState(npc, st, "hostile")
     st.enemy = target
     st.nextPursue, st.chasePos, st.lostSince = 0, nil, nil
-    -- someone wanted who's done nobody any harm: run them down and cuff them, no shooting
-    st.arrestOnly = target:IsPlayer() and LC.Violent and not LC.Violent(target) or nil
+    st.chaseRoute, st.chaseGoal, st.chaseAt, st.chaseMoved, st.chaseAskAt = nil, nil, nil, nil, nil
+    -- someone wanted who's done nobody any harm, or has only used their fists: run them down and cuff them
+    -- (the struggle first), no shooting
+    st.arrestOnly = target:IsPlayer() and LC.Violent and (not LC.Violent(target) or (LC.TakenUnarmed and LC.TakenUnarmed(target))) or nil
     if st.arrestOnly then
         SetRel(npc, st, target, D_NU)
         if st.role == "cop" and npc.SelectWeapon then npc:SelectWeapon("weapon_stunstick") end
@@ -2882,7 +3118,7 @@ hook.Add("EntityTakeDamage", "LivingCityCitizenPanic", function(victim, dmg)
     if not st or st.test or st.role ~= "citizen" then return end
     local att = dmg:GetAttacker()
     if not IsMonster(att) then return end
-    local ok, err = pcall(LC.CitizenPanic, victim, st, att)
+    local ok, err = LC.Try(LC.CitizenPanic, victim, st, att)
     if not ok then LC.Error("citizen panic", err) end
 end)
 
@@ -2936,7 +3172,7 @@ function LC.UnitsSpotMonsters()
 end
 timer.Create("LivingCityUnitsSpotMonsters", 1, 0, function()
     if not LC.Running then return end
-    local ok, err = pcall(LC.UnitsSpotMonsters)
+    local ok, err = LC.Try(LC.UnitsSpotMonsters)
     if not ok then LC.Error("Civil Protection units and monsters", err) end
 end)
 
@@ -3015,10 +3251,14 @@ hook.Add("EntityTakeDamage", "LivingCityDamage", function(victim, dmg)
     -- Civil Protection players can rough up citizens without the NPC cops caring
     if LC.PlayerIsCP(attacker) and st.role == "citizen" then return end
 
+    -- the Administrator strikes one of her own: nobody remembers it, nobody answers it (the owner, 14 November)
+    if (IsSecurity(st) or st.role == "scanner") and LC.IsAdministrator and LC.IsAdministrator(attacker) then return end
+
     -- a unit that gets hurt remembers who did it, however far away they were
     if IsSecurity(st) or st.role == "scanner" then
         st.provokedBy, st.provokedUntil = attacker, CurTime() + 45
-        attacker.lcAttackedSecurityAt = CurTime()
+        -- (a punch is not a fight with a weapon: still taken with the struggle. sv_livingcity_law.lua)
+        if not (LC.BareHandedHit and LC.BareHandedHit(attacker, dmg)) then attacker.lcAttackedSecurityAt = CurTime() end
     end
 
     LC.Scatter(victim:GetPos(), 1500)
@@ -3176,7 +3416,7 @@ local function MakeWay(now)
 end
 LC.MakeWayTick = MakeWay
 timer.Create("LivingCityMakeWay", 0.25, 0, function()
-    local ok, err = pcall(MakeWay, CurTime())
+    local ok, err = LC.Try(MakeWay, CurTime())
     if not ok and LC.Error then LC.Error("make way", err) end
 end)
 
@@ -3218,6 +3458,6 @@ function LC.RescueFallen(now)
     end
 end
 timer.Create("LivingCityFallen", 1, 0, function()
-    local ok, err = pcall(LC.RescueFallen, CurTime())
+    local ok, err = LC.Try(LC.RescueFallen, CurTime())
     if not ok and LC.Error then LC.Error("fallen NPCs", err) end
 end)

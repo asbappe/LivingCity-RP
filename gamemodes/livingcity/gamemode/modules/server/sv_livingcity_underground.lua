@@ -366,7 +366,7 @@ end
 -- Resistance members have clothes of their own to change into: no item needed.
 local OWN_CLOTHES = { plain = "citizen", gear = "rebel" }
 
-function LC.Wear(ply, id)
+function LC.Wear(ply, id, quiet) -- (quiet: whoever dressed them says the one line there is to say)
     local it = LCS.Items[id]
     if OWN_CLOTHES[id] then it = { wear = OWN_CLOTHES[id], own = true } end
     if not it or not it.wear or not (it.own or LC.HasItem(ply, id)) then return false end
@@ -398,7 +398,7 @@ function LC.Wear(ply, id)
     elseif it.wear == "rebel" then
         ply:ChatPrint("[Disguise] Resistance colours. The fighters in rebel territory will take you for one of them, for a while. Out on the streets, Civil Protection units will take you for one of them too.")
     elseif it.own then
-        ply:ChatPrint("[Disguise] Plain clothes. You're just another citizen. Keep your gun out of sight: a Civil Protection unit who sees it will know. (F2 > Gear up to change back.)")
+        if not quiet then ply:ChatPrint("[Disguise] Plain clothes. You're just another citizen. Keep your gun out of sight: a Civil Protection unit who sees it will know. (F2 > Gear up to change back.)") end
     else
         ply:ChatPrint("[Disguise] Union blue, like everyone else. Nobody looks twice at a citizen. Until they check your face.")
     end
@@ -762,11 +762,14 @@ end
 -- What a citizen has on them (nil: nothing), and what happens when a unit finds it, or finds nothing.
 -- (Shared with the pat-down game, sv_livingcity_patsearch.lua.)
 function LC.SearchNPCRoll(st)
+    -- a weapon a sympathizer picked up off the street and hid (sv_livingcity_npcweapons.lua): found, every time
+    if st.hidGun then return "a hidden firearm" end
     -- (someone met on a patrol, loitering or following a unit, is far likelier to: sv_livingcity_patrolcompany.lua)
     if math.random() < (st.suspect and 0.85 or (st.rebel and 0.5 or 0.1)) then return Pick(NPC_CONTRABAND) end
 end
 function LC.SearchNPCFound(cop, npc, st, what)
     st.contraband = what
+    if LC.HiddenGunFound then LC.HiddenGunFound(npc, st) end
     if LC.EvidenceAdd then LC.EvidenceAdd(nil, 1, "search", st.contraband) end -- (sv_livingcity_evidence.lua)
     npc:EmitSound(LC.Sounds and LC.Sounds.Vo(st.gender or "male", "no02") or "", 70)
     cop:ChatPrint("[Search] Found " .. st.contraband .. ". Confiscated. Right click with the baton to detain them.")
@@ -995,7 +998,7 @@ local function ScanForStops(now)
 end
 
 timer.Create("LivingCityStops", 0.5, 0, function()
-    local ok, err = pcall(function()
+    local ok, err = LC.Try(function()
         local now = CurTime()
         if not LC.Running or not cvStops:GetBool() or (LC.EndingSession and LC.EndingSession()) then -- (no inspections through an ending)
             for ply, s in pairs(Stops) do EndStop(ply, s) end
@@ -1423,7 +1426,7 @@ function LC.OpenMarket(ply)
     -- his usual stock, and whatever the Commissary is short of (sv_livingcity_market.lua)
     local stock = {} -- (what only the quartermaster has, a dealer doesn't show: qm, sh_livingcity_shop.lua)
     for _, g in ipairs(LC.MarketBlackList and LC.MarketBlackList() or LCS.Black) do
-        if not g.qm or qm then stock[#stock + 1] = g end
+        if (not g.qm or qm) and not g.lab then stock[#stock + 1] = g end -- (lab: the Resistance's lab alone has it)
     end
     for _, g in ipairs(stock) do
         local can, reason = true, nil
@@ -1459,7 +1462,8 @@ function LC.OpenMarket(ply)
             sell[#sell + 1] = { id = "w:" .. cls, name = (string.gsub(string.gsub(cls, "^weapon_", ""), "_", " ")), n = 1, price = price, weapon = true, donate = giveTo or nil }
         end
     end
-    LC.SendCompressed("lcu_market", { credits = credits, goods = goods, sell = sell, quartermaster = qm }, { ply })
+    -- (gift: credits for the Resistance's fund, at the quartermaster: sv_livingcity_fundgear.lua)
+    LC.SendCompressed("lcu_market", { credits = credits, goods = goods, sell = sell, quartermaster = qm, gift = qm and LC.FundTalkGift or nil }, { ply })
     return true
 end
 
@@ -1485,7 +1489,7 @@ function LC.OpenQuartermasterVisit(ply)
             sell[#sell + 1] = { id = "w:" .. cls, name = (string.gsub(string.gsub(cls, "^weapon_", ""), "_", " ")), n = 1, price = price, weapon = true, donate = true }
         end
     end
-    LC.SendCompressed("lcu_market", { credits = LC.Credits and LC.Credits(ply) or 0, goods = {}, sell = sell, quartermaster = true, visitor = true }, { ply })
+    LC.SendCompressed("lcu_market", { credits = LC.Credits and LC.Credits(ply) or 0, goods = {}, sell = sell, quartermaster = true, visitor = true, gift = LC.FundTalkGift }, { ply })
     return true
 end
 
@@ -1578,6 +1582,7 @@ function LC.BlackBuy(ply, id)
     if not g then return false end
     local ok, why = LC.MarketAccess(ply)
     if not ok then return false, why end
+    if g.lab then return false end -- (the lab's alone: not on anyone's list, so nobody is told)
     if g.qm and not LC.AtQuartermaster(ply) then return false, "Only the quartermaster has those." end
     local left, next = LC.BlackStockLeft(g)
     if left and left <= 0 then return false, string.format("He's out of those. More in about %d minutes.", math.max(1, math.ceil((next or 60) / 60))) end
@@ -1861,8 +1866,9 @@ hook.Add("PlayerSpawn", "LivingCityPlainClothes", function(ply)
     timer.Simple(2.5, function()
         if not IsValid(ply) or not ply:Alive() or ply:GetNW2String("lcf_faction", "") ~= "resistance" then return end
         if ply:GetNW2String("lcf_special", "") ~= "" or LC.Disguise(ply) then return end
-        if LC.Wear(ply, "plain") then
-            ply:ChatPrint("[Resistance] You're in plain clothes. F2 > Gear up when it's time to fight.")
+        -- (one line, not two: the owner, 18 November, "merge the pair of lines to a single line")
+        if LC.Wear(ply, "plain", true) then
+            ply:ChatPrint("[Resistance] You're in plain clothes: keep your gun out of sight. F2 > Gear up when it's time to fight.")
         end
     end)
 end)

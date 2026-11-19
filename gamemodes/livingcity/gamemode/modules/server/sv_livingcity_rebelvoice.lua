@@ -8,7 +8,7 @@
     'words'", with the narration around it) and, when the owner has recorded it, plays it from the one
     saying it: garrysmod/sound/livingcity/resistance/<id>_male1.wav or <id>_female1.wav (.mp3 and .ogg
     too; more takes as 2, 3...). Without a recording, the Half-Life 2 sound the caller plays as before.
-    Every line: VOICE_LINES.md, section 13 (python3 _dev/voice_lines.py).
+    Every line: VOICE_SCRIPTS.md (python3 _dev/voice_lines.py).
 ]]
 
 if CLIENT then return end
@@ -30,6 +30,8 @@ LC.ResistanceLines = {
     medic_fine = "You look fine to me. Come back when you're bleeding.",
     medic_charge = "I hate to charge, but these don't grow on trees.",
     medic_broke = "You don't have the credits, friend. Sorry.",
+    -- (to a lone wolf who tried to kill the Administrator and got away: sv_livingcity_adminrecruit.lua)
+    saw_you = "We saw what you did. You're with us now.",
 }
 
 local clips -- [id_gender] = { paths }

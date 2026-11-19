@@ -167,7 +167,7 @@ local function GiveStops(raid, npc, st, want)
     st.raid = { owner = raid, pts = share, i = 0, phase = "start" }
     st.untilT = 0
     raid.units[#raid.units + 1] = npc
-    if LC.Release then pcall(LC.Release, npc, st) end
+    if LC.Release then LC.Try(LC.Release, npc, st) end
     return true
 end
 

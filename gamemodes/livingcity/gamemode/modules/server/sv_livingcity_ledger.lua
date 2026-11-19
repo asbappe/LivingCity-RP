@@ -34,10 +34,10 @@
 
     The news comes the city's own way: each city morning a City Bulletin on
     the city screens and the PA's chat line (no windows), what changed and why;
-    and anyone can read the state of the city on F2 > Me (More) > The state of the city.
+    and anyone can read the state of the city on F1 > What now? > The state of the city.
 
-    The Administrator's tools (F2 > Me > The city's levers), each with its cost:
-      - a speech: at a speech stand (editor: "Point: speech stand"; she's taken
+    The Administrator's tools (F2 > Speak to the city, and City orders), each with its cost:
+      - a speech: at a speech stand (editor: "Point: Administrator's speech stand"; she's taken
         there), words to the city on the screens. Morale +6, authority +3; the
         citizens near the stand +2 standing. Once a city day.
       - an amnesty: every wanted citizen forgiven. Morale +6, authority -8,
@@ -108,11 +108,13 @@ end
 local Add = LC.LedgerAdd
 
 local function News(line)
+    if not line then return end
     local s = Load()
     s.news[#s.news + 1] = line
     while #s.news > 12 do table.remove(s.news, 1) end
     dirty = true
 end
+LC.LedgerNews = News -- (a line for the next City Bulletin)
 
 ------------------------------------------------------------------------
 -- Districts
@@ -254,8 +256,9 @@ function LC.LedgerLines()
     for _, k in ipairs(NUMS) do lines[#lines + 1] = string.format("%s: %s (%d).", NAMES[k], Word(s[k] or 50), s[k] or 50) end
     for _, n in ipairs(LC.BlockNumbers and LC.BlockNumbers() or {}) do
         local owner, mark = LC.DistrictOwner(n)
-        lines[#lines + 1] = string.format("%s: %s%s.", BName(n), owner == "contested" and "contested" or (owner == "resistance" and "the Resistance's" or "the Combine's"),
-            mark == "liberated" and " (liberated)" or (mark == "crackdown" and " (under a crackdown)" or ""))
+        local sick = LC.DistrictInfestWord and LC.DistrictInfestWord(LC.DistrictInfest(n)) -- (sv_livingcity_districtinfest.lua)
+        lines[#lines + 1] = string.format("%s: %s%s%s.", BName(n), owner == "contested" and "contested" or (owner == "resistance" and "the Resistance's" or "the Combine's"),
+            mark == "liberated" and " (liberated)" or (mark == "crackdown" and " (under a crackdown)" or ""), sick and (", " .. sick) or "")
     end
     return lines
 end
@@ -298,7 +301,7 @@ function LC.LedgerNewDay(quiet)
     if s.pendingRaid and not quiet then
         local k = s.pendingRaid
         s.pendingRaid = nil
-        if LC.StartRaid then pcall(LC.StartRaid, tonumber(k) or k) end
+        if LC.StartRaid then LC.Try(LC.StartRaid, tonumber(k) or k) end
     end
     dirty = true
     if not quiet then Bulletin(s) end
@@ -345,10 +348,10 @@ end
 function LC.GoToSpeechStand(ply)
     if not IsAdministrator(ply) then return false, "Only the City Administrator speaks from the stand." end
     local p = SpeechStand(ply:GetPos())
-    if not p then return false, "There's no speech stand in this city. (Staff: Miscount Editor > Point: speech stand.)" end
+    if not p then return false, "There's no speech stand in this city. (Staff: Miscount Editor > Point: Administrator's speech stand.)" end
     ply:SetPos((LC.FreeSpawnPos and LC.FreeSpawnPos(p.pos + Vector(0, 0, 8))) or p.pos)
     if ply.SetEyeAngles then ply:SetEyeAngles(Angle(0, p.yaw or 0, 0)) end
-    ply:ChatPrint("[The office] You're at the speech stand. F2 > Me > The city's levers > Give a speech, when you're ready.")
+    ply:ChatPrint("[The office] You're at the speech stand. F2 > Speak to the city > Give a speech, when you're ready.")
     -- her guards come with her (sv_livingcity_admguard.lua or wherever they follow her)
     hook.Run("LivingCityAdminMoved", ply, p.pos)
     return true
@@ -381,7 +384,10 @@ function LC.GiveSpeech(ply, text)
     local s = Load()
     if s.speechDay == s.day then return false, "You've spoken to the city today. Tomorrow." end
     text = string.Trim(tostring(text or ""))
-    if #text < 10 then return false, "Say something to the city (at least a sentence)." end
+    -- (no words written: she speaks into her microphone, and the whole city hears it; the owner, 16 November: "most
+    -- of the human players would have a microphone and use that instead of typing". Writing it is the other way.)
+    local mic = text == ""
+    if not mic and #text < 10 then return false, "Say something to the city (at least a sentence)." end
     -- with a speech crowd point on the map, the city gathers first (sv_livingcity_speech.lua)
     if LC.SpeechPlaces and LC.SpeechPlaces(ply:GetPos()) then
         local ok, why = LC.CallSpeech(ply, text)
@@ -391,9 +397,10 @@ function LC.GiveSpeech(ply, text)
         return true
     end
     local stand = SpeechStand(ply:GetPos())
-    if stand and ply:GetPos():DistToSqr(stand.pos) > 400 * 400 then return false, "Speak from the speech stand: F2 > Me > The city's levers > Go to the speech stand." end
+    if stand and ply:GetPos():DistToSqr(stand.pos) > 400 * 400 then return false, "Speak from the speech stand: F2 > Speak to the city > Go to the speech stand." end
     s.speechDay = s.day
-    Deliver(ply, text, ply:GetPos())
+    Deliver(ply, text, ply:GetPos(), mic)
+    if mic and LC.SpeechMicOpen then LC.SpeechMicOpen(ply, ply:GetPos()) end
     return true
 end
 
@@ -422,7 +429,7 @@ function LC.Crackdown(ply, block)
     s.districts[tostring(block)] = math.min(s.districts[tostring(block)] or 0, -40)
     Add("authority", 5, nil) Add("morale", -6, nil) Add("resistance", 4, nil)
     News("A crackdown on " .. BName(block) .. ".")
-    if LC.StartRaid then pcall(LC.StartRaid, block) end
+    if LC.StartRaid then LC.Try(LC.StartRaid, block) end
     for _, p in ipairs(player.GetAll()) do p:ChatPrint("[The City Administrator] A crackdown on " .. BName(block) .. ". Residents: cooperate.") end
     Save()
     return true
@@ -434,7 +441,7 @@ function LC.ExtraRations(ply)
     if s.supply < 20 then return false, "The stores are too low for extra rations." end
     Add("supply", -15, nil) Add("morale", 8, nil)
     News("The Administrator ordered extra rations.")
-    if LC.StartEvent then pcall(LC.StartEvent, "rations") end
+    if LC.StartEvent then LC.Try(LC.StartEvent, "rations") end
     Save()
     return true
 end
@@ -449,7 +456,8 @@ local function Sync()
     local d = {}
     for _, n in ipairs(LC.BlockNumbers and LC.BlockNumbers() or {}) do
         local owner, mark = LC.DistrictOwner(n)
-        d[#d + 1] = { n = n, name = BName(n), owner = owner, mark = mark }
+        local sick = LC.DistrictInfestWord and LC.DistrictInfestWord(LC.DistrictInfest(n)) -- (sv_livingcity_districtinfest.lua)
+        d[#d + 1] = { n = n, name = BName(n), owner = owner, mark = mark, sick = sick }
     end
     SetGlobal2String("lc_ledger", util.TableToJSON({ day = s.day, supply = s.supply, morale = s.morale, combine = s.combine, resistance = s.resistance,
         authority = s.authority, districts = d, spoke = s.speechDay == s.day or nil, amnesty = s.amnestyDay == s.day or nil,
@@ -483,12 +491,12 @@ local function Tick()
     if dirty and (s.savedAt or 0) + 60 <= now then s.savedAt = now Save() end
 end
 timer.Create("LivingCityLedger", 5, 0, function()
-    local ok, err = pcall(Tick)
+    local ok, err = LC.Try(Tick)
     if not ok and LC.Error then LC.Error("ledger", err) end
 end)
 hook.Add("ShutDown", "LivingCityLedger", function() if L then Save() end end)
 
--- The menu's actions (F2 > Me).
+-- The menu's actions (her F2: Speak to the city, City orders).
 local function Wrap()
     if LC.MenuActions then
         LC.MenuActions.speechstand, LC.MenuActions.speech, LC.MenuActions.amnesty, LC.MenuActions.crackdown, LC.MenuActions.extrarations = true, true, true, true, true
@@ -506,6 +514,7 @@ hook.Add("PlayerSay", "LivingCityLedger", function(ply, text)
     elseif cmd == "amnesty" then ok, why = LC.Amnesty(ply)
     elseif cmd == "crackdown" then ok, why = LC.Crackdown(ply, rest)
     elseif cmd == "extrarations" then ok, why = LC.ExtraRations(ply)
+    elseif cmd == "shell" and LC.OrderShelling then ok, why = LC.OrderShelling(ply, rest) -- (sv_livingcity_shelling.lua)
     else return end
     if not ok and why then ply:ChatPrint("[The office] " .. why) end
     return ""

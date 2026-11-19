@@ -26,7 +26,7 @@ local function ScanlineMaterial(w, h)
     if lines.mat and lines.w == w and lines.h == h then return lines.mat end
     if lines.failed or not GetRenderTarget or not CreateMaterial then return nil end
     local pushed, started = false, false
-    local ok = pcall(function()
+    local ok = LC.Try(function()
         local name = "lc_scanlines_" .. w .. "x" .. h
         local rt = GetRenderTarget(name, w, h)
         render.PushRenderTarget(rt)
@@ -112,19 +112,19 @@ local POINT_COLORS = {
     queue = Color(240, 200, 60), patrol = Color(80, 150, 255), checkpoint = Color(255, 80, 80),
     spawn = Color(240, 240, 240), cell = Color(255, 140, 40), release = Color(255, 200, 140),
     work = Color(200, 150, 100), vending = Color(90, 170, 230), dispenser = Color(200, 200, 120),
-    terminal = Color(230, 180, 90), stove = Color(230, 110, 60), fire = Color(255, 120, 40), dealer = Color(150, 110, 190), locker = Color(120, 150, 170), evidlocker = Color(110, 140, 200), screen = Color(110, 190, 230), lawboard = Color(200, 200, 220), cpfeed = Color(92, 200, 216), rebelboard = Color(210, 120, 90), interrochair = Color(240, 230, 190), rebelcage = Color(170, 150, 120), console = Color(120, 210, 200), workbench = Color(190, 150, 100), recycler = Color(140, 200, 240), bin = Color(140, 160, 90), salvage = Color(170, 140, 110), ladder = Color(230, 230, 120), sspawn = Color(255, 90, 80), dataterm = Color(90, 200, 255), rlookout = Color(235, 150, 70), bunk = Color(200, 140, 90), masterterm = Color(120, 230, 255), lz = Color(70, 140, 255), citybin = Color(140, 160, 90), streetlight = Color(255, 220, 140), loudspeaker = Color(200, 200, 200), screen_big = Color(110, 190, 230), tv = Color(110, 190, 230), incinerator = Color(255, 110, 40), hazbarrel = Color(220, 190, 40), dock = Color(180, 160, 120), graffiti = Color(200, 120, 220), rubble = Color(150, 130, 110), pipe = Color(120, 170, 200), studio = Color(110, 190, 230), desk = Color(170, 120, 230), adminpower = Color(190, 140, 255), suppressor = Color(120, 200, 255), platform = Color(200, 180, 120), intake = Color(120, 200, 255), housingterm = Color(150, 210, 170), laborterm = Color(210, 190, 120), cpsupply = Color(100, 170, 255), conveyor = Color(200, 170, 90), bed = Color(170, 150, 210), toilet = Color(220, 220, 230), bath = Color(150, 200, 230), arrival = Color(230, 220, 160), transformer = Color(120, 200, 255), forcefield = Color(80, 160, 255), powerbank = Color(90, 190, 255), turret = Color(255, 90, 80), barricade_low = Color(150, 160, 175), barricade = Color(150, 160, 175), barricade_tall = Color(150, 160, 175),
-    zspawn = Color(170, 220, 40), rspawn = Color(230, 150, 70),
+    terminal = Color(230, 180, 90), stove = Color(230, 110, 60), fire = Color(255, 120, 40), dealer = Color(150, 110, 190), locker = Color(120, 150, 170), locker_rebel = Color(200, 150, 90), locker_cp = Color(110, 140, 200), evidlocker = Color(110, 140, 200), screen = Color(110, 190, 230), lawboard = Color(200, 200, 220), cpfeed = Color(92, 200, 216), rebelboard = Color(210, 120, 90), interrochair = Color(240, 230, 190), rebelcage = Color(170, 150, 120), console = Color(120, 210, 200), workbench = Color(190, 150, 100), recycler = Color(140, 200, 240), bin = Color(140, 160, 90), salvage = Color(170, 140, 110), ladder = Color(230, 230, 120), sspawn = Color(255, 90, 80), dataterm = Color(90, 200, 255), rlookout = Color(235, 150, 70), bunk = Color(200, 140, 90), masterterm = Color(120, 230, 255), lz = Color(70, 140, 255), citybin = Color(140, 160, 90), streetlight = Color(255, 220, 140), loudspeaker = Color(200, 200, 200), screen_big = Color(110, 190, 230), screen_mid = Color(110, 190, 230), monitor_hang = Color(92, 200, 216), camera = Color(150, 200, 255), tv = Color(110, 190, 230), incinerator = Color(255, 110, 40), hazbarrel = Color(220, 190, 40), dock = Color(180, 160, 120), graffiti = Color(200, 120, 220), rubble = Color(150, 130, 110), pipe = Color(120, 170, 200), studio = Color(110, 190, 230), desk = Color(170, 120, 230), adminpower = Color(190, 140, 255), suppressor = Color(120, 200, 255), platform = Color(200, 180, 120), intake = Color(120, 200, 255), housingterm = Color(150, 210, 170), laborterm = Color(210, 190, 120), cpsupply = Color(100, 170, 255), conveyor = Color(200, 170, 90), bed = Color(170, 150, 210), toilet = Color(220, 220, 230), bath = Color(150, 200, 230), arrival = Color(230, 220, 160), transformer = Color(120, 200, 255), forcefield = Color(80, 160, 255), powerbank = Color(90, 190, 255), turret = Color(255, 90, 80), barricade_low = Color(150, 160, 175), barricade = Color(150, 160, 175), barricade_tall = Color(150, 160, 175),
+    zspawn = Color(170, 220, 40), rspawn = Color(230, 150, 70), colonel = Color(200, 200, 215),
     infodesk = Color(120, 190, 240), civposter = Color(210, 210, 160),
     dream = Color(200, 160, 255), -- (the shared dreams: sv_livingcity_dreams.lua)
     sterm = Color(150, 200, 255), -- (a Combine zone's stalker works a terminal here)
-    speechcrowd = Color(230, 200, 120), -- (where the city gathers for her address: sv_livingcity_speech.lua)
+    speechcrowd = Color(230, 200, 120), adminapc = Color(230, 200, 120), adminheli = Color(230, 200, 120), -- (where the city gathers for her address: sv_livingcity_speech.lua)
 }
 local POINT_NAMES = {
-    jogroute = "JOGGING ROUTE", yard = "EXERCISE YARD", parade = "PARADE ROUTE", waymark = "WAY MARK", dream = "DREAM POINT", sterm = "STALKER TERMINAL", speechcrowd = "SPEECH CROWD",
+    jogroute = "JOGGING ROUTE", yard = "EXERCISE YARD", parade = "PARADE ROUTE", waymark = "WAY MARK", dream = "DREAM POINT", sterm = "STALKER TERMINAL", speechcrowd = "SPEECH CROWD", adminapc = "ADMINISTRATOR'S APC", adminheli = "ADMINISTRATOR'S HELICOPTER",
     idle = "LOITER", sit = "SIT", sitchair = "BENCH", lean = "LEAN", queue = "LINE", patrol = "PATROL",
     checkpoint = "CHECKPOINT", spawn = "SPAWN/EXIT", cell = "CELL", release = "RELEASE",
     work = "WORKPLACE", vending = "VENDING", dispenser = "RATIONS", terminal = "COMMISSARY", stove = "STOVE", fire = "FIRE",
-    dealer = "DEALER", locker = "LOCKER", evidlocker = "EVIDENCE LOCKER", screen = "CITY SCREEN", lawboard = "LAW BOARD", cpfeed = "CP INCIDENT FEED", rebelboard = "RESISTANCE NOTICE BOARD", interrochair = "INTERROGATION CHAIR", rebelcage = "HOLDING CAGE", infodesk = "CITIZEN INFORMATION", civposter = "CIVIL NOTICE", console = "SCANNER CONSOLE", workbench = "RESISTANCE LAB", cpsupply = "CP COMMISSARY", conveyor = "CONVEYOR", bed = "BED", toilet = "TOILET", bath = "BATHTUB", recycler = "RECLAMATION", bin = "BIN", salvage = "SALVAGE PILE", ladder = "LADDER", sspawn = "SCANNER LAUNCH", dataterm = "DATA TERMINAL", rlookout = "REBEL LOOKOUT", bunk = "BUNK", masterterm = "MASTER TERMINAL", lz = "LANDING ZONE", citybin = "BIN", streetlight = "STREETLIGHT", loudspeaker = "LOUDSPEAKER", screen_big = "BIG SCREEN", tv = "TV", incinerator = "INCINERATOR", hazbarrel = "INFESTATION BARREL", dock = "LOADING DOCK", graffiti = "GRAFFITI WALL", rubble = "RUBBLE", pipe = "LEAKY PIPE", studio = "BROADCAST STUDIO", desk = "ADMINISTRATOR'S DESK", adminpower = "HER POWER (TRANSFORMER)", suppressor = "SUPPRESSION DEVICE", platform = "TRAIN PLATFORM", intake = "CIVIL INTAKE", housingterm = "HOUSING ALLOCATION", laborterm = "LABOR ASSIGNMENT", arrival = "ARRIVAL", transformer = "TRANSFORMER", forcefield = "FORCEFIELD", powerbank = "POWER BANK", turret = "TURRET", barricade_low = "BARRICADE (LOW)", barricade = "BARRICADE", barricade_tall = "BARRICADE (TALL)", zspawn = "ZOMBIE SPAWN", rspawn = "REBEL SPAWN",
+    dealer = "DEALER", locker = "LOCKER", locker_rebel = "RESISTANCE LOCKER", locker_cp = "CIVIL PROTECTION LOCKER", evidlocker = "EVIDENCE LOCKER", screen = "CITY SCREEN", lawboard = "LAW BOARD", cpfeed = "CP INCIDENT FEED", rebelboard = "RESISTANCE NOTICE BOARD", interrochair = "INTERROGATION CHAIR", rebelcage = "HOLDING CAGE", colonel = "THE COLONEL", infodesk = "CITIZEN INFORMATION", civposter = "CIVIL NOTICE", console = "SCANNER CONSOLE", workbench = "RESISTANCE LAB", cpsupply = "CP COMMISSARY", fundtv = "RESISTANCE FUND SCREEN", conveyor = "CONVEYOR", bed = "BED", toilet = "TOILET", bath = "BATHTUB", recycler = "RECLAMATION", bin = "BIN", salvage = "SALVAGE PILE", ladder = "LADDER", sspawn = "SCANNER LAUNCH", dataterm = "DATA TERMINAL", rlookout = "REBEL LOOKOUT", bunk = "BUNK", masterterm = "MASTER TERMINAL", lz = "LANDING ZONE", citybin = "BIN", streetlight = "STREETLIGHT", loudspeaker = "LOUDSPEAKER", screen_big = "BIG SCREEN", screen_mid = "MEDIUM SCREEN", monitor_hang = "CAMERA MONITOR", camera = "CAMERA", tv = "TV", incinerator = "INCINERATOR", hazbarrel = "INFESTATION BARREL", dock = "LOADING DOCK", graffiti = "GRAFFITI WALL", rubble = "RUBBLE", pipe = "LEAKY PIPE", studio = "BROADCAST STUDIO", desk = "ADMINISTRATOR'S DESK", adminpower = "HER POWER (TRANSFORMER)", suppressor = "SUPPRESSION DEVICE", platform = "TRAIN PLATFORM", intake = "CIVIL INTAKE", housingterm = "HOUSING ALLOCATION", laborterm = "LABOR ASSIGNMENT", arrival = "ARRIVAL", transformer = "TRANSFORMER", forcefield = "FORCEFIELD", powerbank = "POWER BANK", turret = "TURRET", barricade_low = "BARRICADE (LOW)", barricade = "BARRICADE", barricade_tall = "BARRICADE (TALL)", zspawn = "ZOMBIE SPAWN", rspawn = "REBEL SPAWN",
 }
 LC_CL.PointColor = function(k) return POINT_COLORS[k] end
 LC_CL.PointName = function(k)
@@ -151,7 +151,7 @@ local LINK_COLOR, NODE_COLOR, ORPHAN_COLOR, SELECT_COLOR = Color(0, 200, 255), C
 
 local function BlockName(n)
     local cv = GetConVar("lc_block_name")
-    local ok, s = pcall(string.format, GetGlobal2String("lc_block_name", "") ~= "" and GetGlobal2String("lc_block_name", "") or (cv and cv:GetString()) or "Habitation Block %02d", n)
+    local ok, s = LC.Try(string.format, GetGlobal2String("lc_block_name", "") ~= "" and GetGlobal2String("lc_block_name", "") or (cv and cv:GetString()) or "Habitation Block %02d", n)
     return ok and s or ("Block " .. n)
 end
 
@@ -348,7 +348,7 @@ local function DrawFill(d, col, alpha)
     local segs, rings = d.segs, d.rings
     render.SetMaterial(FILL_MAT)
     mesh.Begin(MATERIAL_TRIANGLES, segs + (#rings - 1) * segs * 2)
-    local ok = pcall(function()
+    local ok = LC.Try(function()
         local function V(p) mesh.Position(p) mesh.Color(col.r, col.g, col.b, alpha) mesh.AdvanceVertex() end
         local first = rings[1]
         for j = 1, segs do
@@ -551,7 +551,7 @@ hook.Add("PostDrawTranslucentRenderables", "LivingCityOverlay", function(_, skyb
     for _, z in ipairs(LC_CL.zones) do
         if z.pos:DistToSqr(eye) < (3000 + z.r) ^ 2 and Shown(focus, z.kind, "zone") then
             local col = ZONE_COLORS[z.kind] or color_white
-            local ok = pcall(function()
+            local ok = LC.Try(function()
                 if z.rects then
                     -- territory that grew along the path nodes: the rectangles its cells merge into, eight feet tall
                     render.SetColorMaterial()
@@ -614,7 +614,7 @@ hook.Add("PostDrawTranslucentRenderables", "LivingCityOverlay", function(_, skyb
             local key = string.format("%d_%d_%d_%d", math.floor(hp.x / 16), math.floor(hp.y / 16), math.floor(hp.z / 16), math.floor(r))
             if not preview or preview.key ~= key then preview = { key = key, drape = Drape(hp, r, false) } end
             local col = ZONE_COLORS[zoneKind] or color_white
-            pcall(function()
+            LC.Try(function()
                 DrawFill(preview.drape, col, 45)
                 DrawEdge(preview.drape, C_255_255_255_200, true)
             end)
@@ -780,7 +780,7 @@ function LC_CL.PlayAnnounceOnce(path, vol, secs)
         timer.Simple(math.max(1, (secs or 8) + 1.5), function()
             local c = LC_CL.AnnounceChannels[key]
             LC_CL.AnnounceChannels[key] = nil
-            if c then pcall(function() c:Stop() end) end
+            if c then LC.Try(function() c:Stop() end) end
         end)
     end)
     return "file"
@@ -1018,11 +1018,14 @@ net.Receive("lc_report", function()
     local t = ReadCompressed() or {}
     local text = t.text or "(empty report)"
     SetClipboardText(text)
-    chat.AddText(Color(120, 200, 255), "[Miscount] ", color_white, "Debug report copied to your clipboard. Paste it to Claude. Also saved to " .. tostring(t.file))
+    -- (the errors list, F4 > Factions > Admin: errors, says where it is in its title: no chat line)
+    if not t.errors then
+        chat.AddText(Color(120, 200, 255), "[Miscount] ", color_white, "Debug report copied to your clipboard. Paste it to Claude. Also saved to " .. tostring(t.file))
+    end
 
     local f = vgui.Create("DFrame")
     if LC_CL.SetTheme then LC_CL.SetTheme(f, "staff") end
-    f:SetTitle("Miscount debug report")
+    f:SetTitle(t.errors and ("Miscount errors: copied. Also in " .. tostring(t.file)) or "Miscount debug report")
     f:SetSize(math.min(ScrW() - 80, 900), math.min(ScrH() - 80, 640))
     f:Center()
     f:MakePopup()
@@ -1037,24 +1040,16 @@ net.Receive("lc_report", function()
     copy:SetTall(30)
     copy:SetText("Copy to clipboard again")
     copy.DoClick = function() SetClipboardText(text); copy:SetText("Copied!") end
+    if t.errors and t.clear then
+        local clear = vgui.Create("DButton", f)
+        clear:Dock(BOTTOM)
+        clear:SetTall(26)
+        clear:SetText("Sent it: start the list again")
+        clear.DoClick = function() RunConsoleCommand("lc_errors_clear") f:Close() end
+    end
 end)
 
-------------------------------------------------------------------------
--- Forward our own client errors to the server log
-------------------------------------------------------------------------
-
-local nextSend = 0
-hook.Add("OnLuaError", "LivingCityClientErrors", function(err, realm, stack, name)
-    local text = tostring(err)
-    if istable(stack) and stack[1] then text = text .. " @ " .. tostring(stack[1].File) .. ":" .. tostring(stack[1].Line) end
-    local low = string.lower(text .. tostring(name))
-    if not (string.find(low, "livingcity", 1, true) or string.find(low, "weapon_lc_", 1, true)) then return end
-    if CurTime() < nextSend then return end
-    nextSend = CurTime() + 5
-    net.Start("lc_clerror")
-    net.WriteString(string.sub(text, 1, 400))
-    net.SendToServer()
-end)
+-- (our own errors go to the server from sh_livingcity_errors.lua)
 
 -- the first corner of a box zone being placed (the editor tells us)
 net.Receive("lc_boxcorner", function()

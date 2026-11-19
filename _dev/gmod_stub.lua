@@ -4,7 +4,12 @@ local now = 0
 function CurTime() return now end
 function FrameTime() return 0.1 end
 function SysTime() return os.clock() end
-function _advance(dt) now = now + dt end
+-- Time moves in tenths of a second, kept on a grid of thousandths: adding 0.1 over and over drifts, and
+-- then "five steps of 0.1" is a hair short of "half a second", so a timer due on the step fired a step
+-- late or not, by how much time had gone before (a test that waited exactly as long as a timer takes
+-- passed or failed by what ran ahead of it). Timers also get a hair of grace (TIME_EPS, below).
+function _advance(dt) now = math.floor((now + dt) * 1000 + 0.5) / 1000 end
+local TIME_EPS = 1e-6
 
 -- Vector / Angle / Color
 local VMT = {}
@@ -40,6 +45,40 @@ function AMT:Right() local y = math.rad(self.y - 90) return Vector(math.cos(y), 
 -- (only turns about an upright axis are modelled: enough for drawing)
 function AMT:RotateAroundAxis(axis, deg) if axis and math.abs(axis.z or 0) > 0.9 then self.y = self.y + deg * (axis.z > 0 and 1 or -1) end end
 angle_zero = Angle()
+-- Matrix, WorldToLocal and LocalToWorld (the sleeper on the bed, a body laid down): like the angles
+-- above, only turns about an upright axis are modelled for positions; the matrix keeps its three axes.
+local MMT = {}
+MMT.__index = MMT
+function Matrix() return setmetatable({ f = Vector(1, 0, 0), r = Vector(0, -1, 0), u = Vector(0, 0, 1), t = Vector(0, 0, 0), s = Vector(1, 1, 1) }, MMT) end
+function MMT:SetForward(v) self.f = Vector(v.x, v.y, v.z) end
+function MMT:SetRight(v) self.r = Vector(v.x, v.y, v.z) end
+function MMT:SetUp(v) self.u = Vector(v.x, v.y, v.z) end
+function MMT:GetForward() return Vector(self.f.x, self.f.y, self.f.z) end
+function MMT:GetRight() return Vector(self.r.x, self.r.y, self.r.z) end
+function MMT:GetUp() return Vector(self.u.x, self.u.y, self.u.z) end
+function MMT:SetTranslation(v) self.t = Vector(v.x, v.y, v.z) end
+function MMT:GetTranslation() return Vector(self.t.x, self.t.y, self.t.z) end
+function MMT:Translate(v) self.t = self.t + v end
+function MMT:Scale(v) self.s = Vector(v.x, v.y, v.z) end
+function MMT:GetScale() return Vector(self.s.x, self.s.y, self.s.z) end
+function MMT:Rotate(a) self:SetAngles(Angle(0, (self:GetAngles().y or 0) + (a.y or 0), 0)) end
+function MMT:SetAngles(a) self.f, self.r, self.u = a:Forward(), a:Right(), a:Up() end
+function MMT:GetAngles()
+    local f = self.f
+    local len = math.sqrt(f.x * f.x + f.y * f.y + f.z * f.z)
+    if len == 0 then return Angle() end
+    return Angle(-math.deg(math.asin(math.max(-1, math.min(1, f.z / len)))), math.deg(math.atan2(f.y, f.x)), 0)
+end
+function WorldToLocal(pos, ang, origin, oang)
+    local d, yaw = pos - origin, math.rad(oang.y or 0)
+    local c, s = math.cos(yaw), math.sin(yaw)
+    return Vector(d.x * c + d.y * s, -d.x * s + d.y * c, d.z), Angle(ang.p - oang.p, ang.y - oang.y, ang.r - oang.r)
+end
+function LocalToWorld(lpos, lang, origin, oang)
+    local yaw = math.rad(oang.y or 0)
+    local c, s = math.cos(yaw), math.sin(yaw)
+    return origin + Vector(lpos.x * c - lpos.y * s, lpos.x * s + lpos.y * c, lpos.z), Angle(lang.p + oang.p, lang.y + oang.y, lang.r + oang.r)
+end
 function Color(r, g, b, a) return { r = r, g = g, b = b, a = a or 255 } end
 function VectorRand() return Vector(math.Rand(-1, 1), math.Rand(-1, 1), math.Rand(-1, 1)) end
 color_white, color_black = Color(255, 255, 255), Color(0, 0, 0)
@@ -73,6 +112,9 @@ function istable(x) return type(x) == "table" end
 function isstring(x) return type(x) == "string" end
 function isnumber(x) return type(x) == "number" end
 function isbool(x) return type(x) == "boolean" end
+-- (the game has it; without it a job whose targets had gone and were to be brought back failed with
+-- "something went wrong", now and then: sv_livingcity_quests.lua, SpawnTargets)
+function isfunction(x) return type(x) == "function" end
 bit = require("bit")
 
 FCVAR_ARCHIVE, FCVAR_REPLICATED = 128, 8192
@@ -106,28 +148,66 @@ end
 function ConVarExists(name) return convars[name] ~= nil end
 function _setcvar(n, v) convars[n].v = v end
 
-hook = { t = {} }
-function hook.Add(ev, id, fn) hook.t[ev] = hook.t[ev] or {} hook.t[ev][id] = fn end
-function hook.Remove(ev, id) if hook.t[ev] then hook.t[ev][id] = nil end end
+-- Hooks run in the order they were added, the same on every run. (They used to run in the
+-- order pairs() gave, which this LuaJIT changes from one run to the next: a test that passed
+-- or failed by which of two hooks answered first did so at random.) The first hook to return
+-- something wins, as in the game. _HOOK_REVERSE runs them last-added first: the game's own
+-- order is not the order they were added in, so nothing may depend on it (the robot players
+-- do every job both ways round, _dev/robots.lua).
+hook = { t = {}, seq = {}, n = 0 }
+function hook.Add(ev, id, fn)
+    hook.t[ev] = hook.t[ev] or {}
+    hook.seq[ev] = hook.seq[ev] or {}
+    if hook.seq[ev][id] == nil then hook.n = hook.n + 1 hook.seq[ev][id] = hook.n end
+    hook.t[ev][id] = fn
+end
+function hook.Remove(ev, id)
+    if hook.t[ev] then hook.t[ev][id] = nil end
+    if hook.seq[ev] then hook.seq[ev][id] = nil end
+end
 function hook.Run(ev, ...)
     local hs = hook.t[ev]
     if not hs then return end
-    for _, fn in pairs(hs) do
-        local a, b, c = fn(...)
-        if a ~= nil then return a, b, c end
+    local seq = hook.seq[ev]
+    if not seq then seq = {} hook.seq[ev] = seq end
+    local ids = {}
+    for id in pairs(hs) do
+        -- (a test may put one straight into hook.t: it counts as added now)
+        if seq[id] == nil then hook.n = hook.n + 1 seq[id] = hook.n end
+        ids[#ids + 1] = id
+    end
+    if _HOOK_REVERSE then
+        table.sort(ids, function(a, b) return seq[a] > seq[b] end)
+    else
+        table.sort(ids, function(a, b) return seq[a] < seq[b] end)
+    end
+    for i = 1, #ids do
+        local fn = hs[ids[i]]
+        if fn then
+            local a, b, c = fn(...)
+            if a ~= nil then return a, b, c end
+        end
     end
 end
 
 timer = { list = {}, simple = {} }
-function timer.Create(name, delay, reps, fn) timer.list[name] = { delay = delay, fn = fn, next = now + delay } end
+-- (timers that are due fire in the order they were made, the same on every run: see hook.Run)
+local timerSeq = 0
+function timer.Create(name, delay, reps, fn) timerSeq = timerSeq + 1 timer.list[name] = { delay = delay, fn = fn, next = now + delay, seq = timerSeq } end
 function timer.Remove(name) timer.list[name] = nil end
 function timer.Simple(d, fn) table.insert(timer.simple, { at = now + d, fn = fn }) end
 function _runtimers()
-    for _, t in pairs(timer.list) do if now >= t.next then t.next = now + t.delay; t.fn() end end
+    local due = {}
+    for name, t in pairs(timer.list) do if now + TIME_EPS >= t.next then due[#due + 1] = name end end
+    table.sort(due, function(a, b) return (timer.list[a].seq or 0) < (timer.list[b].seq or 0) end)
+    for _, name in ipairs(due) do
+        local t = timer.list[name]
+        if t and now + TIME_EPS >= t.next then t.next = now + t.delay; t.fn() end
+    end
     local due = {}
     for i = #timer.simple, 1, -1 do
         local s = timer.simple[i]
-        if now >= s.at then table.insert(due, s) table.remove(timer.simple, i) end
+        if now + TIME_EPS >= s.at then table.insert(due, s) table.remove(timer.simple, i) end
     end
     for _, s in ipairs(due) do s.fn() end
 end

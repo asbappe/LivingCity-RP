@@ -68,7 +68,8 @@ function LC.CampSnapshot(z)
     local function Add(e, prop)
         if IsValid(e) then
             local p = e:GetPos()
-            list[#list + 1] = { model = e:GetModel(), cls = e:GetClass(), x = p.x, y = p.y, z = p.z, yaw = e:GetAngles().y, prop = prop }
+            list[#list + 1] = { model = e:GetModel(), cls = e:GetClass(), x = p.x, y = p.y, z = p.z, yaw = e:GetAngles().y, prop = prop,
+                hand = e.lcPlacedByHand or nil } -- (a pot a player set down themselves stays there: sv_livingcity_scavenge.lua, LC.SeatPots)
         end
     end
     local d = LC.Dressed and LC.Dressed[z]
@@ -109,6 +110,7 @@ local function Drop(ply)
     local phys = e.GetPhysicsObject and e:GetPhysicsObject()
     if IsValid(phys) then phys:EnableMotion(false) end
     e.lcCarriedBy = nil
+    if e.lcRebelProp == "pot" then e.lcPlacedByHand, e.lcSeat, e.lcSeatAt = true, nil, nil end -- (where a player wants it, off its table or not)
     LC.CampSnapshot(c.zone)
     if ply.ChatPrint then ply:ChatPrint("[Camp] Set down. (It'll be here next time too.)") end
 end

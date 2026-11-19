@@ -2,7 +2,7 @@
     Living City: the performance debugger (server side)
 
     The measuring is sh_livingcity_perfdebug.lua. This turns it on and off
-    (staff: C > Help > Performance debugger, or lc_perfdebug in the console),
+    (staff: F4 > Factions > Admin: testing tools > Performance debugger, or lc_perfdebug in the console),
     adds what only the server knows (each player's ping, packet loss, what
     the gamemode sends them and what waits in their send queue; the city's
     NPC loop and repeating timers; the server's network settings), sends the
@@ -224,5 +224,5 @@ concommand.Add("lc_perfdebug", function(ply, _, args)
         return
     end
     Say("[Miscount] Performance debugger: " .. (P.on and ("on, started by " .. tostring(P.startedBy)) or "off")
-        .. ". lc_perfdebug on | off | reset | save | report (or C > Help > Performance debugger).")
+        .. ". lc_perfdebug on | off | reset | save | report (or F4 > Factions > Admin: testing tools > Performance debugger).")
 end)

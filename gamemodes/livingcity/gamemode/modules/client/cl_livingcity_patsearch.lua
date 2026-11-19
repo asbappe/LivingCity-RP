@@ -232,7 +232,7 @@ net.Receive("lc_pat_open", function()
             return UnitQuick(t)
         end
         if not IsValid(unitWin) then
-            local ok = pcall(BuildUnit)
+            local ok = LC.Try(BuildUnit)
             if not ok or not IsValid(unitWin) then
                 if IsValid(unitWin) then unitWin.silent = true unitWin:Remove() end
                 unitWin, unitState = nil, nil

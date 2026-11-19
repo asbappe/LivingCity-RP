@@ -32,7 +32,7 @@ local cvShare = CreateConVar("lc_blackout_share", "0.5", FLAGS, "Share of the tr
 local cvDark  = CreateConVar("lc_blackout_light", "b", FLAGS, "How dark a city-wide blackout is: a (pitch black) to m (normal)")
 
 -- Everything that runs off the grid: Living City's own fixtures...
-local POWERED = { "lc_streetlight", "lc_loudspeaker", "lc_screen", "lc_powerbank", "lc_forcefield", "lc_dispenser", "lc_vending", "lc_terminal" }
+local POWERED = { "lc_streetlight", "lc_loudspeaker", "lc_screen", "lc_monitor", "lc_powerbank", "lc_forcefield", "lc_dispenser", "lc_vending", "lc_terminal" }
 -- ...and the map's own lights that can be switched. (A light is only still an
 -- entity in the running map if the mapper named it; the rest are baked into
 -- the map's lighting, which only goes dark all at once: the city-wide
@@ -333,7 +333,7 @@ function LC.FieldUnstick()
     end
 end
 timer.Create("LivingCityFieldUnstick", 0.25, 0, function()
-    local ok, err = pcall(LC.FieldUnstick)
+    local ok, err = LC.Try(LC.FieldUnstick)
     if not ok and LC.Error then LC.Error("forcefield", err) end
 end)
 

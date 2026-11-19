@@ -54,7 +54,7 @@ function SWEP:PrimaryAttack()
     local start = owner:GetShootPos()
     local tr = util.TraceLine({ start = start, endpos = start + owner:GetAimVector() * 700, filter = owner, mask = MASK_SHOT })
     if util.ParticleTracerEx then
-        pcall(util.ParticleTracerEx, "vortigaunt_beam", start - Vector(0, 0, 10), tr.HitPos, false, owner:EntIndex(), -1)
+        LC.Try(util.ParticleTracerEx, "vortigaunt_beam", start - Vector(0, 0, 10), tr.HitPos, false, owner:EntIndex(), -1)
     end
     owner:EmitSound(ZAP_SOUND, 80)
     local ent = tr.Entity

@@ -81,7 +81,8 @@ function LC.TrainArrive(force)
     local room = budget and ((LC.NPCBudget and LC.NPCBudget() or budget:GetInt()) - table.Count(LC.NPCs or {})) or 4
     for _ = 1, math.min(math.random(2, 4), math.max(0, room)) do
         local npc, st
-        if LC.SpawnCitizen then npc, st = LC.SpawnCitizen(OnPlatform(p)) end
+        -- (only someone who lives here and is free to come out: never a nameless extra)
+        if LC.SpawnCitizen and (not LC.PersonAvailable or LC.PersonAvailable("citizen")) then npc, st = LC.SpawnCitizen(OnPlatform(p)) end
         if IsValid(npc) and st then
             arrivals[#arrivals + 1] = npc
             local home = Home(st, p.pos)
@@ -119,7 +120,7 @@ timer.Create("LivingCityTrains", 5, 0, function()
     if now < T.nextAt then return end
     if LC.Event == "curfew" or LC.Event == "lockdown" then T.nextAt = now + 120 return end
     if #LC.TrainPlatforms() == 0 then T.nextAt = now + 300 return end
-    local ok, err = pcall(LC.TrainArrive)
+    local ok, err = LC.Try(LC.TrainArrive)
     if not ok and LC.Error then LC.Error("trains", err) end
 end)
 

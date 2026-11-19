@@ -129,7 +129,7 @@ end
 hook.Add("LivingCitySocioChanged", "LivingCityWaiverPistols", function() LC.WaiverArmTick() end)
 timer.Create("LivingCityWaiverPistols", 3, 0, function()
     if not LC.Running then return end
-    local ok, err = pcall(LC.WaiverArmTick)
+    local ok, err = LC.Try(LC.WaiverArmTick)
     if not ok and LC.Log then LC.Log("error", "waiver pistols: " .. tostring(err)) end
 end)
 
@@ -312,7 +312,7 @@ hook.Add("PlayerDeath", "LivingCityResponse", function(ply) LC.ResetHeat(ply) en
 ------------------------------------------------------------------------
 
 timer.Create("LivingCityResponse", 2, 0, function()
-    local ok, err = pcall(function()
+    local ok, err = LC.Try(function()
         local now = CurTime()
         for _, ply in ipairs(player.GetAll()) do
             local h = LC.Heat(ply)

@@ -369,7 +369,7 @@ end)
 hook.Add("LivingCityDreamStarted", "LivingCityBedtime", function(dream)
     if dream.test then return end -- (a test from the editor isn't tonight's dream)
     local ph = Phase()
-    if ph == "dusk" or ph == "night" then S.dreamEve = S.eve end
+    if (ph == "dusk" or ph == "night") and not dream.prison then S.dreamEve = S.eve end -- (a prisoner's dream at any hour isn't tonight's)
     local forced = dream.forced or dream.mood == "nightmare"
     -- the hat kept someone asleep out of it (who'd have dreamt it otherwise): spent
     for _, p in ipairs(player.GetAll()) do
@@ -381,10 +381,10 @@ hook.Add("LivingCityDreamStarted", "LivingCityBedtime", function(dream)
 end)
 
 -- Woken from tonight's dream: done for the night; and dreamt through (not woken early), another stimulant allowed.
-hook.Add("LivingCityDreamWoke", "LivingCityBedtimeNight", function(p, ok, why)
+hook.Add("LivingCityDreamWoke", "LivingCityBedtimeNight", function(p, ok, why, dream)
     if not IsValid(p) or why == "test" then return end
     local ph = Phase()
-    if ph == "dusk" or ph == "night" then p.lcDreamtEve = S.eve end
+    if (ph == "dusk" or ph == "night") and not (dream and dream.prison) then p.lcDreamtEve = S.eve end
     if why == "end" or why == "game" or (why == "optout" and p.lcDreamWokeFull) then Unlock(p) end
     p.lcDreamWokeFull = nil
 end)
@@ -453,7 +453,7 @@ function LC.DreamBodyMake(p, snap)
     p.lcDreamBedPos = top
     local rag = ents.Create("prop_ragdoll")
     if not IsValid(rag) then return nil end
-    local ok = pcall(function()
+    local ok = LC.Try(function()
         rag:SetModel(p:GetModel())
         rag:SetSkin(p:GetSkin() or 0)
         for i = 0, (p.GetNumBodyGroups and p:GetNumBodyGroups() or 1) - 1 do rag:SetBodygroup(i, p:GetBodygroup(i)) end

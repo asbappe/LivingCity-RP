@@ -20,6 +20,13 @@ if not Q then return end
 
 local Goto, Hold, Count, Narrate, Place, Spot, HideSpots = Q.Goto, Q.Hold, Q.Count, Q.Narrate, Q.Place, Q.Spot, Q.HideSpots
 
+-- A repair as the wiring game: walking up starts it, and the stage after is the game.
+local function Wire(p, go, r, what, fixed)
+    local game = Q.GameStage("Rewire it")
+    game.onDone = fixed
+    return Q.GameGo(p, go, "wiring", { what = what, pos = p }, r), game
+end
+
 local function T(def)
     def.factions = def.factions or {}
     LC.QuestTemplates[#LC.QuestTemplates + 1] = def
@@ -62,7 +69,7 @@ T{
 }
 
 T{
-    id = "res_raidsupply", factions = { resistance = true }, during = { "supply" }, squad = 6, violent = true,
+    id = "res_raidsupply", brings = true, factions = { resistance = true }, during = { "supply" }, squad = 6, violent = true,
     available = function() return LC.Supply ~= nil end, -- (from the moment it's on its way)
     build = function(ply)
         local s = LC.Supply
@@ -116,16 +123,15 @@ T{
             local spec = {
                 title = "Work order: fix a streetlight", reward = 12, limit = 420,
                 desc = "A streetlight is out " .. Place(p, ply:GetPos()) .. ". Rewire it. Keep what's left over.",
-                stages = { Goto(p, "Find the dead streetlight", 160), Hold(p, 12, "Rewire it (stay close)", 150) },
+                stages = { Wire(p, "Find the dead streetlight", 160, "the streetlight", function() if LC.RepairStreetFixture then LC.RepairStreetFixture(lamp) end end) },
                 onFinish = PayIn({ scrap = 1, chemicals = 1 }, "The light flickers on."),
             }
-            spec.stages[2].onDone = function() if LC.RepairStreetFixture then LC.RepairStreetFixture(lamp) end end
             return spec
         end
         return {
             title = "Work order: fix a streetlight", reward = 12, limit = 420,
             desc = "A streetlight is out " .. Place(p, ply:GetPos()) .. ". Rewire it. Keep what's left over.",
-            stages = { Goto(p, "Find the dead streetlight", 150), Hold(p, 12, "Rewire it (stay close)", 140) },
+            stages = { Wire(p, "Find the dead streetlight", 150, "the streetlight") },
             onFinish = PayIn({ scrap = 1, chemicals = 1 }, "The light flickers on."),
         }
     end,
@@ -153,8 +159,9 @@ T{
         if not p then return nil end
         return {
             title = "Work order: patch a leaking pipe", reward = 12, limit = 420,
-            desc = "A pipe is leaking " .. Place(p, ply:GetPos()) .. ". Get down and patch it.",
-            stages = { Goto(p, "Find the leak", 150), Hold(p, 15, "Patch the pipe (crouch beside it)", 140, true) },
+            desc = "A pipe is leaking " .. Place(p, ply:GetPos()) .. ". Patch it.",
+            stages = { Goto(p, "Find the leak", 150),
+                LC.QuestHandsStage({ pos = p, r = 140, model = "models/props_pipes/valve001.mdl", busy = "Patching... (keep holding E)", text = "Patch the leak: hold E on the valve" }) },
             onFinish = PayIn({ chemicals = 1, cloth = 1, scrap = 1 }, "The leak stops."),
         }
     end,
@@ -166,7 +173,7 @@ T{
 
 -- Two terminals, each with half the picture: a fragment from each, and the two make a chip.
 T{
-    id = "res_dataheist", factions = { resistance = true }, violent = true, squad = 4,
+    id = "res_dataheist", brings = true, factions = { resistance = true }, violent = true, squad = 4,
     available = function(ply)
         if not LC.ReadyTerminals or not (LC.CanHack and LC.CanHack(ply)) then return false end -- a Hacker's job (the multitool)
         return #LC.ReadyTerminals(false) >= 2
@@ -199,7 +206,7 @@ T{
 
 -- The master terminal: the motherlode.
 T{
-    id = "res_motherlode", factions = { resistance = true }, violent = true, squad = 4,
+    id = "res_motherlode", brings = true, factions = { resistance = true }, violent = true, squad = 4,
     available = function(ply)
         if not LC.ReadyTerminals or not (LC.CanHack and LC.CanHack(ply)) then return false end
         return #LC.ReadyTerminals(true) >= 1
@@ -238,18 +245,20 @@ T{
 ------------------------------------------------------------------------
 
 T{
-    id = "res_breakout", factions = { resistance = true }, violent = true, squad = 4,
+    id = "res_breakout", brings = true, factions = { resistance = true }, violent = true, squad = 4,
     available = function(ply) return LC.JailedRebel and LC.JailedRebel() ~= nil and LC.JailedRebel() ~= ply end,
     build = function(ply)
         local prisoner, cell = LC.JailedRebel()
         if not prisoner or prisoner == ply then return nil end
-        local hold = Hold(cell, 20, "Get the cell open (stay at the door while the alarm goes)", 170)
+        -- the lock is the needle game, with the alarm going (and the scanner looking in)
+        local go = Q.GameGo(cell, "Get to the cells", "hack", { what = "the cell lock", title = "The cell lock", pos = cell }, 220)
+        local hold = Q.GameStage("Get the cell open")
         hold.onEnter = function() if LC.PrisonBreakAlarm then LC.PrisonBreakAlarm(cell) end end
         hold.onDone = function(q) if LC.BreakOut then LC.BreakOut(prisoner, q.owner) end end
         return {
             title = "Break " .. prisoner:Nick() .. " out", reward = 60, limit = 900,
             desc = prisoner:Nick() .. " is in a cell " .. Place(cell, ply:GetPos()) .. ". Get in (a keycard, a bypass charge, or a Hacker's multitool on the Combine doors), get the cell open, get them out.",
-            stages = { Goto(cell, "Get to the cells", 220), hold },
+            stages = { go, hold },
         }
     end,
 }
@@ -309,7 +318,7 @@ T{
 }
 
 T{
-    id = "res_ambushlz", factions = { resistance = true }, violent = true, squad = 6,
+    id = "res_ambushlz", brings = false, factions = { resistance = true }, violent = true, squad = 6,
     available = function() return LC.OverwatchDrop ~= nil end,
     build = function(ply)
         local d = LC.OverwatchDrop
@@ -320,10 +329,31 @@ T{
             desc = "A dropship is bringing Overwatch soldiers down at the landing zone. Be there when it comes in, and hit the landing party while they're still on the ground.",
             stages = {
                 Goto(d.pos, "Get to the landing zone before the dropship does", 800),
-                Count("killed", need, "Bring down the landing party (the soldiers off the dropship)", function(_, _, npc)
-                    local st = LC.NPCs[npc]
-                    return st ~= nil and st.drop == d -- (these soldiers: not any soldier anywhere)
-                end),
+                (function()
+                    local c = Count("killed", need, "Bring down the landing party (the soldiers off the dropship)", function(_, _, npc)
+                        local st = LC.NPCs[npc]
+                        return st ~= nil and st.drop == d -- (these soldiers: not any soldier anywhere)
+                    end)
+                    -- fewer on the ground than the counter needs: off the dropship, or (the drop over) at the landing zone
+                    c.refill = function(_, _, missing)
+                        local made = LC.OverwatchDropTopUp and LC.OverwatchDropTopUp(d, missing)
+                        if made ~= 0 then return made end
+                        local sp = LC.Spawners and LC.Spawners.soldier
+                        if not sp then return 0 end
+                        made = 0
+                        for i = 1, missing do
+                            local a = i / missing * math.pi * 2
+                            local at = (LC.GroundAt and LC.GroundAt(d.pos + Vector(math.cos(a) * 160, math.sin(a) * 160, 0)) or d.pos) + Vector(0, 0, 6)
+                            local ok, npc, st = LC.Try(LC.ManpowerFree or function(f, ...) return f(...) end, sp, at)
+                            if ok and IsValid(npc) and st then
+                                st.drop, st.unmanaged, st.dropGuard, st.holdPos, st.leaveAt = d, true, true, at, CurTime() + 600
+                                made = made + 1
+                            end
+                        end
+                        return made
+                    end
+                    return c
+                end)(),
             },
         }
     end,
@@ -349,7 +379,8 @@ T{
             desc = "A sweep team is moving into anticitizen territory " .. Place(z.pos, ply:GetPos()) .. ". Join it, and take down the anticitizens who resist.",
             stages = {
                 Goto(z.pos, "Join the sweep team at the edge of anticitizen territory", math.max(500, (z.r or 300) + 300)),
-                Count("killed", 2, "Take down two armed anticitizens there", RebelNear(z.pos, (z.r or 300) + 800)),
+                Q.Spawns(Count("killed", 2, "Take down two armed anticitizens there", RebelNear(z.pos, (z.r or 300) + 800)),
+                    { role = "rebel", pos = z.pos, r = z.r or 300, arg = z }),
             },
         }
     end,
@@ -403,7 +434,7 @@ T{
 -- The Resistance's fighters are about to hit the Combine (sv_livingcity_rebels.lua): be there,
 -- and back them up.
 T{
-    id = "res_backupraid", factions = { resistance = true }, violent = true, squad = 6,
+    id = "res_backupraid", brings = true, factions = { resistance = true }, violent = true, squad = 6,
     available = function() return LC.PlannedRaid ~= nil or (LC.Skirmish ~= nil and LC.Skirmish.kind == "raid") end,
     build = function(ply)
         local r = LC.PlannedRaid or LC.Skirmish
@@ -414,10 +445,10 @@ T{
             desc = "Our fighters are hitting the Combine " .. Place(target, ply:GetPos()) .. ". Get there, and help them: take down the units they're fighting.",
             stages = {
                 Goto(target, "Meet our fighters at the target", 600),
-                Count("killed", 2, "Back them up: take down two of the Combine's units there", function(_, _, npc)
+                Q.Spawns(Count("killed", 2, "Back them up: take down two of the Combine's units there", function(_, _, npc)
                     local st = LC.NPCs[npc]
                     return st ~= nil and LC.IsSecurity(st) and IsValid(npc) and npc:GetPos():DistToSqr(target) < 1400 * 1400
-                end),
+                end), { role = "cop", pos = target, r = 900 }),
             },
         }
     end,
@@ -443,7 +474,7 @@ hook.Add("EntityTakeDamage", "LivingCityQuestVort", function(v, dmg)
     if IsValid(a) and a:IsNPC() and v.AddEntityRelationship then v:AddEntityRelationship(a, D_HT, 99) end
 end)
 T{
-    id = "res_freevort", factions = { resistance = true }, violent = true, squad = 4,
+    id = "res_freevort", brings = true, factions = { resistance = true }, violent = true, squad = 4,
     available = function(ply)
         if ply:GetNW2Int("lcf_rank", 1) < 2 or #LC.ZonesOfKind("rebel") == 0 then return false end
         local n = 0
@@ -510,7 +541,9 @@ T{
             end
             return e
         end
-        local cut = Hold(site, 12, "Cut the shackles (stay beside it)", 140)
+        -- the collar comes off as the wiring game, there beside it
+        local cut = Q.GameStage("Get the collar off")
+        cut.onEnter = function(q) if IsValid(q.owner) and LC.JobGameStart then LC.JobGameStart(q.owner, "wiring", q, { what = "the collar", pos = site }) end end
         cut.onDone = function(q)
             local p = q.owner
             if IsValid(p) and LC.SeenBySecurity and LC.SeenBySecurity(p, 900) then LC.ReportCrime(p, "Theft of Combine property", 180) end
@@ -518,13 +551,14 @@ T{
             Narrate(q, "The shackles fall. It looks at you, and waits. Lead it home.")
         end
         local choose = Q.Choice("The vortigaunt waits, its collar humming. Cut it loose here, or walk it out as if it were still the Combine's?", {
-            { text = "Cut the shackles here (twelve seconds beside it; its keepers may see), then lead it home.",
+            { text = "Cut the shackles here (its keepers may see), then lead it home.",
               pick = function(q) Q.InsertStages(q, { cut, Home("Lead it home to rebel territory (any of it)") }) return "next" end },
             { text = "Lead it off still shackled, like Combine property on the move; cut them in rebel territory (a unit may stop you and ask).",
               pick = function(q) q.data.shackled = true Q.InsertStages(q, { Home("Walk it to rebel territory (any of it), still shackled", true) }) return "next" end },
         })
         return {
             title = "Free a vortigaunt " .. Place(site, ply:GetPos()), reward = 70, limit = 1200,
+            games = { { kind = "wiring", opts = { what = "the collar", pos = site }, maybe = true } }, -- (the job board: LC.PostingPay)
             desc = "The Combine are working a shackled vortigaunt " .. Place(site, ply:GetPos()) .. ". Free it and bring it to rebel territory: it will heal our wounded.",
             stages = { find, choose },
         }

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Reads every line said in a dream you play, from the code. They go in VOICE_LINES.md, section 4, with every
+"""Reads every line said in a dream you play, from the code. They go in VOICE_SCRIPTS.md, with every
 other voice line (_dev/voice_lines.py; the owner, 10 November: all in a single document). Running this file
-remakes VOICE_LINES.md.
+remakes VOICE_SCRIPTS.md.
 
     python3 _dev/dream_lines.py   (the same as python3 _dev/voice_lines.py)
 """

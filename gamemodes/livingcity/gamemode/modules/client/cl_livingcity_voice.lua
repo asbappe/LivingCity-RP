@@ -37,7 +37,7 @@ function LC_CL.VoicePlay(id, title, bytes)
         ch:SetVolume(1)
         ch:Play()
     end)
-    pcall(Tidy)
+    LC.Try(Tidy)
     return true
 end
 

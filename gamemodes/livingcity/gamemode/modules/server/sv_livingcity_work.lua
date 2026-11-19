@@ -66,6 +66,9 @@ LC.GiveJobTools = GiveTools
 -- (with a Labor Assignment terminal in the city, a job is changed only there: viaDesk is that terminal asking)
 LC.LABOR_GO = "Go to a Labor Assignment terminal to change your assignment."
 function LC.SetJob(ply, id, force, viaDesk)
+    -- (sent for by their leader: that word first, before any work is taken; sv_livingcity_adminplot.lua)
+    local first = not force and id ~= "" and LC.AdminPlotBusy and LC.AdminPlotBusy(ply)
+    if first then return false, first end
     local job = LCJ.ById[id]
     if id ~= "" and not job then return false, "That job doesn't exist." end
     if job and LCJ.Closed(job) and not force then return false, "That job is closed right now. Pick a different one." end
@@ -339,13 +342,10 @@ SHIFTS.sanitation = {
                 local tr = util.TraceLine({ start = sp + Vector(0, 0, 40), endpos = sp - Vector(0, 0, 300), mask = MASK_SOLID_BRUSHONLY })
                 if tr.Hit then sp = tr.HitPos end -- on the ground, not floating
             end
-            local h = Hold(sp, 6, string.format("Go to bin %d of 3 (%s) and stay next to it for 6 seconds to empty it", i, Place(sp, ply:GetPos())), 110)
-            if bin then
-                h.item = bin.ent
-            else
-                h.onEnter = function(q, st) st.item = Q.SpawnItem(q, "models/props_trainstation/trashcan_indoor001a.mdl", sp) end
-            end
-            stages[i] = h
+            -- (emptied by hand: hold E on the bin itself; one put down where the map has none)
+            stages[i] = LC.QuestHandsStage({ pos = sp, r = 110, ent = bin and bin.ent or nil, model = "models/props_trainstation/trashcan_indoor001a.mdl",
+                busy = "Emptying... (keep holding E)",
+                text = string.format("Empty bin %d of 3 (%s): hold E on it", i, Place(sp, ply:GetPos())) })
         end
         return { title = "Bin round", reward = 15, limit = 480, desc = "Three bins are overflowing. Go to each one and empty it.", stages = stages }
     end,
@@ -375,7 +375,8 @@ SHIFTS.sanitation = {
                         Insert(q, { Count("used_npc", 1, "Find a Civil Protection unit and press E on them to report the name", Q.IsCopNPC) })
                     end },
                 }),
-                Hold(sp, 5, "Crouch at the wall for 5 seconds to scrub it clean", 100, true),
+                LC.QuestHandsStage({ pos = sp, r = 100, model = "models/props_junk/metalbucket01a.mdl", busy = "Scrubbing... (keep holding E)",
+                    text = "Scrub it off: hold E on the bucket" }),
             },
         }
     end,
@@ -423,7 +424,9 @@ SHIFTS.kitchen = {
             desc = "Every ration pack in the dispensers must match the register. Go to the dispensers and count them.",
             stages = {
                 Goto(at, "Go to the dispensers (marked)", 200),
-                Hold(at, 25, "Stay at the dispensers for 25 seconds to count the packs against the register", 180),
+                LC.QuestSearchStage({ pos = at, r = 180, only = true, min = 3, quiet = true, busy = "Counting... (keep holding E)",
+                    junk = { "models/props_junk/cardboard_box001a.mdl", "models/props_junk/cardboard_box002a.mdl" },
+                    text = "Count the packs: hold E on each crate" }),
                 Choice("The count is three packs short. Nobody signed for them, and the register doesn't care whose fault that is.", {
                     { text = "Report the missing packs to the supervisor.", pick = function(q, p)
                         Trait(p, "loyalty", 1)
@@ -667,6 +670,7 @@ SHIFTS.warden = {
         if not a or not b then return nil end
         return {
             title = "Block patrol", reward = 20, limit = 600,
+            extraCredits = { 0, 10 }, -- (a report that holds up, below: what the job board shows)
             desc = "Walk your block, and keep your eyes open. The Union trusts you to know your neighbours.",
             stages = {
                 Goto(a, "Walk your block: the first corner (marked)", 160),
@@ -710,7 +714,8 @@ SHIFTS.courier = {
             local dest = LC.LetterDestination(l, ply:GetPos())
             if dest then
                 carried[#carried + 1] = l
-                local h = Hold(dest, 3, "", 140)
+                local h = Goto(dest, "", 110)
+                h.letter = true -- (pushed under the door as you reach it)
                 h.onDone = function(q) LC.DeliverLetter(l, q.owner) end
                 stages[#stages + 1] = h
             end
@@ -718,9 +723,9 @@ SHIFTS.courier = {
         if #carried == 0 then return nil end
         local n = 0
         for _, st in ipairs(stages) do
-            if st.kind == "hold" then
+            if st.letter then
                 n = n + 1
-                st.text = string.format("Take letter %d of %d to %s (marked) and stay at their door for 3 seconds to push it under", n, #carried, carried[n].toName or "someone")
+                st.text = string.format("Take letter %d of %d to %s's door (marked)", n, #carried, carried[n].toName or "someone")
             end
         end
         -- they're yours from the moment you start
@@ -1255,6 +1260,7 @@ local function GamesOn() return LC.JobGamesOn and LC.JobGamesOn() end
 local function GameGo(pos, text, kind, opts)
     local go = Goto(pos, text, 180)
     go.onDone = function(q) if IsValid(q.owner) then LC.JobGameStart(q.owner, kind, q, opts) end end
+    go.game, go.gameOpts = kind, opts -- (what the job board reads its pay from: LC.PostingPay)
     return go
 end
 local function GameStage(text) return Count("game_done", 1, text) end
@@ -1267,6 +1273,7 @@ local function Gamify(spec, idx, kind, text, opts)
     o.station = o.station or before.pos
     o.depot = o.depot or before.pos
     before.onDone = function(q) if IsValid(q.owner) then LC.JobGameStart(q.owner, kind, q, o) end end
+    before.game, before.gameOpts = kind, o
     spec.stages[idx] = GameStage(text)
     return spec
 end
@@ -1283,6 +1290,7 @@ local function GamifyHolds(spec, kind, text, opts, keepEnter)
             local o = table.Copy(opts or {})
             o.pos, o.what = st.pos, o.what
             go.onDone = function(q) if IsValid(q.owner) then LC.JobGameStart(q.owner, kind, q, o) end end
+            go.game, go.gameOpts = kind, o
             local gs = GameStage(type(text) == "function" and text(st) or text)
             gs.onDone = st.onDone
             out[#out + 1] = go
@@ -1336,6 +1344,18 @@ do
             stages = { GameGo(station, "Go to the sealing line at the ration plant (marked)", "line", { station = station, variant = "rations" }),
                 GameStage("Work the sealing line: throw split, leaking packs (sickly green) in the reject bin and let the sealed ones pass. E grabs a pack, left click throws it") },
         }
+    end
+    -- The counter: checking the cards is the shift (the owner, 15 November: its last step waited at the
+    -- counter until three citizens had been handed rations, and with nobody in the line the shift ran
+    -- out of time). The papers game, with citizens stepping up to the counter.
+    local counter = SHIFTS.kitchen[4]
+    SHIFTS.kitchen[4] = function(ply, job)
+        local spec = counter(ply, job)
+        if spec and GamesOn() then
+            spec = Gamify(spec, 3, "papers", "Check the ration cards: press E on each citizen, then approve, deny, or call a Civil Protection unit",
+                { who = "Citizens", one = "citizen", where = "Rations", title = "Ration cards" })
+        end
+        return spec
     end
     local short = SHIFTS.factory[3]
     SHIFTS.factory[3] = function(ply, job)
@@ -1484,6 +1504,10 @@ do
     SHIFTS.radio = { AtWork("radio", "Repairs", "Four radio sets on the shelf, all hissing. Tune each one to its station, then adjust its screws until the sound comes through clean.",
         "Go to the radio repair shop (marked)", "Repair the sets: turn the dial to the station, then turn the screws while you listen, until the static is gone. If you close the window, press E to open it again") }
 end
+
+-- Every kind of shift a Union job has, as builders (ply, job) -> a shift or nil: the list of every job's pay an admin
+-- copies from the board (LC.JobPayList, sv_livingcity_quests.lua).
+function LC.ShiftBuilders(id) return SHIFTS[id] end
 
 -- (tests: finish a game at once)
 LC.JobGameFinishForTest = function(ply) if LC.JobGames and LC.JobGames[ply] then LC.JobGameEnd(ply, "test") else LC.QuestEvent("game_done", ply) end end

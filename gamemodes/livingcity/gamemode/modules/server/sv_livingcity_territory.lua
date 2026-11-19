@@ -27,7 +27,7 @@
 
       lc_territory                     what's grown where (admin)
       lc_territory_grow rebel|infest   grow one now (admin; superadmins also have it in
-                                       C > Help > Admin testing tools > The city)
+                                       F4 > Factions > Admin: testing tools > The city)
       lc_territory_reset               take back everything that grew (admin)
 
     Grown patches are kept across restarts in garrysmod/data/livingcity/<map>_territory.json,
@@ -417,6 +417,72 @@ function LC.InfestQuietAt(pos)
 end
 
 LC.TerritoryGrowthSpot = GrowthSpot
+
+-- Somewhere on open ground near `near` (another district, sv_livingcity_districtinfest.lua)
+-- that the infestation of `seed` could leak to: the same checks as growing, without
+-- having to touch the edge (spores carry), but never past a checkpoint with power.
+-- ok(p): an extra test of the spot (which district it is in). Returns pos, r or nil.
+function LC.TerritoryLeakSpot(seed, near, ok)
+    local family = Family(seed)
+    local newR = math.Clamp(seed.r * math.Rand(0.55, 0.8), 200, 500)
+    for _ = 1, 40 do
+        local p = LC.RandomWanderPos and LC.RandomWanderPos("citizen", near)
+        p = p and Floor(p + Vector(0, 0, 8))
+        local fitR = p and FitRadius(p, newR)
+        if p and fitR and (not ok or ok(p)) then
+            -- from the nearest of its ground
+            local from, fd
+            for _, z in ipairs(family) do
+                local d = z.pos:DistToSqr(p)
+                if not fd or d < fd then from, fd = z, d end
+            end
+            local inside = false
+            for _, z in ipairs(LC.Zones) do
+                if z.kind == seed.kind and LCZ.Contains(z, p, 50) then inside = true break end
+            end
+            if from and not inside and ClearOfOthers(p, fitR, seed.kind) and not LC.InfestQuietAt(p)
+                and not (LC.ContainmentBlocks and LC.ContainmentBlocks(from.pos, p, fitR))
+                and (not LC.NavReachable or LC.NavReachable(from.pos, p)) then
+                return p, fitR
+            end
+        end
+    end
+    return nil
+end
+-- Where headcrab shelling puts things (sv_livingcity_shelling.lua), clear of what a patch keeps
+-- clear of (housing blocks, Combine zones, prisons, checkpoints, queues, cells, spawns...), not on
+-- infested ground already nor on ground just cleared. A shell flies over checkpoints.
+--   mode nil       open floor near `near` with sky above it (a canister comes down on it)
+--   mode "covered" floor near `near` with no sky above it: tunnels, sewers, rooms (what crawls down)
+--   mode "nearest" the open floor with sky above nearest to `near` anywhere in the city, within NEAREST
+-- ok(p): an extra test of the spot. Returns pos, r or nil.
+local NEAREST = 3000
+local function OpenSky(p)
+    local tr = util.TraceLine({ start = p + Vector(0, 0, 32), endpos = p + Vector(0, 0, 4096), mask = MASK_SOLID_BRUSHONLY })
+    return not tr or not tr.Hit or tr.HitSky == true
+end
+LC.TerritoryOpenSky = OpenSky
+function LC.TerritoryShellSpot(seed, near, ok, mode)
+    local newR = math.Clamp((seed and seed.r or 400) * math.Rand(0.55, 0.8), 200, 500)
+    local best, bestR, bd
+    for _ = 1, (mode == "nearest" and 60 or 40) do
+        local p = LC.RandomWanderPos and (mode == "nearest" and LC.RandomWanderPos("citizen") or LC.RandomWanderPos("citizen", near))
+        p = p and Floor(p + Vector(0, 0, 8))
+        local fitR = p and FitRadius(p, newR)
+        if p and fitR and (not ok or ok(p)) and OpenSky(p) == (mode ~= "covered") then
+            local inside = false
+            for _, z in ipairs(LC.Zones) do
+                if z.kind == "infest" and LCZ.Contains(z, p, 50) then inside = true break end
+            end
+            if not inside and ClearOfOthers(p, fitR, "infest") and not LC.InfestQuietAt(p) then
+                if mode ~= "nearest" then return p, fitR end
+                local d = (p.x - near.x) ^ 2 + (p.y - near.y) ^ 2
+                if d < NEAREST * NEAREST and (not bd or d < bd) then best, bestR, bd = p, fitR, d end
+            end
+        end
+    end
+    return best, bestR
+end
 function LC.TerritoryCanGrow(seed)
     return ClusterGrown(ClusterOf(seed)) < MaxFor(seed.kind) and LC.GrownCount(seed.kind) < cvCityMax:GetInt()
 end
@@ -690,7 +756,7 @@ end
 LC.TerritoryTryGrow = TryGrow
 
 timer.Create("LivingCityTerritory", 10, 0, function()
-    local ok, err = pcall(function()
+    local ok, err = LC.Try(function()
         if not LC.Running or not cvOn:GetBool() then return end
         local now = CurTime()
         -- one growth at a time per territory (a cluster of touching zones), not per zone
@@ -755,6 +821,8 @@ concommand.Add("lc_territory", function(ply)
     local lines = LC.TerritoryStatus()
     if #lines == 0 then return Say(ply, "[Miscount] No rebel or infestation zones placed.") end
     for _, l in ipairs(lines) do Say(ply, "[Miscount] " .. l) end
+    for _, l in ipairs(LC.DistrictInfestStatus and LC.DistrictInfestStatus() or {}) do Say(ply, "[Miscount] " .. l) end -- (sv_livingcity_districtinfest.lua)
+    for _, l in ipairs(LC.ShellingStatus and LC.ShellingStatus() or {}) do Say(ply, "[Miscount] " .. l) end -- (sv_livingcity_shelling.lua)
 end)
 
 concommand.Add("lc_territory_grow", function(ply, _, args)
