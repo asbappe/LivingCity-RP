@@ -186,7 +186,7 @@ local PART_MODELS = { "models/props_lab/reciever01b.mdl", "models/props_lab/hard
 local function FixLabTemplate()
     local Q = LC.QB
     return {
-        id = "res_fixlab", factions = { resistance = true }, squad = 4,
+        id = "res_fixlab", brings = false, factions = { resistance = true }, squad = 4,
         available = function() return #LC.BrokenLabs() > 0 end,
         build = function(ply, focus)
             local labs = LC.BrokenLabs()

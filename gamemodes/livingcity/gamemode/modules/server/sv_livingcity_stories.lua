@@ -724,7 +724,7 @@ LC.Chain{
 ------------------------------------------------------------------------
 
 LC.Chain{
-    id = "flock", name = "Father Grigori's Flock", special = "chaplain",
+    id = "flock", name = "Father Grigori's Flock", special = "chaplain", brings = false, -- (experience only: the owner, 19 November)
     unlock = function() return true end,
     start = "lost",
     endings = {

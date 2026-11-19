@@ -670,6 +670,7 @@ SHIFTS.warden = {
         if not a or not b then return nil end
         return {
             title = "Block patrol", reward = 20, limit = 600,
+            extraCredits = { 0, 10 }, -- (a report that holds up, below: what the job board shows)
             desc = "Walk your block, and keep your eyes open. The Union trusts you to know your neighbours.",
             stages = {
                 Goto(a, "Walk your block: the first corner (marked)", 160),
@@ -1259,6 +1260,7 @@ local function GamesOn() return LC.JobGamesOn and LC.JobGamesOn() end
 local function GameGo(pos, text, kind, opts)
     local go = Goto(pos, text, 180)
     go.onDone = function(q) if IsValid(q.owner) then LC.JobGameStart(q.owner, kind, q, opts) end end
+    go.game, go.gameOpts = kind, opts -- (what the job board reads its pay from: LC.PostingPay)
     return go
 end
 local function GameStage(text) return Count("game_done", 1, text) end
@@ -1271,6 +1273,7 @@ local function Gamify(spec, idx, kind, text, opts)
     o.station = o.station or before.pos
     o.depot = o.depot or before.pos
     before.onDone = function(q) if IsValid(q.owner) then LC.JobGameStart(q.owner, kind, q, o) end end
+    before.game, before.gameOpts = kind, o
     spec.stages[idx] = GameStage(text)
     return spec
 end
@@ -1287,6 +1290,7 @@ local function GamifyHolds(spec, kind, text, opts, keepEnter)
             local o = table.Copy(opts or {})
             o.pos, o.what = st.pos, o.what
             go.onDone = function(q) if IsValid(q.owner) then LC.JobGameStart(q.owner, kind, q, o) end end
+            go.game, go.gameOpts = kind, o
             local gs = GameStage(type(text) == "function" and text(st) or text)
             gs.onDone = st.onDone
             out[#out + 1] = go

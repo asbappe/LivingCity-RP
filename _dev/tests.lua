@@ -38463,6 +38463,24 @@ setFund(fundWas)
 end
 Nov18_ResistanceFundTests()
 
+function Nov19_JobPayShownTests()
+section("19 November: every job lists its credits, and its share of the Resistance's fund")
+local sides = { "citizen", "cp", "ota", "admin", "resistance", "zombie" }
+for _, t in ipairs(LC.QuestTemplates) do
+    local fs = {}
+    for f in pairs(t.factions or {}) do fs[#fs + 1] = f end
+    print("TMPL", t.id, table.concat(fs, ","), t.special or "", t.during and "during" or "", t.solo and "solo" or "")
+end
+for _, c in ipairs(LC.ChainList) do
+    local fs = {}
+    for f in pairs(c.factions or {}) do fs[#fs + 1] = f end
+    local parts = {}
+    for k in pairs(c.parts or {}) do parts[#parts + 1] = tostring(k) end
+    print("CHAIN", c.id, c.flat and "flat" or "", c.special or "", table.concat(fs, ","), table.concat(parts, ","))
+end
+end
+Nov19_JobPayShownTests()
+
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")
 ;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)
     -- Everything here is something the owner's server, files or players depend on. The list is

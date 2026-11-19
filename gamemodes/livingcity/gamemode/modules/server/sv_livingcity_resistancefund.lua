@@ -240,3 +240,41 @@ hook.Add("LivingCityQuestComplete", "LivingCityResistanceFund", function(ply, q)
         Success(kind, q.members)
     end)
 end)
+
+------------------------------------------------------------------------
+-- What a job feeds the fund, for the job boards
+------------------------------------------------------------------------
+
+-- Every job lists what it can put in the fund (the owner, 19 November: "the range of credits that will/can go into the
+-- resistance fund. this means all players feel responsible for helping grow the resistance fund"). Read from the takes
+-- above, so the board and the fund never disagree (LC.PostingPay, sv_livingcity_quests.lua).
+
+-- How a finished job of this id is counted: the kind of success, its partakers everyone on the job; or nil.
+function LC.ResistanceFundJobKind(id)
+    return JOBS[id] or (id == BREAKOUT_JOB and "saved") or nil
+end
+
+-- A job step counted by one of these events is a success of that kind each time, the one who did it its only partaker
+-- (a load pried out of a supply drop's crate; a collared vortigaunt cut loose: LC.FreeStreetVort).
+LC.ResistanceFundStepKinds = { supply_looted = "load", vort_freed = "saved" }
+
+-- A success of that kind with n of ours taking part: the least and the most the fund keeps, and the least and the
+-- most each of them has, as LC.ResistanceFundSuccess shares it.
+function LC.ResistanceFundShares(kind, n)
+    n = math.max(0, math.floor(tonumber(n) or 0))
+    local takes = {}
+    if TAKE[kind] then
+        takes[1] = TAKE[kind]
+    elseif kind == "saved" then
+        for k = SAVED[1], SAVED[2] do takes[#takes + 1] = 2 * k end
+    end
+    local keptLo, keptHi, eachLo, eachHi
+    for _, take in ipairs(takes) do
+        local shared = math.floor(take * (1 - SPLIT))
+        local each = n > 0 and math.floor(shared / n) or 0
+        local kept = n > 0 and (take - each * n) or (take - shared)
+        keptLo, keptHi = math.min(keptLo or kept, kept), math.max(keptHi or kept, kept)
+        eachLo, eachHi = math.min(eachLo or each, each), math.max(eachHi or each, each)
+    end
+    return keptLo or 0, keptHi or 0, eachLo or 0, eachHi or 0
+end

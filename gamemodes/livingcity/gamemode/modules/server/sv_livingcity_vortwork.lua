@@ -116,6 +116,7 @@ LC.Chain{
             if not pos then return nil end
             local go = Goto(pos, "Go to the street the Overseer has marked", 180)
             go.onDone = function(q) if IsValid(q.owner) and LC.JobGameStart then LC.JobGameStart(q.owner, "sweep", q, { depot = pos }) end end
+            go.game, go.gameOpts = "sweep", { depot = pos } -- (what the job board reads its pay from: LC.PostingPay)
             return {
                 title = "Grime", reward = 10, limit = 600,
                 desc = "The Overseer wants a street swept, and you're the broom. The collar hums at your neck the whole time.",
@@ -190,7 +191,7 @@ local function NearestSlave(pos)
 end
 
 T{
-    id = "res_vort_kin", factions = { resistance = true },
+    id = "res_vort_kin", brings = true, factions = { resistance = true },
     available = function(ply) return FreeVort(ply) and NearestSlave(ply:GetPos()) ~= nil end,
     build = function(ply)
         local v = NearestSlave(ply:GetPos())
@@ -208,7 +209,7 @@ T{
 }
 
 T{
-    id = "res_vort_sense", factions = { resistance = true },
+    id = "res_vort_sense", brings = false, factions = { resistance = true },
     available = function(ply) return FreeVort(ply) end,
     build = function(ply)
         local cps = LC.PointsOfKind and LC.PointsOfKind("checkpoint") or {}

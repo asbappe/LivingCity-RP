@@ -47,6 +47,20 @@ end
 -- The board, built into F4's Jobs tab (cl_livingcity_hub.lua). Its buttons shut the window, as the board's did.
 local function Close() if LC_CL.CloseHub then LC_CL.CloseHub() end end
 
+-- What a job pays, beside its experience (the owner, 19 November: every job lists its credits, and what it puts in the
+-- Resistance's fund): ", 10 credits", ", 10-30 credits, fund +5-15". Nothing for none.
+local function Range(r)
+    local a, b = math.floor(tonumber(r[1]) or 0), math.floor(tonumber(r[2]) or 0)
+    return a == b and tostring(a) or (a .. "-" .. b)
+end
+local function PayText(p)
+    local s = ""
+    if istable(p.credits) and (tonumber(p.credits[2]) or 0) > 0 then s = s .. ", " .. Range(p.credits) .. " credits" end
+    if istable(p.fund) and (tonumber(p.fund[2]) or 0) > 0 then s = s .. ", fund +" .. Range(p.fund) end
+    return s
+end
+LC_CL.QuestPayText = PayText
+
 local function BuildBoard(parent, data)
     local head = vgui.Create("DPanel", parent)
     head:Dock(TOP)
@@ -248,7 +262,7 @@ local function BuildBoard(parent, data)
         meta:Dock(TOP)
         meta:DockMargin(0, 6, 0, 0)
         meta:SetTextColor(p.violent and RED or ACCENT)
-        meta:SetText(string.format("%d XP   |   %d minutes%s%s", p.reward or 0, math.ceil((p.limit or 300) / 60),
+        meta:SetText(string.format("%d XP%s   |   %d minutes%s%s", p.reward or 0, PayText(p), math.ceil((p.limit or 300) / 60),
             p.violent and "   |   violent" or "", (not p.story and p.taken > 0) and string.format("   |   %d/%d on it", p.taken, p.max) or ((not p.story and (p.max or 1) > 1) and string.format("   |   up to %d together", p.max) or "")))
         meta:SizeToContents()
 
