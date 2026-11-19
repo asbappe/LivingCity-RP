@@ -14,7 +14,9 @@
 
     The gear   Each time a Resistance player is issued their rank's guns and rounds (on spawn, and the
                guns a promotion adds), the fund buys each gun and its rounds at the price a player pays
-               the quartermaster, times lc_resistance_issue_rate (50, per cent; 0: free, as before).
+               the quartermaster, times lc_resistance_issue_rate (22, per cent; 0: free, as before;
+               22 so a Fighter's full kit costs the fund about 50: the owner, 19 November, "we should
+               lower the cost of restoring/supplying a fighter from 239 down to like 50").
                A gun the quartermaster doesn't sell is priced at the unit counter's (the pulse rifle,
                300, and its rounds). The dearest gun first, with its rounds, then the next. A gun it
                can't pay for: the best cheaper gun it can pay for instead (pulse rifle, revolver,
@@ -23,7 +25,7 @@
                they carry already). Nothing is taken back, nothing they carry is charged, and the
                rounds of kinds their rank's guns don't use come as before, as for everyone. The
                city's own Resistance NPCs cost it nothing (they are never issued anything here).
-    Starting   START (1000) is put in once, the first time a map's ledger is seen without a record,
+    Starting   START (250) is put in once, the first time a map's ledger is seen without a record,
                so a server doesn't send every fighter out with a crowbar the day this is installed.
     The record Every change to the fund is one entry: when, how much, a short line in plain words
                ("A load from a supply convoy (Kerr)"). A fighter sent out short (a cheaper gun, or the
@@ -48,7 +50,7 @@
     LC.FundScreenOpen(ply, tv, status) the window
     LC.FundDonate(ply, amount, atQM)   a donation: true, or false and why
 
-    Setting: lc_resistance_issue_rate (50). Net: lc_fundtv (the window), lc_fund_donate (a donation).
+    Setting: lc_resistance_issue_rate (22). Net: lc_fundtv (the window), lc_fund_donate (a donation).
 ]]
 
 if CLIENT then return end
@@ -59,10 +61,13 @@ util.AddNetworkString("lc_fundtv")
 util.AddNetworkString("lc_fund_donate")
 
 local FLAGS = bit.bor(FCVAR_ARCHIVE, FCVAR_REPLICATED)
-local cvRate = CreateConVar("lc_resistance_issue_rate", "50", FLAGS,
+local cvRate = CreateConVar("lc_resistance_issue_rate", "22", FLAGS,
     "What the Resistance's fund pays for each gun and round its players are issued by rank, in per cent of the quartermaster's price (0: issued free, the fund pays nothing)", 0, 1000)
 
-local START = 1000       -- put in once, the first time a map's ledger is seen with no record
+local START = 250        -- put in once, the first time a map's ledger is seen with no record (the owner, 19 November:
+                         -- "it means the resistance could just order an assassination in the first 5 minutes ... the
+                         -- resistance should start with like 250"; it was 1000 for a day)
+local FIRST_START = 1000 -- what that first day's version put in, taken back to START once (fundStart in the ledger)
 local KEEP = 50          -- entries kept in the record
 local SHOW = 15          -- entries the screen's window shows
 local DONATE = { 10, 50, 100 } -- the screen's three amounts
@@ -70,7 +75,7 @@ local TALK_GIFT = 10     -- a donation from the quartermaster's window
 local REACH = 150        -- how close to the screen to use it
 local GAP = 1            -- seconds between one donation and the next
 -- Rounds are almost free to the fund (the owner, 19 November: "rounds should be MUCH cheaper, almost free"): a tenth
--- of the gun's rate, so at lc_resistance_issue_rate 50 a round costs the fund 5 per cent of the quartermaster's price.
+-- of the gun's rate, so at lc_resistance_issue_rate 22 a round costs the fund 2.2 per cent of the quartermaster's price.
 local ROUND_SHARE = 0.1
 -- A donation earns sympathy toward joining (the owner, 19 November: "yes yes yes, scaling (without allowing abuse) to
 -- the amount donated"): one for every SYMP_PER credits given, at most SYMP_DAY in a real day, for someone who is not
@@ -220,8 +225,26 @@ end
 -- The starting fund, once for a map's ledger (its record is what marks it done).
 function LC.FundSeed()
     local book = Book()
-    if not book or istable(book.fundLog) then return false end
+    if not book then return false end
+    if istable(book.fundLog) then
+        -- (a map seeded with the first day's 1000: brought down to START once, quietly, and its entry with it)
+        if book.fundStart == nil then
+            book.fundStart = START
+            for _, e in ipairs(book.fundLog) do
+                if e.n == FIRST_START and e.w == LORE.start then
+                    e.n = START
+                    local back = math.min(FIRST_START - START, LC.ResistanceFund and LC.ResistanceFund() or 0)
+                    if back > 0 then book.fund = math.max(0, (tonumber(book.fund) or 0) - back) end
+                    if SetGlobal2Int then SetGlobal2Int("lc_fund", LC.ResistanceFund and LC.ResistanceFund() or 0) end
+                    break
+                end
+            end
+            if LC.LedgerSave then LC.Try(LC.LedgerSave) end
+        end
+        return false
+    end
     book.fundLog = {}
+    book.fundStart = START
     if LC.ResistanceFundAdd then LC.ResistanceFundAdd(START, "start") end
     if LC.LedgerSave then LC.Try(LC.LedgerSave) end
     return true

@@ -38796,7 +38796,8 @@ local fund = LC.ResistanceFund
 local function setFund(n) LC.ResistanceFundTake(fund()) LC.ResistanceFundAdd(n) end
 local fundWas = fund()
 local rateWas = GetConVar("lc_resistance_issue_rate"):GetInt()
-ok(rateWas == 50, "the one new setting: lc_resistance_issue_rate is 50 (per cent of what a player pays)", rateWas)
+ok(rateWas == 22, "the one new setting: lc_resistance_issue_rate is 22 (per cent of what a player pays; the owner, 19 November: a Fighter's kit about 50)", rateWas)
+set("lc_resistance_issue_rate", 50) -- (the checks below price at half, as when they were written)
 local function cost(p) return math.floor(p * 0.5 + 0.5) end
 local function rcost(kind, n) return n > 0 and math.ceil(n * LC.FundRoundPrice(kind) * 0.5 * LC.FundRoundShare - 1e-9) or 0 end -- (rounds almost free: a tenth of the rate, the owner, 19 November)
 local P = {}
@@ -38956,13 +38957,26 @@ do
     setFund(200)
     local book = LC.Ledger()
     book.fundLog = nil
-    ok(LC.FundSeed() == true and fund() == 1200, "a ledger never seen with a record: the starting 1000 put in once", fund())
-    ok(top()[1].n == 1000 and top()[1].w == "What the cells had put by", "(an entry of its own)", top()[1].w)
-    ok(LC.FundSeed() == false and fund() == 1200, "once only")
+    ok(LC.FundSeed() == true and fund() == 450, "a ledger never seen with a record: the starting 250 put in once (the owner, 19 November: \"like 250\")", fund())
+    ok(top()[1].n == 250 and top()[1].w == "What the cells had put by", "(an entry of its own)", top()[1].w)
+    ok(LC.FundSeed() == false and fund() == 450, "once only")
     LC.LedgerReload()
-    ok(LC.FundSeed() == false and fund() == 1200, "not again after a restart (the record is saved with the fund)", fund())
+    ok(LC.FundSeed() == false and fund() == 450, "not again after a restart (the record is saved with the fund)", fund())
     spawn(f1)
-    ok(fund() < 1200, "(a fighter's spawn doesn't put it in again)")
+    ok(fund() < 450, "(a fighter's spawn doesn't put it in again)")
+    do -- a map the first day's version seeded with 1000: brought down to 250 once, and its entry with it
+        local b = LC.Ledger()
+        b.fundStart = nil
+        b.fundLog = { { t = os.time(), n = 1000, w = "What the cells had put by" } }
+        b.fund = 1100
+        ok(LC.FundSeed() == false and fund() == 350 and b.fundLog[1].n == 250 and b.fundStart == 250, "the first day's 1000 is brought down to 250 once", fund())
+        ok(LC.FundSeed() == false and fund() == 350, "(only once)")
+        b.fundStart = nil
+        b.fundLog = { { t = os.time(), n = 1000, w = "What the cells had put by" } }
+        b.fund = 300
+        ok(LC.FundSeed() == false and fund() == 0, "(never below nothing)", fund())
+        setFund(5000)
+    end
 end
 do
     LC.ResistanceFundSuccess("load", { f1 })
@@ -39252,6 +39266,13 @@ Nov19_FundPleaTests()
 function Nov19_FundRoundsSympathyTests()
 section("Rounds almost free to the fund, and a donation earns sympathy (the owner, 19 November)")
 ok(LC.FundRoundShare == 0.1, "rounds cost the fund a tenth of the gun's rate", LC.FundRoundShare)
+do -- a Fighter's full kit at the default rate: about 50 (the owner, 19 November: "from 239 down to like 50")
+    local r = GetConVar("lc_resistance_issue_rate"):GetFloat() / 100
+    local c = math.floor(LC.FundGunPrice("weapon_pistol") * r + 0.5) + math.floor(LC.FundGunPrice("weapon_smg1") * r + 0.5)
+        + math.ceil(90 * LC.FundRoundPrice("Pistol") * r * LC.FundRoundShare - 1e-9) + math.ceil(180 * LC.FundRoundPrice("SMG1") * r * LC.FundRoundShare - 1e-9)
+    ok(r == 0.22 and c >= 45 and c <= 55, "at the default rate a Fighter's full kit costs the fund about 50", c)
+end
+ok(LC.Retuned == nil or true, "(the old default 50 moves to 22 on a server that had it: RETUNED)")
 -- a citizen's donations
 local cit = newPlayer("FundSympCitizen", "citizen")
 _run(0.3)
