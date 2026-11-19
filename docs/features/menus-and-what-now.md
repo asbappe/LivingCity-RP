@@ -107,3 +107,14 @@ Chat is busy, so what matters goes on the screen too (and stays in chat to scrol
 - **The Administrator's F2 is hers** (the server marks her a unit, since her side counts as the Combine's, and that had given her a unit's F2 instead): 1 Sociostability, 2 Speak to the city > (go to the stand, a speech into the microphone or in writing, broadcast), 3 City orders > (amnesty, a crackdown, extra rations, the arrest of whoever she looks at, bounties, Combine manpower), 4 her tablet, 5 the city's laws, 6 Tonight's dream, 7 Command the guards, 8 Me (with Staff inside, for staff).
 - **Duplicates gone:** Talk no longer has the two out-of-character lines (F1 > 6 has them); the Resistance page no longer has Find the lab (Find the way has it).
 - **Shorter names:** Unit tools, HQ calls (radio), What stays on screen, Me. An F2 with more than eight ends in "More...". The two standing poses keep their names until someone has seen what they look like.
+
+**Nothing only in the C menu (the owner, 19 November: "yes, go ahead with 1 to 6").** Everything that was only in the C menu now has a place of its own; the C menu keeps it all as well:
+- **F4 > Me and settings**, a fourth tab built on your side (nothing to ask the server for): Me (where I stand, my credits and standing, my characters, change my name and face, change how strangers see me, holster or draw, run for City Administrator, I'm stuck), Help (the guide, ask staff for help, tips I've seen, tips on, off or from the start) and Settings (camera sway, the next step on screen, what you can do here, the quest trail, terminals' menus, third person while posing, notices on screen, hunger, thirst and pain signs). A setting's button shows whether it is on and flips it.
+- **F2 > My home** is a page: where it is (mark it), about my apartment, my housing block, open my stash, take a key back from..., give up my apartment (asked again first). A citizen's is on F2 itself; everyone else's is in Me. The block's hint says "Your stash: F2 > My home".
+- **F1, what's in front of you:** "My apartment key: (name)..." (give one, or take it back), for anyone; cuff someone (anyone with cuffs of their own) and take their microphone (cuffed or hands up); one of the city's people: ask their name, tell them to leave (on rebel ground), and for a rebel (on F2, with what only their side does) hand them a pamphlet and bring them into the Resistance; a rebel hands a player a pamphlet the same way.
+- **F3:** a Resistance pamphlet has "Leave here" (a rebel's), for someone to find.
+- **F1 > Gesture > 9 More gestures:** the gestures past the first eight (cheer, laugh).
+- **F1 > What now?:** the time and the weather, and the city's laws.
+- **F2 for a Division Leader and up:** Broadcast to the whole city, after the shift and bounties.
+- **F4 > Factions > Admin: testing tools > Staff tools:** the Dreams menu, the performance debugger, the lag monitor.
+Player texts that named these C menu paths name the new ones.

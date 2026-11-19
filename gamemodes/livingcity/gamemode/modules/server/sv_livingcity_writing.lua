@@ -356,7 +356,7 @@ function LC.SetLaw(ply, n, text)
         list[n] = string.sub(text, 1, 200)
     end
     SaveLaws()
-    for _, p in ipairs(player.GetAll()) do p:ChatPrint("[City] The law has changed. C > The city > The city's laws.") end
+    for _, p in ipairs(player.GetAll()) do p:ChatPrint("[City] The law has changed. F1 > What now? > The city's laws.") end
     return true
 end
 

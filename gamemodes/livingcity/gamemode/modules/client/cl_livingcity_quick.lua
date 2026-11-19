@@ -114,7 +114,17 @@ local function GesturePage()
     local rest = {}
     for n in pairs(all) do if not seen[n] then rest[#rest + 1] = n end end
     table.sort(rest)
-    for _, n in ipairs(rest) do if #items < 8 then items[#items + 1] = Item(Title(n), function() Send(n) end) end end
+    for _, n in ipairs(rest) do if #items < 8 then items[#items + 1] = Item(Title(n), function() Send(n) end) seen[n] = true end end
+    -- the rest (cheer, laugh...): on a page of their own (the owner, 19 November: they were only in the C menu)
+    local more = {}
+    for _, n in ipairs(rest) do if not seen[n] then more[#more + 1] = n end end
+    if #more > 0 then
+        items[9] = Page("More gestures", function()
+            local its = {}
+            for _, n in ipairs(more) do if #its < 8 then its[#its + 1] = Item(Title(n), function() Send(n) end) end end
+            return { title = "MORE GESTURES", items = its }
+        end)
+    end
     return { title = "GESTURE", items = items }
 end
 
@@ -307,6 +317,15 @@ local function Context(me, unit, rebel)
     local close = tr and tr.HitPos and tr.HitPos:DistToSqr(me:EyePos()) < 150 * 150
     if not (IsValid(e) and close) then return out end
     local cls = e:GetClass() or ""
+    -- one of the city's people (the owner, 19 November: these were only in the C menu)
+    if cls == "npc_citizen" and not unit and not e:GetNW2Bool("lc_cuffed", false) and not e:GetNW2Bool("lc_downed_body", false) and not e:GetNW2Bool("lc_body", false) then
+        Add("Ask their name", function() Send("askname", "", e) end)
+        if rebel then
+            Add("Hand them a Resistance pamphlet", function() Send("givepamphlet", "", e) end, true)
+            Add("Bring them into the Resistance (on rebel ground)", function() Send("recruitnpc", "", e) end, true)
+        end
+        Add("Tell them to leave (on rebel ground)", function() Send("sendaway", "", e) end)
+    end
     if e:IsPlayer() then
         local n = Name(e)
         local tied = e:GetNW2Bool("lc_tied", false)
@@ -331,7 +350,10 @@ local function Context(me, unit, rebel)
                 Add("Uncuff " .. n, function() Send("untie") end)
                 Add("Drag " .. n .. " along / let go", function() Send("drag") end)
                 Add("Pat " .. n .. " down", function() Send("patdown", "", e) end)
+            elseif me:GetNW2Int("lc_cuffs", 0) > 0 then
+                Add("Cuff " .. n, function() Send("tie") end) -- (the owner, 19 November: only in the C menu before)
             end
+            if tied or e:GetNW2Bool("lc_handsup", false) then Add("Take " .. n .. "'s microphone", function() Send("takemic", "", e) end) end
             if me:GetNW2Bool("lc_foreman", false) then Add("Give " .. n .. " a work order", function() Send("assign", "", e) end, true) end
             if rebel and e:GetNW2String("lcf_faction", "") == "vort" then Add("Cut the vortigaunt's shackles", function() Send("unshackle") end, true) end
             local ef = e:GetNW2String("lcf_faction", "")
@@ -349,6 +371,7 @@ local function Context(me, unit, rebel)
             if (myf == "" or myf == "citizen" or myf == "resistance") and (ef == "" or ef == "citizen" or ef == "resistance") and e:GetNW2String("lc_household", "") == "" then
                 Add("Invite " .. n .. " into my household", function() Send("houseinvite", "", e) end)
             end
+            if rebel then Add("Hand " .. n .. " a Resistance pamphlet", function() Send("givepamphlet", "", e) end, true) end
             local bz = util.JSONToTable(me:GetNW2String("lc_business", "") or "") or {}
             if bz.owner and (ef == "" or ef == "citizen" or ef == "resistance") then Add("Offer " .. n .. " a job at my stall", function() Send("joboffer", "", e) end) end
             -- crime between citizens and debts (sv_livingcity_streetcrime.lua)
@@ -367,6 +390,13 @@ local function Context(me, unit, rebel)
                 end }
             end
         end
+        -- a key to my apartment, given or taken back (the owner, 19 November: only in the C menu before)
+        out[#out + 1] = { label = "My apartment key: " .. n .. "...", ctx = true, page = function()
+            return { title = "MY APARTMENT KEY", items = {
+                Item("Give " .. n .. " a key", function() Send("givekey") end),
+                Item("Take my key back from " .. n, function() Send("takekey") end),
+            } }
+        end }
     elseif unit and cls == "npc_citizen" and not e:GetNW2Bool("lc_cuffed", false) and not e:GetNW2Bool("lc_downed_body", false) and not e:GetNW2Bool("lc_body", false) then
         -- a citizen in front of a unit: their papers, without the search first (sv_livingcity_jobgames.lua, LC.StreetPapers)
         Add("Check their papers", function() Send("streetpapers", "", e) end, true)
@@ -729,6 +759,22 @@ end
 
 -- What everyone has about themselves (the owner, 10 November: never only in the C menu): where they
 -- stand, survival, their dreams. On a citizen's Me page, and a page of its own for everyone else.
+-- My home, one page (the owner, 19 November: all but the first were only in the C menu): where it is, the
+-- apartment, the block, the stash, a key taken back, giving it up.
+local function HomePage()
+    return { title = "MY HOME", items = {
+        Item("Where it is (mark it)", function() QM("home") end),
+        Item("About my apartment", function() Send("apartment") end),
+        Item("My housing block", function() Send("block") end),
+        Item("Open my stash", function() Send("stash") end),
+        Item("Take a key back from...", function() Ask("Take a key back", "Whose key? (their name)", "takekey") end),
+        Item("Give up my apartment", function()
+            Derma_Query("Give up your apartment? Your rent isn't refunded.", "Give up the apartment", "Give it up", function() Send("unrent") end, "Keep it")
+        end),
+    } }
+end
+LC_CL.QuickHomePage = HomePage
+
 -- Dreams and survival, one page: the survival switch (when you have one) above the dreams you can sit out.
 local function DreamsSurvivalPage()
     local me = LocalPlayer()
@@ -758,6 +804,7 @@ local function MineItems(me)
         Item("Where I stand (every number explained)", function() if LC_CL.OpenStandingPanel then LC_CL.OpenStandingPanel() else QM("standing") end end),
     }
     local hf = me:GetNW2String("lcf_faction", "")
+    if hf ~= "" and hf ~= "citizen" then out[#out + 1] = Page("My home", HomePage) end -- (a citizen's is on F2 itself)
     if hf == "" or hf == "citizen" or hf == "resistance" then
         local bz = util.JSONToTable(me:GetNW2String("lc_business", "") or "") or {}
         local waiting = me:GetNW2String("lc_house_invite", "") ~= "" or bz.offer
@@ -800,7 +847,7 @@ local function CitizenItems()
     local items = {
         Item(work, function() if m.work == "board" then Hub("jobs") else QM("work") end end),
         Item(rations, function() QM("rations") end),
-        Item(home, function() QM("home") end),
+        Page(home, HomePage),
         Item(standing, function() if LC_CL.OpenStandingPanel then LC_CL.OpenStandingPanel() else QM("standing") end end), -- (every number explained: cl_livingcity_standingpanel.lua)
     }
     items[4].id = "standing"
@@ -999,6 +1046,10 @@ function LC_CL.QuickRoleRoot()
         Add(radio)
         -- the shift and bounties: on F2 itself (the owner, 18 November: they were under Me)
         for _, it in ipairs(ShiftItems(me)) do Add(it) end
+        -- a Division Leader and up speaks to the city (the owner, 19 November: it was only in the C menu)
+        if f == "cp" and me:GetNW2Int("lcf_rank", 1) >= 3 then
+            Add(Item("Broadcast to the whole city...", function() Ask("Broadcast", "What does the city hear?", "broadcast") end))
+        end
         -- the Resistance's man inside, beside a prisoner being marched to the cells (sv_livingcity_insider.lua):
         -- right after the six, only while it's there; greyed while someone can see
         local slipT, slipWhy = nil, nil

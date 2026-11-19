@@ -176,7 +176,7 @@ local DATA = {
             { "Kills here push the infestation back", Unit } },
         home = { "Your block",
             "Make things here ({gm_showspare1})",
-            "Your stash: {+menu_context} > Getting by",
+            "Your stash: F2 > My home",
             "When a curfew starts, be here" },
         combine = { "Combine only zone",
             { "Leave before the countdown runs out, or you're wanted", Trespassing } },
@@ -205,7 +205,7 @@ local DATA = {
         pickup = { "This step", "{+use} on the marked item to take it" },
         collect = { "This step", "{+use} on each marked item" },
         _any = { "This step",
-            { "Follow the chevrons on the ground (hide them: {+menu_context} > Settings)", function() return LC_CL.TrailActive and LC_CL.TrailActive() end } },
+            { "Follow the chevrons on the ground (hide them: F4 > Me and settings)", function() return LC_CL.TrailActive and LC_CL.TrailActive() end } },
     },
 }
 

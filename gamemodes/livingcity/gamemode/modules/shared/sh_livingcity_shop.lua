@@ -249,7 +249,7 @@ LCS.Items = {
     zipties         = { name = "Cuffs", model = "models/props_lab/box01a.mdl", sell = 1, -- (1, not 4: a unit's own never run out)
                         desc = "Tie someone's hands: up close, looking at them, C > their name > Cuff them. Only someone with their hands up, knocked down, stopped by a unit, or taken from behind. Cuffed, they can't use anything; Drag walks them along, Uncuff lets them go. Units carry their own" },
     request_device  = { name = "Civil Protection call box", model = "models/props_lab/reciever01b.mdl", sell = 6,
-                        desc = "A little handset that calls Civil Protection to where you are and tells them what's wrong: Call for help, beside it in your pockets (F3), or C > Getting by > Request Civil Protection" },
+                        desc = "A little handset that calls Civil Protection to where you are and tells them what's wrong: Call for help, beside it in your pockets (F3)" },
     ------------------------------------------------------------------------
     -- Carrying and keeping things (sv_livingcity_storage.lua)
     --   bag      extra kilograms and large things you can carry while you have it

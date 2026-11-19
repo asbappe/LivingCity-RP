@@ -9,7 +9,7 @@
       named people stand in, as in any dream with too few dreamers: lc_dream_min). Nobody asleep
       is pulled in, and it isn't tonight's dream: nothing about tonight changes.
       A test leaves nothing behind: you can stop it whenever you like (the panel's "Stop the test",
-      or C > Settings > Shared dreams: wake up), you're never an Enforcer in it (you play it), and
+      or F1 > Wake up from the dream), you're never an Enforcer in it (you play it), and
       waking you're put back exactly as you were, with nothing won or lost (no Unbroken, no loyalty
       points, no health, no dream counted towards the lab's foil hat or chip).
       Who may: whoever may use the editor (LC.CanEdit: superadmins). It needs a dream point and
@@ -61,7 +61,7 @@ function LC.DreamTest(p, id)
     if not CanTest(p) then return false, "Only those who may use the Miscount Editor can test dreams." end
     id = string.lower(tostring(id or ""))
     if not (LC.DreamKnown and LC.DreamKnown(id)) then return false, "No such dream." end
-    if LC.DreamActive then return false, "A dream is already under way. Wait for it to end, or wake everyone (C > Help > Dreams)." end
+    if LC.DreamActive then return false, "A dream is already under way. Wait for it to end, or wake everyone (F4 > Factions > Admin: testing tools > Dreams)." end
     if p.lcDreaming then return false, "You're already dreaming." end
     if not p:Alive() then return false, "You have to be alive to dream." end
     if p.lcSleep then return false, "Get out of bed first (a test is dreamt awake)." end
@@ -89,7 +89,7 @@ end
 function LC.DreamTestStop(p)
     if not IsValid(p) or not p.lcDreaming then return false, "You aren't dreaming." end
     local dream = LC.DreamActive
-    if not (dream and dream.test) then return false, "This isn't a test: wake up from C > Settings > Shared dreams once you're out of it." end
+    if not (dream and dream.test) then return false, "This isn't a test: wake up from F1 once you're out of it." end
     LC.DreamWakeOne(p, "test")
     return true
 end
@@ -114,7 +114,7 @@ net.Receive("lc_dream_test", function(_, p)
     if what == "test" then
         local ok, why = LC.DreamTest(p, arg)
         if ok then
-            Notice(p, "info", "Dream test", "Testing \"" .. (LC.DreamTitle and LC.DreamTitle(arg) or arg) .. "\". Stop whenever you like: the editor's Stop the test, or C > Settings > Shared dreams. Nothing you win or lose counts.", 10)
+            Notice(p, "info", "Dream test", "Testing \"" .. (LC.DreamTitle and LC.DreamTitle(arg) or arg) .. "\". Stop whenever you like: the editor's Stop the test, or F1 > Wake up from the dream. Nothing you win or lose counts.", 10)
         else
             Notice(p, "warn", "Dream test", tostring(why), 6)
         end

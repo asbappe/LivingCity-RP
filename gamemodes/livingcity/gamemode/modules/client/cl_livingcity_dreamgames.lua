@@ -532,7 +532,7 @@ hook.Add("HUDPaint", "LivingCityDreamGames", function()
         y = y + 18
     end
     if st.enforcer then -- (sv_livingcity_dreamenforcers.lua)
-        Line("You're an Enforcer: nothing here touches you. Wake whenever you like (C > Settings > Shared dreams).", y, BLUE)
+        Line("You're an Enforcer: nothing here touches you. Wake whenever you like (F1 > Wake up from the dream).", y, BLUE)
         y = y + 18
     end
     local left = math.max(0, math.floor((st.ends or now) - now))
@@ -557,8 +557,8 @@ hook.Add("HUDPaint", "LivingCityDreamGames", function()
         Line("Overheard: " .. n, y + 4, Color(200, 220, 255))
     end
     if st.out then
-        Line(st.out == "won" and "You won. Watching until it's over (wake up: C > Settings > Shared dreams)."
-            or "You're out. Watching until it's over (wake up: C > Settings > Shared dreams).", y + 20, Color(200, 200, 255))
+        Line(st.out == "won" and "You won. Watching until it's over (wake up: F1 > Wake up from the dream)."
+            or "You're out. Watching until it's over (wake up: F1 > Wake up from the dream).", y + 20, Color(200, 200, 255))
         return
     end
     -- the big word, in the middle (Flowers for the Liberators: NOW, as a soldier passes you)
