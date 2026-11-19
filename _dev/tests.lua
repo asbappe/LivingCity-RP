@@ -41034,7 +41034,7 @@ local credits0, standing0 = LC.Credits(cit), LC.Standing(cit)
 local okDo, whyDo = LC.InformDo(cit, cop, "assassin")
 local q = LC.QuestOf[cit]
 ok(okDo and q and q.title == "Lead Civil Protection to the traitor", "chosen: the job 'Lead Civil Protection to the traitor'", tostring(okDo) .. " " .. tostring(whyDo) .. " " .. tostring(q))
-ok(q and q.expires - CurTime() > 290 and q.expires - CurTime() <= 300, "with five minutes on the clock")
+ok(q and q.expires - CurTime() > 290 and q.expires - CurTime() <= 300, "with five minutes on the clock", q and (q.expires - CurTime()))
 ok(cst.questLock and LC.InformLeads[cit] and LC.InformLeads[cit].escorts[1] == cop, "the unit comes along")
 ok(#LC.InformOptions(cit) == 0, "(nothing more to report while leading)")
 -- two soldiers join, ones nearby first
@@ -41242,7 +41242,8 @@ math.random = rnd
 local cage = ents.Create("prop_physics")
 cage:SetPos(R0 + Vector(400, 0, 0))
 local function hold(npc)
-    local st = LC.NPCs[npc]
+    local st = LC.NPCs[npc] or cst -- (the city may have tidied its own record of them away meanwhile)
+    LC.NPCs[npc] = st
     LC.RebelHeld[npc] = { cage = cage, st = st, at = CurTime(), slot = 1 }
     st.questLock = true
 end
