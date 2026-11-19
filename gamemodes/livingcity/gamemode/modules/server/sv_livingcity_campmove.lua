@@ -3,10 +3,10 @@
 
       Hold E (half a second) on anything the city put down in rebel territory
       (the mattresses, couches, crates, the table and chairs, the fire, the
-      supply crate, the garden pots) and you pick it up: it goes where you
-      look, along the floor, and you set it down by letting go of E. R turns
-      it a quarter. It stays inside its own zone. Anyone but Civil Protection
-      can do it.
+      supply crate, the garden pots, the security monitors) and you pick it
+      up: it goes where you look, along the floor, and you set it down by
+      letting go of E. R turns it a quarter. It stays inside its own zone.
+      Anyone but Civil Protection can do it.
 
       Where everything was set down is kept for the map
       (data/livingcity/<map>_camp.json): next time the city dresses that
@@ -57,6 +57,7 @@ end
 local function Movable(e)
     if not IsValid(e) then return false end
     if not (e.lcDressing or e.lcRebelProp or e:GetClass() == "lc_fire") then return false end
+    if e.lcSceneProp and not e.lcRebelProp then return false end -- (the ration plant's counter isn't the camp's)
     return e.lcCampZone ~= nil or ZoneOf(e:GetPos(), 64) ~= nil
 end
 LC.CampMovable = Movable
@@ -78,6 +79,7 @@ function LC.CampSnapshot(z)
     if r then
         Add(r.cache, "cache")
         for _, pot in ipairs(r.pots or {}) do Add(pot, "pot") end
+        Add(r.bank, "bank") -- (the security monitors: sv_livingcity_sceneprops.lua)
     end
     Load()[LC.CampKey(z)] = list
     Save()

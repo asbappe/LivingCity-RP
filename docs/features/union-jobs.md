@@ -17,6 +17,8 @@
 | 11 | Reclamation Crew | Scrap runs, rubble that sometimes hides a weapons cache |
 | 12 | Radio Repair | Repairs (*a game; open while `lc_jobgames` is on*) |
 
+**The ration plant's counter** (the owner, 19 November: "please add soupprep.mdl as automatically placing on a nearby raised table/surface for ration prep"; `sv_livingcity_sceneprops.lua`). `models/props_lab/soupprep.mdl`, a busy kitchen counter, is set on a table or counter top near the Ration plant workplace (level, 24 to 54 units above the floor there, within 240 units, with floor in front of it to stand at), facing where the worker stands. One for each plant, however many work points it has; put back out of sight when it is cleared away (or its table is moved), gone with the workplace. No such top nearby, or a server without the model: none. It can't be used, carried off or saved as a persistent prop.
+
 **Games only:** every Records Clerk, Uniform Laundry and Radio Repair shift is one of the games below (the city's own people still work there too). With `lc_jobgames 0` those three are closed: anyone who had one is told the post has closed, and picks another.
 
 **Work you actually do.** Most jobs' shifts are small games played with your hands in the world, and pay on top of the shift for how well you do them:

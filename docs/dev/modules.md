@@ -15,7 +15,7 @@ or `python3 _dev/run_section.py "section name"`; `anon@N` is a nameless test blo
 A `-` under Tests means no test calls enough of this module's own functions (client code is covered by
 `_dev/client_smoke.py`).
 
-272 modules. Elsewhere: entities and weapons in `gamemodes/livingcity/entities/`, the editor tool in `lua/weapons/gmod_tool/stools/livingcity_editor.lua`, the player guide in `gamemode/cl_init.lua`.
+273 modules. Elsewhere: entities and weapons in `gamemodes/livingcity/entities/`, the editor tool in `lua/weapons/gmod_tool/stools/livingcity_editor.lua`, the player guide in `gamemode/cl_init.lua`.
 
 | Module | What it is | Server | Client | Shared | Key functions | Tests |
 |---|---|---|---|---|---|---|
@@ -42,7 +42,7 @@ A `-` under Tests means no test calls enough of this module's own functions (cli
 | `brain` | The director and free talk (the owner, 10 November: "run some | `server/sv_livingcity_brain.lua` 48K | - | - | `LC.BrainHeard`, `LC.BrainSetKey`, `LC.DirectorApply`, `LC.AdminApply`, `LC.DirectorLook`, `LC.AdminLook` | BrainTests (9); LinesTests (3) |
 | `business` | Apartments and trade | `server/sv_livingcity_business.lua` 19K | - | - | `LC.RentalOf`, `LC.Rent`, `LC.RentPrice`, `LC.ApplyRentDoor`, `LC.HandsRightClick`, `LC.HasRentKey` | BusinessTests (5) |
 | `cache` | Quick lookups (server and client) | - | - | `shared/sh_livingcity_cache.lua` 3K | `LC.EntsOf`, `LC.Players`, `LC.CountOf` | LookupTests (2); EvidenceTests (1); IntakeTests (1) |
-| `campmove` | Rearranging a rebel camp | `server/sv_livingcity_campmove.lua` 8K | - | - | `LC.CampSaved`, `LC.CampFileOf`, `LC.CampKey`, `LC.CampPickUp`, `LC.CampCarryStep`, `LC.CampForget` | anon@23399 (4) |
+| `campmove` | Rearranging a rebel camp | `server/sv_livingcity_campmove.lua` 8K | - | - | `LC.CampSaved`, `LC.CampFileOf`, `LC.CampKey`, `LC.CampSnapshot`, `LC.CampPickUp`, `LC.CampCarryStep` | anon@23399 (4); ScenePropsTests (2) |
 | `candream` | Pick Up That Can, a fever dream | `server/sv_livingcity_candream.lua` 29K | `client/cl_livingcity_candream.lua` 11K | - | `LC.CanBinTop`, `LC.CanThrown`, `LC.CanAim`, `LC.CanOwn`, `LC_CL.CanSqueak`, `LC.CanAddSet` | CanDreamTests (5) |
 | `cards` | The card table's window (sv_livingcity_resistancemoney.lua) | - | `client/cl_livingcity_cards.lua` 9K | - | `LC_CL.CardsFrame` | - |
 | `career` | Your career, on one page (the owner's 7 November playtest: "playing as a | `server/sv_livingcity_career.lua` 9K | `client/cl_livingcity_career.lua` 5K | - | `LC.CareerInfo`, `LC.CanReassess`, `LC.SendCareer`, `LC_CL.AskCareer`, `LC.CareerReassess`, `LC_CL.OpenCareer` | CareerTests (4) |
@@ -229,7 +229,8 @@ A `-` under Tests means no test calls enough of this module's own functions (cli
 | `safefile` | Save files written safely | `server/sv_livingcity_safefile.lua` 9K | - | - | `LC.SafeWrite`, `LC.SafeReadJSON`, `LC.SafeFileBlocked`, `LC.SafeTmpPath`, `LC.SafeFileAllow`, `LC.SafeBakPath` | SafeFileTests (8) |
 | `salvage` | Salvage, bins anywhere, the reclamation point, and workbenches | `server/sv_livingcity_salvage.lua` 21K | - | - | `LC.Salvage`, `LC.RebelGuard`, `LC.BinPointAt`, `LC.JunkAt`, `LC.Reclaim`, `LC.SalvageNoise` | SalvageTests (4) |
 | `scanner` | Flying a scanner from a Combine console | `server/sv_livingcity_scanner.lua` 34K | `client/cl_livingcity_scanner.lua` 13K | `shared/sh_livingcity_scanner.lua` 1K | `LC.ScannerFlash`, `LC.EndScannerLink`, `LC.ScannerSuspect`, `LC.StartScannerLink`, `LC.ScannerInput`, `LC.RebelsFireAtScanner` | ScannerTests (7); OperatorDoorTests (4); PlaytestFixTests (2) |
-| `scavenge` | Getting by | `server/sv_livingcity_scavenge.lua` 52K | - | - | `LC.StartTask`, `LC.Busy`, `LC.ItemUse`, `LC.AddToCache`, `LC.Donate`, `LC.FoodRestockCap` | RebelFoodTests (8); GettingByTests (7); Nov14C_MarkArtTests (5) |
+| `scavenge` | Getting by | `server/sv_livingcity_scavenge.lua` 53K | - | - | `LC.StartTask`, `LC.Busy`, `LC.ItemUse`, `LC.Donate`, `LC.AddToCache`, `LC.FoodRestockCap` | RebelFoodTests (8); GettingByTests (7); Nov14C_MarkArtTests (5) |
+| `sceneprops` | Two pieces of set dressing the owner picked (19 November) | `server/sv_livingcity_sceneprops.lua` 18K | - | - | `LC.SceneModel`, `LC.SceneModelForget`, `LC.EnsureKitchenProps`, `LC.CounterSpot`, `LC.SecurityBankSpot`, `LC.SecurityBankFor` | ScenePropsTests (7) |
 | `screens` | Terminals with their menu on their own screen | - | `client/cl_livingcity_screens.lua` 15K | - | `LC_CL.ScreenFor`, `LC_CL.ScreenHidesSign`, `LC_CL.ScreenClose`, `LC_CL.HoloFlicker`, `LC_CL.HoloLines`, `LC_CL.ScreenOpen` | - |
 | `security` | Combine-only areas | `server/sv_livingcity_security.lua` 5K | - | - | `LC.Unstick`, `LC.CombineZoneTick` | HeldNotTrespassingTests (1); UpdateTests (1); WorkEscortTests (1) |
 | `sentence` | Sentences that fit the crimes, the work detail, probation | `server/sv_livingcity_sentence.lua` 34K | - | - | `LC.SentenceTick`, `LC.CrimeMinutes`, `LC.RapClear`, `LC.SentenceFor`, `LC.OnProbation`, `LC.AskWorkDetail` | SentenceTests (5); Nov14A_CustodyTests (2) |
@@ -283,7 +284,7 @@ A `-` under Tests means no test calls enough of this module's own functions (cli
 | `vortstart` | Being born a vortigaunt (the owner, 14 November) | `server/sv_livingcity_vortstart.lua` 10K | `client/cl_livingcity_vortstart.lua` 3K | - | `LC.OfferRace`, `LC.VortRescueTick`, `LC.BecomeVortSlave`, `LC.VortDesignation`, `LC.VortRescueStart`, `LC_CL.OpenRacePick` | PlaytestNov14Tests (2) |
 | `vortwar` | Vortigaunt dream warfare (sv_livingcity_vortwar.lua) | `server/sv_livingcity_vortwar.lua` 16K | `client/cl_livingcity_vortwar.lua` 3K | - | `LC.VortWarInfluence`, `LC.VortWarChance`, `LC.VortWarLine`, `LC.VortWarSide`, `LC.VortWarSetup` | PropagandaMoreTests (4) |
 | `vortwork` | Things to do as a vortigaunt (and for the city's own) | `server/sv_livingcity_vortwork.lua` 24K | - | - | `LC.VortCall`, `LC.VortHeal`, `LC.VortConverse`, `LC.VortCommune`, `LC.VortLifeTick` | anon@24540 (4) |
-| `war` | The state of the city | `server/sv_livingcity_war.lua` 48K | `client/cl_livingcity_war.lua` 23K | - | `LC.CityState`, `LC.AddRumor`, `LC.CallBackup`, `LC.InWater`, `LC.Mark1020`, `LC.Outbreak` | WarTests (7); ConvoyTests (2); RadioHQTests (2) |
+| `war` | The state of the city | `server/sv_livingcity_war.lua` 48K | `client/cl_livingcity_war.lua` 23K | - | `LC.CityState`, `LC.AddRumor`, `LC.InWater`, `LC.CallBackup`, `LC.Mark1020`, `LC.InWalkway` | WarTests (7); ConvoyTests (2); RadioHQTests (2) |
 | `waymarks` | The Resistance's way marks | `server/sv_livingcity_waymarks.lua` 6K | - | - | `LC.WayMarks`, `LC.WayMarkSeen`, `LC.AddWayMark`, `LC.WayMarkNear`, `LC.WayMarkTick`, `LC.ScrubWayMark` | WayMarkTests (6) |
 | `ways` | Ways to get by | `server/sv_livingcity_ways.lua` 6K | `client/cl_livingcity_ways.lua` 3K | - | `LC.WaysToGetBy`, `LC.SendWays`, `LC_CL.OpenWays` | WaysModelTests (2); KeyLayoutTests (1) |
 | `weeds` | Weeds, the Groundskeeper, and weedkiller (the owner, 2026-11-01) | `server/sv_livingcity_weeds.lua` 9K | - | - | `LC.SpawnWeed`, `LC.SprayWeed`, `LC.PoisonFood`, `LC.WeedSpraySecs`, `LC.KillWeed`, `LC.WeedModel` | anon@24540 (3) |

@@ -40830,6 +40830,150 @@ end
 ShellingTests()
 
 ----------------------------------------------------------------------
+function ScenePropsTests()
+-- the owner's two props (19 November; sv_livingcity_sceneprops.lua): soupprep on a counter by the ration
+-- plant's workplace, securitybank in each Resistance camp, by its notice board, back to a wall
+section("Scene props: the ration plant's counter and the Resistance's monitors")
+local SOUP, BANK = "models/props_lab/soupprep.mdl", "models/props_lab/securitybank.mdl"
+local validWas, traceWas, createWas, runningWas = util.IsValidModel, util.TraceLine, ents.Create, LC.Running
+local function Turn(a) return (a + 180) % 360 - 180 end
+LC.Running = true
+
+-- the models: looked up once; a server without one goes without
+LC.SceneModelForget()
+util.IsValidModel = function() return false end
+ok(LC.SceneModel("soupprep") == nil and LC.SceneModel("securitybank") == nil, "a server without the models: neither is found")
+util.IsValidModel = function(m) return m == SOUP end
+ok(LC.SceneModel("soupprep") == nil, "and it isn't asked again (looked up once)")
+LC.SceneModelForget()
+ok(LC.SceneModel("soupprep") == SOUP and LC.SceneModel("securitybank") == nil, "one there: its path, the other still missing", tostring(LC.SceneModel("soupprep")))
+util.IsValidModel = function() return false end
+ok(LC.SceneModel("soupprep") == SOUP, "found once, kept")
+LC.SceneModelForget()
+util.IsValidModel = nil
+ok(LC.SceneModel("securitybank") == nil, "(no IsValidModel: no file, no model)")
+_files[BANK] = "mdl"
+LC.SceneModelForget()
+ok(LC.SceneModel("securitybank") == BANK, "(and with the file there, found)")
+_files[BANK] = nil
+
+util.IsValidModel = function(m) return m == SOUP or m == BANK end
+LC.SceneModelForget()
+LC.SceneBoundsForget()
+ents.Create = function(cls)
+    local e = createWas(cls)
+    e.SetModel = function(self, m)
+        self.model = m
+        if m == SOUP then self.obbmin, self.obbmax = Vector(-12, -20, 0), Vector(12, 20, 14)
+        elseif m == BANK then self.obbmin, self.obbmax = Vector(-16, -40, 0), Vector(16, 40, 90) end
+    end
+    return e
+end
+
+-- a ration plant: the floor, and a counter 40 deep and 160 long, 36 high, in front of the workplace
+local K = Vector(-93000, 93000, 0)
+local counter = { x1 = K.x + 60, x2 = K.x + 100, y1 = K.y - 80, y2 = K.y + 80, top = 36 }
+local withCounter = true
+util.TraceLine = function(t)
+    local s, e = t.start, t.endpos
+    if math.abs(s.x - e.x) < 0.01 and math.abs(s.y - e.y) < 0.01 and e.z < s.z and math.abs(s.x - K.x) < 2000 and math.abs(s.y - K.y) < 2000 then
+        local on = withCounter and s.x >= counter.x1 and s.x <= counter.x2 and s.y >= counter.y1 and s.y <= counter.y2
+        local z = on and counter.top or 0
+        if s.z >= z and e.z <= z then
+            return { Hit = true, HitPos = Vector(s.x, s.y, z), HitNormal = Vector(0, 0, 1), Fraction = (s.z - z) / (s.z - e.z) }
+        end
+        return { Hit = false, HitPos = e, HitNormal = Vector(0, 0, 1), Fraction = 1 }
+    end
+    return traceWas(t)
+end
+local num = LCJ.ById.kitchen.num
+local function Soups()
+    local n, one = 0, nil
+    for _, e in pairs(LC.KitchenProps) do if IsValid(e) and e:GetPos():Distance(K) < 500 then n, one = n + 1, e end end
+    return n, one
+end
+local pos, yaw = LC.CounterSpot(K)
+ok(pos and math.abs(pos.z - 36.5) < 0.01 and pos.x > counter.x1 and pos.x < counter.x2 and pos.y > counter.y1 and pos.y < counter.y2,
+    "a counter by the workplace: it goes on the counter top", tostring(pos))
+ok(yaw and math.abs(Turn(yaw - 180)) < 0.01, "facing where the worker stands", yaw)
+local wp = LC.AddPoint(K, 0, "work", num)
+LC.EnsureKitchenProps()
+local n, soup = Soups()
+ok(n == 1 and soup:GetModel() == SOUP and soup.lcSceneProp == "soupprep" and soup.lcDressing and not soup.lcRebelProp,
+    "the ration plant gets one, as set dressing (not loot, not a camp's thing)", n)
+ok(LC.CampMovable and not LC.CampMovable(soup), "not carried off with a held E")
+local wp2 = LC.AddPoint(K + Vector(-150, 0, 0), 0, "work", num)
+LC.EnsureKitchenProps()
+LC.EnsureKitchenProps()
+ok(Soups() == 1 and IsValid(soup), "a second work point at the same plant: still the one")
+LC.RemovePoint(wp)
+LC.RemovePoint(wp2)
+LC.EnsureKitchenProps()
+ok(not IsValid(soup) and Soups() == 0, "the workplace taken out of the layout: it goes too")
+
+-- no counter in reach, or no model: nothing
+withCounter = false
+ok(LC.CounterSpot(K) == nil, "no table or counter near the workplace: nowhere for it")
+local wp3 = LC.AddPoint(K, 0, "work", num)
+LC.EnsureKitchenProps()
+ok(Soups() == 0, "and nothing is put there")
+LC.RemovePoint(wp3)
+LC.EnsureKitchenProps()
+withCounter = true
+util.IsValidModel = function(m) return m == BANK end
+LC.SceneModelForget()
+ok(LC.CounterSpot(K) == nil, "a server without the model: nothing, counter or not")
+util.TraceLine = traceWas
+
+-- the Resistance's monitors, in a camp of its own with a wall along one side
+util.IsValidModel = function(m) return m == SOUP or m == BANK end
+LC.SceneModelForget()
+local B = Vector(-93000, 97000, 0)
+local zone = LC.AddZone(B, 300, "rebel", 0)
+local wall = { a = Vector(B.x - 400, B.y + 150, 0), b = Vector(B.x + 400, B.y + 150, 0) }
+_walls[#_walls + 1] = wall
+local o, face, walled = LC.SecurityBankSpot(zone)
+ok(o and walled and math.abs(o.y - (B.y + 132)) < 1 and LCZ.Contains(zone, o, 0), "a wall near: it stands with its back to it, in the camp", tostring(o))
+ok(face and math.abs(Turn(face + 90)) < 1, "facing out from the wall, into the camp", face)
+LC.EnsureRebelProps()
+local r = LC.RebelProps[zone]
+local bank = r and r.bank
+ok(IsValid(bank) and bank:GetModel() == BANK and bank.lcRebelProp == "bank" and bank.lcSceneProp == "securitybank" and bank.lcCampZone == zone,
+    "every camp gets them: one of the camp's own things", tostring(bank))
+ok(LC.CampMovable and LC.CampMovable(bank), "carried with a held E like the rest of the camp")
+bank:SetPos(o + Vector(-120, -40, 0))
+LC.CampSnapshot(zone)
+local saved
+for _, it in ipairs(LC.CampSaved(zone) or {}) do if it.prop == "bank" then saved = it end end
+ok(saved and math.abs(saved.x - (o.x - 120)) < 1, "where it was set down is kept with the camp")
+bank:Remove()
+r.bankNext = 0
+LC.EnsureRebelProps()
+ok(IsValid(r.bank) and r.bank:GetPos():Distance(o + Vector(-120, -40, 0)) < 1, "and it's put back just there")
+local list = LC.CampSaved(zone)
+for i = #list, 1, -1 do list[i] = nil end
+for i, w in ipairs(_walls) do if w == wall then table.remove(_walls, i) break end end
+local o2, face2, walled2 = LC.SecurityBankSpot(zone)
+ok(o2 and walled2 == false and LCZ.Contains(zone, o2, 0) and math.abs(Turn(face2 - math.deg(math.atan2(B.y - o2.y, B.x - o2.x)))) < 1,
+    "no wall near: on the open floor, facing the middle of the camp", tostring(o2))
+util.IsValidModel = function(m) return m == SOUP end
+LC.SceneModelForget()
+ok(LC.SecurityBankSpot(zone) == nil and LC.SecurityBankFor(zone) == nil, "a server without the model: no monitors")
+local kept = r.bank
+LC.RemoveZone(zone)
+LC.EnsureRebelProps()
+ok(not IsValid(kept) and LC.RebelProps[zone] == nil, "the camp gone: its monitors go with it")
+
+-- clean up (no monitors or counters left in the other tests' camps and plants)
+for _, rp in pairs(LC.RebelProps) do if IsValid(rp.bank) then rp.bank:Remove() end rp.bank = nil end
+for k, e in pairs(LC.KitchenProps) do if IsValid(e) then e:Remove() end LC.KitchenProps[k] = nil end
+util.IsValidModel, util.TraceLine, ents.Create, LC.Running = validWas, traceWas, createWas, runningWas
+LC.SceneModelForget()
+LC.SceneBoundsForget()
+end
+ScenePropsTests()
+
+----------------------------------------------------------------------
 section("Stop")
 LC.Stop(admin)
 _run(1)
