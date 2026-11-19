@@ -1462,7 +1462,8 @@ function LC.OpenMarket(ply)
             sell[#sell + 1] = { id = "w:" .. cls, name = (string.gsub(string.gsub(cls, "^weapon_", ""), "_", " ")), n = 1, price = price, weapon = true, donate = giveTo or nil }
         end
     end
-    LC.SendCompressed("lcu_market", { credits = credits, goods = goods, sell = sell, quartermaster = qm }, { ply })
+    -- (gift: credits for the Resistance's fund, at the quartermaster: sv_livingcity_fundgear.lua)
+    LC.SendCompressed("lcu_market", { credits = credits, goods = goods, sell = sell, quartermaster = qm, gift = qm and LC.FundTalkGift or nil }, { ply })
     return true
 end
 
@@ -1488,7 +1489,7 @@ function LC.OpenQuartermasterVisit(ply)
             sell[#sell + 1] = { id = "w:" .. cls, name = (string.gsub(string.gsub(cls, "^weapon_", ""), "_", " ")), n = 1, price = price, weapon = true, donate = true }
         end
     end
-    LC.SendCompressed("lcu_market", { credits = LC.Credits and LC.Credits(ply) or 0, goods = {}, sell = sell, quartermaster = true, visitor = true }, { ply })
+    LC.SendCompressed("lcu_market", { credits = LC.Credits and LC.Credits(ply) or 0, goods = {}, sell = sell, quartermaster = true, visitor = true, gift = LC.FundTalkGift }, { ply })
     return true
 end
 

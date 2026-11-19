@@ -35,3 +35,5 @@
 **14 November:** "Point: jogging route stop" is gone from the editor (the morning jog is archived, `lc_jog` 0: `city-events.md`). The morning drill is held at an exercise yard.
 
 **Fixture: job board** (14 November): a screen listing its side's jobs; which side follows where it stands (`docs/features/jobs-and-quests.md`, end).
+
+**Fixture: Resistance fund screen** (19 November, kind `fundtv`, entity `lc_fundtv`): the apartment's small TV, set on a table in a rebel camp, showing what the Resistance's fund holds; E opens its record and three Donate buttons, for anyone who can reach it (`docs/features/resistance-fund.md`).

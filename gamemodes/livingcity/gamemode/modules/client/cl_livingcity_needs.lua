@@ -1059,6 +1059,17 @@ net.Receive("lcu_market", function()
         l:SetTextColor(DIM)
         l:SetText(#(t.sell or {}) > 0 and "He sells nothing to strangers. But he'll buy arms and what the fight needs, or take them as a gift." or "He sells nothing to strangers. Bring him guns, ammunition, gun parts, scrap, rags or chemicals and he'll buy them, or take them as a gift.")
     end
+    -- credits for the Resistance's fund, from anyone at his post (the owner, 19 November: "a way for random citizens
+    -- and resistance fighters to donate credits somehow in a simple manner"; sv_livingcity_fundgear.lua)
+    if t.quartermaster and tonumber(t.gift) then
+        local gift = tonumber(t.gift)
+        Row(string.format("%d credits for the cause", gift), nil, "Donate", (t.credits or 0) >= gift, function()
+            net.Start("lc_fund_donate")
+            net.WriteUInt(gift, 16)
+            net.WriteBool(true)
+            net.SendToServer()
+        end)
+    end
     for _, g in ipairs(t.goods or {}) do
         -- the price always shows; what's wrong sits beside the name (the owner, 7 November: "idk what the price is")
         Row(g.name, g.desc, g.price .. " credits", g.ok == true, function()

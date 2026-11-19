@@ -2205,6 +2205,61 @@ for name in sorted(f[:-4] for f in os.listdir(ENTDIR) if f.endswith(".lua")):
     """)
     if err:
         problems = (problems + "\n" if problems else "") + name + " (client) " + str(err)
+# the Resistance fund screen (entities/lc_fundtv.lua, cl_livingcity_fundtv.lua, 19 November): the fund's number on its
+# glass, nothing on a dead screen, and E's window with the number, the record and the Donate buttons
+L.globals()._SRC = open(os.path.join(ENTDIR, "lc_fundtv.lua")).read()
+err = L.execute(r"""
+local entWas, drawWas, vguiWas = ENT, draw.SimpleText, vgui
+ENT = {}
+local okL, errL = pcall(function() assert(loadstring(_SRC, "lc_fundtv"))() end)
+local def = ENT
+ENT = entWas
+if not okL then return "load: " .. tostring(errL) end
+local e = ents.Create("lc_fundtv")
+e:SetPos(Vector(40, 0, 0))
+e.Draw, e.DrawModel = def.Draw, function() end
+_globals.lc_fund = 1234
+local said = {}
+draw.SimpleText = function(text, ...) said[#said + 1] = tostring(text) end
+local okD, errD = pcall(function() e:Draw() end)
+local lit = table.concat(said, "|")
+said = {}
+e:SetNW2Bool("lc_nopower", true)
+local okD2, errD2 = pcall(function() e:Draw() end)
+local dark = #said
+draw.SimpleText = drawWas
+_globals.lc_fund = nil
+e:Remove()
+if not okD then return "draw: " .. tostring(errD) end
+if not okD2 then return "draw, no power: " .. tostring(errD2) end
+if lit ~= "1234|credits" then return "the screen should show the number and 'credits', it showed: " .. lit end
+if dark ~= 0 then return "a screen with no power still shows the fund" end
+-- the window: what the server sends (the fund, two entries, the three amounts, a refusal)
+local made, texts, clicks = 0, {}, {}
+local panel
+panel = setmetatable({}, { __index = function(t, k)
+    if k == "SetText" or k == "SetTitle" then return function(_, s) texts[#texts + 1] = tostring(s) return t end end
+    if k == "GetWide" or k == "GetTall" then return function() return 10 end end
+    return function() return t end
+end, __newindex = function(_, k, v) if k == "DoClick" then clicks[#clicks + 1] = v end end })
+vgui = { Create = function() made = made + 1 return panel end }
+local rU, rI, rS = net.ReadUInt, net.ReadInt, net.ReadString
+local function nx() return table.remove(net._q, 1) end
+net.ReadUInt, net.ReadInt, net.ReadString = nx, nx, nx
+net._q = { 1234, 2, 50, "A donation", -239, "Guns and ammunition for a fighter (Kerr)", 3, 10, 50, 100, "You don't have that much." }
+local okW, errW = pcall(net["recv_lc_fundtv"])
+net.ReadUInt, net.ReadInt, net.ReadString = rU, rI, rS
+vgui = vguiWas
+if not okW then return "window: " .. tostring(errW) end
+local all = table.concat(texts, "|")
+for _, want in ipairs({ "Resistance fund", "1234 credits", "+50  A donation", "-239  Guns and ammunition for a fighter (Kerr)", "Donate 10", "Donate 50", "Donate 100", "You don't have that much." }) do
+    if not string.find(all, want, 1, true) then return "the window is missing \"" .. want .. "\": " .. all end
+end
+if #clicks ~= 3 then return "the window should have three Donate buttons, it has " .. #clicks end
+return nil
+""")
+if err:
+    problems = (problems + "\n" if problems else "") + "lc_fundtv (the fund screen) " + str(err)
 # the Combine camera monitors (entities/lc_monitor.lua): the glass is drawn with and without a camera, only the
 # nearest monitor you face from its front is live, and a camera's view is never started from inside itself
 L.globals()._SRC = open(os.path.join(ENTDIR, "lc_monitor.lua")).read()
@@ -4583,7 +4638,7 @@ local okM, errM = pcall(function()
     net.recv_lcu_market()
     -- a stranger at the quartermaster (the owner, 9 November): nothing to buy, arms to sell or give
     sent = {}
-    doc = { credits = 5, goods = {}, quartermaster = true, visitor = true,
+    doc = { credits = 15, goods = {}, quartermaster = true, visitor = true, gift = 10, -- (gift: 10 credits for the fund, 19 November)
         sell = { { id = "gun_pistol", name = "Pistol", n = 1, price = 45, donate = true }, { id = "w:weapon_smg1", name = "smg1", n = 1, price = 60, weapon = true, donate = true } } }
     net.recv_lcu_market()
     for _, pnl in ipairs(made) do
@@ -4594,6 +4649,9 @@ local okM, errM = pcall(function()
     local gave = false
     for _, m in ipairs(sent) do if m and m.name == "lcu_donate" then gave = true end end
     if not gave then error("the quartermaster's Donate button doesn't reach the server") end
+    local fundGift = false
+    for _, m in ipairs(sent) do if m and m.name == "lc_fund_donate" then fundGift = true end end
+    if not fundGift then error("the quartermaster's 10 credits for the cause don't reach the server") end
 end)
 vgui, net.SendToServer, net.Start, net.WriteString = vgWas, stsWas, startWas, wsWas
 net.ReadUInt, net.ReadData, util.Decompress, util.JSONToTable = rU, rD, rDc, rJ

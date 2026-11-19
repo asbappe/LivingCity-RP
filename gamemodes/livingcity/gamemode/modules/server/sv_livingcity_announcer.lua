@@ -149,7 +149,8 @@ LC.AnnounceVoices = { "overwatch", "administrator" }
 LC.AnnounceTierNames = { "warm", "firm", "stern", "furious" }
 -- Other voices with folders of their own, and their triggers: [voice] = { trigger, ... }
 LC.AnnounceExtra = { radio = { "static", "union", "freq7", "freq7_song", "jam",
-    "freq7_sweep", "freq7_raid", "freq7_curfew", "freq7_supply", "freq7_incursion", "freq7_lockdown", "freq7_dropship" } } -- (Freq 7: sv_livingcity_freq7.lua)
+    "freq7_sweep", "freq7_raid", "freq7_curfew", "freq7_supply", "freq7_incursion", "freq7_lockdown", "freq7_dropship",
+    "freq7_fund" } } -- (Freq 7: sv_livingcity_freq7.lua; freq7_fund, asking for the Resistance's fund: sv_livingcity_fundplea.lua)
 local TIERS = LC.AnnounceTierNames
 
 -- the tone she usually takes for each thing (1 warm .. 4 furious)

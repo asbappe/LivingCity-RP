@@ -42,15 +42,18 @@
                 A citizen broken out and led to safety, a fugitive brought home, a
                 shackled vortigaunt led home (the jobs res_jailbreak, res_rescue and
                 res_freevort, finished): everyone on the job.
-    Pays for    For now only the leader's order to kill the Administrator
-                (lc_resistance_order_cost, sv_livingcity_adminplot.lua).
+    Pays for    The leader's order to kill the Administrator (lc_resistance_order_cost,
+                sv_livingcity_adminplot.lua), and, since 19 November, the guns and rounds
+                its players are issued by rank (sv_livingcity_fundgear.lua: the record of
+                every change, the screen in the camp, donations).
     Seen        F2 > Resistance has one row for every member: "Fund: 120 credits"
                 (sv_livingcity_quickmore.lua sends it). Nothing is said when it grows or
                 is spent: no chat line, no notice, nothing on the radio.
 
     LC.ResistanceFund()                  how much it holds
-    LC.ResistanceFundAdd(n, why)         n more (why is for the server's log); how much now
-    LC.ResistanceFundTake(n, why)        n out of it: true; false when it holds less
+    LC.ResistanceFundAdd(n, why, who)    n more (why: for the server's log and the record; who:
+                                         the players it was for); how much now
+    LC.ResistanceFundTake(n, why, who)   n out of it: true; false when it holds less
     LC.ResistanceFundSuccess(kind, who)  a success counted: "load", "raid", "run" or
                                          "saved", and the players who took part; what
                                          went to the fund and what each of them had
@@ -92,11 +95,14 @@ function LC.ResistanceFund()
 end
 
 -- Written at once: what is paid out of it is kept with a player's own record, and the two must agree after a crash.
-local function Set(n, why)
+-- who: the players it was for or because of (the record names those of ours).
+local function Set(n, why, who)
     local book = Book()
     if not book then return false end
     local was = LC.ResistanceFund()
     book.fund = math.max(0, math.floor(n))
+    -- (one entry in the fund's record, which the screen in the camp shows: sv_livingcity_fundgear.lua)
+    if LC.ResistanceFundRecord and book.fund ~= was then LC.Try(LC.ResistanceFundRecord, book.fund - was, why, who) end
     if LC.LedgerSave then LC.Try(LC.LedgerSave) end
     if LC.Log and book.fund ~= was then
         LC.Log("info", string.format("The Resistance's fund: %+d (%s), now %d", book.fund - was, tostring(why or "?"), book.fund))
@@ -104,18 +110,18 @@ local function Set(n, why)
     return true
 end
 
-function LC.ResistanceFundAdd(n, why)
+function LC.ResistanceFundAdd(n, why, who)
     n = math.floor(tonumber(n) or 0)
-    if n > 0 then Set(LC.ResistanceFund() + n, why) end
+    if n > 0 then Set(LC.ResistanceFund() + n, why, who) end
     return LC.ResistanceFund()
 end
 
-function LC.ResistanceFundTake(n, why)
+function LC.ResistanceFundTake(n, why, who)
     n = math.floor(tonumber(n) or 0)
     if n <= 0 then return true end
     local has = LC.ResistanceFund()
     if has < n then return false end
-    return Set(has - n, why)
+    return Set(has - n, why, who)
 end
 
 ------------------------------------------------------------------------
@@ -143,7 +149,7 @@ function LC.ResistanceFundSuccess(kind, who, except)
     local shared = math.floor(take * (1 - SPLIT))
     local each = #party > 0 and math.floor(shared / #party) or 0
     local kept = #party > 0 and (take - each * #party) or (take - shared)
-    LC.ResistanceFundAdd(kept, kind)
+    LC.ResistanceFundAdd(kept, kind, party)
     if each > 0 and LC.AddCredits then
         for _, p in ipairs(party) do LC.AddCredits(p, each, WHY) end
     end

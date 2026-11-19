@@ -117,8 +117,13 @@ LC.ColonelLines = {
     whisper_water = "There's a priest who'd swallow anything holy. Feed him the master core and pray for rain. A lot of rain.",
     whisper_standup = "Keep the city red for three quarters of an hour straight. The crowd starts wanting a show.",
     whisper_none = "Nothing you haven't heard from me already.",
+    -- in place of his greeting while the Resistance's fund has been under 50 credits for ten minutes (sv_livingcity_fundplea.lua)
+    fund_empty = "The fund is empty. Our fighters are going out with crowbars. Give what you can at the screen in the camp.",
+    fund_promises = "I can't arm anyone on promises. If you have credits, the fund needs them.",
+    fund_rounds = "There's nothing left for rounds. Not a credit. Whatever you can spare, put it in at the screen.",
+    fund_crowbar = "Another fighter just went out with nothing but a crowbar. Every credit at that screen helps.",
 }
-local WHISPERS = { "harpies", "plane", "hard", "shalom", "fire", "base", "marrow", "bloom", "water", "standup" }
+local WHISPERS ={ "harpies", "plane", "hard", "shalom", "fire", "base", "marrow", "bloom", "water", "standup" }
 local JOBS = { "medicine", "tags", "unit" }
 
 ------------------------------------------------------------------------
@@ -367,6 +372,7 @@ function LC.OpenColonel(ply)
         Save(ply)
     end
     SendGhost(ply)
+    g = LC.FundPleaLine and LC.FundPleaLine(ply, "colonel") or g -- (the fund low for a while: he asks for it instead; sv_livingcity_fundplea.lua)
     Say(ply, g)
     local job = JobLine(ply)
     Menu(ply, LC.ColonelLines[g] .. (job and ("\n\n" .. job) or ""))

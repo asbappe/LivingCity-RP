@@ -346,7 +346,20 @@ RADIO = [
     ("freq7_incursion", "Freq 7 warns: the Combine are in rebel ground", "\"Combine in our territory. Everyone to your posts.\""),
     ("freq7_lockdown", "Freq 7 warns: lockdown", "\"Lockdown. Stay put, stay quiet, wait it out.\""),
     ("freq7_dropship", "Freq 7 warns: a dropship", "\"Dropship incoming. Find cover.\""),
+    # (the Resistance's fund under 50 credits for ten minutes: at most every twenty minutes, one take of these at random;
+    # sv_livingcity_fundplea.lua. A fourth item names the file: they are takes of one trigger)
+    ("freq7_fund", "Freq 7 asks for the Resistance's fund (under 50 credits for ten minutes; at most every twenty minutes). Tired, pleading, plain", "\"This is Frequency 7. The fund is empty. Our fighters are going out with crowbars. If you have credits, take them to the camp.\"", "freq7_fund1.wav"),
+    ("freq7_fund", "The same, another take", "\"Frequency 7. We can't arm anyone on promises. Whatever credits you can spare, the fund needs them.\"", "freq7_fund2.wav"),
+    ("freq7_fund", "The same, another take", "\"This is Frequency 7. There's nothing left for guns or rounds. Give what you can at the screen in the camp.\"", "freq7_fund3.wav"),
+    ("freq7_fund", "The same, another take", "\"Frequency 7. Some of ours are going out with nothing but a crowbar. Every credit helps. Bring it to the camp.\"", "freq7_fund4.wav"),
 ]
+
+
+def CUB_WHAT(i):
+    """What one of Colonel Cubbage's lines answers (section 12 and the scripts)."""
+    if i.startswith("fund_"):
+        return "(after his closing, while the Resistance's fund is under 50 credits for ten minutes; tired, pleading)"
+    return {"open": "(his opening)", "close": "(his closing)"}.get(i, "her `speech_%s`" % i)
 
 
 def dump():
@@ -461,10 +474,11 @@ def main():
         "|---|---|---|---|",
     ]
     extra = {r[2] for r in rows if r[0] == "extra" and r[1] == "radio"}
-    for trig, when, words in RADIO:
+    for row in RADIO:
+        trig, when, words = row[:3]
         if extra and trig not in extra:
             continue
-        name = "freq7_1.wav" if trig == "freq7" else ("freq7_song_<anything>.ogg" if trig == "freq7_song" else "%s1.wav" % trig)
+        name = row[3] if len(row) > 3 else ("freq7_1.wav" if trig == "freq7" else ("freq7_song_<anything>.ogg" if trig == "freq7_song" else "%s1.wav" % trig))
         doc.append("| [ ] | `%s` | %s | %s |" % (name, when, words))
         count += 1
     doc += [
@@ -540,7 +554,8 @@ def main():
            "Which machine")
     def colonel_when(i):
         for k, v in (("greet", "Greeting (by how well he knows you)"), ("job_", "What he needs (end of his greeting)"), ("thanks_", "You helped"),
-                     ("intel_", "What's the word?"), ("debrief_", "Debrief me"), ("whisper_", "Heard anything strange?"), ("ask", "What's happening to you? (by how ghostly he looks)")):
+                     ("intel_", "What's the word?"), ("debrief_", "Debrief me"), ("whisper_", "Heard anything strange?"), ("ask", "What's happening to you? (by how ghostly he looks)"),
+                     ("fund_", "The Resistance's fund under 50 credits for ten minutes: said instead of his greeting (tired, pleading)")):
             if i.startswith(k): return v
         return "Between answers"
     rs = sorted([r for r in rows if r[0] == "colonel"], key=lambda r: r[1])
@@ -602,7 +617,7 @@ def main():
             doc.append("| [ ] | `%s1.wav` | %s | %s |" % (r[1], r[2], r[3]))
             count += 1
     order12 = [r[1] for r in rows if r[0] == "speech"]
-    cub = sorted([r for r in rows if r[0] == "cubbage"], key=lambda r: (0 if r[1] == "open" else (2 if r[1] == "close" else 1),
+    cub = sorted([r for r in rows if r[0] == "cubbage"], key=lambda r: (0 if r[1] == "open" else (3 if r[1].startswith("fund_") else (2 if r[1] == "close" else 1)),
                                                                        order12.index(r[1]) if r[1] in order12 else 99, r[1]))
     doc.extend(["", "## 12. Colonel Cubbage answers her speeches", "",
                 "Odessa Cubbage, alive and well, at the Resistance's camp a few minutes after her address: defiant, dry, a speaker who enjoys "
@@ -611,7 +626,7 @@ def main():
                 "the words show in chat.",
                 "", "| Done | File | Answers | Says |", "|---|---|---|---|"])
     for r in cub:
-        doc.append("| [ ] | `answer_%s1.wav` | %s | %s |" % (r[1], {"open": "(his opening)", "close": "(his closing)"}.get(r[1], "her `speech_%s`" % r[1]), r[3]))
+        doc.append("| [ ] | `answer_%s1.wav` | %s | %s |" % (r[1], CUB_WHAT(r[1]), r[3]))
         count += 1
     res = sorted([r for r in rows if r[0] == "resistance"], key=lambda r: r[1])
     doc.extend(["", "## 13. The Resistance's people", "",
@@ -798,7 +813,7 @@ def scripts(doc, street, units, group_of, order, done=frozenset(), rows=()):
     cub = [r for r in rows if r[0] == "cubbage"]
     if cub:
         order12 = [r[1] for r in rows if r[0] == "speech"]
-        cub.sort(key=lambda r: (0 if r[1] == "open" else (2 if r[1] == "close" else 1), order12.index(r[1]) if r[1] in order12 else 99, r[1]))
+        cub.sort(key=lambda r: (0 if r[1] == "open" else (3 if r[1].startswith("fund_") else (2 if r[1] == "close" else 1)), order12.index(r[1]) if r[1] in order12 else 99, r[1]))
         out += ["", "## Colonel Cubbage answers her speeches", "",
                 "Folder: `cubbage/`. Odessa Cubbage, alive and well, answering her address from the Resistance's camp: a well-spoken, defiant "
                 "older man who enjoys taking her apart. Voice: `A British man in his fifties, rich and theatrical baritone, educated, dry and "
@@ -806,9 +821,9 @@ def scripts(doc, street, units, group_of, order, done=frozenset(), rows=()):
                 "studio recording.` (Describes a kind of voice: no game or actor named.)", "",
                 "| Done | File | Answers | Paste |", "|---|---|---|---|"]
         for r in cub:
-            what = {"open": "(his opening)", "close": "(his closing)"}.get(r[1], "her `speech_%s`" % r[1])
-            out.append("| [ ] | `answer_%s1` | %s | [defiant, dry, a speaker enjoying himself] %s |" % (r[1], what, r[3]))
-            batch.append(("cubbage", "livingcity/cubbage/answer_" + r[1] + "1", "[defiant, dry, a speaker enjoying himself] " + r[3]))
+            tag = "[tired, pleading, plain]" if r[1].startswith("fund_") else "[defiant, dry, a speaker enjoying himself]"
+            out.append("| [ ] | `answer_%s1` | %s | %s %s |" % (r[1], CUB_WHAT(r[1]), tag, r[3]))
+            batch.append(("cubbage", "livingcity/cubbage/answer_" + r[1] + "1", tag + " " + r[3]))
             n += 1
     res = sorted([r for r in rows if r[0] == "resistance"], key=lambda r: r[1])
     if res:
