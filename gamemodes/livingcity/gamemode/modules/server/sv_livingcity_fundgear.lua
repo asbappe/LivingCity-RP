@@ -69,6 +69,13 @@ local DONATE = { 10, 50, 100 } -- the screen's three amounts
 local TALK_GIFT = 10     -- a donation from the quartermaster's window
 local REACH = 150        -- how close to the screen to use it
 local GAP = 1            -- seconds between one donation and the next
+-- Rounds are almost free to the fund (the owner, 19 November: "rounds should be MUCH cheaper, almost free"): a tenth
+-- of the gun's rate, so at lc_resistance_issue_rate 50 a round costs the fund 5 per cent of the quartermaster's price.
+local ROUND_SHARE = 0.1
+-- A donation earns sympathy toward joining (the owner, 19 November: "yes yes yes, scaling (without allowing abuse) to
+-- the amount donated"): one for every SYMP_PER credits given, at most SYMP_DAY in a real day, for someone who is not
+-- of the Resistance or the Combine; kept with the character (what they gave, what it has earned, the day's count).
+local SYMP_PER, SYMP_DAY = 25, 2
 local SHORT = "You don't have that much."
 local WHO = "a fighter"  -- who the gear went to, in the record
 local LINE_MAX = 120
@@ -273,7 +280,7 @@ function LC.FundIssue(ply, kit, keep)
                 if not keep and rounds[GUNS[pick].ammo] then -- (a kind of round the rank's guns don't use comes as before)
                     local kind = GUNS[pick].ammo
                     local need = math.max(0, Usual(kind) - (ply:GetAmmoCount(kind) or 0) - (rounds[kind] or 0))
-                    local n, c = Afford(need, LC.FundRoundPrice(kind) * Rate(), budget - spent)
+                    local n, c = Afford(need, LC.FundRoundPrice(kind) * Rate() * ROUND_SHARE, budget - spent)
                     if n > 0 then rounds[kind] = (rounds[kind] or 0) + n spent = spent + c anyRounds = true end
                 end
             end
@@ -349,6 +356,7 @@ function LC.FundDonate(ply, amount, atQM)
     Seed()
     LC.AddCredits(ply, -amount)
     LC.ResistanceFundAdd(amount, "donation", { ply })
+    LC.FundDonationSympathy(ply, amount)
     if atQM then
         if LC.OpenMarket then LC.OpenMarket(ply) end
     else
@@ -357,6 +365,32 @@ function LC.FundDonate(ply, amount, atQM)
     return true
 end
 LC.FundDonateAmounts, LC.FundTalkGift = DONATE, TALK_GIFT
+LC.FundRoundShare, LC.FundSympathyPer, LC.FundSympathyDay = ROUND_SHARE, SYMP_PER, SYMP_DAY
+
+-- What a donation earns toward joining. Every credit given counts toward the next sympathy, also those given past
+-- the day's cap (they are earned on a later day). How many were given now.
+function LC.FundDonationSympathy(ply, amount)
+    if not (IsValid(ply) and ply:IsPlayer() and LC.AddTrait) then return 0 end
+    local f = ply:GetNW2String("lcf_faction", "")
+    if f == "resistance" or f == "cp" or f == "admin" or (LC.IsBurned and LC.IsBurned(ply)) then return 0 end
+    local given = (tonumber(ply:GetPData("lc_fund_given", 0)) or 0) + math.max(0, math.floor(tonumber(amount) or 0))
+    ply:SetPData("lc_fund_given", given)
+    local got = tonumber(ply:GetPData("lc_fund_symp", 0)) or 0
+    local day = math.floor(os.time() / 86400)
+    local today = (tonumber(ply:GetPData("lc_fund_symp_day", -1)) == day) and (tonumber(ply:GetPData("lc_fund_symp_n", 0)) or 0) or 0
+    local n = math.max(0, math.min(math.floor(given / SYMP_PER) - got, SYMP_DAY - today))
+    if n <= 0 then return 0 end
+    LC.AddTrait(ply, "sympathy", n)
+    ply:SetPData("lc_fund_symp", got + n)
+    ply:SetPData("lc_fund_symp_day", day)
+    ply:SetPData("lc_fund_symp_n", today + n)
+    return n
+end
+-- (someone new starts with nothing given)
+hook.Add("LivingCityNewCharacter", "LivingCityFundSympathy", function(ply)
+    if not IsValid(ply) then return end
+    for _, k in ipairs({ "lc_fund_given", "lc_fund_symp", "lc_fund_symp_day", "lc_fund_symp_n" }) do ply:RemovePData(k) end
+end)
 
 net.Receive("lc_fund_donate", function(_, ply)
     local amount, atQM = net.ReadUInt(16), net.ReadBool()

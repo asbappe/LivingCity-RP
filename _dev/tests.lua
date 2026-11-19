@@ -38798,7 +38798,7 @@ local fundWas = fund()
 local rateWas = GetConVar("lc_resistance_issue_rate"):GetInt()
 ok(rateWas == 50, "the one new setting: lc_resistance_issue_rate is 50 (per cent of what a player pays)", rateWas)
 local function cost(p) return math.floor(p * 0.5 + 0.5) end
-local function rcost(kind, n) return n > 0 and math.ceil(n * LC.FundRoundPrice(kind) * 0.5 - 1e-9) or 0 end
+local function rcost(kind, n) return n > 0 and math.ceil(n * LC.FundRoundPrice(kind) * 0.5 * LC.FundRoundShare - 1e-9) or 0 end -- (rounds almost free: a tenth of the rate, the owner, 19 November)
 local P = {}
 for cls in pairs(LC.FundGuns) do P[cls] = LC.FundGunPrice(cls) end
 ok(P.weapon_pistol < P.weapon_smg1 and P.weapon_smg1 < P.weapon_shotgun and P.weapon_shotgun < P.weapon_357 and P.weapon_357 < P.weapon_ar2,
@@ -38857,14 +38857,14 @@ ok(fund() == 5000 - wantCm and cm:HasWeapon("weapon_ar2") and cm:HasWeapon("weap
     (5000 - fund()) .. " vs " .. wantCm)
 ok(cm:GetAmmoCount("Pistol") == 90, "(a Commander carries no pistol: its rounds come as before)")
 -- short: the best cheaper gun it can pay for
-local short = cost(P.weapon_pistol) + 10
+local short = cost(P.weapon_pistol) + 3
 ok(short < cost(P.weapon_smg1), "(a fund below an SMG's price)", short)
 setFund(short)
 spawn(f1)
 ok(f1:HasWeapon("weapon_crowbar") and f1:HasWeapon("weapon_pistol") and not f1:HasWeapon("weapon_smg1"), "a short fund: the best cheaper gun it can pay for, a pistol for the SMG")
 ok(f1:GetAmmoCount("SMG1") == 0, "no rounds for the SMG they didn't get", f1:GetAmmoCount("SMG1"))
 local pr = f1:GetAmmoCount("Pistol")
-ok(pr > 0 and pr < 90 and fund() < LC.FundRoundPrice("Pistol") * 0.5 + 1, "rounds: what was left after the gun paid for, up to the usual", pr .. " rounds, " .. fund() .. " left")
+ok(pr > 0 and pr < 90 and fund() < LC.FundRoundPrice("Pistol") * 0.5 * LC.FundRoundShare + 1, "rounds: what was left after the gun paid for, up to the usual", pr .. " rounds, " .. fund() .. " left")
 do
     local l = top(2)
     ok(l[1].n == 0 and l[1].w == "A fighter got a pistol, not an SMG. The fund was short.", "the cheaper gun is an entry of its own, at no cost", l[1].w)
@@ -38890,10 +38890,10 @@ end
 
 -- rounds: what the fund can pay for
 do
-    local left = 20
+    local left = 2
     setFund(cost(P.weapon_smg1) + left)
     spawn(f1)
-    local per = LC.FundRoundPrice("SMG1") * 0.5
+    local per = LC.FundRoundPrice("SMG1") * 0.5 * LC.FundRoundShare
     local n = math.floor(left / per + 1e-9)
     while n > 0 and math.ceil(n * per - 1e-9) > left do n = n - 1 end
     ok(f1:HasWeapon("weapon_smg1") and f1:GetAmmoCount("SMG1") == n and n > 0 and n < 180, "rounds: as many as what's left pays for, no more", f1:GetAmmoCount("SMG1") .. " vs " .. n)
@@ -39248,6 +39248,32 @@ setFund(fundWas)
 LC.FundPleaWatch()
 end
 Nov19_FundPleaTests()
+
+function Nov19_FundRoundsSympathyTests()
+section("Rounds almost free to the fund, and a donation earns sympathy (the owner, 19 November)")
+ok(LC.FundRoundShare == 0.1, "rounds cost the fund a tenth of the gun's rate", LC.FundRoundShare)
+-- a citizen's donations
+local cit = newPlayer("FundSympCitizen", "citizen")
+_run(0.3)
+cit:SetPData("lcq_sympathy", 0)
+local s0 = LC.Trait(cit, "sympathy")
+ok(LC.FundDonationSympathy(cit, 10) == 0 and LC.Trait(cit, "sympathy") == s0, "10 credits earn nothing yet")
+ok(LC.FundDonationSympathy(cit, 15) == 1 and LC.Trait(cit, "sympathy") == s0 + 1, "25 in all: one sympathy")
+ok(LC.FundDonationSympathy(cit, 100) == 1 and LC.Trait(cit, "sympathy") == s0 + 2, "a big gift the same day: only up to the day's cap of two")
+ok(LC.FundDonationSympathy(cit, 50) == 0, "(and nothing more that day)")
+cit:SetPData("lc_fund_symp_day", math.floor(os.time() / 86400) - 1) -- (a day later)
+ok(LC.FundDonationSympathy(cit, 0) == 2 and LC.Trait(cit, "sympathy") == s0 + 4, "the next day what was given before earns its sympathy, up to the cap", LC.Trait(cit, "sympathy"))
+-- nobody of the Resistance or the Combine
+local reb = newPlayer("FundSympRebel", "resistance", nil, 400)
+local cop = newPlayer("FundSympUnit", "cp")
+_run(0.3)
+ok(LC.FundDonationSympathy(reb, 100) == 0 and LC.FundDonationSympathy(cop, 100) == 0, "a Resistance member or a unit earns no sympathy by it")
+-- a new character starts with nothing given
+hook.Run("LivingCityNewCharacter", cit, "x", "test")
+ok(cit:GetPData("lc_fund_given", "") == "" and cit:GetPData("lc_fund_symp", "") == "", "someone new starts with nothing given")
+cit:Remove() reb:Remove() cop:Remove()
+end
+Nov19_FundRoundsSympathyTests()
 
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")
 ;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)
