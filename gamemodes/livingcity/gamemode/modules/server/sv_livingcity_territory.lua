@@ -27,7 +27,7 @@
 
       lc_territory                     what's grown where (admin)
       lc_territory_grow rebel|infest   grow one now (admin; superadmins also have it in
-                                       C > Help > Admin testing tools > The city)
+                                       F4 > Factions > Admin: testing tools > The city)
       lc_territory_reset               take back everything that grew (admin)
 
     Grown patches are kept across restarts in garrysmod/data/livingcity/<map>_territory.json,

@@ -109,4 +109,4 @@ To add an item: `printf '%s\n' '- [ ] **Topic:** what to try. [needs a person: w
 - [ ] **Infestation per district:** leave an infestation alone until its block reads "badly infested" on F2 > The state of the city; does it turn up in the next block after about 20 minutes, and does a powered checkpoint stop it? [needs a person: the pace on the real map]
 - [ ] **The tidied F1 and F2:** as a citizen, a unit, a rebel and the Administrator, does every F2 entry sit where you would look for it, and does F1 > What now? > The state of the city read well? [needs a person: whether it feels right]
 - [ ] **Stand poses:** F1 > Pose > "Stand: pose 1" and "pose 2": what do they look like, so they can be named for it? [needs a person: to see them]
-- [ ] **Testing alone:** C > Help > Admin testing tools > Testing alone: try the assassination test (her address, the job, the attempt) and the collapse with only you on. [needs a person: the real game]
+- [ ] **Testing alone:** F4 > Factions > Admin: testing tools > Testing alone: try the assassination test (her address, the job, the attempt) and the collapse with only you on. [needs a person: the real game]

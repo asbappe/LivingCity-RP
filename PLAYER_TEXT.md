@@ -4,7 +4,7 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version 3847d9c. Admin-only console messages and log lines are left out.
+Made from version 00ab8cb. Admin-only console messages and log lines are left out.
 
 12987 lines, from 360 files.
 
@@ -1325,7 +1325,7 @@ Made from version 3847d9c. Admin-only console messages and log lines are left ou
 - "Resistance lab (editor fixture, formerly the workbench): a lab bench and a scientist who makes what the quartermaster doesn't sell (charge cells, firebombs, the foil hat) and decodes chips, changes faces and pulls the chip. Place one in every rebel base. lc_lab_price (0.6 of the dealer's price), lc_lab_shutdown (600 seconds closed after a Civil Protection unit finds it)."  (text, line 393)
 - "How it feels (editor panel, How it feels): lc_fov (75, the widest view anyone gets; 0 leaves it to each player), lc_eye_height (61; GMod's default is 64), lc_view_bob (with lc_view_bob_amount, 100%, for how strong), lc_quiet_hud, lc_respawn_secs (12, how long the death card shows), lc_word_gets_around."  (text, line 394)
 - "Errors (admins): F4 > Factions > Admin: errors. Everything that has gone wrong on the server and in players' games, grouped and counted, kept over restarts in garrysmod/data/livingcity/errors.txt. Copy it and send it."  (text, line 396)
-- "C > Help > Admin testing tools (or the button on F4, or !admintools): give yourself XP, a rank, credits and Civil Standing, switch faction, get out of custody, or start over. Superadmins: Testing alone sets off what needs more players (her address, the collapse, events)."  (text, line 397)
+- "F4 > Factions > Admin: testing tools: give yourself XP, a rank, credits and Civil Standing, switch faction, get out of custody, or start over. Superadmins: Testing alone sets off what needs more players (her address, the collapse, events)."  (text, line 397)
 - "Switching faction from F4 changes your uniform and kit on the spot: no need to go back to a spawn point."  (text, line 398)
 - "Chat commands: !givexp, !setrank, !givecredits, !givestanding <n> [name]; !resetxp, !resetcredits [name]; !resetme."  (text, line 399)
 - "C > Help > Staff panel (or !staff): logs, tickets, warnings, character bans. !warn <name> <reason>, !charban <name> <reason>."  (text, line 400)
@@ -2677,7 +2677,7 @@ Made from version 3847d9c. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): admins: the testing tools (XP, ranks, credits, standing)
 
-- "Admin: testing tools (XP, ranks, credits, standing)"  (label or button, line 55)
+- "Admin: testing tools (XP, ranks, credits, testing alone)"  (label or button, line 55)
 
 > Note for you (not shown in game): what has gone wrong on the server and in players' games, grouped, to copy and send (sh_livingcity_errors.lua)
 

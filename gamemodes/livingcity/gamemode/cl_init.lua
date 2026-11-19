@@ -394,7 +394,7 @@ local ADMIN_GUIDE = { "Admin", {
     "How it feels (editor panel, How it feels): lc_fov (75, the widest view anyone gets; 0 leaves it to each player), lc_eye_height (61; GMod's default is 64), lc_view_bob (with lc_view_bob_amount, 100%, for how strong), lc_quiet_hud, lc_respawn_secs (12, how long the death card shows), lc_word_gets_around.",
     "lc_debugreport copies a report to send when something breaks.",
     "Errors (admins): F4 > Factions > Admin: errors. Everything that has gone wrong on the server and in players' games, grouped and counted, kept over restarts in garrysmod/data/livingcity/errors.txt. Copy it and send it.",
-    "C > Help > Admin testing tools (or the button on F4, or !admintools): give yourself XP, a rank, credits and Civil Standing, switch faction, get out of custody, or start over. Superadmins: Testing alone sets off what needs more players (her address, the collapse, events).",
+    "F4 > Factions > Admin: testing tools: give yourself XP, a rank, credits and Civil Standing, switch faction, get out of custody, or start over. Superadmins: Testing alone sets off what needs more players (her address, the collapse, events).",
     "Switching faction from F4 changes your uniform and kit on the spot: no need to go back to a spawn point.",
     "Chat commands: !givexp, !setrank, !givecredits, !givestanding <n> [name]; !resetxp, !resetcredits [name]; !resetme.",
     "C > Help > Staff panel (or !staff): logs, tickets, warnings, character bans. !warn <name> <reason>, !charban <name> <reason>.",
