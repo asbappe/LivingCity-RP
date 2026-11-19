@@ -210,9 +210,10 @@ local ACTIONS = {
             if not LC.ShellDistrict then return false, "No shelling on this server." end
             local n = (LC.ShellTargets and LC.ShellTargets() or {})[1] or (LC.LedgerBlockAt and IsValid(admin) and LC.LedgerBlockAt(admin:GetPos()))
             if not n then return false, "No district here (place housing blocks in the editor)." end
-            local k, why = LC.ShellDistrict(n, nil)
-            if not k then return false, tostring(why) end
-            return true, string.format("%d canister(s) on %s: they land in about %d seconds.", k, LC.BlockName and LC.BlockName(n) or n, LC.ShellingConst.FLIGHT)
+            local k, landed, covered = LC.ShellDistrict(n, nil)
+            if not k then return false, tostring(landed) end
+            return true, string.format("Shelling %s: %d canister(s) coming down, %d lot(s) of headcrabs under cover; in about %d seconds.", LC.BlockName and LC.BlockName(n) or n,
+                landed, covered, LC.ShellingConst.FLIGHT)
         elseif string.sub(v, 1, 6) == "event:" then
             if not LC.Running then return false, "Start the city first." end
             if not (LC.StartEvent and LC.StartEvent(string.sub(v, 7))) then return false, "That event can't start now (another may be on)." end

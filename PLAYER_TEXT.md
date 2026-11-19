@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version 6abef84a. Admin-only console messages and log lines are left out.
+Made from version 5590fc7d. Admin-only console messages and log lines are left out.
 
-13119 lines, from 364 files.
+13123 lines, from 364 files.
 
 ## Contents
 
@@ -164,7 +164,7 @@ Made from version 6abef84a. Admin-only console messages and log lines are left o
 - [testing tools for admins](#testing-tools-for-admins-svlivingcityadmintoolslua) (74)
 - [citizens who show you the way](#citizens-who-show-you-the-way-svlivingcityadvicelua) (24)
 - [Half-Life 2's ammo limits](#half-life-2s-ammo-limits-svlivingcityammolua) (4)
-- [custom announcements, for Overwatch and for the Administrator](#custom-announcements-for-overwatch-and-for-the-administrator-svlivingcityannouncerlua) (54)
+- [custom announcements, for Overwatch and for the Administrator](#custom-announcements-for-overwatch-and-for-the-administrator-svlivingcityannouncerlua) (55)
 - [arrests in the open (the owner's playtest, 7 November)](#arrests-in-the-open-the-owners-playtest-7-november-svlivingcityarrestlua) (54)
 - [the time of day, the weather, and the city's music](#the-time-of-day-the-weather-and-the-citys-music-svlivingcityatmoslua) (1)
 - [The Battle Line, a propaganda dream (sv_livingcity_battleline.lua)](#the-battle-line-a-propaganda-dream-svlivingcitybattlelinelua-svlivingcitybattlelinelua) (48)
@@ -319,14 +319,14 @@ Made from version 6abef84a. Admin-only console messages and log lines are left o
 - [getting by](#getting-by-svlivingcityscavengelua) (86)
 - [Combine-only areas](#combine-only-areas-svlivingcitysecuritylua) (10)
 - [sentences that fit the crimes, the work detail, probation](#sentences-that-fit-the-crimes-the-work-detail-probation-svlivingcitysentencelua) (61)
-- [headcrab shelling (the owner, 18 November, the long-term plan,](#headcrab-shelling-the-owner-18-november-the-long-term-plan-svlivingcityshellinglua) (15)
+- [headcrab shelling (the owner, 18 November, the long-term plan,](#headcrab-shelling-the-owner-18-november-the-long-term-plan-svlivingcityshellinglua) (17)
 - [jobs that come with supply drops, and Union work orders that](#jobs-that-come-with-supply-drops-and-union-work-orders-that-svlivingcitysidejobslua) (105)
 - [character slots](#character-slots-svlivingcityslotslua) (20)
 - [small-server mode (the owner, 10 November: "yes please")](#small-server-mode-the-owner-10-november-yes-please-svlivingcitysmallserverlua) (2)
 - [snitches among the citizens, and burning an informant](#snitches-among-the-citizens-and-burning-an-informant-svlivingcitysnitcheslua) (32)
 - [utility boxes at the loudspeakers, and the Resistance's hackers on the PA](#utility-boxes-at-the-loudspeakers-and-the-resistances-hackers-on-the-pa-svlivingcityspeakerhacklua) (16)
 - [sv_livingcity_speech.lua](#svlivingcityspeechlua-svlivingcityspeechlua) (95)
-- [the Resistance answers her speeches](#the-resistance-answers-her-speeches-svlivingcityspeechanswerlua) (47)
+- [the Resistance answers her speeches](#the-resistance-answers-her-speeches-svlivingcityspeechanswerlua) (48)
 - [squad sizes and backup by radio (sv_livingcity_squads.lua)](#squad-sizes-and-backup-by-radio-svlivingcitysquadslua-svlivingcitysquadslua) (19)
 - [staff tools](#staff-tools-svlivingcitystafflua) (48)
 - [the stalker's lot](#the-stalkers-lot-svlivingcitystalkerworklua) (58)
@@ -1149,7 +1149,7 @@ Made from version 6abef84a. Admin-only console messages and log lines are left o
 - "The city's NPCs work Union jobs too: fixing lights and loudspeakers, scrubbing graffiti, hauling bodies, carrying crates and mail. Look at someone to see what they're doing. Broken things are left for a while first, so players get the first chance to fix them."  (text, line 189)
 - "Down and bleeding? A Union medic may come running to help, as long as you're not wanted and there's no firefight."  (text, line 190)
 - "The war for the city"  (text, line 192)
-- "Rebel territory and the infestation spread if nobody fights them (across a floor, or down the stairs to the next floor), and shrink when people fight them. A badly infested block spreads it to the next. The Combine shell blocks the Resistance hold with headcrab canisters, and the infestation takes root where they land."  (text, line 193)
+- "Rebel territory and the infestation spread if nobody fights them (across a floor, or down the stairs to the next floor), and shrink when people fight them. A badly infested block spreads it to the next. When the Administrator orders it, or the Resistance spread into the open, the Combine shell them with headcrab canisters, and the infestation takes root there."  (text, line 193)
 - "A message appears on screen when you enter either one. F1 > What now? > The state of the city shows how much each side controls."  (text, line 194)
 - "When unrest is high (the Resistance is strong): more inspections and raids, and ration cuts. At full compliance, the rebels go quiet."  (text, line 195)
 - "Civil Protection units: anything that goes to HQ is only over the radio. Get your radio transmitter out (next to Hands) and right click: Request resupply, Call for backup (brings the nearest units running), Send my 10-20 (marks your location for other units), Issue a BOLO, a records check, your directives."  (text, line 196)
@@ -5880,44 +5880,44 @@ Made from version 6abef84a. Admin-only console messages and log lines are left o
 
 - "No shelling on this server."  (text, line 210)
 - "No district here (place housing blocks in the editor)."  (text, line 212)
-- "%d canister(s) on %s: they land in about %d seconds."  (message, line 215)
-- "Start the city first."  (text, line 217)
+- "Shelling %s: %d canister(s) coming down, %d lot(s) of headcrabs under cover; in about %d seconds."  (message, line 215)
 
 > Note for you (not shown in game): part of: solo
 
-- "That event can't start now (another may be on)."  (text, line 218)
-- "No event is on."  (text, line 221)
-- "The event is over."  (text, line 223)
-- "Unknown test."  (text, line 225)
+- "Start the city first."  (text, line 218)
+- "That event can't start now (another may be on)."  (text, line 219)
+- "No event is on."  (text, line 222)
+- "The event is over."  (text, line 224)
+- "Unknown test."  (text, line 226)
 
 > Note for you (not shown in game): part of: item
 
-- "No such item."  (text, line 229)
-- "'s pockets are full."  (text, line 230)
+- "No such item."  (text, line 230)
+- "'s pockets are full."  (text, line 231)
 
 > Note for you (not shown in game): part of: admin tool
 
-- "Admins only."  (text, line 237)
-- "Nobody to do that to."  (text, line 239)
-- "Unknown action."  (text, line 241)
-- "That failed: {a}"  (text, line 243)
-- "admin tools: %s used %s %s on %s"  (message, line 245)
+- "Admins only."  (text, line 238)
+- "Nobody to do that to."  (text, line 240)
+- "Unknown action."  (text, line 242)
+- "That failed: {a}"  (text, line 244)
+- "admin tools: %s used %s %s on %s"  (message, line 246)
 
 > Note for you (not shown in game): the console command lc_admintools
 
-- "Admins only."  (chat message, line 295)
+- "Admins only."  (chat message, line 296)
 
 > Note for you (not shown in game): the game answering something done in a window (lc_admintools_do)
 
-- "[Admin tools] {msg}"  (chat message, line 303)
+- "[Admin tools] {msg}"  (chat message, line 304)
 
 > Note for you (not shown in game): typing in chat
 
-- "Admins only."  (chat message, line 322)
-- "Admins only."  (chat message, line 327)
-- "Usage: !{cmd} <number> [player]"  (chat message, line 332)
-- "Player not found: {name}"  (chat message, line 339)
-- "[Admin tools] {msg}"  (chat message, line 342)
+- "Admins only."  (chat message, line 323)
+- "Admins only."  (chat message, line 328)
+- "Usage: !{cmd} <number> [player]"  (chat message, line 333)
+- "Player not found: {name}"  (chat message, line 340)
+- "[Admin tools] {msg}"  (chat message, line 343)
 
 ## citizens who show you the way (sv_livingcity_advice.lua)
 
@@ -5973,105 +5973,106 @@ Made from version 6abef84a. Admin-only console messages and log lines are left o
 
 `gamemodes/livingcity/gamemode/modules/server/sv_livingcity_announcer.lua`
 
-- "Morning exercise"  (text, line 196)
-- "Morning exercise"  (text, line 196)
-- "Morning parade"  (text, line 196)
-- "Power failure"  (text, line 197)
-- "Power restored"  (text, line 197)
-- "Overwatch response"  (text, line 197)
-- "Overwatch response"  (text, line 198)
-- "Prison breakout"  (text, line 198)
-- "Overwatch deployment"  (text, line 198)
-- "Housing block inspection"  (text, line 199)
-- "Resistance activity"  (text, line 199)
-- "City announcement"  (text, line 200)
-- "City announcement"  (text, line 200)
-- "City announcement"  (text, line 200)
-- "City announcement"  (text, line 200)
-- "City announcement"  (text, line 201)
-- "Overwatch response"  (text, line 201)
-- "Civil collapse"  (text, line 201)
-- "The Nexus"  (text, line 202)
-- "The Administrator"  (text, line 202)
-- "Order restored"  (text, line 202)
-- "The suppression device"  (text, line 202)
-- "The Administrator's address"  (text, line 203)
-- "The Administrator"  (text, line 203)
+- "Morning exercise"  (text, line 198)
+- "Morning exercise"  (text, line 198)
+- "Morning parade"  (text, line 198)
+- "Power failure"  (text, line 199)
+- "Power restored"  (text, line 199)
+- "Overwatch response"  (text, line 199)
+- "Overwatch response"  (text, line 200)
+- "Prison breakout"  (text, line 200)
+- "Overwatch deployment"  (text, line 200)
+- "Housing block inspection"  (text, line 201)
+- "Sector sterilization"  (text, line 201)
+- "Resistance activity"  (text, line 201)
+- "City announcement"  (text, line 202)
+- "City announcement"  (text, line 202)
+- "City announcement"  (text, line 202)
+- "City announcement"  (text, line 202)
+- "City announcement"  (text, line 203)
+- "Overwatch response"  (text, line 203)
+- "Civil collapse"  (text, line 203)
+- "The Nexus"  (text, line 204)
+- "The Administrator"  (text, line 204)
+- "Order restored"  (text, line 204)
+- "The suppression device"  (text, line 204)
 - "The Administrator's address"  (text, line 205)
+- "The Administrator"  (text, line 205)
+- "The Administrator's address"  (text, line 207)
 
 > Note for you (not shown in game): part of: announce unused
 
-- ": doesn't start with a trigger (a typo?)"  (text, line 271)
-- ": {t} is no longer said (a surprise, or it answers violence)"  (text, line 273)
-- ": plays as Overwatch (a tone word only means something to the Administrator: is this her recording?)"  (text, line 275)
+- ": doesn't start with a trigger (a typo?)"  (text, line 273)
+- ": {t} is no longer said (a surprise, or it answers violence)"  (text, line 275)
+- ": plays as Overwatch (a tone word only means something to the Administrator: is this her recording?)"  (text, line 277)
 
 > Note for you (not shown in game): part of: say
 
-- "[{or}] "{text}""  (chat message, line 448)
-- "[{or}] "{text}""  (chat message, line 464)
+- "[{or}] "{text}""  (chat message, line 450)
+- "[{or}] "{text}""  (chat message, line 466)
 
 > Note for you (not shown in game): a timer (regularly)
 
-- "Sound files"  (on-screen notice, line 641)
-- "recording(s) can't be played (an MP3 renamed .wav, or a WAV that isn't 16-bit 44100 Hz). Type lc_announce_clips in the console to see which, and how to fix each."  (on-screen notice, line 641)
+- "Sound files"  (on-screen notice, line 643)
+- "recording(s) can't be played (an MP3 renamed .wav, or a WAV that isn't 16-bit 44100 Hz). Type lc_announce_clips in the console to see which, and how to fix each."  (on-screen notice, line 643)
 
 > Note for you (not shown in game): the console command lc_announce_clips
 
-- "[Miscount] {v}: {or}"  (text, line 668)
-- "[Miscount]   check {v}/{why}"  (text, line 669)
-- "[Miscount]   CAN'T PLAY {why}"  (text, line 672)
-- "[Miscount] {v}: {parts}"  (text, line 680)
-- "[Miscount] Players' computers play these, so each needs the files: {or}sv_allowdownload {or}, sv_downloadurl "{or}" (a Workshop addon is the reliable way). Each player can type lc_sound_check to test their own."  (text, line 683)
-- "[Miscount] {total} custom announcements found. Folders: sound/livingcity/overwatch/, administrator/, radio/ (or the same under sound/{ROOT}), flat: a file's name starts with its trigger (curfew1.wav), and the Administrator's tone is in it (curfew_firm1.wav); lc_announce_rescan after adding files."  (text, line 687)
+- "[Miscount] {v}: {or}"  (text, line 670)
+- "[Miscount]   check {v}/{why}"  (text, line 671)
+- "[Miscount]   CAN'T PLAY {why}"  (text, line 674)
+- "[Miscount] {v}: {parts}"  (text, line 682)
+- "[Miscount] Players' computers play these, so each needs the files: {or}sv_allowdownload {or}, sv_downloadurl "{or}" (a Workshop addon is the reliable way). Each player can type lc_sound_check to test their own."  (text, line 685)
+- "[Miscount] {total} custom announcements found. Folders: sound/livingcity/overwatch/, administrator/, radio/ (or the same under sound/{ROOT}), flat: a file's name starts with its trigger (curfew1.wav), and the Administrator's tone is in it (curfew_firm1.wav); lc_announce_rescan after adding files."  (text, line 689)
 
 > Note for you (not shown in game): part of: voice missing
 
-- "Dream lines"  (text, line 703)
-- "dream1 (optional)"  (text, line 725)
+- "Dream lines"  (text, line 705)
+- "dream1 (optional)"  (text, line 727)
 
 > Note for you (not shown in game): what named people say (sv_livingcity_lines.lua): citizens a man's take and a woman's, units one voice
 
-- "Named citizens' lines"  (text, line 745)
-- "Units' lines"  (text, line 746)
+- "Named citizens' lines"  (text, line 747)
+- "Units' lines"  (text, line 748)
 
 > Note for you (not shown in game): part of: voice missing
 
-- "Citizen Information clerk"  (text, line 761)
-- "The old-timer"  (text, line 764)
+- "Citizen Information clerk"  (text, line 763)
+- "The old-timer"  (text, line 766)
 
 > Note for you (not shown in game): Colonel Cubbage answering her speeches (sv_livingcity_speechanswer.lua): answer_<piece>
 
-- "Colonel Cubbage"  (text, line 770)
+- "Colonel Cubbage"  (text, line 772)
 
 > Note for you (not shown in game): what the Resistance's people say to you (sv_livingcity_rebelvoice.lua): a man's take and a woman's
 
-- "The Resistance's people"  (text, line 773)
+- "The Resistance's people"  (text, line 775)
 
 > Note for you (not shown in game): One row of lc_voice_missing as lines short enough to arrive in chat (at most about 200 characters each).
 
-- "[Miscount] {name} (sound/livingcity/{folder}),"  (text, line 780)
-- "nothing missing"  (text, line 781)
+- "[Miscount] {name} (sound/livingcity/{folder}),"  (text, line 782)
+- "nothing missing"  (text, line 783)
 
 > Note for you (not shown in game): also as a file, one missing recording to a line (folder/name), for _dev/tools/elevenlabs_batch.py --missing: it then makes only what the server lacks (the owner, 11 November: "I already have loads of these")
 
-- "[Miscount] The whole list is also in data/livingcity/voice_missing.txt ({lines} lines)."  (text, line 808)
+- "[Miscount] The whole list is also in data/livingcity/voice_missing.txt ({lines} lines)."  (text, line 810)
 
 > Note for you (not shown in game): (in pieces: a chat line over 255 characters never arrives, so the long rows went missing in game)
 
-- "[Miscount] {total} voice lines with no recording yet. Without one, the words still show (Half-Life 2's own Overwatch lines only with lc_announce_stock 1). Name a file for its line (curfew1.wav, ravenholm_defeat1.wav); a .txt with the same name is its subtitle. Everything to record, with suggested words: VOICE_SCRIPTS.md, in the gamemode's folder."  (text, line 814)
+- "[Miscount] {total} voice lines with no recording yet. Without one, the words still show (Half-Life 2's own Overwatch lines only with lc_announce_stock 1). Name a file for its line (curfew1.wav, ravenholm_defeat1.wav); a .txt with the same name is its subtitle. Everything to record, with suggested words: VOICE_SCRIPTS.md, in the gamemode's folder."  (text, line 816)
 
 > Note for you (not shown in game): the console command lc_announce_rescan
 
-- "[Miscount] {AnnounceRescan} custom announcements found."  (text, line 820)
+- "[Miscount] {AnnounceRescan} custom announcements found."  (text, line 822)
 
 > Note for you (not shown in game): the console command lc_announce_say
 
-- "[Miscount] lc_announce_say <overwatch\|administrator> <trigger> [warm\|firm\|stern\|furious]"  (text, line 826)
-- "[Miscount] Nothing in sound/{ROOT}{voice}/{trig}/ to say (or it's off)."  (text, line 829)
+- "[Miscount] lc_announce_say <overwatch\|administrator> <trigger> [warm\|firm\|stern\|furious]"  (text, line 828)
+- "[Miscount] Nothing in sound/{ROOT}{voice}/{trig}/ to say (or it's off)."  (text, line 831)
 
 > Note for you (not shown in game): the console command lc_announce_tier
 
-- "[Miscount] {trig}: she would be {t} about it now (sociostability {or}, {Heat} violent things in ten minutes){or}."  (text, line 837)
+- "[Miscount] {trig}: she would be {t} about it now (sociostability {or}, {Heat} violent things in ten minutes){or}."  (text, line 839)
 
 ## arrests in the open (the owner's playtest, 7 November) (sv_livingcity_arrest.lua)
 
@@ -20271,33 +20272,44 @@ Made from version 6abef84a. Admin-only console messages and log lines are left o
 
 > Note for you (not shown in game): Why it can't happen now (nil: it can).
 
-- "Not during the Administrator's address."  (text, line 89)
-- "Not while an event is on."  (text, line 90)
-- "Not now."  (text, line 91)
+- "Not during the Administrator's address."  (text, line 130)
+- "Not while an event is on."  (text, line 131)
+- "Not now."  (text, line 132)
 
-> Note for you (not shown in game): Shell district n now. by: the Administrator who ordered it (nil: the city's own, or staff). Returns the number of canisters on their way, or nil and why not.
+> Note for you (not shown in game): What follows a shelling: the bulletin, the PA, Cubbage on Freq 7.
 
-- "Which district?"  (text, line 168)
-- "No territory here."  (text, line 169)
+- "The Combine shelled %s with headcrabs."  (message, line 234)
 
-> Note for you (not shown in game): part of: shell district
+> Note for you (not shown in game): the rest under cover (tunnels, sewers, rooms) nearest its rebel ground
 
-- "Nowhere in the open in {n} for a shell to come down."  (text, line 181)
-- "Shelling: %d canister(s) on %s (%s)%s"  (message, line 191)
-- "the city's own"  (message, line 191)
-- ", no infestation placed in the editor: headcrabs only"  (message, line 192)
+- "Nowhere in {n} for them to take root."  (text, line 280)
 
-> Note for you (not shown in game): Her order (F2 > City orders).
+> Note for you (not shown in game): part of: shell
 
-- "Only the City Administrator orders a shelling."  (text, line 199)
-- "Which district?"  (text, line 201)
-- "isn't in the Resistance's hands."  (text, line 202)
-- "The canisters aren't ready yet."  (text, line 203)
+- "Shelling: %d on %s (%s), %d under cover, %d canister(s)%s"  (message, line 311)
+- "the city's own"  (message, line 311)
+- ", no infestation placed in the editor: headcrabs only"  (message, line 312)
 
-> Note for you (not shown in game): For the admin panel and lc_territory: when the next can come, and the city's own.
+> Note for you (not shown in game): Shell district n now. by: the Administrator who ordered it (nil: staff).
 
-- "Shelling: the canisters are ready in about %d min."  (message, line 239)
-- "Shelling: the city's own in about %d min."  (message, line 240)
+- "Which district?"  (text, line 320)
+- "No territory here."  (text, line 321)
+
+> Note for you (not shown in game): part of: shell rebel ground
+
+- "not enough of the Resistance's ground in the open"  (text, line 336)
+
+> Note for you (not shown in game): Her order (F2 > City orders; it arrives with her other orders: sv_livingcity_ledger.lua's PlayerSay).
+
+- "Only the City Administrator orders a shelling."  (text, line 342)
+- "Which district?"  (text, line 344)
+- "isn't in the Resistance's hands."  (text, line 345)
+- "The canisters aren't ready yet."  (text, line 346)
+
+> Note for you (not shown in game): For lc_territory: when the next can come, and the rebel ground in the open.
+
+- "Shelling: the canisters are ready in about %d min."  (message, line 372)
+- "Shelling: %d patch(es) of rebel ground in the open (the city's own shell it from %d)."  (message, line 374)
 
 ## jobs that come with supply drops, and Union work orders that (sv_livingcity_sidejobs.lua)
 
@@ -20841,22 +20853,26 @@ Made from version 6abef84a. Admin-only console messages and log lines are left o
 - "And one last word. I can't arm people with speeches. If you have credits to spare, the fund needs them."  (text, line 86)
 - "One more thing. Some of ours are going out with crowbars, some with nothing at all. Give what you can, at the camp."  (text, line 87)
 
+> Note for you (not shown in game): not part of an answer: on Freq 7 a minute after a shelling (sv_livingcity_shelling.lua)
+
+- "They dropped headcrabs on our own people rather than face us. Remember that the next time she talks about order. Clear them out, and help your neighbours do the same."  (text, line 89)
+
 > Note for you (not shown in game): part of: say
 
-- "[Freq 7] Colonel Cubbage:"  (text, line 170)
-- "[Colonel Cubbage, at the camp]"  (text, line 170)
+- "[Freq 7] Colonel Cubbage:"  (text, line 172)
+- "[Colonel Cubbage, at the camp]"  (text, line 172)
 
 > Note for you (not shown in game): He answers now (pieces: what she said, or nil). True, or false and why not.
 
-- "He's already speaking."  (text, line 202)
-- "Off (lc_speech_answer 0)."  (text, line 203)
-- "There's no Resistance camp."  (text, line 206)
-- "The Combine are in the camp."  (text, line 207)
+- "He's already speaking."  (text, line 204)
+- "Off (lc_speech_answer 0)."  (text, line 205)
+- "There's no Resistance camp."  (text, line 208)
+- "The Combine are in the camp."  (text, line 209)
 
 > Note for you (not shown in game): part of: speech answer
 
-- "Colonel Cubbage answers her"  (on-screen notice, line 226)
-- "He's speaking at the camp now, and on Freq 7."  (on-screen notice, line 226)
+- "Colonel Cubbage answers her"  (on-screen notice, line 228)
+- "He's speaking at the camp now, and on Freq 7."  (on-screen notice, line 228)
 
 ## squad sizes and backup by radio (sv_livingcity_squads.lua) (sv_livingcity_squads.lua)
 
@@ -23689,75 +23705,75 @@ Made from version 6abef84a. Admin-only console messages and log lines are left o
 
 > Note for you (not shown in game): part of: grow territory
 
-- "it's as big as it gets (lc_territory_max, lc_infest_max, lc_territory_city_max)"  (text, line 487)
+- "it's as big as it gets (lc_territory_max, lc_infest_max, lc_territory_city_max)"  (text, line 497)
 
 > Note for you (not shown in game): no path nodes in it or near it: a round patch out past its edge, the way it always grew
 
-- "nowhere to grow: no path nodes lead out of it, and no open floor round its edge is big enough for a round patch (lay path nodes out of it in the editor)"  (text, line 503)
+- "nowhere to grow: no path nodes lead out of it, and no open floor round its edge is big enough for a round patch (lay path nodes out of it in the editor)"  (text, line 513)
 
 > Note for you (not shown in game): someone moves in
 
-- "Territory: %s grew at %s (%s), %d patches now"  (message, line 519)
-- "along %d path node link%s: %d cells in %d rectangles"  (message, line 520)
+- "Territory: %s grew at %s (%s), %d patches now"  (message, line 529)
+- "along %d path node link%s: %d cells in %d rectangles"  (message, line 530)
 
 > Note for you (not shown in game): part of: recede territory
 
-- "somewhere in the city"  (text, line 565)
-- "Dispatch: {who} has retaken anticitizen ground{place}."  (text, line 570)
-- "Dispatch: anticitizen ground{place} is retaken."  (text, line 570)
-- "We've lost the ground{place}."  (text, line 571)
-- "Dispatch: {who} has contained the infestation{place}."  (text, line 573)
-- "Dispatch: infestation{place} is contained."  (text, line 573)
-- "has retaken ground from the Resistance{place}."  (text, line 576)
-- "has contained the infestation{place}."  (text, line 577)
-- "[City] {line}"  (chat message, line 578)
+- "somewhere in the city"  (text, line 575)
+- "Dispatch: {who} has retaken anticitizen ground{place}."  (text, line 580)
+- "Dispatch: anticitizen ground{place} is retaken."  (text, line 580)
+- "We've lost the ground{place}."  (text, line 581)
+- "Dispatch: {who} has contained the infestation{place}."  (text, line 583)
+- "Dispatch: infestation{place} is contained."  (text, line 583)
+- "has retaken ground from the Resistance{place}."  (text, line 586)
+- "has contained the infestation{place}."  (text, line 587)
+- "[City] {line}"  (chat message, line 588)
 
 > Note for you (not shown in game): a patch with nobody left in it falls straight away
 
-- "cleared out"  (text, line 634)
+- "cleared out"  (text, line 644)
 
 > Note for you (not shown in game): a timer (regularly)
 
-- "pushed back"  (text, line 638)
+- "pushed back"  (text, line 648)
 
 > Note for you (not shown in game): part of: pay containment
 
-- "+{credits} credits"  (text, line 667)
-- "{ammo} rounds"  (text, line 673)
-- "[Civil Protection] Containment pay: %d infested put down. %s."  (message, line 678)
+- "+{credits} credits"  (text, line 677)
+- "{ammo} rounds"  (text, line 683)
+- "[Civil Protection] Containment pay: %d infested put down. %s."  (message, line 688)
 
 > Note for you (not shown in game): only while unchallenged, and only from where someone actually holds it
 
-- "it was fought over in the last {GetInt} minutes (lc_territory_calm)"  (text, line 729)
-- "no Resistance fighters are in it to hold it"  (text, line 731)
-- "nothing infested is in it to spread it"  (text, line 731)
-- "it's as big as it gets (lc_territory_max, lc_infest_max, lc_territory_city_max)"  (text, line 733)
+- "it was fought over in the last {GetInt} minutes (lc_territory_calm)"  (text, line 739)
+- "no Resistance fighters are in it to hold it"  (text, line 741)
+- "nothing infested is in it to spread it"  (text, line 741)
+- "it's as big as it gets (lc_territory_max, lc_infest_max, lc_territory_city_max)"  (text, line 743)
 
 > Note for you (not shown in game): Grow one territory of this kind now, whatever the clock says (the admin tools and lc_territory_grow). Returns the patch, or nil and why not.
 
-- "no {or} zones are placed"  (text, line 769)
+- "no {or} zones are placed"  (text, line 779)
 
 > Note for you (not shown in game): part of: territory status
 
-- "%s %s: %d patch%s grown (most %d), next growth %s, %d hit%s since the last push-back%s"  (message, line 793)
-- "Rebel ground"  (message, line 794)
-- "in {due}"  (text, line 795)
-- "due now"  (message, line 795)
-- ". Last try didn't grow: {lastWhy}"  (text, line 796)
+- "%s %s: %d patch%s grown (most %d), next growth %s, %d hit%s since the last push-back%s"  (message, line 803)
+- "Rebel ground"  (message, line 804)
+- "in {due}"  (text, line 805)
+- "due now"  (message, line 805)
+- ". Last try didn't grow: {lastWhy}"  (text, line 806)
 
 > Note for you (not shown in game): Commands
 
-- "[Miscount] No rebel or infestation zones placed."  (chat message, line 812)
+- "[Miscount] No rebel or infestation zones placed."  (chat message, line 822)
 
 > Note for you (not shown in game): the console command lc_territory_grow
 
-- "[Miscount] Usage: lc_territory_grow rebel\|infest"  (chat message, line 821)
-- "[Miscount] Grew {kind} territory {or}{or}"  (text, line 823)
-- "[Miscount] Couldn't grow: {why}"  (text, line 825)
+- "[Miscount] Usage: lc_territory_grow rebel\|infest"  (chat message, line 831)
+- "[Miscount] Grew {kind} territory {or}{or}"  (text, line 833)
+- "[Miscount] Couldn't grow: {why}"  (text, line 835)
 
 > Note for you (not shown in game): the console command lc_territory_reset
 
-- "[Miscount] Took back {n} grown patch{or}. Only the zones you placed are left."  (chat message, line 836)
+- "[Miscount] Took back {n} grown patch{or}. Only the zones you placed are left."  (chat message, line 846)
 
 ## territory grows along the path nodes (sv_livingcity_territorypaths.lua)
 

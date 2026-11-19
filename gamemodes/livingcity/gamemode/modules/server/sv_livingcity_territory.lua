@@ -449,29 +449,39 @@ function LC.TerritoryLeakSpot(seed, near, ok)
     end
     return nil
 end
--- Somewhere in the open near `near` that a shell can come down on (headcrab shelling,
--- sv_livingcity_shelling.lua): open floor with sky above it, clear of what a patch keeps
--- clear of, not on infested ground already nor on ground just cleared. A shell flies over
--- checkpoints. ok(p): an extra test of the spot. Returns pos, r or nil.
+-- Where headcrab shelling puts things (sv_livingcity_shelling.lua), clear of what a patch keeps
+-- clear of (housing blocks, Combine zones, prisons, checkpoints, queues, cells, spawns...), not on
+-- infested ground already nor on ground just cleared. A shell flies over checkpoints.
+--   mode nil       open floor near `near` with sky above it (a canister comes down on it)
+--   mode "covered" floor near `near` with no sky above it: tunnels, sewers, rooms (what crawls down)
+--   mode "nearest" the open floor with sky above nearest to `near` anywhere in the city, within NEAREST
+-- ok(p): an extra test of the spot. Returns pos, r or nil.
+local NEAREST = 3000
 local function OpenSky(p)
     local tr = util.TraceLine({ start = p + Vector(0, 0, 32), endpos = p + Vector(0, 0, 4096), mask = MASK_SOLID_BRUSHONLY })
     return not tr or not tr.Hit or tr.HitSky == true
 end
-function LC.TerritoryShellSpot(seed, near, ok)
+LC.TerritoryOpenSky = OpenSky
+function LC.TerritoryShellSpot(seed, near, ok, mode)
     local newR = math.Clamp((seed and seed.r or 400) * math.Rand(0.55, 0.8), 200, 500)
-    for _ = 1, 40 do
-        local p = LC.RandomWanderPos and LC.RandomWanderPos("citizen", near)
+    local best, bestR, bd
+    for _ = 1, (mode == "nearest" and 60 or 40) do
+        local p = LC.RandomWanderPos and (mode == "nearest" and LC.RandomWanderPos("citizen") or LC.RandomWanderPos("citizen", near))
         p = p and Floor(p + Vector(0, 0, 8))
         local fitR = p and FitRadius(p, newR)
-        if p and fitR and (not ok or ok(p)) and OpenSky(p) then
+        if p and fitR and (not ok or ok(p)) and OpenSky(p) == (mode ~= "covered") then
             local inside = false
             for _, z in ipairs(LC.Zones) do
                 if z.kind == "infest" and LCZ.Contains(z, p, 50) then inside = true break end
             end
-            if not inside and ClearOfOthers(p, fitR, "infest") and not LC.InfestQuietAt(p) then return p, fitR end
+            if not inside and ClearOfOthers(p, fitR, "infest") and not LC.InfestQuietAt(p) then
+                if mode ~= "nearest" then return p, fitR end
+                local d = (p.x - near.x) ^ 2 + (p.y - near.y) ^ 2
+                if d < NEAREST * NEAREST and (not bd or d < bd) then best, bestR, bd = p, fitR, d end
+            end
         end
     end
-    return nil
+    return best, bestR
 end
 function LC.TerritoryCanGrow(seed)
     return ClusterGrown(ClusterOf(seed)) < MaxFor(seed.kind) and LC.GrownCount(seed.kind) < cvCityMax:GetInt()
