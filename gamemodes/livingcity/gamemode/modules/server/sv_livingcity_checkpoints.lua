@@ -415,6 +415,9 @@ end
 local function OverwatchOnly(ply)
     if not LC.PlayerIsCP(ply) then return false, "Civil Protection units only." end
     if (LCF and LCF.IsOverwatch and LCF.IsOverwatch(ply)) or ply:IsAdmin() then return true end
+    -- (the Administrator's order to flush the sewers: the units on that job put theirs up at the containment wall,
+    -- whatever their rank, while the job asks for it; sv_livingcity_flush.lua)
+    if LC.FlushKit and LC.FlushKit(ply) then return true end
     return false, "The Overwatch puts those up. Civil Protection ranks read a power bank (E), pack a turret up, and recharge at a live bank."
 end
 LC.CanDeployCheckpoint = OverwatchOnly

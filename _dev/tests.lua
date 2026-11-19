@@ -41335,4 +41335,251 @@ _walls = savedWalls
 end
 Nov19_RebelAnswerTests()
 
+function SewerFlushTests() -- (the owner, 19 November: the Administrator sends the units into the sealed quarter to open its door into the sewers)
+    local F = LC.Flush
+    section("Sewer flush: not on her tablet where the map has no sealed quarter")
+    ok(F ~= nil and LC.OrderFlush ~= nil, "(the module is loaded)")
+    if not (F and LC.OrderFlush) then return end
+    _setcvar("lc_ledger", 1)
+    _setcvar("lc_territory_spread", 1)
+    F.Reset()
+    local FAR = Vector(-33000, 33000, 0)
+    local adm = newPlayer("FlushAdministrator", "admin")
+    local cop = newPlayer("FlushRecruit", "cp")
+    local ota = newPlayer("FlushSoldier", "ota")
+    local late = newPlayer("FlushLate", "cp")
+    local other = newPlayer("FlushOther", "cp")
+    _runtimers()
+    for _, p in ipairs({ cop, ota, late, other }) do p:SetPos(FAR) end
+    local realTargets, realSeen, realNotice, realXP = LC.ShellTargets, LC.IsSeen, LC.Notice, LC.AddXP
+    LC.ShellTargets = function() return {} end
+    LC.IsSeen = function() return false end
+    local notices, xp = {}, {}
+    LC.Notice = function(p, kind, title, text, secs) notices[#notices + 1] = { p = p, title = title, text = text } return realNotice(p, kind, title, text, secs) end
+    LC.AddXP = function(p, n, why) xp[p] = (xp[p] or 0) + n return realXP(p, n, why) end
+    local led = LC.Ledger()
+    local savedRes, savedAuth, savedDay = led.resistance, led.authority, led.day
+    led.resistance = 70
+    ok(F.Map() == nil and F.State() == "", "no sealed quarter in this map: nothing on her tablet")
+    local okO, whyO = LC.OrderFlush(adm)
+    ok(not okO and string.find(tostring(whyO), "no sealed quarter", 1, true) ~= nil, "and the order is refused", whyO)
+    local one, whyS = F.Start()
+    ok(not one and string.find(tostring(whyS), "lc_raven_post", 1, true) ~= nil and string.find(tostring(whyS), "lc_raven_door_open", 1, true) ~= nil,
+        "the staff's test button says which names the map lacks", whyS)
+
+    -- the map's part, stood in for: the four relays and the five marks, and three places for the quarter's infected
+    local G0 = Vector(52000, -52000, 0)
+    local made, relay = {}, {}
+    local function Mark(name, pos, cls)
+        local e = ents.Create(cls or "info_target")
+        e:SetPos(pos) e:SetName(name) e:Spawn()
+        made[#made + 1] = e
+        return e
+    end
+    for _, n in ipairs({ "lc_raven_gate_open", "lc_raven_gate_shut", "lc_raven_door_open", "lc_raven_door_shut" }) do relay[n] = Mark(n, G0 + Vector(0, 0, 500), "logic_relay") end
+    local function Pulls(n) local c = 0 for _, i in ipairs(relay[n].fired or {}) do if i == "Trigger" then c = c + 1 end end return c end
+    local post, inside = G0 + Vector(-192, 0, 16), G0 + Vector(192, 0, 16)
+    local house, console, sewer = G0 + Vector(1200, 300, 16), G0 + Vector(1200, 2400, -340), G0 + Vector(1250, 3100, -330)
+    Mark("lc_raven_post", post) Mark("lc_raven_inside", inside) Mark("lc_raven_house", house)
+    Mark("lc_raven_console", console, "prop_dynamic") Mark("lc_raven_sewer", sewer)
+    for i = 1, 3 do Mark("lc_raven_spawn", G0 + Vector(900 + i * 60, -200, 8)) end
+    local seed = LC.AddZone(G0 + Vector(1250, 5200, -330), 300, "infest", 0)
+    F.MapForget()
+    local m = F.Map()
+    ok(m ~= nil and m.post == post and m.console == console, "with the quarter's nine names in the map, it is found")
+    if not m then return end
+    ok(F.Side(inside, m) == true and F.Side(post, m) == false and F.Side(G0 + Vector(40, 0, 16), m) == nil and F.Side(FAR, m) == nil,
+        "by the wall it knows who is in and who is out; right in the gateway, or far off, it says neither")
+
+    section("Sewer flush: her order, only while the Resistance are strong, and it opens nothing")
+    local tmpl
+    for _, t in ipairs(LC.QuestTemplates) do if t.id == "cmb_flush" then tmpl = t end end
+    ok(tmpl ~= nil and tmpl.available(cop) == false, "the job is never on the boards by itself")
+    led.resistance = 50
+    okO, whyO = LC.OrderFlush(adm)
+    ok(F.State() == "weak" and not okO and string.find(tostring(whyO), "quiet", 1, true) ~= nil, "while the Resistance are quiet it is greyed, and refused", whyO)
+    LC.ShellTargets = function() return { 81 } end
+    ok(F.State() == "ready", "it is there once they hold a district")
+    LC.ShellTargets = function() return {} end
+    led.resistance = 70
+    ok(F.State() == "ready", "or once their strength in the ledger is high")
+    okO, whyO = LC.OrderFlush(cop)
+    ok(not okO and string.find(tostring(whyO), "Administrator", 1, true) ~= nil, "only the City Administrator orders it", whyO)
+    local okM, whyM = LC.TargetActions.flush(cop)
+    ok(not okM and string.find(tostring(whyM), "[The office]", 1, true) ~= nil and LC.SlashCommands.flush == nil,
+        "her tablet sends it by the menu's own call (no chat command), and a stale menu is told why not", whyM)
+    SetGlobal2String("lc_event", "curfew")
+    okO, whyO = LC.OrderFlush(adm)
+    ok(not okO and string.find(tostring(whyO), "event", 1, true) ~= nil, "not while an event is on", whyO)
+    SetGlobal2String("lc_event", "")
+    notices = {}
+    okO, whyO = LC.OrderFlush(adm)
+    ok(okO == true, "she gives the order", whyO)
+    local function Posted(f) for _, p in ipairs(LC.Postings[f] or {}) do if p.tmpl and p.tmpl.id == "cmb_flush" and not p.dead then return p end end end
+    local pc, po = Posted("cp"), Posted("ota")
+    ok(pc ~= nil and pc == po, "one job, the same one on Civil Protection's board and the Overwatch's")
+    ok(Pulls("lc_raven_gate_open") == 0 and Pulls("lc_raven_door_open") == 0 and F.gate == "shut" and F.door == "shut", "the order itself opens nothing")
+    local told = {}
+    for _, n in ipairs(notices) do told[n.p] = (told[n.p] or 0) + 1 end
+    ok(told[cop] == 1 and told[ota] == 1 and told[adm] == nil, "every unit is told once, and nobody else", tostring(told[cop]) .. " " .. tostring(told[ota]))
+    okO, whyO = LC.OrderFlush(adm)
+    ok(F.State() == "on" and not okO and string.find(tostring(whyO), "already", 1, true) ~= nil, "it can't be ordered twice over", whyO)
+    if not pc then return end
+
+    section("Sewer flush: a power bank and two turrets at the wall, by any unit on the job, then the wall opens")
+    for _, p in ipairs({ cop, ota, late }) do p.lcqNext = 0 end
+    ok(LC.AcceptPosting(cop, pc.id) == true and LC.AcceptPosting(ota, pc.id) == true and LC.AcceptPosting(late, pc.id) == true, "a Recruit, a soldier and another unit take it")
+    local q = LC.QuestOf[cop]
+    ok(q ~= nil and LC.QuestOf[ota] == q and LC.QuestOf[late] == q and #q.members == 3, "and are on the one job together")
+    if not q then return end
+    ok(#q.stages == 5 and q.violent == true and q.title == "Flush the sewers", "five steps, and a squad comes as on any violent job", #q.stages)
+    for _, st in ipairs(q.stages) do ok(st.kind ~= "hold" and st.kind ~= "survive", "no step is standing and waiting: " .. tostring(st.text)) end
+    local wallAim = { Hit = true, HitPos = post + Vector(-100, 60, 40), HitNormal = Vector(1, 0, 0) }
+    local groundAim = { Hit = true, HitPos = post + Vector(-80, -60, -16), HitNormal = Vector(0, 0, 1) }
+    cop.GetEyeTrace = function() return wallAim end
+    other.GetEyeTrace = cop.GetEyeTrace
+    ok(not LC.FlushKit(cop) and not LC.DeployPowerBank(cop), "away from the wall a Recruit still puts up nothing")
+    for _, p in ipairs({ cop, ota, late, other }) do p:SetPos(post + Vector(-50, 0, -16)) end
+    _run(1)
+    ok(q.stage == 2 and q.stages[2].need == 3, "at the wall: a power bank and two turrets to put up", q.stage)
+    ok(cop:GetNW2Bool("lc_flush_kit", false) and not other:GetNW2Bool("lc_flush_kit", false), "the unit tools show the two buttons to a unit on the job, and to no other Recruit")
+    local okX = LC.DeployPowerBank(other)
+    ok(not okX, "a unit who is not on the job is still refused")
+    local okB, whyB = LC.DeployPowerBank(cop)
+    local bank = cop.lcBank
+    ok(okB and IsValid(bank), "the Recruit on the job puts the power bank up on the wall", whyB)
+    _run(1)
+    ok(q.stage == 2 and q.stages[2].got == 1 and Pulls("lc_raven_gate_open") == 0, "one of three: the wall stays shut", q.stages[2].got)
+    cop.GetEyeTrace = function() return groundAim end
+    local okT1, whyT1 = LC.DeployTurret(cop)
+    groundAim = { Hit = true, HitPos = post + Vector(-80, 80, -16), HitNormal = Vector(0, 0, 1) }
+    ota.GetEyeTrace = function() return groundAim end
+    local okT2, whyT2 = LC.DeployTurret(ota)
+    ok(okT1 and okT2, "and a turret each from the Recruit and the soldier", tostring(whyT1) .. " / " .. tostring(whyT2))
+    _run(1)
+    ok(q.stage == 3 and Pulls("lc_raven_gate_open") == 1 and F.gate == "open", "the last one up: the containment wall opens", q.stage)
+    ok(not cop:GetNW2Bool("lc_flush_kit", false) and not LC.FlushKit(cop), "and the Recruit's leave to put those up is over")
+    cop.lcTurretNext = 0
+    ok(not LC.DeployTurret(cop), "another turret is refused him again")
+
+    section("Sewer flush: the wall stays open a minute, shuts on whoever is outside, and they are off the job")
+    cop:SetPos(inside + Vector(60, 0, -16))
+    ota:SetPos(inside + Vector(80, 40, -16))
+    _run(F.GATE_TAKES + 10)
+    ok(q.stage == 3 and Pulls("lc_raven_gate_shut") == 0, "two in and one still outside: it waits for him")
+    _run(F.GATE_OPEN)
+    ok(q.stage == 4 and Pulls("lc_raven_gate_shut") == 1 and F.gate == "shut", "the minute up: it shuts", q.stage)
+    ok(LC.QuestOf[late] == nil and #q.members == 2 and not F.inside[late], "the one left outside is off the job")
+    ok(F.inside[cop] and F.inside[ota] and q.data.committed == true, "the two inside are shut in")
+    other.lcqNext = 0
+    ok(LC.AcceptPosting(other, pc.id) ~= true and LC.QuestOf[other] == nil, "nobody joins from outside now")
+    F.gateNext = 0
+    _run(3)
+    ok(Pulls("lc_raven_gate_open") == 1, "and standing at the wall does not open it for them: the only way on is the door")
+    ok(#(q.data.zombies or {}) == 3, "the quarter's infected are waiting, one at each of the map's marks", #(q.data.zombies or {}))
+    local extra = true
+    for _, n in ipairs(q.data.zombies or {}) do if not (LC.NPCs[n] and LC.NPCs[n].unmanaged) then extra = false end end
+    ok(extra, "on top of the city's own number")
+
+    section("Sewer flush: down the tunnel, whoever reaches the console rewires it, and the door opens")
+    cop:SetPos(house)
+    _run(1)
+    ok(q.stage == 5, "the tunnel house found: now the console", q.stage)
+    ota:SetPos(console + Vector(40, 0, 0))
+    _run(1)
+    local g = LC.JobGames[ota]
+    ok(g ~= nil and g.kind == "wiring" and g.what == "the terminal" and q.data.wirer == ota, "the soldier reaches it first: the wiring is his")
+    ok(LC.JobGames[cop] == nil, "and nobody else's")
+    ota:Kill()
+    _run(1)
+    ok(LC.JobGames[ota] == nil and Pulls("lc_raven_door_open") == 0 and not q.done and not F.inside[ota], "he falls at it: the door stays shut, and the job goes on with the other")
+    cop:SetPos(console + Vector(40, 0, 0))
+    _run(1)
+    ok(LC.JobGames[cop] ~= nil and q.data.wirer == cop, "the Recruit reaches it: now the wiring is his")
+    local resBefore, grew = led.resistance, LC.TerritoryCanGrow(seed)
+    cop.chat = {}
+    xp = {}
+    LC.JobGameEnd(cop, "done")
+    ok(q.done and Pulls("lc_raven_door_open") == 1 and F.door == "open", "rewired: the Combine door opens, and the job is done")
+    ok(led.resistance == resBefore + F.RESIST, "the Resistance lose strength for it", led.resistance)
+    local flushed = 0
+    for _, z in ipairs(LC.ZonesOfKind("infest")) do if z.grown and z.why == "flushed" and z.pos:DistToSqr(sewer) < 16 then flushed = flushed + 1 end end
+    ok(not grew or flushed == 1, "the city's own infestation takes hold at the sewer end", flushed)
+    local said = false
+    for _, l in ipairs(cop.chat or {}) do if string.find(l, "Out the way you came, or on through the sewers", 1, true) then said = true end end
+    ok(said and (xp[cop] or 0) > 0 and xp[ota] == nil, "the living are told the two ways out, and paid (who died in there is a new person, off the job)", tostring(xp[cop]) .. " " .. tostring(xp[ota]))
+    ok(F.q == nil and F.State() == "done", "on her tablet: done today")
+
+    section("Sewer flush: the wall lets the living back out, and wall and door shut themselves")
+    F.gateNext = 0
+    cop:SetPos(inside + Vector(60, 0, -16))
+    _run(2)
+    ok(Pulls("lc_raven_gate_open") == 2 and F.gate == "open" and F.letOut == true, "back at the wall after the door is open: it opens for him")
+    cop:SetPos(post + Vector(-60, 0, -16))
+    _run(2)
+    ok(not F.inside[cop], "out on the city's side, he is out")
+    _run(F.GATE_TAKES + F.OUT_OPEN)
+    ok(Pulls("lc_raven_gate_shut") == 2 and F.gate == "shut", "and it shuts again behind him")
+    F.Tick(CurTime() + F.DOOR_OPEN - 60)
+    ok(F.door == "open" and Pulls("lc_raven_door_shut") == 0, "the sewer door stays open for ten minutes")
+    F.Tick(CurTime() + F.DOOR_OPEN + 1)
+    ok(F.door == "shut" and Pulls("lc_raven_door_shut") == 1, "then shuts itself")
+
+    section("Sewer flush: once a city day; a squad lost inside, or nobody going in, costs her authority")
+    okO, whyO = LC.OrderFlush(adm)
+    ok(not okO and string.find(tostring(whyO), "today", 1, true) ~= nil, "not twice in a day", whyO)
+    led.day = led.day + 1
+    led.resistance = 70
+    ok(F.State() == "ready" and LC.OrderFlush(adm) == true, "the next day she can order it again")
+    local p2 = Posted("cp")
+    ok(p2 ~= nil and p2 ~= pc, "(a new posting)")
+    if p2 then
+        cop.lcqNext = 0
+        cop:SetPos(FAR)
+        ok(LC.AcceptPosting(cop, p2.id) == true, "the Recruit takes it alone")
+        local q2 = LC.QuestOf[cop]
+        cop:SetPos(post + Vector(-50, 0, -16))
+        _run(2)
+        ok(q2.stage == 3 and Pulls("lc_raven_gate_open") == 3, "what was put up at the wall still stands: it opens as he reports", q2.stage)
+        cop:SetPos(inside + Vector(60, 0, -16))
+        _run(2)
+        ok(q2.stage == 4 and Pulls("lc_raven_gate_shut") == 3, "everyone on the job inside: it shuts at once, not after the minute", q2.stage)
+        local authBefore = led.authority
+        cop:Kill()
+        _run(1)
+        ok(q2.done and LC.QuestOf[cop] == nil and Pulls("lc_raven_door_open") == 1, "he dies in there: the squad is lost and the door stays shut")
+        ok(led.authority == authBefore + F.AUTHORITY, "and the Administrator's authority pays for it", led.authority)
+        cop.alive = true
+    end
+    led.day = led.day + 1
+    led.resistance = 70
+    ok(LC.OrderFlush(adm) == true, "(a third day, a third order)")
+    local p3 = Posted("cp")
+    if p3 then
+        late.lcqNext = 0
+        late:SetPos(FAR)
+        LC.AcceptPosting(late, p3.id)
+        local q3 = LC.QuestOf[late]
+        late:SetPos(post + Vector(-50, 0, -16))
+        _run(2)
+        ok(q3 ~= nil and q3.stage == 3 and F.gate == "open", "(the wall opens again)", q3 and (tostring(q3.stage) .. " got " .. tostring(q3.stages[2].got)))
+        _run(F.GATE_TAKES + F.GATE_OPEN + 2)
+        ok(q3 ~= nil and q3.done and F.gate == "shut" and not next(F.inside), "nobody goes in: the wall shuts and the job has failed")
+    end
+
+    -- as it was
+    LC.ShellTargets, LC.IsSeen, LC.Notice, LC.AddXP = realTargets, realSeen, realNotice, realXP
+    led.resistance, led.authority, led.day = savedRes, savedAuth, savedDay
+    for _, f in ipairs({ "cp", "ota" }) do for _, p in ipairs(LC.Postings[f] or {}) do if p.tmpl and p.tmpl.id == "cmb_flush" then p.dead = true end end end
+    for t, o in pairs(LC.DeployedTurrets) do if (o == cop or o == ota) and IsValid(t) then LC.DeployedTurrets[t] = nil t:Remove() end end
+    if IsValid(bank) then LC.DeployedBanks[bank] = nil bank:Remove() end
+    cop.lcBank = nil
+    for _, z in ipairs(LC.ZonesOfKind("infest")) do if z.why == "flushed" then LC.RemoveZone(z) end end
+    if seed then LC.RemoveZone(seed) end
+    for _, e in ipairs(made) do if IsValid(e) then e:Remove() end end
+    F.Reset()
+    for _, p in ipairs({ adm, cop, ota, late, other }) do p.alive = true p:SetPos(FAR) end
+end
+SewerFlushTests()
+
 return results.pass, results.fail, table.concat(results.lines, "\n")

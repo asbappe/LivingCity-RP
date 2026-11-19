@@ -191,7 +191,7 @@ local GUIDE = {
         "Down and bleeding? A Union medic may come running to help, as long as you're not wanted and there's no firefight.",
     } },
     { "The war for the city", {
-        "Rebel territory and the infestation spread if nobody fights them (across a floor, or down the stairs to the next floor), and shrink when people fight them. A badly infested block spreads it to the next. When the Administrator orders it, or the Resistance spread into the open, the Combine shell them with headcrab canisters, and the infestation takes root there.",
+        "Rebel territory and the infestation spread if nobody fights them (across a floor, or down the stairs to the next floor), and shrink when people fight them. A badly infested block spreads it to the next. When the Administrator orders it, or the Resistance spread into the open, the Combine shell them with headcrab canisters, and the infestation takes root there. Where the city has a sealed quarter, the Administrator can send the units into it to open its door into the sewers (F2 > City orders).",
         "A message appears on screen when you enter either one. F1 > What now? > The state of the city shows how much each side controls.",
         "When unrest is high (the Resistance is strong): more inspections and raids, and ration cuts. At full compliance, the rebels go quiet.",
         "Civil Protection units: anything that goes to HQ is only over the radio. Get your radio transmitter out (next to Hands) and right click: Request resupply, Call for backup (brings the nearest units running), Send my 10-20 (marks your location for other units), Issue a BOLO, a records check, your directives.",

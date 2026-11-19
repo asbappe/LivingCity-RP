@@ -4664,6 +4664,25 @@ local ok, e = pcall(function()
     sh = Find(Find(LC_CL.QuickRoleRoot(), "orders").page(), "shell")
     if not (sh and sh.disabled) then error("shelling should wait for the canisters: " .. tostring(sh and sh.label)) end
     _globals.lc_ledger, _globals.lc_shell_next, util.JSONToTable = ledWas, nextWas, jsonWas
+    -- the order to flush the sewers (sv_livingcity_flush.lua): only where the map has the sealed quarter; greyed with the reason; sent as "flush"
+    local flWas = _globals.lc_flush
+    local function Flush() return Find(Find(LC_CL.QuickRoleRoot(), "orders").page(), "flush") end
+    _globals.lc_flush = ""
+    if Flush() then error("the sewer flush is offered in a city with no sealed quarter") end
+    for state, why in pairs({ weak = "the Resistance are quiet", on = "under way", done = "done today", nounits = "no units on duty", busy = "not now" }) do
+        _globals.lc_flush = state
+        local it = Flush()
+        if not (it and it.disabled and string.find(it.label, why, 1, true)) then error("the sewer flush (" .. state .. ") should be greyed with '" .. why .. "': " .. tostring(it and it.label)) end
+    end
+    _globals.lc_flush = "ready"
+    local fl = Flush()
+    if not fl or fl.disabled then error("the sewer flush should be open to order: " .. tostring(fl and fl.label)) end
+    local saFl, gotFl = LC_CL.SendAction, nil
+    LC_CL.SendAction = function(cmd) gotFl = cmd end
+    fl.run()
+    LC_CL.SendAction = saFl
+    if gotFl ~= "flush" then error("the sewer flush sent " .. tostring(gotFl)) end
+    _globals.lc_flush = flWas
     for n = 1, 8 do
         local it = root.items[n]
         if it and it.page then

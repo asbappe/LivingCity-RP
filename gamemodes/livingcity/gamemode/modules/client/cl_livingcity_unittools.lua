@@ -174,7 +174,8 @@ function LC_CL.OpenUnitTools()
         Note(s, "Call in a squad from the Radio menu (radio out, right click): a dropship lands an Overwatch squad at the landing zone nearest you. One every fifteen minutes.")
     end
 
-    if LCF.IsOverwatch(me) or me:IsAdmin() then
+    -- (lc_flush_kit: on the job to flush the sewers, at the wall, any unit; sv_livingcity_flush.lua)
+    if LCF.IsOverwatch(me) or me:IsAdmin() or me:GetNW2Bool("lc_flush_kit", false) then
         s = Section("Checkpoints", "the Overwatch")
         Button(s, "Deploy a turret here", "At a checkpoint: near a power bank or a forcefield.", Do("checkpoint", "turret"))
         Button(s, "Put up a power bank", "On the wall you're facing; it powers turrets and forcefields near it.", Do("checkpoint", "bank"))
