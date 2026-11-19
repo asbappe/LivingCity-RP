@@ -161,6 +161,7 @@ class Vmf:
         self.boxes = [] # (box, seals) for the checks
         self.disp_count = 0
         self.disp_made = [] # (visgroup, edge points, quads folded, quads) of every displaced face
+        self.points = []    # (classname, place) of every point entity, for the checks
 
     def new_id(self):
         self.next += 1
@@ -217,6 +218,7 @@ class Vmf:
         self.ents.append(s)
 
     def point(self, cls, pos, keys=None, vis="LC canal: details"):
+        self.points.append((cls, tuple(pos)))
         s = 'entity\n{\n\t"id" "%d"\n\t"classname" "%s"\n' % (self.new_id(), cls)
         for k, v in (keys or {}).items():
             s += '\t"%s" "%s"\n' % (k, v)
@@ -352,6 +354,15 @@ class Plan:
                     first = False
 
 
+def test_extras(vmf, start, yaw, vis):
+    """What a piece needs to be compiled and walked BY ITSELF: somewhere to spawn and a sun (the owner's map's own
+    settings). Never in the file that goes into the real map: that already has both."""
+    vmf.point("info_player_start", start, {"angles": "0 %d 0" % yaw}, vis)
+    vmf.point("light_environment", (start[0], start[1], start[2] + 128), {
+        "_light": "190 214 193 50", "_ambient": "175 191 207 13", "_lightHDR": "-1 -1 -1 1", "_ambientHDR": "-1 -1 -1 1",
+        "_lightscaleHDR": "1", "_ambientscaleHDR": "1", "angles": "0 149 0", "pitch": "-70", "SunSpreadAngle": "0"}, vis)
+
+
 def gate_cap(vmf, cap, bars, vis):
     """What closes a gate while nothing is joined to it: a black wall across the culvert, and bars before it.
     In a visgroup of its own: delete the cap on each side of a join, and the two pieces are one."""
@@ -403,6 +414,15 @@ def check(vmf, seed, stoppers):
                     todo.append(m)
     if leak:
         problems.append("NOT SEALED: the air inside reaches the outside near (%d %d %d)" % tuple(axes[a][leak[a]] for a in range(3)))
+    else:
+        # every entity must be in that air (or inside a brush): one in the void outside is what the compiler calls a leak
+        out = []
+        for cls, pos in vmf.points:
+            c = tuple(bisect.bisect_right(axes[a], pos[a]) - 1 for a in range(3))
+            if c not in seen and c not in full:
+                out.append("%s at (%d %d %d)" % ((cls,) + tuple(pos)))
+        if out:
+            problems.append("%d entities are outside the sealed space (the compiler would report a leak): %s" % (len(out), "; ".join(out[:4])))
     return problems, len(seen)
 
 
@@ -440,6 +460,12 @@ def canal(args):
     # the two gates, closed until something is joined: each cap is inside the canal's own last 64 units
     gate_cap(vmf, B(4544, 2304, floor_z, 4608, 2816, floor_z + GATE_HIGH), [B(4520, 2304 + 24 + 48 * i, floor_z, 4528, 2304 + 32 + 48 * i, floor_z + GATE_HIGH) for i in range(10)], "LC canal: east gate's cap (delete to join)")
     gate_cap(vmf, B(2560, 3776, floor_z, 3072, 3840, floor_z + GATE_HIGH), [B(2560 + 24 + 48 * i, 3752, floor_z, 2560 + 32 + 48 * i, 3760, floor_z + GATE_HIGH) for i in range(10)], "LC canal: north gate's cap (delete to join)")
+
+    if args.test:
+        # by itself the canal is open where the road comes in (that side is the city): for a test alone, a wall there
+        tv = "LC canal: for testing alone (never in the real map)"
+        vmf.world_box(B(-64, -64, plan.base, 704, 0, plan.top), MAT["sky"], MAT["sky"], MAT["sky"], vis=tv)
+        test_extras(vmf, plan.world(320, 128, road_z + 16), 90, tv)
 
     # stairs from the quay down into the canal, along its south wall: a landing, then 31 steps east
     steps = [B(512, 256, floor_z, 640, 384, road_z)]
@@ -482,7 +508,7 @@ def canal(args):
 
     # the checks: the opening onto the road is stopped up, then a flood from the air over the canal floor
     stopper = B(0, -64, road_z - 64, 640, 0, plan.top)
-    problems, air = check(vmf, plan.world(1280, 512, floor_z + 32), [stopper])
+    problems, air = check(vmf, plan.world(1280, 512, floor_z + 32), [] if args.test else [stopper])
     world_n = sum(1 for _, w in vmf.boxes if w)
     xs = [b[0] for b, _ in vmf.boxes] + [b[3] for b, _ in vmf.boxes]
     ys = [b[1] for b, _ in vmf.boxes] + [b[4] for b, _ in vmf.boxes]
@@ -495,7 +521,8 @@ def canal(args):
         for p in problems:
             print("  PROBLEM: " + p)
     else:
-        print("  checked: every corner on the grid; sealed (a flood from the air inside stays inside, with the road's opening stopped up)")
+        print("  checked: every corner on the grid; sealed (a flood from the air inside stays inside, %s)" % (
+            "by itself: this is the test version" if args.test else "with the road's opening stopped up: by itself this file is OPEN to the road and will leak"))
     return vmf, problems
 
 
@@ -510,12 +537,14 @@ def main():
     ap.add_argument("--road-sky", type=int, default=2784, help="canal: the height of the sky over the road it joins (default 2784)")
     ap.add_argument("--first-node", type=int, default=None, help="the first path node id to use (default: 4000 canal, 4400 and 4800 the forests; the map's own stop at 3043)")
     ap.add_argument("--preview", help="forests: also write a picture of the piece from above to this file (needs Pillow)")
+    ap.add_argument("--test", action="store_true", help="write lc_PIECE_test.vmf instead: the piece made to compile and walk by itself (a spawn point, a sun, "
+                    "and for the canal a wall where the road comes in). Never put the test file in the real map.")
     args = ap.parse_args()
     if args.piece == "canal":
         args.origin = args.origin or (3328, 1856)
         args.first_node = args.first_node or 4000
     vmf, problems = pieces[args.piece](args)
-    out = args.out or "lc_%s.vmf" % args.piece
+    out = args.out or "lc_%s%s.vmf" % (args.piece, "_test" if args.test else "")
     with open(out, "w") as f:
         f.write(vmf.text())
     print("  written: " + out)

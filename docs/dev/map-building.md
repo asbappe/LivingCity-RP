@@ -12,6 +12,8 @@ python3 map_build.py forest_cave --preview cave.png          # lc_forest_cave.vm
 
 `--origin X Y` moves a piece, `--floor Z` sets a forest's gate floor (400), `--first-node N` its first path node id.
 
+**`--test` writes `lc_PIECE_test.vmf`: the piece made to compile and be walked BY ITSELF** (a spawn point, the map's own sun, and for the canal a sky wall where the road comes in), all in a visgroup "for testing alone (never in the real map)". The owner's first compile (19 November, vbsp++ on `lc_canal.vmf` alone) leaked at the quay's path node, 3808 1952 672: not a fault in the piece, the canal is open to the road by design and was compiled without the city. The tool's flood check gives the same leak when the road's opening is not stopped up, and now also fails if any entity is outside the sealed space. What that compile did show: vbsp++ read the file and its brushes without complaint.
+
 ## How a piece is made
 
 - **Boxes on a grid (`Plan`):** a piece is drawn on 64-unit squares from above (`Plan.paint`): each square is open under the sky, open under a ceiling ("low"), or nothing. From that come a floor block under every open square, a lid over it, and a solid block in every square touching an open one (corners too), so it is sealed by construction; alike squares are joined into the biggest rectangles. Walls have looks by height (`bands`). Used for the canal and the bunker.

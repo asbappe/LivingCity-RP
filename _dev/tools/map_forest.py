@@ -25,7 +25,7 @@ has checked is how any of it LOOKS: this was made without seeing it. docs/dev/ma
 import math
 import random
 
-from map_build import CELL, GATE_HIGH, GATE_WIDE, MAT, Plan, Vmf, check, gate_cap
+from map_build import CELL, GATE_HIGH, GATE_WIDE, MAT, Plan, Vmf, check, gate_cap, test_extras
 
 PATCH, STEP, WALL = 512, 64, 128
 
@@ -149,6 +149,7 @@ class Forest:
         self.first_node = first_node
         self.problems = []
         self.notes = []
+        self.test = False
 
     def vis(self, what):
         return "LC %s: %s" % (self.name, what)
@@ -397,6 +398,11 @@ class Forest:
 
     def finish(self):
         self.vmf.point("env_cubemap", self.w(self.W / 2, self.D / 2, self.natural(self.W / 2, self.D / 2) + 96), {"cubemapsize": "0"}, self.vis("structures"))
+        if self.test:
+            # (to compile and walk it by itself: a spawn point on the trail just inside the gate, and the map's sun)
+            sx, sy = self.st(self.gate[1] + GATE_WIDE / 2, 220)
+            yaw = {"west": 0, "south": 90, "east": 180, "north": 270}[self.gate[0]]
+            test_extras(self.vmf, self.w(sx, sy, self.z0 + 16), yaw, self.vis("for testing alone (never in the real map)"))
         problems, air = check(self.vmf, self.w(self.W / 2, self.D / 2, self.lid - 100), [])
         self.problems += problems
         self.skin_check()
@@ -610,6 +616,7 @@ class BunkerForest(Forest):
 
 def forest_bunker(args):
     f = BunkerForest("forest (bunker, pond)", tuple(args.origin or (8064, 1088)), args.floor, 31, args.first_node or 4400, ("west", 3072))
+    f.test = bool(getattr(args, "test", False))
     f.setup()
     f.shell()
     f.ground()
@@ -892,6 +899,7 @@ class CaveForest(Forest):
 
 def forest_cave(args):
     f = CaveForest("forest (cave, stream)", tuple(args.origin or (5632, 5824)), args.floor, 47, args.first_node or 4800, ("south", 256))
+    f.test = bool(getattr(args, "test", False))
     f.setup()
     f.shell()
     f.ground()
