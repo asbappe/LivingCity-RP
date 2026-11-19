@@ -4,7 +4,7 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version db00989. Admin-only console messages and log lines are left out.
+Made from version 796cc2b. Admin-only console messages and log lines are left out.
 
 13176 lines, from 370 files.
 
@@ -13423,31 +13423,31 @@ Made from version db00989. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: hang poster
 
-- "There's no such poster on the roll."  (text, line 198)
-- "Only the Resistance pastes those up."  (text, line 200)
-- "Posters go on a wall."  (text, line 202)
+- "There's no such poster on the roll."  (text, line 206)
+- "Only the Resistance pastes those up."  (text, line 208)
+- "Posters go on a wall."  (text, line 210)
 
 > Note for you (not shown in game): a fresh sheet over one that's been painted on (a hand-hung one becomes the poster chosen)
 
-- "There's a poster here already."  (text, line 206)
-- "Not now. The walls are being watched."  (text, line 213)
+- "There's a poster here already."  (text, line 214)
+- "Not now. The walls are being watched."  (text, line 221)
 
 > Note for you (not shown in game): part of: hang poster
 
-- "There's one of ours close by already. Find another street."  (text, line 216)
-- "The city has enough posters up ({PosterHangMax}). Take one down first."  (text, line 221)
-- "It won't stick."  (text, line 224)
+- "There's one of ours close by already. Find another street."  (text, line 224)
+- "The city has enough posters up ({PosterHangMax}). Take one down first."  (text, line 229)
+- "It won't stick."  (text, line 232)
 
 > Note for you (not shown in game): The Resistance paints over a poster (a spray can: sv_livingcity_scavenge.lua). Their own paste-ups are left alone.
 
-- "Look at a poster."  (text, line 245)
-- "That one is ours."  (text, line 246)
-- "Someone has seen to this one already."  (text, line 247)
+- "Look at a poster."  (text, line 255)
+- "That one is ours."  (text, line 256)
+- "Someone has seen to this one already."  (text, line 257)
 
 > Note for you (not shown in game): part of: take down poster
 
-- "Look at a poster."  (text, line 255)
-- "Look at a poster."  (text, line 256)
+- "Look at a poster."  (text, line 265)
+- "Look at a poster."  (text, line 266)
 
 ## the state of the city, kept from day to day (the owner, (sv_livingcity_ledger.lua)
 
@@ -25789,62 +25789,62 @@ Made from version db00989. Admin-only console messages and log lines are left ou
 - "You fold the note into your pocket."  (text, line 136)
 - "You've got enough of your writing out there already."  (text, line 138)
 - "Look at a wall to put it up on."  (text, line 143)
-- "You put it up."  (text, line 163)
-- "You leave the note."  (text, line 163)
+- "You put it up."  (text, line 164)
+- "You leave the note."  (text, line 164)
 
 > Note for you (not shown in game): part of: take note
 
-- "You can't carry any more notes."  (text, line 192)
-- "You take it."  (text, line 198)
+- "You can't carry any more notes."  (text, line 193)
+- "You take it."  (text, line 199)
 
 > Note for you (not shown in game): part of: tear down
 
-- "unauthorised notice removed"  (text, line 208)
-- "You tear it down."  (text, line 209)
+- "unauthorised notice removed"  (text, line 209)
+- "You tear it down."  (text, line 210)
 
 > Note for you (not shown in game): who it could be posted to, as a letter (sv_livingcity_mail.lua)
 
-- "You've got enough of your writing out there already."  (text, line 224)
+- "You've got enough of your writing out there already."  (text, line 225)
 
 > Note for you (not shown in game): part of: carried note
 
-- "You tear it up."  (text, line 239)
+- "You tear it up."  (text, line 240)
 
 > Note for you (not shown in game): part of: broadcast
 
-- "Only the City Administrator speaks to the whole city."  (text, line 293)
-- "Say something."  (text, line 295)
-- "Give the city a moment."  (text, line 296)
-- "The City Administrator"  (text, line 298)
+- "Only the City Administrator speaks to the whole city."  (text, line 294)
+- "Say something."  (text, line 296)
+- "Give the city a moment."  (text, line 297)
 - "The City Administrator"  (text, line 299)
-- "[{who}] {text}"  (chat message, line 307)
+- "The City Administrator"  (text, line 300)
+- "[{who}] {text}"  (chat message, line 308)
 
 > Note for you (not shown in game): The law
 
-- "Obey the instructions of Civil Protection at all times."  (text, line 317)
-- "Carry your identification. Present it when asked."  (text, line 318)
-- "Curfew is absolute. Be in your residence when it is called."  (text, line 319)
-- "Gatherings of more than three citizens require a permit."  (text, line 320)
-- "Do not run. Do not loiter. Do not obstruct a Civil Protection unit."  (text, line 321)
-- "Possession of weapons, unregistered radios or Resistance materials is forbidden."  (text, line 322)
-- "Report anticitizen activity. Inaction is conspiracy."  (text, line 323)
-- "Rations are allocated by standing. Do not take what is not yours."  (text, line 324)
+- "Obey the instructions of Civil Protection at all times."  (text, line 318)
+- "Carry your identification. Present it when asked."  (text, line 319)
+- "Curfew is absolute. Be in your residence when it is called."  (text, line 320)
+- "Gatherings of more than three citizens require a permit."  (text, line 321)
+- "Do not run. Do not loiter. Do not obstruct a Civil Protection unit."  (text, line 322)
+- "Possession of weapons, unregistered radios or Resistance materials is forbidden."  (text, line 323)
+- "Report anticitizen activity. Inaction is conspiracy."  (text, line 324)
+- "Rations are allocated by standing. Do not take what is not yours."  (text, line 325)
 
 > Note for you (not shown in game): part of: set law
 
-- "Only the City Administrator writes the law."  (text, line 345)
-- "Write the law."  (text, line 349)
-- "No such law."  (text, line 352)
-- "Laws go from 1 to {list}."  (text, line 355)
-- "[City] The law has changed. F1 > What now? > The city's laws."  (chat message, line 359)
+- "Only the City Administrator writes the law."  (text, line 346)
+- "Write the law."  (text, line 350)
+- "No such law."  (text, line 353)
+- "Laws go from 1 to {list}."  (text, line 356)
+- "[City] The law has changed. F1 > What now? > The city's laws."  (chat message, line 360)
 
 > Note for you (not shown in game): Chat
 
-- "Usage: !setlaw <number> <text>"  (chat message, line 399)
+- "Usage: !setlaw <number> <text>"  (chat message, line 400)
 
 > Note for you (not shown in game): part of: dellaw
 
-- "Usage: !dellaw <number>"  (chat message, line 405)
+- "Usage: !dellaw <number>"  (chat message, line 406)
 
 ## the stalkers of the Combine zones (sv_livingcity_zonestalkers.lua)
 

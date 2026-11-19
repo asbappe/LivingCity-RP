@@ -143,6 +143,7 @@ function LC.WriteNote(ply, text, mode, signed, sigAs)
             return false, "Look at a wall to put it up on."
         end
         local a = tr.HitNormal:Angle()
+        a.r = a.r + (LC.PosterTilt and LC.PosterTilt() or 0) -- (a little crooked, as anything put up by hand: kept with it)
         n.poster = true
         n.pos = { x = tr.HitPos.x + tr.HitNormal.x, y = tr.HitPos.y + tr.HitNormal.y, z = tr.HitPos.z }
         n.ang = { p = a.p, y = a.y, r = a.r }
@@ -151,7 +152,7 @@ function LC.WriteNote(ply, text, mode, signed, sigAs)
         local spot = ply:GetPos() + Vector(fwd.x, fwd.y, 0) * 35
         local ground = LC.GroundAt and LC.GroundAt(spot + Vector(0, 0, 30)) or spot
         n.pos = { x = ground.x, y = ground.y, z = ground.z + 1 }
-        n.ang = { p = 0, y = math.floor(ply:EyeAngles().y), r = 0 }
+        n.ang = { p = 0, y = math.floor(ply:EyeAngles().y + math.random(-12, 12)), r = 0 } -- (dropped, not laid square)
     end
     LC.TakeItem(ply, "paper", 1)
     LC.NoteSerial = (LC.NoteSerial or 0) + 1

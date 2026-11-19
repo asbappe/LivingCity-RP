@@ -192,6 +192,14 @@ function LC.HungPosters(pasteUps)
     return out
 end
 
+-- A slight tilt, left or right, for whatever is put up on a wall by hand (the owner, 19 November: "they look SO perfect
+-- that it's unjarring and unnatural"): never quite straight, never more than a few degrees. Degrees of roll.
+LC.PosterTiltRange = { 1.5, 5 }
+function LC.PosterTilt()
+    local lo, hi = LC.PosterTiltRange[1], LC.PosterTiltRange[2]
+    return (math.random(0, 1) == 0 and -1 or 1) * (lo + math.random() * (hi - lo))
+end
+
 function LC.HangPoster(ply, kind, pos, normal, pasted) -- (pasted: a paste-up from someone's pockets, whoever they are)
     local stored = scripted_ents and scripted_ents.GetStored and scripted_ents.GetStored("lc_civposter")
     local notices = stored and stored.t and stored.t.Notices or LC.CivPosterTips
@@ -223,7 +231,9 @@ function LC.HangPoster(ply, kind, pos, normal, pasted) -- (pasted: a paste-up fr
     local e = ents.Create("lc_civposter")
     if not IsValid(e) then return false, "It won't stick." end
     e:SetPos(pos + normal * 1)
-    e:SetAngles(normal:Angle())
+    local tilted = normal:Angle()
+    tilted.r = tilted.r + LC.PosterTilt() -- (put up by hand: a little crooked)
+    e:SetAngles(tilted)
     e.lcFixedKind = kind
     e.lcHungBy = ply
     LC.PosterSeq = (LC.PosterSeq or 0) + 1
