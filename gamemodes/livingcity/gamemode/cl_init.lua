@@ -195,6 +195,7 @@ local GUIDE = {
         "When unrest is high (the Resistance is strong): more inspections and raids, and ration cuts. At full compliance, the rebels go quiet.",
         "Civil Protection units: anything that goes to HQ is only over the radio. Get your radio transmitter out (next to Hands) and right click: Request resupply, Call for backup (brings the nearest units running), Send my 10-20 (marks your location for other units), Issue a BOLO, a records check, your directives.",
         "Resistance: the quartermaster in rebel territory sells gear. Members and up can press E on fighters to have them follow you.",
+        "The small TV in the camp shows the Resistance's fund, which buys its fighters' guns: press E on it to see where the credits went, and anyone can donate there.",
         "Fighters following you stick with you above all else. They hold fire until you or the Combine start shooting, then shoot while on the move.",
         "Rebels fight as guerrillas: they let a Civil Protection unit get close before shouting, and out in the city they stay out of sight. Units who see an armed rebel in the street open fire.",
         "In their base, rebels keep busy: patrols, the lab bench, crates, the garden, the fire, sleep. Now and then one or two leave to scavenge and bring supplies back.",
