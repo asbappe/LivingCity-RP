@@ -52,6 +52,9 @@ MAT = {
     "black": "tools/toolsblack",
     "mud": "nature/blendmuddirt001a",   # hl2: mud, blending to dirt
     "clip": "tools/toolsplayerclip",
+    "portal": "tools/toolsareaportal",
+    "trigger": "tools/toolstrigger",
+    "fence": "metal/metalfence007a",    # hl2: chain link
 }
 
 
@@ -165,6 +168,7 @@ class Vmf:
         self.disp_made = [] # (visgroup, edge points, quads folded, quads) of every displaced face
         self.points = []    # (classname, place) of every point entity, for the checks
         self.shapes = 0     # solids that aren't boxes
+        self.portals = []   # the areaportals' boxes, for the checks
 
     def new_id(self):
         self.next += 1
@@ -179,7 +183,7 @@ class Vmf:
         return ('%seditor\n%s{\n%s\t"color" "%s"\n%s\t"visgroupid" "%d"\n%s\t"visgroupshown" "1"\n%s\t"visgroupautoshown" "1"\n%s}\n'
                 % (indent, indent, indent, colour, indent, self.vis(vis), indent, indent, indent))
 
-    def box_text(self, box, sides, top, bottom, vis, indent="\t", faces=None, disp=None):
+    def box_text(self, box, sides, top, bottom, vis, indent="\t", faces=None, disp=None, tex=0.25):
         """A box brush. sides, top, bottom: materials; faces: {face name: material} for any that differ;
         disp: {face name: (power, target(i, j) -> (x, y, z), alpha(i, j) or None)} to displace a face.
         Corners are written clockwise seen from outside, as Hammer++ does (its vertices_plus), and a
@@ -193,7 +197,7 @@ class Vmf:
         for name in FACE_ORDER:
             p = face_corners(box, name)
             mat = (faces or {}).get(name) or (top if name == "top" else bottom if name == "bottom" else sides)
-            u, v = FACE_AXES[name]
+            u, v = (a.replace("0.25", _num(tex)) for a in FACE_AXES[name])
             s += '%s\tside\n%s\t{\n%s\t\t"id" "%d"\n%s\t\t"plane" "%s"\n' % (t, t, t, self.new_id(), t, " ".join("(%d %d %d)" % q for q in p[:3]))
             s += '%s\t\tvertices_plus\n%s\t\t{\n%s%s\t\t}\n' % (t, t, "".join('%s\t\t\t"v" "%d %d %d"\n' % ((t,) + q) for q in p), t)
             s += ('%s\t\t"material" "%s"\n%s\t\t"uaxis" "%s"\n%s\t\t"vaxis" "%s"\n%s\t\t"rotation" "0"\n%s\t\t"lightmapscale" "%d"\n%s\t\t"smoothing_groups" "0"\n'
@@ -250,29 +254,67 @@ class Vmf:
         s += self.editor(vis, "0 180 0") + "}\n"
         self.ents.append(s)
 
-    def world_box(self, box, sides, top=None, bottom=None, vis="LC canal: walls and floors", faces=None, disp=None, seals=True):
+    def world_box(self, box, sides, top=None, bottom=None, vis="LC canal: walls and floors", faces=None, disp=None, seals=True, tex=0.25):
         """A brush of the world. One with a displaced face seals nothing (the compiler drops the rest of it); nor does a clip."""
         nd = MAT["nodraw"]
-        self.world.append(self.box_text(box, sides, top or nd, bottom or nd, vis, faces=faces, disp=disp))
+        self.world.append(self.box_text(box, sides, top or nd, bottom or nd, vis, faces=faces, disp=disp, tex=tex))
         self.boxes.append((box, seals and not disp))
 
-    def detail(self, boxes, mat, vis="LC canal: details", top=None, faces=None):
+    def detail(self, boxes, mat, vis="LC canal: details", top=None, faces=None, tex=0.25):
         """Brushes that don't seal or cut up the map (func_detail): stairs, beams, bars, low walls."""
         s = 'entity\n{\n\t"id" "%d"\n\t"classname" "func_detail"\n' % self.new_id()
         for b in boxes:
-            s += self.box_text(b, mat, top or mat, mat, vis, faces=faces)
+            s += self.box_text(b, mat, top or mat, mat, vis, faces=faces, tex=tex)
             self.boxes.append((b, False))
         s += self.editor(vis, "0 180 0") + "}\n"
         self.ents.append(s)
 
-    def point(self, cls, pos, keys=None, vis="LC canal: details"):
+    @staticmethod
+    def wires(connections):
+        """What an entity does to others: [(its output, the other's name, the input, a value, seconds later), ...].
+        Written as Hammer++ writes them in the owner's map (the parts held apart by the escape character)."""
+        if not connections:
+            return ""
+        s = "\tconnections\n\t{\n"
+        for out, target, inp, value, delay in connections:
+            s += '\t\t"%s" "%s"\n' % (out, "\x1b".join((target, inp, str(value), _num(delay), "-1")))
+        return s + "\t}\n"
+
+    def point(self, cls, pos, keys=None, vis="LC canal: details", connections=None):
         self.points.append((cls, tuple(pos)))
         s = 'entity\n{\n\t"id" "%d"\n\t"classname" "%s"\n' % (self.new_id(), cls)
         for k, v in (keys or {}).items():
             s += '\t"%s" "%s"\n' % (k, v)
         s += '\t"origin" "%d %d %d"\n' % tuple(pos)
+        s += self.wires(connections)
         s += self.editor(vis, "220 30 220") + "}\n"
         self.ents.append(s)
+
+    def brush_entity(self, cls, keys, boxes, sides, vis, top=None, faces=None, connections=None):
+        """An entity made of brushes: a moving door, a button, a trigger, an areaportal. None of them seals."""
+        s = 'entity\n{\n\t"id" "%d"\n\t"classname" "%s"\n' % (self.new_id(), cls)
+        for k, v in (keys or {}).items():
+            s += '\t"%s" "%s"\n' % (k, v)
+        s += self.wires(connections)
+        for b in boxes:
+            mat, fc = sides, faces
+            if len(b) == 2:      # (a box, its own material) or (a box, {face: material})
+                b, own = b
+                mat, fc = (own, faces) if isinstance(own, str) else (sides, own)
+            s += self.box_text(b, mat, top or mat, mat, vis, faces=fc)
+            self.boxes.append((b, False))
+        s += self.editor(vis, "220 30 220") + "}\n"
+        self.ents.append(s)
+
+    def areaportal(self, box, vis, name=None):
+        """A sheet across an opening that the game sees through only as far as the opening shows (and not at all when
+        told to close): what keeps one area from being drawn while standing in another. It has to fill the opening
+        from wall to wall, with open air on both its sides."""
+        keys = {"StartOpen": "1", "PortalVersion": "1"}
+        if name:
+            keys["targetname"] = name
+        self.portals.append(box)
+        self.brush_entity("func_areaportal", keys, [box], MAT["portal"], vis)
 
     def text(self):
         s = 'versioninfo\n{\n\t"editorversion" "400"\n\t"editorbuild" "8873"\n\t"mapversion" "1"\n\t"formatversion" "100"\n\t"prefab" "0"\n}\n'
@@ -464,15 +506,11 @@ def gate_cap(vmf, cap, bars, along, vis):
 # Checking a piece before the owner sees it
 # ---------------------------------------------------------------------------
 
-def check(vmf, seed, stoppers):
-    """Corners on the grid, no brush inside another of the world's, and no way from the air inside
-    (seed) to the outside once the piece's one opening is stopped up (stoppers: boxes)."""
-    problems = []
-    world = [b for b, is_world in vmf.boxes if is_world]
-    for b, _ in vmf.boxes:
-        if any(v != int(v) for v in b):
-            problems.append("a corner off the 1-unit grid: %r" % (b,))
-    solid = world + list(stoppers)
+def flood(vmf, seed, stoppers):
+    """Where the air at seed reaches, among the piece's sealing brushes and some stopper boxes. Returns (the cells
+    reached, the solid cells, the cuts along each axis, a cell on the outside if the air got there). Exact for boxes:
+    space is cut at every brush face."""
+    solid = [b for b, seals in vmf.boxes if seals] + list(stoppers)
     axes = []
     for a in range(3):
         cuts = sorted(set([b[a] for b in solid] + [b[a + 3] for b in solid]))
@@ -487,7 +525,7 @@ def check(vmf, seed, stoppers):
                     full.add((i, j, k))
     start = tuple(bisect.bisect_right(axes[a], seed[a]) - 1 for a in range(3))
     if start in full:
-        return problems + ["the check's starting point is inside a brush"], 0
+        return None, full, axes, None
     seen, todo, leak = {start}, [start], None
     while todo:
         c = todo.pop()
@@ -502,6 +540,25 @@ def check(vmf, seed, stoppers):
                 if m not in seen and m not in full:
                     seen.add(m)
                     todo.append(m)
+    return seen, full, axes, leak
+
+
+def reaches(flooded, point):
+    """Did that flood reach this point?"""
+    seen, full, axes, leak = flooded
+    return seen is not None and tuple(bisect.bisect_right(axes[a], point[a]) - 1 for a in range(3)) in seen
+
+
+def check(vmf, seed, stoppers):
+    """Corners on the grid, and no way from the air inside (seed) to the outside once the piece's one opening is
+    stopped up (stoppers: boxes); then every entity must be in that air."""
+    problems = []
+    for b, _ in vmf.boxes:
+        if any(v != int(v) for v in b):
+            problems.append("a corner off the 1-unit grid: %r" % (b,))
+    seen, full, axes, leak = flood(vmf, seed, stoppers)
+    if seen is None:
+        return problems + ["the check's starting point is inside a brush"], 0
     if leak:
         problems.append("NOT SEALED: the air inside reaches the outside near (%d %d %d)" % tuple(axes[a][leak[a]] for a in range(3)))
     else:
@@ -513,6 +570,29 @@ def check(vmf, seed, stoppers):
                 out.append("%s at (%d %d %d)" % ((cls,) + tuple(pos)))
         if out:
             problems.append("%d entities are outside the sealed space (the compiler would report a leak): %s" % (len(out), "; ".join(out[:4])))
+        # every areaportal: open air on both its faces, and wall, floor or roof past each of its four edges
+        def solid_at(pt):
+            return tuple(bisect.bisect_right(axes[a], pt[a]) - 1 for a in range(3)) in full
+        for box in vmf.portals:
+            size = [box[a + 3] - box[a] for a in range(3)]
+            thin = size.index(min(size))
+            mid = [(box[a] + box[a + 3]) / 2.0 for a in range(3)]
+            bad = []
+            for d in (-6, 6):
+                pt = list(mid)
+                pt[thin] = (box[thin] if d < 0 else box[thin + 3]) + d
+                if solid_at(pt):
+                    bad.append("no air on one side")
+            for a in range(3):
+                if a == thin:
+                    continue
+                for d in (-6, 6):
+                    pt = list(mid)
+                    pt[a] = (box[a] if d < 0 else box[a + 3]) + d
+                    if not solid_at(pt):
+                        bad.append("open past its %s edge" % ("xyz"[a] + ("-" if d < 0 else "+")))
+            if bad:
+                problems.append("the areaportal at (%d %d %d) would not work: %s" % (mid[0], mid[1], mid[2], ", ".join(bad)))
     return problems, len(seen)
 
 
@@ -556,6 +636,13 @@ def canal(args):
     # the two gates, closed until something is joined: each cap is inside the canal's own last 64 units
     gate_cap(vmf, B(4544, 2304, floor_z, 4608, 2816, floor_z + GATE_HIGH), B(4520, 2304, floor_z, 4528, 2816, floor_z + GATE_HIGH), "y", "LC canal: east gate's cap (delete to join)")
     gate_cap(vmf, B(2560, 3776, floor_z, 3072, 3840, floor_z + GATE_HIGH), B(2560, 3752, floor_z, 3072, 3760, floor_z + GATE_HIGH), "x", "LC canal: north gate's cap (delete to join)")
+
+    # areaportals: across each gate's culvert and across the road's end, so what is beyond one is drawn only as far as
+    # it can be seen through it (each stands a little in from the opening, so it has air on both sides even when capped)
+    pv = "LC canal: areaportals"
+    vmf.areaportal(B(4478, 2304, floor_z, 4480, 2816, floor_z + GATE_HIGH), pv)
+    vmf.areaportal(B(2560, 3710, floor_z, 3072, 3712, floor_z + GATE_HIGH), pv)
+    vmf.areaportal(B(0, 32, road_z, 640, 34, sky), pv)
 
     if args.test:
         # by itself the canal is open where the road comes in (that side is the city): for a test alone, a wall there

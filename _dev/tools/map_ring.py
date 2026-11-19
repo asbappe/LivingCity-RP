@@ -241,6 +241,12 @@ def ring(args):
     gate_cap(vmf, (5888, 5696, lo_f, 6400, 5760, lo_f + GATE_HIGH), (5888, 5776, lo_f, 6400, 5784, lo_f + GATE_HIGH), "x", "LC ring: south gate's cap (delete to join the first canal)")
     gate_cap(vmf, (1024, 8256, lo_f, 1536, 8320, lo_f + GATE_HIGH), (1024, 8232, lo_f, 1536, 8240, lo_f + GATE_HIGH), "x", "LC ring: north gate's cap (delete to join the cave forest)")
 
+    # areaportals: inside each gate's culvert and across the west road's end
+    pv = "LC ring: areaportals"
+    vmf.areaportal((5888, 5824, lo_f, 6400, 5826, lo_f + GATE_HIGH), pv)
+    vmf.areaportal((1024, 8190, lo_f, 1536, 8192, lo_f + GATE_HIGH), pv)
+    vmf.areaportal((-2658, 1920, hi_r, -2656, 2560, hi_sky), pv)
+
     if args.test:
         tv = "LC ring: for testing alone (never in the real map)"
         vmf.world_box((-2608, 1856, base, -2544, 2624, hi_sky + 16), sky, sky, sky, vis=tv)
