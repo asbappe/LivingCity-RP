@@ -38159,7 +38159,8 @@ do
         "two on the job share that half equally (7 each of 15, the odd one to the fund), each counted once", fund() .. " " .. (LC.Credits(a) - ca) .. " " .. (LC.Credits(b) - cb))
     ca = LC.Credits(a)
     q = job(a, "res_propaganda")
-    ok(q ~= nil and q.done and fund() == 31 and LC.Credits(a) - ca == jobPay, "(any other job gives the fund nothing, and pays what it paid)", fund())
+    -- (flyers bring nothing in: experience only since the owner's word of 19 November, Nov19_JobPayShownTests)
+    ok(q ~= nil and q.done and fund() == 31 and LC.Credits(a) - ca == 0, "(any other job gives the fund nothing)", fund() .. " " .. (LC.Credits(a) - ca))
 end
 
 ------------------------------------------------------------------------
