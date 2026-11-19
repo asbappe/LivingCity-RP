@@ -78,6 +78,18 @@ def wall_button(vmf, pos, yaw, name, box, vis, connections, wait):
                      [box], MAT["nodraw"], vis, connections=[("OnPressed", name + "_model", "SetAnimation", "turn_ON", 0)] + list(connections))
 
 
+def crusher(vmf, door, box, vis, name):
+    """Nothing stops a closing door (the owner: "anyone or anything that stands in the closing silo doors or closing antlion
+    nest door is killed, and any props removed/deleted/shoved. nothing should stop these doors"). Two unseen boxes ride on
+    the door's leading edge (`door`: its name; `box`: 14 ahead of that edge, where the door is drawn): one kills whoever
+    it touches (a door only waits while something alive is in its way), one deletes whatever loose thing it touches. Both
+    are off except while the door is closing: the wiring turns `name` on and off."""
+    vmf.brush_entity("trigger_hurt", {"targetname": name, "parentname": door, "StartDisabled": "1", "spawnflags": "3", "damage": "100000", "damagecap": "100000",
+                                      "damagetype": "1", "damagemodel": "0", "nodmgforce": "0"}, [box], MAT["trigger"], vis)
+    vmf.brush_entity("trigger_multiple", {"targetname": name, "parentname": door, "StartDisabled": "1", "spawnflags": "1032", "wait": "0.1"}, [box], MAT["trigger"], vis,
+                     connections=[("OnStartTouch", "!activator", "Kill", "", 0)])
+
+
 def smooth(t):
     t = 0.0 if t < 0 else 1.0 if t > 1 else t
     return t * t * (3 - 2 * t)
@@ -803,15 +815,16 @@ class BunkerForest(Forest):
                 parts.append((B(a, 16, zp + z, a + half, 20, zp + z + 8), rib))
                 parts.append((B(a, 44, zp + z, a + half, 48, zp + z + 8), rib))
             v.brush_entity("func_button", {
-                "targetname": "lc_bunker_door", "movedir": "0 180 0" if side < 0 else "0 0 0", "speed": "26", "lip": lip, "wait": "-1", "spawnflags": "0",
+                "targetname": "lc_bunker_door_" + name, "movedir": "0 180 0" if side < 0 else "0 0 0", "speed": "26", "lip": lip, "wait": "-1", "spawnflags": "0",
                 "sounds": "0", "health": "0", "locked_sound": "0", "unlocked_sound": "0", "locked_sentence": "0", "unlocked_sentence": "0", "min_use_angle": "0.8",
                 "rendermode": "0", "renderamt": "255", "rendercolor": "255 255 255", "disablereceiveshadows": "0"}, parts, steel, dv)
+            crusher(v, "lc_bunker_door_" + name, B(mid - 2, 16, zp, mid + 14, 48, top) if side < 0 else B(mid - 14, 16, zp, mid + 2, 48, top), dv, "lc_bunker_crush")
             # (open, a leaf must be inside the wall but for its edge: if the wall there is not solid it would show)
             lo, hi = (u1 - (half - lip), u1) if side < 0 else (u2, u2 + half - lip)
             for u in range(lo // CELL * CELL, hi, CELL):
                 if plan.cells.get((u // CELL, 0), ("",))[0] != "solid":
                     self.problems.append("the bunker door's %s leaf has no wall to slide into at %d" % (name, u))
-        v.point("logic_auto", W(mid, 200, zp + 150), {"spawnflags": "1"}, dv, connections=[("OnMapSpawn", "lc_bunker_door", "PressIn", "", 0.5)])
+        v.point("logic_auto", W(mid, 200, zp + 150), {"spawnflags": "1"}, dv, connections=[("OnMapSpawn", "lc_bunker_door_*", "PressIn", "", 0.5)])
         # an areaportal across the doorway, shut with the leaves, so the bunker is not drawn from outside nor the forest from
         # inside. It stands INSIDE the leaves' own thickness: a shut door is only drawn from both sides if it is on both sides
         # of its areaportal (the owner, of the first try, which had it behind them: "when they close they become invisible").
@@ -838,12 +851,13 @@ class BunkerForest(Forest):
         # the wiring. Shutting: klaxon and light at once, the leaves start a second later and take about 4.6 s, then the slam.
         shut = [("OnTrigger", "lc_bunker_close", "Disable", "", 0), ("OnTrigger", "lc_bunker_alarm", "PlaySound", "", 0), ("OnTrigger", "lc_bunker_alarm", "PlaySound", "", 1.7),
                 ("OnTrigger", "lc_bunker_alarm", "PlaySound", "", 3.4), ("OnTrigger", "lc_bunker_light", "TurnOn", "", 0),
-                ("OnTrigger", "lc_bunker_door", "PressOut", "", 1), ("OnTrigger", "lc_bunker_move", "PlaySound", "", 1),
+                ("OnTrigger", "lc_bunker_door_*", "PressOut", "", 1), ("OnTrigger", "lc_bunker_move", "PlaySound", "", 1),
+                ("OnTrigger", "lc_bunker_crush", "Enable", "", 1), ("OnTrigger", "lc_bunker_crush", "Disable", "", 5.9),
                 ("OnTrigger", "lc_bunker_move", "StopSound", "", 5.6), ("OnTrigger", "lc_bunker_slam", "PlaySound", "", 5.6), ("OnTrigger", "lc_bunker_groan", "PlaySound", "", 5.7),
                 ("OnTrigger", "lc_bunker_shake", "StartShake", "", 5.6), ("OnTrigger", "lc_bunker_portal", "Close", "", 5.8),
                 ("OnTrigger", "lc_bunker_light", "TurnOff", "", 8.5), ("OnTrigger", "lc_bunker_open", "Enable", "", 8)]
         unshut = [("OnTrigger", "lc_bunker_open", "Disable", "", 0), ("OnTrigger", "lc_bunker_light", "TurnOn", "", 0), ("OnTrigger", "lc_bunker_groan", "PlaySound", "", 0),
-                  ("OnTrigger", "lc_bunker_portal", "Open", "", 0.9), ("OnTrigger", "lc_bunker_door", "PressIn", "", 1), ("OnTrigger", "lc_bunker_move", "PlaySound", "", 1),
+                  ("OnTrigger", "lc_bunker_portal", "Open", "", 0.9), ("OnTrigger", "lc_bunker_door_*", "PressIn", "", 1), ("OnTrigger", "lc_bunker_move", "PlaySound", "", 1),
                   ("OnTrigger", "lc_bunker_move", "StopSound", "", 5.6), ("OnTrigger", "lc_bunker_slam", "PlaySound", "", 5.6), ("OnTrigger", "lc_bunker_light", "TurnOff", "", 7),
                   ("OnTrigger", "lc_bunker_close", "Enable", "", 8)]
         relay = W(mid, 200, zp + 120)
@@ -1472,6 +1486,7 @@ class CaveForest(Forest):
             "targetname": "lc_nest_door", "movedir": "-90 0 0", "speed": "30", "lip": "8", "wait": "-1", "spawnflags": "0", "sounds": "0", "health": "0",
             "locked_sound": "0", "unlocked_sound": "0", "locked_sentence": "0", "unlocked_sentence": "0", "min_use_angle": "0.8",
             "rendermode": "0", "renderamt": "255", "rendercolor": "255 255 255", "disablereceiveshadows": "0"}, parts, steel, dv)
+        crusher(v, "lc_nest_door", B(bx - 96, D + 40, zf - 14, bx + 96, D + 72, zf + 2), dv, "lc_nest_crush")
         # an areaportal in it, shut while it is: the nest is not drawn, nor the cave from the nest
         portal = B(bx - 96, D + 55, zf, bx + 96, D + 57, zf + high)      # (inside the shutter's own thickness: see the bunker's)
         v.portals.append(portal)
@@ -1517,6 +1532,7 @@ class CaveForest(Forest):
                    ("OnTrigger", "lc_nest_maker", "Enable", "", 6.6), ("OnTrigger", "lc_nest_light", "TurnOff", "", 9), ("OnTrigger", "lc_nest_shut", "Enable", "", 9)]
         shutting = [("OnTrigger", "lc_nest_shut", "Disable", "", 0), ("OnTrigger", "lc_nest_maker", "Disable", "", 0), ("OnTrigger", "lc_nest_alarm", "PlaySound", "", 0),
                     ("OnTrigger", "lc_nest_light", "TurnOn", "", 0), ("OnTrigger", "lc_nest_door", "PressOut", "", 1.5), ("OnTrigger", "lc_nest_move", "PlaySound", "", 1.5),
+                    ("OnTrigger", "lc_nest_crush", "Enable", "", 1.5), ("OnTrigger", "lc_nest_crush", "Disable", "", 7),
                     ("OnTrigger", "lc_nest_move", "StopSound", "", 6.6), ("OnTrigger", "lc_nest_slam", "PlaySound", "", 6.6), ("OnTrigger", "lc_nest_shake", "StartShake", "", 6.6),
                     ("OnTrigger", "lc_nest_portal", "Close", "", 6.9), ("OnTrigger", "lc_nest_closed", "Trigger", "", 6.9), ("OnTrigger", "lc_nest_light", "TurnOff", "", 9),
                     ("OnTrigger", "lc_nest_open", "Enable", "", 9)]

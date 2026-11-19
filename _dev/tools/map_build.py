@@ -280,8 +280,10 @@ class Vmf:
             s += '\t\t"%s" "%s"\n' % (out, "\x1b".join((target, inp, str(value), _num(delay), "-1")))
         return s + "\t}\n"
 
-    def point(self, cls, pos, keys=None, vis="LC canal: details", connections=None):
-        self.points.append((cls, tuple(pos)))
+    def point(self, cls, pos, keys=None, vis="LC canal: details", connections=None, outside=False):
+        # (outside: the thing stands in the owner's own map, not in this piece: it is not held to the piece's sealed space)
+        if not outside:
+            self.points.append((cls, tuple(pos)))
         s = 'entity\n{\n\t"id" "%d"\n\t"classname" "%s"\n' % (self.new_id(), cls)
         for k, v in (keys or {}).items():
             s += '\t"%s" "%s"\n' % (k, v)
@@ -600,18 +602,78 @@ def check(vmf, seed, stoppers):
 # The canal at the road's end
 # ---------------------------------------------------------------------------
 
+def fence(vmf, plan, high, vis, top=None):
+    """Chain link along the top of every wall that looks onto a canal (the owner: "put fencing along the boundary at the
+    top of the canal walls"): a sheet standing 2 out from the wall's face, from the concrete's top up, with a rail and
+    posts. top: where the concrete ends, for a plan whose squares don't say (the ring's do: its walls' tops climb)."""
+    cells = plan.cells
+    runs = {}
+    for (i, j), spec in cells.items():
+        if spec[0] != "open":
+            continue
+        x, y = i * CELL, j * CELL
+        for (di, dj, axis, line, side, a) in ((0, -1, "x", y, 1, x), (0, 1, "x", y + CELL, -1, x), (-1, 0, "y", x, 1, y), (1, 0, "y", x + CELL, -1, y)):
+            nb = cells.get((i + di, j + dj))
+            if nb is None or nb[0] == "open":
+                continue
+            at = nb[1] if nb[0] == "solid" and len(nb) > 1 else nb[4] if nb[0] == "low" and len(nb) > 4 else top
+            runs.setdefault((axis, line, side, at), []).append(a)
+    sheets, bars = {"x": [], "y": []}, []
+
+    def along(axis, a, b, lo, hi, z1, z2):
+        return plan.box(a, lo, z1, b, hi, z2) if axis == "x" else plan.box(lo, a, z1, hi, b, z2)
+    for (axis, line, side, at), parts in sorted(runs.items()):
+        parts.sort()
+        start = prev = None
+        for a in parts + [None]:
+            if a is not None and start is not None and a == prev + CELL:
+                prev = a
+                continue
+            if start is not None:
+                b = prev + CELL
+                sheets[axis].append(along(axis, start, b, min(line, line + 2 * side), max(line, line + 2 * side), at, at + high))
+                lo, hi = min(line, line + 4 * side), max(line, line + 4 * side)
+                bars.append(along(axis, start, b, lo, hi, at + high - 4, at + high))
+                for p in range(start, b + 1, 256):
+                    bars.append(along(axis, max(start, p - 2), min(b, p + 2), lo, hi, at, at + high - 4))
+            start = prev = a
+    nd = MAT["nodraw"]
+    if sheets["x"]:
+        vmf.detail(sheets["x"], MAT["fence"], vis=vis, faces={"west": nd, "east": nd, "top": nd, "bottom": nd})
+    if sheets["y"]:
+        vmf.detail(sheets["y"], MAT["fence"], vis=vis, faces={"north": nd, "south": nd, "top": nd, "bottom": nd})
+    vmf.detail(bars, MAT["bars"], vis=vis)
+    return len(sheets["x"]) + len(sheets["y"])
+
+
+def road_bridge(vmf, plan, axis, a, b, lo, hi, floor, trim, vis):
+    """A street carried over a canal at the trim's height: a deck from wall to wall, parapets, girders, a pier wall on each
+    bank. axis: the way the canal runs there; a, b: along it; lo, hi: its two walls. Gives back the room it takes."""
+    def bx(u1, v1, z1, u2, v2, z2):
+        return plan.box(u1, v1, z1, u2, v2, z2) if axis == "x" else plan.box(v1, u1, z1, v2, u2, z2)
+    vmf.detail([bx(a, lo, trim - 40, b, hi, trim + 8)], MAT["beam"], vis=vis, top=MAT["quay_floor"])
+    vmf.detail([bx(a, lo, trim + 8, a + 16, hi, trim + 56), bx(b - 16, lo, trim + 8, b, hi, trim + 56),
+                bx(a + 48, lo + 112, floor, b - 48, lo + 144, trim - 72), bx(a + 48, hi - 144, floor, b - 48, hi - 112, trim - 72)], MAT["canal_wall"], vis=vis)
+    vmf.detail([bx(u, lo, trim - 72, u + 24, hi, trim - 40) for u in range(a + 40, b - 40, 96)], MAT["bars"], vis=vis)
+    return bx(a, lo, floor, b, hi, trim + 56)
+
+
 def canal(args):
     # the road ends at the owner's brush 15074 (x 3328..3968, y 1856..1872): its city side is this piece's south edge
     ox, oy = args.origin
     road_z, floor_z = 656, 400
     sky = road_z + 512
-    plan = Plan((ox, oy), [(floor_z - 64, road_z, MAT["canal_wall"]), (road_z, road_z + 256, MAT["upper_wall"]), (road_z + 256, sky + 16, MAT["sky"])], sky=sky)
+    # (plain concrete to 128 over the road and a fence on it, as the ring: the owner, of the brick band both canals had over
+    #  the concrete, "can we just make the canal walls a bit higher instead of using brickwork at the top", then of this
+    #  canal: "yes please make the first canal match")
+    wall_top = road_z + 128
+    plan = Plan((ox, oy), [(floor_z - 64, wall_top, MAT["canal_wall"]), (wall_top, sky + 16, MAT["sky"])], sky=sky)
     plan.keep_out.append((-100000, -100000, 100000, 0))    # the city: everything south of the road's end is the owner's
     plan.keep_out.append((4608, -100000, 100000, 100000))  # beyond the east gate: whatever is joined there
     plan.keep_out.append((-100000, 3840, 100000, 100000))  # beyond the north gate
     canal_floor = ("open", floor_z, MAT["canal_floor"])
     culvert = ("low", floor_z, MAT["canal_floor"], floor_z + GATE_HIGH)
-    doorway = ("low", road_z, MAT["quay_floor"], road_z + 160)         # a way into the wall at the canal's top: where a footbridge lands
+    doorway = ("low", road_z, MAT["quay_floor"], road_z + 112)         # a way into the wall at the canal's top: where a footbridge lands
     plan.paint((0, 0, 640, 256), ("open", road_z, MAT["quay_floor"]))  # the quay: the road carries on to the canal's edge
     plan.paint((0, 256, 3072, 768), canal_floor)                       # A: east, away from the city
     plan.paint((2560, 768, 3072, 2816), canal_floor)                   # B: the turn north
@@ -726,6 +788,28 @@ def canal(args):
                              B(2560, 1856, road_z - 16, 3072, 1984, road_z + 40),            # the second footbridge
                              B(3008, 1792, floor_z, 3072, 1856, road_z + 128)]               # the ladder
 
+    # --- things in the long stretches, as the ring has (the owner: "the canals are kind of empty") ------------------------
+    sv = "LC canal: set pieces"
+    set_blocked, lanes = [], []
+
+    def static(model, x, y, yaw):
+        vmf.point("prop_static", W(x, y, floor_z), {"model": model, "angles": "0 %d 0" % yaw, "skin": "0", "solid": "6", "disableshadows": "0", "screenspacefade": "0",
+                                                    "fademindist": "-1", "fademaxdist": "0", "fadescale": "1"}, sv)
+    # a container between the stairs and the pipes; cars pushed in beyond the pipes
+    static("models/props_wasteland/cargo_container01.mdl", 1300, 590, 8)
+    for model, x, y, yaw in (("models/props_vehicles/car002a_physics.mdl", 2080, 470, 25), ("models/props_vehicles/car005a_physics.mdl", 2260, 580, 190),
+                             ("models/props_vehicles/tire001c_car.mdl", 2180, 420, 0), ("models/props_junk/trashdumpster02.mdl", 2420, 600, 95)):
+        static(model, x, y, yaw)
+    # a boat and rubble in the turn north; a street carried over the east arm; a barricade in the north arm
+    static("models/props_canal/boat001a.mdl", 2800, 1120, 100)
+    for model, x, y, yaw in (("models/props_debris/concrete_chunk01a.mdl", 2740, 2190, 40), ("models/props_debris/broken_pile001a.mdl", 2890, 2240, 200),
+                             ("models/props_debris/concrete_chunk02a.mdl", 2700, 2300, 110)):
+        static(model, x, y, yaw)
+    taken.append(road_bridge(vmf, plan, "x", 3520, 3776, 2304, 2816, floor_z, road_z, sv))
+    static("models/props_debris/barricade_tall01a.mdl", 2740, 3160, 20)
+    set_blocked += [(1080, 500, 1520, 680), (2000, 400, 2500, 660), (2700, 1000, 2900, 1240), (2650, 2130, 2960, 2360), (2640, 3060, 2860, 3260)]
+    lanes += [(1300, 430), (2240, 400), (2940, 1120), (2990, 2240), (2940, 3160)]
+
     def fits(box, gap=24):
         return not any(box[0] < t[3] + gap and box[3] > t[0] - gap and box[1] < t[4] + gap and box[4] > t[1] - gap and box[2] < t[5] + gap and box[5] > t[2] - gap for t in taken)
     # along the top of every real wall, a concrete lip; up the walls, a rib every 512; between the ribs, a drain pipe's stub
@@ -763,9 +847,9 @@ def canal(args):
     vmf.detail([B(64, 256, road_z, 72, 768, road_z + 40), B(248, 256, road_z, 256, 768, road_z + 40)], rail)
     vmf.detail([B(2560, 1856, road_z - 16, 3072, 1984, road_z)], MAT["beam"], top=MAT["quay_floor"])                   # over B, from wall to wall
     vmf.detail([B(2560, 1856, road_z, 3072, 1864, road_z + 40), B(2560, 1976, road_z, 3072, 1984, road_z + 40)], rail)
-    barred(vmf, B(64, 872, road_z, 256, 880, road_z + 160), "x", "LC canal: details", back=B(64, 888, road_z, 256, 896, road_z + 160))
-    barred(vmf, B(2448, 1792, road_z, 2456, 2048, road_z + 160), "y", "LC canal: details", back=B(2432, 1792, road_z, 2440, 2048, road_z + 160))
-    barred(vmf, B(3176, 1792, road_z, 3184, 2048, road_z + 160), "y", "LC canal: details", back=B(3192, 1792, road_z, 3200, 2048, road_z + 160))
+    barred(vmf, B(64, 872, road_z, 256, 880, road_z + 112), "x", "LC canal: details", back=B(64, 888, road_z, 256, 896, road_z + 112))
+    barred(vmf, B(2448, 1792, road_z, 2456, 2048, road_z + 112), "y", "LC canal: details", back=B(2432, 1792, road_z, 2440, 2048, road_z + 112))
+    barred(vmf, B(3176, 1792, road_z, 3184, 2048, road_z + 112), "y", "LC canal: details", back=B(3192, 1792, road_z, 3200, 2048, road_z + 112))
     # a ladder up to the second bridge, in a slot left in the east bank: set up the way the owner's own map does its ladders
     # (ladder pieces 128 tall, the climbing line 28 out from them, a place to step off at each end)
     for z, model, yaw in ((floor_z, "metalladder002", 180), (floor_z + 128, "metalladder002", 180), (road_z, "metalladder002b", 0)):
@@ -813,7 +897,7 @@ def canal(args):
         silt_n += 1
 
     # --- where the city's people can walk: the flat of the floor, the quay, the stairs, the bridges ----------------
-    blocked = [(512, 256, 1024, 384), (4480, 2304, 4608, 2816), (2560, 3712, 3072, 3840)] # (the stairs, and behind each gate's bars)
+    blocked = [(512, 256, 1024, 384), (4480, 2304, 4608, 2816), (2560, 3712, 3072, 3840)] + set_blocked # (the stairs, behind each gate's bars, the set pieces)
     node_id = [args.first_node]
 
     def node(x, y, z):
@@ -828,6 +912,9 @@ def canal(args):
         if kind((i, j)) == "floor" and wall_near(x, y) < BANK + 16:
             continue   # (on a bank)
         node(x, y, spec[1])
+    for x, y in lanes:
+        node(x, y, floor_z)
+    fences = fence(vmf, plan, 96, "LC canal: fence along the walls' tops", top=wall_top)
     for x, y, z in ((576, 320, road_z), (736, 320, road_z - 64), (832, 320, road_z - 128), (928, 320, road_z - 208), (1056, 320, floor_z),
                     (160, 384, road_z), (160, 512, road_z), (160, 640, road_z), (2688, 1920, road_z), (2816, 1920, road_z), (2944, 1920, road_z)):
         node(x, y, z)
@@ -865,8 +952,9 @@ def canal(args):
     ys = [b[1] for b, _ in vmf.boxes] + [b[4] for b, _ in vmf.boxes]
     print("canal: %d sealing brushes, %d detail boxes, %d sloped or round shapes, %d mud patches, %d entities (%d path nodes, ids %d to %d)" % (
         world_n, len(vmf.boxes) - world_n - silt_n, vmf.shapes, silt_n, len(vmf.ents), node_id[0] - args.first_node, args.first_node, node_id[0] - 1))
-    print("  details: %d banks, %d corner fills, %d lengths of wall trim with %d ribs, %d drain stubs, 2 pipes, 2 footbridges, 1 ladder" % (
-        len(banks), vmf.shapes - len(banks) - len(drains) - 2, len(trims), len(ribs), len(drains)))
+    print("  details: %d banks, %d corner fills, %d lengths of wall trim with %d ribs, %d drain stubs, 2 pipes, 2 footbridges, 1 ladder, %d runs of fence" % (
+        len(banks), vmf.shapes - len(banks) - len(drains) - 2, len(trims), len(ribs), len(drains), fences))
+    print("  set pieces: a container, wrecked cars and a skip, a boat, rubble, a street carried over the east arm, a barricade; the walls' concrete ends at z %d" % wall_top)
     print("  it fills x %d to %d, y %d to %d, z %d to %d (the road's sky plug to %d)" % (min(xs), max(xs), min(ys), max(ys), plan.base, plan.top, args.road_sky))
     print("  gates (a culvert %d wide, %d high, floor z %d): east at x %d, y %d to %d; north at y %d, x %d to %d" % (
         GATE_WIDE, GATE_HIGH, floor_z, ox + 4608, oy + 2304, oy + 2816, oy + 3840, ox + 2560, ox + 3072))
@@ -916,15 +1004,16 @@ def against(vmf, path, expected):
 
 def main():
     import map_forest
+    import map_raven
     import map_ring
-    pieces = {"canal": canal, "ring": map_ring.ring, "forest_bunker": map_forest.forest_bunker, "forest_cave": map_forest.forest_cave}
+    pieces = {"canal": canal, "ring": map_ring.ring, "forest_bunker": map_forest.forest_bunker, "forest_cave": map_forest.forest_cave, "ravenholm": map_raven.ravenholm}
     ap = argparse.ArgumentParser(description="Write a new piece of map as its own VMF (never touches the owner's VMF).")
     ap.add_argument("piece", choices=sorted(pieces))
     ap.add_argument("--out", help="the VMF to write (default: lc_PIECE.vmf)")
     ap.add_argument("--origin", type=int, nargs=2, default=None, metavar=("X", "Y"), help="where the piece sits on the map (default: where it joins what's already there)")
     ap.add_argument("--floor", type=int, default=None, help="forests: the height of the gate's floor (default 400: the canals' floor)")
     ap.add_argument("--road-sky", type=int, default=2784, help="canal: the height of the sky over the road it joins (default 2784)")
-    ap.add_argument("--first-node", type=int, default=None, help="the first path node id to use (default: 4000 canal, 4400 and 4600 the forests, 5000 the ring; the map's own stop at 3043)")
+    ap.add_argument("--first-node", type=int, default=None, help="the first path node id to use (default: 4000 canal, 4400 and 4600 the forests, 5000 the ring, 5300 ravenholm; the map's own stop at 3043)")
     ap.add_argument("--preview", help="forests: also write a picture of the piece from above to this file (needs Pillow)")
     ap.add_argument("--against", help="the owner's own VMF: also check that nothing in the piece runs into anything in it (apart from the brush the piece replaces)")
     ap.add_argument("--test", action="store_true", help="write lc_PIECE_test.vmf instead: the piece made to compile and walk by itself (a spawn point, a sun, "
@@ -935,9 +1024,14 @@ def main():
         args.first_node = args.first_node or 4000
     if args.piece == "ring":
         args.first_node = args.first_node or 5000
+    if args.piece == "ravenholm":
+        args.first_node = args.first_node or 5300
     vmf, problems = pieces[args.piece](args)
     if args.against:
-        problems += against(vmf, args.against, getattr(args, "expect_overlap", {"15074"} if args.piece == "canal" else set()))
+        clashes = against(vmf, args.against, getattr(args, "expect_overlap", {"15074"} if args.piece == "canal" else set()))
+        for p in clashes:
+            print("  PROBLEM: " + p)        # (the piece's own function has already printed its own)
+        problems += clashes
     out = args.out or "lc_%s%s.vmf" % (args.piece, "_test" if args.test else "")
     with open(out, "w") as f:
         f.write(vmf.text())

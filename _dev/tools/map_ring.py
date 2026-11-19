@@ -39,7 +39,7 @@ a fallen bridge to walk under, a goods wagon, containers, wrecks, a camp.
 
 import random
 
-from map_build import CELL, GATE_HIGH, MAT, Plan, Vmf, barred, check, gate_cap, octagon, prism, test_extras
+from map_build import CELL, GATE_HIGH, MAT, Plan, Vmf, barred, check, fence, gate_cap, octagon, prism, road_bridge, test_extras
 from map_forest import noise
 
 BANK = 128
@@ -227,48 +227,6 @@ class RingPlan(Plan):
                 vmf.world_box(self.box(x1, y1, spec[4], x2, y2, self.top), sky, vis=self.vis)
 
 
-def fence(vmf, plan, high, vis):
-    """Chain link along the top of every wall that looks onto the canal (the owner: "put fencing along the boundary at the
-    top of the canal walls"): a sheet standing 2 out from the wall's face, from the concrete's top up, with a rail and posts."""
-    cells = plan.cells
-    runs = {}
-    for (i, j), spec in cells.items():
-        if spec[0] != "open":
-            continue
-        x, y = i * CELL, j * CELL
-        for (di, dj, axis, line, side, a) in ((0, -1, "x", y, 1, x), (0, 1, "x", y + CELL, -1, x), (-1, 0, "y", x, 1, y), (1, 0, "y", x + CELL, -1, y)):
-            nb = cells.get((i + di, j + dj))
-            if nb is None or nb[0] == "open":
-                continue
-            runs.setdefault((axis, line, side, nb[1] if nb[0] == "solid" else nb[4]), []).append(a)
-    sheets, bars = {"x": [], "y": []}, []
-
-    def along(axis, a, b, lo, hi, z1, z2):
-        return (a, lo, z1, b, hi, z2) if axis == "x" else (lo, a, z1, hi, b, z2)
-    for (axis, line, side, top), parts in sorted(runs.items()):
-        parts.sort()
-        start = prev = None
-        for a in parts + [None]:
-            if a is not None and start is not None and a == prev + CELL:
-                prev = a
-                continue
-            if start is not None:
-                b = prev + CELL
-                sheets[axis].append(along(axis, start, b, min(line, line + 2 * side), max(line, line + 2 * side), top, top + high))
-                lo, hi = min(line, line + 4 * side), max(line, line + 4 * side)
-                bars.append(along(axis, start, b, lo, hi, top + high - 4, top + high))
-                for p in range(start, b + 1, 256):
-                    bars.append(along(axis, max(start, p - 2), min(b, p + 2), lo, hi, top, top + high - 4))
-            start = prev = a
-    nd = MAT["nodraw"]
-    if sheets["x"]:
-        vmf.detail(sheets["x"], MAT["fence"], vis=vis, faces={"west": nd, "east": nd, "top": nd, "bottom": nd})
-    if sheets["y"]:
-        vmf.detail(sheets["y"], MAT["fence"], vis=vis, faces={"north": nd, "south": nd, "top": nd, "bottom": nd})
-    vmf.detail(bars, MAT["bars"], vis=vis)
-    return len(sheets["x"]) + len(sheets["y"])
-
-
 def ring(args):
     vmf = Vmf()
     F, TRIM = 400, 656                           # the floor, the same all the way round; the trim line on the walls (the first canal's wall top)
@@ -368,18 +326,8 @@ def ring(args):
     def loose(model, x, y, yaw, z=F):
         vmf.point("prop_physics", (x, y, z + 24), {"model": model, "angles": "0 %d 0" % yaw, "skin": "0", "spawnflags": "0"}, sv)
 
-    def road_bridge(axis, a, b, lo, hi):
-        """A street carried over the canal at the trim's height: a deck from wall to wall, parapets, girders, a pier wall on each bank."""
-        def bx(u1, v1, z1, u2, v2, z2):
-            return (u1, v1, z1, u2, v2, z2) if axis == "x" else (v1, u1, z1, v2, u2, z2)
-        vmf.detail([bx(a, lo, TRIM - 40, b, hi, TRIM + 8)], MAT["beam"], vis=sv, top=MAT["quay_floor"])
-        vmf.detail([bx(a, lo, TRIM + 8, a + 16, hi, TRIM + 56), bx(b - 16, lo, TRIM + 8, b, hi, TRIM + 56),
-                    bx(a + 48, lo + 112, F, b - 48, lo + 144, TRIM - 72), bx(a + 48, hi - 144, F, b - 48, hi - 112, TRIM - 72)], cw, vis=sv)
-        vmf.detail([bx(u, lo, TRIM - 72, u + 24, hi, TRIM - 40) for u in range(a + 40, b - 40, 96)], MAT["bars"], vis=sv)
-        taken.append(bx(a, lo, F, b, hi, TRIM + 56))
-
     # 1. a street over the north leg, and under it somebody's camp
-    road_bridge("y", 6656, 6976, 5888, 6400)
+    taken.append(road_bridge(vmf, plan, "y", 6656, 6976, 5888, 6400, F, TRIM, sv))
     for model, x, y, yaw in (("models/props_c17/furniturecouch001a.mdl", 6052, 6770, 90), ("models/props_c17/oildrum001.mdl", 6090, 6700, 0),
                              ("models/props_junk/wood_crate001a.mdl", 6060, 6900, 20), ("models/props_c17/furnituretable002a.mdl", 6110, 6850, 0)):
         static(model, x, y, yaw)
@@ -424,7 +372,7 @@ def ring(args):
     # 6. a boat and a skip in the west run; a street over it further down, a wrecked APC past that
     static("models/props_canal/boat001a.mdl", -4520, 6850, 20)
     static("models/props_junk/trashdumpster02.mdl", -4610, 5850, 90)
-    road_bridge("y", 3840, 4096, -4800, -4288)
+    taken.append(road_bridge(vmf, plan, "y", 3840, 4096, -4800, -4288, F, TRIM, sv))
     static("models/props_vehicles/apc001.mdl", -4560, 4380, 100)
     static("models/props_wasteland/barricade001a.mdl", -4470, 4560, 80)
     static("models/props_wasteland/barricade002a.mdl", -4620, 4600, 100)
