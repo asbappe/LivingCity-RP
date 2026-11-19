@@ -1505,6 +1505,10 @@ do
         "Go to the radio repair shop (marked)", "Repair the sets: turn the dial to the station, then turn the screws while you listen, until the static is gone. If you close the window, press E to open it again") }
 end
 
+-- Every kind of shift a Union job has, as builders (ply, job) -> a shift or nil: the list of every job's pay an admin
+-- copies from the board (LC.JobPayList, sv_livingcity_quests.lua).
+function LC.ShiftBuilders(id) return SHIFTS[id] end
+
 -- (tests: finish a game at once)
 LC.JobGameFinishForTest = function(ply) if LC.JobGames and LC.JobGames[ply] then LC.JobGameEnd(ply, "test") else LC.QuestEvent("game_done", ply) end end
 

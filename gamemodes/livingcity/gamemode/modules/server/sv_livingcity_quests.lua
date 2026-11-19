@@ -24,7 +24,7 @@
 
 if CLIENT then return end
 
-for _, n in ipairs({ "lcq_board", "lcq_accept", "lcq_abandon", "lcq_state", "lcq_choice_open", "lcq_choice", "lcq_request" }) do
+for _, n in ipairs({ "lcq_board", "lcq_accept", "lcq_abandon", "lcq_state", "lcq_choice_open", "lcq_choice", "lcq_request", "lcq_paylist" }) do
     util.AddNetworkString(n)
 end
 
@@ -3819,7 +3819,7 @@ end)
 function LC.PostingPay(ply, p)
     if not istable(p) then return { 0, 0 }, nil, { 0, 0 } end
     local f = p.faction or LC.QuestFaction(ply)
-    local q = { tmpl = p.tmpl, title = p.title, chain = p.story and p.chain or nil, board = p.story and p.chainName or (BOARDS[f] or "Jobs") }
+    local q = { side = f, tmpl = p.tmpl, title = p.title, chain = p.story and p.chain or nil, board = p.story and p.chainName or (BOARDS[f] or "Jobs") }
     local lo, hi = 0, 0
     local function add(a, b)
         a = math.max(0, math.floor(tonumber(a) or 0))
@@ -3934,6 +3934,7 @@ function LC.SendBoard(ply)
     LC.SendCompressed("lcq_board", {
         jobs = jobs, credits = LC.Credits and LC.Credits(ply) or nil, standing = LC.Standing and LC.Standing(ply) or nil,
         board = BOARDS[f] or "Jobs", faction = f, postings = out, active = mine ~= nil,
+        admin = ply:IsAdmin() or nil, -- (the button that copies every job's pay: LC.JobPayList)
         traits = { loyalty = LC.Trait(ply, "loyalty"), sympathy = LC.Trait(ply, "sympathy"), corruption = LC.Trait(ply, "corruption") },
         wait = math.max(0, math.ceil((ply.lcqNext or 0) - CurTime())),
     }, { ply })
@@ -4082,6 +4083,82 @@ net.Receive("lcq_choice", function(_, ply)
     local qid, idx = net.ReadUInt(32), net.ReadUInt(8)
     LC.ResolveChoice(ply, qid, idx)
 end)
+-- The pay of every job the server knows, as plain text for an admin to paste somewhere and weigh (the owner, 19 November:
+-- "can you please add a 'copy to clipboard' button that shows only for admins?"): a first line with the map and the
+-- date, then a line a job, by side (as the boards are), the stories part by part, and every kind of shift of each Union
+-- job. Each is built as it would be for this player, standing in for whoever takes it; a job that can't be built now
+-- says so, with what its template alone says it pays. "Side | title | +XP | credits | fund +lo-hi".
+local SIDE_NAMES = { citizen = "Citizens", cp = "Civil Protection", ota = "Overwatch", admin = "Administrator", resistance = "Resistance", zombie = "Infested" }
+local SIDE_ORDER = { "citizen", "cp", "ota", "admin", "resistance", "zombie" }
+function LC.JobPayList(ply)
+    local function R(r) return (r[1] == r[2]) and tostring(r[1]) or (r[1] .. "-" .. r[2]) end
+    local lines = { string.format("Job pay on %s, %s", game.GetMap(), os.date("%Y-%m-%d %H:%M")) }
+    local function Line(side, spec, fallback)
+        local okP, credits, fund = LC.Try(LC.PostingPay, ply, spec)
+        if not okP or not istable(credits) then return end
+        local title = spec.title or (fallback .. " (can't be built now)")
+        local s = string.format("%s | %s | %s XP | %s credits", side, title, spec.reward and ("+" .. spec.reward) or "?", R(credits))
+        if fund then s = s .. " | fund +" .. R(fund) end
+        lines[#lines + 1] = s
+    end
+    local function Built(build, ...)
+        local okB, spec = LC.Try(build, ...)
+        return (okB and istable(spec)) and spec or nil
+    end
+    for _, f in ipairs(SIDE_ORDER) do
+        for _, t in ipairs(LC.QuestTemplates) do
+            if t.factions[f] then
+                local spec = Built(t.build, ply) or { stages = {} }
+                spec.tmpl, spec.faction, spec.squad = t, f, spec.squad or t.squad
+                Line(SIDE_NAMES[f], spec, t.id)
+            end
+        end
+    end
+    for _, chain in ipairs(LC.ChainList) do
+        if chain.id ~= "shift" then
+            local f = chain.special == "chaplain" and "resistance" or nil
+            for _, s in ipairs(SIDE_ORDER) do if not f and chain.factions[s] then f = s end end
+            f = f or "citizen"
+            local ids = {}
+            for id in pairs(chain.parts or {}) do ids[#ids + 1] = id end
+            table.sort(ids, function(a, b) return (chain.parts[a].num or 1) < (chain.parts[b].num or 1) or ((chain.parts[a].num or 1) == (chain.parts[b].num or 1) and tostring(a) < tostring(b)) end)
+            for _, id in ipairs(ids) do
+                local def = chain.parts[id]
+                local spec = Built(def.build, ply, {}) or { stages = {} }
+                if spec.title then
+                    spec.title = chain.flat and string.format("%s: %s", chain.name, spec.title) or string.format("%s, part %d: %s", chain.name, def.num or 1, spec.title)
+                end
+                spec.story, spec.chain, spec.chainName, spec.tmpl, spec.faction = true, chain.id, chain.name, { id = chain.id .. "/" .. id }, f
+                Line("Story (" .. SIDE_NAMES[f] .. ")", spec, chain.name .. ", " .. tostring(id))
+            end
+        end
+    end
+    for _, o in ipairs(LCJ and LCJ.Occupations or {}) do
+        local any = false
+        for _, build in ipairs(LC.ShiftBuilders and LC.ShiftBuilders(o.id) or {}) do
+            local spec = Built(build, ply, o)
+            if spec then
+                any = true
+                spec.title = string.format("Union shift: %s: %s", o.name, tostring(spec.title))
+                spec.story, spec.chain, spec.chainName, spec.tmpl, spec.faction = true, "shift", "Union shift", { id = "shift/work" }, "citizen"
+                Line("Union shift", spec, o.name)
+            end
+        end
+        if not any then
+            Line("Union shift", { story = true, chain = "shift", chainName = "Union shift", tmpl = { id = "shift/work" }, faction = "citizen", stages = {} }, "Union shift: " .. tostring(o.name))
+        end
+    end
+    return table.concat(lines, "\n")
+end
+
+net.Receive("lcq_paylist", function(_, ply)
+    if not (IsValid(ply) and ply:IsAdmin()) then return end
+    if (ply.lcPayListAt or 0) > CurTime() then return end
+    ply.lcPayListAt = CurTime() + 5
+    local okL, text = LC.Try(LC.JobPayList, ply)
+    if okL and isstring(text) then LC.SendCompressed("lcq_paylist", { text = text }, { ply }) end
+end)
+
 net.Receive("lcq_request", function(_, ply)
     SendState(ply)
     local q = LC.QuestOf[ply]

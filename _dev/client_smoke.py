@@ -5309,6 +5309,64 @@ if not ok then return "guide trail: " .. tostring(e) end
 """)
 if err:
     problems = (problems + "\n" if problems else "") + str(err)
+# every job's pay beside its experience on the board (the owner, 19 November), and the admin's button that copies the
+# pay of every job: drawn for an admin only, it asks the server, and the answer goes on the clipboard with a click
+err = L.execute(r"""
+local was = { vgui, util.JSONToTable, net.Start, net.SendToServer, SetClipboardText, surface.PlaySound }
+local ok, e = pcall(function()
+    local texts, started, copied, clicks = {}, {}, nil, 0
+    local function P()
+        local t = {}
+        return setmetatable(t, { __index = function(_, k)
+            if string.sub(k, 1, 2) == "lc" or string.sub(k, 1, 1) == "_" then return nil end
+            if k == "SetText" then return function(self, s) rawset(self, "_text", tostring(s)) texts[#texts + 1] = tostring(s) end end
+            if k == "IsValid" then return function() return true end end
+            if k == "GetWide" or k == "GetTall" then return function() return 380 end end
+            return function() return P() end
+        end })
+    end
+    vgui = { Create = function() return P() end, GetKeyboardFocus = function() return nil end }
+    net.Start = function(n) started[#started + 1] = n end
+    net.SendToServer = function() end
+    SetClipboardText = function(t) copied = t end
+    surface.PlaySound = function() clicks = clicks + 1 end
+    local function Board(admin)
+        texts = {}
+        LC_CL.QuestBoardCopy = nil
+        util.JSONToTable = function() return { board = "Operations", faction = "resistance", active = false, traits = {}, wait = 0, admin = admin,
+            postings = {
+                { id = 1, title = "Steal a crate", desc = "x", reward = 35, limit = 480, taken = 0, max = 3, credits = { 15, 25 }, fund = { 15, 15 } },
+                { id = 2, title = "Hunt headcrabs", desc = "x", reward = 40, limit = 600, taken = 0, max = 3, credits = { 0, 0 } },
+                { id = 3, title = "Patrol", desc = "x", reward = 30, limit = 300, taken = 0, max = 3, credits = { 10, 10 } } } } end
+        net._q = { 1 }
+        net["recv_lcq_board"]()
+    end
+    local function Has(prefix) for _, t in ipairs(texts) do if string.sub(t, 1, #prefix) == prefix then return true end end return false end
+    Board(nil)
+    if not Has("35 XP, 15-25 credits, fund +15   |") then error("a job's line doesn't show its credits and its fund share: " .. table.concat(texts, " / ")) end
+    if not Has("30 XP, 10 credits   |") then error("a job's line doesn't show its credits") end
+    if not Has("40 XP   |") then error("a job that pays no credits shows more than its experience") end
+    for _, t in ipairs(texts) do if string.find(t, "0 credits", 1, true) == 1 or string.find(t, " 0 credits", 1, true) then error("a line says 0 credits: " .. t) end end
+    if Has("Copy to clipboard") or LC_CL.QuestBoardCopy then error("the copy button was drawn for a player who is not an admin") end
+    Board(true)
+    local copy = LC_CL.QuestBoardCopy
+    if not (copy and Has("Copy to clipboard")) then error("the copy button wasn't drawn for an admin") end
+    started = {}
+    rawget(copy, "DoClick")()
+    if started[1] ~= "lcq_paylist" then error("the copy button didn't ask the server: " .. tostring(started[1])) end
+    util.JSONToTable = function() return { text = "Job pay on rp_c18_ug, 2026-11-19 12:00\nResistance | Steal a crate | +35 XP | 15-25 credits | fund +15" } end
+    net._q = { 1 }
+    net["recv_lcq_paylist"]()
+    if not (copied and string.find(copied, "Resistance | Steal a crate", 1, true)) then error("the list didn't go on the clipboard") end
+    if clicks ~= 1 then error("copying should make one click, made " .. clicks) end
+    LC_CL.CloseHub()
+end)
+vgui, util.JSONToTable, net.Start, net.SendToServer, SetClipboardText, surface.PlaySound = was[1], was[2], was[3], was[4], was[5], was[6]
+LC_CL.QuestBoardCopy = nil
+if not ok then return "job pay on the board: " .. tostring(e) end
+""")
+if err:
+    problems = (problems + "\n" if problems else "") + str(err)
 # the parade's march: the first piece this game has is played, the server is told which, and it stops when told
 err = L.execute(r"""
 local ok, e = pcall(function()

@@ -124,7 +124,7 @@ local SECRET_BOARDS = { Operations = true, Urges = true }
 local UNION_WORK = { shift = true, rehab = true }
 function LC.QuestBringsNothing(p, q)
     if not (istable(q) and IsValid(p) and p:IsPlayer()) or UNION_WORK[q.chain] then return false end
-    if not (LC.QuestFaction and LC.QuestFaction(p) == "resistance") then return false end
+    if (q.side or (LC.QuestFaction and LC.QuestFaction(p))) ~= "resistance" then return false end -- (q.side: a posting, for its board)
     local def = (q.chain and LC.Chains and LC.Chains[q.chain]) or q.tmpl
     return not (istable(def) and def.brings == true)
 end

@@ -65,11 +65,26 @@ local function BuildBoard(parent, data)
     local head = vgui.Create("DPanel", parent)
     head:Dock(TOP)
     head:SetTall(40)
+    -- (an admin's only, as the server says: the pay of every job the server knows, as plain text to paste somewhere and
+    -- weigh. The owner, 19 November: "can you please add a 'copy to clipboard' button that shows only for admins?")
+    local copy
+    if data.admin then
+        copy = vgui.Create("DButton", head)
+        copy:Dock(RIGHT)
+        copy:DockMargin(0, 8, 8, 8)
+        copy:SetWide(130)
+        copy:SetText("Copy to clipboard")
+        copy.DoClick = function()
+            net.Start("lcq_paylist")
+            net.SendToServer()
+        end
+    end
+    LC_CL.QuestBoardCopy = copy
     head.Paint = function(self, w, h)
         draw.SimpleText(string.upper(data.board or ""), "DermaLarge", 12, 4, ACCENT)
         local t = data.traits or {}
         draw.SimpleText(Trait("Loyalty", t.loyalty) .. "     " .. Trait("Sympathy", t.sympathy) .. "     " .. Trait("Corruption", t.corruption),
-            "DermaDefault", w - 12, 14, DIM, TEXT_ALIGN_RIGHT)
+            "DermaDefault", w - 12 - (copy and 146 or 0), 14, DIM, TEXT_ALIGN_RIGHT)
     end
 
     local scroll = vgui.Create("DScrollPanel", parent)
@@ -306,6 +321,14 @@ net.Receive("lcq_board", function()
     if not data then return end
     data.postings = data.postings or {}
     if LC_CL.HubFill then LC_CL.HubFill("jobs", function(p) BuildBoard(p, data) end) end
+end)
+
+-- The list an admin asked for: on the clipboard, with a click and not a word.
+net.Receive("lcq_paylist", function()
+    local data = ReadCompressed()
+    if not (data and isstring(data.text)) then return end
+    SetClipboardText(data.text)
+    surface.PlaySound("buttons/button14.wav")
 end)
 
 ------------------------------------------------------------------------

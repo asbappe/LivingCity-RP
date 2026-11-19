@@ -400,6 +400,12 @@ return function(T)
         R.pid = (R.pid or 700000) + 1
 
         local chat0, err0, hid0, xp0, t0 = #(p.chat or {}), #_errors, LC.ErrorsCount and LC.ErrorsCount() or 0, xpOf(p), CurTime()
+        -- what its posting says it pays (LC.PostingPay: every job lists its credits, the owner, 19 November), and what it pays
+        local okPay, said, saidFund, saidGames = pcall(LC.PostingPay, p, spec)
+        if okPay then row.said, row.saidFund, row.saidGames = said, saidFund, saidGames end
+        local cr0, fund0 = LC.Credits(p), LC.ResistanceFund and LC.ResistanceFund() or 0
+        -- (a unit's ration coupons come every ten minutes whatever it is doing: not the job's pay, so none come while it plays)
+        p.lcnRationAt = CurTime() + 1e6
         local notices, baseNotice = 0, LC.Notice
         LC.Notice = function(who, ...) if who == p then notices = notices + 1 end return baseNotice(who, ...) end
         local finished, success
@@ -447,6 +453,7 @@ return function(T)
         row.path = table.concat(path, " > ")
         row.chat, row.notices, row.xp = #(p.chat or {}) - chat0, notices, xpOf(p) - xp0
         row.skipped = mem.skipped
+        row.cr, row.fund = LC.Credits(p) - cr0, (LC.ResistanceFund and LC.ResistanceFund() or 0) - fund0
         if not row.result then
             if cant then row.result, row.why = "robot can't", cant
             elseif finished and success then row.result = "done"
@@ -459,6 +466,19 @@ return function(T)
                 end
                 row.result, row.why = "FAILED", said
             else row.result, row.why = "TIMED OUT", "still going after " .. math.floor(row.secs) .. " seconds" end
+        end
+        -- paid what its posting said? (a game ended as an admin's test pays what it had so far: it may be under the game's least)
+        if row.result == "done" and row.said then
+            local lo, hi = row.said[1], row.said[2]
+            if row.skipped and row.saidGames then lo = lo - row.saidGames[1] end
+            local f = row.saidFund
+            if row.cr < lo or row.cr > hi then
+                row.payOff = string.format("paid %d credits, its posting said %s", row.cr, row.said[1] == row.said[2] and tostring(hi) or (row.said[1] .. "-" .. hi))
+            elseif row.fund > 0 and not f then
+                row.payOff = string.format("the fund had %d, its posting said nothing", row.fund)
+            elseif f and (row.fund < f[1] or row.fund > f[2]) then
+                row.payOff = string.format("the fund had %d, its posting said %d-%d", row.fund, f[1], f[2])
+            end
         end
         if KNOWN[row.id] and (row.result == "FAILED" or row.result == "STUCK" or row.result == "TIMED OUT") then
             row.was, row.result, row.why = row.result, "KNOWN", KNOWN[row.id]
@@ -648,15 +668,20 @@ return function(T)
     say("ROBOT PLAYERS: %d jobs (every job on the boards for each side it is offered to, every part of every story, every Union shift)", #R.rows)
     for _, k in ipairs(order) do if counts[k] then say("  %-12s %d", k, counts[k]) end end
     say("  %-12s %d (a different result with the hooks answering in the other order)", "ORDER", twoWays)
+    local off = {}
+    for _, row in ipairs(R.rows) do if row.payOff then off[#off + 1] = row end end
+    say("  %-12s %d (paid other than its posting on the board said)", "PAY", #off)
+    for _, row in ipairs(off) do say("    %-11s %-34s %s", row.side, string.sub(row.id, 1, 34), row.payOff) end
     say("")
-    say("%-11s %-34s %-11s %5s %4s %4s %3s  %s", "side", "job", "result", "secs", "xp", "chat", "ntc", "steps, and why")
+    say("%-11s %-34s %-11s %5s %4s %4s %4s %3s  %s", "side", "job", "result", "secs", "xp", "cr", "chat", "ntc", "steps, and why")
     for _, row in ipairs(R.rows) do
         if row.mode and row.mode ~= "first" then row.id = row.id .. " [" .. row.mode .. "]" end
-        say("%-11s %-34s %-11s %5s %4s %4s %3s  %s%s%s%s", row.side, string.sub(row.id, 1, 34), row.result,
-            row.secs and string.format("%d", row.secs) or "", row.xp and tostring(row.xp) or "", row.chat and tostring(row.chat) or "",
+        say("%-11s %-34s %-11s %5s %4s %4s %4s %3s  %s%s%s%s", row.side, string.sub(row.id, 1, 34), row.result,
+            row.secs and string.format("%d", row.secs) or "", row.xp and tostring(row.xp) or "", row.cr and tostring(row.cr) or "", row.chat and tostring(row.chat) or "",
             row.notices and tostring(row.notices) or "", row.path or "", row.why and ((row.path and "  << " or "") .. row.why) or "",
             row.skipped and "  (game ended as a test)" or "", row.errors and ("  !! " .. row.errors) or "")
         if row.other then say("%-11s %-34s %-11s %s", "", "", "ORDER", "the other way round: " .. row.other) end
+        if row.payOff then say("%-11s %-34s %-11s %s", "", "", "PAY", row.payOff) end
     end
     R.counts = counts
     R.text = table.concat(R.lines, "\n")
