@@ -922,8 +922,7 @@ def main():
     ap.add_argument("piece", choices=sorted(pieces))
     ap.add_argument("--out", help="the VMF to write (default: lc_PIECE.vmf)")
     ap.add_argument("--origin", type=int, nargs=2, default=None, metavar=("X", "Y"), help="where the piece sits on the map (default: where it joins what's already there)")
-    ap.add_argument("--floor", type=int, default=None, help="forests: the height of the gate's floor (default: 400 the bunker forest, the canal's floor; 584 the cave forest, "
-                    "the floor of the ring's west half)")
+    ap.add_argument("--floor", type=int, default=None, help="forests: the height of the gate's floor (default 400: the canals' floor)")
     ap.add_argument("--road-sky", type=int, default=2784, help="canal: the height of the sky over the road it joins (default 2784)")
     ap.add_argument("--first-node", type=int, default=None, help="the first path node id to use (default: 4000 canal, 4400 and 4600 the forests, 5000 the ring; the map's own stop at 3043)")
     ap.add_argument("--preview", help="forests: also write a picture of the piece from above to this file (needs Pillow)")
