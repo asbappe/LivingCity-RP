@@ -251,8 +251,8 @@ class Forest:
         # the gate: a culvert through the wall, with the wall carried on under and over it
         v.world_box(self.st_box(g, -T, g + GATE_WIDE, 0, self.zb, self.z0), MAT["canal_wall"], top=MAT["canal_floor"], vis=vis)
         v.world_box(self.st_box(g, -T, g + GATE_WIDE, 0, self.z0 + GATE_HIGH, self.lid), sky, bottom=MAT["ceiling"], vis=vis)
-        bars = [self.st_box(g + 24 + 48 * i, -T + 80, g + 32 + 48 * i, -T + 88, self.z0, self.z0 + GATE_HIGH) for i in range(10)]
-        gate_cap(v, self.st_box(g, -T, g + GATE_WIDE, -T + 64, self.z0, self.z0 + GATE_HIGH), bars, self.vis("gate's cap (delete to join)"))
+        gate_cap(v, self.st_box(g, -T, g + GATE_WIDE, -T + 64, self.z0, self.z0 + GATE_HIGH), self.st_box(g, -T + 80, g + GATE_WIDE, -T + 88, self.z0, self.z0 + GATE_HIGH),
+                 "y" if side in ("west", "east") else "x", self.vis("gate's cap (delete to join)"))
         # the headwall inside the forest: the ridge is held back over and beside the culvert
         z0 = self.z0
         head = [self.st_box(g - 64, 0, g + GATE_WIDE + 64, 64, z0 + GATE_HIGH, z0 + 448)]

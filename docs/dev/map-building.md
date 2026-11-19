@@ -44,6 +44,14 @@ python3 map_build.py forest_cave --preview cave.png          # lc_forest_cave.vm
 
 **Counts:** with all three the map has about 2,815 path nodes (the engine's limit is 4,096) and about 230 displacements.
 
+## What the owner's compiles and walks have found (fix the cause, and add a check for its kind)
+
+- **19 November, the canal alone leaked:** the plain file is open to the road by design. Now `--test` writes a closed version, and the flood check also fails if any entity is outside the sealed space.
+- **19 November, the detailed canal, walked in game:**
+  - *A doorway's black back wall seen edge-on* (at 6522 4164 707): the second footbridge's east doorway sat right beside the east arm, so it had no wall on that side. The bridge and its doorways moved 256 south; a check now fails any doorway that is open anywhere but its front.
+  - *Drain stubs running through the wall ribs* (five places): the first stub of each wall was 32 from its first rib. Stubs now sit half way between ribs, and ribs and stubs are only placed where they keep 24 clear of everything else on the walls (`taken`, `fits`).
+  - *Bars a player could walk between* (48 apart): every row of bars is now 8 thick and 16 apart with a crossbar (`bar_row`), and an unseen player clip stands in the same place (`barred`). The forests' gates use the same.
+
 ## Known weak points (tell the owner; fix from what they see)
 
 - The rock face round the cave's mouth is the likeliest to show seams, where it meets the hillside. Rocks are placed to dress its edges.
