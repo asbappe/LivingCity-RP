@@ -39424,25 +39424,28 @@ end
 -- 4. the issue takes a fighter's guns from the armory first
 ------------------------------------------------------------------------
 do
-    local function cost(p) return math.floor(p * 0.5 + 0.5) end
-    local function rcost(kind, n) return n > 0 and math.ceil(n * LC.FundRoundPrice(kind) * 0.5 - 1e-9) or 0 end
+    -- (what a gun costs the fund, at the rate the server has: the rate and what rounds cost are the fund gear's own)
+    local rate = math.max(0, GetConVar("lc_resistance_issue_rate"):GetFloat()) / 100
+    local function cost(cls) return math.max(0, math.floor(LC.FundGunPrice(cls) * rate + 0.5)) end
     local f2 = mk("ArmIssue", "resistance", 400)
     _run(1)
-    book.armory = { weapon_smg1 = 1 }
-    setFund(5000)
-    f2.ammo = {}
-    hook.Run("PlayerLoadout", f2)
-    local want = cost(LC.FundGunPrice("weapon_pistol")) + rcost("Pistol", 90) + rcost("SMG1", 180)
-    ok(f2:HasWeapon("weapon_smg1") and f2:HasWeapon("weapon_pistol") and LC.ArmoryCount("weapon_smg1") == 0 and fund() == 5000 - want,
-        "a Fighter's spawn: the SMG off the armory's shelf at no cost, the pistol and the rounds bought", (5000 - fund()) .. " vs " .. want)
+    local function spawnCost(shelf)
+        book.armory = shelf
+        setFund(5000)
+        f2.ammo = {}
+        hook.Run("PlayerLoadout", f2)
+        return 5000 - fund()
+    end
+    local full = spawnCost({}) -- (nothing on the shelf: the fund buys both guns and the rounds)
+    local paid = spawnCost({ weapon_smg1 = 1 })
+    ok(rate > 0 and f2:HasWeapon("weapon_smg1") and f2:HasWeapon("weapon_pistol") and LC.ArmoryCount("weapon_smg1") == 0 and paid == full - cost("weapon_smg1"),
+        "a Fighter's spawn: the SMG off the armory's shelf at no cost, the pistol and the rounds bought", paid .. " vs " .. full .. " less " .. cost("weapon_smg1"))
     local l = top(2)
     ok(l[1].n == 0 and l[1].w == "An SMG from the armory, for a fighter (" .. name(f2) .. ")" and l[2].w == "A pistol and ammunition for a fighter (" .. name(f2) .. ")",
         "the record: what the fund paid for, and what came from the armory", l[1].w .. " | " .. l[2].w)
-    book.armory = { weapon_smg1 = 1, weapon_pistol = 1 }
-    setFund(5000)
-    f2.ammo = {}
-    hook.Run("PlayerLoadout", f2)
-    ok(fund() == 5000 - rcost("Pistol", 90) - rcost("SMG1", 180) and top()[1].w == "A fighter armed from the armory (" .. name(f2) .. ")", "both guns from the armory: the fund pays the rounds only", top()[1].w)
+    local rounds = spawnCost({ weapon_smg1 = 1, weapon_pistol = 1 })
+    ok(rounds == full - cost("weapon_smg1") - cost("weapon_pistol") and top()[1].w == "A fighter armed from the armory (" .. name(f2) .. ")",
+        "both guns from the armory: the fund pays the rounds only", rounds .. " " .. top()[1].w)
     -- empty fund: what the armory has still arms them; a cheaper gun off the shelf counts as issued
     local cm = mk("ArmCommander", "resistance", 1800)
     _run(1)

@@ -4594,11 +4594,12 @@ local function P()
         return function() return P() end
     end })
 end
-local vgWas, stsWas, startWas, wsWas = vgui, net.SendToServer, net.Start, net.WriteString
+local vgWas, stsWas, startWas, wsWas, wuWas = vgui, net.SendToServer, net.Start, net.WriteString, net.WriteUInt
 local rU, rD, rDc, rJ = net.ReadUInt, net.ReadData, util.Decompress, util.JSONToTable
 vgui = { Create = function() return P() end, GetKeyboardFocus = function() return nil end }
 local cur
 net.Start = function(n) cur = { name = n, data = {} } end
+net.WriteUInt = function(v) if cur then table.insert(cur.data, v) end end
 net.WriteString = function(v) if cur then table.insert(cur.data, v) end end
 net.SendToServer = function() sent[#sent + 1] = cur end
 net.ReadUInt = function() return 1 end
@@ -4638,8 +4639,8 @@ local okM, errM = pcall(function()
     net.recv_lcu_market()
     -- a stranger at the quartermaster (the owner, 9 November): nothing to buy, arms to sell or give
     sent = {}
-    doc = { credits = 15, goods = {}, quartermaster = true, visitor = true, gift = 10, -- (gift: 10 credits for the fund, 19 November)
-        sell = { { id = "gun_pistol", name = "Pistol", n = 1, price = 45, donate = true }, { id = "w:weapon_smg1", name = "smg1", n = 1, price = 60, weapon = true, donate = true } } }
+    doc = { credits = 15, goods = {}, quartermaster = true, visitor = true, gift = 10, barter = true, -- (gift: 10 credits for the fund, 19 November; barter: his Barter button)
+        sell = { { id = "gun_pistol", name = "Pistol", n = 1, price = 5, donate = true }, { id = "w:weapon_smg1", name = "smg1", n = 1, price = 5, weapon = true, donate = true } } }
     net.recv_lcu_market()
     for _, pnl in ipairs(made) do
         local fn = rawget(pnl, "Paint")
@@ -4652,10 +4653,105 @@ local okM, errM = pcall(function()
     local fundGift = false
     for _, m in ipairs(sent) do if m and m.name == "lc_fund_donate" then fundGift = true end end
     if not fundGift then error("the quartermaster's 10 credits for the cause don't reach the server") end
+    local barter = false
+    for _, m in ipairs(sent) do if m and m.name == "lc_barter" and m.data[1] == 1 then barter = true end end
+    if not barter then error("the quartermaster's Barter button doesn't ask the server for the barter view") end
 end)
-vgui, net.SendToServer, net.Start, net.WriteString = vgWas, stsWas, startWas, wsWas
+vgui, net.SendToServer, net.Start, net.WriteString, net.WriteUInt = vgWas, stsWas, startWas, wsWas, wuWas
 net.ReadUInt, net.ReadData, util.Decompress, util.JSONToTable = rU, rD, rDc, rJ
 if not okM then return "market panel: " .. tostring(errM) end
+return nil
+""")
+if err:
+    problems = (problems + "\n" if problems else "") + str(err)
+
+# the quartermaster's barter (cl_livingcity_barter.lua, 19 November): the view opens with both sides, the totals and the
+# Goodwill bar (its tooltip has the number, a short trade's shortfall shaded on its own scale), Trade sends the trade,
+# and is greyed when the shortfall is more than the bar holds
+err = L.execute(r"""
+local made, texts, tips, sent = {}, {}, {}, {}
+local function P()
+    local t = {}
+    made[#made + 1] = t
+    return setmetatable(t, { __index = function(_, k)
+        if k == "SetText" then return function(self, s) rawset(self, "_text", tostring(s)) texts[#texts + 1] = tostring(s) return self end end
+        if k == "SetTooltip" then return function(self, s) tips[#tips + 1] = tostring(s) return self end end
+        if k == "SetEnabled" then return function(self, b) rawset(self, "_enabled", b) return self end end
+        if k == "IsValid" then return function() return not rawget(t, "_removed") end end
+        if k == "Remove" then return function() rawset(t, "_removed", true) end end
+        if k == "GetWide" or k == "GetTall" then return function() return 400 end end
+        if string.sub(k, 1, 1) == "_" then return nil end
+        return function() return P() end
+    end })
+end
+local saved = { vgui, net.SendToServer, net.Start, net.WriteString, net.WriteUInt, net.ReadUInt, net.ReadData, util.Decompress, util.JSONToTable }
+local rects, boxes, colors = {}, {}, {}
+local dRB, sDR, sSDC = rawget(draw, "RoundedBox"), rawget(surface, "DrawRect"), rawget(surface, "SetDrawColor")
+local cur, doc
+vgui = { Create = function() return P() end, GetKeyboardFocus = function() return nil end }
+net.Start = function(n) cur = { name = n, data = {} } end
+net.WriteString = function(v) table.insert(cur.data, v) end
+net.WriteUInt = function(v) table.insert(cur.data, v) end
+net.SendToServer = function() sent[#sent + 1] = cur end
+net.ReadUInt = function() return 1 end
+net.ReadData = function() return "x" end
+util.Decompress = function(s) return s end
+util.JSONToTable = function() return doc end
+local function find(text, nth)
+    local n = 0
+    for _, p in ipairs(made) do if rawget(p, "_text") == text then n = n + 1 if n == (nth or 1) then return p end end end
+end
+local okB, errB = pcall(function()
+    doc = { yours = { { id = "gun_pistol", name = "Pistol", n = 2, price = 5 } }, his = { { id = "water_purified", name = "Purified water", price = 4, max = 10 } },
+        credits = 30, fund = 0, goodwill = 7, full = 10, pre = { gun_pistol = 1 } }
+    net.recv_lc_barter()
+    local f = LC_CL.BarterFrame
+    if not (f and f:IsValid()) then error("the barter view didn't open") end
+    local all = table.concat(texts, "|")
+    for _, want in ipairs({ "Yours", "His", "Trade", "Goodwill", "5 credits", "0 credits" }) do
+        if not string.find(all, want, 1, true) then error("the view is missing \"" .. want .. "\": " .. all) end
+    end
+    if tips[#tips] ~= "Goodwill: 7 credits" then error("the bar's tooltip should say \"Goodwill: 7 credits\", it says " .. tostring(tips[#tips])) end
+    for _, p in ipairs(made) do local fn = rawget(p, "Paint") if fn then fn(p, 300, 28) end end
+    -- two of his waters (8) for one gun (5): 3 short, within the bar's 7
+    local plusHis = find("+", 2)
+    plusHis.DoClick(plusHis) plusHis.DoClick(plusHis)
+    local st = LC_CL.BarterState()
+    local trade = find("Trade")
+    if st.short ~= 3 or not st.can or rawget(trade, "_enabled") ~= true then error("3 short with 7 of goodwill should be allowed: short " .. tostring(st.short)) end
+    trade.DoClick(trade)
+    local m = sent[#sent]
+    if not (m and m.name == "lc_barter" and m.data[1] == 2 and m.data[2] == 0 and m.data[3] == 1 and m.data[4] == "gun_pistol" and m.data[5] == 1
+        and m.data[6] == 1 and m.data[7] == "water_purified" and m.data[8] == 2) then error("Trade didn't send the trade as it stands") end
+    -- the bar: 7 of 10 filled, the 3 short shaded on the bar's own scale
+    draw.RoundedBox = function(_, x, y, w, h) boxes[#boxes + 1] = { x, y, w, h } end
+    surface.DrawRect = function(x, y, w, h) rects[#rects + 1] = { x, y, w, h } end
+    surface.SetDrawColor = function(c) colors[#colors + 1] = c end
+    LC_CL.BarterBar.Paint(LC_CL.BarterBar, 100, 6)
+    if not (boxes[2] and boxes[2][3] == 70 and rects[1] and rects[1][1] == 40 and rects[1][3] == 30) then
+        error("the bar should fill 70 of 100 and shade 30 from 40, it drew " .. tostring(boxes[2] and boxes[2][3]) .. " and " .. tostring(rects[1] and (rects[1][1] .. "+" .. rects[1][3])))
+    end
+    -- two more waters: 11 short, more than the bar holds: Trade greyed
+    plusHis.DoClick(plusHis) plusHis.DoClick(plusHis)
+    st = LC_CL.BarterState()
+    if st.can or rawget(trade, "_enabled") ~= false then error("11 short with 7 of goodwill should grey Trade") end
+    -- credits from the pocket make it up
+    local wang
+    for _, p in ipairs(made) do if rawget(p, "OnValueChanged") then wang = p end end
+    wang.OnValueChanged(wang, 11)
+    st = LC_CL.BarterState()
+    if not st.can or st.short ~= 0 or st.credits ~= 11 then error("11 credits from the pocket should make up 11 short") end
+    -- yours worth more: the fund's part, as far as it holds
+    doc = { yours = { { id = "gun_pistol", name = "Pistol", n = 2, price = 5 } }, his = {}, credits = 0, fund = 3, goodwill = 0, full = 0, pre = { gun_pistol = 2 }, status = "You don't have that much." }
+    net.recv_lc_barter()
+    st = LC_CL.BarterState()
+    if st.fund ~= 3 or st.his ~= 3 or not st.can then error("two guns (10) for nothing of his with 3 in the fund: the fund's 3 on his side") end
+    if not string.find(table.concat(texts, "|"), "You don't have that much.", 1, true) then error("the refusal line isn't shown") end
+end)
+vgui, net.SendToServer, net.Start, net.WriteString, net.WriteUInt, net.ReadUInt, net.ReadData, util.Decompress, util.JSONToTable =
+    saved[1], saved[2], saved[3], saved[4], saved[5], saved[6], saved[7], saved[8], saved[9]
+rawset(draw, "RoundedBox", dRB) rawset(surface, "DrawRect", sDR) rawset(surface, "SetDrawColor", sSDC)
+if not okB then return "the quartermaster's barter: " .. tostring(errB) end
 return nil
 """)
 if err:
