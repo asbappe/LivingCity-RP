@@ -524,8 +524,9 @@ local tester = {
     cp = newPlayer("QCop", "cp"), ota = newPlayer("QOTA", "ota"), admin = newPlayer("QAdmin", "admin"),
     resistance = newPlayer("QRebel", "resistance", nil, 900), citizen = newPlayer("QCitizen", "citizen"),
     zombie = newPlayer("QZombie", "zombie"),
+    chaplain = newPlayer("QPriest", "resistance", "chaplain", 200), -- (in the table, so a section or shard that borrows it has him too)
 }
-tester.chaplain = newPlayer("QPriest", "resistance", "chaplain", 200)
+
 local member = newPlayer("QMember", "resistance", nil, 150)
 local built, started, problems = 0, 0, {}
 for _, t in ipairs(LC.QuestTemplates) do
