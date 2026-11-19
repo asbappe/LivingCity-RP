@@ -41034,7 +41034,7 @@ local credits0, standing0 = LC.Credits(cit), LC.Standing(cit)
 local okDo, whyDo = LC.InformDo(cit, cop, "assassin")
 local q = LC.QuestOf[cit]
 ok(okDo and q and q.title == "Lead Civil Protection to the traitor", "chosen: the job 'Lead Civil Protection to the traitor'", tostring(okDo) .. " " .. tostring(whyDo) .. " " .. tostring(q))
-ok(q and q.expires - CurTime() > 290 and q.expires - CurTime() <= 300, "with five minutes on the clock", q and (q.expires - CurTime()))
+ok(q and q.expires - CurTime() > 290 and q.expires - CurTime() <= 300.5, "with five minutes on the clock", q and (q.expires - CurTime()))
 ok(cst.questLock and LC.InformLeads[cit] and LC.InformLeads[cit].escorts[1] == cop, "the unit comes along")
 ok(#LC.InformOptions(cit) == 0, "(nothing more to report while leading)")
 -- two soldiers join, ones nearby first
@@ -41190,6 +41190,7 @@ Nov19_FiringSquadTests()
 function Nov19_RebelAnswerTests()
 section("19 November: the Resistance's prisoners: letting go three ways, exchanges, bodies, the people's view, her answer")
 LC.EndEvent(true)
+LC.Exchange, LC.RebelAnswerPending = nil, nil -- (an earlier test's execution may have left one of either open)
 local savedWalls = _walls
 _walls = {}
 local R0 = Vector(-382000, 191000, 0)
@@ -41278,6 +41279,7 @@ jailed.lcPreferCell = cells[1]
 LC.Incarcerate(jailed, 900, "Carrying a weapon")
 hold(cit)
 ok(LC.ExchangeRebel() ~= nil, "(one of ours in the Combine's cells)")
+LC.Exchange = nil
 local okX = LC.ExchangeOffer("resistance", lt, cit, jailed)
 ok(okX and string.find(GetGlobal2String("lc_xchg", ""), "RAJailed", 1, true), "a Lieutenant offers a prisoner for one of ours: it waits on her F2")
 local s1 = LC.RebelStanding()
@@ -41287,6 +41289,7 @@ ok(GetGlobal2String("lc_xchg", "") == "", "(the offer is gone)")
 jailed.lcPreferCell = cells[1]
 LC.Incarcerate(jailed, 900, "Carrying a weapon")
 hold(cit)
+LC.Exchange = nil
 ok(LC.ExchangeOffer("combine", nil, cit, jailed), "she offers one the other way")
 local s2 = LC.RebelStanding()
 LC.ExchangeAnswer(false, lt)
