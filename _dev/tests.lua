@@ -1805,7 +1805,7 @@ local fighter = newPlayer("Fighter", "resistance", nil, 500)
 fighter:SetPos(Vector(-6000, -6000, 0))
 ok(fighter:HasWeapon("weapon_pistol") and not LC.DealerSell(fighter, "w:weapon_pistol") and fighter:HasWeapon("weapon_pistol"), "but not what your faction issued you")
 for _, it in pairs(LCS.Items) do
-    if not it.doc and not (it.sell and it.sell >= 1) then ok(false, "every item has a resale price") break end
+    if not it.doc and not it.tooCheap and not (it.sell and it.sell >= 1) then ok(false, "every item has a resale price (but what costs under a credit a piece, paper)") break end
 end
 -- a lockpick of your own
 for _ = 1, 4 do LC.GiveItem(buyer2, "scrap") end
@@ -39352,7 +39352,7 @@ cop:SetPos(M0 + Vector(20000, 0, 0)) cop.chat = {} -- (a unit near would put the
 ------------------------------------------------------------------------
 do
     local R = LC.StillRecipe
-    ok(R.batch == 4 and R.water == 2 and R.food == 1 and R.secs == 300, "a batch: a ration packet, 2 water and an empty bottle for each of 4 bottles, five minutes", R.batch .. " " .. R.water .. " " .. R.food .. " " .. R.secs)
+    ok(R.batch == 8 and R.water == 2 and R.food == 1 and R.secs == 300, "a batch: a ration packet, 2 water and an empty bottle for each of 8 bottles, five minutes", R.batch .. " " .. R.water .. " " .. R.food .. " " .. R.secs)
     ok(LC.POINT_KINDS.still and LC.POINT_KINDS.cardtable, "both are placed with the editor and saved with the layout (point kinds still and cardtable)")
     local still = ents.Create("lc_still") still:SetPos(M0 + Vector(60, 0, 0)) still:Spawn()
     rebel:SetPos(M0 + Vector(20, 0, 0)) cit:SetPos(M0 + Vector(20, 20, 0))
@@ -39360,9 +39360,9 @@ do
     drop(rebel, "bottle_empty")
     for _, id in ipairs(R.foods) do drop(rebel, id) end
     rebel.chat = {}
-    ok(LC.UseStill(rebel, still) == false and #rebel.chat == 1 and string.find(rebel.chat[1], "You need a ration packet, 2 water and 4 empty bottles.", 1, true) ~= nil,
+    ok(LC.UseStill(rebel, still) == false and #rebel.chat == 1 and string.find(rebel.chat[1], "You need a ration packet, 2 water and 8 empty bottles.", 1, true) ~= nil,
         "without the makings: one line, the whole recipe", table.concat(rebel.chat, " | "))
-    LC.GiveItem(rebel, "ration", 1) LC.GiveItem(rebel, "bottle_dirty", 1) LC.GiveItem(rebel, "water_purified", 1) LC.GiveItem(rebel, "bottle_empty", 3)
+    LC.GiveItem(rebel, "ration", 1) LC.GiveItem(rebel, "bottle_dirty", 1) LC.GiveItem(rebel, "water_purified", 1) LC.GiveItem(rebel, "bottle_empty", 7)
     rebel.chat = {}
     ok(LC.UseStill(rebel, still) == false and #rebel.chat == 1, "(one empty bottle short: the same line)", table.concat(rebel.chat, " | "))
     LC.GiveItem(rebel, "bottle_empty", 1)
@@ -39373,7 +39373,7 @@ do
     ok(LC.UseStill(rebel, still) == true and #rebel.chat == 0, "with them: it starts brewing, without a word")
     local water1 = 0
     for _, id in ipairs(R.waters) do water1 = water1 + inv(rebel, id) end
-    ok(inv(rebel, "bottle_empty") == e0 - 4 and inv(rebel, "ration") == r0 - 1 and water1 == water0 - 2, "it takes the recipe: 4 empty bottles, the ration and 2 water",
+    ok(inv(rebel, "bottle_empty") == e0 - 8 and inv(rebel, "ration") == r0 - 1 and water1 == water0 - 2, "it takes the recipe: 8 empty bottles, the ration and 2 water",
         inv(rebel, "bottle_empty") .. " " .. inv(rebel, "ration") .. " " .. water1)
     ok(still:GetNW2Float("lc_brew_done", 0) > CurTime(), "and brews, steaming (what the client draws while it works)")
     ok(LC.UseStill(rebel, still) == false and inv(rebel, "moonshine") == m0, "E again while it brews: nothing yet")
@@ -39382,8 +39382,8 @@ do
     _advance(R.secs + 1) _runtimers()
     ok(still:GetNW2Float("lc_brew_done", 0) <= CurTime() and inv(rebel, "moonshine") == m0, "it brews by itself with nobody near it (no step stands anyone anywhere)")
     rebel:SetPos(M0 + Vector(20, 0, 0))
-    ok(LC.UseStill(helper, still) == true and inv(helper, "moonshine") >= 4, "E when it is done takes the bottles: four moonshine (any of ours may take them)")
-    LC.TakeItem(helper, "moonshine", 4) LC.GiveItem(rebel, "moonshine", 4)
+    ok(LC.UseStill(helper, still) == true and inv(helper, "moonshine") >= 8, "E when it is done takes the bottles: eight moonshine (any of ours may take them)")
+    LC.TakeItem(helper, "moonshine", 8) LC.GiveItem(rebel, "moonshine", 4)
     ok(still.lcBrew == nil and still:GetNW2Float("lc_brew_done", 0) == 0, "and it stands ready for the next batch")
     ok(LCS.Items.moonshine.contraband == true, "moonshine is contraband")
     local found = LC.SearchPockets(rebel, 1, true)
@@ -40169,6 +40169,25 @@ book.armory = armoryWas
 setFund(fundWas)
 end
 Nov19_ArmoryBarterTests()
+
+function Nov19_NoPackLoopTests()
+section("Nothing bought in a pack and sold back one by one makes credits (the owner, 19 November)")
+ok(LCS.Items.cig_rolled.sell == 1 and LCS.Items.cig_union.sell == 1, "a cigarette is bought back for 1, not 4 (five for 10 at the dealer)", LCS.Items.cig_rolled.sell)
+local cit = newPlayer("PackLoopCitizen", "citizen")
+_run(0.3)
+local bad = {}
+for _, list in ipairs({ LCS.Black or {}, LCS.Goods or {} }) do
+    for _, g in ipairs(list) do
+        if g.item and not g.lab and not g.cpOnly then
+            local back = LC.SellPrice(cit, g.item)
+            if back and back * (g.count or 1) >= g.price then bad[#bad + 1] = g.id .. " (" .. back .. " x " .. (g.count or 1) .. " for " .. g.price .. ")" end
+        end
+    end
+end
+ok(#bad == 0, "no pack the dealer or the Commissary sells is bought back for as much as it costs", table.concat(bad, ", "))
+cit:Remove()
+end
+Nov19_NoPackLoopTests()
 
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")
 ;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)

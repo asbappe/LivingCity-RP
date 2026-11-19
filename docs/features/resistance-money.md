@@ -12,9 +12,9 @@ The owner: "The still. Moonshine brewed at the camp or lab from water, bottles a
 
 - **A fixture**, "Fixture: Resistance still" in the editor (point kind `still`, entity `lc_still`, a boiler), meant for a camp or beside the lab. Saved with the layout like any fixture.
 - **A Resistance member presses E with the makings in their pockets:** a ration packet (or a short ration), 2 water (any bottle or can of water, untreated included: the still boils it) and an empty bottle for each bottle made, 4. They are taken, and it brews by itself for **5 minutes**. Nobody has to stay (house rule 9): it steams and hisses quietly while it works. **E when it is done takes the 4 bottles of moonshine** (any member may take them). Anyone else's E does nothing.
-- Lacking something, one line: "You need a ration packet, 2 water and 4 empty bottles."
+- Lacking something, one line: "You need a ration packet, 2 water and 8 empty bottles."
 - **Moonshine is contraband**, as it always was: a unit's search takes it.
-- The numbers are constants at the top of the module (`BATCH` 4, `WATER` 2, `FOOD` 1, `BREW_SECS` 300). A batch brewing is not kept over a restart.
+- The numbers are constants at the top of the module (`BATCH` 8, doubled on 19 November at the owner's word ("just increase the amount in a batch please by double"; an empty bottle for each), `WATER` 2, `FOOD` 1, `BREW_SECS` 300). A batch brewing is not kept over a restart.
 
 ## 2. The dealer sells only what the Resistance sold him
 

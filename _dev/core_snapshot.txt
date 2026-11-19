@@ -404,6 +404,7 @@ item gas_mask_broken
 item gren_flash
 item gren_smoke
 item gun_357
+item gun_ar2
 item gun_parts
 item gun_pistol
 item gun_shotgun

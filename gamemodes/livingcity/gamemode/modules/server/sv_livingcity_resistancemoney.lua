@@ -77,7 +77,8 @@ util.AddNetworkString("lc_cards_deal")
 ------------------------------------------------------------------------
 
 -- the still: one batch is BATCH bottles of moonshine
-local BATCH = 4              -- bottles a batch makes; an empty bottle goes in for each
+local BATCH = 8              -- bottles a batch makes; an empty bottle goes in for each (the owner, 19 November: "just
+                             -- increase the amount in a batch please by double"; it was 4)
 local WATER = 2              -- water a batch takes (any bottle or can of water: WATERS)
 local FOOD = 1               -- ration food a batch takes (FOODS)
 local BREW_SECS = 300        -- how long it brews by itself
