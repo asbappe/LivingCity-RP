@@ -315,6 +315,7 @@ WORDS = {
     "breakout": ("Prisoners break out", "Alert: unauthorized departure from detention. All residents, report sightings to Civil Protection.", "Some people have run from where they belong. If you see them, tell a unit. Now."),
     "overwatch_drop": ("Overwatch soldiers are dropped in", "Overwatch deployment in progress. Residents, clear the landing zone.", "Overwatch soldiers are arriving. Make way for them."),
     "block_raided": ("A housing block is raided", "Housing block inspection in progress. Remain in your unit.", "We're checking one of our housing blocks. Stay in your room and it'll be quick."),
+    "shelled": ("Headcrab canisters come down on a district the Resistance hold (as they come in)", "Biotic ordnance deployed on an anticivil sector. Residents, remain indoors. Do not approach the canisters.", "Some of our city was given over to troublemakers. We are taking it back. Stay indoors, and keep well away from the canisters."),
     "territory_grew": ("The Resistance gains ground", "Alert: anticivil activity expanding. Avoid unregistered areas.", "Some troublemakers are spreading out. Don't go near them, and don't listen to them."),
     "train_arrival": ("A train arrives", "Attention: new arrivals at the platform. Proceed to Civil Intake.", "Welcome to the city, all you new faces! Civil Intake is just this way."),
     "welcome": ("Someone joins the server (just for them)", "Attention, new resident: report to Civil Intake for registration.", "Hello, and welcome to the city! You're going to love it here."),
@@ -359,6 +360,8 @@ def CUB_WHAT(i):
     """What one of Colonel Cubbage's lines answers (section 12 and the scripts)."""
     if i.startswith("fund_"):
         return "(after his closing, while the Resistance's fund is under 50 credits for ten minutes; tired, pleading)"
+    if i == "shelled":
+        return "(on Freq 7, a minute after the Combine shell a district with headcrab canisters; angry, steady)"
     return {"open": "(his opening)", "close": "(his closing)"}.get(i, "her `speech_%s`" % i)
 
 
@@ -821,7 +824,7 @@ def scripts(doc, street, units, group_of, order, done=frozenset(), rows=()):
                 "studio recording.` (Describes a kind of voice: no game or actor named.)", "",
                 "| Done | File | Answers | Paste |", "|---|---|---|---|"]
         for r in cub:
-            tag = "[tired, pleading, plain]" if r[1].startswith("fund_") else "[defiant, dry, a speaker enjoying himself]"
+            tag = "[tired, pleading, plain]" if r[1].startswith("fund_") else ("[angry, steady, low]" if r[1] == "shelled" else "[defiant, dry, a speaker enjoying himself]")
             out.append("| [ ] | `answer_%s1` | %s | %s %s |" % (r[1], CUB_WHAT(r[1]), tag, r[3]))
             batch.append(("cubbage", "livingcity/cubbage/answer_" + r[1] + "1", tag + " " + r[3]))
             n += 1

@@ -24,7 +24,7 @@ Ticked [x] below: the server already has it. Left to record, 357 files:
 - **machines** (`machines/`): 10 missing
 - **Colonel Cubbage** (`cubbage/`): 24 missing
 - **the Resistance's people** (`resistance/`): nothing missing
-- **added since the server's list was made**: 105 more rows (unticked below; run `lc_voice_missing` again after uploading and they are checked too)
+- **added since the server's list was made**: 108 more rows (unticked below; run `lc_voice_missing` again after uploading and they are checked too)
 
 Run `lc_voice_missing` on the server after uploading, and give Claude the list (or `data/livingcity/voice_missing.txt`) to update the ticks. The Colonel's own lines (the ghost) aren't checked by it.
 
@@ -169,6 +169,7 @@ Folder: `administrator/`. **Use the voice her existing recordings were made with
 | [ ] | `question_hideout_stern1.wav` | The city's own Administrator questions whoever tried to kill her, in the cells: asked of a member of the Resistance | [stern, cold, slowly] Where do they meet? |
 | [ ] | `question_why_stern1.wav` | The city's own Administrator questions whoever tried to kill her, in the cells: asked of anyone else | [stern, cold, slowly] You tried to kill me. Why? |
 | [ ] | `question_who_stern1.wav` | The city's own Administrator questions whoever tried to kill her, in the cells: asked of anyone else | [stern, cold, slowly] Who put you up to it? |
+| [ ] | `shelled_stern1.wav` | Headcrab canisters come down on a district the Resistance hold (as they come in) | [stern, cold, slowly] Some of our city was given over to troublemakers. We are taking it back. Stay indoors, and keep well away from the canisters. |
 
 ## What named citizens say
 
@@ -365,6 +366,7 @@ Folder: `cubbage/`. Odessa Cubbage, alive and well, answering her address from t
 | [ ] | `answer_attempt_measures1` | her `speech_attempt_measures` | [defiant, dry, a speaker enjoying himself] She never wanted checkpoints. She only built them, manned them and kept them. |
 | [ ] | `answer_attempt_resolve1` | her `speech_attempt_resolve` | [defiant, dry, a speaker enjoying himself] She isn't going anywhere, she says. We'll see about that. |
 | [ ] | `answer_slogan1` | her `speech_slogan` | [defiant, dry, a speaker enjoying himself] Love your neighbour, hate the traitor, she says. We agree. Ask yourself who sold this city. |
+| [ ] | `answer_shelled1` | (on Freq 7, a minute after the Combine shell a district with headcrab canisters; angry, steady) | [angry, steady, low] They dropped headcrabs on our own people rather than face us. Remember that the next time she talks about order. Clear them out, and help your neighbours do the same. |
 | [ ] | `answer_close1` | (his closing) | [defiant, dry, a speaker enjoying himself] That's all from me. Keep your heads down, your eyes open, and your door unlocked for a friend. We're closer than she thinks. |
 | [ ] | `answer_fund_crowbars1` | (after his closing, while the Resistance's fund is under 50 credits for ten minutes; tired, pleading) | [tired, pleading, plain] One more thing. Some of ours are going out with crowbars, some with nothing at all. Give what you can, at the camp. |
 | [ ] | `answer_fund_empty1` | (after his closing, while the Resistance's fund is under 50 credits for ten minutes; tired, pleading) | [tired, pleading, plain] One more thing. Our fund is empty, and our fighters are going out with crowbars. If you have credits, bring them to the camp. |
@@ -452,6 +454,7 @@ Folder: `overwatch/`. Overwatch: cold and clinical, a dispatcher, the same voice
 | [ ] | `speech_soon1` | Her address is called: the city must gather (Overwatch's when a player Administrator calls it from her tablet; hers when the city gives it) | [cold, clinical, flat dispatcher] Attention, all residents: the City Administrator will address the city. Report to the assembly point immediately. Attendance is mandatory. |
 | [ ] | `attempt1` | An attempt on her life at her address, three to five minutes after it (hers with nobody playing her, Overwatch's with a player in the post) | [cold, clinical, flat dispatcher] Attention, all units: an attempt has been made on the life of the City Administrator. The Administrator is secure. All sectors are sealed. Locate and apprehend the assailant. |
 | [ ] | `hunt1` | A hunt for whoever tried to kill her begins: Dispatch to the units, heard on their radios only, in sound only (never the PA, no words on screen); give it the unit lines' radio sound | [cold, clinical, flat dispatcher] All units: an attempt was made on the Administrator's life. The suspect is at large. Take them alive. |
+| [ ] | `shelled1` | Headcrab canisters come down on a district the Resistance hold (as they come in) | [cold, clinical, flat dispatcher] Biotic ordnance deployed on an anticivil sector. Residents, remain indoors. Do not approach the canisters. |
 
 ## The radio
 

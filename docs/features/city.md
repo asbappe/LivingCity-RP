@@ -85,6 +85,7 @@ Every day each number drifts 2 back toward 50. While the server is empty the cit
 - **Declare an amnesty**: every wanted citizen forgiven. Morale +6, authority -8, the Resistance +3. Once a city day.
 - **Order a crackdown on a district**: a block raid there now and the district marked for two days. Authority +5, morale -6, the Resistance +4.
 - **Order extra rations**: a ration day now. Supply -15, morale +8; not with the stores under 20.
+- **Shell a Resistance district with headcrabs** (19 November; the owner's long-term plan, item 2): headcrab canisters on a district in the Resistance's hands (only those are listed). Morale -5, the Resistance -3; the district's infestation rises for everyone (down in its tunnels when it has no open sky). Greyed with "ready in ..." for 45 minutes after any shelling (`docs/features/infestation-cleanup.md`).
 
 **On the streets (phase two):**
 - **A district under a crackdown has a checkpoint:** a Civil Protection unit posted in the middle of it, stopping and searching whoever passes, until the crackdown ends.

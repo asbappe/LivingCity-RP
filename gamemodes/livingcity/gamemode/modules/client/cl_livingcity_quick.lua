@@ -701,6 +701,20 @@ local function LeversPage()
         return { title = "WHICH DISTRICT?", items = its, empty = #its == 0 and { "No housing blocks in this city." } or nil }
     end)
     items[#items + 1] = Item("Order extra rations (supply -15, morale +8)", function() Send("extrarations") end)
+    -- headcrab canisters on a district the Resistance hold (sv_livingcity_shelling.lua)
+    local ready = Later(GetGlobal2Float("lc_shell_next", 0) - CurTime())
+    if ready then
+        items[#items + 1] = Can("Shell a Resistance district with headcrabs", function() end, "ready " .. ready)
+    else
+        items[#items + 1] = Page("Shell a Resistance district with headcrabs (morale -5, Resistance -3)", function()
+            local its = {}
+            for _, d in ipairs(l.districts or {}) do
+                if d.owner == "resistance" and #its < 8 then its[#its + 1] = Item(tostring(d.name), function() Send("shell", tostring(d.n)) end) end
+            end
+            return { title = "WHICH DISTRICT?", items = its, empty = #its == 0 and { "The Resistance hold no district." } or nil }
+        end)
+    end
+    items[#items].id = "shell"
     return { title = "THE CITY'S LEVERS", items = items }
 end
 

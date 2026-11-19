@@ -48,6 +48,7 @@ administrator	livingcity/administrator/question_supplies_stern1	[stern, cold, sl
 administrator	livingcity/administrator/question_hideout_stern1	[stern, cold, slowly] Where do they meet?
 administrator	livingcity/administrator/question_why_stern1	[stern, cold, slowly] You tried to kill me. Why?
 administrator	livingcity/administrator/question_who_stern1	[stern, cold, slowly] Who put you up to it?
+administrator	livingcity/administrator/shelled_stern1	[stern, cold, slowly] Some of our city was given over to troublemakers. We are taking it back. Stay indoors, and keep well away from the canisters.
 man	livingcity/citizens/say_open_listen_male1	[low, urgent] Listen.
 woman	livingcity/citizens/say_open_listen_female1	[low, urgent] Listen.
 man	livingcity/citizens/say_open_look_male1	[tired, flat] Look.

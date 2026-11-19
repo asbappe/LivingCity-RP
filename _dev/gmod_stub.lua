@@ -45,6 +45,40 @@ function AMT:Right() local y = math.rad(self.y - 90) return Vector(math.cos(y), 
 -- (only turns about an upright axis are modelled: enough for drawing)
 function AMT:RotateAroundAxis(axis, deg) if axis and math.abs(axis.z or 0) > 0.9 then self.y = self.y + deg * (axis.z > 0 and 1 or -1) end end
 angle_zero = Angle()
+-- Matrix, WorldToLocal and LocalToWorld (the sleeper on the bed, a body laid down): like the angles
+-- above, only turns about an upright axis are modelled for positions; the matrix keeps its three axes.
+local MMT = {}
+MMT.__index = MMT
+function Matrix() return setmetatable({ f = Vector(1, 0, 0), r = Vector(0, -1, 0), u = Vector(0, 0, 1), t = Vector(0, 0, 0), s = Vector(1, 1, 1) }, MMT) end
+function MMT:SetForward(v) self.f = Vector(v.x, v.y, v.z) end
+function MMT:SetRight(v) self.r = Vector(v.x, v.y, v.z) end
+function MMT:SetUp(v) self.u = Vector(v.x, v.y, v.z) end
+function MMT:GetForward() return Vector(self.f.x, self.f.y, self.f.z) end
+function MMT:GetRight() return Vector(self.r.x, self.r.y, self.r.z) end
+function MMT:GetUp() return Vector(self.u.x, self.u.y, self.u.z) end
+function MMT:SetTranslation(v) self.t = Vector(v.x, v.y, v.z) end
+function MMT:GetTranslation() return Vector(self.t.x, self.t.y, self.t.z) end
+function MMT:Translate(v) self.t = self.t + v end
+function MMT:Scale(v) self.s = Vector(v.x, v.y, v.z) end
+function MMT:GetScale() return Vector(self.s.x, self.s.y, self.s.z) end
+function MMT:Rotate(a) self:SetAngles(Angle(0, (self:GetAngles().y or 0) + (a.y or 0), 0)) end
+function MMT:SetAngles(a) self.f, self.r, self.u = a:Forward(), a:Right(), a:Up() end
+function MMT:GetAngles()
+    local f = self.f
+    local len = math.sqrt(f.x * f.x + f.y * f.y + f.z * f.z)
+    if len == 0 then return Angle() end
+    return Angle(-math.deg(math.asin(math.max(-1, math.min(1, f.z / len)))), math.deg(math.atan2(f.y, f.x)), 0)
+end
+function WorldToLocal(pos, ang, origin, oang)
+    local d, yaw = pos - origin, math.rad(oang.y or 0)
+    local c, s = math.cos(yaw), math.sin(yaw)
+    return Vector(d.x * c + d.y * s, -d.x * s + d.y * c, d.z), Angle(ang.p - oang.p, ang.y - oang.y, ang.r - oang.r)
+end
+function LocalToWorld(lpos, lang, origin, oang)
+    local yaw = math.rad(oang.y or 0)
+    local c, s = math.cos(yaw), math.sin(yaw)
+    return origin + Vector(lpos.x * c - lpos.y * s, lpos.x * s + lpos.y * c, lpos.z), Angle(lang.p + oang.p, lang.y + oang.y, lang.r + oang.r)
+end
 function Color(r, g, b, a) return { r = r, g = g, b = b, a = a or 255 } end
 function VectorRand() return Vector(math.Rand(-1, 1), math.Rand(-1, 1), math.Rand(-1, 1)) end
 color_white, color_black = Color(255, 255, 255), Color(0, 0, 0)

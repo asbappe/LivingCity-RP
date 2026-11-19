@@ -85,6 +85,8 @@ LC.SpeechAnswerLines = {
     fund_nothing = "Before I go. We have almost nothing left to arm anyone with. Whatever you can give, give it at the screen in our camp.",
     fund_promises = "And one last word. I can't arm people with speeches. If you have credits to spare, the fund needs them.",
     fund_crowbars = "One more thing. Some of ours are going out with crowbars, some with nothing at all. Give what you can, at the camp.",
+    -- not part of an answer: on Freq 7 a minute after a shelling (sv_livingcity_shelling.lua)
+    shelled = "They dropped headcrabs on our own people rather than face us. Remember that the next time she talks about order. Clear them out, and help your neighbours do the same.",
 }
 
 -- His answer to an address: a list of { id, words } (an opening, up to three answers, a closing).
