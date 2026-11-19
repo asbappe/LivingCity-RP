@@ -30,10 +30,15 @@ const ART = {
     `<rect x="-38" y="-20" width="76" height="40" fill="${O}"/>` + f('M38,-50 L20,-32 L38,-12 Z', P) +
     `<ellipse cx="0" cy="-62" rx="38" ry="10" fill="${P}" stroke="${K}" stroke-width="6"/><ellipse cx="4" cy="-62" rx="10" ry="3.5" fill="${K}"/>` +
     s('M-26,34 L-26,52', 5, P, 'opacity=".5"') + '</g>',
-  // a ration packet
-  3: () => f('M-56,-78 L56,-78 L64,92 L-64,92 Z') + s('M-52,-62 l13,-9 l13,9 l13,-9 l13,9 l13,-9 l13,9 l13,-9 l13,9', 4, P) +
-    `<rect x="-42" y="-38" width="84" height="72" fill="${P}"/>` + `<circle cx="0" cy="-2" r="22" fill="none" stroke="${K}" stroke-width="7"/>` +
-    f('M0,-2 L30,-20 L30,10 Z', P) + c(0, -2, 7) + f('M-63,50 L63,50 L64,72 L-64,72 Z', O),
+  // a ration packet: the sealed pouch from the dispenser, crimped at both ends, the Combine's emblem on its label
+  3: () => `<ellipse cx="4" cy="104" rx="72" ry="8" fill="${K}" opacity=".22"/><g transform="rotate(-7)">` +
+    f('M-56,-96 L56,-96 L60,-72 L-60,-72 Z') + f('M-60,72 L60,72 L56,96 L-56,96 Z') +
+    s('M-44,-90 l0,12 M-33,-90 l0,12 M-22,-90 l0,12 M-11,-90 l0,12 M0,-90 l0,12 M11,-90 l0,12 M22,-90 l0,12 M33,-90 l0,12 M44,-90 l0,12', 3, P) +
+    s('M-44,78 l0,12 M-33,78 l0,12 M-22,78 l0,12 M-11,78 l0,12 M0,78 l0,12 M11,78 l0,12 M22,78 l0,12 M33,78 l0,12 M44,78 l0,12', 3, P) +
+    `<path d="M-60,-72 Q0,-80 60,-72 Q70,0 60,72 Q0,80 -60,72 Q-70,0 -60,-72 Z" fill="${P}" stroke="${K}" stroke-width="7" stroke-linejoin="round"/>` +
+    `<rect x="-34" y="-52" width="68" height="62" fill="${K}"/><g transform="translate(0,-21) scale(.44)">${SUITS[1].mark(P)}</g>` +
+    `<rect x="-46" y="22" width="92" height="13" fill="${O}"/>` + s('M-44,48 L-8,48 M2,48 L44,48 M-44,60 L18,60', 5) +
+    s('M-50,-56 Q-56,0 -50,56', 4, K, 'opacity=".25"') + '</g>',
   // a headcrab
   4: () => mirror(s('M-50,-10 Q-92,-22 -100,34', 12) + s('M-42,18 Q-74,34 -70,90', 14) + s('M-70,90 l-10,10', 7) + s('M-100,34 l-8,10', 7)) +
     f('M-64,12 Q-68,-48 0,-56 Q68,-48 64,12 Q40,38 0,34 Q-40,38 -64,12 Z') + s('M-36,-32 Q0,-48 36,-32', 5, P, 'opacity=".45"') +
