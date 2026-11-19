@@ -31,7 +31,10 @@ end
 
 if SERVER then
     function ENT:Use(activator)
-        if IsValid(activator) and activator:IsPlayer() and LC and LC.FundScreenOpen then LC.FundScreenOpen(activator, self) end
+        if not (IsValid(activator) and activator:IsPlayer() and LC and LC.FundScreenOpen) then return end
+        if (activator.lcFundTVNext or 0) > CurTime() then return end
+        activator.lcFundTVNext = CurTime() + 0.5
+        LC.FundScreenOpen(activator, self)
     end
 end
 
