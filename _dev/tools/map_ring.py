@@ -25,9 +25,9 @@ The owner removes brush 14734 (the sky wall at the west road's end) and 15630 (t
 wall before it). That brush is 16 thick and off the 64 grid, so the piece carries a 16-unit
 strip in its place (floor, side walls, lid) and, above its own sky, the sky the road sees.
 
-It has a gate in the north wall of its long north run, for the cave forest (which now sits
-there: map_forest.py's default), and takes the first canal's dressing: banks, mud, wall trim,
-drain stubs, bars nobody fits between.
+It has a gate in the west wall of its west run, for the cave forest (which sits out there, on
+the far side of the city from the bunker forest: map_forest.py's default), and takes the first
+canal's dressing: banks, mud, wall trim, drain stubs, bars nobody fits between.
 """
 
 import random
@@ -204,7 +204,7 @@ def ring(args):
     # --- east of the weir -----------------------------------------------------------------------------------
     lf = ("open", lo_f, MAT["canal_floor"])
     lc = ("low", lo_f, MAT["canal_floor"], lo_f + GATE_HIGH)
-    low.keep_out += [(-BIG, -BIG, BIG, 5696), (-BIG, 7000, XW, 9000), (700, 8320, 1900, BIG)]   # the first canal; the high half; the cave forest
+    low.keep_out += [(-BIG, -BIG, BIG, 5696), (-BIG, 7000, XW, 9000)]   # the first canal; the high half
     low.paint((5888, 5696, 6400, 5952), lc)             # the culvert from the first canal's north gate
     low.paint((5888, 5952, 6400, 8064), lf)             # north
     low.paint((0, 7552, 5888, 8064), lf)                # west, along the top of the city (clear of the six leftover rooms)
@@ -212,12 +212,13 @@ def ring(args):
     low.paint((-2048, 6976, 0, 7488), lf)               # ...west...
     low.paint((-2560, 6976, -2048, 7552), lf)           # ...and north again
     low.paint((XW, 7552, -2048, 8064), lf)              # west to the weir
-    low.paint((1024, 8064, 1536, 8320), lc)             # a culvert north: the cave forest's gate (y 8320)
     # --- west of the weir -----------------------------------------------------------------------------------
     hf = ("open", hi_f, MAT["canal_floor"])
-    high.keep_out += [(-2624, -BIG, BIG, BIG), (XW, 7000, BIG, 9000)]   # the city; the low half
+    hc = ("low", hi_f, MAT["canal_floor"], hi_f + GATE_HIGH)
+    high.keep_out += [(-2624, -BIG, BIG, BIG), (XW, 7000, BIG, 9000), (-BIG, -BIG, -5056, BIG)]   # the city; the low half; the cave forest
     high.paint((-4800, 7552, XW, 8064), hf)             # west from the weir
     high.paint((-4800, 2752, -4288, 7552), hf)          # south, down the city's west side (clear of what reaches x -4120)
+    high.paint((-5056, 4864, -4800, 5376), hc)          # a culvert west: the cave forest's gate (x -5056)
     high.paint((-4288, 2752, -3392, 3264), hf)          # east, in toward the road (its north wall 48 clear of the city's wall at y 3376)
     high.paint((-3392, 1664, -2880, 3264), hf)          # south past the road's end
     high.paint((-2880, 1920, -2624, 2560), ("open", hi_r, MAT["quay_floor"]))                    # the quay at the west road's end
@@ -237,14 +238,14 @@ def ring(args):
     vmf.world_box((-2624, 1920, hi_sky, -2608, 2560, hi_sky + 16), sky, sky, sky, vis=wv)
     vmf.world_box((-2624, 1920, hi_sky + 16, -2608, 2560, road_sky), sky, sky, sky, vis=wv)
 
-    # gates: the first canal's north gate, and the cave forest's
+    # gates: the first canal's north gate, and the cave forest's (in the west run's west wall)
     gate_cap(vmf, (5888, 5696, lo_f, 6400, 5760, lo_f + GATE_HIGH), (5888, 5776, lo_f, 6400, 5784, lo_f + GATE_HIGH), "x", "LC ring: south gate's cap (delete to join the first canal)")
-    gate_cap(vmf, (1024, 8256, lo_f, 1536, 8320, lo_f + GATE_HIGH), (1024, 8232, lo_f, 1536, 8240, lo_f + GATE_HIGH), "x", "LC ring: north gate's cap (delete to join the cave forest)")
+    gate_cap(vmf, (-5056, 4864, hi_f, -4992, 5376, hi_f + GATE_HIGH), (-4976, 4864, hi_f, -4968, 5376, hi_f + GATE_HIGH), "y", "LC ring: west gate's cap (delete to join the cave forest)")
 
     # areaportals: inside each gate's culvert and across the west road's end
     pv = "LC ring: areaportals"
     vmf.areaportal((5888, 5824, lo_f, 6400, 5826, lo_f + GATE_HIGH), pv)
-    vmf.areaportal((1024, 8190, lo_f, 1536, 8192, lo_f + GATE_HIGH), pv)
+    vmf.areaportal((-4928, 4864, hi_f, -4926, 5376, hi_f + GATE_HIGH), pv)
     vmf.areaportal((-2658, 1920, hi_r, -2656, 2560, hi_sky), pv)
 
     if args.test:
@@ -275,11 +276,11 @@ def ring(args):
     east.pipes("x", 4160, 7552, 8064, taken_e)
     east.pipes("x", 2560, 7552, 8064, taken_e)
     east.pipes("x", -1024, 6976, 7488, taken_e)
-    west.pipes("y", 5120, -4800, -4288, taken_w)
+    west.pipes("y", 6336, -4800, -4288, taken_w)                                          # (clear of the cave forest's gate)
     east.dress([(XW, 7488, XW + 320, 8128)], taken_e)
     west.dress([(-2944, 2368, -2816, 3008), (XW - 64, 7488, XW + 8, 8128)], taken_w)   # (not at the stairs; not across the weir's top)
-    east.mud(81, skip=[(XW, 7552, XW + 300, 8064), (700, 8320, 1900, 9000), (5000, 5000, 7000, 5696)])   # (not on the weir, nor beyond a gate)
-    west.mud(84)
+    east.mud(81, skip=[(XW, 7552, XW + 300, 8064), (5000, 5000, 7000, 5696)])   # (not on the weir, nor beyond a gate)
+    west.mud(84, skip=[(-10 ** 6, 4000, -5056, 6000)])                                   # (not beyond the cave forest's gate)
 
     # --- where the city's people can walk ---------------------------------------------------------------------------
     node_id = [args.first_node]
@@ -287,8 +288,8 @@ def ring(args):
     def node(x, y, z):
         vmf.point("info_node", (x, y, z + 40), {"nodeid": node_id[0]}, "LC ring: path nodes")
         node_id[0] += 1
-    east.nodes(node, [(5888, 5696, 6400, 5824), (1024, 8192, 1536, 8320), (XW, 7552, XW + 300, 8064)])
-    west.nodes(node, [(-3008, 2432, -2880, 2944)])
+    east.nodes(node, [(5888, 5696, 6400, 5824), (XW, 7552, XW + 300, 8064)])
+    west.nodes(node, [(-3008, 2432, -2880, 2944), (-5056, 4864, -4928, 5376)])
     for (x, y, z) in ((-2944, 2496, hi_r), (-2944, 2656, hi_r - 64), (-2944, 2752, hi_r - 128), (-2944, 2848, hi_r - 208), (-2944, 2976, hi_f),
                       (-3008, 2080, hi_r), (-3136, 2080, hi_r), (-3264, 2080, hi_r),
                       (XW + 40, 7808, hi_f - 24), (XW + 130, 7808, hi_f - 88), (XW + 220, 7808, hi_f - 148), (XW + 320, 7808, lo_f)):
@@ -324,7 +325,7 @@ def ring(args):
         st["banks"], st["fills"], st["ribs"], st["stubs"]))
     print("  it fills x %d to %d, y %d to %d, z %d to %d" % (min(xs), max(xs), min(ys), max(ys), base, hi_sky + 16))
     print("  joins: the first canal's north gate (x 5888 to 6400 at y 5696, floor z %d); the west road's end (x -2608, y 1920 to 2560, floor z %d);" % (lo_f, hi_r))
-    print("         a gate for the cave forest (x 1024 to 1536 at y 8320, floor z %d)" % lo_f)
+    print("         a gate for the cave forest (y 4864 to 5376 at x -5056, floor z %d)" % hi_f)
     if problems:
         for p in problems:
             print("  PROBLEM: " + p)
