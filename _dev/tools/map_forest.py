@@ -38,6 +38,11 @@ FMAT = {
     "bunker_wall": "concrete/concretewall008a",   # these three are in the owner's own map
     "bunker_floor": "concrete/concretefloor031a",
     "bunker_ceiling": "concrete/concreteceiling004a",
+    "door": "metal/metalhull003a",                # hl2: riveted steel plate (the bunker door's leaves)
+    "office_wall": "wood/woodwall047a",           # ep2: a board wall (the mine office in the cave)
+    "office_floor": "wood/woodfloor007a",         # hl2: floorboards
+    "office_ceiling": "metal/metalroof004a",      # hl2: corrugated iron
+    "timber": "wood/woodbeam001a",                # hl2: a squared beam
 }
 
 PINES = (("models/props_foliage/tree_pine04.mdl", 3), ("models/props_foliage/tree_pine05.mdl", 3), ("models/props_foliage/tree_pine06.mdl", 3),
@@ -514,7 +519,7 @@ class BunkerForest(Forest):
     POND = (1500, 1400, 640, 480)   # centre x, y; half its length and width
     ISLE = (1560, 1385, 260)
     B0 = (2240, 3072)               # the bunker's own corner: its door's wall is its south side
-    DOOR = (536, 680)               # the doorway's clear width, in the bunker's own coordinates (144 wide, 186 high)
+    DOOR = (512, 768)               # the doorway, in the bunker's own coordinates: 256 wide and 192 high, shut by two sliding leaves
 
     def setup(self):
         z0 = self.z0
@@ -523,8 +528,8 @@ class BunkerForest(Forest):
         self.zl = self.zp - 128          # the first level, down the first stairs
         self.zd = self.zl - 192          # the deep level, down the second
         self.level = z0 - 6              # the pond's surface
-        self.trails.append(curve([(0, 3328), (500, 3328), (1100, 2900), (1560, 2180), (2300, 2520), (2848, 2760), (2848, 3060)]))
-        self.clearings += [(self.POND[0], self.POND[1], 760), (2848, 2880, 260)]
+        self.trails.append(curve([(0, 3328), (500, 3328), (1100, 2900), (1560, 2180), (2300, 2520), (2880, 2760), (2880, 3060)]))
+        self.clearings += [(self.POND[0], self.POND[1], 760), (2880, 2880, 260)]
         self.waters.append((704, 768, 2304, 2048, self.level, self.level - (self.zb + 16), FMAT["pond"]))
         zp, zl, zd, fm = self.zp, self.zl, self.zd, FMAT["bunker_floor"]
         origin = (self.ox + self.B0[0], self.oy + self.B0[1])
@@ -532,8 +537,8 @@ class BunkerForest(Forest):
         # the part under the mound: its roof is level with the mound's top, and the ground dives under it
         plan = Plan(origin, [(zd - 64, zp + 272, FMAT["bunker_wall"])], roof=FMAT["bunker_floor"], **look)
         plan.keep_out += [(-100000, -100000, 100000, 0), (-100000, 576, -320, 832)]   # in front of the door; where the deep level joins
-        plan.paint((512, 0, 704, 64), ("low", zp, fm, zp + 192))      # the doorway (the door's frame narrows it to 144 by 186)
-        plan.paint((448, 64, 768, 256), ("low", zp, fm, zp + 208))    # the room inside the door
+        plan.paint((512, 0, 768, 64), ("low", zp, fm, zp + 192))      # the doorway: 256 wide, 192 high
+        plan.paint((448, 64, 832, 256), ("low", zp, fm, zp + 208))    # the room inside the door (its front wall is what the door's leaves slide into)
         plan.paint((576, 256, 704, 448), ("low", zl, fm, zp + 160))   # the stairs down
         plan.paint((576, 448, 704, 512), ("low", zl, fm, zl + 160))
         plan.paint((384, 512, 896, 832), ("low", zl, fm, zl + 160))   # the main room
@@ -608,12 +613,12 @@ class BunkerForest(Forest):
         v.detail([B(-12 * (k + 1), 640, zd, -12 * k, 768, zl - 8 * (k + 1)) for k in range(23)], wall, vis=vis, top=MAT["stairs"])
         self.door()
         # light: enough to find the way; the bunks and two of the deep rooms are left dark
-        lights = ((608, 160, zp + 184, "255 225 190 90", "0"), (640, 672, zl + 136, "255 205 150 140", "0"), (1088, 704, zl + 136, "190 255 215 90", "10"),
+        lights = ((640, 160, zp + 184, "255 225 190 90", "0"), (640, 672, zl + 136, "255 205 150 140", "0"), (1088, 704, zl + 136, "190 255 215 90", "10"),
                   (-160, 704, zl + 120, "255 215 170 60", "0"), (-384, 576, zd + 136, "255 200 150 90", "0"), (-832, 448, zd + 136, "255 190 140 70", "0"),
                   (-640, 704, zd + 136, "170 210 255 110", "0"), (-1440, 416, zd + 136, "255 90 60 120", "0"), (-640, 192, zd + 136, "235 255 235 80", "10"))
         for (u, w, z, colour, style) in lights:
             v.point("light", W(u, w, z), {"_light": colour, "_lightHDR": "-1 -1 -1 1", "_quadratic_attn": "1", "style": style}, self.vis("lights"))
-        for (u, w, z) in ((640, 672, zl + 72), (-832, 448, zd + 72), (-1440, 416, zd + 72), (608, 160, zp + 72)):
+        for (u, w, z) in ((640, 672, zl + 72), (-832, 448, zd + 72), (-1440, 416, zd + 72), (640, 160, zp + 72)):
             v.point("env_cubemap", W(u, w, z), {"cubemapsize": "0"}, vis)
         # what was left behind (every one compiled as a static prop; in the structures' visgroup)
         first = (
@@ -648,7 +653,7 @@ class BunkerForest(Forest):
             self.node(bx + u, by + w, z)
         # the bunker's rooms must be shut in on every side but the doorway (for the look of it, and for the door's areaportal):
         # with the doorway stopped up, air from inside must not reach the forest
-        closed = flood(v, W(608, 160, zp + 64), [B(512, 0, zp, 704, 64, zp + 192)])
+        closed = flood(v, W(640, 160, zp + 64), [B(512, 0, zp, 768, 64, zp + 192)])
         if closed[0] is None or reaches(closed, self.w(self.W / 2, self.D / 2, self.lid - 100)):
             self.problems.append("the bunker's rooms are open to the hill somewhere other than the doorway")
         for u, w, z, what in ((640, 672, zl + 64, "main room"), (-384, 576, zd + 64, "foot of the second stairs"), (-1440, 416, zd + 64, "plant room"), (-640, 192, zd + 64, "sick bay")):
@@ -660,63 +665,78 @@ class BunkerForest(Forest):
             self.problems.append("the bunker's deep level comes within %d of the ground's surface" % cover)
         self.notes.append("the bunker: its door at (%d %d), floor z %d; 15 steps down to the first level (z %d: main room, bunks, generator room), 23 more down to the deep level "
                           "(z %d: a passage, radio room, armoury, sick bay, stores, plant room), which is at least %d under the ground; 9 lights" % (
-                              self.ox + bx + 608, self.oy + by, zp, zl, zd, cover))
+                              self.ox + bx + 640, self.oy + by, zp, zl, zd, cover))
 
     def door(self):
-        """The bunker's door: Episode Two's silo door (models/props_silo/silo_door01.mdl, half as big again), hung on its east
-        side and swinging out. It stands open. A button inside shuts it (a klaxon, a red light, about five seconds of
-        swing, a slam, the wheel locks) and opens it again; nothing outside does. It is not a door to the gamemode
-        (not a func_door: a momentary_rot_button turned only by this wiring), so kicks, lockpicks and NPCs leave it alone.
+        """The bunker's door: two steel leaves that slide out of the wall on either side and meet in the middle, as a missile
+        silo's do (the owner: "why not just have 2 sliding bunker doors like a missile silo, that slide until they meet
+        together?"). They stand open, drawn back into the wall with only their edges showing. A button inside shuts them
+        (a klaxon, a red light, about five seconds of travel, a slam) and opens them again; nothing outside does.
+        Each leaf is a func_button used as a mover (PressIn draws it back into the wall, PressOut slides it shut; read from
+        the engine's own buttons.cpp: its travel is its width less its lip, and neither Use, touch nor a shot moves it): not a door to the
+        gamemode, whose door rules (kicks, lockpicks, NPCs opening doors) apply to func_door, func_door_rotating,
+        func_movelinear and prop_door_rotating, so only this wiring moves it. Nothing can use, touch or shoot a leaf to move it.
         If the bunker is left shut with nobody inside, it opens itself after twenty seconds."""
         v, plan, zp = self.vmf, self.plan, self.zp
         B, W = plan.box, plan.world
-        vis, dv = self.vis("structures"), self.vis("bunker door (the door, its button, its wiring)")
+        vis, dv = self.vis("structures"), self.vis("bunker door (the leaves, the button, the wiring)")
         u1, u2 = self.DOOR
-        top = zp + 186
-        # the frame: the doorway is three squares wide and high; the door is 144 by 186
-        v.detail([B(512, 0, zp, u1, 64, zp + 192), B(u2, 0, zp, 704, 64, zp + 192), B(u1, 0, top, u2, 64, zp + 192)], MAT["beam"], vis=vis)
-        hinge = W(u2, 15, zp)
-        # the leaf that is really there: unseen, solid, turning on the hinge; the model rides on it
-        v.brush_entity("momentary_rot_button", {
-            "targetname": "lc_bunker_door", "origin": "%d %d %d" % hinge, "distance": "100", "speed": "22", "returnspeed": "0", "startposition": "0",
-            "startdirection": "-1", "solidbsp": "0", "sounds": "0", "spawnflags": "32"}, [B(u1, 8, zp, u2, 22, top)], MAT["nodraw"], dv)
-        v.point("prop_dynamic", W((u1 + u2) // 2, 15, zp), {
-            "targetname": "lc_bunker_door_model", "parentname": "lc_bunker_door", "model": "models/props_silo/silo_door01.mdl", "modelscale": "1.5", "angles": "0 0 0",
-            "solid": "0", "DefaultAnim": "idle", "skin": "0", "fademindist": "-1", "fadescale": "1", "disableshadows": "0", "spawnflags": "0"}, dv)
-        # an areaportal across the doorway: shut with the door, so the bunker is not drawn from outside nor the forest from inside
-        self.vmf.portals.append(B(512, 40, zp, 704, 42, zp + 192))
-        self.vmf.brush_entity("func_areaportal", {"targetname": "lc_bunker_portal", "StartOpen": "1", "PortalVersion": "1"}, [B(512, 40, zp, 704, 42, zp + 192)], MAT["portal"], dv)
+        mid, top = (u1 + u2) // 2, zp + 192
+        half, lip = (u2 - u1) // 2, 8
+        steel, rib = FMAT["door"], MAT["bars"]
+        # a frame round the doorway outside, standing proud of the wall
+        v.detail([B(u1 - 16, -8, zp, u1, 0, top), B(u2, -8, zp, u2 + 16, 0, top), B(u1 - 16, -8, top, u2 + 16, 0, top + 32)], MAT["beam"], vis=vis)
+        # the two leaves, drawn as they stand when shut (so the light on them is worked out there, not inside the wall).
+        # Pressed in, each is back in the wall on its own side with 8 of it still showing; the map presses them in as it starts.
+        for side, name in ((-1, "west"), (1, "east")):
+            a = u1 if side < 0 else mid                           # the leaf's west edge when shut
+            edge = mid - lip if side < 0 else mid                 # its meeting edge: a thicker bar, all that is seen of it when open
+            parts = [(B(a, 20, zp, a + half, 44, top), steel), (B(edge, 14, zp, edge + lip, 50, top), rib)]
+            for z in (24, 92, 160):
+                parts.append((B(a, 16, zp + z, a + half, 20, zp + z + 8), rib))
+                parts.append((B(a, 44, zp + z, a + half, 48, zp + z + 8), rib))
+            v.brush_entity("func_button", {
+                "targetname": "lc_bunker_door", "movedir": "0 180 0" if side < 0 else "0 0 0", "speed": "26", "lip": lip, "wait": "-1", "spawnflags": "0",
+                "sounds": "0", "health": "0", "locked_sound": "0", "unlocked_sound": "0", "locked_sentence": "0", "unlocked_sentence": "0", "min_use_angle": "0.8",
+                "rendermode": "0", "renderamt": "255", "rendercolor": "255 255 255", "disablereceiveshadows": "0"}, parts, steel, dv)
+            # (open, a leaf must be inside the wall but for its edge: if the wall there is not solid it would show)
+            lo, hi = (u1 - (half - lip), u1) if side < 0 else (u2, u2 + half - lip)
+            for u in range(lo // CELL * CELL, hi, CELL):
+                if plan.cells.get((u // CELL, 0), ("",))[0] != "solid":
+                    self.problems.append("the bunker door's %s leaf has no wall to slide into at %d" % (name, u))
+        v.point("logic_auto", W(mid, 200, zp + 150), {"spawnflags": "1"}, dv, connections=[("OnMapSpawn", "lc_bunker_door", "PressIn", "", 0.5)])
+        # an areaportal across the doorway, behind the leaves: shut with them, so the bunker is not drawn from outside nor the forest from inside
+        self.vmf.portals.append(B(u1, 54, zp, u2, 56, top))
+        v.brush_entity("func_areaportal", {"targetname": "lc_bunker_portal", "StartOpen": "1", "PortalVersion": "1"}, [B(u1, 54, zp, u2, 56, top)], MAT["portal"], dv)
+
         # sounds, the red light, the shake
         def sound(name, message, at):
             v.point("ambient_generic", at, {"targetname": name, "message": message, "health": "10", "pitch": "100", "pitchstart": "100", "radius": "2200", "spawnflags": "48",
                                             "cspinup": "0", "fadeinsecs": "0", "fadeoutsecs": "0", "lfomodpitch": "0", "lfomodvol": "0", "lforate": "0", "lfotype": "0",
                                             "preset": "0", "spindown": "0", "spinup": "0", "volstart": "0"}, dv)
-        at = W((u1 + u2) // 2, 40, zp + 96)
-        sound("lc_bunker_alarm", "ambient/alarms/klaxon1.wav", W((u1 + u2) // 2, 100, zp + 170))
+        at = W(mid, 32, zp + 96)
+        sound("lc_bunker_alarm", "ambient/alarms/klaxon1.wav", W(mid, 100, zp + 170))
         sound("lc_bunker_move", "Streetwar.d3_c17_11_garage_move1", at)
         sound("lc_bunker_slam", "Streetwar.d3_c17_11_garage_stop1", at)
         sound("lc_bunker_groan", "ambient/materials/metal_stress4.wav", at)
-        for pos in (W((u1 + u2) // 2, -28, zp + 236), W((u1 + u2) // 2, 150, zp + 190)):
+        for pos in (W(mid, -28, zp + 240), W(mid, 150, zp + 190)):
             v.point("light", pos, {"targetname": "lc_bunker_light", "_light": "255 50 30 400", "_lightHDR": "-1 -1 -1 1", "_quadratic_attn": "1", "spawnflags": "1",
                                    "pattern": "zzzzzaaaaa", "style": "0"}, dv)
         v.point("env_shake", at, {"targetname": "lc_bunker_shake", "amplitude": "7", "radius": "900", "duration": "1.6", "frequency": "40", "spawnflags": "0"}, dv)
-        # the wiring. Shutting: klaxon and light at once, the door starts a second later and takes about 4.6 s, then the slam.
+        # the wiring. Shutting: klaxon and light at once, the leaves start a second later and take about 4.6 s, then the slam.
         shut = [("OnTrigger", "lc_bunker_close", "Disable", "", 0), ("OnTrigger", "lc_bunker_alarm", "PlaySound", "", 0), ("OnTrigger", "lc_bunker_alarm", "PlaySound", "", 1.7),
                 ("OnTrigger", "lc_bunker_alarm", "PlaySound", "", 3.4), ("OnTrigger", "lc_bunker_light", "TurnOn", "", 0),
-                ("OnTrigger", "lc_bunker_door", "SetPosition", "0", 1), ("OnTrigger", "lc_bunker_move", "PlaySound", "", 1),
+                ("OnTrigger", "lc_bunker_door", "PressOut", "", 1), ("OnTrigger", "lc_bunker_move", "PlaySound", "", 1),
                 ("OnTrigger", "lc_bunker_move", "StopSound", "", 5.6), ("OnTrigger", "lc_bunker_slam", "PlaySound", "", 5.6), ("OnTrigger", "lc_bunker_groan", "PlaySound", "", 5.7),
-                ("OnTrigger", "lc_bunker_shake", "StartShake", "", 5.6), ("OnTrigger", "lc_bunker_portal", "Close", "", 5.7),
-                ("OnTrigger", "lc_bunker_door_model", "SetAnimation", "lock", 5.9), ("OnTrigger", "lc_bunker_light", "TurnOff", "", 8.5),
-                ("OnTrigger", "lc_bunker_open", "Enable", "", 8)]
-        unshut = [("OnTrigger", "lc_bunker_open", "Disable", "", 0), ("OnTrigger", "lc_bunker_door_model", "SetAnimation", "unlock", 0), ("OnTrigger", "lc_bunker_light", "TurnOn", "", 0),
-                  ("OnTrigger", "lc_bunker_portal", "Open", "", 1.5), ("OnTrigger", "lc_bunker_door", "SetPosition", "1", 1.6), ("OnTrigger", "lc_bunker_move", "PlaySound", "", 1.6),
-                  ("OnTrigger", "lc_bunker_move", "StopSound", "", 6.2), ("OnTrigger", "lc_bunker_slam", "PlaySound", "", 6.2), ("OnTrigger", "lc_bunker_light", "TurnOff", "", 7.5),
+                ("OnTrigger", "lc_bunker_shake", "StartShake", "", 5.6), ("OnTrigger", "lc_bunker_portal", "Close", "", 5.8),
+                ("OnTrigger", "lc_bunker_light", "TurnOff", "", 8.5), ("OnTrigger", "lc_bunker_open", "Enable", "", 8)]
+        unshut = [("OnTrigger", "lc_bunker_open", "Disable", "", 0), ("OnTrigger", "lc_bunker_light", "TurnOn", "", 0), ("OnTrigger", "lc_bunker_groan", "PlaySound", "", 0),
+                  ("OnTrigger", "lc_bunker_portal", "Open", "", 0.9), ("OnTrigger", "lc_bunker_door", "PressIn", "", 1), ("OnTrigger", "lc_bunker_move", "PlaySound", "", 1),
+                  ("OnTrigger", "lc_bunker_move", "StopSound", "", 5.6), ("OnTrigger", "lc_bunker_slam", "PlaySound", "", 5.6), ("OnTrigger", "lc_bunker_light", "TurnOff", "", 7),
                   ("OnTrigger", "lc_bunker_close", "Enable", "", 8)]
-        mid = W(608, 200, zp + 120)
-        v.point("logic_relay", mid, {"targetname": "lc_bunker_close", "StartDisabled": "0", "spawnflags": "0"}, dv, connections=shut)
-        v.point("logic_relay", (mid[0] + 16, mid[1], mid[2]), {"targetname": "lc_bunker_open", "StartDisabled": "1", "spawnflags": "0"}, dv, connections=unshut)
-        # (it is hung shut and thrown open as the map starts: a model made to ride on a door that starts open is left behind)
-        v.point("logic_auto", (mid[0] + 32, mid[1], mid[2]), {"spawnflags": "0"}, dv, connections=[("OnMapSpawn", "lc_bunker_door", "SetPositionImmediately", "1", 0.3)])
+        relay = W(mid, 200, zp + 120)
+        v.point("logic_relay", relay, {"targetname": "lc_bunker_close", "StartDisabled": "0", "spawnflags": "0"}, dv, connections=shut)
+        v.point("logic_relay", (relay[0] + 16, relay[1], relay[2]), {"targetname": "lc_bunker_open", "StartDisabled": "1", "spawnflags": "0"}, dv, connections=unshut)
         # the button: a red knob on a plate on the wall inside, west of the stairs; one press works whichever relay is live
         v.detail([B(480, 248, zp + 36, 552, 256, zp + 76)], MAT["bars"], vis=dv)
         v.brush_entity("func_button", {"targetname": "lc_bunker_button", "spawnflags": "1025", "wait": "9", "speed": "5", "lip": "0", "movedir": "0 0 0", "sounds": "0",
@@ -725,7 +745,7 @@ class BunkerForest(Forest):
                        connections=[("OnPressed", "lc_bunker_close", "Trigger", "", 0), ("OnPressed", "lc_bunker_open", "Trigger", "", 0)])
         # nobody left inside and the door shut: it opens again (the unshutting relay is only live while it is shut)
         inside = []
-        for p, skip in ((self.plan, (512, 0, 704, 64)), (self.deep, None)):
+        for p, skip in ((self.plan, (u1, 0, u2, 64)), (self.deep, None)):
             for x1, y1, x2, y2, spec in p.rectangles():
                 if spec[0] != "solid" and not (skip and x1 >= skip[0] and x2 <= skip[2] and y1 >= skip[1] and y2 <= skip[3]):
                     inside.append(B(x1, y1, spec[1], x2, y2, spec[3]))
@@ -764,7 +784,7 @@ class BunkerForest(Forest):
 
 
 def forest_bunker(args):
-    f = BunkerForest("forest (bunker, pond)", tuple(args.origin or (8064, 1088)), args.floor, 31, args.first_node or 4400, ("west", 3072))
+    f = BunkerForest("forest (bunker, pond)", tuple(args.origin or (8064, 1088)), 400 if args.floor is None else args.floor, 31, args.first_node or 4400, ("west", 3072))
     f.test = bool(getattr(args, "test", False))
     f.setup()
     f.shell()
@@ -786,8 +806,15 @@ def forest_bunker(args):
 
 class CaveForest(Forest):
     SHORE_MUD = False                   # (the stream's banks are dirt by their own rule)
-    CX, YM, LONG = 2304, 2560, 2304     # the mouth's middle, the hillside's line, how far in it goes (the owner: "make it go deeper")
-    SPRING = 1664                       # how far in the spring is: a low slot in the west wall the stream runs out of
+    CX, YM, LONG = 2304, 2560, 2816     # the mouth's middle, the hillside's line, how far in it goes
+    # The bend (the owner: "it's a straight shot still; can it curve ... so a combine unit can't just slaughter everyone
+    # inside if they are standing outside"): straight in for 768, then over the next 768 the passage moves 960 west, then
+    # straight on. sight() measures how far a straight line from outside the mouth reaches; it must stop short of the chamber.
+    BEND = (768, 1536, -960)
+    CHAMBER = (1728, 2368)              # past the bend: the wide chamber the mine office is in
+    OFFICE = (1792, 2304)               # the office's front, along the chamber's east wall (two of the skin's 256 pieces)
+    FRONT, FRONT_HIGH = 256, 192        # that front: this far east of the chamber's middle, and this high
+    SPRING = 2624                       # how far in the spring is: a low slot in the west wall the stream runs out of
     HALF, TALL = 160, 320               # the square the cave's skin is hung on
     TEAR = 640                          # the hillside is cut this far each side of the mouth
 
@@ -796,17 +823,25 @@ class CaveForest(Forest):
         self.zf = z0 + 30                # the cave's floor and the ground before it
         self.level = self.zf - 16        # the stream's surface
         cx, ym = self.CX, self.YM
-        self.D = 5120                    # (1024 longer than a forest usually is: the cave runs on north under its hill)
-        # the spring: where the west wall meets the floor, 1664 in. The slot runs 140 back into the rock from the wall's lip.
+        self.D = 5632                    # (1536 longer than a forest usually is: the cave runs on north under its hill)
+        self.front_x = cx + self.BEND[2] + self.FRONT
+        self.office_plan()
+        # the spring: where the west wall meets the floor. The slot runs 140 back into the rock from the wall's lip.
         ys = ym + self.SPRING
         self.lip_theta = math.atan2(80 - self.TALL / 2.0, -self.HALF)
         lip = self.wall_x(self.lip_theta, ys)
         self.spring = (lip - 140, ys)
         self.sink = (3560, 1280)
-        inside = [(cx - 60 + self.wander(ym + q), ym + q) for q in range(self.SPRING - 200, 100, -200)]
+        inside = [(self.stream_x(ym + q), ym + q) for q in range(self.SPRING - 200, 100, -150)]
         self.cave_line = [(lip - 130, ys), (lip + 30, ys)] + curve([(lip + 30, ys)] + inside + [(cx - 60, ym)])
         self.stream_line = self.cave_line + curve([(cx - 60, ym), (cx + 60, 2230), (cx - 160, 1860), (2520, 1520), (3080, 1390), self.sink])[1:]
-        self.trails.append(curve([(512, 0), (512, 520), (900, 1120), (1640, 1660), (2100, 1890), (2390, 2280), (cx + 40, ym)]))
+        # the trail from the gate to the mouth (it fords the stream just before the cave)
+        side, g = self.gate
+        if side == "east":
+            trail = [(self.W, g + GATE_WIDE / 2), (3576, g + GATE_WIDE / 2), (3000, 800), (2420, 1130), (2040, 1520)]
+        else:
+            trail = [(g + GATE_WIDE / 2, 0), (g + GATE_WIDE / 2, 520), (900, 1120), (1640, 1660)]
+        self.trails.append(curve(trail + [(2100, 1890), (2390, 2280), (cx + 40, ym)]))
         self.clearings += [(cx, ym - 260, 330), (self.sink[0], self.sink[1], 200)]
         deep = 48
         seen = set()
@@ -818,6 +853,36 @@ class CaveForest(Forest):
                         seen.add(key)
                         self.waters.append((key[0] * PATCH, key[1] * PATCH, (key[0] + 1) * PATCH, (key[1] + 1) * PATCH, self.level, deep, FMAT["stream"]))
         self.wet_patches = seen
+        r = self.office_rect
+        for (x1, y1, x2, y2, level, deep, mat) in self.waters:
+            if x1 < r[2] and x2 > r[0] and y1 < r[3] and y2 > r[1]:
+                self.problems.append("the stream's water (the patch at %d %d) lies under the mine office" % (x1, y1))
+
+    def office_plan(self):
+        """The mine office (the owner: "a small mining office/shack on the inside ... a few rooms large; it still needs to be
+        reasonably big enough for a small rebel base"): four rooms built into the rock behind the chamber's east wall. Its
+        front is that wall: boards, a doorway 128 wide and a window each side. u runs east from the front, v north."""
+        zf = self.zf
+        wall, floor = FMAT["office_wall"], FMAT["office_floor"]
+        self.office_at = (self.front_x, self.YM + self.OFFICE[0])       # in the forest's own coordinates
+        plan = Plan((self.ox + self.office_at[0], self.oy + self.office_at[1]), [(zf - 64, zf + 224, wall)], floor_side=wall, ceiling=FMAT["office_ceiling"],
+                    vis=self.vis("mine office"))
+        plan.keep_out.append((-100000, -100000, 0, 100000))            # the cave: no wall is built out into it
+        room, door = ("low", zf, floor, zf + 144), ("low", zf, floor, zf + 112)
+        self.office_holes = [(0, 192, zf, 64, 320, zf + 128), (0, 64, zf + 48, 64, 128, zf + 112), (0, 384, zf + 48, 64, 448, zf + 112)]   # the doorway, the windows
+        for (u1, v1, z1, u2, v2, z2) in self.office_holes:
+            plan.paint((u1, v1, u2, v2), ("low", z1, floor if z1 == zf else FMAT["timber"], z2))
+        plan.paint((64, 0, 448, 512), ("low", zf, floor, zf + 160))     # the front room: 384 by 512
+        plan.paint((448, 64, 512, 128), door)
+        plan.paint((512, 0, 832, 256), room)                            # east of it: the bunk room, 320 by 256...
+        plan.paint((448, 384, 512, 448), door)
+        plan.paint((512, 320, 832, 512), room)                          # ...and the store, 320 by 192
+        plan.paint((320, 512, 384, 576), door)
+        plan.paint((256, 576, 512, 768), room)                          # north of it: the back room (maps, the radio), 256 by 192
+        plan.walls()
+        self.office = plan
+        ax, ay = self.office_at
+        self.office_rect = (ax - 64, ay - 64, ax + 896, ay + 832)
 
     # --- the ground ---------------------------------------------------------
 
@@ -831,13 +896,17 @@ class CaveForest(Forest):
         dk = math.hypot(x - self.sink[0], y - self.sink[1])
         # the stream's valley: level ground along it
         h = lerp(h, zf + 5 * noise(x / 120.0, y / 120.0, self.seed + 7), 1 - smooth((min(ds, dk) - 120) / 300.0))
-        # the hill the cave is in, and the gully cut into its face
-        ax = abs(x - cx)
-        side = 1 - smooth((ax - self.TEAR - 150 * (0.5 + 0.5 * noise(y / 330.0, 1.5 if x > cx else 8.5, self.seed + 15))) / (420.0 + 160 * noise(y / 500.0, 4.5, self.seed + 16)))
+        # the hill the cave is in (it follows the cave round its bend, and covers the mine office), and the gully cut into its face
         back = y > ym or (y == ym and bias is not None and bias[1] > ym)
+        mid = self.mid(y) if back else cx
+        away = abs(x - mid)
+        if back:
+            away = min(away, rect_dist(x, y, self.office_rect))
+        side = 1 - smooth((away - self.TEAR - 150 * (0.5 + 0.5 * noise(y / 330.0, 1.5 if x > mid else 8.5, self.seed + 15))) / (420.0 + 160 * noise(y / 500.0, 4.5, self.seed + 16)))
         if back:
             hill = zf + (640 + 120 * smooth((y - ym) / 500.0) + 24 * noise(x / 300.0, y / 300.0, self.seed + 8)) * side
             return max(h, hill)
+        ax = abs(x - cx)
         gully = smooth((ax - 224 - 0.45 * (ym - y)) / 416.0)          # 0 on the gully's floor, 1 on the hill
         reach = 560 + 170 * noise(x / 420.0, 2.5, self.seed + 17) * smooth((ax - 300) / 300.0)
         front = zf + (640 + 24 * noise(x / 300.0, ym / 300.0, self.seed + 8)) * side * (1 - smooth((ym - y) / reach)) * gully
@@ -856,9 +925,10 @@ class CaveForest(Forest):
         return self.gate_pad(x, y, h)
 
     def free_edge_points(self):
-        # the rock face's outer edge (67 points: it is buried in the hillside), and the floor's front edge
-        # across the mouth (7: it lies on the ground before the cave)
-        return 67 + 7
+        # the rock face's outer edge (67 points: it is buried in the hillside), the floor's front edge across the mouth
+        # (7: it lies on the ground before the cave), and the edge of the hole the mine office's front fills (42: it is in
+        # the front's own wall: 14 along the floor, 14 along the roof, 7 up each end)
+        return 67 + 7 + 42
 
     def allowed_tears(self):
         return sum(1 for x in range(0, self.W + 1, STEP) if abs(x - self.CX) < self.TEAR and abs(self.natural(x, self.YM, (0, 0)) - self.natural(x, self.YM, (0, 9999))) > 0.01)
@@ -872,13 +942,33 @@ class CaveForest(Forest):
     # --- the cave's skin ------------------------------------------------------
 
     def wander(self, y):
+        """How far east of the mouth's middle the passage's middle is, y along it: none, then the bend, then all of it."""
+        s1, s2, a = self.BEND
+        return a * smooth((y - self.YM - s1) / float(s2 - s1))
+
+    def mid(self, y):
+        return self.CX + self.wander(y)
+
+    def lean(self, y):
+        """Where the passage runs aslant, its skin is hung this much wider across, so the passage itself keeps its width."""
+        k = (self.wander(y + 4) - self.wander(y - 4)) / 8.0
+        return math.sqrt(1 + k * k)
+
+    def in_chamber(self, y):
         s = y - self.YM
-        return 110 * math.sin(s / 420.0 + 0.6) * smooth(s / 256.0)
+        c1, c2 = self.CHAMBER
+        return smooth((s - (c1 - 220)) / 220.0) * smooth((c2 + 220 - s) / 220.0)
+
+    def stream_x(self, y):
+        # (in the chamber the stream keeps to the west side: the floor before the office is dry)
+        return self.mid(y) - 60 - 110 * self.in_chamber(y)
 
     def radius(self, y):
         s = y - self.YM
-        r = (190 - 30 * smooth(1 - abs(s - 300) / 200.0) + 150 * smooth(1 - abs(s - 800) / 330.0)
-             - 15 * smooth(1 - abs(s - 1250) / 150.0) + 170 * smooth(1 - abs(s - 1720) / 380.0))
+        s1, s2, a = self.BEND
+        # narrower through the bend (that is what stops a line of sight), wide in the chamber, a little wider at the spring
+        r = (190 - 30 * smooth(1 - abs(s - 300) / 200.0) - 30 * smooth((s - (s1 - 150)) / 150.0) * smooth((s2 + 150 - s) / 150.0)
+             + 115 * self.in_chamber(y) + 40 * smooth(1 - abs(s - self.SPRING) / 220.0))
         return r * (1 - 0.35 * smooth((s - (self.LONG - 130)) / 130.0))
 
     def cave_floor(self, x, y):
@@ -894,14 +984,14 @@ class CaveForest(Forest):
     def wall_x(self, theta, y):
         R = self.radius(y)
         r = R * (1 + 0.2 * noise(math.cos(theta) * 1.6 + y / 170.0, math.sin(theta) * 1.6 - y / 230.0, self.seed + 12))
-        return self.CX + self.wander(y) + 1.15 * r * math.cos(theta)
+        return self.mid(y) + 1.15 * r * math.cos(theta) * self.lean(y)
 
     def ring(self, theta, y):
         """A point of the cave's skin: round the passage by theta, y along it."""
         s = y - self.YM
         R = self.radius(y)
         r = R * (1 + 0.2 * noise(math.cos(theta) * 1.6 + y / 170.0, math.sin(theta) * 1.6 - y / 230.0, self.seed + 12))
-        x = self.CX + self.wander(y) + 1.15 * r * math.cos(theta)
+        x = self.mid(y) + 1.15 * r * math.cos(theta) * self.lean(y)
         z = self.zf + 0.51 * R + 0.85 * r * math.sin(theta)
         z = max(z, self.cave_floor(x, y))
         edge = smooth(s / 64.0) * smooth((self.LONG - s) / 64.0)
@@ -921,6 +1011,16 @@ class CaveForest(Forest):
                 zf = self.zf
                 q = (lip, y, zf + 8) if zn == 80 else (lip - 140, y, zf + 8) if zn == 40 else (lip - 140, y, zf - 22)
                 p = tuple(lerp(p[k], q[k], w) for k in range(3))
+        if xn == self.HALF:
+            # the mine office's front: along it the east wall's points lie flat, 6 inside the front's own wall, from the floor
+            # to FRONT_HIGH. That piece of the skin is left out (the wall with its doorway and windows stands there), so the
+            # floor's and the roof's edges and the rock at each end all end in that wall. Beyond each end the rock eases back
+            # to its own shape over 128.
+            a, b = self.YM + self.OFFICE[0], self.YM + self.OFFICE[1]
+            out = max(a - y, 0, y - b)
+            if out < 128:
+                q = (self.front_x + 6, y if out == 0 else p[1], self.zf + zn * self.FRONT_HIGH / float(self.TALL))
+                p = q if out == 0 else tuple(lerp(p[k], q[k], 1 - smooth(out / 128.0)) for k in range(3))
         return p
 
     def collar(self, xn, zn):
@@ -937,6 +1037,26 @@ class CaveForest(Forest):
         far = (self.CX + xn + 14 * noise(xn / 120.0, zn / 120.0, sd + 20), self.YM - crag + 0.15 * zn, self.zf + zn - (24 * smooth(d / 100.0) if zn == 0 else 0))
         w = smooth(d / 200.0)
         return tuple(lerp(near[k], far[k], w) for k in range(3))
+
+    def sight(self):
+        """How far into the cave a straight line from outside reaches, seen from above. Any such line crosses the mouth's own
+        line, so every start along the mouth and every direction is tried, against the passage at its widest (its waist)."""
+        ym, step = self.YM, 16
+        n = self.LONG // step
+        west = [min(self.ring(math.pi + t, ym + i * step)[0] for t in (-0.4, 0, 0.4)) for i in range(n + 1)]
+        east = [max(self.ring(t, ym + i * step)[0] for t in (-0.4, 0, 0.4)) for i in range(n + 1)]
+        best = 0
+        x0 = west[0] + 4
+        while x0 < east[0]:
+            for k in range(-250, 251):
+                for i in range(1, n + 1):
+                    x = x0 + k / 100.0 * i * step
+                    if x < west[i] or x > east[i]:
+                        break
+                    if i * step > best:
+                        best = i * step
+            x0 += 16
+        return best
 
     def cave(self):
         v, cx, ym, zf, H, T = self.vmf, self.CX, self.YM, self.zf, self.HALF, self.TALL
@@ -961,16 +1081,23 @@ class CaveForest(Forest):
         def cliff_dirt(p):
             # dirt in the hollows and along the ledges, rock on what stands out
             return 110 + 120 * noise(p[0] / 150.0, p[2] / 110.0, self.seed + 21) + 70 * smooth(1 - (p[2] - zf) / 90.0)
+
+        def under(y):
+            # (the pieces the skin hangs on follow the bend, a whole square at a time)
+            return cx + int(round(self.wander(y) / 64.0)) * 64
         seg = 256
+        o1, o2 = self.OFFICE
         for k in range(self.LONG // seg):
             y0 = ym + k * seg
-            face((cx - H, y0, zf - 16, cx + H, y0 + seg, zf), "top", lambda i, j, y0=y0: self.on_square(-H + 40 * j, 0, y0 + 32 * i))
-            face((cx - H, y0, zf + T, cx + H, y0 + seg, zf + T + 16), "bottom", lambda i, j, y0=y0: self.on_square(-H + 40 * i, T, y0 + 32 * j))
-            face((cx - H - 16, y0, zf, cx - H, y0 + seg, zf + T), "east", lambda i, j, y0=y0: self.on_square(-H, 40 * i, y0 + 32 * j))
-            face((cx + H, y0, zf, cx + H + 16, y0 + seg, zf + T), "west", lambda i, j, y0=y0: self.on_square(H, 40 * j, y0 + 32 * i))
+            c = under(y0 + seg / 2)
+            face((c - H, y0, zf - 16, c + H, y0 + seg, zf), "top", lambda i, j, y0=y0: self.on_square(-H + 40 * j, 0, y0 + 32 * i))
+            face((c - H, y0, zf + T, c + H, y0 + seg, zf + T + 16), "bottom", lambda i, j, y0=y0: self.on_square(-H + 40 * i, T, y0 + 32 * j))
+            face((c - H - 16, y0, zf, c - H, y0 + seg, zf + T), "east", lambda i, j, y0=y0: self.on_square(-H, 40 * i, y0 + 32 * j))
+            if not o1 <= k * seg < o2:
+                face((c + H, y0, zf, c + H + 16, y0 + seg, zf + T), "west", lambda i, j, y0=y0: self.on_square(H, 40 * j, y0 + 32 * i))
         # the far end: the skin drawn together into a rough dome
         yend = ym + self.LONG
-        mid = (cx + self.wander(yend), yend, zf + 0.51 * self.radius(yend))
+        mid = (self.mid(yend), yend, zf + 0.51 * self.radius(yend))
 
         def dome(i, j):
             xn, zn = -H + 40 * j, 40 * i
@@ -981,25 +1108,27 @@ class CaveForest(Forest):
                 edge = self.on_square(xn / rho, T / 2.0 + (zn - T / 2.0) / rho, yend)
                 p = (lerp(mid[0], edge[0], rho), edge[1] + 90 * (1 - rho * rho), lerp(mid[2], edge[2], rho))
             return (p[0], p[1], max(p[2], self.cave_floor(p[0], yend)))
-        face((cx - H, yend, zf, cx + H, yend + 16, zf + T), "south", dome)
+        c = under(yend)
+        face((c - H, yend, zf, c + H, yend + 16, zf + T), "south", dome)
         # the rock face round the mouth: five pieces that share their edges with each other and with the cave's first ring
         for (x1, x2, z1, z2) in ((-608, -H, 0, T), (H, 608, 0, T), (-608, -H, T, 704), (-H, H, T, 704), (H, 608, T, 704)):
             face((cx + x1, ym - 16, zf + z1, cx + x2, ym, zf + z2), "south",
                  lambda i, j, x1=x1, x2=x2, z1=z1, z2=z2: self.collar(x1 + (x2 - x1) * j / 8.0, z1 + (z2 - z1) * i / 8.0), mat=FMAT["cliff"], tex=0.5, dirt=cliff_dirt)
-        # light: daylight does the mouth; a few dim lights further in, and the far end left dark
-        for (q, up, colour) in ((470, 150, "150 190 255 60"), (820, 210, "255 190 120 110"), (1250, 140, "170 200 255 50"), (1700, 250, "255 180 110 130"), (2080, 130, "140 180 255 40")):
+        # light: daylight does the mouth; dim lights round the bend, more in the chamber, and the far end left to the spring's glow
+        for (q, up, colour) in ((330, 150, "150 190 255 60"), (760, 130, "255 190 120 60"), (1180, 120, "255 180 110 50"), (1640, 170, "255 190 130 90"),
+                                (2048, 250, "255 200 150 170"), (2600, 110, "140 180 255 50")):
             y = ym + q
-            v.point("light", self.w(cx + self.wander(y), y, zf + up), {"_light": colour, "_lightHDR": "-1 -1 -1 1", "_quadratic_attn": "1", "style": "0"}, self.vis("lights"))
-        for q in (800, 1720):
-            v.point("env_cubemap", self.w(cx + self.wander(ym + q), ym + q, zf + 80), {"cubemapsize": "0"}, vis)
-        # hanging rock in the two chambers, fallen rock along the walls
+            v.point("light", self.w(self.mid(y), y, zf + up), {"_light": colour, "_lightHDR": "-1 -1 -1 1", "_quadratic_attn": "1", "style": "0"}, self.vis("lights"))
+        for q in (1150, 2048):
+            v.point("env_cubemap", self.w(self.mid(ym + q), ym + q, zf + 80), {"cubemapsize": "0"}, vis)
+        # hanging rock in the bend and the chamber (there, over its west half: the roof comes down to the office's front on the east), fallen rock along the walls
         rnd = self.rnd
-        for (q1, q2, n) in ((560, 1020, 7), (1450, 1980, 9)):
+        for (q1, q2, n, t1, t2) in ((900, 1450, 6, 1.1, 2.0), (1760, 2340, 10, 1.6, 2.3)):
             for k in range(n):
                 y = ym + rnd.uniform(q1, q2)
-                p = self.ring(rnd.uniform(1.1, 2.0), y)
+                p = self.ring(rnd.uniform(t1, t2), y)
                 self.static("models/props_mining/stalactite_static0%d.mdl" % rnd.choice((1, 2)), p[0], p[1], p[2] - 6, rnd.randrange(0, 360, 15), "cave", fade=(-1, 0))
-        for (q, side) in ((200, 1), (620, -1), (900, 1), (1120, -1), (1420, 1), (1900, 1), (2150, -1)):
+        for (q, side) in ((200, 1), (520, -1), (900, 1), (1250, -1), (1630, 1), (1900, -1), (2200, -1), (2480, 1), (2700, -1)):
             y = ym + q
             p = self.ring(-0.5 if side > 0 else math.pi + 0.5, y)
             self.static("models/props_mining/caverocks_cluster0%d.mdl" % rnd.choice((1, 2)), p[0] - 30 * side, p[1], self.cave_floor(p[0] - 30 * side, p[1]) - 6, rnd.randrange(0, 360, 15), "cave", fade=(-1, 0))
@@ -1016,27 +1145,104 @@ class CaveForest(Forest):
             x, y = cx + dx, ym - rnd.uniform(40, 190)
             self.static(rnd.choice(PLANTS), x, y, self.natural(x, y) - 2, rnd.randrange(0, 360, 5), "cave", solid=0, fade=(1500, 2000))
         self.fence_gate()
+        self.mine_office()
         for q in range(64, self.LONG - 100, 192):
             y = ym + q
-            x = cx + self.wander(y) + 70
+            x = self.mid(y) + 70
             self.node(x, y, self.cave_floor(x, y))
         tall = max(self.ring(math.pi / 2, ym + q)[2] for q in range(0, self.LONG, 32)) - zf
         mouth_w = self.ring(0, ym)[0] - self.ring(math.pi, ym)[0]
         mouth_h = self.ring(math.pi / 2, ym)[2] - zf
-        cover = min(self.natural(cx + self.wander(ym + q), ym + q, (0, 9999)) - self.ring(math.pi / 2, ym + q)[2] for q in range(0, self.LONG, 32))
+        cover = 1e9
+        for q in range(0, self.LONG, 32):
+            for t in (0.5, 1.0, math.pi / 2, math.pi - 1.0, math.pi - 0.5):
+                p = self.ring(t, ym + q)
+                cover = min(cover, self.natural(p[0], p[1], (0, 9999)) - p[2])
         if cover < 40:
             self.problems.append("the cave's roof comes within %d of the hill's surface" % cover)
+        far = self.sight()
+        if far > self.CHAMBER[0] - 128:
+            self.problems.append("a straight line from outside the mouth reaches %d into the cave: into the chamber, which starts at %d" % (far, self.CHAMBER[0]))
         ys = ym + self.SPRING
         lip, back_top, back_low = self.on_square(-H, 80, ys), self.on_square(-H, 40, ys), self.on_square(-H, 0, ys)
         slot_high = lip[2] - back_low[2]
         if slot_high > 34:
             self.problems.append("the spring's slot is %d high: a crouched player (36) could get in" % slot_high)
-        self.notes.append("the cave: its mouth at (%d %d), floor z %d, about %d wide and %d high; it runs %d north through two chambers, up to %d high; at least %d of hill over its roof" % (
-            self.ox + cx, self.oy + ym, zf, mouth_w, mouth_h, self.LONG, tall, cover))
+        s1, s2, a = self.BEND
+        self.notes.append("the cave: its mouth at (%d %d), floor z %d, about %d wide and %d high; it runs %d north, then bends %d %s over the next %d, then %d more north "
+                          "(%d in all, up to %d high); at least %d of hill over its roof" % (
+                              self.ox + cx, self.oy + ym, zf, mouth_w, mouth_h, s1, abs(a), "west" if a < 0 else "east", s2 - s1, self.LONG - s2, self.LONG, tall, cover))
+        self.notes.append("line of sight: a straight line from anywhere outside the mouth reaches at most %d in; the chamber and the mine office begin %d in" % (far, self.CHAMBER[0]))
         self.notes.append("the spring: a slot in the west wall at (%d %d), %d deep and %d from floor to roof (a crouched player is 36), the water %d deep in it" % (
             self.ox + lip[0], self.oy + ys, lip[0] - back_top[0], slot_high, self.level - back_low[2]))
         self.notes.append("the stream: surface z %d, from the spring, down the cave, out of the mouth, to a sink pool at (%d %d); a trail fords it" % (
             self.level, self.ox + self.sink[0], self.oy + self.sink[1]))
+
+    def mine_office(self):
+        v, zf, plan = self.vmf, self.zf, self.office
+        ax, ay = self.office_at
+        B, PW = plan.box, plan.world
+        ov = self.vis("mine office")
+        plan.build(v)
+        # timber round the doorway and the windows, standing 8 proud of the boards
+        tm = FMAT["timber"]
+        v.detail([B(-8, 180, zf, 0, 192, zf + 140), B(-8, 320, zf, 0, 332, zf + 140), B(-8, 180, zf + 128, 0, 332, zf + 140)], tm, vis=ov)
+        for v1 in (64, 384):
+            v.detail([B(-6, v1 - 8, zf + 40, 0, v1 + 72, zf + 48), B(-6, v1 - 8, zf + 112, 0, v1 + 72, zf + 120)], tm, vis=ov)
+        # an areaportal in the doorway and in each window: the rooms are drawn from the cave (and the cave from the rooms) only through them
+        for (u1, v1, z1, u2, v2, z2) in self.office_holes:
+            v.areaportal(B(30, v1, z1, 32, v2, z2), self.vis("areaportals"))
+        # light: a lamp over the door outside, one in each room (the bunk room dim)
+        for (u, w, up, colour) in ((-60, 256, 176, "255 205 150 130"), (256, 256, 148, "255 214 170 160"), (672, 128, 130, "255 200 150 50"),
+                                   (672, 416, 130, "225 235 255 80"), (384, 672, 130, "255 190 130 100")):
+            v.point("light", PW(u, w, zf + up), {"_light": colour, "_lightHDR": "-1 -1 -1 1", "_quadratic_attn": "1", "style": "0"}, self.vis("lights"))
+        v.point("env_cubemap", PW(256, 256, zf + 72), {"cubemapsize": "0"}, ov)
+        # what is in it (every one compiled as a static prop)
+        things = (
+            ("models/props_wasteland/controlroom_desk001a.mdl", 406, 250, 90), ("models/props_wasteland/controlroom_chair001a.mdl", 345, 250, 270),
+            ("models/props_wasteland/controlroom_filecabinet002a.mdl", 400, 480, 180), ("models/props_c17/furnituretable002a.mdl", 170, 410, 0),
+            ("models/props_forest/stove01.mdl", 112, 474, 0), ("models/props_c17/lockers001a.mdl", 300, 30, 0), ("models/props_junk/wood_crate001a.mdl", 110, 50, 20),
+            ("models/props_forest/bunkbed.mdl", 600, 214, 90), ("models/props_forest/bunkbed.mdl", 730, 214, 90), ("models/props_forest/footlocker01_closed.mdl", 600, 40, 0),
+            ("models/props_forest/footlocker01_closed.mdl", 730, 40, 0),
+            ("models/props_forest/shelves_wood.mdl", 800, 372, 270), ("models/props_forest/shelves_wood.mdl", 800, 460, 270), ("models/props_junk/wood_crate001a.mdl", 560, 470, 20),
+            ("models/props_junk/wood_crate001a.mdl", 630, 478, 65), ("models/props_junk/wood_crate002a.mdl", 590, 368, 30), ("models/props_c17/oildrum001.mdl", 700, 350, 15),
+            ("models/props_c17/furnituretable002a.mdl", 384, 716, 0), ("models/props_wasteland/controlroom_chair001a.mdl", 384, 660, 0),
+            ("models/props_wasteland/kitchen_shelf002a.mdl", 478, 640, 270),
+        )
+        for model, u, w, yaw in things:
+            self.static(model, ax + u, ay + w, zf, yaw, "mine office", fade=(-1, 0))
+        # left outside it in the chamber: a cart, cut timber
+        for model, x, y, yaw in (("models/props_mining/flatbed_cart01.mdl", ax - 130, ay - 150, 80), ("models/props_mining/wood_stack.mdl", ax - 120, ay + 600, 10)):
+            self.static(model, x, y, self.cave_floor(x, y), yaw, "mine office", fade=(-1, 0))
+        self.plan_nodes(plan, self.office_at)
+        self.node(ax + 32, ay + 256, zf)
+        self.node(ax - 90, ay + 256, zf)
+        # the rooms must be shut in but for the doorway and the windows; every room reached from the door; the hill over all of
+        # it; and none of the cave's skin in a room's air
+        stops = [B(*hole) for hole in self.office_holes]
+        closed = flood(v, PW(256, 256, zf + 64), stops)
+        if closed[0] is None or reaches(closed, self.w(self.W / 2, 600, self.lid - 100)):
+            self.problems.append("the mine office is open to the hill somewhere other than its doorway and windows")
+        for u, w, what in ((672, 128, "bunk room"), (672, 416, "store"), (384, 672, "back room")):
+            if not reaches(closed, PW(u, w, zf + 64)):
+                self.problems.append("the mine office's %s can't be reached from its front room" % what)
+        cover = min(self.natural(ax + (i + 0.5) * CELL, ay + (j + 0.5) * CELL, (0, 9999)) for (i, j) in plan.cells) - (zf + 224)
+        if cover < 40:
+            self.problems.append("the mine office's roof comes within %d of the hill's surface" % cover)
+        poking = 0
+        for m in v.disp_made:
+            if m[0] != self.vis("cave"):
+                continue
+            for pt in m[1]:
+                u, w = pt[0] - self.ox - ax, pt[1] - self.oy - ay
+                spec = plan.cells.get((int(u // CELL), int(w // CELL)))
+                if spec and spec[0] != "solid" and spec[1] + 2 < pt[2] < spec[3] - 2 and u > 8:
+                    poking += 1
+        if poking:
+            self.problems.append("%d points of the cave's skin are inside the mine office's rooms" % poking)
+        self.notes.append("the mine office: its front along the chamber's east wall from (%d %d) to (%d %d), floor z %d; a doorway 128 wide and two windows; "
+                          "a front room 384 by 512, a bunk room 320 by 256, a store 320 by 192 and a back room 256 by 192; at least %d of hill over its roof" % (
+                              self.ox + ax, self.oy + ay, self.ox + ax, self.oy + ay + self.OFFICE[1] - self.OFFICE[0], zf, cover))
 
     def fence_gate(self):
         """A chain link fence across the cave, 48 inside its mouth, with a gate in it that opens and shuts as any door does
@@ -1072,6 +1278,10 @@ class CaveForest(Forest):
         left = [P(self.ring(math.pi, ym + s)[0], ym + s) for s in range(0, self.LONG + 1, 32)]
         right = [P(self.ring(0, ym + s)[0], ym + s) for s in range(0, self.LONG + 1, 32)]
         dr.polygon(left + right[::-1], fill=(20, 20, 24, 150), outline=(255, 255, 255, 200))
+        ax, ay = self.office_at
+        for x1, y1, x2, y2, spec in self.office.rectangles():
+            if spec[0] != "solid":
+                dr.polygon([P(ax + x1, ay + y1), P(ax + x2, ay + y1), P(ax + x2, ay + y2), P(ax + x1, ay + y2)], fill=(120, 90, 50, 200), outline=(255, 255, 255, 200))
 
     def cave_picture(self, path):
         """The mouth seen from the front, and the passage seen from the side: is the skin a sane shape?"""
@@ -1103,19 +1313,22 @@ class CaveForest(Forest):
         dr.text((10, 8), "the mouth from the front: grey the rock face, yellow the cave's first ring, green the ground before it (dark green: behind), blue the stream's level", fill=(230, 230, 230))
 
         def S(y, z):
-            return (760 + (y - ym + 600) * 0.29, 440 - (z - zf) * 0.29)
+            return (760 + (y - ym + 500) * 0.25, 440 - (z - zf) * 0.25)
         for th, col in ((math.pi / 2, (255, 200, 60)), (-math.pi / 2, (255, 200, 60))):
             dr.line([S(ym + s, self.ring(th, ym + s)[2]) for s in range(0, self.LONG + 1, 16)], fill=col, width=2)
-        dr.line([S(ym + s, self.natural(cx + self.wander(ym + s), ym + s, (0, 9999))) for s in range(0, self.LONG + 1, 16)], fill=(90, 200, 90), width=2)
-        dr.line([S(ym - s, self.natural(cx, ym - s, (0, 0))) for s in range(0, 600, 16)], fill=(90, 200, 90), width=2)
-        dr.line((S(ym - 600, self.level), S(ym + self.SPRING, self.level)), fill=(70, 130, 220))
-        dr.text((760, 30), "the passage from the side (south on the left): yellow its roof and floor, green the ground and the hill over it", fill=(230, 230, 230))
+        dr.line([S(ym + s, self.natural(self.mid(ym + s), ym + s, (0, 9999))) for s in range(0, self.LONG + 1, 16)], fill=(90, 200, 90), width=2)
+        dr.line([S(ym - s, self.natural(cx, ym - s, (0, 0))) for s in range(0, 500, 16)], fill=(90, 200, 90), width=2)
+        dr.line((S(ym - 500, self.level), S(ym + self.SPRING, self.level)), fill=(70, 130, 220))
+        dr.text((760, 30), "the passage from the side, along its middle (south on the left): yellow its roof and floor, green the ground and the hill over it", fill=(230, 230, 230))
         img.save(path)
         print("  picture: " + path)
 
 
 def forest_cave(args):
-    f = CaveForest("forest (cave, stream)", tuple(args.origin or (768, 8448)), args.floor, 47, args.first_node or 4800, ("south", 256))
+    # (west of the ring's west run: the far side of the city from the bunker forest. The owner: "can they be on opposite sides
+    #  of the canal? that way if one is attacked, it's quite a long distance to reach the other")
+    floor = 584 if args.floor is None else args.floor
+    f = CaveForest("forest (cave, stream)", tuple(args.origin or (-9280, 4608)), floor, 47, args.first_node or 4600, ("east", 256))
     f.test = bool(getattr(args, "test", False))
     f.setup()
     f.shell()
