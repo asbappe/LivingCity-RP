@@ -1,8 +1,8 @@
 --[[
     Living City (client): the card table's window (sv_livingcity_resistancemoney.lua)
 
-    One small window: the four seats (a name each, the card each had in the last hand, what the winner took, a
-    chip by whoever dealt it), the last pot, the stake (three buttons for whoever sat first), Deal, and one line
+    One small window: the four seats side by side (the card each had in the last hand, as a picture from the
+    Resistance's own deck, the name under it, what the winner took, a chip by whoever dealt it), the last pot, the stake (three buttons for whoever sat first), Deal, and one line
     when you can't: out of hands this hour, or short of the stake. Closing it stands you up. The server decides
     everything; nothing goes in the chat.
 ]]
@@ -36,18 +36,43 @@ local function Label(parent, x, y, w, h, text, color, align)
     return l
 end
 
-local function Seat(parent, y, s)
-    local row = vgui.Create("DPanel", parent)
-    row:SetPos(10, y)
-    row:SetSize(260, 36)
-    row.Paint = function(_, w, h)
-        if s.you then draw.RoundedBox(4, 0, 0, w, h, MINE) end
-        draw.RoundedBox(4, 2, 1, 26, h - 2, s.card > 0 and CARD or CARD_BACK)
-        if s.card > 0 then draw.SimpleText(RankText(s.card), "DermaDefaultBold", 15, h / 2, CARD_INK, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER) end
-        if s.dealt then draw.RoundedBox(4, 34, h / 2 - 4, 8, 8, ACCENT) end
+-- The deck's pictures: materials/livingcity/cards/2.png to 14.png (the ace) and back.png, made by
+-- _dev/posters/cards.js; loose in the server's garrysmod/ (livingcity_content.zip). Without one, that card is
+-- drawn plainly.
+local art = {}
+local function Art(name)
+    if art[name] == nil then
+        art[name] = false
+        local path = "livingcity/cards/" .. name .. ".png"
+        if file and file.Exists and file.Exists("materials/" .. path, "GAME") then
+            local m = Material(path, "smooth")
+            if m and not (m.IsError and m:IsError()) then art[name] = m end
+        end
     end
-    Label(row, 48, 0, 160, 36, s.name, s.won > 0 and ACCENT or (s.you and INK or DIM))
-    if s.won > 0 then Label(row, 206, 0, 50, 36, "+" .. s.won, ACCENT, 6) end
+    return art[name]
+end
+LC_CL.CardArt = art
+
+local CW, CH = 76, 106
+local function Seat(parent, x, s)
+    local row = vgui.Create("DPanel", parent)
+    row:SetPos(x, 30)
+    row:SetSize(CW + 8, CH + 36)
+    row.Paint = function(_, w, h)
+        if s.you then draw.RoundedBox(6, 0, 0, w, h, MINE) end
+        local m = Art(s.card > 0 and tostring(s.card) or "back")
+        if m then
+            surface.SetDrawColor(255, 255, 255, 255)
+            surface.SetMaterial(m)
+            surface.DrawTexturedRect(4, 4, CW, CH)
+        else
+            draw.RoundedBox(6, 4, 4, CW, CH, s.card > 0 and CARD or CARD_BACK)
+            if s.card > 0 then draw.SimpleText(RankText(s.card), "DermaLarge", 4 + CW / 2, 4 + CH / 2, CARD_INK, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER) end
+        end
+        if s.dealt then draw.RoundedBox(5, w - 12, 0, 10, 10, ACCENT) end
+    end
+    Label(row, 0, CH + 6, CW + 8, 16, s.name, s.won > 0 and ACCENT or (s.you and INK or DIM), 5)
+    if s.won > 0 then Label(row, 0, CH + 20, CW + 8, 14, "+" .. s.won, ACCENT, 5) end
 end
 
 local function Open(t)
@@ -58,22 +83,22 @@ local function Open(t)
     frame = vgui.Create("DFrame")
     if LC_CL.SetTheme then LC_CL.SetTheme(frame, "scrap") end
     frame:SetTitle("High card")
-    frame:SetSize(280, 280)
+    frame:SetSize(360, 258)
     if isnumber(x) and isnumber(y) then frame:SetPos(x, y) else frame:Center() end -- (where they left it)
     frame:MakePopup()
     frame:SetKeyboardInputEnabled(false) -- (they can walk off; out of reach, the server stands them up)
     frame.lcTable = t.tbl
     frame.OnClose = function() if t.you == 1 then Tell(t.tbl, 0) end end
-    for i, s in ipairs(t.seats) do Seat(frame, 30 + (i - 1) * 40, s) end
-    Label(frame, 10, 192, 260, 18, t.pot > 0 and ("Pot " .. t.pot) or "", INK, 5)
-    Label(frame, 10, 212, 260, 18, LINES[t.line] or "", ACCENT, 5)
+    for i, s in ipairs(t.seats) do Seat(frame, 12 + (i - 1) * (CW + 8), s) end
+    Label(frame, 10, 174, 340, 18, t.pot > 0 and ("Pot " .. t.pot) or "", INK, 5)
+    Label(frame, 10, 192, 340, 18, LINES[t.line] or "", ACCENT, 5)
     -- the stake: three buttons for whoever sat first, the number for everyone else
-    Label(frame, 10, 234, 40, 36, "Stake", DIM)
+    Label(frame, 10, 214, 40, 36, "Stake", DIM)
     local stake = STAKES[t.stake]
     if t.chooser then
         for i, b in ipairs(STAKES) do
             local btn = vgui.Create("DButton", frame)
-            btn:SetPos(50 + (i - 1) * 38, 236)
+            btn:SetPos(50 + (i - 1) * 38, 216)
             btn:SetSize(34, 32)
             btn:SetText(tostring(b))
             btn:SetEnabled(math.floor(t.mask / 2 ^ (i - 1)) % 2 == 1)
@@ -81,10 +106,10 @@ local function Open(t)
             btn.DoClick = function() Tell(t.tbl, 2, i) end
         end
     else
-        Label(frame, 50, 234, 60, 36, stake and tostring(stake) or "", INK)
+        Label(frame, 50, 214, 60, 36, stake and tostring(stake) or "", INK)
     end
     local deal = vgui.Create("DButton", frame)
-    deal:SetPos(170, 236)
+    deal:SetPos(250, 216)
     deal:SetSize(100, 32)
     deal:SetText("Deal")
     local readyAt = CurTime() + (t.wait or 0)

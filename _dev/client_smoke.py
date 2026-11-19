@@ -2534,6 +2534,24 @@ local ok, e = pcall(function()
         if by["Deal"]._enabled ~= false then error("Deal is not greyed: " .. words) end
         Words()
     end
+    -- with the deck's pictures on the server, each card is its picture: the ace, and the back for a seat with no card
+    do
+        local feWas, matWas, smWas, dtWas, sdWas = file.Exists, Material, surface.SetMaterial, surface.DrawTexturedRect, surface.SetDrawColor
+        local drawn = {}
+        for k in pairs(LC_CL.CardArt) do LC_CL.CardArt[k] = nil end
+        file.Exists = function(path) return string.find(path, "materials/livingcity/cards/", 1, true) ~= nil end
+        Material = function(path) return { path = path } end
+        surface.SetDrawColor = function() end
+        surface.SetMaterial = function(m) drawn[m.path] = true end
+        surface.DrawTexturedRect = function() end
+        local okA, errA = pcall(Table, 1, 0, false, 2, 7, 30, Seats({ 14, 2, 0, 11 }, { 21 }, 1, 2))
+        file.Exists, Material, surface.SetMaterial, surface.DrawTexturedRect, surface.SetDrawColor = feWas, matWas, smWas, dtWas, sdWas
+        for k in pairs(LC_CL.CardArt) do LC_CL.CardArt[k] = nil end
+        if not okA then error("the deck's pictures: " .. tostring(errA)) end
+        for _, n in ipairs({ "14", "2", "back", "11" }) do
+            if not drawn["livingcity/cards/" .. n .. ".png"] then error("a card's picture is not drawn: " .. n) end
+        end
+    end
     -- closing it stands you up; the server's word closes it
     f, by = Table(1, 0, false, 2, 7, 0, Seats({}, {}, nil))
     f.OnClose()
