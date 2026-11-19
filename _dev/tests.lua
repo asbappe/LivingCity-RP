@@ -38795,6 +38795,7 @@ local set = _setcvar
 local fund = LC.ResistanceFund
 local function setFund(n) LC.ResistanceFundTake(fund()) LC.ResistanceFundAdd(n) end
 local fundWas = fund()
+LC.Ledger().armory = {} -- (an empty armory: guns on its shelf would arm these fighters first, Nov19_ArmoryBarterTests)
 local rateWas = GetConVar("lc_resistance_issue_rate"):GetInt()
 ok(rateWas == 50, "the one new setting: lc_resistance_issue_rate is 50 (per cent of what a player pays)", rateWas)
 local function cost(p) return math.floor(p * 0.5 + 0.5) end
@@ -39248,6 +39249,453 @@ setFund(fundWas)
 LC.FundPleaWatch()
 end
 Nov19_FundPleaTests()
+
+function Nov19_ArmoryBarterTests()
+section("19 November: a gun you carry already goes in your pockets; the armory; the quartermaster paid through the fund; barter and goodwill")
+-- The owner, 19 November: "if I already have an SMG or pistol then I can't pick up the SMG/Pistol on the ground: let's make it
+-- so they are picked up and placed into the player's inventory and if sold to the quartermaster they go into the armory";
+-- "they get like 5 credits from the resistance fund for each weapon"; "quartermaster purchases should go into the fund";
+-- "a button ... that says 'Barter'"; "a Lieutenant should get like a 10 credit leeway and a Commander like a 20 credit
+-- leeway ... the leeway/leniency needs to be it's own hidden value/fund that refills over time".
+local fund = LC.ResistanceFund
+local function setFund(n) LC.ResistanceFundTake(fund()) LC.ResistanceFundAdd(n) end
+local fundWas = fund()
+local book = LC.Ledger()
+local armoryWas = table.Copy(istable(book.armory) and book.armory or {})
+book.armory = {}
+local nqWas, carryWas, sendWas = LC.NearQuartermaster, LC.CarryLimit, LC.SendCompressed
+local bulkyWas, kgWas = GetConVar("lc_carry_bulky"):GetInt(), GetConVar("lc_carry_kg"):GetFloat()
+LC.NearQuartermaster = function() return true end
+local sentT = {}
+LC.SendCompressed = function(msg, tbl, rec) sentT[msg] = tbl return sendWas(msg, tbl, rec) end
+local T0 = Vector(-131000, 85000, 0)
+local made = {}
+local function mk(nm, faction, xp)
+    local p = newPlayer(nm, faction, nil, xp)
+    p.chat, p.lcProtectUntil = {}, 0
+    p:SetPos(T0 + Vector(0, #made * 200, 0))
+    made[#made + 1] = p
+    local inv = LC.Inventory(p)
+    for id in pairs(inv) do inv[id] = nil end
+    return p
+end
+local function top(k) return LC.ResistanceFundLog(k or 1) end
+local function name(p) return LC.CharacterName(p) end
+local function gun(cls, p)
+    local w = ents.Create(cls)
+    w:SetPos(p:GetPos() + Vector(20, 0, 0))
+    w:SetClip1(30)
+    return w
+end
+local function pick(p, w) return hook.Run("PlayerCanPickupWeapon", p, w) end
+local function trade(p, yours, his, credits)
+    _run(1.1)
+    return LC.BarterTrade(p, { yours = yours or {}, his = his or {}, credits = credits or 0 })
+end
+local function row(list, id) for _, r in ipairs(list or {}) do if r.id == id then return r end end end
+
+------------------------------------------------------------------------
+-- 1. a gun you carry already: into the pockets
+------------------------------------------------------------------------
+local fighter = mk("ArmFighter", "resistance", 400)
+local citizen = mk("ArmCitizen", "citizen")
+_run(1)
+fighter.weps = { "weapon_crowbar", "weapon_pistol", "weapon_smg1" }
+fighter.ammo = { SMG1 = 10 }
+_setcvar("lc_carry_bulky", 1)
+do
+    local w = gun("weapon_smg1", fighter)
+    local r = pick(fighter, w)
+    ok(r == false and LC.HasItem(fighter, "gun_smg") and not w:IsValid(), "a fallen unit's SMG, when you carry one: into your pockets, gone from the ground")
+    ok(fighter:GetAmmoCount("SMG1") == 40, "the rounds in it added to yours", fighter:GetAmmoCount("SMG1"))
+    ok(LCS.Items.gun_smg.name == "SMG" and LCS.Items.gun_pistol.name == "Pistol" and LCS.Items.gun_ar2.name == "Pulse rifle" and LC.PocketGunItem("weapon_357") == "gun_357",
+        "one pocket item for each gun, named plainly: Pistol, SMG, Shotgun, Revolver, Pulse rifle")
+    local w2 = gun("weapon_357", fighter)
+    ok(pick(fighter, w2) == nil and w2:IsValid() and not LC.HasItem(fighter, "gun_357"), "a class you don't carry: as before (the game hands it to you), nothing in the pockets")
+    local w3 = gun("weapon_crowbar", fighter)
+    ok(pick(fighter, w3) == nil and w3:IsValid(), "not a gun (a crowbar): as before")
+    local w4 = gun("weapon_smg1", fighter)
+    ok(pick(fighter, w4) == nil and w4:IsValid() and LC.Inventory(fighter).gun_smg == 1, "pockets full (a second large thing): it stays on the ground, as now")
+    w4:Remove() w2:Remove() w3:Remove()
+    local w5 = gun("weapon_pistol", fighter)
+    w5.GetCreationTime = function() return CurTime() end
+    ok(pick(fighter, w5) == nil and w5:IsValid() and not LC.HasItem(fighter, "gun_pistol"), "a gun the game is handing you that moment (a Give) is not pocketed")
+    w5.GetCreationTime = nil
+    w5:SetOwner(made[1])
+    ok(pick(fighter, w5) == nil and not LC.HasItem(fighter, "gun_pistol"), "nor one in someone's hands")
+    w5:SetOwner(nil)
+    -- anything else that says no (a dream here) wins, whichever order the game asks in
+    fighter.lcDreaming = true
+    for _, rev in ipairs({ false, true }) do
+        _HOOK_REVERSE = rev
+        local r2 = pick(fighter, w5)
+        ok(r2 == false and w5:IsValid() and not LC.HasItem(fighter, "gun_pistol"), "another answer says no (a dream): nothing pocketed, either order" .. (rev and " (reversed)" or ""))
+    end
+    _HOOK_REVERSE = nil
+    fighter.lcDreaming = nil
+    ok(pick(fighter, w5) == false and LC.HasItem(fighter, "gun_pistol") and not w5:IsValid(), "(and with nothing against it, the pistol goes in)")
+    local f = LC.PatdownFinds(fighter)
+    ok(f.gun_pistol == 1 and f.gun_smg == 1 and LCS.Items.gun_ar2.contraband == true, "a search finds a pocket gun, contraband as it is for a citizen")
+    -- a unit leaves it; a citizen pockets one too; the pulse rifle
+    local unit = mk("ArmUnit", "cp", 600)
+    unit.weps = { "weapon_pistol" }
+    local w6 = gun("weapon_pistol", unit)
+    ok(pick(unit, w6) == nil and w6:IsValid() and not LC.HasItem(unit, "gun_pistol"), "a unit leaves it lying (as before)")
+    w6:Remove()
+    citizen.weps = { "weapon_ar2" }
+    local w7 = gun("weapon_ar2", citizen)
+    ok(pick(citizen, w7) == false and LC.HasItem(citizen, "gun_ar2"), "a citizen with a pulse rifle picks up another: into the pockets")
+    citizen.weps = {}
+end
+
+------------------------------------------------------------------------
+-- 2. selling to the quartermaster: the armory, 5 a gun out of the fund; everything he buys paid out of the fund
+------------------------------------------------------------------------
+_setcvar("lc_carry_bulky", 3)
+setFund(100)
+do
+    local c0 = LC.Credits(fighter)
+    LC.OpenMarket(fighter)
+    local m = sentT.lcu_market
+    local r = m and row(m.sell, "gun_smg")
+    ok(m and m.quartermaster and m.barter == true and r and r.price == 5, "his window: a pocket gun at 5, and the Barter button", r and tostring(r.price) or "no row")
+    _netcall("lcu_sell", fighter, "gun_smg", false)
+    ok(not LC.HasItem(fighter, "gun_smg") and LC.Credits(fighter) == c0 + 5 and fund() == 95 and LC.ArmoryCount("weapon_smg1") == 1,
+        "sold to him: 5 credits out of the fund, and the SMG in the armory", (LC.Credits(fighter) - c0) .. " " .. fund())
+    ok(top()[1].n == -5 and top()[1].w == "An SMG for the armory (" .. name(fighter) .. ")", "the record says so", top()[1].w)
+    fighter.weps[#fighter.weps + 1] = "weapon_357"
+    _netcall("lcu_sell", fighter, "w:weapon_357", false)
+    ok(not fighter:HasWeapon("weapon_357") and LC.ArmoryCount("weapon_357") == 1 and fund() == 90, "a gun in hand sold to him: the same, into the armory")
+    _netcall("lcu_sell", fighter, "w:weapon_pistol", false)
+    ok(fighter:HasWeapon("weapon_pistol") and LC.ArmoryCount("weapon_pistol") == 0 and fund() == 90, "(not one their side issued them)")
+    -- a stranger, unnamed
+    local cc = LC.Credits(citizen)
+    _netcall("lcu_sell", citizen, "gun_ar2", false)
+    ok(LC.Credits(citizen) == cc + 5 and LC.ArmoryCount("weapon_ar2") == 1 and top()[1].w == "A pulse rifle for the armory", "a stranger sells him one: the same, unnamed", top()[1].w)
+    -- intel, skimmed parts, forged cards: out of the fund, at what he paid before; intel's experience as ever
+    LC.GiveItem(fighter, "intel_patrol", 1)
+    local ip = LC.QuartermasterBuyPrice(fighter, "intel_patrol")
+    ok(ip == LC.SellPrice(fighter, "intel_patrol") and ip > 5, "intel: what he paid before", ip)
+    local xp0 = tonumber(fighter:GetPData("lcf_xp_resistance", 0))
+    c0 = LC.Credits(fighter)
+    local fI = fund()
+    _netcall("lcu_sell", fighter, "intel_patrol", false)
+    ok(LC.Credits(fighter) == c0 + ip and fund() == fI - ip and tonumber(fighter:GetPData("lcf_xp_resistance", 0)) > xp0, "sold: out of the fund, and its experience", fI .. " -> " .. fund())
+    ok(top()[1].n == -ip and top()[1].w == "Bought at the quartermaster's (" .. name(fighter) .. ")", "(the record)", top()[1].w)
+    local forged = 0
+    hook.Add("LivingCityForgedCard", "ArmTest", function(_, n) forged = forged + n end)
+    LC.GiveItem(fighter, "ration_forged", 2)
+    LC.GiveItem(fighter, "union_goods", 1)
+    local f0 = fund()
+    local fp, up = LC.QuartermasterBuyPrice(fighter, "ration_forged"), LC.QuartermasterBuyPrice(fighter, "union_goods")
+    _netcall("lcu_sell", fighter, "ration_forged", true)
+    _netcall("lcu_sell", fighter, "union_goods", false)
+    hook.Remove("LivingCityForgedCard", "ArmTest")
+    ok(forged == 2 and fund() == f0 - 2 * fp - up and not LC.HasItem(fighter, "ration_forged") and not LC.HasItem(fighter, "union_goods"),
+        "forged cards (the forger's trail as before) and skimmed parts: out of the fund", fund() .. " " .. f0)
+    -- the fund short: the sale doesn't fail, his barter opens with it on your side
+    LC.GiveItem(fighter, "intel_checkpoint", 1)
+    setFund(3)
+    sentT.lc_barter = nil
+    c0 = LC.Credits(fighter)
+    _netcall("lcu_sell", fighter, "intel_checkpoint", false)
+    local b = sentT.lc_barter
+    ok(LC.HasItem(fighter, "intel_checkpoint") and LC.Credits(fighter) == c0 and fund() == 3 and b and b.pre and b.pre.intel_checkpoint == 1,
+        "the fund can't pay: nothing sold, and the barter opens with it on your side", b and "barter sent" or "no barter")
+    xp0 = tonumber(fighter:GetPData("lcf_xp_resistance", 0))
+    ok(trade(fighter, { intel_checkpoint = 1 }) == true and LC.Credits(fighter) == c0 + 3 and fund() == 0 and tonumber(fighter:GetPData("lcf_xp_resistance", 0)) > xp0,
+        "traded for nothing of his: the fund pays as far as it can, and intel still gives its experience", LC.Credits(fighter) - c0)
+end
+
+------------------------------------------------------------------------
+-- 3. what a player pays him goes into the fund
+------------------------------------------------------------------------
+do
+    setFund(50)
+    LC.AddCredits(fighter, 500 - LC.Credits(fighter))
+    local g = LCS.BlackById.ammo_pistol
+    local p = LC.MarketPrice(fighter, g)
+    ok(LC.BlackBuy(fighter, "ammo_pistol") and LC.Credits(fighter) == 500 - p and fund() == 50 + p, "bought from him: the credits go into the fund", fund())
+    ok(top()[1].n == p and top()[1].w == "Sold at the quartermaster's (" .. name(fighter) .. ")", "(the record)", top()[1].w)
+    LC.TakeItem(fighter, "ammo_pistol", 1)
+end
+
+------------------------------------------------------------------------
+-- 4. the issue takes a fighter's guns from the armory first
+------------------------------------------------------------------------
+do
+    local function cost(p) return math.floor(p * 0.5 + 0.5) end
+    local function rcost(kind, n) return n > 0 and math.ceil(n * LC.FundRoundPrice(kind) * 0.5 - 1e-9) or 0 end
+    local f2 = mk("ArmIssue", "resistance", 400)
+    _run(1)
+    book.armory = { weapon_smg1 = 1 }
+    setFund(5000)
+    f2.ammo = {}
+    hook.Run("PlayerLoadout", f2)
+    local want = cost(LC.FundGunPrice("weapon_pistol")) + rcost("Pistol", 90) + rcost("SMG1", 180)
+    ok(f2:HasWeapon("weapon_smg1") and f2:HasWeapon("weapon_pistol") and LC.ArmoryCount("weapon_smg1") == 0 and fund() == 5000 - want,
+        "a Fighter's spawn: the SMG off the armory's shelf at no cost, the pistol and the rounds bought", (5000 - fund()) .. " vs " .. want)
+    local l = top(2)
+    ok(l[1].n == 0 and l[1].w == "An SMG from the armory, for a fighter (" .. name(f2) .. ")" and l[2].w == "A pistol and ammunition for a fighter (" .. name(f2) .. ")",
+        "the record: what the fund paid for, and what came from the armory", l[1].w .. " | " .. l[2].w)
+    book.armory = { weapon_smg1 = 1, weapon_pistol = 1 }
+    setFund(5000)
+    f2.ammo = {}
+    hook.Run("PlayerLoadout", f2)
+    ok(fund() == 5000 - rcost("Pistol", 90) - rcost("SMG1", 180) and top()[1].w == "A fighter armed from the armory (" .. name(f2) .. ")", "both guns from the armory: the fund pays the rounds only", top()[1].w)
+    -- empty fund: what the armory has still arms them; a cheaper gun off the shelf counts as issued
+    local cm = mk("ArmCommander", "resistance", 1800)
+    _run(1)
+    book.armory = { weapon_pistol = 1 }
+    setFund(0)
+    cm.ammo = {}
+    hook.Run("PlayerLoadout", cm)
+    ok(cm:HasWeapon("weapon_pistol") and not cm:HasWeapon("weapon_ar2") and LC.IsIssuedWeapon(cm, "weapon_pistol") and fund() == 0 and LC.ArmoryCount("weapon_pistol") == 0,
+        "an empty fund: a pistol off the shelf for the Commander's pulse rifle, counted as issued (it can't be sold back)")
+    book.armory = {}
+end
+
+------------------------------------------------------------------------
+-- 5. barter: what each side holds, the totals and the checks, all on the server
+------------------------------------------------------------------------
+local lt = mk("ArmLieutenant", "resistance", 900)
+_run(1)
+lt.weps = {}
+LC.AddCredits(lt, 200 - LC.Credits(lt))
+LC.GiveItem(lt, "gun_pistol", 2)
+setFund(500)
+lt:RemovePData("lc_goodwill")
+do
+    ok(LC.BarterOpen(lt) == true, "the barter view opens for one of ours at his post")
+    local b = sentT.lc_barter
+    local r = b and row(b.yours, "gun_pistol")
+    ok(r and r.n == 2 and r.price == 5 and #(b.his or {}) > 0, "yours: what he'd buy from your pockets, at what he pays; his: his stock, at what he charges")
+    ok(b.goodwill == 10 and b.full == 10 and b.credits == 200 and b.fund == 500, "the bar's numbers reach the client (a Lieutenant: 10 of 10)", tostring(b.goodwill) .. "/" .. tostring(b.full))
+    LC.BarterOpen(citizen)
+    ok(#(sentT.lc_barter.his or {}) == 0, "a stranger: nothing of his (he sells nothing to strangers)")
+end
+-- his things worth a little more than one gun, a little less, and the cheapest
+local his = sentT.lc_barter and LC.BarterOffer(lt).his or {}
+local function combo(lo, hi) -- one of his things, and how many, worth more than lo and no more than hi
+    for _, h in ipairs(his) do
+        for k = 1, h.max do if h.price * k > lo and h.price * k <= hi then return h.id, k, h.price * k end end
+    end
+end
+do
+    local id, k, worth = combo(5, 12)
+    ok(id ~= nil, "(something of his worth 6 to 12)", tostring(worth))
+    local g0, c0, f0, a0 = LC.Goodwill(lt), LC.Credits(lt), fund(), LC.ArmoryCount("weapon_pistol")
+    ok(trade(lt, {}, { [id] = k }, worth) == false, "a barter gives something of yours (credits alone are a purchase, not a barter)")
+    ok(trade(lt, { gun_357 = 1 }, { [id] = k }) == false and trade(lt, { gun_pistol = 3 }, { [id] = k }) == false, "only what is really in your pockets, no more than you have")
+    ok(trade(lt, { gun_pistol = 1 }, { nosuch = 1 }) == false and trade(lt, { gun_pistol = 1 }, { [id] = 99 }) == false, "only his stock, and a sensible number")
+    ok(trade(lt, { gun_pistol = 1 }, { [id] = k }, 9999) == false, "credits you don't have: refused")
+    ok(select(2, LC.BarterTrade(lt, { yours = { gun_pistol = 1 } })) == nil and LC.Credits(lt) == c0, "(and once a second at most: too soon, nothing moves)")
+    local short = worth - 5
+    ok(trade(lt, { gun_pistol = 1 }, { [id] = k }) == true, "one gun for his things worth a few credits more: he lets it go", short .. " short")
+    ok(LC.Credits(lt) == c0 and fund() == f0 and LC.ArmoryCount("weapon_pistol") == a0 + 1 and LC.Inventory(lt).gun_pistol == 1,
+        "no credits move; the gun is in the armory", LC.Credits(lt) - c0 .. " " .. fund() - f0)
+    ok(math.abs(LC.Goodwill(lt) - (g0 - short)) < 0.01, "and the difference comes off the goodwill", LC.Goodwill(lt))
+    local l = top(2)
+    ok(l[1].n == 0 and l[1].w == string.format("Let %d credit%s go (%s)", short, short == 1 and "" or "s", name(lt)) and l[2].w == "A pistol for the armory (" .. name(lt) .. ")",
+        "the record: the gun, and what he let go", l[1].w .. " | " .. l[2].w)
+    LC.BarterOpen(lt)
+    ok(math.abs(sentT.lc_barter.goodwill - (10 - short)) < 0.01 and sentT.lc_barter.full == 10, "closing and opening again gives nothing back", sentT.lc_barter.goodwill)
+    -- more short than is left: refused (the Trade button is greyed for it)
+    local left = math.floor(LC.Goodwill(lt) + 1e-9)
+    local id2, k2, worth2 = combo(5 + left, 40)
+    ok(id2 and trade(lt, { gun_pistol = 1 }, { [id2] = k2 }) == false and LC.Inventory(lt).gun_pistol == 1, "short by more than is left: refused, nothing moves", tostring(worth2))
+    -- credits from your pocket make up the rest, into the fund
+    local c1, f1 = LC.Credits(lt), fund()
+    local need = worth2 - 5
+    ok(trade(lt, { gun_pistol = 1 }, { [id2] = k2 }, need + 50) == true and LC.Credits(lt) == c1 - need and fund() == f1 + need, "credits from your pocket make up a difference (only what is needed), into the fund",
+        (c1 - LC.Credits(lt)) .. " of " .. need)
+    ok(top(2)[2].w == "Sold at the quartermaster's (" .. name(lt) .. ")" and top(2)[2].n == need, "(the record)", top(2)[2].w)
+    -- room in the pockets (notes weigh nothing; his things do)
+    LC.GiveItem(lt, "gun_pistol", 1)
+    LC.GiveItem(lt, "intel_patrol", 1)
+    LC.CarryLimit = function() return 0, 0 end
+    local okH, whyH = trade(lt, { intel_patrol = 1 }, { [id] = k })
+    LC.CarryLimit = carryWas
+    ok(okH == false and whyH == "That's more than you can carry." and LC.HasItem(lt, "intel_patrol"), "his things won't fit in your pockets: refused, with the one line", tostring(whyH))
+    LC.TakeItem(lt, "intel_patrol", 1)
+    -- too far
+    LC.NearQuartermaster = function() return nil end
+    ok(trade(lt, { gun_pistol = 1 }, { [id] = k }) == false and LC.BarterOpen(lt) == false, "away from his post: nothing")
+    LC.NearQuartermaster = function() return true end
+    -- through the window's own message
+    _run(1.1)
+    sentT.lc_barter = nil
+    _netcall("lc_barter", lt, 1)
+    ok(sentT.lc_barter ~= nil, "the Barter button's message opens the view")
+    _run(1.1)
+    local g1 = LC.Goodwill(lt)
+    _netcall("lc_barter", lt, 2, 0, 1, "gun_pistol", 1, 0)
+    ok(not LC.HasItem(lt, "gun_pistol") and math.abs(LC.Goodwill(lt) - g1) < 0.01, "a trade from the view: one gun for nothing of his, paid out of the fund; the goodwill untouched")
+end
+
+------------------------------------------------------------------------
+-- 6. goodwill: by rank, kept over a reconnect, refilling over 24 hours, never paid out
+------------------------------------------------------------------------
+do
+    local sizes = {}
+    for i, xp in ipairs({ 0, 150, 400, 900, 1800 }) do
+        local p = mk("ArmRank" .. i, "resistance", xp)
+        sizes[i] = LC.GoodwillFull(p)
+    end
+    ok(sizes[1] == 1 and sizes[2] == 3 and sizes[3] == 5 and sizes[4] == 10 and sizes[5] == 20, "the allowance by rank: Sympathizer 1, Member 3, Fighter 5, Lieutenant 10, Commander 20", table.concat(sizes, " "))
+    local c = citizen
+    local s = {}
+    for i, sym in ipairs({ 0, 3, 7, 100 }) do c:SetPData("lcq_sympathy", sym) s[i] = LC.GoodwillFull(c) end
+    ok(s[1] == 0 and s[2] == 1 and s[3] == 3 and s[4] == 3, "anyone else by sympathy, at most 3", table.concat(s, " "))
+    c:SetPData("lcq_sympathy", 0)
+    local now = os.time()
+    lt:SetPData("lc_goodwill", string.format("%.4f:%d", 0, now - 12 * 3600))
+    ok(math.abs(LC.Goodwill(lt) - 5) < 0.05, "empty, it fills again: half after 12 hours", LC.Goodwill(lt))
+    lt:SetPData("lc_goodwill", string.format("%.4f:%d", 0, now - 30 * 3600))
+    ok(LC.Goodwill(lt) == 10, "full after 24, and no more", LC.Goodwill(lt))
+    lt:SetPData("lc_goodwill", string.format("%.4f:%d", 2, now))
+    ok(LC.GoodwillSpend(lt, 3) == false and LC.GoodwillSpend(lt, 2) == true and math.floor(LC.Goodwill(lt) + 1e-9) == 0, "spent across trades: only what is left")
+    -- a reconnect: what is kept with the character (PData) comes back as it was
+    local saved = lt:GetPData("lc_goodwill")
+    local back = mk("ArmLieutenant2", "resistance", 900)
+    back:SetPData("lc_goodwill", saved)
+    ok(math.floor(LC.Goodwill(back) + 1e-9) == 0 and string.match(tostring(saved), "^[%d%.]+:%d+$") ~= nil, "kept with the character over a reconnect or a restart", tostring(saved))
+    hook.Run("LivingCityNewCharacter", back)
+    ok(back:GetPData("lc_goodwill") == nil, "(someone new starts afresh)")
+    -- never paid out: a trade that leans on it moves no credits; one that pays you doesn't touch it
+    lt:RemovePData("lc_goodwill")
+    LC.GiveItem(lt, "gun_pistol", 2)
+    local id, k = combo(5, 9)
+    local c0 = LC.Credits(lt)
+    trade(lt, { gun_pistol = 1 }, { [id] = k })
+    local g0 = LC.Goodwill(lt)
+    ok(LC.Credits(lt) == c0 and g0 < 10, "it never pays out credits: only things of his, for a trade a little short")
+    trade(lt, { gun_pistol = 1 })
+    ok(LC.Credits(lt) == c0 + 5 and math.abs(LC.Goodwill(lt) - g0) < 0.01, "and a trade that pays you leaves it as it was")
+end
+
+------------------------------------------------------------------------
+-- 7. no loop makes credits
+------------------------------------------------------------------------
+do
+    local cm = mk("ArmLooper", "resistance", 1800)
+    _run(1)
+    cm.weps = {}
+    setFund(100000)
+    LC.AddCredits(cm, 2000 - LC.Credits(cm))
+    local offer = LC.BarterOffer(cm)
+    local bad
+    for _, h in ipairs(offer.his) do
+        local g = LCS.BlackById[h.id] or (LC.MarketBlackById and LC.MarketBlackById(h.id))
+        local back = g and (g.item and (LC.QuartermasterBuyPrice(cm, g.item) or 0) * (g.count or 1)) or (g and g.weapon and LC.QuartermasterBuyPrice(cm, "w:" .. g.weapon)) or 0
+        if back >= h.price then bad = h.id .. " " .. back .. " >= " .. h.price end
+    end
+    ok(bad == nil, "everything he sells, he buys back for less", tostring(bad))
+    bad = nil
+    for _, g in ipairs(LCS.Goods or {}) do
+        local back = g.item and (LC.QuartermasterBuyPrice(cm, g.item) or 0) * (g.count or 1) or 0
+        if back > 0 and back >= g.price then bad = g.id .. " " .. back .. " >= " .. g.price end
+    end
+    ok(bad == nil, "nor anything the Commissary sells", tostring(bad))
+    local function wealth(p)
+        local w = LC.Credits(p)
+        for id, n in pairs(LC.Inventory(p)) do w = w + (LC.QuartermasterBuyPrice(p, id) or 0) * n end
+        return w
+    end
+    local w0, rose = wealth(cm), nil
+    for _, h in ipairs(offer.his) do -- buy each and sell it back
+        local g = LCS.BlackById[h.id]
+        if g and g.item and LC.BlackBuy(cm, h.id) then
+            LC.QuartermasterBuy(cm, g.item, true)
+            if wealth(cm) > w0 then rose = h.id end
+            w0 = math.min(w0, wealth(cm))
+        end
+    end
+    ok(rose == nil, "buying from him and selling it back, round and round: never more than you started with", tostring(rose))
+    -- barter loops (a Commander with only guns in the pockets): guns for his things and back, until the goodwill is gone and after
+    _setcvar("lc_carry_kg", 200)
+    local bm = mk("ArmBarterLooper", "resistance", 1800)
+    _run(1)
+    bm.weps = {}
+    LC.AddCredits(bm, 100 - LC.Credits(bm))
+    LC.GiveItem(bm, "gun_pistol", 12)
+    bm:RemovePData("lc_goodwill")
+    local start = wealth(bm)
+    his = LC.BarterOffer(bm).his -- (prices as they are now: buying moved some)
+    local id, k = combo(5, 12)
+    local g = LCS.BlackById[id]
+    local used = 0
+    for _ = 1, 12 do
+        local g0 = LC.Goodwill(bm)
+        if trade(bm, { gun_pistol = 1 }, { [id] = k }) then
+            used = used + (g0 - LC.Goodwill(bm))
+            if g and g.item then LC.QuartermasterBuy(bm, g.item, true) end
+        end
+    end
+    ok(used > 0 and wealth(bm) - start <= used + 0.01 and used <= 20.01, "bartering in a loop: never more than the goodwill spent (20 at most, once a day) above where you started",
+        string.format("%d gained, %.1f goodwill spent (%s x%d)", wealth(bm) - start, used, tostring(id), k or 0))
+    local mid = wealth(bm)
+    for _ = 1, 4 do trade(bm, { gun_pistol = 1 }, { [id] = k }) end
+    ok(wealth(bm) <= mid, "and once it is spent, nothing more", (wealth(bm) - mid) .. "")
+end
+
+------------------------------------------------------------------------
+-- 8. the gun run's crate, a gun given, and fencing
+------------------------------------------------------------------------
+do
+    local runner = citizen
+    LC.GiveItem(runner, "smuggled_supplies", 1)
+    setFund(100)
+    book.armory = {}
+    local c0 = LC.Credits(runner)
+    ok(LC.QuartermasterGunRun(runner, "smuggled_supplies") == true and LC.Credits(runner) == c0 + 60 and fund() == 40 and not LC.HasItem(runner, "smuggled_supplies"),
+        "the gun run's crate: his sixty out of the fund, as the job always paid")
+    ok(LC.ArmoryCount("weapon_pistol") == 1 and LC.ArmoryCount("weapon_smg1") == 1 and top()[1].w == "A crate of guns, brought in", "and its guns in the armory", top()[1].w)
+    LC.GiveItem(runner, "smuggled_supplies", 1)
+    setFund(10)
+    sentT.lc_barter = nil
+    ok(LC.QuartermasterGunRun(runner, "smuggled_supplies") == false and LC.HasItem(runner, "smuggled_supplies") and LC.Credits(runner) == c0 + 60
+        and sentT.lc_barter and sentT.lc_barter.pre.smuggled_supplies == 1 and row(sentT.lc_barter.yours, "smuggled_supplies").price == 60,
+        "the fund can't pay: the crate stays in their pockets, and his barter opens with it at 60")
+    LC.TakeItem(runner, "smuggled_supplies", 1)
+    LC.GiveItem(fighter, "gun_shotgun", 1)
+    LC.QuartermasterDonate(fighter, "gun_shotgun")
+    ok(LC.ArmoryCount("weapon_shotgun") == 1 and top()[1].n == 0 and top()[1].w == "A shotgun for the armory (" .. name(fighter) .. ")", "a gun given to him goes in the armory too", top()[1].w)
+    local all = true
+    for _, id in ipairs({ "gun_pistol", "gun_smg", "gun_shotgun", "gun_357", "gun_ar2" }) do
+        local it = LCS.Items[id]
+        if not (it.resistanceSplit and (it.sell or 0) > 0 and it.sell < (LC.FundGunPrice(it.weapon) or 0) and it.contraband) then all = false end
+    end
+    ok(all, "fencing: each pocket gun has the dealer's split flag and a dealer price below what it costs to buy")
+    local saved = util.JSONToTable(file.Read("livingcity/" .. game.GetMap() .. "_city.json", "DATA") or "") or {}
+    ok(istable(saved.armory) and tonumber(saved.armory.weapon_shotgun) == 1, "the armory is kept with the fund in the ledger's file")
+end
+
+-- nothing new in anyone's chat
+do
+    local bad
+    for _, p in ipairs(made) do
+        for _, line in ipairs(p.chat or {}) do
+            local s = string.lower(tostring(line))
+            for _, w in ipairs({ "barter", "goodwill", "armory", "fund" }) do
+                if string.find(s, w, 1, true) then bad = line end
+            end
+        end
+    end
+    ok(bad == nil, "nothing about the armory, a barter or goodwill reached anyone's chat", tostring(bad))
+end
+
+-- back as it was
+for _, p in ipairs(made) do
+    if IsValid(p) then hook.Run("PlayerDisconnected", p) p:Remove() end
+end
+LC.NearQuartermaster, LC.CarryLimit, LC.SendCompressed = nqWas, carryWas, sendWas
+_setcvar("lc_carry_bulky", bulkyWas)
+_setcvar("lc_carry_kg", kgWas)
+book.armory = armoryWas
+setFund(fundWas)
+end
+Nov19_ArmoryBarterTests()
 
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")
 ;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)

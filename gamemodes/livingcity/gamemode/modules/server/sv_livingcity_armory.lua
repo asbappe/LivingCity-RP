@@ -224,6 +224,23 @@ local function GunOf(id)
     return nil
 end
 
+-- Never as much as he or the Commissary sells one for: what comes a few at a time (five hand-rolled cigarettes for
+-- 6) is worth less to him one by one, so buying it and selling it to him can't make credits out of the fund.
+local function Under(ply, id, p)
+    for _, g in ipairs(LC.MarketBlackList and LC.MarketBlackList() or LCS.Black or {}) do
+        if g.item == id and not g.lab and LC.MarketPrice then
+            p = math.min(p, math.floor((LC.MarketPrice(ply, g) - 1) / (g.count or 1)))
+        end
+    end
+    for _, g in ipairs(LCS.Goods or {}) do
+        if g.item == id and not g.cpOnly then
+            local each = math.min(g.price, math.floor(g.price * (LC.MarketCommissaryMul and LC.MarketCommissaryMul(g) or 1)))
+            p = math.min(p, math.floor((each - 1) / (g.count or 1)))
+        end
+    end
+    return p
+end
+
 -- What he pays for one, here (nil: he won't buy it from them).
 function LC.QuartermasterBuyPrice(ply, id)
     local who = LC.QuartermasterDealer(ply)
@@ -237,6 +254,7 @@ function LC.QuartermasterBuyPrice(ply, id)
     local it = LCS.Items[id]
     if not it or DECODED[id] then return nil end
     local p = LC.SellPrice and LC.SellPrice(ply, id) or it.sell
+    p = p and Under(ply, id, p)
     return (p and p > 0) and p or nil
 end
 
