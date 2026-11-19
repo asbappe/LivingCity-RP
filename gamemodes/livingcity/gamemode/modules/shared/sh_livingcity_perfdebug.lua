@@ -1,7 +1,7 @@
 --[[
     Living City: the performance debugger (server and client)
 
-    Off until staff turn it on (C > Help > Performance debugger, or
+    Off until staff turn it on (F4 > Factions > Admin: testing tools > Performance debugger, or
     lc_perfdebug on in the server console). It goes deeper than the lag
     monitor (which says, live, which kind of lag it is): it says what in the
     code is slow, and keeps it, so a bad evening can be looked at afterwards.

@@ -183,6 +183,17 @@ local function Build()
         fl:Dock(FILL)
         fl:SetWrap(true)
     end
+    -- staff tools that were only in the C menu (the owner, 19 November)
+    local st = Section(scroll, "Staff tools")
+    local sr2 = Row(st)
+    Btn(sr2, "Dreams (tonight's, wake everyone, put things back)", function() if LC_CL.DreamsMenu then LC_CL.DreamsMenu() end end, 300)
+    Btn(sr2, "Performance debugger", function() if LC_CL.PerfDebugMenu then LC_CL.PerfDebugMenu() end end, 160)
+    local sr3 = Row(st)
+    local lagOn = LC_CL.LagWatchOn and LC_CL.LagWatchOn()
+    Btn(sr3, lagOn and "Lag monitor: on (turn off)" or "Lag monitor: off (turn on)", function()
+        if LC_CL.SetLagWatch then LC_CL.SetLagWatch() end
+        timer.Simple(0.2, function() Do("refresh") end)
+    end, 200)
     -- testing alone: what one player can't set off by themselves (superadmins; the owner, 18 November)
     if state.solo then
         local so2 = Section(scroll, "Testing alone  (what one player can't set off)")

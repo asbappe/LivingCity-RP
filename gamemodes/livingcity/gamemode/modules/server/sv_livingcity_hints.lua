@@ -85,23 +85,23 @@ LC.HINTS = {
         text = { default = "Chat is spoken out loud: only people near you can hear it. In {+menu_context} > Talk you can yell, whisper, describe what you're doing or what's happening around you, or talk out of character (in chat: /y yells, /w whispers, /me and /it describe, // is out of character).",
                  zombie = "Chat is spoken out loud: only people near you can hear it. Start a message with // to talk out of character to everyone." } },
     help_staff = { title = "Need a hand?",
-        text = { default = "To reach the staff, open {+menu_context} > Help > Ask staff for help (or type @ and then your message in chat). Use it for anything out of character: you're stuck, you have a rules question, or someone is breaking the rules." } },
+        text = { default = "To reach the staff, open F4 > Me and settings > Ask staff for help (or type @ and then your message in chat). Use it for anything out of character: you're stuck, you have a rules question, or someone is breaking the rules." } },
     night = { title = "Night", when = function() local c = GetConVar("lc_atmosphere") return c and c:GetBool() end,
-        text = { default = "From 21:00 to 05:00 it's night: the city goes dark and curfews happen three times as often. {+menu_context} > The city shows the current time.",
+        text = { default = "From 21:00 to 05:00 it's night: the city goes dark and curfews happen three times as often. F1 > What now? shows the time and the weather.",
                  zombie = "It's night. The streets are darker, and most of the living stay indoors." } },
     rain = { title = "Rain", when = function() local c = GetConVar("lc_atmosphere") return c and c:GetBool() end,
         text = { default = "When it rains, it washes the blood off the streets (graffiti stays). Clean water comes from the vending machines and the taps; canal water needs boiling at a stove or a fire." } },
     acts_intro = { title = "Acting", when = function() local c = GetConVar("lc_acts") return c and c:GetBool() end,
         text = { default = "{+menu_context} > Me > Pose lets you sit, kneel, lie down or lean (move to stand back up). Me > Gesture: wave, salute, bow, nod and more. Me > Put my hands up raises your hands." } },
     slots_intro = { title = "More than one life", when = function() local c = GetConVar("lc_char_slots") return c and c:GetInt() > 1 end,
-        text = { default = "You can have more than one character in the city. Go to {+menu_context} > Me > My characters to switch between them or make a new one." } },
+        text = { default = "You can have more than one character in the city. Go to F4 > Me and settings > My characters to switch between them or make a new one." } },
     needs_intro = { title = "Hunger and thirst", when = Needs,
         text = { default = "Your hunger and thirst go down over time (the bars at the top left; with the quiet HUD, they only appear once they get low). Get rations from the ration dispensers, and water from vending machines and sinks. If either one reaches zero, you start dying.",
                  resistance = "Your hunger and thirst go down over time (the bars at the top left; with the quiet HUD, they only appear once they get low). The Resistance's supply crate in rebel territory gives you food; bins, fishing and the vegetable pots help too. If either one reaches zero, you start dying." } },
     quiet_hud = { title = "Where to find your numbers", when = function() local c = GetConVar("lc_quiet_hud") return c and c:GetBool() end,
         text = { default = "This server hides numbers on screen. Your credits and Civil Standing are shown at the top of your pockets ({gm_showspare1}), and your rank and progress on {gm_showspare2}." } },
     view_bob = { title = "Camera sway", when = function() local c = GetConVar("lc_view_bob") return c and c:GetBool() end,
-        text = { default = "The camera sways slightly as you walk and dips when you land. If that bothers you, turn it off in {+menu_context} > Settings > Camera sway (this only changes it for you)." } },
+        text = { default = "The camera sways slightly as you walk and dips when you land. If that bothers you, turn it off in F4 > Me and settings > Camera sway (this only changes it for you)." } },
 
     -- what happens to you
     downed_self = { title = "You're down", urgent = true,
@@ -126,7 +126,7 @@ LC.HINTS = {
         text = { default = "This is the city's highest alert level: Civil Protection units are allowed to kill whenever they see fit. Get indoors and stay out of sight until it ends.",
                  cp = "You may use lethal force at your own discretion, and units stop twice as many people. It ends when the city calms down, or when an officer ends it." } },
     searched = { title = "Searched",
-        text = "Any contraband (illegal items) in your pockets will be found in a search. Your stash at home ({+menu_context} > Getting by) is never searched, but inspection sweeps sometimes raid it." },
+        text = "Any contraband (illegal items) in your pockets will be found in a search. Your stash at home (F2 > My home) is never searched, but inspection sweeps sometimes raid it." },
     story_open = { title = "Your story",
         text = "You've done enough ordinary jobs that a story of your own can come up on your board ({gm_showspare2}): a quest with choices, marked as your story. It stays posted until you take it." },
     running = { title = "Don't run in front of Civil Protection units", urgent = true,
@@ -191,9 +191,9 @@ LC.HINTS = {
                  cp = "The infected are loose in the streets near the infestation. Kill them and contain the outbreak.",
                  zombie = "The infestation has broken out. The streets are yours to roam, for now." } },
     city_unrest = { title = "The city is in unrest",
-        text = { default = "The Resistance now holds enough of the city to cause unrest: expect more inspections and raids, fewer rations, and cheaper black market prices. See {+menu_context} > The city > Who holds the city." } },
+        text = { default = "The Resistance now holds enough of the city to cause unrest: expect more inspections and raids, fewer rations, and cheaper black market prices. See F1 > What now? > The state of the city." } },
     city_order = { title = "Full compliance",
-        text = { default = "The Combine holds the whole city: neither the Resistance nor the infestation has spread. Expect fewer skirmishes and higher black market prices. See {+menu_context} > The city > Who holds the city." } },
+        text = { default = "The Combine holds the whole city: neither the Resistance nor the infestation has spread. Expect fewer skirmishes and higher black market prices. See F1 > What now? > The state of the city." } },
 
     -- what's near you
     downed_other = { title = "Someone's down",
@@ -209,7 +209,7 @@ LC.HINTS = {
         text = { default = "Press {+use} to open it. Put something in it and it becomes yours, locked to everyone else. Civil Protection units can open any locker and confiscate anything illegal inside.",
                  cp = "Each locker belongs to whoever claimed it. Press {+use} to search one: you can confiscate contraband, and the owner becomes wanted." } },
     apartment = { title = "An apartment for rent",
-        text = { default = "To rent it, look at the door and open {+menu_context} > This door > Rent it. It's a place of your own, locked to everyone except you and anyone you give a key to (look at them and open {+menu_context}). {+menu_context} > Home locks and unlocks it." } },
+        text = { default = "To rent it, look at the door: F1 > Rent / lock this door. It's a place of your own, locked to everyone except you and anyone you give a key to (look at them: F1 > My apartment key). {+menu_context} > Home locks and unlocks it." } },
     stall = { title = "A market stall",
         text = { default = "Someone is selling things here. Press {+use} to see what's for sale and the prices.",
                  cp = "A licensed trader's stall. Press {+use} to search it. An officer can revoke the trader's license from the records terminal." } },
@@ -217,7 +217,7 @@ LC.HINTS = {
         text = { default = "A note or a notice. Press {+use} to read it; you can also take it with you.",
                  cp = "A note or a notice. Press {+use} to read it. Civil Protection units can tear notices down." } },
     lawboard = { title = "The city's laws",
-        text = { default = "This board lists the city's laws. Press {+use} to read them, or read them anywhere in {+menu_context} > The city > The city's laws." } },
+        text = { default = "This board lists the city's laws. Press {+use} to read them, or read them anywhere in F1 > What now? > The city's laws." } },
     overweight = { title = "Too much to carry", urgent = true,
         text = "You're carrying too much weight, so you move slower. Drop something, or carry a satchel so you can hold more." },
     water = { title = "Water",
@@ -333,7 +333,7 @@ LC.HINTS = {
     unshackle = { title = "A shackled vortigaunt",
         text = { resistance = "From the rank of Member up, you can cut its shackles: look at it and choose {+menu_context} > Cut the vortigaunt's shackles (it takes ten seconds, and no Civil Protection unit can be watching). It then joins the Resistance." } },
     stranger = { title = "Strangers", when = ICChat,
-        text = { default = "People don't know your name until you tell them. To introduce yourself, look at someone and choose {+menu_context} > Tell them my name (or show them your papers). Until then they see a description of you instead, which you can change in {+menu_context} > Me > Change how strangers see me." } },
+        text = { default = "People don't know your name until you tell them. To introduce yourself, look at someone and choose F1 > Tell them my name (or show them your papers). Until then they see a description of you instead, which you can change in {+menu_context} > Me > Change how strangers see me." } },
     birds = { title = "Birds",
         text = { default = "One punch kills a bird. Cook it at a stove or burning barrel from your pockets ({gm_showspare1})." } },
     headcrab = { title = "A headcrab",
@@ -347,7 +347,7 @@ LC.HINTS = {
                  cp = "Containment jobs on your board send Civil Protection units in here. Kills here push the infestation back.",
                  zombie = "Home." } },
     home_block = { title = "Your block",
-        text = { default = "This is your housing block: come back here when a curfew starts. You can make things here ({gm_showspare1}), and keep anything you don't want found in your stash ({+menu_context} > Getting by)." } },
+        text = { default = "This is your housing block: come back here when a curfew starts. You can make things here ({gm_showspare1}), and keep anything you don't want found in your stash (F2 > My home)." } },
     trespass = { title = "Combine only zone", urgent = true,
         text = "You're trespassing in a Combine-only area. Leave before the countdown on your screen runs out, or you'll be wanted." },
     plainclothes_gun = { title = "Careful", urgent = true,
@@ -374,7 +374,7 @@ LC.HINTS = {
     item_seeds = { title = "Seeds",
         text = "Plant them in a pot in rebel territory: look at the pot and press {+use}. They grow into vegetables in a few minutes." },
     item_fishing = { title = "Fishing line",
-        text = "Stand in the canal or look at the water, then choose Fish in your pockets ({gm_showspare1}) or in {+menu_context} > Getting by, and keep still. Cook what you catch." },
+        text = "Stand in the canal or look at the water, then choose Fish in your pockets ({gm_showspare1}), and keep still. Cook what you catch." },
     item_spray = { title = "A spray can",
         text = "Look at a wall and choose Spray in your pockets ({gm_showspare1}) to paint the lambda (the Resistance symbol). If a Civil Protection unit sees you, you're wanted for vandalism." },
     item_lockpick = { title = "A lockpick",
@@ -424,7 +424,7 @@ LC.HINTS = {
     item_zipties = { title = "Cuffs",
         text = "To cuff someone, get up close, look at them and choose {+menu_context} > their name > Cuff them. It only works if their hands are up, they're down, they've been stopped by a Civil Protection unit, or you're behind them. Drag walks them along with you; Uncuff them lets them go." },
     item_request = { title = "A Civil Protection call box",
-        text = "It calls Civil Protection to where you are: open your pockets ({gm_showspare1}) and press Call for help beside it, or {+menu_context} > Getting by > Request Civil Protection. Civil Protection units see the request on their screens. You can send one once a minute, and false requests go on your record." },
+        text = "It calls Civil Protection to where you are: open your pockets ({gm_showspare1}) and press Call for help beside it. Civil Protection units see the request on their screens. You can send one once a minute, and false requests go on your record." },
     item_satchel = { title = "A satchel",
         text = "While you carry it, you can hold more: eight more kilos, and one more large item. Your pockets ({gm_showspare1}) show how much you're carrying." },
     item_storage = { title = "A storage crate",
@@ -921,7 +921,7 @@ hook.Add("PlayerSay", "LivingCityHintsChat", function(ply, text)
     if cmd ~= "hints" and cmd ~= "tips" then return end
     if arg == "off" then
         ply:SetPData("lc_hints_off", "1")
-        ply:ChatPrint("[Tips] Tips are now off. Turn them back on in the full menu (C > Settings).")
+        ply:ChatPrint("[Tips] Tips are now off. Turn them back on in F4 > Me and settings.")
     elseif arg == "on" then
         ply:SetPData("lc_hints_off", "0")
         ply:ChatPrint("[Tips] Tips are now on. Each tip shows the first time you run into something.")
@@ -938,8 +938,8 @@ hook.Add("PlayerSay", "LivingCityHintsChat", function(ply, text)
             ply:ChatPrint("[Tips] Your last few tips:")
             for _, r in ipairs(recent) do ply:ChatPrint("  " .. r.title .. ": " .. Plain(r.text)) end
         end
-        ply:ChatPrint(LC.HintsOff(ply) and "[Tips] Tips are off. Turn them back on in C > Settings."
-            or "[Tips] C > Tips I've seen lists every tip you've had. C > Settings turns tips off or starts them over.")
+        ply:ChatPrint(LC.HintsOff(ply) and "[Tips] Tips are off. Turn them back on in F4 > Me and settings."
+            or "[Tips] F4 > Me and settings: the tips you've had, and tips on, off or from the start.")
     end
     return ""
 end)

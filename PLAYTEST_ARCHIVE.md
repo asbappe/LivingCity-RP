@@ -110,3 +110,4 @@ To add an item: `printf '%s\n' '- [ ] **Topic:** what to try. [needs a person: w
 - [ ] **The tidied F1 and F2:** as a citizen, a unit, a rebel and the Administrator, does every F2 entry sit where you would look for it, and does F1 > What now? > The state of the city read well? [needs a person: whether it feels right]
 - [ ] **Stand poses:** F1 > Pose > "Stand: pose 1" and "pose 2": what do they look like, so they can be named for it? [needs a person: to see them]
 - [ ] **Testing alone:** F4 > Factions > Admin: testing tools > Testing alone: try the assassination test (her address, the job, the attempt) and the collapse with only you on. [needs a person: the real game]
+- [ ] **F4 > Me and settings:** does the new tab read well, and do the settings buttons flip and show the new state? [needs a person: how it looks]

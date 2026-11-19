@@ -28,7 +28,7 @@ LC = LC or {}
 util.AddNetworkString("lc_trail")
 
 local cvOn = CreateConVar("lc_trail", "1", FCVAR_ARCHIVE,
-    "The quest trail on the ground, leading to the quest's objective: 1 players can have it (each can hide theirs in C > Settings), 0 off for everyone", 0, 1)
+    "The quest trail on the ground, leading to the quest's objective: 1 players can have it (each can hide theirs in F4 > Me and settings), 0 off for everyone", 0, 1)
 
 local cvStraight = CreateConVar("lc_trail_straight", "1", FCVAR_ARCHIVE,
     "The quest trail skips path points you could walk straight past (1), or follows every one (0)", 0, 1)

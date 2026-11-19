@@ -1152,7 +1152,10 @@ do
                 ranks = { { name = "Recruit", xp = 0 }, { name = "Metrocop", xp = 150 }, { name = "Combine Soldier", xp = 2000, overwatch = true } }, steps = { "Earn more XP." } })
             if LC_CL.HubTab() ~= "jobs" then error("the tabs' content moved F4 off the tab it opened on") end
             -- every tab shows, and the last one looked at is where F4 opens next time
-            for _, t in ipairs({ "career", "factions" }) do
+            -- (the owner, 19 November: Me and settings, built here with what was only in the C menu)
+            local okMe, errMe = pcall(LC_CL.HubFill, "me", LC_CL.HubBuildMe)
+            if not okMe then error("F4's Me and settings tab: " .. tostring(errMe)) end
+            for _, t in ipairs({ "career", "me", "factions" }) do
                 LC_CL.OpenHub(t, true)
                 if LC_CL.HubTab() ~= t then error("F4's " .. t .. " tab didn't show") end
             end
@@ -4341,6 +4344,12 @@ local ok, e = pcall(function()
     LC_CL.Manpower = manWas
     Info({ reb = { tx = false, backup = 0, pos = 0 } })
 
+    -- F1 > What now?: the time and the weather, and the city's laws (the owner, 19 November: only in the C menu before)
+    do
+        local wn = LC_CL.WhatNowPage()
+        local all = Labels(wn)
+        if not (string.find(all, "The time and the weather", 1, true) and string.find(all, "The city's laws", 1, true)) then error("F1 > What now?: " .. all) end
+    end
     -- a plain citizen: their own lines straight on F2 (the owner, 18 November: no "Me" step), with what the server says
     _me.nw = { lcf_faction = "citizen", lce_standing = 120, lc_unreg = true }
     Info({ me = { work = "intake", ration = 240, cards = 2, home = "none", standing = 120, next = 150, nextWhat = "Union foreman (F2)" } })
@@ -4352,7 +4361,11 @@ local ok, e = pcall(function()
     if not string.find(p.items[4].label, "foreman", 1, true) then error("a citizen's F2: no next milestone: " .. Labels(p)) end
     if not (p.items[5] and string.find(p.items[5].label, "Household", 1, true) and p.items[6] and p.items[6].label == "Dreams and survival") then error("a citizen's F2: household, then dreams and survival: " .. Labels(p)) end
     undo = Watch()
-    for i = 1, 4 do p.items[i].run() end
+    for _, i in ipairs({ 1, 2, 4 }) do p.items[i].run() end
+    -- (the owner, 19 November: My home is a page, with what was only in the C menu)
+    local hp = p.items[3].page and p.items[3].page()
+    if not (hp and #hp.items == 6 and hp.items[4].label == "Open my stash" and string.find(hp.items[6].label, "Give up", 1, true)) then error("F2 > My home: " .. (hp and Labels(hp) or "not a page")) end
+    for i = 1, 4 do hp.items[i].run() end
     undo()
     -- in a cell: My sentence
     _me.nw.lc_jail_until = CurTime() + 125

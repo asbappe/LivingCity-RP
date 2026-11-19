@@ -3,7 +3,7 @@
     (the owner, 10 November: "too many numbers, yes please to your
     suggestion").
 
-    F2 > My standing (or F2 > Me > Where I stand) (and C > You > Where I stand) opens one window:
+    F2 > My standing (or F2 > Me > Where I stand) (and F4 > Me and settings) opens one window:
     Civil Standing and its tier, credits, ration cards, rank and experience,
     the three traits (loyalty, sympathy, corruption), wanted or not and how
     to give yourself up, the record since your last sentence and what it

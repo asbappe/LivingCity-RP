@@ -204,7 +204,7 @@ hook.Add("PlayerDeath", "LivingCityConductDeath", function(victim, inflictor, at
     if not ok then
         lastRDM[attacker] = CurTime()
         LC.AddStrike(attacker, string.format("killed %s with no roleplay reason (%s, %du)", victim:Nick(), weapon, dist))
-        victim:ChatPrint("[Conduct] That kill has been flagged for staff. C > Help > Ask staff for help if there's more to it.")
+        victim:ChatPrint("[Conduct] That kill has been flagged for staff. F4 > Me and settings > Ask staff for help if there's more to it.")
     end
 end)
 

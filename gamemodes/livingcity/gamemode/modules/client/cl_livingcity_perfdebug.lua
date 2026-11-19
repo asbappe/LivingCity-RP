@@ -1,7 +1,7 @@
 --[[
     Living City (client): the performance debugger's window
 
-    Staff: C > Help > Performance debugger (or lc_perfdebug_menu in the
+    Staff: F4 > Factions > Admin: testing tools > Performance debugger (or lc_perfdebug_menu in the
     console). Start and Stop turn it on and off on the server (and, while the
     window is open, in your own game too, so you can see what costs you
     frames). The figures come every two seconds:
@@ -258,7 +258,7 @@ concommand.Add("lc_perfdebug_menu", function() LC_CL.PerfDebugMenu() end)
 
 concommand.Add("lc_perfdebug_print", function()
     local text = LC_CL.PerfDebugReports()
-    if text == "" then print("[Performance debugger] Nothing yet: open it (C > Help > Performance debugger) and press Start.") return end
+    if text == "" then print("[Performance debugger] Nothing yet: open it (F4 > Factions > Admin: testing tools > Performance debugger) and press Start.") return end
     for line in string.gmatch(text .. "\n", "([^\n]*)\n") do print(line) end
 end)
 

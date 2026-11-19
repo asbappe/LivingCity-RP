@@ -48,7 +48,7 @@ local GUIDE = {
         "Beware the infestation: put down there by a zombie or a headcrab, and if nobody gets you up, you turn. Die while infested and that character is dead: no close call.",
         "Job boards around the city list their side's work: E on one of your side's opens your jobs.",
         "Lost? {gm_showhelp} > What now? always shows your next step and how to get there. What now? > Places marks useful spots on your screen (the ration dispenser, water, your housing block, your workplace).",
-        "F3: your pockets (and your stash at home)        F4: Jobs (your job board: jobs, stories, Union employment), Career (rank and the way up) and Factions, as tabs",
+        "F3: your pockets (and your stash at home)        F4: Jobs (your job board: jobs, stories, Union employment), Career (rank and the way up), Factions, and Me and settings (you, help, tips, every setting), as tabs",
         "C (when not in build mode): the full menu. Everything you can do, with this guide, your pockets, job board, factions and tips at the top.",
         "E on a person: talk to citizens, or report to Civil Protection units. E on an object: pick it up or use it.",
         "The city's named people have minds of their own: hunger, fear, grudges and friends. Push one too far and they may scream at a unit, turn informer, or side with the Resistance. Where the server has it switched on, say something in chat while looking at one close by and they answer you (what you say to them is read by an outside service).",
@@ -57,7 +57,7 @@ local GUIDE = {
         "Running and jumping tire you: the bar low on the screen. Run it all out and you're out of breath, and can only walk until you get it back. A good night's sleep and a full stomach bring it back faster.",
         "Guns are contraband: a citizen seen by a unit with a gun in hand is wanted at once. On rebel ground everyone carries lowered (hold R): a gun kept up where the fighters can see you for ten seconds and they open fire. Recruits and metrocops carry lowered on the Combine's own ground too: the Overwatch don't trust them.",
         "Everything you can do is in the menus (Civil Protection units: C > Unit tools). Chat commands like !backup still work, but you never need them.",
-        "Warnings and announcements appear on screen as well as in chat: people talking to you appear as subtitles, everything else as cards at the top. C > Settings turns the cards off.",
+        "Warnings and announcements appear on screen as well as in chat: people talking to you appear as subtitles, everything else as cards at the top. F4 > Me and settings turns the cards off.",
     } },
     { "Death, and close calls", {
         "Each character has three close calls. When you die, you use one up: you wake in the infirmary with your pockets emptied, and your character doesn't remember the fight, so don't go after whoever did it.",
@@ -72,7 +72,7 @@ local GUIDE = {
         "In a city with Civil Intake, new characters arrive with nothing: no papers, no room, no ration card.",
         "Every new arrival is searched: a Civil Protection unit stands beside Civil Intake and Housing Allocation. Choose \"Show me how searches work\" to learn the pat-down (press R once to slip something into a spot already checked), then try being the searcher yourself. Contraband found on your first day is taken with a warning. Leave the station without registering and a unit cuffs you and walks you back to the terminal.",
         "Go to Civil Intake (the marker on your screen) and press E on the terminal to open the registration screen. Enter your name, your face and a description strangers will see, submit it, and stay next to the terminal while it processes you. Your identity papers go in your pockets (F3), and the screen sends you on to Housing Allocation.",
-        "Terminals (Civil Intake, Housing Allocation, the Civil Protection Commissary) show their menu on a screen in front of them: aim your crosshair at a button and press E. Prefer a window? C > Settings > Terminals' menus.",
+        "Terminals (Civil Intake, Housing Allocation, the Civil Protection Commissary) show their menu on a screen in front of them: aim your crosshair at a button and press E. Prefer a window? F4 > Me and settings > Terminals' menus.",
         "New here? After Civil Intake, go to Labor Assignment: the Union gives you a job there, and Housing Allocation only houses citizens with work. You stay on it for 30 minutes or 4 shifts, whichever comes first; then a Labor Assignment terminal can change it (Infestation Cleanup needs Civil Standing 25, Intake Processor 50). Jobs are only changed there, in person.",
         "Next, Housing Allocation: press E to open the housing register. Present your papers and apply for a block. Any block is approved at once and gives you the least crowded one; asking for a crowded block needs Civil Standing 50. Your way home is then marked on screen.",
         "Already housed? The same screen shows where you live and how you got it, marks your way home, and takes transfer requests (needs Civil Standing 25; once every half hour).",
@@ -84,12 +84,12 @@ local GUIDE = {
     } },
     { "How the city looks and feels", {
         "Your eye level is a little lower than other characters', and your field of view is no wider than in Half-Life 2, so the city feels big around you.",
-        "The camera sways a little as you walk and dips when you land. C > Settings > Camera sway turns it off, just for you.",
+        "The camera sways a little as you walk and dips when you land. F4 > Me and settings > Camera sway turns it off, just for you.",
         "There's no score on screen: your credits and Civil Standing are at the top of your pockets (F3), and your rank and progress are on F4.",
         "Hunger and thirst appear at the top left once they get low, and briefly after you eat or drink.",
     } },
     { "Staying alive", {
-        "Eat and drink. Ration dispensers and the ration line give you food; the Commissary (a terminal, or C > Getting by) sells everything else.",
+        "Eat and drink. Ration dispensers and the ration line give you food; the Commissary (a terminal) sells everything else.",
         "Walk into water and press E to drink, but boil it first if you can (on a stove or fire, from F3). To use a sink, stand close and look right at it, with nothing in the way.",
         "Parasites (coughing, hunger, thirst) never go away on their own: antiparasitic tablets from a medic or the black market cure them.",
         "Parasites also mean you'll need the toilet (press E on one). Ignore it and you soil yourself: then you need a toilet, a wash (bathtub or shower) and clean clothes, or people back away from the smell.",
@@ -169,7 +169,7 @@ local GUIDE = {
         "The Resistance plans its own operations: a Lieutenant (or a Fighter, with no Lieutenant online) picks a target and a time on F2 > Resistance > Operations, and anyone in the cell can join. Those who were there when it works are rewarded. The Combine answers with bounties: the Administrator or a Division Leader puts a price on a wanted head (F2 > Bounties on the wanted; hers: F2 > City orders).",
         "Careful who sees you: some ordinary citizens are informants. A gun out in the open or contraband used in plain view, and one may walk off to tell the nearest unit. The Resistance can burn a citizen they suspect of informing (F2): RAT over their head for the cell, the quartermaster won't deal with them, and if they're held, a crude rat carved into their cheek for good: no Resistance will ever take them in. Burn an innocent and the whole city thinks less of the Resistance.",
         "Civil Protection works shifts with a quota: searches, checkpoint papers duty and a residence inspection (F2 > More > Me > My shift). A performance review at the end of each shift gives experience toward promotion.",
-        "Lost among the numbers? F2 > My standing (or F2 > Me > Where I stand) (or C > You > Where I stand) shows every one of them in one window, each explained: standing, credits, rank, loyalty, sympathy, corruption, your record, wanted, probation and more.",
+        "Lost among the numbers? F2 > My standing (or F2 > Me > Where I stand) (or F4 > Me and settings) shows every one of them in one window, each explained: standing, credits, rank, loyalty, sympathy, corruption, your record, wanted, probation and more.",
         "Dreams can be sat out once you've earned it: Happy or Neutral ones after living through 2 of that kind, Nightmares and propaganda with Exemplary standing (400). A small note tells you as the dream comes; choose in F2 > Dreams and survival.",
         "Survival: Realistic (every need, 20% more shift pay and experience, the title Hardened) or Relaxed (slow hunger and thirst, no parasites, toilet, washing or spoiling). Choose on the characters screen or F2 > Dreams and survival; you can switch every 3 hours.",
         "Your sentence adds up what you were booked for in the last 30 minutes: 3 minutes for petty things, up to 20 for murdering a unit, 30 at most. The Resistance get twice that, 10 minutes at least, and are always questioned; anyone else is questioned from a 10 minute sentence. In a cell, F1 > Ask for a work detail: a guard walks you out to pick up trash, sweep the floor or unclog the Combine's toilets, by turns, for time off. With more than five minutes left, F1 > Lie down and sleep, at any hour: you may dream. Released, a citizen is on probation for 15 minutes: check in with a unit (F1), stay away from the Resistance, and anything new counts double.",
@@ -191,7 +191,7 @@ local GUIDE = {
     } },
     { "The war for the city", {
         "Rebel territory and the infestation spread if nobody fights them (across a floor, or down the stairs to the next floor), and shrink when people fight them. A badly infested block spreads it to the next.",
-        "A message appears on screen when you enter either one. C > The city > Who holds the city (or F4) shows how much each side controls.",
+        "A message appears on screen when you enter either one. F1 > What now? > The state of the city shows how much each side controls.",
         "When unrest is high (the Resistance is strong): more inspections and raids, and ration cuts. At full compliance, the rebels go quiet.",
         "Civil Protection units: anything that goes to HQ is only over the radio. Get your radio transmitter out (next to Hands) and right click: Request resupply, Call for backup (brings the nearest units running), Send my 10-20 (marks your location for other units), Issue a BOLO, a records check, your directives.",
         "Resistance: the quartermaster in rebel territory sells gear. Members and up can press E on fighters to have them follow you.",
@@ -209,7 +209,7 @@ local GUIDE = {
     { "Getting by, and making things", {
         "Near Resistance activity when the PA announces that ration units are being deducted? You lose your next ration; the dispenser tells you why.",
         "Press E on bins, dumpsters and fridges to search them: scrap, rags, chemicals, tins, seeds, sometimes gun parts.",
-        "Fishing line (from the Commissary): stand in the canal or look at it, choose Fish in F3 (or C > Getting by), and keep still: a cast takes up to 45 seconds, and most come up empty. Cook what you catch.",
+        "Fishing line (from the Commissary): stand in the canal or look at it, choose Fish in F3, and keep still: a cast takes up to 45 seconds, and most come up empty. Cook what you catch.",
         "Rebel territory has plant pots (plant seeds, harvest vegetables) and a supply crate the Resistance eat from. C > Resistance > Donate food adds to it.",
         "The supply crate is restocked for how many Resistance are online, about half of what you eat, so it often runs empty: fish, hunt headcrabs or birds, grow vegetables, ask citizens for food, or buy from the quartermaster. Each of you can take one tin every 15 minutes. Look at the crate to see what's in it and when more is due.",
         "Crate running low? Take a Headcrab hunt from the Operations board (F4): kill four headcrabs in the infested ground, pick up their raw meat (E) and stand by the crate. Each headcrab is a meal for the camp, and it pays more while the crate is empty.",
@@ -252,7 +252,7 @@ local GUIDE = {
         "Apartments: look at a door to see who owns it, or whether it's for rent. With your hands out, right click a free door to rent it (you'll be asked yes or no), and right click your own door to lock or unlock it. Or use C > This door, and C > Home for keys, locking and giving it up.",
         "With a CWU business license you can place a market stall and sell from it. Customers press E on it to buy.",
         "Paper: Write from F3. Leave it as a note, put it up on a wall as a poster, or keep it. Press E on one to read it.",
-        "The city's laws are in C > The city > The city's laws. The Administrator speaks to everyone from C > The city > Broadcast.",
+        "The city's laws are in F1 > What now? > The city's laws. The Administrator speaks to everyone from F2 > Speak to the city.",
     } },
     { "Characters and acts", {
         "C > Me > My characters: all your characters in the city. Switch between them, or create a new one.",
@@ -272,7 +272,7 @@ local GUIDE = {
         "The Resistance (Member rank and up) can free one (look at it, then C): it takes ten seconds, and nobody must see you. Once free, it can attack (left click) and charge vests (right click), and the Combine hunt it.",
         "Armour is the charge stored in a powered vest. Civil Protection units have one built into the uniform, rebel ranks come with one, and anyone else needs one from the quartermaster or the black market. Vortigaunts can charge it.",
         "When no player is Father Grigori, he stays in rebel territory: press E on him for a blessing, a sermon, or a few words.",
-        "A full day lasts one real hour. Nights are dark, and curfews are more likely. C > The city shows the time and weather.",
+        "A full day lasts one real hour. Nights are dark, and curfews are more likely. F1 > What now? shows the time and the weather.",
         "Fill an empty bottle or can at the water's edge (a few feet away will do) or at a sink. lc_music 0 turns off the city's music.",
         "Need a staff member? Type @ followed by your message.",
     } },
@@ -329,7 +329,7 @@ local GUIDE = {
         "Supply drop happening? Guard the crate: if anything is left in it when the convoy moves on, every Civil Protection unit nearby gets paid.",
         "RADIO JAMMED on your HUD means a jammer is nearby. Follow the beeping and press E on it to smash it.",
         "Civil Protection units: look at someone and choose F2 > Cuff them. Anyone with cuffs: C > their name > Cuff them. You can cuff someone whose hands are up, who is down, who has been stopped, or from behind. Drag walks them along; hitting them with the baton arrests them.",
-        "Sociostability (green, yellow or red) is shown at the top of the screen. Only the Administrator sets it (F2 > Sociostability, or C > The city). Red means a judgment waiver: metrocops have their pistols drawn.",
+        "Sociostability (green, yellow or red) is shown at the top of the screen. Only the Administrator sets it (F2 > Sociostability). Red means a judgment waiver: metrocops have their pistols drawn.",
         "BLACK (purple, the city collapsing): long red fills the city's chaos (the readout shows how close: \"collapse 45%\"). Full, the G-Man offers the Administrator a way out: step down, or end it. Under BLACK: a mandatory curfew, and the Nexus's suppression device shells rebels out under open sky (a ring glows where it will land: move!). Refused, he arms the city until her last stand: she floats in a shield that deflects every bullet, fed by 2 or 3 transformers marked on screen, each behind glass and guarded (manhacks, turrets, mines). Destroy them all and she can be killed. If she holds out, a player of the rebellion comes back as Barney, then as Gordon Freeman, to finish it.",
         "Set off an alarm (with a data chip, or during an escape) and a squad of two metrocops and a soldier comes through the door a few seconds later.",
         "The Nexus and every Combine-only area are guarded: mostly Overwatch soldiers, plus a metrocop or two.",
@@ -338,7 +338,7 @@ local GUIDE = {
         "The Resistance doesn't take just anyone: prove yourself first. Help them on jobs and quests, feed their supply crate, sell or give the quartermaster guns, ammunition, gun parts, scrap, rags or chemicals (E on him: strangers can too), hand a ration or arms to one of their fighters, side with the vortigaunts in a dream.",
         "Squads: how many NPCs you can lead depends on how many players are on your side (alone or two: 5 each; 3-4: 3; 5-6: 2; more: 1), so team up with each other. A Resistance Commander or an Overwatch Elite always leads at least 4. F2's Call for backup shows your squad (2 of 3).",
         "Call for backup by left clicking with the radio transmitter up (the Radio menu has it too). The Resistance needs a Freq 7 radio; with nobody near, fighters come out of rebel territory to you. Civil Protection and Overwatch: press E on one of the city's units to have them follow you, again to send them back (Elites follow only the Overwatch Commander).",
-        "Citizens: C > Getting by > Request Civil Protection (needs a request device) calls a Civil Protection unit to you. Use C > Me > Put my hands up when a unit tells you to.",
+        "Citizens: a request device (F3 > Call for help) calls a Civil Protection unit to you. Use F1 > Put my hands up when a unit tells you to.",
         "Cuffed? Use C > Me > Work at the cuffs to get free, when nobody's looking. Anyone can uncuff you.",
         "Arresting someone with the baton: they may struggle (both press E fast; the bar shows who's winning). Held, they're cuffed: walk them to the cells yourself (F2 > Walk them to the cells, or F1 > Drag them along) or a unit comes to walk them in. Arrested yourself, press E fast to break free and run, or put your hands up to go quietly.",
         "Your duty allocation is a ration voucher: take it to a Civil Protection Commissary or a ration dispenser. The CP Commissary gives a health vial and a bandage once a day, and charges your vest while you stand at it.",
@@ -354,8 +354,8 @@ local GUIDE = {
     } },
     { "Tips", {
         "The first time you come across something, a card on the right explains what it is and what you can do. Each card only shows once.",
-        "C > Tips I've seen lists every tip you've had, to read again. C > Settings turns tips off or on, or starts them over.",
-        "A small panel on the right shows what you can do right now: what the tool in your hands does, where you are, and what your quest wants, with your own keys. On a quest, amber chevrons on the ground lead you to the objective. Turn either off in C > Settings.",
+        "F4 > Me and settings: the tips you've had, to read again, and tips on, off or from the start.",
+        "A small panel on the right shows what you can do right now: what the tool in your hands does, where you are, and what your quest wants, with your own keys. On a quest, amber chevrons on the ground lead you to the objective. Turn either off in F4 > Me and settings.",
     } },
     { "Talking, and knowing people", {
         "Chat is spoken out loud: only people nearby hear it. C > Talk lets you yell so people further away hear (/y), or whisper to whoever is right next to you (/w).",
@@ -363,7 +363,7 @@ local GUIDE = {
         "Out of character: F1 > 6 > 1 Nearby (/looc) or 2 Server-wide (//, with a cooldown). Also C > Talk > Out of character. F1 > 6 > 3 sends the server's owner a bug report or feedback (one a minute).",
         "U (the game's team chat key): talk to your own side only, wherever they are: Civil Protection, Overwatch and the Administrator; the Resistance; citizens; the infested. Marked (Team) in chat.",
         "Voice chat works the same way: people only hear you if they're close enough.",
-        "Strangers don't know your name; they see your description instead. Set it in C > Me > Change how strangers see me (\"tall, with a scar over one eye\").",
+        "Strangers don't know your name; they see your description instead. Set it in F4 > Me and settings > Change how strangers see me (\"tall, with a scar over one eye\").",
         "To tell someone your name, look at them and choose F1 > Tell them my name. F1 > Talk > Tell everyone nearby my name tells everyone around you.",
         "While their mask is on, Civil Protection units are known by their designation, not their name.",
     } },
@@ -383,9 +383,9 @@ local ADMIN_GUIDE = { "Admin", {
     "C > Help > Build mode (or !build) turns build mode on and off: spawn menu, context menu, physgun, toolgun (Miscount Editor) and noclip.",
     "Civil Intake: place \"Fixture: Civil Intake (registration)\", \"Fixture: Housing Allocation\" and \"Point: arrival\". Settings: lc_intake, lc_intake_secs (8), lc_intake_grace (10 minutes), lc_papers_fee (10), lc_card_fee (15). Commands: lc_register <name>, lc_unregister <name> (sends them back through all of it, room included). With no desk on the map, people are registered and housed automatically as they arrive.",
     "Labor Assignment: place \"Fixture: Labor Assignment\". Settings: lc_labor_min_minutes (30), lc_labor_min_shifts (4), lc_labor_cleanup_standing (25), lc_labor_porter_standing (50). Without one, the Union assigns work and the board (F4) changes it, as before.",
-    "Shared dreams: place \"Point: dream\" in an out-of-map area (and \"Zone: dream\" round it, tall and open for the flying endings). Endings set off in play then come at night as a dream for sleepers only, with no reload. C > Help > Dreams: status, dream it now, wake everyone, put back a player's things. Settings: lc_dreams (1), lc_dream_delay (60), lc_dream_radius (1500), lc_dream_every_night (0), lc_dream_combine (6). Without a dream point, the endings are as before.",
-    "Nightmare dreams you play (the Administrator's tablet, under Nightmare; or C > Help > Dreams: dream it now): The Patrol Maze, The Barrel Tower, The Crumbling Floor, Freeze, Citizen. Each builds its own arena at the dream point and removes it afterwards; it fits inside the dream zone (or lc_dream_radius), so give it about 1500 units each way and some headroom for the tower.",
-    "Propaganda dreams (her tablet, under Happy, as Propaganda; or C > Help > Dreams): Kneel Before Her, Roses for Her, Mirror, Mirror, The Saviour, The Loyalty Quiz, and ten more (Record Harvest, The Union Shift, Careless Talk, The Newsreel, Two Minutes of Hate, The Mass Games, On-the-Spot Guidance, The Scrap Drive, Flowers for the Liberators, Duck and Cover, Ravenholm). Asleep for one with someone else, the Administrator stars herself (tablet > Tonight's dream > Star in propaganda dreams yourself: on or off); otherwise a giant figure of her does. Music goes flat in garrysmod/sound/livingcity/dreams/, named admire, saviour_horde, saviour or quiz (admire1.mp3), or for the ten more their codeword (harvest, shift, spy, newsreel, hate, massgames, guidance, scrap, flowers, duck, ravenholm) or propaganda; her voice lines in dreams/voice/ (saviour_stop1.wav, a .txt beside it for the subtitle). Upload, FastDL sync, map change.",
+    "Shared dreams: place \"Point: dream\" in an out-of-map area (and \"Zone: dream\" round it, tall and open for the flying endings). Endings set off in play then come at night as a dream for sleepers only, with no reload. F4 > Factions > Admin: testing tools > Dreams: status, dream it now, wake everyone, put back a player's things. Settings: lc_dreams (1), lc_dream_delay (60), lc_dream_radius (1500), lc_dream_every_night (0), lc_dream_combine (6). Without a dream point, the endings are as before.",
+    "Nightmare dreams you play (the Administrator's tablet, under Nightmare; or F4 > Factions > Admin: testing tools > Dreams: dream it now): The Patrol Maze, The Barrel Tower, The Crumbling Floor, Freeze, Citizen. Each builds its own arena at the dream point and removes it afterwards; it fits inside the dream zone (or lc_dream_radius), so give it about 1500 units each way and some headroom for the tower.",
+    "Propaganda dreams (her tablet, under Happy, as Propaganda; or F4 > Factions > Admin: testing tools > Dreams): Kneel Before Her, Roses for Her, Mirror, Mirror, The Saviour, The Loyalty Quiz, and ten more (Record Harvest, The Union Shift, Careless Talk, The Newsreel, Two Minutes of Hate, The Mass Games, On-the-Spot Guidance, The Scrap Drive, Flowers for the Liberators, Duck and Cover, Ravenholm). Asleep for one with someone else, the Administrator stars herself (tablet > Tonight's dream > Star in propaganda dreams yourself: on or off); otherwise a giant figure of her does. Music goes flat in garrysmod/sound/livingcity/dreams/, named admire, saviour_horde, saviour or quiz (admire1.mp3), or for the ten more their codeword (harvest, shift, spy, newsreel, hate, massgames, guidance, scrap, flowers, duck, ravenholm) or propaganda; her voice lines in dreams/voice/ (saviour_stop1.wav, a .txt beside it for the subtitle). Upload, FastDL sync, map change.",
     "Save with the gamemode (Q > Tools > Miscount): spawn a prop, put it where you want it and left click it: it's saved with the map's layout and back every time the map loads. Right click stops saving it. Saved props glow green while the tool is out.",
     "Testing a dream: the Miscount Editor's panel, Dreams: test one. Pick any dream and Test it now (just me): you play it at once, awake and alone (the city's people stand in), and Stop the test whenever you like. Nobody asleep is pulled in, it isn't tonight's dream, and nothing you win or lose counts. With Record the test ticked there (it is, to begin with), the test is written down for the code chat: when you wake, a folder in garrysmod/data/livingcity/dreamrec/ on your own computer holds log.txt (every text that was on screen, how long it was up and whether that was long enough to read; what the dream made; what you did) and screenshots. Type a note in chat mid-test and it lands in the log at that second. Only a test from the editor is ever recorded.",
     "The play study (superadmins): F4 > Factions > Admin: play study. Start it and play as you mean the city's people to behave. It notes who you are (faction, rank), the zone you're in and whose ground it is, your job, how you move, what you do about security, and whether you're in the city or a dream, each kept apart. It pauses by itself while you fly, hold the editor's tool, are out of the game window or away from the keys. A job that fails or is abandoned is kept out; strike the last job or the last 5 minutes yourself when something went wrong. Stop and save: report.txt and log.txt are in garrysmod/data/livingcity/study/ on your own computer, for the code chat. Nothing about the city's people changes by itself.",
@@ -439,7 +439,7 @@ local function OpenGuide(admin)
     f.Paint = function(self, w, h)
         draw.RoundedBox(4, 0, 0, w, h, Color(16, 15, 13, 245))
         draw.SimpleText("MISCOUNT: A GUIDE", "DermaLarge", 16, 28, ACCENT)
-        draw.SimpleText("C > Guide opens this guide. Tips also pop up the first time something happens (C > Tips I've seen lists them all).", "DermaDefault", 16, 60, Color(150, 145, 130))
+        draw.SimpleText("F4 > Me and settings > The guide opens this guide. Tips pop up the first time something happens (Tips I've seen, there too, lists them all).", "DermaDefault", 16, 60, Color(150, 145, 130))
     end
     local search = vgui.Create("DTextEntry", f)
     search:SetPos(f:GetWide() - 276, 32)

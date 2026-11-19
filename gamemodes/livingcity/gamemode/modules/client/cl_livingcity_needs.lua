@@ -647,6 +647,17 @@ local function OpenInventory()
                 b.DoClick = function() Act("scavengemask", id) end
                 btnW = btnW + 138
             end
+            -- (the owner, 19 November: leaving one lying about was only in the C menu)
+            if id == "rebel_pamphlet" and LocalPlayer():GetNW2String("lcf_faction", "") == "resistance" then
+                local b = vgui.Create("DButton", row)
+                b:Dock(RIGHT)
+                b:DockMargin(4, 4, 4, 4)
+                b:SetWide(80)
+                b:SetText("Leave here")
+                b:SetTooltip("For someone to find")
+                b.DoClick = function() if LC_CL.SendAction then LC_CL.SendAction("leavepamphlet") end end
+                btnW = btnW + 88
+            end
             if id == "request_device" then -- (the owner, 7 November: a Call for help button here, where the call box is)
                 local b = vgui.Create("DButton", row)
                 b:Dock(RIGHT)

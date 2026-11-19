@@ -48,7 +48,7 @@
 
       (8 November: nobody can opt out of any dream, or wake themselves until out of it; Enforcers excepted.)
       Players: C > Settings > Shared dreams ("Wake up" in a dream, once out of it), or
-      /dream off, /dream on, /dream wake. Admins: C > Help > Dreams (what's waiting, dream it
+      /dream off, /dream on, /dream wake. Admins: F4 > Factions > Admin: testing tools > Dreams (what's waiting, dream it
       now, wake everyone, put back anyone's things), lc_dream_restore <name>, lc_dream_now.
 ]]
 
@@ -774,7 +774,7 @@ function LC.DreamRestore(p, snap, done)
         if tries > 2 then
             Log("warn", "Dream: " .. p:Nick() .. " still differs after putting it back (" .. table.concat(bad, ", ") .. "): the snapshot is kept")
             Admins(function(a) Notice(a, "warn", "Dream", p:Nick() .. "'s things don't all match after the dream (" .. table.concat(bad, ", ") ..
-                "). The snapshot is kept: C > Help > Dreams, Put back.", 15) end)
+                "). The snapshot is kept: F4 > Factions > Admin: testing tools > Dreams, Put back.", 15) end)
             if done then done(false, bad) end
             return
         end
@@ -1584,7 +1584,7 @@ end)
 local function Blocked(p, what)
     if (p.lcDreamToldAt or 0) > CurTime() then return end
     p.lcDreamToldAt = CurTime() + 5
-    Notice(p, "info", "Dreaming", (what or "That") .. " will have to wait until you wake up. (C > Settings > Shared dreams: wake up.)", 5)
+    Notice(p, "info", "Dreaming", (what or "That") .. " will have to wait until you wake up. (F1 > Wake up from the dream.)", 5)
 end
 -- (their hands excepted: Give goes through this hook too, and a dreamer is given just their hands; and what the
 -- dream itself hands them, LC.DreamGive: The Battle Line's rifle, an Enforcer's baton. Until 12 November this hook
@@ -1698,7 +1698,7 @@ hook.Add("PlayerInitialSpawn", "LivingCityDreams", function(p)
         local snap = LC.DreamSnaps[sid] or LC.DreamLoad(sid)
         if not snap then return end
         if snap.applied then
-            Log("info", "Dream: " .. p:Nick() .. " has an old dream snapshot, already put back once (an admin can put it back again: C > Help > Dreams)")
+            Log("info", "Dream: " .. p:Nick() .. " has an old dream snapshot, already put back once (an admin can put it back again: F4 > Factions > Admin: testing tools > Dreams)")
             return
         end
         Log("info", "Dream: " .. p:Nick() .. " left in the middle of a dream: putting everything back")
@@ -1800,7 +1800,7 @@ net.Receive("lc_dream_act", function(_, p)
     SendStatus(p)
 end)
 
--- Stop whatever dream is under way, for everyone in it (staff: F1 > Staff, F1 in a dream, C > Help > Dreams).
+-- Stop whatever dream is under way, for everyone in it (staff: F1 > Staff, F1 in a dream, F4 > Factions > Admin: testing tools > Dreams).
 -- Everything it made goes, its sounds stop, and everyone wakes with everything put back. True, or false; and the words.
 function LC.DreamStopAll(by)
     local dream = LC.DreamActive

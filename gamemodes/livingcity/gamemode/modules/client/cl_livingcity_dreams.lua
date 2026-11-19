@@ -5,7 +5,7 @@
       out of it; nobody opts out.
       While you dream, a line at the top of the screen says whether you can wake yet and how,
       and a smaller one how long the dream can still last at the most.
-      Admins: C > Help > Dreams (or the Dreams button in the Endings menu): whether
+      Admins: F4 > Factions > Admin: testing tools > Dreams (or the Dreams button in the Endings menu): whether
       dreams can happen (a dream point placed), what's waiting for tonight and when,
       dream it now, wake everyone, and put back anyone's things from their snapshot.
 ]]
