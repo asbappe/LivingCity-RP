@@ -44,11 +44,14 @@ The piece, all in the map's own coordinates:
 - THE TUNNEL HOUSE, on the north side of the approach: a door, 45 steps down north, and a tunnel
   (z 304..448) straight north under the city to the sewer wall, 1,966 long. A vent duct of the
   owner's crosses 4 units behind that wall from x 1256 east, so the tunnel's last 128 are a passage
-  36 wide along the west side. In the sewer wall's west end is THE HATCH (lc_raven_hatch): a steel
-  door anyone opens by hand. Across the tunnel 145 before the narrow passage is THE COMBINE DOOR:
-  two leaves of the Combine's metal that only the wiring parts; it is what seals the tunnel, and
-  opening it opens the hatch too. The piece carries the whole sewer wall again with the hatch in
-  it: the owner deletes 28290.
+  36 wide along the west side, standing open into the sewer. Across the tunnel 145 before it is THE
+  COMBINE DOOR: two leaves of the Combine's metal that only the wiring parts. It is the only way
+  for anything that walks upright, so no infestation reaches the sewers until it is opened; then
+  six makers in the tunnel pour zombies and headcrabs through it. Round it goes THE AIR VENT: a
+  duct 48 square from a grate low in the sewer wall to a grate low in the tunnel's east wall on
+  Ravenholm's side of the door; a player crouches through at any time, nothing infected can. The
+  piece carries the whole sewer wall again with the passage's and the vent's openings: the owner
+  deletes 28290.
 - The owner also deletes 34874 (the bare strip): the approach's south side stands where it starts.
 
 Nothing in the gamemode knows of this yet. Who may open the gate and the hatch is the gamemode's to
@@ -198,6 +201,7 @@ def ravenholm(args):
     STEPS = (ZS - FLOOR) // 8                  # 45
     yb = ya + 12 * STEPS                       # the stairs' foot (y -1433)
     slot_y, wall_y = 265, 393                  # where the narrow last passage begins; the sewer wall's south face
+    VX1, VX2, VY, VZ1, VZ2 = 1440, 1488, 40, 308, 356     # the air vent: 48 square inside, along the outside of the tunnel's east wall
     tw, tf = R["tunnel_wall"], R["tunnel_floor"]
     top_h = ZS + 168                           # the house's walls' top
 
@@ -212,7 +216,10 @@ def ravenholm(args):
     WB((TX1 - 16, ys + 16, 240, TX1, yb, top_h), tw)
     WB((TX2, ys + 16, 240, TX2 + 16, yb, top_h), tw)
     WB((TX1 - 16, yb, 240, TX1, wall_y + 8, CEIL + 16), tw)
-    WB((TX2, yb, 240, TX2 + 16, slot_y, CEIL + 16), tw)
+    WB((TX2, yb, 240, TX2 + 16, VY, CEIL + 16), tw)
+    WB((TX2, VY + 48, 240, TX2 + 16, slot_y, CEIL + 16), tw)
+    WB((TX2, VY, 240, TX2 + 16, VY + 48, VZ1), tw)
+    WB((TX2, VY, VZ2, TX2 + 16, VY + 48, CEIL + 16), tw)
     # floors: the landing inside the door, and one slab under the stairs and the tunnel
     WB((TX1, ys + 16, base, TX2, ya, ZS), tw, top=tf)
     WB((TX1, ys + 16, 240, TX2, slot_y, FLOOR), tw, top=tf)
@@ -231,18 +238,51 @@ def ravenholm(args):
     WB((TX1, slot_y, 240, 1252, wall_y, FLOOR), tw, top=tf)
     WB((TX1, slot_y, CEIL, 1252, wall_y + 8, CEIL + 16), tw, bottom=MAT["ceiling"])
     # the sewer wall again (the owner's brush 28290), with the hatch's opening in its west end
-    WB((1252, wall_y, 239, 1536, wall_y + 8, CEIL), R["sewer_wall"])
+    WB((1252, wall_y, 239, VX1, wall_y + 8, CEIL), R["sewer_wall"])
+    WB((VX2, wall_y, 239, 1536, wall_y + 8, CEIL), R["sewer_wall"])
+    WB((VX1, wall_y, 239, VX2, wall_y + 8, VZ1), R["sewer_wall"])
+    WB((VX1, wall_y, VZ2, VX2, wall_y + 8, CEIL), R["sewer_wall"])
     WB((TX1, wall_y, 239, 1252, wall_y + 8, 307), R["sewer_wall"], top=tf)
-    # The owner: "I was hoping the connection to the existing sewer would have a purely hatch to climb through as you did, but
-    # also a combine door that can be triggered". So two things. THE HATCH, in the sewer wall: a steel door anyone opens by
-    # hand (a func_door as the owner's own: Use opens and shuts it). THE COMBINE DOOR, across the tunnel 145 before the narrow
-    # passage: two leaves of the Combine's metal that only the wiring parts (lc_raven_door_open); it is what seals the tunnel.
-    # When it opens it also opens the hatch, so what comes down the tunnel can get out.
-    vmf.brush_entity("func_door", {
-        "targetname": "lc_raven_hatch", "movedir": "-90 0 0", "speed": "60", "lip": "8", "wait": "-1", "spawnflags": "288", "spawnpos": "0", "dmg": "0", "forceclosed": "0",
-        "health": "0", "ignoredebris": "0", "loopmovesound": "0", "noise1": "doors/doormove1.wav", "noise2": "doors/doormove2.wav", "locked_sentence": "0",
-        "unlocked_sentence": "0", "renderamt": "255", "rendercolor": "255 255 255", "renderfx": "0", "rendermode": "0", "disableshadows": "1"},
-        [((TX1, wall_y + 2, 307, 1252, wall_y + 6, CEIL), R["steel"])], R["steel"], gv)
+    # The sewer end, as the owner settled it: "make the hatch an air vent or something and I want it to bypass the combine
+    # door there, so that any infestation doesn't spread unless the combine door is opened.. if the combine door is opened,
+    # then the infestation spreads rapidly into the sewers and zombies are pouring in". So:
+    # THE COMBINE DOOR, across the tunnel 145 before the narrow passage: two leaves of the Combine's metal that only the
+    # wiring parts (lc_raven_door_open). It is the only way through for anything that walks upright. The narrow passage
+    # beyond it stands open into the sewer (no door of its own now), so when the Combine door opens nothing else is in the way.
+    # THE AIR VENT, which goes round that door: a duct 48 square (a crouched player is 36 high; a zombie stands 72) from a
+    # grate low in the sewer wall, south along the outside of the tunnel's east wall, passing under the owner's own duct, to
+    # a grate low in the tunnel's east wall on Ravenholm's side of the door. Each grate is Episode One's vent cover riding
+    # on an unseen func_door: Use lifts it. No path nodes in it and an NPC clip across it: nothing of the infestation can
+    # use it, whatever its size.
+    duct = "metal/metalduct003a"                 # (the owner's own ducts' metal)
+
+    def VB(box):
+        vmf.world_box(box, duct, vis=tv)
+    VB((VX1 - 8, VY - 8, VZ1 - 8, VX2 + 8, wall_y, VZ1))                      # the run north to the sewer wall: floor, roof, two sides, its south end
+    VB((VX1 - 8, VY - 8, VZ2, VX2 + 8, wall_y, VZ2 + 8))
+    VB((VX1 - 8, VY + 56, VZ1, VX1, wall_y, VZ2))
+    VB((VX2, VY - 8, VZ1, VX2 + 8, wall_y, VZ2))
+    VB((VX1, VY - 8, VZ1, VX2, VY, VZ2))
+    VB((TX2 + 16, VY - 8, VZ1 - 8, VX1 - 8, VY + 56, VZ1))                    # the short piece west into the tunnel: floor, roof, two sides
+    VB((TX2 + 16, VY - 8, VZ2, VX1 - 8, VY + 56, VZ2 + 8))
+    VB((TX2 + 16, VY - 8, VZ1, VX1, VY, VZ2))
+    VB((TX2 + 16, VY + 48, VZ1, VX1, VY + 56, VZ2))
+    vmf.world_box((VX1, 140, VZ1, VX2, 260, VZ2), "tools/toolsnpcclip", vis=tv, seals=False)
+    for name, frame, leaf, at, yaw in (
+            ("lc_raven_vent_sewer", [(VX1, wall_y, VZ1, VX1 + 4, wall_y + 8, VZ2), (VX2 - 4, wall_y, VZ1, VX2, wall_y + 8, VZ2), (VX1 + 4, wall_y, VZ1, VX2 - 4, wall_y + 8, VZ1 + 4),
+                                     (VX1 + 4, wall_y, VZ2 - 4, VX2 - 4, wall_y + 8, VZ2)], (VX1 + 4, wall_y + 2, VZ1 + 4, VX2 - 4, wall_y + 6, VZ2 - 4), (VX1 + 24, wall_y + 4, VZ1 + 24), 90),
+            ("lc_raven_vent_tunnel", [(TX2, VY, VZ1, TX2 + 16, VY + 4, VZ2), (TX2, VY + 44, VZ1, TX2 + 16, VY + 48, VZ2), (TX2, VY + 4, VZ1, TX2 + 16, VY + 44, VZ1 + 4),
+                                      (TX2, VY + 4, VZ2 - 4, TX2 + 16, VY + 44, VZ2)], (TX2 + 6, VY + 4, VZ1 + 4, TX2 + 10, VY + 44, VZ2 - 4), (TX2 + 8, VY + 24, VZ1 + 24), 0)):
+        vmf.detail(frame, duct, vis=tv)                                       # (a frame that narrows the mouth to the cover's 40 square)
+        vmf.brush_entity("func_door", {
+            "targetname": name, "movedir": "-90 0 0", "speed": "80", "lip": "2", "wait": "-1", "spawnflags": "288", "spawnpos": "0", "dmg": "0", "forceclosed": "0",
+            "health": "0", "ignoredebris": "0", "loopmovesound": "0", "noise1": "MetalGrate.ScrapeSmooth", "noise2": "MetalGrate.ImpactSoft", "locked_sentence": "0",
+            "unlocked_sentence": "0", "renderamt": "255", "rendercolor": "255 255 255", "renderfx": "0", "rendermode": "0", "disableshadows": "1"},
+            [leaf], MAT["nodraw"], gv)
+        vmf.point("prop_dynamic", at, {"model": "models/props_junk/vent001.mdl", "angles": "0 %d 0" % yaw, "parentname": name, "skin": "0", "solid": "0", "disableshadows": "1",
+                                       "fademindist": "-1", "fademaxdist": "0", "fadescale": "1", "StartDisabled": "0", "renderamt": "255", "rendercolor": "255 255 255",
+                                       "modelscale": "1.0", "MinAnimTime": "5", "MaxAnimTime": "10", "RandomAnimation": "0", "SetBodyGroup": "0", "PerformanceMode": "0",
+                                       "pressuredelay": "0", "ExplodeDamage": "0", "ExplodeRadius": "0"}, gv)
     DY, DX = 120, (TX1 + TX2) // 2
     for name, x1, x2, way, edge in (("lc_raven_tdoor_w", TX1, DX, "0 180 0", (DX - 2, DY + 3, FLOOR, DX + 14, DY + 13, CEIL)),
                                     ("lc_raven_tdoor_e", DX, TX2, "0 0 0", (DX - 14, DY + 3, FLOOR, DX + 2, DY + 13, CEIL))):
@@ -309,7 +349,7 @@ def ravenholm(args):
         vmf.boxes.pop()      # (not held to the fit check: it is the owner's own unseen wall again, which stands in their pillars and houses as theirs does)
         # where what is made here walks to: the city's side of the gate; the sewer beyond the hatch
         vmf.point("info_target", (-300, -2421, Z + 16), {"targetname": "lc_raven_rally"}, mv, outside=True)
-        vmf.point("info_target", (1376, 760, 323), {"targetname": "lc_raven_door_rally"}, mv, outside=True)
+        vmf.point("info_target", (1264, 760, 323), {"targetname": "lc_raven_door_rally"}, mv, outside=True)
 
     # --- the wiring. The relays and sounds stand inside the quarter (a sound can be told what to play from). ---------------
     def sound(name, message, source, pos, loops=False):
@@ -344,14 +384,13 @@ def ravenholm(args):
         vmf.point("logic_relay", (at[0], at[1], at[2] + 64), {"targetname": name + "_closed", "StartDisabled": "0", "spawnflags": "0"}, gv)
     relays("lc_raven_gate", [("lc_raven_rail_*", 0, 8.6), ("lc_raven_wall*", 3.0, 0)], 11.4, W(40, 190, Z + 96), "lc_raven_maker", "lc_raven_wall",
            crush="lc_raven_gate_crush", clip="lc_raven_gate_clip")
-    relays("lc_raven_door", [("lc_raven_tdoor_*", 0, 0)], 3.7, (1312, ys + 60, ZS + 60), "lc_raven_door_maker", "lc_raven_tdoor_w", crush="lc_raven_door_crush",
-           also=[("lc_raven_hatch", "Open")])
+    relays("lc_raven_door", [("lc_raven_tdoor_*", 0, 0)], 3.7, (1312, ys + 60, ZS + 60), "lc_raven_door_maker", "lc_raven_tdoor_w", crush="lc_raven_door_crush")
 
     # --- what is made while a way is open: zombies and headcrabs, sent walking to that way's far side ----------------------
-    def makers(name, child, march, goal, spots):
+    def makers(name, child, march, goal, spots, every=14, alive=2):
         for (pos, cls) in spots:
             vmf.point("npc_maker", pos, {"targetname": name, "NPCType": cls, "NPCTargetname": child, "StartDisabled": "1", "spawnflags": "32", "MaxNPCCount": "1",
-                                         "SpawnFrequency": "14", "MaxLiveChildren": "2", "angles": "0 180 0"}, mv,
+                                         "SpawnFrequency": every, "MaxLiveChildren": alive, "angles": "0 180 0"}, mv,
                       connections=[("OnSpawnNPC", march, "StartSchedule", "", 1)])
         vmf.point("aiscripted_schedule", (spots[0][0][0], spots[0][0][1], spots[0][0][2] + 64), {
             "targetname": march, "m_iszEntity": child, "m_flRadius": "0", "graball": "1", "forcestate": "0", "schedule": "1", "interruptability": "0", "goalent": goal,
@@ -359,8 +398,11 @@ def ravenholm(args):
     makers("lc_raven_maker", "lc_raven_zombie", "lc_raven_march", "lc_raven_rally",
            [(W(990, 200, Z + 8), "npc_zombie"), (W(930, -600, Z + 8), "npc_zombie"), (W(860, -990, Z + 8), "npc_fastzombie"), (W(500, 896, Z + 8), "npc_headcrab"),
             (W(400, -576, Z + 8), "npc_headcrab")])
+    # (the tunnel's are many and quick: "if the combine door is opened, then the infestation spreads rapidly into the sewers and
+    #  zombies are pouring in": six makers, one made from each every six seconds, three alive from each)
     makers("lc_raven_door_maker", "lc_raven_door_zombie", "lc_raven_door_march", "lc_raven_door_rally",
-           [((1312, yb + 200, FLOOR + 8), "npc_zombie"), ((1312, yb + 420, FLOOR + 8), "npc_headcrab")])
+           [((1312, yb + 200 + 220 * n, FLOOR + 8), cls) for n, cls in enumerate(("npc_zombie", "npc_headcrab", "npc_zombie", "npc_fastzombie", "npc_zombie", "npc_headcrab"))],
+           every=6, alive=3)
 
     # --- the four buildings to go into (the owner: "little abandoned in-buildings and old shops and such along the street").
     # Each is a hollow in the plan right up to the pavement; its front and back are walls 16 thick with a door and windows,
@@ -592,15 +634,15 @@ def ravenholm(args):
     # --- the checks: sealed, with the owner's own street (which is not in this file) stopped round ----------------------------
     lobby = [(1008, Y0 - 192, base - 16, 1024, Y0 + 576, SKY + 32), (1024, Y0 - 192, base - 16, X0, Y0 + 576, base), (1024, Y0 - 192, SKY + 16, X0, Y0 + 576, SKY + 32),
              (1024, Y0 + 512, base, 1184, Y0 + 576, SKY + 16), (1200, ys, top_h, 1424, ys + 16, SKY + 16)]
-    behind = (TX1, wall_y + 8, 239, 1252, wall_y + 24, CEIL + 16)
+    behind = [(TX1, wall_y + 8, 239, 1252, wall_y + 24, CEIL + 16), (VX1, wall_y + 8, VZ1 - 8, VX2, wall_y + 24, VZ2 + 8)]    # (the sewer, past the passage and the vent)
     if test:
         xv = "LC ravenholm: for testing alone (never in the real map)"
-        for box in lobby + [behind]:
+        for box in lobby + behind:
             vmf.world_box(box, sky, sky, sky, vis=xv)
         for box, top, z in (((1024, Y0 + 64, base, X0, Y0 + 320), R["road"], Z), ((1024, Y0, base, 1216, Y0 + 64), R["strip_s"], Z), ((1024, Y0 + 384, base, 1152, Y0 + 512), R["walk"], ZS)):
             vmf.world_box(box + (z,), R["kerb"], top=top, vis=xv)                                             # the owner's roadway and its edges, stood in for
         test_extras(vmf, (1120, Y0 + 192, Z + 16), 0, xv)
-    problems, air = check(vmf, W(352, 192, Z + 64), [] if test else lobby + [behind])
+    problems, air = check(vmf, W(352, 192, Z + 64), [] if test else lobby + behind)
     args.expect_overlap = set(DELETE) | set(STANDS_IN)
     seals = sum(1 for _, s in vmf.boxes if s)
     xs = [b[0] for b, _ in vmf.boxes] + [b[3] for b, _ in vmf.boxes]
@@ -612,7 +654,8 @@ def ravenholm(args):
     print("  the gate: the owner's own four brushes: the two rails draw back into their pillars, then the slab lowers 290 straight into the ground, the outline with it "
           "(lc_raven_gate_open, _shut)")
     print("  the tunnel: from a house at (1312 %d), %d steps down, then %d north at z %d to the sewer wall at y %d; a Combine door across it at y %d (lc_raven_door_open, _shut); "
-          "a hatch opened by hand in the sewer wall, x %d..1252" % (ys, STEPS, slot_y - yb, FLOOR, wall_y, DY, TX1))
+          "an air vent round it, from the sewer wall at x %d..%d to the tunnel's east wall at y %d (crouch through; nothing infected can)" % (
+              ys, STEPS, slot_y - yb, FLOOR, wall_y, DY, VX1, VX2, VY))
     print("  the owner deletes brushes 65929, 51870, 62363 (the wall and its rails), 15623 (the unseen wall round it), 33530 (a black sheet in it), 28290 (the sewer wall) "
           "and 34874 (the bare strip of road)")
     if problems:
