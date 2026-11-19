@@ -19,6 +19,7 @@ The owner, 19 November: "I think the funds should be for the equipment issued to
   - **A citizen broken out and led to safety, a fugitive brought home, a shackled vortigaunt led home** (the board jobs `res_jailbreak`, `res_rescue` and `res_freevort`, finished): everyone on the job.
 - **Not counted** (no supplies taken, nobody saved, or nobody's doing): a data terminal raided, a screen hijacked, an Overwatch landing ambushed; the supply run from a contact (`res_supply`), smuggling, scavenging; a prisoner who slips away from a march by themselves; someone uncuffed; someone healed or got back on their feet.
 - **Donations** (19 November): anyone can give credits to the fund, at the screen in the camp or in the quartermaster's window (below).
+- **The Resistance's own money (19 November)** also feeds it: half of what the dealer pays a member for moonshine, skimmed machine parts and forged cards, the dealer's rent on rebel ground, half the Union paymaster's satchel, and the card table's take (`docs/features/resistance-money.md`).
 
 ## What it pays for
 

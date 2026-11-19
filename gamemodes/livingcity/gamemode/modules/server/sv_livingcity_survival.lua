@@ -1111,6 +1111,7 @@ local FIXTURE_CLASS = {
     laborterm = "lc_intake", -- Labor Assignment: Union work is given out here (sv_livingcity_labor.lua)
     cpsupply = "lc_cpsupply", -- units are issued supplies here (sv_livingcity_cpsupply.lua)
     fundtv = "lc_fundtv", -- the Resistance's fund on a small TV; its record, and donating (sv_livingcity_fundgear.lua)
+    still = "lc_still", cardtable = "lc_cardtable", -- the Resistance still and the card table (sv_livingcity_resistancemoney.lua)
     conveyor = "lc_conveyor", -- the factory line (sv_livingcity_jobgames.lua)
     monitor_hang = "lc_monitor", -- the Combine monitor (the hanging one): a camera's view (entities/lc_monitor.lua)
     bed = "lc_bed", toilet = "lc_toilet", bath = "lc_bath", -- (sv_livingcity_rest.lua, sv_livingcity_hygiene.lua)

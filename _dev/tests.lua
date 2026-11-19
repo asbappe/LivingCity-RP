@@ -39296,6 +39296,418 @@ cit:Remove() reb:Remove() cop:Remove()
 end
 Nov19_FundRoundsSympathyTests()
 
+function Nov19_ResistanceMoneyTests()
+section("19 November: the Resistance's own money: the still, the dealer's drink and his rent, the paymaster, the card table")
+-- The owner, 19 November: "Making their own bootleg alcohol and selling it to the black market dealer"; "let's make it
+-- so the black market dealer doesn't sell alcohol unless the resistance is doing so"; "The dealer pays rent"; "The
+-- paymaster"; "A back-room card game on rebel ground, with the house cut going to the fund"; "The existing sidelines
+-- send a share"; and "the resistance member doing the deed/act/work gets a maybe 50% cut".
+local set = _setcvar
+LC.EndEvent(true)
+if LC.EndPaymaster then LC.EndPaymaster("silent") end
+local manWas, dealWas, stopsWas = GetConVar("lc_manpower"):GetInt(), GetConVar("lc_bad_deal_chance"):GetFloat(), GetConVar("lc_stops"):GetInt()
+set("lc_manpower", 0)
+set("lc_bad_deal_chance", 0)
+set("lc_stops", 0)
+local fund = LC.ResistanceFund
+local function setFund(n) LC.ResistanceFundTake(fund()) LC.ResistanceFundAdd(n) end
+local fundWas = fund()
+local book = LC.Ledger()
+local stockWas = table.Copy(book.bootleg or {})
+local jobPay = GetConVar("lc_economy"):GetBool() and GetConVar("lc_directive_pay"):GetInt() or 0
+local made = {}
+local function person(name, f, xp) local p = newPlayer(name, f, nil, xp) p.chat, p.lcProtectUntil = {}, 0 made[#made + 1] = p return p end
+local function share(p)
+    for i = #(p.chat or {}), 1, -1 do
+        local n = string.match(tostring(p.chat[i]), "^%[Credits%] %+(%d+) %(your share%)$")
+        if n then return tonumber(n) end
+    end
+    return 0
+end
+local function inv(p, id) return LC.Inventory(p)[id] or 0 end
+local function drop(p, id) local n = inv(p, id) if n > 0 then LC.TakeItem(p, id, n) end end
+local function said(p, from) local out = {} for i = (from or 0) + 1, #(p.chat or {}) do out[#out + 1] = tostring(p.chat[i]) end return out end
+local M0 = Vector(-121000, 95000, 0)
+local rz = LC.AddZone(M0, 900, "rebel", 0)
+local rebel, helper = person("MoneyRebel", "resistance", 900), person("MoneyHelper", "resistance", 900)
+local cit, cop = person("MoneyCitizen", "citizen"), person("MoneyCop", "cp")
+_run(2)
+for _, p in ipairs({ rebel, helper, cit }) do p:SetPos(M0 + Vector(0, 0, 0)) p.chat = {} end
+cop:SetPos(M0 + Vector(20000, 0, 0)) cop.chat = {} -- (a unit near would put the rebel ground in the Combine's hands)
+
+------------------------------------------------------------------------
+-- the still
+------------------------------------------------------------------------
+do
+    local R = LC.StillRecipe
+    ok(R.batch == 4 and R.water == 2 and R.food == 1 and R.secs == 300, "a batch: a ration packet, 2 water and an empty bottle for each of 4 bottles, five minutes", R.batch .. " " .. R.water .. " " .. R.food .. " " .. R.secs)
+    ok(LC.POINT_KINDS.still and LC.POINT_KINDS.cardtable, "both are placed with the editor and saved with the layout (point kinds still and cardtable)")
+    local still = ents.Create("lc_still") still:SetPos(M0 + Vector(60, 0, 0)) still:Spawn()
+    rebel:SetPos(M0 + Vector(20, 0, 0)) cit:SetPos(M0 + Vector(20, 20, 0))
+    ok(LC.UseStill(cit, still) == false and #cit.chat == 0, "the still is the Resistance's: anyone else's E does nothing, and says nothing")
+    drop(rebel, "bottle_empty")
+    for _, id in ipairs(R.foods) do drop(rebel, id) end
+    rebel.chat = {}
+    ok(LC.UseStill(rebel, still) == false and #rebel.chat == 1 and string.find(rebel.chat[1], "You need a ration packet, 2 water and 4 empty bottles.", 1, true) ~= nil,
+        "without the makings: one line, the whole recipe", table.concat(rebel.chat, " | "))
+    LC.GiveItem(rebel, "ration", 1) LC.GiveItem(rebel, "bottle_dirty", 1) LC.GiveItem(rebel, "water_purified", 1) LC.GiveItem(rebel, "bottle_empty", 3)
+    rebel.chat = {}
+    ok(LC.UseStill(rebel, still) == false and #rebel.chat == 1, "(one empty bottle short: the same line)", table.concat(rebel.chat, " | "))
+    LC.GiveItem(rebel, "bottle_empty", 1)
+    local water0 = 0
+    for _, id in ipairs(R.waters) do water0 = water0 + inv(rebel, id) end
+    local e0, r0, m0 = inv(rebel, "bottle_empty"), inv(rebel, "ration"), inv(rebel, "moonshine")
+    rebel.chat = {}
+    ok(LC.UseStill(rebel, still) == true and #rebel.chat == 0, "with them: it starts brewing, without a word")
+    local water1 = 0
+    for _, id in ipairs(R.waters) do water1 = water1 + inv(rebel, id) end
+    ok(inv(rebel, "bottle_empty") == e0 - 4 and inv(rebel, "ration") == r0 - 1 and water1 == water0 - 2, "it takes the recipe: 4 empty bottles, the ration and 2 water",
+        inv(rebel, "bottle_empty") .. " " .. inv(rebel, "ration") .. " " .. water1)
+    ok(still:GetNW2Float("lc_brew_done", 0) > CurTime(), "and brews, steaming (what the client draws while it works)")
+    ok(LC.UseStill(rebel, still) == false and inv(rebel, "moonshine") == m0, "E again while it brews: nothing yet")
+    -- nobody stands by it: the player goes off, and time passes
+    rebel:SetPos(M0 + Vector(6000, 0, 0))
+    _advance(R.secs + 1) _runtimers()
+    ok(still:GetNW2Float("lc_brew_done", 0) <= CurTime() and inv(rebel, "moonshine") == m0, "it brews by itself with nobody near it (no step stands anyone anywhere)")
+    rebel:SetPos(M0 + Vector(20, 0, 0))
+    ok(LC.UseStill(helper, still) == true and inv(helper, "moonshine") >= 4, "E when it is done takes the bottles: four moonshine (any of ours may take them)")
+    LC.TakeItem(helper, "moonshine", 4) LC.GiveItem(rebel, "moonshine", 4)
+    ok(still.lcBrew == nil and still:GetNW2Float("lc_brew_done", 0) == 0, "and it stands ready for the next batch")
+    ok(LCS.Items.moonshine.contraband == true, "moonshine is contraband")
+    local found = LC.SearchPockets(rebel, 1, true)
+    local seized = false
+    for _, f in ipairs(found) do if f.id == "moonshine" and f.n == inv(rebel, "moonshine") then seized = true end end
+    ok(seized, "a unit's thorough search finds every bottle (and takes them)")
+    still:Remove()
+end
+
+------------------------------------------------------------------------
+-- the dealer's drink, and the sale split
+------------------------------------------------------------------------
+local dealer = ents.Create("lc_dealer") dealer:SetPos(M0 + Vector(0, 100, 0)) dealer:Spawn()
+local sent
+local realSend = LC.SendCompressed
+local function window(p)
+    sent = nil
+    LC.SendCompressed = function(msg, tbl, rec) if msg == "lcu_market" and rec and rec[1] == p then sent = tbl end return realSend(msg, tbl, rec) end
+    LC.OpenMarket(p)
+    LC.SendCompressed = realSend
+    return sent or { goods = {}, sell = {} }
+end
+local function listed(w, id) for _, g in ipairs(w.goods or {}) do if g.id == id then return g end end return nil end
+local function sellRow(w, id) for _, s in ipairs(w.sell or {}) do if s.id == id then return s end end return nil end
+do
+    for _, p in ipairs({ rebel, helper, cit }) do p:SetPos(M0 + Vector(0, 60, 0)) end
+    LC.AddCredits(cit, 500) LC.AddCredits(rebel, 100)
+    book.bootleg = {}
+    LC.LedgerSave()
+    local w = window(cit)
+    ok(#(w.goods or {}) > 0 and not listed(w, "moonshine") and not listed(w, "beer"), "the dealer sells no drink while nobody has sold him any: it is not on his list")
+    ok(not listed(w, "vodka_black") and LCS.BlackById.vodka_black.gone, "his pre-war vodka is gone (there is none left in the city)")
+    ok(LCS.GoodsById.vodka and not LCS.GoodsById.vodka.gone and LCS.GoodsById.vodka.civOnly, "the Union's own vodka for exemplary citizens at the Commissary is untouched")
+    ok(LC.BlackBuy(cit, "moonshine") == false and LC.BlackBuy(cit, "vodka_black") == false and inv(cit, "moonshine") == 0, "and nobody can buy one off him")
+    -- one of ours sells him moonshine: half to them, half to the fund
+    setFund(100)
+    drop(rebel, "moonshine") LC.GiveItem(rebel, "moonshine", 3)
+    local price = LC.SellPrice(rebel, "moonshine")
+    ok(LCS.Items.moonshine.resistanceSplit and LCS.Items.union_goods.resistanceSplit and LCS.Items.ration_forged.resistanceSplit,
+        "the dealer's 50% split is read from the item's flag resistanceSplit: moonshine, skimmed Union machine parts, forged ration cards")
+    w = window(rebel)
+    ok(sellRow(w, "moonshine") and sellRow(w, "moonshine").price == math.floor(price * 0.5), "his window shows one of ours what they will have: half", tostring(sellRow(w, "moonshine") and sellRow(w, "moonshine").price) .. " of " .. price)
+    local c0, n0 = LC.Credits(rebel), #rebel.chat
+    ok(LC.DealerSell(rebel, "moonshine", true), "(one of ours sells him three bottles)")
+    local yours = 3 * math.floor(price * 0.5)
+    ok(LC.Credits(rebel) - c0 == yours and fund() == 100 + 3 * price - yours, "half of what he pays to the member, half to the fund", (LC.Credits(rebel) - c0) .. " " .. fund())
+    local lines = said(rebel, n0)
+    ok(#lines == 1 and string.find(lines[1], "for " .. yours .. " credits", 1, true) ~= nil, "the dealer's own line says what they had, and nothing else is said", table.concat(lines, " | "))
+    ok(LC.BootlegLeft("moonshine") == 3, "each bottle sold him is one more in his stock", LC.BootlegLeft("moonshine"))
+    w = window(cit)
+    local g = listed(w, "moonshine")
+    ok(g and g.ok and g.market and string.find(g.market, "3 left", 1, true) ~= nil and not listed(w, "beer"), "now he sells moonshine, and says how many are left", g and tostring(g.market))
+    local cc = LC.Credits(cit)
+    ok(LC.BlackBuy(cit, "moonshine") and inv(cit, "moonshine") == 1 and LC.BootlegLeft("moonshine") == 2, "each he sells takes one from it", LC.BootlegLeft("moonshine"))
+    -- a restart keeps it
+    local saved = util.JSONToTable(file.Read("livingcity/" .. game.GetMap() .. "_city.json", "DATA") or "") or {}
+    ok(istable(saved.bootleg) and saved.bootleg.moonshine == 2, "his stock is written with the state of the city the moment it changes", tostring(saved.bootleg and saved.bootleg.moonshine))
+    LC.LedgerReload()
+    book = LC.Ledger()
+    ok(LC.BootlegLeft("moonshine") == 2, "and is there after a restart or a map change", LC.BootlegLeft("moonshine"))
+    -- a citizen sells him the same: paid in full, nothing to the fund
+    LC.GiveItem(cit, "union_goods", 2)
+    local f0, c1 = fund(), LC.Credits(cit)
+    local gp = LC.SellPrice(cit, "union_goods")
+    ok(LC.DealerSell(cit, "union_goods", true) and LC.Credits(cit) - c1 == 2 * gp and fund() == f0, "a citizen selling him skimmed machine parts is paid in full (their money is not the Resistance's)", (LC.Credits(cit) - c1) .. " " .. (fund() - f0))
+    local cm = LC.Credits(cit)
+    ok(LC.DealerSell(cit, "moonshine") and LC.Credits(cit) - cm == LC.SellPrice(cit, "moonshine") and LC.BootlegLeft("moonshine") == 3, "(and their bottle goes into his stock too)")
+    LC.GiveItem(rebel, "union_goods", 2) LC.GiveItem(rebel, "ration_forged", 1)
+    f0, c1 = fund(), LC.Credits(rebel)
+    ok(LC.DealerSell(rebel, "union_goods", true) and LC.Credits(rebel) - c1 == 2 * math.floor(gp * 0.5) and fund() - f0 == 2 * gp - 2 * math.floor(gp * 0.5),
+        "one of ours selling skimmed machine parts: half and half", (LC.Credits(rebel) - c1) .. " " .. (fund() - f0))
+    local rp = LC.SellPrice(rebel, "ration_forged")
+    f0, c1 = fund(), LC.Credits(rebel)
+    ok(LC.DealerSell(rebel, "ration_forged") and LC.Credits(rebel) - c1 == math.floor(rp * 0.5) and fund() - f0 == rp - math.floor(rp * 0.5), "and a forged ration card")
+    local qmWas = LC.AtQuartermaster
+    LC.AtQuartermaster = function() return true end
+    ok(LC.DealerSplit(rebel, "moonshine") == nil, "(never at the quartermaster: he is the Resistance's own)")
+    LC.AtQuartermaster = qmWas
+    ok(LC.DealerSplit(rebel, "bread") == nil and LC.DealerSplit(cit, "moonshine") == nil, "(nor for anything without the flag, nor for a citizen)")
+end
+
+------------------------------------------------------------------------
+-- the dealer's rent
+------------------------------------------------------------------------
+do
+    local at = dealer:GetPos()
+    local rate, how = LC.DealerRentRate(at)
+    ok(rate == 0.3 and how == "safe", "on rebel ground with no unit near and no lockdown: 30 per cent of every sale to the fund", tostring(rate) .. " " .. tostring(how))
+    local f0, c0 = fund(), LC.Credits(cit)
+    ok(LC.BlackBuy(cit, "water_purified"), "(a citizen buys water off him)")
+    local paid = c0 - LC.Credits(cit)
+    ok(paid > 0 and fund() - f0 == math.floor(paid * 0.3), "his rent: a share of what he took, in the fund", paid .. " paid, fund +" .. (fund() - f0))
+    local u, ust = LC.Spawners.cop(at + Vector(800, 0, 0))
+    ok(IsValid(u), "(a unit about)")
+    rate, how = LC.DealerRentRate(at)
+    ok(rate == 0.2 and how == "normal", "a unit within reach: 20 per cent", tostring(rate) .. " " .. tostring(how))
+    u:SetPos(at + Vector(150, 0, 0))
+    rate, how = LC.DealerRentRate(at)
+    ok(rate == 0 and how == "held", "a unit right there: the Combine hold it, nothing", tostring(rate) .. " " .. tostring(how))
+    u:Remove()
+    local skWas = LC.Skirmish
+    LC.Skirmish = { kind = "sweep", zone = rz, units = {}, rebels = {} }
+    rate, how = LC.DealerRentRate(at)
+    ok(rate == 0 and how == "held", "a sweep in that territory: nothing", tostring(rate) .. " " .. tostring(how))
+    LC.Skirmish = skWas
+    LC.Event = "lockdown"
+    rate, how = LC.DealerRentRate(at)
+    LC.Event = nil
+    ok(rate == 0.2 and how == "normal", "a lockdown: 20 per cent", tostring(rate) .. " " .. tostring(how))
+    rate, how = LC.DealerRentRate(M0 + Vector(20000, 0, 0))
+    ok(rate == 0 and how == nil, "off rebel ground: no rent")
+    local c1 = LC.Credits(rebel)
+    f0 = fund()
+    LC.BlackBuy(rebel, "water_purified")
+    ok(fund() - f0 == math.floor((c1 - LC.Credits(rebel)) * 0.3) and share(rebel) == 0, "one of ours buying pays the same rent, and nobody is paid for it")
+end
+
+------------------------------------------------------------------------
+-- the card table
+------------------------------------------------------------------------
+do
+    local tbl = ents.Create("lc_cardtable") tbl:SetPos(M0 + Vector(-100, 0, 0)) tbl:Spawn()
+    local away = ents.Create("lc_cardtable") away:SetPos(M0 + Vector(30000, 0, 0)) away:Spawn()
+    cit:SetPos(tbl:GetPos() + Vector(40, 0, 0))
+    cit.chat = {}
+    local mr = math.random
+    local function rig(a, b) math.random = function(lo, hi) if lo == 0 and hi == 51 then return a end if lo == 0 and hi == 50 then return b end if lo == nil then return mr() elseif hi == nil then return mr(lo) end return mr(lo, hi) end end
+    local function unrig() math.random = mr end
+    setFund(40)
+    net.sent = {}
+    ok(LC.OpenCardTable(cit, tbl), "E on the card table opens its window")
+    local m = _lastnet("lc_cards")
+    ok(m and m.to == cit and m.data[1] == tbl and m.data[5] == 0, "while the fund is low the table rests: it takes no bet", m and tostring(m.data[5]))
+    setFund(300)
+    LC.OpenCardTable(cit, tbl)
+    m = _lastnet("lc_cards")
+    ok(m and m.data[5] == 7, "with the fund able to pay: 5, 10 and 25", m and tostring(m.data[5]))
+    cop:SetPos(tbl:GetPos() + Vector(-40, 0, 0))
+    net.sent = {}
+    away:SetPos(away:GetPos())
+    local citAt = cit:GetPos()
+    cit:SetPos(away:GetPos() + Vector(40, 0, 0))
+    ok(not LC.OpenCardTable(cit, away) and not LC.OpenCardTable(cop, tbl) and not _lastnet("lc_cards"), "off rebel ground it does nothing; nor for a unit")
+    cit:SetPos(citAt)
+    local c0, f0 = LC.Credits(cit), fund()
+    rig(51, 0) -- (an ace against a two)
+    local okD, you, house, won = LC.CardTableDeal(cit, tbl, 10)
+    unrig()
+    ok(okD and you == 14 and house == 2 and won and LC.Credits(cit) == c0 + 10 and fund() == f0 - 10, "a win is paid out of the fund at even money", tostring(you) .. " " .. tostring(house) .. " " .. (LC.Credits(cit) - c0))
+    m = _lastnet("lc_cards")
+    ok(m and m.data[2] == 14 and m.data[3] == 2 and m.data[4] == 1, "the cards and the result go to the window")
+    ok(not LC.CardTableDeal(cit, tbl, 10), "one hand every few seconds at most")
+    _advance(4.1)
+    c0, f0 = LC.Credits(cit), fund()
+    rig(0, 0) -- (a two against a three)
+    okD, you, house, won = LC.CardTableDeal(cit, tbl, 25)
+    unrig()
+    ok(okD and not won and LC.Credits(cit) == c0 - 25 and fund() == f0 + 25, "a lost bet goes to the fund", (LC.Credits(cit) - c0) .. " " .. (fund() - f0))
+    _advance(4.1)
+    c0, f0 = LC.Credits(cit), fund()
+    rig(0, 12) -- (a two against a two)
+    okD, you, house, won = LC.CardTableDeal(cit, tbl, 5)
+    unrig()
+    ok(okD and you == house and not won and LC.Credits(cit) == c0 - 5 and fund() == f0 + 5, "a tie is the house's")
+    _advance(4.1)
+    ok(not LC.CardTableDeal(cit, tbl, 7) and not LC.CardTableDeal(cit, tbl, 1000), "only the three bets")
+    setFund(59)
+    _advance(4.1)
+    ok(not LC.CardTableDeal(cit, tbl, 10) and fund() == 59, "it takes no bet the fund could not pay out and keep 50")
+    c0 = LC.Credits(cit)
+    ok(LC.CardTableDeal(cit, tbl, 5), "(a bet it can cover still goes)")
+    setFund(300)
+    _advance(4.1)
+    local poor = LC.Credits(cit)
+    LC.AddCredits(cit, -poor + 3)
+    ok(not LC.CardTableDeal(cit, tbl, 5), "nor one the player can't cover")
+    LC.AddCredits(cit, poor)
+    -- over the wire: checked on the server (who, how near, how much, how often)
+    _advance(4.1)
+    net.sent = {}
+    c0 = LC.Credits(cit)
+    _netcall("lc_cards_deal", cit, tbl, 25)
+    m = _lastnet("lc_cards")
+    ok(m and (m.data[4] == 1 or m.data[4] == 2) and math.abs(LC.Credits(cit) - c0) == 25, "a hand asked for from the window is dealt")
+    net.sent = {}
+    c0 = LC.Credits(cit)
+    _netcall("lc_cards_deal", cit, tbl, 25)
+    ok(LC.Credits(cit) == c0, "asked again at once: refused")
+    _advance(4.1)
+    cit:SetPos(tbl:GetPos() + Vector(900, 0, 0))
+    _netcall("lc_cards_deal", cit, tbl, 25)
+    ok(LC.Credits(cit) == c0, "from across the room: refused")
+    cit:SetPos(tbl:GetPos() + Vector(40, 0, 0))
+    ok(#cit.chat == 0, "nothing of it in the chat: the cards and the result are in the window", table.concat(cit.chat, " | "))
+    -- the odds: one card each from a fresh deck, ties to the house
+    local wins, n = 0, 0
+    for a = 0, 51 do for b = 0, 50 do
+        local bb = b >= a and b + 1 or b
+        n = n + 1
+        if a % 13 > bb % 13 then wins = wins + 1 end
+    end end
+    ok(wins * 51 == n * 24, "the player wins 24 hands in 51 (the house's edge about 5.9 per cent)", wins .. "/" .. n)
+    tbl:Remove() away:Remove()
+end
+
+------------------------------------------------------------------------
+-- the paymaster
+------------------------------------------------------------------------
+do
+    local dock = LC.AddPoint(M0 + Vector(-3000, 4000, 0), 0, "dock", 0)
+    ok(LC.PaymasterEvery >= 280, "now and then, a little rarer than the supply convoy (about once in five hours of play)", LC.PaymasterEvery)
+    local nightWas, autoWas = LC.IsNight, GetConVar("lc_auto_events"):GetInt()
+    LC.IsNight = function() return false end
+    set("lc_auto_events", 0)
+    ok(not LC.PaymasterMayStart(), "not while the city's automatic events are off (as the supply convoy)")
+    set("lc_auto_events", 1)
+    LC.IsNight = function() return true end
+    ok(not LC.PaymasterMayStart(), "never at night")
+    LC.IsNight = function() return false end
+    ok(LC.PaymasterMayStart(), "by day, he may set out")
+    local mr = math.random
+    math.random = function(lo, hi) if lo == nil then return 0 elseif hi == nil then return mr(lo) end return mr(lo, hi) end
+    timer.list["LivingCityPaymasterClock"].fn()
+    math.random = mr
+    LC.IsNight = nightWas
+    set("lc_auto_events", autoWas)
+    local P = LC.Paymaster
+    ok(P and IsValid(P.npc) and #P.escort == 2 and P.wages >= 80 and P.wages <= 200, "a Union paymaster sets out with the wages (80 to 200) and two units", P and (#P.escort .. " " .. P.wages))
+    ok(P and LC.NPCs[P.npc] and LC.NPCs[P.npc].role == "citizen" and LC.NPCs[P.escort[1]].role == "cop", "a citizen in the Union's blue, and Civil Protection with him")
+    ok(not LC.PaymasterMayStart(), "(one at a time)")
+    local posted
+    for _, p in ipairs(LC.Postings.resistance or {}) do if p.tmpl and p.tmpl.id == "res_paymaster" and not p.dead then posted = p end end
+    ok(posted ~= nil and posted.title == "Rob the paymaster", "the Resistance's job while he walks is on their board")
+    if posted then
+        local credits, fundR = LC.PostingPay(rebel, posted)
+        ok(fundR and fundR[1] == 40 and fundR[2] == 100 and credits[1] == jobPay and credits[2] == jobPay + 100,
+            "its pay on the board: the job's own, up to half the satchel each, and the fund +40-100", credits[1] .. "-" .. credits[2] .. " fund " .. (fundR and (fundR[1] .. "-" .. fundR[2]) or "none"))
+        ok(posted.tmpl.brings == true, "(a job that brings something in)")
+    end
+    local from = P.npc:GetPos()
+    _run(3)
+    ok(P.npc:GetPos():Distance(P.goal) < from:Distance(P.goal) - 100, "he walks to where the wages are paid", math.floor(from:Distance(P.goal) - P.npc:GetPos():Distance(P.goal)))
+    -- one of ours takes the job; another has a go at his escort
+    rebel.lcqNext = 0
+    LC.AcceptPosting(rebel, posted.id)
+    local q = LC.QuestOf[rebel]
+    ok(q and q.tmpl.id == "res_paymaster", "(one of ours takes it)")
+    local st = q and q.stages[q.stage]
+    ok(st and st.npc == P.npc, "the job's marker follows him")
+    rebel:SetPos(P.npc:GetPos() + Vector(40, 0, 0))
+    helper:SetPos(P.npc:GetPos() + Vector(300, 0, 0))
+    ok(not LC.RobPaymaster(rebel, P.npc) and LC.Paymaster == P, "with his escort beside him, E on him takes nothing")
+    hook.Run("EntityTakeDamage", P.escort[1], _dmg(helper, 5))
+    for _, g in ipairs(P.escort) do g:SetPos(P.npc:GetPos() + Vector(60, 0, 0)) g:SetHealth(0) hook.Run("OnNPCKilled", g, rebel, rebel) g:Remove() end
+    setFund(100)
+    local res0 = LC.Ledger().resistance or 50
+    local c0, h0, take = LC.Credits(rebel), LC.Credits(helper), P.wages
+    local seen, hostile = 0, 0
+    local seenWas, hostileWas, crimeWas = LC.SeenBySecurity, LC.MakeCopsHostile, LC.ReportCrime
+    LC.SeenBySecurity = function() return true end
+    LC.MakeCopsHostile = function(...) hostile = hostile + 1 return hostileWas(...) end
+    LC.ReportCrime = function(p, why, ...) if why == "Looting Union supplies" then seen = seen + 1 end return crimeWas(p, why, ...) end
+    rebel.chat = {}
+    hook.Run("PlayerUse", rebel, P.npc) -- (his escort gone: E on him)
+    LC.SeenBySecurity, LC.MakeCopsHostile, LC.ReportCrime = seenWas, hostileWas, crimeWas
+    local each = math.floor(math.floor(take * 0.5) / 2)
+    ok(LC.Paymaster == nil and P.robbed, "his escort gone, E on him: he hands the satchel over")
+    local other = {}
+    for _, l in ipairs(rebel.chat) do if not string.find(l, "(your share)", 1, true) and not string.find(l, "[Credits]", 1, true) and not string.find(l, "complete", 1, true) and not string.find(l, "XP", 1, true) then other[#other + 1] = l end end
+    ok(#other == 0, "nothing new is said: their share, and the job's own end", table.concat(other, " | "))
+    ok(fund() - 100 == take - 2 * each and share(rebel) == each and share(helper) == each,
+        "half to the fund, half shared among ours who took part (the one who took it and the one who went for his escort)", (fund() - 100) .. " " .. share(rebel) .. " " .. share(helper) .. " of " .. take)
+    ok(LC.Credits(helper) - h0 == each, "(the helper had only their share)")
+    ok(not LC.QuestOf[rebel] or LC.QuestOf[rebel].done, "the job is done")
+    ok(LC.Credits(rebel) - c0 == each + jobPay, "and pays what its posting said: the job's own and the share", (LC.Credits(rebel) - c0) .. " " .. each)
+    ok(seen == 1 and hostile >= 1, "seen at it: wanted, and the units after them, as at a looted supply drop")
+    ok((LC.Ledger().resistance or 50) >= res0 and (LC.Ledger().resistance or 50) <= res0 + 1, "the Resistance's strength in the city goes up")
+    -- a citizen: kills him, takes the satchel he drops, keeps it all
+    for _, p in ipairs(made) do LC.ClearWanted(p) end
+    ok(LC.StartPaymaster(), "(another day, another paymaster)")
+    P = LC.Paymaster
+    cit:SetPos(P.npc:GetPos() + Vector(40, 0, 0))
+    local cc, f0 = LC.Credits(cit), fund()
+    P.npc:SetHealth(0) hook.Run("OnNPCKilled", P.npc, cit, cit)
+    ok(IsValid(P.satchel), "killed, he drops his satchel")
+    for _, p in ipairs(LC.Postings.resistance or {}) do if p.tmpl and p.tmpl.id == "res_paymaster" and not p.q then ok(true, "(the job is still up while the satchel lies there)") break end end
+    local sat = P.satchel
+    cit.chat = {}
+    hook.Run("PlayerUse", cit, sat)
+    ok(#cit.chat == 0, "(and nothing is said: the credits are simply theirs)", table.concat(cit.chat, " | "))
+    ok(LC.Credits(cit) - cc == P.wages and fund() == f0 and not IsValid(sat), "a citizen who takes it keeps the whole satchel; the fund gets nothing", (LC.Credits(cit) - cc) .. " " .. (fund() - f0))
+    local left = 0
+    for _, p in ipairs(LC.Postings.resistance or {}) do if p.tmpl and p.tmpl.id == "res_paymaster" and not p.dead then left = left + 1 end end
+    ok(left == 0, "and the job comes off the board")
+    -- he gets through: the job ends with him
+    ok(LC.StartPaymaster(), "(and another)")
+    P = LC.Paymaster
+    for _, p in ipairs(LC.Postings.resistance or {}) do if p.tmpl and p.tmpl.id == "res_paymaster" and not p.dead and not p.q then posted = p end end
+    helper.lcqNext = 0
+    LC.AcceptPosting(helper, posted.id)
+    local hq = LC.QuestOf[helper]
+    P.npc:SetPos(P.goal)
+    LC.PaymasterTick(CurTime())
+    ok(LC.Paymaster == nil and hq and hq.done, "he gets where the wages are paid: it is over, and the job with him")
+    ok(LC.ResistanceFundStepKinds.paymaster_robbed == "paymaster", "(the board reads the share from the fund's own tables)")
+    local a, b, c, d = LC.ResistanceFundShares("paymaster", 1)
+    ok(a == 40 and b == 100 and c == 40 and d == 100, "robbing him alone: 40 to 100 to the fund and as much to the one who did it", a .. " " .. b .. " " .. c .. " " .. d)
+    a, b, c, d = LC.ResistanceFundShares("run", 1)
+    ok(a == 15 and c == 15, "(the fund's other takes are as they were)")
+    LC.RemovePoint(dock)
+end
+
+------------------------------------------------------------------------
+-- back as it was
+------------------------------------------------------------------------
+if LC.EndPaymaster then LC.EndPaymaster("silent") end
+dealer:Remove()
+LC.RemoveZone(rz)
+for _, p in ipairs(made) do
+    if IsValid(p) then
+        if LC.QuestOf[p] then LC.AbandonQuest(p) end
+        LC.ClearWanted(p)
+        hook.Run("PlayerDisconnected", p)
+        p:Remove()
+    end
+end
+book = LC.Ledger()
+book.bootleg = stockWas
+LC.LedgerSave()
+setFund(fundWas)
+set("lc_manpower", manWas)
+set("lc_bad_deal_chance", dealWas)
+set("lc_stops", stopsWas)
+end
+Nov19_ResistanceMoneyTests()
+
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")
 ;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)
     -- Everything here is something the owner's server, files or players depend on. The list is
