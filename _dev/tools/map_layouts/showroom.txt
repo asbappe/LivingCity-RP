@@ -1,0 +1,22 @@
+# A test map: every module once, in two rows, to compile and walk by itself.
+#   python3 map_build.py chain --layout map_layouts/showroom.txt --test     writes lc_showroom_test.vmf
+# It sits at the map's middle and is NOT meant to go into the city: fitting comes after.
+# (The second row heads west, so its side rooms are flipped to face away from the first row.)
+
+start -3584 0
+heading E
+rim 784
+
+checkpoint
+shanty
+underpass
+relay
+cistern
+ash
+left
+straight 1024 bridge
+left
+drain flip
+overflow flip
+vort flip
+sludge flip
