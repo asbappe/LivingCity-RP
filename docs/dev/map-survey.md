@@ -16,3 +16,5 @@ python3 map_survey.py c18_lc.vmf --study ~/.steam/steam/steamapps/common/GarrysM
 **Pictures:** `map_all` (the whole map from above) and `map_level_N` (a floor plan for each height people walk at: taken from the study's trail when there is one, else from where spawn points, nodes and doors stand), with a grid line every 1024 units, entities as dots, floor with no ground path node within 512 units in red (where the city's people can't walk; a roof at that height shows red too), and the study's trail (orange), jumps (cyan) and crouches (pink) laid over.
 
 **Not built yet:** reading a compile's pointfile (`.lin`) to show a real leak's path; proposing or writing geometry changes; the same survey from the gamemode's own layout (zones and points) instead of a study.
+
+**What the owner said about the map (19 November):** the large room at the bottom left (about 3,800 by 3,000 units, a regular grid of nodes) is the dream area. The six identical small rooms at the top right are leftovers from the original map that the owner means to delete: ignore them (their red "no node" squares mean nothing).
