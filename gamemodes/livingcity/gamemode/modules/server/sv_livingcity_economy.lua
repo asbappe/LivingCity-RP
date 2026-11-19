@@ -148,6 +148,7 @@ end
 
 hook.Add("LivingCityQuestComplete", "LivingCityEconomy", function(p, q)
     if not cvOn:GetBool() or not IsValid(p) then return end
+    if q.tmpl and q.tmpl.noJobPay then return end -- (a job that pays its own way and nothing else: informing, sv_livingcity_inform.lua)
     local n, why = LC.QuestCredits(p, q)
     if n > 0 then LC.AddCredits(p, n, why) end
     if q.chain == "rehab" then

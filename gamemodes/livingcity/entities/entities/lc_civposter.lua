@@ -69,6 +69,8 @@ local NOTICES = {
     administrator = { "SHE WATCHES OVER YOU", "Your Administrator works while you sleep. Work well, sleep well, and trust in her." },
     -- (the owner's own slogan, 14 November: never reword it; it has no smaller words)
     neighbour = { "LOVE YOUR NEIGHBOUR, HATE THE TRAITOR", "" },
+    -- while the would-be assassin is free (the owner, 17 November; sv_livingcity_inform.lua)
+    assassin = { "REPORT THE TRAITOR ASSASSIN TO A CIVIL PROTECTION UNIT TODAY!", "Reward: 250 credits and 250 Civil Standing." },
     -- the Resistance's own paste-ups (only a Resistance member with a roll hangs these)
     rebel_leash = { "THE RATION IS THE LEASH", "They feed you so you will not bite." },
     rebel_water = { "DON'T DRINK THE WATER", "They put something in it to make you forget." },
@@ -82,7 +84,7 @@ local DEFACED = {
     dispenser = "CHAINS", commissary = "THE COMBINE", intake = "LIKE CATTLE", water = "DON'T DRINK IT. It makes you forget",
     law = "BREAK IT", curfew = "THE NIGHT IS OURS", work = "BUSY HANDS BUILD CAGES", loyalty = "SO IS COURAGE",
     informants = "SNITCHES BURN", contraband = "ARMS US", radio = "WE HEAR YOU TOO", illness = "THE CITY IS THE SICKNESS",
-    infestation = "THEY LET IT GROW", housing = "IS A CELL", vortigaunt = "FREE THEM", recruit = "TRAITORS", administrator = "LIAR", neighbour = "HATE THE ADMINISTRATOR",
+    infestation = "THEY LET IT GROW", housing = "IS A CELL", vortigaunt = "FREE THEM", recruit = "TRAITORS", administrator = "LIAR", neighbour = "HATE THE ADMINISTRATOR", assassin = "HERO",
 }
 DEFACED.dream = "WAKE UP"
 ENT.Defaced = DEFACED
@@ -119,6 +121,8 @@ if SERVER then
         if self.lcDreamProp then self.lcPickedAt = CurTime() return self:GetNW2String("lc_notice", "dream") end
         -- (one hung by hand keeps the poster it was hung as: LC.HangPoster)
         local best = self.lcFixedKind or (LC and LC.CivPosterNotice and LC.CivPosterNotice(self:GetPos())) or "curfew"
+        -- (while the would-be assassin is free, every other plain curfew notice asks for them: sv_livingcity_inform.lua)
+        if best == "curfew" and not self.lcFixedKind and LC and LC.InformPosterKind then best = LC.InformPosterKind(self) or best end
         -- (a plain curfew one may hint at a dream instead today: sv_livingcity_dreamposters.lua)
         if best == "curfew" and not self.lcFixedKind and LC and LC.DreamPosterFor then
             local id = LC.DreamPosterFor(self:GetPos())

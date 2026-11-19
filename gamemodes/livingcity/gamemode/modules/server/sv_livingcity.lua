@@ -3232,7 +3232,8 @@ hook.Add("PlayerUse", "LivingCityUse", function(ply, ent)
         elseif st.role == "cop" then
             -- walking up to a unit and pressing E is talking to him, not crowding him
             ply.lcCopTalkUntil = CurTime() + 12
-            if LC.QuestOf and LC.QuestOf[ply] then
+            -- (or informing: the list just opened, sv_livingcity_inform.lua)
+            if (LC.QuestOf and LC.QuestOf[ply]) or (ply.lcInformAskedAt or -99) > CurTime() - 1 then
                 ent:EmitSound(Pick({ "npc/metropolice/vo/copy.wav", "npc/metropolice/vo/affirmative.wav", "npc/metropolice/vo/rodgerthat.wav" }), 75) -- probably reporting something: he acknowledges
             else
                 LC.CopProvoked(ent, st, ply, CurTime()) -- pestering a unit is as bad as crowding one

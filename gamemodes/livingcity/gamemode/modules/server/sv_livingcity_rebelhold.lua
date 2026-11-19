@@ -396,6 +396,12 @@ local function SendMenu(ply, cage)
     net.WriteUInt(math.min(15, #list + #plys), 4)
     for _, npc in ipairs(list) do net.WriteEntity(npc) net.WriteString(NameOf(npc)) end
     for i = 1, math.min(#plys, 15 - #list) do net.WriteEntity(plys[i]) net.WriteString(plys[i]:Nick()) end
+    -- an exchange (sv_livingcity_rebelanswer.lua): who of ours they could be offered for (a Lieutenant or above), and
+    -- the Combine's offer waiting for an answer
+    local rebel = LC.ExchangeRebel and not LC.Exchange and LC.RebelMayOrder and LC.RebelMayOrder(ply) and LC.ExchangeRebel()
+    net.WriteString(IsValid(rebel) and NameOf(rebel) or "")
+    local x = LC.Exchange
+    net.WriteString((x and x.from == "combine" and LC.RebelMayOrder and LC.RebelMayOrder(ply)) and (NameOf(x.rebel) .. " for " .. NameOf(x.held)) or "")
     net.Send(ply)
 end
 
@@ -444,6 +450,16 @@ function LC.CageDo(ply, cage, what, npc)
         if not LC.PatdownNPCStart then return nil end
         local ok, why = LC.PatdownNPCStart(ply, npc)
         return (not ok) and why or nil
+    end
+    -- (three ways of letting them go, and an exchange: sv_livingcity_rebelanswer.lua)
+    if (what == "freewarn" or what == "freeblind" or what == "freeturn") and LC.RebelReleaseHow then
+        Scene(cage:GetPos(), NameOf(npc) .. " is let out of the cage.")
+        return LC.RebelReleaseHow(ply, cage, npc, string.sub(what, 5))
+    end
+    if what == "xoffer" and LC.ExchangeOffer then
+        if not (LC.RebelMayOrder and LC.RebelMayOrder(ply)) then return "Only a Lieutenant or above can offer that." end
+        local ok, said = LC.ExchangeOffer("resistance", ply, npc)
+        return said
     end
     if what == "free" then
         Scene(cage:GetPos(), NameOf(npc) .. " is let out of the cage.")

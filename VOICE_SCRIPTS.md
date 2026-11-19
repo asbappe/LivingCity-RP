@@ -24,7 +24,7 @@ Ticked [x] below: the server already has it. Left to record, 357 files:
 - **machines** (`machines/`): 10 missing
 - **Colonel Cubbage** (`cubbage/`): 24 missing
 - **the Resistance's people** (`resistance/`): nothing missing
-- **added since the server's list was made**: 108 more rows (unticked below; run `lc_voice_missing` again after uploading and they are checked too)
+- **added since the server's list was made**: 112 more rows (unticked below; run `lc_voice_missing` again after uploading and they are checked too)
 
 Run `lc_voice_missing` on the server after uploading, and give Claude the list (or `data/livingcity/voice_missing.txt`) to update the ticks. The Colonel's own lines (the ghost) aren't checked by it.
 
@@ -170,6 +170,8 @@ Folder: `administrator/`. **Use the voice her existing recordings were made with
 | [ ] | `question_why_stern1.wav` | The city's own Administrator questions whoever tried to kill her, in the cells: asked of anyone else | [stern, cold, slowly] You tried to kill me. Why? |
 | [ ] | `question_who_stern1.wav` | The city's own Administrator questions whoever tried to kill her, in the cells: asked of anyone else | [stern, cold, slowly] Who put you up to it? |
 | [ ] | `shelled_stern1.wav` | Headcrab canisters come down on a district the Resistance hold (as they come in) | [stern, cold, slowly] Some of our city was given over to troublemakers. We are taking it back. Stay indoors, and keep well away from the canisters. |
+| [ ] | `execution_furious1.wav` | A public execution at the wall is called, two minutes ahead (the name is on screen, never in the recording) | [furious, barely controlled, clipped] An enemy of our city will answer for their crimes at the wall. Come and see that justice is done. |
+| [ ] | `rebel_killing_stern1.wav` | The Combine learn the Resistance killed someone (a body found, or witnesses); the name is on screen, never in the recording | [stern, cold, slowly] They took one of our own and murdered them. They call it freedom. Love your neighbour, hate the traitor. |
 
 ## What named citizens say
 
@@ -455,6 +457,8 @@ Folder: `overwatch/`. Overwatch: cold and clinical, a dispatcher, the same voice
 | [ ] | `attempt1` | An attempt on her life at her address, three to five minutes after it (hers with nobody playing her, Overwatch's with a player in the post) | [cold, clinical, flat dispatcher] Attention, all units: an attempt has been made on the life of the City Administrator. The Administrator is secure. All sectors are sealed. Locate and apprehend the assailant. |
 | [ ] | `hunt1` | A hunt for whoever tried to kill her begins: Dispatch to the units, heard on their radios only, in sound only (never the PA, no words on screen); give it the unit lines' radio sound | [cold, clinical, flat dispatcher] All units: an attempt was made on the Administrator's life. The suspect is at large. Take them alive. |
 | [ ] | `shelled1` | Headcrab canisters come down on a district the Resistance hold (as they come in) | [cold, clinical, flat dispatcher] Biotic ordnance deployed on an anticivil sector. Residents, remain indoors. Do not approach the canisters. |
+| [ ] | `execution1` | A public execution at the wall is called, two minutes ahead (the name is on screen, never in the recording) | [cold, clinical, flat dispatcher] Attention: a public execution of an enemy of the city will take place at the wall. Citizens, attend. |
+| [ ] | `rebel_killing1` | The Combine learn the Resistance killed someone (a body found, or witnesses); the name is on screen, never in the recording | [cold, clinical, flat dispatcher] Attention: anticivil elements have murdered a citizen. Report all knowledge of their whereabouts. |
 
 ## The radio
 

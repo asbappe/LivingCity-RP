@@ -258,6 +258,8 @@ local function Chat(ply, npc, st)
     local line = (feel >= WARM or math.random() < 0.7) and LC.TakeRumor and LC.TakeRumor(ply)
     -- or a story from the chronicle: something that happened, and what led to it (sv_livingcity_chronicle.lua)
     if not line and LC.ChronicleRumor then line = LC.ChronicleRumor(ply, npc) end
+    -- or what they make of the Resistance these days (sv_livingcity_rebelanswer.lua)
+    if not line and LC.RebelGossip then line = LC.RebelGossip(npc, st) end
     -- a sympathizer who likes you: where the Resistance can be found
     local what = line and "rumour" or nil
     if not line and st.rebel and feel >= WARM and LC.SafeHouseHint then line = LC.SafeHouseHint(ply) what = line and "hint" or nil end

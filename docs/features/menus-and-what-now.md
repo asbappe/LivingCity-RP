@@ -119,3 +119,5 @@ Chat is busy, so what matters goes on the screen too (and stays in chat to scrol
 - **F4 > Factions > Admin: testing tools > Staff tools:** the Dreams menu, the performance debugger, the lag monitor.
 - **F1 looking at a Resistance supply crate:** Donate food to the crate, for anyone but a unit (before, a citizen could only type `!donate`).
 Player texts that named C menu paths (tips, the guide, hints, shop lines, the staff ticket line) name the F1 to F4 ones instead (the owner, 19 November: "yes please reword those"). Units' HQ calls in those texts point to the radio (radio out, right click).
+
+**19 November:** F1 > Inform (looking at a Civil Protection unit, with something to report: `docs/features/informing.md`); her F2 > City orders > Firing squad..., Answer the killing of <name>, and The Resistance offer X for Y (`docs/features/firing-squads.md`, `docs/features/resistance-prisoners.md`); City orders past nine lines goes on to a second page. The cage: Let them go is three ways for one of the city's own, and Offer them for <name> for a Lieutenant or above.
