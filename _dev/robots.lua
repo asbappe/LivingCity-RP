@@ -186,6 +186,18 @@ return function(T)
             local e
             for ent in pairs(st.search) do if IsValid(ent) and not st.searched[ent] then e = ent break end end
             if e then holdUse(p, e, (LC.SearchSecs or 2.5) + 0.3) end
+        elseif k == "count" and st.event == "paymaster_robbed" then
+            -- the Union paymaster (sv_livingcity_resistancemoney.lua): his escort put down, then E on him, or on the
+            -- satchel he dropped
+            if now < (mem.useAt or 0) then return end
+            mem.useAt = now + 1
+            local P = LC.Paymaster
+            if not P then return end -- (it is over: the job is done, or calls itself off)
+            for _, g in ipairs(P.escort or {}) do
+                if IsValid(g) and g:Health() > 0 then kill(p, g) return end
+            end
+            local e = (IsValid(P.satchel) and P.satchel) or (IsValid(P.npc) and P.npc) or nil
+            if e then use(p, e) end
         elseif k == "count" and st.event == "killed" then
             if now < (mem.killAt or 0) then return end
             mem.killAt = now + 1
@@ -316,6 +328,13 @@ return function(T)
     -- A job offered only while something is on in the city that is not one of its events: the robot's city
     -- is given it while the job is played. id -> function() -> what puts the city back.
     local STAGED = {
+        -- the Union paymaster on his walk with the wages (sv_livingcity_resistancemoney.lua)
+        res_paymaster = function()
+            if LC.Paymaster then LC.EndPaymaster("silent") end
+            local okP, why = LC.StartPaymaster()
+            if not okP then error("the paymaster would not set out: " .. tostring(why)) end
+            return function() if LC.Paymaster then LC.EndPaymaster("silent") end end
+        end,
         -- her address (the city's own Administrator), at a stand and a crowd point of the robot's own
         res_regicide = function(p)
             if IsValid(p) then p:SetNW2Int("lcf_rank", 3) end -- (Fighters and up: the owner, 17 November)

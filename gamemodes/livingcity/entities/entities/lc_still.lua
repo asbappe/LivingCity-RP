@@ -70,7 +70,7 @@ if CLIENT then
             self.lcHiss:Stop()
             self.lcHiss = nil
         end
-        self:SetNextClientThink(CurTime() + 0.1)
+        if self.SetNextClientThink then self:SetNextClientThink(CurTime() + 0.1) end
         return true
     end
     function ENT:OnRemove()

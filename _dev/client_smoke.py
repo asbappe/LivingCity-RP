@@ -2389,6 +2389,92 @@ return nil
 """)
 if err:
     problems = (problems + "\n" if problems else "") + "weapon_lc_radio (client) " + str(err)
+# the card table's window (cl_livingcity_cards.lua, sv_livingcity_resistancemoney.lua): it opens, shows the cards and
+# the result, greys out a bet the table won't take, and a bet and Deal reach the server; and the still steams while
+# it brews (entities/lc_still.lua)
+L.globals()._SRC = open(os.path.join(ENTDIR, "lc_still.lua")).read()
+err = L.execute(r"""
+local made, sent, texts = {}, {}, {}
+local function P()
+    local t = {}
+    made[#made + 1] = t
+    return setmetatable(t, { __index = function(_, k)
+        if string.sub(k, 1, 2) == "lc" or string.sub(k, 1, 1) == "_" then return nil end
+        if k == "IsValid" then return function() return not t._removed end end
+        if k == "Remove" then return function() t._removed = true end end
+        if k == "SetText" then return function(_, s) t._text = s texts[#texts + 1] = s end end
+        if k == "SetEnabled" then return function(_, on) t._enabled = on end end
+        if k == "IsEnabled" then return function() return t._enabled end end
+        if k == "SetTitle" then return function(_, s) t._title = s end end
+        return function() return P() end
+    end })
+end
+local vgWas, stsWas, startWas, weWas, wuWas = vgui, net.SendToServer, net.Start, net.WriteEntity, net.WriteUInt
+local reWas, ruWas = net.ReadEntity, net.ReadUInt
+local cur
+local ok, e = pcall(function()
+    vgui = { Create = function() return P() end, GetKeyboardFocus = function() return nil end }
+    net.Start = function(n) cur = { name = n, data = {} } end
+    net.WriteEntity = function(v) if cur then cur.data[#cur.data + 1] = v end end
+    net.WriteUInt = function(v) if cur then cur.data[#cur.data + 1] = v end end
+    net.SendToServer = function() sent[#sent + 1] = cur end
+    net.ReadEntity = function() return table.remove(net._q, 1) end
+    net.ReadUInt = function() return table.remove(net._q, 1) end
+    if not net.recv_lc_cards then error("the card window is not listening") end
+    local tbl = ents.Create("lc_cardtable")
+    -- opened, nothing dealt yet, the table taking 5 and 10 but not 25
+    net._q = { tbl, 0, 0, 0, 3 }
+    net.recv_lc_cards()
+    local f = LC_CL.CardsFrame()
+    if not (f and f:IsValid()) then error("E on the card table opens no window") end
+    if f._title ~= "High card" then error("the window's title: " .. tostring(f._title)) end
+    local by = {}
+    for _, p in ipairs(made) do if p._text then by[p._text] = p end end
+    if not (by["5"] and by["10"] and by["25"] and by["Deal"]) then error("the bets and Deal are missing") end
+    if by["25"]._enabled ~= false or by["5"]._enabled ~= true then error("a bet the table won't take is not greyed out") end
+    for _, p in ipairs(made) do if rawget(p, "Paint") then p.Paint(p, 70, 96) end end
+    by["10"].DoClick()
+    if by["Deal"].Think then by["Deal"].Think(by["Deal"]) end
+    by["Deal"].DoClick()
+    local m = sent[#sent]
+    if not (m and m.name == "lc_cards_deal" and m.data[1] == tbl and m.data[2] == 10) then error("Deal does not reach the server with the bet picked") end
+    -- the hand: an ace for you, a seven for the house
+    made, texts = {}, {}
+    net._q = { tbl, 14, 7, 1, 7 }
+    net.recv_lc_cards()
+    f = LC_CL.CardsFrame()
+    for _, p in ipairs(made) do if rawget(p, "Paint") then p.Paint(p, 70, 96) end end
+    local won = false
+    for _, s in ipairs(texts) do if s == "You win" then won = true end end
+    if not won then error("the result is not shown: " .. table.concat(texts, ", ")) end
+    -- the window's words, and nothing more
+    local allowed = { ["You"] = true, ["House"] = true, ["You win"] = true, ["House wins"] = true, [""] = true, ["5"] = true, ["10"] = true, ["25"] = true, ["Deal"] = true }
+    for _, s in ipairs(texts) do if not allowed[s] then error("unexpected words in the card window: " .. tostring(s)) end end
+    f:Remove()
+    -- the still: steam and a hiss while it brews, quiet after
+    local entWas = ENT
+    ENT = {}
+    assert(loadstring(_SRC, "lc_still"))()
+    local def = ENT
+    ENT = entWas
+    local s = ents.Create("lc_still")
+    s.nw = s.nw or {}
+    s.nw.lc_brew_done = CurTime() + 60
+    for _, fn in ipairs({ "Think", "Think", "OnRemove" }) do
+        if def[fn] then def[fn](s) end
+    end
+    s.nw.lc_brew_done = 0
+    if def.Think then def.Think(s) end
+    s:Remove()
+    tbl:Remove()
+end)
+vgui, net.SendToServer, net.Start, net.WriteEntity, net.WriteUInt = vgWas, stsWas, startWas, weWas, wuWas
+net.ReadEntity, net.ReadUInt = reWas, ruWas
+if not ok then return tostring(e) end
+return nil
+""")
+if err:
+    problems = (problems + "\n" if problems else "") + "the card table's window (client): " + str(err)
 # shared dreams (cl_livingcity_dreams.lua): the dreamer's line on screen, the admins' window
 err = L.execute(r"""
 local ok, e = pcall(function()
