@@ -236,6 +236,7 @@ LC_MODULES = {
         "sv_livingcity_pacing", -- (who is in a fight; the Combine's action music)
         "sv_livingcity_campmove",
         "sv_livingcity_funding",
+        "sv_livingcity_resistancemoney", -- (the still, the dealer's drink, his rent, the paymaster, the card table; after funding, resistancefund and quests)
         "sv_livingcity_work",
         "sv_livingcity_labor", -- (after work: Labor Assignment, where Union work is given out and changed)
         "sv_livingcity_reconcile", -- (a new faction or rank: the old job, its clothes and kit go)
@@ -369,6 +370,7 @@ LC_MODULES = {
         "cl_livingcity_writing",
         "cl_livingcity_context", -- (what you can do here: the panel on the right)
         "cl_livingcity_trail", -- (the quest trail on the ground)
+        "cl_livingcity_cards", -- (the card table's window: sv_livingcity_resistancemoney.lua)
     },
 }
 

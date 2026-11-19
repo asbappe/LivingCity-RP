@@ -1426,7 +1426,10 @@ function LC.OpenMarket(ply)
     -- his usual stock, and whatever the Commissary is short of (sv_livingcity_market.lua)
     local stock = {} -- (what only the quartermaster has, a dealer doesn't show: qm, sh_livingcity_shop.lua)
     for _, g in ipairs(LC.MarketBlackList and LC.MarketBlackList() or LCS.Black) do
-        if (not g.qm or qm) and not g.lab then stock[#stock + 1] = g end -- (lab: the Resistance's lab alone has it)
+        -- (lab: the Resistance's lab alone has it; gone: none left in the city; bootleg: a drink sold only from what
+        -- players have sold the black market, none left and it is not on his list: sv_livingcity_resistancemoney.lua)
+        local dry = g.bootleg and LC.BootlegLeft and LC.BootlegLeft(g.item) <= 0
+        if (not g.qm or qm) and not g.lab and not g.gone and not dry then stock[#stock + 1] = g end
     end
     for _, g in ipairs(stock) do
         local can, reason = true, nil
@@ -1435,6 +1438,7 @@ function LC.OpenMarket(ply)
         if credits < price then can, reason, short = false, "Not enough credits", price - credits end
         if can and g.item and not LC.CanCarry(ply, g.item, g.count or 1) then can, reason = false, "Too much to carry" end
         local left, nextIn = LC.BlackStockLeft(g)
+        if g.bootleg and LC.BootlegLeft then left, nextIn = LC.BootlegLeft(g.item), nil end
         local note = LC.MarketBlackNote and LC.MarketBlackNote(g) or nil
         if left then
             if left <= 0 then can, reason = false, string.format("Sold out: more in about %d minutes", math.max(1, math.ceil((nextIn or 60) / 60))) end
@@ -1448,6 +1452,7 @@ function LC.OpenMarket(ply)
     for _, id in ipairs(ids) do
         local it = LCS.Items[id]
         local price = LC.SellPrice and LC.SellPrice(ply, id) or (it and it.sell)
+        if price and LC.DealerPaysYou then price = LC.DealerPaysYou(ply, id, price) end -- (a member's half: the rest is the fund's)
         if it and price and not (qm and DECODED[id]) then
             -- (the quartermaster pays more for what's in demand: sv_livingcity_market.lua)
             local hot = qm and it.sell and price > it.sell and LC.MarketBuybackMul and LC.MarketBuybackMul(id) > 1 and "In demand: he pays more" or nil
@@ -1581,8 +1586,9 @@ function LC.BlackBuy(ply, id)
     if not g then return false end
     local ok, why = LC.MarketAccess(ply)
     if not ok then return false, why end
-    if g.lab then return false end -- (the lab's alone: not on anyone's list, so nobody is told)
+    if g.lab or g.gone then return false end -- (the lab's alone, or none left in the city: not on anyone's list, so nobody is told)
     if g.qm and not LC.AtQuartermaster(ply) then return false, "Only the quartermaster has those." end
+    if g.bootleg and LC.BootlegLeft and LC.BootlegLeft(g.item) < (g.count or 1) then return false end -- (none left: not on his list)
     local left, next = LC.BlackStockLeft(g)
     if left and left <= 0 then return false, string.format("He's out of those. More in about %d minutes.", math.max(1, math.ceil((next or 60) / 60))) end
     local price = LC.MarketPrice(ply, g)
@@ -1595,6 +1601,9 @@ function LC.BlackBuy(ply, id)
         if IsValid(e) then e:SetPos(ply:GetPos() + ply:GetForward() * 40 + Vector(0, 0, 20)) e:Spawn() end
     end
     if left then LC.BlackStock.stim.n = left - 1 end
+    if g.bootleg and LC.BootlegTake then LC.BootlegTake(g.item, g.count or 1) end
+    -- the dealer's rent: a share of what he takes on rebel ground goes to the Resistance's fund (not the quartermaster's)
+    if LC.DealerRent and not LC.AtQuartermaster(ply) then LC.DealerRent(ply, price, NearDealer(ply)) end
     if LC.MarketBought then LC.MarketBought(g, "black") end
     ply:ChatPrint(string.format("[Black market] %s, for %d credits. You didn't get it here.", g.name, price))
     return true
@@ -1627,11 +1636,14 @@ function LC.DealerSell(ply, id, all)
     end
     local n = all and (LC.Inventory(ply)[id] or 1) or 1
     LC.TakeItem(ply, id, n)
-    LC.AddCredits(ply, price * n)
+    -- a Resistance member's half of a resistanceSplit item: the rest goes to the fund (sv_livingcity_resistancemoney.lua)
+    local paid = LC.DealerSaleSplit and LC.DealerSaleSplit(ply, id, n, price) or price * n
+    LC.AddCredits(ply, paid)
+    if LC.BootlegAdd then LC.BootlegAdd(id, n) end -- (a bottle sold is one more he can sell)
     if LC.MarketSold then LC.MarketSold(id, n) end -- (more of it about: less wanted)
     if id == "ration_forged" then hook.Run("LivingCityForgedCard", ply, n) end -- (the search for the forger: sv_livingcity_funding.lua)
     if it.intel and LC.AddXP then LC.AddXP(ply, 5 * n, "intel") end
-    ply:ChatPrint(string.format("[Black market] Sold: %s%s, for %d credits.", it.name, n > 1 and (" x" .. n) or "", price * n))
+    ply:ChatPrint(string.format("[Black market] Sold: %s%s, for %d credits.", it.name, n > 1 and (" x" .. n) or "", paid))
     -- (arms and materials sold to the quartermaster: 0.1 an item for arms and gun parts, 0.025 for scrap, rags and chemicals: the owner, 9 November)
     if Arms(id) and not NearDealer(ply) and LC.NearQuartermaster and LC.NearQuartermaster(ply) and LC.AddTrait then LC.AddTrait(ply, "sympathy", LC.QuartermasterSellSympathy(id) * n) end
     return true
