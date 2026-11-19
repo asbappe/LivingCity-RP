@@ -38,12 +38,23 @@
                   you; the Resistance's strength in the ledger goes up. The Resistance's job while he walks:
                   "Rob the paymaster" (res_paymaster).
     The card      a fixture ("Fixture: card table", entities/lc_cardtable.lua), for a back room on rebel ground;
-    table         off rebel ground it does nothing. E opens one small window: a bet of 5, 10 or 25, and high
-                  card against the house (each draws one from a fresh deck; ties go to the house: the player
-                  wins 24 hands in 51, the house's edge 3 in 51, about 5.9%). A lost bet goes to the fund; a win
-                  is paid out of it at even money. It takes no bet the fund could not pay and still keep FLOOR,
-                  so it rests while the fund is low. One hand every RATE seconds at most. Nothing in the chat:
-                  the cards and the result are in the window.
+    table         off rebel ground it does nothing. A fundraiser, a pot game (the owner, 19 November: "you get
+                  like 70% of the winnings from the pot/pool and the rest goes into the resistance fund; the
+                  resistance fund should not be drained from this"): the fund is never paid out by the table.
+                  E sits you down (SEATS seats) and opens one small window; closing it, or going further than
+                  TABLE_REACH, stands you up. Whoever sat first picks the stake (STAKES), kept until the table is
+                  empty. Empty seats are filled by the Resistance's own people (names from the city's list), so a
+                  lone player has a game; each puts in at most THEIRS, from the city. Deal (any seated player,
+                  one hand every RATE seconds at a table): everyone seated puts the stake in (one short of it is
+                  stood up), one card each from a fresh deck, the highest takes WINNER per cent of the pot (a tie
+                  splits it), the rest goes to the fund ("The card table's cut"). A character plays at most
+                  HOUR_HANDS hands in a real hour (PData HOUR_KEY), then sits out until the hour has passed.
+                  Nothing in the chat: the seats, the cards and the result are in the window.
+                  Twenty-one (the owner, 19 November: "can we have a few more simple card games"; their
+                  pick, with the same pot): whoever sat first picks the game between hands. Two cards each, your
+                  own face up and the others' face down; Card or Stay for TURN21 seconds (the city's people take
+                  a card below STAY21); the nearest to 21 without passing it takes the same WINNER per cent, and
+                  with everyone over the fund takes the pot. A hand counts as one of the hour's.
 
     Nothing is said about any of it beyond what was there: no notice, hint, chat line or announcement, but the
     still's one line and the job's posting (as the supply drop's raid job is posted).
@@ -57,12 +68,17 @@
     LC.DealerRentRate(pos)                   rate, and "safe", "normal", "held" or nil (not rebel ground)
     LC.DealerRent(ply, price, dealer)        his rent on one sale, put in the fund
     LC.StartPaymaster(), LC.EndPaymaster(why), LC.RobPaymaster(ply, ent), LC.Paymaster
-    LC.OpenCardTable(ply, table), LC.CardTableDeal(ply, table, bet)
+    LC.OpenCardTable(ply, table)             E: a seat (or the window as it stands, when full or short)
+    LC.CardTableStake(ply, table, stake), LC.CardTableDeal(ply, table), LC.CardTableStand(ply, table)
+    LC.CardTableHandsLeft(ply), LC.CardTableState(table), LC.CardTableCards(n), LC.CardTableCheck()
+    LC.CardTableGame(ply, table, game)       1 high card, 2 Twenty-one (whoever sat first, between hands)
+    LC.CardTableMove(ply, table, take)       Twenty-one: Card or Stay; LC.CardTableTotal(cards)
 
     Hooks run: LivingCityPaymaster (P), LivingCityPaymasterRobbed (robber, take, partakers, P),
-    LivingCityPaymasterEnded (P, why). Hooks heard (nothing is answered to any): EntityTakeDamage, OnNPCKilled,
-    PlayerUse, LivingCityPlayerUsedNPC. Net: lc_cards (to the player), lc_cards_deal (from the player, checked:
-    who, how near, how much, how often). No settings, no commands: the numbers are the constants below.
+    LivingCityPaymasterEnded (P, why), LivingCityCardHand (table, dealer, pot, cut). Hooks heard (nothing is answered to any): EntityTakeDamage, OnNPCKilled,
+    PlayerUse, LivingCityPlayerUsedNPC. Net: lc_cards (the table, to each player at it), lc_cards_deal (from the
+    player: stand, deal or the stake; checked: who, seated, how near, the stake, how often, the hour's hands). No
+    settings, no commands: the numbers are the constants below.
 ]]
 
 if CLIENT then return end
@@ -77,7 +93,8 @@ util.AddNetworkString("lc_cards_deal")
 ------------------------------------------------------------------------
 
 -- the still: one batch is BATCH bottles of moonshine
-local BATCH = 4              -- bottles a batch makes; an empty bottle goes in for each
+local BATCH = 8              -- bottles a batch makes; an empty bottle goes in for each (the owner, 19 November: "just
+                             -- increase the amount in a batch please by double"; it was 4)
 local WATER = 2              -- water a batch takes (any bottle or can of water: WATERS)
 local FOOD = 1               -- ration food a batch takes (FOODS)
 local BREW_SECS = 300        -- how long it brews by itself
@@ -100,11 +117,21 @@ local SATCHEL_SECS = 180     -- a satchel left lying this long is picked up by t
 local PART_REACH = 1500      -- who took part: on the job or had a go at him, and this near
 local JOB = "res_paymaster"
 local LINE = "A Union paymaster is walking the shift wages across the city with an escort: take his satchel."
--- the card table
-local BETS = { 5, 10, 25 }
-local RATE = 4               -- seconds between hands, per player
-local FLOOR = 50             -- the fund keeps at least this after paying out a win
-local TABLE_REACH = 160
+-- the card table (the owner, 19 November: "a fundraiser card game where you play cards and you get like 70% of the
+-- winnings from the pot/pool and the rest goes into the resistance fund; the resistance fund should not be drained")
+local STAKES = { 5, 10, 25 } -- the stake for everyone at the table, picked by whoever sat first
+local SEATS = 4
+local THEIRS = 5             -- the most one of the city's people in an empty seat puts in, whatever the stake
+local WINNER = 70            -- per cent of the pot to the highest card (split on a tie); the rest is the fund's
+local RATE = 4               -- seconds between hands at a table
+local GAMES = 2              -- 1 high card, 2 Twenty-one (whoever sat first picks, between hands)
+local MAX21 = 5              -- cards in one hand of Twenty-one at most
+local STAY21 = 16            -- one of the city's people takes a card below this
+local TURN21 = 20            -- seconds everyone has to take cards; then whoever is still thinking stays
+local HOUR_HANDS = 20        -- hands a character may play in a real hour
+local HOUR_SECS = 3600
+local HOUR_KEY = "lc_cards_hour" -- (PData: kept with the character over a reconnect)
+local TABLE_REACH = 160      -- to sit and to deal; further off, they are stood up
 
 local WHY = "your share"     -- what each of ours reads with their credits, as with any of the fund's shares
 
@@ -618,7 +645,7 @@ if LC.ResistanceFundShares and LC.ResistanceFundShares ~= LC.ResistanceMoneyShar
 end
 
 ------------------------------------------------------------------------
--- The card table
+-- The card table: a pot game, the fund's cut out of every pot and nothing ever out of the fund
 ------------------------------------------------------------------------
 
 local NO_CARDS = { cp = true, ota = true, admin = true, zombie = true }
@@ -631,68 +658,369 @@ local function MayPlay(ply, tbl)
 end
 LC.CardTableOpen = MayPlay
 
--- The bets the table will take from this player now: each bet, true or false.
-local function Takes(ply)
-    local out, credits, fund = {}, LC.Credits(ply), LC.ResistanceFund and LC.ResistanceFund() or 0
-    for _, b in ipairs(BETS) do out[b] = credits >= b and fund - b >= FLOOR end
+-- [table] = { seats = { { ply = p, since = t } or { name = "Hollis Brandt" }, ... }, stake, chooser, pot, dealt, nextAt }.
+-- A seat keeps its card and what it won (card, won) from the last hand. Nobody seated: no entry.
+local Tables = {}
+function LC.CardTableState(tbl) return Tables[tbl] end
+
+local function SeatOf(T, ply) for i, s in ipairs(T.seats) do if s.ply == ply then return i end end end
+local function Seated(T)
+    local out = {}
+    for _, s in ipairs(T.seats) do if s.ply then out[#out + 1] = s.ply end end
     return out
 end
-LC.CardTableTakes = Takes
 
-local function Send(ply, tbl, you, house, result)
-    local mask, takes = 0, Takes(ply)
-    for i, b in ipairs(BETS) do if takes[b] then mask = mask + 2 ^ (i - 1) end end
-    net.Start("lc_cards")
-    net.WriteEntity(tbl)
-    net.WriteUInt(you or 0, 5)
-    net.WriteUInt(house or 0, 5)
-    net.WriteUInt(result or 0, 2)
-    net.WriteUInt(mask, 3)
-    net.Send(ply)
+-- Hands this character has played this real hour (PData HOUR_KEY: "character|the hour's first hand|hands"), and
+-- when that hour began; none once it has passed, or for another character of theirs.
+local function Hour(ply)
+    local who, start, n = string.match(tostring(ply:GetPData(HOUR_KEY, "") or ""), "^(.*)|(%d+)|(%d+)$")
+    start, n = tonumber(start), tonumber(n)
+    local now = os.time()
+    if not start or who ~= ply:GetNW2String("lc_cid", "") or now < start or now - start >= HOUR_SECS then return 0, nil end
+    return n, start
+end
+function LC.CardTableHandsLeft(ply) return math.max(0, HOUR_HANDS - (Hour(ply))) end
+local function Count(ply)
+    local n, start = Hour(ply)
+    ply:SetPData(HOUR_KEY, ply:GetNW2String("lc_cid", "") .. "|" .. (start or os.time()) .. "|" .. (n + 1))
 end
 
+-- What a seated player can't do now: 1 out of hands this hour, 2 short of the stake; nil when they can.
+local function Cant(ply, T)
+    if LC.CardTableHandsLeft(ply) <= 0 then return 1 end
+    if LC.Credits(ply) < (T.stake or STAKES[1]) then return 2 end
+end
+
+-- One of the Resistance's own people for an empty seat: a name from the city's list, not one already at the table.
+local function FighterName(T)
+    for _ = 1, 8 do
+        local n = LC.NewCharacterName and LC.NewCharacterName() or nil
+        local taken = n == nil
+        for _, s in ipairs(T.seats) do
+            if n and (s.name == n or (IsValid(s.ply) and Name(s.ply) == n)) then taken = true end
+        end
+        if not taken then return n end
+    end
+    return "A fighter"
+end
+local function Fill(T)
+    for i = 1, SEATS do if not T.seats[i] then T.seats[i] = { name = FighterName(T) } end end
+end
+
+-- The window: you 0 closes it, 1 seated, 2 not seated (the table as it is); line as Cant.
+local function Send(ply, tbl, you, line)
+    local T = Tables[tbl] or { seats = {} }
+    local stakeAt, mask = 0, 0
+    for i, b in ipairs(STAKES) do
+        if b == T.stake then stakeAt = i end
+        if LC.Credits(ply) >= b then mask = mask + 2 ^ (i - 1) end
+    end
+    net.Start("lc_cards")
+    net.WriteEntity(tbl)
+    net.WriteUInt(you, 2)
+    net.WriteUInt(line or 0, 2)
+    net.WriteBool(you == 1 and T.chooser == ply)
+    net.WriteUInt(stakeAt, 2)
+    net.WriteUInt(mask, 3)
+    net.WriteUInt(math.min(T.pot or 0, 255), 8)
+    net.WriteUInt(math.Clamp(math.ceil((T.nextAt or 0) - CurTime()), 0, 7), 3)
+    net.WriteUInt(#T.seats, 3)
+    for _, s in ipairs(T.seats) do
+        net.WriteString(s.ply and (IsValid(s.ply) and Name(s.ply) or "") or s.name)
+        net.WriteBool(s.ply == ply)
+        net.WriteUInt(s.cards and 0 or (s.card or 0), 4)
+        net.WriteUInt(math.min(s.won or 0, 127), 7)
+        net.WriteBool(T.dealt == s)
+    end
+    -- the game, and a hand of Twenty-one: whether one is on, whether they may take a card, the seconds left, and
+    -- each seat's cards (during the hand only their own are shown: 0 is a card face down)
+    local R, mine = T.round, nil
+    for _, s in ipairs(T.seats) do if s.ply == ply then mine = s end end
+    net.WriteUInt(T.game or 1, 2)
+    net.WriteBool(R ~= nil)
+    net.WriteBool(R ~= nil and you == 1 and mine ~= nil and mine.cards ~= nil and not mine.done)
+    net.WriteUInt(R and math.Clamp(math.ceil(R.endAt - CurTime()), 0, 31) or 0, 5)
+    -- (a suit, 1 to 4, is only which card of the four it is, for its picture: it decides nothing)
+    for _, s in ipairs(T.seats) do
+        local cards = s.cards or {}
+        net.WriteUInt(s.cards and 0 or (s.suit or 0), 3)
+        net.WriteUInt(#cards, 3)
+        for i, c in ipairs(cards) do
+            local hidden = R and s.ply ~= ply
+            net.WriteUInt(hidden and 0 or c, 4)
+            net.WriteUInt(hidden and 0 or (s.suits and s.suits[i] or 0), 3)
+        end
+    end
+    net.Send(ply)
+end
+local function Show(tbl)
+    local T = Tables[tbl]
+    if not T then return end
+    for _, s in ipairs(T.seats) do if IsValid(s.ply) then Send(s.ply, tbl, 1, Cant(s.ply, T)) end end
+end
+
+-- Twenty-one: what a hand is worth (2 to 10 their number, the jack, queen and king 10, an ace 11 or 1).
+local function Total(cards)
+    local sum, aces = 0, 0
+    for _, c in ipairs(cards or {}) do
+        if c == 14 then sum, aces = sum + 11, aces + 1 else sum = sum + math.min(c, 10) end
+    end
+    while sum > 21 and aces > 0 do sum, aces = sum - 10, aces - 1 end
+    return sum
+end
+LC.CardTableTotal = Total
+local function AllDone(R)
+    for _, s in ipairs(R.hand) do if not s.done then return false end end
+    return true
+end
+-- The hand is over: the nearest to 21 without passing it takes WINNER per cent of the pot (a tie splits it), the
+-- fund the rest; with everyone over, the fund takes all of it. Someone who stood up during the hand left their stake.
+local function Settle21(tbl)
+    local T = Tables[tbl]
+    local R = T and T.round
+    if not R then return false end
+    T.round = nil
+    local best, top, players = 0, {}, {}
+    for _, s in ipairs(R.hand) do
+        s.total = Total(s.cards)
+        if not s.out and s.total <= 21 then best = math.max(best, s.total) end
+    end
+    for _, s in ipairs(R.hand) do if best > 0 and not s.out and s.total == best then top[#top + 1] = s end end
+    local each = #top > 0 and math.floor(math.floor(R.pot * WINNER / 100) / #top) or 0
+    local cut = R.pot - each * #top
+    for _, s in ipairs(top) do
+        s.won = each
+        if IsValid(s.ply) then LC.AddCredits(s.ply, each) end
+    end
+    for _, p in ipairs(R.players) do if IsValid(p) then players[#players + 1] = p end end
+    if LC.ResistanceFundAdd then LC.ResistanceFundAdd(cut, "The card table's cut", players) end
+    T.nextAt = CurTime() + RATE
+    if IsValid(tbl) then tbl:EmitSound("physics/cardboard/cardboard_box_impact_soft" .. math.random(1, 3) .. ".wav", 45, 160) end
+    Show(tbl)
+    hook.Run("LivingCityCardHand", tbl, R.dealer and R.dealer.ply, R.pot, cut)
+    return true, { pot = R.pot, cut = cut, each = each, hand = R.hand }
+end
+
+-- Off the seat: one of the city's people takes it; the last player up, the table empties (its stake with it).
+-- In a hand of Twenty-one their cards are out of it and their stake stays in the pot (the fund's, if the table empties).
+local function Unseat(T, tbl, ply)
+    local i = SeatOf(T, ply)
+    if not i then return false end
+    if T.round then T.seats[i].out, T.seats[i].done = true, true end
+    T.seats[i] = nil
+    if T.chooser == ply then
+        T.chooser = nil
+        local since
+        for _, s in pairs(T.seats) do
+            if s.ply and (not since or s.since < since) then T.chooser, since = s.ply, s.since end
+        end
+    end
+    if not T.chooser then
+        if T.round and LC.ResistanceFundAdd then LC.ResistanceFundAdd(T.round.pot, "The card table's cut", { ply }) end
+        Tables[tbl] = nil
+    else
+        Fill(T)
+    end
+    return true
+end
+-- line: what their window then says, open and unseated; nil closes it.
+local function Stand(ply, tbl, line)
+    local T = Tables[tbl]
+    if not (T and Unseat(T, tbl, ply)) then return false end
+    if IsValid(ply) then Send(ply, tbl, line and 2 or 0, line) end
+    T = Tables[tbl]
+    if T and T.round and AllDone(T.round) then Settle21(tbl) else Show(tbl) end
+    return true
+end
+function LC.CardTableStand(ply, tbl) return Stand(ply, tbl) end
+
+-- E on the table: a seat (one of the city's people gives theirs up), or the window as it stands when the table is
+-- full or they are short of its stake. True when the window opened.
 function LC.OpenCardTable(ply, tbl)
     if not MayPlay(ply, tbl) then return false end
-    Send(ply, tbl)
+    local T = Tables[tbl] or { seats = {}, nextAt = 0 }
+    if SeatOf(T, ply) then Send(ply, tbl, 1, Cant(ply, T)) return true end
+    local free
+    for i = 1, SEATS do
+        local s = T.seats[i]
+        if not s or not s.ply then free = i break end
+    end
+    if T.round then Send(ply, tbl, 2) return true end -- (a hand of Twenty-one is on: the table as it is, no seat)
+    if not free or LC.Credits(ply) < (T.stake or STAKES[1]) then
+        Send(ply, tbl, 2, free and 2 or nil)
+        return true
+    end
+    Tables[tbl] = T
+    T.seats[free] = { ply = ply, since = CurTime() }
+    T.chooser = T.chooser or ply
+    Fill(T)
+    Show(tbl)
     return true
 end
 
--- One hand of high card. True, and the player's card, the house's card (2 to 14, the ace high) and whether they won;
--- or false and why not.
-function LC.CardTableDeal(ply, tbl, bet)
-    if not MayPlay(ply, tbl) then return false, "not here" end
-    bet = math.floor(tonumber(bet) or 0)
+-- Whoever sat first picks the stake, between hands; it stays until the table is empty.
+function LC.CardTableStake(ply, tbl, stake)
+    local T = Tables[tbl]
+    if not (T and T.chooser == ply and not T.round and MayPlay(ply, tbl)) then return false end
+    stake = math.floor(tonumber(stake) or 0)
     local legal = false
-    for _, b in ipairs(BETS) do if b == bet then legal = true end end
-    if not legal then return false, "no such bet" end
-    local now = CurTime()
-    if now < (ply.lcCardsAt or 0) + RATE then return false, "too soon" end
-    if not Takes(ply)[bet] then return false, "the table won't take it" end
-    ply.lcCardsAt = now
-    -- one from a fresh deck each, two different cards (a rank in four suits)
-    local a = math.random(0, 51)
-    local b = math.random(0, 50)
-    if b >= a then b = b + 1 end
-    local you, house = a % 13 + 2, b % 13 + 2
-    local won = you > house -- (a tie is the house's)
-    if won then
-        if LC.ResistanceFundTake and not LC.ResistanceFundTake(bet, "The card table paid out (" .. Name(ply) .. ")") then return false, "the table won't take it" end
-        LC.AddCredits(ply, bet)
-    else
-        LC.AddCredits(ply, -bet)
-        if LC.ResistanceFundAdd then LC.ResistanceFundAdd(bet, "The card table's take") end
-    end
-    tbl:EmitSound("physics/cardboard/cardboard_box_impact_soft" .. math.random(1, 3) .. ".wav", 45, 160)
-    Send(ply, tbl, you, house, won and 1 or 2)
-    hook.Run("LivingCityCardHand", ply, bet, won)
-    return true, you, house, won
+    for _, b in ipairs(STAKES) do if b == stake then legal = true end end
+    if not legal or LC.Credits(ply) < stake then return false end
+    T.stake = stake
+    Show(tbl)
+    return true
 end
 
+-- Whoever sat first picks the game too, between hands: 1 high card, 2 Twenty-one. The last hand's cards are cleared.
+function LC.CardTableGame(ply, tbl, game)
+    local T = Tables[tbl]
+    if not (T and T.chooser == ply and not T.round and MayPlay(ply, tbl)) then return false end
+    game = math.floor(tonumber(game) or 0)
+    if game < 1 or game > GAMES then return false end
+    if (T.game or 1) ~= game then
+        T.game, T.pot, T.dealt = game, 0, nil
+        for _, s in ipairs(T.seats) do s.card, s.suit, s.cards, s.suits, s.won = 0, nil, nil, nil, 0 end
+    end
+    Show(tbl)
+    return true
+end
+
+-- A hand of Twenty-one, once the stakes are in: two cards each, the city's people take theirs at once (a card below
+-- STAY21), the players have TURN21 seconds for Card or Stay (LC.CardTableMove).
+local function Deal21(tbl, T, ply, hand, pot, players)
+    local deck, suits = LC.CardTableCards(#hand * MAX21)
+    local at = 0
+    local R = { hand = hand, pot = pot, players = players, endAt = CurTime() + TURN21, dealer = T.seats[SeatOf(T, ply)] }
+    R.give = function(s) -- (the next card off the deck)
+        at = at + 1
+        s.cards[#s.cards + 1] = deck[at] or 2
+        s.suits[#s.suits + 1] = suits and suits[at] or ((at - 1) % 4 + 1)
+    end
+    for _, s in ipairs(hand) do s.cards, s.suits = {}, {} R.give(s) R.give(s) end
+    for _, s in ipairs(hand) do
+        if not s.ply then
+            while Total(s.cards) < STAY21 and #s.cards < MAX21 do R.give(s) end
+            s.done = true
+        elseif Total(s.cards) >= 21 then
+            s.done = true
+        end
+    end
+    T.round, T.pot, T.dealt = R, pot, R.dealer
+    tbl:EmitSound("physics/cardboard/cardboard_box_impact_soft" .. math.random(1, 3) .. ".wav", 45, 160)
+    if AllDone(R) then Settle21(tbl) else Show(tbl) end
+    return true, { pot = pot, hand = hand, round = R }
+end
+
+-- Card (take true) or Stay, in a hand of Twenty-one: 21, over it or MAX21 cards ends their part; the last one done
+-- ends the hand.
+function LC.CardTableMove(ply, tbl, take)
+    local T = Tables[tbl]
+    local R, i = T and T.round, T and SeatOf(T, ply)
+    local s = R and i and T.seats[i]
+    if not (s and s.cards and not s.done) then return false end
+    if take then
+        R.give(s)
+        if Total(s.cards) >= 21 or #s.cards >= MAX21 then s.done = true end
+    else
+        s.done = true
+    end
+    if AllDone(R) then Settle21(tbl) else Show(tbl) end
+    return true
+end
+
+-- n cards from a fresh deck, as ranks (2 to 14, the ace high), and their suits (1 to 4: which of the four cards of
+-- that rank, for its picture only). (A test may put its own here; without suits they are given in turn.)
+function LC.CardTableCards(n)
+    local deck, out, suits = {}, {}, {}
+    for i = 1, 52 do deck[i] = i - 1 end
+    for i = 1, n do
+        local j = math.random(i, 52)
+        deck[i], deck[j] = deck[j], deck[i]
+        out[i] = deck[i] % 13 + 2
+        suits[i] = math.floor(deck[i] / 13) + 1
+    end
+    return out, suits
+end
+
+-- A hand, dealt by a seated player. Everyone seated who has hands left this hour puts the stake in (one short of it
+-- is stood up first), the city's people at most THEIRS; one card each; the highest card takes WINNER per cent of the
+-- pot (a tie splits it); the rest is the fund's. True and { pot, cut, each, seats in the hand }; or false and why not.
+function LC.CardTableDeal(ply, tbl)
+    local T = Tables[tbl]
+    if not (T and SeatOf(T, ply)) then return false, "not seated" end
+    if not MayPlay(ply, tbl) then Stand(ply, tbl) return false, "not here" end
+    if not T.stake then return false, "no stake" end
+    if T.round then return false, "a hand is on" end
+    local now = CurTime()
+    if now < (T.nextAt or 0) then return false, "too soon" end
+    if LC.CardTableHandsLeft(ply) <= 0 then Send(ply, tbl, 1, 1) return false, "no hands left this hour" end
+    if LC.Credits(ply) < T.stake then Stand(ply, tbl, 2) return false, "short of the stake" end
+    -- who can't stay: gone off, or short of the stake (nothing in the chat: their seat is all anyone sees)
+    for _, p in ipairs(Seated(T)) do
+        if p ~= ply then
+            if not MayPlay(p, tbl) then Stand(p, tbl)
+            elseif LC.CardTableHandsLeft(p) > 0 and LC.Credits(p) < T.stake then Stand(p, tbl, 2) end
+        end
+    end
+    T = Tables[tbl]
+    local hand, pot, players = {}, 0, {}
+    for i = 1, SEATS do
+        local s = T.seats[i]
+        s.card, s.won, s.put = 0, 0, 0
+        s.suit, s.cards, s.suits, s.done, s.out, s.total = nil, nil, nil, nil, nil, nil
+        if s.ply then
+            if LC.CardTableHandsLeft(s.ply) > 0 then s.put = T.stake players[#players + 1] = s.ply end
+        else
+            s.put = math.min(T.stake, THEIRS)
+        end
+        if s.put > 0 then hand[#hand + 1] = s pot = pot + s.put end
+    end
+    for _, p in ipairs(players) do LC.AddCredits(p, -T.stake) Count(p) end
+    if T.game == 2 then return Deal21(tbl, T, ply, hand, pot, players) end
+    local cards, suits = LC.CardTableCards(#hand)
+    local best = 0
+    for i, s in ipairs(hand) do s.card, s.suit = cards[i], suits and suits[i] or ((i - 1) % 4 + 1) best = math.max(best, s.card) end
+    local top = {}
+    for _, s in ipairs(hand) do if s.card == best then top[#top + 1] = s end end
+    local each = math.floor(math.floor(pot * WINNER / 100) / #top)
+    local cut = pot - each * #top
+    for _, s in ipairs(top) do
+        s.won = each
+        if s.ply then LC.AddCredits(s.ply, each) end -- (what one of the city's people wins goes home with them)
+    end
+    if LC.ResistanceFundAdd then LC.ResistanceFundAdd(cut, "The card table's cut", players) end
+    T.pot, T.dealt, T.nextAt = pot, T.seats[SeatOf(T, ply)], now + RATE
+    tbl:EmitSound("physics/cardboard/cardboard_box_impact_soft" .. math.random(1, 3) .. ".wav", 45, 160)
+    Show(tbl)
+    hook.Run("LivingCityCardHand", tbl, ply, pot, cut)
+    return true, { pot = pot, cut = cut, each = each, hand = hand }
+end
+
+-- Once a second: anyone seated who has walked off, died or become a unit is stood up; a table taken away, emptied.
+function LC.CardTableCheck()
+    for tbl, T in pairs(Tables) do
+        local gone = {}
+        for _, s in pairs(T.seats) do if s.ply and not MayPlay(s.ply, tbl) then gone[#gone + 1] = s.ply end end
+        for _, p in ipairs(gone) do Stand(p, tbl) end
+        T = Tables[tbl]
+        if T and T.round and CurTime() >= T.round.endAt then -- (out of time: whoever is still thinking stays)
+            for _, s in ipairs(T.round.hand) do s.done = true end
+            Settle21(tbl)
+        end
+    end
+end
+timer.Create("LivingCityCardTable", 1, 0, function() Heard("the card table's seats", LC.CardTableCheck) end)
+
+-- From the window: 0 stand up, 1 deal, 2 the stake (STAKES[n]), 3 Twenty-one's Card (n 1) or Stay (n 2), 4 the game
+-- (n). All of it is checked here.
 net.Receive("lc_cards_deal", function(_, ply)
     local tbl = net.ReadEntity()
-    local bet = net.ReadUInt(8)
+    local what, n = net.ReadUInt(3), net.ReadUInt(2)
     Heard("a hand of cards", function()
-        local okD = LC.CardTableDeal(ply, tbl, bet)
-        if not okD and MayPlay(ply, tbl) then Send(ply, tbl) end -- (the window as it stands: what it will take now)
+        if what == 0 then Stand(ply, tbl) return end
+        local done = (what == 1 and LC.CardTableDeal(ply, tbl)) or (what == 2 and LC.CardTableStake(ply, tbl, STAKES[n]))
+            or (what == 3 and LC.CardTableMove(ply, tbl, n == 1)) or (what == 4 and LC.CardTableGame(ply, tbl, n))
+        local T = Tables[tbl]
+        if not done and T and SeatOf(T, ply) then Send(ply, tbl, 1, Cant(ply, T)) end -- (the window as it stands)
     end)
 end)

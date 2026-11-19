@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version c1268bf. Admin-only console messages and log lines are left out.
+Made from version db00989. Admin-only console messages and log lines are left out.
 
-13171 lines, from 370 files.
+13176 lines, from 370 files.
 
 ## Contents
 
@@ -83,7 +83,7 @@ Made from version c1268bf. Admin-only console messages and log lines are left ou
 - [cl_livingcity_atmos.lua](#cllivingcityatmoslua-cllivingcityatmoslua) (5)
 - [cl_livingcity_barter.lua](#cllivingcitybarterlua-cllivingcitybarterlua) (1)
 - [cl_livingcity_bodysigns.lua](#cllivingcitybodysignslua-cllivingcitybodysignslua) (9)
-- [cl_livingcity_cards.lua](#cllivingcitycardslua-cllivingcitycardslua) (3)
+- [cl_livingcity_cards.lua](#cllivingcitycardslua-cllivingcitycardslua) (4)
 - [cl_livingcity_career.lua](#cllivingcitycareerlua-cllivingcitycareerlua) (6)
 - [cl_livingcity_chair.lua](#cllivingcitychairlua-cllivingcitychairlua) (12)
 - [cl_livingcity_character.lua](#cllivingcitycharacterlua-cllivingcitycharacterlua) (13)
@@ -313,7 +313,7 @@ Made from version c1268bf. Admin-only console messages and log lines are left ou
 - [what the Resistance's people say to you, recordable (the owner, 13 November playtest:](#what-the-resistances-people-say-to-you-recordable-the-owner-13-november-playtest-svlivingcityrebelvoicelua) (14)
 - [who you are now, and what goes with it (the owner, 7 November: "when I become a metrocop](#who-you-are-now-and-what-goes-with-it-the-owner-7-november-when-i-become-a-metrocop-svlivingcityreconcilelua) (3)
 - [the Resistance's fund](#the-resistances-fund-svlivingcityresistancefundlua) (4)
-- [the Resistance's own money (19 November)](#the-resistances-own-money-19-november-svlivingcityresistancemoneylua) (28)
+- [the Resistance's own money (19 November)](#the-resistances-own-money-19-november-svlivingcityresistancemoneylua) (32)
 - [the Resistance's operations, and what the city does about them](#the-resistances-operations-and-what-the-city-does-about-them-svlivingcityresistanceopslua) (105)
 - [escalation](#escalation-svlivingcityresponselua) (24)
 - [sleep](#sleep-svlivingcityrestlua) (23)
@@ -1181,7 +1181,7 @@ Made from version c1268bf. Admin-only console messages and log lines are left ou
 - "Everyone else buys guns, ammunition and jammers at the black market. If a Civil Protection unit finds the scientist, the lab shuts down for ten minutes."  (text, line 204)
 - "Citizens pick up rumours. Talk to them (E) now and then."  (text, line 205)
 - "Ways for the Resistance to make money: write notes on what you see near a checkpoint or a unit (F2 > Resistance, needs paper) and sell them to the quartermaster; steal good parts off the factory line (R while holding one); or sell forged ration cards (but if too many turn up, the camp gets swept). On the board, only work that brings something in or delivers something pays credits; the rest pays experience."  (text, line 206)
-- "The Resistance's still brews four bottles of moonshine for the dealer from a ration, 2 water and 4 empty bottles (E on it, and come back in five minutes), the card table in a back room on rebel ground plays high card with the fund as the house, and now and then a Union paymaster walks the wages across the city with two units, his satchel half for the fund and half for those who took it."  (text, line 207)
+- "The Resistance's still brews eight bottles of moonshine for the dealer from a ration, 2 water and 8 empty bottles (E on it, and come back in five minutes), the card table in a back room on rebel ground is a pot game for up to four, high card or Twenty-one (the winner takes 70 per cent, the fund the rest), and now and then a Union paymaster walks the wages across the city with two units, his satchel half for the fund and half for those who took it."  (text, line 207)
 - "The Resistance: Freq 7 is only over the radio. Get your radio transmitter out (next to Hands) and talk, left click to call for backup (every Resistance player hears it and sees where you are, and a Member or higher gets a couple of idle fighters from nearby, who stay with you), or right click for its menu (a message, backup, your position). Anything that goes out on Freq 7 needs a Freq 7 radio and a radio transmitter; from Fighter up you're issued both, yours to keep (they can't be sold, dropped or handed over). F2 > Find the way follows a trail to the nearest rebel ground or the lab."  (text, line 208)
 - "Rebel zones that touch count as one camp: one quartermaster, one supply crate. He buys food back for 2 credits at most (food from his crate is free)."  (text, line 209)
 - "A role (Hacker, Father Grigori...) is added on top of your rank: you're still a Fighter working toward Lieutenant, but you carry the role's kit. To give up the role, join the faction again in F4."  (text, line 210)
@@ -1782,12 +1782,13 @@ Made from version c1268bf. Admin-only console messages and log lines are left ou
 
 `gamemodes/livingcity/gamemode/modules/client/cl_livingcity_cards.lua`
 
+- "Out of hands this hour"  (text, line 18)
+- "Short of the stake"  (text, line 18)
+- "High card"  (text, line 19)
 
 > Note for you (not shown in game): part of: open
 
-- "High card"  (window title, line 42)
-- "You win"  (label or button, line 54)
-- "House wins"  (text, line 54)
+- "Pot {pot}"  (text, line 147)
 
 ## cl_livingcity_career.lua (cl_livingcity_career.lua)
 
@@ -19267,94 +19268,98 @@ Made from version c1268bf. Admin-only console messages and log lines are left ou
 
 `gamemodes/livingcity/gamemode/modules/server/sv_livingcity_resistancemoney.lua`
 
-- "A Union paymaster is walking the shift wages across the city with an escort: take his satchel."  (text, line 102)
-
-> Note for you (not shown in game): the card table
-
-- "your share"  (text, line 109)
+- "A Union paymaster is walking the shift wages across the city with an escort: take his satchel."  (text, line 119)
+- "your share"  (text, line 136)
 
 > Note for you (not shown in game): part of: use still
 
-- "You need a ration packet, %d water and %d empty bottles."  (message, line 154)
+- "You need a ration packet, %d water and %d empty bottles."  (message, line 181)
 
 > Note for you (not shown in game): part of: dealer sale split
 
-- "%s%s sold to the dealer (%s)"  (message, line 241)
+- "%s%s sold to the dealer (%s)"  (message, line 268)
 
 > Note for you (not shown in game): part of: dealer rent
 
-- "The dealer's rent"  (text, line 276)
+- "The dealer's rent"  (text, line 303)
 
 > Note for you (not shown in game): off the board, and a job still going has nothing left to do
 
-- "you ran out of time"  (text, line 373)
+- "you ran out of time"  (text, line 400)
 
 > Note for you (not shown in game): part of: start paymaster
 
-- "nobody to send"  (text, line 380)
-- "nowhere to start from"  (text, line 382)
-- "nobody to send"  (text, line 384)
-- "The paymaster sets out %s with %d credits"  (message, line 402)
+- "nobody to send"  (text, line 407)
+- "nowhere to start from"  (text, line 409)
+- "nobody to send"  (text, line 411)
+- "The paymaster sets out %s with %d credits"  (message, line 429)
 
 > Note for you (not shown in game): part of: rob paymaster
 
-- "The paymaster's satchel"  (text, line 452)
+- "The paymaster's satchel"  (text, line 479)
 
 > Note for you (not shown in game): the Combine answer it as they do a looted supply drop: seen at it, wanted, and the units after you
 
-- "Looting Union supplies"  (text, line 461)
+- "Looting Union supplies"  (text, line 488)
 
 > Note for you (not shown in game): pressing E on something
 
-- "E on the paymaster"  (text, line 480)
+- "E on the paymaster"  (text, line 507)
 
 > Note for you (not shown in game): (and where the city hears E on any of its people: whichever of the two hears it first, it is taken once)
 
-- "E on the paymaster"  (text, line 486)
+- "E on the paymaster"  (text, line 513)
 
 > Note for you (not shown in game): an NPC dying
 
-- "the paymaster killed"  (text, line 503)
+- "the paymaster killed"  (text, line 530)
 
 > Note for you (not shown in game): His walk, his escort beside him, and the end of it.
 
-- "the satchel was picked up by the Union"  (text, line 515)
+- "the satchel was picked up by the Union"  (text, line 542)
 
 > Note for you (not shown in game): part of: tick
 
-- "out of time"  (text, line 520)
+- "out of time"  (text, line 547)
 
 > Note for you (not shown in game): a timer (regularly)
 
-- "his walk"  (text, line 551)
-- "the paymaster's day"  (text, line 569)
+- "his walk"  (text, line 578)
+- "the paymaster's day"  (text, line 596)
 
 > Note for you (not shown in game): part of: build
 
-- "Rob the paymaster"  (title, line 590)
+- "Rob the paymaster"  (title, line 617)
 
-> Note for you (not shown in game): One hand of high card. True, and the player's card, the house's card (2 to 14, the ace high) and whether they won; or false and why not.
+> Note for you (not shown in game): part of: settle21
 
-- "not here"  (text, line 663)
-- "no such bet"  (text, line 667)
-- "too soon"  (text, line 669)
+- "The card table's cut"  (text, line 796)
+
+> Note for you (not shown in game): part of: unseat
+
+- "The card table's cut"  (text, line 819)
+
+> Note for you (not shown in game): A hand, dealt by a seated player. Everyone seated who has hands left this hour puts the stake in (one short of it is stood up first), the city's people at most THEIRS; one card each; the highest card takes WINNER per cent of the pot (a tie splits it); the rest is the fund's. True and { pot, cut, each, seats in the hand }; or false and why not.
+
+- "not seated"  (text, line 950)
+- "not here"  (text, line 951)
+- "no stake"  (text, line 952)
+- "a hand is on"  (text, line 953)
+- "too soon"  (text, line 955)
 
 > Note for you (not shown in game): part of: card table deal
 
-- "the table won't take it"  (text, line 670)
+- "no hands left this hour"  (text, line 956)
+- "short of the stake"  (text, line 957)
+- "The card table's cut"  (text, line 991)
 
-> Note for you (not shown in game): one from a fresh deck each, two different cards (a rank in four suits)
+> Note for you (not shown in game): a timer (regularly)
 
-- "The card table paid out ({Name})"  (text, line 679)
-- "the table won't take it"  (text, line 679)
+- "the card table's seats"  (text, line 1012)
 
-> Note for you (not shown in game): part of: card table deal
+> Note for you (not shown in game): From the window: 0 stand up, 1 deal, 2 the stake (STAKES[n]), 3 Twenty-one's Card (n 1) or Stay (n 2), 4 the game (n). All of it is checked here.
 
-- "The card table's take"  (text, line 683)
-
-> Note for you (not shown in game): the game answering something done in a window (lc_cards_deal)
-
-- "a hand of cards"  (text, line 694)
+- "a hand of cards"  (text, line 1019)
 
 ## the Resistance's operations, and what the city does about them (sv_livingcity_resistanceops.lua)
 
@@ -26662,26 +26667,26 @@ Made from version c1268bf. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): Making things by hand (F3): just these, anywhere. Everything else (guns, ammunition, armour, jammers, bypass charges, smoke bombs, a radio tuned to Freq 7) is the Resistance lab's (LCS.Lab, below) or the black market's. private   out of any unit's sight (a tunnel or back room will do)
 
-- "Bent and filed scrap"  (description, line 579)
-- "Rags, torn into strips"  (description, line 580)
-- "Four broken gas masks, made into one that works"  (description, line 581)
+- "Bent and filed scrap"  (description, line 584)
+- "Rags, torn into strips"  (description, line 585)
+- "Four broken gas masks, made into one that works"  (description, line 586)
 
 > Note for you (not shown in game): (hand-made goods, to sell from a stall: sv_livingcity_employment.lua)
 
-- "Sew a rag doll to sell (the city pays about 18)"  (description, line 583)
-- "Hammer out a tin toy to sell (about 20)"  (description, line 584)
-- "Patch together a coat to sell (about 32)"  (description, line 585)
+- "Sew a rag doll to sell (the city pays about 18)"  (description, line 588)
+- "Hammer out a tin toy to sell (about 20)"  (description, line 589)
+- "Patch together a coat to sell (about 32)"  (description, line 590)
 
 > Note for you (not shown in game): The Resistance lab (sv_livingcity_lab.lua): what the scientist makes, for the Resistance only, and only what the quartermaster doesn't sell (the owner, 14 November: "anything the quartermaster sells should not appear at all in the lab"; guns, ammunition, smoke, forged cards, the transmitter, the jammer and the crowbar are the quartermaster's; the charged vest and the bypass charge are the lab's alone, later that day: `lab` in LCS.Black above). Bring him the materials (needs) and he makes it for nothing; or pay him: 60% of the dealer's price (never less than it sells back for). secs: how long he takes.
 
-- "A powered vest, fully charged (charge cells top it up)"  (description, line 602)
-- "A charge cell: twenty-five charge into your vest"  (description, line 603)
-- "Opens any door once, Combine doors too, and holds it open ten seconds"  (description, line 604)
-- "Weedkiller, cooked down, in a bottle with a rag: fire, which armour doesn't keep out"  (description, line 605)
+- "A powered vest, fully charged (charge cells top it up)"  (description, line 607)
+- "A charge cell: twenty-five charge into your vest"  (description, line 608)
+- "Opens any door once, Combine doors too, and holds it open ten seconds"  (description, line 609)
+- "Weedkiller, cooked down, in a bottle with a rag: fire, which armour doesn't keep out"  (description, line 610)
 
 > Note for you (not shown in game): (only once you've lived through lc_chip_dreams of the city's dreams: sv_livingcity_bedtime.lua)
 
-- "A foil hat: sleep in it and it keeps the dream out about one night in three. "The physics is... complicated." Contraband"  (description, line 608)
+- "A foil hat: sleep in it and it keeps the dream out about one night in three. "The physics is... complicated." Contraband"  (description, line 613)
 
 ## the sound guard (server and client) (sh_livingcity_soundguard.lua)
 

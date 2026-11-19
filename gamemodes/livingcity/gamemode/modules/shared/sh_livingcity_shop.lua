@@ -557,13 +557,18 @@ do
     local ref = {}
     for _, list in ipairs({ LCS.Goods, LCS.Black }) do
         for _, g in ipairs(list) do
-            if g.item then ref[g.item] = math.min(ref[g.item] or 1e9, g.price) end
+            -- (what one piece costs: a pack of five is five pieces; the owner, 19 November: buying five cigarettes for
+            -- 10 and selling them back at 4 each made credits out of nothing, "yes please fix")
+            if g.item then ref[g.item] = math.min(ref[g.item] or 1e9, g.price / (g.count or 1)) end
         end
     end
     for id, it in pairs(LCS.Items) do
         if not it.sell then
             local base = ref[id] or (((it.hunger or 0) + (it.thirst or 0)) / 5)
             it.sell = math.max(1, math.floor(base * 0.4))
+            -- (worth less than a credit a piece where it is sold, paper three for 2: bought back by nobody, or selling
+            -- it back would pay more than it cost)
+            if ref[id] and it.sell >= ref[id] then it.sell, it.tooCheap = nil, true end
         end
     end
 end
