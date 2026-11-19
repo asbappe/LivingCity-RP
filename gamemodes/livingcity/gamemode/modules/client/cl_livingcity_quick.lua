@@ -722,6 +722,14 @@ local function LeversPage()
         end)
     end
     items[#items].id = "shell"
+    -- the sealed quarter's door into the sewers: not a switch, a job for every unit (sv_livingcity_flush.lua).
+    -- Only where the map has the quarter; greyed with why when it can't be ordered.
+    local fl = GetGlobal2String("lc_flush", "")
+    if fl ~= "" then
+        local why = ({ on = "under way", done = "done today", weak = "the Resistance are quiet", nounits = "no units on duty", busy = "not now" })[fl]
+        items[#items + 1] = Can("Send the units to flush the sewers from the sealed quarter", function() Send("flush") end, why)
+        items[#items].id = "flush"
+    end
     return { title = "THE CITY'S LEVERS", items = items }
 end
 

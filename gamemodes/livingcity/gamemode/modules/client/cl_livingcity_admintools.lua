@@ -233,6 +233,7 @@ local function Build()
         Btn(r5, "Secret endings menu", function() if LC_CL.EndingsMenu then LC_CL.EndingsMenu() end end, 150)
         Btn(r5, "Leak the infestation now", function() Do("solo", "leak") end, 170)
         Btn(r5, "Shell a district now", function() Do("solo", "shell") end, 150)
+        Btn(r5, "Order the sewer flush now", function() Do("solo", "flush") end, 180)
     end
     -- territory: grow it now, for testing (superadmins; it grows along the path nodes)
     if state.superadmin then

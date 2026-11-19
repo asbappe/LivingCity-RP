@@ -214,6 +214,13 @@ local ACTIONS = {
             if not k then return false, tostring(landed) end
             return true, string.format("Shelling %s: %d canister(s) coming down, %d lot(s) of headcrabs under cover; in about %d seconds.", LC.BlockName and LC.BlockName(n) or n,
                 landed, covered, LC.ShellingConst.FLIGHT)
+        elseif v == "flush" then
+            -- (sv_livingcity_flush.lua: the job on both Combine boards now, whatever the day or the Resistance's strength)
+            if not (LC.Flush and LC.Flush.Start) then return false, "No sewer flush on this server." end
+            LC.Flush.MapForget()
+            local one, why = LC.Flush.Start()
+            if not one then return false, tostring(why) end
+            return true, "Flush the sewers: on the Combine's boards (F4). Take it as a unit."
         elseif string.sub(v, 1, 6) == "event:" then
             if not LC.Running then return false, "Start the city first." end
             if not (LC.StartEvent and LC.StartEvent(string.sub(v, 7))) then return false, "That event can't start now (another may be on)." end

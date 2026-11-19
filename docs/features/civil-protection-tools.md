@@ -23,7 +23,7 @@
 **Changes from the 7 November playtest.**
 - **Running isn't prison:** caught running the first or second time in an hour, a unit cuffs you, gives you three blows of the baton, laughs and says "All right, you can go." No cell and no standing lost. The third time in an hour is prison as before. Giving yourself up for running goes the same way.
 - **No shove for your own:** a unit never shoves the player it is escorting or who called it for backup, and nobody is told to stop running or move back in the infestation zone.
-- **Turrets and power banks are the Overwatch's** (and admins'): ordinary units and recruits no longer deploy them, and the buttons are hidden from them.
+- **Turrets and power banks are the Overwatch's** (and admins'): ordinary units and recruits no longer deploy them, and the buttons are hidden from them. **One exception (19 November):** a unit on the job Flush the sewers, at the containment wall and while the job asks for them, puts them up whatever their rank (`LC.FlushKit`, `docs/features/infestation-cleanup.md`).
 - **No Scanner Operator role:** any unit flies a scanner from a terminal (F2 > Unit tools).
 - **"Freeze"** plays "Don't move!" (the clip it pointed at isn't in the metrocop voice set).
 - **Backup joins your squad** for 5 minutes (was 2): chat says as each unit arrives, and they attack whoever you hit or whoever hurts you.
