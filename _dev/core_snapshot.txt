@@ -32,6 +32,7 @@ announce trigger day
 announce trigger drill
 announce trigger dusk
 announce trigger ended
+announce trigger execution
 announce trigger hunt
 announce trigger jog
 announce trigger lockdown
@@ -48,6 +49,7 @@ announce trigger question_why
 announce trigger raid
 announce trigger rations
 announce trigger rations_soon
+announce trigger rebel_killing
 announce trigger response
 announce trigger shelled
 announce trigger skirmish_raid
@@ -824,6 +826,7 @@ setting lc_eye_height = 61
 setting lc_fever_dream = 1
 setting lc_fighter_trust_jobs = 3
 setting lc_firebomb_secs = 12
+setting lc_firingsquad = 1
 setting lc_fixture_wear = 1
 setting lc_flash_hand = 1
 setting lc_foil_chance = 0.33
@@ -907,6 +910,7 @@ setting lc_infest_nests_per_patch = 4
 setting lc_infest_quiet_minutes = 10
 setting lc_infest_spread_minutes = 10
 setting lc_infodesk = 1
+setting lc_inform = 1
 setting lc_informants = 1
 setting lc_inherit_max = 200
 setting lc_inherit_pct = 25
@@ -1101,6 +1105,7 @@ setting lc_ratscar_pos = 3.4 2.6 -1.6 55
 setting lc_rdm_strikes_jail = 2
 setting lc_rdm_strikes_kick = 4
 setting lc_realistic_bonus = 0.2
+setting lc_rebel_answer = 1
 setting lc_rebel_auto = 1
 setting lc_rebel_bed_height = 8
 setting lc_rebel_cage = 1
