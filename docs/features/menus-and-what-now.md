@@ -117,4 +117,5 @@ Chat is busy, so what matters goes on the screen too (and stays in chat to scrol
 - **F1 > What now?:** the time and the weather, and the city's laws.
 - **F2 for a Division Leader and up:** Broadcast to the whole city, after the shift and bounties.
 - **F4 > Factions > Admin: testing tools > Staff tools:** the Dreams menu, the performance debugger, the lag monitor.
-Player texts that named these C menu paths name the new ones.
+- **F1 looking at a Resistance supply crate:** Donate food to the crate, for anyone but a unit (before, a citizen could only type `!donate`).
+Player texts that named C menu paths (tips, the guide, hints, shop lines, the staff ticket line) name the F1 to F4 ones instead (the owner, 19 November: "yes please reword those"). Units' HQ calls in those texts point to the radio (radio out, right click).

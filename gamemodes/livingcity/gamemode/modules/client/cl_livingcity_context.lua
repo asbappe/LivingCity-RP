@@ -169,7 +169,7 @@ local DATA = {
     },
     zone = {
         rebel = { "Rebel territory",
-            { "The black market is open ({+menu_context} > Getting by), and the bins have better finds", Fac("citizen") },
+            { "The quartermaster trades with you, and the bins have better finds", Fac("citizen") },
             { "Make guns and ammunition here ({gm_showspare1})", Fac("resistance") },
             { "Fighters shout one warning, then open fire. Kills here win ground back", Unit } },
         infest = { "The infestation",
@@ -181,7 +181,7 @@ local DATA = {
         combine = { "Combine only zone",
             { "Leave before the countdown runs out, or you're wanted", Trespassing } },
         prison = { "The prison",
-            { "A lockpick from a visitor opens your cell: {+menu_context} > This door > Pick the lock", Jailed } },
+            { "A lockpick from a visitor opens your cell: {quick} > Pick the lock", Jailed } },
     },
     faction = {
         cp = { "Civil Protection",

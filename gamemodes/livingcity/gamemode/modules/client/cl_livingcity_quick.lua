@@ -416,6 +416,9 @@ local function Context(me, unit, rebel)
     elseif e:GetNW2Bool("lc_body", false) then
         Add("Search the body's pockets", function() Send("searchbody", "", e) end)
         Add("Haul the body", function() Send("haul", "", e) end)
+    elseif e:GetNW2String("lc_label_kind", "") == "cache" and not unit then
+        -- the Resistance's supply crate: anyone but a unit can give it food (sv_livingcity_scavenge.lua, LC.Donate)
+        Add("Donate food to the crate", function() Send("donate") end)
     elseif cls == "func_door" or cls == "func_door_rotating" or cls == "prop_door_rotating" or cls == "func_movelinear" then
         Add("Rent / lock this door", function() Send("rent") end)
         Add("Pick the lock (lockpick)", function() Send("pick") end)

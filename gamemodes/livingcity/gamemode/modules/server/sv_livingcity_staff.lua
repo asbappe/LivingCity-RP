@@ -155,7 +155,7 @@ function LC.OpenTicket(ply, text)
     OpenCount()
     local staff = Staff()
     for _, s in ipairs(staff) do
-        s:ChatPrint(string.format("[Ticket #%d] %s: %s  (C > Help > Staff panel to answer)", t.id, ply:Nick(), text))
+        s:ChatPrint(string.format("[Ticket #%d] %s: %s  (F2 > Staff > Staff panel to answer)", t.id, ply:Nick(), text))
         s:EmitSound("buttons/blip1.wav", 50)
     end
     LC.StaffLogAdd("ticket", "#" .. t.id .. " opened by " .. Who(ply) .. ": " .. text, ply)

@@ -208,7 +208,7 @@ hook.Add("HUDPaint", "LivingCityLagWatch", function()
     local w, x, y = 420, ScrW() - 436, 90
     local lines = {}
     local function L(text, col) lines[#lines + 1] = { text, col or INK } end
-    L("LAG MONITOR (C > Help to turn off)", C_150_200_255)
+    L("LAG MONITOR (F4 > Factions > Admin to turn off)", C_150_200_255)
     if not r then
         L("measuring...", DIM)
     else

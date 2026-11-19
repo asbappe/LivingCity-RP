@@ -138,7 +138,7 @@ hook.Add("HUDPaint", "LivingCityHints", function()
         ly = ly + 19
     end
     -- gone before you finished reading? it's kept
-    draw.SimpleText("Read it again any time: " .. LC_CL.HintKeys("{+menu_context}") .. " > Tips I've seen", "LCHintTag", x + 16, ly + 2, A(DIM))
+    draw.SimpleText("Read it again any time: " .. LC_CL.HintKeys("{gm_showspare2}") .. " > Me and settings > Tips I've seen", "LCHintTag", x + 16, ly + 2, A(DIM))
     -- how long it stays up
     local left = math.Clamp(1 - t / h.dur, 0, 1)
     draw.RoundedBox(0, x + 4, y + H - 3, (W - 8) * left, 2, A(accent, 0.6))

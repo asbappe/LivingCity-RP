@@ -249,7 +249,7 @@ LCS.Items = {
     -- Order (sv_livingcity_cp.lua)
     ------------------------------------------------------------------------
     zipties         = { name = "Cuffs", model = "models/props_lab/box01a.mdl", sell = 1, -- (1, not 4: a unit's own never run out)
-                        desc = "Tie someone's hands: up close, looking at them, C > their name > Cuff them. Only someone with their hands up, knocked down, stopped by a unit, or taken from behind. Cuffed, they can't use anything; Drag walks them along, Uncuff lets them go. Units carry their own" },
+                        desc = "Tie someone's hands: up close, looking at them, F2 > Cuff them. Only someone with their hands up, knocked down, stopped by a unit, or taken from behind. Cuffed, they can't use anything; Drag walks them along, Uncuff lets them go. Units carry their own" },
     request_device  = { name = "Civil Protection call box", model = "models/props_lab/reciever01b.mdl", sell = 6,
                         desc = "A little handset that calls Civil Protection to where you are and tells them what's wrong: Call for help, beside it in your pockets (F3)" },
     ------------------------------------------------------------------------
@@ -519,7 +519,7 @@ LCS.Black = {
     { id = "chemicals", item = "chemicals", price = 6, desc = "Bought by the bottle. Nobody cleans that much." },
     { id = "seeds", item = "seeds", price = 12, desc = "Tomatoes, beans, maybe. Plant them in rebel territory." },
     { id = "canned_food", item = "canned_food", price = 14, desc = "Pre-war tins. Nobody asks where they come from." },
-    { id = "zipties", item = "zipties", count = 2, name = "Cuffs (2)", price = 20, desc = "Two pairs. Tie anyone's hands, a Civil Protection unit's included: up close, looking at them, C > their name > Cuff them. They must have their hands up, be down, be stopped by a unit, or you come from behind. Cuffed, they can't use anything, and Drag walks them along." },
+    { id = "zipties", item = "zipties", count = 2, name = "Cuffs (2)", price = 20, desc = "Two pairs. Tie anyone's hands, a Civil Protection unit's included: up close, looking at them, F2 > Cuff them. They must have their hands up, be down, be stopped by a unit, or you come from behind. Cuffed, they can't use anything, and Drag walks them along." },
     { id = "satchel", item = "satchel", price = 30, desc = "No questions about what goes in it." },
     { id = "spraypaint", item = "spraypaint", count = 3, name = "Spray cans (3)", price = 25, desc = "Let the city know we're still here." },
     { id = "pasteup", item = "pasteup", count = 3, name = "Paste-ups (3)", price = 20, desc = "Their walls, our words.", qm = true }, -- (the owner, 10 November: the dealer isn't Resistance)
