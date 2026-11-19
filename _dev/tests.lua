@@ -38159,7 +38159,8 @@ do
         "two on the job share that half equally (7 each of 15, the odd one to the fund), each counted once", fund() .. " " .. (LC.Credits(a) - ca) .. " " .. (LC.Credits(b) - cb))
     ca = LC.Credits(a)
     q = job(a, "res_propaganda")
-    ok(q ~= nil and q.done and fund() == 31 and LC.Credits(a) - ca == jobPay, "(any other job gives the fund nothing, and pays what it paid)", fund())
+    -- (flyers bring nothing in: experience only since the owner's word of 19 November, Nov19_JobPayShownTests)
+    ok(q ~= nil and q.done and fund() == 31 and LC.Credits(a) - ca == 0, "(any other job gives the fund nothing)", fund() .. " " .. (LC.Credits(a) - ca))
 end
 
 ------------------------------------------------------------------------
@@ -38462,6 +38463,322 @@ set("lc_speech_muster", 120)
 setFund(fundWas)
 end
 Nov18_ResistanceFundTests()
+
+function Nov19_JobPayShownTests()
+section("19 November: every job lists its credits, and what it puts in the Resistance's fund; Resistance jobs that bring nothing in pay experience only")
+-- The owner, 19 November: "every job should list the credits a player will receive if successful, or at least the range
+-- if dependent on success/metrics, and similarly the range of credits that will/can go into the resistance fund. this
+-- means all players feel responsible for helping grow the resistance fund." And, the same day: "Only jobs that bring in
+-- money: Raids, convoy hits, supply runs and rescues pay credits as now. Resistance jobs that bring in nothing (headcrab
+-- hunts, deliveries, scouting and the like) pay experience only. Citizen and Civil Protection jobs keep paying, since the
+-- Union pays them"; then "please be logical: a delivery would pay credits".
+local jobPay = GetConVar("lc_economy"):GetBool() and GetConVar("lc_directive_pay"):GetInt() or 0
+local made = {}
+local function person(name, f, special, x)
+    local p = newPlayer(name, f, special, x)
+    p.chat, p.lcProtectUntil = {}, 0
+    made[#made + 1] = p
+    return p
+end
+local function xpOf(p) return tonumber(p:GetPData("lcf_xp_" .. p:GetNW2String("lcf_faction", ""), 0)) or 0 end
+local function isRange(r) return istable(r) and tonumber(r[1]) ~= nil and tonumber(r[2]) ~= nil and r[1] >= 0 and r[1] <= r[2] end
+local function feeds(spec) -- (does this job put anything in the fund, by the fund's own tables?)
+    if istable(spec.tmpl) and LC.ResistanceFundJobKind(spec.tmpl.id) then return true end
+    for _, st in ipairs(spec.stages or {}) do
+        if st.kind == "count" and LC.ResistanceFundStepKinds[st.event] then return true end
+    end
+    return false
+end
+local nextPid = 919000
+local function post(t, f, p) -- (built and put on the board as LC.RefreshBoard does; nil when it can't be here)
+    local okA, avail = pcall(function() return not t.available or t.available(p) end)
+    if not (okA and avail) then return nil end
+    local spec
+    for i = 1, 5 do
+        local okB, s = pcall(t.build, p)
+        if okB and s then spec = s break end
+        if i == 2 then LC.BadDest = {} end
+    end
+    if not spec then return nil end
+    nextPid = nextPid + 1
+    spec.id, spec.tmpl, spec.violent, spec.faction = nextPid, t, t.violent, f
+    spec.squad, spec.during = spec.squad or t.squad, t.during
+    spec.expiresPost, spec.data = CurTime() + 999, spec.data or {}
+    LC.Postings[f] = LC.Postings[f] or {}
+    table.insert(LC.Postings[f], spec)
+    return spec
+end
+
+------------------------------------------------------------------------
+-- every job has a field for its side; every game says what it can pay
+------------------------------------------------------------------------
+do
+    local missing, kinds = {}, { "sweep", "line", "papers", "wiring", "triage", "rubble", "parcel", "hack", "drop", "search",
+        "laundry", "filing", "radio", "patdown", "breach", "scrub", "assemble" }
+    for _, t in ipairs(LC.QuestTemplates) do
+        if t.factions.resistance and type(t.brings) ~= "boolean" then missing[#missing + 1] = t.id end
+    end
+    ok(#missing == 0, "every job on the Resistance's board says whether it brings something in (brings = true or false)", table.concat(missing, ", "))
+    local noRange = {}
+    for _, k in ipairs(kinds) do
+        local d = LC.JobGameDef(k)
+        if not (d and d.payRange ~= nil) then noRange[#noRange + 1] = k end
+    end
+    ok(#noRange == 0, "every job game says what it can pay, beside its own pay (payRange)", table.concat(noRange, ", "))
+    local lo, hi = LC.JobGamePay(nil, "rubble", {}, nil)
+    ok(lo == 4 and hi == 6, "a game's range: the rubble pays a credit a block, 4 to 6", lo .. "-" .. hi)
+    lo, hi = LC.JobGamePay(nil, "wiring", {}, { title = "Union shift: Sanitation: Community service" })
+    ok(lo == 0 and hi == 0, "community service pays nothing for its game, as at the end of one", lo .. "-" .. hi)
+end
+
+------------------------------------------------------------------------
+-- the fund's numbers come from the fund
+------------------------------------------------------------------------
+do
+    local a, b, c, d = LC.ResistanceFundShares("run", 1)
+    ok(a == 15 and b == 15 and c == 15 and d == 15, "a supply run done alone: 15 to the fund, 15 to whoever did it (half of 30 each)", a .. " " .. b .. " " .. c .. " " .. d)
+    a, b, c, d = LC.ResistanceFundShares("run", 3)
+    ok(a == 15 and b == 15 and c == 5 and d == 5, "three on it: 5 each, the fund 15", a .. " " .. b .. " " .. c .. " " .. d)
+    a, b, c, d = LC.ResistanceFundShares("saved", 1)
+    ok(a == 5 and b == 15 and c == 5 and d == 15, "someone saved: 10 to 30, half to the fund (5-15) and half to whoever did it", a .. " " .. b .. " " .. c .. " " .. d)
+    a, b, c, d = LC.ResistanceFundShares("load", 1)
+    ok(a == 10 and b == 10 and c == 10 and d == 10, "a load pried out of a supply crate: 10 and 10", a .. " " .. b .. " " .. c .. " " .. d)
+    ok(LC.ResistanceFundJobKind("res_supplyrun") == "run" and LC.ResistanceFundJobKind("res_breakout") == "saved" and LC.ResistanceFundJobKind("res_crabhunt") == nil,
+        "which jobs feed it is the fund's own list")
+end
+
+------------------------------------------------------------------------
+-- every job on every board: what it says, and what finishing it pays
+------------------------------------------------------------------------
+local pool = {
+    citizen = person("PayCitizen", "citizen"), cp = person("PayCop", "cp"), ota = person("PayOTA", "ota"),
+    admin = person("PayAdmin", "admin"), resistance = person("PayRebel", "resistance", nil, 900), zombie = person("PayZombie", "zombie"),
+}
+local priest = person("PayPriest", "resistance", "chaplain", 200)
+local said, finished, cant, wrong, noFund, badFund, untagged = 0, 0, {}, {}, {}, {}, {}
+for _, t in ipairs(LC.QuestTemplates) do
+    local sides = {}
+    for f in pairs(t.factions) do sides[#sides + 1] = f end
+    table.sort(sides)
+    for _, f in ipairs(sides) do
+        local p = (t.id == "res_ministry") and priest or pool[f]
+        if p then
+            if LC.QuestOf[p] then LC.AbandonQuest(p) end
+            p.lcqNext = 0
+            local spec = post(t, f, p)
+            if not spec then
+                -- (not on a board here: what it would say, from the template alone)
+                local okP, credits = pcall(LC.PostingPay, p, { tmpl = t, faction = f, stages = {}, squad = t.squad })
+                if okP and isRange(credits) then said = said + 1 else wrong[#wrong + 1] = t.id .. " (" .. f .. "): no range" end
+                cant[#cant + 1] = t.id
+            else
+                local credits, fund, games = LC.PostingPay(p, spec)
+                if isRange(credits) then said = said + 1 else wrong[#wrong + 1] = t.id .. " (" .. f .. "): no range" end
+                if feeds(spec) ~= (fund ~= nil) then noFund[#noFund + 1] = t.id end
+                if fund and not isRange(fund) then badFund[#badFund + 1] = t.id end
+                -- (a step waiting for a game has the step that starts it say which, so its pay is known)
+                for i, st in ipairs(spec.stages or {}) do
+                    if st.kind == "count" and st.event == "game_done" and not st.game and not (spec.stages[i - 1] and spec.stages[i - 1].game) then
+                        untagged[#untagged + 1] = t.id
+                    end
+                end
+                -- finished at once (as an admin's test would): what the end pays, on its own. The pay along the way (its
+                -- games, and what the posting's own build pays in its steps) is the robot players' to check.
+                local c0, f0, x0 = LC.Credits(p), LC.ResistanceFund(), xpOf(p)
+                local okC = pcall(LC.AcceptPosting, p, spec.id)
+                local q = LC.QuestOf[p]
+                if okC and q then
+                    LC.FinishQuest(q, true)
+                    finished = finished + 1
+                    local got = LC.Credits(p) - c0
+                    local x = spec.extraCredits
+                    local along = games[1] + (istable(x) and x[1] or tonumber(x) or 0)
+                    if got > credits[2] or got < credits[1] - along then
+                        wrong[#wrong + 1] = string.format("%s (%s): paid %d, said %d-%d", t.id, f, got, credits[1], credits[2])
+                    end
+                    local put = LC.ResistanceFund() - f0
+                    if fund and (put < fund[1] or put > fund[2]) then
+                        wrong[#wrong + 1] = string.format("%s: the fund had %d, said %d-%d", t.id, put, fund[1], fund[2])
+                    elseif not fund and put ~= 0 then
+                        wrong[#wrong + 1] = string.format("%s: the fund had %d, said nothing", t.id, put)
+                    end
+                    if f == "resistance" and t.brings == false and (got ~= 0 or xpOf(p) <= x0) then
+                        wrong[#wrong + 1] = string.format("%s: brings nothing in, paid %d credits and %d XP", t.id, got, xpOf(p) - x0)
+                    end
+                end
+                if LC.QuestOf[p] then LC.AbandonQuest(p) end
+                p.lcqNext = 0
+            end
+        end
+    end
+end
+ok(#wrong == 0, "every job on every board says what it pays in credits (a number or a range), and finishing it pays within it", wrong[1], #wrong > 1 and (#wrong .. " in all: " .. table.concat(wrong, "; ")) or nil)
+ok(finished >= 30, "most can be finished here and compared", finished .. " finished; not built here: " .. table.concat(cant, ", "))
+ok(#noFund == 0, "a job says what it puts in the fund exactly when it feeds the fund", table.concat(noFund, ", "))
+ok(#badFund == 0, "and the fund's part is a range", table.concat(badFund, ", "))
+ok(#untagged == 0, "every game in a job is known to the board (the step that starts it says which game)", table.concat(untagged, ", "))
+
+------------------------------------------------------------------------
+-- the owner's rule for the Resistance: what brings something in pays, the rest pays experience only
+------------------------------------------------------------------------
+local function tmpl(id) for _, t in ipairs(LC.QuestTemplates) do if t.id == id then return t end end end
+local function finish(p, spec)
+    p.lcqNext = 0
+    local c0, x0, chat0 = LC.Credits(p), xpOf(p), #p.chat
+    LC.AcceptPosting(p, spec.id)
+    local q = LC.QuestOf[p]
+    if q then LC.FinishQuest(q, true) end
+    local lines = {}
+    for i = chat0 + 1, #p.chat do lines[#lines + 1] = tostring(p.chat[i]) end
+    return q ~= nil, LC.Credits(p) - c0, xpOf(p) - x0, table.concat(lines, " | ")
+end
+do
+    local rebel = person("PayRebel2", "resistance", nil, 900)
+    local crab = post(tmpl("res_crabhunt"), "resistance", rebel) or post(tmpl("res_propaganda"), "resistance", rebel)
+    if crab then
+        local credits = LC.PostingPay(rebel, crab)
+        local okF, got, xp = finish(rebel, crab)
+        ok(okF and got == 0 and xp > 0 and credits[2] == 0, "a Resistance job that brings nothing in (" .. crab.tmpl.id .. ") pays its experience and no credits, and says so", got .. " credits, " .. xp .. " XP, said " .. credits[2])
+    else
+        ok(false, "(a headcrab hunt or flyers could be built here)")
+    end
+    local run = post(tmpl("res_supply"), "resistance", rebel)
+    if run then
+        local credits = LC.PostingPay(rebel, run)
+        local okF, got, _, lines = finish(rebel, run)
+        ok(okF and got == jobPay and credits[1] == jobPay, "a delivery for the Resistance (a supply run from a contact) pays as before, quietly", got .. ": " .. lines)
+    end
+    local cit = person("PayCitizen2", "citizen")
+    local errand = post(tmpl("cit_rations"), "citizen", cit) or post(tmpl("cit_errand"), "citizen", cit)
+    if errand then
+        local okF, got, _, lines = finish(cit, errand)
+        ok(okF and got == jobPay and string.find(lines, "Assignments complete", 1, true) ~= nil, "a citizen's job pays as before (the Union pays it)", got .. ": " .. lines)
+    end
+    local cop = person("PayCop2", "cp")
+    local patrol = post(tmpl("cp_patrol"), "cp", cop)
+    if patrol then
+        local okF, got, _, lines = finish(cop, patrol)
+        ok(okF and got == jobPay and string.find(lines, "Directives complete", 1, true) ~= nil, "and a unit's", got .. ": " .. lines)
+    end
+    -- (the same job for a citizen and a fighter: the gun run's sixty is the quartermaster's, for either)
+    local gun = post(tmpl("cit_gunrun"), "resistance", rebel)
+    if gun and gun.extraCredits then
+        local credits = LC.PostingPay(rebel, gun)
+        ok(credits[1] == jobPay + 60 and credits[2] == jobPay + 60, "a gun run says the quartermaster's sixty on top", credits[1] .. "-" .. credits[2])
+    end
+    -- a story of the Resistance's that brings nothing in: Father Grigori's flock
+    local chain = LC.Chains.flock
+    local part = chain and chain.parts[chain.start]
+    local okB, spec = pcall(part.build, priest, {})
+    if okB and spec then
+        spec.story, spec.chain, spec.chainName, spec.tmpl, spec.faction = true, "flock", chain.name, { id = "flock/" .. chain.start }, "resistance"
+        local credits = LC.PostingPay(priest, spec)
+        ok(credits[2] == 0, "a Resistance story that brings nothing in (the flock) says no credits", credits[1] .. "-" .. credits[2])
+        ok(LC.QuestCredits(priest, { chain = "flock", board = chain.name }) == 0 and LC.QuestCredits(priest, { chain = "shift" }) > 0,
+            "and pays none, while a Union shift, whoever works it, is the Union's to pay")
+    end
+    local zed = pool.zombie
+    ok(LC.QuestCredits(zed, { board = "Urges" }) == 0, "(the infested's urges paid nothing before, and still)")
+end
+
+------------------------------------------------------------------------
+-- the boards: a citizen's, a unit's, the Resistance's
+------------------------------------------------------------------------
+do
+    local sent = {}
+    local realSend = LC.SendCompressed
+    LC.SendCompressed = function(msg, tbl, rec) if msg == "lcq_board" and rec and rec[1] then sent[rec[1]] = tbl end return realSend(msg, tbl, rec) end
+    local rebel = person("PayRebel3", "resistance", nil, 900)
+    post(tmpl("res_supplyrun"), "resistance", rebel)
+    post(tmpl("res_crabhunt"), "resistance", rebel)
+    local cit, cop = person("PayCitizen3", "citizen"), person("PayCop3", "cp")
+    for _, p in ipairs({ cit, cop, rebel }) do LC.SendBoard(p) end
+    LC.SendCompressed = realSend
+    local function check(p, who)
+        local b = sent[p]
+        if not (b and #b.postings > 0) then return ok(false, who .. "'s board was sent, with jobs on it") end
+        local bad, fed, paid = {}, 0, 0
+        for _, row in ipairs(b.postings) do
+            local posting
+            for _, x in ipairs(LC.Postings[LC.QuestFaction(p)] or {}) do if x.id == row.id then posting = x end end
+            for _, x in pairs(p.lcStoryPostings or {}) do if x.id == row.id then posting = x end end
+            if not isRange(row.credits) then bad[#bad + 1] = tostring(row.title) .. ": no credits" end
+            if posting and feeds(posting) ~= (row.fund ~= nil) then bad[#bad + 1] = tostring(row.title) .. ": the fund" end
+            if row.fund then fed = fed + 1 end
+            if isRange(row.credits) and row.credits[2] > 0 then paid = paid + 1 end
+        end
+        ok(#bad == 0, who .. "'s board carries each job's credits, and the fund's part only for those that feed it", bad[1])
+        return fed, paid
+    end
+    local fedC = check(cit, "a citizen")
+    local fedU, paidU = check(cop, "a unit")
+    local fedR = check(rebel, "the Resistance")
+    ok(fedC == 0 and fedU == 0, "(nothing on a citizen's or a unit's board feeds the fund)", tostring(fedC) .. " " .. tostring(fedU))
+    ok((paidU or 0) > 0, "(a unit's jobs pay credits)")
+    ok((fedR or 0) >= 1, "the supply run on the Resistance's board says what it puts in the fund", tostring(fedR))
+    -- the words, as the board draws them
+    local text = LC_CL and LC_CL.QuestPayText
+    if text then
+        ok(text({ credits = { 10, 10 } }) == ", 10 credits" and text({ credits = { 25, 40 }, fund = { 5, 15 } }) == ", 25-40 credits, fund +5-15"
+            and text({ credits = { 0, 0 } }) == "" and text({ credits = { 0, 0 }, fund = { 10, 10 } }) == ", fund +10", "the board's line: \"10 credits\", \"25-40 credits, fund +5-15\"; nothing for none")
+    end
+end
+
+------------------------------------------------------------------------
+-- an admin's copy of every job's pay (the owner, 19 November: "can you please add a 'copy to clipboard' button that
+-- shows only for admins?")
+------------------------------------------------------------------------
+do
+    local sent, boards = {}, {}
+    local realSend = LC.SendCompressed
+    LC.SendCompressed = function(msg, tbl, rec)
+        if msg == "lcq_paylist" then sent[#sent + 1] = { to = rec and rec[1], text = tbl and tbl.text } end
+        if msg == "lcq_board" and rec and rec[1] then boards[rec[1]] = tbl end
+        return realSend(msg, tbl, rec)
+    end
+    local nobody, boss = person("PayNotAdmin", "citizen"), person("PayIsAdmin", "citizen")
+    boss.admin = true
+    _netcall("lcq_paylist", nobody)
+    ok(#sent == 0, "a player who is not an admin gets nothing for asking for the list", #sent)
+    _netcall("lcq_paylist", boss)
+    local text = sent[1] and sent[1].to == boss and sent[1].text or ""
+    local lines = {}
+    for l in string.gmatch(text .. "\n", "(.-)\n") do lines[#lines + 1] = l end
+    ok(string.find(lines[1] or "", game.GetMap(), 1, true) ~= nil and string.find(lines[1] or "", os.date("%Y-%m-%d"), 1, true) ~= nil,
+        "an admin gets it: the first line has the map and the date", lines[1])
+    local want, bad = 0, {}
+    for _, t in ipairs(LC.QuestTemplates) do for _ in pairs(t.factions) do want = want + 1 end end
+    local parts = 0
+    for _, c in ipairs(LC.ChainList) do if c.id ~= "shift" then for _ in pairs(c.parts or {}) do parts = parts + 1 end end end
+    local sides, stories, shifts = 0, 0, 0
+    for i = 2, #lines do
+        local l = lines[i]
+        if not string.match(l, "^[^|]+ | [^|]+ | [%+%?%d]+%d* XP | %d+%-?%d* credits") then bad[#bad + 1] = l end
+        if string.sub(l, 1, 6) == "Story " then stories = stories + 1
+        elseif string.sub(l, 1, 12) == "Union shift " then shifts = shifts + 1
+        else sides = sides + 1 end
+    end
+    ok(sides == want, "a line for every job on every side's board", sides .. " of " .. want)
+    ok(stories == parts, "and for every part of every story", stories .. " of " .. parts)
+    ok(shifts >= #(LCJ and LCJ.Occupations or {}), "and every Union job's shifts", shifts)
+    ok(#bad == 0, "each line: side | title | XP | credits (| fund)", bad[1])
+    ok(string.find(text, "Resistance | ", 1, true) ~= nil and string.find(text, " | fund +", 1, true) ~= nil, "the Resistance's jobs that feed the fund say so")
+    _netcall("lcq_paylist", boss)
+    ok(#sent == 1, "asked again at once: nothing more (once in five seconds)", #sent)
+    LC.SendBoard(boss)
+    LC.SendBoard(nobody)
+    ok(boards[boss] and boards[boss].admin == true and boards[nobody] and boards[nobody].admin == nil,
+        "the board tells an admin's game to draw the button, and nobody else's")
+    LC.SendCompressed = realSend
+end
+
+for _, p in ipairs(made) do
+    if LC.QuestOf[p] then LC.AbandonQuest(p) end
+    hook.Run("PlayerDisconnected", p)
+    p:Remove()
+end
+end
+Nov19_JobPayShownTests()
 
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")
 ;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)

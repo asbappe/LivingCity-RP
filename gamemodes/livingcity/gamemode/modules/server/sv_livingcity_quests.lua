@@ -24,7 +24,7 @@
 
 if CLIENT then return end
 
-for _, n in ipairs({ "lcq_board", "lcq_accept", "lcq_abandon", "lcq_state", "lcq_choice_open", "lcq_choice", "lcq_request" }) do
+for _, n in ipairs({ "lcq_board", "lcq_accept", "lcq_abandon", "lcq_state", "lcq_choice_open", "lcq_choice", "lcq_request", "lcq_paylist" }) do
     util.AddNetworkString(n)
 end
 
@@ -1438,11 +1438,13 @@ local function GameStage(text) return Count("game_done", 1, text) end
 local function GameGo(pos, text, kind, opts, r)
     local go = Goto(pos, text, r or 150)
     go.onDone = function(q) if IsValid(q.owner) and LC.JobGameStart then LC.JobGameStart(q.owner, kind, q, opts) end end
+    go.game, go.gameOpts = kind, opts -- (what the job board reads its pay from: LC.PostingPay)
     return go
 end
 local function GameNow(kind, text, opts)
     local st = GameStage(text)
     st.onEnter = function(q) if IsValid(q.owner) and LC.JobGameStart then LC.JobGameStart(q.owner, kind, q, opts) end end
+    st.game, st.gameOpts = kind, opts
     return st
 end
 
@@ -1873,7 +1875,7 @@ T{
 }
 
 T{
-    id = "res_takeground", factions = { resistance = true }, violent = true, squad = 6,
+    id = "res_takeground", brings = false, factions = { resistance = true }, violent = true, squad = 6,
     available = function()
         for _, seed in ipairs(LC.TerritorySeeds and LC.TerritorySeeds("rebel") or {}) do
             if LC.TerritoryCanGrow(seed) then return true end
@@ -1921,7 +1923,7 @@ T{
 }
 
 T{
-    id = "res_supplyrun", factions = { resistance = true }, squad = 4,
+    id = "res_supplyrun", brings = true, factions = { resistance = true }, squad = 4,
     available = function()
         for _, r in pairs(LC.RebelProps or {}) do if IsValid(r.cache) then return true end end
         return false
@@ -1979,7 +1981,7 @@ end
 
 -- Smuggling for the black market: guns out to the Resistance, or parts in.
 T{
-    id = "cit_gunrun", factions = { citizen = true, resistance = true },
+    id = "cit_gunrun", brings = true, factions = { citizen = true, resistance = true },
     build = function(ply)
         local qm = Quartermaster()
         local home, homeName
@@ -2029,6 +2031,7 @@ T{
         end
         return {
             title = partsRun and ("Parts pickup " .. where) or ("Gun run " .. where), reward = 30, limit = 720, failOnArrest = true,
+            extraCredits = (not partsRun) and 60 or nil, -- (the quartermaster's sixty, at the end: what the job board shows)
             desc = partsRun and ("A smuggler has left gun parts for you " .. where .. ". Pick them up and take them home without getting searched.")
                 or ("A crate of guns is waiting " .. where .. ". Get it to the Resistance quartermaster and you're paid sixty credits."),
             stages = { take, bring },
@@ -2423,7 +2426,7 @@ T{
 ------------------------------------------------------------------------
 
 T{
-    id = "res_supply", factions = { resistance = true },
+    id = "res_supply", brings = true, factions = { resistance = true },
     build = function(ply)
         local a = Spot(ply, 600, 2500)
         if not a then return nil end
@@ -2449,7 +2452,7 @@ T{
 }
 
 T{
-    id = "res_propaganda", factions = { resistance = true },
+    id = "res_propaganda", brings = false, factions = { resistance = true },
     build = function(ply)
         local spots = { Spot(ply, 400, 2500), Spot(ply, 400, 2500), Spot(ply, 400, 2500) }
         if not spots[3] then return nil end
@@ -2476,7 +2479,7 @@ T{
 }
 
 T{
-    id = "res_sabotage", factions = { resistance = true }, violent = true,
+    id = "res_sabotage", brings = false, factions = { resistance = true }, violent = true,
     available = function() return #LC.PointsOfKind("checkpoint") > 0 end,
     build = function(ply)
         local cp = Pick(LC.PointsOfKind("checkpoint"))
@@ -2503,7 +2506,7 @@ T{
 }
 
 T{
-    id = "res_jailbreak", factions = { resistance = true },
+    id = "res_jailbreak", brings = true, factions = { resistance = true },
     available = function()
         if #LC.PointsOfKind("cell") == 0 then return false end
         for npc, st in pairs(LC.NPCs or {}) do if IsValid(npc) and st.state == "jailed" then return true end end
@@ -2542,7 +2545,7 @@ T{
 }
 
 T{
-    id = "res_recruit", factions = { resistance = true },
+    id = "res_recruit", brings = false, factions = { resistance = true },
     available = function() return LC.Running and CountRole("citizen") >= 3 end,
     build = function()
         local last = 0
@@ -2562,7 +2565,7 @@ T{
 }
 
 T{
-    id = "res_deaddrop", factions = { resistance = true },
+    id = "res_deaddrop", brings = true, factions = { resistance = true },
     build = function(ply)
         local a, b = Spot(ply, 500, 2500), Spot(ply, 500, 2500)
         if not a or not b then return nil end
@@ -2586,7 +2589,7 @@ T{
 -- The Smuggler's trade (a Resistance role, F4): the cell's cargo from the quartermaster, out
 -- to three drops in the city past the units, knowing exactly what's in it.
 T{
-    id = "res_smuggle", factions = { resistance = true },
+    id = "res_smuggle", brings = true, factions = { resistance = true },
     available = function(ply) return IsValid(ply) and ply:GetNW2String("lcf_special", "") == "smuggler" and GamesOn() end,
     build = function(ply)
         local qm = Quartermaster()
@@ -2610,7 +2613,7 @@ T{
 }
 
 T{
-    id = "res_terminal", factions = { resistance = true },
+    id = "res_terminal", brings = false, factions = { resistance = true },
     -- hacking a terminal is the Hacker's trade (the owner, 14 November: "I am not a hacker,
     -- so please restrict that job to just a hacker role")
     available = function(ply) return GamesOn() and Special(ply) == "hacker" end,
@@ -2655,7 +2658,7 @@ T{
 }
 
 T{
-    id = "res_ambush", factions = { resistance = true }, violent = true,
+    id = "res_ambush", brings = false, factions = { resistance = true }, violent = true,
     available = function(ply) return LC.Running and SecurityCount() >= 2 and (LC.PlayerIsHunted(ply) or RankIndex(ply) >= 3) end,
     build = function()
         return {
@@ -2670,7 +2673,7 @@ T{
 }
 
 T{
-    id = "res_rescue", factions = { resistance = true },
+    id = "res_rescue", brings = true, factions = { resistance = true },
     available = function() return #LC.ZonesOfKind("rebel") > 0 end,
     build = function(ply)
         -- (the owner, 14 November: "is rebel territory not safety?": the fugitive hides out in the
@@ -2725,7 +2728,7 @@ local function OtherRebelGround(ply)
 end
 LC.OtherRebelGround = OtherRebelGround
 T{
-    id = "res_goground", factions = { resistance = true }, manhunt = true,
+    id = "res_goground", brings = false, factions = { resistance = true }, manhunt = true,
     available = function() return false end, -- (given, never posted: LC.ManhuntWayOut)
     build = function(ply)
         local z, onRebelGround = OtherRebelGround(ply)
@@ -2790,7 +2793,7 @@ timer.Create("LivingCityManhuntWayOut", 4, 0, function()
 end)
 
 T{
-    id = "res_ministry", factions = { resistance = true },
+    id = "res_ministry", brings = false, factions = { resistance = true },
     available = function(ply) return Special(ply) == "chaplain" end,
     build = function()
         return {
@@ -3495,7 +3498,7 @@ T{
 }
 
 T{
-    id = "res_warnblock", factions = { resistance = true }, during = { "raid" }, squad = 6,
+    id = "res_warnblock", brings = false, factions = { resistance = true }, during = { "raid" }, squad = 6,
     available = function() return LC.Running and #LC.ZonesOfKind("block") > 0 end,
     build = function(ply)
         local n, z = SomeBlock()
@@ -3532,7 +3535,7 @@ T{
 }
 
 T{
-    id = "res_curfewrun", factions = { resistance = true }, during = { "curfew", "lockdown" }, squad = 4,
+    id = "res_curfewrun", brings = true, factions = { resistance = true }, during = { "curfew", "lockdown" }, squad = 4,
     available = function() return LC.Running end,
     build = function(ply)
         local from = Spot(ply, 600, 2500)
@@ -3798,6 +3801,85 @@ hook.Add("LivingCityOutbreak", "LivingCityDirectives", function()
     LC.PostDirective("cp_infest")
 end)
 
+-- What a job pays, as its posting on the board says it (the owner, 19 November: "every job should list the credits a
+-- player will receive if successful, or at least the range if dependent on success/metrics, and similarly the range of
+-- credits that will/can go into the resistance fund. this means all players feel responsible for helping grow the
+-- resistance fund"). For this player: the credits they have if it succeeds, { lo, hi }; what it puts in the
+-- Resistance's fund, { lo, hi }, or nil when it puts nothing in; and what its games add, { lo, hi }. Read from where
+-- each is paid, so a change of pay changes what the board says:
+--   the board's pay for any job   LC.QuestCredits (sv_livingcity_economy.lua), as it is paid at the end
+--   what the job pays of its own  extraCredits on the posting (from its build) or on its template: a number,
+--                                 { lo, hi }, or a function (ply, posting) giving either
+--   its games                     each step that starts one (st.game, st.gameOpts: GameGo, GameNow) and those a choice
+--                                 may add (posting.games: { kind, opts, maybe }), by LC.JobGamePay (sv_livingcity_jobgames.lua)
+--   the fund                      the take of each success the job is made of, and the share of it to those who took
+--                                 part, by LC.ResistanceFundShares (sv_livingcity_resistancefund.lua); a share depends
+--                                 on how many are on the job, so it is a range for a job more than one can take
+-- A Resistance job that brings nothing in pays experience only, its own pay and its games' too (LC.QuestBringsNothing).
+function LC.PostingPay(ply, p)
+    if not istable(p) then return { 0, 0 }, nil, { 0, 0 } end
+    local f = p.faction or LC.QuestFaction(ply)
+    local q = { side = f, tmpl = p.tmpl, title = p.title, chain = p.story and p.chain or nil, board = p.story and p.chainName or (BOARDS[f] or "Jobs") }
+    local lo, hi = 0, 0
+    local function add(a, b)
+        a = math.max(0, math.floor(tonumber(a) or 0))
+        lo, hi = lo + a, hi + math.max(a, math.floor(tonumber(b) or a))
+    end
+    add(LC.QuestCredits and LC.QuestCredits(ply, q) or 0)
+    if not (LC.QuestBringsNothing and LC.QuestBringsNothing(ply, q)) then
+        local x = p.extraCredits
+        if x == nil and istable(p.tmpl) then x = p.tmpl.extraCredits end
+        if isfunction(x) then
+            local okX, v = LC.Try(x, ply, p)
+            x = okX and v or nil
+        end
+        if istable(x) then add(x[1], x[2]) elseif tonumber(x) then add(x) end
+    end
+    local games = { 0, 0 }
+    if LC.JobGamePay then
+        local from
+        for _, st in ipairs(p.stages or {}) do
+            if st.game then
+                local a, b = LC.JobGamePay(ply, st.game, st.gameOpts, q, st.pos or from)
+                games[1], games[2] = games[1] + a, games[2] + b
+            end
+            from = st.pos or from
+        end
+        for _, g in ipairs(p.games or {}) do
+            local a, b = LC.JobGamePay(ply, g.kind, g.opts, q, g.from or (g.opts and g.opts.pos))
+            games[1], games[2] = games[1] + (g.maybe and 0 or a), games[2] + b
+        end
+    end
+    add(games[1], games[2])
+    local fund
+    if LC.ResistanceFundShares then
+        local most = (p.story or (istable(p.tmpl) and p.tmpl.solo)) and 1 or math.max(1, cvSquad:GetInt(), p.squad or 0)
+        local kind = istable(p.tmpl) and LC.ResistanceFundJobKind and LC.ResistanceFundJobKind(p.tmpl.id)
+        if kind then
+            -- (the one success, shared among everyone on the job: one of them, or as many as can join)
+            local kLo, kHi, eLo, eHi
+            for n = 1, most do
+                local a, b, c, d = LC.ResistanceFundShares(kind, n)
+                kLo, kHi, eLo, eHi = math.min(kLo or a, a), math.max(kHi or b, b), math.min(eLo or c, c), math.max(eHi or d, d)
+            end
+            fund = { kLo, kHi }
+            add(eLo, eHi)
+        end
+        for _, st in ipairs(p.stages or {}) do
+            local sk = st.kind == "count" and LC.ResistanceFundStepKinds and LC.ResistanceFundStepKinds[st.event]
+            if sk then
+                -- (each time, a success of its own, and the share is had by the one who did it: alone, all of them)
+                local times = math.max(1, math.floor(tonumber(st.need) or 1))
+                local a, b, c, d = LC.ResistanceFundShares(sk, 1)
+                fund = fund or { 0, 0 }
+                fund[1], fund[2] = fund[1] + times * a, fund[2] + times * b
+                add(most == 1 and times * c or 0, times * d)
+            end
+        end
+    end
+    return { lo, hi }, fund, games
+end
+
 function LC.SendBoard(ply)
     if not cvOn:GetBool() then return ply:ChatPrint("[Miscount] Quests are turned off on this server.") end
     local list, f = LC.RefreshBoard(ply)
@@ -3807,23 +3889,32 @@ function LC.SendBoard(ply)
     -- a stalker's board has its work on it (The Stalker's Lot), and nothing else
     local stalker = LC.PlayerIsStalker and LC.PlayerIsStalker(ply)
     if stalker then list = {} end
+    -- (what each pays, beside its experience: LC.PostingPay. Nothing of credits while the economy is off.)
+    local eco = GetConVar("lc_economy")
+    local paid = not eco or eco:GetBool()
+    local function Pay(row, p)
+        if not paid then return row end
+        local okP, credits, fund = LC.Try(LC.PostingPay, ply, p)
+        if okP then row.credits, row.fund = credits, fund end
+        return row
+    end
     for _, p in ipairs(LC.StoryPostings and LC.StoryPostings(ply) or {}) do
         if not stalker or p.chain == "stalker" then
-            out[#out + 1] = {
+            out[#out + 1] = Pay({
                 id = p.id, title = p.title, desc = p.desc, reward = p.reward, violent = false, limit = p.limit,
                 taken = p.q and 1 or 0, max = 1, mine = mine ~= nil and mine.posting == p,
                 story = true, flat = p.flat, chain = p.chainName, part = p.partNum,
-            }
+            }, p)
         end
     end
     for _, p in ipairs(list) do
         -- (a job for some of a side only is not on the others' board at all: tmpl.sees, the job to kill the Administrator)
         if not (p.tmpl and p.tmpl.sees and not p.tmpl.sees(ply)) then
-            out[#out + 1] = {
+            out[#out + 1] = Pay({
                 id = p.id, title = p.title, desc = p.desc, reward = p.reward, violent = p.violent == true,
                 limit = p.limit, taken = p.q and #Members(p.q) or 0, max = (p.tmpl and p.tmpl.solo) and 1 or math.max(cvSquad:GetInt(), p.squad or 0), -- (solo: one holder)
                 mine = mine ~= nil and mine.posting == p,
-            }
+            }, p)
         end
     end
     local jobs
@@ -3843,6 +3934,7 @@ function LC.SendBoard(ply)
     LC.SendCompressed("lcq_board", {
         jobs = jobs, credits = LC.Credits and LC.Credits(ply) or nil, standing = LC.Standing and LC.Standing(ply) or nil,
         board = BOARDS[f] or "Jobs", faction = f, postings = out, active = mine ~= nil,
+        admin = ply:IsAdmin() or nil, -- (the button that copies every job's pay: LC.JobPayList)
         traits = { loyalty = LC.Trait(ply, "loyalty"), sympathy = LC.Trait(ply, "sympathy"), corruption = LC.Trait(ply, "corruption") },
         wait = math.max(0, math.ceil((ply.lcqNext or 0) - CurTime())),
     }, { ply })
@@ -3991,6 +4083,82 @@ net.Receive("lcq_choice", function(_, ply)
     local qid, idx = net.ReadUInt(32), net.ReadUInt(8)
     LC.ResolveChoice(ply, qid, idx)
 end)
+-- The pay of every job the server knows, as plain text for an admin to paste somewhere and weigh (the owner, 19 November:
+-- "can you please add a 'copy to clipboard' button that shows only for admins?"): a first line with the map and the
+-- date, then a line a job, by side (as the boards are), the stories part by part, and every kind of shift of each Union
+-- job. Each is built as it would be for this player, standing in for whoever takes it; a job that can't be built now
+-- says so, with what its template alone says it pays. "Side | title | +XP | credits | fund +lo-hi".
+local SIDE_NAMES = { citizen = "Citizens", cp = "Civil Protection", ota = "Overwatch", admin = "Administrator", resistance = "Resistance", zombie = "Infested" }
+local SIDE_ORDER = { "citizen", "cp", "ota", "admin", "resistance", "zombie" }
+function LC.JobPayList(ply)
+    local function R(r) return (r[1] == r[2]) and tostring(r[1]) or (r[1] .. "-" .. r[2]) end
+    local lines = { string.format("Job pay on %s, %s", game.GetMap(), os.date("%Y-%m-%d %H:%M")) }
+    local function Line(side, spec, fallback)
+        local okP, credits, fund = LC.Try(LC.PostingPay, ply, spec)
+        if not okP or not istable(credits) then return end
+        local title = spec.title or (fallback .. " (can't be built now)")
+        local s = string.format("%s | %s | %s XP | %s credits", side, title, spec.reward and ("+" .. spec.reward) or "?", R(credits))
+        if fund then s = s .. " | fund +" .. R(fund) end
+        lines[#lines + 1] = s
+    end
+    local function Built(build, ...)
+        local okB, spec = LC.Try(build, ...)
+        return (okB and istable(spec)) and spec or nil
+    end
+    for _, f in ipairs(SIDE_ORDER) do
+        for _, t in ipairs(LC.QuestTemplates) do
+            if t.factions[f] then
+                local spec = Built(t.build, ply) or { stages = {} }
+                spec.tmpl, spec.faction, spec.squad = t, f, spec.squad or t.squad
+                Line(SIDE_NAMES[f], spec, t.id)
+            end
+        end
+    end
+    for _, chain in ipairs(LC.ChainList) do
+        if chain.id ~= "shift" then
+            local f = chain.special == "chaplain" and "resistance" or nil
+            for _, s in ipairs(SIDE_ORDER) do if not f and chain.factions[s] then f = s end end
+            f = f or "citizen"
+            local ids = {}
+            for id in pairs(chain.parts or {}) do ids[#ids + 1] = id end
+            table.sort(ids, function(a, b) return (chain.parts[a].num or 1) < (chain.parts[b].num or 1) or ((chain.parts[a].num or 1) == (chain.parts[b].num or 1) and tostring(a) < tostring(b)) end)
+            for _, id in ipairs(ids) do
+                local def = chain.parts[id]
+                local spec = Built(def.build, ply, {}) or { stages = {} }
+                if spec.title then
+                    spec.title = chain.flat and string.format("%s: %s", chain.name, spec.title) or string.format("%s, part %d: %s", chain.name, def.num or 1, spec.title)
+                end
+                spec.story, spec.chain, spec.chainName, spec.tmpl, spec.faction = true, chain.id, chain.name, { id = chain.id .. "/" .. id }, f
+                Line("Story (" .. SIDE_NAMES[f] .. ")", spec, chain.name .. ", " .. tostring(id))
+            end
+        end
+    end
+    for _, o in ipairs(LCJ and LCJ.Occupations or {}) do
+        local any = false
+        for _, build in ipairs(LC.ShiftBuilders and LC.ShiftBuilders(o.id) or {}) do
+            local spec = Built(build, ply, o)
+            if spec then
+                any = true
+                spec.title = string.format("Union shift: %s: %s", o.name, tostring(spec.title))
+                spec.story, spec.chain, spec.chainName, spec.tmpl, spec.faction = true, "shift", "Union shift", { id = "shift/work" }, "citizen"
+                Line("Union shift", spec, o.name)
+            end
+        end
+        if not any then
+            Line("Union shift", { story = true, chain = "shift", chainName = "Union shift", tmpl = { id = "shift/work" }, faction = "citizen", stages = {} }, "Union shift: " .. tostring(o.name))
+        end
+    end
+    return table.concat(lines, "\n")
+end
+
+net.Receive("lcq_paylist", function(_, ply)
+    if not (IsValid(ply) and ply:IsAdmin()) then return end
+    if (ply.lcPayListAt or 0) > CurTime() then return end
+    ply.lcPayListAt = CurTime() + 5
+    local okL, text = LC.Try(LC.JobPayList, ply)
+    if okL and isstring(text) then LC.SendCompressed("lcq_paylist", { text = text }, { ply }) end
+end)
+
 net.Receive("lcq_request", function(_, ply)
     SendState(ply)
     local q = LC.QuestOf[ply]

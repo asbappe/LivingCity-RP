@@ -113,6 +113,18 @@ function ParcelWay(g)
 end
 
 LC.JobGameDefine("parcel", {
+    -- 3 a stop (6 on a smuggling run), a credit for every 10 seconds to spare of the time it allows (from where it starts),
+    -- 2 for never being searched, and 8 from a sender who owned up (10 for a smuggling run). Seized or refused: nothing.
+    payRange = function(opts, from)
+        local stops = opts.stops or {}
+        local dist, at = 0, from
+        for _, s in ipairs(stops) do
+            if at and s.pos then dist = dist + at:Distance(s.pos) end
+            at = s.pos or at
+        end
+        local smuggle = opts.smuggle == true
+        return 0, #stops * (smuggle and 6 or 3) + math.floor((45 + dist / 190) / 10) + 2 + (smuggle and 10 or SMUGGLE_BONUS)
+    end,
     start = function(g)
         g.title = "Parcel run"
         g.stops = g.opts.stops or {}
@@ -290,6 +302,8 @@ local function NextSweep(g, now)
 end
 
 LC.JobGameDefine("hack", {
+    -- 8 when it opens, 6 more when the scanner never saw you, 2 more for no misses; the alarm: 2 for each catch before it
+    payRange = { 0, 16 },
     start = function(g)
         g.title = g.opts.title or "Records terminal"
         g.what = g.opts.what or "the records terminal"
@@ -401,6 +415,8 @@ local DROP_SPOTS = {
 local HIDE_SECS = 2.5
 
 LC.JobGameDefine("drop", {
+    -- 6 when it is hidden, 4 more for no hiding place burned, 2 more when nobody noticed; seen at every one: nothing
+    payRange = { 0, 12 },
     start = function(g)
         g.title = "Dead drop"
         local center = g.opts.pos or g.ply:GetPos()
@@ -538,6 +554,8 @@ local function Burn(g)
 end
 
 LC.JobGameDefine("search", {
+    -- what is logged from every pocket (3 at most each), 3 more when the overseer caught nothing
+    payRange = function() return 0, BODIES * #POCKETS * 3 + 3 end,
     start = function(g)
         g.title = "Searching the dead"
         g.slab = g.opts.pos or (g.ply:GetPos() + g.ply:GetForward() * 70)
@@ -641,6 +659,8 @@ local function LaundryPanel(g)
 end
 
 LC.JobGameDefine("laundry", {
+    -- a credit for each uniform sorted right and each pocket turned in, 3 more for none in the wrong bin
+    payRange = function() return 0, 2 * UNIFORMS + 3 end,
     start = function(g)
         g.title = "Sorting"
         local divs = Shuffle(table.Copy(DIVISIONS))
@@ -764,6 +784,8 @@ local function FilingPanel(g)
 end
 
 LC.JobGameDefine("filing", {
+    -- a credit for each form filed right, 3 more for none wrong
+    payRange = function() return 0, FORMS + 3 end,
     start = function(g)
         g.title = "Filing"
         g.n, g.right, g.wrong = 0, 0, 0
@@ -922,6 +944,9 @@ local function RadioDone(g)
 end
 
 LC.JobGameDefine("radio", {
+    -- each set: 3 and a credit for every 10 seconds left of its time (10 more when Freq 7 is heard), 2 for reporting
+    -- Freq 7; 3 more for every set fixed
+    payRange = function() return 0, RADIOS * (5 + math.floor((math.max(20, cvSetSecs:GetFloat()) + 10) / 10)) + 3 end,
     start = function(g)
         g.title = "Radio repair"
         g.n, g.fixed = 0, 0
@@ -1221,6 +1246,8 @@ end
 LC.PatdownVerdict = Verdict
 
 LC.JobGameDefine("patdown", {
+    -- 5 at most for each search (a detention that holds up), 3 more for every call right
+    payRange = function(opts) return 0, 5 * (opts.need or 3) + 3 end,
     start = function(g)
         g.title = "Pat-down"
         g.need = g.opts.need or 3
@@ -1370,6 +1397,8 @@ local function Room(g)
 end
 
 LC.JobGameDefine("breach", {
+    -- 2 for each person put on the floor (three at most), 3 for each find (three places), 4 when nobody ran or burned anything
+    payRange = { 0, 3 * 2 + 3 * 3 + 4 },
     start = function(g)
         g.title = "Breach"
         g.center = g.opts.pos or g.ply:GetPos()

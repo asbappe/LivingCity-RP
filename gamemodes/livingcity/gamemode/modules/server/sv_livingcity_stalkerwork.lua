@@ -228,6 +228,7 @@ hook.Add("LivingCityNewCharacter", "LivingCityStalkerWork", function(ply) Unbuil
 local function GameGo(pos, text, kind, opts)
     local go = Goto(pos, text, 200)
     go.onDone = function(q) if IsValid(q.owner) then LC.JobGameStart(q.owner, kind, q, opts) end end
+    go.game, go.gameOpts = kind, opts -- (what the job board reads its pay from: LC.PostingPay)
     return go
 end
 local function GameStage(text) return Count("game_done", 1, text) end
@@ -371,6 +372,7 @@ end
 local SCRUB_N = 6
 local SCRUB_WAIT = 75 -- seconds without a sweep before a patch nobody can find comes to the stalker
 LC.JobGameDefine("scrub", {
+    payRange = { 0, 0 }, -- (a stalker's work pays nothing of its own)
     start = function(g)
         g.title = g.opts.prisoner and "The cell block floor" or "The holding floor" -- (a prisoner's work detail sweeps it too: sv_livingcity_sentence.lua)
         g.stains, g.swept, g.lastSweep = {}, 0, CurTime()
@@ -434,6 +436,7 @@ end)
 local CELL = "models/items/combine_rifle_ammo01.mdl"
 local SEAM = "models/props_lab/tpplug.mdl"
 LC.JobGameDefine("assemble", {
+    payRange = { 0, 0 },
     start = function(g)
         g.title = "The frame"
         g.frame = LC.StalkerEnergizer(g.ply, g.opts.pos, 0)
@@ -658,6 +661,7 @@ LC.Chain{
             local go = Goto(site, "Go to the frame they've set up, beside the power transformer", 200)
             go.onEnter = function(q) if IsValid(q.owner) then LC.StalkerEnergizer(q.owner, site, 0, yaw, partner) end end
             go.onDone = function(q) if IsValid(q.owner) then LC.JobGameStart(q.owner, "assemble", q, { pos = site }) end end
+            go.game, go.gameOpts = "assemble", { pos = site }
             return {
                 title = "The frame", reward = 0, limit = 900,
                 desc = "A second power transformer, to stand beside the city's own. A frame of black metal, waiting for you.",
@@ -677,6 +681,7 @@ LC.Chain{
             local go = Goto(site, "Go back to the transformer you built", 200)
             go.onEnter = function(q) if IsValid(q.owner) then LC.StalkerEnergizer(q.owner, site, 2, yaw, partner) end end
             go.onDone = function(q) if IsValid(q.owner) then LC.JobGameStart(q.owner, "wiring", q, { pos = site, what = "the terminal" }) end end
+            go.game, go.gameOpts = "wiring", { pos = site, what = "the terminal" }
             return {
                 title = "The charge", reward = 0, limit = 900,
                 desc = "It needs its first charge. Then it's finished, and so are you, one way or another.",

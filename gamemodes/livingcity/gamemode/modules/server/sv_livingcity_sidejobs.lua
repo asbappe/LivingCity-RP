@@ -69,7 +69,7 @@ T{
 }
 
 T{
-    id = "res_raidsupply", factions = { resistance = true }, during = { "supply" }, squad = 6, violent = true,
+    id = "res_raidsupply", brings = true, factions = { resistance = true }, during = { "supply" }, squad = 6, violent = true,
     available = function() return LC.Supply ~= nil end, -- (from the moment it's on its way)
     build = function(ply)
         local s = LC.Supply
@@ -173,7 +173,7 @@ T{
 
 -- Two terminals, each with half the picture: a fragment from each, and the two make a chip.
 T{
-    id = "res_dataheist", factions = { resistance = true }, violent = true, squad = 4,
+    id = "res_dataheist", brings = true, factions = { resistance = true }, violent = true, squad = 4,
     available = function(ply)
         if not LC.ReadyTerminals or not (LC.CanHack and LC.CanHack(ply)) then return false end -- a Hacker's job (the multitool)
         return #LC.ReadyTerminals(false) >= 2
@@ -206,7 +206,7 @@ T{
 
 -- The master terminal: the motherlode.
 T{
-    id = "res_motherlode", factions = { resistance = true }, violent = true, squad = 4,
+    id = "res_motherlode", brings = true, factions = { resistance = true }, violent = true, squad = 4,
     available = function(ply)
         if not LC.ReadyTerminals or not (LC.CanHack and LC.CanHack(ply)) then return false end
         return #LC.ReadyTerminals(true) >= 1
@@ -245,7 +245,7 @@ T{
 ------------------------------------------------------------------------
 
 T{
-    id = "res_breakout", factions = { resistance = true }, violent = true, squad = 4,
+    id = "res_breakout", brings = true, factions = { resistance = true }, violent = true, squad = 4,
     available = function(ply) return LC.JailedRebel and LC.JailedRebel() ~= nil and LC.JailedRebel() ~= ply end,
     build = function(ply)
         local prisoner, cell = LC.JailedRebel()
@@ -318,7 +318,7 @@ T{
 }
 
 T{
-    id = "res_ambushlz", factions = { resistance = true }, violent = true, squad = 6,
+    id = "res_ambushlz", brings = false, factions = { resistance = true }, violent = true, squad = 6,
     available = function() return LC.OverwatchDrop ~= nil end,
     build = function(ply)
         local d = LC.OverwatchDrop
@@ -434,7 +434,7 @@ T{
 -- The Resistance's fighters are about to hit the Combine (sv_livingcity_rebels.lua): be there,
 -- and back them up.
 T{
-    id = "res_backupraid", factions = { resistance = true }, violent = true, squad = 6,
+    id = "res_backupraid", brings = true, factions = { resistance = true }, violent = true, squad = 6,
     available = function() return LC.PlannedRaid ~= nil or (LC.Skirmish ~= nil and LC.Skirmish.kind == "raid") end,
     build = function(ply)
         local r = LC.PlannedRaid or LC.Skirmish
@@ -474,7 +474,7 @@ hook.Add("EntityTakeDamage", "LivingCityQuestVort", function(v, dmg)
     if IsValid(a) and a:IsNPC() and v.AddEntityRelationship then v:AddEntityRelationship(a, D_HT, 99) end
 end)
 T{
-    id = "res_freevort", factions = { resistance = true }, violent = true, squad = 4,
+    id = "res_freevort", brings = true, factions = { resistance = true }, violent = true, squad = 4,
     available = function(ply)
         if ply:GetNW2Int("lcf_rank", 1) < 2 or #LC.ZonesOfKind("rebel") == 0 then return false end
         local n = 0
@@ -558,6 +558,7 @@ T{
         })
         return {
             title = "Free a vortigaunt " .. Place(site, ply:GetPos()), reward = 70, limit = 1200,
+            games = { { kind = "wiring", opts = { what = "the collar", pos = site }, maybe = true } }, -- (the job board: LC.PostingPay)
             desc = "The Combine are working a shackled vortigaunt " .. Place(site, ply:GetPos()) .. ". Free it and bring it to rebel territory: it will heal our wounded.",
             stages = { find, choose },
         }

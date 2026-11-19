@@ -186,6 +186,11 @@ local lesser = setmetatable({}, { __mode = "k" })  -- [player paid for an attemp
 local nextWatch = 0 -- when everyone sent for is looked at next
 local led     -- whether anyone who may give the order was playing, when last looked (the job on the board follows it)
 local TEMPLATE
+-- The board's usual pay for a finished job (lc_directive_pay, sv_livingcity_economy.lua): part of the stipend.
+local function UsualPay()
+    local eco, usual = GetConVar("lc_economy"), GetConVar("lc_directive_pay")
+    return (not eco or eco:GetBool()) and usual and usual:GetInt() or 0
+end
 
 function LC.AdminPlot() return P end
 
@@ -647,6 +652,8 @@ hook.Add("LivingCityQuestFailed", "LivingCityAdminPlot", function(ply) Next(ply)
 
 TEMPLATE = {
     id = JOB, factions = { resistance = true }, first = true, recheck = true,
+    brings = true, -- (its pay was set by the owner, 17 November, and kept when the Resistance's other jobs that bring nothing in stopped paying credits, 19 November)
+    extraCredits = function() return math.max(0, STIPEND - UsualPay()) end, -- (what the job board shows: LC.PostingPay)
     -- (only while nobody leads: with a Commander or a Lieutenant playing, the order comes from them alone)
     available = function(ply) return LC.AdminPlotOpen() and not LC.AdminPlotLeading() and (not IsValid(ply) or RankIndex(ply) >= MIN_RANK) end,
     -- (not on the board of anyone below a Fighter, nor of anyone while someone leads; whoever holds it keeps it)
@@ -1078,8 +1085,7 @@ end
 hook.Add("LivingCityQuestComplete", "LivingCityAdminPlot", function(ply, q)
     Next(ply) -- (sent for while they held this job: put in that one now)
     if not (IsValid(ply) and q and q.tmpl == TEMPLATE and LC.AddCredits) then return end
-    local eco, usual = GetConVar("lc_economy"), GetConVar("lc_directive_pay")
-    local had = (not eco or eco:GetBool()) and usual and usual:GetInt() or 0
+    local had = UsualPay()
     if STIPEND - had > 0 then LC.AddCredits(ply, STIPEND - had, "paid quietly") end
 end)
 

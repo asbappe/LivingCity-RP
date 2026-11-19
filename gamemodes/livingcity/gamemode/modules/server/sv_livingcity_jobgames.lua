@@ -76,6 +76,37 @@ end
 
 local GAMES = {}
 
+-- Community service is unpaid (sv_livingcity_work.lua): the work still counts. So is a Resistance job that brings
+-- nothing in (the owner, 19 November: experience only; LC.QuestBringsNothing, sv_livingcity_economy.lua).
+local function Unpaid(q, ply)
+    if not istable(q) then return false end
+    if isstring(q.title) and string.find(q.title, "Community service", 1, true) then return true end
+    return LC.QuestBringsNothing ~= nil and LC.QuestBringsNothing(ply, q)
+end
+-- What a game pays, with Realistic survival's share on top (sv_livingcity_survivalmode.lua).
+local function Mul(ply, pay)
+    if pay > 0 and LC.SurvivalPayMul and IsValid(ply) then return math.floor(pay * LC.SurvivalPayMul(ply) + 0.5) end
+    return pay
+end
+
+-- What a game can pay this player, the least and the most, for the job boards (every job lists its credits: the owner,
+-- 19 November; LC.PostingPay, sv_livingcity_quests.lua). Each game says it beside its own pay (payRange: { lo, hi },
+-- or a function of the game's opts and where it starts, giving lo, hi and what can be found besides, paid as it is).
+-- q: the job (its title), when known.
+function LC.JobGamePay(ply, kind, opts, q, from)
+    local def = GAMES[kind]
+    if not def or Unpaid(q, ply) then return 0, 0 end
+    local r, lo, hi, besides = def.payRange, 0, 0, 0
+    if isfunction(r) then
+        local okR, a, b, c = LC.Try(r, opts or {}, from)
+        if okR then lo, hi, besides = tonumber(a) or 0, tonumber(b) or 0, tonumber(c) or 0 end
+    elseif istable(r) then
+        lo, hi = tonumber(r[1]) or 0, tonumber(r[2]) or 0
+    end
+    lo, hi = math.max(0, math.floor(lo)), math.max(0, math.floor(hi))
+    return Mul(ply, lo), Mul(ply, hi) + math.max(0, math.floor(besides))
+end
+
 -- Start a game for this player. opts: what the shift worked out (where).
 function LC.JobGameStart(ply, kind, q, opts)
     local def = GAMES[kind]
@@ -105,9 +136,8 @@ function LC.JobGameEnd(ply, how)
     Hud(ply, nil)
     if how == "done" or how == "test" then
         local pay = math.max(0, math.floor(g.pay))
-        -- community service is unpaid (sv_livingcity_work.lua): the work still counts
-        if g.q and g.q.title and string.find(g.q.title, "Community service", 1, true) then pay = 0 end
-        if pay > 0 and LC.SurvivalPayMul then pay = math.floor(pay * LC.SurvivalPayMul(ply) + 0.5) end -- (Realistic survival: sv_livingcity_survivalmode.lua)
+        if Unpaid(g.q, ply) then pay = 0 end
+        pay = Mul(ply, pay)
         if pay > 0 and LC.AddCredits then LC.AddCredits(ply, pay, g.title) end
         if IsValid(ply) and LC.Notice then
             local text = (#g.notes > 0 and (table.concat(g.notes, " ") .. " ") or "") .. (pay > 0 and string.format("You earned %d extra credits for this work, on top of your normal shift pay.", pay) or "No extra credits for this work.")
@@ -213,6 +243,9 @@ local function Push(g, now)
 end
 
 GAMES.sweep = {
+    -- a credit for each piece in the cart and one more for a long throw, 5 for under three minutes; the rubbish can hide
+    -- coins besides (two finds at most, 3 to 8 each)
+    payRange = function(opts) local n = #(opts.spots or {}) return 0, 2 * n + 5, math.min(2, n) * 8 end,
     start = function(g)
         g.title = "Street sweep"
         local depot = g.opts.depot or g.ply:GetPos()
@@ -402,6 +435,8 @@ local function FindConveyor(g)
 end
 
 GAMES.line = {
+    -- 2 for each faulty one binned, 1 for each good one passed, 6 for no mistakes
+    payRange = function() return 0, 2 * TOTAL_PARTS + 6 end,
     start = function(g)
         local L = LineOf(g)
         g.title = L.title
@@ -689,6 +724,8 @@ local function NextTraveler(g)
 end
 
 GAMES.papers = {
+    -- 5 at most for each traveler (a forgery handed to a unit), 5 for no citations
+    payRange = function() return 0, 5 * TRAVELERS + 5 end,
     start = function(g)
         -- (at the ration counter the same game checks citizens' cards: opts.who, opts.one, opts.where, opts.title)
         local who, one, where = g.opts.who or "Travelers", g.opts.one or "traveler", g.opts.where or "Station"
@@ -1066,6 +1103,8 @@ local function SendWires(g, zap)
 end
 
 GAMES.wiring = {
+    -- 3 to 6 by the shocks, 2 for close to the fewest turns, doubled in a blackout (LC.WireTry)
+    payRange = { 1, 16 },
     start = function(g)
         g.title = "Rewiring"
         g.what = g.opts.what or "the panel"
@@ -1179,6 +1218,8 @@ local function Urgency(inj)
 end
 
 GAMES.triage = {
+    -- 4 for each patient saved (five at most), 6 when nobody is lost
+    payRange = { 0, 5 * 4 + 6 },
     start = function(g)
         g.title = "Triage"
         local center = g.opts.center or g.ply:GetPos()
@@ -1298,6 +1339,8 @@ end
 if #CHUNKS == 0 then CHUNKS = { "models/props_junk/cinderblock01a.mdl" } end
 
 GAMES.rubble = {
+    -- a credit for each block in the pile (4 to 6)
+    payRange = { 4, 6 },
     start = function(g)
         g.title = "Rubble"
         local pos = g.opts.pos or (g.ply:GetPos() + g.ply:GetForward() * 80)
