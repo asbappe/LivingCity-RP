@@ -2,7 +2,7 @@
 // (2 to 14, the ace high), four suits and the back. A deck made by hand in a back room: stencils cut with a
 // knife, black paint and orange on the card of Union ration boxes.
 //   2 the can, 3 a ration, 4 a headcrab, 5 a manhack, 6 a barnacle, 7 a scanner, 8 Civil Protection,
-//   9 an Overwatch Elite, 10 a strider, J a vortigaunt, Q the Administrator, K the Colonel, A the Free Man
+//   9 an antlion, 10 a strider, J a vortigaunt, Q the Administrator, K the Colonel, A the Free Man
 // A face is ink alone on nothing; the card under it is its suit's (the owner, 19 November: one set of faces
 // and four suit pictures, not four sets): suit1 the Resistance, suit2 the Combine, suit3 the Union, suit4 the
 // vortigaunts. The game lays the face over the suit.
@@ -61,11 +61,12 @@ const ART = {
     f('M-52,-10 Q-54,-82 0,-84 Q54,-82 52,-10 Q50,42 24,64 L-24,64 Q-50,42 -52,-10 Z') + s('M-22,68 L0,96 L22,68', 4, P) +
     c(-23, -20, 16, P) + c(23, -20, 16, P) + c(-28, -25, 4, K, 'opacity=".25"') + c(18, -25, 4, K, 'opacity=".25"') +
     `<rect x="-17" y="20" width="34" height="32" rx="7" fill="${P}"/>` + s('M-9,29 L9,29 M-9,36 L9,36 M-9,43 L9,43', 3),
-  // an Overwatch Elite
-  9: () => f('M-76,116 L-76,90 Q-44,66 -26,60 L26,60 Q44,66 76,90 L76,116 Z') + mirror(s('M-16,36 Q-46,42 -54,72', 8)) +
-    `<path d="M-56,0 Q-60,-88 0,-90 Q60,-88 56,0 Q56,38 30,60 L-30,60 Q-56,38 -56,0 Z" fill="${P}" stroke="${K}" stroke-width="8"/>` +
-    s('M-40,-58 Q0,-78 40,-58', 4, K, 'opacity=".35"') + c(0, -18, 23) + c(0, -18, 13, O) + c(-5, -23, 3.5, P) +
-    `<rect x="-19" y="20" width="38" height="28" rx="6" fill="${K}"/>` + s('M-10,30 L10,30 M-10,38 L10,38', 3, P),
+  // an antlion, head on
+  9: () => `<ellipse cx="0" cy="104" rx="84" ry="7" fill="${K}" opacity=".2"/>` +
+    mirror(`<ellipse cx="0" cy="-58" rx="15" ry="52" fill="${O}" opacity=".85" transform="rotate(-34 0 -10)"/>`) +
+    mirror(f('M-26,-6 L-88,-52 L-104,92 L-76,-22 L-30,18 Z') + f('M-18,-26 L-50,-110 L-60,104 L-38,-62 L-12,-6 Z')) +
+    `<ellipse cx="0" cy="-12" rx="40" ry="36" fill="${K}"/>` + s('M-26,-30 Q0,-42 26,-30 M-32,-12 Q0,-24 32,-12', 3.5, P, 'opacity=".45"') +
+    f('M-27,14 L27,14 L12,70 L-12,70 Z') + mirror(s('M-9,68 Q-18,90 -3,98', 6) + c(-13, 30, 4.5, O)) + s('M-10,50 L10,50', 3, P, 'opacity=".45"'),
   // a strider over the roofs
   10: () => f('M-104,116 L-104,98 L-84,98 L-84,84 L-62,84 L-62,104 L-40,104 L-40,90 L-18,90 L-18,106 L22,106 L22,94 L44,94 L44,80 L62,80 L62,102 L104,102 L104,116 Z', K, 'opacity=".5"') +
     s('M-26,-70 L-72,-108 L-86,114', 9) + s('M30,-72 L80,-104 L94,114', 9) + s('M2,-62 L12,-24 L-2,114', 9) +
