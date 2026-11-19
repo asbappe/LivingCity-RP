@@ -38463,6 +38463,311 @@ setFund(fundWas)
 end
 Nov18_ResistanceFundTests()
 
+function Nov19_FundGearTests()
+section("19 November: the Resistance's fund buys its fighters' guns and rounds; its record, the fund screen, donations")
+-- The owner, 19 November: "the funds should be for the equipment issued to fighters, such as ammo, weapons, etc. ...
+-- which 'purchases' them at a reduced price versus what a player pays"; "only what the fund can afford; if the fund
+-- cannot afford it then give them a cheaper/downgraded weapon that can be afforded. Crowbars are free"; the small TV
+-- with "the charges/costs and additions to the fund" and "an option for 'Donate'".
+local set = _setcvar
+local fund = LC.ResistanceFund
+local function setFund(n) LC.ResistanceFundTake(fund()) LC.ResistanceFundAdd(n) end
+local fundWas = fund()
+local rateWas = GetConVar("lc_resistance_issue_rate"):GetInt()
+ok(rateWas == 50, "the one new setting: lc_resistance_issue_rate is 50 (per cent of what a player pays)", rateWas)
+local function cost(p) return math.floor(p * 0.5 + 0.5) end
+local function rcost(kind, n) return n > 0 and math.ceil(n * LC.FundRoundPrice(kind) * 0.5 - 1e-9) or 0 end
+local P = {}
+for cls in pairs(LC.FundGuns) do P[cls] = LC.FundGunPrice(cls) end
+ok(P.weapon_pistol < P.weapon_smg1 and P.weapon_smg1 < P.weapon_shotgun and P.weapon_shotgun < P.weapon_357 and P.weapon_357 < P.weapon_ar2,
+    "the guns are priced as a player pays: pistol, SMG, shotgun, revolver, pulse rifle, the cheapest first",
+    string.format("%d %d %d %d %d", P.weapon_pistol, P.weapon_smg1, P.weapon_shotgun, P.weapon_357, P.weapon_ar2))
+ok(P.weapon_pistol == LC.QuartermasterPrice(LCS.BlackById.gun_pistol) and P.weapon_357 == LC.QuartermasterPrice(LCS.BlackById.gun_357),
+    "a gun: what the quartermaster charges a player for it")
+ok(P.weapon_ar2 == LCS.GoodsById.cp_ar2.price, "a pulse rifle (he doesn't sell them): what the unit counter charges", P.weapon_ar2)
+ok(math.abs(LC.FundRoundPrice("Pistol") - LC.QuartermasterPrice(LCS.BlackById.ammo_pistol) / 18) < 1e-6
+    and math.abs(LC.FundRoundPrice("AR2") - LCS.GoodsById.cp_ar2ammo.price / 60) < 1e-6, "a round: his box's price over the rounds in it (the pulse rifle's, the unit counter's)")
+
+local T0 = Vector(-121000, 95000, 0)
+local made = {}
+local function rebel(name, xp, special)
+    local p = newPlayer(name, "resistance", special, xp)
+    p.chat, p.lcProtectUntil = {}, 0
+    p:SetPos(T0 + Vector(0, 3000 + #made * 200, 0))
+    made[#made + 1] = p
+    return p
+end
+local function spawn(p, ammo) p.ammo = ammo or {} hook.Run("PlayerLoadout", p) end -- (what the engine does on spawn; rounds as they carry them)
+local function top(k) return LC.ResistanceFundLog(k or 1) end
+local function name(p) return LC.CharacterName(p) end
+local function sent(msg, to)
+    for i = #net.sent, 1, -1 do local m = net.sent[i] if m.name == msg and (to == nil or m.to == to) then return m end end
+end
+
+------------------------------------------------------------------------
+-- the gear
+------------------------------------------------------------------------
+local f1 = rebel("GearFighter", 400)
+_run(1)
+setFund(5000)
+local logN = #(LC.Ledger().fundLog or {})
+spawn(f1)
+local want = cost(P.weapon_smg1) + rcost("SMG1", 180) + cost(P.weapon_pistol) + rcost("Pistol", 90)
+ok(fund() == 5000 - want, "a Fighter's spawn with a full fund: each gun and its rounds at half the quartermaster's price", (5000 - fund()) .. " vs " .. want)
+ok(f1:HasWeapon("weapon_crowbar") and f1:HasWeapon("weapon_pistol") and f1:HasWeapon("weapon_smg1"), "and the usual kit: crowbar, pistol and SMG")
+ok(f1:GetAmmoCount("Pistol") == 90 and f1:GetAmmoCount("SMG1") == 180, "with the usual rounds", f1:GetAmmoCount("Pistol") .. " " .. f1:GetAmmoCount("SMG1"))
+ok(f1:GetAmmoCount("Buckshot") == 24 and f1:GetAmmoCount("AR2") == 60 and f1:GetAmmoCount("357") == 12,
+    "the rounds of kinds their rank's guns don't use come as before, free, as for everyone")
+ok(top()[1].n == -want and top()[1].w == "Guns and ammunition for a fighter (" .. name(f1) .. ")", "one entry in the record: what it paid, in plain words", top()[1].w)
+ok(#LC.Ledger().fundLog == math.min(50, logN + 1), "(one entry, no more)", #LC.Ledger().fundLog .. " " .. logN)
+
+local lt = rebel("GearLieutenant", 900)
+local cm = rebel("GearCommander", 1800)
+_run(1)
+setFund(5000)
+spawn(lt)
+local wantLt = cost(P.weapon_shotgun) + rcost("Buckshot", 24) + cost(P.weapon_smg1) + rcost("SMG1", 180) + cost(P.weapon_pistol) + rcost("Pistol", 90)
+ok(fund() == 5000 - wantLt and lt:HasWeapon("weapon_shotgun") and lt:GetAmmoCount("Buckshot") == 24, "a Lieutenant's kit, the shotgun with it", (5000 - fund()) .. " vs " .. wantLt)
+setFund(5000)
+spawn(cm)
+local wantCm = cost(P.weapon_ar2) + rcost("AR2", 60) + cost(P.weapon_357) + rcost("357", 12) + cost(P.weapon_shotgun) + rcost("Buckshot", 24) + cost(P.weapon_smg1) + rcost("SMG1", 180)
+ok(fund() == 5000 - wantCm and cm:HasWeapon("weapon_ar2") and cm:HasWeapon("weapon_357") and cm:GetAmmoCount("AR2") == 60, "a Commander's kit, the pulse rifle first",
+    (5000 - fund()) .. " vs " .. wantCm)
+ok(cm:GetAmmoCount("Pistol") == 90, "(a Commander carries no pistol: its rounds come as before)")
+-- short: the best cheaper gun it can pay for
+local short = cost(P.weapon_pistol) + 10
+ok(short < cost(P.weapon_smg1), "(a fund below an SMG's price)", short)
+setFund(short)
+spawn(f1)
+ok(f1:HasWeapon("weapon_crowbar") and f1:HasWeapon("weapon_pistol") and not f1:HasWeapon("weapon_smg1"), "a short fund: the best cheaper gun it can pay for, a pistol for the SMG")
+ok(f1:GetAmmoCount("SMG1") == 0, "no rounds for the SMG they didn't get", f1:GetAmmoCount("SMG1"))
+local pr = f1:GetAmmoCount("Pistol")
+ok(pr > 0 and pr < 90 and fund() < LC.FundRoundPrice("Pistol") * 0.5 + 1, "rounds: what was left after the gun paid for, up to the usual", pr .. " rounds, " .. fund() .. " left")
+do
+    local l = top(2)
+    ok(l[1].n == 0 and l[1].w == "A fighter got a pistol, not an SMG. The fund was short.", "the cheaper gun is an entry of its own, at no cost", l[1].w)
+    ok(l[2].n == -(short - fund()) and l[2].w == "A pistol and ammunition for a fighter (" .. name(f1) .. ")", "after what it paid for", l[2].n .. " " .. l[2].w)
+end
+
+-- empty: the crowbar alone
+setFund(0)
+f1.chat = {}
+spawn(f1)
+ok(fund() == 0 and f1:HasWeapon("weapon_crowbar") and not f1:HasWeapon("weapon_pistol") and not f1:HasWeapon("weapon_smg1"), "an empty fund: the crowbar alone, and nothing charged")
+ok(f1:GetAmmoCount("Pistol") == 0 and f1:GetAmmoCount("SMG1") == 0, "and no rounds for the guns they don't have")
+ok(top()[1].n == 0 and top()[1].w == "A fighter went out with only a crowbar. The fund was empty.", "the record says so", top()[1].w)
+ok(#f1.chat == 0, "nothing in their chat: the screen's record is where it shows", table.concat(f1.chat, " | "))
+do -- a Father Grigori, whose kit has no crowbar: the crowbar is added (it costs the fund nothing), his Blessing stays
+    local pr2 = rebel("GearPriest", 900, "chaplain")
+    _run(1)
+    setFund(0)
+    spawn(pr2)
+    ok(pr2:HasWeapon("weapon_lc_blessing") and pr2:HasWeapon("weapon_crowbar") and not pr2:HasWeapon("weapon_shotgun") and fund() == 0,
+        "a role whose kit has no crowbar: the crowbar, and the role's own tool, at no cost")
+end
+
+-- rounds: what the fund can pay for
+do
+    local left = 20
+    setFund(cost(P.weapon_smg1) + left)
+    spawn(f1)
+    local per = LC.FundRoundPrice("SMG1") * 0.5
+    local n = math.floor(left / per + 1e-9)
+    while n > 0 and math.ceil(n * per - 1e-9) > left do n = n - 1 end
+    ok(f1:HasWeapon("weapon_smg1") and f1:GetAmmoCount("SMG1") == n and n > 0 and n < 180, "rounds: as many as what's left pays for, no more", f1:GetAmmoCount("SMG1") .. " vs " .. n)
+    ok(not f1:HasWeapon("weapon_pistol") and top()[1].w == "A fighter went without a pistol. The fund was short.", "a gun it couldn't pay for with nothing cheaper: an entry of its own", top()[1].w)
+end
+
+-- nothing already carried is charged
+setFund(5000)
+spawn(f1, { Pistol = 50 })
+ok(fund() == 5000 - (cost(P.weapon_smg1) + rcost("SMG1", 180) + cost(P.weapon_pistol) + rcost("Pistol", 40)) and f1:GetAmmoCount("Pistol") == 90,
+    "rounds they carry already are not bought again: up to the usual, no more", (5000 - fund()) .. " " .. f1:GetAmmoCount("Pistol"))
+do -- a promotion adds the shotgun; the guns they carry are not charged
+    setFund(5000)
+    f1.chat = {}
+    f1:SetPData("lcf_xp_resistance", 899)
+    LC.AddXP(f1, 1, "test")
+    _run(0.5)
+    ok(f1:GetNW2Int("lcf_rank", 1) == 4 and f1:HasWeapon("weapon_shotgun"), "(promoted to Lieutenant: the shotgun is theirs)", f1:GetNW2Int("lcf_rank", 1))
+    ok(fund() == 5000 - cost(P.weapon_shotgun), "a promotion: only the gun it adds is bought, nothing they carry", 5000 - fund())
+    f1:SetPData("lcf_xp_resistance", 401)
+    LC.AddXP(f1, -1, "test")
+    _run(0.5)
+end
+
+-- a cheaper gun outside the rank's kit counts as issued (it can't be sold back for the fund's credits)
+setFund(cost(P.weapon_pistol) + 2)
+spawn(cm)
+ok(cm:HasWeapon("weapon_pistol") and not cm:HasWeapon("weapon_ar2") and LC.IsIssuedWeapon(cm, "weapon_pistol"),
+    "a Commander with almost nothing in the fund: a pistol for the pulse rifle, and it counts as issued")
+ok(top(2)[1].w == "A fighter went without a revolver, a shotgun and an SMG. The fund was short." and top(2)[2].w == "A fighter got a pistol, not a pulse rifle. The fund was short.",
+    "(the record: the cheaper gun, then what they went without)", top(2)[1].w .. " | " .. top(2)[2].w)
+setFund(5000)
+spawn(cm)
+ok(not LC.IsIssuedWeapon(cm, "weapon_pistol"), "(and no longer once a full kit replaces it)")
+
+-- 0: issued free, as before
+set("lc_resistance_issue_rate", 0)
+setFund(0)
+spawn(f1)
+ok(fund() == 0 and f1:HasWeapon("weapon_smg1") and f1:GetAmmoCount("SMG1") == 180, "lc_resistance_issue_rate 0: the usual kit, and the fund pays nothing")
+set("lc_resistance_issue_rate", rateWas)
+
+-- the city's own Resistance NPCs, and anyone not of the Resistance, cost it nothing
+do
+    setFund(777)
+    local npc = LC.SpawnRebel(T0 + Vector(400, 0, 4), nil)
+    _run(1)
+    ok(fund() == 777, "the city's own Resistance NPCs cost the fund nothing", fund())
+    if IsValid(npc) then npc:Remove() end
+    local unit = newPlayer("GearUnit", "cp", nil, 600)
+    made[#made + 1] = unit
+    spawn(unit)
+    ok(fund() == 777 and unit:HasWeapon("weapon_pistol"), "nor does anyone else's kit (a unit's, as before)")
+end
+
+------------------------------------------------------------------------
+-- the starting fund, and the record
+------------------------------------------------------------------------
+do
+    setFund(200)
+    local book = LC.Ledger()
+    book.fundLog = nil
+    ok(LC.FundSeed() == true and fund() == 1200, "a ledger never seen with a record: the starting 1000 put in once", fund())
+    ok(top()[1].n == 1000 and top()[1].w == "What the cells had put by", "(an entry of its own)", top()[1].w)
+    ok(LC.FundSeed() == false and fund() == 1200, "once only")
+    LC.LedgerReload()
+    ok(LC.FundSeed() == false and fund() == 1200, "not again after a restart (the record is saved with the fund)", fund())
+    spawn(f1)
+    ok(fund() < 1200, "(a fighter's spawn doesn't put it in again)")
+end
+do
+    LC.ResistanceFundSuccess("load", { f1 })
+    ok(top()[1].n == 10 and top()[1].w == "A load from a supply convoy (" .. name(f1) .. ")", "every change is an entry: half a convoy load's take, with who brought it", top()[1].w)
+    LC.ResistanceFundSuccess("raid", {})
+    ok(top()[1].n == 20 and top()[1].w == "A supply drop raided", "(the city's own fighters: no name)", top()[1].w)
+    setFund(1000)
+    LC.ResistanceFundTake(300, "the leader's order")
+    ok(top()[1].n == -300 and top()[1].w == "An order, paid for", "the leader's order", top()[1].w)
+    LC.ResistanceFundAdd(300, "an order ended before the attempt")
+    ok(top()[1].w == "An order called off, paid back", "and its money back", top()[1].w)
+    for _ = 1, 60 do LC.ResistanceFundAdd(1, "test") end
+    ok(#LC.Ledger().fundLog == 50, "the record keeps the newest 50, never more", #LC.Ledger().fundLog)
+    local saved = util.JSONToTable(file.Read("livingcity/" .. game.GetMap() .. "_city.json", "DATA") or "") or {}
+    ok(istable(saved.fundLog) and #saved.fundLog == 50, "kept in the ledger's file, with the fund", istable(saved.fundLog) and #saved.fundLog or "none")
+    LC.LedgerReload()
+    local l = LC.ResistanceFundLog(50)
+    ok(#l == 50 and l[1].n == 1 and l[1].w == "Test" and l[1].t > 0, "and there after a restart, newest first, with when", #l)
+end
+
+------------------------------------------------------------------------
+-- the screen, and donating
+------------------------------------------------------------------------
+local tv = ents.Create("lc_fundtv")
+tv:SetPos(T0)
+tv:Spawn()
+local cit = newPlayer("GearCitizen", "citizen")
+made[#made + 1] = cit
+cit:SetPos(T0 + Vector(60, 0, 0))
+cit.chat = {}
+do
+    net.sent = {}
+    ok(LC.FundScreenOpen(cit, tv) == true, "E on the screen opens its window, for anyone who can reach it (a citizen)")
+    local m = sent("lc_fundtv", cit)
+    local l = LC.ResistanceFundLog(15)
+    ok(m and m.data[1] == fund() and m.data[2] == 15 and m.data[3] == l[1].n and m.data[4] == l[1].w and m.data[2 + 2 * 15] == l[15].w,
+        "the window has the fund's number and its newest 15 entries, newest first", m and tostring(m.data[1]) or "nothing sent")
+    ok(m and m.data[33] == 3 and m.data[34] == 10 and m.data[35] == 50 and m.data[36] == 100 and m.data[37] == "", "three amounts to donate (10, 50, 100), and no refusal")
+    local far = newPlayer("GearFar", "citizen")
+    made[#made + 1] = far
+    far:SetPos(T0 + Vector(900, 0, 0))
+    ok(LC.FundScreenOpen(far, tv) == false, "(not from across the room)")
+end
+do
+    setFund(100)
+    LC.AddCredits(cit, 200 - LC.Credits(cit))
+    cit.lcFundGiveNext = 0
+    ok(LC.FundDonate(cit, 50, false) == true and LC.Credits(cit) == 150 and fund() == 150, "a donation at the screen: from the pocket to the fund", LC.Credits(cit) .. " " .. fund())
+    ok(top()[1].n == 50 and top()[1].w == "A donation", "the entry says \"A donation\", with no name for someone not of the Resistance", top()[1].w)
+    ok(LC.FundDonate(cit, 50, false) == false and LC.Credits(cit) == 150 and fund() == 150, "too fast: refused, and nothing moves")
+    _run(1.1)
+    ok(LC.FundDonate(cit, 7, false) == false and LC.Credits(cit) == 150, "only the screen's own amounts")
+    _run(1.1)
+    LC.AddCredits(cit, 30 - LC.Credits(cit))
+    net.sent = {}
+    local okD, why = LC.FundDonate(cit, 50, false)
+    local m = sent("lc_fundtv", cit)
+    ok(okD == false and why == "You don't have that much." and LC.Credits(cit) == 30 and fund() == 150 and m and m.data[#m.data] == "You don't have that much.",
+        "a pocket too short: refused, the one line in the window", tostring(why))
+    _run(1.1)
+    cit:SetPos(T0 + Vector(900, 0, 0))
+    ok(LC.FundDonate(cit, 10, false) == false and LC.Credits(cit) == 30, "from too far away: refused")
+    cit:SetPos(T0 + Vector(60, 0, 0))
+    _run(1.1)
+    net._q = { 10, false }
+    net["recv_lc_fund_donate"](0, cit)
+    ok(LC.Credits(cit) == 20 and fund() == 160, "(from the window's button)", LC.Credits(cit) .. " " .. fund())
+    -- one of ours: named
+    f1:SetPos(T0 + Vector(-60, 0, 0))
+    LC.FundScreenOpen(f1, tv)
+    LC.AddCredits(f1, 100 - LC.Credits(f1))
+    f1.lcFundGiveNext = 0
+    ok(LC.FundDonate(f1, 100, false) == true and LC.Credits(f1) == 0 and top()[1].w == "A donation (" .. name(f1) .. ")", "a member's donation has their name", top()[1].w)
+    -- a unit too: their own business
+    local unit = newPlayer("GearUnit2", "cp", nil, 600)
+    made[#made + 1] = unit
+    unit:SetPos(T0 + Vector(0, 60, 0))
+    LC.FundScreenOpen(unit, tv)
+    LC.AddCredits(unit, 10 - LC.Credits(unit))
+    ok(LC.FundDonate(unit, 10, false) == true and top()[1].w == "A donation", "a unit can donate there too, unnamed")
+end
+do -- the quartermaster's own window: 10 credits for the cause
+    local nqWas = LC.NearQuartermaster
+    LC.NearQuartermaster = function() return true end
+    _run(1.1)
+    LC.AddCredits(cit, 50 - LC.Credits(cit))
+    local f0 = fund()
+    ok(LC.FundDonate(cit, 10, true) == true and LC.Credits(cit) == 40 and fund() == f0 + 10 and top()[1].w == "A donation",
+        "at the quartermaster's window: a stranger gives 10 to the fund")
+    _run(1.1)
+    ok(LC.FundDonate(cit, 50, true) == false and LC.Credits(cit) == 40, "(only the window's 10)")
+    _run(1.1)
+    f1:SetPos(T0 + Vector(0, 900, 0))
+    LC.AddCredits(f1, 10 - LC.Credits(f1))
+    ok(LC.FundDonate(f1, 10, true) == true and top()[1].w == "A donation (" .. name(f1) .. ")", "a member at his post too, named")
+    local unit = made[#made]
+    _run(1.1)
+    LC.AddCredits(unit, 10 - LC.Credits(unit))
+    ok(LC.FundDonate(unit, 10, true) == false and LC.Credits(unit) == 10, "(a unit never gets his window)")
+    LC.NearQuartermaster = function() return nil end
+    _run(1.1)
+    ok(LC.FundDonate(cit, 10, true) == false and LC.Credits(cit) == 40, "nobody at his post: refused")
+    LC.NearQuartermaster = nqWas
+end
+
+-- nothing new reached anyone's chat
+do
+    local bad
+    for _, p in ipairs(made) do
+        for _, line in ipairs(p.chat or {}) do
+            local s = string.lower(tostring(line))
+            if string.find(s, "fund", 1, true) or string.find(s, "donat", 1, true) or string.find(s, "crowbar", 1, true) then bad = line end
+        end
+    end
+    ok(bad == nil, "nothing about the fund, a donation or a crowbar reached anyone's chat", tostring(bad))
+end
+
+-- back as it was
+tv:Remove()
+for _, p in ipairs(made) do
+    if IsValid(p) then hook.Run("PlayerDisconnected", p) p:Remove() end
+end
+set("lc_resistance_issue_rate", rateWas)
+setFund(fundWas)
+end
+Nov19_FundGearTests()
+
 section("Core contract: nothing load-bearing changes without the owner knowing (CORE.md)")
 ;(function() -- (its own function: the file's main chunk is at Lua's limit on locals)
     -- Everything here is something the owner's server, files or players depend on. The list is

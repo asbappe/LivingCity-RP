@@ -270,7 +270,7 @@ function LC.FundIssue(ply, kit, keep)
                 out[#out + 1] = pick
                 bought[#bought + 1] = pick
                 if not inKit[pick] then issued[ply] = issued[ply] or {} issued[ply][pick] = true end
-                if not keep then
+                if not keep and rounds[GUNS[pick].ammo] then -- (a kind of round the rank's guns don't use comes as before)
                     local kind = GUNS[pick].ammo
                     local need = math.max(0, Usual(kind) - (ply:GetAmmoCount(kind) or 0) - (rounds[kind] or 0))
                     local n, c = Afford(need, LC.FundRoundPrice(kind) * Rate(), budget - spent)
