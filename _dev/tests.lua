@@ -39067,7 +39067,11 @@ end
 do
     local dock = LC.AddPoint(M0 + Vector(-3000, 4000, 0), 0, "dock", 0)
     ok(LC.PaymasterEvery >= 280, "now and then, a little rarer than the supply convoy (about once in five hours of play)", LC.PaymasterEvery)
-    local nightWas = LC.IsNight
+    local nightWas, autoWas = LC.IsNight, GetConVar("lc_auto_events"):GetInt()
+    LC.IsNight = function() return false end
+    set("lc_auto_events", 0)
+    ok(not LC.PaymasterMayStart(), "not while the city's automatic events are off (as the supply convoy)")
+    set("lc_auto_events", 1)
     LC.IsNight = function() return true end
     ok(not LC.PaymasterMayStart(), "never at night")
     LC.IsNight = function() return false end
@@ -39077,6 +39081,7 @@ do
     timer.list["LivingCityPaymasterClock"].fn()
     math.random = mr
     LC.IsNight = nightWas
+    set("lc_auto_events", autoWas)
     local P = LC.Paymaster
     ok(P and IsValid(P.npc) and #P.escort == 2 and P.wages >= 80 and P.wages <= 200, "a Union paymaster sets out with the wages (80 to 200) and two units", P and (#P.escort .. " " .. P.wages))
     ok(P and LC.NPCs[P.npc] and LC.NPCs[P.npc].role == "citizen" and LC.NPCs[P.escort[1]].role == "cop", "a citizen in the Union's blue, and Civil Protection with him")

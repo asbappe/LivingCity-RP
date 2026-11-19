@@ -550,10 +550,13 @@ LC.PaymasterTick = Tick
 
 timer.Create("LivingCityPaymaster", 1, 0, function() Heard("his walk", Tick, CurTime()) end)
 
--- Now and then, by day: about once in MEAN_MINUTES of the city running, never sooner than GAP_MINUTES after the last.
+-- Now and then, by day: about once in MEAN_MINUTES of the city running, never sooner than GAP_MINUTES after the last;
+-- not while the city's automatic events are off (lc_auto_events, sv_livingcity_events.lua), as the supply convoy.
 function LC.PaymasterMayStart(now)
     now = now or CurTime()
     if LC.Paymaster or not LC.Running then return false end
+    local auto = GetConVar("lc_auto_events") -- (an event like the supply convoy: off with the city's automatic events)
+    if auto and not auto:GetBool() then return false end
     if now - lastPaymaster < GAP_MINUTES * 60 then return false end
     if #player.GetAll() == 0 then return false end
     if LC.IsNight and LC.IsNight() then return false end
