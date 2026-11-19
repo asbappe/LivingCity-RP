@@ -39732,6 +39732,108 @@ do
         "alone, a player loses about 1.50 a hand at 5, 5.78 at 10, 18.00 at 25; the fund has about 6.01, 8.12, 12.00",
         string.format("%.2f %.2f %.2f / %.2f %.2f %.2f", me5, me10, me25, f5, f10, f25))
 
+    -- Twenty-one (the owner, 19 November: "can we have a few more simple card games"; their pick, the same pot)
+    ;(function()
+        if LC.CardTableState(tbl) then for _, s in ipairs(LC.CardTableState(tbl).seats) do if s.ply then LC.CardTableStand(s.ply, tbl) end end end
+        _advance(4.1)
+        for _, p in ipairs({ rebel, helper, cit }) do near(p) fresh(p) credits(p, 500) end
+        setFund(0)
+        LC.OpenCardTable(rebel, tbl)
+        LC.OpenCardTable(helper, tbl)
+        LC.CardTableStake(rebel, tbl, 10)
+        ok(LC.CardTableTotal({ 14, 13 }) == 21 and LC.CardTableTotal({ 14, 14, 9 }) == 21 and LC.CardTableTotal({ 12, 11, 2 }) == 22 and LC.CardTableTotal({ 14, 5, 10 }) == 16,
+            "Twenty-one: faces are 10, an ace 11 or 1")
+        ok(not LC.CardTableGame(helper, tbl, 2) and not LC.CardTableGame(rebel, tbl, 3) and LC.CardTableGame(rebel, tbl, 2) and LC.CardTableState(tbl).game == 2,
+            "whoever sat first picks the game: high card or Twenty-one")
+        -- (the window: 9 the seats, five things for each of the four, then 30 the game, 31 a hand is on, 32 you may take a card)
+        ok(window(helper).data[30] == 2, "and everyone's window is told", tostring(window(helper).data[30]))
+        -- the deck in order: two each for the four seats (rebel 10 9, helper 8 5, the city's people 10 7 and 6 5),
+        -- then what is drawn: the second of the city's people a 4 and a king (25), the helper a 9 (22)
+        local r0, h0 = LC.Credits(rebel), LC.Credits(helper)
+        force({ 10, 9, 8, 5, 10, 7, 6, 5, 4, 13, 9 })
+        local okD, hand = LC.CardTableDeal(rebel, tbl)
+        local T = LC.CardTableState(tbl)
+        local _, rs = seatOf(rebel)
+        local _, hs = seatOf(helper)
+        ok(okD and T.round and #rs.cards == 2 and #hs.cards == 2 and LC.Credits(rebel) == r0 - 10 and LC.Credits(helper) == h0 - 10 and T.pot == 30,
+            "Deal: the stakes go in (the city's people 5 each) and everyone has two cards", tostring(T.pot))
+        local npc = {}
+        for _, s in ipairs(T.seats) do if not s.ply then npc[#npc + 1] = s end end
+        ok(npc[1].done and #npc[1].cards == 2 and npc[2].done and #npc[2].cards == 4 and LC.CardTableTotal(npc[2].cards) == 25,
+            "the city's people take theirs at once: a card below 16 (on 17 they stay, on 15 they take one more)", #npc[2].cards .. " " .. LC.CardTableTotal(npc[2].cards))
+        local w = window(helper)
+        ok(w.data[31] == true and w.data[32] == true, "the window says a hand is on and that they may take a card")
+        ok(not LC.CardTableDeal(helper, tbl) and not LC.CardTableStake(rebel, tbl, 5) and not LC.CardTableGame(rebel, tbl, 1),
+            "no new hand, stake or game while one is on")
+        ok(LC.OpenCardTable(cit, tbl) and not seatOf(cit) and window(cit).data[2] == 2, "nobody sits down in the middle of a hand")
+        ok(LC.CardTableMove(rebel, tbl, false) and rs.done and not LC.CardTableMove(rebel, tbl, true) and T.round ~= nil, "Stay ends your part; the hand waits for the others")
+        local fund0 = LC.ResistanceFund()
+        ok(LC.CardTableMove(helper, tbl, true) and #hs.cards == 3 and T.round == nil, "Card gives you one; over 21 ends your part, and the last one done ends the hand")
+        unforce()
+        ok(rs.won == 21 and LC.Credits(rebel) == r0 - 10 + 21 and LC.Credits(helper) == h0 - 10 and LC.ResistanceFund() == fund0 + 9,
+            "the nearest to 21 takes 70 per cent of the pot, the fund the rest", rs.won .. " " .. (LC.ResistanceFund() - fund0))
+        ok(LC.CardTableHandsLeft(rebel) == 19, "a hand of Twenty-one is one of the hour's")
+        -- over 21 is out, a tie splits; out of time, whoever is still thinking stays
+        _advance(4.1)
+        force({ 10, 13, 10, 12, 9, 8, 9, 8, 5, 5 })
+        r0, h0, fund0 = LC.Credits(rebel), LC.Credits(helper), LC.ResistanceFund()
+        LC.CardTableDeal(rebel, tbl)
+        T = LC.CardTableState(tbl)
+        ok(LC.CardTableMove(rebel, tbl, true) and select(2, seatOf(rebel)).done and LC.CardTableTotal(select(2, seatOf(rebel)).cards) == 25, "over 21 ends your part")
+        _advance(21)
+        LC.CardTableCheck()
+        unforce()
+        ok(T.round == nil and LC.Credits(rebel) == r0 - 10 and LC.Credits(helper) == h0 - 10 + 21 and LC.ResistanceFund() == fund0 + 9,
+            "out of time the hand ends: whoever was over is out, the one who stayed on 20 wins", tostring(LC.Credits(helper) - h0))
+        -- everyone over: the fund takes the pot
+        _advance(4.1)
+        LC.CardTableStand(helper, tbl)
+        force({ 10, 6, 10, 5, 10, 4, 10, 3, 13, 12, 11, 10 })
+        r0, fund0 = LC.Credits(rebel), LC.ResistanceFund()
+        LC.CardTableDeal(rebel, tbl)
+        LC.CardTableMove(rebel, tbl, true)
+        unforce()
+        T = LC.CardTableState(tbl)
+        ok(T.round == nil and LC.Credits(rebel) == r0 - 10 and LC.ResistanceFund() == fund0 + T.pot and T.pot == 25, "with everyone over 21 the fund takes the pot", tostring(LC.ResistanceFund() - fund0))
+        -- standing up in a hand leaves the stake; the last one up, the pot is the fund's
+        _advance(4.1)
+        force({ 5, 5, 10, 7, 10, 8, 10, 9 })
+        r0, fund0 = LC.Credits(rebel), LC.ResistanceFund()
+        LC.CardTableDeal(rebel, tbl)
+        LC.CardTableStand(rebel, tbl)
+        unforce()
+        ok(LC.CardTableState(tbl) == nil and LC.Credits(rebel) == r0 - 10 and LC.ResistanceFund() == fund0 + 25, "standing up in a hand leaves your stake; the table empty, the pot is the fund's")
+        -- over the wire
+        _advance(4.1)
+        LC.OpenCardTable(rebel, tbl)
+        LC.CardTableStake(rebel, tbl, 5)
+        _netcall("lc_cards_deal", rebel, tbl, 4, 2)
+        ok(LC.CardTableState(tbl).game == 2, "the game picked in the window")
+        force({ 10, 2, 10, 8, 10, 8, 10, 8, 3 })
+        _netcall("lc_cards_deal", rebel, tbl, 1, 0)
+        _netcall("lc_cards_deal", rebel, tbl, 3, 1)
+        ok(LC.CardTableState(tbl).round and #select(2, seatOf(rebel)).cards == 3, "Card in the window")
+        _netcall("lc_cards_deal", rebel, tbl, 3, 2)
+        unforce()
+        ok(LC.CardTableState(tbl).round == nil, "Stay in the window")
+        _netcall("lc_cards_deal", rebel, tbl, 4, 1)
+        ok(LC.CardTableState(tbl).game == 1 and select(2, seatOf(rebel)).cards == nil, "back to high card: the last hand's cards are cleared")
+        -- suits: which of the four cards of a rank it is, for its picture; no two cards of a hand the same
+        local ranks, suits = LC.CardTableCards(52)
+        local seen, fine = {}, #ranks == 52 and #suits == 52
+        for i = 1, 52 do
+            local k = ranks[i] .. "/" .. suits[i]
+            if seen[k] or suits[i] < 1 or suits[i] > 4 then fine = false end
+            seen[k] = true
+        end
+        ok(fine, "a deck is thirteen ranks in four suits, each card once")
+        _advance(4.1)
+        LC.CardTableDeal(rebel, tbl)
+        local _, mine = seatOf(rebel)
+        local w = window(rebel)
+        ok(mine.suit and mine.suit >= 1 and mine.suit <= 4 and w.data[34] == mine.suit, "a card's suit goes to the window with it", tostring(w.data[34]))
+    end)()
+
     LC.ResistanceFundTake = takeWas
     if LC.CardTableState(tbl) then for _, s in ipairs(LC.CardTableState(tbl).seats) do if s.ply then LC.CardTableStand(s.ply, tbl) end end end
     tbl:Remove() away:Remove()

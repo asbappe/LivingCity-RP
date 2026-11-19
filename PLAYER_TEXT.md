@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version 50d4041. Admin-only console messages and log lines are left out.
+Made from version 796cc2b. Admin-only console messages and log lines are left out.
 
-13173 lines, from 370 files.
+13176 lines, from 370 files.
 
 ## Contents
 
@@ -313,7 +313,7 @@ Made from version 50d4041. Admin-only console messages and log lines are left ou
 - [what the Resistance's people say to you, recordable (the owner, 13 November playtest:](#what-the-resistances-people-say-to-you-recordable-the-owner-13-november-playtest-svlivingcityrebelvoicelua) (14)
 - [who you are now, and what goes with it (the owner, 7 November: "when I become a metrocop](#who-you-are-now-and-what-goes-with-it-the-owner-7-november-when-i-become-a-metrocop-svlivingcityreconcilelua) (3)
 - [the Resistance's fund](#the-resistances-fund-svlivingcityresistancefundlua) (4)
-- [the Resistance's own money (19 November)](#the-resistances-own-money-19-november-svlivingcityresistancemoneylua) (29)
+- [the Resistance's own money (19 November)](#the-resistances-own-money-19-november-svlivingcityresistancemoneylua) (32)
 - [the Resistance's operations, and what the city does about them](#the-resistances-operations-and-what-the-city-does-about-them-svlivingcityresistanceopslua) (105)
 - [escalation](#escalation-svlivingcityresponselua) (24)
 - [sleep](#sleep-svlivingcityrestlua) (23)
@@ -1181,7 +1181,7 @@ Made from version 50d4041. Admin-only console messages and log lines are left ou
 - "Everyone else buys guns, ammunition and jammers at the black market. If a Civil Protection unit finds the scientist, the lab shuts down for ten minutes."  (text, line 204)
 - "Citizens pick up rumours. Talk to them (E) now and then."  (text, line 205)
 - "Ways for the Resistance to make money: write notes on what you see near a checkpoint or a unit (F2 > Resistance, needs paper) and sell them to the quartermaster; steal good parts off the factory line (R while holding one); or sell forged ration cards (but if too many turn up, the camp gets swept). On the board, only work that brings something in or delivers something pays credits; the rest pays experience."  (text, line 206)
-- "The Resistance's still brews eight bottles of moonshine for the dealer from a ration, 2 water and 8 empty bottles (E on it, and come back in five minutes), the card table in a back room on rebel ground is a pot game for up to four (the winner takes 70 per cent, the fund the rest), and now and then a Union paymaster walks the wages across the city with two units, his satchel half for the fund and half for those who took it."  (text, line 207)
+- "The Resistance's still brews eight bottles of moonshine for the dealer from a ration, 2 water and 8 empty bottles (E on it, and come back in five minutes), the card table in a back room on rebel ground is a pot game for up to four, high card or Twenty-one (the winner takes 70 per cent, the fund the rest), and now and then a Union paymaster walks the wages across the city with two units, his satchel half for the fund and half for those who took it."  (text, line 207)
 - "The Resistance: Freq 7 is only over the radio. Get your radio transmitter out (next to Hands) and talk, left click to call for backup (every Resistance player hears it and sees where you are, and a Member or higher gets a couple of idle fighters from nearby, who stay with you), or right click for its menu (a message, backup, your position). Anything that goes out on Freq 7 needs a Freq 7 radio and a radio transmitter; from Fighter up you're issued both, yours to keep (they can't be sold, dropped or handed over). F2 > Find the way follows a trail to the nearest rebel ground or the lab."  (text, line 208)
 - "Rebel zones that touch count as one camp: one quartermaster, one supply crate. He buys food back for 2 credits at most (food from his crate is free)."  (text, line 209)
 - "A role (Hacker, Father Grigori...) is added on top of your rank: you're still a Fighter working toward Lieutenant, but you carry the role's kit. To give up the role, join the faction again in F4."  (text, line 210)
@@ -1782,13 +1782,13 @@ Made from version 50d4041. Admin-only console messages and log lines are left ou
 
 `gamemodes/livingcity/gamemode/modules/client/cl_livingcity_cards.lua`
 
-- "Out of hands this hour"  (text, line 14)
-- "Short of the stake"  (text, line 14)
+- "Out of hands this hour"  (text, line 18)
+- "Short of the stake"  (text, line 18)
+- "High card"  (text, line 19)
 
 > Note for you (not shown in game): part of: open
 
-- "High card"  (window title, line 60)
-- "Pot {pot}"  (text, line 68)
+- "Pot {pot}"  (text, line 147)
 
 ## cl_livingcity_career.lua (cl_livingcity_career.lua)
 
@@ -13423,31 +13423,31 @@ Made from version 50d4041. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: hang poster
 
-- "There's no such poster on the roll."  (text, line 198)
-- "Only the Resistance pastes those up."  (text, line 200)
-- "Posters go on a wall."  (text, line 202)
+- "There's no such poster on the roll."  (text, line 206)
+- "Only the Resistance pastes those up."  (text, line 208)
+- "Posters go on a wall."  (text, line 210)
 
 > Note for you (not shown in game): a fresh sheet over one that's been painted on (a hand-hung one becomes the poster chosen)
 
-- "There's a poster here already."  (text, line 206)
-- "Not now. The walls are being watched."  (text, line 213)
+- "There's a poster here already."  (text, line 214)
+- "Not now. The walls are being watched."  (text, line 221)
 
 > Note for you (not shown in game): part of: hang poster
 
-- "There's one of ours close by already. Find another street."  (text, line 216)
-- "The city has enough posters up ({PosterHangMax}). Take one down first."  (text, line 221)
-- "It won't stick."  (text, line 224)
+- "There's one of ours close by already. Find another street."  (text, line 224)
+- "The city has enough posters up ({PosterHangMax}). Take one down first."  (text, line 229)
+- "It won't stick."  (text, line 232)
 
 > Note for you (not shown in game): The Resistance paints over a poster (a spray can: sv_livingcity_scavenge.lua). Their own paste-ups are left alone.
 
-- "Look at a poster."  (text, line 245)
-- "That one is ours."  (text, line 246)
-- "Someone has seen to this one already."  (text, line 247)
+- "Look at a poster."  (text, line 255)
+- "That one is ours."  (text, line 256)
+- "Someone has seen to this one already."  (text, line 257)
 
 > Note for you (not shown in game): part of: take down poster
 
-- "Look at a poster."  (text, line 255)
-- "Look at a poster."  (text, line 256)
+- "Look at a poster."  (text, line 265)
+- "Look at a poster."  (text, line 266)
 
 ## the state of the city, kept from day to day (the owner, (sv_livingcity_ledger.lua)
 
@@ -19268,89 +19268,98 @@ Made from version 50d4041. Admin-only console messages and log lines are left ou
 
 `gamemodes/livingcity/gamemode/modules/server/sv_livingcity_resistancemoney.lua`
 
-- "A Union paymaster is walking the shift wages across the city with an escort: take his satchel."  (text, line 112)
-- "your share"  (text, line 125)
+- "A Union paymaster is walking the shift wages across the city with an escort: take his satchel."  (text, line 119)
+- "your share"  (text, line 136)
 
 > Note for you (not shown in game): part of: use still
 
-- "You need a ration packet, %d water and %d empty bottles."  (message, line 170)
+- "You need a ration packet, %d water and %d empty bottles."  (message, line 181)
 
 > Note for you (not shown in game): part of: dealer sale split
 
-- "%s%s sold to the dealer (%s)"  (message, line 257)
+- "%s%s sold to the dealer (%s)"  (message, line 268)
 
 > Note for you (not shown in game): part of: dealer rent
 
-- "The dealer's rent"  (text, line 292)
+- "The dealer's rent"  (text, line 303)
 
 > Note for you (not shown in game): off the board, and a job still going has nothing left to do
 
-- "you ran out of time"  (text, line 389)
+- "you ran out of time"  (text, line 400)
 
 > Note for you (not shown in game): part of: start paymaster
 
-- "nobody to send"  (text, line 396)
-- "nowhere to start from"  (text, line 398)
-- "nobody to send"  (text, line 400)
-- "The paymaster sets out %s with %d credits"  (message, line 418)
+- "nobody to send"  (text, line 407)
+- "nowhere to start from"  (text, line 409)
+- "nobody to send"  (text, line 411)
+- "The paymaster sets out %s with %d credits"  (message, line 429)
 
 > Note for you (not shown in game): part of: rob paymaster
 
-- "The paymaster's satchel"  (text, line 468)
+- "The paymaster's satchel"  (text, line 479)
 
 > Note for you (not shown in game): the Combine answer it as they do a looted supply drop: seen at it, wanted, and the units after you
 
-- "Looting Union supplies"  (text, line 477)
+- "Looting Union supplies"  (text, line 488)
 
 > Note for you (not shown in game): pressing E on something
 
-- "E on the paymaster"  (text, line 496)
+- "E on the paymaster"  (text, line 507)
 
 > Note for you (not shown in game): (and where the city hears E on any of its people: whichever of the two hears it first, it is taken once)
 
-- "E on the paymaster"  (text, line 502)
+- "E on the paymaster"  (text, line 513)
 
 > Note for you (not shown in game): an NPC dying
 
-- "the paymaster killed"  (text, line 519)
+- "the paymaster killed"  (text, line 530)
 
 > Note for you (not shown in game): His walk, his escort beside him, and the end of it.
 
-- "the satchel was picked up by the Union"  (text, line 531)
+- "the satchel was picked up by the Union"  (text, line 542)
 
 > Note for you (not shown in game): part of: tick
 
-- "out of time"  (text, line 536)
+- "out of time"  (text, line 547)
 
 > Note for you (not shown in game): a timer (regularly)
 
-- "his walk"  (text, line 567)
-- "the paymaster's day"  (text, line 585)
+- "his walk"  (text, line 578)
+- "the paymaster's day"  (text, line 596)
 
 > Note for you (not shown in game): part of: build
 
-- "Rob the paymaster"  (title, line 606)
+- "Rob the paymaster"  (title, line 617)
+
+> Note for you (not shown in game): part of: settle21
+
+- "The card table's cut"  (text, line 796)
+
+> Note for you (not shown in game): part of: unseat
+
+- "The card table's cut"  (text, line 819)
 
 > Note for you (not shown in game): A hand, dealt by a seated player. Everyone seated who has hands left this hour puts the stake in (one short of it is stood up first), the city's people at most THEIRS; one card each; the highest card takes WINNER per cent of the pot (a tie splits it); the rest is the fund's. True and { pot, cut, each, seats in the hand }; or false and why not.
 
-- "not seated"  (text, line 810)
-- "not here"  (text, line 811)
-- "no stake"  (text, line 812)
-- "too soon"  (text, line 814)
-- "no hands left this hour"  (text, line 815)
+- "not seated"  (text, line 950)
+- "not here"  (text, line 951)
+- "no stake"  (text, line 952)
+- "a hand is on"  (text, line 953)
+- "too soon"  (text, line 955)
 
 > Note for you (not shown in game): part of: card table deal
 
-- "short of the stake"  (text, line 816)
-- "The card table's cut"  (text, line 847)
+- "no hands left this hour"  (text, line 956)
+- "short of the stake"  (text, line 957)
+- "The card table's cut"  (text, line 991)
 
-> Note for you (not shown in game): Once a second: anyone seated who has walked off, died or become a unit is stood up; a table taken away, emptied.
+> Note for you (not shown in game): a timer (regularly)
 
-- "the card table's seats"  (text, line 863)
+- "the card table's seats"  (text, line 1012)
 
-> Note for you (not shown in game): From the window: 0 stand up, 1 deal, 2 the stake (STAKES[n]). All of it is checked here.
+> Note for you (not shown in game): From the window: 0 stand up, 1 deal, 2 the stake (STAKES[n]), 3 Twenty-one's Card (n 1) or Stay (n 2), 4 the game (n). All of it is checked here.
 
-- "a hand of cards"  (text, line 869)
+- "a hand of cards"  (text, line 1019)
 
 ## the Resistance's operations, and what the city does about them (sv_livingcity_resistanceops.lua)
 
@@ -25780,62 +25789,62 @@ Made from version 50d4041. Admin-only console messages and log lines are left ou
 - "You fold the note into your pocket."  (text, line 136)
 - "You've got enough of your writing out there already."  (text, line 138)
 - "Look at a wall to put it up on."  (text, line 143)
-- "You put it up."  (text, line 163)
-- "You leave the note."  (text, line 163)
+- "You put it up."  (text, line 164)
+- "You leave the note."  (text, line 164)
 
 > Note for you (not shown in game): part of: take note
 
-- "You can't carry any more notes."  (text, line 192)
-- "You take it."  (text, line 198)
+- "You can't carry any more notes."  (text, line 193)
+- "You take it."  (text, line 199)
 
 > Note for you (not shown in game): part of: tear down
 
-- "unauthorised notice removed"  (text, line 208)
-- "You tear it down."  (text, line 209)
+- "unauthorised notice removed"  (text, line 209)
+- "You tear it down."  (text, line 210)
 
 > Note for you (not shown in game): who it could be posted to, as a letter (sv_livingcity_mail.lua)
 
-- "You've got enough of your writing out there already."  (text, line 224)
+- "You've got enough of your writing out there already."  (text, line 225)
 
 > Note for you (not shown in game): part of: carried note
 
-- "You tear it up."  (text, line 239)
+- "You tear it up."  (text, line 240)
 
 > Note for you (not shown in game): part of: broadcast
 
-- "Only the City Administrator speaks to the whole city."  (text, line 293)
-- "Say something."  (text, line 295)
-- "Give the city a moment."  (text, line 296)
-- "The City Administrator"  (text, line 298)
+- "Only the City Administrator speaks to the whole city."  (text, line 294)
+- "Say something."  (text, line 296)
+- "Give the city a moment."  (text, line 297)
 - "The City Administrator"  (text, line 299)
-- "[{who}] {text}"  (chat message, line 307)
+- "The City Administrator"  (text, line 300)
+- "[{who}] {text}"  (chat message, line 308)
 
 > Note for you (not shown in game): The law
 
-- "Obey the instructions of Civil Protection at all times."  (text, line 317)
-- "Carry your identification. Present it when asked."  (text, line 318)
-- "Curfew is absolute. Be in your residence when it is called."  (text, line 319)
-- "Gatherings of more than three citizens require a permit."  (text, line 320)
-- "Do not run. Do not loiter. Do not obstruct a Civil Protection unit."  (text, line 321)
-- "Possession of weapons, unregistered radios or Resistance materials is forbidden."  (text, line 322)
-- "Report anticitizen activity. Inaction is conspiracy."  (text, line 323)
-- "Rations are allocated by standing. Do not take what is not yours."  (text, line 324)
+- "Obey the instructions of Civil Protection at all times."  (text, line 318)
+- "Carry your identification. Present it when asked."  (text, line 319)
+- "Curfew is absolute. Be in your residence when it is called."  (text, line 320)
+- "Gatherings of more than three citizens require a permit."  (text, line 321)
+- "Do not run. Do not loiter. Do not obstruct a Civil Protection unit."  (text, line 322)
+- "Possession of weapons, unregistered radios or Resistance materials is forbidden."  (text, line 323)
+- "Report anticitizen activity. Inaction is conspiracy."  (text, line 324)
+- "Rations are allocated by standing. Do not take what is not yours."  (text, line 325)
 
 > Note for you (not shown in game): part of: set law
 
-- "Only the City Administrator writes the law."  (text, line 345)
-- "Write the law."  (text, line 349)
-- "No such law."  (text, line 352)
-- "Laws go from 1 to {list}."  (text, line 355)
-- "[City] The law has changed. F1 > What now? > The city's laws."  (chat message, line 359)
+- "Only the City Administrator writes the law."  (text, line 346)
+- "Write the law."  (text, line 350)
+- "No such law."  (text, line 353)
+- "Laws go from 1 to {list}."  (text, line 356)
+- "[City] The law has changed. F1 > What now? > The city's laws."  (chat message, line 360)
 
 > Note for you (not shown in game): Chat
 
-- "Usage: !setlaw <number> <text>"  (chat message, line 399)
+- "Usage: !setlaw <number> <text>"  (chat message, line 400)
 
 > Note for you (not shown in game): part of: dellaw
 
-- "Usage: !dellaw <number>"  (chat message, line 405)
+- "Usage: !dellaw <number>"  (chat message, line 406)
 
 ## the stalkers of the Combine zones (sv_livingcity_zonestalkers.lua)
 
