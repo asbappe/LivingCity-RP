@@ -65,3 +65,39 @@ Filled in as the review goes; the first ones are clear already:
 
 **Weight.** small (lamp model, decals), medium (the channel dressed as Ravenholm's edge, a lever).
 
+### 3. shanty (showroom 1): the shantytown under a street bridge
+
+**Seen.** The canal widens into a basin under a heavy, dark street bridge on two deep beams. Along the back a boardwalk with three shacks: a card room (a table, two chairs, a lamp), a trader's stall (a counter, shelves, a few jars), a bunk room. Under the bridge a hangout round a fire drum with chairs, a couch and a stove with its chimney pipe. A boat pulled up on the mud, dock poles, a notice board, a plank fence.
+
+**Fix.**
+- The shacks read as clean wooden boxes: each is a perfect rectangle of one wood, floor, walls and ceiling alike, no window. A shanty is the opposite: walls of mismatched sheets (corrugated tin, plywood, a door laid sideways, a tarp), roofs of tin sloping and overhanging on visible posts, gaps.
+- The card room and the bunk room have no window and one lamp: inside they are closed brown boxes.
+
+**Better.**
+- Build each shack from pieces, not a box: brush walls in two or three materials per shack (wood planks, metal sheet, plaster salvage), roof sheets as thin tilted brushes overhanging 16 to 24, corner posts, and props on the walls: props_debris wood boards and metal panels nailed over gaps, an old door (door01_left as a wall panel, turned on its side so it is not mistaken for a real door), a tarp (cloth brush) over a doorway.
+- A window in each shack: a hole with boards across, or a sheet of cracked glass (glasswindowbreak070a, the owner's map uses it).
+- Light like a lived-in place: a string of bulbs on a cable between the dock poles and the bridge (a rope with lightbulb01a props or glow sprites every 48, the owner's map has 30 lightbulbs), a lantern in each shack, the fire's glow under the bridge.
+- Washing on a line across the basin (a rope, cloth brushes hanging), crates and a cart outside the stall, a hand-painted sign over it, the lambda spray on the bridge pier, posters inside.
+- The basin: the canal's water could fill it shallow (a dock to step from), with the boat floating, not pulled up on mud.
+- When this is the Resistance's base: a radio table and a map board in the card room (the office the game shows), so the base is in a room, not only at the pole.
+
+**Weight.** medium to large (the shacks rebuilt from pieces), small (lights, washing, signs).
+
+### 4. vort (showroom 1): the vortigaunt culvert
+
+**Seen.** A low culvert off the left wall, a pipe along its wall under the roof, two turns, tall dark brown slabs half across the last turn (the "hanging of strips"), then a chamber: smooth pale walls and ceiling, a ring of stones round a fire, a tripod with a pot over it, three mattresses for mats, shelves with jars on the back wall, a faint green glow.
+
+**Fix.**
+- The chamber's walls read as clean pale plaster: a room in a house, not a den at the end of a drain. Damp concrete or brick with water stains (decalstain002a, decalconcretedrain*), earth where it has broken through.
+- The "hanging of strips" draws as a few thick planks from floor to roof: it hides the room like a fence. Thin strips (4 wide, 1 thick, uneven lengths, a hand's gap between) or a cloth brush with a material that has holes, ending a foot above the floor.
+- The culvert is a bare grey tube with no light from the mouth to the turn: the walk in is a dark box. A green glow should leak round the turn (a dim green light at the turn, sprites) so players are drawn in.
+
+**Better.**
+- Make the chamber a cave the vortigaunts have dug into: one wall broken into earth and rock (rock models, nature/dirt materials, a slope of rubble), roots through the roof.
+- The vortigaunts' things: bones (Half-Life 2's gibs and skull), antlion parts, bundles hung from a cord, a stack of firewood, the cooking pot steaming (env_steam: the owner's map has five), a ring of candles.
+- The green glow made of several small green sprites near the floor and a point_spotlight of green on the back wall (a "vortessence" pool), not one sprite in the air.
+- A soundscape of a fire and low hum.
+- Gameplay: a place to heal (the game's medic) or trade with a vortigaunt NPC: an info_target for where an NPC vortigaunt stands, facing the fire.
+
+**Weight.** medium (walls and the cave corner), small (glow, steam, strips).
+
