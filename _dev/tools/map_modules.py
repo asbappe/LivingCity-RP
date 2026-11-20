@@ -519,11 +519,16 @@ def m_gate(m, opt):
 
 def m_drain(m, opt):
     """1. The storm drain junction: a way from the canal down into the city's sewers. In the left wall a drain's mouth
-    with a concrete collar and an arched roof; a junction chamber round a railed sump of standing water, two inflow
-    pipes, a valve wheel, a lamp; then thirteen steps down to the sewers' height (z 288), a grate, and a cap to delete
-    where the owner joins it to a sewer of theirs.
-    Named for the game: lc_drain_grate (a func_door: Open lifts it, Close drops it), lc_drain_junction (the chamber).
-    Unchecked: ambient/water/water_flow_loop1.wav."""
+    with a concrete collar and an arched roof; a junction chamber round a sump of standing water behind the city's
+    handrail, two inflow pipes (concrete pipes set in the side walls, dark inside), a standing valve, a lamp; then
+    thirteen steps down to the sewers' height (z 288), a grate (the canals' own bar panels, four of them), and a cap to
+    delete where the owner joins it to a sewer of theirs.
+    Named for the game: lc_drain_grate (a func_door: Open lifts it, Close drops it; unseen, the four bar panels riding
+    on it), lc_drain_junction (the chamber).
+    Left as brushes: the mouth, its collar and arch, the chamber, the sump, the steps, the plugs that darken the inflow
+    pipes' insides, the sewer end's cap.
+    Unchecked: ambient/water/water_flow_loop1.wav; that the concrete pipe is open at both ends (a plug darkens it at
+    the wall, so its far end, in the wall, is never seen)."""
     from map_build import bar_row
     b = m.b
     m.open(0, -256, 1024, 256)
@@ -538,12 +543,13 @@ def m_drain(m, opt):
               prism([(640, F + 192), (640, F + 128), (576, F + 192)], "y", 256, 768, MAT["canal_wall"])])
     m.taken(360, 232, F, 664, 256, F + 216)
     m.water(384, 896, 640, 1152, F - 64, F - 40)
-    rail = [(384, 896, F + 36, 640, 900, F + 40), (384, 1148, F + 36, 640, 1152, F + 40), (384, 896, F + 36, 388, 1152, F + 40), (636, 896, F + 36, 640, 1152, F + 40)]
-    rail += [(u, v, F, u + 4, v + 4, F + 36) for u in (384, 448, 508, 572, 636) for v in (896, 1148)] + [(u, v, F, u + 4, v + 4, F + 36) for u in (384, 636) for v in (960, 1022, 1086)]
-    m.det(rail, MAT["bars"])
-    m.shapes([prism(octagon(1024, F + 150, 40), "x", 256, 300, MAT["bars"], MAT["black"]), prism(octagon(1024, F + 150, 40), "x", 724, 768, MAT["bars"], MAT["black"]),
-              prism(octagon(320, F + 70, 18), "y", 768, 774, MAT["bars"])])
-    m.det([(316, 768, F + 66, 324, 780, F + 74), (300, 768, F + 20, 340, 772, F + 30)], MAT["bars"])
+    from map_mods_c import centred, handrail
+    for a, e in (((384, 894), (640, 894)), ((384, 1154), (640, 1154)), ((382, 896), (382, 1152)), ((642, 896), (642, 1152))):
+        handrail(m, a, e, F)                                 # (round the sump, on the chamber's floor)
+    for u, s in ((256, 1), (768, -1)):                       # the inflow pipes: concrete pipes 64 out of the side walls (their middles in the room, so
+        centred(m, "models/props_pipes/concrete_pipe001a.mdl", u + s * 8, 1024, 0, F + 150)     # they are lit), a dark plug inside each at the wall
+        m.shapes([prism(octagon(1024, F + 150, 38), "x", min(u, u + s * 3), max(u, u + s * 3), MAT["black"])])
+    m.static("models/props_pipes/valve002.mdl", 320, 787, 90, z=F)
     m.lamp(512, 840, F + 214, "190 210 170 70", hang=34)
     m.lamp(512, 1216, F + 214, "190 210 170 40", hang=34)
     m.sound("ambient/water/water_flow_loop1.wav", 512, 1024, F, radius=600, volume=3)
@@ -555,12 +561,15 @@ def m_drain(m, opt):
     m.lane(512, 1280 + run + 48, SEWER)
     for u, v in ((320, 832), (320, 1024), (320, 1216), (704, 1024)):
         m.lane(u, v)
-    rows = bar_row(m.fr.box(384, 1544, SEWER, 640, 1552, SEWER + 240), m.fr.ax("u"))
     b.vmf.brush_entity("func_door", {"targetname": "lc_drain_grate", "movedir": "-90 0 0", "speed": "30", "lip": "24", "wait": "-1", "spawnflags": "32",
                                      "spawnpos": "0", "dmg": "0", "forceclosed": "0", "health": "0", "ignoredebris": "0", "loopmovesound": "0",
-                                     "noise1": "MetalGrate.ScrapeSmooth", "noise2": "MetalGrate.ImpactSoft", "renderamt": "255", "rendercolor": "255 255 255",
-                                     "renderfx": "0", "rendermode": "0", "disableshadows": "1"}, rows, MAT["bars"], m.dv)
+                                     "noise1": "MetalGrate.ScrapeSmooth", "noise2": "MetalGrate.ImpactSoft", "renderamt": "0", "rendercolor": "255 255 255",
+                                     "renderfx": "0", "rendermode": "10", "disableshadows": "1"}, [m.fr.box(384, 1544, SEWER, 640, 1552, SEWER + 240)], MAT["nodraw"], m.dv)
     b.names.append(("lc_drain_grate", "func_door", m.tag))
+    from map_mods_c import ride
+    for gu in (448, 576):                                    # the canals' bar panels (128 by 124), two by two: the top pair's heads go 8 into the roof
+        for gz in (SEWER, SEWER + 124):
+            ride(m, "lc_drain_grate", "models/props_canal/canal_bars002.mdl", gu, 1548, 0, gz)
     m.test_button((384, 1500, SEWER + 48, 392, 1516, SEWER + 64), [("OnIn", "lc_drain_grate", "Open"), ("OnOut", "lc_drain_grate", "Close")])
     m.world((384, 1600, SEWER, 640, 1664, SEWER + 240), MAT["black"], vis="%s: the drain's sewer end (delete to join a sewer)" % b.vis)
     b.plan.keep_out.append(m.fr.rect(320, 1664, 704, 1728))
@@ -577,12 +586,16 @@ def m_drain(m, opt):
 
 def m_overflow(m, opt):
     """2. The overflow toward Ravenholm. A spillway in the left wall, its apron stepping down into the canal, shut by a
-    steel sluice plate on two lifting rods under a winch housing, red lamps either side. Behind the plate a ribbed
-    channel runs on to a cap ("delete to join Ravenholm"). Driftwood and a body lie against the plate.
+    steel sluice plate on two lifting rods under two of the canal's winches on a ledge, caged red lamps either side.
+    Behind the plate a ribbed channel runs on to a cap ("delete to join Ravenholm"). Driftwood (the coast's own) and a
+    body lie against the plate.
     "overflow 1280": how far the channel reaches from the canal's middle (default 1024).
     Named for the game: lc_overflow_sluice (a func_door: Open lifts it), lc_overflow_moan (a sound from beyond the
     plate, silent until told: PlaySound), lc_overflow_far (the channel's far end).
-    Unchecked: ambient/creatures/town_zombie_call1.wav, models/humans/charple02.mdl."""
+    Left as brushes: the weir, its sill, apron and frame, the ledge the winches stand on, the channel and its ribs, and
+    the sluice plate with its rods (a slab of steel 384 wide and 176 high: no model is a plate that size; the canals'
+    bar panels are bars, and stacked to that height they would rise out over the wall's top when it lifts).
+    Unchecked: ambient/creatures/town_zombie_call1.wav, models/humans/charple02.mdl; which way winch02 faces."""
     reach = int(opt[0]) if opt and opt[0].isdigit() else 1024
     steel = MM["steel"]
     m.open(0, -256, 1024, 256)
@@ -595,13 +608,14 @@ def m_overflow(m, opt):
     m.portal(320, 295, F, 704, 297, F + 192)
     m.test_button((304, 240, F + 48, 320, 248, F + 64), [("OnIn", "lc_overflow_sluice", "Open"), ("OnOut", "lc_overflow_sluice", "Close")])
     m.det([(304, 248, F, 320, 256, F + 224), (704, 248, F, 720, 256, F + 224), (304, 248, F + 208, 720, 256, F + 224)], steel)   # its frame
-    m.det([(416, 216, F + 240, 608, 256, F + 304)], steel)                                                                        # the winch housing
-    m.shapes([prism(octagon(236, F + 272, 22), "x", 608, 620, MAT["bars"]), prism(octagon(236, F + 272, 22), "x", 404, 416, MAT["bars"])])
+    m.det([(408, 200, F + 232, 616, 256, F + 240)], MAT["beam"])                                                                # the ledge for the winches
+    for u in (443, 581):                                                                                                          # a winch over each rod
+        m.static("models/props_canal/winch02.mdl", u, 226, 270, z=F + 240)
     m.taken(296, 200, F, 728, 256, F + 312)
     for u in (280, 744):
-        m.det([(u - 6, 244, F + 250, u + 6, 256, F + 262)], steel)
-        m.glow(u, 240, F + 256, "255 50 30", 0.25)
-        m.light(u, 232, F + 256, "255 60 40 30")
+        m.static("models/props_c17/light_cagelight02_off.mdl", u, 254, 270, z=F + 224)         # (under the walls' trim line)
+        m.glow(u, 245, F + 234, "255 50 30", 0.25)
+        m.light(u, 232, F + 234, "255 60 40 30")
     for v in range(704, reach - 64, 128):                    # the channel's ribs
         m.det([(384, v, F + 176, 640, v + 16, F + 192), (384, v, F, 392, v + 16, F + 176), (632, v, F, 640, v + 16, F + 176)], MAT["beam"])
     m.world((384, reach - 64, F, 640, reach, F + 192), MAT["black"], vis="%s: the overflow's far end (delete to join Ravenholm)" % m.b.vis)
@@ -612,10 +626,11 @@ def m_overflow(m, opt):
     m.light(512, 480, F + 150, "200 120 90 30")
     m.sound("ambient/creatures/town_zombie_call1.wav", 512, reach - 96, F + 60, radius=1400, volume=8, name="lc_overflow_moan", on=False)
     m.target("lc_overflow_far", 512, reach - 80, F + 8, 270)
-    m.static("models/props_debris/concrete_chunk01a.mdl", 250, 130, 40)
-    m.static("models/props_debris/broken_pile001a.mdl", 780, 150, 200)
-    m.det([(430, 170, F + 6, 600, 182, F + 10), (470, 150, F + 6, 482, 250, F + 12), (530, 190, F + 12, 640, 200, F + 16)], MM["wood"])
-    m.loose("models/props_junk/wood_pallet001a.mdl", 560, 120, 25)
+    m.static("models/props_debris/concrete_chunk01a.mdl", 250, 96, 40, z=F + 4)
+    m.static("models/props_debris/broken_pile001a.mdl", 780, 96, 200, z=F + 4)
+    m.static("models/props_foliage/driftwood_03a.mdl", 500, 190, 10, z=F + 6)
+    m.static("models/props_foliage/driftwood_03a.mdl", 596, 176, 160, z=F + 6)
+    m.loose("models/props_junk/wood_pallet001a.mdl", 560, 110, 25, z=F + 12)
     m.body("models/humans/charple02.mdl", 520, 420, 70)
     m.body("models/humans/charple02.mdl", 500, 130, 200)
     m.decal("decals/decalstain002a", 512, 100, F + 1)
@@ -628,12 +643,19 @@ def m_overflow(m, opt):
 
 def m_shanty(m, opt):
     """4. The shantytown under a street bridge. The canal widens into a basin on its left; a boardwalk runs along the
-    basin's back, with a card room, a trader's stall with a counter and shelves, and a bunk room on it; under the street
-    between them, a fire drum with seats round it and a stove. Tin windbreaks along the basin's edge, lamps on a cable
-    from pole to pole, washing on a line, a boat pulled up, a notice board.
+    basin's back, with a card room, a trader's stall (a long table for its counter, shelves on its back wall with jars
+    and cans) and a bunk room (two bed frames, mattresses on them) on it; under the street between them, a fire drum
+    with seats round it and a stove with its chimney pipe. A plank fence against the wind at the basin's edge east of
+    the street, a lamp on a cable between two old dock poles over it, caged lamps on the card room's front, a boat
+    pulled up, a cork notice board on two poles, posters on the card room. In front of the card room the basin's
+    floor is left clear for the Resistance's flag.
     Named for the game (places only): lc_shanty_cards (the card room's table), lc_shanty_fund (the stall, for the fund's
-    screen), lc_shanty_soup (under the street, for the soup), lc_shanty_fire (the drum), lc_shanty_board (the notices).
-    Unchecked: ambient/fire/fire_small_loop2.wav, env_smokestack, the cable (move_rope), sprites/light_glow03.vmt."""
+    screen), lc_shanty_soup (under the street, for the soup), lc_shanty_fire (the drum), lc_shanty_board (the notices),
+    lc_hq_setup_shanty (where the game stands the Resistance's flagpole when a territory covers the shanty town: the
+    basin's open floor, 64 clear all round, open to the sky).
+    Left as brushes: the boardwalk, the shacks (walls, tin roofs), the street bridge.
+    Unchecked: ambient/fire/fire_small_loop2.wav, env_smokestack, the cable (move_rope), sprites/light_glow03.vmt;
+    where on prison_bedframe001b a mattress lies (the mattresses are loose: they fall onto the frames)."""
     wood, tin, beam = MM["wood"], MM["tin"], MM["beam_wood"]
     m.open(0, -256, 1536, 256)
     m.open(256, 256, 1280, 640)
@@ -647,24 +669,28 @@ def m_shanty(m, opt):
     m.static("models/props_c17/furnituretable002a.mdl", 396, 544, 0, z=z)
     m.static("models/props_c17/furniturechair001a.mdl", 340, 544, 0, z=z)
     m.static("models/props_c17/furniturechair001a.mdl", 452, 544, 180, z=z)
-    m.lamp(396, 544, z + 96, "255 190 110 45")
+    m.lamp(396, 544, z + 104, "255 190 110 45")
     m.target("lc_shanty_cards", 396, 544, z + 36)
     m.hut(912, 456, 1088, 632, z, tin, open_front=True)                   # the trader's stall
-    m.det([(920, 456, z, 1080, 480, z + 40)], beam)
-    m.det([(924, 600, z + 40 + 30 * k, 1076, 624, z + 44 + 30 * k) for k in range(2)], wood)
+    m.static("models/props_wasteland/cafeteria_table001a.mdl", 1000, 476, 90, z=z)
+    for k, su in enumerate((960, 1032)):                                  # shelves on the back wall, what is for sale on them
+        for sz in (z + 44, z + 74):
+            m.static("models/props_c17/furnitureshelf001b.mdl", su, 616, 270, z=sz)
+        m.static(("models/props_junk/glassjug01.mdl", "models/props_lab/jar01a.mdl")[k], su - 10, 616, 0, z=z + 46)
+        m.static(("models/props_junk/metal_paintcan001a.mdl", "models/props_junk/garbage_glassbottle001a.mdl")[k], su + 8, 616, 0, z=z + 76)
     m.static("models/props_junk/wood_crate001a.mdl", 950, 560, 15, z=z)
     m.static("models/props_c17/shelfunit01a.mdl", 1050, 560, 180, z=z)
-    m.lamp(1000, 520, z + 96, "255 190 110 45")
+    m.lamp(1000, 520, z + 104, "255 190 110 45")
     m.target("lc_shanty_fund", 1000, 560, z + 48, 270)
     m.hut(1104, 432, 1272, 632, z, wood)                                  # the bunk room
-    m.loose("models/props_c17/furnituremattress001a.mdl", 1150, 560, 90, z=z)
-    m.loose("models/props_c17/furnituremattress001a.mdl", 1226, 560, 90, z=z)
-    m.det([(1112, 600, z + 60, 1264, 624, z + 64)], wood)
-    m.light(1188, 540, z + 90, "255 180 100 25")
+    from map_mods_b import fire, mattress
+    for bu in (1150, 1226):
+        m.static("models/props_wasteland/prison_bedframe001b.mdl", bu, 570, 90, z=z)
+        mattress(m, bu, 570, 90, z=z + 30)
+    m.light(1188, 520, z + 90, "255 180 100 25")
     # under the street: the fire drum and seats, the stove and its pipe, a table for the soup
     m.static("models/props_c17/oildrum001.mdl", 768, 400, 0)
-    m.point("env_fire", 768, 400, F + 44, {"health": "30", "firesize": "28", "fireattack": "4", "firetype": "0", "spawnflags": "7", "ignitionpoint": "32", "damagescale": "0.1"})
-    m.light(768, 400, F + 90, "255 150 70 110")
+    fire(m, 768, 400, F + 45, size=28, drop=False)                        # (it burns in the drum: an env_fire drops to the ground unless told not to)
     m.sound("ambient/fire/fire_small_loop2.wav", 768, 400, F + 50, radius=500, volume=5)
     m.smoke(768, 400, F + 60, size=10, length=120, rate=8)
     m.target("lc_shanty_fire", 768, 400, F + 8)
@@ -672,37 +698,40 @@ def m_shanty(m, opt):
         m.static("models/props_junk/wood_crate001a.mdl", u, v, yaw)
     m.static("models/props_c17/furniturecouch001a.mdl", 690, 596, 270)
     m.static("models/props_c17/furniturestove001a.mdl", 856, 604, 270)
-    m.det([(852, 620, F + 40, 860, 628, TRIM - 44)], MAT["bars"])
+    m.static("models/props_rooftop/chimneypipe01b.mdl", 856, 618, 0, z=F + 40)          # its pipe, up from its top, capped, under the street's deck
     m.static("models/props_c17/furnituretable001a.mdl", 780, 560, 0)
     m.target("lc_shanty_soup", 780, 560, F + 40)
     m.blocked(660, 520, 890, 640)
     m.blocked(690, 340, 840, 490)
-    # windbreaks of tin along the basin's edge, on posts
-    for (a, c) in ((300, 560), (980, 1240)):
-        m.det([(a, 264, F, c, 268, F + 88)], tin)
-        m.det([(u, 262, F, u + 6, 270, F + 96) for u in range(a, c + 1, 130)], beam)
-        m.blocked(a - 8, 248, c + 8, 284)
-    # lamps on a cable from pole to pole across the basin; washing on a line
-    poles = [(290, 330), (620, 330), (916, 330), (1250, 330)]
-    m.det([(u - 3, v - 3, F, u + 3, v + 3, F + 150) for u, v in poles], beam)
-    m.rope([(u, v, F + 148) for u, v in poles], slack=30)
-    for a, c in zip(poles, poles[1:]):
-        u, v = (a[0] + c[0]) // 2, a[1]
-        m.glow(u, v, F + 126, "255 200 130", 0.2)
-        m.light(u, v, F + 120, "255 190 120 30")
-    m.rope([(520, 440, z + 100), (640, 600, F + 150)], slack=20, width=1)
-    m.det([(540 + 26 * k, 462 + 34 * k, F + 104 - 2 * k, 544 + 26 * k, 480 + 34 * k, F + 136 - 2 * k) for k in range(4)], wood)
-    # a boat pulled up, a notice board, what is left lying
-    m.static("models/props_canal/boat001a.mdl", 1340, 150, 20)
-    m.blocked(1260, 60, 1420, 250)
-    m.det([(560, 262, F, 566, 270, F + 110), (626, 262, F, 632, 270, F + 110), (560, 264, F + 50, 632, 268, F + 108)], wood)
-    m.decal("decals/decalposter014a", 580, 263, F + 80)
-    m.decal("decals/decal_posters005a", 612, 263, F + 82)
+    # a plank fence against the wind at the basin's edge east of the street (west of it the floor is the flag's), clear
+    # of the bank against the basin's end wall
+    m.static("models/props_wasteland/wood_fence01a.mdl", 965, 266, 0, z=F)
+    m.static("models/props_wasteland/wood_fence02a.mdl", 1062, 266, 0, z=F)
+    m.blocked(892, 248, 1102, 284)
+    # a lamp on a cable between two old dock poles over the east basin; caged lamps on the card room's front
+    poles = [(916, 330), (1136, 330)]
+    for u, v in poles:
+        m.static("models/props_docks/dock01_pole01a_128.mdl", u, v, 0)
+    m.rope([(u, v, F + 126) for u, v in poles], slack=30)
+    m.glow(1026, 330, F + 106, "255 200 130", 0.2)
+    m.light(1026, 330, F + 100, "255 190 120 30")
+    for u in (300, 492):
+        m.static("models/props_c17/light_cagelight02_on.mdl", u, 438, 270, z=z + 74)
+        m.light(u, 424, z + 80, "255 190 120 30")
+    # the Resistance's flag, when a territory covers the shanty town: the open floor in front of the card room
+    m.target("lc_hq_setup_shanty", 480, 330, F, 90)
+    # a boat pulled up, a notice board on two poles, posters on the card room's front, what is left lying
+    m.static("models/props_canal/boat001a.mdl", 1360, 60, 15)
+    m.blocked(1240, -40, 1480, 160)
+    for u in (563, 629):
+        m.static("models/props_docks/dock01_pole01a_128.mdl", u, 270, 0)
+    m.static("models/props_lab/corkboard001.mdl", 596, 262, 270, z=F + 60)
+    m.decal("decals/decalposter014a", 300, 440, z + 60)
+    m.decal("decals/decal_posters005a", 340, 440, z + 62)
     m.target("lc_shanty_board", 596, 240, F + 8, 90)
-    m.scatter(280, 280, 600, 380, 4, 11)
-    m.scatter(940, 280, 1250, 380, 4, 12)
+    m.scatter(920, 280, 1130, 380, 4, 12)
     m.static("models/props_junk/wood_crate002a.mdl", 560, 600, 0)
-    m.loose("models/props_junk/wood_pallet001a.mdl", 600, 300, 30)
+    m.loose("models/props_junk/wood_pallet001a.mdl", 600, 300, 30, z=F + 12)
     for u, v in ((396, 360), (600, 440), (768, 290), (1000, 360), (1188, 360), (396, 420), (1000, 420)):
         m.lane(u, v)
     m.view(200, -100, F, 30, 0, "the basin")
@@ -713,12 +742,15 @@ def m_shanty(m, opt):
 
 
 def m_vort(m, opt):
-    """6. The vortigaunt culvert: a low side drain in the left wall with a pipe along its roof, turning twice (nobody
-    in the canal can see or shoot into its end), a hanging of strips half across its last turn, and a dead-end chamber:
-    a ring of stones round a fire with a pot on a tripod, three mats, a shelf, things drying on a line, a seep of water
-    in one corner, a faint green glow in the air.
+    """6. The vortigaunt culvert: a low side drain in the left wall with the city's pipe along its wall under the roof
+    (capped where it starts), turning twice (nobody in the canal can see or shoot into its end), a hanging of strips
+    half across its last turn, and a dead-end chamber: a ring of stones round a fire with a pot hung on a tripod, three
+    old mattresses for mats, shelves on the back wall with jars and a pot on them, a seep of water in one corner, a
+    faint green glow in the air.
     Named for the game: lc_vort_fire, lc_vort_seat_1 to _3 (the mats, facing the fire).
-    Unchecked: env_fire, ambient/fire/fire_small_loop2.wav, the line (move_rope)."""
+    Left as brushes: the culvert and the chamber, the hearth's slab, the tripod's three sticks and its rod, and the
+    hanging of strips (Half-Life 2 has no cloth).
+    Unchecked: env_fire, ambient/fire/fire_small_loop2.wav."""
     m.open(0, -256, 1024, 256)
     m.low(384, 256, 576, 896, F + 144)
     m.low(576, 704, 896, 896, F + 144)
@@ -727,33 +759,39 @@ def m_vort(m, opt):
     m.side(384, 256, 1024, 1280)
     m.portal(384, 318, F, 576, 320, F + 144)
     m.water(896, 1152, 1024, 1280, F - 16, F - 6)
-    m.shapes([prism(octagon(408, F + 126, 10), "y", 256, 880, MAT["bars"])])
-    m.det([(400, 256 + 150 * k, F + 136, 416, 262 + 150 * k, F + 144) for k in range(1, 5)], MAT["bars"])
+    for k in range(6):                                       # the pipe (16 across) against the culvert's left wall, from a cap inside the mouth to the bend's wall
+        m.static("models/props_pipes/pipe03_straight01_long.mdl", 392, 368 + 96 * k, 0, z=F + 118)
+    m.static("models/props_pipes/pipe03_connector01.mdl", 392, 319, 90, z=F + 114)
     m.det([(704 + 24 * k, 892, F + 16 + 6 * (k % 2), 722 + 24 * k, 896, F + 144) for k in range(4)], MM["wood"])     # the hanging
     fu, fv = 864, 1056
     m.det([(fu - 24, fv - 24, F, fu + 24, fv + 24, F + 4)], MAT["beam"])
     ring = [(60, 0), (42, 42), (0, 60), (-42, 42), (-60, 0), (-42, -42), (0, -60), (42, -42)]
-    m.det([(fu + a - 9, fv + c - 9, F, fu + a + 9, fv + c + 9, F + 8 + 3 * (k % 2)) for k, (a, c) in enumerate(ring)], MAT["beam"])
+    for k, (a, c) in enumerate(ring):                       # the ring of stones (the city's own loose rocks)
+        m.static("models/props_junk/rock001a.mdl", fu + a, fv + c, 40 * k)
     m.shapes([prism([(fu + 40, F), (fu + 46, F), (fu + 4, F + 84), (fu - 2, F + 84)], "y", fv - 3, fv + 3, MAT["bars"]),
               prism([(fu - 40, F), (fu - 46, F), (fu - 4, F + 84), (fu + 2, F + 84)], "y", fv - 3, fv + 3, MAT["bars"]),
               prism([(fv + 40, F), (fv + 46, F), (fv + 4, F + 84), (fv - 2, F + 84)], "x", fu - 3, fu + 3, MAT["bars"])])
-    m.det([(fu - 10, fv - 10, F + 36, fu + 10, fv + 10, F + 52), (fu - 1, fv - 1, F + 52, fu + 1, fv + 1, F + 84)], MM["steel"])     # the pot
+    m.det([(fu - 1, fv - 1, F + 52, fu + 1, fv + 1, F + 84)], MM["steel"])                                                       # the pot's rod
+    m.static("models/props_c17/metalpot001a.mdl", fu, fv, 0, z=F + 38)
     m.point("env_fire", fu, fv, F + 6, {"health": "30", "firesize": "30", "fireattack": "4", "firetype": "0", "spawnflags": "7", "ignitionpoint": "32", "damagescale": "0.2"})
     m.light(fu, fv, F + 70, "255 140 60 120")
     m.sound("ambient/fire/fire_small_loop2.wav", fu, fv, F + 30, radius=500, volume=5)
     m.target("lc_vort_fire", fu, fv, F + 8)
+    from map_mods_b import mattress
     for k, (a, c, yaw) in enumerate(((-110, 60, 330), (20, 130, 260), (110, -70, 150))):
-        m.det([(fu + a - 34, fv + c - 22, F, fu + a + 34, fv + c + 22, F + 3)], MM["wood"])
+        mattress(m, fu + a, fv + c, (yaw + 90) % 360)
         m.target("lc_vort_seat_%d" % (k + 1), fu + a, fv + c, F + 8, yaw)
-    m.det([(712, 1262, F + 56, 860, 1280, F + 60), (712, 1262, F + 96, 860, 1280, F + 100)], MM["wood"])           # a shelf on the back wall
-    m.rope([(712, 920, F + 150), (1010, 1010, F + 150)], slack=24, width=1)
-    m.det([(770 + 60 * k, 936 + 18 * k, F + 112, 774 + 60 * k, 950 + 18 * k, F + 140) for k in range(4)], MM["wood"])
+    for su in (750, 822):                                    # shelves on the back wall, jars and a pot on them
+        for sz in (F + 58, F + 98):
+            m.static("models/props_c17/furnitureshelf001b.mdl", su, 1272, 90, z=sz)
+    m.static("models/props_lab/jar01a.mdl", 742, 1272, 0, z=F + 60)
+    m.static("models/props_lab/jar01b.mdl", 830, 1272, 0, z=F + 60)
+    m.static("models/props_c17/metalpot002a.mdl", 822, 1272, 30, z=F + 100)
     for u, v, z in ((760, 1150, F + 120), (960, 980, F + 100), (940, 1210, F + 40)):
         m.glow(u, v, z, "120 255 170", 0.18)
     m.light(940, 1210, F + 50, "110 255 170 14")
     m.static("models/props_junk/wood_crate001a.mdl", 740, 1236, 20)
     m.static("models/props_c17/oildrum001.mdl", 724, 1140, 0)
-    m.loose("models/props_c17/furnituremattress001a.mdl", 970, 1000, 30)
     m.blocked(800, 990, 930, 1120)
     m.lane(480, 800)
     m.lane(800, 800)
@@ -765,12 +803,15 @@ def m_vort(m, opt):
 
 def m_relay(m, opt):
     """7. Cubbage's relay. A concrete quay against the right wall, 128 high with steps up its upstream end, and on it a tin hut:
-    inside, the set on a bench, a chair, a cot, a map board. Beside it a lattice mast that stands about 350 over the canal's
-    walls, with rungs, two dish aerials, guy wires to the pier and the wall, a red lamp at its tip, and an aerial wire
-    across the canal to the far wall. A generator built of brushes hums behind the hut; fuel drums beside it.
+    inside, the set on a table, a chair, a cot (a bed frame), a cork board on the back wall with a poster beside it.
+    Beside it the mast: one of the city's tall utility poles (utilitypole01a, about 230 over the canal's walls) with two
+    small dishes on it, guy wires to the pier and the wall, a red lamp at its tip, and an aerial wire across the canal
+    to the far wall. A diesel generator (generatortrailer01) hums behind the hut; fuel drums beside it.
     Named for the game: lc_relay_radio (the set, a prop_dynamic), lc_relay_hum (the generator's sound: StopSound),
     lc_relay_lamp (the red lamp's glow: HideSprite, ShowSprite), lc_relay_mast (the mast's foot), lc_relay_seat.
-    Unchecked: models/props_lab/citizenradio.mdl, ambient/machines/diesel_engine_idle1.wav, the cables (move_rope)."""
+    Left as brushes: the quay and its steps, the hut.
+    Unchecked: models/props_lab/citizenradio.mdl, ambient/machines/diesel_engine_idle1.wav, the cables (move_rope);
+    where on the pole its cross arm is (the lamp and the wires are at its tip, the dishes on its shaft)."""
     b = m.b
     top, tin, steel = F + 128, MM["tin"], MM["steel"]
     m.open(0, -256, 1024, 256)
@@ -784,37 +825,31 @@ def m_relay(m, opt):
     m.lane(336, -224, top)
     # the hut
     m.hut(344, -248, 544, -96, top, tin, high=104, front="hi")
-    m.det([(352, -240, top, 392, -200, top + 34)], MM["beam_wood"])                        # the bench the set stands on
-    m.dynamic("models/props_lab/citizenradio.mdl", 372, -220, 90, z=top + 34, name="lc_relay_radio")
-    m.static("models/props_c17/furniturechair001a.mdl", 410, -200, 180, z=top)
-    m.target("lc_relay_seat", 410, -200, top + 8, 180)
-    m.det([(500, -240, top + 8, 536, -168, top + 20)], MM["wood"])                          # a cot
-    m.det([(396, -243, top + 44, 480, -240, top + 96)], MM["wood"])                         # a map board on the back wall
-    m.decal("decals/decalposter014a", 430, -241, top + 70)
-    m.lamp(444, -170, top + 92, "255 200 130 30")
-    # the mast: four legs, braces every 128, rungs up one side, two dishes, a rod and a red lamp on top
-    u1, v1, u2, v2, tip = 624, -224, 720, -128, b.rim + 256
-    legs = [(u, v, top, u + 8, v + 8, tip) for u in (u1, u2 - 8) for v in (v1, v2 - 8)]
-    braces = []
-    for z in range(top + 120, tip, 128):
-        braces += [(u1, v1 + 2, z, u2, v1 + 6, z + 4), (u1, v2 - 6, z, u2, v2 - 2, z + 4), (u1 + 2, v1, z, u1 + 6, v2, z + 4), (u2 - 6, v1, z, u2 - 2, v2, z + 4)]
-    rungs = [(u1 + 30, v2 - 4, z, u1 + 66, v2, z + 3) for z in range(top + 24, tip - 8, 24)]
-    m.det(legs + braces + rungs + [(u1, v1, tip, u2, v2, tip + 4), (668, -180, tip + 4, 676, -172, tip + 100)], MAT["bars"])
-    m.shapes([prism(octagon(-176, tip - 150, 34), "x", u2, u2 + 10, steel), prism(octagon(672, tip - 280, 28), "y", v2, v2 + 10, steel)])
-    m.point("env_sprite", 672, -176, tip + 104, {"targetname": "lc_relay_lamp", "model": "sprites/light_glow03.vmt", "rendermode": "9", "renderamt": "220",
+    m.static("models/props_c17/furnituretable001a.mdl", 378, -214, 0, z=top)               # the table the set stands on
+    m.dynamic("models/props_lab/citizenradio.mdl", 378, -220, 90, z=top + 37, name="lc_relay_radio")
+    m.static("models/props_c17/furniturechair001a.mdl", 420, -200, 180, z=top)
+    m.target("lc_relay_seat", 420, -200, top + 8, 180)
+    m.static("models/props_wasteland/prison_bedframe001a.mdl", 514, -194, 90, z=top)       # a cot
+    m.static("models/props_lab/corkboard001.mdl", 438, -240, 90, z=top + 44)               # a board on the back wall, a poster beside it
+    m.decal("decals/decalposter014a", 470, -240, top + 70)
+    m.lamp(444, -170, top + 96, "255 200 130 30")
+    # the mast: a tall utility pole, two small dishes on its shaft, the red lamp at its tip
+    tip = top + 487
+    m.static("models/props_c17/utilitypole01a.mdl", 672, -176, 0, z=top)
+    m.static("models/props_rooftop/satellitedish02.mdl", 693, -176, 0, z=tip - 190)       # (their backs against the pole's shaft)
+    m.static("models/props_rooftop/satellitedish02.mdl", 672, -155, 90, z=tip - 260)
+    m.point("env_sprite", 672, -176, tip + 4, {"targetname": "lc_relay_lamp", "model": "sprites/light_glow03.vmt", "rendermode": "9", "renderamt": "220",
                                                  "rendercolor": "255 40 30", "scale": "0.5", "framerate": "10.0", "GlowProxySize": "2.0", "HDRColorScale": "1.0",
                                                  "renderfx": "0", "spawnflags": "1"}, m.lv)
-    for (gu, gv, gz) in ((330, -72, top + 4), (824, -72, top + 4), (824, -250, top + 220)):
+    for (gu, gv, gz) in ((330, -72, top + 4), (824, -72, top + 4), (824, -256, top + 220)):
         m.rope([(672, -176, tip - 40), (gu, gv, gz)], slack=10, width=1)
-    m.rope([(672, -176, tip), (700, 250, b.rim + 90)], slack=60, width=1)                   # the aerial, across to the far wall
-    m.rope([(540, -100, top + 100), (628, -132, top + 300)], slack=30, width=1)             # the hut's feed
+    m.rope([(672, -176, tip), (700, 256, b.rim - 24)], slack=60, width=1)                   # the aerial, across to the far wall (into it, under its top)
+    m.rope([(540, -100, top + 100), (667, -171, top + 300)], slack=30, width=1)             # the hut's feed, up to the pole
     m.target("lc_relay_mast", 672, -100, top + 8, 90)
     # the generator and its fuel
-    m.det([(752, -240, top, 816, -176, top + 40), (760, -232, top + 40, 808, -184, top + 52)], steel)
-    m.shapes([prism(octagon(-200, top + 76, 8), "x", 772, 780, MAT["bars"])])
-    m.det([(772, -204, top + 52, 780, -196, top + 76)], MAT["bars"])
+    m.static("models/props_vehicles/generatortrailer01.mdl", 784, -175, 90, z=top)
     m.sound("ambient/machines/diesel_engine_idle1.wav", 784, -208, top + 30, radius=600, volume=5, name="lc_relay_hum")
-    m.rope([(784, -180, top + 44), (544, -150, top + 96)], slack=14, width=1)
+    m.rope([(784, -175, top + 78), (544, -150, top + 96)], slack=14, width=1)
     m.static("models/props_c17/oildrum001.mdl", 580, -236, 0, z=top)
     m.loose("models/props_c17/oildrum001.mdl", 590, -196, 0, z=top)
     m.loose("models/props_junk/wood_crate001a.mdl", 780, -110, 30, z=top)
@@ -830,18 +865,20 @@ def m_relay(m, opt):
 
 def m_ash(m, opt):
     """10. The ash outfall (the owner: "just trash and burnt corpses"). High in the left wall, a chute's mouth: a real
-    hole under a concrete hood, barred, black behind, with a steel tray. Under it a heap of ash and rubbish 110 high
-    with the burnt dead in it, thin smoke rising from it; a second, smaller heap; a tipped barrow built of brushes.
-    No way in or out.
+    hole under a concrete hood, barred with one of the canals' bar panels, black behind, with a steel tray. Under it a
+    heap of ash and rubbish 110 high with the burnt dead in it, thin smoke rising from it; a second, smaller heap; a
+    wheelbarrow left on its side. No way in or out.
     Named for the game: lc_ash_heap (the top of the heap).
-    Unchecked: the garbage pile and garbage bag models, models/humans/charple01..04.mdl, metalbucket01a, env_smokestack."""
+    Left as brushes: the chute's mouth, its hood and its tray.
+    Unchecked: the garbage pile and garbage bag models, models/humans/charple01..04.mdl, metalbucket01a, env_smokestack;
+    the wheelbarrow is loose and turned on its side (roll 85): it settles as it falls."""
     m.open(0, -256, 768, 256)
     lo, hi = F + 208, F + 336
     m.low(320, 256, 448, 320, hi, floor=lo, mat=MAT["black"])
     m.side(320, 256, 448, 320)
     m.blocked(320, 256, 448, 320)
     m.det([(320, 312, lo, 448, 320, hi)], MAT["black"])
-    m.bars((320, 258, lo, 448, 266, hi), "u")
+    m.static("models/props_canal/canal_bars002.mdl", 384, 262, 90, z=lo + 2)
     m.det([(304, 184, lo - 16, 320, 256, hi + 16), (448, 184, lo - 16, 464, 256, hi + 16), (304, 184, hi, 464, 256, hi + 16)], MAT["beam"])
     m.shapes([prism([(168, lo - 48), (256, lo), (256, lo - 16), (168, lo - 64)], "x", 320, 448, MM["steel"])])
     m.taken(296, 160, lo - 72, 472, 256, hi + 24)
@@ -862,11 +899,9 @@ def m_ash(m, opt):
         m.loose(model, u, v, 30, z=F + 24)
     m.smoke(384, 110, F + 100, colour="60 58 55", size=14, length=260, rate=6)
     m.smoke(580, -60, F + 40, colour="60 58 55", size=8, length=120, rate=4)
-    # a barrow left tipped on its side
-    m.shapes([prism([(96, F + 6), (176, F + 6), (196, F + 54), (84, F + 40)], "y", -210, -150, MM["steel"]),
-              prism(octagon(136, F + 20, 20), "y", -218, -210, MAT["bars"]), prism(octagon(136, F + 20, 20), "y", -150, -142, MAT["bars"])])
-    m.det([(60, -186, F + 36, 96, -180, F + 42), (60, -180, F + 36, 64, -174, F + 42)], MAT["bars"])
-    m.blocked(60, -230, 210, -130)
+    # a wheelbarrow left on its side (loose, turned over: it settles as it falls)
+    m.prop("prop_physics", "models/props_junk/wheebarrow01a.mdl", 136, -96, 0, F + 24, {"spawnflags": "0", "angles": "0 %d 85" % m.fr.yaw(0)})
+    m.blocked(80, -140, 200, -50)
     m.target("lc_ash_heap", 384, 110, F + 110)
     m.blocked(192, -64, 640, 256)
     m.lane(384, -200)
@@ -877,10 +912,13 @@ def m_ash(m, opt):
 def m_sludge(m, opt):
     """11. The sludge tunnel. The canal goes the long way round a block (out to the left and back, about 3,800, under a
     street and past a dumped container), and a low tunnel 768 long cuts straight through, ankle deep in toxic runoff:
-    green lamps, six outfall pipes running slime, the start of a plank walk that has rotted away, drums, a body.
+    green lamps, five outfall pipes (concrete pipes out of the walls at the slime's face, slime in them), the planks
+    of a walk that has rotted away floating in it, drums, a body.
     Named for the game: lc_sludge_gas (a trigger filling the tunnel's air: a place for gas masks), lc_sludge_haze (the
     green haze in it, a func_dustcloud: TurnOff, TurnOn).
-    Unchecked: nature/toxicslime002a, func_dustcloud and its keys, ambient/levels/canals/toxic_slime_loop1.wav."""
+    Left as brushes: the tunnel, the beams over its mouths, the slime plugs in the pipes, the street bridge.
+    Unchecked: nature/toxicslime002a, func_dustcloud and its keys, ambient/levels/canals/toxic_slime_loop1.wav; that
+    loose planks float on the slime (they do on water)."""
     sludge = MM["sludge"]
     m.open(0, -256, 640, 256)
     m.open(128, 256, 640, 1536)
@@ -901,19 +939,17 @@ def m_sludge(m, opt):
           [(712, -120, floor + 16, 1336, 120, ceil - 8)], MAT["trigger"], vis=m.b.vis + ": experiments (delete if they misbehave)")
     for u in (800, 1024, 1248):
         m.lamp(u, 0, ceil - 10, "120 255 90 40")
-    stubs = []
-    for k, u in enumerate((780, 1010, 1240)):
-        stubs.append(prism(octagon(u, F + 64 + 8 * (k % 2), 26), "y", 100, 128, MAT["bars"], sludge))
-        stubs.append(prism(octagon(u + 110, F + 60 + 8 * (k % 2), 22), "y", -128, -104, MAT["bars"], sludge))
-    m.shapes(stubs)
-    m.det([(704, 92, F - 8, 930, 128, F - 2), (704, 86, floor, 712, 92, F - 8), (816, 86, floor, 824, 92, F - 8), (922, 86, floor, 930, 92, F - 8)], MM["wood"])
-    m.det([(960, 96, F - 10, 1010, 128, F - 5)], MM["wood"])
+    from map_mods_c import centred
+    for u, s in ((1060, 1), (1250, 1), (840, -1), (1080, -1), (1300, -1)):    # the outfalls: concrete pipes 64 out of the walls (their middles in the
+        centred(m, "models/props_pipes/concrete_pipe001a.mdl", u, s * 120, 90, F + 40)      # tunnel, so they are lit), slime inside each at the wall
+        m.shapes([prism(octagon(u, F + 40, 38), "y", min(s * 128, s * 125), max(s * 128, s * 125), sludge)])
+    for u, v, yaw in ((760, 108, 2), (860, 96, 355), (980, 110, 8)):           # what is left of the plank walk, floating
+        m.loose("models/props_wasteland/dockplank01a.mdl", u, v, (yaw + 90) % 360, z=floor + 12)
     m.static("models/props_c17/oildrum001.mdl", 900, -96, 0, z=floor)
     m.static("models/props_c17/oildrum001.mdl", 1130, 92, 0, z=floor)
     m.loose("models/props_c17/oildrum001.mdl", 1010, -60, 40, z=floor)
     m.body("models/humans/charple04.mdl", 1180, -40, 120, z=floor)
     m.det([(640, -160, F + 152, 656, 160, F + 176), (1392, -160, F + 152, 1408, 160, F + 176)], MAT["beam"])
-    m.det([(628, -150, F + 100, 640, -134, F + 150), (1408, 134, F + 100, 1420, 150, F + 150)], MM["tin"])        # a warning board by each mouth
     m.sound("ambient/levels/canals/toxic_slime_loop1.wav", 1024, 0, F + 40, radius=800, volume=6)
     m.decal("decals/decalstain002a", 600, 0, F + 1)
     m.decal("decals/decalstain002a", 1450, 0, F + 1)
@@ -923,8 +959,8 @@ def m_sludge(m, opt):
     m.blocked(180, 1130, 590, 1380)
     m.static("models/props_vehicles/car002a_physics.mdl", 1660, 1300, 250)
     m.blocked(1560, 1200, 1770, 1400)
-    m.scatter(180, 400, 590, 900, 5, 31)
-    m.scatter(1460, 400, 1870, 900, 5, 32)
+    m.scatter(270, 400, 500, 900, 5, 31)                  # (on the floor between the banks)
+    m.scatter(1550, 400, 1780, 900, 5, 32)
     for u, v in ((384, 700), (384, 1050), (700, 1280), (1300, 1280), (1664, 1050), (1664, 700), (1024, 0)):
         m.lane(u, v, F if v else floor)
     m.view(480, 0, F, 0, 0, "the tunnel's mouth")
@@ -935,11 +971,14 @@ def m_sludge(m, opt):
 def m_cistern(m, opt):
     """12. The cistern, for the hive boss (blind, hunts by sound). Off the RIGHT wall, a tall passage with a stair in
     it leads to a round settling tank 1536 across, ankle deep in water. Two levels: a dry ledge round the tank at the
-    canal's height with four plank walks out to an island in the middle, and over the ledge a gallery with a rail,
-    128 up, reached by the stair. Four pillars, three inflow pipes high in the wall, chains hanging; the island lies
-    under a grated shaft open to the sky, so it stands in daylight while the rest is dim.
+    canal's height with four plank walks out to an island in the middle, and over the ledge a gallery behind the
+    city's handrail, 128 up, reached by the stair (a steel plate along its open side). Four pillars, three inflow pipes
+    high in the wall (concrete pipes, dark inside), chains hanging; the island lies under a grated shaft open to the
+    sky, so it stands in daylight while the rest is dim.
     Wading is in the water (the game can tell: a player's water level); the ledge, the planks and the gallery are dry.
     Named for the game: lc_hive_boss_spot (the island), lc_cistern_gallery (the head of the stair).
+    Left as brushes: the tank, its gallery's slabs, the stair and its plate, the plank walks and their posts (decks on
+    piers), the shaft's grate, the pillars, the plugs that darken the inflow pipes.
     Unchecked: ambient/water/water_flow_loop1.wav, the chains (move_rope)."""
     b = m.b
     m.open(0, -256, 1536, 256)
@@ -981,16 +1020,15 @@ def m_cistern(m, opt):
             continue
         u, v = cu + i * CELL, cv + j * CELL
         slabs.append((u, v, G - 8, u + CELL, v + CELL, G))
-        for di, dj, box in ((1, 0, (u + 60, v, u + 64, v + 64)), (-1, 0, (u, v, u + 4, v + 64)), (0, 1, (u, v + 60, u + 64, v + 64)), (0, -1, (u, v, u + 64, v + 4))):
+        for di, dj, ru, rv, yaw in ((1, 0, u + 62, v + 32, 0), (-1, 0, u + 2, v + 32, 0), (0, 1, u + 32, v + 62, 90), (0, -1, u + 32, v + 2, 90)):
             if kind.get((i + di, j + dj)) == "wet":
-                rails.append((box[0], box[1], G + 36, box[2], box[3], G + 40))
-                rails.append((box[0], box[1], G, box[0] + 4, box[1] + 4, G + 36))
+                rails.append((ru, rv, yaw))
     m.det(slabs, MAT["beam"], top=MAT["quay_floor"])
-    m.det(rails, MAT["bars"])
+    for ru, rv, yaw in rails:                                # the city's handrail, a 64 piece on each edge that looks down on the water
+        m.static("models/props_c17/handrail04_medium.mdl", ru, rv, yaw, G)
     # the stair up to it, in the passage
     m.steps(-448, 640, 704, F, G, "v", -1)
-    m.shapes([prism([(-448, F + 36), (-448, F + 40), (-640, G + 40), (-640, G + 36)], "x", 704, 708, MAT["bars"])])
-    m.det([(704, -640, G, 708, -636, G + 36), (704, -548, F + 64, 708, -544, F + 104)], MAT["bars"])
+    m.shapes([prism([(-448, F), (-448, F + 36), (-640, G + 36), (-640, G)], "x", 704, 708, MM["steel"])])
     m.blocked(640, -660, 720, -430)
     m.target("lc_cistern_gallery", 672, -672, G + 8, 270)
     # plank walks from the ledge to the island, on posts
@@ -1004,8 +1042,11 @@ def m_cistern(m, opt):
     # the shaft's grate, the pillars' heads, the inflow pipes, chains
     m.det([(cu - 128, cv - 128 + 32 * k, ceil - 8, cu + 128, cv - 122 + 32 * k, ceil) for k in range(9)] + [(cu - 4, cv - 128, ceil - 14, cu + 4, cv + 128, ceil - 8)], MAT["bars"])
     m.det([(p[0] - 16, p[1] - 16, ceil - 24, p[2] + 16, p[3] + 16, ceil) for p in pillars] + [(p[0] - 12, p[1] - 12, basin, p[2] + 12, p[3] + 12, F + 8) for p in pillars], MAT["beam"])
-    m.shapes([prism(octagon(cv, F + 292, 40), "x", cu + R - 40, cu + R, MAT["bars"], MAT["black"]), prism(octagon(cv, F + 292, 40), "x", cu - R, cu - R + 40, MAT["bars"], MAT["black"]),
-              prism(octagon(cu, F + 292, 40), "y", cv - R, cv - R + 40, MAT["bars"], MAT["black"])])
+    from map_mods_c import centred
+    for pu, pv, yaw, plug in ((cu + R - 8, cv, 0, (cu + R - 3, cv, "x")), (cu - R + 8, cv, 0, (cu - R, cv, "x")), (cu, cv - R + 8, 90, (cv - R, cu, "y"))):
+        centred(m, "models/props_pipes/concrete_pipe001a.mdl", pu, pv, yaw, F + 292)      # (64 out of the wall, its middle in the tank so it is lit)
+        a, c, ax = plug
+        m.shapes([prism(octagon(c, F + 292, 38), ax, a, a + 3, MAT["black"])])
     for du, dv in ((-70, -60), (60, -80), (80, 70)):
         m.rope([(cu + du, cv + dv, ceil - 10), (cu + du + 6, cv + dv + 4, F + 70)], slack=6, width=2)
     m.target("lc_hive_boss_spot", cu, cv, F + 8, 90)
@@ -1032,10 +1073,13 @@ def m_underpass(m, opt):
     """13. The barnacle underpass: 1024 of canal under a wide road, unlit. Three piers stand down its middle; six
     barnacles hang from the roof between them. Part of the roof has come in by the right wall: daylight down a shaft,
     a fallen slab, rubble. A lorry jammed against a pier, a car, cables hanging, and five of the dead lying where they
-    were dropped, one beside a lantern that still burns.
+    were dropped, one beside a lantern (the city's oil lamp, lamp001a) that still burns. Reinforcing bars stick out of
+    the broken roof's edge.
     Named for the game: lc_underpass_body_1 to _5 (where each body lies: things to search).
+    Left as brushes: the road over it, the piers, the fallen slab.
     Unchecked: npc_barnacle (and whether the game minds NPCs it did not make), models/humans/corpse1.mdl and
-    charple01, charple03, ambient/atmosphere/tunnel1.wav, the cables (move_rope)."""
+    charple01, charple03, ambient/atmosphere/tunnel1.wav, the cables (move_rope); the rebar is laid on its side (pitch
+    90), centred on its origin."""
     roof = F + GATE_HIGH
     m.open(0, -256, 256, 256)
     m.low(256, -256, 1280, 256, roof)
@@ -1050,7 +1094,10 @@ def m_underpass(m, opt):
     m.static("models/props_debris/concrete_chunk01a.mdl", 820, -110, 40)
     m.static("models/props_debris/concrete_chunk02a.mdl", 960, -150, 110)
     m.static("models/props_debris/broken_pile001a.mdl", 900, -90, 200)
-    m.det([(850 + 22 * k, -256, F + 150 + 9 * (k % 3), 853 + 22 * k, -224 + 6 * (k % 2), F + 153 + 9 * (k % 3)) for k in range(5)], MAT["bars"])
+    for k in range(4):                                       # bars sticking out of the fallen slab's upper part
+        m.point("prop_static", 860 + 26 * k, -200 + 4 * (k % 2), F + 132 + 7 * (k % 3), {"model": "models/props_debris/rebar00%dc_64.mdl" % (2 if k % 2 else 4),
+                "angles": "90 %d 0" % m.fr.yaw(90 + 8 * k), "skin": "0", "solid": "0", "disableshadows": "0", "screenspacefade": "0", "fademindist": "-1",
+                "fademaxdist": "0", "fadescale": "1"}, m.pv)
     m.blocked(800, -256, 990, -60)
     for u, v in ((380, 10), (576, -130), (640, 120), (832, 70), (1090, -100), (1180, 110)):
         m.point("npc_barnacle", u, v, roof - 1, {"angles": "0 0 0", "spawnflags": "0"}, m.b.vis + ": barnacles (delete them if the game minds)")
@@ -1064,8 +1111,8 @@ def m_underpass(m, opt):
     for k, (model, u, v) in enumerate(bodies):
         m.body(model, u, v, 70 * k)
         m.target("lc_underpass_body_%d" % (k + 1), u, v, F + 8)
-    m.det([(712, 162, F, 720, 170, F + 14)], MM["steel"])                # the lantern
-    m.glow(716, 166, F + 18, "255 200 120", 0.15)
+    m.static("models/props_c17/lamp001a.mdl", 716, 166, 30)                # the lantern
+    m.glow(716, 166, F + 14, "255 200 120", 0.15)
     m.light(716, 166, F + 22, "255 190 110 16")
     m.rope([(600, 200, roof - 2), (700, 150, roof - 2)], slack=90, width=1)
     m.rope([(1000, -200, roof - 2), (1130, -40, roof - 2)], slack=110, width=1)
@@ -1089,9 +1136,16 @@ def m_checkpoint(m, opt):
     Under the walk on the right bank, a chain link holding pen with a sliding gate.
     Named for the game: lc_checkpoint_field (a func_brush: Disable opens it, Enable shuts it), lc_checkpoint_hum (its
     sound: StopSound, PlaySound), lc_checkpoint_light and lc_checkpoint_light_b (the searchlights: LightOff, LightOn),
-    lc_checkpoint_pen (the pen's gate, a func_door: Open, Close), lc_checkpoint_pen_spot (where a prisoner stands),
-    lc_checkpoint_post (the guard's place on the wall), lc_checkpoint_queue (where people wait to be seen).
-    Unchecked: effects/com_shield003a, ambient/machines/combine_shield_loop3.wav, point_spotlight and light_spot keys."""
+    lc_checkpoint_pen (the pen's gate, a func_door: Open, Close; unseen, a panel of the pen's fence riding on it),
+    lc_checkpoint_pen_spot (where a prisoner stands), lc_checkpoint_post (the guard's place on the wall),
+    lc_checkpoint_queue (where people wait to be seen).
+    The things are the Combine's and the city's own: concrete barriers and Combine barricades for the chicane, two
+    Combine floodlights on the wall for the searchlights, the city's handrail behind the walk, a steel plate along the
+    stairs, Nova Prospekt's chain link panels for the pen (a mesh roof over it), caged lamps on the walls.
+    Left as brushes: the wall, its buttresses, the gateway's frame, the walk, its deck, brackets and battlements, the
+    stairs and their plate, the cabin, the pen's mesh roof, the field.
+    Unchecked: effects/com_shield003a, ambient/machines/combine_shield_loop3.wav, point_spotlight and light_spot keys;
+    which way combine_light001b faces (its beam is the light_spot's)."""
     b = m.b
     cmb, steel = "metal/metalcombine002", MM["steel"]
     W1, W2, top, pz = 512, 576, TRIM + 64, F + 128
@@ -1104,7 +1158,9 @@ def m_checkpoint(m, opt):
     # the way up to it: barriers set as a chicane, teeth to keep people off the banks
     m.static("models/props_c17/concrete_barrier001a.mdl", 330, 64, 90)
     m.static("models/props_c17/concrete_barrier001a.mdl", 210, -64, 90)
-    m.shapes([pyramid(u, v, F, 24, 44, MAT["beam"]) for u in (120, 400) for v in (-104, 104)])
+    for u in (120, 400):                                     # Combine barricades to keep people off the banks
+        for v in (-104, 104):
+            m.static("models/props_combine/combine_barricade_short02a.mdl", u, v, 0, z=F)
     m.blocked(180, -120, 360, 120)
     # the wall, its buttresses, the gateway and its frame
     m.det([(W1, -256, F, W2, -96, top), (W1, 96, F, W2, 256, top), (W1, -96, F + 160, W2, 96, top)], cmb)
@@ -1121,34 +1177,39 @@ def m_checkpoint(m, opt):
     m.det([(W2, -256, top - 16, 672, 256, top)], steel)
     m.shapes([prism([(W2, top - 16), (W2 + 80, top - 16), (W2, top - 96)], "y", v - 8, v + 8, steel) for v in (-240, -128, 128, 176)])
     m.det([(W1, v, top, W1 + 16, v + 64, top + 56) for v in range(-256, 256, 128)] + [(W1, -256, top, W1 + 16, 256, top + 24)], cmb)
-    m.det([(664, -256, top + 36, 672, 256, top + 40)] + [(664, v, top, 672, v + 4, top + 36) for v in range(-256, 256, 64)] + [(664, 252, top, 672, 256, top + 36)], MAT["bars"])
+    from map_mods_c import handrail, panel_fence, ride
+    handrail(m, (668, -256), (668, 192), top)                # (the stairs come up onto the walk at its left end)
     m.det([(W1, -256, top, 672, -248, top + 40)], cmb)
     # the searchlights, on the wall's two ends
-    for v, yaw, name in ((216, 196, "lc_checkpoint_light"), (-216, 164, "lc_checkpoint_light_b")):
-        m.det([(W1 + 20, v - 14, top, W1 + 28, v + 14, top + 60), (W1 + 12, v - 16, top + 60, W1 + 44, v + 16, top + 88)], steel)
-        m.spot(W1 + 8, v, top + 74, "190 225 255 900", yaw, pitch=16, cone=30, name=name)
+    for v, yaw, name in ((200, 196, "lc_checkpoint_light"), (-200, 164, "lc_checkpoint_light_b")):
+        m.static("models/props_combine/combine_light001b.mdl", W1 + 50, v, yaw, z=top)
+        m.spot(W1 + 20, v, top + 60, "190 225 255 900", yaw, pitch=16, cone=30, name=name)
     # the guard's platform: stairs to the wall's top along the canal's wall, a cabin, lockers
     m.steps(864, 192, 256, pz, top, "u", -1)
-    m.shapes([prism([(864, pz + 36), (864, pz + 40), (W2, top + 40), (W2, top + 36)], "y", 188, 192, MAT["bars"])])
-    m.det([(864 - 72 * k, 188, pz + 8 * (6 * k), 868 - 72 * k, 192, pz + 8 * (6 * k) + 38) for k in range(1, 4)], MAT["bars"])
+    m.shapes([prism([(864, pz), (864, pz + 36), (W2, top + 36), (W2, top)], "y", 188, 192, steel)])
     m.hut(928, 136, 1080, 248, pz, cmb, high=104, front="lo")
-    m.static("models/props_combine/combine_interface001.mdl", 1050, 226, 270, z=pz)
-    m.static("models/props_c17/lockers001a.mdl", 960, 236, 270, z=pz)
+    m.static("models/props_combine/combine_interface001.mdl", 1028, 213, 270, z=pz)       # (inside the cabin's walls)
+    m.static("models/props_c17/lockers001a.mdl", 960, 230, 270, z=pz)
     m.light(1004, 190, pz + 84, "150 210 255 35")
-    m.lamp(760, 250, pz + 150, "190 220 255 70")
+    m.static("models/props_c17/light_cagelight02_on.mdl", 760, 255, 270, z=pz + 196)
+    m.light(760, 240, pz + 202, "190 220 255 70")
     m.blocked(576, 176, 880, 256)
     # the holding pen, under the walk on the right bank
-    chain_link(m, (720, -128), (800, -128), F, 112)
-    chain_link(m, (864, -128), (944, -128), F, 112)
-    chain_link(m, (720, -256), (720, -128), F, 112)
-    chain_link(m, (944, -256), (944, -128), F, 112)
-    m.det([(718, -256, F + 112, 946, -126, F + 114)], MAT["fence"])
-    m.door("lc_checkpoint_pen", [(800, -130, F, 866, -126, F + 108)], MAT["fence"], "0 %d 0" % m.fr.yaw(0), speed=60, lip=2)
+    panel_fence(m, (704, -128), (800, -128), F)
+    panel_fence(m, (864, -128), (960, -128), F)
+    panel_fence(m, (707, -256), (707, -128), F)              # (just inside the cut in the bank, clear of its faces)
+    panel_fence(m, (957, -256), (957, -128), F)
+    m.det([(702, -256, F + 129, 962, -126, F + 130)], MAT["fence"])
+    from map_mods_b import slide_door                        # the gate: a panel sliding along in front of the fence's right part
+    slide_door(m, "lc_checkpoint_pen", [((800, -126, F, 864, -122, F + 128), MAT["fence"])], "0 %d 0" % m.fr.yaw(0), speed=60, lip=2,
+               sounds=("MetalGrate.ScrapeSmooth", "MetalGrate.ImpactSoft"), unseen=True)
+    ride(m, "lc_checkpoint_pen", "models/props_wasteland/interior_fence002b.mdl", 832, -124, 0, F)
     m.test_button((936, -124, F + 48, 944, -116, F + 64), [("OnIn", "lc_checkpoint_pen", "Open"), ("OnOut", "lc_checkpoint_pen", "Close")])
     m.static("models/props_trainstation/benchoutdoor01a.mdl", 832, -226, 90)
     m.target("lc_checkpoint_pen_spot", 832, -190, F + 8, 90)
     m.blocked(704, -256, 960, -112)
-    m.lamp(832, -100, F + 200, "190 220 255 60")
+    m.static("models/props_c17/light_cagelight02_on.mdl", 832, -255, 90, z=F + 150)
+    m.light(832, -240, F + 156, "190 220 255 60")
     m.static("models/props_wasteland/barricade002a.mdl", 1130, -120, 100)
     m.target("lc_checkpoint_post", 620, 0, top + 8, 180)
     m.target("lc_checkpoint_queue", 300, 0, F + 8, 0)
