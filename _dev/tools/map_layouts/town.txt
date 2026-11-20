@@ -1,0 +1,19 @@
+# The Resistance's town: one abandoned street north of the city, with the Resistance's places on both
+# sides of it, the leader's office, a road end and a canal landing. Not fitted to the map yet.
+#   python3 map_build.py chain --layout map_layouts/town.txt --test
+#
+#   ground street      this layout is a town (map_town.py): a street at the city's road height, not a canal
+#   LEFT | RIGHT       two modules facing each other across the street; "landing" is the canal's way in
+#   start X Y          the middle of the road's end, where the street begins; heading: the way it runs
+
+ground street
+start 0 8320
+heading N
+rim 784
+
+memorial | landing
+market | garden
+clinic | cells
+hq | press
+plaza | playground
+pit | still

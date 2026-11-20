@@ -145,6 +145,8 @@ class Mod:
         for i in range(r[0] // CELL, r[2] // CELL):
             for j in range(r[1] // CELL, r[3] // CELL):
                 was = self.b.owner.get((i, j))
+                if was and was != self.tag and self.b.plan.cells.get((i, j)) == spec:
+                    continue      # (the same square painted the same way twice: two modules sharing a street)
                 if was and was != self.tag and ("clash", was, self.tag) not in self.b.names:
                     self.b.names.append(("clash", was, self.tag))
                     self.b.problems.append("%s runs into %s near (%d %d): move one of them in the layout" % (self.tag, was, i * CELL, j * CELL))
@@ -1191,7 +1193,7 @@ MODULES = {
 }
 
 
-for _more in ("map_mods_a", "map_mods_b", "map_mods_c", "map_mods_d"):
+for _more in ("map_mods_a", "map_mods_b", "map_mods_c", "map_mods_d", "map_town"):
     try:
         MODULES.update(__import__(_more).MODULES)
     except ImportError as e:
@@ -1237,6 +1239,8 @@ def read_layout(path):
             lay["rim"] = int(words[1])
         elif words[0] == "end":
             lay["end"] = (int(words[1]), int(words[2]), words[3].upper())
+        elif words[0] == "ground":
+            lay["ground"] = words[1].lower()     # ("ground street": a town, map_town.py)
         elif words[0] == "upper":
             lay["upper"] = words[1].lower()      # (the street beside the canal: "upper left" or "upper right")
         elif words[0] == "cars":
@@ -1457,9 +1461,16 @@ def chain(args):
         lay["heading"], lay["end"] = args.heading, None
     if args.rim:
         lay["rim"] = args.rim
-    b, seed, spawn, end = build_chain(lay, args)
+    if lay.get("ground") == "street":
+        import map_town
+        b, seed, spawn, end = map_town.build(lay, args)
+    else:
+        b, seed, spawn, end = build_chain(lay, args)
     ch, fences, problems, names = finish(b, seed, spawn, args)
     report(b, ch, fences, problems, names, end, "chain %s (%d modules)" % (lay["name"], len(lay["modules"])))
+    if getattr(args, "ascii", False):
+        import map_town
+        print(map_town.ascii_plan(b))
     if args.preview:
         picture(b, args.preview)
     args.expect_overlap = set()

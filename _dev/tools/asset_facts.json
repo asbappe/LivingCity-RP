@@ -980,6 +980,21 @@
 "ragdoll": false,
 "static": true
 },
+"models/props_foliage/tree_dead01.mdl": {
+"bbox": [
+-159.1,
+-169.7,
+-1.6,
+181.8,
+151.6,
+704.8
+],
+"collides": true,
+"game": "ep2",
+"physics": false,
+"ragdoll": false,
+"static": true
+},
 "models/props_interiors/furniture_shelf01a.mdl": {
 "bbox": [
 -9.6,

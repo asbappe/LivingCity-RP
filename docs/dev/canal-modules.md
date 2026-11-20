@@ -54,6 +54,7 @@ What a module is and how to lay them out: `docs/dev/map-building.md` ("Canal mod
 | `breach` | 1024 | the breach: the floor fallen into an old cellar, slabs for ramps, an undercut | `lc_breach_bottom`, `lc_breach_stash` | `map_mods_d.py` |
 | `wreck` | 1024 | the wreck: a Combine carrier's container down in the canal, hollow, to race for | `lc_wreck_beacon`, `lc_wreck_cache`, `lc_wreck_spark` | `map_mods_d.py` |
 | `morgue` | 1024 | the morgue: a cold room of drawers and tables behind a sliding door (left) | `lc_morgue_door`, `lc_morgue_ledger`, `lc_morgue_table_1`, `lc_morgue_table_2`, `lc_morgue_table_3` | `map_mods_d.py` |
+| `hq` | 768 | the Resistance leader's office: a briefing room and an office behind it, a flag outside (left) | `lc_hq_desk`, `lc_hq_flag`, `lc_hq_map`, `lc_hq_setup`, `lc_hq_table` | `map_town.py` |
 | `straight` | 1024 | plain canal ("straight 1536", "straight 1024 bridge") | none | `map_modules.py` |
 | `jog` | 1024 | the canal steps sideways to break a long view ("jog left 768", "jog right 1024") | none | `map_modules.py` |
 | `tee` | 512 | a standard gate in the left wall, for another piece or layout to join | none | `map_modules.py` |
@@ -831,6 +832,15 @@ it by hand), a short passage, a tiled cold room: a wall of twelve drawers, two p
 a drain in the floor, a clerk's desk with the ledger, cold lamps, a hum. The dead on the tables are props.
 Named for the game: lc_morgue_door (a func_door), lc_morgue_table_1 to _3 (the tables), lc_morgue_ledger (the desk).
 Unchecked: models/humans/corpse1.mdl as a ragdoll lying on a table (it may slide off), ambient/machines/...
+
+### `hq`
+
+The Resistance leader's office. A doorway in the left wall into a briefing room (a long table and benches, a
+map board, a lamp), and behind a partition the leader's own office: a desk and chair, a filing cabinet, a strong
+box, a cot. Outside by the door, a flagpole with a banner the game can show while this is the live headquarters.
+Named for the game: lc_hq_setup (the doorstep: where the leader stands to set the headquarters up), lc_hq_flag
+(the banner, a func_brush: Enable shows it, Disable hides it), lc_hq_desk, lc_hq_table, lc_hq_map.
+Unchecked: a func_brush's rendercolor on plaster (the banner's red).
 
 ### `straight`
 
