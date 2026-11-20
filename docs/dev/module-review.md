@@ -138,3 +138,39 @@ Filled in as the review goes; the first ones are clear already:
 
 **Weight.** small (decals, sounds, bodies placed right), medium (the heap's material, the chute's event).
 
+### 7. sludge (showroom 1): the sludge tunnel, a shortcut through the long way round
+
+**Seen.** The canal loops out round a block (a long way, under a street, past a dumped container); a straight tunnel cuts across, a flat green slime floor wall to wall, three dome lamps in a row, planks on drums, crates, drums, a body. The loop: wide and mostly empty but for the container, a car and a few crates.
+
+**Fix.**
+- The tunnel is a perfect rectangular box with smooth walls and a flat green floor: from its mouth it reads as a lit green corridor. A culvert this long has a shape: a vaulted or chamfered roof, ribs every 128 (the canal's own), a ledge along one wall (broken in places, so the slime has to be waded somewhere).
+- The five outfall pipes are lost: at the slime's face they are hard to see and nothing comes out. Slime should pour from two or three (a falling slime brush, toxicslime material), with a sound.
+- The dome lamps make the tunnel evenly bright: the green should come from the slime (a dim green light low, sprites over the surface), with the roof dark between two caged lamps.
+
+**Better.**
+- Warning at both mouths, shown not told: a skull or biohazard sign (decalsigndanger), a gas mask hung on a nail, a chain across with a tin sign, a body that did not make it at the mouth.
+- The slime surface broken up: drums half sunk and tilted (pitch and roll), a floating pallet, scum overlays at the walls' foot, bubbles (an env_bubbles or a small env_smokestack in green).
+- The long way round should be worth taking: a ladder up to the street under the bridge (a real exit), a Combine camera watching the loop, the container open with something in it, a car half in the canal from the street above.
+- A soundscape: slime gurgle and drips inside, the city's traffic outside.
+
+**Weight.** medium (tunnel shape, ledge, pouring slime), small (signs, lights, debris).
+
+### 8. cistern (showroom 1): the round tank, for the hive boss
+
+**Seen.** Off the right wall a tall passage with a stair to a round settling tank 1536 across: dark water, a dry ledge round it, four plank walks out to a pale island under a grated shaft of daylight, a gallery with handrails all round 128 up, four square pillars, chains hanging, inflow pipes high up. Dim and blue, the island bright: a strong arena.
+
+**Fix.**
+- "Round" is a stepped outline of 64 squares: from above the wall is a staircase of corners, and inside the back wall is a sawtooth of small facets, each catching light differently. The wall wants to be truly round (or a clean 16 or 24 sided polygon): angled brush segments (`m.shapes` prisms) standing on the squares' line, the squares behind kept only to seal.
+- The inflow pipes are dark plugs: water should fall from at least one into the tank (it is a settling tank), with its sound echoing.
+- The gallery's 72 handrail pieces follow the stepped outline too, so they zigzag; on a true circle they become one smooth ring (or Combine railing pieces with corner pieces).
+
+**Better.**
+- Built for a blind boss that hunts by sound: loose things to throw for a distraction (buckets, cans, bottles as physics props on the ledge and gallery), metal grates on the ledge that ring when walked (a func_brush with a footstep material: metal grate), the chains clinking when touched. The game can listen for the sounds.
+- Ways out under pressure: two ladders from the water to the gallery, a hatch and ladder up the daylight shaft to the street (an escape the boss can't follow).
+- Light: caged lamps on the pillars (most dead, two working), the daylight shaft with dust motes (func_dustmotes: the owner's map uses them) and a light_spot straight down onto the island.
+- Grime: water lines on the walls (an overlay band at the old water level), numbers on the pillars (decalindustrialnumber), algae at the waterline.
+- Water with things in it: a floating plank, a drum, a body face down near the island (the boss's last meal).
+- A soundscape of echoing drips and a low hum that the boss's own sounds play over.
+
+**Weight.** large (the round wall and ring rail), medium (ladders, shaft exit, sound toys), small (light, grime).
+
