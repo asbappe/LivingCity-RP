@@ -15,7 +15,7 @@ or `python3 _dev/run_section.py "section name"`; `anon@N` is a nameless test blo
 A `-` under Tests means no test calls enough of this module's own functions (client code is covered by
 `_dev/client_smoke.py`).
 
-280 modules. Elsewhere: entities and weapons in `gamemodes/livingcity/entities/`, the editor tool in `lua/weapons/gmod_tool/stools/livingcity_editor.lua`, the player guide in `gamemode/cl_init.lua`.
+281 modules. Elsewhere: entities and weapons in `gamemodes/livingcity/entities/`, the editor tool in `lua/weapons/gmod_tool/stools/livingcity_editor.lua`, the player guide in `gamemode/cl_init.lua`.
 
 | Module | What it is | Server | Client | Shared | Key functions | Tests |
 |---|---|---|---|---|---|---|
@@ -35,7 +35,7 @@ A `-` under Tests means no test calls enough of this module's own functions (cli
 | `arrest` | Arrests in the open (the owner's playtest, 7 November) | `server/sv_livingcity_arrest.lua` 39K | `client/cl_livingcity_arrest.lua` 8K | - | `LC.BatonArrest`, `LC.NPCCustodyLead`, `LC.NPCFlee`, `LC.StruggleCancel`, `LC_CL.FeltTug`, `LC.DisarmPrisoner` | - |
 | `atmos` | The time of day, the weather, and the city's music | `server/sv_livingcity_atmos.lua` 9K | `client/cl_livingcity_atmos.lua` 22K | - | `LC.DayPhase`, `LC.Hour`, `LC.SetHour`, `LC.ApplyLightStyle`, `LC.Weather`, `LC.SetWeather` | VortAtmosStaffTests (6); DaylightTests (3); SleepWarnTests (2) |
 | `barter` | The quartermaster's barter (sv_livingcity_armory.lua) | - | `client/cl_livingcity_barter.lua` 10K | - | `LC_CL.BarterSums`, `LC_CL.BarterBarPaint` | - |
-| `base` | The Resistance's headquarters (one live base at a time) | `server/sv_livingcity_base.lua` 20K | `client/cl_livingcity_base.lua` 2K | - | `B.Ground`, `B.Forget`, `LC.BaseRaise`, `LC.BaseOn`, `LC.BaseLive`, `LC.BaseOrder` | BaseTests (7) |
+| `base` | The Resistance's headquarters (one live base at a time) | `server/sv_livingcity_base.lua` 26K | `client/cl_livingcity_base.lua` 4K | - | `B.Ground`, `B.Forget`, `LC.BaseOn`, `LC.BaseRaise`, `LC.BaseOrder`, `LC.BaseLive` | BaseTests (11) |
 | `battleline` | The Battle Line, a propaganda dream (sv_livingcity_battleline.lua) | `server/sv_livingcity_battleline.lua` 37K | - | - | `def.leave`, `def.hello`, `LC.BattleLineShot`, `LC.BattleLineAdvance`, `LC.BattleLineHolding`, `LC.BattleLineField` | DreamFixTests (2) |
 | `bedtime` | Lights out, the night shift, stimulants, the foil hat, and the chip | `server/sv_livingcity_bedtime.lua` 36K | - | - | `LC.BedtimeDue`, `LC.Chipless`, `LC.SideOf`, `LC.DreamsEndured`, `LC.StimLocked`, `LC.FoilOn` | DreamCrowdTests (20) |
 | `bodies` | The dead | `server/sv_livingcity_bodies.lua` 16K | - | - | `LC.SpawnBody`, `LC.MakeBody`, `LC.TakeBodyAt`, `LC.StartBodySearch`, `LC.CopyLook`, `LC.DropNPCGun` | - |
@@ -44,7 +44,7 @@ A `-` under Tests means no test calls enough of this module's own functions (cli
 | `breach` | The Resistance and the sealed quarter | `server/sv_livingcity_breach.lua` 12K | - | - | `B.Opened`, `LC.OrderBreach`, `B.DoorOpened` | QuarterBreachTests (1) |
 | `business` | Apartments and trade | `server/sv_livingcity_business.lua` 19K | - | - | `LC.RentalOf`, `LC.Rent`, `LC.RentPrice`, `LC.ApplyRentDoor`, `LC.HandsRightClick`, `LC.HasRentKey` | BusinessTests (5) |
 | `cache` | Quick lookups (server and client) | - | - | `shared/sh_livingcity_cache.lua` 3K | `LC.EntsOf`, `LC.Players`, `LC.CountOf` | LookupTests (2); EvidenceTests (1); IntakeTests (1) |
-| `campmove` | Rearranging a rebel camp | `server/sv_livingcity_campmove.lua` 8K | - | - | `LC.CampSaved`, `LC.CampKey`, `LC.CampFileOf`, `LC.CampSnapshot`, `LC.CampPickUp`, `LC.CampCarryStep` | anon@23406 (4); ScenePropsTests (2) |
+| `campmove` | Rearranging a rebel camp | `server/sv_livingcity_campmove.lua` 8K | - | - | `LC.CampKey`, `LC.CampSaved`, `LC.CampFileOf`, `LC.CampSnapshot`, `LC.CampPickUp`, `LC.CampCarryStep` | anon@23406 (4); ScenePropsTests (2) |
 | `candream` | Pick Up That Can, a fever dream | `server/sv_livingcity_candream.lua` 29K | `client/cl_livingcity_candream.lua` 11K | - | `LC.CanBinTop`, `LC.CanThrown`, `LC.CanAim`, `LC.CanOwn`, `LC_CL.CanSqueak`, `LC.CanAddSet` | CanDreamTests (5) |
 | `cards` | The card table's window (sv_livingcity_resistancemoney.lua) | - | `client/cl_livingcity_cards.lua` 9K | - | `LC_CL.CardsFrame` | - |
 | `career` | Your career, on one page (the owner's 7 November playtest: "playing as a | `server/sv_livingcity_career.lua` 9K | `client/cl_livingcity_career.lua` 5K | - | `LC.CareerInfo`, `LC.CanReassess`, `LC.SendCareer`, `LC_CL.AskCareer`, `LC.CareerReassess`, `LC_CL.OpenCareer` | CareerTests (4) |
@@ -126,11 +126,12 @@ A `-` under Tests means no test calls enough of this module's own functions (cli
 | `guard` | Flood guard | `server/sv_livingcity_guard.lua` 5K | - | - | `LC.NetAllowed`, `LC.ChatAllowed` | anon@24308 (2); DreamTests (1) |
 | `guidance` | Guidance | `server/sv_livingcity_guidance.lua` 15K | - | - | `LC.TrailTick`, `LC.TrailRoute`, `LC.TrailShortcut`, `LC.WhereKind`, `LC.GuideGoal`, `LC.SendTrail` | GuidanceTests (4) |
 | `heist` | Stealing the Combine's data | `server/sv_livingcity_heist.lua` 17K | - | - | `LC.DecodeChip`, `LC.ReadyTerminals`, `LC.StealData`, `LC.DataTerminals`, `LC.UseDataChip`, `LC.IsTerminalModel` | HeistTests (3); ZoneStalkerTests (2) |
-| `hints` | Tips that pop up the first time something happens | `server/sv_livingcity_hints.lua` 80K | `client/cl_livingcity_hints.lua` 8K | - | `LC.Hint`, `LC.HintScan`, `LC.HintsOff`, `LC.HintDue`, `LC_CL.HintKeys`, `LC.HintLearned` | HintTests (3); MenuTests (2); TalkTests (2) |
+| `hints` | Tips that pop up the first time something happens | `server/sv_livingcity_hints.lua` 80K | `client/cl_livingcity_hints.lua` 8K | - | `LC.Hint`, `LC.HintScan`, `LC_CL.HintKeys`, `LC.HintsOff`, `LC.HintDue`, `LC.HintLearned` | HintTests (3); MenuTests (2); TalkTests (2) |
 | `households` | Households (the owner, 10 November: "shared households: | `server/sv_livingcity_households.lua` 11K | - | - | `LC.HouseholdOf`, `LC.HouseholdInvite`, `LC.HouseholdShares`, `LC.HouseholdsReload`, `LC.HouseholdAccept`, `LC.HouseholdLeave` | HouseholdTests (8) |
 | `housing` | Housing blocks | `server/sv_livingcity_housing.lua` 6K | - | - | `LC.PlayerBlock`, `LC.BlockNumbers`, `LC.InBlock`, `LC.PlayerInOwnBlock`, `LC.AssignBlock`, `LC.BroadcastPublic` | section "Housing and curfew enforcement" (2); IntakeTests (2) |
 | `hub` | F4, one window for your work and your place in the city | - | `client/cl_livingcity_hub.lua` 9K | - | `LC_CL.CloseHub`, `LC_CL.HubFill`, `LC_CL.HubOpen`, `LC_CL.HubTab`, `LC_CL.HubLastTab`, `LC_CL.HubBuildMe` | - |
 | `hygiene` | Toilets, baths and what happens without them | `server/sv_livingcity_hygiene.lua` 20K | - | - | `LC.Urge`, `LC.Amenities`, `LC.AmenityKindOf`, `LC.IsFilthy`, `LC.UseToilet`, `LC.SoilNeeds` | HygieneTests (10) |
+| `ied` | IEDs (homemade bombs set on the ground and blown by hand) | `server/sv_livingcity_ied.lua` 11K | - | - | `I.Repair`, `I.Blow`, `LC.IEDPlant`, `LC.TracksWrecked`, `LC.IEDDetonate`, `LC.IEDUnitUse` | IEDTests (8) |
 | `illness` | Catching something | `server/sv_livingcity_illness.lua` 14K | - | `shared/sh_livingcity_illness.lua` 3K | `LC.CatchIllness`, `LC.IsIll`, `LC.InFeverDream`, `LC.HasFever`, `LC.IllnessLeft`, `LC.FeverSway` | TalkTests (7) |
 | `imbalance` | Help for the outnumbered side | `server/sv_livingcity_imbalance.lua` 15K | - | - | `LC.QRFSpot`, `LC.QRFDispatch`, `LC.QRFOut`, `LC.QRFLandSpot`, `LC.ImbalanceBonus`, `LC.QRFHeavyNow` | SideBalanceTests (9); Nov16_AdminHuntTests (2) |
 | `infest` | The infestation, up close | - | `client/cl_livingcity_infest.lua` 9K | - | `LC_CL.InfestMotes`, `LC_CL.StainZone` | - |
@@ -242,7 +243,7 @@ A `-` under Tests means no test calls enough of this module's own functions (cli
 | `security` | Combine-only areas | `server/sv_livingcity_security.lua` 5K | - | - | `LC.Unstick`, `LC.CombineZoneTick` | HeldNotTrespassingTests (1); UpdateTests (1); WorkEscortTests (1) |
 | `sentence` | Sentences that fit the crimes, the work detail, probation | `server/sv_livingcity_sentence.lua` 34K | - | - | `LC.SentenceTick`, `LC.CrimeMinutes`, `LC.RapClear`, `LC.SentenceFor`, `LC.OnProbation`, `LC.AskWorkDetail` | SentenceTests (5); Nov14A_CustodyTests (2) |
 | `shelling` | Headcrab shelling (the owner, 18 November, the long-term plan, | `server/sv_livingcity_shelling.lua` 18K | - | - | `LC.ShellDistrict`, `LC.OrderShelling`, `LC.ShellTargets`, `LC.ShellOpenRebelGround`, `LC.ShellingStatus`, `LC.ShellRebelGround` | ShellingTests (4) |
-| `shop` | Items, Civil Standing tiers, the Union Commissary and the black market | - | - | `shared/sh_livingcity_shop.lua` 61K | `LCS.Weight`, `LCS.TierFor`, `LCS.IsBulky` | PapersHousingTests (1); ResponseTests (1) |
+| `shop` | Items, Civil Standing tiers, the Union Commissary and the black market | - | - | `shared/sh_livingcity_shop.lua` 62K | `LCS.Weight`, `LCS.TierFor`, `LCS.IsBulky` | PapersHousingTests (1); ResponseTests (1) |
 | `sidejobs` | Jobs that come with supply drops, and Union work orders that | `server/sv_livingcity_sidejobs.lua` 29K | - | - | - | - |
 | `sleep` | NPCs far from everyone sleep | `server/sv_livingcity_sleep.lua` 5K | - | - | `LC.WakeNPC`, `LC.NPCSleepTick`, `LC.SleepingCount` | - |
 | `slots` | Character slots | `server/sv_livingcity_slots.lua` 12K | `client/cl_livingcity_slots.lua` 7K | - | `LC.SwitchCharacter`, `LC.SendSlots`, `LC.CanSwitchCharacter`, `LC.DeleteCharacterSlot`, `LC.ActiveSlot` | SlotActTests (3) |

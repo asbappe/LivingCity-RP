@@ -195,6 +195,7 @@ LC_MODULES = {
         "sv_livingcity_flush", -- (the Administrator sends the units into the sealed quarter to open its door into the sewers; after quests, checkpoints and shelling)
         "sv_livingcity_breach", -- (the Resistance and the sealed quarter: shutting its door again, the leader's order to open its wall; after flush)
         "sv_livingcity_base", -- (the Resistance's one headquarters: the leader raises a flag; after the leader's orders, the camps and their props)
+        "sv_livingcity_ied", -- (IEDs and the tracks they wreck: after the job games it mends them with)
         "sv_livingcity_daylight", -- (the map's own lights: the sun and sky by the hour, the dream room's lights, the darker places; after atmos and dreams)
         "sv_livingcity_trains",
         "sv_livingcity_underground",

@@ -41938,7 +41938,32 @@ local boss = newPlayer("BaseCommander", "resistance", nil, 99999)
 local foot = newPlayer("BaseFighter", "resistance", nil, 400)
 local cop = newPlayer("BaseCop", "cp")
 boss:SetPos(T0) foot:SetPos(far) cop:SetPos(far)
-ok(LC.AdminPlotLeader(boss) == true and LC.AdminPlotLeader(foot) == false, "(the test's Commander leads, its Fighter does not)")
+local deputy = newPlayer("BaseLieutenant", "resistance", nil, 900)
+deputy:SetPos(far)
+ok(LC.BaseMayLead(boss) == true and LC.BaseMayLead(deputy) == true and LC.BaseMayLead(foot) == false and LC.BaseMayLead(cop) == false,
+    "a Commander or a Lieutenant may raise the flag, both at once; a Fighter may not, nor a unit", LCF.RankOf(deputy) and LCF.RankOf(deputy).name)
+-- a bare pole stands in every rebel territory, for anyone to walk up to
+B.Poles()
+local p1, p2 = B.poles[LC.RebelLeader(z1)], B.poles[LC.RebelLeader(z2)]
+ok(IsValid(p1) and IsValid(p2) and p1 ~= p2 and p1:GetNW2Bool("lc_flag_up", true) == false and p1:GetNW2Bool("lc_baseflag", false) == true,
+    "each rebel territory has its own pole, bare until a flag is raised on it")
+foot:SetPos(p1:GetPos() + Vector(40, 0, 0))
+ok(LC.BasePoleUse(foot) == false and B.S.state == nil, "a Fighter pressing E at the pole raises nothing (the pole's own prompt tells him who can)")
+foot:SetPos(far)
+deputy:SetPos(p2:GetPos() + Vector(40, 0, 0))
+ok(LC.BasePoleUse(deputy) == true and B.S.state == "raising" and B.S.zone == LC.RebelLeader(z2) and B.S.flag == p2,
+    "a Lieutenant pressing E at a pole raises the flag on that pole, a Commander playing or not")
+B.Tick(1)
+deputy:SetPos(far)
+boss:SetPos(p2:GetPos() + Vector(300, 0, 0))
+local before = B.S.prog
+B.Tick(1)
+ok(B.S.prog > before, "whoever of those ranks is near keeps it climbing: the one who started it can leave")
+ok(LC.BasePoleUse(boss) == false and B.S.state == "raising", "(E does nothing away from the pole)")
+boss:SetPos(p2:GetPos() + Vector(40, 0, 0))
+ok(LC.BasePoleUse(boss) == true and B.S.state == nil and IsValid(p2) and p2:GetNW2Bool("lc_flag_up", true) == false,
+    "E at the pole again gives it up: the flag goes, the pole stays")
+boss:SetPos(T0)
 local function live() for _ = 1, 6 do B.Tick(1) end return B.S.state == "live" end
 local function count() local n = 0 for _, e in pairs(B.S.props or {}) do if IsValid(e) then n = n + 1 end end return n end
 
@@ -42065,9 +42090,105 @@ hook.Remove("LivingCityBaseRansacked", "BaseTests")
 B.Reset()
 for k, v in pairs(was) do _setcvar(k, v) end
 LC.RemoveZone(z1) LC.RemoveZone(z2)
-boss:Remove() foot:Remove() cop:Remove() zed:Remove()
+boss:Remove() foot:Remove() cop:Remove() zed:Remove() deputy:Remove()
 end
 BaseTests()
+
+function IEDTests()
+-- the owner, 20 November: IEDs set on the ground and blown by hand, on roads and on the tracks, where they stop the
+-- trains until the Combine mend them (sv_livingcity_ied.lua)
+section("IEDs: set, blown by hand, and what they do to the tracks")
+local I = LC.IED
+I.Reset()
+ok(GetConVar("lc_ied_max"):GetInt() == 3 and GetConVar("lc_ied_arm"):GetInt() == 2 and GetConVar("lc_ied_radius"):GetInt() == 320
+    and GetConVar("lc_ied_damage"):GetInt() == 220 and GetConVar("lc_ied_track"):GetInt() == 260, "the settings: three at once, live after 2 seconds, 220 over 320, the rails within 260")
+ok(LCS.Items.ied ~= nil and LCS.Items.ied.contraband == true, "the IED is an item, and contraband")
+local recipe
+for _, r in ipairs(LCS.Lab) do if r.id == "ied" then recipe = r end end
+ok(recipe ~= nil and recipe.needs.weedkiller == 2 and recipe.needs.scrap == 3 and recipe.needs.gun_parts == 1, "made at the lab: 2 weedkiller, 3 scrap, 1 gun parts")
+local P0 = Vector(-310000, 310000, 0)
+local reb = newPlayer("IEDRebel", "resistance", nil, 400)
+local cop = newPlayer("IEDCop", "cp")
+reb:SetPos(P0) cop:SetPos(P0 + Vector(0, 50000, 0))
+local traceWas = util.TraceLine
+local ground = true
+util.TraceLine = function(t) return ground and { Hit = true, HitPos = t.endpos, HitNormal = Vector(0, 0, 1) } or { Hit = true, HitPos = t.endpos, HitNormal = Vector(1, 0, 0) } end
+local did, why = LC.IEDPlant(reb)
+ok(did == false and why ~= nil, "nothing to set without one", tostring(why))
+LC.GiveItem(reb, "ied", 5)
+LC.IEDSync(reb)
+ok(reb:HasWeapon("weapon_lc_ied"), "carrying one puts the Detonator in your hands")
+ground = false
+ok(LC.IEDPlant(reb) == false and #I.set == 0, "it is set on the ground, not on a wall")
+ground = true
+ok(LC.IEDPlant(reb) == true and #I.set == 1 and I.set[1].lcOwner == reb and not LC.HasItem(reb, "ied", 5), "set: one on the ground, one fewer carried")
+did, why = LC.IEDDetonate(reb)
+ok(did == false and #I.set == 1, "it cannot be blown at once (not live for 2 seconds)", tostring(why))
+LC.IEDPlant(reb) LC.IEDPlant(reb)
+did, why = LC.IEDPlant(reb)
+ok(did == false and #I.set == 3, "three of yours at once, no more", tostring(why))
+ok(LC.IEDDetonate(cop) == false, "nobody else's hand blows them")
+
+-- a unit who finds one takes it apart
+cop:SetPos(I.set[3]:GetPos() + Vector(30, 0, 0))
+ok(LC.IEDUnitUse(cop) == true and #I.set == 2, "a unit pressing E at one takes it apart")
+ok(LC.IEDUnitUse(reb) == false, "(a rebel's E does nothing to them)")
+cop:SetPos(P0 + Vector(0, 50000, 0))
+
+-- blown by hand: a blast where each lay
+local blasts = {}
+hook.Add("LivingCityIED", "IEDTests", function(pos, by) blasts[#blasts + 1] = by end)
+_advance(3)
+ok(LC.IEDDetonate(reb) == true and #I.set == 0 and #blasts == 2 and blasts[1] == reb, "right click blows every live one of yours", #blasts)
+LC.TakeItem(reb, "ied", 2)
+LC.IEDSync(reb)
+ok(not reb:HasWeapon("weapon_lc_ied"), "with none carried and none set, the Detonator goes")
+
+-- on the tracks: the train's timetable stops and rubble marks the place; a unit mends it
+local wrecked, mended = {}, {}
+hook.Add("LivingCityTracksWrecked", "IEDTests", function(name, pos, by) wrecked[#wrecked + 1] = name end)
+hook.Add("LivingCityTracksRepaired", "IEDTests", function(name, by) mended[#mended + 1] = by end)
+local railsWas = I.Rails
+local A, Bp = P0 + Vector(-2000, 300, 0), P0 + Vector(2000, 300, 0)
+local train = ents.Create("prop_physics")
+train:SetPos(A)
+I.Rails = function() return { { name = "lc_train_9", a = A, b = Bp, train = train } } end
+LC.GiveItem(reb, "ied", 2)
+reb:SetPos(P0 + Vector(0, 2000, 0))          -- (far from the rails)
+LC.IEDPlant(reb)
+_advance(3)
+LC.IEDDetonate(reb)
+ok(#wrecked == 0 and LC.TracksWrecked() == false, "an IED on a road, away from the rails, leaves the trains alone")
+reb:SetPos(P0 + Vector(0, 250, 0))           -- (beside them)
+LC.IEDPlant(reb)
+_advance(3)
+LC.IEDDetonate(reb)
+ok(#wrecked == 1 and wrecked[1] == "lc_train_9" and LC.TracksWrecked() == true and LC.TracksWrecked("lc_train_9") == true and IsValid(I.wrecks.lc_train_9.marker),
+    "one beside the rails wrecks them: no train runs there, and rubble marks the place", #wrecked)
+ok(math.abs(I.wrecks.lc_train_9.pos.y - (P0.y + 300)) < 1, "(the rubble lies on the rails, at the nearest point)")
+ok(I.wrecks.lc_train_9.derailed == false, "(no train was passing: none is stopped)")
+reb:SetPos(I.wrecks.lc_train_9.pos)
+ok(LC.IEDUnitUse(reb) == false and LC.TracksWrecked() == true, "a rebel cannot mend them")
+local gamesWas = LC.JobGameStart
+local started
+LC.JobGameStart = function(ply, kind, q, opts) started = { ply, kind, opts } LC.JobGames[ply] = { kind = kind, ply = ply, opts = opts, props = {}, notes = {}, pay = 0 } return true end
+cop:SetPos(I.wrecks.lc_train_9.pos + Vector(40, 0, 0))
+ok(LC.IEDUnitUse(cop) == true and started and started[2] == "wiring" and started[3].lcTrack == "lc_train_9" and LC.TracksWrecked() == true,
+    "a unit pressing E at the rubble is given the rewiring game: mending is work, not waiting")
+LC.JobGameStart = gamesWas
+LC.JobGames[cop] = nil
+ok(I.Repair("lc_train_9", cop) == true and LC.TracksWrecked() == false and #mended == 1 and mended[1] == cop, "mended: the rubble goes and the trains run again")
+-- a train passing the blast is stopped where it is
+train:SetPos(P0 + Vector(100, 300, 0))
+I.Wreck({ name = "lc_train_9", a = A, b = Bp, train = train }, P0 + Vector(0, 300, 0), reb)
+ok(I.wrecks.lc_train_9.derailed == true, "a train within 600 of the blast is stopped there")
+I.Rails = railsWas
+util.TraceLine = traceWas
+hook.Remove("LivingCityIED", "IEDTests") hook.Remove("LivingCityTracksWrecked", "IEDTests") hook.Remove("LivingCityTracksRepaired", "IEDTests")
+I.Reset()
+train:Remove() reb:Remove() cop:Remove()
+end
+IEDTests()
 
 ----------------------------------------------------------------------
 section("Stop")

@@ -1,0 +1,11 @@
+# IEDs (`sv_livingcity_ied.lua`, `weapon_lc_ied.lua`)
+
+The owner, 20 November: "the resistance to sabotage the train by having IEDs on the tracks that can be set and blown up (a SWEP for IED detonator would be neat) that a player can use to manually blow up the train, which derails it and wrecks the tracks where exploded, causing a problem with supplies ... the combine need to go out and repair it"; then: "they should be useable on the roads as well as the train tracks". Built 20 November; not played yet.
+
+- **The item:** `ied`, "IED", contraband. Made at the lab from 2 weedkiller, 3 scrap and 1 gun parts (14 seconds).
+- **The Detonator** (`weapon_lc_ied`) is in your hands while you carry an IED or have one set, and goes when you have neither. **Left click** sets one on the ground in front of you (not on a wall), up to 3 of yours at once; it is live after 2 seconds. **Right click** blows every live one of yours: 220 damage over 320 units each. A refusal is a dry click, not a line of text.
+- **Anywhere:** a road, a doorway, the tracks. One that is shot goes off. A Civil Protection or Overwatch unit who presses E at one takes it apart.
+- **On the tracks:** a blast within 260 units of a train's rails (the map's own: each `func_tracktrain` named `lc_train_N` between `lc_train_N_p1` and `_p2`, `map_corridor.py`) wrecks them. That train's timetable stops, a train passing within 600 is stopped where it is, and rubble marks the place. A unit who presses E at the rubble is given **the rewiring game**; finished, the train is put back in its shed and the timetable starts again. `LC.TracksWrecked()` is true meanwhile.
+- **Not built:** what a cut line costs the city. Nothing is taken from supplies or rations yet: the hooks are there (`LivingCityTracksWrecked`, `LivingCityTracksRepaired`) and the owner is to say what it should cost. The train itself is in the map pieces, not yet in the compiled map, so this part cannot be played until it is.
+
+Settings (new): `lc_ied_max` 3, `lc_ied_arm` 2, `lc_ied_radius` 320, `lc_ied_damage` 220, `lc_ied_track` 260. For other code: `LC.IEDPlant(ply)`, `LC.IEDDetonate(ply)`, `LC.IEDUnitUse(ply)`, `LC.IEDSync(ply)`, `LC.TracksWrecked([name])`, `LC.IED.Rails()`, `LC.IED.Wreck`, `LC.IED.Repair`; hooks `LivingCityIED(pos, by)`, `LivingCityIEDDisarmed(unit)`, and the two above. Tests: `IEDTests` (22).

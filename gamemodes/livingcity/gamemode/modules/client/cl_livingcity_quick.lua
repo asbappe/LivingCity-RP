@@ -237,7 +237,7 @@ local function ResistancePage()
     end
     -- the headquarters (sv_livingcity_base.lua): one line for whoever leads, and it does whatever comes next. The flag
     -- itself shows how far along it is.
-    if GetGlobal2Bool("lc_base_on", false) and me:GetNW2Bool("lc_res_leads", false) then
+    if GetGlobal2Bool("lc_base_on", false) and me:GetNW2Bool("lc_base_may", false) then
         local st = GetGlobal2String("lc_base", "")
         local label = ({ [""] = "Raise the flag here (set up headquarters)", raising = "Leave the flag (give up setting up)",
             live = "Strike the flag (pack up headquarters)", striking = "Hoist it again (stay)", overrun = "Headquarters overrun: clear it out" })[st]

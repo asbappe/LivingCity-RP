@@ -5,7 +5,10 @@
       as high up the pole as the server says (lc_flag_h, 0 to 1): climbing
       while the headquarters is being set up, at the top while it is live,
       at half mast when it is overrun, coming down when it is struck or torn
-      down. Nothing is written on the screen: the flag is the message.
+      down. The flag is the message; the only words are at the pole itself,
+      for a member of the Resistance standing at it: what E does there for a
+      Lieutenant or Commander, and for anyone else that it takes one of them
+      (the owner, 20 November).
 ]]
 
 if SERVER then return end
@@ -44,10 +47,36 @@ hook.Add("PostDrawOpaqueRenderables", "LivingCityBaseFlag", function()
     mat = mat or Material("models/debug/debugwhite")
     render.SetMaterial(mat)
     for _, e in ipairs(flags) do
-        if IsValid(e) then
+        if IsValid(e) and e:GetNW2Bool("lc_flag_up", false) then
             local a, b, c, d = LC_CL.BaseFlagCorners(e:GetPos(), e:GetNW2Float("lc_flag_h", 0), e:GetRight(), e:GetNW2Float("lc_flag_top", POLE_TOP))
             render.DrawQuad(a, b, c, d, CLOTH)
             render.DrawQuad(b, a, d, c, CLOTH)
+        end
+    end
+end)
+
+-- What the pole says to a member of the Resistance standing at it (nil: nothing).
+function LC_CL.BasePolePrompt(me, state, up)
+    if not (IsValid(me) and me:GetNW2String("lcf_faction", "") == "resistance") then return nil end
+    if not me:GetNW2Bool("lc_base_may", false) then return "Resistance Commander or Lieutenant is required to establish a Resistance HQ" end
+    if state == "" then return LC_CL.HintKeys("{+use} Raise the flag") end
+    if not up then return nil end
+    return LC_CL.HintKeys(({ raising = "{+use} Leave the flag", live = "{+use} Strike the flag", striking = "{+use} Hoist it again" })[state] or "")
+end
+
+surface.CreateFont("LCBasePole", { font = "Trebuchet MS", size = 18, weight = 600 })
+hook.Add("HUDPaint", "LivingCityBasePole", function()
+    if #flags == 0 or not GetGlobal2Bool("lc_base_on", false) then return end
+    local me = LocalPlayer()
+    if not (IsValid(me) and me:Alive()) then return end
+    local at = me:GetPos()
+    for _, e in ipairs(flags) do
+        if IsValid(e) and e:GetPos():DistToSqr(at) <= 110 * 110 then
+            local text = LC_CL.BasePolePrompt(me, GetGlobal2String("lc_base", ""), e:GetNW2Bool("lc_flag_up", false))
+            if text and text ~= "" then
+                draw.SimpleTextOutlined(text, "LCBasePole", ScrW() / 2, ScrH() * 0.62, Color(238, 236, 230), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, 1, Color(0, 0, 0, 200))
+            end
+            return
         end
     end
 end)

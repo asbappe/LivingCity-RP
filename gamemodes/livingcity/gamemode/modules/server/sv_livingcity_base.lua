@@ -17,9 +17,14 @@
       if they went in and took it back".
 
       So:
-        Raise     The leader (a Commander; a Lieutenant when no Commander is
-                  playing: LC.AdminPlotLeader), standing in rebel territory,
-                  F2 > Resistance > Raise the flag here. A pole stands where
+        Poles     A bare pole stands in every rebel territory (where a
+                  leader last planted it, else at the map's lc_hq_setup, else
+                  in the middle of the camp).
+        Raise     Any Lieutenant or Commander of the Resistance, at the pole:
+                  E (or, anywhere in rebel territory, F2 > Resistance >
+                  Raise the flag here, which plants the pole where he
+                  stands). Whoever of those ranks is near keeps it going,
+                  so a leader who leaves strands nobody. A pole stands where
                   he stood (as tall as fits: short under a roof or a
                   bridge) and the flag climbs it for lc_base_setup_time
                   (300 s), but only while he is alive within lc_base_radius
@@ -114,6 +119,21 @@ local function Rebel(p) return Faction(p) == "resistance" and Living(p) end
 local function Unit(p) local f = Faction(p) return (f == "cp" or f == "ota") and Living(p) end
 local function Near(p, pos, r) return IsValid(p) and p:GetPos():DistToSqr(pos) <= r * r end
 
+-- Who may raise and strike the flag: any Lieutenant or Commander of the Resistance (the owner, 20 November: "Resistance
+-- Commander or Lieutenant is required to establish a Resistance HQ"; so a Commander who leaves in the middle of a move
+-- leaves nobody stranded: any Lieutenant carries on).
+local ltIndex
+function LC.BaseMayLead(ply)
+    if not Rebel(ply) then return false end
+    if not ltIndex then
+        local fac = LCF and LCF.Get and LCF.Get("resistance")
+        for i, r in ipairs(fac and fac.ranks or {}) do if r.name == "Lieutenant" then ltIndex = i end end
+        ltIndex = ltIndex or 4
+    end
+    return ply:GetNW2Int("lcf_rank", 1) >= ltIndex
+end
+local MayLead = LC.BaseMayLead
+
 -- Who is on the base's ground: rebels, units, and whether anything wild or the Combine's own is there.
 function B.Ground(pos, r)
     local out = { rebels = {}, units = {}, wild = false, combine = false }
@@ -153,24 +173,31 @@ local function Height()
     return h
 end
 
-local function ShowFlag()
-    local s = B.S
-    if not s.state then return end
-    if not IsValid(s.flag) then
-        local e = ents.Create("prop_physics")
-        if not IsValid(e) then return end
-        e:SetModel(POLE)
-        e:SetPos(s.pos)
-        e:Spawn()
-        if e.SetModelScale then e:SetModelScale((s.high or POLE_HIGH) / POLE_MODEL_HIGH, 0) end
-        if e.SetNW2Float then e:SetNW2Float("lc_flag_top", s.high or POLE_HIGH) end
-        local phys = e.GetPhysicsObject and e:GetPhysicsObject()
-        if IsValid(phys) then phys:EnableMotion(false) end
-        e.lcDressing, e.lcSceneProp, e.lcBaseFlag = true, "baseflag", true
-        if e.SetNW2Bool then e:SetNW2Bool("lc_baseflag", true) end
-        s.flag = e
+-- How tall a pole may stand here: under a roof (a bridge, a tunnel, a room) only as tall as fits, so a base in the canal's
+-- shantytown shows no flag over the canal's walls (the owner, 20 November: "a short flagpole").
+local function HighAt(pos)
+    local tr = util.TraceLine and util.TraceLine({ start = pos + Vector(0, 0, 8), endpos = pos + Vector(0, 0, POLE_HIGH + 60), mask = MASK_SOLID_BRUSHONLY })
+    if tr and tr.Hit and tr.HitPos then return math.Clamp(math.floor(tr.HitPos.z - pos.z - 24), POLE_LOW, POLE_HIGH) end
+    return POLE_HIGH
+end
+
+local function Pole(pos, high)
+    local e = ents.Create("prop_physics")
+    if not IsValid(e) then return nil end
+    e:SetModel(POLE)
+    e:SetPos(pos)
+    e:Spawn()
+    if e.SetModelScale then e:SetModelScale(high / POLE_MODEL_HIGH, 0) end
+    local phys = e.GetPhysicsObject and e:GetPhysicsObject()
+    if IsValid(phys) then phys:EnableMotion(false) end
+    e.lcDressing, e.lcSceneProp, e.lcBaseFlag, e.lcHigh = true, "baseflag", true, high
+    if e.SetNW2Bool then
+        e:SetNW2Bool("lc_baseflag", true)
+        e:SetNW2Float("lc_flag_top", high)
+        e:SetNW2Float("lc_flag_h", 0)
+        e:SetNW2Bool("lc_flag_up", false)
     end
-    if s.flag.SetNW2Float then s.flag:SetNW2Float("lc_flag_h", Height()) end
+    return e
 end
 
 local saved
@@ -183,6 +210,66 @@ local function Load()
     return saved
 end
 function B.Forget() saved = nil end
+local function Write() if LC.SafeWrite then LC.SafeWrite(File(), util.TableToJSON(saved or {}, true)) end end
+
+-- Where a territory's pole stands: where a leader last planted it, else the map's own spot for it (an info_target
+-- named lc_hq_setup inside the territory), else the middle of the camp.
+function B.PoleSpot(zone)
+    local key = LC.CampKey and LC.CampKey(zone)
+    local w = key and Load()[key .. "_pole"]
+    if w then return Vector(w.x, w.y, w.z) end
+    for _, t in ipairs(ents.FindByName and ents.FindByName("lc_hq_setup*") or {}) do
+        if IsValid(t) and B.SiteAt(t:GetPos()) == zone then return LC.FloorUnder and LC.FloorUnder(t:GetPos()) or t:GetPos() end
+    end
+    return LC.FloorUnder and LC.FloorUnder(zone.pos) or zone.pos
+end
+
+-- A bare pole in every rebel territory (the owner, 20 November: any member can walk up to it; only a Lieutenant or
+-- Commander can raise the flag on it).
+B.poles = B.poles or {}
+function B.Poles()
+    local live = {}
+    for _, z in ipairs(LC.ZonesOfKind and LC.ZonesOfKind("rebel") or {}) do
+        local lead = LC.RebelLeader and LC.RebelLeader(z) or z
+        if not live[lead] then
+            live[lead] = true
+            if not IsValid(B.poles[lead]) then
+                local pos = B.PoleSpot(lead)
+                B.poles[lead] = Pole(pos, HighAt(pos))
+            end
+        end
+    end
+    for z, e in pairs(B.poles) do
+        if not live[z] then
+            if IsValid(e) then e:Remove() end
+            B.poles[z] = nil
+        end
+    end
+end
+-- The pole a player is standing at (within reach), and its territory.
+function B.PoleAt(ply, reach)
+    for z, e in pairs(B.poles) do
+        if IsValid(e) and Near(ply, e:GetPos(), reach or 110) then return e, z end
+    end
+    return nil
+end
+
+local function ShowFlag()
+    local s = B.S
+    if not s.state then return end
+    if not IsValid(s.flag) then
+        local e = B.poles[s.zone]
+        if IsValid(e) and (e:GetPos():DistToSqr(s.pos) > 4 or e.lcHigh ~= (s.high or POLE_HIGH)) then e:Remove() e = nil end   -- (planted somewhere new)
+        if not IsValid(e) then e = Pole(s.pos, s.high or POLE_HIGH) end
+        if not IsValid(e) then return end
+        B.poles[s.zone] = e
+        s.flag = e
+    end
+    if s.flag.SetNW2Float then
+        s.flag:SetNW2Float("lc_flag_h", Height())
+        s.flag:SetNW2Bool("lc_flag_up", true)
+    end
+end
 
 -- Where the office's things stand now is where they come back to at this site.
 function B.Remember()
@@ -197,7 +284,7 @@ function B.Remember()
     end
     if next(at) == nil then return end
     Load()[LC.CampKey(s.zone)] = at
-    if LC.SafeWrite then LC.SafeWrite(File(), util.TableToJSON(saved, true)) end
+    Write()
 end
 
 local function Office()
@@ -231,7 +318,10 @@ local function Clear(destroyed)
     local s = B.S
     if not destroyed then B.Remember() end
     for _, e in pairs(s.props or {}) do if IsValid(e) then e:Remove() end end
-    if IsValid(s.flag) then s.flag:Remove() end
+    if IsValid(s.flag) and s.flag.SetNW2Float then      -- (the pole stays: bare again)
+        s.flag:SetNW2Float("lc_flag_h", 0)
+        s.flag:SetNW2Bool("lc_flag_up", false)
+    end
     B.S = {}
 end
 
@@ -248,26 +338,32 @@ end
 
 function LC.BaseRaise(ply)
     if not LC.BaseOn() then return false, "No headquarters on this server." end
-    if not (LC.AdminPlotLeader and LC.AdminPlotLeader(ply)) then return false, "Only the Resistance's leader raises the flag." end
+    if not MayLead(ply) then return false, "A Resistance Commander or Lieutenant is required." end
     if not Living(ply) then return false, "Not now." end
     local s = B.S
     if s.state == "overrun" then return false, "The headquarters is overrun: clear it out first." end
     if s.state then return false, "Strike the flag at the old headquarters first." end
     local zone = B.SiteAt(ply:GetPos())
     if not zone then return false, "Only in rebel territory." end
-    local fwd = ply.GetAimVector and ply:GetAimVector() or Vector(1, 0, 0)
-    fwd = Vector(fwd.x, fwd.y, 0)
-    if fwd:Length() < 0.1 then fwd = Vector(1, 0, 0) end
-    fwd:Normalize()
-    local pos = ply:GetPos() + fwd * 60
-    pos = LC.FloorUnder and LC.FloorUnder(pos) or pos
+    local pos
+    local pole, poleZone = B.PoleAt(ply, 150)
+    if IsValid(pole) and poleZone == zone then
+        pos = pole:GetPos()                              -- (at the territory's own pole)
+    else                                                 -- (from F2, away from it: the pole is planted where he stands, and stays there)
+        local fwd = ply.GetAimVector and ply:GetAimVector() or Vector(1, 0, 0)
+        fwd = Vector(fwd.x, fwd.y, 0)
+        if fwd:Length() < 0.1 then fwd = Vector(1, 0, 0) end
+        fwd:Normalize()
+        pos = ply:GetPos() + fwd * 60
+        pos = LC.FloorUnder and LC.FloorUnder(pos) or pos
+        if LC.CampKey then
+            Load()[LC.CampKey(zone) .. "_pole"] = { x = pos.x, y = pos.y, z = pos.z }
+            Write()
+        end
+    end
     local g = B.Ground(pos, cvCore:GetFloat())
     if g.wild or g.combine then return false, "Not with them here." end
-    -- Under a roof (a bridge, a tunnel, a room) the pole is only as tall as fits: a base in the canal's shantytown shows
-    -- no flag over the canal's walls (the owner, 20 November: "a short flagpole so there isn't a huge flagpole sticking out").
-    local high = POLE_HIGH
-    local tr = util.TraceLine and util.TraceLine({ start = pos + Vector(0, 0, 8), endpos = pos + Vector(0, 0, POLE_HIGH + 60), mask = MASK_SOLID_BRUSHONLY })
-    if tr and tr.Hit and tr.HitPos then high = math.Clamp(math.floor(tr.HitPos.z - pos.z - 24), POLE_LOW, POLE_HIGH) end
+    local high = HighAt(pos)
     B.S = { zone = zone, state = "raising", prog = 0, pos = pos, by = ply, seen = CurTime(), high = high }
     ShowFlag()
     return true
@@ -275,7 +371,7 @@ end
 
 function LC.BaseStrike(ply)
     local s = B.S
-    if not (LC.AdminPlotLeader and LC.AdminPlotLeader(ply)) then return false, "Only the Resistance's leader strikes the flag." end
+    if not MayLead(ply) then return false, "A Resistance Commander or Lieutenant is required." end
     if s.state ~= "live" then return false, "No headquarters to pack up." end
     if not Near(ply, s.pos, cvRadius:GetFloat()) then return false, "Go to the headquarters." end
     local left = (s.liveAt or 0) + cvStay:GetFloat() - CurTime()
@@ -288,7 +384,7 @@ end
 function LC.BaseOrder(ply)
     local s = B.S
     if not s.state then return LC.BaseRaise(ply) end
-    if not (LC.AdminPlotLeader and LC.AdminPlotLeader(ply)) then return false, "Only the Resistance's leader." end
+    if not MayLead(ply) then return false, "A Resistance Commander or Lieutenant is required." end
     if s.state == "raising" then Gone("abandoned") return true end
     if s.state == "live" then return LC.BaseStrike(ply) end
     if s.state == "striking" then s.state, s.prog, s.liveAt = "live", 1, s.liveAt or CurTime() return true end
@@ -313,8 +409,19 @@ function LC.BaseTear(ply)
     s.tear = { by = ply, t = 0 }
     return true
 end
+-- E at a pole: a unit tears a flying flag down; a Lieutenant or Commander does what their F2 line does. (Anyone else of
+-- the Resistance is told by the pole's own prompt that it takes one of those: cl_livingcity_base.lua.)
+function LC.BasePoleUse(ply)
+    if not LC.BaseOn() then return false end
+    if Unit(ply) then return B.S.state ~= nil and LC.BaseTear(ply) end
+    if not MayLead(ply) then return false end
+    local pole, zone = B.PoleAt(ply, 110)
+    if not IsValid(pole) then return false end
+    if B.S.state and B.S.zone ~= zone then return false end      -- (another territory's bare pole while a flag flies elsewhere)
+    return LC.BaseOrder(ply)
+end
 hook.Add("KeyPress", "LivingCityBase", function(ply, key)
-    if key == IN_USE and B.S.state and Unit(ply) then LC.BaseTear(ply) end
+    if key == IN_USE then LC.BasePoleUse(ply) end
 end)
 
 local function Ransack()
@@ -348,11 +455,13 @@ function B.Tick(dt)
         B.sentOn = LC.BaseOn()
         SetGlobal2Bool("lc_base_on", B.sentOn)
     end
-    if LC.BaseOn() and LC.AdminPlotLeader then       -- (who sees the line on their F2: whoever may give it)
+    if LC.BaseOn() then       -- (who sees the line on their F2, and the pole's prompt: whoever may give it)
         for _, p in ipairs(player.GetAll()) do
-            local leads = LC.AdminPlotLeader(p) == true
-            if p:GetNW2Bool("lc_res_leads", false) ~= leads then p:SetNW2Bool("lc_res_leads", leads) end
+            local may = MayLead(p) == true
+            if p:GetNW2Bool("lc_base_may", false) ~= may then p:SetNW2Bool("lc_base_may", may) end
         end
+        B.poleLook = (B.poleLook or 0) + dt
+        if B.poleLook >= 5 or not B.poled then B.poleLook, B.poled = 0, true B.Poles() end
     end
     if not s.state then return end
     local now = CurTime()
@@ -366,7 +475,10 @@ function B.Tick(dt)
             if s.tear.t >= cvTear:GetFloat() then Ransack() return end
         end
     end
-    local leaderHere = Rebel(s.by) and LC.AdminPlotLeader and LC.AdminPlotLeader(s.by) and Near(s.by, s.pos, cvRadius:GetFloat())
+    local leaderHere = false      -- (whoever raised it, or any other Lieutenant or Commander: the move does not hang on one player)
+    for _, p in ipairs(player.GetAll()) do
+        if MayLead(p) and Near(p, s.pos, cvRadius:GetFloat()) then leaderHere = true break end
+    end
     if s.state == "raising" then
         if leaderHere then s.seen = now end
         if leaderHere and not (g.wild or g.combine) then
@@ -414,11 +526,15 @@ end)
 
 hook.Add("LivingCityStopped", "LivingCityBase", function()
     if B.S.state then Clear(false) end
+    for z, e in pairs(B.poles) do if IsValid(e) then e:Remove() end end
+    B.poles, B.poled = {}, nil
 end)
 hook.Add("PostCleanupMap", "LivingCityBase", function()      -- (the map's cleanup took the pole and the office: put them back)
     local s = B.S
     if not s.state then return end
     s.flag, s.props = nil, {}
+    B.poles = {}
+    B.Poles()
     ShowFlag()
     if s.state ~= "raising" then Office() end
 end)
@@ -426,6 +542,6 @@ end)
 -- (for the tests: as if no flag had ever been raised)
 function B.Reset()
     for _, e in pairs(B.S.props or {}) do if IsValid(e) then e:Remove() end end
-    if IsValid(B.S.flag) then B.S.flag:Remove() end
-    B.S, B.sent = {}, nil
+    for z, e in pairs(B.poles) do if IsValid(e) then e:Remove() end end
+    B.S, B.sent, B.poles, B.poled = {}, nil, {}, nil
 end
