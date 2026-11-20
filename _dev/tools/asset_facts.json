@@ -7265,6 +7265,24 @@
 "static": true,
 "v": 2
 },
+"models/props_trainstation/trackends01.mdl": {
+"bbox": [
+-34.1,
+-10.4,
+-11.5,
+33.9,
+10.3,
+23.1
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
 "models/props_trainstation/tracklight01.mdl": {
 "bbox": [
 -12.5,
@@ -7283,6 +7301,24 @@
 "static": true,
 "v": 2
 },
+"models/props_trainstation/trackmarkers01.mdl": {
+"bbox": [
+-153.3,
+-7.0,
+-6.8,
+144.2,
+8.6,
+6.6
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
 "models/props_trainstation/tracksign01.mdl": {
 "bbox": [
 -18.5,
@@ -7291,6 +7327,60 @@
 18.5,
 15.3,
 36.9
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_trainstation/tracksign02.mdl": {
+"bbox": [
+-18.5,
+-11.4,
+-13.9,
+18.5,
+11.4,
+14.1
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_trainstation/tracksign03.mdl": {
+"bbox": [
+-2.0,
+-11.9,
+-53.1,
+1.8,
+11.9,
+53.2
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_trainstation/trackswitch01.mdl": {
+"bbox": [
+-72.5,
+-29.7,
+-3.8,
+72.5,
+29.7,
+4.2
 ],
 "built_static": true,
 "collides": true,
@@ -7391,6 +7481,24 @@
 "static": true,
 "v": 2
 },
+"models/props_trainstation/traincar_bars001.mdl": {
+"bbox": [
+-5.0,
+-318.3,
+-0.3,
+5.0,
+318.3,
+134.3
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
 "models/props_trainstation/traincar_rack001.mdl": {
 "bbox": [
 -11.3,
@@ -7399,6 +7507,24 @@
 15.3,
 61.3,
 3.0
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_trainstation/traincar_seats001.mdl": {
+"bbox": [
+-14.3,
+-59.0,
+-0.3,
+14.3,
+59.0,
+47.3
 ],
 "built_static": true,
 "collides": true,
@@ -7481,6 +7607,24 @@
 "static": true,
 "v": 2
 },
+"models/props_trainstation/traintrack001c.mdl": {
+"bbox": [
+-512.3,
+-144.0,
+-8.0,
+512.3,
+144.0,
+8.3
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
 "models/props_trainstation/traintrack006b.mdl": {
 "bbox": [
 -930.4,
@@ -7492,6 +7636,24 @@
 ],
 "built_static": true,
 "collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_trainstation/traintrack006c.mdl": {
+"bbox": [
+-596.9,
+-992.0,
+-12.0,
+594.3,
+992.0,
+12.0
+],
+"built_static": true,
+"collides": false,
 "game": "hl2",
 "physics": false,
 "prop_data": false,
@@ -7849,6 +8011,24 @@
 20.6,
 55.9,
 17.1
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": true,
+"prop_data": true,
+"ragdoll": false,
+"static": false,
+"v": 2
+},
+"models/props_wasteland/controlroom_filecabinet001a.mdl": {
+"bbox": [
+-12.3,
+-9.5,
+-13.8,
+12.0,
+9.5,
+13.8
 ],
 "built_static": true,
 "collides": true,
