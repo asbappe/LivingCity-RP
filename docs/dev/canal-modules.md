@@ -54,7 +54,7 @@ What a module is and how to lay them out: `docs/dev/map-building.md` ("Canal mod
 | `breach` | 1024 | the breach: the floor fallen into an old cellar, slabs for ramps, an undercut | `lc_breach_bottom`, `lc_breach_stash` | `map_mods_d.py` |
 | `wreck` | 1024 | the wreck: a Combine carrier's container down in the canal, hollow, to race for | `lc_wreck_beacon`, `lc_wreck_cache`, `lc_wreck_spark` | `map_mods_d.py` |
 | `morgue` | 1024 | the morgue: a cold room of drawers and tables behind a sliding door (left) | `lc_morgue_door`, `lc_morgue_ledger`, `lc_morgue_table_1`, `lc_morgue_table_2`, `lc_morgue_table_3` | `map_mods_d.py` |
-| `hq` | 768 | the Resistance leader's office: a briefing room and an office behind it, a flag outside (left) | `lc_hq_desk`, `lc_hq_flag`, `lc_hq_map`, `lc_hq_setup`, `lc_hq_table` | `map_town.py` |
+| `hq` | 768 | the Resistance leader's office: a briefing room and an office behind it (the game puts the flagpole at its door) | `lc_hq_desk`, `lc_hq_map`, `lc_hq_setup`, `lc_hq_table` | `map_town.py` |
 | `straight` | 1024 | plain canal ("straight 1536", "straight 1024 bridge") | none | `map_modules.py` |
 | `jog` | 1024 | the canal steps sideways to break a long view ("jog left 768", "jog right 1024") | none | `map_modules.py` |
 | `tee` | 512 | a standard gate in the left wall, for another piece or layout to join | none | `map_modules.py` |
@@ -415,53 +415,63 @@ line's rope hangs where its cloths are (the rope sags by itself).
 
 ### `cells`
 
-The cells: where the Resistance keeps captured Combine units. A plain steel door at the foot of the left wall
-(lc_cells_entry: Use swings it in) opens on a guard room (a table, lockers, a board of keys). A corridor runs on past
-three cells, each 128 by 160 behind a barred front: half of each front is a barred door (lc_cells_door_1 to _3) that
-slides behind the fixed half when the button beside it on the corridor's pier is pressed (lc_cells_button_1 to _3,
-tally marks over each say which). A mattress and a bucket in each; lc_cells_spot_1 to _3 are where a prisoner
-stands. The far cell has a loose grate low in its side wall (lc_cells_grate: Use swings it; the game can Lock it)
-onto a crawl duct 40 high that comes out at the canal's floor through a big outfall pipe: the way to break out, or in.
-Unchecked: the sound ambient/atmosphere/tunnel1.wav; whether a prisoner's Use can reach a button round the pier's
-corner (they are 16 or more past the cell's edge, facing away); which way the table, chair and lockers face (their
-sizes and places are from the models' own files); the doors' sounds (the bunker's own, doors/doormove1.wav and
-doors/gate_move1.wav).
+The cells: where the Resistance keeps captured Combine units. A heavy steel door at the foot of the left wall
+(lc_cells_entry: Use swings it in) opens on a guard room (a table, a chair, lockers, a bench, a board with the
+padlocks on it). A corridor runs on past three cells, each 128 by 160 behind a wall with a barred window and a
+barred door (lc_cells_door_1 to _3) that slides aside behind the wall when the button beside it on the corridor's
+pier is pressed (lc_cells_button_1 to _3, tally marks over each say which) or the game sends Open, Close or
+Toggle. A mattress, a bucket and a toilet in each; lc_cells_spot_1 to _3 are where a prisoner stands. The far cell
+has a loose grate low in its side wall (lc_cells_grate: Use swings it; the game can Lock it) onto a crawl duct 40
+high that comes out at the canal's floor through a concrete pipe: the way to break out, or in.
+The doors are Nova Prospekt's models (prison_heavydoor001a, prison_celldoor001a) riding on unseen brush doors
+of the same names and inputs as before; the windows are prison_cellwindow002a with an unseen wall in them.
+Left as brushes: the grate (no model 62 by 38), the tally marks and scratches (paint, not things).
+Unchecked: which way the door, window, bench and board models face (each is thin along its x, so its face looks
+along x: turned here to look along v); the sound ambient/atmosphere/tunnel1.wav; whether a prisoner's Use can
+reach a button round the pier's corner; the doors' sounds (doors/doormove1.wav, doors/gate_move1.wav).
 
 ### `memorial`
 
 The wall of the dead: a shallow recess in the left wall, open to the sky, its floor one step above the canal's.
 A stone wall stands against its back, covered in rows of small plaques (the upper rows half empty: room for more),
-with a ledge at its foot where candle stubs burn steadily among tins of dried stalks, a few pictures and bottles;
-a wreath over it, posters on the side walls, a line strung across, and a plank bench out in the canal facing it.
-lc_memorial_wall is the middle of the wall, facing out: the game may one day list there the names of characters
-who died for good.
-Unchecked: the sound ambient/levels/canals/windmill_wind_loop1.wav (a low wind). No flowers: Half-Life 2's model
-list has none, so the dried stalks are brushes.
+with a ledge at its foot where candle stubs burn steadily among framed pictures, bottles, tins and pots; a tall
+candlestick at each end of it, posters on the side walls, a line strung across, and a bench out in the canal
+facing it. lc_memorial_wall is the middle of the wall, facing out: the game may one day list there the names of
+characters who died for good.
+Left as brushes: the stone wall, its plaques and the candle stubs (Half-Life 2 has no plaque and no candle).
+Unchecked: the sound ambient/levels/canals/windmill_wind_loop1.wav (a low wind); which way the picture frames
+face; the candlesticks are Lost Coast's (lostcoast/props_monastery/candlestick). No flowers: there is no model.
 
 ### `pit`
 
 The fighting pit: the canal opens on its left, through a mouth 512 wide, into an eight-sided arena under the
-open sky. In its middle a ring sunk 64 into the floor, 384 across, floored with dirt, inside a chain-link cage on
-posts; the one gate (lc_pit_gate, on the side toward the canal) slides aside when the button on the post beside it
-is pressed (lc_pit_gate_button) or the game tells it to (Open, Close), and steps go down from it into the ring.
-lc_pit_corner_a and lc_pit_corner_b are the two corners the fighters start in (a stool in each). Three tiers of
-concrete seats, 32 high each, stand on the three far sides, with stairs of 16 up the middle of each side. By the
-mouth on the right the bookmaker's table, chair and lamp under a chalk board of odds (lc_pit_bookie: where he
-sits); on the left the corner men's bench, water drum and bucket. Two lamps hang over the ring from a gantry.
-Unchecked: whether a press of the gate's button can be made through the cage from inside (it should not: the post
-stands 16 clear of it); the button's model is Episode Two's (the framework's own choice).
+open sky. In its middle a ring sunk 64 into the floor, 384 across, floored with dirt, inside a cage of Nova
+Prospekt's fence panels on a kerb; the one gate (lc_pit_gate, on the side toward the canal) slides aside when the
+button on the post beside it is pressed (lc_pit_gate_button) or the game tells it to (Open, Close), and steps go
+down from it into the ring. lc_pit_corner_a and lc_pit_corner_b are the two corners the fighters start in (a stool
+in each). Three tiers of concrete seats, 32 high each, stand on the three far sides, with stairs of 16 up the
+middle of each. By the mouth on the right the bookmaker's table, chair, till and lamp under a chalk board of odds
+(lc_pit_bookie: where he sits); on the left the corner men's bench, water drum and bucket. A street lamp stands
+on each side of the cage, its arm over the ring.
+The gate is a fence panel (interior_fence002e) riding on an unseen brush door of the same name and inputs; an
+unseen wall stands in the cage's line all round, so the cage holds whatever the panels' own shapes are.
+Left as brushes: the tiers, kerb and posts for the buttons (concrete), the chalk board (no model of one).
+Unchecked: which way the fence panels face and whether their meshes meet at the corners; whether a press of the
+gate's button can be made through the cage from inside; the button's model is Episode Two's.
 
 ### `garden`
 
-The walled garden: where the Resistance grows food. A gap in the left wall, three steps up and a picket gate
-(lc_garden_gate: Use swings it), opens on a yard 640 by 448 under the open sky, its floor 24 above the canal's.
-Six raised soil beds edged with timber, three on each side of a path of flagstones (lc_garden_bed_1 to _6: on the
-beds, for a farming job; 1 to 3 on the left going back, 4 to 6 on the right), ridged and planted; bean poles with
-lines between over the first bed on each side; a scarecrow in the middle bed on the right. Against the back wall a
-tool lean-to (a bench, pots, a shovel, a bucket), a rain butt fed by pipes down the wall in the left corner, a
-compost bay in the right corner; a push cart and a crate of melons on the path.
-Unchecked: nothing from memory (models and materials pass map_assets.py); how the loose things lie once the game
-drops them (shovel, bucket, pots, melons, cart).
+The walled garden: where the Resistance grows food. A gap in the left wall, three steps up, a fence of boards
+and an iron gate (lc_garden_gate: Use swings it in), opens on a yard 640 by 448 under the open sky, its floor 24
+above the canal's. Six raised soil beds edged with timber, three on each side of a path of flagstones
+(lc_garden_bed_1 to _6: on the beds, for a farming job; 1 to 3 on the left going back, 4 to 6 on the right),
+ridged; melons on two of them; bean poles with lines between over the first bed on each side; a scarecrow in the
+middle bed on the right. Against the back wall a tool lean-to (a desk, pots, a shovel, a bucket, a bell lamp), a
+barrel under a gutter pipe in the left corner, a compost heap behind boards in the right corner; a push cart, a
+wheelbarrow and a crate of melons on the path.
+The gate is props_c17/gate_door01a riding on an unseen brush door of the same name.
+Left as brushes: the beds (timber and soil), the scarecrow (no model of one), the lean-to, the fence's two rails.
+Unchecked: which way the gate and the boards face; how the loose things lie once the game drops them.
 
 ### `stash`
 
@@ -481,37 +491,45 @@ doormove2.wav are the bunker doors' own.
 ### `market`
 
 The black market: a vaulted arcade inside the left wall, entered from the canal's floor by two archways.
-Five stalls in alcoves along its back, each with a counter (crouch under its left end to get behind it), shelves
-of goods, a lamp, a crate to sit on, and a tin roll shutter over the counter (lc_market_shutter_1 to _5: each
-lifts and drops when the button inside its own stall is pressed, lc_market_button_1 to _5, or when the game
-sends Open or Close). lc_market_stall_1 to _5 are where the stallholders stand, facing out. A brazier burns in
-the middle of the arcade, benches by it; a lookout's stool stands inside each archway, where the canal can be
-watched both ways; ribs carry the vault at every pier.
+Five stalls in alcoves along its back, each with a steel kitchen counter across the right half of its front (the
+left half is the way behind it), a shelf unit, goods on the counter, a dome light, a crate to sit on, and a tin
+roll shutter over the front (lc_market_shutter_1 to _5: each lifts and drops when the button inside its own stall
+is pressed, lc_market_button_1 to _5, or when the game sends Open or Close). lc_market_stall_1 to _5 are where
+the stallholders stand, facing out. A fire drum burns in the middle of the arcade between two benches; a
+lookout's stool stands inside each archway, where the canal can be watched both ways; ribs carry the vault at
+every pier.
+Left as brushes: the shutters, their boxes and guide rails (Half-Life 2 has no roll shutter; they are the named
+doors), the vault's ribs and the arches.
 Unchecked: the sound ambient/fire/fire_small_loop1.wav; env_fire's look (the same settings as the vortigaunt
-culvert's fire); func_door's "spawnpos" 1 (starts open) is from memory. The first, third and fifth shutters start up, the second and fourth down (to be seen both ways);
-a shut stall is still got into under its counter's end: the shutter says closed, it does not lock.
+culvert's fire); func_door's "spawnpos" 1 (starts open) is from memory; which way the counters and small goods
+face. The first, third and fifth shutters start up, the second and fourth down (to be seen both ways); a shut
+stall is still got into by crouching under the shutter's foot: the shutter says closed, it does not lock.
 
 ### `press`
 
 The pamphlet press: a short side tunnel off the left wall that seems to end in a stack of crates to the roof.
-The crates are brushes; between the two at the floor is a gap 44 wide and 40 high behind a hanging sack (no
-thing: walk, or rather crawl, through it). Behind is the printing room: a hand press built of brushes (a bed on
-legs with the forme on it, a platen hanging from a screw between two cheeks, a long lever), lc_press_machine on
-its bed; a type case with a sloped top; three drying lines across the room hung with sheets; stacks and tied
-bundles of paper on a pallet (lc_press_stack); a table with an oil lamp; drums of ink; a mattress in the corner.
-Unchecked: func_illusionary (the sack over the gap) is from memory; how taut the drying lines hang (the sheets are
-brushes placed for a line with almost no sag).
+The crates are real ones, stacked: between the two at the floor is a gap 48 wide and 40 high under a pallet,
+behind a hanging sack (no thing: crawl through it). Behind is the printing room: a hand press (a bed on legs
+with the forme on it, a platen hanging from a screw between two cheeks, a long lever), lc_press_machine on its
+bed; a chest of drawers for the type; three drying lines across the room hung with sheets; boxes and bundles of
+paper on a pallet (lc_press_stack); a table with a lamp and papers; drums and cans of ink; a mattress.
+Left as brushes: the hand press (Half-Life 2 has no printing press), the sheets on the lines (they hang; the
+paper models lie flat), the sack over the gap.
+Unchecked: func_illusionary (the sack) is from memory; how taut the drying lines hang; that the stacked crates
+leave the gap clear (their boxes say 48 by 40; they are solid props, not brushes); which way the drawers face.
 
 ### `still`
 
 The still: a distillery in a cellar off the left wall. A short tunnel, then eight steps down into a cellar
-64 below the canal's floor. Against its far side the pot still, built of brushes: a brick firebox open at the
-front with a small steady fire in it, a round pot on it, a head that tapers up in rings, a pipe across to the
-worm (a cask with hoops round it) and a spout over a glass jar (lc_still_pot: in front of the firebox). Three mash
-casks along the left wall, one open; sacks; shelves of bottles along the back wall (lc_still_shelf: in front of
-them); a table with a funnel and bottles; cut wood by the fire; a pale steam over the pot's head.
+64 below the canal's floor. Against its far side the still: a brick firebox open at the front with a small steady
+fire in it, a boiler standing on it, a pipe across to the worm (a drum on a crate) and a glass jug under it
+(lc_still_pot: in front of the firebox). Three mash barrels along the left wall, boxes; kitchen shelves along the
+back wall (lc_still_shelf: in front of them); a table with a pot, bottles and a jug; a stool; a pale steam over
+the boiler.
+Left as brushes: the firebox (brick) and its grate.
 Unchecked: the sound ambient/fire/fire_small_loop1.wav; env_fire's look and env_smokestack's (the framework's own
-settings, made small and pale here); how the loose bottles lie.
+settings, made small and pale here); which way the boiler and the pipe pieces face; Half-Life 2 has no wooden
+cask, so the barrels are its blue plastic ones and an oil drum.
 
 ### `plaza`
 
@@ -519,32 +537,39 @@ The plaza: where people gather to listen. The canal opens on its left, 1024 wide
 amphitheatre under the open sky: a flat floor 512 across, then five concrete tiers of seats stepping up and back
 round it, each 16 high and 48 deep (walked up anywhere, sat on anywhere), the last one a broad walk under the
 wall; the tiers' ends show as steps from the canal. At the canal's edge, facing the tiers, a timber rostrum three
-steps up with a lectern (lc_plaza_rostrum: where the speaker stands, facing the tiers), between two poles that
-carry a wire for a banner; a horn on one pole; a fire drum on each side of the floor. lc_plaza_crowd is the middle
-of the third tier, facing the rostrum.
-Unchecked: env_fire's look in the drums (the vortigaunt culvert's settings); no sound here.
+steps up with a lectern and a handrail behind (lc_plaza_rostrum: where the speaker stands, facing the tiers),
+between two street lamps that carry a wire for a banner; a cluster of loudspeakers on one (speakercluster01a);
+a fire drum on each side of the floor. lc_plaza_crowd is the middle of the third tier, facing the rostrum.
+Left as brushes: the tiers, the rostrum's deck and steps (timber staging), its lectern (no model of one).
+Unchecked: env_fire's look in the drums; which way the loudspeakers and the lamps' arms point (the arms are along
+the model's y, turned here toward the tiers); no sound here.
 
 ### `playground`
 
 The playground: a relic of before. A terrace 128 above the canal's floor on the left, open to the sky (the
-bank along it is the way up). On it, rusted and built of brushes: a swing frame with two seats on chains, one
-hanging by a single chain with its end on the ground; a slide with a ladder of rungs and a railed top; a
-roundabout; a sandpit edged with timber; and a bench with its back to the wall, facing it all
-(lc_playground_bench: on the bench). Nothing else, and no lamp.
-Unchecked: the sound ambient/levels/canals/windmill_wind_loop1.wav (one faint wind); how the chains hang (they
-are ropes drawn taut between two points each).
+bank along it is the way up). On it, City 17's own playground models: a swing set with one seat still hanging on
+its chains and one fallen, hanging by a single chain; a slide; a roundabout; and, built here, a sandpit edged with
+timber; a bench with its back to the wall, facing it all (lc_playground_bench: on the bench). Nothing else, and
+no lamp.
+Left as brushes: the sandpit (timber and sand in the ground).
+Unchecked: the sound ambient/levels/canals/windmill_wind_loop1.wav (one faint wind); which end of the slide is
+its ladder and which way the bench faces; whether the swing set's model has chains of its own (the seats are
+separate models, hung here on ropes); on a street there is no bank, so the terrace needs steps of the street's.
 
 ### `clinic`
 
 The clinic: a field hospital in a vault off the left wall, whitewashed and tiled against the canal's concrete.
 A wide way in between two drawn curtains (a white cross on the wall over it); a ward of four beds along its back wall
-with cloth screens between them (lc_clinic_bed_1 to _4: where a patient lies), a bedside locker and a drip stand
-each; a dispensary nook behind a counter (crouch under its flap at the left end), shelves of bottles on its back
-wall; through a curtained opening an operating theatre with a steel table under a strong lamp that shines straight
-down (lc_clinic_table: on the table), a trolley and shelves; and off the theatre a sluice room with a sink, a
-boiler and a floor drain.
+with cloth screens between them (lc_clinic_bed_1 to _4: where a patient lies), a mattress and a bedside drawer
+each, a hospital cart, a stove, a bench; a dispensary nook behind a shop's display counter (walk round its left
+end), kitchen shelves behind, jars and kits on it; through a curtained opening an operating theatre with a long
+steel-legged table under a bell lamp that shines straight down (lc_clinic_table: on the table), a cart, a closet
+and shelves; and off the theatre a sluice room with a sink, a boiler, a bucket and a floor grille.
+Left as brushes: the curtains and the screens between the beds (cloth: no model), the white cross (paint), the
+theatre's door frame.
 Unchecked: the sound ambient/water/leak_1.wav; which end of a bed frame is its head, and which way the sink,
-stove, radiator and shelves face (sizes and places are from the models' own files; BED_YAW turns the frames).
+stove, radiator, drawers, closet, boiler and shelves face (sizes and places are from the models' own files;
+BED_YAW turns the frames); how the loose mattresses settle on the frames.
 
 ### `lock`
 
@@ -836,11 +861,11 @@ Unchecked: models/humans/corpse1.mdl as a ragdoll lying on a table (it may slide
 ### `hq`
 
 The Resistance leader's office. A doorway in the left wall into a briefing room (a long table and benches, a
-map board, a lamp), and behind a partition the leader's own office: a desk and chair, a filing cabinet, a strong
-box, a cot. Outside by the door, a flagpole with a banner the game can show while this is the live headquarters.
-Named for the game: lc_hq_setup (the doorstep: where the leader stands to set the headquarters up), lc_hq_flag
-(the banner, a func_brush: Enable shows it, Disable hides it), lc_hq_desk, lc_hq_table, lc_hq_map.
-Unchecked: a func_brush's rendercolor on plaster (the banner's red).
+cork board, a lamp), and behind a partition the leader's own office: a desk and chair, a filing cabinet, a steel
+closet, a bed. The flagpole is the game's own: it stands it at lc_hq_setup, by the door.
+Named for the game: lc_hq_setup (the doorstep: where the pole goes and the leader stands to set the headquarters
+up), lc_hq_desk, lc_hq_table, lc_hq_map.
+Unchecked: which way the cork board, the closet and the bed face.
 
 ### `straight`
 

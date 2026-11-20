@@ -298,10 +298,10 @@ def terrace_slopes(b, fr, L, sign, m):
             x, y = fr.pt(u + 32, sign * 288)
             spec = cells.get((x // CELL, y // CELL))
             if spec and spec[0] == "open" and street < spec[1] <= street + 128:
-                h = min(spec[1] - street, 88)
+                h = spec[1] - street
         if h != was:
             if was:
-                m.shapes([prism([(sign * 256, F), (sign * (256 - was), F), (sign * 256, F + was)], "x", start, u, MAT["canal_wall"])])
+                m.shapes([prism([(sign * 256, F - 16), (sign * (240 - was), F - 16), (sign * 256, F + was)], "x", start, u, MAT["canal_wall"])])      # (down to the gutter's height: a high terrace's slope crosses the kerb)
             start, was = u, h
 
 
