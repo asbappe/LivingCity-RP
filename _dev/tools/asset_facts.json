@@ -424,6 +424,21 @@
 "ragdoll": false,
 "static": false
 },
+"models/props_mining/freightelevatorbutton02.mdl": {
+"bbox": [
+-0.3,
+-0.6,
+-0.3,
+4.8,
+8.0,
+20.3
+],
+"collides": true,
+"game": "ep2",
+"physics": false,
+"ragdoll": false,
+"static": false
+},
 "models/props_trainstation/benchoutdoor01a.mdl": {
 "bbox": [
 -11.8,

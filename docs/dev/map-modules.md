@@ -10,9 +10,10 @@ python3 map_build.py module                                   # the list
 python3 map_modules_check.py --only NAME --views /some/folder # builds it 9 ways, then draws it: NAME_sheet.png
 python3 map_view.py lc_mod_NAME.vmf --eye X Y Z --yaw A --pitch P --out a.png   # one more look, from anywhere
 python3 map_view.py lc_mod_NAME.vmf --iso SW --cut 560 --out b.png              # from above, nothing drawn over z 560
+python3 map_build.py module --name NAME && python3 map_assets.py lc_mod_NAME.vmf  # is every model and material real, and the right kind?
 ```
 
-Look at the pictures every time (`map_view.py` draws brushes in flat colours, props as coloured posts, light roughly). A module is done when the check passes all ways AND the pictures show what was meant.
+Look at the pictures every time (`map_view.py` draws brushes in flat colours, props as boxes of their true size, light roughly: `docs/dev/map-view.md`). A build also prints `LOOK:` lines for props that reach into a wall, stand taller than the roof over them or lie under the floor: clear them. A module is done when the check passes all ways, `map_assets.py` passes, there are no `LOOK:` lines left unexplained, AND the pictures show what was meant.
 
 ## Where a module lives
 
@@ -46,7 +47,7 @@ The plan is squares of 64, seen from above. Paint them and the walls, floors, ro
 
 - `m.open(u1, v1, u2, v2, floor=F, mat=None)`: open to the sky.
 - `m.low(u1, v1, u2, v2, ceil, floor=F, mat=None)`: under a roof at `ceil` (solid concrete above it up to the rim).
-- Anything not painted is solid or nothing. A pillar is squares left unpainted in the middle of a room.
+- Anything not painted is solid or nothing. A pillar is squares left unpainted in the middle of a room, or taken back out with `m.unpaint(u1, v1, u2, v2)`.
 - **A square's floor can be at any height.** Higher than `F` beside the canal: the dressing treats it as a wall and puts a 45 degree bank against it, which makes a walkable ramp up to a platform 128 high (the relay's pier, the checkpoint's platform). Higher than 128: build stairs (`m.steps`).
 - `m.side(u1, v1, u2, v2)`: tell the mud to stay out of a side room. Call it for everything that is not open canal.
 - Painting a square another module painted is a PROBLEM the tool reports.
@@ -62,7 +63,7 @@ What the dressing adds afterwards, to every module at once: sloped banks along e
 - `m.det([(u1, v1, z1, u2, v2, z2), ...], material, top=None)`: boxes. Walls of huts, slabs, counters, railings, beams.
 - `m.shapes([faces, ...])`: anything convex that is not a box, from `prism(profile, "x" or "y", a, b, material)` (a flat outline, as `(across, up)` points, pushed along `u` for "x" or along `v` for "y") or `octagon(c, up, r)` for a pipe's outline. Every corner must be a whole number. A tilted or leaning thing is a prism with a sheared outline, never a rotation.
 - `m.steps(start, lo, hi, z_low, z_high, "u" or "v", +1 or -1)`: stairs, 8 up and 12 along; returns their run.
-- `m.bridge(a, b, lo, hi)`: a street carried over at the trim's height. `m.hut(u1, v1, u2, v2, z, material, high=112, front="lo"|"hi", open_front=False)`: a shack.
+- `m.bridge(a, b, lo, hi, far_pier=True)`: a street carried over at the trim's height. `m.hut(u1, v1, u2, v2, z, material, high=112, front="lo"|"hi", open_front=False)`: a shack.
 - `m.bars(slab, "u"|"v")`: bars nobody fits between (with an unseen wall in them).
 - `m.world(box, material)`: a brush of the WORLD, which seals: only for a cap across an opening.
 - `m.water(u1, v1, u2, v2, z1, z2, mat=None)`: standing water; `MM["sludge"]` for slime. Never across an areaportal.
@@ -71,13 +72,13 @@ Materials: `MAT` (canal_wall, canal_floor, quay_floor, ceiling, stairs, beam, ba
 
 ## Things
 
-- `m.static(model, u, v, yaw=0, z=F)`, `m.loose(...)` (a physics prop), `m.body(model, u, v, yaw, z)` (a ragdoll), `m.scatter(u1, v1, u2, v2, n, seed)` (odds and ends).
-- `m.light(u, v, z, "R G B brightness")`, `m.lamp(u, v, z, colour, hang=0)` (a housing, a glow and the light), `m.spot(u, v, z, colour, yaw, pitch=60, cone=40, name=None)` (a beam), `m.glow(...)`. No flickering lights (the owner disliked them).
+- `m.static(model, u, v, yaw=0, z=F)`, `m.loose(...)` (a physics prop), `m.dynamic(model, u, v, yaw, z, name=None)` (any model; may be named), `m.body(model, u, v, yaw, z)` (a ragdoll), `m.scatter(u1, v1, u2, v2, n, seed)` (odds and ends). **`z` is the floor the thing stands ON**: the tool reads the model's real size and lifts its origin as needed (many models have their origin at their middle). A model's size: `map_assets.size("models/...mdl")`, a box from its origin with x forward.
+- `m.light(u, v, z, "R G B brightness")`, `m.lamp(u, v, z, colour, hang=0)` (a housing, a glow and the light), `m.spot(u, v, z, colour, yaw, pitch=60, cone=40, name=None)` (a beam), `m.glow(...)`. No flickering lights (the owner disliked them). A lamp of brightness 40 to 70 lights a room; 100 and over is a fire or a floodlight.
 - `m.sound(message, u, v, z, radius=1100, volume=7, name=None, on=True)`, `m.decal(texture, u, v, z)` (the point ON the surface), `m.rope([(u, v, z), ...], slack=40)`, `m.smoke(u, v, z)`, `m.spark(u, v, z)`, `m.cubemap(u, v)`.
 - `m.ladder(u, v, z0, z1, out)`: a real ladder, pieces of 128.
 - `m.point(classname, u, v, z, {keys}, connections=[(output, name, input, value, delay)])` for anything else. Angles in keys: `"0 %d 0" % m.fr.yaw(a)`.
 
-Models known to be right (used in pieces the owner has compiled, or checked against file lists): `props_junk/wood_crate001a`, `wood_crate002a`, `wood_pallet001a`, `trashdumpster02`, `sawblade001a`; `props_c17/oildrum001`, `oildrum001_explosive`, `furnituretable001a`, `furnituretable002a`, `furniturechair001a`, `furniturecouch001a`, `furniturecouch002a`, `furnituremattress001a`, `furniturebed001a`, `furniturestove001a`, `furnituredresser001a`, `furnitureradiator001a`, `shelfunit01a`, `lockers001a`, `concrete_barrier001a`, `canister01a`, `display_cooler01a`, `door01_left`, `metalladder002`; `props_wasteland/cargo_container01`, `barricade001a`, `barricade002a`, `controlroom_desk001a`, `controlroom_chair001a`, `controlroom_filecabinet001a`, `controlroom_filecabinet002a`, `controlroom_storagecloset001a`, `kitchen_shelf002a`, `cafeteria_table001a`, `cafeteria_bench001a`, `prison_bedframe001b`, `rockgranite02a`, `rockgranite03a`; `props_debris/concrete_chunk01a`, `concrete_chunk02a`, `broken_pile001a`, `barricade_tall01a`, `barricade_short01a`; `props_vehicles/car002a_physics`, `car004a_physics`, `car005a_physics`, `truck001a`, `apc001`, `tire001c_car`; `props_canal/boat001a`, `boat002b`; `props_trainstation/train002`, `trashcan_indoor001b`, `benchoutdoor01a`, `payphone001a`; `props_interiors/sinkkitchen01a`, `refrigerator01a`, `furniture_shelf01a`; `props_lab/lockers`; `props_combine/combine_interface001` (all under `models/`, ending `.mdl`). **Props are placed without knowing their sizes** (assume furniture is about 40 to 60 wide and its origin is at its middle or its foot): leave room round them. Any other model is from memory: say so in the docstring, and prefer building the thing from brushes.
+**Which models:** any model of Half-Life 2, Episode One or Lost Coast that `map_assets.py` passes. Find names in the lists it keeps: `grep -i bench _dev/tools/dl/ValveQCs.txt | grep source/hl2/` (materials: `ValveVMTs.txt`). It fails a `prop_static` whose model was not built to be static (use `m.dynamic` or `m.loose`), and notes Episode Two's models (players without it see an error: use them only when nothing else will do). Sounds cannot be checked: say "Unchecked:" for each in the docstring.
 
 ## Things that move or are named for the game
 

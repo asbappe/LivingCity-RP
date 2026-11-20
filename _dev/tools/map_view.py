@@ -106,14 +106,19 @@ def scene(path):
     facts = json.load(open(facts_path)) if os.path.exists(facts_path) else {}
 
     def solid(s):
-        for side in s.kids:
-            if side.name != "side":
-                continue
+        sides = [k for k in s.kids if k.name == "side"]
+        worked = None
+        if any(not [k for k in side.kids if k.name == "vertices_plus"] for side in sides):
+            worked = from_planes(sides)      # (a file not saved by Hammer++ has no corner lists: work them out)
+        for n, side in enumerate(sides):
             mat = side.kv.get("material", "").lower()
             vp = [k for k in side.kids if k.name == "vertices_plus"]
-            if not vp:
+            if vp:
+                verts = [tuple(nums(v)) for k, v in vp[0].rows if k == "v"]
+            elif worked and worked[n]:
+                verts = worked[n]
+            else:
                 continue
-            verts = [tuple(nums(v)) for k, v in vp[0].rows if k == "v"]
             disp = [k for k in side.kids if k.name == "dispinfo"]
             if disp:
                 polys.extend(displaced(verts, disp[0], colour_of(mat)))
@@ -161,6 +166,52 @@ def scene(path):
         for vs in box_faces((x - r, y - r, z, x + r, y + r, z + h)):
             polys.append((vs, col, None))      # (None: a marker, which shades nothing under it)
     return polys, lights
+
+
+def from_planes(sides):
+    """Each side's corners, worked out from the planes alone (three points each): where three planes meet inside all the others."""
+    planes = []
+    for side in sides:
+        p = nums(side.kv.get("plane", ""))
+        if len(p) < 9:
+            return None
+        a, b, c = np.array(p[0:3]), np.array(p[3:6]), np.array(p[6:9])
+        n = np.cross(c - a, b - a)
+        ln = np.linalg.norm(n)
+        if ln < 1e-9:
+            return None
+        n = n / ln
+        planes.append((n, float(n @ a)))
+    N = np.array([pl[0] for pl in planes])
+    D = np.array([pl[1] for pl in planes])
+    pts = []
+    k = len(planes)
+    for i in range(k):
+        for j in range(i + 1, k):
+            for l in range(j + 1, k):
+                M = N[[i, j, l]]
+                if abs(np.linalg.det(M)) < 1e-6:
+                    continue
+                v = np.linalg.solve(M, D[[i, j, l]])
+                if (N @ v - D <= 0.05).all() or (N @ v - D >= -0.05).all():
+                    pts.append(v)
+    out = []
+    for n, d in planes:
+        on = [v for v in pts if abs(n @ v - d) < 0.05]
+        uniq = []
+        for v in on:
+            if not any(np.linalg.norm(v - w) < 0.05 for w in uniq):
+                uniq.append(v)
+        if len(uniq) < 3:
+            out.append(None)
+            continue
+        mid = sum(uniq) / len(uniq)
+        ax = uniq[0] - mid
+        ax = ax / (np.linalg.norm(ax) or 1.0)
+        ay = np.cross(n, ax)
+        uniq.sort(key=lambda v: math.atan2((v - mid) @ ay, (v - mid) @ ax))
+        out.append([tuple(float(x) for x in v) for v in uniq])
+    return out
 
 
 def box_faces(b):

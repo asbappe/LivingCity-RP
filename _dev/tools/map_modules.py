@@ -1018,7 +1018,7 @@ def m_underpass(m, opt):
         m.lane(u, v)
     m.view(190, 0, F, 0, 0, "at the mouth")
     m.view(560, 150, F, 350, -4, "inside")
-    m.view(1060, 40, F, 205, -14, "where the roof came in")
+    m.view(1150, -180, F, 172, -14, "where the roof came in")
 
 
 def m_checkpoint(m, opt):

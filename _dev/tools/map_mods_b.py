@@ -23,7 +23,7 @@ STONE = "stone/stonewall040f"
 STONE_FLOOR = "stone/stonefloor006d_c17"
 CRACKED = "concrete/concretefloor016a"
 DIRT = "nature/dirtfloor005c"
-DUCT = "metal/metalduct003a"
+DUCT = "metal/metalfloor001a"
 BRICK = "brick/brickwall037a"
 WOOD, TIN, STEEL, BEAM = MM["wood"], MM["tin"], MM["steel"], MM["beam_wood"]
 BARS, WALL = MAT["bars"], MAT["canal_wall"]
@@ -155,7 +155,7 @@ def m_cells(m, opt):
     # the guard room
     m.static("models/props_c17/furnituretable002a.mdl", 232, 420, 0)
     m.static("models/props_c17/furniturechair001a.mdl", 232, 372, 90)
-    m.static("models/props_c17/lockers001a.mdl", 90, 440, 0)
+    m.static("models/props_c17/lockers001a.mdl", 74, 452, 0)
     m.det([(72, 328, F, 112, 392, F + 18)], BEAM)                                         # a bench by the door
     m.det([(228, 506, F + 58, 300, 512, F + 86)], WOOD)                                   # the board of keys
     hooks, keys = [], []
@@ -311,7 +311,7 @@ def m_clinic(m, opt):
             m.det([(s - 1, 652, F + 10, s + 1, 764, F + 78)], PLASTER)
             m.det([(s - 1, 650, F, s + 1, 652, F + 80), (s - 1, 764, F, s + 1, 766, F + 80), (s - 1, 650, F + 78, s + 1, 766, F + 80),
                    (s - 8, 650, F, s + 8, 652, F + 2), (s - 8, 764, F, s + 8, 766, F + 2)], BARS)
-    m.static("models/props_c17/furnitureradiator001a.mdl", 140, 520, 0)
+    m.static("models/props_c17/furnitureradiator001a.mdl", 136, 520, 0)
     m.det([(132, 600, F, 152, 690, F + 18)], BEAM)                                           # a bench for whoever waits
     m.static("models/props_c17/furnituretable001a.mdl", 656, 500, 0)                         # the nurse's table
     m.static("models/props_c17/furniturechair001a.mdl", 656, 544, 270)
@@ -373,7 +373,7 @@ def m_clinic(m, opt):
 
     # the sluice room: a narrowed way in, the sink, a boiler with its flue, a drain in the floor
     m.det([(832, 444, F, 864, 448, F + 128), (928, 444, F, 960, 448, F + 128)], TILE)
-    m.static("models/props_interiors/sinkkitchen01a.mdl", 880, 340, 90)
+    m.static("models/props_interiors/sinkkitchen01a.mdl", 880, 336, 90)
     m.shapes([vpipe(934, 348, 18, F + 8, F + 78, STEEL), vpipe(934, 348, 4, F + 78, F + 126, BARS), vpipe(934, 348, 20, F, F + 8, MAT["beam"])])
     m.det([(880, 384, F, 912, 416, F + 1)], BARS)
     m.shapes([vpipe(852, 420, 7, F, F + 14, STEEL, top=MAT["black"])])
