@@ -3376,13 +3376,13 @@ if not (LC_CL.DreamArt and LC_CL.DreamArt.cheese and LC_CL.DreamArtMade.cheese ~
 do -- the dreams' grounds (15 November): a material for each, its picture read only when a floor wears it
     local n = 0
     for _ in pairs(LC_CL.DreamArt) do n = n + 1 end
-    if n ~= 33 then return "dream art: " .. n .. " surfaces listed, not 33" end
-    if LC_CL.DreamArtMade.snow ~= nil then return "dream art: a ground's picture was read before any floor wore it" end
+    if n ~= 34 then return "dream art: " .. n .. " surfaces listed, not 34" end
+    if LC_CL.DreamArtMade.ice ~= nil then return "dream art: a ground's picture was read before any floor wore it" end
     local fbcWas = ents.FindByClass
-    ents.FindByClass = function(c) if c == "prop_dynamic" then return { { GetMaterial = function() return "!lc_dream_snow" end } } end return {} end
+    ents.FindByClass = function(c) if c == "prop_dynamic" then return { { GetMaterial = function() return "!lc_dream_ice" end } } end return {} end
     LC_CL.DreamArtWanted()
     ents.FindByClass = fbcWas
-    if LC_CL.DreamArtMade.snow == nil or LC_CL.DreamArtMade.mud ~= nil then return "dream art: the floor in sight did not have its picture read (or another's was)" end
+    if LC_CL.DreamArtMade.ice == nil or LC_CL.DreamArtMade.mud ~= nil then return "dream art: the floor in sight did not have its picture read (or another's was)" end
 end
 local before = _calls["cam.Start3D2D"] or 0
 for _, h in pairs(hook.t["PostDrawTranslucentRenderables"] or {}) do h(false, false) end

@@ -227,6 +227,7 @@ do
         }) }
     G.harvest = def
     LC.HarvestRotten = 0.25
+    LC.HarvestBillboard = 3 -- (its two billboards: times a wall poster's size)
 
     local function NewCrate(g, i)
         local c = g.crates[i]
@@ -253,6 +254,19 @@ do
         for i = 1, 8 do g.crates[i] = {} NewCrate(g, i) end
         g.tally = 0
         g.boardAt = Vector(x1 - 30, c.y + PLATE8_S - 140, top + 170)
+        -- the owner's RECORD HARVEST picture (20 November), on a billboard at each side of the field,
+        -- facing in (posters/dream_harvestbanner.jpg; the drawn notice with the dream's words without it)
+        if LC.DreamBillboard then
+            local bx = (g.fieldX0 + g.fieldX1) / 2
+            for side = -1, 1, 2 do
+                local e = LC.DreamBillboard(Vector(bx, c.y + side * (PLATE8_S + 30), top + 120), side > 0 and 270 or 90, "harvest", "harvestbanner", LC.HarvestBillboard)
+                if e then
+                    e.lcDreamGame, e.lcKeepLook = true, true
+                    g.ents[#g.ents + 1] = e
+                    g.boards = (g.boards or 0) + 1
+                end
+            end
+        end
         Starts(g, x0 + 90, c.y, top)
         return true
     end

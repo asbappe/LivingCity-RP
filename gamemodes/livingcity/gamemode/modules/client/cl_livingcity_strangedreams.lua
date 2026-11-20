@@ -39,9 +39,9 @@ LC_CL.DreamArt = {
 -- The dreams' grounds (15 November; LC.DreamSurfaces, sv_livingcity_strangedreams.lua): thirty more,
 -- each read only when a floor that wears it is there to be seen (the third entry), since thirty
 -- pictures read at once would be about 160 MB in every player's game.
-for _, name in ipairs({ "snow", "mud", "dirt", "sand", "grass", "field", "meadow", "petals", "track", "rubber",
+for _, name in ipairs({ "ice", "chintz", "eyepaper", "eyes", "mud", "dirt", "sand", "grass", "field", "meadow", "petals", "track", "rubber",
     "parquet", "checker", "tiles", "marble", "mosaic", "oldmosaic", "terrazzo", "worntile", "velvet", "satin",
-    "damask", "quatrefoil", "gingham", "carpet", "wallpaper", "cobbles", "rust", "pebbles", "moon", "marbled" }) do
+    "quatrefoil", "carpet", "wallpaper", "cobbles", "rust", "pebbles", "moon", "marbled" }) do
     LC_CL.DreamArt[name] = { "livingcity/dreams/" .. name .. ".jpg", 0.25, true }
 end
 LC_CL.DreamArtMade = {}
