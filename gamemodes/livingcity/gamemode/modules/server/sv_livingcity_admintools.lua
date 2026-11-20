@@ -221,6 +221,21 @@ local ACTIONS = {
             local one, why = LC.Flush.Start()
             if not one then return false, tostring(why) end
             return true, "Flush the sewers: on the Combine's boards (F4). Take it as a unit."
+        elseif v == "flushdoor" then
+            -- (the Combine door open as if the units had rewired it: the Resistance's answer goes up on their board)
+            if not (LC.Flush and LC.Flush.OpenDoor) then return false, "No sewer flush on this server." end
+            LC.Flush.MapForget()
+            local m, missing = LC.Flush.Map()
+            if not m then return false, "This map has no sealed quarter: missing " .. table.concat(missing or {}, ", ") .. "." end
+            LC.Flush.OpenDoor()
+            return true, "The sewer door is open for ten minutes. Shut the sewer door: on the Resistance's board (F4)."
+        elseif v == "breach" then
+            -- (sv_livingcity_breach.lua: the leader's order, whatever the day)
+            if not (LC.Breach and LC.Breach.Start) then return false, "No sealed quarter on this server." end
+            LC.Flush.MapForget()
+            local one, why = LC.Breach.Start()
+            if not one then return false, tostring(why) end
+            return true, "Open the sealed quarter: on the Resistance's board (F4). Take it as a member."
         elseif string.sub(v, 1, 6) == "event:" then
             if not LC.Running then return false, "Start the city first." end
             if not (LC.StartEvent and LC.StartEvent(string.sub(v, 7))) then return false, "That event can't start now (another may be on)." end

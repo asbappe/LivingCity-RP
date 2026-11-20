@@ -62,6 +62,8 @@ way by five more names, lc_raven_post and lc_raven_inside (either side of the wa
 (inside the tunnel house's door), lc_raven_console (the Combine's console on Ravenholm's side of the
 door) and lc_raven_sewer (the sewer beyond it). Without all nine names in the map the order is not
 offered. The ten marks named lc_raven_spawn are where that job puts the quarter's own infected.
+The Resistance's two jobs (sv_livingcity_breach.lua) use the same names and one more,
+lc_raven_gate_console: the wall's console on the inside, on the owner's north pavement.
 While the gate is open zombies and headcrabs are made in the quarter and walk out through it; while
 the Combine door is open, in the tunnel, and walk to the sewer (the makers are in their own visgroup:
 delete it if the gamemode is to send them itself).
@@ -370,6 +372,14 @@ def ravenholm(args):
         vmf.point("info_target", (-92, MID, Z + 16), {"targetname": "lc_raven_post"}, gv, outside=True)
         vmf.point("info_target", (292, MID, Z + 16), {"targetname": "lc_raven_inside"}, gv, outside=True)
         vmf.point("info_target", (1264, 760, 323), {"targetname": "lc_raven_sewer"}, gv, outside=True)
+        # the wall's own console, inside it (the owner: "a resistance quest set by the resistance leader to open the infested
+        # quarter's gate ... They have to open the containment gate on the street from inside the infested quarter"): on the
+        # owner's north pavement (their brush 20571, top z 665), its back to the east face of their north pillar (52305)
+        vmf.point("prop_dynamic", (175, -2146, 665), {
+            "targetname": "lc_raven_gate_console", "model": "models/props_combine/combine_interface001.mdl", "angles": "0 0 0", "skin": "0", "solid": "6",
+            "disableshadows": "1", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1", "StartDisabled": "0", "renderamt": "255", "rendercolor": "255 255 255",
+            "modelscale": "1.0", "MinAnimTime": "5", "MaxAnimTime": "10", "RandomAnimation": "0", "SetBodyGroup": "0", "PerformanceMode": "0", "pressuredelay": "0",
+            "ExplodeDamage": "0", "ExplodeRadius": "0"}, gv, outside=True)
 
     # --- the wiring. The relays and sounds stand inside the quarter (a sound can be told what to play from). ---------------
     def sound(name, message, source, pos, loops=False):

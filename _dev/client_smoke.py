@@ -4520,6 +4520,30 @@ local ok, e = pcall(function()
     -- page, only when the server sent them the list; its page is the names, with what each has of it; a name sends
     -- F2's own action with that name's number and what the list showed: nothing (send for them), sent for (they
     -- have spoken), under the order (take it back)
+    -- the leader's order to open the sealed quarter's wall (sv_livingcity_breach.lua): only where the map has it and only
+    -- for whoever may give it; greyed with the reason; sent as "breach"
+    local brWas = _globals.lc_breach
+    local function Breach() return Find(root.items[3].page(), "breach") end
+    _globals.lc_breach = "ready"
+    if Breach() then error("a Member's Resistance page has the order to open the sealed quarter") end
+    _me.nw.lc_res_leads = true
+    _globals.lc_breach = ""
+    if Breach() then error("the order to open the sealed quarter is offered in a city with none") end
+    for state, why in pairs({ on = "under way", done = "done today", busy = "the Combine are at the wall" }) do
+        _globals.lc_breach = state
+        local it = Breach()
+        if not (it and it.disabled and string.find(it.label, why, 1, true)) then error("open the sealed quarter (" .. state .. ") should be greyed with '" .. why .. "': " .. tostring(it and it.label)) end
+    end
+    _globals.lc_breach = "ready"
+    local bi = Breach()
+    if not bi or bi.disabled then error("the leader can't order the sealed quarter opened: " .. tostring(bi and bi.label)) end
+    local saBr, gotBr = LC_CL.SendAction, nil
+    LC_CL.SendAction = function(cmd) gotBr = cmd end
+    bi.run()
+    LC_CL.SendAction = saBr
+    if gotBr ~= "breach" then error("open the sealed quarter sent " .. tostring(gotBr)) end
+    _me.nw.lc_res_leads = nil
+    _globals.lc_breach = brWas
     local res = root.items[3].page()
     for i = 1, 9 do
         local it = res.items[i]
@@ -4669,7 +4693,7 @@ local ok, e = pcall(function()
     local function Flush() return Find(Find(LC_CL.QuickRoleRoot(), "orders").page(), "flush") end
     _globals.lc_flush = ""
     if Flush() then error("the sewer flush is offered in a city with no sealed quarter") end
-    for state, why in pairs({ weak = "the Resistance are quiet", on = "under way", done = "done today", nounits = "no units on duty", busy = "not now" }) do
+    for state, why in pairs({ weak = "the Resistance hold nothing underground", on = "under way", done = "done today", nounits = "no units on duty", busy = "not now" }) do
         _globals.lc_flush = state
         local it = Flush()
         if not (it and it.disabled and string.find(it.label, why, 1, true)) then error("the sewer flush (" .. state .. ") should be greyed with '" .. why .. "': " .. tostring(it and it.label)) end

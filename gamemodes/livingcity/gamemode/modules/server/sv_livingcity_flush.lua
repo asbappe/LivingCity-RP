@@ -16,13 +16,17 @@
 
       The order      F2 > City orders > "Send the units to flush the sewers". Only the
                      City Administrator, once a city day, and only while the Resistance
-                     are strong (they hold a district, or their strength in the ledger
-                     is high). It opens nothing: it puts one job on both Combine boards.
+                     hold ground underground (the owner, 20 November: rebel ground under
+                     a roof and below the street at the wall). It opens nothing: it puts
+                     one job on both Combine boards.
       The job        "Flush the sewers", one job for Civil Protection and the Overwatch
                      together (up to 8, with the squad a violent job brings):
-                       1. report to the containment wall;
-                       2. put up a power bank and two turrets there (F2 > Unit tools:
-                          on this job, at the wall, any unit may, whatever their rank);
+                       1. the briefing (the owner, 20 November: "This would all need a
+                          briefing beforehand"): an officer on the Combine's own ground
+                          nearest the wall (at the wall where they have none) says the
+                          plan to whoever walks up and uses him;
+                       2. put up a power bank and two turrets at the containment wall
+                          (F2 > Unit tools: on this job, at the wall, any unit may);
                        3. the wall opens by itself as the last of them goes up, and
                           stays open a minute: get inside. It shuts when every unit on
                           the job is in, or when the minute is up. Whoever is still
@@ -36,6 +40,9 @@
       Getting out    The job ends as the door opens. Whoever went in may go on through
                      the sewers, or back to the wall: it opens for them as they reach
                      it (and for anyone left inside when a job fails).
+      The Resistance Their two jobs with the same quarter (shutting that door again from the
+                     quarter's side; their leader's order to open the wall from inside)
+                     are in sv_livingcity_breach.lua.
       The map        Nine names, all from lc_ravenholm.vmf (_dev/tools/map_raven.py):
                      the relays lc_raven_gate_open / _shut and lc_raven_door_open /
                      _shut, and the marks lc_raven_post, lc_raven_inside,
@@ -70,7 +77,7 @@ F.PATCH_R = 400        -- the infested ground that takes hold at the sewer end
 F.REWARD = 80          -- XP
 F.LIMIT = 1800         -- the job's time
 F.AGAIN = 2400         -- seconds before the order can be given again where the ledger keeps no days
-F.STRONG = 60          -- the Resistance's strength in the ledger from which they count as strong
+F.DEEP = 96            -- how far below the street at the wall rebel ground under a roof counts as underground
 F.RESIST = -6          -- what the Resistance lose as the door opens
 F.AUTHORITY = -4       -- what the Administrator loses when the job is taken and fails
 F.inside = F.inside or {}   -- [ply] = true: went in through the wall, and has not come out or died since
@@ -110,6 +117,10 @@ function F.Map()
     map = {
         ents = found, post = post, inside = inside,
         house = found.lc_raven_house:GetPos(), console = found.lc_raven_console:GetPos(), sewer = found.lc_raven_sewer:GetPos(),
+        gateConsole = (function()
+            local e = ents.FindByName and ents.FindByName("lc_raven_gate_console")[1]
+            return IsValid(e) and e:GetPos() or nil
+        end)(),
         -- the wall: midway between the two marks, facing in
         midX = (post.x + inside.x) / 2, midY = (post.y + inside.y) / 2, nx = nx / len, ny = ny / len,
     }
@@ -141,6 +152,50 @@ function F.ShutGate()
     F.gateNext = CurTime() + F.GATE_TAKES + 5
 end
 
+-- One notice to everyone of these sides (the only place this file and sv_livingcity_breach.lua put text on a screen).
+function F.Tell(sides, title, text)
+    if not LC.Notice then return end
+    for _, p in ipairs(player.GetAll()) do
+        if sides[LC.QuestFaction and LC.QuestFaction(p) or ""] then LC.Notice(p, "info", title, text) end
+    end
+end
+
+-- A spot on a side's own ground nearest `pos` (nil: it has none).
+function F.OwnGround(kind, pos)
+    local best, bd
+    for _, z in ipairs(LC.ZonesOfKind and LC.ZonesOfKind(kind) or {}) do
+        local d = z.pos:DistToSqr(pos)
+        if not bd or d < bd then best, bd = z, d end
+    end
+    if not best then return nil end
+    return LC.SpotInZone and LC.SpotInZone(best) or best.pos
+end
+
+-- A briefing first (the owner, 20 November: "This would all need a briefing beforehand"): one of their own stands
+-- at posFn() and says the plan, in one line, to whoever on the job walks up and uses them (E). With nobody to
+-- give it (no such ground, or he is dead), the job goes straight on.
+function F.Briefing(text, role, posFn, line)
+    local st = Count("used_npc", 1, text, function(q, _, npc) return npc ~= nil and npc == q.data.briefer end)
+    st.untallied = true
+    st.onEnter = function(q, s)
+        local pos = posFn(q)
+        local npc = pos and Q.SpawnActor(q, role, pos, 1800) or nil
+        q.data.briefer = IsValid(npc) and npc or nil
+        s.npc, s.pos = q.data.briefer, pos
+    end
+    st.poll = function(q) if not IsValid(q.data.briefer) then Q.Advance(q) end end
+    st.onDone = function(q)
+        local npc = q.data.briefer
+        if not IsValid(npc) then return end
+        Narrate(q, line)
+        -- (he has said it: he goes about his day, and is not taken away with the job)
+        for i, e in ipairs(q.ents) do if e == npc then table.remove(q.ents, i) break end end
+        local nst = LC.NPCs and LC.NPCs[npc]
+        if nst then nst.unmanaged, nst.eventUntil, nst.leaveAt = nil, CurTime() + 5, CurTime() + 120 end
+    end
+    return st
+end
+
 local function NearestSeed(pos)
     local best, bd
     for _, z in ipairs(LC.TerritorySeeds and LC.TerritorySeeds("infest") or {}) do
@@ -165,6 +220,10 @@ function F.OpenDoor(q)
         if not ok and LC.Error then LC.Error("sewer flush", err) end
     end
     if q then Narrate(q, "The door is open. Out the way you came, or on through the sewers.") end
+    if LC.Breach and LC.Breach.DoorOpened then
+        local ok, err = LC.Try(LC.Breach.DoorOpened)
+        if not ok and LC.Error then LC.Error("sewer flush", err) end
+    end
 end
 function F.ShutDoor()
     if F.door ~= "open" then return end
@@ -267,26 +326,26 @@ function F.Infest(q)
     return n
 end
 
--- The console: whoever on the job is at it rewires it. If they fall or walk off, the next one there does.
-function F.Wire(q, st, m)
+-- A console at `at`: whoever on the job is at it rewires it. If they fall or walk off, the next one there does.
+function F.Wire(q, at)
     if LC.JobGamesOn and not LC.JobGamesOn() or not LC.JobGameStart then
         -- (no job games on this server: reaching it is enough)
         for _, p in ipairs(Members(q)) do
-            if p:Alive() and p:GetPos():DistToSqr(m.console) < F.CONSOLE_R * F.CONSOLE_R then return Q.Advance(q) end
+            if p:Alive() and p:GetPos():DistToSqr(at) < F.CONSOLE_R * F.CONSOLE_R then return Q.Advance(q) end
         end
         return
     end
-    local at = q.data.wirer
-    if IsValid(at) and LC.JobGames and LC.JobGames[at] and LC.JobGames[at].q == q then return end
+    local who = q.data.wirer
+    if IsValid(who) and LC.JobGames and LC.JobGames[who] and LC.JobGames[who].q == q then return end
     q.data.wirer = nil
     local best, bd
     for _, p in ipairs(Members(q)) do
         if p:Alive() and not (LC.JobGames and LC.JobGames[p]) then
-            local d = p:GetPos():DistToSqr(m.console)
+            local d = p:GetPos():DistToSqr(at)
             if d < F.CONSOLE_R * F.CONSOLE_R and (not bd or d < bd) then best, bd = p, d end
         end
     end
-    if best and LC.JobGameStart(best, "wiring", q, { what = "the terminal", pos = m.console }) then q.data.wirer = best end
+    if best and LC.JobGameStart(best, "wiring", q, { what = "the terminal", pos = at }) then q.data.wirer = best end
 end
 
 local function JobTick(q)
@@ -306,13 +365,18 @@ local function JobTick(q)
     end
 end
 
+-- What is left of the infected a job put there wanders off once nobody is looking.
+function F.Leftovers(q)
+    for _, npc in ipairs(q.data.zombies or {}) do
+        local st = IsValid(npc) and LC.NPCs and LC.NPCs[npc]
+        if st then st.surgeExpires = CurTime() + 120 end
+    end
+end
+
 local function Finished(q, success)
     KitOff()
     if F.gate == "open" and not F.letOut then F.ShutGate() end
-    for _, npc in ipairs(q.data.zombies or {}) do
-        local st = IsValid(npc) and LC.NPCs and LC.NPCs[npc]
-        if st then st.surgeExpires = CurTime() + 120 end -- (what is left wanders off once nobody is looking)
-    end
+    F.Leftovers(q)
     if not success and LC.LedgerAdd then LC.LedgerAdd("authority", F.AUTHORITY, nil) end
     if F.q == q then F.q = nil end
 end
@@ -325,9 +389,9 @@ LC.QuestTemplates[#LC.QuestTemplates + 1] = {
         local m = F.Map()
         if not m then return nil end
         local need = 1 + F.TURRETS
-        local go = Goto(m.post, "Report to the containment wall", 450)
-        go.kit = true
-        local prep = Count("flush_prep", need, "Put up a power bank and two turrets at the wall (Unit tools)")
+        local brief = F.Briefing("Get your briefing from the officer", "cop", function() return F.OwnGround("combine", m.post) or m.post end,
+            "A power bank and two turrets at the wall. It opens for a minute. Once it shuts behind you, the only way on is the door under the tunnel house.")
+        local prep = Count("flush_prep", need, "Put up a power bank and two turrets at the containment wall (Unit tools)")
         prep.pos, prep.kit = m.post, true
         prep.poll = function(q, st)
             local got = F.SetUp(m.post)
@@ -345,13 +409,13 @@ LC.QuestTemplates[#LC.QuestTemplates + 1] = {
         house.onEnter = function(q) F.Infest(q) end
         local wire = Count("game_done", 1, "Rewire the console at the Combine door, down the tunnel")
         wire.pos, wire.untallied = m.console, true
-        wire.poll = function(q, st) F.Wire(q, st, m) end
+        wire.poll = function(q) F.Wire(q, m.console) end
         wire.onDone = function(q) F.OpenDoor(q) end
         return {
             title = "Flush the sewers", reward = F.REWARD, limit = F.LIMIT,
             desc = "The Administrator's order. Set up at the containment wall, go in, and open the Combine door under the sealed quarter: "
                 .. "what is in there floods the rebels' sewers. Once the wall shuts behind you, that door is the only way on.",
-            stages = { go, prep, enter, house, wire },
+            stages = { brief, prep, enter, house, wire },
             tick = JobTick,
             onFinish = Finished,
         }
@@ -367,10 +431,16 @@ local function Day()
     return s and tonumber(s.day) or nil
 end
 
-function F.Strong()
-    if #(LC.ShellTargets and LC.ShellTargets() or {}) > 0 then return true end
-    local s = LC.Ledger and LC.Ledger()
-    return s ~= nil and (tonumber(s.resistance) or 50) >= F.STRONG
+-- Do the Resistance hold ground underground? (The owner, 20 November, of "only while the Resistance are strong":
+-- narrower, "the Resistance holding ground underground".) Rebel ground, placed or grown, with a roof over it
+-- and lower than the street at the wall.
+function F.Underground()
+    local m = F.Map()
+    if not m then return false end
+    for _, z in ipairs(LC.ZonesOfKind and LC.ZonesOfKind("rebel") or {}) do
+        if z.pos and z.pos.z < m.post.z - F.DEEP and LC.TerritoryOpenSky and not LC.TerritoryOpenSky(z.pos) then return true end
+    end
+    return false
 end
 
 function F.Units()
@@ -393,11 +463,14 @@ local function Waiting()
     local p = F.posted
     return p ~= nil and not p.dead and not p.q and CurTime() < (p.expiresPost or 0)
 end
+-- Is the Combine's job up or under way? (sv_livingcity_breach.lua: the wall is theirs for now)
+function F.Active() return F.q ~= nil or Waiting() end
 
 local function Busy()
     if LC.SpeechSession and LC.SpeechSession() then return "Not during the Administrator's address." end
     if GetGlobal2String("lc_event", "") ~= "" then return "Not while an event is on." end
     if LC.CollapseActive and LC.CollapseActive() then return "Not now." end
+    if F.gate == "open" or (LC.Breach and LC.Breach.Active and LC.Breach.Active()) then return "Not while the wall is in play." end
     return nil
 end
 
@@ -407,7 +480,7 @@ function F.State()
     if not F.Map() then return "" end
     if F.q or Waiting() then return "on" end
     if F.DoneToday() then return "done" end
-    if not F.Strong() then return "weak" end
+    if not F.Underground() then return "weak" end
     if F.Units() == 0 then return "nounits" end
     if Busy() then return "busy" end
     return "ready"
@@ -433,12 +506,7 @@ function F.Start()
         if not table.HasValue(list, one) then table.insert(list, 1, one) end
     end
     F.posted, F.orderedAt, F.orderedDay = one, CurTime(), Day()
-    for _, p in ipairs(player.GetAll()) do
-        local f = LC.QuestFaction and LC.QuestFaction(p)
-        if (f == "cp" or f == "ota") and LC.Notice then
-            LC.Notice(p, "info", "Administrator's order", "Flush the sewers: on your board (F4), for every unit.")
-        end
-    end
+    F.Tell({ cp = true, ota = true }, "Administrator's order", "Flush the sewers: on your board (F4), for every unit.")
     if LC.Log then LC.Log("info", "The Administrator ordered the sewers flushed") end
     return one
 end
@@ -449,7 +517,7 @@ function LC.OrderFlush(ply)
     if s == "" then return false, "This city has no sealed quarter." end
     if s == "on" then return false, "The units are already at it." end
     if s == "done" then return false, "Not again today." end
-    if s == "weak" then return false, "The Resistance are too quiet to warrant it." end
+    if s == "weak" then return false, "The Resistance hold nothing underground." end
     if s == "nounits" then return false, "No units on duty." end
     if s == "busy" then return false, Busy() end
     local one, err = F.Start()
