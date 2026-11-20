@@ -601,3 +601,36 @@ Filled in as the review goes; the first ones are clear already:
 
 **Weight.** small.
 
+### 35. chimney (street 1; also a canal module): a hollow factory chimney to climb
+
+**Seen.** The canal opens into a round yard; in its middle an eight-sided brick chimney on a plinth, a doorway at its foot, a stair of stone slabs winding up inside round an open well with the old hoist rope, an iron gallery at the top with plates and handrails and a cap on posts. Broken walls of the works in the yard, a car, a skip.
+
+**Fix.**
+- The "round" yard is a stepped outline of squares (as the cistern): its wall is a staircase of corners from above and a sawtooth from inside. A true curve (angled segments) or an honest polygon with clean faces.
+- The chimney is one dark brick from foot to top: a factory chimney has a stone plinth course, lighter bands of brick every 64 or so, iron hoops, a corbelled crown wider than the shaft, a lightning conductor down one face, maybe the works' name in white brick (decalfont letters).
+- The broken walls of the works are low plain stubs: give them arched window openings in brick, so the factory that was is read.
+
+**Better.**
+- The works' leftovers in the yard: pulley wheels (props_c17 pulleywheels_large01), a boiler, rails set in the floor for a truck, a rusted gantry.
+- An iron ladder up the chimney's outside to a hatch (a second way up, exposed, for the brave), and the hoist rope's pulley at the top.
+- At the top, the reward is the view: make sure the gallery's plates do not block it at standing height (they are for crouching behind), and a pair of binoculars on a hook.
+- Wind on top (a soundscape that changes up there), crows.
+
+**Weight.** large (the yard's curve), medium (chimney detail, works' walls), small (dressing).
+
+### 36. cells (street 1; also a canal module): the Resistance's cells
+
+**Seen.** A heavy steel door from the canal into a guard room (table, chair, lockers, bench, a board of padlocks), a long corridor past three cells with Nova Prospekt's barred doors and windows, prison lamps, a pipe along the ceiling; in each cell a mattress, a bucket, a toilet; a loose grate in the far cell to a crawl duct out to a pipe in the canal.
+
+**Fix.**
+- Walls, ceiling and floor are one pale plaster everywhere: it reads as a clean office corridor. A cell block is concrete, painted to shoulder height (City 18's two-tone walls with a dado line: a darker lower band), stained, with a floor drain.
+- The corridor is long, straight and evenly lit: give it rhythm: a lamp over each cell door (the prison lamps), darker between, the guard room brighter.
+
+**Better.**
+- The cells lived in: tally marks exist (good), scratched names, a bunk frame (prison_bedframe001b) instead of a mattress on the floor in one, a tray of food on the floor, a rag.
+- The guard room as the Resistance's: a radio, a rifle on the table (a weapon prop), a ring of keys on the board, a Combine mask on a nail as a trophy, a chair facing the corridor.
+- The breakout duct: a few loose bricks round the grate, dirt trailing from it, so the observant prisoner finds it.
+- A soundscape: a drip, a far-off radio, a cough from a cell.
+
+**Weight.** small to medium.
+
