@@ -442,3 +442,36 @@ Filled in as the review goes; the first ones are clear already:
 
 **Weight.** small to medium.
 
+### 25. stash (showroom 3): the secret arms room behind a wall a valve opens
+
+**Seen.** From the canal only a run of rusted pipes with a valve wheel; a section of the wall slides aside; a short passage turns twice into the arms room: wooden racks of long guns on two walls, a workbench with tools under a map board, a planning table, shelves, crates, two bell lamps. Pale cream walls.
+
+**Fix.**
+- The guns on the racks, the tools on the bench and the map on the board are all brushes (grey gun shapes, grey bars, black lines on a pale board): the owner's complaint exactly. Use Half-Life 2's own weapon world models on the racks (models/weapons/w_smg1, w_shotgun, w_irifle, w_crossbow, w_pistol, w_357, w_crowbar, as prop_dynamic_override, not solid), the city's tool models on the bench (props_c17 tools_wrench01a, pliers, hammer), and paper on the board (props_c17 paper, props_lab clipboard; a map overlay if the owner makes one).
+- The room's walls are clean cream plaster: a hidden arms room behind a canal wall is raw concrete or brick, with the pipes it hides running through it.
+
+**Better.**
+- Half-Life 2's ammunition crates (models/items/ammocrate_smg1, ammocrate_ar2, ammocrate_rockets, as the game uses them) for the stock: the gamemode could even make one a real ammo crate for the Resistance.
+- A planning table that looks used: a map, a radio (props_lab citizenradio), a lamp, cups, an ashtray, a chair pushed back.
+- The valve wall: a hint for the observant on the canal side (a scrape on the floor where the wall slides, a lambda scratched small on a pipe), invisible to the rest.
+- Its soundscape: still, a radio's hiss.
+
+**Weight.** small to medium (props for the guns, tools and board; the walls).
+
+### 26. lock (showroom 3): a lock house, two steel gates and the control house
+
+**Seen.** Two pairs of Half-Life 2's canal lock leaves between concrete piers that fill the banks (a gateway 256 wide), a pier and stairs on the left bank up to a gantry, a control house on it with a slit window each way, buttons, a desk with a monitor; a heavy door that never opens; a hydraulic pack on the far half. The house inside is pale cream plaster.
+
+**Fix.**
+- The control house reads as a clean room in a flat: a lock's control room is concrete and steel, with the gear in it. Panels on the walls (props_lab gauges and levers, the Combine's interface if the Combine run it), a big lever per gate beside the buttons, a gate-position indicator (two small lamps per gate, red and green), a chart of the canal, a CRT (the owner's map has controlroom monitors).
+- The lock chamber between the gates has nothing to say it is a lock: no water marks, no ladders, no bollards.
+
+**Better.**
+- Lock furniture: recessed iron ladders in the chamber walls (metalladder002 in a slot), bollards and rings along the coping, a depth board (decalindustrialnumber up the wall at each gate), a dark tide line (overlay band) half way up.
+- Signals at each end for boats: Half-Life 2's rail signal lamps (props_trainstation light_signal001a/b) on the piers, set red while a gate moves.
+- The hydraulics seen: the rams that push the leaves (brush cylinders with a shining rod between the pier and the leaf), pipes from the pack to them along the gantry's underside.
+- The street door: since it never opens, board it (as the town's unused doorways) or chain it (prison_padlock001a), so nobody tries it.
+- A soundscape: water against the gates, the pack's hum, a klaxon when a gate moves.
+
+**Weight.** medium (control room, rams), small (lock furniture, signals, door).
+
