@@ -507,3 +507,36 @@ Filled in as the review goes; the first ones are clear already:
 
 **Weight.** small (doors, signals, bell), medium (drum and truss).
 
+### 29. floodroom (showroom 3): a valve chamber that floods
+
+**Seen.** Off the left wall a passage and a steel sliding door, steps down into an eight-sided chamber with a gallery round it behind handrails, a stair up to it, a big main from floor to roof with a hand wheel, a second way out round the back through one of the city's doors. Blue water shows in patches on the chamber's floor even while it is meant to be drained.
+
+**Fix.**
+- **A real bug:** the drained water's top lies exactly at the chamber's floor (`map_mods_c.py`, the func_water_analog's box ends at FL), so floor and water share one plane and will flicker through each other in game (the blue patches in the picture). Its top should sit 2 or more under the floor (box to FL - 2, movedistance 90).
+- The hand wheel on the main is `props_wasteland/wheel01`, a cart's wheel. Half-Life 2 has real valve wheels: `props_pipes/valvewheel001` and `valvewheel002` (and the Borealis's `door_wheel001a`, already used on the gallery).
+- Before it floods there is no warning: a klaxon and a red rotating light (a light with a slowly turning point_spotlight: a func_rotating carrying it) while the water rises, so a player on the floor knows to climb.
+
+**Better.**
+- Make the chamber look like it floods: a tide line on the walls at the gallery's height (an overlay), silt on the floor, a drain grate in the middle (the water comes up through it: a decal of a grate and bubbles), the steel door with a rubber seal and wheel lock.
+- The trap's tell for the careful: a sign by the door ("DANGER: CHAMBER FLOODS") in the city's way (decalsigndanger plus a few letters), the second way out marked with an arrow.
+- Under water: something worth diving for when flooded (a lost case at the bottom, a cache the game can fill), so flooding it is also a way in.
+- Sounds: rushing water when it fills, pipes knocking when it drains.
+
+**Weight.** small (the water's top: a one-line fix; valve wheel; alarm), medium (dressing, underwater cache).
+
+### 30. railbridge (showroom 3): a railway bridge a train crosses every few minutes
+
+**Seen.** A steel girder bridge on two concrete piers crosses over the canal from one tunnel mouth to another; the waiting train of two flat cars sits in the left tunnel; caged lamps on the mouths, crates fallen under the bridge.
+
+**Fix.**
+- The signal lamps are `light_cagelight02_off` with a red glow sprite in front: Half-Life 2's rail signals (props_trainstation `light_signal001a/b`, `light_signal002a`) are made for this, with a lit and an unlit look.
+- The tunnel mouths are plain openings in the canal wall: a railway portal has a face (a stone or concrete surround with a lintel, a number plate, a warning sign), and the rails should be seen running into it.
+
+**Better.**
+- The same train as the street's: the street corridor runs Half-Life 2's Combine train (combinetrain01a and combine_train02a cars); this bridge runs two flat cars of train005. One look for the city's trains (or both, as two kinds of traffic: Combine freight here, the Combine's own train on the street).
+- Rails, sleepers and ballast seen on the bridge's deck from the canal's edge and from the tunnel mouths; an overhead wire on posts.
+- When the train crosses: dust and grit falling from the girders (a func_dustmotes burst or a small env_dustpuff along the bridge's underside), the lamps' red, the horn echoing in the canal.
+- Under the bridge: the fallen crates broken open, a body of someone who stood on the line (the game's trains kill), graffiti on the piers.
+
+**Weight.** small (signals, dust, portals), medium (rails and ballast, one train look).
+
