@@ -225,9 +225,15 @@ def facade(b, fr, L, rnd, tag, first=0):
                 m.det([(u1, 256 - out, F + za, u2, 256, F + zb) for u1, za, u2, zb in boxes], mat)
             k = j
 
-    def clear(u1, u2, z):
-        """Is the wall whole from u1 to u2 at this height?"""
-        return all(0 <= k < n and cols[k] is not None and cols[k] <= z for k in range(u1 // CELL, (u2 - 1) // CELL + 1))
+    def clear(u1, u2, z, z2=None):
+        """Is the wall whole from u1 to u2 at this height, and (to z2) free of what a module has hung on it (its `taken`)?"""
+        if not all(0 <= k < n and cols[k] is not None and cols[k] <= z for k in range(u1 // CELL, (u2 - 1) // CELL + 1)):
+            return False
+        if z2 is not None:
+            x1, y1, a, x2, y2, c = fr.box(u1, 224, F + z, u2, 264, F + z2)
+            if any(x1 < t[3] and t[0] < x2 and y1 < t[4] and t[1] < y2 and a < t[5] and t[2] < c for t in b.taken):
+                return False
+        return True
 
     for a, c, high, (ground, upper) in lots:
         bays = (c - a) // 128
@@ -236,7 +242,7 @@ def facade(b, fr, L, rnd, tag, first=0):
         rows = [172, 300] if high >= 420 else [192 if high >= 370 else 172]
         low_holes, doors, door_done = [], [], False
         for u in mids:                                       # the ground floor: a window, a door, or a blank bay
-            if not clear(u - 64, u + 64, 0):
+            if not clear(u - 64, u + 64, 0, 140):
                 continue
             pick = rnd.random()
             if pick < 0.22 and not door_done:
@@ -245,7 +251,7 @@ def facade(b, fr, L, rnd, tag, first=0):
                 doors.append(u)
             elif pick < 0.85:
                 low_holes.append((u - WIN_W // 2, u + WIN_W // 2, 36, 36 + WIN_H))
-        up_holes = [[(u - WIN_W // 2, u + WIN_W // 2, s, s + WIN_H) for u in mids if clear(u - 32, u + 32, s - 8)] for s in rows]
+        up_holes = [[(u - WIN_W // 2, u + WIN_W // 2, s, s + WIN_H) for u in mids if clear(u - 40, u + 40, s - 8, s + WIN_H + 8)] for s in rows]
         band(a, c, 0, 24, 9, R["plinth"], [h for h in low_holes if h[2] == 0])
         band(a, c, 24, 136, 6, ground, low_holes)
         band(a, c, 136, 152, 10, R["trim"])
