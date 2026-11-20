@@ -194,6 +194,7 @@ LC_MODULES = {
         "sv_livingcity_shelling", -- (the Combine shell a Resistance district with headcrab canisters; after districtinfest)
         "sv_livingcity_flush", -- (the Administrator sends the units into the sealed quarter to open its door into the sewers; after quests, checkpoints and shelling)
         "sv_livingcity_breach", -- (the Resistance and the sealed quarter: shutting its door again, the leader's order to open its wall; after flush)
+        "sv_livingcity_daylight", -- (the map's own lights: the sun and sky by the hour, the dream room's lights, the darker places; after atmos and dreams)
         "sv_livingcity_trains",
         "sv_livingcity_underground",
         "sv_livingcity_patsearch", -- (a unit's search as a short pat-down: sv_livingcity_underground.lua starts it)
@@ -313,6 +314,7 @@ LC_MODULES = {
         "cl_livingcity_ratscar", -- (the crude rat carved into a burned informant's cheek)
         "cl_livingcity_petbird", -- (a pet bird on someone's shoulder)
         "cl_livingcity_atmos",
+        "cl_livingcity_daylight", -- (darker places: the screen's part)
         "cl_livingcity_character",
         "cl_livingcity_vortstart", -- (the choice at a new life's start: a citizen or a vortigaunt)
         "cl_livingcity_rebelmedic", -- (the Resistance's medic: his offer)

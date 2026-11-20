@@ -221,6 +221,15 @@ local ACTIONS = {
             local one, why = LC.Flush.Start()
             if not one then return false, tostring(why) end
             return true, "Flush the sewers: on the Combine's boards (F4). Take it as a unit."
+        elseif v == "lights" then
+            -- (sv_livingcity_daylight.lua: what the map gives the day and night and the dreams to work with)
+            if not (LC.Daylight and LC.Daylight.Report) then return false, "No such thing on this server." end
+            return true, LC.Daylight.Report()
+        elseif string.sub(v, 1, 12) == "dreamlights:" then
+            if not (LC.Daylight and LC.Daylight.SetDreamLights) then return false, "No such thing on this server." end
+            local white, red = LC.Daylight.SetDreamLights(string.sub(v, 13))
+            if not white then return false, tostring(red) end
+            return true, string.format("Dream room lights: %s (%d lights%s).", string.sub(v, 13), white, red > 0 and (", " .. red .. " red") or "")
         elseif v == "flushdoor" then
             -- (the Combine door open as if the units had rewired it: the Resistance's answer goes up on their board)
             if not (LC.Flush and LC.Flush.OpenDoor) then return false, "No sewer flush on this server." end

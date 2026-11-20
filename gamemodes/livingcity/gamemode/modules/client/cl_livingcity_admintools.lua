@@ -238,6 +238,10 @@ local function Build()
         Label(r6, "The quarter:", 70)
         Btn(r6, "Open the sewer door now", function() Do("solo", "flushdoor") end, 170)
         Btn(r6, "Order the wall opened from inside now", function() Do("solo", "breach") end, 250)
+        local r7 = Row(so2)
+        Label(r7, "Lights:", 70)
+        Btn(r7, "What this map has", function() Do("solo", "lights") end, 130)
+        for _, m in ipairs({ "on", "dim", "dark", "off", "flicker", "red" }) do Btn(r7, "Dream room " .. m, function() Do("solo", "dreamlights:" .. m) end, 118) end
     end
     -- territory: grow it now, for testing (superadmins; it grows along the path nodes)
     if state.superadmin then

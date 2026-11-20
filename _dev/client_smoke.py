@@ -4688,6 +4688,53 @@ local ok, e = pcall(function()
     sh = Find(Find(LC_CL.QuickRoleRoot(), "orders").page(), "shell")
     if not (sh and sh.disabled) then error("shelling should wait for the canisters: " .. tostring(sh and sh.label)) end
     _globals.lc_ledger, _globals.lc_shell_next, util.JSONToTable = ledWas, nextWas, jsonWas
+    -- darker places (cl_livingcity_daylight.lua): the nearer a mark of the map's, the more the picture is darkened; no marks, nothing
+    do
+        local moodsWas, dcmWas, grade = LC_CL.Moods, DrawColorModify, nil
+        DrawColorModify = function(t) grade = t end
+        LC_CL.Moods = {}
+        hook.t.RenderScreenspaceEffects.LivingCityPlaceMood()
+        if grade then error("the picture is graded in a map with no marks") end
+        local here = _me.EyePos and _me:EyePos() or _me:GetPos()
+        LC_CL.Moods = { { kind = "dark", pos = here } }
+        if LC_CL.MoodAt(here, "dark") ~= 1 or LC_CL.MoodAt(here, "dim") ~= 0 then error("standing on a dark mark should be fully in it, and in no dim one") end
+        if LC_CL.MoodAt(here + Vector(1125, 0, 0), "dark") ~= 0.5 or LC_CL.MoodAt(here + Vector(1600, 0, 0), "dark") ~= 0 then error("a dark mark should fade out between half its reach and its edge") end
+        for _ = 1, 400 do hook.t.RenderScreenspaceEffects.LivingCityPlaceMood() end
+        if not (grade and grade["$pp_colour_brightness"] < -0.05 and grade["$pp_colour_colour"] < 0.6) then error("standing in a dark place the picture should be darker and greyer") end
+        LC_CL.Moods, DrawColorModify = moodsWas, dcmWas
+    end
+    -- its own stars (cl_livingcity_daylight.lua): built once and drawn behind everything, only while the server paints the sky and it is dark
+    do
+        local keep = { Mesh = Mesh, mesh = mesh, CreateMaterial = CreateMaterial, EyeAngles = EyeAngles, MATERIAL_QUADS = MATERIAL_QUADS, start3d = cam.Start3D, end3d = cam.End3D,
+            depth = render.OverrideDepthEnable, setmat = render.SetMaterial, stars = _globals.lc_sky_stars, zero = _globals.lc_day_zero, len = _globals.lc_day_len }
+        local verts, quads, draws, begun = 0, 0, 0, 0
+        MATERIAL_QUADS = MATERIAL_QUADS or 7
+        Mesh = function() return { Draw = function() draws = draws + 1 end } end
+        mesh = { Begin = function(_, _, n) begun = begun + 1 quads = n end, End = function() end, Position = function() end, TexCoord = function() end, Color = function() end,
+            AdvanceVertex = function() verts = verts + 1 end }
+        CreateMaterial = function() return { SetVector = function() end } end
+        EyeAngles = EyeAngles or function() return Angle(0, 0, 0) end
+        cam.Start3D, cam.End3D = function() end, function() end
+        render.OverrideDepthEnable, render.SetMaterial = function() end, function() end
+        local star = hook.t.PostDraw2DSkyBox and hook.t.PostDraw2DSkyBox.LivingCityStars
+        if not star then error("the stars have no hook") end
+        _globals.lc_day_len = 3600
+        _globals.lc_day_zero = CurTime()            -- (midnight)
+        _globals.lc_sky_stars = false
+        star()
+        if draws ~= 0 then error("the stars are drawn though the server is not painting the sky") end
+        _globals.lc_sky_stars = true
+        star() star()
+        local built, broken = LC_CL.StarsState()
+        if broken or not built then error("the stars could not be built or drawn") end
+        if not (begun == 1 and quads == 1500 and verts == 6000 and draws == 2) then error("the stars: built " .. begun .. " time(s), " .. quads .. " stars, " .. verts .. " corners, drawn " .. draws) end
+        _globals.lc_day_zero = CurTime() - 1800     -- (noon)
+        star()
+        if draws ~= 2 then error("the stars are drawn at noon") end
+        Mesh, mesh, CreateMaterial, EyeAngles, MATERIAL_QUADS = keep.Mesh, keep.mesh, keep.CreateMaterial, keep.EyeAngles, keep.MATERIAL_QUADS
+        cam.Start3D, cam.End3D, render.OverrideDepthEnable, render.SetMaterial = keep.start3d, keep.end3d, keep.depth, keep.setmat
+        _globals.lc_sky_stars, _globals.lc_day_zero, _globals.lc_day_len = keep.stars, keep.zero, keep.len
+    end
     -- the order to flush the sewers (sv_livingcity_flush.lua): only where the map has the sealed quarter; greyed with the reason; sent as "flush"
     local flWas = _globals.lc_flush
     local function Flush() return Find(Find(LC_CL.QuickRoleRoot(), "orders").page(), "flush") end

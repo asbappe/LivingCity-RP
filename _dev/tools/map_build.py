@@ -905,9 +905,13 @@ def canal(args):
     blocked = [(512, 256, 1024, 384), (4480, 2304, 4608, 2816), (2560, 3712, 3072, 3840)] + set_blocked # (the stairs, behind each gate's bars, the set pieces)
     node_id = [args.first_node]
 
+    dim = []       # (the owner, 20 November: the ring's southern half "a bit dimmer"; this canal is its south-east: map_ring.py)
+
     def node(x, y, z):
         vmf.point("info_node", W(x, y, z + 40), {"nodeid": node_id[0]}, "LC canal: path nodes")
         node_id[0] += 1
+        if W(x, y, 0)[1] < 4600 and all((x - a) ** 2 + (y - b) ** 2 >= 700 ** 2 for a, b, _ in dim):
+            dim.append((x, y, z))
     for (i, j), spec in sorted(cells.items()):
         if spec[0] == "solid" or i % 2 != 1 or j % 2 != 1 or (i + j) % 4 != 0:
             continue
@@ -923,6 +927,9 @@ def canal(args):
     for x, y, z in ((576, 320, road_z), (736, 320, road_z - 64), (832, 320, road_z - 128), (928, 320, road_z - 208), (1056, 320, floor_z),
                     (160, 384, road_z), (160, 512, road_z), (160, 640, road_z), (2688, 1920, road_z), (2816, 1920, road_z), (2944, 1920, road_z)):
         node(x, y, z)
+
+    for x, y, z in dim:
+        vmf.point("info_target", W(x, y, z + 64), {"targetname": "lc_mood_dim"}, "LC canal: the dimmer southern half (marks for the gamemode)")
 
     # reflections: one cubemap for each stretch, at eye height
     for x, y, z in ((320, 128, road_z), (800, 512, floor_z), (2000, 512, floor_z), (2816, 1500, floor_z), (3200, 1472, floor_z), (2816, 2560, floor_z), (3900, 2560, floor_z), (2816, 3300, floor_z)):

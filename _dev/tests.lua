@@ -41762,6 +41762,142 @@ function QuarterBreachTests() -- (the owner, 20 November: the Resistance shut th
 end
 QuarterBreachTests()
 
+function DaylightTests() -- (the owner, 20 November: the map's own lights: the sun and sky by the hour, the dream room's, the darker places)
+    local D = LC.Daylight
+    section("The map's lights: the sun and the sky by the hour, where the map has given the sun a name")
+    ok(D ~= nil, "(the module is loaded)")
+    if not D then return end
+    local function Cv(n) local c = GetConVar(n) return c and c:GetString() or nil end
+    local saved = { atmos = Cv("lc_atmosphere"), light = Cv("lc_daynight_light"), dn = Cv("lc_daynight"), hour = LC.Hour(), phase = LC.AtmosPhase, style = LC.LightStyle }
+    _setcvar("lc_atmosphere", 1) _setcvar("lc_daynight_light", 1) _setcvar("lc_daynight", 1)
+    local made = {}
+    local function Ent(cls, name, pos)
+        local e = ents.Create(cls)
+        e:SetPos(pos or Vector(0, 0, 0))
+        if name then e:SetName(name) end
+        e:Spawn()
+        e.did = {}
+        e.Fire = function(self, input, param) self.did[#self.did + 1] = { input, param } end
+        made[#made + 1] = e
+        return e
+    end
+    local function Last(e, input) for k = #e.did, 1, -1 do if e.did[k][1] == input then return e.did[k][2] or true end end return nil end
+    for _, e in ipairs(ents.FindByClass("light_environment")) do e:Remove() end
+    D.Reset()
+    ok(D.Sun() == nil and not D.SunHooked(), "a map whose sun has no name: it cannot be faded, and nothing here says it can")
+    LC.AtmosPhase, LC.LightStyle = "night", nil
+    LC.ApplyLightStyle()
+    ok(LC.LightStyle == "d", "there the old way stands: every light of the map dimmed for the night", LC.LightStyle)
+    ok(D.SunLetter(12) == "m" and D.SunLetter(0) == "a" and D.SunLetter(23) == "a" and D.SunLetter(4.9) == "a", "the sun: full by day, out by night")
+    ok(D.SunLetter(6) == "g" and D.SunLetter(20) == "g" and D.SunLetter(5.5) < D.SunLetter(6.5) and D.SunLetter(19.5) > D.SunLetter(20.5), "rising a step at a time through dawn, falling through dusk")
+    ok(D.GloomLetter(0) == "e" and D.GloomLetter(12) == "m", "the quarter's own lights: low by night, never out")
+
+    local sun = Ent("light_environment", "lc_sun", Vector(0, 0, 5000))
+    local glow = Ent("env_sun", nil, Vector(0, 0, 5000))
+    local gloom = Ent("light", "lc_raven_gloom", Vector(70000, 70000, 0))
+    local sky = Ent("env_skypaint", nil, Vector(0, 0, 5000))
+    -- (as the owner's map has it: black at every hour, with the stock star picture)
+    local was = { TopColor = Vector(0, 0, 0), BottomColor = Vector(0, 0, 0), SunSize = 0, SunColor = Vector(0.6, 0.5, 0.2), SunNormal = Vector(0.4, 0, 0.01),
+        DuskScale = 0.75, DuskIntensity = 0.7, DuskColor = Vector(0, 0.05, 0.12), DrawStars = true }
+    local vals = {}
+    for k, v in pairs(was) do
+        vals[k] = v
+        sky["Get" .. k] = function() return vals[k] end
+        sky["Set" .. k] = function(_, x) vals[k] = x end
+    end
+    local function Same(a, b) if type(a) ~= "number" and type(a) ~= "boolean" and type(a) ~= "string" then return math.abs(a.x - b.x) + math.abs(a.y - b.y) + math.abs(a.z - b.z) < 0.001 end return a == b end
+    local function AsSet() for k, v in pairs(was) do if not Same(vals[k], v) then return false, k end end return true end
+    D.Reset()
+    LC.SetHour(12)
+    D.Tick()
+    ok(D.SunHooked() and Last(sun, "FadeToPattern") == "m" and Last(gloom, "FadeToPattern") == "m", "with a name it is ours: at noon the sun and the quarter's lights are full")
+    ok(Same(vals.TopColor, D.SKY.day.top) and Same(vals.BottomColor, D.SKY.day.bottom) and vals.SunSize == D.SUN_SIZE and vals.SunNormal.z > 0.9,
+        "and the sky is painted for the day: grey-blue, a pale sun high in it")
+    ok(vals.DrawStars == false and GetGlobal2Bool("lc_sky_stars", false) == true, "the stock star picture is off: each client draws its own stars")
+    LC.AtmosPhase, LC.LightStyle = "night", nil
+    LC.ApplyLightStyle()
+    ok(LC.LightStyle == "m", "the map's other lights are no longer dimmed for the night: only the sun goes", LC.LightStyle)
+    LC.SetHour(6)
+    D.Tick()
+    ok(Last(sun, "FadeToPattern") == "g" and vals.TopColor.z > D.SKY.night.top.z and vals.TopColor.z < D.SKY.day.top.z and vals.DuskIntensity > 1 and vals.SunNormal.z < 0.1,
+        "at dawn the sun is half up and low in the east, the sky between night and day, and the horizon glows")
+    LC.SetHour(0)
+    D.Tick()
+    ok(Last(sun, "FadeToPattern") == "a" and Last(gloom, "FadeToPattern") == "e" and Last(glow, "TurnOff") == true, "at midnight the sun is out, its glow is off, and the quarter's lights are low")
+    ok(Same(vals.TopColor, D.SKY.night.top) and vals.SunSize == 0 and vals.SunNormal.z < 0 and vals.DuskIntensity == 0, "the sky is near black, the sun below the horizon")
+    local n = #sun.did
+    D.Tick()
+    ok(#sun.did == n, "nothing is sent again while nothing changes")
+    LC.SetHour(12)
+    D.Tick()
+    ok(Last(sun, "FadeToPattern") == "m" and Last(glow, "TurnOn") == true and Same(vals.TopColor, D.SKY.day.top), "and at noon it is day again")
+    _setcvar("lc_daynight_light", 0)
+    LC.SetHour(0)
+    D.Tick()
+    ok(not D.SunHooked() and Last(sun, "FadeToPattern") == "m" and AsSet() and GetGlobal2Bool("lc_sky_stars", false) == false,
+        "with the night's dimming switched off in the settings: the sun stays full, and the sky is the map's own again, as it was set", select(2, AsSet()))
+    _setcvar("lc_daynight_light", 1)
+
+    section("The map's lights: the dream room's, set by the dream")
+    local P = Vector(-70000, -70000, 0)
+    local zone = { pos = P, r = 1000 }
+    local a, b = Ent("light", "evr_l", P + Vector(1500, 0, 800)), Ent("light_spot", "evr_l", P + Vector(0, -1900, 800))
+    local own = Ent("light", "lc_dream_light", P + Vector(30000, 0, 0))
+    local far = Ent("light", "subway_flicker_light", P + Vector(9000, 0, 0))
+    local quarter = Ent("light", "lc_raven_gloom", P + Vector(200, 0, 0))
+    local white, red = D.DreamLights(zone)
+    ok(#white == 3 and #red == 0, "the room's lights: every named light in or round the dream zone, and any named for it; not one far off, nor another place's", #white .. " " .. #red)
+    local okU, whyU = D.SetDreamLights("purple", zone)
+    ok(okU == false and whyU ~= nil, "a mode there is not is refused")
+    ok(D.SetDreamLights("off", zone) == 3 and Last(a, "TurnOff") == true and Last(b, "TurnOff") == true and Last(far, "TurnOff") == nil, "off: every one of them out, and only them")
+    D.SetDreamLights("flicker", zone)
+    ok(Last(a, "SetPattern") == D.MODES.flicker.white and Last(a, "TurnOn") == true, "flicker: on, with a flickering pattern")
+    D.SetDreamLights("red", zone)
+    ok(Last(a, "SetPattern") == "e", "red, in a map with no red set: the room dimmed instead")
+    local r1 = Ent("light", "lc_dream_red", P + Vector(1500, 0, 800))
+    D.SetDreamLights("red", zone)
+    ok(Last(a, "TurnOff") == true and Last(r1, "SetPattern") == "m" and a.did[#a.did][1] == "TurnOff", "with the red set: the white ones out and the red ones on")
+    local realMood = LC.DreamMood
+    LC.DreamMood = function(id) return ({ grim = "nightmare", sweet = "happy" })[id] or "neutral" end
+    ok(D.ModeFor({ id = "harpies", zone = zone }) == "off" and D.ModeFor({ id = "grim", zone = zone }) == "red" and D.ModeFor({ id = "sweet", zone = zone }) == "on",
+        "each dream's own: the one where every light goes out, a nightmare in red, a happy one as it is")
+    r1:Remove()
+    ok(D.ModeFor({ id = "grim", zone = zone }) == "dim", "a nightmare with no red set: dim")
+    -- (this module's own listeners alone: the dream here is only a name and a zone, not a whole dream)
+    hook.GetTable().LivingCityDreamStarted.LivingCityDaylight({ id = "grim", zone = zone })
+    ok(Last(a, "SetPattern") == "e" and D.dreamMode == "dim", "as the dream starts the room is set")
+    hook.GetTable().LivingCityDreamEnded.LivingCityDaylight({ id = "grim", zone = zone })
+    ok(Last(a, "SetPattern") == "m" and a.did[#a.did][1] == "SetPattern" and D.dreamMode == "on", "and as it ends the lights are back on")
+    LC.DreamMood = realMood
+    local okN, whyN = D.SetDreamLights("off", { pos = Vector(90000, 90000, 0), r = 100 })
+    ok(okN == 1 and Last(own, "TurnOff") == true, "(a light named for the dream room counts wherever it is)")
+    own:Remove()
+    okN, whyN = D.SetDreamLights("off", { pos = Vector(90000, 90000, 0), r = 100 })
+    ok(okN == false and string.find(tostring(whyN), "no named lights", 1, true) ~= nil, "a room with no named lights: said so, nothing done", whyN)
+
+    section("The map's lights: the darker places, from the map's marks")
+    Ent("info_target", "lc_mood_dark", Vector(100, 200, 300))
+    Ent("info_target", "lc_mood_dim", Vector(-100, -200, 300))
+    Ent("info_target", "lc_mood_dim", Vector(-900, -200, 300))
+    local dark, dim = 0, 0
+    for _, m in ipairs(D.Moods()) do if m.k == "dark" then dark = dark + 1 elseif m.k == "dim" then dim = dim + 1 end end
+    ok(dark == 1 and dim == 2, "one dark mark and two dim: what every client is sent", dark .. " " .. dim)
+    local rep = D.Report()
+    ok(string.find(rep, "named (lc_sun)", 1, true) ~= nil and string.find(rep, "1 dark mark, 2 dim", 1, true) ~= nil and string.find(rep, "painted", 1, true) ~= nil,
+        "the staff's button says what the map has, in plain words", rep)
+
+    -- as it was
+    for _, e in ipairs(made) do if IsValid(e) then e:Remove() end end
+    D.Reset()
+    if saved.atmos then _setcvar("lc_atmosphere", saved.atmos) end
+    if saved.light then _setcvar("lc_daynight_light", saved.light) end
+    if saved.dn then _setcvar("lc_daynight", saved.dn) end
+    LC.SetHour(saved.hour)
+    LC.AtmosPhase, LC.LightStyle = saved.phase, nil
+    LC.ApplyLightStyle()
+end
+DaylightTests()
+
 ----------------------------------------------------------------------
 section("Stop")
 LC.Stop(admin)

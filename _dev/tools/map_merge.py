@@ -26,6 +26,12 @@ What it does, and what it never does:
   entities from one count, faces from another, as Hammer does), so nothing shares an id.
 - A test file (lc_*_test.vmf) is refused: it has a sun, a spawn and walls that must never be in the
   real map.
+- Two things for the gamemode's day and night and its dreams (the owner, 20 November: "hook into the
+  lights in the map"; --plain leaves both out): the owner's light_environment is given a name
+  (SUN_NAME, only if it has none: one line added to it), which is what lets the sun be faded while
+  the map runs; and beside each of the dream room's own lights (the ones named evr_l) a second, red
+  one that starts dark (TWINS), so a dream can turn the room red. Nothing else of the owner's gains
+  or loses a line.
 
 Afterwards it reads its own output back and checks it (CHECKS at the end of the run): the braces, the
 ids, the path node numbers, that every block of the owner's is still there unchanged, and names used
@@ -59,6 +65,11 @@ BOXES = {   # (from the owner's map of 19 November, mapversion 39)
     "28290": (1216, 393, 239, 1536, 401, 448),          # the sewer wall
     "34874": (1216, -5184, 655, 1472, -2293, 656),      # the bare strip of road
 }
+# The sun's name, and the lights that get a twin: (the owner's lights' name, the twins' name, the twins' colour and
+# brightness). A named light can be switched and faded while the map runs; a light's colour is fixed when the map is
+# compiled, which is why a red room needs red lights of its own.
+SUN_NAME = "lc_sun"
+TWINS = [("evr_l", "lc_dream_red", "255 48 32 160")]
 CAP = re.compile(r"gate's cap \(delete to join")
 PLANE = re.compile(r'"plane" "\(([-\d.e]+) ([-\d.e]+) ([-\d.e]+)\) \(([-\d.e]+) ([-\d.e]+) ([-\d.e]+)\) \(([-\d.e]+) ([-\d.e]+) ([-\d.e]+)\)"')
 KEY = re.compile(r'^"([^"]*)" "(.*)"$')
@@ -252,6 +263,7 @@ def main():
     ap.add_argument("pieces", nargs="+", help="the pieces: lc_canal.vmf lc_ring.vmf ... (never a _test file)")
     ap.add_argument("--out", required=True, help="the new VMF to write")
     ap.add_argument("--keep-caps", action="store_true", help="leave every gate's cap in (the pieces stay shut off from each other)")
+    ap.add_argument("--plain", action="store_true", help="do not name the sun and do not add the dream room's red lights")
     args = ap.parse_args()
     if os.path.abspath(args.out) == os.path.abspath(args.owner):
         raise SystemExit("the new file must not be the owner's own")
@@ -339,9 +351,58 @@ def main():
             if vid not in p.dropped:
                 print("  a cap stays: '%s' (nothing is against it)" % p.vis[vid][0])
 
+    # --- the gamemode's hooks into the owner's lights: the sun's name, the dream room's red twins ---
+    add_after = {}                                  # line number in the owner's file -> a line to put after it
+    twins = []                                      # (the keys and values of each light to copy)
+    if not args.plain:
+        for name, a, b in tops:
+            if name != "entity":
+                continue
+            kv, at = {}, None
+            depth = 0
+            for i in range(a + 1, b):
+                l = lines[i].strip()
+                if l == "{":
+                    depth += 1
+                elif l == "}":
+                    depth -= 1
+                elif depth == 1:
+                    m = KEY.match(l)
+                    if m:
+                        kv[m.group(1)] = m.group(2)
+                        if m.group(1) == "classname":
+                            at = i
+            cls = kv.get("classname", "")
+            if cls == "light_environment":
+                if kv.get("targetname"):
+                    print("  the sun already has a name: %s (left as it is)" % kv["targetname"])
+                else:
+                    add_after[at] = '\t"targetname" "%s"' % SUN_NAME
+                    print("  the sun: the owner's light_environment (entity %s) is named %s: one line added to it" % (kv.get("id"), SUN_NAME))
+            elif cls in ("light", "light_spot"):
+                for theirs, ours, colour in TWINS:
+                    if kv.get("targetname") == theirs:
+                        twins.append((kv, ours, colour))
+        for theirs, ours, colour in TWINS:
+            n = sum(1 for t in twins if t[1] == ours)
+            if n:
+                print("  the dream room: beside each of the %d lights named %s, a red one named %s that starts dark" % (n, theirs, ours))
+
     # --- the pieces, renumbered ---
     ids = [obj + 1, side + 1]
     new_vis, new_solids, new_ents = [], [], []
+    if twins:
+        vis += 1
+        new_vis += ["\tvisgroup", "\t{", '\t\t"name" "LC lights: the dream room\'s red set"', '\t\t"visgroupid" "%d"' % vis, '\t\t"color" "220 60 50"', "\t}"]
+        for kv, ours, colour in twins:
+            keys = dict(kv)
+            keys.update({"targetname": ours, "_light": colour, "spawnflags": "1", "style": "0"})
+            keys.pop("id", None)
+            keys.pop("_lightHDR", None)
+            new_ents += ["entity", "{", '\t"id" "%d"' % ids[0]] + ['\t"%s" "%s"' % (k, v) for k, v in keys.items()] + [
+                "\teditor", "\t{", '\t\t"color" "220 30 220"', '\t\t"visgroupid" "%d"' % vis, '\t\t"visgroupshown" "1"', '\t\t"visgroupautoshown" "1"',
+                '\t\t"logicalpos" "[0 0]"', "\t}", "}"]
+            ids[0] += 1
     for p in pieces:
         vismap = {}
         for vid in sorted(p.vis, key=int):
@@ -380,6 +441,8 @@ def main():
             out += new_solids
         if not skip[i]:
             out.append(raw)
+            if i in add_after:
+                out.append(add_after[i])
         if i == after_ents:
             out += new_ents
     with open(args.out, "w", errors="surrogateescape", newline="") as f:
@@ -445,7 +508,12 @@ def main():
             else:
                 out.append((name, digest(ls[a:b + 1])))
         return out
-    kept_lines = [raw for i, raw in enumerate(lines) if not skip[i]]
+    kept_lines = []                                 # (the owner's file as it should now read: without what was left out, with the lines added)
+    for i, raw in enumerate(lines):
+        if not skip[i]:
+            kept_lines.append(raw)
+            if i in add_after:
+                kept_lines.append(add_after[i])
     before = chunks(kept_lines, top_blocks(kept_lines))
     after = chunks(merged, mtops)
     # (in the same order: each of the owner's blocks is looked for after the one before it)
@@ -480,8 +548,9 @@ def main():
     n_ents = sum(1 for k in after if k[0] == "entity")
     print("written: %s (%d lines; %d brushes in the world, %d entities, %d path nodes, %d displacements)" % (
         args.out, len(merged), n_world, n_ents, len(seen_nodes), sum(1 for raw in merged if raw.strip() == "dispinfo")))
-    print("  left out of the owner's: %d brushes%s; everything else of theirs: %d blocks, each one unchanged" % (
-        len(wanted), " (%d brush entities went with their last brush)" % emptied if emptied else "", len(before)))
+    print("  left out of the owner's: %d brushes%s; everything else of theirs: %d blocks, each one unchanged%s" % (
+        len(wanted), " (%d brush entities went with their last brush)" % emptied if emptied else "", len(before),
+        " but for %d line added (the sun's name)" % len(add_after) if add_after else ""))
     if problems:
         for p in problems:
             print("  PROBLEM: " + p)

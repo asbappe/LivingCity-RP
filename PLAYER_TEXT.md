@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version f259040. Admin-only console messages and log lines are left out.
+Made from version 7e3b504. Admin-only console messages and log lines are left out.
 
-13367 lines, from 376 files.
+13392 lines, from 378 files.
 
 ## Contents
 
@@ -78,7 +78,7 @@ Made from version f259040. Admin-only console messages and log lines are left ou
 - [init.lua](#initlua-initlua) (5)
 - [cl_livingcity.lua](#cllivingcitylua-cllivingcitylua) (22)
 - [cl_livingcity_actions.lua](#cllivingcityactionslua-cllivingcityactionslua) (56)
-- [cl_livingcity_admintools.lua](#cllivingcityadmintoolslua-cllivingcityadmintoolslua) (55)
+- [cl_livingcity_admintools.lua](#cllivingcityadmintoolslua-cllivingcityadmintoolslua) (57)
 - [cl_livingcity_arrest.lua](#cllivingcityarrestlua-cllivingcityarrestlua) (14)
 - [cl_livingcity_atmos.lua](#cllivingcityatmoslua-cllivingcityatmoslua) (5)
 - [cl_livingcity_barter.lua](#cllivingcitybarterlua-cllivingcitybarterlua) (1)
@@ -94,6 +94,7 @@ Made from version f259040. Admin-only console messages and log lines are left ou
 - [cl_livingcity_context.lua](#cllivingcitycontextlua-cllivingcitycontextlua) (97)
 - [cl_livingcity_cp.lua](#cllivingcitycplua-cllivingcitycplua) (26)
 - [cl_livingcity_cuffed.lua](#cllivingcitycuffedlua-cllivingcitycuffedlua) (6)
+- [darker places (the screen's part)](#darker-places-the-screens-part-cllivingcitydaylightlua) (9)
 - [cl_livingcity_dialog.lua](#cllivingcitydialoglua-cllivingcitydialoglua) (3)
 - [cl_livingcity_directives.lua](#cllivingcitydirectiveslua-cllivingcitydirectiveslua) (19)
 - [how the dreams' figures move (sv_livingcity_dreamstandins.lua, sv_livingcity_dreamstage.lua)](#how-the-dreams-figures-move-svlivingcitydreamstandinslua-svlivingcitydreamstagelua-cllivingcitydreamactinglua) (8)
@@ -166,7 +167,7 @@ Made from version f259040. Admin-only console messages and log lines are left ou
 - [the would-be assassin is hers to question (the owner, 16 November)](#the-would-be-assassin-is-hers-to-question-the-owner-16-november-svlivingcityadminquestioninglua) (13)
 - [a lone wolf who tried to kill the Administrator and got away is taken in by the Resistance](#a-lone-wolf-who-tried-to-kill-the-administrator-and-got-away-is-taken-in-by-the-resistance-svlivingcityadminrecruitlua) (2)
 - [the Administrator's security (the owner, 15 November)](#the-administrators-security-the-owner-15-november-svlivingcityadminsecuritylua) (9)
-- [testing tools for admins](#testing-tools-for-admins-svlivingcityadmintoolslua) (81)
+- [testing tools for admins](#testing-tools-for-admins-svlivingcityadmintoolslua) (85)
 - [citizens who show you the way](#citizens-who-show-you-the-way-svlivingcityadvicelua) (24)
 - [Half-Life 2's ammo limits](#half-life-2s-ammo-limits-svlivingcityammolua) (4)
 - [custom announcements, for Overwatch and for the Administrator](#custom-announcements-for-overwatch-and-for-the-administrator-svlivingcityannouncerlua) (57)
@@ -203,6 +204,7 @@ Made from version f259040. Admin-only console messages and log lines are left ou
 - [the Cremator](#the-cremator-svlivingcitycrematorlua) (20)
 - [what custody costs the worst anticitizens](#what-custody-costs-the-worst-anticitizens-svlivingcitycustodylua) (30)
 - [saved layout](#saved-layout-svlivingcitydatalua) (16)
+- [the map's own lights, by the hour and by the dream](#the-maps-own-lights-by-the-hour-and-by-the-dream-svlivingcitydaylightlua) (10)
 - [debugging](#debugging-svlivingcitydebuglua) (82)
 - [the desperate Combine (sv_livingcity_desperation.lua)](#the-desperate-combine-svlivingcitydesperationlua-svlivingcitydesperationlua) (12)
 - [sv_livingcity_directives.lua](#svlivingcitydirectiveslua-svlivingcitydirectiveslua) (56)
@@ -1710,17 +1712,19 @@ Made from version f259040. Admin-only console messages and log lines are left ou
 - "The quarter:"  (text, line 238)
 - "Open the sewer door now"  (text, line 239)
 - "Order the wall opened from inside now"  (text, line 240)
+- "What this map has"  (text, line 243)
+- "Dream room {m}"  (text, line 244)
 
 > Note for you (not shown in game): territory: grow it now, for testing (superadmins; it grows along the path nodes)
 
-- "Grow rebel ground now"  (text, line 246)
-- "Grow the infestation now"  (text, line 247)
+- "Grow rebel ground now"  (text, line 250)
+- "Grow the infestation now"  (text, line 251)
 
 > Note for you (not shown in game): part of: build
 
-- "No rebel or infestation zones are placed."  (text, line 254)
-- "Start over"  (text, line 257)
-- "Reset XP, credits and standing to 0"  (text, line 259)
+- "No rebel or infestation zones are placed."  (text, line 258)
+- "Start over"  (text, line 261)
+- "Reset XP, credits and standing to 0"  (text, line 263)
 
 ## cl_livingcity_arrest.lua (cl_livingcity_arrest.lua)
 
@@ -2236,6 +2240,23 @@ Made from version f259040. Admin-only console messages and log lines are left ou
 - "The cuffs bite into your wrists."  (text, line 168)
 - "Something in them gives a little."  (text, line 169)
 - "Nearly... keep at it."  (text, line 171)
+
+## darker places (the screen's part) (cl_livingcity_daylight.lua)
+
+`gamemodes/livingcity/gamemode/modules/client/cl_livingcity_daylight.lua`
+
+
+> Note for you (not shown in game): the game's render screenspace effects moment
+
+- "$pp_colour_addr"  (text, line 54)
+- "$pp_colour_addg"  (text, line 54)
+- "$pp_colour_addb"  (text, line 54)
+- "$pp_colour_brightness"  (text, line 55)
+- "$pp_colour_contrast"  (text, line 56)
+- "$pp_colour_colour"  (text, line 57)
+- "$pp_colour_mulr"  (text, line 58)
+- "$pp_colour_mulg"  (text, line 58)
+- "$pp_colour_mulb"  (text, line 58)
 
 ## cl_livingcity_dialog.lua (cl_livingcity_dialog.lua)
 
@@ -6004,53 +6025,60 @@ Made from version f259040. Admin-only console messages and log lines are left ou
 - "No sewer flush on this server."  (text, line 219)
 - "Flush the sewers: on the Combine's boards (F4). Take it as a unit."  (text, line 223)
 
+> Note for you (not shown in game): (sv_livingcity_daylight.lua: what the map gives the day and night and the dreams to work with)
+
+- "No such thing on this server."  (text, line 226)
+- "No such thing on this server."  (text, line 229)
+- "Dream room lights: %s (%d lights%s)."  (message, line 232)
+- ", {red} red"  (text, line 232)
+
 > Note for you (not shown in game): (the Combine door open as if the units had rewired it: the Resistance's answer goes up on their board)
 
-- "No sewer flush on this server."  (text, line 226)
-- "This map has no sealed quarter: missing {or}."  (text, line 229)
-- "The sewer door is open for ten minutes. Shut the sewer door: on the Resistance's board (F4)."  (text, line 231)
+- "No sewer flush on this server."  (text, line 235)
+- "This map has no sealed quarter: missing {or}."  (text, line 238)
+- "The sewer door is open for ten minutes. Shut the sewer door: on the Resistance's board (F4)."  (text, line 240)
 
 > Note for you (not shown in game): (sv_livingcity_breach.lua: the leader's order, whatever the day)
 
-- "No sealed quarter on this server."  (text, line 234)
-- "Open the sealed quarter: on the Resistance's board (F4). Take it as a member."  (text, line 238)
-- "Start the city first."  (text, line 240)
-- "That event can't start now (another may be on)."  (text, line 241)
+- "No sealed quarter on this server."  (text, line 243)
+- "Open the sealed quarter: on the Resistance's board (F4). Take it as a member."  (text, line 247)
+- "Start the city first."  (text, line 249)
+- "That event can't start now (another may be on)."  (text, line 250)
 
 > Note for you (not shown in game): part of: solo
 
-- "No event is on."  (text, line 244)
-- "The event is over."  (text, line 246)
-- "Unknown test."  (text, line 248)
+- "No event is on."  (text, line 253)
+- "The event is over."  (text, line 255)
+- "Unknown test."  (text, line 257)
 
 > Note for you (not shown in game): part of: item
 
-- "No such item."  (text, line 252)
-- "'s pockets are full."  (text, line 253)
+- "No such item."  (text, line 261)
+- "'s pockets are full."  (text, line 262)
 
 > Note for you (not shown in game): part of: admin tool
 
-- "Admins only."  (text, line 260)
-- "Nobody to do that to."  (text, line 262)
-- "Unknown action."  (text, line 264)
-- "That failed: {a}"  (text, line 266)
-- "admin tools: %s used %s %s on %s"  (message, line 268)
+- "Admins only."  (text, line 269)
+- "Nobody to do that to."  (text, line 271)
+- "Unknown action."  (text, line 273)
+- "That failed: {a}"  (text, line 275)
+- "admin tools: %s used %s %s on %s"  (message, line 277)
 
 > Note for you (not shown in game): the console command lc_admintools
 
-- "Admins only."  (chat message, line 318)
+- "Admins only."  (chat message, line 327)
 
 > Note for you (not shown in game): the game answering something done in a window (lc_admintools_do)
 
-- "[Admin tools] {msg}"  (chat message, line 326)
+- "[Admin tools] {msg}"  (chat message, line 335)
 
 > Note for you (not shown in game): typing in chat
 
-- "Admins only."  (chat message, line 345)
-- "Admins only."  (chat message, line 350)
-- "Usage: !{cmd} <number> [player]"  (chat message, line 355)
-- "Player not found: {name}"  (chat message, line 362)
-- "[Admin tools] {msg}"  (chat message, line 365)
+- "Admins only."  (chat message, line 354)
+- "Admins only."  (chat message, line 359)
+- "Usage: !{cmd} <number> [player]"  (chat message, line 364)
+- "Player not found: {name}"  (chat message, line 371)
+- "[Admin tools] {msg}"  (chat message, line 374)
 
 ## citizens who show you the way (sv_livingcity_advice.lua)
 
@@ -6364,7 +6392,7 @@ Made from version f259040. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): typing in chat
 
-- "It's %s, %s. The weather: %s."  (message, line 224)
+- "It's %s, %s. The weather: %s."  (message, line 227)
 
 ## The Battle Line, a propaganda dream (sv_livingcity_battleline.lua) (sv_livingcity_battleline.lua)
 
@@ -8906,6 +8934,30 @@ Made from version f259040. Admin-only console messages and log lines are left ou
 > Note for you (not shown in game): the game answering something done in a window (lc_setting)
 
 - "%s set %s to %s"  (message, line 665)
+
+## the map's own lights, by the hour and by the dream (sv_livingcity_daylight.lua)
+
+`gamemodes/livingcity/gamemode/modules/server/sv_livingcity_daylight.lua`
+
+
+> Note for you (not shown in game): Put the room's lights in a mode (D.MODES). Returns how many white and red lights it reached, or false and why.
+
+- "No such mode."  (text, line 244)
+- "This map has no named lights in or round the dream zone."  (text, line 246)
+
+> Note for you (not shown in game): What this map gives it to work with, in plain words (F4 > Admin testing tools > Lights: what this map has).
+
+- "Sun: named ({GetName}), faded by the hour."  (text, line 339)
+- "Sun: no name in this map, so it cannot be faded: the old four steps dim every light instead."  (text, line 340)
+- "Sky: painted, follows the hour."  (text, line 341)
+- "Sky: not a painted sky (a fixed picture), left alone."  (text, line 341)
+- "Dream room: %d named light%s%s."  (message, line 343)
+
+> Note for you (not shown in game): part of: report
+
+- ", and a red set of {red}"  (text, line 344)
+- ", no red set"  (message, line 344)
+- "Darker places: %d dark mark%s, %d dim."  (message, line 347)
 
 ## debugging (sv_livingcity_debug.lua)
 

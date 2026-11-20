@@ -125,6 +125,7 @@ class TownPlan(Plan):
     def build(self, vmf):
         self.walls()
         sky = MAT["sky"]
+        self.shade = []            # (under each lid: where the sheet that keeps the sun out goes, ravenholm())
         for x1, y1, x2, y2, spec in self.rectangles():
             if spec[0] == "solid":
                 for a, b, mat in self.looks(spec[1], self.base):
@@ -133,6 +134,7 @@ class TownPlan(Plan):
             vmf.world_box(self.box(x1, y1, self.base, x2, y2, spec[1]), self.floor_side, top=spec[2], vis=self.vis)
             if spec[0] == "open":
                 vmf.world_box(self.box(x1, y1, self.sky, x2, y2, self.top), sky, sky, sky, vis=self.vis)
+                self.shade.append(self.box(x1, y1, self.street + 752, x2, y2, self.street + 760))
             else:
                 first = True
                 for a, b, mat in self.looks(spec[4], spec[3]):
@@ -437,6 +439,21 @@ def ravenholm(args):
     for at in (W(900, 60, Z + 8), W(1100, 400, Z + 8), W(600, 190, Z + 8), W(930, -420, Z + 8), W(860, -800, Z + 8), W(200, -300, ZS + 8), W(580, -300, ZS + 8),
                (1312, yb + 300, FLOOR + 8), (1312, yb + 800, FLOOR + 8), (1312, yb + 1200, FLOOR + 8)):
         vmf.point("info_target", at, {"targetname": "lc_raven_spawn"}, gv)
+
+    # --- its light. The owner, 20 November: "I really want the infested quarter to be darker and not sunny". The map has one
+    # sun for everything under a sky, so the quarter is taken out from under it: a sheet of tools/toolsblocklight (unseen,
+    # walked through, but the light compiler stops at it) under every sky lid, at the height where the walls turn to sky
+    # (z 1408), so neither the sun nor the sky's own glow reaches the streets while the sky is still seen. In their place
+    # four dim cold lights high over the streets that do not fade with distance (_constant_attn 1: 7 each, where the sun
+    # is 50), named lc_raven_gloom so the gamemode can dim them with the hour or alter them. Delete the visgroup to have
+    # the sun back. And marks named lc_mood_dark: where the gamemode greys and fogs the view of whoever stands there.
+    sv = "LC ravenholm: no sunlight (delete to let the sun back in)"
+    vmf.detail(plan.shade, "tools/toolsblocklight", vis=sv)
+    for at in (W(400, 190, Z + 720), W(990, 190, Z + 720), W(930, -700, Z + 720), W(500, 760, Z + 720)):
+        vmf.point("light", at, {"targetname": "lc_raven_gloom", "_light": "150 170 165 7", "_lightHDR": "-1 -1 -1 1", "_lightscaleHDR": "1",
+                                "_constant_attn": "1", "_linear_attn": "0", "_quadratic_attn": "0", "style": "0", "spawnflags": "0"}, sv)
+    for at in (W(400, 190, Z + 64), W(990, 190, Z + 64), W(930, -700, Z + 64), W(500, 760, Z + 64), (1312, ys + 56, ZS + 64)):
+        vmf.point("info_target", at, {"targetname": "lc_mood_dark"}, sv)
 
     # --- the four buildings to go into (the owner: "little abandoned in-buildings and old shops and such along the street").
     # Each is a hollow in the plan right up to the pavement; its front and back are walls 16 thick with a door and windows,

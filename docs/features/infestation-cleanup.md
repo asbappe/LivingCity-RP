@@ -39,4 +39,5 @@
 
 - **For staff:** F4 > Admin testing tools has "Order the sewer flush now", "Open the sewer door now" (which puts the Resistance's answer up) and "Order the wall opened from inside now": each skips the day and the conditions, and says which of the map's names are missing.
 - **Numbers:** `LC.Flush` (`sv_livingcity_flush.lua`): `GATE_OPEN` 60, `OUT_OPEN` 30, `DOOR_OPEN` 600, `TURRETS` 2, `POST_R` 700, `DEEP` 96, `ZOMBIES` 10, `PATCH_R` 400, `REWARD` 80, `LIMIT` 1800, `RESIST` -6, `AUTHORITY` -4. `LC.Breach` (`sv_livingcity_breach.lua`): `HAVOC` 300, `SEAL_REWARD` 50, `REWARD` 80, `LIMIT` 1800, `RESIST` 4, `COMBINE` -6, `MORALE` -4. No console settings, no chat commands.
+- **Its light (20 November):** the quarter is out of the sun (in the map), with dim lights of its own, and darker and greyer on the screen of whoever is in it: `docs/features/vortigaunts-and-weather.md`, "Darker places".
 - **Not built yet:** a way for the Combine to shut the wall early once the Resistance have opened it; the cave's antlion nest as an objective.
