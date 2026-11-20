@@ -410,3 +410,35 @@ Filled in as the review goes; the first ones are clear already:
 
 **Weight.** small (lights, falling water, algae), medium (arches, the sluice).
 
+### 23. pipes (showroom 3): a tangle of service pipes to duck and weave through, or climb over
+
+**Seen.** Big concrete pipe sections laid across and along the canal (one to duck under, a chicane of two, a fat main along the left), steel plates on their ends; a stair of big concrete steps up the left side to a valve platform, a plank with a handrail along the main, a railed grating bridge across, a plank ramp down; a run of small pipes high overhead, risers on the walls, a steam leak. Good routes for play.
+
+**Fix.**
+- The "service pipes" are the city's concrete culvert sections: hollow drain pipes, not pipes that carry steam or water under pressure, and they look it (plain, hollow, end plates bolted on). Service mains are steel: octagonal or round brush pipes in a metal material with flange rings every 128 (the tools' `ring` helper makes them), saddles, a valve wheel at a joint; or Half-Life 2's industrial pipe models where they fit (props_pipes pipe sets, props_wasteland pipeclusters, the Combine's pipes01/02/03 singles).
+- The stair to the valve platform is a flight of massive concrete blocks: a service stair is steel, grating treads on stringers with a rail (the grating material the bridge already uses, metalgrate013a).
+
+**Better.**
+- Pipes that say what is in them: painted bands (a stripe of colour material near the ends), stencilled numbers (decalindustrialnumber), arrows, a pressure gauge (props_lab gauges) on the main by the valve.
+- The steam leak is the only sign of life: a second leak that the game can turn on and off (an env_steam with a name and a hurt trigger, so it blocks a route until someone shuts the valve: the valve becomes a use).
+- Cage lights on the risers, lighting along the plank walk; drips and a low hum in the soundscape.
+
+**Weight.** medium (steel pipes and stair), small (bands, gauges, steam use).
+
+### 24. camp (showroom 3): a refugee camp on a terrace on the left bank
+
+**Seen.** A broad earth terrace up the bank with six ridge tents of patched tar paper and carpet, their mouths to a cooking fire with a tripod and pot, benches and flat rocks round it, a washing line with cloths, a basket, barrels, buckets, a pushcart, a notice board, crates, a couch. Warm and believable from above.
+
+**Fix.**
+- At night it is lit by the fire alone: the tents' insides are dark caves. A lantern in or by each tent (the city's oil lamp, props_c17/lamp001a, is already in the game's kit: the underpass uses it), a string of bulbs from the washing poles.
+- The tents are all the same A-frame shape: some can be a lean-to against the canal wall (one slope), one a tarp over a frame of pallets, one an old car body with a tarp (car002b), so it reads as people making do, not as a row of issue tents.
+
+**Better.**
+- Windbreaks and claims: pallets and doors stood on end round some tents (doors as wall panels, never upright where they look openable), a curtain over a tent's mouth.
+- Water: a barrel under a gutter pipe coming down the canal wall from the street (props_pipes gutter pipe), a basin and a washboard.
+- Children: a ball, a doll, chalk drawings on the wall (graffiti decals that look childish are few; decalgraffiti ones in bright colours).
+- The Combine's eye: a Breen poster pasted on the wall above them, a camera on the opposite rim watching, a notice on the board in the Combine's way.
+- A soundscape: the fire, murmuring voices, a cough, a radio playing very low.
+
+**Weight.** small to medium.
+
