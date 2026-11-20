@@ -110,9 +110,9 @@ end
 -- the picture: none for the picture as it is, "soft" for the dream's own plate colours at half
 -- strength (a dance floor keeps its lights). A server without the picture keeps the plain coloured
 -- floor that dream always had. (roses_carpet, barrels_ramp, course_lane: one part of that dream.)
-local DIM, DARK = Color(150, 150, 150), Color(110, 110, 120)
+local DIM = Color(150, 150, 150)
 LC.DreamSurfaces = {
-    freeze = { "snow" }, maze = { "worntile" }, crumble = { "oldmosaic" }, barrels_ramp = { "rust" },
+    freeze = { "ice" }, maze = { "worntile" }, crumble = { "oldmosaic" }, barrels_ramp = { "rust" },
     battleline = { "mud" }, rally = { "checker" }, course_lane = { "track" },
     adore = { "quatrefoil" }, roses = { "marble" }, roses_carpet = { "velvet" }, mirror = { "mosaic" },
     saviour = { "marble", Color(190, 190, 190) }, quiz = { "terrazzo" }, harvest = { "field" },
@@ -120,10 +120,13 @@ LC.DreamSurfaces = {
     flowers = { "meadow" }, duck = { "sand" }, ravenholm = { "cobbles", DIM },
     chairs = { "tiles" }, flying = { "marbled" }, melons = { "petals" }, horse = { "dirt", DIM },
     boxing = { "rubber" }, exam = { "terrazzo" }, dance = { "parquet", "soft" }, conga = { "parquet", "soft" },
-    sheep = { "grass" }, clocks = { "moon", "soft" }, tea = { "gingham" }, derby = { "dirt" },
-    doors = { "damask", Color(190, 170, 220) }, shh = { "satin", "soft" }, bubbles = { "pebbles", "soft" },
-    watchers = { "wallpaper", DARK },
+    sheep = { "grass" }, clocks = { "moon", "soft" }, tea = { "chintz" }, derby = { "dirt" },
+    doors = { "eyepaper" }, shh = { "satin", "soft" }, bubbles = { "pebbles", "soft" },
+    watchers = { "eyes" },
 }
+-- (the owner's own pictures, 20 November, in place of the free ones those four had: ice under Freeze,
+-- Citizen (it was snow), a stained chintz tablecloth under The Tea Party (gingham), a wallpaper with
+-- eyes in it under The Doors (a lilac damask), a floor of eyes under The Watchers (dark wallpaper))
 -- The surface and the colour for a dream's ground: its picture, or the plain floor in col as before.
 function LC.DreamSurface(id, col)
     local s = LC.DreamSurfaces[id]

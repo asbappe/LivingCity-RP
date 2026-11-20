@@ -20664,6 +20664,7 @@ ok(LC.PropagandaCommas(1234567) == "1,234,567" and LC.HarvestPercent(0) == 100 a
 local st0 = LC.Standing(a)
 local g, d = Start("harvest")
 ok(g and #g.crates == 8 and IsValid(g.her) and g.depotX, "Record Harvest is built: the field, the crates, the depot, her on her pedestal")
+ok(g.boards == 2, "the owner's RECORD HARVEST picture stands on a billboard at each side of the field (20 November)", tostring(g.boards))
 local s = g.pl[a]
 local function Take(i, rotten)
     for j, o in ipairs(g.crates) do if j ~= i then o.gone, o.pos = CurTime() + 1000, Vector(0, 0, -50000) end end -- (only this one anywhere near)
@@ -32744,7 +32745,9 @@ function DreamSurfaceTests()
     ok(m == W and c == green, "no picture on the server: the plain coloured floor that dream always had", tostring(m))
     local names, count = {}, 0
     for _, s in pairs(LC.DreamSurfaces) do if not names[s[1]] then names[s[1]] = true count = count + 1 end end
-    ok(count == 30, "thirty pictures are spoken for", count)
+    ok(count == 31, "thirty-one pictures are spoken for", count)
+    ok(LC.DreamSurfaces.freeze[1] == "ice" and LC.DreamSurfaces.tea[1] == "chintz" and LC.DreamSurfaces.doors[1] == "eyepaper" and LC.DreamSurfaces.doors[2] == nil
+        and LC.DreamSurfaces.watchers[1] == "eyes", "the owner's own four (20 November): ice, the tablecloth, the wallpaper with eyes, the floor of eyes, each as it is")
     for n in pairs(names) do _files["materials/livingcity/dreams/" .. n .. ".jpg"] = "x" end
     m, c = LC.DreamSurface("sheep", green)
     ok(m == "!lc_dream_grass" and c.r == 255 and c.g == 255 and c.b == 255, "with it there: the picture, as it is", tostring(m))

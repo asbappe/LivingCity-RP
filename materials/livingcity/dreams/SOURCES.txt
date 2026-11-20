@@ -1,16 +1,18 @@
 Where the dreams' floor pictures came from (added 15 November 2026). All may be used freely.
 
 cheese.jpg, swirl1.jpg, swirl2.jpg: the owner's own pictures (13 November).
+ice.jpg, chintz.jpg, eyepaper.jpg, eyes.jpg: the owner's own pictures (20 November), in place of
+snow, gingham, damask and (under The Watchers) wallpaper; their edges blended so they repeat.
 
 From Poly Haven (polyhaven.com), licence CC0 (public domain, no credit needed). Each is the
 1024 pixel colour picture of the texture named, saved again as a smaller JPEG:
-snow = snow_02, mud = brown_mud, dirt = raked_dirt, sand = sand_01, grass = grass_ground,
+mud = brown_mud, dirt = raked_dirt, sand = sand_01, grass = grass_ground,
 field = dry_mud_field_001, meadow = leafy_grass, petals = flower_scattered_dirt,
 track = running_track, rubber = rubber_tiles, parquet = herringbone_parquet,
 checker = checkered_pavement_tiles, tiles = floor_tiles_06, marble = marble_01,
 mosaic = marble_mosaic_tiles, oldmosaic = old_mosaic_floor, terrazzo = terrazzo_tiles,
 worntile = worn_tile_floor, velvet = velour_velvet, satin = crepe_satin,
-damask = floral_jacquard, quatrefoil = quatrefoil_jacquard_fabric, gingham = gingham_check,
+quatrefoil = quatrefoil_jacquard_fabric,
 carpet = dirty_carpet, wallpaper = decrepit_wallpaper, cobbles = cobblestone_floor_08,
 rust = rusty_metal_02, pebbles = multicolored_pebble_floor, moon = moon_01.
 
