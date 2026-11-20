@@ -696,3 +696,34 @@ Filled in as the review goes; the first ones are clear already:
 
 **Weight.** small.
 
+### 41. press (street 2; also a canal module): the pamphlet press
+
+**Seen.** A short tunnel to a wall with a real door; behind, the printing room: a wooden hand press (brush: no model exists) with its lever, platen and bed, three drying lines hung with sheets, a chest of drawers for type, a table with a lamp and papers, paper bundles on a pallet, ink drums, a mattress.
+
+**Fix.**
+- The module's one-line description still says "a printing room behind a false stack of crates" (the crates are gone): it shows in the catalogue and the build lists. "a printing room behind a door in a side tunnel".
+- The room is evenly lit by one dome lamp and the walls are clean plaster: a clandestine print shop is lit by a hanging work lamp low over the press (the bell lamp) and the table lamp, the corners dark, the walls spattered with ink (dark stain decals) and pinned with proofs.
+
+**Better.**
+- What they print, shown: the Resistance's posters on the walls and on the drying lines (if the owner makes a poster or two as decals, as their city's posters are; the lambda spray as a stand-in), stacks of finished pamphlets tied with string, a satchel by the door for the runner.
+- Half-Life 2's paper guillotine (props_citizen_tech/guillotine001a: check its size) as the paper cutter, a typewriter if any model exists (none known), a radio.
+- A lookout's touch: a mirror or periscope by the door, a bell wired from the tunnel's mouth (a cord along the ceiling), so the printers have warning.
+- A soundscape: the press's creak and thump when used, paper rustle.
+
+**Weight.** small.
+
+### 42. still (street 2; also a canal module): the still in a cellar
+
+**Seen.** A tunnel, steps down into a cellar: a brick firebox with a fire, a boiler on it, a pipe across to the worm (a drum on a crate, now capped with a funnel), three blue mash barrels, kitchen shelves, a table with a pot and bottles, a stool, pale steam. Pale cream walls, a dome lamp.
+
+**Fix.**
+- A cellar of cream plaster under one dome lamp: a distillery's cellar is brick or stone, low and vaulted, lit by the fire's glow and one bare bulb, the walls sweating (damp stains) and blackened over the firebox.
+- The firebox has nowhere for its smoke to go: a flue pipe from the boiler's top up through the ceiling (props_pipes gutter pipe or a brush pipe), or the cellar would fill.
+
+**Better.**
+- The trade shown: rows of filled bottles on the shelves (glassbottle props in lines), crates of empties, a funnel and a jug at the worm's tap, sacks of grain or potatoes (props_junk sacks if any; else boxes), a hand-written tally on the wall.
+- The danger: a fire extinguisher (props_junk? if none, a bucket of sand), scorch marks round the firebox, a warning in the Resistance's own hand.
+- A soundscape: the fire, a drip from the worm, bubbling.
+
+**Weight.** small.
+
