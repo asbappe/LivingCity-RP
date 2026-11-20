@@ -30,6 +30,10 @@ Living City is a Garry's Mod Half-Life 2 roleplay gamemode. The owner has put a 
 5. **`PLAYTEST_ARCHIVE.md` is the backlog: about 70 one-line things that still wait for a person, under ten feature headings (13 KB; the owner had it cut down on 15 November: "the list is way too massive").** Keep it that size: nothing ticked, nothing a test proves, no Notes lines, and when it passes about 70 items drop the oldest. The old list of 964 items is in git only (`git show 7fc8b61:PLAYTEST_ARCHIVE.md`): never bring it back. **`TODO.md`: never whole.** `grep -n '^## ' FILE | cut -c1-100` for the headings, then `sed -n 'A,Bp' FILE`, or `tail -n 60 FILE` for the newest entries.
 6. **Never read `_dev/tests_index.txt` whole (15 KB):** `grep -n TEXT _dev/tests_index.txt | cut -c1-160`.
 
+## Map work: look before the owner compiles
+
+A chat cannot compile a map, but it can look at one. **`python3 _dev/tools/map_view.py FILE.vmf --iso SW --out a.png`** draws any VMF (from above, cut away with `--cut Z`, or from a player's eye with `--eye X Y Z --yaw A`); open the PNG with the Read tool. **`python3 _dev/tools/map_assets.py FILE.vmf`** checks that every model and material in it exists and is the right kind. The assets check and the tools' own checks are free: run them on every piece of map before sending it. **Reading a picture costs a lot of usage** (the owner, 20 November: the viewer "has eaten about 10x more usage than a usual chat"): read one only for what no check can tell, one small picture at a time, never sheets for every module (`docs/dev/map-view.md`; the pieces themselves: `docs/dev/map-building.md`, and for canal modules `docs/dev/map-modules.md`). Needs `pip install numpy pillow`.
+
 ## Testing
 
 - Client smoke test, from the repo root: `python3 _dev/client_smoke.py` (must end `CLIENT SMOKE PASS`).

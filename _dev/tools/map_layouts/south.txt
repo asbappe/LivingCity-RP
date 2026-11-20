@@ -25,11 +25,11 @@ left
 
 # south, down the city's west side (left: the city)
 drain
-straight 768
+straight 768 pipes
 ash
 straight 512
 vort flip
-straight 1024
+straight 1024 pipes
 left
 
 # east, along the south of the city (left: the city and Ravenholm; right: outside)
@@ -43,8 +43,8 @@ straight 1920 bridge
 left
 
 # north, up the city's east side to the first canal
-straight 1024
+straight 1024 pipes
 sludge flip
 straight 1024 bridge
 relay
-straight 1216
+straight 960

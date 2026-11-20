@@ -1033,6 +1033,8 @@ def main():
     ap.add_argument("--name", default="", help="module: which one (leave out to list them)")
     ap.add_argument("--heading", choices=["E", "N", "W", "S"], default=None, help="chain, module: the way it heads from its start (default: the layout's; east)")
     ap.add_argument("--rim", type=int, default=None, help="chain, module: where the walls' concrete ends (default 784, the east canal's; the ring's west end is 968)")
+    ap.add_argument("--opt", nargs="*", default=None, help="module: the words a layout line would have after its name (\"--opt 1280\")")
+    ap.add_argument("--views", default=None, help="chain, module: also draw pictures of it into this folder (map_view.py: needs numpy and Pillow)")
     ap.add_argument("--flip", action="store_true", help="module: its side room on the other side of the canal")
     ap.add_argument("--test", action="store_true", help="write lc_PIECE_test.vmf instead: the piece made to compile and walk by itself (a spawn point, a sun, "
                     "and for the canal a wall where the road comes in). Never put the test file in the real map.")
@@ -1054,6 +1056,8 @@ def main():
     with open(out, "w") as f:
         f.write(vmf.text())
     print("  written: " + out)
+    if getattr(args, "after_write", None):
+        args.after_write(out)
     sys.exit(1 if problems else 0)
 
 

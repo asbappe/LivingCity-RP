@@ -1,0 +1,23 @@
+# Test map 2: tenement, quay, collapse, scrapyard, boathouse, arcade, crypt, lift, barge, busbridge
+# Made by map_showroom.py: run it again rather than editing this.
+#   python3 map_build.py chain --layout map_layouts/showroom_2.txt --test
+
+start -3072 -4096
+heading E
+rim 784
+
+tenement
+quay
+collapse
+scrapyard
+boathouse
+
+left
+straight 1664
+left
+
+arcade
+crypt
+lift
+barge
+busbridge

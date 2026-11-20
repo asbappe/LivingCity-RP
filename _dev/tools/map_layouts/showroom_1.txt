@@ -1,0 +1,28 @@
+# Test map 1: drain, overflow, shanty, vort, checkpoint, ash, sludge, cistern, underpass, tram
+# Made by map_showroom.py: run it again rather than editing this.
+#   python3 map_build.py chain --layout map_layouts/showroom_1.txt --test
+
+start -3072 -4096
+heading E
+rim 784
+
+drain
+overflow
+shanty
+vort
+checkpoint
+
+left
+straight 2944
+left
+
+ash
+sludge
+cistern
+underpass
+
+right
+straight 2944
+right
+
+tram
