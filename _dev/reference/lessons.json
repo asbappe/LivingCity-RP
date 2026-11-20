@@ -436,10 +436,10 @@
     "canal",
     "city18"
    ],
-   "title": "The owner's canal has water and walkways",
-   "rule": "The owner's own canal runs water down a middle channel with a raised walkway along each wall and round-arched tunnel mouths. Canal modules meant to join it should share that section (or change to it where they join).",
-   "why": "Reference picture 06 (the owner's canal tunnel); the module review found the modules' canal floor dry.",
-   "how": "To decide with the owner: a water channel in the shared canal dressing (map_ring / map_modules), or a section change at the joins.",
+   "title": "The owner's sewers carry water; the open canal is dry",
+   "rule": "Under the city the owner's sewers (floor about z 268, water nature/sewer_waterdarkfog2 to z 291) run water in a channel with raised walks either side and round-arched tunnel mouths: a piece that joins the sewers (the drain module's far end) should match that. The open canal, built by these tools and compiled by the owner (the ring and the first canal), is dry with mud: canal modules match it as they are.",
+   "why": "Measured in c18_lc.vmf, 20 November: the water in reference pictures 06 and 15 is the sewer's (4 water brushes in the whole map: the sewers' two, a pool, and the sea), not a canal's. An earlier note here said the canal had water: wrong, corrected.",
+   "how": "Sewer pieces: a water brush at z 267 to 291 in the channel, walks at about z 400 to 420 either side.",
    "check": "review"
   },
   {

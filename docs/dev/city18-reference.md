@@ -32,7 +32,7 @@ The pictures are drawn by `map_view.py` (flat colours; props as boxes of their t
 | 3 | `03_street.png` | the station's terminal square (eye -266 -10 720, looking south) | A big paved square in a large tile grid; a curved brick corner building banded at every floor with its windows in strips; stepped and set-back masses; steps up to entrances; lampposts all round the square's edge. | skyline-corners, street-profile, city18-lighting |
 | 4 | `04_station.png` | inside the station by the spawn points (eye 3387 -2602 816, looking north) | A big hall in two tones (brick to shoulder height, plaster above); a doorway into an arched passage lit at the far end. Two-tone walls work at every scale, and a vault reads at once as old and solid. | city18-interiors, true-curves |
 | 5 | `05_flat.png` | a flat in the apartments (eye -1485 146 1269, looking east) | The flats' way: plaster walls split by a dado line, wooden floor, a timber door casing standing proud, a window seen through the doorway beyond. Nothing in it is a cream box. | city18-interiors, real-doors, fake-windows |
-| 6 | `06_canal.png` | the owner's canal tunnel (eye 336 1529 346, looking north) | The owner's canal has water: a channel down the middle with a raised walkway each side, a round-arched tunnel mouth, pipes overhead, lamps on the walls, a slot window high in the wall. The modules' dry canal floor does not match it. | canal-water, city18-lighting, true-curves |
+| 6 | `06_canal.png` | the owner's sewer under the city (eye 336 1529 346, looking north) | The sewer: water in a channel (z 267 to 291) with a raised walk each side, a round-arched tunnel mouth, pipes overhead, lamps on the walls, a slot window high up. Pieces that join the sewers match this; the open canal above is dry. | canal-water, city18-lighting, true-curves |
 | 7 | `07_cells.png` | the Combine's cell block (eye 2776 580 986, looking north) | The Combine's own interior: dark blue Combine metal walls with ribs arching over a barrel vault, cells opening off one side, lamps on the ribs. Combine places are built in the Combine's kit and shapes, not in plaster. | combine-kit, city18-lighting, true-curves |
 | 8 | `08_combine.png` | a Combine fence line by the terminal square (eye 100 -2408 1000, looking east) | A narrow lane between a brick building and a high wall, a raised walkway running off along the wall, a Combine structure beyond; lampposts against the walls. | combine-kit, skyline-corners |
 | 9 | `09_payphone.png` | the terminal square by the payphones (eye 675 -1115 724, looking north-west) | Brick and plaster fronts banded at every floor, windows in rows, steps up to a raised forecourt, lampposts at the square's edge, the Combine's dark tower over the roofs: the street as City 18 builds it. | facades, street-profile, skyline-corners |
@@ -41,7 +41,7 @@ The pictures are drawn by `map_view.py` (flat colours; props as boxes of their t
 | 12 | `12_block_above.png` | the block round the terminal square from above (south-west) | How a block is massed: many separate volumes of different heights and materials (brick, pale concrete, the Combine's dark blue), courtyards and lit rooms inside, balconies and stair towers on the faces; never one box. | skyline-corners, facades |
 | 13 | `13_toilet.png` | a street of tall brick blocks (eye -850 462 863, looking south) | Tall brick facades with strong vertical piers and horizontal bands, windows grouped in bays, a projecting sign box, lampposts, a paved street in a tile grid with steps: rhythm and depth on every front. | facades, skyline-corners, street-profile |
 | 14 | `14_flats_plan.png` | the apartment block cut away at z 1180 (south-west) | The flats' plan: a corridor down the middle with small rooms off both sides, furniture against the walls, every floor the same plan stacked, windows on the outer walls only, wood floors. The model for any house to live in. | city18-interiors, room-to-move, fake-windows |
-| 15 | `15_canal_above.png` | the canal and its tunnels cut away at z 900 (south-west) | The owner's canal is water (blue) in a channel threaded through tunnels, pump rooms and service corridors at several levels, joined by stairs and ladders. | canal-water |
+| 15 | `15_canal_above.png` | the sewers and service tunnels cut away at z 900 (south-west) | The sewers (blue water) threaded through tunnels, pump rooms and service corridors at several levels, joined by stairs and ladders. | canal-water |
 | 16 | `16_ladder.png` | a service tunnel by the canal (eye -398 1456 468, looking east) | A long service corridor in brick and earth tones with a ribbed vaulted ceiling and a lamp every so often, ending in a lit room: even a corridor has a ceiling shape and a rhythm of lights. | city18-lighting, true-curves, city18-interiors |
 | 17 | `17_street.png` | a back street (eye 426 -2314 704, looking east) | Brick walls close on both sides, a kerb and gutter strip, a small building at the end with a canopy and a lamp over its door: back streets narrow and end on something to look at. | street-profile, city18-lighting |
 | 18 | `18_cells.png` | a lower Combine corridor (eye 2384 1015 426, looking south) | Plaster walls with a Combine metal panel and door frame set in, fluorescent fittings on the wall: the Combine's kit laid into older rooms. | combine-kit, city18-lighting |
@@ -402,12 +402,12 @@ Episode Two's models are allowed where the owner asks for them (the tram's passe
 - **Checked by:** map_assets.py (notes Episode Two)
 - **Tags:** props
 
-### The owner's canal has water and walkways (`canal-water`)
+### The owner's sewers carry water; the open canal is dry (`canal-water`)
 
-The owner's own canal runs water down a middle channel with a raised walkway along each wall and round-arched tunnel mouths. Canal modules meant to join it should share that section (or change to it where they join).
+Under the city the owner's sewers (floor about z 268, water nature/sewer_waterdarkfog2 to z 291) run water in a channel with raised walks either side and round-arched tunnel mouths: a piece that joins the sewers (the drain module's far end) should match that. The open canal, built by these tools and compiled by the owner (the ring and the first canal), is dry with mud: canal modules match it as they are.
 
-- **Why:** Reference picture 06 (the owner's canal tunnel); the module review found the modules' canal floor dry.
-- **How:** To decide with the owner: a water channel in the shared canal dressing (map_ring / map_modules), or a section change at the joins.
+- **Why:** Measured in c18_lc.vmf, 20 November: the water in reference pictures 06 and 15 is the sewer's (4 water brushes in the whole map: the sewers' two, a pool, and the sea), not a canal's. An earlier note here said the canal had water: wrong, corrected.
+- **How:** Sewer pieces: a water brush at z 267 to 291 in the channel, walks at about z 400 to 420 either side.
 - **Checked by:** review
 - **Tags:** canal, city18
 

@@ -70,8 +70,8 @@
   {
    "n": 6,
    "file": "06_canal.png",
-   "where": "the owner's canal tunnel (eye 336 1529 346, looking north)",
-   "teaches": "The owner's canal has water: a channel down the middle with a raised walkway each side, a round-arched tunnel mouth, pipes overhead, lamps on the walls, a slot window high in the wall. The modules' dry canal floor does not match it.",
+   "where": "the owner's sewer under the city (eye 336 1529 346, looking north)",
+   "teaches": "The sewer: water in a channel (z 267 to 291) with a raised walk each side, a round-arched tunnel mouth, pipes overhead, lamps on the walls, a slot window high up. Pieces that join the sewers match this; the open canal above is dry.",
    "lessons": [
     "canal-water",
     "city18-lighting",
@@ -165,8 +165,8 @@
   {
    "n": 15,
    "file": "15_canal_above.png",
-   "where": "the canal and its tunnels cut away at z 900 (south-west)",
-   "teaches": "The owner's canal is water (blue) in a channel threaded through tunnels, pump rooms and service corridors at several levels, joined by stairs and ladders.",
+   "where": "the sewers and service tunnels cut away at z 900 (south-west)",
+   "teaches": "The sewers (blue water) threaded through tunnels, pump rooms and service corridors at several levels, joined by stairs and ladders.",
    "lessons": [
     "canal-water"
    ]
