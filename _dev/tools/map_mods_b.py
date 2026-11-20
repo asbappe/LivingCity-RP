@@ -92,12 +92,12 @@ def swing_door(m, name, boxes, mat, hinge, speed=90, wait="-1", reverse=False, s
     m.b.names.append((name, "func_door_rotating", m.tag))
 
 
-def slide_door(m, name, parts, movedir, speed=40, lip=0, wait="-1", toggle=True, sounds=("MetalGrate.ScrapeSmooth", "MetalGrate.ImpactSoft")):
+def slide_door(m, name, parts, movedir, speed=40, lip=0, wait="-1", toggle=True, sounds=("MetalGrate.ScrapeSmooth", "MetalGrate.ImpactSoft"), starts_open=False):
     """A sliding door of more than one material, told to move by name (Open, Close, Toggle), never by a player's Use.
     parts: [(box, material), ...]. wait: seconds before it shuts by itself ("-1": it stays)."""
     out = [(m.fr.box(*b), mat) for b, mat in parts]
     m.b.vmf.brush_entity("func_door", {
-        "targetname": name, "movedir": movedir, "speed": str(speed), "lip": str(lip), "wait": wait, "spawnflags": "32" if toggle else "0", "spawnpos": "0", "dmg": "0",
+        "targetname": name, "movedir": movedir, "speed": str(speed), "lip": str(lip), "wait": wait, "spawnflags": "32" if toggle else "0", "spawnpos": "1" if starts_open else "0", "dmg": "0",
         "forceclosed": "0", "health": "0", "ignoredebris": "0", "loopmovesound": "0", "noise1": sounds[0], "noise2": sounds[1], "locked_sentence": "0",
         "unlocked_sentence": "0", "renderamt": "255", "rendercolor": "255 255 255", "renderfx": "0", "rendermode": "0", "disableshadows": "1"}, out, parts[0][1], m.dv)
     m.b.names.append((name, "func_door", m.tag))
@@ -123,6 +123,57 @@ def can_of_stalks(m, u, v, z, seed):
     rnd = random.Random(seed)
     m.shapes([vpipe(u, v, 3, z, z + 7, TIN)])
     m.det([(u + du, v + dv, z + 6, u + du + 1, v + dv + 1, z + 6 + rnd.randrange(9, 19)) for du, dv in ((-2, -1), (0, 1), (1, -2), (-1, 0))], BEAM)
+
+
+def goods(m, a, b, at, side, z, levels, seed, deep=14, kinds=(PLASTER, TIN, BEAM), jar="glass/glasswindow041a", jars=0.5):
+    """Shelves of small things against a wall that runs along u: boards on uprights from a to b at the wall's line `at`
+    (side +1 or -1: the way the room is), a board at each height in `levels` above z, and on each a row of boxes and
+    jars (the same every time for one seed)."""
+    def q(d):
+        return at + side * d
+    lo, hi = min(q(0), q(deep)), max(q(0), q(deep))
+    top = z + max(levels) + 16
+    m.det([(u, lo, z, u + 3, hi, top) for u in (a, (a + b) // 2 - 1, b - 3)], BEAM)
+    m.det([(a, lo, z + h, b, hi, z + h + 2) for h in levels], WOOD)
+    rnd = random.Random(seed)
+    c = (lo + hi) // 2
+    pots, boxes = [], {}
+    for h in levels:
+        u = a + 6
+        while u < b - 14:
+            if abs(u - (a + b) // 2) < 8:
+                u += 10
+                continue
+            w = rnd.choice((4, 4, 6, 6, 10, 14))
+            if w <= 6 and rnd.random() < jars * 2:
+                pots.append(vpipe(u + w // 2, c, w // 2, z + h + 2, z + h + 2 + rnd.randrange(6, 12), jar if rnd.random() < 0.7 else STEEL))
+            else:
+                boxes.setdefault(rnd.choice(kinds), []).append((u, c - 4, z + h + 2, u + w, c + 4, z + h + 2 + rnd.randrange(5, 13)))
+            u += w + rnd.randrange(3, 10)
+    if pots:
+        m.shapes(pots)
+    for mat, bx in sorted(boxes.items()):
+        m.det(bx, mat)
+
+
+def arch_rib(m, u1, u2, v1, v2, top, spring, mat):
+    """A vault's rib across a hall (from v1 to v2, u1..u2 thick): the roof is at `top`, the arch springs from the walls
+    `spring` below it. Six wedges, three to a side."""
+    mid, w = (v1 + v2) // 2, v2 - v1
+    d1, d2 = w // 12, w // 4
+    out = []
+    for s, v0 in ((1, v1), (-1, v2)):
+        p = [(v0, top - spring), (v0 + s * d1, top - (spring * 2) // 5), (v0 + s * d2, top - spring // 8), (mid, top)]
+        out += [prism([p[0], p[1], (p[1][0], top), (v0, top)], "x", u1, u2, mat),
+                prism([p[1], p[2], (p[2][0], top), (p[1][0], top)], "x", u1, u2, mat),
+                prism([p[2], p[3], (p[2][0], top)], "x", u1, u2, mat)]
+    m.shapes(out)
+
+
+def fire(m, u, v, z, size=24, light="255 150 70 110"):
+    """A small fire that burns from the start (the vortigaunt culvert's own), and a steady warm light over it."""
+    m.point("env_fire", u, v, z, {"health": "30", "firesize": str(size), "fireattack": "4", "firetype": "0", "spawnflags": "7", "ignitionpoint": "32", "damagescale": "0.2"})
+    m.light(u, v, z + 40, light)
 
 
 # ---------------------------------------------------------------------------
@@ -790,7 +841,7 @@ def m_stash(m, opt):
     m.target("lc_stash_room", 544, 448, Z + 8, 0)
     rifle_rack(m, 400, 584, 576, -1, Z)                                                      # along the back wall
     rifle_rack(m, 408, 560, 384, 1, Z, axis="v")                                             # and the wall beside the way in
-    m.static("models/props_c17/shelfunit01a.mdl", 648, 560, 270, z=Z)
+    m.static("models/props_c17/shelfunit01a.mdl", 648, 562, 0, z=Z)
     m.det([(546, 438, Z + 37, 562, 450, Z + 45), (548, 440, Z + 45, 562, 450, Z + 53), (566, 456, Z + 37, 580, 468, Z + 45)], TIN)   # boxes of rounds, on the table
     # the workbench under the map board, on the wall toward the canal
     m.det([(440, 322, Z + 32, 616, 354, Z + 36)], WOOD)
@@ -819,11 +870,96 @@ def m_stash(m, opt):
     m.view(680, 540, Z, 215, 10, "the workbench and the map")
 
 
+# ---------------------------------------------------------------------------
+# 7. The black market
+# ---------------------------------------------------------------------------
+
+def m_market(m, opt):
+    """The black market: a vaulted arcade inside the left wall, entered from the canal's floor by two archways.
+    Five stalls in alcoves along its back, each with a counter (crouch under its left end to get behind it), shelves
+    of goods, a lamp, a crate to sit on, and a tin roll shutter over the counter (lc_market_shutter_1 to _5: each
+    lifts and drops when the button inside its own stall is pressed, lc_market_button_1 to _5, or when the game
+    sends Open or Close). lc_market_stall_1 to _5 are where the stallholders stand, facing out. A brazier burns in
+    the middle of the arcade, benches by it; a lookout's stool stands inside each archway, where the canal can be
+    watched both ways; ribs carry the vault at every pier.
+    Unchecked: the sound ambient/fire/fire_small_loop1.wav; env_fire's look (the same settings as the vortigaunt
+    culvert's fire); a shutter starts shut, and nothing but its button or the game opens it."""
+    L, H, A = 1280, F + 176, F + 128
+    m.open(0, -256, L, 256)
+    m.low(128, 320, 1152, 512, H, mat=STONE_FLOOR)                  # the arcade
+    arches = (256, 896)
+    for au in arches:
+        m.low(au, 256, au + 128, 320, A, mat=STONE_FLOOR)
+        m.portal(au, 286, F, au + 128, 288, A)
+        cheeks(m, au, au + 128)
+        m.taken(au - 24, 110, F, au + 152, 256, F + 170)
+        # the arch: a chamfer in each top corner, a keystone
+        m.shapes([prism([(au, A - 44), (au + 36, A), (au, A)], "y", 256, 320, MAT["beam"]), prism([(au + 128, A - 44), (au + 92, A), (au + 128, A)], "y", 256, 320, MAT["beam"])])
+        m.det([(au + 54, 250, A - 6, au + 74, 256, A + 18)], MAT["beam"])
+        m.lane(au + 64, 288)
+        m.lane(au + 64, 400)
+    stalls = (192, 384, 576, 768, 960)
+    for su in stalls:
+        m.low(su, 512, su + 128, 640, A, mat=STONE_FLOOR)
+    m.side(64, 256, 1216, 704)
+    for ru in (136, 352, 544, 736, 928, 1128):
+        arch_rib(m, ru - 8, ru + 8, 320, 512, H, 72, MAT["beam"])
+
+    themes = ((PLASTER, TIN, BEAM), (CLOTH, CLOTH, PLASTER), (STEEL, BARS, TIN), (PLASTER, PLASTER, TIN), (TIN, BEAM, STEEL))
+    for k, su in enumerate(stalls):
+        n = k + 1
+        # the counter: its top runs the whole front, its foot leaves the left 40 open to crouch through
+        m.det([(su + 40, 514, F, su + 128, 528, F + 38)], BRICK)
+        m.det([(su, 510, F + 38, su + 128, 532, F + 41)], WOOD)
+        # the shutter, and the box it rolls up into
+        slide_door(m, "lc_market_shutter_%d" % n, [((su, 507, F + 42, su + 128, 509, A), TIN), ((su, 506, F + 42, su + 128, 510, F + 46), BARS)],
+                   "-90 0 0", speed=50, lip=6)
+        m.det([(su - 4, 500, A - 4, su + 132, 512, A + 22)], TIN)
+        m.det([(su - 4, 504, F, su, 512, A - 4), (su + 128, 504, F, su + 132, 512, A - 4)], BARS)
+        m.button("lc_market_button_%d" % n, su, 600, F + 44, 0, [("lc_market_shutter_%d" % n, "Toggle", "", 0)])
+        m.target("lc_market_stall_%d" % n, su + 76, 566, F + 8, 270)
+        goods(m, su + 8, su + 120, 640, -1, F, (26, 52, 78), 40 + k, kinds=themes[k], jars=0.5 if k in (0, 3) else 0.1)
+        m.lamp(su + 64, 572, A - 14, "255 205 140 75", hang=6)
+        m.static("models/props_junk/wood_crate001a.mdl", su + 100, 590, 10 * k)
+        # what is laid out on the counter
+        rnd = random.Random(70 + k)
+        m.det([(u, 514, F + 41, u + rnd.choice((8, 12, 16)), 526, F + 41 + rnd.randrange(3, 9)) for u in range(su + 46, su + 110, 22)], themes[k][0])
+        m.lane(su + 64, 470)
+    m.static("models/props_c17/shelfunit01a.mdl", 1126, 420, 90)        # the end of the arcade: spare stock
+
+    # the middle of the arcade: a brazier, benches, lamps along the roof
+    bu, bv = 640, 400
+    m.shapes([vpipe(bu, bv, 16, F + 12, F + 30, BARS, top=MAT["black"]), vpipe(bu, bv, 18, F + 28, F + 31, BARS)])
+    m.det([(bu + du, bv + dv, F, bu + du + 3, bv + dv + 3, F + 14) for du in (-12, 9) for dv in (-12, 9)], BARS)
+    fire(m, bu, bv, F + 30, size=20, light="255 160 80 130")
+    m.sound("ambient/fire/fire_small_loop1.wav", bu, bv, F + 40, radius=420, volume=3)
+    m.det([(bu - 70, bv - 12, F + 14, bu - 44, bv + 44, F + 17), (bu + 44, bv - 44, F + 14, bu + 70, bv + 12, F + 17)], WOOD)
+    m.det([(bu - 66, bv - 8, F, bu - 48, bv + 2, F + 14), (bu - 66, bv + 30, F, bu - 48, bv + 40, F + 14),
+           (bu + 48, bv - 40, F, bu + 66, bv - 30, F + 14), (bu + 48, bv - 2, F, bu + 66, bv + 8, F + 14)], MAT["beam"])
+    m.blocked(bu - 80, bv - 60, bu + 80, bv + 60)
+    for u in (448, 832):
+        m.lamp(u, 416, H - 30, "255 210 150 120", hang=22)
+    # the lookouts' stools, inside each archway on the side they watch from
+    for su in (232, 1048):
+        m.shapes([vpipe(su, 340, 9, F + 20, F + 23, WOOD), vpipe(su, 340, 3, F, F + 20, BARS)])
+    m.det([(130, 440, F, 150, 500, F + 1), (1100, 330, F, 1150, 400, F + 1)], CLOTH)                 # a rug at each end
+    m.static("models/props_junk/wood_crate002a.mdl", 160, 470, 80)
+    m.decal("decals/decalposter014a", 352, 512, F + 90)
+    m.decal("decals/decal_posters005a", 928, 512, F + 88)
+
+    m.view(320, 120, F, 90, 0, "an archway from the canal")
+    m.view(180, 416, F, 0, 2, "down the arcade")
+    m.view(640, 340, F, 80, 2, "the brazier and the stalls")
+    m.view(480, 440, F, 115, 4, "a stall")
+    m.view(470, 600, F, 300, 6, "behind a counter")
+
+
 MODULES = {
     "cells": (1024, m_cells, "the cells: a guard room, three barred cells, a crawl duct out (left)"),
     "memorial": (768, m_memorial, "the wall of the dead: plaques and candles in a recess under the open sky (left)"),
     "pit": (1280, m_pit, "the fighting pit: a caged sunken ring, tiers of seats, a bookmaker (left)"),
     "garden": (1280, m_garden, "the walled garden: soil beds, bean poles, a scarecrow, a lean-to, a rain butt (left)"),
     "stash": (768, m_stash, "the stash: an arms room behind a section of wall that a pipe valve opens (left)"),
+    "market": (1280, m_market, "the black market: a vaulted arcade of five shuttered stalls (left)"),
     "clinic": (1024, m_clinic, "the clinic: a ward, an operating theatre, a dispensary and a sluice room in a vault (left)"),
 }

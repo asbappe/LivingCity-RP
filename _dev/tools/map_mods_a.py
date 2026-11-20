@@ -590,6 +590,10 @@ def m_collapse(m, opt):
               para((180, -130, F), (70, -10, 0), (10, 60, 26), (0, 0, 12), con, top=ROAD),
               para((560, 96, F), (120, -20, 0), (14, 76, 0), (0, 0, 12), con, top=ROAD),
               para((520, -140, F), (16, 70, 0), (40, 6, 70), (10, 0, 0), con)])
+    # cracks and what is left of the road's lines on the slabs' faces (slivers lying on the lean)
+    m.shapes([para((274, 150, F + 20), (0, 5, 0), (70, 0, 140), (-2, 0, 0), MAT["black"]), para((300, 196, F + 72), (0, 3, 0), (40, 0, 80), (-2, 0, 0), MAT["black"]),
+              para((494, 120, F + 20), (0, 4, 0), (-60, 0, 120), (2, 0, 0), MAT["black"]), para((330, 60, F + 132), (0, 8, 0), (40, 0, 80), (-2, 0, 0), PLASTER),
+              para((452, 200, F + 104), (0, 8, 0), (-40, 0, 80), (2, 0, 0), PLASTER)])
     # rebar: out of the ridge, out of the wedge's edges, out of the bite's lip
     bars = [(382 + (k % 3) * 3, v, F + 236, 384 + (k % 3) * 3, v + 2, F + 262 + 9 * (k % 4)) for k, v in enumerate(range(44, 250, 23))]
     bars += [(286, v, F + 150 + k * 20, 290, v + 2, F + 152 + k * 20) for k, v in enumerate((-40, -10, 14))]
@@ -627,9 +631,173 @@ def m_collapse(m, opt):
     b.notes.append("%s: the squeeze is 96 wide along the right wall; the crawl's two holes are 48 wide and 44 high; the tent's ridge is at z %d" % (m.tag, F + 240))
 
 
+# ---------------------------------------------------------------------------
+# scrapyard
+# ---------------------------------------------------------------------------
+
+def container(m, u1, v1, z, along, mat, open_lo=False, open_hi=False, holes=(), doors="out"):
+    """A shipping container of brushes to stand on and walk through: 384 long, 128 wide, 128 high, walls 4 thick.
+    (u1, v1): its low corner; along: "u" or "v", the way it lies. open_lo, open_hi: no end wall there (doors: "out",
+    the leaves stand open; "flat", folded back along its sides; None). holes: (side 0 or 1, from, to) doorways 96
+    high cut in a long wall, measured along it from its low end."""
+    def bx(a1, c1, z1, a2, c2, z2):
+        return (u1 + a1, v1 + c1, z + z1, u1 + a2, v1 + c2, z + z2) if along == "u" else (u1 + c1, v1 + a1, z + z1, u1 + c2, v1 + a2, z + z2)
+    out, thin = [bx(0, 0, 0, 384, 128, 4), bx(0, 0, 124, 384, 128, 128)], []
+    for side, (c1, c2) in enumerate(((0, 4), (124, 128))):
+        hs = sorted((h[1], h[2]) for h in holes if h[0] == side)
+        at = 0
+        for (h1, h2) in hs:
+            out += [bx(at, c1, 4, h1, c2, 124), bx(h1, c1, 100, h2, c2, 124)]
+            at = h2
+        out.append(bx(at, c1, 4, 384, c2, 124))
+        for a in range(28, 384, 64):                      # the ribs of its sides
+            if not any(h1 - 10 < a < h2 + 2 for h1, h2 in hs):
+                thin.append(bx(a, c1 - 2 if side == 0 else c2, 8, a + 8, c1 if side == 0 else c2 + 2, 120))
+    for is_open, a0, way in ((open_lo, 0, -1), (open_hi, 380, 1)):
+        if not is_open:
+            out.append(bx(a0, 4, 4, a0 + 4, 124, 124))
+            e = a0 - 2 if way < 0 else a0 + 4
+            thin += [bx(e, c, 10, e + 2, c + 3, 118) for c in (30, 58, 68, 96)] + [bx(e, 62, 4, e + 2, 66, 124)]      # its doors' locking rods
+            continue
+        out.append(bx(a0, 4, 112, a0 + 4, 124, 124))
+        if doors == "out":
+            a1, a2 = (-58, 0) if way < 0 else (384, 442)
+            out += [bx(a1, 0, 6, a2, 3, 122), bx(a1, 125, 6, a2, 128, 122)]
+        elif doors == "flat":
+            a1, a2 = (2, 60) if way < 0 else (324, 382)
+            out += [bx(a1, -3, 6, a2, 0, 122), bx(a1, 128, 6, a2, 131, 122)]
+    out += [bx(a, c, 0, a + 7, c + 7, 128) for a in (-1, 378) for c in (-1, 122)]          # corner posts, a little proud
+    m.det(out, mat)
+    m.det(thin, MAT["bars"])
+    if z <= F:
+        r = bx(-8, -8, 0, 392, 136, 0)
+        m.blocked(r[0], r[1], r[3], r[4])
+
+
+def m_scrapyard(m, opt):
+    """The scrapyard. The canal widens 384 on both sides into a yard where the Combine dump what they clear from the
+    streets: shipping containers built of brushes (each 384 by 128 by 128, walls 4 thick, to walk through and stand
+    on), bales of crushed cars, wrecks, tyres, and a tower crane on a plinth in the far right corner whose jib reaches
+    over the yard, its hook hanging on a rope above the highest container.
+    On the ground: a container lies across the canal at each end of the yard with a doorway cut through its sides
+    (64 wide, 96 high) and both ends open; between them one lies along the middle, open toward the entry, with a
+    doorway cut in its right side near its closed end; side lanes left and right run through more containers and
+    round the bales. Nothing gives a straight view from one end to the other.
+    Over the top: a ramp of planks at each end (128 up over 256) to the roof of the container lying across; from
+    the entry one plank bridges on to a covered porch on the middle stack and one to the left stack, where a ramp
+    (128 up over 192) climbs to the roof of the second level; a ramp from the far container's roof climbs there too.
+    From that roof a plank crosses to a ledge on the middle stack, and a ladder climbs the last 128 to the top of the
+    third container (lc_scrap_perch, z 784: level with the canal walls' tops, the whole yard under it). The second
+    container of the middle stack is open toward the exit: a nest reached from the far container's roof.
+    Named for the game: lc_scrap_perch (an info_target on the highest container: a sniper's or a lookout's place)."""
+    b = m.b
+    steel, tin, wood, cmb = MM["steel"], MM["tin"], MM["wood"], "metal/metalcombine002"
+    L1Z, L2Z, L3Z = F + 128, F + 256, F + 384
+    m.open(0, -256, 1536, 256)
+    m.open(192, 256, 1344, 640)
+    m.open(192, -640, 1344, -256)
+    m.side(192, -640, 1344, 640)
+    # --- the containers ---
+    container(m, 384, -192, F, "v", steel, open_lo=True, open_hi=True, holes=((0, 160, 224), (1, 160, 224)))              # across the canal, entry side
+    container(m, 1088, -192, F, "v", DUCT, open_lo=True, open_hi=True, holes=((0, 160, 224), (1, 160, 224)))             # across the canal, exit side
+    container(m, 576, -64, F, "u", tin, open_lo=True, holes=((0, 288, 352),), doors="flat")                              # the middle stack: ground
+    container(m, 704, -64, L1Z, "u", steel, open_hi=True, doors=None)                                                     # ...second, open toward the exit
+    container(m, 576, -64, L2Z, "u", cmb)                                                                                 # ...third: the perch
+    container(m, 576, 128, F, "v", DUCT, open_lo=True, holes=((1, 272, 336),), doors="flat")                             # the left stack's way in
+    container(m, 768, 256, F, "u", tin, open_hi=True)
+    container(m, 832, 256, L1Z, "u", steel)
+    container(m, 320, -448, F, "u", cmb, open_hi=True)                                                                    # the right lane
+    container(m, 832, -448, F, "u", steel, open_lo=True, open_hi=True)
+    container(m, 320, -432, L1Z, "u", DUCT)
+    # --- planks: ramps (sheared, never steeper than 128 up over 192) and bridges ---
+    planks = []
+    for (v1, v2) in ((-168, -146), (-142, -120)):
+        planks.append(prism([(128, F), (384, L1Z), (384, L1Z - 6), (140, F)], "y", v1, v2, wood))
+    for (v1, v2) in ((120, 142), (146, 168)):
+        planks.append(prism([(1472, F), (1216, L1Z), (1216, L1Z - 6), (1460, F)], "y", v1, v2, wood))
+    for (v1, v2) in ((296, 318), (322, 344)):
+        planks.append(prism([(640, L1Z), (832, L2Z), (832, L2Z - 6), (649, L1Z)], "y", v1, v2, wood))
+    for (u1, u2) in ((1152, 1174), (1178, 1200)):
+        planks.append(prism([(64, L1Z), (256, L2Z), (256, L2Z - 6), (73, L1Z)], "x", u1, u2, wood))
+    m.shapes(planks)
+    m.det([(496, 136, L1Z, 592, 158, L1Z + 6), (492, 162, L1Z, 588, 184, L1Z + 6), (496, -24, L1Z, 592, -2, L1Z + 6), (500, 2, L1Z, 596, 24, L1Z + 6),
+           (1000, 48, L2Z, 1022, 272, L2Z + 6), (1026, 52, L2Z, 1048, 276, L2Z + 6)], wood)
+    m.det([(132, -170, F, 138, -118, F + 5), (1462, 118, F, 1468, 170, F + 5), (780, 290, L1Z, 786, 350, L1Z + 60), (1146, 190, L1Z, 1206, 196, L1Z + 76)], MM["beam_wood"])   # cleats and props
+    # --- the perch: a ladder up the third container's end from the ledge, plates to crouch behind ---
+    m.ladder(960, 0, L2Z, L3Z, 0)
+    m.det([(576, -64, L3Z, 582, 64, L3Z + 26), (582, -64, L3Z, 700, -58, L3Z + 26), (640, 58, L3Z, 760, 64, L3Z + 26), (800, -64, L3Z, 900, -58, L3Z + 22)], steel)
+    m.target("lc_scrap_perch", 768, 0, L3Z + 8, 180)
+    # --- bales of crushed cars: 64 by 96 by 48, stacked like bricks ---
+    bale = [(752, -320, F, 0), (752, -224, F, 1), (752, -288, F + 48, 2), (880, 400, F, 1), (880, 432, F + 48, 0), (1240, 300, F, 2), (1240, 396, F, 0), (1240, 340, F + 48, 1),
+            (230, -100, F, 2), (1000, -220, F, 0), (1000, -124, F, 1)]
+    for k in range(3):
+        boxes = [(u, v, z, u + 64, v + 96, z + 48) for (u, v, z, kind) in bale if kind == k]
+        m.det(boxes, (steel, DUCT, tin)[k])
+    m.det([(u - 1, v + c, z + 1, u + 65, v + c + 3, z + 49) for (u, v, z, kind) in bale for c in (22, 70)], MAT["bars"])       # their straps
+    for (u, v, z, kind) in bale:
+        if z == F:
+            m.blocked(u - 16, v - 16, u + 80, v + 112)
+    # --- the crane: a plinth, a lattice tower, a cab, a jib of three chords over the yard, the hook ---
+    tu, tv, top = 1288, -520, F + 600
+    m.det([(1232, -576, F, 1344, -464, F + 136)], MAT["beam"], top=MAT["quay_floor"])
+    legs = [(tu + du, tv + dv, F + 136, tu + du + 8, tv + dv + 8, top) for du in (-32, 24) for dv in (-32, 24)]
+    for z in range(F + 240, top, 116):
+        legs += [(tu - 32, tv - 30, z, tu + 32, tv - 26, z + 4), (tu - 32, tv + 26, z, tu + 32, tv + 30, z + 4), (tu - 30, tv - 32, z, tu - 26, tv + 32, z + 4), (tu + 26, tv - 32, z, tu + 30, tv + 32, z + 4)]
+    m.det(legs + [(tu - 36, tv - 36, top, tu + 36, tv + 36, top + 6), (tu - 4, tv - 4, top + 6, tu + 4, tv + 4, top + 60)], MAT["bars"])
+    m.det([(tu - 30, tv - 30, top - 64, tu + 30, tv + 30, top - 8)], steel)
+    m.det([(tu - 31, tv - 8, top - 44, tu - 30, tv + 31, top - 20), (tu - 8, tv + 30, top - 44, tu + 31, tv + 31, top - 20)], MAT["black"])
+    m.det([(tu + 30, tv - 40, top - 60, tu + 54, tv - 4, top - 20)], MAT["beam"])                              # the counterweight
+    jz = top - 56
+    jib = [para((tu - 20, tv + 28, jz), (-580, 580, 0), (6, 6, 0), (0, 0, 8), MAT["bars"]), para((tu - 34, tv + 14, jz), (-580, 580, 0), (6, 6, 0), (0, 0, 8), MAT["bars"]),
+           para((tu - 27, tv + 21, jz + 48), (-560, 560, -40), (6, 6, 0), (0, 0, 8), MAT["bars"])]
+    for k in range(0, 9):                                                                                   # ties between the chords
+        o = (tu - 34 - 70 * k, tv + 14 + 70 * k, jz)
+        jib.append(para(o, (20, -20, 0), (4, 4, 0), (0, 0, 6), MAT["bars"]))
+        if k:
+            jib.append(para((o[0] + 9, o[1] - 5, jz + 8), (4, 4, 0), (-2, 2, 0), (0, 0, 40 - (40 * k) // 14), MAT["bars"]))
+    m.shapes(jib)
+    hu, hv = 768, 0
+    m.det([(hu - 10, hv - 10, jz - 10, hu + 10, hv + 10, jz), (hu - 6, hv - 6, L3Z + 76, hu + 6, hv + 6, L3Z + 92), (hu - 2, hv - 2, L3Z + 60, hu + 2, hv + 2, L3Z + 76),
+           (hu - 2, hv - 2, L3Z + 56, hu + 12, hv + 2, L3Z + 60), (hu + 8, hv - 2, L3Z + 56, hu + 12, hv + 2, L3Z + 68)], MAT["bars"])
+    m.rope([(hu, hv, jz - 10), (hu, hv, L3Z + 92)], slack=2, width=3)
+    m.spot(tu - 40, tv + 40, top - 70, "255 225 180 500", 135, pitch=42, cone=50)
+    m.blocked(1216, -592, 1344, -448)
+    # --- wrecks, tyres, drums ---
+    put(m, P + "props_vehicles/car004a_physics.mdl", 940, 190, 185)
+    put(m, P + "props_vehicles/car002a_physics.mdl", 1130, -250, 15)
+    put(m, P + "props_vehicles/car005a_physics.mdl", 262, 120, 80)
+    put(m, P + "props_vehicles/car002a_physics.mdl", 440, 400, 110)
+    put(m, P + "props_vehicles/car004a_physics.mdl", 1280, -120, 250)
+    put(m, P + "props_junk/trashdumpster02.mdl", 420, -300, 90)
+    for (u, v, n) in ((540, 300, 4), (700, -250, 3), (1060, 440, 5), (1250, 190, 3), (560, -100, 2)):
+        for k in range(n):
+            m.loose(P + "props_vehicles/tire001c_car.mdl", u + 22 * (k % 3), v + 30 * (k // 3), 90 * (k % 2))
+    put(m, P + "props_c17/oildrum001.mdl", 730, 100, 0)
+    put(m, P + "props_c17/oildrum001.mdl", 1030, -90, 0)
+    put(m, P + "props_c17/oildrum001.mdl", 612, 20, 0, z=L1Z)
+    m.loose(P + "props_junk/wood_crate001a.mdl", 700, 20, 10, z=F + 4)
+    m.loose(P + "props_junk/wood_pallet001a.mdl", 900, 0, 0, z=L1Z + 4)
+    m.loose(P + "props_junk/wood_crate001a.mdl", 760, -30, 30, z=L1Z + 4)
+    m.blocked(840, 140, 1040, 240)
+    m.blocked(1040, -300, 1220, -200)
+    m.blocked(200, 30, 320, 210)
+    for (u, v, z) in ((330, 0, F), (448, 0, F + 4), (544, 0, F), (640, 0, F + 4), (820, 0, F + 4), (896, -36, F + 4), (896, -100, F), (1024, -20, F), (1152, 0, F + 4),
+                      (1260, 0, F), (448, 230, F), (544, 96, F), (640, 300, F + 4), (736, 432, F), (448, -256, F), (760, -384, F), (1024, -384, F + 4), (1260, -384, F)):
+        m.lane(u, v, z)
+    m.view(260, -144, F, 5, -6, "the ramp, the way through")
+    m.view(448, 0, L1Z, 0, -4, "from the first roof: the stack, the porch")
+    m.view(610, 0, F + 4, 0, 2, "inside the middle container")
+    m.view(900, 320, L2Z, 250, 8, "the left stack's roof: the plank to the ledge, the ladder")
+    m.view(700, 0, L3Z, 180, 16, "from the perch, the way people come")
+    m.view(1460, -60, F, 170, -10, "from the far end")
+    b.notes.append("%s: the yard is %d by %d; container roofs at z %d, %d and %d (the perch); the crane's tower tops out at z %d, its hook hangs at z %d" % (
+        m.tag, 1152, 1280, L1Z, L2Z, L3Z, top + 60, L3Z + 56))
+
+
 MODULES = {
     "tram": (1536, m_tram, "a fallen tram bridge: a station in each wall, a derailed car to climb, a beam walk"),
     "tenement": (1280, m_tenement, "a tenement block fallen across the canal: the way on is through its rooms"),
     "quay": (1024, m_quay, "stairs up to a quay with a street doorway (a cap to delete), a footbridge to a barred door"),
     "collapse": (768, m_collapse, "a street's wall and roadway fallen in: a squeeze by the right wall, a crawl under the slabs"),
+    "scrapyard": (1536, m_scrapyard, "the canal widens into a yard of stacked containers under a crane: ways through, ways over, a perch"),
 }

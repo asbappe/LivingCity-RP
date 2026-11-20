@@ -104,6 +104,7 @@ class Build:
         self.props = []       # (class, model, place, yaw) of every prop, for the checks
         self.views = []       # (label, eye, yaw, pitch): pictures to take with map_view.py
         self.rope_n = 0
+        self.pipes = []       # (axis, where along it, wall, wall): pipes to lay across the canal with the dressing
 
     def node(self, x, y, z):
         self.vmf.point("info_node", (x, y, z + 40), {"nodeid": self.node_id}, self.vis + ": path nodes")
@@ -406,11 +407,19 @@ class Mod:
 # ---------------------------------------------------------------------------
 
 def m_straight(m, opt):
-    """Plain canal. "straight 1536": that long. "straight 1024 bridge": with a street carried over its middle."""
+    """Plain canal. "straight 1536": that long. Add "bridge" for a street carried over its middle, "pipes" for a pair of
+    pipes across it, "bare" for nothing left lying in it (otherwise a few odds and ends, the same every time)."""
     L = m.fr.length
     m.open(0, -256, L, 256)
     if "bridge" in opt:
         m.bridge(L // 2 - 128, L // 2 + 128, -256, 256)
+    if "pipes" in opt:
+        at = L // 4 if "bridge" in opt else L // 2
+        (x1, y1), (x2, y2) = m.fr.pt(at, -256), m.fr.pt(at, 256)
+        m.b.pipes.append(("x", x1, min(y1, y2), max(y1, y2)) if m.fr.ax("u") == "x" else ("y", y1, min(x1, x2), max(x1, x2)))
+    if "bare" not in opt and L >= 512:
+        x, y = m.fr.pt(0, 0)
+        m.scatter(64, -110, L - 64, 110, L // 420, 1000 + (x * 7 + y * 13) % 997)
 
 
 def m_corner(m, opt):
@@ -1251,6 +1260,8 @@ def finish(b, seed, spawn, args):
     if args.test:
         test_extras(vmf, spawn[0], spawn[1], b.vis + ": for testing alone (never in the real map)")
     ch = Channel(vmf, plan, F, TRIM, b.vis)
+    for axis, at, lo, hi in b.pipes:
+        ch.pipes(axis, at, lo, hi, b.taken)
     ch.dress(b.no_bank, b.taken)
     bump = (lambda x, y: sum(f(x, y) for f in b.bumps)) if b.bumps else None
     ch.mud(47, skip=b.no_mud, bump=bump)

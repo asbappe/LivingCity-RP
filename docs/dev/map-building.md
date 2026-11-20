@@ -77,11 +77,13 @@ python3 map_build.py forest_cave --preview cave.png          # lc_forest_cave.vm
 
 **Counts:** with all five the map has about 3,200 path nodes (the engine's limit is 4,096; ids: 4000 canal, 4400 and 4600 the forests, 5000 the ring, 5300 Ravenholm) and about 560 displacements, and reaches from x -9408 to 12288 and y -8040 to 13184 (the engine's limit is 16,384 each way).
 
-## Canal modules (`map_modules.py`; 19 November, none compiled or seen yet)
+## Canal modules (`map_modules.py`, `map_mods_a.py` to `_d.py`; none compiled or seen in the game yet)
 
-The owner, 19 November, picking from a list of ideas: "1, 2, 4, 6, 7, 10 but just trash and burnt corpses, and 11 and 12; 12 would likely need to [be] on the south side ... 13 [is] a really good idea too. Can you start building them? They should be modular so we can move them and their order or position easily."
+The owner, 19 November, picking from a list of ideas: "1, 2, 4, 6, 7, 10 but just trash and burnt corpses, and 11 and 12 ... 13 [is] a really good idea too. Can you start building them? They should be modular so we can move them and their order or position easily." Then: "Build them on a test map and we can fit them into the map after", "yes to the combine checkpoint as well", and on 20 November: "Please make them more polished and detailed, more finalized, and also add tons more modules ... go crazy and experimental."
 
 **A module is a stretch of canal with one thing in it.** Every module starts and ends on the canals' own cross-section (512 wide, floor z 400), so any module follows any other, in any order, heading any of the four ways. It is written in its own coordinates (`u` along the canal, `v` across, `+v` the left bank) and a `Frame` turns those into the map's.
+
+**The list of modules, what each names for the game and what each says of itself: `docs/dev/canal-modules.md`** (30 KB: grep it, `grep -n '^| .cistern' docs/dev/canal-modules.md`). It is written by `python3 map_catalogue.py --list ../../docs/dev/canal-modules.md` from the modules themselves: rerun that after adding or changing one, never edit it by hand. How to write a module: `docs/dev/map-modules.md`.
 
 ```bash
 python3 map_build.py module                                  # lists the modules
@@ -89,29 +91,21 @@ python3 map_build.py module --name cistern --test            # lc_mod_cistern_te
 python3 map_build.py module --name vort --heading N --flip --origin 640 -1280
 python3 map_build.py chain --layout map_layouts/south.txt --preview south.png    # lc_south.vmf: a layout's modules joined in its order
 python3 map_build.py chain --layout map_layouts/south.txt --against c18_lc.vmf   # ...and checked against the owner's map
+python3 map_build.py module --name cistern --views pics      # ...and pictures of it (map_view.py)
+python3 map_showroom.py                                      # rewrites map_layouts/showroom_N.txt: every module, ten to a test map
+python3 map_modules_check.py                                 # builds every module 9 ways and every layout: must end MODULES CHECK PASS
+python3 map_assets.py lc_showroom_1_test.vmf                 # every model and material real, and the right kind
+python3 map_catalogue.py FOLDER                              # pictures of every module and catalogue.json (what the owner's catalogue page is made from)
 ```
 
-**To move things, edit the layout** (`_dev/tools/map_layouts/south.txt`, a text file): `start X Y` and `heading` place the whole chain; then one module on each line in walking order. Move a line to move a module; `left` and `right` are turns; `straight 1024` is plain canal of any length (add `bridge` for a street over it); `flip` puts a module's side room on the other bank; `end X Y N` makes the tool fail if the chain does not come out there. A chain is one VMF: gates (capped, with an areaportal) only at its two ends, open canal between modules. One module by itself has a gate each end, so it can also be dropped in by hand as an instance.
+**To move things, edit a layout** (`_dev/tools/map_layouts/*.txt`, text files): `start X Y` and `heading` place the whole chain; then one module on each line in walking order. Move a line to move a module; `left` and `right` are turns; `straight 1024` is plain canal of any length (add `bridge` for a street over it, `pipes` for pipes across, `bare` for nothing lying in it); `tunnel 1536` is a covered stretch for passing under the city; `jog left 768` steps the canal sideways to break a long view; `tee` leaves a standard gate in the left wall for another piece or layout; `flip` puts a module's side room on the other bank; `end X Y N` makes the tool fail if the chain does not come out there. A chain is one VMF: gates (capped, with an areaportal) only at its two ends, open canal between modules. One module by itself has a gate each end, so it can also be dropped in by hand as an instance.
 
-| Module | Long | What is there | Named for the game |
-|---|---|---|---|
-| `drain` (1) | 1024 | Left wall: a drain mouth, a junction chamber, 13 steps down to z 288 (the sewers' height), a grate, a cap to delete where it meets a sewer | `lc_drain_grate` (a `func_door`: Open lifts it) |
-| `overflow` (2) | 1024 | Left wall: a spillway behind a steel sluice plate, a channel on to a cap ("delete to join Ravenholm"); `overflow 704` sets its reach | `lc_overflow_sluice` (a `func_door`) |
-| `shanty` (4) | 1536 | The canal widens left into a basin; a street bridge over; a card room, a trader's stall with a counter, a bunk room, a fire drum and a stove under the street | none (the card table, the fund's screen and the soup are placed with the editor: the tool prints where there is room) |
-| `vort` (6) | 1024 | Left wall: a low drain that turns twice to a dead-end chamber with a fire and a pot | none |
-| `relay` (7) | 768 | Right wall: a pier 128 high (the banks round it are its ramps), a tin hut, a lattice mast 356 over the walls' tops | `lc_relay_radio` (the set) |
-| `checkpoint` (8) | 1024 | A Combine wall across the canal to z 720 with one gateway (192 x 160) shut by a force field; behind it a guard's platform 128 high on the left bank and a searchlight down the canal. People come at it from its entry: `flip` turns it round | `lc_checkpoint_field` (a `func_brush`: Disable opens it), `lc_checkpoint_light` |
-| `ash` (10) | 768 | Left wall: a barred chute mouth, and under it a heap (the mud's skin raised 96) of rubbish and six burnt bodies. No way in or out | none |
-| `sludge` (11) | 2048 | The canal goes 3,800 the long way round a block; a tunnel 768 long cuts through, 12 deep in toxic slime | `lc_sludge_gas` (a trigger filling the tunnel) |
-| `cistern` (12) | 1536 | Right wall: a passage to a round tank 1536 across, 12 deep in water, four pillars, a dry ledge all round, four plank walks to an island | `lc_hive_boss_spot` (the island) |
-| `underpass` (13) | 1536 | 1024 of canal under a wide road, unlit: six barnacles, a wreck, five bodies | none |
-
-- **The test map** (the owner: "Build them on a test map and we can fit them into the map after"): `map_layouts/showroom.txt`, every module once in two rows at the map's middle; `chain --layout map_layouts/showroom.txt --test` writes `lc_showroom_test.vmf` (a spawn, a sun). In a `--test` file only, a red button stands by the force field, the sluice and the drain's grate (`Mod.test_button`): the game is to work those later.
-- **The cistern is on the right**, so on a run that heads east it lies to the south, outside the city (the owner: "on the south side").
-- **Checks, on top of every piece's:** no module may paint a square another has (a detour running into another leg); a name used twice in one chain; the chain's end against the layout's `end`. All ten modules pass heading each of the four ways, flipped and not (80 builds), and the other pieces' files come out byte for byte as before.
-- **`map_layouts/south.txt` is NOT fitted to the map.** It runs from the south end of the ring's west run (-3136 1664) round to the first canal's south wall (6144 2112), but was drawn without the owner's VMF (this chat could not download it: Drive was allowed in the environment, then the download itself was refused). Until `--against c18_lc.vmf` passes it is a showroom: the showroom layout is the one to walk. The first canal and the ring have no gate where it would join yet: add those when the route is fitted.
-- **Not checked against the file lists** (no network to them here): `models/props_junk/garbage256_composite001a.mdl`, `garbage128_composite001a.mdl`, `garbage_bag001a.mdl`, `metalbucket01a.mdl`, `models/props_c17/metalpot001a.mdl`, `models/props_lab/citizenradio.mdl`, `models/humans/charple01..04.mdl`, `models/humans/corpse1.mdl`, `models/props_combine/combine_fence01a.mdl` and `01b`, `combine_light001a.mdl`, the materials `nature/toxicslime002a`, `metal/metalcombine002` (in Ravenholm's list) and `effects/com_shield003a`. From memory also: `env_fire`, `npc_barnacle`, `prop_ragdoll`, `point_spotlight`, `light_spot`.
-- **Nothing in the gamemode uses the seven names yet.** Each is there for the game to give a use, as the nest's extract was.
+- **The test maps** (the owner: "Build them on a test map and we can fit them into the map after"): `map_layouts/showroom_1.txt` and on, written by `map_showroom.py` (it measures how far each module's side rooms reach and sets the rows apart for the widest). `chain --layout map_layouts/showroom_1.txt --test` writes `lc_showroom_1_test.vmf` (a spawn, a sun). In a `--test` file only, a red button stands by each thing the game is to work later (`Mod.test_button`): force fields, sluices, grates.
+- **Props stand on the floor by their real sizes.** `map_assets.py` reads each model's build file (does it exist, was it built to be static, how big is it, where is its origin); `m.static`, `m.loose` and `m.dynamic` lift a model so it stands ON the height given. A build prints `LOOK:` for a prop in a wall, over a roof or under a floor. **The older pieces (canal, ring, forests, Ravenholm) do not do this yet:** their props were placed at their origins, and models with the origin at their middle (tables, couches, lockers, the lorry) will be half in the floor there. Offer the owner the same fix for them.
+- **Checks, on top of every piece's:** no module may paint a square another has; a name used twice in one chain; the chain's end against the layout's `end`. `map_modules_check.py` builds every module heading each of the four ways, flipped and not, and as a test file.
+- **`map_layouts/south.txt` is NOT fitted to the map.** It runs from the south end of the ring's west run (-3136 1664) round to the first canal's south wall (6144 2112), but was drawn without the owner's VMF (a chat's download of it from Drive was refused on 19 November). Until `--against c18_lc.vmf` passes it is only a sketch. The first canal and the ring have no gate where it would join yet: add those when the route is fitted.
+- **What is still from memory:** sound names (there is no list to check them against), and the keys of entities no piece the owner compiled has used: `env_fire`, `npc_barnacle`, `point_spotlight`, `light_spot`, `env_smokestack`, `move_rope`, `func_dustcloud`, `func_breakable`, `func_tracktrain`. Each module's docstring ends with its own "Unchecked:" line.
+- **Nothing in the gamemode uses the names yet.** Each is there for the game to give a use, as the nest's extract was.
 
 ## What the owner's compiles and walks have found (fix the cause, and add a check for its kind)
 
