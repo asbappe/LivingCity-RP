@@ -36,10 +36,10 @@ What a module is and how to lay them out: `docs/dev/map-building.md` ("Canal mod
 | `garden` | 1280 | the walled garden: soil beds, bean poles, a scarecrow, a lean-to, a rain butt (left) | `lc_garden_bed_1`, `lc_garden_bed_2`, `lc_garden_bed_3`, `lc_garden_bed_4`, `lc_garden_bed_5`, `lc_garden_bed_6`, `lc_garden_gate`, `lc_garden_plot_1`, `lc_garden_plot_2`, `lc_garden_plot_3`, `lc_garden_plot_4`, `lc_garden_plot_5`, `lc_garden_plot_6`, `lc_garden_plot_7`, `lc_garden_plot_8` | `map_mods_b.py` |
 | `stash` | 768 | the stash: an arms room behind a section of wall that a pipe valve opens (left) | `lc_stash_inside`, `lc_stash_room`, `lc_stash_valve`, `lc_stash_wall` | `map_mods_b.py` |
 | `market` | 1280 | the black market: a vaulted arcade of five shuttered stalls (left) | `lc_market_button_1`, `lc_market_button_2`, `lc_market_button_3`, `lc_market_button_4`, `lc_market_button_5`, `lc_market_shutter_1`, `lc_market_shutter_2`, `lc_market_shutter_3`, `lc_market_shutter_4`, `lc_market_shutter_5`, `lc_market_stall_1`, `lc_market_stall_2`, `lc_market_stall_3`, `lc_market_stall_4`, `lc_market_stall_5` | `map_mods_b.py` |
-| `press` | 768 | the pamphlet press: a printing room behind a false stack of crates (left) | `lc_press_machine`, `lc_press_stack` | `map_mods_b.py` |
+| `press` | 768 | the pamphlet press: a printing room behind a false stack of crates (left) | `lc_press_door`, `lc_press_machine`, `lc_press_stack` | `map_mods_b.py` |
 | `still` | 768 | the still: a pot still, mash casks and bottles in a cellar (left) | `lc_still_pot`, `lc_still_shelf` | `map_mods_b.py` |
 | `plaza` | 1536 | the plaza: five rows of seats stepping down from the street to a rostrum at the back wall (left) | `lc_plaza_crowd`, `lc_plaza_rostrum` | `map_mods_b.py` |
-| `playground` | 1024 | the playground: a rusted relic on a terrace over the canal (left) | `lc_playground_bench` | `map_mods_b.py` |
+| `playground` | 1024 | the playground: a rusted relic on a terrace over the canal (left) | `lc_playground_bench`, `lc_playground_roundabout`, `lc_playground_roundabout_hinge`, `lc_playground_swing_1`, `lc_playground_swing_1_hinge`, `lc_playground_swing_2`, `lc_playground_swing_2_hinge` | `map_mods_b.py` |
 | `clinic` | 1024 | the clinic: a ward, an operating theatre, a dispensary and a sluice room in a vault (left) | `lc_clinic_bed_1`, `lc_clinic_bed_2`, `lc_clinic_bed_3`, `lc_clinic_bed_4`, `lc_clinic_table` | `map_mods_b.py` |
 | `lock` | 1536 | a lock house: two steel gates and the control house that works them | `lc_lock_a_move`, `lc_lock_a_open`, `lc_lock_a_shake`, `lc_lock_a_shut`, `lc_lock_a_slam`, `lc_lock_a_warn_1`, `lc_lock_a_warn_2`, `lc_lock_b_move`, `lc_lock_b_open`, `lc_lock_b_shake`, `lc_lock_b_shut`, `lc_lock_b_slam`, `lc_lock_b_warn_1`, `lc_lock_b_warn_2`, `lc_lock_button_a`, `lc_lock_button_b`, `lc_lock_gate_a`, `lc_lock_gate_b`, `lc_lock_house` | `map_mods_c.py` |
 | `pumphouse` | 1280 | a pumping station: a machine hall, a flywheel, a turbine pit, a pipe bridge | `lc_pump_button`, `lc_pump_down`, `lc_pump_glow`, `lc_pump_hall`, `lc_pump_sound`, `lc_pump_start`, `lc_pump_stop`, `lc_pump_up`, `lc_pump_wheel` | `map_mods_c.py` |
@@ -447,14 +447,15 @@ face; the candlesticks are Lost Coast's (lostcoast/props_monastery/candlestick).
 
 The fighting pit: the canal opens on its left, through a mouth 512 wide, into an eight-sided arena under the
 open sky. In its middle a ring sunk 64 into the floor, 384 across, floored with dirt, inside a cage of Nova
-Prospekt's fence panels on a kerb; the one gate (lc_pit_gate, on the side toward the canal) slides aside when the
+Prospekt's fence panels on a kerb; the one gate (lc_pit_gate, on the side toward the canal) swings open when the
 button on the post beside it is pressed (lc_pit_gate_button) or the game tells it to (Open, Close), and steps go
 down from it into the ring. lc_pit_corner_a and lc_pit_corner_b are the two corners the fighters start in (a stool
 in each). Three tiers of concrete seats, 32 high each, stand on the three far sides, with stairs of 16 up the
 middle of each. By the mouth on the right the bookmaker's table, chair, till and lamp under a chalk board of odds
 (lc_pit_bookie: where he sits); on the left the corner men's bench, water drum and bucket. Two lamps hang over
 the ring from a gantry (the owner asked for these, not street lamps).
-The gate is a fence panel (interior_fence002e) riding on an unseen brush door of the same name and inputs; an
+The gate is Nova Prospekt's gate (interior_fence001g) in its own frame (interior_fence002e), riding on an unseen
+brush door of the same name and inputs that swings it out (Use opens it too); an
 unseen wall stands in the cage's line all round, so the cage holds whatever the panels' own shapes are.
 Left as brushes: the tiers, kerb and posts for the buttons (concrete), the chalk board (no model of one), the
 gantry and its lamps.
@@ -510,16 +511,14 @@ stall is still got into by crouching under the shutter's foot: the shutter says 
 
 ### `press`
 
-The pamphlet press: a short side tunnel off the left wall that seems to end in a stack of crates to the roof.
-The crates are real ones, stacked: between the two at the floor is a gap 48 wide and 40 high under a pallet,
-behind a hanging sack (no thing: crawl through it). Behind is the printing room: a hand press (a bed on legs
+The pamphlet press: a short side tunnel off the left wall, shut by a wall with one of the city's doors in it
+(lc_press_door, a prop_door_rotating: anyone opens it; the game may Lock it). Behind is the printing room: a hand press (a bed on legs
 with the forme on it, a platen hanging from a screw between two cheeks, a long lever), lc_press_machine on its
 bed; a chest of drawers for the type; three drying lines across the room hung with sheets; boxes and bundles of
 paper on a pallet (lc_press_stack); a table with a lamp and papers; drums and cans of ink; a mattress.
 Left as brushes: the hand press (Half-Life 2 has no printing press), the sheets on the lines (they hang; the
-paper models lie flat), the sack over the gap.
-Unchecked: func_illusionary (the sack) is from memory; how taut the drying lines hang; that the stacked crates
-leave the gap clear (their boxes say 48 by 40; they are solid props, not brushes); which way the drawers face.
+paper models lie flat).
+Unchecked: how taut the drying lines hang; which way the drawers face.
 
 ### `still`
 
@@ -550,15 +549,15 @@ the model's y, turned here toward the rows); no sound here.
 
 ### `playground`
 
-The playground: a relic of before. A terrace 128 above the canal's floor on the left, open to the sky (the
-bank along it is the way up). On it, City 17's own playground models: a swing set with one seat still hanging on
-its chains and one fallen, hanging by a single chain; a slide; a roundabout; and, built here, a sandpit edged with
-timber; a bench with its back to the wall, facing it all (lc_playground_bench: on the bench). Nothing else, and
+The playground: a relic of before. A yard on the left, open to the sky: in a canal a terrace 128 above its floor
+(the bank is the way up), on a street level with the pavement. In it, City 17's own playground models: a swing set
+whose two seats swing on their chains (lc_playground_swing_1 and _2, each on a phys_hinge under the bar); a slide;
+a roundabout that turns (lc_playground_roundabout on a phys_hinge); and, built here, a sandpit edged with timber; a bench with its back to the wall, facing it all (lc_playground_bench: on the bench). Nothing else, and
 no lamp.
 Left as brushes: the sandpit (timber and sand in the ground).
 Unchecked: the sound ambient/levels/canals/windmill_wind_loop1.wav (one faint wind); which end of the slide is
-its ladder and which way the bench faces; whether the swing set's model has chains of its own (the seats are
-separate models, hung here on ropes); on a street there is no bank, so the terrace needs steps of the street's.
+its ladder and which way the bench faces; how high the swing set's bar is (its box says 144: the seats hang
+from 138); how freely the hinges turn.
 
 ### `clinic`
 
@@ -873,14 +872,16 @@ Unchecked: which way the cork board, the closet and the bed face.
 
 ### `flats`
 
-A house people can live in, as the flats of the owner's city are furnished (their stoves, sinks, fridges and beds
-stand backs to the wall: so do these). A front door that opens (the city's own door, with its handle) into a hall;
-off it two flats, each behind its own door: a kitchen (stove, sink, fridge, a table and chairs, a radiator, a
-window on the street) and through an archway a bedroom (a bed, a dresser, a bedside drawer). The left flat has
-the city's iron bed, the right one a wooden bed and mattress, a couch and a fireplace.
+A house people can live in, furnished as the owner's city's flats are (stoves, sinks, fridges and beds stand
+backs to the wall). A front door that opens (the city's own door, with its handle) into a hall; off it two flats,
+each behind its own door: a kitchen (stove, sink, fridge, a table and two chairs, a radiator) and through an
+archway a living room (a fireplace, a couch facing it, a dresser). At the hall's end a stair climbs 160 to a landing
+and a passage with a bedroom off each side: the left flat's has the city's iron bed, the right one's a wooden bed
+and mattress; both a dresser and a bedside drawer. (The owner, 20 November: "too cramped, half of that can go in
+the bedroom(s), can we have a few upstairs rooms too?")
 Named for the game: lc_flat_door (the front door), lc_flat_1 and lc_flat_2 (info_targets in the two kitchens). A
 second house in one chain takes a word after its name in the layout ("flats b"): lc_flat_b_door, lc_flat_b_1 ...
-Unchecked: which way the doors' leaves swing clear; the mattress's height on its frame.
+Unchecked: the mattress's height on its frame; which way the dresser and drawers face.
 
 ### `straight`
 

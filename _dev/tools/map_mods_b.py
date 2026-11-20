@@ -28,6 +28,7 @@ STONE = "stone/stonewall040f"
 STONE_FLOOR = "stone/stonefloor006d_c17"
 CRACKED = "concrete/concretefloor016a"
 DIRT = "nature/dirtfloor005c"
+SAND = "nature/sandfloor010a"
 DUCT = "metal/metalfloor001a"
 BRICK = "brick/brickwall037a"
 WOOD, TIN, STEEL, BEAM = MM["wood"], MM["tin"], MM["steel"], MM["beam_wood"]
@@ -156,6 +157,19 @@ def cheeks(m, u1, u2, top=136, out=132, thick=12):
     m.shapes([prism(shape, "x", u1 - thick, u1, MAT["beam"]), prism(shape, "x", u2, u2 + thick, MAT["beam"])])
 
 
+def swing(m, name, u, v, seat, bar):
+    """A swing's seat (u, v) at height seat, on a phys_hinge along the bar at height bar and two chains that follow it."""
+    m.prop("prop_physics", "models/props_c17/playground_swingset_seat01a.mdl", u, v, 0, seat, {"targetname": name, "spawnflags": "0"})
+    m.point("phys_hinge", u, v, bar, {"targetname": name + "_hinge", "attach1": name, "attach2": "", "hingeaxis": "%d %d %d" % m.fr.at(u + 32, v, bar),
+                                       "hingefriction": "0", "forcelimit": "0", "torquelimit": "0", "spawnflags": "0", "systemoverridefile": ""})
+    for d in (-13, 13):
+        top, low = name + "_chain%d" % (d > 0), name + "_chain%d_end" % (d > 0)
+        keys = {"Slack": "0", "Type": "0", "Subdiv": "2", "Barbed": "0", "Width": "1", "TextureScale": "1", "Collide": "0", "Dangling": "0", "Breakable": "0",
+                "RopeMaterial": "cable/chain.vmt", "MoveSpeed": "64", "PositionInterpolator": "2", "NoWind": "1"}
+        m.b.vmf.point("move_rope", m.fr.at(u + d, v, bar), dict(keys, targetname=top, NextKey=low), m.b.vis + ": ropes")
+        m.b.vmf.point("keyframe_rope", m.fr.at(u + d, v, seat + 4), dict(keys, targetname=low, parentname=name), m.b.vis + ": ropes")
+
+
 def candle(m, u, v, z, high=6, light=True):
     """A candle stub: an octagon 4 across (no model of one exists), its flame a glow, and a small steady warm light."""
     m.shapes([vpipe(u, v, 2, z, z + high, PLASTER)])
@@ -178,10 +192,27 @@ def arch_rib(m, u1, u2, v1, v2, top, spring, mat):
     m.shapes(out)
 
 
-def fire(m, u, v, z, size=24, light="255 150 70 110"):
-    """A small fire that burns from the start (the vortigaunt culvert's own), and a steady warm light over it."""
-    m.point("env_fire", u, v, z, {"health": "30", "firesize": str(size), "fireattack": "4", "firetype": "0", "spawnflags": "7", "ignitionpoint": "32", "damagescale": "0.2"})
+def fire(m, u, v, z, size=24, light="255 150 70 110", drop=True):
+    """A small fire that burns from the start (the vortigaunt culvert's own), and a steady warm light over it.
+    drop=False: it stays at z (an env_fire falls to the ground it stands over unless told not to: the owner saw the
+    drums' fires burning at their feet, 20 November)."""
+    m.point("env_fire", u, v, z, {"health": "30", "firesize": str(size), "fireattack": "4", "firetype": "0", "spawnflags": "7" if drop else "23",
+                                  "ignitionpoint": "32", "damagescale": "0.2"})
     m.light(u, v, z + 40, light)
+
+
+def mattress(m, u, v, yaw, z=F):
+    """A loose mattress, turned the right way up (unturned the model lies on its back: the owner saw the clinic's so)."""
+    m.prop("prop_physics", "models/props_c17/furnituremattress001a.mdl", u, v, yaw, z + 1, {"spawnflags": "0", "angles": "0 %d 180" % m.fr.yaw(yaw)})
+
+
+def frustum(u, v, r1, z1, r2, z2, mat):
+    """A standing cone cut off flat (r1 round at z1, r2 at z2): a funnel, a cap."""
+    lo, hi = octagon(u, v, r1), octagon(u, v, r2)
+    faces = [([(a, b, z2) for a, b in hi], mat), ([(a, b, z1) for a, b in lo], mat)]
+    for k in range(8):
+        faces.append(([lo[k] + (z1,), lo[(k + 1) % 8] + (z1,), hi[(k + 1) % 8] + (z2,), hi[k] + (z2,)], mat))
+    return faces
 
 
 # ---------------------------------------------------------------------------
@@ -277,7 +308,7 @@ def m_cells(m, opt):
         m.button("lc_cells_button_%d" % n, bu, 512, F + 40, 270, [(name, "Toggle", "", 0)])
         m.det([(bu - 2 * n + 4 * j, 511, F + 72, bu - 2 * n + 4 * j + 2, 512, F + 84) for j in range(n)], PLASTER)
         m.target("lc_cells_spot_%d" % n, cu + 64, 624, F + 8, 270)
-        m.loose("models/props_c17/furnituremattress001a.mdl", cu + 30, 640, 90)
+        mattress(m, cu + 30, 640, 90)
         m.loose("models/props_junk/metalbucket01a.mdl", cu + 108, 580, 0)
         m.static("models/props_wasteland/prison_toilet01.mdl", cu + (40 if last else 100), 694, 0)
         m.static("models/props_wasteland/prison_lamp001c.mdl", cu + 64, 620, 0, z=H - 12)
@@ -393,7 +424,7 @@ def m_clinic(m, opt):
     for k in range(4):
         u, n = 200 + 128 * k, k + 1
         m.static("models/props_wasteland/prison_bedframe001b.mdl", u, 716, BED_YAW)
-        m.loose("models/props_c17/furnituremattress001a.mdl", u, 716, BED_YAW, z=F + 31)
+        mattress(m, u, 716, BED_YAW, z=F + 31)
         m.static("models/props_c17/furnituredrawer002a.mdl", u + 42, 754, 270)
         m.target("lc_clinic_bed_%d" % n, u, 716, F + 28, 270)
         if k < 3:
@@ -535,14 +566,15 @@ def m_memorial(m, opt):
 def m_pit(m, opt):
     """The fighting pit: the canal opens on its left, through a mouth 512 wide, into an eight-sided arena under the
     open sky. In its middle a ring sunk 64 into the floor, 384 across, floored with dirt, inside a cage of Nova
-    Prospekt's fence panels on a kerb; the one gate (lc_pit_gate, on the side toward the canal) slides aside when the
+    Prospekt's fence panels on a kerb; the one gate (lc_pit_gate, on the side toward the canal) swings open when the
     button on the post beside it is pressed (lc_pit_gate_button) or the game tells it to (Open, Close), and steps go
     down from it into the ring. lc_pit_corner_a and lc_pit_corner_b are the two corners the fighters start in (a stool
     in each). Three tiers of concrete seats, 32 high each, stand on the three far sides, with stairs of 16 up the
     middle of each. By the mouth on the right the bookmaker's table, chair, till and lamp under a chalk board of odds
     (lc_pit_bookie: where he sits); on the left the corner men's bench, water drum and bucket. Two lamps hang over
     the ring from a gantry (the owner asked for these, not street lamps).
-    The gate is a fence panel (interior_fence002e) riding on an unseen brush door of the same name and inputs; an
+    The gate is Nova Prospekt's gate (interior_fence001g) in its own frame (interior_fence002e), riding on an unseen
+    brush door of the same name and inputs that swings it out (Use opens it too); an
     unseen wall stands in the cage's line all round, so the cage holds whatever the panels' own shapes are.
     Left as brushes: the tiers, kerb and posts for the buttons (concrete), the chalk board (no model of one), the
     gantry and its lamps.
@@ -583,9 +615,12 @@ def m_pit(m, opt):
     for box in ((a1 - 1, b1, F, a1 + 1, b2, F + 140), (a2 - 1, b1, F, a2 + 1, b2, F + 140), (a1, b2 - 1, F, a2, b2 + 1, F + 140),
                 (a1, b1 - 1, F, cu - 65, b1 + 1, F + 140), (cu, b1 - 1, F, a2, b1 + 1, F + 140)):
         m.world(box, clip, seals=False)
-    g = b1 - 6                                           # the gate hangs just outside the cage's line and slides along it
-    slide_door(m, "lc_pit_gate", [((cu - 65, g - 2, F + 8, cu, g + 2, F + 134), STEEL)], "0 %d 0" % m.fr.yaw(0), speed=60, lip=0, unseen=True)
-    rider(m, "lc_pit_gate", narrow, cu - 32, g, 90, F + 6)
+    # the gate: Nova Prospekt's own (interior_fence001g) hung in its frame (interior_fence002e) in the gap, swinging out
+    # on an unseen door of the same name (the owner: the panels used before are the gate's frames, "so they have to be
+    # fitted inside of the gate frames")
+    m.static(narrow, cu - 33, b1, 90, z=F + 6)
+    swing_door(m, "lc_pit_gate", [(cu - 55, b1 - 2, F + 7, cu - 10, b1 + 2, F + 112)], STEEL, (cu - 55, b1, F + 60), speed=80, unseen=True)
+    rider(m, "lc_pit_gate", "models/props_wasteland/interior_fence001g.mdl", cu - 32, b1, 90, F + 6)
     m.det([(cu + 12, 470, F, cu + 24, 482, F + 64)], MAT["beam"])
     m.button("lc_pit_gate_button", cu + 18, 470, F + 34, 270, [("lc_pit_gate", "Toggle", "", 0)])
     m.test_button((542, 470, F + 40, 550, 478, F + 56), [("OnIn", "lc_pit_gate", "Open"), ("OnOut", "lc_pit_gate", "Close")])
@@ -903,7 +938,7 @@ def m_market(m, opt):
         m.lane(au + 64, 400)
     stalls = (192, 384, 576, 768, 960)
     for su in stalls:
-        m.low(su, 512, su + 128, 640, A, mat=STONE_FLOOR)
+        m.low(su, 512, su + 128, 704, A, mat=STONE_FLOOR)      # (192 deep: the owner, "no room to even walk into them")
     m.side(64, 256, 1216, 704)
     for ru in (136, 352, 544, 736, 928, 1128):
         arch_rib(m, ru - 8, ru + 8, 320, 512, H, 72, MAT["beam"])
@@ -916,8 +951,8 @@ def m_market(m, opt):
     for k, su in enumerate(stalls):
         n = k + 1
         # the counter across the right half of the front; the left half is the way in behind it
-        m.static("models/props_wasteland/kitchen_counter001%s.mdl" % "abcab"[k], su + 96, 545, 90)
-        put(m, [(name, su + du, 536 + 7 * (j % 3), yaw) for j, (name, du, yaw) in enumerate(wares[k])], F + 40)
+        m.static("models/props_wasteland/kitchen_counter001%s.mdl" % "abcab"[k], su + 94, 545, 90)
+        put(m, [(name, su + du, 536 + 7 * (j % 3), yaw) for j, (name, du, yaw) in enumerate(wares[k][:2])], F + 40)
         if k % 2 == 0:
             m.static("models/props_c17/cashregister01a.mdl", su + 100, 562, 90, z=F + 40)
         # the shutter, and the box it rolls up into
@@ -926,17 +961,17 @@ def m_market(m, opt):
         m.det([(su - 4, 500, A - 4, su + 132, 512, A + 22)], TIN)
         m.det([(su - 4, 504, F, su, 512, A - 4), (su + 128, 504, F, su + 132, 512, A - 4)], BARS)
         m.button("lc_market_button_%d" % n, su, 600, F + 44, 0, [("lc_market_shutter_%d" % n, "Toggle", "", 0)])
-        m.target("lc_market_stall_%d" % n, su + 76, 596, F + 8, 270)
-        m.static("models/props_c17/shelfunit01a.mdl", su + 68, 626, 0)
-        dome(m, su + 64, 590, A, "255 205 140 75")
-        m.static("models/props_junk/wood_crate001a.mdl", su + 30, 596, 10 * k)
+        m.target("lc_market_stall_%d" % n, su + 80, 616, F + 8, 270)
+        m.static("models/props_c17/shelfunit01a.mdl", su + 64, 692, 0)
+        dome(m, su + 64, 620, A, "255 205 140 75")
         m.lane(su + 64, 470)
+        m.lane(su + 40, 630)
     m.static("models/props_c17/shelfunit01a.mdl", 1138, 420, 90)        # the end of the arcade: spare stock
 
     # the middle of the arcade: a fire drum between two benches, bell lamps along the roof
     bu, bv = 640, 400
     m.static("models/props_c17/oildrum001.mdl", bu, bv, 0)
-    fire(m, bu, bv, F + 46, size=20, light="255 160 80 130")
+    fire(m, bu, bv, F + 46, size=20, light="255 160 80 130", drop=False)
     m.sound("ambient/fire/fire_small_loop1.wav", bu, bv, F + 40, radius=420, volume=3)
     m.static("models/props_wasteland/cafeteria_bench001a.mdl", bu - 56, bv, 0)
     m.static("models/props_wasteland/cafeteria_bench001a.mdl", bu + 56, bv, 0)
@@ -946,7 +981,6 @@ def m_market(m, opt):
     # the lookouts' stools, inside each archway on the side they watch from
     for su in (232, 1048):
         m.static("models/props_c17/chair_stool01a.mdl", su, 340, 0)
-    m.static("models/props_junk/wood_crate002a.mdl", 160, 470, 80)
     m.decal("decals/decalposter014a", 352, 512, F + 90)
     m.decal("decals/decal_posters005a", 928, 512, F + 88)
 
@@ -962,16 +996,14 @@ def m_market(m, opt):
 # ---------------------------------------------------------------------------
 
 def m_press(m, opt):
-    """The pamphlet press: a short side tunnel off the left wall that seems to end in a stack of crates to the roof.
-    The crates are real ones, stacked: between the two at the floor is a gap 48 wide and 40 high under a pallet,
-    behind a hanging sack (no thing: crawl through it). Behind is the printing room: a hand press (a bed on legs
+    """The pamphlet press: a short side tunnel off the left wall, shut by a wall with one of the city's doors in it
+    (lc_press_door, a prop_door_rotating: anyone opens it; the game may Lock it). Behind is the printing room: a hand press (a bed on legs
     with the forme on it, a platen hanging from a screw between two cheeks, a long lever), lc_press_machine on its
     bed; a chest of drawers for the type; three drying lines across the room hung with sheets; boxes and bundles of
     paper on a pallet (lc_press_stack); a table with a lamp and papers; drums and cans of ink; a mattress.
     Left as brushes: the hand press (Half-Life 2 has no printing press), the sheets on the lines (they hang; the
-    paper models lie flat), the sack over the gap.
-    Unchecked: func_illusionary (the sack) is from memory; how taut the drying lines hang; that the stacked crates
-    leave the gap clear (their boxes say 48 by 40; they are solid props, not brushes); which way the drawers face."""
+    paper models lie flat).
+    Unchecked: how taut the drying lines hang; which way the drawers face."""
     L, H = 768, F + 144
     m.open(0, -256, L, 256)
     m.low(256, 256, 384, 512, F + 128)                          # the side tunnel
@@ -983,19 +1015,12 @@ def m_press(m, opt):
     m.lane(320, 300)
 
     # the false stack: two long crates at the floor with the gap between them, a pallet across, two rows more to the roof
-    long_crate, crate = "models/props_junk/wood_crate002a.mdl", "models/props_junk/wood_crate001a.mdl"
-    m.static(long_crate, 276, 420, 0)
-    m.static(long_crate, 364, 420, 0)
-    m.static("models/props_junk/wood_pallet001a.mdl", 320, 420, 0, z=F + 40)
-    m.static(crate, 276, 418, 0, z=F + 40)
-    m.static(crate, 364, 420, 0, z=F + 40)
-    m.static(crate, 320, 418, 0, z=F + 49)
-    m.static(crate, 277, 420, 0, z=F + 80)
-    m.static(crate, 363, 416, 0, z=F + 80)
-    m.static("models/props_junk/cardboard_box001a.mdl", 320, 420, 90, z=F + 89)
-    m.ent("func_illusionary", {"rendermode": "0", "renderamt": "255", "rendercolor": "255 255 255", "disableshadows": "1"}, [(296, 383, F + 1, 344, 384, F + 40)], CLOTH)
-    m.static(crate, 279, 350, 5)
-    m.blocked(256, 320, 384, 512)
+    # across the tunnel a wall with the city's own door in it, that opens (the owner: "the printing press room is
+    # missing its door", and of the crates that hid it: "idk why you have a heap of boxes ... in the entrance")
+    from map_town import real_door, R as TR
+    m.det([(256, 408, F, 295, 424, F + 128), (345, 408, F, 384, 424, F + 128), (295, 408, F + 110, 345, 424, F + 128)], PLASTER)
+    m.det([(291, 406, F, 295, 426, F + 114), (345, 406, F, 349, 426, F + 114), (291, 406, F + 110, 349, 426, F + 114)], TR["frame"])
+    real_door(m, 297, 416, 270, F, "lc_press_door")
     m.light(320, 300, F + 110, "200 205 190 25")
 
     # the press
@@ -1048,15 +1073,14 @@ def m_press(m, opt):
     m.static("models/props_c17/oildrum001.mdl", 580, 536, 0)
     m.static("models/props_c17/chair_stool01a.mdl", 548, 536, 0)
     put(m, [("props_junk/metal_paintcan001a", 524, 550, 0), ("props_junk/metal_paintcan001a", 520, 532, 0)], F)
-    m.loose("models/props_c17/furnituremattress001a.mdl", 600, 610, 90)
+    mattress(m, 600, 610, 90)
     dome(m, 300, 600, H, "225 215 190 45")
     m.decal("decals/decalposter014a", 192, 700, F + 90)
     m.decal("decals/decal_posters005a", 640, 640, F + 92)
     for u, v in ((320, 480), (400, 600), (500, 620)):
         m.lane(u, v)
 
-    m.view(320, 150, F, 90, 0, "the tunnel: a stack of crates")
-    m.view(320, 330, F, 90, 14, "at the stack: the gap")
+    m.view(320, 150, F, 90, 0, "the tunnel and its door")
     m.view(320, 530, F, 80, 4, "the printing room")
     m.view(600, 560, F, 150, 8, "the press")
     m.view(230, 740, F, 345, 4, "the paper and the lines")
@@ -1106,6 +1130,8 @@ def m_still(m, opt):
     m.static("models/props_junk/wood_crate001a.mdl", wu, pv, 0, z=C)
     m.static("models/props_c17/oildrum001.mdl", wu, pv, 0, z=C + 40)
     m.static("models/props_junk/glassjug01.mdl", wu - 32, pv, 0, z=C)
+    m.static("models/props_pipes/pipe02_connector01.mdl", wu - 3, pv, 0, z=C + 90)            # a cap on the pipe's end (the owner saw it open)
+    m.shapes([frustum(wu - 8, pv, 3, C + 85, 8, C + 91, STEEL)])                                # and a funnel from it into the drum
     m.target("lc_still_pot", pu - 60, pv, C + 8, 0)
     m.smoke(pu, pv, C + 124, colour="215 215 215", size=7, length=30, rate=6)
     m.sound("ambient/fire/fire_small_loop1.wav", pu, pv, C + 30, radius=380, volume=3)
@@ -1192,18 +1218,16 @@ def m_plaza(m, opt):
     m.det([(cu - 14, rv1 + 4, top, cu + 14, rv1 + 14, top + 38)], WOOD)
     m.shapes([prism([(rv1 + 2, top + 38), (rv1 + 16, top + 38), (rv1 + 16, top + 40), (rv1 + 2, top + 46)], "x", cu - 16, cu + 16, BEAM)])
     m.target("lc_plaza_rostrum", cu, vb - 30, top + 8, 270)
-    # two street lamps and the wire for a banner; the loudspeakers on one, turned to the street
-    p1, p2, pz = r1 - 22, r2 + 22, low + 208
-    for u in (p1, p2):
-        m.static("models/props_c17/lamppost03a_on.mdl", u, vb - 20, 180, z=low)
-        m.light(u, vb - 116, low + 420, "255 220 170 1500")
-    m.rope([(p1, vb - 20, pz), (p2, vb - 20, pz)], slack=10, width=1)
-    m.static("models/props_wasteland/speakercluster01a.mdl", p1, vb - 38, 270, z=low + 176)
+    # the loudspeakers on the back wall over the rostrum, turned to the street; a caged lamp on the wall each side
+    m.static("models/props_wasteland/speakercluster01a.mdl", cu, vb - 17, 270, z=low + 160)
+    for u in (r1 - 40, r2 + 40):
+        m.static("models/props_c17/light_cagelight02_on.mdl", u, vb - 1, 270, z=low + 130)
+        m.light(u, vb - 40, low + 130, "255 220 170 260")
 
     # a fire drum on each side of the floor
     for u in (cu - 190, cu + 190):
         m.static("models/props_c17/oildrum001.mdl", u, vb - 40, 0, z=low)
-        fire(m, u, vb - 40, low + 46, size=18, light="255 150 70 140")
+        fire(m, u, vb - 40, low + 46, size=18, light="255 150 70 140", drop=False)
     for u, v in ((cu, vb - 120), (cu - 120, vb - 100), (cu + 120, vb - 100), (cu, vb - 200)):
         m.lane(u, v, low)
     for u in (cu - 420, cu - 140, cu + 140, cu + 420):
@@ -1220,42 +1244,41 @@ def m_plaza(m, opt):
 # ---------------------------------------------------------------------------
 
 def m_playground(m, opt):
-    """The playground: a relic of before. A terrace 128 above the canal's floor on the left, open to the sky (the
-    bank along it is the way up). On it, City 17's own playground models: a swing set with one seat still hanging on
-    its chains and one fallen, hanging by a single chain; a slide; a roundabout; and, built here, a sandpit edged with
-    timber; a bench with its back to the wall, facing it all (lc_playground_bench: on the bench). Nothing else, and
+    """The playground: a relic of before. A yard on the left, open to the sky: in a canal a terrace 128 above its floor
+    (the bank is the way up), on a street level with the pavement. In it, City 17's own playground models: a swing set
+    whose two seats swing on their chains (lc_playground_swing_1 and _2, each on a phys_hinge under the bar); a slide;
+    a roundabout that turns (lc_playground_roundabout on a phys_hinge); and, built here, a sandpit edged with timber; a bench with its back to the wall, facing it all (lc_playground_bench: on the bench). Nothing else, and
     no lamp.
     Left as brushes: the sandpit (timber and sand in the ground).
     Unchecked: the sound ambient/levels/canals/windmill_wind_loop1.wav (one faint wind); which end of the slide is
-    its ladder and which way the bench faces; whether the swing set's model has chains of its own (the seats are
-    separate models, hung here on ropes); on a street there is no bank, so the terrace needs steps of the street's."""
-    L, T = 1024, F + 128
+    its ladder and which way the bench faces; how high the swing set's bar is (its box says 144: the seats hang
+    from 138); how freely the hinges turn."""
+    L, T = 1024, (F if m.fr.dz else F + 128)    # (on a street level with the pavement: the owner, 20 November)
     m.open(0, -256, L, 256)
     m.open(192, 256, 832, 640, floor=T, mat=CRACKED)
     m.side(192, 256, 832, 640)
 
-    # the swings
-    sv, sz = 500, T + 134
+    # the swings: each seat hangs from the bar on a hinge and two chains, and swings (as Half-Life 2's do)
+    sv = 500
     m.static("models/props_c17/playground_swingset01.mdl", 338, sv, 0, z=T)
-    m.static("models/props_c17/playground_swingset_seat01a.mdl", 300, sv, 0, z=T + 20)       # the seat that still hangs true
-    m.rope([(286, sv, sz), (286, sv, T + 24)], slack=0, width=1)
-    m.rope([(314, sv, sz), (314, sv, T + 24)], slack=0, width=1)
-    m.static("models/props_c17/playground_swingset_seat01a.mdl", 374, sv - 8, 20, z=T)        # the other: one chain gone, its end on the ground
-    m.rope([(362, sv, sz), (362, sv - 10, T + 4)], slack=4, width=1)
-    m.rope([(388, sv, sz), (388, sv, T + 70)], slack=0, width=1)
+    for k, su in enumerate((300, 376)):
+        swing(m, "lc_playground_swing_%d" % (k + 1), su, sv, T + 22, T + 138)
     m.blocked(232, 440, 440, 560)
 
     # the slide, the roundabout
     m.static("models/props_c17/playgroundslide01.mdl", 640, 340, 270, z=T)
     m.blocked(540, 288, 760, 392)
-    m.static("models/props_c17/playground_carousel01.mdl", 330, 350, 0, z=T)
+    m.prop("prop_physics", "models/props_c17/playground_carousel01.mdl", 330, 350, 0, T + 1, {"targetname": "lc_playground_roundabout", "spawnflags": "0"})
+    m.point("phys_hinge", 330, 350, T + 24, {"targetname": "lc_playground_roundabout_hinge", "attach1": "lc_playground_roundabout", "attach2": "",
+                                              "hingeaxis": "%d %d %d" % m.fr.at(330, 350, T + 88), "hingefriction": "4", "forcelimit": "0", "torquelimit": "0",
+                                              "spawnflags": "0", "systemoverridefile": ""})
     m.blocked(256, 272, 408, 428)
 
     # the sandpit
     g1, g2, h1, h2 = 520, 680, 430, 580
     m.det([(g1, h1, T, g2, h1 + 6, T + 10), (g1, h2 - 6, T, g2, h2, T + 10), (g1, h1 + 6, T, g1 + 6, h2 - 6, T + 10), (g2 - 6, h1 + 6, T, g2, h2 - 6, T + 10)], BEAM)
-    m.det([(g1 + 6, h1 + 6, T, g2 - 6, h2 - 6, T + 5)], DIRT)
-    m.shapes([prism([(470, T + 5), (506, T + 5), (490, T + 12)], "x", 590, 634, DIRT)])
+    m.det([(g1 + 6, h1 + 6, T, g2 - 6, h2 - 6, T + 5)], SAND)
+    m.shapes([prism([(470, T + 5), (506, T + 5), (490, T + 12)], "x", 590, 634, SAND)])
     m.blocked(g1, h1, g2, h2)
 
     # the bench, its back to the wall

@@ -106,71 +106,83 @@ def m_hq(m, opt):
 
 
 def m_flats(m, opt):
-    """A house people can live in, as the flats of the owner's city are furnished (their stoves, sinks, fridges and beds
-    stand backs to the wall: so do these). A front door that opens (the city's own door, with its handle) into a hall;
-    off it two flats, each behind its own door: a kitchen (stove, sink, fridge, a table and chairs, a radiator, a
-    window on the street) and through an archway a bedroom (a bed, a dresser, a bedside drawer). The left flat has
-    the city's iron bed, the right one a wooden bed and mattress, a couch and a fireplace.
+    """A house people can live in, furnished as the owner's city's flats are (stoves, sinks, fridges and beds stand
+    backs to the wall). A front door that opens (the city's own door, with its handle) into a hall; off it two flats,
+    each behind its own door: a kitchen (stove, sink, fridge, a table and two chairs, a radiator) and through an
+    archway a living room (a fireplace, a couch facing it, a dresser). At the hall's end a stair climbs 160 to a landing
+    and a passage with a bedroom off each side: the left flat's has the city's iron bed, the right one's a wooden bed
+    and mattress; both a dresser and a bedside drawer. (The owner, 20 November: "too cramped, half of that can go in
+    the bedroom(s), can we have a few upstairs rooms too?")
     Named for the game: lc_flat_door (the front door), lc_flat_1 and lc_flat_2 (info_targets in the two kitchens). A
     second house in one chain takes a word after its name in the layout ("flats b"): lc_flat_b_door, lc_flat_b_1 ...
-    Unchecked: which way the doors' leaves swing clear; the mattress's height on its frame."""
+    Unchecked: the mattress's height on its frame; which way the dresser and drawers face."""
     from map_modules import F
-    H, D = F + 128, F + 112
+    H, D, Z = F + 128, F + 112, F + 160                     # the ground floor's ceiling, a doorway's, the upper floor
     nm = "lc_flat_" + "".join(w + "_" for w in opt[:1] if w.isalnum() and w != "flip")
+    wood, tile, wall = "wood/woodfloor007a", "tile/tilefloor018a_c17", "plaster/plasterwall042c"
     m.open(0, -256, 768, 256)
-    m.low(320, 256, 384, 320, D)                             # the front doorway
-    m.low(320, 320, 448, 896, H)                             # the hall
-    m.low(64, 320, 256, 576, H)                              # flat 1: kitchen, bedroom
-    m.low(64, 640, 256, 896, H)
-    m.low(512, 320, 704, 576, H)                             # flat 2
-    m.low(512, 640, 704, 896, H)
-    m.low(256, 384, 320, 448, D)                             # the flats' doorways off the hall
-    m.low(448, 384, 512, 448, D)
-    m.low(128, 576, 192, 640, D)                             # the archways to the bedrooms
-    m.low(576, 576, 640, 640, D)
-    m.side(64, 256, 704, 896)
+    m.low(320, 256, 384, 320, D, mat=wood)                   # the front doorway
+    m.low(320, 320, 448, 640, H, mat=wood)                   # the hall
+    m.low(320, 640, 448, 896, Z + 128, mat=wood)             # the stairwell
+    m.low(320, 896, 448, 1216, Z + 128, floor=Z, mat=wood)   # the landing and the passage upstairs
+    for u1 in (64, 512):
+        m.low(u1, 320, u1 + 192, 576, H, mat=tile)           # a kitchen
+        m.low(u1, 640, u1 + 192, 896, H, mat=wood)           # a living room
+        m.low(u1, 960, u1 + 192, 1216, Z + 128, floor=Z, mat=wood)   # a bedroom upstairs
+        m.low(u1 + 64, 576, u1 + 128, 640, D, mat=wood)      # the archway between kitchen and living room
+    m.low(256, 384, 320, 448, D, mat=wood)                   # the flats' doors off the hall
+    m.low(448, 384, 512, 448, D, mat=wood)
+    m.low(256, 1024, 320, 1088, Z + 112, floor=Z, mat=wood)  # the bedrooms' doors off the passage
+    m.low(448, 1024, 512, 1088, Z + 112, floor=Z, mat=wood)
+    m.side(64, 256, 704, 1216)
     m.portal(320, 286, F, 384, 288, D)
     m.taken(308, 232, F, 396, 256, F + 124)
-    fr = R["frame"]
-    m.det([(320, 280, F, 328, 296, D), (376, 280, F, 384, 296, D), (328, 280, F + 108, 376, 296, D)], fr)
-    real_door(m, 328, 288, 270, F, nm + "door")
-    for u, hinge, yaw in ((288, 392, 0), (480, 440, 180)):
-        m.det([(u - 8, 384, F, u + 8, 392, D), (u - 8, 440, F, u + 8, 448, D), (u - 8, 392, F + 108, u + 8, 440, D)], fr)
-        real_door(m, u, hinge, yaw, F)
-    for u in (128, 576):
-        m.det([(u, 604, F + 104, u + 64, 612, D)], fr)
+    door_hole(m, "u", 320, 256, 320, F, D, name=nm + "door", yaw=270)
+    door_hole(m, "v", 384, 256, 320, F, D, yaw=0)
+    door_hole(m, "v", 384, 448, 512, F, D, yaw=180)
+    door_hole(m, "v", 1024, 256, 320, Z, Z + 112, yaw=0)
+    door_hole(m, "v", 1024, 448, 512, Z, Z + 112, yaw=180)
+    m.det([(u1 + 64, 604, F + 104, u1 + 128, 612, D) for u1 in (64, 512)], R["frame"])
+    # the stair: 10 steps of 16 and 24, then the landing
+    m.det([(320, 640 + 24 * i, F, 448, 640 + 24 * (i + 1), F + 16 * (i + 1)) for i in range(10)] + [(320, 880, F, 448, 896, Z)], wall, top=MAT["stairs"])
+    m.blocked(320, 640, 448, 896)
+    m.lane(384, 760, F + 80)
     lamp = "255 214 170 45"
-    m.lamp(384, 600, H - 8, lamp)
-    m.static("models/props_c17/furnitureradiator001a.mdl", 384, 888, 270)
-    for n, (wall, yaw, far) in enumerate(((64, 0, 1), (704, 180, -1))):        # each flat: its outer wall, the way its things face, and which way is in
-        mid = wall + far * 96
-        m.static("models/props_c17/furniturestove001a.mdl", wall + far * 19, 420, yaw)
-        m.static("models/props_c17/furnituresink001a.mdl", wall + far * 12, 484, yaw)
-        m.static("models/props_interiors/refrigerator01a.mdl", wall + far * 17, 540, yaw)
-        m.static("models/props_c17/furnituretable00%da.mdl" % (n + 1), mid + far * 30, 500, 90 * n)
-        m.static("models/props_c17/furniturechair001a.mdl", mid + far * 30, 452, 90)
-        m.static("models/props_c17/furniturechair001a.mdl", mid + far * 68, 506, 180 if far > 0 else 0)
-        m.static("models/props_c17/furnitureradiator001a.mdl", mid - far * 40, 327, 90)
-        glass_pane(m, mid - 32, mid + 32, F + 40, F + 136, "sash", v=320)     # the kitchen's window, from inside
-        m.det([(mid - 36, 320, F + 35, mid + 36, 326, F + 40)], R["trim"])
+    m.lamp(384, 480, H - 8, lamp)
+    m.lamp(384, 1040, Z + 120, lamp)
+    for n, (wall_u, yaw, far) in enumerate(((64, 0, 1), (704, 180, -1))):    # each flat: its outer wall, the way its things face, and which way is in
+        mid = wall_u + far * 96
+        back = 180 if far > 0 else 0
+        # the kitchen
+        m.static("models/props_c17/furniturestove001a.mdl", wall_u + far * 19, 400, yaw)
+        m.static("models/props_c17/furnituresink001a.mdl", wall_u + far * 12, 452, yaw)
+        m.static("models/props_interiors/refrigerator01a.mdl", wall_u + far * 17, 530, yaw)
+        m.static("models/props_c17/furnituretable00%da.mdl" % (n + 1), wall_u + far * 140, 476, 0)
+        m.static("models/props_c17/furniturechair001a.mdl", wall_u + far * 140, 530, 270)
+        m.static("models/props_c17/furniturechair001a.mdl", wall_u + far * 92, 476, yaw)
+        m.static("models/props_c17/furnitureradiator001a.mdl", mid, 327, 90)
         m.lamp(mid, 448, H - 8, lamp)
+        m.target(nm + str(n + 1), mid, 440, F + 8, 90)
+        # the living room
+        m.static("models/props_c17/furniturefireplace001a.mdl", wall_u + far * 16, 790, yaw)
+        m.static("models/props_c17/furniturecouch002a.mdl", wall_u + far * 174, 790, back)
+        m.static("models/props_c17/furnituredresser001a.mdl", wall_u + far * 60, 877, 270)
         m.lamp(mid, 768, H - 8, "255 205 160 35")
-        m.target(nm + str(n + 1), mid, 448, F + 8, 90)
-        m.static("models/props_c17/furnituredresser001a.mdl", mid + far * 40, 877, 270)
-        m.static("models/props_c17/furnituredrawer002a.mdl", wall + far * 11, 730, yaw)
-        for u, v in ((mid, 448), (mid, 608), (mid, 768)):
-            m.lane(u, v)
-    m.static("models/props_wasteland/prison_metalbed001a.mdl", 75, 810, 0)                  # flat 1's bed, as the city's flats have
-    m.static("models/props_c17/furniturebed001a.mdl", 681, 810, 90)                         # flat 2's
-    m.static("models/props_c17/furnituremattress001a.mdl", 681, 810, 90, F + 20)
-    m.static("models/props_c17/furniturecouch002a.mdl", 529, 530, 0)
-    m.static("models/props_c17/furniturefireplace001a.mdl", 560, 560, 270)
-    m.blocked(64, 380, 110, 576)
-    m.blocked(660, 380, 704, 576)
-    for u, v in ((352, 290), (384, 416), (288, 416), (480, 416)):
-        m.lane(u, v)
+        # the bedroom upstairs
+        m.static("models/props_c17/furnituredrawer002a.mdl", wall_u + far * 11, 1196, yaw, Z)
+        m.static("models/props_c17/furnituredresser001a.mdl", wall_u + far * 120, 1197, 270, Z)
+        m.lamp(mid, 1088, Z + 120, "255 205 160 35")
+        for u, v, z in ((mid, 448, F), (mid, 608, F), (mid + far * 30, 720, F), (mid + far * 40, 1000, Z)):
+            m.lane(u, v, z)
+    m.static("models/props_wasteland/prison_metalbed001a.mdl", 75, 1110, 0, Z)                 # the left flat's bed, as the city's flats have
+    m.static("models/props_c17/furniturebed001a.mdl", 681, 1110, 90, Z)                        # the right flat's
+    from map_mods_b import mattress
+    mattress(m, 681, 1110, 90, Z + 20)
+    for u, v, z in ((352, 290, F), (384, 420, F), (288, 416, F), (480, 416, F), (384, 920, Z), (288, 1056, Z), (480, 1056, Z)):
+        m.lane(u, v, z)
     m.view(352, 80, F, 90, 0, "the front door")
-    m.view(230, 540, F, 215, 4, "flat 1's kitchen")
+    m.view(230, 520, F, 200, 4, "a kitchen")
+    m.view(384, 600, F, 90, 10, "the stair")
 
 
 def town_plan(b, walk):
@@ -255,13 +267,31 @@ def board(m, u, v, z, yaw, roll):
 
 def real_door(m, u, v, yaw, z, name=None, skin=7):
     """One of the city's own doors, that opens: a prop_door_rotating set up as the owner's 134 are (a handle, opens 90
-    either way). Its hinge at (u, v) on the floor z; the leaf reaches 47 to the left of yaw."""
+    either way). Its hinge at (u, v) on the floor z; the leaf reaches 47 to the left of yaw. Its opening, as the owner's
+    are (measured round 42 of them): 50 wide from 2 behind the hinge, 110 high (`door_hole` makes one)."""
     k = {"model": DOOR, "angles": "0 %d 0" % m.fr.yaw(yaw), "hardware": "1", "skin": str(skin), "spawnflags": "8192", "distance": "90", "speed": "100", "returndelay": "-1",
          "opendir": "0", "ajarangles": "0 0 0", "dmg": "0", "forceclosed": "0", "health": "0", "spawnpos": "0", "rendercolor": "255 255 255", "fademindist": "-1", "fadescale": "1"}
     if name:
         k["targetname"] = name
         m.b.names.append((name, "prop_door_rotating", m.tag))
-    m.b.vmf.point("prop_door_rotating", m.fr.at(u, v, z + 54), k, m.pv)
+    m.b.vmf.point("prop_door_rotating", m.fr.at(u, v, z + 55), k, m.pv)
+
+
+def door_hole(m, axis, a, lo, hi, z, top, mat=None, name=None, yaw=None):
+    """A doorway cell's reveal filled to a door's own opening: the cell runs `axis` ("u" or "v") from a to a + 64 across
+    the opening, lo to hi through the wall; jambs fill it to 50 wide and a head from 110 to its ceiling `top`. With a
+    name or a yaw, the door itself, its hinge 2 in from the low jamb (yaw 270 or 0) or the high one (90 or 180)."""
+    mat = mat or R["frame"]
+    j1, j2 = a + 7, a + 57
+    if axis == "u":
+        boxes = [(a, lo, z, j1, hi, top), (j2, lo, z, a + 64, hi, top), (j1, lo, z + 110, j2, hi, top)]
+    else:
+        boxes = [(lo, a, z, hi, j1, top), (lo, j2, z, hi, a + 64, top), (lo, j1, z + 110, hi, j2, top)]
+    m.det(boxes, mat)
+    if yaw is not None:
+        mid = (lo + hi) // 2
+        h = j1 + 2 if yaw in (270, 0) else j2 - 2
+        real_door(m, h, mid, yaw, z, name) if axis == "u" else real_door(m, mid, h, yaw, z, name)
 
 
 def facade(b, fr, L, rnd, tag, first=0):
@@ -447,15 +477,15 @@ def landing(b, x, y, rot, L, tag, dz):
     steps, tread = 17, 24                                    # (the owner, of 33 steps of 8: "meant for toddlers ... fewer and larger")
     foot = -448 - tread * steps
     low.det([(512, foot + tread * i, F, 704, foot + tread * (i + 1), F + (dz * (i + 1) + steps // 2) // steps) for i in range(steps)], MAT["canal_wall"], top=MAT["stairs"])
-    for u in (504, 704):
-        low.shapes([prism([(foot, F), (-448, F + dz), (-448, F + dz + 40), (foot, F + 40)], "x", u, u + 8, MAT["beam"])])
-    low.no_bank(488, -456, 728, -440)
-    low.blocked(504, foot, 712, -448)
-    low.taken(496, foot, F, 720, -448, F + dz + 40)
-    for u in (320, 448, 768, 832):                           # the handrail along the quay's edge, open at the steps' head
-        up.static(RAIL, u, -445, 90, F)
-    up.static(POST, 608, -280, 180, F)
-    up.light(608, -380, F + 400, "255 214 170 380")
+    for u in (448, 704):      # (solid to the floor, and as wide as the bank is cut, so bank and cheek meet: the owner saw gaps)
+        low.shapes([prism([(foot, F), (-448, F), (-448, F + dz + 40), (foot, F + 40)], "x", u, u + 64, MAT["beam"])])
+    low.no_bank(456, -456, 760, -440)
+    low.blocked(448, foot, 768, -448)
+    low.taken(440, foot, F, 776, -448, F + dz + 40)
+    for model, u in ((RAIL, 320), ("models/props_c17/handrail04_medium.mdl", 415), (RAIL, 833)):     # the handrail along the quay's edge
+        up.static(model, u, -445, 90, F)
+    up.static(POST, 608, -280, 0, F)                         # (its arm over the street: the owner, 20 November)
+    up.light(608, -180, F + 400, "255 214 170 380")
     low.static("models/props_canal/boat001a.mdl", 400, -960, 100)
     low.blocked(300, -1040, 500, -880)
     up.target("lc_town_landing", 608, -400, F + 8, 90)
@@ -465,6 +495,32 @@ def landing(b, x, y, rot, L, tag, dz):
     low.lane(400, -704, F)
     low.view(380, -760, F, 20, -8, "the basin and the steps")
     b.notes.append("%s: the canal's gate is at (%d %d), 512 wide, floor z %d, facing back along the street" % ((tag,) + gf.pt(0, 0) + (F,)))
+
+
+def corner(b, x, y, rot, right, dz, fronts, n):
+    """A street's corner: a square of cobbles 512 across at the roadway's crown, the pavements carried round its outer
+    sides and across its inner corner, a house on each outer side and a lamppost at the outer corner. right: it turns
+    right (else left). Gives where the next stretch starts, and its heading."""
+    from map_modules import F, Frame, Mod
+    fr = Frame(x, y, rot, 512, dz=dz)
+    m = Mod(b, fr, "the corner %d" % n)
+    s = -1 if right else 1                                   # the side the street leaves by (+v is the left)
+    o = -s                                                   # the outer side
+    m.open(0, -256, 512, 256, floor=F - 4, mat=R["road"])
+    m.open(0, min(o * 192, o * 256), 512, max(o * 192, o * 256), mat=R["walk"])
+    m.open(448, -256, 512, 256, mat=R["walk"])
+    m.open(0, min(s * 192, s * 256), 64, max(s * 192, s * 256), mat=R["walk"])
+    m.det([(0, min(o * 160, o * 192), F - 4, 416, max(o * 160, o * 192), F), (416, min(s * 256, o * 160), F - 4, 448, max(s * 256, o * 160), F),
+           (0, min(s * 160, s * 192), F - 4, 96, max(s * 160, s * 192), F), (64, min(s * 192, s * 256), F - 4, 96, max(s * 192, s * 256), F)], R["walk"])
+    m.static(POST, 470, o * 214, 135 if o > 0 else 45, F)
+    m.light(400, o * 144, F + 400, "255 214 170 380")
+    m.cubemap(256, 0)
+    for u, v in ((128, 0), (256, 0), (256, s * 128), (384, 0)):
+        m.lane(u, v, F - 4)
+    fronts.append((Frame(x, y, rot, 512, s > 0, dz=dz), 512, "the houses, corner %d" % n))
+    fronts.append((Frame(*(Frame(x, y, rot, 0).pt(256, 256) + ((rot - 1) % 4, 512)), dz=dz), 512, "the houses, corner %d, ahead" % n))
+    nx, ny = Frame(x, y, rot, 512).pt(256, s * 256)
+    return nx, ny, (rot + s) % 4
 
 
 def build(lay, args):
@@ -491,13 +547,25 @@ def build(lay, args):
     b.notes.append("the road's end is at (%d %d), 512 wide: the roadway's crown at z %d, gutters %d, pavements %d" % (fr.pt(0, 0) + (F + dz - 4, F + dz - 8, F + dz)))
     x, y = Frame(x, y, rot, 64).pt(64, 0)
     fronts = []
+    def known(w):
+        return w and (w[0] in ("landing", "houses") or w[0] in MODULES)
+
+    def length_of(w):       # ("houses N": a stretch of house fronts alone, N long; a corner's inner side wants one)
+        if w[0] == "houses":
+            return int(w[1]) if len(w) > 1 and w[1].isdigit() else 768
+        return 1024 if w[0] == "landing" else MODULES[w[0]][0]
+    corners = 0
     for n, words in enumerate(lay["modules"]):
+        if words[0] == "turn":
+            corners += 1
+            x, y, rot = corner(b, x, y, rot, words[1:2] != ["left"], dz, fronts, corners)
+            continue
         line = " ".join(words)
         left, _, right = [p.split() for p in line.partition("|")]
         sides = [(left, False), (right, True)]
-        lengths = [1024 if w and w[0] == "landing" else MODULES[w[0]][0] for w, _ in sides if w and (w[0] == "landing" or w[0] in MODULES)]
+        lengths = [length_of(w) for w, _ in sides if known(w)]
         for w, _ in sides:
-            if w and w[0] != "landing" and w[0] not in MODULES:
+            if w and not known(w):
                 b.problems.append("the layout names a module that does not exist: %s" % w[0])
         if not lengths:
             continue

@@ -4,6 +4,9 @@
 #
 #   ground street      this layout is a town (map_town.py): a street at the city's road height, not a canal
 #   LEFT | RIGHT       two modules facing each other across the street; "landing" is the canal's way in
+#   turn right|left    a corner: the street turns there (an L; two turns the same way make a U)
+#   houses N           house fronts alone for N (768 if not given); a corner's inner side wants one 1280 long
+#                      on the stretch after it, so the two arms' modules cannot meet behind the corner
 #   start X Y          the middle of the road's end, where the street begins; heading: the way it runs
 
 ground street
@@ -15,6 +18,8 @@ memorial | landing
 market | garden
 clinic | cells
 hq | press
-flats | flats b
+turn right
+flats | houses 1280
 plaza | playground
-pit | still
+pit | flats b
+still
