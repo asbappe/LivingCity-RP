@@ -68,7 +68,7 @@ What the dressing adds afterwards, to every module at once: sloped banks along e
 - `m.world(box, material)`: a brush of the WORLD, which seals: only for a cap across an opening.
 - `m.water(u1, v1, u2, v2, z1, z2, mat=None)`: standing water; `MM["sludge"]` for slime. Never across an areaportal.
 
-Materials: `MAT` (canal_wall, canal_floor, quay_floor, ceiling, stairs, beam, bars, black, fence, mud, nodraw, clip, trigger) and `MM` (wood, tin, steel, beam_wood, water, sludge). Others known to be in the owner's map: `metal/metalcombine002`, `metal/citadel_metalwall077a`, `metal/metalduct003a`, `brick/brickwall045d`, `brick/brickwall037a`, `plaster/plasterwall042c`, `tile/tilefloor018a_c17`, `stone/stonewall040f`, `stone/stonefloor006d_c17`, `concrete/concretefloor016a`, `glass/glasswindow041a`, `nature/dirtfloor005c`, `wood/woodbeam001a`. Anything else is from memory: list it in the module's docstring as unchecked.
+Materials: `MAT` (canal_wall, canal_floor, quay_floor, ceiling, stairs, beam, bars, black, fence, mud, nodraw, clip, trigger) and `MM` (wood, tin, steel, beam_wood, water, sludge). Others known to be in the owner's map: `metal/metalcombine002`, `metal/citadel_metalwall077a`, `brick/brickwall045d`, `brick/brickwall037a`, `plaster/plasterwall042c`, `tile/tilefloor018a_c17`, `stone/stonewall040f`, `stone/stonefloor006d_c17`, `concrete/concretefloor016a`, `glass/glasswindow041a`, `nature/dirtfloor005c`, `wood/woodbeam001a`. Anything else is from memory: list it in the module's docstring as unchecked.
 
 ## Things
 
@@ -86,6 +86,8 @@ Materials: `MAT` (canal_wall, canal_floor, quay_floor, ceiling, stairs, beam, ba
 - `m.button(name, u, v, z, out, wires, wait="1")`: a button players press, working in the map by itself: `wires` is `[(name, input, value, delay), ...]`. `m.relay(name, u, v, z, wires)`: a switchboard to Trigger.
 - `m.ent(classname, {keys}, boxes, material)`: any other brush entity (`func_brush`, `trigger_multiple`, `func_breakable` ...).
 - `m.target(name, u, v, z)`: a place for the game to find.
+- More kinds of door and entity are in `map_mods_b.py`, to import: `slide_door` (a sliding door with its own wait and start), `swing_door` (a `func_door_rotating` with its hinge), `shape_entity` (a brush entity made of shapes that are not boxes), `vprism` and `vpipe` (standing prisms and pipes). `map_mods_d.py` has `use_door` (slides when a player uses it); `map_modules.py` has `chain_link(m, a, b, z, high)` and `pyramid(...)`.
+- The button model (`m.button`) is Episode Two's mine lift button, the owner's own choice for the bunker: `map_assets.py` notes it on every module with a button. That note is expected.
 - `m.test_button(box, [(output, name, input), ...])`: a red button that exists only in `--test` files, to work by hand what the game will work later.
 - **Names start `lc_` and say the module** (`lc_lock_gate_a`). A name used twice in one chain is a PROBLEM. Everything named is listed in the report: put what each is for in the docstring.
 - A brush entity that turns needs `"origin": "%d %d %d" % (m.fr.pt(u, v) + (z,))` for its hinge.

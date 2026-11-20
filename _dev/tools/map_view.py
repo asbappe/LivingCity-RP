@@ -101,7 +101,7 @@ def scene(path):
     import json
     import os
     root = read(path)
-    polys, lights, marks = [], [], []
+    polys, lights, marks, ropes = [], [], [], {}
     facts_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "asset_facts.json")
     facts = json.load(open(facts_path)) if os.path.exists(facts_path) else {}
 
@@ -139,6 +139,9 @@ def scene(path):
                     solid(s)
             if "origin" in top.kv and not any(k.name == "solid" for k in top.kids):
                 pos = tuple(nums(top.kv["origin"])[:3])
+                if cls in ("move_rope", "keyframe_rope"):
+                    ropes[top.kv.get("targetname", "")] = (pos, top.kv.get("NextKey"), float(top.kv.get("Slack", "25")))
+                    continue
                 if cls in ("light", "light_spot"):
                     l = nums(top.kv.get("_light", "255 255 255 200"))
                     aim = None
@@ -153,7 +156,7 @@ def scene(path):
                 for key, c in MARKS:
                     if cls.startswith(key):
                         col = c
-                small = cls in ("info_target", "env_sprite", "point_spotlight", "logic_relay", "env_spark", "env_smokestack")
+                small = cls in ("info_target", "env_sprite", "point_spotlight", "logic_relay", "env_spark", "env_smokestack", "env_fire")
                 if top.kv.get("targetname", "").startswith("lc_") and cls not in ("ambient_generic", "move_rope", "keyframe_rope", "logic_timer", "path_track"):
                     col = (235, 60, 235)
                 bb = (facts.get(top.kv.get("model", "").lower()) or {}).get("bbox")
@@ -162,6 +165,13 @@ def scene(path):
                         polys.append((vs, col, None))
                 elif col:
                     marks.append((pos, col, 5 if small else 14, 10 if small else 14 if cls == "prop_ragdoll" else 56))
+    for name, (a, nxt, slack) in ropes.items():      # (a cable: a thin dark line from key to key, sagging in the middle)
+        if nxt in ropes:
+            b = ropes[nxt][0]
+            mid = ((a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2 - min(60.0, slack * 0.6))
+            for p, q in ((a, mid), (mid, b)):
+                for dx, dy, dz in ((0, 0, 1.5), (1.5, 1.5, 0)):
+                    polys.append(([(p[0] - dx, p[1] - dy, p[2] - dz), (p[0] + dx, p[1] + dy, p[2] + dz), (q[0] + dx, q[1] + dy, q[2] + dz), (q[0] - dx, q[1] - dy, q[2] - dz)], (30, 28, 26), None))
     for (x, y, z), col, r, h in marks:
         for vs in box_faces((x - r, y - r, z, x + r, y + r, z + h)):
             polys.append((vs, col, None))      # (None: a marker, which shades nothing under it)

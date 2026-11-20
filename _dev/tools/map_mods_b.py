@@ -8,6 +8,11 @@ Living City: canal modules, set B: places where the Resistance lives (map_module
     pit        a fighting pit: a caged sunken ring, bleachers, a bookmaker
     garden     a walled garden: soil beds, a rain butt, a lean-to, a scarecrow
     stash      a secret arms room behind a section of canal wall that a pipe valve opens
+    market     the black market: a vaulted arcade of five stalls with roll shutters
+    press      the pamphlet press: a printing room behind a false stack of crates
+    still      a distillery in a cellar: a pot still, mash casks, shelves of bottles
+    plaza      half a round amphitheatre of five tiers, a rostrum at the canal's edge
+    playground a rusted playground on a terrace: a relic of before
 
 How to write one, and what every call does: docs/dev/map-modules.md.
 """
@@ -189,7 +194,9 @@ def m_cells(m, opt):
     stands. The far cell has a loose grate low in its side wall (lc_cells_grate: Use swings it; the game can Lock it)
     onto a crawl duct 40 high that comes out at the canal's floor through a big outfall pipe: the way to break out, or in.
     Unchecked: the sound ambient/atmosphere/tunnel1.wav; whether a prisoner's Use can reach a button round the pier's
-    corner (they are 16 past the cell's edge, facing away); how the prop models sit (table, chair, lockers, mattress)."""
+    corner (they are 16 or more past the cell's edge, facing away); which way the table, chair and lockers face (their
+    sizes and places are from the models' own files); the doors' sounds (the bunker's own, doors/doormove1.wav and
+    doors/gate_move1.wav)."""
     L, H = 1024, F + 128
     m.open(0, -256, L, 256)
     m.low(128, 256, 192, 320, F + 112)                      # the doorway
@@ -311,7 +318,7 @@ def line_walls(m, rooms, dado=56, low=TILE, high=PLASTER, roof=PLASTER):
             start = prev = a
 
 
-BED_YAW = 90     # the way the clinic's bed frames are turned: change it if a compile shows them lying across their mattresses
+BED_YAW = 90     # the way the clinic's bed frames are turned (their long side is the model's x): 270 puts their heads the other way
 
 
 # ---------------------------------------------------------------------------
@@ -326,8 +333,8 @@ def m_clinic(m, opt):
     wall; through a curtained opening an operating theatre with a steel table under a strong lamp that shines straight
     down (lc_clinic_table: on the table), a trolley and shelves; and off the theatre a sluice room with a sink, a
     boiler and a floor drain.
-    Unchecked: the sound ambient/water/leak_1.wav; how the prop models sit and face (the bed frames above all: BED_YAW
-    turns them; the sink, radiator, shelves, table and chair)."""
+    Unchecked: the sound ambient/water/leak_1.wav; which end of a bed frame is its head, and which way the sink,
+    stove, radiator and shelves face (sizes and places are from the models' own files; BED_YAW turns the frames)."""
     L = 1024
     m.open(0, -256, L, 256)
     m.low(384, 256, 576, 320, F + 144)                          # the way in
@@ -462,8 +469,8 @@ def m_memorial(m, opt):
     a wreath over it, posters on the side walls, a line strung across, and a plank bench out in the canal facing it.
     lc_memorial_wall is the middle of the wall, facing out: the game may one day list there the names of characters
     who died for good.
-    Unchecked: the sound ambient/levels/canals/windmill_wind_loop1.wav (a low wind). No flowers: no flower model is
-    known to be in the owner's game, so the dried stalks are brushes."""
+    Unchecked: the sound ambient/levels/canals/windmill_wind_loop1.wav (a low wind). No flowers: Half-Life 2's model
+    list has none, so the dried stalks are brushes."""
     L, Z = 768, F + 16
     m.open(0, -256, L, 256)
     m.open(192, 256, 576, 384, floor=Z, mat=STONE_FLOOR)
@@ -883,7 +890,8 @@ def m_market(m, opt):
     the middle of the arcade, benches by it; a lookout's stool stands inside each archway, where the canal can be
     watched both ways; ribs carry the vault at every pier.
     Unchecked: the sound ambient/fire/fire_small_loop1.wav; env_fire's look (the same settings as the vortigaunt
-    culvert's fire); a shutter starts shut, and nothing but its button or the game opens it."""
+    culvert's fire); func_door's "spawnpos" 1 (starts open) is from memory. The first, third and fifth shutters start up, the second and fourth down (to be seen both ways);
+    a shut stall is still got into under its counter's end: the shutter says closed, it does not lock."""
     L, H, A = 1280, F + 176, F + 128
     m.open(0, -256, L, 256)
     m.low(128, 320, 1152, 512, H, mat=STONE_FLOOR)                  # the arcade
@@ -913,7 +921,7 @@ def m_market(m, opt):
         m.det([(su, 510, F + 38, su + 128, 532, F + 41)], WOOD)
         # the shutter, and the box it rolls up into
         slide_door(m, "lc_market_shutter_%d" % n, [((su, 507, F + 42, su + 128, 509, A), TIN), ((su, 506, F + 42, su + 128, 510, F + 46), BARS)],
-                   "-90 0 0", speed=50, lip=6)
+                   "-90 0 0", speed=50, lip=6, starts_open=k % 2 == 0)
         m.det([(su - 4, 500, A - 4, su + 132, 512, A + 22)], TIN)
         m.det([(su - 4, 504, F, su, 512, A - 4), (su + 128, 504, F, su + 132, 512, A - 4)], BARS)
         m.button("lc_market_button_%d" % n, su, 600, F + 44, 0, [("lc_market_shutter_%d" % n, "Toggle", "", 0)])
@@ -954,6 +962,343 @@ def m_market(m, opt):
     m.view(470, 600, F, 300, 6, "behind a counter")
 
 
+# ---------------------------------------------------------------------------
+# 8. The pamphlet press
+# ---------------------------------------------------------------------------
+
+def m_press(m, opt):
+    """The pamphlet press: a short side tunnel off the left wall that seems to end in a stack of crates to the roof.
+    The crates are brushes; between the two at the floor is a gap 44 wide and 40 high behind a hanging sack (no
+    thing: walk, or rather crawl, through it). Behind is the printing room: a hand press built of brushes (a bed on
+    legs with the forme on it, a platen hanging from a screw between two cheeks, a long lever), lc_press_machine on
+    its bed; a type case with a sloped top; three drying lines across the room hung with sheets; stacks and tied
+    bundles of paper on a pallet (lc_press_stack); a table with an oil lamp; drums of ink; a mattress in the corner.
+    Unchecked: func_illusionary (the sack over the gap) is from memory; how taut the drying lines hang (the sheets are
+    brushes placed for a line with almost no sag)."""
+    L, H = 768, F + 144
+    m.open(0, -256, L, 256)
+    m.low(256, 256, 384, 512, F + 128)                          # the side tunnel
+    m.low(192, 512, 640, 768, H, mat=CRACKED)                   # the printing room
+    m.side(128, 256, 704, 832)
+    m.portal(256, 318, F, 384, 320, F + 128)
+    m.taken(232, 110, F, 408, 256, F + 170)
+    cheeks(m, 256, 384)
+    m.lane(320, 300)
+
+    # the false stack: two crates at the floor with the gap between them, two rows more to the roof
+    crates = [(256, 384, F, 300, 448, F + 40), (344, 384, F, 384, 448, F + 40),
+              (256, 386, F + 40, 324, 446, F + 86), (324, 388, F + 40, 384, 448, F + 86),
+              (256, 384, F + 86, 312, 444, F + 128), (312, 388, F + 86, 384, 448, F + 128)]
+    m.det(crates, WOOD)
+    straps = []
+    for (u1, v1, z1, u2, v2, z2) in crates:
+        straps += [(u1, v1 - 1, z1, u2, v1, z1 + 4), (u1, v1 - 1, z2 - 4, u2, v1, z2), (u1, v1 - 1, z1 + 4, u1 + 4, v1, z2 - 4), (u2 - 4, v1 - 1, z1 + 4, u2, v1, z2 - 4)]
+    m.det(straps, BEAM)
+    m.ent("func_illusionary", {"rendermode": "0", "renderamt": "255", "rendercolor": "255 255 255", "disableshadows": "1"}, [(300, 383, F + 1, 344, 384, F + 40)], CLOTH)
+    m.static("models/props_junk/wood_crate001a.mdl", 279, 352, 5)
+    m.static("models/props_junk/wood_crate002a.mdl", 363, 348, 0)
+    m.blocked(256, 320, 384, 512)
+    m.light(320, 300, F + 110, "200 205 190 25")
+
+    # the press
+    pu, pv = 300, 664
+    m.det([(pu - 28, pv - 30, F, pu - 22, pv - 24, F + 30), (pu + 22, pv - 30, F, pu + 28, pv - 24, F + 30),
+           (pu - 28, pv + 24, F, pu - 22, pv + 30, F + 30), (pu + 22, pv + 24, F, pu + 28, pv + 30, F + 30),
+           (pu - 34, pv - 8, F, pu - 26, pv + 8, F + 102), (pu + 26, pv - 8, F, pu + 34, pv + 8, F + 102), (pu - 38, pv - 10, F + 102, pu + 38, pv + 10, F + 114)], BEAM)
+    m.det([(pu - 30, pv - 34, F + 30, pu + 30, pv + 34, F + 36)], WOOD)                         # the bed
+    m.det([(pu - 18, pv - 22, F + 36, pu + 18, pv + 22, F + 39), (pu - 17, pv - 18, F + 52, pu + 17, pv + 18, F + 60)], STEEL)   # the forme, the platen
+    m.det([(pu - 15, pv - 19, F + 39, pu + 15, pv + 19, F + 40)], PLASTER)                      # a sheet, just pulled
+    m.shapes([vpipe(pu, pv, 3, F + 60, F + 102, BARS), vpipe(pu, pv, 7, F + 94, F + 102, STEEL),
+              vprism([(pu - 2, pv - 3), (pu + 3, pv + 2), (pu + 61, pv - 54), (pu + 56, pv - 59)], F + 74, F + 78, BARS),   # the lever
+              vpipe(pu + 59, pv - 57, 4, F + 70, F + 82, WOOD)])
+    m.target("lc_press_machine", pu, pv, F + 42, 270)
+    m.blocked(pu - 48, pv - 64, pu + 72, pv + 48)
+
+    # the type case, against the left wall
+    m.det([(194, 548, F, 222, 632, F + 36)], BEAM)
+    m.shapes([prism([(194, F + 36), (224, F + 36), (224, F + 40), (194, F + 58)], "y", 546, 634, WOOD)])
+    m.det([(222, 552 + 20 * j, F + 6 + 10 * i, 223, 568 + 20 * j, F + 13 + 10 * i) for i in range(3) for j in range(4)], WOOD)
+    m.det([(223, 558 + 20 * j, F + 9 + 10 * i, 224, 562 + 20 * j, F + 10 + 10 * i) for i in range(3) for j in range(4)], STEEL)
+
+    # the drying lines, hung with sheets
+    rnd = random.Random(31)
+    sheets = []
+    for lv in (556, 612, 736):
+        m.rope([(194, lv, F + 126), (638, lv, F + 126)], slack=2, width=1)
+        u = 214
+        while u < 610:
+            if rnd.random() < 0.75 and not (lv == 612 and 250 < u < 350):
+                sheets.append((u, lv, F + 108, u + 12, lv + 1, F + 125))
+            u += rnd.choice((18, 22, 30))
+    m.det(sheets, PLASTER)
+
+    # paper: stacks and tied bundles on a pallet, more on the floor
+    m.static("models/props_junk/wood_pallet001a.mdl", 580, 706, 0)
+    m.target("lc_press_stack", 580, 706, F + 30, 180)
+    stacks = [(552, 676, F + 9, 576, 708, F + 37), (580, 678, F + 9, 604, 710, F + 27), (554, 712, F + 9, 578, 740, F + 21), (582, 714, F + 9, 606, 742, F + 43),
+              (470, 742, F, 494, 766, F + 14), (498, 740, F, 522, 764, F + 8)]
+    m.det(stacks, PLASTER)
+    m.det([(u1, (v1 + v2) // 2 - 1, z1, u2, (v1 + v2) // 2 + 1, z2 + 1) for (u1, v1, z1, u2, v2, z2) in stacks[:4]], BEAM)
+    m.blocked(536, 656, 624, 760)
+
+    # a table with the oil lamp, a chair; ink; somewhere to sleep
+    m.static("models/props_c17/furnituretable001a.mdl", 420, 734, 0)
+    m.static("models/props_c17/furniturechair001a.mdl", 420, 694, 90)
+    lu, lv, lz = 412, 738, F + 37
+    m.shapes([vpipe(lu, lv, 5, lz, lz + 5, TIN), vpipe(lu, lv, 3, lz + 5, lz + 15, "glass/glasswindow041a"), vpipe(lu, lv, 2, lz + 15, lz + 18, TIN)])
+    m.glow(lu, lv, lz + 10, "255 200 120", 0.15)
+    m.light(lu, lv, lz + 24, "255 185 105 110")
+    m.det([(430, 726, lz, 446, 746, lz + 3), (434, 722, lz, 452, 740, lz + 1)], PLASTER)
+    m.static("models/props_c17/oildrum001.mdl", 612, 540, 0)
+    m.static("models/props_c17/oildrum001.mdl", 580, 536, 0)
+    m.det([(540, 524, F, 560, 544, F + 18), (542, 528, F + 18, 558, 540, F + 20)], BEAM)        # a stool with the ink tray and roller
+    m.shapes([prism(octagon(534, F + 23, 3), "x", 543, 557, BARS)])
+    m.loose("models/props_c17/furnituremattress001a.mdl", 600, 610, 90)
+    m.light(300, 600, H - 12, "225 215 190 45")
+    m.decal("decals/decalposter014a", 192, 700, F + 90)
+    m.decal("decals/decal_posters005a", 640, 640, F + 92)
+    for u, v in ((320, 480), (400, 600), (500, 620)):
+        m.lane(u, v)
+
+    m.view(320, 150, F, 90, 0, "the tunnel: a stack of crates")
+    m.view(320, 330, F, 90, 14, "at the stack: the gap")
+    m.view(320, 530, F, 80, 4, "the printing room")
+    m.view(600, 560, F, 150, 8, "the press")
+    m.view(230, 740, F, 345, 4, "the paper and the lines")
+
+
+# ---------------------------------------------------------------------------
+# 9. The still
+# ---------------------------------------------------------------------------
+
+def cask(u, v, r, z1, z2, top=None):
+    """A barrel standing on z1: its staves and three iron hoops."""
+    h = z2 - z1
+    return [vpipe(u, v, r, z1, z2, WOOD, top=top or BEAM)] + [vpipe(u, v, r + 1, z1 + (h * k) // 8, z1 + (h * k) // 8 + 3, BARS) for k in (1, 4, 7)]
+
+
+def m_still(m, opt):
+    """The still: a distillery in a cellar off the left wall. A short tunnel, then eight steps down into a cellar
+    64 below the canal's floor. Against its far side the pot still, built of brushes: a brick firebox open at the
+    front with a small steady fire in it, a round pot on it, a head that tapers up in rings, a pipe across to the
+    worm (a cask with hoops round it) and a spout over a glass jar (lc_still_pot: in front of the firebox). Three mash
+    casks along the left wall, one open; sacks; shelves of bottles along the back wall (lc_still_shelf: in front of
+    them); a table with a funnel and bottles; cut wood by the fire; a pale steam over the pot's head.
+    Unchecked: the sound ambient/fire/fire_small_loop1.wav; env_fire's look and env_smokestack's (the framework's own
+    settings, made small and pale here); how the loose bottles lie."""
+    L, C = 768, F - 64
+    H = C + 160
+    m.open(0, -256, L, 256)
+    m.low(320, 256, 448, 384, F + 128)                          # the tunnel
+    m.low(192, 384, 640, 704, H, floor=C, mat=STONE_FLOOR)      # the cellar
+    m.side(128, 256, 704, 768)
+    m.portal(320, 318, F, 448, 320, F + 128)
+    m.taken(296, 110, F, 472, 256, F + 170)
+    cheeks(m, 320, 448)
+    m.steps(480, 320, 448, C, F, "v", -1)
+    m.blocked(320, 384, 448, 496)
+    m.lane(384, 300)
+    m.lane(384, 520, C)
+    m.light(384, 330, F + 110, "200 200 185 22")
+
+    # the pot still
+    pu, pv = 524, 600
+    m.det([(pu - 24, pv - 30, C, pu + 30, pv - 22, C + 26), (pu - 24, pv + 22, C, pu + 30, pv + 30, C + 26), (pu + 22, pv - 22, C, pu + 30, pv + 22, C + 26),
+           (pu - 30, pv - 30, C, pu - 24, pv - 14, C + 26), (pu - 30, pv + 14, C, pu - 24, pv + 30, C + 26), (pu - 30, pv - 14, C + 20, pu - 24, pv + 14, C + 26)], BRICK)
+    m.det([(pu - 32, pv - 32, C + 26, pu + 32, pv + 32, C + 30)], STEEL)
+    m.det([(pu - 22, pv - 12, C + 4, pu + 16, pv - 9, C + 6), (pu - 22, pv - 2, C + 4, pu + 16, pv + 1, C + 6), (pu - 22, pv + 9, C + 4, pu + 16, pv + 12, C + 6)], BARS)   # the grate
+    fire(m, pu - 6, pv, C + 7, size=14, light="255 150 70 90")
+    m.shapes([vpipe(pu, pv, 24, C + 30, C + 78, BARS), vpipe(pu, pv, 25, C + 52, C + 55, STEEL),
+              vpipe(pu, pv, 20, C + 78, C + 86, BARS), vpipe(pu, pv, 15, C + 86, C + 94, BARS), vpipe(pu, pv, 10, C + 94, C + 104, BARS), vpipe(pu, pv, 6, C + 104, C + 118, BARS),
+              prism(octagon(pv, C + 114, 3), "x", 420, pu, BARS), vpipe(420, pv, 3, C + 72, C + 117, BARS)])
+    m.target("lc_still_pot", pu - 60, pv, C + 8, 0)
+    m.smoke(pu, pv, C + 122, colour="215 215 215", size=7, length=44, rate=6)
+    m.sound("ambient/fire/fire_small_loop1.wav", pu, pv, C + 30, radius=380, volume=3)
+    # the worm: a cask on a stand, hoops all the way up it, a spout, a jar
+    wu = 414
+    m.det([(wu - 20, pv - 18, C, wu - 12, pv + 18, C + 12), (wu + 12, pv - 18, C, wu + 20, pv + 18, C + 12)], BEAM)
+    m.shapes([vpipe(wu, pv, 20, C + 12, C + 72, WOOD, top=MAT["black"])] + [vpipe(wu, pv, 21, C + 16 + 9 * k, C + 18 + 9 * k, BARS) for k in range(6)]
+             + [prism(octagon(pv, C + 20, 2), "x", wu - 34, wu - 18, BARS), vpipe(wu - 36, pv, 5, C, C + 12, "glass/glasswindow041a"), vpipe(wu - 36, pv, 3, C + 12, C + 15, "glass/glasswindow041a")])
+    m.blocked(360, 552, 576, 648)
+    # cut wood by the fire
+    m.shapes([prism(octagon(540 + 9 * (k % 4) + 4 * (k // 4), C + 4 + 8 * (k // 4), 4), "x", 470, 506, BEAM) for k in range(7)])
+
+    # the mash: three casks along the left wall (the middle one open), sacks
+    casks = []
+    for k, cv in enumerate((452, 512, 572)):
+        casks += cask(226, cv, 24, C, C + 58, top=DIRT if k == 1 else None)
+    m.shapes(casks)
+    m.det([(198, 620, C, 250, 652, C + 12), (200, 656, C, 248, 690, C + 12), (206, 630, C + 12, 246, 668, C + 23), (256, 640, C, 290, 696, C + 11)], CLOTH)
+    m.det([(250, 500, C, 252, 502, C + 74)], BEAM)                                          # the paddle, stood in the open cask's reach
+
+    # shelves of bottles along the back wall; a table with a funnel
+    goods(m, 300, 620, 704, -1, C, (24, 48, 72, 96), 90, kinds=(WOOD,), jars=1.0)
+    m.target("lc_still_shelf", 460, 670, C + 8, 270)
+    tu, tv = 590, 460
+    m.det([(tu - 30, tv - 26, C + 32, tu + 30, tv + 26, C + 35)], WOOD)
+    m.det([(tu + du, tv + dv, C, tu + du + 4, tv + dv + 4, C + 32) for du in (-28, 24) for dv in (-24, 20)], BEAM)
+    m.shapes([vpipe(tu - 12, tv, 7, C + 43, C + 46, TIN), vpipe(tu - 12, tv, 4, C + 39, C + 43, TIN), vpipe(tu - 12, tv, 2, C + 35, C + 39, TIN)])
+    for du, dv in ((8, -10), (16, 4), (4, 12)):
+        m.loose("models/props_junk/garbage_glassbottle003a.mdl", tu + du, tv + dv, 0, z=C + 35)
+    m.static("models/props_junk/wood_crate001a.mdl", 606, 664, 10, z=C)
+    m.det([(540, 430, C, 556, 446, C + 18)], BEAM)
+    m.lamp(400, 520, H - 20, "255 205 140 110", hang=12)
+    m.lane(400, 520, C)
+    m.lane(330, 620, C)
+
+    m.view(384, 150, F, 90, 0, "the tunnel from the canal")
+    m.view(384, 370, F, 80, 16, "down the steps")
+    m.view(330, 500, C, 25, 2, "the still")
+    m.view(600, 520, C, 160, 6, "the casks and the shelves")
+    m.view(470, 520, C, 60, 6, "the pot and the fire")
+
+
+# ---------------------------------------------------------------------------
+# 10. The plaza
+# ---------------------------------------------------------------------------
+
+def half_ring(cu, v0, r):
+    """Five corners of half an eight-sided ring about r from (cu, v0), on the side v > v0."""
+    a = int(round(r * 0.7071))
+    return [(cu + r, v0), (cu + a, v0 + a), (cu, v0 + r), (cu - a, v0 + a), (cu - r, v0)]
+
+
+def m_plaza(m, opt):
+    """The plaza: where people gather to listen. The canal opens on its left, 1024 wide, into half a round
+    amphitheatre under the open sky: a flat floor 512 across, then five concrete tiers of seats stepping up and back
+    round it, each 16 high and 48 deep (walked up anywhere, sat on anywhere), the last one a broad walk under the
+    wall; the tiers' ends show as steps from the canal. At the canal's edge, facing the tiers, a timber rostrum three
+    steps up with a lectern (lc_plaza_rostrum: where the speaker stands, facing the tiers), between two poles that
+    carry a wire for a banner; a horn on one pole; a fire drum on each side of the floor. lc_plaza_crowd is the middle
+    of the third tier, facing the rostrum.
+    Unchecked: env_fire's look in the drums (the vortigaunt culvert's settings); no sound here."""
+    L, cu, v0 = 1536, 768, 256
+    m.open(0, -256, L, 256)
+    for i in range(-9, 9):
+        for j in range(0, 9):
+            du, dv = i * CELL + 32, j * CELL + 32
+            if du * du + dv * dv < 544 * 544:
+                m.open(cu + i * CELL, v0 + j * CELL, cu + (i + 1) * CELL, v0 + (j + 1) * CELL, mat=MAT["quay_floor"])
+    m.side(192, 256, 1344, 896)
+    m.no_bank(192, 264, 1344, 896)
+    m.blocked(192, 448, 1344, 896)
+    m.taken(232, 110, F, 1304, 256, F + 150)
+    cheeks(m, 256, 1280)
+
+    # the tiers: each a half ring from its own front back to the wall, one on top of the next
+    far = half_ring(cu, v0, 704)
+    tiers = []
+    for k in range(5):
+        near = half_ring(cu, v0, 256 + 48 * k)
+        tiers += [vprism([near[j], near[j + 1], far[j + 1], far[j]], F, F + 16 * (k + 1), MAT["beam"], top=MAT["quay_floor"]) for j in range(4)]
+    m.shapes(tiers)
+    m.target("lc_plaza_crowd", cu, v0 + 376, F + 56, 270)
+
+    # the rostrum at the canal's edge: a timber deck three steps up, a lectern, a rail behind
+    r1, r2, rv1, rv2, top = cu - 48, cu + 48, 196, 262, F + 24
+    m.det([(r1, rv1, top - 4, r2, rv2, top)], WOOD)
+    m.det([(u, v, F, u + 6, v + 6, top - 4) for u in (r1, cu - 3, r2 - 6) for v in (rv1, rv2 - 6)]
+          + [(r1, rv1, top - 10, r2, rv1 + 4, top - 4), (r1, rv2 - 4, top - 10, r2, rv2, top - 4)], BEAM)
+    m.det([(r1 - 12 * (3 - k), rv1 + 8, F, r1 - 12 * (2 - k), rv2 - 8, F + 8 * (k + 1)) for k in range(3)], BEAM, top=WOOD)
+    m.det([(cu - 14, rv2 - 14, top, cu + 14, rv2 - 4, top + 38)], WOOD)
+    m.shapes([prism([(rv2 - 16, top + 38), (rv2 - 2, top + 38), (rv2 - 2, top + 46), (rv2 - 16, top + 40)], "x", cu - 16, cu + 16, BEAM)])
+    m.det([(u, rv1, top, u + 3, rv1 + 3, top + 36) for u in (r1, cu - 1, r2 - 3)] + [(r1, rv1, top + 33, r2, rv1 + 3, top + 36)], BEAM)
+    m.target("lc_plaza_rostrum", cu, 228, top + 8, 90)
+    m.blocked(r1 - 48, rv1 - 16, r2 + 16, rv2 + 16)
+    # two poles and the wire for a banner; a horn on one
+    p1, p2, pz = r1 - 20, r2 + 16, F + 208
+    m.det([(p1, 258, F, p1 + 4, 262, pz), (p2, 258, F, p2 + 4, 262, pz), (p1 - 6, 254, F, p1 + 10, 266, F + 6), (p2 - 6, 254, F, p2 + 10, 266, F + 6)], BEAM)
+    m.rope([(p1 + 2, 260, pz - 4), (p2 + 2, 260, pz - 4)], slack=10, width=1)
+    hz = pz - 30
+    m.shapes([prism(octagon(p1 + 2, hz, 3), "y", 262, 270, STEEL), prism(octagon(p1 + 2, hz, 6), "y", 270, 275, TIN), prism(octagon(p1 + 2, hz, 11), "y", 275, 279, TIN)])
+    m.rope([(p1 + 2, 262, hz - 4), (cu - 10, 250, top + 40)], slack=30, width=1)
+
+    # a fire drum on each side of the floor
+    for u in (cu - 216, cu + 216):
+        m.static("models/props_c17/oildrum001.mdl", u, 300, 0)
+        fire(m, u, 300, F + 46, size=18, light="255 150 70 140")
+        m.blocked(u - 32, 268, u + 32, 332)
+    for u, v in ((cu, 330), (cu - 120, 380), (cu + 120, 380), (cu, 440), (cu - 380, 290), (cu + 380, 290)):
+        m.lane(u, v)
+
+    m.view(cu, 60, F, 90, 0, "from across the canal")
+    m.view(cu, 228, F + 24, 90, 2, "from the rostrum")
+    m.view(cu, v0 + 420, F + 80, 270, 8, "from the top tier")
+    m.view(330, 150, F, 40, 2, "the tiers' ends from the canal")
+
+
+# ---------------------------------------------------------------------------
+# 11. The playground
+# ---------------------------------------------------------------------------
+
+def m_playground(m, opt):
+    """The playground: a relic of before. A terrace 128 above the canal's floor on the left, open to the sky (the
+    bank along it is the way up). On it, rusted and built of brushes: a swing frame with two seats on chains, one
+    hanging by a single chain with its end on the ground; a slide with a ladder of rungs and a railed top; a
+    roundabout; a sandpit edged with timber; and a bench with its back to the wall, facing it all
+    (lc_playground_bench: on the bench). Nothing else, and no lamp.
+    Unchecked: the sound ambient/levels/canals/windmill_wind_loop1.wav (one faint wind); how the chains hang (they
+    are ropes drawn taut between two points each)."""
+    L, T = 1024, F + 128
+    m.open(0, -256, L, 256)
+    m.open(192, 256, 832, 640, floor=T, mat=CRACKED)
+    m.side(192, 256, 832, 640)
+    RUST = BARS
+
+    # the swings: an A frame at each end, a bar across, two seats
+    sv, s1, s2, sz = 500, 248, 424, T + 116
+    legs = []
+    for u in (s1, s2 - 4):
+        legs += [prism([(sv - 44, T), (sv - 40, T), (sv + 2, sz), (sv - 2, sz)], "x", u, u + 4, RUST), prism([(sv + 40, T), (sv + 44, T), (sv + 2, sz), (sv - 2, sz)], "x", u, u + 4, RUST)]
+    m.shapes(legs)
+    m.det([(s1 - 4, sv - 2, sz - 2, s2 + 4, sv + 2, sz + 2)], RUST)
+    m.det([(288, sv - 6, T + 18, 312, sv + 6, T + 20)], WOOD)                             # the seat that still hangs true
+    m.rope([(290, sv, sz - 2), (290, sv, T + 20)], slack=0, width=1)
+    m.rope([(310, sv, sz - 2), (310, sv, T + 20)], slack=0, width=1)
+    m.det([(362, sv - 14, T, 386, sv - 2, T + 2)], WOOD)                                  # the other: one chain gone, its end on the ground
+    m.rope([(366, sv, sz - 2), (364, sv - 8, T + 2)], slack=4, width=1)
+    m.rope([(386, sv, sz - 2), (386, sv, T + 70)], slack=0, width=1)
+    m.blocked(232, 440, 440, 560)
+
+    # the slide: a chute down toward the canal's end, side rails, a railed top on four posts, a ladder behind
+    a, b, c1, c2 = 584, 704, 326, 354               # (the chute's foot and head along u, its sides in v)
+    m.shapes([prism([(a, T), (b, T + 66), (b, T + 70), (a - 6, T + 3)], "y", c1, c2, TIN),
+              prism([(a, T), (b, T + 66), (b, T + 82), (a - 6, T + 12)], "y", c1 - 2, c1, RUST), prism([(a, T), (b, T + 66), (b, T + 82), (a - 6, T + 12)], "y", c2, c2 + 2, RUST)])
+    m.det([(b, c1 - 2, T + 66, b + 28, c2 + 2, T + 70)], TIN)
+    m.det([(u, v, T, u + 3, v + 3, T + 102) for u in (b, b + 25) for v in (c1 - 2, c2 - 1)]
+          + [(b, c1 - 2, T + 99, b + 28, c1 + 1, T + 102), (b, c2 - 1, T + 99, b + 28, c2 + 2, T + 102)], RUST)
+    m.shapes([prism([(b + 48, T), (b + 52, T), (b + 32, T + 70), (b + 28, T + 70)], "y", v, v + 2, RUST) for v in (c1, c2 - 2)])
+    m.det([(b + 49 - (20 * (8 + 12 * k)) // 70, c1 + 2, T + 8 + 12 * k, b + 51 - (20 * (8 + 12 * k)) // 70, c2 - 2, T + 10 + 12 * k) for k in range(5)], RUST)
+    m.blocked(560, 304, 768, 376)
+
+    # the roundabout: a disc on a hub, four posts and two rails across
+    ru, rv = 330, 350
+    m.shapes([vpipe(ru, rv, 5, T, T + 12, RUST), vpipe(ru, rv, 40, T + 10, T + 14, RUST, top=WOOD)])
+    m.det([(ru + du - 1, rv + dv - 1, T + 14, ru + du + 1, rv + dv + 1, T + 44) for du, dv in ((-30, 0), (30, 0), (0, -30), (0, 30))]
+          + [(ru - 31, rv - 1, T + 42, ru + 31, rv + 1, T + 44), (ru - 1, rv - 31, T + 42, ru + 1, rv + 31, T + 44)], RUST)
+    m.blocked(280, 300, 380, 400)
+
+    # the sandpit
+    g1, g2, h1, h2 = 520, 680, 430, 580
+    m.det([(g1, h1, T, g2, h1 + 6, T + 10), (g1, h2 - 6, T, g2, h2, T + 10), (g1, h1 + 6, T, g1 + 6, h2 - 6, T + 10), (g2 - 6, h1 + 6, T, g2, h2 - 6, T + 10)], BEAM)
+    m.det([(g1 + 6, h1 + 6, T, g2 - 6, h2 - 6, T + 5)], DIRT)
+    m.shapes([prism([(470, T + 5), (506, T + 5), (490, T + 12)], "x", 590, 634, DIRT)])
+    m.blocked(g1, h1, g2, h2)
+
+    # the bench, its back to the wall
+    m.det([(566, 612, T, 572, 632, T + 16), (708, 612, T, 714, 632, T + 16), (566, 632, T, 570, 636, T + 42), (710, 632, T, 714, 636, T + 42)], RUST)
+    m.det([(560, 610, T + 16, 720, 618, T + 18), (560, 620, T + 16, 720, 630, T + 18), (560, 633, T + 24, 720, 635, T + 32), (560, 633, T + 34, 720, 635, T + 42)], WOOD)
+    m.target("lc_playground_bench", 640, 620, T + 20, 270)
+    m.sound("ambient/levels/canals/windmill_wind_loop1.wav", 512, 440, T + 120, radius=700, volume=2)
+    for u, v in ((480, 300), (480, 400), (760, 480), (220, 600)):
+        m.lane(u, v, T)
+
+    m.view(512, 40, F, 90, -6, "from the canal")
+    m.view(220, 290, T, 30, 4, "up on the terrace")
+    m.view(640, 600, T, 250, 6, "from the bench")
+    m.view(780, 420, T, 190, 6, "the slide and the swings")
+
+
 MODULES = {
     "cells": (1024, m_cells, "the cells: a guard room, three barred cells, a crawl duct out (left)"),
     "memorial": (768, m_memorial, "the wall of the dead: plaques and candles in a recess under the open sky (left)"),
@@ -961,5 +1306,9 @@ MODULES = {
     "garden": (1280, m_garden, "the walled garden: soil beds, bean poles, a scarecrow, a lean-to, a rain butt (left)"),
     "stash": (768, m_stash, "the stash: an arms room behind a section of wall that a pipe valve opens (left)"),
     "market": (1280, m_market, "the black market: a vaulted arcade of five shuttered stalls (left)"),
+    "press": (768, m_press, "the pamphlet press: a printing room behind a false stack of crates (left)"),
+    "still": (768, m_still, "the still: a pot still, mash casks and bottles in a cellar (left)"),
+    "plaza": (1536, m_plaza, "the plaza: half a round amphitheatre of five tiers, a rostrum, fire drums (left)"),
+    "playground": (1024, m_playground, "the playground: a rusted relic on a terrace over the canal (left)"),
     "clinic": (1024, m_clinic, "the clinic: a ward, an operating theatre, a dispensary and a sluice room in a vault (left)"),
 }

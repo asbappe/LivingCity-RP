@@ -1266,6 +1266,9 @@ def finish(b, seed, spawn, args):
     bump = (lambda x, y: sum(f(x, y) for f in b.bumps)) if b.bumps else None
     ch.mud(47, skip=b.no_mud, bump=bump)
     fences = fence(vmf, plan, 96, b.vis + ": fence along the walls' tops", top=b.rim)
+    for (i, j), spec in plan.cells.items():      # (no path node where nobody can stand: a crawl duct)
+        if spec[0] == "low" and spec[3] - spec[1] < 72:
+            b.blocked.append((i * CELL, j * CELL, (i + 1) * CELL, (j + 1) * CELL))
     ch.nodes(b.node, b.blocked)
     for (nx, ny, nz) in b.lanes:
         b.node(nx, ny, nz)

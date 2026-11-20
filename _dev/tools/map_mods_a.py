@@ -11,6 +11,8 @@ Living City: canal modules, set A (picked up by map_modules.py; the guide is doc
     python3 map_modules_check.py --only tram,tenement,quay,collapse,scrapyard --views /some/folder
 """
 
+import math
+
 from map_build import CELL, GATE_HIGH, MAT, prism, octagon
 from map_modules import F, TRIM, BASE, SEWER, MM
 
@@ -95,6 +97,42 @@ def put(m, model, u, v, yaw=0, z=F):
     except Exception:
         ok = False
     (m.static if ok else m.dynamic)(model, u, v, yaw, z)
+
+
+def vprism(pts, z1, z2, mat, top=None):
+    """A standing prism: a flat outline seen from above, [(u, v), ...] in order round it, from z1 up to z2."""
+    faces = [([(u, v, z1) for u, v in pts], mat), ([(u, v, z2) for u, v in pts], top or mat)]
+    for k in range(len(pts)):
+        (a, c), (d, e) = pts[k], pts[(k + 1) % len(pts)]
+        faces.append(([(a, c, z1), (d, e, z1), (d, e, z2), (a, c, z2)], mat))
+    return faces
+
+
+def arch(a, b, zt, rise, lo, hi, mat, axis="x"):
+    """The haunches of an arch over an opening from a to b under a soffit at zt: prisms that round its two top corners
+    (three facets a side), pushed from lo to hi along u (axis "x": the opening is in v) or along v ("y": it is in u)."""
+    out = []
+    for corner, way in ((a, 1), (b, -1)):
+        pts = [(corner, zt - rise), (corner + way * (rise // 8), zt - rise // 2), (corner + way * (3 * rise // 8), zt - (3 * rise) // 16), (corner + way * rise, zt)]
+        for k in range(3):
+            out.append(prism([(corner, zt), pts[k], pts[k + 1]], axis, lo, hi, mat))
+    return out
+
+
+def wall_stair(m, start, v1, v2, sign, rail_v):
+    """Stairs 64 wide along a canal wall from the floor up to the trim's height, rising along u from `start` in the way
+    of sign, with a rail on the canal's side (rail_v: that side's v) and a rail post every fourth step."""
+    run = m.steps(start, v1, v2, F, TRIM, "u", sign)
+    end = start + sign * run
+    r1, r2 = (rail_v, rail_v + 4) if rail_v == v1 else (rail_v - 4, rail_v)
+    posts = []
+    for k in range(8):
+        u = start + sign * 48 * k
+        posts.append((min(u, u + sign * 4), r1, F + 8 * (4 * k + 1), max(u, u + sign * 4), r2, F + 40 + 32 * k))
+    m.det(posts, MAT["bars"])
+    m.shapes([prism([(start, F + 40), (end, TRIM + 40), (end, TRIM + 44), (start, F + 44)], "y", r1, r2, MAT["bars"]),
+              prism([(start, F + 20), (end, TRIM + 20), (end, TRIM + 23), (start, F + 23)], "y", r1, r1 + 2, MAT["bars"])])
+    return end
 
 
 def clip(m, box):
@@ -784,14 +822,437 @@ def m_scrapyard(m, opt):
     for (u, v, z) in ((330, 0, F), (448, 0, F + 4), (544, 0, F), (640, 0, F + 4), (820, 0, F + 4), (896, -36, F + 4), (896, -100, F), (1024, -20, F), (1152, 0, F + 4),
                       (1260, 0, F), (448, 230, F), (544, 96, F), (640, 300, F + 4), (736, 432, F), (448, -256, F), (760, -384, F), (1024, -384, F + 4), (1260, -384, F)):
         m.lane(u, v, z)
-    m.view(260, -144, F, 5, -6, "the ramp, the way through")
+    m.view(70, -40, F, 355, -4, "the ramp, the way through")
     m.view(448, 0, L1Z, 0, -4, "from the first roof: the stack, the porch")
     m.view(610, 0, F + 4, 0, 2, "inside the middle container")
-    m.view(900, 320, L2Z, 250, 8, "the left stack's roof: the plank to the ledge, the ladder")
-    m.view(700, 0, L3Z, 180, 16, "from the perch, the way people come")
+    m.view(1100, 330, L2Z, 235, 10, "the left stack's roof: the plank to the ledge, the ladder")
+    m.view(840, 0, L3Z, 180, 22, "from the perch, the way people come")
     m.view(1460, -60, F, 170, -10, "from the far end")
     b.notes.append("%s: the yard is %d by %d; container roofs at z %d, %d and %d (the perch); the crane's tower tops out at z %d, its hook hangs at z %d" % (
         m.tag, 1152, 1280, L1Z, L2Z, L3Z, top + 60, L3Z + 56))
+
+
+# ---------------------------------------------------------------------------
+# boathouse
+# ---------------------------------------------------------------------------
+
+def m_boathouse(m, opt):
+    """The smugglers' boathouse: a boat shed built into the left wall, its floor 64 over the canal's. A slipway of
+    concrete with two launching rails climbs from the canal floor through a cut in the bank to a roll-up door of
+    corrugated tin 256 wide (lc_boathouse_door: a func_door that lifts). The door is worked by a button inside, to
+    the right of it, and by one outside on the canal wall, on the far side of a drain pipe so that nobody coming
+    along the canal sees it (stand on the bank to reach it). Inside: a boat on trestles on the rails, a winch at the
+    back with its cable on the bow, a workbench, shelves, fuel drums, two lamps. In the floor at the back a steel
+    hatch (lc_boathouse_hatch: a func_door that slides aside, worked by the button over the workbench) covers steps
+    down to a cellar 192 square where the contraband is kept (lc_boathouse_cellar).
+    Named for the game: lc_boathouse_door (func_door: Open, Close, Toggle), lc_boathouse_hatch (func_door, the same),
+    lc_boathouse_button_in, lc_boathouse_button_out, lc_boathouse_hatch_button (func_buttons that already work in the
+    map), lc_boathouse_cellar (an info_target in the cellar: the cache).
+    Unchecked: the buttons' model is Episode Two's (the shared button helper's choice)."""
+    b = m.b
+    fz, ceil, cz = F + 64, F + 224, F - 64
+    steel, tin, wood = MM["steel"], MM["tin"], MM["wood"]
+    m.open(0, -256, 1024, 256)
+    m.low(448, 256, 704, 320, ceil, floor=fz)                    # the doorway
+    m.low(320, 320, 832, 704, ceil, floor=fz)                    # the shed
+    m.low(640, 512, 704, 704, ceil, floor=cz)                    # the stair's well in its floor
+    m.low(576, 704, 768, 896, cz + 112, floor=cz)                # the cellar
+    m.side(320, 256, 832, 896)
+    m.portal(448, 283, fz, 704, 285, ceil)
+    m.portal(576, 708, cz, 768, 710, cz + 112)
+    # --- the slipway through the bank, its rails on into the shed ---
+    m.no_bank(448, 248, 704, 264)
+    m.shapes([prism([(256, fz), (64, F), (256, F)], "x", 448, 704, MAT["beam"]),
+              para((520, 64, F), (8, 0, 0), (0, 192, 64), (0, 0, 5), MAT["bars"]), para((624, 64, F), (8, 0, 0), (0, 192, 64), (0, 0, 5), MAT["bars"]),
+              para((448, 100, F + 12), (256, 0, 0), (0, 12, 4), (0, 0, 3), MAT["canal_wall"]), para((448, 190, F + 42), (256, 0, 0), (0, 12, 4), (0, 0, 3), MAT["canal_wall"])])
+    m.det([(520, 256, fz, 528, 640, fz + 5), (624, 256, fz, 632, 640, fz + 5)], MAT["bars"])
+    m.blocked(448, 64, 704, 320)
+    m.lane(576, 40, F)
+    m.lane(576, 160, F + 32)
+    m.lane(576, 300, fz)
+    # --- the roll-up door, its guides and roller housing, the two buttons ---
+    m.door("lc_boathouse_door", [(448, 280, fz, 704, 288, ceil)], tin, "-90 0 0", speed=36, lip=14)
+    m.det([(440, 246, fz, 448, 256, ceil + 8), (704, 246, fz, 712, 256, ceil + 8), (436, 236, ceil + 8, 716, 256, ceil + 40)], steel)
+    m.det([(448, 276, fz, 452, 292, ceil), (700, 276, fz, 704, 292, ceil)], steel)
+    m.taken(424, 200, F, 728, 256, ceil + 48)
+    m.button("lc_boathouse_button_in", 740, 320, fz + 40, 90, [("lc_boathouse_door", "Toggle", "", 0)])
+    m.det([(724, 232, F + 96, 738, 248, b.rim), (720, 228, F + 250, 742, 256, F + 258), (720, 228, F + 150, 742, 256, F + 158)], MAT["bars"])       # the drain pipe, strapped to the wall
+    m.button("lc_boathouse_button_out", 748, 256, F + 160, 270, [("lc_boathouse_door", "Toggle", "", 0)])
+    m.taken(712, 220, F, 768, 256, b.rim)
+    # --- the hatch over the cellar steps, its frame, the steps, the cellar ---
+    m.door("lc_boathouse_hatch", [(640, 512, fz, 704, 704, fz + 5)], steel, "0 %d 0" % m.fr.yaw(180), speed=30, lip=0)
+    m.det([(636, 508, fz, 640, 704, fz + 2), (704, 508, fz, 708, 704, fz + 2), (636, 508, fz, 708, 512, fz + 2)], MAT["bars"])
+    m.steps(704, 640, 704, cz, fz, "v", -1)
+    m.blocked(576, 448, 768, 704)
+    m.button("lc_boathouse_hatch_button", 320, 560, fz + 52, 0, [("lc_boathouse_hatch", "Toggle", "", 0)])
+    m.target("lc_boathouse_cellar", 672, 800, cz + 8, 270)
+    m.light(672, 800, cz + 96, "255 190 120 22")
+    m.det([(580, 880, cz, 764, 892, cz + 4), (580, 880, cz + 40, 764, 892, cz + 44), (580, 880, cz + 80, 764, 892, cz + 84)] +
+          [(u, 880, cz, u + 4, 892, cz + 84) for u in (580, 668, 760)], MM["beam_wood"])                                    # the cellar's racking
+    m.loose(P + "props_junk/wood_crate001a.mdl", 610, 740, 10, z=cz)
+    m.loose(P + "props_junk/wood_crate001a.mdl", 612, 790, 40, z=cz)
+    m.loose(P + "props_junk/wood_crate002a.mdl", 736, 840, 90, z=cz)
+    put(m, P + "props_c17/canister01a.mdl", 744, 760, 0, z=cz)
+    put(m, P + "props_c17/canister01a.mdl", 750, 780, 30, z=cz)
+    put(m, P + "props_c17/lockers001a.mdl", 588, 850, 0, z=cz)
+    m.lane(672, 800, cz)
+    m.lane(672, 490, fz)
+    # --- the shed: the boat on trestles, the winch and its cable, the bench, shelves, drums ---
+    for u in (500, 652):
+        m.det([(u, 432, fz + 22, u + 8, 528, fz + 28), (u, 436, fz, u + 8, 442, fz + 22), (u, 518, fz, u + 8, 524, fz + 22), (u + 2, 442, fz + 8, u + 6, 518, fz + 11)], MM["beam_wood"])
+    put(m, P + "props_canal/boat001a.mdl", 576, 480, 0, z=fz + 28)
+    m.det([(388, 464, fz, 420, 496, fz + 10), (392, 458, fz + 10, 396, 502, fz + 44), (412, 458, fz + 10, 416, 502, fz + 44)], steel)
+    m.shapes([prism(octagon(480, fz + 30, 12), "x", 396, 412, MAT["bars"])])
+    m.rope([(404, 480, fz + 40), (470, 480, fz + 50)], slack=6)
+    m.det([(328, 520, fz + 34, 372, 680, fz + 38)] + [(u, v, fz, u + 4, v + 4, fz + 34) for u in (330, 366) for v in (522, 674)] + [(332, 524, fz + 10, 368, 676, fz + 12)], MM["beam_wood"])
+    put(m, P + "props_c17/tools_wrench01a.mdl", 350, 640, 30, z=fz + 38)
+    put(m, P + "props_junk/metalbucket01a.mdl", 352, 600, 0, z=fz + 38)
+    put(m, P + "props_c17/shelfunit01a.mdl", 440, 690, 0, z=fz)
+    for (u, v) in ((790, 380), (800, 420), (766, 356)):
+        put(m, P + "props_c17/oildrum001.mdl", u, v, 0, z=fz)
+    put(m, P + "props_c17/oildrum001_explosive.mdl", 796, 470, 0, z=fz)
+    m.loose(P + "props_junk/wood_pallet001a.mdl", 780, 640, 20, z=fz)
+    m.loose(P + "props_vehicles/tire001c_car.mdl", 350, 370, 0, z=fz)
+    m.lamp(480, 480, ceil - 8, "255 205 150 45")
+    m.lamp(700, 420, ceil - 8, "255 205 150 35")
+    m.blocked(448, 416, 704, 544)
+    m.lane(400, 600, fz)
+    m.lane(760, 560, fz)
+    m.lane(420, 380, fz)
+    m.view(576, -80, F, 90, -6, "the slipway and the door")
+    m.view(860, 150, F + 60, 160, 4, "the button behind the pipe")
+    m.view(770, 350, fz, 160, 6, "inside: the boat")
+    m.view(400, 650, fz, 320, 8, "from the bench: the hatch, the door")
+    m.view(600, 730, cz, 50, 2, "the cellar")
+    b.notes.append("%s: the shed's floor is z %d, the cellar's z %d; the door and the hatch both start shut" % (m.tag, fz, cz))
+
+
+# ---------------------------------------------------------------------------
+# arcade
+# ---------------------------------------------------------------------------
+
+def m_arcade(m, opt):
+    """The market arcade: an old covered market built over the canal on three stone arches (u 640 to 896). Below, the
+    canal passes between two piers 64 thick with cutwaters: a middle arch 128 wide over the flat of the floor, a side
+    arch over each bank. Above, at the trim's height, a covered walk 256 wide crosses from wall to wall under a
+    pitched tin roof on columns: open bays with a parapet 36 high look up and down the canal, three empty stalls
+    stand down its middle (counters either side, a canopy), shop shutters close its two ends. It is reached by a
+    stair along each wall from the canal floor: on the left bank from the entry side (u 256 up to 640), on the right
+    bank from the exit side (u 1280 down to 896), so each end of the canal has its own way up. Two levels to fight
+    over: whoever holds the walk sees both approaches, whoever is below has the piers.
+    Named for the game: lc_arcade_upper (an info_target in the middle of the walk)."""
+    b = m.b
+    deck, roof = TRIM, TRIM + 120
+    stone, tin, wood = STONE, MM["tin"], MM["wood"]
+    m.open(0, -256, 1536, 256)
+    # --- below: the deck on its piers and arches ---
+    m.det([(640, -256, deck - 32, 896, 256, deck)], stone, top=TILE)
+    m.det([(640, 64, F, 896, 128, deck - 32), (640, -128, F, 896, -64, deck - 32)], stone)
+    cut = []
+    for (v1, v2) in ((64, 128), (-128, -64)):
+        mid = (v1 + v2) // 2
+        cut += [vprism([(640, v1), (640, v2), (600, mid)], F, F + 176, stone), vprism([(896, v1), (896, v2), (936, mid)], F, F + 176, stone)]
+        m.blocked(576, v1 - 32, 960, v2 + 32)
+    m.shapes(cut)
+    haunch = []
+    for (a, c) in ((-256, -128), (-64, 64), (128, 256)):
+        haunch += arch(a, c, deck - 32, 64, 640, 896, stone)
+    m.shapes(haunch)
+    m.det([(632, -256, deck - 12, 640, 256, deck + 4), (896, -256, deck - 12, 904, 256, deck + 4)], MAT["beam"])              # the cornice along each face
+    m.taken(600, 192, F, 936, 256, b.rim)
+    m.taken(600, -256, F, 936, -192, b.rim)
+    # --- the stairs: left bank from the entry side, right bank from the exit side ---
+    m.no_bank(192, 248, 640, 264)
+    m.no_bank(896, -264, 1344, -248)
+    wall_stair(m, 256, 192, 256, 1, 192)
+    wall_stair(m, 1280, -256, -192, -1, -192)
+    m.blocked(192, 128, 640, 256)
+    m.blocked(896, -256, 1344, -128)
+    m.taken(192, 176, F, 640, 256, deck + 64)
+    m.taken(896, -256, F, 1344, -176, deck + 64)
+    for k, u in enumerate((230, 352, 496, 630)):
+        m.lane(u, 224, (F, F + 64, F + 160, deck)[k])
+        m.lane(1536 - u, -224, (F, F + 64, F + 160, deck)[k])
+    # --- above: the covered walk. Columns and a parapet along each face (a gap where each stair comes up) ---
+    cols, brackets = [], []
+    for (ua, ub, gap) in ((640, 652, (192, 256)), (884, 896, (-256, -192))):
+        for c in (-256, -152, -56, 40, 136, 240):
+            cols.append((ua, c, deck, ub, c + 16, roof))
+            for way in (-1, 1):
+                edge = c if way < 0 else c + 16
+                if -256 < edge + way * 24 < 256:
+                    brackets.append(prism([(edge, roof - 16), (edge, roof - 44), (edge + way * 28, roof - 16)], "x", ua + 2, ub - 2, MM["beam_wood"]))
+        para_boxes = wall(ua + 2, -256, ub - 2, 256, deck, deck + 36, [(gap[0], gap[1], deck, deck + 36)])
+        m.det(para_boxes, stone)
+        m.det([(ua - 2 if ua == 640 else ua, x[1], deck + 36, ub if ua == 640 else ub + 2, x[4], deck + 40) for x in para_boxes], MAT["beam"])
+        m.det([(ua, -256, roof - 16, ub, 256, roof)], MM["beam_wood"])
+    m.det(cols, stone)
+    m.shapes(brackets)
+    m.det([(628, -256, roof, 908, 256, roof + 8)], MM["beam_wood"])
+    m.shapes([prism([(620, roof + 8), (916, roof + 8), (768, roof + 64)], "y", -256, 256, tin)])
+    # shop shutters closing the walk's two ends, a board over each
+    for s in (1, -1):
+        v1, v2 = (248, 256) if s > 0 else (-256, -248)
+        m.det([(672, v1, deck, 752, v2, deck + 92), (784, v1, deck, 864, v2, deck + 92)], tin)
+        m.det([(664, v1, deck, 672, v2, deck + 100), (752, v1, deck, 784, v2, deck + 100), (864, v1, deck, 872, v2, deck + 100), (664, v1, deck + 92, 872, v2, deck + 100)], MM["beam_wood"])
+    # three empty stalls down the middle: a counter each side, posts, a canopy, a shelf
+    for c in (-160, 0, 160):
+        m.det([(736, c - 48, deck, 748, c + 48, deck + 36), (788, c - 48, deck, 800, c + 48, deck + 36), (736, c - 48, deck + 36, 750, c + 48, deck + 39), (786, c - 48, deck + 36, 800, c + 48, deck + 39)] +
+              [(u, v, deck, u + 4, v + 4, deck + 88) for u in (736, 796) for v in (c - 48, c + 44)] + [(752, c - 46, deck + 16, 784, c - 40, deck + 18)], MM["beam_wood"])
+        m.det([(728, c - 54, deck + 88, 808, c + 54, deck + 92)], tin)
+    m.target("lc_arcade_upper", 768, 80, deck + 8, 0)
+    m.lamp(692, -80, roof - 8, "255 205 150 30")
+    m.lamp(844, 80, roof - 8, "255 205 150 30")
+    m.loose(P + "props_junk/wood_crate001a.mdl", 770, -160, 20, z=deck)
+    m.loose(P + "props_junk/wood_pallet001a.mdl", 850, -60, 30, z=deck)
+    put(m, P + "props_trainstation/trashcan_indoor001b.mdl", 690, 120, 0, z=deck)
+    m.loose(P + "props_junk/wood_crate002a.mdl", 690, -200, 90, z=deck)
+    put(m, P + "props_c17/oildrum001.mdl", 850, 200, 0, z=deck)
+    for (u, v) in ((692, 224), (692, 80), (692, -100), (844, 100), (844, -80), (844, -224)):
+        m.lane(u, v, deck)
+    # --- below: what has washed up against the piers ---
+    put(m, P + "props_debris/concrete_chunk02a.mdl", 590, -30, 100)
+    put(m, P + "props_debris/concrete_chunk01a.mdl", 950, 30, 40)
+    m.loose(P + "props_junk/wood_pallet001a.mdl", 610, 150, 0)
+    put(m, P + "props_c17/oildrum001.mdl", 930, -150, 0)
+    m.view(430, -40, F, 5, -10, "the arches")
+    m.view(250, 150, F, 15, -16, "the left stair")
+    m.view(668, 224, deck, 280, 6, "the walk and its stalls")
+    m.view(870, 90, deck, 200, 12, "from the walk, the way people come")
+    m.view(1420, 0, F, 180, -10, "from the far side")
+    b.notes.append("%s: the walk is at z %d, 256 wide, under a roof at z %d; the arches' crowns are %d over the floor" % (m.tag, deck, roof, deck - 32 - F))
+
+
+# ---------------------------------------------------------------------------
+# chimney
+# ---------------------------------------------------------------------------
+
+def ring(r, k=None):
+    """An octagon's corners round (0, 0), going round: r to its flat sides, k to where they end (0.4 r)."""
+    k = (2 * r) // 5 if k is None else k
+    return [(r, k), (k, r), (-k, r), (-r, k), (-r, -k), (-k, -r), (k, -r), (r, -k)]
+
+
+def frustum(bottom, top, z1, z2, mat):
+    """A solid between two flat outlines of the same number of corners, one at z1 and one at z2 (its sides lean)."""
+    n = len(bottom)
+    faces = [([(u, v, z1) for u, v in bottom], mat), ([(u, v, z2) for u, v in top], mat)]
+    for i in range(n):
+        j = (i + 1) % n
+        faces.append(([bottom[i] + (z1,), bottom[j] + (z1,), top[j] + (z2,), top[i] + (z2,)], mat))
+    return faces
+
+
+def m_chimney(m, opt):
+    """The chimney. The canal widens to the right into a round yard 896 across, and in its middle stands what is left
+    of a factory: its brick chimney, eight-sided, hollow (200 across inside), on a plinth 320 across, tapering to its
+    top 624 over the canal floor and 240 over the canal walls' tops. A doorway 48 wide and 96 high at its foot faces
+    the canal. Inside, slabs of stone climb round the wall in thirteen short flights (five treads and a landing in
+    each corner, 48 up a side, an open well down the middle with the old hoist rope in it) to an iron gallery round
+    the chimney's top: plates to crouch behind on four sides, rails on the other four, a cap on four posts. From up
+    there the whole canal both ways is in view: a sniper's nest with one way up (lc_chimney_top).
+    Named for the game: lc_chimney_top (an info_target on the gallery)."""
+    b = m.b
+    cu, cv, R = 512, -576, 448
+    plinth, top = F + 128, F + 624
+    if top + 104 > b.sky - 32:
+        b.problems.append("%s: the sky is too low for the chimney" % m.tag)
+    steel = MM["steel"]
+    m.open(0, -256, 1024, 256)
+    for i in range(-8, 8):
+        for j in range(-8, 8):
+            u, v = cu + i * CELL, cv + j * CELL
+            if math.hypot(i + 0.5, j + 0.5) * CELL < R and v + CELL <= -256:
+                m.open(u, v, u + CELL, v + CELL)
+    m.side(cu - 160, cv - 160, cu + 160, cv + 160)
+    m.blocked(cu - 192, cv - 192, cu + 192, cv + 192)
+
+    def at(pts):
+        return [(cu + du, cv + dv) for du, dv in pts]
+    inner, base, foot, head = ring(100), ring(160), ring(150), ring(125)
+    # --- the plinth, with the doorway in its side toward the canal ---
+    shapes = []
+    for i in range(8):
+        j = (i + 1) % 8
+        if i == 1:
+            continue
+        shapes.append(vprism(at([base[i], base[j], inner[j], inner[i]]), F, plinth, BRICK))
+        shapes.append(frustum(at([foot[i], foot[j], inner[j], inner[i]]), at([head[i], head[j], inner[j], inner[i]]), plinth, top, BRICK))
+    shapes += [vprism(at([(-64, 160), (-24, 160), (-24, 100), (-40, 100)]), F, plinth, BRICK), vprism(at([(24, 160), (64, 160), (40, 100), (24, 100)]), F, plinth, BRICK),
+               vprism(at([(-24, 160), (24, 160), (24, 100), (-24, 100)]), F + 96, plinth, BRICK),
+               frustum(at([foot[1], foot[2], inner[2], inner[1]]), at([head[1], head[2], inner[2], inner[1]]), plinth, top, BRICK)]
+    m.shapes(shapes)
+    m.det([(cu - 28, cv + 158, F + 96, cu + 28, cv + 164, F + 104), (cu - 30, cv + 158, F, cu - 24, cv + 164, F + 96), (cu + 24, cv + 158, F, cu + 30, cv + 164, F + 96)], steel)     # the door's frame
+    m.det([(cu - 24, cv + 100, F, cu + 24, cv + 176, F + 4)], MAT["beam"])
+    # --- the stair: thirteen flights round the inside, each on the next wall, a landing in each corner ---
+    def turn(f, a, c):
+        return [(c, -a), (-a, -c), (-c, a), (a, c)][f % 4]
+
+    def slab(f, a1, c1, a2, c2, z1, z2):
+        (x1, y1), (x2, y2) = turn(f, a1, c1), turn(f, a2, c2)
+        return (cu + min(x1, x2), cv + min(y1, y2), z1, cu + max(x1, x2), cv + max(y1, y2), z2)
+    treads, lands = [], []
+    for k in range(13):
+        z = F + 48 * k
+        for i in range(5):
+            treads.append(slab(k, -30 + 12 * i, 60, -18 + 12 * i, 100, z + 8 * i + 2, z + 8 * i + 8))
+        lands.append(slab(k, 30, 30, 100, 100, z + 42, z + 48))
+    m.det(treads, STONE)
+    m.det(lands[:-1], STONE)
+    m.rope([(cu, cv, top + 92), (cu, cv, F + 300), (cu + 4, cv - 4, F + 40)], slack=4)
+    for z in (F + 110, F + 300, F + 480):
+        m.light(cu, cv, z, "255 190 120 14")
+    # --- the gallery: an iron floor round the top (open over the last flights), plates and rails, a cap ---
+    g = top
+    floor = [[(-30, 176), (-70, 176), (-176, 70), (-176, -70), (-70, -176), (-30, -176)], [(-30, -176), (30, -176), (30, 60), (-30, 60)], [(-30, 100), (30, 100), (30, 176), (-30, 176)],
+             [(30, -176), (70, -176), (176, -70), (176, -30), (30, -30)], [(100, -30), (176, -30), (176, 70), (100, 146)], [(30, 100), (100, 100), (100, 146), (70, 176), (30, 176)]]
+    m.shapes([vprism(at(f), g - 8, g, steel) for f in floor])
+    edge = ring(176, 70)
+    rails, plates = [], []
+    for i in range(8):
+        j = (i + 1) % 8
+        (x1, y1), (x2, y2) = edge[i], edge[j]
+        o = (cu + x1, cv + y1)
+        a = (x2 - x1, y2 - y1, 0)
+        inward = (-2 if x1 + x2 > 0 else 2 if x1 + x2 < 0 else 0, -2 if y1 + y2 > 0 else 2 if y1 + y2 < 0 else 0, 0)
+        if i % 2:                                   # the four flat sides: plates to crouch behind
+            plates.append(para(o + (g,), a, inward, (0, 0, 38), steel))
+        else:                                       # the four corners: two rails
+            inward = (inward[0] // 2 * 2, inward[1] // 2 * 2, 0)
+            rails += [para(o + (g + 36,), a, inward, (0, 0, 3), MAT["bars"]), para(o + (g + 18,), a, inward, (0, 0, 2), MAT["bars"])]
+    m.shapes(rails + plates)
+    m.det([(cu + x - 2, cv + y - 2, g, cu + x + 2, cv + y + 2, g + 40) for (x, y) in ring(174, 69)], MAT["bars"])
+    m.det([(cu + x - 3, cv + y - 3, g, cu + x + 3, cv + y + 3, g + 96) for x in (-112, 112) for y in (-112, 112)], MAT["bars"])
+    m.shapes([vprism(at(ring(150)), g + 96, g + 104, MM["tin"])])
+    m.det([(cu + 28, cv - 30, g, cu + 30, cv + 60, g + 30), (cu - 30, cv + 58, g, cu + 30, cv + 60, g + 30)], MAT["bars"])      # a curb rail by the stair's opening
+    m.target("lc_chimney_top", cu - 90, cv, g + 8, 90)
+    # --- the yard: what is left of the works ---
+    m.det([(cu - 300, cv - 60, F, cu - 284, cv + 120, F + 70), (cu - 300, cv + 120, F, cu - 284, cv + 200, F + 36), (cu - 300, cv - 220, F, cu - 284, cv - 110, F + 110)], BRICK)
+    m.shapes([para((cu + 200, cv - 120, F), (16, 140, 0), (60, -8, 90), (12, 0, 0), BRICK)])
+    put(m, P + "props_c17/oildrum001.mdl", cu + 200, cv + 120, 0)
+    put(m, P + "props_c17/oildrum001.mdl", cu + 232, cv + 100, 0)
+    put(m, P + "props_junk/trashdumpster02.mdl", cu - 220, cv - 150, 100)
+    put(m, P + "props_debris/broken_pile001a.mdl", cu + 60, cv + 230, 30)
+    put(m, P + "props_debris/concrete_chunk01a.mdl", cu - 100, cv + 250, 120)
+    m.loose(P + "props_junk/wood_pallet001a.mdl", cu + 250, cv - 40, 20)
+    m.loose(P + "props_junk/wood_crate001a.mdl", cu + 40, cv + 40, 20)
+    put(m, P + "props_vehicles/car002a_physics.mdl", cu - 60, cv - 250, 200)
+    m.blocked(cu - 320, cv - 240, cu - 264, cv + 220)
+    m.lane(cu, cv + 200, F)
+    m.lane(cu, cv + 130, F)
+    m.view(200, 60, F, 315, -14, "the chimney from the canal")
+    m.view(cu, cv + 250, F, 270, -4, "its doorway")
+    m.view(cu - 40, cv + 60, F, 300, -40, "up the well")
+    m.view(cu - 90, cv + 30, g, 80, 14, "from the gallery, over the canal")
+    m.view(cu - 60, cv - 40, g, 0, 10, "the gallery: the stair's head")
+    b.notes.append("%s: the chimney's middle is at (%d %d); its gallery is at z %d (%d over the walls' tops), its cap at z %d; the sky's lid is at z %d" % (
+        (m.tag,) + m.fr.pt(cu, cv) + (g, g - b.rim, g + 104, b.sky)))
+
+
+# ---------------------------------------------------------------------------
+# crypt
+# ---------------------------------------------------------------------------
+
+def coffin(m, u1, v1, z, opened=False):
+    """A stone coffin of brushes lying along v: 36 by 104 by 24, a ridged lid on it; opened: hollow, the lid slid off
+    and leaning on its side."""
+    u2, v2 = u1 + 36, v1 + 104
+    if not opened:
+        m.det([(u1, v1, z, u2, v2, z + 24), (u1 - 2, v1 - 2, z + 24, u2 + 2, v2 + 2, z + 28)], STONE)
+        m.shapes([prism([(u1 - 2, z + 28), (u2 + 2, z + 28), (u1 + 18, z + 36)], "y", v1 - 2, v2 + 2, STONE)])
+        return
+    m.det([(u1, v1, z, u2, v2, z + 4), (u1, v1, z + 4, u1 + 5, v2, z + 24), (u2 - 5, v1, z + 4, u2, v2, z + 24), (u1 + 5, v1, z + 4, u2 - 5, v1 + 5, z + 24),
+           (u1 + 5, v2 - 5, z + 4, u2 - 5, v2, z + 24)], STONE)
+    m.det([(u1 + 5, v1 + 5, z + 4, u2 - 5, v2 - 5, z + 5)], MAT["black"])
+    m.shapes([para((u2 + 4, v1 + 6, z), (0, 100, 0), (26, 0, 30), (4, 0, -3), STONE)])
+
+
+def m_crypt(m, opt):
+    """The crypt. The canal's left wall has broken through into the crypt of a church that is no longer there: a
+    ragged hole 128 wide at the top of the bank (the bank is the way up), broken slabs round it, then a vaulted
+    room 512 square under a roof 112 high, its floor of old stone 128 over the canal's. Four squat pillars carry
+    arches both ways. In each side wall two burial niches hold a stone coffin; one coffin's lid is ajar. In the
+    middle of the nave stands a tomb that has been opened, its lid leaning against it. At the back a stone altar on
+    a step, a cross on the wall behind it (lc_crypt_altar), and to its right a stair that once went up into the
+    church: bricked up, with black showing through a gap at the top. The only light is candle stubs (steady) and
+    what comes in at the hole. Quiet and old: a place to hide, to meet, or to be buried.
+    Named for the game: lc_crypt_altar (an info_target before the altar)."""
+    b = m.b
+    cz, ceil = F + 128, F + 240
+    floor = "stone/stonefloor006d_c17"
+    m.open(0, -256, 1024, 256)
+    m.low(448, 256, 576, 320, ceil, floor=cz, mat=floor)                 # the hole
+    m.low(256, 320, 768, 832, ceil, floor=cz, mat=floor)                 # the crypt
+    for (u, v) in ((384, 448), (576, 448), (384, 640), (576, 640)):      # its pillars
+        m.unpaint(u, v, u + 64, v + 64)
+    niches = [(192, 384), (192, 576), (768, 384), (768, 576)]
+    for (u, v) in niches:
+        m.low(u, v, u + 64, v + 128, cz + 96, floor=cz + 24, mat=floor)
+    m.low(640, 832, 768, 960, ceil, floor=cz, mat=floor)                 # the stair that went up
+    m.side(192, 256, 832, 960)
+    m.portal(448, 286, cz, 576, 288, ceil)
+    m.taken(416, 200, F, 608, 256, b.rim)
+    # --- the hole: broken slabs of the wall round it and under it ---
+    m.shapes([para((428, 236, cz - 20), (26, 0, 0), (-10, 0, 150), (0, 22, 0), MAT["canal_wall"]), para((574, 240, cz - 10), (24, 0, 0), (12, 0, 128), (0, 18, 0), MAT["canal_wall"]),
+              para((440, 238, ceil - 6), (150, 0, 14), (0, 20, 0), (0, 0, 22), MAT["canal_wall"]), para((400, 130, F), (60, 16, 0), (-8, 50, 40), (0, 0, 12), MAT["beam"]),
+              para((590, 150, F + 20), (50, -10, 0), (10, 44, 30), (0, 0, 12), MAT["beam"]), para((452, 262, cz), (30, 6, 0), (-6, 40, 0), (0, 0, 9), STONE),
+              para((540, 300, cz), (28, -8, 0), (10, 34, 0), (0, 0, 7), STONE)])
+    put(m, P + "props_debris/concrete_chunk01a.mdl", 500, 110, 30)
+    put(m, P + "props_debris/broken_pile001a.mdl", 600, 90, 70)
+    put(m, P + "props_debris/concrete_chunk02a.mdl", 560, 330, 10, z=cz)
+    m.light(512, 300, ceil - 20, "170 190 220 30")
+    m.lane(512, 220, F + 92)
+    m.lane(512, 296, cz)
+    # --- the vault: a base and a capital on each pillar, arches both ways from pillar to pillar and to the walls ---
+    ribs, blocks = [], []
+    for (u, v) in ((384, 448), (576, 448), (384, 640), (576, 640)):
+        blocks += [(u - 6, v - 6, cz, u + 70, v + 70, cz + 10), (u - 8, v - 8, ceil - 44, u + 72, v + 72, ceil - 32)]
+    for v in (448, 640):
+        for (a, c) in ((256, 384), (448, 576), (640, 768)):
+            ribs += arch(a, c, ceil, 32, v + 8, v + 56, STONE, "y")
+    for u in (384, 576):
+        for (a, c) in ((320, 448), (512, 640), (704, 832)):
+            ribs += arch(a, c, ceil, 32, u + 8, u + 56, STONE, "x")
+    m.det(blocks, STONE)
+    m.shapes(ribs)
+    # --- the niches' coffins (one lid ajar), the tomb in the nave ---
+    for k, (u, v) in enumerate(niches):
+        cu = u + 14
+        if k == 2:
+            m.det([(cu, v + 12, cz + 24, cu + 36, v + 116, cz + 48)], STONE)
+            m.shapes([para((cu - 2, v + 30, cz + 48), (40, 0, 0), (10, 90, 0), (0, 0, 5), STONE)])
+        else:
+            coffin(m, cu, v + 12, cz + 24)
+        m.det([(u + (60 if u < 512 else 0), v, cz, u + (64 if u < 512 else 4), v + 128, cz + 24)], STONE)          # the niche's sill
+    m.det([(470, 548, cz, 554, 676, cz + 8)], STONE)
+    coffin(m, 494, 560, cz + 8, opened=True)
+    m.dynamic(P + "gibs/hgibs.mdl", 512, 640, 0, z=cz + 13)
+    m.blocked(448, 512, 576, 704)
+    # --- the altar on its step, the cross behind it ---
+    m.det([(432, 752, cz, 592, 832, cz + 8), (464, 788, cz + 8, 560, 824, cz + 40), (458, 782, cz + 40, 566, 830, cz + 46)], STONE)
+    m.det([(506, 828, cz + 56, 518, 832, cz + 108), (490, 828, cz + 84, 534, 832, cz + 94)], STONE)
+    m.target("lc_crypt_altar", 512, 730, cz + 8, 90)
+    m.blocked(448, 768, 576, 832)
+    # --- the stair up into the church: three steps, then brick, black through the gap at its top ---
+    m.steps(840, 656, 752, cz, cz + 24, "v", 1)
+    m.det([(640, 876, cz, 768, 892, ceil - 14)], BRICK)
+    m.det([(640, 892, cz, 768, 960, ceil)], MAT["black"])
+    m.det([(640, 832, cz, 656, 876, ceil), (752, 832, cz, 768, 876, ceil), (640, 832, ceil - 12, 768, 846, ceil)], STONE)
+    m.blocked(640, 832, 768, 960)
+    # --- candle stubs: a stub of wax, a small steady light, a glow ---
+    for (u, v, z) in ((476, 806, cz + 46), (548, 806, cz + 46), (512, 800, cz + 46), (250, 448, cz + 24), (774, 640, cz + 24), (412, 444, cz + 10), (612, 708, cz + 10),
+                      (700, 850, cz + 8)):
+        m.det([(u - 2, v - 2, z, u + 2, v + 2, z + 7)], PLASTER)
+        m.glow(u, v, z + 11, "255 190 110", 0.12)
+        m.light(u, v, z + 14, "255 170 90 7")
+    for (u, v) in ((512, 400), (512, 720), (320, 580), (704, 580)):
+        m.lane(u, v, cz)
+    m.view(512, -40, F, 90, -12, "the hole in the wall")
+    m.view(512, 300, cz, 90, 2, "coming in: the nave, the tomb, the altar")
+    m.view(330, 350, cz, 60, 4, "the left aisle: niches, pillars")
+    m.view(530, 700, cz, 40, 2, "the altar and the bricked stair")
+    m.view(700, 420, cz, 20, 6, "a niche: the lid ajar")
+    b.notes.append("%s: the crypt's floor is z %d, its roof z %d; the hole is 128 wide at the top of the left bank" % (m.tag, cz, ceil))
 
 
 MODULES = {
@@ -800,4 +1261,8 @@ MODULES = {
     "quay": (1024, m_quay, "stairs up to a quay with a street doorway (a cap to delete), a footbridge to a barred door"),
     "collapse": (768, m_collapse, "a street's wall and roadway fallen in: a squeeze by the right wall, a crawl under the slabs"),
     "scrapyard": (1536, m_scrapyard, "the canal widens into a yard of stacked containers under a crane: ways through, ways over, a perch"),
+    "boathouse": (1024, m_boathouse, "a smugglers' boat shed in the left wall: a roll-up door, a slipway, a hatch to a cellar"),
+    "arcade": (1536, m_arcade, "a market arcade over the canal on three arches: a covered walk above, a stair on each bank"),
+    "chimney": (1024, m_chimney, "a round yard on the right with a hollow brick chimney to climb: a lookout over the whole canal"),
+    "crypt": (1024, m_crypt, "the left wall broken into a church crypt: pillars, niches with stone coffins, an altar, a bricked stair"),
 }
