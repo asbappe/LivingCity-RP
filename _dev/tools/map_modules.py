@@ -48,12 +48,12 @@ class Frame:
     """Where a module sits: its entry's middle (x, y), the way it heads (rot: 0 east, 1 north, 2 west, 3 south) and its
     length. flip: built from its far end backwards, which puts its left bank on the right."""
 
-    def __init__(self, x, y, rot, length, flip=False):
-        self.x, self.y, self.rot, self.length, self.flip = x, y, rot % 4, length, flip
+    def __init__(self, x, y, rot, length, flip=False, shift=0):
+        self.x, self.y, self.rot, self.length, self.flip, self.shift = x, y, rot % 4, length, flip, shift
 
     def pt(self, u, v):
-        if self.flip:
-            u, v = self.length - u, -v
+        if self.flip:      # (shift: how far to the left of its entry the module's exit is; flipped, its exit is the entry)
+            u, v = self.length - u, self.shift - v
         r = self.rot
         if r == 0:
             return (self.x + u, self.y + v)
@@ -78,6 +78,10 @@ class Frame:
     def yaw(self, a):
         return (a + 90 * self.rot + (180 if self.flip else 0)) % 360
 
+    def way(self, a):
+        """The map's whole-number direction (dx, dy) of a yaw in the module (0 along u, 90 to the left)."""
+        return {0: (1, 0), 90: (0, 1), 180: (-1, 0), 270: (0, -1)}[self.yaw(a)]
+
     def faces(self, faces):
         return [([self.pt(p[0], p[1]) + (p[2],) for p in verts], mat) for verts, mat in faces]
 
@@ -97,6 +101,8 @@ class Build:
         self.node_id = first_node
         self.first_node = first_node
         self.test = False
+        self.views = []       # (label, eye, yaw, pitch): pictures to take with map_view.py
+        self.rope_n = 0
 
     def node(self, x, y, z):
         self.vmf.point("info_node", (x, y, z + 40), {"nodeid": self.node_id}, self.vis + ": path nodes")
@@ -177,8 +183,8 @@ class Mod:
         return 12 * len(out)
 
     # --- things ---
-    def point(self, cls, u, v, z, keys=None, vis=None):
-        self.b.vmf.point(cls, self.fr.pt(u, v) + (z,), keys or {}, vis or self.dv)
+    def point(self, cls, u, v, z, keys=None, vis=None, connections=None):
+        self.b.vmf.point(cls, self.fr.pt(u, v) + (z,), keys or {}, vis or self.dv, connections=connections)
         if keys and keys.get("targetname"):
             self.b.names.append((keys["targetname"], cls, self.tag))
 
@@ -194,6 +200,127 @@ class Mod:
 
     def light(self, u, v, z, colour):
         self.point("light", u, v, z, {"_light": colour, "_lightHDR": "-1 -1 -1 1", "_quadratic_attn": "1", "style": "0"}, self.lv)
+
+    def glow(self, u, v, z, colour="255 220 170", scale=0.3):
+        """A soft glow in the air (a lamp seen from afar). No light of its own."""
+        self.point("env_sprite", u, v, z, {"model": "sprites/light_glow03.vmt", "rendermode": "9", "renderamt": "200", "rendercolor": colour, "scale": str(scale),
+                                           "framerate": "10.0", "GlowProxySize": "2.0", "HDRColorScale": "1.0", "renderfx": "0", "spawnflags": "1"}, self.lv)
+
+    def lamp(self, u, v, z, colour, hang=0):
+        """A lamp to be seen: a small steel housing (hang: on a rod this long from above), a glow, and its light under it."""
+        boxes = [(u - 6, v - 6, z, u + 6, v + 6, z + 8)]
+        if hang:
+            boxes.append((u - 1, v - 1, z + 8, u + 1, v + 1, z + 8 + hang))
+        self.det(boxes, MM["steel"])
+        rgb = " ".join(colour.split()[:3])
+        self.glow(u, v, z - 4, rgb, 0.25)
+        self.light(u, v, z - 10, colour)
+
+    def spot(self, u, v, z, colour, yaw, pitch=60, cone=40, name=None):
+        """A beam: a light that only shines one way (pitch: degrees down), and the beam drawn in the air."""
+        wy = self.fr.yaw(yaw)
+        self.point("light_spot", u, v, z, {"_light": colour, "_lightHDR": "-1 -1 -1 1", "_inner_cone": str(cone // 2), "_cone": str(cone), "_quadratic_attn": "1",
+                                           "angles": "0 %d 0" % wy, "pitch": str(-pitch), "style": "0"}, self.lv)
+        keys = {"angles": "%d %d 0" % (pitch, wy), "spawnflags": "1", "spotlightlength": "500", "spotlightwidth": "50",
+                "rendercolor": " ".join(colour.split()[:3]), "renderamt": "160", "HDRColorScale": "1.0"}
+        if name:
+            keys["targetname"] = name
+        self.point("point_spotlight", u, v, z, keys, self.lv)
+
+    def sound(self, message, u, v, z, radius=1100, volume=7, name=None, on=True):
+        """A sound in the air, playing from the start (on) or waiting to be told (PlaySound). Only a sound file made to
+        loop goes on for ever: one that is not plays once."""
+        keys = {"message": message, "health": str(volume), "pitch": "100", "pitchstart": "100", "radius": str(radius), "spawnflags": "0" if on else "16",
+                "cspinup": "0", "fadeinsecs": "0", "fadeoutsecs": "0", "lfomodpitch": "0", "lfomodvol": "0", "lforate": "0", "lfotype": "0", "preset": "0",
+                "spindown": "0", "spinup": "0", "volstart": "0"}
+        if name:
+            keys["targetname"] = name
+        self.point("ambient_generic", u, v, z, keys, self.b.vis + ": sounds")
+
+    def decal(self, texture, u, v, z):
+        """A stain or poster: the point must lie ON the wall or floor it marks (within a unit)."""
+        self.point("infodecal", u, v, z, {"texture": texture})
+
+    def target(self, name, u, v, z, yaw=0):
+        """A place named for the game to find (nothing to see)."""
+        self.point("info_target", u, v, z, {"targetname": name, "angles": "0 %d 0" % self.fr.yaw(yaw)})
+
+    def relay(self, name, u, v, z, wires, on=True):
+        """A switchboard: Trigger makes it fire every wire, [(the thing's name, the input, a value, seconds later), ...]."""
+        self.point("logic_relay", u, v, z, {"targetname": name, "StartDisabled": "0" if on else "1", "spawnflags": "0"},
+                   connections=[("OnTrigger", n, i, val, d) for n, i, val, d in wires])
+
+    def rope(self, pts, slack=40, width=2):
+        """A cable hung from point to point, [(u, v, z), ...]: it sags by itself."""
+        self.b.rope_n += 1
+        names = ["lc_rope_%s_%d_%d" % (self.b.name, self.b.rope_n, k) for k in range(len(pts))]
+        for k, (u, v, z) in enumerate(pts):
+            keys = {"targetname": names[k], "Slack": str(slack), "Type": "0", "Subdiv": "2", "Barbed": "0", "Width": str(width), "TextureScale": "1", "Collide": "0",
+                    "Dangling": "0", "Breakable": "0", "RopeMaterial": "cable/cable.vmt", "MoveSpeed": "64", "PositionInterpolator": "2", "NoWind": "1"}
+            if k + 1 < len(pts):
+                keys["NextKey"] = names[k + 1]
+            self.b.vmf.point("move_rope" if k == 0 else "keyframe_rope", self.fr.pt(u, v) + (z,), keys, self.b.vis + ": ropes")
+
+    def ladder(self, u, v, z0, z1, out):
+        """A ladder against a wall at (u, v), from z0 up to z1 (128 a piece), facing `out` (a yaw in the module: 0 along
+        u, 90 left ...): set up the way the owner's own map does its ladders. The floor at the top is behind it."""
+        vmf, vis = self.b.vmf, self.dv
+        x, y = self.fr.pt(u, v)
+        dx, dy = self.fr.way(out)
+        wy = self.fr.yaw(out)
+        z = z0
+        while z < z1:
+            vmf.point("prop_static", (x, y, z), {"model": "models/props_c17/metalladder002.mdl", "angles": "0 %d 0" % wy, "skin": "0", "solid": "6",
+                                                 "fademindist": "-1", "fadescale": "1"}, vis)
+            z += 128
+        vmf.point("prop_static", (x, y, z1), {"model": "models/props_c17/metalladder002b.mdl", "angles": "0 %d 0" % ((wy + 180) % 360), "skin": "0", "solid": "6",
+                                              "fademindist": "-1", "fadescale": "1"}, vis)
+        lx, ly = x + 28 * dx, y + 28 * dy
+        vmf.point("func_useableladder", (lx, ly, z0 + 130), {"point0": "%d %d %d" % (lx, ly, z0 + 4), "point1": "%d %d %d" % (lx, ly, z1 + 12),
+                                                             "spawnflags": "0", "StartDisabled": "0"}, vis)
+        vmf.point("info_ladder_dismount", (x + 70 * dx, y + 70 * dy, z0 + 1), {}, vis)
+        vmf.point("info_ladder_dismount", (x - 42 * dx, y - 42 * dy, z1 + 1), {}, vis)
+
+    def button(self, name, u, v, z, out, wires, wait="1"):
+        """A button players press, on the wall at (u, v), its foot at z, facing `out`. wires: what a press does,
+        [(the thing's name, the input, a value, seconds later), ...]. It works in the map by itself: no game code."""
+        from map_forest import wall_button
+        x, y = self.fr.pt(u, v)
+        dx, dy = self.fr.way(out)
+        box = (min(x - 10 * abs(dy), x + 10 * dx), min(y - 10 * abs(dx), y + 10 * dy), z - 4, max(x + 10 * abs(dy), x + 10 * dx), max(y + 10 * abs(dx), y + 10 * dy), z + 24)
+        wall_button(self.b.vmf, (x, y, z), self.fr.yaw(out), name, box, self.dv, [("OnPressed", n, i, val, d) for n, i, val, d in wires], wait)
+        self.b.names.append((name, "func_button", self.tag))
+
+    def water(self, u1, v1, u2, v2, z1, z2, mat=None):
+        """Standing water (or sludge): never across an areaportal."""
+        self.b.vmf.world_box(self.fr.box(u1, v1, z1, u2, v2, z2), MAT["nodraw"], top=mat or MM["water"], vis=self.b.vis + ": water and sludge", seals=False)
+
+    def spark(self, u, v, z, name=None):
+        keys = {"MaxDelay": "7", "Magnitude": "2", "TrailLength": "1", "spawnflags": "64"}
+        if name:
+            keys["targetname"] = name
+        self.point("env_spark", u, v, z, keys)
+
+    def smoke(self, u, v, z, colour="70 70 70", size=24, length=220, rate=14):
+        """Thin smoke rising from a place."""
+        self.point("env_smokestack", u, v, z, {"InitialState": "1", "BaseSpread": "14", "SpreadSpeed": "10", "Speed": "24", "StartSize": str(size), "EndSize": str(size * 3),
+                                               "Rate": str(rate), "JetLength": str(length), "WindAngle": "0", "WindSpeed": "0", "SmokeMaterial": "particle/SmokeStack.vmt",
+                                               "twist": "4", "roll": "4", "rendercolor": colour, "renderamt": "120", "angles": "0 0 0"})
+
+    def cubemap(self, u, v, z=F):
+        self.point("env_cubemap", u, v, z + 72, {"cubemapsize": "0"})
+
+    def scatter(self, u1, v1, u2, v2, n, seed, kinds=None, z=F):
+        """Odds and ends left lying in a rectangle (loose things; the same every time for one seed)."""
+        rnd = random.Random(seed)
+        kinds = kinds or ("models/props_junk/wood_crate001a.mdl", "models/props_junk/wood_pallet001a.mdl", "models/props_vehicles/tire001c_car.mdl",
+                          "models/props_c17/oildrum001.mdl", "models/props_junk/wood_crate002a.mdl")
+        for _ in range(n):
+            self.loose(rnd.choice(kinds), rnd.randrange(u1, u2), rnd.randrange(v1, v2), rnd.randrange(0, 360, 15), z=z)
+
+    def view(self, u, v, z, yaw, pitch=6, label=""):
+        """A picture to take when asked (--views): from where a player standing at (u, v) on a floor at z would look."""
+        self.b.views.append(((self.tag + " " + label).strip(), self.fr.pt(u, v) + (z + 64,), self.fr.yaw(yaw), pitch))
 
     def door(self, name, boxes, mat, movedir, speed=40, lip=8, vis=None):
         """A brush that slides when the game tells it to (Open, Close): never by a player's Use."""
@@ -252,6 +379,35 @@ def m_straight(m, opt):
 
 def m_corner(m, opt):
     m.open(0, -256, 512, 256)
+
+
+def jog_shift(opt):
+    n = [int(w) for w in opt if w.lstrip("-").isdigit()]
+    return (n[0] if n else 768) * (-1 if "right" in opt else 1)
+
+
+def m_jog(m, opt):
+    """The canal steps sideways, to break a long view: "jog left 768" (the default), "jog right 1024"."""
+    s = jog_shift(opt)
+    m.open(0, -256, 768, 256)
+    m.open(256, min(-256, s - 256), 768, max(256, s + 256))
+    m.open(256, s - 256, 1024, s + 256)
+
+
+def m_tee(m, opt):
+    """A way off to the left: a standard gate in the left wall (512 wide, 256 high), capped until another piece, or
+    another layout's start, is joined to it."""
+    b = m.b
+    m.open(0, -256, 512, 256)
+    m.low(0, 256, 512, 512, F + GATE_HIGH)
+    gate_cap(b.vmf, m.fr.box(0, 448, F, 512, 512, F + GATE_HIGH), m.fr.box(0, 424, F, 512, 432, F + GATE_HIGH), m.fr.ax("u"),
+             "%s: %s side gate's cap (delete to join)" % (b.vis, m.tag))
+    m.portal(0, 382, F, 512, 384, F + GATE_HIGH)
+    b.plan.keep_out.append(m.fr.rect(-64, 512, 576, 576))
+    m.blocked(0, 384, 512, 512)
+    m.side(0, 256, 512, 512)
+    dx, dy = m.fr.way(90)
+    b.notes.append("%s: its side gate is at (%d %d), heading %s: a layout may start there" % ((m.tag,) + m.fr.pt(256, 512) + ({(1, 0): "E", (0, 1): "N", (-1, 0): "W", (0, -1): "S"}[(dx, dy)],)))
 
 
 def m_gate(m, opt):
@@ -588,6 +744,8 @@ def m_checkpoint(m, opt):
 # name: (length, how to build it, what it is)
 MODULES = {
     "straight": (1024, m_straight, "plain canal (\"straight 1536\", \"straight 1024 bridge\")"),
+    "jog": (1024, m_jog, "the canal steps sideways to break a long view (\"jog left 768\", \"jog right 1024\")"),
+    "tee": (512, m_tee, "a standard gate in the left wall, for another piece or layout to join"),
     "drain": (1024, m_drain, "1. the storm drain junction, down to the city's sewers (left)"),
     "overflow": (1024, m_overflow, "2. the overflow toward Ravenholm, behind a sluice plate (left)"),
     "shanty": (1536, m_shanty, "4. the shantytown under a street bridge (left)"),
@@ -599,6 +757,29 @@ MODULES = {
     "cistern": (1536, m_cistern, "12. the cistern for the hive boss (right)"),
     "underpass": (1536, m_underpass, "13. the barnacle underpass"),
 }
+
+
+for _more in ("map_mods_a", "map_mods_b", "map_mods_c", "map_mods_d"):
+    try:
+        MODULES.update(__import__(_more).MODULES)
+    except ImportError:
+        pass
+
+
+def take_views(b, vmf_path, folder, name, cut=None):
+    """Pictures of what was just written (map_view.py): from above, from above with the roofs off, and every view the
+    modules asked for; then all of them on one sheet."""
+    import os
+    import map_view
+    os.makedirs(folder, exist_ok=True)
+    shots = []
+    for tag, kw in (("above", {"iso": "SW"}), ("open", {"iso": "NE", "cut": cut or F + 150})):
+        shots.append(map_view.render(vmf_path, os.path.join(folder, "%s_%s.png" % (name, tag)), size=(960, 600), title="%s: from above%s" % (name, ", roofs off" if "cut" in kw else ""), **kw))
+    for k, (label, eye, yaw, pitch) in enumerate(b.views):
+        shots.append(map_view.render(vmf_path, os.path.join(folder, "%s_%02d.png" % (name, k)), eye=eye, yaw=yaw, pitch=pitch, size=(960, 600),
+                                     title="%s (eye %d %d %d, looking %d)" % ((label,) + tuple(eye) + (yaw,))))
+    out = map_view.sheet(shots, os.path.join(folder, "%s_sheet.png" % name))
+    print("  pictures: %s (and %d single ones beside it)" % (out, len(shots)))
 
 
 def read_layout(path):
@@ -659,13 +840,17 @@ def build_chain(lay, args):
             b.problems.append("%s %d: a length must be a multiple of %d" % (name, length, CELL))
             continue
         count[name] = count.get(name, 0) + 1
-        tag = name if name == "straight" else "%s%s" % (name, " %d" % count[name] if count[name] > 1 else "")
-        fr = Frame(x, y, rot, length, flip)
+        tag = name if name in ("straight", "jog", "tee") else "%s%s" % (name, " %d" % count[name] if count[name] > 1 else "")
+        shift = jog_shift(opt) if name == "jog" else 0
+        fr = Frame(x, y, rot, length, flip, shift)
         mod = Mod(b, fr, "%d %s" % (n, tag))
+        if name not in ("straight", "jog", "tee"):
+            mod.view(40, 0, F, 0, 4, "coming in")
+            mod.cubemap(length // 2, 0)
         MODULES[name][1](mod, opt)
         if name != "straight":
             b.labels.append(fr.pt(length // 2, 0) + (tag,))
-        x, y = Frame(x, y, rot, length).pt(length, 0)
+        x, y = Frame(x, y, rot, length).pt(length, shift)
     end = (x, y, "ENWS"[rot])
     if lay["end"] and tuple(lay["end"]) != end:
         b.problems.append("the chain comes out at (%d %d) heading %s, not at (%d %d) heading %s as the layout says it must" % (end + tuple(lay["end"])))
@@ -760,6 +945,7 @@ def chain(args):
         picture(b, args.preview)
     args.expect_overlap = set()
     args.out_name = "lc_%s%s.vmf" % (lay["name"], "_test" if args.test else "")
+    args.after_write = (lambda path: take_views(b, path, args.views, lay["name"])) if args.views else None
     return b.vmf, problems
 
 
@@ -770,7 +956,7 @@ def module(args):
             print("  %-10s %5d long  %s" % (k, length, what))
         raise SystemExit(1)
     lay = {"name": "mod_" + args.name, "start": tuple(args.origin or (0, 0)), "heading": args.heading or "E", "rim": args.rim or 784, "end": None,
-           "modules": [[args.name] + (["flip"] if args.flip else [])]}
+           "modules": [[args.name] + list(args.opt or []) + (["flip"] if args.flip else [])]}
     b, seed, spawn, end = build_chain(lay, args)
     ch, fences, problems, names = finish(b, seed, spawn, args)
     report(b, ch, fences, problems, names, end, "module %s (%s)" % (args.name, MODULES[args.name][2]))
@@ -778,4 +964,5 @@ def module(args):
         picture(b, args.preview)
     args.expect_overlap = set()
     args.out_name = "lc_mod_%s%s.vmf" % (args.name, "_test" if args.test else "")
+    args.after_write = (lambda path: take_views(b, path, args.views, args.name)) if args.views else None
     return b.vmf, problems
