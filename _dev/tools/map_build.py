@@ -1057,6 +1057,12 @@ def main():
     with open(out, "w") as f:
         f.write(vmf.text())
     print("  written: " + out)
+    try:      # (the owner's corrections, checked by machine: _dev/reference/lessons.json, map_lint.py)
+        import map_lint
+        for line in map_lint.check(out, views=getattr(args, "view_list", None)):
+            print("  LOOK: " + line)
+    except Exception as e:
+        print("  (map_lint could not run: %s)" % e)
     if getattr(args, "after_write", None):
         args.after_write(out)
     sys.exit(1 if problems else 0)

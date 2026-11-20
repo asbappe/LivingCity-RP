@@ -73,6 +73,7 @@ class Channel:
         """Banks along every wall (with a quarter pyramid where a wall's corner sticks out), a lip along the walls' tops,
         a rib every 512, a drain stub between ribs. no_bank: rectangles the banks stay out of. taken: boxes already on
         the walls: nothing is put within 24 units of them (and what is put is added to them)."""
+        self.made = {}
         vmf, cells, kind, fz, rz = self.vmf, self.cells, self.kind, self.floor_z, self.rim_z
 
         def clear(x1, y1, x2, y2):
@@ -130,6 +131,7 @@ class Channel:
                     boxes.append(rib)
                     taken.append(rib)
                     self.stats["ribs"] += 1
+                    self.made.setdefault("ribs", []).append((axis, line, side, at))      # (for whoever dresses them further)
         for (axis, line, side, a, b) in trims:
             for at in range(a + 512, b - 128, 1024):
                 z = fz + 176
@@ -137,6 +139,7 @@ class Channel:
                 if not fits(stub):
                     continue
                 taken.append(stub)
+                self.made.setdefault("stubs", []).append((axis, line, side, at, z))
                 shapes.append(prism(octagon(at, z, 24), "y" if axis == "x" else "x", min(line, line + side * 40), max(line, line + side * 40), MAT["bars"], MAT["black"]))
                 self.stats["stubs"] += 1
         if shapes:

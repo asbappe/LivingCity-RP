@@ -34,6 +34,25 @@ F, TRIM = 400, 656        # the canals' floor and the trim line on their walls: 
 BASE = 224                # the bottom of everything (the storm drain goes down to the city's sewers, feet at z 288)
 SEWER = 288
 HEADINGS = {"E": 0, "N": 1, "W": 2, "S": 3}
+# Soundscapes the owner's own map uses (so they are known to be there): what a place sounds like, by kind.
+SCAPES = {"tunnel": "prison.general_dripping_tunnel", "watery": "prison.watery_hallway", "slime": "canals_slime_tunnel", "pump": "d1_canals.waterpuzzleroom",
+          "cave": "d1_town.CaveTunnel", "flat": "d1_trainstation.Appartments", "house": "d1_town.WoodBuilding", "inside": "construct.inside",
+          "combine": "d3_citadel.generic_moody", "laundry": "prison.laundry", "metal": "coast.util_metalstress", "courtyard": "d1_trainstation.QuietCourtyard",
+          "square": "d1_trainstation.TerminalSquare", "rooftop": "d1_town.Rooftop"}
+# Decals Half-Life 2 has (checked in Valve's lists), by what they show: m.grime picks one.
+GRIME = {"stain": ["decals/decalstain%03da" % n for n in (1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15)],
+         "drain": ["decals/decalconcretedrain00%da" % n for n in (1, 2, 3)],
+         "trash": ["decals/trashdecal0%da" % n for n in (1, 2, 3, 4, 5)],
+         "crack": ["decals/plaster%03da" % n for n in (1, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20)],
+         "poster": ["decals/decal_posterbreen", "decals/decalposter002a", "decals/decalposter002b", "decals/decalposter003a", "decals/decalposter004a",
+                    "decals/decalposter007a", "decals/decalposter014a", "decals/decalposter014b", "decals/decalposter014d"],
+         "danger": ["decals/decalsigndanger00%s" % k for k in ("1a", "1b", "1c", "1d", "1e", "1f", "2a")],
+         "graffiti": ["decals/decalgraffiti%03da" % n for n in (1, 3, 5, 6, 7, 8, 9, 10, 11, 12, 15, 17, 18, 20, 22, 23, 24, 25, 28, 31, 36, 37, 38, 43, 44, 46, 47, 49, 50, 54, 56, 59, 60, 61, 62)],
+         "number": ["decals/decalindustrialnumber%s" % k for k in ("00a", "01a", "01b", "02a", "02b", "03a", "03b", "04b", "05a", "05b", "06b", "07b", "08b")],
+         "lambda": ["decals/lambdaspray_1a", "decals/lambdaspray_2a"], "burn": ["decals/burn01a", "decals/burn02a", "decals/burn03a"],
+         "puddle": ["decals/decalborealispuddle001a"], "grate": ["decals/decalmetalgrate001a", "decals/decalmetalgrate005a"],
+         "debris": ["decals/debris_concrete001a", "decals/debris_concrete001b"], "police": ["decals/decal_policeline01a"]}
+
 MM = {
     "wood": "wood/woodfloor007a",          # (these four are in the owner's own map: Ravenholm's recipe was read from it)
     "tin": "metal/metalroof004a",
@@ -288,6 +307,25 @@ class Mod:
         self.static("models/props_c17/light_domelight02_on.mdl", u, v, 0, z + 1)
         self.glow(u, v, z - 2, rgb, 0.25)
         self.light(u, v, z - 10, colour)
+
+    def soundscape(self, name, u, v, z, radius=768):
+        """What the place sounds like: an env_soundscape (the owner's map has 155; a loop alone is not a place). Use the
+        names in SCAPES (the ones the owner's own map uses) or another Half-Life 2 soundscape (say it is unchecked)."""
+        self.point("env_soundscape", u, v, z + 64, {"soundscape": name, "radius": str(radius), "StartDisabled": "0"})
+
+    def grime(self, kind, u, v, z, seed=0):
+        """A decal of a kind (GRIME: stain, drain, trash, crack, poster, danger, graffiti, number, lambda, burn, puddle,
+        grate): the point must lie ON the wall or floor it marks, as for m.decal."""
+        import random
+        self.decal(random.Random(seed * 7919 + u * 31 + v).choice(GRIME[kind]), u, v, z)
+
+    def stair_side(self, start, run, v1, v2, z_low, z_high, sign=1, high=32, mat=None):
+        """The open side of a stair that climbs along u, made solid: an upstand from the floor to 'high' over the stair's
+        line, from u = start to start + sign * run, standing on v1..v2 (a slab 8 or so thick). A flight then reads as
+        one built stair, not a row of blocks (the module review, 20 November)."""
+        a, b = sorted((start, start + sign * run))
+        za, zb = (z_low, z_high) if sign > 0 else (z_high, z_low)
+        self.shapes([prism([(a, z_low), (b, z_low), (b, zb + high), (a, za + high)], "y", v1, v2, mat or MAT["beam"])])
 
     def spot(self, u, v, z, colour, yaw, pitch=60, cone=40, name=None):
         """A beam: a light that only shines one way (pitch: degrees down), and the beam drawn in the air."""
@@ -1419,6 +1457,7 @@ def finish(b, seed, spawn, args):
     for axis, at, lo, hi in b.pipes:
         ch.pipes(axis, at, lo, hi, b.taken)
     ch.dress(b.no_bank, b.taken)
+    dress_canal_walls(b, ch)
     bump = (lambda x, y: sum(f(x, y) for f in b.bumps)) if b.bumps else None
     ch.mud(47, skip=b.no_mud, bump=bump)
     fences = fence(vmf, walled, 96, b.vis + ": fence along the walls' tops", top=b.rim)
@@ -1437,6 +1476,7 @@ def finish(b, seed, spawn, args):
     problems, air = check(vmf, seed, [])
     problems = b.problems + problems
     look_at_props(b)
+    args.view_list = list(b.views)      # (map_build.py checks them with map_lint.py once the file is written)
     names = [n for n in b.names if n[0] != "clash"]
     seen = {}
     for n in names:
@@ -1445,6 +1485,33 @@ def finish(b, seed, spawn, args):
         if k > 1:
             problems.append("%d things are named %s (the same module twice in one chain: the game could not tell them apart)" % (k, name))
     return ch, fences, problems, names
+
+
+def dress_canal_walls(b, ch):
+    """What every stretch of canal gets on its walls (the module review, 20 November: the canal had no light of its own
+    and its drains left no mark): a caged lamp on every third rib, one in three of those dead; a dark stain down the
+    wall under every drain stub; graffiti and stains here and there, the same every build."""
+    import random
+    rnd = random.Random(len(b.name) * 977)
+    made = getattr(ch, "made", {})
+    for k, (axis, line, side, at) in enumerate(made.get("ribs", [])):
+        x, y = (at, line + side * 24) if axis == "x" else (line + side * 24, at)
+        if k % 3 == 1:
+            yaw = (90 if side > 0 else 270) if axis == "x" else (0 if side > 0 else 180)
+            lit = rnd.random() > 0.33
+            model = "models/props_c17/light_cagelight02_%s.mdl" % ("on" if lit else "off")
+            b.vmf.point("prop_static", (x, y, F + 260), {"model": model, "angles": "0 %d 0" % yaw, "solid": "0", "disableshadows": "1", "fademindist": "-1", "fadescale": "1"},
+                        b.vis + ": canal lamps")
+            if lit:
+                dx, dy = (0, side * 30) if axis == "x" else (side * 30, 0)
+                b.vmf.point("light", (x + dx, y + dy, F + 250), {"_light": "255 214 170 60", "_lightHDR": "-1 -1 -1 1", "_quadratic_attn": "1", "style": "0"}, b.vis + ": canal lamps")
+        elif rnd.random() < 0.18:
+            dx, dy = (0, side * 0) if axis == "x" else (0, 0)
+            wx, wy = (at + 120, line) if axis == "x" else (line, at + 120)
+            b.vmf.point("infodecal", (wx, wy, F + 200 + rnd.randrange(0, 120)), {"texture": rnd.choice(GRIME["graffiti"] + GRIME["stain"])}, b.vis + ": canal grime")
+    for (axis, line, side, at, z) in made.get("stubs", []):
+        wx, wy = (at, line) if axis == "x" else (line, at)
+        b.vmf.point("infodecal", (wx, wy, z - 44), {"texture": rnd.choice(GRIME["drain"])}, b.vis + ": canal grime")
 
 
 def look_at_props(b):

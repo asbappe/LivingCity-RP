@@ -71,7 +71,7 @@
    "rule": "Never put the door01_left model (or any door that looks openable) where it does not open: board the doorway up (planks, wood_board props), chain it, or brick it.",
    "why": "\"The door prop you used for all these unopenable doors is the same prop ... for actual doors that are supposed to open, so it's confusing and I can't tell where I can actually go in\" (20 November).",
    "how": "map_town.facade boards unused doorways; heavy doors that never open (lock, swing bridge) still to fix.",
-   "check": "review"
+   "check": "map_lint.py door (a door model that is not a prop_door_rotating)"
   },
   {
    "id": "stairs-16-24",
@@ -93,7 +93,7 @@
    "title": "A stair along a wall has a solid open side",
    "rule": "Give a wall stair an upstand (a parapet about 32 high following the flight) on its open side and fill under it to the floor, so it reads as one built stair, not a row of blocks hung on the wall.",
    "why": "Review, 20 November: from the canal the quay, arcade, lift and pipes stairs read as a sawtooth.",
-   "how": "To add: a wall_stair helper in the tools.",
+   "how": "m.stair_side(start, run, v1, v2, z_low, z_high, sign): an upstand on the open side of a flight along u.",
    "check": "review"
   },
   {
@@ -129,7 +129,7 @@
    "rule": "A rope or cable is tied at both ends to something that is there (a pole, a wall, a hook), or it is not placed.",
    "why": "\"Please remove the floating ropes in the garden\" (20 November).",
    "how": "m.rope: check both ends.",
-   "check": "review"
+   "check": "map_lint.py rope (a rope end tied to nothing)"
   },
   {
    "id": "cap-open-ends",
@@ -153,7 +153,7 @@
    "rule": "A water brush's top sits at least 2 under any floor it lies beneath, or the two flicker through each other.",
    "why": "Review, 20 November: the flood room's drained water lies exactly at its floor.",
    "how": "Fix in map_mods_c.py (the func_water_analog's box to FL - 2).",
-   "check": "review"
+   "check": "map_lint.py water (a water brush's top level with a floor)"
   },
   {
    "id": "fire-in-drums",
@@ -165,7 +165,7 @@
    "rule": "env_fire falls to the ground under it unless spawnflag 16 (Don't drop) is set: set it for any fire placed above the ground (drums, braziers, stoves).",
    "why": "\"The burn barrels flanking the podium have fire on the ground inside the barrel instead of the fire coming out the top\" (20 November).",
    "how": "map_mods_b.fire(..., drop=False).",
-   "check": "review"
+   "check": "map_lint.py fire (an env_fire on a prop without spawnflag 16)"
   },
   {
    "id": "mattress-turned",
@@ -177,7 +177,7 @@
    "rule": "Turn furnituremattress001a over (roll 180) when placing it.",
    "why": "\"The mattresses in the clinic are all rotated 180 degrees on their side\" (20 November).",
    "how": "map_mods_b.mattress().",
-   "check": "review"
+   "check": "map_lint.py mattress"
   },
   {
    "id": "moving-things-move",
@@ -224,7 +224,7 @@
    "rule": "Where a light shines, the fixture is its _on model (light_cagelight02_on, not _off with a light under it); a dead lamp has no light.",
    "why": "Review, 20 November: overflow, thumper, railbridge and armoury.",
    "how": "m.lamp uses real fixtures.",
-   "check": "review"
+   "check": "map_lint.py offlamp (an _off fixture with a light at it)"
   },
   {
    "id": "city18-lighting",
@@ -235,7 +235,7 @@
    "title": "Light as City 18 does: many small fixtures, some with beams",
    "rule": "Light a room with two or three fixtures, not one; point some (light_spot, point_spotlight); use the city's own fixtures: dome lights, lab fluorescent tubes indoors, cage lights in service places, the Combine's light on Combine places, lampposts outside.",
    "why": "The owner's map: 597 lights, 391 light_spot, 174 point_spotlight; dome light 151, lab fluorescent 149, Combine light 75, lamp fixture 52, cage light 47.",
-   "how": "m.lamp, m.spot, m.light.",
+   "how": "m.lamp, m.spot, m.light; every canal stretch now gets a caged lamp on every third rib, a third of them dead (dress_canal_walls).",
    "check": "review"
   },
   {
@@ -247,7 +247,7 @@
    "title": "Lay grime on: stains, cracks, trash, posters, signs",
    "rule": "Every place gets overlays and decals: water stains down walls and under drains, cracks, trash in corners, posters where people are, the lambda where the Resistance is, danger signs on hazards, numbers on machines.",
    "why": "The owner's map: 249 info_overlays and 267 infodecals (decalstain002a 26 times, trashdecal04a, plaster cracks, Breen posters, danger signs, metal grates, speaker grilles, graffiti 059a, the lambda spray). The modules had almost none.",
-   "how": "m.decal now; an m.overlay helper is to be added.",
+   "how": "m.grime(kind, u, v, z) with GRIME's kinds (stain, drain, trash, crack, poster, danger, graffiti, number, lambda, burn, puddle, grate, debris, police: all checked in Valve's lists); every canal stretch now gets drain stains and some graffiti by itself (map_modules.dress_canal_walls).",
    "check": "review"
   },
   {
@@ -259,7 +259,7 @@
    "title": "Every place sounds like itself",
    "rule": "Each module and each part of the town names a soundscape (env_soundscape with a radius), not only an ambient_generic loop.",
    "why": "The owner's map: 155 env_soundscapes (d1_trainstation.*, d1_town.*, prison.*, d1_canals.*, construct.inside...) and only 41 ambient_generics.",
-   "how": "An m.soundscape helper is to be added.",
+   "how": "m.soundscape(SCAPES[kind], u, v, z, radius): SCAPES holds the soundscapes the owner's own map uses (tunnel, watery, slime, pump, cave, flat, house, inside, combine, laundry, metal, courtyard, square, rooftop).",
    "check": "review"
   },
   {
@@ -346,7 +346,7 @@
    "rule": "Leave walking room: furniture against walls, a clear path through every room and into every stall; split a crowded room's things into two rooms; no prop inside another.",
    "why": "\"You put a couch inside the table and the wood furnace/stove is almost touching the table and couch and it's just too cramped, half of that can go in the bedroom(s)\"; \"all the market stalls are filled with boxes and random props and there's no room to even walk into them\" (20 November).",
    "how": "Place by the models' real boxes (map_assets.size).",
-   "check": "review (a prop overlap check would help: to add)"
+   "check": "map_lint.py overlap (a solid prop inside another), printed as LOOK lines by every build"
   },
   {
    "id": "city18-interiors",
@@ -474,7 +474,7 @@
    "rule": "Each m.view is a place a player can stand, looking at what it names: not inside a prop's box, not facing a wall.",
    "why": "Review, 20 November: views inside props or walls in the checkpoint, tram, lift and playground.",
    "how": "Rebuild the sheet after moving things (map_modules_check.py --only NAME --views DIR).",
-   "check": "review (a check that no view's eye is inside a box would be easy to add)"
+   "check": "map_lint.py view (a module's viewpoint inside a prop or a brush, by the brush's own planes)"
   },
   {
    "id": "viewer-economy",
