@@ -913,3 +913,19 @@ Filled in as the review goes; the first ones are clear already:
 
 **Weight.** medium (vaulted roof), small (lights, details).
 
+### 55. shed and the street corridor (street 1 to 4): the road beside the canal and the train's shed
+
+**Seen** (lc_street_1, from the road and from above). The road runs level beside the canal at z 656 between the lifted modules' brick fronts (black window holes) and a long brick shed over the railway, where the Combine train waits and from which it runs; a chain link fence along the canal's edge; lampposts.
+
+**Fix.**
+- The corridor's road is the old flat slab: no kerbs, no crown, no pavements, one grey. The town now has the owner's own street (pavements 664 with a kerb of 8, gutters, a cobbled crown: `map_town.lay_street`); the corridor should have the same, or the two pieces will not match when stitched.
+- The fronts along the road are the old plain brick with black holes for windows: the town's facade dressing (`map_town.facade`: lots of three heights, plinths, cornices, six kinds of the owner's glass, boarded doorways) should dress the corridor's frontage too.
+- The shed is a long flat-roofed brick box: a railway shed has a pitched or arched roof on trusses, a big arched mouth at each end, clerestory windows, smoke stains over the mouths. (The train itself is Half-Life 2's Combine train: right.)
+
+**Better.**
+- Between the road and the tracks: a proper railway fence (the Combine's fence posts or the city's fence03a), warning signs at intervals, a level crossing where a stair comes up from the canal (barrier arms that drop when the train comes: the train's own relay could work them).
+- Signals along the line (props_trainstation light_signal001a), a signal box (a small brick hut with windows over the line).
+- The canal side of the street: the parapet with the city's handrail, lampposts on the street side lighting both.
+
+**Weight.** medium to large (street profile and facades for the corridor: mostly reusing the town's code), medium (shed roof), small (signals, fences).
+
