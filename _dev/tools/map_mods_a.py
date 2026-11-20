@@ -24,6 +24,8 @@ ROAD = "concrete/concretefloor016a"
 DIRT = "nature/dirtfloor005c"
 DUCT = "metal/metalwall014a"      # (the guide lists metal/metalduct003a, but no such material is in the game: it is props/metalduct003a)
 STONE = "stone/stonewall040f"
+WOODTRIM = "wood/woodwall006a"    # (the owner's own panelling and trims: their map has no wood/woodbeam001a)
+HULL = "metal/metalhull010c"      # (the owner's own steel plate: their map has no metal/metalhull003a)
 P = "models/"
 M_ = "models/"
 
@@ -179,28 +181,38 @@ BOGIE = "models/props_trainstation/train_wheels1.mdl"
 def m_tram(m, opt):
     """The fallen tram bridge. A tram line crossed the canal here, 96 over its floor; its bridge is gone but for a stub
     of deck at each wall, one whole girder on a pier and one that sags. In each wall a station opens: a short mouth, then
-    a hall with a platform 64 high either side of a track pit, columns, benches and dim lamps. Episode Two's own passenger
+    a hall with a platform 64 high either side of a track pit, dressed in Half-Life 2's own station kit: its cast iron
+    columns (trainstation_column001) carrying its arches (column_arch001a between them, ceiling_arch001a to the back
+    wall) under a girder across the hall, a plaster ceiling, walls in two tones as the city's station (brick to the
+    shoulder, a rail, plaster over it), its wall lamps (light_128wallmounted001a) each with a beam down on the platform,
+    its indoor benches, bins and payphone, route signs and the city's notices on the walls. Episode Two's own passenger
     car, crushed and its front end torn off (passengercar001_dam01b), has come off the bridge: it lies across the canal
     from the right bank's foot, where its open front end is on the floor, up over the left mouth's lip into the left
-    station, about 13 degrees, leaning 5 to one side. Walk in at its open end and up through it into the left station
-    (its doors there open onto the mouth's ledges, its far end over the pit). The left station has a ticket booth with a
-    barred window and, at the back, a stair up to the street behind a prison's sliding gate, black beyond
-    (lc_tram_exit); its pit ends in steps up to a concourse, a concrete barrier for a buffer. The right station is reached
-    only along the whole girder, a beam 16 wide and 368 long, 96 over the floor (steps at its end climb from the pit to
-    the platform): the same car whole (passengercar001) stands at its platform on two bogies with a cache in it
-    (lc_tram_stash), and somebody has been living on that platform. Dropping from either stub is safe.
+    station, about 13 degrees, leaning 5 to one side; two of its seats and a suitcase spilled out of its open end. Walk in
+    at its open end and up through it into the left station (its doors there open onto the mouth's ledges, its far end
+    over the pit). The overhead wire still hangs from it, snapped, its live end spitting sparks on the canal floor. The
+    left station has a ticket booth with a barred window and, at the back, a stair up to the street behind a prison's
+    sliding gate with a danger sign over it, black beyond (lc_tram_exit); its pit ends in the line's own buffer stop and
+    steps up to a concourse, a signal on the far platform, the station clock stopped over the concourse. The right station
+    is reached only along the whole girder, a beam 16 wide and 368 long, 96 over the floor (steps at its end climb from
+    the pit to the platform): the same car whole (passengercar001) stands at its platform on two bogies with a cache in it
+    (lc_tram_stash), and somebody has been living on that platform (a mattress, a fire in a drum, a lambda on the wall).
+    Dropping from either stub is safe. Sounds: the station's own soundscape in each hall (d1_trainstation.Turnstyle, which
+    the owner's map uses), the metal groaning over the wreck (coast.util_metalstress).
     Named for the game: lc_tram_exit (an info_target on the left platform before the barred stair: where people come
     from or go to the street), lc_tram_stash (an info_target inside the car in the right station: a cache).
-    Left as brushes: the stations (walls, platforms, steps, columns, tiles), the bridge's deck, girders and pier (a
-    building's frame), the rails (no single track narrower than 288 exists as a model), the booth's walls.
+    Left as brushes: the stations' walls, platforms, steps, tiles and girders (architecture), the bridge's deck, girders
+    and pier (a building's frame), the rails (no single track narrower than 288 exists as a model), the booth's walls.
     Unchecked: the cars are Episode Two's (players without it see errors; the owner asked for them); that the cars' own
     collision lets a player walk inside them, where their doors are and that the wreck's floor walks well at 13
-    degrees; how high the car's floor is inside (the platform is 12 over its underside); how the bench, payphone and
-    barrier face."""
+    degrees; how high the car's floor is inside (the platform is 12 over its underside); which way the wall lamps, the
+    benches, the signal, the clock and the payphone face (set by their boxes); that the columns, sunk 40 into the
+    platform so their heads meet the roof, and the arches under it read as meant; the light_256ceilingmounted001a lamp
+    the review named hangs 320 and does not fit under these roofs, so it is left out."""
     b = m.b
     ceil, zr = TRIM + 120, F + 96           # the halls' roof; the stations' floor, the track bed and the bridge's deck
     pz = zr + 64                            # the platforms
-    steel = MM["steel"]
+    steel = HULL
     m.open(0, -256, 1536, 256)
     m.no_bank(640, 192, 896, 320)           # (no bank up to either mouth: a ramp would make the girder pointless)
     m.no_bank(640, -320, 896, -192)
@@ -251,7 +263,7 @@ def m_tram(m, opt):
         m.det([w[:2] + (w[2],) + w[3:5] + (pz + 72,) for w in walls], BRICK)
         m.det([w[:2] + (pz + 76,) + w[3:5] + (ceil - 2,) for w in walls], "plaster/plasterwall041a")
         m.det([(w[0] - (w[3] - w[0] == 2), w[1] - (w[4] - w[1] == 2), pz + 72, w[3] + (w[3] - w[0] == 2), w[4] + (w[4] - w[1] == 2), pz + 76) for w in walls],
-              MM["beam_wood"])
+              WOODTRIM)
         # the rails in the pit, from the mouth's lip
         for u in (736, 796):
             m.det([box(u, 256, zr, u + 4, 316, zr + 3), box(u, 322, zr, u + 4, 736 if s > 0 else 1136, zr + 3)], MAT["bars"])
@@ -280,7 +292,7 @@ def m_tram(m, opt):
     bz = pz
     m.det(wall(448, 480, 544, 488, bz, ceil) + wall(448, 584, 544, 592, bz, ceil, [(472, 520, bz, bz + 88)]) +
           wall(536, 488, 544, 584, bz, ceil, [(500, 572, bz + 36, bz + 90)]), MM["wood"])
-    m.det([(528, 500, bz + 32, 556, 572, bz + 36)], MM["beam_wood"])                                   # the sill
+    m.det([(528, 500, bz + 32, 556, 572, bz + 36)], WOODTRIM)                                   # the sill
     for c in (518, 554):
         m.static(P + "props_wasteland/prison_cellwindow002a.mdl", 540, c, 0, bz + 36)
     m.static(P + "props_wasteland/controlroom_chair001a.mdl", 492, 536, 0, bz)
@@ -369,7 +381,7 @@ def m_tram(m, opt):
     m.spark(930, -96, F + 8)                                                          # still live: it spits now and then
     tilted(m, "prop_static", P + "props_trainstation/traincar_seats001.mdl", 700, -200, F, 205, 0, 0)    # seats spilled from its open end
     tilted(m, "prop_static", P + "props_trainstation/traincar_seats001.mdl", 820, -236, F + 14, 70, 0, 75)
-    m.loose(P + "props_c17/suitcase001a.mdl", 640, -190, 35)
+    m.loose(P + "props_c17/suitcase001a.mdl", 960, -180, 35)
     m.soundscape(SCAPES["metal"], 768, 0, F, radius=560)                             # the wreck's metal groaning under its own weight
     canal_grime(m, 32, 560, 4100)
     canal_grime(m, 1000, 1504, 4200)
@@ -380,7 +392,7 @@ def m_tram(m, opt):
     m.static(P + "props_debris/concrete_floorpile01a.mdl", 600, -150, 20, F - 4)
     m.loose(P + "props_debris/concrete_chunk02a.mdl", 880, -110, 110)
     m.loose(P + "props_vehicles/tire001c_car.mdl", 900, 90, 0)
-    m.view(380, -190, F, 28, -6, "the car and the bridge")
+    m.view(360, -100, F, 22, -6, "the car and the bridge")
     m.view(766, -110, F, 90, -14, "into the car's open end")
     m.view(670, 300, pz, 90, 4, "the left station")
     m.view(600, 700, pz, 300, 4, "its platform, looking back")
@@ -394,63 +406,178 @@ def m_tram(m, opt):
 # tenement
 # ---------------------------------------------------------------------------
 
+def wedge(u1, u2, v1, v2, base, fz, mat, top):
+    """A floor that tilts across v: from `base` up to fz(v) (its top: material `top`), pushed along u from u1 to u2."""
+    f = prism([(v1, base), (v2, base), (v2, fz(v2)), (v1, fz(v1))], "x", u1, u2, mat)
+    f[4] = (f[4][0], top)
+    return f
+
+
+def ragged(m, axis, at, t1, t2, a1, a2, zb, zt, mat, seed):
+    """A hole torn in a wall rather than cut: teeth of the wall's own stuff left round an opening a1..a2 (along the wall)
+    by zb..zt, in a wall from t1 to t2 through it. axis "u": the wall runs along u (pushed along v); "v": it runs along v."""
+    w = a2 - a1
+    teeth = [[(a1, zb), (a1 + 12, zb + 30), (a1, zb + 52)], [(a1, zb + 52), (a1 + 8, zb + 70), (a1, zt - 20)],
+             [(a1, zt), (a1, zt - 20), (a1 + 30, zt)], [(a1 + 30, zt), (a1 + 48, zt - 10), (a1 + w * 2 // 3, zt)], [(a1 + w * 2 // 3, zt), (a2 - 14, zt - 16), (a2, zt)],
+             [(a2, zt - 20), (a2 - 12, zb + 70), (a2, zb + 46)], [(a2, zb + 46), (a2 - 8, zb + 20), (a2, zb)]]
+    if seed % 2:
+        teeth = [[(a1 + a2 - p, z) for p, z in t] for t in teeth]
+    m.shapes([prism(t, "x" if axis == "v" else "y", t1, t2, mat) for t in teeth])
+
+
+def lining(m, u1, v1, u2, v2, fz, ceil, faces, low="plaster/plasterwall047b", skin=None):
+    """A room's walls as the city's flats are: a lower tone up to a dado rail 40 over the floor, the rail proud of it.
+    The floor tilts across v (fz(v) is its top), so a rail along a wall that runs along v slopes with it. faces:
+    {"u1"|"u2"|"v1"|"v2": [(from, to) of each doorway or window to leave open along it]}; a face named in skin is a
+    brick wall: plaster is laid over it above the rail as well."""
+    lo, rail, over = [], [], []
+    for face, holes in faces.items():
+        a1, a2 = (u1, u2) if face[0] == "v" else (v1, v2)
+        spans, at = [], a1
+        for h1, h2 in sorted(holes):
+            if h1 > at:
+                spans.append((at, h1))
+            at = max(at, h2)
+        if at < a2:
+            spans.append((at, a2))
+        for a, b in spans:
+            if face[0] == "v":
+                w = v1 if face == "v1" else v2 - 2
+                z = fz(v1 if face == "v1" else v2)
+                ka, kb = (3 if a == u1 else 0), (3 if b == u2 else 0)      # (clear of the walls across the room's corners)
+                lo.append((a + ka, w, z, b - kb, w + 2, z + 40))
+                rail.append((a + ka, w - (face == "v2"), z + 40, b - kb, w + 2 + (face == "v1"), z + 44))
+                if skin and face in skin:
+                    over.append((a + ka, w + (face == "v2"), z + 44, b - kb, w + 1 + (face == "v2"), ceil))
+            else:
+                w = u1 if face == "u1" else u2 - 2
+                za, zb = fz(a), fz(b)
+                m.shapes([prism([(a, za - 2), (b, zb - 2), (b, zb + 40), (a, za + 40)], "x", w, w + 2, low)])
+                d = -1 if face == "u2" else 0
+                m.shapes([prism([(a, za + 40), (b, zb + 40), (b, zb + 44), (a, za + 44)], "x", w + d, w + d + 3, WOODTRIM)])
+                if skin and face in skin:
+                    e = 1 if face == "u2" else 0
+                    m.shapes([prism([(a, za + 44), (b, zb + 44), (b, ceil), (a, ceil)], "x", w + e, w + e + 1, PLASTER)])
+    if lo:
+        m.det(lo, low)
+        m.det(rail, WOODTRIM)
+    if over:
+        m.det(over, PLASTER)
+
+
 def m_tenement(m, opt):
     """The fallen tenement. A block that stood on the left street has gone into the canal and lies across it from u 320
-    to 960: there is no way round, the way on is through its rooms. Its body fills the canal from the right wall to
-    v 128; the strip left over by the left wall is choked by its own outer wall, fallen in slabs (with an unseen wall
-    for players in it). Ground floor, 112 high: an entry hall, a living room, a kitchen, a stair hall open to the
-    leaning roof, a bedroom, a small room with a bed, and behind that a nook that is easy to miss (a crawl hole 40
-    high by the bed, or a hole in the floor above): lc_tenement_stash. A stair climbs to the one room left upstairs,
-    with a window over the canal the far way (lc_tenement_lookout); out of that window is a drop, never a way in.
-    The roof is sheared slabs lying where they slid. Where the block stood, the left wall is bitten out down to the
-    trim, with its cellar walls and floor beams left.
-    The way through, door by door (wide by high): the hole in the entry wall 64 by 88; hall to living room 48 by 84;
-    living room to kitchen 48 by 88; kitchen door to the stair hall 48 by 96; stair hall to bedroom 48 by 92; the hole
-    in the far wall 64 by 92. A short cut from the hall to the stair hall is a crawl, 48 by 40.
+    to 960: there is no way round, the way on is through its rooms. It came down tilted: every floor in it leans 5
+    degrees down toward the left bank (32 over its 352 depth), the furniture has slid to the low side, the tallest wall
+    in it leans over the kitchen, a crack runs across the kitchen's ceiling with daylight through it, and the canal's
+    water has crept into the low side of the hall. Its body fills the canal from the right wall to v 128; the strip left
+    over by the left wall is choked by its own outer wall, fallen in slabs (with an unseen wall for players in it). Its
+    face to the canal at each end is a tenement's (a plinth, a string course, windows with sills and lintels, broken),
+    and the ways in are holes torn in it, ragged, rubble and rebar at their edges. Ground floor, 112 high: an entry hall,
+    a living room, a kitchen, a stair hall open to the leaning roof, a bedroom, a back room, a small room with a bed,
+    and behind that a nook that is easy to miss (a crawl hole by the bed, or a hole in the floor above):
+    lc_tenement_stash. A stair climbs to the one room left upstairs, a sentry's chair and binoculars at its window over
+    the canal the far way (lc_tenement_lookout); out of that window is a drop, never a way in. The rooms are the city's
+    flats: plaster in two tones split by a dado rail, wood floors, door casings proud of the walls, a radiator under
+    the window, posters and a radio. The roof is sheared slabs lying where they slid. Where the block stood, the left
+    wall is bitten out down to the trim, with its cellar walls and floor beams left. It creaks (d1_town.WoodBuilding).
+    The way through, door by door (wide, and high over the tilted floor at its lowest): the hole in the entry wall about
+    74 by 90; hall to living room 48 by 84; living room to kitchen 48 by 84; kitchen door to the stair hall 48 by 84;
+    stair hall to bedroom 48 by 80; the hole in the far wall about 74 by 90. A short cut from the hall to the stair hall
+    is a crawl, 48 by 42; the nook's crawl is 40 by 42.
     Named for the game: lc_tenement_stash (an info_target in the nook: a cache), lc_tenement_lookout (an info_target
     at the upstairs window: a sentry's place).
     Left as brushes: the block itself (its walls, floors, stair, the roof's slabs and the outer wall fallen in slabs),
-    the kitchen's door frame, a sill and lintels, the cellar walls and joists in the bite. Its furniture is the game's
-    own (couch, radiator, stove, sink, fridge, tables, chairs, dresser, bed, shelf, two mattresses turned the right way
-    up), and rubble of the game's lies where it struck.
-    Unchecked: that the crawl holes (40 high) pass a crouched player in the game as they do on paper; how the
-    furniture models face; that nobody can get onto the roof (unseen walls stand over it in case)."""
+    its trims (plinth, string course, sills, lintels, dado rails, door casings), the cellar walls and joists in the
+    bite. Its furniture is the game's own (couches, radiator, stove, sink, a fridge on its back, tables, chairs,
+    dresser, bed, shelf, a radio, mattresses turned the right way up), and rubble, rebar and a torn ceiling of the
+    game's lie where it struck.
+    Unchecked: that the crawl holes pass a crouched player in the game as they do on paper; how the furniture models
+    face; that the tilted props (the fridge, a fallen chair, the hanging lamp) lie as worked out; how destroyedceiling01a
+    looks round the living room's hole; that nobody can get onto the roof (unseen walls stand over it in case)."""
     b = m.b
     g, zc, up, top = F + 8, F + 120, F + 136, F + 248
     wood, tin = MM["wood"], MM["tin"]
+
+    def fz(v):            # the ground floor's top: 5 degrees down toward +v
+        return g + (112 - v) * 32 // 352
+
+    def fu(v):            # ...and upstairs
+        return up + (112 - v) * 32 // 352
     m.open(0, -256, 1280, 256)
     m.open(448, 256, 832, 384, floor=TRIM, mat=DIRT)               # where it stood
     m.side(320, -256, 960, 384)
     m.no_bank(320, -264, 960, -248)
     m.blocked(304, -256, 976, 384)
     m.taken(296, -256, F, 984, 256, b.rim)
-    # --- the outer walls (brick, 16 thick) ---
-    ew = wall(320, -256, 336, 128, F, up + 48, [(16, 80, g, g + 88)])
+    # --- the outer walls (brick, 16 thick): the ways in torn through them, two broken windows in the entry wall ---
+    ew = wall(320, -256, 336, 128, F, up + 48, [(-224, -168, g + 40, g + 104), (-128, -72, g + 40, g + 104), (0, 96, g, g + 112)])
     ew += [(320, -256, up + 48, 336, -196, up + 96), (320, -92, up + 48, 336, -20, up + 76), (320, 56, up + 48, 336, 128, up + 104)]
-    xw = wall(944, -256, 960, 128, F, top, [(16, 80, g, g + 92), (-176, -48, up + 40, up + 88)])
+    xw = wall(944, -256, 960, 128, F, top, [(0, 96, g, g + 112), (-176, -48, up + 40, up + 88)])
     lw = [(336, 112, F, 944, 128, up), (544, 112, up, 944, 128, top), (752, 112, top, 944, 128, top + 40),
           (336, 112, up, 424, 128, up + 64), (468, 112, up, 544, 128, up + 28)]
     bw = [(336, -256, F, 944, -240, up), (736, -256, up, 944, -240, top)]
     m.det(ew + xw + lw, BRICK)
     m.det(bw, PLASTER)
+    for (t1, t2, seed) in ((320, 336, 1), (944, 960, 2)):
+        ragged(m, "v", 0, t1, t2, 0, 96, g, g + 112, BRICK, seed)
     m.shapes([prism([(-256, top), (128, top), (128, top + 44)], "x", 944, 960, BRICK), prism([(-240, top), (112, top), (112, top + 40)], "x", 736, 752, PLASTER)])
-    m.det([(942, -180, up + 36, 962, -44, up + 40), (942, 12, g + 92, 962, 84, g + 98), (318, 12, g + 88, 338, 84, g + 94)], MM["beam_wood"])     # a sill, two lintels
-    # --- the walls inside (plaster) ---
-    p1 = wall(336, -64, 944, -48, g, zc, [(400, 448, g, g + 84), (624, 672, g, g + 96), (776, 824, g, g + 92)])
-    p1 += [(544, -64, zc, 736, -48, top - 20), (544, -64, top - 20, 632, -48, top)]
-    p2 = wall(528, -240, 544, 112, g, zc, [(-176, -128, g, g + 88), (24, 72, g, g + 40)])
-    p3 = wall(736, -240, 752, 112, g, zc, [(-24, 24, g, g + 92)]) + wall(736, -240, 752, 112, up, top, [(64, 112, up, up + 96)])
-    p4 = wall(848, -240, 864, -64, g, zc, [(-240, -200, g, g + 40)])
+    # its face to the canal at both ends, as the town's houses: a plinth, a string course at the first floor, the windows
+    # with stone sills and lintels (both downstairs broken, one boarded), a sill under the lookout's window
+    trim, plinth = "stone/stonewall050f", "concrete/concretewall002c"
+    for u0, d in ((320, -1), (960, 1)):
+        a, c = (u0 - 8, u0) if d < 0 else (u0, u0 + 8)
+        m.det(wall(a, -256, c, 128, F, F + 24, [(0, 96, F, F + 24)]), plinth)
+        m.det([(min(u0, u0 + 6 * d), -256, up - 8, max(u0, u0 + 6 * d), 128, up + 4)], trim)
+    for (a1, a2) in ((-224, -168), (-128, -72)):
+        m.det([(310, a1 - 6, g + 34, 322, a2 + 6, g + 41), (314, a1 - 4, g + 104, 320, a2 + 4, g + 112)], trim)
+    m.det([(958, -180, up + 34, 968, -44, up + 41), (960, -178, up + 88, 966, -46, up + 96)], trim)
+    m.det([(940, -180, up + 36, 946, -44, up + 41)], WOODTRIM)                        # the lookout's sill inside
+    for z, roll in ((g + 60, 8), (g + 86, -6)):
+        m.point("prop_dynamic_override", 316, -100, z, {"model": P + "props_debris/wood_board05a.mdl", "angles": "0 %d %d" % (m.fr.yaw(0), 90 + roll), "skin": "0",
+                                                         "solid": "6", "disableshadows": "1", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1",
+                                                         "StartDisabled": "0", "renderamt": "255", "rendercolor": "255 255 255"}, m.pv)
+    # rubble spilled from the torn holes, rebar standing out of their edges
+    m.static(P + "props_debris/broken_pile001a.mdl", 292, 48, 90, F - 2)
+    m.static(P + "props_debris/plaster_floorpile001a.mdl", 990, 40, 270, F - 2)
+    for (u, v, z, model) in ((316, 2, g + 92, "rebar001c_64"), (316, 92, g + 60, "rebar001b_48"), (964, 6, g + 80, "rebar_cluster001a"), (964, 90, g + 96, "rebar001c_64")):
+        m.static(P + "props_debris/%s.mdl" % model, u, v, 0, z)
+    # --- the walls inside (plaster), their doorways raised to pass over the tilted floor, the tall wall over the kitchen leaning ---
+    p1 = wall(336, -64, 944, -48, g, zc, [(400, 448, g, g + 100), (624, 672, g, g + 100), (776, 824, g, g + 100)])
+    p2 = wall(528, -240, 544, 112, g, zc, [(-176, -128, g, g + 108), (24, 72, g, g + 48)])
+    p3 = wall(736, -240, 752, 112, g, zc, [(-24, 24, g, g + 100)]) + wall(736, -240, 752, 112, up, top, [(64, 112, up, up + 96)])
+    p4 = wall(848, -240, 864, -64, g, zc, [(-240, -200, g, g + 72)])
     m.det(p1 + p2 + p3 + p4, PLASTER)
-    m.det([(620, -66, g, 624, -46, g + 100), (672, -66, g, 676, -46, g + 100), (620, -66, g + 96, 676, -46, g + 100)], MM["beam_wood"])          # the kitchen's door frame
-    # --- floors ---
-    m.det([(336, -240, F, 544, 112, g), (544, -64, F, 736, 112, g), (736, -240, F, 944, 112, g)], MAT["canal_wall"], top=wood)
-    m.det([(544, -240, F, 736, -64, g)], MAT["canal_wall"], top=TILE)
-    m.det(floor_with_holes(336, -240, 544, 112, zc, up, [(416, -200, 496, -120)]) + [(544, -240, zc, 736, -48, up)], MAT["ceiling"], top=MAT["quay_floor"])
-    m.det(floor_with_holes(736, -240, 944, 112, zc, up, [(880, -232, 928, -184)]), MAT["ceiling"], top=wood)
+    m.shapes([para((544, -64, zc), (192, 0, 0), (0, 16, 0), (0, -20, top - 20 - zc), PLASTER),
+              para((544, -84, top - 20), (88, 0, 0), (0, 16, 0), (0, -4, 20), PLASTER)])
+    cas = []
+    for (a, c) in ((400, 448), (624, 672), (776, 824)):             # hole a..c in the wall v -64..-48
+        cas += [(a - 4, -67, g, a + 1, -45, g + 99), (c - 1, -67, g, c + 4, -45, g + 99), (a - 4, -67, g + 99, c + 4, -45, g + 104)]
+    cas += [(525, -180, g, 547, -175, zc), (525, -129, g, 547, -124, zc),
+            (733, -28, g, 755, -23, g + 99), (733, 23, g, 755, 28, g + 99), (733, -28, g + 99, 755, 28, g + 104)]
+    m.det(cas, WOODTRIM)
+    # --- floors, all tilted the same way; the kitchen's ceiling cracked across ---
+    m.shapes([wedge(336, 544, -240, 112, F, fz, MAT["canal_wall"], wood), wedge(544, 736, -64, 112, F, fz, MAT["canal_wall"], wood),
+              wedge(736, 944, -240, 112, F, fz, MAT["canal_wall"], wood), wedge(544, 736, -240, -64, F, fz, MAT["canal_wall"], TILE)])
+    m.det(floor_with_holes(336, -240, 544, 112, zc, up, [(416, -200, 496, -120)]), MAT["ceiling"], top=MAT["quay_floor"])
+    m.det([(544, -240, zc, 736, -158, up), (544, -142, zc, 736, -48, up)], MAT["ceiling"], top=MAT["quay_floor"])
+    m.shapes([prism([(-158, zc), (-150, zc), (-158, up)], "x", 544, 640, MAT["ceiling"]), prism([(-142, zc), (-142, up), (-150, up)], "x", 640, 736, MAT["ceiling"])])
+    m.shapes([wedge(736, 880, -240, 112, zc, fu, MAT["ceiling"], wood), wedge(880, 928, -240, -232, zc, fu, MAT["ceiling"], wood),
+              wedge(880, 928, -184, 112, zc, fu, MAT["ceiling"], wood), wedge(928, 944, -240, 112, zc, fu, MAT["ceiling"], wood)])
     m.steps(544, 64, 112, g, up, "u", 1)
+    # the rooms lined as the city's flats are (brick walls plastered over above the rail)
+    rooms = [(336, -240, 528, -64, zc, {"u1": [(-224, -168), (-128, -72)], "u2": [(-180, -124)], "v1": [], "v2": [(396, 452)]}, ("u1",)),
+             (336, -48, 528, 112, zc, {"u1": [(0, 96)], "u2": [(24, 72)], "v1": [(396, 452)], "v2": []}, ("u1", "v2")),
+             (544, -240, 736, -64, zc, {"u1": [(-180, -124)], "u2": [], "v1": [], "v2": [(620, 676)]}, ()),
+             (544, -48, 736, 112, zc, {"u1": [(24, 72)], "u2": [(-28, 28)], "v1": [(620, 676)]}, ()),
+             (752, -240, 848, -64, zc, {"u1": [], "u2": [(-240, -200)], "v1": [], "v2": [(772, 828)]}, ()),
+             (864, -240, 944, -64, zc, {"u1": [(-240, -200)], "u2": [], "v1": [], "v2": []}, ("u2",)),
+             (752, -48, 944, 112, zc, {"u1": [(-28, 28)], "u2": [(0, 96)], "v1": [(772, 828)], "v2": []}, ("u2", "v2"))]
+    for (u1, v1, u2, v2, ceil, faces, skin) in rooms:
+        lining(m, u1, v1, u2, v2, fz, ceil, faces, low=TILE if (u1, v1) == (544, -240) else "plaster/plasterwall047b", skin=skin)
+    lining(m, 752, -240, 944, 112, fu, top, {"u1": [(64, 112)], "u2": [(-176, -48)], "v1": [], "v2": []}, skin=("u2", "v2"))
     # --- the roof, where it slid (sheared slabs) ---
-    m.shapes([para((728, -256, top), (232, 0, 0), (0, 392, 48), (0, 0, 12), tin),
+    m.shapes([para((728, -256, top), (233, 0, 0), (0, 392, 48), (0, 0, 12), tin),
               para((336, -256, up + 4), (0, 184, 0), (400, 0, 108), (0, 0, 12), tin),
               para((352, -40, up + 12), (0, 160, 0), (384, 0, 128), (0, 0, 12), tin),
               # the outer wall, fallen into the strip by the left wall
@@ -469,59 +596,85 @@ def m_tenement(m, opt):
     clip(m, (736, -256, top + 64, 960, -64, b.sky))
     # --- where it stood: cellar walls and floor beams in the bite ---
     m.det([(448, 368, TRIM, 832, 384, TRIM + 44), (448, 256, TRIM, 464, 368, TRIM + 28), (816, 256, TRIM, 832, 368, TRIM + 60), (632, 300, TRIM, 648, 368, TRIM + 36)], BRICK)
-    m.det([(u, 226, TRIM - 14, u + 10, 330, TRIM) for u in (500, 590, 700, 780)], MM["beam_wood"])
-    # --- what is in the rooms ---
-    put(m, P + "props_c17/furniturecouch001a.mdl", 366, -150, 0, z=g)
-    put(m, P + "props_debris/broken_pile001a.mdl", 444, -200, 20, z=g)
-    put(m, P + "props_c17/furnitureradiator001a.mdl", 492, -232, 90, z=g)
-    put(m, P + "props_c17/furniturestove001a.mdl", 700, -218, 90, z=g)
-    put(m, P + "props_interiors/sinkkitchen01a.mdl", 640, -224, 90, z=g)
-    put(m, P + "props_interiors/refrigerator01a.mdl", 580, -220, 90, z=g)
-    put(m, P + "props_c17/furnituretable002a.mdl", 684, -150, 0, z=g)
-    m.loose(P + "props_c17/furniturechair001a.mdl", 646, -150, 0, z=g)
-    put(m, P + "props_c17/furnituredresser001a.mdl", 488, 90, 270, z=g)
-    put(m, P + "props_debris/concrete_chunk01a.mdl", 384, -16, 40, z=g)
-    m.loose(P + "props_debris/concrete_chunk02a.mdl", 470, 16, 100, z=g)
-    m.loose(P + "props_junk/wood_crate001a.mdl", 580, -20, 15, z=g)
-    mattress(m, 860, 90, 0, g)
-    m.loose(P + "props_c17/furniturechair001a.mdl", 782, 94, 200, z=g)
-    put(m, P + "props_c17/furniturebed001a.mdl", 792, -178, 90, z=g)
-    put(m, P + "props_interiors/furniture_shelf01a.mdl", 836, -104, 180, z=g)
-    m.loose(P + "props_junk/wood_crate001a.mdl", 914, -92, 0, z=g)
-    m.loose(P + "props_junk/wood_crate002a.mdl", 900, -140, 90, z=g)
-    put(m, P + "props_c17/furnituretable001a.mdl", 900, 40, 0, z=up)
-    m.loose(P + "props_c17/furniturechair001a.mdl", 862, 40, 0, z=up)
-    mattress(m, 800, -200, 90, up)
-    put(m, P + "props_c17/oildrum001.mdl", 782, 24, 0, z=up)
-    put(m, P + "props_c17/furniturecouch002a.mdl", 176, -84, 140)
+    m.det([(u, 226, TRIM - 12, u + 10, 330, TRIM + 2) for u in (500, 590, 700, 780)], WOODTRIM)
+    # --- what is in the rooms, slid to the low side ---
+    put(m, P + "props_c17/furniturecouch001a.mdl", 432, -100, 0, z=fz(-100))                                    # living room
+    put(m, P + "props_c17/furnitureradiator001a.mdl", 342, -100, 0, z=fz(-75) + 2)
+    put(m, P + "props_c17/furnitureradiator001a.mdl", 342, -196, 0, z=fz(-171) + 2)
+    put(m, P + "props_debris/plaster_floorpile001a.mdl", 460, -170, 20, z=fz(-140))
+    m.static(P + "props_debris/destroyedceiling01a.mdl", 456, -160, 0, zc - 33)                                  # torn round the hole
+    put(m, P + "props_c17/furnituredresser001a.mdl", 500, -210, 270, z=fz(-180))
+    put(m, P + "props_lab/citizenradio.mdl", 500, -210, 270, z=fz(-180) + 82)
+    put(m, P + "props_c17/furniturestove001a.mdl", 712, -218, 90, z=fz(-192))                                  # kitchen
+    put(m, P + "props_interiors/sinkkitchen01a.mdl", 664, -224, 90, z=fz(-210))
+    tilted(m, "prop_static", P + "props_interiors/refrigerator01a.mdl", 590, -140, fz(-120) + 16, 90, 90, 0)   # the fridge, fallen on its back
+    put(m, P + "props_c17/furnituretable002a.mdl", 660, -100, 0, z=fz(-80))
+    tilted(m, "prop_physics", P + "props_c17/furniturechair001a.mdl", 700, -110, fz(-100) + 10, 30, 0, -90)
+    put(m, P + "props_debris/concrete_chunk01a.mdl", 384, 40, 40, z=fz(40))                                     # the hall
+    m.loose(P + "props_debris/concrete_chunk02a.mdl", 470, 60, 100, z=fz(60))
+    m.loose(P + "props_junk/wood_crate001a.mdl", 600, 20, 15, z=fz(20))                                         # the stair hall
+    mattress(m, 860, 80, 0, fz(80))                                                                           # the back room
+    m.loose(P + "props_c17/furniturechair001a.mdl", 782, 90, 200, z=fz(90))
+    put(m, P + "props_c17/furniturebed001a.mdl", 796, -96, 0, z=fz(-74))                                        # the small room
+    put(m, P + "props_interiors/furniture_shelf01a.mdl", 760, -200, 0, z=fz(-176))
+    m.loose(P + "props_junk/wood_crate001a.mdl", 914, -92, 0, z=fz(-72))                                       # the nook
+    m.loose(P + "props_junk/wood_crate002a.mdl", 900, -140, 90, z=fz(-120))
+    put(m, P + "props_c17/furnituretable001a.mdl", 900, 30, 0, z=fu(30))                                       # upstairs
+    put(m, P + "props_c17/oildrum001.mdl", 782, 24, 0, z=fu(24))
+    mattress(m, 800, -170, 90, fu(-150))
+    put(m, P + "props_c17/furniturechair001a.mdl", 920, -112, 0, z=fu(-112))                                    # the lookout's chair at the window
+    m.static(P + "props_combine/combine_binocular01.mdl", 924, -60, 90, fu(-50))
+    put(m, P + "props_c17/furniturecouch002a.mdl", 150, -56, 140)                                              # thrown out into the canal
     put(m, P + "props_debris/concrete_chunk01a.mdl", 250, -40, 70)
-    put(m, P + "props_debris/broken_pile001a.mdl", 1030, 70, 100)
-    m.static(P + "props_debris/concrete_debris256pile001a.mdl", 200, 40, 30, F - 5)      # rubble where it struck
-    m.static(P + "props_debris/concrete_debris128pile001a.mdl", 1090, 100, 200, F - 4)
+    put(m, P + "props_debris/broken_pile001a.mdl", 1050, 120, 100)
+    m.static(P + "props_debris/concrete_debris128pile001a.mdl", 200, -186, 0, F - 4)       # rubble where it struck, clear of the way in
+    m.static(P + "props_debris/concrete_debris128pile001a.mdl", 200, 150, 0, F - 4)
+    m.static(P + "props_debris/concrete_debris128pile001b.mdl", 1150, 174, 200, F - 4)
     m.loose(P + "props_debris/concrete_chunk02a.mdl", 1090, -90, 10)
-    m.target("lc_tenement_stash", 904, -150, g + 8, 90)
-    m.target("lc_tenement_lookout", 920, -112, up + 8, 0)
-    # --- light: grey from the holes in the roof, one lamp left burning in the kitchen, a candle's worth elsewhere ---
+    m.water(336, 64, 528, 112, F + 2, g + 3)                                               # the canal's water, come in at the low side
+    m.target("lc_tenement_stash", 904, -150, fz(-150) + 8, 90)
+    m.target("lc_tenement_lookout", 920, -112, fu(-112) + 8, 0)
+    # --- light: grey from the holes in the roof and the crack, one lamp left burning in the kitchen (hanging on its cable,
+    # askew), a candle in the small room, the radio's corner lit low ---
     m.light(456, -160, up + 10, "190 205 230 45")
+    m.spot(456, -160, up + 40, "190 205 230 70", 0, 88, 50)
     m.light(640, 20, top - 30, "190 205 230 55")
-    m.lamp(640, -150, zc - 8, "255 200 140 28")
+    m.spot(600, -150, up + 60, "200 212 235 80", 90, 85, 30)                                 # daylight down through the kitchen's crack
+    m.rope([(640, -100, zc - 1), (646, -100, zc - 34)], slack=4)
+    tilted(m, "prop_static", P + "props_c17/light_industrialbell01_on.mdl", 646, -100, zc - 34, 0, 12, 0)
+    m.light(648, -100, zc - 62, "255 200 140 34")
     m.light(432, 32, zc - 24, "200 210 230 10")
+    m.lamp(432, 32, zc, "200 210 230 8")
+    from map_mods_b import candle
+    candle(m, 760, -200, fz(-176) + 88)
     m.light(848, 32, g + 40, "255 170 100 12")
     m.light(904, -120, g + 30, "255 160 90 6")
     m.light(900, -100, top - 30, "190 205 230 30")
+    m.spot(900, -112, top - 10, "190 205 230 50", 0, 70, 40)
+    m.soundscape(SCAPES["house"], 640, -64, g, radius=420)
+    # --- grime: cracks where it struck, stains where the water got in, posters and the lambda of whoever sheltered here ---
+    for kind, u, v, z, seed in (("crack", 336 + 2, -150, g + 70, 1), ("crack", 528, -30, g + 80, 2), ("crack", 736 - 2, -150, g + 90, 3), ("poster", 544 + 2, 0, g + 60, 4),
+                                ("poster", 752 + 2, -150, g + 56, 5), ("stain", 640, -240 + 2, g + 70, 6), ("lambda", 864 + 2, -150, g + 50, 7), ("stain", 336 + 2, 30, g + 50, 8),
+                                ("trash", 440, 0, fz(0), 9), ("debris", 400, -130, fz(-130), 10), ("stain", 319, -60, F + 60, 11), ("crack", 319, -200, up + 20, 12),
+                                ("stain", 961, -120, F + 90, 13), ("graffiti", 961, -200, F + 40, 14)):
+        m.grime(kind, u, v, z, seed)
+    canal_grime(m, 32, 300, 4300)
+    canal_grime(m, 980, 1250, 4400)
     # --- the way through, for those who cannot crawl ---
-    for (u, v, z) in ((290, 48, F), (360, 48, g), (424, 16, g), (424, -56, g), (440, -130, g), (536, -152, g), (600, -150, g), (648, -100, g), (648, -56, g),
-                      (656, 0, g), (744, 0, g), (800, 16, g), (880, 40, g), (952, 48, g), (1000, 48, F), (800, -56, g), (800, -100, g),
-                      (560, 88, g + 8), (724, 88, up), (800, 80, up), (860, -60, up)):
+    for (u, v) in ((360, 48), (424, 16), (424, -56), (440, -130), (536, -152), (600, -150), (648, -100), (648, -56), (656, 0), (744, 0), (800, 16), (880, 40),
+                   (952, 48), (800, -56), (800, -100), (560, 88)):
+        m.lane(u, v, fz(v))
+    for (u, v, z) in ((290, 48, F), (1000, 48, F), (724, 88, fu(88)), (800, 80, fu(80)), (860, -60, fu(-60))):
         m.lane(u, v, z)
     m.view(150, 60, F, 0, 0, "what is left of it")
-    m.view(350, 48, g, 320, 4, "the hall: the hole to the living room, the crawl")
-    m.view(716, -84, g, 215, 8, "the kitchen")
-    m.view(570, 20, g, 20, -14, "the stair hall")
-    m.view(790, 60, up, 310, 6, "upstairs: the window")
-    m.view(800, -84, g, 290, 16, "the small room: the nook's hole by the bed")
+    m.view(350, 48, fz(48), 320, 4, "the hall: the hole to the living room, the crawl")
+    m.view(716, -84, fz(-84), 215, 8, "the kitchen")
+    m.view(570, 20, fz(20), 20, -14, "the stair hall")
+    m.view(790, 60, fu(60), 310, 6, "upstairs: the window")
+    m.view(800, -140, fz(-140), 305, 16, "the small room: the nook's hole by the bed")
     m.view(1180, 30, F, 180, -6, "looking back at it")
-    b.notes.append("%s: the block lies across u 320 to 960; ground floor z %d, upstairs z %d; every door on the way through is at least 48 wide and 84 high" % (m.tag, g, up))
+    b.notes.append("%s: the block lies across u 320 to 960; ground floor z %d to %d, upstairs z %d to %d (tilted 5 degrees); every door on the way through is at least 48 wide and 80 high" % (
+        m.tag, g, fz(-240), up, fu(-240)))
 
 
 # ---------------------------------------------------------------------------
@@ -545,7 +698,7 @@ def m_quay(m, opt):
     the boat, bench and payphone models face; the doorway's frame stands 24 above the walls' tops when the rim is at
     its lowest (784), which may look odd from the street."""
     b = m.b
-    steel = MM["steel"]
+    steel = HULL
     m.open(0, -256, 1024, 256)
     m.open(320, 256, 960, 512, floor=TRIM, mat=MAT["quay_floor"])
     m.low(576, 512, 704, 640, TRIM + 128, floor=TRIM, mat=MAT["quay_floor"])
@@ -602,7 +755,7 @@ def m_quay(m, opt):
     m.lane(640, 490, TRIM)
     m.lane(864, 330, TRIM)
     # --- the footbridge: a plank deck on two girders, two trestles, a rail each side ---
-    m.det([(832, -256, TRIM - 6, 896, 256, TRIM)], MM["beam_wood"], top=MM["wood"])
+    m.det([(832, -256, TRIM - 6, 896, 256, TRIM)], WOODTRIM, top=MM["wood"])
     m.det([(836, -256, TRIM - 24, 842, 256, TRIM - 6), (886, -256, TRIM - 24, 892, 256, TRIM - 6)], MAT["bars"])
     br = []
     for u in (835, 893):                    # its rails: the city's own, four lengths a side
@@ -767,7 +920,7 @@ def m_scrapyard(m, opt):
     and that their insides walk; the ladder on a container's end; that two planks 22 wide side by side walk as one
     ramp; how the wrecks and the hook face."""
     b = m.b
-    steel = MM["steel"]
+    steel = HULL
     wood = MM["wood"]
     L1Z, L2Z, L3Z = F + 130, F + 260, F + 390
     m.open(0, -256, 1536, 256)
@@ -799,7 +952,7 @@ def m_scrapyard(m, opt):
     m.shapes(planks)
     m.det([(496, 136, L1Z, 592, 158, L1Z + 6), (492, 162, L1Z, 588, 184, L1Z + 6), (496, -24, L1Z, 592, -2, L1Z + 6), (500, 2, L1Z, 596, 24, L1Z + 6),
            (1000, 48, L2Z, 1022, 272, L2Z + 6), (1026, 52, L2Z, 1048, 276, L2Z + 6)], wood)
-    m.det([(132, -170, F, 138, -118, F + 5), (1462, 118, F, 1468, 170, F + 5), (780, 290, L1Z, 786, 350, L1Z + 89), (1146, 190, L1Z, 1206, 196, L1Z + 79)], MM["beam_wood"])   # cleats and props
+    m.det([(132, -170, F, 138, -118, F + 5), (1462, 118, F, 1468, 170, F + 5), (780, 290, L1Z, 786, 350, L1Z + 89), (1146, 190, L1Z, 1206, 196, L1Z + 79)], WOODTRIM)   # cleats and props
     # --- the perch: a ladder up the third container's end from the ledge, sheets of metal to crouch behind ---
     m.ladder(960, 0, L2Z, L3Z - 2, 0)
     for (u, v, yaw) in ((600, -40, 0), (600, 30, 0), (700, -62, 90), (860, 60, 270)):
@@ -890,7 +1043,7 @@ def m_boathouse(m, opt):
     be pressed past the pipe; that the hatch, sliding from under someone, lets them down the steps cleanly."""
     b = m.b
     fz, ceil, cz = F + 64, F + 224, F - 64
-    steel, tin, wood = MM["steel"], MM["tin"], MM["wood"]
+    steel, tin, wood = HULL, MM["tin"], MM["wood"]
     m.open(0, -256, 1024, 256)
     m.low(448, 256, 704, 320, ceil, floor=fz)                    # the doorway
     m.low(320, 320, 832, 704, ceil, floor=fz)                    # the shed
@@ -1024,21 +1177,21 @@ def m_arcade(m, opt):
             for way in (-1, 1):
                 edge = c if way < 0 else c + 16
                 if -256 < edge + way * 24 < 256:
-                    brackets.append(prism([(edge, roof - 16), (edge, roof - 44), (edge + way * 28, roof - 16)], "x", ua + 2, ub - 2, MM["beam_wood"]))
+                    brackets.append(prism([(edge, roof - 16), (edge, roof - 44), (edge + way * 28, roof - 16)], "x", ua + 2, ub - 2, WOODTRIM))
         para_boxes = wall(ua + 2, -256, ub - 2, 256, deck, deck + 36, [(gap[0], gap[1], deck, deck + 36)])
         m.det(para_boxes, stone)
         m.det([(ua - 2 if ua == 640 else ua, x[1], deck + 36, ub if ua == 640 else ub + 2, x[4], deck + 40) for x in para_boxes], MAT["beam"])
-        m.det([(ua, -256, roof - 16, ub, 256, roof)], MM["beam_wood"])
+        m.det([(ua, -256, roof - 16, ub, 256, roof)], WOODTRIM)
     m.det(cols, stone)
     m.shapes(brackets)
-    m.det([(628, -256, roof, 908, 256, roof + 8)], MM["beam_wood"])
+    m.det([(628, -256, roof, 908, 256, roof + 8)], WOODTRIM)
     m.shapes([prism([(620, roof + 8), (916, roof + 8), (768, roof + 64)], "y", -256, 256, tin)])
     # barred shop fronts closing the walk's two ends: the city's storefront bars in a wooden frame, dark behind
     for s in (1, -1):
         v1, v2 = (248, 256) if s > 0 else (-256, -248)
         m.det([(681, v1, deck, 743, v2, deck + 105), (793, v1, deck, 855, v2, deck + 105)], MAT["black"])
         m.det([(664, v1, deck, 681, v2, deck + 113), (743, v1, deck, 793, v2, deck + 113), (855, v1, deck, 872, v2, deck + 113), (664, v1, deck + 105, 872, v2, deck + 113)],
-              MM["beam_wood"])
+              WOODTRIM)
         for u in (712, 824):
             m.static(P + "props_building_details/storefront_template001a_bars.mdl", u, 246 * s, 90, deck)
     # three empty stalls down the middle: the game's kitchen counters, a pushcart left by one
@@ -1107,7 +1260,7 @@ def m_chimney(m, opt):
     plinth, top = F + 128, F + 624
     if top + 104 > b.sky - 32:
         b.problems.append("%s: the sky is too low for the chimney" % m.tag)
-    steel = MM["steel"]
+    steel = HULL
     m.open(0, -256, 1024, 256)
     for i in range(-8, 8):
         for j in range(-8, 8):
@@ -1342,7 +1495,7 @@ def m_lift(m, opt):
     harm: dmg 0); that the button parented to it follows and still takes a press; the sounds
     plats/elevator_move_loop1.wav and plats/elevator_stop1.wav; the buttons' model is Episode Two's."""
     b = m.b
-    steel = MM["steel"]
+    steel = HULL
     m.open(0, -256, 1024, 256)
     m.open(320, 256, 768, 576, floor=TRIM, mat=MAT["quay_floor"])
     m.low(448, 576, 576, 704, TRIM + 128, floor=TRIM, mat=MAT["quay_floor"])
@@ -1454,7 +1607,7 @@ def m_barge(m, opt):
     Unchecked: that props_wasteland/wheel01 (a cart's wheel) reads as a ship's; which way the winch faces; the ladder standing free in the hatch (the shared helper's models and dismount points); that walls
     sheared in plan do not snag a player walking the side decks (40 wide)."""
     b = m.b
-    steel, wood, tin = MM["steel"], MM["wood"], MM["tin"]
+    steel, wood, tin = HULL, MM["wood"], MM["tin"]
     U0, V0, dk = 320, -136, F + 96
     m.open(0, -256, 1280, 256)
     m.side(320, -160, 960, 160)
@@ -1506,7 +1659,7 @@ def m_barge(m, opt):
     m.static(M_ + "props_canal/winch02.mdl", xu, xv, 7, dk)
     mu, mv = P(112, 96)
     m.static(M_ + "props_docks/dock01_pole01a_256.mdl", mu, mv, 0, F + 8)         # the mast, stepped on the hold's floor through the deck
-    m.det([(mu - 2, mv - 30, dk + 146, mu + 2, mv + 30, dk + 150)], MM["beam_wood"])
+    m.det([(mu - 2, mv - 30, dk + 146, mu + 2, mv + 30, dk + 150)], WOODTRIM)
     m.rope([(mu, mv, dk + 164), (wu + 20, wv, wz + 104)], slack=30)
     m.rope([(mu, mv, dk + 164), P(8, 96) + (dk + 4,)], slack=6)
     m.static(M_ + "props_c17/light_cagelight02_on.mdl", mu + 9, mv + 1, 7, dk + 110)   # a caged lamp on the mast, looking aft
@@ -1515,7 +1668,7 @@ def m_barge(m, opt):
     # --- the gangplank from the left bank, level with the deck ---
     gu = 320 + 476
     m.det([(gu - 20, 112, dk, gu + 20, 236, dk + 5)], wood)
-    m.det([(gu - 20, v, dk + 5, gu + 20, v + 3, dk + 7) for v in range(124, 230, 24)], MM["beam_wood"])
+    m.det([(gu - 20, v, dk + 5, gu + 20, v + 3, dk + 7) for v in range(124, 230, 24)], WOODTRIM)
     m.lane(gu, 236, dk)
     m.lane(gu, 140, dk)
     # --- the hold: the ladder down from the first hatch cover, bunks, the stove and its pipe, a table, a lamp ---
@@ -1582,7 +1735,7 @@ class BusBody:
     def build(self, m, vs, doors=(), body=None):
         """vs: where the window posts stand along v. doors: (side 0 or 1, segment) with no panel under the window."""
         u1, u2, high, post = self.u1, self.u2, self.high, self.post
-        body = body or MM["steel"]
+        body = body or HULL
         a, b = vs[0], vs[-1]
         self.piece(u1, u2, a, b, -8, 0, MM["wood"])
         self.piece(u1 - 2, u2 + 2, a, b, high, high + 8, MM["tin"])
@@ -1850,7 +2003,7 @@ def m_pipes(m, opt):
     that the hollow pipes, open inside, do not tempt anyone to crawl along them into a plate); that the 87-high pipes
     cannot be hopped; what pipeset32d_512_001a looks like overhead."""
     b = m.b
-    pm, steel, wood = MAT["bars"], MM["steel"], MM["wood"]
+    pm, steel, wood = MAT["bars"], HULL, MM["wood"]
     top = F + 152
     CP = M_ + "props_pipes/concrete_pipe001%s.mdl"
     m.open(0, -256, 1280, 256)
@@ -1899,7 +2052,7 @@ def m_pipes(m, opt):
     m.det([(880, -176, F, 904, -96, F + 65)], MAT["beam"])
     m.shapes([prism([(948, top + 4), (1192, F + 12), (1192, F + 6), (948, top - 2)], "y", -152, -137, wood),
               prism([(948, top + 4), (1192, F + 12), (1192, F + 6), (948, top - 2)], "y", -135, -120, wood)])
-    m.det([(1080, -150, F, 1088, -122, F + 76), (1140, -150, F, 1148, -122, F + 40)], MM["beam_wood"])
+    m.det([(1080, -150, F, 1088, -122, F + 76), (1140, -150, F, 1148, -122, F + 40)], WOODTRIM)
     m.target("lc_pipes_top", 660, 126, top + 12, 0)
     # --- on the floor: the pipe to duck under, the chicane's two ---
     e = run("v", 480, F + 96, -256, 3)
@@ -1979,16 +2132,16 @@ def tent(m, u1, v1, z, L, W, H, along, open_end, mat, mat_floor, guy=30):
     m.det([(min(ma, mb), min(mc, md), z, max(ma, mb), max(mc, md), z + 2)], mat_floor)
     # the ridge pole, the back pole, its two guys and their pegs
     (ra, rc), (rb, rd) = pt(0, half - 1), pt(L, half + 2)
-    m.det([(min(ra, rb), min(rc, rd), z + H, max(ra, rb), max(rc, rd), z + H + 3)], MM["beam_wood"])
+    m.det([(min(ra, rb), min(rc, rd), z + H, max(ra, rb), max(rc, rd), z + H + 3)], WOODTRIM)
     pa = back + (-4 if back == 0 else 1)
     (qa, qc), (qb, qd) = pt(pa, half - 1), pt(pa + 3, half + 2)
-    m.det([(min(qa, qb), min(qc, qd), z, max(qa, qb), max(qc, qd), z + H + 8)], MM["beam_wood"])
+    m.det([(min(qa, qb), min(qc, qd), z, max(qa, qb), max(qc, qd), z + H + 8)], WOODTRIM)
     ga = back - guy if back == 0 else back + guy
     for c in (-8, W + 8):
         gu, gv = pt(ga, c)
         tu, tv = pt(pa + 1, half)
         m.rope([(tu, tv, z + H + 6), (gu, gv, z + 6)], slack=2, width=1)
-        m.det([(gu - 1, gv - 1, z, gu + 2, gv + 2, z + 9)], MM["beam_wood"])
+        m.det([(gu - 1, gv - 1, z, gu + 2, gv + 2, z + 9)], WOODTRIM)
     (ba, bc), (bb, bd) = pt(-4, -8), pt(L + 4, W + 8)
     m.blocked(min(ba, bb), min(bc, bd), max(ba, bb), max(bc, bd))
     return pt(L // 2, half)
@@ -2013,7 +2166,7 @@ def m_camp(m, opt):
     b = m.b
     tz = F + 128
     tarp, c3, c6, rug = "props/tarpaperroof002a", "props/carpetfloor003a", "props/carpetfloor006a", "props/carpetfloor001a"
-    wd = MM["beam_wood"]
+    wd = WOODTRIM
     m.open(0, -256, 1280, 256)
     m.open(192, 256, 1088, 704, floor=tz, mat=DIRT)
     m.side(192, 256, 1088, 704)

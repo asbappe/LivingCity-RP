@@ -20,7 +20,7 @@ How to write one, and what every call does: docs/dev/map-modules.md.
 import random
 
 from map_build import CELL, MAT, bar_row, octagon, prism
-from map_modules import F, TRIM, MM
+from map_modules import F, TRIM, MM, SCAPES
 
 TILE = "tile/tilefloor018a_c17"
 PLASTER = "plaster/plasterwall042c"
@@ -34,6 +34,21 @@ BRICK = "brick/brickwall037a"
 WOOD, TIN, STEEL, BEAM = MM["wood"], MM["tin"], MM["steel"], MM["beam_wood"]
 BARS, WALL = MAT["bars"], MAT["canal_wall"]
 WARM = "255 190 120"
+# What is new here is made of the owner's own materials (all in their City 18 map: _dev/reference/city18/palette.json)
+TIMBER = "wood/woodwall006a"                # racks, frames, boards, staging
+DECK = "wood/woodfloor006b"                 # timber floors and decks
+IRON = "metal/metalhull010c"                # steel parts
+CEILING = "plaster/plasterceiling008a_c17"
+LOW_PAINT = "plaster/plasterwall047b"       # the lower band of a two-tone wall (the town's flats have it)
+CONCRETE = "concrete/concretewall008a"      # raw concrete: City 18's commonest wall
+DAMP = "concrete/concretewall059e"
+CONC_CEIL = "concrete/concreteceiling004a"
+CONC_FLOOR = "concrete/concretefloor013a"
+RED_BRICK = "brick/brickwall045d"
+OLD_BRICK = "brick/brickwall014l"
+SHUTTER = "metal/metaldoor032c"             # corrugated: the owner's own roll doors
+TILE_WALL = "tile/tilewall009b"
+TUBE = "models/props_lab/lab_flourescentlight002b.mdl"
 
 
 # ---------------------------------------------------------------------------
@@ -140,6 +155,20 @@ def cage(m, u, v, z, out, colour):
     m.static("models/props_c17/light_cagelight02_on.mdl", u, v, out, z=z)
     du, dv = WAY[out]
     m.light(u + 14 * du, v + 14 * dv, z + 6, colour)
+
+
+def tube(m, u, v, ceil, colour="215 228 235 60", along="u"):
+    """A fluorescent tube (the lab's: City 18 has 149 of them) flat under a roof at `ceil`, its length along u or v,
+    and its light under it."""
+    m.static(TUBE, u, v, 90 if along == "u" else 0, z=ceil - 9)
+    m.light(u, v, ceil - 22, colour)
+
+
+def sounds(m, L, kind, u, v, z, radius):
+    """What the place sounds like (a soundscape of SCAPES), and the canal's (or the street's) own in front of it, so
+    walking back out changes it back (a soundscape holds until another is in reach)."""
+    m.soundscape(SCAPES[kind], u, v, z, radius)
+    m.soundscape(SCAPES["courtyard"], L // 2, -128, F, max(512, L // 2))
 
 
 def put(m, things, z, u0=0, v0=0):
@@ -334,39 +363,46 @@ def m_cells(m, opt):
     m.view(928, 60, F, 90, 0, "the concrete pipe")
 
 
-def line_walls(m, rooms, dado=56, low=TILE, high=PLASTER, roof=PLASTER):
-    """Whitewash a vault: a skin 2 thick on every wall of these rooms, [(u1, v1, u2, v2, ceiling), ...] (floors at F):
-    tile up to `dado`, plaster above, plaster over a lower doorway's head, and a plaster skin under each roof.
-    It finds the walls by itself: wherever the square next door is not painted."""
-    cells = m.b.plan.cells
+def line_walls(m, rooms, dado=56, low=TILE, high=PLASTER, roof=PLASTER, rail=None):
+    """Line a vault's rooms as City 18 lines its own: a skin 2 thick on every wall of these rooms,
+    [(u1, v1, u2, v2, ceiling[, floor]), ...] (floors at F unless given): `low` up to `dado` over the floor, `high`
+    above it, with a rail of `rail` between when one is given (4 high and 1 proud: the dado line), `high` over a lower
+    doorway's head, and a skin of `roof` under each roof. It finds the walls by itself: wherever the square next door
+    is not painted, or is solid; never across a doorway."""
+    cells, dz = m.b.plan.cells, m.fr.dz
 
     def spec(u, v):
         x, y = m.fr.pt(u + 32, v + 32)
         return cells.get((x // CELL, y // CELL))
     runs = {}
-    for (u1, v1, u2, v2, ceil) in rooms:
+    for room in rooms:
+        u1, v1, u2, v2, ceil = room[:5]
+        fl = room[5] if len(room) > 5 else F
         edges = [("u", u, v1, 1, (u, v1 - CELL)) for u in range(u1, u2, CELL)] + [("u", u, v2, -1, (u, v2)) for u in range(u1, u2, CELL)]
         edges += [("v", v, u1, 1, (u1 - CELL, v)) for v in range(v1, v2, CELL)] + [("v", v, u2, -1, (u2, v)) for v in range(v1, v2, CELL)]
         for axis, a, line, side, nb in edges:
             n = spec(*nb)
-            if n is None:
-                parts = [(F, F + dado, low), (F + dado, ceil, high)]
-            elif n[0] == "low" and n[3] < ceil:
-                parts = [(n[3], ceil, high)]
+            if n is None or n[0] == "solid":
+                if rail:
+                    parts = [(fl, fl + dado, low, 2), (fl + dado, fl + dado + 4, rail, 3), (fl + dado + 4, ceil, high, 2)]
+                else:
+                    parts = [(fl, fl + dado, low, 2), (fl + dado, ceil, high, 2)]
+            elif n[0] == "low" and n[3] - dz < ceil:      # (the plan keeps its heights lifted with the module: dz)
+                parts = [(n[3] - dz, ceil, high, 2)]
             else:
                 continue
-            for z1, z2, mat in parts:
-                runs.setdefault((axis, line, side, z1, z2, mat), []).append(a)
+            for z1, z2, mat, thick in parts:
+                runs.setdefault((axis, line, side, z1, z2, mat, thick), []).append(a)
         if roof:
             m.det([(u1, v1, ceil - 2, u2, v2, ceil)], roof)
-    for (axis, line, side, z1, z2, mat), at in sorted(runs.items()):
+    for (axis, line, side, z1, z2, mat, thick), at in sorted(runs.items()):
         at.sort()
         start = prev = at[0]
         for a in at[1:] + [None]:
             if a is not None and a == prev + CELL:
                 prev = a
                 continue
-            lo, hi = min(line, line + 2 * side), max(line, line + 2 * side)
+            lo, hi = min(line, line + thick * side), max(line, line + thick * side)
             m.det([(start, lo, z1, prev + CELL, hi, z2) if axis == "u" else (lo, start, z1, hi, prev + CELL, z2)], mat)
             start = prev = a
 
@@ -799,37 +835,58 @@ def m_garden(m, opt):
 # 6. The stash
 # ---------------------------------------------------------------------------
 
-def rifle_rack(m, a, b, at, side, z, axis="u"):
-    """A rack of long guns against a wall: a foot board, a back board, a notched rail, and a gun every 22.
-    a..b along the wall, `at` the wall's line, side +1 or -1 the way the room is from it. axis: the way the wall runs."""
+def gun_rack(m, a, b, at, side, z, axis, rows):
+    """A rack for guns on a wall (Half-Life 2 has no model of one: a timber board, a rail and pegs for each row), with
+    Half-Life 2's own weapon world models resting on the pegs, upright and their length along the wall, not solid (so
+    nobody snags on them). a..b along the wall; `at` the wall's line (the room's lining is 2 thick on it); side +1 or
+    -1, the way the room is from it; axis "u" or "v", the way the wall runs. rows: [(the pegs' height over z,
+    [(the model's name under models/weapons/, its middle along the wall), ...]), ...]."""
+    import map_assets
+
     def box(p1, q1, z1, p2, q2, z2):
         q1, q2 = at + side * q1, at + side * q2
         lo, hi = min(q1, q2), max(q1, q2)
         return (p1, lo, z1, p2, hi, z2) if axis == "u" else (lo, p1, z1, hi, p2, z2)
-    m.det([box(a, 0, z, b, 14, z + 6), box(a, 0, z + 6, b, 3, z + 84), box(a, 3, z + 58, b, 13, z + 61), box(a, 0, z, a + 4, 14, z + 84), box(b - 4, 0, z, b, 14, z + 84)], BEAM)
-    stocks, barrels = [], []
-    for k in range(a + 12, b - 14, 22):
-        if (k // 22) % 5 == 3:
-            continue                                            # (an empty place: one is out)
-        stocks.append(box(k, 4, z + 6, k + 6, 12, z + 30))
-        barrels += [box(k + 1, 5, z + 30, k + 5, 10, z + 52), box(k + 2, 6, z + 52, k + 4, 9, z + 80)]
-    m.det(stocks, WOOD)
-    m.det(barrels, STEEL)
+    top = max(h for h, _ in rows) + 34
+    parts = [box(a, 2, z + 24, b, 5, z + top), box(a, 2, z + top, b, 7, z + top + 3)]          # the board, a shelf on its top
+    for h, guns in rows:
+        parts.append(box(a, 5, z + h - 6, b, 7, z + h - 2))                                     # the rail under the row
+        for name, mid in guns:
+            model = "models/weapons/%s.mdl" % name
+            x1, y1, z1, x2, y2, z2 = map_assets.size(model)
+            half = int((x2 - x1) * 0.3)
+            parts += [box(mid - half - 1, 7, z + h - 5, mid - half + 1, 12, z + h), box(mid + half - 1, 7, z + h - 5, mid + half + 1, 12, z + h)]
+            o = mid - (x1 + x2) / 2
+            if axis == "u":            # (yaw 0: the gun's x along u, its y along v)
+                q = at - 7 - y2 if side < 0 else at + 7 - y1
+                m.dynamic(model, int(round(o)), int(round(q)), 0, z + h, solid=False)
+            else:                      # (yaw 90: the gun's x along v, its y along -u)
+                q = at + 7 + y2 if side > 0 else at - 7 + y1
+                m.dynamic(model, int(round(q)), int(round(o)), 90, z + h, solid=False)
+    m.det(parts, TIMBER)
 
 
 def m_stash(m, opt):
     """The stash: a secret arms room. From the canal there is only a run of rusted pipes on the left wall with a valve
-    wheel on the thick one (lc_stash_valve: Use turns it a quarter, and it turns back by itself). Turning it slides a
-    section of the wall itself aside (lc_stash_wall: 96 wide, 112 high, of the wall's own concrete, flush with it when
-    shut, its sill at the top of the bank, 128 up); it shuts again by itself after 12 seconds, and the button on the
-    wall just inside (lc_stash_inside) opens it from within. Behind: a short passage that turns twice, then the arms
-    room (lc_stash_room: its middle): racks of long guns on two walls, a workbench with a vice under a map board,
-    a planning table, shelves, crates.
+    wheel on the thick one (lc_stash_valve: Use turns it a quarter, and it turns back by itself), and for the
+    observant a small lambda sprayed low behind the pipe. Turning it slides a section of the wall itself aside
+    (lc_stash_wall: 96 wide, 112 high, of the wall's own concrete, flush with it when shut, its sill at the top of the
+    bank, 128 up); it shuts again by itself after 12 seconds, and the button on the wall just inside (lc_stash_inside)
+    opens it from within. Behind: a short passage of raw concrete that turns twice, then the arms room (lc_stash_room:
+    its middle), a cellar of brick over a damp concrete plinth, the pipes it hides running along under its roof, lit
+    by two fluorescent tubes. Racks on two walls hold Half-Life 2's own guns (pulse rifles, shotguns, SMGs, a rocket
+    launcher, a crowbar, pistols; a peg or two empty: those are out); a steel workbench against the wall toward the
+    canal with a vice, tools, a parts bin and a crossbow on it, the canal map and a board of papers on the wall over
+    it; a planning table with papers, a radio, a desk lamp, a revolver and a mug, its chair pushed back; two of the
+    Combine's ammunition crates and wooden crates along the far wall; boxes of rounds on a shelf.
+    Left as brushes: the racks (Half-Life 2 has no gun rack: a board, rails and pegs), the valve's wheel (it turns).
     Unchecked: func_rot_button (the valve wheel) is from memory, with its turning axis set by spawnflag 64 or 128 (the
     map's x or y, whichever way the module is turned): if the wheel turns the wrong way round or not at all, the door
     still needs only one Open sent to lc_stash_wall. The door slides a little inward as well as aside (its movedir is
     2 degrees off the wall's line) so that, open, it does not lie in the wall's own face. Sounds doors/doormove1.wav and
-    doormove2.wav are the bunker doors' own."""
+    doormove2.wav are the bunker doors' own. Which way the weapon models' muzzles point on the racks (their length is
+    their x), which side of the ammunition crates is their front, and whether the canal map (props_canal/canalmap001)
+    reads as a map on a wall."""
     L, Z = 768, F + 128
     m.open(0, -256, L, 256)
     m.low(192, 256, 320, 384, Z + 112, floor=Z)                 # behind the wall, and the first turn
@@ -850,10 +907,12 @@ def m_stash(m, opt):
               prism(octagon(40, vz, 8), "y", 238, 256, BARS), vpipe(176, 246, 8, F + 84, vz + 8, BARS),
               prism(octagon(250, F + 214, 4), "x", 64, 150, BARS),                           # the thin one: along, then up and into the wall
               prism(octagon(64, F + 214, 4), "y", 246, 256, BARS), vpipe(150, 250, 4, F + 210, F + 246, BARS), prism(octagon(150, F + 246, 4), "y", 246, 256, BARS),
-              prism(octagon(88, vz + 14, 5), "y", 236, 240, STEEL)])                         # a gauge
+              prism(octagon(88, vz + 14, 5), "y", 236, 240, IRON)])                          # a gauge
     m.det([(u - 3, 250, vz - 12, u + 3, 256, vz + 12) for u in (64, 152)] + [(u - 2, 252, F + 208, u + 2, 256, F + 220) for u in (96, 128)]
-          + [(87, 240, vz + 8, 89, 246, vz + 12)], STEEL)
-    m.det([(vu - 9, 236, vz - 10, vu + 9, 256, vz + 10)], STEEL)                             # the valve's body
+          + [(87, 240, vz + 8, 89, 246, vz + 12)], IRON)
+    m.det([(30, 236, vz - 10, 50, 256, vz + 10), (166, 236, vz - 10, 186, 256, vz + 10)]                                # a fitting at every bend
+          + [(143, 243, z - 7, 157, 256, z + 7) for z in (F + 214, F + 246)] + [(57, 243, F + 207, 71, 256, F + 221)], IRON)
+    m.det([(vu - 9, 236, vz - 10, vu + 9, 256, vz + 10)], IRON)                              # the valve's body
     m.shapes([prism(octagon(vu, vz, 3), "y", 228, 236, BARS)])                               # its stem
     axis = 64 if m.fr.ax("v") == "x" else 128
     shape_entity(m, "func_rot_button", {
@@ -862,45 +921,77 @@ def m_stash(m, opt):
         shapes=ring("y", vu, vz, 12, 15, 224, 228, BARS),
         boxes=[(vu - 13, 225, vz - 1, vu + 13, 227, vz + 1), (vu - 1, 225, vz - 13, vu + 1, 227, vz + 13), (vu - 3, 223, vz - 3, vu + 3, 229, vz + 3)], mat=BARS,
         connections=[("OnPressed", "lc_stash_wall", "Open", "", 0)])
+    m.grime("lambda", 184, 256, F + 146, 3)                                                  # (small, low, half behind the pipe's down run)
+    m.grime("stain", 90, 256, F + 200, 4)                                                    # (rust run from the joints)
 
-    # just inside: the button that opens it from within, a dim lamp
+    # just inside: the button that opens it from within, a dim lamp, a crate; the passage's raw concrete, stained
     m.button("lc_stash_inside", 192, 350, Z + 40, 0, [("lc_stash_wall", "Open", "", 0)])
     m.lamp(256, 340, Z + 100, "255 200 140 45")
     m.static("models/props_junk/wood_crate001a.mdl", 290, 300, 0, z=Z)
+    m.grime("stain", 256, 384, Z + 70, 5)
+    m.grime("crack", 352, 384, Z + 60, 6)
     m.lane(256, 336, Z)
     m.lane(352, 352, Z)
 
-    # the arms room
+    # the arms room: brick over a damp plinth, a concrete roof, the hidden pipes along under it
+    R1, R2, S1, S2, top = 384, 704, 320, 576, Z + 128
+    line_walls(m, [(R1, S1, R2, S2, top, Z)], dado=24, low=DAMP, high=RED_BRICK, roof=CONC_CEIL)
+    for k in range(6):
+        m.static("models/props_pipes/pipe02_straight01_long.mdl", 409 + 49 * k, 327, 90, z=top - 11)
+        m.static("models/props_pipes/pipe02_connector01.mdl", 433 + 49 * k, 327, 0, z=top - 14)
+    m.static("models/props_pipes/pipe02_straight01_short.mdl", 687, 327, 90, z=top - 11)
     m.target("lc_stash_room", 544, 448, Z + 8, 0)
-    rifle_rack(m, 400, 584, 576, -1, Z)                                                      # along the back wall
-    rifle_rack(m, 408, 560, 384, 1, Z, axis="v")                                             # and the wall beside the way in
-    m.static("models/props_c17/shelfunit01a.mdl", 648, 562, 0, z=Z)
-    m.det([(546, 438, Z + 37, 562, 450, Z + 45), (548, 440, Z + 45, 562, 450, Z + 53), (566, 456, Z + 37, 580, 468, Z + 45)], TIN)   # boxes of rounds, on the table
-    # the workbench under the map board, on the wall toward the canal
-    m.det([(440, 322, Z + 32, 616, 354, Z + 36)], WOOD)
-    m.det([(444, 324, Z, 450, 350, Z + 32), (606, 324, Z, 612, 350, Z + 32), (450, 326, Z + 10, 606, 330, Z + 14)], BEAM)
-    m.det([(580, 340, Z + 36, 596, 352, Z + 42), (584, 346, Z + 42, 592, 356, Z + 48), (586, 356, Z + 44, 590, 362, Z + 46)], STEEL)   # the vice
-    m.det([(470, 334, Z + 36, 500, 338, Z + 38), (512, 330, Z + 36, 516, 350, Z + 37), (524, 340, Z + 36, 548, 346, Z + 40)], STEEL)   # tools, a part
-    m.det([(456, 320, Z + 52, 600, 323, Z + 116)], BEAM)
-    m.det([(462, 323, Z + 56, 594, 324, Z + 112)], PLASTER)
-    m.det([(466, 324, Z + 80, 590, 325, Z + 84), (520, 324, Z + 60, 524, 325, Z + 108), (466, 324, Z + 98, 520, 325, Z + 100), (524, 324, Z + 66, 590, 325, Z + 68),
-           (560, 324, Z + 84, 562, 325, Z + 108)], MAT["black"])                                 # the canals, drawn on it
-    m.det([(u, 324, z, u + 2, 326, z + 2) for u, z in ((480, Z + 90), (540, Z + 74), (572, Z + 100), (504, Z + 64))], STEEL)       # pins
-    m.lamp(528, 348, Z + 104, "255 215 160 70", hang=24)
-    # the planning table, crates
-    m.static("models/props_c17/furnituretable001a.mdl", 560, 452, 0, z=Z)
-    m.static("models/props_c17/furniturechair001a.mdl", 600, 452, 180, z=Z)
-    m.static("models/props_junk/wood_crate002a.mdl", 676, 372, 0, z=Z)
-    m.static("models/props_junk/wood_crate001a.mdl", 676, 430, 15, z=Z)
-    m.static("models/props_junk/wood_crate001a.mdl", 674, 372, 5, z=Z + 40)
-    m.lamp(544, 448, Z + 112, "255 220 170 150", hang=16)
+
+    # the racks: along the back wall, and the wall beside the way in
+    gun_rack(m, 400, 600, S2, -1, Z, "u", [(40, [("w_irifle", 432), ("w_shotgun", 488), ("w_irifle", 576)]),
+                                           (76, [("w_smg1", 418), ("w_smg1", 448), ("w_shotgun", 500), ("w_rocket_launcher", 566)])])
+    gun_rack(m, 408, 560, R1, 1, Z, "v", [(40, [("w_shotgun", 432), ("w_smg1", 476), ("w_crowbar", 530)]),
+                                          (76, [("w_irifle", 448), ("w_pistol", 504), ("w_pistol", 530)])])
+
+    # the workbench on the wall toward the canal: a vice, tools, a parts bin, a crossbow; the canal map and papers over it
+    bu = 530
+    m.static("models/props_wasteland/controlroom_desk001b.mdl", bu, S1 + 24, 90, z=Z)
+    m.static("models/props_c17/grinderclamp01a.mdl", bu + 46, S1 + 16, 0, z=Z + 34)
+    m.static("models/props_lab/partsbin01.mdl", bu - 44, S1 + 10, 90, z=Z + 34)
+    put(m, [("props_c17/tools_wrench01a", bu + 18, S1 + 32, 10), ("props_c17/tools_pliers01a", bu + 30, S1 + 24, 80)], Z + 34)
+    m.dynamic("models/weapons/w_crossbow.mdl", bu - 10, S1 + 26, 0, z=Z + 34, solid=False)
+    m.static("models/props_canal/canalmap001.mdl", bu, S1 + 4, 90, z=Z + 40)
+    m.static("models/props_lab/corkboard002.mdl", 612, S1 + 4, 90, z=Z + 44)
+    tube(m, bu, S1 + 44, top, "215 228 235 70", along="u")
+
+    # the planning table: papers, a radio, a lamp, a revolver, a mug; the chair pushed back
+    tu, tv = 560, 452
+    m.static("models/props_c17/furnituretable001a.mdl", tu, tv, 0, z=Z)
+    put(m, [("props_c17/paper01", tu - 6, tv - 4, 20), ("props_c17/paper01", tu + 8, tv + 6, 75), ("props_lab/citizenradio", tu - 12, tv + 14, 200),
+            ("props_c17/lamp001a", tu + 16, tv - 14, 0), ("props_junk/garbage_coffeemug001a", tu + 18, tv + 12, 0)], Z + 37)
+    m.dynamic("models/weapons/w_357.mdl", tu + 2, tv - 12, 300, z=Z + 37, solid=False)
+    m.light(tu + 16, tv - 14, Z + 64, "255 200 130 40")
+    m.static("models/props_c17/furniturechair001a.mdl", tu + 46, tv + 26, 200, z=Z)
+    tube(m, tu, tv, top, "215 228 235 60", along="u")
+
+    # the stock along the far wall: the Combine's ammunition crates, wooden crates, boxes of rounds on a shelf
+    m.dynamic("models/items/ammocrate_smg1.mdl", R2 - 19, 410, 180, z=Z)
+    m.dynamic("models/items/ammocrate_ar2.mdl", R2 - 19, 472, 180, z=Z)
+    m.static("models/props_junk/wood_crate001a.mdl", R2 - 24, S1 + 24, 0, z=Z)
+    m.static("models/props_junk/wood_crate001a.mdl", R2 - 24, S1 + 24, 10, z=Z + 40)
+    m.static("models/props_c17/shelfunit01a.mdl", 648, S2 - 14, 0, z=Z)
+    put(m, [("items/boxmrounds", 630, S2 - 14, 0), ("items/boxsrounds", 662, S2 - 14, 90)], Z + 93)
     m.lane(544, 400, Z)
 
+    # the grime: water down the brick, a crack, trash, the lambda
+    m.grime("stain", R2 - 2, 530, Z + 96, 7)
+    m.grime("stain", 650, S2 - 2, Z + 112, 8)
+    m.grime("crack", R1 + 2, 396, Z + 90, 9)
+    m.grime("lambda", R2 - 2, 440, Z + 76, 10)
+    m.grime("trash", 470, 520, Z, 11)
+    sounds(m, L, "tunnel", 544, 448, Z, 384)
+
     m.view(150, 40, F, 75, -8, "the pipes: nothing to see")
-    m.view(256, 150, F + 40, 90, -12, "on the bank, at the wall that opens")
+    m.view(256, 40, F, 90, -12, "at the wall that opens")
     m.view(256, 356, Z, 270, 4, "inside, looking back at the wall")
     m.view(400, 350, Z, 30, 8, "the arms room")
-    m.view(680, 540, Z, 215, 10, "the workbench and the map")
+    m.view(640, 520, Z, 215, 10, "the workbench and the map")
+    m.view(520, 400, Z, 90, 6, "the rack")
 
 
 # ---------------------------------------------------------------------------

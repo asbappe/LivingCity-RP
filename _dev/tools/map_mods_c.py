@@ -371,31 +371,115 @@ def combine_field(m, a, b, z, name=None, high=180, hum=True):
         m.sound("ambient/machines/combine_shield_loop3.wav", mu, mv, z + 80, radius=500, volume=4, name=(name + "_hum") if name else None)
 
 
-def pour(m, u, v, z, length=120, colour="196 208 214", size=6):
-    """Water (or slime) running out of a pipe's mouth at (u, v, z) and falling: an env_steam pointed straight down, as
-    the owner's map points its jets (no falling-water material is in Half-Life 2's lists)."""
-    m.point("env_steam", u, v, z, {"angles": "90 0 0", "type": "0", "InitialState": "1", "spawnflags": "0", "Speed": "150", "SpreadSpeed": "5",
+def pour(m, u, v, z, length=120, colour="196 208 214", size=6, yaw=0, pitch=90):
+    """Water (or slime) running out of a pipe's mouth at (u, v, z) and falling: an env_steam pointed down (pitch 90:
+    straight down; less, out toward `yaw` too), as the owner's map points its jets (no falling-water material is in
+    Half-Life 2's lists)."""
+    m.point("env_steam", u, v, z, {"angles": "%d %d 0" % (pitch, m.fr.yaw(yaw)), "type": "0", "InitialState": "1", "spawnflags": "0", "Speed": "150", "SpreadSpeed": "5",
                                    "StartSize": str(size), "EndSize": str(size * 3), "Rate": "36", "JetLength": str(length), "rendercolor": colour,
                                    "renderamt": "150", "rollspeed": "4"})
 
 
-def round_arch(m, lo, hi, spring, a, b, axis="y", mat=None, steps=4):
+def round_arch(m, lo, hi, spring, a, b, axis="y", mat=None, steps=5):
     """A round arch's haunches filled in under a flat roof: a passage `lo` to `hi` wide (across), its roof at
-    spring + (hi - lo) / 2, the arch springing from its walls at `spring`; pushed along `axis` from a to b. Triangles
-    fanned from the roof's corners (each convex, every corner a whole number)."""
+    spring + (hi - lo) / 2, the arch springing from its walls at `spring`; pushed along `axis` from a to b. Upright
+    strips, each from the curve up to the roof (convex, every corner a whole number, no two in one plane overlapping)."""
     r = (hi - lo) / 2.0
-    mid, top = (lo + hi) / 2.0, spring + (hi - lo) // 2
+    mid, top = (lo + hi) // 2, spring + (hi - lo) // 2
     out = []
-    for side, corner in ((-1, lo), (1, hi)):
-        pts = [(int(round(mid + side * r * math.cos(math.radians(90.0 * k / steps)))), int(round(spring + r * math.sin(math.radians(90.0 * k / steps)))))
-               for k in range(steps + 1)]
+    for side in (-1, 1):
+        pts = []
+        for k in range(steps + 1):
+            t = math.radians(90.0 * k / steps)
+            pts.append((int(round(mid + side * r * math.cos(t))), int(round(spring + r * math.sin(t)))))
+        pts[-1] = (mid, top)
         for k in range(steps):
-            tri = [(corner, top), pts[k], pts[k + 1]]
-            if side > 0:
-                tri = [tri[0], tri[2], tri[1]]
-            if len(set(tri)) == 3:
-                out.append(prism(tri, "x" if axis == "x" else "y", a, b, mat or MAT["canal_wall"]))
+            (x1, z1), (x2, z2) = pts[k], pts[k + 1]
+            prof = [(x1, z1), (x2, z2), (x2, top), (x1, top)] if z2 < top else [(x1, z1), (x2, top), (x1, top)]
+            if side < 0:
+                prof = prof[::-1]
+            prof = [q for i, q in enumerate(prof) if q != prof[i - 1]]
+            if len(prof) >= 3 and x1 != x2:
+                out.append(prism(prof, "x" if axis == "x" else "y", a, b, mat or MAT["canal_wall"]))
     m.shapes(out)
+
+
+# ---------------------------------------------------------------------------
+# Helpers for the canal modules written in map_modules.py
+# ---------------------------------------------------------------------------
+
+# The shanty town's shacks, built from pieces (the module review: "walls of mismatched sheets ... roofs of tin sloping
+# and overhanging on visible posts"): every material here is one the owner's map uses.
+SHEETS = ("wood/woodwall006a", "metal/metalhull010c", "wood/woodfloor006b", "metal/metalroof008a", "plaster/plasterwall046b", "wood/wooddoor042a",
+          "metal/metalwall030a", "wood/woodfloor007a")
+POSTS = "wood/woodfloor006b"
+
+
+def shack(m, u1, v1, u2, v2, z, seed, high=112, door=56, window="boards", open_front=False, roof="metal/metalroof008a"):
+    """A shack whose front is its low-v side, standing on z: a post at each corner, walls of sheets 6 thick, each sheet
+    of its own material, some 2 proud of the next, their tops uneven under a tin roof that slopes down to the front and
+    overhangs it by 24 on two posts of its own; a doorway 'door' wide a third of the way along the front, and a window
+    two thirds along it, 40 by 32 (window: "boards" nailed across, "glass" cracked, or None). open_front: no front wall
+    (a stall). Returns the doorway's middle (u)."""
+    import random
+    rnd = random.Random(seed)
+    zf, zb = z + high, z + high + 14               # the roof's line over the front and the back walls
+
+    def top(v):
+        return zf + (zb - zf) * (v - v1) // (v2 - v1)
+
+    def sheets(a, b):
+        out, p = [], a
+        while b - p > 0:
+            w = min(b - p, rnd.choice((32, 40, 48, 56, 64)))
+            if b - p - w < 24:
+                w = b - p
+            out.append((p, p + w, rnd.choice(SHEETS), rnd.choice((0, 0, 2)), rnd.choice((0, 0, 3, 6))))
+            p += w
+        return out
+    shapes, boxes = [], []
+    for su in ((u1, u1 + 6), (u2 - 6, u2)):        # the side walls: sheets along v, their tops on the roof's slope
+        for a, b, mat, proud, drop in sheets(v1 + 6, v2 - 6):
+            o = -proud if su[0] == u1 else proud
+            shapes.append(prism([(a, z), (b, z), (b, top(b) - drop), (a, top(a) - drop)], "x", su[0] + o, su[1] + o, mat))
+    for a, b, mat, proud, drop in sheets(u1 + 6, u2 - 6):          # the back wall
+        boxes.append(((a, v2 - 6 + proud, z, b, v2 + proud, zb - drop), mat))
+    dm = u1 + (u2 - u1) // 3
+    wm = u1 + 2 * (u2 - u1) // 3
+    if not open_front:
+        for a, b, mat, proud, drop in sheets(u1 + 6, u2 - 6):      # the front wall, a doorway and a window cut from its sheets
+            t = zf - drop
+            for c, d in ((a, min(b, dm - door // 2)), (max(a, dm + door // 2), b)):
+                if d - c < 4:
+                    continue
+                if window and c < wm + 20 and d > wm - 20:       # (the window's hole)
+                    if wm - 20 - c >= 4:
+                        boxes.append(((c, v1 - proud, z, wm - 20, v1 + 6 - proud, t), mat))
+                    if d - (wm + 20) >= 4:
+                        boxes.append(((wm + 20, v1 - proud, z, d, v1 + 6 - proud, t), mat))
+                    lo, hi = max(c, wm - 20), min(d, wm + 20)
+                    boxes += [((lo, v1 - proud, z, hi, v1 + 6 - proud, z + 48), mat), ((lo, v1 - proud, z + 80, hi, v1 + 6 - proud, t), mat)]
+                else:
+                    boxes.append(((c, v1 - proud, z, d, v1 + 6 - proud, t), mat))
+        boxes.append(((dm - door // 2, v1, z + 88, dm + door // 2, v1 + 6, zf), rnd.choice(SHEETS)))       # over the doorway
+        if window == "boards":
+            boxes += [((wm - 24, v1 - 3, z + 54, wm + 24, v1 - 1, z + 60), "wood/woodfloor006b"), ((wm - 22, v1 - 3, z + 68, wm + 22, v1 - 1, z + 73), "wood/woodwall006a")]
+        elif window == "glass":
+            boxes.append(((wm - 20, v1 + 2, z + 48, wm + 20, v1 + 3, z + 80), "glass/glasswindowbreak070a"))
+    boxes += [((u1 - 1, v1 - 1, z, u1 + 6, v1 + 6, zf + 2), POSTS), ((u2 - 6, v1 - 1, z, u2 + 1, v1 + 6, zf + 2), POSTS),
+              ((u1 - 1, v2 - 6, z, u1 + 6, v2 + 1, zb), POSTS), ((u2 - 6, v2 - 6, z, u2 + 1, v2 + 1, zb), POSTS)]
+    boxes += [((u1 - 10, v1 - 26, z, u1 - 6, v1 - 22, zf - 1), POSTS), ((u2 + 6, v1 - 26, z, u2 + 10, v1 - 22, zf - 1), POSTS)]   # the overhang's posts
+    for (bx, mat) in boxes:
+        m.det([bx], mat)
+    m.shapes(shapes)
+    # the roof: one sheet of tin, sloping to the front, overhanging 24 there and 12 at the sides
+    rf, rb = v1 - 24, v2 + 8
+    zr1 = zf - (zb - zf) * 24 // (v2 - v1) - 1
+    zr2 = zb + (zb - zf) * 8 // (v2 - v1) + 1
+    m.shapes([prism([(rf, zr1), (rb, zr2), (rb, zr2 + 3), (rf, zr1 + 3)], "x", u1 - 12, u2 + 12, roof)])
+    m.blocked(u1 - 16, v1 - 28, u2 + 16, v2 + 16)
+    m.taken(u1 - 12, v1 - 28, z, u2 + 12, v2 + 12, zr2 + 4)
+    return dm
 
 
 # ---------------------------------------------------------------------------

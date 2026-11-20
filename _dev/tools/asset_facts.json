@@ -1,4 +1,40 @@
 {
+"models/barneyhelmet.mdl": {
+"bbox": [
+-6.3,
+-4.7,
+-5.5,
+3.1,
+4.4,
+5.9
+],
+"built_static": false,
+"collides": false,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": false,
+"v": 2
+},
+"models/barneyhelmet_faceplate.mdl": {
+"bbox": [
+-1.6,
+-4.0,
+-6.8,
+6.8,
+3.6,
+5.9
+],
+"built_static": false,
+"collides": false,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": false,
+"v": 2
+},
 "models/c18_custom/apts_stairs_up.mdl": {
 "elsewhere": [],
 "game": null
@@ -157,6 +193,60 @@
 "prop_data": false,
 "ragdoll": false,
 "static": true,
+"v": 2
+},
+"models/gibs/antlion_gib_large_1.mdl": {
+"bbox": [
+-14.4,
+-9.0,
+-23.2,
+14.4,
+9.0,
+23.2
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": true,
+"prop_data": true,
+"ragdoll": false,
+"static": false,
+"v": 2
+},
+"models/gibs/antlion_gib_medium_1.mdl": {
+"bbox": [
+-8.2,
+-5.5,
+-1.6,
+7.6,
+5.5,
+2.7
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": true,
+"prop_data": true,
+"ragdoll": false,
+"static": false,
+"v": 2
+},
+"models/gibs/fast_zombie_torso.mdl": {
+"bbox": [
+-11.1,
+-9.4,
+41.8,
+4.7,
+20.7,
+67.6
+],
+"built_static": false,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": true,
+"static": false,
 "v": 2
 },
 "models/gibs/hgibs.mdl": {
@@ -1357,6 +1447,24 @@
 "prop_data": false,
 "ragdoll": false,
 "static": true,
+"v": 2
+},
+"models/props_c17/doll01.mdl": {
+"bbox": [
+-2.0,
+-4.0,
+-8.8,
+4.8,
+2.8,
+8.0
+],
+"built_static": false,
+"collides": true,
+"game": "hl2",
+"physics": true,
+"prop_data": true,
+"ragdoll": false,
+"static": false,
 "v": 2
 },
 "models/props_c17/door01_left.mdl": {
@@ -2581,6 +2689,24 @@
 12.8,
 13.6,
 16.2
+],
+"built_static": true,
+"collides": true,
+"game": "episodic",
+"physics": true,
+"prop_data": true,
+"ragdoll": false,
+"static": false,
+"v": 2
+},
+"models/props_c17/hospital_surgerylight01.mdl": {
+"bbox": [
+-33.5,
+-22.5,
+-3.2,
+22.4,
+22.5,
+30.2
 ],
 "built_static": true,
 "collides": true,
@@ -6401,6 +6527,42 @@
 "static": true,
 "v": 2
 },
+"models/props_debris/building_brokenexterior001a.mdl": {
+"bbox": [
+-8.5,
+-64.4,
+-64.7,
+18.2,
+64.5,
+65.2
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_debris/building_brokenexterior002a.mdl": {
+"bbox": [
+-8.3,
+-128.4,
+-64.3,
+19.7,
+128.1,
+64.3
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
 "models/props_debris/building_brokenpillar001c.mdl": {
 "bbox": [
 -8.2,
@@ -6427,6 +6589,24 @@
 1.7,
 20.4,
 37.9
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_debris/building_brokenwindow001b.mdl": {
+"bbox": [
+-19.9,
+-20.3,
+-36.7,
+7.1,
+20.3,
+35.8
 ],
 "built_static": true,
 "collides": true,
@@ -6615,6 +6795,24 @@
 "prop_data": false,
 "ragdoll": false,
 "static": true,
+"v": 2
+},
+"models/props_debris/concrete_cynderblock001.mdl": {
+"bbox": [
+-8.3,
+-4.3,
+-4.3,
+8.2,
+4.2,
+4.2
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": true,
+"prop_data": true,
+"ragdoll": false,
+"static": false,
 "v": 2
 },
 "models/props_debris/concrete_debris128pile001a.mdl": {
@@ -6963,6 +7161,60 @@
 "static": true,
 "v": 2
 },
+"models/props_debris/destroyedceiling01b.mdl": {
+"bbox": [
+-67.8,
+-130.0,
+-19.7,
+65.2,
+129.1,
+5.1
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_debris/destroyedceiling01c.mdl": {
+"bbox": [
+-16.3,
+-64.3,
+-44.1,
+39.1,
+64.3,
+5.9
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_debris/destroyedceiling01d.mdl": {
+"bbox": [
+-64.3,
+-64.3,
+-52.7,
+64.3,
+64.3,
+4.3
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
 "models/props_debris/metal_panel01a.mdl": {
 "bbox": [
 -2.0,
@@ -6999,6 +7251,42 @@
 "static": false,
 "v": 2
 },
+"models/props_debris/plaster_ceiling001a.mdl": {
+"bbox": [
+-128.4,
+-64.1,
+-5.7,
+128.1,
+64.5,
+11.6
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_debris/plaster_ceilingpile001a.mdl": {
+"bbox": [
+-45.2,
+-50.9,
+-15.2,
+45.4,
+49.1,
+16.8
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
 "models/props_debris/plaster_floorpile001a.mdl": {
 "bbox": [
 -40.2,
@@ -7017,6 +7305,24 @@
 "static": true,
 "v": 2
 },
+"models/props_debris/plaster_wall001a.mdl": {
+"bbox": [
+-9.9,
+-64.4,
+-64.2,
+9.3,
+64.6,
+64.4
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
 "models/props_debris/rebar001a_32.mdl": {
 "bbox": [
 -3.3,
@@ -7025,6 +7331,24 @@
 3.4,
 3.3,
 16.5
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_debris/rebar001b_48.mdl": {
+"bbox": [
+-3.1,
+-3.1,
+-24.2,
+2.9,
+3.0,
+24.5
 ],
 "built_static": true,
 "collides": true,
@@ -7061,6 +7385,42 @@
 4.9,
 5.5,
 48.3
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_debris/rebar002a_32.mdl": {
+"bbox": [
+-3.4,
+-3.9,
+-16.3,
+3.6,
+3.9,
+16.3
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_debris/rebar002b_48.mdl": {
+"bbox": [
+-5.3,
+-4.4,
+-24.3,
+4.2,
+5.6,
+24.4
 ],
 "built_static": true,
 "collides": true,
@@ -7251,6 +7611,14 @@
 "static": true,
 "v": 2
 },
+"models/props_debris/rebar_medium_a.mdl": {
+"elsewhere": [],
+"game": null
+},
+"models/props_debris/rebar_medthick01a.mdl": {
+"elsewhere": [],
+"game": null
+},
 "models/props_debris/rebar_medthin01a.mdl": {
 "bbox": [
 -3.1,
@@ -7305,6 +7673,24 @@
 "static": true,
 "v": 2
 },
+"models/props_debris/tile_wall001a.mdl": {
+"bbox": [
+-5.9,
+-128.2,
+-64.3,
+5.9,
+128.7,
+64.3
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
 "models/props_debris/walldestroyed01a.mdl": {
 "bbox": [
 -6.3,
@@ -7313,6 +7699,150 @@
 5.6,
 187.6,
 82.9
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_debris/walldestroyed02a.mdl": {
+"bbox": [
+-64.0,
+-8.7,
+-65.1,
+64.0,
+8.0,
+193.0
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_debris/walldestroyed03a.mdl": {
+"bbox": [
+-135.3,
+-11.2,
+-64.2,
+134.6,
+13.8,
+74.6
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_debris/walldestroyed05a.mdl": {
+"bbox": [
+-19.0,
+-97.1,
+-64.7,
+8.2,
+96.6,
+67.8
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_debris/walldestroyed06b.mdl": {
+"bbox": [
+-6.0,
+-64.8,
+-64.3,
+6.0,
+64.9,
+57.6
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_debris/walldestroyed08a.mdl": {
+"bbox": [
+-35.8,
+-8.5,
+-64.7,
+53.6,
+12.0,
+65.3
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_debris/windowdestroyed01a.mdl": {
+"bbox": [
+-25.8,
+-196.2,
+-68.9,
+27.7,
+197.0,
+66.3
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_debris/windowdestroyed01b.mdl": {
+"bbox": [
+-21.9,
+-56.7,
+-67.4,
+21.6,
+61.1,
+66.5
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_debris/windowdestroyed01d.mdl": {
+"bbox": [
+-27.7,
+-74.5,
+-67.6,
+28.7,
+74.3,
+67.7
 ],
 "built_static": true,
 "collides": true,
@@ -7439,6 +7969,60 @@
 4.3,
 4.3,
 64.3
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": true,
+"prop_data": true,
+"ragdoll": false,
+"static": false,
+"v": 2
+},
+"models/props_debris/wood_chunk03a.mdl": {
+"bbox": [
+-1.2,
+-4.8,
+-40.2,
+1.4,
+5.0,
+39.9
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": true,
+"prop_data": true,
+"ragdoll": false,
+"static": false,
+"v": 2
+},
+"models/props_debris/wood_chunk04a.mdl": {
+"bbox": [
+-1.7,
+-4.6,
+-16.2,
+1.5,
+4.7,
+16.0
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": true,
+"prop_data": true,
+"ragdoll": false,
+"static": false,
+"v": 2
+},
+"models/props_debris/wood_splinters01a.mdl": {
+"bbox": [
+-0.7,
+-0.7,
+-6.9,
+0.7,
+0.7,
+6.9
 ],
 "built_static": true,
 "collides": true,
@@ -7969,6 +8553,24 @@
 "prop_data": false,
 "ragdoll": false,
 "static": true,
+"v": 2
+},
+"models/props_interiors/furniture_chair01a.mdl": {
+"bbox": [
+-10.4,
+-10.4,
+-21.2,
+10.4,
+10.3,
+21.3
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": true,
+"prop_data": true,
+"ragdoll": false,
+"static": false,
 "v": 2
 },
 "models/props_interiors/furniture_chair03a.mdl": {
@@ -8583,6 +9185,42 @@
 "static": false,
 "v": 2
 },
+"models/props_junk/garbage_carboard002a.mdl": {
+"bbox": [
+-13.5,
+-23.9,
+-0.3,
+13.5,
+23.9,
+0.5
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_junk/garbage_coffeemug001a.mdl": {
+"bbox": [
+-2.7,
+-3.5,
+-3.1,
+2.7,
+3.6,
+2.9
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": true,
+"prop_data": true,
+"ragdoll": false,
+"static": false,
+"v": 2
+},
 "models/props_junk/garbage_glassbottle001a.mdl": {
 "bbox": [
 -3.0,
@@ -8626,6 +9264,24 @@
 -3.9,
 2.4,
 2.4,
+4.1
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": true,
+"prop_data": true,
+"ragdoll": false,
+"static": false,
+"v": 2
+},
+"models/props_junk/garbage_metalcan002a.mdl": {
+"bbox": [
+-3.2,
+-3.2,
+-4.0,
+3.2,
+3.2,
 4.1
 ],
 "built_static": true,
@@ -8681,6 +9337,24 @@
 3.4,
 3.4,
 11.4
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": true,
+"prop_data": true,
+"ragdoll": false,
+"static": false,
+"v": 2
+},
+"models/props_junk/garbage_takeoutcarton001a.mdl": {
+"bbox": [
+-4.0,
+-3.8,
+-5.8,
+3.9,
+3.8,
+5.7
 ],
 "built_static": true,
 "collides": true,
@@ -9276,6 +9950,24 @@
 "v": 2
 },
 "models/props_lab/binderblue.mdl": {
+"bbox": [
+-5.9,
+-2.0,
+-0.4,
+5.8,
+1.7,
+12.0
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": true,
+"prop_data": true,
+"ragdoll": false,
+"static": false,
+"v": 2
+},
+"models/props_lab/binderredlabel.mdl": {
 "bbox": [
 -5.9,
 -2.0,
@@ -11413,6 +12105,14 @@
 "static": true,
 "v": 2
 },
+"models/props_pipes/pipeset02d_corner128d_001a.mdl": {
+"elsewhere": [
+"cstrike",
+"left4dead",
+"left4dead2"
+],
+"game": null
+},
 "models/props_pipes/pipeset02d_corner128l_001a.mdl": {
 "bbox": [
 -66.0,
@@ -11430,6 +12130,10 @@
 "ragdoll": false,
 "static": true,
 "v": 2
+},
+"models/props_pipes/pipeset02d_corner128u_001a.mdl": {
+"elsewhere": [],
+"game": null
 },
 "models/props_pipes/pipeset08d_128_001a.mdl": {
 "bbox": [
@@ -11637,6 +12341,24 @@
 128.9,
 19.2,
 153.0
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_pipes/pipeset32d_bend256u_001a.mdl": {
+"bbox": [
+-128.9,
+-19.0,
+-152.0,
+129.2,
+19.2,
+153.9
 ],
 "built_static": true,
 "collides": true,
@@ -13243,6 +13965,24 @@
 "static": true,
 "v": 2
 },
+"models/props_vehicles/car002b.mdl": {
+"bbox": [
+-83.8,
+-40.1,
+-21.3,
+69.4,
+44.3,
+33.9
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
 "models/props_vehicles/car002b_physics.mdl": {
 "bbox": [
 -83.1,
@@ -13257,6 +13997,24 @@
 "game": "hl2",
 "physics": true,
 "prop_data": true,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_vehicles/car003a.mdl": {
+"bbox": [
+-101.1,
+-44.2,
+-22.7,
+81.6,
+39.3,
+39.0
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
 "ragdoll": false,
 "static": true,
 "v": 2
@@ -16041,6 +16799,24 @@
 "static": true,
 "v": 2
 },
+"models/props_wasteland/prison_throwswitchlever001.mdl": {
+"bbox": [
+-2.0,
+-1.3,
+-12.8,
+2.0,
+1.2,
+12.8
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
 "models/props_wasteland/prison_toilet01.mdl": {
 "bbox": [
 -12.9,
@@ -16057,6 +16833,114 @@
 "prop_data": true,
 "ragdoll": false,
 "static": false,
+"v": 2
+},
+"models/props_wasteland/prison_toiletchunk01a.mdl": {
+"bbox": [
+-13.4,
+-5.6,
+-15.2,
+-10.6,
+1.8,
+-1.8
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": true,
+"prop_data": true,
+"ragdoll": false,
+"static": false,
+"v": 2
+},
+"models/props_wasteland/rockcliff01b.mdl": {
+"bbox": [
+-51.7,
+-41.4,
+-86.8,
+51.7,
+41.4,
+86.8
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_wasteland/rockcliff01f.mdl": {
+"bbox": [
+-64.2,
+-48.0,
+-88.7,
+63.5,
+46.8,
+88.7
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_wasteland/rockcliff05a.mdl": {
+"bbox": [
+-127.1,
+-125.6,
+-260.4,
+131.3,
+136.7,
+258.9
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_wasteland/rockcliff_cluster02a.mdl": {
+"bbox": [
+-244.0,
+-273.0,
+-270.0,
+220.9,
+303.2,
+267.3
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_wasteland/rockcliff_cluster03a.mdl": {
+"bbox": [
+-151.2,
+-137.8,
+-148.4,
+151.5,
+137.8,
+148.1
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
 "v": 2
 },
 "models/props_wasteland/rockgranite01a.mdl": {
@@ -16632,6 +17516,24 @@
 "physics": false,
 "prop_data": false,
 "ragdoll": false,
+"static": false,
+"v": 2
+},
+"models/zombie/classic_torso.mdl": {
+"bbox": [
+-12.0,
+-12.0,
+0.0,
+12.0,
+12.0,
+24.0
+],
+"built_static": false,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": true,
 "static": false,
 "v": 2
 }
