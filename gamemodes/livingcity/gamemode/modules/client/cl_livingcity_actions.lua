@@ -358,7 +358,7 @@ function LC_CL.OpenActions()
         Add(cp, "Find the Civil Protection Commissary (supplies; mark it)", function() Send("waypoint", "cpsupply") end, "icon16/map.png")
         Add(cp, "Mask voice lines", function() Send("vo") end)
         Add(cp, "Read the mail (at the post office)", function() Send("readmail") end, "icon16/email_open.png")
-        if LCF.IsOverwatch(me) or me:IsAdmin() then -- (the Overwatch's, the owner, 7 November)
+        if LCF.IsOverwatch(me) or me:IsAdmin() or me:GetNW2Bool("lc_flush_kit", false) then -- (the Overwatch's, the owner, 7 November; and a unit on the job to flush the sewers)
             Add(cp, "Deploy a turret here (at a checkpoint: near a power bank or forcefield)", function() Send("checkpoint", "turret") end, "icon16/gun.png")
             Add(cp, "Put up a power bank on this wall", function() Send("checkpoint", "bank") end, "icon16/lightning_add.png")
         end

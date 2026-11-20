@@ -226,6 +226,15 @@ local function ResistancePage()
         local cost = math.floor(tonumber(info.plotcost) or 0)
         items[#items + 1] = Page(cost > 0 and string.format("%s (%d each)", PLOT, cost) or PLOT, PlotPage)
     end
+    -- the leader's other order: the sealed quarter's wall, opened from inside (sv_livingcity_breach.lua). Only
+    -- where the map has it and for whoever may give it; greyed with why.
+    local br = GetGlobal2String("lc_breach", "")
+    if br ~= "" and me:GetNW2Bool("lc_res_leads", false) then
+        local why = ({ on = "under way", done = "done today", busy = "the Combine are at the wall" })[br]
+        local it = Item("Send the cell to open the sealed quarter's wall" .. (why and ("  (" .. why .. ")") or ""), function() Send("breach") end)
+        it.id, it.disabled = "breach", why ~= nil
+        items[#items + 1] = it
+    end
     -- (the owner, 7 November: losses you can see; the fighters we have left, under the rest)
     local fund = tonumber((info.reb or {}).fund)
     if not fund then return { title = "RESISTANCE", items = items, empty = ManpowerRows(leads and (#items + 1) or 7) } end
@@ -722,6 +731,14 @@ local function LeversPage()
         end)
     end
     items[#items].id = "shell"
+    -- the sealed quarter's door into the sewers: not a switch, a job for every unit (sv_livingcity_flush.lua).
+    -- Only where the map has the quarter; greyed with why when it can't be ordered.
+    local fl = GetGlobal2String("lc_flush", "")
+    if fl ~= "" then
+        local why = ({ on = "under way", done = "done today", weak = "the Resistance hold nothing underground", nounits = "no units on duty", busy = "not now" })[fl]
+        items[#items + 1] = Can("Send the units to flush the sewers from the sealed quarter", function() Send("flush") end, why)
+        items[#items].id = "flush"
+    end
     return { title = "THE CITY'S LEVERS", items = items }
 end
 

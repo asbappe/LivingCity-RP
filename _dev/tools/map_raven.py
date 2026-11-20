@@ -54,9 +54,16 @@ The piece, all in the map's own coordinates:
   deletes 28290.
 - The owner also deletes 34874 (the bare strip): the approach's south side stands where it starts.
 
-Nothing in the gamemode knows of this yet. Who may open the gate and the hatch is the gamemode's to
-say: the map only has lc_raven_gate_open / _shut and lc_raven_door_open / _shut (logic_relays: fire
-Trigger), and fires lc_raven_gate_opened, lc_raven_door_opened and their _closed for it to hear.
+Who may open the gate and the Combine door is the gamemode's to say: the map only has
+lc_raven_gate_open / _shut and lc_raven_door_open / _shut (logic_relays: fire Trigger), and fires
+lc_raven_gate_opened, lc_raven_door_opened and their _closed for it to hear. The Administrator's
+order to flush the sewers (sv_livingcity_flush.lua) is the first thing to use them: it finds its
+way by five more names, lc_raven_post and lc_raven_inside (either side of the wall), lc_raven_house
+(inside the tunnel house's door), lc_raven_console (the Combine's console on Ravenholm's side of the
+door) and lc_raven_sewer (the sewer beyond it). Without all nine names in the map the order is not
+offered. The ten marks named lc_raven_spawn are where that job puts the quarter's own infected.
+The Resistance's two jobs (sv_livingcity_breach.lua) use the same names and one more,
+lc_raven_gate_console: the wall's console on the inside, on the owner's north pavement.
 While the gate is open zombies and headcrabs are made in the quarter and walk out through it; while
 the Combine door is open, in the tunnel, and walk to the sewer (the makers are in their own visgroup:
 delete it if the gamemode is to send them itself).
@@ -291,6 +298,16 @@ def ravenholm(args):
         crusher(vmf, name, edge, gv, "lc_raven_door_crush")
     vmf.detail([(TX1, DY - 4, FLOOR, TX1 + 8, DY + 20, CEIL), (TX2 - 8, DY - 4, FLOOR, TX2, DY + 20, CEIL), (TX1 + 8, DY - 4, CEIL - 12, TX2 - 8, DY + 20, CEIL)],
                "metal/metalcombine002", vis=gv)
+    # What the gamemode's job reads (sv_livingcity_flush.lua; the owner: "she can trigger a combine wide quest to infiltrate
+    # the infested quarter ... and go into the tunnels and open the door from the other side"): the Combine's console on
+    # Ravenholm's side of the door, where the units rewire it, and a mark inside the tunnel house's door. Only where they
+    # stand is read; the gamemode fires lc_raven_door_open itself.
+    vmf.point("prop_dynamic", (TX1 + 14, DY - 64, FLOOR), {
+        "targetname": "lc_raven_console", "model": "models/props_combine/combine_interface001.mdl", "angles": "0 0 0", "skin": "0", "solid": "6", "disableshadows": "1",
+        "fademindist": "-1", "fademaxdist": "0", "fadescale": "1", "StartDisabled": "0", "renderamt": "255", "rendercolor": "255 255 255", "modelscale": "1.0",
+        "MinAnimTime": "5", "MaxAnimTime": "10", "RandomAnimation": "0", "SetBodyGroup": "0", "PerformanceMode": "0", "pressuredelay": "0", "ExplodeDamage": "0",
+        "ExplodeRadius": "0"}, gv)
+    vmf.point("info_target", (1312, ys + 56, ZS + 16), {"targetname": "lc_raven_house"}, gv)
 
     def city_door(pos, yaw, vis):
         """The city's own door, as the owner's map has it 134 times (hinged at pos; yaw 0 it runs north from there, 270 east)."""
@@ -350,6 +367,19 @@ def ravenholm(args):
         # where what is made here walks to: the city's side of the gate; the sewer beyond the hatch
         vmf.point("info_target", (-300, -2421, Z + 16), {"targetname": "lc_raven_rally"}, mv, outside=True)
         vmf.point("info_target", (1264, 760, 323), {"targetname": "lc_raven_door_rally"}, mv, outside=True)
+        # and for the gamemode's job: where the units set up on the city's side of the wall, a point as far inside it (whoever
+        # is nearer that one than the first is in), and the sewer beyond the Combine door
+        vmf.point("info_target", (-92, MID, Z + 16), {"targetname": "lc_raven_post"}, gv, outside=True)
+        vmf.point("info_target", (292, MID, Z + 16), {"targetname": "lc_raven_inside"}, gv, outside=True)
+        vmf.point("info_target", (1264, 760, 323), {"targetname": "lc_raven_sewer"}, gv, outside=True)
+        # the wall's own console, inside it (the owner: "a resistance quest set by the resistance leader to open the infested
+        # quarter's gate ... They have to open the containment gate on the street from inside the infested quarter"): on the
+        # owner's north pavement (their brush 20571, top z 665), its back to the east face of their north pillar (52305)
+        vmf.point("prop_dynamic", (175, -2146, 665), {
+            "targetname": "lc_raven_gate_console", "model": "models/props_combine/combine_interface001.mdl", "angles": "0 0 0", "skin": "0", "solid": "6",
+            "disableshadows": "1", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1", "StartDisabled": "0", "renderamt": "255", "rendercolor": "255 255 255",
+            "modelscale": "1.0", "MinAnimTime": "5", "MaxAnimTime": "10", "RandomAnimation": "0", "SetBodyGroup": "0", "PerformanceMode": "0", "pressuredelay": "0",
+            "ExplodeDamage": "0", "ExplodeRadius": "0"}, gv, outside=True)
 
     # --- the wiring. The relays and sounds stand inside the quarter (a sound can be told what to play from). ---------------
     def sound(name, message, source, pos, loops=False):
@@ -403,6 +433,10 @@ def ravenholm(args):
     makers("lc_raven_door_maker", "lc_raven_door_zombie", "lc_raven_door_march", "lc_raven_door_rally",
            [((1312, yb + 200 + 220 * n, FLOOR + 8), cls) for n, cls in enumerate(("npc_zombie", "npc_headcrab", "npc_zombie", "npc_fastzombie", "npc_zombie", "npc_headcrab"))],
            every=6, alive=3)
+    # (and where the gamemode's job puts the quarter's own infected as the units are shut in: marks, one to each)
+    for at in (W(900, 60, Z + 8), W(1100, 400, Z + 8), W(600, 190, Z + 8), W(930, -420, Z + 8), W(860, -800, Z + 8), W(200, -300, ZS + 8), W(580, -300, ZS + 8),
+               (1312, yb + 300, FLOOR + 8), (1312, yb + 800, FLOOR + 8), (1312, yb + 1200, FLOOR + 8)):
+        vmf.point("info_target", at, {"targetname": "lc_raven_spawn"}, gv)
 
     # --- the four buildings to go into (the owner: "little abandoned in-buildings and old shops and such along the street").
     # Each is a hollow in the plan right up to the pavement; its front and back are walls 16 thick with a door and windows,

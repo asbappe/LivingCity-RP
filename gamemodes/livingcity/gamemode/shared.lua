@@ -192,6 +192,8 @@ LC_MODULES = {
         "sv_livingcity_territorypaths", -- (territory grows along the path nodes)
         "sv_livingcity_districtinfest", -- (how infested each district is, and its leaking to the next)
         "sv_livingcity_shelling", -- (the Combine shell a Resistance district with headcrab canisters; after districtinfest)
+        "sv_livingcity_flush", -- (the Administrator sends the units into the sealed quarter to open its door into the sewers; after quests, checkpoints and shelling)
+        "sv_livingcity_breach", -- (the Resistance and the sealed quarter: shutting its door again, the leader's order to open its wall; after flush)
         "sv_livingcity_trains",
         "sv_livingcity_underground",
         "sv_livingcity_patsearch", -- (a unit's search as a short pat-down: sv_livingcity_underground.lua starts it)
