@@ -174,3 +174,38 @@ Filled in as the review goes; the first ones are clear already:
 
 **Weight.** large (the round wall and ring rail), medium (ladders, shaft exit, sound toys), small (light, grime).
 
+### 9. underpass (showroom 1): the barnacle underpass
+
+**Seen.** A long stretch of canal under a wide flat road deck, three plain square piers down the middle, six barnacles on the roof between them, a lorry jammed against a pier, a car, crates, the dead lying about, one lantern burning on the floor. By the right wall part of the deck has come down as a tilted slab, daylight down the hole, rubble, rebar.
+
+**Fix.**
+- The deck is one flat slab and the piers are plain square posts: an underpass reads by its structure. Girders across the deck every 256 resting on the piers' caps (a cap wider than the pier, chamfered as City 18's columns are), the piers themselves chamfered or octagonal.
+- The barnacles hang where nothing warns of them. Under each, Half-Life 2's tell: bones and gibs on the floor, a dark stain (decalstain), a body half lifted. The dead are there but not under the barnacles.
+
+**Better.**
+- The road above: a rumble of traffic and a passing Combine APC in the soundscape, dust falling now and then from the broken edge (func_dustmotes or a small env_dustpuff on a timer).
+- Gutter pipes down the piers from the road's drains (props_pipes gutter pipes, the owner's map has gutter_704), water dripping from them into puddles (decalborealispuddle001a).
+- A road sign or a lamppost that came down through the hole with the slab (streetsign, lamppost03a_off on its side), the lorry's back open with crates spilled.
+- Graffiti on the piers (decalgraffiti*), an old warning sign (decalsigndanger).
+- The daylight hole as a light_spot straight down with dust in it, so the one bright place is a lure past the barnacles.
+
+**Weight.** medium (girders, pier caps), small (bones, puddles, sounds, signs).
+
+### 10. tram (showroom 1): the fallen tram bridge
+
+**Seen.** Two stations face each other across the canal, each a hall with platforms either side of a track pit, square columns, dome lamps, benches, a wainscot band on the walls. Episode Two's crushed passenger car lies across the canal from the right bank up into the left station's mouth; the whole car stands in the right station. The bridge is gone but for stubs, one girder (the beam walk) and one sagging. (The viewer draws the cars as untilted boxes, so their lie is judged by numbers, not by the picture.)
+
+**Fix.**
+- The viewpoint "the car and the bridge" (eye 686 -60 464) is inside a prop's box: a debris pile has been put where the module's own view stands. Move the view (or the pile) so a player standing there sees the car.
+- The stations are plain boxes with square posts: nothing says "station". City 18's station is the model to follow, and Half-Life 2 ships its pieces.
+
+**Better.**
+- Dress the stations with Half-Life 2's station kit (props_trainstation): `trainstation_column001` for the columns, `trainstation_arch001` over the platforms' ends, `ceiling_truss001a` and `ceiling_arch001a` under the roof, `light_128wallmounted001a` and `light_256ceilingmounted001a` for light, a `clock01` stopped on the wall, `trainstation_post001` posts, `light_signal001a` at the pit's end, `bench_indoor001a` (the owner's map has 16), `payphone001a`, `trashcan_indoor001b`.
+- The walls in the station's own materials: building_template / trainstation templates the owner's map uses (building_trainstation_template002o, window001a/b), tile floors (tilefloor018a_c17), a platform edge stripe.
+- Overlays: a route sign on each platform (decal_signroute*, the commonest street sign in the owner's map), a Breen poster, timetable posters, a "no entry" over the barred stair.
+- Overhead line wires across the canal from the stubs (ropes), one snapped and hanging into the water, sparking now and then (env_spark on a timer).
+- The car: a sound of creaking metal, a few seats spilled out of its open end, glass on the floor (decals), a light flickering inside it is not allowed (no flicker), so a dead light instead.
+- A soundscape of wind through the gap and a distant train (the street's train passes somewhere above).
+
+**Weight.** medium (the station kit), small (overlays, wires, sounds).
+
