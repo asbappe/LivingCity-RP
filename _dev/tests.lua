@@ -40843,6 +40843,10 @@ function ScenePropsTests()
 -- the owner's two props (19 November; sv_livingcity_sceneprops.lua): soupprep on a counter by the ration
 -- plant's workplace, securitybank in each Resistance camp, by its notice board, back to a wall
 section("Scene props: the ration plant's counter and the Resistance's monitors")
+-- (the monitors in every camp are what the city does with the one-headquarters rule off, lc_base 0: with it on they are part
+--  of the live base's office, BaseTests)
+local baseWas = GetConVar("lc_base"):GetInt()
+_setcvar("lc_base", 0)
 local SOUP, BANK = "models/props_lab/soupprep.mdl", "models/props_lab/securitybank.mdl"
 local validWas, traceWas, createWas, runningWas = util.IsValidModel, util.TraceLine, ents.Create, LC.Running
 local function Turn(a) return (a + 180) % 360 - 180 end
@@ -40979,6 +40983,7 @@ for k, e in pairs(LC.KitchenProps) do if IsValid(e) then e:Remove() end LC.Kitch
 util.IsValidModel, util.TraceLine, ents.Create, LC.Running = validWas, traceWas, createWas, runningWas
 LC.SceneModelForget()
 LC.SceneBoundsForget()
+_setcvar("lc_base", baseWas)
 end
 ScenePropsTests()
 
@@ -41912,6 +41917,136 @@ function DaylightTests() -- (the owner, 20 November: the map's own lights: the s
     LC.ApplyLightStyle()
 end
 DaylightTests()
+
+function BaseTests()
+-- the owner, 20 November: one Resistance headquarters at a time; its leader sets it up by raising a flag, and it moves
+-- only by being packed up, ransacked by the Combine, or overrun and won back (sv_livingcity_base.lua)
+section("The Resistance's headquarters: one base at a time, a flag raised by its leader")
+local B = LC.Base
+local was = {}
+for _, k in ipairs({ "lc_base_setup_time", "lc_base_pack_time", "lc_base_stay", "lc_base_overrun", "lc_base_teardown" }) do was[k] = GetConVar(k):GetInt() end
+ok(was.lc_base_setup_time == 300 and was.lc_base_pack_time == 180 and was.lc_base_stay == 600 and GetConVar("lc_base_radius"):GetInt() == 4800
+    and GetConVar("lc_base_ransack_share"):GetInt() == 35 and LC.BaseOn() == true,
+    "the settings: five minutes to set up within 300 feet (4800 units), three to pack, ten before it may be packed, 35 per cent taken in a ransack; on")
+_setcvar("lc_base_setup_time", 5) _setcvar("lc_base_pack_time", 5) _setcvar("lc_base_stay", 0) _setcvar("lc_base_overrun", 3) _setcvar("lc_base_teardown", 2)
+B.Reset()
+local T0 = Vector(-300000, 300000, 0)
+local far = T0 + Vector(0, 90000, 0)
+local z1 = LC.AddZone(nil, nil, "rebel", 0, { mins = T0 + Vector(-400, -400, -16), maxs = T0 + Vector(400, 400, 192) })
+local z2 = LC.AddZone(nil, nil, "rebel", 0, { mins = T0 + Vector(20000, -400, -16), maxs = T0 + Vector(20800, 400, 192) })
+local boss = newPlayer("BaseCommander", "resistance", nil, 99999)
+local foot = newPlayer("BaseFighter", "resistance", nil, 400)
+local cop = newPlayer("BaseCop", "cp")
+boss:SetPos(T0) foot:SetPos(far) cop:SetPos(far)
+ok(LC.AdminPlotLeader(boss) == true and LC.AdminPlotLeader(foot) == false, "(the test's Commander leads, its Fighter does not)")
+local function live() for _ = 1, 6 do B.Tick(1) end return B.S.state == "live" end
+local function count() local n = 0 for _, e in pairs(B.S.props or {}) do if IsValid(e) then n = n + 1 end end return n end
+
+-- who may raise it, and where
+local did, why = LC.BaseRaise(foot)
+ok(did == false and B.S.state == nil and why ~= nil, "a Fighter cannot raise the flag", tostring(why))
+boss:SetPos(far)
+ok(LC.BaseRaise(boss) == false and B.S.state == nil, "nor the leader anywhere but rebel territory")
+boss:SetPos(T0)
+ok(LC.BaseRaise(boss) == true and B.S.state == "raising" and IsValid(B.S.flag) and B.S.zone == LC.RebelLeader(z1),
+    "the leader, standing in rebel territory, raises the flag: a pole where he stood")
+ok(LC.BaseLive() == nil and count() == 0 and LC.BaseShows(z1) == false, "it is no headquarters yet, and no office shows")
+
+-- the flag climbs while he is near and the ground is clear; its height is all that players are told
+B.Tick(1) B.Tick(1)
+local h = B.S.prog
+ok(math.abs(h - 0.4) < 0.01 and math.abs(B.S.flag:GetNW2Float("lc_flag_h", 0) - 0.4) < 0.01, "the flag climbs with the time (two fifths up after 2 of 5 seconds)", h)
+boss:SetPos(far)
+B.Tick(1)
+ok(B.S.prog == h, "and stops when the leader is out of reach")
+boss:SetPos(T0)
+cop:SetPos(T0 + Vector(100, 0, 0))
+B.Tick(1)
+ok(B.S.prog == h, "or while a unit stands on its ground")
+cop:SetPos(far)
+ok(live() and LC.BaseLive() == LC.RebelLeader(z1), "at the top it is the headquarters")
+ok(count() == #LC.BaseOffice and IsValid(B.S.props.bank) and B.S.props.bank:GetModel() == "models/props_lab/securitybank.mdl" and B.S.props.desk.lcRebelProp == "desk",
+    "and the office appears round the pole: the monitors, the desk and the rest, each one of the camp's things to carry", count())
+ok(LC.BaseShows(z1) == true and LC.BaseShows(z2) == false, "this camp is the one whose office shows")
+
+-- one at a time
+boss:SetPos(T0 + Vector(20400, 0, 0))
+did, why = LC.BaseRaise(boss)
+ok(did == false and B.S.zone == LC.RebelLeader(z1), "no second flag while one flies", tostring(why))
+
+-- packing up: not at once, and it takes time; where the office stood is kept for this place
+boss:SetPos(T0)
+_setcvar("lc_base_stay", 600)
+did, why = LC.BaseStrike(boss)
+ok(did == false and B.S.state == "live", "the flag cannot be struck as soon as it is up", tostring(why))
+_setcvar("lc_base_stay", 0)
+B.S.props.desk:SetPos(T0 + Vector(222, 111, 0))
+ok(LC.BaseOrder(boss) == true and B.S.state == "striking", "the leader's one line on F2 strikes it")
+ok(LC.BaseOrder(boss) == true and B.S.state == "live", "and, pressed again, hoists it back")
+LC.BaseOrder(boss)
+B.Tick(1) B.Tick(1)
+ok(B.S.state == "striking" and B.S.prog < 1 and count() == #LC.BaseOffice, "it comes down over the packing time, the office still there")
+for _ = 1, 4 do B.Tick(1) end
+ok(B.S.state == nil and LC.BaseLive() == nil and not IsValid(B.S.flag), "at the bottom the headquarters is packed: no flag, no office, no base")
+local gone = {}
+hook.Add("LivingCityBaseGone", "BaseTests", function(z, how) gone[#gone + 1] = how end)
+ok(LC.BaseRaise(boss) == true and live(), "(raised again in the same place)")
+local d = B.S.props.desk:GetPos()
+ok(math.abs(d.x - (T0.x + 222)) < 1 and math.abs(d.y - (T0.y + 111)) < 1, "the desk is where it was left here: each place's office is laid out once", tostring(d))
+
+-- the Combine: a unit at the pole, with no rebel on the ground, tears it down and takes a share of the fund
+LC.ResistanceFundAdd(1000, "test")
+local fund = LC.ResistanceFund()
+local seized
+hook.Add("LivingCityBaseRansacked", "BaseTests", function(z, n, u) seized = { z, n, u } end)
+cop:SetPos(B.S.pos + Vector(40, 0, 0))
+ok(LC.BaseTear(cop) == false and B.S.tear == nil, "a unit cannot touch the flag while a rebel holds the ground")
+boss:SetPos(far)
+ok(LC.BaseTear(boss) == false and LC.BaseTear(cop) == true and B.S.tear ~= nil, "with the ground empty of rebels, a unit at the pole starts it down (nobody else can)")
+B.Tick(1)
+ok(B.S.flag:GetNW2Float("lc_flag_h", 1) < 1 and B.S.state == "live", "the flag comes down as the unit pulls")
+foot:SetPos(T0)
+B.Tick(1)
+ok(B.S.tear == nil and B.S.state == "live" and B.S.flag:GetNW2Float("lc_flag_h", 0) == 1, "a rebel coming back stops it, and the flag is up again")
+foot:SetPos(far)
+LC.BaseTear(cop)
+B.Tick(1) B.Tick(1)
+local taken = math.floor(fund * 0.35)
+ok(B.S.state == nil and LC.ResistanceFund() == fund - taken and seized and seized[2] == taken and seized[3] == cop and gone[#gone] == "ransacked",
+    "torn down: no headquarters, the office gone, 35 per cent of the fund taken", LC.ResistanceFund(), fund, taken)
+
+-- overrun: zombies on the ground and no rebel there; the office stays and can be won back
+boss:SetPos(T0)
+ok(LC.BaseRaise(boss) == false and B.S.state == nil, "no flag goes up with a unit standing there")
+cop:SetPos(far)
+ok(LC.BaseRaise(boss) == true and live(), "(raised a third time)")
+boss:SetPos(far)
+local zed = ents.Create("npc_zombie")
+zed:SetPos(B.S.pos + Vector(60, 0, 0))
+zed:Spawn()
+_run(5)
+ok(B.S.state == "overrun" and LC.BaseLive() == nil and count() == #LC.BaseOffice and math.abs(B.S.flag:GetNW2Float("lc_flag_h", 0) - 0.5) < 0.01,
+    "zombies on its ground with no rebel there: overrun, the flag at half mast, the office still standing", tostring(B.S.state))
+boss:SetPos(T0 + Vector(20400, 0, 0))
+ok(LC.BaseRaise(boss) == false and LC.BaseOrder(boss) == false, "no flag goes up elsewhere while it is overrun")
+boss:SetPos(T0)
+_run(3)
+ok(B.S.state == "overrun", "a rebel walking in is not enough while they are still there")
+zed:Remove()
+_run(22)
+ok(B.S.state == "live" and LC.BaseLive() == LC.RebelLeader(z1), "cleared out and held a little: the headquarters is live again", tostring(B.S.state))
+
+-- the camps' own monitors are part of the office now; with the feature off, each camp has its own as before
+ok(LC.BaseOn() == true, "(on: the camps put out no monitors of their own, sv_livingcity_scavenge.lua)")
+
+hook.Remove("LivingCityBaseGone", "BaseTests")
+hook.Remove("LivingCityBaseRansacked", "BaseTests")
+B.Reset()
+for k, v in pairs(was) do _setcvar(k, v) end
+LC.RemoveZone(z1) LC.RemoveZone(z2)
+boss:Remove() foot:Remove() cop:Remove()
+end
+BaseTests()
 
 ----------------------------------------------------------------------
 section("Stop")

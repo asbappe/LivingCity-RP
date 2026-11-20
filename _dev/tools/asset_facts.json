@@ -599,6 +599,21 @@
 "ragdoll": false,
 "static": true
 },
+"models/props_c17/signpole001.mdl": {
+"bbox": [
+-1.4,
+-1.4,
+-0.3,
+1.4,
+1.4,
+110.0
+],
+"collides": true,
+"game": "hl2",
+"physics": true,
+"ragdoll": false,
+"static": true
+},
 "models/props_c17/tools_wrench01a.mdl": {
 "bbox": [
 -1.9,
@@ -1310,6 +1325,36 @@
 "ragdoll": false,
 "static": false
 },
+"models/props_lab/corkboard001.mdl": {
+"bbox": [
+-0.2,
+-45.6,
+-25.0,
+4.7,
+45.9,
+33.6
+],
+"collides": false,
+"game": "hl2",
+"physics": false,
+"ragdoll": false,
+"static": true
+},
+"models/props_lab/corkboard002.mdl": {
+"bbox": [
+-2.0,
+-20.0,
+-32.0,
+0.3,
+20.0,
+32.0
+],
+"collides": false,
+"game": "hl2",
+"physics": false,
+"ragdoll": false,
+"static": true
+},
 "models/props_lab/generatorconsole.mdl": {
 "bbox": [
 -51.6,
@@ -1325,6 +1370,21 @@
 "ragdoll": false,
 "static": true
 },
+"models/props_lab/monitor01a.mdl": {
+"bbox": [
+-14.1,
+-13.1,
+-13.1,
+14.0,
+11.8,
+13.6
+],
+"collides": true,
+"game": "hl2",
+"physics": true,
+"ragdoll": false,
+"static": true
+},
 "models/props_lab/reciever_cart.mdl": {
 "bbox": [
 -16.2,
@@ -1337,6 +1397,81 @@
 "collides": true,
 "game": "hl2",
 "physics": true,
+"ragdoll": false,
+"static": true
+},
+"models/props_lab/securitybank.mdl": {
+"bbox": [
+-13.4,
+-68.2,
+-0.1,
+31.8,
+72.1,
+145.8
+],
+"collides": true,
+"game": "hl2",
+"physics": false,
+"ragdoll": false,
+"static": true
+},
+"models/props_lab/servers.mdl": {
+"bbox": [
+-13.6,
+-47.3,
+-0.3,
+15.4,
+46.3,
+101.3
+],
+"collides": true,
+"game": "hl2",
+"physics": false,
+"ragdoll": false,
+"static": true
+},
+"models/props_lab/workspace001.mdl": {
+"bbox": [
+-62.9,
+-29.2,
+-0.9,
+81.5,
+23.1,
+90.8
+],
+"collides": true,
+"game": "hl2",
+"physics": false,
+"ragdoll": false,
+"static": true
+},
+"models/props_lab/workspace002.mdl": {
+"bbox": [
+-74.4,
+-75.4,
+-6.0,
+13.3,
+102.2,
+88.0
+],
+"collides": true,
+"game": "hl2",
+"physics": false,
+"ragdoll": false,
+"static": true
+},
+"models/props_lab/workspace003.mdl": {
+"bbox": [
+-14.2,
+-27.1,
+-1.0,
+22.1,
+159.4,
+101.7
+],
+"collides": true,
+"game": "hl2",
+"physics": false,
 "ragdoll": false,
 "static": true
 },

@@ -194,6 +194,7 @@ LC_MODULES = {
         "sv_livingcity_shelling", -- (the Combine shell a Resistance district with headcrab canisters; after districtinfest)
         "sv_livingcity_flush", -- (the Administrator sends the units into the sealed quarter to open its door into the sewers; after quests, checkpoints and shelling)
         "sv_livingcity_breach", -- (the Resistance and the sealed quarter: shutting its door again, the leader's order to open its wall; after flush)
+        "sv_livingcity_base", -- (the Resistance's one headquarters: the leader raises a flag; after the leader's orders, the camps and their props)
         "sv_livingcity_daylight", -- (the map's own lights: the sun and sky by the hour, the dream room's lights, the darker places; after atmos and dreams)
         "sv_livingcity_trains",
         "sv_livingcity_underground",
@@ -366,6 +367,7 @@ LC_MODULES = {
         "cl_livingcity_layoutbrowser",
         "cl_livingcity_life",
         "cl_livingcity_livecam",
+        "cl_livingcity_base",
         "cl_livingcity_needs",
         "cl_livingcity_quests",
         "cl_livingcity_rent",

@@ -455,7 +455,11 @@ local function EnsureRebelProps()
             LC.SeatPots(z, r)
             -- the headquarters' security monitors (the owner, 19 November: "a good setting for the Resistance
             -- Leader"): where the players last left them, else by the notice board (sv_livingcity_sceneprops.lua)
-            if not IsValid(r.bank) and LC.SecurityBankFor and CurTime() >= (r.bankNext or 0) then
+            -- (with one headquarters at a time, sv_livingcity_base.lua, the monitors are part of its office: not in every camp)
+            if LC.BaseOn and LC.BaseOn() then
+                if IsValid(r.bank) then r.bank:Remove() end
+                r.bank = nil
+            elseif not IsValid(r.bank) and LC.SecurityBankFor and CurTime() >= (r.bankNext or 0) then
                 r.bankNext = CurTime() + 30
                 r.bank = LC.SecurityBankFor(z, LC.CampSaved and LC.CampSaved(z))
                 if IsValid(r.bank) then r.bank.lcCampZone = z end -- (carried, it's saved with this camp's things)

@@ -235,6 +235,18 @@ local function ResistancePage()
         it.id, it.disabled = "breach", why ~= nil
         items[#items + 1] = it
     end
+    -- the headquarters (sv_livingcity_base.lua): one line for whoever leads, and it does whatever comes next. The flag
+    -- itself shows how far along it is.
+    if GetGlobal2Bool("lc_base_on", false) and me:GetNW2Bool("lc_res_leads", false) then
+        local st = GetGlobal2String("lc_base", "")
+        local label = ({ [""] = "Raise the flag here (set up headquarters)", raising = "Leave the flag (give up setting up)",
+            live = "Strike the flag (pack up headquarters)", striking = "Hoist it again (stay)", overrun = "Headquarters overrun: clear it out" })[st]
+        if label then
+            local it = Item(label, function() Send("base") end)
+            it.id, it.disabled = "base", st == "overrun"
+            items[#items + 1] = it
+        end
+    end
     -- (the owner, 7 November: losses you can see; the fighters we have left, under the rest)
     local fund = tonumber((info.reb or {}).fund)
     if not fund then return { title = "RESISTANCE", items = items, empty = ManpowerRows(leads and (#items + 1) or 7) } end
