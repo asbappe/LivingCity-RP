@@ -540,11 +540,12 @@ def m_pit(m, opt):
     down from it into the ring. lc_pit_corner_a and lc_pit_corner_b are the two corners the fighters start in (a stool
     in each). Three tiers of concrete seats, 32 high each, stand on the three far sides, with stairs of 16 up the
     middle of each. By the mouth on the right the bookmaker's table, chair, till and lamp under a chalk board of odds
-    (lc_pit_bookie: where he sits); on the left the corner men's bench, water drum and bucket. A street lamp stands
-    on each side of the cage, its arm over the ring.
+    (lc_pit_bookie: where he sits); on the left the corner men's bench, water drum and bucket. Two lamps hang over
+    the ring from a gantry (the owner asked for these, not street lamps).
     The gate is a fence panel (interior_fence002e) riding on an unseen brush door of the same name and inputs; an
     unseen wall stands in the cage's line all round, so the cage holds whatever the panels' own shapes are.
-    Left as brushes: the tiers, kerb and posts for the buttons (concrete), the chalk board (no model of one).
+    Left as brushes: the tiers, kerb and posts for the buttons (concrete), the chalk board (no model of one), the
+    gantry and its lamps.
     Unchecked: which way the fence panels face and whether their meshes meet at the corners; whether a press of the
     gate's button can be made through the cage from inside; the button's model is Episode Two's."""
     L, cu, cv = 1280, 640, 704
@@ -595,11 +596,12 @@ def m_pit(m, opt):
     m.static("models/props_c17/chair_stool01a.mdl", 466, 530, 0, z=F - 64)
     m.static("models/props_c17/chair_stool01a.mdl", 814, 878, 0, z=F - 64)
 
-    # a street lamp on each side of the cage, its arm over the ring
-    m.static("models/props_c17/lamppost03a_on.mdl", a1 - 14, cv + 60, 270)
-    m.static("models/props_c17/lamppost03a_on.mdl", a2 + 14, cv - 60, 90)
-    m.light(a1 + 90, cv + 60, F + 420, "255 225 180 1500")
-    m.light(a2 - 90, cv - 60, F + 420, "255 225 180 1500")
+    # the gantry over the ring, two lamps hanging from it (as first built: the owner asked for these back)
+    top = F + 144
+    m.det([(cu - 208, cv - 4, F + 6, cu - 200, cv + 4, top + 84), (cu + 200, cv - 4, F + 6, cu + 208, cv + 4, top + 84),
+           (cu - 207, cv - 3, top + 74, cu + 207, cv + 3, top + 80)], BARS)
+    for u in (cu - 88, cu + 88):
+        m.lamp(u, cv, top + 46, "255 225 180 320", hang=20)
 
     # the seats: three tiers on the three far sides, stairs up the middle of each
     tiers, stairs = [], []
@@ -652,8 +654,9 @@ def m_garden(m, opt):
     and an iron gate (lc_garden_gate: Use swings it in), opens on a yard 640 by 448 under the open sky, its floor 24
     above the canal's. Six raised soil beds edged with timber, three on each side of a path of flagstones
     (lc_garden_bed_1 to _6: on the beds, for a farming job; 1 to 3 on the left going back, 4 to 6 on the right),
-    ridged; melons on two of them; bean poles with lines between over the first bed on each side; a scarecrow in the
-    middle bed on the right. Against the back wall a tool lean-to (a desk, pots, a shovel, a bucket, a bell lamp), a
+    ridged. lc_garden_plot_1 to _8 are the planting spots for the game (melons, pumpkins): info_targets on the soil
+    of the four beds that have no bean poles, two a bed, each a little off the line and turned an odd way (the same
+    every build). Bean poles over the first bed on each side; a scarecrow in the middle bed on the right. Against the back wall a tool lean-to (a desk, pots, a shovel, a bucket, a bell lamp), a
     barrel under a gutter pipe in the left corner, a compost heap behind boards in the right corner; a push cart, a
     wheelbarrow and a crate of melons on the path.
     The gate is props_c17/gate_door01a riding on an unseen brush door of the same name.
@@ -694,21 +697,21 @@ def m_garden(m, opt):
     m.det(edges + stakes, BEAM)
     m.det(soil, DIRT)
     m.shapes(ridges)
-    for n, spots in ((1, (30, 62, 104, 150)), (4, (44, 90, 128, 166))):                  # melons, on two of the beds
+    rnd = random.Random(8)                               # the planting spots: two on each bed that has no bean poles, none quite in line
+    k = 0
+    for n in (1, 2, 4, 5):
         u, v = beds[n]
-        for k, du in enumerate(spots):
-            m.static("models/props_junk/watermelon01.mdl", u + du, v + 26 + 20 * (k % 2), 40 * k, z=Z + 14)
+        for du in (52, 140):
+            k += 1
+            m.target("lc_garden_plot_%d" % k, u + du + rnd.randrange(-9, 10), v + 36 + rnd.randrange(-11, 12), Z + 17, rnd.randrange(0, 360))
     m.blocked(336, 344, 560, 672)
     m.blocked(720, 344, 944, 672)
 
-    # bean poles over the first bed on each side, lines strung between them
+    # bean poles over the first bed on each side
     for (u, v) in (beds[0], beds[3]):
         for row in (0, 2):
-            c = v + 16 + 20 * row
-            for k in range(u + 13, u + 190, 42):
-                m.static("models/props_c17/signpole001.mdl", k, c, 0, z=Z + 13)
-            m.rope([(u + 13, c, Z + 104), (u + 181, c, Z + 104)], slack=6, width=1)
-            m.rope([(u + 13, c, Z + 62), (u + 181, c, Z + 62)], slack=6, width=1)
+            for k in range(u + 24, u + 190, 72):
+                m.static("models/props_c17/signpole001.mdl", k, v + 16 + 20 * row, 0, z=Z + 13)
 
     # the scarecrow, in the middle bed on the right
     su, sv = 832, 508
@@ -1139,78 +1142,77 @@ def m_still(m, opt):
 # 10. The plaza
 # ---------------------------------------------------------------------------
 
-def half_ring(cu, v0, r):
-    """Five corners of half an eight-sided ring about r from (cu, v0), on the side v > v0."""
+def bowl(cu, v1, vb, w, r):
+    """The ground round half an eight-sided hollow of radius r whose middle is (cu, vb) on the back wall, out to a
+    rectangle (cu - w .. cu + w, v1 .. vb): four outlines for vprism, every corner a whole number."""
     a = int(round(r * 0.7071))
-    return [(cu + r, v0), (cu + a, v0 + a), (cu, v0 + r), (cu - a, v0 + a), (cu - r, v0)]
+    out = []
+    for s in (-1, 1):
+        out.append([(cu + s * w, vb), (cu + s * r, vb), (cu + s * a, vb - a), (cu + s * w, v1)])
+        out.append([(cu + s * w, v1), (cu + s * a, vb - a), (cu, vb - r), (cu, v1)])
+    return out
 
 
 def m_plaza(m, opt):
-    """The plaza: where people gather to listen. The canal opens on its left, 1024 wide, into half a round
-    amphitheatre under the open sky: a flat floor 512 across, then five concrete tiers of seats stepping up and back
-    round it, each 16 high and 48 deep (walked up anywhere, sat on anywhere), the last one a broad walk under the
-    wall; the tiers' ends show as steps from the canal. At the canal's edge, facing the tiers, a timber rostrum three
-    steps up with a lectern and a handrail behind (lc_plaza_rostrum: where the speaker stands, facing the tiers),
-    between two street lamps that carry a wire for a banner; a cluster of loudspeakers on one (speakercluster01a);
-    a fire drum on each side of the floor. lc_plaza_crowd is the middle of the third tier, facing the rostrum.
-    Left as brushes: the tiers, the rostrum's deck and steps (timber staging), its lectern (no model of one).
+    """The plaza: where people gather to listen. The canal (or the street) opens on its left, 1152 wide, onto a
+    terrace at its own height, and from the terrace five concrete rows of seats step DOWN and away, each 16 high and
+    48 deep (walked down anywhere, sat on anywhere), round half an eight-sided floor 512 across and 80 below the
+    street. At the back wall, facing the rows and the street beyond them, a timber rostrum three steps up with a
+    lectern (lc_plaza_rostrum: where the speaker stands, facing the street), between two street lamps that carry a
+    wire for a banner; a cluster of loudspeakers on one (speakercluster01a), turned to the street; a fire drum on
+    each side of the floor. lc_plaza_crowd is the middle of the third row, facing the rostrum.
+    (Turned round on 21 November at the owner's word: the top row used to be at the back.)
+    Left as brushes: the rows, the rostrum's deck and steps (timber staging), its lectern (no model of one).
     Unchecked: env_fire's look in the drums; which way the loudspeakers and the lamps' arms point (the arms are along
-    the model's y, turned here toward the tiers); no sound here."""
-    L, cu, v0 = 1536, 768, 256
+    the model's y, turned here toward the rows); no sound here."""
+    L, cu, v1, vb, w = 1536, 768, 256, 768, 576
+    low = F - 80
     m.open(0, -256, L, 256)
-    for i in range(-9, 9):
-        for j in range(0, 9):
-            du, dv = i * CELL + 32, j * CELL + 32
-            if du * du + dv * dv < 544 * 544:
-                m.open(cu + i * CELL, v0 + j * CELL, cu + (i + 1) * CELL, v0 + (j + 1) * CELL, mat=MAT["quay_floor"])
-    m.side(192, 256, 1344, 896)
-    m.no_bank(192, 264, 1344, 896)
-    m.blocked(192, 448, 1344, 896)
-    m.taken(232, 110, F, 1304, 256, F + 150)
-    cheeks(m, 256, 1280)
+    m.open(cu - w, v1, cu + w, vb, floor=low, mat=MAT["quay_floor"])
+    m.side(cu - w, v1, cu + w, vb)
+    m.no_bank(cu - w, v1 + 8, cu + w, vb + 64)
+    m.blocked(cu - w, v1, cu + w, vb)
+    m.taken(cu - w - 24, 110, F, cu + w + 24, 256, F + 150)
+    cheeks(m, cu - w, cu + w)
 
-    # the tiers: each a half ring from its own front back to the wall, one on top of the next
-    far = half_ring(cu, v0, 704)
-    tiers = []
+    # the rows: the ground round the hollow at each height, the highest (the terrace, level with the street) the widest
+    rows = []
     for k in range(5):
-        near = half_ring(cu, v0, 256 + 48 * k)
-        tiers += [vprism([near[j], near[j + 1], far[j + 1], far[j]], F, F + 16 * (k + 1), MAT["beam"], top=MAT["quay_floor"]) for j in range(4)]
-    m.shapes(tiers)
-    m.target("lc_plaza_crowd", cu, v0 + 376, F + 56, 270)
+        for pts in bowl(cu, v1, vb, w, 256 + 48 * k):
+            rows.append(vprism(pts, low, low + 16 * (k + 1), MAT["beam"], top=MAT["quay_floor"]))
+    m.shapes(rows)
+    m.target("lc_plaza_crowd", cu, vb - 376, low + 56, 90)
 
-    # the rostrum at the canal's edge: a timber deck three steps up, a lectern, a handrail behind
-    r1, r2, rv1, rv2, top = cu - 48, cu + 48, 196, 262, F + 24
+    # the rostrum at the back wall: a timber deck three steps up, a lectern at its front
+    r1, r2, rv1, rv2, top = cu - 48, cu + 48, vb - 66, vb, low + 24
     m.det([(r1, rv1, top - 4, r2, rv2, top)], WOOD)
-    m.det([(u, v, F, u + 6, v + 6, top - 4) for u in (r1, cu - 3, r2 - 6) for v in (rv1, rv2 - 6)]
+    m.det([(u, v, low, u + 6, v + 6, top - 4) for u in (r1, cu - 3, r2 - 6) for v in (rv1, rv2 - 6)]
           + [(r1, rv1, top - 10, r2, rv1 + 4, top - 4), (r1, rv2 - 4, top - 10, r2, rv2, top - 4)], BEAM)
-    m.det([(r1 - 12 * (3 - k), rv1 + 8, F, r1 - 12 * (2 - k), rv2 - 8, F + 8 * (k + 1)) for k in range(3)], BEAM, top=WOOD)
-    m.det([(cu - 14, rv2 - 14, top, cu + 14, rv2 - 4, top + 38)], WOOD)
-    m.shapes([prism([(rv2 - 16, top + 38), (rv2 - 2, top + 38), (rv2 - 2, top + 46), (rv2 - 16, top + 40)], "x", cu - 16, cu + 16, BEAM)])
-    m.static("models/props_c17/handrail04_medium.mdl", r1 + 33, rv1 + 2, 90, z=top)
-    m.static("models/props_c17/handrail04_short.mdl", r2 - 18, rv1 + 2, 90, z=top)
-    m.target("lc_plaza_rostrum", cu, 228, top + 8, 90)
-    m.blocked(r1 - 48, rv1 - 16, r2 + 16, rv2 + 16)
-    # two street lamps and the wire for a banner; the loudspeakers on one
-    p1, p2, pz = r1 - 22, r2 + 22, F + 208
+    m.det([(r1 - 12 * (3 - k), rv1 + 8, low, r1 - 12 * (2 - k), rv2 - 8, low + 8 * (k + 1)) for k in range(3)], BEAM, top=WOOD)
+    m.det([(cu - 14, rv1 + 4, top, cu + 14, rv1 + 14, top + 38)], WOOD)
+    m.shapes([prism([(rv1 + 2, top + 38), (rv1 + 16, top + 38), (rv1 + 16, top + 40), (rv1 + 2, top + 46)], "x", cu - 16, cu + 16, BEAM)])
+    m.target("lc_plaza_rostrum", cu, vb - 30, top + 8, 270)
+    # two street lamps and the wire for a banner; the loudspeakers on one, turned to the street
+    p1, p2, pz = r1 - 22, r2 + 22, low + 208
     for u in (p1, p2):
-        m.static("models/props_c17/lamppost03a_on.mdl", u, 240, 0)
-        m.light(u, 336, F + 420, "255 220 170 1500")
-    m.rope([(p1, 240, pz), (p2, 240, pz)], slack=10, width=1)
-    m.static("models/props_wasteland/speakercluster01a.mdl", p1, 258, 90, z=F + 176)
-    m.rope([(p1, 250, F + 180), (cu - 10, 250, top + 40)], slack=30, width=1)
+        m.static("models/props_c17/lamppost03a_on.mdl", u, vb - 20, 180, z=low)
+        m.light(u, vb - 116, low + 420, "255 220 170 1500")
+    m.rope([(p1, vb - 20, pz), (p2, vb - 20, pz)], slack=10, width=1)
+    m.static("models/props_wasteland/speakercluster01a.mdl", p1, vb - 38, 270, z=low + 176)
 
     # a fire drum on each side of the floor
-    for u in (cu - 216, cu + 216):
-        m.static("models/props_c17/oildrum001.mdl", u, 300, 0)
-        fire(m, u, 300, F + 46, size=18, light="255 150 70 140")
-        m.blocked(u - 32, 268, u + 32, 332)
-    for u, v in ((cu, 330), (cu - 120, 380), (cu + 120, 380), (cu, 440), (cu - 380, 290), (cu + 380, 290)):
-        m.lane(u, v)
+    for u in (cu - 190, cu + 190):
+        m.static("models/props_c17/oildrum001.mdl", u, vb - 40, 0, z=low)
+        fire(m, u, vb - 40, low + 46, size=18, light="255 150 70 140")
+    for u, v in ((cu, vb - 120), (cu - 120, vb - 100), (cu + 120, vb - 100), (cu, vb - 200)):
+        m.lane(u, v, low)
+    for u in (cu - 420, cu - 140, cu + 140, cu + 420):
+        m.lane(u, v1 + 28)
 
-    m.view(cu, 60, F, 90, 0, "from across the canal")
-    m.view(cu, 228, F + 24, 90, 2, "from the rostrum")
-    m.view(cu, v0 + 420, F + 80, 270, 8, "from the top tier")
-    m.view(330, 150, F, 40, 2, "the tiers' ends from the canal")
+    m.view(cu, 60, F, 90, 6, "from across the canal: looking down the rows")
+    m.view(cu, vb - 30, top, 270, -4, "from the rostrum")
+    m.view(cu, v1 + 30, F, 90, 12, "from the terrace")
+    m.view(cu - 300, vb - 60, low, 20, 0, "the rostrum from the floor")
 
 
 # ---------------------------------------------------------------------------
@@ -1278,7 +1280,7 @@ MODULES = {
     "market": (1280, m_market, "the black market: a vaulted arcade of five shuttered stalls (left)"),
     "press": (768, m_press, "the pamphlet press: a printing room behind a false stack of crates (left)"),
     "still": (768, m_still, "the still: a pot still, mash casks and bottles in a cellar (left)"),
-    "plaza": (1536, m_plaza, "the plaza: half a round amphitheatre of five tiers, a rostrum, fire drums (left)"),
+    "plaza": (1536, m_plaza, "the plaza: five rows of seats stepping down from the street to a rostrum at the back wall (left)"),
     "playground": (1024, m_playground, "the playground: a rusted relic on a terrace over the canal (left)"),
     "clinic": (1024, m_clinic, "the clinic: a ward, an operating theatre, a dispensary and a sluice room in a vault (left)"),
 }

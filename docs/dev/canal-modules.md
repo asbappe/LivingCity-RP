@@ -33,12 +33,12 @@ What a module is and how to lay them out: `docs/dev/map-building.md` ("Canal mod
 | `cells` | 1024 | the cells: a guard room, three barred cells, a crawl duct out (left) | `lc_cells_button_1`, `lc_cells_button_2`, `lc_cells_button_3`, `lc_cells_door_1`, `lc_cells_door_2`, `lc_cells_door_3`, `lc_cells_entry`, `lc_cells_grate`, `lc_cells_spot_1`, `lc_cells_spot_2`, `lc_cells_spot_3` | `map_mods_b.py` |
 | `memorial` | 768 | the wall of the dead: plaques and candles in a recess under the open sky (left) | `lc_memorial_wall` | `map_mods_b.py` |
 | `pit` | 1280 | the fighting pit: a caged sunken ring, tiers of seats, a bookmaker (left) | `lc_pit_bookie`, `lc_pit_corner_a`, `lc_pit_corner_b`, `lc_pit_gate`, `lc_pit_gate_button` | `map_mods_b.py` |
-| `garden` | 1280 | the walled garden: soil beds, bean poles, a scarecrow, a lean-to, a rain butt (left) | `lc_garden_bed_1`, `lc_garden_bed_2`, `lc_garden_bed_3`, `lc_garden_bed_4`, `lc_garden_bed_5`, `lc_garden_bed_6`, `lc_garden_gate` | `map_mods_b.py` |
+| `garden` | 1280 | the walled garden: soil beds, bean poles, a scarecrow, a lean-to, a rain butt (left) | `lc_garden_bed_1`, `lc_garden_bed_2`, `lc_garden_bed_3`, `lc_garden_bed_4`, `lc_garden_bed_5`, `lc_garden_bed_6`, `lc_garden_gate`, `lc_garden_plot_1`, `lc_garden_plot_2`, `lc_garden_plot_3`, `lc_garden_plot_4`, `lc_garden_plot_5`, `lc_garden_plot_6`, `lc_garden_plot_7`, `lc_garden_plot_8` | `map_mods_b.py` |
 | `stash` | 768 | the stash: an arms room behind a section of wall that a pipe valve opens (left) | `lc_stash_inside`, `lc_stash_room`, `lc_stash_valve`, `lc_stash_wall` | `map_mods_b.py` |
 | `market` | 1280 | the black market: a vaulted arcade of five shuttered stalls (left) | `lc_market_button_1`, `lc_market_button_2`, `lc_market_button_3`, `lc_market_button_4`, `lc_market_button_5`, `lc_market_shutter_1`, `lc_market_shutter_2`, `lc_market_shutter_3`, `lc_market_shutter_4`, `lc_market_shutter_5`, `lc_market_stall_1`, `lc_market_stall_2`, `lc_market_stall_3`, `lc_market_stall_4`, `lc_market_stall_5` | `map_mods_b.py` |
 | `press` | 768 | the pamphlet press: a printing room behind a false stack of crates (left) | `lc_press_machine`, `lc_press_stack` | `map_mods_b.py` |
 | `still` | 768 | the still: a pot still, mash casks and bottles in a cellar (left) | `lc_still_pot`, `lc_still_shelf` | `map_mods_b.py` |
-| `plaza` | 1536 | the plaza: half a round amphitheatre of five tiers, a rostrum, fire drums (left) | `lc_plaza_crowd`, `lc_plaza_rostrum` | `map_mods_b.py` |
+| `plaza` | 1536 | the plaza: five rows of seats stepping down from the street to a rostrum at the back wall (left) | `lc_plaza_crowd`, `lc_plaza_rostrum` | `map_mods_b.py` |
 | `playground` | 1024 | the playground: a rusted relic on a terrace over the canal (left) | `lc_playground_bench` | `map_mods_b.py` |
 | `clinic` | 1024 | the clinic: a ward, an operating theatre, a dispensary and a sluice room in a vault (left) | `lc_clinic_bed_1`, `lc_clinic_bed_2`, `lc_clinic_bed_3`, `lc_clinic_bed_4`, `lc_clinic_table` | `map_mods_b.py` |
 | `lock` | 1536 | a lock house: two steel gates and the control house that works them | `lc_lock_a_move`, `lc_lock_a_open`, `lc_lock_a_shake`, `lc_lock_a_shut`, `lc_lock_a_slam`, `lc_lock_a_warn_1`, `lc_lock_a_warn_2`, `lc_lock_b_move`, `lc_lock_b_open`, `lc_lock_b_shake`, `lc_lock_b_shut`, `lc_lock_b_slam`, `lc_lock_b_warn_1`, `lc_lock_b_warn_2`, `lc_lock_button_a`, `lc_lock_button_b`, `lc_lock_gate_a`, `lc_lock_gate_b`, `lc_lock_house` | `map_mods_c.py` |
@@ -55,6 +55,7 @@ What a module is and how to lay them out: `docs/dev/map-building.md` ("Canal mod
 | `wreck` | 1024 | the wreck: a Combine carrier's container down in the canal, hollow, to race for | `lc_wreck_beacon`, `lc_wreck_cache`, `lc_wreck_spark` | `map_mods_d.py` |
 | `morgue` | 1024 | the morgue: a cold room of drawers and tables behind a sliding door (left) | `lc_morgue_door`, `lc_morgue_ledger`, `lc_morgue_table_1`, `lc_morgue_table_2`, `lc_morgue_table_3` | `map_mods_d.py` |
 | `hq` | 768 | the Resistance leader's office: a briefing room and an office behind it (the game puts the flagpole at its door) | `lc_hq_desk`, `lc_hq_map`, `lc_hq_setup`, `lc_hq_table` | `map_town.py` |
+| `flats` | 768 | a house to live in: a front door that opens, a hall, and two flats of a kitchen and a bedroom each (stove, sink, fridge, table, bed) | `lc_flat_1`, `lc_flat_2`, `lc_flat_door` | `map_town.py` |
 | `straight` | 1024 | plain canal ("straight 1536", "straight 1024 bridge") | none | `map_modules.py` |
 | `jog` | 1024 | the canal steps sideways to break a long view ("jog left 768", "jog right 1024") | none | `map_modules.py` |
 | `tee` | 512 | a standard gate in the left wall, for another piece or layout to join | none | `map_modules.py` |
@@ -451,11 +452,12 @@ button on the post beside it is pressed (lc_pit_gate_button) or the game tells i
 down from it into the ring. lc_pit_corner_a and lc_pit_corner_b are the two corners the fighters start in (a stool
 in each). Three tiers of concrete seats, 32 high each, stand on the three far sides, with stairs of 16 up the
 middle of each. By the mouth on the right the bookmaker's table, chair, till and lamp under a chalk board of odds
-(lc_pit_bookie: where he sits); on the left the corner men's bench, water drum and bucket. A street lamp stands
-on each side of the cage, its arm over the ring.
+(lc_pit_bookie: where he sits); on the left the corner men's bench, water drum and bucket. Two lamps hang over
+the ring from a gantry (the owner asked for these, not street lamps).
 The gate is a fence panel (interior_fence002e) riding on an unseen brush door of the same name and inputs; an
 unseen wall stands in the cage's line all round, so the cage holds whatever the panels' own shapes are.
-Left as brushes: the tiers, kerb and posts for the buttons (concrete), the chalk board (no model of one).
+Left as brushes: the tiers, kerb and posts for the buttons (concrete), the chalk board (no model of one), the
+gantry and its lamps.
 Unchecked: which way the fence panels face and whether their meshes meet at the corners; whether a press of the
 gate's button can be made through the cage from inside; the button's model is Episode Two's.
 
@@ -465,8 +467,9 @@ The walled garden: where the Resistance grows food. A gap in the left wall, thre
 and an iron gate (lc_garden_gate: Use swings it in), opens on a yard 640 by 448 under the open sky, its floor 24
 above the canal's. Six raised soil beds edged with timber, three on each side of a path of flagstones
 (lc_garden_bed_1 to _6: on the beds, for a farming job; 1 to 3 on the left going back, 4 to 6 on the right),
-ridged; melons on two of them; bean poles with lines between over the first bed on each side; a scarecrow in the
-middle bed on the right. Against the back wall a tool lean-to (a desk, pots, a shovel, a bucket, a bell lamp), a
+ridged. lc_garden_plot_1 to _8 are the planting spots for the game (melons, pumpkins): info_targets on the soil
+of the four beds that have no bean poles, two a bed, each a little off the line and turned an odd way (the same
+every build). Bean poles over the first bed on each side; a scarecrow in the middle bed on the right. Against the back wall a tool lean-to (a desk, pots, a shovel, a bucket, a bell lamp), a
 barrel under a gutter pipe in the left corner, a compost heap behind boards in the right corner; a push cart, a
 wheelbarrow and a crate of melons on the path.
 The gate is props_c17/gate_door01a riding on an unseen brush door of the same name.
@@ -533,16 +536,17 @@ cask, so the barrels are its blue plastic ones and an oil drum.
 
 ### `plaza`
 
-The plaza: where people gather to listen. The canal opens on its left, 1024 wide, into half a round
-amphitheatre under the open sky: a flat floor 512 across, then five concrete tiers of seats stepping up and back
-round it, each 16 high and 48 deep (walked up anywhere, sat on anywhere), the last one a broad walk under the
-wall; the tiers' ends show as steps from the canal. At the canal's edge, facing the tiers, a timber rostrum three
-steps up with a lectern and a handrail behind (lc_plaza_rostrum: where the speaker stands, facing the tiers),
-between two street lamps that carry a wire for a banner; a cluster of loudspeakers on one (speakercluster01a);
-a fire drum on each side of the floor. lc_plaza_crowd is the middle of the third tier, facing the rostrum.
-Left as brushes: the tiers, the rostrum's deck and steps (timber staging), its lectern (no model of one).
+The plaza: where people gather to listen. The canal (or the street) opens on its left, 1152 wide, onto a
+terrace at its own height, and from the terrace five concrete rows of seats step DOWN and away, each 16 high and
+48 deep (walked down anywhere, sat on anywhere), round half an eight-sided floor 512 across and 80 below the
+street. At the back wall, facing the rows and the street beyond them, a timber rostrum three steps up with a
+lectern (lc_plaza_rostrum: where the speaker stands, facing the street), between two street lamps that carry a
+wire for a banner; a cluster of loudspeakers on one (speakercluster01a), turned to the street; a fire drum on
+each side of the floor. lc_plaza_crowd is the middle of the third row, facing the rostrum.
+(Turned round on 21 November at the owner's word: the top row used to be at the back.)
+Left as brushes: the rows, the rostrum's deck and steps (timber staging), its lectern (no model of one).
 Unchecked: env_fire's look in the drums; which way the loudspeakers and the lamps' arms point (the arms are along
-the model's y, turned here toward the tiers); no sound here.
+the model's y, turned here toward the rows); no sound here.
 
 ### `playground`
 
@@ -866,6 +870,17 @@ closet, a bed. The flagpole is the game's own: it stands it at lc_hq_setup, by t
 Named for the game: lc_hq_setup (the doorstep: where the pole goes and the leader stands to set the headquarters
 up), lc_hq_desk, lc_hq_table, lc_hq_map.
 Unchecked: which way the cork board, the closet and the bed face.
+
+### `flats`
+
+A house people can live in, as the flats of the owner's city are furnished (their stoves, sinks, fridges and beds
+stand backs to the wall: so do these). A front door that opens (the city's own door, with its handle) into a hall;
+off it two flats, each behind its own door: a kitchen (stove, sink, fridge, a table and chairs, a radiator, a
+window on the street) and through an archway a bedroom (a bed, a dresser, a bedside drawer). The left flat has
+the city's iron bed, the right one a wooden bed and mattress, a couch and a fireplace.
+Named for the game: lc_flat_door (the front door), lc_flat_1 and lc_flat_2 (info_targets in the two kitchens). A
+second house in one chain takes a word after its name in the layout ("flats b"): lc_flat_b_door, lc_flat_b_1 ...
+Unchecked: which way the doors' leaves swing clear; the mattress's height on its frame.
 
 ### `straight`
 

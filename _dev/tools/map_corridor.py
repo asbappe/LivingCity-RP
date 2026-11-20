@@ -46,7 +46,7 @@ RAIL_V = 416            # the middle of the tracks
 # level in a canal"), and the words to put after each in a layout. "flip": its own things are on its right.
 STREET_MODULES = {"relay": "up flip", "substation": "up flip", "market": "up", "clinic": "up", "cells": "up", "morgue": "up", "depot": "up", "armory": "up",
                   "press": "up", "still": "up", "garden": "up", "playground": "up", "pumphouse": "up", "chimney": "up flip", "hq": "up", "memorial": "up", "pit": "up",
-                  "plaza": "up"}
+                  "plaza": "up", "flats": "up"}
 ENGINE, CAR = "models/props_combine/combinetrain01a.mdl", "models/props_combine/combine_train02a.mdl"
 ENGINE_LEN, CAR_LEN, GAP = 640, 628, 16
 

@@ -255,7 +255,8 @@ class Mod:
              "renderamt": "255", "rendercolor": "255 255 255"}
         if name:
             k["targetname"] = name
-        self.prop("prop_dynamic", model, u, v, yaw, z, k)
+        import map_assets      # (a physics prop standing still is a prop_dynamic_override: as a plain prop_dynamic the game objects to it)
+        self.prop("prop_dynamic_override" if map_assets.is_physics_prop(model) else "prop_dynamic", model, u, v, yaw, z, k)
 
     def body(self, model, u, v, yaw=0, z=F):
         self.point("prop_ragdoll", u, v, z + 16, {"model": model, "angles": "0 %d 0" % self.fr.yaw(yaw), "spawnflags": "4"}, self.b.vis + ": bodies")

@@ -79,7 +79,7 @@ def read_vmf(path):
 
 
 def facts_of(model, qcs, known, offline):
-    if model in known and ("bbox" in known[model] or known[model].get("game") is None):
+    if model in known and (("bbox" in known[model] and (known[model].get("v") == 2 or offline)) or known[model].get("game") is None):
         return known[model]
     repo, index = qcs
     key = re.sub(r"^models/", "", model)[:-4] + ".qc"
@@ -94,7 +94,13 @@ def facts_of(model, qcs, known, offline):
         if not text:
             return {"game": game, "unread": True}
         bb = re.search(r"\$bbox\s+(-?[\d.]+)\s+(-?[\d.]+)\s+(-?[\d.]+)\s+(-?[\d.]+)\s+(-?[\d.]+)\s+(-?[\d.]+)", text)
-        fact = {"game": game, "static": "$staticprop" in text, "physics": "prop_data" in text or "physics_prop" in text,
+        # A model with prop_data is a physics prop: the compiler DELETES it as a prop_static ("must be used on a dynamic
+        # entity") unless its prop_data says allowstatic (the owner's compile of the town, 20 November: every table, shelf,
+        # counter and board was gone). So "static" is: built with $staticprop AND not a physics prop.
+        data = "prop_data" in text
+        allow = bool(re.search(r'"?allowstatic"?\s+"?1', text))
+        fact = {"game": game, "v": 2, "built_static": "$staticprop" in text, "static": "$staticprop" in text and (not data or allow), "prop_data": data,
+                "physics": "prop_data" in text or "physics_prop" in text,
                 "ragdoll": "$collisionjoints" in text, "collides": "$collisionmodel" in text or "$collisionjoints" in text,
                 "bbox": [round(float(x), 1) for x in bb.groups()] if bb else None}      # (the model's own box: x forward, y left, z up, from its origin)
     known[model] = fact
@@ -122,7 +128,7 @@ def size(model):
     if _known is None:
         _known = json.load(open(FACTS)) if os.path.exists(FACTS) else {}
     fact = _known.get(model)
-    if (fact is None or ("bbox" not in fact and fact.get("game"))) and _lists is not None and not os.environ.get("LC_ASSETS_OFFLINE"):
+    if (fact is None or (fact.get("game") and ("bbox" not in fact or fact.get("v") != 2))) and _lists is not None and not os.environ.get("LC_ASSETS_OFFLINE"):
         if _lists is False:
             _lists = lists(os.path.join(HERE, "dl"), True)       # (only if they are already here: a build never starts a download)
         if _lists:
@@ -135,7 +141,17 @@ def is_static(model):
     """Was this model built to be a prop_static? True, False, or None if it is not known."""
     size(model)
     fact = (_known or {}).get(model.lower().replace("\\", "/")) or {}
+    if fact.get("v") != 2 and fact.get("physics"):
+        return False        # (an older note that could not be read again: a physics prop is never trusted as a prop_static)
     return fact.get("static")
+
+
+def is_physics_prop(model):
+    """Does this model carry prop_data (a physics prop)? Standing still it must be a prop_dynamic_override, never a
+    prop_static (the compiler deletes it) and never a plain prop_dynamic (the game removes or warns of it)."""
+    size(model)
+    fact = (_known or {}).get(model.lower().replace("\\", "/")) or {}
+    return bool(fact.get("prop_data", fact.get("physics")))
 
 
 def main():
@@ -172,7 +188,10 @@ def main():
         if fact["game"] == "ep2":
             notes.append("%s is Episode Two's: players without it see an error" % model)
         if "prop_static" in classes and not fact["static"]:
-            problems.append("%s is used as a prop_static but was not built to be one: the compiler leaves it out (use prop_dynamic or prop_physics)" % model)
+            problems.append("%s is used as a prop_static but %s: the compiler deletes it (use prop_dynamic_override or prop_physics)"
+                            % (model, "is a physics prop (it has prop_data)" if fact.get("prop_data") else "was not built to be one"))
+        if "prop_dynamic" in classes and fact.get("prop_data"):
+            problems.append("%s is used as a prop_dynamic but is a physics prop (it has prop_data): use prop_dynamic_override or prop_physics" % model)
         if ("prop_physics" in classes or "prop_physics_multiplayer" in classes) and not fact["physics"]:
             problems.append("%s is used as a prop_physics but has no physics data: it deletes itself (use prop_dynamic or prop_static)" % model)
         if "prop_ragdoll" in classes and not fact["ragdoll"]:
