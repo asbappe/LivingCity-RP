@@ -1206,7 +1206,7 @@ def m_crypt(m, opt):
     # --- the vault: a base and a capital on each pillar, arches both ways from pillar to pillar and to the walls ---
     ribs, blocks = [], []
     for (u, v) in ((384, 448), (576, 448), (384, 640), (576, 640)):
-        blocks += [(u - 6, v - 6, cz, u + 70, v + 70, cz + 10), (u - 8, v - 8, ceil - 44, u + 72, v + 72, ceil - 32)]
+        blocks += [(u - 6, v - 6, cz, u + 70, v + 70, cz + 10), (u - 8, v - 8, ceil - 34, u + 72, v + 72, ceil - 22)]
     for v in (448, 640):
         for (a, c) in ((256, 384), (448, 576), (640, 768)):
             ribs += arch(a, c, ceil, 32, v + 8, v + 56, STONE, "y")
@@ -1255,6 +1255,106 @@ def m_crypt(m, opt):
     b.notes.append("%s: the crypt's floor is z %d, its roof z %d; the hole is 128 wide at the top of the left bank" % (m.tag, cz, ceil))
 
 
+# ---------------------------------------------------------------------------
+# lift (experimental)
+# ---------------------------------------------------------------------------
+
+def m_lift(m, opt):
+    """The freight lift (experimental: nothing like it has been compiled yet). A loading dock is recessed into the
+    left wall at the trim's height, 448 by 320 and open to the sky: a low wall along its edge, a lorry backed up to a
+    barred street gate, crates, a lamp post. The gate and the cap behind it are in one visgroup ("the dock's street
+    end (delete to join a street)"). Against the wall below the dock, where the bank is cut away, a lift platform
+    160 square with rails on three sides rides between four guide posts from the canal floor (its deck 8 over the
+    floor) up 256 to the dock (its deck 8 over the dock's: a step down). It is one func_door, lc_lift_platform,
+    that stays where it is sent; each of three buttons sends it to its other end (Toggle): one on a post at the
+    bottom, one on a post on the dock, one on a stand on the platform that rides with it. Its own moving sound is a
+    motor's, looping while it moves, and a clank when it stops.
+    Named for the game: lc_lift_platform (func_door: Open is up, Close is down, Toggle), lc_lift_button_low,
+    lc_lift_button_high (func_buttons that already work), lc_lift_button_ride (a func_button parented to the
+    platform), lc_lift_dock (an info_target on the dock), lc_lift_street (an info_target at the street gate).
+    Unchecked: that a func_door carries players up 256 smoothly and reverses if someone stands under it (it does no
+    harm: dmg 0); that the button parented to it follows and still takes a press; the sounds
+    plats/elevator_move_loop1.wav and plats/elevator_stop1.wav; the buttons' model is Episode Two's."""
+    b = m.b
+    steel = MM["steel"]
+    m.open(0, -256, 1024, 256)
+    m.open(320, 256, 768, 576, floor=TRIM, mat=MAT["quay_floor"])
+    m.low(416, 576, 544, 704, TRIM + 128, floor=TRIM, mat=MAT["quay_floor"])
+    m.side(320, 256, 768, 704)
+    gate = "%s: the dock's street end (delete to join a street)" % b.vis
+    m.world((416, 640, TRIM, 544, 704, TRIM + 128), MAT["black"], vis=gate)
+    m.bars((416, 580, TRIM, 544, 588, TRIM + 128), "u", vis=gate)
+    b.plan.keep_out.append(m.fr.rect(352, 704, 608, 768))
+    m.blocked(416, 576, 544, 704)
+    m.det([(396, 560, TRIM, 416, 576, TRIM + 128), (544, 560, TRIM, 564, 576, TRIM + 128), (388, 556, TRIM + 128, 572, 576, TRIM + 152)], MAT["beam"])
+    m.target("lc_lift_street", 480, 540, TRIM + 8, 270)
+    m.target("lc_lift_dock", 544, 400, TRIM + 8, 270)
+    # --- the lift: the bank cut away, four guide posts tied at their heads, the platform ---
+    u1, v1, u2, v2 = 464, 96, 624, 256
+    m.no_bank(448, 248, 640, 264)
+    posts = [(u, v, F, u + 8, v + 8, TRIM + 120) for u in (u1 - 8, u2) for v in (v1 - 8, v2 - 8)]
+    posts += [(u1 - 8, v1 - 8, TRIM + 120, u2 + 8, v1, TRIM + 128), (u1 - 8, v2 - 8, TRIM + 120, u2 + 8, v2, TRIM + 128),
+              (u1 - 8, v1, TRIM + 120, u1, v2 - 8, TRIM + 128), (u2, v1, TRIM + 120, u2 + 8, v2 - 8, TRIM + 128), (536, v1 - 8, TRIM + 128, 552, v2, TRIM + 140)]
+    posts += [(u, v1 - 6, z, u + 8, v1 - 2, z + 4) for u in (u1 - 8, u2) for z in range(F + 96, TRIM + 100, 96)]             # cleats up the two free posts
+    m.det(posts, MAT["bars"])
+    m.shapes([prism(octagon(176, TRIM + 152, 14), "x", 538, 550, MAT["bars"])])                                                # the sheave
+    m.det([(u1 - 16, v1 - 16, F, u1, v1, F + 6), (u2, v1 - 16, F, u2 + 16, v1, F + 6)], MAT["beam"])
+    deck = [(u1, v1, F, u2, v2, F + 8)]
+    rails = []
+    for u in (u1, u2 - 3):                                              # a rail down each side
+        rails += [(u, v1, F + 44, u + 3, v2, F + 48), (u, v1, F + 26, u + 3, v2, F + 28)] + [(u, v, F + 8, u + 3, v + 3, F + 44) for v in (v1, v1 + 52, v1 + 104, v2 - 3)]
+    for (a, c) in ((u1, u1 + 48), (u2 - 48, u2)):                       # and across the canal's side, but for a way on 64 wide
+        rails += [(a, v1, F + 44, c, v1 + 3, F + 48), (a, v1, F + 26, c, v1 + 3, F + 28), (c - 3 if a == u1 else a, v1, F + 8, c if a == u1 else a + 3, v1 + 3, F + 44)]
+    stand = [(u2 - 22, v1 + 60, F + 8, u2 - 14, v1 + 68, F + 44), (u2 - 26, v1 + 56, F + 44, u2 - 10, v1 + 72, F + 48)]       # the stand its button sits on
+    boxes = deck + rails + stand
+    high = 48
+    m.b.vmf.brush_entity("func_door", {"targetname": "lc_lift_platform", "movedir": "-90 0 0", "speed": "48", "lip": str(high - 256), "wait": "-1", "spawnflags": "32", "spawnpos": "0",
+                                        "dmg": "0", "forceclosed": "0", "health": "0", "ignoredebris": "0", "loopmovesound": "1", "noise1": "plats/elevator_move_loop1.wav",
+                                        "noise2": "plats/elevator_stop1.wav", "locked_sentence": "0", "unlocked_sentence": "0", "renderamt": "255",
+                                        "rendercolor": "255 255 255", "renderfx": "0", "rendermode": "0", "disableshadows": "1"},
+                           [m.fr.box(*x) for x in boxes], steel, m.dv, top=MM["wood"])
+    b.names.append(("lc_lift_platform", "func_door", m.tag))
+    m.b.vmf.brush_entity("func_button", {"targetname": "lc_lift_button_ride", "parentname": "lc_lift_platform", "spawnflags": "1025", "wait": "2", "speed": "5", "lip": "0",
+                                          "movedir": "0 0 0", "sounds": "0", "health": "0", "rendermode": "0", "renderamt": "255", "rendercolor": "255 70 60"},
+                           [m.fr.box(u2 - 23, v1 + 59, F + 48, u2 - 13, v1 + 69, F + 52)], steel, m.dv, connections=[("OnPressed", "lc_lift_platform", "Toggle", "", 0)])
+    b.names.append(("lc_lift_button_ride", "func_button", m.tag))
+    # the button at the bottom, on a post by the way on; the one at the top, on a post on the dock
+    m.det([(u1 - 40, v1 - 24, F, u1 - 24, v1 - 8, F + 56)], MAT["beam"])
+    m.button("lc_lift_button_low", u1 - 32, v1 - 24, F + 30, 270, [("lc_lift_platform", "Toggle", "", 0)], wait="2")
+    m.det([(u2 + 16, 272, TRIM, u2 + 32, 288, TRIM + 56)], MAT["beam"])
+    m.button("lc_lift_button_high", u2 + 24, 288, TRIM + 30, 90, [("lc_lift_platform", "Toggle", "", 0)], wait="2")
+    m.taken(432, 200, F, 656, 256, b.rim)
+    m.blocked(432, 64, 656, 256)
+    # --- the dock: a low wall along its edge (open where the lift comes up), stripes there, the lorry, crates, a lamp ---
+    edge = [(320, u1 - 8), (u2 + 8, 768)]
+    m.det([(a, 256, TRIM, c, 268, TRIM + 40) for a, c in edge], MAT["canal_wall"])
+    m.det([(a, 254, TRIM + 40, c, 270, TRIM + 44) for a, c in edge], MAT["beam"])
+    m.det([(u, 258, TRIM, u + 16, 286, TRIM + 1) for u in range(u1 + 8, u2 - 8, 32)], MAT["black"])
+    put(m, P + "props_vehicles/truck001a.mdl", 664, 440, 90, z=TRIM)
+    m.blocked(600, 304, 728, 576)
+    for (u, v, way) in ((344, 540, -1),):
+        m.det([(u - 8, v - 8, TRIM, u + 8, v + 8, TRIM + 14), (u - 3, v - 3, TRIM + 14, u + 3, v + 3, TRIM + 184),
+               (u - 2, v + 40 * way, TRIM + 178, u + 2, v, TRIM + 182), (u - 5, v - 5, TRIM + 184, u + 5, v + 5, TRIM + 188)], MAT["bars"])
+        m.lamp(u, v + 40 * way, TRIM + 166, "255 205 150 90", hang=4)
+    m.loose(P + "props_junk/wood_crate001a.mdl", 360, 300, 10, z=TRIM)
+    m.loose(P + "props_junk/wood_crate001a.mdl", 362, 346, 40, z=TRIM)
+    m.loose(P + "props_junk/wood_crate002a.mdl", 410, 310, 90, z=TRIM)
+    m.loose(P + "props_junk/wood_pallet001a.mdl", 380, 430, 20, z=TRIM)
+    put(m, P + "props_c17/oildrum001.mdl", 740, 290, 0, z=TRIM)
+    put(m, P + "props_c17/oildrum001.mdl", 744, 326, 0, z=TRIM)
+    put(m, P + "props_debris/concrete_chunk01a.mdl", 400, 60, 40)
+    m.loose(P + "props_junk/wood_pallet001a.mdl", 680, 60, 60)
+    m.lane(544, 60, F)
+    m.lane(544, 330, TRIM)
+    m.lane(480, 520, TRIM)
+    m.view(300, -70, F, 30, -10, "the lift at the bottom, the dock above")
+    m.view(544, 110, F + 8, 90, -32, "from the platform, up")
+    m.view(544, 300, TRIM, 100, 4, "the dock: the gate, the lorry")
+    m.view(700, 560, TRIM, 215, 8, "from the back of the dock")
+    b.notes.append("%s: the street end is at (%d %d), floor z %d, 128 wide and 128 high: bring a street to it, then delete its gate and cap; the lift's deck rides from z %d to z %d" % (
+        (m.tag,) + m.fr.pt(480, 704) + (TRIM, F + 8, F + 264)))
+
+
 MODULES = {
     "tram": (1536, m_tram, "a fallen tram bridge: a station in each wall, a derailed car to climb, a beam walk"),
     "tenement": (1280, m_tenement, "a tenement block fallen across the canal: the way on is through its rooms"),
@@ -1265,4 +1365,5 @@ MODULES = {
     "arcade": (1536, m_arcade, "a market arcade over the canal on three arches: a covered walk above, a stair on each bank"),
     "chimney": (1024, m_chimney, "a round yard on the right with a hollow brick chimney to climb: a lookout over the whole canal"),
     "crypt": (1024, m_crypt, "the left wall broken into a church crypt: pillars, niches with stone coffins, an altar, a bricked stair"),
+    "lift": (1024, m_lift, "EXPERIMENTAL: a freight lift from the canal floor up to a loading dock with a street gate (a cap to delete)"),
 }
