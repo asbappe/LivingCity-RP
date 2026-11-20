@@ -96,6 +96,7 @@ class Build:
         self.labels = []      # (x, y, text) for the picture
         self.node_id = first_node
         self.first_node = first_node
+        self.test = False
 
     def node(self, x, y, z):
         self.vmf.point("info_node", (x, y, z + 40), {"nodeid": self.node_id}, self.vis + ": path nodes")
@@ -201,6 +202,15 @@ class Mod:
                                "noise2": "MetalGrate.ImpactSoft", "locked_sentence": "0", "unlocked_sentence": "0", "renderamt": "255",
                                "rendercolor": "255 255 255", "renderfx": "0", "rendermode": "0", "disableshadows": "1"}, boxes, mat, vis)
 
+    def test_button(self, box, wires):
+        """Only in a --test file: a button a walker presses to work something the game will work later.
+        wires: [(the button's output, the thing's name, the input), ...]."""
+        if not self.b.test:
+            return
+        self.b.vmf.brush_entity("func_button", {"movedir": "0 0 0", "speed": "8", "lip": "4", "wait": "-1", "spawnflags": "1056", "sounds": "0", "health": "0",
+                                                "rendermode": "0", "renderamt": "255", "rendercolor": "255 60 60"}, [self.fr.box(*box)], MM["steel"],
+                                self.b.vis + ": for testing alone (never in the real map)", connections=[(o, n, i, "", 0) for o, n, i in wires])
+
     def hut(self, u1, v1, u2, v2, z, mat, high=112, front="lo", open_front=False, door=56):
         """A shack: walls 8 thick, a tin roof, a way in on its front (the low-v or the high-v side)."""
         walls = [(u1, v1, z, u1 + 8, v2, z + high), (u2 - 8, v1, z, u2, v2, z + high)]
@@ -278,6 +288,7 @@ def m_drain(m, opt):
                                        "noise1": "MetalGrate.ScrapeSmooth", "noise2": "MetalGrate.ImpactSoft", "renderamt": "255", "rendercolor": "255 255 255",
                                        "renderfx": "0", "rendermode": "0", "disableshadows": "1"}, rows, MAT["bars"], m.dv)
     m.b.names.append(("lc_drain_grate", "func_door", m.tag))
+    m.test_button((384, 1500, SEWER + 48, 392, 1516, SEWER + 64), [("OnIn", "lc_drain_grate", "Open"), ("OnOut", "lc_drain_grate", "Close")])
     m.world((384, 1600, SEWER, 640, 1664, SEWER + 240), MAT["black"], vis="%s: the drain's sewer end (delete to join a sewer)" % m.b.vis)
     m.b.plan.keep_out.append(m.fr.rect(320, 1664, 704, 1728))
     m.blocked(384, 1536, 640, 1664)
@@ -301,6 +312,7 @@ def m_overflow(m, opt):
     m.det([(320, 256, F, 704, 272, F + 16)], MAT["beam"])                    # the weir's sill
     m.door("lc_overflow_sluice", [(320, 288, F + 16, 704, 304, F + 192)], MM["steel"], "-90 0 0", speed=24, lip=16)
     m.portal(320, 295, F, 704, 297, F + 192)
+    m.test_button((304, 240, F + 48, 320, 248, F + 64), [("OnIn", "lc_overflow_sluice", "Open"), ("OnOut", "lc_overflow_sluice", "Close")])
     m.det([(304, 248, F, 320, 256, F + 224), (704, 248, F, 720, 256, F + 224), (304, 248, F + 208, 720, 256, F + 224)], MM["steel"])   # its frame
     m.taken(304, 240, F, 720, 256, F + 224)
     m.world((384, reach - 64, F, 640, reach, F + 192), MAT["black"], vis="%s: the overflow's far end (delete to join Ravenholm)" % m.b.vis)
@@ -529,6 +541,50 @@ def m_underpass(m, opt):
         m.lane(u, 0)
 
 
+def m_checkpoint(m, opt):
+    """8. The Combine checkpoint: a Combine wall across the canal with one gateway, shut by a force field the game can
+    switch (lc_checkpoint_field: Enable, Disable); behind it on the left bank a guard's platform (the banks are its
+    ramps) with a searchlight down the canal the way people come (lc_checkpoint_light). A post to hold."""
+    b = m.b
+    cmb, top = "metal/metalcombine002", TRIM + 64
+    m.open(0, -256, 1024, 256)
+    m.open(576, 128, 832, 256, floor=F + 128, mat=MAT["quay_floor"])
+    m.side(576, 128, 832, 256)
+    m.no_bank(448, 248, 576, 264)
+    m.no_bank(448, -264, 576, -248)
+    m.det([(480, -256, F, 544, -96, top), (480, 96, F, 544, 256, top), (480, -96, F + 160, 544, 96, top)], cmb)
+    m.det([(472, -112, F, 552, -96, F + 176), (472, 96, F, 552, 112, F + 176), (472, -112, F + 160, 552, 112, F + 176)], MM["steel"])   # the gateway's frame
+    m.ent("func_brush", {"targetname": "lc_checkpoint_field", "Solidity": "0", "StartDisabled": "0", "solidbsp": "0", "rendermode": "0", "renderamt": "255",
+                         "rendercolor": "255 255 255", "renderfx": "0", "spawnflags": "2", "disableshadows": "1", "vrad_brush_cast_shadows": "0"},
+          [(510, -96, F, 514, 96, F + 160)], "effects/com_shield003a")
+    m.test_button((464, -160, F + 48, 472, -144, F + 64), [("OnIn", "lc_checkpoint_field", "Disable"), ("OnOut", "lc_checkpoint_field", "Enable")])
+    for v, yaw in ((-104, 90), (104, 270)):
+        m.point("prop_dynamic", 512, v, F, {"model": "models/props_combine/combine_fence01%s.mdl" % ("a" if v < 0 else "b"), "angles": "0 %d 0" % m.fr.yaw(yaw), "solid": "6",
+                                            "skin": "0", "disableshadows": "1", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1", "StartDisabled": "0",
+                                            "renderamt": "255", "rendercolor": "255 255 255"}, m.pv)
+    m.taken(464, -256, F, 560, 256, top)
+    m.blocked(448, -256, 576, -96)
+    m.blocked(448, 96, 576, 256)
+    # the guard's platform: a parapet toward the wall, the searchlight on its corner
+    pz = F + 128
+    m.det([(576, 128, pz, 592, 256, pz + 40), (592, 128, pz, 704, 136, pz + 40)], cmb)
+    m.point("prop_dynamic", 600, 150, pz + 40, {"model": "models/props_combine/combine_light001a.mdl", "angles": "0 %d 0" % m.fr.yaw(180), "solid": "0", "skin": "0",
+                                                "disableshadows": "1", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1", "StartDisabled": "0",
+                                                "renderamt": "255", "rendercolor": "255 255 255"}, m.pv)
+    m.point("point_spotlight", 596, 150, pz + 72, {"targetname": "lc_checkpoint_light", "angles": "14 %d 0" % m.fr.yaw(196), "spawnflags": "1", "spotlightlength": "900",
+                                                   "spotlightwidth": "70", "rendercolor": "190 225 255", "renderamt": "255", "HDRColorScale": "1.0"}, m.lv)
+    m.point("light_spot", 596, 150, pz + 72, {"_light": "190 225 255 900", "_lightHDR": "-1 -1 -1 1", "_inner_cone": "18", "_cone": "32", "_quadratic_attn": "1",
+                                              "angles": "0 %d 0" % m.fr.yaw(196), "pitch": "-14", "style": "0"}, m.lv)
+    m.static("models/props_wasteland/barricade002a.mdl", 700, -150, 100)
+    m.static("models/props_c17/concrete_barrier001a.mdl", 330, 60, 80)
+    m.static("models/props_c17/concrete_barrier001a.mdl", 250, -90, 100)
+    m.blocked(576, 112, 720, 256)
+    m.lane(512, 0)
+    m.lane(760, 192, pz)
+    m.lane(400, -40)
+    b.notes.append("%s: the gateway is 192 wide and 160 high in a wall to z %d; people come at it from the module's entry (flip it to face the other way)" % (m.tag, top))
+
+
 # name: (length, how to build it, what it is)
 MODULES = {
     "straight": (1024, m_straight, "plain canal (\"straight 1536\", \"straight 1024 bridge\")"),
@@ -537,6 +593,7 @@ MODULES = {
     "shanty": (1536, m_shanty, "4. the shantytown under a street bridge (left)"),
     "vort": (1024, m_vort, "6. the vortigaunt culvert (left)"),
     "relay": (768, m_relay, "7. Cubbage's relay shack and mast, on a pier (right)"),
+    "checkpoint": (1024, m_checkpoint, "8. the Combine checkpoint: a wall, a force field gateway, a guard's platform and searchlight"),
     "ash": (768, m_ash, "10. the ash outfall: trash and burnt corpses (left)"),
     "sludge": (2048, m_sludge, "11. the sludge tunnel: a shortcut through the long way round (left)"),
     "cistern": (1536, m_cistern, "12. the cistern for the hive boss (right)"),
@@ -566,6 +623,7 @@ def read_layout(path):
 
 def build_chain(lay, args):
     b = Build(lay["name"], lay["rim"], args.first_node or 6000)
+    b.test = bool(args.test)
     x, y = lay["start"]
     rot = HEADINGS[lay["heading"]]
     for v in (x, y):
