@@ -1,4 +1,4 @@
-# Test map 3: shell, aqueduct, pipes, camp, memorial, pit, stash, plaza, lock, thumper
+# Test map 3: shell, aqueduct, pipes, camp, stash, lock, thumper, swingbridge, floodroom, railbridge
 # Made by map_showroom.py: run it again rather than editing this.
 #   python3 map_build.py chain --layout map_layouts/showroom_3.txt --test
 
@@ -10,14 +10,14 @@ shell
 aqueduct
 pipes
 camp
-memorial
-
-left
-straight 1664
-left
-
-pit
 stash
-plaza
+
+left
+straight 1792
+left
+
 lock
 thumper
+swingbridge
+floodroom
+railbridge

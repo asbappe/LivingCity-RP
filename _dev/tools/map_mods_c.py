@@ -680,6 +680,7 @@ def m_pumphouse(m, opt):
     pu = cx + 384
     m.det([(cx - 32, 240, hz - 32, cx + 32, 256, hz + 32), (pu - 32, -256, hz - 32, pu + 32, -240, hz + 32)], STEEL)
     pipe_run(m, (cx, 220), (pu, 220), hz, "32d")              # (clear of the trim line on the wall: it rests on it)
+    m.static("models/props_c17/pipe_cap005.mdl", cx, 220, 180, z=hz - 19)    # (its start, at the plate where it leaves the hall, capped)
     pipe_run(m, (pu, -256), (pu, 256), hz, "32d")
     m.det([(pu - 40, -256, hz - 48, pu - 32, 256, hz - 32), (pu + 32, -256, hz - 48, pu + 40, 256, hz - 32)], STEEL)
     m.det([(pu - 40, v, hz - 32, pu + 40, v + 6, hz - 26) for v in range(-232, 240, 96)], PIPE)

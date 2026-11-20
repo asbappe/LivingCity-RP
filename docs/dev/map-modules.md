@@ -11,6 +11,7 @@ python3 map_modules_check.py --only NAME --views /some/folder # builds it 9 ways
 python3 map_view.py lc_mod_NAME.vmf --eye X Y Z --yaw A --pitch P --out a.png   # one more look, from anywhere
 python3 map_view.py lc_mod_NAME.vmf --iso SW --cut 560 --out b.png              # from above, nothing drawn over z 560
 python3 map_build.py module --name NAME && python3 map_assets.py lc_mod_NAME.vmf  # is every model and material real, and the right kind?
+python3 map_floating.py lc_mod_NAME.vmf                        # does any prop touch nothing (floating)?
 ```
 
 **Pictures cost usage to read (the owner asked for restraint, 20 November):** pass the checks first, then read ONE small picture of a new module (`map_view.py ... --size 800 520`), and another only if something in it is in doubt. Do not use `--views` sheets as a routine.

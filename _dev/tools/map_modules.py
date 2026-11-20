@@ -520,15 +520,15 @@ def m_gate(m, opt):
 def m_drain(m, opt):
     """1. The storm drain junction: a way from the canal down into the city's sewers. In the left wall a drain's mouth
     with a concrete collar and an arched roof; a junction chamber round a sump of standing water behind the city's
-    handrail, two inflow pipes (concrete pipes set in the side walls, dark inside), a standing valve, a lamp; then
+    handrail, two inflow pipes (concrete pipes out of the side walls, dark inside), a standing valve, a lamp; then
     thirteen steps down to the sewers' height (z 288), a grate (the canals' own bar panels, four of them), and a cap to
     delete where the owner joins it to a sewer of theirs.
     Named for the game: lc_drain_grate (a func_door: Open lifts it, Close drops it; unseen, the four bar panels riding
     on it), lc_drain_junction (the chamber).
     Left as brushes: the mouth, its collar and arch, the chamber, the sump, the steps, the plugs that darken the inflow
     pipes' insides, the sewer end's cap.
-    Unchecked: ambient/water/water_flow_loop1.wav; that the concrete pipe is open at both ends (a plug darkens it at
-    the wall, so its far end, in the wall, is never seen)."""
+    Unchecked: ambient/water/water_flow_loop1.wav; that the concrete pipe is open at both ends (a dark plug closes its
+    back, against the wall)."""
     from map_build import bar_row
     b = m.b
     m.open(0, -256, 1024, 256)
@@ -546,8 +546,8 @@ def m_drain(m, opt):
     from map_mods_c import centred, handrail
     for a, e in (((384, 894), (640, 894)), ((384, 1154), (640, 1154)), ((382, 896), (382, 1152)), ((642, 896), (642, 1152))):
         handrail(m, a, e, F)                                 # (round the sump, on the chamber's floor)
-    for u, s in ((256, 1), (768, -1)):                       # the inflow pipes: concrete pipes 64 out of the side walls (their middles in the room, so
-        centred(m, "models/props_pipes/concrete_pipe001a.mdl", u + s * 8, 1024, 0, F + 150)     # they are lit), a dark plug inside each at the wall
+    for u, s in ((256, 1), (768, -1)):                       # the inflow pipes: concrete pipes out of the side walls, their backs against the walls
+        centred(m, "models/props_pipes/concrete_pipe001a.mdl", u + s * 56, 1024, 0, F + 150)    # (lit from the room), a dark plug in each at the wall
         m.shapes([prism(octagon(1024, F + 150, 38), "x", min(u, u + s * 3), max(u, u + s * 3), MAT["black"])])
     m.static("models/props_pipes/valve002.mdl", 320, 787, 90, z=F)
     m.lamp(512, 840, F + 214, "190 210 170 70", hang=34)
@@ -912,7 +912,7 @@ def m_ash(m, opt):
 def m_sludge(m, opt):
     """11. The sludge tunnel. The canal goes the long way round a block (out to the left and back, about 3,800, under a
     street and past a dumped container), and a low tunnel 768 long cuts straight through, ankle deep in toxic runoff:
-    green lamps, five outfall pipes (concrete pipes out of the walls at the slime's face, slime in them), the planks
+    green lamps, five outfall pipes (the city's pipes out of the walls at the slime's face, slime in them), the planks
     of a walk that has rotted away floating in it, drums, a body.
     Named for the game: lc_sludge_gas (a trigger filling the tunnel's air: a place for gas masks), lc_sludge_haze (the
     green haze in it, a func_dustcloud: TurnOff, TurnOn).
@@ -939,10 +939,9 @@ def m_sludge(m, opt):
           [(712, -120, floor + 16, 1336, 120, ceil - 8)], MAT["trigger"], vis=m.b.vis + ": experiments (delete if they misbehave)")
     for u in (800, 1024, 1248):
         m.lamp(u, 0, ceil - 10, "120 255 90 40")
-    from map_mods_c import centred
-    for u, s in ((1060, 1), (1250, 1), (840, -1), (1080, -1), (1300, -1)):    # the outfalls: concrete pipes 64 out of the walls (their middles in the
-        centred(m, "models/props_pipes/concrete_pipe001a.mdl", u, s * 120, 90, F + 40)      # tunnel, so they are lit), slime inside each at the wall
-        m.shapes([prism(octagon(u, F + 40, 38), "y", min(s * 128, s * 125), max(s * 128, s * 125), sludge)])
+    for u, s in ((1060, 1), (1250, 1), (840, -1), (1080, -1), (1300, -1)):    # the outfalls: the city's pipes (16 across), 64 out of the walls at the
+        m.static("models/props_pipes/pipe03_straight01_short.mdl", u, s * 96, 0, z=F + 32)    # slime's face, their backs against the walls, slime in each
+        m.shapes([prism(octagon(u, F + 40, 7), "y", min(s * 128, s * 126), max(s * 128, s * 126), sludge)])
     for u, v, yaw in ((760, 108, 2), (860, 96, 355), (980, 110, 8)):           # what is left of the plank walk, floating
         m.loose("models/props_wasteland/dockplank01a.mdl", u, v, (yaw + 90) % 360, z=floor + 12)
     m.static("models/props_c17/oildrum001.mdl", 900, -96, 0, z=floor)
@@ -1043,8 +1042,8 @@ def m_cistern(m, opt):
     m.det([(cu - 128, cv - 128 + 32 * k, ceil - 8, cu + 128, cv - 122 + 32 * k, ceil) for k in range(9)] + [(cu - 4, cv - 128, ceil - 14, cu + 4, cv + 128, ceil - 8)], MAT["bars"])
     m.det([(p[0] - 16, p[1] - 16, ceil - 24, p[2] + 16, p[3] + 16, ceil) for p in pillars] + [(p[0] - 12, p[1] - 12, basin, p[2] + 12, p[3] + 12, F + 8) for p in pillars], MAT["beam"])
     from map_mods_c import centred
-    for pu, pv, yaw, plug in ((cu + R - 8, cv, 0, (cu + R - 3, cv, "x")), (cu - R + 8, cv, 0, (cu - R, cv, "x")), (cu, cv - R + 8, 90, (cv - R, cu, "y"))):
-        centred(m, "models/props_pipes/concrete_pipe001a.mdl", pu, pv, yaw, F + 292)      # (64 out of the wall, its middle in the tank so it is lit)
+    for pu, pv, yaw, plug in ((cu + R - 56, cv, 0, (cu + R - 3, cv, "x")), (cu - R + 56, cv, 0, (cu - R, cv, "x")), (cu, cv - R + 56, 90, (cv - R, cu, "y"))):
+        centred(m, "models/props_pipes/concrete_pipe001a.mdl", pu, pv, yaw, F + 292)      # (its back against the wall, lit from the tank)
         a, c, ax = plug
         m.shapes([prism(octagon(c, F + 292, 38), ax, a, a + 3, MAT["black"])])
     for du, dv in ((-70, -60), (60, -80), (80, 70)):

@@ -1,4 +1,4 @@
-# Street test map 2: press, still, playground, clinic, pumphouse
+# Street test map 2: garden, market, press, still, plaza
 # Made by map_showroom.py: run it again rather than editing this.
 #   python3 map_build.py chain --layout map_layouts/street_2.txt --test
 # The street (a railway and a road) runs along the left bank; a train runs between the two sheds.
@@ -10,9 +10,9 @@ upper left
 cars 2
 
 shed
+garden up
+market up
 press up
 still up
-playground up
-clinic up
-pumphouse up
+plaza up
 shed
