@@ -883,3 +883,33 @@ Filled in as the review goes; the first ones are clear already:
 
 **Weight.** medium (bathrooms, wall linings, windows), small (dressing, light).
 
+### 53. straight, jog and tee: the plain canal every module shares
+
+**Seen** (in every module's first picture). Concrete walls in two tones with a trim line and ribs, smooth 45 degree banks along both walls, round drain stubs out of the walls, the chain link fence along the rim, mud patches on the floor, a few crates; the tee is the same with a capped standard gate in the left wall; the jog shifts the canal sideways.
+
+**Fix.**
+- Dry: the canal floor is concrete and mud with no water at all. Half-Life 2's canals (and the canal theme the owner chose) carry a little water: a shallow channel down the middle (a sunken strip 128 wide, 8 deep, with water in it) would change every module at once, and give the drain stubs somewhere to pour. (Check the owner's own canal pieces first: match what they compiled.)
+- The drain stubs are dry, dark tubes: a dark stain under each down the bank (an overlay, decalconcretedrain001a to 003a are made for it), one in three trickling.
+- At night the canal has no light of its own: a cage light on the wall every 768 or so (alternating sides), a few dead, so the long stretches are not black.
+
+**Better.**
+- The canal's own junk, varied by a seed as the crates are: tyres, a shopping trolley (props_junk shoppingcart001a), a mattress, planks, a bicycle wheel, a traffic cone, cardboard (props_junk), a sunken car now and then.
+- Grime on the walls: water lines, graffiti here and there (decalgraffiti*, the owner's map uses 059a), a Combine notice, moss at the banks' feet.
+- A soundscape for the canal itself (wind, water, the city over the walls), so every module sits in it.
+
+**Weight.** large (a water channel through every module), small (stains, lights, junk, grime: all in the shared dressing, done once).
+
+### 54. tunnel: the canal under the city
+
+**Seen.** A covered stretch with a raised kerb walk along each wall, flat roof beams, a pipe along the right wall, a dome lamp every 256 on alternate sides.
+
+**Fix.**
+- Flat roof slabs on beams: Half-Life 2's canal tunnels are vaulted (an arch or a chamfered barrel roof), ribbed every 256. The chamfer the drain's mouth already has, made the tunnel's whole roof.
+- Dome lamps are a house light: a tunnel uses cage lights on the walls (light_cagelight02_on) or Half-Life 2's tunnel lights.
+
+**Better.**
+- A kerb walk worth walking: railings on the canal side in places, a ladder down from it every so often, a maintenance door in the wall (boarded), cables along the wall above the pipe.
+- Water dripping from the roof's joints (puddles under them), a draught (the soundscape), the echo of footsteps.
+
+**Weight.** medium (vaulted roof), small (lights, details).
+
