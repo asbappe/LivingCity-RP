@@ -290,6 +290,115 @@ def fence_gate(m, name, u, v, z, along="u", hinge_low=True):
 
 
 # ---------------------------------------------------------------------------
+# The Combine's kit and the city's light, as the owner's map sets them (measured in c18_lc.vmf, 20 November)
+# ---------------------------------------------------------------------------
+
+SHIELD = "effects/combineshield/comshieldwall2faded"      # the field the owner's map hangs between its posts (5 of them)
+WAY = {0: (1, 0), 90: (0, 1), 180: (-1, 0), 270: (0, -1)}
+
+
+def combine_lamp(m, u, v, z, out, colour="147 226 240 70", name=None, spot=False):
+    """The Combine's wall light (combine_light002a: 75 in the owner's map) with its back on a wall face at (u, v), its
+    foot at z, its face toward `out` (a yaw in the module, 0 90 180 270); its light 18 out and 20 up, the owner's
+    blue-white. name: a light the game can switch (TurnOff, TurnOn). spot: a beam down the wall instead, as theirs."""
+    du, dv = WAY[out]
+    m.static("models/props_combine/combine_light002a.mdl", u + 10 * du, v + 10 * dv, (out + 180) % 360, z=z)
+    lu, lv = u + 28 * du, v + 28 * dv
+    if name:
+        named_light(m, name, lu, lv, z + 20, colour)
+    elif spot:
+        m.spot(lu, lv, z + 20, colour, out, pitch=50, cone=70)
+    else:
+        m.light(lu, lv, z + 20, colour)
+
+
+def tube(m, u, v, ceil, colour="217 209 190 45", along="u", name=None):
+    """A lab fluorescent tube (lab_flourescentlight002b, 64 long: 149 in the owner's map) flat under a roof at ceil, lying
+    `along` u or v, and its light. Two or three light a room."""
+    m.static("models/props_lab/lab_flourescentlight002b.mdl", u, v, 90 if along == "u" else 0, z=ceil - 8)
+    if name:
+        named_light(m, name, u, v, ceil - 24, colour)
+    else:
+        m.light(u, v, ceil - 24, colour)
+
+
+def cage_lamp(m, u, v, z, out, colour="238 226 162 50", lit=True):
+    """A caged lamp (light_cagelight02: 47 in the owner's map) with its back on a wall face at (u, v), its foot at z,
+    facing `out`; lit: the _on model and its light 26 out, as theirs. Unlit: the _off model and no light (a dead lamp)."""
+    du, dv = WAY[out]
+    m.static("models/props_c17/light_cagelight02_%s.mdl" % ("on" if lit else "off"), u + du, v + dv, out, z=z)
+    if lit:
+        m.light(u + 26 * du, v + 26 * dv, z + 4, colour)
+
+
+def combine_rail(m, a, b, z):
+    """The Combine's railing (props_combine railing_256 and _128, 40 high) along a straight line from a to b (each
+    (u, v), along u or along v), standing on z. Lengths in 128s; what is left under 128 has no piece."""
+    (u1, v1), (u2, v2) = a, b
+    along_u = v1 == v2
+    lo, hi = (min(u1, u2), max(u1, u2)) if along_u else (min(v1, v2), max(v1, v2))
+    p = lo
+    while hi - p >= 128:
+        n = 256 if hi - p >= 256 else 128
+        c = p + n // 2
+        model = "models/props_combine/railing_%d.mdl" % n
+        m.static(model, c, v1, 0, z) if along_u else m.static(model, u1, c, 90, z)
+        p += n
+
+
+def combine_field(m, a, b, z, name=None, high=180, hum=True):
+    """The Combine's fence: a post at each end (combine_fence01b at a, 01a at b, their fins toward each other, 192 high,
+    as the owner's map sets its twelve pairs) and the field between them, the owner's comshieldwall2faded, from post to
+    post and 180 high. a and b: (u, v), in line along u or along v. name: the field is a func_brush the game can switch
+    (Disable lets people through, Enable shuts it); without, it always stands (players are blocked, bullets too)."""
+    (u1, v1), (u2, v2) = a, b
+    along_u = v1 == v2
+    sgn = 1 if (u2 - u1 if along_u else v2 - v1) > 0 else -1
+    yaw = (270 if sgn > 0 else 90) if along_u else (0 if sgn > 0 else 180)
+    m.static("models/props_combine/combine_fence01b.mdl", u1, v1, yaw, z=z)
+    m.static("models/props_combine/combine_fence01a.mdl", u2, v2, yaw, z=z)
+    lo, hi = (min(u1, u2), max(u1, u2)) if along_u else (min(v1, v2), max(v1, v2))
+    box = (lo + 2, v1 - 1, z, hi - 2, v1 + 1, z + high) if along_u else (u1 - 1, lo + 2, z, u1 + 1, hi - 2, z + high)
+    keys = {"Solidity": "0", "StartDisabled": "0", "solidbsp": "0", "rendermode": "0", "renderamt": "255", "rendercolor": "255 255 255", "renderfx": "0",
+            "spawnflags": "2", "disableshadows": "1", "vrad_brush_cast_shadows": "0"}
+    if name:
+        keys["targetname"] = name
+    brush(m, "func_brush", keys, [box], SHIELD)
+    if hum:
+        mu, mv = (lo + hi) // 2, v1
+        if not along_u:
+            mu, mv = u1, (lo + hi) // 2
+        m.sound("ambient/machines/combine_shield_loop3.wav", mu, mv, z + 80, radius=500, volume=4, name=(name + "_hum") if name else None)
+
+
+def pour(m, u, v, z, length=120, colour="196 208 214", size=6):
+    """Water (or slime) running out of a pipe's mouth at (u, v, z) and falling: an env_steam pointed straight down, as
+    the owner's map points its jets (no falling-water material is in Half-Life 2's lists)."""
+    m.point("env_steam", u, v, z, {"angles": "90 0 0", "type": "0", "InitialState": "1", "spawnflags": "0", "Speed": "150", "SpreadSpeed": "5",
+                                   "StartSize": str(size), "EndSize": str(size * 3), "Rate": "36", "JetLength": str(length), "rendercolor": colour,
+                                   "renderamt": "150", "rollspeed": "4"})
+
+
+def round_arch(m, lo, hi, spring, a, b, axis="y", mat=None, steps=4):
+    """A round arch's haunches filled in under a flat roof: a passage `lo` to `hi` wide (across), its roof at
+    spring + (hi - lo) / 2, the arch springing from its walls at `spring`; pushed along `axis` from a to b. Triangles
+    fanned from the roof's corners (each convex, every corner a whole number)."""
+    r = (hi - lo) / 2.0
+    mid, top = (lo + hi) / 2.0, spring + (hi - lo) // 2
+    out = []
+    for side, corner in ((-1, lo), (1, hi)):
+        pts = [(int(round(mid + side * r * math.cos(math.radians(90.0 * k / steps)))), int(round(spring + r * math.sin(math.radians(90.0 * k / steps)))))
+               for k in range(steps + 1)]
+        for k in range(steps):
+            tri = [(corner, top), pts[k], pts[k + 1]]
+            if side > 0:
+                tri = [tri[0], tri[2], tri[1]]
+            if len(set(tri)) == 3:
+                out.append(prism(tri, "x" if axis == "x" else "y", a, b, mat or MAT["canal_wall"]))
+    m.shapes(out)
+
+
+# ---------------------------------------------------------------------------
 # 1. The lock house
 # ---------------------------------------------------------------------------
 

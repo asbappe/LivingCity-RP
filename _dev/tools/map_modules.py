@@ -484,20 +484,43 @@ class Mod:
 # nodes come afterwards for the whole chain at once.
 # ---------------------------------------------------------------------------
 
+# What the canal's floor collects (the module review: "the canal's own junk, varied by a seed"): all of Half-Life 2.
+CANAL_JUNK = ("models/props_junk/wood_crate001a.mdl", "models/props_junk/wood_pallet001a.mdl", "models/props_vehicles/tire001c_car.mdl",
+              "models/props_c17/oildrum001.mdl", "models/props_junk/pushcart01a.mdl", "models/props_junk/trafficcone001a.mdl",
+              "models/props_junk/cardboard_box001a.mdl", "models/props_junk/bicycle01a.mdl", "models/props_vehicles/carparts_tire01a.mdl",
+              "models/props_c17/furniturewashingmachine001a.mdl", "models/props_junk/plasticcrate01a.mdl", "models/props_debris/wood_board06a.mdl")
+
+
+def canal_grime(m, u1, u2, seed):
+    """Grime on a plain stretch's floor between u1 and u2: a puddle, trash, a stain, where the water stands and the wind
+    drops things (the same every build for one seed)."""
+    rnd = random.Random(seed)
+    for k in range(max(1, (u2 - u1) // 384)):
+        u = rnd.randrange(u1 + 32, max(u1 + 33, u2 - 32))
+        m.grime(rnd.choice(("puddle", "trash", "stain", "puddle")), u, rnd.randrange(-96, 96), F + 1, seed + k)
+
+
 def m_straight(m, opt):
     """Plain canal. "straight 1536": that long. Add "bridge" for a street carried over its middle, "pipes" for a pair of
-    pipes across it, "bare" for nothing left lying in it (otherwise a few odds and ends, the same every time)."""
+    pipes across it, "bare" for nothing left lying in it (otherwise a few odds and ends from CANAL_JUNK, the same every
+    time for one place: crates, tyres, a cart, a cone, a bicycle, a washing machine). Puddles and trash on the floor; a
+    quiet courtyard's soundscape (wind and the city over the walls). The walls' caged lamps, drain stains and graffiti
+    come with every canal (dress_canal_walls)."""
     L = m.fr.length
     m.open(0, -256, L, 256)
+    x, y = m.fr.pt(0, 0)
+    seed = 1000 + (x * 7 + y * 13) % 997
     if "bridge" in opt:
         m.bridge(L // 2 - 128, L // 2 + 128, -256, 256)
+        m.grime("stain", L // 2, -112, F + 150, seed)           # (water off the deck, down its pier's face)
     if "pipes" in opt:
         at = L // 4 if "bridge" in opt else L // 2
         (x1, y1), (x2, y2) = m.fr.pt(at, -256), m.fr.pt(at, 256)
         m.b.pipes.append(("x", x1, min(y1, y2), max(y1, y2)) if m.fr.ax("u") == "x" else ("y", y1, min(x1, x2), max(x1, x2)))
     if "bare" not in opt and L >= 512:
-        x, y = m.fr.pt(0, 0)
-        m.scatter(64, -110, L - 64, 110, L // 420, 1000 + (x * 7 + y * 13) % 997)
+        m.scatter(64, -110, L - 64, 110, L // 420, seed, kinds=CANAL_JUNK)
+    canal_grime(m, 0, L, seed)
+    m.soundscape(SCAPES["courtyard"], L // 2, 0, F, radius=max(768, L // 2))
 
 
 def m_shed(m, opt):
@@ -519,16 +542,23 @@ def jog_shift(opt):
 
 
 def m_jog(m, opt):
-    """The canal steps sideways, to break a long view: "jog left 768" (the default), "jog right 1024"."""
+    """The canal steps sideways, to break a long view: "jog left 768" (the default), "jog right 1024". What the floods
+    leave in the elbow (two things from CANAL_JUNK), puddles and trash, the courtyard's soundscape."""
     s = jog_shift(opt)
     m.open(0, -256, 768, 256)
     m.open(256, min(-256, s - 256), 768, max(256, s + 256))
     m.open(256, s - 256, 1024, s + 256)
+    x, y = m.fr.pt(0, 0)
+    seed = 2000 + (x * 7 + y * 13) % 997
+    m.scatter(320, s // 2 - 96, 704, s // 2 + 96, 2, seed, kinds=CANAL_JUNK)      # (in the elbow, where the flood leaves things)
+    canal_grime(m, 256, 768, seed)
+    m.soundscape(SCAPES["courtyard"], 512, s // 2, F, radius=900)
 
 
 def m_tee(m, opt):
     """A way off to the left: a standard gate in the left wall (512 wide, 256 high), capped until another piece, or
-    another layout's start, is joined to it."""
+    another layout's start, is joined to it. A number painted beside the gate, puddles and trash, the courtyard's
+    soundscape."""
     b = m.b
     m.open(0, -256, 512, 256)
     m.low(0, 256, 512, 512, F + GATE_HIGH)
@@ -538,6 +568,10 @@ def m_tee(m, opt):
     b.plan.keep_out.append(m.fr.rect(-64, 512, 576, 576))
     m.blocked(0, 384, 512, 512)
     m.side(0, 256, 512, 512)
+    x, y = m.fr.pt(0, 0)
+    canal_grime(m, 0, 512, 3000 + (x * 7 + y * 13) % 997)
+    m.grime("number", 512, 320, F + 180, x + y)               # (a number on the gate's cheek, where the side way leaves)
+    m.soundscape(SCAPES["courtyard"], 256, 0, F, radius=768)
     dx, dy = m.fr.way(90)
     b.notes.append("%s: its side gate is at (%d %d), heading %s: a layout may start there" % ((m.tag,) + m.fr.pt(256, 512) + ({(1, 0): "E", (0, 1): "N", (-1, 0): "W", (0, -1): "S"}[(dx, dy)],)))
 

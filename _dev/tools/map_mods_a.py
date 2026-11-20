@@ -14,7 +14,7 @@ Living City: canal modules, set A (picked up by map_modules.py; the guide is doc
 import math
 
 from map_build import CELL, FACE_ORDER, GATE_HIGH, MAT, prism, octagon
-from map_modules import F, TRIM, BASE, SEWER, MM
+from map_modules import F, TRIM, BASE, SEWER, MM, SCAPES, canal_grime
 from map_mods_b import fire, mattress, rider
 
 TILE = "tile/tilefloor018a_c17"
@@ -229,21 +229,39 @@ def m_tram(m, opt):
               MAT["canal_wall"], top=TILE)
         steps_up(m, 640, e1, 256 * s, zr, pz, s)
         m.det([box(e1 - 4, 352, pz, e1, back, pz + 1), box(e2, 256, pz, e2 + 4, back, pz + 1)], MAT["beam"])          # a dark strip along the edges
-        # columns along the platforms, a wainscot of tile on the hall's walls with a steel rail over it
-        rows = (480, 608, 736) if s > 0 else (480, 608, 736, 864, 992)
-        m.det([box(u, c - 12, pz, u + 24, c + 12, ceil) for u in (664, 848) for c in rows], MAT["beam"])
-        m.det([box(u - 4, c - 16, ceil - 12, u + 28, c + 16, ceil) for u in (664, 848) for c in rows], MAT["canal_wall"])
-        tiles = [box(448, 384, pz, 450, back, pz + 60), box(1086, 384, pz, 1088, back, pz + 60), box(448, 384, pz, 640, 386, pz + 60),
-                 box(896, 384, pz, 1088, 386, pz + 60), box(e2, back - 2, pz, 1088, back, pz + 60), box(448, back - 2, pz, 512 if s > 0 else e1, back, pz + 60)]
+        # Half-Life 2's own station kit: its cast iron columns (sunk 40 so their heads meet this lower roof), its arches
+        # between them and on to the back wall, a girder across the hall over each pair, a plaster ceiling
+        rows = (480, 736) if s > 0 else (480, 736, 992)
+        for c in rows:
+            for u in (676, 860):
+                m.static(P + "props_trainstation/trainstation_column001.mdl", u, c * s, 0, ceil - 257)
+        m.det([box(448, c - 8, ceil - 20, 1088, c + 8, ceil - 2) for c in rows], steel)
+        for u in (676, 860):
+            for c1, c2 in zip(rows, rows[1:]):
+                m.static(P + "props_trainstation/column_arch001a.mdl", u, (c1 + c2) // 2 * s, 0, ceil - 109)
+            m.static(P + "props_trainstation/ceiling_arch001a.mdl", u, (rows[-1] + back) // 2 * s, 0, ceil - 109)
+        m.det([box(448, 384, ceil - 2, 1088, back, ceil), box(640, 256, ceil - 2, 896, 384, ceil)], "plaster/plasterceiling008a_c17")
+        # the walls in two tones as the city's station: brick to the shoulder, a rail, plaster over it
+        walls = [box(448, 384, pz, 450, back, ceil - 2), box(1086, 384, pz, 1088, back, ceil - 2), box(448, 384, pz, 640, 386, ceil - 2),
+                 box(896, 384, pz, 1088, 386, ceil - 2), box(e2, back - 2, pz, 1088, back, ceil - 2), box(448, back - 2, pz, 512 if s > 0 else e1, back, ceil - 2)]
         if s > 0:
-            tiles += [box(640, back - 2, pz, e1, back, pz + 60), box(e1, back - 2, pz, e2, back, pz + 60)]
-        m.det(tiles, TILE)
-        m.det([(t[0], t[1], pz + 60, t[3], t[4], pz + 64) for t in tiles], steel)
+            walls += [box(640, back - 2, pz, e1, back, ceil - 2), box(e1, back - 2, pz, e2, back, ceil - 2)]
+        else:
+            walls += [box(e1, back - 2, zr, 704, back, ceil - 2), box(832, back - 2, zr, e2, back, ceil - 2)]
+        m.det([w[:2] + (w[2],) + w[3:5] + (pz + 72,) for w in walls], BRICK)
+        m.det([w[:2] + (pz + 76,) + w[3:5] + (ceil - 2,) for w in walls], "plaster/plasterwall041a")
+        m.det([(w[0] - (w[3] - w[0] == 2), w[1] - (w[4] - w[1] == 2), pz + 72, w[3] + (w[3] - w[0] == 2), w[4] + (w[4] - w[1] == 2), pz + 76) for w in walls],
+              MM["beam_wood"])
         # the rails in the pit, from the mouth's lip
         for u in (736, 796):
             m.det([box(u, 256, zr, u + 4, 316, zr + 3), box(u, 322, zr, u + 4, 736 if s > 0 else 1136, zr + 3)], MAT["bars"])
-        for (u, c) in ((576, 500), (576, 716), (960, 500), (960, 716)) if s > 0 else ((576, 560), (960, 560), (576, 940), (960, 940)):
-            m.lamp(u, c * s, ceil - 8, "255 214 170 45" if s > 0 else "200 214 255 30")
+        # light: the station's own wall lamps over the platforms' backs, each with a light and a beam down onto the platform
+        for (u, c) in ((448, 690), (1088, 500), (1088, 700)) if s > 0 else ((448, 560), (448, 900), (1088, 560), (1088, 900)):
+            inward = 0 if u == 448 else 180
+            m.static(P + "props_trainstation/light_128wallmounted001a.mdl", u + (11 if u == 448 else -11), c * s, 90, pz + 92)
+            m.light(u + (40 if u == 448 else -40), c * s, pz + 130, "255 214 170 45" if s > 0 else "200 214 255 30")
+            m.spot(u + (14 if u == 448 else -14), c * s, pz + 150, "255 220 180 60" if s > 0 else "200 214 255 40", inward, 55, 50)
+        m.soundscape("d1_trainstation.Turnstyle", 768, 600 * s, pz, radius=520)       # (one the owner's own map uses 14 times)
         m.lane(670, 300 * s, pz)
         m.lane(576, 608 * s, pz)
         m.lane(960, 608 * s, pz)
@@ -269,15 +287,25 @@ def m_tram(m, opt):
     m.light(492, 536, ceil - 20, "255 190 120 20")
     m.blocked(448, 448, 576, 608)
     m.lane(496, 624, pz)
-    # the pit's end: steps up to a concourse joining the platforms, a barrier for a buffer before them
+    # the pit's end: steps up to a concourse joining the platforms, the line's own buffer stop before them, a signal
+    # on the far platform, the station clock stopped over the concourse
     steps_up(m, 692, 840, 736, zr, pz, 1)
-    m.static(P + "props_c17/concrete_barrier001a.mdl", 768, 712, 90, zr)
-    m.static(P + "props_trainstation/benchoutdoor01a.mdl", 474, 440, 0, pz)
-    m.static(P + "props_trainstation/benchoutdoor01a.mdl", 474, 716, 0, pz)
-    m.static(P + "props_trainstation/benchoutdoor01a.mdl", 1062, 560, 180, pz)
-    m.static(P + "props_trainstation/trashcan_indoor001b.mdl", 470, 640, 0, pz)
-    m.static(P + "props_trainstation/payphone001a.mdl", 1076, 730, 180, pz)
+    m.static(P + "props_trainstation/trackends01.mdl", 766, 722, 0, zr)
+    m.static(P + "props_trainstation/light_signal001a.mdl", 904, 690, 270, pz)
+    m.static(P + "props_trainstation/trainstation_clock001.mdl", 766, 827, 270, pz + 110)
+    m.static(P + "props_trainstation/bench_indoor001a.mdl", 467, 760, 0, pz)
+    m.static(P + "props_trainstation/bench_indoor001a.mdl", 1069, 600, 180, pz)
+    m.static(P + "props_trainstation/trashcan_indoor001a.mdl", 470, 640, 0, pz)
+    m.static(P + "props_trainstation/payphone001a.mdl", 1076, 760, 180, pz)
     m.loose(P + "props_junk/wood_crate001a.mdl", 1040, 430, 20, z=pz)
+    m.decal("decals/decal_signroute004a", 450, 620, pz + 112)                    # route signs, a timetable, the city's notices
+    m.decal("decals/decal_signroute007a", 1086, 700, pz + 112)
+    m.decal("decals/decal_posterbreen", 1086, 470, pz + 100)
+    m.grime("poster", 450, 720, pz + 96, 3)
+    m.grime("danger", 576, 826, pz + 150, 1)                                      # no entry, over the barred stair
+    m.grime("trash", 600, 620, pz + 1, 5)
+    m.grime("stain", 1086, 820, pz + 160, 6)
+    m.grime("crack", 740, 830, pz + 190, 7)
 
     # --- the right station: the car whole at the platform, a cache in it; somebody has been living here ---
     m.dynamic(CAR, 767, -740, 0, zr + 52)
@@ -288,8 +316,15 @@ def m_tram(m, opt):
     m.loose(P + "props_junk/wood_crate002a.mdl", 756, -700, 40, z=zr + 92)
     mattress(m, 520, -760, 90, pz)
     m.static(P + "props_c17/lockers001a.mdl", 1078, -700, 180, pz)
-    m.static(P + "props_trainstation/benchoutdoor01a.mdl", 474, -520, 0, pz)
-    m.static(P + "props_trainstation/benchoutdoor01a.mdl", 1062, -520, 180, pz)
+    m.static(P + "props_trainstation/bench_indoor001a.mdl", 467, -470, 0, pz)
+    m.static(P + "props_trainstation/bench_indoor001a.mdl", 1069, -470, 180, pz)
+    m.static(P + "props_trainstation/trainstation_clock001.mdl", 960, -1085, 90, pz + 110)
+    m.decal("decals/decal_signroute006a", 1086, -700, pz + 112)
+    m.grime("lambda", 450, -640, pz + 120, 2)                                     # whoever lives here is with the Resistance
+    m.grime("graffiti", 1086, -980, pz + 90, 4)
+    m.grime("trash", 560, -700, pz + 1, 8)
+    m.grime("burn", 560, -880, pz + 1, 9)
+    m.grime("stain", 450, -1000, pz + 170, 10)
     m.static(P + "props_c17/oildrum001.mdl", 560, -840, 0, pz)
     fire(m, 560, -840, pz + 46, 18, "255 150 70 60", drop=False)                    # a fire in the drum by the mattress
     m.loose(P + "props_junk/wood_pallet001a.mdl", 600, -450, 30, z=pz)
@@ -327,10 +362,17 @@ def m_tram(m, opt):
     # its open front end's lowest corner is on the floor, its underside just touches the lip at v 256 on its low side and
     # its far end reaches v 400 (rolled 13: its +y end up; pitched 5: its +x side down; yaw 1.15 keeps it along v). ---
     tilted(m, "prop_dynamic", WRECK, 766, 85, 463, 1.15, 5, 13)
-    tilted(m, "prop_static", BOGIE, 500, -60, F + 46, 20, 0, 90)                    # its front bogie, torn off, on its side
+    tilted(m, "prop_static", BOGIE, 540, -20, F + 46, 20, 0, 90)                    # its front bogie, torn off, on its side
     m.static(P + "props_debris/concrete_debris128pile001b.mdl", 768, 372, 90, zr - 4)    # what it brought down with it, under its far end
     m.rope([(766, 300, ceil - 4), (775, 150, 690)], slack=30)                        # the wire, still on its roof
     m.rope([(766, -300, ceil - 4), (900, -150, F + 40), (930, -96, F + 6)], slack=60)     # and the other end of it, down
+    m.spark(930, -96, F + 8)                                                          # still live: it spits now and then
+    tilted(m, "prop_static", P + "props_trainstation/traincar_seats001.mdl", 700, -200, F, 205, 0, 0)    # seats spilled from its open end
+    tilted(m, "prop_static", P + "props_trainstation/traincar_seats001.mdl", 820, -236, F + 14, 70, 0, 75)
+    m.loose(P + "props_c17/suitcase001a.mdl", 640, -190, 35)
+    m.soundscape(SCAPES["metal"], 768, 0, F, radius=560)                             # the wreck's metal groaning under its own weight
+    canal_grime(m, 32, 560, 4100)
+    canal_grime(m, 1000, 1504, 4200)
     m.lane(766, -200, F)
     m.blocked(640, -256, 896, 256)
     m.static(P + "props_debris/concrete_debris128pile001a.mdl", 1010, 130, 60, F - 4)
@@ -338,7 +380,7 @@ def m_tram(m, opt):
     m.static(P + "props_debris/concrete_floorpile01a.mdl", 600, -150, 20, F - 4)
     m.loose(P + "props_debris/concrete_chunk02a.mdl", 880, -110, 110)
     m.loose(P + "props_vehicles/tire001c_car.mdl", 900, 90, 0)
-    m.view(430, -60, F, 15, -8, "the car and the bridge")
+    m.view(380, -190, F, 28, -6, "the car and the bridge")
     m.view(766, -110, F, 90, -14, "into the car's open end")
     m.view(670, 300, pz, 90, 4, "the left station")
     m.view(600, 700, pz, 300, 4, "its platform, looking back")
