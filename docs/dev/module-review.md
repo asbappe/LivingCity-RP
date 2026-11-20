@@ -209,3 +209,37 @@ Filled in as the review goes; the first ones are clear already:
 
 **Weight.** medium (the station kit), small (overlays, wires, sounds).
 
+### 11. tenement (showroom 2): a tenement block fallen across the canal
+
+**Seen.** A block lies across the canal, the way on through its rooms: a dark brick front with one neat doorway under a wooden lintel, rubble piles before it; inside a hall, a living room, a kitchen (fridge, stove, sink, table, chairs), a stair hall open to the leaning roof slabs, a bedroom, a small room with a nook, a room upstairs with a window. Plaster walls with a ceiling trim, wood floors, dome lamps.
+
+**Fix.**
+- The block "fell" but stands perfectly level and square inside: floors flat, walls plumb, doors neat. It reads as a house built in the canal, not one that came down into it. Give it the fall: floors that tilt a few degrees one way (ramps of 5 to 8 degrees), a wall leaning in (a sheared prism), a crack across a ceiling with daylight through it, furniture slid to the low side, a light hanging on its cable at an angle.
+- The ways through are tidy rectangles with lintels (the "hole in the entry wall" has a timber lintel): a fall tears holes. Ragged outlines (prisms with broken edges), splintered frames, rubble spilling from each hole, rebar at the torn edges.
+- The front facing the canal is blank dark brick: a tenement's face has rows of windows. The town's facade kit (`map_town.facade`, with the owner's glass) laid on its face, tilted with it, glass broken in most.
+- A big debris pile stands right at the module's entry viewpoint: it fills the first look at the block; move it aside so the first sight is the block itself.
+
+**Better.**
+- Make it feel lived in before it fell: the owner's flats are the model (plaster with a dado line, door casings, a radiator under each window, fluorescent tube or dome light, a toilet and sink in a tiny bathroom), posters and a calendar, a radio.
+- Water: the canal's water has come into the ground floor's low side (a shallow func_water in the lowest room).
+- Sounds: creaks and a slow trickle (a soundscape), a settling thud now and then.
+- The stash nook and the lookout are good: mark the lookout with a chair and an ashtray at the window, binoculars (combine_binocular01 is Half-Life 2's, or a pair of jars).
+
+**Weight.** large (the tilt and torn holes), medium (facade on the fallen face), small (dressing, sounds).
+
+### 12. quay (showroom 2): stairs up to a quay with a street doorway, a footbridge to a barred door
+
+**Seen.** A stair climbs the left wall from the canal to a landing; a quay recessed into the wall with a low wall along its edge, two street lamps, cleats, a skip, a bench, a payphone, crates, three posts before a framed street doorway (black, capped). A railed footbridge on two trestles crosses to a barred door in the right wall, glowing orange and black behind.
+
+**Fix.**
+- From the canal the stair is a row of separate steps hung on the wall with their sides open: it reads as a jagged sawtooth. Give its open side a solid upstand (a parapet 32 high following the flight) and fill under the flight to the floor, so it reads as one concrete stair built against the wall (Half-Life 2's canal stairs are built so).
+- The barred door leads to nothing: through its bars is black. A short corridor behind it with a light and something to see (a locked store, a Combine supply room, a ladder going down) gives the bridge a reason.
+- The lamps stand where they light the wall behind them better than the quay; turn their arms over the quay (lamppost03a's arm is its +y).
+
+**Better.**
+- A quay as a working place: tyres hung as fenders down the quay wall on short chains (tire001c and ropes), an iron ladder from the canal floor to the quay's edge (a second way up), a mooring ring, a coil of rope (props_junk rope coils if any; else a ring of rope), a capstan.
+- The street doorway: a street sign over it (streetsign, decal_signroute), a Combine notice (decal_posterbreen), a camera watching who comes down.
+- Puddles on the quay, a stain under the skip, cigarette ends by the bench (small decals), a gull's sound in the soundscape (Half-Life 2's coast birds) since this is where the canal meets the city.
+
+**Weight.** small to medium.
+
