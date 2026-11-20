@@ -60,10 +60,19 @@ GROUPS = {"map_modules.py": "The first ten", "map_mods_a.py": "Ruins and the cit
           "map_mods_c.py": "The Combine and its machines", "map_mods_d.py": "More"}
 
 
-def page(mods, path):
-    """One page to browse them all: a fragment of HTML with the pictures beside it (what the owner's catalogue is published from)."""
+def page(mods, path, embed=False):
+    """One page to browse them all: a fragment of HTML with the pictures beside it, or (embed) inside it as one file
+    (what the owner's catalogue is published from)."""
+    import base64
     import html
     import re
+    folder = os.path.dirname(path)
+
+    def src(p):
+        if not embed:
+            return p
+        with open(os.path.join(folder, p), "rb") as f:
+            return "data:image/jpeg;base64," + base64.b64encode(f.read()).decode()
     cards = []
     for m in mods:
         group = "Canal structure" if m["name"] in STRUCTURE else GROUPS.get(m.get("file"), "More")
@@ -76,8 +85,8 @@ def page(mods, path):
         if k >= 0:
             doc = doc[:k]
         doc = re.sub(r"^\d+\.\s*", "", " ".join(doc.split()))
-        pics = "".join('<button class="shot" type="button" data-full="%s" data-cap="%s"><img src="%s" alt="%s: %s" loading="lazy" width="720" height="450"><span>%s</span></button>' % (
-            p, html.escape("%s: %s" % (m["name"], l), True), p, html.escape(m["name"], True), html.escape(l, True), html.escape(l)) for p, l in zip(m["pictures"], m["labels"]))
+        pics = "".join('<button class="shot" type="button" data-cap="%s"><img src="%s" alt="%s: %s" loading="lazy" width="720" height="450"><span>%s</span></button>' % (
+            html.escape("%s: %s" % (m["name"], l), True), src(p), html.escape(m["name"], True), html.escape(l, True), html.escape(l)) for p, l in zip(m["pictures"], m["labels"]))
         named = "".join("<li>%s</li>" % html.escape(n) for n in m["named"]) or ""
         cards.append('<article class="mod" data-group="%s" data-text="%s"><header><h2>%s</h2><p class="meta"><span>%d long</span><span>%s</span></p></header>'
                      '<p class="sum">%s</p><div class="shots">%s</div>%s%s</article>' % (
@@ -146,6 +155,7 @@ def main():
     with open(os.path.join(args.out, "catalogue.json"), "w") as f:
         json.dump(out, f, indent=1)
     page(out, os.path.join(args.out, "index.html"))
+    page(out, os.path.join(args.out, "canal_modules.html"), embed=True)
     print("written: %s (%d modules)" % (os.path.join(args.out, "catalogue.json"), len(out)))
 
 

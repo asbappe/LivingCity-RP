@@ -125,6 +125,50 @@ def pipe_z(u, v, r, z1, z2, mat=PIPE):
     return vprism(octagon(u, v, r), z1, z2, mat)
 
 
+def leaning(u, v, w, z1, du, dv, z2, mat):
+    """A leaning square post: its foot the square (u, v) to (u + w, v + w) at z1, its head the same square moved by
+    (du, dv) at z2. The faces for m.shapes (every side stays flat)."""
+    foot = [(u, v, z1), (u + w, v, z1), (u + w, v + w, z1), (u, v + w, z1)]
+    head = [(a + du, c + dv, z2) for a, c, _ in foot]
+    faces = [(foot, mat), (head, mat)]
+    for k in range(4):
+        j = (k + 1) % 4
+        faces.append(([foot[k], foot[j], head[j], head[k]], mat))
+    return faces
+
+
+def swing_gate(m, name, boxes, hinge, mat=None, speed=90, connections=None, flags="288", wait="-1"):
+    """A gate or door a player opens by Use: a func_door_rotating that swings 90 degrees round `hinge` (u, v, z) and
+    stays until used again (spawnflags 32 toggle + 256 use opens; not one-way, so it swings away from whoever uses it).
+    boxes: (box) or (box, material). The gamemode's door rules (locks, lockpicks, kicks) reach it, as they should.
+    flags "0" and wait "4": a door no Use opens, that only an input (a button's Open) opens, and that shuts by itself."""
+    brush(m, "func_door_rotating", {
+        "targetname": name, "origin": "%d %d %d" % (m.fr.pt(hinge[0], hinge[1]) + (hinge[2],)), "distance": "90", "speed": str(speed), "wait": wait, "lip": "0",
+        "dmg": "0", "forceclosed": "0", "solidbsp": "0", "spawnflags": flags, "health": "0", "ignoredebris": "0", "loopmovesound": "0", "locked_sentence": "0",
+        "unlocked_sentence": "0", "rendermode": "0", "renderamt": "255", "rendercolor": "255 255 255", "renderfx": "0", "disableshadows": "1"},
+          boxes, mat or PIPE, connections=connections)
+
+
+def mesh_gate(m, name, a, b, z, high=96, hinge_at_a=True):
+    """A chain link gate from a to b (each (u, v), in line along u or v) standing on z: a steel frame with mesh in it."""
+    (u1, v1), (u2, v2) = a, b
+    if v1 == v2:
+        lo, hi = min(u1, u2), max(u1, u2)
+        parts = [((lo, v1 - 1, z + 2, hi, v1 + 1, z + high - 2), MAT["fence"]), ((lo, v1 - 2, z + high - 6, hi, v1 + 2, z + high - 2), PIPE), ((lo, v1 - 2, z + 2, hi, v1 + 2, z + 6), PIPE),
+                 ((lo, v1 - 2, z + 2, lo + 4, v1 + 2, z + high - 2), PIPE), ((hi - 4, v1 - 2, z + 2, hi, v1 + 2, z + high - 2), PIPE)]
+    else:
+        lo, hi = min(v1, v2), max(v1, v2)
+        parts = [((u1 - 1, lo, z + 2, u1 + 1, hi, z + high - 2), MAT["fence"]), ((u1 - 2, lo, z + high - 6, u1 + 2, hi, z + high - 2), PIPE), ((u1 - 2, lo, z + 2, u1 + 2, hi, z + 6), PIPE),
+                 ((u1 - 2, lo, z + 2, u1 + 2, lo + 4, z + high - 2), PIPE), ((u1 - 2, hi - 4, z + 2, u1 + 2, hi, z + high - 2), PIPE)]
+    swing_gate(m, name, parts, (a if hinge_at_a else b) + (z,))
+
+
+def chain_link(m, a, b, z, high=96):
+    """A run of chain link fence (map_modules.chain_link, fetched when called: that file loads this one)."""
+    import map_modules
+    map_modules.chain_link(m, a, b, z, high)
+
+
 # ---------------------------------------------------------------------------
 # 1. The lock house
 # ---------------------------------------------------------------------------
@@ -565,8 +609,248 @@ def m_pumphouse(m, opt):
     b.notes.append("%s: the hall's floor is z %d, its gallery z %d, its roof z %d; the pit's floor z %d under %d of water" % (m.tag, F, G, H, F - 96, 24))
 
 
+# ---------------------------------------------------------------------------
+# 4. The thumper (experimental)
+# ---------------------------------------------------------------------------
+
+def m_thumper(m, opt):
+    """EXPERIMENTAL: a Combine thumper. The canal widens to the right into a concrete terrace 512 long and 384 deep,
+    128 over the floor (the bank is its ramp). On it, behind a chain link fence with a gate players open, a thumper
+    built of brushes: four leaning legs of Combine metal 240 high carrying a sleeve, and through the sleeve a piston
+    with a heavy head that lifts 96 and drops on a steel striker plate, for ever. Each time it lands the ground shakes,
+    it thuds, and dust jumps from the plate. Against the terrace's near wall a control box with the button that stops
+    and starts it. The head has no damage of its own: it turns back from whoever stands under it.
+
+    Named for the game:
+      lc_thumper_head    the piston: a func_door, drawn down. Open lifts it; "wait" 0.4 and no toggle, so it comes down
+                         by itself. OnFullyOpen sets its speed to 384 (the drop), OnFullyClosed back to 96 (the lift).
+      lc_thumper_timer   a logic_timer, RefireTime 3, that fires Open. Disable stops the thumper, Enable starts it.
+      lc_thumper_stop, lc_thumper_start   relays: Trigger one to stop or start it (the timer, the lamp, a sound).
+                         lc_thumper_stop is live while it runs. The game may hang antlions on lc_thumper_stop.
+      lc_thumper_button  the button on the control box: a press triggers both relays; only the live one answers.
+      lc_thumper_pad     the ground under the head.
+      lc_thumper_gate    the fence's gate (a func_door_rotating: Use opens it; the gamemode can lock it).
+      lc_thumper_hit, lc_thumper_top, lc_thumper_shake, lc_thumper_dust, lc_thumper_glow, lc_thumper_down
+                         the thud, the clank at the top, the shake, the dust, the lamp on the sleeve, the run-down sound.
+
+    Unchecked: that a func_door takes the input SetSpeed (if it does not, the head lifts and drops at 96: 2.4 seconds
+    of a 3 second beat, still landing every time). env_smokestack's TurnOn and TurnOff for the dust. Sounds from
+    memory: ambient/machines/thumper_hit.wav, ambient/machines/thumper_top.wav, ambient/machines/thumper_shutdown1.wav."""
+    b = m.b
+    L, P = 1024, F + 128
+    cu, cv = 512, -448
+    m.open(0, -256, L, 256)
+    m.open(256, -640, 768, -256, floor=P, mat=MAT["quay_floor"])
+    m.side(256, -640, 768, -256)
+    m.taken(256, -264, F, 768, -256, P + 100)
+    m.blocked(256, -640, 768, -256)
+    # the fence across the terrace, 48 back from its edge, with the gate
+    fv = -304
+    chain_link(m, (256, fv), (592, fv), P)
+    chain_link(m, (656, fv), (768, fv), P)
+    mesh_gate(m, "lc_thumper_gate", (592, fv), (656, fv), P)
+    # the plinth and the striker plate
+    m.shapes([vprism(octagon(cu, cv, 76), P, P + 16, MAT["beam"]), vprism(octagon(cu, cv, 46), P + 16, P + 20, STEEL)])
+    # the frame: four leaning legs, a ring of braces half way up, the sleeve
+    top = P + 240
+    legs = [leaning(cu + su * 112 - 12, cv + sv * 112 - 12, 24, P, -su * 80, -sv * 80, top, CMB) for su in (1, -1) for sv in (1, -1)]
+    m.shapes(legs)
+    m.det([(cu - 72, cv + s * 72 - 4, P + 116, cu + 72, cv + s * 72 + 4, P + 124) for s in (1, -1)] + [(cu + s * 72 - 4, cv - 72, P + 116, cu + s * 72 + 4, cv + 72, P + 124) for s in (1, -1)], PIPE)
+    m.det([(cu - 44, cv - 44, top - 8, cu + 44, cv + 44, top + 72)], CMB)
+    m.det([(cu - 48, cv - 48, top + 16, cu + 48, cv + 48, top + 28), (cu - 48, cv - 48, top + 52, cu + 48, cv + 48, top + 60)], PIPE)
+    m.det([(cu + 44, cv - 20, top, cu + 60, cv + 20, top + 56)], STEEL)                      # its power pack, the cable's end
+    sprite(m, "lc_thumper_glow", cu, cv + 50, top + 40, "120 220 255", 0.35)
+    m.light(cu, cv + 70, top + 40, "120 200 255 40")
+    # the piston: a foot, a block, and the rod up through the sleeve (it shows above the sleeve when lifted)
+    brush_shapes(m, "func_door", {
+        "targetname": "lc_thumper_head", "movedir": "-90 0 0", "speed": "96", "lip": "184", "wait": "0.4", "spawnflags": "0", "spawnpos": "0", "dmg": "0",
+        "forceclosed": "0", "health": "0", "ignoredebris": "0", "loopmovesound": "0", "locked_sentence": "0", "unlocked_sentence": "0", "renderamt": "255",
+        "rendercolor": "255 255 255", "renderfx": "0", "rendermode": "0", "disableshadows": "1"},
+        [vprism(octagon(cu, cv, 40), P + 20, P + 36, STEEL), vprism(octagon(cu, cv, 12), P + 100, P + 300, PIPE)],
+        boxes=[(cu - 28, cv - 28, P + 36, cu + 28, cv + 28, P + 100)], mat=CMB, vis=b.vis + ": the thumper",
+        connections=[("OnFullyOpen", "lc_thumper_head", "SetSpeed", "384", 0), ("OnFullyOpen", "lc_thumper_top", "PlaySound", "", 0),
+                     ("OnFullyClosed", "lc_thumper_head", "SetSpeed", "96", 0), ("OnFullyClosed", "lc_thumper_hit", "PlaySound", "", 0),
+                     ("OnFullyClosed", "lc_thumper_shake", "StartShake", "", 0), ("OnFullyClosed", "lc_thumper_dust", "TurnOn", "", 0),
+                     ("OnFullyClosed", "lc_thumper_dust", "TurnOff", "", 0.5)])
+    m.point("logic_timer", cu, cv, top + 100, {"targetname": "lc_thumper_timer", "RefireTime": "3", "UseRandomTime": "0", "StartDisabled": "0", "spawnflags": "0"},
+            connections=[("OnTimer", "lc_thumper_head", "Open", "", 0)])
+    sound(m, "lc_thumper_hit", "ambient/machines/thumper_hit.wav", cu, cv, P + 40, radius=3000)
+    sound(m, "lc_thumper_top", "ambient/machines/thumper_top.wav", cu, cv, top, radius=1500, volume=6)
+    sound(m, "lc_thumper_down", "ambient/machines/thumper_shutdown1.wav", cu, cv, top, radius=2000)
+    m.point("env_shake", cu, cv, P + 20, {"targetname": "lc_thumper_shake", "amplitude": "6", "radius": "1200", "duration": "0.6", "frequency": "30", "spawnflags": "0"})
+    m.point("env_smokestack", cu, cv, P + 22, {"targetname": "lc_thumper_dust", "InitialState": "0", "BaseSpread": "44", "SpreadSpeed": "40", "Speed": "30", "StartSize": "16",
+                                               "EndSize": "56", "Rate": "40", "JetLength": "70", "WindAngle": "0", "WindSpeed": "0", "SmokeMaterial": "particle/SmokeStack.vmt",
+                                               "twist": "6", "roll": "6", "rendercolor": "150 136 112", "renderamt": "110", "angles": "0 0 0"})
+    m.target("lc_thumper_pad", cu, cv, P + 24)
+    # the control box against the terrace's near wall, its cable up to the sleeve
+    m.det([(256, -440, P, 284, -368, P + 84)], STEEL)
+    m.det([(256, -444, P + 84, 288, -364, P + 88), (284, -432, P + 60, 286, -410, P + 76)], PIPE)
+    m.button("lc_thumper_button", 284, -390, P + 36, 0, [("lc_thumper_stop", "Trigger", "", 0), ("lc_thumper_start", "Trigger", "", 0)], wait="2.5")
+    m.rope([(270, -404, P + 88), (cu - 44, cv, top + 30)], slack=60)
+    toggle(m, "lc_thumper_stop", "lc_thumper_start", 270, -404, P + 120,
+           [("lc_thumper_timer", "Disable", "", 0), ("lc_thumper_glow", "HideSprite", "", 0), ("lc_thumper_down", "PlaySound", "", 0)],
+           [("lc_thumper_timer", "Enable", "", 0), ("lc_thumper_glow", "ShowSprite", "", 0)], 2)
+    # outside the fence: two Combine barricades at the ramp's head; inside: what the crew left
+    m.dynamic("models/props_combine/combine_barricade_short01a.mdl", 330, -280, 90, z=P)
+    m.dynamic("models/props_combine/combine_barricade_short01a.mdl", 720, -280, 90, z=P)
+    m.static("models/props_c17/oildrum001.mdl", 720, -600, 0, z=P)
+    m.loose("models/props_junk/wood_crate001a.mdl", 690, -560, 20, z=P)
+    m.lane(624, -280, P)
+    m.lane(624, -350, P)
+    m.lane(360, -400, P)
+    m.view(512, 150, F, 270, -16, "the thumper from the canal")
+    m.view(700, -280, P, 205, -10, "at the fence, by the gate")
+    m.view(330, -560, P, 40, -20, "inside, by the control box")
+    b.notes.append("%s: the terrace is z %d; the thumper stands at (%d %d), its sleeve's top z %d (%d over the walls)" % (
+        (m.tag, P) + m.fr.pt(cu, cv) + (top + 72, top + 72 - b.rim)))
+
+
+# ---------------------------------------------------------------------------
+# 5. The ration depot
+# ---------------------------------------------------------------------------
+
+def m_depot(m, opt):
+    """The Combine's ration depot: a place to raid. In the left wall a steel roller door 192 wide (lc_depot_door, shut)
+    opens straight off the canal's floor into a loading bay with a truck backed up to a dock 40 high. The dock runs
+    along the back (pallets of crates) and fills the far half of the hall: three chain link cages of shelved cartons
+    and crates against the back wall, each with its own gate (lc_depot_cage_1 to _3: Use opens them, the gamemode can
+    lock them), the dispatch desk with a Combine console (lc_depot_desk), and a roller conveyor that carries crates out
+    through a low hatch in the wall and down a chute to the canal (the hatch is 26 high over the rollers: nobody gets
+    in that way). At the far end a staff door (lc_depot_side) up five steps from the canal: no Use opens it, only the
+    button beside it inside, and it shuts by itself after four seconds.
+
+    Named for the game:
+      lc_depot_door         the roller door: a func_door that lifts (Open, Close, Toggle).
+      lc_depot_button_door  the button inside, left of the roller door: Toggle.
+      lc_depot_side         the staff door: a func_door_rotating with no Use (Open; it shuts itself). The gamemode's
+                            door rules (lockpicks, kicks) may still reach it: that is the raiders' other way in.
+      lc_depot_button_side  the button inside beside the staff door: Open.
+      lc_depot_cage_1, _2, _3   the cages' gates (func_door_rotating, Use).
+      lc_depot_desk         the Combine console at the dispatch desk (a prop_dynamic).
+    In a --test file a red button in the roller door's mouth opens and shuts it from outside, as the game will.
+    Areaportals: one inside the thickness of each door, one in the hatch.
+
+    Unchecked: a func_door_rotating with spawnflags 0 and "wait" 4 as a door only an input opens; which way it swings
+    (either way is clear). All models pass the assets check; the truck's and the console's facing are guesses."""
+    b = m.b
+    L, HC, DK = 1280, F + 192, F + 40
+    floor, wood = "concrete/concretefloor016a", MM["wood"]
+    m.open(0, -256, L, 256)
+    m.low(256, 320, 1024, 704, HC, mat=floor)
+    m.low(640, 320, 1024, 704, HC, floor=DK, mat=floor)
+    m.low(256, 576, 640, 704, HC, floor=DK, mat=floor)
+    m.low(384, 256, 576, 320, F + 160)                           # the roller door's way
+    m.low(768, 256, 832, 320, DK + 64, floor=DK)                 # the conveyor's hatch
+    m.low(928, 256, 992, 320, DK + 104, floor=DK)                # the staff door's way
+    m.side(256, 256, 1024, 704)
+    m.no_bank(768, 248, 832, 264)
+    m.no_bank(928, 248, 992, 264)
+    m.portal(384, 287, F, 576, 289, F + 160)
+    m.portal(768, 287, DK, 832, 289, DK + 64)
+    m.portal(928, 287, DK, 992, 289, DK + 104)
+    m.taken(368, 224, F, 592, 256, F + 184)
+    m.taken(744, 224, F, 1008, 256, F + 170)
+
+    # the roller door: slats on its outer face, a steel frame round the mouth, a lamp over it
+    m.door("lc_depot_door", [(384, 280, F, 576, 296, F + 160)] + [(384, 278, z, 576, 280, z + 6) for z in range(F + 8, F + 156, 16)], STEEL, "-90 0 0", speed=40, lip=8)
+    m.det([(376, 248, F, 384, 256, F + 168), (576, 248, F, 584, 256, F + 168), (376, 248, F + 160, 584, 256, F + 176)], PIPE)
+    m.det([(384, 276, F + 152, 576, 300, F + 160)], PIPE)                                        # the drum's casing
+    m.lamp(480, 244, F + 200, "255 214 160 80")
+    m.button("lc_depot_button_door", 364, 320, F + 44, 90, [("lc_depot_door", "Toggle", "", 0)], wait="2")
+    m.test_button((568, 262, F + 48, 576, 274, F + 64), [("OnIn", "lc_depot_door", "Open"), ("OnOut", "lc_depot_door", "Close")])
+
+    # the dock: a steel edge and rubber bumpers toward the bay, steps up beside the door
+    m.det([(636, 320, DK - 6, 640, 576, DK), (256, 572, DK - 6, 640, 576, DK)], PIPE)
+    m.det([(u, 568, DK - 30, u + 24, 576, DK - 8) for u in (408, 528)] + [(632, v, DK - 30, 640, v + 24, DK - 8) for v in (420, 500)], MAT["black"])
+    m.steps(580, 320, 384, F, DK, "u", 1)
+    m.blocked(576, 320, 640, 384)
+    m.static("models/props_vehicles/truck001a.mdl", 468, 448, 270)
+    m.blocked(400, 320, 544, 576)
+    # the back of the dock: pallets of crates waiting to go
+    for k, (u, v, n) in enumerate(((312, 648, 2), (410, 652, 1), (520, 644, 2))):
+        m.static("models/props_junk/wood_pallet001a.mdl", u, v, 90 if k % 2 else 0, z=DK)
+        for j in range(n):
+            m.loose("models/props_junk/wood_crate001a.mdl", u, v, 8 * k + 20 * j, z=DK + 9 + 40 * j)
+    m.loose("models/items/item_item_crate.mdl", 590, 600, 30, z=DK)
+
+    # the cages: one run of chain link 112 high with a mesh roof, two partitions, a gate each, shelves along the back wall
+    cz, fv = DK, 608
+    gates = ((652, 772, 684, 740), (772, 892, 804, 860), (892, 1024, 930, 986))
+    for k, (a, e, g1, g2) in enumerate(gates):
+        chain_link(m, (a, fv), (g1, fv), cz, 112)
+        chain_link(m, (g2, fv), (e, fv), cz, 112)
+        m.det([(g1, fv - 2, cz + 96, g2, fv + 2, cz + 112)], PIPE)
+        mesh_gate(m, "lc_depot_cage_%d" % (k + 1), (g1, fv), (g2, fv), cz, high=96)
+        if k < 2:
+            chain_link(m, (e, fv), (e, 704), cz, 112)
+        # shelves: three boards on uprights, cartons on them
+        s1, s2 = a + 10, min(e, 1020) - 10
+        m.det([(s1, 676, cz + z, s2, 702, cz + z + 3) for z in (28, 60, 92)] + [(u, 676, cz, u + 3, 679, cz + 95) for u in (s1, (s1 + s2) // 2, s2 - 3)], PIPE)
+        cartons = []
+        for j, z in enumerate((31, 63, 95)):
+            u = s1 + 6 + 5 * ((k + j) % 3)
+            while u + 20 < s2 - 4:
+                w, h = 18 + 6 * ((u + j + k) % 3), 12 + 5 * ((u // 7 + j) % 3)
+                if (u + 3 * j + k) % 5:
+                    cartons.append((u, 680, cz + z, u + w, 700, cz + z + min(h, 26)))
+                u += w + 4
+        m.det(cartons, wood)
+        mid = (a + min(e, 1020)) // 2
+        m.loose("models/items/item_item_crate.mdl", mid - 26, 650, 10 * k, z=cz)
+        m.loose("models/items/item_item_crate.mdl", mid + 20, 644, 40 + 25 * k, z=cz)
+    chain_link(m, (652, fv), (652, 704), cz, 112)
+    m.det([(652, fv, cz + 112, 1024, 704, cz + 113)], MAT["fence"])
+    m.blocked(640, 592, 1024, 704)
+
+    # the conveyor: rollers between two rails from the dock out through the hatch, and a chute down to the canal
+    c1, c2, bz = 780, 820, DK + 20
+    rails = []
+    for a, e in ((176, 287), (289, 432)):
+        rails += [(c1, a, bz, c1 + 4, e, bz + 8), (c2 - 4, a, bz, c2, e, bz + 8)]
+    rails += [(u, v, DK, u + 4, v + 4, bz) for u in (c1, c2 - 4) for v in (328, 428)] + [(u, 176, F, u + 4, 180, bz) for u in (c1, c2 - 4)]
+    m.det(rails, PIPE)
+    m.shapes([pipe_u(v, bz + 5, 3, c1 + 4, c2 - 4) for v in range(184, 430, 16) if not 280 < v < 296]
+             + [prism([(176, bz), (176, bz + 4), (112, F + 8), (112, F + 4)], "x", c1, c2, STEEL)])
+    m.det([(768, 298, DK + 54, 832, 304, DK + 64), (768, 298, DK, c1, 304, DK + 54), (c2, 298, DK, 832, 304, DK + 54)], STEEL)     # the hatch's shutter and cheeks
+    m.loose("models/items/item_item_crate.mdl", 800, 380, 0, z=bz + 8)
+    m.blocked(768, 128, 832, 448)
+    # the notches in the bank at the hatch and the staff door: concrete cheeks, and the door's steps
+    cheek = [(256, F), (120, F), (256, F + 136)]
+    m.shapes([prism(cheek, "x", u, u + 8, MAT["beam"]) for u in (760, 832, 920, 992)])
+    m.steps(196, 928, 992, F, DK, "v", 1)
+    m.blocked(928, 128, 992, 320)
+
+    # the staff door: a steel leaf in a frame; no Use opens it
+    m.det([(928, 280, DK, 936, 296, DK + 104), (984, 280, DK, 992, 296, DK + 104), (936, 280, DK + 96, 984, 296, DK + 104)], PIPE)
+    swing_gate(m, "lc_depot_side", [((936, 284, DK, 984, 292, DK + 96), STEEL), ((944, 283, DK + 40, 976, 293, DK + 48), PIPE)], (936, 288, DK), flags="0", wait="4")
+    m.button("lc_depot_button_side", 1008, 320, DK + 44, 90, [("lc_depot_side", "Open", "", 0)], wait="5")
+    m.lamp(960, 244, DK + 130, "255 60 40 25")
+
+    # the dispatch desk: the console against the end wall, a counter, a chair, a cabinet
+    m.dynamic("models/props_combine/combine_interface001.mdl", 996, 500, 180, z=DK, name="lc_depot_desk")
+    m.det([(884, 452, DK, 916, 556, DK + 36)], MM["beam_wood"], top=wood)
+    m.det([(884, 452, DK + 36, 916, 556, DK + 38)], wood)
+    m.static("models/props_wasteland/controlroom_chair001a.mdl", 946, 500, 0, z=DK)
+    m.static("models/props_wasteland/controlroom_filecabinet002a.mdl", 1006, 400, 180, z=DK)
+    m.loose("models/props_junk/cardboard_box002a.mdl", 900, 480, 20, z=DK + 38)
+    for u, v in ((448, 448), (832, 480), (420, 640), (840, 656)):
+        m.lamp(u, v, HC - 8, "255 226 180 55")
+    m.lane(480, 288)
+    m.lane(340, 448)
+    m.lane(700, 480, DK)
+    m.lane(960, 340, DK)
+    m.view(480, 40, F, 90, 0, "the roller door from the canal")
+    m.view(300, 350, F, 35, 4, "the loading bay")
+    m.view(690, 440, DK, 55, 6, "on the dock: the cages")
+    m.view(700, 560, DK, 335, 6, "the dispatch desk and the conveyor")
+    m.view(880, 20, F, 95, 0, "the hatch, the chute and the staff door")
+    b.notes.append("%s: the bay's floor is z %d, the dock z %d, the roof z %d" % (m.tag, F, DK, HC))
+
+
 MODULES = {
     "lock": (1536, m_lock, "a lock house: two steel gates and the control house that works them"),
     "railbridge": (1024, m_railbridge, "a railway bridge: a Combine train crosses every few minutes (experimental)"),
     "pumphouse": (1280, m_pumphouse, "a pumping station: a machine hall, a flywheel, a turbine pit, a pipe bridge"),
+    "thumper": (1024, m_thumper, "a Combine thumper on a fenced terrace, with the box that stops it (experimental)"),
+    "depot": (1280, m_depot, "the Combine's ration depot: a roller door, a loading bay, caged stores, a staff door"),
 }

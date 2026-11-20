@@ -30,7 +30,7 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .mod h2 { font: 500 26px/1.1 var(--mono); margin: 0; color: var(--canal); }
 .meta { margin: 0; display: flex; flex-wrap: wrap; gap: 6px 14px; color: var(--soft); font-size: 13px; text-transform: uppercase; letter-spacing: .06em; font-variant-numeric: tabular-nums; }
 .sum { margin: 0; max-width: 78ch; }
-.shots { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 10px; }
+.shots { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; }
 .shot { all: unset; cursor: zoom-in; display: grid; gap: 4px; min-width: 0; }
 .shot img { display: block; width: 100%; height: auto; aspect-ratio: 8 / 5; object-fit: cover; border: 1px solid var(--line); background: var(--chip); }
 .shot span { font-size: 12px; color: var(--soft); }
@@ -81,7 +81,7 @@ dialog figcaption { color: #dfe6e3; font: 14px var(--body); display: flex; justi
   var big = document.getElementById('big'), img = document.getElementById('bigimg'), cap = document.getElementById('bigcap');
   document.getElementById('list').addEventListener('click', function (e) {
     var s = e.target.closest('.shot'); if (!s) return;
-    img.src = s.dataset.full; img.alt = s.dataset.cap; cap.textContent = s.dataset.cap;
+    img.src = s.querySelector('img').src; img.alt = s.dataset.cap; cap.textContent = s.dataset.cap;
     if (big.showModal) big.showModal(); else big.setAttribute('open', '');
   });
   document.getElementById('close').addEventListener('click', function () { big.close(); });

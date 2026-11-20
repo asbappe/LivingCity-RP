@@ -72,6 +72,21 @@
 "ragdoll": false,
 "static": false
 },
+"models/items/ammocrate_grenade.mdl": {
+"bbox": [
+-16.3,
+-28.3,
+-16.3,
+17.0,
+28.3,
+17.8
+],
+"collides": true,
+"game": "hl2",
+"physics": false,
+"ragdoll": false,
+"static": false
+},
 "models/items/ammocrate_smg1.mdl": {
 "bbox": [
 -16.3,
@@ -86,6 +101,96 @@
 "physics": false,
 "ragdoll": false,
 "static": false
+},
+"models/items/battery.mdl": {
+"bbox": [
+-4.3,
+-2.5,
+-0.3,
+2.5,
+2.5,
+10.3
+],
+"collides": true,
+"game": "hl2",
+"physics": true,
+"ragdoll": false,
+"static": true
+},
+"models/items/boxmrounds.mdl": {
+"bbox": [
+-6.1,
+-10.0,
+-0.3,
+6.1,
+10.0,
+13.6
+],
+"collides": true,
+"game": "hl2",
+"physics": true,
+"ragdoll": false,
+"static": true
+},
+"models/items/boxsrounds.mdl": {
+"bbox": [
+-3.1,
+-9.4,
+-0.3,
+3.1,
+9.5,
+11.5
+],
+"collides": true,
+"game": "hl2",
+"physics": true,
+"ragdoll": false,
+"static": true
+},
+"models/items/combine_rifle_ammo01.mdl": {
+"bbox": [
+-3.9,
+-4.1,
+-0.3,
+3.9,
+4.1,
+12.2
+],
+"collides": true,
+"game": "hl2",
+"physics": false,
+"ragdoll": false,
+"static": false
+},
+"models/items/combine_rifle_cartridge01.mdl": {
+"bbox": [
+-5.9,
+-1.6,
+-6.0,
+6.1,
+1.6,
+6.6
+],
+"collides": true,
+"game": "hl2",
+"physics": false,
+"ragdoll": false,
+"static": true
+},
+"models/items/healthkit.mdl": {
+"bbox": [
+-3.6,
+-7.3,
+-0.3,
+14.2,
+7.4,
+6.1
+],
+"collides": true,
+"game": "hl2",
+"physics": true,
+"ragdoll": false,
+"static": true
 },
 "models/items/item_item_crate.mdl": {
 "bbox": [
@@ -207,6 +312,21 @@
 "ragdoll": false,
 "static": true
 },
+"models/props_c17/furnituredrawer001a.mdl": {
+"bbox": [
+-14.1,
+-23.8,
+-20.3,
+14.0,
+23.3,
+20.1
+],
+"collides": true,
+"game": "hl2",
+"physics": true,
+"ragdoll": false,
+"static": true
+},
 "models/props_c17/furnituredresser001a.mdl": {
 "bbox": [
 -17.5,
@@ -309,6 +429,21 @@
 "collides": true,
 "game": "hl2",
 "physics": true,
+"ragdoll": false,
+"static": true
+},
+"models/props_c17/metalladder001.mdl": {
+"bbox": [
+-3.3,
+-12.2,
+-0.3,
+3.3,
+12.2,
+128.4
+],
+"collides": true,
+"game": "hl2",
+"physics": false,
 "ragdoll": false,
 "static": true
 },
@@ -468,6 +603,21 @@
 "ragdoll": false,
 "static": true
 },
+"models/props_combine/breenglobe.mdl": {
+"bbox": [
+-7.7,
+-7.7,
+-9.2,
+7.7,
+7.7,
+9.1
+],
+"collides": true,
+"game": "hl2",
+"physics": true,
+"ragdoll": false,
+"static": false
+},
 "models/props_combine/combine_barricade_short01a.mdl": {
 "bbox": [
 -9.1,
@@ -480,6 +630,36 @@
 "collides": true,
 "game": "hl2",
 "physics": true,
+"ragdoll": false,
+"static": true
+},
+"models/props_combine/combine_dispenser.mdl": {
+"bbox": [
+-30.1,
+-32.1,
+-22.5,
+9.3,
+34.9,
+60.6
+],
+"collides": false,
+"game": "hl2",
+"physics": false,
+"ragdoll": false,
+"static": false
+},
+"models/props_combine/combine_emitter01.mdl": {
+"bbox": [
+-22.8,
+-12.4,
+-1.2,
+24.0,
+9.4,
+21.5
+],
+"collides": true,
+"game": "hl2",
+"physics": false,
 "ragdoll": false,
 "static": true
 },
@@ -510,6 +690,66 @@
 "collides": true,
 "game": "hl2",
 "physics": true,
+"ragdoll": false,
+"static": true
+},
+"models/props_combine/combine_intmonitor001.mdl": {
+"bbox": [
+-9.9,
+-45.7,
+0.0,
+6.3,
+37.1,
+65.0
+],
+"collides": true,
+"game": "hl2",
+"physics": true,
+"ragdoll": false,
+"static": true
+},
+"models/props_combine/combine_light001a.mdl": {
+"bbox": [
+-18.8,
+-11.6,
+-3.8,
+16.6,
+11.6,
+42.3
+],
+"collides": true,
+"game": "hl2",
+"physics": false,
+"ragdoll": false,
+"static": true
+},
+"models/props_combine/combine_lock01.mdl": {
+"bbox": [
+-9.0,
+-7.0,
+-19.2,
+9.0,
+7.0,
+20.0
+],
+"collides": true,
+"game": "hl2",
+"physics": false,
+"ragdoll": false,
+"static": true
+},
+"models/props_combine/combine_monitorbay.mdl": {
+"bbox": [
+-41.1,
+-99.5,
+-53.8,
+39.7,
+131.5,
+65.3
+],
+"collides": true,
+"game": "hl2",
+"physics": false,
 "ragdoll": false,
 "static": true
 },
@@ -557,6 +797,21 @@
 "physics": false,
 "ragdoll": false,
 "static": false
+},
+"models/props_combine/weaponstripper.mdl": {
+"bbox": [
+-15.1,
+-64.3,
+-0.3,
+19.1,
+64.3,
+128.9
+],
+"collides": true,
+"game": "hl2",
+"physics": false,
+"ragdoll": false,
+"static": true
 },
 "models/props_debris/barricade_short01a.mdl": {
 "bbox": [
@@ -671,6 +926,36 @@
 16.4,
 19.6,
 12.3
+],
+"collides": true,
+"game": "hl2",
+"physics": true,
+"ragdoll": false,
+"static": true
+},
+"models/props_junk/cardboard_box002a.mdl": {
+"bbox": [
+-16.4,
+-19.6,
+-12.3,
+16.4,
+19.6,
+12.3
+],
+"collides": true,
+"game": "hl2",
+"physics": true,
+"ragdoll": false,
+"static": true
+},
+"models/props_junk/cardboard_box003a.mdl": {
+"bbox": [
+-5.5,
+-14.0,
+-9.9,
+16.4,
+16.7,
+4.6
 ],
 "collides": true,
 "game": "hl2",
@@ -918,6 +1203,21 @@
 "ragdoll": false,
 "static": true
 },
+"models/props_lab/reciever_cart.mdl": {
+"bbox": [
+-16.2,
+-23.2,
+-35.5,
+16.8,
+22.6,
+35.6
+],
+"collides": true,
+"game": "hl2",
+"physics": true,
+"ragdoll": false,
+"static": true
+},
 "models/props_lab/workspace004.mdl": {
 "bbox": [
 -53.7,
@@ -1035,6 +1335,21 @@
 "collides": true,
 "game": "hl2",
 "physics": false,
+"ragdoll": false,
+"static": true
+},
+"models/props_vehicles/apc001.mdl": {
+"bbox": [
+-65.3,
+-174.8,
+-48.0,
+65.3,
+153.3,
+164.9
+],
+"collides": true,
+"game": "hl2",
+"physics": true,
 "ragdoll": false,
 "static": true
 },
@@ -1263,6 +1578,21 @@
 "ragdoll": false,
 "static": true
 },
+"models/props_wasteland/kitchen_shelf001a.mdl": {
+"bbox": [
+-31.8,
+-15.9,
+-0.3,
+31.9,
+15.8,
+96.7
+],
+"collides": true,
+"game": "hl2",
+"physics": true,
+"ragdoll": false,
+"static": true
+},
 "models/props_wasteland/kitchen_shelf002a.mdl": {
 "bbox": [
 -15.8,
@@ -1271,6 +1601,21 @@
 16.0,
 21.8,
 72.6
+],
+"collides": true,
+"game": "hl2",
+"physics": true,
+"ragdoll": false,
+"static": true
+},
+"models/props_wasteland/laundry_cart001.mdl": {
+"bbox": [
+-54.5,
+-23.5,
+-19.8,
+54.0,
+23.5,
+19.7
 ],
 "collides": true,
 "game": "hl2",
@@ -1316,6 +1661,66 @@
 26.9,
 5.5,
 13.3
+],
+"collides": true,
+"game": "hl2",
+"physics": false,
+"ragdoll": false,
+"static": false
+},
+"models/weapons/w_package.mdl": {
+"bbox": [
+-5.3,
+-13.5,
+-7.0,
+12.9,
+1.1,
+3.0
+],
+"collides": true,
+"game": "hl2",
+"physics": false,
+"ragdoll": false,
+"static": false
+},
+"models/weapons/w_pistol.mdl": {
+"bbox": [
+-6.0,
+-1.6,
+-6.1,
+5.8,
+2.5,
+2.1
+],
+"collides": true,
+"game": "hl2",
+"physics": false,
+"ragdoll": false,
+"static": false
+},
+"models/weapons/w_shotgun.mdl": {
+"bbox": [
+-15.4,
+-2.1,
+-9.4,
+16.7,
+1.5,
+8.7
+],
+"collides": true,
+"game": "hl2",
+"physics": false,
+"ragdoll": false,
+"static": false
+},
+"models/weapons/w_smg1.mdl": {
+"bbox": [
+-12.0,
+-0.6,
+-8.5,
+8.4,
+2.9,
+5.9
 ],
 "collides": true,
 "game": "hl2",
