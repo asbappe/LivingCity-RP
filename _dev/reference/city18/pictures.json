@@ -15,5 +15,311 @@
   "Optimisation: 62 func_areaportal, 41 func_areaportalwindow, 24 func_lod, 321 env_cubemap, 21 info_lighting, 1826 info_node and 580 info_node_air.",
   "Brushwork: 3612 func_detail entities: much of the city's detail is detail brushes over a simple sealed shell."
  ],
- "pictures": []
+ "pictures": [
+  {
+   "n": 1,
+   "file": "01_overview_sw.png",
+   "where": "the whole city from the south-west (x -3200 to 5200, y -5000 to 6400)",
+   "teaches": "Dense blocks of very different heights packed tight, no two alike; towers and low sheds side by side; the Combine's dark blue buildings rising out of the brick and plaster city.",
+   "lessons": [
+    "skyline-corners",
+    "facades"
+   ]
+  },
+  {
+   "n": 2,
+   "file": "02_overview_ne.png",
+   "where": "the whole city from the north-east",
+   "teaches": "The same from the other side: small courtyards and lanes between the blocks, roofs at many levels, pitched roofs here and there, the Combine's angular dark structures in the middle.",
+   "lessons": [
+    "skyline-corners"
+   ]
+  },
+  {
+   "n": 3,
+   "file": "03_street.png",
+   "where": "the station's terminal square (eye -266 -10 720, looking south)",
+   "teaches": "A big paved square in a large tile grid; a curved brick corner building banded at every floor with its windows in strips; stepped and set-back masses; steps up to entrances; lampposts all round the square's edge.",
+   "lessons": [
+    "skyline-corners",
+    "street-profile",
+    "city18-lighting"
+   ]
+  },
+  {
+   "n": 4,
+   "file": "04_station.png",
+   "where": "inside the station by the spawn points (eye 3387 -2602 816, looking north)",
+   "teaches": "A big hall in two tones (brick to shoulder height, plaster above); a doorway into an arched passage lit at the far end. Two-tone walls work at every scale, and a vault reads at once as old and solid.",
+   "lessons": [
+    "city18-interiors",
+    "true-curves"
+   ]
+  },
+  {
+   "n": 5,
+   "file": "05_flat.png",
+   "where": "a flat in the apartments (eye -1485 146 1269, looking east)",
+   "teaches": "The flats' way: plaster walls split by a dado line, wooden floor, a timber door casing standing proud, a window seen through the doorway beyond. Nothing in it is a cream box.",
+   "lessons": [
+    "city18-interiors",
+    "real-doors",
+    "fake-windows"
+   ]
+  },
+  {
+   "n": 6,
+   "file": "06_canal.png",
+   "where": "the owner's canal tunnel (eye 336 1529 346, looking north)",
+   "teaches": "The owner's canal has water: a channel down the middle with a raised walkway each side, a round-arched tunnel mouth, pipes overhead, lamps on the walls, a slot window high in the wall. The modules' dry canal floor does not match it.",
+   "lessons": [
+    "canal-water",
+    "city18-lighting",
+    "true-curves"
+   ]
+  },
+  {
+   "n": 7,
+   "file": "07_cells.png",
+   "where": "the Combine's cell block (eye 2776 580 986, looking north)",
+   "teaches": "The Combine's own interior: dark blue Combine metal walls with ribs arching over a barrel vault, cells opening off one side, lamps on the ribs. Combine places are built in the Combine's kit and shapes, not in plaster.",
+   "lessons": [
+    "combine-kit",
+    "city18-lighting",
+    "true-curves"
+   ]
+  },
+  {
+   "n": 8,
+   "file": "08_combine.png",
+   "where": "a Combine fence line by the terminal square (eye 100 -2408 1000, looking east)",
+   "teaches": "A narrow lane between a brick building and a high wall, a raised walkway running off along the wall, a Combine structure beyond; lampposts against the walls.",
+   "lessons": [
+    "combine-kit",
+    "skyline-corners"
+   ]
+  },
+  {
+   "n": 9,
+   "file": "09_payphone.png",
+   "where": "the terminal square by the payphones (eye 675 -1115 724, looking north-west)",
+   "teaches": "Brick and plaster fronts banded at every floor, windows in rows, steps up to a raised forecourt, lampposts at the square's edge, the Combine's dark tower over the roofs: the street as City 18 builds it.",
+   "lessons": [
+    "facades",
+    "street-profile",
+    "skyline-corners"
+   ]
+  },
+  {
+   "n": 10,
+   "file": "10_waiting.png",
+   "where": "a covered way with benches (eye -1239 1406 875, looking south)",
+   "teaches": "A street passing under a building on chunky concrete beams and posts, kerbed pavement, a payphone on the wall, lamps and fluorescent fittings under the deck: covered streets give the city depth and shade.",
+   "lessons": [
+    "street-profile",
+    "city18-lighting"
+   ]
+  },
+  {
+   "n": 11,
+   "file": "11_street_main.png",
+   "where": "the main street west of the square (eye -300 -980 724, looking east)",
+   "teaches": "A street corner with an octagonal-cornered tower in pale concrete, brick blocks beside it, lampposts, a wide pavement in a large tile grid with steps up onto a raised forecourt: cut corners and level changes in the street itself.",
+   "lessons": [
+    "skyline-corners",
+    "street-profile"
+   ]
+  },
+  {
+   "n": 12,
+   "file": "12_block_above.png",
+   "where": "the block round the terminal square from above (south-west)",
+   "teaches": "How a block is massed: many separate volumes of different heights and materials (brick, pale concrete, the Combine's dark blue), courtyards and lit rooms inside, balconies and stair towers on the faces; never one box.",
+   "lessons": [
+    "skyline-corners",
+    "facades"
+   ]
+  },
+  {
+   "n": 13,
+   "file": "13_toilet.png",
+   "where": "a street of tall brick blocks (eye -850 462 863, looking south)",
+   "teaches": "Tall brick facades with strong vertical piers and horizontal bands, windows grouped in bays, a projecting sign box, lampposts, a paved street in a tile grid with steps: rhythm and depth on every front.",
+   "lessons": [
+    "facades",
+    "skyline-corners",
+    "street-profile"
+   ]
+  },
+  {
+   "n": 14,
+   "file": "14_flats_plan.png",
+   "where": "the apartment block cut away at z 1180 (south-west)",
+   "teaches": "The flats' plan: a corridor down the middle with small rooms off both sides, furniture against the walls, every floor the same plan stacked, windows on the outer walls only, wood floors. The model for any house to live in.",
+   "lessons": [
+    "city18-interiors",
+    "room-to-move",
+    "fake-windows"
+   ]
+  },
+  {
+   "n": 15,
+   "file": "15_canal_above.png",
+   "where": "the canal and its tunnels cut away at z 900 (south-west)",
+   "teaches": "The owner's canal is water (blue) in a channel threaded through tunnels, pump rooms and service corridors at several levels, joined by stairs and ladders.",
+   "lessons": [
+    "canal-water"
+   ]
+  },
+  {
+   "n": 16,
+   "file": "16_ladder.png",
+   "where": "a service tunnel by the canal (eye -398 1456 468, looking east)",
+   "teaches": "A long service corridor in brick and earth tones with a ribbed vaulted ceiling and a lamp every so often, ending in a lit room: even a corridor has a ceiling shape and a rhythm of lights.",
+   "lessons": [
+    "city18-lighting",
+    "true-curves",
+    "city18-interiors"
+   ]
+  },
+  {
+   "n": 17,
+   "file": "17_street.png",
+   "where": "a back street (eye 426 -2314 704, looking east)",
+   "teaches": "Brick walls close on both sides, a kerb and gutter strip, a small building at the end with a canopy and a lamp over its door: back streets narrow and end on something to look at.",
+   "lessons": [
+    "street-profile",
+    "city18-lighting"
+   ]
+  },
+  {
+   "n": 18,
+   "file": "18_cells.png",
+   "where": "a lower Combine corridor (eye 2384 1015 426, looking south)",
+   "teaches": "Plaster walls with a Combine metal panel and door frame set in, fluorescent fittings on the wall: the Combine's kit laid into older rooms.",
+   "lessons": [
+    "combine-kit",
+    "city18-lighting"
+   ]
+  },
+  {
+   "n": 19,
+   "file": "19_combine.png",
+   "where": "a Combine rooftop (eye 2360 766 1688, looking north)",
+   "teaches": "The Combine's structures on the roofs: dark blue angular masses, a lamp on a parapet. The Combine sits on and over the old city, in its own material and shapes.",
+   "lessons": [
+    "combine-kit"
+   ]
+  },
+  {
+   "n": 20,
+   "file": "20_payphone.png",
+   "where": "a covered passage with a payphone (eye -1926 1264 852, looking north)",
+   "teaches": "A passage through a building in brick with a coffered ceiling, a window into a room on one side with a ledge, opening onto a bright street: passages frame the next place.",
+   "lessons": [
+    "city18-interiors",
+    "city18-lighting"
+   ]
+  },
+  {
+   "n": 21,
+   "file": "21_waiting.png",
+   "where": "an open square by the covered way (eye -1569 2384 899, looking north-west)",
+   "teaches": "A paved square in a large tile grid edged by brick and pale walls with a kerb along their foot, a lamppost against the wall, planting (green) on a wall top.",
+   "lessons": [
+    "street-profile"
+   ]
+  },
+  {
+   "n": 22,
+   "file": "22_street_section.png",
+   "where": "the street the town copies (eye 600 -2420 716, looking west)",
+   "teaches": "Pavements each side with a kerb and gutter, the road between, closed at the end by the Combine's wall with a huge gate: a street that ends on something.",
+   "lessons": [
+    "street-profile",
+    "combine-kit"
+   ]
+  },
+  {
+   "n": 23,
+   "file": "23_spot.png",
+   "where": "an alley off the square (eye 1746 -535 679, looking west)",
+   "teaches": "A narrow alley between brick walls opening onto a brightly lit square full of detail: a dark frame onto light draws the eye and the player.",
+   "lessons": [
+    "city18-lighting",
+    "facades"
+   ]
+  },
+  {
+   "n": 24,
+   "file": "24_toilet.png",
+   "where": "a hall with steps (eye 998 1017 783, looking north)",
+   "teaches": "A tall plaster hall with a heavy beam across, a sunken floor with steps down along two sides, a lit doorway at the end, a lamp on the wall.",
+   "lessons": [
+    "city18-interiors",
+    "city18-lighting"
+   ]
+  },
+  {
+   "n": 25,
+   "file": "25_station_plan.png",
+   "where": "the train station cut away at z 1100 (south-west)",
+   "teaches": "The station: an arched train hall beside a big rectangular waiting hall with the spawn points (white posts), both in two tones (brick to shoulder height), lit by spotlights from the walls (the cones).",
+   "lessons": [
+    "city18-interiors",
+    "city18-lighting",
+    "true-curves"
+   ]
+  },
+  {
+   "n": 26,
+   "file": "26_combine_plan.png",
+   "where": "the Combine block cut away at z 1150 (south-east)",
+   "teaches": "The Combine's own building: rooms of Combine metal with angled walls and chamfers, cells off a corridor, a walkway round the outside behind railings; nothing in it is plain plaster.",
+   "lessons": [
+    "combine-kit"
+   ]
+  },
+  {
+   "n": 27,
+   "file": "27_square_above.png",
+   "where": "the terminal square and its streets from above (north-east)",
+   "teaches": "Brick blocks with rows of balconies and windows round the square, the Combine's dark tower rising out of the middle, the paved square in a grid between.",
+   "lessons": [
+    "skyline-corners",
+    "facades",
+    "combine-kit"
+   ]
+  },
+  {
+   "n": 28,
+   "file": "28_covered_above.png",
+   "where": "the covered way and courtyards from above (north-west)",
+   "teaches": "Tall plain walls with planting, small courtyards and passages under buildings, stairs and doorways at the foot: the city's back spaces.",
+   "lessons": [
+    "facades"
+   ]
+  },
+  {
+   "n": 29,
+   "file": "29_payphone.png",
+   "where": "the station's arched hall (eye 3145 -1856 820, looking north-west)",
+   "teaches": "A barrel-vaulted hall with arched ribs, two-tone walls (brick below, plaster above), a row of windows high up, lamps on the walls at one height: an arched roof makes a hall.",
+   "lessons": [
+    "true-curves",
+    "city18-interiors",
+    "city18-lighting"
+   ]
+  },
+  {
+   "n": 30,
+   "file": "30_waiting.png",
+   "where": "a train platform (eye -2165 4233 683, looking south-west)",
+   "teaches": "A platform under a deck on steel columns and beams, the track in a channel, brick walls behind, lights in a row along the far wall and under the deck: structure shown, light in rhythm.",
+   "lessons": [
+    "city18-lighting",
+    "true-curves"
+   ]
+  }
+ ]
 }
