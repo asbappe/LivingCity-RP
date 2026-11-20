@@ -665,3 +665,34 @@ Filled in as the review goes; the first ones are clear already:
 
 **Weight.** small.
 
+### 39. garden (street 2; also a canal module): the walled garden
+
+**Seen.** Steps and a board fence with an iron gate into a yard: six raised timber beds with ridged soil, a flagstone path, bean poles over two beds, a scarecrow (a brush figure with a hat), a tool lean-to with a lamp, a barrel under a gutter pipe, a compost heap, a cart, a wheelbarrow, melons; eight planting spots marked for the game.
+
+**Fix.**
+- Between the beds the yard is the canal's grey concrete with flagstones laid on it: a garden's ground is earth and worn grass (the module already has a grass material, nature/grassfloor002a, and the dirt one), the flagstones set into it.
+- The bean poles stand bare: nothing grows on them. Leafy plant models at their feet climbing a little (Half-Life 2's foliage: the ferns and shrubs the bunker forest uses), or fewer poles with some leaning, so they read as a crop and not as a fence of sticks.
+
+**Better.**
+- Things growing in the beds that are not the game's: rows of small plants (low foliage props, a cabbage-like shrub), a bed of seedlings under an old window laid on bricks as a cold frame (a glass brush on timber).
+- The lean-to: seed packets and jars on a shelf, a hose coiled, a watering can (if no model, a bucket), sacks.
+- Birds: a pigeon or crow sound, and the scarecrow earning its keep with a crow on a fence post (Half-Life 2's crow NPC is the game's to place; the sound is enough here).
+- A soundscape of the street above and birds, quieter than the canal.
+
+**Weight.** small.
+
+### 40. market (street 2; also a canal module): the black market arcade
+
+**Seen.** Two archways into a vaulted arcade with ribs at every pier; five stalls along the back behind roll shutters (some up, some down), each now deeper with a counter at the front, a shelf at the back and a couple of goods; a fire drum between two benches, a lookout's stool in each archway, dome lamps.
+
+**Fix.**
+- The shutters are flat plain panels: give them the corrugated door material (as the boathouse's should have), with a padlock on the down ones (prison_padlock001a) and a handle at the foot.
+- The arcade's walls and vault are a pale clean plaster: a black market in a canal wall is grimy, smoke-blackened over the fire drum (a soot overlay above it), damp at the floor.
+
+**Better.**
+- Sell the black market's goods: Half-Life 2's ration package (models/weapons/w_package), batteries and health vials (items/battery, items/healthvial), radios and parts (props_lab), Combine things stripped and resold, a crate of Breen's water cans (props_junk popcan models).
+- Each stall its own trade, shown above it: a hand-painted sign (a board brush with decalfont letters), an awning (props_c17 awning001a/002a) over the open ones, hanging lanterns.
+- Smoke from the fire drum gathering under the vault (an env_smokestack, thin), a soundscape of low voices and the fire.
+
+**Weight.** small.
+
