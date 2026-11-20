@@ -267,6 +267,21 @@
 "ragdoll": false,
 "static": true
 },
+"models/props_c17/metalladder002b.mdl": {
+"bbox": [
+-11.2,
+-12.3,
+0.0,
+9.5,
+12.3,
+25.2
+],
+"collides": true,
+"game": "hl2",
+"physics": false,
+"ragdoll": false,
+"static": true
+},
 "models/props_c17/metalpot001a.mdl": {
 "bbox": [
 -9.6,

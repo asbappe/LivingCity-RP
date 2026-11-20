@@ -19,7 +19,7 @@ BRICK = "brick/brickwall045d"
 PLASTER = "plaster/plasterwall042c"
 ROAD = "concrete/concretefloor016a"
 DIRT = "nature/dirtfloor005c"
-DUCT = "metal/metalduct003a"
+DUCT = "metal/metalwall014a"      # (the guide lists metal/metalduct003a, but no such material is in the game: it is props/metalduct003a)
 STONE = "stone/stonewall040f"
 P = "models/"
 
