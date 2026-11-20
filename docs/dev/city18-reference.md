@@ -60,7 +60,7 @@ The pictures are drawn by `map_view.py` (flat colours; props as boxes of their t
 
 ## The lessons
 
-Tags: `props`, `owner`, `compiler`, `check`, `performance`, `doors`, `stairs`, `geometry`, `bug`, `entities`, `lighting`, `city18`, `grime`, `sound`, `streets`, `facades`, `layout`, `interiors`, `combine`, `process`, `gameplay`, `canal`, `viewer`
+Tags: `props`, `owner`, `compiler`, `check`, `performance`, `doors`, `stairs`, `geometry`, `bug`, `entities`, `lighting`, `city18`, `grime`, `sound`, `streets`, `facades`, `layout`, `interiors`, `combine`, `process`, `gameplay`, `canal`, `viewer`, `materials`
 
 ### A thing is a prop, never brushes (`props-not-brushes`)
 
@@ -470,4 +470,13 @@ Two-tone plaster, a dado rail and skirting are thin detail brushes on the room s
 - **How:** map_town.lining(m, u1, v1, u2, v2, floor, ceil, low, high): reads the plan's squares to skip doorways.
 - **Checked by:** review
 - **Tags:** interiors, city18
+
+### Build in the owner's palette (`palette`)
+
+Prefer the materials and models the owner's own map uses (_dev/reference/city18/palette.json: 503 materials, 238 models, by count), so a piece looks like their city when it is stitched in. Their wood: wood/woodwall006a (panelling and trims), woodfloor006b and 007a (floors), woodstair002a/c (stairs), wooddoor042a. Steel: metal/metalhull010c. Grates: metalgrate016a, 013b, metalcombinegrate001a. Floors: concretefloor031a, 013a, 006a, 016a with a 039b kerb. Tiles: tilefloor009a, 007b, tilewall009b/d. Chain link: effects/metalfence007a (the tools use metal/metalfence007a: to change once the modules are done). The Combine: metalcombine001/002, citadel_metalwall090a/072c/077a.
+
+- **Why:** Counted in c18_lc.vmf, 20 November: wood/woodbeam001a, metal/metalhull003a and metal/metalfence007a, the tools' defaults, are not in it at all.
+- **How:** Pick from palette.json; map_town's trims are wood/woodwall006a since 20 November.
+- **Checked by:** map_lint.py palette (one LOOK line naming the commonest materials City 18 never uses)
+- **Tags:** materials, city18, check
 

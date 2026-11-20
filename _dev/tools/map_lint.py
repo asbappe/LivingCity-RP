@@ -18,6 +18,7 @@ often bigger than the model. What each kind means:
   view      a module's viewpoint inside a prop or a wall (its picture shows nothing)
   water     a water brush whose top is level with a floor (they flicker through each other)
   rope      a rope or cable end tied to nothing
+  palette   materials the owner's City 18 map never uses (listed once, the commonest first): use theirs where one fits
 """
 import argparse
 import math
@@ -252,6 +253,19 @@ def check(path, views=None, only=None):
         o = origin(e)
         if not any(all(b[k] - 20 <= o[k] <= b[k + 3] + 20 for k in range(3)) for b in near_boxes):
             say("rope", "a rope's end at (%d %d %d) is tied to nothing" % o)
+    # palette: materials City 18 never uses (one line, the commonest few)
+    pal = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "reference", "city18", "palette.json")
+    if os.path.exists(pal) and (not only or only == "palette"):
+        import json
+        theirs = json.load(open(pal))["materials"]
+        counts = {}
+        for b, mats in brushes:
+            for m in mats:
+                if not m.startswith("tools/") and m not in theirs:
+                    counts[m] = counts.get(m, 0) + 1
+        if counts:
+            top = sorted(counts.items(), key=lambda kv: -kv[1])[:6]
+            say("palette", "materials City 18 never uses: " + ", ".join("%s (%d)" % kv for kv in top) + ": use one of theirs where it fits (map_lessons.py --find palette)")
     return found
 
 

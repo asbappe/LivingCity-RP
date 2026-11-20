@@ -37,7 +37,7 @@ HQ_DOC = "the Resistance leader's office: a briefing room and an office behind i
 
 # What the owner's own streets are made of (counted in their map), and how their windows are laid.
 R = {"road": "stone/stonefloor006d_c17", "strip": "stone/stonefloor006f_c17", "walk": "concrete/concretefloor016a", "kerb": "concrete/concretefloor039b",
-     "plinth": "concrete/concretewall002c", "trim": "stone/stonewall050f", "frame": "wood/woodbeam001a"}
+     "plinth": "concrete/concretewall002c", "trim": "stone/stonewall050f", "frame": "wood/woodwall006a"}
 STYLES = (   # a house's ground floor and its upper floors: the commonest walls of the owner's own streets
     ("brick/brickwall053e", "concrete/concretewall074c"), ("plaster/plasterwall047b", "plaster/plasterwall042c"), ("brick/brickwall037a", "brick/brickwall037c"),
     ("concrete/concretewall059e", "concrete/concretewall055b"), ("brick/brickwall045d", "brick/brickwall040c"), ("stone/stonewall040f", "plaster/plasterwall046b"),
