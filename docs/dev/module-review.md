@@ -821,3 +821,33 @@ Filled in as the review goes; the first ones are clear already:
 
 **Weight.** small to medium.
 
+### 49. substation (street 4; also a canal module): transformers behind chain link, a fuse panel to break
+
+**Seen.** A concrete quay against the right wall fenced with chain link panels and a sliding gate; three of the city's transformers on it, cables up to an arm on the wall and across the canal, a switch cabinet with a breakable fuse panel, a caged warning lamp, a hum. Inside the fence a narrow aisle between the panels and the transformers.
+
+**Fix.**
+- The fence runs along the quay's very edge and the transformers fill the rest: inside is a corridor 64 wide between two walls of boxes. Pull the fence back from the quay's edge so the transformers stand in a yard, with the cabinet reachable without squeezing.
+- No warning anywhere: City 18 marks its danger (decalsigndanger001c and 001e are in the owner's map): signs on the fence and the cabinet, a lightning-bolt plate on each transformer.
+
+**Better.**
+- Make the power seen: the Combine's cable conduits (props_combine pipes01/02 singles) from the transformers into the canal wall toward the checkpoint the fuse feeds, a Combine meter box (combine_interface002/003) on the cabinet.
+- When it is cut: sparks from the transformers' tops as well as the panel, a smoke wisp, the hum's stop, every Combine light in the module going dark (name them: the relay is there).
+- A soundscape: electrical hum close, the canal's quiet beyond.
+
+**Weight.** small.
+
+### 50. morgue (street 4; also a canal module): the cold room
+
+**Seen.** A sliding steel door into a short passage and a tiled cold room: a wall of twelve drawers (brush, two pulled out), three steel surgery tables with the dead, a drain, a clerk's desk with a ledger and clipboard, hanging lamps, a hum. Clean and cold: it works.
+
+**Fix.**
+- The "cold lamps" are the warm industrial bell lamp: a cold room is lit by fluorescent tubes, and City 18 has them everywhere (props_lab lab_flourescentlight002b, 149 in the owner's map): two or three tubes on the ceiling, a cool white light.
+- The two corpses are ragdolls on the tables; they may slide off (the docstring says so). A body laid out does not move: a prop_static or a prop_ragdoll with the "start asleep" and "debris" flags, or the body under a sheet as a brush shape with a cloth material, which also reads more soberly.
+
+**Better.**
+- Tie it to the ash outfall (module 6): a body chute in the back wall (a steel hatch on a frame) where the dead go to the cremator, its conveyor rollers, a tag on each drawer (small decals or numbers).
+- The clerk's things: a stack of identity cards (paper props), a Combine terminal for the records (combine_interface or a monitor), a coat on a hook, a radio.
+- Cold breath: a faint mist near the floor (func_dustcloud in white, very thin), the hum of a compressor in the soundscape.
+
+**Weight.** small.
+
