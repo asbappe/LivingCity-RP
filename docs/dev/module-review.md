@@ -377,3 +377,36 @@ Filled in as the review goes; the first ones are clear already:
 
 **Weight.** large (the bus rebuilt or replaced), small (dressing).
 
+### 21. shell (showroom 3): a headcrab canister in the right bank
+
+**Seen.** The game's headcrab canister stands out of the right bank, nose buried, in a raised ring of mud; rocks thrown up on the bank; a crack drawn up the wall to the trim as thin black lines; seven low red-brown mounds round it, three bodies, smoke, a faint green light.
+
+**Fix.**
+- The crack is a few black strips standing on the wall: it reads as wires stuck to it. A crack is either painted (an overlay of a crack decal, decals/plaster013a and 016a are in the owner's map) or cut: a patch of the wall's face knocked out (a shallow recess with broken edges, brick or rebar showing), chunks of it on the bank below.
+- Round the impact there is no scorch: Half-Life 2 has a crater decal (decals/decal_crater001a) and burn decals for exactly this; the mud ring alone looks like a heap.
+
+**Better.**
+- The canister as Half-Life 2 shows one: steam venting from its open end (env_steam, white, short), a few sparks (env_spark on a slow timer), a small fire on the bank, the trail of smoke it left in the sky above (a long thin env_smokestack angled back the way it came).
+- Headcrab signs before any headcrab: a dead headcrab or two (the ragdoll), a zombie torso (charple or the zombie models as ragdolls), blood trails (decals) leading away up the bank into the city.
+- The Combine's answer: a police line across the canal at one end (decal_policeline01a, two barricades), a warning sign, a dead Civil Protection unit (the police model as a ragdoll) by the bars.
+- The growth: keep it, but make it read as alive: the mounds a slightly glossy dark material, small pulsing sprites in sick yellow on them (no flicker: a slow scale pulse is fine), a wet sound in the soundscape.
+
+**Weight.** small to medium.
+
+### 22. aqueduct (showroom 3): a water trough crossing over the canal
+
+**Seen.** A concrete trough on two piers crosses over the canal at the trim's height, from a barred culvert mouth in one wall to another; water in it; a narrow maintenance walk with a handrail on brackets along it; a ladder up the left pier; under mid-span a dark stain and a shallow pool in a ring of mud. From below it is a long dark beam on dark piers.
+
+**Fix.**
+- From the canal the trough's underside and the piers are almost black (no light reaches them): it is a silhouette, its brackets and ribs lost. A cage light on each pier under the walk and a light washing the trough's side.
+- The leak drips into the pool by sound only: water should be seen to fall (a thin falling-water brush or a stream of drops: an env_splash or a small particle-less sprite trail is not available, so a narrow vertical water sheet), with splashes in the pool.
+- Both culvert mouths are barred onto black (as in several modules: see the general list). A few feet of lit culvert behind each set of bars, the trough's water flowing on into it.
+
+**Better.**
+- Give it an aqueduct's shape: arches between the piers (as the arcade's), or ribs every 64 down the trough's sides, a coping along its top. City 18's concrete trims (stonewall050f, the owner's commonest trim) along its edges.
+- The algae: a green-black overlay trailing down the trough's side from the leak and at the waterline inside the trough.
+- Something to do with it: the valve on its rim could open a sluice and drain the trough (its water a func_water that lowers: a func_movelinear carrying the water brush), so the walk becomes a way along the empty trough into the culvert, a route the game can open.
+- A soundscape of running water overhead.
+
+**Weight.** small (lights, falling water, algae), medium (arches, the sluice).
+
