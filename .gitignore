@@ -5,3 +5,5 @@ _dev/core_snapshot.new.txt
 voice_out/
 _dev/tools/dl/
 _dev/tools/__pycache__/
+# maps the tools write while building and checking (sent to the owner as zips, never kept here)
+_dev/tools/lc_*.vmf
