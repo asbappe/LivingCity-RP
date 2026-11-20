@@ -1279,15 +1279,15 @@ def m_lift(m, opt):
     steel = MM["steel"]
     m.open(0, -256, 1024, 256)
     m.open(320, 256, 768, 576, floor=TRIM, mat=MAT["quay_floor"])
-    m.low(416, 576, 544, 704, TRIM + 128, floor=TRIM, mat=MAT["quay_floor"])
+    m.low(448, 576, 576, 704, TRIM + 128, floor=TRIM, mat=MAT["quay_floor"])
     m.side(320, 256, 768, 704)
     gate = "%s: the dock's street end (delete to join a street)" % b.vis
-    m.world((416, 640, TRIM, 544, 704, TRIM + 128), MAT["black"], vis=gate)
-    m.bars((416, 580, TRIM, 544, 588, TRIM + 128), "u", vis=gate)
-    b.plan.keep_out.append(m.fr.rect(352, 704, 608, 768))
-    m.blocked(416, 576, 544, 704)
-    m.det([(396, 560, TRIM, 416, 576, TRIM + 128), (544, 560, TRIM, 564, 576, TRIM + 128), (388, 556, TRIM + 128, 572, 576, TRIM + 152)], MAT["beam"])
-    m.target("lc_lift_street", 480, 540, TRIM + 8, 270)
+    m.world((448, 640, TRIM, 576, 704, TRIM + 128), MAT["black"], vis=gate)
+    m.bars((448, 580, TRIM, 576, 588, TRIM + 128), "u", vis=gate)
+    b.plan.keep_out.append(m.fr.rect(384, 704, 640, 768))
+    m.blocked(448, 576, 576, 704)
+    m.det([(428, 560, TRIM, 448, 576, TRIM + 128), (576, 560, TRIM, 596, 576, TRIM + 128), (420, 556, TRIM + 128, 604, 576, TRIM + 152)], MAT["beam"])
+    m.target("lc_lift_street", 512, 540, TRIM + 8, 270)
     m.target("lc_lift_dock", 544, 400, TRIM + 8, 270)
     # --- the lift: the bank cut away, four guide posts tied at their heads, the platform ---
     u1, v1, u2, v2 = 464, 96, 624, 256
@@ -1346,13 +1346,13 @@ def m_lift(m, opt):
     m.loose(P + "props_junk/wood_pallet001a.mdl", 680, 60, 60)
     m.lane(544, 60, F)
     m.lane(544, 330, TRIM)
-    m.lane(480, 520, TRIM)
+    m.lane(512, 520, TRIM)
     m.view(300, -70, F, 30, -10, "the lift at the bottom, the dock above")
     m.view(544, 110, F + 8, 90, -32, "from the platform, up")
     m.view(544, 300, TRIM, 100, 4, "the dock: the gate, the lorry")
     m.view(700, 560, TRIM, 215, 8, "from the back of the dock")
     b.notes.append("%s: the street end is at (%d %d), floor z %d, 128 wide and 128 high: bring a street to it, then delete its gate and cap; the lift's deck rides from z %d to z %d" % (
-        (m.tag,) + m.fr.pt(480, 704) + (TRIM, F + 8, F + 264)))
+        (m.tag,) + m.fr.pt(512, 704) + (TRIM, F + 8, F + 264)))
 
 
 MODULES = {
