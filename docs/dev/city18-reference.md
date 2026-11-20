@@ -122,7 +122,7 @@ Never put the door01_left model (or any door that looks openable) where it does 
 
 Fewer, larger steps: rise about 16, tread about 24 (the same slope as 8 and 12, half the steps).
 
-- **Why:** "It's like a stairway meant for toddlers or old ladies? these steps should be fewer and larger" (20 November).
+- **Why:** "It's like a stairway meant for toddlers or old ladies? these steps should be fewer and larger" (20 November). Measured in City 18 (20 November): the owner's own flights are mostly 8 up and 12 deep (about 300 steps of 8, 36 of 16), so 16 by 24 is their choice for the long flights of the new pieces (the canal's way up), not a copy of their map.
 - **How:** m.steps does it; hand-made stairs should match.
 - **Checked by:** review
 - **Tags:** stairs, owner
@@ -239,7 +239,7 @@ Where a light shines, the fixture is its _on model (light_cagelight02_on, not _o
 
 Light a room with two or three fixtures, not one; point some (light_spot, point_spotlight); use the city's own fixtures: dome lights, lab fluorescent tubes indoors, cage lights in service places, the Combine's light on Combine places, lampposts outside.
 
-- **Why:** The owner's map: 597 lights, 391 light_spot, 174 point_spotlight; dome light 151, lab fluorescent 149, Combine light 75, lamp fixture 52, cage light 47.
+- **Why:** The owner's map: 597 lights, 391 light_spot, 174 point_spotlight; dome light 151, lab fluorescent 149, Combine light 75, lamp fixture 52, cage light 47. Lampposts in City 18 stand 360 to 870 apart (most about 600 to 750).
 - **How:** m.lamp, m.spot, m.light; every canal stretch now gets a caged lamp on every third rib, a third of them dead (dress_canal_walls).
 - **Checked by:** review
 - **Tags:** lighting, city18
@@ -300,7 +300,7 @@ Use several of the owner's glass materials, each laid exactly as their map lays 
 Corner buildings get a cut (chamfered) corner, often with a doorway; rooflines get chimneys, aerials, dishes, the odd pitched roof; facades get balconies, shutters, shopfronts with signs and awnings.
 
 - **Why:** City 18's massing (octagonal columns, cut corners, stepped blocks); review of the town, 20 November.
-- **How:** To add to map_town.facade.
+- **How:** map_town.facade puts chimneys, aerials, dishes and vents on the roofs (roof_prop, one to a slot so they never stand in each other), a pitched roof on about one house in three, balconies on some upper floors, awnings and name boards over shop windows. The houses are filled 640 deep behind their fronts and the sky over inner roofs starts at the lid, so things can stand on them. Cut corners are still to do.
 - **Checked by:** review
 - **Tags:** facades, city18
 
@@ -452,4 +452,22 @@ Pass the free checks first; then one module sheet (six views in one picture) per
 - **How:** map_modules_check.py --only NAME --views DIR; map_view.py --size 800 520.
 - **Checked by:** process
 - **Tags:** viewer, process
+
+### A roof needs a house under it and air over it (`roofs-need-depth`)
+
+Things on a roof need the building to go back far enough to stand on (not a wall one square deep), and the sky must not sit directly on the roof (a skybox brush on the roof buries anything placed there). Keep the sky directly on top only along the map's outer edge, where it seals.
+
+- **Why:** Found building the town's roofline, 20 November: the first chimneys stood in the void behind one-square walls; the leak check caught them (entities outside the sealed space).
+- **How:** map_town.town_plan: plan.fill (640 behind every front), TownPlan.build (sky from the lid over inner roofs, on the roof only at the edge).
+- **Checked by:** the build's flood check (entities outside the sealed space)
+- **Tags:** facades, geometry
+
+### Line rooms only where there is wall (`room-linings`)
+
+Two-tone plaster, a dado rail and skirting are thin detail brushes on the room side of each wall, and only along the stretches where the plan has wall, never across a doorway.
+
+- **Why:** The owner's flats (picture 05); the town's flats, 20 November.
+- **How:** map_town.lining(m, u1, v1, u2, v2, floor, ceil, low, high): reads the plan's squares to skip doorways.
+- **Checked by:** review
+- **Tags:** interiors, city18
 

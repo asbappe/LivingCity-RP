@@ -32,6 +32,7 @@ way in: a wall in a visgroup of its own to delete where a road is joined.
 from map_build import CELL, GATE_HIGH, MAT, prism
 
 FLATS_DOC = "a house to live in: a front door that opens, a hall, and two flats of a kitchen and a bedroom each (stove, sink, fridge, table, bed)"
+SCAPE_TOWN = "d1_trainstation.QuietCourtyard"      # (one the owner's own map uses)
 HQ_DOC = "the Resistance leader's office: a briefing room and an office behind it (the game puts the flagpole at its door)"
 
 # What the owner's own streets are made of (counted in their map), and how their windows are laid.
@@ -58,6 +59,10 @@ PIPE = "models/props_pipes/gutter_256_001a.mdl"
 BOARD = "models/props_debris/wood_board05a.mdl"
 POST = "models/props_c17/lamppost03a_on.mdl"
 RAIL = "models/props_c17/handrail04_long.mdl"
+CHIMNEY, CHIMNEY_B, STACKS = "models/props_rooftop/chimneypipe01a.mdl", "models/props_rooftop/chimneypipe01b.mdl", "models/props_rooftop/chimneypipe_cluster02a.mdl"
+AERIALS = ("models/props_rooftop/antenna01a.mdl", "models/props_rooftop/antenna02a.mdl", "models/props_rooftop/antenna03a.mdl")
+DISH, VENT = "models/props_rooftop/satellitedish02.mdl", "models/props_rooftop/roof_vent001.mdl"
+RED_ROOF = "metal/metalroof004a"
 
 
 def m_hq(m, opt):
@@ -115,7 +120,10 @@ def m_flats(m, opt):
     the bedroom(s), can we have a few upstairs rooms too?")
     Named for the game: lc_flat_door (the front door), lc_flat_1 and lc_flat_2 (info_targets in the two kitchens). A
     second house in one chain takes a word after its name in the layout ("flats b"): lc_flat_b_door, lc_flat_b_1 ...
-    Unchecked: the mattress's height on its frame; which way the dresser and drawers face."""
+    Each bedroom has a bathroom behind it (a toilet, a sink, a bath); the walls are lined in two tones of plaster
+    with a dado rail, the living rooms panelled below it; the kitchens have the owner's fluorescent tube.
+    Unchecked: the mattress's height on its frame; which way the dresser, drawers, toilet and bath face;
+    the living rooms are panelled in wood/woodwall006a (the owner uses it 87 times)."""
     from map_modules import F
     H, D, Z = F + 128, F + 112, F + 160                     # the ground floor's ceiling, a doorway's, the upper floor
     nm = "lc_flat_" + "".join(w + "_" for w in opt[:1] if w.isalnum() and w != "flip")
@@ -129,12 +137,14 @@ def m_flats(m, opt):
         m.low(u1, 320, u1 + 192, 576, H, mat=tile)           # a kitchen
         m.low(u1, 640, u1 + 192, 896, H, mat=wood)           # a living room
         m.low(u1, 960, u1 + 192, 1216, Z + 128, floor=Z, mat=wood)   # a bedroom upstairs
+        m.low(u1, 1280, u1 + 192, 1408, Z + 112, floor=Z, mat=tile)  # its bathroom, through a door at the bedroom's back
+        m.low(u1 + 64, 1216, u1 + 128, 1280, Z + 112, floor=Z, mat=tile)
         m.low(u1 + 64, 576, u1 + 128, 640, D, mat=wood)      # the archway between kitchen and living room
     m.low(256, 384, 320, 448, D, mat=wood)                   # the flats' doors off the hall
     m.low(448, 384, 512, 448, D, mat=wood)
     m.low(256, 1024, 320, 1088, Z + 112, floor=Z, mat=wood)  # the bedrooms' doors off the passage
     m.low(448, 1024, 512, 1088, Z + 112, floor=Z, mat=wood)
-    m.side(64, 256, 704, 1216)
+    m.side(64, 256, 704, 1408)
     m.portal(320, 286, F, 384, 288, D)
     m.taken(308, 232, F, 396, 256, F + 124)
     door_hole(m, "u", 320, 256, 320, F, D, name=nm + "door", yaw=270)
@@ -161,8 +171,16 @@ def m_flats(m, opt):
         m.static("models/props_c17/furniturechair001a.mdl", wall_u + far * 140, 530, 270)
         m.static("models/props_c17/furniturechair001a.mdl", wall_u + far * 92, 476, yaw)
         m.static("models/props_c17/furnitureradiator001a.mdl", mid, 327, 90)
-        m.lamp(mid, 448, H - 8, lamp)
+        m.static("models/props_lab/lab_flourescentlight002b.mdl", mid, 448, 90, H - 8)     # the kitchen's tube, as the owner's flats have
+        m.light(mid, 448, H - 20, "235 240 255 55")
         m.target(nm + str(n + 1), mid, 440, F + 8, 90)
+        # the bathroom
+        door_hole(m, "u", wall_u + far * 64 if far > 0 else wall_u - 128, 1216, 1280, Z, Z + 112, yaw=270)
+        m.static("models/props_c17/furnituretoilet001a.mdl", wall_u + far * 13, 1300, yaw, Z)
+        m.static("models/props_c17/furnituresink001a.mdl", wall_u + far * 12, 1370, yaw, Z)
+        m.static("models/props_c17/furniturebathtub001a.mdl", wall_u + far * 130, 1390, 0, Z)
+        m.lamp(mid, 1340, Z + 104, "255 225 200 30")
+        m.lane(mid, 1320, Z)
         # the living room
         m.static("models/props_c17/furniturefireplace001a.mdl", wall_u + far * 16, 790, yaw)
         m.static("models/props_c17/furniturecouch002a.mdl", wall_u + far * 174, 790, back)
@@ -174,6 +192,11 @@ def m_flats(m, opt):
         m.lamp(mid, 1088, Z + 120, "255 205 160 35")
         for u, v, z in ((mid, 448, F), (mid, 608, F), (mid + far * 30, 720, F), (mid + far * 40, 1000, Z)):
             m.lane(u, v, z)
+    for u1 in (64, 512):                                     # the walls lined as the owner's flats are (two tones, a dado rail)
+        lining(m, u1, 320, u1 + 192, 576, F, H)
+        lining(m, u1, 640, u1 + 192, 896, F, H, low="wood/woodwall006a", high="plaster/plasterwall042c")
+        lining(m, u1, 960, u1 + 192, 1216, Z, Z + 128)
+    lining(m, 320, 320, 448, 640, F, H)
     m.static("models/props_wasteland/prison_metalbed001a.mdl", 75, 1110, 0, Z)                 # the left flat's bed, as the city's flats have
     m.static("models/props_c17/furniturebed001a.mdl", 681, 1110, 90, Z)                        # the right flat's
     from map_mods_b import mattress
@@ -202,6 +225,10 @@ def town_plan(b, walk):
         def walls(self):
             if self.walled:
                 return
+            for x1, y1, x2, y2 in self.fill:      # (each house solid 640 deep behind its front: it has a roof to stand things on)
+                for i in range(x1 // CELL, x2 // CELL):
+                    for j in range(y1 // CELL, y2 // CELL):
+                        self.cells.setdefault((i, j), ("solid",))
             Plan.walls(self)
             for c, spec in list(self.cells.items()):
                 x, y = c[0] * CELL + 32, c[1] * CELL + 32
@@ -211,9 +238,39 @@ def town_plan(b, walk):
                     self.cells[c] = ("solid", top, not quay)
                 elif spec[0] == "low" and len(spec) == 4:
                     self.cells[c] = spec + (max(top, spec[3]), not quay)
+            for c, spec in list(self.cells.items()):      # (the outermost wall keeps the sky on its top: it seals the map)
+                if spec[0] == "solid" and any((c[0] + di, c[1] + dj) not in self.cells for di in (-1, 0, 1) for dj in (-1, 0, 1)):
+                    self.cells[c] = spec + ("edge",)
+
+        def build(self, vmf):
+            """As the street's plan builds, but over a house's roof the sky starts at the lid: chimneys, aerials and
+            pitched roofs stand in the air above the roofs (the module review: a skyline of flat steps). Only the
+            outermost wall carries the sky on its top, so the map stays sealed."""
+            self.walls()
+            cw, sky, brick = MAT["canal_wall"], MAT["sky"], "brick/brickwall045d"
+            STREET = mc.STREET
+            for x1, y1, x2, y2, spec in self.rectangles():
+                if spec[0] != "solid":
+                    continue
+                top, front, edge = spec[1], spec[2], len(spec) > 3
+                if front and top > STREET:
+                    vmf.world_box(self.box(x1, y1, self.base, x2, y2, STREET), cw, vis=self.vis)
+                    vmf.world_box(self.box(x1, y1, STREET, x2, y2, top), brick, top=self.roof_mat, vis=self.vis)
+                else:
+                    vmf.world_box(self.box(x1, y1, self.base, x2, y2, top), cw, top=self.roof_mat, vis=self.vis)
+                if edge or top >= self.sky:
+                    vmf.world_box(self.box(x1, y1, top, x2, y2, self.top), sky, vis=self.vis)
+                else:
+                    vmf.world_box(self.box(x1, y1, self.sky, x2, y2, self.top), sky, sky, sky, vis=self.vis)
+            keep = self.cells
+            self.cells = dict((c, sp) for c, sp in keep.items() if sp[0] != "solid")
+            self.walled = True
+            mc.CorridorPlan.build(self, vmf)
+            self.cells = keep
 
     plan = TownPlan(BASE, b.rim, b.sky, b.vis + ": walls and floors")
-    plan.tops, plan.canal, plan.walk = [], [], walk
+    plan.tops, plan.canal, plan.walk, plan.fill = [], [], walk, []
+    plan.roof_mat = "concrete/concretefloor026a"      # (a flat roof seen from the street's far side and the chimneys' height)
     return plan
 
 
@@ -256,6 +313,41 @@ def glass_pane(m, u1, u2, z1, z2, kind, v=255):
     else:
         us, names = "[1 0 0 %.3f] %g" % ((pu - x1 / su) % 4096, su), ("north", "south")
     m.b.vmf.brush_entity("func_detail", {}, [((x1, y1, a, x2, y2, c), dict((n, mat) for n in names), dict((n, (us, vs)) for n in names))], R["frame"], m.dv)
+
+
+def roof_prop(m, model, u, v, z, yaw=0):
+    """A thing standing on a roof at z (above the plan's own squares, so it is placed straight into the map and the
+    wall checks, which would call it inside the house, leave it alone)."""
+    m.b.vmf.point("prop_static", m.fr.at(u, v, m.stand(model, z)), {"model": model, "angles": "0 %d 0" % m.fr.yaw(yaw), "solid": "6", "skin": "0",
+                                                                   "disableshadows": "0", "fademindist": "-1", "fadescale": "1"}, m.pv)
+
+
+def lining(m, u1, v1, u2, v2, floor, ceil, low="plaster/plasterwall047b", high="plaster/plasterwall042c", rail=None, thick=2):
+    """A room's walls lined as the owner's flats are: plaster in two tones split by a dado rail at 40, a skirting at the
+    floor. Only where the room's edge meets a wall (never across a doorway): the plan says which squares are open."""
+    cells = m.b.plan.cells
+    rail = rail or R["frame"]
+    boxes_low, boxes_high, boxes_rail = [], [], []
+    for u in range(u1, u2, CELL):
+        for v, d in ((v1, -1), (v2, 1)):
+            x, y = m.fr.pt(u + 32, v + d * 32)
+            if (x // CELL, y // CELL) not in cells or cells[(x // CELL, y // CELL)][0] == "solid":
+                w = v if d < 0 else v - thick
+                boxes_low.append((u, w, floor, u + CELL, w + thick, floor + 40))
+                boxes_high.append((u, w, floor + 44, u + CELL, w + thick, ceil))
+                boxes_rail.append((u, w - d * 1, floor + 40, u + CELL, w + thick - d * 1, floor + 44))
+    for v in range(v1, v2, CELL):
+        for u, d in ((u1, -1), (u2, 1)):
+            x, y = m.fr.pt(u + d * 32, v + 32)
+            if (x // CELL, y // CELL) not in cells or cells[(x // CELL, y // CELL)][0] == "solid":
+                w = u if d < 0 else u - thick
+                boxes_low.append((w, v, floor, w + thick, v + CELL, floor + 40))
+                boxes_high.append((w, v, floor + 44, w + thick, v + CELL, ceil))
+                boxes_rail.append((w - d * 1, v, floor + 40, w + thick - d * 1, v + CELL, floor + 44))
+    if boxes_low:
+        m.det(boxes_low, low)
+        m.det(boxes_high, high)
+        m.det(boxes_rail, rail)
 
 
 def board(m, u, v, z, yaw, roll):
@@ -321,11 +413,12 @@ def facade(b, fr, L, rnd, tag, first=0):
             break
         cuts.append(c)
     cuts.append(L)
-    lots, state = [], {}
+    lots, state, lot_holes = [], {}, []
     for i in range(len(cuts) - 1):
         high = rnd.choice([h for h in HEIGHTS if not lots or h != lots[-1][2]])
         lots.append((cuts[i], cuts[i + 1], high, STYLES[(first + i * 3 + rnd.randrange(2)) % len(STYLES)]))
         b.plan.tops.append(fr.rect(cuts[i], 256, cuts[i + 1], 256 + 2048) + (walk + high,))
+        b.plan.fill.append(fr.rect(cuts[i], 320, cuts[i + 1], 320 + 640))
 
     def band(a, c, z1, z2, out, mat, holes=()):
         k = a // CELL
@@ -401,6 +494,7 @@ def facade(b, fr, L, rnd, tag, first=0):
             band(a, c, 152, high - 28, 6, upper, up_holes[0])
         band(a, c, high - 28, high - 12, 11, R["trim"])
         band(a, c, high - 12, high, 16, R["trim"])
+        lot_holes.append(low_holes + up_holes[0] + (up_holes[1] if len(rows) == 2 else []))
         for h1, h2, s, t in low_holes + up_holes[0] + (up_holes[1] if len(rows) == 2 else []):
             if s == 0:      # a doorway nobody uses: planked over and boards nailed across (never the city's door: that one opens)
                 m.det([(h1 - 5, 245, F, h1, 256, F + 113), (h2, 245, F, h2 + 5, 256, F + 113), (h1 - 5, 245, F + 108, h2 + 5, 256, F + 113)], R["frame"])
@@ -414,6 +508,40 @@ def facade(b, fr, L, rnd, tag, first=0):
             if s < 100 and h2 - h1 < 100 and rnd.random() < 0.2:                                   # a ground floor window boarded up
                 for z in (s + (t - s) // 3, s + 2 * (t - s) // 3):
                     board(m, (h1 + h2) // 2 + rnd.randrange(-6, 7), 248, F + z, 270, 90 + rnd.randrange(-7, 8))
+    for a, c, high, (ground, upper) in lots:               # on the roofs: chimneys, aerials, dishes, now and then a pitched roof
+        roof = F + high
+        kind = rnd.random()
+        if kind < 0.3 and c - a >= 256:                      # a pitched roof over the front, its gable ends in the house's wall
+            depth = 320
+            m.shapes([prism([(272, roof), (272 + depth, roof), (272 + depth // 2, roof + 112)], "x", a + 8, c - 8, RED_ROOF, upper)])
+            stack = (a + c) // 2 + rnd.choice((-64, 64))
+            roof_prop(m, CHIMNEY, stack, 272 + depth // 2, roof + 100)
+        else:
+            m.det([(a, 256, roof, c, 272, roof + 24)], R["trim"])           # a parapet along the roof's front
+            slots = [(u, v) for u in range(a + 64, c - 63, 128) for v in (380, 520, 660)]
+            rnd.shuffle(slots)
+            things = [rnd.choice((CHIMNEY, CHIMNEY_B, STACKS)) for _ in range(rnd.choice((1, 2, 2, 3)))]
+            if rnd.random() < 0.35:
+                things.append(rnd.choice(AERIALS))
+            if rnd.random() < 0.4:
+                things.append(VENT)
+            for model, (u, v) in zip(things, slots):       # (one thing to a slot 128 by 140: they never stand in each other)
+                roof_prop(m, model, u + rnd.randrange(-16, 17), v + rnd.randrange(-16, 17), roof, rnd.randrange(0, 360, 90) if model != STACKS else 0)
+            if rnd.random() < 0.3:
+                roof_prop(m, DISH, rnd.randrange(a + 40, c - 40), 300, roof + 24, 270)
+    for (a, c, high, styles), holes in zip(lots, lot_holes):  # balconies on some upper floors, awnings over the shop windows
+        if high >= 370 and rnd.random() < 0.35:
+            row = [h for h in holes if 150 < h[2] < 260]
+            for h1, h2, s, t in row[:: max(1, len(row) // 2)] if row else []:
+                mid = (h1 + h2) // 2
+                m.det([(mid - 48, 212, F + s - 12, mid + 48, 256, F + s - 4)], R["trim"])
+                m.static("models/props_c17/handrail04_medium.mdl", mid, 214, 90, F + s - 4)
+                for d in (-47, 47):
+                    m.static("models/props_c17/handrail04_short.mdl", mid + d, 232, 0, F + s - 4)
+        for h1, h2, s, t in holes:
+            if s == 44 and h2 - h1 > 140:
+                m.static("models/props_c17/awning00%da.mdl" % (1 if h2 - h1 > 140 else 2), (h1 + h2) // 2, 240, 270, F + t + 4)
+                m.det([(h1, 250, F + t + 10, h2, 256, F + t + 40)], R["frame"])            # the shop's name board
     for i, e in enumerate(cuts):                             # between the houses: a pilaster, and here and there a downpipe
         if (e == 0 or whole(e // CELL - 1)) and (e == L or whole(e // CELL)):
             near = [lot[2] for lot in lots if lot[0] == e or lot[1] == e]
@@ -599,6 +727,17 @@ def build(lay, args):
         street.light(L // 2, side * 80, F + 400, "255 214 170 380")
         street.blocked(L // 2 - 16, min(side * 160, side * 192), L // 2 + 16, max(side * 160, side * 192))
         street.cubemap(L // 2, 0)
+        other = -side                                        # on the other pavement: a bench, a bin, now and then a payphone on a wall
+        bu = rnd.choice((L // 4, 3 * L // 4))
+        street.static("models/props_trainstation/benchoutdoor01a.mdl", bu, other * 236, 90 if other > 0 else 270, F)
+        street.static("models/props_trainstation/trashcan_indoor001b.mdl", bu + 96, other * 232, 0, F)
+        street.blocked(bu - 60, min(other * 192, other * 256), bu + 120, max(other * 192, other * 256))
+        for k in range(3):                                   # what the street has on it: puddles, litter, a drain grate in the gutter
+            street.grime("puddle", rnd.randrange(80, L - 80), rnd.randrange(-60, 60), F - 4, n * 10 + k)
+            street.grime("trash", rnd.randrange(80, L - 80), rnd.choice((-1, 1)) * rnd.randrange(196, 250), F, n * 10 + k)
+        street.grime("grate", rnd.randrange(64, L - 64), rnd.choice((-1, 1)) * 140, F - 8, n)
+        if n == 0:
+            street.soundscape(SCAPE_TOWN, L // 2, 0, F, 2048)
         if n % 2 == 0:
             street.view(60, 0, F - 4, 0, 2, "stretch %d, along the street" % (n + 1))
         for u in range(128, L, 256):
