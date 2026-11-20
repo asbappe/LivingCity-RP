@@ -791,3 +791,33 @@ Filled in as the review goes; the first ones are clear already:
 
 **Weight.** small to medium (move the wheel, stripes, crane, gauges).
 
+### 47. depot (street 3; also a canal module): the Combine's ration depot
+
+**Seen.** The Combine's big door into a loading bay with a lorry at a dock; three chain link cages with gates along the back with stock; the dispatch desk with a console; a roller conveyor out through a hatch and down a chute; a staff door up steps with a red lamp. Cream walls, dome lamps.
+
+**Fix.**
+- It is the Combine's, but inside it looks like any warehouse in cream plaster: City 18 dresses the Combine's places in their metal (metalcombine002, the Combine's inner wall props combineinnerwall001a/c), lit by combine_light002a (75 in the owner's map), with monitors (combine_intmonitor001, combine_smallmonitor001) and the Combine's interface by the doors.
+- The stock is wooden crates and cardboard: the Combine's ration supply should show its own crates (models/items/item_item_crate is the Combine's supply crate: there are five; more of them, stacked), ration packages (models/weapons/w_package) in the cages, Breen's water (props_junk popcan) in cases.
+
+**Better.**
+- Security that raiders must answer: a camera over the cages (combinecamera001), a Combine lock on the cage gates (props_combine combine_lock01), an alarm lamp that the game can turn red.
+- The loading dock: yellow hazard edging on the dock's lip, a pallet jack (if any model; else a brush handle and forks), a clipboard of manifests at the desk.
+- A soundscape of the Combine's hum, a radio dispatcher's voice now and then.
+
+**Weight.** medium (the Combine's dressing), small (crates, camera, locks).
+
+### 48. armory (street 3; also a canal module): the Combine armoury vault
+
+**Seen.** An armoured corridor in Combine metal to a sliding vault door, a guard booth with a slit beside it, two buttons that must be pressed together, a red alarm lamp; inside the vault lockers, ammunition crates with guns and rounds on them, the Combine's weapon frame with pulse rifles under a blue glow.
+
+**Fix.**
+- The corridor is the Combine's metal, but the booth and the vault behind it are cream plaster: the vault, of all places, should be the Combine's (metalcombine002, the inner wall props), with a floor of steel plate.
+- The green "press counts" lamps are `light_cagelight02_off` with a glow sprite: the Combine's own small light (combine_light001a/b or 002a) suits a Combine door better, and shows lit when the glow is on.
+
+**Better.**
+- The heist's feel: a camera in the corridor (combinecamera001) the raiders must deal with, laser-like tripwire beams across the vault's door (a thin red sprite beam: env_beam between two points, which the game could tie to an alarm), the Combine's ammo crates (ammocrate_ar2) with the Combine's markings stacked to the ceiling.
+- The guard booth: a monitor showing the corridor (combine_smallmonitor001), a rack for the guard's stunstick, a chair, a log.
+- The alarm: when the door opens without the right pair, a klaxon, the red lamp, and the corridor's lights to red (the relays are there; give the lights names).
+
+**Weight.** small to medium.
+
