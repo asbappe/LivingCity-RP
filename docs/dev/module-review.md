@@ -634,3 +634,34 @@ Filled in as the review goes; the first ones are clear already:
 
 **Weight.** small to medium.
 
+### 37. memorial (street 1; also a canal module): the wall of the dead
+
+**Seen.** A recess with a stone wall covered in rows of small plaques (the top rows sparse), a ledge of candles, frames, bottles, tins and pots, a tall candlestick at each end, posters, a line strung across, a bench facing it. Warm, quiet, and one of the most affecting modules.
+
+**Fix.**
+- The plaques are all plain flat rectangles in slightly different flat colours: they read as tiles. Give them a material that reads as metal or stone with an engraved surface (a brass or stone plaque material if Half-Life 2 has one; otherwise a dark metal with a lighter frame, two brushes each), and vary their sizes a little.
+- 14 lights for the candles is many for a small recess (each costs at compile and in game): two or three lights placed among the candles give the same glow, with the sprites kept for the flames.
+
+**Better.**
+- Personal things among the candles: a child's shoe, glasses, a Combine ration card, a hat; photographs (the frames) at different angles; dried flowers if any plant model will do (Half-Life 2's potted plants or Kleiner's cactus are wrong; leave flowers out rather than fake them).
+- Writing: names scratched straight into the wall's lower part where the plaques ran out (decalfont letters, or graffiti decals in white), the lambda once, small.
+- The game's link: when the gamemode lists the permanently dead (the docstring's idea), each could become a plaque here, a real tie between play and place.
+- A soundscape: almost silent, a low wind, a candle's crackle.
+
+**Weight.** small.
+
+### 38. pit (street 1; also a canal module): the fighting pit
+
+**Seen.** An eight-sided arena off the canal: three tiers of concrete seats on three sides, a sunken dirt ring inside a cage of Nova Prospekt's fence panels on a kerb, the real gate in its frame, a gantry with two hanging lamps over the ring, a bookmaker's table with a till, lamp and a chalk board of odds, the corner men's bench.
+
+**Fix.**
+- The tiers are plain concrete steps with no edge: spectators stand on a 32 drop with nothing to lean on. A rail along each tier's front (the city's handrail) and the tiers' faces darker, so the rows read.
+- The arena's walls above the tiers are blank: lit only by the two lamps over the ring, the crowd's side is dark. Strings of bulbs from the gantry to the walls (lightbulb props on ropes), a lamp at each stair.
+
+**Better.**
+- A fight night's dressing: bottles and cans on the tiers, paper slips on the floor by the bookmaker (props_c17 paper), a bucket and towel in each corner, blood decals in the ring's dirt, a bell (a pan hung on a hook will do), banners of cloth on the walls with painted names.
+- The chalk board as the one brush that should stay a brush, but with chalk on it: a few decalfont letters and numbers (Half-Life 2's font decals) instead of grey bars.
+- A soundscape that the game raises with a crowd's murmur and cheer when a fight is on (the game knows when the gate opens).
+
+**Weight.** small.
+
