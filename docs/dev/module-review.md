@@ -345,3 +345,35 @@ Filled in as the review goes; the first ones are clear already:
 
 **Weight.** small (lorry, cables, light), medium (cage and gate).
 
+### 19. barge (showroom 2): a river barge grounded askew
+
+**Seen.** A black steel barge sits askew on the canal floor: raked bow, a mast with a lamp, a winch, hatch covers (one slid back over a ladder), a wheelhouse aft with windows, a gangplank from the left bank. The hold below: two beds, a stove, a table, crates, low and crowded.
+
+**Fix.**
+- The hull is one flat black colour with no detail: from the canal it reads as a black box with a pointed end. A hull has a rub rail along its sheer, a waterline (a band of a second, rust-red material), rust streaks down from the deck scuppers (overlays), a name painted on the bow (Half-Life 2's decalfont letters), an anchor and chain at the bow (a chain rope to the floor), tyres hung as fenders.
+- The hold is packed: crates fill the space between the beds and the ladder, so a player can barely turn. Fewer crates, the hold's floor clear down the middle.
+
+**Better.**
+- Half-Life 2 has two real fishing boats (`props_wasteland/boat_fishing01a`, about 1150 long and 310 wide, and `boat_fishing02a`, 1075 by 300): one could lie wrecked in another stretch of canal, or this module could carry one as the barge's neighbour, for a second, ready-made silhouette.
+- Life aboard: washing on a line from the mast to the wheelhouse, a deckchair, a fishing rod over the side, a stove pipe smoking (env_smokestack, thin).
+- The wheelhouse: an instrument panel (a brush console with dials: props_lab gauges), a chart on the wall, a radio.
+- Mud piled against the hull where it grounded, a list to one side (a few degrees of roll on the whole vessel would sell "grounded" better than a level deck).
+
+**Weight.** medium (hull detail, list), small (dressing).
+
+### 20. busbridge (showroom 2): a bus hanging nose-down from the left street
+
+**Seen.** A long tilted body hangs from the left wall's lip to the canal floor: a frame of thin posts with window openings, train bench seats inside tilted with its floor, truck tyres on its sides, the driver's chair at its foot. At the top a short pavement recessed in the wall, a dark lamppost askew, a bus stop sign, a capped street doorway.
+
+**Fix.**
+- The bus reads as a skeleton: thin posts and rails with large openings, little body below the windows, no roof edge, no front. It is the kind of brush vehicle the owner called "1998". Either build it as a bus (solid skirt panels to the window line, wheel arches round the tyres, a front with a windscreen frame, grille and a destination board, a rounded roof edge, a back with an engine grille, the owner's metal materials in two colours), or replace it with a real model.
+- Real models that could do the job (no bus exists in Half-Life 2 or its episodes): `trailer001a` or `trailer002a` (a box trailer, hanging nose-down, a way up inside if hollow; check), `van001a_nodoor` (smaller), the Episode Two passenger car used in the tram (a city railcar off its rails is as good a story as a bus).
+- The tyres stand out from its sides as loose boxes: on a bus they sit inside arches, half hidden.
+
+**Better.**
+- What fell with it: the parapet's broken railing hanging down the wall (handrail pieces at angles), glass everywhere (decals), a trail of scrapes down the wall where it slid (overlays), luggage and a suitcase spilled out of the low end (props_c17 suitcase, briefcase).
+- The stop: a shelter frame at the top (a few brush posts and a roof, or the station's bench and a sign), a timetable poster.
+- A soundscape: metal creaking under weight; the bus could even settle a little when someone climbs it (a tiny func_movelinear drop once) for a scare.
+
+**Weight.** large (the bus rebuilt or replaced), small (dressing).
+
