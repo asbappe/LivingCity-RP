@@ -207,13 +207,19 @@ class Mod:
         barred(self.b.vmf, self.fr.box(*slab), self.fr.ax(along), vis or self.dv)
 
     def steps(self, start, lo, hi, z_low, z_high, axis, sign):
-        """Steps of 8 up and 12 along, rising from z_low at `start` in the way of sign along axis ("u" or "v"); lo..hi across."""
+        """Stairs rising from z_low at `start` in the way of sign along axis ("u" or "v"); lo..hi across. Steps of about 16
+        up and 24 along (the owner, 20 November, of steps of 8 and 12: "a stairway meant for toddlers ... these steps
+        should be fewer and larger"); the slope and the run are as they were, 12 along for every 8 up, which it returns."""
+        rise = z_high - z_low
+        run, n = 12 * (rise // 8), max(1, -(-rise // 16))
         out = []
-        for i in range((z_high - z_low) // 8):
-            a, c = start + sign * 12 * i, start + sign * 12 * (i + 1)
-            out.append((a, lo, z_low, c, hi, z_low + 8 * (i + 1)) if axis == "u" else (lo, a, z_low, hi, c, z_low + 8 * (i + 1)))
+        for i in range(n):
+            a, c = start + sign * (run * i // n), start + sign * (run * (i + 1) // n)
+            a, c = min(a, c), max(a, c)
+            top = z_low + rise * (i + 1) // n
+            out.append((a, lo, z_low, c, hi, top) if axis == "u" else (lo, a, z_low, hi, c, top))
         self.det(out, MAT["canal_wall"], top=MAT["stairs"])
-        return 12 * len(out)
+        return run
 
     # --- things ---
     def point(self, cls, u, v, z, keys=None, vis=None, connections=None):
