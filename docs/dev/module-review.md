@@ -278,3 +278,38 @@ Filled in as the review goes; the first ones are clear already:
 
 **Weight.** small (rotations, floodlights, ground), medium (magnet, office).
 
+### 15. boathouse (showroom 2): the smugglers' boat shed, a slipway and a hidden cellar
+
+**Seen.** A slipway with two rails climbs to a big dark roll-up door in the left wall; a button hidden behind a drain pipe outside. Inside: a boat up on crates over the rails, a winch at the back, a workbench, shelves, drums, two dome lamps, a flat ceiling. A hatch in the floor to a cellar with pale walls, shelves, lockers and crates.
+
+**Fix.**
+- The shed is a flat-ceilinged concrete box: a boat shed has a pitched roof on timber trusses or a steel gantry over the slip, with a chain hoist hanging from it (a rope and a pulley hook). That one change makes the room.
+- The roll-up door is a flat plate: give it the owner's corrugated door material (metaldoor032c or 018a, both in their map) laid with its ribs across, and a slot of light under it.
+- The cellar's walls read as clean pale plaster: a cellar under a canal is damp brick or concrete, stained.
+
+**Better.**
+- A working smugglers' shed: tools on a board over the bench (props_c17 tools: wrench, hammer, pliers, the owner can see them), an outboard motor or engine on the bench (props_c17 engine models if any; else a generator01), coiled ropes, oars, a tarp over the boat.
+- The contraband looks like it: Half-Life 2's own ammo crates (models/items/ammocrate_*) and supply crates in the cellar, a Combine crate with its markings, a ledger on a table, a radio.
+- Light like a shed: bulbs on cables (lightbulb01a, the owner's map has 30) instead of dome fittings, daylight from the gap under the door.
+- Water: let the canal's water lap at the slip's foot (if the canal ever has water), wet decals on the slip.
+- A soundscape: water lapping, a radio murmuring in the cellar.
+
+**Weight.** medium (roof and hoist), small (materials, dressing, lights).
+
+### 16. arcade (showroom 2): a market arcade over the canal on three arches
+
+**Seen.** Three dark stone arches carry a timber covered walk across the canal: open bays with brackets and a parapet, a pitched roof on posts, three counters down the middle, barred shop fronts at both ends; a railed stair up each wall. One of the best-looking modules: it has a real shape.
+
+**Fix.**
+- The stairs along the walls are separate steps with open sides (the same as the quay's): from the canal they read as a sawtooth. One shared fix in the tools (see the general list at the top: a wall stair with an upstand on its open side and filled under), applied here and in the quay, lift, crypt and anywhere `wall_stair` is used.
+- The barred shop fronts are black behind: a shallow shop behind each (a counter, shelves with a few things, a dead lamp) so looking through the bars rewards it.
+- The stone of the arches is uniformly dark: they read as black shapes from the canal. Lighter dressed stone at the arches' edges and keystones (a second stone material), a band at the deck's edge, and a lamp on each pier's cutwater.
+
+**Better.**
+- A market needs its awnings: Half-Life 2's `awning001a` and `awning002a` (props_c17) over the stalls and the bays, faded.
+- Goods and the life of a market: crates of produce (watermelons, the game's food models), hanging lanterns or bulbs on a cord down the walk (the owner's lamp fixture lampfixture01a), a scale on a counter, a chalkboard price list, sacks.
+- From below: water stains down the piers (decalstain), moss at the cutwaters' feet, an old painted market name across the arches' face (decalfont letters, Half-Life 2 has them).
+- A soundscape of wind through the bays and creaking timber.
+
+**Weight.** small to medium (shops behind bars, awnings, stone trim, lights).
+
