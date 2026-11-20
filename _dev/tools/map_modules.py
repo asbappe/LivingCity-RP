@@ -269,13 +269,17 @@ class Mod:
                                            "framerate": "10.0", "GlowProxySize": "2.0", "HDRColorScale": "1.0", "renderfx": "0", "spawnflags": "1"}, self.lv)
 
     def lamp(self, u, v, z, colour, hang=0):
-        """A lamp to be seen: a small steel housing (hang: on a rod this long from above), a glow, and its light under it."""
-        boxes = [(u - 6, v - 6, z, u + 6, v + 6, z + 8)]
-        if hang:
-            boxes.append((u - 1, v - 1, z + 8, u + 1, v + 1, z + 8 + hang))
-        self.det(boxes, MM["steel"])
+        """A lamp to be seen, a real fixture of the city's (the owner's map has 151 of the dome light): a dome light flat
+        on the ceiling at z + 8, or with hang a bell lamp on a rod this long from above. A glow, and its light under it."""
         rgb = " ".join(colour.split()[:3])
-        self.glow(u, v, z - 4, rgb, 0.25)
+        if hang:
+            self.det([(u - 1, v - 1, z + 8, u + 1, v + 1, z + 8 + hang)], MM["steel"])
+            self.static("models/props_c17/light_industrialbell01_on.mdl", u, v, 0, z - 15)
+            self.glow(u, v, z - 18, rgb, 0.25)
+            self.light(u, v, z - 24, colour)
+            return
+        self.static("models/props_c17/light_domelight02_on.mdl", u, v, 0, z + 1)
+        self.glow(u, v, z - 2, rgb, 0.25)
         self.light(u, v, z - 10, colour)
 
     def spot(self, u, v, z, colour, yaw, pitch=60, cone=40, name=None):

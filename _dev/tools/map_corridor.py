@@ -114,7 +114,7 @@ def canal_view(b):
     for c, spec in b.plan.cells.items():
         if spec[0] == "under":
             cells[c] = ("low", spec[1], spec[2], spec[3])
-        elif spec[0] != "solid" and spec[1] >= STREET and (c in b.deck or c in b.lifted):
+        elif spec[0] != "solid" and spec[1] >= STREET - 16 and (c in b.deck or c in b.lifted):      # (a town's gutters are 8 under the street)
             cells[c] = ("solid", STREET)
         else:
             cells[c] = spec
@@ -125,7 +125,7 @@ def fence_view(b):
     """For the chain link along the walls' tops: none where the street is (it has its own parapet), none on buildings."""
     cells = {}
     for c, spec in b.plan.cells.items():
-        if spec[0] == "under" or (spec[0] != "solid" and spec[1] >= STREET) or (spec[0] == "solid" and len(spec) > 2 and spec[2]):
+        if spec[0] == "under" or (spec[0] != "solid" and spec[1] >= STREET - 16) or (spec[0] == "solid" and len(spec) > 2 and spec[2]):
             continue
         cells[c] = spec
     return View(b.plan, cells)

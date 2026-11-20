@@ -3771,6 +3771,12 @@ do
     hook.t.PostDrawTranslucentRenderables.LivingCityStealthCones(false, false)
     if (_calls["render.DrawQuad"] or 0) <= q0 then return "sneaking: no sight painted on the ground" end
     if (_calls["render.DrawQuad"] or 0) - q0 < 12 * 6 then return "sneaking: the sight isn't 3D (ground, lid and walls)" end
+    -- (the Resistance's flag is the Lambda in its ring on a waving cloth: many quads, not one, and it draws without an error)
+    q0 = _calls["render.DrawQuad"] or 0
+    LC_CL.BaseFlagDraw(Vector(0, 0, 300), Vector(1, 0, 0), Vector(0, 0, -1), Vector(0, 1, 0), 132, 84, 1.5, 1)
+    if (_calls["render.DrawQuad"] or 0) - q0 < 24 + 2 * 20 + 2 * 8 then return "the base's flag: not a cloth with the Lambda and its ring on both sides" end
+    local fa, fb, fc, fd = LC_CL.BaseFlagCorners(Vector(0, 0, 0), 1, Vector(1, 0, 0), 330)
+    if not (fa.z > fd.z and fb.x - fa.x > 100 and fa.z <= 330) then return "the base's flag: not a banner 100 or more wide under the pole's top" end
     hook.t.HUDPaint.LivingCityStealthMeter()
     unit.GetForward = function() return Vector(-1, 0, 0) end
     if LC_CL.StealthInside(unit, _me:GetPos(), 900 * LC_CL.StealthFactor()) then return "sneaking: seen from behind his back" end
