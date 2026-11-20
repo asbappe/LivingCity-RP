@@ -2483,12 +2483,84 @@
 "static": false,
 "v": 2
 },
+"models/props_canal/boxcar_door.mdl": {
+"bbox": [
+-2.5,
+-51.6,
+0.0,
+0.5,
+44.4,
+128.1
+],
+"built_static": false,
+"collides": false,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": false,
+"v": 2
+},
+"models/props_canal/bridge_pillar02.mdl": {
+"bbox": [
+-35.0,
+-40.4,
+-0.3,
+35.0,
+40.4,
+241.7
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
 "models/props_canal/canal_bars001.mdl": {
 "bbox": [
 -4.4,
 -192.3,
 -224.3,
 8.3,
+192.3,
+224.3
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_canal/canal_bars001b.mdl": {
+"bbox": [
+-104.6,
+-192.4,
+-224.7,
+16.1,
+192.4,
+224.3
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_canal/canal_bars001c.mdl": {
+"bbox": [
+-137.7,
+-192.3,
+-224.3,
+8.7,
 192.3,
 224.3
 ],
@@ -2509,6 +2581,24 @@
 3.6,
 64.2,
 62.0
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_canal/canal_bars002b.mdl": {
+"bbox": [
+-7.3,
+-64.0,
+-59.8,
+31.3,
+64.0,
+62.8
 ],
 "built_static": true,
 "collides": true,
@@ -2545,6 +2635,42 @@
 8.0,
 64.3,
 64.3
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_canal/canal_bridge_railing01.mdl": {
+"bbox": [
+-0.4,
+-673.9,
+0.0,
+2.8,
+673.9,
+32.0
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_canal/canal_bridge_railing02.mdl": {
+"bbox": [
+-15.1,
+-683.0,
+-0.3,
+16.0,
+640.1,
+40.6
 ],
 "built_static": true,
 "collides": true,
@@ -2609,6 +2735,132 @@
 "static": true,
 "v": 2
 },
+"models/props_canal/generator02.mdl": {
+"bbox": [
+-134.9,
+-150.5,
+-112.9,
+134.9,
+150.9,
+112.5
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_canal/locks_large.mdl": {
+"bbox": [
+-101.6,
+-223.0,
+-0.1,
+102.9,
+221.7,
+571.9
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_canal/locks_large_b.mdl": {
+"bbox": [
+-101.6,
+-221.2,
+-0.1,
+102.9,
+223.6,
+571.9
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_canal/locks_small.mdl": {
+"bbox": [
+-32.4,
+-81.1,
+-1.6,
+32.9,
+82.3,
+289.2
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": true,
+"prop_data": true,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_canal/locks_small_b.mdl": {
+"bbox": [
+-32.6,
+-81.7,
+-1.6,
+32.6,
+81.7,
+289.2
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": true,
+"prop_data": true,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_canal/mattpipe.mdl": {
+"bbox": [
+-3.3,
+-4.1,
+-18.8,
+6.5,
+5.0,
+14.0
+],
+"built_static": false,
+"collides": true,
+"game": "hl2",
+"physics": true,
+"prop_data": true,
+"ragdoll": false,
+"static": false,
+"v": 2
+},
+"models/props_canal/pipe_bracket001.mdl": {
+"bbox": [
+-4.3,
+-40.0,
+-0.3,
+4.3,
+40.0,
+65.3
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
 "models/props_canal/winch01.mdl": {
 "bbox": [
 -38.4,
@@ -2625,6 +2877,96 @@
 "prop_data": false,
 "ragdoll": false,
 "static": true,
+"v": 2
+},
+"models/props_canal/winch01b.mdl": {
+"bbox": [
+0.0,
+0.0,
+0.0,
+6.6,
+74.1,
+166.1
+],
+"built_static": false,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": false,
+"v": 2
+},
+"models/props_canal/winch02.mdl": {
+"bbox": [
+-18.7,
+-25.0,
+-0.4,
+16.8,
+29.2,
+49.1
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_canal/winch02b.mdl": {
+"bbox": [
+-18.7,
+-12.3,
+0.0,
+0.0,
+7.1,
+52.6
+],
+"built_static": false,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": false,
+"v": 2
+},
+"models/props_canal/winch02c.mdl": {
+"bbox": [
+-12.2,
+0.0,
+0.0,
+0.0,
+24.8,
+44.3
+],
+"built_static": false,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": false,
+"v": 2
+},
+"models/props_canal/winch02d.mdl": {
+"bbox": [
+-13.6,
+0.0,
+0.0,
+0.0,
+20.6,
+64.9
+],
+"built_static": false,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": false,
 "v": 2
 },
 "models/props_citizen_tech/firetrap_propanecanister01a.mdl": {
@@ -2895,6 +3237,24 @@
 "prop_data": false,
 "ragdoll": false,
 "static": true,
+"v": 2
+},
+"models/props_combine/combinethumper001a.mdl": {
+"bbox": [
+-74.0,
+-105.2,
+-0.3,
+64.0,
+88.7,
+704.1
+],
+"built_static": false,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": false,
 "v": 2
 },
 "models/props_combine/combinethumper002.mdl": {
@@ -5245,6 +5605,10 @@
 "static": true,
 "v": 2
 },
+"models/props_trainstation/clock001.mdl": {
+"elsewhere": [],
+"game": null
+},
 "models/props_trainstation/clock01.mdl": {
 "bbox": [
 -5.7,
@@ -5297,6 +5661,150 @@
 "prop_data": false,
 "ragdoll": false,
 "static": true,
+"v": 2
+},
+"models/props_trainstation/passengercar001.mdl": {
+"bbox": [
+-63.2,
+-320.4,
+0.0,
+65.3,
+322.2,
+208.3
+],
+"built_static": false,
+"collides": true,
+"game": "ep2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": false,
+"v": 2
+},
+"models/props_trainstation/passengercar001_dam01a.mdl": {
+"bbox": [
+-98.8,
+-320.4,
+0.0,
+75.0,
+322.2,
+213.5
+],
+"built_static": false,
+"collides": true,
+"game": "ep2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": false,
+"v": 2
+},
+"models/props_trainstation/passengercar001_dam01b.mdl": {
+"bbox": [
+-71.7,
+-254.6,
+0.0,
+65.3,
+322.2,
+208.3
+],
+"built_static": false,
+"collides": true,
+"game": "ep2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": false,
+"v": 2
+},
+"models/props_trainstation/passengercar001_dam01c.mdl": {
+"bbox": [
+-74.9,
+-70.2,
+0.0,
+69.4,
+320.2,
+221.6
+],
+"built_static": false,
+"collides": true,
+"game": "ep2",
+"physics": true,
+"prop_data": true,
+"ragdoll": false,
+"static": false,
+"v": 2
+},
+"models/props_trainstation/passengercar_intro01a.mdl": {
+"bbox": [
+-4982.1,
+-627.2,
+50.3,
+-4681.5,
+65.5,
+500.0
+],
+"built_static": false,
+"collides": false,
+"game": "ep2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": false,
+"v": 2
+},
+"models/props_trainstation/passengercar_intro01b.mdl": {
+"bbox": [
+-4980.6,
+-1333.1,
+-540.6,
+-4599.2,
+-585.7,
+176.8
+],
+"built_static": false,
+"collides": false,
+"game": "ep2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": false,
+"v": 2
+},
+"models/props_trainstation/passengercar_intro01c.mdl": {
+"bbox": [
+-4842.5,
+-1520.4,
+-899.6,
+-4698.1,
+-1234.9,
+-476.1
+],
+"built_static": false,
+"collides": false,
+"game": "ep2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": false,
+"v": 2
+},
+"models/props_trainstation/passengercardoor001.mdl": {
+"bbox": [
+-28.2,
+-1.2,
+-56.2,
+28.2,
+1.2,
+56.2
+],
+"built_static": false,
+"collides": true,
+"game": "ep2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": false,
 "v": 2
 },
 "models/props_trainstation/payphone001a.mdl": {
@@ -5419,6 +5927,24 @@
 "built_static": true,
 "collides": true,
 "game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_trainstation/train_wheels1.mdl": {
+"bbox": [
+-63.4,
+-46.3,
+-2.3,
+90.9,
+46.3,
+49.8
+],
+"built_static": true,
+"collides": true,
+"game": "ep2",
 "physics": false,
 "prop_data": false,
 "ragdoll": false,
