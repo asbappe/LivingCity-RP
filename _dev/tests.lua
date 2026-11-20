@@ -41431,7 +41431,7 @@ function SewerFlushTests() -- (the owner, 19 November: the Administrator sends t
     ok(#q.stages == 5 and q.violent == true and q.title == "Flush the sewers", "five steps, and a squad comes as on any violent job", #q.stages)
     for _, st in ipairs(q.stages) do ok(st.kind ~= "hold" and st.kind ~= "survive", "no step is standing and waiting: " .. tostring(st.text)) end
     local officer = q.data.briefer
-    ok(q.stage == 1 and IsValid(officer) and string.find(q.stages[1].text, "briefing", 1, true) ~= nil and officer:GetPos():DistToSqr(zHQ.pos) < 400 * 400,
+    ok(q.stage == 1 and IsValid(officer) and string.find(q.stages[1].text, "briefing", 1, true) ~= nil and (officer:GetPos().x - zHQ.pos.x) ^ 2 + (officer:GetPos().y - zHQ.pos.y) ^ 2 < 400 * 400,
         "first the briefing: an officer waits on the Combine's own ground nearest the wall")
     _run(2)
     ok(q.stage == 1, "nothing goes on until someone has heard him")
@@ -41718,7 +41718,9 @@ function QuarterBreachTests() -- (the owner, 20 November: the Resistance shut th
     ok(#q.stages == 4 and not q.violent and q.title == "Open the sealed quarter", "four steps", #q.stages)
     for _, st in ipairs(q.stages) do ok(st.kind ~= "hold" and st.kind ~= "survive", "no step is standing and waiting: " .. tostring(st.text)) end
     local runner = q.data.briefer
-    ok(q.stage == 1 and IsValid(runner) and runner:GetPos():DistToSqr(camp.pos) < 400 * 400, "first the plan: the cell's runner waits on rebel ground nearest the sewer end")
+    -- (across the ground: the test world's floor is not at the camp's own height)
+    local function Flat(v, w) return (v.x - w.x) ^ 2 + (v.y - w.y) ^ 2 end
+    ok(q.stage == 1 and IsValid(runner) and Flat(runner:GetPos(), camp.pos) < 400 * 400, "first the plan: the cell's runner waits on rebel ground nearest the sewer end")
     lead.chat = {}
     if IsValid(runner) then hook.Run("LivingCityPlayerUsedNPC", lead, runner, LC.NPCs[runner]) end
     local planned = false
