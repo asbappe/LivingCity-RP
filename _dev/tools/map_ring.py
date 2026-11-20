@@ -124,7 +124,8 @@ class Channel:
         def along(axis, a, b, lo, hi, z1, z2):
             return (a, lo, z1, b, hi, z2) if axis == "x" else (lo, a, z1, hi, b, z2)
         for (axis, line, side, a, b) in trims:
-            boxes.append(along(axis, a, b, min(line, line + side * 16), max(line, line + side * 16), rz, rz + 16))
+            dz = 1 if axis == "y" else 0      # (trims along y sit inside those along x where they cross at a corner: no shared face to flicker)
+            boxes.append(along(axis, a, b, min(line, line + side * (16 - dz)), max(line, line + side * (16 - dz)), rz + dz, rz + 16 - dz))
             for at in range(a + 256, b - 128, 512):
                 rib = along(axis, at - 24, at + 24, min(line, line + side * 24), max(line, line + side * 24), fz + 96, rz)
                 if fits(rib):

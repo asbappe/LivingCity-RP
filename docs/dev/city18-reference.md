@@ -480,3 +480,12 @@ Prefer the materials and models the owner's own map uses (_dev/reference/city18/
 - **Checked by:** map_lint.py palette (one LOOK line naming the commonest materials City 18 never uses)
 - **Tags:** materials, city18, check
 
+### No two surfaces flush in one plane (`no-flush-faces`)
+
+Two visible faces of different brushes must never lie in the same plane facing the same way where they overlap: they flicker through each other (z-fighting). Sink one piece 1 unit into the other (a sill 1 into the opening, a lintel 1 down into it, a crossbar 1 proud of the bars, a jamb 1 past the band's end, a trim along one wall 1 inside the trim it crosses), or stop one 1 short.
+
+- **Why:** The owner, 21 November: "please also check for overlapping textures on two surfaces that are flush on the same grid/coordinates". The first run found about 300 in one showroom and 900 in the town; most came from shared code (the canal fence's rails at corners, the canal trims where two walls meet, bar rows' crossbars, the town's sills, lintels, door frames and pilasters), fixed there.
+- **How:** Leave a 1 unit step between pieces that meet; map_build.fence, bar_row and map_ring's trims do it now.
+- **Checked by:** map_lint.py flush (axis-aligned faces; a face buried in another brush or looking into the void outside the map, by the build's own flood fill, is not counted)
+- **Tags:** geometry, owner, check
+

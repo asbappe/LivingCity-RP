@@ -341,9 +341,10 @@ def lining(m, u1, v1, u2, v2, floor, ceil, low="plaster/plasterwall047b", high="
             x, y = m.fr.pt(u + d * 32, v + 32)
             if (x // CELL, y // CELL) not in cells or cells[(x // CELL, y // CELL)][0] == "solid":
                 w = u if d < 0 else u - thick
-                boxes_low.append((w, v, floor, w + thick, v + CELL, floor + 40))
-                boxes_high.append((w, v, floor + 44, w + thick, v + CELL, ceil))
-                boxes_rail.append((w - d * 1, v, floor + 40, w + thick - d * 1, v + CELL, floor + 44))
+                va, vb = max(v, v1 + thick + 1), min(v + CELL, v2 - thick - 1)      # (short of the other walls' linings at the corners: no shared faces)
+                boxes_low.append((w, va, floor, w + thick, vb, floor + 40))
+                boxes_high.append((w, va, floor + 44, w + thick, vb, ceil))
+                boxes_rail.append((w - d * 1, va, floor + 40, w + thick - d * 1, vb, floor + 44))
     if boxes_low:
         m.det(boxes_low, low)
         m.det(boxes_high, high)
@@ -497,14 +498,14 @@ def facade(b, fr, L, rnd, tag, first=0):
         lot_holes.append(low_holes + up_holes[0] + (up_holes[1] if len(rows) == 2 else []))
         for h1, h2, s, t in low_holes + up_holes[0] + (up_holes[1] if len(rows) == 2 else []):
             if s == 0:      # a doorway nobody uses: planked over and boards nailed across (never the city's door: that one opens)
-                m.det([(h1 - 5, 245, F, h1, 256, F + 113), (h2, 245, F, h2 + 5, 256, F + 113), (h1 - 5, 245, F + 108, h2 + 5, 256, F + 113)], R["frame"])
+                m.det([(h1 - 5, 245, F, h1 + 1, 256, F + 108), (h2 - 1, 245, F, h2 + 5, 256, F + 108), (h1 - 5, 245, F + 108, h2 + 5, 256, F + 113)], R["frame"])
                 m.det([(h1, 253, F, h2, 256, F + 108)], R["frame"])
                 for z in (34, 74):
                     board(m, (h1 + h2) // 2 + rnd.randrange(-4, 5), 248, F + z + rnd.randrange(-5, 6), 270, 90 + rnd.randrange(-12, 13))
                 continue
             glass_pane(m, h1, h2, F + s, F + t, glass[(h1, h2, s, t)])
-            m.det([(h1 - 5, 244, F + s - 5, h2 + 5, 256, F + s)], R["trim"])                     # the sill
-            m.det([(h1 - 4, 247, F + t, h2 + 4, 256, F + t + 7)], R["trim"])                     # the lintel
+            m.det([(h1 - 5, 244, F + s - 5, h2 + 5, 256, F + s + 1)], R["trim"])                 # the sill (1 into the opening: no face shared with the wall's, which would flicker)
+            m.det([(h1 - 4, 247, F + t - 1, h2 + 4, 256, F + t + 7)], R["trim"])                 # the lintel
             if s < 100 and h2 - h1 < 100 and rnd.random() < 0.2:                                   # a ground floor window boarded up
                 for z in (s + (t - s) // 3, s + 2 * (t - s) // 3):
                     board(m, (h1 + h2) // 2 + rnd.randrange(-6, 7), 248, F + z, 270, 90 + rnd.randrange(-7, 8))
@@ -546,7 +547,7 @@ def facade(b, fr, L, rnd, tag, first=0):
         if (e == 0 or whole(e // CELL - 1)) and (e == L or whole(e // CELL)):
             near = [lot[2] for lot in lots if lot[0] == e or lot[1] == e]
             top = min(near) - 28
-            m.det([(max(e - 8, 0), 245, F, min(e + 8, L), 256, F + top)], R["trim"])
+            m.det([(max(e - 8, -1), 244 if e == 0 else 245, F, min(e + 8, L + 1), 256, F + top)], R["trim"])      # (1 past a front's ends, and the first 1 deeper: no face shared with the band's or a neighbour's)
             if 0 < e < L and i % 2 == 1:
                 m.static(PIPE, e + 16, 247, 0, F + top - 256)
                 if top > 300:

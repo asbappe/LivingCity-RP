@@ -19,6 +19,9 @@ often bigger than the model. What each kind means:
   water     a water brush whose top is level with a floor (they flicker through each other)
   rope      a rope or cable end tied to nothing
   palette   materials the owner's City 18 map never uses (listed once, the commonest first): use theirs where one fits
+  flush     two visible faces of different brushes lying in the same plane, facing the same way and overlapping:
+            they flicker through each other in game (z-fighting; the owner, 21 November). Faces made of
+            axis-aligned rectangles only; a face buried in another brush is not counted.
 """
 import argparse
 import math
@@ -33,6 +36,7 @@ SHELVES = re.compile(r"shelf|rack|locker|cupboard|closet|cabinet|counter|table|d
 
 
 SHAPES = {}      # (a brush's box -> its planes, for the exact test of a point inside a sloped brush)
+SIDES = {}       # (a brush's box -> ([(material, corners)], "world" or the entity's class), for the flush-face check)
 
 
 def in_brush(p, box, pad=1.0):
@@ -87,6 +91,7 @@ def read(path):
         for km in re.finditer(r'^\t"([^"]+)" "([^"]*)"', body, re.M):
             keys.setdefault(km.group(1).lower(), km.group(2))
         boxes = []
+        kind_of = "world" if m.group(1) == "world" else keys.get("classname", "")
         for sm in re.finditer(r"^\tsolid\s*\n\t\{(.*?)^\t\}", body, re.M | re.S):
             vs = [nums(v) for v in re.findall(r'"v" "([^"]+)"', sm.group(1))]
             mats = set(x.lower() for x in re.findall(r'"material" "([^"]+)"', sm.group(1)))
@@ -95,6 +100,13 @@ def read(path):
                 planes = [nums(pl) for pl in re.findall(r'"plane" "([^"]+)"', sm.group(1))]
                 boxes.append((box, mats))
                 SHAPES[box] = planes
+                sides = []
+                for side in re.findall(r"side\s*\{(.*?)\n\t\t\}", sm.group(1), re.S):
+                    mt = re.search(r'"material" "([^"]+)"', side)
+                    pv = [nums(v) for v in re.findall(r'"v" "([^"]+)"', side)]
+                    if mt and len(pv) >= 3:
+                        sides.append((mt.group(1).lower(), pv))
+                SIDES[box] = (sides, kind_of)
         if m.group(1) == "world":
             brushes += boxes
         else:
@@ -151,7 +163,9 @@ def short(model):
     return model.split("/")[-1].replace(".mdl", "")
 
 
-def check(path, views=None, only=None):
+def check(path, views=None, only=None, air=None):
+    """air: the build's own flood (map_build.flood: the air players are in); a flush face looking into the void outside
+    the map is then not counted."""
     ents, brushes = read(path)
     found = []
 
@@ -253,6 +267,63 @@ def check(path, views=None, only=None):
         o = origin(e)
         if not any(all(b[k] - 20 <= o[k] <= b[k + 3] + 20 for k in range(3)) for b in near_boxes):
             say("rope", "a rope's end at (%d %d %d) is tied to nothing" % o)
+    # flush: two faces in one plane, facing one way, overlapping (they flicker)
+    if not only or only == "flush":
+        HIDDEN = ("tools/", "effects/", "nature/water", "nature/toxicslime", "nature/sewer")
+        groups = {}
+        for box, (sides, kind) in SIDES.items():
+            if kind.startswith(("trigger", "func_areaportal", "func_illusionary", "func_water", "func_door", "func_button", "func_brush", "func_breakable", "func_movelinear", "func_rot", "func_tracktrain")):
+                continue      # (moving, unseen or water brushes: not drawn where they stand, or meant to cross)
+            for mat, pv in sides:
+                if mat.startswith(HIDDEN):
+                    continue
+                for ax in range(3):
+                    vals = [p[ax] for p in pv]
+                    if max(vals) - min(vals) > 0.01:
+                        continue
+                    c = round(vals[0], 1)
+                    centre = [(box[k] + box[k + 3]) / 2.0 for k in range(3)]
+                    out = 1 if centre[ax] < c else -1
+                    o1, o2 = [k for k in range(3) if k != ax]
+                    rect = (min(p[o1] for p in pv), min(p[o2] for p in pv), max(p[o1] for p in pv), max(p[o2] for p in pv))
+                    if rect[2] - rect[0] < 1 or rect[3] - rect[1] < 1:
+                        continue
+                    groups.setdefault((ax, c, out), []).append((rect, box, mat))
+                    break
+        allboxes = list(SIDES.keys())
+        seen = 0
+        for (ax, c, out), faces in groups.items():
+            if len(faces) < 2:
+                continue
+            faces.sort()
+            for i in range(len(faces)):
+                ra, ba, ma = faces[i]
+                for j in range(i + 1, len(faces)):
+                    rb, bb, mb = faces[j]
+                    if rb[0] >= ra[2]:
+                        break
+                    w = min(ra[2], rb[2]) - max(ra[0], rb[0])
+                    h = min(ra[3], rb[3]) - max(ra[1], rb[1])
+                    if w < 2 or h < 2 or ba == bb:
+                        continue
+                    o1, o2 = [k for k in range(3) if k != ax]
+                    p = [0.0, 0.0, 0.0]
+                    p[ax] = c + out * 1.0
+                    p[o1] = (max(ra[0], rb[0]) + min(ra[2], rb[2])) / 2.0 + 0.37      # (off the grid: never on a seam between two brushes)
+                    p[o2] = (max(ra[1], rb[1]) + min(ra[3], rb[3])) / 2.0 + 0.29
+                    if air and air[0] is not None:
+                        import bisect
+                        cell = tuple(bisect.bisect_right(air[2][k], p[k]) - 1 for k in range(3))
+                        if cell not in air[0]:
+                            continue      # (it looks into the void outside the map, or into solid: never seen)
+                    if any(b2 not in (ba, bb) and in_brush(p, b2, 0.05) for b2 in allboxes if b2[0] - 1 <= p[0] <= b2[3] + 1 and b2[1] - 1 <= p[1] <= b2[4] + 1 and b2[2] - 1 <= p[2] <= b2[5] + 1):
+                        continue      # (the face is buried in another brush: not drawn)
+                    seen += 1
+                    if seen <= 12:
+                        say("flush", "%s and %s lie flush in one plane at %s %d, %d by %d from (%d %d %d): they will flicker; move one face in by 1 or more, or cut one away" % (
+                            ma, mb, "xyz"[ax], c, w, h, p[0], p[1], p[2]))
+        if seen > 12:
+            say("flush", "... and %d more flush faces" % (seen - 12))
     # palette: materials City 18 never uses (one line, the commonest few)
     pal = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "reference", "city18", "palette.json")
     if os.path.exists(pal) and (not only or only == "palette"):

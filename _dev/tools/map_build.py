@@ -488,8 +488,8 @@ def bar_row(box, along, gap=24):
     for i in range(n + 1):
         a = first + i * gap
         out.append((a, y1, z1, a + 8, y2, z2) if along == "x" else (x1, a, z1, x2, a + 8, z2))
-    mid = (z1 + z2) // 2
-    out.append((x1, y1, mid - 4, x2, y2, mid + 4))
+    mid = (z1 + z2) // 2      # (the crossbar 1 proud of the bars on each face: no face of theirs lies in its, which would flicker)
+    out.append((x1, y1 - 1, mid - 4, x2, y2 + 1, mid + 4) if along == "x" else (x1 - 1, y1, mid - 4, x2 + 1, y2, mid + 4))
     return out
 
 
@@ -564,6 +564,7 @@ def check(vmf, seed, stoppers):
         if any(v != int(v) for v in b):
             problems.append("a corner off the 1-unit grid: %r" % (b,))
     seen, full, axes, leak = flood(vmf, seed, stoppers)
+    vmf.flooded = (seen, full, axes, leak)      # (map_lint.py asks it which side of a face is the air players are in)
     if seen is None:
         return problems + ["the check's starting point is inside a brush"], 0
     if leak:
@@ -638,9 +639,12 @@ def fence(vmf, plan, high, vis, top=None):
                 b = prev + CELL
                 sheets[axis].append(along(axis, start, b, min(line, line + 2 * side), max(line, line + 2 * side), at, at + high))
                 lo, hi = min(line, line + 4 * side), max(line, line + 4 * side)
-                bars.append(along(axis, start, b, lo, hi, at + high - 4, at + high))
+                dz = 1 if axis == "y" else 0      # (a run along y sits 1 lower and 1 thinner: where two runs meet at a corner
+                if axis == "y":                    # their rails never share a face, which would flicker: the owner, 21 November)
+                    lo, hi = (lo, hi - 1) if side > 0 else (lo + 1, hi)
+                bars.append(along(axis, start, b, lo, hi, at + high - 4 - dz, at + high - dz))
                 for p in range(start, b + 1, 256):
-                    bars.append(along(axis, max(start, p - 2), min(b, p + 2), lo, hi, at, at + high - 4))
+                    bars.append(along(axis, max(start, p - 2), min(b, p + 2), lo, hi, at, at + high - 4 - dz))
             start = prev = a
     nd = MAT["nodraw"]
     if sheets["x"]:
@@ -1059,7 +1063,7 @@ def main():
     print("  written: " + out)
     try:      # (the owner's corrections, checked by machine: _dev/reference/lessons.json, map_lint.py)
         import map_lint
-        for line in map_lint.check(out, views=getattr(args, "view_list", None)):
+        for line in map_lint.check(out, views=getattr(args, "view_list", None), air=getattr(vmf, "flooded", None)):
             print("  LOOK: " + line)
     except Exception as e:
         print("  (map_lint could not run: %s)" % e)
