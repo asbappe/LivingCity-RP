@@ -20,7 +20,8 @@
         Raise     The leader (a Commander; a Lieutenant when no Commander is
                   playing: LC.AdminPlotLeader), standing in rebel territory,
                   F2 > Resistance > Raise the flag here. A pole stands where
-                  he stood and the flag climbs it for lc_base_setup_time
+                  he stood (as tall as fits: short under a roof or a
+                  bridge) and the flag climbs it for lc_base_setup_time
                   (300 s), but only while he is alive within lc_base_radius
                   (4800 units: 300 feet) and nothing hostile is within
                   lc_base_core (700) of the pole. Left for a minute, it
@@ -77,7 +78,7 @@ local cvShare = CreateConVar("lc_base_ransack_share", "35", FLAGS, "Per cent of 
 local cvOverrun = CreateConVar("lc_base_overrun", "45", FLAGS, "Seconds zombies or antlions hold the headquarters' ground, with no rebel there, before it is overrun", 1, 3600)
 
 local POLE = "models/props_c17/signpole001.mdl"
-local POLE_SCALE = 3
+local POLE_MODEL_HIGH, POLE_HIGH, POLE_LOW = 110, 330, 110   -- the model's own height; a pole in the open; the shortest pole
 local RECLAIM = 20     -- seconds a rebel stands in a cleared, overrun base before it is live again
 local SLIDE = 60       -- seconds the leader may be away before a half-raised flag starts back down
 -- The commander's office: what appears round the pole when the base is live.
@@ -161,7 +162,8 @@ local function ShowFlag()
         e:SetModel(POLE)
         e:SetPos(s.pos)
         e:Spawn()
-        if e.SetModelScale then e:SetModelScale(POLE_SCALE, 0) end
+        if e.SetModelScale then e:SetModelScale((s.high or POLE_HIGH) / POLE_MODEL_HIGH, 0) end
+        if e.SetNW2Float then e:SetNW2Float("lc_flag_top", s.high or POLE_HIGH) end
         local phys = e.GetPhysicsObject and e:GetPhysicsObject()
         if IsValid(phys) then phys:EnableMotion(false) end
         e.lcDressing, e.lcSceneProp, e.lcBaseFlag = true, "baseflag", true
@@ -261,7 +263,12 @@ function LC.BaseRaise(ply)
     pos = LC.FloorUnder and LC.FloorUnder(pos) or pos
     local g = B.Ground(pos, cvCore:GetFloat())
     if g.wild or g.combine then return false, "Not with them here." end
-    B.S = { zone = zone, state = "raising", prog = 0, pos = pos, by = ply, seen = CurTime() }
+    -- Under a roof (a bridge, a tunnel, a room) the pole is only as tall as fits: a base in the canal's shantytown shows
+    -- no flag over the canal's walls (the owner, 20 November: "a short flagpole so there isn't a huge flagpole sticking out").
+    local high = POLE_HIGH
+    local tr = util.TraceLine and util.TraceLine({ start = pos + Vector(0, 0, 8), endpos = pos + Vector(0, 0, POLE_HIGH + 60), mask = MASK_SOLID_BRUSHONLY })
+    if tr and tr.Hit and tr.HitPos then high = math.Clamp(math.floor(tr.HitPos.z - pos.z - 24), POLE_LOW, POLE_HIGH) end
+    B.S = { zone = zone, state = "raising", prog = 0, pos = pos, by = ply, seen = CurTime(), high = high }
     ShowFlag()
     return true
 end

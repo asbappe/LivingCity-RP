@@ -42044,6 +42044,19 @@ zed:SetPos(far)
 pass(22)
 ok(B.S.state == "live" and LC.BaseLive() == LC.RebelLeader(z1), "cleared out and held a little: the headquarters is live again", tostring(B.S.state))
 
+-- under a roof the pole is short (a base in the canal's shantytown shows no flag over the walls)
+LC.BaseOrder(boss)
+for _ = 1, 6 do B.Tick(1) end
+ok(B.S.state == nil, "(struck and packed)")
+local traceWas = util.TraceLine
+util.TraceLine = function(t) return { Hit = true, HitPos = t.start + Vector(0, 0, 192) } end
+ok(LC.BaseRaise(boss) == true and B.S.high == 176 and B.S.flag:GetNW2Float("lc_flag_top", 0) == 176, "raised under a roof 200 up, the pole is 176 tall, not 330", tostring(B.S.high))
+util.TraceLine = traceWas
+LC.BaseOrder(boss)
+util.TraceLine = function() return { Hit = false } end
+ok(LC.BaseRaise(boss) == true and B.S.high == 330, "and in the open it is the full 330")
+util.TraceLine = traceWas
+
 -- the camps' own monitors are part of the office now; with the feature off, each camp has its own as before
 ok(LC.BaseOn() == true, "(on: the camps put out no monitors of their own, sv_livingcity_scavenge.lua)")
 
