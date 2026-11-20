@@ -475,3 +475,35 @@ Filled in as the review goes; the first ones are clear already:
 
 **Weight.** medium (control room, rams), small (lock furniture, signals, door).
 
+### 27. thumper (showroom 3): a Combine thumper on a fenced terrace
+
+**Seen.** A concrete terrace up the right bank, fenced with chain link panels and a gate, Half-Life 2's real thumper on a plinth, two Combine barricades, a console with a button and a lamp against the wall.
+
+**Fix.**
+- The console's lamp is `light_cagelight02_off` with a light under it (the same mismatch as the overflow): use the `_on` model.
+- The fence is Nova Prospekt's prison chain link: around a Combine machine, Half-Life 2 uses the Combine's own fences (`combine_fence01a/b`, with a field between posts, or the tall barricades). The prison fence belongs to people's places (the pit, the pen).
+- Nothing shows why a thumper is here: antlions are kept away from something.
+
+**Better.**
+- The other side of the story: the canal beyond the terrace drifted with sand (a sand material blended into the floor, nature/sandfloor010a), an antlion corpse or two (the antlion model as a ragdoll), a burrow mouth in the far bank (a dark hole with sand spilling), Half-Life 2's antlion hill if Episode Two is allowed.
+- Power: a fat cable from a Combine generator (combine_generator01, Half-Life 2's own) to the thumper's base, lying on the terrace (a rope with slack on the floor).
+- Combine presence: combine_light002a on the fence posts, a camera, a warning sign, the hum and the beat in the soundscape; the dust burst exists already, a faint shake already exists.
+- The console as the thing to fight over: a screen that shows its state (combine_smallmonitor001), the button behind a cover.
+
+**Weight.** small (lamp, fence, generator), medium (sand and antlion signs).
+
+### 28. swingbridge (showroom 3): a footbridge that turns on a pier
+
+**Seen.** A plank footbridge on two steel beams spans the canal at the trim's height, turning on an octagonal pier in the middle; a roofed landing in each wall with a heavy door, a winch and a button, green lamps; a covered stair to each landing.
+
+**Fix.**
+- The heavy doors at the landings never open (as the lock's): board or chain them so nobody tries them, or make one real (the city's door, `real_door`) onto a short stair to the street.
+- The pier is a plain octagonal post: what turns the bridge is not shown. A swing bridge sits on a drum: a wider round cap on the pier with a toothed ring (a ring of small blocks, or the tools' `ring` helper) and a pinion from a motor box on the deck's middle.
+
+**Better.**
+- A bridge of its kind: steel truss sides instead of (or under) the handrails (a lattice of thin brush members, Half-Life 2's girder material), a counterweight box under one end, a little control cabin at the middle (a booth: the Combine's or the city's).
+- Signals at both landings: a red and a green lamp (the rail signal props), a striped barrier arm that drops when the bridge is turned away (a func_door_rotating arm, linked to the bridge's own outputs).
+- A klaxon and a turning motor in the bridge's sounds (it has a sound already: add a bell before it moves, so players on it hear it coming).
+
+**Weight.** small (doors, signals, bell), medium (drum and truss).
+
