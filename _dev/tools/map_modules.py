@@ -1004,8 +1004,8 @@ def m_vort(m, opt):
         m.target("lc_vort_seat_%d" % (k + 1), fu + a, fv + c, F + 8, yaw)
     for u, v, yaw in ((790, 1110, 20), (802, 1122, 75)):     # firewood
         m.loose("models/props_debris/wood_chunk04a.mdl", u, v, yaw, z=F + 2)
-    m.loose("models/gibs/hgibs.mdl", 800, 1168, 200, z=F)    # the bones of a meal, or of an enemy
-    m.loose("models/gibs/hgibs_rib.mdl", 814, 1158, 30, z=F)
+    m.loose("models/gibs/hgibs.mdl", 820, 1170, 200, z=F)    # the bones of a meal, or of an enemy
+    m.loose("models/gibs/hgibs_rib.mdl", 832, 1160, 30, z=F)
     for sv in (960, 1032):                                   # shelves on the left wall, jars and a pot on them
         for sz in (F + 58, F + 98):
             m.static("models/props_c17/furnitureshelf001b.mdl", 716, sv, 0, z=sz)
