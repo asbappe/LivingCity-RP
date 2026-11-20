@@ -40,8 +40,8 @@ def m_execwall(m, opt):
     m.det([(340, 250, z, 364, 412, z + 1)] + [(340, 256 + 20 * k, z + 1, 364, 258 + 20 * k, z + 2) for k in range(8)], MAT["bars"])
     m.det([(208, 28, F, 496, 36, F + 6)], MAT["beam"])
     m.target("lc_execwall_line", 352, 0, F + 8, 90)
-    m.static("models/props_c17/concrete_barrier001a.mdl", 170, 290, 90, z=z)
-    m.static("models/props_c17/concrete_barrier001a.mdl", 534, 290, 90, z=z)
+    m.static("models/props_c17/concrete_barrier001a.mdl", 200, 290, 90, z=z)
+    m.static("models/props_c17/concrete_barrier001a.mdl", 504, 290, 90, z=z)
     # one hard lamp, on a pole at the recess's corner
     m.det([(138, 420, z, 144, 426, z + 210), (138, 380, z + 204, 144, 426, z + 210), (134, 372, z + 196, 148, 386, z + 206)], MAT["bars"])
     m.spot(141, 379, z + 194, "235 240 255 500", 20, pitch=52, cone=44, name="lc_execwall_lamp")

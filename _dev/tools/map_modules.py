@@ -215,7 +215,11 @@ class Mod:
         self.b.props.append((cls, model, self.fr.pt(u, v) + (zo,), wy, self.tag))
 
     def static(self, model, u, v, yaw=0, z=F):
-        """A prop that never moves, standing on z (only models built to be static: map_assets.py says which)."""
+        """A prop that never moves, standing on z. A model that was not built to be static (map_assets.py knows) is
+        placed as a prop_dynamic instead, since the compiler would leave it out."""
+        import map_assets
+        if map_assets.is_static(model) is False:
+            return self.dynamic(model, u, v, yaw, z)
         self.prop("prop_static", model, u, v, yaw, z, {"solid": "6", "disableshadows": "0", "screenspacefade": "0", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1"})
 
     def loose(self, model, u, v, yaw=0, z=F):
@@ -1169,8 +1173,12 @@ def take_views(b, vmf_path, folder, name, cut=None):
     import map_view
     os.makedirs(folder, exist_ok=True)
     shots = []
-    for tag, kw in (("above", {"iso": "SW"}), ("open", {"iso": "NE", "cut": cut or F + 150})):
-        shots.append(map_view.render(vmf_path, os.path.join(folder, "%s_%s.png" % (name, tag)), size=(640, 400), title="%s: from above%s" % (name, ", roofs off" if "cut" in kw else ""), **kw))
+    kinds = [("above", {"iso": "SW"}, ""), ("open", {"iso": "NE", "cut": cut or F + 150}, ", roofs off")]
+    high = max([spec[1] for spec in b.plan.cells.values() if spec[0] != "solid" and spec[1] >= F + 200] or [0])
+    if high:      # (rooms well above the canal's floor: a second cut, over them)
+        kinds.append(("upper", {"iso": "NE", "cut": high + 150}, ", cut over the upper floors"))
+    for tag, kw, said in kinds:
+        shots.append(map_view.render(vmf_path, os.path.join(folder, "%s_%s.png" % (name, tag)), size=(640, 400), title="%s: from above%s" % (name, said), **kw))
     for k, (label, eye, yaw, pitch) in enumerate(b.views):
         shots.append(map_view.render(vmf_path, os.path.join(folder, "%s_%02d.png" % (name, k)), eye=eye, yaw=yaw, pitch=pitch, size=(640, 400),
                                      title="%s (eye %d %d %d, looking %d)" % ((label,) + tuple(eye) + (yaw,))))

@@ -131,6 +131,13 @@ def size(model):
     return (fact or {}).get("bbox")
 
 
+def is_static(model):
+    """Was this model built to be a prop_static? True, False, or None if it is not known."""
+    size(model)
+    fact = (_known or {}).get(model.lower().replace("\\", "/")) or {}
+    return fact.get("static")
+
+
 def main():
     ap = argparse.ArgumentParser(description="Check the models and materials a VMF names against Valve's sources.")
     ap.add_argument("vmf", nargs="+")

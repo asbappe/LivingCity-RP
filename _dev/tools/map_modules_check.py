@@ -47,7 +47,10 @@ def main():
             ok, out = run(["module", "--name", name, "--test"] + (["--views", os.path.abspath(args.views)] if args.views else []), tmp)
             if not ok:
                 fails.append(("E", "test", out))
-            print("%-12s %s" % (name, "ok" if not fails else "FAILS %d ways" % len(fails)))
+            looks = [l.strip() for l in out.splitlines() if "LOOK:" in l]
+            print("%-12s %s%s" % (name, "ok" if not fails else "FAILS %d ways" % len(fails), "   (%d props to look at)" % len(looks) if looks else ""))
+            for l in looks[:4]:
+                print("    " + l[:200])
             for heading, flip, out in fails[:1]:
                 lines = [l for l in out.splitlines() if "PROBLEM" in l or "Error" in l or "Traceback" in l or l.startswith("  File")]
                 print("    heading %s%s: %s" % (heading, " flipped" if flip is True else " test" if flip else "", "\n      ".join(lines[-6:]) or out[-400:]))

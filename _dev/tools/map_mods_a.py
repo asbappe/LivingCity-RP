@@ -205,7 +205,8 @@ def m_tram(m, opt):
     Dropping from either stub onto a bank is safe; there is no other way up.
     Named for the game: lc_tram_exit (an info_target on the left platform before the barred stair: where people come
     from or go to the street), lc_tram_stash (an info_target inside the car in the right station: a cache).
-    Unchecked: how the bench, payphone, bin, locker and mattress models face and how big they are."""
+    Unchecked: that the hanging car's sheared floor (about 39 degrees) walks well in the game and that its window posts
+    do not snag; how the bench, payphone and locker models face."""
     b = m.b
     ceil, pz = TRIM + 120, TRIM + 16
     steel, wood = MM["steel"], MM["wood"]
@@ -372,7 +373,9 @@ def m_tenement(m, opt):
     living room to kitchen 48 by 88; kitchen door to the stair hall 48 by 96; stair hall to bedroom 48 by 92; the hole
     in the far wall 64 by 92. A short cut from the hall to the stair hall is a crawl, 48 by 40.
     Named for the game: lc_tenement_stash (an info_target in the nook: a cache), lc_tenement_lookout (an info_target
-    at the upstairs window: a sentry's place)."""
+    at the upstairs window: a sentry's place).
+    Unchecked: that the crawl holes (40 high) pass a crouched player in the game as they do on paper; how the
+    furniture models face; that nobody can get onto the roof (unseen walls stand over it in case)."""
     b = m.b
     g, zc, up, top = F + 8, F + 120, F + 136, F + 248
     wood, tin = MM["wood"], MM["tin"]
@@ -493,7 +496,9 @@ def m_quay(m, opt):
     street end (delete to join a street)"). From the quay a footbridge on two trestles crosses to a barred doorway in
     the right wall, black behind its bars.
     Named for the game: lc_quay_street (an info_target in the street doorway, facing the quay: where people arrive
-    from the street), lc_quay_far_door (an info_target on the bridge before the barred door)."""
+    from the street), lc_quay_far_door (an info_target on the bridge before the barred door).
+    Unchecked: how the boat, bench and payphone models face; the doorway's frame stands 24 above the walls' tops
+    when the rim is at its lowest (784), which may look odd from the street."""
     b = m.b
     steel = MM["steel"]
     m.open(0, -256, 1024, 256)
@@ -599,7 +604,9 @@ def m_collapse(m, opt):
     88): the two holes do not line up, so nobody sees or shoots straight through. The hollow is a hide
     (lc_collapse_hide). Each side also has a perch: the earth bank leads up to the end of the bite's ledge beside the
     slabs. Rebar, a car that came down with the road, rubble.
-    Named for the game: lc_collapse_hide (an info_target in the hollow under the slabs)."""
+    Named for the game: lc_collapse_hide (an info_target in the hollow under the slabs).
+    Unchecked: that players cannot scramble up the slabs (they lean at 63 and 51 degrees; the game's limit is about
+    45); that the leaning hole reads as a way in; how the car lies."""
     b = m.b
     con = MAT["beam"]
     m.open(0, -256, 768, 256)
@@ -727,7 +734,10 @@ def m_scrapyard(m, opt):
     From that roof a plank crosses to a ledge on the middle stack, and a ladder climbs the last 128 to the top of the
     third container (lc_scrap_perch, z 784: level with the canal walls' tops, the whole yard under it). The second
     container of the middle stack is open toward the exit: a nest reached from the far container's roof.
-    Named for the game: lc_scrap_perch (an info_target on the highest container: a sniper's or a lookout's place)."""
+    Named for the game: lc_scrap_perch (an info_target on the highest container: a sniper's or a lookout's place).
+    Unchecked: the ladder on a container's end (the shared helper's models and dismount points); that two planks 22
+    wide side by side walk as one ramp; the look of metal/metalwall014a and metal/metalcombine002 on containers;
+    how the wrecks lie."""
     b = m.b
     steel, tin, wood, cmb = MM["steel"], MM["tin"], MM["wood"], "metal/metalcombine002"
     L1Z, L2Z, L3Z = F + 128, F + 256, F + 384
@@ -805,7 +815,7 @@ def m_scrapyard(m, opt):
     put(m, P + "props_vehicles/car002a_physics.mdl", 1130, -250, 15)
     put(m, P + "props_vehicles/car005a_physics.mdl", 262, 120, 80)
     put(m, P + "props_vehicles/car002a_physics.mdl", 440, 400, 110)
-    put(m, P + "props_vehicles/car004a_physics.mdl", 1280, -120, 250)
+    put(m, P + "props_vehicles/car004a_physics.mdl", 1290, -150, 270)
     put(m, P + "props_junk/trashdumpster02.mdl", 420, -300, 90)
     for (u, v, n) in ((540, 300, 4), (700, -250, 3), (1060, 440, 5), (1250, 190, 3), (560, -100, 2)):
         for k in range(n):
@@ -848,7 +858,8 @@ def m_boathouse(m, opt):
     Named for the game: lc_boathouse_door (func_door: Open, Close, Toggle), lc_boathouse_hatch (func_door, the same),
     lc_boathouse_button_in, lc_boathouse_button_out, lc_boathouse_hatch_button (func_buttons that already work in the
     map), lc_boathouse_cellar (an info_target in the cellar: the cache).
-    Unchecked: the buttons' model is Episode Two's (the shared button helper's choice)."""
+    Unchecked: the buttons' model is Episode Two's (the shared button helper's choice); that the outside button can
+    be pressed past the pipe; that the hatch, sliding from under someone, lets them down the steps cleanly."""
     b = m.b
     fz, ceil, cz = F + 64, F + 224, F - 64
     steel, tin, wood = MM["steel"], MM["tin"], MM["wood"]
@@ -940,7 +951,8 @@ def m_arcade(m, opt):
     stair along each wall from the canal floor: on the left bank from the entry side (u 256 up to 640), on the right
     bank from the exit side (u 1280 down to 896), so each end of the canal has its own way up. Two levels to fight
     over: whoever holds the walk sees both approaches, whoever is below has the piers.
-    Named for the game: lc_arcade_upper (an info_target in the middle of the walk)."""
+    Named for the game: lc_arcade_upper (an info_target in the middle of the walk).
+    Unchecked: the look of stone/stonewall040f on the piers and arches; how the bin faces."""
     b = m.b
     deck, roof = TRIM, TRIM + 120
     stone, tin, wood = STONE, MM["tin"], MM["wood"]
@@ -1051,7 +1063,9 @@ def m_chimney(m, opt):
     each corner, 48 up a side, an open well down the middle with the old hoist rope in it) to an iron gallery round
     the chimney's top: plates to crouch behind on four sides, rails on the other four, a cap on four posts. From up
     there the whole canal both ways is in view: a sniper's nest with one way up (lc_chimney_top).
-    Named for the game: lc_chimney_top (an info_target on the gallery)."""
+    Named for the game: lc_chimney_top (an info_target on the gallery).
+    Unchecked: that the corner landings turn a player comfortably (about 38 of clear floor between the well and the
+    corner's wall); how the taper looks in brick; whether the map's fog or far plane hides the canal from up there."""
     b = m.b
     cu, cv, R = 512, -576, 448
     plinth, top = F + 128, F + 624
@@ -1176,7 +1190,9 @@ def m_crypt(m, opt):
     a step, a cross on the wall behind it (lc_crypt_altar), and to its right a stair that once went up into the
     church: bricked up, with black showing through a gap at the top. The only light is candle stubs (steady) and
     what comes in at the hole. Quiet and old: a place to hide, to meet, or to be buried.
-    Named for the game: lc_crypt_altar (an info_target before the altar)."""
+    Named for the game: lc_crypt_altar (an info_target before the altar).
+    Unchecked: models/gibs/hgibs.mdl as a prop_dynamic (the skull in the tomb); the look of
+    stone/stonefloor006d_c17 and stone/stonewall040f; whether eight small lights are enough to see by."""
     b = m.b
     cz, ceil = F + 128, F + 240
     floor = "stone/stonefloor006d_c17"
@@ -1281,6 +1297,7 @@ def m_lift(m, opt):
     m.open(320, 256, 768, 576, floor=TRIM, mat=MAT["quay_floor"])
     m.low(448, 576, 576, 704, TRIM + 128, floor=TRIM, mat=MAT["quay_floor"])
     m.side(320, 256, 768, 704)
+    m.side(448, 64, 640, 256)                                           # (no mud over the platform)
     gate = "%s: the dock's street end (delete to join a street)" % b.vis
     m.world((448, 640, TRIM, 576, 704, TRIM + 128), MAT["black"], vis=gate)
     m.bars((448, 580, TRIM, 576, 588, TRIM + 128), "u", vis=gate)
@@ -1350,7 +1367,7 @@ def m_lift(m, opt):
     m.view(300, -70, F, 30, -10, "the lift at the bottom, the dock above")
     m.view(544, 110, F + 8, 90, -32, "from the platform, up")
     m.view(544, 300, TRIM, 100, 4, "the dock: the gate, the lorry")
-    m.view(700, 560, TRIM, 215, 8, "from the back of the dock")
+    m.view(360, 540, TRIM, 315, 10, "from the back of the dock")
     b.notes.append("%s: the street end is at (%d %d), floor z %d, 128 wide and 128 high: bring a street to it, then delete its gate and cap; the lift's deck rides from z %d to z %d" % (
         (m.tag,) + m.fr.pt(512, 704) + (TRIM, F + 8, F + 264)))
 
