@@ -1698,6 +1698,21 @@
 "ragdoll": false,
 "static": false
 },
+"models/weapons/w_rocket_launcher.mdl": {
+"bbox": [
+-4.6,
+-5.9,
+-7.5,
+42.1,
+2.9,
+18.2
+],
+"collides": true,
+"game": "hl2",
+"physics": false,
+"ragdoll": false,
+"static": false
+},
 "models/weapons/w_shotgun.mdl": {
 "bbox": [
 -15.4,

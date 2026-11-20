@@ -2,14 +2,18 @@
 """
 Living City: canal modules, set C: the Combine's and the city's machinery in the canals (things both sides fight over).
 
-    lock        a lock house: two steel gates and the control house over the canal that works them
-    substation  what powers the Combine's things in the canals: transformers in a fenced yard, a fuse to break
-    railbridge  a railway over the canal: a Combine train crosses every few minutes (experimental)
-    execwall    where the Combine shoots people
-    pumphouse   a pumping station: a machine hall, a turbine pit, a pipe bridge
+    lock         a lock house: two steel gates and the control house over the canal that works them
+    railbridge   a railway over the canal: a Combine train crosses every few minutes (experimental)
+    pumphouse    a pumping station: a machine hall, a flywheel, a turbine pit, a pipe bridge
+    thumper      a Combine thumper on a fenced terrace, with the box that stops it (experimental)
+    depot        the Combine's ration depot: a roller door, a loading bay, caged stores, a staff door
+    armory       a Combine armoury vault behind a door that takes two people to open
+    swingbridge  a footbridge that turns on a pier in the middle of the canal (experimental)
+    floodroom    a valve chamber that can be flooded and drained (experimental)
 
 map_modules.py picks this file up by itself (docs/dev/map-modules.md). Nothing here has been compiled: each module's
-docstring ends with what is from memory ("Unchecked").
+docstring ends with what is from memory ("Unchecked"). Every model and material passes map_assets.py; sounds cannot
+be checked. Moving things follow the bunker door's pattern where they can (a func_button as a mover, named sounds).
 """
 
 from map_build import CELL, GATE_HIGH, MAT, prism, octagon
@@ -304,13 +308,26 @@ def m_lock(m, opt):
     m.lamp(512, 244, F + 300, "255 220 170 120")
     m.lamp(816, 0, deck - 60, "255 220 170 90")
     m.static("models/props_c17/oildrum001.mdl", 480, 228, 0, z=F + 128)
+    # small things: a bollard on the pier, a depth gauge on each gate's outer face, a sloped board under each slit
+    m.shapes([vprism(octagon(462, 204, 8), F + 128, F + 146, PIPE), vprism(octagon(462, 204, 11), F + 146, F + 150, PIPE)])
+    for u1, u2 in ((382, 384), (1216, 1218)):
+        m.det([(u1, -144, F + 8, u2, -134, F + 248)], "plaster/plasterwall042c")
+        m.det([(min(u1, u2 + (1 if u1 > 1000 else -3)), -144, z, max(u2, u1 + (3 if u1 > 1000 else -1)), -138 if (z - F) % 64 else -134, z + 2) for z in range(F + 24, F + 248, 32)], PIPE)
+    for u1, u2 in ((h1 + 8, h1 + 24), (h2 - 24, h2 - 8)):
+        lo, hi = (deck + 42, deck + 34) if u1 < 800 else (deck + 34, deck + 42)
+        m.shapes([prism([(u1, deck + 30), (u2, deck + 30), (u2, hi), (u1, lo)], "y", -36, 64, STEEL)])
+        m.det([(u1, v, deck + 1, u2, v + 4, deck + 30) for v in (-36, 60)], PIPE)
     m.loose("models/props_junk/wood_crate001a.mdl", 980, -90, 20)
     m.view(1060, -40, F, 172, 2, "in the lock, toward gate a and the stairs")
     m.view(700, 224, deck - 24, 330, 8, "the stairs' head: the gantry and the house")
     m.view(860, 20, deck, 180, 6, "in the house: the slit toward gate a")
-    m.view(250, 60, F, 0, 0, "gate a from outside")
+    m.view(120, 60, F, 0, -4, "gate a from outside")
     b.notes.append("%s: the gates are at (%d %d) and (%d %d), the gateway 256 wide; the house's floor is z %d" % ((m.tag,) + m.fr.pt(416, 0) + m.fr.pt(1184, 0) + (deck,)))
 
+
+# ---------------------------------------------------------------------------
+# 2. The railway bridge (experimental)
+# ---------------------------------------------------------------------------
 
 # ---------------------------------------------------------------------------
 # 2. The railway bridge (experimental)
@@ -452,20 +469,12 @@ def m_railbridge(m, opt):
     m.static("models/props_debris/concrete_chunk01a.mdl", c + 130, 150, 40)
     m.lane(c, 0)
     m.view(180, -40, F, 8, -14, "the bridge from the canal")
-    m.view(c + 220, -60, F, 118, -22, "the left tunnel's mouth, from below")
+    m.view(c + 360, -170, F, 138, -16, "the left tunnel's mouth and the bridge")
     m.view(c - 56, 300, D, 86, 2, "in the left tunnel: the train where it waits")
     m.view(c + 60, 40, F, 200, -30, "under the bridge")
     b.notes.append("%s: the rails are at z %d (the walls' top less 144); the train waits at (%d %d) and stops at (%d %d)" % (
         (m.tag, D + 6) + m.fr.pt(c, tv) + m.fr.pt(c, -tv)))
 
-
-# ---------------------------------------------------------------------------
-# 3. The pumping station
-# ---------------------------------------------------------------------------
-
-# ---------------------------------------------------------------------------
-# 3. The pumping station
-# ---------------------------------------------------------------------------
 
 def m_pumphouse(m, opt):
     """The pumping station: off the left wall, through a wide doorway, a machine hall 704 by 512 and 320 high. Facing
@@ -709,6 +718,10 @@ def m_thumper(m, opt):
 # 5. The ration depot
 # ---------------------------------------------------------------------------
 
+# ---------------------------------------------------------------------------
+# 5. The ration depot
+# ---------------------------------------------------------------------------
+
 def m_depot(m, opt):
     """The Combine's ration depot: a place to raid. In the left wall a steel roller door 192 wide (lc_depot_door, shut)
     opens straight off the canal's floor into a loading bay with a truck backed up to a dock 40 high. The dock runs
@@ -741,13 +754,13 @@ def m_depot(m, opt):
     m.low(256, 576, 640, 704, HC, floor=DK, mat=floor)
     m.low(384, 256, 576, 320, F + 160)                           # the roller door's way
     m.low(768, 256, 832, 320, DK + 64, floor=DK)                 # the conveyor's hatch
-    m.low(928, 256, 992, 320, DK + 104, floor=DK)                # the staff door's way
+    m.low(896, 256, 960, 320, DK + 104, floor=DK)                # the staff door's way
     m.side(256, 256, 1024, 704)
     m.no_bank(768, 248, 832, 264)
-    m.no_bank(928, 248, 992, 264)
+    m.no_bank(896, 248, 960, 264)
     m.portal(384, 287, F, 576, 289, F + 160)
     m.portal(768, 287, DK, 832, 289, DK + 64)
-    m.portal(928, 287, DK, 992, 289, DK + 104)
+    m.portal(896, 287, DK, 960, 289, DK + 104)
     m.taken(368, 224, F, 592, 256, F + 184)
     m.taken(744, 224, F, 1008, 256, F + 170)
 
@@ -816,15 +829,15 @@ def m_depot(m, opt):
     m.blocked(768, 128, 832, 448)
     # the notches in the bank at the hatch and the staff door: concrete cheeks, and the door's steps
     cheek = [(256, F), (120, F), (256, F + 136)]
-    m.shapes([prism(cheek, "x", u, u + 8, MAT["beam"]) for u in (760, 832, 920, 992)])
-    m.steps(196, 928, 992, F, DK, "v", 1)
-    m.blocked(928, 128, 992, 320)
+    m.shapes([prism(cheek, "x", u, u + 8, MAT["beam"]) for u in (760, 832, 888, 960)])
+    m.steps(196, 896, 960, F, DK, "v", 1)
+    m.blocked(896, 128, 960, 320)
 
     # the staff door: a steel leaf in a frame; no Use opens it
-    m.det([(928, 280, DK, 936, 296, DK + 104), (984, 280, DK, 992, 296, DK + 104), (936, 280, DK + 96, 984, 296, DK + 104)], PIPE)
-    swing_gate(m, "lc_depot_side", [((936, 284, DK, 984, 292, DK + 96), STEEL), ((944, 283, DK + 40, 976, 293, DK + 48), PIPE)], (936, 288, DK), flags="0", wait="4")
-    m.button("lc_depot_button_side", 1008, 320, DK + 44, 90, [("lc_depot_side", "Open", "", 0)], wait="5")
-    m.lamp(960, 244, DK + 130, "255 60 40 25")
+    m.det([(896, 280, DK, 904, 296, DK + 104), (952, 280, DK, 960, 296, DK + 104), (904, 280, DK + 96, 952, 296, DK + 104)], PIPE)
+    swing_gate(m, "lc_depot_side", [((904, 284, DK, 952, 292, DK + 96), STEEL), ((912, 283, DK + 40, 944, 293, DK + 48), PIPE)], (904, 288, DK), flags="0", wait="4")
+    m.button("lc_depot_button_side", 984, 320, DK + 44, 90, [("lc_depot_side", "Open", "", 0)], wait="5")
+    m.lamp(928, 244, DK + 130, "255 60 40 25")
 
     # the dispatch desk: the console against the end wall, a counter, a chair, a cabinet
     m.dynamic("models/props_combine/combine_interface001.mdl", 996, 500, 180, z=DK, name="lc_depot_desk")
@@ -838,7 +851,7 @@ def m_depot(m, opt):
     m.lane(480, 288)
     m.lane(340, 448)
     m.lane(700, 480, DK)
-    m.lane(960, 340, DK)
+    m.lane(928, 340, DK)
     m.view(480, 40, F, 90, 0, "the roller door from the canal")
     m.view(300, 350, F, 35, 4, "the loading bay")
     m.view(690, 440, DK, 55, 6, "on the dock: the cages")
@@ -847,10 +860,432 @@ def m_depot(m, opt):
     b.notes.append("%s: the bay's floor is z %d, the dock z %d, the roof z %d" % (m.tag, F, DK, HC))
 
 
+# ---------------------------------------------------------------------------
+# 6. The armoury vault
+# ---------------------------------------------------------------------------
+
+# ---------------------------------------------------------------------------
+# 6. The armoury vault
+# ---------------------------------------------------------------------------
+
+def m_armory(m, opt):
+    """A Combine armoury vault: a heist target. Off the left wall an armoured corridor 128 wide runs 384 in to a vault
+    door: a slab of Combine metal 24 thick that slides sideways into the wall at 20 a second, with a klaxon, a groan
+    and a slam. Beside the corridor's first half is the guard booth, behind a wall of Combine metal with a doorway and
+    a slit that looks down the corridor. The door answers only to TWO buttons pressed within two seconds of each other:
+    one in the booth's far corner, one on the corridor wall by the door, 340 apart with the booth's wall between, so
+    it takes two people (a green lamp shows over each for the two seconds its press counts). Pressed together again,
+    they shut it. Inside the vault (384 by 256): rifle racks along two walls, stacked ammunition crates, and a
+    pulse-rifle charging frame of Combine metal with three rifles standing in it under a blue glow. A button inside by
+    the door opens it, so nobody is shut in.
+
+    The door is a func_button used as a mover, as the bunker's: the gamemode's door rules do not reach it, and it has
+    no damage of its own (at 20 a second it stops against whoever stands in its way).
+
+    Named for the game:
+      lc_armory_door        the vault door (PressIn opens, PressOut shuts; use the relays for the sounds).
+      lc_armory_button_a    the button in the guard booth.     lc_armory_button_b    the button by the door.
+      lc_armory_count       a math_counter, 0 to 2: each press adds 1 and takes it off two seconds later; at 2 it
+                            triggers both relays below.
+      lc_armory_open, lc_armory_shut   relays: Trigger one to open or shut the vault with klaxon, groan, slam and the
+                            red light. Only the one that makes sense is live.
+      lc_armory_button_exit the button inside the vault: triggers lc_armory_open.
+      lc_armory_vault       the middle of the vault's floor.
+      lc_armory_lamp_a, _b, lc_armory_blip, lc_armory_alarm, lc_armory_move, lc_armory_slam, lc_armory_groan,
+      lc_armory_light, lc_armory_shake   the buttons' lamps and blip, and the door's sounds, red light and shake.
+    Areaportals: one in the entry, one inside the vault door's thickness.
+
+    Unchecked: the wiring is the owner's nest door's (math_counter Add and Subtract, OnHitMax) and the sounds are the
+    bunker's and the nest's, heard there. The rifles in the frame are prop_dynamics turned to stand on their butts
+    ("angles" -90 pitch): which way a weapon model's barrel lies is from its size alone. The weapon and ammunition
+    models pass the assets check as prop_dynamic; whether the gamemode lets players pick such props up is its affair."""
+    b = m.b
+    L, CH, VH = 1024, F + 128, F + 160
+    m.open(0, -256, L, 256)
+    m.low(448, 256, 576, 320, CH)                 # the entry
+    m.low(448, 320, 768, 512, CH)                 # the corridor's first half and the guard booth beside it
+    m.low(448, 512, 576, 704, CH)                 # the corridor's second half and the door's place
+    m.low(320, 704, 704, 960, VH, mat="concrete/concretefloor016a")
+    m.side(320, 256, 768, 960)
+    m.portal(448, 287, F, 576, 289, CH)
+    m.portal(448, 671, F, 576, 673, CH)
+    m.taken(432, 224, F, 592, 256, CH + 24)
+    # the entry's frame of Combine metal on the canal wall, and the corridor's armour: plates on its walls, ribs overhead
+    m.det([(440, 244, F, 448, 256, CH + 8), (576, 244, F, 584, 256, CH + 8), (440, 244, CH, 584, 256, CH + 16)], CMB)
+    m.det([(448, 320, F, 452, 652, CH), (572, 512, F, 576, 652, CH)], CMB)
+    m.det([(448, v, CH - 6, 576, v + 12, CH) for v in range(340, 640, 60)], PIPE)
+    # the booth's wall: Combine metal 16 thick, a doorway at the entry's end, a slit 24 high further on
+    wu, zs = 576, F + 44
+    m.det([(wu, 320, F, wu + 16, 332, CH), (wu, 388, F, wu + 16, 512, zs), (wu, 388, zs + 24, wu + 16, 512, CH), (wu, 388, zs, wu + 16, 412, zs + 24),
+           (wu, 492, zs, wu + 16, 512, zs + 24), (wu, 332, F + 96, wu + 16, 388, CH)], CMB)
+    m.det([(wu - 2, 408, zs - 4, wu + 18, 496, zs), (wu - 2, 408, zs + 24, wu + 18, 496, zs + 28)], PIPE)
+    m.dynamic("models/props_combine/combine_intmonitor001.mdl", 756, 380, 180)
+    m.static("models/props_wasteland/controlroom_chair001a.mdl", 650, 452, 180)
+    m.static("models/props_c17/lockers001a.mdl", 720, 500, 270)
+    m.lamp(680, 416, CH - 8, "200 220 255 45")
+    m.lamp(512, 420, CH - 8, "200 220 255 45")
+    m.lamp(512, 600, CH - 8, "200 220 255 40")
+
+    # the vault door, drawn shut: it slides away from the booth's side into the wall
+    parts = [((448, 660, F, 576, 684, CH), CMB), ((568, 654, F, 576, 690, CH), PIPE)]
+    for z in (F + 20, F + 60, F + 100):
+        parts += [((448, 656, z, 568, 660, z + 8), PIPE), ((448, 684, z, 568, 688, z + 8), PIPE)]
+    brush(m, "func_button", {"targetname": "lc_armory_door", "movedir": "0 %d 0" % m.fr.yaw(180), "speed": "20", "lip": "8", "wait": "-1", "spawnflags": "0",
+                             "sounds": "0", "health": "0", "locked_sound": "0", "unlocked_sound": "0", "locked_sentence": "0", "unlocked_sentence": "0",
+                             "min_use_angle": "0.8", "rendermode": "0", "renderamt": "255", "rendercolor": "255 255 255", "disablereceiveshadows": "0"},
+          parts, CMB, vis=b.vis + ": the vault door")
+    m.det([(572, 648, F, 576, 656, CH), (448, 648, CH - 8, 576, 656, CH)], PIPE)
+    at = (512, 640, F + 100)
+    sound(m, "lc_armory_blip", "Buttons.snd17", 512, 600, F + 60, radius=700)
+    sound(m, "lc_armory_alarm", "ambient/alarms/klaxon1.wav", 512, 560, F + 110, radius=2200)
+    sound(m, "lc_armory_move", "Streetwar.d3_c17_11_garage_move1", *at, loops=True, radius=2200)
+    sound(m, "lc_armory_slam", "Streetwar.d3_c17_11_garage_stop1", *at, radius=2200)
+    sound(m, "lc_armory_groan", "ambient/materials/metal_stress4.wav", *at, radius=2200)
+    named_light(m, "lc_armory_light", 512, 620, CH - 14, "255 50 30 200", on=False)
+    m.point("env_shake", 512, 640, F + 60, {"targetname": "lc_armory_shake", "amplitude": "5", "radius": "700", "duration": "1.2", "frequency": "40", "spawnflags": "0"})
+    m.point("math_counter", 512, 560, F + 90, {"targetname": "lc_armory_count", "startvalue": "0", "min": "0", "max": "2", "StartDisabled": "0"},
+            connections=[("OnHitMax", "lc_armory_open", "Trigger", "", 0), ("OnHitMax", "lc_armory_shut", "Trigger", "", 0)])
+    for tag, u, v, out in (("a", 768, 484, 180), ("b", 452, 616, 0)):
+        du = -10 if out == 180 else 10
+        sprite(m, "lc_armory_lamp_" + tag, u + du, v, F + 84, "120 255 120", 0.3, on=False)
+        m.button("lc_armory_button_" + tag, u, v, F + 40, out,
+                 [("lc_armory_count", "Add", "1", 0), ("lc_armory_count", "Subtract", "1", 2), ("lc_armory_lamp_" + tag, "ShowSprite", "", 0),
+                  ("lc_armory_lamp_" + tag, "HideSprite", "", 2), ("lc_armory_blip", "PlaySound", "", 0)], wait="2.2")
+    moving = [("lc_armory_alarm", "PlaySound", "", 0), ("lc_armory_alarm", "PlaySound", "", 1.7), ("lc_armory_light", "TurnOn", "", 0), ("lc_armory_groan", "PlaySound", "", 0.4),
+              ("lc_armory_move", "PlaySound", "", 1), ("lc_armory_move", "StopSound", "", 7), ("lc_armory_slam", "PlaySound", "", 7), ("lc_armory_shake", "StartShake", "", 7),
+              ("lc_armory_light", "TurnOff", "", 9)]
+    m.relay("lc_armory_open", 500, 580, F + 100, [("lc_armory_open", "Disable", "", 0), ("lc_armory_door", "PressIn", "", 1)] + moving + [("lc_armory_shut", "Enable", "", 9.5)], on=True)
+    m.relay("lc_armory_shut", 524, 580, F + 100, [("lc_armory_shut", "Disable", "", 0), ("lc_armory_door", "PressOut", "", 1)] + moving + [("lc_armory_open", "Enable", "", 9.5)], on=False)
+    m.button("lc_armory_button_exit", 620, 704, F + 40, 90, [("lc_armory_open", "Trigger", "", 0)], wait="10")
+
+    # the vault: racks of rifles on two walls
+    def rack(a, e, along, wall, out, guns):
+        """Two boards and a back plate on a wall, from a to e along it; guns: (model, how many)."""
+        d1, d2 = min(wall, wall + out * 18), max(wall, wall + out * 18)
+        p1, p2 = min(wall, wall + out * 2), max(wall, wall + out * 2)
+        box = (lambda x1, x2, y1, y2, z1, z2: (x1, y1, z1, x2, y2, z2)) if along == "u" else (lambda x1, x2, y1, y2, z1, z2: (y1, x1, z1, y2, x2, z2))
+        m.det([box(a, e, p1, p2, F + 8, F + 124)], CMB)
+        m.det([box(a, e, d1, d2, z, z + 3) for z in (F + 36, F + 80)] + [box(x, x + 3, d1, d2, F, F + 110) for x in range(a, e, 64)] + [box(e - 3, e, d1, d2, F, F + 110)], PIPE)
+        k = 0
+        for z in (F + 39, F + 83):
+            x = a + 34
+            while x < e - 20:
+                model, yaw = guns[k % len(guns)]
+                gu, gv = (x, wall + out * 9) if along == "u" else (wall + out * 9, x)
+                m.dynamic(model, gu, gv, yaw if along == "u" else yaw + 90, z=z, solid=False)
+                x += 64
+                k += 1
+    rack(720, 944, "v", 320, 1, (("models/weapons/w_smg1.mdl", 0), ("models/weapons/w_shotgun.mdl", 0)))
+    rack(384, 608, "u", 960, -1, (("models/weapons/w_shotgun.mdl", 0), ("models/weapons/w_smg1.mdl", 0)))
+    # the charging frame on the far wall: two posts and three arms of Combine metal, three pulse rifles standing in it
+    fu = 704
+    m.det([(fu - 20, 772, F, fu, 788, F + 124), (fu - 20, 876, F, fu, 892, F + 124), (fu - 26, 772, F + 110, fu, 892, F + 124), (fu - 26, 772, F, fu, 892, F + 10),
+           (fu - 4, 788, F + 10, fu, 876, F + 110)], CMB)
+    m.det([(fu - 26, 788, F + 34, fu - 4, 876, F + 40)], CMB)                       # the ledge the rifles stand on, and the bar that holds them
+    m.det([(fu - 26, 788, F + 70, fu - 22, 876, F + 74)], PIPE)
+    for v in (806, 832, 858):
+        m.point("prop_dynamic", fu - 13, v, F + 59, {"model": "models/weapons/w_irifle.mdl", "angles": "-90 %d 0" % m.fr.yaw(180), "solid": "0", "skin": "0",
+                                                      "disableshadows": "1", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1", "StartDisabled": "0",
+                                                      "renderamt": "255", "rendercolor": "255 255 255"}, m.pv)
+    m.glow(fu - 30, 832, F + 100, "120 200 255", 0.5)
+    m.light(fu - 40, 832, F + 90, "120 200 255 30")
+    m.rope([(fu - 10, 780, F + 124), (fu - 10, 720, VH - 4)], slack=20)
+    # ammunition: crates stacked in the corner by the door and under the racks
+    for u, v, yaw, z in ((372, 740, 0, 0), (372, 800, 0, 0), (372, 770, 10, 34), (430, 736, 90, 0), (640, 930, 90, 0), (660, 740, 0, 0)):
+        m.dynamic("models/items/ammocrate_%s.mdl" % ("smg1", "ar2", "grenade")[(u + v) // 10 % 3], u, v, yaw, z=F + z)
+    m.loose("models/items/item_item_crate.mdl", 470, 800, 20)
+    m.loose("models/items/item_item_crate.mdl", 520, 860, 65)
+    for u, v in ((560, 936), (590, 940), (420, 938)):
+        m.dynamic("models/items/boxmrounds.mdl", u, v, 0, z=F + 39, solid=False)
+    m.lamp(512, 832, VH - 8, "255 236 200 70")
+    m.target("lc_armory_vault", 512, 832, F + 8, 90)
+    m.blocked(576, 320, 768, 512)
+    m.lane(512, 288)
+    m.lane(512, 480)
+    m.lane(512, 620)
+    m.lane(680, 440)
+    m.lane(512, 800)
+    m.view(512, 80, F, 90, 0, "the entry from the canal")
+    m.view(512, 330, F, 90, 0, "the corridor: the booth's slit, the vault door")
+    m.view(730, 370, F, 140, 4, "in the guard booth")
+    m.view(500, 730, F, 60, 4, "in the vault: the charging frame")
+    m.view(640, 900, F, 190, 6, "in the vault: the racks")
+    b.notes.append("%s: the two buttons are %d apart; the vault door is at (%d %d)" % ((m.tag, int(((768 - 452) ** 2 + (484 - 616) ** 2) ** 0.5)) + m.fr.pt(512, 672)))
+
+
+# ---------------------------------------------------------------------------
+# 7. The swing bridge (experimental)
+# ---------------------------------------------------------------------------
+
+def m_swingbridge(m, opt):
+    """EXPERIMENTAL: a footbridge at the trim's height that turns on a round pier in the middle of the canal. As the
+    map starts it lies across, from a landing in the left wall to one in the right; turned a quarter it lies along the
+    canal and joins nothing. Each landing is a roofed alcove with a barred street door (never opens, black behind), a
+    green lamp that shows while the bridge is across, and a wheel on its back wall that turns the bridge (a button: a
+    press is Toggle). Each has its own stairs from the canal floor: a covered flight in the wall, open to the canal on
+    its side, running away from the bridge (the left one toward the module's exit, the right one toward its entry).
+    Whoever turns the bridge away strands the other bank at that height.
+
+    The bridge is 456 long and 64 wide, rails and all one func_door_rotating. Its corners sweep a circle 461 across;
+    the canal is 512 wide and the landings' lips stop 234 from the pier's middle, so it sweeps through nothing (ribs
+    and drain stubs are kept off the walls there; the walls' trim line stands 240 out). A gap of 6 is left at each end.
+    It has no damage of its own.
+
+    Named for the game:
+      lc_swing_bridge    the bridge: Toggle (or Open: along the canal; Close: across). 12 degrees a second.
+      lc_swing_wheel_a   the wheel on the left landing.     lc_swing_wheel_b   the wheel on the right landing.
+      lc_swing_lamp_a, lc_swing_lamp_b   the green lamps (env_sprites): lit while the bridge is across.
+      lc_swing_move, lc_swing_stop       the turning sound (looping) and the clank as it comes to rest.
+
+    Unchecked: a func_door_rotating this big, turning about its middle with people on it: the engine carries riders
+    round on a turning brush, but how well is only seen in the game. Spawnflags 32 (toggle) and no Use; outputs OnOpen,
+    OnClose, OnFullyOpen, OnFullyClosed for the sound and lamps. With "wait" -1 a blocked door does not turn back: it
+    waits, pushing. Sounds are the bunker door's (heard there)."""
+    b = m.b
+    L, cu, deck = 1024, 512, TRIM
+    half, wide = 228, 32
+    reach = int((half * half + wide * wide) ** 0.5) + 1          # how far a corner swings out
+    lip = 234
+    if reach >= lip:
+        b.problems.append("%s: the bridge's corners (%d out) would hit the landings' lips (%d out)" % (m.tag, reach, lip))
+    m.open(0, -256, L, 256)
+    for s in (1, -1):                                             # s 1: the left bank, its stairs toward the exit; -1: the right, toward the entry
+        def V(a, c):
+            return (min(s * a, s * c), max(s * a, s * c))
+        w1, w2 = V(256, 320)
+        m.low(cu - 64, w1, cu + 64, w2, deck + 112, floor=deck, mat=MAT["quay_floor"])
+        for i in range(6):
+            a = cu + s * (64 + 64 * i)
+            top = deck - (64 * i * 8) // 12
+            m.low(min(a, a + s * 64), w1, max(a, a + s * 64), w2, min(deck + 112, (top + 136) // 8 * 8))
+        m.side(min(cu - s * 64, cu + s * 448), w1, max(cu - s * 64, cu + s * 448), w2)
+        m.blocked(min(cu - s * 64, cu + s * 448), w1, max(cu - s * 64, cu + s * 448), w2)
+        m.steps(cu + s * 448, w1, w2, F, deck, "u", -s)
+        # a handrail down the flight's open side
+        r1, r2 = V(256, 260)
+        lo, hi = cu + s * 64, cu + s * 448
+        m.shapes([prism([(hi, F + 36), (lo, deck + 36), (lo, deck + 40), (hi, F + 40)], "y", r1, r2, PIPE)])
+        m.det([(min(u, u + 4), r1, z, max(u, u + 4), r2, z + 38) for u, z in ((lo + s * 2, deck), (cu + s * 256, F + 128), (hi - s * 6, F))], PIPE)
+        # the landing: its lip out toward the bridge on a corbel, a rail each side of the bridge's end, the street door, a lamp
+        l1, l2 = V(lip, 256)
+        m.det([(cu - 64, l1, deck - 16, cu + 64, l2, deck)], MAT["beam"], top=MAT["quay_floor"])
+        m.shapes([prism([(s * 256, deck - 56), (s * 256, deck - 16), (s * lip, deck - 16)], "x", cu - 64, cu + 64, MAT["beam"])])
+        k1, k2 = V(lip + 2, lip + 6)
+        m.det([(cu - 64, k1, deck + 36, cu - 36, k2, deck + 40), (cu + 36, k1, deck + 36, cu + 64, k2, deck + 40), (cu - 64, k1, deck, cu - 60, k2, deck + 36),
+               (cu - 40, k1, deck, cu - 36, k2, deck + 36), (cu + 36, k1, deck, cu + 40, k2, deck + 36), (cu + 60, k1, deck, cu + 64, k2, deck + 36)], PIPE)
+        d1, d2 = V(316, 320)
+        g1, g2 = V(308, 316)
+        f1, f2 = V(306, 320)
+        du = cu - s * 24                                          # the door's middle: on the landing's side away from the stairs
+        m.det([(du - 28, d1, deck, du + 28, d2, deck + 96)], MAT["black"])
+        m.det([(du - 34, f1, deck, du - 28, f2, deck + 102), (du + 28, f1, deck, du + 34, f2, deck + 102), (du - 34, f1, deck + 96, du + 34, f2, deck + 102)], MAT["beam"])
+        m.bars((du - 28, g1, deck, du + 28, g2, deck + 96), "u")
+        m.lamp(cu, s * 290, deck + 104, "255 220 170 45")
+        m.taken(cu - 260, V(228, 256)[0], deck - 60, cu + 260, V(228, 256)[1], deck + 120)
+        # the wheel: a steel disc on the back wall with the button at its hub, and the green lamp over it
+        tag = "a" if s > 0 else "b"
+        wu = cu + s * 40
+        m.shapes([prism(octagon(wu, deck + 50, 16), "y", V(317, 320)[0], V(317, 320)[1], PIPE)])
+        m.button("lc_swing_wheel_" + tag, wu, s * 317, deck + 40, 270 if s > 0 else 90, [("lc_swing_bridge", "Toggle", "", 0)], wait="8")
+        sprite(m, "lc_swing_lamp_" + tag, wu, s * 312, deck + 84, "120 255 120", 0.3)
+        m.lane(cu, s * 290, deck)
+        m.lane(cu + s * 256, s * 288, F + 128)
+
+    # the pier: a round concrete drum with a steel turntable on it
+    m.shapes([vprism(octagon(cu, 0, 40), F, deck - 40, MAT["beam"]), vprism(octagon(cu, 0, 52), F, F + 24, MAT["canal_wall"]), vprism(octagon(cu, 0, 48), deck - 40, deck - 32, STEEL)])
+    m.blocked(cu - 64, -64, cu + 64, 64)
+    # the bridge, drawn across: two steel beams, a plank deck, a rail each side
+    wood = MM["wood"]
+    parts = [((cu - wide, -half, deck - 16, cu + wide, half, deck), wood)]
+    for s in (1, -1):
+        a, c = min(s * 20, s * 28), max(s * 20, s * 28)
+        parts.append(((cu + a, -half, deck - 32, cu + c, half, deck - 16), STEEL))
+        e, f = min(s * (wide - 4), s * wide), max(s * (wide - 4), s * wide)
+        parts.append(((cu + e, -half, deck + 36, cu + f, half, deck + 40), PIPE))
+        parts.append(((cu + e + 1, -half, deck + 18, cu + f - 1, half, deck + 20), PIPE))
+        parts += [((cu + e, v, deck, cu + f, v + 4, deck + 36), PIPE) for v in range(-half, half, 57)] + [((cu + e, half - 4, deck, cu + f, half, deck + 36), PIPE)]
+    parts += [((cu - 28, v, deck - 30, cu + 28, v + 6, deck - 18), STEEL) for v in (-half + 4, -110, -3, 104, half - 10)]
+    swing_gate(m, "lc_swing_bridge", parts, (cu, 0, deck - 16), mat=STEEL, speed=12, flags="32", connections=[
+        ("OnOpen", "lc_swing_move", "PlaySound", "", 0), ("OnClose", "lc_swing_move", "PlaySound", "", 0), ("OnOpen", "lc_swing_lamp_*", "HideSprite", "", 0),
+        ("OnFullyOpen", "lc_swing_move", "StopSound", "", 0), ("OnFullyClosed", "lc_swing_move", "StopSound", "", 0), ("OnFullyOpen", "lc_swing_stop", "PlaySound", "", 0),
+        ("OnFullyClosed", "lc_swing_stop", "PlaySound", "", 0), ("OnFullyClosed", "lc_swing_lamp_*", "ShowSprite", "", 0)])
+    sound(m, "lc_swing_move", "Streetwar.d3_c17_11_garage_move1", cu, 0, deck, loops=True, radius=1600, volume=8)
+    sound(m, "lc_swing_stop", "Streetwar.d3_c17_11_garage_stop1", cu, 0, deck, radius=1600, volume=8)
+    m.lane(cu, 120, deck)
+    m.lane(cu, -120, deck)
+    m.view(150, 60, F, 0, -12, "the bridge from the canal")
+    m.view(cu + 10, 300, deck, 270, 10, "from the left landing, across the bridge")
+    m.view(900, 150, F, 160, -18, "the left bank's stairs")
+    m.view(cu - 40, -290, deck, 60, 6, "on the right landing: the wheel")
+    b.notes.append("%s: the bridge turns about (%d %d); its deck is z %d; its corners swing %d out, the landings' lips are %d out, the walls 256" % (
+        (m.tag,) + m.fr.pt(cu, 0) + (deck, reach, lip)))
+
+
+# ---------------------------------------------------------------------------
+# 8. The flood room (experimental)
+# ---------------------------------------------------------------------------
+
+# ---------------------------------------------------------------------------
+# 8. The flood room (experimental)
+# ---------------------------------------------------------------------------
+
+def m_floodroom(m, opt):
+    """EXPERIMENTAL: a valve chamber that can be flooded: a trap or a refuge. Off the left wall a short passage, a
+    steel door (lc_flood_door, open) and eight steps down into an eight-sided chamber 384 across. A steel gallery runs
+    round it 96 over its floor (stairs up to it inside the chamber); from the gallery's far side a passage leads round
+    the chamber and back to the canal through a second door (lc_flood_door_out: Use opens it), four steps over the
+    canal's floor. In the chamber's middle stands the main with a big valve wheel; a button on it (lc_flood_valve_b) and
+    one on the gallery's wall (lc_flood_valve_a) flood the chamber: the steel door at the foot of the way in drops,
+    then water rises 88 from under the floor to just under the gallery, in about fifteen seconds. Pressed again, it
+    drains and the door lifts. Nobody is hurt: whoever is on the floor swims up to the gallery and walks out.
+
+    Named for the game:
+      lc_flood_water      the water: a func_water_analog under the chamber's floor (Open floods, Close drains; 6 a second).
+      lc_flood_valve_a    the button on the gallery.     lc_flood_valve_b    the button on the main, at the floor.
+      lc_flood_fill, lc_flood_drain   relays: Trigger one to flood or drain with the door and the sound. A press of
+                          either button triggers both; only the one that makes sense is live.
+      lc_flood_door       the door at the foot of the way in: a func_button used as a mover, as the bunker's (PressOut
+                          shuts, PressIn opens; the map opens it as it starts). It has no damage of its own.
+      lc_flood_door_out   the second door, at the canal (a func_door_rotating: Use; the gamemode can lock it).
+      lc_flood_rush       the rushing sound, playing while the water moves.
+      lc_flood_chamber    the middle of the chamber's floor.
+    Areaportals: one in the way in, one inside the second door's thickness: both dry, both well away from the water.
+
+    Unchecked: func_water_analog from memory ("movedir" up, "movedistance" 88, "speed" 6, "startposition" 0; inputs
+    Open and Close; outputs OnFullyOpen and OnFullyClosed). Its top is nature/water_canals_water_clear and its other
+    faces nodraw; if moving water will not draw with that material, a cheap water material is needed there. Whether
+    the engine lets a player surface cleanly 8 under the gallery. Sound from memory: ambient/water/water_flow_loop1.wav."""
+    b = m.b
+    L, cu, cv = 1024, 448, 576
+    FL, G, CH = F - 64, F + 32, F + 160            # the chamber's floor, the gallery, the chamber's roof
+    PH = G + 112                                   # the passages' roof at gallery height
+    grate = "metal/metalgrate013a"
+    m.open(0, -256, L, 256)
+    m.low(cu - 64, 256, cu + 64, 384, F + 128)                    # the way in
+    for i in range(-3, 3):
+        for j in range(-3, 3):
+            if abs(i + 0.5) > 2 and abs(j + 0.5) > 2:
+                continue
+            m.low(cu + 64 * i, cv + 64 * j, cu + 64 * i + 64, cv + 64 * j + 64, CH, floor=FL)
+    m.low(cu - 64, cv + 192, cu + 64, cv + 256, PH, floor=G)      # the way out: from the gallery's far side,
+    m.low(cu - 64, cv + 256, cu + 320, cv + 320, PH, floor=G)     # along behind the chamber,
+    m.low(cu + 256, 256, cu + 320, cv + 256, PH, floor=G)         # and back to the canal
+    m.side(cu - 256, 256, cu + 320, cv + 320)
+    m.blocked(cu - 192, cv - 192, cu + 192, cv + 192)
+    m.no_bank(cu + 256, 248, cu + 320, 264)
+    m.portal(cu - 64, 287, F, cu + 64, 289, F + 128)
+    m.portal(cu + 256, 287, G, cu + 320, 289, PH)
+    m.taken(cu - 80, 224, F, cu + 80, 256, F + 150)
+    m.taken(cu + 240, 224, F, cu + 336, 256, PH + 24)
+
+    def P(dx, dy):
+        return (cu + dx, cv + dy)
+    # the chamber's corners filled to make it eight-sided
+    fills = []
+    for sx in (1, -1):
+        for sy in (1, -1):
+            fills.append(vprism([P(sx * 64, sy * 192), P(sx * 128, sy * 192), P(sx * 128, sy * 128)], FL, CH, MAT["canal_wall"]))
+            fills.append(vprism([P(sx * 128, sy * 128), P(sx * 192, sy * 128), P(sx * 192, sy * 64)], FL, CH, MAT["canal_wall"]))
+    m.shapes(fills)
+    # the gallery: seven of the ring's eight pieces (the eighth would cross the way in), a rail on the inner edge
+    outer = [(64, -192), (192, -64), (192, 64), (64, 192), (-64, 192), (-192, 64), (-192, -64), (-64, -192)]
+    inner = [(40, -136), (136, -40), (136, 40), (40, 136), (-40, 136), (-136, 40), (-136, -40), (-40, -136)]
+    ends = {0: ((72, -104), (72, -184)), 7: ((-72, -104), (-72, -184))}      # (its two ends stop 8 short of the steps down, so nothing hangs over them)
+    ring = []
+    for k in range(7):
+        i1, o1 = ends.get(k, (inner[k], outer[k]))
+        i2, o2 = ends.get(k + 1, (inner[k + 1], outer[k + 1]))
+        ring.append(vprism([P(*i1), P(*o1), P(*o2), P(*i2)], G - 8, G, PIPE, grate))
+    m.shapes(ring)
+
+    def rail(p, q, off):
+        a, c = P(*p), P(*q)
+        a2, c2 = (a[0] + off[0], a[1] + off[1]), (c[0] + off[0], c[1] + off[1])
+        m.shapes([vprism([a, c, c2, a2], G + 36, G + 40, PIPE), vprism([a, c, c2, a2], G + 18, G + 20, PIPE)])
+        m.det([(x - 2, y - 2, G, x + 2, y + 2, G + 36) for x, y in (a, c)], PIPE)
+    outs = [(2, -2), (3, 0), (2, 2), (0, 3), (-2, 2), (-3, 0), (-2, -2)]
+    for k in range(7):
+        if k == 2:
+            rail((88, 88), inner[3], outs[2])      # (the stairs' landing joins the gallery on the rest of this piece)
+        else:
+            rail(ends.get(k, (inner[k],))[0], ends.get(k + 1, (inner[k + 1],))[0], outs[k])
+    rail(ends[0][0], ends[0][1], (3, 0))           # the gallery's two ends, each side of the way in
+    rail(ends[7][0], ends[7][1], (-3, 0))
+    # the eight steps down from the way in, and the stairs up to the gallery
+    m.steps(cv - 96, cu - 64, cu + 64, FL, F, "v", -1)
+    m.steps(cv - 104, cu + 56, cu + 96, FL, G, "v", 1)
+    m.det([(cu + 56, cv + 40, G - 8, cu + 140, cv + 88, G)], PIPE, top=grate)
+    m.det([(cu + 54, cv + 40, G + 36, cu + 58, cv + 88, G + 40), (cu + 54, cv + 84, G + 36, cu + 90, cv + 88, G + 40), (cu + 54, cv + 84, G, cu + 58, cv + 88, G + 36),
+           (cu + 54, cv + 40, G, cu + 58, cv + 44, G + 36)], PIPE)
+    m.shapes([prism([(cv - 104, FL + 36), (cv + 40, G + 36), (cv + 40, G + 40), (cv - 104, FL + 40)], "x", cu + 54, cu + 58, PIPE)])
+    m.det([(cu + 54, cv - 104, FL, cu + 58, cv - 100, FL + 38)], PIPE)
+
+    # the main in the middle with its valve wheel; the inlets low on the near wall
+    m.shapes([vprism(octagon(cu, cv, 20), FL, CH, PIPE), vprism(octagon(cu, cv, 26), FL, FL + 8, STEEL), vprism(octagon(cu, cv, 44), FL + 50, FL + 54, STEEL),
+              vprism(octagon(cu, cv, 26), FL + 46, FL + 58, PIPE), vprism(octagon(cu, cv, 26), G + 60, G + 68, STEEL),
+              pipe_u(cv - 24, FL + 36, 22, cu - 192, cu - 170), pipe_u(cv + 30, FL + 36, 22, cu - 192, cu - 170)])
+    m.det([(cu - 14, cv - 32, FL + 14, cu + 14, cv - 18, FL + 44)], STEEL)
+    m.shapes([prism(octagon(cv, G + 50, 18), "x", cu - 192, cu - 189, PIPE)])
+    wires = [("lc_flood_fill", "Trigger", "", 0), ("lc_flood_drain", "Trigger", "", 0)]
+    m.button("lc_flood_valve_a", cu - 189, cv, G + 40, 0, wires, wait="18")
+    m.button("lc_flood_valve_b", cu, cv - 32, FL + 18, 270, wires, wait="18")
+
+    # the water: one slab under the whole chamber, its top the water's face
+    wbox = m.fr.box(cu - 192, cv - 192, FL - 88, cu + 192, cv + 192, FL)
+    b.vmf.brush_entity("func_water_analog", {"targetname": "lc_flood_water", "movedir": "-90 0 0", "movedistance": "88", "speed": "6", "startposition": "0",
+                                             "WaveHeight": "3.0", "rendermode": "0", "renderamt": "255", "rendercolor": "255 255 255", "disableshadows": "1"},
+                        [wbox], MAT["nodraw"], b.vis + ": water and sludge", top=MM["water"],
+                        connections=[("OnFullyOpen", "lc_flood_rush", "StopSound", "", 0), ("OnFullyClosed", "lc_flood_rush", "StopSound", "", 0),
+                                     ("OnFullyClosed", "lc_flood_door", "PressIn", "", 0.5)])
+    b.names.append(("lc_flood_water", "func_water_analog", m.tag))
+    sound(m, "lc_flood_rush", "ambient/water/water_flow_loop1.wav", cu, cv, F, loops=True, radius=1500, volume=9)
+    toggle(m, "lc_flood_fill", "lc_flood_drain", cu, cv, CH - 40,
+           [("lc_flood_door", "PressOut", "", 0), ("lc_flood_rush", "PlaySound", "", 1.5), ("lc_flood_water", "Open", "", 2.5)],
+           [("lc_flood_water", "Close", "", 0), ("lc_flood_rush", "PlaySound", "", 0)], 18)
+    m.target("lc_flood_chamber", cu, cv - 60, FL + 8, 90)
+
+    # the door at the foot of the way in: a steel slab that drops from the lintel (drawn shut; the map lifts it as it starts)
+    parts = [((cu - 64, 364, F, cu + 64, 380, F + 128), STEEL)] + [((cu - 64, 362, z, cu + 64, 364, z + 8), PIPE) for z in (F + 24, F + 64, F + 104)]
+    parts += [((cu - 64, 360, F, cu + 64, 384, F + 8), PIPE)]
+    brush(m, "func_button", {"targetname": "lc_flood_door", "movedir": "-90 0 0", "speed": "60", "lip": "8", "wait": "-1", "spawnflags": "0", "sounds": "0", "health": "0",
+                             "locked_sound": "0", "unlocked_sound": "0", "locked_sentence": "0", "unlocked_sentence": "0", "min_use_angle": "0.8", "rendermode": "0",
+                             "renderamt": "255", "rendercolor": "255 255 255", "disablereceiveshadows": "0"}, parts, STEEL, vis=b.vis + ": the flood door")
+    m.point("logic_auto", cu, 330, F + 110, {"spawnflags": "1"}, connections=[("OnMapSpawn", "lc_flood_door", "PressIn", "", 0.5)])
+    m.det([(cu - 72, 244, F, cu - 64, 256, F + 136), (cu + 64, 244, F, cu + 72, 256, F + 136), (cu - 72, 244, F + 128, cu + 72, 256, F + 144)], STEEL)
+
+    # the second door, at the canal: four steps up from the floor in a notch in the bank
+    du = cu + 256
+    m.steps(208, du, du + 64, F, G, "v", 1)
+    m.shapes([prism([(256, F), (120, F), (256, F + 136)], "x", u, u + 8, MAT["beam"]) for u in (du - 8, du + 64)])
+    m.blocked(du, 128, du + 64, 320)
+    m.det([(du, 280, G, du + 8, 296, PH), (du + 56, 280, G, du + 64, 296, PH), (du + 8, 280, G + 96, du + 56, 296, PH)], PIPE)
+    swing_gate(m, "lc_flood_door_out", [((du + 8, 284, G, du + 56, 292, G + 96), STEEL), ((du + 16, 283, G + 40, du + 48, 293, G + 48), PIPE)], (du + 8, 288, G))
+    # light
+    m.lamp(cu + 70, cv - 130, CH - 32, "200 230 220 60", hang=24)
+    m.lamp(cu - 70, cv + 130, CH - 32, "200 230 220 60", hang=24)
+    m.lamp(cu, 320, F + 120, "255 220 170 40")
+    m.lamp(cu + 150, cv + 288, PH - 8, "255 220 170 40")
+    m.lamp(du + 32, cv, PH - 8, "255 220 170 40")
+    m.lane(cu, 320)
+    m.lane(cu, cv + 224, G)
+    m.lane(cu + 150, cv + 288, G)
+    m.lane(du + 32, cv, G)
+    m.lane(du + 32, 340, G)
+    m.view(cu, 80, F, 90, 0, "the way in, from the canal")
+    m.view(cu, 396, F, 90, 14, "from the door: the eight steps down, the main, the gallery")
+    m.view(cu - 150, cv + 60, G, 320, 14, "on the gallery, by the valve")
+    m.view(cu - 20, cv - 130, FL, 60, -8, "on the chamber's floor")
+    m.view(du + 32, 100, F, 90, 0, "the second door, from the canal")
+    b.notes.append("%s: the chamber's floor is z %d, its gallery z %d; flooded, the water stands at z %d" % (m.tag, FL, G, FL + 88))
+
+
 MODULES = {
     "lock": (1536, m_lock, "a lock house: two steel gates and the control house that works them"),
-    "railbridge": (1024, m_railbridge, "a railway bridge: a Combine train crosses every few minutes (experimental)"),
     "pumphouse": (1280, m_pumphouse, "a pumping station: a machine hall, a flywheel, a turbine pit, a pipe bridge"),
     "thumper": (1024, m_thumper, "a Combine thumper on a fenced terrace, with the box that stops it (experimental)"),
     "depot": (1280, m_depot, "the Combine's ration depot: a roller door, a loading bay, caged stores, a staff door"),
+    "armory": (1024, m_armory, "a Combine armoury vault behind a two-button door: a heist target"),
+    "swingbridge": (1024, m_swingbridge, "a footbridge that turns on a pier: across the canal, or along it (experimental)"),
+    "floodroom": (1024, m_floodroom, "a valve chamber that floods: a trap or a refuge (experimental)"),
+    "railbridge": (1024, m_railbridge, "a railway bridge: a Combine train crosses every few minutes (experimental)"),
 }
