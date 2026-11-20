@@ -727,3 +727,35 @@ Filled in as the review goes; the first ones are clear already:
 
 **Weight.** small.
 
+### 43. plaza (street 2; also a canal module): rows stepping down to a rostrum at the back wall
+
+**Seen.** (Turned round on the owner's word.) From a terrace at street height five concrete rows step down to a half-octagon floor; at the back wall a small timber rostrum with a lectern, the loudspeaker cluster high on the wall above it, a caged lamp each side, a fire drum each side of the floor.
+
+**Fix.**
+- The module's description still says the rostrum stands "between two street lamps that carry a wire for a banner": the lamps and wire are gone. Update it.
+- The back wall behind the rostrum is a huge blank face: every eye in the rows ends on it. It is the backdrop: a banner hung from it (a cloth brush with the lambda, or the Combine's if they take the place), a painted mural, or a framed recess with a door behind the rostrum (the speaker's way in and out).
+- The rostrum is small and low against that wall (24 up): from the top row it is a box at the foot of a cliff. Larger (a stage 256 wide, 48 up) with a back screen and a canopy, the lectern on it.
+
+**Better.**
+- Light the speaker: a pair of spotlights on the side walls pointing at the rostrum (point_spotlight: the owner's map uses 174 of them), the rows in half light, so the eye goes to the speaker.
+- People's things on the rows: crates and planks used as seats, a few cushions, cans, a hat.
+- A flagpole at the rostrum's side for the Resistance's flag (the game's pole stands at a marker: an `lc_hq_setup_plaza` marker here would make the plaza a possible headquarters too, if the owner wants).
+- Sound: the speaker's voice should carry: an env_soundscape here that is quiet, so the game's speeches are heard.
+
+**Weight.** small to medium.
+
+### 44. playground (street 3; also a canal module): the playground
+
+**Seen.** A yard (in the canal a terrace up the bank; on a street level with the pavement): City 17's swing set with two seats that swing, a slide, a roundabout that turns, a timber sandpit with sand, a bench facing it all. The yard's floor is plain concrete, its walls blank.
+
+**Fix.**
+- The viewpoint "from the canal" (eye 768 40 464) looks straight into the terrace's face: it shows a grey wall. Raise the eye or set it back so the playground is seen from the canal.
+- Concrete underfoot and blank walls round it: a playground has a softer, worn ground (dirt and gravel, a worn patch under each swing: an overlay), and a low fence or railing round it (the city's handrail or fence01a), so it is a place and not a corner of a yard.
+
+**Better.**
+- The relic feel: rust and peeling paint on everything (overlays on the walls behind), a dead tree in a planter (Half-Life 2's dead trees or a stump), a bin overflowing, a Combine notice on the fence.
+- Children are gone but not forgotten: a ball or a doll if a model exists (check the lists), chalk drawings on the ground (a graffiti decal on the floor), a hopscotch grid (an overlay).
+- A soundscape: wind, the swings' chains creaking now and then (the game's own physics will do it if the wind is not there).
+
+**Weight.** small.
+
