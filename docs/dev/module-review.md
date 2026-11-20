@@ -313,3 +313,35 @@ Filled in as the review goes; the first ones are clear already:
 
 **Weight.** small to medium (shops behind bars, awnings, stone trim, lights).
 
+### 17. crypt (showroom 2): the left wall broken into a church crypt
+
+**Seen.** In the left wall an opening into a vaulted crypt: four squat pillars, chamfered vaults both ways, niches with stone coffins (one lid ajar), an opened tomb in the nave, Lost Coast's altar on a step with two tall candlesticks and a cross lit behind it, a bricked stair. Warm candle pools on the pillars. A good, quiet room.
+
+**Fix.**
+- The way in reads from the canal as a neat rectangular doorway into a lit room: it is meant to be a wall broken through. A ragged outline (prisms with broken edges), brick and stone showing in the break, rubble down the bank, and the crypt darker than the canal so it is a black mouth with candlelight deep inside.
+- The candles: a candle's light on each pillar at the same height makes even pools; vary them (some pillars dark, a cluster on the altar, one in a niche) for a room that is lit by people, not by fittings.
+
+**Better.**
+- What a crypt holds: bones and skulls in the niches (Half-Life 2's skull gib is there once: more, and bones), plaques on the walls (a carved stone material patch or decals), dust and cobweb corners (a web overlay if the owner has one; else dust motes in the candle light).
+- Water finding its way in from the canal: a dark stain spreading from the broken wall, a puddle on the stone floor, a drip sound.
+- The bricked stair: a crack of daylight at the top (a light_spot through the gap) so the church above is felt, and a loose brick to peek through.
+- The Resistance's use of it: the altar as a meeting table (a map, a radio, candles), or a hiding place for the injured (a cot in a niche). Its own soundscape: still air, a drip, the canal far off.
+
+**Weight.** small to medium.
+
+### 18. lift (showroom 2): a freight lift up to a loading dock
+
+**Seen.** Against the left wall an open lift: four thin guide posts with ties and a sheave on top, a platform with handrails on three sides and a button on a stand. Above, a loading dock recessed into the wall: a lorry backed up to a street gate, crates, a lamppost.
+
+**Fix.**
+- The lorry fills most of the dock: the view "from the back of the dock" is inside the lorry's box. The dock is 448 by 320 and the lorry nearly that long; either a smaller vehicle (a van, or the lorry's trailer only, its doors open toward the lift) or a deeper dock.
+- The lift's frame is four bare posts with nothing hung on them: it does not look like it lifts anything. Cables from the sheave to the platform's corners (ropes that move with it: keyframe ropes parented to the platform, as the swings' chains are), a counterweight in a channel beside it, the motor housing on top.
+
+**Better.**
+- Safety the Combine would never bother with but the city did: a chain link cage round the shaft at the dock (Nova Prospekt's panels), a sliding gate on the dock side the lift opens, yellow and black hazard edging on the platform and the dock's lip (an overlay).
+- Light on the frame (a cage light on a post at each level), and a light on the platform that rides with it.
+- The dock as a place: a loading ramp, pallets of Combine supplies, a forklift's absence shown by its parking marks, a clipboard on the wall. The street gate with a Combine notice on it.
+- A soundscape: the street beyond the gate, the motor's hum.
+
+**Weight.** small (lorry, cables, light), medium (cage and gate).
+
