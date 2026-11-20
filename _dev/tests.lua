@@ -19293,6 +19293,11 @@ while #q > 0 do local c = table.remove(q) for n in pairs(open[c]) do if not seen
 ok(table.Count(seen) == 42, "the maze's every corridor can be reached (and there's more than one way round)", table.Count(seen))
 
 -- The Patrol Maze
+-- (the minute's duty time waits until the maze is over: if it fell inside, the dream would rightly put
+-- back what they had on falling asleep, and that would look like the dream taking experience away)
+local dutyT = timer.list["LivingCityFactionsDuty"]
+local dutyNext = dutyT and dutyT.next
+if dutyT then dutyT.next = math.huge end
 local goodA = { hp = a:Health(), pos = CITY }
 Asleep(a, CITY)
 Asleep(b, CITY + Vector(0, 200, 0))
@@ -19358,12 +19363,13 @@ _run(2.5)
 local gone = true
 for _, e in ipairs(ents0) do if IsValid(e) then gone = false end end
 ok(g.pl[b].how == "won" and not b.lcDreaming and LC.DreamActive == nil and gone and #g.won == 1, "every token picked up: those left win; nobody's left in it, so it's over, everyone wakes, and the maze is gone")
-ok(LC.Unbroken(b) and LC.SecondWind(b) and b:GetNW2Int("lce_credits", 0) == crB and b:GetNW2Int("lcf_xp", 0) == xpB, "a winner wakes Unbroken with a second wind, and nothing the Combine would give (no credits, no experience)")
+ok(LC.Unbroken(b) and LC.SecondWind(b) and b:GetNW2Int("lce_credits", 0) == crB and b:GetNW2Int("lcf_xp", 0) == xpB, "a winner wakes Unbroken with a second wind, and nothing the Combine would give (no credits, no experience)", tostring(LC.Unbroken(b)) .. " " .. tostring(LC.SecondWind(b)) .. ", credits " .. crB .. " to " .. b:GetNW2Int("lce_credits", 0) .. ", experience " .. xpB .. " to " .. b:GetNW2Int("lcf_xp", 0))
 ok(LC.DreamsLivedOfKind(a, "nightmare") == livedA + 1 and LC.DreamsLivedOfKind(b, "nightmare") == livedB + 1,
     "both lived through a nightmare, counted for sitting out: the one who woke early, and the one in it to the end (the dream itself already gone)",
     LC.DreamsLivedOfKind(a, "nightmare") - livedA .. ", " .. LC.DreamsLivedOfKind(b, "nightmare") - livedB)
 b:SetNW2Float("lc_unbroken_until", 0)
 b:SetNW2Float("lc_secondwind_until", 0)
+if dutyT then dutyT.next = math.max(dutyNext, CurTime()) end
 
 -- The Barrel Tower
 Asleep(a, CITY)
@@ -40973,12 +40979,6 @@ LC.SceneBoundsForget()
 end
 ScenePropsTests()
 
-----------------------------------------------------------------------
-section("Stop")
-LC.Stop(admin)
-_run(1)
-ok(table.Count(LC.NPCs) == 0, "stopping removes every NPC")
-ok(#_errors == 0, "no errors logged during the whole run", _errors[1])
 
 
 function Nov19_InformTests()
@@ -41243,6 +41243,12 @@ math.random = rnd
 local cage = ents.Create("prop_physics")
 cage:SetPos(R0 + Vector(400, 0, 0))
 local function hold(npc)
+    if npc == cit and not IsValid(cit) then -- (let go and left alone for a while, they may have gone indoors for good: one like them)
+        cit = LC.SpawnCitizen and LC.SpawnCitizen(R0 + Vector(0, 0, 4)) or ents.Create("npc_citizen")
+        cit:SetPos(R0 + Vector(0, 0, 4))
+        cit.lcProfile = cit.lcProfile or { name = "Ada Test", id = "ra_ada" }
+        npc = cit
+    end
     local st = LC.NPCs[npc] or cst -- (the city may have tidied its own record of them away meanwhile)
     LC.NPCs[npc] = st
     LC.RebelHeld[npc] = { cage = cage, st = st, at = CurTime(), slot = 1 }
@@ -41334,5 +41340,12 @@ for _, e in ipairs({ unit, body, cage }) do if IsValid(e) then e:Remove() end en
 _walls = savedWalls
 end
 Nov19_RebelAnswerTests()
+
+----------------------------------------------------------------------
+section("Stop")
+LC.Stop(admin)
+_run(1)
+ok(table.Count(LC.NPCs) == 0, "stopping removes every NPC")
+ok(#_errors == 0, "no errors logged during the whole run", _errors[1])
 
 return results.pass, results.fail, table.concat(results.lines, "\n")
