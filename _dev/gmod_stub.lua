@@ -420,7 +420,11 @@ function ents.Create(cls)
 end
 function ents.FindInSphere(pos, r) local o = {} for e in pairs(all) do if e.pos:DistToSqr(pos) < r * r then o[#o + 1] = e end end return o end
 function ents.FindByClass(c) local o = {} for e in pairs(all) do if e.cls == c then o[#o + 1] = e end end return o end
-function ents.FindByName(n) local o = {} for e in pairs(all) do if e.name == n then o[#o + 1] = e end end return o end
+function ents.FindByName(n)      -- (as the engine: a trailing * matches any end)
+    local o, pre = {}, n:sub(-1) == "*" and n:sub(1, -2) or nil
+    for e in pairs(all) do if e.name == n or (pre and type(e.name) == "string" and e.name:sub(1, #pre) == pre) then o[#o + 1] = e end end
+    return o
+end
 function ents.GetMapCreatedEntity(id) for e in pairs(all) do if e.mapid == id then return e end end end
 function EMT:IsValid() return self.valid end
 function EMT:Remove() if not self.valid then return end self.valid = false all[self] = nil hook.Run("EntityRemoved", self) end

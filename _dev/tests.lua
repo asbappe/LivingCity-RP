@@ -41947,6 +41947,22 @@ B.Poles()
 local p1, p2 = B.poles[LC.RebelLeader(z1)], B.poles[LC.RebelLeader(z2)]
 ok(IsValid(p1) and IsValid(p2) and p1 ~= p2 and p1:GetNW2Bool("lc_flag_up", true) == false and p1:GetNW2Bool("lc_baseflag", false) == true,
     "each rebel territory has its own pole, bare until a flag is raised on it")
+-- and one at each of the map's own spots for a pole, a territory over it or not (the owner, 20 November)
+local mark = ents.Create("info_target") mark:SetName("lc_hq_setup_test") mark:SetPos(far + Vector(0, 3000, 0)) mark:Spawn()
+local inside = ents.Create("info_target") inside:SetName("lc_hq_setup_inside") inside:SetPos(T0 + Vector(100, 100, 0)) inside:Spawn()
+B.Poles()
+local mp, np = nil, 0
+for k, e in pairs(B.poles) do if IsValid(e) and isstring(k) then np = np + 1 if e:GetPos():DistToSqr(mark:GetPos()) < 100 then mp = e end end end
+ok(IsValid(mp) and mp:GetNW2Bool("lc_baseflag", false) == true and np == 1,
+    "a bare pole stands at the map's marker outside any territory too; a marker inside one is that territory's own pole, not a second", np)
+boss:SetPos(mp:GetPos() + Vector(40, 0, 0))
+ok(LC.BasePoleUse(boss) == false and B.S.state == nil, "at a marker's pole outside rebel territory not even the leader can raise a flag")
+boss:SetPos(T0)
+mark:Remove() inside:Remove()
+B.Poles()
+for k, e in pairs(B.poles) do if isstring(k) then np = -1 end end
+ok(np ~= -1, "a marker that is gone takes its pole with it")
+p1 = B.poles[LC.RebelLeader(z1)]
 foot:SetPos(p1:GetPos() + Vector(40, 0, 0))
 ok(LC.BasePoleUse(foot) == false and B.S.state == nil, "a Fighter pressing E at the pole raises nothing (the pole's own prompt tells him who can)")
 foot:SetPos(far)

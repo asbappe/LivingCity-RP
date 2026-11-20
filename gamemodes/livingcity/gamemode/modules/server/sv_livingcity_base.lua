@@ -225,7 +225,9 @@ function B.PoleSpot(zone)
 end
 
 -- A bare pole in every rebel territory (the owner, 20 November: any member can walk up to it; only a Lieutenant or
--- Commander can raise the flag on it).
+-- Commander can raise the flag on it), and at every one of the map's own spots for one (an info_target named
+-- lc_hq_setup...) whether a territory covers it or not (the owner, 20 November: "always stand a bare pole at the
+-- markers"). Outside a territory nobody can raise a flag on it: E there says it takes rebel territory.
 B.poles = B.poles or {}
 function B.Poles()
     local live = {}
@@ -237,6 +239,14 @@ function B.Poles()
                 local pos = B.PoleSpot(lead)
                 B.poles[lead] = Pole(pos, HighAt(pos))
             end
+        end
+    end
+    for _, t in ipairs(ents.FindByName and ents.FindByName("lc_hq_setup*") or {}) do
+        if IsValid(t) and not B.SiteAt(t:GetPos()) then
+            local pos = LC.FloorUnder and LC.FloorUnder(t:GetPos()) or t:GetPos()
+            local key = string.format("marker %d %d %d", math.floor(pos.x), math.floor(pos.y), math.floor(pos.z))
+            live[key] = true
+            if not IsValid(B.poles[key]) then B.poles[key] = Pole(pos, HighAt(pos)) end
         end
     end
     for z, e in pairs(B.poles) do
