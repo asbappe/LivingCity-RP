@@ -91,7 +91,7 @@ def main():
     lessons, pictures = load()
     if a.md:
         text = markdown(lessons, pictures)
-        if "—" in text:
+        if chr(0x2014) in text:
             raise SystemExit("an em dash in the lessons or pictures: take it out")
         open(DOC, "w").write(text)
         print("written: %s (%d lessons, %d pictures)" % (os.path.relpath(DOC), len(lessons), len(pictures.get("pictures", []))))
