@@ -101,3 +101,40 @@ Filled in as the review goes; the first ones are clear already:
 
 **Weight.** medium (walls and the cave corner), small (glow, steam, strips).
 
+### 5. checkpoint (showroom 1): the Combine checkpoint
+
+**Seen.** A chicane of concrete barriers and Combine barricades, then a Combine wall across the canal in dark blue metal with buttresses and one gateway shut by a force field. From the wall's top: two massive slanted blocks (the battlements) either side of the gateway, mesh panels behind. Behind the wall a guard's platform with a cabin, the pen of chain link under the walk.
+
+**Fix.**
+- The picture "on the platform" (eye 1156 160 592) is solid blue: the eye is inside something. Either the cabin has grown over the place a guard stands, or the viewpoint is stale; check that a player can stand on the platform there.
+- The guard's cabin is a brush box. Half-Life 2 has the Combine's own booths: `combine_booth_short01a` and `combine_booth_med01a`. Use one.
+- The buttresses and battlements are brushes; Half-Life 2 has `combinebuttress` and the bunker shields (`combine_bunker_shield01a/b`) for a parapet. The slanted blocks on the walk are taller than a man and hide the canal from the walk they are meant to guard.
+- The field has nothing making it: Half-Life 2's fields run between `combine_fence01a/b` posts (or `combine_emitter01`). Put the posts at the gateway's sides, the field between them (the owner's map has 12 of each post).
+
+**Better.**
+- The Combine's own railings on the walk: `railing_128/256/512` and the corner pieces, not the city's handrail.
+- A camera (`combinecamera001`) over the gateway, a scanner (`combine_interface001` is there: give it a light and a beep), a `combine_smallmonitor001` and `combine_intmonitor001` in the booth, a `health_charger001` for the guards.
+- Light it as City 18 lights the Combine: `combine_light002a` on the wall's face (the owner's map has 75), two point_spotlights sweeping (the searchlights could pan: a func_rotating or a logic timer turning them slowly).
+- Overlays: Breen's poster (decal_posterbreen) on the wall's face, a police line decal across the pen, numbers (decalindustrialnumber) on the gateway.
+- The queue: yellow lines on the floor (an overlay) and a pair of barriers making a single file to the gateway, so where to wait is shown, not told.
+- A soundscape of the field's hum and distant radio chatter.
+
+**Weight.** medium (booth, buttresses, posts, railings as props), small (lights, decals, camera).
+
+### 6. ash (showroom 1): the ash outfall, trash and burnt corpses
+
+**Seen.** High in the left wall a chute's mouth under a concrete hood, barred, with a steel tray. Under it a big smooth heap and a smaller one, both the canal's brown mud; garbage piles, bags and tyres on them; the burnt dead (drawn as red boxes) scattered over and above the heap; smoke rising.
+
+**Fix.**
+- The heap is the canal's mud (blendmuddirt): smooth and brown, it reads as a hill of earth, not of ash. It wants a grey-black surface: a dark concrete or dirt material blended toward black at its top, with burn decals (decals/burn01a to 03a) and soot.
+- The bodies are dropped from heights above the heap (up to 96) and fall when the map starts; a few will lodge on each other or in the garbage piles. Place each on the heap's own surface: the heap is a sum of bumps the tool knows (`b.bumps`), so the height under any point can be worked out and the body put there.
+- No way to the chute and no reason to look at it: the heap is scenery only.
+
+**Better.**
+- Make the chute work: now and then (a logic_timer, rarely) its grate tips, a burst of grey dust and a clatter, and a little more comes down (a func_door grate, an env_dustpuff or env_smokestack burst, a sound). It tells everyone where the Combine's dead go.
+- Soot streaks down the wall under the chute (decalstain002a, the owner's commonest overlay), scorch marks round the heap's foot, flies (a soundscape with flies and a low wind).
+- A painted biohazard or danger sign by the chute (decalsigndanger001c/001e, both in the owner's map) and a Combine number.
+- For the game: the heap as a search spot (hold E to sift for scrap, the game's own search job), so the place has a use.
+
+**Weight.** small (decals, sounds, bodies placed right), medium (the heap's material, the chute's event).
+
