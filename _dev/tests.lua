@@ -40845,8 +40845,8 @@ function ScenePropsTests()
 section("Scene props: the ration plant's counter and the Resistance's monitors")
 -- (the monitors in every camp are what the city does with the one-headquarters rule off, lc_base 0: with it on they are part
 --  of the live base's office, BaseTests)
-local baseWas = GetConVar("lc_base"):GetInt()
-_setcvar("lc_base", 0)
+local baseOnWas = LC.BaseOn
+LC.BaseOn = function() return false end
 local SOUP, BANK = "models/props_lab/soupprep.mdl", "models/props_lab/securitybank.mdl"
 local validWas, traceWas, createWas, runningWas = util.IsValidModel, util.TraceLine, ents.Create, LC.Running
 local function Turn(a) return (a + 180) % 360 - 180 end
@@ -40983,7 +40983,7 @@ for k, e in pairs(LC.KitchenProps) do if IsValid(e) then e:Remove() end LC.Kitch
 util.IsValidModel, util.TraceLine, ents.Create, LC.Running = validWas, traceWas, createWas, runningWas
 LC.SceneModelForget()
 LC.SceneBoundsForget()
-_setcvar("lc_base", baseWas)
+LC.BaseOn = baseOnWas
 end
 ScenePropsTests()
 
@@ -41948,8 +41948,9 @@ ok(did == false and B.S.state == nil and why ~= nil, "a Fighter cannot raise the
 boss:SetPos(far)
 ok(LC.BaseRaise(boss) == false and B.S.state == nil, "nor the leader anywhere but rebel territory")
 boss:SetPos(T0)
-ok(LC.BaseRaise(boss) == true and B.S.state == "raising" and IsValid(B.S.flag) and B.S.zone == LC.RebelLeader(z1),
-    "the leader, standing in rebel territory, raises the flag: a pole where he stood")
+did, why = LC.BaseRaise(boss)
+ok(did == true and B.S.state == "raising" and IsValid(B.S.flag) and B.S.zone == LC.RebelLeader(z1),
+    "the leader, standing in rebel territory, raises the flag: a pole where he stood", tostring(why))
 ok(LC.BaseLive() == nil and count() == 0 and LC.BaseShows(z1) == false, "it is no headquarters yet, and no office shows")
 
 -- the flag climbs while he is near and the ground is clear; its height is all that players are told
@@ -42021,19 +42022,26 @@ ok(LC.BaseRaise(boss) == false and B.S.state == nil, "no flag goes up with a uni
 cop:SetPos(far)
 ok(LC.BaseRaise(boss) == true and live(), "(raised a third time)")
 boss:SetPos(far)
-local zed = ents.Create("npc_zombie")
+local crab = ents.Create("npc_headcrab")
+crab:SetPos(B.S.pos + Vector(60, 0, 0))
+crab:Spawn()
+local g = B.Ground(B.S.pos, 700)
+ok(g.wild == true and g.combine == false and #g.rebels == 0, "(a headcrab on the ground counts as the wild; so does a zombie player)")
+crab:Remove()
+local zed = newPlayer("BaseZombie", "zombie")
 zed:SetPos(B.S.pos + Vector(60, 0, 0))
-zed:Spawn()
-_run(5)
+-- (the clock moved by hand, the base's own second and nothing else of the city's: what else runs in a second may move players)
+local function pass(n) for _ = 1, n do _advance(1) B.Tick(1) end end
+pass(5)
 ok(B.S.state == "overrun" and LC.BaseLive() == nil and count() == #LC.BaseOffice and math.abs(B.S.flag:GetNW2Float("lc_flag_h", 0) - 0.5) < 0.01,
     "zombies on its ground with no rebel there: overrun, the flag at half mast, the office still standing", tostring(B.S.state))
 boss:SetPos(T0 + Vector(20400, 0, 0))
 ok(LC.BaseRaise(boss) == false and LC.BaseOrder(boss) == false, "no flag goes up elsewhere while it is overrun")
 boss:SetPos(T0)
-_run(3)
+pass(3)
 ok(B.S.state == "overrun", "a rebel walking in is not enough while they are still there")
-zed:Remove()
-_run(22)
+zed:SetPos(far)
+pass(22)
 ok(B.S.state == "live" and LC.BaseLive() == LC.RebelLeader(z1), "cleared out and held a little: the headquarters is live again", tostring(B.S.state))
 
 -- the camps' own monitors are part of the office now; with the feature off, each camp has its own as before
@@ -42044,7 +42052,7 @@ hook.Remove("LivingCityBaseRansacked", "BaseTests")
 B.Reset()
 for k, v in pairs(was) do _setcvar(k, v) end
 LC.RemoveZone(z1) LC.RemoveZone(z2)
-boss:Remove() foot:Remove() cop:Remove()
+boss:Remove() foot:Remove() cop:Remove() zed:Remove()
 end
 BaseTests()
 
