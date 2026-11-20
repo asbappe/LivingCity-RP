@@ -230,6 +230,12 @@ class RingPlan(Plan):
                 vmf.world_box(self.box(x1, y1, spec[4], x2, y2, self.top), sky, vis=self.vis)
 
 
+# The owner, 20 November: "even the southern half of the ring should be a bit dimmer". One sun lights the whole map alike,
+# so this is the gamemode's to do, on the screen of whoever stands there: marks named lc_mood_dim along the canal south of
+# this line, one every so far (sv_livingcity_daylight.lua reads them).
+DIM_SOUTH_OF, DIM_APART = 4600, 700
+
+
 def ring(args):
     vmf = Vmf()
     F, TRIM = 400, 656                           # the floor, the same all the way round; the trim line on the walls (the first canal's wall top)
@@ -400,9 +406,13 @@ def ring(args):
     # --- where the city's people can walk ---------------------------------------------------------------------------
     node_id = [args.first_node]
 
+    dim = []       # (where the southern half's "a bit dimmer" marks go: below)
+
     def node(x, y, z):
         vmf.point("info_node", (x, y, z + 40), {"nodeid": node_id[0]}, "LC ring: path nodes")
         node_id[0] += 1
+        if y < DIM_SOUTH_OF and all((x - a) ** 2 + (y - b) ** 2 >= DIM_APART ** 2 for a, b, _ in dim):
+            dim.append((x, y, z))
     ch.nodes(node, [(5888, 5696, 6400, 5824), (-3008, 2432, -2880, y_foot), (-5056, 4864, -4928, 5376)] + blocked)
     for (x, y) in lanes:
         node(x, y, F)
@@ -415,6 +425,8 @@ def ring(args):
     for (x, y, z) in ((6144, 6400, F), (4800, 7808, F), (3200, 7808, F), (1280, 7808, F), (256, 7300, F), (-1024, 7232, F), (-2304, 7400, F),
                       (-3900, 7808, F), (-4544, 6400, F), (-4544, 4700, F), (-3800, 3008, F), (-3136, 2600, F), (-2752, 2240, ROAD_W)):
         vmf.point("env_cubemap", (x, y, z + 72), {"cubemapsize": "0"}, dv)
+    for x, y, z in dim:
+        vmf.point("info_target", (x, y, z + 64), {"targetname": "lc_mood_dim"}, "LC ring: the dimmer southern half (marks for the gamemode)")
     # a little left lying about
     rnd = random.Random(27)
     for model, x, y in (("models/props_c17/oildrum001.mdl", 4300, 7700), ("models/props_junk/wood_pallet001a.mdl", 4380, 7760),

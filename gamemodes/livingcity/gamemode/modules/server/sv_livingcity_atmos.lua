@@ -94,6 +94,9 @@ LC.AtmosPhase = LC.AtmosPhase or nil
 
 local function ApplyLight(phase)
     if not cvLight:GetBool() or not cvAtmos:GetBool() or not LC.DayNightOn() then phase = "day" end
+    -- (a map whose sun has a name: the sun itself is faded by the hour, with no reloading on anyone's screen, and the
+    -- map's other lights stay as they are at night: sv_livingcity_daylight.lua. The owner, 20 November.)
+    if LC.Daylight and LC.Daylight.SunHooked and LC.Daylight.SunHooked() then phase = "day" end
     local style = LIGHT[phase] or "m"
     -- a city-wide blackout (sv_livingcity_power.lua): whichever's darker
     local dark = LC.CityDark and LC.BlackoutStyle and LC.BlackoutStyle()

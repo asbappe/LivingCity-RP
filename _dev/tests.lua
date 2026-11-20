@@ -19293,6 +19293,11 @@ while #q > 0 do local c = table.remove(q) for n in pairs(open[c]) do if not seen
 ok(table.Count(seen) == 42, "the maze's every corridor can be reached (and there's more than one way round)", table.Count(seen))
 
 -- The Patrol Maze
+-- (the minute's duty time waits until the maze is over: if it fell inside, the dream would rightly put
+-- back what they had on falling asleep, and that would look like the dream taking experience away)
+local dutyT = timer.list["LivingCityFactionsDuty"]
+local dutyNext = dutyT and dutyT.next
+if dutyT then dutyT.next = math.huge end
 local goodA = { hp = a:Health(), pos = CITY }
 Asleep(a, CITY)
 Asleep(b, CITY + Vector(0, 200, 0))
@@ -19358,12 +19363,13 @@ _run(2.5)
 local gone = true
 for _, e in ipairs(ents0) do if IsValid(e) then gone = false end end
 ok(g.pl[b].how == "won" and not b.lcDreaming and LC.DreamActive == nil and gone and #g.won == 1, "every token picked up: those left win; nobody's left in it, so it's over, everyone wakes, and the maze is gone")
-ok(LC.Unbroken(b) and LC.SecondWind(b) and b:GetNW2Int("lce_credits", 0) == crB and b:GetNW2Int("lcf_xp", 0) == xpB, "a winner wakes Unbroken with a second wind, and nothing the Combine would give (no credits, no experience)")
+ok(LC.Unbroken(b) and LC.SecondWind(b) and b:GetNW2Int("lce_credits", 0) == crB and b:GetNW2Int("lcf_xp", 0) == xpB, "a winner wakes Unbroken with a second wind, and nothing the Combine would give (no credits, no experience)", tostring(LC.Unbroken(b)) .. " " .. tostring(LC.SecondWind(b)) .. ", credits " .. crB .. " to " .. b:GetNW2Int("lce_credits", 0) .. ", experience " .. xpB .. " to " .. b:GetNW2Int("lcf_xp", 0))
 ok(LC.DreamsLivedOfKind(a, "nightmare") == livedA + 1 and LC.DreamsLivedOfKind(b, "nightmare") == livedB + 1,
     "both lived through a nightmare, counted for sitting out: the one who woke early, and the one in it to the end (the dream itself already gone)",
     LC.DreamsLivedOfKind(a, "nightmare") - livedA .. ", " .. LC.DreamsLivedOfKind(b, "nightmare") - livedB)
 b:SetNW2Float("lc_unbroken_until", 0)
 b:SetNW2Float("lc_secondwind_until", 0)
+if dutyT then dutyT.next = math.max(dutyNext, CurTime()) end
 
 -- The Barrel Tower
 Asleep(a, CITY)
@@ -40973,14 +40979,6 @@ LC.SceneBoundsForget()
 end
 ScenePropsTests()
 
-----------------------------------------------------------------------
-section("Stop")
-LC.Stop(admin)
-_run(1)
-ok(table.Count(LC.NPCs) == 0, "stopping removes every NPC")
-ok(#_errors == 0, "no errors logged during the whole run", _errors[1])
-
-
 function Nov19_InformTests()
 section("19 November: informing to Civil Protection, the assassin who got away")
 LC.EndEvent(true)
@@ -41243,6 +41241,12 @@ math.random = rnd
 local cage = ents.Create("prop_physics")
 cage:SetPos(R0 + Vector(400, 0, 0))
 local function hold(npc)
+    if npc == cit and not IsValid(cit) then -- (let go and left alone for a while, they may have gone indoors for good: one like them)
+        cit = LC.SpawnCitizen and LC.SpawnCitizen(R0 + Vector(0, 0, 4)) or ents.Create("npc_citizen")
+        cit:SetPos(R0 + Vector(0, 0, 4))
+        cit.lcProfile = cit.lcProfile or { name = "Ada Test", id = "ra_ada" }
+        npc = cit
+    end
     local st = LC.NPCs[npc] or cst -- (the city may have tidied its own record of them away meanwhile)
     LC.NPCs[npc] = st
     LC.RebelHeld[npc] = { cage = cage, st = st, at = CurTime(), slot = 1 }
@@ -41351,8 +41355,9 @@ function SewerFlushTests() -- (the owner, 19 November: the Administrator sends t
     local other = newPlayer("FlushOther", "cp")
     _runtimers()
     for _, p in ipairs({ cop, ota, late, other }) do p:SetPos(FAR) end
-    local realTargets, realSeen, realNotice, realXP = LC.ShellTargets, LC.IsSeen, LC.Notice, LC.AddXP
-    LC.ShellTargets = function() return {} end
+    local realSky, realSeen, realNotice, realXP, realActor = LC.TerritoryOpenSky, LC.IsSeen, LC.Notice, LC.AddXP, LC.QB.SpawnActor
+    local RZ -- (the one rebel ground with a roof over it, when there is one)
+    LC.TerritoryOpenSky = function(p) return not (RZ and p:DistToSqr(RZ) < 4) end
     LC.IsSeen = function() return false end
     local notices, xp = {}, {}
     LC.Notice = function(p, kind, title, text, secs) notices[#notices + 1] = { p = p, title = title, text = text } return realNotice(p, kind, title, text, secs) end
@@ -41391,18 +41396,21 @@ function SewerFlushTests() -- (the owner, 19 November: the Administrator sends t
     ok(F.Side(inside, m) == true and F.Side(post, m) == false and F.Side(G0 + Vector(40, 0, 16), m) == nil and F.Side(FAR, m) == nil,
         "by the wall it knows who is in and who is out; right in the gateway, or far off, it says neither")
 
-    section("Sewer flush: her order, only while the Resistance are strong, and it opens nothing")
+    section("Sewer flush: her order, only while the Resistance hold ground underground, and it opens nothing")
     local tmpl
     for _, t in ipairs(LC.QuestTemplates) do if t.id == "cmb_flush" then tmpl = t end end
     ok(tmpl ~= nil and tmpl.available(cop) == false, "the job is never on the boards by itself")
-    led.resistance = 50
     okO, whyO = LC.OrderFlush(adm)
-    ok(F.State() == "weak" and not okO and string.find(tostring(whyO), "quiet", 1, true) ~= nil, "while the Resistance are quiet it is greyed, and refused", whyO)
-    LC.ShellTargets = function() return { 81 } end
-    ok(F.State() == "ready", "it is there once they hold a district")
-    LC.ShellTargets = function() return {} end
-    led.resistance = 70
-    ok(F.State() == "ready", "or once their strength in the ledger is high")
+    ok(F.State() == "weak" and not okO and string.find(tostring(whyO), "underground", 1, true) ~= nil, "while the Resistance hold nothing underground it is greyed, and refused", whyO)
+    local zUp = LC.AddZone(G0 + Vector(-3000, 3000, 16), 200, "rebel", 0)
+    RZ = zUp.pos
+    ok(F.State() == "weak", "rebel ground under a roof at street height is not underground")
+    local zDown = LC.AddZone(G0 + Vector(1250, 4200, -400), 200, "rebel", 0)
+    RZ = nil
+    ok(F.State() == "weak", "nor is ground down there under the open sky")
+    RZ = zDown.pos
+    ok(F.State() == "ready", "with rebel ground under a roof and below the street, it is there")
+    local zHQ = LC.AddZone(G0 + Vector(-1500, 0, 0), 300, "combine", 0)
     okO, whyO = LC.OrderFlush(cop)
     ok(not okO and string.find(tostring(whyO), "Administrator", 1, true) ~= nil, "only the City Administrator orders it", whyO)
     local okM, whyM = LC.TargetActions.flush(cop)
@@ -41426,7 +41434,7 @@ function SewerFlushTests() -- (the owner, 19 November: the Administrator sends t
     ok(F.State() == "on" and not okO and string.find(tostring(whyO), "already", 1, true) ~= nil, "it can't be ordered twice over", whyO)
     if not pc then return end
 
-    section("Sewer flush: a power bank and two turrets at the wall, by any unit on the job, then the wall opens")
+    section("Sewer flush: the briefing, then a power bank and two turrets at the wall by any unit on the job, and the wall opens")
     for _, p in ipairs({ cop, ota, late }) do p.lcqNext = 0 end
     ok(LC.AcceptPosting(cop, pc.id) == true and LC.AcceptPosting(ota, pc.id) == true and LC.AcceptPosting(late, pc.id) == true, "a Recruit, a soldier and another unit take it")
     local q = LC.QuestOf[cop]
@@ -41434,6 +41442,17 @@ function SewerFlushTests() -- (the owner, 19 November: the Administrator sends t
     if not q then return end
     ok(#q.stages == 5 and q.violent == true and q.title == "Flush the sewers", "five steps, and a squad comes as on any violent job", #q.stages)
     for _, st in ipairs(q.stages) do ok(st.kind ~= "hold" and st.kind ~= "survive", "no step is standing and waiting: " .. tostring(st.text)) end
+    local officer = q.data.briefer
+    ok(q.stage == 1 and IsValid(officer) and string.find(q.stages[1].text, "briefing", 1, true) ~= nil and (officer:GetPos().x - zHQ.pos.x) ^ 2 + (officer:GetPos().y - zHQ.pos.y) ^ 2 < 400 * 400,
+        "first the briefing: an officer waits on the Combine's own ground nearest the wall")
+    _run(2)
+    ok(q.stage == 1, "nothing goes on until someone has heard him")
+    cop.chat = {}
+    if IsValid(officer) then hook.Run("LivingCityPlayerUsedNPC", cop, officer, LC.NPCs[officer]) end
+    local briefed = false
+    for _, l in ipairs(cop.chat or {}) do if string.find(l, "power bank and two turrets", 1, true) then briefed = true end end
+    ok(q.stage == 2 and briefed, "one of them walks up and uses him: the plan in one line, and on to the wall", q.stage)
+    ok(IsValid(officer) and not table.HasValue(q.ents, officer), "he goes about his day: he is not taken away with the job")
     local wallAim = { Hit = true, HitPos = post + Vector(-100, 60, 40), HitNormal = Vector(1, 0, 0) }
     local groundAim = { Hit = true, HitPos = post + Vector(-80, -60, -16), HitNormal = Vector(0, 0, 1) }
     cop.GetEyeTrace = function() return wallAim end
@@ -41533,6 +41552,7 @@ function SewerFlushTests() -- (the owner, 19 November: the Administrator sends t
     ok(F.State() == "ready" and LC.OrderFlush(adm) == true, "the next day she can order it again")
     local p2 = Posted("cp")
     ok(p2 ~= nil and p2 ~= pc, "(a new posting)")
+    LC.QB.SpawnActor = function() return nil end
     if p2 then
         cop.lcqNext = 0
         cop:SetPos(FAR)
@@ -41540,7 +41560,7 @@ function SewerFlushTests() -- (the owner, 19 November: the Administrator sends t
         local q2 = LC.QuestOf[cop]
         cop:SetPos(post + Vector(-50, 0, -16))
         _run(2)
-        ok(q2.stage == 3 and Pulls("lc_raven_gate_open") == 3, "what was put up at the wall still stands: it opens as he reports", q2.stage)
+        ok(q2.stage == 3 and Pulls("lc_raven_gate_open") == 3, "with no officer to give the briefing the job goes straight on, and what was put up at the wall still stands: it opens", q2.stage)
         cop:SetPos(inside + Vector(60, 0, -16))
         _run(2)
         ok(q2.stage == 4 and Pulls("lc_raven_gate_shut") == 3, "everyone on the job inside: it shuts at once, not after the minute", q2.stage)
@@ -41568,9 +41588,14 @@ function SewerFlushTests() -- (the owner, 19 November: the Administrator sends t
     end
 
     -- as it was
-    LC.ShellTargets, LC.IsSeen, LC.Notice, LC.AddXP = realTargets, realSeen, realNotice, realXP
+    LC.TerritoryOpenSky, LC.IsSeen, LC.Notice, LC.AddXP, LC.QB.SpawnActor = realSky, realSeen, realNotice, realXP, realActor
     led.resistance, led.authority, led.day = savedRes, savedAuth, savedDay
-    for _, f in ipairs({ "cp", "ota" }) do for _, p in ipairs(LC.Postings[f] or {}) do if p.tmpl and p.tmpl.id == "cmb_flush" then p.dead = true end end end
+    for _, f in ipairs({ "cp", "ota", "resistance" }) do
+        for _, p in ipairs(LC.Postings[f] or {}) do if p.tmpl and (p.tmpl.id == "cmb_flush" or p.tmpl.id == "res_sealdoor") then p.dead = true end end
+    end
+    for _, z in ipairs({ zUp, zDown, zHQ }) do if z then LC.RemoveZone(z) end end
+    if IsValid(officer) then officer:Remove() end
+    if LC.Breach then LC.Breach.Reset() end
     for t, o in pairs(LC.DeployedTurrets) do if (o == cop or o == ota) and IsValid(t) then LC.DeployedTurrets[t] = nil t:Remove() end end
     if IsValid(bank) then LC.DeployedBanks[bank] = nil bank:Remove() end
     cop.lcBank = nil
@@ -41581,5 +41606,315 @@ function SewerFlushTests() -- (the owner, 19 November: the Administrator sends t
     for _, p in ipairs({ adm, cop, ota, late, other }) do p.alive = true p:SetPos(FAR) end
 end
 SewerFlushTests()
+
+function QuarterBreachTests() -- (the owner, 20 November: the Resistance shut the Combine's door from the quarter's side, and their leader has the wall opened from inside)
+    local F, B = LC.Flush, LC.Breach
+    section("The Resistance and the sealed quarter: shutting the Combine's door again from the far side")
+    ok(F ~= nil and B ~= nil and LC.OrderBreach ~= nil, "(the modules are loaded)")
+    if not (F and B and LC.OrderBreach) then return end
+    _setcvar("lc_ledger", 1)
+    _setcvar("lc_territory_spread", 1)
+    F.Reset() B.Reset()
+    local FAR = Vector(-33000, 33000, 0)
+    local lead = newPlayer("BreachLeader", "resistance", nil, 900)
+    local reb = newPlayer("BreachRebel", "resistance", nil, 900)
+    local cop = newPlayer("BreachUnit", "cp")
+    _runtimers()
+    for _, p in ipairs({ lead, reb, cop }) do p:SetPos(FAR) end
+    local realSeen, realNotice, realLeader, realSky = LC.IsSeen, LC.Notice, LC.AdminPlotLeader, LC.TerritoryOpenSky
+    LC.IsSeen = function() return false end
+    LC.AdminPlotLeader = function(p) return p == lead end
+    local notices = {}
+    LC.Notice = function(p, kind, title, text, secs) notices[#notices + 1] = { p = p, text = text } return realNotice(p, kind, title, text, secs) end
+    local function Told(p) local c = 0 for _, n in ipairs(notices) do if n.p == p then c = c + 1 end end return c end
+    local led = LC.Ledger()
+    local savedRes, savedCmb, savedMor, savedDay = led.resistance, led.combine, led.morale, led.day
+    led.resistance, led.combine, led.morale = 50, 50, 50
+
+    -- the map's part, stood in for (the wall's inside console comes later)
+    local G0 = Vector(52000, 52000, 0)
+    local made, relay = {}, {}
+    local function Mark(name, pos, cls)
+        local e = ents.Create(cls or "info_target")
+        e:SetPos(pos) e:SetName(name) e:Spawn()
+        made[#made + 1] = e
+        return e
+    end
+    for _, n in ipairs({ "lc_raven_gate_open", "lc_raven_gate_shut", "lc_raven_door_open", "lc_raven_door_shut" }) do relay[n] = Mark(n, G0 + Vector(0, 0, 500), "logic_relay") end
+    local function Pulls(n) local c = 0 for _, i in ipairs(relay[n].fired or {}) do if i == "Trigger" then c = c + 1 end end return c end
+    local post, inside = G0 + Vector(-192, 0, 16), G0 + Vector(192, 0, 16)
+    local house, console, sewer = G0 + Vector(1200, 300, 16), G0 + Vector(1200, 2400, -340), G0 + Vector(1250, 3100, -330)
+    local gateConsole = G0 + Vector(260, 200, 16)
+    Mark("lc_raven_post", post) Mark("lc_raven_inside", inside) Mark("lc_raven_house", house)
+    Mark("lc_raven_console", console, "prop_dynamic") Mark("lc_raven_sewer", sewer)
+    for i = 1, 2 do Mark("lc_raven_spawn", G0 + Vector(900 + i * 60, -200, 8)) end
+    local camp = LC.AddZone(G0 + Vector(1250, 4600, -330), 300, "rebel", 0)
+    local seed = LC.AddZone(G0 + Vector(-4000, 0, 0), 300, "infest", 0)
+    F.MapForget()
+    local m = F.Map()
+    ok(m ~= nil and m.gateConsole == nil, "(the quarter, without a console inside its wall yet)")
+    if not m then return end
+    local function Tmpl(id) for _, t in ipairs(LC.QuestTemplates) do if t.id == id then return t end end end
+    local function Posted(id) for _, p in ipairs(LC.Postings.resistance or {}) do if p.tmpl and p.tmpl.id == id and not p.dead then return p end end end
+
+    ok(Tmpl("res_sealdoor").available(reb) == false and Posted("res_sealdoor") == nil, "with the Combine's door shut there is nothing to shut")
+    notices = {}
+    F.OpenDoor()
+    local ps = Posted("res_sealdoor")
+    ok(F.door == "open" and ps ~= nil, "the door opens: the answer is on the Resistance's board at once")
+    ok(Told(lead) == 1 and Told(reb) == 1 and Told(cop) == 0, "and every member is told once, and no unit", Told(lead) .. " " .. Told(reb) .. " " .. Told(cop))
+    if ps then
+        reb.lcqNext = 0
+        ok(LC.AcceptPosting(reb, ps.id) == true, "a member takes it")
+        local q = LC.QuestOf[reb]
+        ok(q ~= nil and #q.stages == 2 and not q.violent, "two steps and no briefing: there is no time", q and #q.stages)
+        for _, st in ipairs(q.stages) do ok(st.kind ~= "hold" and st.kind ~= "survive", "no step is standing and waiting: " .. tostring(st.text)) end
+        reb:SetPos(sewer + Vector(40, 0, 0))
+        _run(1)
+        ok(q.stage == 2 and q.stages[2].pos == console, "at the sewer end: now their console, on the far side", q.stage)
+        reb:SetPos(console + Vector(40, 0, 0))
+        _run(1)
+        local g = LC.JobGames[reb]
+        ok(g ~= nil and g.kind == "wiring" and q.data.wirer == reb, "at the console: the wiring is his")
+        local resBefore = led.resistance
+        LC.JobGameEnd(reb, "done")
+        ok(q.done and F.door == "shut" and Pulls("lc_raven_door_shut") == 1, "rewired: the door shuts, and the job is done")
+        ok(led.resistance == resBefore + B.RESIST, "the Resistance win back some strength", led.resistance)
+    end
+    -- the door shutting by itself ends the job
+    F.OpenDoor()
+    local ps2 = Posted("res_sealdoor")
+    ok(ps2 ~= nil and ps2 ~= ps, "(open again: up again)")
+    if ps2 then
+        reb.lcqNext = 0
+        reb:SetPos(FAR)
+        LC.AcceptPosting(reb, ps2.id)
+        local q = LC.QuestOf[reb]
+        F.Tick(CurTime() + F.DOOR_OPEN + 1)
+        _run(1)
+        ok(F.door == "shut" and q ~= nil and q.done and LC.QuestOf[reb] == nil, "the door shuts by itself first: the job is over")
+        ok(Tmpl("res_sealdoor").available(reb) == false, "and it is off the board")
+    end
+
+    section("The Resistance and the sealed quarter: the leader's order to open the wall from inside")
+    ok(B.State() == "" and Tmpl("res_breach").available(lead) == false, "a quarter with no console inside its wall: no such order")
+    local okS, whyS = B.Start()
+    ok(not okS and string.find(tostring(whyS), "lc_raven_gate_console", 1, true) ~= nil, "the staff's test button says what the map lacks", whyS)
+    Mark("lc_raven_gate_console", gateConsole, "prop_dynamic")
+    F.MapForget()
+    m = F.Map()
+    ok(m ~= nil and m.gateConsole == gateConsole and B.State() == "ready", "with it, the order is there")
+    B.Tick()
+    ok(lead:GetNW2Bool("lc_res_leads", false) and not reb:GetNW2Bool("lc_res_leads", false), "on the leader's F2, and nobody else's")
+    local okO, whyO = LC.OrderBreach(reb)
+    ok(not okO and string.find(tostring(whyO), "leader", 1, true) ~= nil, "only the Resistance's leader gives it", whyO)
+    local okM, whyM = LC.TargetActions.breach(reb)
+    ok(not okM and string.find(tostring(whyM), "[Resistance]", 1, true) ~= nil and LC.SlashCommands.breach == nil, "by the menu's own call (no chat command)", whyM)
+    notices = {}
+    okO, whyO = LC.OrderBreach(lead)
+    local pb = Posted("res_breach")
+    ok(okO == true and pb ~= nil, "the leader gives it: one job on the Operations board", whyO)
+    ok(Told(lead) == 1 and Told(reb) == 1 and Told(cop) == 0 and Pulls("lc_raven_gate_open") == 0, "every member is told once, and the order itself opens nothing")
+    okO, whyO = LC.OrderBreach(lead)
+    ok(B.State() == "on" and not okO and string.find(tostring(whyO), "already", 1, true) ~= nil, "not twice over", whyO)
+    -- while it is up the wall is not the Administrator's to use
+    local adm = newPlayer("BreachAdministrator", "admin")
+    LC.TerritoryOpenSky = function(p) return p:DistToSqr(camp.pos) > 4 end
+    local okF, whyF = LC.OrderFlush(adm)
+    ok(F.State() == "busy" and not okF, "and while it is up the Administrator's own order waits", tostring(F.State()) .. " " .. tostring(whyF))
+    if not pb then return end
+    lead.lcqNext = 0
+    ok(LC.AcceptPosting(lead, pb.id) == true, "the leader takes it himself")
+    local q = LC.QuestOf[lead]
+    if not q then return end
+    ok(#q.stages == 4 and not q.violent and q.title == "Open the sealed quarter", "four steps", #q.stages)
+    for _, st in ipairs(q.stages) do ok(st.kind ~= "hold" and st.kind ~= "survive", "no step is standing and waiting: " .. tostring(st.text)) end
+    local runner = q.data.briefer
+    -- (across the ground: the test world's floor is not at the camp's own height)
+    local function Flat(v, w) return (v.x - w.x) ^ 2 + (v.y - w.y) ^ 2 end
+    ok(q.stage == 1 and IsValid(runner) and Flat(runner:GetPos(), camp.pos) < 400 * 400, "first the plan: the cell's runner waits on rebel ground nearest the sewer end")
+    lead.chat = {}
+    if IsValid(runner) then hook.Run("LivingCityPlayerUsedNPC", lead, runner, LC.NPCs[runner]) end
+    local planned = false
+    for _, l in ipairs(lead.chat or {}) do if string.find(l, "In by the vent", 1, true) then planned = true end end
+    ok(q.stage == 2 and planned, "he says it in one line", q.stage)
+    lead:SetPos(console + Vector(60, 0, 0))
+    _run(1)
+    ok(q.stage == 3 and #(q.data.zombies or {}) == 2, "through the vent and in the tunnel: the quarter's infected are waiting", tostring(q.stage) .. " " .. #(q.data.zombies or {}))
+    lead:SetPos(house)
+    _run(1)
+    ok(q.stage == 4 and q.stages[4].pos == gateConsole, "out by the tunnel house: now the wall's console, on the inside", q.stage)
+    lead:SetPos(gateConsole + Vector(40, 0, 0))
+    _run(1)
+    ok(LC.JobGames[lead] ~= nil and LC.JobGames[lead].kind == "wiring", "at it: the wiring")
+    local cmbBefore, morBefore, grew = led.combine, led.morale, LC.TerritoryCanGrow(seed)
+    LC.JobGameEnd(lead, "done")
+    ok(q.done and F.gate == "open" and Pulls("lc_raven_gate_open") == 1, "rewired: the wall opens onto the city, and the job is done")
+    ok(led.combine == cmbBefore + B.COMBINE and led.morale == morBefore + B.MORALE, "the Combine lose strength and the city morale", led.combine .. " " .. led.morale)
+    local breached = 0
+    for _, z in ipairs(LC.ZonesOfKind("infest")) do if z.grown and z.why == "breached" and z.pos:DistToSqr(post) < 16 then breached = breached + 1 end end
+    ok(not grew or breached == 1, "the city's own infestation takes hold in the street outside", breached)
+    F.Tick(CurTime() + F.GATE_TAKES + B.HAVOC - 30)
+    ok(F.gate == "open", "it stays open five minutes")
+    F.Tick(CurTime() + F.GATE_TAKES + B.HAVOC + 1)
+    ok(F.gate == "shut" and Pulls("lc_raven_gate_shut") == 1, "then shuts itself")
+    okO, whyO = LC.OrderBreach(lead)
+    ok(B.State() == "done" and not okO and string.find(tostring(whyO), "today", 1, true) ~= nil, "once a city day", whyO)
+
+    -- as it was
+    LC.IsSeen, LC.Notice, LC.AdminPlotLeader, LC.TerritoryOpenSky = realSeen, realNotice, realLeader, realSky
+    led.resistance, led.combine, led.morale, led.day = savedRes, savedCmb, savedMor, savedDay
+    for _, p in ipairs(LC.Postings.resistance or {}) do if p.tmpl and (p.tmpl.id == "res_sealdoor" or p.tmpl.id == "res_breach") then p.dead = true end end
+    for _, z in ipairs(LC.ZonesOfKind("infest")) do if z.why == "breached" or z.why == "flushed" then LC.RemoveZone(z) end end
+    for _, z in ipairs({ camp, seed }) do if z then LC.RemoveZone(z) end end
+    if IsValid(runner) then runner:Remove() end
+    for _, e in ipairs(made) do if IsValid(e) then e:Remove() end end
+    F.Reset() B.Reset()
+    for _, p in ipairs({ lead, reb, cop, adm }) do p.alive = true p:SetPos(FAR) end
+end
+QuarterBreachTests()
+
+function DaylightTests() -- (the owner, 20 November: the map's own lights: the sun and sky by the hour, the dream room's, the darker places)
+    local D = LC.Daylight
+    section("The map's lights: the sun and the sky by the hour, where the map has given the sun a name")
+    ok(D ~= nil, "(the module is loaded)")
+    if not D then return end
+    local function Cv(n) local c = GetConVar(n) return c and c:GetString() or nil end
+    local saved = { atmos = Cv("lc_atmosphere"), light = Cv("lc_daynight_light"), dn = Cv("lc_daynight"), hour = LC.Hour(), phase = LC.AtmosPhase, style = LC.LightStyle }
+    _setcvar("lc_atmosphere", 1) _setcvar("lc_daynight_light", 1) _setcvar("lc_daynight", 1)
+    local made = {}
+    local function Ent(cls, name, pos)
+        local e = ents.Create(cls)
+        e:SetPos(pos or Vector(0, 0, 0))
+        if name then e:SetName(name) end
+        e:Spawn()
+        e.did = {}
+        e.Fire = function(self, input, param) self.did[#self.did + 1] = { input, param } end
+        made[#made + 1] = e
+        return e
+    end
+    local function Last(e, input) for k = #e.did, 1, -1 do if e.did[k][1] == input then return e.did[k][2] or true end end return nil end
+    for _, e in ipairs(ents.FindByClass("light_environment")) do e:Remove() end
+    D.Reset()
+    ok(D.Sun() == nil and not D.SunHooked(), "a map whose sun has no name: it cannot be faded, and nothing here says it can")
+    LC.AtmosPhase, LC.LightStyle = "night", nil
+    LC.ApplyLightStyle()
+    ok(LC.LightStyle == "d", "there the old way stands: every light of the map dimmed for the night", LC.LightStyle)
+    ok(D.SunLetter(12) == "m" and D.SunLetter(0) == "a" and D.SunLetter(23) == "a" and D.SunLetter(4.9) == "a", "the sun: full by day, out by night")
+    ok(D.SunLetter(6) == "g" and D.SunLetter(20) == "g" and D.SunLetter(5.5) < D.SunLetter(6.5) and D.SunLetter(19.5) > D.SunLetter(20.5), "rising a step at a time through dawn, falling through dusk")
+    ok(D.GloomLetter(0) == "e" and D.GloomLetter(12) == "m", "the quarter's own lights: low by night, never out")
+
+    local sun = Ent("light_environment", "lc_sun", Vector(0, 0, 5000))
+    local glow = Ent("env_sun", nil, Vector(0, 0, 5000))
+    local gloom = Ent("light", "lc_raven_gloom", Vector(70000, 70000, 0))
+    local sky = Ent("env_skypaint", nil, Vector(0, 0, 5000))
+    -- (as the owner's map has it: black at every hour, with the stock star picture)
+    local was = { TopColor = Vector(0, 0, 0), BottomColor = Vector(0, 0, 0), SunSize = 0, SunColor = Vector(0.6, 0.5, 0.2), SunNormal = Vector(0.4, 0, 0.01),
+        DuskScale = 0.75, DuskIntensity = 0.7, DuskColor = Vector(0, 0.05, 0.12), DrawStars = true }
+    local vals = {}
+    for k, v in pairs(was) do
+        vals[k] = v
+        sky["Get" .. k] = function() return vals[k] end
+        sky["Set" .. k] = function(_, x) vals[k] = x end
+    end
+    local function Same(a, b) if type(a) ~= "number" and type(a) ~= "boolean" and type(a) ~= "string" then return math.abs(a.x - b.x) + math.abs(a.y - b.y) + math.abs(a.z - b.z) < 0.001 end return a == b end
+    local function AsSet() for k, v in pairs(was) do if not Same(vals[k], v) then return false, k end end return true end
+    D.Reset()
+    LC.SetHour(12)
+    D.Tick()
+    ok(D.SunHooked() and Last(sun, "FadeToPattern") == "m" and Last(gloom, "FadeToPattern") == "m", "with a name it is ours: at noon the sun and the quarter's lights are full")
+    ok(Same(vals.TopColor, D.SKY.day.top) and Same(vals.BottomColor, D.SKY.day.bottom) and vals.SunSize == D.SUN_SIZE and vals.SunNormal.z > 0.9,
+        "and the sky is painted for the day: grey-blue, a pale sun high in it")
+    ok(vals.DrawStars == false and GetGlobal2Bool("lc_sky_stars", false) == true, "the stock star picture is off: each client draws its own stars")
+    LC.AtmosPhase, LC.LightStyle = "night", nil
+    LC.ApplyLightStyle()
+    ok(LC.LightStyle == "m", "the map's other lights are no longer dimmed for the night: only the sun goes", LC.LightStyle)
+    LC.SetHour(6)
+    D.Tick()
+    ok(Last(sun, "FadeToPattern") == "g" and vals.TopColor.z > D.SKY.night.top.z and vals.TopColor.z < D.SKY.day.top.z and vals.DuskIntensity > 1 and vals.SunNormal.z < 0.1,
+        "at dawn the sun is half up and low in the east, the sky between night and day, and the horizon glows")
+    LC.SetHour(0)
+    D.Tick()
+    ok(Last(sun, "FadeToPattern") == "a" and Last(gloom, "FadeToPattern") == "e" and Last(glow, "TurnOff") == true, "at midnight the sun is out, its glow is off, and the quarter's lights are low")
+    ok(Same(vals.TopColor, D.SKY.night.top) and vals.SunSize == 0 and vals.SunNormal.z < 0 and vals.DuskIntensity == 0, "the sky is near black, the sun below the horizon")
+    local n = #sun.did
+    D.Tick()
+    ok(#sun.did == n, "nothing is sent again while nothing changes")
+    LC.SetHour(12)
+    D.Tick()
+    ok(Last(sun, "FadeToPattern") == "m" and Last(glow, "TurnOn") == true and Same(vals.TopColor, D.SKY.day.top), "and at noon it is day again")
+    _setcvar("lc_daynight_light", 0)
+    LC.SetHour(0)
+    D.Tick()
+    ok(not D.SunHooked() and Last(sun, "FadeToPattern") == "m" and AsSet() and GetGlobal2Bool("lc_sky_stars", false) == false,
+        "with the night's dimming switched off in the settings: the sun stays full, and the sky is the map's own again, as it was set", select(2, AsSet()))
+    _setcvar("lc_daynight_light", 1)
+
+    section("The map's lights: the dream room's, set by the dream")
+    local P = Vector(-70000, -70000, 0)
+    local zone = { pos = P, r = 1000 }
+    local a, b = Ent("light", "evr_l", P + Vector(1500, 0, 800)), Ent("light_spot", "evr_l", P + Vector(0, -1900, 800))
+    local own = Ent("light", "lc_dream_light", P + Vector(30000, 0, 0))
+    local far = Ent("light", "subway_flicker_light", P + Vector(9000, 0, 0))
+    local quarter = Ent("light", "lc_raven_gloom", P + Vector(200, 0, 0))
+    local white, red = D.DreamLights(zone)
+    ok(#white == 3 and #red == 0, "the room's lights: every named light in or round the dream zone, and any named for it; not one far off, nor another place's", #white .. " " .. #red)
+    local okU, whyU = D.SetDreamLights("purple", zone)
+    ok(okU == false and whyU ~= nil, "a mode there is not is refused")
+    ok(D.SetDreamLights("off", zone) == 3 and Last(a, "TurnOff") == true and Last(b, "TurnOff") == true and Last(far, "TurnOff") == nil, "off: every one of them out, and only them")
+    D.SetDreamLights("flicker", zone)
+    ok(Last(a, "SetPattern") == D.MODES.flicker.white and Last(a, "TurnOn") == true, "flicker: on, with a flickering pattern")
+    D.SetDreamLights("red", zone)
+    ok(Last(a, "SetPattern") == "e", "red, in a map with no red set: the room dimmed instead")
+    local r1 = Ent("light", "lc_dream_red", P + Vector(1500, 0, 800))
+    D.SetDreamLights("red", zone)
+    ok(Last(a, "TurnOff") == true and Last(r1, "SetPattern") == "m" and a.did[#a.did][1] == "TurnOff", "with the red set: the white ones out and the red ones on")
+    local realMood = LC.DreamMood
+    LC.DreamMood = function(id) return ({ grim = "nightmare", sweet = "happy" })[id] or "neutral" end
+    ok(D.ModeFor({ id = "harpies", zone = zone }) == "off" and D.ModeFor({ id = "grim", zone = zone }) == "red" and D.ModeFor({ id = "sweet", zone = zone }) == "on",
+        "each dream's own: the one where every light goes out, a nightmare in red, a happy one as it is")
+    r1:Remove()
+    ok(D.ModeFor({ id = "grim", zone = zone }) == "dim", "a nightmare with no red set: dim")
+    -- (this module's own listeners alone: the dream here is only a name and a zone, not a whole dream)
+    hook.GetTable().LivingCityDreamStarted.LivingCityDaylight({ id = "grim", zone = zone })
+    ok(Last(a, "SetPattern") == "e" and D.dreamMode == "dim", "as the dream starts the room is set")
+    hook.GetTable().LivingCityDreamEnded.LivingCityDaylight({ id = "grim", zone = zone })
+    ok(Last(a, "SetPattern") == "m" and a.did[#a.did][1] == "SetPattern" and D.dreamMode == "on", "and as it ends the lights are back on")
+    LC.DreamMood = realMood
+    local okN, whyN = D.SetDreamLights("off", { pos = Vector(90000, 90000, 0), r = 100 })
+    ok(okN == 1 and Last(own, "TurnOff") == true, "(a light named for the dream room counts wherever it is)")
+    own:Remove()
+    okN, whyN = D.SetDreamLights("off", { pos = Vector(90000, 90000, 0), r = 100 })
+    ok(okN == false and string.find(tostring(whyN), "no named lights", 1, true) ~= nil, "a room with no named lights: said so, nothing done", whyN)
+
+    section("The map's lights: the darker places, from the map's marks")
+    Ent("info_target", "lc_mood_dark", Vector(100, 200, 300))
+    Ent("info_target", "lc_mood_dim", Vector(-100, -200, 300))
+    Ent("info_target", "lc_mood_dim", Vector(-900, -200, 300))
+    local dark, dim = 0, 0
+    for _, m in ipairs(D.Moods()) do if m.k == "dark" then dark = dark + 1 elseif m.k == "dim" then dim = dim + 1 end end
+    ok(dark == 1 and dim == 2, "one dark mark and two dim: what every client is sent", dark .. " " .. dim)
+    local rep = D.Report()
+    ok(string.find(rep, "named (lc_sun)", 1, true) ~= nil and string.find(rep, "1 dark mark, 2 dim", 1, true) ~= nil and string.find(rep, "painted", 1, true) ~= nil,
+        "the staff's button says what the map has, in plain words", rep)
+
+    -- as it was
+    for _, e in ipairs(made) do if IsValid(e) then e:Remove() end end
+    D.Reset()
+    if saved.atmos then _setcvar("lc_atmosphere", saved.atmos) end
+    if saved.light then _setcvar("lc_daynight_light", saved.light) end
+    if saved.dn then _setcvar("lc_daynight", saved.dn) end
+    LC.SetHour(saved.hour)
+    LC.AtmosPhase, LC.LightStyle = saved.phase, nil
+    LC.ApplyLightStyle()
+end
+DaylightTests()
+
+----------------------------------------------------------------------
+section("Stop")
+LC.Stop(admin)
+_run(1)
+ok(table.Count(LC.NPCs) == 0, "stopping removes every NPC")
+ok(#_errors == 0, "no errors logged during the whole run", _errors[1])
 
 return results.pass, results.fail, table.concat(results.lines, "\n")
