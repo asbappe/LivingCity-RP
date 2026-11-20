@@ -15,6 +15,14 @@
 "static": true
 },
 "models/humans/charple01.mdl": {
+"bbox": [
+-10.6,
+-13.0,
+13.1,
+17.9,
+15.2,
+72.1
+],
 "collides": true,
 "game": "hl2",
 "physics": false,
@@ -22,6 +30,14 @@
 "static": false
 },
 "models/humans/charple02.mdl": {
+"bbox": [
+-12.6,
+-17.6,
+16.0,
+17.9,
+10.9,
+71.6
+],
 "collides": true,
 "game": "hl2",
 "physics": false,
@@ -29,6 +45,14 @@
 "static": false
 },
 "models/humans/charple03.mdl": {
+"bbox": [
+-8.9,
+-10.3,
+27.6,
+9.3,
+9.6,
+71.5
+],
 "collides": true,
 "game": "hl2",
 "physics": false,
@@ -36,6 +60,14 @@
 "static": false
 },
 "models/humans/charple04.mdl": {
+"bbox": [
+-21.5,
+-16.6,
+17.3,
+18.8,
+15.8,
+69.7
+],
 "collides": true,
 "game": "hl2",
 "physics": false,
