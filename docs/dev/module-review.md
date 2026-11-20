@@ -540,3 +540,34 @@ Filled in as the review goes; the first ones are clear already:
 
 **Weight.** small (signals, dust, portals), medium (rails and ballast, one train look).
 
+### 31. execwall (showroom 4): the firing wall
+
+**Seen.** A recess in the left wall: concrete barriers along the back, the wall above pocked and stained (17 decals), three timber posts with rope ends, a grating to the canal, one hard Combine floodlight raking along the posts; a low kerb in the canal where the squad stands. Sober, and it works.
+
+**Fix.**
+- The squad's kerb runs across the canal floor as a long, low concrete rail: in the canal's walking line it is a trip edge with no reason. A painted line instead (an overlay: a yellow stripe), or two short stubs at the line's ends.
+
+**Better.**
+- The Combine's voice: a speaker on the wall (speakercluster01a, as the plaza's) to read the sentence, a camera over the recess.
+- The Combine's marks: a number or stencil on the wall (decalindustrialnumber), a Breen poster facing the posts, a combine_light002a over the barriers instead of nothing.
+- What is left behind, still sober: a dark stain at the grating (decalstain under it), a shoe, a dropped ration bag, a candle and a flower someone left at night (the Resistance's memorial touch; the gamemode's memorial module has candles).
+- A soundscape that is silent but for the floodlight's hum and the canal's wind.
+
+**Weight.** small.
+
+### 32. breach (showroom 4): the floor fallen into an old cellar
+
+**Seen.** A neat rectangular pit in the middle of the canal, its walls the canal's grey concrete, two long slabs leaning in as ramps, a third hanging over the far end on two timber poles with crates under it; a little rubble and rebar.
+
+**Fix.**
+- The pit is a clean box: perfectly straight edges, smooth walls, square corners. A floor that fell in breaks: a ragged outline (cut the edge into uneven prisms, the floor's thickness showing in layers), cracks running out from it across the canal floor (overlays), the slabs' broken ends jagged.
+- It is meant to be an old cellar, but its walls are the canal's concrete: old brick walls (brick/brickwall material, an arch or two in them, a bricked-up doorway), the cellar's own floor of old flagstones under the earth and water.
+
+**Better.**
+- The cellar's past: an old wine rack or shelves against one wall, barrels (props_c17 oildrum is wrong for old; wooden barrels from Lost Coast or crates), a coal chute.
+- Water: a real pool in the low corner (it has a sliver of water now), drips from the breach's edge.
+- The undercut stash lit by a candle or a lantern left by whoever uses it.
+- Dust in the light from above (func_dustmotes), a soundscape with dripping and a hollow echo.
+
+**Weight.** medium (ragged edges, brick cellar), small (dressing).
+
