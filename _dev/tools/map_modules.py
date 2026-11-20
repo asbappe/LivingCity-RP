@@ -1221,8 +1221,9 @@ def build_chain(lay, args):
             b.problems.append("the layout names a module that does not exist: %s" % name)
             continue
         length = MODULES[name][0]
-        if name == "straight" and opt and opt[0].isdigit():
-            length = int(opt[0])
+        info = MODULES[name]
+        if (name == "straight" or (len(info) > 3 and info[3].get("stretch"))) and opt and opt[0].isdigit():
+            length = int(opt[0])      # (a module that can be any length: "tunnel 1536")
         if length % CELL:
             b.problems.append("%s %d: a length must be a multiple of %d" % (name, length, CELL))
             continue

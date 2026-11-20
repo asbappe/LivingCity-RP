@@ -92,6 +92,17 @@ def swing_door(m, name, boxes, mat, hinge, speed=90, wait="-1", reverse=False, s
     m.b.names.append((name, "func_door_rotating", m.tag))
 
 
+def slide_door(m, name, parts, movedir, speed=40, lip=0, wait="-1", toggle=True, sounds=("MetalGrate.ScrapeSmooth", "MetalGrate.ImpactSoft")):
+    """A sliding door of more than one material, told to move by name (Open, Close, Toggle), never by a player's Use.
+    parts: [(box, material), ...]. wait: seconds before it shuts by itself ("-1": it stays)."""
+    out = [(m.fr.box(*b), mat) for b, mat in parts]
+    m.b.vmf.brush_entity("func_door", {
+        "targetname": name, "movedir": movedir, "speed": str(speed), "lip": str(lip), "wait": wait, "spawnflags": "32" if toggle else "0", "spawnpos": "0", "dmg": "0",
+        "forceclosed": "0", "health": "0", "ignoredebris": "0", "loopmovesound": "0", "noise1": sounds[0], "noise2": sounds[1], "locked_sentence": "0",
+        "unlocked_sentence": "0", "renderamt": "255", "rendercolor": "255 255 255", "renderfx": "0", "rendermode": "0", "disableshadows": "1"}, out, parts[0][1], m.dv)
+    m.b.names.append((name, "func_door", m.tag))
+
+
 def cheeks(m, u1, u2, top=136, out=132, thick=12):
     """Where the left wall's bank is cut for a way in (u1 to u2), a retaining wall on each side of the cut, its top
     sloping with the bank it holds back."""
@@ -460,8 +471,359 @@ def m_memorial(m, opt):
     m.view(700, 120, F, 150, 2, "walking past")
 
 
+# ---------------------------------------------------------------------------
+# 4. The fighting pit
+# ---------------------------------------------------------------------------
+
+def m_pit(m, opt):
+    """The fighting pit: the canal opens on its left, through a mouth 512 wide, into an eight-sided arena under the
+    open sky. In its middle a ring sunk 64 into the floor, 384 across, floored with dirt, inside a chain-link cage on
+    posts; the one gate (lc_pit_gate, on the side toward the canal) slides aside when the button on the post beside it
+    is pressed (lc_pit_gate_button) or the game tells it to (Open, Close), and steps go down from it into the ring.
+    lc_pit_corner_a and lc_pit_corner_b are the two corners the fighters start in (a stool in each). Three tiers of
+    concrete seats, 32 high each, stand on the three far sides, with stairs of 16 up the middle of each side. By the
+    mouth on the right the bookmaker's table, chair and lamp under a chalk board of odds (lc_pit_bookie: where he
+    sits); on the left the corner men's bench, water drum and bucket. Two lamps hang over the ring from a gantry.
+    Unchecked: whether a press of the gate's button can be made through the cage from inside (it should not: the post
+    stands 16 clear of it); the button's model is Episode Two's (the framework's own choice)."""
+    L, cu, cv = 1280, 640, 704
+    FENCE = MAT["fence"]
+    m.open(0, -256, L, 256)
+    for i in range(-7, 7):
+        for j in range(-7, 7):
+            du, dv = i * CELL + 32, j * CELL + 32
+            if abs(du) + abs(dv) >= 704:
+                continue
+            u, v = cu + i * CELL, cv + j * CELL
+            if abs(du) < 192 and abs(dv) < 192:
+                m.open(u, v, u + CELL, v + CELL, floor=F - 64, mat=DIRT)
+            else:
+                m.open(u, v, u + CELL, v + CELL, mat=MAT["quay_floor"])
+    m.side(128, 256, 1152, 1216)
+    m.no_bank(128, 264, 1152, 1216)
+    m.blocked(128, 448, 1152, 1216)
+    m.taken(360, 100, F, 920, 256, F + 150)
+    cheeks(m, 384, 896)
+
+    # the cage round the ring: a kerb, posts, chain link, a rail along the top; the gate's gap is on the canal's side
+    r1, r2, top = 192, 204, F + 144                  # (the ring's edge and the cage's line, from the middle)
+    a1, a2, b1, b2 = cu - r2, cu + r2, cv - r2, cv + r2
+    m.det([(a1 - 2, b1 - 2, F, a2 + 2, cv - r1, F + 6), (a1 - 2, cv + r1, F, a2 + 2, b2 + 2, F + 6),
+           (a1 - 2, cv - r1, F, cu - r1, cv + r1, F + 6), (cu + r1, cv - r1, F, a2 + 2, cv + r1, F + 6)], MAT["beam"])
+    posts, sheets, rails = [], [], []
+    for k in range(5):
+        t = -r2 + k * 102
+        for (u, v) in ((cu + t, b1), (cu + t, b2), (a1, cv + t), (a2, cv + t)):
+            posts.append((u - 4, v - 4, F + 6, u + 4, v + 4, top + (80 if (k == 2 and v == cv + t) else 4)))
+    posts += [(604, b1 - 4, F + 6, 608, b1 + 4, top), (672, b1 - 4, F + 6, 676, b1 + 4, top)]
+    sheets += [(a1, b2 - 1, F + 6, a2, b2 + 1, top), (a1 - 1, b1, F + 6, a1 + 1, b2, top), (a2 - 1, b1, F + 6, a2 + 1, b2, top),
+               (a1, b1 - 1, F + 6, 604, b1 + 1, top), (676, b1 - 1, F + 6, a2, b1 + 1, top), (604, b1 - 1, F + 118, 676, b1 + 1, top)]
+    rails += [(a1, b2 - 2, top, a2, b2 + 2, top + 4), (a1 - 2, b1, top, a1 + 2, b2, top + 4), (a2 - 2, b1, top, a2 + 2, b2, top + 4),
+              (a1, b1 - 2, top, a2, b1 + 2, top + 4), (604, b1 - 2, F + 114, 676, b1 + 2, F + 118)]
+    m.det(posts + rails, BARS)
+    m.det(sheets, FENCE)
+    g = b1 - 5                                           # the gate hangs just outside the cage's line and slides along it
+    slide_door(m, "lc_pit_gate", [((608, g - 1, F + 8, 672, g + 1, F + 112), FENCE), ((608, g - 2, F + 8, 612, g + 2, F + 112), BARS),
+                                  ((668, g - 2, F + 8, 672, g + 2, F + 112), BARS), ((608, g - 2, F + 108, 672, g + 2, F + 112), BARS),
+                                  ((608, g - 2, F + 8, 672, g + 2, F + 12), BARS), ((608, g - 2, F + 58, 672, g + 2, F + 62), BARS)],
+               "0 %d 0" % m.fr.yaw(0), speed=60, lip=0)
+    m.det([(692, 470, F, 704, 482, F + 64)], MAT["beam"])
+    m.button("lc_pit_gate_button", 698, 470, F + 34, 270, [("lc_pit_gate", "Toggle", "", 0)])
+    m.test_button((572, 470, F + 40, 580, 478, F + 56), [("OnIn", "lc_pit_gate", "Open"), ("OnOut", "lc_pit_gate", "Close")])
+    m.det([(566, 468, F, 586, 480, F + 40)], MAT["beam"])
+    m.steps(608, 608, 672, F - 64, F, "v", -1)
+    m.target("lc_pit_corner_a", 496, 584, F - 56, 45)
+    m.target("lc_pit_corner_b", 784, 848, F - 56, 225)
+    m.det([(456, 520, F - 64, 472, 536, F - 48), (808, 872, F - 64, 824, 888, F - 48)], BEAM)
+
+    # the gantry over the ring, two lamps hanging from it
+    m.det([(a1 - 3, cv - 3, top + 74, a2 + 3, cv + 3, top + 80)], BARS)
+    for u in (cu - 88, cu + 88):
+        m.lamp(u, cv, top + 46, "255 225 180 320", hang=20)
+
+    # the seats: three tiers on the three far sides, stairs up the middle of each
+    tiers, stairs = [], []
+    for k in range(3):
+        d, e, z = 256 + 64 * k, 384 - 64 * k, F + 32 * (k + 1)
+        tiers += [(cu - d - 64, cv - 192, F, cu - d, cv + e, z), (cu + d, cv - 192, F, cu + d + 64, cv + e, z), (cu - e, cv + d, F, cu + e, cv + d + 64, z)]
+        stairs += [(cu - d, cv - 32, F, cu - d + 16, cv + 32, z - 16), (cu + d - 16, cv - 32, F, cu + d, cv + 32, z - 16), (cu - 32, cv + d - 16, F, cu + 32, cv + d, z - 16)]
+    m.det(tiers, MAT["beam"], top=MAT["quay_floor"])
+    m.det(stairs, WALL, top=MAT["stairs"])
+
+    # the bookmaker, right of the mouth: table, chair, strongbox, a lamp on a post, the board of odds on the wall
+    m.static("models/props_c17/furnituretable002a.mdl", 948, 424, 90)
+    m.static("models/props_c17/furniturechair001a.mdl", 944, 380, 90)
+    m.target("lc_pit_bookie", 944, 380, F + 8, 90)
+    m.det([(962, 414, F + 38, 978, 426, F + 46)], STEEL)
+    m.det([(1004, 420, F, 1008, 424, F + 118), (976, 421, F + 112, 1008, 423, F + 114)], BARS)
+    m.lamp(982, 422, F + 102, "255 205 140 160", hang=4)
+    m.det([(964, 384, F + 44, 1020, 386, F + 104)], MAT["black"])
+    m.det([(962, 384, F + 42, 1022, 387, F + 44), (962, 384, F + 104, 1022, 387, F + 106), (962, 384, F + 44, 964, 387, F + 104), (1020, 384, F + 44, 1022, 387, F + 104)], BEAM)
+    chalk = [(968, 386, F + 92, 1016, 387, F + 93), (991, 386, F + 50, 992, 387, F + 92)]
+    for row in range(4):
+        z = F + 82 - 9 * row
+        chalk += [(970 + 3 * j, 386, z, 971 + 3 * j, 387, z + 6) for j in range((3, 5, 2, 4)[row])]
+        chalk += [(996 + 3 * j, 386, z, 997 + 3 * j, 387, z + 6) for j in range((4, 1, 5, 2)[row])]
+    m.det(chalk, PLASTER)
+
+    # the corner men, left of the mouth: a bench with a towel, a drum of water, a bucket
+    m.det([(268, 396, F, 284, 404, F + 16), (268, 452, F, 284, 460, F + 16)], MAT["beam"])
+    m.det([(264, 392, F + 16, 288, 464, F + 19)], WOOD)
+    m.det([(266, 420, F + 19, 286, 438, F + 20), (286, 420, F + 9, 287, 438, F + 20)], PLASTER)
+    m.static("models/props_c17/oildrum001.mdl", 344, 356, 0)
+    m.shapes([vpipe(318, 410, 7, F, F + 14, STEEL, top=MAT["black"])])
+    for u, v in ((640, 380), (480, 380), (800, 380), (640, 300)):
+        m.lane(u, v)
+
+    m.view(640, 100, F, 90, 2, "from the canal")
+    m.view(640, 440, F, 90, 8, "at the gate")
+    m.view(520, 840, F - 64, 315, 0, "in the ring")
+    m.view(640, 1100, F + 96, 270, 16, "from the top tier")
+    m.view(840, 440, F, 20, 2, "the bookmaker")
+
+
+# ---------------------------------------------------------------------------
+# 5. The garden
+# ---------------------------------------------------------------------------
+
+GRASS = "nature/grassfloor002a"
+CLOTH = "props/carpetfloor003a"
+
+
+def m_garden(m, opt):
+    """The walled garden: where the Resistance grows food. A gap in the left wall, three steps up and a picket gate
+    (lc_garden_gate: Use swings it), opens on a yard 640 by 448 under the open sky, its floor 24 above the canal's.
+    Six raised soil beds edged with timber, three on each side of a path of flagstones (lc_garden_bed_1 to _6: on the
+    beds, for a farming job; 1 to 3 on the left going back, 4 to 6 on the right), ridged and planted; bean poles with
+    lines between over the first bed on each side; a scarecrow in the middle bed on the right. Against the back wall a
+    tool lean-to (a bench, pots, a shovel, a bucket), a rain butt fed by pipes down the wall in the left corner, a
+    compost bay in the right corner; a push cart and a crate of melons on the path.
+    Unchecked: nothing from memory (models and materials pass map_assets.py); how the loose things lie once the game
+    drops them (shovel, bucket, pots, melons, cart)."""
+    L, Z = 1280, F + 24
+    m.open(0, -256, L, 256)
+    m.open(576, 256, 704, 320, floor=Z, mat=CRACKED)
+    m.open(320, 320, 960, 768, floor=Z, mat=CRACKED)
+    m.side(320, 256, 960, 768)
+    m.no_bank(576, 240, 704, 272)
+    m.taken(552, 100, F, 728, 256, F + 150)
+    cheeks(m, 576, 704)
+    m.steps(220, 576, 704, F, Z, "v", 1)
+    m.blocked(576, 208, 704, 256)
+    m.lane(640, 200)
+    m.lane(640, 336, Z)
+
+    # the picket gate: a fixed half and a leaf that swings in
+    pickets = [(580 + 8 * k, 287, Z + 2, 584 + 8 * k, 289, Z + 44 + (2 if k % 2 else 0)) for k in range(8)]
+    m.det(pickets + [(576, 289, Z + 10, 642, 291, Z + 14), (576, 289, Z + 32, 642, 291, Z + 36), (638, 286, Z, 642, 292, Z + 48)], BEAM)
+    leaf = [(646 + 8 * k, 287, Z + 2, 650 + 8 * k, 289, Z + 44 + (2 if k % 2 else 0)) for k in range(7)]
+    swing_door(m, "lc_garden_gate", leaf + [(644, 289, Z + 10, 702, 291, Z + 14), (644, 289, Z + 32, 702, 291, Z + 36)], BEAM, (702, 290, Z + 24),
+               reverse=True, sound="doors/gate_move1.wav")
+
+    # six raised beds: timber edges, soil, three ridges each, something growing
+    rnd = random.Random(5)
+    beds = [(352, v) for v in (360, 472, 584)] + [(736, v) for v in (360, 472, 584)]
+    edges, soil, ridges, greens, stakes = [], [], [], [], []
+    for n, (u, v) in enumerate(beds):
+        a, b = u + 192, v + 72
+        edges += [(u, v, Z, a, v + 4, Z + 18), (u, b - 4, Z, a, b, Z + 18), (u, v + 4, Z, u + 4, b - 4, Z + 18), (a - 4, v + 4, Z, a, b - 4, Z + 18)]
+        stakes += [(u - 2, v - 2, Z, u + 4, v + 4, Z + 22), (a - 4, v - 2, Z, a + 2, v + 4, Z + 22), (u - 2, b - 4, Z, u + 4, b + 2, Z + 22), (a - 4, b - 4, Z, a + 2, b + 2, Z + 22)]
+        soil.append((u + 4, v + 4, Z, a - 4, b - 4, Z + 13))
+        for row in range(3):
+            c = v + 16 + 20 * row
+            ridges.append(prism([(c - 7, Z + 13), (c + 7, Z + 13), (c, Z + 17)], "x", u + 6, a - 6, DIRT))
+            if n in (0, 3):
+                continue                                    # (the beans' beds: their poles come below)
+            step = (14, 22, 18)[(n + row) % 3]
+            for k in range(u + 14, a - 10, step):
+                if rnd.random() < 0.82:
+                    r = rnd.choice((2, 3, 3, 4))
+                    greens.append(vpipe(k + rnd.randrange(-2, 3), c, r, Z + 15, Z + 17 + r + rnd.randrange(0, 4), GRASS))
+        m.target("lc_garden_bed_%d" % (n + 1), u + 96, v + 36, Z + 18, 270 if n < 3 else 270)
+    m.det(edges + stakes, BEAM)
+    m.det(soil, DIRT)
+    m.shapes(ridges + greens)
+    m.blocked(336, 344, 560, 672)
+    m.blocked(720, 344, 944, 672)
+
+    # bean poles over the first bed on each side, lines strung between them
+    for (u, v) in (beds[0], beds[3]):
+        poles = []
+        for row in (0, 2):
+            c = v + 16 + 20 * row
+            poles += [(k, c - 1, Z + 13, k + 2, c + 1, Z + 104) for k in range(u + 12, u + 190, 42)]
+            m.rope([(u + 13, c, Z + 100), (u + 181, c, Z + 100)], slack=6, width=1)
+            m.rope([(u + 13, c, Z + 62), (u + 181, c, Z + 62)], slack=6, width=1)
+            greens = [vpipe(k + 1, c, 3, Z + 17 + 9 * j, Z + 23 + 9 * j, GRASS) for k in range(u + 12, u + 190, 42) for j in range(1 + (k // 42) % 4)]
+            m.shapes(greens)
+        m.det(poles, BEAM)
+
+    # the scarecrow, in the middle bed on the right
+    su, sv = 832, 508
+    m.det([(su - 2, sv - 2, Z + 13, su + 2, sv + 2, Z + 96), (su - 30, sv - 1, Z + 76, su + 30, sv + 1, Z + 80)], BEAM)
+    m.det([(su - 13, sv - 3, Z + 46, su + 13, sv + 3, Z + 82), (su - 30, sv - 2, Z + 70, su - 13, sv + 2, Z + 82), (su + 13, sv - 2, Z + 70, su + 30, sv + 2, Z + 82)], CLOTH)
+    m.det([(su - 6, sv - 6, Z + 84, su + 6, sv + 6, Z + 97)], PLASTER)
+    m.shapes([vpipe(su, sv, 11, Z + 97, Z + 99, TIN), vpipe(su, sv, 6, Z + 99, Z + 105, TIN)])
+
+    # the flagstones of the path
+    m.det([(616 + (k % 2) * 14, 348 + 62 * k, Z, 652 + (k % 2) * 14, 386 + 62 * k, Z + 2) for k in range(5)], STONE, top=STONE_FLOOR)
+
+    # the tool lean-to against the back wall
+    m.hut(560, 688, 720, 768, Z, WOOD, high=96, front="lo", open_front=True)
+    m.det([(572, 740, Z, 708, 760, Z + 34)], BEAM, top=WOOD)
+    m.det([(572, 752, Z + 60, 708, 760, Z + 62)], WOOD)
+    for u in (590, 616, 690):
+        m.loose("models/props_junk/terracotta01.mdl", u, 750, 0, z=Z + 34)
+    m.loose("models/props_junk/metalbucket01a.mdl", 596, 716, 0, z=Z)
+    m.loose("models/props_junk/shovel01a.mdl", 690, 712, 90, z=Z)
+    m.shapes([prism([(746, Z), (750, Z), (724, Z + 72), (720, Z + 72)], "y", 716, 718, BEAM)])       # a hoe, leaning on the lean-to's side
+    m.det([(744, 711, Z, 753, 723, Z + 2)], STEEL)
+    m.lamp(640, 676, Z + 78, "255 200 130 90", hang=12)
+
+    # the rain butt in the left corner, fed by pipes from the wall
+    bu, bv = 348, 740
+    m.shapes([vpipe(bu, bv, 20, Z + 4, Z + 50, WOOD, top=MAT["black"]), vpipe(bu, bv, 21, Z + 12, Z + 15, BARS), vpipe(bu, bv, 21, Z + 38, Z + 41, BARS),
+              vpipe(bu, 762, 4, Z + 60, Z + 236, BARS), vpipe(bu, 762, 5, Z + 228, Z + 240, BARS),
+              prism(octagon(762, Z + 234, 4), "x", bu, 556, BARS), prism(octagon(bu, Z + 60, 4), "y", bv, 766, BARS),
+              vpipe(556, 762, 4, Z + 230, m.b.rim - 8, BARS), vpipe(556, 762, 5, Z + 228, Z + 240, BARS), vpipe(556, 762, 8, m.b.rim - 8, m.b.rim + 4, TIN, top=MAT["black"])])
+    m.det([(u, 764, Z + 226, u + 4, 768, Z + 242) for u in (420, 500)] + [(bu - 6, 764, Z + 140, bu + 6, 768, Z + 144)], STEEL)
+    m.det([(bu - 24, bv - 16, Z, bu - 8, bv + 16, Z + 4), (bu + 8, bv - 16, Z, bu + 24, bv + 16, Z + 4)], MAT["beam"])
+    m.static("models/props_c17/oildrum001.mdl", 400, 744, 0, z=Z)
+
+    # the compost bay in the right corner
+    m.det([(868, 696, Z, 872, 768, Z + 34), (872, 696, Z, 956, 700, Z + 18), (868, 692, Z, 874, 698, Z + 38)], BEAM)
+    m.shapes([prism([(702, Z), (766, Z), (756, Z + 26), (722, Z + 30)], "x", 874, 956, DIRT)])
+    m.blocked(864, 688, 960, 768)
+
+    # on the path: a push cart, a crate, melons
+    m.loose("models/props_junk/pushcart01a.mdl", 696, 566, 95, z=Z)
+    m.static("models/props_junk/wood_crate002a.mdl", 690, 400, 10, z=Z)
+    for u, v in ((676, 452), (694, 462)):
+        m.loose("models/props_junk/watermelon01.mdl", u, v, 30, z=Z)
+    for v in (430, 560, 660):
+        m.lane(640, v, Z)
+
+    m.view(640, 120, F, 90, 0, "the gate from the canal")
+    m.view(640, 330, Z, 90, 10, "coming in")
+    m.view(640, 668, Z, 270, 12, "from the lean-to")
+    m.view(590, 610, Z, 140, 0, "the rain butt")
+    m.view(600, 500, Z, 215, 8, "the bean poles")
+    m.view(650, 450, Z, 20, 6, "the scarecrow")
+
+
+# ---------------------------------------------------------------------------
+# 6. The stash
+# ---------------------------------------------------------------------------
+
+def rifle_rack(m, a, b, at, side, z, axis="u"):
+    """A rack of long guns against a wall: a foot board, a back board, a notched rail, and a gun every 22.
+    a..b along the wall, `at` the wall's line, side +1 or -1 the way the room is from it. axis: the way the wall runs."""
+    def box(p1, q1, z1, p2, q2, z2):
+        q1, q2 = at + side * q1, at + side * q2
+        lo, hi = min(q1, q2), max(q1, q2)
+        return (p1, lo, z1, p2, hi, z2) if axis == "u" else (lo, p1, z1, hi, p2, z2)
+    m.det([box(a, 0, z, b, 14, z + 6), box(a, 0, z + 6, b, 3, z + 84), box(a, 3, z + 58, b, 13, z + 61), box(a, 0, z, a + 4, 14, z + 84), box(b - 4, 0, z, b, 14, z + 84)], BEAM)
+    stocks, barrels = [], []
+    for k in range(a + 12, b - 14, 22):
+        if (k // 22) % 5 == 3:
+            continue                                            # (an empty place: one is out)
+        stocks.append(box(k, 4, z + 6, k + 6, 12, z + 30))
+        barrels += [box(k + 1, 5, z + 30, k + 5, 10, z + 52), box(k + 2, 6, z + 52, k + 4, 9, z + 80)]
+    m.det(stocks, WOOD)
+    m.det(barrels, STEEL)
+
+
+def m_stash(m, opt):
+    """The stash: a secret arms room. From the canal there is only a run of rusted pipes on the left wall with a valve
+    wheel on the thick one (lc_stash_valve: Use turns it a quarter, and it turns back by itself). Turning it slides a
+    section of the wall itself aside (lc_stash_wall: 96 wide, 112 high, of the wall's own concrete, flush with it when
+    shut, its sill at the top of the bank, 128 up); it shuts again by itself after 12 seconds, and the button on the
+    wall just inside (lc_stash_inside) opens it from within. Behind: a short passage that turns twice, then the arms
+    room (lc_stash_room: its middle): racks of long guns on two walls, a workbench with a vice under a map board,
+    a planning table, shelves, crates.
+    Unchecked: func_rot_button (the valve wheel) is from memory, with its turning axis set by spawnflag 64 or 128 (the
+    map's x or y, whichever way the module is turned): if the wheel turns the wrong way round or not at all, the door
+    still needs only one Open sent to lc_stash_wall. The door slides a little inward as well as aside (its movedir is
+    2 degrees off the wall's line) so that, open, it does not lie in the wall's own face. Sounds doors/doormove1.wav and
+    doormove2.wav are the bunker doors' own."""
+    L, Z = 768, F + 128
+    m.open(0, -256, L, 256)
+    m.low(192, 256, 320, 384, Z + 112, floor=Z)                 # behind the wall, and the first turn
+    m.low(320, 320, 384, 384, Z + 112, floor=Z)                 # the second
+    m.low(384, 320, 704, 576, Z + 128, floor=Z, mat=CRACKED)    # the arms room
+    m.side(128, 256, L, 640)
+    m.world((192, 256, Z, 208, 320, Z + 112), WALL)             # the jambs: the way through is 96 wide
+    m.world((304, 256, Z, 320, 320, Z + 112), WALL)
+    m.portal(208, 263, Z, 304, 265, Z + 112)
+    slide_door(m, "lc_stash_wall", [((208, 256, Z, 304, 272, Z + 112), WALL)], "0 %d 0" % m.fr.yaw(2), speed=32, lip=0, wait="12", toggle=False,
+               sounds=("doors/doormove1.wav", "doors/doormove2.wav"))
+    m.det([(192, 240, TRIM, 320, 256, TRIM + 16)], MAT["beam"])                              # the trim line, carried over the door's squares
+    m.taken(16, 200, F + 60, 340, 256, F + 250)
+
+    # the pipes on the wall, and the valve
+    vu, vz = 120, F + 180
+    m.shapes([prism(octagon(246, vz, 8), "x", 40, 176, BARS),                                # the thick pipe: out of the wall, along it, down into the bank
+              prism(octagon(40, vz, 8), "y", 238, 256, BARS), vpipe(176, 246, 8, F + 84, vz + 8, BARS),
+              prism(octagon(250, F + 214, 4), "x", 64, 150, BARS),                           # the thin one: along, then up and into the wall
+              prism(octagon(64, F + 214, 4), "y", 246, 256, BARS), vpipe(150, 250, 4, F + 210, F + 246, BARS), prism(octagon(150, F + 246, 4), "y", 246, 256, BARS),
+              prism(octagon(88, vz + 14, 5), "y", 236, 240, STEEL)])                         # a gauge
+    m.det([(u - 3, 250, vz - 12, u + 3, 256, vz + 12) for u in (64, 152)] + [(u - 2, 252, F + 208, u + 2, 256, F + 220) for u in (96, 128)]
+          + [(87, 240, vz + 8, 89, 246, vz + 12)], STEEL)
+    m.det([(vu - 9, 236, vz - 10, vu + 9, 256, vz + 10)], STEEL)                             # the valve's body
+    m.shapes([prism(octagon(vu, vz, 3), "y", 228, 236, BARS)])                               # its stem
+    axis = 64 if m.fr.ax("v") == "x" else 128
+    shape_entity(m, "func_rot_button", {
+        "targetname": "lc_stash_valve", "origin": "%d %d %d" % (m.fr.pt(vu, 226) + (vz,)), "distance": "90", "speed": "60", "wait": "4", "sounds": "0", "health": "0",
+        "spawnflags": str(1024 + axis), "rendermode": "0", "renderamt": "255", "rendercolor": "255 255 255", "disableshadows": "1"},
+        shapes=ring("y", vu, vz, 12, 15, 224, 228, BARS),
+        boxes=[(vu - 13, 225, vz - 1, vu + 13, 227, vz + 1), (vu - 1, 225, vz - 13, vu + 1, 227, vz + 13), (vu - 3, 223, vz - 3, vu + 3, 229, vz + 3)], mat=BARS,
+        connections=[("OnPressed", "lc_stash_wall", "Open", "", 0)])
+
+    # just inside: the button that opens it from within, a dim lamp
+    m.button("lc_stash_inside", 192, 350, Z + 40, 0, [("lc_stash_wall", "Open", "", 0)])
+    m.lamp(256, 340, Z + 100, "255 200 140 45")
+    m.static("models/props_junk/wood_crate001a.mdl", 290, 300, 0, z=Z)
+    m.lane(256, 336, Z)
+    m.lane(352, 352, Z)
+
+    # the arms room
+    m.target("lc_stash_room", 544, 448, Z + 8, 0)
+    rifle_rack(m, 400, 584, 576, -1, Z)                                                      # along the back wall
+    rifle_rack(m, 408, 560, 384, 1, Z, axis="v")                                             # and the wall beside the way in
+    m.static("models/props_c17/shelfunit01a.mdl", 648, 560, 270, z=Z)
+    m.det([(546, 438, Z + 37, 562, 450, Z + 45), (548, 440, Z + 45, 562, 450, Z + 53), (566, 456, Z + 37, 580, 468, Z + 45)], TIN)   # boxes of rounds, on the table
+    # the workbench under the map board, on the wall toward the canal
+    m.det([(440, 322, Z + 32, 616, 354, Z + 36)], WOOD)
+    m.det([(444, 324, Z, 450, 350, Z + 32), (606, 324, Z, 612, 350, Z + 32), (450, 326, Z + 10, 606, 330, Z + 14)], BEAM)
+    m.det([(580, 340, Z + 36, 596, 352, Z + 42), (584, 346, Z + 42, 592, 356, Z + 48), (586, 356, Z + 44, 590, 362, Z + 46)], STEEL)   # the vice
+    m.det([(470, 334, Z + 36, 500, 338, Z + 38), (512, 330, Z + 36, 516, 350, Z + 37), (524, 340, Z + 36, 548, 346, Z + 40)], STEEL)   # tools, a part
+    m.det([(456, 320, Z + 52, 600, 323, Z + 116)], BEAM)
+    m.det([(462, 323, Z + 56, 594, 324, Z + 112)], PLASTER)
+    m.det([(466, 324, Z + 80, 590, 325, Z + 84), (520, 324, Z + 60, 524, 325, Z + 108), (466, 324, Z + 98, 520, 325, Z + 100), (524, 324, Z + 66, 590, 325, Z + 68),
+           (560, 324, Z + 84, 562, 325, Z + 108)], MAT["black"])                                 # the canals, drawn on it
+    m.det([(u, 324, z, u + 2, 326, z + 2) for u, z in ((480, Z + 90), (540, Z + 74), (572, Z + 100), (504, Z + 64))], STEEL)       # pins
+    m.lamp(528, 348, Z + 104, "255 215 160 70", hang=24)
+    # the planning table, crates
+    m.static("models/props_c17/furnituretable001a.mdl", 560, 452, 0, z=Z)
+    m.static("models/props_c17/furniturechair001a.mdl", 600, 452, 180, z=Z)
+    m.static("models/props_junk/wood_crate002a.mdl", 676, 372, 0, z=Z)
+    m.static("models/props_junk/wood_crate001a.mdl", 676, 430, 15, z=Z)
+    m.static("models/props_junk/wood_crate001a.mdl", 674, 372, 5, z=Z + 40)
+    m.lamp(544, 448, Z + 112, "255 220 170 150", hang=16)
+    m.lane(544, 400, Z)
+
+    m.view(150, 40, F, 75, -8, "the pipes: nothing to see")
+    m.view(256, 150, F + 40, 90, -12, "on the bank, at the wall that opens")
+    m.view(256, 356, Z, 270, 4, "inside, looking back at the wall")
+    m.view(400, 350, Z, 30, 8, "the arms room")
+    m.view(680, 540, Z, 215, 10, "the workbench and the map")
+
+
 MODULES = {
     "cells": (1024, m_cells, "the cells: a guard room, three barred cells, a crawl duct out (left)"),
     "memorial": (768, m_memorial, "the wall of the dead: plaques and candles in a recess under the open sky (left)"),
+    "pit": (1280, m_pit, "the fighting pit: a caged sunken ring, tiers of seats, a bookmaker (left)"),
+    "garden": (1280, m_garden, "the walled garden: soil beds, bean poles, a scarecrow, a lean-to, a rain butt (left)"),
+    "stash": (768, m_stash, "the stash: an arms room behind a section of wall that a pipe valve opens (left)"),
     "clinic": (1024, m_clinic, "the clinic: a ward, an operating theatre, a dispensary and a sluice room in a vault (left)"),
 }
