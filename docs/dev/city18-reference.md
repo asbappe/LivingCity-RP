@@ -489,3 +489,12 @@ Two visible faces of different brushes must never lie in the same plane facing t
 - **Checked by:** map_lint.py flush (axis-aligned faces; a face buried in another brush or looking into the void outside the map, by the build's own flood fill, is not counted)
 - **Tags:** geometry, owner, check
 
+### Copy City 18 itself (`copy-city18`)
+
+Where a piece needs architecture, take it from the owner's map: their materials (palette.json), their ways (the reference pictures), and their very brushes, lifted as prefabs (map_prefab.py: a box of their map with every face's texture exactly as laid, placed again moved and turned) for facade bays, shopfronts, window frames, door surrounds, balconies, cornices, stairs. Some of their streets get their facades from painted building textures (building_template/*, building_trainstation_*), not brushes: those textures are theirs to use too.
+
+- **Why:** The owner, 21 November: "don't be afraid to more or less rip off and copy the design principles, textures, etc from city 18; the modules are really bad with texture choice and architecture".
+- **How:** python3 map_prefab.py extract c18_lc.vmf NAME X1 Y1 Z1 X2 Y2 Z2 --anchor X Y Z --note ...; in a module: from map_prefab import place; place(m, NAME, u, v, z, turn). The library: _dev/reference/prefabs/ (python3 map_prefab.py list).
+- **Checked by:** review
+- **Tags:** facades, materials, city18, owner
+
