@@ -90,7 +90,7 @@ def swing_door(m, name, boxes, mat, hinge, speed=90, wait="-1", reverse=False, s
     (reverse: clockwise), and stays until used again. boxes: (box) or (box, material)."""
     out = [(m.fr.box(*b[0]), b[1]) if len(b) == 2 else m.fr.box(*b) for b in boxes]
     m.b.vmf.brush_entity("func_door_rotating", {
-        "targetname": name, "origin": "%d %d %d" % (m.fr.pt(hinge[0], hinge[1]) + (hinge[2],)), "distance": "90", "speed": str(speed), "wait": wait, "lip": "0",
+        "targetname": name, "origin": "%d %d %d" % (m.fr.at(hinge[0], hinge[1], hinge[2])), "distance": "90", "speed": str(speed), "wait": wait, "lip": "0",
         "dmg": "0", "forceclosed": "0", "solidbsp": "0", "spawnflags": str(32 + 256 + (2 if reverse else 0)), "noise1": sound, "health": "0",
         "ignoredebris": "0", "loopmovesound": "0", "locked_sentence": "0", "unlocked_sentence": "0", "rendermode": "0", "renderamt": "255",
         "rendercolor": "255 255 255", "renderfx": "0", "disableshadows": "1"}, out, mat, m.dv)
@@ -831,7 +831,7 @@ def m_stash(m, opt):
     m.shapes([prism(octagon(vu, vz, 3), "y", 228, 236, BARS)])                               # its stem
     axis = 64 if m.fr.ax("v") == "x" else 128
     shape_entity(m, "func_rot_button", {
-        "targetname": "lc_stash_valve", "origin": "%d %d %d" % (m.fr.pt(vu, 226) + (vz,)), "distance": "90", "speed": "60", "wait": "4", "sounds": "0", "health": "0",
+        "targetname": "lc_stash_valve", "origin": "%d %d %d" % (m.fr.at(vu, 226, vz)), "distance": "90", "speed": "60", "wait": "4", "sounds": "0", "health": "0",
         "spawnflags": str(1024 + axis), "rendermode": "0", "renderamt": "255", "rendercolor": "255 255 255", "disableshadows": "1"},
         shapes=ring("y", vu, vz, 12, 15, 224, 228, BARS),
         boxes=[(vu - 13, 225, vz - 1, vu + 13, 227, vz + 1), (vu - 1, 225, vz - 13, vu + 1, 227, vz + 13), (vu - 3, 223, vz - 3, vu + 3, 229, vz + 3)], mat=BARS,

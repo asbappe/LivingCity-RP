@@ -587,7 +587,7 @@ def m_quay(m, opt):
     m.view(900, 300, TRIM, 160, 2, "the quay, the street doorway")
     m.view(864, 200, TRIM, 270, 6, "the footbridge")
     m.view(560, -110, F, 50, -22, "from the canal")
-    b.notes.append("%s: the street end is at (%d %d), floor z %d, 128 wide and 128 high: bring a street to it, then delete its cap" % ((m.tag,) + m.fr.pt(640, 640) + (TRIM,)))
+    b.notes.append("%s: the street end is at (%d %d), floor z %d, 128 wide and 128 high: bring a street to it, then delete its cap" % ((m.tag,) + m.fr.at(640, 640, TRIM)))
 
 
 # ---------------------------------------------------------------------------
@@ -1664,7 +1664,7 @@ def m_shell(m, opt):
     m.view(200, 40, F, 335, -6, "the shell in the bank")
     m.view(520, 110, F, 270, -4, "from across the canal: the crater, the crack")
     m.view(700, -40, F, 200, -8, "from beyond it: the growth, the dead")
-    b.notes.append("%s: the shell's nose is in the right bank at (%d %d), its open end at z %d" % ((m.tag,) + m.fr.pt(cu, cv) + (top,)))
+    b.notes.append("%s: the shell's nose is in the right bank at (%d %d), its open end at z %d" % ((m.tag,) + m.fr.at(cu, cv, top)))
 
 
 # ---------------------------------------------------------------------------

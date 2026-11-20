@@ -20,7 +20,7 @@ sys.path.insert(0, HERE)
 
 import map_modules as mm
 
-SKIP = ("straight", "jog", "tee")
+SKIP = ("straight", "jog", "tee", "shed", "tunnel")
 ROW = 6200      # about how long a row may be
 
 
@@ -69,12 +69,23 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--per", type=int, default=10, help="how many modules to a map")
     args = ap.parse_args()
-    names = [n for n in mm.MODULES if n not in SKIP]
+    import map_corridor
+    up = [n for n in mm.MODULES if n in map_corridor.STREET_MODULES]
+    names = [n for n in mm.MODULES if n not in SKIP and n not in up]
     reaches = {n: reach(n) for n in names}
     folder = os.path.join(HERE, "map_layouts")
     for old in os.listdir(folder):
-        if old.startswith("showroom"):
+        if old.startswith("showroom") or old.startswith("street_"):
             os.remove(os.path.join(folder, old))
+    # the modules that belong on the street: one straight run to a map, a shed at each end for the train, five lifted between
+    for k in range(0, len(up), 5):
+        part = up[k:k + 5]
+        path = os.path.join(folder, "street_%d.txt" % (k // 5 + 1))
+        with open(path, "w") as f:
+            f.write("# Street test map %d: %s\n# Made by map_showroom.py: run it again rather than editing this.\n" % (k // 5 + 1, ", ".join(part)))
+            f.write("#   python3 map_build.py chain --layout map_layouts/%s --test\n# The street (a railway and a road) runs along the left bank; a train runs between the two sheds.\n\n" % os.path.basename(path))
+            f.write("start -6400 0\nheading E\nrim 784\nupper left\ncars 2\n\nshed\n" + "".join("%s %s\n" % (n, map_corridor.STREET_MODULES[n]) for n in part) + "shed\n")
+        print("%s: %d modules on the street" % (os.path.basename(path), len(part)))
     for k in range(0, len(names), args.per):
         part = names[k:k + args.per]
         path = os.path.join(folder, "showroom_%d.txt" % (k // args.per + 1))

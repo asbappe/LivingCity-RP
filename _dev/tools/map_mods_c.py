@@ -147,7 +147,7 @@ def swing_gate(m, name, boxes, hinge, mat=None, speed=90, connections=None, flag
     boxes: (box) or (box, material). The gamemode's door rules (locks, lockpicks, kicks) reach it, as they should.
     flags "0" and wait "4": a door no Use opens, that only an input (a button's Open) opens, and that shuts by itself."""
     brush(m, "func_door_rotating", {
-        "targetname": name, "origin": "%d %d %d" % (m.fr.pt(hinge[0], hinge[1]) + (hinge[2],)), "distance": "90", "speed": str(speed), "wait": wait, "lip": "0",
+        "targetname": name, "origin": "%d %d %d" % (m.fr.at(hinge[0], hinge[1], hinge[2])), "distance": "90", "speed": str(speed), "wait": wait, "lip": "0",
         "dmg": "0", "forceclosed": "0", "solidbsp": "0", "spawnflags": flags, "health": "0", "ignoredebris": "0", "loopmovesound": "0", "locked_sentence": "0",
         "unlocked_sentence": "0", "rendermode": "0", "renderamt": "255", "rendercolor": "255 255 255", "renderfx": "0", "disableshadows": "1"},
           boxes, mat or PIPE, connections=connections)
@@ -322,7 +322,7 @@ def m_lock(m, opt):
     m.view(700, 224, deck - 24, 330, 8, "the stairs' head: the gantry and the house")
     m.view(860, 20, deck, 180, 6, "in the house: the slit toward gate a")
     m.view(120, 60, F, 0, -4, "gate a from outside")
-    b.notes.append("%s: the gates are at (%d %d) and (%d %d), the gateway 256 wide; the house's floor is z %d" % ((m.tag,) + m.fr.pt(416, 0) + m.fr.pt(1184, 0) + (deck,)))
+    b.notes.append("%s: the gates are at (%d %d) and (%d %d), the gateway 256 wide; the house's floor is z %d" % ((m.tag,) + m.fr.pt(416, 0) + m.fr.at(1184, 0, deck)))
 
 
 # ---------------------------------------------------------------------------
@@ -443,7 +443,7 @@ def m_railbridge(m, opt):
         if k < 2:
             parts.append(((c - 8, a + 224, base + 14, c + 8, a + 240, base + 26), PIPE))
     brush(m, "func_tracktrain", {
-        "targetname": "lc_rail_train", "target": "lc_rail_p1", "origin": "%d %d %d" % (m.fr.pt(c, tv) + (base,)), "orientationtype": "0", "velocitytype": "0",
+        "targetname": "lc_rail_train", "target": "lc_rail_p1", "origin": "%d %d %d" % (m.fr.at(c, tv, base)), "orientationtype": "0", "velocitytype": "0",
         "startspeed": "350", "speed": "350", "height": "0", "wheels": "50", "bank": "0", "dmg": "1000", "spawnflags": "530", "volume": "10",
         "MoveSound": "ambient/machines/razor_train_wheels_loop1.wav", "MoveSoundMinPitch": "60", "MoveSoundMaxPitch": "200", "MoveSoundMinTime": "0",
         "MoveSoundMaxTime": "0", "ManualSpeedChanges": "0", "ManualAccelSpeed": "0", "ManualDecelSpeed": "0", "rendermode": "0", "renderamt": "255",
@@ -545,7 +545,7 @@ def m_pumphouse(m, opt):
     # the machines: flywheel, shaft, gearbox, a pump drum each side
     wz = F + 88
     brush_shapes(m, "func_rotating", {
-        "targetname": "lc_pump_wheel", "origin": "%d %d %d" % (m.fr.pt(cx, 448) + (wz,)), "spawnflags": str(1 + 16 + 64 + (4 if m.fr.ax("v") == "x" else 8)),
+        "targetname": "lc_pump_wheel", "origin": "%d %d %d" % (m.fr.at(cx, 448, wz)), "spawnflags": str(1 + 16 + 64 + (4 if m.fr.ax("v") == "x" else 8)),
         "maxspeed": "40", "fanfriction": "20", "volume": "0", "dmg": "0", "solidbsp": "0", "rendermode": "0", "renderamt": "255", "rendercolor": "255 255 255",
         "disableshadows": "1"},
         [prism(octagon(cx, wz, 72), "y", 442, 454, STEEL), prism(octagon(cx, wz, 16), "y", 434, 462, PIPE)],

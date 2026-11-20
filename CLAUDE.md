@@ -32,7 +32,7 @@ Living City is a Garry's Mod Half-Life 2 roleplay gamemode. The owner has put a 
 
 ## Map work: look before the owner compiles
 
-A chat cannot compile a map, but it can look at one. **`python3 _dev/tools/map_view.py FILE.vmf --iso SW --out a.png`** draws any VMF (from above, cut away with `--cut Z`, or from a player's eye with `--eye X Y Z --yaw A`); open the PNG with the Read tool. **`python3 _dev/tools/map_assets.py FILE.vmf`** checks that every model and material in it exists and is the right kind. Use both on every piece of map before sending it (`docs/dev/map-view.md`; the pieces themselves: `docs/dev/map-building.md`, and for canal modules `docs/dev/map-modules.md`). Needs `pip install numpy pillow`.
+A chat cannot compile a map, but it can look at one. **`python3 _dev/tools/map_view.py FILE.vmf --iso SW --out a.png`** draws any VMF (from above, cut away with `--cut Z`, or from a player's eye with `--eye X Y Z --yaw A`); open the PNG with the Read tool. **`python3 _dev/tools/map_assets.py FILE.vmf`** checks that every model and material in it exists and is the right kind. The assets check and the tools' own checks are free: run them on every piece of map before sending it. **Reading a picture costs a lot of usage** (the owner, 20 November: the viewer "has eaten about 10x more usage than a usual chat"): read one only for what no check can tell, one small picture at a time, never sheets for every module (`docs/dev/map-view.md`; the pieces themselves: `docs/dev/map-building.md`, and for canal modules `docs/dev/map-modules.md`). Needs `pip install numpy pillow`.
 
 ## Testing
 

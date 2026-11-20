@@ -13,7 +13,9 @@ python3 map_view.py lc_mod_NAME.vmf --iso SW --cut 560 --out b.png              
 python3 map_build.py module --name NAME && python3 map_assets.py lc_mod_NAME.vmf  # is every model and material real, and the right kind?
 ```
 
-Look at the pictures every time (`map_view.py` draws brushes in flat colours, props as boxes of their true size, light roughly: `docs/dev/map-view.md`). A build also prints `LOOK:` lines for props that reach into a wall, stand taller than the roof over them or lie under the floor: clear them. A module is done when the check passes all ways, `map_assets.py` passes, there are no `LOOK:` lines left unexplained, AND the pictures show what was meant.
+**Pictures cost usage to read (the owner asked for restraint, 20 November):** pass the checks first, then read ONE small picture of a new module (`map_view.py ... --size 800 520`), and another only if something in it is in doubt. Do not use `--views` sheets as a routine.
+
+A picture when you do look (`map_view.py` draws brushes in flat colours, props as boxes of their true size, light roughly: `docs/dev/map-view.md`). A build also prints `LOOK:` lines for props that reach into a wall, stand taller than the roof over them or lie under the floor: clear them. A module is done when the check passes all ways, `map_assets.py` passes, there are no `LOOK:` lines left unexplained, AND the pictures show what was meant.
 
 ## Where a module lives
 
@@ -39,6 +41,7 @@ MODULES = {"example": (1024, m_example, "what it is")}
 - `F` 400: the canal's floor. `TRIM` 656: the trim line on the walls, and the height of streets carried over. `m.b.rim` (784 by default): where the walls' concrete ends, with a fence on it. `m.b.sky`: the sky's lid (rim + 384). `BASE` 224: the bottom of everything; `SEWER` 288: the city's sewers.
 - A player is 32 wide, 72 high standing, 36 crouched, steps up 18, jumps about 56, walks slopes up to 45 degrees. Eyes are 64 over the floor.
 - A module's length and everything painted must be multiples of 64. A module must start and end with the full canal: `m.open(0, -256, L, 256)` or the same in pieces, so the cross-section at `u` 0 and `u` L is the plain canal at floor `F`.
+- **Never write `m.fr.pt(u, v) + (z,)`: write `m.fr.at(u, v, z)`.** A module can be built lifted to the street (`NAME up` in a layout: `map_corridor.py`), which moves everything in it 768 out and 256 up through the frame; a height added by hand is not lifted. `m.fr.box(...)` and every `m.` helper are safe.
 - Stay inside `u` 0 to L. Side rooms go out in `v`: `+v` by habit, so `flip` in a layout can put them on the other bank.
 
 ## Squares (what seals the map)

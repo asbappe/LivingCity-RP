@@ -1,4 +1,4 @@
-# Test map 3: breach
+# Test map 3: shell, aqueduct, pipes, camp, memorial, pit, stash, plaza, lock, thumper
 # Made by map_showroom.py: run it again rather than editing this.
 #   python3 map_build.py chain --layout map_layouts/showroom_3.txt --test
 
@@ -6,4 +6,18 @@ start -3072 -4096
 heading E
 rim 784
 
-breach
+shell
+aqueduct
+pipes
+camp
+memorial
+
+left
+straight 1664
+left
+
+pit
+stash
+plaza
+lock
+thumper

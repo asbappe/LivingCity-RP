@@ -1,0 +1,17 @@
+# Street test map 3: depot, armory, substation, morgue
+# Made by map_showroom.py: run it again rather than editing this.
+#   python3 map_build.py chain --layout map_layouts/street_3.txt --test
+# The street (a railway and a road) runs along the left bank; a train runs between the two sheds.
+
+start -6400 0
+heading E
+rim 784
+upper left
+cars 2
+
+shed
+depot up
+armory up
+substation up flip
+morgue up
+shed

@@ -417,6 +417,36 @@
 "ragdoll": false,
 "static": true
 },
+"models/props_c17/lamppost03a_off.mdl": {
+"bbox": [
+-10.1,
+-10.1,
+-0.1,
+10.1,
+105.8,
+450.3
+],
+"collides": true,
+"game": "hl2",
+"physics": false,
+"ragdoll": false,
+"static": true
+},
+"models/props_c17/lamppost03a_on.mdl": {
+"bbox": [
+-10.1,
+-10.1,
+-0.1,
+10.1,
+105.8,
+450.3
+],
+"collides": true,
+"game": "hl2",
+"physics": false,
+"ragdoll": false,
+"static": true
+},
 "models/props_c17/lockers001a.mdl": {
 "bbox": [
 -8.9,
@@ -753,6 +783,36 @@
 "ragdoll": false,
 "static": true
 },
+"models/props_combine/combine_train02a.mdl": {
+"bbox": [
+-68.3,
+-313.6,
+-123.4,
+66.2,
+313.6,
+123.4
+],
+"collides": true,
+"game": "hl2",
+"physics": false,
+"ragdoll": false,
+"static": true
+},
+"models/props_combine/combine_train02b.mdl": {
+"bbox": [
+-64.9,
+-313.6,
+-123.4,
+67.6,
+317.1,
+124.2
+],
+"collides": true,
+"game": "hl2",
+"physics": false,
+"ragdoll": false,
+"static": true
+},
 "models/props_combine/combinethumper002.mdl": {
 "bbox": [
 -21.4,
@@ -767,6 +827,21 @@
 "physics": false,
 "ragdoll": false,
 "static": false
+},
+"models/props_combine/combinetrain01a.mdl": {
+"bbox": [
+-371.4,
+-70.3,
+-0.3,
+268.6,
+70.3,
+289.0
+],
+"collides": true,
+"game": "hl2",
+"physics": false,
+"ragdoll": false,
+"static": true
 },
 "models/props_combine/health_charger001.mdl": {
 "bbox": [
@@ -1316,6 +1391,96 @@
 11.4,
 8.1,
 36.6
+],
+"collides": true,
+"game": "hl2",
+"physics": false,
+"ragdoll": false,
+"static": true
+},
+"models/props_trainstation/train001.mdl": {
+"bbox": [
+-79.7,
+-342.1,
+-113.8,
+79.7,
+342.9,
+113.5
+],
+"collides": true,
+"game": "hl2",
+"physics": false,
+"ragdoll": false,
+"static": true
+},
+"models/props_trainstation/train002.mdl": {
+"bbox": [
+-59.1,
+-229.5,
+-96.3,
+60.5,
+229.5,
+96.0
+],
+"collides": true,
+"game": "hl2",
+"physics": false,
+"ragdoll": false,
+"static": true
+},
+"models/props_trainstation/train003.mdl": {
+"bbox": [
+-65.2,
+-279.2,
+-96.9,
+65.2,
+280.9,
+96.6
+],
+"collides": true,
+"game": "hl2",
+"physics": false,
+"ragdoll": false,
+"static": true
+},
+"models/props_trainstation/train005.mdl": {
+"bbox": [
+-58.3,
+-229.5,
+-27.1,
+60.5,
+229.5,
+27.1
+],
+"collides": true,
+"game": "hl2",
+"physics": false,
+"ragdoll": false,
+"static": true
+},
+"models/props_trainstation/traincar_rack001.mdl": {
+"bbox": [
+-11.3,
+-61.3,
+-5.0,
+15.3,
+61.3,
+3.0
+],
+"collides": true,
+"game": "hl2",
+"physics": false,
+"ragdoll": false,
+"static": true
+},
+"models/props_trainstation/traintrack006b.mdl": {
+"bbox": [
+-930.4,
+-1056.3,
+-12.0,
+930.4,
+1056.1,
+12.3
 ],
 "collides": true,
 "game": "hl2",

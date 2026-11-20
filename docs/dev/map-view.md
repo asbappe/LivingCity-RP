@@ -2,6 +2,8 @@
 
 The owner, 20 November: "Please make sure your vmf 3D viewer is available for other and future chats, very useful."
 
+**It costs usage: look sparingly** (the owner, 20 November: "your 3D viewer has eaten about 10x more usage than a usual chat, please reserve that and don't use it too liberally"). Drawing a picture is free; READING one with the Read tool is what costs, and a big sheet costs most. So: trust the checks first (`map_modules_check.py`, `map_assets.py`, the `LOOK:` lines); read a picture only for something no check can tell (a new kind of shape, a layout nobody has seen), one small picture at a time (`--size 800 520`, `--box` round the part in question), never a whole sheet of views for every module, and never the same thing twice. Helpers given map work must be told the same.
+
 A chat cannot compile a map or open Hammer. This tool draws a VMF to a PNG so a chat can LOOK at what it built (or at a part of the owner's own map) before the owner spends a compile on it. Read the picture with the Read tool. It needs `pip install numpy pillow`; nothing else. It only reads.
 
 ```bash

@@ -34,7 +34,7 @@ def main():
     args = ap.parse_args()
     sys.path.insert(0, HERE)
     import map_modules
-    names = [n for n in args.only.split(",") if n] or sorted(map_modules.MODULES)
+    names = [n for n in args.only.split(",") if n] or sorted(n for n in map_modules.MODULES if n != "shed")      # (a shed needs a street: the layouts try it)
     bad = 0
     with tempfile.TemporaryDirectory() as tmp:
         for name in names:
@@ -48,12 +48,22 @@ def main():
             if not ok:
                 fails.append(("E", "test", out))
             looks = [l.strip() for l in out.splitlines() if "LOOK:" in l]
+            import map_corridor
+            if name in map_corridor.STREET_MODULES:      # (a module that belongs on the street: also built lifted up there)
+                for heading in ("E", "S"):
+                    lay = os.path.join(tmp, "lift.txt")
+                    with open(lay, "w") as f:
+                        f.write("start 0 0\nheading %s\nrim 784\nupper left\nstraight 512\n%s %s\nstraight 512\n" % (heading, name, map_corridor.STREET_MODULES[name]))
+                    ok2, out2 = run(["chain", "--layout", lay], tmp)
+                    if not ok2:
+                        fails.append((heading, "lifted", out2))
+                    out += out2
             print("%-12s %s%s" % (name, "ok" if not fails else "FAILS %d ways" % len(fails), "   (%d props to look at)" % len(looks) if looks else ""))
             for l in looks[:4]:
                 print("    " + l[:200])
             for heading, flip, out in fails[:1]:
                 lines = [l for l in out.splitlines() if "PROBLEM" in l or "Error" in l or "Traceback" in l or l.startswith("  File")]
-                print("    heading %s%s: %s" % (heading, " flipped" if flip is True else " test" if flip else "", "\n      ".join(lines[-6:]) or out[-400:]))
+                print("    heading %s%s: %s" % (heading, " flipped" if flip is True else " " + flip if flip else "", "\n      ".join(lines[-6:]) or out[-400:]))
             bad += bool(fails)
         if not args.only:
             for lay in sorted(glob.glob(os.path.join(HERE, "map_layouts", "*.txt"))):

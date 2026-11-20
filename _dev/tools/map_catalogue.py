@@ -24,13 +24,17 @@ sys.path.insert(0, HERE)
 import map_modules as mm
 import map_view
 
-STRUCTURE = ("straight", "jog", "tee", "tunnel")
+STRUCTURE = ("straight", "jog", "tee", "tunnel", "shed")
 
 
 def one(name, folder, tmp, size):
     class A:
         first_node, test, origin, heading, rim, preview, views = 6000, False, None, None, None, None, None
+    import map_corridor
+    street = map_corridor.STREET_MODULES.get(name)
     lay = {"name": "cat_" + name, "start": (0, 0), "heading": "E", "rim": 784, "end": None, "modules": [[name]]}
+    if street:      # (a module that belongs on the street is drawn up there)
+        lay.update({"upper": "left", "cars": 2, "modules": [["straight", "256"], [name] + street.split(), ["straight", "256"]]})
     b, seed, spawn, end = mm.build_chain(lay, A)
     ch, fences, problems, names = mm.finish(b, seed, spawn, A)
     path = os.path.join(tmp, name + ".vmf")
@@ -45,13 +49,13 @@ def one(name, folder, tmp, size):
         jpg = "%s_%s.jpg" % (name, tag)
         Image.open(png).convert("RGB").save(os.path.join(folder, jpg), quality=82)
         pics.append(jpg)
-    shot("above", iso="NE", cut=mm.F + 150)
+    shot("above", iso="NE", cut=(map_corridor.STREET if street else mm.F) + 150)
     views = [v for v in b.views if "coming in" not in v[0]] or b.views
     for k, (label, eye, yaw, pitch) in enumerate(views[:3]):
         shot("view%d" % (k + 1), eye=eye, yaw=yaw, pitch=pitch)
     doc = inspect.getdoc(mm.MODULES[name][1]) or ""
     return {"name": name, "length": mm.MODULES[name][0], "summary": mm.MODULES[name][2], "doc": doc, "problems": problems,
-            "file": os.path.basename(inspect.getsourcefile(mm.MODULES[name][1])),
+            "file": os.path.basename(inspect.getsourcefile(mm.MODULES[name][1])), "street": street or "",
             "named": sorted(set(n[0] for n in names)), "pictures": pics, "labels": ["from above, roofs off"] + [v[0].split(" ", 2)[-1] for v in views[:3]],
             "notes": [n for n in b.notes if n.startswith("LOOK")]}
 
@@ -88,10 +92,11 @@ def page(mods, path, embed=False):
         pics = "".join('<button class="shot" type="button" data-cap="%s"><img src="%s" alt="%s: %s" loading="lazy" width="720" height="450"><span>%s</span></button>' % (
             html.escape("%s: %s" % (m["name"], l), True), src(p), html.escape(m["name"], True), html.escape(l, True), html.escape(l)) for p, l in zip(m["pictures"], m["labels"]))
         named = "".join("<li>%s</li>" % html.escape(n) for n in m["named"]) or ""
-        cards.append('<article class="mod" data-group="%s" data-text="%s"><header><h2>%s</h2><p class="meta"><span>%d long</span><span>%s</span></p></header>'
+        where = '<span class="up">on the street: %s %s</span>' % (html.escape(m["name"]), html.escape(m["street"])) if m.get("street") else "<span>in the canal</span>"
+        cards.append('<article class="mod" data-group="%s" data-text="%s"><header><h2>%s</h2><p class="meta"><span>%d long</span><span>%s</span>%s</p></header>'
                      '<p class="sum">%s</p><div class="shots">%s</div>%s%s</article>' % (
                          html.escape(group, True), html.escape((m["name"] + " " + m["summary"] + " " + doc + " " + " ".join(m["named"])).lower(), True), html.escape(m["name"]),
-                         m["length"], html.escape(group), html.escape(doc), pics,
+                         m["length"], html.escape(group), where, html.escape(doc), pics,
                          '<div class="named"><h3>Named for the game</h3><ul>%s</ul></div>' % named if named else "",
                          '<p class="unchecked"><b>Not yet checkable:</b> %s</p>' % html.escape(unchecked) if unchecked else ""))
     groups = []

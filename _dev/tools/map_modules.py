@@ -40,7 +40,11 @@ MM = {
     "steel": "metal/metalhull003a",
     "beam_wood": "wood/woodbeam001a",
     "water": "nature/water_canals_water_clear",   # hl2 (the bunker forest's pond)
-    "sludge": "nature/toxicslime002a",            # hl2: the canals' toxic slime. NOT checked against a file list
+    "sludge": "nature/toxicslime002a",            # hl2: the canals' toxic slime
+    "road": "stone/stonefloor006d_c17",           # the owner's own streets' cobbles (Ravenholm's recipe was read from their map)
+    "walk": "concrete/concretefloor016a",         # ...and their pavements
+    "gravel": "nature/gravelfloor002a",           # hl2: a railway's ballast
+    "brick": "brick/brickwall045d",
 }
 
 
@@ -48,12 +52,14 @@ class Frame:
     """Where a module sits: its entry's middle (x, y), the way it heads (rot: 0 east, 1 north, 2 west, 3 south) and its
     length. flip: built from its far end backwards, which puts its left bank on the right."""
 
-    def __init__(self, x, y, rot, length, flip=False, shift=0):
+    def __init__(self, x, y, rot, length, flip=False, shift=0, dv=0, dz=0):
         self.x, self.y, self.rot, self.length, self.flip, self.shift = x, y, rot % 4, length, flip, shift
+        self.dv, self.dz = dv, dz      # (a module lifted to the street: moved this far to the left, and this far up)
 
     def pt(self, u, v):
         if self.flip:      # (shift: how far to the left of its entry the module's exit is; flipped, its exit is the entry)
             u, v = self.length - u, self.shift - v
+        v += self.dv
         r = self.rot
         if r == 0:
             return (self.x + u, self.y + v)
@@ -69,7 +75,11 @@ class Frame:
 
     def box(self, u1, v1, z1, u2, v2, z2):
         r = self.rect(u1, v1, u2, v2)
-        return (r[0], r[1], min(z1, z2), r[2], r[3], max(z1, z2))
+        return (r[0], r[1], min(z1, z2) + self.dz, r[2], r[3], max(z1, z2) + self.dz)
+
+    def at(self, u, v, z):
+        """A place in the map (x, y, z) for a place in the module. Use this, never pt() plus a height of your own."""
+        return self.pt(u, v) + (z + self.dz,)
 
     def ax(self, a):
         """The map's axis ("x" or "y") that the module's "u" or "v" runs along."""
@@ -83,17 +93,24 @@ class Frame:
         return {0: (1, 0), 90: (0, 1), 180: (-1, 0), 270: (0, -1)}[self.yaw(a)]
 
     def faces(self, faces):
-        return [([self.pt(p[0], p[1]) + (p[2],) for p in verts], mat) for verts, mat in faces]
+        return [([self.at(p[0], p[1], p[2]) for p in verts], mat) for verts, mat in faces]
 
 
 class Build:
     """One file being made: its plan, and what the modules leave for the dressing and the checks."""
 
-    def __init__(self, name, rim, first_node):
+    def __init__(self, name, rim, first_node, upper=None):
         self.name, self.rim, self.sky = name, rim, rim + 384
         self.vmf = Vmf()
         self.vis = "LC %s" % name
-        self.plan = Plan((0, 0), [(BASE, rim, MAT["canal_wall"]), (rim, self.sky + 16, MAT["sky"])], sky=self.sky, vis=self.vis + ": walls and floors")
+        self.upper = upper    # "left" or "right": the bank built up to the street (map_corridor.py), or None
+        self.deck, self.viaduct, self.sheds, self.lifted = set(), set(), set(), set()
+        if upper:
+            import map_corridor
+            self.sky = map_corridor.STREET + 768
+            self.plan = map_corridor.CorridorPlan(BASE, rim, self.sky, self.vis + ": walls and floors")
+        else:
+            self.plan = Plan((0, 0), [(BASE, rim, MAT["canal_wall"]), (rim, self.sky + 16, MAT["sky"])], sky=self.sky, vis=self.vis + ": walls and floors")
         self.taken, self.blocked, self.no_bank, self.no_mud, self.lanes = [], [], [], [], []
         self.after, self.bumps, self.notes, self.names, self.problems = [], [], [], [], []
         self.owner = {}       # square -> the module that painted it
@@ -121,6 +138,10 @@ class Mod:
     # --- the squares ---
     def paint(self, u1, v1, u2, v2, spec):
         r = self.fr.rect(u1, v1, u2, v2)
+        if self.fr.dz:      # (lifted to the street: its floors and roofs go up with it, and its canal's floor is the road)
+            if spec[0] == "open" and spec[1] == F and spec[2] == MAT["canal_floor"]:
+                spec = ("open", F, MM["road"])
+            spec = spec[:1] + (spec[1] + self.fr.dz,) + spec[2:3] + tuple(z + self.fr.dz for z in spec[3:4]) + spec[4:]
         for i in range(r[0] // CELL, r[2] // CELL):
             for j in range(r[1] // CELL, r[3] // CELL):
                 was = self.b.owner.get((i, j))
@@ -158,7 +179,7 @@ class Mod:
         self.b.taken.append(self.fr.box(*box))
 
     def lane(self, u, v, z=F):
-        self.b.lanes.append(self.fr.pt(u, v) + (z,))
+        self.b.lanes.append(self.fr.at(u, v, z))
 
     # --- brushes ---
     def det(self, boxes, mat, top=None, vis=None, faces=None):
@@ -194,7 +215,7 @@ class Mod:
 
     # --- things ---
     def point(self, cls, u, v, z, keys=None, vis=None, connections=None):
-        self.b.vmf.point(cls, self.fr.pt(u, v) + (z,), keys or {}, vis or self.dv, connections=connections)
+        self.b.vmf.point(cls, self.fr.at(u, v, z), keys or {}, vis or self.dv, connections=connections)
         if keys and keys.get("targetname"):
             self.b.names.append((keys["targetname"], cls, self.tag))
 
@@ -212,7 +233,7 @@ class Mod:
         k = {"model": model, "angles": "0 %d 0" % wy, "skin": "0"}
         k.update(keys)
         self.point(cls, u, v, zo, k, vis or self.pv)
-        self.b.props.append((cls, model, self.fr.pt(u, v) + (zo,), wy, self.tag))
+        self.b.props.append((cls, model, self.fr.at(u, v, zo), wy, self.tag))
 
     def static(self, model, u, v, yaw=0, z=F):
         """A prop that never moves, standing on z. A model that was not built to be static (map_assets.py knows) is
@@ -298,12 +319,13 @@ class Mod:
                     "Dangling": "0", "Breakable": "0", "RopeMaterial": "cable/cable.vmt", "MoveSpeed": "64", "PositionInterpolator": "2", "NoWind": "1"}
             if k + 1 < len(pts):
                 keys["NextKey"] = names[k + 1]
-            self.b.vmf.point("move_rope" if k == 0 else "keyframe_rope", self.fr.pt(u, v) + (z,), keys, self.b.vis + ": ropes")
+            self.b.vmf.point("move_rope" if k == 0 else "keyframe_rope", self.fr.at(u, v, z), keys, self.b.vis + ": ropes")
 
     def ladder(self, u, v, z0, z1, out):
         """A ladder against a wall at (u, v), from z0 up to z1 (128 a piece), facing `out` (a yaw in the module: 0 along
         u, 90 left ...): set up the way the owner's own map does its ladders. The floor at the top is behind it."""
         vmf, vis = self.b.vmf, self.dv
+        z0, z1 = z0 + self.fr.dz, z1 + self.fr.dz
         x, y = self.fr.pt(u, v)
         dx, dy = self.fr.way(out)
         wy = self.fr.yaw(out)
@@ -324,6 +346,7 @@ class Mod:
         """A button players press, on the wall at (u, v), its foot at z, facing `out`. wires: what a press does,
         [(the thing's name, the input, a value, seconds later), ...]. It works in the map by itself: no game code."""
         from map_forest import wall_button
+        z += self.fr.dz
         x, y = self.fr.pt(u, v)
         dx, dy = self.fr.way(out)
         box = (min(x - 10 * abs(dy), x + 10 * dx), min(y - 10 * abs(dx), y + 10 * dy), z - 4, max(x + 10 * abs(dy), x + 10 * dx), max(y + 10 * abs(dx), y + 10 * dy), z + 24)
@@ -359,7 +382,7 @@ class Mod:
 
     def view(self, u, v, z, yaw, pitch=6, label=""):
         """A picture to take when asked (--views): from where a player standing at (u, v) on a floor at z would look."""
-        self.b.views.append(((self.tag + " " + label).strip(), self.fr.pt(u, v) + (z + 64,), self.fr.yaw(yaw), pitch))
+        self.b.views.append(((self.tag + " " + label).strip(), self.fr.at(u, v, z + 64), self.fr.yaw(yaw), pitch))
 
     def door(self, name, boxes, mat, movedir, speed=40, lip=8, vis=None):
         """A brush that slides when the game tells it to (Open, Close): never by a player's Use."""
@@ -426,6 +449,15 @@ def m_straight(m, opt):
         m.scatter(64, -110, L - 64, 110, L // 420, 1000 + (x * 7 + y * 13) % 997)
 
 
+def m_shed(m, opt):
+    """Plain canal, and on the street beside it a brick shed over the tracks, where a train waits out of sight. A
+    straight run needs two for a train: one to come out of, one to go into. Only where the layout has a street
+    ("upper left"). "shed 2304": that long (by itself it is the length of the train and a little over)."""
+    m.open(0, -256, m.fr.length, 256)
+    if not m.b.upper:
+        m.b.problems.append("%s: a shed needs a street to stand on: add a line \"upper left\" or \"upper right\" to the layout" % m.tag)
+
+
 def m_corner(m, opt):
     m.open(0, -256, 512, 256)
 
@@ -466,7 +498,9 @@ def m_gate(m, opt):
     gate_cap(b.vmf, m.fr.box(0, -256, F, 64, 256, F + GATE_HIGH), m.fr.box(80, -256, F, 88, 256, F + GATE_HIGH), m.fr.ax("v"),
              "%s: %s gate's cap (delete to join)" % (b.vis, opt[0] if opt else "a"))
     m.portal(128, -256, F, 130, 256, F + GATE_HIGH)
-    b.plan.keep_out.append(m.fr.rect(-64, -448, 0, 448))
+    # (nothing of this piece beyond the gate's plane, where the next piece begins; beside a street only the culvert's own width,
+    #  since the street needs its end wall)
+    b.plan.keep_out.append(m.fr.rect(-64, -256, 0, 256) if b.upper else m.fr.rect(-64, -448, 0, 448))
     m.blocked(0, -256, 128, 256)
 
 
@@ -576,7 +610,7 @@ def m_overflow(m, opt):
     m.lane(512, 480)
     m.view(512, -120, F, 90, -6, "the sluice")
     m.view(512, 560, F, 270, 0, "behind the plate")
-    m.b.notes.append("%s: the overflow's far end is at (%d %d), floor z %d, 256 wide and 192 high" % ((m.tag,) + m.fr.pt(512, reach) + (F,)))
+    m.b.notes.append("%s: the overflow's far end is at (%d %d), floor z %d, 256 wide and 192 high" % ((m.tag,) + m.fr.at(512, reach, F)))
 
 
 def m_shanty(m, opt):
@@ -1143,6 +1177,7 @@ MODULES = {
     "straight": (1024, m_straight, "plain canal (\"straight 1536\", \"straight 1024 bridge\")"),
     "jog": (1024, m_jog, "the canal steps sideways to break a long view (\"jog left 768\", \"jog right 1024\")"),
     "tee": (512, m_tee, "a standard gate in the left wall, for another piece or layout to join"),
+    "shed": (2112, m_shed, "plain canal with a train's shed on the street beside it (two to a straight run; needs \"upper left\")", {"stretch": True}),
     "drain": (1024, m_drain, "1. the storm drain junction, down to the city's sewers (left)"),
     "overflow": (1024, m_overflow, "2. the overflow toward Ravenholm, behind a sluice plate (left)"),
     "shanty": (1536, m_shanty, "4. the shantytown under a street bridge (left)"),
@@ -1188,7 +1223,8 @@ def take_views(b, vmf_path, folder, name, cut=None):
 
 def read_layout(path):
     """A layout: "start X Y", "heading E|N|W|S", "rim Z", "end X Y HEADING" (where it must come out), then a module a line."""
-    lay = {"name": path.replace("\\", "/").split("/")[-1].rsplit(".", 1)[0], "start": (0, 0), "heading": "E", "rim": 784, "end": None, "modules": []}
+    lay = {"name": path.replace("\\", "/").split("/")[-1].rsplit(".", 1)[0], "start": (0, 0), "heading": "E", "rim": 784, "end": None, "modules": [],
+           "upper": None, "cars": 2}
     for raw in open(path):
         words = raw.split("#")[0].split()
         if not words:
@@ -1201,14 +1237,23 @@ def read_layout(path):
             lay["rim"] = int(words[1])
         elif words[0] == "end":
             lay["end"] = (int(words[1]), int(words[2]), words[3].upper())
+        elif words[0] == "upper":
+            lay["upper"] = words[1].lower()      # (the street beside the canal: "upper left" or "upper right")
+        elif words[0] == "cars":
+            lay["cars"] = int(words[1])           # (how many cars the trains pull behind the engine)
         else:
             lay["modules"].append(words)
     return lay
 
 
 def build_chain(lay, args):
-    b = Build(lay["name"], lay["rim"], args.first_node or 6000)
+    upper = lay.get("upper")
+    b = Build(lay["name"], lay["rim"], args.first_node or 6000, upper)
     b.test = bool(args.test)
+    elems, shed_n = [], 0
+    if upper:
+        import map_corridor
+        s = 1 if upper == "left" else -1
     x, y = lay["start"]
     rot = HEADINGS[lay["heading"]]
     for v in (x, y):
@@ -1222,6 +1267,8 @@ def build_chain(lay, args):
         if name in ("left", "right"):
             fr = Frame(x, y, rot, 512)
             m_corner(Mod(b, fr, "%d %s turn" % (n, name)), opt)
+            elems.append({"kind": name, "frame": fr, "length": 512, "tag": "%d %s turn" % (n, name)})
+            shed_n = 0
             x, y = fr.pt(256, 256 if name == "left" else -256)
             rot = (rot + (1 if name == "left" else -1)) % 4
             continue
@@ -1229,9 +1276,10 @@ def build_chain(lay, args):
             fr = Frame(x, y, rot, 256, flip=(opt[0] == "end"))
             m_gate(Mod(b, fr, "the %s gate" % opt[0]), opt)
             if opt[0] == "start":
-                seed = fr.pt(192, 0) + (F + 32,)
-                spawn = (fr.pt(224, 0) + (F + 16,), fr.yaw(0))
+                seed = fr.at(192, 0, F + 32)
+                spawn = (fr.at(224, 0, F + 16), fr.yaw(0))
             b.labels.append(fr.pt(128, 0) + ("gate",))
+            elems.append({"kind": "leg", "frame": Frame(x, y, rot, 256), "length": 256, "tag": "the %s gate" % opt[0]})
             x, y = Frame(x, y, rot, 256).pt(256, 0)
             continue
         if name not in MODULES:
@@ -1241,21 +1289,42 @@ def build_chain(lay, args):
         info = MODULES[name]
         if (name == "straight" or (len(info) > 3 and info[3].get("stretch"))) and opt and opt[0].isdigit():
             length = int(opt[0])      # (a module that can be any length: "tunnel 1536")
+        if name == "shed" and not (opt and opt[0].isdigit()):
+            import map_corridor
+            length = (map_corridor.train_len(lay.get("cars", 2)) + 128 + 63) // 64 * 64
         if length % CELL:
             b.problems.append("%s %d: a length must be a multiple of %d" % (name, length, CELL))
             continue
         count[name] = count.get(name, 0) + 1
-        tag = name if name in ("straight", "jog", "tee") else "%s%s" % (name, " %d" % count[name] if count[name] > 1 else "")
+        tag = name if name in ("straight", "jog", "tee", "shed") else "%s%s" % (name, " %d" % count[name] if count[name] > 1 else "")
         shift = jog_shift(opt) if name == "jog" else 0
-        fr = Frame(x, y, rot, length, flip, shift)
+        lifted = bool(upper) and "up" in opt
+        if upper:
+            if name == "jog":
+                b.problems.append("a jog cannot be used where the street runs beside the canal (the street would break): use turns")
+            e = {"kind": "leg", "frame": Frame(x, y, rot, length), "length": length, "tag": "%d %s" % (n, tag), "lifted": lifted,
+                 "stairs": (lifted and "nostairs" not in opt) or "stairs" in opt}
+            if name == "shed":
+                shed_n += 1
+                e["shed"] = "start" if shed_n == 1 else "end"
+            elems.append(e)
+        elif "up" in opt:
+            b.problems.append("%s is to be lifted to the street (\"up\"), but the layout has no street: add a line \"upper left\" or \"upper right\"" % tag)
+        if lifted:      # (the module is built on the street; the canal passes below it as a plain stretch)
+            m_straight(Mod(b, Frame(x, y, rot, length), "%d the canal under %s" % (n, tag)), ["bare"])
+            fr = Frame(x, y, rot, length, flip != (s < 0), shift, dv=s * map_corridor.LIFT_V, dz=map_corridor.LIFT_Z)
+        else:
+            fr = Frame(x, y, rot, length, flip, shift)
         mod = Mod(b, fr, "%d %s" % (n, tag))
-        if name not in ("straight", "jog", "tee"):
+        if name not in ("straight", "jog", "tee", "shed"):
             mod.view(40, 0, F, 0, 4, "coming in")
             mod.cubemap(length // 2, 0)
         MODULES[name][1](mod, opt)
         if name != "straight":
             b.labels.append(fr.pt(length // 2, 0) + (tag,))
         x, y = Frame(x, y, rot, length).pt(length, shift)
+    if upper:
+        map_corridor.lay(b, elems, upper, lay.get("cars", 2))
     end = (x, y, "ENWS"[rot])
     if lay["end"] and tuple(lay["end"]) != end:
         b.problems.append("the chain comes out at (%d %d) heading %s, not at (%d %d) heading %s as the layout says it must" % (end + tuple(lay["end"])))
@@ -1267,17 +1336,27 @@ def finish(b, seed, spawn, args):
     plan.build(vmf)
     if args.test:
         test_extras(vmf, spawn[0], spawn[1], b.vis + ": for testing alone (never in the real map)")
-    ch = Channel(vmf, plan, F, TRIM, b.vis)
+    canal, walled = plan, plan
+    if b.upper:      # (the canal's dressing sees the street as wall; the chain link along the walls' tops stays off it)
+        import map_corridor
+        canal, walled = map_corridor.canal_view(b), map_corridor.fence_view(b)
+    ch = Channel(vmf, canal, F, TRIM, b.vis)
     for axis, at, lo, hi in b.pipes:
         ch.pipes(axis, at, lo, hi, b.taken)
     ch.dress(b.no_bank, b.taken)
     bump = (lambda x, y: sum(f(x, y) for f in b.bumps)) if b.bumps else None
     ch.mud(47, skip=b.no_mud, bump=bump)
-    fences = fence(vmf, plan, 96, b.vis + ": fence along the walls' tops", top=b.rim)
+    fences = fence(vmf, walled, 96, b.vis + ": fence along the walls' tops", top=b.rim)
     for (i, j), spec in plan.cells.items():      # (no path node where nobody can stand: a crawl duct)
         if spec[0] == "low" and spec[3] - spec[1] < 72:
             b.blocked.append((i * CELL, j * CELL, (i + 1) * CELL, (j + 1) * CELL))
     ch.nodes(b.node, b.blocked)
+    for (i, j) in sorted(b.lifted):       # (what was lifted to the street: its own path nodes, as the canal's rooms get)
+        spec = plan.cells.get((i, j))
+        if spec and spec[0] != "solid" and i % 2 == 1 and j % 2 == 1 and (i + j) % 4 == 0:
+            nx, ny = i * CELL + 32, j * CELL + 32
+            if not any(k[0] <= nx < k[2] and k[1] <= ny < k[3] for k in b.blocked):
+                b.node(nx, ny, spec[1])
     for (nx, ny, nz) in b.lanes:
         b.node(nx, ny, nz)
     problems, air = check(vmf, seed, [])
@@ -1312,7 +1391,7 @@ def look_at_props(b):
                 spec = cells.get((i, j))
                 if spec is None or spec[0] == "solid":
                     bad = "reaches into the wall at (%d %d)" % (i * CELL, j * CELL)
-                elif spec[0] == "low" and z + bb[5] > spec[3] + 6:
+                elif spec[0] in ("low", "under") and z + bb[5] > spec[3] + 6 and z < spec[3]:
                     bad = "is %d taller than the roof over it" % (z + bb[5] - spec[3])
         here = cells.get((int(x // CELL), int(y // CELL)))
         if here and here[0] != "solid" and z + bb[2] < here[1] - 6:

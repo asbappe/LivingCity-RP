@@ -29,6 +29,7 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .mod header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 16px; }
 .mod h2 { font: 500 26px/1.1 var(--mono); margin: 0; color: var(--canal); }
 .meta { margin: 0; display: flex; flex-wrap: wrap; gap: 6px 14px; color: var(--soft); font-size: 13px; text-transform: uppercase; letter-spacing: .06em; font-variant-numeric: tabular-nums; }
+.meta .up { color: var(--rust); font-weight: 600; }
 .sum { margin: 0; max-width: 78ch; }
 .shots { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; }
 .shot { all: unset; cursor: zoom-in; display: grid; gap: 4px; min-width: 0; }
@@ -50,7 +51,7 @@ dialog figcaption { color: #dfe6e3; font: 14px var(--body); display: flex; justi
 <div class="wrap">
   <div>
     <h1>Canal Modules</h1>
-    <p class="lede"><b><!--COUNT--> stretches of canal</b>, each with one thing in it, that join in any order. The name in teal is the word to put on a line of a layout file. The pictures are rough drawings made from the map files themselves: shapes, sizes and where the light falls, <b>not the game's look</b>. Coloured boxes are props at their true size; small magenta cubes are places named for the game.</p>
+    <p class="lede"><b><!--COUNT--> stretches of canal</b>, each with one thing in it, that join in any order. The name in teal is the word to put on a line of a layout file. The pictures are rough drawings made from the map files themselves: shapes, sizes and where the light falls, <b>not the game's look</b>. Coloured boxes are props at their true size; small magenta cubes are places named for the game. Modules marked <b>on the street</b> are built up beside the road above the canal, with stairs down to it, and are drawn there.</p>
   </div>
   <div class="bar" role="group" aria-label="Filter the modules">
     <!--CHIPS-->

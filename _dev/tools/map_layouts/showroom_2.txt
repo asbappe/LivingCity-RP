@@ -1,4 +1,4 @@
-# Test map 2: tram, tenement, cells, memorial, pit, garden, clinic, lock, execwall, substation
+# Test map 2: tenement, quay, collapse, scrapyard, boathouse, arcade, crypt, lift, barge, busbridge
 # Made by map_showroom.py: run it again rather than editing this.
 #   python3 map_build.py chain --layout map_layouts/showroom_2.txt --test
 
@@ -6,18 +6,18 @@ start -3072 -4096
 heading E
 rim 784
 
-tram
 tenement
-cells
-memorial
-pit
+quay
+collapse
+scrapyard
+boathouse
 
 left
-straight 1728
+straight 1664
 left
 
-garden
-clinic
-lock
-execwall
-substation
+arcade
+crypt
+lift
+barge
+busbridge
