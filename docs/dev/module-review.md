@@ -243,3 +243,38 @@ Filled in as the review goes; the first ones are clear already:
 
 **Weight.** small to medium.
 
+### 13. collapse (showroom 2): a street's wall and roadway fallen in
+
+**Seen.** Two huge slabs lean together like a tent across the canal, a wedge of roadway slopes down beside them to a standing piece of wall; a squeeze by the right wall, a low crawl hole at the slabs' foot into a hollow, rebar clusters, broken road sections, chunks, a car. The slabs are plain grey with black lane stripes painted on them.
+
+**Fix.**
+- City 18's roads are cobbles with no lane lines: the fallen road should be the owner's own road (stonefloor006d_c17, the sett strips at its sides) with a pavement strip, a kerb and a gutter along one edge of the slab, so it is plainly a piece of their street. Remove the painted stripes.
+- Each slab is one flat colour on every face: the top should be road, the underside raw concrete with rebar mesh (a metal grid material or rebar props along it), the broken edges rough (a broken concrete material, uneven prisms).
+- The crawl hole is a neat rectangle; a hole under fallen slabs is ragged and half filled (prisms, rubble spilling out, a beam propping it).
+
+**Better.**
+- What came down with the street: a lamppost lying across the slabs (lamppost03a_off on its side), a street sign, a bench, a manhole cover and its shaft, a fire hydrant (props_c17 has none; a short pipe stub with a cap), the gutter pipe snapped.
+- Under the bite: the street's insides exposed: a sewer pipe (concrete_pipe001a) broken open and trickling, cables hanging (ropes), a water main spraying (a small env_steam in white, or falling water).
+- Dust (func_dustmotes in the hollow), a light_spot from the gap down into the hollow so the hide has one shaft of light.
+- A soundscape of creaking and settling; a small chunk falling now and then (a physics chunk spawned by a timer is too much; a sound alone does it).
+
+**Weight.** medium (slab materials, broken edges), small (street things, dust, light).
+
+### 14. scrapyard (showroom 2): a yard of stacked containers under a crane
+
+**Seen.** The canal widens into a yard full of shipping containers (some stacked three high), wrecked cars stacked, tyres, plank ramps up onto the container roofs, a plank bridge, a ladder to the perch on top, a brush tower crane in the far corner with its jib over the yard and a hook. Plenty of ways through and over; the perch commands it all. A strong space.
+
+**Fix.**
+- Everything stands square and level: containers aligned to the grid, stacks plumb. A dump is messier: turn several by 5 to 20 degrees, lean one against another (a small pitch), leave a door hanging open, one stack slumped.
+- The ground is the canal's clean concrete: a yard is dirt and gravel, oil-black where machines stood (a dirt material in a blend, oil and stain decals, puddles).
+- One spotlight lights it all: a yard is lit by floodlights on poles and on the crane (the industrial light models, point_spotlights pointing down), and the porch by a bare bulb.
+
+**Better.**
+- Half-Life 2's crane magnet (`props_wasteland/cranemagnet01a` and a phys_magnet) on the crane instead of the hook, or as well: something to lift and drop (players could move cars to make a new way).
+- A yard office: a hut on the plinth by the crane with a desk, a radio, a calendar, a window over the yard (the Combine's foreman, or a Resistance spy's place).
+- Junk heaps the game's salvage can use (the crowbar salvage: these props are its natural home), a car crusher block, piles of tyres to hide behind.
+- A chain link fence (Nova Prospekt's or the city's fence01a/03a) closing the yard off from the canal's edges, with a gap cut in it.
+- Sounds: wind on metal, a container creaking, a distant crane.
+
+**Weight.** small (rotations, floodlights, ground), medium (magnet, office).
+
