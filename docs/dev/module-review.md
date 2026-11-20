@@ -929,3 +929,29 @@ Filled in as the review goes; the first ones are clear already:
 
 **Weight.** medium to large (street profile and facades for the corridor: mostly reusing the town's code), medium (shed roof), small (signals, fences).
 
+### 56. The Resistance's town as a whole (lc_town)
+
+**Seen** (from the corner of the L and down its second arm). A cobbled street with kerbed pavements between rows of houses of three heights in the owner's walls, each with its own glass, sills and lintels, cornices, pilasters, downpipes; boarded doorways; the city's real doors where there is a way in; a corner square where the street turns; lampposts. It now reads as a street of the city.
+
+**Fix.**
+- Every roofline is a flat parapet at one of three heights: from the street the skyline is a row of steps. City 18's skyline has pitched roofs, chimneys, water tanks and aerials: chimney stacks and pots (props_rooftop chimneypipe01a, chimneypipe_cluster02a), aerials and dishes (antenna01a/02a, satellitedish02), a pitched roof on one house in three (a sloped brush roof in the owner's roof material, metalroof008a or 004a).
+- The corner houses meet at a hard right angle: City 18 cuts its corners (chamfered corners and octagonal columns). A cut corner on each corner house with a doorway in it (a corner shop) is the classic European street corner.
+- The facades are flat apart from trims: no balconies, no shutters, no shopfronts with signs. Iron balconies on the upper floors here and there (a slab and the city's handrail), shutters beside some windows (thin boards), ground floor shopfronts (the shop glass already there) with a sign board over each and an awning (awning001a/002a).
+
+**Better.**
+- Street furniture as City 18 has it: payphones (the owner's map has 7), benches, bins, street signs (the route sign is their commonest), a post box, a Combine monitor on a post (the Breencast screen) gone dark, a Combine barricade at the town's entrance from the road.
+- The ground: puddles, a manhole or two, gutter grates (decalmetalgrate001a is in the owner's map), litter overlays, a burnt-out car, weeds at the kerbs.
+- More light at night: a lamppost every stretch on both sides, lit windows in a few houses (a warm light behind the glass), the flats lit.
+- The town's own soundscape: wind, a dog far off, a radio from a window, the Resistance's voices near the headquarters.
+
+**Weight.** medium (roofs, corners, balconies, shopfronts in `facade`), small (street furniture, ground, light).
+
+## What to do first (my order, for the owner to change)
+
+1. **Real bugs:** the flood room's water sits on the floor's own plane (module 29: a one-line fix); the console and red lamps that use the `_off` cage light with a light still on (overflow, thumper, railbridge, armory); the doors that never open shown as real doors (lock, swing bridge: board or chain them); stale viewpoints inside props or walls (checkpoint, tram, lift, playground); stale descriptions (press, plaza).
+2. **The tools, once for every module:** `m.overlay` and a grime pass (stains under drains, water lines, soot, posters, the lambda); `m.soundscape`; a wall stair with an upstand and filled underneath (quay, arcade, lift, pipes); cage lights along the canal; the canal's junk varied; the corridor street given the town's profile and facades.
+3. **The worst-looking things the owner named before:** the bus (rebuild or replace), the stash's brush guns, tools and map (weapon and tool models), the vortigaunt den's walls, the shanty town's box shacks, the tenement's fall, the barge's bare hull.
+4. **Interiors in City 18's way:** two-tone plaster with a dado rail instead of plain cream in the cells, stash, depot, armoury vault, press, still, morgue's lights, flats; fluorescent tubes where City 18 has them.
+5. **The Combine's places in the Combine's own kit:** booths, buttresses, fences with fields, railings, lights, monitors, cameras (checkpoint, thumper, depot, armoury, substation).
+6. **The big shape changes:** the round cistern and chimney yard made truly round; vaulted tunnels; the sludge tunnel's shape; a water channel down every canal (only if it matches the owner's own canal).
+7. **The headquarters office markers** (module 51): needs the owner's yes, as it changes how the game lays out the office.

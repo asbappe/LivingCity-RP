@@ -4489,6 +4489,10 @@
 "static": true,
 "v": 2
 },
+"models/props_citizen_tech/guillotine001a.mdl": {
+"elsewhere": [],
+"game": null
+},
 "models/props_citizen_tech/steamengine001a.mdl": {
 "bbox": [
 -160.8,
