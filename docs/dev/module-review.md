@@ -851,3 +851,35 @@ Filled in as the review goes; the first ones are clear already:
 
 **Weight.** small.
 
+### 51. hq (street 4 and the town): the Resistance leader's office
+
+**Seen.** A doorway into a briefing room (a long table and benches, a cork board, a bell lamp), and behind a partition the leader's office (desk and chair, filing cabinet, steel closet, bed). The game stands its flagpole at the door. Only one viewpoint, from outside.
+
+**Fix.**
+- When the headquarters goes live, the game lays out the commander's office (the security bank of monitors, desk, console, shelves, lab, servers, board: `LC.BaseOffice`) in a ring round the pole, unless someone has carried them into place before (`sv_livingcity_base.lua`, `Office`). In the town that ring is in the street. The module should carry a marker for each (`lc_hq_office_bank`, `_desk`, `_console`, `_shelves`, `_lab`, `_servers`, `_board`, info_targets with a facing) and the game should use them when they are there: the office then appears inside the office, as the owner asked on 20 November ("pre-defined prop locations for the Resistance Commander's HQ"). A small change to the game and the module, for the owner to say yes to.
+- One viewpoint only: add views of the briefing room and the office, so the next look (and the owner's) can see inside without a compile.
+- The rooms are bare concrete with one bell lamp each: a commander's rooms have their marks: a big map of the city on the briefing wall (the cork board is small: a large board with a map overlay if the owner makes one), the lambda flag hung inside, radios.
+
+**Better.**
+- The briefing table set for a meeting: papers, a radio, cups, an ashtray, a lamp over it, chairs not benches at its head.
+- The leader's office lived in: a coat on a hook, a rifle by the bed, photos, a bottle in the desk, a safe (a steel box, or the depot's crate) for the fund.
+- Guards' places at the door: a chair, a crate to sit on, an ashtray.
+
+**Weight.** small to medium (office markers in the module and a few lines in the game: needs the owner's yes), small (dressing).
+
+### 52. flats (street 4 and the town): a house to live in
+
+**Seen.** A front door into a hall; two flats off it, each a kitchen (stove, sink, fridge against the wall, a table and chairs, a radiator) and a living room (fireplace, couch, dresser); a stair of 16 by 24 up to a landing and a bedroom each. Doors are the city's own in openings fitted as the owner's.
+
+**Fix.**
+- No bathroom: City 18's flats have a toilet and a sink in every one (14 toilets and 14 sinks in the owner's map). A small bathroom upstairs off each bedroom or off the landing (toilet, sink, the bathtub model, a mirror).
+- In the town the rooms' walls are the plan's own wall, which above the street is bare brick (`CorridorPlan`): flats with brick walls inside. Line them as City 18's flats are lined: plaster in two tones with a dado rail, a skirting board, door casings that stand proud, a ceiling trim (thin detail brushes on the room side of each wall).
+- The kitchens' windows are glass laid on the inside of a solid wall, with the house front's own windows elsewhere: from inside they are pictures of windows. Put each kitchen's window where the front has one (the facade knows its lots; the flats module could ask for its own windows in the front), or leave them out.
+
+**Better.**
+- Lived in: a calendar and a clock on the kitchen wall, pans on the stove, plates in the sink, a radio, a rug in the living room (a carpet overlay or a thin brush), photos on the dresser, clothes on a chair.
+- Light like the owner's flats: a fluorescent tube in each kitchen, a hanging lamp fixture in the living rooms, a bedside lamp.
+- One flat lived in, one abandoned (sheets over the furniture, dust, a broken window boarded from inside): the two tell a story side by side.
+
+**Weight.** medium (bathrooms, wall linings, windows), small (dressing, light).
+
