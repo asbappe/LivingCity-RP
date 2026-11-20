@@ -759,3 +759,35 @@ Filled in as the review goes; the first ones are clear already:
 
 **Weight.** small.
 
+### 45. clinic (street 3; also a canal module): the field hospital
+
+**Seen.** A vault behind drawn curtains under a painted white cross: whitewashed walls over a darker band (City 18's two tones, good), tiled floor; a ward of four bed frames with mattresses and screens between them, drawers, carts, a stove, a bench; a dispensary behind a display counter with shelves; an operating theatre with a long table under a downward light; a sluice room with a sink, a boiler, a bucket and a floor grille. One of the most finished interiors.
+
+**Fix.**
+- The curtains at the way in are heavy panels to the floor in one flat colour: a clinic's curtains are thinner, hung from a rail with a gap at the foot (end them 8 above the floor), lighter in colour.
+- The theatre's table is lit, the rest of the theatre flat: one more light (a cool tone) by the closet, and the table's light a stronger, tighter spot.
+
+**Better.**
+- Medical things Half-Life 2 has: gas canisters as oxygen bottles (props_c17 canister01a/02a) by the beds, the Combine's wall health charger (props_combine health_charger001) stolen and wired up in the dispensary, health kits and vials on the shelves (items/healthkit, healthvial), a stretcher (a hospital cart with a mattress on it).
+- The marks of use: bloodied rags in a bucket, stains under the theatre table (decals), a sterilising pot steaming on the stove (env_steam, small), a chart on a clipboard at each bed.
+- A queue outside: a bench by the curtains, a sign with the hours.
+- A soundscape: a kettle, a low moan, the leak (it has one).
+
+**Weight.** small.
+
+### 46. pumphouse (street 3; also a canal module): the pumping station
+
+**Seen.** A wide doorway into a tall machine hall: a big iron wheel turning on the pump's shaft right in front of the door, the long tank of the pump behind it, risers to a header pipe, a turbine pit with water and a handrail, a steel gallery round the hall with the control desk over the door; the main leaving through the wall and crossing the canal on a pipe bridge.
+
+**Fix.**
+- The wheel stands squarely in front of the doorway: the picture "the hall from the door" is all wheel. Coming in, the first thing a player does is walk into its unseen wall. Move the wheel and pump to one side of the hall's axis so the doorway opens onto floor, with the wheel seen turning across the hall.
+- The hall's walls are bare pale concrete: a machine hall has its marks: hazard stripes along the pit's edge and the wheel's guard (an overlay), numbers on the machines, a painted line round the walkway.
+
+**Better.**
+- A travelling crane rail across the roof with a hoist hanging (a beam brush and the pulley hook), as every pump hall has.
+- Gauges and switchgear: props_lab gauges and switch boxes on a panel by the pump, the substation transformer already there wired to it with cables (ropes) in a tray.
+- Grating over part of the floor with water running in a channel under it (a func_water strip under a grate material), the turbine pit's water moving (a slow-scrolling water material if available).
+- A soundscape the game can change: loud machinery while the pumps run, silence when stopped (it has the relays: give the soundscape a name too).
+
+**Weight.** small to medium (move the wheel, stripes, crane, gauges).
+
