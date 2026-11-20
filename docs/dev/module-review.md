@@ -571,3 +571,33 @@ Filled in as the review goes; the first ones are clear already:
 
 **Weight.** medium (ragged edges, brick cellar), small (dressing).
 
+### 33. wreck (showroom 4): a Combine dropship's container down in the canal
+
+**Seen.** Episode One's wrecked troop container lies on its belly squarely along the middle of the canal, earth heaped at its nose, crates scattered, a red glow and sparks. (The viewer draws it as a box: its shape is Valve's, its lie is judged by numbers.)
+
+**Fix.**
+- It lies dead straight down the canal's middle, level: a thing that fell from the sky lands at an angle. Turn it 15 to 25 degrees across the canal, nose down a few degrees into the earth (a pitch), one corner against the bank.
+- Nothing shows how it arrived: a gouge down the canal floor behind it (long scrape overlays, broken floor slabs lifted), a chunk knocked out of the canal wall's top where it clipped it, the fence there torn and hanging.
+
+**Better.**
+- The crash's leftovers: a dead Combine soldier or two (the soldier model as a ragdoll), their weapons nearby (w_irifle as a prop the game could let be taken), Combine supply cases (ammo crates), a burning patch (env_fire, small, does not drop), black scorch overlays.
+- The beacon: a slow red pulse on top (a sprite whose brightness the game can toggle) and a Combine tone in the soundscape, so both sides know where it is from a distance.
+- If its door end is closed or not enterable (unchecked), the cache can go in a torn-off section beside it, so the race always has a prize.
+
+**Weight.** small (turn and pitch, scorch, bodies), medium (gouge and wall damage).
+
+### 34. relay (street 1; also a canal module): the radio relay shack and mast
+
+**Seen.** A concrete quay against the right wall, a tin hut on it (a table with a radio, a chair, a bed frame, a cork board), a tall utility pole for a mast with two small dishes, guy wires, a red lamp at its tip, an aerial across the canal, a generator and drums.
+
+**Fix.**
+- The quay is a plain concrete block with blunt steps: the hut and mast sit on a featureless plinth. A quay's edge has a coping, bollards, a ladder, a fender or two; the steps a rail.
+- Inside, one dome lamp on a radio shack's ceiling: a radio operator works by a desk lamp (props_lab desklamp01, already in the game's kit) with the set's dials glowing (a small sprite).
+
+**Better.**
+- A relay that looks like one: a long-wire aerial strung from the mast to the hut's roof, an antenna on the hut (props_rooftop antenna01a/02a are real), cables into the hut through the wall, a battery bank or car batteries on a shelf, headphones and a logbook on the table, a map with pins on the board, a codebook.
+- Hidden from the Combine: a tarp or netting thrown over the hut's roof, the red lamp shielded from above (only visible from the canal), the generator in a lean-to with its exhaust pipe.
+- A soundscape: the generator's hum, radio static and fragments of Resistance chatter.
+
+**Weight.** small.
+
