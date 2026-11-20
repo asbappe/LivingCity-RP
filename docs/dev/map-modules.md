@@ -2,6 +2,10 @@
 
 What a module is, and how the owner uses them, is in `docs/dev/map-building.md` ("Canal modules"). This page is for whoever writes one. Nobody can compile here: the checks and the pictures are all there is before the owner's compile, so use both.
 
+## Read the lessons first
+
+`python3 map_lessons.py --tag KIND` prints what the owner has corrected before for that kind of thing and how City 18 does it (the database: `_dev/reference/lessons.json`; the reference with 30 pictures of their map: `docs/dev/city18-reference.md`). Add a lesson whenever the owner corrects a piece.
+
 ## The loop
 
 ```bash

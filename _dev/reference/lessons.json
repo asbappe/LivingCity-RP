@@ -1,0 +1,492 @@
+{
+ "about": "Lessons for building map pieces for Living City, learnt from the owner's compiles, walks and words (November 2026) and from reading their City 18 map. One entry per lesson: what to do, why (the owner's own words where there are some), how the tools do it, and what checks it. Read with: python3 _dev/tools/map_lessons.py (--tag TAG, --find WORD, --md to rewrite docs/dev/city18-reference.md).",
+ "lessons": [
+  {
+   "id": "props-not-brushes",
+   "tags": [
+    "props",
+    "owner"
+   ],
+   "title": "A thing is a prop, never brushes",
+   "rule": "Doors, bars, gates, beds, tables, shelves, lamps, speakers, fences, railings, pipes, signs, machines, vehicles, guns, tools: find the Half-Life 2 model and place it. Brushes are for architecture (walls, floors, slabs, steps, frames, kerbs, roofs) and for things no game has a model of (say which in the module's 'Left as brushes' line).",
+   "why": "\"You use almost entirely brushes to make things when there are perfectly good props ... it literally looks like something from 1998 ... cell doors out of brushes, but there is a whole selection of cell doors and prison bars from HL2 Nova Prospekt ... a loudspeaker out of brushes but there is literally a loudspeaker prop\" (20 November).",
+   "how": "grep -i WORD _dev/tools/dl/ValveQCs.txt | grep -iE 'source/(hl2|episodic|lostcoast)/'; sizes with map_assets.size(model). docs/dev/map-modules.md, 'Things'.",
+   "check": "review (no automatic check)"
+  },
+  {
+   "id": "prop-fits-its-job",
+   "tags": [
+    "props"
+   ],
+   "title": "The prop must be the right thing, not just a thing",
+   "rule": "Use the model made for the job: valve wheels (props_pipes valvewheel001/002) not a cart wheel, steel pipes for pressure mains not concrete culvert sections, the Combine's own crates (models/items/item_item_crate) and ration packages (models/weapons/w_package) in a Combine depot, weapon world models (models/weapons/w_*) on a gun rack.",
+   "why": "Review, 20 November: a cart wheel on a flood valve, drain culverts as service mains, brush guns on a rack.",
+   "how": "Search the lists by what the thing is, not by what is near in size.",
+   "check": "review"
+  },
+  {
+   "id": "physics-props-dynamic",
+   "tags": [
+    "props",
+    "compiler",
+    "check"
+   ],
+   "title": "A physics prop is never a prop_static",
+   "rule": "A model with prop_data (tables, chairs, shelves, lockers, boards, pots, crates, mattresses...) is deleted by the compiler as a prop_static. Place it as prop_dynamic_override (standing still) or prop_physics (loose).",
+   "why": "The owner's compile of the town, 20 November: \"almost none of the props are showing\"; vbsp printed \"prop_static using model X, which must be used on a dynamic entity (i.e. prop_physics). Deleted.\" for every one.",
+   "how": "m.static does it by itself (map_assets.is_static / is_physics_prop).",
+   "check": "map_assets.py fails a physics model used as prop_static or plain prop_dynamic"
+  },
+  {
+   "id": "networked-budget",
+   "tags": [
+    "props",
+    "performance"
+   ],
+   "title": "Keep networked props to what a place needs",
+   "rule": "Every prop_dynamic(_override), prop_physics and prop_door_rotating is an entity the server networks (the game has about 8,000 for everything). About 60 a module at most; clutter that does not need to move should be a model built static.",
+   "why": "Follows from physics-props-dynamic: the town went to about 300 such entities.",
+   "how": "grep -c the classnames in the built VMF.",
+   "check": "review (counts in the build)"
+  },
+  {
+   "id": "real-doors",
+   "tags": [
+    "doors",
+    "owner"
+   ],
+   "title": "A door that opens is the city's own, fitted as the owner's",
+   "rule": "Doors players use are prop_door_rotating with door01_left, set up as the owner's 134 are, in an opening 50 wide (from 2 behind the hinge) and 110 high, the door's middle 55 up. The jambs fill the reveal so nothing is seen past the door.",
+   "why": "\"The apartments' door frames are slightly too large for the doors and I can see past the door into the apartments\" (20 November). Measured round 42 of the owner's doors.",
+   "how": "map_town.real_door and door_hole.",
+   "check": "review"
+  },
+  {
+   "id": "no-fake-doors",
+   "tags": [
+    "doors",
+    "owner"
+   ],
+   "title": "A doorway nobody can use never shows a real door",
+   "rule": "Never put the door01_left model (or any door that looks openable) where it does not open: board the doorway up (planks, wood_board props), chain it, or brick it.",
+   "why": "\"The door prop you used for all these unopenable doors is the same prop ... for actual doors that are supposed to open, so it's confusing and I can't tell where I can actually go in\" (20 November).",
+   "how": "map_town.facade boards unused doorways; heavy doors that never open (lock, swing bridge) still to fix.",
+   "check": "review"
+  },
+  {
+   "id": "stairs-16-24",
+   "tags": [
+    "stairs",
+    "owner"
+   ],
+   "title": "Steps about 16 high and 24 deep",
+   "rule": "Fewer, larger steps: rise about 16, tread about 24 (the same slope as 8 and 12, half the steps).",
+   "why": "\"It's like a stairway meant for toddlers or old ladies? these steps should be fewer and larger\" (20 November).",
+   "how": "m.steps does it; hand-made stairs should match.",
+   "check": "review"
+  },
+  {
+   "id": "stair-open-side",
+   "tags": [
+    "stairs"
+   ],
+   "title": "A stair along a wall has a solid open side",
+   "rule": "Give a wall stair an upstand (a parapet about 32 high following the flight) on its open side and fill under it to the floor, so it reads as one built stair, not a row of blocks hung on the wall.",
+   "why": "Review, 20 November: from the canal the quay, arcade, lift and pipes stairs read as a sawtooth.",
+   "how": "To add: a wall_stair helper in the tools.",
+   "check": "review"
+  },
+  {
+   "id": "no-gaps",
+   "tags": [
+    "geometry"
+   ],
+   "title": "Pieces meet: no gaps between walls, banks and steps",
+   "rule": "Where something stands at a cut in the canal's banks, it fills to the cut's edge: the banks are cut a whole 64 square at a time by m.no_bank. Side walls of steps go down to the floor.",
+   "why": "\"The geometry in the canal entrance thing has a gap for the sloped walls and the grey concrete brush underneath the railings, there is a gap on both sides\" (20 November).",
+   "how": "map_town.landing: cheeks 64 wide, solid to the floor.",
+   "check": "review"
+  },
+  {
+   "id": "nothing-floating",
+   "tags": [
+    "geometry",
+    "check"
+   ],
+   "title": "Nothing floats, nothing is sunk, nothing clips",
+   "rule": "Every prop touches a floor, a ceiling, a wall or another prop; lamps sit on their ceilings; bodies lie on the ground they are on (work out a mound's height from the build's bumps).",
+   "why": "Floating dome lamps and props in walls found in several modules (20 November); the owner saw floating ropes in the garden.",
+   "how": "m.static takes the floor z the thing stands ON; map_assets sizes.",
+   "check": "map_floating.py (props touching nothing), the build's LOOK lines (props in walls, through roofs, under floors)"
+  },
+  {
+   "id": "no-floating-ropes",
+   "tags": [
+    "geometry",
+    "owner"
+   ],
+   "title": "No ropes hanging in the air",
+   "rule": "A rope or cable is tied at both ends to something that is there (a pole, a wall, a hook), or it is not placed.",
+   "why": "\"Please remove the floating ropes in the garden\" (20 November).",
+   "how": "m.rope: check both ends.",
+   "check": "review"
+  },
+  {
+   "id": "cap-open-ends",
+   "tags": [
+    "geometry",
+    "owner"
+   ],
+   "title": "No open pipe end shows its inside",
+   "rule": "Cap every pipe end players can see (props_pipes pipe02_connector01, pipe_cap005, a cone or plate brush), and never leave a nodraw face where it can be seen.",
+   "why": "\"At the end of the pipe for the distillery we need a cone brush or something since the pipe has nodraw on the exposed end\" (20 November).",
+   "how": "The still: a cap and a funnel (map_mods_b.frustum).",
+   "check": "review"
+  },
+  {
+   "id": "water-plane",
+   "tags": [
+    "geometry",
+    "bug"
+   ],
+   "title": "Water never shares a plane with a floor",
+   "rule": "A water brush's top sits at least 2 under any floor it lies beneath, or the two flicker through each other.",
+   "why": "Review, 20 November: the flood room's drained water lies exactly at its floor.",
+   "how": "Fix in map_mods_c.py (the func_water_analog's box to FL - 2).",
+   "check": "review"
+  },
+  {
+   "id": "fire-in-drums",
+   "tags": [
+    "entities",
+    "owner"
+   ],
+   "title": "A fire in a drum stays in the drum",
+   "rule": "env_fire falls to the ground under it unless spawnflag 16 (Don't drop) is set: set it for any fire placed above the ground (drums, braziers, stoves).",
+   "why": "\"The burn barrels flanking the podium have fire on the ground inside the barrel instead of the fire coming out the top\" (20 November).",
+   "how": "map_mods_b.fire(..., drop=False).",
+   "check": "review"
+  },
+  {
+   "id": "mattress-turned",
+   "tags": [
+    "props",
+    "owner"
+   ],
+   "title": "The loose mattress lies on its back unless turned",
+   "rule": "Turn furnituremattress001a over (roll 180) when placing it.",
+   "why": "\"The mattresses in the clinic are all rotated 180 degrees on their side\" (20 November).",
+   "how": "map_mods_b.mattress().",
+   "check": "review"
+  },
+  {
+   "id": "moving-things-move",
+   "tags": [
+    "entities",
+    "owner"
+   ],
+   "title": "What Half-Life 2 made move, moves",
+   "rule": "Swings, roundabouts, hanging things: physics props on phys_hinge (or ropes parented to them), not frozen models.",
+   "why": "\"HL2 had a working merry-go-round, and working swings\" (20 November).",
+   "how": "map_mods_b.swing; the playground's roundabout.",
+   "check": "review"
+  },
+  {
+   "id": "gates-in-frames",
+   "tags": [
+    "props",
+    "owner"
+   ],
+   "title": "A gate goes in its frame",
+   "rule": "Nova Prospekt's interior_fence002e is the frame for the gate interior_fence001g: hang the gate in the frame (or use the gate alone), never the frame as the gate.",
+   "why": "\"The gates you used are the gate/door frames for the real gate interior_fence001g; so they have to be fitted inside of the gate frames, or just used instead\" (20 November).",
+   "how": "The pit: frame static, the gate riding an unseen swing door.",
+   "check": "review"
+  },
+  {
+   "id": "lamppost-arm",
+   "tags": [
+    "lighting",
+    "owner"
+   ],
+   "title": "A lamppost's arm reaches over what it lights",
+   "rule": "lamppost03a's arm runs along the model's +y (90 degrees left of its yaw): turn it so the arm is over the street or the place, never over a wall or a drop behind.",
+   "why": "\"The lamppost at the top of the canal entry stairs is backwards and should be facing the street not the stairs\" (20 November).",
+   "how": "Yaw so model +y points at the street.",
+   "check": "review"
+  },
+  {
+   "id": "light-model-matches",
+   "tags": [
+    "lighting"
+   ],
+   "title": "A lit lamp uses the lit model",
+   "rule": "Where a light shines, the fixture is its _on model (light_cagelight02_on, not _off with a light under it); a dead lamp has no light.",
+   "why": "Review, 20 November: overflow, thumper, railbridge and armoury.",
+   "how": "m.lamp uses real fixtures.",
+   "check": "review"
+  },
+  {
+   "id": "city18-lighting",
+   "tags": [
+    "lighting",
+    "city18"
+   ],
+   "title": "Light as City 18 does: many small fixtures, some with beams",
+   "rule": "Light a room with two or three fixtures, not one; point some (light_spot, point_spotlight); use the city's own fixtures: dome lights, lab fluorescent tubes indoors, cage lights in service places, the Combine's light on Combine places, lampposts outside.",
+   "why": "The owner's map: 597 lights, 391 light_spot, 174 point_spotlight; dome light 151, lab fluorescent 149, Combine light 75, lamp fixture 52, cage light 47.",
+   "how": "m.lamp, m.spot, m.light.",
+   "check": "review"
+  },
+  {
+   "id": "grime",
+   "tags": [
+    "grime",
+    "city18"
+   ],
+   "title": "Lay grime on: stains, cracks, trash, posters, signs",
+   "rule": "Every place gets overlays and decals: water stains down walls and under drains, cracks, trash in corners, posters where people are, the lambda where the Resistance is, danger signs on hazards, numbers on machines.",
+   "why": "The owner's map: 249 info_overlays and 267 infodecals (decalstain002a 26 times, trashdecal04a, plaster cracks, Breen posters, danger signs, metal grates, speaker grilles, graffiti 059a, the lambda spray). The modules had almost none.",
+   "how": "m.decal now; an m.overlay helper is to be added.",
+   "check": "review"
+  },
+  {
+   "id": "soundscapes",
+   "tags": [
+    "sound",
+    "city18"
+   ],
+   "title": "Every place sounds like itself",
+   "rule": "Each module and each part of the town names a soundscape (env_soundscape with a radius), not only an ambient_generic loop.",
+   "why": "The owner's map: 155 env_soundscapes (d1_trainstation.*, d1_town.*, prison.*, d1_canals.*, construct.inside...) and only 41 ambient_generics.",
+   "how": "An m.soundscape helper is to be added.",
+   "check": "review"
+  },
+  {
+   "id": "street-profile",
+   "tags": [
+    "streets",
+    "owner",
+    "city18"
+   ],
+   "title": "Streets as the owner's: pavements, kerbs, a crowned road",
+   "rule": "Pavements 96 wide at the floor's height with a kerb of 8; gutters 8 down; cobbles (stonefloor006d_c17, sett strips 006e/006f) rising to a crown 4 over the gutters.",
+   "why": "\"The street is just flat cobblestone? We have sidewalks and a sloped street (higher in middle) all over the main map\"; \"sidewalks are not 2 feet tall irl, they are like 6-12 inches\" (20 November). Measured in the owner's map.",
+   "how": "map_town.lay_street. The street corridor beside the canal does not have it yet.",
+   "check": "review"
+  },
+  {
+   "id": "facades",
+   "tags": [
+    "facades",
+    "owner",
+    "city18"
+   ],
+   "title": "Building fronts, not brick walls",
+   "rule": "Dress a building line as houses: lots of different heights, a plinth, a string course, a cornice, pilasters between neighbours, windows recessed with sills and lintels, downpipes, real doors where there is a way in.",
+   "why": "\"There's no design, windows, building facades, nothing! I was hoping you'd make something more similar to the city just on a much smaller scale\" (20 November).",
+   "how": "map_town.facade.",
+   "check": "review"
+  },
+  {
+   "id": "glass-variety",
+   "tags": [
+    "facades",
+    "owner"
+   ],
+   "title": "Not every window the same glass",
+   "rule": "Use several of the owner's glass materials, each laid exactly as their map lays it, a different one per house.",
+   "why": "\"The window texture fits right but it's the same texture and it looks awful because every window looks like that; we need to use the varieties of glass\" (20 November).",
+   "how": "map_town.GLASS: six fits read from the owner's map.",
+   "check": "review"
+  },
+  {
+   "id": "skyline-corners",
+   "tags": [
+    "facades",
+    "city18"
+   ],
+   "title": "Cut corners and a broken skyline",
+   "rule": "Corner buildings get a cut (chamfered) corner, often with a doorway; rooflines get chimneys, aerials, dishes, the odd pitched roof; facades get balconies, shutters, shopfronts with signs and awnings.",
+   "why": "City 18's massing (octagonal columns, cut corners, stepped blocks); review of the town, 20 November.",
+   "how": "To add to map_town.facade.",
+   "check": "review"
+  },
+  {
+   "id": "town-shape",
+   "tags": [
+    "layout",
+    "owner"
+   ],
+   "title": "A town is not one straight line",
+   "rule": "Lay a town as an L or a U (corners), keeping the two arms' modules apart behind a corner (a stretch of house fronts alone, 1280 long, on the inner side).",
+   "why": "\"Yes I think the town needs to be in an L shape or a U\" (20 November).",
+   "how": "Layout words 'turn right|left' and 'houses N' (map_town.corner).",
+   "check": "the build's clash check"
+  },
+  {
+   "id": "flush-with-street",
+   "tags": [
+    "layout",
+    "owner"
+   ],
+   "title": "On a street, places sit at the pavement's height",
+   "rule": "A module lifted from the canal to a street drops the terraces it needed against the canal's floods: its yards sit level with the pavement; where something must be higher, steps from the pavement reach it.",
+   "why": "\"Please lower the playground to be flush/even with the sidewalk and not raised up on a massive platform\"; \"the playground needs stairs to get up the slope\" (20 November).",
+   "how": "Modules read m.fr.dz (on a street when non-zero); map_town.terrace_slopes makes steps.",
+   "check": "review"
+  },
+  {
+   "id": "room-to-move",
+   "tags": [
+    "interiors",
+    "owner"
+   ],
+   "title": "Rooms with room in them",
+   "rule": "Leave walking room: furniture against walls, a clear path through every room and into every stall; split a crowded room's things into two rooms; no prop inside another.",
+   "why": "\"You put a couch inside the table and the wood furnace/stove is almost touching the table and couch and it's just too cramped, half of that can go in the bedroom(s)\"; \"all the market stalls are filled with boxes and random props and there's no room to even walk into them\" (20 November).",
+   "how": "Place by the models' real boxes (map_assets.size).",
+   "check": "review (a prop overlap check would help: to add)"
+  },
+  {
+   "id": "city18-interiors",
+   "tags": [
+    "interiors",
+    "city18"
+   ],
+   "title": "Interiors in City 18's way",
+   "rule": "Plaster walls in two tones split by a dado rail, wooden floors, door casings proud of the wall, a ceiling trim; stoves, sinks, toilets, fridges, iron bunks backs to the wall; radiators; fluorescent tubes. Never a plain cream box. Each kind of place in its own materials: a cellar is brick or stone, a Combine room is Combine metal, a culvert is damp concrete.",
+   "why": "The owner's flats (picture), their 14 toilets and sinks; review, 20 November (cream rooms in a dozen modules).",
+   "how": "Line rooms with thin detail brushes; the plan's own walls are concrete or brick.",
+   "check": "review"
+  },
+  {
+   "id": "combine-kit",
+   "tags": [
+    "combine",
+    "city18"
+   ],
+   "title": "The Combine's places in the Combine's kit",
+   "rule": "Use the Combine's own props: booths (combine_booth_short01a/med01a), buttresses (combinebuttress), bunker shields, fences with fields (combine_fence01a/b, combine_emitter01), railings (props_combine railing_128/256/512), lights (combine_light001/002), monitors, cameras (combinecamera001), locks, health chargers, metal (metalcombine002).",
+   "why": "The owner's map: combine_fence01a/b 12 each, combine_light002a 75; review, 20 November (checkpoint, thumper, depot, armoury in brushes, prison fencing and cream plaster).",
+   "how": "grep source/hl2/props_combine in the lists.",
+   "check": "review"
+  },
+  {
+   "id": "keep-what-works",
+   "tags": [
+    "owner",
+    "process"
+   ],
+   "title": "Do not replace what the owner liked",
+   "rule": "When going through a module, keep what the owner praised or asked for (the pit's hanging lamps); change only what is wrong.",
+   "why": "\"Ok wait you went a tad bit too far: the fighting pit/ring had really cool lights above it before and you replaced them with street lights, please reverse that\" (20 November).",
+   "how": "Read the module's history (git log -p) before reworking it.",
+   "check": "review"
+  },
+  {
+   "id": "speaker-on-wall",
+   "tags": [
+    "owner"
+   ],
+   "title": "The auditorium sinks from the street; its speaker is on the wall",
+   "rule": "The plaza's top row is at the street; the rostrum at the back wall faces the street; the loudspeaker is mounted on the wall, not on lampposts.",
+   "why": "\"Can we rotate the speaker/auditorium module 180 degrees so that the auditorium begins (highest row) at street/sidewalk level and recedes/sinks down\"; \"replace the light posts above the podium and put the loudspeaker on the wall instead\" (20 November).",
+   "how": "map_mods_b.m_plaza.",
+   "check": "review"
+  },
+  {
+   "id": "planting-spots",
+   "tags": [
+    "gameplay",
+    "owner"
+   ],
+   "title": "Garden beds carry planting spots",
+   "rule": "Mark where the game can plant (melons, pumpkins): about 8 info_targets lc_garden_plot_N on the beds, evenly spread but each a little off line and turned.",
+   "why": "\"Make the garden beds have some sort of entity or brush that allows the gamemode to register the beds as planting spots, with about 8 evenly but slightly off kilter (not robotic AI perfect) planting spots\" (20 November).",
+   "how": "map_mods_b.m_garden. The game does not plant yet (TODO.md).",
+   "check": "review"
+  },
+  {
+   "id": "flagpole-markers",
+   "tags": [
+    "gameplay",
+    "owner"
+   ],
+   "title": "Possible headquarters carry a pole marker",
+   "rule": "Put an info_target named lc_hq_setup... where the Resistance's flagpole should stand; the game stands a bare pole at every one, territory or not.",
+   "why": "\"I didn't see the flag entity or flagpole in the town map\"; \"yes, always stand a bare pole at the markers\" (20 November).",
+   "how": "m.target('lc_hq_setup_NAME', ...); sv_livingcity_base.lua B.Poles.",
+   "check": "BaseTests"
+  },
+  {
+   "id": "ep2-models",
+   "tags": [
+    "props"
+   ],
+   "title": "Episode Two models when the owner asks; check them first",
+   "rule": "Episode Two's models are allowed where the owner asks for them (the tram's passenger cars), noted by map_assets. Check each: the EP2 intro cars (passengercar_intro01a/b/c) have no collision and draw about 4800 units from their origin, so passengercar001 and _dam01 are used instead.",
+   "why": "\"Can we just use the train props from EP2 that you start EP2 inside? they are perfectly sized and already built\" (20 November).",
+   "how": "map_assets.size and the model's QC.",
+   "check": "map_assets.py (notes Episode Two)"
+  },
+  {
+   "id": "canal-water",
+   "tags": [
+    "canal",
+    "city18"
+   ],
+   "title": "The owner's canal has water and walkways",
+   "rule": "The owner's own canal runs water down a middle channel with a raised walkway along each wall and round-arched tunnel mouths. Canal modules meant to join it should share that section (or change to it where they join).",
+   "why": "Reference picture 06 (the owner's canal tunnel); the module review found the modules' canal floor dry.",
+   "how": "To decide with the owner: a water channel in the shared canal dressing (map_ring / map_modules), or a section change at the joins.",
+   "check": "review"
+  },
+  {
+   "id": "true-curves",
+   "tags": [
+    "geometry"
+   ],
+   "title": "Round means round",
+   "rule": "A round room or yard drawn with 64 squares has a jagged, sawtooth wall: build the wall from angled segments on the squares' line (the squares behind only seal).",
+   "why": "Review, 20 November: the cistern and the chimney yard.",
+   "how": "m.shapes prisms.",
+   "check": "review"
+  },
+  {
+   "id": "fake-windows",
+   "tags": [
+    "interiors"
+   ],
+   "title": "A window inside matches a window outside",
+   "rule": "Never lay glass on the inside of a solid wall where the front has no window: put the room's window where the facade has one, or leave it out.",
+   "why": "Review, 20 November: the flats' kitchens.",
+   "how": "The facade knows its windows: a module can ask for its own.",
+   "check": "review"
+  },
+  {
+   "id": "valid-viewpoints",
+   "tags": [
+    "viewer",
+    "check"
+   ],
+   "title": "A module's viewpoints stand where a player can",
+   "rule": "Each m.view is a place a player can stand, looking at what it names: not inside a prop's box, not facing a wall.",
+   "why": "Review, 20 November: views inside props or walls in the checkpoint, tram, lift and playground.",
+   "how": "Rebuild the sheet after moving things (map_modules_check.py --only NAME --views DIR).",
+   "check": "review (a check that no view's eye is inside a box would be easy to add)"
+  },
+  {
+   "id": "viewer-economy",
+   "tags": [
+    "viewer",
+    "process"
+   ],
+   "title": "Look with the viewer, but economically",
+   "rule": "Pass the free checks first; then one module sheet (six views in one picture) per module is the cheapest full look; single small pictures (800 by 520) for a detail. The viewer draws props as boxes of their true size and ignores pitch and roll.",
+   "why": "The owner, 20 November: the viewer \"has eaten about 10x more usage than a usual chat\"; later allowed freely for the showrooms on Opus 5.5.",
+   "how": "map_modules_check.py --only NAME --views DIR; map_view.py --size 800 520.",
+   "check": "process"
+  }
+ ]
+}

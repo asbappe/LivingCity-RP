@@ -1,0 +1,19 @@
+{
+ "numbers": [
+  "Lights: 597 light, 391 light_spot, 174 point_spotlight, 126 env_sprite: rooms are lit by several fixtures and many lamps throw a beam.",
+  "Fixtures: dome light (light_domelight02_on) 151, lab fluorescent tube (lab_flourescentlight002b) 149, Combine light (combine_light002a) 75, hanging lamp fixture (lampfixture01a) 52, cage light (light_cagelight02_on) 47, bare bulbs (lightbulb01a) 30, wall light (walllight001a) 25, lampposts (lamppost03a_on) 24.",
+  "Grime: 249 info_overlay and 267 infodecal. Commonest overlays: decalstain002a 26, trashdecal04a 13, decalstain011a/013a 5 each, Breen poster 5, plaster cracks (plaster013a, 016a), danger signs (decalsigndanger001c/e), metal grates, speaker grilles, wires, graffiti 059a, the lambda spray.",
+  "Sound: 155 env_soundscape (d1_trainstation.*, d1_town.*, prison.*, d1_canals.*, d3_citadel.*, construct.inside, eli_01_*), 41 ambient_generic.",
+  "Doors: 134 prop_door_rotating, all door01_left, in openings 50 wide (from 2 behind the hinge) and 110 high, the door's middle 55 up; 42 func_door, 20 func_door_rotating, 15 func_movelinear.",
+  "Streets: about 416 between the fronts; pavements 664 (a kerb about 8 over the gutter), gutters 648 to 656, a cobbled crown 656 (stonefloor006d_c17, sett strips 006e and 006f); pavements in concretefloor016a with a concretefloor039b kerb.",
+  "Walls: trim stonewall050f 953 faces, concretewall008a 873, 059e 734, 036a 486, brickwall014l 473, brickwall045d 385, concretewall055b 273, plasterceiling008a_c17 272, concretewall073a 271, stonewall040f 270, plasterwall041a 251 (inside), brick 053e, 040b, 037a.",
+  "Glass: glasswindow015a 159, 007a 74, combineglass001a 73, 011a 67, trainstation template windows 001a/b and 002d, 010a, 042a, 037a, 029c: many kinds, each laid to show whole windows.",
+  "Props: 1477 prop_static against 72 prop_dynamic, 16 prop_dynamic_override and 21 prop_physics: almost everything fixed is a model built static.",
+  "Pipes: pipe02 straights and connectors 127 together, pipe sets (pipeset32d, 08d, 02d), gutters down fronts (gutter_704_001a), prison pipes: walls and ceilings carry pipes.",
+  "Flats: 14 toilets, 14 sinks, 10 stoves, 10 fridges, iron bunks (prison_metalbed001a) 15; their stoves, sinks, toilets, fridges and bunks stand backs to the wall.",
+  "Combine: combine_fence01a/b 12 each, combine_light002a 75, combineglass 73 faces, metalcombine002 on their buildings.",
+  "Optimisation: 62 func_areaportal, 41 func_areaportalwindow, 24 func_lod, 321 env_cubemap, 21 info_lighting, 1826 info_node and 580 info_node_air.",
+  "Brushwork: 3612 func_detail entities: much of the city's detail is detail brushes over a simple sealed shell."
+ ],
+ "pictures": []
+}
