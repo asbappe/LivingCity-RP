@@ -47,4 +47,4 @@ straight 1024
 sludge flip
 straight 1024 bridge
 relay
-straight 1216
+straight 960

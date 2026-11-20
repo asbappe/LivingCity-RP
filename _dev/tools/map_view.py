@@ -84,10 +84,26 @@ def colour_of(mat):
     return (90 + h % 70, 90 + (h // 7) % 70, 90 + (h // 13) % 70)
 
 
+def turned_box(pos, bb, yaw):
+    """The faces of a model's own box (x forward, y left, z up) standing at pos, turned by yaw."""
+    c, s = math.cos(math.radians(yaw)), math.sin(math.radians(yaw))
+
+    def w(x, y, z):
+        return (pos[0] + x * c - y * s, pos[1] + x * s + y * c, pos[2] + z)
+    x1, y1, z1, x2, y2, z2 = bb
+    lo = [w(x1, y1, z1), w(x2, y1, z1), w(x2, y2, z1), w(x1, y2, z1)]
+    hi = [w(x1, y1, z2), w(x2, y1, z2), w(x2, y2, z2), w(x1, y2, z2)]
+    return [hi, lo[::-1]] + [[lo[k], lo[(k + 1) % 4], hi[(k + 1) % 4], hi[k]] for k in range(4)]
+
+
 def scene(path):
     """Everything to draw: polygons [(corners, colour, see-through)], lights [(place, colour, brightness)], and the sun-less places' roofs."""
+    import json
+    import os
     root = read(path)
     polys, lights, marks = [], [], []
+    facts_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "asset_facts.json")
+    facts = json.load(open(facts_path)) if os.path.exists(facts_path) else {}
 
     def solid(s):
         for side in s.kids:
@@ -120,20 +136,30 @@ def scene(path):
                 pos = tuple(nums(top.kv["origin"])[:3])
                 if cls in ("light", "light_spot"):
                     l = nums(top.kv.get("_light", "255 255 255 200"))
-                    lights.append((pos, (l[0] / 255.0, l[1] / 255.0, l[2] / 255.0), l[3] if len(l) > 3 else 200.0))
+                    aim = None
+                    if cls == "light_spot":      # (a beam: the way it points, and how wide)
+                        yw = math.radians(nums(top.kv.get("angles", "0 0 0"))[1])
+                        pt = math.radians(float(top.kv.get("pitch", "-90")))
+                        aim = ((math.cos(yw) * math.cos(pt), math.sin(yw) * math.cos(pt), math.sin(pt)), math.cos(math.radians(float(top.kv.get("_cone", "45")))))
+                    lights.append((pos, (l[0] / 255.0, l[1] / 255.0, l[2] / 255.0), l[3] if len(l) > 3 else 200.0, aim))
                     marks.append((pos, (255, 250, 170), 6, 6))
                     continue
                 col = None
                 for key, c in MARKS:
                     if cls.startswith(key):
                         col = c
-                if top.kv.get("targetname", "").startswith("lc_") and cls not in ("ambient_generic",):
+                small = cls in ("info_target", "env_sprite", "point_spotlight", "logic_relay", "env_spark", "env_smokestack")
+                if top.kv.get("targetname", "").startswith("lc_") and cls not in ("ambient_generic", "move_rope", "keyframe_rope", "logic_timer", "path_track"):
                     col = (235, 60, 235)
-                if col:
-                    marks.append((pos, col, 14, 56 if cls != "prop_ragdoll" else 14))
+                bb = (facts.get(top.kv.get("model", "").lower()) or {}).get("bbox")
+                if col and bb and cls != "prop_ragdoll":      # (a model whose size is known: its own box, turned as it is)
+                    for vs in turned_box(pos, bb, nums(top.kv.get("angles", "0 0 0"))[1]):
+                        polys.append((vs, col, None))
+                elif col:
+                    marks.append((pos, col, 5 if small else 14, 10 if small else 14 if cls == "prop_ragdoll" else 56))
     for (x, y, z), col, r, h in marks:
         for vs in box_faces((x - r, y - r, z, x + r, y + r, z + h)):
-            polys.append((vs, col, False))
+            polys.append((vs, col, None))      # (None: a marker, which shades nothing under it)
     return polys, lights
 
 
@@ -198,7 +224,7 @@ def render(path, out, eye=None, yaw=0.0, pitch=0.0, fov=90.0, iso=None, cut=None
     gw, gh = int((mx[0] - mn[0]) / G) + 2, int((mx[1] - mn[1]) / G) + 2
     roof = np.full((gw, gh), -1e9)
     for verts, col, thru in polys:
-        if thru:
+        if thru or thru is None:
             continue
         a = np.array(verts)
         if a[:, 2].max() - a[:, 2].min() > 1.0:      # (only level faces make a roof)
@@ -305,12 +331,17 @@ def render(path, out, eye=None, yaw=0.0, pitch=0.0, fov=90.0, iso=None, cut=None
     sun = np.array([-0.35, 0.25, 0.9])
     sun /= np.linalg.norm(sun)
     lit = np.where(covered, 0.10, 0.42 + 0.58 * np.clip(n @ sun, 0, 1))[..., None] * np.ones(3)
-    for pos, lc, bright in lights:
+    for pos, lc, bright, aim in lights:
         d = np.array(pos, dtype=np.float32) - world
         dist2 = (d * d).sum(axis=2) + 1.0
-        ndl = np.clip((n * d).sum(axis=2) / np.sqrt(dist2), 0, 1) * 0.8 + 0.2
-        lit += (bright * 260.0 / dist2 * ndl)[..., None] * np.array(lc)
-    img = np.clip(base * np.clip(lit, 0, 1.6), 0, 255)
+        dist = np.sqrt(dist2)
+        ndl = np.clip((n * d).sum(axis=2) / dist, 0, 1) * 0.8 + 0.2
+        add = np.clip(bright * 260.0 / dist2 * ndl, 0, 0.9)
+        if aim:
+            along = -(d * np.array(aim[0], dtype=np.float32)).sum(axis=2) / dist
+            add = add * np.clip((along - aim[1]) / max(1e-3, 1 - aim[1]) * 3, 0, 1)
+        lit += add[..., None] * np.array(lc)
+    img = np.clip(base * np.clip(lit, 0, 1.25), 0, 255)
     edge = np.zeros((H, W), dtype=bool)
     edge[:, 1:] |= face[:, 1:] != face[:, :-1]
     edge[1:, :] |= face[1:, :] != face[:-1, :]
@@ -337,7 +368,7 @@ def clip6(pts, near):
     return out
 
 
-def sheet(pictures, out, across=2):
+def sheet(pictures, out, across=3):
     """Several pictures on one sheet."""
     from PIL import Image
     ims = [Image.open(p) for p in pictures]
