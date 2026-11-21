@@ -78,6 +78,8 @@ def scene(m):
             if any(t in sm for t in POLES):      # (a lamppost or pole: thin, with its arm at the top)
                 polys += [(vs, col, None) for vs in mv.turned_box(pos, (-4, -4, bb[2], 4, 4, bb[5]), e.angles[1])]
                 polys += [(vs, col, None) for vs in mv.turned_box(pos, (-3, bb[1], bb[5] - 14, 3, bb[4], bb[5] - 6), e.angles[1])]
+            elif mv.card(e.model):      # (a tree card: an upright sheet, not a crown as wide as the cluster)
+                polys += [(vs, (78, 108, 58), None) for vs in mv.card_faces(pos, bb, e.angles[1])]
             elif any(t in sm for t in TREES):      # (a tree: a trunk and a smaller canopy, not one big box)
                 h, w = bb[5], max(bb[3] - bb[0], bb[4] - bb[1]) * 0.3
                 o = pos
@@ -154,6 +156,20 @@ def score(st, props):
     return round(st["edges"] * 4 + 0.03 * min(props, 12) - pen, 3)
 
 
+def main_level(P, gap=1024.0, few=0.15):
+    """The points without a small group standing far above or below the rest (a separate room 5000 up, as in
+    ep2_outland_11b, framed the overviews on itself): groups apart by more than `gap` in height and holding under
+    `few` of the points are left out of the overview's frame."""
+    P = np.asarray(P, dtype=float).reshape(-1, 3)
+    if len(P) < 8:
+        return P
+    zs = np.sort(P[:, 2])
+    cuts = [zs[0] - 1] + [(a + b) / 2 for a, b in zip(zs[:-1], zs[1:]) if b - a > gap] + [zs[-1] + 1]
+    groups = [P[(P[:, 2] > lo) & (P[:, 2] <= hi)] for lo, hi in zip(cuts[:-1], cuts[1:])]
+    keep = [g for g in groups if len(g) >= few * len(P)]
+    return np.concatenate(keep) if keep else P
+
+
 def compass(yaw):
     return COMPASS[int(((yaw % 360) + 22.5) // 45) % 8]
 
@@ -166,7 +182,7 @@ def run(m, s, out_dir, n_eye=6, sections=None, log=print):
     PP = np.array([p for p, _ in props]).reshape(-1, 3)
     N = eye_points(m, s, PP)
     scapes = [(e.origin, e.kv.get("soundscape", "")) for e in m.ents if m.play_ent(e) and e.cls.startswith("env_soundscape") and e.origin is not None]
-    base = N if len(N) else (PP if len(PP) else m.f_cen)
+    base = main_level(N if len(N) else (PP if len(PP) else m.f_cen))
     lo, hi = np.percentile(base, 3, axis=0), np.percentile(base, 97, axis=0)
     box = (rnd(lo[0] - 768), rnd(lo[1] - 768), rnd(hi[0] + 768), rnd(hi[1] + 768))
     pics = [{"kind": "overview", "file": "01_overview_sw.png", "view": {"iso": "SW", "box": box}, "where": "the whole map from the south-west"},

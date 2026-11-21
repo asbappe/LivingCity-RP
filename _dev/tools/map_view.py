@@ -117,11 +117,38 @@ def see_through(model):
     return "fence" in m and "wood" not in m
 
 
-def prop_faces(pos, bb, yaw, t=4.0, model=""):
-    """A model's box: solid when small; when big in two ways, or a fence one sees through, only its twelve edges as thin bars."""
+HOLLOW = ("struts_tunnel", "strut_", "struts_")      # (a mine's timber sets: open frames whatever their size)
+SLIM = ("stalactite", "stalagmite")      # (a rock spike: its box is mostly air round a cone)
+
+
+def card(model):
+    """A tree card (a few crossed flat pictures of trees): drawn as one upright sheet, not as a tree with a crown."""
+    m = (model or "").lower()
+    return "card" in m and ("tree" in m or "foliage" in m)
+
+
+def card_faces(pos, bb, yaw, t=4.0):
+    """A tree card's box flattened to an upright sheet along its longer way."""
     x1, y1, z1, x2, y2, z2 = bb
+    if x2 - x1 >= y2 - y1:
+        c = (y1 + y2) / 2
+        return turned_box(pos, (x1, c - t / 2, z1, x2, c + t / 2, z2), yaw)
+    c = (x1 + x2) / 2
+    return turned_box(pos, (c - t / 2, y1, z1, c + t / 2, y2, z2), yaw)
+
+
+def prop_faces(pos, bb, yaw, t=4.0, model=""):
+    """A model's box: solid when small; when big in two ways, a fence one sees through or a mine's timber set, only its
+    twelve edges as thin bars; a tree card as an upright sheet; a stalactite a third as wide."""
+    x1, y1, z1, x2, y2, z2 = bb
+    m = (model or "").lower()
+    if card(m):
+        return card_faces(pos, bb, yaw, t)
+    if any(k in m for k in SLIM):      # (a third as wide, on the same middle)
+        cx, cy, wx, wy = (x1 + x2) / 2, (y1 + y2) / 2, (x2 - x1) / 6, (y2 - y1) / 6
+        return turned_box(pos, (cx - wx, cy - wy, z1, cx + wx, cy + wy, z2), yaw)
     d = sorted((x2 - x1, y2 - y1, z2 - z1))
-    if d[1] < FRAME_OVER and not (d[2] >= 2 * FRAME_OVER and d[1] >= 256) and not see_through(model):   # (the Combine's creeping wall is 300 by 300 by 1000)
+    if d[1] < FRAME_OVER and not (d[2] >= 2 * FRAME_OVER and d[1] >= 256) and not see_through(model) and not any(k in m for k in HOLLOW):   # (the Combine's creeping wall is 300 by 300 by 1000)
         return turned_box(pos, bb, yaw)
     h = t / 2
     out = []
