@@ -1,0 +1,18 @@
+{
+ "title": "Valve's styleguide_06_elev_tower (draft)",
+ "draft": true,
+ "about": "Valve's own styleguide_06_elev_tower, measured by map_ingest.py on 2026-11-21 (play space only: hidden objects and the 3D skybox room left out) and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees drawn as trunk and canopy, poles thin). Reference only: the VMF is not in the repo. DRAFT: a reviewer fills in what each picture teaches, picks the lessons, and removes \"draft\".",
+ "numbers": [
+  "Things: 13 prop_static, 0 prop_physics, 4 prop_dynamic, 0 prop_door_rotating, 0 prop_ragdoll, 0 infodecal, 0 info_overlay, 5 keyframe_rope and 14 move_rope, 2 func_detail, 0 npc entities (makers included); left out: 0 hidden objects and no 3D skybox room.",
+  "Lights: 0 light (median brightness None), 0 light_spot (median None), 0 point_spotlight, 0 env_sprite; no light_environment; no fog controller; sky sky_day01_05.",
+  "Commonest models: utilityconnecter005 8, pulleywheels_small01 4, ladderwood 2, crank 1, pulleywheels_large01 1, winch02 1.",
+  "Commonest materials (faces): metalpipe002a 485, woodfloor005a 362, metalpipe005a 361, woodfloor008a 50, metaltrack001a 34, metalfence004a 30, concretewall059c 25, woodfloor005a 7, metaltruss022c 6, citadel_metalwall074a 6, metalpipe003a 5, forest_metal01g 5, metaltruss017a 2.",
+  "Cables: 10 rope spans, median 236 long, slack 0, width 2.",
+  "Spacing (nearest of the same model): utilityconnecter005 84 apart (n 8).",
+  "Walls in bands: 49% of wall columns over 256 tall change material at least once; the first change most often 184 or 16 over the foot; pairs (below > above): metalfence004a > woodfloor005a, woodfloor005a > woodfloor008a, concretewall059c > metalpipe002a.",
+  "Props: 17 in play; on exact 90s: static 100%, physics ?; physics tilted ? (lying most often nothing); statics touching a wall 33%, physics within 16 of one ?; None props per 100 by 100 of play (None physics).",
+  "Craft: texture scale 0.25 on 97% of faces; lightmapscale 16 on 100% (near the nodes ?, far 100%); func_detail 99% of brushes; 68 trim strips (8x16 13, 1x8 10); 0 chamfers; 0 displacements."
+ ],
+ "pictures": [],
+ "pictures_folder": "valve_styleguide_06_elev_tower"
+}

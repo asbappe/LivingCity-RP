@@ -1,0 +1,21 @@
+{
+ "title": "Valve's styleguide_silo (draft)",
+ "draft": true,
+ "about": "Valve's own styleguide_silo, measured by map_ingest.py on 2026-11-21 (play space only: hidden objects and the 3D skybox room left out) and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees drawn as trunk and canopy, poles thin). Reference only: the VMF is not in the repo. DRAFT: a reviewer fills in what each picture teaches, picks the lessons, and removes \"draft\".",
+ "numbers": [
+  "Things: 50 prop_static, 11 prop_physics, 0 prop_dynamic, 0 prop_door_rotating, 0 prop_ragdoll, 0 infodecal, 0 info_overlay, 0 keyframe_rope and 0 move_rope, 14 func_detail, 2 npc entities (makers included); left out: 780 hidden objects and no 3D skybox room.",
+  "Lights: 45 light (median brightness 300), 29 light_spot (median 200), 0 point_spotlight, 1 env_sprite; sun \"243 238 224 800\" at pitch -70, ambient \"243 238 224 200\"; no fog controller; sky sky_day01_01.",
+  "Commonest models: metalladder002 6, light_cagelight01_off 6, alyx 5, canister_propane01a 5, lights_florescent01a 5, ministrider 3, pipe03_straight01_long 3, handrail04_medium 3, pipe03_straight01_short 3, steamengine001a 2, handrailcluster03a 2, handrail04_short 2, tpswitch 2, light_cagelight02_on 2, wood_crate002a 2.",
+  "Commonest materials (faces): reflectivity_50 5788, metalhull003a 342, reflectivity_20 295, metalrail012c 294, metalgrate002a 267, reflectivity_20b 255, metalstair002a 189, reflectivity_10 159, dev_blendmeasure 141, concretewall037c 131, concretewall015b 82, concretefloor006a 72, dev_measuregeneric01 70, metalwall005b 64, metalwall035a 60, reflectivity_50b 59, concretewall020a 54, concretefloor014a 52, metalpipe011a 48, metaltrack001a 44.",
+  "Stairs: 145 flights of 3 or more steps; steps (rise x tread) 8x12 656, 8x8 462, 16x16 219; median 9 steps a flight.",
+  "Spacing (nearest of the same model): light_cagelight01_off 351 apart (n 6).",
+  "Walls in bands: 20% of wall columns over 256 tall change material at least once; the first change most often 16 or 64 over the foot; pairs (below > above): reflectivity_50 > metalwall_silo01b, concretewall037c > concretewall015b, concretefloor014a > metalpipe011a.",
+  "Slopes: 137 sloped faces over 2000 square units, most often 45, 15, 30 degrees; reflectivity_50, metalwall035a.",
+  "Props: 61 in play; on exact 90s: static 84%, physics 73%; physics tilted 0% (lying most often nothing); statics touching a wall 38%, physics within 16 of one 72%; None props per 100 by 100 of play (None physics).",
+  "Wiring: 3 output lines from 1 entities; commonest OnMapSpawn>SetAutoExposureMax 1, OnMapSpawn>SetAutoExposureMin 1, OnMapSpawn>SetTonemapRate 1; 0 relays (longest chain 0), 0 counters, 0 timers, 0 makers, 0 buttons working doors; 0 lines name nothing.",
+  "Craft: texture scale 0.25 on 98% of faces; lightmapscale 16 on 100% (near the nodes ?, far 100%); func_detail 7% of brushes; 98 trim strips (16x32 19, 4x12 17); 87 chamfers; 0 displacements.",
+  "Light by fixture: light_cagelight01_off: light 205 29 29 75; lights_florescent01a: light_spot 255 245 145 200, cone 70/30, pitch -74; light_cagelight02_on: light_spot 254 216 146 75, cone 70/30, pitch -70; light_cagelight01_off: light_spot 255 0 0 25, cone 70/30, pitch -70."
+ ],
+ "pictures": [],
+ "pictures_folder": "valve_styleguide_silo"
+}

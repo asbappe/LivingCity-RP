@@ -1,0 +1,21 @@
+{
+ "title": "Valve's styleguide_train_repair (draft)",
+ "draft": true,
+ "about": "Valve's own styleguide_train_repair, measured by map_ingest.py on 2026-11-21 (play space only: hidden objects and the 3D skybox room left out) and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees drawn as trunk and canopy, poles thin). Reference only: the VMF is not in the repo. DRAFT: a reviewer fills in what each picture teaches, picks the lessons, and removes \"draft\".",
+ "numbers": [
+  "Things: 72 prop_static, 13 prop_physics, 0 prop_dynamic, 0 prop_door_rotating, 0 prop_ragdoll, 0 infodecal, 0 info_overlay, 0 keyframe_rope and 0 move_rope, 35 func_detail, 0 npc entities (makers included); left out: 180 hidden objects and no 3D skybox room.",
+  "Lights: 0 light (median brightness None), 9 light_spot (median 600), 5 point_spotlight, 2 env_sprite; sun \"243 228 167 600\" at pitch -25, ambient \"182 164 143 200\"; no fog controller; sky sky_ep01_03.",
+  "Commonest models: light_industrialbell01_on 25, handrail04_singlerise 10, oildrum001 5, interior_fence003b 5, pipeset08d_512_001a 4, canister01a 4, lights_florescent01a 3, wood_pallet001a 3, interior_fence001g 3, interior_fence003e 3, train001 2, pipeset08d_256_001a 2, pipeset08d_corner128r_001a 2, interior_fence003a 2, coolingtank02 2.",
+  "Commonest materials (faces): metaltruss022c 1830, metaltruss022a 1408, metaltruss016a 448, brickwall037a 353, concretewall073b 240, brickwall055a 224, metalstair002a 210, brickwall037c 84, metalwall062a 60, metaltruss020a 50, concretefloor009a 40, metalfloor001a 37, metalrail003a 21, concretewall075a 15, metalgrate013b 14, glasswindow001b 12, metalwall029a 12, metaldoor032c 10, reflectivity_50 7, building_trainstation_template002k 5.",
+  "Ceilings: floor to ceiling indoors (cast up from 16 AI nodes) is most often 128 (10), then 64 (2) and 384 (1); 0% of the nodes are outdoors; corridors 141 wide under 92, rooms 588 by 1667 (medians, wall to wall).",
+  "Stairs: 21 flights of 3 or more steps; steps (rise x tread) 8x12 107; median 6 steps a flight.",
+  "Spacing (nearest of the same model): interior_fence003b 194 apart (n 5), interior_fence001g 256 apart (n 3), interior_fence003e 256 apart (n 3).",
+  "Walls in bands: 81% of wall columns over 256 tall change material at least once; the first change most often 64 or 32 over the foot; pairs (below > above): concretewall073b > metaltruss022a, concretewall073b > brickwall037a, building_trainstation_template002k > concretewall073b.",
+  "Slopes: 99 sloped faces over 2000 square units, most often 45, 40, 55 degrees; metaltruss022a.",
+  "Props: 85 in play; on exact 90s: static 92%, physics 8%; physics tilted 23% (lying most often barrel, propane); statics touching a wall 50%, physics within 16 of one 31%; 0.534 props per 100 by 100 of play (0.0 physics).",
+  "Craft: texture scale 0.25 on 67% of faces; lightmapscale 16 on 100% (near the nodes 100%, far 100%); func_detail 86% of brushes; 66 trim strips (4x24 50, 8x16 12); 232 chamfers; 0 displacements.",
+  "Light by fixture: light_industrialbell01_on: light_spot 221 249 241 600, cone 50/20, pitch -90; lights_florescent01a: light_spot 159 237 215 600, cone 50/30, pitch -74; light_cagelight01_on: light_spot 225 0 0 75, cone 70/30, pitch -70."
+ ],
+ "pictures": [],
+ "pictures_folder": "valve_styleguide_train_repair"
+}

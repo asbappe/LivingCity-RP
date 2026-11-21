@@ -1,0 +1,22 @@
+{
+ "title": "Valve's styleguide_antlion_tunnel (draft)",
+ "draft": true,
+ "about": "Valve's own styleguide_antlion_tunnel, measured by map_ingest.py on 2026-11-21 (play space only: hidden objects and the 3D skybox room left out) and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees drawn as trunk and canopy, poles thin). Reference only: the VMF is not in the repo. DRAFT: a reviewer fills in what each picture teaches, picks the lessons, and removes \"draft\".",
+ "numbers": [
+  "Things: 30 prop_static, 15 prop_physics, 0 prop_dynamic, 0 prop_door_rotating, 0 prop_ragdoll, 0 infodecal, 1 info_overlay, 3 keyframe_rope and 1 move_rope, 6 func_detail, 27 npc entities (makers included); left out: 88 hidden objects and no 3D skybox room.",
+  "Lights: 7 light (median brightness 80), 2 light_spot (median 525), 0 point_spotlight, 2 env_sprite; no light_environment; no fog controller; sky sky_day01_01.",
+  "Sound: 3 env_soundscape (d1_town.HeadcrabCave 2, d1_town.MineshaftDown 1), median radius 192; 0 ambient_generic ().",
+  "Commonest models: fence01a 12, concrete_spawnchunk001d 7, concrete_spawnchunk001f 4, pipeset32d_512_001a 3, pipeset08d_512_001a 3, oildrum001 3, rebar004d_96 3, antlion_worker 2, light_cagelight02_on 2, pipeset02d_512_001a 2, rebar002d_96 2, antlionhill 1, light_cagelight02_off 1, wood_pallet001a 1, generatortrailer01 1.",
+  "Commonest materials (faces): reflectivity_50 200, woodwall041a 120, rockwall015a 72, blendrockdirt_tunnel01a 41, metaltruss017a 16, concretewall_mine_002a 11, metalwall089b 10, concretewall_mine_001c 9, gravelfloor002b 6, dirtfloor_mine001a 3, gravelfloor002a_lowfriction 2, concretewall_mine_002c 2, water_tunnels01 1, blendconcreterock001a 1.",
+  "Cables: 3 rope spans, median 512 long, slack 80, width 1.",
+  "Spacing (nearest of the same model): fence01a 133 apart (n 12).",
+  "Walls in bands: 4% of wall columns over 256 tall change material at least once; the first change most often 32 or 16 over the foot; pairs (below > above): reflectivity_50 > woodwall041a, concretewall_mine_002a > blendrockdirt_tunnel01a, blendrockdirt_tunnel01a > reflectivity_50.",
+  "Slopes: 15 sloped faces over 2000 square units, most often 25, 40, 50 degrees; rockwall015a, blendrockdirt_tunnel01a.",
+  "Props: 45 in play; on exact 90s: static 83%, physics 7%; physics tilted 7% (lying most often barrel); statics touching a wall 60%, physics within 16 of one 50%; None props per 100 by 100 of play (None physics).",
+  "Craft: texture scale 0.25 on 78% of faces; lightmapscale 16 on 100% (near the nodes ?, far 100%); func_detail 39% of brushes; 4 trim strips (4x8 4); 0 chamfers; 57 displacements.",
+  "Light by fixture: light_cagelight02_on: light_spot 220 181 156 525, cone 50/30, pitch -70; light_cagelight02_on: light 220 181 156 100.",
+  "Grime: 0 infodecal and 1 info_overlay; on walls ; wall decals median None over the floor."
+ ],
+ "pictures": [],
+ "pictures_folder": "valve_styleguide_antlion_tunnel"
+}

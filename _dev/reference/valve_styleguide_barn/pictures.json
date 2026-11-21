@@ -1,0 +1,17 @@
+{
+ "title": "Valve's styleguide_barn (draft)",
+ "draft": true,
+ "about": "Valve's own styleguide_barn, measured by map_ingest.py on 2026-11-21 (play space only: hidden objects and the 3D skybox room left out) and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees drawn as trunk and canopy, poles thin). Reference only: the VMF is not in the repo. DRAFT: a reviewer fills in what each picture teaches, picks the lessons, and removes \"draft\".",
+ "numbers": [
+  "Things: 0 prop_static, 0 prop_physics, 0 prop_dynamic, 0 prop_door_rotating, 0 prop_ragdoll, 0 infodecal, 0 info_overlay, 0 keyframe_rope and 0 move_rope, 3 func_detail, 0 npc entities (makers included); left out: 0 hidden objects and no 3D skybox room.",
+  "Lights: 0 light (median brightness None), 0 light_spot (median None), 0 point_spotlight, 0 env_sprite; sun \"243 238 224 600\" at pitch -30, ambient \"243 238 224 250\"; no fog controller; sky sky_day01_01.",
+  "Commonest models: .",
+  "Commonest materials (faces): woodfloor005a 3158, woodwall024a 145, stonewall017c 102, woodwall029a 72, woodfloor008a 69, driftwood_01a 56, woodgibs02 52, woodwall008a 51, woodwall037a 42, woodwall045a 42, grassfloor003a 36, metalceiling005a 36, metalwall014a 31, woodwall045b 26, brickfloor001a 21, woodwall002a 18, woodwall043a 16, woodtrack001a 12, mudfloor004a 12, tileroof002a 8.",
+  "Stairs: 5 flights of 3 or more steps; steps (rise x tread) 8x11 25; median 6 steps a flight.",
+  "Walls in bands: 76% of wall columns over 256 tall change material at least once; the first change most often 72 or 16 over the foot; pairs (below > above): stonewall017c > woodfloor005a, grassfloor003a > woodwall024a, mudfloor004a > woodwall024a.",
+  "Slopes: 12 sloped faces over 2000 square units, most often 35, 55 degrees; woodwall045a, woodwall008a, tileroof002a.",
+  "Craft: texture scale 0.25 on 99% of faces; lightmapscale 16 on 94% (near the nodes ?, far 94%); func_detail 19% of brushes; 191 trim strips (2x4 43, 10x18 31); 24 chamfers; 0 displacements."
+ ],
+ "pictures": [],
+ "pictures_folder": "valve_styleguide_barn"
+}

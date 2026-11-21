@@ -1,0 +1,20 @@
+{
+ "title": "Valve's outland_building_large_01 (draft)",
+ "draft": true,
+ "about": "Valve's own outland_building_large_01, measured by map_ingest.py on 2026-11-21 (play space only: hidden objects and the 3D skybox room left out) and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees drawn as trunk and canopy, poles thin). Reference only: the VMF is not in the repo. DRAFT: a reviewer fills in what each picture teaches, picks the lessons, and removes \"draft\".",
+ "numbers": [
+  "Things: 16 prop_static, 11 prop_physics, 30 prop_dynamic, 0 prop_door_rotating, 0 prop_ragdoll, 0 infodecal, 20 info_overlay, 0 keyframe_rope and 0 move_rope, 37 func_detail, 13 npc entities (makers included); left out: 0 hidden objects and no 3D skybox room.",
+  "Lights: 0 light (median brightness None), 0 light_spot (median None), 0 point_spotlight, 0 env_sprite; no light_environment; no fog controller; sky sky_day01_01.",
+  "Commonest models: woodwall030b_window01a 8, combine_barricade_tall01b 8, woodwall030b_window01a_bars 7, combine_soldier 6, combine_barricade_tall01a 4, combine_barricade_med01a 4, plasterwall029c_window01a 3, plasterwall029g_window01a_bars 3, plasterwall029g_window01a 3, plasterwall029c_window01a_bars 2, furniture_chair01a 2, wood_board03a 2, woodwall030b_window02a_bars 1, woodwall030b_window02a 1, garbage_coffeemug001a 1.",
+  "Commonest materials (faces): woodfloor005a 570, brickwall020a 316, plasterwall029d 150, woodwall009a 111, plasterwall029c 92, woodfloor008a 87, plasterwall029a 70, woodwall008a 66, tileroof004a_c17 55, woodwall006a 49, stonewall017a 47, stonewall002a 43, woodbeam002a 39, plasterwall029b 37, plasterwall029e 33, brickwall017b 33, woodshutters001a 24, concretefloor010a 21, brickwall017a 21, tileroof004b 19.",
+  "Stairs: 3 flights of 3 or more steps; steps (rise x tread) 8x11 39; median 14 steps a flight.",
+  "Walls in bands: 100% of wall columns over 256 tall change material at least once; the first change most often 24 or 112 over the foot; pairs (below > above): plasterwall029b > woodfloor005a, plasterwall029d > plasterwall029a, woodfloor005a > brickwall020a.",
+  "Slopes: 42 sloped faces over 2000 square units, most often 35, 45, 55 degrees; tileroof004a_c17, tileroof004b, woodfloor005a.",
+  "Props: 57 in play; on exact 90s: static 94%, physics 36%; physics tilted 55% (lying most often personal, pallet); statics touching a wall 94%, physics within 16 of one 45%; 0.352 props per 100 by 100 of play (0.094 physics).",
+  "Wiring: 74 output lines from 35 entities; commonest OnTrigger>Disable 11, OnTrigger>Kill 9, OnBreak>SetBodyGroup 8; 7 relays (longest chain 1), 1 counters, 0 timers, 0 makers, 0 buttons working doors; 2 lines name nothing.",
+  "Craft: texture scale 0.25 on 93% of faces; lightmapscale 16 on 88% (near the nodes 87%, far ?); func_detail 70% of brushes; 55 trim strips (6x8 8, 4x8 7); 0 chamfers; 40 displacements.",
+  "Grime: 0 infodecal and 20 info_overlay; on walls ; wall decals median None over the floor."
+ ],
+ "pictures": [],
+ "pictures_folder": "valve_outland_building_large_01"
+}

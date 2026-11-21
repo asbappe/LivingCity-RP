@@ -1,0 +1,18 @@
+{
+ "title": "Valve's styleguide_silo_derilict (draft)",
+ "draft": true,
+ "about": "Valve's own styleguide_silo_derilict, measured by map_ingest.py on 2026-11-21 (play space only: hidden objects and the 3D skybox room left out) and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees drawn as trunk and canopy, poles thin). Reference only: the VMF is not in the repo. DRAFT: a reviewer fills in what each picture teaches, picks the lessons, and removes \"draft\".",
+ "numbers": [
+  "Things: 0 prop_static, 0 prop_physics, 0 prop_dynamic, 0 prop_door_rotating, 0 prop_ragdoll, 0 infodecal, 0 info_overlay, 0 keyframe_rope and 0 move_rope, 179 func_detail, 0 npc entities (makers included); left out: 4217 hidden objects and no 3D skybox room.",
+  "Lights: 0 light (median brightness None), 0 light_spot (median None), 0 point_spotlight, 0 env_sprite; no light_environment; no fog controller; sky sky_day02_04.",
+  "Commonest models: .",
+  "Commonest materials (faces): reflectivity_50 10722, metaldoor046a 2950, metalhull003a 2139, reflectivity_20b 1114, reflectivity_10 1083, metalrail012c 1081, plasterwall042a 552, metalwall085a 473, metalfloor003a 462, plasterwall042c 411, concretewall064d 343, reflectivity_40 331, reflectivity_20 324, metalwall061f 314, metalgrate013a2 308, metalfloor010a 295, concretewall064b 279, concretewall036a 236, metalwall067a 220, concretefloor039b 218.",
+  "Stairs: 62 flights of 3 or more steps; steps (rise x tread) 8x12 327, 8x16 150, 8x20 6; median 7.5 steps a flight.",
+  "Walls in bands: 52% of wall columns over 256 tall change material at least once; the first change most often 64 or 128 over the foot; pairs (below > above): reflectivity_50 > plasterwall042c, concretewall064d > concretewall064b, reflectivity_50 > plasterwall042a.",
+  "Slopes: 273 sloped faces over 2000 square units, most often 45, 15, 40 degrees; reflectivity_50, metalwall025a, metalwall035a.",
+  "Wiring: 474 output lines from 151 entities; commonest OnTrigger>Enable 18, OnPressed>Skin 18, OnTrigger>ForceSpawn 16; 15 relays (longest chain 1), 2 counters, 5 timers, 0 makers, 1 buttons working doors; 23 lines name nothing.",
+  "Craft: texture scale 0.25 on 91% of faces; lightmapscale 16 on 98% (near the nodes ?, far 98%); func_detail 38% of brushes; 351 trim strips (4x16 66, 16x32 42); 343 chamfers; 46 displacements."
+ ],
+ "pictures": [],
+ "pictures_folder": "valve_styleguide_silo_derilict"
+}

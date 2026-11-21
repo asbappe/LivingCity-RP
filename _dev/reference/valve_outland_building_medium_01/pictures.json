@@ -1,0 +1,18 @@
+{
+ "title": "Valve's outland_building_medium_01 (draft)",
+ "draft": true,
+ "about": "Valve's own outland_building_medium_01, measured by map_ingest.py on 2026-11-21 (play space only: hidden objects and the 3D skybox room left out) and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees drawn as trunk and canopy, poles thin). Reference only: the VMF is not in the repo. DRAFT: a reviewer fills in what each picture teaches, picks the lessons, and removes \"draft\".",
+ "numbers": [
+  "Things: 22 prop_static, 16 prop_physics, 3 prop_dynamic, 0 prop_door_rotating, 0 prop_ragdoll, 0 infodecal, 6 info_overlay, 0 keyframe_rope and 0 move_rope, 5 func_detail, 2 npc entities (makers included); left out: 0 hidden objects and no 3D skybox room.",
+  "Lights: 0 light (median brightness None), 0 light_spot (median None), 0 point_spotlight, 0 env_sprite; no light_environment; no fog controller; sky sky_day01_01.",
+  "Commonest models: wood_crate001a_damagedmax 4, lab_flourescentlight002b 3, woodwall030b_window03a_bars 3, woodwall030b_window03a 3, carparts_wheel01a 2, gutter_256_001a 2, pylon 2, box01a 2, prison_shelf001a 2, floodlights_01 1, light_outdoor 1, partsbin01 1, controlroom_desk001b 1, plasticbucket001a 1, wall_wires2 1.",
+  "Commonest materials (faces): forest_metal_07 58, forest_metal_02c 38, metaldoor053a 36, plasterwall053a 35, dev_windowportal 24, concretefloor039a_cheap 16, sign_trainsation_1a 10, metalroof005a 8, glasswindow017a 7, metalwall014a 6, woodfloor005a 4, metalwall018f_cheap 4, metalfloor002a 2, metalwall018a_cheap 2, concretewall_bunker07c 1.",
+  "Ceilings: floor to ceiling indoors (cast up from 14 AI nodes) is most often 128 (14), then ; 30% of the nodes are outdoors; corridors 121 wide under 128, rooms 197 by 407 (medians, wall to wall).",
+  "Props: 41 in play; on exact 90s: static 77%, physics 25%; physics tilted 44% (lying most often vehicle, crate, trash); statics touching a wall 62%, physics within 16 of one 81%; 1.043 props per 100 by 100 of play (0.407 physics).",
+  "Wiring: 5 output lines from 3 entities; commonest OnBreak>SetBodyGroup 3, OnBreak>StartSchedule 1, OnBreak>Kill 1; 0 relays (longest chain 0), 0 counters, 0 timers, 0 makers, 0 buttons working doors; 1 lines name nothing.",
+  "Craft: texture scale 0.25 on 92% of faces; lightmapscale 16 on 92% (near the nodes 93%, far ?); func_detail 45% of brushes; 14 trim strips (4x4 4, 8x20 3); 2 chamfers; 0 displacements.",
+  "Grime: 0 infodecal and 6 info_overlay; on walls ; wall decals median None over the floor."
+ ],
+ "pictures": [],
+ "pictures_folder": "valve_outland_building_medium_01"
+}

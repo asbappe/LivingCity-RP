@@ -1,0 +1,21 @@
+{
+ "title": "Valve's styleguide_logging (draft)",
+ "draft": true,
+ "about": "Valve's own styleguide_logging, measured by map_ingest.py on 2026-11-21 (play space only: hidden objects and the 3D skybox room left out) and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees drawn as trunk and canopy, poles thin). Reference only: the VMF is not in the repo. DRAFT: a reviewer fills in what each picture teaches, picks the lessons, and removes \"draft\".",
+ "numbers": [
+  "Things: 247 prop_static, 29 prop_physics, 0 prop_dynamic, 0 prop_door_rotating, 0 prop_ragdoll, 0 infodecal, 9 info_overlay, 0 keyframe_rope and 0 move_rope, 21 func_detail, 0 npc entities (makers included); left out: 2 hidden objects and no 3D skybox room.",
+  "Lights: 3 light (median brightness 50), 0 light_spot (median None), 0 point_spotlight, 0 env_sprite; sun \"239 231 203 300\" at pitch -45, ambient \"176 193 201 150\"; fog \"176 193 201\" from -500 to 5500; sky sky_day02_10.",
+  "Commonest models: tree_pine04 60, tree_pine06 21, plasterwall029g_window01a 20, tree_pine05 14, plasterwall029c_window01a 10, tree_deciduous_01a 10, gutter_256_001a 9, tree_deciduous_card_01 9, woodwall030b_window02a 8, vine_wall1 8, tree_pine_card_cluster_01 8, rockcluster01 6, tree_stump01 6, gutter_448_001a 5, rooftopcluser01a 4.",
+  "Commonest materials (faces): woodwall043a 1381, reflectivity_50 417, brickfloor001a 315, woodwall048a 174, dev_measurewall01d 141, woodwall048d 123, woodwall047c 78, woodwall024a 75, wooddoor019a 75, woodwall047d 64, metalwall017a 61, woodwall047b 58, woodwall047e 57, metalwall070b_cheap 56, stonewall016a 52, plasterwallpaper006a 41, woodwall047f 32, brickwall001a 28, woodwall012a 26, woodwall048b 17.",
+  "Stairs: 2 flights of 3 or more steps; steps (rise x tread) 8x8 14; median 8 steps a flight.",
+  "Spacing (nearest of the same model): tree_pine04 315 apart (n 60), tree_pine06 373 apart (n 21), tree_pine05 708 apart (n 14), tree_deciduous_01a 928 apart (n 10), tree_deciduous_card_01 2496 apart (n 9), tree_pine_card_cluster_01 2510 apart (n 8).",
+  "Walls in bands: 83% of wall columns over 256 tall change material at least once; the first change most often 64 or 32 over the foot; pairs (below > above): cliff01a > clifftrees_cardboard02a, brickfloor001a > woodwall043a, woodwall048d > woodwall043a.",
+  "Slopes: 27 sloped faces over 2000 square units, most often 25, 30, 45 degrees; metalwall017a, reflectivity_30, dev_measurewall01d.",
+  "Props: 260 in play; on exact 90s: static 97%, physics 79%; physics tilted 52% (lying most often tool, tire, shelf); statics touching a wall 60%, physics within 16 of one 100%; 0.051 props per 100 by 100 of play (0.0 physics).",
+  "Wiring: 12 output lines from 9 entities; commonest OnPlayerTouch>Add 4, OnBreak>Add 3, OnMapSpawn>SetAutoExposureMin 1; 0 relays (longest chain 0), 0 counters, 0 timers, 0 makers, 0 buttons working doors; 8 lines name nothing.",
+  "Craft: texture scale 0.25 on 97% of faces; lightmapscale 16 on 100% (near the nodes 100%, far 100%); func_detail 34% of brushes; 77 trim strips (8x8 48, 8x32 10); 0 chamfers; 157 displacements.",
+  "Grime: 0 infodecal and 9 info_overlay; on walls ; wall decals median None over the floor."
+ ],
+ "pictures": [],
+ "pictures_folder": "valve_styleguide_logging"
+}
