@@ -1,0 +1,81 @@
+{
+ "about": "Valve's own d1_trainstation_04 (the streets on the way to Kleiner) (the Source SDK copy the owner uploaded, 21 November), measured and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees and poles drawn as trunk and pole). Reference only: the VMF is not in the repo.",
+ "numbers": [
+  "Things: 185 prop_static, 61 prop_physics, 10 prop_dynamic, 6 prop_door_rotating, 8 prop_ragdoll, 69 infodecal, 4 info_overlay, 39 keyframe_rope and 24 move_rope, 91 func_detail, 25 npc entities (makers included).",
+  "Lights: 10 light (median brightness 29.0), 16 light_spot (median 400.0), 1 point_spotlight, 6 env_sprite; sun \"237 218 143 800\" at pitch -35, ambient \"190 201 220 100\"; fog \"223 216 173\" from 2048 to 15000; sky sky_day01_01.",
+  "Sound: 10 env_soundscape (d1_trainstation.QuietCourtyard 4, d1_trainstation.TerminalSquare 2, general.concrete_quiet 2, Automatic_Dialog 1, d1_trainstation.RaidAppartments 1), median radius 128; 9 ambient_generic (eli_lab.elevator_ding, npc_metropolice.onecontained, npc_metropolice.takedown, npc_metropolice.stay).",
+  "Commonest models: antennaclusters01a 12, tree_deciduous_01a-lod 11, wood_crate002a 11, exterior_fence002d 9, wood_pallet001a 9, utilitypolemount01a 8, chimneysmokestack_cluster01a 7, oildrum001 7, door01_left 6, popcan01a 6, metal_paintcan001b 6, police 6, utilitypole02b 5, lightbulb01a 5, tree_deciduous_03b 5.",
+  "Commonest materials (faces): woodwall043a 404, metalwall061f 360, concretewall047a 331, concretewall032d 326, concretewall041b 266, woodwall006a 262, concretewall026h 198, building_template014g 198, plasterwall041a 193, metalroof006a 178, concretefloor028c 172, metalduct003a 141, rubberroof002a 128, concretewall041c 114, concretefloor036a 112, concretewall041a 110, metalwall026a 107, building_template007f 103, tileroof003a 100, building_template007a 98.",
+  "Ceilings: floor to ceiling indoors (cast up from 75 AI nodes) is most often 128 (32 of them), then 232 and 144; 35% of the nodes are outdoors; rooms at those nodes measure about 184 by 376 (median, wall to wall).",
+  "Stairs: 28 flights of 3 or more steps; steps rise 8 and tread 12 (120 steps), then 8 by 8 (14); median 6 steps a flight.",
+  "Walls in bands: 72% of wall length over 256 tall changes material at least once; the first change is most often 128 over the wall's foot, then 64 and 72; commonest pairs (below > above): concretewall032d > metalwall070f, concretewall041c > concretewall041a, concretewall032d > metalwall032c, building_template002h > building_template002a.",
+  "Fronts: 39% of all vertical wall area is building_template texture (windows painted on a flat wall): building_template014g, building_template007f, building_template002a, building_template002k.",
+  "Streets (cross-sections through 52 outdoor AI nodes, 36 with a kerb each side): roadway most often 256 wide; kerbs 4 (70) or 8 (2) high; pavements most often 192, 128, 256 wide; the road is flat (crown 0 in 34 of 36); road concretefloor033c, pavement concretefloor028c; wall to wall most often 640; street walls median 576 tall (height over width 0.56).",
+  "Doors: door01_left 6 (model 12x49x109); doorways measured at them (jamb to jamb, floor to head): 48x108 (5), 56x112 (1).",
+  "Cables: 46 rope spans, median 736 long, slack 100, width 2.0.",
+  "Spacing (nearest of the same model): utilitypole02b 1411 apart (n 5), utilitypolemount01a 697 apart (n 8), tree_poplar_01 288 apart (n 3), lamppost03a_off 962 apart (n 4), tree_deciduous_01a-lod 597 apart (n 11).",
+  "Slopes: 101 sloped faces over 2000 square units; pitch most often 70, 35, 25 degrees; metalroof006a, tileroof003a, metalwall014a.",
+  "Kerb in detail: a plain step of 4 from concretefloor028c pavement to concretefloor033c road, nothing else (probed at 1-unit steps); 70 of 72 kerbs measured are 4.",
+  "Inside walls: 140 of 183 sampled are one material; the rest change at 120 (concretewall047c below, 047a above, 26) or 32.",
+  "Street things: lamppost03a_off 4 (the unlit model: a day map hangs no light on its lamps) 962 apart, utilitypole02b 5 and utilitypolemount01a 8 (wires off the walls), antennaclusters01a 12 and chimneysmokestack_cluster01a 7 on the roofs, wood_crate002a 11 and wood_pallet001a 9 in the yards, 8 prop_ragdoll."
+ ],
+ "pictures": [
+  {
+   "n": "T4.1",
+   "file": "01_overview_sw.png",
+   "where": "the streets from the south-west",
+   "teaches": "Streets of 640 between fronts 576 tall; yards and a train yard behind.",
+   "lessons": [
+    "valve-street-proportions",
+    "valve-template-fronts"
+   ]
+  },
+  {
+   "n": "T4.2",
+   "file": "02_overview_ne.png",
+   "where": "the same from the north-east",
+   "teaches": "Roofscape of aerials and chimney stacks; the Combine wall pieces cutting through.",
+   "lessons": [
+    "skyline-corners",
+    "valve-combine-cold"
+   ]
+  },
+  {
+   "n": "T4.3",
+   "file": "03_alley.png",
+   "where": "a back street (eye -7036 -4568 0)",
+   "teaches": "Narrow back street, steps up at the side, crates and bins on the edges.",
+   "lessons": [
+    "valve-clutter"
+   ]
+  },
+  {
+   "n": "T4.4",
+   "file": "04_street.png",
+   "where": "a street between tall blocks (eye -6416 -4616 40)",
+   "teaches": "Road 256, kerb 4, a fence along the pavement, wires overhead; walls 576 tall over a 640 street.",
+   "lessons": [
+    "valve-street-proportions",
+    "valve-overhead-cables"
+   ]
+  },
+  {
+   "n": "T4.5",
+   "file": "05_attic.png",
+   "where": "from the raided flats' attic (eye -4016 -3456 628)",
+   "teaches": "Timber attic, planks, and the square seen past the roofs.",
+   "lessons": [
+    "valve-boarded-openings"
+   ]
+  },
+  {
+   "n": "T4.6",
+   "file": "06_block.png",
+   "where": "a block of flats and its roofs from the north-east",
+   "teaches": "Pitched roofs (35 and 25 degrees) and flat ones with sheds; painted fronts below.",
+   "lessons": [
+    "valve-template-fronts"
+   ]
+  }
+ ]
+}

@@ -1,0 +1,70 @@
+{
+ "about": "Valve's own d1_trainstation_05 (Kleiner's lab) (the Source SDK copy the owner uploaded, 21 November), measured and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees and poles drawn as trunk and pole). Reference only: the VMF is not in the repo.",
+ "numbers": [
+  "Things: 259 prop_static, 65 prop_physics, 63 prop_dynamic, 3 prop_door_rotating, 0 prop_ragdoll, 23 infodecal, 16 info_overlay, 45 keyframe_rope and 19 move_rope, 88 func_detail, 37 npc entities (makers included).",
+  "Lights: 18 light (median brightness 29.5), 74 light_spot (median 140.0), 2 point_spotlight, 40 env_sprite; sun \"237 218 143 800\" at pitch -35, ambient \"190 201 220 100\"; fog \"255 220 200\" from 0 to 5000; sky sky_day01_01.",
+  "Sound: 6 env_soundscape (Automatic_Dialog 2, d1_trainstation.QuietCourtyard 2, general.concrete_quiet 1, d1_trainstation.city 1), median radius 128; 73 ambient_generic (k_lab.teleport_sound, k_lab.teleport_heartbeat, k_lab.teleport_breathing, k_lab.teleport_rings_high).",
+  "Commonest models: teleportring 12, cell_01_pod_cheap 12, lab_flourescentlight001b 11, utilityconnecter006c 10, exterior_fence002d 9, substation_stripebox01a 8, utilityconnecter006b 8, exterior_fence002c 7, lab_flourescentlight001a 7, wood_crate002a 7, oildrum001 7, powerbox01a 6, prison_cagedlight001a 6, exterior_fence003a 6, teleportgate 6.",
+  "Commonest materials (faces): metalwall063a 902, metalwall061f 502, brickwall052e 477, brickwall052d 373, concretewall002a 355, metalduct003a 306, concretewall032d 294, metalwall062a 231, concretewall041b 183, stonewall050c 154, metalwall033a 145, metaltruss016a 128, metalroof008a 121, woodwall006a 115, concretewall047a 112, concretefloor013a 108, woodfloor005a 106, metalwall087a 97, concretestair005a 87, concretewall004a 81.",
+  "Ceilings: floor to ceiling indoors (cast up from 73 AI nodes) is most often 320 (24 of them), then 248 and 184; 12% of the nodes are outdoors; rooms at those nodes measure about 288 by 701 (median, wall to wall).",
+  "Stairs: 20 flights of 3 or more steps; steps rise 8 and tread 12 (100 steps); median 6 steps a flight.",
+  "Walls in bands: 26% of wall length over 256 tall changes material at least once; the first change is most often 128 over the wall's foot, then 256 and 64; commonest pairs (below > above): brickwall052e > brickwall052d, concretewall020a > concretewall047a, concretewall032d > metalwall021f.",
+  "Doors: door01_left 3 (model 12x49x109); doorways measured at them (jamb to jamb, floor to head): 48x108 (3).",
+  "Cables: 42 rope spans, median 585 long, slack 100, width 1.0.",
+  "Spacing (nearest of the same model): utilitypole01b 1861 apart (n 3), tree_deciduous_01a-lod 322 apart (n 4).",
+  "Slopes: 43 sloped faces over 2000 square units; pitch most often 20, 35, 45 degrees; metalwall063a, brickwall052e, metalroof006a.",
+  "A lit lab: 74 light_spot (median 140) and 40 env_sprite, under lab_flourescentlight001a/b 18 and prison_cagedlight001a 6; half the lights are cool ('160 224 240') and half warm: the lab's own light, not the street's.",
+  "Big rooms: ceilings most often 320 (24 of 73 nodes), then 248; the walls are mostly one material (only 26% of tall wall length banded), metalwall063a and brickwall052d/e.",
+  "73 ambient_generic, most of them the teleport's sounds (k_lab.teleport_*): a machine room tells what it does by sound."
+ ],
+ "pictures": [
+  {
+   "n": "T5.1",
+   "file": "01_overview_sw.png",
+   "where": "the lab and the block over it from the south-west",
+   "teaches": "The lab is hidden under an ordinary old block; the teleporter room is a separate volume.",
+   "lessons": []
+  },
+  {
+   "n": "T5.2",
+   "file": "02_overview_ne.png",
+   "where": "the same from the north-east",
+   "teaches": "Two parts joined by a passage; every room a simple box.",
+   "lessons": []
+  },
+  {
+   "n": "T5.3",
+   "file": "03_lab.png",
+   "where": "the lab (eye -6608 -1524 134)",
+   "teaches": "Benches and machines along the walls, monitors (cyan) at head height, the floor left clear.",
+   "lessons": [
+    "valve-clutter"
+   ]
+  },
+  {
+   "n": "T5.4",
+   "file": "04_teleport.png",
+   "where": "the teleporter room (eye -13460 -607 72)",
+   "teaches": "One pool of light on a round pad under a ring; everything else dark.",
+   "lessons": [
+    "valve-light-pools"
+   ]
+  },
+  {
+   "n": "T5.5",
+   "file": "05_lab_cut.png",
+   "where": "the lab cut at 190 over the floor",
+   "teaches": "Rooms of 288 by 700, machines at the walls.",
+   "lessons": [
+    "room-to-move"
+   ]
+  },
+  {
+   "n": "T5.6",
+   "file": "06_entrance_block.png",
+   "where": "the old block over the lab's way in, from the north-east",
+   "teaches": "An ordinary courtyard building as the cover for a secret place.",
+   "lessons": []
+  }
+ ]
+}

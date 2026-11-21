@@ -21,7 +21,17 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 REF = os.path.join(HERE, "..", "reference")
 LESSONS = os.path.join(REF, "lessons.json")
 PICTURES = os.path.join(REF, "city18", "pictures.json")
-OTHER_SETS = [("valve_d1_trainstation_01", "Valve's d1_trainstation_01 (reference only)")]      # (more picture sets: folder, title)
+OTHER_SETS = [("valve_d1_trainstation_01", "Valve's d1_trainstation_01 (reference only)"),
+              ("valve_d1_trainstation_02", "Valve's d1_trainstation_02: City 17's plaza and streets"),
+              ("valve_d1_trainstation_03", "Valve's d1_trainstation_03: flats and rooftops"),
+              ("valve_d1_trainstation_04", "Valve's d1_trainstation_04: streets to Kleiner's"),
+              ("valve_d1_trainstation_05", "Valve's d1_trainstation_05: Kleiner's lab"),
+              ("valve_d3_c17_13", "Valve's d3_c17_13: City 17's streets at war"),
+              ("valve_d1_town_03", "Valve's d1_town_03: Ravenholm, for the infestation quarter (map_raven.py)"),
+              ("valve_d3_citadel_01", "Valve's d3_citadel_01: the Citadel"),
+              ("valve_d2_coast_12", "Valve's d2_coast_12: the coast"),
+              ("valve_vehicles", "Valve's vehicles test map"),
+              ("valve_canals", "Valve's Route Kanal (d1_canals_01 to 13)")]      # (more picture sets: folder, title)
 DOC = os.path.join(HERE, "..", "..", "docs", "dev", "city18-reference.md")
 
 

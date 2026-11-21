@@ -1,0 +1,81 @@
+{
+ "about": "Valve's own d3_c17_13 (City 17 streets at war) (the Source SDK copy the owner uploaded, 21 November), measured and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees and poles drawn as trunk and pole). Reference only: the VMF is not in the repo.",
+ "numbers": [
+  "Things: 440 prop_static, 56 prop_physics, 54 prop_dynamic, 0 prop_door_rotating, 4 prop_ragdoll, 86 infodecal, 3 info_overlay, 2 keyframe_rope and 0 move_rope, 121 func_detail, 109 npc entities (makers included).",
+  "Lights: 24 light (median brightness 100.0), 19 light_spot (median 600.0), 10 point_spotlight, 0 env_sprite; sun \"238 200 128 450\" at pitch -12, ambient \"75 96 116 250\"; fog \"214 207 189\" from 1024 to 12285; sky sky_day03_05.",
+  "Sound: 5 env_soundscape (d3_citadel_01.pipe_entrance 2, streetwar.general_indoor_heavy_combat 1, streetwar.general_outdoor_heavy_combat 1, d3_citadel_01.cliffside1 1), median radius 144; 45 ambient_generic (streetwar.d3_c17_13_fire, streetwar.d3_c17_13_metal_large_debris2, streetwar.d3_c17_13_explode_2, streetwar.d3_c17_13_metal_barrel_impact_hard7).",
+  "Commonest models: concrete_section64floor001c 46, concrete_section64floor001a 46, concrete_section64floor001b 34, concrete_section128wall001a 34, combine_soldier 23, rebar_cluster001a 22, rebar_cluster001b 19, concrete_section128floor001a 16, walldestroyed08a 14, walldestroyed01a 11, walldestroyed07b 11, lights_florescent01a 11, barricade_short04a 10, concrete_debris128pile001a 10, concrete_debris256pile001a 10.",
+  "Commonest materials (faces): plasterwall021a 1415, concretefloor013a 415, stonefloor006d_c17 363, concretefloor028c_c17 335, stonewall044a 285, plasterwall039d 282, building_template025m 248, concretefloor002a 194, stonefloor006f_c17 185, concretefloor007a 158, plasterwall041a 156, building_template002b 155, storefront_template001g 133, concretefloor026a 127, stonewall044c 124, roof_template001b 117, plasterwall039b 106, concretefloor020a 104, concretefloor019a 103, building_template002i 102.",
+  "Ceilings: floor to ceiling indoors (cast up from 157 AI nodes) is most often 120 (87 of them), then 128 and 248; 63% of the nodes are outdoors; rooms at those nodes measure about 284 by 896 (median, wall to wall).",
+  "Stairs: 17 flights of 3 or more steps; steps rise 8 and tread 12 (151 steps); median 10 steps a flight.",
+  "Walls in bands: 64% of wall length over 256 tall changes material at least once; the first change is most often 128 over the wall's foot, then 64 and 16; commonest pairs (below > above): plasterwall021a > plasterwallpaper006a, building_template004c > building_template004b, building_template013e > building_template013l.",
+  "Fronts: 38% of all vertical wall area is building_template texture (windows painted on a flat wall): building_template002b, building_template025m, storefront_template001g, building_template002i.",
+  "Streets (cross-sections through 340 outdoor AI nodes, 83 with a kerb each side): roadway most often 320 wide; kerbs 4 (100) or 8 (62) high; pavements most often 128, 192, 144 wide; the road is flat (crown 0 in 79 of 83); road stonefloor006d_c17, pavement concretefloor028c_c17; wall to wall most often 640; street walls median 256 tall (height over width 0.31).",
+  "Spacing (nearest of the same model): signpole001 823 apart (n 5), lamppost03a_off 818 apart (n 6), tree_deciduous_01a-lod 576 apart (n 8).",
+  "Slopes: 92 sloped faces over 2000 square units; pitch most often 45, 40, 65 degrees; roof_template001b, stonewall044a, concretefloor007a.",
+  "The cobbles are the owner's own: roadway stonefloor006d_c17 with stonefloor006f_c17 edge strips (18 of 83 sections), pavements concretefloor028c_c17; but Valve's road is flat (crown 0 in 79 of 83) and the kerb 4 (100) or 8 (62).",
+  "Ruin as props: concrete_section64floor001a/b/c 126 and concrete_section128wall001a 34 (broken floors and walls), rebar_cluster001a/b 41, walldestroyed01a/05a/07b/08a 45, concrete_debris piles 20, barricade_short04a 10, car004a_physics 7, ibeam01a 5: 440 prop_static in all.",
+  "The Combine's wall pushes through the city: combineinnerwallcluster1024_001a/002a 8 pieces, 1024 tall; lamppost03a_off 6 at 818 apart.",
+  "Light: a low sun (pitch -12, '238 200 128' at 450) with a strong ambient (250); fog '214 207 189' from 1024.",
+  "Sound: streetwar.general_outdoor_heavy_combat and _indoor_heavy_combat soundscapes and 45 ambient_generic (fire, falling debris, explosions)."
+ ],
+ "pictures": [
+  {
+   "n": "W1",
+   "file": "01_overview_sw.png",
+   "where": "the war streets from the south-west",
+   "teaches": "Low, broken blocks (street walls median 256) round squares, the Combine wall at the edge.",
+   "lessons": [
+    "valve-street-proportions",
+    "valve-combine-cold"
+   ]
+  },
+  {
+   "n": "W2",
+   "file": "02_overview_ne.png",
+   "where": "the same from the north-east",
+   "teaches": "Debris props (orange) fill the streets: the ruin is mostly props over whole brush buildings.",
+   "lessons": [
+    "valve-clutter"
+   ]
+  },
+  {
+   "n": "W3",
+   "file": "03_street.png",
+   "where": "a cobbled street (eye 6739 582 60)",
+   "teaches": "Cobbles with sett edge strips, kerb 4 to 8, pavement 128, the Combine wall closing the view.",
+   "lessons": [
+    "street-profile",
+    "valve-street-proportions",
+    "valve-combine-cold"
+   ]
+  },
+  {
+   "n": "W4",
+   "file": "04_square.png",
+   "where": "a square in the fighting (eye 7330 330 64)",
+   "teaches": "Trees, barricades and broken walls make cover; the middle stays open.",
+   "lessons": [
+    "valve-clutter"
+   ]
+  },
+  {
+   "n": "W5",
+   "file": "05_barricade.png",
+   "where": "a barricade at a corner (eye 6522 510 60)",
+   "teaches": "Debris and barricade_short pieces across the cobbles at a corner, leaving a gap to pass.",
+   "lessons": [
+    "valve-clutter"
+   ]
+  },
+  {
+   "n": "W6",
+   "file": "06_block.png",
+   "where": "a block of houses with pitched roofs and a yard, from the south-west",
+   "teaches": "Roofs of 40 to 45 degrees (roof_template001b), a yard inside the block, rubble in it.",
+   "lessons": [
+    "skyline-corners"
+   ]
+  }
+ ]
+}

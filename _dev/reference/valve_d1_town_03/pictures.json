@@ -1,0 +1,99 @@
+{
+ "about": "Valve's own d1_town_03 (Ravenholm, the town) (the Source SDK copy the owner uploaded, 21 November), measured and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees and poles drawn as trunk and pole). Reference only: the VMF is not in the repo. It is the reference for the infestation quarter still to be built (the zombie-overrun quarter behind the sealed gate, map_raven.py), not for the Resistance town.",
+ "numbers": [
+  "Things: 117 prop_static, 61 prop_physics, 17 prop_dynamic, 0 prop_door_rotating, 1 prop_ragdoll, 82 infodecal, 2 info_overlay, 21 keyframe_rope and 20 move_rope, 85 func_detail, 40 npc entities (makers included).",
+  "Lights: 8 light (median brightness 8.0), 18 light_spot (median 700.0), 11 point_spotlight, 5 env_sprite; sun \"175 230 239 50\" at pitch -45, ambient \"43 45 57 5\"; no fog controller; sky sky_day01_09.",
+  "Sound: 7 env_soundscape (d1_town.ConcreteBuilding 3, d1_town.Street 2, d1_town.WoodBuilding 1, d1_town.CorpseRoom 1), median radius 128; 27 ambient_generic (town.d1_town_03_zo_attack2, town.d1_town_03_metalgrate3, town.d1_town_03_fz_alert_far1, town.d1_town_03_tram_hit1).",
+  "Commonest models: pipe02_straight01_long 17, propane_tank001a 13, pulleywheels_small01 12, tree_deciduous_01a-lod 11, oildrum001_explosive 10, pipe02_connector01 9, handrail04_long 6, light_spotlight01_lamp 6, pipe02_straight01_short 5, utilitypole01b 5, lightbulb01a 5, garbage256_composite002b 5, handrail04_corner 4, metalladder002 4, sawblade001a 4.",
+  "Commonest materials (faces): woodfloor005a 961, plasterwall029d 458, concretefloor013c 403, concretewall032d 342, stonefloor006a 327, plasterwall029a 285, brickwall048i 222, metaltruss022c 221, plasterwall029g 184, brickwall048d 171, brickwall048a 166, rubberroof002a 166, metalwall026a 163, metalwall014a 162, stonewall002a 146, metalwall070a 139, plasterwall029c 132, plasterwall041a 111, metalwall070f 103, metaltruss002a 96.",
+  "Ceilings: floor to ceiling indoors (cast up from 41 AI nodes) is most often 120 (19 of them), then 168 and 152; 74% of the nodes are outdoors; rooms at those nodes measure about 232 by 376 (median, wall to wall).",
+  "Stairs: 17 flights of 3 or more steps; steps rise 8 and tread 12 (147 steps), then 8 by 32 (3); median 10 steps a flight.",
+  "Walls in bands: 82% of wall length over 256 tall changes material at least once; the first change is most often 128 over the wall's foot, then 48 and 16; commonest pairs (below > above): concretewall032d > metalwall070f, brickwall048d > brickwall048a, stonewall016a > plasterwall029c, concretefloor013c > rubberroof002a.",
+  "Cables: 32 rope spans, median 914 long, slack 100, width 2.0.",
+  "Spacing (nearest of the same model): utilitypole01b 887 apart (n 5), tree_deciduous_01a-lod 487 apart (n 11), lampfixture01a 374 apart (n 4), light_spotlight01_lamp 870 apart (n 6), tree_cliff_02a 910 apart (n 3).",
+  "Slopes: 95 sloped faces over 2000 square units; pitch most often 25, 70, 20 degrees; metalwall026a, tileroof003a, metalwall014a.",
+  "How dark: no env_fog_controller at all; the sun is cold and weak ('175 230 239' at 50, where the City 17 maps use '237 218 143' at 800) and the ambient is '43 45 57' at 5 (the city's: 100). The gloom is a dim cold sun and a dusk sky (sky_day01_09), not fog and not a blocked sky.",
+  "Pools of light: 11 point_spotlight, each with a light_spot at the same place (warm '255 245 145' or '254 233 146', 400 to 1000), most hung on light_spotlight01_lamp props on house walls, about 500 apart (nearest neighbour median 506); 8 plain light at brightness 8 fill under them; an env_fire with an orange light ('254 174 10', 300). 22 of the 26 lights are warm.",
+  "Traps lie ready as loose physics props: 13 propane_tank001a, 10 oildrum001_explosive, 4 sawblade001a, one propeller trap (trappropeller_engine, _blade, _lever, a func_rotating); 18 item_healthkit and 6 weapon_frag as rewards.",
+  "The dead: 15 npc_zombie and 2 npc_fastzombie placed, 10 npc_maker and 7 npc_template_maker, 14 aiscripted_schedule walking them at the player (the same machinery map_raven.py uses); 1 prop_ragdoll (corpse1, a pinned zombie) with 5 npc_crow round it; 1 npc_monk on a roof.",
+  "No gore decals: 0 blood decals among 82 infodecal. The ground reads abandoned through trashdecal01a 26, ivy03 19, leaves_ground02 17, plaster020a 5 and a little graffiti; the 2 overlays are scorch marks.",
+  "Streets: no kerbs and no pavements (0 of 119 cross-sections found one); cobbles (stonefloor006a) and displaced ground (36% of the floor area) run house to house; wall to wall most often 640 (384 to 768); house walls along the streets median 352 tall (256 to 512), height over width 0.42.",
+  "Houses: timber and plaster (woodfloor005a is the commonest material, 961 faces; plasterwall029a/c/d/g; brickwall048a/d/i); a concrete plinth (concretewall032d) under plaster or sheet metal, its top most often at 128, 48 or 16; pitched roofs most often 25 degrees (20 to 35) in corrugated metal (metalwall026a, 014a) and tile (tileroof003a, 004b), and steep 65 to 70 degree faces for mansards and the spire.",
+  "Boards: 39 plank brushes (most 4 thick, 8 wide, 112 long, or 4 by 16 by 64) in woodfloor005a and wooddoor015a; 25 timber beams 6 to 16 square.",
+  "Overhead: 21 keyframe_rope and 20 move_rope, spans median 914, slack 100, width 2; utilitypole01b about 887 apart; 12 pulleywheels_small01 and 9 path_track for the cable tram. 74% of the AI nodes are outdoors, many of them on roofs joined by planks and metalladder002 (4).",
+  "Indoors: ceilings most often 120 over the floor (19 of 41 nodes), rooms about 232 by 376; inside walls are one material in 118 of 163 sampled, else a concrete base to 32 or 64 under plaster.",
+  "Sound: four soundscapes (d1_town.Street, .WoodBuilding, .ConcreteBuilding, .CorpseRoom, radius 128) and 27 ambient_generic one-shots placed where a scare happens (zombie attack, a metal grate, a fast zombie's far call, the tram hitting, a small fire loop).",
+  "This part of Ravenholm has no church; its refuges are the rooftops (pictures R4 and R6)."
+ ],
+ "pictures": [
+  {
+   "n": "R1",
+   "file": "01_overview_sw.png",
+   "where": "the whole of this part of Ravenholm from the south-west",
+   "teaches": "Tight blocks of two and three storey houses, every roof a different height and pitch, wires strung over the streets, a cliff and trees behind.",
+   "lessons": [
+    "raven-streets-and-houses",
+    "skyline-corners"
+   ]
+  },
+  {
+   "n": "R2",
+   "file": "02_overview_ne.png",
+   "where": "the same from the north-east",
+   "teaches": "Streets are narrow gaps between houses, no pavements; yards and passages behind; roofs joined by planks into a second way through.",
+   "lessons": [
+    "raven-streets-and-houses",
+    "raven-rooftop-refuge"
+   ]
+  },
+  {
+   "n": "R3",
+   "file": "03_street.png",
+   "where": "a street at eye height looking east (eye -3328 -1064 -3544)",
+   "teaches": "House walls straight onto uneven cobbles, a utility pole and its wires, boards and a ladder on the walls, the street closing in at the far end.",
+   "lessons": [
+    "raven-streets-and-houses",
+    "valve-overhead-cables",
+    "valve-boarded-openings"
+   ]
+  },
+  {
+   "n": "R4",
+   "file": "04_rooftops.png",
+   "where": "over the rooftops (eye -2800 -1352 -3416)",
+   "teaches": "The refuge route: plank bridges, ladders and timber scaffolds between roofs, the spire as a landmark; a corpse (red) and the dead (green) below and on the roofs.",
+   "lessons": [
+    "raven-rooftop-refuge"
+   ]
+  },
+  {
+   "n": "R5",
+   "file": "05_trap_passage.png",
+   "where": "from a walkway down through timber props to the propeller trap (eye -1479 -1385 -3392)",
+   "teaches": "A trap is a place: a narrow passage under leaning timbers where the dead are drawn in, the trap (engine, blade, lever) at its throat.",
+   "lessons": [
+    "raven-traps-and-makers"
+   ]
+  },
+  {
+   "n": "R6",
+   "file": "06_corpse_alley.png",
+   "where": "down onto the yard of the pinned corpse and the crows (eye -1642 -1328 -3326)",
+   "teaches": "One corpse with crows round it tells the story; the yard is otherwise litter and leaves, seen from a roof.",
+   "lessons": [
+    "raven-litter-not-gore",
+    "raven-rooftop-refuge"
+   ]
+  },
+  {
+   "n": "R7",
+   "file": "07_houses_cut.png",
+   "where": "the houses round the corpse room and the saw blades, cut at 190 over the floor",
+   "teaches": "Small rooms, low ceilings (120), stairs of 8 by 12, furniture on the walls, the corpse room full of the dead waiting.",
+   "lessons": [
+    "valve-flat-interiors",
+    "raven-traps-and-makers"
+   ]
+  }
+ ]
+}

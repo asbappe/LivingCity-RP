@@ -1,0 +1,93 @@
+{
+ "about": "Valve's own d1_trainstation_03 (the apartments and the rooftop chase) (the Source SDK copy the owner uploaded, 21 November), measured and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees and poles drawn as trunk and pole). Reference only: the VMF is not in the repo.",
+ "numbers": [
+  "Things: 151 prop_static, 146 prop_physics, 22 prop_dynamic, 8 prop_door_rotating, 5 prop_ragdoll, 83 infodecal, 54 info_overlay, 24 keyframe_rope and 17 move_rope, 91 func_detail, 33 npc entities (makers included).",
+  "Lights: 17 light (median brightness 8.0), 20 light_spot (median 400.0), 7 point_spotlight, 5 env_sprite; sun \"237 218 143 800\" at pitch -35, ambient \"190 201 220 100\"; fog \"184 218 231\" from 600 to 4000.0; sky sky_day01_01.",
+  "Sound: 2 env_soundscape (d1_trainstation.Appartments 1, d1_trainstation.RaidAppartments 1), median radius 160; 16 ambient_generic (breakable.spark, d1_trainstation.sinkdrips, d1_trainstation.boots_on_stairs, d1_trainstation_03.citizen_beating).",
+  "Commonest models: radiator01a 16, building_tem002_window01 14, building_tem002_window01_bars 14, furnitureshelf001b 12, lightbulb01a 12, furnitureshelf002a 11, courtyard_template002_window 10, playgroundtick-tack-toe_block01a 9, tree_deciduous_01a-lod 9, light_domelight02_on 8, furniturechair001a 8, combine_lock01 8, furniturecouch001a 7, tv_monitor01_screen 5, tv_monitor01 5.",
+  "Commonest materials (faces): woodstair002c 652, wooddoor045b 633, plasterwall030c 410, plasterwall041a 403, stonestair001a 332, wooddoor048a 317, plasterwall005c 313, plasterwall012a 301, plasterwall030a 300, plasterwall005a 288, plasterwall044b 275, plasterwall042c 259, concretefloor028c 215, plasterwall040a 190, concretefloor013a 159, metalfence007a 156, glasswindow070a 148, stonewall040f 134, tilefloor009a 128, woodstair002a 128.",
+  "Ceilings: floor to ceiling indoors (cast up from 125 AI nodes) is most often 120 (81 of them), then 112 and 128; 12% of the nodes are outdoors; rooms at those nodes measure about 160 by 324 (median, wall to wall).",
+  "Stairs: 45 flights of 3 or more steps; steps rise 8 and tread 12 (238 steps), then 8 by 8 (14); median 7 steps a flight.",
+  "Walls in bands: 83% of wall length over 256 tall changes material at least once; the first change is most often 128 over the wall's foot, then 80 and 120; commonest pairs (below > above): plasterwall030c > plasterwall030a, stonewall040f > stonewall050c, plasterwall005c > plasterwall005a, building_template011f > building_template011c.",
+  "Fronts: 35% of all vertical wall area is building_template texture (windows painted on a flat wall): building_template012j, building_template002a, courtyard_template002b, building_template002b.",
+  "Streets (cross-sections through 4 outdoor AI nodes, 4 with a kerb each side): roadway most often 256 wide; kerbs 4 (8) high; pavements most often 128, 288, 192 wide; the road is flat (crown 0 in 4 of 4); road concretefloor033c, pavement concretefloor028c; wall to wall most often 704; street walls median 672 tall (height over width 1.05).",
+  "Doors: door01_left 4 (model 12x49x109), door02_double 4 (model 12x46x109); doorways measured at them (jamb to jamb, floor to head): 60x108 (4), 48x108 (3), 32x108 (1).",
+  "Cables: 26 rope spans, median 328 long, slack 100, width 1.0.",
+  "Spacing (nearest of the same model): utilitypole02b 1411 apart (n 3), tree_deciduous_03b 635 apart (n 5), tree_deciduous_01a-lod 597 apart (n 9).",
+  "Slopes: 51 sloped faces over 2000 square units; pitch most often 35, 70, 65 degrees; metalroof006a, tileroof002a, plasterwall005a.",
+  "Inside walls: 337 of 423 walls sampled from the corridors and flats are one material floor to ceiling; where a wall is two-toned the change is most often at 64 (plasterwall030c below, 030a above), then 128 (tile to wallpaper).",
+  "Flats are furnished on the walls: radiator01a 16 (the commonest model), furnitureshelf001b 12 and 002a 11, furniturechair001a 8, furniturecouch001a 7, tv_monitor01 5; lit by lightbulb01a 12 and light_domelight02_on 8; 25 of the 37 lights are warm ('255 224 144'), the plain light at brightness 8 as fill and light_spot at 400.",
+  "Windows from outside are models on painted fronts: building_tem002_window01 14 with the same number of _bars, courtyard_template002_window 10; glass faces most often 40 wide by 72 tall.",
+  "Boards: 172 plank brushes, most 4 thick, 8 wide and 112 long (78 of them), in wooddoor045b and wooddoor048a: doors and windows nailed shut.",
+  "Lived in: decals of power outlets 10, stains 9, wallstain_frame (where pictures hung) 11, plaster damage; 54 overlays (stains, ivy, posters); 36 func_breakable; combine_lock01 8 on the doors.",
+  "Sound: 2 soundscapes (d1_trainstation.Appartments, .RaidAppartments) and one-shots: sink drips, boots on stairs, a crying loop, a citizen being beaten."
+ ],
+ "pictures": [
+  {
+   "n": "T3.1",
+   "file": "01_overview_sw.png",
+   "where": "the apartments chase from the south-west",
+   "teaches": "A deep block of flats, courtyards and roofs; the street on one side.",
+   "lessons": [
+    "valve-template-fronts"
+   ]
+  },
+  {
+   "n": "T3.2",
+   "file": "02_overview_ne.png",
+   "where": "the same from the north-east",
+   "teaches": "The rooftop way out: low roofs, sheds and walls stepping down.",
+   "lessons": [
+    "skyline-corners"
+   ]
+  },
+  {
+   "n": "T3.3",
+   "file": "03_street.png",
+   "where": "the street below the flats (eye -4223 -5336 60)",
+   "teaches": "Road 256, kerb 4, pavements 128 to 288, trees on the pavement edge, fronts 672 tall.",
+   "lessons": [
+    "valve-street-proportions",
+    "street-profile"
+   ]
+  },
+  {
+   "n": "T3.4",
+   "file": "04_corridor.png",
+   "where": "a tenement corridor (eye -4896 -4616 448)",
+   "teaches": "Corridor 64 to 128 wide, ceiling 120, a dome light every few doors, doors in proud frames both sides.",
+   "lessons": [
+    "valve-flat-interiors",
+    "valve-light-pools"
+   ]
+  },
+  {
+   "n": "T3.5",
+   "file": "05_flat.png",
+   "where": "inside a flat (eye -4468 -4664 320)",
+   "teaches": "Small rooms, things on the walls (fridge, shelves, boxes), the doorway on to the next room.",
+   "lessons": [
+    "valve-flat-interiors",
+    "room-to-move"
+   ]
+  },
+  {
+   "n": "T3.6",
+   "file": "06_stairwell.png",
+   "where": "the stairwell (eye -4984 -4832 576)",
+   "teaches": "Flights of 8 by 12, a light on each landing.",
+   "lessons": [
+    "valve-flat-interiors"
+   ]
+  },
+  {
+   "n": "T3.7",
+   "file": "07_block_cut.png",
+   "where": "the tenement block cut at 190 over the floor",
+   "teaches": "The plan: a corridor down the middle, flats each side about 160 to 232 by 224 to 376, the stair in its own shaft.",
+   "lessons": [
+    "valve-flat-interiors"
+   ]
+  }
+ ]
+}

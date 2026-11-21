@@ -1,0 +1,17 @@
+{
+ "about": "Valve's own sdk_vehicles (a vehicle test map in the Source SDK copy the owner uploaded, 21 November), drawn by map_view.py. Reference only: the VMF is not in the repo.",
+ "numbers": [
+  "Things: 31 prop_static (rockcliff_cluster03a 20, 03b 9, driftwood_01a 2), one prop_vehicle_jeep (the buggy), one info_player_start, one light_environment; no lights, no sound, no decals.",
+  "Ground: 49 world brushes; every floor is displacement (blendsandgrass008a, blenddirtgrass001a/b) over about 7600 by 12900.",
+  "Light: sun '255 244 213' at 512, pitch -45, ambient '172 196 204' at 50; sky sky_wasteland02; no fog."
+ ],
+ "pictures": [
+  {
+   "n": "VH1",
+   "file": "01_overview_sw.png",
+   "where": "the whole test map from the south-west",
+   "teaches": "One big rolling displacement field ringed by rock cliff props: room to drive, nothing else.",
+   "lessons": []
+  }
+ ]
+}

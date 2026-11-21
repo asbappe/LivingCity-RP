@@ -1,0 +1,94 @@
+{
+ "about": "Valve's own d1_trainstation_02 (the City 17 plaza and streets after the station) (the Source SDK copy the owner uploaded, 21 November), measured and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees and poles drawn as trunk and pole). Reference only: the VMF is not in the repo.",
+ "numbers": [
+  "Things: 305 prop_static, 66 prop_physics, 6 prop_dynamic, 6 prop_door_rotating, 0 prop_ragdoll, 162 infodecal, 27 info_overlay, 27 keyframe_rope and 19 move_rope, 126 func_detail, 47 npc entities (makers included).",
+  "Lights: 7 light (median brightness 2.0), 21 light_spot (median 600.0), 10 point_spotlight, 21 env_sprite; sun \"237 218 143 800\" at pitch -35, ambient \"190 201 220 100\"; fog \"223 216 173\" from 512 to 20000; sky sky_day01_01.",
+  "Sound: 12 env_soundscape (d1_trainstation.QuietCourtyard 3, d1_trainstation.Turnstyle 2, d1_trainstation.Interrogation 2, d1_trainstation.TerminalSquare 2, d1_trainstation.AppartmentCourtyard 2, d1_trainstation.Appartments 1), median radius 96; 15 ambient_generic (combine.sheild_loop, combine.sheild_touch, trainyard.sodamachine_dispense, trainyard.sodamachine_empty).",
+  "Commonest models: handrail_64decoration001a 17, bench_indoor001a 14, trainstation_post001 13, tree_deciduous_03b 12, benchoutdoor01a 10, trainstation_column001 10, tree_poplar_01 9, trainstation_arch001 9, awning001a 9, antennaclusters01a 9, combine_lock01 9, awning002a 8, playgroundtick-tack-toe_block01a 8, tree_deciduous_01a-lod 8, gutterlarge_512_001a 8.",
+  "Commonest materials (faces): concretefloor028c 405, stonewall050c 379, stonewall050b 370, stonewall040f 293, stonewall050a 267, stonefloor006b 209, concretewall037d 183, building_template028a 179, stonefloor006a 166, stonestair001a 139, building_template012j 137, metalroof006a 116, courtyard_template002b 109, dev_lowermetaldoor02a 108, building_trainstation_window001b 100, building_template003e 94, metalcombine001 93, metalhull003a 93, building_template011c 92, red_grass 91.",
+  "Ceilings: floor to ceiling indoors (cast up from 50 AI nodes) is most often 352 (11 of them), then 192 and 256; 64% of the nodes are outdoors; rooms at those nodes measure about 211 by 704 (median, wall to wall).",
+  "Stairs: 54 flights of 3 or more steps; steps rise 8 and tread 12 (251 steps), then 16 by 24 (42); median 6 steps a flight.",
+  "Walls in bands: 83% of wall length over 256 tall changes material at least once; the first change is most often 128 over the wall's foot, then 144 and 64; commonest pairs (below > above): stonewall050c > stonewall050a, building_template011f > building_template011c, stonewall040f > brickwall017a, stonewall050c > stonewall050b.",
+  "Fronts: 46% of all vertical wall area is building_template texture (windows painted on a flat wall): building_template028a, building_template012j, building_template011c, courtyard_template002b.",
+  "Streets (cross-sections through 243 outdoor AI nodes, 112 with a kerb each side): roadway most often 416 wide; kerbs 4 (190) or 8 (34) high; pavements most often 128, 32 wide; the road is flat (crown 0 in 78 of 112); road stonefloor006a, pavement concretefloor028c; wall to wall most often 768; street walls median 672 tall (height over width 0.41).",
+  "Doors: door01_left 6 (model 12x49x109); doorways measured at them (jamb to jamb, floor to head): 96x108 (4), 48x108 (2).",
+  "Cables: 25 rope spans, median 734 long, slack 100, width 1.0.",
+  "Spacing (nearest of the same model): utilitypole02b 693 apart (n 3), tree_poplar_01 512 apart (n 9), lampfixture01a 784 apart (n 5), benchoutdoor01a 192 apart (n 10), tree_deciduous_03b 384 apart (n 12).",
+  "Slopes: 107 sloped faces over 2000 square units; pitch most often 70, 35, 45 degrees; metalroof006a, roof_template001b, tileroof002a.",
+  "Steps: the outdoor steps by the station front are 16 by 24 (42 steps found); every other flight is 8 by 12.",
+  "Plaza furniture: benchoutdoor01a 10 at 192 apart, tree_deciduous_03b 12 at 384 apart and tree_poplar_01 9 at 512, trainstation_post001 13, awnings 17 (awning001a, 002a), gutterlarge_512 downpipes 8, antennaclusters01a 9 on the roofs, combine_lock01 9 on doors.",
+  "Grime: 162 infodecal and 27 info_overlay in one plaza and its yards."
+ ],
+ "pictures": [
+  {
+   "n": "T2.1",
+   "file": "01_overview_sw.png",
+   "where": "the plaza, the station and the blocks from the south-west",
+   "teaches": "The station is one long banded hall; the blocks round the plaza stand 576 to 768 tall, their upper storeys painted building_template fronts.",
+   "lessons": [
+    "valve-wall-bands",
+    "valve-template-fronts",
+    "valve-street-proportions"
+   ]
+  },
+  {
+   "n": "T2.2",
+   "file": "02_overview_ne.png",
+   "where": "the same from the north-east",
+   "teaches": "Roofs at many heights with chimneys and aerials; the Combine wall and towers stand over the old blocks.",
+   "lessons": [
+    "skyline-corners",
+    "valve-combine-cold"
+   ]
+  },
+  {
+   "n": "T2.3",
+   "file": "03_station_front.png",
+   "where": "the station front (eye -2816 -2720 64)",
+   "teaches": "Wide steps, bollards in a row, trees on a rhythm, a banded wall with tall windows.",
+   "lessons": [
+    "valve-wall-bands",
+    "valve-column-rhythm"
+   ]
+  },
+  {
+   "n": "T2.4",
+   "file": "04_plaza.png",
+   "where": "across the plaza (eye -3014 -2042 128)",
+   "teaches": "Barricades and wires; the middle kept open, the things at its edges.",
+   "lessons": [
+    "valve-clutter",
+    "valve-overhead-cables",
+    "combine-kit"
+   ]
+  },
+  {
+   "n": "T2.5",
+   "file": "05_courtyard.png",
+   "where": "the apartment courtyard (eye -4648 -3648 64)",
+   "teaches": "A quiet yard behind the blocks, its own soundscape (d1_trainstation.AppartmentCourtyard).",
+   "lessons": [
+    "soundscapes",
+    "valve-template-fronts"
+   ]
+  },
+  {
+   "n": "T2.6",
+   "file": "06_station_hall_cut.png",
+   "where": "the station hall from above, roof cut away",
+   "teaches": "Columns (trainstation_column001) and posts on one rhythm, benches in rows between them.",
+   "lessons": [
+    "valve-column-rhythm"
+   ]
+  },
+  {
+   "n": "T2.7",
+   "file": "07_apartment_block.png",
+   "where": "an apartment block and its courtyard from the south-west",
+   "teaches": "A block is a few big volumes with painted fronts; detail only where the player walks.",
+   "lessons": [
+    "valve-template-fronts"
+   ]
+  }
+ ]
+}

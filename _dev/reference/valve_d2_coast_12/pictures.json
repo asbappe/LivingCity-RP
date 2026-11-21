@@ -1,0 +1,67 @@
+{
+ "about": "Valve's own d2_coast_12 (the coast and the Combine bunkers) (the Source SDK copy the owner uploaded, 21 November), measured and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees and poles drawn as trunk and pole). Reference only: the VMF is not in the repo.",
+ "numbers": [
+  "Things: 151 prop_static, 47 prop_physics, 15 prop_dynamic, 0 prop_door_rotating, 3 prop_ragdoll, 78 infodecal, 22 info_overlay, 29 keyframe_rope and 5 move_rope, 45 func_detail, 80 npc entities (makers included).",
+  "Lights: 17 light (median brightness 50.0), 24 light_spot (median 2500.0), 27 point_spotlight, 27 env_sprite; sun \"237 232 209 70\" at pitch -5, ambient \"122 140 169 60\"; fog \"68 84 99\" from 1000 to 6600; sky sky_day02_09.",
+  "Sound: 26 env_soundscape (coast.shoreline_with_antlion_dens 11, coast.combine_controlroom_ambience 6, coast.bridge_concrete_room 6, coast.cliffside 2, coast.generic_ambient_01 1), median radius 96; 18 ambient_generic (novaprospekt.flare_fire, coast.bunker_siren1, coast.bunker_siren2, coast.wind_01).",
+  "Commonest models: combine_soldier_prisonguard 39, rockgranite01a 16, bunker_gun01 11, wood_crate001a 9, oildrum001_explosive 9, tree_deciduous_card_01 9, rockgranite01b 8, oildrum001 8, tree_deciduous_01a-lod 8, driftwood_01a 7, powertower01 7, dock01_pole01a_128 7, driftwood_clump_02a 6, combine_bunker01 6, combine_light001a 6.",
+  "Commonest materials (faces): metalwall077a 774, brickwall020a 743, brickwall046a 415, metalpipe002a 230, concretewall036a 220, metaldoor005a 186, reflectivity_10 132, concretewall010a 77, woodfloor005a 73, concretewall022b 66, blenddirtgrass008a 62, metalrail003a 62, concretefloor009a 57, metalgrate014a 56, cliffface001a 46, concretefloor011a 42, gravelfloor004a 37, metaltruss004a 36, metalgate005a 30, concreteceiling002a 28.",
+  "Ceilings: floor to ceiling indoors (cast up from 132 AI nodes) is most often 144 (81 of them), then 96 and 128; 72% of the nodes are outdoors; rooms at those nodes measure about 372 by 975 (median, wall to wall).",
+  "Cables: 29 rope spans, median 3897 long, slack 120, width 4.0.",
+  "Spacing (nearest of the same model): light_spotlight01_lamp 112 apart (n 5), tree_deciduous_01a-lod 725 apart (n 8), tree_deciduous_card_01 1615 apart (n 9).",
+  "Slopes: 57 sloped faces over 2000 square units; pitch most often 60, 20, 30 degrees; metalpipe002a, brickwall046a, brickwall020a.",
+  "Bunkers: combine_bunker01 6 and bunker_gun01 11 set into the slopes; 39 Combine soldiers placed (combine_soldier_prisonguard), 11 npc_template_maker, antlion makers.",
+  "Dusk light: the sun is low and weak ('237 232 209' at 70, pitch -5), ambient '122 140 169' at 60, fog dark blue ('68 84 99') from 1000 to 6600; the bunkers lit cold by 27 point_spotlight and 24 light_spot (median 2500, '144 224 240'), with red lights ('240 48 32') at alarms.",
+  "Open ground: half the floor is displacement; power lines on powertower01 (7) with spans of about 3900, slack 120, width 4; dock01_pole01a_128 posts 148 apart.",
+  "Sound: 26 env_soundscape (coast.shoreline_with_antlion_dens 11, coast.combine_controlroom_ambience 6, coast.bridge_concrete_room 6) and sirens and wind one-shots."
+ ],
+ "pictures": [
+  {
+   "n": "K1",
+   "file": "01_overview_sw.png",
+   "where": "the coast from the south-west",
+   "teaches": "A long strip of shore and cliff, the bunkers dug in along it.",
+   "lessons": []
+  },
+  {
+   "n": "K2",
+   "file": "02_overview_ne.png",
+   "where": "the same from the north-east",
+   "teaches": "Concrete rooms and a bridge set into the land, power lines along the shore.",
+   "lessons": [
+    "valve-combine-cold"
+   ]
+  },
+  {
+   "n": "K3",
+   "file": "03_bunker_mouth.png",
+   "where": "a Combine bunker dug into the slope (eye 2343 -976 736)",
+   "teaches": "A dark mouth in a low concrete face, a curved trench in front; the Combine builds low and heavy outside the city.",
+   "lessons": [
+    "combine-kit",
+    "valve-combine-cold"
+   ]
+  },
+  {
+   "n": "K4",
+   "file": "04_clifftop.png",
+   "where": "the cliff-top (eye 4683 4545 799)",
+   "teaches": "Trees, rocks and crates on uneven ground; the old prison tower on the skyline.",
+   "lessons": []
+  },
+  {
+   "n": "K5",
+   "file": "05_bunker_cut.png",
+   "where": "the concrete bridge room and bunker from the north-east, roof cut away",
+   "teaches": "Rooms of brick and concrete (brickwall020a, 046a), ceilings 144, one long room after another.",
+   "lessons": []
+  },
+  {
+   "n": "K6",
+   "file": "06_shore.png",
+   "where": "the shoreline under the cliffs (eye 8350 6746 822)",
+   "teaches": "Water against cliff faces, posts of the old docks.",
+   "lessons": []
+  }
+ ]
+}
