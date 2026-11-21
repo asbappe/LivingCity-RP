@@ -11985,6 +11985,24 @@
 "static": true,
 "v": 2
 },
+"models/props_pipes/gutter_256_002a.mdl": {
+"bbox": [
+-8.2,
+-13.0,
+-128.3,
+8.3,
+13.2,
+128.4
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
 "models/props_pipes/gutter_320_002a.mdl": {
 "bbox": [
 -7.7,
@@ -15246,6 +15264,10 @@
 "ragdoll": false,
 "static": true,
 "v": 2
+},
+"models/props_vehicles/truck001c.mdl": {
+"elsewhere": [],
+"game": null
 },
 "models/props_vehicles/truck002a_cab.mdl": {
 "bbox": [

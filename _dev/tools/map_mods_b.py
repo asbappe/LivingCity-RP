@@ -130,8 +130,10 @@ def slide_door(m, name, parts, movedir, speed=40, lip=0, wait="-1", toggle=True,
 
 def rider(m, door, model, u, v, yaw, z):
     """The model an unseen door wears: a prop_dynamic standing on z that rides on the door named `door` (not solid: the
-    door's own brush does the blocking)."""
-    m.prop("prop_dynamic", model, u, v, yaw, z, {"parentname": door, "solid": "0", "disableshadows": "1", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1",
+    door's own brush does the blocking). A physics model is a prop_dynamic_override: as a plain prop_dynamic the game
+    objects to it."""
+    import map_assets
+    m.prop("prop_dynamic_override" if map_assets.is_physics_prop(model) else "prop_dynamic", model, u, v, yaw, z, {"parentname": door, "solid": "0", "disableshadows": "1", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1",
                                                 "StartDisabled": "0", "renderamt": "255", "rendercolor": "255 255 255"})
 
 
@@ -1156,14 +1158,17 @@ def m_stash(m, opt):
 # ---------------------------------------------------------------------------
 
 def m_market(m, opt):
-    """The black market: a vaulted arcade inside the left wall, entered from the canal's floor by two archways.
-    Five stalls in alcoves along its back, each with a steel kitchen counter across the right half of its front (the
-    left half is the way behind it), a shelf unit, goods on the counter, a dome light, a crate to sit on, and a tin
-    roll shutter over the front (lc_market_shutter_1 to _5: each lifts and drops when the button inside its own stall
-    is pressed, lc_market_button_1 to _5, or when the game sends Open or Close). lc_market_stall_1 to _5 are where
-    the stallholders stand, facing out. A fire drum burns in the middle of the arcade between two benches; a
-    lookout's stool stands inside each archway, where the canal can be watched both ways; ribs carry the vault at
-    every pier.
+    """The black market: a vaulted arcade inside the left wall, entered from the canal's floor by two archways, its
+    walls as City 18's vaulted halls are (brick to the dado, plaster above, a stone rail between), damp at the foot
+    and blackened over the fire. Five stalls in alcoves along its back, each with a steel kitchen counter across the
+    right half of its front (the left half is the way behind it), a shelf unit, a trade's goods on the counter (food,
+    the Combine's ration packs, parts and tools, medicine, radios), a dome light, and a roll shutter of the city's
+    corrugated door metal with a handle at its foot (lc_market_shutter_1 to _5: each lifts into its box and drops
+    when the button inside its own stall is pressed, lc_market_button_1 to _5, or when the game sends Open or
+    Close); the two that start down carry a padlock on the handle, and three boxes carry a painted sign.
+    lc_market_stall_1 to _5 are where the stallholders stand, facing out. A fire drum burns in the middle of the
+    arcade between two benches, its smoke gathering under the vault; a lookout's stool stands inside each archway,
+    where the canal can be watched both ways; ribs carry the vault at every pier.
     Left as brushes: the shutters, their boxes and guide rails (Half-Life 2 has no roll shutter; they are the named
     doors), the vault's ribs and the arches.
     Unchecked: the sound ambient/fire/fire_small_loop1.wav; env_fire's look (the same settings as the vortigaunt
@@ -1188,26 +1193,33 @@ def m_market(m, opt):
     for su in stalls:
         m.low(su, 512, su + 128, 704, A, mat=STONE_FLOOR)      # (192 deep: the owner, "no room to even walk into them")
     m.side(64, 256, 1216, 704)
+    line_walls(m, [(128, 320, 1152, 512, H)] + [(su, 512, su + 128, 704, A) for su in stalls], dado=64, low=OLD_BRICK, high=CELL_HIGH,
+               roof=CELL_HIGH, rail=CELL_RAIL)
     for ru in (136, 352, 544, 736, 928, 1128):
         arch_rib(m, ru - 8, ru + 8, 320, 512, H, 72, MAT["beam"])
 
-    wares = ((("props_junk/watermelon01", 76, 0), ("props_junk/glassjug01", 96, 20), ("props_junk/garbage_metalcan001a", 108, 60), ("props_junk/popcan01a", 116, 100)),
-             (("props_c17/suitcase001a", 82, 10), ("props_c17/briefcase001a", 110, 80), ("props_junk/cardboard_box004a", 100, 30)),
-             (("props_lab/partsbin01", 78, 0), ("props_c17/tools_wrench01a", 98, 40), ("props_c17/tools_pliers01a", 112, 110), ("props_lab/harddrive01", 118, 70)),
-             (("props_lab/jar01a", 76, 0), ("props_lab/jar01b", 90, 30), ("items/healthkit", 106, 80), ("props_junk/glassbottle01a", 120, 0)),
-             (("props_lab/citizenradio", 80, 270), ("props_lab/reciever01a", 104, 280), ("props_c17/consolebox01a", 112, 250)))
+    wares = ((("props_junk/watermelon01", 76, 0), ("props_junk/popcan01a", 100, 100)),                  # food, and Breen's water
+             (("weapons/w_package", 80, 10), ("weapons/w_package", 104, 80)),                          # the Combine's ration packs, resold
+             (("props_lab/partsbin01", 78, 0), ("props_c17/tools_wrench01a", 104, 40)),                # parts and tools
+             (("items/healthkit", 78, 80), ("props_lab/jar01b", 104, 30)),                             # medicine
+             (("props_lab/citizenradio", 80, 270), ("props_lab/reciever01a", 108, 280)))               # radios
     for k, su in enumerate(stalls):
         n = k + 1
         # the counter across the right half of the front; the left half is the way in behind it
         m.static("models/props_wasteland/kitchen_counter001%s.mdl" % "abcab"[k], su + 94, 545, 90)
-        put(m, [(name, su + du, 536 + 7 * (j % 3), yaw) for j, (name, du, yaw) in enumerate(wares[k][:2])], F + 40)
+        put(m, [(name, su + du, 536 + 7 * (j % 3), yaw) for j, (name, du, yaw) in enumerate(wares[k])], F + 40)
         if k % 2 == 0:
             m.static("models/props_c17/cashregister01a.mdl", su + 100, 562, 90, z=F + 40)
         # the shutter, and the box it rolls up into
-        slide_door(m, "lc_market_shutter_%d" % n, [((su, 507, F + 42, su + 128, 509, A), TIN), ((su, 506, F + 42, su + 128, 510, F + 46), BARS)],
-                   "-90 0 0", speed=50, lip=6, starts_open=k % 2 == 0)
-        m.det([(su - 4, 500, A - 4, su + 132, 512, A + 22)], TIN)
-        m.det([(su - 4, 504, F, su, 512, A - 4), (su + 128, 504, F, su + 132, 512, A - 4)], BARS)
+        name = "lc_market_shutter_%d" % n
+        slide_door(m, name, [((su, 507, F + 42, su + 128, 509, A), SHUTTER), ((su, 506, F + 42, su + 128, 510, F + 46), BARS),
+                             ((su + 58, 504, F + 44, su + 70, 506, F + 48), IRON)], "-90 0 0", speed=50, lip=6, starts_open=k % 2 == 0)
+        if k % 2:                                              # (down, and locked: a padlock on the handle, riding with the shutter)
+            rider(m, name, "models/props_wasteland/prison_padlock001a.mdl", su + 64, 502, 90, F + 36)
+        m.det([(su - 4, 500, A - 4, su + 132, 512, H)], TIN)                                # the box it rolls into, up to the vault
+        if k % 2 == 0:
+            m.decal("decals/decalsignpainted001%s" % "abc"[k // 2], su + 64, 500, A + 20)    # the trade, painted on the box
+        m.det([(su - 4, 504, F, su + 2, 512, A - 4), (su + 126, 504, F, su + 132, 512, A - 4)], BARS)
         m.button("lc_market_button_%d" % n, su, 600, F + 44, 0, [("lc_market_shutter_%d" % n, "Toggle", "", 0)])
         m.target("lc_market_stall_%d" % n, su + 80, 616, F + 8, 270)
         m.static("models/props_c17/shelfunit01a.mdl", su + 64, 692, 0)
@@ -1220,6 +1232,8 @@ def m_market(m, opt):
     bu, bv = 640, 400
     m.static("models/props_c17/oildrum001.mdl", bu, bv, 0)
     fire(m, bu, bv, F + 46, size=20, light="255 160 80 130", drop=False)
+    m.smoke(bu, bv, F + 70, colour="60 60 60", size=8, length=90, rate=5)                 # its smoke, gathering under the vault
+    m.decal("decals/scorch1", bu, bv, H - 2)                                               # and the soot it leaves there
     m.sound("ambient/fire/fire_small_loop1.wav", bu, bv, F + 40, radius=420, volume=3)
     m.static("models/props_wasteland/cafeteria_bench001a.mdl", bu - 56, bv, 0)
     m.static("models/props_wasteland/cafeteria_bench001a.mdl", bu + 56, bv, 0)
@@ -1229,8 +1243,13 @@ def m_market(m, opt):
     # the lookouts' stools, inside each archway on the side they watch from
     for su in (232, 1048):
         m.static("models/props_c17/chair_stool01a.mdl", su, 340, 0)
-    m.decal("decals/decalposter014a", 352, 512, F + 90)
-    m.decal("decals/decal_posters005a", 928, 512, F + 88)
+    m.grime("poster", 352, 510, F + 100, 1)
+    m.grime("poster", 928, 510, F + 98, 2)
+    for k, (u, v) in enumerate(((180, 322), (560, 322), (1100, 322), (700, 510))):
+        m.grime("stain", u, v, F + 34, 3 + k)                                              # damp at the foot of the walls
+    m.grime("trash", 450, 360, F, 7)
+    m.grime("lambda", 1150, 420, F + 120, 8)
+    sounds(m, L, "inside", 640, 420, F, 560)
 
     m.view(320, 120, F, 90, 0, "an archway from the canal")
     m.view(180, 416, F, 0, 2, "down the arcade")

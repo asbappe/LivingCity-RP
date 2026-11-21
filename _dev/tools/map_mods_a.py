@@ -114,12 +114,13 @@ def vprism(pts, z1, z2, mat, top=None):
 
 def arch(a, b, zt, rise, lo, hi, mat, axis="x"):
     """The haunches of an arch over an opening from a to b under a soffit at zt: prisms that round its two top corners
-    (three facets a side), pushed from lo to hi along u (axis "x": the opening is in v) or along v ("y": it is in u)."""
+    (three facets a side), pushed from lo to hi along u (axis "x": the opening is in v) or along v ("y": it is in u).
+    Each facet stops 1 short of the last at both ends, so no two of their end faces share a plane (they would flicker)."""
     out = []
     for corner, way in ((a, 1), (b, -1)):
         pts = [(corner, zt - rise), (corner + way * (rise // 8), zt - rise // 2), (corner + way * (3 * rise // 8), zt - (3 * rise) // 16), (corner + way * rise, zt)]
         for k in range(3):
-            out.append(prism([(corner, zt), pts[k], pts[k + 1]], axis, lo, hi, mat))
+            out.append(prism([(corner, zt), pts[k], pts[k + 1]], axis, lo + k, hi - k, mat))
     return out
 
 
@@ -1310,7 +1311,7 @@ def m_arcade(m, opt):
     m.shapes(haunch)
     m.det([(632, -256, deck - 12, 640, 256, deck + 4), (896, -256, deck - 12, 904, 256, deck + 4)], "stone/stonewall050f")    # the cornice along each face
     # dressed stone at the arches: a keystone at each crown on both faces, and a lamp under the middle arch on each pier
-    m.det([(u, c - 12, deck - 60, u + 6, c + 12, deck - 30) for u in (634, 896) for c in (-192, 0, 192)], "stone/stonewall050f")
+    m.det([(u, c - 12, deck - 60, u + 6, c + 12, deck - 30) for (u, c) in ((634, 0), (634, -192), (896, 0), (896, 192))], "stone/stonewall050f")    # (not over the stairs)
     for v, out in ((63, 270), (-63, 90)):
         m.static(P + "props_c17/light_cagelight02_on.mdl", 768, v, out, F + 196)
         m.light(768, v - 14 if out == 270 else v + 14, F + 202, "255 200 140 40")
@@ -1335,14 +1336,14 @@ def m_arcade(m, opt):
     cols, brackets = [], []
     for (ua, ub, gap) in ((640, 652, (192, 256)), (884, 896, (-256, -192))):
         for c in (-256, -152, -56, 40, 136, 240):
-            cols.append((ua, c, deck, ub, c + 16, roof - 16))
+            cols.append((ua, max(c, -255), deck, ub, min(c + 16, 255), roof - 16))
             for way in (-1, 1):
                 edge = c if way < 0 else c + 16
                 if -256 < edge + way * 24 < 256:
                     brackets.append(prism([(edge, roof - 16), (edge, roof - 44), (edge + way * 28, roof - 16)], "x", ua + 2, ub - 2, WOODTRIM))
-        para_boxes = wall(ua + 2, -256, ub - 2, 256, deck, deck + 36, [(gap[0], gap[1], deck, deck + 36)])
+        para_boxes = [x for x in wall(ua + 2, -254, ub - 2, 254, deck, deck + 36, [(max(gap[0], -254), min(gap[1], 254), deck, deck + 36)]) if x[4] - x[1] > 0]
         m.det(para_boxes, stone)
-        m.det([(ua - 2 if ua == 640 else ua, x[1], deck + 36, ub if ua == 640 else ub + 2, x[4], deck + 40) for x in para_boxes], MAT["beam"])
+        m.det([(ua - 2 if ua == 640 else ua + 1, x[1], deck + 36, ub - 1 if ua == 640 else ub + 2, x[4], deck + 40) for x in para_boxes], "stone/stonewall050f")
         m.det([(ua, -256, roof - 16, ub, 256, roof)], WOODTRIM)
     m.det(cols, stone)
     m.shapes(brackets)
@@ -1366,7 +1367,6 @@ def m_arcade(m, opt):
         m.static(P + "props_c17/light_domelight02_off.mdl", 768, 290 * s, 0, deck + 112 - 7)
         m.static(P + "props_junk/glassjug01.mdl", 700, 300 * s, 0, deck + 64)
         m.static(P + "props_lab/jar01a.mdl", 836, 300 * s, 0, deck + 64)
-        m.light(768, 290 * s, deck + 60, "255 200 150 8")
         m.grime("poster", 641, 290 * s, deck + 70, 7 + s)
         for u in (712, 824):
             m.static(P + "props_building_details/storefront_template001a_bars.mdl", u, 246 * s, 90, deck)
