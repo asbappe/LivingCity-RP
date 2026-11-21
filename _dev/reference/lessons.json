@@ -1092,7 +1092,7 @@
    "title": "Loose props asleep, junk as debris, fixtures held still",
    "rule": "Set the physics flags as Valve does: start asleep (1) on barrels, crates and trash that wait for the player (26% of physics props); debris (4) on small junk so it never blocks a player (10%: trash 99, boards 38, cans 36, boxes 12); motion disabled (8) on things that must stay until hit (29%: nailed boards 207, dock planks 61, barrels 55, crates 37, radiators 24 of 25, shelves 21, tables 12, couches 11, signs 16), with 64 (free on a gravity-gun grab) on 76 of them. 256 (output on use) is Hammer's default and on most.",
    "why": "prop_physics spawnflags across 22 maps: d1_trainstation_01 to 05, d3_c17_13, d1_town_03, d3_citadel_01, d2_coast_12 and 13 Route Kanal maps (21 November): bits 0:571, 2:219, 3:637, 6:76, 7:254 (rotor wash, canals), 8:694. Valve placed only 3 prop_dynamic_override, 9 prop_physics_override and no prop_physics_multiplayer in 22 maps; standing physics furniture is prop_physics with flag 8. Our Mod.loose writes spawnflags 0 on everything. In the uprising's battle maps (d3_c17_01 to 12b, 748 physics props) loose things are mostly left awake: asleep 9%, motion disabled 21% (shelves, boards, rubble, radiators, fences, cars), debris 4% (trash), flags 0 on 119; physdamagescale 0.1 kept on 744.",
-   "how": "Mod.loose(..., asleep=True) writing spawnflags 1 by default; 5 (asleep + debris) for trash, cans, bottles, papers, shoes; boards nailed over openings 8. Whether standing furniture should become prop_physics with flag 8 instead of prop_dynamic_override (physics-props-dynamic) is the owner's call: ask first.",
+   "how": "Mod.loose(..., asleep=True) writing spawnflags 1 by default; 5 (asleep + debris) for trash, cans, bottles, papers, shoes; boards nailed over openings 8. Whether standing furniture should become prop_physics with flag 8 instead of prop_dynamic_override (physics-props-dynamic) is the owner's call: ask first. Episode One's City 17 (nine maps, 1236 physics props): debris (4) on 347 (28%, mostly trash, cans and boards), motion off (8) on 254 (21%: fences, shelves, boards, debris, radiators), asleep on 70 (6%), freed on grab on 85 (7%); loose things on exact 90s only 35% and tilted 56%.",
    "check": "proposed: map_lint lists prop_physics with spawnflags 0 (none asleep) and small junk without the debris flag"
   },
   {
@@ -1259,7 +1259,7 @@
    "title": "Each lamp model has its own light recipe",
    "rule": "Light a fixture as Valve does that model: a light_spot a few units under the model, pitch -90, cone 60 to 80, inner 30 to 45, does the lighting; a small fixture adds a faint point light (brightness 2 to 10) for the glow. Copy the per-model table in the notes (dome light, bulb, prison lamp, cage light, fluorescent, Combine light, spotlight lamp, bell lamp).",
    "why": "Lights matched to the nearest model within 48 (946 lights, 22 maps): light_domelight02_on = light 254 216 146 at 8 plus light_spot 254 216 146 at 200, cone 60, inner 30, pitch -90 (17 pairs); lightbulb01a = light at 8 plus spot at 300, cone 75; prison_lamp001b = light at 2 plus spot at 400 to 550, cone 45 to 60 (12 pairs); light_cagelight02_on = spot 241 214 173 at 1850, cone 80, inner 45, exponent 5, 15 under the model (106 in the canals); lights_florescent01a = spot 159 237 215 at 1200, cone 80, inner 30, exponent 2; combine_light002a = spot 147 226 240 at 2000, cone 35, inner 12; light_spotlight01_lamp = spot 187 234 201 at 1500, cone 35, inner 20, pitch -30, exponent 0.5. Spots point straight down on 37% (city) and 52% (canals). Our m.lamp gives the dome light one point light, and the canal lamps are point lights at 60.",
-   "how": "A FIXTURE table in map_modules keyed by model; m.lamp and the canal lamps place the table light_spot under the model and turn the point light down to the table value. Nova Prospekt (21 November): prison_flourescentlight002b, the flat ceiling panel (96, skin 1 on 94), is lit every time: light_spot 159 237 215 600 (or 255 245 145 400 to 600), cone 70, inner 20 to 30, pitch -74, constant attenuation 500000, at the model; the hanging tubes are dressing (prison_flourescentlight001b lit 0 of 130, 001a 14 of 110); prison_cagedlight001a lit 61 of 154, with light_glow03 at scale 0.75, and in the cellblocks only one in five to ten.",
+   "how": "A FIXTURE table in map_modules keyed by model; m.lamp and the canal lamps place the table light_spot under the model and turn the point light down to the table value. Nova Prospekt (21 November): prison_flourescentlight002b, the flat ceiling panel (96, skin 1 on 94), is lit every time: light_spot 159 237 215 600 (or 255 245 145 400 to 600), cone 70, inner 20 to 30, pitch -74, constant attenuation 500000, at the model; the hanging tubes are dressing (prison_flourescentlight001b lit 0 of 130, 001a 14 of 110); prison_cagedlight001a lit 61 of 154, with light_glow03 at scale 0.75, and in the cellblocks only one in five to ten. light_industrialbell01_on (ep1_c17_05, 06, the loading dock and repair shed: 135 lamps): light_spot 221 249 241 3000, cone 50/20, straight down, hung 480 to 704 up in rows 192 to 224 apart. hospital_surgerylight01 held still at 100 up; the ward's reading tube lights_florescent01a at 64 up pitched 75: light_spot 220 235 245 600 cone 40 pitch -35 plus a point 20.",
    "check": "map_lint.py offlamp (extend, proposed): a lit model from the table with no light_spot under it."
   },
   {
@@ -1885,7 +1885,7 @@
    "title": "Wrecked cars are turned, against the walls, a few burning",
    "rule": "Leave cars the way a fight leaves them: turned off the street's axis (only 15% square), half of them against a wall or kerb, 40% tilted (mostly 10 to 35 degrees, a few on the side or roof), skins varied, a few with a fire or smoke and a scorch overlay under them, trash decals beside. Static for the big ones (trucks, vans, the burnt hatchback); physics only for the small physics car models. Never one square in the middle of the road.",
    "why": "d3_c17_01 to 12b (21 November): 47 cars, vans and trucks: yaw free 25, turned 3 to 20 15, square 7; tilted over 5 degrees 19 (on the roof 2, on the side 3); 22 touch a wall (25 within 16); skin not 0 on 28; env_fire or env_smokestack within 200 of 12, scorch1 within 200 of 7; static 33, physics 11 (car002b, 003b, 004a, 005a/b, van001a_physics), crushed cars as prop_ragdoll (car001a_phy 3). Ours (map_town.py): one car00Xa_physics within 40 of the middle of the street, yaw in steps of 15.",
-   "how": "map_town street dressing: place the car within 16 of a kerb or wall, yaw = street axis plus 15 to 60 (or free), tilt 0 to 30 on a third, skin random; one in five with a small fire (valve-fire-kit) and a scorch overlay 250 across under it. Physics car models go through m.dynamic, never static (physics-props-dynamic). Ask the owner first if it changes cars in streets they have walked.",
+   "how": "map_town street dressing: place the car within 16 of a kerb or wall, yaw = street axis plus 15 to 60 (or free), tilt 0 to 30 on a third, skin random; one in five with a small fire (valve-fire-kit) and a scorch overlay 250 across under it. Physics car models go through m.dynamic, never static (physics-props-dynamic). Ask the owner first if it changes cars in streets they have walked. Episode One (ep1_c17_00 to 06 and styleguide_hospital_exit, 105 vehicles): cars come in jams: 74% have another vehicle within 400 and 38 have three or more; square only 18%, tilted 40% (8 on a side, 8 on the roof), skin not 0 on 46%, static 70%; trucks stand jackknifed 15 to 35 across the lanes. Place cars in groups of three to six within 400, not one by one.",
    "check": "proposed: map_lint notes a vehicle prop square to the grid within 64 of a street's middle; map_assets.py (physics models never static)"
   },
   {
@@ -1913,7 +1913,7 @@
    "title": "A fire: firesize 64, a steady orange light beside it, a scorch under it",
    "rule": "A burning spot is an env_fire of firesize 64 (32 to 48 for a small one, 128 to 150 for a big one), burning from the start and forever, on the rubble or floor rather than inside a prop, with a steady orange light about 30 from it ('254 150 35' at 300 to 900, never a flicker style), a scorch overlay about 250 across under a third of them, and a fire loop within 256. Fires in a burning street come in short rows, not one per prop.",
    "why": "d3_c17_01 to 12b (21 November): 137 env_fire; firesize 64 on 41, 128 to 150 on 35, 48 on 13, 32 on 10; spawnflags 47 (infinite, smokeless, start on, start full, no glow) 39, 3 (lit by the map) 31, 45 (with smoke) 22; 111 with no prop within 64; 88 with a light within 128 (median 33, '254 150 35' 300 to 900 and '254 174 10 500'), no light styles; scorch1 under 42; a fire sound within 256 of 86; groups at 96: 57 alone, 18 of 2 to 4, one street chain of 29 (d3_c17_04). Ours (map_mods_b.py fire): firesize 24 to 30 with a light '255 150 70 110' 40 over it.",
-   "how": "map_mods_b fire(): default size 48 to 64 outdoors, light brightness 300 to 500 at 20 to 40 from the fire, an optional scorch overlay and ambient fire loop; keep drop=False for drums (fire-in-drums). Ask the owner first before changing fires already in their modules. A trap's fire is different: a grid of 8 to 46 env_fire 10 to 30 apart over up to 240 by 288, sizes mixed 25 to 130, all one name, not lit at the start (spawnflags 3, or 34 smokeless with no glow) and lit together by the trap (d1_town_01: 29, 11 and 8; 01a: 23; 02a: 46 and 13 round the propane canisters).",
+   "how": "map_mods_b fire(): default size 48 to 64 outdoors, light brightness 300 to 500 at 20 to 40 from the fire, an optional scorch overlay and ambient fire loop; keep drop=False for drums (fire-in-drums). Ask the owner first before changing fires already in their modules. A trap's fire is different: a grid of 8 to 46 env_fire 10 to 30 apart over up to 240 by 288, sizes mixed 25 to 130, all one name, not lit at the start (spawnflags 3, or 34 smokeless with no glow) and lit together by the trap (d1_town_01: 29, 11 and 8; 01a: 23; 02a: 46 and 13 round the propane canisters). Episode One's City 17: only 5 to 12 fires a map; firesize 32 or 64 lit at 100 to 200, 80 to 128 at 300 to 400, 256 at 2000; 49 of 52 have a steady orange light (254 174 10 or 250 159 69) 8 to 24 over the fire (16 commonest); rubble piles and burnt hatchbacks within 64.",
    "check": "proposed: map_lint notes an env_fire with no light within 128, or a light near a fire with a style"
   },
   {
@@ -2262,7 +2262,7 @@
    "title": "The Combine's walls stand square in plan but lean, and its sections are lop-sided lozenges",
    "rule": "Where the Combine builds its own place, its walls run on the axes in plan but lean 14 to 23 degrees off upright: panels 128 high set back 32 (1 in 4) or 40 (5 in 16), or 104 high set back 44. The foot leans back and the head leans over, so a hall or shaft opens out low and closes in high, in steps that differ from one side to the other. A train runs in a trench of the metal 336 wide at the foot that steps out 32 a side every 112 to 128. The metal is metalwall077a at texture scale 0.5. New Combine pieces can be built so; ask the owner first before changing the checkpoint, depot or armoury, which stand upright.",
    "why": "d2_prison_06 and 08 (21 November): wall area of the Combine's metal is 99% on the axes in plan, but 14% (06) and 7% (08) of it slopes: 137 leaning faces, 128 high set back 32 (41) or 40 (34), 104 high set back 44 (23); faces leaning back 14 degrees and leaning over 17 and 23. The pod shafts of d2_prison_08 (1680..2032 by 2816..4096, -960 to 192): 256 wide at the foot, out to about 400, straight for 600, in to 224 at the head, the two sides stepping at different heights. The train trench of d2_prison_06 at x 3000: 336, 400, 464 wide at -576, -448, -320. metalwall077a at 0.5 on 89% of its area in 08 and 60% in 06 (the old prison 0.25 on 94%).",
-   "how": "A Combine wall helper that stacks 128 courses each set in or out 32 or 40 (a lean of 1 in 4 or 5 in 16) with the faces cut as planes, not stepped boxes; one side of a hall stepping at 128 and the other at 104 or 112. Studied further later (the owner wants the Combine's own architecture).",
+   "how": "A Combine wall helper that stacks 128 courses each set in or out 32 or 40 (a lean of 1 in 4 or 5 in 16) with the faces cut as planes, not stepped boxes; one side of a hall stepping at 128 and the other at 104 or 112. Studied further later (the owner wants the Combine's own architecture). Under the Citadel (ep1_c17_00) the Combine's metal is 28% of the map's visible area and its texture scale is 0.25 on 94% (not 0.5); plan 94% on the axes; leaning panels 128 high at 14 degrees, 208 at 4, 112 at 8, 176 at 57; 46% of the leaning area faces down (heads over), 54% up; floors ribbed every 128, ribs 32 wide alternately 20 and 3 high.",
    "check": "review; map_view cut-away across the piece"
   },
   {
@@ -2646,6 +2646,191 @@
    "why": "d1_eli_01 (21 November): dormitory at z -1584 (864 by 160 to 576, ceiling 128 to 200): 7 prison_bedframe001a (pairs at y 2068 and 2120, 2060 and 2112: 52 apart), 8 FurnitureMattress001a as prop_ragdoll, 4 lockers001a at x 208, 256, 304 (48 apart) and 496, furniturearmchair001a 2, furniturecouch001a, furniture_vanity01a, furnituretable003a with props_lab/chess, chair_office01a, cafeteria_table001a and 2 cafeteria_bench001a. Kitchen at z -1872 (504 by 736, ceiling 200): kitchen_fridge001a 4 (not solid), kitchen_counter001d 4 and 001a 2, kitchen_stove002a 2 and 001a, sinkkitchen01a 2, kitchen_shelf001a 2, soupprep, headcrabprep.",
    "how": "Map modules: the bunker's bunk room and the cave office's bunk room take this kit (beds in pairs 52 apart, lockers 48 apart); a kitchen kit for the HQ town. Use mattresses as loose props on the frames where a ragdoll is not wanted.",
    "check": "review"
+  },
+  {
+   "id": "valve-hospital-ward",
+   "tags": [
+    "valve",
+    "interiors",
+    "props"
+   ],
+   "title": "A hospital ward: the bed off the wall with its kit round it, a washroom to each ward",
+   "rule": "A ward is a room about 232 by 304 under 128 for one bed (two at most), with its own washroom 152 by 112 under 120. The bed is a loose prop standing 32 to 56 off the wall (never against it), often turned 3 to 20; round it an IV stand 42 to 51 away, a cart 52 to 58, a bedside cabinet 16 off the wall with a monitor on it, a radiator on the wall, a wall rail at 36, and over the bed's head a tube on the wall at 64 up, tilted 75, lighting the pillow. The washroom holds a bath 16 off the wall, a basin and a toilet, a radiator and a rail by the bath. Our clinic is the owner's field hospital (four beds in one ward with screens): ask the owner first before changing it; use this for a new hospital or clinic piece.",
+   "why": "ep1_c17_02a (21 November): 13 hospital_bed01, all prop_physics flags 256; 6 in rooms 232 by 304 by 128 (sections cast from the beds); wall gap 32 (3), 40 (3), 48 (4), 56 (2); yaw 3 to 20 on 7. Within 128 of the ward beds: hospital_ivstand01 42 to 51, hospital_cart01 52 to 58, hospital_shelf01 53 to 87 (16 off its wall, 18 up), consolebox03a 57 to 111 (36 up, on the shelf), radiator01a 111 to 124 (21 up, on the wall), lights_florescent01a at 64 up pitched 75 (9 of 34) with a light_spot 220 235 245 600 cone 40 pitch -35 and a point 20. Nine washrooms all 152 by 112 by 120: bathtub01a 16 off, furnituresink001a 8 to 16 off at 23 up, furnituretoilet001a 16 off, a radiator, hospital_railing pieces. Ours (map_mods_b.py m_clinic): a ward 576 by 320 under 160 with four beds along its back wall and cloth screens between.",
+   "how": "A hospital room helper for new pieces: bed as m.dynamic or a loose prop 40 off the back wall, yaw jittered 0 to 15, the kit placed on a ring 40 to 60 round it (IV at the head, cart at the foot side, cabinet against the wall beside the head), the reading tube on the wall over the head at 64 pitched 75 with its light_spot; a washroom cell 152 by 112 off the ward. Sizes come from the models (map_assets.py).",
+   "check": "proposed: map_lint notes a bed prop touching a wall (gap under 16) or with no IV stand, cart or cabinet within 96"
+  },
+  {
+   "id": "valve-operating-theatre",
+   "tags": [
+    "valve",
+    "interiors",
+    "props",
+    "lighting"
+   ],
+   "title": "An operating theatre: the table in the middle, two lamps held still and turned, scrub sinks",
+   "rule": "The operating table is fixed and square, 48 to 120 from every wall, in a room 288 to 451 wide under 124 to 192 (a big theatre has three tables in a row 92 apart). Over each table hang one to three surgery lamps about 100 over the floor and 24 to 32 under the ceiling, each rolled 45 and turned its own way so they cross over the table; they are physics props held still (no damage, motion off). Beside: a pair of scrub sinks on a wall, monitors on a cart or shelf, an IV stand, a cart. Our clinic's theatre lamp hangs from its top and shines straight down: ask the owner first before changing it.",
+   "why": "ep1_c17_02a (21 November): 8 hospital_surgerytable01, prop_static, square on 7, 20 up, ceiling 104 to 172 over them, wall gaps 48 to 120; one room 376 by 288 by 128 with three tables at x -656, -564, -472. 6 hospital_surgerylight01: prop_physics spawnflags 266 (2 + 8 + 256), angles roll -45, yaws 0 with 120, 225 with 0, 30 with 225; 100 over the floor, 24 to 32 under the ceiling. sinkkitchen01a in pairs (2 rooms), monitor02 and controlroom_monitor001a/b, hospital_ivstand01, hospital_cart01. Ours (m_clinic): the theatre 192 by 320 under 176, one lamp with its top on the roof shining straight down.",
+   "how": "In a theatre piece: table static at the room's middle; two surgery lamps as held-still physics (spawnflags 266) or prop_dynamic_override (the owner's rule for standing things) at table + 80 up, roll 45, yaws 120 apart; their light_spot aimed at the table top. Two kitchen sinks side by side on one wall.",
+   "check": "proposed: map_lint notes a surgery table within 40 of a wall, or a surgery lamp more than 48 under its ceiling"
+  },
+  {
+   "id": "valve-hospital-corridor",
+   "tags": [
+    "valve",
+    "interiors",
+    "props"
+   ],
+   "title": "A hospital corridor: 224 wide, a rail all along both walls, benches with a picture over each",
+   "rule": "Hospital corridors are wider than a flat's: 160 to 256 (commonest 224) under 128, the main one 192 high. A wall rail runs all along both walls at 36 (pieces of 64 and 160 with 32s to fill), fixed and square. The waiting stretch has loose benches 24 off the wall, turned a little, with a picture on the wall over each at 72 to 92, a clock, a TV; vending machines and payphones stand in pairs in a corner. After an evacuation a few beds stand in the corridor, turned across it. Pieces already built keep their look: ask the owner first before changing them.",
+   "why": "ep1_c17_02a (21 November), 534 nodes within 400 of a hospital prop: narrow side 224 (43), 256 (37), 192 (31), 160 to 184 (85); ceilings 192 (201), 128 (134), 112 to 120 (100). hospital_railing_64_01 67, _160_01 29, _32_01 11, _256_01 6: all static, wall gap 0, square (but 3), origin 34 to 36 over the floor. bench01a 16 (physics, 24 off the wall on 7, yaw 3 to 20 on 7), frame002a 11 at 72 to 92, clock01, tv_monitor01; vendingmachinesoda01a 4 and payphone001a 4 (8 off the wall, 36 up) in pairs. Four beds in corridors 176 to 253 wide, yaws 105 to 195. The valve-sightlines median corridor is 112.",
+   "how": "A corridor piece for a hospital or clinic: width 224, the rail props in a chain along both walls (64 and 160 pieces, a 32 at each end), benches as loose props 24 off with a frame prop over each; a vending machine and a payphone together at a corner.",
+   "check": "proposed: map_lint notes a hospital_railing prop more than 4 off a wall or not 34 to 37 over its floor"
+  },
+  {
+   "id": "valve-power-out",
+   "tags": [
+    "valve",
+    "lighting",
+    "logic"
+   ],
+   "title": "A building without power: lamps named and off until the power comes back, flares and signs in the dark",
+   "rule": "To make a place dark that can be lit again, its lamps are real lights named in banks and set to start off, each a warm cage lamp spot (254 216 146 75, cone 70, pitch -70) with a glow sprite 10 under it, turned on together when the power is restored. In the dark, a road flare on the floor carries an orange light (254 174 10, 100 to 200) 12 over it, a green sprite marks the exit, a blue light by sparking wires. Even dark places keep a light within about 200 to 350 of most of their floor. In Living City this suits an outage or a raid's cut power: ask the owner first, since it is a new feature (and never a flicker style).",
+   "why": "ep1_c17_02a (21 November): 76 lights; 10 named power_light_1 to 5 with spawnflags 1 (start off): light_spot 254 216 146 75 cone 70 pitch -70, each with an env_sprite light_glow03 (254 216 146) 10 under it, named power_light_sprite_N. Orange lights 254 174 10 at 100 and 200, 12 over the floor, beside the two flare props and small fires; sprite_exitdoor 37 186 60; electric_flickerlight 41 166 226 at 100 to 120. Named lights that start off per map: 00 10 of 48, 00a 7 of 56, 01 7 of 25, 02a 10 of 76. Node to nearest light, median: 02a 211, 00a 297, 00 343; nodes over 512 from any light: 00 25%, 00a 21%, 02a 9%.",
+   "how": "A bank of lamps for a module: each lamp prop with its light_spot and sprite named lc_NAME_power, spawnflags 1 on the lights, sprites hidden; one relay lc_NAME_power_on (TurnOn, ShowSprite) and _off (TurnOff, HideSprite) for the gamemode. A flare model with its own baked orange light where a dark room wants a hint.",
+   "check": "proposed: map_lint notes a named light that starts off with no output anywhere that turns it on"
+  },
+  {
+   "id": "valve-car-park",
+   "tags": [
+    "valve",
+    "interiors",
+    "props",
+    "streets"
+   ],
+   "title": "A car park: 112 clear, columns every 256, two cars to a bay, a deck that slopes 1 in 12",
+   "rule": "A car park deck is 112 clear under its slab (96 under the beams), with columns 32 by 32 every 256 along, in rows that leave a drive aisle of about 384; each column bay takes two cars (128 a car) and is 176 to 192 deep. The deck itself slopes about 4.8 degrees (1 in 12), or decks are joined by ramps of 9.2 degrees (1 in 6) 224 to 240 wide. Bay lines, arrows and letters are overlays on the floor; wall markings on the columns. Cars mostly nose in (yaw square to the wall, 2 in 3), a few turned free; the kit is fluorescent tubes, sprinklers, pipes along the ceiling, power boxes, cones, a dumpster, bicycles, handrails along the ramps. A new piece, if the owner wants one. Pieces already built keep their look: ask the owner first before changing them.",
+   "why": "styleguide_garage (21 November): deck x 2176 to 4464 by y -2176 to -1104, floor 0, ceiling 112 (96 under beams); columns 32 by 32 at x 2544, 2800, 3056, 3312, 3568, 3824, 4080, rows at y -2000, -1616, -1424; floor faces sloped 4.8 degrees over 1407k square units; 13 cars, yaws 86 to 92 or 272 on 9, 120, 226, 302 on 3, at 112 to 128 side by side; overlays garagegroundmarking01h 22 (32 by 128, pairs), 01i 12 (8 by 128), 01f, 01a, 01b, garagewallmarking02e 12 on the columns; prison_sprinkler001a 13, lights_florescent01a 8, handrail04_singlerise 12. ep1_c17_00 and 00a (the same deck): ceilings at nodes 112 (47 of 230) and 120 (96 of 317); ramps 9.2 degrees (444k square units in 00a), world brushes 792 by 224 and 752 by 240. Car models 76 to 87 wide, 152 to 203 long.",
+   "how": "A car park module: deck brushes sloping 1 in 12 (or flat decks with 1 in 6 ramps), column brushes 32 by 32 on a 256 pitch, slab 16 deep beams under the ceiling, bay line overlays every 128 along each row, car props in two of three bays nose in with a skin each, and the garage soundscape (ep1.antlion_parking_garage) inside.",
+   "check": "proposed: map_lint notes a car prop in a car park closer than 96 (centre to centre) to another side by side"
+  },
+  {
+   "id": "valve-collapsed-deck",
+   "tags": [
+    "valve",
+    "geometry",
+    "props"
+   ],
+   "title": "A fallen floor: the slab broken into tilted pieces, what stood on it slid down with it",
+   "rule": "When a floor or deck falls, build it as separate detail slabs 96 to 300 across and 27 to 56 thick, each tilted its own way (5 to 60 degrees), the floor's material on top and the ceiling's underneath, resting on the level below and on each other. What stood on the floor lies on the slabs tilted with them (a car pitched 8 to 15 and rolled onto its side or roof), and one thing may rest on another. Rubble piles, rebar and spawn chunks at the slabs' feet. For a wrecked district or a raid's aftermath: ask the owner first if it changes a piece they have walked.",
+   "why": "ep1_c17_00a and styleguide_garage_antlionroom (21 November): the car park's upper deck as func_detail slabs: 96 by 284, 104 by 284, 120 by 284 at 7.1 degrees; 192 by 234 at 5.3; 135 by 192 at 15.9; 167 by 195 at 29.9; 102 by 237 at 47.8; 154 by 250 at 50.2; thickness 27 to 56; tops concretefloor033o, undersides concretewall075a and concretefloor013a. Cars on them: car001a_hatchback, car001b_hatchback, car003b, car002a static at pitch -11 roll 136 (7 of 15), -8 to -15 roll 17 to 29, one hatchback 76 over a car005b at the same x and y. 233 small displacements break the walls and ceilings round it (32 by 8, 128 by 32).",
+   "how": "map_build a broken_slab(x, y, z, w, d, thick, pitch, roll, top, under) that writes one tilted func_detail box; a collapse helper that cuts a deck into four to eight such slabs and lays a vehicle or furniture prop on one with the slab's pitch.",
+   "check": "proposed: map_floating.py checks that props on a tilted slab are tilted within 10 degrees of it (nothing level on a slope)"
+  },
+  {
+   "id": "valve-road-tunnel",
+   "tags": [
+    "valve",
+    "streets",
+    "interiors"
+   ],
+   "title": "A road tunnel under the city: 608 wide, 196 high, tiled, two carriageways and a central strip",
+   "rule": "A road tunnel is about 608 wall to wall and 196 clear: tiled walls under a concrete ceiling, two carriageways of 240 to 272 with a 48 edge strip each side, a central strip 96 wide raised 4 carrying pillars about 875 apart. Sprinklers hang 20 under the ceiling in two rows 384 apart, one every 512. Abandoned, it holds a vehicle every 400 or so, turned, trucks jackknifed 15 to 35 across the lanes, a few on their sides, and the dead. A new piece (our tunnel to the town is a 192 walkway): ask the owner first if it would replace a tunnel already built.",
+   "why": "ep1_c17_00 (21 November), the ep1.zombiedark zone, about 6000 long (x 3669 to 4589): cuts at y -5300, -4900, -1300: floor -124, ceiling 72; walls at 3672 and 4280; strip concretefloor028c at -120 from 3912 to 4008; lanes concretefloor033k/q, edges 033p 48 wide; walls tilewall006c on 180 of 326 nodes. pillarcluster_001b at y -6591, -5568, -3935, -3060, -607, 64, 2008. prison_sprinkler001a at x 3776 and 4160, y every 512, 176 over the floor. 15 vehicles: 1 square, truck001a yaw 35, truck003a 15 rolled 90, van001a 30, tanker001a 195, skins 1 or 2 on 8; 20 corpses. Ours (map_raven tunnel): 192 wide, z 304 to 448.",
+   "how": "A tunnel module type: profile (edge 48, lane 240, strip 96 at +4, lane 240, edge 48), tile walls to 196, sprinkler props on a 512 pitch in two rows, pillar props on the strip every 768 to 1024; vehicles placed by the jam rule (valve-wrecked-cars).",
+   "check": "proposed: map_lint notes a road tunnel piece narrower than 512 or lower than 160"
+  },
+  {
+   "id": "valve-pipe-runs",
+   "tags": [
+    "valve",
+    "props"
+   ],
+   "title": "A pipe run is straights with a connector at every joint, in stacked rows along the wall",
+   "rule": "Run pipes along a service tunnel or plant room as straight pieces end to end with a connector at every joint (one connector for every straight), static, in rows: the big pipes (pipe03, 96 long) in three rows at about 80, 104 and 120 up, 20 to 44 off the wall; thin pipes (pipe02, pipe01, 48 long) higher, 184 to 208 up under the ceiling. Use the pipes' second skin on most. Bends and 45s turn the run; no open end shows (cap-open-ends). Pieces already built keep their look: ask the owner first before changing them.",
+   "why": "ep1_c17_00a (21 November), the wet service tunnel: pipe03_straight01_long 112 (box 17 by 96) and pipe03_connector01 112, connectors 48 to 49 from a straight's middle on 75 (the joints), over the floor 104 (28), 120 (26), 80 (24), wall gap 36 (25), 20 (15), 16 (10), 44 (10), pitch 90 on 84 and -90 on 12, skin 1 on 88; pipe02_straight01_long 24 (48 long) with 25 connectors at 88 and 184 to 200 up; pipe01 11 at 208. ep1_c17_00: pipe02 12 straights and 12 connectors at 120 up. ep1_c17_02: pipe01 13 at 80 to 144, 4 off the wall.",
+   "how": "A pipe_run(points, family, height, off_wall) helper in map_build: lays straights every model length along the path, a connector at each joint, a 90 or 45 piece at each turn, skin 1 by default; three heights for a rack.",
+   "check": "proposed: map_lint notes a pipe straight whose ends have neither a connector, a bend nor another straight within 8"
+  },
+  {
+   "id": "valve-antlion-breach",
+   "tags": [
+    "valve",
+    "infestation",
+    "geometry",
+    "props"
+   ],
+   "title": "Where antlions dig in: a broken wall with chunks and rebar, a rough cave behind, holes in floors",
+   "rule": "Where antlions break into the city's underground, the tunnel's wall opens into a cave of displacements (power 3 and 4, pieces 128 to 512 across, rock with blends where it meets concrete), 120 to 680 high and never even. At the break lie about a dozen concrete spawn chunks (loose, within 80 of each other) and five or so rebar pieces sticking out of the broken edge at 60 to 90 degrees. On a floor they come up through a round broken hole model (concrete_spawnhole, 128 across) laid on the slab. Grubs, if any, cluster in threes to sevens, each cluster with a faint green light. The owner's nest is its own piece: ask the owner first before changing it.",
+   "why": "styleguide_antlion_tunnel (21 November): service tunnel 352 wide (148 + 204) and 176 high; 119 displacements, power 3 on 74, 4 on 24, 2 on 21, all lightmapscale 16, sizes 128 by 256 (12), 128 by 384 (10), 384 by 512 (8); rockwall015a 74, blendrockdirt_tunnel01a 20, blendconcreterock001a 16; heights probed 120 to 680. concrete_spawnchunk001d/f 11 physics within 80; rebar002d_96 and 004d_96 5 at pitch 60, -60, 90, -90. npc_antlion_grub 27 in 5 clusters, each with a light 154 168 122 80 12 over it. concrete_spawnhole001a: styleguide_antlionhole 3, ep1_c17_00 2, 00a 3.",
+   "how": "map_build: a breach(wall, centre, w, h) that cuts the brush wall, lays the chunk and rebar props, and starts a displacement cave behind; a spawnhole prop where the nest's makers bring antlions up through a floor.",
+   "check": "proposed: map_lint notes a cave displacement of power 2 wider than 256 in an antlion piece"
+  },
+  {
+   "id": "valve-train-shed",
+   "tags": [
+    "valve",
+    "interiors",
+    "lighting"
+   ],
+   "title": "A train shed: docks 96 over the bed, a tight grid of bell lamps under the roof",
+   "rule": "Freight docks stand 96 over the gravel track bed, reached by steep metal steps; a loading shed holds two or three sidings 224 apart between a narrow dock and a wide loading floor. A repair shed puts the train at floor level with a sunk walk 64 deep and 120 wide along each side and galleries 256 up along the walls at the height of the car roofs. The track itself is a texture strip 128 wide on the gravel. Light a tall shed with many bell lamps hung right under the roof, 480 to 704 up, in rows 192 to 224 apart, each with a strong spot straight down; not with a few floods. Ours: the street's railway shed is one track 192 wide under 320 and its tracks are sleepers and rails: ask the owner first before changing it.",
+   "why": "styleguide_train_loadingdock (21 November), cut at x 11568 and 10400: walls at y 8260 and 10084; dock 8292 to 8548 and floor 9284 to 10084 at -736, gravel bed -832 from 8548 to 9284; roof 608 over the docks, 704 over the bed; metal steps -816 to -736 over 128. train005 and train003 prop_dynamic at y 8985 and 9209. light_industrialbell01_on 48 (704 up 26, 480 up 17; nearest 224 on 24, 208 on 14); measure.json: light_spot 221 249 241 3000 cone 50/20 pitch -90. styleguide_train_repair, cut at y 9900: walls 7640 and 8936, floor -768, pits -832 at 8072 to 8192 and 8392 to 8512, grates at -512; bells 25, 488 to 552 up, 192 apart. ep1_c17_05 37 bells, 06 25. Track: metaltrack001a on brush strips 128 wide. Ours (map_corridor.py): SHED_H 320, the railway 320 to 512 from the canal's middle.",
+   "how": "A train shed or depot hall: a bell lamp grid helper (rows every 208, lamps every 208 along, hung at the roof's underside, each a light_spot 3000 cone 50 straight down); docks at track bed + 96 with metal steps; a repair bay with side pits 64 deep.",
+   "check": "proposed: map_lint notes a hall over 400 high lit by fewer than one lamp per 50,000 square units of floor"
+  },
+  {
+   "id": "valve-rebel-hideout",
+   "tags": [
+    "valve",
+    "props",
+    "interiors",
+    "story"
+   ],
+   "title": "A Resistance hideout: the slotted door, barricades leaned on the windows, a radio corner",
+   "rule": "A Resistance hideout in a block of flats is shown by a few things: its door is the slotted door (a door with a sliding peephole); tall barricade pieces lean back 30 degrees against the windows from inside, 40 to 46 off the wall, and boards are nailed across the others; a radio corner on a shelf (a radio, a hard drive, a receiver cart); the flat lived in (couch, several chairs, a TV, fridge, sink, stove and a pot, cupboards, a bed frame tipped); warm dome lights and bulbs; a hoist or a crank as the way up. Ask the owner first before any of our hideouts' doors change.",
+   "why": "ep1_c17_02b (21 November), the flats round x 1200, y 2000 (Barney and five citizens): door03_slotted_left (prop_door_rotating) with door03_slot (prop_dynamic at the same origin) twice (hideout_slit_door_1, barney_door_2); barricade_tall01a twice and tall02a at pitch 30, 39 to 46 off the wall, 52 up; barricade_short03a in a doorway; wood_board06a roll 105, flags 328, 41 to 61 out; citizenradio (prop_dynamic_override) 13 off the wall, harddrive02 12 off, reciever_cart 16 off; furniturecouch001a, chair02a 5, tv_monitor01, furniturefridge001a, sinkkitchen01a, kitchen_stove001a, metalpot001a, furniturecupboard001a 2, prison_bedframe001a pitch -7 roll 17; light_domelight02_on 5, lightbulb01a 3; pulleywheels_large01 with two w_crowbar wedged (pitch -71).",
+   "how": "A hideout kit in map_town (props only): the radio corner, leaned barricades at windows (pitch 30, back 40 off), boards on others, the living props; the slotted door only where the owner says (it is a door: real-doors).",
+   "check": "proposed: map_lint notes a barricade prop pitched over 20 that is more than 64 from a wall (a lean needs something to lean on)"
+  },
+  {
+   "id": "valve-combine-wall-chain",
+   "tags": [
+    "valve",
+    "combine",
+    "geometry"
+   ],
+   "title": "The Combine's walls through the old city run in straight lengths, each turned a little from the last, battered on one face",
+   "rule": "Where the Combine walls off the old city it builds straight lengths 200 to 1000 long, each turned 3 to 17 degrees from the one before, so the line wanders off the grid; a street wall is 48 thick and 160 to 256 high with end caps 48 to 64 wide, its outer face leaning back 4 degrees and its inner face plumb. The great walls stand 768 high and 96 thick in lengths of 690 to 1093 turned 10 to 34 degrees off the grid, one face battered 4 to 5 degrees, the other plumb: lop-sided in section. Ask the owner first before changing a Combine wall or checkpoint already built.",
+   "why": "ep1_c17_01 (21 November): metalcombine001 func_detail faces 433, 208, 574, 496, 375, 984, 858 wide, yaws 357, 357, 13, 30, 94, 77, 105; heights 160 to 256; thickness 37 to 40 on 78 brushes; outer faces 4 degrees off upright, all facing up (295k square units). ep1_c17_06: citadel_metalwall077a world brushes 768 high, faces 1093, 1089, 879, 877, 694 wide, normals at 10, 159, 190, 236 degrees, one face of each slab 4.4 to 4.7 off upright, its partner 0; 96 thick. Combine metal lean in 06: 4 (1100k) and 5 (839k), all facing up.",
+   "how": "A combine_wall(path, height, thick) helper: break the path into lengths of 200 to 1000, turn each by 3 to 17 from the last, lean the outer face back 4 (one plane tilted), cap the ends.",
+   "check": "proposed: map_lint notes a Combine metal wall longer than 1200 in one straight length"
+  },
+  {
+   "id": "valve-blast-lean",
+   "tags": [
+    "valve",
+    "props",
+    "streets"
+   ],
+   "title": "After a blast the tall things lean: lampposts, poles, signs and trees, in round steps",
+   "rule": "In a district wrecked by a blast, most tall street furniture leans: three in four lampposts and utility poles, half the signs, a quarter of the trees, each tilted 10 to 45 degrees (15, 22, 30, 45: round steps) and leaning many ways, one way a little more often than the others. They stay fixed (static). Low things (benches, bins, phones, awnings) stay upright. For a wrecked district only; ask the owner first before tilting anything in a street they have walked.",
+   "why": "ep1_c17_01 (21 November): lamppost03a_off 12, tilted 9 (13, 22, 22, 22, 30, 30, 30, 30, 45); utilitypole02b 12, tilted 10 (10, 15 x5, 22, 30, 45, 45); signs 13, tilted 7 (22 x5, 30 x2); trees 18, tilted 5 (13 to 22); all prop_static; benches 4, bins 3, phones 6, awnings 1 upright. Lean toward 180 degrees on 7 of 22, 90 on 5, the rest spread. ep1_c17_01a: poles 4 of 10 (10 to 45), lean toward 180 on 5 of 6. ep1_c17_02b: lampposts 6 of 9 (6 to 66).",
+   "how": "A wrecked flag on street dressing (map_town, map_corridor): lampposts and poles get pitch or roll from (0, 15, 22.5, 30, 45) with three in four tilted, the base kept at the pavement (rotate about the foot: move the origin so the base stays put), yaw of the lean random with a bias.",
+   "check": "proposed: map_floating.py checks a tilted pole's foot still meets its pavement (the model rotated about its origin lifts or sinks the foot)"
+  },
+  {
+   "id": "valve-haze-cards",
+   "tags": [
+    "valve",
+    "geometry",
+    "lighting"
+   ],
+   "title": "Far haze and far ruins are flat cards, a long way off",
+   "rule": "Make the dust in the air and the far ruined skyline with flat cards rather than geometry: detail faces textured as fog (fake_fog01/02), as a far building or as a rubble heap, about 500 high and 500 to 1400 wide, standing 1300 to 4000 from where players walk, at a coarse texture scale (about 5), with fog that starts near (100 to 300) and closes at 3000 to 7000. Far rubble heaps are single faces sloped 50 to 60 degrees. A new tool for district edges; ask the owner first before changing a skyline they have seen.",
+   "why": "ep1_c17_01 (21 November): 25 func_detail card faces (fake_fog01 8, fake_fog02 5, fake_fog01a 1, rubble_card01 10, building_card01 1), median 496 high and 1024 wide, from nodes p10 1281, median 2477, p90 4090; fake_fog at texture scale 5.31 and 4.88 (10% of the map's visible area). ep1_c17_02b 9 (fake_fog02 7, building_card02 2, median 832 high, 1280 wide, about 2500 out); 06 5; 01a 3; 02 3. Fog 210 176 130 from 200 to 300 out to 3000 to 7000 in 01, 01a, 02, 02b, 05; 214 198 169 to 13000 in 06.",
+   "how": "map_build: a haze_card(path, height, mat) that stands one thin func_detail slab per stretch of a district's far edge, 1500 to 3000 out from the play space, textured fake_fog01 at scale 5; a rubble_card slope where a far collapse should show.",
+   "check": "proposed: map_assets.py confirms the card materials exist on the owner's server (fake_fog01 and building_card01 are Episode One materials)"
   }
  ]
 }

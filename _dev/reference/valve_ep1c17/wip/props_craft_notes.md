@@ -91,18 +91,18 @@ firmer, beside the City 17, Ravenholm and Nova Prospekt notes.
   pop cans (19 in the hospital's waiting room, 17 in 01a); the evacuation is told by people (citizens, soldiers)
   and by the trains, not by piles of luggage.
 
-## 4. Props across the episode (4,817 props in ten maps, pooled from measure.json)
+## 4. Props across the episode (nine maps without the test map 03, pooled from measure.json)
 
 | | grid yaw | turned 3-20 | free | tilted |
 |---|---|---|---|---|
 | prop_static (3178) | 76% | 8% | 8% | 37% |
-| prop_physics (1448) | 31% | 26% | 32% | 56% |
+| prop_physics (1236) | 35% | 25% | 29% | 56% |
 | prop_dynamic (191) | 87% | 7% | 5% | 28% |
 
-- Loose things are less square here than anywhere yet (physics on 90s: 31%; the uprising 53%, the 22-map pass 41%)
+- Loose things are less square here than anywhere yet (physics on 90s: 35%; the uprising 53%, the 22-map pass 41%)
   and more tilted (56%; 28%, 43%).
-- **Debris flag** (4) on 424 of 1448 physics props (29%; the uprising 4%, the 22-map pass 10%): trash 305, cans 39,
-  boards 22. Motion off (8) on 18% (fences 61, shelves 47, boards 34, debris 31, radiators 17); asleep 5%; freed on
+- **Debris flag** (4) on 347 of 1236 physics props (28%; the uprising 4%, the 22-map pass 10%): mostly trash, cans,
+  boards. Motion off (8) on 21% (fences 61, shelves 47, boards 34, debris 31, radiators 17); asleep 5%; freed on
   grab 6%. Lying: trash 201, boards 53, cinder blocks 41, fences 35, cans 33.
 - **Abandoned vehicles** (105 in ten maps and the hospital exit room): square 18%, tilted 40% (8 on a side, 8 on
   the roof), static 70%, skin not 0 on 46%. **They come in jams**: 74% have another vehicle within 400, 38 have three
@@ -156,3 +156,79 @@ firmer, beside the City 17, Ravenholm and Nova Prospekt notes.
   combine_interface001, combine_emitter01 pairs, combine_barricade_bracket02a on the door, combine_wire002 along the
   wall, combine_lock01 by each door, set into an ordinary office (controlroom_desk001b, desk lamp, binder, chair,
   radiator).
+
+## 7. The city after the blast (01, 01a, 02, 02b; styleguide_hospital_exit)
+
+- **Everything tall leans**: in 01, 9 of 12 lampposts (lamppost03a_off) tilted 13 to 45 (22 and 30 commonest), 10 of
+  12 utility poles 10 to 45 (15 commonest), 7 of 13 signs 22 to 30, 5 of 18 trees 13 to 22; all static, the tilts in
+  round steps (15, 22, 30, 45), leaning many ways (west commonest: 7 of 22 in 01, 5 of 6 in 01a). 02b: 6 of 9
+  lampposts at 6 to 66. Benches, bins, phones and awnings stay upright.
+- **Haze and far ruins are cards**: func_detail faces of fake_fog01/02 (texture scale about 5) and building_card or
+  rubble_card, about 500 high and 500 to 1400 wide, 1300 to 4000 from where players walk (median about 2450): 01 has
+  25 (14 fog, 10 rubble, 1 building), 02b 9, 06 5. Far rubble heaps are single faces sloped 50 to 60 degrees.
+- **Haze in the air**: fog 210 176 130 starting only 100 to 300 out and closing at 3000 to 7000 (05: 15000; 06:
+  214 198 169 to 13000); sun 219 191 148 or 240 217 183 at 500, pitch -25 to -35; ambient 207 172 133 at 40 to 100.
+  Warmer and browner than the uprising's grey (224 224 201 from 3000).
+- **Diagonal streets** (hospital exit room, 05): lampposts 724 apart (the 512 grid's diagonal), the two rows facing,
+  641 apart, staggered by half a spacing (375).
+- Streets are as known (road 256 to 320, wall to wall 560 to 864); odd-angled ruin brushes 7 to 16% of old-material
+  brushes (01 15%, 02a 16%, the hospital exit room 23%), as the uprising.
+
+## 8. Craft and light across the episode
+
+- Texture scale 0.25 on 73 to 99% of area; coarser only on far ground (06 grass 0.5 on 16% of area, concrete floors
+  1.0 in 01) and the fog cards (about 5).
+- Lightmapscale 16 on 88 to 99% of faces in the underground and the hospital (8 on 10% in 02a); 64 on 39% in 05 (the
+  station's far faces) and on 40% of 06's displacements (the far hill).
+- Displacements: the underground uses many small ones on walls and ceilings (00a: 233, 127 on walls, 39 on
+  ceilings; 32 by 8, 128 by 32, 40 by 30; power 2 on 94%) to break concrete; streets use 256 to 320 squares of power
+  2 and 3 (01: 106 floors in concretefloor028c, blendrubbledirt001a, blendconcretedirt001a); 06's far hill 1075 wide
+  strips in rockwall006b and grassfloor002a at lightmapscale 64.
+- The hospital is bloody: about 180 of 02a's 280 decals are blood (blood1 to 6, bloodstain_001 to 101), with power
+  outlets (decalpoweroutlet001a 12) on the ward walls.
+- Light: the underground is dim (00: lights median 35, spots 300; 00a 50 and 600), cool tubes 160 240 208 and warm
+  cage lamps 256 224 144 in equal numbers.
+
+## 9. Cross-sections against ours
+
+- Ours: the clinic's ward is 576 by 320 under 160 for four beds behind screens; Valve's hospital gives a bed a room
+  232 by 304 under 128 with its own washroom 152 by 112 under 120.
+- Ours: the clinic's theatre is 192 by 320 under 176 with one lamp shining straight down; Valve's theatres are 288
+  to 451 wide under 124 to 192, the table 48 to 120 off every wall, two or three lamps rolled 45 at 100 up.
+- Ours: the clinic's way in is 192 wide under 144; Valve's hospital corridors are 224 (160 to 256) under 128 or 192,
+  a rail at 36 along both walls.
+- Ours: the tunnel to the town is 192 wide and 144 high; Valve's road tunnel is 608 by 196, the antlion room's
+  service tunnel 352 by 176, the wet service tunnels 128 or 256 high.
+- Ours: the street's railway shed is one track 192 wide under 320, with sleepers and two rails; Valve's loading
+  shed is 1824 wide under 608 to 704 with three sidings 224 apart, and its track is a texture strip 128 wide.
+- Ours: the depot's truck dock is 40 high; Valve's freight dock stands 96 over the track bed.
+- Ours: the tram's stations put platforms 64 high either side of a track pit; Valve's repair shed keeps the train at
+  floor level with walks sunk 64 beside it, and galleries 256 up.
+- Ours: no car park; Valve's deck is 112 clear (96 under beams), columns 32 by 32 every 256, a slope of 1 in 12.
+- Ours: our Combine walls (checkpoint, depot) stand upright and on the grid; Valve's Combine walls through the old
+  city run in lengths turned 3 to 17 degrees from each other, battered 4 on the outer face.
+
+## 10. Check ideas
+
+- A bed or surgery table touching a wall; a surgery lamp more than 48 under its ceiling; a hospital rail not 34 to
+  37 up or off its wall.
+- A pipe straight with an open joint (no connector, bend or straight within 8 of its end).
+- A car park car closer than 96 side by side to another; a deck slope steeper than 1 in 10 without being a ramp.
+- A named light that starts off with nothing that turns it on.
+- A prop level on a tilted slab (props on a fallen deck should share its tilt within 10).
+- A barricade pitched over 20 with no wall within 64 to lean on.
+- A Combine metal wall straight for more than 1200.
+- A tall hall (over 400) lit by too few lamps for its floor.
+- In a wrecked district: lampposts and poles all upright (a blast leans most of them 15 to 45).
+
+## 11. What did not work
+
+- Blind rays inside the Combine's hall under the Citadel (00) gave noise: machines, debris and props block nothing,
+  so wall profiles came out ragged. Face statistics (lean, height, plan angle) were used instead.
+- The loading dock's cuts started above the sky brush and found only the skybox; starting under the roof worked.
+- Platforms in 05 and 06: the yard trains stand on the gravel (no platform), so no passenger platform height was
+  found; the dock (96) and the repair shed's pits (64) are the train numbers here.
+- Flares carry no light of their own in the file; the orange lights near them were found by distance, and some of
+  those are small fires (firesize 32) instead.
+- ep1_c17_03 is a small test map (212 physics props of junk, no nodes, dev cameras): little to learn from it.
+- The lean of the knocked poles has no single direction; no blast centre could be read from it.
