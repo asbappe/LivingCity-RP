@@ -20,7 +20,7 @@ sys.path.insert(0, HERE)
 
 import map_modules as mm
 
-SKIP = ("straight", "jog", "tee", "shed", "tunnel")
+SKIP = ("straight", "jog", "tee", "shed", "tunnel", "widen", "narrow", "wide", "widetee", "basin")     # (the canal itself; the wide canal goes in map_layouts/wide.txt)
 ROW = 6200      # about how long a row may be
 
 

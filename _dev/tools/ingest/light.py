@@ -127,9 +127,10 @@ def decals(m, s, N):
         if tuple(float(e.kv.get(x, d) or d) for x, d in (("startu", 0), ("endu", 1), ("startv", 0), ("endv", 1))) != (0, 1, 0, 1):
             atlas += 1
         if o == "wall":
-            fz, _ = s.floor(e.origin[0], e.origin[1], e.origin[2] + 1, 2048)
-            if fz is not None:
-                oh.append(e.origin[2] - fz)
+            q = e.origin + np.array(bn) * 4
+            t, _, _ = s.ray(q, (0, 0, -1), 2048, inside=False)
+            if t is not None:
+                oh.append(t)
     for e in dc:
         k = decal_kind(e.kv.get("texture", "").lower())
         t = [s.ray(e.origin - d * 2, d, 64)[0] for d in dirs]
@@ -138,9 +139,10 @@ def decals(m, s, N):
         o = "floor" if j == 5 else ("ceiling" if j == 4 else "wall")
         dsurf[o][k] += 1
         if o == "wall":
-            fz, _ = s.floor(e.origin[0], e.origin[1], e.origin[2], 2048)
-            if fz is not None:
-                dh.append(e.origin[2] - fz)
+            q = e.origin - dirs[j] * 4
+            tz, _, _ = s.ray(q, (0, 0, -1), 2048, inside=False)
+            if tz is not None:
+                dh.append(tz)
     cells = {}
     if len(N):
         ck = C(tuple(x) for x in np.floor(N / 512).astype(int))

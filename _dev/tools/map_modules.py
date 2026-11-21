@@ -723,6 +723,8 @@ def m_drain(m, opt):
     of theirs (their sewers: water about z 267 to 291 in a channel, walks either side, round-arched mouths).
     Grime: drain stains under the inflow pipes, stains down the walls, trash in the corners, a number by the valve, and
     the lambda by the head of the stair (the Resistance's way down, as Half-Life 2 marks its routes).
+    Along the right wall a walk (walk_ledge: 72 wide, 208 up, the city's handrail on it, stairs at its near end, its
+    far end railed), the bank stopping either side of it in slopes: the drain's keepers' way along the canal.
     Named for the game: lc_drain_grate (a func_door: Open lifts it, Close drops it; unseen, the four bar panels riding
     on it), lc_drain_junction (the chamber), lc_drain_cache (the case at the bottom of the sump: a place the game can
     fill).
@@ -829,6 +831,8 @@ def m_overflow(m, opt):
     on its wall, blood on the walls and the floor, a headcrab canister come through its roof, a zombie's torso and a
     burnt body under it, a wheelbarrow on its side, rags; one oil lamp still burning low, one caged lamp dead.
     "overflow 1280": how far the channel reaches from the canal's middle (default 1024).
+    Along the right wall a walk (walk_ledge: 72 wide, 208 up, the city's handrail on it, stairs at its near end, its
+    far end railed), the bank stopping either side of it in slopes: where the sluice keepers watch the plate.
     Named for the game: lc_overflow_sluice (a func_door: Open lifts it), lc_overflow_moan (a sound from beyond the
     plate, silent until told: PlaySound), lc_overflow_far (the channel's far end), lc_overflow_lever (the lever by the
     plate, a button that starts locked: Unlock lets players lift and drop the plate by hand, Lock takes it back;
@@ -2142,6 +2146,8 @@ def settle(b, ch, loose):
         return
 
     def height(x, y):
+        if (int(x // CELL), int(y // CELL)) not in ch.dished:
+            return None      # (on the concrete: a thing partly there stays as it is)
         x0, y0 = int(x // CELL) * CELL, int(y // CELL) * CELL
         q = [surf.get(p) for p in ((x0, y0), (x0 + CELL, y0), (x0, y0 + CELL), (x0 + CELL, y0 + CELL))]
         if None in q:
@@ -2150,9 +2156,9 @@ def settle(b, ch, loose):
         return (q[0] * (1 - fx) + q[1] * fx) * (1 - fy) + (q[2] * (1 - fx) + q[3] * fx) * fy
     moved = {}
     for k, box in loose:
-        hs = [height(x, y) for x in (box[0], (box[0] + box[3]) / 2.0, box[3]) for y in (box[1], (box[1] + box[4]) / 2.0, box[4])]
-        hs = [h for h in hs if h is not None]
-        if not hs:
+        hs = [height(min(max(x, box[0] + 1), box[3] - 1), min(max(y, box[1] + 1), box[4] - 1))
+              for x in (box[0], (box[0] + box[3]) / 2.0, box[3]) for y in (box[1], (box[1] + box[4]) / 2.0, box[4])]
+        if None in hs:
             continue
         drop = int(math.ceil(box[2] - min(min(hs), box[2])))
         if drop < 1:
@@ -2192,10 +2198,19 @@ def dress_canal_walls(b, ch, avoid=()):
     def at_wall(axis, line, side, along, out):
         return (along, line + side * out) if axis == "x" else (line + side * out, along)
     keep = list(b.taken) + list(avoid)
+
+    def wall_top(axis, line, side, p):
+        """How high the wall behind a place on it goes (a street beside the canal is a wall only to its own height)."""
+        c = (p // CELL, line // CELL - (1 if side > 0 else 0)) if axis == "x" else (line // CELL - (1 if side > 0 else 0), p // CELL)
+        spec = ch.cells.get(c)
+        return spec[1] if spec and spec[0] == "solid" and len(spec) > 1 else b.rim
     for (axis, line, side, a, b2) in made.get("walls", []):
         off = 0 if side > 0 else LAMP_STEP // 2
         p = a + 160 + (off - (a + 160)) % LAMP_STEP
         while p <= b2 - 160:
+            if wall_top(axis, line, side, p) < F + LAMP_Z + 32:
+                p += LAMP_STEP
+                continue
             x, y = at_wall(axis, line, side, p, 1)
             lo, hi = min(line, line + side * 16), max(line, line + side * 16)
             box = (p - 12, lo, F + LAMP_Z - 16, p + 12, hi, F + LAMP_Z + 8) if axis == "x" else (lo, p - 12, F + LAMP_Z - 16, hi, p + 12, F + LAMP_Z + 8)

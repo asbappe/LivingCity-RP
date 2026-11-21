@@ -24,7 +24,7 @@ sys.path.insert(0, HERE)
 import map_modules as mm
 import map_view
 
-STRUCTURE = ("straight", "jog", "tee", "tunnel", "shed")
+STRUCTURE = ("straight", "jog", "tee", "tunnel", "shed", "widen", "narrow", "wide", "widetee", "basin")
 
 
 def one(name, folder, tmp, size):
@@ -32,7 +32,7 @@ def one(name, folder, tmp, size):
         first_node, test, origin, heading, rim, preview, views = 6000, False, None, None, None, None, None
     import map_corridor
     street = map_corridor.STREET_MODULES.get(name)
-    lay = {"name": "cat_" + name, "start": (0, 0), "heading": "E", "rim": 784, "end": None, "modules": [[name]]}
+    lay = {"name": "cat_" + name, "start": (0, 0), "heading": "E", "rim": 784, "end": None, "modules": mm.alone(name)}
     if street:      # (a module that belongs on the street is drawn up there)
         lay.update({"upper": "left", "cars": 2, "modules": [["straight", "256"], [name] + street.split(), ["straight", "256"]]})
     b, seed, spawn, end = mm.build_chain(lay, A)
@@ -119,7 +119,7 @@ def listing(path):
     rows, texts = [], []
     for name in [n for n in mm.MODULES if n not in STRUCTURE] + [n for n in STRUCTURE if n in mm.MODULES]:
         info = mm.MODULES[name]
-        lay = {"name": "list", "start": (0, 0), "heading": "E", "rim": 784, "end": None, "modules": [[name]]}
+        lay = {"name": "list", "start": (0, 0), "heading": "E", "rim": 784, "end": None, "modules": mm.alone(name)}
         try:
             b, seed, spawn, end = mm.build_chain(lay, A)
             named = sorted(set(n[0] for n in b.names if n[0] != "clash"))

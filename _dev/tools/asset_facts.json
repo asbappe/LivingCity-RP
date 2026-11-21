@@ -89,6 +89,24 @@
 "static": false,
 "v": 2
 },
+"models/breen_monitor.mdl": {
+"bbox": [
+-13.0,
+-13.0,
+0.0,
+13.0,
+13.0,
+72.0
+],
+"built_static": false,
+"collides": false,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": false,
+"v": 2
+},
 "models/c18_custom/apts_stairs_up.mdl": {
 "elsewhere": [],
 "game": null
@@ -790,6 +808,24 @@
 "v": 2
 },
 "models/humans/group01/male_08.mdl": {
+"bbox": [
+-13.0,
+-13.0,
+0.0,
+13.0,
+13.0,
+72.0
+],
+"built_static": false,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": true,
+"static": false,
+"v": 2
+},
+"models/humans/group01/male_09.mdl": {
 "bbox": [
 -13.0,
 -13.0,

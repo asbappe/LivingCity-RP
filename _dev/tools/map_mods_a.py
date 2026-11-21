@@ -1173,6 +1173,8 @@ def m_boathouse(m, opt):
     (lc_boathouse_hatch: a func_door that slides aside, worked by the button over the workbench) covers steps down to a
     cellar 192 square of damp brick where the contraband is kept: the Combine's own ammunition crates and a supply crate,
     shelves, a radio (lc_boathouse_cellar). Sounds: the watery hallway in the shed, a dripping tunnel in the cellar.
+    Along the right wall a walk (walk_ledge: 72 wide, 208 up, the city's handrail on it, stairs at its near end, its
+    far end railed), the bank stopping either side of it in slopes: a lookout over the slipway.
     Named for the game: lc_boathouse_door (func_door: Open, Close, Toggle), lc_boathouse_hatch (func_door, the same),
     lc_boathouse_button_in, lc_boathouse_button_out, lc_boathouse_hatch_button (func_buttons that already work in the
     map), lc_boathouse_cellar (an info_target in the cellar: the cache).
