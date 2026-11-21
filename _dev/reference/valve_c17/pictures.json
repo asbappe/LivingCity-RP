@@ -7,8 +7,8 @@
   "d3_c17_01: the most crowded place measured so far: 1.31 props per 100 by 100 of play (the streets of d3_c17_02 to 05: 0.15 to 0.58), 71% of statics touching a wall; lab lights (lab_flourescentlight001a and b, 14), pipes, power boxes, crates and file cabinets.",
   "Ours: rooms 120 to 128 high in City 18's two tones with a dado rail. Valve's lab is a hall about 306 high, its walls banded (brickwall052e below brickwall052d, the first change 64 or 128 over the foot): a lab or workshop hideout can stand taller than a flat.",
   "d3_c17_02: from the lab through the old streets to the Combine wall; 52 street cuts, 30 with kerbs: road 256 (23 of 30, the rest 512), kerb 4 (all 60), crown 0 (all 30), pavements most often 192 (128 to 768: the yards are wide); walls median 544.",
-  "Ours: streets keep a crown, a kerb of 8 and pavements of 96. Valve's d3_c17_02 street at the checkpoint (x -5700) is 647 wall to wall: pavements 196 and 180, a road of 256 laid in strips of 64, 128 and 64 (concretefloor033q_c17 at the edges, 033k_c17 in the middle), kerbs 4, flat; fronts 616 and 680 over it (height about the width).",
-  "d3_c17_02 checkpoint: four combine_barricade_med02c, 128 apart, straight across the street from wall to wall (x -5582, y -5956 to -5315), two each side of a gap of 128 that holds a combine_gate_citizen; a combine_light001a on the end barricade at 136 up; the street beyond is shut by the Combine wall (metalcombine001) 707 further east.",
+  "Ours: streets keep a crown, a kerb of 8 and pavements of 96. Valve's d3_c17_02 street by the checkpoint (x -5640) is about 676 between the fronts (647 at the barricades): pavements 256 and 164, a road of 252 laid in strips of 64, 128 and 60 (concretefloor033q_c17 at the edges, 033k_c17 in the middle), kerbs 4, flat; fronts 680 and 616 over it (height about the width).",
+  "d3_c17_02 checkpoint: four combine_barricade_med02c, 128 apart, straight across the street from wall to wall (x -5582, y -5956 to -5315), two each side of a gap of 128 that holds a combine_gate_citizen, with metalcombine001 blocks (48 wide, 88 high) in the line; a combine_light001a on the end barricade at 136 up; the street beyond is shut by the Combine wall (metalcombine001) 707 further east.",
   "d3_c17_02 wires: utility poles (utilitypole02b) 843 to 1479 apart and wall mounts (utilitypolemount01a) 333 to 2299 (median 697) carry 16 rope spans, median 345 long, slack 100, width 2; 9 of 11 lights warm ('256 224 144' most often).",
   "d3_c17_03: the square of the colonnade (trainstation_post001 13 and trainstation_column001 10, each 128 apart, 9 arches, awnings 16) and the streets round it; 387 cuts, 114 with kerbs: kerbs 4 (156 sides) and 8 (59); the road widths there are muddled by the square's steps (the commonest, 608 at 30 cuts, is the square's edge), so the street below was measured by hand.",
   "Ours: streets keep a crown, a kerb of 8 and pavements of 96. Valve's street beside the square (x -2496 y -1544): steps down from the square (8 by 12), a pavement of 176, a road of 380 (stonefloor006a with edge strips of 006c and 006b, 64 and 60 wide), kerbs 4, flat; a pavement of 124, then a wall 32 high with a fence round a grass bed 248 wide.",
@@ -46,8 +46,8 @@
   {
    "n": "U2",
    "file": "02_checkpoint_iso.png",
-   "where": "d3_c17_02, the checkpoint from the south-west, box x -5950 to -5150, y -6100 to -5150, cut at 360",
-   "teaches": "A Combine checkpoint across a street 647 wide: four combine_barricade_med02c (128 each) from wall to wall, a gap of 128 in the middle for a combine_gate_citizen, a combine_light001a on the end one. The barricades and the gate draw as small markers (their size is not in asset_facts.json).",
+   "where": "d3_c17_02, the checkpoint from the south-west, box x -5950 to -5150, y -6100 to -5150, cut at 360, the Combine wall cluster props left out",
+   "teaches": "A Combine checkpoint across a street 647 wide: four combine_barricade_med02c (128 each) from wall to wall, a gap of 128 in the middle for a combine_gate_citizen, a combine_light001a on the end one. The barricades and the gate draw as small markers (their size is not in asset_facts.json); the CombineInnerwallCluster props over the roofs are left out (they draw as solid boxes over 1000 across).",
    "lessons": [
     "combine-kit"
    ],
@@ -59,14 +59,17 @@
      -5150,
      -5150
     ],
-    "cut": 360
+    "cut": 360,
+    "leave_out": [
+     "combineinnerwallcluster"
+    ]
    }
   },
   {
    "n": "U3",
    "file": "03_checkpoint_street_section.png",
-   "where": "d3_c17_02, a true cut across the street at x -5700 y -5635, by the checkpoint",
-   "teaches": "647 wall to wall: pavements 196 and 180, a flat road of 256 in strips of 64, 128 and 64, kerbs 4; fronts 616 and 680 (a plinth of 64, a ground floor to 200, then 128 a storey).",
+   "where": "d3_c17_02, a true cut across the street at x -5640 y -5635, by the checkpoint",
+   "teaches": "About 676 between the fronts: pavements 256 and 164, a flat road of 252 in strips of 64, 128 and 60, kerbs 4; fronts 680 and 616 (a plinth of 64, a ground floor to 200, then 128 a storey).",
    "lessons": [
     "valve-street-proportions",
     "street-profile",
@@ -74,12 +77,12 @@
    ],
    "view": {
     "cut": [
-     -5700,
+     -5640,
      -5635,
      0,
      0
     ],
-    "smax": 384,
+    "smax": 400,
     "up": 768
    }
   },

@@ -142,6 +142,9 @@ damage filters strider-only 8, turret damage-type 8, mortar 5.
   triggers just before something blows: NPCs scatter from the spot.
 - **Weapons left on the ground.** game_weapon_manager 6 (c07, c11, c12): ar2 or smg1, maxpieces 2 to 4, ammomod 1:
   in long fights only that many dropped guns stay.
+- **Mine scanners** (c04 5, c05 2, c09 2): a maker spawns a claw scanner with EquipMine and flight speed 300, it
+  flies path_corners, DeployMine at one over the street, then is Killed at its last corner. Floor turrets (11):
+  rebels tip them (OnTipped > counter Add, 4). Manhacks (c08 11) fly a scripted sequence and are Killed at its end.
 - **Headcrab shelling (c06b).** env_headcrabcanister 4: FlightSpeed 2000, FlightTime 0.5 to 1, Damage 100 to 150 in
   150 to 200, 6 headcrabs, smoke 30 s; fired from relays or a path_corner; OnImpacted chains the next canister,
   explosions, fire and a relationship change.
@@ -162,3 +165,43 @@ damage filters strider-only 8, turret damage-type 8, mortar 5.
   through the force fields while they are up; TurnOn for everyone when the fields fall.
 - 6 npc_turret_ceiling and 2 npc_combine_camera (inner 700 or 800, outer 1000) Enabled by relays; a camera's
   OnFoundEnemy fires the alarm.
+
+## Posts, noise, guidance, sight, robustness
+
+- Outpost microphone (c05): env_microphone range 300, flags 40 (bullet impacts, explosions), on when the player
+  nears; OnHeardSound spawns the outpost's two cops. Garrison rooms: standoff on a cop's OnFoundPlayer; 2 dead >
+  fallback line, standoff and hint group. Teach a command (c03): spoken nags @10, 20, 30, 40, key hint re-shown,
+  exit opens @50 anyway; OnStationOrder cancels the nags (CancelPending, Kill). Text in 15 maps: 2 hud hints,
+  4 GAMEOVER_ALLY messages, 1 game_text.
+- Occluders follow doors (c10a door OnOpen Deactivate, OnFullyClosed Activate; c05 gate relays); 42 of 46 start on;
+  func_areaportal 80 (59 open with no name, 6 tied to a door); areaportalwindow fades 72/240 in rooms to 700/850
+  and 1000/1200 outside; func_viscluster 3 (c02, boxes about 1000 to 2000 a side); func_lod 4 (1000 to 2200).
+- Outputs 5008 in 15 maps; Kill the commonest input (532: func_brush 61, scenes 47, sequences 39, soldiers 38,
+  makers 24); x1 on 173; !activator 16, !self 1, !player only as a key (schedule goals 64, relationship targets
+  15, follow goals 6); wildcards 11; dangling 70 (1.4%, c06b 23); CancelPending 19 (c07 17).
+- logic_navigation (c08, 8): lamps, shelves and chain doors set navprop Ignore so NPCs walk through their space.
+
+## For Living City (what our fights could borrow; [owner] = ask first)
+
+1. Counterattacks and held zones: one clock, waves of 3 walking 3 lines then storming, quicker each wave, a wipe
+   respawns in 6 s, a last assault from both sides, pressure until the way is shut [game][owner].
+2. Units taking ground: lines 380 to 480 apart, moved on by time or by 3 arrivals [game][owner]; lc_line spots [map].
+3. Rebel squads refilled at the base and taken checkpoints, one medic among them [game][owner] (cap 3 today).
+4. Resistance resupply as a rebel throwing crates from a roof [game][owner]; lc_drop spots at roof edges [map].
+5. Overwatch drops: troops get their target at once, the ship leaves by another path [game][owner]; flybys of
+   neutral aircraft every 20 to 30 s over Combine quarters [game][owner]; flight paths [map][new].
+6. Combine strongholds: tripwires, turret lifts that re-arm, three switches to cut it all (like the administrator's
+   transformers) [map][new], turrets [owner].
+7. District fights: unseen gunfire pairs across streets, debris from hit walls [game][owner].
+8. IEDs and breaches: a danger sound 3 s before the blast [game][owner].
+9. Long fights: at most 2 to 4 dropped guns of a kind [game][owner].
+10. Posts that wake on noise within 300 and fall back to a second line [game][owner]; snipers in high windows
+    only while players are in the street [game][owner].
+11. Follower wait spots by doors and corners, step-aside spots in bases [map][new].
+
+## What did not work
+
+- .vcd contents are not in the VMFs: what the scenes say is guessed from file names (password, dropper, letusout).
+- Hint types 900, 902, 904, 950 and the citizen and env_microphone flag bits are named from the FGD as
+  remembered; d3_c17_13 not re-read here (done before).
+- Brush sizes from three plane points are approximate (trigger boxes).

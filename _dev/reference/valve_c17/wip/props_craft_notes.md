@@ -99,3 +99,88 @@ Style guide rooms: styleguide_c17_rubble is a distant ruin vista (collapsedbuild
 parliament_dome_destroyed_exterior, walldestroyed09a-g) over a displacement ground of power 3 at lightmapscale 64;
 styleguide_c17_rubble_2 is a ruined street: concrete_section64floor001b 17, piles 15, rebar 10, walldestroyed09 10,
 48 displacements (power 3 on 43, lightmapscale 16 on 31).
+
+### Loose props in a war (748 physics props)
+
+- On exact 90s 54%, tilted over 5 degrees 28%, lying (75 to 105) 13% (the 22-map pass: 41%, 43%, 23%).
+- Flags: asleep 9% (26% before), motion disabled 21% (29%), debris 4% (10%), free on grab 12%, use output 61%;
+  119 with flags 0. Held still: shelves 19, boards 19, debris 19, radiators 15, fences 15, cars 12, couches 9, bins 8.
+  Debris flag: trash 17, personal 4. Asleep: personal things 18, boxes 6, bins 6.
+- Fades on 12% of physics (max median 1500; bins 2250, crates 2200, debris 1200, bottles 1100) and 16% of
+  statics (max median 1600; rubble 1200, fences 2400, barricades 2600, lamps 1200, Combine 1100).
+- Skins not 0 on 767 of 4181 (pipes, fluorescent tubes skin 1, door01_left, oildrum001 20); rendercolor 5, modelscale 0.
+- physdamagescale 0.1 on 744 of 748 (the default kept); explodedamage on 27 (the red barrels).
+- 44 corpses (ragdolls; 47 of 51 ragdolls spawnflags 4): 34 indoors, wall gap median 32; a weapon within 160 for
+  17 (median 52), a blood decal within 96 for 25; items rest on corpses 21 times, on tables 9.
+- Items: item_item_crate 138 (the supply crate is the main cache), healthkits 72, batteries 51, dynamic resupply 39.
+
+### Fires, burned flats
+
+- env_fire 137 (c04 30, c12 22, c06b 19), firesize 64 (41), 128 to 150 (35), 48 (13), 32 (10); flags 47
+  (infinite, smokeless, start on, start full, no glow) 39, 3 (lit later) 31, 45 (with smoke) 22. 85 outdoors.
+- 111 of 137 have no prop within 64: they burn on rubble and floors, alone (57) or in rows (29 fires along one
+  street in a single chain at 96).
+- 88 have a light within 128 (median 33 away), orange: '254 150 35' 300 to 900, '254 174 10 500', no light styles
+  (steady, as the owner wants). A scorch1 overlay under 42; a fire sound within 256 of 86.
+- The burned block (c06b): burn01a 30 and burn02a 16 wall decals, scorch1 7, destroyedceiling01a-d 23 under the
+  ceilings, streetwar.fire_tiny loops, plaster walls broken as small displacements (107 displacements, 128x45 and
+  64x45, on plasterwall009d and 037f, power 2 and 3).
+- Lived-in refuge (c06b 3176 877): couches 3, fridge 2, bottles 5, sinks, rug overlays, crying loop
+  (d1_trainstation.crying), four citizens, being raided by soldiers.
+
+### The Combine in the old city
+
+- combine_lock01 (18x14x39) beside 21 of 22 Combine doors (func_door), centred 44 to 58 over the floor (median 52),
+  on the wall, 2 to 11 from the door's origin.
+- The creeping wall: combineinnerwall001a (306x296x998) and combineinnerwallcluster1024 (322x1024x1064) high in
+  the skyline (z 400 to 1176), static, in broken runs of 2 to 4 pieces 150 to 250 apart, each turned in steps of
+  15 degrees from the last (yaws 150, 165, 180, 210, 240, 255, 270, 285).
+
+## 3. Building craft across the uprising (112,670 faces, 22,474 brushes)
+
+- Texture scale 0.25 on 91% of faces (87% of area), 0.5 on 3%: the city stays at 0.25 even on its ruins.
+- Lightmapscale 16 on 83% of faces (near 87%, mid 74%, far 68%), 64 on 7%, 32 on 7%, 8 on 2%. The uprising
+  coarsens far faces less than the canals (far: 16 on 68%, 64 on 16%).
+- func_detail 41% of brushes. Trims 2623 strips: 16x32 311, 8x32 262, 8x8 251, 8x16 234, 2x14 220 (window and
+  door frames), 4x8 176. Ledges 517: out 8 (186), 32 (165), 16 (116); tall 8 (162), 32 (158), 16 (99).
+  Chamfers 2984: 11.3 wide (8 off) 874, 22.6 (16 off) 735, 45.3 (32 off) 376. Slabs: 8 (1379), 16 (682), 32 (403).
+- Walls change material first at 128 over the foot (12,885 columns), then 64 (4,489), 16 (2,935); banded share
+  70 to 93% per map. Painted building_template fronts on 31 to 66% of front area (c04 66, c11 64, c10a 60).
+- Glass panes 2 thick (69) or 8 (58); 64x96 the commonest pane.
+- Doorways 48x108 (24), 96x108 (10), 56 and 59 x108 (6). Stairs 8x12 on 4,410 steps (16x24 on 42 in c03 only).
+  Flats' ceilings 120 (c05 294 nodes, c06b 263, c07 124), 184 to 192 in shops and halls.
+- Streets: roadway 256 (most maps), wall to wall median 512 to 768, kerbs 4.
+
+### Broken walls and ruin brushes
+
+Brushes in old materials (brick, plaster, concrete, stone, wood, templates) with a face at an odd angle (not a
+simple ratio: 90, 45, 2:1, 3:2 stairs, 3:1, 4:1, 5:1, 15/30/60/75, 22.5/67.5): 8.1% of 20,584 (c04 3%, c06b 4%,
+c05 6%, c10a 6%, c09 6%, c12 6%, c03 11%, c12b 11%, c08 16%), and 27% in styleguide_c17_rubble_2 (the ruin as Valve
+meant it). 913 of 1661 are six-sided boxes with one or two odd faces; thickness 8 (205), 4 (139, planks), 64
+(124), 16 (76); 1869 of 2143 odd faces are textured (the cut shows), most of them upright (jagged vertical edges).
+(A first pass that counted 3:2 faces as odd gave 21%: stair stringers.)
+
+### Displacements
+
+- Outdoor rubble streets are power 3 (c02 56%, c03 59% with power 4 on 41%, c09 100%, c10a 89%, c11 100%,
+  c12b 100%) at lightmapscale 16 near play, 512x512 to 1088x464, in concretefloor007a, dirtfloor005b,
+  blendgrassgravel001a (alpha painted on the blends). The 22-map digest had power 2 on 86% of city displacements.
+- Small displacements break walls and ceilings in burned rooms: c06b 107 (128x45, 64x45, 96x8 on plaster), c12 126
+  (rockwall003a_c17 55), c08 144 (128x128 floors in blendsandrock004a and dirtfloor004a, 67 blend painted).
+  c10b has 212 thin displacements on metalwall076a (160x12): the Combine wall's ribs.
+- Style guide: styleguide_c17_rubble ground 21 displacements power 3 at 64 (a far vista); _2 48 displacements,
+  power 3 on 43, 16 on 31 (a street).
+
+### Decals and overlays
+
+1,299 decals to 74 overlays (17 to 1; the 22-map pass 4.5 to 1). Overlays are mostly scorch1 and burn floor
+overlays 248 to 287 across under fires and cars (c06a 9, c12 8). Decals per map 43 to 172: trash, stains,
+plaster, graffiti, plants (ivy), burn in c06b (55 on walls), blood in c07 (18) and c09 (10).
+
+## 4. Light across the uprising
+
+The sun sinks across the chapter: pitch -25 to -40 and brightness 600 to 700 in c02 to c10b, -12 at 450 in c11,
+-8 at 450 in c12 and 350 in c12b; skies sky_day03_01 to 05 in order; ambient 160 184 211 150 then 75 96 116 at the
+end. Fog warm grey 224 224 201 from 3000 to 9000 (c02 to c05), 234 236 236 3000 to 6500 (c06b, c07),
+214 207 189 1024 to 16285 (c11, c12). Lights warm in homes (c05 42 warm of 45, c06b 42 of 46), cool in
+industry and the Nexus (c08 65 cool of 96, c10b 16 of 20). Fires carry their own steady orange light (above).
