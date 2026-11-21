@@ -15,7 +15,7 @@ python3 map_view.py c18_lc.vmf --iso SW --box 3000 1500 4500 3000 --out corner.p
 ```
 
 - `--eye X Y Z`: where the eyes are (a player's eyes are 64 over the floor). `--yaw`: 0 east, 90 north. `--pitch`: degrees DOWN (negative looks up). `--fov` 90.
-- `--iso NE|NW|SE|SW`: the corner looked from. `--cut Z`: a cut-away. `--box X1 Y1 X2 Y2`. `--size W H` (1280 800).
+- `--iso NE|NW|SE|SW`: the corner looked from. `--cut Z`: a cut-away (what it opens is lit as if roofless, so a closed room or tunnel is not a dark box). `--box X1 Y1 X2 Y2`. `--size W H` (1280 800).
 - From Python: `map_view.render(path, out, eye=..., yaw=..., pitch=..., iso=..., cut=..., box=..., size=..., title=...)` and `map_view.sheet([pictures], out)` to put several on one page.
 
 **What it draws:** every brush face from the file's own corner lists (Hammer++'s `vertices_plus`; a file without them has its corners worked out from the planes), displaced ground, brush entities; tool textures (sky, nodraw, clips, triggers, areaportals) are left out, so an open-topped place shows the sky. Flat colours by material name (concrete grey, wood brown, Combine metal blue, water blue, slime green, chain link and force fields see-through), a dark line where two faces meet.

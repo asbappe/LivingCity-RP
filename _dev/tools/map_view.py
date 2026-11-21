@@ -6,8 +6,9 @@ Living City: look at a VMF without Hammer (a rough picture, to catch mistakes be
     python3 map_view.py lc_mod_cistern.vmf --eye 1024 -700 464 --yaw 270 --pitch 10 --out inside.png
 
 It draws every brush face (and displaced ground) from the file's own corner lists, with flat colours
-by material, a dark line where two faces meet, and a rough light: the sun where nothing is overhead,
-the file's own light entities elsewhere (no shadows). Props and other point entities are drawn as
+by material, a dark line where two faces meet, and a rough light: the sun where nothing is overhead
+(nothing drawn: under a --cut the rooms it opens are lit as if roofless), the file's own light entities
+elsewhere (no shadows). Props and other point entities are drawn as
 small coloured posts, since a chat has no models: orange a prop_static, yellow a prop_physics, red a
 body, cyan a prop_dynamic, green an NPC, magenta anything named for the game.
 
@@ -353,6 +354,13 @@ def render(path, out, eye=None, yaw=0.0, pitch=0.0, fov=90.0, iso=None, cut=None
             if len(v) >= 3:
                 kept.append((v, col, thru))
         polys = kept
+    if cut is not None:      # (cut first: under a cut-away the sun reaches what the cut opened, so a room or a tunnel cut open is not a dark box)
+        clipped = []
+        for verts, col, thru in polys:
+            v = clip(verts, 2, cut, True)
+            if len(v) >= 3:
+                clipped.append((v, col, thru))
+        polys = clipped
     # where nothing is overhead: the highest thing over each 32-unit square
     allv = np.array([v for p in polys for v in p[0]])
     if not len(allv):
@@ -371,13 +379,6 @@ def render(path, out, eye=None, yaw=0.0, pitch=0.0, fov=90.0, iso=None, cut=None
         j1, j2 = int((a[:, 1].min() - mn[1]) / G + 0.5), int((a[:, 1].max() - mn[1]) / G + 0.5)
         if i2 > i1 and j2 > j1:
             roof[i1:i2, j1:j2] = np.maximum(roof[i1:i2, j1:j2], a[0, 2])
-    if cut is not None:
-        clipped = []
-        for verts, col, thru in polys:
-            v = clip(verts, 2, cut, True)
-            if len(v) >= 3:
-                clipped.append((v, col, thru))
-        polys = clipped
     W, H = size
     if iso:
         az = {"NE": 45, "NW": 135, "SW": 225, "SE": 315}[iso.upper()]
