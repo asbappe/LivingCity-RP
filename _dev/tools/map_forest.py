@@ -632,6 +632,11 @@ class Forest:
 
     def finish(self):
         self.vmf.point("env_cubemap", self.w(self.W / 2, self.D / 2, self.natural(self.W / 2, self.D / 2) + 96), {"cubemapsize": "0"}, self.vis("structures"))
+        # gates NPCs walk through switch their path links as they open and shut, as the modules' do (Valve's
+        # info_node_link_controller: map_modules.link_gates; the cave's fence gate, the bunker's room doors)
+        import types
+        import map_modules
+        map_modules.link_gates(types.SimpleNamespace(vmf=self.vmf, vis="LC %s" % self.name))
         if self.test:
             # (to compile and walk it by itself: a spawn point on the trail just inside the gate, and the map's sun)
             sx, sy = self.st(self.gate[1] + GATE_WIDE / 2, 220)

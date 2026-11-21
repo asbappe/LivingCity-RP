@@ -686,6 +686,11 @@ def ravenholm(args):
     if not test:
         vmf.point("info_node", (1234, wall_y + 40, 307 + 16), {"nodeid": node_id[0]}, "LC ravenholm: path nodes", outside=True)   # on the sewer's own ledge
         node_id[0] += 1
+    # cover hints behind its wrecks and barricades, as the modules have (Valve's; in what is left of its share)
+    from map_build import node_share
+    from map_modules import piece_cover_hints
+    node_id[0] += piece_cover_hints(vmf, lambda x, y: cells.get((int((x - X0) // CELL), int((y - Y0) // CELL))), "LC ravenholm", "ravenholm", node_id[0],
+                                    node_share("ravenholm") - (node_id[0] - args.first_node))
 
     # --- the checks: sealed, with the owner's own street (which is not in this file) stopped round ----------------------------
     lobby = [(1008, Y0 - 192, base - 16, 1024, Y0 + 576, SKY + 32), (1024, Y0 - 192, base - 16, X0, Y0 + 576, base), (1024, Y0 - 192, SKY + 16, X0, Y0 + 576, SKY + 32),

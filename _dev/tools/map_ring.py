@@ -625,6 +625,10 @@ def ring(args):
     for (x, y, z) in ((6144, 6400, F), (4800, 7808, F), (3200, 7808, F), (1280, 7808, F), (256, 7300, F), (-1024, 7232, F), (-2304, 7400, F),
                       (-3900, 7808, F), (-4544, 6400, F), (-4544, 4700, F), (-3800, 3008, F), (-3136, 2600, F), (-2752, 2240, ROAD_W)):
         vmf.point("env_cubemap", (x, y, z + 72), {"cubemapsize": "0"}, dv)
+    # cover hints behind its wrecks and barricades, as the modules have (Valve's; in what is left of its share)
+    from map_modules import piece_cover_hints
+    node_id[0] += piece_cover_hints(vmf, lambda x, y: plan.cells.get((x // CELL, y // CELL)), "LC ring", "ring", node_id[0],
+                                    node_share("ring") - (node_id[0] - args.first_node), ch.dished)
     for x, y, z in dim:
         vmf.point("info_target", (x, y, z + 64), {"targetname": "lc_mood_dim"}, "LC ring: the dimmer southern half (marks for the gamemode)")
     # a little left lying about

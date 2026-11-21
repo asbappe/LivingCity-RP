@@ -2355,13 +2355,20 @@ def dress_canal_walls(b, ch, avoid=()):
 COVER_MODELS = ("barricade", "barrier", "sandbag", "/car00", "jersey")
 
 
-def cover_hints(b, dished=(), step=96):
+def cover_hints(b, dished=(), step=96, cell_of=None, limit=None):
     """Cover hints (info_node_hint 101 cover low, 100 cover medium, Valve's keys: nodeFOV 180, IgnoreFacing 2) behind the
     modules' barriers, barricades, sandbags and car wrecks: one each side of a piece, 28 out from it, facing it, on the
-    floor it stands on, about `step` apart, in a group named for its place (lc_cover_<module>). Counted as path nodes."""
+    floor it stands on, about `step` apart, in a group named for its place (lc_cover_<module>). Counted as path nodes.
+    cell_of(x, y): the plan's square at a point of the map (default: b.plan's, on the map's own grid); limit: at most
+    this many (what is left of the piece's share of path nodes)."""
     import re
     import map_assets
-    cells, made = b.plan.cells, []
+    made = []
+    if cell_of is None:
+        cells = b.plan.cells
+
+        def cell_of(x, y):
+            return cells.get((x // CELL, y // CELL))
     keep = [bx for bx, _ in b.vmf.boxes] + list(getattr(b.vmf, "shape_boxes", []))
     for cls, model, (x, y, z), yaw, tag in b.props:
         if not any(k in model.lower() for k in COVER_MODELS):
@@ -2380,8 +2387,10 @@ def cover_hints(b, dished=(), step=96):
         cx = x + math.cos(math.radians(yaw)) * (bb[0] + bb[3]) / 2.0 - math.sin(math.radians(yaw)) * (bb[1] + bb[4]) / 2.0
         cy = y + math.sin(math.radians(yaw)) * (bb[0] + bb[3]) / 2.0 + math.cos(math.radians(yaw)) * (bb[1] + bb[4]) / 2.0
         for side in (1, -1):
+            if limit is not None and len(made) >= limit:
+                break
             hx, hy = int(round(cx + side * math.cos(a) * (half + 28))), int(round(cy + side * math.sin(a) * (half + 28)))
-            spec = cells.get((hx // CELL, hy // CELL))
+            spec = cell_of(hx, hy)
             if not spec or spec[0] == "solid":
                 continue
             if abs((F if (hx // CELL, hy // CELL) in dished else spec[1]) - foot) > 18:
@@ -2398,6 +2407,27 @@ def cover_hints(b, dished=(), step=96):
                                                                     "MaximumState": "3", "nodeFOV": "180", "Group": group}, b.vis + ": cover hints")
             b.node_id += 1
     return len(made)
+
+
+def piece_cover_hints(vmf, cell_of, vis, tag, first_id, limit, dished=()):
+    """Cover hints for a piece built by itself (the first canal, the ring, Ravenholm), as the modules have them
+    (cover_hints): behind its barriers, barricades and wrecks, read from the props already in it. first_id: the first
+    node id to give; limit: what is left of its share of path nodes. Gives how many it made."""
+    import re
+    import types
+    props = []
+    for text in vmf.ents:
+        cls = re.search(r'"classname" "(prop_[a-z_]+)"', text)
+        model = re.search(r'"model" "([^"]+)"', text)
+        o = re.search(r'"origin" "(-?\d+) (-?\d+) (-?\d+)"', text)
+        if not cls or not model or not o or cls.group(1) == "prop_ragdoll" or "parentname" in text:
+            continue
+        ang = re.search(r'"angles" "(-?[\d.]+) (-?[\d.]+) (-?[\d.]+)"', text)
+        if ang and (abs(float(ang.group(1))) > 20 or abs(float(ang.group(3))) > 20):
+            continue      # (a wreck on its side: no cover hint by rule)
+        props.append((cls.group(1), model.group(1), tuple(int(t) for t in o.groups()), float(ang.group(2)) if ang else 0.0, tag))
+    b = types.SimpleNamespace(props=props, vmf=vmf, node_id=first_id, vis=vis)
+    return cover_hints(b, dished, cell_of=cell_of, limit=max(0, limit))
 
 
 # Gates NPCs walk through (Valve, lesson valve-node-link): a thin box across the gap that turns the path links through it

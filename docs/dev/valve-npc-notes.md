@@ -93,3 +93,13 @@ npc_template_maker 197: 194 start disabled and are driven by `Spawn` (164 inputs
 - The .vcd files and the actbusy list are not in the map sources: what a scene says, and each busy entry's timings, are not measured.
 - Sequence names come from Valve's maps playing them on that NPC class; `_dev/tools/dl/ValveQCs` has no animation QCs to confirm each model has them.
 - Flag and choice meanings (maker 128, busyactor 1, assaultcue 3, interruptability 2) are the FGD's as remembered.
+
+## What our tools do with this (21 November, later)
+
+Item 8 and 9: the canal pieces lay path nodes down the middle of every walkable place, 128 apart in the open (Valve's
+open ground 126 to 141) and 64 in corridors and rooms (Valve's 64 to 73), within each piece's share of the engine's
+4096 (`map_build.NODE_SHARES`), not the 96 of Valve's whole-map median; flying nodes about 150 apart and 120 over the
+ground nodes; cover hints behind barricades, barriers and wrecks (`cover_hints`, now also in the first canal, the ring
+and Ravenholm, as far as each piece's share allows); a path link controller across every gate the modules move and
+across the forests' gates and the bunker's room doors (`link_gates`). The forests (256 outside, 192 in the bunker) and
+Ravenholm (128) keep their own node grids, and have no flying nodes: their shares are full.

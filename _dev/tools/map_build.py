@@ -1180,6 +1180,9 @@ def canal(args):
                     (160, 384, road_z), (160, 512, road_z), (160, 640, road_z), (2688, 1920, road_z), (2816, 1920, road_z), (2944, 1920, road_z)):
         node(x, y, z)
 
+    # cover hints behind its wrecks and barricades, as the modules have (Valve's; in what is left of its share)
+    node_id[0] += map_modules.piece_cover_hints(vmf, lambda x, y: plan.cells.get((x // CELL, y // CELL)), "LC canal", "canal", node_id[0],
+                                                node_share("canal") - (node_id[0] - args.first_node), ch.dished)
     for x, y, z in dim:
         vmf.point("info_target", W(x, y, z + 64), {"targetname": "lc_mood_dim"}, "LC canal: the dimmer southern half (marks for the gamemode)")
 
