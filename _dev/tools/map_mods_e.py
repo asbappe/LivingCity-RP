@@ -128,7 +128,7 @@ def m_basin(m, opt):
         walk_ledge(m, 768, L - 768, 1, wide=True, stairs=2 if L - 1536 >= 1152 else 1)
     odds(m, 512, L - 512, 300, seed_of(m, 4400))
     m.soundscape(SCAPES["courtyard"], L // 2, 0, F, radius=max(900, L // 2))
-    m.view(600, -300, F, 20, 2, "the basin")
+    m.view(560, -40, F, 10, 2, "the basin")
 
 
 MODULES = {

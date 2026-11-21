@@ -25,7 +25,7 @@ Living City: canal modules, set A (picked up by map_modules.py; the guide is doc
 import math
 
 from map_build import CELL, FACE_ORDER, GATE_HIGH, MAT, prism, octagon
-from map_modules import F, TRIM, BASE, SEWER, MM, SCAPES, canal_grime
+from map_modules import F, TRIM, BASE, SEWER, MM, SCAPES, canal_grime, walk_ledge
 from map_mods_b import fire, mattress, rider
 
 TILE = "tile/tilefloor018a_c17"
@@ -1289,6 +1289,7 @@ def m_boathouse(m, opt):
     m.view(400, 650, fz, 320, 8, "from the bench: the hatch, the door")
     m.view(600, 730, cz, 50, 2, "the cellar")
     b.notes.append("%s: the shed's floor is z %d, the cellar's z %d; the door and the hatch both start shut" % (m.tag, fz, cz))
+    walk_ledge(m, 64, 960, -1, stairs=1)      # (a lookout's walk along the opposite wall, over the slipway: Valve's canal, 21 November)
 
 
 # ---------------------------------------------------------------------------

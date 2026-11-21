@@ -816,6 +816,7 @@ def m_drain(m, opt):
     m.view(512, 1470, SEWER, 90, 0, "the grate and the sewer beyond")
     b.notes.append("%s: the sewer end is at %s, the walks z %d and the channel's floor z %d (its water to z %d), 256 wide and 240 high: move or stretch it to a sewer of the map's, then delete its cap" % (
         m.tag, "(%d %d)" % m.fr.pt(512, 1664), SEWER, CH, SEWER - 2))
+    walk_ledge(m, 64, 960, -1, stairs=1)      # (the maintenance walk opposite the drain's mouth: Valve's canal, 21 November)
 
 
 def m_overflow(m, opt):
@@ -926,6 +927,7 @@ def m_overflow(m, opt):
     m.view(512, 560, F, 270, 0, "behind the plate")
     m.view(512, 680, F, 90, 0, "toward Ravenholm")
     m.b.notes.append("%s: the overflow's far end is at (%d %d), floor z %d, 256 wide and 192 high" % ((m.tag,) + m.fr.at(512, reach, F)))
+    walk_ledge(m, 64, 960, -1, stairs=1)      # (the sluice keepers' walk along the opposite wall: Valve's canal, 21 November)
 
 
 def m_shanty(m, opt):
