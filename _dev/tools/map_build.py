@@ -168,6 +168,7 @@ class Vmf:
         self.disp_made = [] # (visgroup, edge points, quads folded, quads) of every displaced face
         self.points = []    # (classname, place) of every point entity, for the checks
         self.shapes = 0     # solids that aren't boxes
+        self.shape_boxes = []   # (the box round each of them, for the checks)
         self.portals = []   # the areaportals' boxes, for the checks
 
     def new_id(self):
@@ -253,6 +254,8 @@ class Vmf:
         s = 'entity\n{\n\t"id" "%d"\n\t"classname" "func_detail"\n' % self.new_id()
         for faces in shapes:
             s += self.convex_text(faces, vis)
+            allv = [v for f, _ in faces for v in f]
+            self.shape_boxes.append(tuple(min(v[k] for v in allv) for k in range(3)) + tuple(max(v[k] for v in allv) for k in range(3)))
         s += self.editor(vis, "0 180 0") + "}\n"
         self.ents.append(s)
 
