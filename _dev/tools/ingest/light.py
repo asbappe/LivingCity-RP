@@ -11,7 +11,7 @@ import re
 
 import numpy as np
 
-from .common import C, dist, top, shares, med, rnd, short, light_value, tone, near_dist
+from .common import C, dist, top, med, rnd, short, light_value, tone, near_dist
 
 DECAL_KINDS = [("road", r"road|stripe|line|arrow|crosswalk|parking"), ("crack", r"crack"), ("poster", r"poster|breen|propaganda|billboard"),
                ("sign", r"sign|number|letter|exit|danger|warning"), ("stain", r"stain|dirt|grime|smear|leak|drip|mildew|rust|water|wet"),

@@ -52,14 +52,22 @@ logic, building craft, NPCs).
 1. **Receive.** Copy each upload into the scratch folder by group, then check its format:
    `grep -m1 editorversion F.vmf; grep -c vertices_plus F.vmf; grep -c '^\s*solid$' F.vmf`. Valve's sources so far
    are editorversion 400 with no `vertices_plus`.
-2. **Measure** (minutes a map, no pictures looked at): `python3 _dev/tools/map_ingest.py all NAME F.vmf` writes
-   `measure.json` and a draft `pictures.json` (or `pictures.draft.json` when the set exists). Its parts can be run
-   alone: `census`, `sections`, `props`, `logic`, `craft`, `views`. Run `python3 _dev/tools/map_ingest.py -h`.
+2. **Measure** (about a minute a map with pictures, 5 to 20 seconds without; nobody looks at anything yet):
+   `python3 -I _dev/tools/map_ingest.py all NAME F.vmf` writes `_dev/reference/valve_NAME/measure.json` (about 30 KB,
+   one key a line so grep works), the pictures with a `sheet.png`, and a draft `pictures.json` ("draft": true, its
+   "numbers" generated sentences, each picture's "where" filled and "teaches" left TODO, a "view" key to shoot it
+   again). When a reviewed set exists already it writes `pictures.draft.json` and puts the pictures in `draft/`.
+   `--no-pictures` measures only. One part alone: `census`, `sections`, `props`, `logic`, `craft` (as JSON),
+   `views F.vmf --out DIR`, and `draw F.vmf --eye X Y Z --yaw A` or `--iso SW --box X1 Y1 X2 Y2 --cut Z --out F.png`
+   to shoot one view again. Every map gets its own folder, even when its pictures live in a shared set (each of
+   Route Kanal's 13 maps has `valve_d1_canals_NN/measure.json`; the pictures are in `valve_canals/`).
 3. **Pictures.** `views` scores candidate eye-level views by their pixels (sky, darkness, one surface filling the
-   frame) before anyone looks, renders the best at 800x520 with two iso overviews, and makes one contact sheet.
+   frame) before anyone looks, renders the best at 800x520 with two iso overviews and a cut-away, leaves out
+   Hammer-hidden things and the 3D skybox room, draws poles thin and trees as trunk and crown, and makes one sheet.
    Look at the sheet once; replace the bad ones (a cut-away of part of the map, `map_view.py --iso SW --box X1 Y1 X2
    Y2 --cut Z`, is the most reliable); then write each picture's "teaches" and "lessons" in `pictures.json`, and give
-   the set a "title" (the reference page lists every `valve_*` folder by itself).
+   the set a "title" and take out "draft" (the reference page lists every `valve_*` folder with a pictures.json that
+   is not a draft, by itself).
 4. **Study.** For a batch of maps, send helpers by topic across all of them rather than one helper a map: numbers
    across maps beat anecdotes. The topics that worked: the reference set (pictures and numbers), props, entity logic,
    building craft, NPC scripting, and one-off studies where the owner has a use (Route Kanal's cross-sections for our
@@ -73,7 +81,9 @@ logic, building craft, NPCs).
    lifts every brush wholly inside a box (textures exactly as laid), with its props, lights and decals. It keeps the
    black behind windows, takes moving parts shut as fixed slabs, flattens displacements, and each placed copy's names
    get their own ending. Look at each in the viewer (`map_prefab.py show NAME`), add it to `docs/dev/prefabs.md`.
-7. **Across maps.** After each batch: `python3 _dev/tools/map_ingest.py aggregate`; when a headline number moves,
+7. **Across maps.** After each batch: `python3 -I _dev/tools/map_ingest.py aggregate` (every measure.json into
+   `valve_stats.json`, and the headline numbers printed: street widths, kerbs, ceilings, stairs, light spacing, props on
+   the square...); when a headline number moves,
    update the digest below.
 8. **Save.** Commit and push (plain words, the session's attribution lines). `_dev/` changed, so send
    `livingcity_tools.zip` (`CLAUDE.md`, house rule 6). Update "Where things stand" in `HANDOFF.md`.
@@ -109,7 +119,9 @@ nodes); **sections** (cross-sections at many places, compared with ours as sente
 - **The format.** Planes are three points, so brush sizes from them are close, not exact. Hammer-hidden objects and
   the 3D skybox room (scale 16) must be left out of play-space numbers. A brush entity that starts disabled is not
   drawn (the station screen's backing box only served the cubemap). Valve's screens are six layers of `func_monitor`
-  strips 1 apart. Texture sizes are not in the file: seams can only be judged against 128, 256 and 512 texels.
+  strips 1 apart. The first pass counted the 3D skybox room's props and floors and Hammer-hidden objects (9 props in
+  d1_trainstation_02, 32 lights across Route Kanal); the tool leaves them out. Old-format displacements were drawn
+  turned over by the viewer (the corners worked out from planes go round the other way): fixed 21 November. Texture sizes are not in the file: seams can only be judged against 128, 256 and 512 texels.
 - **The viewer** (`map_view.py`) draws props as boxes of their model's size turned by yaw only: fallen train cars and
   boats draw huge, and lampposts, poles and trees draw as slabs (draw them thin). A `box` now cuts faces at its edges
   instead of dropping them. Naive eyes land inside walls or stare at the sky: pick near AI nodes and props, test the
@@ -196,7 +208,10 @@ nodes); **sections** (cross-sections at many places, compared with ours as sente
 
 ## The tools
 
-- `map_ingest.py` (+ `_dev/tools/ingest/`): measuring, views, aggregate, merging lessons.
+- `map_ingest.py` (+ `_dev/tools/ingest/`, 16 files, each under 20 KB: one VMF reader for old and new files, then
+  census, sections, props, logic, craft, views, aggregate): measuring, views, statistics, merging lessons
+  (`merge-lessons FILE`, the same as `map_lessons.py --merge FILE`: it adds new ids, appends "extra" sentences,
+  refuses em dashes, taken ids and unknown fields, and rewrites the reference page).
 - `map_view.py`: pictures of any VMF (from above, cut away, from a player's eye); `docs/dev/map-view.md`.
 - `map_lint.py`: reads a VMF fast (`read`), corners from planes; the owner's corrections as checks (flush, bare,
   overlap, view, fire, mattress...).

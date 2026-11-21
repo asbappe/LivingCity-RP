@@ -11,7 +11,6 @@ visgroup turned off are flagged hidden; the 3D skybox room round the sky_camera 
 space numbers leave both out (use m.play_ent and the brush flags). Reads only; nothing is ever run from a map.
 """
 import itertools
-import math
 import os
 import sys
 

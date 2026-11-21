@@ -8,11 +8,10 @@ Props in play space only (no hidden, no 3D skybox room, no skybox-only models). 
 (map_assets.size, which learns a model it has not met if the Valve lists are in _dev/tools/dl).
 """
 import collections
-import math
 
 import numpy as np
 
-from .common import C, dist, top, shares, med, rnd, short, kind, world_box, yaw_class, tilt, model_box, model_facts, DRESS, node_points
+from .common import C, dist, top, shares, med, short, kind, world_box, yaw_class, tilt, model_box, model_facts, DRESS, node_points
 from .geom import Grid
 
 WALL_BANDS = ((0.5, "touch"), (4, "<=4"), (16, "4-16"), (32, "16-32"), (64, "32-64"), (128, "64-128"), (1e9, ">128"))

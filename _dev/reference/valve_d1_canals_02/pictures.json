@@ -1,0 +1,26 @@
+{
+ "title": "Valve's d1_canals_02 (draft)",
+ "draft": true,
+ "about": "Valve's own d1_canals_02, measured by map_ingest.py on 2026-11-21 (play space only: hidden objects and the 3D skybox room left out) and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees drawn as trunk and canopy, poles thin). Reference only: the VMF is not in the repo. DRAFT: a reviewer fills in what each picture teaches, picks the lessons, and removes \"draft\".",
+ "numbers": [
+  "Things: 177 prop_static, 112 prop_physics, 2 prop_dynamic, 2 prop_door_rotating, 8 prop_ragdoll, 23 infodecal, 0 info_overlay, 72 keyframe_rope and 8 move_rope, 47 func_detail, 23 npc entities (makers included); left out: 0 hidden objects and the 3D skybox room (21 props, scale 16).",
+  "Lights: 11 light (median brightness 100), 11 light_spot (median 1250), 1 point_spotlight, 0 env_sprite; sun \"248 234 205 1000\" at pitch -55, ambient \"194 236 252 175\"; fog \"149 158 166\" from 512 to 10000.0; sky sky_day01_04_hdr.",
+  "Sound: 11 env_soundscape (d1_canals.heli_attack 4, underground_soundscape_helitunnel 3, d1_canals.heli_slide_tunnels 2, d1_canals_pipe_chamber 2), median radius 252; 1 ambient_generic (song_hl1_6).",
+  "Commonest models: oildrum001 24, popcan01a 19, handrail04_long 18, shrub_01a 16, metal_paintcan001a 16, handrail04_medium 12, metal_panel01a 11, utilitypole01b 10, wood_board03a 10, cinderblock01a 9, lights_florescent01a 8, tree_deciduous_01a 7, garbage256_composite002a 7, canal_bars002 6, tree_deciduous_01a-lod 6.",
+  "Commonest materials (faces): stonewall051a 1484, concretewall064a 1374, concretefloor006a 377, brickwall037a 302, concretewall001a 256, concretewall032a 246, stonewall040f 235, mudfloor004a 161, woodshelf001a 132, concretewall041f 122, blendsandweed005a 118, concretewall041e 104, concretewall064b 94, woodwall043a 82, concretewall023b 78, metaltruss022c 78, concretewall066a 73, metalwall001a 64, woodwall037a 62, stonewall051b 50.",
+  "Stairs: 18 flights of 3 or more steps; steps (rise x tread) 8x12 75, 8x16 4, 8x32 3; median 6.5 steps a flight.",
+  "Channels (9 cuts across the shortest way, 7 at water: 4 open, 3 tunnels): open width 64 up most often 352, 128 up 448; rims (where a side opens out) 376; water 19.2 deep; ledges 56 wide at 120 up; tunnels most often 64 wide, roof 112 up.",
+  "Doors: door01_left 2; openings at them (wide x high): 48x108 2.",
+  "Cables: 64 rope spans, median 1048 long, slack 105, width 1.",
+  "Spacing (nearest of the same model): utilitypole01b 1006 apart (n 10), tree_deciduous_01a 384 apart (n 7), tree_deciduous_01a-lod 398 apart (n 6).",
+  "Walls in bands: 51% of wall columns over 256 tall change material at least once; the first change most often 128 or 64 over the foot; pairs (below > above): concretewall071c > concretewall071b, brickwall037a > brickwall037c, stonewall040f > concretewall023a.",
+  "Slopes: 155 sloped faces over 2000 square units, most often 45, 35, 55 degrees; concretewall001a, concretewall064a, stonewall051a.",
+  "Props: 289 in play; on exact 90s: static 66%, physics 71%; physics tilted 50% (lying most often barrel, board, debris); statics touching a wall 31%, physics within 16 of one 20%; 0.725 props per 100 by 100 of play (0.305 physics).",
+  "Wiring: 72 output lines from 31 entities; commonest OnStartTouch>ApplyRelationship 5, OnOpen>Open 4, OnTrigger>Close 4; 1 relays (longest chain 1), 0 counters, 0 timers, 1 makers, 0 buttons working doors; 0 lines name nothing.",
+  "Craft: texture scale 0.25 on 95% of faces; lightmapscale 16 on 95% (near the nodes 100%, far 92%); func_detail 46% of brushes; 71 trim strips (16x32 32, 6x6 8); 110 chamfers; 25 displacements.",
+  "Light by fixture: lights_florescent01a: light_spot 159 237 215 1500, cone 80/30, pitch -90; prison_cellwindow002a: light_spot 223 204 138 4000, cone 85/35, pitch -83; lampfixture01a: light_spot 255 245 145 600, cone 60/20, pitch -90.",
+  "Grime: 23 infodecal and 0 info_overlay; on walls trash 7, plant 6, graffiti 4, burn 4; wall decals median 54.4 over the floor."
+ ],
+ "pictures": [],
+ "pictures_folder": "valve_d1_canals_02"
+}

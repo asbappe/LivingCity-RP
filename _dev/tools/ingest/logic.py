@@ -10,7 +10,7 @@ import collections
 import fnmatch
 import re
 
-from .common import C, dist, top, med, rnd
+from .common import C, dist, top, rnd
 from .vmf import SPECIAL
 
 LOGIC = re.compile(r"^(trigger_|logic_|math_|filter_|env_|ambient_generic|npc_maker|npc_template_maker|func_button|func_rot_button|"

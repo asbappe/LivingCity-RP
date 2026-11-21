@@ -3,14 +3,14 @@
  "vmf": "d1_canals_05.vmf",
  "made": "2026-11-21",
  "tool": "map_ingest.py",
+ "format": 1,
  "seconds": {
   "census": 0.0,
-  "sections": 6.6,
-  "props": 0.2,
+  "sections": 7.5,
+  "props": 0.1,
   "logic": 0.0,
-  "craft": 0.7,
-  "views": 42.6,
-  "total": 51.8
+  "craft": 0.8,
+  "total": 10.2
  },
  "census": {
   "file": {"name":"d1_canals_05","editorversion":"400","vertices_plus":false,"entities":1766,"hidden_entities":35,"skybox_entities":47,"brushes":2226,"hidden_brushes":8,"skybox_brushes":25,"faces":13493,"displacements":104,"unreadable_brushes":0,"visgroups":36},
@@ -115,7 +115,7 @@
   "checks": {"unused_named":[3,["sound_canister7_open","sound_headcrabbing_bite","sound_guncave_entrance_lock01"]],"counters_short_of_max":[0,[]],"timers_without_time":[0,[]],"buttons_nobody_can_press":[0,[]],"lines_to_player":0,"relays_over_40_lines":[0,[]]}
  },
  "craft": {
-  "texture": {"faces":8470,"scale":{"0.25":0.68,"0.5":0.25,"0.2":0.03,"0.1":0.02,"0.7":0.0,"0.07":0.0},"scale_by_area":{"0.5":0.49,"0.25":0.34,"1":0.14,"0.7":0.01,"0.2":0.01,"0.1":0.0},"scale_by_distance":{"mid":{"0.25":0.41,"0.5":0.3,"1":0.25,"0.7":0.02},"far":{"0.5":0.72,"0.25":0.22,"1":0.05,"0.7":0.01},"near":{"0.25":0.51,"0.5":0.35,"1":0.06,"0.2":0.04}},"rotated":0.077,"off_axis":0.225,"shifted":0.93,"walls_v_up":3400,"foot_on_seam":{"128":0.56,"256":0.41,"512":0.29},"foot_on_seam_unshifted":{"128":0.54,"256":0.35,"512":0.27}},
+  "texture": {"faces":8470,"scale":{"0.25":0.68,"0.5":0.25,"0.2":0.03,"0.1":0.02,"0.7":0.0,"0.07":0.0},"scale_by_area":{"0.5":0.49,"0.25":0.34,"1":0.14,"0.7":0.01,"0.2":0.01,"0.1":0.0},"scale_by_distance":{"mid":{"0.25":0.41,"0.5":0.3,"1":0.25,"0.7":0.02},"far":{"0.5":0.72,"0.25":0.22,"1":0.05,"0.7":0.01},"near":{"0.25":0.51,"0.5":0.35,"1":0.06,"0.2":0.04}},"scale_by_surface":{"wall":{"0.5":0.57,"0.25":0.39,"0.7":0.02,"0.2":0.01},"floor":{"1":0.53,"0.5":0.23,"0.25":0.23,"0.2":0.01},"ceiling":{"0.5":0.65,"0.25":0.31,"0.2":0.01,"0.1":0.01},"slope":{"0.25":0.74,"0.5":0.26,"0.2":0.0,"0.28":0.0}},"off_quarter_top":[["concretewall022b",599],["woodfloor006a",390],["metalpipe003a",324],["concretewall022a",311],["metalwall001a",162],["stonewall029a",160],["gravelfloor003a",113],["stonewall029c",106]],"rotated":0.077,"off_axis":0.225,"shifted":0.93,"walls_v_up":3400,"foot_on_seam":{"128":0.56,"256":0.41,"512":0.29},"foot_on_seam_unshifted":{"128":0.54,"256":0.35,"512":0.27}},
   "lightmapscale": {"faces":{"16":0.876,"32":0.067,"64":0.036,"4":0.01,"3":0.01,"8":0.001},"by_distance":{"mid":{"16":0.81,"32":0.1,"64":0.06,"3":0.02},"far":{"16":0.85,"32":0.11,"64":0.03,"4":0.0},"near":{"16":0.98,"64":0.01,"32":0.01,"4":0.0}},"displacements":{"64":0.84,"16":0.16},"fine_top":[["metalpipe002a",82],["metalwall029a",72],["stonewall051a",8],["woodfloor006a",6],["concretewall022b",2],["metalpipe009b",2],["concretewall036a",1],["concretewall064b",1]],"coarse_top":[["concretewall022a",203],["concretewall073a",95],["woodfloor006a",91],["blendtoxictoxic004a",58],["woodbeam002a",40],["building_trainstation_truss_template001e",32],["concretewall071d",28],["concretewall071f",28]]},
   "brushes": {"n":1665,"detail_share":0.63,"detail_area_share":0.11,"detail_kinds":{"angled":0.72,"strip":0.17,"thin":0.05,"mid":0.04,"large":0.01,"small":0.0},"world_kinds":{"angled":0.36,"mid":0.34,"large":0.21,"thin":0.05,"strip":0.02,"small":0.02},"covered_faces":{"hidden":{"n":2632,"nodraw":0.28,"textured":0.72},"free":{"n":3351,"nodraw":0.21,"textured":0.79}}},
   "trims": {"n":117,"sections_top":[["2x4",38],["8x8",25],["16x32",9],["4x16",8],["2x8",6],["8x12",4],["3.6x16",3],["8x16",3]],"materials_top":[["metalpipe003a",49],["woodfloor006a",18],["stonewall051a",15],["woodfloor005a",7],["stonewall029c",6],["concretewall039a",5],["metalwall069a",4],["woodbeam002a",4]],"detail_share":0.92,"direction":{"horizontal":67,"vertical":50},"vs_wall":{"same":32,"other":54,"same folder":31}},

@@ -6,6 +6,8 @@ Living City: ingest one of Valve's maps (or any VMF) so the map tools learn how 
     python3 map_ingest.py all NAME MAP.vmf --no-pictures      the same without drawing (about a minute less)
     python3 map_ingest.py census|sections|props|logic|craft MAP.vmf     one part, printed as JSON
     python3 map_ingest.py views MAP.vmf --out DIR    candidate pictures scored, the best drawn at 800x520, one contact sheet
+    python3 map_ingest.py draw MAP.vmf --eye X Y Z --yaw A --out F.png    one picture again, as views draws them
+    python3 map_ingest.py draw MAP.vmf --iso SW [--box X1 Y1 X2 Y2] [--cut Z] --out F.png
     python3 map_ingest.py aggregate                  every _dev/reference/valve_*/measure.json into _dev/reference/valve_stats.json
     python3 map_ingest.py merge-lessons FILE         proposed lessons into lessons.json (as map_lessons.py --merge FILE)
 
@@ -88,7 +90,7 @@ def cmd_all(a, log):
         for p in pics:
             p["file"] = p["file"] if rel == "." else os.path.join(rel, p["file"])
     secs["total"] = round(time.time() - t0, 1)
-    M = {"name": a.name, "vmf": os.path.basename(a.vmf), "made": time.strftime("%Y-%m-%d"), "tool": "map_ingest.py", "seconds": secs}
+    M = {"name": a.name, "vmf": os.path.basename(a.vmf), "made": time.strftime("%Y-%m-%d"), "tool": "map_ingest.py", "format": 1, "seconds": secs}
     M.update(meas)
     text = dump(M)
     if chr(0x2014) in text:
@@ -107,11 +109,17 @@ def cmd_all(a, log):
 
 def main():
     ap = argparse.ArgumentParser(description="Ingest a Valve VMF: measure it, picture it, and gather statistics across maps.")
-    ap.add_argument("command", choices=("all",) + PARTS + ("views", "aggregate", "merge-lessons"))
+    ap.add_argument("command", choices=("all",) + PARTS + ("views", "draw", "aggregate", "merge-lessons"))
     ap.add_argument("args", nargs="*", help="all: NAME MAP.vmf; a part or views: MAP.vmf; merge-lessons: FILE")
     ap.add_argument("--out", help="views / all: where the pictures go")
     ap.add_argument("--eyes", type=int, default=6, help="how many eye-level views to draw (default 6)")
     ap.add_argument("--no-pictures", action="store_true", help="all: measure only")
+    ap.add_argument("--eye", type=float, nargs=3, metavar=("X", "Y", "Z"), help="draw: look from here")
+    ap.add_argument("--yaw", type=float, default=0.0, help="draw: the way to look (0 east, 90 north)")
+    ap.add_argument("--pitch", type=float, default=3.0, help="draw: degrees down")
+    ap.add_argument("--iso", choices=["NE", "NW", "SE", "SW"], help="draw: from above, from this corner")
+    ap.add_argument("--box", type=float, nargs=4, metavar=("X1", "Y1", "X2", "Y2"), help="draw: only what is inside")
+    ap.add_argument("--cut", type=float, help="draw: nothing above this height")
     a = ap.parse_args()
     log = lambda s: print(s, flush=True)
     if a.command == "aggregate":
@@ -136,6 +144,15 @@ def main():
     from ingest import vmf, geom
     m = vmf.load(a.args[0])
     s = geom.Solid(m)
+    if a.command == "draw":
+        from ingest import views
+        if not a.out or not (a.eye or a.iso):
+            raise SystemExit("usage: map_ingest.py draw MAP.vmf (--eye X Y Z --yaw A | --iso SW) --out F.png")
+        polys, lights = views.scene(m)
+        kw = dict(eye=tuple(a.eye), yaw=a.yaw, pitch=a.pitch) if a.eye else dict(iso=a.iso, box=tuple(a.box) if a.box else None, cut=a.cut)
+        views.Painter(m, polys, lights).draw(a.out, (800, 520), title="", reach=5000 if a.eye else None, **kw)
+        print("written: " + a.out)
+        return
     if a.command == "views":
         from ingest import views
         out = a.out or os.path.join(os.getcwd(), m.name + "_views")

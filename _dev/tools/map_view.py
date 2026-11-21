@@ -121,6 +121,8 @@ def scene(path):
                 continue
             disp = [k for k in side.kids if k.name == "dispinfo"]
             if disp:
+                if not vp:      # (worked-out corners go round the other way from Hammer's: the grid would come out turned over)
+                    verts = list(reversed(verts))
                 polys.extend(displaced(verts, disp[0], colour_of(mat)))
                 continue
             if mat in SKIP or len(verts) < 3:
@@ -268,12 +270,12 @@ def clip(poly, axis, limit, keep_below):
     return out
 
 
-def render(path, out, eye=None, yaw=0.0, pitch=0.0, fov=90.0, iso=None, cut=None, box=None, size=(1280, 800), title=None):
+def render(path, out, eye=None, yaw=0.0, pitch=0.0, fov=90.0, iso=None, cut=None, box=None, size=(1280, 800), title=None, scene_data=None):
     """eye/yaw/pitch: a view as a player would have (pitch: degrees DOWN). iso: "NE", "NW", "SE" or "SW", the corner
     looked from, from above. cut: nothing above this height is drawn (to see into roofed places). box: x1 y1 x2 y2,
-    only what is in it."""
+    only what is in it. scene_data: a scene() already read (to draw one file many times without reading it again)."""
     from PIL import Image, ImageDraw
-    polys, lights = scene(path)
+    polys, lights = scene_data if scene_data is not None else scene(path)
     if box:      # (cut every face to the rectangle: a wall or floor running past its edge keeps the part inside)
         kept = []
         for verts, col, thru in polys:

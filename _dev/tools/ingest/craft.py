@@ -11,7 +11,7 @@ import math
 
 import numpy as np
 
-from .common import C, dist, top, shares, med, rnd, node_points, near_dist, band
+from .common import C, top, shares, med, rnd, node_points, near_dist, band
 from . import surfaces, light
 
 DETAIL = ("world", "func_detail")

@@ -3,13 +3,14 @@
  "vmf": "sdk_d1_trainstation_02.vmf",
  "made": "2026-11-21",
  "tool": "map_ingest.py",
+ "format": 1,
  "seconds": {
   "census": 0.0,
-  "sections": 11.2,
+  "sections": 10.1,
   "props": 0.1,
   "logic": 0.0,
   "craft": 0.7,
-  "total": 13.9
+  "total": 12.6
  },
  "census": {
   "file": {"name":"d1_trainstation_02","editorversion":"400","vertices_plus":false,"entities":1767,"hidden_entities":0,"skybox_entities":11,"brushes":2213,"hidden_brushes":0,"skybox_brushes":27,"faces":13532,"displacements":3,"unreadable_brushes":0,"visgroups":8},
@@ -114,7 +115,7 @@
   "checks": {"unused_named":[6,["logic_tv_turnoffallscreens","forcefield3_sound_far","forcefield2_sound_far","forcefield1_sound_far","soda_machine_2_dispense_sound","relay_spawn_passerby"]],"counters_short_of_max":[2,["soda_machine_1_counter","soda_machine_1_total_counter"]],"timers_without_time":[0,[]],"buttons_nobody_can_press":[0,[]],"lines_to_player":0,"relays_over_40_lines":[0,[]]}
  },
  "craft": {
-  "texture": {"faces":7391,"scale":{"0.25":0.88,"1":0.04,"0.73":0.04,"0.4":0.01,"0.19":0.0,"0.3":0.0},"scale_by_area":{"0.25":0.95,"1.13":0.01,"0.4":0.01,"0.27/0.25":0.0,"0.225":0.0,"0.1":0.0},"scale_by_distance":{"mid":{"0.25":0.94,"1.13":0.02,"0.4":0.02,"0.27/0.25":0.01},"near":{"0.25":0.99,"0.5":0.0,"0.21/0.25":0.0,"0.438":0.0},"far":{"0.25":0.87,"0.225":0.06,"5":0.03,"0.268/0.292":0.02}},"rotated":0.035,"off_axis":0.176,"shifted":0.78,"walls_v_up":3601,"foot_on_seam":{"128":0.62,"256":0.53,"512":0.41},"foot_on_seam_unshifted":{"128":0.61,"256":0.49,"512":0.23}},
+  "texture": {"faces":7391,"scale":{"0.25":0.88,"1":0.04,"0.73":0.04,"0.4":0.01,"0.19":0.0,"0.3":0.0},"scale_by_area":{"0.25":0.95,"1.13":0.01,"0.4":0.01,"0.27/0.25":0.0,"0.225":0.0,"0.1":0.0},"scale_by_distance":{"mid":{"0.25":0.94,"1.13":0.02,"0.4":0.02,"0.27/0.25":0.01},"near":{"0.25":0.99,"0.5":0.0,"0.21/0.25":0.0,"0.438":0.0},"far":{"0.25":0.87,"0.225":0.06,"5":0.03,"0.268/0.292":0.02}},"scale_by_surface":{"wall":{"0.25":0.93,"1.13":0.03,"0.27/0.25":0.01,"0.1":0.01},"floor":{"0.25":0.96,"0.4":0.02,"0.225":0.01,"0.268":0.0},"ceiling":{"0.25":1.0,"5":0.0,"0.268":0.0,"0.4":0.0},"slope":{"0.25":0.82,"0.4":0.11,"0.73":0.07}},"off_quarter_top":[["dev_combinemonitor_3",468],["dev_combinemonitor_b",156],["roof_template001b",26],["metalgrate008a",24],["concretewall037d",24],["building_trainstation_window002d",21],["metalwall030a",19],["building_template012c",17]],"rotated":0.035,"off_axis":0.176,"shifted":0.78,"walls_v_up":3601,"foot_on_seam":{"128":0.62,"256":0.53,"512":0.41},"foot_on_seam_unshifted":{"128":0.61,"256":0.49,"512":0.23}},
   "lightmapscale": {"faces":{"16":0.821,"32":0.093,"8":0.045,"64":0.037,"4":0.004,"12":0.0,"128":0.0},"by_distance":{"mid":{"16":0.76,"32":0.15,"64":0.04,"8":0.03},"near":{"16":0.89,"8":0.06,"32":0.03,"64":0.02},"far":{"16":0.59,"64":0.3,"32":0.06,"8":0.05}},"displacements":{"16":1.0},"fine_top":[["stonewall050c",45],["building_template012b",37],["building_template012j",28],["building_template028a",27],["stonewall040f",26],["stonewall050b",23],["stonewall050a",22],["dev_lowermetaldoor02a",18]],"coarse_top":[["building_template028a",90],["dev_lowermetaldoor02a",90],["metalroof006a",59],["roof_template001b",57],["building_template012j",37],["metalrail001a",32],["building_trainstation_template002k",30],["building_template011c",29]]},
   "brushes": {"n":1643,"detail_share":0.45,"detail_area_share":0.33,"detail_kinds":{"angled":0.38,"strip":0.28,"thin":0.14,"large":0.11,"mid":0.08,"small":0.02},"world_kinds":{"angled":0.33,"thin":0.31,"mid":0.14,"strip":0.12,"large":0.08,"small":0.01},"covered_faces":{"hidden":{"n":3913,"nodraw":0.38,"textured":0.62},"free":{"n":3458,"nodraw":0.31,"textured":0.69}}},
   "trims": {"n":231,"sections_top":[["16x32",96],["16x16",39],["4x8",20],["8x16",18],["8x32",18],["4x21",6],["1x32",5],["8x24",4]],"materials_top":[["stonewall050c",28],["stonewall050b",28],["stonewall050a",19],["building_template028a",19],["building_trainstation_template002o",16],["dev_lowermetaldoor02a",14],["stonewall040f",13],["building_trainstation_template002j",11]],"detail_share":0.6,"direction":{"vertical":148,"horizontal":83},"vs_wall":{"same folder":70,"same":68,"other":93}},
