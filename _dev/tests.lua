@@ -7492,10 +7492,26 @@ LC.SetJob(porter, "porter", true)
 porter.chat = {}
 local spotInZone = LC.SpotInZone
 LC.SpotInZone = function() return nil end -- (home is this section's doorway, not a block another section left across the map)
+-- off the train come only people new to the city (21 November): with nobody new, nobody gets off
+local okE, empty = LC.TrainArrive(true)
+ok(okE and #(empty or {}) == 0, "with nobody new to the city, the train comes in and nobody gets off", #(empty or {}))
+timer.Remove("LivingCityTrainLeaves")
+local newcomers = {}
+for i = 1, 4 do local np = LC.NewPerson("citizen") np.newcomer = true newcomers[i] = np end
+ok(not LC.PersonAvailable("citizen") or LC.NextPerson("citizen") == nil or not LC.NextPerson("citizen").newcomer,
+    "someone new to the city doesn't come out onto the street while trains run: they wait for the train")
 local okA, arrivals = LC.TrainArrive(true)
 LC.SpotInZone = spotInZone
 arrivals = arrivals or {}
 ok(okA and #arrivals >= 2, "a train comes in, and people get off", tostring(okA) .. " " .. #arrivals .. " plats " .. #LC.TrainPlatforms() .. " npcs " .. table.Count(LC.NPCs))
+local allNew = #arrivals > 0
+for _, n in ipairs(arrivals) do
+    local pr = n.lcProfile
+    local was = false
+    for _, np in ipairs(newcomers) do if np == pr then was = true end end
+    if not was or pr.newcomer then allNew = false end
+end
+ok(allNew, "they are the people new to the city, and in it now")
 ok(has(porter.chat, "train is in"), "Intake Processors are told")
 local a1 = arrivals[1]
 local s1 = a1 and LC.NPCs[a1] or {}
@@ -43381,6 +43397,59 @@ function Nov21_GardenPlotTests()
     LC.Running = runWas
 end
 Nov21_GardenPlotTests()
+
+function Nov21_PeopleNextTests()
+    section("21 November: people back from home come out of their own block; units are all named")
+    local seenWas, farWas = LC.IsSeen, LC.FarFromPlayers
+    LC.IsSeen = function() return false end
+    LC.FarFromPlayers = function() return true end
+    local at = Vector(-47000, -47000, 0)
+    local home = LC.AddZone(at, 300, "block", 77)
+    local other = LC.AddZone(at + Vector(3000, 0, 0), 300, "block", 78)
+    local p = LC.NewPerson("citizen")
+    p.home = 77
+    local spot = LC.PersonHomeSpot(p)
+    ok(spot and spot:Distance(at) < 320, "a spot in their own block, out of sight", spot and spot:Distance(at))
+    LC.IsSeen = function() return true end
+    ok(LC.PersonHomeSpot(p) == nil, "nowhere unseen in it: no spot (they come out wherever the city would put them)")
+    LC.IsSeen = function() return false end
+    -- the street top-up takes the one it chose, at that spot
+    p.homeUntil = CurTime() - 1
+    local got = LC.ClaimProfile("citizen", { person = p })
+    ok(got == p, "the person chosen for the spot is the one who comes out")
+    p.npc = nil
+    -- every unit out there has a name
+    local units = 0
+    for _, q in ipairs(LC.People.list) do if q.alive and q.role == "cop" then units = units + 1 end end
+    local copsWas = GetConVar("lc_cops"):GetInt()
+    _setcvar("lc_cops", tostring(math.max(units, GetConVar("lc_roster_cops"):GetInt()) + 5))
+    LC.TopUpPeople()
+    local after = 0
+    for _, q in ipairs(LC.People.list) do if q.alive and q.role == "cop" then after = after + 1 end end
+    ok(after >= GetConVar("lc_cops"):GetInt(), "more units on the streets than lc_roster_cops: the roster grows, so none is nameless", after)
+    _setcvar("lc_cops", tostring(copsWas))
+    -- someone new to the city is not one of the first people
+    local list = LC.People.list
+    local alive = 0
+    for _, q in ipairs(list) do if q.alive and q.role == "citizen" then alive = alive + 1 end end
+    local sizeWas, streetsWas = GetConVar("lc_roster_size"):GetInt(), GetConVar("lc_citizens"):GetInt()
+    _setcvar("lc_roster_size", tostring(alive))
+    _setcvar("lc_citizens", tostring(math.min(streetsWas, alive)))
+    local before = #list
+    local dead
+    for _, q in ipairs(list) do if q.alive and q.role == "citizen" and not q.npc then dead = q break end end
+    if dead then dead.alive = false end
+    LC.TopUpPeople()
+    local fresh = list[#list]
+    ok(#list > before and fresh.newcomer == true, "the place of the dead is filled by someone new to the city", #list - before)
+    fresh.alive = false
+    _setcvar("lc_roster_size", tostring(sizeWas))
+    _setcvar("lc_citizens", tostring(streetsWas))
+    LC.RemoveZone(home) LC.RemoveZone(other)
+    p.alive = false
+    LC.IsSeen, LC.FarFromPlayers = seenWas, farWas
+end
+Nov21_PeopleNextTests()
 
 ----------------------------------------------------------------------
 section("Stop")
