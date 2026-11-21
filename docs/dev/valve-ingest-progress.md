@@ -23,13 +23,24 @@ plus Valve's 41 style guide and standards rooms** (not the dated drafts or the t
 
 ## The owner's requests on the way
 
-- **EP1 Citadel (batch 6):** copy and save for future use the **massive Combine doors built of 20 to 40 brushes**,
+- **EP1 Citadel doors and core (batch 6):** copy and save for future use the **massive Combine doors built of 20 to 40 brushes**,
   and the **Citadel core reactor** with its effect, animation, damage, sounds and wiring, as pieces
   (`map_prefab.py extract`, with the logic noted in `docs/dev/prefabs.md`). Not done yet.
-- **HL2 Citadel walkway reactors (do with batch 6):** the small power reactors in the middle of the walkways in
+- **HL2 Citadel walkway reactors (batch 6):** the small power reactors in the middle of the walkways in
   d3_citadel_03 and 04: step in and you float (`trigger_vphysics_motion`, `SetGravityScale` 0; 9 in 03, 10 in 04),
   float to the middle and it kills you (`trigger_physics_trap`, `trigger_hurt`). Lift one whole, brushes, effects,
   sounds and wiring, as a piece. Not done yet.
+- **The Citadel pods that carry you (batch 6):** the ride in d3_citadel_01 and 05 and ep1_citadel_00 (the
+  prisoner pod with `Inner_pod_arm` and `Inner_pod_rotator` on `func_tracktrain` along `path_track`s, 12 to 22
+  tracktrains a map). Lift the pod, its route and its wiring as a piece. Not done yet.
+- **Combine architecture, special attention (batch 6, the owner's words):** "pay special attention to the odd,
+  unnerving, and unnatural architecture of the combine structures. they never have symmetrical architecture, it
+  seems very random/odd and that's something we don't do well and the C18 map doesn't do well and I want to
+  reproduce it". A study of its own, by numbers: how far each Combine structure is from mirror symmetry; leaning and
+  off-axis faces; overhangs and cantilevers; panel sizes and how they step out from a wall; contrast of huge and small;
+  materials and light strips. Across the Citadel maps first, then every Combine structure in the 145 maps (the Nexus
+  in d3_c17_10a, 10b, 11; Nova Prospekt's Combine parts; EP2). It ends in rules our map tools can follow to build
+  such structures (a generator or module), shown to the owner before it changes anything they settled. Not done yet.
 
 ## The batches (M measured, P pictures reviewed, S studied and lessons merged)
 
@@ -42,9 +53,9 @@ All 122 measured on 21 November (145 maps in `valve_stats.json` with the first 2
 | 3 | Nova Prospekt | d2_prison_01 to 08 | yes | | |
 | 4 | Black Mesa East | d1_eli_01, 02 | yes | | |
 | 5 | EP1 City 17 | ep1_c17_00, 00a, 01, 01a, 02, 02a, 02b, 03, 05, 06; styleguide_hospital_exit, styleguide_garage, styleguide_garage_destroyed, styleguide_garage_antlionroom, styleguide_train_loadingdock, styleguide_train_repair, styleguide_antlion_tunnel, styleguide_antlionhole | yes | | |
-| 6 | EP1 Citadel | ep1_intro, ep1_citadel_00, 01, 02, 02b, 03, 04; styleguide_core, styleguide_destroyed_citadel | yes | | |
+| 6 | The Citadel, HL2 and EP1 | d3_citadel_01 (in before; studied again), 02, 03, 04, 05, d3_breen_01; ep1_intro, ep1_citadel_00, 01, 02, 02b, 03, 04; styleguide_core, styleguide_destroyed_citadel | yes | | |
 | 7 | EP2 | ep2_outland_01, 01a, 02, 03, 04, 05, 06, 06a, 07, 08, 09, 10, 10a, 11, 11a, 11b, 12, 12a; styleguide_01_antenna, 06_elev_tower, 11a, barn, barn_deterioration, bunkers, caves, farmhouse1, farmhouse2, farmyard, forest_01, inn, logging, radiotower, radiotower_a, radiotower_b, silo, silo_derilict, vista_01, riverbed, riverbed2; outland_building_large_01, medium_01, medium_02 | yes | | |
-| 8 | The rest of HL2 | d1_trainstation_06; d2_coast_01, 03, 04, 05, 07, 08, 09, 10, 11; d3_citadel_02 to 05; d3_breen_01 | yes | | |
+| 8 | The rest of HL2 | d1_trainstation_06; d2_coast_01, 03, 04, 05, 07, 08, 09, 10, 11 | yes | | |
 
 Left out on purpose: the `_fix`, `_clean`, `_steph`, `_ps3`, `_websacks` and dated (`_0609`...) copies, the
 backgrounds, credits, demos, trailers and test rooms.
