@@ -1883,6 +1883,9 @@ end
 
 local function TryChat(npc, st, now)
     st.nextChat = now + math.Rand(25, 60)
+    -- a quiet crowd where the Combine is watching: they look (at you, a unit, the screen), they don't chat
+    -- (Valve's station maps; the owner, 21 November: sv_livingcity_idlelife.lua)
+    if LC.CrowdQuiet and LC.CrowdQuiet(npc, st, now) then return end
     for other, ost in pairs(LC.NPCs) do
         if other ~= npc and IsValid(other) and ost.role == "citizen" and (ost.state == "idle" or ost.state == "inline")
             and other:GetPos():DistToSqr(npc:GetPos()) < 160 * 160 then
@@ -1902,6 +1905,8 @@ local function TryChat(npc, st, now)
         end
     end
 end
+
+LC.TryChat = TryChat
 
 local SITTABLE = { sit = true, sitchair = true, lean = true }
 LC.SITTABLE = SITTABLE -- (with Valve's idle spots added: window, armscrossed, drinker, couch, bedside: sv_livingcity_idlelife.lua)
