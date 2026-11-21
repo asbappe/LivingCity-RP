@@ -27,6 +27,7 @@ import math
 import random
 
 import map_prefab as PF
+import map_silo as MS
 from map_build import CELL, FACE_AXES, FACE_ORDER, GATE_HIGH, GATE_WIDE, MAT, Plan, Vmf, check, face_corners, flood, gate_cap, reaches, test_extras
 
 PATCH, STEP, WALL = 512, 64, 128
@@ -1153,7 +1154,10 @@ class BunkerForest(Forest):
     # piece): its path point, gate, call button and wiring are all made from this list.
     LIFT_STOPS = (320, 896, 1152)
     LIFT_XY = (-480, 0)          # the lift's track in the piece's frame: 480 from the shaft's axis, which stays clear
-    HQ_FOOT, HQ_TOP = 160 + 8, 1408 + 120      # the Resistance flag's markers on the shaft's axis: over the pit grate (160) and the gantry (1408)
+    HQ_FOOT, HQ_TOP = 322 + 8, 1408 + 120      # the Resistance flag's markers on the shaft's axis: over the pit's cover (322) and the gantry (1408)
+    # the rebel territory the gamemode reads from the map round the flag's pole: a box 1400 wide each way and 1800 high
+    # from the floor under the marker (the gamemode's reading), so the marker stands on the bottom floor beside the pole's foot
+    REBEL_ZONE = ("lc_zone_rebel_r700_h1800_silo", 322 + 8)
 
     def silo(self):
         """White Forest's rocket silo (the lifted piece valve_ep2_silo: docs/dev/prefabs.md) just outside the forest's north
@@ -1176,7 +1180,10 @@ class BunkerForest(Forest):
         q, d = 1, (ax, ay, az)
         reserve = set(pf.get("reserve", {}).get("names", ()))
         live = set(w["keys"].get("targetname", "") for w in pf["wiring"]) - {""}
-        pf_solids(v, pf, q, d, sv, world=True, skip=lambda s: "taken shut" in s["from"] or s.get("live") in live)
+        finished = MS.finish(pf)        # (the nodraw faces players now see: map_silo.py)
+        for i in MS.SKIP:
+            pf["solids"][i]["skip"] = True
+        pf_solids(v, pf, q, d, sv, world=True, skip=lambda s: "taken shut" in s["from"] or s.get("live") in live or s.get("skip"))
         drop = {"steam_silo1_1", "tr_laddergate_1", "sound_ladder_steam_1", "sound_ladder_steamloop_1", "sound_ladder_lock_1", "door_silo_lab_outside_1_malfunction_timer",
                 # the ladder's hatch and the clip over it (the owner: "there is no way to open the gate ... can we just remove that grate?")
                 "door_hatch_ladder_1", "pclip_hatch_1",
@@ -1184,7 +1191,9 @@ class BunkerForest(Forest):
                 "door_silo_lab_outside_1_door_open_rl", "door_silo_lab_outside_1_open_wav", "door_silo_lab_outside_1_keybeep_wav_1", "door_silo_lab_outside_1_keybeep_wav_2",
                 "door_silo_lab_outside_1_keybeep_wav_3", "break_glass_1", "break_glass_1a", "exit_airlock_blastdoor_lever_rl",
                 # Valve's lift button, the trigger that locked it, its path: lift() makes them anew
-                "button_ele_2", "trigger_unlock_ele", "path_elevator_5", "path_elevator_6", "path_elevator_7", "path_elevator_8"}
+                "button_ele_2", "trigger_unlock_ele", "path_elevator_5", "path_elevator_6", "path_elevator_7", "path_elevator_8",
+                # level B's fake door at its north end (a working door now: map_silo.py)
+                "brush_fake_cit_door_1"}
         pads = [p for p in pf["points"] if "keypad" in p["keys"].get("model", "")]
         buttons = [w for w in pf["wiring"] if w["classname"] == "func_button" and any(c[1].startswith("keypad_1,") for c in w.get("connections", []))]
         pad_name, lab_pads = {}, set()
@@ -1196,7 +1205,7 @@ class BunkerForest(Forest):
 
         def keep(e):
             k = e["keys"]
-            if k.get("targetname", "") in drop or e["classname"] == "func_areaportal":
+            if k.get("targetname", "") in drop or e["classname"] == "func_areaportal" or MS.dropped_prop(e):
                 return False
             if k.get("targetname", "") in reserve or any(k.get(r, "") in reserve for r in ("parentname", "attach1", "attach2")):
                 return False        # (the hoist: kept in the piece's reserve, not placed)
@@ -1281,6 +1290,19 @@ class BunkerForest(Forest):
         # top floor"): its foot over the pit grate on the shaft's axis, its _top marker 120 over the gantry's floor
         v.point("info_target", (ax, ay, az + self.HQ_FOOT), {"targetname": "lc_hq_setup_silo", "spawnflags": "0"}, wv)
         v.point("info_target", (ax, ay, az + self.HQ_TOP), {"targetname": "lc_hq_setup_silo_top", "spawnflags": "0"}, wv)
+        v.point("info_target", (ax, ay, az + self.REBEL_ZONE[1]), {"targetname": self.REBEL_ZONE[0], "spawnflags": "0"}, wv)
+        # the playable silo (map_silo.py): the pit covered, a rail at the gantry's hatch, level B's doors, the ring halls
+        # dressed, the leader's office and bedroom, and his way out
+        ms = MS.Silo(self, d)
+        ms.pit_cover()
+        ms.hatch_rail()
+        ms.level_b_doors()
+        ms.ring_dress()
+        ms.office()
+        ms.bedroom()
+        ms.escape()
+        self.notes.append("the silo made playable: %d nodraw faces players now see finished; the pit covered at the bottom level; a rail round the gantry's hatch; "
+                          "level B's two doors; the leader's office and bedroom" % finished)
         for dz in (1408 + 64, 322 + 64):
             v.point("env_cubemap", (ax, ay + 200, az + dz), {"cubemapsize": "0"}, sv)
         # player clips in the empty shaft: over the solid ring's hole (159), the ring slab's grate's hole (114) and inside
