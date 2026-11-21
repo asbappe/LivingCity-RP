@@ -1476,6 +1476,7 @@ function LC.HoldWaveTick(w, now, send)
     if had and alive == 0 and not w.wiped then
         w.wiped = true
         w.nextAt = math.min(w.nextAt, now + LC.HOLD_WAVE_WIPED)
+        if w.onWiped then LC.Try(w.onWiped, w) end -- (between waves: supplies from a roof, sv_livingcity_roofdrop.lua)
     end
     if now < w.nextAt or now >= w.start + w.secs - 5 then return false end
     w.i = w.i + 1
@@ -1951,6 +1952,11 @@ T{
         hold.onEnter = function(q)
             if LC.RadioNotice then LC.RadioNotice("cp", "Dispatch: anticitizens gathering " .. where .. ". Nearby Civil Protection units, investigate.") end
             q.data.waves = LC.HoldWaves(60, CurTime(), 0)
+            -- a wave of units wiped out: a rebel on a roof throws down rounds and bandages, twice at most
+            q.data.waves.onWiped = function()
+                q.data.drops = (q.data.drops or 0) + 1
+                if q.data.drops <= 2 and LC.RoofResupply then LC.RoofResupply(spot, Members(q)) end
+            end
             LC.HoldWaveTick(q.data.waves, CurTime(), function() return Dispatch(q) end)
         end
         hold.onDone = function(q)

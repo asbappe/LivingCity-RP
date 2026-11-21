@@ -43584,6 +43584,56 @@ function Nov21_SquadTopUpTests()
 end
 Nov21_SquadTopUpTests()
 
+function Nov21_RoofDropTests()
+    section("21 November: Resistance supplies thrown down from a roof between waves")
+    local runWas = LC.Running
+    LC.Running = true
+    local manWas = GetConVar("lc_manpower") and GetConVar("lc_manpower"):GetString()
+    if manWas then _setcvar("lc_manpower", "0") end
+    local at = Vector(46000, 48000, 0)
+    local holder = newPlayer("RoofHolder", "resistance", nil, 400)
+    holder:SetPos(at)
+    local fbWas = LC.Fallback
+    LC.Fallback = {}
+    ok(LC.RoofDropSpot(at) == nil and LC.RoofResupply(at, { holder }) == nil, "no roof spot near: nothing comes")
+    LC.Fallback = { at + Vector(600, 0, 300), at + Vector(300, 0, 20) }
+    local nav = LC.RoofDropSpot(at)
+    ok(nav and nav.z > at.z + 200, "a high spot of the map's navigation with a clear line down will do", tostring(nav))
+    local mark = ents.Create("info_target")
+    mark:SetPos(at + Vector(-500, 200, 350)) mark:SetName("lc_drop_test") mark:Spawn()
+    ok(LC.RoofDropSpot(at) == mark:GetPos(), "the map's own roof spot (lc_drop_...) first")
+    local function count()
+        local n = 0
+        for _, e in ipairs(ents.FindByClass("lc_item")) do
+            local id = e:GetNW2String("lc_item", "")
+            if e.lcRoofTest == nil and (string.sub(id, 1, 5) == "ammo_" or id == "bandage" or id == "health_vial") then n = n + 1 end
+        end
+        return n
+    end
+    local before = count()
+    local thrower = LC.RoofResupply(at, { holder })
+    ok(IsValid(thrower) and thrower:GetPos():Distance(mark:GetPos()) < 60 and LC.NPCs[thrower].thrower, "a rebel appears on the roof")
+    _run(6)
+    ok(count() - before == 2 * LC.RoofDropThrows, "and throws down a box of rounds and a bandage or vial, each throw", count() - before)
+    -- in a hold: a wave of units wiped out brings it
+    local w = LC.HoldWaves(60, CurTime(), 0)
+    local fired = 0
+    w.onWiped = function() fired = fired + 1 end
+    local unit = ents.Create("npc_metropolice") unit:SetPos(at + Vector(900, 0, 0)) unit:Spawn() unit:SetHealth(50)
+    LC.HoldWaveTick(w, CurTime(), function() return { unit } end)
+    unit:SetHealth(0)
+    LC.HoldWaveTick(w, CurTime() + 1, function() return {} end)
+    ok(fired == 1, "between waves: when a wave is wiped out")
+    unit:Remove()
+    if IsValid(thrower) then LC.NPCs[thrower] = nil thrower:Remove() end
+    mark:Remove()
+    LC.Fallback = fbWas
+    holder:Remove()
+    if manWas then _setcvar("lc_manpower", manWas) end
+    LC.Running = runWas
+end
+Nov21_RoofDropTests()
+
 ----------------------------------------------------------------------
 section("Stop")
 LC.Stop(admin)
