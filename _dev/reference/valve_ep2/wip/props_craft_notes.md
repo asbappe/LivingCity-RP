@@ -95,16 +95,18 @@ strider battle round the barns; **12a** launch control, hangar, the ending barn 
 - **Four mouths** (brushes crossing the edge): north x 1824-1904, y -9432 to -9232, z -1408 to -832 (to the lab);
   north-east x 2144-2560, y -9584 to -9264, z -1280 to -1152; north-west x 1344-1580, y -9520 to -9296, z -1472 to
   -1248; west x 1184-1440, y -10080 to -9792, z -320 to 128 (the lift from the surface, `elevator_2`).
-- **Shaft**: a **24-sided cylinder**, flats 254 from the axis (256 to the corners, sides turned 7.5 degrees),
-  `concretewall010a` lined with `metalwall069a`, from the floor at z -1406 to -300; a **24-sided collar at 381**
-  from -252 to 32; the **lid** a world slab z 32 to 64 over the whole block; open sky above z 84.
-- **Pit**: grate `metalgrate014a` at z -1568 over `metalhull003a` at -1728, x 1632-2016, y -10112 to -9760; an
-  inner ring wall 127 to 159 from the axis (`concretewall073b`, `ep2_concretewall01b/c`).
-- **Levels**: full 24-sided ring floors (150 to 256 out) at z -1406 (`concretefloor039b`), -832 (slab -896 to
-  -832), -576, gantry -320 (`metalgrate_silo01a` on `metaltruss011a/017a`, func_detail); grates
-  `metalgrate_silo01b` inside 150 at -1406, -832, -576 hug the rocket. Ring rooms from 256 out to 508-552 open at z
-  -1404 to -1308, -828 to -684, -540 to -348, -300 to -204 (790 to 980 deep at the top gallery); their floors
-  -1408, -1280/-1216, -1152, -832, -640/-576, -448/-384/-320, -160/-128/-96.
+- **Shaft**: **24-sided** throughout (flats 254 from the axis, 256 to the corners, sides turned 7.5 degrees),
+  `concretewall010a` lined with `metalwall069a`. Read from the rocket outward (rays from 112 off the axis), it is a
+  stack: the **pit** below z -1414 (free to 159 to 176; grate `metalgrate014a` at -1568 over `metalhull003a` at
+  -1728, x 1632-2016, y -10112 to -9760); the **bottom level** z -1406 to about -1280, open to 256 and through doors
+  to rooms 512 out; wall at 254 from -1250 to -1152; a **solid concrete ring from -1152 to -832** narrowing the shaft
+  to 159 (the rocket passes through a hole 318 across; `concretefloor039b` on its top); **open levels** at -832 to
+  -640 and -576 to -330 (wall 254, doors to ring rooms 552 out); a ring slab at -640 to -576 (159, its grate
+  `metalgrate_silo01b` to 114); the **gantry** at -320 (`metalgrate_silo01a` on `metaltruss011a/017a`, func_detail,
+  inner edge 125 to 159); the **collar** at 381 from -252 to -96 (openings 860 to 955 deep at -264 to -216); a
+  **well** 128 from the axis from -96 to 32; the **lid** a world slab z 32 to 64 over the whole block; sky above 84.
+- **Ring rooms** from 256 out to 508-552, floors at -1408, -1280/-1216, -1152, -832, -640/-576, -448/-384/-320,
+  -160/-128/-96.
 - **Leave out (the rocket)**: `props_silo/rocket.mdl` (z -473), `rocket_stage1` (-1381), `_stage2` (-989),
   `_stage3` (-801), three `rocket_engine` (-1381), `rocket_hatch` (`prop_rocket_hatch`) and `door_rocket_hatch`,
   `steamjet_rocket_*`, `lighting_rocket_1/2`, marks `mark_*rocket*`, `target_rocket_cam`.
@@ -167,7 +169,7 @@ White Forest reuses `citadel_metalwall060a` on 53 world brushes leaning 11 and 2
 - Forest edge: Valve, clip on the slope and cards 1000 to 2000 out. Ours: a ridge 440 high planted thickest.
 - Cave: Valve tunnels about 250 x 200, chambers 512 to 1800. Ours: 320 x 320, nest 345 to 760.
 - Gallery: Valve 192 high, 290 to 365 wide, sets every 192 to 280. Ours: the office rooms; no gallery yet.
-- Silo: Valve's shaft 512 across, 1106 tall to the collar, block 1088 square. Ours: the bunker, no shaft.
+- Silo: Valve's shaft 512 across (318 through its rings), about 1660 from pit floor to lid, block 1088 square. Ours: the bunker, no shaft.
 - Base corridor: Valve 181 to 248 wide, ceilings 192. Ours: bunker doorway 256 x 192, inner doors 128 wide.
 
 ## 9. Check ideas
