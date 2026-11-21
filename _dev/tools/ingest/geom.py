@@ -61,13 +61,10 @@ class Grid:
     def _key(ix, iy):
         return (ix + (1 << 20)) * (1 << 21) + (iy + (1 << 20))
 
-    def near_points(self, xy):
-        """Items in the squares holding these points."""
+    def _lookup(self, k):
         if not len(self.keys):
             return np.zeros(0, dtype=np.int64)
-        ix = np.floor(xy[:, 0] / self.cell).astype(np.int64)
-        iy = np.floor(xy[:, 1] / self.cell).astype(np.int64)
-        k = np.unique(self._key(ix, iy))
+        k = np.unique(k)
         pos = np.searchsorted(self.keys, k)
         ok = pos < len(self.keys)
         pos, k = pos[ok], k[ok]
@@ -76,6 +73,16 @@ class Grid:
             return np.zeros(0, dtype=np.int64)
         parts = [self.items[self.start[p]:self.start[p + 1]] for p in pos]
         return np.unique(np.concatenate(parts)) if len(parts) > 1 else parts[0]
+
+    def near_points(self, xy):
+        """Items in the squares holding these points."""
+        return self._lookup(self._key(np.floor(xy[:, 0] / self.cell).astype(np.int64), np.floor(xy[:, 1] / self.cell).astype(np.int64)))
+
+    def near_box(self, x1, y1, x2, y2):
+        """Items in every square a rectangle touches."""
+        ix = np.arange(int(np.floor(x1 / self.cell)), int(np.floor(x2 / self.cell)) + 1, dtype=np.int64)
+        iy = np.arange(int(np.floor(y1 / self.cell)), int(np.floor(y2 / self.cell)) + 1, dtype=np.int64)
+        return self._lookup(self._key(np.repeat(ix, len(iy)), np.tile(iy, len(ix))))
 
     def near_segment(self, a, b):
         a, b = np.asarray(a, float)[:2], np.asarray(b, float)[:2]
@@ -156,8 +163,9 @@ class Solid:
         e = o + d * maxt
         return self.grid.near_segment(o, e), self.tgrid.near_segment(o, e)
 
-    def ray(self, o, d, maxt=4096.0, water=False, sky=True):
-        """(distance or None, face index or -1, kind). water=False lets the ray pass through water brushes."""
+    def ray(self, o, d, maxt=4096.0, water=False, sky=True, inside=True):
+        """(distance or None, face index or -1, kind). water=False lets the ray pass through water brushes;
+        inside=False lets it pass out of a brush it starts in (as a ray that sees only front faces would)."""
         o, d = np.asarray(o, float), np.asarray(d, float)
         cb, ct = self._cands(o, d, maxt)
         best, face, kind = maxt, -1, 0
@@ -181,6 +189,8 @@ class Solid:
             te = te_all.max(axis=1)
             tx = np.where(leave, t, np.inf).min(axis=1)
             hit = ~par_out & (te <= tx + 1e-6) & (tx > 1e-4)
+            if not inside:
+                hit &= te > 1e-4
             if hit.any():
                 tt = np.where(te > 0, te, 0.0)
                 tt[~hit] = np.inf

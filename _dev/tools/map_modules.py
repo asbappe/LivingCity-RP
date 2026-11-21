@@ -31,6 +31,7 @@ from map_forest import noise
 from map_ring import BANK, Channel
 
 F, TRIM = 400, 656        # the canals' floor and the trim line on their walls: the same as the first canal and the ring
+CANAL_W, WIDE_W = 512, 1024   # the canal's width (Valve's city canal), and the wide canal's (Valve's airboat canals)
 BASE = 224                # the bottom of everything (the storm drain goes down to the city's sewers, feet at z 288)
 SEWER = 288
 HEADINGS = {"E": 0, "N": 1, "W": 2, "S": 3}
@@ -131,6 +132,7 @@ class Build:
         else:
             self.plan = Plan((0, 0), [(BASE, rim, MAT["canal_wall"]), (rim, self.sky + 16, MAT["sky"])], sky=self.sky, vis=self.vis + ": walls and floors")
         self.taken, self.blocked, self.no_bank, self.no_mud, self.lanes = [], [], [], [], []
+        self.upright = []     # rectangles where the canal's walls stand upright: no bank, the rest of the dressing as ever
         self.after, self.bumps, self.notes, self.names, self.problems = [], [], [], [], []
         self.owner = {}       # square -> the module that painted it
         self.labels = []      # (x, y, text) for the picture
@@ -195,6 +197,11 @@ class Mod:
 
     def no_bank(self, u1, v1, u2, v2):
         self.b.no_bank.append(self.fr.rect(u1, v1, u2, v2))
+
+    def upright(self, u1, v1, u2, v2):
+        """The walls stand upright here, as Valve's do (the wide canal, a walk along a wall): no bank where this rectangle
+        covers a wall's line; its lip, ribs, outfalls and lamps stay."""
+        self.b.upright.append(self.fr.rect(u1, v1, u2, v2))
 
     def taken(self, *box):
         self.b.taken.append(self.fr.box(*box))
@@ -500,16 +507,116 @@ def canal_grime(m, u1, u2, seed):
         m.grime(rnd.choice(("puddle", "trash", "stain", "puddle")), u, rnd.randrange(-96, 96), F + 1, seed + k)
 
 
+CITY_LEDGE, WIDE_LEDGE = (72, 208), (102, 320)      # a walk along a wall: how wide, how high over the floor (Valve: 72 at 212, 102 at 316)
+
+
+def bank_hip(m, u, s, way, half=CANAL_W // 2):
+    """Where a bank stops along a wall that goes on (where a walk's stretch begins): the bank's end sloped down to the
+    floor at 45 degrees, BANK on into the stretch (way: 1 or -1 along u), not a cut end standing in the open.
+    s: the wall (1 the left, -1 the right)."""
+    wall, toe, c = s * half, s * (half - BANK), MAT["canal_wall"]
+    w0, w1, t0, e = (u, wall, F), (u, wall, F + BANK), (u, toe, F), (u + way * BANK, wall, F)
+    m.shapes([[([w0, w1, t0], c), ([w0, t0, e], c), ([w0, w1, e], c), ([w1, t0, e], c)]])
+    m.blocked(min(u, u + way * BANK), min(wall, toe), max(u, u + way * BANK), max(wall, toe))
+
+
+def walk_ledge(m, u0, u3, s, wide=False, stairs=2):
+    """A walk along one wall (s: 1 the left, -1 the right) from u0 to u3, as Valve's canals have them (the owner, 21
+    November): 72 wide and 208 up in the city canal, 102 wide and 320 up in the wide one, the city's handrail along its
+    open edge; stairs up to it at its start, and at its end (stairs=2) or a rail across its far end (stairs=1), their
+    open side solid and railed as the city's stairs are (map_mods_a.wall_stair). Its wall stands upright, so in the
+    city canal the bank stops either side, its ends sloped down to the floor (bank_hip). Lamps on the wall over the
+    walk, one in three dead. Builds nothing (and gives False) if anything of the module's is in its way."""
+    from map_mods_c import cage_lamp, handrail
+    half = (WIDE_W if wide else CANAL_W) // 2
+    w, h = WIDE_LEDGE if wide else CITY_LEDGE
+    wall, edge = s * half, s * (half - w)
+    lo, hi = min(wall, edge), max(wall, edge)
+    hip = 0 if wide else BANK
+    run = 12 * (h // 8)
+    a = u0 + hip                                         # the first stair's foot
+    w1, w2 = a + run, u3 - hip - (run if stairs > 1 else 0)      # where the walk itself begins and ends
+    if w2 - w1 < 128 or m.b.upper or m.fr.dz:
+        return False
+    reach = s * (half - (w if wide else BANK) - 8)
+    r = m.fr.box(u0 - 16, min(reach, wall), F, u3 + 16, max(reach, wall), F + h + 80)
+
+    def meets(t):
+        return t[0] < r[3] and t[3] > r[0] and t[1] < r[4] and t[4] > r[1] and t[2] < r[5] and t[5] > r[2]
+    vmf = m.b.vmf
+    if (any(meets(bx) for bx, _ in vmf.boxes) or any(meets(bx) for bx in vmf.shape_boxes) or any(meets(t) for t in m.b.taken)
+            or any(meets(p + p) for _, p in vmf.points)):
+        m.b.notes.append("%s: no walk along its %s wall (something of its own is in the way)" % (m.tag, "left" if s > 0 else "right"))
+        return False
+    m.no_bank(u0, wall - 8, u3, wall + 8)
+    if hip:
+        bank_hip(m, u0, s, 1, half)
+        bank_hip(m, u3, s, -1, half)
+    for start, sign in [(a, 1)] + ([(u3 - hip, -1)] if stairs > 1 else []):
+        m.steps(start, lo, hi, F, F + h, "u", sign)
+        stair_rail(m, start, run, edge, h, sign, s)
+        m.blocked(min(start, start + sign * run), lo - 16, max(start, start + sign * run), hi)
+        m.lane(start - sign * 48, edge - s * 48)
+    m.det([(w1, lo, F, w2, hi, F + h)], MAT["canal_wall"], top=MAT["quay_floor"])
+    handrail(m, (w1, edge + s * 3), (w2 - (8 if stairs < 2 else 0), edge + s * 3), F + h)
+    if stairs < 2:
+        handrail(m, (w2 - 3, lo + (8 if s > 0 else 0)), (w2 - 3, hi - (0 if s > 0 else 8)), F + h)
+    for k, u in enumerate(range(w1 + 160, w2 - 96, 512)):
+        cage_lamp(m, u, wall, F + h + (88 if not wide else 24), 270 if s > 0 else 90, lit=k % 3 != 1)
+    m.taken(u0, lo, F, u3, hi, F + h + 64)
+    m.blocked(w1, lo - 16, w2, hi)
+    m.lane((w1 + w2) // 2, (lo + hi) // 2, F + h)
+    m.view(w1 - 200, edge - s * 120, F, 0, -10, "the walk along the %s wall" % ("left" if s > 0 else "right"))
+    return True
+
+
+def stair_rail(m, start, run, edge, h, sign, s):
+    """A walk's stair: its open side (edge, the v of its canal side) solid from the floor, and the city's stair rail on
+    it, handrail04_doublerise for each 128 it climbs and handrail04_singlerise for 64 (each 192 or 96 along, as these
+    stairs climb 2 in 3), their origins set by hand at their middles as map_mods_a.wall_stair does."""
+    from map_mods_a import tilted
+    side = (edge - 8, edge) if s > 0 else (edge, edge + 8)
+    m.stair_side(start, run, side[0], side[1], F, F + h, sign)
+    rv = edge + 2 if s > 0 else edge - 2
+    pieces = [("doublerise", 96, 88)] + ([("doublerise", 288, 216)] if h > 256 else []) + [("singlerise", 432 if h > 256 else 240, 312 if h > 256 else 184)]
+    for kind, d, z in pieces:
+        tilted(m, "prop_static", "models/props_c17/handrail04_%s.mdl" % kind, start + sign * d, rv, F + z, 270 if sign > 0 else 90)
+
+
+def ledge_span(L, opt):
+    """Where a plain stretch's walk can go: the longest part of 256 .. L-256 clear of a bridge or pipes over it."""
+    cut = []
+    if "bridge" in opt:
+        cut.append((L // 2 - 192, L // 2 + 192))
+    if "pipes" in opt:
+        at = L // 4 if "bridge" in opt else L // 2
+        cut.append((at - 192, at + 256))
+    free, a = [], 256
+    for c1, c2 in sorted(cut):
+        if c1 > a:
+            free.append((a, c1 // 64 * 64))
+        a = max(a, -(-c2 // 64) * 64)
+    if L - 256 > a:
+        free.append((a, L - 256))
+    best = max(free, key=lambda f: f[1] - f[0]) if free else None
+    return best if best and best[1] - best[0] >= 832 else None
+
+
 def m_straight(m, opt):
     """Plain canal. "straight 1536": that long. Add "bridge" for a street carried over its middle, "pipes" for a pair of
     pipes across it, "bare" for nothing left lying in it (otherwise a few odds and ends from CANAL_JUNK, the same every
     time for one place: crates, tyres, a cart, a cone, a bicycle, a washing machine). Puddles and trash on the floor; a
-    quiet courtyard's soundscape (wind and the city over the walls). The walls' caged lamps, drain stains and graffiti
-    come with every canal (dress_canal_walls)."""
+    quiet courtyard's soundscape (wind and the city over the walls). The walls' caged lamps, outfalls, drain stains and
+    graffiti come with every canal (dress_canal_walls). From 1536 long a walk along the left wall (walk_ledge: 72 wide,
+    208 up, stairs at each end where it is long enough; "flip" puts it on the right, "noledge" leaves it out), clear
+    of a bridge or pipes."""
     L = m.fr.length
     m.open(0, -256, L, 256)
     x, y = m.fr.pt(0, 0)
     seed = 1000 + (x * 7 + y * 13) % 997
+    span = ledge_span(L, opt) if L >= 1536 and "bare" not in opt and "noledge" not in opt else None
+    if span:
+        walk_ledge(m, span[0], span[1], 1, stairs=2 if span[1] - span[0] >= 1408 else 1)
     if "bridge" in opt:
         m.bridge(L // 2 - 128, L // 2 + 128, -256, 256)
         m.grime("stain", L // 2, -112, F + 150, seed)           # (water off the deck, down its pier's face)
@@ -533,7 +640,23 @@ def m_shed(m, opt):
 
 
 def m_corner(m, opt):
+    if "wide" in opt:      # (a turn in the wide canal: 1024 square, its walls upright as the wide canal's are)
+        m.open(0, -512, 1024, 512)
+        m.upright(-64, -576, 1088, 576)
+        return
     m.open(0, -256, 512, 256)
+
+
+def widths(name):
+    """How wide a module is where it starts and where it ends: (512, 512) for all but the wide canal's own."""
+    info = MODULES.get(name)
+    return info[3].get("width", (CANAL_W, CANAL_W)) if info and len(info) > 3 else (CANAL_W, CANAL_W)
+
+
+def alone(name, opt=()):
+    """A module by itself, as a layout's lines: with a widening before it and a narrowing after it where it is wide."""
+    w_in, w_out = widths(name)
+    return ([["widen"]] if w_in > CANAL_W else []) + [[name] + list(opt)] + ([["narrow"]] if w_out > CANAL_W else [])
 
 
 def jog_shift(opt):
@@ -1720,7 +1843,7 @@ MODULES = {
 }
 
 
-for _more in ("map_mods_a", "map_mods_b", "map_mods_c", "map_mods_d", "map_town"):
+for _more in ("map_mods_a", "map_mods_b", "map_mods_c", "map_mods_d", "map_mods_e", "map_town"):
     try:
         MODULES.update(__import__(_more).MODULES)
     except ImportError as e:
@@ -1792,17 +1915,21 @@ def build_chain(lay, args):
             b.problems.append("the start (%d %d) is off the %d grid" % (x, y, CELL))
     steps = [["gate", "start"]] + lay["modules"] + [["gate", "end"]]
     count = {}
+    width = CANAL_W       # (how wide the canal is where the chain has got to: 512, or 1024 between a widen and a narrow)
     for n, words in enumerate(steps):
         name, opt = words[0], words[1:]
         flip = "flip" in opt
         if name in ("left", "right"):
-            fr = Frame(x, y, rot, 512)
-            m_corner(Mod(b, fr, "%d %s turn" % (n, name)), opt)
-            elems.append({"kind": name, "frame": fr, "length": 512, "tag": "%d %s turn" % (n, name)})
+            size = width      # (a turn as wide as the canal: 512 square, or 1024 in the wide canal)
+            fr = Frame(x, y, rot, size)
+            m_corner(Mod(b, fr, "%d %s turn" % (n, name)), opt + (["wide"] if size > CANAL_W else []))
+            elems.append({"kind": name, "frame": fr, "length": size, "tag": "%d %s turn" % (n, name)})
             shed_n = 0
-            x, y = fr.pt(256, 256 if name == "left" else -256)
+            x, y = fr.pt(size // 2, size // 2 if name == "left" else -size // 2)
             rot = (rot + (1 if name == "left" else -1)) % 4
             continue
+        if name == "gate" and opt[0] == "end" and width != CANAL_W:
+            b.problems.append("the chain ends %d wide: put a narrow before its end (its gate is %d wide)" % (width, CANAL_W))
         if name == "gate":
             fr = Frame(x, y, rot, 256, flip=(opt[0] == "end"))
             m_gate(Mod(b, fr, "the %s gate" % opt[0]), opt)
@@ -1818,6 +1945,12 @@ def build_chain(lay, args):
             continue
         length = MODULES[name][0]
         info = MODULES[name]
+        w_in, w_out = widths(name)
+        if w_in != width:
+            b.problems.append("%s starts %d wide, but the canal there is %d wide: put a %s before it" % (name, w_in, width, "widen" if w_in > width else "narrow"))
+        if upper and max(w_in, w_out) > CANAL_W:
+            b.problems.append("%s is wide: the wide canal cannot run beside a street" % name)
+        width = w_out
         if (name == "straight" or (len(info) > 3 and info[3].get("stretch"))) and opt and opt[0].isdigit():
             length = int(opt[0])      # (a module that can be any length: "tunnel 1536")
         if name == "shed" and not (opt and opt[0].isdigit()):
@@ -1909,28 +2042,185 @@ def finish(b, seed, spawn, args):
     return ch, fences, problems, names
 
 
-def dress_canal_walls(b, ch):
+DISH_DEEP, DISH_REACH = 44, 162      # the canal's floor sags 44 * (1 - e^(-e/162)) at e from its edge: 24 at a 512 canal's middle, 42 at a 1024's
+DISH_FLOOR = F - 64                  # the concrete under a dished square (the mud's skin is the floor over it)
+LAMP_STEP, LAMP_Z = 768, 300         # the canal's caged lamps: one every 768 along a wall (the walls facing each other take turns), 300 up
+
+
+def standing_things(b):
+    """What the modules stood on the canal's floor: the dish keeps flat round it. Gives {"flat": rectangles seen from
+    above, "loose": physics props to settle onto the mud (they would fall there anyway), "props": the box of every
+    prop (the outfalls and lamps keep clear of them)}."""
+    import re
+    import map_assets
+    vmf = b.vmf
+    flat, loose, props = [], [], []
+    for box in [bx for bx, _ in vmf.boxes] + list(getattr(vmf, "shape_boxes", [])):
+        if box[2] <= F + 4 and box[5] >= DISH_FLOOR and box[3] > box[0] and box[4] > box[1]:
+            flat.append((box[0], box[1], box[3], box[4]))
+    for k, text in enumerate(vmf.ents):
+        cls = re.search(r'"classname" "(prop_[a-z_]+)"', text)
+        if not cls or cls.group(1) == "prop_ragdoll":
+            continue
+        model = re.search(r'"model" "([^"]+)"', text)
+        o = re.search(r'"origin" "(-?\d+) (-?\d+) (-?\d+)"', text)
+        if not model or not o:
+            continue
+        ang = re.search(r'"angles" "(-?[\d.]+) (-?[\d.]+) (-?[\d.]+)"', text)
+        x, y, z = (int(t) for t in o.groups())
+        bb = map_assets.size(model.group(1))
+        if not bb:
+            props.append((x - 32, y - 32, z - 32, x + 32, y + 32, z + 32))
+            if DISH_FLOOR - 32 <= z <= F + 36:
+                flat.append((x - 32, y - 32, x + 32, y + 32))
+            continue
+        yaw = math.radians(float(ang.group(2)) if ang else 0.0)
+        c, sn = math.cos(yaw), math.sin(yaw)
+        xs = [x + px * c - py * sn for px in (bb[0], bb[3]) for py in (bb[1], bb[4])]
+        ys = [y + px * sn + py * c for px in (bb[0], bb[3]) for py in (bb[1], bb[4])]
+        box = (min(xs), min(ys), z + bb[2], max(xs), max(ys), z + bb[5])
+        props.append(box)
+        if box[2] <= F + 4 and box[5] >= DISH_FLOOR:
+            if cls.group(1) == "prop_physics" and "parentname" not in text:
+                loose.append((k, box))
+            else:
+                flat.append((box[0] - 8, box[1] - 8, box[3] + 8, box[4] + 8))
+    return {"flat": flat, "loose": loose, "props": props}
+
+
+def dish_plan(b, ch, flat, bump=None):
+    """The canal's floor falls to its middle (the owner, 21 November: Valve's Route Kanal, the lesson valve-canal-dish):
+    every square of plain canal floor that no bank stands on, nothing stands on and the mud covers has its concrete
+    lowered to DISH_FLOOR, and the mud's skin over it sags with the distance from the dish's edge (the banks' feet, an
+    upright wall's foot, a gate, anything standing): 24 at a 512 canal's middle, 42 at a 1024 canal's. The edges stay
+    at F, so modules still meet on the plain section. Sets ch.dished and ch.dish; lowers the squares in the plan."""
+    cells = ch.cells
+    plain = ("open", F, MAT["canal_floor"])
+    banks = ch.made.get("bank_rects", [])
+    skip = b.no_mud
+
+    def hit(rects, x1, y1, x2, y2):
+        return any(r[0] < x2 and r[2] > x1 and r[1] < y2 and r[3] > y1 for r in rects)
+    low = set()
+    for (i, j), spec in cells.items():
+        if spec != plain or (i, j) in b.lifted:
+            continue
+        x1, y1 = i * CELL, j * CELL
+        bx, by = (i // 4) * 256, (j // 4) * 256
+        if hit(skip, bx, by, bx + 256, by + 256) or hit(banks, x1, y1, x1 + CELL, y1 + CELL) or hit(flat, x1, y1, x1 + CELL, y1 + CELL):
+            continue
+        if bump and any(abs(bump(x, y)) > 0.5 for x in (x1, x1 + CELL // 2, x1 + CELL) for y in (y1, y1 + CELL // 2, y1 + CELL)):
+            continue
+        low.add((i, j))
+    sag = {}
+    for (i, j) in low:
+        for (x, y) in ((i * CELL, j * CELL), ((i + 1) * CELL, j * CELL), (i * CELL, (j + 1) * CELL), ((i + 1) * CELL, (j + 1) * CELL)):
+            if (x, y) in sag:
+                continue
+            gi, gj, k = x // CELL, y // CELL, 0
+            while k < 10:      # (how many squares out the nearest one that is not lowered lies)
+                ring = [(gi - 1 - k + a, gj - 1 - k + c) for a in range(2 * k + 2) for c in range(2 * k + 2) if a in (0, 2 * k + 1) or c in (0, 2 * k + 1)]
+                if any(q not in low for q in ring):
+                    break
+                k += 1
+            sag[(x, y)] = round(DISH_DEEP * (1 - math.exp(-k * CELL / float(DISH_REACH))), 1)
+    for c in low:
+        b.plan.cells[c] = cells[c] = ("open", DISH_FLOOR, MAT["canal_floor"])
+    ch.dished, ch.dish, ch.dish_floor = low, {pt: d for pt, d in sag.items() if d > 0}, DISH_FLOOR
+    if low:
+        b.notes.append("the canal's floor is dished on %d squares: %d deep at most" % (len(low), max(sag.values()) if sag else 0))
+
+
+def settle(b, ch, loose):
+    """Loose things and floor stains over the dish, brought down onto the mud (a physics prop would fall there; a stain
+    must lie on what it marks): a prop by the lowest point under it, a stain moved to the nearest corner of the grid."""
+    import re
+    surf = ch.surface
+    if not surf:
+        return
+
+    def height(x, y):
+        x0, y0 = int(x // CELL) * CELL, int(y // CELL) * CELL
+        q = [surf.get(p) for p in ((x0, y0), (x0 + CELL, y0), (x0, y0 + CELL), (x0 + CELL, y0 + CELL))]
+        if None in q:
+            return None
+        fx, fy = (x - x0) / float(CELL), (y - y0) / float(CELL)
+        return (q[0] * (1 - fx) + q[1] * fx) * (1 - fy) + (q[2] * (1 - fx) + q[3] * fx) * fy
+    moved = {}
+    for k, box in loose:
+        hs = [height(x, y) for x in (box[0], (box[0] + box[3]) / 2.0, box[3]) for y in (box[1], (box[1] + box[4]) / 2.0, box[4])]
+        hs = [h for h in hs if h is not None]
+        if not hs:
+            continue
+        drop = int(math.ceil(box[2] - min(min(hs), box[2])))
+        if drop < 1:
+            continue
+        text = b.vmf.ents[k]
+        o = re.search(r'"origin" "(-?\d+) (-?\d+) (-?\d+)"', text)
+        x, y, z = (int(t) for t in o.groups())
+        b.vmf.ents[k] = text.replace(o.group(0), '"origin" "%d %d %d"' % (x, y, z - drop))
+        moved[(x, y, z)] = z - drop
+    if moved:
+        b.props = [(c, mdl, (p[0], p[1], moved.get(p, p[2])), yw, tag) for (c, mdl, p, yw, tag) in b.props]
+    for k, text in enumerate(b.vmf.ents):
+        if '"classname" "infodecal"' not in text:
+            continue
+        o = re.search(r'"origin" "(-?\d+) (-?\d+) (-?\d+)"', text)
+        x, y, z = (int(t) for t in o.groups())
+        if not (F - 1 <= z <= F + 2) or (x // CELL, y // CELL) not in ch.dished:
+            continue
+        gx, gy = int(round(x / float(CELL))) * CELL, int(round(y / float(CELL))) * CELL
+        if (gx, gy) in surf:
+            b.vmf.ents[k] = text.replace(o.group(0), '"origin" "%d %d %d"' % (gx, gy, int(round(surf[(gx, gy)])) + 1))
+
+
+def dress_canal_walls(b, ch, avoid=()):
     """What every stretch of canal gets on its walls (the module review, 20 November: the canal had no light of its own
-    and its drains left no mark): a caged lamp on every third rib, one in three of those dead; a dark stain down the
-    wall under every drain stub; graffiti and stains here and there, the same every build."""
+    and its drains left no mark; then Valve's spacing, 21 November): a caged lamp every 768 along each wall, 300 up,
+    the walls facing each other taking turns (about 600 from one lamp to the next across the canal), one in three dead
+    (the _off model, no light), each lit one with its own light 30 out; Valve's canal_cap001 ring round every outfall
+    (Channel.outfalls), a dark stain under it; graffiti and stains here and there by the ribs, the same every build."""
     import random
     rnd = random.Random(len(b.name) * 977)
     made = getattr(ch, "made", {})
+
+    def yaw_of(axis, side):
+        return (90 if side > 0 else 270) if axis == "x" else (0 if side > 0 else 180)
+
+    def at_wall(axis, line, side, along, out):
+        return (along, line + side * out) if axis == "x" else (line + side * out, along)
+    keep = list(b.taken) + list(avoid)
+    for (axis, line, side, a, b2) in made.get("walls", []):
+        off = 0 if side > 0 else LAMP_STEP // 2
+        p = a + 160 + (off - (a + 160)) % LAMP_STEP
+        while p <= b2 - 160:
+            x, y = at_wall(axis, line, side, p, 1)
+            lo, hi = min(line, line + side * 16), max(line, line + side * 16)
+            box = (p - 12, lo, F + LAMP_Z - 16, p + 12, hi, F + LAMP_Z + 8) if axis == "x" else (lo, p - 12, F + LAMP_Z - 16, hi, p + 12, F + LAMP_Z + 8)
+            if not any(box[0] < t[3] + 8 and box[3] > t[0] - 8 and box[1] < t[4] + 8 and box[4] > t[1] - 8 and box[2] < t[5] + 8 and box[5] > t[2] - 8 for t in keep):
+                lit = random.Random(p * 31 + line * 17 + side).random() > 0.33
+                model = "models/props_c17/light_cagelight02_%s.mdl" % ("on" if lit else "off")
+                b.vmf.point("prop_static", (x, y, F + LAMP_Z), {"model": model, "angles": "0 %d 0" % yaw_of(axis, side), "solid": "0", "disableshadows": "1",
+                                                                 "fademindist": "-1", "fadescale": "1"}, b.vis + ": canal lamps")
+                if lit:
+                    lx, ly = at_wall(axis, line, side, p, 30)
+                    b.vmf.point("light", (lx, ly, F + LAMP_Z - 10), {"_light": "255 214 170 70", "_lightHDR": "-1 -1 -1 1", "_quadratic_attn": "1", "style": "0"},
+                                b.vis + ": canal lamps")
+            p += LAMP_STEP
     for k, (axis, line, side, at) in enumerate(made.get("ribs", [])):
-        x, y = (at, line + side * 24) if axis == "x" else (line + side * 24, at)
-        if k % 3 == 1:
-            yaw = (90 if side > 0 else 270) if axis == "x" else (0 if side > 0 else 180)
-            lit = rnd.random() > 0.33
-            model = "models/props_c17/light_cagelight02_%s.mdl" % ("on" if lit else "off")
-            b.vmf.point("prop_static", (x, y, F + 260), {"model": model, "angles": "0 %d 0" % yaw, "solid": "0", "disableshadows": "1", "fademindist": "-1", "fadescale": "1"},
-                        b.vis + ": canal lamps")
-            if lit:
-                dx, dy = (0, side * 30) if axis == "x" else (side * 30, 0)
-                b.vmf.point("light", (x + dx, y + dy, F + 250), {"_light": "255 214 170 60", "_lightHDR": "-1 -1 -1 1", "_quadratic_attn": "1", "style": "0"}, b.vis + ": canal lamps")
-        elif rnd.random() < 0.18:
-            dx, dy = (0, side * 0) if axis == "x" else (0, 0)
+        if rnd.random() < 0.18:
             wx, wy = (at + 120, line) if axis == "x" else (line, at + 120)
             b.vmf.point("infodecal", (wx, wy, F + 200 + rnd.randrange(0, 120)), {"texture": rnd.choice(GRIME["graffiti"] + GRIME["stain"])}, b.vis + ": canal grime")
+    for (axis, line, side, at, z, out) in made.get("outfalls", []):
+        x, y = at_wall(axis, line, side, at, out + 7 if not out else out - 5)
+        b.vmf.point("prop_static", (x, y, z), {"model": "models/props_canal/canal_cap001.mdl", "angles": "0 %d 0" % yaw_of(axis, side), "solid": "6",
+                                               "disableshadows": "1", "fademindist": "-1", "fadescale": "1"}, b.vis + ": canal outfalls")
+        if out:      # (the stain runs down the bank's slope under the pipe's mouth)
+            wx, wy = at_wall(axis, line, side, at, 96)
+            b.vmf.point("infodecal", (wx, wy, F + BANK - 96), {"texture": rnd.choice(GRIME["drain"])}, b.vis + ": canal grime")
+        else:
+            wx, wy = at_wall(axis, line, side, at, 0)
+            b.vmf.point("infodecal", (wx, wy, F + 48), {"texture": rnd.choice(GRIME["drain"])}, b.vis + ": canal grime")
     for (axis, line, side, at, z) in made.get("stubs", []):
         wx, wy = (at, line) if axis == "x" else (line, at)
         b.vmf.point("infodecal", (wx, wy, z - 44), {"texture": rnd.choice(GRIME["drain"])}, b.vis + ": canal grime")
@@ -2042,11 +2332,11 @@ def chain(args):
 def module(args):
     if args.name not in MODULES:
         print("modules: ")
-        for k, (length, _, what) in MODULES.items():
-            print("  %-10s %5d long  %s" % (k, length, what))
+        for k, info in MODULES.items():
+            print("  %-10s %5d long  %s" % (k, info[0], info[2]))
         raise SystemExit(1)
     lay = {"name": "mod_" + args.name, "start": tuple(args.origin or (0, 0)), "heading": args.heading or "E", "rim": args.rim or 784, "end": None,
-           "modules": [[args.name] + list(args.opt or []) + (["flip"] if args.flip else [])]}
+           "modules": alone(args.name, list(args.opt or []) + (["flip"] if args.flip else []))}
     b, seed, spawn, end = build_chain(lay, args)
     ch, fences, problems, names = finish(b, seed, spawn, args)
     report(b, ch, fences, problems, names, end, "module %s (%s)" % (args.name, MODULES[args.name][2]))
