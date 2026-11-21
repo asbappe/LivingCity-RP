@@ -115,7 +115,7 @@ and NPCs, then its pictures; then batch 6 (the Citadel, with the owner's four pi
   the bunker's rooms (layout kept), its big door lifted (`valve_ep2_bunker_door`) for the main entrance. In progress.
 - **The teleporter's power-up (the owner, 21 November):** the "below the floor" Combine laser and lightning effect
   that powers up the teleporter in Entanglement, lifted as `valve_prison_teleport_charge` (**done 21 November**:
-  d2_prison_08, a slot 128 wide down the teleport room's floor under an invisible lid; six dials, seven glows, six
+  d2_prison_08, a slot 128 wide down the teleport room's floor under a Combine glass lid; six dials, seven glows, six
   beams lighting in six steps about 26 s apart; `docs/dev/prefabs.md`, "Pieces with their wiring (Nova Prospekt)").
 
 ## The batches (M measured, P pictures reviewed, S studied and lessons merged)
