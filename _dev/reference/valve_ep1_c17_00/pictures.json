@@ -1,0 +1,26 @@
+{
+ "title": "Valve's ep1_c17_00 (draft)",
+ "draft": true,
+ "about": "Valve's own ep1_c17_00, measured by map_ingest.py on 2026-11-21 (play space only: hidden objects and the 3D skybox room left out) and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees drawn as trunk and canopy, poles thin). Reference only: the VMF is not in the repo. DRAFT: a reviewer fills in what each picture teaches, picks the lessons, and removes \"draft\".",
+ "numbers": [
+  "Things: 355 prop_static, 186 prop_physics, 14 prop_dynamic, 5 prop_door_rotating, 28 prop_ragdoll, 208 infodecal, 191 info_overlay, 16 keyframe_rope and 44 move_rope, 182 func_detail, 88 npc entities (makers included); left out: 6 hidden objects and no 3D skybox room.",
+  "Lights: 26 light (median brightness 35), 22 light_spot (median 300), 1 point_spotlight, 18 env_sprite; no light_environment; no fog controller; sky sky_ep01_02_hdr.",
+  "Sound: 6 env_soundscape (ep1.zombiedark 2, ep1.outsidestalkertrain 2, Nothing 1, ep1.antlion_parking_garage 1), median radius 128; 21 ambient_generic (coast.baittrain_lightswitch, streetwar.fire_tiny_loop, doorhandles.unlocked2, d3_citadel.stalker_breathing).",
+  "Commonest models: prison_sprinkler001a 42, concrete_debris256pile001a 35, interior_fence003b 24, concrete_spawnchunk001a 24, pipeset08d_512_001a 15, oildrum001 14, lights_florescent01a 13, pipe02_straight01_long 12, pipe02_connector01 12, garbage_plasticbottle003a 12, overhaingcluster_001a 10, headcrabcannister01a 10, handrail04_singlerise 10, garbage_glassbottle001a_chunk01 9, rebar_cluster002b 9.",
+  "Commonest materials (faces): citadel_metalwall076a 2093, citadel_metalwall077a 2075, concreteceiling003a 1120, concretewall075a 683, concretewall020a 632, concretewall041b 578, tilewall006b 519, concretewall075c 480, concretefloor012a 352, tilewall006c 307, metalduct003a 284, concretefloor033o 276, metalstair003a 210, metalcombine001 191, concretewall075b 180, metaldoor028b 169, concretefloor007a 166, concretefloor039b 160, concretewall075k 150, reflectivity_50b 141.",
+  "Ceilings: floor to ceiling indoors (cast up from 539 AI nodes) is most often 192 (204), then 128 (65) and 112 (64); 0% of the nodes are outdoors; corridors 128 wide under 160, rooms 336 by 1959 (medians, wall to wall).",
+  "Stairs: 41 flights of 3 or more steps; steps (rise x tread) 8x12 309; median 8 steps a flight.",
+  "Doors: door03_left 5; openings at them (wide x high): 48x108 3, 96x108 2.",
+  "Cables: 41 rope spans, median 72.5 long, slack 85, width 1.",
+  "Spacing (nearest of the same model): interior_fence003b 129 apart (n 24), pillarcluster_001b 875 apart (n 7), light_cagelight02_on 2328 apart (n 5), interior_fence002c 129 apart (n 3).",
+  "Walls in bands: 63% of wall columns over 256 tall change material at least once; the first change most often 120 or 128 over the foot; pairs (below > above): concreteceiling003a > tilewall006c, citadel_metalwall077a > citadel_metalwall063a, concreteceiling003a > stonefloor006f.",
+  "Slopes: 123 sloped faces over 2000 square units, most often 60, 35, 15 degrees; citadel_metalwall077a, citadel_metalwall076a, concretewall075a.",
+  "Props: 588 in play; on exact 90s: static 66%, physics 17%; physics tilted 68% (lying most often trash, other, cinder); statics touching a wall 75%, physics within 16 of one 42%; 0.472 props per 100 by 100 of play (0.166 physics).",
+  "Wiring: 553 output lines from 215 entities; commonest OnTrigger>DisableHint 19, OnTrigger>Enable 15, OnTrigger>Disable 15; 32 relays (longest chain 3), 3 counters, 7 timers, 5 makers, 1 buttons working doors; 34 lines name nothing.",
+  "Craft: texture scale 0.25 on 88% of faces; lightmapscale 16 on 88% (near the nodes 88%, far 59%); func_detail 62% of brushes; 233 trim strips (8x32 49, 16x32 26); 162 chamfers; 68 displacements.",
+  "Light by fixture: lights_florescent01a: light_spot 159 237 215 600, cone 70/30, pitch -74; light_cagelight02_on: light_spot 254 216 146 75, cone 70/30, pitch -70; lights_florescent01a: light 159 237 215 50; lightbulb01a: light 254 216 146 50.",
+  "Grime: 208 infodecal and 191 info_overlay; on walls stain 63, plaster 55, blood 39, graffiti 15; wall decals median 4 over the floor."
+ ],
+ "pictures": [],
+ "pictures_folder": "valve_ep1_c17_00"
+}

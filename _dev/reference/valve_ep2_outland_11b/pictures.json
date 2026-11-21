@@ -1,0 +1,27 @@
+{
+ "title": "Valve's ep2_outland_11b (draft)",
+ "draft": true,
+ "about": "Valve's own ep2_outland_11b, measured by map_ingest.py on 2026-11-21 (play space only: hidden objects and the 3D skybox room left out) and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees drawn as trunk and canopy, poles thin). Reference only: the VMF is not in the repo. DRAFT: a reviewer fills in what each picture teaches, picks the lessons, and removes \"draft\".",
+ "numbers": [
+  "Things: 315 prop_static, 102 prop_physics, 51 prop_dynamic, 2 prop_door_rotating, 0 prop_ragdoll, 1 infodecal, 34 info_overlay, 29 keyframe_rope and 19 move_rope, 102 func_detail, 22 npc entities (makers included); left out: 3 hidden objects and no 3D skybox room.",
+  "Lights: 38 light (median brightness 9), 59 light_spot (median 350), 12 point_spotlight, 44 env_sprite; sun \"240 185 130 800\" at pitch -35, ambient \"104 133 162 250\"; fog \"45 58 74\" from 512 to 4000; sky sky_ep02_05_hdr.",
+  "Sound: 8 env_soundscape (ep2_silo.concretehall 5, ep2_whiteforest.training 2, ep2_silo.techroom 1), median radius 150; 18 ambient_generic (vehicles/crane/crane_idle_loop3.wav, crane_extend_stop, ep2_outland.magnusson_teleporter_idle, crane_engine_start).",
+  "Commonest models: wood_crate001a 36, magnusson_device 19, prison_switchbox001a 16, prison_flourescentlight001a 16, footlocker01_closed 14, lab_flourescentlight001a 11, pipesystem02a 10, keypad 9, handrail_alley-upperdeck 9, garbage_carboard002a 9, prodcables256 8, pipeset32d_256_001a 8, interior_fence002c 8, gutter_256_002a 6, speakercluster01a 6.",
+  "Commonest materials (faces): metalpipe003a 482, snowwall002a 281, metalhull003a 278, concretewall065a 241, metalwall054b 237, concretewall_bunker05b 235, metaltruss029a 223, metalwall061f 183, concretewall010a 176, woodwall048b 167, concretewall_bunker06c 145, metalwall085a 138, snowfloor001a 121, metaltruss008a 117, tvscreen001a 112, metaldoor061a 85, metaltruss017a 75, concretefloor023a 75, metalfloor010a 74, metalhull005a 72.",
+  "Ceilings: floor to ceiling indoors (cast up from 68 AI nodes) is most often 192 (11), then 160 (8) and 176 (8); 15% of the nodes are outdoors; corridors 134 wide under 157, rooms 247 by 487 (medians, wall to wall).",
+  "Stairs: 2 flights of 3 or more steps; steps (rise x tread) 8x12 6; median 4 steps a flight.",
+  "Streets: no kerbed roadway in 10 cuts through outdoor AI nodes; wall to wall most often 192; walls median 288 tall (height over width 0.9).",
+  "Doors: door01_left 1, door03_left 1; openings at them (wide x high): 48x108 2.",
+  "Cables: 31 rope spans, median 127 long, slack 25, width 1.",
+  "Spacing (nearest of the same model): interior_fence002c 384 apart (n 8), light_spotlight02_lamp 261 apart (n 5), lamp_standard_off01 192 apart (n 5), interior_fence002b 64.1 apart (n 4), light_cagelight02_on 265 apart (n 4), tree_dead04 844 apart (n 4).",
+  "Walls in bands: 17% of wall columns over 256 tall change material at least once; the first change most often 128 or 32 over the foot; pairs (below > above): concretewall_bunker05b > concretewall_bunker05a, concretewall_bunker06a > concretewall_bunker06c, concretewall065a > concretewall010a.",
+  "Slopes: 81 sloped faces over 2000 square units, most often 30, 35, 45 degrees; snowfloor001a, snowwall002a, concretewall_bunker01a.",
+  "Props: 470 in play; on exact 90s: static 84%, physics 37%; physics tilted 13% (lying most often paper, debris); statics touching a wall 50%, physics within 16 of one 76%; 1.637 props per 100 by 100 of play (0.428 physics).",
+  "Wiring: 472 output lines from 103 entities; commonest OnTrigger>Enable 25, OnPressed>Skin 16, OnTrigger>Disable 16; 22 relays (longest chain 2), 5 counters, 2 timers, 0 makers, 0 buttons working doors; 4 lines name nothing.",
+  "Craft: texture scale 0.25 on 71% of faces; lightmapscale 16 on 83% (near the nodes 93%, far 34%); func_detail 48% of brushes; 129 trim strips (8x16 32, 8x32 11); 83 chamfers; 49 displacements.",
+  "Light by fixture: lamp_standard_off01: light_spot 254 216 146 300, cone 40/15, pitch -90; lab_flourescentlight001a: light_spot 253 230 159 800, cone 60/30, pitch -90; light_security: light_spot 224 254 248 80, cone 45/30, pitch -60; lamp_standard_off01: light 254 216 146 2.",
+  "Grime: 1 infodecal and 34 info_overlay; on walls plaster 1; wall decals median 127 over the floor."
+ ],
+ "pictures": [],
+ "pictures_folder": "valve_ep2_outland_11b"
+}

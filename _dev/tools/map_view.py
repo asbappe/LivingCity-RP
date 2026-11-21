@@ -39,6 +39,8 @@ def read(path):
             s = line.strip()
             if not s:
                 continue
+            if "&i" in s:   # (some of Valve's files have the digit 1 saved as "&i": pitch "&i00", fademindist "-&i")
+                s = s.replace("&i", "1")
             c = s[0]
             if c == '"':
                 m = KV.match(s)
@@ -59,7 +61,17 @@ def read(path):
 
 
 def nums(text):
-    return [float(x) for x in text.replace("(", " ").replace(")", " ").replace("[", " ").replace("]", " ").split()]
+    parts = text.replace("(", " ").replace(")", " ").replace("[", " ").replace("]", " ").split()
+    try:
+        return [float(x) for x in parts]
+    except ValueError:      # (a typo in one of Valve's files: keep the numbers that read)
+        out = []
+        for x in parts:
+            try:
+                out.append(float(x))
+            except ValueError:
+                pass
+        return out
 
 
 COLOURS = (("toolsblack", (10, 10, 12)), ("com_shield", (90, 210, 255)), ("combine", (62, 78, 100)), ("citadel", (62, 78, 100)), ("toxicslime", (95, 170, 45)),

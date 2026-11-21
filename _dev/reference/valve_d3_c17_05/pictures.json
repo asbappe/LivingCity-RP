@@ -1,0 +1,29 @@
+{
+ "title": "Valve's d3_c17_05 (draft)",
+ "draft": true,
+ "about": "Valve's own d3_c17_05, measured by map_ingest.py on 2026-11-21 (play space only: hidden objects and the 3D skybox room left out) and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees drawn as trunk and canopy, poles thin). Reference only: the VMF is not in the repo. DRAFT: a reviewer fills in what each picture teaches, picks the lessons, and removes \"draft\".",
+ "numbers": [
+  "Things: 237 prop_static, 137 prop_physics, 24 prop_dynamic, 11 prop_door_rotating, 6 prop_ragdoll, 124 infodecal, 7 info_overlay, 18 keyframe_rope and 7 move_rope, 164 func_detail, 114 npc entities (makers included); left out: 47 hidden objects and the 3D skybox room (5 props, scale 16).",
+  "Lights: 21 light (median brightness 8), 24 light_spot (median 200), 11 point_spotlight, 11 env_sprite; sun \"236 218 145 650\" at pitch -35, ambient \"160 184 211 150\"; fog \"224 224 201\" from 3000 to 9000; sky sky_day03_02_hdr.",
+  "Sound: 26 env_soundscape (e3_c17_01_battle 7, streetwar.general_indoor_light_combat 7, streetwar.infested_appartments 3, streetwar.bank_machine_room 3, streetwar.bank_control_room 2, streetwar.general_indoor_medium_combat 2), median radius 128; 10 ambient_generic (d1_trainstation.sinkdrips, breencast.breencast_tone, breakable.spark, song12_long).",
+  "Commonest models: building_tem002_window01 40, building_tem002_window01_bars 20, concrete_section64floor001b 12, monitor02 11, combine_lock01 11, controlroom_desk001b 11, light_domelight02_on 10, controlroom_filecabinet002a 10, lightbulb01a 9, male_01 9, harddrive01 8, computer01_keyboard 8, handrailcluster01b 7, combineinnerwall001a 7, radiator01a 7.",
+  "Commonest materials (faces): plasterwall045a 1188, wooddoor048a 998, concretefloor011a_c17 717, acousticceiling002a 627, plasterwallpaper006a_c17 452, building_template007a 405, woodstair002c 376, plasterwall022c_c17 329, plasterwall021a 311, concretewall041b 297, wooddoor045b 275, stonestair001a 256, plasterwall022a 248, concretefloor013a_c17 242, plasterwall017c_c17 227, plasterwall030c_c17 194, woodfloor007a_c17 192, metalcombine002 185, stonewall040f 178, storefront_template001a 173.",
+  "Ceilings: floor to ceiling indoors (cast up from 415 AI nodes) is most often 120 (294), then 248 (25) and 128 (20); 33% of the nodes are outdoors; corridors 99.5 wide under 120, rooms 178 by 380 (medians, wall to wall).",
+  "Stairs: 99 flights of 3 or more steps; steps (rise x tread) 8x12 622, 8x8 13, 8x28 1; median 7 steps a flight.",
+  "Streets (cuts through 243 outdoor AI nodes, 154 with a kerb each side): roadway most often 256 wide; kerbs 4 (270) or 8 (19) high; pavements most often 128, 160, 384 wide; crown 0 in 128 of 154; road stonefloor006d_c17, pavement concretefloor028c_c17; wall to wall most often 512; street walls median 512 tall (height over width 0.4).",
+  "Channels (37 cuts across the shortest way, 0 at water: 8 open, 5 tunnels): open width 64 up most often 512, 128 up 704; rims (where a side opens out) 388; ledges 76 wide at 132 up; tunnels most often 128 wide, roof 128 up.",
+  "Doors: door02_double 6, door01_left 5; openings at them (wide x high): 48x108 5, 59x108 4, 56x108 2.",
+  "Cables: 18 rope spans, median 989 long, slack 100, width 1.",
+  "Spacing (nearest of the same model): utilitypole02b 1024 apart (n 5), fence01a 134 apart (n 5), tree_deciduous_01a-lod 812 apart (n 4), lamppost03a_off 757 apart (n 4).",
+  "Walls in bands: 66% of wall columns over 256 tall change material at least once; the first change most often 128 or 64 over the foot; pairs (below > above): plasterwall022c_c17 > plasterwall022a, storefront_template001g > building_template007a, concretewall032d_c17 > plasterwall048b.",
+  "Fronts: 41% of vertical wall area is painted building fronts (building_template007a, building_template015b, storefront_template001a).",
+  "Slopes: 74 sloped faces over 2000 square units, most often 65, 60, 25 degrees; tileroof004a_c17, roof_template001b, concretefloor020a_c17.",
+  "Props: 411 in play; on exact 90s: static 86%, physics 42%; physics tilted 9% (lying most often box, table, trash); statics touching a wall 72%, physics within 16 of one 64%; 0.582 props per 100 by 100 of play (0.2 physics).",
+  "Wiring: 389 output lines from 182 entities; commonest OnTrigger>Spawn 28, OnTrigger>Kill 21, OnTrigger>Enable 15; 16 relays (longest chain 3), 2 counters, 1 timers, 34 makers, 0 buttons working doors; 6 lines name nothing.",
+  "Craft: texture scale 0.25 on 98% of faces; lightmapscale 16 on 68% (near the nodes 71%, far 41%); func_detail 34% of brushes; 308 trim strips (4x32 58, 8x32 37); 238 chamfers; 47 displacements.",
+  "Light by fixture: light_domelight02_on: light_spot 254 216 146 200, cone 60/30, pitch -90; light_domelight02_on: light 254 216 146 8; lightbulb01a: light 254 216 146 8; lightbulb01a: light_spot 254 216 146 300, cone 75/30, pitch -90.",
+  "Grime: 124 infodecal and 7 info_overlay; on walls trash 48, stain 31, plaster 18, plant 6; wall decals median 58.6 over the floor."
+ ],
+ "pictures": [],
+ "pictures_folder": "valve_d3_c17_05"
+}

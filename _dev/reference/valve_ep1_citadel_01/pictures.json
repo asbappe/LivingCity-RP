@@ -1,0 +1,26 @@
+{
+ "title": "Valve's ep1_citadel_01 (draft)",
+ "draft": true,
+ "about": "Valve's own ep1_citadel_01, measured by map_ingest.py on 2026-11-21 (play space only: hidden objects and the 3D skybox room left out) and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees drawn as trunk and canopy, poles thin). Reference only: the VMF is not in the repo. DRAFT: a reviewer fills in what each picture teaches, picks the lessons, and removes \"draft\".",
+ "numbers": [
+  "Things: 317 prop_static, 17 prop_physics, 38 prop_dynamic, 0 prop_door_rotating, 4 prop_ragdoll, 10 infodecal, 21 info_overlay, 25 keyframe_rope and 32 move_rope, 358 func_detail, 24 npc entities (makers included); left out: 12 hidden objects and no 3D skybox room.",
+  "Lights: 108 light (median brightness 200), 69 light_spot (median 1000), 66 point_spotlight, 54 env_sprite; sun \"204 137 36 50\" at pitch -85, ambient \"91 38 48 500\"; fog \"100 61 26\" from 512 to 4200; sky sky_ep01_citadel_int.",
+  "Sound: 16 env_soundscape (ep1_citadel.generic_moody 7, ep1_citadel.generic 4, d3_citadel.generic_moody 2, ep1_citadel.deep_dropoff_inside 2, ep1_citadel.combine_ball_room 1), median radius 209; 81 ambient_generic (d3_citadel.shield_loop, d3_citadel.shield_touch_loop, buttons.snd41, citadel_ep01.metal_impact_scrape1).",
+  "Commonest models: combine_emitter01 40, railing_128 36, weaponstripper 18, combine_light002a 16, combine_generator01 15, combine_fence01a 14, combine_soldier 13, combine_fence01b 12, pipes01_single01a 10, pipes01_single01b 10, cell_array_01 10, combine_bridge 9, advisorpod_docked 9, combine_lock01 8, combine_intwallunit 7.",
+  "Commonest materials (faces): citadel_metalwall077a_cheap 9296, citadel_metalwall077a 6166, citadel_metalwall076a 2876, citadel_metalwall063a_cheap 1634, citadel_metalwall063a 1280, metalcombine002 1083, citadel_metalwall072b 913, citadel_metalwall091a 457, citadel_metalwall078a 447, marblefloor001d 388, citadel_tilefloor016a 354, glasswindow070c 312, citadel_metalwall091a_cheap 244, citadel_metalwall090a 228, citadel_metalwall072a 208, citadel_metalwall101a 205, citadel_metalwall072b_cheap 130, white004_nochop 82, citadel_metalwall072c 68, citadel_metalwall101b 67.",
+  "Ceilings: floor to ceiling indoors (cast up from 295 AI nodes) is most often 256 (39), then 160 (26) and 128 (22); 8% of the nodes are outdoors; corridors 128 wide under 237, rooms 355 by 1574 (medians, wall to wall).",
+  "Stairs: 26 flights of 3 or more steps; steps (rise x tread) 12x16 32, 12x24 18, 12x32 11; median 5 steps a flight.",
+  "Streets: no kerbed roadway in 11 cuts through outdoor AI nodes; wall to wall most often 384; walls median 1568 tall (height over width 4.1).",
+  "Cables: 30 rope spans, median 435 long, slack 57.5, width 2.",
+  "Spacing (nearest of the same model): combine_fence01a 489 apart (n 14), combine_fence01b 489 apart (n 12).",
+  "Walls in bands: 36% of wall columns over 256 tall change material at least once; the first change most often 64 or 48 over the foot; pairs (below > above): citadel_metalwall072a > citadel_metalwall077a, citadel_metalwall063a_cheap > citadel_metalwall077a_cheap, citadel_metalwall077a_cheap > citadel_metalwall063a_cheap.",
+  "Slopes: 181 sloped faces over 2000 square units, most often 45, 60, 70 degrees; citadel_metalwall077a, citadel_metalwall077a_cheap, metalcombine002.",
+  "Props: 376 in play; on exact 90s: static 59%, physics 24%; physics tilted 88% (lying most often combine, tv); statics touching a wall 51%, physics within 16 of one 100%; 0.241 props per 100 by 100 of play (0.021 physics).",
+  "Wiring: 1099 output lines from 248 entities; commonest OnTrigger>Trigger 66, OnTrigger>PlaySound 64, OnTrigger>Enable 44; 77 relays (longest chain 5), 6 counters, 5 timers, 0 makers, 1 buttons working doors; 0 lines name nothing.",
+  "Craft: texture scale 0.25 on 57% of faces; lightmapscale 16 on 41% (near the nodes 42%, far 40%); func_detail 66% of brushes; 676 trim strips (2x8 245, 8x32 175); 693 chamfers; 743 displacements.",
+  "Light by fixture: combine_emitter01: light 254 95 48 200; combine_light002a: light_spot 147 226 240 2000, cone 75/12, pitch -44.5; combine_intwallunit: light_spot 245 67 22 250, cone 45/30, pitch -60; combinebutton: light 136 219 208 55.",
+  "Grime: 10 infodecal and 21 info_overlay; on walls other 7, burn 1; wall decals median 92.7 over the floor."
+ ],
+ "pictures": [],
+ "pictures_folder": "valve_ep1_citadel_01"
+}
