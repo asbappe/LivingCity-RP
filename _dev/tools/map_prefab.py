@@ -20,6 +20,8 @@ it in `outside`, what outside fires into it in `fired_from_outside` (docs/dev/pr
             writes _dev/reference/prefabs/NAME.json (the anchor, default the box's bottom corner, becomes 0 0 0;
             --wire-box: a bigger box for the logic, for a piece whose relays and sounds stand round it)
             [--drop MATERIAL ...] leaves out brushes with a face of that material (water, say)
+            [--centroid] keeps every brush whose corners' mean is inside (a cave not cut on a grid: its tunnels run
+            on past the box, to be capped); [--force ID ...] keeps those brushes too
     python3 map_prefab.py list                  the library, with each piece's size and what it is
     python3 map_prefab.py show NAME [--out a.vmf] [--no-wiring]   a VMF with only that piece in it (map_view.py draws it)
     python3 map_prefab.py check                 the self-check: lifts a small made-up map with logic and places it twice
@@ -113,7 +115,7 @@ def resolves(target, names):
     return [t] if t in names else []
 
 
-def extract(path, name, box, anchor=None, note="", wire_box=None, lib=None, drop=()):
+def extract(path, name, box, anchor=None, note="", wire_box=None, lib=None, drop=(), centroid=False, force=()):
     import map_view as mv
     root = mv.read(path)
     x1, y1, z1, x2, y2, z2 = box
@@ -148,7 +150,7 @@ def extract(path, name, box, anchor=None, note="", wire_box=None, lib=None, drop
             di = [k for k in side.kids if k.name == "dispinfo"]
             if di:
                 sides[-1]["disp"] = disp_read(di[0], (0, 0, 0))      # (made relative to the anchor in moved())
-        return (sides, allv) if sides else None
+        return (sides, allv, sol.kv.get("id")) if sides else None
 
     def moved(sides):
         """A brush's sides moved so the anchor is at 0 0 0 (a copy: the source's stay as they were)."""
@@ -213,8 +215,10 @@ def extract(path, name, box, anchor=None, note="", wire_box=None, lib=None, drop
                 if wired is None and unwired(cls):
                     continue
                 cls = "%s (taken shut, as a static slab)" % cls      # (a moving brush: its look, shut, for a piece placed without its logic)
-        for sides, allv in brushes:
-            if all(inside(v) for v in allv):
+        for sides, allv, sid in brushes:
+            mean = [sum(v[k] for v in allv) / len(allv) for k in range(3)] if allv else None
+            # (--centroid: every brush whose corners' mean is inside, for a cave not cut on a grid; --force: by id)
+            if all(inside(v) for v in allv) or (centroid and mean and inside(mean, 0)) or sid in force:
                 if any(sd["material"].lower() in drop for sd in sides):
                     continue      # (--drop: water, say)
                 if all_tools(sides):
@@ -634,6 +638,8 @@ def main():
     e.add_argument("--note", default="")
     e.add_argument("--wire-box", nargs=6, type=float, help="a bigger box for the logic (default: the piece's box)")
     e.add_argument("--drop", nargs="*", default=[])
+    e.add_argument("--centroid", action="store_true")
+    e.add_argument("--force", nargs="*", default=[])
     sub.add_parser("list")
     s = sub.add_parser("show")
     s.add_argument("name")
@@ -642,7 +648,7 @@ def main():
     sub.add_parser("check")
     a = ap.parse_args()
     if a.cmd == "extract":
-        pf = extract(a.vmf, a.name, a.box, a.anchor, a.note, a.wire_box, drop=tuple(m.lower() for m in a.drop))
+        pf = extract(a.vmf, a.name, a.box, a.anchor, a.note, a.wire_box, drop=tuple(m.lower() for m in a.drop), centroid=a.centroid, force=tuple(a.force))
         nd = sum(1 for sol in pf["solids"] for sd in sol["sides"] if sd.get("disp"))
         print("%s: %d brushes (%d displaced faces), %d props/lights/decals, %d wired (%d names outside, %d firing in), %d by %d by %d" % (
             a.name, len(pf["solids"]), nd, len(pf["points"]), len(pf.get("wiring", [])), len(pf.get("outside", [])), len(pf.get("fired_from_outside", [])),

@@ -31,16 +31,15 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 
 ## Where things stand
 
-- 21 November (late, this chat): from TODO, no input needed. Built: garden plots (lc_garden_plot_N, melons and pumpkins);
-  people back out of their own block, new people only off the train, every unit named; dream breakout wakes beside the
-  rescuer; a gun given to a sympathizer stays hidden on them; Answer the reprisal / counter-raid / a harder cell after
-  her answer; holds on one clock with faster waves; squads topped up with a medic; supplies thrown from roofs;
-  strongholds' tripwire alarm and Cut the defences (docs/features/strongholds.md). Headcrab hunt robot fixed.
-- Lists for the owner to mark (nothing changed by them): docs/dev/keep-park-cut.md, docs/dev/dead-weight.md.
-- Map tool faults fixed (map_assets facts, prefab wiring, views, sections, viewer). Helpers' work on map pieces
-  (props, wire lint, Valve's prop and craft rules, path nodes) and on map_security.py + the Combine generator: TODO.md.
-- Another chat (same day): the forest cave from Valve's mines, the playable silo (map_silo.py), zone markers. Not
-  compiled: lc_forest_cave.vmf, lc_forest_bunker.vmf. Leave the silo to that work.
-- Open with the owner: HQ later stages and Advisor screens (shape first); Combine sleep and the lab's dark look (models);
-  the south canal layout (needs c18_lc.vmf); the bunker door's speed; the mounted gun's damage; lock gates.
-- Full parallel run after the merge: see TODO.md, end, for the flaky tests (the recorder, res_breakout pay).
+- 21 November (late), two chats. This one, from TODO with no input needed: garden plots (lc_garden_plot_N); people back
+  out of their own block, newcomers off the train first, every unit named; dream breakout wakes beside the rescuer; a
+  given gun stays hidden on a sympathizer; revenge / counter-raid / a harder cell after her answer; holds on one clock
+  with faster waves; squads topped up with a medic; supplies from roofs; strongholds (docs/features/strongholds.md).
+  Lists for the owner to mark: docs/dev/keep-park-cut.md, docs/dev/dead-weight.md. Map tool faults fixed; helpers'
+  map pieces and map_security.py: TODO.md.
+- The other chat: Valve ingestion DONE (docs/dev/valve-ingest-progress.md); the forest cave (Ravenholm's mine, the
+  shaft head and EP2's alarm, a lift down to EP2's nest chambers: lc_forest_cave.vmf); the playable silo, the leader's
+  office, bedroom and escape tunnel (map_silo.py); map-placed territories (lc_zone_..., CORE.md); the Combine
+  generator's round two (combine/, lc_combine_scene.vmf waits on the owner). Not compiled yet.
+- Open for the owner: HQ later stages and Advisor screens (shape first); Combine sleep, the lab's dark look (models);
+  the south canal layout (needs c18_lc.vmf); lift and bunker door speeds; the mounted gun; NPC lessons to build.
