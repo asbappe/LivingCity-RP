@@ -1575,6 +1575,7 @@ class CaveForest(Forest):
     SPRING = 2624                       # how far in the spring is: a low slot in the west wall the stream runs out of
     HALF, TALL = 160, 320               # the square the cave's skin is hung on
     TEAR = 640                          # the hillside is cut this far each side of the mouth
+    NEST_WARNING = 11                   # seconds from opening the emergency door to the first antlions: the alarm at the breach sounds meanwhile
     MINE, BREACH = 1280, 64             # behind the emergency door: Ravenholm's mine tunnel (lifted), then the wall the antlions broke through
 
     def setup(self):
@@ -2122,8 +2123,16 @@ class CaveForest(Forest):
                    ("OnTrigger", "lc_nest_alarm", "PlaySound", "", 3.4), ("OnTrigger", "lc_nest_light", "TurnOn", "", 0), ("OnTrigger", "lc_nest_portal", "Open", "", 1.4),
                    ("OnTrigger", "lc_nest_door", "PressIn", "", 1.5), ("OnTrigger", "lc_nest_move", "PlaySound", "", 1.5), ("OnTrigger", "lc_nest_opened", "Trigger", "", 1.5),
                    ("OnTrigger", "lc_nest_move", "StopSound", "", 6.6), ("OnTrigger", "lc_nest_slam", "PlaySound", "", 6.6), ("OnTrigger", "lc_nest_shake", "StartShake", "", 6.6),
-                   ("OnTrigger", "lc_nest_maker", "Enable", "", 6.6), ("OnTrigger", "lc_nest_light", "TurnOff", "", 9), ("OnTrigger", "lc_nest_shut", "Enable", "", 9)]
+                   ("OnTrigger", "lc_nest_light", "TurnOff", "", 9), ("OnTrigger", "lc_nest_shut", "Enable", "", 9)]
+        # the alarm at the breach (Episode Two's post, CaveForest.mine): the siren and all three lamps when the door is
+        # opened, the antlions 11 s later (the owner, 21 November: "20 seconds is too long; let's do 11 seconds. This is
+        # triggered by the players so they know what they are getting into already"). The first antlion out stops the
+        # siren (makers in nest()); the lamps stay lit while the door is open.
+        opening += [("OnTrigger", "lc_nest_mouth_1_siren", "PlaySound", "", 0)] + [("OnTrigger", "lc_nest_mouth_1_lamp_%d" % k, "LightOn", "", 0.3 * (k - 1)) for k in (1, 2, 3)]
+        opening += [("OnTrigger", "lc_nest_maker", "Enable", "", self.NEST_WARNING)]
         shutting = [("OnTrigger", "lc_nest_shut", "Disable", "", 0), ("OnTrigger", "lc_nest_maker", "Disable", "", 0), ("OnTrigger", "lc_nest_alarm", "PlaySound", "", 0),
+                    ("OnTrigger", "lc_nest_open", "CancelPending", "", 0),          # (shut inside the 11 s: no antlions come at all)
+                    ("OnTrigger", "lc_nest_mouth_1_siren", "StopSound", "", 0)] + [("OnTrigger", "lc_nest_mouth_1_lamp_%d" % k, "LightOff", "", 0) for k in (1, 2, 3)] + [
                     ("OnTrigger", "lc_nest_light", "TurnOn", "", 0), ("OnTrigger", "lc_nest_door", "PressOut", "", 1.5), ("OnTrigger", "lc_nest_move", "PlaySound", "", 1.5),
                     ("OnTrigger", "lc_nest_crush", "Enable", "", 1.5), ("OnTrigger", "lc_nest_crush", "Disable", "", 7),
                     ("OnTrigger", "lc_nest_move", "StopSound", "", 6.6), ("OnTrigger", "lc_nest_slam", "PlaySound", "", 6.6), ("OnTrigger", "lc_nest_shake", "StartShake", "", 6.6),
@@ -2207,7 +2216,10 @@ class CaveForest(Forest):
         # Episode Two's antlion alarm post, by the west wall before the breach, its lamps facing the way from the door
         ax, ay = 1100, 96
         alarm = PF.load("valve_ep2_antlion_alarm")
-        pf_entities(v, alarm, q, self.w(*at(ax, ay, floor_at(ax, ay))), "lc_nest_", lv, lv)
+        def louder(e):                          # (Valve's 1250 stops short of the buttons, about 1350 away: heard at the door)
+            if e["keys"].get("targetname") == "mouth_1_siren":
+                e["keys"]["radius"] = "2000"
+        pf_entities(v, alarm, q, self.w(*at(ax, ay, floor_at(ax, ay))), "lc_nest_", lv, lv, edit=louder)
         for xp in range(128, L - 40, 256):
             x, y, z = at(xp, 0, max(8, floor_at(xp, 0)))
             self.node(x, y, z)
@@ -2387,7 +2399,7 @@ class CaveForest(Forest):
             v.point("npc_template_maker", self.w(*spot(q, across, 8)), {
                 "targetname": "lc_nest_maker", "TemplateName": "lc_nest_antlion", "StartDisabled": "1", "spawnflags": "32", "MaxNPCCount": "1", "SpawnFrequency": "9",
                 "MaxLiveChildren": "2", "Radius": "96", "MinSpawnDistance": "0", "CriterionVisibility": "2", "CriterionDistance": "2", "angles": "0 270 0"}, mv,
-                connections=[("OnSpawnNPC", "!activator", "FightToPosition", "lc_nest_rally", 0.5)])
+                connections=[("OnSpawnNPC", "!activator", "FightToPosition", "lc_nest_rally", 0.5), ("OnSpawnNPC", "lc_nest_mouth_1_siren", "StopSound", "", 0)])
         ry = self.YM + (self.OFFICE[0] + self.OFFICE[1]) / 2
         v.point("info_target", self.w(self.mid(ry) + 60, ry, zf + 8), {"targetname": "lc_nest_rally", "angles": "0 0 0"}, mv)
         for q in range(96, L - 60, 160):
