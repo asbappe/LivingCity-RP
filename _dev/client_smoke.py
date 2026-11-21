@@ -2424,19 +2424,20 @@ return bad
 """)
 if err:
     problems = (problems + "\n" if problems else "") + "Combine monitors (client): " + str(err)
-# the train station's giant screen (lc_screen, kind screen_station: Valve's curved strips): drawn live and dark, and
-# the picture it shows is made a few times a second
+# the train station's giant screen (lc_screen, kind screen_station: Valve's curved strips): it shows the scanner's
+# picture of an official broadcast only (the Administrator, the Director of Propaganda), never a pirate's, else dark
 L.globals()._SRC = open(os.path.join(ENTDIR, "lc_screen.lua")).read()
 err = L.execute(r"""
-local entWas, grtWas = ENT, GetRenderTarget
+local entWas, picWas, setWas = ENT, LC_CL.LiveCamPicture, render.SetMaterial
 ENT = {}
 local okL, errL = pcall(function() assert(loadstring(_SRC, "lc_screen"))() end)
 local def = ENT
 ENT = entWas
 if not okL then return "load: " .. tostring(errL) end
-GetRenderTarget = function(name) return { GetName = function() return name end } end
 local bad
-local function n(k) return _calls[k] or 0 end
+local PIC = { name = "the scanner's picture" }
+local used
+render.SetMaterial = function(m) if m == PIC then used = true end end
 local ok, e = pcall(function()
     local s = ents.Create("lc_screen")
     s.Draw, s.Think, s.DrawModel = def.Draw, def.Think, function() end
@@ -2445,20 +2446,27 @@ local ok, e = pcall(function()
     s:SetNW2String("lc_screen_kind", "screen_station")
     s:SetPos(_me:GetPos() + Vector(300, 0, 200))
     s:Think()
-    local m0 = n("mesh.Begin")
+    local m0 = _calls["mesh.Begin"] or 0
+    LC_CL.LiveCamPicture = function() return nil end
     s:Draw()
-    if n("mesh.Begin") < m0 + 2 then bad = "the strips and their back weren't drawn" return end
-    local pre = hook.t.PreRender and hook.t.PreRender.LivingCityStationScreen
-    if not pre then bad = "no picture is made for it" return end
-    _advance(1)
-    local c0 = n("cam.Start2D")
-    pre()
-    if n("cam.Start2D") ~= c0 + 1 then bad = "the broadcast wasn't drawn into its picture" return end
+    if (_calls["mesh.Begin"] or 0) < m0 + 2 then bad = "the strips and their back weren't drawn" return end
+    if used then bad = "a picture with nobody on air" return end
+    LC_CL.LiveCamPicture = function() return PIC, 1, 288 / 512 end
+    SetGlobal2Bool("lc_live_pirate", false)
+    s:Draw()
+    if not used then bad = "the Administrator's or the Director's picture isn't shown" return end
+    used = false
+    SetGlobal2Bool("lc_live_pirate", true)
+    s:Draw()
+    if used then bad = "a pirate's picture is shown" return end
+    SetGlobal2Bool("lc_live_pirate", false)
     s:SetNW2Bool("lc_nopower", true)
     s:Draw()
+    if used then bad = "a picture with the power out" return end
     s:Remove()
 end)
-GetRenderTarget = grtWas
+LC_CL.LiveCamPicture, render.SetMaterial = picWas, setWas
+SetGlobal2Bool("lc_live_pirate", false)
 if not ok then return "error: " .. tostring(e) end
 return bad
 """)

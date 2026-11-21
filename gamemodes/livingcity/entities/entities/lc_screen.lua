@@ -96,33 +96,16 @@ if CLIENT then
         return self:LocalToWorld(Vector(maxs.x + (g[5] or 0.5), mins.y + wide * g[1], mins.z + tall * g[2])), scale, stretch
     end
 
-    -- The station screen: the broadcast is drawn into a tall picture (a render target) a few times a second, and the
-    -- strips show it, so it bends round the curve as Valve's does.
-    local stationMat, stationRT, stationAt, stationEnt
+    -- The station screen shows one thing only (the owner, 21 November): the scanner's picture of the Administrator or
+    -- the Director of Propaganda on air (cl_livingcity_livecam.lua), cut to its tall shape round their face, as Valve's
+    -- shows Breen. No written broadcasts, no pirates: otherwise its glass is dark.
     local BACK = Material("models/props_combine/metal_combinebridge001")
-    local function StationPicture()
-        if stationMat ~= nil then return stationMat end
-        if not (GetRenderTarget and CreateMaterial) then stationMat = false return false end
-        stationRT = GetRenderTarget("lc_station_screen", 512, 1024)
-        stationMat = CreateMaterial("lc_station_screen", "UnlitGeneric", { ["$basetexture"] = stationRT:GetName() })
-        return stationMat
+    local OFF = Material("tools/toolsblack")
+    local CROP = (184 / 321) / (16 / 9) -- (how much of the 16:9 picture's width the tall screen shows)
+    local function OfficialPicture()
+        if GetGlobal2Bool("lc_live_pirate", false) or not LC_CL or not LC_CL.LiveCamPicture then return nil end
+        return LC_CL.LiveCamPicture()
     end
-    hook.Add("PreRender", "LivingCityStationScreen", function()
-        local e = stationEnt
-        if not (IsValid(e) and stationRT and LC_CL and LC_CL.DrawCityScreen) or CurTime() - (stationAt or 0) < 0.1 then return end
-        stationAt = CurTime()
-        render.PushRenderTarget(stationRT)
-        render.Clear(10, 14, 18, 255)
-        cam.Start2D()
-            local m = Matrix()
-            m:Translate(Vector(256, 512, 0))
-            m:Scale(Vector(0.8, 0.8, 1))
-            cam.PushModelMatrix(m)
-            LC_CL.DrawCityScreen(e)
-            cam.PopModelMatrix()
-        cam.End2D()
-        render.PopRenderTarget()
-    end)
     local function Quad(a, b, c, d, n, ua, ub, va, vb)
         for _, q in ipairs({ { a, ua, va }, { b, ub, va }, { c, ub, vb }, { d, ua, vb } }) do
             mesh.Position(q[1])
@@ -135,15 +118,16 @@ if CLIENT then
         local n = #STATION - 1
         local fwd = Vector(1, 0, 0)
         cam.PushModelMatrix(self:GetWorldTransformMatrix())
-        -- the glass: the picture when live, else the dark metal of its back
-        local pic = live and StationPicture()
-        if pic then stationEnt = self end
-        render.SetMaterial(pic or BACK)
+        -- the glass: the official picture when there is one, else dark
+        local pic, umax, vmax
+        if live then pic, umax, vmax = OfficialPicture() end
+        render.SetMaterial(pic or OFF)
+        local u0, v1 = (umax or 1) * (0.5 - CROP / 2), vmax or 1
         mesh.Begin(MATERIAL_QUADS, n)
         for i = 1, n do
             local a, b = STATION[i], STATION[i + 1]
-            local ua, ub = (92 - a[1]) / 184, (92 - b[1]) / 184
-            Quad(Vector(a[4], a[1], a[5]), Vector(b[4], b[1], b[5]), Vector(b[2], b[1], b[3]), Vector(a[2], a[1], a[3]), fwd, ua, ub, 0, 1)
+            local ua, ub = u0 + (umax or 1) * CROP * (92 - a[1]) / 184, u0 + (umax or 1) * CROP * (92 - b[1]) / 184
+            Quad(Vector(a[4], a[1], a[5]), Vector(b[4], b[1], b[5]), Vector(b[2], b[1], b[3]), Vector(a[2], a[1], a[3]), fwd, ua, ub, 0, v1)
         end
         mesh.End()
         -- its back, top, foot and ends

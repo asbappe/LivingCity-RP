@@ -424,7 +424,7 @@ Valve's own Route Kanal (d1_canals_01, 01a, 02, 03, 05 to 13; the Source SDK cop
 
 ## The lessons
 
-Tags: `props`, `owner`, `compiler`, `check`, `performance`, `doors`, `stairs`, `geometry`, `bug`, `entities`, `lighting`, `city18`, `grime`, `sound`, `streets`, `facades`, `layout`, `interiors`, `combine`, `process`, `gameplay`, `canal`, `viewer`, `materials`, `valve`, `infestation`, `ravenholm`, `logic`, `multiplayer`, `story`, `water`
+Tags: `props`, `owner`, `compiler`, `check`, `performance`, `doors`, `stairs`, `geometry`, `bug`, `entities`, `lighting`, `city18`, `grime`, `sound`, `streets`, `facades`, `layout`, `interiors`, `combine`, `process`, `gameplay`, `canal`, `viewer`, `materials`, `valve`, `infestation`, `ravenholm`, `logic`, `recipe`, `multiplayer`, `story`, `water`
 
 ### A thing is a prop, never brushes (`props-not-brushes`)
 
@@ -1183,18 +1183,18 @@ Each thing the gamemode or a player sets off is one logic_relay whose outputs ar
 A switch shows on or off with its own model (CombineButton.mdl SetAnimation togglein / toggleout) and a small sprite whose colour changes (0 255 0 on, 255 0 0 off), not with text and not by switching room lights. It Locks as it moves and Unlocks a second later, so a double press does not undo it.
 
 - **Why:** d2_coast_12 thumper_1_button: func_door spawnflags 289 (use opens, toggle), wait 3, noise2 Buttons.snd9; OnOpen: thumper_1_button_model togglein, thumper_1_button_sprite (sprites/glow01.spr, scale 0.1) Color 0 255 0 at 0.2 and SetScale 0.05 then 0.1, thumper_1 Enable, Lock at 0, Unlock at 1; OnClose the reverse. Valve switches or recolours 67 env_sprite but switches only 23 of its 948 lights; 14 env_hudhint and 1 game_text in 23 maps (house rule 10).
-- **How:** m.switch(name, u, v, z, out, on_wires, off_wires) built as the coast's; our wall_button could carry such a sprite.
+- **How:** m.switch(name, u, v, z, out, on_wires, off_wires) built as the coast's; our wall_button could carry such a sprite. Recipe, as Valve wires it (the owner asked to keep it, 21 November): R3 Toggle switch with status light (d2_coast_12 thumper_1_button, alarm_button): func_door 20x10x12 `spawnflags` 288 or 289 (use opens + toggle), `wait` 3, `noise2` Buttons.snd9; prop_dynamic props_combine/CombineButton.mdl; env_sprite sprites/glow01.spr (`rendermode` 5, `scale` 0.1, red or green); optional env_lightglow. `OnOpen`: `model.SetAnimation(togglein)`, `sprite.Color(0 255 0) @0.2`, `sprite.SetScale(0.05) @0.2`, `SetScale(0.1) @0.3`, `machine.Enable @0.2`, `!self.Lock @0`, `!self.Unlock @1`. `OnClose`: the same with toggleout, 255 0 0, Disable.
 - **Checked by:** review
-- **Tags:** logic, valve, gameplay
+- **Tags:** logic, valve, gameplay, recipe
 
 ### Breaking a place swaps intact for broken in one go (`valve-swap-broken`)
 
 A wall, door or floor that gets blown or breached is two named sets: the intact props and brushes (Kill or Break) and the broken ones (prop_dynamic and func_brush with StartDisabled 1: TurnOn or Enable). One relay does it with a one-shot sound (48, radius 2000), env_shake (amplitude 12, radius 1000, 1 s, frequency 2.5), env_explosion (magnitude 100, flag 1 for no damage) and fire half a second later.
 
 - **Why:** d3_c17_13 bigdestroy1_relay: bigdestroy1_props_intact (3 prop_dynamic) Kill, bigdestroy1_props_broken (8 prop_dynamic, StartDisabled 1) TurnOn, bigdestroy1_breakables_intact Break, bigdestroy1_explosion Explode, bigdestroy1_shake StartShake, bigdestroy1_wav (Streetwar.d3_C17_13_explode_2) PlaySound, bigdestroy1_fire StartFire at 0.5; bigdestroy3 also wakes a prop_physics beam and fires env_physexplosion at 0.5. d1_canals_01a: sewerbarrels_gate_intact Kill, _broken Enable.
-- **How:** m.swap(name, intact, broken, boom=True) giving lc_NAME_break, the relay the gamemode fires (a Combine breach, a collapse).
+- **How:** m.swap(name, intact, broken, boom=True) giving lc_NAME_break, the relay the gamemode fires (a Combine breach, a collapse). Recipe, as Valve wires it (the owner asked to keep it, 21 November): R12 Breaking things (lesson valve-swap-broken): env_explosion `iMagnitude` 100, `iRadiusOverride` 0, `fireballsprite` sprites/zerogxplode.spr, `rendermode` 5, flag 1 no damage (19 of 46). env_shake `amplitude` 12, `radius` 1000, `duration` 1, `frequency` 2.5 (commonest; 20 fired from path_track OnPass, 12 from relays). env_physexplosion `spawnflags` 1, `magnitude` 50, `radius` 0 (or 128 to 200 with a named target). env_spark `magnitude` 1 to 2, `traillength` 1 to 3, `spawnflags` 128 or 640; driven StartSpark / SparkOnce / StopSpark. env_fire: burning from the start `spawnflags` 15 or 47 (4 start on, 8 full), `health` 30 to 300, `firesize` 48 to 130. func_breakable boards: `material` 1 wood (243 of 349), `health` 1 to 10, `spawnflags` 256; func_physbox freed by relays (`EnableMotion` 154 lines, `Break` 62, `Wake` 24).
 - **Checked by:** review
-- **Tags:** logic, valve, props
+- **Tags:** logic, valve, props, recipe
 
 ### A hazard that comes and goes is a timer, a relay and switched parts (`valve-hazard-cycle`)
 
@@ -1228,18 +1228,18 @@ Things that switch together share one targetname and one output reaches them all
 A door closed by the wiring sends itself Close again from OnBlockedClosing a second later, and Locks from OnFullyClosed rather than with the Close (a player in the way would otherwise leave it open and locked). Heavy doors that must never stop keep the crusher (map_forest.crusher).
 
 - **Why:** d1_trainstation_01 barney_door_2 (prop_door_rotating, spawnflags 34816): OnBlockedClosing -> barney_door_2 Close at 1, OnFullyClosed -> Lock; introom_door_1 the same; barney_door_close_trigger sends Close at 0 and Lock at 0.1. On a busy server players stand in doorways all the time.
-- **How:** m.door and the door helpers add the two wires when the door is closed by the map.
+- **How:** m.door and the door helpers add the two wires when the door is closed by the map. Recipe, as Valve wires it (the owner asked to keep it, 21 November): R5 Door the map closes (d1_trainstation_01 barney_door_2, introom_door_1): `door.Close @0`, `door.Lock @0.1`; on the door `OnBlockedClosing > !self.Close @1`, `OnFullyClosed > !self.Lock`. prop_door_rotating `spawnflags` 8192 normal (23 of 51), 2048 starts locked, 32768 ignores players' use; `hardware` 1, `distance` 90, `speed` 100, `returndelay` -1.
 - **Checked by:** review
-- **Tags:** logic, valve, doors, multiplayer
+- **Tags:** logic, valve, doors, multiplayer, recipe
 
 ### An alarm is a turning red light, a siren and makers, on two relays (`valve-alarm`)
 
 A start relay turns on a red beacon (func_rotating carrying two red point_spotlights back to back, in a caged lamp), plays a siren or bell loop (16) a moment later and Spawns from disabled npc_template_makers; a stop relay (fired by the gamemode, or by the start relay after a set time) turns all of it off. A one-shot klaxon (48) can be fired several times a second apart instead of a loop.
 
 - **Why:** d1_canals_07 logic_start_redlight: spot_doors and spot_doors2 LightOn (point_spotlight 255 0 0, length 96, width 25, spawnflags 2, angles 0 0 -180 and 0 180 -180, parented to rot_redlight1), rot_redlight1 Start (func_rotating 16 cube, spawnflags 64, maxspeed 350, fanfriction 20) inside props_c17/light_cagelight01_on, sound_redlight1 PlaySound at 2 and StopSound at 14, logic_stop_redlight at 120. d2_coast_12 bunker_1_alarm_relay: coast.bunker_siren1 and 2 (16, radius 10000) and a red glow sprite. d1_canals_08 klaxon at 0, 1, 2, 3. 194 of 197 npc_template_maker start disabled and are fired by Spawn.
-- **How:** m.alarm(name, u, v, z, makers=()) giving lc_NAME_alarm_on / _off for the gamemode (a raid on a checkpoint).
+- **How:** m.alarm(name, u, v, z, makers=()) giving lc_NAME_alarm_on / _off for the gamemode (a raid on a checkpoint). Recipe, as Valve wires it (the owner asked to keep it, 21 November): R7 Alarm (d1_canals_07 logic_start_redlight, d2_coast_12 bunker_1_alarm_relay, d1_canals_08 relay_locks_opengates): Beacon: func_rotating 16 cube nodraw, `spawnflags` 64, `maxspeed` 350, `fanfriction` 20; two point_spotlight parented to it, `angles` 0 0 -180 and 0 180 -180, `rendercolor` 255 0 0, `spotlightlength` 96, `spotlightwidth` 25, `spawnflags` 2, `HDRColorScale` 0.6; inside props_c17/light_cagelight01_on. Start relay: `spot.LightOn`, `rot.Start`, `bell.PlaySound @2`, `bell.StopSound @14`, `stop_relay.Trigger @120`. Stop relay: `LightOff`, `rot.Stop`. Sirens coast.bunker_siren1/2 (16, radius 10000) or a one-shot klaxon d1_canals.Floodgate_Klaxon (48) fired `@0, @1, @2, @3`. Makers: npc_template_maker `StartDisabled` 1, `MaxNPCCount` 1, `MaxLiveChildren` 1 to 5, `SpawnFrequency` 5, `Radius` 256, `CriterionVisibility` 2, `CriterionDistance` 2; fired by `Spawn` from triggers and relays (100 lines) or `Enable`; `OnSpawnNPC > schedule.StartSchedule` (aiscripted_schedule, goal an info_target, never !player).
 - **Checked by:** review
-- **Tags:** logic, valve, combine, sound
+- **Tags:** logic, valve, combine, sound, recipe
 
 ### Small things fade far off; cover never does (`valve-fade-clutter`)
 
