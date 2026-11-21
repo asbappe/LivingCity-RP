@@ -109,10 +109,15 @@ and NPCs, then its pictures; then batch 6 (the Citadel, with the owner's four pi
   picture; waiting on the owner's look; what it lacks is on TODO.md.
 
 - **Silo joined to the bunker (the owner, 21 November: "connect the silo to the bunker so that the silo sits just
-  outside the existing map area (then seal it off obviously)"):** in progress (`BunkerForest`, `lc_forest_bunker.vmf`).
+  outside the existing map area (then seal it off obviously)"):** **done 21 November** (`BunkerForest`,
+  `lc_forest_bunker.vmf`; `docs/dev/map-building.md`, the `forest_bunker` paragraphs): the silo north of the north wall,
+  turned a quarter, in a sealed 64-thick hull, reached from a new door in the radio room's north wall by a corridor
+  under the ridge and 15 steps of 16 by 24 down to its tunnel.
   With it (the owner, same day): "update/revamp the bunker to match the EP2 whiteforest bunker aesthetic and designs
   ... the bunker/silo doors for whiteforest from EP2 and such too": White Forest's materials, lights and dressing on
-  the bunker's rooms (layout kept), its big door lifted (`valve_ep2_bunker_door`) for the main entrance. In progress.
+  the bunker's rooms (layout kept), its big door lifted (`valve_ep2_bunker_door`) for the main entrance. **Done 21
+  November**; the main door takes about 11 s (today's took 4.6 s) and its opening is 160 by 160 (was 256 by 192): the
+  owner decides.
 - **The teleporter's power-up (the owner, 21 November):** the "below the floor" Combine laser and lightning effect
   that powers up the teleporter in Entanglement, lifted as `valve_prison_teleport_charge` (**done 21 November**:
   d2_prison_08, a slot 128 wide down the teleport room's floor under a Combine glass lid; six dials, seven glows, six

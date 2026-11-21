@@ -595,6 +595,7 @@
 10.3
 ],
 "built_static": false,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": false,
@@ -646,6 +647,7 @@
 104.0
 ],
 "built_static": false,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": false,
@@ -1505,6 +1507,7 @@
 1495.7
 ],
 "built_static": false,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": false,
@@ -2312,6 +2315,7 @@
 15.1
 ],
 "built_static": false,
+"game": "hl2",
 "physics": true,
 "prop_data": true,
 "static": false,
@@ -2615,6 +2619,7 @@
 73.3
 ],
 "built_static": false,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": false,
@@ -2630,6 +2635,7 @@
 72.9
 ],
 "built_static": false,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": false,
@@ -2645,6 +2651,7 @@
 28.6
 ],
 "built_static": false,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": false,
@@ -3690,6 +3697,7 @@
 24.0
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -5009,6 +5017,7 @@
 2767.2
 ],
 "built_static": true,
+"game": "hl2",
 "physics": true,
 "prop_data": true,
 "static": false,
@@ -5042,6 +5051,7 @@
 26.0
 ],
 "built_static": true,
+"game": "hl2",
 "physics": true,
 "prop_data": true,
 "static": false,
@@ -5219,6 +5229,7 @@
 88.0
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -5234,6 +5245,7 @@
 400.0
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -5267,6 +5279,7 @@
 24.5
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -5282,6 +5295,7 @@
 26.3
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -5297,6 +5311,7 @@
 16.9
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -5312,6 +5327,7 @@
 58.9
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -5327,6 +5343,7 @@
 38.2
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -5342,6 +5359,7 @@
 25.8
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -5357,6 +5375,7 @@
 26.0
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -5498,6 +5517,7 @@
 96.5
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -5513,6 +5533,7 @@
 1941.8
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -5528,6 +5549,7 @@
 121.4
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -5543,6 +5565,7 @@
 95.5
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -5648,6 +5671,7 @@
 237.5
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -5735,6 +5759,7 @@
 74.6
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -6100,6 +6125,7 @@
 664.6
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -7909,6 +7935,7 @@
 0.6
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -8270,6 +8297,7 @@
 165.2
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -8751,6 +8779,7 @@
 212.2
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -9162,6 +9191,7 @@
 8.9
 ],
 "built_static": false,
+"game": "hl2",
 "physics": true,
 "prop_data": true,
 "static": false,
@@ -9231,6 +9261,7 @@
 32.5
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -9246,6 +9277,7 @@
 16.4
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -9261,6 +9293,7 @@
 16.4
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -9276,6 +9309,7 @@
 16.4
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -9291,6 +9325,7 @@
 16.3
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -9306,6 +9341,7 @@
 16.3
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -9339,6 +9375,7 @@
 64.6
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -9480,6 +9517,7 @@
 24.8
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -9495,6 +9533,7 @@
 25.3
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -9510,6 +9549,7 @@
 24.8
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -9927,6 +9967,7 @@
 188.0
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -9942,6 +9983,7 @@
 601.1
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -10263,6 +10305,7 @@
 2152.8
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -10296,6 +10339,7 @@
 2213.7
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -10311,6 +10355,7 @@
 2518.4
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -10344,6 +10389,7 @@
 56.3
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -10377,6 +10423,7 @@
 49.3
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -10392,6 +10439,7 @@
 54.7
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -10443,6 +10491,7 @@
 52.9
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -10786,6 +10835,7 @@
 197.9
 ],
 "built_static": true,
+"game": "hl2",
 "physics": true,
 "prop_data": true,
 "static": true,
@@ -10909,6 +10959,7 @@
 55.0
 ],
 "built_static": false,
+"game": "hl2",
 "physics": true,
 "prop_data": true,
 "static": false,
@@ -11140,6 +11191,7 @@
 98.4
 ],
 "built_static": false,
+"game": "hl2",
 "physics": true,
 "prop_data": true,
 "static": false,
@@ -11551,6 +11603,7 @@
 140.9
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -11566,6 +11619,7 @@
 209.3
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -11599,6 +11653,7 @@
 209.3
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -11776,6 +11831,7 @@
 4201.0
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -11791,6 +11847,7 @@
 4201.0
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -12904,6 +12961,7 @@
 256.6
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -13225,6 +13283,7 @@
 194.2
 ],
 "built_static": false,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": false,
@@ -13258,6 +13317,7 @@
 1024.3
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -13363,6 +13423,7 @@
 1024.3
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -13378,6 +13439,7 @@
 1024.3
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -13411,6 +13473,7 @@
 1024.3
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -13426,6 +13489,7 @@
 1024.3
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -13495,6 +13559,7 @@
 1024.3
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -13510,6 +13575,7 @@
 1024.3
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -13525,6 +13591,7 @@
 1024.3
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -13702,6 +13769,7 @@
 1537.2
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -13717,6 +13785,7 @@
 830.9
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -14182,6 +14251,7 @@
 28.3
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -14359,6 +14429,7 @@
 13.9
 ],
 "built_static": true,
+"game": "hl2",
 "physics": true,
 "prop_data": true,
 "static": true,
@@ -14900,6 +14971,7 @@
 64.5
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -15473,6 +15545,7 @@
 60.6
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -15964,6 +16037,7 @@
 47.7
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -15997,6 +16071,7 @@
 67.0
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -16012,6 +16087,7 @@
 79.8
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -16027,6 +16103,7 @@
 62.5
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -16042,6 +16119,7 @@
 62.1
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -16543,6 +16621,7 @@
 117.9
 ],
 "built_static": true,
+"game": "hl2",
 "physics": true,
 "prop_data": true,
 "static": false,
@@ -16558,6 +16637,7 @@
 172.7
 ],
 "built_static": false,
+"game": "hl2",
 "physics": true,
 "prop_data": true,
 "static": false,
@@ -16681,6 +16761,7 @@
 256.2
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -16696,6 +16777,7 @@
 256.1
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -16711,6 +16793,7 @@
 128.1
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -16726,6 +16809,7 @@
 256.1
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -16759,6 +16843,7 @@
 261.9
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -16774,6 +16859,7 @@
 128.4
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -16879,6 +16965,7 @@
 98.7
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -16894,6 +16981,7 @@
 259.0
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -16981,6 +17069,7 @@
 126.4
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -17014,6 +17103,7 @@
 125.3
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -17029,6 +17119,7 @@
 249.4
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -17458,6 +17549,7 @@
 27.5
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -18147,6 +18239,7 @@
 591.4
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -18360,6 +18453,7 @@
 63.6
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -19761,6 +19855,7 @@
 125.8
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -19776,6 +19871,7 @@
 125.8
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -20007,6 +20103,7 @@
 35.5
 ],
 "built_static": true,
+"game": "hl2",
 "physics": true,
 "prop_data": true,
 "static": false,
@@ -20040,6 +20137,7 @@
 81.6
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -21957,6 +22055,7 @@
 12.0
 ],
 "built_static": true,
+"game": "hl2",
 "physics": true,
 "prop_data": true,
 "static": false,
@@ -21972,6 +22071,7 @@
 12.0
 ],
 "built_static": true,
+"game": "hl2",
 "physics": true,
 "prop_data": true,
 "static": false,
@@ -21987,6 +22087,7 @@
 12.0
 ],
 "built_static": true,
+"game": "hl2",
 "physics": true,
 "prop_data": true,
 "static": false,
@@ -22020,6 +22121,7 @@
 12.0
 ],
 "built_static": true,
+"game": "hl2",
 "physics": true,
 "prop_data": true,
 "static": false,
@@ -22143,6 +22245,7 @@
 3.3
 ],
 "built_static": true,
+"game": "hl2",
 "physics": true,
 "prop_data": true,
 "static": false,
@@ -22374,6 +22477,7 @@
 27.0
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -22443,6 +22547,7 @@
 174.0
 ],
 "built_static": false,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": false,
@@ -22516,6 +22621,7 @@
 3.0
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -22531,6 +22637,7 @@
 108.3
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -22636,6 +22743,7 @@
 77.7
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -22741,6 +22849,7 @@
 41.2
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -22940,6 +23049,7 @@
 45.0
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -22955,6 +23065,7 @@
 15.0
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -23042,6 +23153,7 @@
 24.8
 ],
 "built_static": true,
+"game": "hl2",
 "physics": true,
 "prop_data": true,
 "static": false,
@@ -23129,6 +23241,7 @@
 27.7
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -23216,6 +23329,7 @@
 2.0
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -23231,6 +23345,7 @@
 1.4
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -23642,6 +23757,7 @@
 87.9
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -23657,6 +23773,7 @@
 233.9
 ],
 "built_static": false,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": false,
@@ -23690,6 +23807,7 @@
 289.9
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -23705,6 +23823,7 @@
 10.4
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -23720,6 +23839,7 @@
 9.0
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -23735,6 +23855,7 @@
 4.5
 ],
 "built_static": false,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": false,
@@ -23750,6 +23871,7 @@
 18.3
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -26199,6 +26321,7 @@
 29.4
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -26290,6 +26413,7 @@
 192.1
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -26377,6 +26501,7 @@
 256.3
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -26818,6 +26943,7 @@
 12.1
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -27089,6 +27215,7 @@
 236.1
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -27140,6 +27267,7 @@
 32.3
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -27245,6 +27373,7 @@
 83.1
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -28028,6 +28157,7 @@
 16.9
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -28043,6 +28173,7 @@
 129.5
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -28058,6 +28189,7 @@
 157.3
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -28073,6 +28205,7 @@
 273.4
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -28214,6 +28347,7 @@
 32.3
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -28265,6 +28399,7 @@
 141.2
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -28298,6 +28433,7 @@
 41.6
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -28389,6 +28525,7 @@
 20.5
 ],
 "built_static": true,
+"game": "hl2",
 "physics": true,
 "prop_data": true,
 "static": false,
@@ -28404,6 +28541,7 @@
 20.4
 ],
 "built_static": true,
+"game": "hl2",
 "physics": true,
 "prop_data": true,
 "static": false,
@@ -28419,6 +28557,7 @@
 21.0
 ],
 "built_static": true,
+"game": "hl2",
 "physics": true,
 "prop_data": true,
 "static": false,
@@ -31592,6 +31731,7 @@
 32.3
 ],
 "built_static": true,
+"game": "hl2",
 "physics": true,
 "prop_data": true,
 "static": false,
@@ -31625,6 +31765,7 @@
 28.3
 ],
 "built_static": false,
+"game": "hl2",
 "physics": true,
 "prop_data": true,
 "static": false,
@@ -31658,6 +31799,7 @@
 32.3
 ],
 "built_static": false,
+"game": "hl2",
 "physics": true,
 "prop_data": true,
 "static": false,
@@ -31781,6 +31923,7 @@
 36.2
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -31850,6 +31993,7 @@
 37.1
 ],
 "built_static": true,
+"game": "hl2",
 "physics": true,
 "prop_data": true,
 "static": true,
@@ -31883,6 +32027,7 @@
 39.7
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -31916,6 +32061,7 @@
 37.4
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -31985,6 +32131,7 @@
 3.9
 ],
 "built_static": true,
+"game": "hl2",
 "physics": true,
 "prop_data": true,
 "static": false,
@@ -32314,6 +32461,7 @@
 30.7
 ],
 "built_static": false,
+"game": "hl2",
 "physics": true,
 "prop_data": true,
 "static": false,
@@ -32329,6 +32477,7 @@
 41.3
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -32380,6 +32529,7 @@
 10.8
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -32413,6 +32563,7 @@
 11.0
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -32464,6 +32615,7 @@
 10.3
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -32515,6 +32667,7 @@
 542.9
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -33294,6 +33447,7 @@
 1926.9
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -33669,6 +33823,7 @@
 497.7
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -34732,6 +34887,7 @@
 32.0
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -34747,6 +34903,7 @@
 31.0
 ],
 "built_static": false,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": false,
@@ -35014,6 +35171,7 @@
 73.1
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -35137,6 +35295,7 @@
 10.8
 ],
 "built_static": true,
+"game": "hl2",
 "physics": true,
 "prop_data": true,
 "static": false,
@@ -35638,6 +35797,7 @@
 258.9
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -35689,6 +35849,7 @@
 125.2
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -35758,6 +35919,7 @@
 239.0
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -35791,6 +35953,7 @@
 176.5
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -35806,6 +35969,7 @@
 160.0
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -35857,6 +36021,7 @@
 60.3
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -36052,6 +36217,7 @@
 69.5
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -36427,6 +36593,7 @@
 32.0
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -36442,6 +36609,7 @@
 31.0
 ],
 "built_static": false,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": false,
@@ -37177,6 +37345,7 @@
 25.4
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -37192,6 +37361,7 @@
 12.4
 ],
 "built_static": true,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": true,
@@ -37207,6 +37377,7 @@
 98.4
 ],
 "built_static": false,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": false,
@@ -37222,6 +37393,7 @@
 86.5
 ],
 "built_static": false,
+"game": "hl2",
 "physics": false,
 "prop_data": false,
 "static": false,
