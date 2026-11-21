@@ -38669,6 +38669,13 @@ for _, t in ipairs(LC.QuestTemplates) do
                     local got = LC.Credits(p) - c0
                     local x = spec.extraCredits
                     local along = games[1] + (istable(x) and x[1] or tonumber(x) or 0)
+                    -- (a breakout's fund share is paid when the cell opens, along the way, not at the end: 21 November,
+                    -- the full run's "res_breakout paid 10, said 11-41" whenever the lock game's own pay came to nothing)
+                    if t.id == "res_breakout" and LC.ResistanceFundShares then
+                        local most = math.max(1, GetConVar("lc_quest_squad"):GetInt(), spec.squad or 0)
+                        local _, _, eachLo = LC.ResistanceFundShares("saved", most)
+                        along = along + (eachLo or 0)
+                    end
                     if got > credits[2] or got < credits[1] - along then
                         wrong[#wrong + 1] = string.format("%s (%s): paid %d, said %d-%d", t.id, f, got, credits[1], credits[2])
                     end
