@@ -5,7 +5,7 @@ to 05, d3_breen_01, ep1_intro, ep1_citadel_00 to 04, styleguide_core and stylegu
 helpers): the architecture (`architecture_*`), and the owner's pieces lifted whole (the big doors, the core reactor,
 the walkway reactors, the pods: `_dev/reference/prefabs/`). Tools in the chat's scratch folder (`citlogic/`: an
 entity-only reader, `loops.py` for tracktrain rings, `ride.py` for a ride's timeline, `soldiers.py`).
-Status: d3_citadel_01 to 05 and d3_breen_01 read, with first passes across all 15 maps.
+Status: all 15 maps read (21 November).
 
 ## 1. Machinery on loops
 
@@ -157,4 +157,32 @@ Status: d3_citadel_01 to 05 and d3_breen_01 read, with first passes across all 1
 - The guards outside the door (valve-breach-buildup) and the end: `player_weaponstrip` at the end game, a speed mod
   for the G-Man's scene.
 
-(More to come: ep1_intro, ep1_citadel_00 to 04, the style rooms.)
+## 12. Episode One: the Citadel breaking (ep1_intro, ep1_citadel_00 to 04, the two style rooms)
+
+- **The blast grows (ep1_intro).** The end-of-HL2 blast is a sprite whose scale a math_counter sets (OutValue >
+  SetScale): it starts at 8 and a timer Multiplies it by 1.0065 every 0.05 s (about 14% a second, x49 in 30 s);
+  with it the fog lerps to white over the view and the screen fades. Debris rides past on tracktrains at 170 to 2000.
+  Vortigaunts warp in by a material lerp (0 to 1 over 2 s) as their scene starts.
+- **The Citadel seen from outside (ep1_citadel_00):** a chunk shot off its top every 6 to 12 s (a logic_case picks one
+  of 5 env_shooters), lightning every 4 to 12 s with thunder 1 and 2 s later, vortigaunts reloading on random 6 to
+  18 s and 5 to 15 s timers. The van ride: 51 path_tracks, 15156 long, up to 2000.
+- **The broken Citadel inside (ep1_citadel_01 to 03):** rumbles every 12 to 49 s (section 1); the advisor pod room and
+  the core control room (section 3); the confiscation field again, the gravity gun charged by it (section 5); every
+  soldier's gun dissolved on death (section 6); defenders asleep and woken in a chain (section 7). Ball launchers
+  (ep1_citadel_02): 3 balls, back 5 s after one is lost, launched up at 20 to 30 degrees, 8 bounces.
+- **The lift (ep1_citadel_02b):** small tremors every 6 to 12 s while it rides; a stalker in the shaft is the trouble, and
+  once it is dead the lift runs on fast (SetSpeedReal 180 at the next node); Alyx's nag repeats every 16 s until the player acts.
+- **The core's state is heard (ep1_citadel_03):** the core's loop (radius 3250) is swapped as it is mended: unstable
+  (and a nearer unstable loop), then partial stable 1 s after the third laser, then stable; 6 balls into the catchers
+  complete it. The core itself wobbles on three axes, each on its own random timer (0.9 to 1.1 s; 0.2 to 0.9 in
+  styleguide_core) picking one of 12 to 16 scales between 0.91 and 1.1, and flares to 1.2 every 3 s while a flare-up timer runs, with
+  three touch zones that follow its size. (The core as a piece is the other helper's.)
+- **The alarm in the Citadel:** a siren and a glow sprite that shows 0.7 s and hides 0.2 s, six times over 5.2 s, then
+  the room's alarm light off; a timer repeats it every 8 s until a scene stops it (ep1_citadel_03, 04). No turning
+  beacon here.
+- **The escape train (ep1_citadel_04):** the train stands still; a ring of three spotlights and a brush on a
+  tracktrain runs past it at 2200 (9 path_tracks, 2560 long: a pass every 1.2 s), with shakes every 12 to 30 s: the
+  lights sweeping by are the motion.
+- **styleguide_destroyed_citadel** is ep1_citadel_02's bridge with 8 stalkers and the same rumble timer;
+  **styleguide_core** is the core's wobble alone.
+
