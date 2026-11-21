@@ -4,7 +4,10 @@
     A "Combine only" zone (editor: Zone > Combine only) marks the nexus, the
     offices, the armory and the prison. Citizens, NPC or player, keep out.
     A player who wanders in gets a countdown to leave (lc_trespass_grace
-    seconds); stay, and they're wanted for trespassing. Civil Protection,
+    seconds); stay, and they're wanted for trespassing. At a door a unit
+    guards (sv_livingcity_unitposts.lua) he deals with them instead: no
+    countdown there. Deeper in, the nearest unit who sees them calls out
+    (no chat line: the owner, 21 November, Valve's police posts). Civil Protection,
     Overwatch, admins, people in custody, and anyone in a convincing
     uniform may be inside.
 
@@ -34,21 +37,22 @@ local function MayEnter(ply)
     return false
 end
 
+LC.MayEnterCombine = MayEnter
+
 function LC.CombineZoneTick(now)
     for _, ply in ipairs(player.GetAll()) do
         local inside = LC.CombineZoneAt and LC.CombineZoneAt(ply:GetPos()) ~= nil
-        if inside and not MayEnter(ply) then
+        if inside and not MayEnter(ply) and not (LC.PostCovers and LC.PostCovers(ply, now)) then
             local deadline = warned[ply]
             if not deadline then
                 deadline = now + cvGrace:GetFloat()
                 warned[ply] = deadline
                 ply:SetNW2Float("lc_trespass_until", deadline)
-                ply:ChatPrint("[Civil Protection] This is a restricted area. Leave immediately.")
+                if LC.UnitCallsOut then LC.UnitCallsOut(ply, now) end -- (a unit's "Hold it!", not a line of text)
             elseif now > deadline then
                 warned[ply] = nil
                 ply:SetNW2Float("lc_trespass_until", 0)
-                ply:ChatPrint("[Civil Protection] Trespassing in a restricted area. You are now wanted.")
-                LC.ReportCrime(ply, "Trespassing in a Combine area", 240)
+                LC.ReportCrime(ply, "Trespassing in a Combine area", 240) -- (the WANTED banner says why)
                 if LC.MakeCopsHostile then LC.MakeCopsHostile(ply, ply:GetPos(), 1500) end
             end
         elseif warned[ply] then

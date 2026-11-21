@@ -2762,28 +2762,33 @@ local function ThinkZombie(npc, st, now)
 end
 
 ------------------------------------------------------------------------
--- Ambient barks when players brush past citizens
+-- Players brushing past citizens: a glance (a quiet crowd, the owner, 21 November: Valve's
+-- citizens look at you, they don't say "Excuse me"; sv_livingcity_idlelife.lua). One of the
+-- infested still sends them off with "Run for your life!"
 ------------------------------------------------------------------------
 
 local function BarkPass(now)
     for _, ply in LC.Players() do
         if ply:Alive() and ply:GetVelocity():LengthSqr() > 100 * 100 then
             -- only who's right there (the engine finds them; not every NPC in the city)
-            for _, npc in ipairs(ents.FindInSphere(ply:GetPos(), 60)) do
+            for _, npc in ipairs(ents.FindInSphere(ply:GetPos(), 80)) do
                 local st = LC.NPCs[npc]
                 if st and st.role == "citizen" and now > st.nextBark and IsValid(npc)
                     and (st.state == "moving" or st.state == "idle" or st.state == "inline") then
                     st.nextBark = now + 20
-                    if math.random() < 0.5 then
-                        local snd = LC.PlayerIsZombie and LC.PlayerIsZombie(ply) and Vo(st.gender, "runforyourlife01")
-                            or Vo(st.gender, Pick(CIT_BARK))
-                        npc:EmitSound(snd, 70)
+                    if LC.PlayerIsZombie and LC.PlayerIsZombie(ply) then
+                        if math.random() < 0.5 then npc:EmitSound(Vo(st.gender, "runforyourlife01"), 70) end
+                    elseif LC.CrowdGlance then
+                        LC.CrowdGlance(npc, st, ply)
+                    elseif math.random() < 0.5 then
+                        npc:EmitSound(Vo(st.gender, Pick(CIT_BARK)), 70)
                     end
                 end
             end
         end
     end
 end
+LC.BarkPass = BarkPass
 
 ------------------------------------------------------------------------
 -- Relationships with players (zombie players, CP players)

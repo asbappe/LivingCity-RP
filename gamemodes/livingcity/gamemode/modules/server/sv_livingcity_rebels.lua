@@ -1534,6 +1534,8 @@ local function StartSweep(z)
         end
     end
     if #sk.units == 0 then return false, "no Civil Protection units" end
+    -- in lanes, each man his own way in, a bound at a time (sv_livingcity_unitmoves.lua)
+    if LC.LaneMove then LC.LaneMove(sk.units, (LCZ.Heart and LCZ.Heart(z)) or z.pos, { run = true, from = stage }) end
     -- the team meets the players who joined the sweep before going in (the owner, 7 November: "joined a
     -- sweep and no one showed up"), up to a minute, then pushes in with them
     sk.rally = {}
@@ -1724,6 +1726,9 @@ local function RunSkirmish(sk, now)
                         if rst and not rst.foe then SetFoe(target, rst, u, now) end
                     elseif sk.arrived and SweepChore(u, st, sk, now) then
                         -- (busy with the scientist, a pot or a crate)
+                    elseif st.lane and not sk.arrived and LC.LaneStep then
+                        -- moving up in his own lane, a bound at a time (sv_livingcity_unitmoves.lua)
+                        if st.state ~= "moving" and now > (st.untilT or 0) then LC.LaneStep(u, st, now) end
                     elseif st.state == "sweep" and now > (st.nextSweepMove or 0) then
                         -- along the city's own routes (the engine alone often finds no way in)
                         st.nextSweepMove = now + 8
@@ -1751,6 +1756,7 @@ local function RunSkirmish(sk, now)
             if IsValid(u) and Alive(u) and (LCZ.Near(sk.zone, u:GetPos(), 200) or (ust and ust.state == "hostile")) then
                 sk.arrived = true
                 sk.ends = math.max(sk.ends, now + 120) -- (a long walk in doesn't eat the sweep)
+                for _, u2 in ipairs(sk.units) do local s2 = IsValid(u2) and LC.NPCs[u2] if s2 then s2.lane = nil end end -- (in: the lanes are done)
                 hook.Run("LivingCitySweepArrived", sk, u) -- (a gas bomb lobbed in first: sv_livingcity_cleanup.lua)
                 break
             end

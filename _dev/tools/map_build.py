@@ -41,6 +41,47 @@ SEE_THROUGH = ("bar", "glass", "fence", "grate", "window", "cage", "chain", "mes
 import sys
 
 CELL = 64
+
+# The engine's path node limit is for a whole map, flying nodes and hints counted (the owner, 21 November: "mind the
+# engine's node limit"): City 18 already has about 1826 walking and 580 flying, and our pieces are merged into it, so
+# each piece has a share of what is left (1690), and its nodes are thinned to fit (map_ring.lane_cells, NODE_LEVELS).
+NODE_CAP, CITY18_NODES = 4096, 2406
+NODE_SHARES = {"canal": 150, "ring": 300, "forest_bunker": 150, "forest_cave": 260, "ravenholm": 150, "south": 300, "town": 330}
+NODE_SHARE_OTHER = 400      # (a layout not planned for the merge yet: kept to a piece's size all the same)
+NODE_CLASSES = ("info_node", "info_node_air", "info_node_hint", "info_node_air_hint", "info_node_climb")
+
+
+def node_share(name):
+    """How many path nodes (walking, flying and hints) a piece may have: its share, or None for one module by itself."""
+    if name.startswith("mod_"):
+        return None
+    return NODE_SHARES.get(name, NODE_SHARE_OTHER)
+
+
+def node_report(vmf, name):
+    """Count a piece's path nodes and say what they would do to the merged map. Gives (the line to print, a LOOK line
+    or None): a LOOK when the piece is over its share, or when with City 18 and the other planned pieces' shares the
+    merged map would come within a tenth of the engine's limit."""
+    count = {}
+    for cls, _ in vmf.points:
+        if cls in NODE_CLASSES:
+            count[cls] = count.get(cls, 0) + 1
+    n = sum(count.values())
+    if not n:
+        return None, None
+    others = sum(v for k, v in NODE_SHARES.items() if k != name) if name in NODE_SHARES else 0
+    merged = CITY18_NODES + others + n
+    share = node_share(name)
+    line = "path nodes: %d (%d walking, %d flying, %d hints); its share %s; merged with City 18 (%d)%s: %d of the engine's %d" % (
+        n, count.get("info_node", 0), count.get("info_node_air", 0), count.get("info_node_hint", 0), share if share is not None else "none (one module)",
+        CITY18_NODES, " and the other pieces' shares" if others else "", merged, NODE_CAP)
+    look = None
+    if share is not None and n > share:
+        look = "nodes: %d path nodes, over this piece's share of %d (NODE_SHARES in map_build.py): thin them or give it a bigger share" % (n, share)
+    elif merged > (NODE_CAP if others else NODE_CAP * 0.9):      # (the planned pieces' shares are made to fill what City 18 leaves)
+        look = "nodes: with City 18%s the merged map would have %d path nodes, %s the engine's %d" % (
+            " and the other pieces" if others else "", merged, "over" if merged > NODE_CAP else "near", NODE_CAP)
+    return line, look
 GATE_WIDE, GATE_HIGH = 512, 256 # a gate: the culvert every piece ends in, so any two pieces join
 
 # what things are made of: all of these are already used in the owner's own VMF, so they exist
@@ -868,7 +909,10 @@ def canal(args):
         node_id[0] += 1
         if W(x, y, 0)[1] < 4600 and all((x - a) ** 2 + (y - b) ** 2 >= 700 ** 2 for a, b, _ in dim):
             dim.append((x, y, z))
-    ch.nodes(lambda x, y, z: node(x - ox, y - oy, z), [P(r) for r in blocked])
+    def air_node(x, y, z):      # (flying nodes for scanners over the canal: Valve's, the owner, 21 November)
+        vmf.point("info_node_air", (x, y, z), {"nodeid": node_id[0], "nodeheight": "0"}, "LC canal: flying nodes")
+        node_id[0] += 1
+    ch.nodes(lambda x, y, z: node(x - ox, y - oy, z), [P(r) for r in blocked], air=air_node, share=node_share("canal"), extra=len(lanes) + 11)
     for x, y in lanes:
         node(x, y, floor_z)
     fences = fence(vmf, plan, 96, "LC canal: fence along the walls' tops", top=wall_top)
@@ -996,6 +1040,11 @@ def main():
     with open(out, "w") as f:
         f.write(vmf.text())
     print("  written: " + out)
+    line, look = node_report(vmf, out[3:-4].replace("_test", "") if out.startswith("lc_") else out)
+    if line:
+        print("  " + line)
+    if look:
+        print("  LOOK: " + look)
     try:      # (the owner's corrections, checked by machine: _dev/reference/lessons.json, map_lint.py)
         import map_lint
         for line in map_lint.check(out, views=getattr(args, "view_list", None), air=getattr(vmf, "flooded", None)):

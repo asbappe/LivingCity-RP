@@ -161,7 +161,7 @@ local RELAX = {
     soldier = { wall = { "CrouchIdle" }, open = { "CrouchIdle", "crouchidle_AB" } },
 }
 LC.RELAX_SEQS = RELAX
-LC.Relaxed = LC.Relaxed or {} -- [npc] = { ss, pos, doors = { [door] = shut }, at }
+LC.AtEase = LC.AtEase or {} -- [npc] = { ss, pos, doors = { [door] = shut }, at }
 
 local function Has(npc, name) local s = npc.LookupSequence and npc:LookupSequence(name) return s ~= nil and s >= 0 end
 
@@ -175,7 +175,7 @@ end
 -- Settle into an easy pose where he stands, facing yaw. False if he can't (none of the poses, or alert).
 function LC.RelaxAtPost(npc, st, yaw, now)
     now = now or CurTime()
-    if not IsValid(npc) or (st.alertUntil or 0) > now or LC.Relaxed[npc] or IsValid(npc.lcGesture) then return false end
+    if not IsValid(npc) or (st.alertUntil or 0) > now or LC.AtEase[npc] or IsValid(npc.lcGesture) then return false end
     local set = RELAX[st.role]
     if not set or not LC.MakeSequence then return false end
     yaw = yaw or npc:GetAngles().y
@@ -198,14 +198,14 @@ function LC.RelaxAtPost(npc, st, yaw, now)
     for _, d in ipairs(ents.FindInSphere(npc:GetPos(), 400)) do
         if LC.IsDoorEntity and LC.IsDoorEntity(d) then doors[d] = DoorShut(d) end
     end
-    LC.Relaxed[npc] = { ss = ss, pos = npc:GetPos(), doors = doors, at = now, name = name }
+    LC.AtEase[npc] = { ss = ss, pos = npc:GetPos(), doors = doors, at = now, name = name }
     return true
 end
 
 -- Up again: why = what alarmed him (nil when he just moves on), from = where it came from.
 function LC.RelaxEnd(npc, st, why, from)
-    local r = LC.Relaxed[npc]
-    LC.Relaxed[npc] = nil
+    local r = LC.AtEase[npc]
+    LC.AtEase[npc] = nil
     if r and IsValid(r.ss) then
         r.ss:Fire("CancelSequence")
         SafeRemoveEntityDelayed(r.ss, 0.2)
@@ -224,7 +224,7 @@ hook.Add("EntityFireBullets", "LivingCityGuardsHear", function(ent, data)
     if IsValid(ent) then lastShot = { pos = ent:GetPos(), t = CurTime() } end
 end)
 hook.Add("EntityTakeDamage", "LivingCityGuardsHurt", function(ent)
-    if LC.Relaxed[ent] then
+    if LC.AtEase[ent] then
         local st = LC.NPCs and LC.NPCs[ent]
         LC.RelaxEnd(ent, st, "hurt")
     end
@@ -248,7 +248,7 @@ local function Alarm(npc, r, now)
 end
 
 function LC.RelaxTick(now)
-    for npc, r in pairs(LC.Relaxed) do
+    for npc, r in pairs(LC.AtEase) do
         local st = IsValid(npc) and npc:Health() > 0 and LC.NPCs and LC.NPCs[npc]
         if not st or not IsValid(r.ss) or (st.state ~= "idle" and st.state ~= "post") or npc:GetPos():DistToSqr(r.pos) > 48 * 48 then
             LC.RelaxEnd(npc, st)
@@ -341,6 +341,30 @@ function LC.PostCovers(ply, now)
         end
     end
     return false
+end
+
+-- Someone deeper in than a door's guard reaches: the nearest unit who can see them calls out (the
+-- countdown on their screen does the rest: sv_livingcity_security.lua). The unit, or nil.
+function LC.UnitCallsOut(ply, now)
+    local best, bst, bd
+    for npc, st in pairs(LC.NPCs or {}) do
+        if IsValid(npc) and (st.role == "cop" or st.role == "soldier") and st.state ~= "hostile" and npc:Health() > 0 then
+            local d = npc:GetPos():DistToSqr(ply:GetPos())
+            if d < 1200 * 1200 and (not bd or d < bd) and (not LC.LineOfSight or LC.LineOfSight(npc:EyePos(), ply:EyePos(), npc, ply)) then
+                best, bst, bd = npc, st, d
+            end
+        end
+    end
+    if not best then return nil end
+    LC.RelaxEnd(best, bst, "heard", ply:GetPos())
+    if LC.Face then LC.Face(best, ply:GetPos()) end
+    if bst.role == "cop" then
+        best:EmitSound(MP .. "holdit.wav", 85)
+        if LC.PlayGesture then LC.PlayGesture(best, { "plazahalt", "ACT_SIGNAL_HALT" }, 2) end
+    elseif LC.PlayGesture then
+        LC.PlayGesture(best, { "signal_halt", "ACT_SIGNAL_HALT" }, 2)
+    end
+    return best
 end
 
 -- The first warning: the nearest scanner comes and photographs them.
@@ -474,7 +498,7 @@ function LC.UnitPostThink(npc, st, now)
     end
     if inside then LC.PostKnockOut(npc, st, p, inside, now) return end
     if outside then LC.PostWarn(npc, st, p, outside, now) return end
-    if not LC.Relaxed[npc] and (st.alertUntil or 0) < now and not IsValid(npc.lcGesture) then
+    if not LC.AtEase[npc] and (st.alertUntil or 0) < now and not IsValid(npc.lcGesture) then
         if npc.SetIdealYawAndUpdate then npc:SetIdealYawAndUpdate(p.yaw) end
         LC.RelaxAtPost(npc, st, p.yaw, now)
     end
@@ -536,7 +560,7 @@ end)
 
 hook.Add("PlayerDeath", "LivingCityUnitPosts", function(ply) ply.lcPostWarn = nil end)
 hook.Add("LivingCityStopped", "LivingCityUnitPosts", function()
-    LC.Relaxed = {}
+    LC.AtEase = {}
     zonePosts = setmetatable({}, { __mode = "k" })
     doorCache = setmetatable({}, { __mode = "k" })
 end)

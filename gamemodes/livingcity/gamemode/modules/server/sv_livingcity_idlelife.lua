@@ -159,7 +159,8 @@ end
 -- Sat down (or stood) at a spot: a drinker's seat has the bottle out, if they are fond of one.
 function LC.BusyStarted(npc, st, p)
     if not p or p.kind ~= "drinker" or not LC.NPCViceStart or not LC.NPCViceOf then return end
-    if LC.NPCViceOf(npc) <= 0 then return end
+    local cv = GetConVar("lc_npc_vices") -- (lc_npc_vices 0: nobody drinks in the street, nor here)
+    if (cv and not cv:GetBool()) or LC.NPCViceOf(npc) <= 0 then return end
     local now = CurTime()
     if LC.NPCViceStop then LC.NPCViceStop(npc) end
     if LC.NPCViceStart(npc, "drink", now) and LC.NPCVices and LC.NPCVices[npc] then

@@ -550,7 +550,10 @@ local function EndCan(success)
     local c = can
     can = nil
     if IsValid(c.cop) and c.cst then
-        if success then c.cop:EmitSound("npc/metropolice/vo/affirmative.wav", 75) end
+        if success then
+            c.cop:EmitSound("npc/metropolice/vo/affirmative.wav", 75)
+            if IsValid(c.ply) and LC.AddStanding then LC.AddStanding(c.ply, 3, "Did as Civil Protection said") end -- (passed: a little Civil Standing)
+        end
         LC.SetState(c.cop, c.cst, "idle")
         c.cst.untilT = CurTime() + 3
     end
@@ -575,12 +578,20 @@ local function StartCan(cop, cst, ply, bin)
     prop.lcCan = true -- not for pocketing; the officer wants it in the trash
     prop:SetPos(cop:EyePos() + cop:GetForward() * 18 - Vector(0, 0, 18))
     prop:Spawn()
-    local phys = prop:GetPhysicsObject()
-    if IsValid(phys) then
-        phys:SetVelocity((ply:GetPos() - prop:GetPos()):GetNormalized() * 160 + Vector(0, 0, 40))
-    end
     cop:SetSchedule(SCHED_IDLE_STAND)
     LC.Face(cop, ply:GetPos())
+    -- Valve's itemhit (the owner, 21 November): his hand knocks it off as he swings, at the swing's own moment
+    local swung = LC.PlayGesture and LC.PlayGesture(cop, { "itemhit" }, 2.5)
+    local phys = prop:GetPhysicsObject()
+    if IsValid(phys) and swung then phys:EnableMotion(false) end
+    timer.Simple(swung and 1.15 or 0, function()
+        local ph = IsValid(prop) and prop:GetPhysicsObject()
+        if IsValid(ph) and IsValid(ply) then
+            ph:EnableMotion(true)
+            ph:Wake()
+            ph:SetVelocity((ply:GetPos() - prop:GetPos()):GetNormalized() * 160 + Vector(0, 0, 40))
+        end
+    end)
     LC.SetState(cop, cst, "event")
     cst.eventUntil = CurTime() + 45
     cop:EmitSound("npc/metropolice/vo/pickupthecan1.wav", 78)
@@ -665,10 +676,16 @@ local function CanThink(now)
                 LC.ReportCrime(c.ply, "Refusing a lawful order", 90)
                 LC.MakeCopsHostile(c.ply, c.cop:GetPos(), 60)
             elseif c.ply:GetPos():DistToSqr(c.cop:GetPos()) < 200 * 200 then
-                -- a shove, not a beating
-                c.ply:SetVelocity(c.cop:GetForward() * 380 + Vector(0, 0, 120))
-                c.ply:ViewPunch(Angle(-12, math.Rand(-6, 6), 0))
-                c.cop:EmitSound("Weapon_StunStick.Melee_Hit", 70)
+                -- failed: a beating, as Valve's officer gives it, that never kills (sv_livingcity_unitposts.lua)
+                if LC.UnitBlow then
+                    local cop, ply = c.cop, c.ply
+                    LC.UnitBlow(cop, ply)
+                    timer.Simple(0.5, function() if IsValid(cop) and IsValid(ply) and ply:GetPos():DistToSqr(cop:GetPos()) < 200 * 200 then LC.UnitBlow(cop, ply) end end)
+                else
+                    c.ply:SetVelocity(c.cop:GetForward() * 380 + Vector(0, 0, 120))
+                    c.ply:ViewPunch(Angle(-12, math.Rand(-6, 6), 0))
+                    c.cop:EmitSound("Weapon_StunStick.Melee_Hit", 70)
+                end
             end
             return EndCan(false)
         end

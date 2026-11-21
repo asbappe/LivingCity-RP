@@ -186,6 +186,7 @@ class Channel:
         import random as _r
         fz, c = self.floor_z, MAT["canal_wall"]
         sloping, placed = {}, []
+        builts = [bx for bx, _ in self.vmf.boxes] + list(getattr(self.vmf, "shape_boxes", []))      # (what the modules built before the dressing)
         for (axis, line, side, a, b) in banks:
             sloping.setdefault((axis, line, side), []).append((a, b))
         for (axis, line, side, a, b) in trims:
@@ -209,6 +210,8 @@ class Channel:
                     lip = along(axis, p - 96, p + 96, min(line, line + side * 32), max(line, line + side * 32), fz, z - 64)
                     if not fits(ring, more=avoid) or (kind == "wall" and not fits(lip, gap=8, more=avoid)):
                         continue
+                    if kind == "wall" and not fits(lip, gap=4, more=builts):
+                        continue      # (a module's own brush there: no outfall, rather than two faces in one plane)
                     taken.append(ring)
                     shapes.append(prism(octagon(p, z, 68), across, min(line, line + side * 2), max(line, line + side * 2), MAT["black"]))
                     if kind == "wall":      # (Valve's lip: up to 16 under the hole at the wall, falling 32 to its front)
@@ -270,18 +273,121 @@ class Channel:
                                disp={"top": (2, lambda i, j, g=grid, x0=x0, y0=y0: (x0 + j * CELL, y0 + i * CELL, g[(i, j)][0]), lambda i, j, g=grid: g[(i, j)][1])})
             self.stats["mud"] += 1
 
-    def nodes(self, node, blocked):
-        for (i, j), spec in sorted(self.cells.items()):
-            if spec[0] == "solid" or i % 2 != 1 or j % 2 != 1 or (i + j) % 4 != 0:
-                continue
-            x, y = i * CELL + 32, j * CELL + 32
-            if any(b[0] <= x < b[2] and b[1] <= y < b[3] for b in blocked):
-                continue
-            if self.kind((i, j)) == "floor" and self.wall_near(x, y) < BANK + 16:
-                continue
-            node(x, y, self.floor_z if (i, j) in self.dished else spec[1])      # (over the dish: above the mud)
-            self.stats["nodes"] += 1
+    def lanes(self, blocked, level=0, air=True):
+        """The path nodes and flying nodes lane_cells and air_points would lay at a sparseness level (NODE_LEVELS)."""
+        fz, cells = self.floor_z, self.cells
+        open_every, tight_every, air_step = NODE_LEVELS[level]
 
+        def floor_of(c):
+            spec = cells.get(c)
+            if spec is None or spec[0] == "solid" or (spec[0] in ("low", "under") and len(spec) > 3 and spec[3] - spec[1] < 72):
+                return None
+            return fz if c in self.dished else spec[1]
+        banks = getattr(self, "made", {}).get("bank_rects", [])
+        ground, line = lane_cells(cells, floor_of, lambda c: cells.get(c, ("solid",))[0] in ("low", "under"), blocked, banks, open_every, tight_every)
+        flying = air_points(line, [bx for bx, _ in self.vmf.boxes] + list(getattr(self.vmf, "shape_boxes", [])), air_step) if air else []
+        return ground, flying
+
+    def nodes(self, node, blocked, air=None, share=None, extra=0):
+        """Path nodes where people walk (Valve's spacing, the owner, 21 November: lane_cells): along the middle of the
+        canal's floor and of every room and platform, 128 apart in the open and 64 in corridors, never on a bank; over
+        the dish at the mud's height. air(x, y, z): if given, flying nodes for scanners over the open ones, about 150
+        apart, 120 over the ground nodes (160 over the floor), where nothing is in the way. share: the most nodes this
+        piece may have (with `extra` already spent elsewhere): sparser levels are tried until they fit."""
+        for level in range(len(NODE_LEVELS)):
+            ground, flying = self.lanes(blocked, level, air is not None)
+            if share is None or len(ground) + len(flying) + extra <= share:
+                break
+        for (x, y, z, roofed) in ground:
+            node(x, y, z)
+            self.stats["nodes"] += 1
+        for (x, y, z) in flying:
+            air(x, y, z)
+            self.stats["air"] = self.stats.get("air", 0) + 1
+        self.stats["level"] = level
+
+NODE_AIR, AIR_UP = 150, 160      # Valve's flying nodes: about 150 apart, 120 over the ground nodes (lane_cells lays the walking ones)
+
+
+NODE_LEVELS = ((2, 1, 150), (2, 2, 256), (3, 2, 384), (4, 3, 512))      # (every how many squares in the open, in corridors; flying nodes apart): densest first
+
+
+def lane_cells(cells, floor_of, roofed, blocked=(), banks=(), open_every=2, tight_every=1):
+    """Where people walk, for path nodes (Valve, 23 maps: rooms and sewers 64 to 72 apart, open ground 126 to 141, 96 on
+    the whole; the owner, 21 November: "denser only where people walk", so the engine's 4096 for a whole map is not
+    used up): one line down the middle of every walkable place (the squares farthest from its edge across it; where two
+    tie side by side, the first), a node on every other square along it in the open and in roofed halls (128) and on
+    every square in corridors and small rooms (64), and none on the rest of the floor. floor_of(c): the height people walk at on a square, None where nobody
+    does; a step over 18 is the place's edge. blocked: rectangles with no node; banks: rectangles of slope. Gives the
+    nodes [(x, y, z, roofed)] and the whole middle line (for the flying nodes), the same every build."""
+    from collections import deque
+    walk = {}
+    for c in cells:
+        z = floor_of(c)
+        if z is not None:
+            walk[c] = z
+
+    def same(a, b):
+        return b in walk and abs(walk[a] - walk[b]) <= 18
+    ring8 = [(dx, dy) for dx in (-1, 0, 1) for dy in (-1, 0, 1) if dx or dy]
+    k, dq = {}, deque()
+    for c in walk:
+        if any(not same(c, (c[0] + dx, c[1] + dy)) for dx, dy in ring8):
+            k[c] = 1
+            dq.append(c)
+    while dq:
+        c = dq.popleft()
+        for dx, dy in ring8:
+            n = (c[0] + dx, c[1] + dy)
+            if n not in k and same(c, n):
+                k[n] = k[c] + 1
+                dq.append(n)
+
+    def kk(c, n):
+        return k.get(n, 0) if same(c, n) else 0
+    kept, line, near = [], [], {}
+    for c in sorted(k):
+        kc = k[c]
+        nb = {(1, 0): kk(c, (c[0] + 1, c[1])), (-1, 0): kk(c, (c[0] - 1, c[1])), (0, 1): kk(c, (c[0], c[1] + 1)), (0, -1): kk(c, (c[0], c[1] - 1))}
+        if any(v > kc for v in nb.values()) or any(kk(c, (c[0] + dx, c[1] + dy)) > kc for dx, dy in ring8):
+            continue      # (not on the middle line; nor a notch in a ragged edge)
+        # a line two squares wide (two tie side by side across it): keep the first of the two
+        if (nb[(0, -1)] < kc or nb[(0, 1)] < kc) and nb[(0, -1)] == kc and nb[(1, 0)] == kc == nb[(-1, 0)]:
+            continue
+        if (nb[(-1, 0)] < kc or nb[(1, 0)] < kc) and nb[(-1, 0)] == kc and nb[(0, 1)] == kc == nb[(0, -1)]:
+            continue
+        r = roofed(c)
+        x, y, z = c[0] * CELL + 32, c[1] * CELL + 32, walk[c]
+        if any(q[0] <= x < q[2] and q[1] <= y < q[3] for q in blocked) or any(q[0] < x < q[2] and q[1] < y < q[3] for q in banks):
+            continue
+        line.append((x, y, z, r))
+        tight = r and kc <= 2          # (a corridor or a small room; a roofed hall is spaced as the open is)
+        every = tight_every if tight else open_every
+        if (c[0] + c[1]) % every:
+            continue      # (in the open, every other square; in a corridor, every one, unless the piece's share is short)
+        g, gap = (x // 128, y // 128), 64 * every - (8 if every == 1 else 40)
+        if any((x - p[0]) ** 2 + (y - p[1]) ** 2 < gap * gap and abs(z - p[2]) < 64
+               for dx in (-1, 0, 1) for dy in (-1, 0, 1) for p in near.get((g[0] + dx, g[1] + dy), [])):
+            continue      # (where the middle spreads wide, as in a turn or a room: none closer than that)
+        kept.append((x, y, z, r))
+        near.setdefault(g, []).append((x, y, z))
+    return kept, line
+
+
+def air_points(line, boxes, step=NODE_AIR, up=AIR_UP, clear=32):
+    """Flying nodes over the open middle line (lane_cells): about `step` apart, `up` over the floor, none within `clear`
+    of a brush."""
+    kept = []
+    for (x, y, z, roofed) in line:
+        if roofed:
+            continue
+        az = z + up
+        if any((x - p[0]) ** 2 + (y - p[1]) ** 2 < (step - 14) ** 2 for p in kept):
+            continue
+        if any(b[0] - clear < x < b[3] + clear and b[1] - clear < y < b[4] + clear and b[2] - clear < az < b[5] + clear for b in boxes):
+            continue
+        kept.append((x, y, az))
+    return kept
 
 class RingPlan(Plan):
     """The ring's squares: one floor all the way round, but the concrete of its walls ends higher the further west a square
@@ -500,7 +606,12 @@ def ring(args):
         node_id[0] += 1
         if y < DIM_SOUTH_OF and all((x - a) ** 2 + (y - b) ** 2 >= DIM_APART ** 2 for a, b, _ in dim):
             dim.append((x, y, z))
-    ch.nodes(node, [(5888, 5696, 6400, 5824), (-3008, 2432, -2880, y_foot), (-5056, 4864, -4928, 5376)] + blocked)
+    def air_node(x, y, z):      # (flying nodes for scanners over the canal: Valve's, the owner, 21 November)
+        vmf.point("info_node_air", (x, y, z), {"nodeid": node_id[0], "nodeheight": "0"}, "LC ring: flying nodes")
+        node_id[0] += 1
+    from map_build import node_share      # (as many as the ring's share of the merged map allows: map_build.NODE_SHARES)
+    ch.nodes(node, [(5888, 5696, 6400, 5824), (-3008, 2432, -2880, y_foot), (-5056, 4864, -4928, 5376)] + blocked, air=air_node,
+             share=node_share("ring"), extra=len(lanes) + len(range(2632, y_foot, 96)) + 5)
     for (x, y) in lanes:
         node(x, y, F)
     node(-2944, 2496, ROAD_W)
