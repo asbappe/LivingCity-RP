@@ -43315,6 +43315,73 @@ _setcvar("lc_base_setup_time", setupWas)
 end
 BaseTallPoleTests()
 
+function Nov21_GardenPlotTests()
+    section("21 November: the walled garden's planting spots grow melons and pumpkins")
+    local G = LC.Garden
+    local runWas = LC.Running
+    LC.Running = true
+    _setcvar("lc_garden_minutes", "2")
+    local at = Vector(47000, -47000, 0)
+    local targets = {}
+    for k = 1, 8 do
+        local t = ents.Create("info_target")
+        t:SetPos(at + Vector(k * 40, (k % 2) * 30, 0)) t:SetName("lc_garden_plot_" .. k) t:Spawn()
+        targets[k] = t
+    end
+    ok(G.Ensure() == 8, "a plot on each of the map's eight spots")
+    local melon, pumpkin = G.Plots[1], G.Plots[8]
+    ok(IsValid(melon) and IsValid(pumpkin) and melon.lcPlot.crop == "melon" and pumpkin.lcPlot.crop == "pumpkin",
+        "plots 1 to 4 grow melons, 5 to 8 pumpkins")
+    ok(melon.nodraw and melon:GetNW2String("lc_label_kind", "") == "plot", "bare soil shows nothing, and is labelled when aimed at")
+    G.Ensure()
+    ok(G.Plots[1] == melon, "(set up again, the same plots stay)")
+    local farmer = newPlayer("GFarmer", "citizen")
+    farmer:SetPos(melon:GetPos() + Vector(30, 0, 0))
+    farmer.lcPropUseNext = 0
+    hook.Run("PlayerUse", farmer, melon)
+    ok(melon.lcPlot.state == "empty", "no seed packet: nothing is planted")
+    LC.GiveItem(farmer, "seeds", 2)
+    farmer.lcPropUseNext = 0
+    hook.Run("PlayerUse", farmer, melon)
+    ok(melon.lcPlot.state == "growing" and not melon.nodraw and not LC.HasItem(farmer, "seeds", 2),
+        "E with a seed packet plants it (one packet) and a sprout shows", melon.lcPlot.state)
+    ok(melon.mscale and melon.mscale < 0.5, "the sprout is small", melon.mscale)
+    ok(math.abs((melon.lcPlot.readyAt - CurTime()) - 120) < 2, "a melon ripens in lc_garden_minutes", melon.lcPlot.readyAt - CurTime())
+    -- the packet from the pockets, standing by a pumpkin plot
+    farmer:SetPos(pumpkin:GetPos() + Vector(20, 0, 0))
+    LC.InvAction(farmer, "use", "seeds")
+    ok(pumpkin.lcPlot.state == "growing" and math.abs((pumpkin.lcPlot.readyAt - CurTime()) - 180) < 2,
+        "Use the packet by a plot plants it; a pumpkin takes half as long again", pumpkin.lcPlot.state)
+    _run(65)
+    ok(melon.lcPlot.state == "growing" and melon.mscale > 0.4, "halfway, the melon has swelled", melon.mscale)
+    _run(60)
+    ok(melon.lcPlot.state == "ripe" and melon.mscale == 1, "ripe at full size", melon.lcPlot.state, melon.mscale)
+    local function veg() local n = 0 while LC.HasItem(farmer, "vegetables", n + 1) do n = n + 1 end return n end
+    local before = veg()
+    farmer:SetPos(melon:GetPos() + Vector(30, 0, 0))
+    farmer.lcPropUseNext = 0
+    hook.Run("PlayerUse", farmer, melon)
+    local after = veg()
+    ok(after - before == 3 and melon.lcPlot.state == "empty" and melon.nodraw, "picked: three lots of vegetables, and bare soil again", after - before)
+    -- Civil Protection pull up only what grows in rebel territory
+    local cop = newPlayer("GCop", "cp")
+    cop.lcPropUseNext = 0
+    hook.Run("PlayerUse", cop, pumpkin)
+    ok(pumpkin.lcPlot.state == "growing", "outside rebel territory, a unit leaves the garden alone")
+    local z = LC.AddZone(pumpkin:GetPos(), 300, "rebel", 0)
+    cop.lcPropUseNext = 0
+    hook.Run("PlayerUse", cop, pumpkin)
+    ok(pumpkin.lcPlot.state == "empty", "in rebel territory, a unit pulls it up")
+    LC.RemoveZone(z)
+    -- a map without the spots has no plots
+    for _, t in ipairs(targets) do t:Remove() end
+    ok(G.Ensure() == 0 and not IsValid(melon), "no spots on the map: no plots")
+    farmer:Remove() cop:Remove()
+    _setcvar("lc_garden_minutes", "8")
+    LC.Running = runWas
+end
+Nov21_GardenPlotTests()
+
 ----------------------------------------------------------------------
 section("Stop")
 LC.Stop(admin)

@@ -1197,7 +1197,7 @@ The plaza's top row is at the street; the rostrum at the back wall faces the str
 Mark where the game can plant (melons, pumpkins): about 8 info_targets lc_garden_plot_N on the beds, evenly spread but each a little off line and turned.
 
 - **Why:** "Make the garden beds have some sort of entity or brush that allows the gamemode to register the beds as planting spots, with about 8 evenly but slightly off kilter (not robotic AI perfect) planting spots" (20 November).
-- **How:** map_mods_b.m_garden. The game does not plant yet (TODO.md).
+- **How:** map_mods_b.m_garden. The game plants on them: sv_livingcity_garden.lua (melons on 1 to 4, pumpkins on 5 to 8).
 - **Checked by:** review
 - **Tags:** gameplay, owner
 

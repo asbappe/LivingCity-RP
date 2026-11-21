@@ -374,6 +374,14 @@ hook.Add("HUDPaint", "LivingCityRebelPropLabels", function()
     local title, sub
     if kind == "pot" then
         title, sub = PotLabel(e)
+    elseif kind == "plot" then
+        -- the walled garden's soil (sv_livingcity_garden.lua): bare, growing, or ripe
+        title, sub = PotLabel(e)
+        local crop = e:GetNW2String("lc_plot_crop", "") == "pumpkin" and "Pumpkin" or "Melon"
+        local s = e:GetNW2String("lc_pot_state", "empty")
+        if s == "empty" then title, sub = "Soil", "Plant a seed packet (E)"
+        elseif s == "ripe" then title, sub = "Ripe " .. string.lower(crop), "Pick (E)"
+        else title = crop end
     elseif kind == "cache" then
         title = "Resistance supplies"
         local n = e:GetNW2Int("lc_cache_stock", 0)
