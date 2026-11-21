@@ -5,7 +5,9 @@
  "numbers": [
   "d3_citadel_01: 733 entities, 1859 brushes, 110 static props, 29 dynamic, 2 physics; 13 AI nodes only (the player rides); 22 func_tracktrain on 46 path_tracks: two rings of 7 prisoner pods (4749 and 4549 long) that stop together, a ring of 3 pods (6858 long, 46 s a lap) and three diggers started 1, 4 and 6 s apart. The map reaches from z -14336 to 3104. Ours: no Combine machine moves on its own anywhere in our map.",
   "d3_citadel_02: 1120 entities, 3241 brushes, 387 static props; 25 AI nodes; the player's pod ride is 56 path_tracks and 24581 units, about 147 s at 100 to 250, with 13 stops that set something off (a thing to see about every 11 s); 3 container trains on one ring of 15206 (72 s a lap), 2 razor trains of 7488; 6 stalkers, 6 soldiers, 3 striders, 5 scanners, all seen from the pod.",
-  "d3_citadel_03: 1564 entities, 4877 brushes; 245 AI nodes (indoor ceilings 192 to 320 in half the rooms, up to 2815 in the shafts); 25 soldiers (5 elites), 17 of them in point_templates; 8 energy ball spawners, 7 shield walls, the confiscation field, 12 consoles that tear off the wall, 26 spark timers; materials 97% metal by area (citadel_metalwall063a and 077a)."
+  "d3_citadel_03: 1564 entities, 4877 brushes; 245 AI nodes (indoor ceilings 192 to 320 in half the rooms, up to 2815 in the shafts); 25 soldiers (5 elites), 17 of them in point_templates; 8 energy ball spawners, 7 shield walls, the confiscation field, 12 consoles that tear off the wall, 26 spark timers; materials 97% metal by area (citadel_metalwall063a and 077a).",
+  "d3_citadel_04: 2297 entities; 58 soldiers (12 elites), 37 of them in point_templates, 5 env_entity_makers; 37 assault rally and 37 assault points; 50 timers (42 for sparks); the walkway reactors in the stasis room (three pairs of energy cores at x 144 to 160, y -1464, -1728, -2104, z 6377 to 6767, each with a trigger_vphysics_motion of gravity 0 and a trigger_physics_trap); the lift wait's waves capped at 4 soldiers alive.",
+  "d3_citadel_05: 1224 entities; a ring of 7 pods (10 path_tracks, 4058 long, 7 stops), 4 more on a ring of 6931; the player's pod climbs one shaft from z -808 to 3788 and then the Citadel's height from -15328 to 10304 at up to 1000 (about 25 s); one pod carries a stalker past at 70; two crab synths walk the gunship bay 1.5 s after the pod passes; 3 stalkers on act busy hints."
  ],
  "pictures": [
   {
@@ -136,6 +138,88 @@
     "cut": 2700,
     "clip_below": 1200,
     "clip_above": 4200
+   }
+  },
+  {
+   "n": "Z7",
+   "file": "07_c04_walkway_reactors_cut.png",
+   "where": "d3_citadel_04, the stasis room with its walkway reactors, from the south-west, cut at 6620 (box -700 -3100 1000 -700; drawn from a copy without brushes reaching below 5600 or above 9000)",
+   "teaches": "The walkways cross the room as a lopsided frame: one arm runs out long to the left, another short to the right, a ring sits off the middle, and each walkway has a reactor in it (the energy cores, scale 3, at y -1464, -1728 and -2104): step in and you float, float to its middle and it kills you. Tall columns (orange) drop from it far below. Soldiers (green) stand off to one side. Nothing in it is mirrored. Ours: no Combine walkway; the reactors are being lifted as a piece by the other helper.",
+   "lessons": [
+    "valve-combine-lean",
+    "valve-forcefield"
+   ],
+   "view": {
+    "iso": "SW",
+    "box": [
+     -700,
+     -3100,
+     1000,
+     -700
+    ],
+    "cut": 6620,
+    "clip_below": 5600,
+    "clip_above": 9000
+   }
+  },
+  {
+   "n": "Z8",
+   "file": "08_c04_pod_array_hall.png",
+   "where": "d3_citadel_04, a catwalk hall past the pod arrays, eye level looking south (eye -1760 -4896 6208, yaw 270); the auto view of map_ingest.py views",
+   "teaches": "A catwalk down a hall whose walls lean in and step out in plates of different widths, cell arrays and pods (yellow and cyan boxes) hung along it, thin rods dropping from the dark overhead to the rail; the far end is a dark slot. The rail and the catwalk are the only straight things. Ours: our corridors are boxes with square walls.",
+   "lessons": [
+    "valve-combine-lean",
+    "valve-pod-racks"
+   ],
+   "view": {
+    "eye": [
+     -1760,
+     -4896,
+     6208
+    ],
+    "yaw": 270,
+    "pitch": 0
+   }
+  },
+  {
+   "n": "Z9",
+   "file": "09_c05_synth_hall.png",
+   "where": "d3_citadel_05, the hall the crab synths walk (path_gunshipbay_synths from x 9242 to 7450 along y -3074), eye level looking east (eye 8000 -3072 3352, yaw 0); the auto view of map_ingest.py views",
+   "teaches": "A long Combine hall: a sunken track down the middle, walls of upright ribs of many widths and depths, no two bays alike, a dark round mouth at the far end. The synths' walk is laid down this track: they appear as the pod passes, walk it and are removed at the far end. Ours: no hall of this scale; the ribbed wall is the Combine's rhythm without repeats.",
+   "lessons": [
+    "valve-work-shown-in-passing",
+    "valve-combine-lean"
+   ],
+   "view": {
+    "eye": [
+     8000,
+     -3072,
+     3352
+    ],
+    "yaw": 0,
+    "pitch": 0
+   }
+  },
+  {
+   "n": "Z10",
+   "file": "10_c05_gunship_bay_cut.png",
+   "where": "d3_citadel_05, the gunship bay where the player's pod climbs past (shaft at x 8400, y -5232), from the south-west, cut at 4400 (box 7300 -5800 9800 -1800; drawn from a copy without brushes reaching below 2600 or above 5200)",
+   "teaches": "The bay hangs in the shaft like a growth: plates jut out on one side only, beams leave it at angles, and bundles of pipe (orange) hang beneath it far down. The pod rail climbs straight through it. Ours: our Combine props stand on the ground; nothing of ours hangs.",
+   "lessons": [
+    "valve-combine-lean",
+    "valve-lift-diorama"
+   ],
+   "view": {
+    "iso": "SW",
+    "box": [
+     7300,
+     -5800,
+     9800,
+     -1800
+    ],
+    "cut": 4400,
+    "clip_below": 2600,
+    "clip_above": 5200
    }
   }
  ]

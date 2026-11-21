@@ -1,6 +1,6 @@
 {
 "name": "valve_citadel_core",
-"note": "draft",
+"note": "EP1 Citadel core and its machinery, part 1 of 2 (ep1_citadel_03; part 2 is valve_citadel_core_effects, same anchor): the core ball (prop_coreball 'core', model coreball.mdl, 462 across, its centre 173 over the anchor, in 'wiring'), the stalk (three combine_core_tube01, each 1338 long: one from 1192 under the anchor up into the ball, two overlapping above from 628 and 1432 over it), the platform beside it (combine_core_platform01, 125 to -x, 10 under the anchor), the crown: a ring (combine_core_ring01, 638 over) on a func_rotating that turns about the upright axis at 10 degrees a second, and four arms (combine_core_arm01) 264 out on four func_door_rotating spinners parented to it, with eight collision bits (glass and nodraw func_brush, the 4 glass ones also in 'solids' as static slabs); three portalball shields at the ball (their origins 190 to 270 from its centre); the light and the glow sprite at its centre; a func_door the ball is parented to when sealed (lifts it 144). The ring, arms and bits are spawned by a point_template through an env_entity_maker when the core wakes. Anchor: the ball's x and y at the level of the bridges round it. Nearly all props: few brushes. Read prefabs.md, 'Pieces with their wiring'.",
 "from": "ep1_citadel_03.vmf",
 "box": [
 2240.0,

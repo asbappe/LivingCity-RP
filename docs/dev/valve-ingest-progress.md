@@ -31,14 +31,19 @@ helpers' running notes and lesson proposals in its `wip/` while it runs; at the 
 
 - **EP1 Citadel doors and core (batch 6):** copy and save for future use the **massive Combine doors built of 20 to 40 brushes**,
   and the **Citadel core reactor** with its effect, animation, damage, sounds and wiring, as pieces
-  (`map_prefab.py extract`, with the logic noted in `docs/dev/prefabs.md`). Not done yet.
+  (`map_prefab.py extract`, with the logic noted in `docs/dev/prefabs.md`). **Done 21 November:** `valve_citadel_door_big`
+  (ten slats rising one after another), `valve_citadel_door_shutters` (six shutters parting), `valve_citadel_core` and
+  `valve_citadel_core_effects` (one anchor; 83 wired effects, kill zones and sounds).
 - **HL2 Citadel walkway reactors (batch 6):** the small power reactors in the middle of the walkways in
   d3_citadel_03 and 04: step in and you float (`trigger_vphysics_motion`, `SetGravityScale` 0; 9 in 03, 10 in 04),
   float to the middle and it kills you (`trigger_physics_trap`, `trigger_hurt`). Lift one whole, brushes, effects,
-  sounds and wiring, as a piece. Not done yet.
+  sounds and wiring, as a piece. **Done 21 November:** `valve_citadel_walkway_reactor` (d3_citadel_03). It floats a
+  player by taking away the gravity of the player's physics copy (no push, no gravity setting); it should work in
+  Garry's Mod (same code) but is untested: a Lua zone is the fallback.
 - **The Citadel pods that carry you (batch 6):** the ride in d3_citadel_01 and 05 and ep1_citadel_00 (the
   prisoner pod with `Inner_pod_arm` and `Inner_pod_rotator` on `func_tracktrain` along `path_track`s, 12 to 22
-  tracktrains a map). Lift the pod, its route and its wiring as a piece. Not done yet.
+  tracktrains a map). Lift the pod, its route and its wiring as a piece. **Done 21 November:** `valve_citadel_pod`
+  (pod, arm, rotator, train, seat trigger, halt-and-go logic, a route of 13 path points).
 - **Combine architecture, special attention (batch 6, the owner's words):** "pay special attention to the odd,
   unnerving, and unnatural architecture of the combine structures. they never have symmetrical architecture, it
   seems very random/odd and that's something we don't do well and the C18 map doesn't do well and I want to
