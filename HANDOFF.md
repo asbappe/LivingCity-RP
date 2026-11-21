@@ -34,8 +34,8 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 - 21 November (night). The owner sent every HL2/EP1/EP2 map source: 122 more maps measured (145 in all); another chat
   ingests them batch by batch: docs/dev/valve-ingest-progress.md (read it first). Batch 1 (City 17) done; Ravenholm
   merged (167 lessons); Nova Prospekt running. Owner-approved findings wait on TODO.md, built after all ingestion.
-- Ingestion tools: _dev/tools/map_ingest.py, valve_stats.json, VDC Saver (_dev/tools/vdc_saver/); THE GUIDE:
-  docs/dev/map-ingestion.md.
+- Ingestion tools: _dev/tools/map_ingest.py, valve_stats.json; THE GUIDE: docs/dev/map-ingestion.md. Valve's wiki is
+  saved (9,984 pages): `vdc.py --card func_door` joins it with Valve's map use and the lessons; docs/dev/vdc-topics.md.
 - Canals: the Valve table built, `lockgate` (crushes anything, open on map load, booth switch for anyone), the ring
   and first canal on the new dressing, NPC nodes with a share of the 4096 limit each; wiring follows Valve's five
   rules (map_wiring.py; map_lint kind wire).

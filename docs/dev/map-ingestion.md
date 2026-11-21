@@ -36,6 +36,9 @@ batches, what is done and next, the owner's requests on the way, and how to get 
    never sheets of everything.
 6. **Helpers never commit.** They write to the scratch folder (or the folders named in their brief); the main
    chat reviews, merges, commits and pushes (to the session's branch, and to `main` when checks pass).
+7. **A lesson about an entity checks Valve's wiki first:** `python3 _dev/tools/vdc.py --card CLASS` (what the
+   engine says it does, its bugs, keyvalues only other games have, Valve's use across the maps, the lessons that
+   already name it). Where Valve's maps and the wiki disagree, the lesson says so (`docs/dev/vdc-topics.md`).
 
 ## What one ingestion leaves behind, and where
 
@@ -240,7 +243,8 @@ nodes); **sections** (cross-sections at many places, compared with ours as sente
   Coast), Garry's Mod, Source SDK 2013 or exactly "Source"; Help: pages (about editing the wiki) are not followed; checked against 1414 real pages (21 November): game icon templates like {{tf2}} are NOT a signal
   (generic pages such as "Your First Map" carry only other games' icons). "Remove other games" cleans what was saved
   before: by name at once, then by asking the wiki for the categories of the rest. The zip's index.tsv has each
-  page's categories. Translations are also the older prefix kind ("Ko/Making a Mod"). "Download zip" gives `vdc_wiki.zip`: `vdc/wikitext/<Namespace>/<Title>.wiki`,
+  page's categories. Translations are also the older prefix kind ("Ko/Making a Mod"). The owner's save (10,220
+  pages, 21 November) is in the repo: `python3 _dev/tools/vdc.py NAME` (`docs/dev/vdc-reference.md`). "Download zip" gives `vdc_wiki.zip`: `vdc/wikitext/<Namespace>/<Title>.wiki`,
   `vdc/text/...txt` for visited pages, `vdc/index.tsv`. Load it in Chrome or Chromium: `chrome://extensions`,
   Developer mode, Load unpacked, pick the folder. `node _dev/tools/vdc_saver_check.js` checks it against a fake wiki
   (ends `VDC SAVER CHECK PASS`).
