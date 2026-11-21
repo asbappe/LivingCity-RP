@@ -2500,24 +2500,31 @@ def m_aqueduct(m, opt):
 # ---------------------------------------------------------------------------
 
 def m_pipes(m, opt):
-    """The pipes. A tangle of big pipes fills a stretch of the canal: the city's own concrete pipe sections (113 long,
-    87 across, hollow), laid end to end, every free end shut by a bolted steel plate.
-    On the floor: one pipe lies across the whole floor at u 480 with 52 under it, and the fat main along the left side
-    has 64 under it: everyone on the floor ducks once. Past it two pipes on the floor (87 high, too high to hop) make
-    a chicane: the first reaches from under the main to v -30 (go round its end on the right), the second from the
-    right wall to v -31 (go round on the left, by the main). A run of the city's pipes crosses high overhead.
-    Over the top: steps (u 96 to 324, by the left side) up to a valve platform 152 over the floor, with a valve and a
-    gas meter; from it a plank 32 wide with the city's handrail runs along the top of the main (u 428 to 878); a
-    grating bridge, railed, crosses the canal there to a second fat pipe on the right, and from its end a ramp of
-    planks (144 down over 244) comes back to the floor at u 1192. That is also the only way for anyone who cannot duck.
-    A steam leak on the main (pale, small, with a hiss), risers of the city's pipe up the walls. The pipes are cover
-    from end to end, and the plank is a firing step over all of it (lc_pipes_top).
-    Named for the game: lc_pipes_top (an info_target on the main's plank).
-    Left as brushes: the steel plates shutting the pipes' ends (no cap model fits a pipe 87 across), the saddles and
-    posts they rest on, the platform's deck and posts, the steps, the bridge's grating and girders, the planks.
-    Unchecked: the sound ambient/gas/steam_loop1.wav; that 52 and 64 of headroom pass a crouched player easily (and
-    that the hollow pipes, open inside, do not tempt anyone to crawl along them into a plate); that the 87-high pipes
-    cannot be hopped; what pipeset32d_512_001a looks like overhead."""
+    """The pipes. A tangle of the city's service mains fills a stretch of the canal: steel pipes 87 across (solid,
+    eight-sided, in the owner's own pipe steel), a flange every 128, every end shut by a bolted plate, stencilled
+    numbers on their sides.
+    On the floor: one main lies across the whole floor at u 480 with 54 under it, and the fat main along the left side
+    has 66 under it: everyone on the floor ducks once. Past it two mains on the floor (86 high, too high to hop) make a
+    chicane: the first reaches from under the main to v -30 (go round its end on the right), the second from the right
+    wall to v -31 (go round on the left, by the main). A run of the city's pipes crosses high overhead.
+    Over the top: a steel service stair (grating treads on two stringers, the city's rail on its open side; u 96 to
+    324, by the left side) up to a valve platform 152 over the floor, with a valve, a gas meter and a lamp; from it a
+    plank 32 wide with the city's handrail runs along the top of the main (u 428 to 878); a grating bridge, railed,
+    crosses the canal there to a second fat main on the right, and from its end a ramp of planks (144 down over 244)
+    comes back to the floor at u 1192. That is also the only way for anyone who cannot duck.
+    Two steam leaks on the main: a pale one with a hiss, and one at a joint by the bridge (lc_pipes_leak) that the
+    button by the platform's valve shuts and opens again (lc_pipes_valve). Risers of the city's pipe up the walls, each
+    with a caged lamp. The mains are cover from end to end, and the plank is a firing step over all of it
+    (lc_pipes_top). It hums like a pump room (d1_canals.waterpuzzleroom).
+    Named for the game: lc_pipes_top (an info_target on the main's plank), lc_pipes_leak (an env_steam: TurnOn,
+    TurnOff, Toggle; it starts on), lc_pipes_valve (a func_button that already works: it toggles the leak).
+    Left as brushes: the mains, their flanges and end plates (no pipe model of the game is 87 across), the saddles and
+    posts they rest on, the platform's deck and posts, the stair's treads and stringers, the bridge's grating and
+    girders, the planks.
+    Unchecked: the sound ambient/gas/steam_loop1.wav; that 54 and 66 of headroom pass a crouched player easily; that
+    the 86-high mains cannot be hopped; what pipeset32d_512_001a looks like overhead; where handrail04_doublerise's
+    posts meet the treads; the button's model is Episode Two's (the shared helper's choice). The leak does no harm:
+    the game can add a hurt to it if it wants the valve to matter."""
     b = m.b
     pm, steel, wood = MAT["bars"], HULL, MM["wood"]
     top = F + 152
@@ -2532,7 +2539,7 @@ def m_pipes(m, opt):
         ax = "x" if axis == "u" else "y"
         plates.append(prism(octagon(at, z, 42), ax, a, b_, main))
         for f in range(a + 64, b_ - 32, 128):
-            plates.append(prism(octagon(at, z, 48), ax, f, f + 6, MAT["bars"]))
+            plates.append(prism(octagon(at, z, 46), ax, f, f + 6, MAT["bars"]))
         mid = (a + b_) // 2 + 20
         m.grime("number", mid if axis == "u" else at - 42, at - 42 if axis == "u" else mid, z, a)
         return b_
@@ -2546,7 +2553,7 @@ def m_pipes(m, opt):
     for i in range(10):
         ua_, ub_ = 96 + 228 * i // 10, 96 + 228 * (i + 1) // 10
         z = F + 152 * (i + 1) // 10
-        treads.append((ua_, 76, z - 4, ub_ + 2, 124, z))
+        treads.append((ua_, 76, z - 4, ub_ + 2 if i < 9 else ub_, 124, z))
     m.det(treads, "metal/metalgrate013a")
     m.shapes([para((96, 72, F - 20), (228, 0, 152), (0, 4, 0), (0, 0, 22), MAT["bars"]), para((96, 124, F - 20), (228, 0, 152), (0, 4, 0), (0, 0, 22), MAT["bars"])])
     tilted(m, "prop_static", M_ + "props_c17/handrail04_doublerise.mdl", 210, 71, F + 112, 270)          # the city's stair rail on its open side
@@ -2571,8 +2578,8 @@ def m_pipes(m, opt):
     for u in (833, 879):
         for c in (-64, 64):
             m.static(M_ + "props_c17/handrail04_long.mdl", u, c, 0, top)
-    e = run("u", -136, F + 108, 832, 1, "b")                                       # the second fat pipe
-    plate("u", -136, F + 108, 832, -1)
+    e = run("u", -136, F + 108, 831, 1, "b")                                       # the second fat pipe
+    plate("u", -136, F + 108, 831, -1)
     plate("u", -136, F + 108, e, 1)
     m.det([(832, -152, top, 944, -120, top + 4)], wood)
     m.det([(880, -176, F, 904, -96, F + 65)], MAT["beam"])
@@ -2582,7 +2589,7 @@ def m_pipes(m, opt):
     m.target("lc_pipes_top", 660, 126, top + 12, 0)
     # --- on the floor: the pipe to duck under, the chicane's two ---
     e = run("v", 480, F + 96, -256, 3)
-    plate("v", 480, F + 96, e, -1)
+    plate("v", 480, F + 96, e, 1)
     m.det([(460, -200, F, 500, -176, F + 54)], MAT["beam"])
     e = run("v", 640, F + 44, -30, 1, "c")
     plate("v", 640, F + 44, -30, -1)
@@ -2607,7 +2614,6 @@ def m_pipes(m, opt):
     m.point("env_steam", 812, 84, F + 112, {"targetname": "lc_pipes_leak", "InitialState": "1", "type": "0", "SpreadSpeed": "15", "Speed": "110", "StartSize": "10",
                                             "EndSize": "30", "Rate": "30", "rendercolor": "225 225 225", "JetLength": "90", "renderamt": "200",
                                             "angles": "0 %d 0" % m.fr.yaw(270)})
-    m.b.names.append(("lc_pipes_leak", "env_steam", m.tag))
     m.button("lc_pipes_valve", 392, 183, top + 30, 270, [("lc_pipes_leak", "Toggle", "", 0)])
     m.static(M_ + "props_pipes/valvewheel001.mdl", 812, 168, 90, F + 108)                 # the joint's valve wheel
     for (u, sd) in ((200, 1), (640, 1), (760, -1), (1010, -1)):                            # caged lamps on the risers

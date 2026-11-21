@@ -5,6 +5,8 @@ Living City: canal modules, set D (the firing wall, the substation, the breach)
 Run them through map_build.py; how a module is written: docs/dev/map-modules.md.
 """
 
+import math
+
 from map_build import CELL, GATE_HIGH, MAT, octagon, prism
 from map_modules import F, TRIM, MM, SCAPES, chain_link
 
@@ -340,40 +342,73 @@ def m_tunnel(m, opt):
 
 
 def m_wreck(m, opt):
-    """The wreck: a Combine dropship's troop container has come down in the canal and lies on its belly: Episode One's
-    own wrecked container (combine_dropship_container_static, 415 long, hollow: its collision is the hull's own), a
-    dim red glow still on inside. Earth thrown up round its nose, sparks, thin smoke, its cargo scattered down the
-    canal. A thing to race for: the Combine to recover it, the Resistance to strip it.
-    Named for the game: lc_wreck_cache (inside, at its middle), lc_wreck_beacon (the red lamp's glow: HideSprite),
-    lc_wreck_spark (StopSpark).
-    Left as brushes: nothing (the earth round its nose is the ground's own bumps).
-    Unchecked: env_spark, env_smokestack. The container is Episode One's (players need Episode One's content, as for
-    every Episode One model); whether its door end is open and players can get in, and which end is its nose (it is
-    laid with its long side along the canal; its size is read, its shape is not)."""
+    """The wreck: a Combine dropship's troop container has come down in the canal: Episode One's own wrecked container
+    (combine_dropship_container_static, 415 long, hollow: its collision is the hull's own), lying askew as a thing that
+    fell from the sky lies: turned 20 degrees across the canal, nose down a few degrees into a ring of thrown earth,
+    its tail toward the left bank, a dim red glow still on inside and a red beacon pulsing slowly on its back. Behind it
+    the gouge it cut: slabs of the canal's floor lifted and tilted, scorch and debris along its track, a torn-off piece
+    of its hull. Round it the crash's leftovers: two dead Combine soldiers, a pulse rifle by one, the Combine's supply
+    crates and an ammunition crate spilled from it, a small fire still burning, sparks, thin smoke. A thing to race
+    for: the Combine to recover it, the Resistance to strip it.
+    Named for the game: lc_wreck_cache (inside, at its middle), lc_wreck_beacon (the beacon's pulsing glow on its back:
+    HideSprite, ShowSprite), lc_wreck_spark (StopSpark).
+    Left as brushes: the lifted slabs of floor (the ground itself; the earth round its nose is the ground's own bumps).
+    Unchecked: env_spark, env_smokestack, env_fire, models/combine_soldier.mdl as a ragdoll. The container is Episode
+    One's (players need Episode One's content, as for every Episode One model); whether its door end is open and
+    players can get in, and which end is its nose (its size is read, its shape is not: the nose is taken as its +x,
+    171 before its origin); container_chunk04 as a torn-off piece."""
+    from map_mods_b import fire
     b = m.b
     m.open(0, -256, 1024, 256)
-    a, c = 300, 715                                  # its two ends along the canal (the model's box: 244 behind its origin, 171 before)
-    m.static("models/combine_dropship_container_static.mdl", a + 244, -3, 0, z=F)
-    cx, cy = m.fr.pt(c + 10, 0)
+    ou, ov, yaw = 520, -10, 20                     # the container's origin (244 behind it its tail, 171 before it its nose), turned 20 degrees
+    t = math.radians(yaw)
+    nu, nv = int(ou + 171 * math.cos(t)), int(ov + 171 * math.sin(t))
+    tu, tv = int(ou - 244 * math.cos(t)), int(ov - 244 * math.sin(t))
+    m.prop("prop_static", "models/combine_dropship_container_static.mdl", ou, ov, yaw, F - 6, {"angles": "4 %d 0" % m.fr.yaw(yaw), "solid": "6",
+           "disableshadows": "0", "screenspacefade": "0", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1"})
+    cx, cy = m.fr.pt(nu + 20, nv)
     b.bumps.append(lambda x, y: 46 * max(0.0, 1 - abs(((x - cx) ** 2 + (y - cy) ** 2) ** 0.5 - 110) / 80.0))        # a ring of thrown earth round the nose
-    m.point("env_sprite", 500, 0, F + 70, {"targetname": "lc_wreck_beacon", "model": "sprites/light_glow03.vmt", "rendermode": "9", "renderamt": "200",
-                                              "rendercolor": "255 40 30", "scale": "0.25", "framerate": "10.0", "GlowProxySize": "2.0", "HDRColorScale": "1.0",
-                                              "renderfx": "0", "spawnflags": "1"}, m.lv)
-    m.light(470, 0, F + 60, "255 60 40 22")
-    m.spark(c + 2, 30, F + 60, name="lc_wreck_spark")
-    m.smoke(c + 20, -10, F + 90, colour="50 50 55", size=12, length=240, rate=7)
-    m.target("lc_wreck_cache", 520, 0, F + 10, 180)
-    for u, v, yaw in ((120, 100, 30), (200, -96, 80), (840, 110, 10), (900, -60, 55), (780, -104, 0)):       # (on the floor, off the banks)
-        m.loose("models/props_junk/wood_crate001a.mdl", u, v, yaw)
-    m.loose("models/props_debris/concrete_chunk01a.mdl", c + 90, 110, 40, z=F + 30)       # (loose: they settle on the thrown earth)
-    m.loose("models/props_debris/concrete_chunk02a.mdl", c + 110, -100, 110, z=F + 30)
-    m.decal("decals/decalstain002a", 500, 150, F + 1)
-    m.blocked(a - 20, -70, c + 150, 70)
-    m.taken(a - 20, -70, F, c + 20, 70, F + 220)
-    for u, v in ((240, 0), (500, 160), (500, -160), (860, 0)):
+    m.point("env_sprite", ou, ov, F + 150, {"targetname": "lc_wreck_beacon", "model": "sprites/light_glow03.vmt", "rendermode": "9", "renderamt": "220",
+                                            "rendercolor": "255 40 30", "scale": "0.4", "framerate": "10.0", "GlowProxySize": "2.0", "HDRColorScale": "1.0",
+                                            "renderfx": "1", "spawnflags": "1"}, m.lv)
+    m.glow(ou - 40, ov, F + 60, "255 40 30", 0.2)
+    m.light(ou - 50, ov, F + 60, "255 60 40 22")
+    m.spark(nu, nv + 30, F + 60, name="lc_wreck_spark")
+    m.smoke(nu + 10, nv - 10, F + 90, colour="50 50 55", size=12, length=240, rate=7)
+    m.target("lc_wreck_cache", ou - 30, ov - 10, F + 10, 180 + yaw)
+    # the gouge behind it: slabs of the floor lifted and tilted, scorch and debris along its track
+    slab = MAT["canal_floor"]
+    lifted = []
+    for k, (du, w, rise) in enumerate(((70, 56, 18), (150, 48, 26), (230, 64, 12))):
+        u0, v0 = tu - du, int(tv - du * math.tan(t))
+        lifted.append(prism([(u0, F - 4), (u0 + w, F + rise - 4), (u0 + w, F + rise + 4), (u0, F + 4)], "y", v0 - 28, v0 + 28 + 8 * k, slab))
+        m.grime("burn" if k % 2 else "debris", u0 + w // 2, v0 + 44, F + 1, k)
+    m.shapes(lifted)
+    m.grime("burn", tu - 20, tv - 30, F + 1, 7)
+    m.grime("burn", nu + 60, nv + 60, F + 1, 8)
+    m.static("models/container_chunk04.mdl", tu - 120, tv + 120, 140, z=F)               # (a piece of its hull, torn off as it hit)
+    # the crash's leftovers: the dead, a rifle, its cargo spilled, a fire still burning
+    m.body("models/combine_soldier.mdl", ou + 40, ov + 120, 200)
+    m.body("models/combine_soldier.mdl", tu - 40, tv - 70, 30)
+    m.point("prop_dynamic", ou + 70, ov + 140, F + 4, {"model": "models/weapons/w_irifle.mdl", "angles": "0 %d 90" % m.fr.yaw(60), "solid": "0", "skin": "0",
+                                                       "disableshadows": "1", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1", "StartDisabled": "0",
+                                                       "renderamt": "255", "rendercolor": "255 255 255"}, m.pv)
+    m.dynamic("models/items/ammocrate_ar2.mdl", nu + 60, nv - 110, 70)
+    for u, v, yaw2 in ((tu - 30, tv + 60, 30), (ou + 120, ov - 120, 80), (nu + 100, nv + 20, 10)):
+        m.loose("models/items/item_item_crate.mdl", u, v, yaw2)
+    fire(m, nu + 50, nv + 90, F + 2, size=20, light="255 150 70 60")
+    for u, v, yaw2 in ((120, 100, 30), (880, -60, 55)):                                 # (on the floor, off the banks)
+        m.loose("models/props_junk/wood_crate001a.mdl", u, v, yaw2)
+    m.loose("models/props_debris/concrete_chunk01a.mdl", nu + 90, nv + 110, 40, z=F + 30)       # (loose: they settle on the thrown earth)
+    m.loose("models/props_debris/concrete_chunk02a.mdl", nu + 110, nv - 100, 110, z=F + 30)
+    m.decal("decals/decalstain002a", ou, ov + 150, F + 1)
+    m.soundscape(SCAPES["combine"], ou, 0, F, radius=700)
+    m.blocked(tu - 40, -170, nu + 150, 150)
+    m.taken(tu - 40, -170, F, nu + 40, 150, F + 220)
+    for u, v in ((140, 0), (520, 190), (520, -200), (900, 0)):
         m.lane(u, v)
     m.view(60, 80, F, 350, 0, "coming up to it")
-    m.view(a - 120, 0, F, 0, -4, "its tail")
+    m.view(140, -60, F, 10, -4, "its tail, the gouge behind it")
     m.view(900, 120, F, 200, 0, "its nose")
 
 

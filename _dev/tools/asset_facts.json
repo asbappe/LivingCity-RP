@@ -195,6 +195,132 @@
 "static": true,
 "v": 2
 },
+"models/combine_soldier.mdl": {
+"bbox": [
+-13.0,
+-13.0,
+0.0,
+13.0,
+13.0,
+72.0
+],
+"built_static": false,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": true,
+"static": false,
+"v": 2
+},
+"models/combine_super_soldier.mdl": {
+"bbox": [
+-13.0,
+-13.0,
+0.0,
+13.0,
+13.0,
+72.0
+],
+"built_static": false,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": true,
+"static": false,
+"v": 2
+},
+"models/container_chunk01.mdl": {
+"bbox": [
+-115.3,
+-57.4,
+-27.9,
+0.0,
+57.4,
+52.3
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": true,
+"prop_data": true,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/container_chunk02.mdl": {
+"bbox": [
+0.0,
+-30.5,
+0.0,
+53.4,
+0.2,
+68.5
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": true,
+"prop_data": true,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/container_chunk03.mdl": {
+"bbox": [
+-66.2,
+-50.9,
+-43.6,
+32.5,
+0.0,
+68.6
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": true,
+"prop_data": true,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/container_chunk04.mdl": {
+"bbox": [
+0.0,
+0.0,
+0.0,
+103.6,
+51.9,
+55.1
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": true,
+"prop_data": true,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/container_chunk05.mdl": {
+"bbox": [
+0.0,
+-25.9,
+-24.4,
+105.4,
+25.9,
+40.3
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": true,
+"prop_data": true,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
 "models/cranes/crane_body_lod.mdl": {
 "bbox": [
 -84.9,
@@ -1527,6 +1653,24 @@
 "prop_data": true,
 "ragdoll": false,
 "static": false,
+"v": 2
+},
+"models/props_c17/computer01_keyboard.mdl": {
+"bbox": [
+-4.1,
+-15.1,
+-0.3,
+4.1,
+11.5,
+3.4
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": true,
+"prop_data": true,
+"ragdoll": false,
+"static": true,
 "v": 2
 },
 "models/props_c17/concrete_barrier001a.mdl": {
