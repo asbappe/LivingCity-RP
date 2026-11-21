@@ -52,6 +52,9 @@ class Channel:
         self.vmf, self.plan, self.cells = vmf, plan, plan.cells
         self.floor_z, self.rim_z, self.vis = floor_z, rim_z, vis
         self.stats = {"banks": 0, "fills": 0, "ribs": 0, "stubs": 0, "mud": 0, "nodes": 0}
+        # (the dished floor, map_modules.dish_plan: squares whose concrete is lowered to dish_floor, how far the mud
+        #  sags at each corner of the grid over them, and the mud's height wherever it was laid over them)
+        self.dished, self.dish, self.surface, self.dish_floor = set(), {}, {}, floor_z
 
     def kind(self, c):
         spec = self.cells.get(c)
@@ -69,19 +72,28 @@ class Channel:
                     best = min(best, max(cx - x, 0, x - (cx + CELL)) + max(cy - y, 0, y - (cy + CELL)))
         return best
 
-    def dress(self, no_bank, taken):
+    def dress(self, no_bank, taken, outfalls=False, upright=(), avoid=()):
         """Banks along every wall (with a quarter pyramid where a wall's corner sticks out), a lip along the walls' tops,
         a rib every 512, a drain stub between ribs. no_bank: rectangles the banks stay out of. taken: boxes already on
-        the walls: nothing is put within 24 units of them (and what is put is added to them)."""
+        the walls: nothing is put within 24 units of them (and what is put is added to them).
+        For the canal modules (map_modules.finish, the owner's Valve canal, 21 November): upright: rectangles where the
+        walls stand upright, with no bank, but keep their lip, ribs and drains (Valve's walls; the wide canal). outfalls:
+        Valve's drain outfalls in place of the small stubs: a hole 128 across centred 140 up, in pairs 384 apart either
+        side of every other rib (a concrete pipe's mouth out through a bank; flush in an upright wall), their rings
+        and stains put on by whoever dresses them further (map_modules.dress_canal_walls). avoid: more boxes (the
+        props on the walls) that only the outfalls keep clear of."""
         self.made = {}
         vmf, cells, kind, fz, rz = self.vmf, self.cells, self.kind, self.floor_z, self.rim_z
 
         def clear(x1, y1, x2, y2):
             return not any(x1 < r[2] and x2 > r[0] and y1 < r[3] and y2 > r[1] for r in no_bank)
 
-        def fits(box, gap=24):
+        def sloped(x1, y1, x2, y2):
+            return clear(x1, y1, x2, y2) and not any(x1 < r[2] and x2 > r[0] and y1 < r[3] and y2 > r[1] for r in upright)
+
+        def fits(box, gap=24, more=()):
             return not any(box[0] < t[3] + gap and box[3] > t[0] - gap and box[1] < t[4] + gap and box[4] > t[1] - gap
-                           and box[2] < t[5] + gap and box[5] > t[2] - gap for t in taken)
+                           and box[2] < t[5] + gap and box[5] > t[2] - gap for t in list(taken) + list(more))
         runs = {}
         for (i, j) in list(cells):
             if kind((i, j)) != "floor":
@@ -91,14 +103,15 @@ class Channel:
                 if kind((i + di, j + dj)) == "wall":
                     solid = cells.get((i + di, j + dj), ("solid",))[0] == "solid"
                     edge = (a, key[1] - 8, a + CELL, key[1] + 8) if key[0] == "x" else (key[1] - 8, a, key[1] + 8, a + CELL)
-                    runs.setdefault(key, []).append((a, solid, clear(*edge)))
+                    runs.setdefault(key, []).append((a, solid, clear(*edge), sloped(*edge)))
         banks, trims = [], []
         for (axis, line, side), parts in sorted(runs.items()):
             parts.sort()
-            for want, out in ((lambda p: p[2], banks), (lambda p: p[1] and p[2], trims)):
+            for want, out in ((lambda p: p[3], banks), (lambda p: p[1] and p[2], trims)):
                 start = prev = None
-                for a, solid, free in parts + [(None, False, False)]:
-                    ok = a is not None and want((a, solid, free))
+                for part in parts + [(None, False, False, False)]:
+                    a = part[0]
+                    ok = a is not None and want(part)
                     if ok and start is not None and a == prev + CELL:
                         prev = a
                         continue
@@ -106,19 +119,24 @@ class Channel:
                         out.append((axis, line, side, start, prev + CELL))
                     start = prev = a if ok else None
         m, shapes, boxes = MAT["canal_wall"], [], []
+        self.made["banks"], self.made["walls"] = list(banks), list(trims)      # (for whoever dresses them further)
+        rects = self.made.setdefault("bank_rects", [])      # (where the banks stand, seen from above)
         for (axis, line, side, a, b) in banks:
             shapes.append(prism([(line, fz), (line + side * BANK, fz), (line, fz + BANK)], axis, a, b, m))
+            lo, hi = min(line, line + side * BANK), max(line, line + side * BANK)
+            rects.append((a, lo, b, hi) if axis == "x" else (lo, a, hi, b))
         self.stats["banks"] += len(banks)
         for (i, j) in list(cells):
             for (dx, dy) in ((1, 1), (1, -1), (-1, 1), (-1, -1)):
                 if kind((i, j)) == "wall" and kind((i + dx, j)) == "floor" and kind((i, j + dy)) == "floor" and kind((i + dx, j + dy)) == "floor":
                     vx, vy = (i + (1 if dx > 0 else 0)) * CELL, (j + (1 if dy > 0 else 0)) * CELL
-                    if not (clear(vx - 8, vy - 8, vx + 8, vy + 8) and clear(min(vx + dx * 8, vx + dx * 72), vy - 8, max(vx + dx * 8, vx + dx * 72), vy + 8)
-                            and clear(vx - 8, min(vy + dy * 8, vy + dy * 72), vx + 8, max(vy + dy * 8, vy + dy * 72))):
+                    if not (sloped(vx - 8, vy - 8, vx + 8, vy + 8) and sloped(min(vx + dx * 8, vx + dx * 72), vy - 8, max(vx + dx * 8, vx + dx * 72), vy + 8)
+                            and sloped(vx - 8, min(vy + dy * 8, vy + dy * 72), vx + 8, max(vy + dy * 8, vy + dy * 72))):
                         continue
                     v0, apex = (vx, vy, fz), (vx, vy, fz + BANK)
                     px, py, pd = (vx + dx * BANK, vy, fz), (vx, vy + dy * BANK, fz), (vx + dx * BANK, vy + dy * BANK, fz)
                     shapes.append([([v0, px, pd, py], m), ([v0, px, apex], m), ([v0, py, apex], m), ([apex, px, pd], m), ([apex, py, pd], m)])
+                    rects.append((min(vx, vx + dx * BANK), min(vy, vy + dy * BANK), max(vx, vx + dx * BANK), max(vy, vy + dy * BANK)))
                     self.stats["fills"] += 1
 
         def along(axis, a, b, lo, hi, z1, z2):
@@ -133,7 +151,9 @@ class Channel:
                     taken.append(rib)
                     self.stats["ribs"] += 1
                     self.made.setdefault("ribs", []).append((axis, line, side, at))      # (for whoever dresses them further)
-        for (axis, line, side, a, b) in trims:
+        if outfalls:
+            self.outfalls(trims, banks, along, fits, taken, avoid, shapes)
+        for (axis, line, side, a, b) in ([] if outfalls else trims):
             for at in range(a + 512, b - 128, 1024):
                 z = fz + 176
                 stub = along(axis, at - 24, at + 24, min(line, line + side * 40), max(line, line + side * 40), z - 24, z + 24)
@@ -147,6 +167,46 @@ class Channel:
             vmf.detail_shapes(shapes, self.vis + ": banks, pipes and trim")
         if boxes:
             vmf.detail(boxes, MAT["beam"], vis=self.vis + ": banks, pipes and trim")
+
+    def outfalls(self, trims, banks, along, fits, taken, avoid, shapes):
+        """Valve's drain outfalls (Route Kanal: canal_cap001 rings 154 across round holes 128 across, centred 139 over
+        the floor, in groups about 384 apart): a pair either side of every other rib, now and then one alone or none
+        (the same every build). Through a bank: a concrete pipe 128 across whose mouth stands 80 out of the wall, its
+        foot in the slope; in an upright wall: a dark hole flush with the face. Each goes to made["outfalls"] as
+        (axis, line, side, where along, centre height, how far out its mouth is)."""
+        import random as _r
+        fz = self.floor_z
+        sloping = {}
+        for (axis, line, side, a, b) in banks:
+            sloping.setdefault((axis, line, side), []).append((a, b))
+        z = fz + 140
+        for (axis, line, side, a, b) in trims:
+            spans = sloping.get((axis, line, side), [])
+            for at in range(a + 256, b - 128, 512):      # (the ribs' places)
+                if (at // 512 + (side > 0)) % 2 == 0:
+                    continue      # (every other rib; the walls facing each other take turns)
+                r = _r.Random(at * 7919 + line * 104729 + side * 13).random()
+                for d in (-192, 192) if r < 0.65 else (-192,) if r < 0.8 else (192,) if r < 0.9 else ():
+                    p = at + d
+                    if p - 80 < a + 16 or p + 80 > b - 16:
+                        continue
+                    if any(s <= p - 96 and p + 96 <= e for s, e in spans):
+                        out = 80      # (out through the bank)
+                    elif not any(p - 96 < e and p + 96 > s for s, e in spans):
+                        out = 0       # (an upright wall)
+                    else:
+                        continue      # (where a bank ends)
+                    ring = along(axis, p - 80, p + 80, min(line, line + side * (out + 22)), max(line, line + side * (out + 22)), z - 80, z + 80)
+                    if not fits(ring, more=avoid):
+                        continue
+                    taken.append(ring)
+                    across = "y" if axis == "x" else "x"
+                    if out:
+                        shapes.append(prism(octagon(p, z, 64), across, min(line, line + side * out), max(line, line + side * out), MAT["beam"], MAT["black"]))
+                    else:
+                        shapes.append(prism(octagon(p, z, 68), across, min(line, line + side * 2), max(line, line + side * 2), MAT["black"]))
+                    self.made.setdefault("outfalls", []).append((axis, line, side, p, z, out))
+                    self.stats["stubs"] += 1
 
     def pipes(self, axis, at, a, b, taken):
         """A big pipe and a small one across the canal at `at` (axis: the way the canal runs there), on saddles at each wall (a, b)."""
@@ -165,11 +225,13 @@ class Channel:
         """Mud and silt: a second, displaced skin over the floor; mud where it rises above the concrete.
         bump(x, y): extra height at a place (a heap), added everywhere, the banks' feet too."""
         cells, fz = self.cells, self.floor_z
+        dished, dish = self.dished, self.dish
         for (bi, bj) in sorted(set((i // 4, j // 4) for (i, j) in cells if self.kind((i, j)) in ("floor", "gap"))):
             x0, y0 = bi * 256, bj * 256
             if any(x0 < r[2] and x0 + 256 > r[0] and y0 < r[3] and y0 + 256 > r[1] for r in skip):
                 continue
             grid, shown = {}, False
+            sags = any((bi * 4 + a, bj * 4 + c) in dished for a in range(4) for c in range(4))
             for i in range(5):
                 for j in range(5):
                     x, y = x0 + j * CELL, y0 + i * CELL
@@ -180,11 +242,17 @@ class Channel:
                         h = -7 + 17 * noise(x / 170.0, y / 170.0, seed) + 9 * noise(x / 60.0, y / 60.0, seed + 1) + (9 if d == BANK else 0)
                     if bump:
                         h += bump(x, y)
-                    shown = shown or h > 0
+                    if (x, y) in dish:      # (over a dished square: the mud is the floor, sagging to the middle)
+                        h = -dish[(x, y)] + max(h, 0.0)
+                    elif sags and any((x // CELL - a, y // CELL - c) in dished for a in (0, 1) for c in (0, 1)):
+                        h = max(h, 1.0)     # (at the edge of the dish: over the lowered concrete's edge)
+                    shown = shown or h > 0 or sags
                     grid[(i, j)] = (fz + h, 128 + 127 * noise(x / 110.0, y / 110.0, seed + 2))
+                    if sags:
+                        self.surface[(x, y)] = fz + h
             if not shown:
                 continue
-            self.vmf.world_box((x0, y0, fz, x0 + 256, y0 + 256, fz + 8), MAT["nodraw"], top=MAT["mud"], vis=self.vis + ": mud",
+            self.vmf.world_box((x0, y0, self.dish_floor if sags else fz, x0 + 256, y0 + 256, fz + 8), MAT["nodraw"], top=MAT["mud"], vis=self.vis + ": mud",
                                disp={"top": (2, lambda i, j, g=grid, x0=x0, y0=y0: (x0 + j * CELL, y0 + i * CELL, g[(i, j)][0]), lambda i, j, g=grid: g[(i, j)][1])})
             self.stats["mud"] += 1
 
@@ -197,7 +265,7 @@ class Channel:
                 continue
             if self.kind((i, j)) == "floor" and self.wall_near(x, y) < BANK + 16:
                 continue
-            node(x, y, spec[1])
+            node(x, y, self.floor_z if (i, j) in self.dished else spec[1])      # (over the dish: above the mud)
             self.stats["nodes"] += 1
 
 
