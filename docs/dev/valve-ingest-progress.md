@@ -95,7 +95,8 @@ and NPCs, then its pictures; then batch 6 (the Citadel, with the owner's four pi
   design in the woods; the mines and the antlion nests and tunnels, for our own cave and forest; the White Forest
   base for our own bunker map (`map_forest.py`, `lc_forest_bunker.vmf`). **Lift the core missile silo** (its brushes
   and rooms, minus the missile) as a piece, to be added to our existing bunker. The EP2 props helper was told
-  (its notes get a section for each); the silo is lifted with batch 7's pieces.
+  (its notes get a section for each). **Silo lifted 21 November:** `valve_ep2_silo` (one piece, no rocket); what
+  joining it to the bunker takes, and the question of where it goes, are on TODO.md.
 
 - **The Combine generator (the owner, 21 November: "build it next"):** right after batch 6 closes, build
   `_dev/tools/map_combine.py` as planned in TODO.md and `_dev/reference/valve_citadel/` (`notes/architecture_notes.md`, `arch_scripts/`),
