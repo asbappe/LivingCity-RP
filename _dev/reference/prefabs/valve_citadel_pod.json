@@ -1,0 +1,1843 @@
+{
+"name": "valve_citadel_pod",
+"note": "draft",
+"from": "d3_citadel_01.vmf",
+"box": [
+10200.0,
+4530.0,
+-1800.0,
+10340.0,
+4600.0,
+-1640.0
+],
+"anchor": [
+10299.0,
+4578.0,
+-1792.0
+],
+"size": [
+140.0,
+70.0,
+160.0
+],
+"solids": [],
+"points": [
+{
+"classname": "prop_dynamic",
+"origin": [
+-5.0,
+-9.0,
+117.0
+],
+"keys": {
+"classname": "prop_dynamic",
+"angles": "0 270 0",
+"disableshadows": "1",
+"fademindist": "-1",
+"fadescale": "1",
+"MaxAnimTime": "10",
+"MinAnimTime": "5",
+"model": "models/vehicles/Inner_pod_arm.mdl",
+"parentname": "playerpod4_train",
+"renderamt": "255",
+"rendercolor": "255 255 255",
+"solid": "0"
+}
+},
+{
+"classname": "prop_dynamic",
+"origin": [
+-5.0,
+-9.0,
+117.08999999999992
+],
+"keys": {
+"classname": "prop_dynamic",
+"angles": "0 270 0",
+"fademindist": "-1",
+"fadescale": "1",
+"MaxAnimTime": "10",
+"MinAnimTime": "5",
+"model": "models/vehicles/Inner_pod_rotator.mdl",
+"parentname": "playerpod4_rotator",
+"renderamt": "255",
+"rendercolor": "255 255 255",
+"solid": "0"
+}
+}
+],
+"wiring": [
+{
+"classname": "math_counter",
+"origin": [
+-327.8,
+-24.5,
+167.0
+],
+"keys": {
+"max": "7",
+"min": "0",
+"startvalue": "0",
+"targetname": "playerpod_ready_counter"
+},
+"connections": [
+[
+"OnHitMax",
+"playerpod_resume_relay,Trigger,,4,-1"
+],
+[
+"OnHitMax",
+"playerpod_ready_counter,SetValue,0,0,-1"
+]
+]
+},
+{
+"classname": "logic_relay",
+"origin": [
+-295.8,
+-24.5,
+167.0
+],
+"keys": {
+"spawnflags": "2",
+"StartDisabled": "0",
+"targetname": "playerpod_ready_relay"
+},
+"connections": [
+[
+"OnTrigger",
+"playerpod_ready_counter,Add,1,0.1,-1"
+],
+[
+"OnTrigger",
+"!activator,Stop,,0,-1"
+]
+]
+},
+{
+"classname": "logic_relay",
+"origin": [
+-359.8,
+-24.5,
+167.0
+],
+"keys": {
+"spawnflags": "2",
+"StartDisabled": "1",
+"targetname": "playerpod_resume_relay"
+},
+"connections": [
+[
+"OnTrigger",
+"playerpod6_train,Resume,,0,-1"
+],
+[
+"OnTrigger",
+"playerpod5_train,Resume,,0,-1"
+],
+[
+"OnTrigger",
+"playerpod4_train,Resume,,0,-1"
+],
+[
+"OnTrigger",
+"playerpod3_train,Resume,,0,-1"
+],
+[
+"OnTrigger",
+"playerpod2_train,Resume,,0,-1"
+],
+[
+"OnTrigger",
+"playerpod1_train,Resume,,0,-1"
+],
+[
+"OnTrigger",
+"playerpod7_train,Resume,,0,-1"
+]
+]
+},
+{
+"classname": "func_tracktrain",
+"keys": {
+"bank": "0",
+"disablereceiveshadows": "0",
+"disableshadows": "1",
+"dmg": "0",
+"height": "4",
+"MoveSound": "d3_citadel.playerpod_move",
+"MoveSoundMaxPitch": "200",
+"MoveSoundMinPitch": "60",
+"orientationtype": "3",
+"renderamt": "255",
+"rendercolor": "255 255 255",
+"renderfx": "0",
+"rendermode": "0",
+"spawnflags": "11",
+"speed": "100",
+"startspeed": "800",
+"StopSound": "d3_citadel.playerpod_stop",
+"target": "pod_bay_track4",
+"targetname": "playerpod4_train",
+"velocitytype": "1",
+"volume": "3",
+"wheels": "0"
+},
+"connections": [
+[
+"OnUser1",
+"playerpod4_rotator,Open,,0,-1"
+],
+[
+"OnUser1",
+"playerpod4_vehicle,Open,,1,-1"
+],
+[
+"OnUser1",
+"playerpod4_vehicle,Close,,4,-1"
+],
+[
+"OnUser1",
+"playerpod4_rotator,Close,,5,-1"
+]
+],
+"brushes": [
+[
+{
+"plane": [
+[
+2.0,
+2.0,
+142.0
+],
+[
+2.0,
+-2.0,
+142.0
+],
+[
+-2.0,
+-2.0,
+142.0
+]
+],
+"verts": [],
+"corners": [
+[
+2.0,
+2.0,
+142.0
+],
+[
+-2.0,
+2.0,
+142.0
+],
+[
+-2.0,
+-2.0,
+142.0
+],
+[
+2.0,
+-2.0,
+142.0
+]
+],
+"material": "TOOLS/TOOLSNODRAW",
+"uaxis": "[1 0 0 41191.7969] 0.25",
+"vaxis": "[0 -1 0 -18268] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+2.0,
+-2.0,
+134.0
+],
+[
+2.0,
+2.0,
+134.0
+],
+[
+-2.0,
+2.0,
+134.0
+]
+],
+"verts": [],
+"corners": [
+[
+-2.0,
+-2.0,
+134.0
+],
+[
+-2.0,
+2.0,
+134.0
+],
+[
+2.0,
+2.0,
+134.0
+],
+[
+2.0,
+-2.0,
+134.0
+]
+],
+"material": "TOOLS/TOOLSNODRAW",
+"uaxis": "[1 0 0 41191.7969] 0.25",
+"vaxis": "[0 -1 0 -18268] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+-2.0,
+-2.0,
+142.0
+],
+[
+-2.0,
+-2.0,
+134.0
+],
+[
+-2.0,
+2.0,
+134.0
+]
+],
+"verts": [],
+"corners": [
+[
+-2.0,
+-2.0,
+142.0
+],
+[
+-2.0,
+2.0,
+142.0
+],
+[
+-2.0,
+2.0,
+134.0
+],
+[
+-2.0,
+-2.0,
+134.0
+]
+],
+"material": "TOOLS/TOOLSNODRAW",
+"uaxis": "[0 1 0 18268] 0.25",
+"vaxis": "[0 0 -1 7140] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+2.0,
+-2.0,
+134.0
+],
+[
+2.0,
+-2.0,
+142.0
+],
+[
+2.0,
+2.0,
+142.0
+]
+],
+"verts": [],
+"corners": [
+[
+2.0,
+2.0,
+134.0
+],
+[
+2.0,
+2.0,
+142.0
+],
+[
+2.0,
+-2.0,
+142.0
+],
+[
+2.0,
+-2.0,
+134.0
+]
+],
+"material": "TOOLS/TOOLSNODRAW",
+"uaxis": "[0 1 0 18268] 0.25",
+"vaxis": "[0 0 -1 7140] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+-2.0,
+2.0,
+142.0
+],
+[
+-2.0,
+2.0,
+134.0
+],
+[
+2.0,
+2.0,
+134.0
+]
+],
+"verts": [],
+"corners": [
+[
+-2.0,
+2.0,
+134.0
+],
+[
+-2.0,
+2.0,
+142.0
+],
+[
+2.0,
+2.0,
+142.0
+],
+[
+2.0,
+2.0,
+134.0
+]
+],
+"material": "TOOLS/TOOLSNODRAW",
+"uaxis": "[1 0 0 41194.7969] 0.25",
+"vaxis": "[0 0 -1 7140] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+-2.0,
+-2.0,
+134.0
+],
+[
+-2.0,
+-2.0,
+142.0
+],
+[
+2.0,
+-2.0,
+142.0
+]
+],
+"verts": [],
+"corners": [
+[
+2.0,
+-2.0,
+142.0
+],
+[
+-2.0,
+-2.0,
+142.0
+],
+[
+-2.0,
+-2.0,
+134.0
+],
+[
+2.0,
+-2.0,
+134.0
+]
+],
+"material": "TOOLS/TOOLSNODRAW",
+"uaxis": "[1 0 0 41191.7969] 0.25",
+"vaxis": "[0 0 -1 7160] 0.25",
+"lightmapscale": "16"
+}
+]
+],
+"origin": [
+0.0,
+0.0,
+135.0
+]
+},
+{
+"classname": "func_door_rotating",
+"keys": {
+"angles": "0 0 0",
+"disablereceiveshadows": "0",
+"disableshadows": "1",
+"distance": "90",
+"dmg": "0",
+"health": "0",
+"lip": "0",
+"locked_sentence": "0",
+"parentname": "playerpod4_train",
+"renderamt": "255",
+"rendercolor": "255 255 255",
+"renderfx": "0",
+"rendermode": "0",
+"spawnflags": "32",
+"speed": "100",
+"targetname": "playerpod4_rotator",
+"unlocked_sentence": "0",
+"wait": "-1"
+},
+"connections": [],
+"brushes": [
+[
+{
+"plane": [
+[
+-9.6,
+-15.08,
+134.0
+],
+[
+-7.1,
+-15.08,
+134.0
+],
+[
+-7.1,
+-17.58,
+134.0
+]
+],
+"verts": [],
+"corners": [
+[
+-7.1,
+-15.08,
+134.0
+],
+[
+-9.6,
+-15.08,
+134.0
+],
+[
+-9.6,
+-17.58,
+134.0
+],
+[
+-7.1,
+-17.58,
+134.0
+]
+],
+"material": "TOOLS/TOOLSNODRAW",
+"uaxis": "[1 0 0 41196] 0.25",
+"vaxis": "[0 -1 0 -18312] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+-9.6,
+-17.58,
+124.0
+],
+[
+-7.1,
+-17.58,
+124.0
+],
+[
+-7.1,
+-15.08,
+124.0
+]
+],
+"verts": [],
+"corners": [
+[
+-9.6,
+-17.58,
+124.0
+],
+[
+-9.6,
+-15.08,
+124.0
+],
+[
+-7.1,
+-15.08,
+124.0
+],
+[
+-7.1,
+-17.58,
+124.0
+]
+],
+"material": "TOOLS/TOOLSNODRAW",
+"uaxis": "[1 0 0 41196] 0.25",
+"vaxis": "[0 -1 0 -18312] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+-9.6,
+-15.08,
+134.0
+],
+[
+-9.6,
+-17.58,
+134.0
+],
+[
+-9.6,
+-17.58,
+124.0
+]
+],
+"verts": [],
+"corners": [
+[
+-9.6,
+-17.58,
+124.0
+],
+[
+-9.6,
+-17.58,
+134.0
+],
+[
+-9.6,
+-15.08,
+134.0
+],
+[
+-9.6,
+-15.08,
+124.0
+]
+],
+"material": "TOOLS/TOOLSNODRAW",
+"uaxis": "[0 1 0 18312] 0.25",
+"vaxis": "[0 0 -1 7168] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+-7.1,
+-15.08,
+124.0
+],
+[
+-7.1,
+-17.58,
+124.0
+],
+[
+-7.1,
+-17.58,
+134.0
+]
+],
+"verts": [],
+"corners": [
+[
+-7.1,
+-15.08,
+124.0
+],
+[
+-7.1,
+-15.08,
+134.0
+],
+[
+-7.1,
+-17.58,
+134.0
+],
+[
+-7.1,
+-17.58,
+124.0
+]
+],
+"material": "TOOLS/TOOLSNODRAW",
+"uaxis": "[0 1 0 18312] 0.25",
+"vaxis": "[0 0 -1 7168] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+-7.1,
+-15.08,
+134.0
+],
+[
+-9.6,
+-15.08,
+134.0
+],
+[
+-9.6,
+-15.08,
+124.0
+]
+],
+"verts": [],
+"corners": [
+[
+-9.6,
+-15.08,
+124.0
+],
+[
+-9.6,
+-15.08,
+134.0
+],
+[
+-7.1,
+-15.08,
+134.0
+],
+[
+-7.1,
+-15.08,
+124.0
+]
+],
+"material": "TOOLS/TOOLSNODRAW",
+"uaxis": "[1 0 0 41196] 0.25",
+"vaxis": "[0 0 -1 7168] 0.25",
+"lightmapscale": "16"
+},
+{
+"plane": [
+[
+-7.1,
+-17.58,
+124.0
+],
+[
+-9.6,
+-17.58,
+124.0
+],
+[
+-9.6,
+-17.58,
+134.0
+]
+],
+"verts": [],
+"corners": [
+[
+-7.1,
+-17.58,
+124.0
+],
+[
+-7.1,
+-17.58,
+134.0
+],
+[
+-9.6,
+-17.58,
+134.0
+],
+[
+-9.6,
+-17.58,
+124.0
+]
+],
+"material": "TOOLS/TOOLSNODRAW",
+"uaxis": "[1 0 0 41196] 0.25",
+"vaxis": "[0 0 -1 7168] 0.25",
+"lightmapscale": "16"
+}
+]
+],
+"origin": [
+-8.4,
+-16.33,
+129.0
+]
+},
+{
+"classname": "prop_vehicle_prisoner_pod",
+"origin": [
+-26.0,
+-16.0,
+43.0
+],
+"keys": {
+"actionScale": "1",
+"angles": "15 0 0",
+"disableshadows": "1",
+"fademaxdist": "0",
+"fademindist": "-1",
+"fadescale": "1",
+"maxdxlevel": "0",
+"mindxlevel": "0",
+"model": "models/vehicles/prisoner_pod_inner.mdl",
+"skin": "0",
+"solid": "0",
+"targetname": "playerpod4_vehicle",
+"VehicleLocked": "0",
+"vehiclescript": "scripts/vehicles/prisoner_pod.txt"
+},
+"connections": [
+[
+"OnOpen",
+"playerpod4_trigger,Enable,,0,-1"
+],
+[
+"OnClose",
+"playerpod4_trigger,Disable,,0,-1"
+]
+]
+},
+{
+"classname": "trigger_multiple",
+"keys": {
+"parentname": "playerpod4_vehicle",
+"spawnflags": "1",
+"StartDisabled": "0",
+"targetname": "playerpod4_trigger",
+"wait": "1"
+},
+"connections": [
+[
+"OnStartTouch",
+"playerpod4_vehicle,EnterVehicle,,0,-1"
+]
+],
+"brushes": [
+[
+{
+"plane": [
+[
+-15.0,
+-7.0,
+108.44
+],
+[
+-2.0,
+-7.0,
+108.44
+],
+[
+-2.0,
+-26.0,
+108.44
+]
+],
+"verts": [],
+"corners": [
+[
+-2.0,
+-26.0,
+108.44
+],
+[
+-2.0,
+-7.0,
+108.44
+],
+[
+-15.0,
+-7.0,
+108.44
+],
+[
+-15.0,
+-26.0,
+108.44
+]
+],
+"material": "TOOLS/TOOLSTRIGGER",
+"uaxis": "[1 0 0 41168] 0.25",
+"vaxis": "[0 -1 0 -18288] 0.25",
+"lightmapscale": "64"
+},
+{
+"plane": [
+[
+-15.0,
+-26.0,
+98.44
+],
+[
+-2.0,
+-26.0,
+98.44
+],
+[
+-2.0,
+-7.0,
+98.44
+]
+],
+"verts": [],
+"corners": [
+[
+-15.0,
+-26.0,
+98.44
+],
+[
+-15.0,
+-7.0,
+98.44
+],
+[
+-2.0,
+-7.0,
+98.44
+],
+[
+-2.0,
+-26.0,
+98.44
+]
+],
+"material": "TOOLS/TOOLSTRIGGER",
+"uaxis": "[1 0 0 41168] 0.25",
+"vaxis": "[0 -1 0 -18288] 0.25",
+"lightmapscale": "64"
+},
+{
+"plane": [
+[
+-15.0,
+-7.0,
+108.44
+],
+[
+-15.0,
+-26.0,
+108.44
+],
+[
+-15.0,
+-26.0,
+98.44
+]
+],
+"verts": [],
+"corners": [
+[
+-15.0,
+-26.0,
+98.44
+],
+[
+-15.0,
+-26.0,
+108.44
+],
+[
+-15.0,
+-7.0,
+108.44
+],
+[
+-15.0,
+-7.0,
+98.44
+]
+],
+"material": "TOOLS/TOOLSTRIGGER",
+"uaxis": "[0 1 0 18256] 0.25",
+"vaxis": "[0 0 -1 7192] 0.25",
+"lightmapscale": "64"
+},
+{
+"plane": [
+[
+-2.0,
+-7.0,
+98.44
+],
+[
+-2.0,
+-26.0,
+98.44
+],
+[
+-2.0,
+-26.0,
+108.44
+]
+],
+"verts": [],
+"corners": [
+[
+-2.0,
+-7.0,
+98.44
+],
+[
+-2.0,
+-7.0,
+108.44
+],
+[
+-2.0,
+-26.0,
+108.44
+],
+[
+-2.0,
+-26.0,
+98.44
+]
+],
+"material": "TOOLS/TOOLSTRIGGER",
+"uaxis": "[0 1 0 18256] 0.25",
+"vaxis": "[0 0 -1 7192] 0.25",
+"lightmapscale": "64"
+},
+{
+"plane": [
+[
+-2.0,
+-7.0,
+108.44
+],
+[
+-15.0,
+-7.0,
+108.44
+],
+[
+-15.0,
+-7.0,
+98.44
+]
+],
+"verts": [],
+"corners": [
+[
+-15.0,
+-7.0,
+98.44
+],
+[
+-15.0,
+-7.0,
+108.44
+],
+[
+-2.0,
+-7.0,
+108.44
+],
+[
+-2.0,
+-7.0,
+98.44
+]
+],
+"material": "TOOLS/TOOLSTRIGGER",
+"uaxis": "[1 0 0 41168] 0.25",
+"vaxis": "[0 0 -1 7192] 0.25",
+"lightmapscale": "64"
+},
+{
+"plane": [
+[
+-2.0,
+-26.0,
+98.44
+],
+[
+-15.0,
+-26.0,
+98.44
+],
+[
+-15.0,
+-26.0,
+108.44
+]
+],
+"verts": [],
+"corners": [
+[
+-2.0,
+-26.0,
+98.44
+],
+[
+-2.0,
+-26.0,
+108.44
+],
+[
+-15.0,
+-26.0,
+108.44
+],
+[
+-15.0,
+-26.0,
+98.44
+]
+],
+"material": "TOOLS/TOOLSTRIGGER",
+"uaxis": "[1 0 0 41168] 0.25",
+"vaxis": "[0 0 -1 7192] 0.25",
+"lightmapscale": "64"
+}
+]
+],
+"origin": [
+-8.5,
+-16.5,
+103.44
+]
+},
+{
+"classname": "phys_ragdollconstraint",
+"origin": [
+-5.0,
+-17.0,
+119.0
+],
+"keys": {
+"attach1": "playerpod4_vehicle",
+"attach2": "playerpod4_rotator",
+"forcelimit": "0",
+"spawnflags": "1",
+"targetname": "playerpod4_constraint",
+"torquelimit": "0",
+"xfriction": "6",
+"xmax": "0",
+"xmin": "0",
+"yfriction": "6",
+"ymax": "40",
+"ymin": "-35",
+"zfriction": "6",
+"zmax": "0",
+"zmin": "0"
+},
+"connections": []
+},
+{
+"classname": "trigger_once",
+"origin": [
+325.0,
+14.0,
+128.0
+],
+"keys": {
+"spawnflags": "33",
+"StartDisabled": "0"
+},
+"connections": [
+[
+"OnTrigger",
+"playerpod_resume_relay,Trigger,,0.1,-1"
+],
+[
+"OnTrigger",
+"playerpod_ready_relay,Disable,,0,-1"
+],
+[
+"OnTrigger",
+"pod_bay_track9,EnableAlternatePath,,0,-1"
+]
+],
+"brushes": [
+[
+{
+"plane": [
+[
+309.0,
+46.0,
+192.0
+],
+[
+341.0,
+46.0,
+192.0
+],
+[
+341.0,
+-18.0,
+192.0
+]
+],
+"verts": [],
+"corners": [
+[
+341.0,
+46.0,
+192.0
+],
+[
+309.0,
+46.0,
+192.0
+],
+[
+309.0,
+-18.0,
+192.0
+],
+[
+341.0,
+-18.0,
+192.0
+]
+],
+"material": "TOOLS/TOOLSTRIGGER",
+"uaxis": "[1 0 0 41196.1094] 0.25",
+"vaxis": "[0 -1 0 -18280.0527] 0.25",
+"lightmapscale": "64"
+},
+{
+"plane": [
+[
+309.0,
+-18.0,
+64.0
+],
+[
+341.0,
+-18.0,
+64.0
+],
+[
+341.0,
+46.0,
+64.0
+]
+],
+"verts": [],
+"corners": [
+[
+309.0,
+-18.0,
+64.0
+],
+[
+309.0,
+46.0,
+64.0
+],
+[
+341.0,
+46.0,
+64.0
+],
+[
+341.0,
+-18.0,
+64.0
+]
+],
+"material": "TOOLS/TOOLSTRIGGER",
+"uaxis": "[1 0 0 41196.1094] 0.25",
+"vaxis": "[0 -1 0 -18280.0527] 0.25",
+"lightmapscale": "64"
+},
+{
+"plane": [
+[
+309.0,
+46.0,
+192.0
+],
+[
+309.0,
+-18.0,
+192.0
+],
+[
+309.0,
+-18.0,
+64.0
+]
+],
+"verts": [],
+"corners": [
+[
+309.0,
+-18.0,
+192.0
+],
+[
+309.0,
+46.0,
+192.0
+],
+[
+309.0,
+46.0,
+64.0
+],
+[
+309.0,
+-18.0,
+64.0
+]
+],
+"material": "TOOLS/TOOLSTRIGGER",
+"uaxis": "[0 1 0 18280.0527] 0.25",
+"vaxis": "[0 0 -1 7168] 0.25",
+"lightmapscale": "64"
+},
+{
+"plane": [
+[
+341.0,
+46.0,
+64.0
+],
+[
+341.0,
+-18.0,
+64.0
+],
+[
+341.0,
+-18.0,
+192.0
+]
+],
+"verts": [],
+"corners": [
+[
+341.0,
+46.0,
+64.0
+],
+[
+341.0,
+46.0,
+192.0
+],
+[
+341.0,
+-18.0,
+192.0
+],
+[
+341.0,
+-18.0,
+64.0
+]
+],
+"material": "TOOLS/TOOLSTRIGGER",
+"uaxis": "[0 1 0 18280.0527] 0.25",
+"vaxis": "[0 0 -1 7168] 0.25",
+"lightmapscale": "64"
+},
+{
+"plane": [
+[
+341.0,
+46.0,
+192.0
+],
+[
+309.0,
+46.0,
+192.0
+],
+[
+309.0,
+46.0,
+64.0
+]
+],
+"verts": [],
+"corners": [
+[
+309.0,
+46.0,
+64.0
+],
+[
+309.0,
+46.0,
+192.0
+],
+[
+341.0,
+46.0,
+192.0
+],
+[
+341.0,
+46.0,
+64.0
+]
+],
+"material": "TOOLS/TOOLSTRIGGER",
+"uaxis": "[1 0 0 41196.1094] 0.25",
+"vaxis": "[0 0 -1 7168] 0.25",
+"lightmapscale": "64"
+},
+{
+"plane": [
+[
+341.0,
+-18.0,
+64.0
+],
+[
+309.0,
+-18.0,
+64.0
+],
+[
+309.0,
+-18.0,
+192.0
+]
+],
+"verts": [],
+"corners": [
+[
+341.0,
+-18.0,
+192.0
+],
+[
+309.0,
+-18.0,
+192.0
+],
+[
+309.0,
+-18.0,
+64.0
+],
+[
+341.0,
+-18.0,
+64.0
+]
+],
+"material": "TOOLS/TOOLSTRIGGER",
+"uaxis": "[1 0 0 41196.1094] 0.25",
+"vaxis": "[0 0 -1 7168] 0.25",
+"lightmapscale": "64"
+}
+]
+]
+}
+],
+"outside": [
+{
+"name": "playerpod1_train",
+"found": [
+{
+"classname": "func_tracktrain",
+"origin": [
+9339,
+4578,
+-1657
+]
+}
+],
+"named_by": [
+"playerpod_resume_relay OnTrigger > playerpod1_train,Resume,,0,-1"
+]
+},
+{
+"name": "playerpod2_train",
+"found": [
+{
+"classname": "func_tracktrain",
+"origin": [
+9659,
+4578,
+-1657
+]
+}
+],
+"named_by": [
+"playerpod_resume_relay OnTrigger > playerpod2_train,Resume,,0,-1"
+]
+},
+{
+"name": "playerpod3_train",
+"found": [
+{
+"classname": "func_tracktrain",
+"origin": [
+9979,
+4578,
+-1657
+]
+}
+],
+"named_by": [
+"playerpod_resume_relay OnTrigger > playerpod3_train,Resume,,0,-1"
+]
+},
+{
+"name": "playerpod5_train",
+"found": [
+{
+"classname": "func_tracktrain",
+"origin": [
+10747,
+4642,
+-1593
+]
+}
+],
+"named_by": [
+"playerpod_resume_relay OnTrigger > playerpod5_train,Resume,,0,-1"
+]
+},
+{
+"name": "playerpod6_train",
+"found": [
+{
+"classname": "func_tracktrain",
+"origin": [
+10747,
+4898,
+-1593
+]
+}
+],
+"named_by": [
+"playerpod_resume_relay OnTrigger > playerpod6_train,Resume,,0,-1"
+]
+},
+{
+"name": "playerpod7_train",
+"found": [
+{
+"classname": "func_tracktrain",
+"origin": [
+10747,
+5282,
+-1593
+]
+}
+],
+"named_by": [
+"playerpod_resume_relay OnTrigger > playerpod7_train,Resume,,0,-1"
+]
+}
+],
+"fired_from_outside": [
+{
+"name": "",
+"classname": "trigger_once",
+"origin": [
+9556,
+3168,
+-1440
+],
+"outputs": [
+[
+"OnTrigger",
+"playerpod_resume_relay,Enable,,0,-1"
+],
+[
+"OnTrigger",
+"playerpod_resume_relay,Trigger,,0.1,-1"
+]
+]
+}
+],
+"route": [
+{
+"name": "pod_bay_track1",
+"origin": [
+-987.0,
+-10.0,
+124.0
+],
+"target": "pod_bay_track2",
+"altpath": "",
+"speed": "0",
+"spawnflags": "16",
+"orientationtype": "1",
+"angles": "0 0 0",
+"outputs": [
+[
+"OnPass",
+"playerpod_ready_counter,Add,1,0.1,-1"
+],
+[
+"OnPass",
+"!activator,Stop,,0,-1"
+]
+]
+},
+{
+"name": "pod_bay_track2",
+"origin": [
+-667.0,
+-10.0,
+124.0
+],
+"target": "pod_bay_track3",
+"altpath": "",
+"speed": "0",
+"spawnflags": "0",
+"orientationtype": "1",
+"angles": "0 0 0",
+"outputs": [
+[
+"OnPass",
+"playerpod_ready_counter,Add,1,0.1,-1"
+],
+[
+"OnPass",
+"!activator,Stop,,0,-1"
+]
+]
+},
+{
+"name": "pod_bay_track3",
+"origin": [
+-347.0,
+-10.0,
+124.0
+],
+"target": "pod_bay_track4",
+"altpath": "",
+"speed": "0",
+"spawnflags": "0",
+"orientationtype": "1",
+"angles": "0 0 0",
+"outputs": [
+[
+"OnPass",
+"playerpod_ready_counter,Add,1,0.1,-1"
+],
+[
+"OnPass",
+"!activator,Stop,,0,-1"
+]
+]
+},
+{
+"name": "pod_bay_track4",
+"origin": [
+-47.0,
+-10.0,
+124.0
+],
+"target": "pod_bay_track5",
+"altpath": "",
+"speed": "0",
+"spawnflags": "0",
+"orientationtype": "1",
+"angles": "0 0 0",
+"outputs": [
+[
+"OnPass",
+"!activator,FireUser1,,0.1,-1"
+],
+[
+"OnPass",
+"playerpod_ready_counter,Add,1,0.1,-1"
+],
+[
+"OnPass",
+"!activator,Stop,,0,-1"
+]
+]
+},
+{
+"name": "pod_bay_track5",
+"origin": [
+261.0,
+-10.0,
+124.0
+],
+"target": "pod_bay_track6",
+"altpath": "",
+"speed": "0",
+"spawnflags": "0",
+"orientationtype": "1",
+"angles": "0 0 0",
+"outputs": []
+},
+{
+"name": "pod_bay_track6",
+"origin": [
+404.0,
+38.0,
+188.0
+],
+"target": "pod_bay_track7",
+"altpath": "",
+"speed": "0",
+"spawnflags": "0",
+"orientationtype": "1",
+"angles": "0 0 0",
+"outputs": [
+[
+"OnPass",
+"playerpod_ready_relay,Trigger,,0,-1"
+]
+]
+},
+{
+"name": "pod_bay_track7",
+"origin": [
+405.0,
+318.0,
+188.0
+],
+"target": "pod_bay_track8",
+"altpath": "",
+"speed": "0",
+"spawnflags": "0",
+"orientationtype": "1",
+"angles": "0 0 0",
+"outputs": [
+[
+"OnPass",
+"playerpod_ready_relay,Trigger,,0,-1"
+]
+]
+},
+{
+"name": "pod_bay_track8",
+"origin": [
+405.0,
+686.0,
+188.0
+],
+"target": "pod_bay_track9",
+"altpath": "player_track1",
+"speed": "0",
+"spawnflags": "0",
+"orientationtype": "1",
+"angles": "0 0 0",
+"outputs": [
+[
+"OnPass",
+"playerpod_ready_relay,Trigger,,0,-1"
+]
+]
+},
+{
+"name": "pod_bay_track9",
+"origin": [
+405.0,
+1278.0,
+188.0
+],
+"target": "pod_bay_track1",
+"altpath": "player_track1",
+"speed": "0",
+"spawnflags": "0",
+"orientationtype": "2",
+"angles": "0 90 0",
+"outputs": []
+},
+{
+"name": "player_track1",
+"origin": [
+405.0,
+1206.0,
+188.0
+],
+"target": "player_track2",
+"altpath": "",
+"speed": "0",
+"spawnflags": "0",
+"orientationtype": "1",
+"angles": "0 0 0",
+"outputs": []
+},
+{
+"name": "player_track2",
+"origin": [
+405.0,
+1310.0,
+188.0
+],
+"target": "player_track3",
+"altpath": "",
+"speed": "0",
+"spawnflags": "0",
+"orientationtype": "1",
+"angles": "0 0 0",
+"outputs": []
+},
+{
+"name": "player_track3",
+"origin": [
+1189.0,
+1310.0,
+188.0
+],
+"target": "player_track4",
+"altpath": "",
+"speed": "0",
+"spawnflags": "0",
+"orientationtype": "1",
+"angles": "0 0 0",
+"outputs": []
+},
+{
+"name": "player_track4",
+"origin": [
+1797.0,
+1310.0,
+188.0
+],
+"target": "",
+"altpath": "",
+"speed": "0",
+"spawnflags": "0",
+"orientationtype": "1",
+"angles": "0 0 0",
+"outputs": [
+[
+"OnPass",
+"!activator,Kill,,0,-1"
+]
+]
+}
+]
+}

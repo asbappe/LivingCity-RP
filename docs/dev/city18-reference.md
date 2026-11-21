@@ -2397,7 +2397,7 @@ Dress each prison room with its own short kit, against the walls, the floor left
 Where the Combine builds its own place, its walls run on the axes in plan but lean 14 to 23 degrees off upright: panels 128 high set back 32 (1 in 4) or 40 (5 in 16), or 104 high set back 44. The foot leans back and the head leans over, so a hall or shaft opens out low and closes in high, in steps that differ from one side to the other. A train runs in a trench of the metal 336 wide at the foot that steps out 32 a side every 112 to 128. The metal is metalwall077a at texture scale 0.5. New Combine pieces can be built so; ask the owner first before changing the checkpoint, depot or armoury, which stand upright.
 
 - **Why:** d2_prison_06 and 08 (21 November): wall area of the Combine's metal is 99% on the axes in plan, but 14% (06) and 7% (08) of it slopes: 137 leaning faces, 128 high set back 32 (41) or 40 (34), 104 high set back 44 (23); faces leaning back 14 degrees and leaning over 17 and 23. The pod shafts of d2_prison_08 (1680..2032 by 2816..4096, -960 to 192): 256 wide at the foot, out to about 400, straight for 600, in to 224 at the head, the two sides stepping at different heights. The train trench of d2_prison_06 at x 3000: 336, 400, 464 wide at -576, -448, -320. metalwall077a at 0.5 on 89% of its area in 08 and 60% in 06 (the old prison 0.25 on 94%).
-- **How:** A Combine wall helper that stacks 128 courses each set in or out 32 or 40 (a lean of 1 in 4 or 5 in 16) with the faces cut as planes, not stepped boxes; one side of a hall stepping at 128 and the other at 104 or 112. Studied further later (the owner wants the Combine's own architecture). Under the Citadel (ep1_c17_00) the Combine's metal is 28% of the map's visible area and its texture scale is 0.25 on 94% (not 0.5); plan 94% on the axes; leaning panels 128 high at 14 degrees, 208 at 4, 112 at 8, 176 at 57; 46% of the leaning area faces down (heads over), 54% up; floors ribbed every 128, ribs 32 wide alternately 20 and 3 high. EP1's great walls in the station yard (ep1_c17_06, picture C14): slabs 768 high, 96 thick at the foot and 48 at the head, their faces turned 10 and 21 degrees with the ends square, one face leaning about 4.5 degrees.
+- **How:** A Combine wall helper that stacks 128 courses each set in or out 32 or 40 (a lean of 1 in 4 or 5 in 16) with the faces cut as planes, not stepped boxes; one side of a hall stepping at 128 and the other at 104 or 112. Studied further later (the owner wants the Combine's own architecture). Under the Citadel (ep1_c17_00) the Combine's metal is 28% of the map's visible area and its texture scale is 0.25 on 94% (not 0.5); plan 94% on the axes; leaning panels 128 high at 14 degrees, 208 at 4, 112 at 8, 176 at 57; 46% of the leaning area faces down (heads over), 54% up; floors ribbed every 128, ribs 32 wide alternately 20 and 3 high. EP1's great walls in the station yard (ep1_c17_06, picture C14): slabs 768 high, 96 thick at the foot and 48 at the head, their faces turned 10 and 21 degrees with the ends square, one face leaning about 4.5 degrees. The Citadel (21 November): 128 courses set back 32 or 40 are 72% of leaning Combine area in d3_citadel_02 and 55% in d3_citadel_05, set back 16 (1 in 8) 23% in d3_citadel_03; giant shaft walls 1856 to 2560 high lean 2 to 11 (set back 67 to 346); 43 to 62% of leaning faces look up.
 - **Checked by:** review; map_view cut-away across the piece
 - **Tags:** valve, combine, geometry
 
@@ -2408,7 +2408,7 @@ Where the Combine builds its own place, its walls run on the axes in plan but le
 Inside the old prison its own fixtures sit square (97% on exact 90s). The Combine's things are square on about three quarters: its wall lights are turned to aim at what they light (yaw by 15 or 45, a few pitched down 18), its consoles and small monitors set at free angles to the room; but pod racks, fences, locks, doors and generators stand square to the walls. Turn a Combine light or console off the grid on purpose; never a rack or a fence.
 
 - **Why:** d2_prison_01 to 08 (21 November): of 390 unparented Combine props, 284 on exact 90s, 46 on 15s, 21 on 45s, 39 free; combine_light002a 58 of 66 off the grid (37 on 15s, 16 on 45s; d2_prison_07 yaw 300 pitch -18 in a row of four); combine_interface003 yaw 24, 69, 204, 294, 356 (d2_prison_07 -1358 -1904); combine_smallmonitor001 5 of 5 free; combine_fence01a/b 40 of 40, cell_01_pod 20 of 20, combine_lock01 9 of 9 square. prison_ models 880 of 903 square.
-- **How:** Combine dressing in our pieces: the light helper aims each combine_light002a at its target and rounds the yaw to 15; consoles get a free yaw within 30 of facing the room; racks, fences and locks stay square (valve-turn-the-loose for loose things).
+- **How:** Combine dressing in our pieces: the light helper aims each combine_light002a at its target and rounds the yaw to 15; consoles get a free yaw within 30 of facing the room; racks, fences and locks stay square (valve-turn-the-loose for loose things). The Citadel's wall props (21 November, 15 maps): 745 Combine pipes, 39% on 15s and 20% on 45s off the walls, 9% rising; 175 combine_light, 10% square; the 39 creeping walls (combineinnerwall*) 74% tilted, mostly rolled near 180 (upside down) and pitched 6 to 54, half at free yaws; combine_intwallunit 86% square, nearest twin 64 to 124 apart.
 - **Checked by:** review
 - **Tags:** valve, combine, props
 
@@ -2899,4 +2899,76 @@ A message on the city's screens runs as a loop of short scenes that starts partw
 - **How:** Gamemode: the Administrator's broadcasts and a Resistance hijack (docs/features/city-administration.md) could loop their recorded lines starting partway in; when a Combine camera or scanner spots a wanted player, the screens near him show static and the Combine's face for 3 s. Sound and picture, no text.
 - **Checked by:** review
 - **Tags:** valve, logic, gameplay, combine
+
+### A Combine structure is a centred mass with an off-centre skin: plates, layers, leans and turns, and no mirror (`valve-combine-recipe`)
+
+Build a Combine wall, gate, tower or hall side in five passes: (1) masses on a 256 bay in 128 courses, which may be centred; (2) plates 2 to 16 thick laid over them; (3) 3 to 6 layers on about a third of the wall; (4) 2 or 3 leans and turns from a short list of simple ratios; (5) the relief of each wall and the two sides of each opening made to differ. It is not random: the rhythm stays on 256, the oddness is in the skin. New Combine pieces only; ask the owner first before changing the checkpoint, depot or armoury, which stand upright and square.
+
+- **Why:** d3_citadel_01 to 05, d3_breen_01, ep1_intro, ep1_citadel_00 to 04, styleguide_core (21 November): single detail groups are mirror-true (median 0.91 to 1.0; d3_citadel_03's shaft walls 0.93 to 0.998, d3_breen_01's pillars in mirrored pairs), but 30% of 1082 articulated Combine walls match their mirror below 0.6 (old City 17: 15% of 206), 18.1% of the Combine's visible area is off the axes (old City 17 1.4%), plates are 32 to 74% of its brushes, 3+ layers cover 17 to 67% of its wall area. Notes: _dev/reference/valve_citadel/wip/architecture_notes.md.
+- **How:** A map_combine.py generator (proposed): combine_piece(kind, box, seed) lays mass, plate stacks, lean courses and turns by the recipe in the notes and returns convex solids for Vmf.detail_shapes; it throws away a seed whose walls mirror (see valve-combine-no-mirror).
+- **Checked by:** proposed: map_combine.py checks its own pieces (mirror match, layer share, off-axis share) before writing
+- **Tags:** valve, combine, geometry, recipe
+
+### The Combine's skin is thin plates, butted, three to six deep on a third of the wall: a big step off the mass, then small reveals (`valve-combine-plates`)
+
+Cover a Combine mass with plates 2, 4, 8 or 16 thick (pick 2 or 3 per piece), 32 to 64 by 64 to 256 (128 the commonest; 1024 for giant ones). Butt them (no gap on 60 to 81% of joins) and give one join in five a reveal of 8, 12, 40 or 48. By wall area: 1 layer on 36 to 61%, 2 on 10 to 29%, 3 to 6 on 17 to 67%. The first layer stands 48, 56 or 64 off the mass, each layer on it 4 or 8 more: steps are big or small, rarely between. New pieces only; ask the owner first before changing a Combine piece already built.
+
+- **Why:** Citadel maps (21 November): plates (thinnest side 16 or less, short side 3 times that) 32 to 74% of Combine brushes, median 56%. Thickness tops: 8 (26 to 38% in d3_citadel_02, 05, ep1_citadel_00), 16 (30% d3_citadel_03), 2 (25 to 28% ep1_citadel_01, 03; 39% the Nexus d3_c17_10b). Long side 128 on 22 to 33% in HL2. Same-facing faces within 64 of depth: 3+ layers on 17 to 67% of the area in 14 of 15 maps (the core 3%); steps 64, 48, 56, 4, 8 lead in every map; coplanar joins gap 0 on 60 to 81%, then 8, 12, 40, 48, 64.
+- **How:** map_combine.py plate_stack(face, layers): first layer 48 to 64 out, then 4 or 8 per layer, plates from the chosen thicknesses, widths never repeated next to each other, butted with one reveal in five.
+- **Checked by:** proposed: map_lint notes a Combine wall of one plate layer longer than 512 (valve-combine-plates)
+- **Tags:** valve, combine, geometry
+
+### The Combine turns off the grid by simple ratios: 45, 1 in 2, 1 in 4, 22.5; a fifth of its surface is off the axes (`valve-combine-turns`)
+
+Turn Combine faces in plan by 45, 26.6 (1 in 2), 14.0 (1 in 4) or 22.5 (an octagon, its corners on the grid giving 22.2 and 23.5), never a free angle; one piece uses 2 to 4 off-axis directions (a showpiece up to 12). Off-axis area: 4 to 15% for a plain hall, 15 to 35% for a showpiece, 44 to 56% for the core or a wreck; the old city round it stays square (1 to 2%). Make sloped faces from three whole-number points on the 4 to 16 grid, as HL2 did. New pieces only; ask the owner first before turning anything already built.
+
+- **Why:** Citadel maps (21 November): 18.1% of 4.6 billion square units of visible Combine area off the axes (3.8% d3_citadel_02, 14 to 15% d3_citadel_03, 05, ep1_citadel_00, 35% ep1_citadel_01, 03, 44% styleguide_core, 56% ep1_intro); intact City 17 (d3_c17_10a, b) 1.4%, ruined (ep1_c17_00, 01) 6.5%. Turned area: 45 is 83% in d3_citadel_02 and 88% in ep1_citadel_01; 1 in 2 24 to 25% in ep1_citadel_00, d3_citadel_05 and 56% in styleguide_destroyed_citadel; 1 in 4 36% in d3_citadel_03; 22.5 (as 22.1 to 22.3 and 23.5) 53% in ep1_citadel_03 and 62% in the core. Detail groups: median 2 to 4 off-axis directions, 90th percentile 4 to 12. HL2's off-axis plane points on a 4, 8 or 16 grid (9% fractional in d3_citadel_02); EP1's mostly fractional (84% in ep1_citadel_03).
+- **How:** map_combine.py turn(ratio): rotate a plate stack's plan by one of the four turns, corners snapped to the 4 grid; a piece draws its 2 to 4 turns at the start and keeps to them.
+- **Checked by:** proposed: map_combine.py reports each piece's off-axis share and its distinct turn count
+- **Tags:** valve, combine, geometry
+
+### No Combine wall's relief and no passage's two sides are each other's mirror; the masses under them may be (`valve-combine-no-mirror`)
+
+On a Combine wall with three or more relief levels, make the left and right differ: different layer counts (one side 1 or 2, the other 3 to 5), different step depths, one side leaning and the other plumb, a bay 88 to 408 deep on one side only. The two walls of a passage get different relief. Aim for a third of such walls matching their mirror below 0.6 and passage sides matching below 0.3. Single pillars, a reactor core and a formal office may stay centred. New pieces only; ask the owner first before changing a Combine piece already built.
+
+- **Why:** Depth pictures of every wall on an 8 grid, mirrored about the best upright line (21 November): articulated Combine walls 1082, 30% below 0.6 and 43% at 0.9 or more; old City 17 walls 206, 15% and 46%; per-map medians 0.57 (d3_citadel_04) to 1.0 (the core). Passages (walls facing 64 to 640 apart): median match 0.02 (d3_citadel_05), 0.07 (d3_breen_01), 0.04 (styleguide_destroyed_citadel), 0.13 to 0.30 in nine more maps; exceptions d3_citadel_02 0.96, ep1_citadel_04 0.63, the core 1.0; City 17 streets 0.18 to 0.50. Valve's detail groups mirror-true (median 0.91 to 1.0); d3_breen_01's office pillars in mirrored pairs. Nexus picture U27.
+- **How:** map_combine.py builds the two sides of an opening from different draws of the plate and layer rules and scores each wall with the depth-picture mirror test (walls.py in the study); a seed scoring 0.9 or more on an articulated wall, or 0.5 or more on a passage, is drawn again.
+- **Checked by:** proposed: map_lint kind mirror notes a Combine wall of 3+ relief levels whose relief matches its mirror at 0.9 or more
+- **Tags:** valve, combine, geometry
+
+### Huge against small: one Combine join in six puts a piece against one 8 times its size, and the texture grows with the piece (`valve-combine-scale-jump`)
+
+Set small Combine parts (plates 2 to 16 thick, 32 to 64 wide) straight against masses 8 to 32 times their size on about one join in six (the old city: one in fifteen). Texture plates near the eye at 0.25 and giant faces at 1 or 2, so the panel pattern grows with the piece. New pieces only; ask the owner first before retexturing anything built.
+
+- **Why:** Citadel maps (21 November): touching Combine pairs whose longest sides differ 8 times or more: 15.8% of 148 thousand pairs (16 times: 5.1%); old buildings 6.5% of 24 thousand (1.6%). Combine longest sides median 128 to 512, 90th percentile 512 to 1737. Texture scale on the Combine's area: 0.25 on 39 to 81% in HL2's Citadel, 1.0 on 21 to 55%, 2.0 on 42% in d3_citadel_01 (its giant walls); City 17's old walls 0.25.
+- **How:** map_combine.py: each mass gets at least one small plate or fin straight on it; texture scale by the face's longest side (under 512: 0.25; to 1024: 1; over: 2).
+- **Checked by:** review
+- **Tags:** valve, combine, geometry
+
+### The Combine keeps a 256 rhythm and breaks it with pairs and odd ones, not with random spacing (`valve-combine-rhythm`)
+
+Repeat Combine ribs, fins and panels on a 256 pitch (or 128), then break the run: about 2 runs in 5 stay even, 1 in 5 goes in pairs (two pieces 14 to 36 apart, a pair every 143 to 285), the rest take uneven spacings (170, 36, 510). Never scatter at random. New pieces only. Pieces already built keep their look: ask the owner first before changing them.
+
+- **Why:** Runs of 3 or more like Combine pieces in a line (21 November): 1345 in the Citadel maps, even 40% (pitch 256 on 416 of them), near even 15%, paired 19%, free 26%; EP1's Citadel freer (51 to 73% uneven) than HL2's (27 to 40%). Old City 17, 162 runs: even 47% (pitch 128), paired 17%, free 22%. Examples: ep1_citadel_03 fins 16 by 32 spaced 32, 160, 32, 160; plates 2 thick 14, 98, 14, 490; d3_citadel_04 slabs 170, 36, 510.
+- **How:** map_combine.py rib_run(length, pitch): even, paired or free by the shares above; pairs 14 to 36 apart.
+- **Checked by:** review
+- **Tags:** valve, combine, geometry
+
+### Inside an old building the Combine lays plates flush and square; where its own mass arrives it drives in at an angle (`valve-combine-meets-old`)
+
+Two ways only. Inside an old building, Combine plates lie flush on the old walls, square to them, not cut in (or stand 14 to 16 off). Where a Combine mass meets the old city from outside, it is turned against it by 1 in 2 (27) or 45 and cut 4 to 128 into the old wall or floor. Ask the owner first before changing an old building or Combine piece already built.
+
+- **Why:** 21 November. The Nexus (d3_c17_10a, b): 43 to 79% of Combine brushes touch old ones, 2.5 to 6% cut in, 0 to 6% turned, the rest stand 14 to 16 off. ep1_citadel_00 (the Citadel's foot in the old city): 40% of touching Combine brushes cut in (to 64 and 128), 43% turned, 65% of those by 27; ep1_citadel_03 (old concrete under the core) 67% cut in 4 to 13, 29% turned by 45; ep1_c17_00 29% cut in, 29% turned by 13. Nova Prospekt's plates flush on concrete (valve-combine-lean).
+- **How:** map_combine.py takes the old wall's plane: inside, plates flush and square; outside, the mass rotated 27 or 45 and sunk 4 to 128 into the old brush (a func_detail, so the old wall keeps sealing).
+- **Checked by:** review
+- **Tags:** valve, combine, geometry
+
+### Combine light is set into the plates: flush panels, mostly upright, cold; warm only where it fails (`valve-combine-light-panels`)
+
+Light a Combine wall with light-panel brushes (lights/white004_nochop or white003_nochop) set flush in the plate layer, 16 to 64 thick, 64 to 192 by 140 to 1150 (small rooms 8 to 16 by 16 to 100 by 48 to 256), upright 3 to 2 over lying, coloured 147 226 240 or 122 173 188; warm 254 95 48 or 249 177 106 only where the place is failing. No flickering (the owner's rule). New pieces only. Pieces already built keep their look: ask the owner first before changing them.
+
+- **Why:** Citadel maps (21 November): 11 to 74 light-panel brushes a map; their face flush with the plate beside it on 77 to 100%; d3_citadel_03 to 05 panels 16 to 128 thick, 64 to 457 by 128 to 1280; ep1_citadel_03 2.7 to 23 thick, 15 to 192 by 16 to 392; upright 214 to lying 135. light and light_spot colours: 147 226 240 leads, 122 173 188 in d3_citadel_04, 05; ep1_citadel_01, 02b (the core failing) 254 95 48, 249 177 106, 235 114 33. Glow sprites 1 to 92 a map.
+- **How:** map_combine.py swaps one plate of a stack for a light panel of the same size and plane, with a light behind it in the panel's colour.
+- **Checked by:** review
+- **Tags:** valve, combine, lighting
 
