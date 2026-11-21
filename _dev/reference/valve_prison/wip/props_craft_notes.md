@@ -94,7 +94,10 @@ little large.
 - **Field walls:** comshieldwall3 on a func_brush 2 thick, 126 high, 192 wide across a way (d2_prison_07 3776 -4904).
 - Where Combine brushes meet the old: d2_prison_07 bolts thin metalcombine001 panels (2 to 10 thick, func_detail,
   87% at angles) against plaster; d2_prison_06's Combine brushes are 8 thick (140) or 2 (82), 177 of 504 touch old
-  brushes (concrete floor, concretewall004c, rails), 44 cut into them.
+  brushes (concrete floor, concretewall004c, rails), 44 cut into them. Of the thin Combine wall slabs (up to 32
+  thick, 64+ high), 49 of 74 in 06 and 66 of 79 in 08 stand free as walls of their own; where one is laid on an old
+  wall it touches it (gap 0 on 23 of 25 in 06, 11 of 13 in 08): plate laid flush on concretewall004c or plaster,
+  never stood off it.
 
 ## 7. Rooms and their props (props within 192 to 256 of the key piece, pooled)
 
