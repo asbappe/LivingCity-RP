@@ -382,7 +382,7 @@ def render(path, out, eye=None, yaw=0.0, pitch=0.0, fov=90.0, iso=None, cut=None
     W, H = size
     if iso:
         az = {"NE": 45, "NW": 135, "SW": 225, "SE": 315}[iso.upper()]
-        yaw, pitch = az + 180.0, 35.0
+        yaw, pitch = az + 180.0, (pitch or 35.0)      # (--pitch steepens it: 80 is nearly a plan)
     cy, sy, cp, sp = math.cos(math.radians(yaw)), math.sin(math.radians(yaw)), math.cos(math.radians(pitch)), math.sin(math.radians(pitch))
     fwd = np.array([cy * cp, sy * cp, -sp])
     right = np.array([sy, -cy, 0.0])
@@ -526,7 +526,7 @@ def main():
     ap.add_argument("--out", default="view.png")
     ap.add_argument("--eye", type=float, nargs=3, metavar=("X", "Y", "Z"), help="look from here, as a player would (eyes are 64 over the floor)")
     ap.add_argument("--yaw", type=float, default=0.0, help="with --eye: the way to look (0 east, 90 north)")
-    ap.add_argument("--pitch", type=float, default=0.0, help="with --eye: degrees down")
+    ap.add_argument("--pitch", type=float, default=0.0, help="degrees down: with --eye, the look; with --iso, how steep (default 35)")
     ap.add_argument("--fov", type=float, default=90.0)
     ap.add_argument("--iso", choices=["NE", "NW", "SE", "SW"], help="from above, looking from this corner")
     ap.add_argument("--cut", type=float, default=None, help="draw nothing above this height (to see into roofed places)")

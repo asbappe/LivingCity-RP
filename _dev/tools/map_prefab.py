@@ -8,6 +8,8 @@ A prefab is every brush wholly inside a box of the owner's map (world brushes an
 material and texture alignment exactly as theirs, and the props, lights and decals inside it. Placed in a piece it is
 moved and turned (in quarter turns) with its textures kept right, and written as detail (it never seals: the piece's
 own plan does that), so a facade bay, a shopfront, a door surround or a stair of theirs can dress our walls.
+A displaced face (Valve's cave rock, 21 November) keeps its dispinfo, moved and turned with it, so a cave can be lifted
+too; cut its box on the grid the cave's brushes are laid on, or the rock stops short of the cut.
 
 A piece also keeps its logic: every other entity inside the box (relays, triggers with their brushes, doors, buttons,
 sounds, NPCs, scripted sequences) goes in `wiring` with its keys and outputs, a moving brush also in `solids` as a slab
@@ -17,6 +19,7 @@ it in `outside`, what outside fires into it in `fired_from_outside` (docs/dev/pr
     python3 map_prefab.py extract c18_lc.vmf NAME X1 Y1 Z1 X2 Y2 Z2 [--anchor X Y Z] [--note "what it is"] [--wire-box X1 Y1 Z1 X2 Y2 Z2]
             writes _dev/reference/prefabs/NAME.json (the anchor, default the box's bottom corner, becomes 0 0 0;
             --wire-box: a bigger box for the logic, for a piece whose relays and sounds stand round it)
+            [--drop MATERIAL ...] leaves out brushes with a face of that material (water, say)
     python3 map_prefab.py list                  the library, with each piece's size and what it is
     python3 map_prefab.py show NAME [--out a.vmf] [--no-wiring]   a VMF with only that piece in it (map_view.py draws it)
     python3 map_prefab.py check                 the self-check: lifts a small made-up map with logic and places it twice
@@ -110,7 +113,7 @@ def resolves(target, names):
     return [t] if t in names else []
 
 
-def extract(path, name, box, anchor=None, note="", wire_box=None, lib=None):
+def extract(path, name, box, anchor=None, note="", wire_box=None, lib=None, drop=()):
     import map_view as mv
     root = mv.read(path)
     x1, y1, z1, x2, y2, z2 = box
@@ -142,6 +145,9 @@ def extract(path, name, box, anchor=None, note="", wire_box=None, lib=None):
             sides.append({"plane": [plane[0:3], plane[3:6], plane[6:9]], "verts": verts, "corners": corners, "material": side.kv.get("material", "TOOLS/TOOLSNODRAW"),
                           "uaxis": side.kv.get("uaxis", "[1 0 0 0] 0.25"), "vaxis": side.kv.get("vaxis", "[0 -1 0 0] 0.25"),
                           "lightmapscale": side.kv.get("lightmapscale", "16")})
+            di = [k for k in side.kids if k.name == "dispinfo"]
+            if di:
+                sides[-1]["disp"] = disp_read(di[0], (0, 0, 0))      # (made relative to the anchor in moved())
         return (sides, allv) if sides else None
 
     def moved(sides):
@@ -154,6 +160,8 @@ def extract(path, name, box, anchor=None, note="", wire_box=None, lib=None):
             s["corners"] = [rel(p) for p in s["corners"]]
             s["uaxis"] = shift_axis(s["uaxis"], ax)
             s["vaxis"] = shift_axis(s["vaxis"], ax)
+            if s.get("disp"):
+                s["disp"] = disp_shift(s["disp"], ax)
             out.append(s)
         return out
 
@@ -207,6 +215,8 @@ def extract(path, name, box, anchor=None, note="", wire_box=None, lib=None):
                 cls = "%s (taken shut, as a static slab)" % cls      # (a moving brush: its look, shut, for a piece placed without its logic)
         for sides, allv in brushes:
             if all(inside(v) for v in allv):
+                if any(sd["material"].lower() in drop for sd in sides):
+                    continue      # (--drop: water, say)
                 if all_tools(sides):
                     continue      # (clips, triggers, skybox, hint: the piece does not need them; black panes are seen and kept)
                 s = {"from": cls, "sides": moved(sides)}
@@ -258,6 +268,52 @@ def shift_axis(text, d):
     return "[%s %s %s %s] %s" % (fmt(a[0]), fmt(a[1]), fmt(a[2]), fmt(off), fmt(scale))
 
 
+def disp_shift(disp, ax):
+    """A kept displaced face's dispinfo with its start position moved by -ax (a copy)."""
+    keys = []
+    for k, v in disp["keys"]:
+        if k == "startposition":
+            p = nums(v.replace("[", " ").replace("]", " "))
+            v = "[%s %s %s]" % (fmt(p[0] - ax[0]), fmt(p[1] - ax[1]), fmt(p[2] - ax[2]))
+        keys.append([k, v])
+    return {"keys": keys, "blocks": disp["blocks"]}
+
+
+def disp_read(block, ax):
+    """A displaced face's dispinfo as it was, its start position made relative to the anchor."""
+    keys = []
+    for k, v in block.rows:
+        if k == "startposition":
+            p = nums(v.replace("[", " ").replace("]", " "))
+            v = "[%s %s %s]" % (fmt(p[0] - ax[0]), fmt(p[1] - ax[1]), fmt(p[2] - ax[2]))
+        keys.append([k, v])
+    return {"keys": keys, "blocks": [[b.name, [[k, v] for k, v in b.rows]] for b in block.kids]}
+
+
+DISP_VECTORS = ("normals", "offsets", "offset_normals")      # (rows of x y z triples: they turn with the face)
+
+
+def disp_text(disp, q, d, t):
+    """A dispinfo block for a face turned q quarter turns and moved by d (t: the side's indent)."""
+    out = "%s\t\tdispinfo\n%s\t\t{\n" % (t, t)
+    for k, v in disp["keys"]:
+        if k == "startposition":
+            p = nums(v.replace("[", " ").replace("]", " "))
+            p = [a + b for a, b in zip(rot(p, q), d)]
+            v = "[%s %s %s]" % tuple(fmt(round(c, 4)) for c in p)
+        out += '%s\t\t\t"%s" "%s"\n' % (t, k, v)
+    for name, rows in disp["blocks"]:
+        out += "%s\t\t\t%s\n%s\t\t\t{\n" % (t, name, t)
+        for k, v in rows:
+            if name in DISP_VECTORS and q % 4:
+                f = [float(c) for c in v.split()]
+                f = [c for i in range(0, len(f) - 2, 3) for c in rot(f[i:i + 3], q)]
+                v = " ".join(fmt(round(c, 6)) for c in f)
+            out += '%s\t\t\t\t"%s" "%s"\n' % (t, k, v)
+        out += "%s\t\t\t}\n" % t
+    return out + "%s\t\t}\n" % t
+
+
 def turn_axis(text, turn, d):
     """A texture axis after its face is turned `turn` quarter turns about z and then moved by +d."""
     m = AXIS.match(text)
@@ -281,6 +337,34 @@ def fmt(v):
     return ("%.4f" % v).rstrip("0").rstrip(".") if v != int(v) else "%d" % v
 
 
+def disp_side_text(disp, q, d, t):
+    """A displaced face of a piece (as extract() keeps it) turned q quarter turns and moved by d: its start moved, and
+    every vector of its grid (normals, offsets, offset normals) turned with it; distances, alphas and tags as they were."""
+    if "keys" in disp:      # (the form disp_read() keeps: one form for every piece since 21 November)
+        kv, rows = dict(disp["keys"]), dict((name, [v for _, v in r]) for name, r in disp["blocks"])
+    else:
+        kv, rows = disp["kv"], disp["rows"]
+    sp = nums(kv["startposition"].replace("[", " ").replace("]", " "))
+    x, y, z = rot(sp, q)
+    out = '%sdispinfo\n%s{\n' % (t, t)
+    for k in ("power", "flags", "elevation", "subdiv"):
+        if k in kv:
+            out += '%s\t"%s" "%s"\n' % (t, k, kv[k])
+    out += '%s\t"startposition" "[%s %s %s]"\n' % (t, fmt(x + d[0]), fmt(y + d[1]), fmt(z + d[2]))
+    for name in ("normals", "distances", "offsets", "offset_normals", "alphas", "triangle_tags", "allowed_verts"):
+        if name not in rows:
+            continue
+        out += '%s\t%s\n%s\t{\n' % (t, name, t)
+        for k, row in enumerate(rows[name]):
+            if name in ("normals", "offsets", "offset_normals"):
+                v = nums(row)
+                row = " ".join(" ".join(fmt(round(c, 6)) for c in rot(v[i:i + 3], q)) for i in range(0, len(v) - 2, 3))
+            key = ("%d" % 10) if name == "allowed_verts" else "row%d" % k
+            out += '%s\t\t"%s" "%s"\n' % (t, key, row)
+        out += '%s\t}\n' % t
+    return out + '%s}\n' % t
+
+
 def load(name):
     with open(os.path.join(LIB, name + ".json")) as f:
         return json.load(f)
@@ -300,8 +384,9 @@ def solid_text(vmf, sides, q, d, vis, t="\t"):
         text += '%s\tside\n%s\t{\n%s\t\t"id" "%d"\n%s\t\t"plane" "%s"\n' % (t, t, t, vmf.new_id(), t, " ".join("(%s %s %s)" % tuple(fmt(c) for c in p) for p in pl))
         if vs:
             text += '%s\t\tvertices_plus\n%s\t\t{\n%s%s\t\t}\n' % (t, t, "".join('%s\t\t\t"v" "%s %s %s"\n' % ((t,) + tuple(fmt(c) for c in p)) for p in vs), t)
-        text += '%s\t\t"material" "%s"\n%s\t\t"uaxis" "%s"\n%s\t\t"vaxis" "%s"\n%s\t\t"rotation" "0"\n%s\t\t"lightmapscale" "%s"\n%s\t\t"smoothing_groups" "0"\n%s\t}\n' % (
-            t, s["material"], t, turn_axis(s["uaxis"], q, d), t, turn_axis(s["vaxis"], q, d), t, t, s["lightmapscale"], t, t)
+        text += '%s\t\t"material" "%s"\n%s\t\t"uaxis" "%s"\n%s\t\t"vaxis" "%s"\n%s\t\t"rotation" "0"\n%s\t\t"lightmapscale" "%s"\n%s\t\t"smoothing_groups" "0"\n' % (
+            t, s["material"], t, turn_axis(s["uaxis"], q, d), t, turn_axis(s["vaxis"], q, d), t, t, s["lightmapscale"], t)
+        text += (disp_text(s["disp"], q, d, t) if s.get("disp") else "") + "%s\t}\n" % t
     text += vmf.editor(vis, indent=t + "\t") + "%s}\n" % t
     return text, allv
 
@@ -548,6 +633,7 @@ def main():
     e.add_argument("--anchor", nargs=3, type=float)
     e.add_argument("--note", default="")
     e.add_argument("--wire-box", nargs=6, type=float, help="a bigger box for the logic (default: the piece's box)")
+    e.add_argument("--drop", nargs="*", default=[])
     sub.add_parser("list")
     s = sub.add_parser("show")
     s.add_argument("name")
@@ -556,9 +642,10 @@ def main():
     sub.add_parser("check")
     a = ap.parse_args()
     if a.cmd == "extract":
-        pf = extract(a.vmf, a.name, a.box, a.anchor, a.note, a.wire_box)
-        print("%s: %d brushes, %d props/lights/decals, %d wired (%d names outside, %d firing in), %d by %d by %d" % (
-            a.name, len(pf["solids"]), len(pf["points"]), len(pf.get("wiring", [])), len(pf.get("outside", [])), len(pf.get("fired_from_outside", [])),
+        pf = extract(a.vmf, a.name, a.box, a.anchor, a.note, a.wire_box, drop=tuple(m.lower() for m in a.drop))
+        nd = sum(1 for sol in pf["solids"] for sd in sol["sides"] if sd.get("disp"))
+        print("%s: %d brushes (%d displaced faces), %d props/lights/decals, %d wired (%d names outside, %d firing in), %d by %d by %d" % (
+            a.name, len(pf["solids"]), nd, len(pf["points"]), len(pf.get("wiring", [])), len(pf.get("outside", [])), len(pf.get("fired_from_outside", [])),
             pf["size"][0], pf["size"][1], pf["size"][2]))
     elif a.cmd == "list":
         for f in sorted(os.listdir(LIB)) if os.path.isdir(LIB) else []:

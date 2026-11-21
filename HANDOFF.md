@@ -31,18 +31,15 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 
 ## Where things stand
 
-- 21 November (night). Valve map ingestion of the whole set is DONE: 145 maps measured, 279 lessons, 289 pictures in
-  `_dev/reference/valve_*`, each batch's notes in its `notes/`. What was done and the owner's requests:
-  docs/dev/valve-ingest-progress.md. Guide: docs/dev/map-ingestion.md; digest: docs/dev/valve-digest.md.
-- Pieces lifted at the owner's asking (docs/dev/prefabs.md, "Pieces with their wiring"): Black Mesa East (airlock,
-  turrets, lift, work spots), the Citadel (big doors, core, walkway reactor, pod; light bridge, vortex, ball socket and
-  dispenser, weapon check room), White Forest's silo (for the bunker: where it goes is the owner's call).
-- The forest bunker (21 November): the silo joined just outside the north wall, sealed; the bunker in White Forest's
-  style with its round blast door (about 11 s to open: the owner decides). `lc_forest_bunker.vmf` is not compiled yet.
-- New tool: `_dev/tools/map_combine.py` (Combine structures from the architecture study); its test map
-  `lc_combine_test.vmf` waits on the owner's look before any module uses it.
-- Built after ingestion, owner-approved (TODO.md): timed holds with faster waves, squads topped up, supplies from
-  roofs, tripwires and turrets; the church as a forward Resistance base over the crypt (Grigori there, wall benches,
-  no cells); the silo into the bunker; Citadel and Black Mesa East pieces as modules. Ideas: Advisor screens.
-- Canals built to Valve's table; the Breencast screen and the mounted gun are in the game; Valve's wiki is saved (vdc.py --card), lessons checked against it: docs/dev/vdc-lessons-check.md.
-- Open questions: the mounted gun's damage; lock gates crush or stop; which NPC lessons to build (all say ask first).
+- 21 November (late). The forest cave, expanded from Valve's maps (the owner: "reference the Episode 2 antlion caves and
+  mineshafts, and the HL2 ravenholm caves/mines"; copying Valve's VMFs is allowed). Behind the emergency door: 1280 of
+  Ravenholm's mine tunnel lifted whole from d1_town_04 (rock, timber sets, clamp lamps, rails, flooded floor), the
+  breach into the hive, Episode Two's antlion alarm post (`lc_nest_mouth_1_*`, not wired). The hive dressed to EP2's
+  measures (grub groups with their lights, cold fills, sacks, web plugs, stalactites). docs/dev/map-building.md.
+- `map_prefab.py` now lifts displacements (caves); pieces in docs/dev/prefabs.md, "Cave and mine pieces"; next lifts
+  listed there and on TODO.md. Valve's VMF zip: on the owner's Drive, found by name with the Drive connector.
+- Not compiled yet: `lc_forest_cave.vmf` (mine and hive), `lc_forest_bunker.vmf` (bunker and silo).
+- Valve map ingestion is DONE (145 maps, 279 lessons): docs/dev/valve-ingest-progress.md, docs/dev/map-ingestion.md.
+- Lifted and joined earlier: the silo into the bunker; Citadel and Black Mesa East pieces as modules.
+- Open with the owner (TODO.md): whether the nest's mouth sounds before a wave; the bunker door's speed; the mounted
+  gun's damage; lock gates crush or stop; which NPC lessons to build (all say ask first).

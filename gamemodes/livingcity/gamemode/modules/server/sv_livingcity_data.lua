@@ -232,6 +232,9 @@ function LC.SaveData(settingsOnly)
     for id, tag in pairs(LC.DoorTags) do
         out.doors[#out.doors + 1] = { id = id, tag = tag }
     end
+    local used = table.GetKeys(LC.UsedZoneMarkers or {}) -- the map's zone markers that have acted (LC.AddMapZones)
+    table.sort(used)
+    out.zoneMarkers = #used > 0 and used or nil
     out.props = LC.PropsToSave and LC.PropsToSave() or nil -- persistent props (sv_livingcity_props.lua)
     LC.SafeWrite(Path(), util.TableToJSON(out, true))
     if settingsOnly then return end
@@ -270,6 +273,7 @@ end
 
 function LC.LoadData(applySettings)
     LC.Points, LC.Nodes, LC.Zones, LC.DoorTags, LC.Settings = {}, {}, {}, {}, nil
+    LC.UsedZoneMarkers = {}
     LC.NextNodeId = 1
     local migrated = false
 
@@ -310,6 +314,9 @@ function LC.LoadData(applySettings)
         for _, d in ipairs(t.doors or {}) do
             if LC.DOOR_TAGS[d.tag] then LC.DoorTags[tonumber(d.id)] = d.tag end
         end
+        for _, n in ipairs(istable(t.zoneMarkers) and t.zoneMarkers or {}) do
+            if isstring(n) then LC.UsedZoneMarkers[string.lower(n)] = true end
+        end
         LC.NextNodeId = math.max(LC.NextNodeId, tonumber(t.nextNodeId) or 1)
         LC.Settings = t.settings
         if (t.version or 1) < 3 then migrated = true end
@@ -325,6 +332,10 @@ function LC.LoadData(applySettings)
             LC.Log("info", string.format("The morning jog is archived: %d jogging route stops taken out of the layout (a backup was kept: lc_backups).", n))
         end
     end
+
+    -- zones the map brings with it, each once (info_target lc_zone_<kind>_r<radius>_h<height>_<label>: LC.AddMapZones)
+    local _, marked = LC.AddMapZones()
+    if (marked or 0) > 0 then migrated = true end
 
     -- the very first builds kept Civil Protection door tags in a separate file
     local oldPath = "livingcity/" .. game.GetMap() .. "_cpdoors.json"
@@ -467,14 +478,19 @@ end
 ------------------------------------------------------------------------
 
 -- box: optional { mins, maxs } (LCZ.BoxFromCorners); then pos and r are worked out from it.
-function LC.AddZone(pos, r, kind, group, box)
-    if not LC.ZONE_KINDS[kind] then return nil end
+local function MakeZone(pos, r, kind, group, box)
     if box then pos, r = LCZ.BoxCircle(box) end
     local z = {
         pos = pos, r = math.Clamp(tonumber(r) or 150, 32, 6000), kind = kind,
         group = math.max(0, math.floor(tonumber(group) or 0)), box = box,
     }
     LC.Zones[#LC.Zones + 1] = z
+    return z
+end
+
+function LC.AddZone(pos, r, kind, group, box)
+    if not LC.ZONE_KINDS[kind] then return nil end
+    local z = MakeZone(pos, r, kind, group, box)
     LC.SaveData()
     return z
 end
@@ -511,6 +527,80 @@ function LC.ZoneAt(pos)
         if LCZ.Contains(z, pos) and (not best or z.r < best.r) then best = z end
     end
     return best
+end
+
+-- Zones a map brings (the owner, 21 November, of the silo's territory: "why don't you just place them yourself?").
+-- An info_target named lc_zone_<kind>_r<radius>_h<height>_<label>, for example lc_zone_rebel_r700_h1800_silo:
+-- <kind> is one the editor places (LC.ZONE_KINDS); r how far it reaches from the marker (300 if left out; 32 to
+-- 4000, as the editor's slider); h, if there, how tall it stands from the floor under the marker (64 to 4096); the
+-- label tells two markers apart (each name must be its own). Without h it is the editor's circle round the floor under
+-- the marker (reaching as far up and down as out, as every circle); with h, the editor's box, 2r wide each way. As
+-- the layout loads, a marker that no zone of its kind covers yet adds its zone just as the editor would (a housing
+-- block gets the next free number): saved with the layout, moved or deleted in the editor like any other. Each marker
+-- acts once: its name goes in the layout's list (zoneMarkers), so a zone the owner deleted stays deleted. The size is in
+-- the name because Garry's Mod keeps only an info_target's own keyvalues once the map has loaded.
+LC.UsedZoneMarkers = LC.UsedZoneMarkers or {}
+
+-- A marker's name read: kind, r, h (h nil: a circle). nil for a name that isn't a zone marker.
+function LC.ParseZoneMarker(name)
+    local rest = string.match(string.lower(tostring(name or "")), "^lc_zone_(.+)$")
+    if not rest then return nil end
+    local kind, r, h
+    for part in string.gmatch(rest, "[^_]+") do
+        if not kind then kind = part
+        elseif not r and string.match(part, "^r%d+$") then r = tonumber(string.sub(part, 2))
+        elseif not h and string.match(part, "^h%d+$") then h = tonumber(string.sub(part, 2)) end
+    end
+    if not kind then return nil end
+    return kind, math.Clamp(r or 300, 32, 4000), h and math.Clamp(h, 64, 4096) or nil
+end
+
+-- Adds the zones of the map's markers that are due. Saves nothing (LC.LoadData does). Returns how many zones it added
+-- and how many markers it marked as used (a marker already covered is marked too: that zone stands for it).
+function LC.AddMapZones()
+    if LC.LayoutBroken then return 0, 0 end -- (which markers were used is in the file that couldn't be read)
+    local used = LC.UsedZoneMarkers
+    local found = {}
+    for _, e in ipairs(ents.FindByName and ents.FindByName("lc_zone_*") or {}) do
+        if IsValid(e) and e:GetClass() == "info_target" then found[#found + 1] = { e = e, name = string.lower(tostring(e:GetName())) } end
+    end
+    table.sort(found, function(a, b) return a.name < b.name end)
+    local added, marked = 0, 0
+    for _, m in ipairs(found) do
+        local kind, r, h = LC.ParseZoneMarker(m.name)
+        if kind and not used[m.name] then
+            if not LC.ZONE_KINDS[kind] then
+                local kinds = table.GetKeys(LC.ZONE_KINDS)
+                table.sort(kinds)
+                LC.Error("the map's zone markers", string.format("%s on %s names no kind of zone the editor places (%s): left out",
+                    m.name, game.GetMap(), table.concat(kinds, ", ")))
+            else
+                local spot, covered = m.e:GetPos(), false
+                for _, z in ipairs(LC.Zones) do
+                    if z.kind == kind and not z.grown and LCZ.Contains(z, spot) then covered = true break end
+                end
+                if not covered then
+                    local floor = LC.FloorUnder and LC.FloorUnder(spot) or spot
+                    local group = 0
+                    if kind == "block" then
+                        for _, z in ipairs(LC.Zones) do if z.kind == "block" then group = math.max(group, z.group or 0) end end
+                        group = group + 1
+                    end
+                    if h then
+                        MakeZone(nil, nil, kind, group, LCZ.BoxFromCorners(floor - Vector(r, r, 0), floor + Vector(r, r, 0), h))
+                    else
+                        MakeZone(floor, r, kind, group)
+                    end
+                    added = added + 1
+                    LC.Log("info", string.format("The map's marker %s brought a %s zone (%s).", m.name, kind,
+                        h and string.format("a box %d wide, %d tall", 2 * r, h) or ("radius " .. r)))
+                end
+                used[m.name] = true
+                marked = marked + 1
+            end
+        end
+    end
+    return added, marked
 end
 
 ------------------------------------------------------------------------

@@ -20123,6 +20123,10 @@
 "static": true,
 "v": 2
 },
+"models/props_interiors/bed_frame01a.mdl": {
+"elsewhere": [],
+"game": null
+},
 "models/props_interiors/elevatorshaft_door01a.mdl": {
 "bbox": [
 -3.9,
@@ -30014,6 +30018,10 @@
 "ragdoll": false,
 "static": true,
 "v": 2
+},
+"models/props_silo/silo_workspace2.mdl": {
+"elsewhere": [],
+"game": null
 },
 "models/props_silo/tire1.mdl": {
 "bbox": [

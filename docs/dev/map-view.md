@@ -10,6 +10,7 @@ A chat cannot compile a map or open Hammer. This tool draws a VMF to a PNG so a 
 cd _dev/tools
 python3 map_view.py FILE.vmf --iso SW --out above.png                 # from above, looking from the south-west corner
 python3 map_view.py FILE.vmf --iso NE --cut 560 --out open.png        # ...with nothing drawn above z 560: roofs off, to see into rooms
+python3 map_view.py FILE.vmf --iso SE --pitch 72 --cut 560 --out plan.png   # ...looking down more steeply (default 35): rooms seen over their walls
 python3 map_view.py FILE.vmf --eye 1024 -700 464 --yaw 270 --pitch 10 --out inside.png   # as a player standing there would see it
 python3 map_view.py c18_lc.vmf --iso SW --box 3000 1500 4500 3000 --out corner.png        # only what lies in a rectangle (a big map)
 ```

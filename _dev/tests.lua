@@ -43677,6 +43677,79 @@ function Nov21_StrongholdTests()
 end
 Nov21_StrongholdTests()
 
+function MapZoneMarkerTests()
+-- the owner, 21 November, of the silo's territory: "why don't you just place them yourself?": an info_target named
+-- lc_zone_<kind>_r<radius>_h<height>_<label> brings a zone of that kind once, as if placed with the editor
+section("The map's zone markers: a map brings its own territories, once")
+local path = LC.LayoutPath()
+local groundWas = _groundFn
+_groundFn = nil
+local Z0 = Vector(-420000, 260000, 0)
+local function MapZone(kind, at)
+    for _, z in ipairs(LC.Zones) do if z.kind == kind and not z.grown and LCZ.Contains(z, at) then return z end end
+end
+local function Saved() return util.JSONToTable(_files[path] or "{}") or {} end
+local before = _files[path]
+local a0, m0 = LC.AddMapZones()
+ok(a0 == 0 and m0 == 0 and _files[path] == before and not string.find(before or "", "zoneMarkers", 1, true),
+    "a map without markers: nothing added, the layout as it was")
+local k, r, h = LC.ParseZoneMarker("lc_zone_rebel_r700_h1800_silo")
+local k2, r2, h2 = LC.ParseZoneMarker("LC_Zone_Infest_Yard")
+ok(k == "rebel" and r == 700 and h == 1800 and k2 == "infest" and r2 == 300 and h2 == nil and LC.ParseZoneMarker("lc_hq_setup_silo") == nil,
+    "a marker's name gives its kind, radius and height (radius 300 and a circle when left out)", k, r, h, k2, r2, h2)
+-- a marker no zone of its kind covers brings one as the layout loads
+local zones0, maxBlock = #(Saved().zones or {}), 0
+for _, z in ipairs(LC.Zones) do if z.kind == "block" and not z.grown then maxBlock = math.max(maxBlock, z.group or 0) end end
+local SILO, YARD = Z0 + Vector(0, 0, 8), Z0 + Vector(30000, 0, 8)
+local silo = ents.Create("info_target") silo:SetName("lc_zone_rebel_r700_h1800_silotest") silo:SetPos(SILO) silo:Spawn()
+local yard = ents.Create("info_target") yard:SetName("lc_zone_block_r400_yardtest") yard:SetPos(YARD) yard:Spawn()
+LC.LoadData(false)
+local zs, zy = MapZone("rebel", SILO), MapZone("block", YARD)
+ok(zs and zs.box and zs.box.maxs.x - zs.box.mins.x == 1400 and zs.box.maxs.y - zs.box.mins.y == 1400
+    and zs.box.mins.z == -16 and zs.box.maxs.z == 1800 and zs.group == 0,
+    "a marker with a height brings a box of its kind: 2r wide, standing h tall from the floor under it (the editor's box)",
+    zs and zs.box and tostring(zs.box.mins) .. " " .. tostring(zs.box.maxs))
+ok(zy and not zy.box and zy.r == 400 and zy.pos.z == 0 and zy.group == maxBlock + 1,
+    "without a height, the editor's circle on the floor under it; a housing block gets the next free number", zy and zy.r, zy and zy.group)
+local sv = Saved()
+local names = {}
+for _, n in ipairs(sv.zoneMarkers or {}) do names[n] = true end
+ok(#(sv.zones or {}) == zones0 + 2 and names["lc_zone_rebel_r700_h1800_silotest"] and names["lc_zone_block_r400_yardtest"],
+    "both are saved with the layout, and the markers' names with them", #(sv.zones or {}), zones0)
+-- one already there: none added
+local hand = LC.AddZone(Z0 + Vector(60000, 0, 0), 500, "rebel", 0)
+local inside = ents.Create("info_target") inside:SetName("lc_zone_rebel_r900_coveredtest") inside:SetPos(Z0 + Vector(60100, 0, 8)) inside:Spawn()
+local n1 = #LC.Zones
+local a1, m1 = LC.AddMapZones()
+ok(a1 == 0 and m1 == 1 and #LC.Zones == n1 and LC.UsedZoneMarkers["lc_zone_rebel_r900_coveredtest"],
+    "a marker a zone of its kind already covers adds none (that zone stands for it)", a1, m1)
+-- deleted in the editor: it stays deleted
+LC.RemoveZone(zs)
+LC.LoadData(false)
+local blocks = 0
+for _, z in ipairs(LC.Zones) do if z.kind == "block" and not z.grown and LCZ.Contains(z, YARD) then blocks = blocks + 1 end end
+ok(MapZone("rebel", SILO) == nil and blocks == 1,
+    "a map zone the owner deleted does not come back when the layout loads again, and one kept is not doubled", blocks)
+-- an unknown kind: left out, with a line in the errors file
+local e0, lost0 = #_errors, LC.Err.lost or 0
+local bogus = ents.Create("info_target") bogus:SetName("lc_zone_castle_r500_bogustest") bogus:SetPos(Z0 + Vector(90000, 0, 8)) bogus:Spawn()
+local n2 = #LC.Zones
+local a2, m2 = LC.AddMapZones()
+local noted = (LC.Err.lost or 0) > lost0
+for _, e in ipairs(LC.Err.list) do if string.find(e.msg, "lc_zone_castle_r500_bogustest", 1, true) then noted = true end end
+ok(a2 == 0 and m2 == 0 and #LC.Zones == n2 and noted and not LC.UsedZoneMarkers["lc_zone_castle_r500_bogustest"],
+    "a marker of a kind the editor doesn't place is left out, with a line in the errors file", a2, m2, noted)
+for i = #_errors, e0 + 1, -1 do table.remove(_errors, i) end
+silo:Remove() yard:Remove() inside:Remove() bogus:Remove()
+LC.UsedZoneMarkers = {}
+for _, at in ipairs({ { "block", YARD }, { "rebel", hand.pos } }) do -- (a reload makes new zone tables: found again)
+    local z = MapZone(at[1], at[2])
+    if z then LC.RemoveZone(z) end
+end
+_groundFn = groundWas
+end
+MapZoneMarkerTests()
+
 ----------------------------------------------------------------------
 section("Stop")
 LC.Stop(admin)

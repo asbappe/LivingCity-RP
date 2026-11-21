@@ -46,7 +46,7 @@ This is the master technical document. It lists what the owner's server, files, 
 | How often each player has had the PA's explanations | PData `lc_pa_heard` | sv_livingcity_learning.lua |
 | Citizens' advice lines (showing you the way) | `sound/livingcity/citizens/`, flat, named for the line and the voice: `advice_bins_male1.wav`, `advice_bins_female1.wav` (list: `VOICE_SCRIPTS.md`) | `LC.AdviceVoiceRoot`, `LC.AdviceClip`, sv_livingcity_advice.lua |
 | Ending songs | `sound/livingcity/endings/`, flat, named for the ending's codeword (`bus.mp3`, `bus2.mp3`, `shalom1.mp3`); `.mp3`, `.ogg` or `.wav`; the older folder per ending still works | `LC.EndingOfSong`, `LC.EndingSongs`, `LC.EndingRoot` |
-| The city's layout (the editor's work) | `data/livingcity/<map>.json`, with backups in `data/livingcity/backups/<map>/` | `LC.LayoutPath`, sv_livingcity_data.lua |
+| The city's layout (the editor's work; since 21 November also `zoneMarkers`, the names of the map's `lc_zone_...` markers that have brought their zone once, so one deleted stays deleted) | `data/livingcity/<map>.json`, with backups in `data/livingcity/backups/<map>/` | `LC.LayoutPath`, sv_livingcity_data.lua |
 | Who knew whom (for "word gets around"), and news of a death still to pass on | `data/livingcity/known.json`, `data/livingcity/word.json` | sv_livingcity_life.lua |
 | Lockers, storage crates and market stalls, with what's in them | `data/livingcity/<map>_storage.json` | sv_livingcity_storage.lua |
 | Debug reports (each one saved as it's copied) | `data/livingcity/reports/` | sv_livingcity_debug.lua |
