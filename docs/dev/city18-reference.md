@@ -424,7 +424,7 @@ Valve's own Route Kanal (d1_canals_01, 01a, 02, 03, 05 to 13; the Source SDK cop
 
 ## The lessons
 
-Tags: `props`, `owner`, `compiler`, `check`, `performance`, `doors`, `stairs`, `geometry`, `bug`, `entities`, `lighting`, `city18`, `grime`, `sound`, `streets`, `facades`, `layout`, `interiors`, `combine`, `process`, `gameplay`, `canal`, `viewer`, `materials`, `valve`, `infestation`, `ravenholm`
+Tags: `props`, `owner`, `compiler`, `check`, `performance`, `doors`, `stairs`, `geometry`, `bug`, `entities`, `lighting`, `city18`, `grime`, `sound`, `streets`, `facades`, `layout`, `interiors`, `combine`, `process`, `gameplay`, `canal`, `viewer`, `materials`, `valve`, `infestation`, `ravenholm`, `logic`, `multiplayer`
 
 ### A thing is a prop, never brushes (`props-not-brushes`)
 
@@ -1123,4 +1123,130 @@ A lock across a canal is a pair of Valve's gate props, locks_large and locks_lar
 - **Tags:** canal, valve, props
 
 - **See:** `valve_canals/15_lock_iso.png`, `valve_canals/18_reservoir_water_iso.png`
+
+### A valve wheel moves the gate as far as it is turned (`valve-wheel-gate`)
+
+A wheel players turn is a momentary_rot_button: an unseen toolsinvisible brush, spawnflags 1024 (use) + 64 or 128 (the axis, none for z) + 1 (not solid), distance 210 to 800 (negative turns the other way), speed 18 to 180, returnspeed 30 to 240, sounds 24, with the wheel model a prop_dynamic parented to it. Its Position output goes to SetPosition on a func_movelinear (the gate or lift), so the gate follows the wheel; OnFullyClosed, once, plays the lock sound and Locks the wheel. A second wheel without the use flag can follow the first by the same SetPosition. When the game opens the gate itself, the same relay sends the wheel SetPosition and Lock so the wheel shows the gate's state.
+
+- **Why:** 8 momentary_rot_button in 4 canal maps, every one with its model parented. d1_canals_05 gate3_wheel (props_pipes/valvewheel002): Position -> door_lock2_2.SetPosition (func_movelinear, movedistance 148, startsound d1_canals.citizen_gate.Move1, stopsound d1_canals.citizen_gate.FullClose1), OnFullyClosed -> canals_sound_lock01 (d1_canals.citizen_gate.WheelLock1, flags 48) PlaySound x1 and gate3_wheel Lock x1. Its Position also turns rotate_exitgate_wheel and _wheel2 (spawnflags 65: no use flag). d1_canals_10 gate4_wheel (props_borealis/door_wheel001a) lifts canals_brush_boathouselift1 320. d1_canals_11 relay_guncave_gateopen: door Open, wheel Unlock, wheel SetPosition 1 at 0.1. Our lc_stash_valve and lc_aqueduct_valve fire once on a press.
+- **How:** A helper m.wheel(name, u, v, z, axis, drives, distance) that makes the brush, the parented model, the func_movelinear wiring and a once-only lock sound; lc_NAME_open / _shut relays also move the wheel.
+- **Checked by:** review; proposed map_lint wire: a momentary_rot_button needs an axis flag (or turns about z), a distance, and a Position line that reaches a SetPosition.
+- **Tags:** logic, valve, entities, canal
+
+### An areaportal in a doorway shuts with its door, never by a trigger (`valve-portal-door`)
+
+A portal where a door hangs names the door in its target key (prop_door_rotating, func_door); for a gate that is a func_door_rotating or func_movelinear, the gate's OnOpen sends the portal Open and its OnFullyClosed sends Close. It starts closed (StartOpen 0) when the door starts shut. Never open or close a portal from a trigger in a map many people share: Valve's triggers open the way ahead and shut it behind one player, which would blind everyone behind him.
+
+- **Why:** 173 func_areaportal in 18 maps: 93 have no name and only cut what is drawn; 11 name their door in target (10 prop_door_rotating such as d1_trainstation_01 barney_door_1, 1 func_door, d1_trainstation_05 lab_door); 71 output lines open or close the rest, 62 of them from triggers (d1_trainstation_03 portal_courtyard_doorway1: two strips 60 apart, Open then Close). d1_canals_08: door_locke1_1 OnFullyClosed -> relay_locks_closegateportal -> portal_locks_1 Close.
+- **How:** map_build.areaportal(box, vis, name=None, door=None) writes the target key, or the door's OnOpen / OnFullyClosed wires; today our portals never close.
+- **Checked by:** review; proposed: a portal whose box meets a door's box with neither target nor door wiring; any trigger that sends a portal Open or Close.
+- **Tags:** logic, valve, performance, doors
+
+### A sound waits silent and plays once unless it loops (`valve-sound-flags`)
+
+A sound the wiring plays is an ambient_generic with spawnflags 48 (starts silent, not looped) for a one-shot, 16 for a loop that waits for PlaySound and StopSound, 0 only for a loop that runs from the start (49 adds 'play everywhere'). Name the game's sound scripts (Doors.Move*, Buttons.snd*, d1_canals.*) rather than a raw .wav; volume (health) 10, radius about 1250, 2000 for a blast, 10000 for a siren. Of two leaves that move together, only one carries the move sound.
+
+- **Why:** 419 ambient_generic: 407 name a sound script, 12 a .wav; spawnflags 48 on 240, 16 on 68, 49 on 59, 0 on 34; health 10 on 377; radius 1250 on 223. d1_canals_05 canals_sound_lock01 (48), d1_canals_07 sound_redlight1 d1_canals.Floodgate_AlarmBellLoop (16), d2_coast_12 bunker_1_alarm_1 coast.bunker_siren1 (16, radius 10000); d1_canals_08 door_locke1_1 has noise1/noise2, its twin door_locke1_2 none. Our m.sound uses health 7, radius 1100, spawnflags 0 or 16 and never 32 (what GMod then does with a one-shot fired twice is unchecked).
+- **How:** m.sound(..., once=True) gives 48; the default stays a loop.
+- **Checked by:** review; proposed: a sound that outputs PlaySound but lacks flag 16 (it also plays at spawn).
+- **Tags:** logic, valve, sound
+
+### A timer sleeps until someone is there (`valve-timer-asleep`)
+
+A logic_timer that only dresses a place (dust, sparks, steam, a far noise) starts disabled, with a random time (UseRandomTime 1, bounds such as 1 to 8), and is enabled by a trigger_multiple when the first player comes in (OnStartTouchAll Enable) and disabled when the last leaves (OnEndTouchAll Disable). A timer the gamemode needs (a train timetable) may run always.
+
+- **Why:** 48 of 50 logic_timer start disabled and 36 use random times (bounds 1-8, 1-3, 3-5 commonest); they are enabled by triggers and relays and Killed when done: d1_canals_03 deadly_steamjet_1_timer (3 to 5 s), d3_c17_13 transition_flickerlight_timer (Enable and Disable from trigger_multiple), d2_coast_12 bunker suppression timers. Ours (lc_ash_timer, lc_underpass_dust_timer, lc_thumper_timer) run from the start on a server that runs all day.
+- **How:** m.timer(name, u, v, z, lo, hi, wires, area=box) builds the timer off and the presence trigger round the place.
+- **Checked by:** review; proposed: a timer that starts enabled and is not on the gamemode's list.
+- **Tags:** logic, valve, performance
+
+### 'When all of these have happened' is a math_counter (`valve-counter`)
+
+Each event sends Add 1 to a math_counter whose max is how many; OnHitMax fires the result. An AND of two different things (a scene ended and an item taken) is a counter with max 2. A wave that comes again resets its own counter from OnHitMax (SetValue 0). Every counter needs at least max feeders.
+
+- **Why:** 55 math_counter in 16 maps, max 2 on 17 and 3 on 13; fed by NPC OnDeath (55 lines), prop OnBreak (16), path_track OnPass (11). d1_canals_01 traintrackcops_south_assault_counter: cop OnDeath Add; OnHitMax -> traintrackcops_south_makers_relay Enable and SetValue 0 on itself. d1_trainstation_05 get_suit_math_1 (max 2): lab03_lcs OnCompletion and item_suit OnPlayerTouch. d1_canals_01a sewerbarrels_counter (max 4): barrels OnBreak, then sewerbarrels_gate_intact Kill and sewerbarrels_gate_broken Enable. Valve shipped counters nothing adds to (d1_canals_01a train_boardbreak_counter1 and 2).
+- **How:** m.counter(name, u, v, z, top, done_wires, again=False); our lc_nest_count and lc_armory_count already work this way.
+- **Checked by:** review; proposed: a counter with fewer Add lines than its max.
+- **Tags:** logic, valve
+
+### One relay per event, its steps timed by delays (`valve-relay-per-event`)
+
+Each thing the gamemode or a player sets off is one logic_relay whose outputs are staggered (the sound first, the move 0.1 to 2 seconds later, the end a few seconds after); a second relay only for what also happens alone (stop, reset). Relays come in pairs (open and shut, start and stop) and the gamemode fires only relays, never the moving parts.
+
+- **Why:** 414 logic_relay, 2056 outputs (median 3, about 12 at the 90th percentile, most 42 in d1_trainstation_01 scene4_start); of 344 relays called from outside, 280 call no other relay; the longest delay in a relay is 0.2 s at the median and 2 s at the upper quarter. Pairs: d1_canals_07 logic_start_redlight / logic_stop_redlight; d1_canals_08 relay_locks_opengates / relay_locks_closegates (Unlock at 0, Open at 0.1, klaxon at 0, 1, 2 and 3). Relays drive doors more than anything else does (func_door: Open 11, Close 5; func_door_rotating: Open 9, Toggle 7, Close 6, Unlock 5).
+- **How:** Keep map_raven's and map_forest's lc_X_open / _shut / _opened / _closed relays for every moving thing the game uses; m.relay as it is.
+- **Checked by:** review
+- **Tags:** logic, valve
+
+### A switch shows its state on itself (`valve-switch-state`)
+
+A switch shows on or off with its own model (CombineButton.mdl SetAnimation togglein / toggleout) and a small sprite whose colour changes (0 255 0 on, 255 0 0 off), not with text and not by switching room lights. It Locks as it moves and Unlocks a second later, so a double press does not undo it.
+
+- **Why:** d2_coast_12 thumper_1_button: func_door spawnflags 289 (use opens, toggle), wait 3, noise2 Buttons.snd9; OnOpen: thumper_1_button_model togglein, thumper_1_button_sprite (sprites/glow01.spr, scale 0.1) Color 0 255 0 at 0.2 and SetScale 0.05 then 0.1, thumper_1 Enable, Lock at 0, Unlock at 1; OnClose the reverse. Valve switches or recolours 67 env_sprite but switches only 23 of its 948 lights; 14 env_hudhint and 1 game_text in 23 maps (house rule 10).
+- **How:** m.switch(name, u, v, z, out, on_wires, off_wires) built as the coast's; our wall_button could carry such a sprite.
+- **Checked by:** review
+- **Tags:** logic, valve, gameplay
+
+### Breaking a place swaps intact for broken in one go (`valve-swap-broken`)
+
+A wall, door or floor that gets blown or breached is two named sets: the intact props and brushes (Kill or Break) and the broken ones (prop_dynamic and func_brush with StartDisabled 1: TurnOn or Enable). One relay does it with a one-shot sound (48, radius 2000), env_shake (amplitude 12, radius 1000, 1 s, frequency 2.5), env_explosion (magnitude 100, flag 1 for no damage) and fire half a second later.
+
+- **Why:** d3_c17_13 bigdestroy1_relay: bigdestroy1_props_intact (3 prop_dynamic) Kill, bigdestroy1_props_broken (8 prop_dynamic, StartDisabled 1) TurnOn, bigdestroy1_breakables_intact Break, bigdestroy1_explosion Explode, bigdestroy1_shake StartShake, bigdestroy1_wav (Streetwar.d3_C17_13_explode_2) PlaySound, bigdestroy1_fire StartFire at 0.5; bigdestroy3 also wakes a prop_physics beam and fires env_physexplosion at 0.5. d1_canals_01a: sewerbarrels_gate_intact Kill, _broken Enable.
+- **How:** m.swap(name, intact, broken, boom=True) giving lc_NAME_break, the relay the gamemode fires (a Combine breach, a collapse).
+- **Checked by:** review
+- **Tags:** logic, valve, props
+
+### A hazard that comes and goes is a timer, a relay and switched parts (`valve-hazard-cycle`)
+
+Steam or sparks that hurt on a rhythm: a logic_timer (random 3 to 5 s, off until players are near) triggers a relay that turns on the effect, Enables a trigger_hurt and a trigger_push and plays a one-shot sound, and turns all of them off 1.7 s later. Everything starts off.
+
+- **Why:** d1_canals_03 deadly_steamjet_1_timer -> deadly_steamjet_1_on_rl: env_steam deadly_steamjet_1 TurnOn (speed 180, startsize 25, endsize 40, rate 40, jetlength 80), deadly_steamjet_1_hurt Enable (damage 20, damagetype 8), deadly_steamjet_1_push Enable (speed 40), underground_steamjet (48); all off at 1.7. Three of them in a row make a run to time (a challenge, not a wait: house rule 9).
+- **How:** m.hazard(name, box, kind='steam') in the sewers and works.
+- **Checked by:** review
+- **Tags:** logic, valve, gameplay
+
+### Every trigger says who touches it, and counts many players (`valve-trigger-who`)
+
+Set spawnflags on every trigger: 1 players, 2 NPCs, 8 physics props, 64 everything; add a filter only to pick one kind or name. trigger_multiple waits 1 second. On a shared server: trigger_once fires for the first player only (once a round); OnStartTouchAll and OnEndTouchAll mean 'someone is here' and 'all have gone' (a plain OnEndTouch from one player undoes it for the others); !activator is 'whoever did it'; never !player (in multiplayer it is always player 1).
+
+- **Why:** 664 of 808 trigger_once and trigger_multiple use flag 1, 75 a filter (an NPC class or name, the airboat); trigger_multiple wait 1 on 199 of 305; 92 triggers start disabled until the story opens them. !activator in 93 outputs, !player in 11 and in 52 aiscripted_schedule goals. d1_town_03 street_lever_unlock_trigger: OnStartTouch Unlock, OnEndTouch Lock (the lever works only from the street side); d1_canals_07 trigger_room5_detect_desk_movement OnEndTouchAll.
+- **How:** m.ent('trigger_multiple', ...) with flags always given; use the All outputs for presence.
+- **Checked by:** review; proposed: a trigger with spawnflags 0, any !player, an OnEndTouch that undoes an OnStartTouch.
+- **Tags:** logic, valve, multiplayer
+
+### Group by one name, leave no loose ends (`valve-names-no-loose-ends`)
+
+Things that switch together share one targetname and one output reaches them all (Valve's way), or carry a numbered stem reached by one wildcard (ours, lc_swing_lamp_*); wildcards are otherwise rare. Every output names something that is in the map or that the gamemode makes: the game says nothing when it is not. Parent one level deep, two at most.
+
+- **Why:** 482 targetnames are shared (68 groups of prop_physics, 44 of ambient_generic, 17 of func_areaportal, d1_trainstation_04 portal_endsection x4); 30 of 7711 outputs use a wildcard. 98 outputs in Valve's own maps name nothing: d1_canals_01 boards send Add 46 times to train_boardbreak_counter1 and 2, which live in d1_canals_01a; d1_trainstation_04 citizen_DoorBracer and door_bracerProp. Parent depth: 437 children one level, 41 two, 1 three. Our names check calls a name used twice a PROBLEM: a shared name inside one module would need allowing.
+- **How:** Keep lc_ names; list what the gamemode spawns so the check knows them.
+- **Checked by:** proposed map_lint wire: output targets that do not exist, wildcards that match nothing, parentname that does not exist, filtername that is not a filter.
+- **Tags:** logic, valve, check
+
+### A door the map closes tries again when blocked (`valve-door-retry`)
+
+A door closed by the wiring sends itself Close again from OnBlockedClosing a second later, and Locks from OnFullyClosed rather than with the Close (a player in the way would otherwise leave it open and locked). Heavy doors that must never stop keep the crusher (map_forest.crusher).
+
+- **Why:** d1_trainstation_01 barney_door_2 (prop_door_rotating, spawnflags 34816): OnBlockedClosing -> barney_door_2 Close at 1, OnFullyClosed -> Lock; introom_door_1 the same; barney_door_close_trigger sends Close at 0 and Lock at 0.1. On a busy server players stand in doorways all the time.
+- **How:** m.door and the door helpers add the two wires when the door is closed by the map.
+- **Checked by:** review
+- **Tags:** logic, valve, doors, multiplayer
+
+### An alarm is a turning red light, a siren and makers, on two relays (`valve-alarm`)
+
+A start relay turns on a red beacon (func_rotating carrying two red point_spotlights back to back, in a caged lamp), plays a siren or bell loop (16) a moment later and Spawns from disabled npc_template_makers; a stop relay (fired by the gamemode, or by the start relay after a set time) turns all of it off. A one-shot klaxon (48) can be fired several times a second apart instead of a loop.
+
+- **Why:** d1_canals_07 logic_start_redlight: spot_doors and spot_doors2 LightOn (point_spotlight 255 0 0, length 96, width 25, spawnflags 2, angles 0 0 -180 and 0 180 -180, parented to rot_redlight1), rot_redlight1 Start (func_rotating 16 cube, spawnflags 64, maxspeed 350, fanfriction 20) inside props_c17/light_cagelight01_on, sound_redlight1 PlaySound at 2 and StopSound at 14, logic_stop_redlight at 120. d2_coast_12 bunker_1_alarm_relay: coast.bunker_siren1 and 2 (16, radius 10000) and a red glow sprite. d1_canals_08 klaxon at 0, 1, 2, 3. 194 of 197 npc_template_maker start disabled and are fired by Spawn.
+- **How:** m.alarm(name, u, v, z, makers=()) giving lc_NAME_alarm_on / _off for the gamemode (a raid on a checkpoint).
+- **Checked by:** review
+- **Tags:** logic, valve, combine, sound
+
+### Small things fade far off; cover never does (`valve-fade-clutter`)
+
+Outdoors, give small clutter a fade, the start about 80 percent of the end: shrubs, rubbish and handrails 2000 to 2500, fences, driftwood and containers 3000 to 5000, poles, barriers and tree cards 10000 to 12000. Never fade what players hide behind (a far player would see through it); rooms behind areaportals need no fade.
+
+- **Why:** 2363 of 6970 prop_static and 711 of 2237 prop_physics carry a fade: shrub_01a 2000 to 2500, garbage256_composite002b 2000 to 2200, exterior_fence002e 3000 to 4000, cargo_container01 3500 to 3800, utilitypole02b and concrete_barrier001a 10000 to 12000. Our m.static never fades.
+- **How:** m.static(..., fade=(2000, 2500)) for clutter in open modules.
+- **Checked by:** review
+- **Tags:** logic, valve, performance, props, multiplayer
 
