@@ -1449,16 +1449,23 @@ def m_cistern(m, opt):
 
 
 def m_underpass(m, opt):
-    """13. The barnacle underpass: 1024 of canal under a wide road, unlit. Three piers stand down its middle; six
-    barnacles hang from the roof between them. Part of the roof has come in by the right wall: daylight down a shaft,
-    a fallen slab, rubble. A lorry jammed against a pier, a car, cables hanging, and five of the dead lying where they
-    were dropped, one beside a lantern (the city's oil lamp, lamp001a) that still burns. Reinforcing bars stick out of
-    the broken roof's edge.
-    Named for the game: lc_underpass_body_1 to _5 (where each body lies: things to search).
-    Left as brushes: the road over it, the piers, the fallen slab.
+    """13. The barnacle underpass: 1024 of canal under a wide road, unlit. Three piers stand down its middle, chamfered
+    (as City 18's columns are) under wider caps, and a concrete girder crosses the canal on each, the road's deck resting
+    on them; the road's drains come down the piers in gutter pipes, puddles under them. Six barnacles hang from the deck
+    between them, and under each Half-Life 2's tell: bones and a stain on the floor, two of the dead lying where they
+    were dropped. Part of the deck has come in by the right wall: daylight straight down a shaft (dust hanging in it,
+    now and then more dust and grit falling off the broken edge), a fallen slab with its bars sticking out, rubble, a
+    street sign and its pole come down with it. A lorry jammed against a pier, its load of crates spilled behind it, a
+    car, cables hanging, five of the dead in all, one beside a lantern (the city's oil lamp, lamp001a) that still
+    burns. Graffiti on the piers, a danger sign by the hole.
+    Named for the game: lc_underpass_body_1 to _5 (where each body lies: things to search), lc_underpass_dust (the dust
+    off the broken edge: SpawnDust; a logic_timer, lc_underpass_dust_timer, works it).
+    Left as brushes: the road over it, the piers, their caps and the girders, the fallen slab.
     Unchecked: npc_barnacle (and whether the game minds NPCs it did not make), models/humans/corpse1.mdl and
-    charple01, charple03, ambient/atmosphere/tunnel1.wav, the cables (move_rope); the rebar is laid on its side (pitch
-    90), centred on its origin."""
+    charple01, charple03, ambient/atmosphere/tunnel1.wav, env_dustpuff, the cables (move_rope); the rebar is laid on its
+    side (pitch 90), centred on its origin; the sign and its pole are loose, laid on their sides, and settle."""
+    from map_mods_b import vprism
+    from map_mods_c import centred, dustmotes
     roof = F + GATE_HIGH
     m.open(0, -256, 256, 256)
     m.low(256, -256, 1280, 256, roof)
@@ -1469,6 +1476,27 @@ def m_underpass(m, opt):
     m.no_bank(824, -264, 968, -248)
     m.portal(318, -256, F, 320, 256, roof)
     m.portal(1216, -256, F, 1218, 256, roof)
+
+    def octo(u1, v1, u2, v2, e, c):
+        return [(u1 - e, v1 - e + c), (u1 - e + c, v1 - e), (u2 + e - c, v1 - e), (u2 + e, v1 - e + c), (u2 + e, v2 + e - c), (u2 + e - c, v2 + e),
+                (u1 - e + c, v2 + e), (u1 - e, v2 + e - c)]
+    piers = []
+    for u in (448, 704, 960):                               # each pier clad chamfered, a wider cap, a girder across on it
+        piers.append(vprism(octo(u, -64, u + 64, 64, 16, 16), F, roof - 24, "concrete/concretewall008a"))
+        piers.append(vprism(octo(u, -64, u + 64, 64, 32, 24), roof - 24, roof, MAT["beam"]))
+    m.shapes(piers)
+    girders = []
+    for u in (448, 704, 960):
+        cu = u + 32
+        for v1, v2 in ((-256, -96), (96, 256)):
+            girders.append(prism([(cu - 20, roof), (cu + 20, roof), (cu + 20, roof - 20), (cu + 12, roof - 30), (cu - 12, roof - 30), (cu - 20, roof - 20)], "y", v1, v2, MAT["beam"]))
+    m.shapes(girders)
+    for u in (448, 704, 960):                               # the road's drains down the piers' sides, a puddle under each
+        centred(m, "models/props_pipes/gutter_256_001a.mdl", u + 20, -86, 0, F + 128)        # (its head in the cap)
+        m.grime("puddle", u + 20, -110, F + 1, u)
+        m.grime("graffiti", u + 44, -80, F + 90, u + 1)
+    m.grime("graffiti", 736, 80, F + 120, 7)
+    # where the roof came in: the slab, its bars, rubble, a sign and its pole, daylight and dust
     m.shapes([prism([(-256, F + 210), (-256, F + 180), (-130, F), (-108, F)], "x", 836, 950, MAT["beam"])])
     m.static("models/props_debris/concrete_chunk01a.mdl", 820, -110, 40)
     m.static("models/props_debris/concrete_chunk02a.mdl", 960, -150, 110)
@@ -1477,28 +1505,44 @@ def m_underpass(m, opt):
         m.point("prop_static", 860 + 26 * k, -200 + 4 * (k % 2), F + 132 + 7 * (k % 3), {"model": "models/props_debris/rebar00%dc_64.mdl" % (2 if k % 2 else 4),
                 "angles": "90 %d 0" % m.fr.yaw(90 + 8 * k), "skin": "0", "solid": "0", "disableshadows": "0", "screenspacefade": "0", "fademindist": "-1",
                 "fademaxdist": "0", "fadescale": "1"}, m.pv)
+    m.prop("prop_physics", "models/props_c17/signpole001.mdl", 990, -170, 0, F + 4, {"spawnflags": "0", "angles": "0 %d 90" % m.fr.yaw(30)})
+    m.prop("prop_physics", "models/props_c17/streetsign004f.mdl", 1010, -120, 0, F + 14, {"spawnflags": "0", "angles": "0 %d 90" % m.fr.yaw(70)})
+    m.spot(896, -192, roof + 120, "230 236 240 220", 0, pitch=90, cone=50)
+    dustmotes(m, (840, -250, F + 16, 952, -136, roof + 100))
+    m.point("env_dustpuff", 896, -128, roof - 8, {"targetname": "lc_underpass_dust", "scale": "16", "speed": "10", "color": "120 116 108", "angles": "90 0 0"})
+    m.point("logic_timer", 896, -100, roof - 40, {"targetname": "lc_underpass_dust_timer", "UseRandomTime": "1", "LowerRandomBound": "20", "UpperRandomBound": "70",
+                                                 "StartDisabled": "0", "spawnflags": "0"}, connections=[("OnTimer", "lc_underpass_dust", "SpawnDust", "", 0)])
+    m.grime("danger", 840, -128, F + 180, 8)
     m.blocked(800, -256, 990, -60)
-    for u, v in ((380, 10), (576, -130), (640, 120), (832, 70), (1090, -100), (1180, 110)):
+    # the barnacles, and under each the tell
+    for k, (u, v) in enumerate(((380, 10), (576, -130), (640, 120), (832, 70), (1090, -100), (1180, 110))):
         m.point("npc_barnacle", u, v, roof - 1, {"angles": "0 0 0", "spawnflags": "0"}, m.b.vis + ": barnacles (delete them if the game minds)")
+        m.decal("decals/bloodstain_%s" % ("001", "002", "003", "101", "201", "001")[k], u + 6, v - 4, F + 1)
+        if k % 2 == 0:
+            m.loose("models/gibs/hgibs.mdl", u + 14, v + 10, 40 * k, z=F)
+        else:
+            m.loose("models/gibs/hgibs_rib.mdl", u - 12, v + 6, 50 * k, z=F)
     m.static("models/props_vehicles/truck001a.mdl", 580, -160, 12)
+    for u, v, yaw in ((430, -140, 20), (418, -196, 60), (452, -230, 5)):    # its load, spilled out of its back
+        m.loose("models/props_junk/wood_crate001a.mdl", u, v, yaw)
     m.static("models/props_vehicles/car004a_physics.mdl", 1060, 160, 200)
     m.static("models/props_debris/barricade_short01a.mdl", 330, 150, 80)
     m.blocked(450, -250, 720, -70)
     m.blocked(960, 70, 1170, 250)
-    bodies = (("models/humans/corpse1.mdl", 540, 60), ("models/humans/charple03.mdl", 700, 150), ("models/humans/corpse1.mdl", 930, 40),
+    bodies = (("models/humans/corpse1.mdl", 395, 30), ("models/humans/charple03.mdl", 700, 150), ("models/humans/corpse1.mdl", 845, 90),
               ("models/humans/charple01.mdl", 1100, -150), ("models/humans/corpse1.mdl", 1190, 20))
     for k, (model, u, v) in enumerate(bodies):
         m.body(model, u, v, 70 * k)
         m.target("lc_underpass_body_%d" % (k + 1), u, v, F + 8)
-    m.static("models/props_c17/lamp001a.mdl", 716, 166, 30)                # the lantern
-    m.glow(716, 166, F + 14, "255 200 120", 0.15)
-    m.light(716, 166, F + 22, "255 190 110 16")
+    m.static("models/props_c17/lamp001a.mdl", 716, 186, 30)                # the lantern
+    m.glow(716, 186, F + 14, "255 200 120", 0.15)
+    m.light(716, 186, F + 22, "255 190 110 16")
     m.rope([(600, 200, roof - 2), (700, 150, roof - 2)], slack=90, width=1)
     m.rope([(1000, -200, roof - 2), (1130, -40, roof - 2)], slack=110, width=1)
     m.rope([(400, -180, roof - 2), (420, -60, roof - 2)], slack=70, width=1)
-    m.loose("models/props_junk/wood_crate001a.mdl", 640, 190, 15)
-    m.loose("models/props_junk/wood_crate002a.mdl", 1000, -200, 50)
+    m.loose("models/props_junk/wood_crate001a.mdl", 640, 200, 15)
     m.sound("ambient/atmosphere/tunnel1.wav", 768, 0, F + 120, radius=1000, volume=4)
+    m.soundscape(SCAPES["tunnel"], 768, 0, F, radius=700)
     m.decal("decals/decalstain002a", 930, 60, F + 1)
     for u, v in ((400, -100), (620, 0), (880, 20), (1136, 0), (1240, -60)):
         m.lane(u, v)

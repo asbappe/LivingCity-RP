@@ -9,7 +9,7 @@ Living City: canal modules, set B: places where the Resistance lives (map_module
     garden     a walled garden: soil beds, a rain butt, a lean-to, a scarecrow
     stash      a secret arms room behind a section of canal wall that a pipe valve opens
     market     the black market: a vaulted arcade of five stalls with roll shutters
-    press      the pamphlet press: a printing room behind a false stack of crates
+    press      the pamphlet press: a printing room behind a door in a side tunnel
     still      a distillery in a cellar: a pot still, mash casks, shelves of bottles
     plaza      half a round amphitheatre of five tiers, a rostrum at the canal's edge
     playground a rusted playground on a terrace: a relic of before
@@ -1264,10 +1264,13 @@ def m_market(m, opt):
 
 def m_press(m, opt):
     """The pamphlet press: a short side tunnel off the left wall, shut by a wall with one of the city's doors in it
-    (lc_press_door, a prop_door_rotating: anyone opens it; the game may Lock it). Behind is the printing room: a hand press (a bed on legs
-    with the forme on it, a platen hanging from a screw between two cheeks, a long lever), lc_press_machine on its
-    bed; a chest of drawers for the type; three drying lines across the room hung with sheets; boxes and bundles of
-    paper on a pallet (lc_press_stack); a table with a lamp and papers; drums and cans of ink; a mattress.
+    (lc_press_door, a prop_door_rotating: anyone opens it; the game may Lock it), bricked up across the tunnel with a
+    timber casing round the door. Behind is the printing room, brick to a timber dado rail and stained plaster above,
+    its corners dark: lit only by a work lamp hung low in front of the press and the lamp on the table. A hand press (a
+    bed on legs with the forme on it, a platen hanging from a screw between two cheeks, a long lever), lc_press_machine
+    on its bed; a chest of drawers for the type, a radio on it; three drying lines across the room hung with sheets;
+    boxes and bundles of paper on a pallet (lc_press_stack); a table with a lamp and papers; a board of proofs on the
+    wall; drums and cans of ink, ink spattered on the walls by the press; a runner's case by the door; a mattress.
     Left as brushes: the hand press (Half-Life 2 has no printing press), the sheets on the lines (they hang; the
     paper models lie flat).
     Unchecked: how taut the drying lines hang; which way the drawers face."""
@@ -1276,18 +1279,20 @@ def m_press(m, opt):
     m.low(256, 256, 384, 512, F + 128)                          # the side tunnel
     m.low(192, 512, 640, 768, H, mat=CRACKED)                   # the printing room
     m.side(128, 256, 704, 832)
+    line_walls(m, [(192, 512, 640, 768, H)], dado=48, low=RED_BRICK, high="plaster/plasterwall046b", roof=CEILING, rail=TIMBER)
     m.portal(256, 318, F, 384, 320, F + 128)
     m.taken(232, 110, F, 408, 256, F + 170)
     cheeks(m, 256, 384)
     m.lane(320, 300)
 
-    # the false stack: two long crates at the floor with the gap between them, a pallet across, two rows more to the roof
-    # across the tunnel a wall with the city's own door in it, that opens (the owner: "the printing press room is
-    # missing its door", and of the crates that hid it: "idk why you have a heap of boxes ... in the entrance")
+    # across the tunnel a wall of brick with the city's own door in it, that opens (the owner: "the printing press room
+    # is missing its door", and of the crates that hid it: "idk why you have a heap of boxes ... in the entrance"): the
+    # casing's posts and head bury the wall's edges, so nothing lies flush
     from map_town import real_door, R as TR
-    m.det([(256, 408, F, 295, 424, F + 128), (345, 408, F, 384, 424, F + 128), (295, 408, F + 110, 345, 424, F + 128)], PLASTER)
-    m.det([(291, 406, F, 295, 426, F + 114), (345, 406, F, 349, 426, F + 114), (291, 406, F + 110, 349, 426, F + 114)], TR["frame"])
+    m.det([(256, 408, F, 293, 424, F + 128), (347, 408, F, 384, 424, F + 128), (293, 408, F + 112, 347, 424, F + 128)], RED_BRICK)
+    m.det([(291, 406, F, 295, 426, F + 114), (345, 406, F, 349, 426, F + 114), (295, 406, F + 110, 345, 426, F + 114)], TR["frame"])
     real_door(m, 297, 416, 270, F, "lc_press_door")
+    m.grime("number", 320, 406, F + 120, 1)
     m.light(320, 300, F + 110, "200 205 190 25")
 
     # the press
@@ -1306,6 +1311,7 @@ def m_press(m, opt):
 
     # the type's chest of drawers, against the left wall
     m.static("models/props_c17/furnituredrawer001a.mdl", 208, 590, 0)
+    put(m, [("props_lab/citizenradio", 208, 592, 0)], F + 40)
 
     # the drying lines, hung with sheets
     rnd = random.Random(31)
@@ -1317,7 +1323,7 @@ def m_press(m, opt):
             if rnd.random() < 0.75 and not (lv == 612 and 250 < u < 350):
                 sheets.append((u, lv, F + 108, u + 12, lv + 1, F + 125))
             u += rnd.choice((18, 22, 30))
-    m.det(sheets, PLASTER)
+    m.det(sheets, CEILING)
 
     # paper: boxes and bundles on a pallet, more on the floor
     m.static("models/props_junk/wood_pallet001a.mdl", 580, 706, 0)
@@ -1341,11 +1347,17 @@ def m_press(m, opt):
     m.static("models/props_c17/chair_stool01a.mdl", 548, 536, 0)
     put(m, [("props_junk/metal_paintcan001a", 524, 550, 0), ("props_junk/metal_paintcan001a", 520, 532, 0)], F)
     mattress(m, 600, 610, 90)
-    dome(m, 300, 600, H, "225 215 190 45")
-    m.decal("decals/decalposter014a", 192, 700, F + 90)
-    m.decal("decals/decal_posters005a", 640, 640, F + 92)
+    m.lamp(300, 620, F + 110, "255 200 130 120", hang=26)                                 # the work lamp, hung low in front of the press
+    m.static("models/props_lab/corkboard002.mdl", 480, 764, 270, z=F + 58)                 # the proofs, pinned up
+    m.loose("models/props_c17/briefcase001a.mdl", 404, 528, 0)                             # the runner's case, by the door
+    m.decal("decals/decal_paintsplatterblue001", 330, 766, F + 60)                        # ink, where the press is worked
+    m.grime("stain", 194, 690, F + 70, 2)
+    m.grime("stain", 638, 720, F + 100, 3)
+    m.grime("lambda", 194, 720, F + 84, 4)
+    m.grime("poster", 638, 620, F + 92, 5)
     for u, v in ((320, 480), (400, 600), (500, 620)):
         m.lane(u, v)
+    sounds(m, L, "inside", 416, 640, F, 420)
 
     m.view(320, 150, F, 90, 0, "the tunnel and its door")
     m.view(320, 530, F, 80, 4, "the printing room")
@@ -1358,16 +1370,20 @@ def m_press(m, opt):
 # ---------------------------------------------------------------------------
 
 def m_still(m, opt):
-    """The still: a distillery in a cellar off the left wall. A short tunnel, then eight steps down into a cellar
-    64 below the canal's floor. Against its far side the still: a brick firebox open at the front with a small steady
-    fire in it, a boiler standing on it, a pipe across to the worm (a drum on a crate) and a glass jug under it
-    (lc_still_pot: in front of the firebox). Three mash barrels along the left wall, boxes; kitchen shelves along the
-    back wall (lc_still_shelf: in front of them); a table with a pot, bottles and a jug; a stool; a pale steam over
-    the boiler.
-    Left as brushes: the firebox (brick) and its grate.
+    """The still: a distillery in a cellar off the left wall. A short tunnel, then eight steps down, walled on both
+    open sides, into a cellar 64 below the canal's floor: stone to the knee and brick above, sweating, two brick ribs
+    carrying its low vault, lit by the fire's glow and one bare bulb. Against its far side the still: a brick firebox
+    open at the front with a small steady fire in it, a boiler standing on it with its flue up through the vault
+    (blackened round it, scorched in front of the fire), a pipe across to the worm (a drum on a crate, capped, a
+    funnel into it) and a glass jug under it (lc_still_pot: in front of the firebox), a bucket of water by the fire.
+    Three mash barrels along the left wall, sacks of grain and boxes; kitchen shelves along the back wall with filled
+    bottles on top (lc_still_shelf: in front of them); a table with a pot, bottles and a jug; a stool; the tally
+    chalked on the wall and a warning painted by the fire.
+    Left as brushes: the firebox (brick) and its grate, the flue, the ribs.
     Unchecked: the sound ambient/fire/fire_small_loop1.wav; env_fire's look and env_smokestack's (the framework's own
-    settings, made small and pale here); which way the boiler and the pipe pieces face; Half-Life 2 has no wooden
-    cask, so the barrels are its blue plastic ones and an oil drum."""
+    settings, made small and pale here); which way the boiler and the pipe pieces face; that the bare bulb
+    (props_interiors/lightbulb01a, a box 49 high) hangs from its top; Half-Life 2 has no wooden cask, so the barrels
+    are its blue plastic ones and an oil drum."""
     L, C = 768, F - 64
     H = C + 160
     m.open(0, -256, L, 256)
@@ -1378,7 +1394,12 @@ def m_still(m, opt):
     m.taken(296, 110, F, 472, 256, F + 170)
     cheeks(m, 320, 448)
     m.steps(480, 320, 448, C, F, "v", -1)
+    side = [(386, C), (480, C), (480, C + 32), (386, F + 31)]                      # the flight's open sides walled to the stair line and 32 over it
+    m.shapes([prism(side, "x", 312, 320, STONE), prism(side, "x", 448, 456, STONE)])
     m.blocked(320, 384, 448, 496)
+    line_walls(m, [(192, 384, 640, 704, H, C)], dado=40, low=STONE, high=RED_BRICK, roof=RED_BRICK)
+    for ru in (256, 576):
+        arch_rib(m, ru - 8, ru + 8, 384, 704, H, 56, RED_BRICK)
     m.lane(384, 300)
     m.lane(384, 520, C)
     m.light(384, 330, F + 110, "200 200 185 22")
@@ -1400,7 +1421,11 @@ def m_still(m, opt):
     m.static("models/props_pipes/pipe02_connector01.mdl", wu - 3, pv, 0, z=C + 90)            # a cap on the pipe's end (the owner saw it open)
     m.shapes([frustum(wu - 8, pv, 3, C + 85, 8, C + 91, STEEL)])                                # and a funnel from it into the drum
     m.target("lc_still_pot", pu - 60, pv, C + 8, 0)
-    m.smoke(pu, pv, C + 124, colour="215 215 215", size=7, length=30, rate=6)
+    m.shapes([vpipe(pu + 3, pv - 3, 4, C + 116, H, IRON)])                                    # the flue, up through the vault
+    m.decal("decals/scorch1", pu + 3, pv - 3, H - 2)                                          # the soot round it
+    m.decal("decals/smscorch1", pu - 44, pv, C)                                               # and scorch where the fire spits
+    m.smoke(wu - 32, pv, C + 18, colour="225 225 225", size=3, length=16, rate=3)             # a breath of steam off the jug
+    m.loose("models/props_junk/metalbucket01a.mdl", pu - 52, pv + 44, 0, z=C)                 # water, against the fire
     m.sound("ambient/fire/fire_small_loop1.wav", pu, pv, C + 30, radius=380, volume=3)
     m.blocked(360, 552, 576, 648)
 
@@ -1409,10 +1434,12 @@ def m_still(m, opt):
         m.static("models/props_borealis/bluebarrel001.mdl", 222, cv, 0, z=C)
     m.static("models/props_junk/cardboard_box002a.mdl", 224, 640, 0, z=C)
     m.static("models/props_junk/cardboard_box001a.mdl", 228, 676, 30, z=C)
+    put(m, [("props_junk/garbage_bag001a", 226, 404, 30), ("props_junk/garbage_bag001a", 254, 410, 100)], C)        # grain
 
     # kitchen shelves along the back wall; a table with a pot, bottles and a jug
     for u in (340, 420, 500):
         m.static("models/props_wasteland/kitchen_shelf001a.mdl", u, 684, 0, z=C)
+        put(m, [("props_junk/glassbottle01a", u + du, 684 + dv, 0) for du, dv in ((-20, -4), (-6, 3), (8, -2), (22, 4))], C + 97)      # filled, in a row
     m.target("lc_still_shelf", 460, 650, C + 8, 270)
     tu, tv = 590, 460
     m.static("models/props_c17/furnituretable001a.mdl", tu, tv, 0, z=C)
@@ -1420,9 +1447,16 @@ def m_still(m, opt):
             ("props_junk/glassbottle01a", tu + 4, tv + 12, 0), ("props_junk/glassjug01", tu - 6, tv - 14, 0)], C + 37)
     m.static("models/props_junk/wood_crate001a.mdl", 606, 664, 10, z=C)
     m.static("models/props_c17/chair_stool01a.mdl", 548, 438, 0, z=C)
-    dome(m, 400, 520, H, "255 205 140 110")
+    m.static("models/props_interiors/lightbulb01a.mdl", 400, 520, 0, z=H - 50)              # the bare bulb
+    m.light(400, 520, H - 60, "255 205 140 80")
+    m.grime("graffiti", 638, 620, C + 84, 1)                                                  # the tally
+    m.decal("decals/decalsignpainted001c", 638, 540, C + 92)                                  # a warning in their own hand
+    m.grime("stain", 194, 560, C + 100, 2)
+    m.grime("stain", 300, 702, C + 110, 3)
+    m.grime("stain", 638, 430, C + 70, 4)
     m.lane(400, 520, C)
     m.lane(330, 620, C)
+    sounds(m, L, "cave", 416, 560, C, 400)
 
     m.view(384, 150, F, 90, 0, "the tunnel from the canal")
     m.view(384, 370, F, 80, 16, "down the steps")
@@ -1568,7 +1602,7 @@ MODULES = {
     "garden": (1280, m_garden, "the walled garden: soil beds, bean poles, a scarecrow, a lean-to, a rain butt (left)"),
     "stash": (768, m_stash, "the stash: an arms room behind a section of wall that a pipe valve opens (left)"),
     "market": (1280, m_market, "the black market: a vaulted arcade of five shuttered stalls (left)"),
-    "press": (768, m_press, "the pamphlet press: a printing room behind a false stack of crates (left)"),
+    "press": (768, m_press, "the pamphlet press: a printing room behind a door in a side tunnel (left)"),
     "still": (768, m_still, "the still: a pot still, mash casks and bottles in a cellar (left)"),
     "plaza": (1536, m_plaza, "the plaza: five rows of seats stepping down from the street to a rostrum at the back wall (left)"),
     "playground": (1024, m_playground, "the playground: a rusted relic on a terrace over the canal (left)"),

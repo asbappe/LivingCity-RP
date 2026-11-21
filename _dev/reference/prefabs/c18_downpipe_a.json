@@ -1,0 +1,82 @@
+{
+"name": "c18_downpipe_a",
+"note": "a downpipe run: the city's 704 long downpipe with a 256 gutter piece at the top, on a brick facade; wall plane x 0, it stands out toward +x; props only",
+"from": "c18_lc.vmf",
+"box": [
+-1362,
+0,
+640,
+-1330,
+48,
+1600
+],
+"anchor": [
+-1352,
+17,
+664
+],
+"size": [
+32,
+48,
+960
+],
+"solids": [],
+"points": [
+{
+"classname": "prop_static",
+"origin": [
+3.0,
+0.21499999999999986,
+335.0
+],
+"keys": {
+"classname": "prop_static",
+"angles": "0 90 0",
+"disableselfshadowing": "0",
+"disableshadows": "0",
+"disablevertexlighting": "0",
+"fademaxdist": "0",
+"fademindist": "-1",
+"fadescale": "1",
+"generatelightmaps": "0",
+"ignorenormals": "0",
+"lightmapresolutionx": "32",
+"lightmapresolutiony": "32",
+"maxdxlevel": "0",
+"mindxlevel": "0",
+"model": "models/props_pipes/gutter_704_001a.mdl",
+"screenspacefade": "0",
+"skin": "0",
+"solid": "6"
+}
+},
+{
+"classname": "prop_static",
+"origin": [
+7.0,
+12.0,
+814.51
+],
+"keys": {
+"classname": "prop_static",
+"angles": "0 0 0",
+"disableselfshadowing": "0",
+"disableshadows": "0",
+"disablevertexlighting": "0",
+"fademaxdist": "0",
+"fademindist": "-1",
+"fadescale": "1",
+"generatelightmaps": "0",
+"ignorenormals": "0",
+"lightmapresolutionx": "32",
+"lightmapresolutiony": "32",
+"maxdxlevel": "0",
+"mindxlevel": "0",
+"model": "models/props_pipes/gutter_256_001a.mdl",
+"screenspacefade": "0",
+"skin": "0",
+"solid": "6"
+}
+}
+]
+}

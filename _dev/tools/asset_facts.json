@@ -1305,6 +1305,10 @@
 "static": false,
 "v": 2
 },
+"models/props_c17/canal_bridge_railing01a.mdl": {
+"elsewhere": [],
+"game": null
+},
 "models/props_c17/canister01a.mdl": {
 "bbox": [
 -5.1,
@@ -1758,6 +1762,10 @@
 "ragdoll": false,
 "static": false,
 "v": 2
+},
+"models/props_c17/furnaceboiler.mdl": {
+"elsewhere": [],
+"game": null
 },
 "models/props_c17/furniturearmchair001a.mdl": {
 "bbox": [
@@ -5036,6 +5044,42 @@
 "models/props_citizen_tech/guillotine001a.mdl": {
 "elsewhere": [],
 "game": null
+},
+"models/props_citizen_tech/guillotine001a_base01.mdl": {
+"bbox": [
+-18.7,
+-140.4,
+-56.9,
+18.7,
+140.3,
+57.1
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_citizen_tech/guillotine001a_wheel01.mdl": {
+"bbox": [
+-2.1,
+-12.5,
+-12.5,
+2.2,
+12.6,
+12.6
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
 },
 "models/props_citizen_tech/steamengine001a.mdl": {
 "bbox": [
@@ -11181,6 +11225,24 @@
 "static": true,
 "v": 2
 },
+"models/props_lab/lab_flourescentlight001b.mdl": {
+"bbox": [
+-6.2,
+-33.1,
+-73.6,
+6.2,
+33.3,
+73.1
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
 "models/props_lab/lab_flourescentlight002a.mdl": {
 "elsewhere": [],
 "game": null
@@ -15578,6 +15640,10 @@
 "ragdoll": false,
 "static": true,
 "v": 2
+},
+"models/props_wasteland/boiler01.mdl": {
+"elsewhere": [],
+"game": null
 },
 "models/props_wasteland/bridge_railing.mdl": {
 "bbox": [

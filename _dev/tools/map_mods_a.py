@@ -1281,17 +1281,22 @@ def m_boathouse(m, opt):
 def m_arcade(m, opt):
     """The market arcade: an old covered market built over the canal on three stone arches (u 640 to 896). Below, the
     canal passes between two piers 64 thick with cutwaters: a middle arch 128 wide over the flat of the floor, a side
-    arch over each bank. Above, at the trim's height, a covered walk 256 wide crosses from wall to wall under a
-    pitched tin roof on columns: open bays with a parapet 36 high look up and down the canal, three empty stalls
-    (the game's kitchen counters) stand down its middle, barred shop fronts (the city's own bars, dark behind) close
-    its two ends. It is reached by a stair along each wall, railed, from the canal floor: on the left bank from the entry side (u 256 up to 640), on the right
-    bank from the exit side (u 1280 down to 896), so each end of the canal has its own way up. Two levels to fight
-    over: whoever holds the walk sees both approaches, whoever is below has the piers.
+    arch over each bank; a keystone of lighter dressed stone at the crowns, a trim along the deck's edge, a caged lamp
+    on each pier lighting the middle arch, water stains down the piers. Above, at the trim's height, a covered walk 256
+    wide crosses from wall to wall under a pitched tin roof on columns: open bays with a parapet 36 high look up and
+    down the canal, three stalls (the game's kitchen counters) stand down its middle, each under an awning with a few
+    goods on it (melons, a pot, a crate), lamps hang under tie beams across the walk, and barred shop fronts (the city's
+    own bars) close its two ends: through the bars a shallow shop each side (plaster in two tones, a counter, shelves
+    with a jar or a jug left, a dead lamp). It is reached by a stair along each wall, railed, its open side solid from
+    the floor: on the left bank from the entry side (u 256 up to 640), on the right bank from the exit side (u 1280 down
+    to 896), so each end of the canal has its own way up. Two levels to fight over: whoever holds the walk sees both
+    approaches, whoever is below has the piers. It creaks above (d1_town.WoodBuilding) and drips below
+    (prison.watery_hallway).
     Named for the game: lc_arcade_upper (an info_target in the middle of the walk).
-    Left as brushes: the piers, arches, deck, parapets, columns, brackets and roof (the building), the shop fronts'
-    frames.
-    Unchecked: the look of stone/stonewall040f on the piers and arches; how the bin and the pushcart face; which end
-    of handrail04_doublerise is its high end (see wall_stair)."""
+    Left as brushes: the piers, arches, keystones, deck, parapets, columns, brackets, tie beams and roof (the building),
+    the shop fronts' frames and the shops' walls.
+    Unchecked: the look of stone/stonewall040f on the piers and arches; how the bin, the pushcart, the counters and
+    the awnings face; which end of handrail04_doublerise is its high end (see wall_stair)."""
     b = m.b
     deck, roof = TRIM, TRIM + 120
     stone, tin, wood = STONE, MM["tin"], MM["wood"]
@@ -1380,10 +1385,10 @@ def m_arcade(m, opt):
     for (u, v, model) in ((760, -190, "props_junk/watermelon01"), (776, -168, "props_junk/watermelon01"), (764, -140, "props_junk/watermelon01"),
                           (770, 20, "props_c17/metalpot001a"), (760, 150, "props_junk/plasticcrate01a")):
         m.static(P + model + ".mdl", u, v, 0, deck + 40)
-    for v in (-80, 80, 230, -230):
-        m.rope([(768, v, roof - 1), (768, v, roof - 30)], slack=2)
-        m.static(P + "props_c17/lampfixture01a.mdl", 768, v, 0, roof - 50)
-        m.light(768, v, roof - 60, "255 205 150 32")
+    for v in (-80, 80, 230, -230):                                   # tie beams across the walk, a hanging lamp under each
+        m.det([(652, v - 4, roof - 16, 884, v + 4, roof)], WOODTRIM)
+        m.static(P + "props_c17/lampfixture01a.mdl", 768, v, 0, roof - 36)
+        m.light(768, v, roof - 48, "255 205 150 32")
     m.soundscape(SCAPES["house"], 768, 0, deck, radius=300)
     m.soundscape(SCAPES["watery"], 768, 0, F, radius=360)
     canal_grime(m, 16, 560, 5200)

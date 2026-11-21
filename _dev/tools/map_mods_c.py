@@ -19,7 +19,7 @@ be checked. Moving things follow the bunker door's pattern where they can (a fun
 import math
 
 from map_build import CELL, GATE_HIGH, MAT, prism, octagon
-from map_modules import F, TRIM, BASE, SEWER, MM
+from map_modules import F, TRIM, BASE, SEWER, MM, SCAPES
 
 CMB = "metal/metalcombine002"
 STEEL, PIPE = MM["steel"], MAT["bars"]
@@ -556,12 +556,16 @@ def m_lock(m, opt):
     open until somebody shuts it. The leaf is a func_button used as a mover (PressIn opens, PressOut shuts), exactly as
     the bunker's door: the gamemode's door rules (kicks, lockpicks) do not reach it, nothing can use or shoot it open,
     and it has no damage of its own: a leaf that meets somebody stops and waits. A Combine lamp on each pier's beam
-    shows red while a gate moves.
+    shows red while a gate moves, and on each pier's outer face a railway signal head shows red with it (Half-Life 2's
+    light_signal002a); a klaxon sounds while a gate moves. The lock chamber says what it is: a dark tide line along its
+    walls, depth numbers up the piers' faces.
 
     Inside the lock, on the left bank, a concrete pier (the bank is its ramp, a mooring cleat on it) and stairs up to
-    the gantry behind a concrete parapet; on the gantry, behind the city's handrail, the house: a slit each way down
-    the canal, a button under each slit's end for the gate on that side, a desk with a monitor and a chair. On the left
-    wall at the gantry's end a street door, a Nova Prospekt heavy door that never opens. The right half of the gantry
+    the gantry behind a concrete parapet; on the gantry, behind the city's handrail, the house, concrete with steel
+    plate to the waist inside: a slit each way down the canal, a button under each slit's end for the gate on that side
+    with a lever panel beside it and two lamps over it (green while that gate is open, red while it is shut), the
+    canals' own map on the wall, switch boxes, a desk with a monitor and a chair, a fluorescent tube. On the left wall at
+    the gantry's end a street doorway that is never used: planked over, boards nailed across. The right half of the gantry
     holds the hydraulic pack (a pipe cluster and a generator) and cannot be reached; its two pipes run under the
     gantry along the right wall to the gates.
 
@@ -574,16 +578,20 @@ def m_lock(m, opt):
                                         slam. Only the one that makes sense is live (shut while open, open while shut).
       lc_lock_button_a, lc_lock_button_b   the buttons in the house (a press triggers both of its gate's relays).
       lc_lock_house                     the middle of the control house's floor.
-      lc_lock_a_move, lc_lock_a_slam, lc_lock_a_warn, lc_lock_a_shake (and _b_)   the sounds, lamp and shake of each gate.
+      lc_lock_a_move, lc_lock_a_slam, lc_lock_a_warn, lc_lock_a_shake, lc_lock_a_klaxon (and _b_)   the sounds, lamps
+                                        and shake of each gate.
+      lc_lock_a_lamp_open, lc_lock_a_lamp_shut (and _b_)   the house's lamps for each gate (ShowSprite, HideSprite).
 
     Left as brushes: the piers, the beams, sills and slot lips, the gantry, its girders and corbels, the stairs and
-    their parapet, the house's walls and roof, the street door's frame (all of them the building).
+    their parapet, the house's walls, steel lining and roof, the street doorway's frame and planking (all of them the
+    building).
 
     Unchecked: the two sounds are the bunker door's (Streetwar.d3_c17_11_garage_move1 / _stop1: the owner has heard
     them there). That a func_button leaf simply stops against a player (no damage, no reversing) is how the bunker's
     leaves behaved before their crushers were added, by its comments; not seen here. How locks_small looks from each
     face (it is the canals' own lock leaf, 65 thick, 163 wide, 291 high: its sizes are read, its faces are not); that
-    locks_small_b is its mirror. That a prop rides on a func_button by parentname (it does on doors)."""
+    locks_small_b is its mirror. That a prop rides on a func_button by parentname (it does on doors).
+    ambient/alarms/apc_alarm_loop1.wav; which way the lever panel, its handle, the signal heads and the map face."""
     b = m.b
     L, top, deck = 1536, F + 296, TRIM
     quay = MAT["quay_floor"]
@@ -622,21 +630,29 @@ def m_lock(m, opt):
         pre = "lc_lock_%s_" % g
         sound(m, pre + "move", "Streetwar.d3_c17_11_garage_move1", mid, 0, F + 140, loops=True)
         sound(m, pre + "slam", "Streetwar.d3_c17_11_garage_stop1", mid, 0, F + 140)
+        out = -1 if g == "a" else 1                                                                           # (the pier's face away from the lock)
         for s in (1, -1):
             m.static("models/props_combine/combine_light002a.mdl", mid, s * 192, 180 if g == "a" else 0, z=top + 16)
             sprite(m, pre + "warn_%d" % (1 if s > 0 else 2), mid + (-12 if g == "a" else 12), s * 192, top + 50, "255 60 40", 0.35, on=False)
+            m.static("models/props_trainstation/light_signal002a.mdl", mid + out * 62, s * 196, 180 if g == "a" else 0, z=F + 170)     # the boats' signal
+            sprite(m, pre + "warn_%d" % (3 if s > 0 else 4), mid + out * 88, s * 196, F + 250, "255 50 30", 0.3, on=False)
+            for k, z in enumerate((F + 40, F + 110, F + 180)):                                              # depth numbers up the pier's face in the lock
+                m.grime("number", mid - out * 38, s * 200, z, k + (3 if s > 0 else 7))
         m.point("env_shake", mid, 0, F + 140, {"targetname": pre + "shake", "amplitude": "4", "radius": "600", "duration": "1", "frequency": "40", "spawnflags": "0"})
-        moving = [(pre + "warn_*", "ShowSprite", "", 0), (pre + "move", "PlaySound", "", 0.5), (pre + "move", "StopSound", "", 4.5), (pre + "slam", "PlaySound", "", 4.5),
-                  (pre + "warn_*", "HideSprite", "", 5.2)]
-        m.relay(pre + "shut", mid, 40, top + 40, [(pre + "shut", "Disable", "", 0), (name, "PressOut", "", 0.5), (pre + "shake", "StartShake", "", 4.5)] + moving
+        sound(m, pre + "klaxon", "ambient/alarms/apc_alarm_loop1.wav", mid, 0, top - 20, loops=True, radius=1400, volume=6)
+        moving = [(pre + "warn_*", "ShowSprite", "", 0), (pre + "klaxon", "PlaySound", "", 0), (pre + "move", "PlaySound", "", 0.5), (pre + "move", "StopSound", "", 4.5),
+                  (pre + "slam", "PlaySound", "", 4.5), (pre + "klaxon", "StopSound", "", 4.6), (pre + "warn_*", "HideSprite", "", 5.2)]
+        m.relay(pre + "shut", mid, 40, top + 40, [(pre + "shut", "Disable", "", 0), (name, "PressOut", "", 0.5), (pre + "shake", "StartShake", "", 4.5),
+                                                  (pre + "lamp_open", "HideSprite", "", 0), (pre + "lamp_shut", "ShowSprite", "", 4.5)] + moving
                 + [(pre + "open", "Enable", "", 5.5)], on=True)
-        m.relay(pre + "open", mid, -40, top + 40, [(pre + "open", "Disable", "", 0), (name, "PressIn", "", 0.5)] + moving + [(pre + "shut", "Enable", "", 5.5)], on=False)
+        m.relay(pre + "open", mid, -40, top + 40, [(pre + "open", "Disable", "", 0), (name, "PressIn", "", 0.5), (pre + "lamp_shut", "HideSprite", "", 0),
+                                                   (pre + "lamp_open", "ShowSprite", "", 4.5)] + moving + [(pre + "shut", "Enable", "", 5.5)], on=False)
     m.point("logic_auto", 768, 0, deck + 150, {"spawnflags": "1"}, connections=[("OnMapSpawn", "lc_lock_gate_*", "PressIn", "", 0.5)])
 
     # the stairs from the pier to the gantry, on a plinth, with a concrete parapet on the open side
     m.steps(528, 192, 256, F + 128, deck, "u", 1)
     m.det([(576, 192, F, 720, 256, F + 128)], MAT["canal_wall"])
-    m.shapes([prism([(528, F + 128), (528, F + 164), (720, deck + 36), (720, deck)], "y", 192, 198, MAT["beam"])])
+    m.shapes([prism([(527, F + 128), (527, F + 164), (720, deck + 36), (720, deck)], "y", 190, 196, MAT["beam"])])    # (2 proud of the steps' side)
     m.blocked(448, 128, 720, 256)
     m.lane(500, 224, F + 128)
     m.lane(624, 224, F + 192)
@@ -649,10 +665,13 @@ def m_lock(m, opt):
     m.taken(g1, -256, deck - 112, g2, 256, deck + 130)
     handrail(m, (g1 + 2, -256), (g1 + 2, 192), deck)
     handrail(m, (g2 - 2, -256), (g2 - 2, 256), deck)
-    # the street door on the left wall: Nova Prospekt's heavy door, shut for good (not the city's door: that one opens)
-    m.det([(785, 252, deck, 847, 256, deck + 112)], MAT["black"])
-    m.det([(777, 240, deck, 785, 256, deck + 120), (847, 240, deck, 855, 256, deck + 120), (777, 240, deck + 112, 855, 256, deck + 120)], MAT["beam"])
-    m.static("models/props_wasteland/prison_heavydoor001a.mdl", 816, 246, 270, z=deck)
+    # the street doorway on the left wall, never used: planked over, boards nailed across (never a door that looks
+    # openable where nobody can go: the owner, 20 November)
+    from map_town import board
+    m.det([(785, 252, deck, 847, 256, deck + 112)], "wood/woodwall006a")
+    m.det([(777, 239, deck, 785, 256, deck + 112), (847, 239, deck, 855, 256, deck + 112), (777, 239, deck + 112, 855, 256, deck + 120)], MAT["beam"])   # (1 proud of the trim)
+    for z, roll in ((deck + 36, 80), (deck + 76, 101)):
+        board(m, 816, 248, z, 270, roll)
 
     # the control house
     h1, h2, w1, w2, hz = 736, 896, -112, 112, deck + 112
@@ -662,15 +681,27 @@ def m_lock(m, opt):
     walls += [(h1 + 8, w1, deck, h2 - 8, w1 + 8, hz)]             # the right side: blind
     walls += [(h1 + 8, w2 - 8, deck, 792, w2, hz), (840, w2 - 8, deck, h2 - 8, w2, hz), (792, w2 - 8, deck + 88, 840, w2, hz)]   # the left side: the doorway
     m.det(walls, MAT["beam"])
-    m.det([(h1 - 8, w1 - 8, hz, h2 + 8, w2 + 8, hz + 8)], MM["tin"])
-    m.det([(h1 + 8, w1 + 8, deck, h2 - 8, w2 - 8, deck + 1)], "tile/tilefloor018a_c17")
+    m.det([(h1 - 8, w1 - 8, hz, h2 + 8, w2 + 8, hz + 8)], "metal/metalroof008a")
+    m.det([(h1 + 8, w1 + 8, deck, h2 - 8, w2 - 8, deck + 1)], "metal/metalfloor005a")
+    plate = "metal/metalwall030a"                                 # steel to the waist inside (the ends 1 lower than the sides: no shared tops)
+    m.det([(h1 + 8, w1 + 12, deck + 1, h1 + 12, w2 - 12, deck + 44), (h2 - 12, w1 + 12, deck + 1, h2 - 8, w2 - 12, deck + 44)], plate)
+    m.det([(h1 + 8, w1 + 8, deck + 1, h2 - 8, w1 + 12, deck + 45), (h1 + 8, w2 - 12, deck + 1, 792, w2 - 8, deck + 45), (840, w2 - 12, deck + 1, h2 - 8, w2 - 8, deck + 45)], plate)
+    m.static("models/props_canal/canalmap001.mdl", 780, w1 + 12, 270, z=deck + 48)               # the canals' own map, on the blind wall
+    m.static("models/props_lab/powerbox01a.mdl", 860, w1 + 26, 90, z=deck + 56)
+    m.static("models/props_lab/powerbox02b.mdl", 840, w1 + 19, 90, z=deck + 70)
     for g, u, out in (("a", h1 + 8, 0), ("b", h2 - 8, 180)):
         pre = "lc_lock_%s_" % g
         m.button("lc_lock_button_" + g, u, 90, deck + 40, out, [(pre + "shut", "Trigger", "", 0), (pre + "open", "Trigger", "", 0)], wait="6")
+        du = 1 if out == 0 else -1
+        m.static("models/props_wasteland/panel_leverbase001a.mdl", u + du * 5, 44, (out + 180) % 360, z=deck + 30)    # a lever panel beside it
+        m.static("models/props_wasteland/panel_leverhandle001a.mdl", u + du * 10, 44, (out + 180) % 360, z=deck + 42)
+        m.static("models/props_lab/powerbox02a.mdl", u + du * 10, 90, out, z=deck + 74)               # the gate's two lamps over it
+        sprite(m, pre + "lamp_open", u + du * 18, 82, deck + 92, "60 255 80", 0.12, on=True)
+        sprite(m, pre + "lamp_shut", u + du * 18, 98, deck + 92, "255 50 30", 0.12, on=False)
     m.static("models/props_wasteland/controlroom_desk001a.mdl", 816, -78, 90, z=deck + 1)
     m.static("models/props_wasteland/controlroom_monitor001a.mdl", 800, -86, 90, z=deck + 35)
     m.static("models/props_wasteland/controlroom_chair001a.mdl", 816, -34, 270, z=deck + 1)
-    m.lamp(816, 0, hz - 8, "255 214 160 50")
+    tube(m, 816, 0, hz, "217 209 190 55", along="u")
     m.target("lc_lock_house", 816, 30, deck + 8, 90)
     m.lane(816, 180, deck)
     m.lane(816, 40, deck)
@@ -687,6 +718,11 @@ def m_lock(m, opt):
     m.static("models/props_c17/oildrum001.mdl", 480, 228, 0, z=F + 128)
     m.static("models/props_docks/dock01_cleat01a.mdl", 462, 210, 90, z=F + 128)
     m.loose("models/props_junk/wood_crate001a.mdl", 980, -90, 20)
+    for k, u in enumerate((480, 600, 1000, 1100)):                 # the tide line: dark stains along both walls, over the banks
+        m.grime("stain", u, 256, F + 160, 30 + k)
+        m.grime("stain", u + 60, -256, F + 150, 40 + k)
+    m.soundscape(SCAPES["pump"], 816, 0, deck, radius=200)
+    m.soundscape(SCAPES["watery"], 768, 0, F, radius=800)
     m.view(1060, -40, F, 172, 2, "in the lock, toward gate a and the stairs")
     m.view(700, 224, deck - 24, 330, 8, "the stairs' head: the gantry and the house")
     m.view(860, 20, deck, 180, 6, "in the house: the slit toward gate a")
