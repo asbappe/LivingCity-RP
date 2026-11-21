@@ -27,7 +27,7 @@ import math
 import random
 
 import map_prefab as PF
-from map_build import CELL, GATE_HIGH, GATE_WIDE, MAT, Plan, Vmf, check, flood, gate_cap, reaches, test_extras
+from map_build import CELL, FACE_AXES, FACE_ORDER, GATE_HIGH, GATE_WIDE, MAT, Plan, Vmf, check, face_corners, flood, gate_cap, reaches, test_extras
 
 PATCH, STEP, WALL = 512, 64, 128
 
@@ -756,10 +756,10 @@ class BunkerForest(Forest):
         plan.paint((576, 448, 704, 512), ("low", zl, fm, zl + 160))
         plan.paint((384, 512, 896, 832), ("low", zl, fm, zl + 160))   # the main room
         plan.paint((320, 640, 384, 768), ("low", zl, fm, zl + 128))   # (each doorway between rooms is 128 wide: a frame narrows it to the door's 96)
-        plan.paint((64, 576, 320, 832), ("low", zl, fm, zl + 160))    # west: the bunks
+        plan.paint((64, 576, 320, 832), ("low", zl, fm, zl + 160))    # west: the generator and stores (the way through)
         plan.paint((896, 640, 960, 768), ("low", zl, fm, zl + 128))
-        plan.paint((960, 576, 1216, 832), ("low", zl, fm, zl + 160))  # east: the generator and stores
-        plan.paint((0, 640, 64, 768), ("low", zl, fm, zl + 128))      # a door in the bunk room's west wall...
+        plan.paint((960, 576, 1216, 832), ("low", zl, fm, zl + 160))  # east: the bunks (a dead end)
+        plan.paint((0, 640, 64, 768), ("low", zl, fm, zl + 128))      # a door in the generator room's west wall...
         plan.paint((-320, 640, 0, 768), ("low", zd, fm, zl + 160))    # ...and the second stairs, down and west
         plan.walls()
         # the deep level: wholly under the ground (its top is 72 under the gate's floor), so nothing of it shows outside
@@ -909,7 +909,7 @@ class BunkerForest(Forest):
         zp, zl, zd, zg = self.zp, self.zl, self.zd, self.zg
         vis = self.vis("structures")
         cold, cold2, warm, warm2, red = "224 254 248", "193 249 255", "253 230 159", "252 241 180", "255 64 64"
-        lights = ((640, 160, zp + 184, cold, 90), (640, 672, zl + 136, warm, 140), (1088, 704, zl + 136, cold2, 90), (-160, 704, zl + 120, cold, 60),
+        lights = ((640, 160, zp + 184, cold, 90), (640, 672, zl + 136, warm, 140), (192, 704, zl + 136, cold2, 90), (-160, 704, zl + 120, cold, 60),
                   (-384, 576, zd + 136, cold, 90), (-832, 448, zd + 136, cold, 70), (-640, 704, zd + 136, warm2, 110), (-1440, 416, zd + 136, red, 120),
                   (-640, 192, zd + 136, cold, 80), (-640, 1000, zd + 136, cold, 70), (-640, 1340, zd + 40, cold, 80), (-640, 1568, zg + 136, cold, 70))
         for (u, w, z, colour, power) in lights:
@@ -930,7 +930,7 @@ class BunkerForest(Forest):
             keys.update({"StartDisabled": "0", "spawnflags": "0", "renderamt": "255", "rendercolor": "255 255 255", "modelscale": "1.0", "MinAnimTime": "5", "MaxAnimTime": "10",
                          "RandomAnimation": "0", "SetBodyGroup": "0", "PerformanceMode": "0", "pressuredelay": "0", "ExplodeDamage": "0", "ExplodeRadius": "0"})
             v.point("prop_dynamic_override", W(u, w, z), keys, vis)
-        for (u, w, ceil) in ((640, 160, zp + 208), (544, 672, zl + 160), (736, 672, zl + 160), (1088, 704, zl + 160), (-384, 576, zd + 160), (-832, 448, zd + 160),
+        for (u, w, ceil) in ((640, 160, zp + 208), (544, 672, zl + 160), (736, 672, zl + 160), (192, 704, zl + 160), (-384, 576, zd + 160), (-832, 448, zd + 160),
                              (-640, 704, zd + 160), (-640, 192, zd + 160)):
             put("props_lab/lab_flourescentlight001a", u, w, ceil - 33, 0, "f")
         for (u, w, z, yaw) in ((-703, 1000, zd + 120, 0), (-577, 1340, zd + 16, 180), (-703, 1568, zg + 120, 0), (-832, 511, zd + 124, 270), (-832, 385, zd + 124, 90),
@@ -948,13 +948,17 @@ class BunkerForest(Forest):
             ("props_silo/desk_console1", 670, 811, zl + 34, 270, "s"), ("props_wasteland/controlroom_chair001a", 640, 768, zl + 20, 90, "d"),
             ("props_silo/silo_server_a", 800, 818, zl, 270, "s"), ("props_silo/silo_server_b", 838, 815, zl, 270, "s"), ("props_silo/wall_console2", 392, 576, zl, 0, "s"),
             ("props_junk/wood_crate001a", 425, 548, zl + 20, 10, "d"), ("props_junk/wood_crate002a", 480, 795, zl + 20, 0, "d"),
-            # the bunks
-            ("props_forest/bunkbed", 130, 805, zl, 270, "s"), ("props_forest/bunkbed", 250, 805, zl, 270, "s"), ("props_forest/bunkbed2", 150, 600, zl, 90, "s"),
-            ("props_lab/lockers", 250, 589, zl, 90, "s"), ("props_forest/footlocker01_closed", 130, 755, zl + 12, 270, "s"), ("props_wasteland/prison_sink001a", 78, 610, zl + 28, 0, "s"),
-            # the generator room
-            ("props_outland/generator_static01a", 1090, 771, zl, 270, "s"), ("props_forest/shelves_wood", 1198, 660, zl, 180, "s"),
-            ("props_silo/electricalbox02", 1088, 577, zl, 90, "s"), ("props_silo/tirestack2", 1150, 790, zl, 30, "s"), ("props_silo/tirestack3", 1150, 620, zl, 0, "s"),
-            ("props_silo/barrelwarning", 1000, 800, zl, 20, "d"),
+            # the bunk room: the east room, a dead end (the owner: "why did you put the bunkroom as a 'walkway' room before the
+            # stairs down?"). Each frame (bunkbed) has its mattresses (bunkbed2: Valve's mattress set for it, the same origin
+            # and turn; the owner: they were "floating on the other side of the room away from the bunk bed frames")
+            ("props_forest/bunkbed", 1150, 805, zl, 270, "s"), ("props_forest/bunkbed2", 1150, 805, zl, 270, "s"),
+            ("props_forest/bunkbed", 1030, 805, zl, 270, "s"), ("props_forest/bunkbed2", 1030, 805, zl, 270, "s"),
+            ("props_lab/lockers", 1030, 589, zl, 90, "s"), ("props_forest/footlocker01_closed", 1150, 755, zl + 12, 270, "s"), ("props_wasteland/prison_sink001a", 1202, 610, zl + 28, 180, "s"),
+            # the generator room: the west room, the way through to the second stairs, so all of it stands against its north
+            # and south walls and the line between its two doors (y 656 to 752) stays clear
+            ("props_outland/generator_static01a", 125, 608, zl, 0, "s"), ("props_forest/shelves_wood", 256, 593, zl, 90, "s"),
+            ("props_silo/electricalbox02", 192, 831, zl, 270, "s"), ("props_silo/tirestack2", 150, 788, zl, 30, "s"), ("props_silo/tirestack3", 215, 788, zl, 0, "s"),
+            ("props_silo/barrelwarning", 285, 800, zl, 20, "d"),
             # the radio room: the base's control room, as White Forest's
             ("props_wasteland/controlroom_desk001a", -534, 704, zd + 17, 180, "d"), ("props_silo/desk_console1", -534, 674, zd + 34, 180, "s"),
             ("props_silo/desk_console3", -534, 734, zd + 34, 180, "s"), ("props_wasteland/controlroom_chair001a", -585, 704, zd + 20, 0, "d"),
@@ -985,14 +989,20 @@ class BunkerForest(Forest):
                   (1, (-704, 512, -576, 576), "y", 1, 1), (1, (-1088, 512, -960, 576), "y", 1, -1), (1, (-704, 320, -576, 384), "y", -1, -1),
                   (1, (-1088, 320, -960, 384), "y", -1, -1), (1, (-1280, 384, -1216, 512), "x", 1, -1), (1, (-704, 832, -576, 896), "y", 1, -1))
 
+    # Episode Two's own small silo door, the lab door at the silo's bottom (door_silo_lab_outside_1, the owner: "has
+    # CORRECT opening/closing animations and opens at the right speed"): every silo_door01 door copies it. Its func_door:
+    # speed 60, lip 32, Valve's lever-door sounds; its prop has NO default animation, so it holds the last frame of
+    # "unlock" while open and of "lock" while shut (with DefaultAnim "idle" it snapped back to locked when "unlock" ended).
+    SILO_DOOR = {"speed": "60", "lip": "32", "noise1": "ep2_outland_11.leverdoor_open", "startclosesound": "ep2_outland_11.leverdoor_close"}
+
     def room_doors(self):
         """A door in each doorway between the bunker's rooms, as White Forest's are (the owner, 21 November: "the bunker/silo
         doors for whiteforest from EP2"): Episode Two's silo door (props_silo/silo_door01) carried by an unseen func_door 96
-        wide and 124 high, 4 thick in the middle of the doorway, that slides 64 sideways into the wall at 60 a second, as
-        Valve's slide 67 (until then the same model swung on a hinge). Use opens and shuts it; it starts shut; the wheel
-        unlocks as it opens and locks when it is shut again. To the gamemode these ARE doors (its door rules apply to
-        func_door). A keypad beside each, 52 up as Valve's: a model only (the door opens by Use, and a keypad that opened
-        it would get round the gamemode's locks). The move and stop sounds are the ones most of the owner's own doors use."""
+        wide and 124 high, 4 thick in the middle of the doorway, that slides 64 sideways into the wall, set as Valve's lab
+        door at the silo's bottom (SILO_DOOR: speed 60, lip 32, its sounds, a prop with no default animation). Use opens
+        and shuts it; it starts shut; the wheel unlocks as it opens and stays unlocked, and locks when it is shut again.
+        To the gamemode these ARE doors (its door rules apply to func_door). A keypad beside each, 52 up as Valve's: a
+        model only (the door opens by Use, and a keypad that opened it would get round the gamemode's locks)."""
         v, vis = self.vmf, self.vis("bunker room doors")
         frames = []
         for k, (level, (u1, v1, u2, v2), way, room, slide) in enumerate(self.ROOM_DOORS):
@@ -1010,15 +1020,14 @@ class BunkerForest(Forest):
                 leaf, at, yaw, movedir = B(a, m - 2, z, b, m + 2, z + 124), W((a + b) // 2, m, z), 0, 0 if slide > 0 else 180
                 pad = (W(u1 - 12 if slide > 0 else u2 + 12, v1 - 1, z + 52), 270) if room > 0 else (W(u1 - 12 if slide > 0 else u2 + 12, v2 + 1, z + 52), 90)
             name = "lc_bunker_room_door_%d" % (k + 1)
-            v.brush_entity("func_door", {
-                "targetname": name, "movedir": "0 %d 0" % movedir, "speed": "60", "lip": "32", "wait": "-1", "spawnflags": "288", "noise1": "doors/doormove1.wav",
-                "noise2": "doors/doormove2.wav", "forceclosed": "0", "ignoredebris": "1", "loopmovesound": "0", "dmg": "0", "health": "0", "locked_sentence": "0",
-                "unlocked_sentence": "0", "rendermode": "0", "renderamt": "255", "rendercolor": "255 255 255", "renderfx": "0", "disableshadows": "1",
-                "disablereceiveshadows": "0"}, [leaf], MAT["nodraw"], vis,
+            v.brush_entity("func_door", dict(self.SILO_DOOR, **{
+                "targetname": name, "movedir": "0 %d 0" % movedir, "wait": "-1", "spawnflags": "288", "forceclosed": "0", "ignoredebris": "1", "loopmovesound": "0",
+                "dmg": "0", "health": "0", "locked_sentence": "0", "unlocked_sentence": "0", "rendermode": "0", "renderamt": "255", "rendercolor": "255 255 255",
+                "renderfx": "0", "disableshadows": "1", "disablereceiveshadows": "0"}), [leaf], MAT["nodraw"], vis,
                 connections=[("OnOpen", name + "_model", "SetAnimation", "unlock", 0), ("OnFullyClosed", name + "_model", "SetAnimation", "lock", 0)])
             v.point("prop_dynamic_override", at, {
                 "targetname": name + "_model", "model": "models/props_silo/silo_door01.mdl", "angles": "0 %d 0" % yaw, "parentname": name, "skin": "0", "solid": "0",
-                "DefaultAnim": "idle", "disableshadows": "1", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1", "StartDisabled": "0", "renderamt": "255",
+                "disableshadows": "1", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1", "StartDisabled": "0", "renderamt": "255",
                 "rendercolor": "255 255 255", "modelscale": "1.0", "MinAnimTime": "5", "MaxAnimTime": "10", "RandomAnimation": "0", "SetBodyGroup": "0",
                 "PerformanceMode": "0", "pressuredelay": "0", "ExplodeDamage": "0", "ExplodeRadius": "0"}, vis)
             v.point("prop_dynamic", pad[0], {"model": "models/props_lab/keypad.mdl", "angles": "0 %d 0" % pad[1], "solid": "0", "skin": "0", "disableshadows": "1",
@@ -1080,6 +1089,11 @@ class BunkerForest(Forest):
         portal = B(mid - half, 31, zp, mid + half, 33, top)
         self.vmf.portals.append(portal)
         v.brush_entity("func_areaportal", {"targetname": "lc_bunker_portal", "StartOpen": "1", "PortalVersion": "1"}, [portal], MAT["portal"], dv)
+        # a floor plate 1 thick over the doorway's whole floor, across the areaportal's plane: a detail face belongs to every
+        # leaf it touches, so it is drawn from both sides of the shut portal (the owner: with the door shut, "a gap at the
+        # leaves' foot" showed the forest ground, because the floor between the leaves and the portal was the outside's
+        # and was not drawn from inside). The portal still meets the world's floor under it on its bottom edge.
+        v.detail([B(mid - half, 0, zp, mid + half, 64, zp + 1)], FMAT["wf_floor"], vis=vis)
 
         # sounds (Valve's blast door's own, and the klaxon and groan the owner heard), the red light, the shake
         def sound(name, message, at, loops=False):
@@ -1134,30 +1148,43 @@ class BunkerForest(Forest):
         v.brush_entity("trigger_multiple", {"targetname": "lc_bunker_inside", "spawnflags": "1", "wait": "1", "StartDisabled": "0"}, inside, MAT["trigger"],
                        self.vis("bunker door's failsafe (delete to let it stay shut when empty)"), connections=[("OnEndTouchAll", "lc_bunker_open", "Trigger", "", 20)])
 
+    # the lift's stops: the silo piece's floors with a landing on the lift shaft, bottom to top (its bottom level, the solid
+    # ring's top, the ring slab's top). A floor becomes a stop by adding its height here (with its landing open in the
+    # piece): its path point, gate, call button and wiring are all made from this list.
+    LIFT_STOPS = (320, 896, 1152)
+    LIFT_XY = (-480, 0)          # the lift's track in the piece's frame: 480 from the shaft's axis, which stays clear
+    HQ_FOOT, HQ_TOP = 160 + 8, 1408 + 120      # the Resistance flag's markers on the shaft's axis: over the pit grate (160) and the gantry (1408)
+
     def silo(self):
         """White Forest's rocket silo (the lifted piece valve_ep2_silo: docs/dev/prefabs.md) just outside the forest's north
         wall, turned a quarter so that its west tunnel faces the corridor from the radio room, its gantry level the
         corridor's floor (zg), its lid 192 under the bunker's door. Its world brushes go into the world (they cut up the
         map for visibility as in Valve's own), the rest as detail; sealed in a hull of our own 64 thick (nodraw outside,
         the silo's own concrete inside, so each mouth of the piece Valve's rooms ran on through ends at a plain wall), with
-        one opening: where the corridor comes in. Its wiring: the lift goes down and comes back up (its button in the car;
-        the bottom level has no other way up), the ladder hatch on the gantry opens by Use, the lab door's two keypads open
-        it, the keypads have names of their own, the steam gate, the areaportals and Valve's story (scenes, NPC makers, the
-        autosave, Uriah) are left out. Invisible player clips stand in the empty shaft (where the rocket was) at the open
-        levels and the gantry, so nobody walks off into a 1,250 drop."""
+        one opening: where the corridor comes in. Its wiring: the lift (lift(): a stop at every floor in LIFT_STOPS, it
+        starts at the top), the ladder from the gantry to the lift's top landing always usable (its hatch removed), the lab
+        door at the bottom (the Resistance leader's office) opened and shut by Use, with Valve's lever moved inside to
+        lock it; the keypads have names of their own; the steam gate, the areaportals, Valve's story (scenes, NPC makers,
+        the autosave, Uriah) and the piece's reserve (the hoisted machine) are left out; the soundscapes are Valve's silo
+        ones without the rocket's ignition hisses. Invisible player clips stand in the empty shaft (where the rocket was)
+        at the open levels and the gantry, so nobody walks off into a 1,250 drop. Two info_targets on the shaft's axis
+        mark the Resistance flag's pole: lc_hq_setup_silo over the pit grate, lc_hq_setup_silo_top 120 over the gantry."""
         v = self.vmf
         sv, wv = self.vis("silo (Valve's White Forest silo)"), self.vis("silo's wiring")
         pf = PF.load("valve_ep2_silo")
         ax, ay, az = self.silo_at
         q, d = 1, (ax, ay, az)
+        reserve = set(pf.get("reserve", {}).get("names", ()))
         live = set(w["keys"].get("targetname", "") for w in pf["wiring"]) - {""}
         pf_solids(v, pf, q, d, sv, world=True, skip=lambda s: "taken shut" in s["from"] or s.get("live") in live)
-        drop = {"steam_silo1_1", "tr_laddergate_1", "sound_ladder_steam_1", "sound_ladder_steamloop_1", "sound_ladder_lock_1", "door_silo_lab_outside_1_malfunction_timer"}
-
-        def keep(e):
-            if e["keys"].get("targetname", "") in drop or e["classname"] == "func_areaportal":
-                return False
-            return not (e["classname"] == "trigger_multiple" and any(c[1].startswith("!activator,Kill") for c in e.get("connections", [])))
+        drop = {"steam_silo1_1", "tr_laddergate_1", "sound_ladder_steam_1", "sound_ladder_steamloop_1", "sound_ladder_lock_1", "door_silo_lab_outside_1_malfunction_timer",
+                # the ladder's hatch and the clip over it (the owner: "there is no way to open the gate ... can we just remove that grate?")
+                "door_hatch_ladder_1", "pclip_hatch_1",
+                # the lab door's keypad relay and beeps (it opens by Use now), the glass over its lever and what breaking it did
+                "door_silo_lab_outside_1_door_open_rl", "door_silo_lab_outside_1_open_wav", "door_silo_lab_outside_1_keybeep_wav_1", "door_silo_lab_outside_1_keybeep_wav_2",
+                "door_silo_lab_outside_1_keybeep_wav_3", "break_glass_1", "break_glass_1a", "exit_airlock_blastdoor_lever_rl",
+                # Valve's lift button, the trigger that locked it, its path: lift() makes them anew
+                "button_ele_2", "trigger_unlock_ele", "path_elevator_5", "path_elevator_6", "path_elevator_7", "path_elevator_8"}
         pads = [p for p in pf["points"] if "keypad" in p["keys"].get("model", "")]
         buttons = [w for w in pf["wiring"] if w["classname"] == "func_button" and any(c[1].startswith("keypad_1,") for c in w.get("connections", []))]
         pad_name, lab_pads = {}, set()
@@ -1167,6 +1194,44 @@ class BunkerForest(Forest):
             if abs(b["origin"][2] - 373) < 20:
                 lab_pads.add(tuple(b["origin"]))
 
+        def keep(e):
+            k = e["keys"]
+            if k.get("targetname", "") in drop or e["classname"] == "func_areaportal":
+                return False
+            if k.get("targetname", "") in reserve or any(k.get(r, "") in reserve for r in ("parentname", "attach1", "attach2")):
+                return False        # (the hoist: kept in the piece's reserve, not placed)
+            if e["classname"] == "func_button" and tuple(e.get("origin", ())) in lab_pads:
+                return False        # (the lab door's keypads are models only now)
+            return not (e["classname"] == "trigger_multiple" and any(c[1].startswith("!activator,Kill") for c in e.get("connections", [])))
+
+        # the lab door's lever, moved from the outside niche to the office's wall east of the door, facing into the office:
+        # turned a quarter clockwise about its hinge and set there (the owner: "move the little lever mechanism to the inside")
+        lo, lo2 = (280, 222, 374), (261, 288, 374)
+        r3 = PF.rot(list(lo), 3)
+        ld = (lo2[0] - r3[0], lo2[1] - r3[1], lo2[2] - r3[2])
+
+        def indoors(p):
+            x, y, z = PF.rot(list(p), 3)
+            return [x + ld[0], y + ld[1], z + ld[2]]
+
+        def indoor_brushes(brushes):
+            out = []
+            for b in brushes:
+                nb = []
+                for s in b:
+                    s = dict(s, plane=[indoors(p) for p in s["plane"]], verts=[indoors(p) for p in s.get("verts", [])],
+                             uaxis=PF.turn_axis(s["uaxis"], 3, ld), vaxis=PF.turn_axis(s["vaxis"], 3, ld))
+                    if s.get("corners"):
+                        s["corners"] = [indoors(p) for p in s["corners"]]
+                    nb.append(s)
+                out.append(nb)
+            return out
+        # Valve's silo soundscapes all play "ep2_util.rocket", whose hisses include gascan_ignite1 and ignite.wav every 5 to
+        # 15 s (the owner: "a fire sound effect playing over and over on the bottom of the silo"): the same silo's soundscapes
+        # from after the rocket left (12a's silo_shut) or of its rooms, which have none
+        scapes = {"ep2_silo.silo_top": "ep2_silo.techroom", "ep2_silo.silo_middle": "ep2_silobattle.silo_shut", "ep2_silo.silo_bottom": "ep2_silobattle.silo_shut"}
+        top = len(self.LIFT_STOPS) - 1
+
         def edit(e):
             cls, k = e["classname"], e["keys"]
             tn, o = k.get("targetname", ""), tuple(e.get("origin", ()))
@@ -1175,51 +1240,47 @@ class BunkerForest(Forest):
                     k["targetname"] = pad_name[o]
                 else:
                     e["out"] = [(a, pad_name[o] if t == "keypad_1" else t, i, val, dl) for a, t, i, val, dl in e["out"]]
-                    if o in lab_pads:
-                        e["out"].append(("OnPressed", "door_silo_lab_outside_1_door_open_rl", "Trigger", "", 0))
             if cls == "ambient_generic":
                 k["spawnflags"] = str(int(k.get("spawnflags", "0") or 0) & ~1)
             if cls == "prop_dynamic" and "silo_door01" in k.get("model", ""):
                 e["classname"] = "prop_dynamic_override"      # (the model has physics data: map_assets.py)
-            if cls == "path_track" and tn.startswith("path_elevator_"):
-                k["speed"] = "40"      # (a train going backward misbehaves on path points whose speed is 0)
-                e["out"] = {"path_elevator_5": [("OnPass", "lift_at_bottom", "Trigger", "", 0)], "path_elevator_6": [("OnPass", "lift_at_top", "Trigger", "", 0)]}.get(tn, [])
-            if tn == "button_ele_2":
-                k["spawnflags"] = "1025"
-                e["out"] = [("OnPressed", "lift_go_down", "Trigger", "", 0), ("OnPressed", "lift_go_up", "Trigger", "", 0)]
+            if cls == "prop_static" and k.get("model", "").endswith("generatorconsole.mdl"):
+                k["solid"] = "6"        # (the gantry's control panel: Valve's is not solid, and the clipboard on it fell through it)
+            if cls == "env_soundscape" and k.get("soundscape") in scapes:
+                k["soundscape"] = "ep2_silo.concreteroom" if o[1] > 200 else scapes[k["soundscape"]]      # (the one by the lab door: a room's)
+            if tn == "ladder_hatch_1":
+                k["StartDisabled"] = "0"        # (it waited for the hatch to open; with the hatch gone it is always there)
+            if tn == "light_hatch_ladder_1":
+                k["spawnflags"] = "0"           # (they lit when the hatch opened: now always)
+            if tn == "sprite_hatch_ladder_1":
+                k["spawnflags"] = "1"
+            if tn == "door_silo_lab_outside_1":     # (the Resistance leader's office: Use opens and shuts it, as the bunker's doors)
+                k.update({"spawnflags": str(int(k["spawnflags"]) | 256), "wait": "-1", "locked_sound": "DoorHandles.Locked2"})
+                e["out"] = [("OnOpen", "prop_door_silo_lab_outside_1", "SetAnimation", "unlock", 0), ("OnFullyClosed", "prop_door_silo_lab_outside_1", "SetAnimation", "lock", 0)]
+            if tn == "exit_airlock_blastdoor_lever":     # (a lever, not a door to the gamemode: pulled, it shuts and locks the door; pushed back, unlocks it)
+                e["classname"] = "func_rot_button"
+                e["keys"] = {"targetname": tn, "angles": "0 0 0", "distance": k["distance"], "speed": k["speed"], "wait": "-1", "spawnflags": str(1024 | 32 | 64), "sounds": "0",
+                             "health": "0", "rendermode": "0", "renderamt": "255", "rendercolor": "255 255 255", "disablereceiveshadows": "0", "disableshadows": "0"}
+                e["brushes"], e["origin"] = indoor_brushes(e["brushes"]), indoors(e["origin"])
+                e["out"] = [("OnPressed", "lab_lever_sound", "PlaySound", "", 0), ("OnIn", "door_silo_lab_outside_1", "Close", "", 0),
+                            ("OnIn", "door_silo_lab_outside_1", "Lock", "", 0.1), ("OnOut", "door_silo_lab_outside_1", "Unlock", "", 0)]
+            if "panel_lever" in k.get("model", ""):
+                a = [float(c) for c in k["angles"].split()]
+                e["origin"], k["angles"] = indoors(e["origin"]), "%s %s %s" % (PF.fmt(a[0]), PF.fmt((a[1] + 270) % 360), PF.fmt(a[2]))
+            if tn == "lift_2":      # (it starts at the top stop; no crush damage; its own path, made by lift())
+                k.update({"target": "lift_stop_%d" % top, "height": "0", "startspeed": "40", "speed": "0", "dmg": "0"})
             if tn == "brush_pclip_lift_2":
                 k["StartDisabled"] = "1"
             if tn == "lift_door_2_b":      # (a mover only the wiring moves, not a door to the gamemode)
                 e["classname"] = "func_button"
                 k.update({"spawnflags": "0", "wait": "-1", "sounds": "0", "health": "0"})
-            if tn == "door_hatch_ladder_1":
-                k["spawnflags"] = str(int(k["spawnflags"]) | 256)
-                e["out"] = [x for x in e["out"] if x[1] not in ("prop_eledoor_4", "lift_door_2_b")]
-            if tn == "door_silo_lab_outside_1":
-                k["spawnflags"], k["wait"] = str(int(k["spawnflags"]) & ~32), "8"
-                e["out"].append(("OnFullyClosed", "prop_door_silo_lab_outside_1", "SetAnimation", "lock", 0))
-
-        def relay(name, outs, off, at):
-            return {"classname": "logic_relay", "origin": at, "keys": {"targetname": name, "StartDisabled": "1" if off else "0", "spawnflags": "0"}, "out": outs}
-
-        def go(me, way, arrive):
-            return [("OnTrigger", me, "Disable", "", 0), ("OnTrigger", "button_ele_2", "Lock", "", 0), ("OnTrigger", "prop_eledoor_4", "SetAnimation", "close", 0),
-                    ("OnTrigger", "lift_door_2_b", "PressOut", "", 0), ("OnTrigger", "brush_pclip_lift_2", "Enable", "", 0), ("OnTrigger", "sprite_ele_2", "Color", "255 10 10", 0),
-                    ("OnTrigger", "sound_elevator_startup_1", "PlaySound", "", 0), ("OnTrigger", "sound_elevator_startup_1", "StopSound", "", 2.2),
-                    ("OnTrigger", "lift_2", way, "", 2), ("OnTrigger", "lift_2", "SetSpeedReal", "40", 2.1), ("OnTrigger", arrive, "Enable", "", 3)]
-
-        def arrive(me, then):
-            return [("OnTrigger", me, "Disable", "", 0), ("OnTrigger", "lift_2", "Stop", "", 0), ("OnTrigger", "lift_door_2_b", "PressIn", "", 1),
-                    ("OnTrigger", "prop_eledoor_4", "SetAnimation", "open", 1), ("OnTrigger", "brush_pclip_lift_2", "Disable", "", 1),
-                    ("OnTrigger", "sprite_ele_2", "Color", "255 170 43", 1), ("OnTrigger", "button_ele_2", "Unlock", "", 2), ("OnTrigger", then, "Enable", "", 2)]
-        # the lift: each arrival is answered only after the car has set off that way (a path point can fire as the car leaves it)
-        extra = [relay("lift_go_down", go("lift_go_down", "StartForward", "lift_at_bottom"), False, [-500, 40, 1240]),
-                 relay("lift_at_bottom", arrive("lift_at_bottom", "lift_go_up") + [("OnTrigger", "physexp_hook_crash_1", "Explode", "", 0)], True, [-500, 40, 1224]),
-                 relay("lift_go_up", go("lift_go_up", "StartBackward", "lift_at_top"), True, [-500, 40, 1208]),
-                 relay("lift_at_top", arrive("lift_at_top", "lift_go_down"), True, [-500, 40, 1192]),
-                 {"classname": "logic_auto", "origin": [-500, 60, 1240], "keys": {"spawnflags": "1"},
-                  "out": [("OnMapSpawn", "lift_door_2_b", "PressIn", "", 1), ("OnMapSpawn", "prop_eledoor_4", "SetAnimation", "open", 1)]}]
+        extra = self.lift() + [{"classname": "ambient_generic", "origin": [261, 300, 384], "keys": {
+            "targetname": "lab_lever_sound", "message": "streetwar.drawbridge_lever_start", "health": "10", "pitch": "100", "pitchstart": "100", "radius": "1250", "spawnflags": "48"}}]
         pf_entities(v, pf, q, d, "lc_silo_", sv, wv, keep=keep, edit=edit, extra=extra, valve_anchor=pf["anchor"])
+        # the Resistance flag's pole (the owner: raised "from the bottom of the silo" with the flag "flush with eye level on the
+        # top floor"): its foot over the pit grate on the shaft's axis, its _top marker 120 over the gantry's floor
+        v.point("info_target", (ax, ay, az + self.HQ_FOOT), {"targetname": "lc_hq_setup_silo", "spawnflags": "0"}, wv)
+        v.point("info_target", (ax, ay, az + self.HQ_TOP), {"targetname": "lc_hq_setup_silo_top", "spawnflags": "0"}, wv)
         for dz in (1408 + 64, 322 + 64):
             v.point("env_cubemap", (ax, ay + 200, az + dz), {"cubemapsize": "0"}, sv)
         # player clips in the empty shaft: over the solid ring's hole (159), the ring slab's grate's hole (114) and inside
@@ -1250,6 +1311,111 @@ class BunkerForest(Forest):
         sky, shv = MAT["sky"], self.vis("shell (sky, walls, slab)")
         v.world_box(self.box(lx1, self.D, roof, lx2, self.D + WALL, self.lid), sky, sky, sky, vis=shv)
         v.world_box(self.box(lx1, self.D, self.zg - 80, lx2, self.D + WALL, self.zd - 64), nd, vis=shv)
+
+    def lift(self):
+        """The silo's lift, in the piece's frame (named as the piece's: lc_silo_...), as entities for pf_entities. The owner,
+        21 November: it starts at the top, "can go to any floor it is called to", each floor's gate shut while the lift is
+        elsewhere, a re-usable call button at each floor, and in the car "two different PROPER PROP buttons, one on top of
+        the other, and one goes up a floor and the other goes down a floor".
+        How it works: Valve's car (lift_2, a func_tracktrain) runs on a path point per stop (lift_stop_N, N counted from
+        the bottom; forward is down). A trip to stop N enables every point but the one just past N in the way it goes, so
+        the car's path ends at N: it stops exactly there and the point's OnPass fires lift_arrive_N, the only arrival relay
+        enabled for that trip (a point passed on the way fires its own, which is off). Which way to go: lift_cmp_N (a
+        logic_compare holding the stop the car is at, set on every arrival) against N. While it moves every call relay
+        and the car's buttons are off, so a press then does nothing. It sets off only when nobody stands in its doorway
+        (a trigger on the car, between its gate and the landing's: lift_clear_dn / _up wait until it is clear). Every
+        path point has a speed (a train going backward misbehaves on points whose speed is 0: Valve's wiki), and the one
+        under the top starts disabled, so the car stays at the top when the map starts. It does no crush damage, and the
+        gates (sliding func_buttons only the wiring moves) stop against whoever is in their way."""
+        stops, (lx, ly) = self.LIFT_STOPS, self.LIFT_XY
+        n, top = len(stops), len(stops) - 1
+        z0 = stops[top]          # (the car is built at its top stop)
+        out = []
+        spots = iter([(-520 + 16 * (i % 5), -48 + 16 * ((i // 5) % 7), 1290 - 12 * (i // 35)) for i in range(1000)])
+
+        def box(x1, y1, z1, x2, y2, z2, mat):
+            sides = []
+            for f in FACE_ORDER:
+                p = face_corners((x1, y1, z1, x2, y2, z2), f)
+                u, w = FACE_AXES[f]
+                sides.append({"plane": [list(c) for c in p[:3]], "verts": [list(c) for c in p], "material": mat.upper(), "uaxis": u, "vaxis": w, "lightmapscale": "16"})
+            return sides
+
+        def ent(cls, keys, outs=(), at=None, brush=None):
+            e = {"classname": cls, "origin": list(at or next(spots)), "keys": keys, "out": list(outs)}
+            if brush:
+                e["brushes"] = [box(*brush)]
+                e["origin"] = [(brush[0] + brush[3]) / 2.0, (brush[1] + brush[4]) / 2.0, (brush[2] + brush[5]) / 2.0]
+            out.append(e)
+
+        def relay(name, outs, off=False):
+            ent("logic_relay", {"targetname": name, "StartDisabled": "1" if off else "0", "spawnflags": "0"}, outs)
+
+        def button(name, foot, yaw, bb, outs, parent=None):
+            # (Episode Two's mine lift button, freightelevatorbutton02, and round it an unseen func_button: as wall_button())
+            pk = {"targetname": name + "_model", "model": "models/props_mining/freightelevatorbutton02.mdl", "angles": "0 %d 0" % yaw, "skin": "0", "solid": "0",
+                  "DefaultAnim": "idleoff", "disableshadows": "1", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1", "StartDisabled": "0", "renderamt": "255",
+                  "rendercolor": "255 255 255", "modelscale": "1.0", "MinAnimTime": "5", "MaxAnimTime": "10", "RandomAnimation": "0", "SetBodyGroup": "0",
+                  "PerformanceMode": "0", "pressuredelay": "0", "ExplodeDamage": "0", "ExplodeRadius": "0"}
+            bk = {"targetname": name, "spawnflags": "1025", "wait": "1", "speed": "5", "lip": "0", "movedir": "0 0 0", "sounds": "0", "health": "0", "rendermode": "10",
+                  "renderamt": "0", "rendercolor": "255 255 255"}
+            if parent:
+                pk["parentname"] = bk["parentname"] = parent
+            ent("prop_dynamic", pk, at=foot)
+            ent("func_button", bk, [("OnPressed", name + "_model", "SetAnimation", "turn_ON", 0)] + list(outs), brush=tuple(bb) + (MAT["nodraw"],))
+
+        for k, z in enumerate(stops):
+            # its path point, top to bottom
+            ent("path_track", {"targetname": "lift_stop_%d" % k, "target": "lift_stop_%d" % (k - 1) if k else "", "speed": "40", "spawnflags": "1" if k == top - 1 else "0",
+                               "orientationtype": "0", "angles": "0 0 0"}, [("OnPass", "lift_arrive_%d" % k, "Trigger", "", 0)], at=(lx, ly, z))
+            # arriving: the gates open, the car's buttons and every call work again
+            arrive = [("OnTrigger", "lift_arrive_%d" % k, "Disable", "", 0), ("OnTrigger", "lift_2", "Stop", "", 0), ("OnTrigger", "lift_cmp_*", "SetValue", str(k), 0),
+                      ("OnTrigger", "lift_gate_%d" % k, "PressIn", "", 1), ("OnTrigger", "lift_door_2_b", "PressIn", "", 1), ("OnTrigger", "prop_eledoor_4", "SetAnimation", "open", 1),
+                      ("OnTrigger", "brush_pclip_lift_2", "Disable", "", 1), ("OnTrigger", "sprite_ele_2", "Color", "255 170 43", 1), ("OnTrigger", "lift_call_*", "Enable", "", 2)]
+            arrive += [("OnTrigger", "lift_up_from_%d" % k, "Enable", "", 2)] if k < top else []
+            arrive += [("OnTrigger", "lift_dn_from_%d" % k, "Enable", "", 2)] if k > 0 else []
+            relay("lift_arrive_%d" % k, arrive, off=k != top)
+            # a call: which way, from the stop the car is at
+            relay("lift_call_%d" % k, [("OnTrigger", "lift_cmp_%d" % k, "Compare", "", 0)])
+            ent("logic_compare", {"targetname": "lift_cmp_%d" % k, "InitialValue": str(top), "CompareValue": str(k)},
+                [("OnEqualTo", "lift_here_%d" % k, "Trigger", "", 0)] + ([("OnLessThan", "lift_up_to_%d" % k, "Trigger", "", 0)] if k > 0 else [])
+                + ([("OnGreaterThan", "lift_dn_to_%d" % k, "Trigger", "", 0)] if k < top else []))
+            relay("lift_here_%d" % k, [("OnTrigger", "lift_gate_%d" % k, "PressIn", "", 0), ("OnTrigger", "lift_door_2_b", "PressIn", "", 0)])
+            # setting off: everything off, the path ends at this stop, the gates shut, then it goes once the doorway is clear
+            for name, past, branch in (("lift_dn_to_%d" % k, k - 1, "lift_clear_dn"), ("lift_up_to_%d" % k, k + 1, "lift_clear_up")):
+                if (branch == "lift_clear_dn" and k == top) or (branch == "lift_clear_up" and k == 0):
+                    continue
+                go = [("OnTrigger", "lift_call_*", "Disable", "", 0), ("OnTrigger", "lift_up_from_*", "Disable", "", 0), ("OnTrigger", "lift_dn_from_*", "Disable", "", 0),
+                      ("OnTrigger", "lift_stop_*", "EnablePath", "", 0), ("OnTrigger", "lift_arrive_%d" % k, "Enable", "", 0)]
+                go += [("OnTrigger", "lift_stop_%d" % past, "DisablePath", "", 0.1)] if 0 <= past <= top else []
+                go += [("OnTrigger", "lift_gate_*", "PressOut", "", 0), ("OnTrigger", "lift_door_2_b", "PressOut", "", 0), ("OnTrigger", "prop_eledoor_4", "SetAnimation", "close", 0),
+                       ("OnTrigger", "sprite_ele_2", "Color", "255 10 10", 0), ("OnTrigger", "sound_elevator_startup_1", "PlaySound", "", 0),
+                       ("OnTrigger", "sound_elevator_startup_1", "StopSound", "", 2.2), ("OnTrigger", branch, "Test", "", 2)]
+                relay(name, go)
+            # the floor's gate: two leaves of sliding grating across the landing (72 each), 40 aside into the jambs to open
+            for y1, y2, way in ((0, 72, 90), (-72, 0, 270)):
+                ent("func_button", {"targetname": "lift_gate_%d" % k, "movedir": "0 %d 0" % way, "speed": "50", "lip": "32", "wait": "-1", "spawnflags": "0", "sounds": "0",
+                                    "health": "0", "rendermode": "0", "renderamt": "255", "rendercolor": "255 255 255"}, brush=(-390, y1, z, -388, y2, z + 112, "metal/metalgate001a"))
+            # the floor's call button, on the landing's side of the gate's jamb, facing the landing
+            fx = -384 if z == 320 else -383      # (the bottom level's jamb; the grating panels' face above)
+            button("lift_button_%d" % k, (fx, 78, z + 40), 0, (fx - 1, 77, z + 39, fx + 6, 87, z + 61), [("OnPressed", "lift_call_%d" % k, "Trigger", "", 0)])
+            # what the car's own buttons do at this stop
+            if k < top:
+                relay("lift_up_from_%d" % k, [("OnTrigger", "lift_call_%d" % (k + 1), "Trigger", "", 0)], off=True)
+            if k > 0:
+                relay("lift_dn_from_%d" % k, [("OnTrigger", "lift_call_%d" % (k - 1), "Trigger", "", 0)], off=True)
+        for branch, way in (("lift_clear_dn", "StartForward"), ("lift_clear_up", "StartBackward")):
+            ent("logic_branch", {"targetname": branch, "InitialValue": "0"},
+                [("OnFalse", "lift_2", way, "", 0), ("OnFalse", "brush_pclip_lift_2", "Enable", "", 0), ("OnTrue", branch, "Test", "", 1)])
+        # the car's doorway, between its gate and the landing's: somebody there holds it
+        ent("trigger_multiple", {"targetname": "lift_doorway", "parentname": "lift_2", "spawnflags": "1", "wait": "0.1", "StartDisabled": "0"},
+            [("OnStartTouchAll", "lift_clear_*", "SetValue", "1", 0), ("OnEndTouchAll", "lift_clear_*", "SetValue", "0", 0)], brush=(-419, -40, z0, -391, 40, z0 + 72, MAT["trigger"]))
+        # in the car, on the wall by its door: up a floor over down a floor
+        button("lift_btn_up", (-426, 45, z0 + 50), 180, (-432, 36, z0 + 49, -425, 47, z0 + 71), [("OnPressed", "lift_up_from_*", "Trigger", "", 0)], parent="lift_2")
+        button("lift_btn_dn", (-426, 45, z0 + 24), 180, (-432, 36, z0 + 23, -425, 47, z0 + 45), [("OnPressed", "lift_dn_from_*", "Trigger", "", 0)], parent="lift_2")
+        # when the map starts: the car is at the top (the arrival there runs once, whichever comes first)
+        ent("logic_auto", {"spawnflags": "1"}, [("OnMapSpawn", "lift_arrive_%d" % top, "Trigger", "", 1)])
+        return out
 
     def preview_extra(self, dr, P):
         # the deep level, which is under the ground: drawn faintly, so the picture shows how far the bunker goes
