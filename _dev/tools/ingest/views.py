@@ -9,7 +9,9 @@ canopy) and handed to map_view.render in place of its own reading. Candidates: t
 cut-away over the busiest knot of props, and eye-level views from AI nodes spread over the map, each turned to
 the longest clear way with the most props in sight. A candidate is drawn small and scored: plenty of edges (things
 to see) and props in view are good; much sky, much darkness or one flat colour filling the frame (a wall at the
-nose) are bad.
+nose) are bad, and a view mostly dark (DARK_MAX) or one flat colour (FLAT_MAX) is dropped before any is chosen. A map
+whose nodes are all Hammer-hidden (the style rooms) uses them all the same, and one with none looks from beside its
+props. A cut-away under a roof is cut at the floor under the knot plus about 150, lower under a low ceiling.
 """
 import math
 import os
@@ -26,6 +28,7 @@ NOT_DRAWN = ("trigger_", "func_areaportal", "func_dustcloud", "func_precipitatio
              "func_viscluster", "func_ladder", "env_", "func_vehicleclip", "func_smokevolume")
 SMALL = ("info_target", "env_sprite", "point_spotlight", "logic_relay", "env_spark", "env_smokestack", "env_fire")
 COMPASS = ("east", "north-east", "north", "north-west", "west", "south-west", "south", "south-east")
+DARK_MAX, FLAT_MAX = 0.6, 0.8      # (an eye view darker than this, or one colour over this much of it, is never chosen)
 
 
 def scene(m):
@@ -159,9 +162,9 @@ def run(m, s, out_dir, n_eye=6, sections=None, log=print):
     os.makedirs(out_dir, exist_ok=True)
     polys, lights = scene(m)
     P = Painter(m, polys, lights)
-    N = node_points(m)
     props = [(e.origin, short(e.model)) for e in m.ents if m.play_ent(e) and e.cls.startswith("prop_") and e.origin is not None]
     PP = np.array([p for p, _ in props]).reshape(-1, 3)
+    N = eye_points(m, s, PP)
     scapes = [(e.origin, e.kv.get("soundscape", "")) for e in m.ents if m.play_ent(e) and e.cls.startswith("env_soundscape") and e.origin is not None]
     base = N if len(N) else (PP if len(PP) else m.f_cen)
     lo, hi = np.percentile(base, 3, axis=0), np.percentile(base, 97, axis=0)
@@ -208,11 +211,43 @@ def cutaway(m, s, PP, box, G=768.0):
         return []
     k, n = cells.most_common(1)[0]
     A = np.array([p for p in PP if (int(p[0] // G), int(p[1] // G)) == k])
-    cx, cy, fz = A[:, 0].mean(), A[:, 1].mean(), float(np.percentile(A[:, 2], 25))
+    cx, cy = A[:, 0].mean(), A[:, 1].mean()
     covered = sum(1 for p in A[:12] if not s.open_above(p[0], p[1], p[2] + 8)[0])
-    cut = rnd(fz + 190) if covered >= min(len(A), 12) / 2 else None
+    cut = cut_height(s, A) if covered >= min(len(A), 12) / 2 else None
     return [{"kind": "cutaway" if cut else "block", "view": {"iso": "SW", "box": (rnd(cx - 900), rnd(cy - 900), rnd(cx + 900), rnd(cy + 900)), "cut": cut},
              "where": "the busiest knot of props (%d near %d %d) from the south-west%s" % (n, cx, cy, ", cut at %d" % cut if cut else "")}]
+
+
+def cut_height(s, A):
+    """Where to cut a knot of props under a roof: the floor most of them stand on plus about 150, lower under a low
+    ceiling (a car park's deck), so the cut opens the room and never lands at its roof (d3_c17_06a's tunnel, cut at its
+    roof from the props' heights; styleguide_garage's deck, cut 200 over a ceiling at 112 to 132)."""
+    floors, rooms = [], []
+    for p in A[:24]:
+        fz, _ = s.floor(p[0], p[1], p[2] + 16, 512)
+        if fz is None:
+            continue
+        floors.append(fz)
+        t = s.open_above(p[0], p[1], fz + 8)[1]
+        if t is not None and t > 24:      # (0: the ray starts in a brush, a step or a sill)
+            rooms.append(t + 8)
+    if not floors:
+        return rnd(float(np.percentile(A[:, 2], 25)) + 150)
+    fz = float(np.median(floors))
+    head = float(np.median(rooms)) if rooms else 512.0
+    return rnd(fz + min(150.0, max(72.0, head * 0.8)))
+
+
+def eye_points(m, s, PP):
+    """Where eyes may stand: the AI nodes; if the map has none in play, its Hammer-hidden ones (they still stand on the
+    floors); if none at all, points 128 beside its props."""
+    N = node_points(m)
+    if len(N):
+        return N
+    N = np.array([e.origin for e in m.ents if e.cls == "info_node" and not e.sky and e.origin is not None]).reshape(-1, 3)
+    if len(N) or not len(PP):
+        return N
+    return np.concatenate([PP + np.array(o, dtype=float) for o in ((128, 0, 0), (-128, 0, 0), (0, 128, 0), (0, -128, 0))])
 
 
 def eyes(m, s, P, N, PP, props, scapes, tmp, n_eye, log):
@@ -225,38 +260,22 @@ def eyes(m, s, P, N, PP, props, scapes, tmp, n_eye, log):
         j = int(np.argmax(dmin))
         pick.append(j)
         dmin = np.minimum(dmin, np.linalg.norm(N[:, :2] - N[j, :2], axis=1))
-    cands = []
-    for j in pick:
-        p = N[j]
-        fz, _ = s.floor(p[0], p[1], p[2] + 24, 256)
-        if fz is None:
-            continue
-        e = np.array([p[0], p[1], fz + 64])
-        out = s.open_above(e[0], e[1], e[2])[0]
-        best = None
-        for yaw in range(0, 360, 45):
-            d = np.array([math.cos(math.radians(yaw)), math.sin(math.radians(yaw)), 0.0])
-            run = s.ray(e, d, 2000)[0] or 2000.0
-            if run < (384 if out else 224):
-                continue
-            seen = 0
-            if len(PP):
-                v = PP[:, :2] - e[:2]
-                dist = np.linalg.norm(v, axis=1)
-                cos = (v @ d[:2]) / np.maximum(dist, 1)
-                seen = int(((dist > 64) & (dist < min(run, 1200)) & (cos > 0.7) & (np.abs(PP[:, 2] - fz) < 200)).sum())
-            sc = min(run, 1500) / 1500 + 0.08 * min(seen, 12)
-            if not best or sc > best[0]:
-                best = (sc, yaw, run, seen)
-        if best:
-            cands.append({"eye": [rnd(x) for x in e], "yaw": best[1], "run": rnd(best[2]), "props": best[3], "out": bool(out), "pre": best[0]})
+    cands = eye_cands(s, N, pick, PP)
+    if len(cands) < n_eye:      # (a map of small rooms: once more, taking shorter views indoors)
+        have = set(tuple(c["eye"]) for c in cands)
+        cands += [c for c in eye_cands(s, N, pick, PP, True) if tuple(c["eye"]) not in have]
     cands.sort(key=lambda c: -c["pre"])
-    scored = []
-    for i, c in enumerate(cands[:36]):
+    scored, dropped = [], 0
+    for i, c in enumerate(cands[:60]):
+        if len(scored) >= 36:
+            break
         f = os.path.join(tmp, "c%d.png" % i)
         if P.draw(f, (200, 130), eye=tuple(c["eye"]), yaw=c["yaw"], pitch=3):
             c.update(stats(f))
             c["score"] = score(c, c["props"])
+            if c["dark"] > DARK_MAX or c["modal"] > FLAT_MAX:
+                dropped += 1      # (mostly dark, or a wall at the nose: never chosen, whatever the rules below want)
+                continue
             scored.append(c)
     scored.sort(key=lambda c: -c["score"])
     outz = [c["eye"][2] for c in cands if c["out"]]
@@ -264,18 +283,18 @@ def eyes(m, s, P, N, PP, props, scapes, tmp, n_eye, log):
     for c in scored:
         c["scape"] = min(scapes, key=lambda q: float(np.sum((q[0] - np.array(c["eye"])) ** 2)))[1] if scapes else ""
     fin = []
-    for want_out, per_scape in ((True, 2), (False, 2), (False, 99)):      # (outdoors at ground level first; places spread)
+    for want_out, per_scape, spread in ((True, 2, 768), (False, 2, 768), (False, 99, 768), (False, 99, 384)):      # (outdoors at ground level first; places spread)
         for c in scored:
             if len(fin) >= (n_eye // 2 if want_out else n_eye):
                 break
             if c in fin or (want_out and not (c["out"] and c["eye"][2] <= gz)):
                 continue
-            if any(np.linalg.norm(np.array(c["eye"][:2]) - np.array(q["eye"][:2])) < 768 for q in fin):
+            if any(np.linalg.norm(np.array(c["eye"][:2]) - np.array(q["eye"][:2])) < spread for q in fin):
                 continue
             if sum(q["scape"] == c["scape"] for q in fin) >= per_scape:
                 continue
             fin.append(c)
-    log("  views: %d candidates scored, %d chosen" % (len(scored), len(fin)))
+    log("  views: %d candidates scored, %d dropped as dark or flat, %d chosen" % (len(scored) + dropped, dropped, len(fin)))
     res = []
     for c in fin:
         e = np.array(c["eye"], dtype=float)
@@ -291,6 +310,37 @@ def eyes(m, s, P, N, PP, props, scapes, tmp, n_eye, log):
         res.append({"kind": "out" if c["out"] else "in", "view": {"eye": c["eye"], "yaw": c["yaw"], "pitch": 3}, "where": where,
                     "scores": {k: c[k] for k in ("score", "sky", "dark", "edges", "modal", "props", "run")}})
     return res
+
+
+def eye_cands(s, N, pick, PP, short_run=False):
+    """An eye 64 over the floor at each picked node, turned the longest clear way with the most props in sight (a view
+    must run 384 outdoors and 224 indoors, or 128 indoors when short_run)."""
+    cands = []
+    for j in pick:
+        p = N[j]
+        fz, _ = s.floor(p[0], p[1], p[2] + 24, 256)
+        if fz is None:
+            continue
+        e = np.array([p[0], p[1], fz + 64])
+        out = s.open_above(e[0], e[1], e[2])[0]
+        best = None
+        for yaw in range(0, 360, 45):
+            d = np.array([math.cos(math.radians(yaw)), math.sin(math.radians(yaw)), 0.0])
+            run = s.ray(e, d, 2000)[0] or 2000.0
+            if run < (384 if out else 128 if short_run else 224):
+                continue
+            seen = 0
+            if len(PP):
+                v = PP[:, :2] - e[:2]
+                dist = np.linalg.norm(v, axis=1)
+                cos = (v @ d[:2]) / np.maximum(dist, 1)
+                seen = int(((dist > 64) & (dist < min(run, 1200)) & (cos > 0.7) & (np.abs(PP[:, 2] - fz) < 200)).sum())
+            sc = min(run, 1500) / 1500 + 0.08 * min(seen, 12)
+            if not best or sc > best[0]:
+                best = (sc, yaw, run, seen)
+        if best:
+            cands.append({"eye": [rnd(x) for x in e], "yaw": best[1], "run": rnd(best[2]), "props": best[3], "out": bool(out), "pre": best[0]})
+    return cands
 
 
 def cuts(s, sec, k):
