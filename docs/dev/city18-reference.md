@@ -3662,3 +3662,12 @@ Where a line crosses a way people walk, a passing train is announced: two red la
 - **Checked by:** review
 - **Tags:** valve, sound, logic, props
 
+### Copy Valve's rooms and sections, then adapt them (`owner-copy-valve-rooms`)
+
+Where Half-Life 2, Episode One or Episode Two already has the thing (a room, a street, a building, a stairwell, a set piece), copy it out of Valve's VMF and adapt it to the gamemode rather than building it from nothing. Adapting means: the owner's settled choices win (docs/dev/map-ingestion.md, rule 1: the street crown and kerbs, 16 by 24 stairs, two-tone rooms with a dado rail, prop_dynamic_override furniture, no flickering lights), and it works on a multiplayer server (no nodraw a player can see, doors and lifts that work for everyone, nothing single-player: docs/dev/vdc-lessons-check.md).
+
+- **Why:** The owner, 21 November: "I am totally ok with them just copy/pasting sections, rooms, etc out of the HL2 and episodes VMF files and adapting them to the gamemode" (and earlier that day: "I am totally ok with you literally copy/pasting rooms and sections of the HL2 / EP1 / EP2 games").
+- **How:** Get Valve's VMFs (docs/dev/valve-ingest-progress.md, "Getting the maps again"; they stay in the chat's scratch folder, never in the repo). Lift the piece: python3 _dev/tools/map_prefab.py extract F.vmf NAME X1 Y1 Z1 X2 Y2 Z2 --anchor X Y Z --note "..." (75 pieces already lifted: docs/dev/prefabs.md). Look up every entity in it: python3 _dev/tools/vdc.py --card CLASS. Garry's Mod has Episode One and Two content built in, so the piece's models and materials are there.
+- **Checked by:** map_assets.py and map_lint.py on the result; no entity left in that its card says is single-player only.
+- **Tags:** owner, geometry, interiors, facades, streets, stairs, doors, lighting, props, combine, grime, sound
+

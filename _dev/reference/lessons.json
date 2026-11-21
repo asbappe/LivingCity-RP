@@ -3753,6 +3753,28 @@
    "why": "d1_trainstation_06: first_train_rl (logic_relay) > first_train_1 to 4 SetSpeed 0.7; sprite_crossing_1 ShowSprite and sprite_crossing_2 HideSprite @1; timer_crossing_lights (refire 0.5) Enable @1 > both ToggleSprite; train_bell (train_crossing_bell, radius 2174) PlaySound @1, StopSound @25; the timer Disable @25, both sprites HideSprite @26. The two env_sprite (glow01, 255 0 0, scale 1) stand 13 apart. ambient_generic train_idle, train_horn_1 and train_brake have sourceentityname first_train_1 (radius 1250); first_train_hurtbrushes (trigger_hurt, damagecap 20) is parented to the train. 54 path_track OnPass > SetSpeed lines run the yard's trains.",
    "how": "Map modules (ask first): a crossing piece by the station (two lamps, a bell, the relay), fired when Civil Intake's train comes in.",
    "check": "review"
+  },
+  {
+   "id": "owner-copy-valve-rooms",
+   "tags": [
+    "owner",
+    "geometry",
+    "interiors",
+    "facades",
+    "streets",
+    "stairs",
+    "doors",
+    "lighting",
+    "props",
+    "combine",
+    "grime",
+    "sound"
+   ],
+   "title": "Copy Valve's rooms and sections, then adapt them",
+   "rule": "Where Half-Life 2, Episode One or Episode Two already has the thing (a room, a street, a building, a stairwell, a set piece), copy it out of Valve's VMF and adapt it to the gamemode rather than building it from nothing. Adapting means: the owner's settled choices win (docs/dev/map-ingestion.md, rule 1: the street crown and kerbs, 16 by 24 stairs, two-tone rooms with a dado rail, prop_dynamic_override furniture, no flickering lights), and it works on a multiplayer server (no nodraw a player can see, doors and lifts that work for everyone, nothing single-player: docs/dev/vdc-lessons-check.md).",
+   "why": "The owner, 21 November: \"I am totally ok with them just copy/pasting sections, rooms, etc out of the HL2 and episodes VMF files and adapting them to the gamemode\" (and earlier that day: \"I am totally ok with you literally copy/pasting rooms and sections of the HL2 / EP1 / EP2 games\").",
+   "how": "Get Valve's VMFs (docs/dev/valve-ingest-progress.md, \"Getting the maps again\"; they stay in the chat's scratch folder, never in the repo). Lift the piece: python3 _dev/tools/map_prefab.py extract F.vmf NAME X1 Y1 Z1 X2 Y2 Z2 --anchor X Y Z --note \"...\" (75 pieces already lifted: docs/dev/prefabs.md). Look up every entity in it: python3 _dev/tools/vdc.py --card CLASS. Garry's Mod has Episode One and Two content built in, so the piece's models and materials are there.",
+   "check": "map_assets.py and map_lint.py on the result; no entity left in that its card says is single-player only."
   }
  ]
 }

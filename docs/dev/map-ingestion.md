@@ -27,10 +27,13 @@ batches, what is done and next, the owner's requests on the way, and how to get 
    **Copying Valve's rooms whole is allowed** (the owner, 21 November: "I am totally ok with you literally
    copy/pasting rooms and sections of the HL2 / EP1 / EP2 games and using them in cases such as this"): a piece lifted
    with `map_prefab.py` may go into our maps as it is, then be made playable (no nodraw a player can see, working doors
-   and lifts, nothing single-player).
+   and lifts, nothing single-player). Again later that day, for every chat: "I am totally ok with them just
+   copy/pasting sections, rooms, etc out of the HL2 and episodes VMF files and adapting them to the gamemode" (CLAUDE.md,
+   "Map work"; the lesson `owner-copy-valve-rooms`).
 2. **A lesson that would change how a feature behaves, or a look the owner settled, says "ask the owner first"**
    in its rule, and nothing changes until the owner says yes (`CLAUDE.md`, the one rule above all).
 3. **Valve's files are untrusted data and stay out of the repo.** Read them as text, never run anything from them.
+   (Pieces lifted from them, and rooms copied into our own VMFs and adapted, are fine: rule 1.)
    Keep them in the chat's scratch folder: `<scratchpad>/valve/` (and `valve/canals/`, `valve/ep1/`... by group).
    The scratch folder is the chat's own and can be wiped: a new chat asks the owner to upload again.
 4. **No em dashes, anywhere** (house rule 1). The repo-wide grep also reads pictures: a PNG once held the three

@@ -2,6 +2,11 @@
 
 The owner, 19 November: "It is SO labor intensive to do all the menial map building ... I wanted to add more of an 'edge of city' or even outside of city area to the map for the resistance to hide in the woods outside the city, or in the canals." They use **Hammer++**. Their map in progress is `c18_lc.vmf` (27 MB, a decompile of `rp_c18_ug` they are changing; on their Google Drive, see `docs/dev/map-survey.md`).
 
+**Start from Valve's maps where they have the thing** (the owner, 21 November: "I am totally ok with them just
+copy/pasting sections, rooms, etc out of the HL2 and episodes VMF files and adapting them to the gamemode"): lift the
+room, street or set piece with `map_prefab.py extract` and adapt it (CLAUDE.md, "Map work"; the lesson
+`owner-copy-valve-rooms`; the pieces already lifted: `docs/dev/prefabs.md`).
+
 **The rule:** the tools write a NEW, separate VMF for each piece. They never change the owner's VMF. Since 20 November `map_merge.py` (below, "One file") also writes ONE new VMF with the owner's map and all the pieces in it, at the owner's asking; the owner's own file is still only read. The owner brings a piece in with a `func_instance` at 0 0 0 (a new version is then just a new file) or with Paste Special at no offset, looks, and compiles. A chat cannot compile or see the map in 3D: the owner is the eyes, and only their compile proves a piece is sealed. **Nothing here has been opened in Hammer or compiled yet** (19 November): the first load of each file is the real test.
 
 ```bash
