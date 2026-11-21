@@ -14,13 +14,14 @@ def _top(lst, n, fmt="%s %d"):
 
 
 def _mode(d):
-    h = (d or {}).get("hist") or {}
-    return max(h.items(), key=lambda kv: kv[1])[0] if h else None
+    m = _modes(d, 1)
+    return m[0] if m else None
 
 
-def _modes(d, n=3):
+def _modes(d, n=3, counts=False):
     h = (d or {}).get("hist") or {}
-    return [k for k, _ in sorted(h.items(), key=lambda kv: -kv[1])[:n]]
+    items = sorted(h.items(), key=lambda kv: (-kv[1], float(kv[0])))[:n]
+    return ["%s (%d)" % kv for kv in items] if counts else [k for k, _ in items]
 
 
 def _q(d, i=2):
@@ -56,7 +57,7 @@ def numbers(M):
         S.append("Commonest materials (faces): %s." % _top(c["materials_top"], 20))
     nd = se.get("nodes") or {}
     if nd.get("indoor_ceiling", {}).get("n", 0) >= 10:
-        m3 = _modes(nd["indoor_ceiling"])
+        m3 = _modes(nd["indoor_ceiling"], 3, True)
         S.append("Ceilings: floor to ceiling indoors (cast up from %d AI nodes) is most often %s, then %s; %s of the nodes are outdoors; corridors %s wide under %s, "
                  "rooms %s by %s (medians, wall to wall)." % (nd["indoor_ceiling"]["n"], m3[0], " and ".join(m3[1:]), pct(nd["outdoor_share"]),
                                                              _q(nd.get("corridor_width")), nd.get("corridor_ceiling"), _q(nd.get("room_width")), _q(nd.get("room_length"))))
@@ -78,11 +79,11 @@ def numbers(M):
     k = ch.get("kinds", {})
     if k.get("open", 0) >= 3:
         o, t = ch["open"], ch["tunnel"]
-        S.append("Channels (%d cuts across the shortest way, %d at water: %d open, %d tunnels): open width 64 up most often %s, 128 up %s; rims (where a side opens out) %s; "
-                 "water %s deep%s; tunnels most often %s wide, roof %s up." % (
+        S.append("Channels (%d cuts across the shortest way, %d at water: %d open, %d tunnels): open width 64 up most often %s, 128 up %s; rims (where a side opens out) %s%s%s; "
+                 "tunnels most often %s wide, roof %s up." % (
                      ch["cuts"], ch["from_water"], k.get("open", 0), k.get("tunnel", 0), _mode(o["w64"]), _mode(o["w128"]), _q(o["rim_lo"]),
-                     _q(o["water"]) if o["water"].get("n") else 0, ("; ledges %s wide at %s up" % (_q(o["ledge_w"]), _q(o["ledge_h"]))) if o["ledge_h"].get("n") else "",
-                     _mode(t["max"]), _mode(t["crown"])))
+                     ("; water %s deep" % _q(o["water"])) if o["water"].get("n") else "",
+                     ("; ledges %s wide at %s up" % (_q(o["ledge_w"]), _q(o["ledge_h"]))) if o["ledge_h"].get("n") else "", _mode(t["max"]), _mode(t["crown"])))
     dw = se.get("doorways") or {}
     if dw.get("doors"):
         S.append("Doors: %s; openings at them (wide x high): %s." % (_top(dw["models_top"], 3), _top([x for x in dw["openings_top"] if "?" not in x[0]], 3)))
@@ -106,20 +107,20 @@ def numbers(M):
         wg = pr.get("wall_gap", {})
         de = pr.get("density", {})
         S.append("Props: %d in play; on exact 90s: static %s, physics %s; physics tilted %s (lying most often %s); statics touching a wall %s, physics within 16 of one %s; "
-                 "%s props per 1000 square units of play (%s physics)." % (
+                 "%s props per 100 by 100 of play (%s physics)." % (
                      pr["n"], pct(y.get("prop_static", {}).get("grid")), pct(y.get("prop_physics", {}).get("grid")), pct(pr.get("tilted", {}).get("prop_physics")),
                      ", ".join(a for a, _ in pr.get("lying_by_kind", [])[:3]) or "nothing", pct(wg.get("prop_static", {}).get("touch")),
                      pct(sum(v for kk, v in wg.get("prop_physics", {}).items() if kk in ("touch", "<=4", "4-16"))) if wg.get("prop_physics") else "?",
-                     de.get("per_1000"), de.get("physics_per_1000")))
+                     de.get("per_10000"), de.get("physics_per_10000")))
     if lo.get("outputs"):
         S.append("Wiring: %d output lines from %d entities; commonest %s; %d relays (longest chain %d), %d counters, %d timers, %d makers, %d buttons working doors; %d lines name nothing." % (
             lo["outputs"], lo["with_outputs"], _top(lo["pairs_top"], 3), lo["relays"]["n"], lo["relays"]["chain_longest"], lo["counters"]["n"], lo["timers"]["n"],
             lo["makers"]["n"], lo["button_door"], lo["targets"].get("missing", 0)))
     if cr.get("texture"):
         tx, lm, br = cr["texture"], cr["lightmapscale"], cr["brushes"]
+        sk, sv = next(iter(tx["scale"].items()), ("?", None))
         S.append("Craft: texture scale %s on %s of faces; lightmapscale 16 on %s (near the nodes %s, far %s); func_detail %s of brushes; %d trim strips (%s); %d chamfers; %d displacements." % (
-            *(list(tx["scale"].items())[0] if tx["scale"] else ("?", 0))[:1], pct(list(tx["scale"].values())[0] if tx["scale"] else None),
-            pct(lm["faces"].get("16")), pct(lm["by_distance"].get("near", {}).get("16")), pct(lm["by_distance"].get("far", {}).get("16")),
+            sk, pct(sv), pct(lm["faces"].get("16")), pct(lm["by_distance"].get("near", {}).get("16")), pct(lm["by_distance"].get("far", {}).get("16")),
             pct(br["detail_share"]), cr["trims"]["n"], _top(cr["trims"]["sections_top"], 2), cr["chamfers"]["n"], cr["displacements"]["n"]))
         rec = cr["lights"].get("recipes", [])
         named = [r for r in rec if r["fixture"] != "(none)"][:4]

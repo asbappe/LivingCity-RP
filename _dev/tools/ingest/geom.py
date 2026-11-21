@@ -223,9 +223,9 @@ class Solid:
         j = int(np.argmin(np.where(hit, t, np.inf)))
         return float(t[j]), int(self.Tf[idx[j]])
 
-    def floor(self, x, y, ztop, depth=512.0, water=False):
-        """(height of the first floor under (x, y, ztop) or None, its face)."""
-        t, f, k = self.ray((x, y, ztop), (0.0, 0.0, -1.0), depth, water=water)
+    def floor(self, x, y, ztop, depth=512.0, water=False, inside=False):
+        """(height of the first floor under (x, y, ztop) or None, its face). A point inside a brush looks past it."""
+        t, f, k = self.ray((x, y, ztop), (0.0, 0.0, -1.0), depth, water=water, inside=inside)
         return (ztop - t, f) if t is not None else (None, -1)
 
     def open_above(self, x, y, z, reach=16384.0):

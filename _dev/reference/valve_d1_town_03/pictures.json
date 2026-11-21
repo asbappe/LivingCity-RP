@@ -1,4 +1,5 @@
 {
+ "title": "Valve's d1_town_03: Ravenholm, for the infestation quarter (map_raven.py)",
  "about": "Valve's own d1_town_03 (Ravenholm, the town) (the Source SDK copy the owner uploaded, 21 November), measured and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees and poles drawn as trunk and pole). Reference only: the VMF is not in the repo. It is the reference for the infestation quarter still to be built (the zombie-overrun quarter behind the sealed gate, map_raven.py), not for the Resistance town.",
  "numbers": [
   "Things: 117 prop_static, 61 prop_physics, 17 prop_dynamic, 0 prop_door_rotating, 1 prop_ragdoll, 82 infodecal, 2 info_overlay, 21 keyframe_rope and 20 move_rope, 85 func_detail, 40 npc entities (makers included).",

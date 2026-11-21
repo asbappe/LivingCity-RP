@@ -89,6 +89,21 @@
 "static": false,
 "v": 2
 },
+"models/blackout.mdl": {
+"bbox": [
+-0.8,
+-62.9,
+-0.8,
+0.8,
+0.8,
+10.3
+],
+"built_static": false,
+"physics": false,
+"prop_data": false,
+"static": false,
+"v": 2
+},
 "models/breen_monitor.mdl": {
 "bbox": [
 -13.0,
@@ -104,6 +119,21 @@
 "physics": false,
 "prop_data": false,
 "ragdoll": false,
+"static": false,
+"v": 2
+},
+"models/buggy.mdl": {
+"bbox": [
+-105.0,
+-113.0,
+-1.0,
+105.0,
+114.5,
+104.0
+],
+"built_static": false,
+"physics": false,
+"prop_data": false,
 "static": false,
 "v": 2
 },
@@ -303,6 +333,21 @@
 "static": false,
 "v": 2
 },
+"models/combine_wall.mdl": {
+"bbox": [
+-286.9,
+-311.0,
+28.9,
+124.5,
+287.2,
+1495.7
+],
+"built_static": false,
+"physics": false,
+"prop_data": false,
+"static": false,
+"v": 2
+},
 "models/container_chunk01.mdl": {
 "bbox": [
 -115.3,
@@ -483,6 +528,21 @@
 "static": true,
 "v": 2
 },
+"models/gibs/airboat_broken_engine.mdl": {
+"bbox": [
+-28.8,
+-16.9,
+-15.1,
+26.1,
+14.0,
+15.1
+],
+"built_static": false,
+"physics": true,
+"prop_data": true,
+"static": false,
+"v": 2
+},
 "models/gibs/antlion_gib_large_1.mdl": {
 "bbox": [
 -14.4,
@@ -606,6 +666,51 @@
 "physics": true,
 "prop_data": true,
 "ragdoll": false,
+"static": false,
+"v": 2
+},
+"models/gman.mdl": {
+"bbox": [
+-8.3,
+-11.6,
+-2.7,
+9.0,
+11.7,
+73.3
+],
+"built_static": false,
+"physics": false,
+"prop_data": false,
+"static": false,
+"v": 2
+},
+"models/gman_high.mdl": {
+"bbox": [
+-8.3,
+-11.5,
+0.0,
+9.0,
+11.1,
+72.9
+],
+"built_static": false,
+"physics": false,
+"prop_data": false,
+"static": false,
+"v": 2
+},
+"models/headcrab.mdl": {
+"bbox": [
+-17.0,
+-17.7,
+-0.8,
+15.9,
+19.3,
+28.6
+],
+"built_static": false,
+"physics": false,
+"prop_data": false,
 "static": false,
 "v": 2
 },
@@ -736,6 +841,24 @@
 "v": 2
 },
 "models/humans/group01/female_01.mdl": {
+"bbox": [
+-13.0,
+-13.0,
+0.0,
+13.0,
+13.0,
+72.0
+],
+"built_static": false,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": true,
+"static": false,
+"v": 2
+},
+"models/humans/group01/female_06.mdl": {
 "bbox": [
 -13.0,
 -13.0,
@@ -1081,6 +1204,21 @@
 "static": false,
 "v": 2
 },
+"models/items/item_item_crate_dynamic.mdl": {
+"bbox": [
+-15.0,
+-17.0,
+0.0,
+17.0,
+15.0,
+24.0
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
 "models/lostcoast/props_monastery/altar.mdl": {
 "bbox": [
 -18.7,
@@ -1359,6 +1497,21 @@
 ],
 "game": null
 },
+"models/props_animated_breakable/smokestack.mdl": {
+"bbox": [
+-179.6,
+-182.4,
+0.0,
+179.6,
+182.4,
+2767.2
+],
+"built_static": true,
+"physics": true,
+"prop_data": true,
+"static": false,
+"v": 2
+},
 "models/props_borealis/bluebarrel001.mdl": {
 "bbox": [
 -14.4,
@@ -1374,6 +1527,21 @@
 "physics": true,
 "prop_data": true,
 "ragdoll": false,
+"static": false,
+"v": 2
+},
+"models/props_borealis/bluebarrel002.mdl": {
+"bbox": [
+-14.4,
+-14.4,
+-25.9,
+14.4,
+14.4,
+26.0
+],
+"built_static": true,
+"physics": true,
+"prop_data": true,
 "static": false,
 "v": 2
 },
@@ -1539,6 +1707,141 @@
 "static": true,
 "v": 2
 },
+"models/props_buildings/collapsedbuilding01awall.mdl": {
+"bbox": [
+-39.9,
+-322.1,
+-116.5,
+47.6,
+323.0,
+88.0
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
+"models/props_buildings/collapsedbuilding02b.mdl": {
+"bbox": [
+-169.6,
+-334.1,
+-400.0,
+169.6,
+334.1,
+400.0
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
+"models/props_buildings/destroyed_cityblock01a.mdl": {
+"bbox": [
+-122.6,
+-24.5,
+-24.5,
+122.3,
+24.5,
+24.5
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
+"models/props_buildings/destroyed_cityblock01b.mdl": {
+"bbox": [
+-122.9,
+-44.3,
+-26.8,
+122.1,
+44.7,
+26.3
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
+"models/props_buildings/destroyed_cityblock01d.mdl": {
+"bbox": [
+-75.4,
+-68.9,
+-39.0,
+80.8,
+66.7,
+16.9
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
+"models/props_buildings/destroyed_cityblock01e.mdl": {
+"bbox": [
+-85.0,
+-107.2,
+-58.9,
+85.0,
+107.2,
+58.9
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
+"models/props_buildings/destroyed_cityblock01f.mdl": {
+"bbox": [
+-124.5,
+-37.1,
+-54.2,
+124.5,
+37.1,
+38.2
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
+"models/props_buildings/destroyed_cityblock01g.mdl": {
+"bbox": [
+-84.2,
+-15.4,
+-23.9,
+84.6,
+15.4,
+25.8
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
+"models/props_buildings/destroyed_cityblock01h.mdl": {
+"bbox": [
+-107.7,
+-23.6,
+-26.0,
+107.7,
+23.6,
+26.0
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
 "models/props_buildings/factory_skybox001a.mdl": {
 "bbox": [
 -821.5,
@@ -1665,6 +1968,66 @@
 "static": true,
 "v": 2
 },
+"models/props_buildings/project_building03_skybox.mdl": {
+"bbox": [
+-39.1,
+-19.8,
+-0.3,
+35.8,
+54.9,
+96.5
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
+"models/props_buildings/project_destroyedbuildings01.mdl": {
+"bbox": [
+-617.4,
+-461.5,
+-4.0,
+1104.4,
+461.5,
+1941.8
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
+"models/props_buildings/project_destroyedbuildings01_skybox.mdl": {
+"bbox": [
+-38.6,
+-28.8,
+0.0,
+38.6,
+28.8,
+121.4
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
+"models/props_buildings/project_destroyedbuildings03_skybox.mdl": {
+"bbox": [
+-39.2,
+-19.2,
+-0.1,
+43.8,
+55.8,
+95.5
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
 "models/props_buildings/row_church_fullscale.mdl": {
 "bbox": [
 -2407.7,
@@ -1755,6 +2118,21 @@
 "static": true,
 "v": 2
 },
+"models/props_buildings/row_industrial_cluster.mdl": {
+"bbox": [
+-145.7,
+-176.4,
+0.0,
+145.8,
+176.4,
+237.5
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
 "models/props_buildings/row_res_1.mdl": {
 "bbox": [
 -119.3,
@@ -1824,6 +2202,21 @@
 "physics": false,
 "prop_data": false,
 "ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_buildings/row_res_2_ascend.mdl": {
+"bbox": [
+-79.0,
+-16.3,
+0.0,
+84.0,
+13.5,
+74.6
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
 "static": true,
 "v": 2
 },
@@ -2157,6 +2550,21 @@
 "prop_data": true,
 "ragdoll": false,
 "static": false,
+"v": 2
+},
+"models/props_c17/column02a.mdl": {
+"bbox": [
+-68.3,
+-68.7,
+-78.7,
+68.3,
+67.9,
+664.6
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
 "v": 2
 },
 "models/props_c17/computer01_keyboard.mdl": {
@@ -3845,6 +4253,21 @@
 "static": true,
 "v": 2
 },
+"models/props_c17/light_domelight01_off.mdl": {
+"bbox": [
+-16.0,
+-16.0,
+-6.8,
+16.0,
+16.0,
+0.6
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
 "models/props_c17/light_domelight02_off.mdl": {
 "bbox": [
 -9.0,
@@ -4135,6 +4558,21 @@
 "prop_data": true,
 "ragdoll": false,
 "static": false,
+"v": 2
+},
+"models/props_c17/overpass_001a.mdl": {
+"bbox": [
+-235.4,
+-570.5,
+-154.9,
+219.1,
+599.0,
+165.2
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
 "v": 2
 },
 "models/props_c17/overpass_001b.mdl": {
@@ -4585,6 +5023,21 @@
 "static": false,
 "v": 2
 },
+"models/props_c17/statue_horse.mdl": {
+"bbox": [
+-82.3,
+-27.4,
+0.0,
+91.7,
+50.9,
+212.2
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
 "models/props_c17/streetsign001c.mdl": {
 "bbox": [
 -12.1,
@@ -4963,6 +5416,21 @@
 "static": true,
 "v": 2
 },
+"models/props_c17/trappropeller_blade.mdl": {
+"bbox": [
+-77.5,
+-77.5,
+-11.4,
+77.5,
+77.5,
+8.9
+],
+"built_static": false,
+"physics": true,
+"prop_data": true,
+"static": false,
+"v": 2
+},
 "models/props_c17/trappropeller_engine.mdl": {
 "bbox": [
 -13.3,
@@ -5017,6 +5485,96 @@
 "static": true,
 "v": 2
 },
+"models/props_c17/truss02c.mdl": {
+"bbox": [
+-16.3,
+-127.2,
+-32.0,
+16.1,
+128.4,
+32.5
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
+"models/props_c17/truss02d.mdl": {
+"bbox": [
+-16.3,
+-160.0,
+-16.2,
+16.6,
+160.0,
+16.4
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
+"models/props_c17/truss02e.mdl": {
+"bbox": [
+-19.4,
+-128.1,
+-16.4,
+19.4,
+128.1,
+16.4
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
+"models/props_c17/truss02f.mdl": {
+"bbox": [
+-19.4,
+-96.1,
+-16.4,
+19.4,
+96.1,
+16.4
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
+"models/props_c17/truss02g.mdl": {
+"bbox": [
+-15.9,
+-64.0,
+-16.3,
+16.0,
+64.0,
+16.3
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
+"models/props_c17/truss02h.mdl": {
+"bbox": [
+-15.9,
+-32.0,
+-16.3,
+16.0,
+32.0,
+16.3
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
 "models/props_c17/truss03a.mdl": {
 "bbox": [
 -19.4,
@@ -5032,6 +5590,21 @@
 "physics": false,
 "prop_data": false,
 "ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_c17/truss03b.mdl": {
+"bbox": [
+-16.3,
+-95.7,
+-64.1,
+16.1,
+96.3,
+64.6
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
 "static": true,
 "v": 2
 },
@@ -5104,6 +5677,51 @@
 "physics": false,
 "prop_data": false,
 "ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_c17/utilityconnecter006b.mdl": {
+"bbox": [
+-5.5,
+-31.7,
+-99.8,
+18.6,
+5.6,
+24.8
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
+"models/props_c17/utilityconnecter006c.mdl": {
+"bbox": [
+-8.1,
+-8.5,
+-22.3,
+8.1,
+8.8,
+25.3
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
+"models/props_c17/utilityconnecter006d.mdl": {
+"bbox": [
+-5.5,
+-31.7,
+-99.8,
+18.6,
+5.6,
+24.8
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
 "static": true,
 "v": 2
 },
@@ -5491,6 +6109,36 @@
 "static": true,
 "v": 2
 },
+"models/props_canal/canal_bridge03b.mdl": {
+"bbox": [
+-325.5,
+-197.5,
+0.0,
+325.5,
+197.5,
+188.0
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
+"models/props_canal/canal_bridge03c.mdl": {
+"bbox": [
+-1041.7,
+-326.6,
+0.0,
+1041.7,
+326.6,
+601.1
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
 "models/props_canal/canal_bridge04.mdl": {
 "bbox": [
 -1.1,
@@ -5797,6 +6445,21 @@
 "static": true,
 "v": 2
 },
+"models/props_canal/refinery_03.mdl": {
+"bbox": [
+-736.2,
+-1351.1,
+-128.3,
+568.1,
+1048.1,
+2152.8
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
 "models/props_canal/refinery_03_skybox.mdl": {
 "bbox": [
 -46.0,
@@ -5812,6 +6475,36 @@
 "physics": false,
 "prop_data": false,
 "ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_canal/refinery_04.mdl": {
+"bbox": [
+-559.3,
+-623.5,
+-129.5,
+670.9,
+1162.5,
+2213.7
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
+"models/props_canal/refinery_05.mdl": {
+"bbox": [
+-703.8,
+-1650.6,
+-3.8,
+1434.2,
+984.6,
+2518.4
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
 "static": true,
 "v": 2
 },
@@ -5833,6 +6526,21 @@
 "static": true,
 "v": 2
 },
+"models/props_canal/rock_riverbed01a.mdl": {
+"bbox": [
+-318.3,
+-156.6,
+-57.3,
+318.3,
+162.3,
+56.3
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
 "models/props_canal/rock_riverbed01b.mdl": {
 "bbox": [
 -293.3,
@@ -5848,6 +6556,36 @@
 "physics": false,
 "prop_data": false,
 "ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_canal/rock_riverbed01c.mdl": {
+"bbox": [
+-226.0,
+-142.8,
+-49.3,
+219.6,
+149.1,
+49.3
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
+"models/props_canal/rock_riverbed01d.mdl": {
+"bbox": [
+-106.7,
+-111.5,
+-54.7,
+107.2,
+111.3,
+54.7
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
 "static": true,
 "v": 2
 },
@@ -5884,6 +6622,21 @@
 "physics": false,
 "prop_data": false,
 "ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_canal/rock_riverbed02c.mdl": {
+"bbox": [
+-64.3,
+-36.5,
+-52.9,
+63.4,
+35.3,
+52.9
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
 "static": true,
 "v": 2
 },
@@ -6125,6 +6878,21 @@
 "static": true,
 "v": 2
 },
+"models/props_citizen_tech/windmill_blade002a.mdl": {
+"bbox": [
+-128.2,
+-199.4,
+-197.9,
+127.4,
+199.4,
+197.9
+],
+"built_static": true,
+"physics": true,
+"prop_data": true,
+"static": true,
+"v": 2
+},
 "models/props_citizen_tech/windmill_blade004a.mdl": {
 "bbox": [
 -11.9,
@@ -6176,6 +6944,21 @@
 "physics": false,
 "prop_data": false,
 "ragdoll": false,
+"static": false,
+"v": 2
+},
+"models/props_combine/breenchair.mdl": {
+"bbox": [
+-15.0,
+-16.7,
+-0.2,
+14.9,
+16.7,
+55.0
+],
+"built_static": false,
+"physics": true,
+"prop_data": true,
 "static": false,
 "v": 2
 },
@@ -6321,6 +7104,21 @@
 "prop_data": false,
 "ragdoll": false,
 "static": true,
+"v": 2
+},
+"models/props_combine/cell_01_pod_cheap.mdl": {
+"bbox": [
+-30.9,
+-18.6,
+-5.5,
+28.8,
+14.0,
+98.4
+],
+"built_static": false,
+"physics": true,
+"prop_data": true,
+"static": false,
 "v": 2
 },
 "models/props_combine/cell_01_supports.mdl": {
@@ -6593,6 +7391,36 @@
 "static": true,
 "v": 2
 },
+"models/props_combine/combine_barricade_tall03a.mdl": {
+"bbox": [
+-97.3,
+-65.0,
+-30.3,
+96.2,
+65.0,
+140.9
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
+"models/props_combine/combine_barricade_tall03b.mdl": {
+"bbox": [
+-97.3,
+-65.0,
+-30.3,
+96.2,
+65.0,
+209.3
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
 "models/props_combine/combine_barricade_tall04a.mdl": {
 "bbox": [
 -97.3,
@@ -6608,6 +7436,21 @@
 "physics": false,
 "prop_data": false,
 "ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_combine/combine_barricade_tall04b.mdl": {
+"bbox": [
+-97.3,
+-65.0,
+-30.3,
+96.2,
+65.0,
+209.3
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
 "static": true,
 "v": 2
 },
@@ -6752,6 +7595,36 @@
 "physics": false,
 "prop_data": false,
 "ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_combine/combine_citadel001.mdl": {
+"bbox": [
+-4168.3,
+-4278.3,
+-4229.9,
+4962.7,
+3044.0,
+4201.0
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
+"models/props_combine/combine_citadel001_open.mdl": {
+"bbox": [
+-4168.3,
+-4278.3,
+-4229.9,
+4962.7,
+3044.0,
+4201.0
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
 "static": true,
 "v": 2
 },
@@ -7277,6 +8150,21 @@
 "static": true,
 "v": 2
 },
+"models/props_combine/combinecrane002.mdl": {
+"bbox": [
+-51.0,
+-64.5,
+-257.0,
+52.2,
+63.4,
+256.6
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
 "models/props_combine/combineinnerwall001a.mdl": {
 "bbox": [
 -153.0,
@@ -7529,6 +8417,21 @@
 "static": true,
 "v": 2
 },
+"models/props_combine/masterinterface_dyn.mdl": {
+"bbox": [
+-87.1,
+-64.1,
+-0.9,
+35.5,
+62.7,
+194.2
+],
+"built_static": false,
+"physics": false,
+"prop_data": false,
+"static": false,
+"v": 2
+},
 "models/props_combine/pipes01_cluster02a.mdl": {
 "bbox": [
 -20.7,
@@ -7544,6 +8447,21 @@
 "physics": false,
 "prop_data": false,
 "ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_combine/pipes01_cluster02b.mdl": {
+"bbox": [
+-12.8,
+-39.8,
+-0.3,
+37.6,
+45.6,
+1024.3
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
 "static": true,
 "v": 2
 },
@@ -7619,6 +8537,36 @@
 "static": true,
 "v": 2
 },
+"models/props_combine/pipes01_single02b.mdl": {
+"bbox": [
+-20.7,
+-22.1,
+-0.3,
+21.6,
+98.3,
+1024.3
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
+"models/props_combine/pipes01_single02c.mdl": {
+"bbox": [
+-29.4,
+-33.5,
+-0.3,
+19.1,
+37.5,
+1024.3
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
 "models/props_combine/pipes02_single01a.mdl": {
 "bbox": [
 -36.9,
@@ -7634,6 +8582,36 @@
 "physics": false,
 "prop_data": false,
 "ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_combine/pipes02_single01b.mdl": {
+"bbox": [
+-29.5,
+-56.4,
+-0.3,
+34.8,
+53.8,
+1024.3
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
+"models/props_combine/pipes02_single01c.mdl": {
+"bbox": [
+-42.4,
+-44.5,
+-0.3,
+25.3,
+44.3,
+1024.3
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
 "static": true,
 "v": 2
 },
@@ -7655,6 +8633,51 @@
 "static": true,
 "v": 2
 },
+"models/props_combine/pipes03_single02a.mdl": {
+"bbox": [
+-35.1,
+-32.7,
+-0.3,
+85.9,
+175.4,
+1024.3
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
+"models/props_combine/pipes03_single02b.mdl": {
+"bbox": [
+0.0,
+0.0,
+-0.3,
+139.6,
+391.5,
+1024.3
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
+"models/props_combine/pipes03_single02c.mdl": {
+"bbox": [
+-35.1,
+0.0,
+-0.3,
+81.4,
+288.7,
+1024.3
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
 "models/props_combine/podframe.mdl": {
 "bbox": [
 -86.1,
@@ -7670,6 +8693,36 @@
 "physics": false,
 "prop_data": false,
 "ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_combine/prison01b.mdl": {
+"bbox": [
+-2653.6,
+-4227.4,
+0.0,
+4527.6,
+501.6,
+1537.2
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
+"models/props_combine/prison01c.mdl": {
+"bbox": [
+-2255.9,
+-1152.0,
+-32.6,
+2676.4,
+3207.0,
+830.9
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
 "static": true,
 "v": 2
 },
@@ -7853,6 +8906,21 @@
 "static": true,
 "v": 2
 },
+"models/props_debris/barricade_short02a.mdl": {
+"bbox": [
+-33.4,
+-49.3,
+-28.2,
+33.0,
+48.3,
+28.3
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
 "models/props_debris/barricade_short03a.mdl": {
 "bbox": [
 -21.8,
@@ -8012,6 +9080,21 @@
 "physics": true,
 "prop_data": true,
 "ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_debris/beam01d.mdl": {
+"bbox": [
+-150.8,
+-12.2,
+-35.7,
+151.5,
+13.4,
+13.9
+],
+"built_static": true,
+"physics": true,
+"prop_data": true,
 "static": true,
 "v": 2
 },
@@ -8541,6 +9624,21 @@
 "static": true,
 "v": 2
 },
+"models/props_debris/concrete_section128wall001b.mdl": {
+"bbox": [
+-8.4,
+-64.5,
+-64.7,
+8.4,
+64.0,
+64.5
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
 "models/props_debris/concrete_section128wall001c.mdl": {
 "bbox": [
 -8.5,
@@ -8916,6 +10014,21 @@
 "physics": false,
 "prop_data": false,
 "ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_debris/plaster_wall002a.mdl": {
+"bbox": [
+-8.4,
+-96.9,
+-60.0,
+8.2,
+97.4,
+60.6
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
 "static": true,
 "v": 2
 },
@@ -9377,6 +10490,21 @@
 "static": true,
 "v": 2
 },
+"models/props_debris/walldestroyed07b.mdl": {
+"bbox": [
+-5.3,
+-64.0,
+-64.5,
+13.8,
+64.2,
+47.7
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
 "models/props_debris/walldestroyed08a.mdl": {
 "bbox": [
 -35.8,
@@ -9392,6 +10520,66 @@
 "physics": false,
 "prop_data": false,
 "ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_debris/walldestroyed09a.mdl": {
+"bbox": [
+-238.6,
+-219.6,
+-67.5,
+240.8,
+222.5,
+67.0
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
+"models/props_debris/walldestroyed09e.mdl": {
+"bbox": [
+-161.2,
+-165.2,
+-57.5,
+167.0,
+172.0,
+79.8
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
+"models/props_debris/walldestroyed09f.mdl": {
+"bbox": [
+-189.4,
+-193.5,
+-60.6,
+200.4,
+169.0,
+62.5
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
+"models/props_debris/walldestroyed09g.mdl": {
+"bbox": [
+-192.3,
+-219.5,
+-60.2,
+192.5,
+220.4,
+62.1
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
 "static": true,
 "v": 2
 },
@@ -9719,6 +10907,36 @@
 "static": false,
 "v": 2
 },
+"models/props_docks/channelmarker01c.mdl": {
+"bbox": [
+-8.4,
+-12.8,
+-45.5,
+8.1,
+11.8,
+117.9
+],
+"built_static": true,
+"physics": true,
+"prop_data": true,
+"static": false,
+"v": 2
+},
+"models/props_docks/channelmarker02a.mdl": {
+"bbox": [
+-22.4,
+-21.5,
+-46.2,
+23.1,
+21.5,
+172.7
+],
+"built_static": false,
+"physics": true,
+"prop_data": true,
+"static": false,
+"v": 2
+},
 "models/props_docks/channelmarker_gib01.mdl": {
 "bbox": [
 -5.6,
@@ -9809,6 +11027,96 @@
 "static": true,
 "v": 2
 },
+"models/props_docks/dock01_polecluster01a.mdl": {
+"bbox": [
+-12.6,
+-85.6,
+-256.3,
+11.7,
+86.9,
+256.2
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
+"models/props_docks/dock01_polecluster01b.mdl": {
+"bbox": [
+-26.3,
+-82.5,
+-256.2,
+11.7,
+85.2,
+256.1
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
+"models/props_docks/dock01_polecluster01b_256.mdl": {
+"bbox": [
+-18.3,
+-83.6,
+-128.4,
+11.7,
+83.9,
+128.1
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
+"models/props_docks/dock01_polecluster01c.mdl": {
+"bbox": [
+-14.3,
+-96.3,
+-256.2,
+11.7,
+89.3,
+256.1
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
+"models/props_docks/dock01_polecluster01d.mdl": {
+"bbox": [
+-37.5,
+-164.1,
+-257.4,
+11.7,
+83.2,
+261.9
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
+"models/props_docks/dock01_polecluster01d_256.mdl": {
+"bbox": [
+-25.4,
+-104.1,
+-127.5,
+11.4,
+107.3,
+128.4
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
 "models/props_docks/dock02_pole02a.mdl": {
 "bbox": [
 -8.3,
@@ -9878,6 +11186,36 @@
 "physics": false,
 "prop_data": false,
 "ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_docks/dock03_pole01a_256.mdl": {
+"bbox": [
+-9.1,
+-9.1,
+-98.7,
+9.1,
+9.1,
+98.7
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
+"models/props_docks/dock_broken01a.mdl": {
+"bbox": [
+-255.6,
+-94.2,
+-258.3,
+257.4,
+86.6,
+259.0
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
 "static": true,
 "v": 2
 },
@@ -9953,6 +11291,21 @@
 "static": true,
 "v": 2
 },
+"models/props_docks/dock_bumper01b_256.mdl": {
+"bbox": [
+-14.4,
+-255.4,
+-126.4,
+14.4,
+255.4,
+126.4
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
 "models/props_docks/dock_bumper02a.mdl": {
 "bbox": [
 -20.1,
@@ -9968,6 +11321,36 @@
 "physics": false,
 "prop_data": false,
 "ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_docks/dock_bumper02a_256.mdl": {
+"bbox": [
+-20.1,
+-511.7,
+-125.7,
+20.1,
+511.7,
+125.3
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
+"models/props_docks/dock_bumper02b.mdl": {
+"bbox": [
+-20.2,
+-511.5,
+-249.6,
+20.2,
+511.4,
+249.4
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
 "static": true,
 "v": 2
 },
@@ -10205,6 +11588,21 @@
 "static": true,
 "v": 2
 },
+"models/props_foliage/driftwood_clump_03a.mdl": {
+"bbox": [
+-120.7,
+-70.7,
+-0.5,
+188.9,
+81.0,
+27.5
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
 "models/props_foliage/ivy_01.mdl": {
 "bbox": [
 -23.7,
@@ -10256,6 +11654,21 @@
 "physics": false,
 "prop_data": false,
 "ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_foliage/tree_cliff_01a.mdl": {
+"bbox": [
+-142.5,
+-253.1,
+-142.5,
+294.9,
+178.0,
+591.4
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
 "static": true,
 "v": 2
 },
@@ -10403,6 +11816,21 @@
 "static": true,
 "v": 2
 },
+"models/props_foliage/tree_deciduous_card_01_skybox.mdl": {
+"bbox": [
+-49.9,
+-62.0,
+-0.4,
+25.5,
+88.6,
+63.6
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
 "models/props_foliage/tree_poplar_01.mdl": {
 "bbox": [
 -122.7,
@@ -10418,6 +11846,36 @@
 "physics": false,
 "prop_data": false,
 "ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_interiors/attic_beam001a.mdl": {
+"bbox": [
+-248.0,
+-102.2,
+-125.5,
+249.2,
+101.4,
+125.8
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
+"models/props_interiors/attic_beam001b.mdl": {
+"bbox": [
+-248.0,
+-61.5,
+-125.5,
+249.2,
+60.1,
+125.8
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
 "static": true,
 "v": 2
 },
@@ -10619,6 +12077,21 @@
 "static": false,
 "v": 2
 },
+"models/props_interiors/furniture_vanity01a.mdl": {
+"bbox": [
+-12.7,
+-27.7,
+-35.4,
+12.5,
+27.7,
+35.5
+],
+"built_static": true,
+"physics": true,
+"prop_data": true,
+"static": false,
+"v": 2
+},
 "models/props_interiors/handrailcluster01a.mdl": {
 "bbox": [
 -79.1,
@@ -10634,6 +12107,21 @@
 "physics": false,
 "prop_data": false,
 "ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_interiors/handrailcluster01b.mdl": {
+"bbox": [
+-79.1,
+-79.1,
+-81.4,
+79.1,
+79.1,
+81.6
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
 "static": true,
 "v": 2
 },
@@ -12269,6 +13757,51 @@
 "static": false,
 "v": 2
 },
+"models/props_lab/binderbluelabel.mdl": {
+"bbox": [
+-5.9,
+-2.0,
+-0.4,
+5.8,
+1.7,
+12.0
+],
+"built_static": true,
+"physics": true,
+"prop_data": true,
+"static": false,
+"v": 2
+},
+"models/props_lab/bindergraylabel01a.mdl": {
+"bbox": [
+-5.9,
+-2.0,
+-0.4,
+5.8,
+1.7,
+12.0
+],
+"built_static": true,
+"physics": true,
+"prop_data": true,
+"static": false,
+"v": 2
+},
+"models/props_lab/bindergraylabel01b.mdl": {
+"bbox": [
+-5.9,
+-2.0,
+-0.4,
+5.8,
+1.7,
+12.0
+],
+"built_static": true,
+"physics": true,
+"prop_data": true,
+"static": false,
+"v": 2
+},
 "models/props_lab/bindergreen.mdl": {
 "bbox": [
 -5.9,
@@ -12284,6 +13817,21 @@
 "physics": true,
 "prop_data": true,
 "ragdoll": false,
+"static": false,
+"v": 2
+},
+"models/props_lab/bindergreenlabel.mdl": {
+"bbox": [
+-5.9,
+-2.0,
+-0.4,
+5.8,
+1.7,
+12.0
+],
+"built_static": true,
+"physics": true,
+"prop_data": true,
 "static": false,
 "v": 2
 },
@@ -12392,6 +13940,21 @@
 "physics": true,
 "prop_data": true,
 "ragdoll": false,
+"static": false,
+"v": 2
+},
+"models/props_lab/box01b.mdl": {
+"bbox": [
+-9.2,
+-4.6,
+-3.4,
+3.7,
+4.2,
+3.3
+],
+"built_static": true,
+"physics": true,
+"prop_data": true,
 "static": false,
 "v": 2
 },
@@ -12557,6 +14120,21 @@
 "static": false,
 "v": 2
 },
+"models/props_lab/eyescanner.mdl": {
+"bbox": [
+-4.5,
+-6.5,
+-0.1,
+5.8,
+6.5,
+27.0
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
 "models/props_lab/filecabinet02.mdl": {
 "bbox": [
 -16.9,
@@ -12609,6 +14187,21 @@
 "prop_data": false,
 "ragdoll": false,
 "static": true,
+"v": 2
+},
+"models/props_lab/freightelevator.mdl": {
+"bbox": [
+-72.0,
+-86.1,
+0.0,
+73.9,
+86.1,
+174.0
+],
+"built_static": false,
+"physics": false,
+"prop_data": false,
+"static": false,
 "v": 2
 },
 "models/props_lab/freightelevatorbutton.mdl": {
@@ -12666,6 +14259,36 @@
 "physics": false,
 "prop_data": false,
 "ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_lab/generatorhose.mdl": {
+"bbox": [
+-215.9,
+-136.0,
+-0.6,
+237.3,
+137.0,
+3.0
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
+"models/props_lab/generatortube.mdl": {
+"bbox": [
+-22.0,
+-22.1,
+-0.3,
+22.0,
+22.0,
+108.3
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
 "static": true,
 "v": 2
 },
@@ -12741,6 +14364,21 @@
 "static": false,
 "v": 2
 },
+"models/props_lab/hev_machine.mdl": {
+"bbox": [
+-48.7,
+-61.5,
+-0.0,
+40.8,
+86.6,
+77.7
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
 "models/props_lab/hl1teleport.mdl": {
 "bbox": [
 -443.8,
@@ -12811,6 +14449,21 @@
 "prop_data": true,
 "ragdoll": false,
 "static": false,
+"v": 2
+},
+"models/props_lab/kennel.mdl": {
+"bbox": [
+-28.4,
+-19.8,
+-0.3,
+28.3,
+19.8,
+41.2
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
 "v": 2
 },
 "models/props_lab/keypad.mdl": {
@@ -12979,6 +14632,36 @@
 "static": true,
 "v": 2
 },
+"models/props_lab/miniteleport.mdl": {
+"bbox": [
+-19.9,
+-48.3,
+-0.6,
+20.2,
+47.2,
+45.0
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
+"models/props_lab/miniteleportarc.mdl": {
+"bbox": [
+-10.6,
+-11.2,
+0.0,
+7.1,
+11.1,
+15.0
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
 "models/props_lab/monitor01a.mdl": {
 "bbox": [
 -14.1,
@@ -12994,6 +14677,21 @@
 "physics": true,
 "prop_data": true,
 "ragdoll": false,
+"static": false,
+"v": 2
+},
+"models/props_lab/monitor02.mdl": {
+"bbox": [
+-12.5,
+-11.2,
+-0.4,
+12.3,
+11.4,
+24.8
+],
+"built_static": true,
+"physics": true,
+"prop_data": true,
 "static": false,
 "v": 2
 },
@@ -13069,6 +14767,21 @@
 "static": true,
 "v": 2
 },
+"models/props_lab/pipesystem02b.mdl": {
+"bbox": [
+-1.3,
+-1.2,
+-27.4,
+1.4,
+1.3,
+27.7
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
 "models/props_lab/pipesystem02c.mdl": {
 "bbox": [
 -1.3,
@@ -13138,6 +14851,36 @@
 "physics": false,
 "prop_data": false,
 "ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_lab/pipesystem03b.mdl": {
+"bbox": [
+-2.2,
+-9.1,
+-1.7,
+2.3,
+9.3,
+2.0
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
+"models/props_lab/pipesystem03c.mdl": {
+"bbox": [
+-1.4,
+-5.9,
+-1.4,
+1.5,
+5.9,
+1.4
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
 "static": true,
 "v": 2
 },
@@ -13429,6 +15172,111 @@
 "static": true,
 "v": 2
 },
+"models/props_lab/teleplatform.mdl": {
+"bbox": [
+-59.4,
+-46.8,
+-10.7,
+55.5,
+46.8,
+87.9
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
+"models/props_lab/teleportbulk.mdl": {
+"bbox": [
+-205.5,
+-147.2,
+-12.7,
+137.0,
+109.2,
+233.9
+],
+"built_static": false,
+"physics": false,
+"prop_data": false,
+"static": false,
+"v": 2
+},
+"models/props_lab/teleportframe.mdl": {
+"bbox": [
+-82.3,
+-76.1,
+-1.6,
+82.3,
+76.1,
+289.9
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
+"models/props_lab/teleportgate.mdl": {
+"bbox": [
+-11.8,
+-37.5,
+-12.8,
+9.6,
+37.5,
+10.4
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
+"models/props_lab/teleportring.mdl": {
+"bbox": [
+0.0,
+-32.9,
+0.0,
+32.6,
+32.9,
+9.0
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
+"models/props_lab/tpplug.mdl": {
+"bbox": [
+-0.3,
+-5.5,
+-4.6,
+12.4,
+5.5,
+4.5
+],
+"built_static": false,
+"physics": false,
+"prop_data": false,
+"static": false,
+"v": 2
+},
+"models/props_lab/tpplugholder.mdl": {
+"bbox": [
+-0.3,
+-24.2,
+-0.3,
+17.4,
+24.2,
+18.3
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
 "models/props_lab/tpswitch.mdl": {
 "bbox": [
 -5.3,
@@ -13649,6 +15497,21 @@
 "static": true,
 "v": 2
 },
+"models/props_pipes/destroyedpipes01d.mdl": {
+"bbox": [
+-63.8,
+-25.5,
+-29.4,
+63.8,
+25.5,
+29.4
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
 "models/props_pipes/gutter_128_001a.mdl": {
 "elsewhere": [],
 "game": null
@@ -13704,6 +15567,21 @@
 "physics": false,
 "prop_data": false,
 "ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_pipes/gutter_384_001a.mdl": {
+"bbox": [
+-7.9,
+-6.1,
+-192.4,
+7.9,
+6.1,
+192.1
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
 "static": true,
 "v": 2
 },
@@ -13776,6 +15654,21 @@
 "physics": false,
 "prop_data": false,
 "ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_pipes/gutter_512_002a.mdl": {
+"bbox": [
+-8.3,
+-12.8,
+-256.4,
+8.1,
+12.9,
+256.3
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
 "static": true,
 "v": 2
 },
@@ -14169,6 +16062,21 @@
 "static": true,
 "v": 2
 },
+"models/props_pipes/pipe03_45degree01.mdl": {
+"bbox": [
+-17.8,
+-19.3,
+-12.1,
+16.4,
+12.1,
+12.1
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
 "models/props_pipes/pipe03_90degree01.mdl": {
 "bbox": [
 -12.9,
@@ -14407,6 +16315,21 @@
 "static": true,
 "v": 2
 },
+"models/props_pipes/pipecluster08d_005a.mdl": {
+"bbox": [
+-28.7,
+-44.9,
+-234.3,
+18.0,
+44.9,
+236.1
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
 "models/props_pipes/pipecluster08d_006a.mdl": {
 "bbox": [
 -5.9,
@@ -14440,6 +16363,21 @@
 "physics": false,
 "prop_data": false,
 "ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_pipes/pipecluster08d_extender64.mdl": {
+"bbox": [
+-4.8,
+-5.0,
+-32.3,
+4.8,
+5.0,
+32.3
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
 "static": true,
 "v": 2
 },
@@ -14530,6 +16468,21 @@
 "physics": false,
 "prop_data": false,
 "ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_pipes/pipecluster32d_003a.mdl": {
+"bbox": [
+-69.1,
+-111.6,
+-83.4,
+69.0,
+111.7,
+83.1
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
 "static": true,
 "v": 2
 },
@@ -15229,6 +17182,66 @@
 "static": true,
 "v": 2
 },
+"models/props_rooftop/chimneytoppipe_cluster02a.mdl": {
+"bbox": [
+-8.4,
+-60.8,
+-16.9,
+8.4,
+60.8,
+16.9
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
+"models/props_rooftop/dome004.mdl": {
+"bbox": [
+-104.3,
+-104.3,
+-0.5,
+104.3,
+104.3,
+129.5
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
+"models/props_rooftop/dome005.mdl": {
+"bbox": [
+-195.2,
+-195.2,
+-0.3,
+195.2,
+195.2,
+157.3
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
+"models/props_rooftop/dome_copper.mdl": {
+"bbox": [
+-93.9,
+-93.9,
+0.0,
+93.9,
+93.9,
+273.4
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
 "models/props_rooftop/dome_terminal_01.mdl": {
 "bbox": [
 -55.2,
@@ -15355,6 +17368,21 @@
 "static": true,
 "v": 2
 },
+"models/props_rooftop/roof_vent002.mdl": {
+"bbox": [
+-6.0,
+-6.0,
+-0.3,
+6.0,
+6.0,
+32.3
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
 "models/props_rooftop/roof_vent003.mdl": {
 "bbox": [
 -7.5,
@@ -15388,6 +17416,36 @@
 "physics": false,
 "prop_data": false,
 "ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_rooftop/rooftop_set01b.mdl": {
+"bbox": [
+-264.6,
+-392.8,
+-141.2,
+264.0,
+392.0,
+141.2
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
+"models/props_rooftop/rooftopcluser02a.mdl": {
+"bbox": [
+-23.8,
+-14.5,
+-41.6,
+23.8,
+14.2,
+41.6
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
 "static": true,
 "v": 2
 },
@@ -15465,6 +17523,51 @@
 "prop_data": false,
 "ragdoll": false,
 "static": true,
+"v": 2
+},
+"models/props_rooftop/sign_letter_f001b.mdl": {
+"bbox": [
+-5.3,
+-7.5,
+-0.2,
+0.3,
+7.5,
+20.5
+],
+"built_static": true,
+"physics": true,
+"prop_data": true,
+"static": false,
+"v": 2
+},
+"models/props_rooftop/sign_letter_m001.mdl": {
+"bbox": [
+-5.3,
+-11.1,
+-0.3,
+0.3,
+11.1,
+20.4
+],
+"built_static": true,
+"physics": true,
+"prop_data": true,
+"static": false,
+"v": 2
+},
+"models/props_rooftop/sign_letter_u001b.mdl": {
+"bbox": [
+-5.3,
+-8.9,
+-0.2,
+0.3,
+9.0,
+21.0
+],
+"built_static": true,
+"physics": true,
+"prop_data": true,
+"static": false,
 "v": 2
 },
 "models/props_rooftop/vent_large_straight001.mdl": {
@@ -16699,6 +18802,21 @@
 "static": false,
 "v": 2
 },
+"models/props_vehicles/apc_tire001.mdl": {
+"bbox": [
+-11.3,
+-32.3,
+-32.3,
+11.3,
+32.3,
+32.3
+],
+"built_static": true,
+"physics": true,
+"prop_data": true,
+"static": false,
+"v": 2
+},
 "models/props_vehicles/car001a_hatchback.mdl": {
 "bbox": [
 -76.5,
@@ -16717,6 +18835,21 @@
 "static": true,
 "v": 2
 },
+"models/props_vehicles/car001a_phy.mdl": {
+"bbox": [
+-75.4,
+-40.7,
+-28.1,
+78.7,
+45.9,
+28.3
+],
+"built_static": false,
+"physics": true,
+"prop_data": true,
+"static": false,
+"v": 2
+},
 "models/props_vehicles/car001b_hatchback.mdl": {
 "bbox": [
 -77.4,
@@ -16733,6 +18866,21 @@
 "prop_data": false,
 "ragdoll": false,
 "static": true,
+"v": 2
+},
+"models/props_vehicles/car001b_phy.mdl": {
+"bbox": [
+-79.3,
+-49.8,
+-23.4,
+90.0,
+40.2,
+32.3
+],
+"built_static": false,
+"physics": true,
+"prop_data": true,
+"static": false,
 "v": 2
 },
 "models/props_vehicles/car002a.mdl": {
@@ -16843,6 +18991,21 @@
 "static": true,
 "v": 2
 },
+"models/props_vehicles/car003b.mdl": {
+"bbox": [
+-101.1,
+-39.5,
+-23.1,
+84.5,
+44.5,
+36.2
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
 "models/props_vehicles/car003b_physics.mdl": {
 "bbox": [
 -100.0,
@@ -16897,6 +19060,21 @@
 "static": true,
 "v": 2
 },
+"models/props_vehicles/car004b.mdl": {
+"bbox": [
+-123.3,
+-49.8,
+-24.0,
+84.2,
+47.7,
+37.1
+],
+"built_static": true,
+"physics": true,
+"prop_data": true,
+"static": true,
+"v": 2
+},
 "models/props_vehicles/car004b_physics.mdl": {
 "bbox": [
 -122.5,
@@ -16915,6 +19093,21 @@
 "static": true,
 "v": 2
 },
+"models/props_vehicles/car005a.mdl": {
+"bbox": [
+-105.9,
+-44.3,
+-26.3,
+81.3,
+39.4,
+39.7
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
 "models/props_vehicles/car005a_physics.mdl": {
 "bbox": [
 -105.6,
@@ -16930,6 +19123,21 @@
 "physics": true,
 "prop_data": true,
 "ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_vehicles/car005b.mdl": {
+"bbox": [
+-115.8,
+-55.3,
+-22.5,
+78.4,
+43.4,
+37.4
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
 "static": true,
 "v": 2
 },
@@ -16984,6 +19192,21 @@
 "physics": true,
 "prop_data": true,
 "ragdoll": false,
+"static": false,
+"v": 2
+},
+"models/props_vehicles/carparts_muffler01a.mdl": {
+"bbox": [
+-28.5,
+-11.1,
+-4.3,
+28.6,
+10.7,
+3.9
+],
+"built_static": true,
+"physics": true,
+"prop_data": true,
 "static": false,
 "v": 2
 },
@@ -17283,6 +19506,36 @@
 "static": true,
 "v": 2
 },
+"models/props_vehicles/wagon001a_phy.mdl": {
+"bbox": [
+-47.1,
+-39.2,
+-29.2,
+47.1,
+39.6,
+30.7
+],
+"built_static": false,
+"physics": true,
+"prop_data": true,
+"static": false,
+"v": 2
+},
+"models/props_vents/vent_cluster003.mdl": {
+"bbox": [
+-23.3,
+-87.7,
+-40.9,
+24.5,
+88.2,
+41.3
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
 "models/props_vents/vent_cluster006.mdl": {
 "bbox": [
 -23.6,
@@ -17319,6 +19572,21 @@
 "static": true,
 "v": 2
 },
+"models/props_vents/vent_large_blower002.mdl": {
+"bbox": [
+-27.2,
+-30.6,
+-118.9,
+29.0,
+30.7,
+10.8
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
 "models/props_vents/vent_large_corner001.mdl": {
 "bbox": [
 -21.7,
@@ -17334,6 +19602,21 @@
 "physics": false,
 "prop_data": false,
 "ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_vents/vent_large_corner002.mdl": {
+"bbox": [
+-18.5,
+-17.9,
+-25.3,
+18.4,
+18.5,
+11.0
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
 "static": true,
 "v": 2
 },
@@ -17373,6 +19656,21 @@
 "static": true,
 "v": 2
 },
+"models/props_vents/vent_large_straight002.mdl": {
+"bbox": [
+-18.5,
+-33.3,
+-10.3,
+18.5,
+33.1,
+10.3
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
 "models/props_vents/vent_medium_grill001.mdl": {
 "bbox": [
 -10.7,
@@ -17406,6 +19704,21 @@
 "physics": false,
 "prop_data": false,
 "ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_wasteland/antlionhill.mdl": {
+"bbox": [
+-144.8,
+-175.9,
+-7.4,
+134.5,
+159.1,
+542.9
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
 "static": true,
 "v": 2
 },
@@ -17903,6 +20216,21 @@
 "static": false,
 "v": 2
 },
+"models/props_wasteland/depot.mdl": {
+"bbox": [
+-1287.8,
+-482.3,
+-4.4,
+1142.2,
+646.4,
+1926.9
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
 "models/props_wasteland/dockplank01a.mdl": {
 "bbox": [
 -7.5,
@@ -18152,6 +20480,21 @@
 "physics": false,
 "prop_data": false,
 "ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_wasteland/grainelevator01.mdl": {
+"bbox": [
+-222.3,
+-130.8,
+-497.7,
+223.0,
+130.8,
+497.7
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
 "static": true,
 "v": 2
 },
@@ -19095,6 +21438,36 @@
 "static": false,
 "v": 2
 },
+"models/props_wasteland/plasterwall029g_window01a.mdl": {
+"bbox": [
+-16.0,
+-4.0,
+-32.0,
+16.0,
+4.0,
+32.0
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
+"models/props_wasteland/plasterwall029g_window01a_bars.mdl": {
+"bbox": [
+-12.0,
+-4.0,
+-28.0,
+12.0,
+4.0,
+31.0
+],
+"built_static": false,
+"physics": false,
+"prop_data": false,
+"static": false,
+"v": 2
+},
 "models/props_wasteland/powertower01.mdl": {
 "bbox": [
 -216.2,
@@ -19311,6 +21684,21 @@
 "static": true,
 "v": 2
 },
+"models/props_wasteland/prison_flourescentlight001b.mdl": {
+"bbox": [
+-6.2,
+-33.1,
+-73.6,
+6.2,
+33.3,
+73.1
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
 "models/props_wasteland/prison_flourescentlight001c.mdl": {
 "bbox": [
 -11.8,
@@ -19416,6 +21804,21 @@
 "physics": true,
 "prop_data": true,
 "ragdoll": false,
+"static": false,
+"v": 2
+},
+"models/props_wasteland/prison_heater002a.mdl": {
+"bbox": [
+-2.6,
+-31.6,
+-11.2,
+2.3,
+31.6,
+10.8
+],
+"built_static": true,
+"physics": true,
+"prop_data": true,
 "static": false,
 "v": 2
 },
@@ -19833,6 +22236,36 @@
 "static": true,
 "v": 2
 },
+"models/props_wasteland/rockcliff05e.mdl": {
+"bbox": [
+-127.1,
+-138.1,
+-258.9,
+125.6,
+138.1,
+258.9
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
+"models/props_wasteland/rockcliff07b.mdl": {
+"bbox": [
+-67.7,
+-51.9,
+-125.2,
+73.7,
+51.9,
+125.2
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
 "models/props_wasteland/rockcliff_cluster02a.mdl": {
 "bbox": [
 -244.0,
@@ -19869,6 +22302,21 @@
 "static": true,
 "v": 2
 },
+"models/props_wasteland/rockcliff_cluster02c.mdl": {
+"bbox": [
+-198.8,
+-248.7,
+-239.0,
+200.0,
+249.2,
+239.0
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
 "models/props_wasteland/rockcliff_cluster03a.mdl": {
 "bbox": [
 -151.2,
@@ -19884,6 +22332,36 @@
 "physics": false,
 "prop_data": false,
 "ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_wasteland/rockcliff_cluster03b.mdl": {
+"bbox": [
+-153.1,
+-192.6,
+-176.8,
+153.4,
+131.2,
+176.5
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
+"models/props_wasteland/rockcliff_cluster03c.mdl": {
+"bbox": [
+-144.9,
+-137.7,
+-167.4,
+144.2,
+140.3,
+160.0
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
 "static": true,
 "v": 2
 },
@@ -19920,6 +22398,21 @@
 "physics": false,
 "prop_data": false,
 "ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_wasteland/rockgranite01c.mdl": {
+"bbox": [
+-88.5,
+-104.2,
+-18.7,
+69.8,
+114.0,
+60.3
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
 "static": true,
 "v": 2
 },
@@ -20064,6 +22557,21 @@
 "physics": false,
 "prop_data": false,
 "ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_wasteland/tram_bracket01.mdl": {
+"bbox": [
+-16.4,
+-52.6,
+-71.0,
+15.9,
+52.9,
+69.5
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
 "static": true,
 "v": 2
 },
@@ -20352,6 +22860,96 @@
 "physics": false,
 "prop_data": false,
 "ragdoll": false,
+"static": false,
+"v": 2
+},
+"models/props_wasteland/woodwall030b_window03a.mdl": {
+"bbox": [
+-48.0,
+-4.3,
+-32.2,
+48.0,
+4.3,
+32.0
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
+"models/props_wasteland/woodwall030b_window03a_bars.mdl": {
+"bbox": [
+-44.0,
+-4.0,
+-28.0,
+44.0,
+4.0,
+31.0
+],
+"built_static": false,
+"physics": false,
+"prop_data": false,
+"static": false,
+"v": 2
+},
+"models/vehicles/inner_pod_arm.mdl": {
+"bbox": [
+-10.8,
+-6.8,
+0.0,
+10.8,
+6.8,
+25.4
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
+"models/vehicles/inner_pod_rotator.mdl": {
+"bbox": [
+0.0,
+-6.8,
+-0.2,
+10.8,
+1.8,
+12.4
+],
+"built_static": true,
+"physics": false,
+"prop_data": false,
+"static": true,
+"v": 2
+},
+"models/vehicles/prisoner_pod.mdl": {
+"bbox": [
+-30.9,
+-18.6,
+-5.5,
+28.8,
+14.0,
+98.4
+],
+"built_static": false,
+"physics": false,
+"prop_data": false,
+"static": false,
+"v": 2
+},
+"models/vehicles/prisoner_pod_inner.mdl": {
+"bbox": [
+-13.8,
+-12.3,
+0.0,
+4.4,
+12.4,
+86.5
+],
+"built_static": false,
+"physics": false,
+"prop_data": false,
 "static": false,
 "v": 2
 },

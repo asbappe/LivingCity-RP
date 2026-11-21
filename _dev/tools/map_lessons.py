@@ -6,14 +6,23 @@ Living City: the lessons for building map pieces, and the City 18 reference pict
     python3 map_lessons.py --tag doors     the lessons with that tag, in full
     python3 map_lessons.py --find glass    the lessons that mention a word, in full
     python3 map_lessons.py --tags          the tags and how many lessons each has
-    python3 map_lessons.py --md            rewrite docs/dev/city18-reference.md from the two files below
+    python3 map_lessons.py --md            rewrite docs/dev/city18-reference.md from the files below
+    python3 map_lessons.py --merge FILE    add proposed lessons from FILE to lessons.json, then rewrite the page
 
 The lessons are in _dev/reference/lessons.json (one entry each: what to do, why, how the tools do it, what checks
 it); the reference pictures of the owner's City 18 map are in _dev/reference/city18/, described in
-_dev/reference/city18/pictures.json. Add a lesson whenever the owner corrects a piece: it is how the next piece
-starts right. Read the lessons before building a piece (--tag for the kind of piece).
+_dev/reference/city18/pictures.json. Every other picture set is found by itself: each _dev/reference/valve_*/
+pictures.json, titled by its "title" key (else the folder name), in folder order after City 18. A set still
+marked "draft": true (map_ingest.py writes those) is left out of the page until a reviewer has filled it in.
+Add a lesson whenever the owner corrects a piece: it is how the next piece starts right. Read the lessons before
+building a piece (--tag for the kind of piece).
+
+--merge FILE takes a JSON list (or {"lessons": [...]}) of whole new lessons (id, tags, title, rule, why, how,
+check) and of additions to existing ones: {"id": "an-existing-id", "extra": {"how": "a sentence"}} appends the
+sentence to that field. It refuses em dashes and an id that is already taken, and prints what changed.
 """
 import argparse
+import glob
 import json
 import os
 
@@ -21,29 +30,91 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 REF = os.path.join(HERE, "..", "reference")
 LESSONS = os.path.join(REF, "lessons.json")
 PICTURES = os.path.join(REF, "city18", "pictures.json")
-OTHER_SETS = [("valve_d1_trainstation_01", "Valve's d1_trainstation_01 (reference only)"),
-              ("valve_d1_trainstation_02", "Valve's d1_trainstation_02: City 17's plaza and streets"),
-              ("valve_d1_trainstation_03", "Valve's d1_trainstation_03: flats and rooftops"),
-              ("valve_d1_trainstation_04", "Valve's d1_trainstation_04: streets to Kleiner's"),
-              ("valve_d1_trainstation_05", "Valve's d1_trainstation_05: Kleiner's lab"),
-              ("valve_d3_c17_13", "Valve's d3_c17_13: City 17's streets at war"),
-              ("valve_d1_town_03", "Valve's d1_town_03: Ravenholm, for the infestation quarter (map_raven.py)"),
-              ("valve_d3_citadel_01", "Valve's d3_citadel_01: the Citadel"),
-              ("valve_d2_coast_12", "Valve's d2_coast_12: the coast"),
-              ("valve_vehicles", "Valve's vehicles test map"),
-              ("valve_canals", "Valve's Route Kanal (d1_canals_01 to 13)")]      # (more picture sets: folder, title)
 DOC = os.path.join(HERE, "..", "..", "docs", "dev", "city18-reference.md")
 
 
-def load():
+FIELDS = ("id", "tags", "title", "rule", "why", "how", "check")
+
+
+def sets(quiet=False):
+    """Every picture set beside City 18: (folder, title, its pictures.json), drafts left out."""
+    out, drafts = [], []
+    for f in sorted(glob.glob(os.path.join(REF, "valve_*", "pictures.json"))):
+        folder = os.path.basename(os.path.dirname(f))
+        ps = json.load(open(f))
+        if ps.get("draft"):
+            drafts.append(folder)
+            continue
+        out.append((folder, ps.get("title") or folder, ps))
+    if drafts and not quiet:
+        print("left out (still drafts): %s" % ", ".join(drafts))
+    return out
+
+
+def load(quiet=False):
     lessons = json.load(open(LESSONS))["lessons"]
     pictures = json.load(open(PICTURES)) if os.path.exists(PICTURES) else {"pictures": [], "numbers": []}
-    pictures["sets"] = []
-    for folder, title in OTHER_SETS:
-        f = os.path.join(REF, folder, "pictures.json")
-        if os.path.exists(f):
-            pictures["sets"].append((folder, title, json.load(open(f))))
+    pictures["sets"] = sets(quiet)
     return lessons, pictures
+
+
+def merge(path):
+    """Proposed lessons into lessons.json: new ids added, {"id", "extra": {field: sentence}} appended. Rewrites the page."""
+    text = open(path).read()
+    if chr(0x2014) in text:
+        raise SystemExit("an em dash in %s: take it out" % path)
+    P = json.loads(text)
+    P = P if isinstance(P, list) else P.get("lessons", [])
+    L = json.load(open(LESSONS))
+    by = {l["id"]: l for l in L["lessons"]}
+    added, extended, refused = [], [], []
+    for x in P:
+        if "extra" in x:
+            l = by.get(x.get("id"))
+            if not l:
+                refused.append("%s: no such lesson to extend" % x.get("id"))
+                continue
+            ex = x["extra"] if isinstance(x["extra"], dict) else {"how": x["extra"]}
+            for k, v in ex.items():
+                if k == "tags":
+                    new = [t for t in (v if isinstance(v, list) else [v]) if t not in l["tags"]]
+                    l["tags"] += new
+                    if new:
+                        extended.append("%s tags +%s" % (l["id"], ", ".join(new)))
+                elif k not in FIELDS[2:]:
+                    refused.append("%s: no field %r" % (l["id"], k))
+                elif v.strip() and v.strip() not in l[k]:
+                    l[k] = l[k].rstrip() + " " + v.strip()
+                    extended.append("%s %s" % (l["id"], k))
+        else:
+            missing = [k for k in FIELDS if not x.get(k)]
+            if missing:
+                refused.append("%s: missing %s" % (x.get("id", "?"), ", ".join(missing)))
+            elif x["id"] in by:
+                refused.append("%s: id taken (to add to it, use extra)" % x["id"])
+            else:
+                L["lessons"].append({k: x[k] for k in FIELDS})
+                by[x["id"]] = L["lessons"][-1]
+                added.append(x["id"])
+    out = json.dumps(L, indent=1, ensure_ascii=False)
+    if chr(0x2014) in out:
+        raise SystemExit("an em dash would go into lessons.json: nothing written")
+    if added or extended:
+        open(LESSONS, "w").write(out)
+    for line in ["added: " + a for a in added] + ["extended: " + e for e in extended] + ["refused: " + r for r in refused]:
+        print(line)
+    print("%d added, %d extended, %d refused; %d lessons in all" % (len(added), len(extended), len(refused), len(L["lessons"])))
+    if added or extended:
+        write_doc()
+
+
+def write_doc():
+    lessons, pictures = load()
+    text = markdown(lessons, pictures)
+    if chr(0x2014) in text:
+        raise SystemExit("an em dash in the lessons or pictures: take it out")
+    open(DOC, "w").write(text)
+    print("written: %s (%d lessons, %d pictures)" % (os.path.relpath(DOC), len(lessons), len(pictures.get("pictures", [])) + sum(len(ps.get("pictures", [])) for _, _, ps in pictures.get("sets", []))))
 
 
 def full(l):
@@ -112,15 +183,13 @@ def main():
     ap.add_argument("--find")
     ap.add_argument("--tags", action="store_true")
     ap.add_argument("--md", action="store_true")
+    ap.add_argument("--merge", metavar="FILE")
     a = ap.parse_args()
-    lessons, pictures = load()
+    if a.merge:
+        return merge(a.merge)
     if a.md:
-        text = markdown(lessons, pictures)
-        if chr(0x2014) in text:
-            raise SystemExit("an em dash in the lessons or pictures: take it out")
-        open(DOC, "w").write(text)
-        print("written: %s (%d lessons, %d pictures)" % (os.path.relpath(DOC), len(lessons), len(pictures.get("pictures", [])) + sum(len(ps.get("pictures", [])) for _, _, ps in pictures.get("sets", []))))
-        return
+        return write_doc()
+    lessons, pictures = load(quiet=True)
     if a.tags:
         counts = {}
         for l in lessons:

@@ -1,4 +1,5 @@
 {
+ "title": "Valve's d1_trainstation_02: City 17's plaza and streets",
  "about": "Valve's own d1_trainstation_02 (the City 17 plaza and streets after the station) (the Source SDK copy the owner uploaded, 21 November), measured and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees and poles drawn as trunk and pole). Reference only: the VMF is not in the repo.",
  "numbers": [
   "Things: 305 prop_static, 66 prop_physics, 6 prop_dynamic, 6 prop_door_rotating, 0 prop_ragdoll, 162 infodecal, 27 info_overlay, 27 keyframe_rope and 19 move_rope, 126 func_detail, 47 npc entities (makers included).",

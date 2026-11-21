@@ -210,7 +210,7 @@ def clusters(P, r=96.0):
 
 
 def density(m, P, cell=256.0):
-    """Props per 256 square of play (a square holding an AI node), and per 1000 square units."""
+    """Props per 256 square of play (a square holding an AI node), and per 100 by 100."""
     N = node_points(m)
     if not len(N):
         return {"cells": 0}
@@ -224,7 +224,7 @@ def density(m, P, cell=256.0):
             dress[k] += p["kind"] in DRESS
             phys[k] += p["group"] == "prop_physics"
     n = len(cells)
-    area = n * cell * cell / 1000.0
-    return {"cells": n, "per_cell": dist([cnt[k] for k in cells], 1, 12), "per_1000": round(sum(cnt.values()) / area, 3),
-            "dressing_per_1000": round(sum(dress.values()) / area, 3), "physics_per_1000": round(sum(phys.values()) / area, 3),
+    area = n * cell * cell / 10000.0
+    return {"cells": n, "per_cell": dist([cnt[k] for k in cells], 1, 12), "per_10000": round(sum(cnt.values()) / area, 3),
+            "dressing_per_10000": round(sum(dress.values()) / area, 3), "physics_per_10000": round(sum(phys.values()) / area, 3),
             "empty_cells": round(sum(1 for k in cells if not cnt[k]) / n, 2)}

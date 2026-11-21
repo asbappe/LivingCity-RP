@@ -1,4 +1,5 @@
 {
+ "title": "Valve's d1_trainstation_03: flats and rooftops",
  "about": "Valve's own d1_trainstation_03 (the apartments and the rooftop chase) (the Source SDK copy the owner uploaded, 21 November), measured and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees and poles drawn as trunk and pole). Reference only: the VMF is not in the repo.",
  "numbers": [
   "Things: 151 prop_static, 146 prop_physics, 22 prop_dynamic, 8 prop_door_rotating, 5 prop_ragdoll, 83 infodecal, 54 info_overlay, 24 keyframe_rope and 17 move_rope, 91 func_detail, 33 npc entities (makers included).",

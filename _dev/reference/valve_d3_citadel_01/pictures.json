@@ -1,4 +1,5 @@
 {
+ "title": "Valve's d3_citadel_01: the Citadel",
  "about": "Valve's own d3_citadel_01 (the Citadel's flank) (the Source SDK copy the owner uploaded, 21 November), measured and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees and poles drawn as trunk and pole). Reference only: the VMF is not in the repo.",
  "numbers": [
   "Things: 111 prop_static, 2 prop_physics, 29 prop_dynamic, 0 prop_door_rotating, 1 prop_ragdoll, 0 infodecal, 0 info_overlay, 21 keyframe_rope and 8 move_rope, 109 func_detail, 7 npc entities (makers included).",

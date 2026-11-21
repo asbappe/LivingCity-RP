@@ -41,7 +41,7 @@ def texture(m, N):
     plain = [f for f in vis if m.f_disp[f] < 0 and m.f_u[f][4] != 0]
     disp = [f for f in vis if m.f_disp[f] >= 0]
     dn = near_dist(N, m.f_cen[plain]) if len(N) and plain else np.full(len(plain), 9e9)
-    sc, sca, scd, lms, lmsd = C(), C(), collections.defaultdict(C), C(), collections.defaultdict(C)
+    sc, sca, scd, lms, lmsd, scs = C(), C(), collections.defaultdict(C), C(), collections.defaultdict(C), collections.defaultdict(C)
     rot = off = shift = 0
     seam, seam0, walls = C(), C(), 0
     for f, d in zip(plain, dn):
@@ -51,6 +51,8 @@ def texture(m, N):
         sca[k] += a
         b = band(d)
         scd[b][k] += a
+        nz = m.f_n[f][2]
+        scs["floor" if nz > 0.7 else ("ceiling" if nz < -0.7 else ("wall" if abs(nz) < 0.05 else "slope"))][k] += a
         L = int(m.f_lms[f])
         lms[L] += 1
         lmsd[b][L] += 1
@@ -71,6 +73,8 @@ def texture(m, N):
     tot = max(1, len(plain))
     return {"texture": {"faces": len(plain), "scale": shares(sc, 2, 6), "scale_by_area": shares(sca, 2, 6),
                         "scale_by_distance": {b: shares(c, 2, 4) for b, c in scd.items()},
+                        "scale_by_surface": {b: shares(c, 2, 4) for b, c in scs.items()},
+                        "off_quarter_top": top(C(m.mat(f) for f in plain if scale_key(f, m) != "0.25"), 8, short=True),
                         "rotated": round(rot / tot, 3), "off_axis": round(off / tot, 3), "shifted": round(shift / tot, 2),
                         "walls_v_up": walls, "foot_on_seam": {str(W): round(seam[W] / max(1, walls), 2) for W in (128, 256, 512)},
                         "foot_on_seam_unshifted": {str(W): round(seam0[W] / max(1, walls), 2) for W in (128, 256, 512)}},

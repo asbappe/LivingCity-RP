@@ -1,4 +1,5 @@
 {
+ "title": "Valve's Route Kanal (d1_canals_01 to 13)",
  "about": "Valve's own Route Kanal (d1_canals_01, 01a, 02, 03, 05 to 13; the Source SDK copies the owner uploaded, 21 November), measured from the VMFs and drawn by map_view.py (R7 to R20) or as true slices across the channel (R1 to R6: dark grey solid, white air, blue water, pale blue sky, a grid every 128). Valve's maps are reference only, for shape and dressing: their VMFs are not in the repo, and the owner's own canal stays dry.",
  "numbers": [
   "How measured: the 13 Route Kanal VMFs (d1_canals_01, 01a, 02, 03, 05 to 13) were cut across at 1,283 places (from path nodes and water brushes, 448 apart), each cut a true slice 4 units fine through world, detail and displacement geometry; 372 cuts are open canal (sky above, long both ways), 281 tunnels. Heights below are over the lowest floor of the cut; widths between the walls.",

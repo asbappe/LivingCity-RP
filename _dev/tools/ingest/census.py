@@ -9,6 +9,7 @@ import re
 import numpy as np
 
 from .common import C, dist, top, med, short, kind, light_value, tone, shares, rnd
+from .geom import SOLID_CLASSES
 
 GROUPS = (("prop_static", "prop_static"), ("prop_physics", "prop_physics*"), ("prop_dynamic", "prop_dynamic*"),
           ("prop_door_rotating", "prop_door_rotating"), ("prop_ragdoll", "prop_ragdoll"), ("light", "light"), ("light_spot", "light_spot"),
@@ -70,7 +71,7 @@ def sky_room(m):
 
 
 def materials(m):
-    vis = [f for f in range(len(m.f_mat)) if m.play_brush(m.f_brush[f]) and not m.mat(f).startswith("tools/")]
+    vis = [f for f in range(len(m.f_mat)) if m.play_brush(m.f_brush[f]) and not m.mat(f).startswith("tools/") and m.b_cls[m.f_brush[f]] in SOLID_CLASSES]
     plain = [f for f in vis if m.f_disp[f] < 0]
     area = collections.defaultdict(float)
     for f in vis:

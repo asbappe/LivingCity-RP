@@ -20,8 +20,8 @@ C = collections.Counter
 def rnd(x, nd=1):
     if x is None:
         return None
-    x = float(x)
-    return int(round(x)) if abs(x - round(x)) < 1e-9 or abs(x) >= 100 else round(x, nd)
+    r = round(float(x), 0 if abs(float(x)) >= 100 else nd)
+    return int(r) if r == int(r) else r
 
 
 def dist(values, step=1.0, keep=24):

@@ -58,6 +58,121 @@ The pictures are drawn by `map_view.py` (flat colours; props as boxes of their t
 | 29 | `29_payphone.png` | the station's arched hall (eye 3145 -1856 820, looking north-west) | A barrel-vaulted hall with arched ribs, two-tone walls (brick below, plaster above), a row of windows high up, lamps on the walls at one height: an arched roof makes a hall. | true-curves, city18-interiors, city18-lighting |
 | 30 | `30_waiting.png` | a train platform (eye -2165 4233 683, looking south-west) | A platform under a deck on steel columns and beams, the track in a channel, brick walls behind, lights in a row along the far wall and under the deck: structure shown, light in rhythm. | city18-lighting, true-curves |
 
+## Valve's Route Kanal (d1_canals_01 to 13) (`_dev/reference/valve_canals/`)
+
+Valve's own Route Kanal (d1_canals_01, 01a, 02, 03, 05 to 13; the Source SDK copies the owner uploaded, 21 November), measured from the VMFs and drawn by map_view.py (R7 to R20) or as true slices across the channel (R1 to R6: dark grey solid, white air, blue water, pale blue sky, a grid every 128). Valve's maps are reference only, for shape and dressing: their VMFs are not in the repo, and the owner's own canal stays dry.
+
+- How measured: the 13 Route Kanal VMFs (d1_canals_01, 01a, 02, 03, 05 to 13) were cut across at 1,283 places (from path nodes and water brushes, 448 apart), each cut a true slice 4 units fine through world, detail and displacement geometry; 372 cuts are open canal (sky above, long both ways), 281 tunnels. Heights below are over the lowest floor of the cut; widths between the walls.
+- d1_canals_01: from the train station's back yard; the first canal runs beside a railway, a narrow wet channel inside a wider dry one; a dry channel 224 to 256 wide and 256 to 320 deep at the start; train tunnels, the junkyard and a boxcar hideout (a citizen and a vortigaunt); 18 Civil Protection.
+- d1_canals_01a: the canal of the outfalls: 512 between walls, water 168 deep at the middle; train cars fallen into it by the road bridges, barnacle tunnels (21 barnacles), a pipe chamber, citizens massacred by the cops.
+- d1_canals_02: the helicopter's slide tunnels (d1_canals.heli_slide_tunnels): dirty water (water_lowdirty001) about 20 deep, 72 keyframe ropes and 16 barnacles.
+- d1_canals_03: underground: the drain room, the water puzzle room, a steam tunnel, 138 breakables (the boards the cops come through); d1_canals.general_dripping_tunnel 9 times.
+- d1_canals_05: the slime: toxicslime002a 20 to 32 deep in 512 wide channels and a wide basin; the Resistance shanty where the airboat is handed over (5 citizens); 64 lights, the most of any of these maps.
+- d1_canals_06: the first airboat run: open canals 1024 wide with walls 256 high, box culverts 512 by 248, the river (canals_river), a red barn, an infested pipe.
+- d1_canals_07: docks and the floodgate base: canals 1024 wide, box tunnels 704 wide and 288 to 352 high, 34 Civil Protection, 22 point_spotlight.
+- d1_canals_08: the floodgates and a warehouse: the deep canal with leaning walls (784 wide at the floor, 1008 at the top, 476 deep), lock gates with fishing boats in the lock, round pipes 384 across.
+- d1_canals_09: the entry tunnel and slime tunnels: round pipes 344 to 384 across; almost empty of loose things (22 physics props, 3 path nodes).
+- d1_canals_10: the banked canal (45 degree banks 284 high), bridges with their decks' undersides 380 to 420 over the floor, a warehouse; a hunter-chopper overhead.
+- d1_canals_11: the Resistance station where the airboat gets its gun (2 citizens, a vortigaunt, a curved roofed hut), the puzzle arena, slime and murky water channels.
+- d1_canals_12: canals among wooden and metal docks (canals_canal_water_creaking_wood, _metal), a deep channel 1024 wide with water 128 deep, three pairs of lock gates; 85 decals, the most of any of these maps.
+- d1_canals_13: the reservoir and the island under the dam's floodgate: the deep channel (1024 wide, leaning walls, water 128 deep), two pairs of lock gates, 520 displacement faces, a vortigaunt at the end.
+- Cross-section, city canal (01, 01a; 36 open cuts): width 128 up most often 512 (11 cuts) or 448 (8), from 256 to 704; the wall top, where the channel opens out for good, 384 (320 to 472); the floor is a dish, reaching the wall line 44 up (8 to 81); water where there is any 92 deep at the middle (60 to 106), 168 in 01a.
+- Cross-section, airboat canals (06 to 13; 318 open cuts): width 128 up most often 1024 (70 cuts), then 896 (23), 832 (21), 512 (20), 704 (19); wall tops 512 (68 cuts) or 256 (64), median 456 (275 to 508); the floor dishes up to the walls, reaching them 90 up (36 to 120); water 34 deep at the middle (28 to 95).
+- Cross-section, slime canal (05; 11 cuts): 512 wide channels (4 cuts) with walls 240 to 256, a wide basin (1600 to 2048); slime 28 deep (15 to 32).
+- Typical profiles, measured exactly: 01a x -3744 y 9088 (R1): 512 between upright walls 452 high, the floor a dish 88 deep (104 wide 8 up, 288 wide 64 up). 07 x 8052 y 8192 (R3): 1024 between upright walls 252 high, the floor dishing 36 to 48 over the outer 250 (8 to 10 degrees), water 32. 08 x -8204 y -4096 (R4): 784 at the floor, 1008 at 448 up, walls leaning back 14 degrees, a step of 36 at 352 and a coping, 476 deep. 10 x 13312 y -1248 (R5): a floor 256 wide with upright sides 32 high, banks at about 45 degrees rising 284 over 312, a berm at 316 and an upright wall to 508.
+- Two channels in one (01 x 704, y -1300 to 2200, R2): a wet channel 400 to 440 wide and 184 to 232 deep (its dish and its water, 52 to 106 deep, deepen along the stretch), with shelves at its top (164 on one side, 36 on the other) and the upper walls standing back to 540 to 600.
+- Banks: true 45 degree banks are rare (the banked canal in 10); most walls stand upright from a dished floor. Ledges a player can stand on (32 wide or more, 72 clear over them): in the city canal 72 wide (42 to 106) at 212 up (146 to 256), on at least one side in 28 of 36 cuts; in the airboat canals 102 wide (64 to 148) at 316 up (244 to 492), on at least one side in 200 of 318 cuts.
+- How the profile changes: in 01 the dish under the water narrows from 400 to 124 and widens again to 304 within 2,500 units; the city canal goes from 440 (01) to 512 (01a); in the airboat maps one canal steps between 1024, 832 and 512 and its walls between 256 and 512. Where a canal enters a culvert, the mouth is a hole 252 to 260 high and 512 wide (896 in 08 and 09) in a wall 48 to 80 thick rising to 504 to 512 (R12, R9).
+- Tunnels and culverts (128 cuts of tunnels up to 760 wide): round pipes 384 across and 352 to 384 high (19 cuts), 320 across (7), 448 by 288 (5); box culverts 512 wide by 256 high (9) or 224 (4), their floors dished 64 into the walls (R6); 512 by 320 with a rounded floor (8); arches 320 wide and 256 to 352 high (9); big box tunnels 704 wide and 288 to 352 high (7); 384 by 320 boxes (4). Small openings are closed by canal_bars002 (128 wide, 124 high; 57 placed).
+- Drain outfalls: a round hole 128 across running 588 deep into the wall (420 to 966; 58 measured), framed by the canal_cap001 ring (154 across; 65 placed), its middle 139 over the floor in front (93 to 172); they come in groups 383 apart (288 to 768), sometimes a pair either side of the middle (R13); decalconcretedrain002a is the commonest drain stain (17 decals, 11 overlays).
+- Bridges (found where a deck crosses the open canal with sky beyond it): 10 street and road bridges, decks 56 to 96 thick (one 124), 80 to 576 along the canal (most 128 to 304), spanning 513 to 896; their undersides 380 to 422 over the floor in the airboat canals (at the walls' tops), 252 to 284 in the city canal (01, 01a). 7 footbridges: 64 to 160 wide, only 4 to 12 thick, 128 to 424 up, spanning 416 to 1072. Bridges carry canal_bridge_railing01 or 02 (32 to 40 high; 108 placed) and 14 canal_bridge_railing_lamps (R14). Where the canal enters a culvert, the wall over the mouth reads as a bridge 214 to 320 thick.
+- Ladders and stairs: ladders are metalladder002 or 001 props in pieces of 128 (61 and 13 pieces), most one or two pieces high (128 or 256), the longest 640; the 27 func_useableladder climb 192 (127 to 238). Every brush step measured (205) rises 8 and runs 12.
+- Fences and railings at the top: mostly fence props: fence03a (108 high, 260 long; 190 placed, end to end 258 apart) and exterior_fence002e (152 high, 512 long; 171 placed), their feet on the wall tops (fence03a about 480 over the canal floor, 351 to 626); handrail04_long (40 high, 128 long; 114 placed) along walks, most about 130 over the canal floor. Brush rails too (metalrail013a/b/c on 1,292 faces) on walks and stairs; brush chain link (metalfence004a, 205 faces) is rare.
+- Locks: a pair of lock gates is locks_large and locks_large_b (each leaf 205 thick, 446 wide, 572 high), set 441 apart so the pair closes about 880; pairs stand 5,185 to 7,300 apart, the length of a lock chamber (08, 12, 13; R15, R18).
+- Lights: the 13 maps hold only 208 light, 315 light_spot and 68 point_spotlight. In the canals: light_cagelight02_on 100 times, 311 over the canal floor (233 to 342), nearest neighbour 811 (581 to 956), and 99 of the 100 have their own light within 96; the light entities' brightness 70 (25 to 100), light_spot 1200 (500 to 1850); colours warm 346, cool 126, white 51. prison_lamp001b (19) hang 314 up, 224 apart; lights_florescent01a (38) about 125 up.
+- Commonest wall materials in the canals (by area of faces within the channels): concretewall074a 8%, 004c 8%, 010c 7%, 074c 7%, 022a 5%, 022b 5%, 004a 4%, 010b 3%, 010a 3%, 064b 3%, 032a 3%, 004b 3%, stone/stonewall051a 3%, concretewall061a 2%, 046i 2%, 073b 2%, 074b 2%, 023b 1%, 061b 1%, wood/woodfloor001a 1%.
+- Commonest floor materials in the canals: concrete/concretefloor018a 17%, nature/dirtfloor012a 14%, nature/blendsandweed005a 9%, concretewall074a 6%, concretefloor013a 4%, concretewall004b 4%, 004c 4%, nature/sandfloor005a 3%, concretefloor010a 3%, 031a 2%, concretewall004a 2%, concretefloor006a 2%, 038a 2%, 039a 2%, 025a 1%, concretewall022b 1%, 074c 1%, 032a 1%, 051a 1%, 022a 1%; sloped faces mostly concretewall004b (36%). Water: water_canals_water2 (243 faces), toxicslime002a (128).
+- Commonest models: oildrum001 264, fence03a 190, shrub_01a 190, exterior_fence002e 171, oildrum001_explosive 141, driftwood_01a 132, tree_deciduous_card_01 130, handrail04_long 114, ivy_01 110, driftwood_02a 106, wood_crate002a 103, light_cagelight02_on 100, rebar001c_64 97, cargo_container01 93, wood_crate001a 81, tree_deciduous_01a 75, concrete_debris256pile001a 74, canal_bridge_railing01 72, concrete_barrier001a 69, canal_cap001 65.
+- Dressing: 178 to 541 prop_static and 22 to 194 prop_physics a map. Within 224 of the canal's middle line: about 4 fixed and 4 loose props per 1024 of city canal, but only about 1 per 1024 in the airboat canals (the boat's lane kept clear; the rest stands on the edges).
+- Decals and overlays: 613 infodecal and 75 info_overlay; commonest ivy02 92, trashdecal01a 90, ivy01 69, trashdecal02a 31, ivy03 26, decalstain002a 17, decalconcretedrain002a 17, lambdaspray_2a 14 (and 5 overlays: the Resistance's way marks, 1 to 5 a map), graffiti001b/c/d 31, decalsigndanger001e 9; overlays: decalconcretedrain002a 11, slimeoverlay001a 8, decalstain006a 6, sign_gate5 5.
+- Soundscapes: 173 env_soundscape (8 to 24 a map) and 173 ambient_generic. Names: canals_slime_tunnel 17, canals_river 12, d1_canals.general_dripping_tunnel 13, canals_slime_outside 10, canals_canal_water_industrial 10, d1_canals_barnacle_tunnel 7, d1_canals_cop_alerted 7, d1_canals_pipe_chamber 6, canals_canal_water 4, canals_tunnel_dry 4, canals_tunnel_wet 3, canals_canal_nowater 1, d1_canals.floodgate_base_ambience 5.
+- Ours: the canal is 512 between walls everywhere (v -256 to 256). Valve's city canal is the same (512 the commonest, 448 next), but its airboat canals are 1024, and Valve changes the width from stretch to stretch (320 to 1216); ours keeps one section so modules chain.
+- Ours: walls 384 high to the rim (z 400 to 784) with a trim at 256 and a fence on top. Valve's city canal walls 384 (320 to 472) and its airboat canals 256 or 512: our height is Valve's city height.
+- Ours: a flat floor with a 45 degree bank (128 out, 128 up) along every wall (the owner asked for the sloped sides). Valve dishes the floor instead: 44 to 90 of fall from the walls to the middle, 8 to 10 degrees in the wide canals; its 45 degree banks are rare (10 only) and much bigger (284 high).
+- Ours: no ledge along a plain canal. Valve puts a walk on at least one side in most stretches (28 of 36 city cuts, 200 of 318 airboat cuts), 72 to 102 wide at 212 to 316 up, with handrail04 rails.
+- Ours: the canal is dry with mud (the owner's own canal is dry; keep it). Valve's are wet: 92 deep in the city canal, 34 in the airboat canals, slime 28.
+- Ours: drain stubs 48 across at 176 up, one per wall per 1024, a stain decal under each. Valve's outfalls are holes 128 across in a canal_cap001 ring, centred 139 up, grouped 383 apart, with decalconcretedrain002a under them.
+- Ours: caged lamps (light_cagelight02) on every third rib, 1536 apart at 260 up, a third dead, light 60. Valve's are 811 apart (581 to 956) at 311 up, each lit one with its own light (brightness 70 typical).
+- Ours: the fence on the rim is brushes (metalfence007a). Valve's are mostly props: fence03a (108 high) and exterior_fence002e (152 high) end to end on the wall tops.
+- Ours: walls concretewall064a, floor concretefloor026a, trim concretewall036a. Valve's canal walls mix many: concretewall074a, 004a/b/c, 010a/b/c, 022a/b, 064b (3%), stonewall051a; floors concretefloor018a, dirtfloor012a, blendsandweed005a; slopes concretewall004b.
+- Ours: a plain stretch scatters about 2.4 odds and ends per 1024 (L / 420 from CANAL_JUNK). Valve's city canal holds about 8 props per 1024 near its middle (half of them loose), its airboat canals about 1 (kept clear), the rest on the edges; oil drums, crates, pallets, tyres, driftwood, shrubs and ivy are the commonest.
+- Ours: the gate (culvert) is 512 by 256, the same as Valve's box culverts (512 by 224 to 256). Valve also uses round pipes 384 across and arches 320 wide; small ones closed by canal_bars002.
+- Ours: m.bridge carries a street at the trim (656), its underside 216 over the floor, 168 under our wall top, 48 thick. Valve's city canal bridges are close to that (undersides 252 to 284, 64 to 96 thick); its airboat canals' bridges sit on the wall tops (380 to 422); its footbridges are thin (4 to 12) and narrow (64 to 160).
+- Ours: m.steps rise 16 and run 24 (the owner's choice for the long flights). Valve's canal steps all rise 8 and run 12.
+- Ours: grime kinds stain, drain, trash, crack, poster, danger, graffiti, number, lambda and others; no ivy. Valve's commonest decal is ivy (ivy01 to 03, 187 of 613) and trash (trashdecal01a/02a, 121).
+- Ours: the plain canal names one soundscape (d1_trainstation.QuietCourtyard). Valve's canal maps use 8 to 24 each, from HL2's own canal set: canals_river, canals_canal_water(_industrial), canals_canal_nowater, canals_slime_tunnel/_outside, canals_tunnel_dry/_wet, d1_canals.general_dripping_tunnel.
+
+| # | File | Where | What it teaches | Lessons |
+|---|---|---|---|---|
+| R1 | `valve_canals/01_city_canal_section.png` | d1_canals_01a, a true cut across the city canal at x -3744 y 9088 | 512 between upright walls 452 high; a dished floor 88 deep, no banks; water 168 deep at the middle. | valve-canal-dish, canal-water |
+| R2 | `valve_canals/02_city_canal_walk_section.png` | d1_canals_01, a true cut across the first canal at x 704 y 200 | A narrow wet channel (432 wide, 188 deep) inside a wider dry one: shelves at its top, the upper walls standing back. | valve-canal-ledges, valve-canal-varies |
+| R3 | `valve_canals/03_airboat_canal_section.png` | d1_canals_07, a true cut across the airboat canal at x 8052 y 8192 | 1024 between upright walls 252 high; the floor dishes 36 to 48 into the walls; water 32 deep. | valve-canal-dish, valve-canal-varies |
+| R4 | `valve_canals/04_battered_canal_section.png` | d1_canals_08, a true cut across the deep canal at x -8204 y -4096 | Walls leaning back 14 degrees, a step of 36 at 352 up and a coping on top: a deep wall is not one plane. | valve-wall-bands, valve-canal-varies |
+| R5 | `valve_canals/05_banked_canal_section.png` | d1_canals_10, a true cut across the banked canal at x 13312 y -1248 | Valve's one true banked canal: a 256 floor, 45 degree banks 284 high, a berm, then an upright wall to 508. | valve-canal-dish |
+| R6 | `valve_canals/06_culverts_section.png` | d1_canals_06 x 12368 y 9088 (box culvert) and d1_canals_09 x 5152 y -8704 (round pipe), cut across | Box culvert 512 by 248 with a dished floor; round pipe about 344 across, crown 360: our gate's size is Valve's. | valve-canal-culverts |
+| R7 | `valve_canals/07_city_canal_iso.png` | d1_canals_01, the first canal from the south-west, cut at z 330 | The wet channel (blue) under shelves, the railway on the upper level: the canal as two stacked channels. | valve-canal-ledges, valve-canal-varies |
+| R8 | `valve_canals/08_city_canal_iso.png` | d1_canals_01a, the canal with the outfalls, from the south-west, cut at z 290 | Water between upright walls, wooden walks and boards hung on the walls, houses straight off the wall tops. | valve-canal-ledges, valve-clutter |
+| R9 | `valve_canals/09_airboat_canal_iso.png` | d1_canals_07, the airboat canal from the south-west, cut at z -200 | A wide water canal bending, its banks dirt where the walls stop, arched tunnel mouths in a thick wall. | valve-canal-varies, valve-canal-culverts |
+| R10 | `valve_canals/10_city_canal_eye.png` | d1_canals_01, down the first canal (eye 704 -700 -40, looking north) | Water between the walls, a dark tunnel mouth ahead to lead the eye, loose things in the water. | valve-light-pools, valve-canal-culverts |
+| R11 | `valve_canals/11_airboat_canal_eye.png` | d1_canals_07, down the airboat canal from the water (eye 8052 8192 -420, looking east) | The lane of water kept clear; rough walls either side; a big prop closing the view. | valve-canal-varies |
+| R12 | `valve_canals/12_culvert_inside_eye.png` | d1_canals_06, inside a box culvert (eye 12900 9088 -170, looking west) | A long 512 by 248 box with slime on its floor, lamps along one wall, the far mouth bright. | valve-canal-culverts, valve-canal-lamps |
+| R13 | `valve_canals/13_outfalls_eye.png` | d1_canals_01a, the canal's end wall (eye -2950 9088 40, looking east) | Two outfalls (the orange squares are the canal_cap001 rings, drawn as their boxes) 256 apart either side of the middle, 242 over the floor; boards and junk below. | valve-canal-outfalls |
+| R14 | `valve_canals/14_bridge_eye.png` | d1_canals_10, under a bridge over the banked canal (eye 13312 -3400 -380, looking south) | The banks run on under the deck; the deck's underside about 384 over the floor, at the walls' tops. | valve-canal-varies |
+| R15 | `valve_canals/15_lock_iso.png` | d1_canals_08, a pair of lock gates across the deep canal, from the south-west, cut at z -250 | Lock gates as Valve's props (locks_large and locks_large_b, drawn as boxes) closing the full width, in recesses of the wall. | valve-canal-locks, props-not-brushes |
+| R16 | `valve_canals/16_shanty_camp_iso.png` | d1_canals_05, the Resistance shanty by the canal, from the south-west, cut at z -250 | A camp is a heap of tin sheets, planks and crates in a walled yard beside the canal, not a tidy hut. | valve-clutter |
+| R17 | `valve_canals/17_slime_iso.png` | d1_canals_05, the slime basin, from the south-west, cut at z -250 | Slime (green) 32 deep around islands of displaced mud with barrels on them; a concrete wall along one side. | canal-water, valve-canal-dish |
+| R18 | `valve_canals/18_reservoir_water_iso.png` | d1_canals_13, the deep water channel and a pair of lock gates, from the south-west, cut at z -100 | The deep channel: 1024 wide, water 128 deep, a walk along one wall, the gates across its end. | valve-canal-locks, valve-canal-ledges |
+| R19 | `valve_canals/19_gun_station_iso.png` | d1_canals_11, the Resistance station where the airboat gets its gun, from the south-west, cut at z -700 | A curved roofed hut by the canal, the station's walls round it: a camp the boat pulls up to. | valve-clutter |
+| R20 | `valve_canals/20_boxcar_hideout_iso.png` | d1_canals_01, the boxcar hideout by the canal, from the south-west, cut at z 120 | A hideout in a goods wagon left by the water: the Resistance live in what the city threw away. | valve-clutter |
+
+## Valve's d1_town_03: Ravenholm, for the infestation quarter (map_raven.py) (`_dev/reference/valve_d1_town_03/`)
+
+Valve's own d1_town_03 (Ravenholm, the town) (the Source SDK copy the owner uploaded, 21 November), measured and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees and poles drawn as trunk and pole). Reference only: the VMF is not in the repo. It is the reference for the infestation quarter still to be built (the zombie-overrun quarter behind the sealed gate, map_raven.py), not for the Resistance town.
+
+- Things: 117 prop_static, 61 prop_physics, 17 prop_dynamic, 0 prop_door_rotating, 1 prop_ragdoll, 82 infodecal, 2 info_overlay, 21 keyframe_rope and 20 move_rope, 85 func_detail, 40 npc entities (makers included).
+- Lights: 8 light (median brightness 8.0), 18 light_spot (median 700.0), 11 point_spotlight, 5 env_sprite; sun "175 230 239 50" at pitch -45, ambient "43 45 57 5"; no fog controller; sky sky_day01_09.
+- Sound: 7 env_soundscape (d1_town.ConcreteBuilding 3, d1_town.Street 2, d1_town.WoodBuilding 1, d1_town.CorpseRoom 1), median radius 128; 27 ambient_generic (town.d1_town_03_zo_attack2, town.d1_town_03_metalgrate3, town.d1_town_03_fz_alert_far1, town.d1_town_03_tram_hit1).
+- Commonest models: pipe02_straight01_long 17, propane_tank001a 13, pulleywheels_small01 12, tree_deciduous_01a-lod 11, oildrum001_explosive 10, pipe02_connector01 9, handrail04_long 6, light_spotlight01_lamp 6, pipe02_straight01_short 5, utilitypole01b 5, lightbulb01a 5, garbage256_composite002b 5, handrail04_corner 4, metalladder002 4, sawblade001a 4.
+- Commonest materials (faces): woodfloor005a 961, plasterwall029d 458, concretefloor013c 403, concretewall032d 342, stonefloor006a 327, plasterwall029a 285, brickwall048i 222, metaltruss022c 221, plasterwall029g 184, brickwall048d 171, brickwall048a 166, rubberroof002a 166, metalwall026a 163, metalwall014a 162, stonewall002a 146, metalwall070a 139, plasterwall029c 132, plasterwall041a 111, metalwall070f 103, metaltruss002a 96.
+- Ceilings: floor to ceiling indoors (cast up from 41 AI nodes) is most often 120 (19 of them), then 168 and 152; 74% of the nodes are outdoors; rooms at those nodes measure about 232 by 376 (median, wall to wall).
+- Stairs: 17 flights of 3 or more steps; steps rise 8 and tread 12 (147 steps), then 8 by 32 (3); median 10 steps a flight.
+- Walls in bands: 82% of wall length over 256 tall changes material at least once; the first change is most often 128 over the wall's foot, then 48 and 16; commonest pairs (below > above): concretewall032d > metalwall070f, brickwall048d > brickwall048a, stonewall016a > plasterwall029c, concretefloor013c > rubberroof002a.
+- Cables: 32 rope spans, median 914 long, slack 100, width 2.0.
+- Spacing (nearest of the same model): utilitypole01b 887 apart (n 5), tree_deciduous_01a-lod 487 apart (n 11), lampfixture01a 374 apart (n 4), light_spotlight01_lamp 870 apart (n 6), tree_cliff_02a 910 apart (n 3).
+- Slopes: 95 sloped faces over 2000 square units; pitch most often 25, 70, 20 degrees; metalwall026a, tileroof003a, metalwall014a.
+- How dark: no env_fog_controller at all; the sun is cold and weak ('175 230 239' at 50, where the City 17 maps use '237 218 143' at 800) and the ambient is '43 45 57' at 5 (the city's: 100). The gloom is a dim cold sun and a dusk sky (sky_day01_09), not fog and not a blocked sky.
+- Pools of light: 11 point_spotlight, each with a light_spot at the same place (warm '255 245 145' or '254 233 146', 400 to 1000), most hung on light_spotlight01_lamp props on house walls, about 500 apart (nearest neighbour median 506); 8 plain light at brightness 8 fill under them; an env_fire with an orange light ('254 174 10', 300). 22 of the 26 lights are warm.
+- Traps lie ready as loose physics props: 13 propane_tank001a, 10 oildrum001_explosive, 4 sawblade001a, one propeller trap (trappropeller_engine, _blade, _lever, a func_rotating); 18 item_healthkit and 6 weapon_frag as rewards.
+- The dead: 15 npc_zombie and 2 npc_fastzombie placed, 10 npc_maker and 7 npc_template_maker, 14 aiscripted_schedule walking them at the player (the same machinery map_raven.py uses); 1 prop_ragdoll (corpse1, a pinned zombie) with 5 npc_crow round it; 1 npc_monk on a roof.
+- No gore decals: 0 blood decals among 82 infodecal. The ground reads abandoned through trashdecal01a 26, ivy03 19, leaves_ground02 17, plaster020a 5 and a little graffiti; the 2 overlays are scorch marks.
+- Streets: no kerbs and no pavements (0 of 119 cross-sections found one); cobbles (stonefloor006a) and displaced ground (36% of the floor area) run house to house; wall to wall most often 640 (384 to 768); house walls along the streets median 352 tall (256 to 512), height over width 0.42.
+- Houses: timber and plaster (woodfloor005a is the commonest material, 961 faces; plasterwall029a/c/d/g; brickwall048a/d/i); a concrete plinth (concretewall032d) under plaster or sheet metal, its top most often at 128, 48 or 16; pitched roofs most often 25 degrees (20 to 35) in corrugated metal (metalwall026a, 014a) and tile (tileroof003a, 004b), and steep 65 to 70 degree faces for mansards and the spire.
+- Boards: 39 plank brushes (most 4 thick, 8 wide, 112 long, or 4 by 16 by 64) in woodfloor005a and wooddoor015a; 25 timber beams 6 to 16 square.
+- Overhead: 21 keyframe_rope and 20 move_rope, spans median 914, slack 100, width 2; utilitypole01b about 887 apart; 12 pulleywheels_small01 and 9 path_track for the cable tram. 74% of the AI nodes are outdoors, many of them on roofs joined by planks and metalladder002 (4).
+- Indoors: ceilings most often 120 over the floor (19 of 41 nodes), rooms about 232 by 376; inside walls are one material in 118 of 163 sampled, else a concrete base to 32 or 64 under plaster.
+- Sound: four soundscapes (d1_town.Street, .WoodBuilding, .ConcreteBuilding, .CorpseRoom, radius 128) and 27 ambient_generic one-shots placed where a scare happens (zombie attack, a metal grate, a fast zombie's far call, the tram hitting, a small fire loop).
+- This part of Ravenholm has no church; its refuges are the rooftops (pictures R4 and R6).
+
+| # | File | Where | What it teaches | Lessons |
+|---|---|---|---|---|
+| R1 | `valve_d1_town_03/01_overview_sw.png` | the whole of this part of Ravenholm from the south-west | Tight blocks of two and three storey houses, every roof a different height and pitch, wires strung over the streets, a cliff and trees behind. | raven-streets-and-houses, skyline-corners |
+| R2 | `valve_d1_town_03/02_overview_ne.png` | the same from the north-east | Streets are narrow gaps between houses, no pavements; yards and passages behind; roofs joined by planks into a second way through. | raven-streets-and-houses, raven-rooftop-refuge |
+| R3 | `valve_d1_town_03/03_street.png` | a street at eye height looking east (eye -3328 -1064 -3544) | House walls straight onto uneven cobbles, a utility pole and its wires, boards and a ladder on the walls, the street closing in at the far end. | raven-streets-and-houses, valve-overhead-cables, valve-boarded-openings |
+| R4 | `valve_d1_town_03/04_rooftops.png` | over the rooftops (eye -2800 -1352 -3416) | The refuge route: plank bridges, ladders and timber scaffolds between roofs, the spire as a landmark; a corpse (red) and the dead (green) below and on the roofs. | raven-rooftop-refuge |
+| R5 | `valve_d1_town_03/05_trap_passage.png` | from a walkway down through timber props to the propeller trap (eye -1479 -1385 -3392) | A trap is a place: a narrow passage under leaning timbers where the dead are drawn in, the trap (engine, blade, lever) at its throat. | raven-traps-and-makers |
+| R6 | `valve_d1_town_03/06_corpse_alley.png` | down onto the yard of the pinned corpse and the crows (eye -1642 -1328 -3326) | One corpse with crows round it tells the story; the yard is otherwise litter and leaves, seen from a roof. | raven-litter-not-gore, raven-rooftop-refuge |
+| R7 | `valve_d1_town_03/07_houses_cut.png` | the houses round the corpse room and the saw blades, cut at 190 over the floor | Small rooms, low ceilings (120), stairs of 8 by 12, furniture on the walls, the corpse room full of the dead waiting. | valve-flat-interiors, raven-traps-and-makers |
+
 ## Valve's d1_trainstation_01 (reference only) (`_dev/reference/valve_d1_trainstation_01/`)
 
 Valve's own d1_trainstation_01 (the Source SDK copy the owner uploaded, 21 November), drawn by map_view.py. Valve's map is reference only: its VMF is not in the repo.
@@ -211,6 +326,33 @@ Valve's own d1_trainstation_05 (Kleiner's lab) (the Source SDK copy the owner up
 | T5.5 | `valve_d1_trainstation_05/05_lab_cut.png` | the lab cut at 190 over the floor | Rooms of 288 by 700, machines at the walls. | room-to-move |
 | T5.6 | `valve_d1_trainstation_05/06_entrance_block.png` | the old block over the lab's way in, from the north-east | An ordinary courtyard building as the cover for a secret place. |  |
 
+## Valve's d2_coast_12: the coast (`_dev/reference/valve_d2_coast_12/`)
+
+Valve's own d2_coast_12 (the coast and the Combine bunkers) (the Source SDK copy the owner uploaded, 21 November), measured and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees and poles drawn as trunk and pole). Reference only: the VMF is not in the repo.
+
+- Things: 151 prop_static, 47 prop_physics, 15 prop_dynamic, 0 prop_door_rotating, 3 prop_ragdoll, 78 infodecal, 22 info_overlay, 29 keyframe_rope and 5 move_rope, 45 func_detail, 80 npc entities (makers included).
+- Lights: 17 light (median brightness 50.0), 24 light_spot (median 2500.0), 27 point_spotlight, 27 env_sprite; sun "237 232 209 70" at pitch -5, ambient "122 140 169 60"; fog "68 84 99" from 1000 to 6600; sky sky_day02_09.
+- Sound: 26 env_soundscape (coast.shoreline_with_antlion_dens 11, coast.combine_controlroom_ambience 6, coast.bridge_concrete_room 6, coast.cliffside 2, coast.generic_ambient_01 1), median radius 96; 18 ambient_generic (novaprospekt.flare_fire, coast.bunker_siren1, coast.bunker_siren2, coast.wind_01).
+- Commonest models: combine_soldier_prisonguard 39, rockgranite01a 16, bunker_gun01 11, wood_crate001a 9, oildrum001_explosive 9, tree_deciduous_card_01 9, rockgranite01b 8, oildrum001 8, tree_deciduous_01a-lod 8, driftwood_01a 7, powertower01 7, dock01_pole01a_128 7, driftwood_clump_02a 6, combine_bunker01 6, combine_light001a 6.
+- Commonest materials (faces): metalwall077a 774, brickwall020a 743, brickwall046a 415, metalpipe002a 230, concretewall036a 220, metaldoor005a 186, reflectivity_10 132, concretewall010a 77, woodfloor005a 73, concretewall022b 66, blenddirtgrass008a 62, metalrail003a 62, concretefloor009a 57, metalgrate014a 56, cliffface001a 46, concretefloor011a 42, gravelfloor004a 37, metaltruss004a 36, metalgate005a 30, concreteceiling002a 28.
+- Ceilings: floor to ceiling indoors (cast up from 132 AI nodes) is most often 144 (81 of them), then 96 and 128; 72% of the nodes are outdoors; rooms at those nodes measure about 372 by 975 (median, wall to wall).
+- Cables: 29 rope spans, median 3897 long, slack 120, width 4.0.
+- Spacing (nearest of the same model): light_spotlight01_lamp 112 apart (n 5), tree_deciduous_01a-lod 725 apart (n 8), tree_deciduous_card_01 1615 apart (n 9).
+- Slopes: 57 sloped faces over 2000 square units; pitch most often 60, 20, 30 degrees; metalpipe002a, brickwall046a, brickwall020a.
+- Bunkers: combine_bunker01 6 and bunker_gun01 11 set into the slopes; 39 Combine soldiers placed (combine_soldier_prisonguard), 11 npc_template_maker, antlion makers.
+- Dusk light: the sun is low and weak ('237 232 209' at 70, pitch -5), ambient '122 140 169' at 60, fog dark blue ('68 84 99') from 1000 to 6600; the bunkers lit cold by 27 point_spotlight and 24 light_spot (median 2500, '144 224 240'), with red lights ('240 48 32') at alarms.
+- Open ground: half the floor is displacement; power lines on powertower01 (7) with spans of about 3900, slack 120, width 4; dock01_pole01a_128 posts 148 apart.
+- Sound: 26 env_soundscape (coast.shoreline_with_antlion_dens 11, coast.combine_controlroom_ambience 6, coast.bridge_concrete_room 6) and sirens and wind one-shots.
+
+| # | File | Where | What it teaches | Lessons |
+|---|---|---|---|---|
+| K1 | `valve_d2_coast_12/01_overview_sw.png` | the coast from the south-west | A long strip of shore and cliff, the bunkers dug in along it. |  |
+| K2 | `valve_d2_coast_12/02_overview_ne.png` | the same from the north-east | Concrete rooms and a bridge set into the land, power lines along the shore. | valve-combine-cold |
+| K3 | `valve_d2_coast_12/03_bunker_mouth.png` | a Combine bunker dug into the slope (eye 2343 -976 736) | A dark mouth in a low concrete face, a curved trench in front; the Combine builds low and heavy outside the city. | combine-kit, valve-combine-cold |
+| K4 | `valve_d2_coast_12/04_clifftop.png` | the cliff-top (eye 4683 4545 799) | Trees, rocks and crates on uneven ground; the old prison tower on the skyline. |  |
+| K5 | `valve_d2_coast_12/05_bunker_cut.png` | the concrete bridge room and bunker from the north-east, roof cut away | Rooms of brick and concrete (brickwall020a, 046a), ceilings 144, one long room after another. |  |
+| K6 | `valve_d2_coast_12/06_shore.png` | the shoreline under the cliffs (eye 8350 6746 822) | Water against cliff faces, posts of the old docks. |  |
+
 ## Valve's d3_c17_13: City 17's streets at war (`_dev/reference/valve_d3_c17_13/`)
 
 Valve's own d3_c17_13 (City 17 streets at war) (the Source SDK copy the owner uploaded, 21 November), measured and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees and poles drawn as trunk and pole). Reference only: the VMF is not in the repo.
@@ -242,44 +384,6 @@ Valve's own d3_c17_13 (City 17 streets at war) (the Source SDK copy the owner up
 | W5 | `valve_d3_c17_13/05_barricade.png` | a barricade at a corner (eye 6522 510 60) | Debris and barricade_short pieces across the cobbles at a corner, leaving a gap to pass. | valve-clutter |
 | W6 | `valve_d3_c17_13/06_block.png` | a block of houses with pitched roofs and a yard, from the south-west | Roofs of 40 to 45 degrees (roof_template001b), a yard inside the block, rubble in it. | skyline-corners |
 
-## Valve's d1_town_03: Ravenholm, for the infestation quarter (map_raven.py) (`_dev/reference/valve_d1_town_03/`)
-
-Valve's own d1_town_03 (Ravenholm, the town) (the Source SDK copy the owner uploaded, 21 November), measured and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees and poles drawn as trunk and pole). Reference only: the VMF is not in the repo. It is the reference for the infestation quarter still to be built (the zombie-overrun quarter behind the sealed gate, map_raven.py), not for the Resistance town.
-
-- Things: 117 prop_static, 61 prop_physics, 17 prop_dynamic, 0 prop_door_rotating, 1 prop_ragdoll, 82 infodecal, 2 info_overlay, 21 keyframe_rope and 20 move_rope, 85 func_detail, 40 npc entities (makers included).
-- Lights: 8 light (median brightness 8.0), 18 light_spot (median 700.0), 11 point_spotlight, 5 env_sprite; sun "175 230 239 50" at pitch -45, ambient "43 45 57 5"; no fog controller; sky sky_day01_09.
-- Sound: 7 env_soundscape (d1_town.ConcreteBuilding 3, d1_town.Street 2, d1_town.WoodBuilding 1, d1_town.CorpseRoom 1), median radius 128; 27 ambient_generic (town.d1_town_03_zo_attack2, town.d1_town_03_metalgrate3, town.d1_town_03_fz_alert_far1, town.d1_town_03_tram_hit1).
-- Commonest models: pipe02_straight01_long 17, propane_tank001a 13, pulleywheels_small01 12, tree_deciduous_01a-lod 11, oildrum001_explosive 10, pipe02_connector01 9, handrail04_long 6, light_spotlight01_lamp 6, pipe02_straight01_short 5, utilitypole01b 5, lightbulb01a 5, garbage256_composite002b 5, handrail04_corner 4, metalladder002 4, sawblade001a 4.
-- Commonest materials (faces): woodfloor005a 961, plasterwall029d 458, concretefloor013c 403, concretewall032d 342, stonefloor006a 327, plasterwall029a 285, brickwall048i 222, metaltruss022c 221, plasterwall029g 184, brickwall048d 171, brickwall048a 166, rubberroof002a 166, metalwall026a 163, metalwall014a 162, stonewall002a 146, metalwall070a 139, plasterwall029c 132, plasterwall041a 111, metalwall070f 103, metaltruss002a 96.
-- Ceilings: floor to ceiling indoors (cast up from 41 AI nodes) is most often 120 (19 of them), then 168 and 152; 74% of the nodes are outdoors; rooms at those nodes measure about 232 by 376 (median, wall to wall).
-- Stairs: 17 flights of 3 or more steps; steps rise 8 and tread 12 (147 steps), then 8 by 32 (3); median 10 steps a flight.
-- Walls in bands: 82% of wall length over 256 tall changes material at least once; the first change is most often 128 over the wall's foot, then 48 and 16; commonest pairs (below > above): concretewall032d > metalwall070f, brickwall048d > brickwall048a, stonewall016a > plasterwall029c, concretefloor013c > rubberroof002a.
-- Cables: 32 rope spans, median 914 long, slack 100, width 2.0.
-- Spacing (nearest of the same model): utilitypole01b 887 apart (n 5), tree_deciduous_01a-lod 487 apart (n 11), lampfixture01a 374 apart (n 4), light_spotlight01_lamp 870 apart (n 6), tree_cliff_02a 910 apart (n 3).
-- Slopes: 95 sloped faces over 2000 square units; pitch most often 25, 70, 20 degrees; metalwall026a, tileroof003a, metalwall014a.
-- How dark: no env_fog_controller at all; the sun is cold and weak ('175 230 239' at 50, where the City 17 maps use '237 218 143' at 800) and the ambient is '43 45 57' at 5 (the city's: 100). The gloom is a dim cold sun and a dusk sky (sky_day01_09), not fog and not a blocked sky.
-- Pools of light: 11 point_spotlight, each with a light_spot at the same place (warm '255 245 145' or '254 233 146', 400 to 1000), most hung on light_spotlight01_lamp props on house walls, about 500 apart (nearest neighbour median 506); 8 plain light at brightness 8 fill under them; an env_fire with an orange light ('254 174 10', 300). 22 of the 26 lights are warm.
-- Traps lie ready as loose physics props: 13 propane_tank001a, 10 oildrum001_explosive, 4 sawblade001a, one propeller trap (trappropeller_engine, _blade, _lever, a func_rotating); 18 item_healthkit and 6 weapon_frag as rewards.
-- The dead: 15 npc_zombie and 2 npc_fastzombie placed, 10 npc_maker and 7 npc_template_maker, 14 aiscripted_schedule walking them at the player (the same machinery map_raven.py uses); 1 prop_ragdoll (corpse1, a pinned zombie) with 5 npc_crow round it; 1 npc_monk on a roof.
-- No gore decals: 0 blood decals among 82 infodecal. The ground reads abandoned through trashdecal01a 26, ivy03 19, leaves_ground02 17, plaster020a 5 and a little graffiti; the 2 overlays are scorch marks.
-- Streets: no kerbs and no pavements (0 of 119 cross-sections found one); cobbles (stonefloor006a) and displaced ground (36% of the floor area) run house to house; wall to wall most often 640 (384 to 768); house walls along the streets median 352 tall (256 to 512), height over width 0.42.
-- Houses: timber and plaster (woodfloor005a is the commonest material, 961 faces; plasterwall029a/c/d/g; brickwall048a/d/i); a concrete plinth (concretewall032d) under plaster or sheet metal, its top most often at 128, 48 or 16; pitched roofs most often 25 degrees (20 to 35) in corrugated metal (metalwall026a, 014a) and tile (tileroof003a, 004b), and steep 65 to 70 degree faces for mansards and the spire.
-- Boards: 39 plank brushes (most 4 thick, 8 wide, 112 long, or 4 by 16 by 64) in woodfloor005a and wooddoor015a; 25 timber beams 6 to 16 square.
-- Overhead: 21 keyframe_rope and 20 move_rope, spans median 914, slack 100, width 2; utilitypole01b about 887 apart; 12 pulleywheels_small01 and 9 path_track for the cable tram. 74% of the AI nodes are outdoors, many of them on roofs joined by planks and metalladder002 (4).
-- Indoors: ceilings most often 120 over the floor (19 of 41 nodes), rooms about 232 by 376; inside walls are one material in 118 of 163 sampled, else a concrete base to 32 or 64 under plaster.
-- Sound: four soundscapes (d1_town.Street, .WoodBuilding, .ConcreteBuilding, .CorpseRoom, radius 128) and 27 ambient_generic one-shots placed where a scare happens (zombie attack, a metal grate, a fast zombie's far call, the tram hitting, a small fire loop).
-- This part of Ravenholm has no church; its refuges are the rooftops (pictures R4 and R6).
-
-| # | File | Where | What it teaches | Lessons |
-|---|---|---|---|---|
-| R1 | `valve_d1_town_03/01_overview_sw.png` | the whole of this part of Ravenholm from the south-west | Tight blocks of two and three storey houses, every roof a different height and pitch, wires strung over the streets, a cliff and trees behind. | raven-streets-and-houses, skyline-corners |
-| R2 | `valve_d1_town_03/02_overview_ne.png` | the same from the north-east | Streets are narrow gaps between houses, no pavements; yards and passages behind; roofs joined by planks into a second way through. | raven-streets-and-houses, raven-rooftop-refuge |
-| R3 | `valve_d1_town_03/03_street.png` | a street at eye height looking east (eye -3328 -1064 -3544) | House walls straight onto uneven cobbles, a utility pole and its wires, boards and a ladder on the walls, the street closing in at the far end. | raven-streets-and-houses, valve-overhead-cables, valve-boarded-openings |
-| R4 | `valve_d1_town_03/04_rooftops.png` | over the rooftops (eye -2800 -1352 -3416) | The refuge route: plank bridges, ladders and timber scaffolds between roofs, the spire as a landmark; a corpse (red) and the dead (green) below and on the roofs. | raven-rooftop-refuge |
-| R5 | `valve_d1_town_03/05_trap_passage.png` | from a walkway down through timber props to the propeller trap (eye -1479 -1385 -3392) | A trap is a place: a narrow passage under leaning timbers where the dead are drawn in, the trap (engine, blade, lever) at its throat. | raven-traps-and-makers |
-| R6 | `valve_d1_town_03/06_corpse_alley.png` | down onto the yard of the pinned corpse and the crows (eye -1642 -1328 -3326) | One corpse with crows round it tells the story; the yard is otherwise litter and leaves, seen from a roof. | raven-litter-not-gore, raven-rooftop-refuge |
-| R7 | `valve_d1_town_03/07_houses_cut.png` | the houses round the corpse room and the saw blades, cut at 190 over the floor | Small rooms, low ceilings (120), stairs of 8 by 12, furniture on the walls, the corpse room full of the dead waiting. | valve-flat-interiors, raven-traps-and-makers |
-
 ## Valve's d3_citadel_01: the Citadel (`_dev/reference/valve_d3_citadel_01/`)
 
 Valve's own d3_citadel_01 (the Citadel's flank) (the Source SDK copy the owner uploaded, 21 November), measured and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees and poles drawn as trunk and pole). Reference only: the VMF is not in the repo.
@@ -306,33 +410,6 @@ Valve's own d3_citadel_01 (the Citadel's flank) (the Source SDK copy the owner u
 | C5 | `valve_d3_citadel_01/05_combine_inside.png` | inside (eye 7012 4576 -1535) | Combine metal in leaning frames, all one material, lit cold. | valve-combine-cold |
 | C6 | `valve_d3_citadel_01/06_rock_and_metal.png` | old stone and cliff against a Combine pillar (eye 6180 4494 -514) | The pillar is plain and dark; the rock and brick round it carry the texture. | valve-combine-cold |
 
-## Valve's d2_coast_12: the coast (`_dev/reference/valve_d2_coast_12/`)
-
-Valve's own d2_coast_12 (the coast and the Combine bunkers) (the Source SDK copy the owner uploaded, 21 November), measured and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees and poles drawn as trunk and pole). Reference only: the VMF is not in the repo.
-
-- Things: 151 prop_static, 47 prop_physics, 15 prop_dynamic, 0 prop_door_rotating, 3 prop_ragdoll, 78 infodecal, 22 info_overlay, 29 keyframe_rope and 5 move_rope, 45 func_detail, 80 npc entities (makers included).
-- Lights: 17 light (median brightness 50.0), 24 light_spot (median 2500.0), 27 point_spotlight, 27 env_sprite; sun "237 232 209 70" at pitch -5, ambient "122 140 169 60"; fog "68 84 99" from 1000 to 6600; sky sky_day02_09.
-- Sound: 26 env_soundscape (coast.shoreline_with_antlion_dens 11, coast.combine_controlroom_ambience 6, coast.bridge_concrete_room 6, coast.cliffside 2, coast.generic_ambient_01 1), median radius 96; 18 ambient_generic (novaprospekt.flare_fire, coast.bunker_siren1, coast.bunker_siren2, coast.wind_01).
-- Commonest models: combine_soldier_prisonguard 39, rockgranite01a 16, bunker_gun01 11, wood_crate001a 9, oildrum001_explosive 9, tree_deciduous_card_01 9, rockgranite01b 8, oildrum001 8, tree_deciduous_01a-lod 8, driftwood_01a 7, powertower01 7, dock01_pole01a_128 7, driftwood_clump_02a 6, combine_bunker01 6, combine_light001a 6.
-- Commonest materials (faces): metalwall077a 774, brickwall020a 743, brickwall046a 415, metalpipe002a 230, concretewall036a 220, metaldoor005a 186, reflectivity_10 132, concretewall010a 77, woodfloor005a 73, concretewall022b 66, blenddirtgrass008a 62, metalrail003a 62, concretefloor009a 57, metalgrate014a 56, cliffface001a 46, concretefloor011a 42, gravelfloor004a 37, metaltruss004a 36, metalgate005a 30, concreteceiling002a 28.
-- Ceilings: floor to ceiling indoors (cast up from 132 AI nodes) is most often 144 (81 of them), then 96 and 128; 72% of the nodes are outdoors; rooms at those nodes measure about 372 by 975 (median, wall to wall).
-- Cables: 29 rope spans, median 3897 long, slack 120, width 4.0.
-- Spacing (nearest of the same model): light_spotlight01_lamp 112 apart (n 5), tree_deciduous_01a-lod 725 apart (n 8), tree_deciduous_card_01 1615 apart (n 9).
-- Slopes: 57 sloped faces over 2000 square units; pitch most often 60, 20, 30 degrees; metalpipe002a, brickwall046a, brickwall020a.
-- Bunkers: combine_bunker01 6 and bunker_gun01 11 set into the slopes; 39 Combine soldiers placed (combine_soldier_prisonguard), 11 npc_template_maker, antlion makers.
-- Dusk light: the sun is low and weak ('237 232 209' at 70, pitch -5), ambient '122 140 169' at 60, fog dark blue ('68 84 99') from 1000 to 6600; the bunkers lit cold by 27 point_spotlight and 24 light_spot (median 2500, '144 224 240'), with red lights ('240 48 32') at alarms.
-- Open ground: half the floor is displacement; power lines on powertower01 (7) with spans of about 3900, slack 120, width 4; dock01_pole01a_128 posts 148 apart.
-- Sound: 26 env_soundscape (coast.shoreline_with_antlion_dens 11, coast.combine_controlroom_ambience 6, coast.bridge_concrete_room 6) and sirens and wind one-shots.
-
-| # | File | Where | What it teaches | Lessons |
-|---|---|---|---|---|
-| K1 | `valve_d2_coast_12/01_overview_sw.png` | the coast from the south-west | A long strip of shore and cliff, the bunkers dug in along it. |  |
-| K2 | `valve_d2_coast_12/02_overview_ne.png` | the same from the north-east | Concrete rooms and a bridge set into the land, power lines along the shore. | valve-combine-cold |
-| K3 | `valve_d2_coast_12/03_bunker_mouth.png` | a Combine bunker dug into the slope (eye 2343 -976 736) | A dark mouth in a low concrete face, a curved trench in front; the Combine builds low and heavy outside the city. | combine-kit, valve-combine-cold |
-| K4 | `valve_d2_coast_12/04_clifftop.png` | the cliff-top (eye 4683 4545 799) | Trees, rocks and crates on uneven ground; the old prison tower on the skyline. |  |
-| K5 | `valve_d2_coast_12/05_bunker_cut.png` | the concrete bridge room and bunker from the north-east, roof cut away | Rooms of brick and concrete (brickwall020a, 046a), ceilings 144, one long room after another. |  |
-| K6 | `valve_d2_coast_12/06_shore.png` | the shoreline under the cliffs (eye 8350 6746 822) | Water against cliff faces, posts of the old docks. |  |
-
 ## Valve's vehicles test map (`_dev/reference/valve_vehicles/`)
 
 Valve's own sdk_vehicles (a vehicle test map in the Source SDK copy the owner uploaded, 21 November), drawn by map_view.py. Reference only: the VMF is not in the repo.
@@ -344,83 +421,6 @@ Valve's own sdk_vehicles (a vehicle test map in the Source SDK copy the owner up
 | # | File | Where | What it teaches | Lessons |
 |---|---|---|---|---|
 | VH1 | `valve_vehicles/01_overview_sw.png` | the whole test map from the south-west | One big rolling displacement field ringed by rock cliff props: room to drive, nothing else. |  |
-
-## Valve's Route Kanal (d1_canals_01 to 13) (`_dev/reference/valve_canals/`)
-
-Valve's own Route Kanal (d1_canals_01, 01a, 02, 03, 05 to 13; the Source SDK copies the owner uploaded, 21 November), measured from the VMFs and drawn by map_view.py (R7 to R20) or as true slices across the channel (R1 to R6: dark grey solid, white air, blue water, pale blue sky, a grid every 128). Valve's maps are reference only, for shape and dressing: their VMFs are not in the repo, and the owner's own canal stays dry.
-
-- How measured: the 13 Route Kanal VMFs (d1_canals_01, 01a, 02, 03, 05 to 13) were cut across at 1,283 places (from path nodes and water brushes, 448 apart), each cut a true slice 4 units fine through world, detail and displacement geometry; 372 cuts are open canal (sky above, long both ways), 281 tunnels. Heights below are over the lowest floor of the cut; widths between the walls.
-- d1_canals_01: from the train station's back yard; the first canal runs beside a railway, a narrow wet channel inside a wider dry one; a dry channel 224 to 256 wide and 256 to 320 deep at the start; train tunnels, the junkyard and a boxcar hideout (a citizen and a vortigaunt); 18 Civil Protection.
-- d1_canals_01a: the canal of the outfalls: 512 between walls, water 168 deep at the middle; train cars fallen into it by the road bridges, barnacle tunnels (21 barnacles), a pipe chamber, citizens massacred by the cops.
-- d1_canals_02: the helicopter's slide tunnels (d1_canals.heli_slide_tunnels): dirty water (water_lowdirty001) about 20 deep, 72 keyframe ropes and 16 barnacles.
-- d1_canals_03: underground: the drain room, the water puzzle room, a steam tunnel, 138 breakables (the boards the cops come through); d1_canals.general_dripping_tunnel 9 times.
-- d1_canals_05: the slime: toxicslime002a 20 to 32 deep in 512 wide channels and a wide basin; the Resistance shanty where the airboat is handed over (5 citizens); 64 lights, the most of any of these maps.
-- d1_canals_06: the first airboat run: open canals 1024 wide with walls 256 high, box culverts 512 by 248, the river (canals_river), a red barn, an infested pipe.
-- d1_canals_07: docks and the floodgate base: canals 1024 wide, box tunnels 704 wide and 288 to 352 high, 34 Civil Protection, 22 point_spotlight.
-- d1_canals_08: the floodgates and a warehouse: the deep canal with leaning walls (784 wide at the floor, 1008 at the top, 476 deep), lock gates with fishing boats in the lock, round pipes 384 across.
-- d1_canals_09: the entry tunnel and slime tunnels: round pipes 344 to 384 across; almost empty of loose things (22 physics props, 3 path nodes).
-- d1_canals_10: the banked canal (45 degree banks 284 high), bridges with their decks' undersides 380 to 420 over the floor, a warehouse; a hunter-chopper overhead.
-- d1_canals_11: the Resistance station where the airboat gets its gun (2 citizens, a vortigaunt, a curved roofed hut), the puzzle arena, slime and murky water channels.
-- d1_canals_12: canals among wooden and metal docks (canals_canal_water_creaking_wood, _metal), a deep channel 1024 wide with water 128 deep, three pairs of lock gates; 85 decals, the most of any of these maps.
-- d1_canals_13: the reservoir and the island under the dam's floodgate: the deep channel (1024 wide, leaning walls, water 128 deep), two pairs of lock gates, 520 displacement faces, a vortigaunt at the end.
-- Cross-section, city canal (01, 01a; 36 open cuts): width 128 up most often 512 (11 cuts) or 448 (8), from 256 to 704; the wall top, where the channel opens out for good, 384 (320 to 472); the floor is a dish, reaching the wall line 44 up (8 to 81); water where there is any 92 deep at the middle (60 to 106), 168 in 01a.
-- Cross-section, airboat canals (06 to 13; 318 open cuts): width 128 up most often 1024 (70 cuts), then 896 (23), 832 (21), 512 (20), 704 (19); wall tops 512 (68 cuts) or 256 (64), median 456 (275 to 508); the floor dishes up to the walls, reaching them 90 up (36 to 120); water 34 deep at the middle (28 to 95).
-- Cross-section, slime canal (05; 11 cuts): 512 wide channels (4 cuts) with walls 240 to 256, a wide basin (1600 to 2048); slime 28 deep (15 to 32).
-- Typical profiles, measured exactly: 01a x -3744 y 9088 (R1): 512 between upright walls 452 high, the floor a dish 88 deep (104 wide 8 up, 288 wide 64 up). 07 x 8052 y 8192 (R3): 1024 between upright walls 252 high, the floor dishing 36 to 48 over the outer 250 (8 to 10 degrees), water 32. 08 x -8204 y -4096 (R4): 784 at the floor, 1008 at 448 up, walls leaning back 14 degrees, a step of 36 at 352 and a coping, 476 deep. 10 x 13312 y -1248 (R5): a floor 256 wide with upright sides 32 high, banks at about 45 degrees rising 284 over 312, a berm at 316 and an upright wall to 508.
-- Two channels in one (01 x 704, y -1300 to 2200, R2): a wet channel 400 to 440 wide and 184 to 232 deep (its dish and its water, 52 to 106 deep, deepen along the stretch), with shelves at its top (164 on one side, 36 on the other) and the upper walls standing back to 540 to 600.
-- Banks: true 45 degree banks are rare (the banked canal in 10); most walls stand upright from a dished floor. Ledges a player can stand on (32 wide or more, 72 clear over them): in the city canal 72 wide (42 to 106) at 212 up (146 to 256), on at least one side in 28 of 36 cuts; in the airboat canals 102 wide (64 to 148) at 316 up (244 to 492), on at least one side in 200 of 318 cuts.
-- How the profile changes: in 01 the dish under the water narrows from 400 to 124 and widens again to 304 within 2,500 units; the city canal goes from 440 (01) to 512 (01a); in the airboat maps one canal steps between 1024, 832 and 512 and its walls between 256 and 512. Where a canal enters a culvert, the mouth is a hole 252 to 260 high and 512 wide (896 in 08 and 09) in a wall 48 to 80 thick rising to 504 to 512 (R12, R9).
-- Tunnels and culverts (128 cuts of tunnels up to 760 wide): round pipes 384 across and 352 to 384 high (19 cuts), 320 across (7), 448 by 288 (5); box culverts 512 wide by 256 high (9) or 224 (4), their floors dished 64 into the walls (R6); 512 by 320 with a rounded floor (8); arches 320 wide and 256 to 352 high (9); big box tunnels 704 wide and 288 to 352 high (7); 384 by 320 boxes (4). Small openings are closed by canal_bars002 (128 wide, 124 high; 57 placed).
-- Drain outfalls: a round hole 128 across running 588 deep into the wall (420 to 966; 58 measured), framed by the canal_cap001 ring (154 across; 65 placed), its middle 139 over the floor in front (93 to 172); they come in groups 383 apart (288 to 768), sometimes a pair either side of the middle (R13); decalconcretedrain002a is the commonest drain stain (17 decals, 11 overlays).
-- Bridges (found where a deck crosses the open canal with sky beyond it): 10 street and road bridges, decks 56 to 96 thick (one 124), 80 to 576 along the canal (most 128 to 304), spanning 513 to 896; their undersides 380 to 422 over the floor in the airboat canals (at the walls' tops), 252 to 284 in the city canal (01, 01a). 7 footbridges: 64 to 160 wide, only 4 to 12 thick, 128 to 424 up, spanning 416 to 1072. Bridges carry canal_bridge_railing01 or 02 (32 to 40 high; 108 placed) and 14 canal_bridge_railing_lamps (R14). Where the canal enters a culvert, the wall over the mouth reads as a bridge 214 to 320 thick.
-- Ladders and stairs: ladders are metalladder002 or 001 props in pieces of 128 (61 and 13 pieces), most one or two pieces high (128 or 256), the longest 640; the 27 func_useableladder climb 192 (127 to 238). Every brush step measured (205) rises 8 and runs 12.
-- Fences and railings at the top: mostly fence props: fence03a (108 high, 260 long; 190 placed, end to end 258 apart) and exterior_fence002e (152 high, 512 long; 171 placed), their feet on the wall tops (fence03a about 480 over the canal floor, 351 to 626); handrail04_long (40 high, 128 long; 114 placed) along walks, most about 130 over the canal floor. Brush rails too (metalrail013a/b/c on 1,292 faces) on walks and stairs; brush chain link (metalfence004a, 205 faces) is rare.
-- Locks: a pair of lock gates is locks_large and locks_large_b (each leaf 205 thick, 446 wide, 572 high), set 441 apart so the pair closes about 880; pairs stand 5,185 to 7,300 apart, the length of a lock chamber (08, 12, 13; R15, R18).
-- Lights: the 13 maps hold only 208 light, 315 light_spot and 68 point_spotlight. In the canals: light_cagelight02_on 100 times, 311 over the canal floor (233 to 342), nearest neighbour 811 (581 to 956), and 99 of the 100 have their own light within 96; the light entities' brightness 70 (25 to 100), light_spot 1200 (500 to 1850); colours warm 346, cool 126, white 51. prison_lamp001b (19) hang 314 up, 224 apart; lights_florescent01a (38) about 125 up.
-- Commonest wall materials in the canals (by area of faces within the channels): concretewall074a 8%, 004c 8%, 010c 7%, 074c 7%, 022a 5%, 022b 5%, 004a 4%, 010b 3%, 010a 3%, 064b 3%, 032a 3%, 004b 3%, stone/stonewall051a 3%, concretewall061a 2%, 046i 2%, 073b 2%, 074b 2%, 023b 1%, 061b 1%, wood/woodfloor001a 1%.
-- Commonest floor materials in the canals: concrete/concretefloor018a 17%, nature/dirtfloor012a 14%, nature/blendsandweed005a 9%, concretewall074a 6%, concretefloor013a 4%, concretewall004b 4%, 004c 4%, nature/sandfloor005a 3%, concretefloor010a 3%, 031a 2%, concretewall004a 2%, concretefloor006a 2%, 038a 2%, 039a 2%, 025a 1%, concretewall022b 1%, 074c 1%, 032a 1%, 051a 1%, 022a 1%; sloped faces mostly concretewall004b (36%). Water: water_canals_water2 (243 faces), toxicslime002a (128).
-- Commonest models: oildrum001 264, fence03a 190, shrub_01a 190, exterior_fence002e 171, oildrum001_explosive 141, driftwood_01a 132, tree_deciduous_card_01 130, handrail04_long 114, ivy_01 110, driftwood_02a 106, wood_crate002a 103, light_cagelight02_on 100, rebar001c_64 97, cargo_container01 93, wood_crate001a 81, tree_deciduous_01a 75, concrete_debris256pile001a 74, canal_bridge_railing01 72, concrete_barrier001a 69, canal_cap001 65.
-- Dressing: 178 to 541 prop_static and 22 to 194 prop_physics a map. Within 224 of the canal's middle line: about 4 fixed and 4 loose props per 1024 of city canal, but only about 1 per 1024 in the airboat canals (the boat's lane kept clear; the rest stands on the edges).
-- Decals and overlays: 613 infodecal and 75 info_overlay; commonest ivy02 92, trashdecal01a 90, ivy01 69, trashdecal02a 31, ivy03 26, decalstain002a 17, decalconcretedrain002a 17, lambdaspray_2a 14 (and 5 overlays: the Resistance's way marks, 1 to 5 a map), graffiti001b/c/d 31, decalsigndanger001e 9; overlays: decalconcretedrain002a 11, slimeoverlay001a 8, decalstain006a 6, sign_gate5 5.
-- Soundscapes: 173 env_soundscape (8 to 24 a map) and 173 ambient_generic. Names: canals_slime_tunnel 17, canals_river 12, d1_canals.general_dripping_tunnel 13, canals_slime_outside 10, canals_canal_water_industrial 10, d1_canals_barnacle_tunnel 7, d1_canals_cop_alerted 7, d1_canals_pipe_chamber 6, canals_canal_water 4, canals_tunnel_dry 4, canals_tunnel_wet 3, canals_canal_nowater 1, d1_canals.floodgate_base_ambience 5.
-- Ours: the canal is 512 between walls everywhere (v -256 to 256). Valve's city canal is the same (512 the commonest, 448 next), but its airboat canals are 1024, and Valve changes the width from stretch to stretch (320 to 1216); ours keeps one section so modules chain.
-- Ours: walls 384 high to the rim (z 400 to 784) with a trim at 256 and a fence on top. Valve's city canal walls 384 (320 to 472) and its airboat canals 256 or 512: our height is Valve's city height.
-- Ours: a flat floor with a 45 degree bank (128 out, 128 up) along every wall (the owner asked for the sloped sides). Valve dishes the floor instead: 44 to 90 of fall from the walls to the middle, 8 to 10 degrees in the wide canals; its 45 degree banks are rare (10 only) and much bigger (284 high).
-- Ours: no ledge along a plain canal. Valve puts a walk on at least one side in most stretches (28 of 36 city cuts, 200 of 318 airboat cuts), 72 to 102 wide at 212 to 316 up, with handrail04 rails.
-- Ours: the canal is dry with mud (the owner's own canal is dry; keep it). Valve's are wet: 92 deep in the city canal, 34 in the airboat canals, slime 28.
-- Ours: drain stubs 48 across at 176 up, one per wall per 1024, a stain decal under each. Valve's outfalls are holes 128 across in a canal_cap001 ring, centred 139 up, grouped 383 apart, with decalconcretedrain002a under them.
-- Ours: caged lamps (light_cagelight02) on every third rib, 1536 apart at 260 up, a third dead, light 60. Valve's are 811 apart (581 to 956) at 311 up, each lit one with its own light (brightness 70 typical).
-- Ours: the fence on the rim is brushes (metalfence007a). Valve's are mostly props: fence03a (108 high) and exterior_fence002e (152 high) end to end on the wall tops.
-- Ours: walls concretewall064a, floor concretefloor026a, trim concretewall036a. Valve's canal walls mix many: concretewall074a, 004a/b/c, 010a/b/c, 022a/b, 064b (3%), stonewall051a; floors concretefloor018a, dirtfloor012a, blendsandweed005a; slopes concretewall004b.
-- Ours: a plain stretch scatters about 2.4 odds and ends per 1024 (L / 420 from CANAL_JUNK). Valve's city canal holds about 8 props per 1024 near its middle (half of them loose), its airboat canals about 1 (kept clear), the rest on the edges; oil drums, crates, pallets, tyres, driftwood, shrubs and ivy are the commonest.
-- Ours: the gate (culvert) is 512 by 256, the same as Valve's box culverts (512 by 224 to 256). Valve also uses round pipes 384 across and arches 320 wide; small ones closed by canal_bars002.
-- Ours: m.bridge carries a street at the trim (656), its underside 216 over the floor, 168 under our wall top, 48 thick. Valve's city canal bridges are close to that (undersides 252 to 284, 64 to 96 thick); its airboat canals' bridges sit on the wall tops (380 to 422); its footbridges are thin (4 to 12) and narrow (64 to 160).
-- Ours: m.steps rise 16 and run 24 (the owner's choice for the long flights). Valve's canal steps all rise 8 and run 12.
-- Ours: grime kinds stain, drain, trash, crack, poster, danger, graffiti, number, lambda and others; no ivy. Valve's commonest decal is ivy (ivy01 to 03, 187 of 613) and trash (trashdecal01a/02a, 121).
-- Ours: the plain canal names one soundscape (d1_trainstation.QuietCourtyard). Valve's canal maps use 8 to 24 each, from HL2's own canal set: canals_river, canals_canal_water(_industrial), canals_canal_nowater, canals_slime_tunnel/_outside, canals_tunnel_dry/_wet, d1_canals.general_dripping_tunnel.
-
-| # | File | Where | What it teaches | Lessons |
-|---|---|---|---|---|
-| R1 | `valve_canals/01_city_canal_section.png` | d1_canals_01a, a true cut across the city canal at x -3744 y 9088 | 512 between upright walls 452 high; a dished floor 88 deep, no banks; water 168 deep at the middle. | valve-canal-dish, canal-water |
-| R2 | `valve_canals/02_city_canal_walk_section.png` | d1_canals_01, a true cut across the first canal at x 704 y 200 | A narrow wet channel (432 wide, 188 deep) inside a wider dry one: shelves at its top, the upper walls standing back. | valve-canal-ledges, valve-canal-varies |
-| R3 | `valve_canals/03_airboat_canal_section.png` | d1_canals_07, a true cut across the airboat canal at x 8052 y 8192 | 1024 between upright walls 252 high; the floor dishes 36 to 48 into the walls; water 32 deep. | valve-canal-dish, valve-canal-varies |
-| R4 | `valve_canals/04_battered_canal_section.png` | d1_canals_08, a true cut across the deep canal at x -8204 y -4096 | Walls leaning back 14 degrees, a step of 36 at 352 up and a coping on top: a deep wall is not one plane. | valve-wall-bands, valve-canal-varies |
-| R5 | `valve_canals/05_banked_canal_section.png` | d1_canals_10, a true cut across the banked canal at x 13312 y -1248 | Valve's one true banked canal: a 256 floor, 45 degree banks 284 high, a berm, then an upright wall to 508. | valve-canal-dish |
-| R6 | `valve_canals/06_culverts_section.png` | d1_canals_06 x 12368 y 9088 (box culvert) and d1_canals_09 x 5152 y -8704 (round pipe), cut across | Box culvert 512 by 248 with a dished floor; round pipe about 344 across, crown 360: our gate's size is Valve's. | valve-canal-culverts |
-| R7 | `valve_canals/07_city_canal_iso.png` | d1_canals_01, the first canal from the south-west, cut at z 330 | The wet channel (blue) under shelves, the railway on the upper level: the canal as two stacked channels. | valve-canal-ledges, valve-canal-varies |
-| R8 | `valve_canals/08_city_canal_iso.png` | d1_canals_01a, the canal with the outfalls, from the south-west, cut at z 290 | Water between upright walls, wooden walks and boards hung on the walls, houses straight off the wall tops. | valve-canal-ledges, valve-clutter |
-| R9 | `valve_canals/09_airboat_canal_iso.png` | d1_canals_07, the airboat canal from the south-west, cut at z -200 | A wide water canal bending, its banks dirt where the walls stop, arched tunnel mouths in a thick wall. | valve-canal-varies, valve-canal-culverts |
-| R10 | `valve_canals/10_city_canal_eye.png` | d1_canals_01, down the first canal (eye 704 -700 -40, looking north) | Water between the walls, a dark tunnel mouth ahead to lead the eye, loose things in the water. | valve-light-pools, valve-canal-culverts |
-| R11 | `valve_canals/11_airboat_canal_eye.png` | d1_canals_07, down the airboat canal from the water (eye 8052 8192 -420, looking east) | The lane of water kept clear; rough walls either side; a big prop closing the view. | valve-canal-varies |
-| R12 | `valve_canals/12_culvert_inside_eye.png` | d1_canals_06, inside a box culvert (eye 12900 9088 -170, looking west) | A long 512 by 248 box with slime on its floor, lamps along one wall, the far mouth bright. | valve-canal-culverts, valve-canal-lamps |
-| R13 | `valve_canals/13_outfalls_eye.png` | d1_canals_01a, the canal's end wall (eye -2950 9088 40, looking east) | Two outfalls (the orange squares are the canal_cap001 rings, drawn as their boxes) 256 apart either side of the middle, 242 over the floor; boards and junk below. | valve-canal-outfalls |
-| R14 | `valve_canals/14_bridge_eye.png` | d1_canals_10, under a bridge over the banked canal (eye 13312 -3400 -380, looking south) | The banks run on under the deck; the deck's underside about 384 over the floor, at the walls' tops. | valve-canal-varies |
-| R15 | `valve_canals/15_lock_iso.png` | d1_canals_08, a pair of lock gates across the deep canal, from the south-west, cut at z -250 | Lock gates as Valve's props (locks_large and locks_large_b, drawn as boxes) closing the full width, in recesses of the wall. | valve-canal-locks, props-not-brushes |
-| R16 | `valve_canals/16_shanty_camp_iso.png` | d1_canals_05, the Resistance shanty by the canal, from the south-west, cut at z -250 | A camp is a heap of tin sheets, planks and crates in a walled yard beside the canal, not a tidy hut. | valve-clutter |
-| R17 | `valve_canals/17_slime_iso.png` | d1_canals_05, the slime basin, from the south-west, cut at z -250 | Slime (green) 32 deep around islands of displaced mud with barrels on them; a concrete wall along one side. | canal-water, valve-canal-dish |
-| R18 | `valve_canals/18_reservoir_water_iso.png` | d1_canals_13, the deep water channel and a pair of lock gates, from the south-west, cut at z -100 | The deep channel: 1024 wide, water 128 deep, a walk along one wall, the gates across its end. | valve-canal-locks, valve-canal-ledges |
-| R19 | `valve_canals/19_gun_station_iso.png` | d1_canals_11, the Resistance station where the airboat gets its gun, from the south-west, cut at z -700 | A curved roofed hut by the canal, the station's walls round it: a camp the boat pulls up to. | valve-clutter |
-| R20 | `valve_canals/20_boxcar_hideout_iso.png` | d1_canals_01, the boxcar hideout by the canal, from the south-west, cut at z 120 | A hideout in a goods wagon left by the water: the Resistance live in what the city threw away. | valve-clutter |
 
 ## The lessons
 
@@ -672,7 +672,7 @@ Corner buildings get a cut (chamfered) corner, often with a doorway; rooflines g
 - **Checked by:** review
 - **Tags:** facades, city18
 
-- **See:** `01_overview_sw.png`, `02_overview_ne.png`, `03_street.png`, `08_combine.png`, `09_payphone.png`, `11_street_main.png`, `12_block_above.png`, `13_toilet.png`, `27_square_above.png`, `valve_d1_trainstation_01/01_overview_sw.png`, `valve_d1_trainstation_02/02_overview_ne.png`, `valve_d1_trainstation_03/02_overview_ne.png`, `valve_d1_trainstation_04/02_overview_ne.png`, `valve_d3_c17_13/06_block.png`, `valve_d1_town_03/01_overview_sw.png`
+- **See:** `01_overview_sw.png`, `02_overview_ne.png`, `03_street.png`, `08_combine.png`, `09_payphone.png`, `11_street_main.png`, `12_block_above.png`, `13_toilet.png`, `27_square_above.png`, `valve_d1_town_03/01_overview_sw.png`, `valve_d1_trainstation_01/01_overview_sw.png`, `valve_d1_trainstation_02/02_overview_ne.png`, `valve_d1_trainstation_03/02_overview_ne.png`, `valve_d1_trainstation_04/02_overview_ne.png`, `valve_d3_c17_13/06_block.png`
 
 ### A town is not one straight line (`town-shape`)
 
@@ -723,7 +723,7 @@ Use the Combine's own props: booths (combine_booth_short01a/med01a), buttresses 
 - **Checked by:** review
 - **Tags:** combine, city18
 
-- **See:** `07_cells.png`, `08_combine.png`, `18_cells.png`, `19_combine.png`, `22_street_section.png`, `26_combine_plan.png`, `27_square_above.png`, `valve_d1_trainstation_01/07_interrogation.png`, `valve_d1_trainstation_02/04_plaza.png`, `valve_d3_citadel_01/03_cliff_cut.png`, `valve_d2_coast_12/03_bunker_mouth.png`
+- **See:** `07_cells.png`, `08_combine.png`, `18_cells.png`, `19_combine.png`, `22_street_section.png`, `26_combine_plan.png`, `27_square_above.png`, `valve_d1_trainstation_01/07_interrogation.png`, `valve_d1_trainstation_02/04_plaza.png`, `valve_d2_coast_12/03_bunker_mouth.png`, `valve_d3_citadel_01/03_cliff_cut.png`
 
 ### Do not replace what the owner liked (`keep-what-works`)
 
@@ -875,7 +875,7 @@ A wall taller than about 256 is never one texture. Lay it in courses: a base (st
 - **Checked by:** map_lint.py bare: a face of one material 384 long and 256 tall with nothing within 24 in front of it (printed by every build as LOOK: bare).
 - **Tags:** facades, materials, valve
 
-- **See:** `valve_d1_trainstation_01/01_overview_sw.png`, `valve_d1_trainstation_01/02_overview_ne.png`, `valve_d1_trainstation_01/12_courtyard_plan.png`, `valve_d1_trainstation_02/01_overview_sw.png`, `valve_d1_trainstation_02/03_station_front.png`, `valve_canals/04_battered_canal_section.png`
+- **See:** `valve_canals/04_battered_canal_section.png`, `valve_d1_trainstation_01/01_overview_sw.png`, `valve_d1_trainstation_01/02_overview_ne.png`, `valve_d1_trainstation_01/12_courtyard_plan.png`, `valve_d1_trainstation_02/01_overview_sw.png`, `valve_d1_trainstation_02/03_station_front.png`
 
 ### Columns on a rhythm (`valve-column-rhythm`)
 
@@ -897,7 +897,7 @@ Let places be dim and light them in pools: a fixture over each door, each way on
 - **Checked by:** map_lint.py offlamp checks that an off lamp has no light; pools are judged in the viewer.
 - **Tags:** lighting, valve
 
-- **See:** `valve_d1_trainstation_01/03_platform.png`, `valve_d1_trainstation_01/07_interrogation.png`, `valve_d1_trainstation_01/08_platform.png`, `valve_d1_trainstation_03/04_corridor.png`, `valve_d1_trainstation_05/04_teleport.png`, `valve_d3_citadel_01/04_pipe.png`, `valve_canals/10_city_canal_eye.png`
+- **See:** `valve_canals/10_city_canal_eye.png`, `valve_d1_trainstation_01/03_platform.png`, `valve_d1_trainstation_01/07_interrogation.png`, `valve_d1_trainstation_01/08_platform.png`, `valve_d1_trainstation_03/04_corridor.png`, `valve_d1_trainstation_05/04_teleport.png`, `valve_d3_citadel_01/04_pipe.png`
 
 ### Clutter on the edges (`valve-clutter`)
 
@@ -908,7 +908,7 @@ Dress floors with small loose things (bottles, cans, papers, boxes, suitcases, c
 - **Checked by:** map_lint.py overlap and map_floating.py catch clutter inside or above things; the clear lane is judged in the viewer.
 - **Tags:** props, valve
 
-- **See:** `valve_d1_trainstation_01/03_platform.png`, `valve_d1_trainstation_01/05_payphone.png`, `valve_d1_trainstation_01/11_platform_plan.png`, `valve_d1_trainstation_02/04_plaza.png`, `valve_d1_trainstation_04/03_alley.png`, `valve_d1_trainstation_05/03_lab.png`, `valve_d3_c17_13/02_overview_ne.png`, `valve_d3_c17_13/04_square.png`, `valve_d3_c17_13/05_barricade.png`, `valve_canals/08_city_canal_iso.png`, `valve_canals/16_shanty_camp_iso.png`, `valve_canals/19_gun_station_iso.png`, `valve_canals/20_boxcar_hideout_iso.png`
+- **See:** `valve_canals/08_city_canal_iso.png`, `valve_canals/16_shanty_camp_iso.png`, `valve_canals/19_gun_station_iso.png`, `valve_canals/20_boxcar_hideout_iso.png`, `valve_d1_trainstation_01/03_platform.png`, `valve_d1_trainstation_01/05_payphone.png`, `valve_d1_trainstation_01/11_platform_plan.png`, `valve_d1_trainstation_02/04_plaza.png`, `valve_d1_trainstation_04/03_alley.png`, `valve_d1_trainstation_05/03_lab.png`, `valve_d3_c17_13/02_overview_ne.png`, `valve_d3_c17_13/04_square.png`, `valve_d3_c17_13/05_barricade.png`
 
 ### Streets in Valve's proportions (`valve-street-proportions`)
 
@@ -941,7 +941,7 @@ A City 17 flat: ceiling 120 over the floor (112 to 128), corridors 64 to 128 wid
 - **Checked by:** review
 - **Tags:** interiors, valve
 
-- **See:** `valve_d1_trainstation_03/04_corridor.png`, `valve_d1_trainstation_03/05_flat.png`, `valve_d1_trainstation_03/06_stairwell.png`, `valve_d1_trainstation_03/07_block_cut.png`, `valve_d1_town_03/07_houses_cut.png`
+- **See:** `valve_d1_town_03/07_houses_cut.png`, `valve_d1_trainstation_03/04_corridor.png`, `valve_d1_trainstation_03/05_flat.png`, `valve_d1_trainstation_03/06_stairwell.png`, `valve_d1_trainstation_03/07_block_cut.png`
 
 ### Boards nailed across, at Valve's size (`valve-boarded-openings`)
 
@@ -952,7 +952,7 @@ Boarded doors and windows are plank brushes 4 thick, 8 wide and 112 long (or 16 
 - **Checked by:** review
 - **Tags:** interiors, facades, valve, infestation, ravenholm
 
-- **See:** `valve_d1_trainstation_04/05_attic.png`, `valve_d1_town_03/03_street.png`
+- **See:** `valve_d1_town_03/03_street.png`, `valve_d1_trainstation_04/05_attic.png`
 
 ### Wires over the streets (`valve-overhead-cables`)
 
@@ -963,7 +963,7 @@ Streets carry cables: spans of 700 to 900 between poles and wall mounts, slack 1
 - **Checked by:** no-floating-ropes check; review
 - **Tags:** streets, props, valve
 
-- **See:** `valve_d1_trainstation_02/04_plaza.png`, `valve_d1_trainstation_04/04_street.png`, `valve_d1_town_03/03_street.png`
+- **See:** `valve_d1_town_03/03_street.png`, `valve_d1_trainstation_02/04_plaza.png`, `valve_d1_trainstation_04/04_street.png`
 
 ### The Combine is one cold metal; the old city is banded and warm (`valve-combine-cold`)
 
@@ -974,7 +974,7 @@ Combine places: one metal over whole walls, no courses, lit cold and bright (lig
 - **Checked by:** review
 - **Tags:** combine, lighting, valve
 
-- **See:** `valve_d1_trainstation_02/02_overview_ne.png`, `valve_d1_trainstation_04/02_overview_ne.png`, `valve_d3_c17_13/01_overview_sw.png`, `valve_d3_c17_13/03_street.png`, `valve_d3_citadel_01/01_overview_sw.png`, `valve_d3_citadel_01/02_overview_ne.png`, `valve_d3_citadel_01/03_cliff_cut.png`, `valve_d3_citadel_01/05_combine_inside.png`, `valve_d3_citadel_01/06_rock_and_metal.png`, `valve_d2_coast_12/02_overview_ne.png`, `valve_d2_coast_12/03_bunker_mouth.png`
+- **See:** `valve_d1_trainstation_02/02_overview_ne.png`, `valve_d1_trainstation_04/02_overview_ne.png`, `valve_d2_coast_12/02_overview_ne.png`, `valve_d2_coast_12/03_bunker_mouth.png`, `valve_d3_c17_13/01_overview_sw.png`, `valve_d3_c17_13/03_street.png`, `valve_d3_citadel_01/01_overview_sw.png`, `valve_d3_citadel_01/02_overview_ne.png`, `valve_d3_citadel_01/03_cliff_cut.png`, `valve_d3_citadel_01/05_combine_inside.png`, `valve_d3_citadel_01/06_rock_and_metal.png`
 
 ### Ravenholm's dark: weak cold light and warm pools (`raven-dusk-light`)
 

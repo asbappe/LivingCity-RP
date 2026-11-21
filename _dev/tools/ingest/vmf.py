@@ -19,6 +19,7 @@ import numpy as np
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 import map_view as mv      # (the shared tokenizer: one tree of blocks)
+from . import sky
 
 EPS = 0.06
 SPECIAL = ("!self", "!activator", "!caller", "!player", "!picker", "!pvsplayer", "!speechtarget")
@@ -190,7 +191,7 @@ class Map:
                     elif e.name == "world":
                         self._world(e, True)
         self._build()
-        self._find_sky()
+        sky.find(self)
         self.by_name = {}
         for e in self.ents:
             if e.name:
@@ -338,72 +339,6 @@ class Map:
             n_l.append(n); d_l.append(d)
             faces.append(_order(v, n) if len(v) >= 3 else None)
         return np.array(n_l), np.array(d_l), faces
-
-    # ---- the 3D skybox room
-    def _find_sky(self):
-        self.sky_box, self.sky_camera, self.sky_how = None, None, "no sky_camera"
-        cams = [e for e in self.ents if e.cls == "sky_camera" and not e.hidden and e.origin is not None]
-        if not cams:
-            return
-        c = cams[0].origin
-        self.sky_camera = c
-        skyb = [i for i in range(len(self.b_owner)) if self.b_owner[i] < 0 and not self.b_hidden[i]
-                and any("toolsskybox" in self.mats[self.f_mat[f]] for f in range(self.b_f0[i], self.b_f1[i]))]
-        lo, hi = [None] * 3, [None] * 3
-        for i in skyb:
-            bl, bh = self.b_lo[i], self.b_hi[i]
-            for ax in range(3):
-                o1, o2 = (ax + 1) % 3, (ax + 2) % 3
-                if bl[o1] <= c[o1] <= bh[o1] and bl[o2] <= c[o2] <= bh[o2]:
-                    if bl[ax] >= c[ax] and (hi[ax] is None or bl[ax] < hi[ax]):
-                        hi[ax] = bl[ax]
-                    if bh[ax] <= c[ax] and (lo[ax] is None or bh[ax] > lo[ax]):
-                        lo[ax] = bh[ax]
-        if all(v is not None for v in lo + hi):
-            box = (np.array(lo) - 16, np.array(hi) + 16)
-            how = "sealed by toolsskybox"
-        else:      # (not sealed: the touching brushes round the camera, as long as no player start is inside)
-            box, how = self._sky_component(c), "touching brushes round the sky_camera"
-        if box is None:
-            self.sky_how = "sky_camera found but no room round it"
-            return
-        starts = [e.origin for e in self.ents if e.cls in ("info_player_start", "info_node") and e.origin is not None and not e.hidden]
-        inside = [p for p in starts if np.all(p >= box[0]) and np.all(p <= box[1])]
-        if starts and len(inside) > max(2, 0.2 * len(starts)):
-            self.sky_how = "room round the sky_camera holds the play space: not used"
-            return
-        self.sky_box, self.sky_how = box, how
-        cen = (self.b_lo + self.b_hi) / 2
-        self.b_sky = np.all((cen >= box[0]) & (cen <= box[1]), axis=1)
-        for e in self.ents:
-            if e.origin is not None and np.all(e.origin >= box[0]) and np.all(e.origin <= box[1]):
-                e.sky = True
-
-    def _sky_component(self, c, reach=8192.0, pad=2.0):
-        near = np.where(np.all((self.b_lo <= c + reach) & (self.b_hi >= c - reach), axis=1) & ~self.b_hidden)[0]
-        if not len(near):
-            return None
-        lo, hi = self.b_lo[near], self.b_hi[near]
-        par = list(range(len(near)))
-
-        def f(i):
-            while par[i] != i:
-                par[i] = par[par[i]]
-                i = par[i]
-            return i
-        touch = np.all((lo[:, None] <= hi[None] + pad) & (lo[None] <= hi[:, None] + pad), axis=2)
-        for i, j in zip(*np.nonzero(np.triu(touch, 1))):
-            a, b = f(i), f(j)
-            if a != b:
-                par[a] = b
-        roots = np.array([f(i) for i in range(len(near))])
-        best = None
-        for r in set(roots.tolist()):
-            idx = np.where(roots == r)[0]
-            l, h = lo[idx].min(axis=0), hi[idx].max(axis=0)
-            if np.all(c >= l - 1) and np.all(c <= h + 1) and (best is None or len(idx) < best[0]):
-                best = (len(idx), l, h)
-        return (best[1], best[2]) if best else None
 
     # ---- helpers every part uses
     def corners(self, f):

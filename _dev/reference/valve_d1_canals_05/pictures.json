@@ -1,0 +1,180 @@
+{
+ "title": "Valve's d1_canals_05 (draft)",
+ "draft": true,
+ "about": "Valve's own d1_canals_05, measured by map_ingest.py on 2026-11-21 (play space only: hidden objects and the 3D skybox room left out) and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees drawn as trunk and canopy, poles thin). Reference only: the VMF is not in the repo. DRAFT: a reviewer fills in what each picture teaches, picks the lessons, and removes \"draft\".",
+ "numbers": [
+  "Things: 231 prop_static, 175 prop_physics, 12 prop_dynamic, 0 prop_door_rotating, 7 prop_ragdoll, 26 infodecal, 24 info_overlay, 12 keyframe_rope and 8 move_rope, 208 func_detail, 45 npc entities (makers included); left out: 43 hidden objects and the 3D skybox room (45 props, scale 16).",
+  "Lights: 64 light (median brightness 70), 26 light_spot (median 1000), 3 point_spotlight, 5 env_sprite; sun \"248 233 186 800\" at pitch -35, ambient \"140 167 174 150\"; fog \"149 158 166\" from 512 to 15000.0; sky sky_day01_05_hdr.",
+  "Sound: 14 env_soundscape (d1_canals.general_dripping_tunnel 4, canals_slime_tunnel 3, d1_canals_05_shanty_approach 2, canals_slime_outside 2, canals_tunnel_dry 2, d1_canals_05_shanty 1), median radius 213; 27 ambient_generic (d1_canals_05.canister_open, zombie.alert, d1_canals.citizen_gate.wheellock1, d1_canals_05.shanty_battle).",
+  "Commonest models: shrub_01a 47, oildrum001 23, wood_crate001a 17, dockplank01b 14, fence03a 14, cinderblock01a 13, prison_cellwindow002a 12, metal_panel01a 11, fence02b 11, utilitypole02b 11, dockplank01a 10, wood_pallet001a 10, tree_deciduous_01a 10, tree_deciduous_03a 9, pipesystem01a 8.",
+  "Commonest materials (faces): stonewall051a 2156, metalpipe003a 996, concretewall022b 617, woodfloor006a 614, concretewall022a 371, metalwall001a 364, metalwall061f 258, stonewall029a 190, concretewall055b 164, metalwall002a 145, concretefloor012a 144, metalwall069a 143, blendtoxictoxic004a 128, gravelfloor003a 117, metalfloor003a 117, metalwall014a 112, stonewall029c 108, concretewall073a 101, concretewall064b 97, metalcrate002d 95.",
+  "Ceilings: floor to ceiling indoors (cast up from 151 AI nodes) is most often 104 (20), then 120 (14) and 56 (11); 45% of the nodes are outdoors; corridors 116 wide under 138, rooms 256 by 931 (medians, wall to wall).",
+  "Stairs: 2 flights of 3 or more steps; steps (rise x tread) 8x12 6; median 4 steps a flight.",
+  "Streets: no kerbed roadway in 86 cuts through outdoor AI nodes; wall to wall most often 512; walls median 128 tall (height over width 0.2).",
+  "Channels (65 cuts across the shortest way, 51 at water: 10 open, 18 tunnels): open width 64 up most often 512, 128 up 544; rims (where a side opens out) 192; water 23.8 deep; ledges 136 wide at 240 up; tunnels most often 512 wide, roof 256 up.",
+  "Cables: 13 rope spans, median 339 long, slack 67.5, width 1.",
+  "Spacing (nearest of the same model): fence03a 260 apart (n 14), fence02b 151 apart (n 11), utilitypole02b 1024 apart (n 11), tree_deciduous_01a 295 apart (n 10), tree_deciduous_03a 302 apart (n 9), fence02a 105 apart (n 4).",
+  "Walls in bands: 32% of wall columns over 256 tall change material at least once; the first change most often 256 or 64 over the foot; pairs (below > above): concretewall022b > concretewall064b, concretewall073a > concretewall022a, gravelfloor003a > stonewall051a.",
+  "Slopes: 201 sloped faces over 2000 square units, most often 45, 65, 55 degrees; metalwall001a, stonewall051a, concretewall010a.",
+  "Props: 419 in play; on exact 90s: static 43%, physics 16%; physics tilted 74% (lying most often trash, debris, cinder); statics touching a wall 48%, physics within 16 of one 40%; 0.354 props per 100 by 100 of play (0.176 physics).",
+  "Wiring: 356 output lines from 141 entities; commonest OnTrigger>Trigger 16, OnTrigger>Enable 16, OnTrigger>PlaySound 15; 32 relays (longest chain 2), 3 counters, 1 timers, 2 makers, 1 buttons working doors; 2 lines name nothing.",
+  "Craft: texture scale 0.25 on 68% of faces; lightmapscale 16 on 88% (near the nodes 98%, far 85%); func_detail 63% of brushes; 117 trim strips (2x4 38, 8x8 25); 156 chamfers; 104 displacements.",
+  "Light by fixture: light_spotlight02_lamp: light_spot 186 209 203 600, cone 30/15, pitch -40; lightbulb01a: light_spot 254 216 146 300, cone 75/30, pitch -90; lightbulb01a: light 254 216 146 8; light_cagelight02_on: light_spot 241 214 173 1200, cone 75/45, pitch -80.",
+  "Grime: 26 infodecal and 24 info_overlay; on walls plant 7, trash 6, stain 3, grate 3; wall decals median 96 over the floor."
+ ],
+ "pictures": [
+  {
+   "n": "c05.1",
+   "file": "01_overview_sw.png",
+   "where": "the whole map from the south-west",
+   "teaches": "TODO",
+   "lessons": [],
+   "view": {
+    "iso": "SW",
+    "box": [
+     -646,
+     -5372,
+     7196,
+     7368
+    ]
+   }
+  },
+  {
+   "n": "c05.2",
+   "file": "02_overview_ne.png",
+   "where": "the same from the north-east",
+   "teaches": "TODO",
+   "lessons": [],
+   "view": {
+    "iso": "NE",
+    "box": [
+     -646,
+     -5372,
+     7196,
+     7368
+    ]
+   }
+  },
+  {
+   "n": "c05.3",
+   "file": "03_cutaway.png",
+   "where": "the busiest knot of props (32 near 4999 1189) from the south-west, cut at -245",
+   "teaches": "TODO",
+   "lessons": [],
+   "view": {
+    "iso": "SW",
+    "box": [
+     4100,
+     289,
+     5900,
+     2089
+    ],
+    "cut": -245
+   }
+  },
+  {
+   "n": "c05.4",
+   "file": "04_out.png",
+   "where": "eye level outdoors, looking south-east (eye 5047 -2595 -372, yaw 315), near shrub_01a, beam01c, oildrum001; soundscape canals_slime_outside",
+   "teaches": "TODO",
+   "lessons": [],
+   "view": {
+    "eye": [
+     5047,
+     -2595,
+     -372
+    ],
+    "yaw": 315,
+    "pitch": 3
+   }
+  },
+  {
+   "n": "c05.5",
+   "file": "05_out.png",
+   "where": "eye level outdoors, looking north-west (eye 4920 916 -403, yaw 135), near fence02b, furniturechair001a, cinderblock01a; soundscape d1_canals_05_shanty",
+   "teaches": "TODO",
+   "lessons": [],
+   "view": {
+    "eye": [
+     4920,
+     916,
+     -403
+    ],
+    "yaw": 135,
+    "pitch": 3
+   }
+  },
+  {
+   "n": "c05.6",
+   "file": "06_out.png",
+   "where": "eye level outdoors, looking east (eye 5204 -3717 -392, yaw 0), near metal_panel01a, oildrum001, driftwood_01a; soundscape canals_slime_outside",
+   "teaches": "TODO",
+   "lessons": [],
+   "view": {
+    "eye": [
+     5204,
+     -3717,
+     -392
+    ],
+    "yaw": 0,
+    "pitch": 3
+   }
+  },
+  {
+   "n": "c05.7",
+   "file": "07_in.png",
+   "where": "eye level indoors, looking south (eye 4239 3248 -411, yaw 270), near wood_crate002a, wood_crate001a, citizenradio; soundscape d1_canals_05_shanty_approach",
+   "teaches": "TODO",
+   "lessons": [],
+   "view": {
+    "eye": [
+     4239,
+     3248,
+     -411
+    ],
+    "yaw": 270,
+    "pitch": 3
+   }
+  },
+  {
+   "n": "c05.8",
+   "file": "08_in.png",
+   "where": "eye level indoors, looking north (eye 4212 2472 -413, yaw 90), near fence02b, wood_crate002a, laundry_basket002; soundscape d1_canals_05_shanty_approach",
+   "teaches": "TODO",
+   "lessons": [],
+   "view": {
+    "eye": [
+     4212,
+     2472,
+     -413
+    ],
+    "yaw": 90,
+    "pitch": 3
+   }
+  },
+  {
+   "n": "c05.9",
+   "file": "09_in.png",
+   "where": "eye level indoors, looking east (eye 6834 1567 -384, yaw 0), near pipesystem01a, powerbox02a, metalgascan; soundscape canals_slime_tunnel",
+   "teaches": "TODO",
+   "lessons": [],
+   "view": {
+    "eye": [
+     6834,
+     1567,
+     -384
+    ],
+    "yaw": 0,
+    "pitch": 3
+   }
+  },
+  {
+   "n": "c05.10",
+   "file": "10_channel_section.png",
+   "where": "a true cut across the channel at x 6640 y -256",
+   "teaches": "TODO",
+   "lessons": []
+  }
+ ],
+ "pictures_folder": "valve_d1_canals_05"
+}
