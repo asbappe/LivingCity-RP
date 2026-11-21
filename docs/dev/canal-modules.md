@@ -61,6 +61,11 @@ What a module is and how to lay them out: `docs/dev/map-building.md` ("Canal mod
 | `tee` | 512 | a standard gate in the left wall, for another piece or layout to join | none | `map_modules.py` |
 | `tunnel` | 1024 | the canal under the city: a covered stretch of any length ("tunnel 1536") | none | `map_mods_d.py` |
 | `shed` | 2112 | plain canal with a train's shed on the street beside it (two to a straight run; needs "upper left") | none | `map_modules.py` |
+| `widen` | 768 | the canal widens from 512 to 1024 in two steps (its next module must be a wide one) | none | `map_mods_e.py` |
+| `narrow` | 768 | the wide canal narrows back to 512 in two steps | none | `map_mods_e.py` |
+| `wide` | 1024 | the wide canal: 1024 between upright walls, any length ("wide 2048"), a walk along a wall from 2048 | none | `map_mods_e.py` |
+| `widetee` | 512 | a standard gate in the wide canal's left wall, for another piece or layout to join | none | `map_mods_e.py` |
+| `basin` | 2048 | the canal widens into a 1024 basin and narrows again (512 at both ends; "basin 2560") | none | `map_mods_e.py` |
 
 ## Each module, in its own words
 
@@ -76,6 +81,8 @@ channel of dark water between two walks under a round arch, to a cap to delete w
 of theirs (their sewers: water about z 267 to 291 in a channel, walks either side, round-arched mouths).
 Grime: drain stains under the inflow pipes, stains down the walls, trash in the corners, a number by the valve, and
 the lambda by the head of the stair (the Resistance's way down, as Half-Life 2 marks its routes).
+Along the right wall a walk (walk_ledge: 72 wide, 208 up, the city's handrail on it, stairs at its near end, its
+far end railed), the bank stopping either side of it in slopes: the drain's keepers' way along the canal.
 Named for the game: lc_drain_grate (a func_door: Open lifts it, Close drops it; unseen, the four bar panels riding
 on it), lc_drain_junction (the chamber), lc_drain_cache (the case at the bottom of the sump: a place the game can
 fill).
@@ -96,6 +103,8 @@ strip of water down its middle (where the channel is long enough), and it says R
 on its wall, blood on the walls and the floor, a headcrab canister come through its roof, a zombie's torso and a
 burnt body under it, a wheelbarrow on its side, rags; one oil lamp still burning low, one caged lamp dead.
 "overflow 1280": how far the channel reaches from the canal's middle (default 1024).
+Along the right wall a walk (walk_ledge: 72 wide, 208 up, the city's handrail on it, stairs at its near end, its
+far end railed), the bank stopping either side of it in slopes: where the sluice keepers watch the plate.
 Named for the game: lc_overflow_sluice (a func_door: Open lifts it), lc_overflow_moan (a sound from beyond the
 plate, silent until told: PlaySound), lc_overflow_far (the channel's far end), lc_overflow_lever (the lever by the
 plate, a button that starts locked: Unlock lets players lift and drop the plate by hand, Lock takes it back;
@@ -420,6 +429,8 @@ fuel drums, bare bulbs on their cables under the tie beams. In the floor at the 
 (lc_boathouse_hatch: a func_door that slides aside, worked by the button over the workbench) covers steps down to a
 cellar 192 square of damp brick where the contraband is kept: the Combine's own ammunition crates and a supply crate,
 shelves, a radio (lc_boathouse_cellar). Sounds: the watery hallway in the shed, a dripping tunnel in the cellar.
+Along the right wall a walk (walk_ledge: 72 wide, 208 up, the city's handrail on it, stairs at its near end, its
+far end railed), the bank stopping either side of it in slopes: a lookout over the slipway.
 Named for the game: lc_boathouse_door (func_door: Open, Close, Toggle), lc_boathouse_hatch (func_door, the same),
 lc_boathouse_button_in, lc_boathouse_button_out, lc_boathouse_hatch_button (func_buttons that already work in the
 map), lc_boathouse_cellar (an info_target in the cellar: the cache).
@@ -1387,8 +1398,10 @@ the living rooms are panelled in wood/woodwall006a (the owner uses it 87 times).
 Plain canal. "straight 1536": that long. Add "bridge" for a street carried over its middle, "pipes" for a pair of
 pipes across it, "bare" for nothing left lying in it (otherwise a few odds and ends from CANAL_JUNK, the same every
 time for one place: crates, tyres, a cart, a cone, a bicycle, a washing machine). Puddles and trash on the floor; a
-quiet courtyard's soundscape (wind and the city over the walls). The walls' caged lamps, drain stains and graffiti
-come with every canal (dress_canal_walls).
+quiet courtyard's soundscape (wind and the city over the walls). The walls' caged lamps, outfalls, drain stains and
+graffiti come with every canal (dress_canal_walls). From 1536 long a walk along the left wall (walk_ledge: 72 wide,
+208 up, stairs at each end where it is long enough; "flip" puts it on the right, "noledge" leaves it out), clear
+of a bridge or pipes.
 
 ### `jog`
 
@@ -1416,3 +1429,35 @@ Left as brushes: the kerbs, the vault and its ribs, the doorway's frame and plan
 Plain canal, and on the street beside it a brick shed over the tracks, where a train waits out of sight. A
 straight run needs two for a train: one to come out of, one to go into. Only where the layout has a street
 ("upper left"). "shed 2304": that long (by itself it is the length of the train and a little over).
+
+### `widen`
+
+The canal widens from 512 to 1024 (Valve's airboat canals' width): 256 of the city canal, then its walls step out
+128 each side, and again 256 on, so it is 1024 wide for its last 256. The banks wrap round both steps (a slope up
+each step's face, a quarter pyramid on each corner) and stop against the wide canal's upright walls. The next
+module must be a wide one ("wide", "widetee", a turn) or "narrow".
+
+### `narrow`
+
+The wide canal narrows back to 512: the mirror of "widen" (256 of the wide canal, two steps in, 256 of the city
+canal), the banks starting again round the steps.
+
+### `wide`
+
+The wide canal: 1024 between upright walls, the floor sagging about 42 to its middle, any length ("wide 2048").
+From 2048 long a walk along its left wall (walk_ledge: 102 wide, 320 up, stairs at each end; "flip" puts it on the
+right, "noledge" leaves it out). "bridge": a street carried over its middle; "pipes": a pair of pipes across it.
+Odds and ends lying in it, puddles and trash, the quiet courtyard's soundscape; the lamps and outfalls come with
+its walls (dress_canal_walls).
+
+### `widetee`
+
+A way off the wide canal's left wall: the same standard gate as "tee" (512 wide, 256 high), capped until another
+piece or another layout's start is joined to it, a number painted beside it. The canal is 1024 wide at both ends.
+
+### `basin`
+
+The canal widens into a basin 1024 wide and narrows again within one module, so it starts and ends on the plain
+512 section and goes anywhere a plain stretch does ("basin 2560": that long, 2048 at least). Its steps are those of
+"widen" and "narrow" (the banks wrap round them); between them the wide canal's upright walls and deeper dish, a
+walk along the left wall where the basin is 2560 or longer ("flip": the right; "noledge": none), odds and ends.
