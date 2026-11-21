@@ -2661,7 +2661,7 @@ def tent(m, u1, v1, z, L, W, H, along, open_end, mat, mat_floor, guy=30):
         return (a, c, dz) if along == "u" else (c, a, dz)
     half = W // 2
     back, front = (0, L) if open_end == "hi" else (L, 0)
-    sh = [para(pt(0, 0) + (z,), vec(L, 0, 0), vec(0, half, H), (0, 0, 3), mat), para(pt(0, W) + (z,), vec(L, 0, 0), vec(0, -half, H), (0, 0, 3), mat)]
+    sh = [para(pt(1, 0) + (z,), vec(L - 2, 0, 0), vec(0, half, H), (0, 0, 3), mat), para(pt(2, W) + (z,), vec(L - 4, 0, 0), vec(0, -half, H), (0, 0, 3), mat)]   # (each side stops short of the ends by a different unit: no two end faces in one plane)
     axis = "x" if along == "u" else "y"
     base = u1 if along == "u" else v1
     cross = v1 if along == "u" else u1
@@ -2716,14 +2716,34 @@ def m_camp(m, opt):
     m.open(192, 256, 1088, 704, floor=tz, mat=DIRT)
     m.side(192, 256, 1088, 704)
     # --- the tents: (low corner, length, width, height, the way it lies, its open end, cloth, mat, how far its pegs stand) ---
-    tents = [(240, 400, 144, 112, 88, "u", "hi", tarp, rug, 30), (896, 420, 128, 96, 80, "u", "lo", c3, rug, 30), (440, 568, 120, 104, 84, "v", "lo", PLASTER, c6, 12),
-             (700, 560, 128, 128, 96, "v", "lo", tarp, c3, 12), (330, 284, 112, 96, 72, "v", "hi", c6, rug, 20), (800, 280, 124, 108, 90, "v", "hi", PLASTER, rug, 18)]
-    for k, (u, v, L, W, H, along, end, cloth, mat, guy) in enumerate(tents):
-        cu, cv = tent(m, u, v, tz, L, W, H, along, end, cloth, mat, guy)
-        m.target("lc_camp_tent_%d" % (k + 1), cu, cv, tz + 8, 0)
-        if k in (0, 3):
-            mattress(m, cu, cv + (20 if along == "u" else 0), 0 if along == "u" else 90, tz + 2)
-        m.light(cu, cv, tz + 30, "255 190 130 5")
+    # three ridge tents, no two the same size; then people making do: a pallet shelter under a tarp, a lean-to against
+    # the back wall, a car's wreck with a tarp run off its side
+    tents = [(1, 240, 400, 144, 112, 88, "u", "hi", tarp, rug, 30), (5, 330, 284, 112, 96, 72, "v", "hi", c6, rug, 20), (6, 800, 280, 124, 108, 90, "v", "hi", PLASTER, rug, 18)]
+    beds = {}
+    for (k, u, v, L, W, H, along, end, cloth, mat, guy) in tents:
+        beds[k] = tent(m, u, v, tz, L, W, H, along, end, cloth, mat, guy)
+    mattress(m, beds[1][0], beds[1][1] + 20, 0, tz + 2)
+    for (u, v, yaw) in ((978, 431, 90), (978, 519, 90), (1017, 475, 0)):                   # the pallet shelter: pallets stood on edge, a tarp on them
+        tilted(m, "prop_dynamic_override", M_ + "props_junk/wood_pallet001a.mdl", u, v, tz + 34, yaw, 90, 0, {"solid": "6"})
+    m.shapes([para((936, 426, tz + 62), (86, 0, 8), (0, 98, 0), (0, 0, 3), c3)])
+    m.det([(946, 440, tz, 1008, 510, tz + 2)], rug)
+    beds[2] = (976, 475)
+    m.shapes([para((440, 600, tz), (120, 0, 0), (0, 104, 112), (0, 0, 3), PLASTER),           # the lean-to against the back wall
+              prism([(600, tz), (703, tz), (703, tz + 111)], "x", 441, 443, c6), prism([(600, tz), (703, tz), (703, tz + 111)], "x", 557, 559, c6)])
+    m.det([(450, 640, tz, 550, 700, tz + 2)], c6)
+    beds[3] = (500, 668)
+    m.static(M_ + "props_vehicles/car002b_physics.mdl", 764, 642, 0, tz)                       # the car's wreck, a tarp off its side
+    m.shapes([para((690, 548, tz), (140, 0, 0), (0, 52, 50), (0, 0, 3), tarp)])
+    m.det([(700, 556, tz, 820, 596, tz + 2)], c3)
+    mattress(m, 760, 576, 0, tz + 2)
+    beds[4] = (760, 576)
+    for k in range(1, 7):
+        cu, cv = beds[k]
+        m.target("lc_camp_tent_%d" % k, cu, cv, tz + 8, 0)
+    # a lantern by each one, lit low (the city's oil lamp)
+    for (u, v) in ((380, 470), (948, 500), (452, 616), (712, 560), (360, 386), (820, 382)):
+        m.dynamic(M_ + "props_c17/lamp001a.mdl", u, v, 0, tz)
+        m.light(u, v, tz + 30, "255 180 110 22")
     # patches sewn on two of them (slivers lying on the cloth)
     m.shapes([para((280, 420, tz + 16), (40, 0, 0), (0, 20, 31), (0, 0, 4), c3), para((720, 600, tz + 12), (0, 36, 0), (24, 0, 36), (0, 0, 4), PLASTER)])
     # --- the fire: stones, logs, a pot on a tripod, embers, smoke; log seats round it ---
@@ -2731,9 +2751,9 @@ def m_camp(m, opt):
     for k, (x, y) in enumerate(((24, 0), (-24, 0), (0, 24), (0, -24), (17, 17), (-17, 17), (17, -17), (-17, -17))):
         m.dynamic(M_ + "props_junk/rock001a.mdl", fu + x, fv + y, 45 * k, tz - 2)       # the ring of stones (each sunk 2 in the earth)
     m.det([(fu - 18, fv - 3, tz, fu + 18, fv + 3, tz + 5), (fu - 3, fv - 16, tz + 4, fu + 3, fv + 16, tz + 9)], MAT["black"])
-    m.shapes([para((fu - 26, fv - 14, tz), (3, 0, 0), (0, 3, 0), (24, 12, 62), MAT["bars"]), para((fu + 23, fv - 14, tz), (3, 0, 0), (0, 3, 0), (-24, 12, 62), MAT["bars"]),
-              para((fu - 2, fv + 26, tz), (3, 0, 0), (0, 3, 0), (0, -26, 62), MAT["bars"])])
-    m.det([(fu - 1, fv - 1, tz + 34, fu + 1, fv + 1, tz + 62)], MAT["bars"])
+    m.shapes([para((fu - 26, fv - 14, tz), (3, 0, 0), (0, 3, 0), (24, 12, 62), MAT["bars"]), para((fu + 23, fv - 14, tz), (3, 0, 0), (0, 3, 0), (-24, 12, 63), MAT["bars"]),
+              para((fu - 2, fv + 26, tz), (3, 0, 0), (0, 3, 0), (0, -26, 64), MAT["bars"])])
+    m.det([(fu - 1, fv - 1, tz + 34, fu + 1, fv + 1, tz + 61)], MAT["bars"])
     m.dynamic(M_ + "props_c17/metalpot001a.mdl", fu, fv, 0, tz + 20)                   # the pot, hung on the tripod's chain
     m.static(M_ + "props_trainstation/bench_indoor001a.mdl", fu - 3, fv - 64, 90, tz)     # seats round it: two benches carried off from a station, two flat rocks
     m.static(M_ + "props_trainstation/bench_indoor001a.mdl", fu + 5, fv + 66, 270, tz)
@@ -2752,9 +2772,17 @@ def m_camp(m, opt):
     m.det([(500, 319, tz + 64, 530, 320, tz + 102), (560, 319, tz + 74, 578, 320, tz + 101), (670, 319, tz + 60, 698, 320, tz + 102)], PLASTER)
     m.det([(596, 319, tz + 68, 640, 320, tz + 101)], c3)
     # --- water, the handcart, the notice post, odds and ends ---
-    put(m, M_ + "props_c17/oildrum001.mdl", 600, 640, 0, z=tz)
-    m.loose(M_ + "props_junk/metalbucket01a.mdl", 628, 618, 0, z=tz)
-    m.loose(M_ + "props_junk/metalbucket01a.mdl", 580, 606, 40, z=tz)
+    put(m, M_ + "props_c17/oildrum001.mdl", 620, 688, 0, z=tz)                              # the water barrel under a gutter pipe down the wall
+    m.static(M_ + "props_pipes/gutter_256_001a.mdl", 620, 697, 0, b.rim - 256)
+    m.loose(M_ + "props_junk/metalbucket01a.mdl", 648, 668, 0, z=tz)
+    m.loose(M_ + "props_junk/metalbucket01a.mdl", 596, 660, 40, z=tz)
+    m.dynamic(M_ + "props_c17/doll01.mdl", 410, 560, 30, tz)                                   # children live here too
+    for kind, u, v, z, seed in (("graffiti", 300, 703, tz + 30, 1), ("graffiti", 380, 703, tz + 22, 2), ("poster", 560, 703, tz + 150, 3),
+                                ("stain", 620, 703, tz + 60, 4), ("trash", 700, 440, tz + 1, 5), ("burn", 640, 470, tz + 1, 6), ("stain", 900, 600, tz + 1, 7)):
+        m.grime(kind, u, v, z, seed)
+    m.decal("decals/decal_posterbreen", 900, 703, tz + 160)                                    # the Combine's face over them
+    m.static(M_ + "props_combine/combinecamera001.mdl", 640, -239, 90, b.rim - 40)            # ...and its eye on the opposite rim
+    m.soundscape(SCAPES["courtyard"], 640, 480, tz, radius=520)
     m.dynamic(M_ + "props_junk/pushcart01a.mdl", 966, 602, 0, tz)
     m.blocked(912, 560, 1056, 640)
     m.dynamic(M_ + "props_c17/signpole001.mdl", 630, 280, 0, tz)                       # the notice board where the bank comes up
@@ -2763,12 +2791,12 @@ def m_camp(m, opt):
     m.loose(M_ + "props_junk/wood_crate002a.mdl", 1040, 320, 90, z=tz)
     m.loose(M_ + "props_c17/furniturechair001a.mdl", fu + 50, fv - 70, 120, z=tz)
     m.loose(M_ + "props_junk/wood_pallet001a.mdl", 240, 300, 0, z=tz)
-    put(m, M_ + "props_c17/furniturecouch002a.mdl", 560, 380, 300, z=tz)
+    put(m, M_ + "props_c17/furniturecouch002a.mdl", 480, 420, 300, z=tz)
     m.view(120, 60, F, 30, -10, "the terrace from the canal")
     m.view(730, 290, tz, 115, 4, "coming up the bank: the fire, the tents")
     m.view(420, 470, tz, 0, 6, "from the first tent's mouth")
     m.view(980, 680, tz, 225, 10, "from the back corner")
-    m.view(764, 580, tz, 90, 4, "inside the big tent")
+    m.view(500, 640, tz, 90, 4, "under the lean-to")
     b.notes.append("%s: the terrace is at z %d, from u 192 to 1088 and v 256 to 704; the fire is at (%d %d)" % ((m.tag, tz) + m.fr.pt(fu, fv)))
 
 

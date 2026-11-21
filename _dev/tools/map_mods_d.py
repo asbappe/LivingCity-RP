@@ -414,16 +414,20 @@ def m_wreck(m, opt):
 
 def m_morgue(m, opt):
     """The morgue: where the city's dead wait for the cremator. A sliding steel door in the left wall (Nova Prospekt's
-    sliding door between steel jambs: players open it by hand), a short passage, a tiled cold room: a wall of twelve
-    drawers, two pulled out, three steel tables (the hospital's surgery tables), a drain in the floor, a clerk's desk
-    with the ledger and a clipboard on it, cold lamps, a caged lamp over the door outside, a hum. The dead on the tables
-    are props.
+    sliding door between steel jambs: players open it by hand), a short passage, a cold room tiled to the waist and
+    plastered above: a wall of twelve drawers, two pulled out, a number on each column, three steel tables (the
+    hospital's surgery tables), two of the dead laid out on them (they do not move), a drain in the floor, a thin cold
+    mist on the floor, three fluorescent tubes; in the right wall the body chute to the cremator (a steel hatch in a
+    frame, a roller conveyor up to it: where the dead go to the ash outfall); a clerk's desk with the ledger, a
+    clipboard, papers, a radio and a Combine screen for the records; a caged lamp over the door outside; a compressor's
+    hum.
     Named for the game: lc_morgue_door (a func_door, unseen, the door's model riding on it), lc_morgue_table_1 to _3
-    (the tables), lc_morgue_ledger (the desk).
-    Left as brushes: the room, the door's jambs and head, the drain, and the wall of drawers (built into the wall:
-    Half-Life 2 has no morgue drawers).
-    Unchecked: models/humans/corpse1.mdl as a ragdoll lying on a table (it may slide off), ambient/machines/...; which
-    way the surgery table's head is (it is the same both ways in its size)."""
+    (the tables), lc_morgue_ledger (the desk), lc_morgue_chute (the chute's hatch: where the game sends the dead).
+    Left as brushes: the room, its tiles and plaster, the door's jambs and head, the drain, the wall of drawers (built
+    into the wall: Half-Life 2 has no morgue drawers), the chute's hatch and frame and the conveyor (no model of one).
+    Unchecked: models/humans/corpse1.mdl as a ragdoll laid on a table with its motion disabled (spawnflags 16388:
+    debris and motion disabled, so it stays where it is laid), func_dustcloud's keys for the mist; which way the
+    surgery table's head is (it is the same both ways in its size)."""
     tile, steel = "tile/tilefloor018a_c17", MM["steel"]
     m.open(0, -256, 1024, 256)
     m.low(448, 256, 576, 384, F + 128, mat=tile)
@@ -436,8 +440,14 @@ def m_morgue(m, opt):
     m.portal(448, 319, F, 576, 321, F + 128)
     m.det([(436, 244, F, 448, 256, F + 140), (576, 244, F, 588, 256, F + 140), (436, 244, F + 128, 588, 256, F + 140)], MAT["beam"])
     m.taken(428, 232, F, 596, 256, F + 160)
-    m.static("models/props_c17/light_cagelight02_on.mdl", 512, 255, 270, z=F + 146)
-    m.light(512, 240, F + 152, "200 225 255 40")
+    from map_mods_c import cage_lamp, pipe_v, tube
+    cage_lamp(m, 512, 256, F + 146, 270, "200 225 255 40")
+    # the room tiled to the waist and plastered above (the back wall is the drawers' bank; the side walls' courses between
+    # the front wall's, so no two tops lie in one plane)
+    for z1, z2, t, mat in ((F, F + 64, 6, "tile/tilewall009b"), (F + 64, F + 176, 4, "plaster/plasterwall041a")):
+        m.det([(256, 384, z1, 448, 384 + t, z2), (576, 384, z1, 768, 384 + t, z2), (256, 384 + 8, z1, 256 + t, 760, z2), (768 - t, 384 + 8, z1, 768, 760, z2)], mat)
+        if z2 > F + 128:
+            m.det([(448, 384, max(z1, F + 128), 576, 384 + t, z2)], mat)
     # the drawers: three high and four along the back wall, two of them pulled out
     fronts = []
     for i in range(4):
@@ -451,22 +461,39 @@ def m_morgue(m, opt):
                 fronts.append((u + 6, v2, z + 4, u + 90, 768, z + 10))
     m.det(fronts, steel)
     m.det([(288, 764, F + 158, 752, 768, F + 164), (288, 764, F, 752, 768, F + 8)], MAT["beam"])
+    for i in range(4):
+        m.grime("number", 348 + 110 * i, 762, F + 150, i)
     # three tables, the dead on two of them
     for k, (u, v) in enumerate(((340, 520), (512, 520), (684, 520))):
         m.static("models/props_c17/hospital_surgerytable01.mdl", u, v, 90)
         m.target("lc_morgue_table_%d" % (k + 1), u, v, F + 40)
-        if k != 1:
-            m.body("models/humans/corpse1.mdl", u, v, 90, z=F + 30)
+        if k != 1:                                          # (laid out: their motion disabled, they stay on the tables)
+            m.point("prop_ragdoll", u, v, F + 40, {"model": "models/humans/corpse1.mdl", "angles": "0 %d 0" % m.fr.yaw(90), "spawnflags": "16388"}, m.b.vis + ": bodies")
         m.blocked(u - 34, v - 68, u + 34, v + 68)
     m.det([(500, 600, F, 524, 624, F + 1)] + [(500 + 5 * k, 600, F + 1, 502 + 5 * k, 624, F + 2) for k in range(5)], MAT["bars"])
     m.static("models/props_wasteland/controlroom_desk001a.mdl", 320, 420, 90)
     m.static("models/props_lab/binderblue.mdl", 330, 430, 100, z=F + 34)
     m.static("models/props_lab/clipboard.mdl", 300, 410, 80, z=F + 34)
+    m.static("models/props_c17/paper01.mdl", 318, 448, 20, z=F + 35)
+    m.static("models/props_lab/citizenradio.mdl", 334, 466, 180, z=F + 34)
+    m.static("models/props_combine/combine_smallmonitor001.mdl", 322, 392, 90, z=F + 34)
     m.static("models/props_wasteland/controlroom_chair001a.mdl", 300, 470, 270)
     m.target("lc_morgue_ledger", 320, 440, F + 36, 270)
     for u, v in ((384, 600), (640, 600), (512, 440)):
-        m.lamp(u, v, F + 150, "190 220 255 45", hang=18)
+        tube(m, u, v, F + 176, "200 222 240 45", along="v")
+    # the body chute in the right wall, a roller conveyor up to it
+    m.det([(760, 600, F + 40, 768, 608, F + 116), (760, 680, F + 40, 768, 688, F + 116), (760, 600, F + 108, 768, 688, F + 116), (760, 600, F + 40, 768, 688, F + 48)],
+          "metal/metalhull010c")
+    m.det([(764, 608, F + 48, 766, 680, F + 108)], MAT["black"])
+    m.target("lc_morgue_chute", 750, 644, F + 60, 0)
+    m.det([(680, 610, F, 684, 614, F + 44), (680, 674, F, 684, 678, F + 44), (740, 610, F, 744, 614, F + 44), (740, 674, F, 744, 678, F + 44),
+           (676, 610, F + 44, 760, 614, F + 48), (676, 674, F + 44, 760, 678, F + 48)], MAT["bars"])
+    m.shapes([pipe_v(u, F + 47, 3, 614, 674) for u in range(684, 756, 12)])
+    m.ent("func_dustcloud", {"StartDisabled": "0", "Color": "210 225 235", "SpawnRate": "12", "SpeedMax": "4", "LifetimeMin": "4", "LifetimeMax": "8", "DistMax": "700",
+                             "Alpha": "18", "SizeMin": "40", "SizeMax": "80", "Frozen": "0"}, [(272, 400, F + 2, 752, 752, F + 26)], MAT["trigger"],
+          vis=m.b.vis + ": experiments (delete if they misbehave)")
     m.sound("ambient/atmosphere/tunnel1.wav", 512, 560, F + 80, radius=500, volume=3)
+    m.soundscape(SCAPES["laundry"], 512, 560, F, radius=300)
     m.decal("decals/decalstain002a", 512, 612, F + 1)
     for u, v in ((512, 300), (512, 420), (430, 640), (600, 640)):
         m.lane(u, v)
@@ -477,7 +504,7 @@ def m_morgue(m, opt):
 
 MODULES = {
     "execwall": (768, m_execwall, "the firing wall: a backstop, three posts, one hard lamp (left)"),
-    "substation": (1024, m_substation, "the substation: transformers behind chain link, a fuse panel to break (right)"),
+    "substation": (1024, m_substation, "the substation: transformers behind the Combine's fence, a fuse panel to break (right)"),
     "breach": (1024, m_breach, "the breach: the floor fallen into an old cellar, slabs for ramps, an undercut"),
     "tunnel": (1024, m_tunnel, "the canal under the city: a covered stretch of any length (\"tunnel 1536\")", {"stretch": True}),
     "wreck": (1024, m_wreck, "the wreck: a Combine carrier's container down in the canal, hollow, to race for"),
