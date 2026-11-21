@@ -36,6 +36,9 @@ batches, what is done and next, the owner's requests on the way, and how to get 
    never sheets of everything.
 6. **Helpers never commit.** They write to the scratch folder (or the folders named in their brief); the main
    chat reviews, merges, commits and pushes (to the session's branch, and to `main` when checks pass).
+7. **A lesson about an entity checks Valve's wiki first:** `python3 _dev/tools/vdc.py --card CLASS` (what the
+   engine says it does, its bugs, keyvalues only other games have, Valve's use across the maps, the lessons that
+   already name it). Where Valve's maps and the wiki disagree, the lesson says so (`docs/dev/vdc-topics.md`).
 
 ## What one ingestion leaves behind, and where
 
