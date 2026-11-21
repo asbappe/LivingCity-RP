@@ -1,0 +1,22 @@
+{
+ "title": "Valve's styleguide_garage (draft)",
+ "draft": true,
+ "about": "Valve's own styleguide_garage, measured by map_ingest.py on 2026-11-21 (play space only: hidden objects and the 3D skybox room left out) and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees drawn as trunk and canopy, poles thin). Reference only: the VMF is not in the repo. DRAFT: a reviewer fills in what each picture teaches, picks the lessons, and removes \"draft\".",
+ "numbers": [
+  "Things: 90 prop_static, 18 prop_physics, 0 prop_dynamic, 3 prop_door_rotating, 1 prop_ragdoll, 0 infodecal, 91 info_overlay, 0 keyframe_rope and 0 move_rope, 56 func_detail, 0 npc entities (makers included); left out: 0 hidden objects and no 3D skybox room.",
+  "Lights: 6 light (median brightness 50), 9 light_spot (median 600), 0 point_spotlight, 11 env_sprite; no light_environment; fog \"60 64 70\" from 1 to 5000; sky sky_day01_01_hdr.",
+  "Commonest models: interior_fence003b 13, prison_sprinkler001a 13, handrail04_singlerise 12, lights_florescent01a 8, pipeset08d_512_001a 6, pipeset08d_corner128r_001a 5, pipeset08d_corner128u_001a 4, car003a 3, car002a 3, car004a 3, door03_left 3, light_decklight01_on 3, powerbox02d 3, trafficcone001a 3, car005a 2.",
+  "Commonest materials (faces): concretewall075a 572, concretewall075c 387, concretewall075k 319, metalstair003a 252, metalwall006b 250, concretewall075b 185, concretefloor033o 171, concretefloor039b 165, metalwall061f 105, plasterwall034a 72, glasswindow007a 72, concretewall075g 56, plasticexitsign001b 6, concretewall075e 5, metaldoor013a 4, metalvent012a 2, tilefloor012b 1, metaldoor032c 1, metaldoor028a 1.",
+  "Ceilings: floor to ceiling indoors (cast up from 24 AI nodes) is most often 128 (20), then 192 (4); 0% of the nodes are outdoors; corridors 67.9 wide under 124, rooms 124 by 274 (medians, wall to wall).",
+  "Stairs: 30 flights of 3 or more steps; steps (rise x tread) 8x12 150; median 6 steps a flight.",
+  "Doors: door03_left 3; openings at them (wide x high): 96x104 2, 48x108 1.",
+  "Spacing (nearest of the same model): interior_fence003b 128 apart (n 13).",
+  "Walls in bands: 24% of wall columns over 256 tall change material at least once; the first change most often 384 or 128 over the foot; pairs (below > above): concretewall075c > concretewall075b, concretewall075c > concretewall075a, concretewall075e > concretewall075b.",
+  "Props: 112 in play; on exact 90s: static 84%, physics 22%; physics tilted 44% (lying most often trash); statics touching a wall 80%, physics within 16 of one 47%; 0.916 props per 100 by 100 of play (0.114 physics).",
+  "Craft: texture scale 0.25 on 90% of faces; lightmapscale 16 on 99% (near the nodes 99%, far 99%); func_detail 41% of brushes; 18 trim strips (8x16 10, 16x32 3); 92 chamfers; 0 displacements.",
+  "Light by fixture: lights_florescent01a: light 159 237 215 50; lights_florescent01a: light_spot 159 237 215 600, cone 70/30, pitch -74; light_decklight01_on: light_spot 255 245 145 300, cone 70/30, pitch -89; light_cagelight02_on: light_spot 254 216 146 75, cone 70/30, pitch -70.",
+  "Grime: 0 infodecal and 91 info_overlay; on walls ; wall decals median None over the floor."
+ ],
+ "pictures": [],
+ "pictures_folder": "valve_styleguide_garage"
+}

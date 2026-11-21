@@ -1,0 +1,18 @@
+{
+ "title": "Valve's styleguide_c17_rubble (draft)",
+ "draft": true,
+ "about": "Valve's own styleguide_c17_rubble, measured by map_ingest.py on 2026-11-21 (play space only: hidden objects and the 3D skybox room left out) and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees drawn as trunk and canopy, poles thin). Reference only: the VMF is not in the repo. DRAFT: a reviewer fills in what each picture teaches, picks the lessons, and removes \"draft\".",
+ "numbers": [
+  "Things: 39 prop_static, 0 prop_physics, 0 prop_dynamic, 0 prop_door_rotating, 0 prop_ragdoll, 0 infodecal, 0 info_overlay, 0 keyframe_rope and 0 move_rope, 9 func_detail, 0 npc entities (makers included); left out: 3 hidden objects and the 3D skybox room (10 props, scale 16).",
+  "Lights: 0 light (median brightness None), 0 light_spot (median None), 0 point_spotlight, 0 env_sprite; sun \"213 152 85 500\" at pitch -25, ambient \"154 123 61 100\"; fog \"181 146 121\" from 100 to 5000; sky sky_ep01_02.",
+  "Commonest models: collapsedbuilding01awall 4, lamppost03a_off 4, building_brokenexterior002c 3, concrete_debris256pile001a 2, collapsedbuilding02c 2, bridge_pillar02 2, building_brokenexterior002a 2, combineinnerwallcluster1024_002a 2, tree_deciduous_01a-lod 1, parliament_dome_destroyed_exterior 1, destroyedpipes01d 1, truck002a_cab 1, tanker001a 1, project_destroyedbuildings01 1, car003a 1.",
+  "Commonest materials (faces): dev_blendmeasure 414, plasterwall021a 74, building_template010a 57, building_template002m 44, concretefloor019a 42, dirtfloor001a 21, red_grass_thin 21, concretefloor020a 21, building_template010b 13, building_template010c 11, concretefloor028c_c17 8, fake_fog01 8, concretefloor037a 7, stonewall036a 5, building_template002n 4, building_template002e 3, building_template012i 3, building_template012k 2, building_template002h 2, building_template002g 1.",
+  "Spacing (nearest of the same model): lamppost03a_off 801 apart (n 4).",
+  "Walls in bands: 8% of wall columns over 256 tall change material at least once; the first change most often 16 or 128 over the foot; pairs (below > above): concretefloor019a > dev_blendmeasure, building_template002h > building_template002m, stonewall036a > building_template012i.",
+  "Fronts: 9% of vertical wall area is painted building fronts (building_template002m, building_template010a, building_template010b).",
+  "Props: 30 in play; on exact 90s: static 53%, physics ?; physics tilted ? (lying most often nothing); statics touching a wall 69%, physics within 16 of one ?; None props per 100 by 100 of play (None physics).",
+  "Craft: texture scale 0.25 on 99% of faces; lightmapscale 16 on 100% (near the nodes ?, far 100%); func_detail 27% of brushes; 3 trim strips (12x32 3); 12 chamfers; 21 displacements."
+ ],
+ "pictures": [],
+ "pictures_folder": "valve_styleguide_c17_rubble"
+}

@@ -1,0 +1,23 @@
+{
+ "title": "Valve's styleguide_garage_antlionroom (draft)",
+ "draft": true,
+ "about": "Valve's own styleguide_garage_antlionroom, measured by map_ingest.py on 2026-11-21 (play space only: hidden objects and the 3D skybox room left out) and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees drawn as trunk and canopy, poles thin). Reference only: the VMF is not in the repo. DRAFT: a reviewer fills in what each picture teaches, picks the lessons, and removes \"draft\".",
+ "numbers": [
+  "Things: 155 prop_static, 44 prop_physics, 0 prop_dynamic, 3 prop_door_rotating, 1 prop_ragdoll, 55 infodecal, 40 info_overlay, 0 keyframe_rope and 0 move_rope, 128 func_detail, 3 npc entities (makers included); left out: 1111 hidden objects and no 3D skybox room.",
+  "Lights: 16 light (median brightness 50), 13 light_spot (median 600), 0 point_spotlight, 5 env_sprite; no light_environment; no fog controller; sky sky_wasteland02.",
+  "Commonest models: lights_florescent01a 25, concrete_debris256pile001a 21, handrail04_singlerise 12, rebar_cluster001b 11, concrete_spawnchunk001d 8, interior_fence003b 7, pipeset08d_256_001a 7, car001a_hatchback 6, rebar_cluster002b 6, interior_fence002a 6, concrete_spawnchunk001f 6, rebar_cluster001a 5, concrete_section128floor001b 4, concrete_section64floor001b 4, concrete_section64floor001a 4.",
+  "Commonest materials (faces): concretewall075a 844, concretewall075k 564, concretewall075c 351, metalwall006b 326, metalstair003a 252, concretefloor033o 190, concretewall075b 168, plasterwall021a 167, concretefloor007a 129, concretefloor039b 126, metalwall061f 115, concretewall075g 95, concretefloor013a_c17 81, plasterwall034a 72, concretefloor026a 67, concretewall032a 67, concretefloor012a 57, glasswindow020a 54, dirtfloor004a 40, concretefloor013a 36.",
+  "Stairs: 24 flights of 3 or more steps; steps (rise x tread) 8x12 108; median 5.5 steps a flight.",
+  "Doors: door03_left 3; openings at them (wide x high): 96x108 2, 48x108 1.",
+  "Spacing (nearest of the same model): interior_fence003b 129 apart (n 7), interior_fence002a 101 apart (n 6), interior_fence004a 580 apart (n 4).",
+  "Walls in bands: 61% of wall columns over 256 tall change material at least once; the first change most often 32 or 16 over the foot; pairs (below > above): concretefloor012a > concretewall075b, concretefloor026a > plasterwall021a, concretefloor026a > concretewall032a.",
+  "Slopes: 26 sloped faces over 2000 square units, most often 15, 50, 60 degrees; concretewall075a, concretefloor013a_c17, concretefloor033o.",
+  "Props: 203 in play; on exact 90s: static 55%, physics 5%; physics tilted 34% (lying most often trash, barrel, sawhorse); statics touching a wall 68%, physics within 16 of one 21%; None props per 100 by 100 of play (None physics).",
+  "Wiring: 242 output lines from 101 entities; commonest OnTrigger>Enable 17, OnTrigger>DisableHint 14, OnDamaged>Trigger 11; 7 relays (longest chain 1), 1 counters, 2 timers, 3 makers, 0 buttons working doors; 106 lines name nothing.",
+  "Craft: texture scale 0.25 on 90% of faces; lightmapscale 16 on 99% (near the nodes ?, far 99%); func_detail 46% of brushes; 31 trim strips (8x16 10, 16x32 5); 90 chamfers; 31 displacements.",
+  "Light by fixture: lights_florescent01a: light 159 237 215 50; lights_florescent01a: light_spot 159 237 215 600, cone 70/30, pitch -74; light_decklight01_on: light_spot 255 245 145 600, cone 70/30, pitch -89; car001a_hatchback: light 254 174 10 150.",
+  "Grime: 55 infodecal and 40 info_overlay; on walls burn 23, graffiti 10, other 6, blood 2; wall decals median 8.1 over the floor."
+ ],
+ "pictures": [],
+ "pictures_folder": "valve_styleguide_garage_antlionroom"
+}

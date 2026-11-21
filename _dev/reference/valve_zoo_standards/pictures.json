@@ -1,0 +1,18 @@
+{
+ "title": "Valve's zoo_standards (draft)",
+ "draft": true,
+ "about": "Valve's own zoo_standards, measured by map_ingest.py on 2026-11-21 (play space only: hidden objects and the 3D skybox room left out) and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees drawn as trunk and canopy, poles thin). Reference only: the VMF is not in the repo. DRAFT: a reviewer fills in what each picture teaches, picks the lessons, and removes \"draft\".",
+ "numbers": [
+  "Things: 8 prop_static, 0 prop_physics, 0 prop_dynamic, 0 prop_door_rotating, 0 prop_ragdoll, 0 infodecal, 0 info_overlay, 0 keyframe_rope and 0 move_rope, 55 func_detail, 0 npc entities (makers included); left out: 0 hidden objects and no 3D skybox room.",
+  "Lights: 0 light (median brightness None), 0 light_spot (median None), 0 point_spotlight, 0 env_sprite; no light_environment; no fog controller; sky sky_wasteland02.",
+  "Commonest models: handrail04_singlerise 8, alyx 2, doorknob01 1, toilet01_clean 1, urinal01_clean 1.",
+  "Commonest materials (faces): dev_measuregeneric01 624, dev_measuregeneric01b 472, dev_measurewall01a 102, dev_measurebarrel 70, dev_measuredoor01 24, dev_measurecrate02 24, dev_measurerails01 18, dev_measurerails02 18, dev_measurecrate01 18, fluorescentwhite001a 16, dev_measurecrate03 12, dev_measuredesk 10, dev_measurestairs01a 8, dev_measurecomputer01 4, dev_measurecounter 4, dev_measurehall01 3, dev_measurewall01c 2, dev_measurewall01b 2, dev_measureswitch03 1, dev_measureswitch01 1.",
+  "Stairs: 27 flights of 3 or more steps; steps (rise x tread) 8x12 181, 16x8 14; median 8 steps a flight.",
+  "Walls in bands: 87% of wall columns over 256 tall change material at least once; the first change most often 128 or 64 over the foot; pairs (below > above): dev_measurewall01a > dev_measuregeneric01, dev_measuregeneric01 > dev_measuregeneric01b, dev_measurewall01c > dev_measurewall01a.",
+  "Slopes: 16 sloped faces over 2000 square units, most often 20, 55, 45 degrees; dev_measuregeneric01b.",
+  "Props: 8 in play; on exact 90s: static 100%, physics ?; physics tilted ? (lying most often nothing); statics touching a wall 100%, physics within 16 of one ?; None props per 100 by 100 of play (None physics).",
+  "Craft: texture scale 0.25 on 99% of faces; lightmapscale 16 on ? (near the nodes ?, far ?); func_detail 67% of brushes; 8 trim strips (2x32 3, 8x8 1); 6 chamfers; 0 displacements."
+ ],
+ "pictures": [],
+ "pictures_folder": "valve_zoo_standards"
+}

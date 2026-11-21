@@ -31,16 +31,17 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 
 ## Where things stand
 
-- 21 November (late). All on main. Valve map ingestion: 23 maps in, 127 lessons, 54 prefab pieces, studies in
-  docs/dev/valve-*.md, the tool _dev/tools/map_ingest.py; THE GUIDE for more: docs/dev/map-ingestion.md.
-- Canals: the Valve table built (dished floor, 1024-wide stretches, ledges, Valve's outfalls and lamps), lockgate
-  (Valve's lock gates: crush anything, open on map load, booth switch for anyone), the ring and first canal on the new
-  dressing, NPC nodes with a share of the 4096 limit each (map_merge fails a merged map over it). Wiring follows Valve's
-  five rules (map_wiring.py; map_lint kind wire).
-- Gamemode, from Valve's NPC study (the owner said build all): door guards at Combine zones (warn, halt, shove; the
-  trespass chat lines gone), Valve's raid breach, frisks against a wall, the arrest punch, the can, guards at ease,
-  squads in lanes; citizens' idle poses (five editor points and spots the city finds itself: couches, chairs, beds,
-  windows, walls; never Combine, never the infestation), moments that wait to be seen, a quieter crowd. The mounted
-  gun (5 damage; an officer mans it for an enemy in front) and the station's Breencast screen in the editor.
-- Tests: the full parallel run passes but for a few tests that fail now and then and pass alone (TODO.md); robots pass.
-- Not seen in game yet: the new poses and gestures, the gunner's stance, the lock gates' models hiding their portal.
+- 21 November (night). The owner sent every HL2/EP1/EP2 map source: 122 more maps measured (145 in all); another chat
+  ingests them batch by batch: docs/dev/valve-ingest-progress.md (read it first). Batch 1 (City 17) done; Ravenholm
+  merged (167 lessons); Nova Prospekt running. Owner-approved findings wait on TODO.md, built after all ingestion.
+- Ingestion tools: _dev/tools/map_ingest.py, valve_stats.json, VDC Saver (_dev/tools/vdc_saver/); THE GUIDE:
+  docs/dev/map-ingestion.md.
+- Canals: the Valve table built, `lockgate` (crushes anything, open on map load, booth switch for anyone), the ring
+  and first canal on the new dressing, NPC nodes with a share of the 4096 limit each; wiring follows Valve's five
+  rules (map_wiring.py; map_lint kind wire).
+- Gamemode, from Valve's NPC study (the owner said build all): door guards at Combine zones (the trespass chat lines
+  gone), Valve's raid breach, frisks, the arrest punch, the can, guards at ease, squads in lanes; citizens' idle poses
+  (editor points and spots found by the city; never Combine or the infestation), moments that wait to be seen, a
+  quieter crowd. The mounted gun (5 damage; an officer mans it for an enemy in front), the station's Breencast screen.
+- Tests: full parallel run passes but for a few that come and go (TODO.md); robots pass. Not seen in game yet: the new
+  poses and gestures, the gunner's stance, the lock gates hiding their portal.

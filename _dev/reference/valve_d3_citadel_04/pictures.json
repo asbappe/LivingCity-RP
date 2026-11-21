@@ -1,0 +1,24 @@
+{
+ "title": "Valve's d3_citadel_04 (draft)",
+ "draft": true,
+ "about": "Valve's own d3_citadel_04, measured by map_ingest.py on 2026-11-21 (play space only: hidden objects and the 3D skybox room left out) and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees drawn as trunk and canopy, poles thin). Reference only: the VMF is not in the repo. DRAFT: a reviewer fills in what each picture teaches, picks the lessons, and removes \"draft\".",
+ "numbers": [
+  "Things: 110 prop_static, 37 prop_physics, 4 prop_dynamic, 0 prop_door_rotating, 0 prop_ragdoll, 1 infodecal, 2 info_overlay, 0 keyframe_rope and 0 move_rope, 229 func_detail, 71 npc entities (makers included); left out: 753 hidden objects and no 3D skybox room.",
+  "Lights: 12 light (median brightness 55), 59 light_spot (median 2000), 14 point_spotlight, 29 env_sprite; no light_environment; fog \"38 70 74\" from 512 to 4096; sky sky_day03_05_hdr.",
+  "Sound: 10 env_soundscape (d3_citadel.generic_moody2 3, d3_citadel.generic_moody 3, d3_citadel.deep_dropoff_inside 3, d3_citadel.stasis_room 1), median radius 704; 48 ambient_generic (solidmetal.strain, d3_citadel.shield_loop, d3_citadel.shield_touch_loop, d3_citadel.combine_ball_field_loop2).",
+  "Commonest models: combine_soldier 46, railing_128 25, cell_01_pod_cheap 16, combine_super_soldier 12, combine_fence01a 8, combine_fence01b 8, combine_intwallunit 8, combine_light001a 7, combine_interface001 7, combine_intmonitor003 7, combine_barricade_bracket01b 6, cell_array_01 6, pipes03_single02a 4, pipes03_single02b 4, pipes02_single01a 4.",
+  "Commonest materials (faces): citadel_metalwall063a 7046, citadel_metalwall077a 5020, metalcombine002 797, reflectivity_80b 667, citadel_metalwall072b 296, citadel_metalwall078a 232, combineglass001a 218, white004_nochop 165, citadel_metalwall090a 155, citadel_metalwall091a 131, citadel_tilefloor016a 113, metalcombine001 66, com_shield002a 50, metalwall030a 36, citadel_metalwall101a 34, white004 21, citadel_metalwall101b 8, decalporthole001b 6, comshieldwall2 4, citadel_metalwall072a 4.",
+  "Ceilings: floor to ceiling indoors (cast up from 413 AI nodes) is most often 192 (89), then 256 (53) and 128 (51); 0% of the nodes are outdoors; corridors 128 wide under 192, rooms 384 by 1728 (medians, wall to wall).",
+  "Stairs: 9 flights of 3 or more steps; steps (rise x tread) 8x16 37; median 4 steps a flight.",
+  "Spacing (nearest of the same model): combine_fence01a 1296 apart (n 8), combine_fence01b 1336 apart (n 8).",
+  "Walls in bands: 39% of wall columns over 256 tall change material at least once; the first change most often 64 or 128 over the foot; pairs (below > above): citadel_metalwall077a > citadel_metalwall063a, reflectivity_80b > citadel_metalwall063a, citadel_metalwall063a > white004_nochop.",
+  "Slopes: 32 sloped faces over 2000 square units, most often 45, 70, 60 degrees; citadel_metalwall077a, citadel_metalwall072b, citadel_metalwall090a.",
+  "Props: 151 in play; on exact 90s: static 42%, physics 97%; physics tilted 5% (lying most often combine); statics touching a wall 43%, physics within 16 of one 63%; 0.122 props per 100 by 100 of play (0.037 physics).",
+  "Wiring: 1156 output lines from 347 entities; commonest OnTrigger>Explode 182, OnTrigger>Kill 117, OnTrigger>Disable 95; 132 relays (longest chain 2), 6 counters, 50 timers, 0 makers, 0 buttons working doors; 2 lines name nothing.",
+  "Craft: texture scale 0.25 on 84% of faces; lightmapscale 16 on 43% (near the nodes 68%, far 38%); func_detail 75% of brushes; 155 trim strips (2x8 64, 2x4 32); 496 chamfers; 693 displacements.",
+  "Light by fixture: combine_light001a: light_spot 147 226 240 2000, cone 35/12, pitch -25; combine_intmonitor003: light_spot 147 226 240 50, cone 60/30, pitch -30; combine_light002a: light_spot 147 226 240 2000, cone 35/12, pitch -25; combine_intwallunit: light_spot 147 226 240 50, cone 60/30, pitch -30.",
+  "Grime: 1 infodecal and 2 info_overlay; on walls poster 1; wall decals median 51.9 over the floor."
+ ],
+ "pictures": [],
+ "pictures_folder": "valve_d3_citadel_04"
+}

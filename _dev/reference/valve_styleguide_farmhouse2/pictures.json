@@ -1,0 +1,20 @@
+{
+ "title": "Valve's styleguide_farmhouse2 (draft)",
+ "draft": true,
+ "about": "Valve's own styleguide_farmhouse2, measured by map_ingest.py on 2026-11-21 (play space only: hidden objects and the 3D skybox room left out) and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees drawn as trunk and canopy, poles thin). Reference only: the VMF is not in the repo. DRAFT: a reviewer fills in what each picture teaches, picks the lessons, and removes \"draft\".",
+ "numbers": [
+  "Things: 23 prop_static, 7 prop_physics, 18 prop_dynamic, 0 prop_door_rotating, 0 prop_ragdoll, 3 infodecal, 1 info_overlay, 0 keyframe_rope and 0 move_rope, 18 func_detail, 0 npc entities (makers included); left out: 0 hidden objects and no 3D skybox room.",
+  "Lights: 0 light (median brightness None), 0 light_spot (median None), 0 point_spotlight, 0 env_sprite; sun \"255 255 255 400\" at pitch -45, ambient \"255 255 255 320\"; no fog controller; sky sky_day01_01.",
+  "Commonest models: plasterwall029c_window01a 10, plasterwall029c_window01a_bars 9, plasterwall029g_window01a 8, plasterwall029g_window01a_bars 6, furniture_chair01a 2, door01_dynamic 2, alyx 1, woodwall030b_window01a_bars 1, woodwall030b_window01a 1, woodwall030b_window02a_bars 1, woodwall030b_window02a 1, woodwall030b_window03a_bars 1, woodwall030b_window03a 1, pot01a 1, pot02a 1.",
+  "Commonest materials (faces): woodfloor005a 248, plasterwall029a 199, reflectivity_50 181, woodwall008a 90, woodshelf002a 81, plasterwall029b 60, tileroof003a 38, concretefloor010b 38, woodfloor008a 36, woodshelf003a 36, woodwall045c 33, brickwall017a 32, woodfloor001a 31, grassfloor003a 30, glasswindow017a 24, building_template022k 23, plasterwall029d 21, brickwall017b 20, woodwall006a 18, plasterwall032a 15.",
+  "Stairs: 3 flights of 3 or more steps; steps (rise x tread) 8x12 4, 8x14.7 3, 8x11 2; median 4 steps a flight.",
+  "Walls in bands: 100% of wall columns over 256 tall change material at least once; the first change most often 48 or 16 over the foot; pairs (below > above): stonewall017c > building_template022k, woodwall008a > stonestair001a, plasterwall029b > reflectivity_50.",
+  "Slopes: 24 sloped faces over 2000 square units, most often 45 degrees; tileroof003a, plasterwall029a, reflectivity_50.",
+  "Props: 48 in play; on exact 90s: static 100%, physics 14%; physics tilted 0% (lying most often nothing); statics touching a wall 71%, physics within 16 of one 57%; None props per 100 by 100 of play (None physics).",
+  "Wiring: 4 output lines from 4 entities; commonest OnBreak>SetBodyGroup 4; 0 relays (longest chain 0), 0 counters, 0 timers, 0 makers, 0 buttons working doors; 0 lines name nothing.",
+  "Craft: texture scale 0.25 on 98% of faces; lightmapscale 16 on 99% (near the nodes ?, far 99%); func_detail 27% of brushes; 65 trim strips (4x10 12, 4x8 8); 16 chamfers; 0 displacements.",
+  "Grime: 3 infodecal and 1 info_overlay; on walls other 2, graffiti 1; wall decals median 27.5 over the floor."
+ ],
+ "pictures": [],
+ "pictures_folder": "valve_styleguide_farmhouse2"
+}

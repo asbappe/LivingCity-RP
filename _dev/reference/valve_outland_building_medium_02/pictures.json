@@ -1,0 +1,16 @@
+{
+ "title": "Valve's outland_building_medium_02 (draft)",
+ "draft": true,
+ "about": "Valve's own outland_building_medium_02, measured by map_ingest.py on 2026-11-21 (play space only: hidden objects and the 3D skybox room left out) and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees drawn as trunk and canopy, poles thin). Reference only: the VMF is not in the repo. DRAFT: a reviewer fills in what each picture teaches, picks the lessons, and removes \"draft\".",
+ "numbers": [
+  "Things: 4 prop_static, 2 prop_physics, 0 prop_dynamic, 0 prop_door_rotating, 0 prop_ragdoll, 0 infodecal, 0 info_overlay, 0 keyframe_rope and 0 move_rope, 4 func_detail, 0 npc entities (makers included); left out: 0 hidden objects and no 3D skybox room.",
+  "Lights: 0 light (median brightness None), 0 light_spot (median None), 0 point_spotlight, 0 env_sprite; no light_environment; no fog controller; sky sky_day01_01.",
+  "Commonest models: explosive_butane_can02 2, shelves 1, woodwall030b_window01a 1, shelves_wood 1, utilitypole01b 1.",
+  "Commonest materials (faces): woodwall024a 829, woodwall045b 68, metalwall026a_c17 51, woodwall047d 41, woodwall048_roof 20, metalwall014a 14, forest_metal_07 11, glasswindow029c 6, stonewall016a 4, ep2_sign_supplies 1.",
+  "Props: 6 in play; on exact 90s: static 75%, physics 100%; physics tilted 100% (lying most often can); statics touching a wall 100%, physics within 16 of one ?; 0.254 props per 100 by 100 of play (0.102 physics).",
+  "Wiring: 1 output lines from 1 entities; commonest OnTrigger>Trigger 1; 0 relays (longest chain 0), 0 counters, 0 timers, 0 makers, 0 buttons working doors; 1 lines name nothing.",
+  "Craft: texture scale 0.25 on 99% of faces; lightmapscale 16 on 100% (near the nodes 100%, far ?); func_detail 100% of brushes; 10 trim strips (4x12 3, 6x6 3); 14 chamfers; 0 displacements."
+ ],
+ "pictures": [],
+ "pictures_folder": "valve_outland_building_medium_02"
+}

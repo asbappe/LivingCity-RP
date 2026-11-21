@@ -11,6 +11,10 @@ the vehicles test map, and all of Route Kanal (d1_canals_01, 01a, 02, 03, 05 to 
 pictures, 81 lessons (of 127 in all; tag `valve`), 26 prefab pieces (`valve_*`) and four studies (props, entity
 logic, building craft, NPCs).
 
+**The whole set (from 21 November):** the owner sent every HL2, EP1 and EP2 map source. What was chosen, the
+batches, what is done and next, the owner's requests on the way, and how to get the maps again:
+`docs/dev/valve-ingest-progress.md` (read it first when carrying on). Save every 5 or so maps (the owner's asking).
+
 ## The rules, every time
 
 1. **The owner's choices beat Valve's.** Where Valve does it differently from what the owner settled, we keep the
@@ -44,6 +48,7 @@ logic, building craft, NPCs).
 | Lessons | `_dev/reference/lessons.json` (one entry each: id, tags, title, rule, why, how, check) |
 | The reference page | `docs/dev/city18-reference.md`, made by `python3 _dev/tools/map_lessons.py --md` (never by hand) |
 | Studies of one topic across maps | `docs/dev/valve-prop-notes.md`, `valve-logic-recipes.md`, `valve-craft-notes.md`, `valve-npc-notes.md` |
+| Each batch's study notes (from 21 November) | `_dev/reference/valve_SET/notes/` (City 17: `valve_c17/notes/`), listed in `docs/dev/valve-ingest-progress.md` |
 | Pieces lifted from a map | `_dev/reference/prefabs/valve_*.json`, listed in `docs/dev/prefabs.md` |
 | Work the lessons ask of our tools | lines at the end of `TODO.md` (appended with printf, never read whole) |
 
@@ -131,6 +136,8 @@ nodes); **sections** (cross-sections at many places, compared with ours as sente
   whole flats: measure round key furniture instead. Automatic water depth misses some water: read it from cuts.
   Bridge finding picks up pipes and lintels: filter by rules. Ray casts use brush boxes; props block nothing.
 - **Valve's own faults.** 98 outputs name things that are in another map (counters in d1_canals_01a fed from 01).
+  Some files have the digit 1 saved as `&i` (`pitch "&i00"`) and stray typos in numbers (`"254 216 146) 1100"`):
+  the readers read `&i` as 1 and skip a bad number (21 November).
   Single-player tricks not to copy on our server: `!player` (it is player 1), triggers switching areaportals,
   flickering lights.
 - **Running helpers.** Five at once hit the 5-hour usage limit; a stopped helper resumes from where it was with a
@@ -219,3 +226,21 @@ nodes); **sections** (cross-sections at many places, compared with ours as sente
 - `map_lessons.py`: the lessons (`--tag`, `--find`, `--tags`), the reference page (`--md`).
 - `map_assets.py`: every model and material exists and is the right kind (physics models never static).
 - `map_modules_check.py`, `map_catalogue.py`: our own pieces built, checked and listed.
+- `vdc_saver/` (a Chrome extension, for the owner's PC) saves the Valve Developer Community wiki, which turns
+  scripts away with a bot check (Anubis), by working inside a wiki tab the owner opened: it saves each page they
+  visit (as shown, and its wikitext) and, on "Save the whole wiki", lists and saves every article, template and
+  category through the wiki's API (50 pages a request, 1.5 s apart, English only by default; when the check asks
+  again it reloads the tab and carries on). "Save pages linked from open wiki tabs" keeps it to one game (the whole
+  wiki has TF2, L4D2, CS:GO, Alyx...): the owner opens the HL2 and Source SDK index and category pages, and it
+  queues every page their article bodies link to (not the sidebar or footer) and every member of an open category
+  (all of them, from the API), skipping pages already saved, red links, special pages, images and translations.
+  Pressing it again after opening more pages adds to the queue. "Skip other games" (on by default; filter.js, lists
+  editable in Options) leaves a page out when its name names another game, or one of its categories does (from the
+  API, so template-added ones count) and neither names Half-Life 2, the Episodes (also EP1, EP2, Episodic, Lost
+  Coast), Garry's Mod, Source SDK 2013 or exactly "Source"; Help: pages (about editing the wiki) are not followed; checked against 1414 real pages (21 November): game icon templates like {{tf2}} are NOT a signal
+  (generic pages such as "Your First Map" carry only other games' icons). "Remove other games" cleans what was saved
+  before: by name at once, then by asking the wiki for the categories of the rest. The zip's index.tsv has each
+  page's categories. Translations are also the older prefix kind ("Ko/Making a Mod"). "Download zip" gives `vdc_wiki.zip`: `vdc/wikitext/<Namespace>/<Title>.wiki`,
+  `vdc/text/...txt` for visited pages, `vdc/index.tsv`. Load it in Chrome or Chromium: `chrome://extensions`,
+  Developer mode, Load unpacked, pick the folder. `node _dev/tools/vdc_saver_check.js` checks it against a fake wiki
+  (ends `VDC SAVER CHECK PASS`).

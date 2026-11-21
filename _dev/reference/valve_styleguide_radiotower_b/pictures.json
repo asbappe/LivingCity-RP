@@ -1,0 +1,21 @@
+{
+ "title": "Valve's styleguide_radiotower_b (draft)",
+ "draft": true,
+ "about": "Valve's own styleguide_radiotower_b, measured by map_ingest.py on 2026-11-21 (play space only: hidden objects and the 3D skybox room left out) and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees drawn as trunk and canopy, poles thin). Reference only: the VMF is not in the repo. DRAFT: a reviewer fills in what each picture teaches, picks the lessons, and removes \"draft\".",
+ "numbers": [
+  "Things: 52 prop_static, 68 prop_physics, 10 prop_dynamic, 3 prop_door_rotating, 0 prop_ragdoll, 2 infodecal, 4 info_overlay, 0 keyframe_rope and 0 move_rope, 39 func_detail, 0 npc entities (makers included); left out: 0 hidden objects and no 3D skybox room.",
+  "Lights: 0 light (median brightness None), 9 light_spot (median 250), 9 point_spotlight, 0 env_sprite; no light_environment; no fog controller; sky sky_day01_01.",
+  "Commonest models: box01a 12, tire1 6, light_domelight02_on 5, oildrum001 5, wood_pallet001a 5, prison_lamp001a 4, lightbulb01a 4, light_outdoor 4, canister_propane01a 4, box01b 3, cardboard_box004a 3, door01_left 3, bunkbed 3, ibeam01a_cluster01 3, prison_sink001a 3.",
+  "Commonest materials (faces): woodwall048d 265, concretewall004a_c17 220, woodwall024a 213, brickwall037c 130, wooddoor028a 96, plasterwall018d 83, concretewall008a 75, wooddoor019a 73, concretewall015a 68, brickwall037a 44, bunker_metalwall02a 34, metalpipe003a 32, graygrid 28, concretewall008b 25, glasswindow005c 20, concreteceiling003a 14, dev_lowerwallmetal01a 14, concretewall002c 13, tilewall009e 13, tilewall009b 13.",
+  "Doors: door01_left 3; openings at them (wide x high): 96x108 2, 48x108 1.",
+  "Spacing (nearest of the same model): prison_lamp001a 128 apart (n 4).",
+  "Walls in bands: 79% of wall columns over 256 tall change material at least once; the first change most often 80 or 128 over the foot; pairs (below > above): concretewall008a > brickwall037c, plasterwall018d > woodwall048d, plasterwall018d > concretewall015a.",
+  "Props: 133 in play; on exact 90s: static 87%, physics 34%; physics tilted 35% (lying most often box, shelf, cart); statics touching a wall 49%, physics within 16 of one 40%; None props per 100 by 100 of play (None physics).",
+  "Wiring: 2 output lines from 2 entities; commonest OnAwakened>Wake 2; 0 relays (longest chain 0), 0 counters, 0 timers, 0 makers, 0 buttons working doors; 0 lines name nothing.",
+  "Craft: texture scale 0.25 on 98% of faces; lightmapscale 16 on 100% (near the nodes ?, far 100%); func_detail 56% of brushes; 58 trim strips (4x8 12, 1x8 8); 4 chamfers; 0 displacements.",
+  "Light by fixture: light_domelight02_on: light_spot 255 241 217 250, cone 60/40, pitch -90; prison_lamp001a: light_spot 255 241 217 250, cone 60/40, pitch -90.",
+  "Grime: 2 infodecal and 4 info_overlay; on walls grate 2; wall decals median None over the floor."
+ ],
+ "pictures": [],
+ "pictures_folder": "valve_styleguide_radiotower_b"
+}

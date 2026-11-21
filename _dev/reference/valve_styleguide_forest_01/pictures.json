@@ -1,0 +1,19 @@
+{
+ "title": "Valve's styleguide_forest_01 (draft)",
+ "draft": true,
+ "about": "Valve's own styleguide_forest_01, measured by map_ingest.py on 2026-11-21 (play space only: hidden objects and the 3D skybox room left out) and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees drawn as trunk and canopy, poles thin). Reference only: the VMF is not in the repo. DRAFT: a reviewer fills in what each picture teaches, picks the lessons, and removes \"draft\".",
+ "numbers": [
+  "Things: 114 prop_static, 0 prop_physics, 0 prop_dynamic, 0 prop_door_rotating, 0 prop_ragdoll, 0 infodecal, 0 info_overlay, 0 keyframe_rope and 0 move_rope, 2 func_detail, 1 npc entities (makers included); left out: 896 hidden objects and no 3D skybox room.",
+  "Lights: 0 light (median brightness None), 0 light_spot (median None), 0 point_spotlight, 0 env_sprite; sun \"239 231 203 300\" at pitch -20, ambient \"176 193 201 150\"; fog \"78 94 113\" from 64 to 6000; sky sky_ep02_03_hdr.",
+  "Commonest models: tree_pine05 26, tree_pine06 20, tree_pine04 12, fern01 8, tree_stump01 7, rockcluster02 7, tree_pine_card_cluster_01 5, exterior_fence002e 4, rock_riverbed02a 4, rockcluster01 4, exterior_fence002c 3, rock_riverbed01d 3, driftwood_clump_02a 3, rock_riverbed01b 2, tree_deciduous_02a 2.",
+  "Commonest materials (faces): brickfloor001a 300, concretefloor011a 64, blenddirtgrass005a 10, stonewall002a 8.",
+  "Channels (5 cuts across the shortest way, 0 at water: 3 open, 0 tunnels): open width 64 up most often 544, 128 up 1504; rims (where a side opens out) 108; ledges 154 wide at 86 up; tunnels most often None wide, roof None up.",
+  "Spacing (nearest of the same model): tree_pine05 320 apart (n 26), tree_pine06 473 apart (n 20), tree_pine04 741 apart (n 12), tree_stump01 1019 apart (n 7), exterior_fence002e 512 apart (n 4), exterior_fence002c 384 apart (n 3).",
+  "Walls in bands: 0% of wall columns over 256 tall change material at least once; the first change most often  over the foot; pairs (below > above): .",
+  "Props: 109 in play; on exact 90s: static 45%, physics ?; physics tilted ? (lying most often nothing); statics touching a wall ?, physics within 16 of one ?; 0.031 props per 100 by 100 of play (0.0 physics).",
+  "Wiring: 60 output lines from 19 entities; commonest OnDeath>Add 9, OnDeath>Trigger 6, OnSpawnNPC>PlaySound 5; 0 relays (longest chain 0), 0 counters, 1 timers, 24 makers, 0 buttons working doors; 40 lines name nothing.",
+  "Craft: texture scale 0.25 on 100% of faces; lightmapscale 16 on 100% (near the nodes 100%, far 100%); func_detail 100% of brushes; 0 trim strips (); 0 chamfers; 127 displacements."
+ ],
+ "pictures": [],
+ "pictures_folder": "valve_styleguide_forest_01"
+}

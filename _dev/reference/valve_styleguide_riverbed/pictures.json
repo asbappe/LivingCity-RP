@@ -1,0 +1,21 @@
+{
+ "title": "Valve's styleguide_riverbed (draft)",
+ "draft": true,
+ "about": "Valve's own styleguide_riverbed, measured by map_ingest.py on 2026-11-21 (play space only: hidden objects and the 3D skybox room left out) and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees drawn as trunk and canopy, poles thin). Reference only: the VMF is not in the repo. DRAFT: a reviewer fills in what each picture teaches, picks the lessons, and removes \"draft\".",
+ "numbers": [
+  "Things: 141 prop_static, 0 prop_physics, 0 prop_dynamic, 0 prop_door_rotating, 0 prop_ragdoll, 0 infodecal, 1 info_overlay, 0 keyframe_rope and 0 move_rope, 28 func_detail, 0 npc entities (makers included); left out: 615 hidden objects and the 3D skybox room (0 props, scale 16).",
+  "Lights: 0 light (median brightness None), 0 light_spot (median None), 0 point_spotlight, 0 env_sprite; sun \"239 231 203 300\" at pitch -25, ambient \"188 200 204 100\"; fog \"181 192 200\" from 512 to 9000; sky sky_day02_04.",
+  "Commonest models: tree_pine_03 22, tree_pine_01 16, tree_pine_02 16, tree_pine_card_cluster_01 12, tree_pine_tall_cluster_01 9, train003 8, rock_riverbed01d 7, rock_riverbed01c 4, rock_riverbed02a 4, tree_deciduous_03a 4, tree_deciduous_02a 4, canal_bridge02 3, rock_riverbed02b 3, tree_cliff_01a 3, tree_cliff_02a 3.",
+  "Commonest materials (faces): metalpipe002a 480, woodfloor005a 302, blendrockrock007a 295, concretewall074b 266, concretewall073b 219, concretewall074c 165, concretewall062a 120, concretewall008a 95, metalwall014a 61, concretewall073a 40, metaltruss024a 40, metalwall074d 30, metalwall061f 30, woodwall019a 30, metalwall066e 28, metalwall066a 25, metalwall062a 25, metalwall026a 19, concretewall008b 15, metalgate005a 15.",
+  "Channels (36 cuts across the shortest way, 36 at water: 14 open, 9 tunnels): open width 64 up most often 832, 128 up 1216; rims (where a side opens out) 264; water 8 deep; ledges 74 wide at 86 up; tunnels most often 896 wide, roof 352 up.",
+  "Spacing (nearest of the same model): tree_pine_03 257 apart (n 22), tree_pine_01 272 apart (n 16), tree_pine_02 366 apart (n 16), tree_pine_card_cluster_01 1920 apart (n 12), tree_pine_tall_cluster_01 1506 apart (n 9), tree_deciduous_03a 2986 apart (n 4).",
+  "Walls in bands: 16% of wall columns over 256 tall change material at least once; the first change most often 104 or 128 over the foot; pairs (below > above): concretewall071a > concretewall071b, concretewall074c > concretewall074b, concretewall062a > concretewall074c.",
+  "Slopes: 55 sloped faces over 2000 square units, most often 25, 35, 55 degrees; metalpipe002a, metalwall014a, rockwall006b.",
+  "Props: 129 in play; on exact 90s: static 27%, physics ?; physics tilted ? (lying most often nothing); statics touching a wall 31%, physics within 16 of one ?; None props per 100 by 100 of play (None physics).",
+  "Wiring: 4 output lines from 2 entities; commonest OnFullyOpen>Close 2, OnFullyClosed>Open 2; 0 relays (longest chain 0), 0 counters, 0 timers, 0 makers, 0 buttons working doors; 0 lines name nothing.",
+  "Craft: texture scale 0.25 on 63% of faces; lightmapscale 16 on 99% (near the nodes ?, far 99%); func_detail 73% of brushes; 41 trim strips (4x10 14, 16x16 10); 15 chamfers; 104 displacements.",
+  "Grime: 0 infodecal and 1 info_overlay; on walls ; wall decals median None over the floor."
+ ],
+ "pictures": [],
+ "pictures_folder": "valve_styleguide_riverbed"
+}

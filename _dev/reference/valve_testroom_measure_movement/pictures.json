@@ -1,0 +1,15 @@
+{
+ "title": "Valve's testroom_measure_movement (draft)",
+ "draft": true,
+ "about": "Valve's own testroom_measure_movement, measured by map_ingest.py on 2026-11-21 (play space only: hidden objects and the 3D skybox room left out) and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees drawn as trunk and canopy, poles thin). Reference only: the VMF is not in the repo. DRAFT: a reviewer fills in what each picture teaches, picks the lessons, and removes \"draft\".",
+ "numbers": [
+  "Things: 0 prop_static, 1 prop_physics, 1 prop_dynamic, 0 prop_door_rotating, 0 prop_ragdoll, 0 infodecal, 0 info_overlay, 0 keyframe_rope and 0 move_rope, 1 func_detail, 0 npc entities (makers included); left out: 0 hidden objects and no 3D skybox room.",
+  "Lights: 0 light (median brightness None), 0 light_spot (median None), 0 point_spotlight, 0 env_sprite; sun \"255 255 255 200\" at pitch -70, ambient \"255 255 255 20\"; no fog controller; sky sky_wasteland02.",
+  "Commonest models: oildrum001 2.",
+  "Commonest materials (faces): dev_measurecrate01 24, dev_measuregeneric01b 6.",
+  "Props: 2 in play; on exact 90s: static ?, physics 100%; physics tilted 100% (lying most often nothing); statics touching a wall ?, physics within 16 of one 0%; None props per 100 by 100 of play (None physics).",
+  "Craft: texture scale 0.25 on 73% of faces; lightmapscale 16 on 100% (near the nodes ?, far 100%); func_detail 0% of brushes; 0 trim strips (); 0 chamfers; 0 displacements."
+ ],
+ "pictures": [],
+ "pictures_folder": "valve_testroom_measure_movement"
+}

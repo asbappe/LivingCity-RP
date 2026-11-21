@@ -1,0 +1,23 @@
+{
+ "title": "Valve's styleguide_garage_destroyed (draft)",
+ "draft": true,
+ "about": "Valve's own styleguide_garage_destroyed, measured by map_ingest.py on 2026-11-21 (play space only: hidden objects and the 3D skybox room left out) and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees drawn as trunk and canopy, poles thin). Reference only: the VMF is not in the repo. DRAFT: a reviewer fills in what each picture teaches, picks the lessons, and removes \"draft\".",
+ "numbers": [
+  "Things: 124 prop_static, 83 prop_physics, 0 prop_dynamic, 3 prop_door_rotating, 1 prop_ragdoll, 0 infodecal, 106 info_overlay, 0 keyframe_rope and 0 move_rope, 58 func_detail, 0 npc entities (makers included); left out: 0 hidden objects and no 3D skybox room.",
+  "Lights: 10 light (median brightness 50), 6 light_spot (median 450), 0 point_spotlight, 9 env_sprite; no light_environment; fog \"33 35 37\" from 512 to 5000; sky sky_day01_01_hdr.",
+  "Commonest models: interior_fence003b 15, prison_sprinkler001a 13, handrail04_singlerise 12, concrete_spawnchunk001d 10, lights_florescent01a 9, garbage_plasticbottle003a 8, oildrum001 8, pipeset08d_512_001a 7, garbage_plasticbottle002a 7, garbage_glassbottle001a 7, garbage_glassbottle001a_chunk01 7, garbage_takeoutcarton001a 7, garbage_glassbottle003a 7, rebar_cluster001b 6, rebar_cluster002b 6.",
+  "Commonest materials (faces): concretewall075a 651, concretewall075c 399, concretewall075k 318, metalstair003a 252, metalwall006b 250, concretefloor033o 239, concretewall075b 195, concretefloor039b 177, metalwall061f 105, dirtfloor004a 84, plasterwall034a 72, glasswindow007a 72, concretewall075g 56, concretefloor013a_c17 50, concretewall075e 10, plasticexitsign001b 6, metaldoor013a 4, metalvent012a 2, decalsigndanger001e 2, tilefloor012b 1.",
+  "Ceilings: floor to ceiling indoors (cast up from 24 AI nodes) is most often 128 (20), then 192 (4); 0% of the nodes are outdoors; corridors 67.9 wide under 124, rooms 124 by 274 (medians, wall to wall).",
+  "Stairs: 30 flights of 3 or more steps; steps (rise x tread) 8x12 150; median 6 steps a flight.",
+  "Doors: door03_left 3; openings at them (wide x high): 96x104 2, 48x108 1.",
+  "Spacing (nearest of the same model): interior_fence003b 126 apart (n 15).",
+  "Walls in bands: 34% of wall columns over 256 tall change material at least once; the first change most often 384 or 128 over the foot; pairs (below > above): concretewall075c > concretewall075b, concretewall075c > concretewall075a, concretefloor039b > concretewall075c.",
+  "Props: 211 in play; on exact 90s: static 67%, physics 5%; physics tilted 51% (lying most often trash, barrel, sawhorse); statics touching a wall 73%, physics within 16 of one 13%; 0.916 props per 100 by 100 of play (0.114 physics).",
+  "Wiring: 3 output lines from 1 entities; commonest OnTimer>SparkOnce 1, OnTimer>TurnOn 1, OnTimer>TurnOff 1; 0 relays (longest chain 0), 0 counters, 1 timers, 0 makers, 0 buttons working doors; 0 lines name nothing.",
+  "Craft: texture scale 0.25 on 91% of faces; lightmapscale 16 on 99% (near the nodes 98%, far 99%); func_detail 37% of brushes; 18 trim strips (8x16 10, 16x32 3); 90 chamfers; 30 displacements.",
+  "Light by fixture: lights_florescent01a: light 159 237 215 37.5; lights_florescent01a: light_spot 159 237 215 450, cone 70/30, pitch -74; light_decklight01_on: light_spot 255 245 145 600, cone 70/30, pitch -89; light_cagelight02_on: light_spot 254 216 146 75, cone 70/30, pitch -70.",
+  "Grime: 0 infodecal and 106 info_overlay; on walls ; wall decals median None over the floor."
+ ],
+ "pictures": [],
+ "pictures_folder": "valve_styleguide_garage_destroyed"
+}

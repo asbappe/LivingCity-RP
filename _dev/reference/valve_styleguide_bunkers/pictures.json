@@ -1,0 +1,22 @@
+{
+ "title": "Valve's styleguide_bunkers (draft)",
+ "draft": true,
+ "about": "Valve's own styleguide_bunkers, measured by map_ingest.py on 2026-11-21 (play space only: hidden objects and the 3D skybox room left out) and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees drawn as trunk and canopy, poles thin). Reference only: the VMF is not in the repo. DRAFT: a reviewer fills in what each picture teaches, picks the lessons, and removes \"draft\".",
+ "numbers": [
+  "Things: 121 prop_static, 7 prop_physics, 6 prop_dynamic, 0 prop_door_rotating, 0 prop_ragdoll, 0 infodecal, 20 info_overlay, 10 keyframe_rope and 2 move_rope, 11 func_detail, 0 npc entities (makers included); left out: 887 hidden objects and no 3D skybox room.",
+  "Lights: 2 light (median brightness 6), 2 light_spot (median 800), 0 point_spotlight, 2 env_sprite; sun \"239 231 203 300\" at pitch -45, ambient \"176 193 201 150\"; fog \"176 193 201\" from -250 to 5500; sky sky_day02_10.",
+  "Commonest models: pipeset02d_128_001a 14, prison_flourescentlight001a 12, tree_pine04 7, tree_pine06 5, tree_pine05 5, tree_stump01 5, shrub_01a 5, fern01 5, interior_fence002a 4, pipeset32d_256_001a 4, handrail_alley-upperdeck 4, tree_deciduous_01a 4, prodcables256 3, light_outdoor 3, light_red2 3.",
+  "Commonest materials (faces): blendgrassdirt01 320, reflectivity_50 311, concretewall_bunker01c 156, brickfloor001a 148, metalwall041a 136, metalhull005a 92, metalwall_silo01a 84, concretewall_bunker01a 80, metalduct003a 77, concretewall064b 67, metaltruss008a 67, metalwall_silo01b 67, concretewall002a 58, concretewall_bunker01b 41, reflectivity_60 41, concretewall002c 36, bunker_metalwall01b 23, bunker_metalwall01a 19, concretefloor_bunker02b 11, metalstair002a 8.",
+  "Cables: 9 rope spans, median 169 long, slack 128, width 0.6.",
+  "Spacing (nearest of the same model): tree_pine04 328 apart (n 7), tree_pine06 181 apart (n 5), tree_pine05 713 apart (n 5), tree_stump01 360 apart (n 5), interior_fence002a 78 apart (n 4), tree_deciduous_01a 748 apart (n 4).",
+  "Walls in bands: 17% of wall columns over 256 tall change material at least once; the first change most often 128 or 64 over the foot; pairs (below > above): metalwall_silo01b > metalwall_silo01a, blendgrassdirt01 > brickfloor001a, reflectivity_50 > metalwall_silo01a.",
+  "Slopes: 17 sloped faces over 2000 square units, most often 45, 40, 50 degrees; concretewall_bunker01a, metalwall041a.",
+  "Props: 135 in play; on exact 90s: static 82%, physics 43%; physics tilted 43% (lying most often plant, trash); statics touching a wall 24%, physics within 16 of one 75%; 0.534 props per 100 by 100 of play (0.0 physics).",
+  "Wiring: 4 output lines from 1 entities; commonest OnMapSpawn>SetAutoExposureMin 1, OnMapSpawn>SetAutoExposureMax 1, OnMapSpawn>SetTonemaprate 1; 0 relays (longest chain 0), 0 counters, 0 timers, 0 makers, 0 buttons working doors; 0 lines name nothing.",
+  "Craft: texture scale 0.25 on 86% of faces; lightmapscale 16 on 97% (near the nodes 98%, far 97%); func_detail 17% of brushes; 23 trim strips (4x16 7, 8x16 6); 60 chamfers; 128 displacements.",
+  "Light by fixture: prison_flourescentlight001a: light 252 243 209 6.",
+  "Grime: 0 infodecal and 20 info_overlay; on walls ; wall decals median None over the floor."
+ ],
+ "pictures": [],
+ "pictures_folder": "valve_styleguide_bunkers"
+}

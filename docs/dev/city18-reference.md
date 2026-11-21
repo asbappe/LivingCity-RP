@@ -58,6 +58,98 @@ The pictures are drawn by `map_view.py` (flat colours; props as boxes of their t
 | 29 | `29_payphone.png` | the station's arched hall (eye 3145 -1856 820, looking north-west) | A barrel-vaulted hall with arched ribs, two-tone walls (brick below, plaster above), a row of windows high up, lamps on the walls at one height: an arched roof makes a hall. | true-curves, city18-interiors, city18-lighting |
 | 30 | `30_waiting.png` | a train platform (eye -2165 4233 683, looking south-west) | A platform under a deck on steel columns and beams, the track in a channel, brick walls behind, lights in a row along the far wall and under the deck: structure shown, light in rhythm. | city18-lighting, true-curves |
 
+## Valve's City 17 uprising (d3_c17_01 to 13) (`_dev/reference/valve_c17/`)
+
+Valve's own City 17 uprising maps (d3_c17_01 onwards; the map sources the owner uploaded, 21 November), measured from the VMFs by map_ingest.py (each map's numbers in valve_d3_c17_NN/measure.json) and drawn by map_view.py (flat colours; props as boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; a prop whose size is unknown is a small marker) or as true slices across a street (dark grey solid, white air, pale blue sky, a grid every 128 across and 64 up). Reference only, for shape and dressing: the VMFs are not in the repo, and the owner's own choices win where they differ (streets, stairs, rooms).
+
+- d3_c17_01: Kleiner's lab after the teleport, the rebels' hidden lab; all indoors: rooms 348 by 971 (medians) under 306 (most often 320 and 352), corridors 189 wide under 120, one door01_left in an opening 48 by 108.
+- d3_c17_01: the most crowded place measured so far: 1.31 props per 100 by 100 of play (the streets of d3_c17_02 to 05: 0.15 to 0.58), 71% of statics touching a wall; lab lights (lab_flourescentlight001a and b, 14), pipes, power boxes, crates and file cabinets.
+- Ours: rooms 120 to 128 high in City 18's two tones with a dado rail. Valve's lab is a hall about 306 high, its walls banded (brickwall052e below brickwall052d, the first change 64 or 128 over the foot): a lab or workshop hideout can stand taller than a flat.
+- d3_c17_02: from the lab through the old streets to the Combine wall; 52 street cuts, 30 with kerbs: road 256 (23 of 30, the rest 512), kerb 4 (all 60), crown 0 (all 30), pavements most often 192 (128 to 768: the yards are wide); walls median 544.
+- Ours: streets keep a crown, a kerb of 8 and pavements of 96. Valve's d3_c17_02 street by the checkpoint (x -5640) is about 676 between the fronts (647 at the barricades): pavements 256 and 164, a road of 252 laid in strips of 64, 128 and 60 (concretefloor033q_c17 at the edges, 033k_c17 in the middle), kerbs 4, flat; fronts 680 and 616 over it (height about the width).
+- d3_c17_02 checkpoint: four combine_barricade_med02c, 128 apart, straight across the street from wall to wall (x -5582, y -5956 to -5315), two each side of a gap of 128 that holds a combine_gate_citizen, with metalcombine001 blocks (48 wide, 88 high) in the line; a combine_light001a on the end barricade at 136 up; the street beyond is shut by the Combine wall (metalcombine001) 707 further east.
+- d3_c17_02 wires: utility poles (utilitypole02b) 843 to 1479 apart and wall mounts (utilitypolemount01a) 333 to 2299 (median 697) carry 16 rope spans, median 345 long, slack 100, width 2; 9 of 11 lights warm ('256 224 144' most often).
+- d3_c17_03: the square of the colonnade (trainstation_post001 13 and trainstation_column001 10, each 128 apart, 9 arches, awnings 16) and the streets round it; 387 cuts, 114 with kerbs: kerbs 4 (156 sides) and 8 (59); the road widths there are muddled by the square's steps (the commonest, 608 at 30 cuts, is the square's edge), so the street below was measured by hand.
+- Ours: streets keep a crown, a kerb of 8 and pavements of 96. Valve's street beside the square (x -2496 y -1544): steps down from the square (8 by 12), a pavement of 176, a road of 380 (stonefloor006a with edge strips of 006c and 006b, 64 and 60 wide), kerbs 4, flat; a pavement of 124, then a wall 32 high with a fence round a grass bed 248 wide.
+- d3_c17_03 note: the 'crown 14' measure.json gives at 40 cuts is the square's steps read as a crown; the roads measured by hand are flat. Trees: tree_deciduous_03b 10 (179 to 963 apart), poplars 6 (256 to 496); 27 rope spans, many long (median 751).
+- d3_c17_04: back courts behind the blocks, with headcrab canisters and striders: courtyard_template fronts, barred ground-floor windows (woodwall030b_window01a_bars 6, courtyard_template001c_bars 8); 82% of the nodes outdoors; walls in the cuts median 608 (448 to 704); the big court 1728 across (walls 1568 and 576).
+- d3_c17_04 flats: ceilings 128 (19 of 41 indoor nodes, 120 at 7), corridors 128 wide (19 of 32), rooms 176 by 409 (medians), nearly bare (a TV, a file cabinet, lightbulb01a 5). Roofs: antennaclusters01a 30 (the commonest model), big gutters (gutterlarge_512 and 640) 10; lampposts (lamppost03a_off) 480 to 768 apart; fence01a 11 at 96 to 136.
+- Ours: streets keep a crown, a kerb of 8 and pavements of 96. Valve's d3_c17_04 roads are 256 (38 of 64) or 384 (17), pavements most often 192 and 128, kerbs 4 (102 of 128), crowns 0 or 2.
+- d3_c17_05: a block of flats and shops the Combine have taken: control desks with monitors on three floors 128 apart, 32 metropolice, 6 floor turrets, 11 combine_lock01 on its doors; 616 nodes, 33% outdoors; 411 props (0.58 per 100 by 100).
+- Ours: streets keep a crown, a kerb of 8 and pavements of 96. Valve's d3_c17_05 street (x 1376 y -4992) is 576 wall to wall: a road of 252 in three strips (stonefloor006e_c17 edges of 64 and 60, 006d_c17 in the middle), pavements 128 and 192, kerbs 4, flat; across its 154 kerbed cuts: road 256 (103), pavements 128 (93), kerb 4 (270 of 308), crown 0 (128 of 154).
+- Ours: fronts with a 128 plinth. Valve's d3_c17_05 shop front: a shop storey 136 high (storefront_template001a, glass from 16 to 120) set 32 to 48 back, then a storey every 128 (a course of 32, building_template007f, standing 16 proud, and 96 of windows, 007d) up to 648; across the street, bands of 128 (building_template012f, then 012d) up to 392. At the d3_c17_02 checkpoint: a plinth of 64, a ground floor to 200, a course of 32, then 128 a storey.
+- Ours: rooms 120 to 128 high in City 18's two tones with a dado rail. Valve's d3_c17_05 flats: 120 at 294 of 415 indoor nodes, corridors 99.5 wide (64 to 155), rooms 178 by 380, doorways 48 by 108 (door01_left 5) and 56 to 59 wide for door02_double (6); walls banded plasterwall022c_c17 below 022a; radiators 7, sinks 6; 42 of 45 lights warm (37 of them '256 224 144').
+- d3_c17_06a: the road tunnel under the city (abandoned cars, zombies): 92% of the nodes indoors, ceilings 192 (130 of 357) and 224 (70); the tunnel at y -6319 is 768 wall to wall: a walk of 128 on a kerb of 4, two lanes of 232 (concretefloor033k with edge strips of 033p and 033q) either side of a row of pillars 64 wide, tiled walls (tilewall006c and d); light_cagelight02_on 350 to 1261 apart (median 611), prison_sprinkler001a 30.
+- d3_c17_06b: the citizens' block the Combine raid (40 soldiers, 22 citizens): ceilings 120 (263 of 419 indoor nodes), corridors 96 wide, rooms 218 by 534 (medians); the rebels' barricades are props: shelves (furniture_shelf01a 8) pushed up in pairs, boards over windows as physics props three to a window (wood_board05a, 07a, 05a), mattresses on the floor; destroyedceiling01a to d (27) where the Combine wall broke through.
+- d3_c17_07: the street war at the Combine wall; 131 street cuts, 123 with kerbs: road 256 (63), pavements 128 (75), 192 and 224 (27 each), kerb 4 (234 of 246), crown 0 (112 of 123); walls median 608 (544 to 704); lampposts (lamppost03a_off) 565 to 1431 apart (median 635), utility poles 954 to 1211, 25 rope spans (median 1010).
+- Ours: streets keep a crown, a kerb of 8 and pavements of 96. Valve's d3_c17_07 street at x 5648 y 2784 is 608 wall to wall: road 256, pavements 220 and 128, kerbs 4, flat; fronts 672 and 512 under pitched tile roofs (tileroof004a rising about 112 in 128); a shop storey of 128 (storefront_template001a), then building_template002 or 017 storeys; a hotel sign 256 tall standing 64 proud.
+- d3_c17_07 Combine places: a post in a square 1179 across (combine_booth_short01a facing out, a combine_interface001 beside it, combine_generator01 2, a metalcombine001 block, two combine_barricade_tall02b 384 apart on the pavements of the street beyond); and a block of flats the Combine hold (combine_lock01 8, combine_interface001 4, combine_intmonitor001 3, 2 floor turrets) among bathtubs, beds and radiators.
+- d3_c17_08: the pipe works (all indoors): 994 props, 1.49 per 100 by 100, most of them pipes (pipe01 to 03 straights and connectors over 500) and catwalk rails (handrail04 long 40, short 22, medium 19); statics touching a wall only 22%; ceilings 152 (28), 128 (25), up to 600 in the hall; 55 of 96 lights a dim blue fill ('32 64 80'), cage lights (light_cagelight02_on 20, median 394 apart); flooded tunnels 80 to 364 wide with water only 9 to 15 deep.
+- d3_c17_09: the shop streets under the Nexus (5 snipers): 238 cuts, 177 with kerbs: roads 320 (42), 256 (35), 640 (30) and 192 (26), pavements 160 (63), 128 (55) and 64 (42), kerb 4 (347 of 354), crown 0 (170 of 177); walls 640 most often, and the Nexus wall 1536 high along 169 cuts; ceilings 184 (138 of 277 indoor nodes) and 120 (62).
+- Ours: streets keep a crown, a kerb of 8 and pavements of 96. Valve's d3_c17_09 street at x 4944 y 4584 is 724 wall to wall: road 320 (stonefloor006d with 006f edges), pavements 144 and 256, kerbs 4, flat, fronts 608 and 512.
+- d3_c17_10a: the park and streets before the Nexus (d3_c17_11 and 12 come back to the same ground later, in the same coordinates); 335 street cuts, 84 with kerbs: roads 384 (54 of 84), pavements 128 (56 of 168) and 192 (17), kerbs 4 (128) or 8 (37), crown 0 (82 of 84); wall to wall most often 768; ceilings indoors 120 (43 of 165 nodes) and 312 (37).
+- d3_c17_10a park: a strip about 800 wide between low stone walls (stonewall040f, 28 thick, 128 high at the sides, 28 high round the beds): grass and gravel beds (blendgrassgravel001a) 270 to 340 wide, paths of concrete (concretefloor019a) 260 wide across it; poplars (tree_poplar_01) 512 apart, benches (bench_indoor001a) 226 apart, lampposts (lamppost03a_off) 605 apart, combine_fence01a and 01b in pairs 488 apart along it.
+- d3_c17_10a Combine vehicle gates: a combine_gate_vehicle with a combine_barricade_tall02b (141 by 133 by 261) either side, 384 apart (x -784 and -400, y 4474) and 380 apart (x -2278 and -1898, y 8502); a combine_light001a on a wall beside each, two combine_emitter01 64 apart by the north gate.
+- d3_c17_10a rubble: walldestroyed09g heaps (385 by 440 by 122) about 330 apart along the west side of the street at x -2032 (y 5276, 5592, 5928) on rubble ground 8 to 23 high; a broken front beside it shows its floor at 388 (264 over the street) with concrete_section128floor and wall pieces at the break and rebar clusters (rebar_cluster001a 7, 002b 4) poking out of each.
+- Ours: streets keep a crown, a kerb of 8 and pavements of 96. Valve's d3_c17_10a streets are flat (crown 0 in 82 of 84 cuts) with roads of 384 (stonefloor006d_c17) and pavements of 128 (concretefloor028c_c17), kerbs 4.
+- d3_c17_10b: inside the Overwatch Nexus, an old bank or government block the Combine have grown into (in the frame of d3_c17_10a, 11 and 12 it is the block east of the park, x 32 to 2304, y 4512 to 7884); 96% of the nodes indoors: ceilings 192 (145 of 350), 240 (54) and 256 (43); corridors 133 wide, rooms 226 by 768 (medians); 0.41 props per 100 by 100; walls banded in 93% of tall columns (tilefloor011a below plasterwall043c, 043c below 043b), the first change 16 or 64 over the foot.
+- d3_c17_10b Combine architecture: the Combine's part is brushwork, not props: metalcombine001 on 4639 faces (the most used material, area 668 x 10000 against the old plaster's 762), 921 brushes, most of them thin plates (2 thick 356 times, 8 thick 167, 1 thick 104; longest side median 64); 14% of their faces off the right angles (the old building's plaster 4%), leaning 45 to 70 degrees from flat and turned 25, 45 or 65 degrees in plan; it fills the middle of the block (x 3072 to 4352, y -1024 to 0, 128 to 768 up) and an upper floor (x 2560 to 3584, y -2304 to -1536, 512 to 944 up).
+- d3_c17_10b machines: combine_generator01 31, set in rows along walls 32 to 96 apart (x 2880, y -1280 to -1504; y 509, x 2629 to 2821); cell_01_pod 7 in rows of two and three 40 to 44 apart; consoles as a combine_interface001 or 002 with a combine_intmonitor001 or 003 on it (8 sets); turrets 8 on the ground and 6 on ceilings; prison_flourescentlight001a 39 and combine_light001a 11; a Breen bust in pairs (2, 372 apart); force fields (comshieldwall2) across the courtyard's ways, each between a combine_fence01a and a 01b post 256 apart (combine_fence01a and 01b 5 each).
+- Ours: rooms 120 to 128 high in City 18's two tones with a dado rail. Valve's Nexus keeps the old building's rooms (192 high, plaster banded over tile) and sets the Combine's metal inside them as a second skin of thin, tilted plates, so the Combine reads as grown in, not built from scratch.
+- d3_c17_11: out of the Nexus over its roof and down into the streets (the frame of d3_c17_10a); half the nodes outdoors, most of them on roofs: ceilings indoors 176 (35 of 120) and 128 (20); corridors 128 wide; no kerbed street cut at all (walls median 96 tall: parapets); fronts 64% of wall area (building_template017b, 029j, 029i).
+- d3_c17_11 Nexus roof: flat roofs at 960 with parapets, a Combine post on them: a health charger and a suit charger side by side (28 apart) on one wall, ammo crates (item_item_crate) stacked three, substation_transformer01b (5, 192 apart in a pair), vent_large ducts turning over the roof, combine_mine on the lower roof at 905; combine_bridge walkways (6) link the roofs 560 apart; CombineInnerwallCluster1024 props (12) ring the area as the far Combine wall.
+- d3_c17_11 checkpoint: nine combine_barricade_med01a 64 apart in one straight row from wall to wall across a street 576 wide (x 912, y 3744 to 4256), no gap left; d3_c17_12 has the same row as ten combine_barricade_med01b 63 apart (x 896).
+- d3_c17_12: back through the park before the Nexus after the battle (the same ground as d3_c17_10a): 126 displacements (68 floors, 36 walls, 22 ceilings; power 2 in 83%), 16% of floor area; shell craters about 250 across and up to 190 deep in the paved ways (x -2232 to -1984 at y 7072, floor at -64 under a street at 128); wrecked Combine APCs (combine_apc_wheelcollision 5); rebel barricades of barricade_short04a (12), often in pairs splayed like a V (yaws 120 and 240, 166 apart; 75 and 105, 208 apart), and concrete_debris256barricade001a (4).
+- d3_c17_12 rebel post: a shop on the park's west street blocked up from inside: dumpsters (trashdumpster02, two trashdumpster02b on it at 308), file cabinets stacked two high (filecabinet02 4, controlroom_filecabinet002a), wall001a_base boards over the broken windows (windowdestroyed01a, 01d), and behind them a table with a monitor, keyboard and hard drives: the rebels' radio desk.
+- Ours: streets keep a crown, a kerb of 8 and pavements of 96. Valve's d3_c17_12 park streets are flat with kerbs of 4 and the craters cut straight through road and pavement.
+- d3_c17_10a and 12, the Nexus from outside: an old civic block (about x -444 to 1700, y 4500 to 7900) facing the park; a portico 256 proud in the middle of its park front (columns, steps up 8 by 12 from the plaza), storeys in building_template029 (g, f, d, b, then a cornice of 029j stepping out 32 at 800), a metal mansard roof (metalroof008a) to 960 and a lower middle wing at 896. The Combine's mark outside is props: CombineInnerwall plates (001a 306 by 296 by 999, 001c 90 by 253 by 805, some leaning 5 degrees) set into the front from the ground to 1025, two more standing on the roof to 1441 and 1601; inside it is brushwork (d3_c17_10b).
+- d3_c17_12b: the last ruined block and the road under it (striders outside): 70% of the nodes indoors: ceilings 184 (96 of 275), 120 (59) and 384 (40); floors 192 apart (-320, -192, 0, 192, 384); 0.24 props per 100 by 100, physics tilted 50% (bins, tyres, trash), statics touching a wall 73%; walls banded in 70% of tall columns (tilewall006c below 006a, concretewall032a below plasterwall021a), the first change 128 or 120 over the foot.
+- d3_c17_12b broken block: its front blown off and the floors left open like a doll's house: building_brokenexterior002c (8) and 002a (2), each 40 by 257 by 128, stand along the open edge, concrete_section floor and wall pieces (64 and 128) at the breaks, rebar (rebar003c_64 9, rebar_cluster001a 6) out of them; strip lights (lights_florescent01a 10) and sprinkler pipes 512 long (prison_sprinkler001a 9) on the ceilings; the rebels hold it with barricade_short04a (8) and barricade_tall02a (6).
+- d3_c17_12b road tunnel: tiled walls in bands (tilewall006c below 006a, 006d), a floor of concretefloor013a, cage lights; dumpsters and garbage piles (trashdumpster01a, garbage256_composite002b) against the walls.
+- styleguide_c17_rubble: Valve's style room for City 17 in ruins (a sample, not a level): 30 props in play and no lamps lit (sun '213 152 85 500' at pitch -25, ambient '154 123 61', fog '181 146 121' from 100 to 5000: a warm dusty haze); the ruin is made of big models (collapsedbuilding01awall 4, collapsedbuilding02c 2, building_brokenexterior002a, b and c 6, concrete_debris256pile001a 2, parliament_dome_destroyed_exterior, project_destroyedbuildings01) on displacement ground (21 displacements, still in dev_blendmeasure on 414 faces); lampposts 801 apart along the road, a car, a tanker and a truck cab left on it.
+- styleguide_c17_rubble skeleton: a block stripped to floors every 128 (0 to 512) on posts 32 by 32 and 512 tall (8), with a broken-exterior model (40 by 257 by 128, one storey tall) hung on each open floor edge; d3_c17_12b uses the same models on floors 192 apart.
+- styleguide_c17_rubble_2: a ruined street corner (813 Hammer-hidden objects left out, among them 295 path nodes): 219 props in play, 46 physics (33% of them lying: boards, crates, chairs); wires on utility poles (utilitypole02b 11, 856 apart): 17 spans, median 816 long, slack 100, width 2; fronts 39% of wall area (courtyard_template003f, building_template017o, storefront_template001g); walls banded in 52% of tall columns, the first change 128 or 256 over the foot; 48 displacements; sun '219 191 148' at pitch -25, fog from 100 to 8000.
+- styleguide_c17_rubble_2 ruined shop: a corner shop open to the street (display_cooler01a 4, kitchen_fridge001a 3, propane canisters 3, chairs knocked over) under broken floors: concrete_section64floor001b and 001c pieces (24) along each break, rebar (rebar001c_64 6, rebar003c_64 4) out of them, walldestroyed09c (4) and debris piles (128 and 256 across) under the holes; bottles and cans (garbage_glassbottle 12, popcan01a 5) scattered as physics props.
+
+| # | File | Where | What it teaches | Lessons |
+|---|---|---|---|---|
+| U1 | `valve_c17/01_kleiner_lab_cut.png` | d3_c17_01, Kleiner's lab from the south-west, box x -7400 to -5600, y -2064 to -264, cut at 206 | The rebels' hidden lab: a hall about 350 wide and 970 long under 306, packed to the walls (1.31 props per 100 by 100, 71% of statics touching a wall): benches, pipes, power boxes, the teleporter in its own bay. | valve-furniture-on-walls, valve-busy-and-quiet, valve-wall-bands |
+| U2 | `valve_c17/02_checkpoint_iso.png` | d3_c17_02, the checkpoint from the south-west, box x -5950 to -5150, y -6100 to -5150, cut at 360, the Combine wall cluster props left out | A Combine checkpoint across a street 647 wide: four combine_barricade_med02c (128 each) from wall to wall, a gap of 128 in the middle for a combine_gate_citizen, a combine_light001a on the end one. The barricades and the gate draw as small markers (their size is not in asset_facts.json); the CombineInnerwallCluster props over the roofs are left out (they draw as solid boxes over 1000 across). | combine-kit |
+| U3 | `valve_c17/03_checkpoint_street_section.png` | d3_c17_02, a true cut across the street at x -5640 y -5635, by the checkpoint | About 676 between the fronts: pavements 256 and 164, a flat road of 252 in strips of 64, 128 and 60, kerbs 4; fronts 680 and 616 (a plinth of 64, a ground floor to 200, then 128 a storey). | valve-street-proportions, street-profile, valve-trim-strips |
+| U4 | `valve_c17/04_street_wires_eye.png` | d3_c17_02, eye level outdoors looking south-west (eye -6892 -5996 64, yaw 225) | Wires over the old street: utility poles 843 to 1479 apart and wall mounts about 700 apart, spans median 345 with a slack of 100; trees in the verges. | valve-overhead-cables |
+| U5 | `valve_c17/05_square_street_section.png` | d3_c17_03, a true cut across the street beside the square at x -2496 y -1544 | Steps down from the square (8 by 12), a pavement of 176, a flat road of 380 with edge strips 64 and 60 wide, kerbs 4, a pavement of 124, then a wall 32 high with a fence round a grass bed. | street-profile, valve-trim-strips |
+| U6 | `valve_c17/06_square_colonnade_cut.png` | d3_c17_03, the colonnade of the square from the south-west, box x -3832 to -2032, y -2852 to -1052, cut at 238 | A colonnade along the square: posts and columns every 128 (trainstation_post001 12 and trainstation_column001 10 in this part), benches between them (bench_indoor001a 4, 197 apart), a Combine monitor on the square. | valve-column-rhythm |
+| U7 | `valve_c17/07_tree_street_eye.png` | d3_c17_03, eye level outdoors looking east (eye -5344 -3776 64, yaw 0) | A side street with grass verges and trees (tree_deciduous_03b 179 to 963 apart), dumpsters on the pavement and a playground (playgroundtick-tack-toe_block01a 8): the old city kept some green. | valve-clutter |
+| U8 | `valve_c17/08_back_court_blocks_iso.png` | d3_c17_04, blocks round the back courts from the south-west, box x -2040 to -240, y -6036 to -4236 | Blocks 448 to 704 high round back courts, their roofs crowded with antenna clusters (antennaclusters01a 30, drawn as boxes of their size), big gutters down the walls, barred windows on the ground floor. | valve-template-fronts, skyline-corners |
+| U9 | `valve_c17/09_court_flats_cut.png` | d3_c17_04, flats by the back court from the south-west, box x -4300 to -3000, y -4000 to -2800, cut at 240 | Flats over the back court: ceilings 128, corridors 128 wide, rooms about 176 by 409, nearly bare (a TV, a file cabinet, a bulb). | valve-flat-interiors, room-to-move |
+| U10 | `valve_c17/10_shop_street_section.png` | d3_c17_05, a true cut across the shop street at x 1376 y -4992 | 576 wall to wall: a flat road of 252 in three strips, pavements 128 and 192, kerbs 4; fronts 648 (a shop storey of 136, then 128 a storey) and 392. | valve-street-proportions, street-profile, facades |
+| U11 | `valve_c17/11_combine_office_cut.png` | d3_c17_05, the block the Combine took, from the south-west, box x 1004 to 2804, y -4153 to -2353, cut at 391 | The Combine's office in a block of flats: rows of controlroom_desk001b with monitor02 and keyboards (11 each) on floors 128 apart, file cabinets (10), combine_lock01 on the doors, combineinnerwall001a panels; 19 metropolice and 4 floor turrets in this part. | combine-kit, valve-furniture-on-walls |
+| U12 | `valve_c17/12_shop_street_eye.png` | d3_c17_05, eye level outdoors looking south (eye 1166 -5280 178, yaw 270) | Shopfronts along a 576 street: a shop storey 136 high set 32 to 48 back, storeys of 128 over it (a course of 32 and 96 of windows), window props (building_tem002_window01 40, half with bars), door02_double at the doors. | facades, valve-template-fronts, valve-wall-bands |
+| U13 | `valve_c17/13_road_tunnel_eye.png` | d3_c17_06a, eye level in the road tunnel looking north (eye 3788 -6319 -196, yaw 90) | A road tunnel about 196 high: two lanes either side of a row of pillars, a raised walk along the tiled wall, cage lights about 600 apart, abandoned cars and oil drums. | valve-column-rhythm, valve-light-pools |
+| U14 | `valve_c17/14_road_tunnel_section.png` | d3_c17_06a, a true cut across the road tunnel at x 3904 y -6319 | 768 wall to wall and about 196 high: a walk of 128 on a kerb of 4, two lanes of 232, a row of pillars 64 wide between them with kerb strips of 32. | valve-column-rhythm |
+| U15 | `valve_c17/15_raided_flats_cut.png` | d3_c17_06b, the citizens' flats from the south-west, box x 3400 to 4700, y 450 to 1300, cut at 360, the Combine wall props left out | The flats the Combine raid, floor at 256: rooms about 218 by 534 under 120, corridors 96 wide, a kitchen (refrigerator, stove), shelves pushed up, boards over the corridor window. The CombineInnerwall001a props of the advancing wall are left out (they draw as solid boxes 300 by 300 by 1000). | valve-flat-interiors, valve-boarded-openings, valve-npc-raid |
+| U16 | `valve_c17/16_flat_room_eye.png` | d3_c17_06b, eye level in a flat looking east (eye 2980 1392 256, yaw 0) | One room of a citizen's flat, about 200 by 170 under 120 (floor 192), plaster walls, a barred window (courtyard_template002c_bars), shelves against the walls, bottles left about. | valve-flat-interiors, valve-furniture-on-walls |
+| U17 | `valve_c17/17_combine_held_flats_cut.png` | d3_c17_07, the block the Combine hold, from the south-west, box x 3977 to 5777, y 230 to 2030, cut at 246 | Flats the Combine took: the homes left as they were (bathtubs 7, beds 4, toilets 4, radiators 5, dome lights on and off), the Combine's kit put in (combine_lock01 8 on the doors, combine_interface001 4, combine_intmonitor001 3), 2 floor turrets and 8 soldiers. | combine-kit, valve-flat-interiors |
+| U18 | `valve_c17/18_combine_post_iso.png` | d3_c17_07, the Combine post in the square from the south-west, box x 6300 to 7500, y 1150 to 1950, cut at 300, the Combine wall props left out | A Combine post in a square 1179 across: a combine_booth_short01a facing out with a combine_interface001 beside it, generators and a metalcombine001 block behind; two combine_barricade_tall02b 384 apart on the pavements where the street leaves the square. | combine-kit |
+| U19 | `valve_c17/19_flats_corridor_eye.png` | d3_c17_07, eye level in a corridor of the held flats looking north (eye 4680 696 192, yaw 90) | A flats corridor: 113 wide under 120 (medians for the map), doors 48 by 108 (door01_left) with combine_lock01 on them, a dome light every few doors, one long view down it. | valve-flat-interiors, valve-sightlines |
+| U20 | `valve_c17/20_warehouse_hall_eye.png` | d3_c17_08, eye level in the pipe works hall looking north (eye 1414 -725 128, yaw 90) | An industrial hall: catwalks with handrail04 rails, pipe runs on stands (most props here are pipes, only 22% of statics touch a wall), cage lights in pools over a dim blue fill, oil drums on the floor. | valve-fixture-lights, valve-light-pools |
+| U21 | `valve_c17/21_flooded_tunnel_eye.png` | d3_c17_08, eye level in a flooded tunnel looking west (eye 922 -1611 -431, yaw 180) | A flooded tunnel under the works: 80 to 364 wide, the crown 133 to 356 up, water only 9 to 15 deep over an uneven bed, pipes along the wall and fences. | valve-water-depth |
+| U22 | `valve_c17/22_shop_window_street_eye.png` | d3_c17_09, eye level on a shop street looking east (eye 5470 6123 60, yaw 0) | A shop street: a glass shopfront with coolers (display_cooler01a) and fluorescent tubes seen inside, handrails at the shop's steps; the map's streets most often have a road of 320 or 256, pavements of 128 to 160 and kerbs of 4. | facades |
+| U23 | `valve_c17/23_shop_and_office_cut.png` | d3_c17_09, a shop and offices from the south-west, box x 5659 to 7459, y 5599 to 7399, cut at 340 | A corner shop and offices behind the fronts: coolers and fluorescent tubes in the shop, control desks and file cabinets in the office, rubble piles and pallets, zombies in the rooms. | valve-story-props, city18-interiors |
+| U24 | `valve_c17/24_nexus_park_eye.png` | d3_c17_10a, eye level in the park before the Nexus looking north (eye -1376 6532 186, yaw 90) | A park strip about 800 wide between low stone walls (stonewall040f 28 thick, 128 high at the sides), beds of grass and gravel 270 to 340 wide, paths of concrete 260 wide across; poplars 512 apart, benches 226 apart, lampposts 605 apart; fronts of building_template028j close the far end. A place for people to stand about under the Combine's eye. | valve-street-proportions, valve-column-rhythm, planting-spots |
+| U25 | `valve_c17/25_rubble_street_eye.png` | d3_c17_10a, eye level in the street at x -2032 looking north (eye -2032 4220 188, yaw 90) | A street after shelling: walldestroyed09g heaps (385 by 440 by 122, drawn as orange boxes) about 330 apart along one side on rubble ground 8 to 23 high, a flat road of stonefloor006d_c17 left clear down the middle; a broken front beside it with its floor at 388 (264 over the street), concrete_section pieces at the break and rebar clusters out of each. | valve-rubble-fitted, valve-broken-edges, valve-rubble-displacements |
+| U26 | `valve_c17/26_nexus_core_cut.png` | d3_c17_10b, the middle of the Nexus from the south-west, box x 2900 to 4500, y -1200 to 200, cut at 420, the CombineInnerwall and combine_bridge props left out | The Combine grown into an old block: plaster rooms 192 high on the ground floor (floor 256) with the Combine's metal (metalcombine001, blue-grey) set inside them as a second skin of thin plates, cold blue light, consoles (combine_interface with a monitor on it) and generators in rows on the walls; the old outer walls stay. | combine-kit, valve-combine-cold |
+| U27 | `valve_c17/27_nexus_combine_corridor_eye.png` | d3_c17_10b, eye level in a Combine corridor in the middle of the Nexus looking east (eye 3500 -456 320, yaw 0) | A Combine corridor 192 high: on one side the metal panels stand 48 to 72 from the middle of the walk, stepping in and out by 8 to 24 every 32 to 64; the other side opens into bays 88 to 408 deep; no two panels the same, nothing on a centre line. This is the Combine's odd, unsymmetrical look: plates of 1 to 8 thick, many tilted, rather than a plain metal box. | combine-kit, valve-combine-cold |
+| U28 | `valve_c17/28_nexus_courtyard_eye.png` | d3_c17_10b, eye level in the Nexus courtyard looking north-east (eye 2432 -608 320, yaw 45) | The courtyard inside the Nexus, open to the sky, floor at 256: old stone walls (stonewall050c) 352 to 608 away, steps up (8 by 12) to the next level, a low barricade of three pieces (barricade_short01a to 03a, the orange block) before them, and 420 east a force field (comshieldwall2, the cyan sheet) between two Combine fence posts (combine_fence01a and 01b, 192 tall) 256 apart; consoles, generators and combine_light001a lamps in the Combine metal beyond. A Combine door for Living City: two posts and a field, not a gate. | combine-kit |
+| U29 | `valve_c17/29_combine_barricade_row_cut.png` | d3_c17_11, a street closed by the Combine from the south-west, box x 300 to 1500, y 3300 to 4600, cut at 420, the CombineInnerwall props left out | A street 576 wide shut from wall to wall by nine combine_barricade_med01a (96 by 65 by 108) 64 apart in one straight row, no gap; the fronts either side keep their shop storeys. A Combine closure, not a checkpoint: nobody passes. | valve-combine-barricade-rows, combine-kit |
+| U30 | `valve_c17/30_nexus_roof_post_iso.png` | d3_c17_11, the roofs of the Nexus from the south-west, box x 600 to 2200, y 4800 to 7700, the CombineInnerwall and combine_bridge props left out | The Nexus roof at 960 as a Combine post: parapets round flat roofs, a health and a suit charger side by side, crates stacked three, substation transformers (orange boxes) and vent ducts on the roof, soldiers (green) at the edges; the combine_bridge walkways between roofs are left out (they draw as boxes 320 by 212 by 429). | combine-kit, raven-rooftop-refuge |
+| U31 | `valve_c17/31_cratered_park_eye.png` | d3_c17_12, eye level at the park's west side looking east after the battle (eye -2336 7072 194, yaw 0) | The park of U24 after the battle: shell craters (brown) about 250 across and up to 190 deep cut through the paving, rebel barricades (barricade_short04a, orange) across the ways, some in pairs splayed like a V, a colonnaded front at the end. The same place, two states: a map piece can swap its whole, clean dress for a broken one. | valve-swap-broken, valve-rebel-barricades, valve-rubble-displacements |
+| U32 | `valve_c17/32_nexus_outside_iso.png` | d3_c17_10a, the Overwatch Nexus from the south-west, box x -900 to 2500, y 4200 to 8200 (the CombineInnerwall plates drawn as orange boxes of their size) | The Nexus is an old civic block the Combine took, not a new building: a portico 256 proud in the middle of its park front, storeys in building_template029 to a cornice at 800, a metal mansard roof to 960, a rounded corner; the Combine's plates (the orange boxes, 306 by 296 by 999) stand in the front and over the roof to 1601, off the axis and not in pairs. For Living City: a Combine building can be one of the city's old fronts with a few Combine plates breaking through it, never symmetrical. | combine-kit, valve-template-fronts, skyline-corners |
+| U33 | `valve_c17/33_broken_block_iso.png` | d3_c17_12b, the ruined block from the south-west, box x -5899 to -4099, y -720 to 1080 (the busiest knot of props, 50 near -4998 179) | A block with its front blown off: floors 192 apart left open to the street like a doll's house, broken-edge models (building_brokenexterior002c, 40 by 257 by 128) along each open floor, concrete_section pieces and rebar at the breaks, rubble and barricades (orange) inside where the rebels hold it. | valve-broken-edges, valve-rubble-fitted, valve-rebel-barricades |
+| U34 | `valve_c17/34_rubble_skeleton_block_iso.png` | styleguide_c17_rubble, the ruined block from the south-west, box x -3981 to -2181, y 988 to 2788 | A block stripped to its frame: floor slabs every 128 (0 to 512) on posts 32 by 32 and 512 tall, and on each open floor edge one broken-exterior model (building_brokenexterior002a, b or c, 257 wide and 128 tall, one storey). A ruin is a kit: slabs, posts and edge models, not hand-cut broken brushes. | valve-broken-edges, valve-rubble-fitted |
+| U35 | `valve_c17/35_rubble_corner_shop_iso.png` | styleguide_c17_rubble_2, the ruined corner shop from the south-west, box x 315 to 2115, y 1078 to 2878 (the busiest knot of props, 57 near 1214 1977) | A corner shop under broken floors, still stocked: coolers, fridges and propane along the walls, chairs knocked over; concrete_section64floor pieces (24) along each break with rebar out of them, walldestroyed09c and debris piles of 128 and 256 under the holes, bottles and cans thrown about. A looted shop for a rebel or scavenger scene. | valve-rubble-fitted, valve-story-props, valve-tilt-and-topple |
+| U36 | `valve_c17/36_rubble_wired_street_eye.png` | styleguide_c17_rubble_2, eye level in the street looking north (eye 2636 -1422 2108, yaw 90; the room has no visible nodes, so the eyes were placed on floors round the props) | A ruined street that still has its wires: utility poles (utilitypole02b) 856 apart carrying spans median 816 long with a slack of 100, a debris pile (concrete_debris256pile001a, the orange box at the front) and a wrecked hatchback on the road, rubble ground of concretefloor020a and 007a. | valve-overhead-cables, valve-wrecked-cars, valve-rubble-fitted |
+
 ## Valve's Route Kanal (d1_canals_01 to 13) (`_dev/reference/valve_canals/`)
 
 Valve's own Route Kanal (d1_canals_01, 01a, 02, 03, 05 to 13; the Source SDK copies the owner uploaded, 21 November), measured from the VMFs and drawn by map_view.py (R7 to R20) or as true slices across the channel (R1 to R6: dark grey solid, white air, blue water, pale blue sky, a grid every 128). Valve's maps are reference only, for shape and dressing: their VMFs are not in the repo, and the owner's own canal stays dry.
@@ -641,7 +733,7 @@ Pavements 96 wide at the floor's height with a kerb of 8; gutters 8 down; cobble
 - **Checked by:** review
 - **Tags:** streets, owner, city18
 
-- **See:** `03_street.png`, `09_payphone.png`, `10_waiting.png`, `11_street_main.png`, `13_toilet.png`, `17_street.png`, `21_waiting.png`, `22_street_section.png`, `valve_d1_trainstation_03/03_street.png`, `valve_d3_c17_13/03_street.png`
+- **See:** `03_street.png`, `09_payphone.png`, `10_waiting.png`, `11_street_main.png`, `13_toilet.png`, `17_street.png`, `21_waiting.png`, `22_street_section.png`, `valve_c17/03_checkpoint_street_section.png`, `valve_c17/05_square_street_section.png`, `valve_c17/10_shop_street_section.png`, `valve_d1_trainstation_03/03_street.png`, `valve_d3_c17_13/03_street.png`
 
 ### Building fronts, not brick walls (`facades`)
 
@@ -652,7 +744,7 @@ Dress a building line as houses: lots of different heights, a plinth, a string c
 - **Checked by:** review
 - **Tags:** facades, owner, city18
 
-- **See:** `01_overview_sw.png`, `09_payphone.png`, `12_block_above.png`, `13_toilet.png`, `23_spot.png`, `27_square_above.png`, `28_covered_above.png`
+- **See:** `01_overview_sw.png`, `09_payphone.png`, `12_block_above.png`, `13_toilet.png`, `23_spot.png`, `27_square_above.png`, `28_covered_above.png`, `valve_c17/10_shop_street_section.png`, `valve_c17/12_shop_street_eye.png`, `valve_c17/22_shop_window_street_eye.png`
 
 ### Not every window the same glass (`glass-variety`)
 
@@ -672,7 +764,7 @@ Corner buildings get a cut (chamfered) corner, often with a doorway; rooflines g
 - **Checked by:** review
 - **Tags:** facades, city18
 
-- **See:** `01_overview_sw.png`, `02_overview_ne.png`, `03_street.png`, `08_combine.png`, `09_payphone.png`, `11_street_main.png`, `12_block_above.png`, `13_toilet.png`, `27_square_above.png`, `valve_d1_town_03/01_overview_sw.png`, `valve_d1_trainstation_01/01_overview_sw.png`, `valve_d1_trainstation_02/02_overview_ne.png`, `valve_d1_trainstation_03/02_overview_ne.png`, `valve_d1_trainstation_04/02_overview_ne.png`, `valve_d3_c17_13/06_block.png`
+- **See:** `01_overview_sw.png`, `02_overview_ne.png`, `03_street.png`, `08_combine.png`, `09_payphone.png`, `11_street_main.png`, `12_block_above.png`, `13_toilet.png`, `27_square_above.png`, `valve_c17/08_back_court_blocks_iso.png`, `valve_c17/32_nexus_outside_iso.png`, `valve_d1_town_03/01_overview_sw.png`, `valve_d1_trainstation_01/01_overview_sw.png`, `valve_d1_trainstation_02/02_overview_ne.png`, `valve_d1_trainstation_03/02_overview_ne.png`, `valve_d1_trainstation_04/02_overview_ne.png`, `valve_d3_c17_13/06_block.png`
 
 ### A town is not one straight line (`town-shape`)
 
@@ -701,7 +793,7 @@ Leave walking room: furniture against walls, a clear path through every room and
 - **Checked by:** map_lint.py overlap (a solid prop inside another), printed as LOOK lines by every build
 - **Tags:** interiors, owner
 
-- **See:** `14_flats_plan.png`, `valve_d1_trainstation_03/05_flat.png`, `valve_d1_trainstation_05/05_lab_cut.png`
+- **See:** `14_flats_plan.png`, `valve_c17/09_court_flats_cut.png`, `valve_d1_trainstation_03/05_flat.png`, `valve_d1_trainstation_05/05_lab_cut.png`
 
 ### Interiors in City 18's way (`city18-interiors`)
 
@@ -712,18 +804,18 @@ Plaster walls in two tones split by a dado rail, wooden floors, door casings pro
 - **Checked by:** review
 - **Tags:** interiors, city18
 
-- **See:** `04_station.png`, `05_flat.png`, `14_flats_plan.png`, `16_ladder.png`, `20_payphone.png`, `24_toilet.png`, `25_station_plan.png`, `29_payphone.png`
+- **See:** `04_station.png`, `05_flat.png`, `14_flats_plan.png`, `16_ladder.png`, `20_payphone.png`, `24_toilet.png`, `25_station_plan.png`, `29_payphone.png`, `valve_c17/23_shop_and_office_cut.png`
 
 ### The Combine's places in the Combine's kit (`combine-kit`)
 
 Use the Combine's own props: booths (combine_booth_short01a/med01a), buttresses (combinebuttress), bunker shields, fences with fields (combine_fence01a/b, combine_emitter01), railings (props_combine railing_128/256/512), lights (combine_light001/002), monitors, cameras (combinecamera001), locks, health chargers, metal (metalcombine002).
 
 - **Why:** The owner's map: combine_fence01a/b 12 each, combine_light002a 75; review, 20 November (checkpoint, thumper, depot, armoury in brushes, prison fencing and cream plaster).
-- **How:** grep source/hl2/props_combine in the lists. Into the old city the Combine comes as models (combine_barricade_*, combine_lock01, monitors, CombineInnerwallCluster1024, combine_light002a); its brushes are rare: 34 in d1_trainstation_02, metalcombine001 panels 4 to 8 thick, a third of them cut into the old wall, none in d1_trainstation_03 to 05.
+- **How:** grep source/hl2/props_combine in the lists. Into the old city the Combine comes as models (combine_barricade_*, combine_lock01, monitors, CombineInnerwallCluster1024, combine_light002a); its brushes are rare: 34 in d1_trainstation_02, metalcombine001 panels 4 to 8 thick, a third of them cut into the old wall, none in d1_trainstation_03 to 05. Valve's uprising (d3_c17_05 to 10a, 21 November): combine_lock01 on the wall beside 21 of 22 Combine func_doors, centred 52 up (44 to 58); the creeping wall (combineinnerwall001a, combineinnerwallcluster1024) high in the skyline in runs of 2 to 4 pieces 150 to 250 apart, each turned 15 degrees from the last; roadblocks in valve-combine-barricade-rows.
 - **Checked by:** review
 - **Tags:** combine, city18
 
-- **See:** `07_cells.png`, `08_combine.png`, `18_cells.png`, `19_combine.png`, `22_street_section.png`, `26_combine_plan.png`, `27_square_above.png`, `valve_d1_trainstation_01/07_interrogation.png`, `valve_d1_trainstation_02/04_plaza.png`, `valve_d2_coast_12/03_bunker_mouth.png`, `valve_d3_citadel_01/03_cliff_cut.png`
+- **See:** `07_cells.png`, `08_combine.png`, `18_cells.png`, `19_combine.png`, `22_street_section.png`, `26_combine_plan.png`, `27_square_above.png`, `valve_c17/02_checkpoint_iso.png`, `valve_c17/11_combine_office_cut.png`, `valve_c17/17_combine_held_flats_cut.png`, `valve_c17/18_combine_post_iso.png`, `valve_c17/26_nexus_core_cut.png`, `valve_c17/27_nexus_combine_corridor_eye.png`, `valve_c17/28_nexus_courtyard_eye.png`, `valve_c17/29_combine_barricade_row_cut.png`, `valve_c17/30_nexus_roof_post_iso.png`, `valve_c17/32_nexus_outside_iso.png`, `valve_d1_trainstation_01/07_interrogation.png`, `valve_d1_trainstation_02/04_plaza.png`, `valve_d2_coast_12/03_bunker_mouth.png`, `valve_d3_citadel_01/03_cliff_cut.png`
 
 ### Do not replace what the owner liked (`keep-what-works`)
 
@@ -751,6 +843,8 @@ Mark where the game can plant (melons, pumpkins): about 8 info_targets lc_garden
 - **How:** map_mods_b.m_garden. The game does not plant yet (TODO.md).
 - **Checked by:** review
 - **Tags:** gameplay, owner
+
+- **See:** `valve_c17/24_nexus_park_eye.png`
 
 ### Possible headquarters carry a pole marker (`flagpole-markers`)
 
@@ -875,7 +969,7 @@ A wall taller than about 256 is never one texture. Lay it in courses: a base (st
 - **Checked by:** map_lint.py bare: a face of one material 384 long and 256 tall with nothing within 24 in front of it (printed by every build as LOOK: bare).
 - **Tags:** facades, materials, valve
 
-- **See:** `valve_canals/04_battered_canal_section.png`, `valve_d1_trainstation_01/01_overview_sw.png`, `valve_d1_trainstation_01/02_overview_ne.png`, `valve_d1_trainstation_01/12_courtyard_plan.png`, `valve_d1_trainstation_02/01_overview_sw.png`, `valve_d1_trainstation_02/03_station_front.png`
+- **See:** `valve_c17/01_kleiner_lab_cut.png`, `valve_c17/12_shop_street_eye.png`, `valve_canals/04_battered_canal_section.png`, `valve_d1_trainstation_01/01_overview_sw.png`, `valve_d1_trainstation_01/02_overview_ne.png`, `valve_d1_trainstation_01/12_courtyard_plan.png`, `valve_d1_trainstation_02/01_overview_sw.png`, `valve_d1_trainstation_02/03_station_front.png`
 
 ### Columns on a rhythm (`valve-column-rhythm`)
 
@@ -886,7 +980,7 @@ Big halls and long walls are broken into bays by columns, pilasters or posts at 
 - **Checked by:** map_lint.py bare: a face of one material 384 long and 256 tall with nothing within 24 in front of it (printed by every build as LOOK: bare).
 - **Tags:** geometry, interiors, valve
 
-- **See:** `valve_d1_trainstation_01/05_payphone.png`, `valve_d1_trainstation_01/06_trash.png`, `valve_d1_trainstation_01/08_platform.png`, `valve_d1_trainstation_01/10_hall_plan.png`, `valve_d1_trainstation_01/11_platform_plan.png`, `valve_d1_trainstation_02/03_station_front.png`, `valve_d1_trainstation_02/06_station_hall_cut.png`
+- **See:** `valve_c17/06_square_colonnade_cut.png`, `valve_c17/13_road_tunnel_eye.png`, `valve_c17/14_road_tunnel_section.png`, `valve_c17/24_nexus_park_eye.png`, `valve_d1_trainstation_01/05_payphone.png`, `valve_d1_trainstation_01/06_trash.png`, `valve_d1_trainstation_01/08_platform.png`, `valve_d1_trainstation_01/10_hall_plan.png`, `valve_d1_trainstation_01/11_platform_plan.png`, `valve_d1_trainstation_02/03_station_front.png`, `valve_d1_trainstation_02/06_station_hall_cut.png`
 
 ### Light in pools, not floods (`valve-light-pools`)
 
@@ -897,7 +991,7 @@ Let places be dim and light them in pools: a fixture over each door, each way on
 - **Checked by:** map_lint.py offlamp checks that an off lamp has no light; pools are judged in the viewer.
 - **Tags:** lighting, valve
 
-- **See:** `valve_canals/10_city_canal_eye.png`, `valve_d1_trainstation_01/03_platform.png`, `valve_d1_trainstation_01/07_interrogation.png`, `valve_d1_trainstation_01/08_platform.png`, `valve_d1_trainstation_03/04_corridor.png`, `valve_d1_trainstation_05/04_teleport.png`, `valve_d3_citadel_01/04_pipe.png`
+- **See:** `valve_c17/13_road_tunnel_eye.png`, `valve_c17/20_warehouse_hall_eye.png`, `valve_canals/10_city_canal_eye.png`, `valve_d1_trainstation_01/03_platform.png`, `valve_d1_trainstation_01/07_interrogation.png`, `valve_d1_trainstation_01/08_platform.png`, `valve_d1_trainstation_03/04_corridor.png`, `valve_d1_trainstation_05/04_teleport.png`, `valve_d3_citadel_01/04_pipe.png`
 
 ### Clutter on the edges (`valve-clutter`)
 
@@ -908,7 +1002,7 @@ Dress floors with small loose things (bottles, cans, papers, boxes, suitcases, c
 - **Checked by:** map_lint.py overlap and map_floating.py catch clutter inside or above things; the clear lane is judged in the viewer.
 - **Tags:** props, valve
 
-- **See:** `valve_canals/08_city_canal_iso.png`, `valve_canals/16_shanty_camp_iso.png`, `valve_canals/19_gun_station_iso.png`, `valve_canals/20_boxcar_hideout_iso.png`, `valve_d1_trainstation_01/03_platform.png`, `valve_d1_trainstation_01/05_payphone.png`, `valve_d1_trainstation_01/11_platform_plan.png`, `valve_d1_trainstation_02/04_plaza.png`, `valve_d1_trainstation_04/03_alley.png`, `valve_d1_trainstation_05/03_lab.png`, `valve_d3_c17_13/02_overview_ne.png`, `valve_d3_c17_13/04_square.png`, `valve_d3_c17_13/05_barricade.png`
+- **See:** `valve_c17/07_tree_street_eye.png`, `valve_canals/08_city_canal_iso.png`, `valve_canals/16_shanty_camp_iso.png`, `valve_canals/19_gun_station_iso.png`, `valve_canals/20_boxcar_hideout_iso.png`, `valve_d1_trainstation_01/03_platform.png`, `valve_d1_trainstation_01/05_payphone.png`, `valve_d1_trainstation_01/11_platform_plan.png`, `valve_d1_trainstation_02/04_plaza.png`, `valve_d1_trainstation_04/03_alley.png`, `valve_d1_trainstation_05/03_lab.png`, `valve_d3_c17_13/02_overview_ne.png`, `valve_d3_c17_13/04_square.png`, `valve_d3_c17_13/05_barricade.png`
 
 ### Streets in Valve's proportions (`valve-street-proportions`)
 
@@ -919,7 +1013,7 @@ A City 17 street is about 640 to 768 wall to wall: a roadway of 256 (320 on the 
 - **Checked by:** review (the viewer from a pavement eye)
 - **Tags:** streets, valve
 
-- **See:** `valve_d1_trainstation_02/01_overview_sw.png`, `valve_d1_trainstation_03/03_street.png`, `valve_d1_trainstation_04/01_overview_sw.png`, `valve_d1_trainstation_04/04_street.png`, `valve_d3_c17_13/01_overview_sw.png`, `valve_d3_c17_13/03_street.png`
+- **See:** `valve_c17/03_checkpoint_street_section.png`, `valve_c17/10_shop_street_section.png`, `valve_c17/24_nexus_park_eye.png`, `valve_d1_trainstation_02/01_overview_sw.png`, `valve_d1_trainstation_03/03_street.png`, `valve_d1_trainstation_04/01_overview_sw.png`, `valve_d1_trainstation_04/04_street.png`, `valve_d3_c17_13/01_overview_sw.png`, `valve_d3_c17_13/03_street.png`
 
 ### Upper storeys and far blocks as painted fronts (`valve-template-fronts`)
 
@@ -930,29 +1024,29 @@ Where the player cannot reach, Valve's fronts are flat walls in building_templat
 - **Checked by:** map_assets.py (the materials exist); the look in the viewer
 - **Tags:** facades, valve
 
-- **See:** `valve_d1_trainstation_02/01_overview_sw.png`, `valve_d1_trainstation_02/05_courtyard.png`, `valve_d1_trainstation_02/07_apartment_block.png`, `valve_d1_trainstation_03/01_overview_sw.png`, `valve_d1_trainstation_04/01_overview_sw.png`, `valve_d1_trainstation_04/06_block.png`
+- **See:** `valve_c17/08_back_court_blocks_iso.png`, `valve_c17/12_shop_street_eye.png`, `valve_c17/32_nexus_outside_iso.png`, `valve_d1_trainstation_02/01_overview_sw.png`, `valve_d1_trainstation_02/05_courtyard.png`, `valve_d1_trainstation_02/07_apartment_block.png`, `valve_d1_trainstation_03/01_overview_sw.png`, `valve_d1_trainstation_04/01_overview_sw.png`, `valve_d1_trainstation_04/06_block.png`
 
 ### Flats at Valve's size (`valve-flat-interiors`)
 
 A City 17 flat: ceiling 120 over the floor (112 to 128), corridors 64 to 128 wide, rooms about 160 to 232 by 224 to 376, doorways 48 wide and 108 high (door01_left; 96 for a pair), stairs 8 by 12 in their own shaft; furniture only against the walls (radiators under windows, shelves, a couch, a TV), a bulb or dome light per room and every few doors in a corridor.
 
-- **Why:** d1_trainstation_03: floor to ceiling 120 at 81 of 125 indoor AI nodes (112: 17, 128: 11); rooms median 160 by 324; doorways 48x108 and 60x108; radiator01a 16 (the commonest model), shelves 23, couches 7, lightbulb01a 12, light_domelight02_on 8. Ceilings are 120 in Ravenholm too (19 of 41) and d3_c17_13 (87 of 157), 128 in d1_trainstation_04 (32 of 75); halls and labs 248 to 352. Pictures T3.4 to T3.7, R7.
+- **Why:** d1_trainstation_03: floor to ceiling 120 at 81 of 125 indoor AI nodes (112: 17, 128: 11); rooms median 160 by 324; doorways 48x108 and 60x108; radiator01a 16 (the commonest model), shelves 23, couches 7, lightbulb01a 12, light_domelight02_on 8. Ceilings are 120 in Ravenholm too (19 of 41) and d3_c17_13 (87 of 157), 128 in d1_trainstation_04 (32 of 75); halls and labs 248 to 352. Pictures T3.4 to T3.7, R7. The uprising agrees (21 November): ceilings 120 at 294 nodes in d3_c17_05, 263 in 06b, 124 in 07; doorways 48x108 (24), 96x108 (10), 56 and 59 by 108 (6); Valve's standards room explains the 120: a storey of 128 with an 8 floor (valve-standard-sizes).
 - **How:** Interior modules: 120 to 128 in flats and houses, taller only for halls, shops and Combine places; doorway 48 by 108 for door01_left. Small rooms work because they are sparse (room-to-move).
 - **Checked by:** review
 - **Tags:** interiors, valve
 
-- **See:** `valve_d1_town_03/07_houses_cut.png`, `valve_d1_trainstation_03/04_corridor.png`, `valve_d1_trainstation_03/05_flat.png`, `valve_d1_trainstation_03/06_stairwell.png`, `valve_d1_trainstation_03/07_block_cut.png`
+- **See:** `valve_c17/09_court_flats_cut.png`, `valve_c17/15_raided_flats_cut.png`, `valve_c17/16_flat_room_eye.png`, `valve_c17/17_combine_held_flats_cut.png`, `valve_c17/19_flats_corridor_eye.png`, `valve_d1_town_03/07_houses_cut.png`, `valve_d1_trainstation_03/04_corridor.png`, `valve_d1_trainstation_03/05_flat.png`, `valve_d1_trainstation_03/06_stairwell.png`, `valve_d1_trainstation_03/07_block_cut.png`
 
 ### Boards nailed across, at Valve's size (`valve-boarded-openings`)
 
 Boarded doors and windows are plank brushes 4 thick, 8 wide and 112 long (or 16 wide and 64 to 112 long), a few across the opening at slightly different angles, in a door or floor wood (wooddoor045b, wooddoor048a, wooddoor015a, woodfloor005a).
 
 - **Why:** Plank brushes counted (21 November): 172 in d1_trainstation_03 (78 of them 4 by 8 by 112), 39 in Ravenholm (4x8x112, 4x16x64), 30 in d3_c17_13 (4x16x112, wooddoor015a), 35 in d1_trainstation_04. Pictures R3, T4.5.
-- **How:** A board helper: 3 to 5 planks of 4 by 8 by 112 across a 48 by 108 doorway or a window, func_detail, each turned a few degrees; for the infestation quarter's houses and the town's boarded doorways.
+- **How:** A board helper: 3 to 5 planks of 4 by 8 by 112 across a 48 by 108 doorway or a window, func_detail, each turned a few degrees; for the infestation quarter's houses and the town's boarded doorways. Three more Ravenholm maps agree: plank brushes 119 in d1_town_01, 71 in 02, 49 in 01a (woodfloor005a most, then wooddoor004a, 015a, 032a; func_detail 176 of 239), and two in three are turned off the axes (78 of 119 in 01); 22 more boards are physics props held still, 14 of them freed when grabbed, 73% touching a wall. Ravenholm: a zombie behind boards breaks through: d1_town_01 bldg1's four board props Spawn the zombie behind them from OnHealthChanged (template flags 2690, wait for script); its sequence (Idle01, then attackE) Breaks the boards, and its OnDeath Breaks all four; d1_town_02 bldg1_zombie3 the same with brush boards Killed.
 - **Checked by:** review
 - **Tags:** interiors, facades, valve, infestation, ravenholm
 
-- **See:** `valve_d1_town_03/03_street.png`, `valve_d1_trainstation_04/05_attic.png`
+- **See:** `valve_c17/15_raided_flats_cut.png`, `valve_d1_town_03/03_street.png`, `valve_d1_trainstation_04/05_attic.png`
 
 ### Wires over the streets (`valve-overhead-cables`)
 
@@ -963,7 +1057,7 @@ Streets carry cables: spans of 700 to 900 between poles and wall mounts, slack 1
 - **Checked by:** no-floating-ropes check; review
 - **Tags:** streets, props, valve
 
-- **See:** `valve_d1_town_03/03_street.png`, `valve_d1_trainstation_02/04_plaza.png`, `valve_d1_trainstation_04/04_street.png`
+- **See:** `valve_c17/04_street_wires_eye.png`, `valve_c17/36_rubble_wired_street_eye.png`, `valve_d1_town_03/03_street.png`, `valve_d1_trainstation_02/04_plaza.png`, `valve_d1_trainstation_04/04_street.png`
 
 ### The Combine is one cold metal; the old city is banded and warm (`valve-combine-cold`)
 
@@ -974,14 +1068,14 @@ Combine places: one metal over whole walls, no courses, lit cold and bright (lig
 - **Checked by:** review
 - **Tags:** combine, lighting, valve
 
-- **See:** `valve_d1_trainstation_02/02_overview_ne.png`, `valve_d1_trainstation_04/02_overview_ne.png`, `valve_d2_coast_12/02_overview_ne.png`, `valve_d2_coast_12/03_bunker_mouth.png`, `valve_d3_c17_13/01_overview_sw.png`, `valve_d3_c17_13/03_street.png`, `valve_d3_citadel_01/01_overview_sw.png`, `valve_d3_citadel_01/02_overview_ne.png`, `valve_d3_citadel_01/03_cliff_cut.png`, `valve_d3_citadel_01/05_combine_inside.png`, `valve_d3_citadel_01/06_rock_and_metal.png`
+- **See:** `valve_c17/26_nexus_core_cut.png`, `valve_c17/27_nexus_combine_corridor_eye.png`, `valve_d1_trainstation_02/02_overview_ne.png`, `valve_d1_trainstation_04/02_overview_ne.png`, `valve_d2_coast_12/02_overview_ne.png`, `valve_d2_coast_12/03_bunker_mouth.png`, `valve_d3_c17_13/01_overview_sw.png`, `valve_d3_c17_13/03_street.png`, `valve_d3_citadel_01/01_overview_sw.png`, `valve_d3_citadel_01/02_overview_ne.png`, `valve_d3_citadel_01/03_cliff_cut.png`, `valve_d3_citadel_01/05_combine_inside.png`, `valve_d3_citadel_01/06_rock_and_metal.png`
 
 ### Ravenholm's dark: weak cold light and warm pools (`raven-dusk-light`)
 
 Valve darkens Ravenholm without fog: a weak cold sun and almost no ambient under a dusk sky, then pools of warm light from spotlights on the houses (a point_spotlight with a light_spot at the same spot, '255 245 145', 400 to 1000) about 500 apart, dim fills of 8 under them, and the orange glow of a fire.
 
 - **Why:** d1_town_03: light_environment '175 230 239' at 50, ambient '43 45 57' at 5 (the City 17 maps: '237 218 143' at 800, ambient 100); sky_day01_09; no env_fog_controller; 11 point_spotlight each paired with a light_spot, nearest 506 apart; 8 light at 8; an env_fire with '254 174 10' at 300; 22 of its 26 lights warm. Pictures R3, R4.
-- **How:** One map has one sun, so map_raven.py's sheet of toolsblocklight under the quarter's sky is the right stand-in for Valve's weak sun; what Valve adds is the pools: a light_spotlight01_lamp on a house wall every 500 or so with a point_spotlight and a light_spot, a fire in a drum, against the gloom lights (now four at 7, cold grey). Ask the owner before changing the quarter's light.
+- **How:** One map has one sun, so map_raven.py's sheet of toolsblocklight under the quarter's sky is the right stand-in for Valve's weak sun; what Valve adds is the pools: a light_spotlight01_lamp on a house wall every 500 or so with a point_spotlight and a light_spot, a fire in a drum, against the gloom lights (now four at 7, cold grey). Ask the owner before changing the quarter's light. d1_town_01, 01a, 02 and 02a share the sun '175 230 239 50' and ambient '43 45 57 5' under sky_day01_09; only the graveyard (02a) adds fog, black '0 0 0' from 1500 to 4000; the mine (04) has no sun; the way out (05) brightens to '254 242 160 400' with warm fog 1024 to 10000. Spotlight spacing by map: 294 (01), 368 (02), 452 (01a), 540 (02a), 780 (04).
 - **Checked by:** review (a screenshot from the owner: the quarter's light is a first guess)
 - **Tags:** lighting, infestation, ravenholm, valve
 
@@ -990,7 +1084,7 @@ Valve darkens Ravenholm without fog: a weak cold sun and almost no ambient under
 Ravenholm's lanes have no kerb and no pavement: cobbles and uneven ground run house to house, 384 to 768 wall to wall; houses two or three storeys (walls 256 to 512 over the lane), timber and plaster on a concrete plinth (to 128, 48 or 16), roofs pitched 20 to 35 degrees in corrugated metal or tile, a steep mansard or spire for a landmark; boards on openings, wires overhead.
 
 - **Why:** d1_town_03: no kerb in 119 cross-sections; 36% of the floor is displacement; wall to wall most often 640; walls median 352 (height over width 0.42); woodfloor005a the commonest material (961 faces), plasterwall029a/c/d/g, brickwall048a/d/i, concretewall032d under plaster or metal (first change at 128, 48, 16); roof pitch 25 degrees (31 faces), 20, 35, steep faces 65 to 70; metalwall026a and 014a, tileroof003a and 004b. Pictures R1 to R3.
-- **How:** The quarter's main street keeps the owner's street recipe (they asked for it); use these numbers for the lanes, yards and back ways behind it and for the houses' looks.
+- **How:** The quarter's main street keeps the owner's street recipe (they asked for it); use these numbers for the lanes, yards and back ways behind it and for the houses' looks. The other maps agree: kerbs in 4 of 320 cross-sections in d1_town_01 and 0 of 50 in 01a (the town square in 02 has kerbs 4 to 15 in 21 of 275); wall to wall median 620 (01), 376 (01a, walls 384 to 512: height over width 0.9), 589 (02); the lane floor is dirt and cobbles (01: blenddirtgrass008a 36%, stonefloor006a/b/c 31%, planks 8%). Ours: the quarter's main street keeps the owner's crown, kerb 8 and pavements 96; its back lanes and yards should have none.
 - **Checked by:** review
 - **Tags:** streets, facades, infestation, ravenholm, valve
 
@@ -1005,14 +1099,14 @@ Give an overrun quarter a second way through above the dead: low roofs joined by
 - **Checked by:** review; valid-viewpoints for spots on the roofs
 - **Tags:** layout, infestation, ravenholm, valve
 
-- **See:** `valve_d1_town_03/02_overview_ne.png`, `valve_d1_town_03/04_rooftops.png`, `valve_d1_town_03/06_corpse_alley.png`
+- **See:** `valve_c17/30_nexus_roof_post_iso.png`, `valve_d1_town_03/02_overview_ne.png`, `valve_d1_town_03/04_rooftops.png`, `valve_d1_town_03/06_corpse_alley.png`
 
 ### Traps lying ready, the dead from makers (`raven-traps-and-makers`)
 
 Leave traps as loose physics props where the dead come: propane tanks in clusters of 2 to 6, explosive barrels in twos and threes, saw blades to throw, one rigged machine trap at a choke point; bring the dead with npc_maker and npc_template_maker and walk them in with aiscripted_schedule; health kits as rewards.
 
 - **Why:** d1_town_03: 13 propane_tank001a, 10 oildrum001_explosive, 4 sawblade001a, a propeller trap (engine, blade, lever, func_rotating); 15 npc_zombie and 2 npc_fastzombie, 10 npc_maker, 7 npc_template_maker, 14 aiscripted_schedule; 18 item_healthkit. The same machinery map_raven.py uses. Pictures R5, R7.
-- **How:** map_raven.py: clusters of tanks and barrels along the makers' walk and one trap at a choke; keep them physics (physics-props-dynamic).
+- **How:** map_raven.py: clusters of tanks and barrels along the makers' walk and one trap at a choke; keep them physics (physics-props-dynamic). Across d1_town_01 to 05: 28 of 31 propane tanks lie on their side, 5 on a table, 58% within 16 of a wall, about 36 apart; explosive barrels stand (65 of 67), spread (nearest other explosive median 128, q25 57) among plain oildrum001 (91), skins not 0 on 28%; graveyard canisters stand in twos and fours 33 apart. Ours: three single blades, three explosive drums and a pallet, all upright, spawnflags 0. The rest of Ravenholm (d1_town_01, 04): the spinning blade is a TrapPropeller_Blade prop_physics (Damagetype 1) on a phys_motor (speed -1200, inertiafactor 5) switched by a toggle func_button (flags 1057, wait 5) with spin-up, loop and spin-down sounds and a sputter on a random 3 to 8 s timer, the first already running at map start (logic_auto Press); the mine's bladed cart (func_physbox, massScale 4) is pushed down the rails by a phys_thruster (force 1000) with a trigger_hurt (damage 250, flags 3) parented to its func_rotating (maxspeed 1500), while four trigger_onces 640 to 770 apart along the rails each spawn 2 to 4 zombies that run at the player (the cart's run is the blade's line); 142 of the 154 makers hold one NPC, fired once by Spawn (raven-gas-fire-trap, raven-car-drop-trap, raven-live-fence).
 - **Checked by:** map_lint (physics props); review
 - **Tags:** props, infestation, ravenholm, valve
 
@@ -1023,7 +1117,7 @@ Leave traps as loose physics props where the dead come: propane tanks in cluster
 Dress an overrun quarter with trash, ivy and dead-leaf decals and a few scorch marks rather than blood (Valve's Ravenholm has none); a corpse is a single set piece (a pinned ragdoll with crows round it), not scattered.
 
 - **Why:** d1_town_03: 82 infodecal, 0 of them blood: trashdecal01a 26, ivy03 19, leaves_ground02 17, plaster020a 5, graffiti; 2 info_overlay, both scorch1; 1 prop_ragdoll (corpse1) with 5 npc_crow. Picture R6.
-- **How:** Mod.grime with trash, ivy and leaves in the quarter; at most one corpse scene a yard (the zombies bring their own blood in game).
+- **How:** Mod.grime with trash, ivy and leaves in the quarter; at most one corpse scene a yard (the zombies bring their own blood in game). Only d1_town_03 is without blood: the rest of Ravenholm has 189 blood decals (146 in d1_town_01), half of them within 128 of a body; keep the lanes to litter, ivy and leaves and put blood only at a body scene (raven-dead-set-pieces).
 - **Checked by:** review
 - **Tags:** grime, infestation, ravenholm, valve
 
@@ -1034,7 +1128,7 @@ Dress an overrun quarter with trash, ivy and dead-leaf decals and a few scorch m
 Name d1_town.Street outside, d1_town.WoodBuilding or d1_town.ConcreteBuilding inside by what the house is made of, d1_town.CorpseRoom where the dead wait; put one-shot sounds (a metal grate, a far fast-zombie call, an attack, a fire loop) where something should startle.
 
 - **Why:** d1_town_03: 7 env_soundscape (ConcreteBuilding 3, Street 2, WoodBuilding 1, CorpseRoom 1), radius 128; 27 ambient_generic: zo_attack2 4, metalgrate3 4, fz_alert_far1 3, tram_hit1 2, smallfireloop 2.
-- **How:** m.soundscape with these names in map_raven.py (map_modules SCAPES already has d1_town.WoodBuilding as 'house').
+- **How:** m.soundscape with these names in map_raven.py (map_modules SCAPES already has d1_town.WoodBuilding as 'house'). The other six Ravenholm maps: 101 env_soundscape (d1_town.WoodBuilding 23, Street 22, Start 15, Rooftop 14, ConcreteBuilding 11, CorpseRoom 5; in the mine WaterCave 2, CaveTunnel 2, MineshaftDown 1, HeadcrabCave 1), all radius 128; 183 ambient_generic, 142 one-shot (flags 48), radius median 1250; d1_town.Flies from trigger_multiples 13 to 45 from six corpses; board creaks from func_physbox OnAwakened (d1_town_04); distant poison zombie calls (radius 3000) @0, 0.7, 1.2 and 2 from 556 to 1316 away as the graveyard opens.
 - **Checked by:** review
 - **Tags:** sound, infestation, ravenholm, valve
 
@@ -1138,7 +1232,7 @@ A wheel players turn is a momentary_rot_button: an unseen toolsinvisible brush, 
 A portal where a door hangs names the door in its target key (prop_door_rotating, func_door); for a gate that is a func_door_rotating or func_movelinear, the gate's OnOpen sends the portal Open and its OnFullyClosed sends Close. It starts closed (StartOpen 0) when the door starts shut. Never open or close a portal from a trigger in a map many people share: Valve's triggers open the way ahead and shut it behind one player, which would blind everyone behind him.
 
 - **Why:** 173 func_areaportal in 18 maps: 93 have no name and only cut what is drawn; 11 name their door in target (10 prop_door_rotating such as d1_trainstation_01 barney_door_1, 1 func_door, d1_trainstation_05 lab_door); 71 output lines open or close the rest, 62 of them from triggers (d1_trainstation_03 portal_courtyard_doorway1: two strips 60 apart, Open then Close). d1_canals_08: door_locke1_1 OnFullyClosed -> relay_locks_closegateportal -> portal_locks_1 Close.
-- **How:** map_build.areaportal(box, vis, name=None, door=None) writes the target key, or the door's OnOpen / OnFullyClosed wires; today our portals never close.
+- **How:** map_build.areaportal(box, vis, name=None, door=None) writes the target key, or the door's OnOpen / OnFullyClosed wires; today our portals never close. City 17 wires occluders the same way: d3_c17_10a bldg1_door2 and soldierscare_door OnOpen send their occluder Deactivate and OnFullyClosed Activate; d3_c17_05 barricade_1_gate_open_rl Deactivates backstreet_gate_occluder and the close relay Activates it 2 s later; 42 of 46 func_occluder start active.
 - **Checked by:** review; proposed: a portal whose box meets a door's box with neither target nor door wiring; any trigger that sends a portal Open or Close.
 - **Tags:** logic, valve, performance, doors
 
@@ -1165,7 +1259,7 @@ A logic_timer that only dresses a place (dust, sparks, steam, a far noise) start
 Each event sends Add 1 to a math_counter whose max is how many; OnHitMax fires the result. An AND of two different things (a scene ended and an item taken) is a counter with max 2. A wave that comes again resets its own counter from OnHitMax (SetValue 0). Every counter needs at least max feeders.
 
 - **Why:** 55 math_counter in 16 maps, max 2 on 17 and 3 on 13; fed by NPC OnDeath (55 lines), prop OnBreak (16), path_track OnPass (11). d1_canals_01 traintrackcops_south_assault_counter: cop OnDeath Add; OnHitMax -> traintrackcops_south_makers_relay Enable and SetValue 0 on itself. d1_trainstation_05 get_suit_math_1 (max 2): lab03_lcs OnCompletion and item_suit OnPlayerTouch. d1_canals_01a sewerbarrels_counter (max 4): barrels OnBreak, then sewerbarrels_gate_intact Kill and sewerbarrels_gate_broken Enable. Valve shipped counters nothing adds to (d1_canals_01a train_boardbreak_counter1 and 2).
-- **How:** m.counter(name, u, v, z, top, done_wires, again=False); our lc_nest_count and lc_armory_count already work this way.
+- **How:** m.counter(name, u, v, z, top, done_wires, again=False); our lc_nest_count and lc_armory_count already work this way. d3_c17_10b switches_counter (max 3): each control room's relay (force field Kill, generator off, sparks, shake) Adds 1; OnHitMax fires one success relay that ends the whole stronghold's defences, the shape of our administrator's last stand (collapse.md).
 - **Checked by:** review; proposed: a counter with fewer Add lines than its max.
 - **Tags:** logic, valve
 
@@ -1174,7 +1268,7 @@ Each event sends Add 1 to a math_counter whose max is how many; OnHitMax fires t
 Each thing the gamemode or a player sets off is one logic_relay whose outputs are staggered (the sound first, the move 0.1 to 2 seconds later, the end a few seconds after); a second relay only for what also happens alone (stop, reset). Relays come in pairs (open and shut, start and stop) and the gamemode fires only relays, never the moving parts.
 
 - **Why:** 414 logic_relay, 2056 outputs (median 3, about 12 at the 90th percentile, most 42 in d1_trainstation_01 scene4_start); of 344 relays called from outside, 280 call no other relay; the longest delay in a relay is 0.2 s at the median and 2 s at the upper quarter. Pairs: d1_canals_07 logic_start_redlight / logic_stop_redlight; d1_canals_08 relay_locks_opengates / relay_locks_closegates (Unlock at 0, Open at 0.1, klaxon at 0, 1, 2 and 3). Relays drive doors more than anything else does (func_door: Open 11, Close 5; func_door_rotating: Open 9, Toggle 7, Close 6, Unlock 5).
-- **How:** Keep map_raven's and map_forest's lc_X_open / _shut / _opened / _closed relays for every moving thing the game uses; m.relay as it is.
+- **How:** Keep map_raven's and map_forest's lc_X_open / _shut / _opened / _closed relays for every moving thing the game uses; m.relay as it is. A relay whose steps are spread over time is stopped with CancelPending when its event ends early: 19 lines in City 17, 17 of them in d3_c17_07's waves (northfront_battle_reset CancelPending on wave relays 1 to 5) and d3_c17_03's nags; Kill is the commonest input in the 15 maps (532 of 5008 lines): what has done its job is removed.
 - **Checked by:** review
 - **Tags:** logic, valve
 
@@ -1192,9 +1286,11 @@ A switch shows on or off with its own model (CombineButton.mdl SetAnimation togg
 A wall, door or floor that gets blown or breached is two named sets: the intact props and brushes (Kill or Break) and the broken ones (prop_dynamic and func_brush with StartDisabled 1: TurnOn or Enable). One relay does it with a one-shot sound (48, radius 2000), env_shake (amplitude 12, radius 1000, 1 s, frequency 2.5), env_explosion (magnitude 100, flag 1 for no damage) and fire half a second later.
 
 - **Why:** d3_c17_13 bigdestroy1_relay: bigdestroy1_props_intact (3 prop_dynamic) Kill, bigdestroy1_props_broken (8 prop_dynamic, StartDisabled 1) TurnOn, bigdestroy1_breakables_intact Break, bigdestroy1_explosion Explode, bigdestroy1_shake StartShake, bigdestroy1_wav (Streetwar.d3_C17_13_explode_2) PlaySound, bigdestroy1_fire StartFire at 0.5; bigdestroy3 also wakes a prop_physics beam and fires env_physexplosion at 0.5. d1_canals_01a: sewerbarrels_gate_intact Kill, _broken Enable.
-- **How:** m.swap(name, intact, broken, boom=True) giving lc_NAME_break, the relay the gamemode fires (a Combine breach, a collapse). Recipe, as Valve wires it (the owner asked to keep it, 21 November): R12 Breaking things (lesson valve-swap-broken): env_explosion `iMagnitude` 100, `iRadiusOverride` 0, `fireballsprite` sprites/zerogxplode.spr, `rendermode` 5, flag 1 no damage (19 of 46). env_shake `amplitude` 12, `radius` 1000, `duration` 1, `frequency` 2.5 (commonest; 20 fired from path_track OnPass, 12 from relays). env_physexplosion `spawnflags` 1, `magnitude` 50, `radius` 0 (or 128 to 200 with a named target). env_spark `magnitude` 1 to 2, `traillength` 1 to 3, `spawnflags` 128 or 640; driven StartSpark / SparkOnce / StopSpark. env_fire: burning from the start `spawnflags` 15 or 47 (4 start on, 8 full), `health` 30 to 300, `firesize` 48 to 130. func_breakable boards: `material` 1 wood (243 of 349), `health` 1 to 10, `spawnflags` 256; func_physbox freed by relays (`EnableMotion` 154 lines, `Break` 62, `Wake` 24).
+- **How:** m.swap(name, intact, broken, boom=True) giving lc_NAME_break, the relay the gamemode fires (a Combine breach, a collapse). Recipe, as Valve wires it (the owner asked to keep it, 21 November): R12 Breaking things (lesson valve-swap-broken): env_explosion `iMagnitude` 100, `iRadiusOverride` 0, `fireballsprite` sprites/zerogxplode.spr, `rendermode` 5, flag 1 no damage (19 of 46). env_shake `amplitude` 12, `radius` 1000, `duration` 1, `frequency` 2.5 (commonest; 20 fired from path_track OnPass, 12 from relays). env_physexplosion `spawnflags` 1, `magnitude` 50, `radius` 0 (or 128 to 200 with a named target). env_spark `magnitude` 1 to 2, `traillength` 1 to 3, `spawnflags` 128 or 640; driven StartSpark / SparkOnce / StopSpark. env_fire: burning from the start `spawnflags` 15 or 47 (4 start on, 8 full), `health` 30 to 300, `firesize` 48 to 130. func_breakable boards: `material` 1 wood (243 of 349), `health` 1 to 10, `spawnflags` 256; func_physbox freed by relays (`EnableMotion` 154 lines, `Break` 62, `Wake` 24). d3_c17_12 strider breach: a trigger_once sends each strider SetCannonTarget at a named npc_bullseye (health 20, damagefilter strider_only_filter); its OnDeath disables destroyed_wall_1_brush_1, turns on destroyed_wall_1_hole_1, explodes @0 and @0.5, shoots concrete from an env_shooter, shakes, ForceSpawns a debris template and turns on destroyed_wall_1_link (the hole becomes a path).
 - **Checked by:** review
 - **Tags:** logic, valve, props, recipe
+
+- **See:** `valve_c17/31_cratered_park_eye.png`
 
 ### A hazard that comes and goes is a timer, a relay and switched parts (`valve-hazard-cycle`)
 
@@ -1254,7 +1350,7 @@ Outdoors, give small clutter a fade, the start about 80 percent of the end: shru
 
 Turn loose things off the grid and keep fixed things square. Of Valve's physics props only 41% sit on exact 0/90/180/270; 34% are turned 1 to 20 degrees and 21% at any angle. Crates are square only 19% of the time, trash 27%, push carts 14%, couches 15%, chairs 32%, barrels 57%. Fixed things are square: radiators and payphones 100%, benches 89%, fences 88%, prop_dynamic 89%, prop_static 69%.
 
-- **Why:** Measured on 8,951 props in 22 maps: d1_trainstation_01 to 05, d3_c17_13, d1_town_03, d3_citadel_01, d2_coast_12 and 13 Route Kanal maps (21 November): 2,193 prop_physics, 6,154 prop_static. Our scratch town build had 93% of all props on exact 90s and 26 of its 42 physics props square.
+- **Why:** Measured on 8,951 props in 22 maps: d1_trainstation_01 to 05, d3_c17_13, d1_town_03, d3_citadel_01, d2_coast_12 and 13 Route Kanal maps (21 November): 2,193 prop_physics, 6,154 prop_static. Our scratch town build had 93% of all props on exact 90s and 26 of its 42 physics props square. d3_c17_01 to 12b (21 November): physics props on exact 90s 54%, turned 3 to 20 23%, free 20%; tilted 28% (lying 13%); statics on 90s 81%; cars only 15% square.
 - **How:** In Mod.loose (and any scatter): yaw = the square yaw plus a turn drawn from -20..20 for crates, boxes, barrels, trash, carts, chairs and suitcases, and one in five at a free angle; keep wall furniture, benches, radiators, phones and fences on the grid. Crates in a group are never all square (6% of Valve's crate groups are).
 - **Checked by:** proposed: map_lint warns when more than 60% of a module's prop_physics sit on exact 90s
 - **Tags:** props, valve
@@ -1268,11 +1364,13 @@ Lay a share of loose things on their side or upside down, and let things on roug
 - **Checked by:** proposed: map_lint notes a module with 10 or more loose props and none tilted; map_floating.py still catches anything sunk or floating
 - **Tags:** props, valve
 
+- **See:** `valve_c17/35_rubble_corner_shop_iso.png`
+
 ### Loose props asleep, junk as debris, fixtures held still (`valve-physics-flags`)
 
 Set the physics flags as Valve does: start asleep (1) on barrels, crates and trash that wait for the player (26% of physics props); debris (4) on small junk so it never blocks a player (10%: trash 99, boards 38, cans 36, boxes 12); motion disabled (8) on things that must stay until hit (29%: nailed boards 207, dock planks 61, barrels 55, crates 37, radiators 24 of 25, shelves 21, tables 12, couches 11, signs 16), with 64 (free on a gravity-gun grab) on 76 of them. 256 (output on use) is Hammer's default and on most.
 
-- **Why:** prop_physics spawnflags across 22 maps: d1_trainstation_01 to 05, d3_c17_13, d1_town_03, d3_citadel_01, d2_coast_12 and 13 Route Kanal maps (21 November): bits 0:571, 2:219, 3:637, 6:76, 7:254 (rotor wash, canals), 8:694. Valve placed only 3 prop_dynamic_override, 9 prop_physics_override and no prop_physics_multiplayer in 22 maps; standing physics furniture is prop_physics with flag 8. Our Mod.loose writes spawnflags 0 on everything.
+- **Why:** prop_physics spawnflags across 22 maps: d1_trainstation_01 to 05, d3_c17_13, d1_town_03, d3_citadel_01, d2_coast_12 and 13 Route Kanal maps (21 November): bits 0:571, 2:219, 3:637, 6:76, 7:254 (rotor wash, canals), 8:694. Valve placed only 3 prop_dynamic_override, 9 prop_physics_override and no prop_physics_multiplayer in 22 maps; standing physics furniture is prop_physics with flag 8. Our Mod.loose writes spawnflags 0 on everything. In the uprising's battle maps (d3_c17_01 to 12b, 748 physics props) loose things are mostly left awake: asleep 9%, motion disabled 21% (shelves, boards, rubble, radiators, fences, cars), debris 4% (trash), flags 0 on 119; physdamagescale 0.1 kept on 744.
 - **How:** Mod.loose(..., asleep=True) writing spawnflags 1 by default; 5 (asleep + debris) for trash, cans, bottles, papers, shoes; boards nailed over openings 8. Whether standing furniture should become prop_physics with flag 8 instead of prop_dynamic_override (physics-props-dynamic) is the owner's call: ask first.
 - **Checked by:** proposed: map_lint lists prop_physics with spawnflags 0 (none asleep) and small junk without the debris flag
 - **Tags:** props, valve, performance
@@ -1281,7 +1379,7 @@ Set the physics flags as Valve does: start asleep (1) on barrels, crates and tra
 
 Give small props a fade distance: about a third of Valve's props have one (statics 35 to 41% of medium and large models, physics 26 to 42%), rarely dynamics (8%). Typical min/max: small loose junk, chairs and corpses 1000/1200 to 1024/1500; boards and cinderblocks 1200/1600; crates 1900/2500; barrels 2000/3000; debris 1800/2000; fences 2750/3200; large statics 2500/3000; huge 4000/5000; props seen across open water 10000/12000. fadescale 1 (97%).
 
-- **Why:** fademindist and fademaxdist on 8,951 props in 22 maps: d1_trainstation_01 to 05, d3_c17_13, d1_town_03, d3_citadel_01, d2_coast_12 and 13 Route Kanal maps (21 November); commonest pairs 10000/12000 (217), 3000/3200 (214), 10000/11000 (184), 2000/2500 (167), 4000/5000 (145), 1000/1200 (143). Our Mod.static, loose and dynamic write fademaxdist 0 on everything.
+- **Why:** fademindist and fademaxdist on 8,951 props in 22 maps: d1_trainstation_01 to 05, d3_c17_13, d1_town_03, d3_citadel_01, d2_coast_12 and 13 Route Kanal maps (21 November); commonest pairs 10000/12000 (217), 3000/3200 (214), 10000/11000 (184), 2000/2500 (167), 4000/5000 (145), 1000/1200 (143). Our Mod.static, loose and dynamic write fademaxdist 0 on everything. d3_c17_01 to 12b set fades on fewer props (physics 12%, statics 16%): rubble 1200, lamps 1200, Combine pieces 1100, fences 2400, barricades 2600, bins 2250, crates 2200, bottles 1100.
 - **How:** A size table in Mod.prop: under 24 tall 1000/1500, under 64 1500/2000, crates and barrels 2000/2500 to 3000, fences 2750/3200; leave big architecture props and anything seen from far without a fade.
 - **Checked by:** proposed: map_lint counts loose props under 64 with no fade in an outdoor module
 - **Tags:** props, valve, performance
@@ -1331,6 +1429,8 @@ Concentrate props in one to three busy spots per place and keep the rest clear. 
 - **Checked by:** proposed: map_lint counts props per 256 square and physics per 512 square, and warns over 12/25 indoors or an indoor room with nothing in it
 - **Tags:** props, valve, performance
 
+- **See:** `valve_c17/01_kleiner_lab_cut.png`
+
 ### Furniture against the walls, chairs pulled out (`valve-furniture-on-walls`)
 
 Put furniture against the walls, square, facing into the room; let chairs stand free. Within 16 of a wall: shelves 76% (60% square, back to the wall), radiators 76% (all within 32), couches in flats 100%, payphones 88%, tables and desks 62%, TVs 60%, boxes 60%, trash 51%. Chairs only 22%: 33 to 58 from their table (median 42), turned to face it within 45 in 18 of 20, one to three a table. Loose barrels 32%, crates 38%, cans 12%.
@@ -1340,14 +1440,18 @@ Put furniture against the walls, square, facing into the room; let chairs stand 
 - **Checked by:** proposed: map_lint notes shelves, couches, radiators, desks and sinks more than 16 from any wall
 - **Tags:** props, valve, interiors
 
+- **See:** `valve_c17/01_kleiner_lab_cut.png`, `valve_c17/11_combine_office_cut.png`, `valve_c17/16_flat_room_eye.png`
+
 ### Tell what happened with a few props (`valve-story-props`)
 
-Let a small kit of props, decals and at most one sound tell the story, no text. Valve's recurring kits: a bunk room (one to three mattresses on the floor, a radio on a crate, a pallet, supplies, a rug overlay and graffiti); the dead with his weapon (a corpse, the gun 20 to 70 away, ammo, blood decals); a radio left playing beside its dead owner (the sound at the radio); a raided flat (fridge on its back with its doors off, drawers and couches tipped, boards and cinderblocks); a kitchen still in use (stove, two pots on it, cupboard, sink with bottles, the drips heard); travellers (a push cart, suitcases, one on its side, a box, by the benches).
+Let a small kit of props, decals and at most one sound tell the story, no text. Valve's recurring kits: a bunk room (one to three mattresses on the floor, a radio on a crate, a pallet, supplies, a rug overlay and graffiti); the dead with his weapon (a corpse, the gun 20 to 70 away, ammo, blood decals); a radio left playing beside its dead owner (the sound at the radio); a raided flat (fridge on its back with its doors off, drawers and couches tipped, boards and cinderblocks); a kitchen still in use (stove, two pots on it, cupboard, sink with bottles, the drips heard); travellers (a push cart, suitcases, one on its side, a box, by the benches). Two more from the uprising: a burned flat (burn decals on the walls, destroyedceiling models under the ceiling, a tiny fire loop, plaster dented by small displacements); a refuge being raided (couches, a fridge, bottles, a rug overlay, a crying loop, the residents and the soldiers).
 
-- **Why:** Places in Valve's maps (21 November): c01a 2400 6240 -155, c12 476 10948 507, c10 11152 39 -375 (bunk rooms); c03 -801 -328 -905 and c12 687 6445 425 (dead with weapon); c05 7161 1635 -387 and c06 4000 5812 -151 (radio, coast.radio_dead); d1_trainstation_03 -4254 -4712 274 and -4320 -4634 440 (raided flats); -4658 -4691 276 (kitchen); d1_trainstation_01 -3958 -1711 2 (luggage). Fits the owner's 'keep text minimal' rule.
+- **Why:** Places in Valve's maps (21 November): c01a 2400 6240 -155, c12 476 10948 507, c10 11152 39 -375 (bunk rooms); c03 -801 -328 -905 and c12 687 6445 425 (dead with weapon); c05 7161 1635 -387 and c06 4000 5812 -151 (radio, coast.radio_dead); d1_trainstation_03 -4254 -4712 274 and -4320 -4634 440 (raided flats); -4658 -4691 276 (kitchen); d1_trainstation_01 -3958 -1711 2 (luggage). Fits the owner's 'keep text minimal' rule. d3_c17_06b (21 November): burn01a 30, burn02a 16, scorch1 7, destroyedceiling01a-d 23, streetwar.fire_tiny loops, 107 small displacements; the refuge at 3176 877 169: couches 3, fridge 2, bottles 5, decalrug002a 2, d1_trainstation.crying, four citizens and three soldiers.
 - **How:** Story kits in map_mods (4 to 8 props, 1 to 3 decals, an optional ambient_generic at the prop): bunk, dead_with_gun, radio_left_on, raided_flat, kitchen, luggage. Corpses as prop_ragdoll spawnflags 4 (55 of Valve's 66).
 - **Checked by:** review
 - **Tags:** props, valve, story
+
+- **See:** `valve_c17/23_shop_and_office_cut.png`, `valve_c17/35_rubble_corner_shop_iso.png`
 
 ### A loop sits on the thing that makes it (`valve-sound-at-the-prop`)
 
@@ -1362,8 +1466,8 @@ Put a looping ambient_generic on the prop that makes the sound, a few units off 
 
 Never one lightmapscale for everything. 16 on what players walk past; 8 on small detailed pieces at eye level (stairs, rails, pipes, trims, a floor under a lamp); 32 to 64 on faces more than about 1000 from anywhere players walk (far walls, roof tops, backdrops, the upper part of a tall canal wall); 64 on terrain displacements, 128 on far terrain.
 
-- **Why:** Faces within 256 of an AI node: 16 on 86% in the city maps (d1_trainstation_01 to 05, d3_c17_13, d1_town_03, d3_citadel_01, d2_coast_12), 8 or 4 on 5% (canals 11%); faces over 3000 away: 64 on 54%, 16 on only 34%. Displacements: 64 on 70 to 78% in d1_canals_01 to 13, 128 on 16% of the far ones; only near ones keep 16. 8 goes on stonefloor006a, stonewall050b/c, plasterwall, metalstair004a, metalpipe009a/b, metalrail013b, metaltrack001a. Our builder writes 16 on every face and 32 on displacements.
-- **How:** map_build: a lightmapscale per box (default 16); 8 from the stair, rail, pipe and trim helpers; 64 for displacements and for pieces a module marks as backdrop or out of reach.
+- **Why:** Faces within 256 of an AI node: 16 on 86% in the city maps (d1_trainstation_01 to 05, d3_c17_13, d1_town_03, d3_citadel_01, d2_coast_12), 8 or 4 on 5% (canals 11%); faces over 3000 away: 64 on 54%, 16 on only 34%. Displacements: 64 on 70 to 78% in d1_canals_01 to 13, 128 on 16% of the far ones; only near ones keep 16. 8 goes on stonefloor006a, stonewall050b/c, plasterwall, metalstair004a, metalpipe009a/b, metalrail013b, metaltrack001a. Our builder writes 16 on every face and 32 on displacements. The uprising coarsens less: lightmapscale 16 on 83% of faces, still 68% of faces more than 1024 from any node (64 on 16%, 32 on 13% there).
+- **How:** map_build: a lightmapscale per box (default 16); 8 from the stair, rail, pipe and trim helpers; 64 for displacements and for pieces a module marks as backdrop or out of reach. Dark maps use more 64: Ravenholm puts lightmapscale 64 on 26% of faces in d1_town_01 and 36% in 01a (roofs, trusses, upper plaster, some floors), against 12 to 13% in the city; the caves keep 16 on every displacement.
 - **Checked by:** map_lint.py lightmap (proposed): a face over 64k square units at 16 with no viewpoint or spawn within 1024; a displacement at 16 or 32.
 - **Tags:** valve, lighting, materials, performance, check
 
@@ -1371,7 +1475,7 @@ Never one lightmapscale for everything. 16 on what players walk past; 8 on small
 
 0.25 for what players walk past (brick, plaster, wood, small concrete). Big poured concrete on the canals at 0.5 (concretewall074a, 022a, 004c, 010c); rock and cliff faces at 1 to 2; terrain blends at 0.5 to 1; water at 0.5 to 1; walls far from play may go to 1.
 
-- **Why:** 0.25 is on 84% of faces in the city maps and 63% in the canals, but the canals lay big concrete at 0.5 (by area: concretewall074a 53%, 022a 71%, 004c 64%, 010c 89%, 074c 90%), rockwall006a at 2 on 85%, blenddirtgrass008b at 0.5 or 1, water_canals_water2 at 0.5 or 1. Faces more than 1024 from any AI node carry scale 1 or 2 on 43% of their area (city maps), against 0.25 on 51 to 64% of the area near nodes. A 128-unit tile repeated over a 1000-unit canal wall reads as wallpaper.
+- **Why:** 0.25 is on 84% of faces in the city maps and 63% in the canals, but the canals lay big concrete at 0.5 (by area: concretewall074a 53%, 022a 71%, 004c 64%, 010c 89%, 074c 90%), rockwall006a at 2 on 85%, blenddirtgrass008b at 0.5 or 1, water_canals_water2 at 0.5 or 1. Faces more than 1024 from any AI node carry scale 1 or 2 on 43% of their area (city maps), against 0.25 on 51 to 64% of the area near nodes. A 128-unit tile repeated over a 1000-unit canal wall reads as wallpaper. The uprising (d3_c17_01 to 12b, 112,670 faces) keeps 0.25 on 91% of faces and 87% of area, ruins included.
 - **How:** Mod.box(tex=...) already takes a scale (map_build): pass 0.5 for canal wall panels over 256 tall, 1 or 2 for rock, cliff and terrain displacements.
 - **Checked by:** map_lint.py scale (proposed): nature/rock*, cliff* or blend* faces at 0.25; a wall face longer than 1024 at 0.25.
 - **Tags:** valve, materials, check
@@ -1393,6 +1497,8 @@ Light a fixture as Valve does that model: a light_spot a few units under the mod
 - **How:** A FIXTURE table in map_modules keyed by model; m.lamp and the canal lamps place the table light_spot under the model and turn the point light down to the table value.
 - **Checked by:** map_lint.py offlamp (extend, proposed): a lit model from the table with no light_spot under it.
 - **Tags:** valve, lighting
+
+- **See:** `valve_c17/20_warehouse_hall_eye.png`
 
 ### Falloff chosen by the light's job (`valve-falloff-by-job`)
 
@@ -1421,6 +1527,8 @@ Edge walls, doorways and floor changes with thin strips 8x16, 16x32, 8x8 or 4x8 
 - **Checked by:** map_lint.py bare counts a strip within 24 as dressing.
 - **Tags:** valve, facades, geometry
 
+- **See:** `valve_c17/03_checkpoint_street_section.png`, `valve_c17/05_square_street_section.png`
+
 ### Cut corners at 8 (`valve-chamfer-8`)
 
 Where a corner should not be sharp (pillars, piers, kerb ends, the top edge of a ledge), cut it at 45 degrees 8 units off the corner (16 on canal concrete); bevel the top edge of a ledge 4 or 16.
@@ -1444,7 +1552,7 @@ Partitions in flats and houses 8 thick (16 at most); a door jamb 8 deep; canal a
 A displacement that meets a path, kerb or wall goes past the edge: it dips under the brush floor in places and rises over it in others, and climbs about 30 up a wall, so no seam line shows. Power 2 (3 where players walk on it), squares of 512 or 1024 sewn to their neighbours; a blend material is always painted.
 
 - **Why:** Canal floor displacements beside a brush floor (2872 edges): 47% cross it (part above, part below), 28% lie over it, 25% under, 0.6% flush; at a wall the edge climbs a median 34 (472 edges). Power 2 on 66% (canals) and 86% (city), 3 on 33% of the canals, 4 on 1%; 1363 of 2600 canal displacements are 1024 square; 65 to 72% of floor edges are sewn to another displacement; 95% of displacements in a blend material have alpha painted (blenddirtgrass008b 808).
-- **How:** map_build displacements: let the border rows overshoot the neighbouring brush by 4 to 16 (down under a path, up a wall) instead of ending at its edge; power 2 by default.
+- **How:** map_build displacements: let the border rows overshoot the neighbouring brush by 4 to 16 (down under a path, up a wall) instead of ending at its edge; power 2 by default. Ravenholm's yards and hill (d1_town_02, 02a) differ from the city's: 85 floor displacements, power 3 on 53 (4 on 10), odd sizes cut to the plot (224x128, 352x304, 288x144, 576x512) rather than 512 or 1024, texture scale 0.25, lightmapscale 16 near play, alpha painted on 38; muddy patches in dirtfloor005b; the graveyard's ground 91% displacement.
 - **Checked by:** map_lint.py (proposed): a displacement edge lying on a brush edge at the same height; a blend material with no alpha.
 - **Tags:** valve, geometry, canal
 
@@ -1452,7 +1560,7 @@ A displacement that meets a path, kerb or wall goes past the edge: it dips under
 
 Small marks (trash, leaves, graffiti, posters, cracks, outlets) as infodecal: four to eight decals for each overlay. An info_overlay only for a mark over 128 or one that must cross a corner or seam (big stains 128 to 600, ivy about 230, sand tracks, drains 96 by 128). Wall marks low, floor litter by the walls, and in clusters: about a third of the spaces get any, two to four each.
 
-- **Why:** City maps: 699 infodecal to 157 info_overlay; canals 613 to 75. On floors the decals are mostly trash (158) and leaves (105); wall decals graffiti, stains, plaster damage, posters, ivy, a median 78 over the floor (p10 28, p90 398). Overlays: decalstain015a/002a 128 to 600, ivy02/03 about 230, sandtrack02a, decalconcretedrain002a; half of them (city) and a third (canals) span two or more faces. Only 36% (city) and 26% (canals) of 512 squares with AI nodes carry any mark, and nine in ten carry 4 or fewer.
+- **Why:** City maps: 699 infodecal to 157 info_overlay; canals 613 to 75. On floors the decals are mostly trash (158) and leaves (105); wall decals graffiti, stains, plaster damage, posters, ivy, a median 78 over the floor (p10 28, p90 398). Overlays: decalstain015a/002a 128 to 600, ivy02/03 about 230, sandtrack02a, decalconcretedrain002a; half of them (city) and a third (canals) span two or more faces. Only 36% (city) and 26% (canals) of 512 squares with AI nodes carry any mark, and nine in ten carry 4 or fewer. d3_c17_01 to 12b (21 November): 1,299 decals to 74 overlays (17 to 1); the overlays are mostly scorch1 and burn floor patches 248 to 287 across under fires and cars; a burned block (d3_c17_06b) carries 46 burn01a/02a wall decals.
 - **How:** Mod.grime as now (decals); a Mod.overlay for big stains and ivy across a corner (proposed).
 - **Checked by:** review
 - **Tags:** valve, grime
@@ -1466,14 +1574,18 @@ Corridors about 112 wide (64 to 176) under 120 ceilings; rooms about 270 across 
 - **Checked by:** review (the viewer from a node's eye)
 - **Tags:** valve, layout
 
+- **See:** `valve_c17/19_flats_corridor_eye.png`
+
 ### Broken walls: odd cuts and debris models (`valve-broken-edges`)
 
 Break a wall by cutting its brushes at odd angles (a box with one or two slanted faces, not a 15 or 45 degree step), then lay broken concrete and rebar models along the break (concrete_section64floor001a/b/c, concrete_section128wall001a, rebar_cluster001a/b, walldestroyed08a).
 
-- **Why:** d3_c17_13: 102 of 1057 old-material brushes (10%) are cut at odd angles, 62 of them six-sided boxes; Ravenholm 18%; with 126 concrete_section64floor, 34 concrete_section128wall001a, 41 rebar_cluster and 14 walldestroyed08a along the breaks.
-- **How:** A ruin option for map_town fronts: slice the top of a wall box with two or three random planes (convex_text), then place the debris models on the cut (map_assets.py first).
+- **Why:** d3_c17_13: 102 of 1057 old-material brushes (10%) are cut at odd angles, 62 of them six-sided boxes; Ravenholm 18%; with 126 concrete_section64floor, 34 concrete_section128wall001a, 41 rebar_cluster and 14 walldestroyed08a along the breaks. Across the uprising (d3_c17_01 to 12b, 21 November) 8.1% of 20,584 old-material brushes have a face at an odd angle (3% in d3_c17_04 to 16% in 08; faces at simple ratios such as stair pitches not counted), 913 of 1661 of them six-sided boxes with one or two odd faces, thickness 8 (205) or 4 (139); 1869 of 2143 odd faces are textured; Valve's own rubble style room styleguide_c17_rubble_2 cuts 27%.
+- **How:** A ruin option for map_town fronts: slice the top of a wall box with two or three random planes (convex_text), then place the debris models on the cut (map_assets.py first). Aim at about 8% of a ruined front's brushes cut (up to 25% for a full ruin like the style room), most as one or two upright cuts through an 8 thick wall box, the cut face textured; then valve-rubble-fitted for the models.
 - **Checked by:** map_assets.py; review
 - **Tags:** valve, geometry, facades
+
+- **See:** `valve_c17/25_rubble_street_eye.png`, `valve_c17/33_broken_block_iso.png`, `valve_c17/34_rubble_skeleton_block_iso.png`
 
 ### Water 32 to 64 deep, with a cheap-water distance (`valve-water-depth`)
 
@@ -1483,6 +1595,8 @@ Where a new piece has water: the water brush 32 to 64 tall, the bed 32 to 64 und
 - **How:** The water helper in map_mods: depth 48 by default; add water_lod_control when the map has none (check the owner's map first).
 - **Checked by:** map_lint.py water (proposed): water deeper than 128; water in a map with no water_lod_control.
 - **Tags:** valve, water, canal
+
+- **See:** `valve_c17/21_flooded_tunnel_eye.png`
 
 ### Detail the small and the angled; nodraw where nobody looks (`valve-detail-and-nodraw`)
 
@@ -1543,7 +1657,7 @@ A unit on post plays a calm idle (crouched, leaning on the wall, baton at rest) 
 Before a staged moment (a beating, an arrest, a break, an approach), wait until a player is near (128 to 1000) with the spot in a 25 to 60 degree cone and in sight for half a second to two; after a timeout do it anyway. Seen, it needs no text.
 
 - **Why:** 35 ai_script_conditions: playertargetfov 25 to 60 (true cone) with line of sight, proximity 128 to 1000, requiredtime 0.4 to 2.5 s, a 15 s timeout; ts01's luggage shove waits for the player within 500 with the citizen in a 50 degree cone (3 s at most); ts01's interrogation room shuts its door slot when the player is within 150.
-- **How:** Gamemode: a helper beside LC.IsSeen that takes a spot, a distance and a cone, used before the breaks in sv_livingcity_mindsact.lua and the director's approaches; the act and the voice then carry it and the chat line can go (house rule 10). That changes those features: ask the owner. ai_script_conditions itself is single-player minded.
+- **How:** Gamemode: a helper beside LC.IsSeen that takes a spot, a distance and a cone, used before the breaks in sv_livingcity_mindsact.lua and the director's approaches; the act and the voice then carry it and the chat line can go (house rule 10). That changes those features: ask the owner. ai_script_conditions itself is single-player minded. City 17 (15 maps) adds: 30 ai_script_conditions, 25 with the actor FOV left at 360 and 6 with a player proximity of 200 to 650; d3_c17_03's supply thrower waits for a 20 degree true cone with line of sight; 5 of the 30 send the same output from OnConditionsTimeout after 3 to 10 s (d3_c17_06a rubble_citizen_aisc_1, 8 s), so the moment happens even if no one looks. Ravenholm (d1_town_01, 02): 7 ai_script_conditions wake a slumped zombie or start Grigori's scene when the player looks: PlayerActorFOV 60 to 65 (45 for Grigori) with line of sight, or PlayerTargetFOV 75 at the zombie's spot; d1_town_01's are Enabled only by another zombie's OnFoundPlayer, so the house wakes once one zombie has seen you.
 - **Checked by:** review
 - **Tags:** npc, valve, gameplay
 
@@ -1552,7 +1666,7 @@ Before a staged moment (a beating, an arrest, a break, an approach), wait until 
 Spawn people out of sight at a doorway or exit and give each its job in the same moment (where to go, what to do, whom to hate); never spawn one in view or leave it standing. The ones that leave walk to an exit doorway first.
 
 - **Why:** 194 of 197 npc_template_maker start disabled and are fired by Spawn (164 inputs) more than Enable (66); 51 'not while seen' (flag 128), the rest hidden by placement; OnSpawnNPC: StartSchedule 46, ApplyRelationship 23, Activate or BeginAssault 19, BeginSequence 11, act busy 10, BeginRappel 6. ts02 spawns at info_npc_spawn_destination beside hint 903 exits (reusedelay 1); passers-by (2 alive) cross to another exit and vanish, the next 10 s later.
-- **How:** Already our way for citizens (spawn and exit doorways, people who stay): keep it for units and anything new. Map modules: an exit doorway point (lc_exit_N) inside a door at each block or street end, out of sight lines.
+- **How:** Already our way for citizens (spawn and exit doorways, people who stay): keep it for units and anything new. Map modules: an exit doorway point (lc_exit_N) inside a door at each block or street end, out of sight lines. City 17 (15 maps): 364 npc_template_maker in all 15 (d3_c17_06b alone 87), 365 of 367 start disabled, Radius 256 on 347, visibility left 'don't care' on 363 (hidden by placement); fired by trigger_once 264, relays 81, ai_ally_manager 47; OnSpawnNPC 309 lines (StartSchedule 131, SetRelationship 30, BeginSequence 20, FlyToSpecificTrackViaPath 15, BeginRappel 8 at 0.4 to 0.5 s); makers passed are Killed (39 lines).
 - **Checked by:** review
 - **Tags:** npc, valve, logic, multiplayer
 
@@ -1561,7 +1675,7 @@ Spawn people out of sight at a doorway or exit and give each its job in the same
 When units go into a place (a raid, a landing, retaking ground), give each man his own rally spot where they gather and his own target spot inside, in separate lanes about 130 apart; start the move a moment after they gather; long moves go in bounds of 450 to 1000 with a pause of 0 to 3 s at each.
 
 - **Why:** 45 ai_goal_assault, 112 assault_rallypoint, 147 assault_assaultpoint: rally points by wildcard, 1 to 6 a goal, each with its own assault point; rally to assault median 467 (quartiles 24, 998); assaulttimeout 3 (74) or 0, assaulttolerance 36, clear on arrival (55); c01's track cops: six chains of 6 points 450 to 1000 apart, zigzagging 160 across the track, lanes about 130 apart; Activate at 0 to 0.2 s and BeginAssault at 0.2 to 0.5 s after the spawn.
-- **How:** Map modules: lc_lane_<place>_rally_N and lc_lane_<place>_N info_targets where the Combine or the Resistance would go in. Gamemode: our GoTo per man, or a runtime ai_goal_assault (the unit then needs a state our think loop leaves alone until OnArrival). Changes raids and deployments: ask the owner.
+- **How:** Map modules: lc_lane_<place>_rally_N and lc_lane_<place>_N info_targets where the Combine or the Resistance would go in. Gamemode: our GoTo per man, or a runtime ai_goal_assault (the unit then needs a state our think loop leaves alone until OnArrival). Changes raids and deployments: ask the owner. City 17 (15 maps): 41 ai_goal_assault, 109 rally and 111 assault points; rally to assault median 94 (quartiles 24, 465), 105 of 109 rally points lead to one assault point and stop (no chains, unlike Route Kanal), AssaultCue 1 on 36; BeginAssault from relays 0.2 to 2 s after Activate; d3_c17_11's dropship troops play 'cower' at their rally points until BeginAssault 10.5 s after landing.
 - **Checked by:** review
 - **Tags:** npc, valve, combine, logic
 
@@ -1570,7 +1684,7 @@ When units go into a place (a raid, a landing, retaking ground), give each man h
 Behind waist-high cover (sandbags, low walls, crates, car bonnets) put a cover-low hint (info_node_hint hinttype 101), behind chest-high cover a cover-medium (100), facing the threat, about 100 apart (56 to 135), in a named group per building, roof or barricade.
 
 - **Why:** d3_c17_13: 82 cover-low hints, nearest other median 96 (quartiles 56, 128), almost half in groups (rooftop_hintgroup 19, bldg1_hintgroup 5); d2_coast_12: 67 cover-medium, 117 apart; nodefov 180 on all. No pinch, guard or enemy-disadvantage hints in any of the 23 maps. ai_changehintgroup moves a squad to another group 15 s after OnFoundPlayer (c07).
-- **How:** Map modules: barricades, checkpoints and rebel camps add the hints with each piece of cover (a helper beside m.static for sandbags and barriers), the group named lc_cover_<place>. The engine's combat AI uses them by itself.
+- **How:** Map modules: barricades, checkpoints and rebel camps add the hints with each piece of cover (a helper beside m.static for sandbags and barriers), the group named lc_cover_<place>. The engine's combat AI uses them by itself. City 17 (15 maps): 215 cover-low hints (101) in 11 maps, nearest other median 72 (quartiles 64, 95), d3_c17_06a 55 and d3_c17_07 38; cover-medium (100) only 7.
 - **Checked by:** review; proposed: a barricade or sandbag prop in a module with no cover hint within 64.
 - **Tags:** npc, valve, combine, props
 
@@ -1579,7 +1693,7 @@ Behind waist-high cover (sandbags, low walls, crates, car bonnets) put a cover-l
 Lay ground nodes about 96 apart in the open (no more than about 140), 64 to 72 apart in rooms, corridors and sewers, and one on each side of every door NPCs use, within about 64 of it.
 
 - **Why:** 4392 ground nodes in the 23 maps: nearest neighbour median 96 (quartiles 64, 141); tenement 68, lab 73, sewers c05 66, c07 72, c11 68; open coast 141, c12 132; about 2 per occupied 256 x 256 cell; nearest node to a prop_door_rotating median 65. Our canal Channel.nodes (map_ring.py) lays a diagonal lattice about 181 apart (64 cells, odd cells with i + j divisible by 4); the forest nest 160.
-- **How:** map_ring.Channel.nodes: a node every 96 to 128 in the open and every 64 in rooms and ducts; the door helpers add a node each side. Count nodes per map against the engine's cap (4096, from memory: check).
+- **How:** map_ring.Channel.nodes: a node every 96 to 128 in the open and every 64 in rooms and ducts; the door helpers add a node each side. Count nodes per map against the engine's cap (4096, from memory: check). City 17 (15 maps): 5271 ground nodes, nearest other median 84 (quartiles 61, 115); the flats and courtyards of d3_c17_05, 06b and 09 at 67 to 73; air nodes 442 in 9 maps, 140 to 215 apart (d3_c17_06a 131 nodes).
 - **Checked by:** proposed map_lint: a module whose ground nodes' nearest-neighbour median is over 140, or a door with no node within 96.
 - **Tags:** npc, valve, geometry, doors
 
@@ -1588,7 +1702,7 @@ Lay ground nodes about 96 apart in the open (no more than about 140), 64 to 72 a
 Across every gate, shutter or breakable wall NPCs path through, put an info_node_link_controller: a thin box (16 deep, as wide and high as the gap) that starts off when the gate starts shut; the gate's own OnFullyOpen turns it on and OnClose turns it off. Turn a link off to keep units back during a scene.
 
 - **Why:** 9 controllers (d1_town_03 side_alley_gate, c01a, c03 grate, c05, d3_c17_13 5), mostly 16 deep, 96 to 208 wide, 32 to 84 high; 14 info_node_link; switched by func_door_rotating OnFullyOpen TurnOn and OnClose TurnOff (c01 backalley_gate), by scenes and counters; ts03 link_prevent_cop_movement is turned off to keep cops back.
-- **How:** Map modules: the gate helpers add the controller and the two wires. Our navgraph (sv_livingcity_navgraph.lua) learns a closed way only after failures; the engine's own legs follow the switched link.
+- **How:** Map modules: the gate helpers add the controller and the two wires. Our navgraph (sv_livingcity_navgraph.lua) learns a closed way only after failures; the engine's own legs follow the switched link. City 17 (15 maps): 55 info_node_link_controller in 11 maps, commonest box 16 by 64 by 72; prop_physics OnMotionEnabled sends TurnOn (10 lines: a barricade knocked loose opens the way), a strider-breached wall's bullseye OnDeath TurnOn (d3_c17_12), and d3_c17_10b's links and controllers with AllowUse npc_combine_s let soldiers path through force fields while they are up. Ravenholm: junk props blocking a corridor TurnOn its node links OnBreak (d1_town_01 blocked_corridor_nodelink_1 and 2); two broken windows Add to a math_counter whose OnHitMax TurnOns a link controller 336 by 324 (d1_town_02 bldg2_window2_linkcontroller); doors switch their links on FullyOpen and FullyClosed; the freight lift's button TurnOns elevator_nodelink and the down button TurnOffs it @10.
 - **Checked by:** proposed map_lint: a func_door or func_door_rotating gate across a node line with no link controller.
 - **Tags:** npc, valve, doors, logic
 
@@ -1606,7 +1720,7 @@ Over streets, canals and yards where scanners, manhacks or crows fly, lay info_n
 What happens behind a wall (a beating, a search, a fight) reaches players as sound and moving things: a one-shot sound fired on short random timers for a few seconds, furniture knocked about, then what is left (a person cowering, a broken chair). No text line.
 
 - **Why:** ts03 relay_beating_start: the citizen_beating sound (one-shot, flags 48, radius 508) on two logic_timers (random 0.4 to 1.5 s) for 6 and 8 s; physics explosions at 2.1, 3, 4.1, 5.6 and 7.1 s throw chairs, a table and an armoire spawned from templates; the victim is left in a cower post idle. House rule 10: prefer the world to text.
-- **How:** Gamemode: raids (sv_livingcity_raids.lua) and unit brutality (sv_livingcity_mindsact.lua) in a closed room: EmitSound on a short random timer and a few physics pushes on the room's props, instead of a chat line. Changes those features: ask the owner. Map modules: interiors keep a few loose physics props a search can knock over (valve-busy-and-quiet).
+- **How:** Gamemode: raids (sv_livingcity_raids.lua) and unit brutality (sv_livingcity_mindsact.lua) in a closed room: EmitSound on a short random timer and a few physics pushes on the room's props, instead of a chat line. Changes those features: ask the owner. Map modules: interiors keep a few loose physics props a search can knock over (valve-busy-and-quiet). Ravenholm: Grigori's fights are heard before they are seen: d1_town_02 plays a zombie @1, shotgun @1.5, 2.4, 4.2 and 5, a mad laugh scene @3 and a zombie @3.5, 521 from the trigger; d1_town_01a a shotgun pair @0 and @0.75 with a window shattered.
 - **Checked by:** review
 - **Tags:** npc, valve, sound, gameplay
 
@@ -1628,6 +1742,8 @@ Units enter a block flat by flat: two at the door, one kicks (adooridle, adoorki
 - **Checked by:** review
 - **Tags:** npc, valve, combine, doors, interiors
 
+- **See:** `valve_c17/15_raided_flats_cut.png`
+
 ### Soldiers pin a target in cover before they hit it (`valve-npc-suppression`)
 
 In a fight with the Resistance, soldiers first fire at a spot beside a rebel's cover for 4 to 8 s, pause 0.5 to 3 s and fire again while he stays there; aimed fire comes after.
@@ -1636,4 +1752,374 @@ In a fight with the Resistance, soldiers first fire at a spot beside a rebel's c
 - **How:** Gamemode: ents.Create('npc_bullseye') beside the target's cover and npc:AddEntityRelationship(bullseye, D_HT, 99) for the burst, then remove it. Changes how fights go (war, rebel ground, Overwatch hunts): ask the owner.
 - **Checked by:** review
 - **Tags:** npc, valve, combine, gameplay
+
+### A timed hold runs on one clock, and each wave comes on faster (`valve-npc-timed-hold`)
+
+When players must hold a place against attacks for a set time (the owner's exception to house rule 9: holding ground against waves, a post, a zone taken), drive the whole fight from one clock: one start event whose delayed outputs bring the landings, the fronts, the music, the radio lines and the end. Each front is a small squad that walks forward through two or three lines and then storms; when the whole squad is dead it resets and the next, quicker wave comes about 6 s later. A few seconds before the end, cancel every pending wave and send one last assault from both sides; after it, keep spawning attackers until the players have left and shut the way behind them. Changing how our counterattacks run: ask the owner first.
+
+- **Why:** d3_c17_07 alyx_atwork_seq (about 285 s): OnBeginSequence sends dropship_maker Spawn @20, balcony_cop1_maker Enable @40, northfront_begin_relay @50, combatsong @55, dropship2 @60, southfront_begin_relay @80, comm tower doors @110, 210, 260, radio scenes @150, 210, 240, 260, 275, elite_soldier_makers @250, 4_seconds_togo_relay @266. Each front: point_template of 3 soldiers via env_entity_maker; wave relays move them battle line 1, 2, 3 then the assault at @0, 15, 40, 70 (wave 1), @0, 10, 30, 50 (wave 2), @0, 5, 20, 40, @0, 5, 15, 25, @0, 5, 7, 9 (wave 5). northfront_soldiers_respawn_counter (max 3, fed by OnDeath) fires northfront_battle_reset (CancelPending on all five wave relays, lines and goals Deactivate, counter SetValue 0) and ForceSpawn @6; a logic_case on the wave counter picks the next wave relay (OnDefault: the last). 4_seconds_togo_relay Kills and CancelPendings the waves, Activates finalassault_north and _south @0.5, BeginAssault @1, and Enables northfront_ and southfront_pressuresoldiers_maker @4 (stock 100, 2 alive, every 1.5 s, schedule 'set enemy and run'), Killed by gate_close_counter OnHitMax @3. 17 of the 19 CancelPending lines in the 15 City 17 maps are in this fight.
+- **How:** Gamemode: a counterattack or held-zone event gets one table of timed steps (landing, fronts, voices, the end) and a wave loop per front: spawn 3, walk them to line 1, 2, 3 then at the defenders, the windows shrinking each wave (70, 50, 40, 25, 9 s to the assault), a wipe counted by deaths starts the next wave 6 s later; timers cancelled at the end. Map modules where holds are expected: three lc_line_<place>_N spots 380 to 480 apart toward the held place. Ravenholm's holds are timed by a slow machine players can see and hear: the freight lift climbs 385 at speed 12 (about 32 s) while fast zombies spawn at the button press, @1, and through the windows @5; after Grigori's guard line the cable car's motor is heard map-wide from @45 (radius 7000 to 12000), the car sets off @64 and needs about 20 s more (784 at speed 40), while two makers of 6 (Enabled @1 and @6) send one fast zombie at a time along one of two routes (logic_case PickRandom); Grigori's propane fire holds the way for 47 s. For our flush job, the gate's own slow opening and motor sound can be the clock.
+- **Checked by:** review; robots.py can count a hold's waves and that pending timers stop at its end.
+- **Tags:** npc, valve, combine, logic, gameplay
+
+### Attackers advance line by line, by time or when they have arrived (`valve-npc-battle-lines`)
+
+An attacking squad holds a line (where they stand and fight from cover) and moves to the next only when told: after a set time, or when all of them have reached the line. Lines are about 400 apart. Attackers on a line fight in short bursts and take cover on reload; defenders and posts stay at their cover. When the squad is wiped, one reset puts every counter, line and goal back as it started. Changes how our units attack: ask the owner first.
+
+- **Why:** 22 ai_battle_line (Strict 1 on 15) and 22 ai_goal_standoff in 6 City 17 maps. By arrival: d3_c17_06b battleline1_trigger (trigger_multiple, NPCs only, flag 2, 512 by 288) adds to battleline1_counter (max 3); OnHitMax Deactivates line 1, Activates line 2 and Enables its trigger; lines 384 and 480 apart; sols_respawn_counter (max 3) fires battle_reset (11 lines: lines and goals off, counters 0). By time: d3_c17_07 lines 430 and 380 apart. Standoffs: Aggressiveness 2 (9) or 3 (8), PlayerBattleline 1 on 17, StayAtCover 1 for barricade and garrison cops, custom bursts 3 to 6 shots in 2 to 4 s, cover on reload, odds of cover 25.
+- **How:** Gamemode: units sent to take a place get line spots and move on when 3 of them stand there or a timer runs out (our GoTo per unit). Map modules: lc_line_<place>_N info_targets 380 to 480 apart, facing the objective.
+- **Checked by:** review
+- **Tags:** npc, valve, combine, logic
+
+### A squad is topped up at each stage, with one medic (`valve-npc-squad-topup`)
+
+Rebels who follow a leader are refilled when the squad reaches a stage (a barricade door, a gate, a roof, freed prisoners), not continuously: up to 4, one of them a medic, only for the places missing, the newcomers arriving unseen nearby. Our squads are capped at 3 (squads.md) and refilling would change them: ask the owner first.
+
+- **Why:** 16 ai_ally_manager in 9 City 17 maps: maxallies 4 (2 to 5), maxmedics 1 (one 2, one 0). Replenish comes from a trigger_once at each checkpoint (d3_c17_05 barricade_1_door_trigger; d3_c17_11 the roof @0.2), a relay (d3_c17_10a first_turret_relay, d3_c17_10b barney_lead_exit_relay), map start, once a citizen's OnWake. SpawnAlly0 to 3 and SpawnMedicAlly go to makers: Spawn (1 stock, 1 alive) or SpawnNPCInRadius to a 400-stock maker (4 alive, flag 32). 21 medics among 109 placed citizens (1 to 5 a map); 12 top-up rebels carry ResponseContext reinforcement:1. d3_c17_05 support_cit2: spawned crouched at his own busy hint (Coverlow_L, teleport), held with StartScripting until a player is in sight, then StopScripting; OnJoinedPlayerSquad starts a greeting scene.
+- **How:** Gamemode: a rebel squad leader reaching the base or a taken checkpoint could have the squad refilled to its cap with one medic among them, the newcomers walking in from an exit doorway (valve-npc-spawn-job). Map modules: a rebel reinforcement spot behind cover at bases and checkpoints.
+- **Checked by:** review
+- **Tags:** npc, valve, logic, gameplay
+
+### Rebels resupply from a roof, and ammo comes in crates (`valve-npc-supply-drop`)
+
+Resistance supplies reach fighters as things in the world: a rebel on a roof calls down and throws crates (the crate in his hands becomes a real one at the moment of the throw), or a few health kits and crates tumble off a roof edge after his call. No rebel hands out ammo; it is in crates, and a resupply comes between waves. A new resupply event: ask the owner where it fits our economy.
+
+- **Why:** No placed citizen in the 15 City 17 maps has the ammo resupplier flag (524288, as the FGD is remembered); there are 138 item_item_crate and 39 item_dynamic_resupply (16 each in d3_c17_01 and 02). d3_c17_03 npc_tower_thrower: ai_script_conditions (player looks at him in a 20 degree true cone, line of sight) starts LCS_Heydownthere, then ss_thrower (d3_c17_03_throw_from_tower): OnScriptEvent01 pd_crate TurnOn (the crate in his hands), OnScriptEvent02 pd_crate TurnOff, eem_crate ForceSpawn (env_entity_maker) and mc_crates_to_throw Add 1, whose OnHitMax Kills the sequence. d3_c17_12: a trigger_once spawns resupply_citizen_1 (rpg; damagefilter keeps him alive until it is Killed 10 s later), starts cit_dropper01.vcd and ForceSpawns resupply_template_1 (3 item_healthkit, 2 item_item_crate: 357 ammo, 2 batteries) at the roof edge; a strider's death Enables the next resupply trigger.
+- **How:** Gamemode: a Resistance resupply could be a rebel NPC at a roof edge who says one line and drops a crate per throw (prop shown in hand, then spawned and thrown at the animation's moment), or kits rolled off the edge. Map modules: a lc_drop_<place> spot at roof edges over rebel streets.
+- **Checked by:** review
+- **Tags:** npc, valve, logic, gameplay
+
+### Combine aircraft cross the sky as scenery, on a loop (`valve-npc-flyby`)
+
+Over a quarter the Combine holds, a dropship or gunship now and then flies a fixed route high up, harmless (neutral to everyone), removed at the far end out of sight, the next one 20 to 30 s later; the loop stops when the place's story moves on. NPC aircraft are new to our city: ask the owner first.
+
+- **Why:** d3_c17_10a firstdropship_maker and firstgunship_maker (stock 2, 1 alive) send the ship FlyToSpecificTrackViaPath @0.2 on spawn; the far path_track (firstdropship_path5, firstgunship_path6) Kills the ship and sends the maker Spawn @20 or @30; firstgunship_relationship (disposition 4 to !player, npc_citizen and npc_barney) is applied @0.5 so it never attacks; a trigger_once Kills the makers. Path speeds 200 to 400, heights about 1100 to 1800. d3_c17_04, 05, 09 and 12b: a 'firstdropship' (no crate, or crate 2: a strider) crosses once.
+- **How:** Gamemode: a flight path is a list of points (editor 'Point: flight path', or a map module's lc_flight_<place>_N); a timer spawns a neutral dropship that flies it and is removed at the end. Map modules: flight paths over Combine quarters, ending behind buildings.
+- **Checked by:** review
+- **Tags:** npc, valve, combine, logic, multiplayer
+
+### A dropship lands, its troops go straight in, and it leaves another way (`valve-npc-dropship`)
+
+A dropship carrying troops is spawned unseen, flies its route, lands from a waypoint, and the moment it has dropped them their assault starts (gathered at once, the push about 10 s later, a gate opening for them with its path link); the ship leaves by a different route and is removed out of sight. Our Overwatch drops exist (city-administration.md): differences from them need the owner's yes.
+
+- **Why:** 13 npc_combinedropship in 9 City 17 maps (crate 1 soldiers 7, none 4, strider 2), all from makers: d3_c17_11 dropship_maker (spawned 30 s after the gunship's OnDeath) sends FlyToSpecificTrackViaPath dropship_path8; dropship_path8 OnPass LandTakeCrate 4; dropship OnFinishedDropoff: FlyToSpecificTrackViaPath dropship9 @0 (dropship8 OnPass Kill), dropship_soldiers_assault Activate @0 and BeginAssault @10.5, roof_gate SetAnimation open @10, roof_gate_nodelink TurnOn @10.1, sounds @10 and @12. Its 4 rally points play rallysequence 'cower' while waiting. d3_c17_07 dropships land from path_track OnPass LandLeaveCrate.
+- **How:** Gamemode: after an Overwatch drop, give the soldiers their target at once (each his own spot, valve-npc-assault-lanes) and send the ship off along another path. Map modules: a landing zone gets an arrival path, a departure path and the troops' rally spots.
+- **Checked by:** review
+- **Tags:** npc, valve, combine, logic
+
+### Combine tripwires wake turrets, and re-arm when the room is clear (`valve-tripwire-turrets`)
+
+Inside a Combine stronghold, red laser tripwires cross the ways in; a trespasser who breaks one sets off an alarm, the lasers drop, turrets rise from the floor and start. Each turret sinks again when it sees no one; when all have sunk the lasers come back on. Destroying the turrets switches the room off for good, and the stronghold's switches turn every room off at once. A new security piece; turrets are the Overwatch's (civil-protection-tools.md): ask the owner how it fits.
+
+- **Why:** d3_c17_10b: 32 env_beam tripwires (rendercolor 170 0 0, BoltWidth 0.2, length 78 to 414, median 202, TouchType 1, filtername filter_combine_s with Negated 1 so soldiers pass) and a trigger_multiple per room fire atrium_turrets1_detected_relay: lasers TurnOff, alarm PlaySound and StopSound @1.5, atrium_turret_1a_lift and 1b_lift (func_door, movedir down, noise Streetwar.d3_c17_10b_doormove3) Open, turrets (npc_turret_ground parented to the lifts) Enable. Turret OnAreaClear > lift Close; lift OnClose > turret Disable; atrium_turrets1_allclear_counter (max 2: lift OnFullyOpen Subtract, OnFullyClosed Add @0.2) turns the lasers on and re-Enables the trigger; atrium_turrets1_deathcounter (max 2, turret OnDeath) turns lasers off, Kills the re-arm counter and trigger. switches_counter (max 3, one per control room) fires switches_success_relay: every laser and turret trigger Killed, turrets SetHealth 0, combinebeam_nodelinks TurnOn, shake, the last squad spawned @1.
+- **How:** Map modules for Combine places: m.tripwire(name, a, b) (env_beam, filter so Combine NPCs pass) and m.turret_lift(name, ...) with the two counters, giving lc_NAME_alarm and lc_NAME_off relays for the gamemode (a rebel raid that cuts the power).
+- **Checked by:** review; proposed map_lint: a tripwire env_beam with no filter (Combine NPCs would set it off), a re-arm counter whose max differs from its lifts.
+- **Tags:** logic, valve, combine, gameplay, recipe
+
+### A fight nearby is heard and seen as tracers before it is reached (`valve-ambient-gunfire`)
+
+Around a district fight, unseen guns fire bursts of tracers along streets far from the players (pairs aimed across a street 800 to 2000 away), switched on as players near the fighting and off when they pass; walls hit by heavy fire throw out concrete chunks. The fight feels big without more NPCs. New atmosphere: ask the owner before adding it to fights.
+
+- **Why:** 15 env_gunfire in d3_c17_07, 11 and 12b, all StartDisabled 1, Enabled by relays (13): bursts 2 to 7 shots (minburstsize 2, maxburstsize 7 on 12), 2 to 5 s between bursts, rateoffire 10 or 15, spread 5, tracertype AR2TRACER, shootsound Weapon_AR2.NPC_Single (9) or Weapon_SMG1.NPC_Single (6); d3_c17_11 ground_gunfire_1a and 1b to 6a in pairs, 768 to 1989 from their targets at ground level; d3_c17_07 gunfire_rooftop 607 above, 3100 to 3250 away. 50 env_shooter in 6 maps: props_debris concrete chunks, 1 to 4 a shot, velocity 400 to 800, life 4, fired by a bullseye's OnDeath, a sequence's script event or a relay.
+- **How:** Gamemode: during a district fight, a few unseen 'gunfire' emitters between the front and the rear (sound plus tracer effect) on random bursts; map modules: lc_gunfire_<place>_a and _b pairs across main streets.
+- **Checked by:** review
+- **Tags:** logic, valve, sound, combine
+
+### Before a blast, a danger sound tells NPCs to get clear (`valve-npc-danger-sound`)
+
+A few seconds before a planned explosion (a charge on rubble, a breach, a strike), put an AI danger sound at the spot so every NPC near it runs clear; the blast then hurts only those who stayed. A change to how our NPCs react: ask the owner first.
+
+- **Why:** 13 ai_sound in 5 City 17 maps: soundtype 8 (danger) on 10, volume 120, duration 0.5, sent InsertSound by relays (5), triggers (3), sequences (2). d3_c17_06a citizen_rubble_demolition_rl: rebels' scenes @0, 25, 50, 70 while they set the charge, citizen_rubble_danger_sound InsertSound @72, barricade_explosion_rl_1 and barrier_clip Kill @75, the rebels regroup @75. d3_c17_09 combine_crusherwall4_ss sounds @0 and @4 round its explosion.
+- **How:** Gamemode: IEDs (ieds.md), breaches and strikes could insert a danger sound (GMod sound.EmitHint with SOUND_DANGER, from memory: check in game) about 3 s before the blast.
+- **Checked by:** review
+- **Tags:** npc, valve, logic, sound
+
+### In a long fight, only a few dropped guns stay on the ground (`valve-weapon-pile-limit`)
+
+Where NPCs die again and again (waves, a held zone), keep only 2 to 4 dropped guns of each kind; older ones go. Fewer loose weapons, fewer physics objects. It changes what players can pick up: ask the owner first.
+
+- **Why:** 6 game_weapon_manager in d3_c17_07 (the timed hold), 11 and 12 (long street fights): weaponname weapon_ar2 (3) or weapon_smg1 (2), maxpieces 3 (3), 2 (2) or 4, ammomod 1. One is misspelt 'waepon_ar2' in Valve's file and so does nothing.
+- **How:** Gamemode: when an NPC's dropped weapon is made, count those of its class and remove the oldest beyond the limit (or never drop, as the owner prefers).
+- **Checked by:** review
+- **Tags:** logic, valve, performance, multiplayer
+
+### A reminder stops the moment it is done, and the way opens anyway (`valve-teach-then-give-up`)
+
+When a player must learn to do something, a person says it (not text) a few times about 10 s apart; the moment the player does it, every pending reminder is cancelled; and after about 50 s the way on opens regardless, so no one is stuck. Text on screen is kept for the one key to press. Valve's 15 City 17 maps put text on screen only 7 times.
+
+- **Why:** d3_c17_03 command_send_nag_relay: command_send_nag_1 to 4 (squad_train01 to 04.vcd, spoken) @10, 20, 30, 40, the key hint (env_hudhint valve_hint_command_send) @0.5, 11, 21, 31, 41, plaza_exit_conditions Enable @50. Any citizen's OnStationOrder fires command_recall_hudhint_relay: command_send_nag_relay CancelPending @0 and Kill @0.1, the send hint Killed, the next hint @7, the exit @10. Text entities in the 15 maps: 2 env_hudhint (squad commands), 4 env_message (GAMEOVER_ALLY), 1 game_text ('You have failed.').
+- **How:** Gamemode: tutorials and job steps that wait for an action: voice lines on a timer, all cancelled (timer.Remove) on success, and a timeout that moves on; one notice at most (house rule 10). Ravenholm: Grigori's gate nag is a logic_timer (RefireTime 20, StartDisabled 1) starting three nag scenes @0, 7 and 13, Enabled 1 s after his gate sequence begins and Killed with all three scenes by the trigger_once the player reaches (d1_town_02a); in d1_town_01 his voice goes ahead as three rant sounds placed 387 to 936 ahead of their triggers, each trigger stopping the last; no env_hudhint in the six maps.
+- **Checked by:** review; house_rules.py already counts text on screen.
+- **Tags:** valve, gameplay, logic
+
+### Followers wait at marked spots, not on the leader's heels (`valve-npc-follow-wait-spots`)
+
+Where squads follow a leader, mark spots for them to wait at when the leader stops (by doors, corners, behind cover), in small clusters about 60 apart, and in a base mark spots where people step aside to when someone pushes past. Whether our followers use them needs a check in game: ask the owner before changing how they follow.
+
+- **Why:** In the 15 City 17 maps (hint meanings as the FGD is remembered): 291 info_node_hint of type 900 (follower wait point) in 10 maps, nearest other median 59 (quartiles 43, 115), up to 68 a map (d3_c17_05); 91 of type 950 (ally move-away spot), 84 of them in the d3_c17_05 rebel base, 152 apart; 110 of type 902 (squad transition, about 262 from the map change); only 8 act busy hints, so rebels in the street war do not idle.
+- **How:** Map modules: lc_wait spots (info_node_hint hinttype 900) in twos and threes by doors and corners of streets rebels use; 950 spots round the rebel base's rooms.
+- **Checked by:** review
+- **Tags:** npc, valve, geometry
+
+### A loud approach wakes a Combine post (`valve-npc-noisy-approach`)
+
+A small Combine post (a guard room, an outpost) stays quiet until it hears gunfire or an explosion within about 300 of it, or sees an intruder; then its men come out and hold the room from cover, and when half are down the rest fall back to a second line. Changes how our garrisons react: ask the owner first.
+
+- **Why:** d3_c17_05 outpost_microphone (env_microphone, MaxRange 300, spawnflags 40 = bullet impacts and explosions, StartDisabled 1, Enabled by a trigger_once as the player nears): OnHeardSound Spawns outpost_room_1_cop_1_maker and _2_maker and starts their schedule. outpost_room_1_standoff and _2 (StayAtCover 1) Activate from a cop's OnFoundPlayer. garrison_3nd_floor: cops 3 and 4 OnDeath fire garrison_3nd_floor_cop_fallback_relay: a fallback battle line, a fallback standoff and a schedule to the fallback hint group (garrison_3nd_floor_cop_fallbacks). ai_changehintgroup (6) moves squads to their next hint group from OnAssaultClear (4).
+- **How:** Gamemode: Combine posts and garrisons could listen (EntityFireBullets, explosions) within about 300 and wake their units; a fallback spot set per room. Map modules: lc_post_<room>_fallback_N spots.
+- **Checked by:** review
+- **Tags:** npc, valve, combine, gameplay
+
+### A sniper shows himself before he kills, and only while players are in his street (`valve-npc-snipers`)
+
+A Combine sniper sits in a high window (about 280 to 410 above the street), is switched on when players enter his street and removed when they leave it; his laser paints a target about a second before each shot, and crows on the street are shot first, telling players he is there. NPC snipers are new: ask the owner first.
+
+- **Why:** d3_c17_09: 5 npc_sniper, 281 to 409 above the nearest ground node; EnableSniper from trigger_onces (one from logic_auto @5), Kill from trigger_onces past the street; PaintInterval 1, PaintIntervalVariance 0.75, misses 0, shielddistance 64, shieldradius 48; 5 npc_crow below (ai_relationship snipers hate crows); a func_brush (sniper4_los) blocks one sniper's view until he dies; sniper4 OnDeath sends sniper2 SweepGroupRandomly sniper_sweeptarget; sniper_death_counter (max 2) ends the street.
+- **How:** Gamemode: an Overwatch sniper for district fights (a window spot from the editor or a module's lc_sniper_<street>), on while players are in his street's box, with a visible laser lead before each shot.
+- **Checked by:** review
+- **Tags:** npc, valve, combine
+
+### Valve's own standard sizes for people's things (`valve-standard-sizes`)
+
+Size what people use to Valve's standards room: a storey every 128 (8 of floor, 120 clear), walls 8 thick, the narrowest hall 64 wide; a doorway 48 by 108 framed by 4 wide jambs and a 4 deep head (a rough hole 56 by 112), the door 2 thick, its knob 43 up; a counter 40 high and 32 deep; a desk top 30 high, 64 by 32, a monitor 24 wide and 20 high on it; a chair seat 16 to 18 high with its back to 42; light switches 40 to 52 up; wall chargers 40 to 72 up; a ladder 24 wide with dismounts 36 out at each side of its top and 36 out at its foot; crates of 32, 40 and 64; barrels 32 across and 48 high; hanging fluorescent panels 32 by 16 at 168 under a 256 ceiling. Rails stand 40 high (handrail04 props from 0 to 40); cover is low at 40 to 63 (crates 40, barrels 48, concrete_barrier001a and combine_barricade_short 48, rebel short barricades 56 to 63: a crouching player, 36, hides) or tall at 108 to 132 (rebel tall barricades, combine_barricade_med: a standing player, 72, hides).
+
+- **Why:** testroom_standards and zoo_standards (Valve's style folder, read 21 November) build every size in its own dev_measure texture: dev_measurehall01 floors 64 wide between walls 8 thick, dev_measuredoor01 jambs 4x8x112 round a 48 by 108 door brush 2 thick, dev_measurecounter 64x32x40 (items on it at 41 to 42), dev_measuredesk top at 28 to 30, dev_measureswitch01 to 03 plates 8x12 at 40 to 52, dev_measureladder01 24x256 on a func_ladder with info_ladder_dismount 36 out, func_healthcharger and func_recharge 16x4x32 at 40 to 72, dev_measurecrate01 to 03 and dev_measurebarrel boxes; two Alyx figures stand in the zoo for scale. Our digest already has ceilings 120 to 128 and doorways 48 by 108; the 128 storey with an 8 slab is why the flats measure 120. Rails and cover from d3_c17_01 to 12b: handrail04_long/short/medium are 40.6 high with their origin 18 to 20 over the floor (57 of 92 measured); metalladder001/002 are 24.6 wide in pieces of 128; barricade heights as listed in valve-rebel-barricades and valve-combine-barricade-rows.
+- **How:** map_modules: counters and shop tables at 40, desks at 30, benches and seats at 16 to 18, switches and terminals 40 to 52 up, chargers 40 to 72; m.ladder 24 wide with its dismount points 36 out; halls never under 64 (our corridors stay wider: valve-sightlines); keep the owner's stairs (stairs-16-24).
+- **Checked by:** proposed: map_lint standards: a counter or table brush top outside 28 to 42, a hall under 64 between walls, a func_ladder not 24 wide or without dismounts, a light switch or charger outside 36 to 72 up
+- **Tags:** valve, interiors, geometry, props, doors
+
+### A stairwell turns once a storey in a shaft 128 wide (`valve-stairwell`)
+
+A stair between storeys 128 apart goes in a shaft 128 wide by 256 long: two flights side by side, each 60 wide, climbing 64 to a landing 80 to 92 deep, open treads 2 thick, a rail 64 high along each flight and handrail04_singlerise props on both sides about 62 apart. Valve's steps are 8 by 12 (8 a flight); with the owner's 16 by 24 steps a half flight is 4 steps and 96 of run: ask the owner first before building one with Valve's steps.
+
+- **Why:** testroom_standards (21 November): the stairwell at 640..768 by 320..576 has treads 60x12x2 rising 8, landings 128x92 and 128x80 at 56 to 64 and 120 to 128, rail brushes dev_measurerails02 2 thick and 64 high stepping 32 every 48, and eight Handrail04_SingleRise props at x 705 and 767; dev_measurestairs01a is 8 by 12 by 64 wide, eight steps to 64. Every one of 4,410 steps in d3_c17_01 to 12b rises 8 and runs 12 except 42 of 16 by 24 in d3_c17_03.
+- **How:** A stairwell module for map_town's blocks: shaft 128 by 256 (by 288 with 16 by 24 steps), two flights of the owner's steps, landings 80 to 96 deep, a handrail04_singlerise each side of each flight; the shaft's walls 8 thick (valve-standard-sizes).
+- **Checked by:** review; map_modules_check valid-viewpoints on each landing
+- **Tags:** valve, stairs, interiors, geometry
+
+### Rebel barricades are junk models against a wall, a way left past (`valve-rebel-barricades`)
+
+Barricade a street the way City 17's rebels did: with Valve's ready-made junk barricade models (props_debris/barricade_short01a to 04a, barricade_tall02a to 04a, concrete_debris256barricade001a), mostly one alone with an end or its back on a wall and the rest of the street left open (more than 128 free beside it), square to the grid or turned a little, set 0 to 5 into the ground. Only a doorway gets sealed (one tall02a fills a 96 doorway; a short02a with a short01a on its side on top). Furniture stays in the rooms, not piled in the street. For dressing maps only: the game's own barricades (lc_barricade, battle lines, checkpoints) keep how they behave unless the owner asks.
+
+- **Why:** d3_c17_01 to 12b (21 November): 73 such models, 72 prop_static (barricade_short04a 34, tall02a 16, tall03a 6, rubble barricade 7); 54 stand alone (no other within 160), 8 pairs and one three; 39 touch a wall (26 by an end, 13 by the back); rays along each one's long side find more than 128 left open for 66 of 73 (median 957 to the next wall); 7 sit in gaps under 256 (d3_c17_07 5137 1616: a 96 doorway); 45 square, 11 tilted up to 30; bottoms 0 (median) to 5 under the floor. Couches, drawers and beds (33) are all inside flats. Sizes: short04a 94x183x58, tall02a 78x108x124, tall03a 80x134x116.
+- **How:** A barricade helper in map_mods: pick one model (short04a most), put an end or its back to a wall, yaw on the street axis plus 0 to 20, z 2 into the floor, keep a lane of 128 or more beside it; optional extras within 200: a sawhorse, an oildrum, a corpse with his gun (valve-story-props). For a sealed doorway: tall02a in a 96 opening, or short02a with short01a laid on it.
+- **Checked by:** proposed: map_lint notes a barricade model with no free lane of 96 beside it unless it sits in a doorway; map_assets.py for the models
+- **Tags:** valve, props, streets, layout
+
+- **See:** `valve_c17/31_cratered_park_eye.png`, `valve_c17/33_broken_block_iso.png`
+
+### Combine barricades stand in straight rows at a fixed pitch (`valve-combine-barricade-rows`)
+
+The Combine closes a street with one barricade piece repeated in a straight row at a fixed pitch, all on one yaw, square to the grid, never tilted, sunk 1 to 5: combine_barricade_tall02b every 128 with its back to a building front, med01a or med01b every 64 in rows of 9 or 10 across a plaza, med02a/b/c and short01a to 03a in pairs 64 to 146 apart. A gap it guards gets combine_fence01a and 01b as two posts set into its sides, 124 to 488 apart, with a field 113 to 480 long between: a func_brush 1 thick and 192 high, effects/combineshield/comshieldwall2 on both faces, nodraw on the rest. For dressing maps only: the game's own barricades (lc_barricade, battle lines, checkpoints) keep how they behave unless the owner asks.
+
+- **Why:** d3_c17_01 to 12b (21 November): 78 Combine barricade pieces, all prop_static, 74 on exact 90s; rows of four tall02b at 128 (d3_c17_04 -1042 -3840, d3_c17_05 559 -3864), 20 of the 24 that touch a wall have the back on it; med01a 9 in a row at 64 (d3_c17_11 912 4000) and med01b 10 at 63 (d3_c17_12 896 4004). 38 combine_fence posts, 35 touching a wall; fields 480 long three times in d3_c17_10a (-1787 7056), 113 to 240 in d3_c17_10b, where one is cut into nine pieces 32 wide.
+- **How:** A Combine roadblock helper: n copies of one model at its pitch (tall02b 128, med01 64) along a line, one yaw, z minus 2; a field helper: fence01a and 01b at the two sides of a gap, the field brush between (func_brush, comshieldwall2 both faces, 192 high, 1 thick). Fits combine-kit and valve-combine-cold.
+- **Checked by:** proposed: map_lint notes Combine barricade pieces in a row whose spacing varies by more than 4, or tilted; a combine_fence post with no field brush within its gap
+- **Tags:** valve, combine, props, streets
+
+- **See:** `valve_c17/29_combine_barricade_row_cut.png`
+
+### Wrecked cars are turned, against the walls, a few burning (`valve-wrecked-cars`)
+
+Leave cars the way a fight leaves them: turned off the street's axis (only 15% square), half of them against a wall or kerb, 40% tilted (mostly 10 to 35 degrees, a few on the side or roof), skins varied, a few with a fire or smoke and a scorch overlay under them, trash decals beside. Static for the big ones (trucks, vans, the burnt hatchback); physics only for the small physics car models. Never one square in the middle of the road.
+
+- **Why:** d3_c17_01 to 12b (21 November): 47 cars, vans and trucks: yaw free 25, turned 3 to 20 15, square 7; tilted over 5 degrees 19 (on the roof 2, on the side 3); 22 touch a wall (25 within 16); skin not 0 on 28; env_fire or env_smokestack within 200 of 12, scorch1 within 200 of 7; static 33, physics 11 (car002b, 003b, 004a, 005a/b, van001a_physics), crushed cars as prop_ragdoll (car001a_phy 3). Ours (map_town.py): one car00Xa_physics within 40 of the middle of the street, yaw in steps of 15.
+- **How:** map_town street dressing: place the car within 16 of a kerb or wall, yaw = street axis plus 15 to 60 (or free), tilt 0 to 30 on a third, skin random; one in five with a small fire (valve-fire-kit) and a scorch overlay 250 across under it. Physics car models go through m.dynamic, never static (physics-props-dynamic). Ask the owner first if it changes cars in streets they have walked.
+- **Checked by:** proposed: map_lint notes a vehicle prop square to the grid within 64 of a street's middle; map_assets.py (physics models never static)
+- **Tags:** valve, props, streets
+
+- **See:** `valve_c17/36_rubble_wired_street_eye.png`
+
+### Rubble models fit the break square; rebar and chunks are the loose part (`valve-rubble-fitted`)
+
+Dress a ruin in layers: concrete_section pieces square on the grid, touching the broken floor or wall edge they continue, at storey height; building_brokenexterior, walldestroyed and windowdestroyed pieces square in the wall hole; destroyedceiling pieces under the ceiling of a burned room; rebar sticking out of the sections, tilted; debris piles (concrete_debris128pile, 256pile) square, against the wall foot, sunk 3 to 10 into the floor; concrete_chunk physics props loose and tilted. Most stand alone or in pairs, section with rebar.
+
+- **Why:** d3_c17_01 to 12b (21 November): concrete_section 128 (127 on exact 90s, 106 touching a wall, bottoms a median 104 and up to 192 over the floor below); rebar 124 (108 tilted over 5, 17 prop_dynamic); piles 106 (83 square, 69 touching a wall, bottom a median 3 under the floor, p10 10; fade 1100 to 1660 on 38); broken fronts 98 (84 square, 58 of 90 touching); destroyedceiling01a-d 37 (all square, all touching, 80 to 200 up; 23 in the burned block of d3_c17_06b); concrete_chunk 23 physics, 13 tilted. Groups at 128: 220 alone, 53 pairs; section with rebar the commonest mix. styleguide_c17_rubble_2: sections 24, piles 15, rebar 10, walldestroyed09 10.
+- **How:** With valve-broken-edges: after cutting a wall or floor, place sections along the cut edge (yaw on the grid, flush to the brush), one or two rebar at 30 to 90 degrees out of them, a pile at the wall's foot 4 into the floor, two or three chunks loose within 128; pile fademaxdist about 1600.
+- **Checked by:** map_floating.py (nothing floats); proposed: map_lint notes a concrete_section or brokenexterior model off the grid or more than 8 from any brush
+- **Tags:** valve, props, geometry, facades
+
+- **See:** `valve_c17/25_rubble_street_eye.png`, `valve_c17/33_broken_block_iso.png`, `valve_c17/34_rubble_skeleton_block_iso.png`, `valve_c17/35_rubble_corner_shop_iso.png`, `valve_c17/36_rubble_wired_street_eye.png`
+
+### A fire: firesize 64, a steady orange light beside it, a scorch under it (`valve-fire-kit`)
+
+A burning spot is an env_fire of firesize 64 (32 to 48 for a small one, 128 to 150 for a big one), burning from the start and forever, on the rubble or floor rather than inside a prop, with a steady orange light about 30 from it ('254 150 35' at 300 to 900, never a flicker style), a scorch overlay about 250 across under a third of them, and a fire loop within 256. Fires in a burning street come in short rows, not one per prop.
+
+- **Why:** d3_c17_01 to 12b (21 November): 137 env_fire; firesize 64 on 41, 128 to 150 on 35, 48 on 13, 32 on 10; spawnflags 47 (infinite, smokeless, start on, start full, no glow) 39, 3 (lit by the map) 31, 45 (with smoke) 22; 111 with no prop within 64; 88 with a light within 128 (median 33, '254 150 35' 300 to 900 and '254 174 10 500'), no light styles; scorch1 under 42; a fire sound within 256 of 86; groups at 96: 57 alone, 18 of 2 to 4, one street chain of 29 (d3_c17_04). Ours (map_mods_b.py fire): firesize 24 to 30 with a light '255 150 70 110' 40 over it.
+- **How:** map_mods_b fire(): default size 48 to 64 outdoors, light brightness 300 to 500 at 20 to 40 from the fire, an optional scorch overlay and ambient fire loop; keep drop=False for drums (fire-in-drums). Ask the owner first before changing fires already in their modules. A trap's fire is different: a grid of 8 to 46 env_fire 10 to 30 apart over up to 240 by 288, sizes mixed 25 to 130, all one name, not lit at the start (spawnflags 3, or 34 smokeless with no glow) and lit together by the trap (d1_town_01: 29, 11 and 8; 01a: 23; 02a: 46 and 13 round the propane canisters).
+- **Checked by:** proposed: map_lint notes an env_fire with no light within 128, or a light near a fire with a style
+- **Tags:** valve, lighting, props, sound
+
+### Rubble ground is power 3; small displacements dent burned walls (`valve-rubble-displacements`)
+
+Lay the ground of a ruined street as displacements of power 3 (not 2), 512 to 1100 across, lightmapscale 16 where people walk, in concretefloor007a, dirtfloor005b or a painted blend such as blendgrassgravel001a, and dent the walls and ceilings of a burned room with small displacements (64 to 128 by 8 to 45) on the plaster faces.
+
+- **Why:** d3_c17_01 to 12b (21 November): outdoor rubble displacements power 3 on 56% in d3_c17_02, 59% (plus 41% power 4) in 03, 100% in 09, 89% in 10a, 100% in 11 and 12b, lightmapscale 16 near play; styleguide_c17_rubble_2: power 3 on 43 of 48, 16 on 31. Burned rooms: d3_c17_06b 107 displacements (128x45, 64x45, 96x8 on plasterwall009d and 037f; 43 walls, 21 ceilings), d3_c17_12 126 (rockwall003a_c17). The 22-map digest had power 2 on 86% of city displacements.
+- **How:** Where a module has a ruined yard or street, its ground displacement at power 3, lightmapscale 16 within 512 of play, 32 to 64 beyond (valve-lightmap-by-distance), edges into the brush (valve-terrain-into-brush).
+- **Checked by:** proposed: map_lint notes a power 2 displacement over 512 across on a rubble material near play
+- **Tags:** valve, geometry, materials
+
+- **See:** `valve_c17/25_rubble_street_eye.png`, `valve_c17/31_cratered_park_eye.png`
+
+### The dead lie in set pieces, with their blood and their crows (`raven-dead-set-pieces`)
+
+Put the infested quarter's dead in a few set pieces rather than one body per lane: a yard or room of 4 to 9 bodies (whole, cut in half, burned, a few hung on hooks), blood decals only round them (4 to 26 a scene, none alone in a lane), crows standing on the ground in fours to sixes by the bodies, flies heard there; elsewhere single bodies behind cover. Bodies are ragdolls players pass through.
+
+- **Why:** d1_town_01, 01a, 02, 02a, 04, 05 (21 November): 66 prop_ragdoll (t01 36: classic_legs 10, classic 9, fast 4, classic_torso 4, corpse1 4, charple 3), spawnflags 4 (debris) on 58; in t01 groups at 128 of 9 (the pyre yard) and 7 (the blade store), a 4, three pairs, singles. 189 blood decals (t01 146: bloodstain_101 46, 002 42, 001 19, 003 12), 47% of t01's within 128 of a body, all 10 of t01a's within 107. 15 meathook001a (prop_physics held still, a phys_constraint to each body, hung 70 to 165 up, 15 to 60 apart). 43 npc_crow: t01's 19 stand on the ground (9 up) in groups of 6, 4, 2, 2, 13 within 256 of a body; in the graveyard singly on the grass. d1_town.CorpseRoom soundscapes and d1_town.Flies at the scenes. d1_town_03 alone had no blood (raven-litter-not-gore).
+- **How:** map_raven.py: one or two corpse scenes in the quarter (a back yard, a room off the tunnel house): 4 to 9 prop_ragdoll (spawnflags 4) with 6 to 20 bloodstain decals within 128, two or three meathooks with bodies where there is a beam, a group of 4 to 6 npc_crow on the ground beside them, an ambient d1_town.Flies; no blood anywhere else. Bodies and blood are what players see: ask the owner first.
+- **Checked by:** proposed: map_lint notes a blood decal more than 192 from any prop_ragdoll in a module tagged infestation; review
+- **Tags:** grime, props, infestation, ravenholm, valve
+
+### In the trap streets loose props are half of all props, and many wait to be grabbed (`raven-held-till-grabbed`)
+
+Where the dead walk, make about half the props loose physics (blades, tanks, drums, boards, tables, drawers), and hold the ones that belong on a wall or table still until someone grabs them (motion disabled plus motion on grab): boards across windows, blades on the wall, tanks on a table, radiators. Standing furniture keeps the owner's prop_dynamic_override.
+
+- **Why:** d1_town_01: 166 prop_physics to 157 prop_static (t01a 40 to 57; the city maps about 1 to 3). Ravenholm's six maps: 462 prop_physics, 109 held still (flag 8), 51 of them freed on grab (8+64; t01 38 of 166, 23%; flag 64 is on 3.5% of physics props in the other 22 maps): sawblade001a 9, propane_tank001a 9, furnitureradiator001a 6, wood_board 14, trappropeller_blade 3, cafeteria_table001a 3. Held still only: meathooks 10, metal panels 12, graveyard canisters 6. Ours (map_raven.py): about 8 loose props (spawnflags 0) to over 20 statics.
+- **How:** map_raven.py loose(): a held=True option writing spawnflags 72 (8 motion disabled + 64 on grab) for boards on windows, blades and tanks on tables or walls; aim for loose props at about half the quarter's dressing props, the cars, bins and barricades staying static. Ask the owner first: it changes what players can pick up there.
+- **Checked by:** proposed: map_lint reports the share of prop_physics among a module's dressing props when the module is tagged infestation (Valve's trap streets 0.4 to 0.5)
+- **Tags:** props, infestation, ravenholm, valve
+
+### A trap is a kit of a few props, close together, with its own light and a reward (`raven-trap-kits`)
+
+Build each trap as a small kit inside 30 to 100: a work table with the trap's loose parts (blades, a wrench, pliers, paint cans, a stool) under a clamp lamp; a blade store (a room of blades and tanks, the dead in it); a spinning blade (engine fixed, blade loose on a hinge 30 over it, a lever beside); a fire trap (a gas canister, a valve wheel for the gas, a pad button for the spark, a hose model to the pyre, a grid of fires lit together); each with a health kit and the sound of the machine.
+
+- **Why:** d1_town_01 (21 November): the workbench at 2149 -1026: cafeteria_table001a, 3 sawblade001a, 2 tools_wrench01a, 2 metal_paintcan001a, tools_pliers01a, chair_stool01a, metal panels, a light_spotlight02_lamp with a spot '255 245 145 1000', 2 item_healthkit. The blade store at 3700 -1150: 10 propane_tank001a, 8 sawblades, paint cans, three bodies cut in half, about 26 blood decals, a bulb (light '254 216 146 8' and spot 300), d1_town.Flies. Five propeller traps: TrapPropeller_Engine static, TrapPropeller_Blade prop_physics (flag 0) on phys_hinge and phys_motor, lever (func_button and func_rot_button) all within 30, a logic_timer for the sputter, spinup, spin loop, spindown sounds. The fire trap at 911 -1459: Firetrap_PropaneCanister01a, valvewheel002 on a func_door_rotating (opens the gas), Firetrap_button01a on a pad (sparks), Firetrap_gashose to the pyre, 29 env_fire 10 to 16 apart, env_firesensor enabling a trigger_hurt, env_steam heat haze, light '254 174 10 1250', a health kit and spawn point about 70 from the controls.
+- **How:** map_raven.py, at one or two chokes along the makers' walk: a workbench kit and one machine trap from these parts (the wiring after valve-logic-recipes.md); the gamemode's own jobs decide whether players may use it: ask the owner first before a working trap goes in.
+- **Checked by:** review
+- **Tags:** props, infestation, ravenholm, valve
+
+### Timber and plaster: 4 by 8 timbers standing 4 proud, a third of them braces; thin roofs with a 16 eave (`raven-timber-craft`)
+
+Make a Ravenholm house front of plaster with timber strips on it: sections 4x8 (or 8x8, 4x16), standing 4 out of the plaster, posts a storey long, beams along each floor line, a third of the strips diagonal braces; walls 8 thick (16 for the outer shell); roofs pitched 25 degrees (35 or 45 for a landmark), slabs 3 to 4 thick for corrugated metal and 7 to 8 for tile, the eave 16 past the wall below. Pieces already built keep their look: ask the owner first before changing them.
+
+- **Why:** d1_town_01, 01a, 02 (21 November): 196 wood strips touch plaster brushes: 4x8 72, 8x8 26, 4x16 19, 2x16 15; 85 of 154 stand 4 proud (then 8 and 2); 80 diagonal, 54 posts (median 124 to 146 long), 62 beams; woodfloor005a the timber material. 285 sloped roof brushes (t01, t01a, t02, t02a): pitch 25 on 131, 35 on 43, 45 on 38, 20 on 28; thickness 3 to 4 (metalwall026a, 014a) or 7 to 8 (tileroof004b, 003a); eave past the wall median 16 (q25 0, q75 16, porches 48 to 96). Wall slabs: 8 thick 492, 16 thick 118 (t01, t02, t02a). styleguide_ravenholm_01: posts 2x8, roofs 25, eaves 16.
+- **How:** A timber() helper for map_raven.py and the house modules: given a plaster wall, lay posts at the corners and beside each opening, a beam at each floor line and under the eave, one or two braces per bay, all func_detail woodfloor005a 4x8 standing 4 out; a roof() helper: 25 degree slabs 4 thick, 16 past the walls. The quarter's main street keeps the owner's facade recipe; this is for the lanes and back houses.
+- **Checked by:** proposed: map_lint notes a sloped roof brush in a module tagged infestation thicker than 16 or with no eave past its wall
+- **Tags:** facades, geometry, infestation, ravenholm, valve
+
+### A mine tunnel: a cave of small displacements, a timber set every 512 (`raven-mine-sets`)
+
+Make an old mine as a closed tube of displacements (walls, floor and roof all displaced, 256 square, power 2, pushed 30 to 130 off the brush, lightmapscale 16), and hold it up with timber sets: two 16x16 posts 224 apart inside, a 16x16 cap across their tops, 128 tall (256 where the floor drops), one set every 512 along the tunnel; a shaft gets a ring of 16x16 beams round a 192 square every 190 to 320 up; a walkway stands on 16x16 posts on an 84 grid under 4 thick planks.
+
+- **Why:** d1_town_04 (21 November): 327 displacements, power 2 on 324, 256x256 on 290, all lightmapscale 16, offsets median 60 (q75 128), walls 181, floors 76, ceilings 70; rockwall015a 251, blendrockgravel001a 73 (170 alpha painted). Timber all woodfloor005a func_detail: sets at x -3838, -3600, -3088, -2576, -2064 (posts at y 1024 and 1264, cap 16x224x16 on top); shaft cribbing 192 square at z -4304, -4048, -3856, -3536, -3336; walkway posts 64 tall 84 apart; planks 4x80 and 4x64. styleguide_mining: braces of woodwall041a 16x16 at an angle, concretewall_mine walls, cage lights.
+- **How:** For the quarter's tunnels or a mine module: a corridor of power-2 displacements with the sets placed by a helper (posts, cap, every 512), a cool clamp lamp every second or third set (raven-clamp-lamps).
+- **Checked by:** proposed: map_lint notes a displacement in a cave module at power 3 or 4, or lightmapscale over 16 within 256 of a node
+- **Tags:** geometry, interiors, infestation, ravenholm, valve
+
+### A graveyard is a few stones scattered and turned on rough grass, never rows (`raven-graveyard`)
+
+Lay a graveyard as rough grass displacement with a grave piece every 250 or so: headstones and crosses each turned a little (about half square, the rest 3 to 30 off), a coffin lid lying 60 to 90 in front of some, a statue; only the stones along a wall stand in a row. The church over it: stone walls to about 600 tall, a shingle or metal roof at 45 to 55, panes 64x96.
+
+- **Why:** d1_town_02a (21 November): 26 grave pieces (gravestone004a 9, 002a 4, crosses 4, coffin lids 5, 001a 2, 003a, a statue) over about 1300 by 1300, all prop_static; yaw on the grid 11, turned 3 to 20 9, free 5; nearest stone q25 82, median 369; the three by the wall 86 and 78 apart at the same yaw. Ground: 91% displacement, blenddirtgrass008a 77% and blendgrassgravel001a 21% of the outdoor ground. Church: stonewall036b to 592 tall, woodshingles002a and metalroof005a, glasswindow010b 64x96. Also there: 6 upright canister_propane01a in twos and fours 33 apart, held still, that light a field of 46 fires; 5 sawblades lying alone 150 to 1050 apart; 14 crows on the grass.
+- **How:** If the quarter gets a churchyard: a gravestones() helper scattering 15 to 30 pieces over a displaced lawn, yaw square on half and 3 to 30 off on the rest, a coffin lid in front of one in three. Ask the owner first: a graveyard is a new place in their quarter.
+- **Checked by:** proposed: map_lint notes 4 or more gravestones in one straight line at one yaw away from a wall
+- **Tags:** props, layout, infestation, ravenholm, valve
+
+### Inside an overrun town the homes are stripped: work rooms, corpse rooms and one barricaded flat (`raven-room-kits`)
+
+Dress the quarter's rooms as what survivors left, not as lived-in homes: a work room (tables, blades, tools, a clamp lamp), a corpse room (bodies, blood, flies, one bulb), a barricaded flat (couch, dressers and drawers against the walls and the door, a chair, the dead who got in), a bedroom with a mattress on a bed frame and one body; kitchens and living-room sets are almost absent. Drawers and dressers stand against walls, a few tipped over. Pieces already built keep their look: ask the owner first before changing them.
+
+- **Why:** d1_town_01 to 05 (21 November), indoor props: 26 clamp lamps (light_spotlight02_lamp), 13 bulbs, 9 cafeteria tables, 12 drawers and 6 dressers (all 18 within 16 of a wall, 4 tipped), 6 radiators (held still), 5 washing machines by a boiler, 2 couches, 4 mattresses, no stove or fridge. The barricaded flat (t01 351 -896): furniturecouch001a, 2 furnituredresser001a, furnituredrawer001a and 003a, a chair, a door, 4 dead zombies, 6 blood stains, one warm spot '239 210 156 300'. The bedroom (t02 -3800 -180): furnituremattress001a on prison_bedframe001a, a radiator, a drawer, lightbulb01a (light 8 plus spot 300), corpse1, decalrug002a, 2 health kits. Each scene has a d1_town.CorpseRoom soundscape (radius 128) or a sound.
+- **How:** map_raven.py's four buildings: the shop's back room as a work room, the tenement's upper room as the barricaded flat (dressers to the walls by its door), one corpse room off the tunnel house; reuse the room recipes in valve-prop-notes.md only where people still live.
+- **Checked by:** review
+- **Tags:** interiors, props, infestation, ravenholm, valve
+
+### Ravenholm is lit by clamp lamps on the walls, each with its spot (`raven-clamp-lamps`)
+
+Light the overrun quarter with work lamps clamped to the walls (light_spotlight02_lamp, pitched down, turned freely), each with a light_spot about 5 from it (warm '255 245 145' 600 to 1000 on two in three, cool '159 237 215' up to 2000 on the rest), cone 30 to 50 (35 most), inner 20 to 30, pitch about -50 (-20 to -65), and a point_spotlight beam beside it; 300 apart in the streets, 450 to 550 round the square and graveyard, 700 to 800 in the mine; indoors a bare bulb (light '254 216 146 8' plus spot 300, cone 75).
+
+- **Why:** d1_town_01 to 05 (21 November): 41 light_spotlight02_lamp, all prop_static, 80% touching a wall, 38 pitched down, yaw free on 22; every one of the 41 has a light_spot and a point_spotlight within 48 (the spot a median 5 away): warm 26, cool 15, brightness median 600 (q75 1000, q90 2000), cone 35 on 14, 45 and 50 on 8 each, 30 on 6, inner 20 on 15, 30 on 13, 25 on 9, pitch median -50 (q10 -65, q90 -20); point_spotlight nearest neighbour median 294 (t01), 452 (t01a), 368 (t02), 540 (t02a), 780 (t04); lightbulb01a with light '254 216 146 8' on 13 and spot 300 75/30 -90 on 8. Same sun in t01 to t02a ('175 230 239 50', ambient '43 45 57 5'); fog only in the graveyard ('0 0 0', 1500 to 4000).
+- **How:** map_raven.py: replace the lit lamp posts' role in the lanes with clamp lamps on house walls about every 300, alternating warm and cool, with the spot and a point_spotlight; with raven-dusk-light. Ask the owner first: the quarter's light is theirs to settle.
+- **Checked by:** map_lint offlamp (a lit lamp model without its light within 64)
+- **Tags:** lighting, props, infestation, ravenholm, valve
+
+### An endless stream of the dead follows the front, and stops when players stop (`raven-stream-follows-front`)
+
+Where the dead keep coming, use one maker with spawn points in small named groups along the way: each stage moves the stream to the next group, sets how many may be alive at once (6, then 8, then 4) and starts a 15 to 20 s timer that stops the stream if nobody moves on; moving on cancels the timer. Spawn only at points out of sight. When the stage's reason ends, stop the makers and send the living off to a spot out of sight, one a second, and remove them there. Progress, not time, brings the dead. Changing how our infestation spawns its zombies: ask the owner first.
+
+- **Why:** d1_town_02a graveyard_zombie_maker: npc_template_maker MaxNPCCount 10000, MaxLiveChildren 6, SpawnFrequency 1, CriterionVisibility 1 (only points out of sight), DestinationGroup zombie_dest_group_1; 13 info_npc_spawn_destination in four groups of 3 or 4 (ReuseDelay 1). Each stage's trigger_once: ChangeDestinationGroup(zombie_dest_group_2, 3, then 4), Enable @0.2, SetMaxLiveChildren 8 then 4, Trigger its own cull relay @20 or @15 (whose one output is the maker's Disable), and CancelPending and Kill on the last stage's cull relay; the last stage also Disables @15. d1_town_02 cable car: stepping in Kills cavezombies_maker1 and 2 (6 each, 1 alive) and a 1 s logic_timer runs each fast zombie's away sequence (run to a spot, Kill there), a math_counter of 2 stopping it. Elsewhere 142 of the 154 makers in the six maps hold one NPC and are fired once by Spawn from a trigger_once (101 lines).
+- **How:** Gamemode (FindSpawnPos in sv_livingcity.lua, the cleanup jobs): zombies now come up at zspawn points or anywhere in a zone, unseen and 400 from players, with no cap tied to a job. Valve's way would give a cleanup crew a cap of 6 to 8 alive near it, pick spawn points from the cluster nearest the crew's next growth, go quiet when the crew has done nothing for 20 s, and at the job's end walk the zombies left near the crew off out of sight before removing them. Map modules: lc_zspawn points in clusters of 3 or 4, the clusters 300 to 900 apart along the quarter's way in.
+- **Checked by:** review; a robot-player run of a cleanup job counting zombies alive near the crew (never over the cap)
+- **Tags:** valve, npc, infestation, ravenholm, logic, gameplay
+
+### Some of the dead lie slumped, and rise when someone comes near or hurts them (`raven-slumped-dead`)
+
+Lay a few zombies slumped against walls and on floors (slump_a or slump_b) where people pass; each rises (slumprise_a, slumprise_a2, slumprise_b) when a player comes within about 100 to 400, looks at it, or hurts it, then goes for the nearest player. Rise them a fraction of a second apart, never all at once. In the dark, any body on the floor is a threat. Changes how our infestation's zombies appear: ask the owner first.
+
+- **Why:** d1_town_01 and 01a: 17 scripted_sequences hold a zombie in slump_a (13) or slump_b (2) and play slumprise_a (11), slumprise_a2 (2) or slumprise_b (2); m_fMoveTo 4 (in place), spawnflags 624 (start on spawn 16, no interruptions 32, override AI 64, priority 512) or 608; a trigger_once fires BeginSequence, the zombie's own OnDamaged fires it too and Kills that trigger, and OnEndSequence > StartSchedule (set enemy to the player and run). Three rise @0.5, @1 and @1.3 (town_getup_06 to 08). d1_town_02: three more rise when the player looks at them (ai_script_conditions PlayerActorFOV 60 to 65 with line of sight), enabled 0 to 0.4 s after they are spawned or by a trigger.
+- **How:** Gamemode: a share of infestation zombies (the owner's call, say 1 in 5) spawned against a wall in the slump pose, held by a scripted_sequence as MakeSequence in sv_livingcity.lua does, and woken by a player within 300, a player looking at it within 60 degrees, or damage; neighbours woken 0.3 to 0.5 s apart. Check in game that the zombie models have these sequences. Map modules: lc_slump spots on the floor against the walls of the quarter's rooms.
+- **Checked by:** review; a test that a slumped zombie wakes on damage and on a player within 300
+- **Tags:** valve, npc, infestation, ravenholm, gameplay
+
+### A gas trap: open the valve, light it, shut it to put it out (`raven-gas-fire-trap`)
+
+A fire trap is a gas valve and a way to light it. Turning the wheel lets gas hiss out (a loop and a heat haze); a press of the igniter, any fire close to the gas, or a shot or blast next to it lights it; a carpet of small fires then covers the gassed ground and sets alight whatever walks in; turning the wheel back puts it out, and it can be used again. Players burn as well as the dead: the wheel and the igniter stand outside the fire.
+
+- **Why:** d1_town_01 zombiepyre, hallfire and zombiecage traps, wired alike. Wheel: func_door_rotating distance 180, speed 80, wait 9999; OnOpen: d1_town.GasJet loop (flag 16, radius 600), env_steam type 1 heat haze (Speed 120, StartSize 10, EndSize 20, JetLength 80, Rate 26), arms the light relay. Lighting: the igniter (func_door_rotating 90, wait 0.5, four clicks @0, 0.3, 0.6, 0.9 with env_spark), an env_firesensor (fireradius 39, heatlevel 1, HeatLevelStart), an env_microphone (MaxRange 100, Sensitivity 1, flags 40: bullet impacts and explosions, OnHeardSound). Lit: 40 env_fire over 274 by 234 (pyre) or 32 over 328 by 85 (corridor), nearest 8 to 14 apart, firesize 25 to 130, flags 3, fireattack 0.05, ignitionpoint 10; env_firesource fireradius 45, firedamage 100 (5 in the pyre); a trigger_hurt; d1_town.FlameTrapIgnite and d1_town.LargeFireLoop. Wheel shut: d1_town.FlameTrapExtinguish, ExtinguishTemporary(1) @0.5, the fires Disabled @2, the light off @0.5.
+- **How:** Map modules: a gas trap piece for the sealed quarter (lc_ravenholm.vmf) and the infestation's yards: a propane canister and a valvewheel002 wheel by a wall, a Firetrap_button01a igniter outside the gassed patch, the fire carpet as env_fire about 12 apart (fewer if the server's frame time suffers: test it). Gamemode, new: a growth or zombie burned in it counts for a cleanup job (the owner's call).
+- **Checked by:** review; map_lint 'wire': a trap's env_fire start off and are Enabled and Disabled by name; an env_microphone has MaxRange and flags
+- **Tags:** valve, logic, infestation, ravenholm, gameplay
+
+### The car on the rope drops on a lever and winds itself back up (`raven-car-drop-trap`)
+
+Hang a heavy wreck over a choke point where the dead gather; a lever lets it go, it lands with a crash, and two seconds later a winch hauls it back up with a motor sound and spinning pulleys, so the next player can use it again; while it hangs, the rope creaks now and then.
+
+- **Why:** d1_town_01 crushtrap_01 and 02: car004a_physics prop_physics (massScale 4) on a phys_lengthconstraint from an unseen func_physbox ballast on a phys_slideconstraint, in one phys_constraintsystem. A func_rot_button lever (distance 10, wait 4) fires the release relay (slide SetVelocity(0), d1_town.CarRelease: the car falls), which re-arms the lift relay and fires it @2 (SetVelocity(10) or (8), Town.d1_town_01_spinup and d1_town.CarTrapMotorLoop, func_rotating pulleys maxspeed 900 to 1200 reversed at SetSpeed(500)). Two trigger_multiple of flag 8 (physics objects) filtered to the car's name: at the bottom d1_town.CarHit and the pulleys stop; at the top a logic_timer (random 3 to 7 s) starts d1_town.CarStraining while it hangs. A trigger_once lifts it as the player first comes near (Press). The arena's three zombie makers fire @0, @0.5 and @1.
+- **How:** Map modules: a car trap piece over a lane or yard of the quarter (lc_ravenholm.vmf), its lever on a wall out of the drop; the winch makes it a trap for every player, not one use. Test the constraint system on a server (physics can jitter).
+- **Checked by:** review; map_assets: the car is a physics model
+- **Tags:** valve, logic, infestation, ravenholm, props
+
+### A live fence shocks in pulses and throws you back, until someone cuts the power (`raven-live-fence`)
+
+A charged fence or wire hurts in pulses, not as a steady drain: a jolt, a spark, a zap and a shove back, then a third of a second off. It stays live until someone finds the power box and switches it off, which opens the way on (a ladder, a gate). The step is to find and throw the switch, never to wait it out (house rule 9).
+
+- **Why:** d1_town_01 electric_fence: trigger_hurt damage 10, damagecap 20, damagetype 256 (shock), flags 11; OnHurt: env_physexplosion, one of four Town.d1_town_01_LoudSpark sounds by logic_case PickRandom, env_spark @0, 0.1 and 0.3, Disable itself, and a logic_timer Enables it again @0.3; OnHurtPlayer: a trigger_push of speed 500 for 0.2 s. A transformer hum (radius 400) and an electric loop (radius 500) mark it. The power switch (tram_button) Kills the hurt and the pushes, breaks the hanging corpse's constraint and Enables func_useableladder electric_fence_ladder. (Its blue light flickers: not for us.) No electrified water in these six maps.
+- **How:** A new step for the sealed quarter's jobs (the flush squad, the Resistance shutting the sewer door): a live fence or flooded floor across the way, its power box hidden nearby; finding it is a hold-E search (LC.QuestSearchStage) and switching it off opens the way. The owner's call.
+- **Checked by:** review
+- **Tags:** valve, logic, infestation, ravenholm, gameplay
+
+### An ally sets off the trap, never with a player in it (`raven-ally-blast-safety`)
+
+When an NPC ally sets off explosives or fire for the players (to block the dead, to clear the way), only the ally's shot counts, he aims at it only once he is at his post, and he stops while any player stands in the blast area. Our NPCs that use fire near players (the Cremator escort, soldiers with grenades) would follow the same rule: ask the owner first.
+
+- **Why:** d1_town_02a propanetanks: an npc_bullseye (health 50) with damagefilter filter_multi (Grigori only, and not blast damage); the tanks themselves damagefilter filter_monk; ai_relationship monk hates the bullseye (rank 100) is applied 2 s after his assault point's OnArrival, reverted by trigger_multiple player_near_propanetanks_trigger OnStartTouch and applied again OnEndTouch. The bullseye's OnDeath runs the relay: env_explosion @0.2 and @0.4 (iMagnitude 100), env_shake, three env_fire (firesize 64, health 160) and two of 40, the tanks Break @0.4, scorch decals Activated @3, 5.5, 7 and 12, a light; Extinguish @47, the hold going on to @48 and @91. d1_town_01a: Grigori is given a bullseye behind each window to shoot through, Killed by the window's OnBreak.
+- **How:** Gamemode: before the Cremator (sv_livingcity_cremator.lua) or a soldier starts a fire or throws a grenade at a target, check no player is inside the blast radius; the target is the thing or the zombie, never the spot a player stands on. Changes how they fight: ask the owner.
+- **Checked by:** a test: no ally fire or grenade starts with a player inside its radius
+- **Tags:** valve, npc, logic, infestation, ravenholm
+
+### Fast zombies are heard far off and glimpsed on the roofs before they come (`raven-fast-zombie-show`)
+
+Before fast zombies attack, let players hear their call from far off, then glimpse one or two running over the roofs to a place out of sight where they are removed; the real attack comes a few seconds later. A sound and a glimpse instead of a warning line (house rule 10). For our infestation spreading from one district to the next: ask the owner first.
+
+- **Why:** d1_town_02: 11 npc_fastzombie, 13 Town.d1_town_02_fz_alert_far1 (one-shot, radius 2500). first_fz_seq plays BR2_Roar with its call, then three more calls 1185 to 1589 away @0.5, 1.5 and 2; first_fz_a and _b, spawned @1 and @2, run (m_fMoveTo 2) to a spot and are Killed there on arrival (seven such runs in the map: roofs, the lift shaft, the cave); the freight lift's show: one in view with its call, two more @8 and @8.5. d1_town_02a's graveyard fast zombie makers play the call @2 after each spawn.
+- **How:** Gamemode: when a district's infestation leaks next door (sv_livingcity_districtinfest.lua) or a cleanup job starts, play a far fast-zombie call at the zone's edge and run one fast zombie across a roof or street to a hidden spot, removed there; no notice. Map modules: the quarter's roofs keep jump and climb nodes for the runs.
+- **Checked by:** review
+- **Tags:** valve, npc, sound, infestation, ravenholm
+
+### A climbing zombie is heard on the pipe (`raven-climb-heard`)
+
+Where the dead can climb (drainpipes, ladders up the houses), put an NPC-only trigger at the foot and at the top: as one climbs, the pipe clanks and shakes a little, so players hear it coming. Climbing routes open by script when the attack starts.
+
+- **Why:** d1_town_02: 7 ladders, each with a trigger_multiple of flag 2 (NPCs only) at the foot and one about 300 up; each plays Town.d1_town_02_metalgrate3 (14 sounds, radius 1000) and Toggles a func_door_rotating 'wobble door' (distance 3, speed 200, wait 0.5) @0.1. 14 info_node_climb; info_node_link bldg4_climbnode_link_east and west (linktype 1) TurnOn 5 s after the player looks at Grigori (church_monk_conditions), so fast zombies can climb that side only then.
+- **How:** Map modules: the sealed quarter's drainpipes get climb nodes, the two NPC-only triggers with a metal clank, and a short pipe on a small rotating door to shake. Check in game that fast zombies use climb nodes from our .ain.
+- **Checked by:** review
+- **Tags:** valve, npc, sound, infestation, ravenholm
+
+### Crows lift ahead of a player and fly into the place he is going (`raven-crows-lead`)
+
+Leave crows on the ground and on the dead where the infestation starts; as a player comes they lift a second or two apart and fly ahead into the overrun place, where they are quietly removed out of sight. The way in is shown by birds, not text. For our infested districts: ask the owner first.
+
+- **Why:** 43 npc_crow (d1_town_01 19, 02 10, 02a 14), spawnflags 4. d1_town_01: a trigger_once DisableHints crow_node_0, EnableHints crow_node_1 (info_node_air_hint type 700, crow fly-to) 1133 ahead, crow1 FlyAway @0.1, crow_node_2 Enabled @2 (2582 further), crow2 @2.1, crow3 @3.1; NPC-only trigger_multiples (flag 2) at the fly-to hints Kill them where they land (7 in d1_town_01, up in the air where only birds reach; 2 in 02, filtered to crows). 7 crow npc_makers spawn crows that FlyAway at once as the player passes. d1_town_03's pinned corpse has 5 crows (raven-litter-not-gore).
+- **How:** Gamemode: our birds (BIRDS in sv_livingcity_survival.lua) could gather on the edges of infested districts and lift into the zone when a player comes near, removed out of sight. Map modules: crow perch and fly-to hints in the quarter.
+- **Checked by:** review
+- **Tags:** valve, npc, sound, infestation, ravenholm
+
+### Spent headcrab canisters stay stuck in the ground, open (`raven-pod-aftermath`)
+
+Show that a place was shelled with a few spent headcrab canisters left stuck nose-down in lanes, yards and roofs, open and empty, rather than live headcrabs beside them. Our shelling's canisters go after 180 s: keeping some longer in the infested quarter is the owner's call.
+
+- **Why:** 12 prop_dynamic headcrabcannister01b named pod in d1_town_01 (4), 01a (1), 02 (4) and 02a (3), each set to idle_open by logic_auto OnMapSpawn (SetAnimation), pitched -43 to -58 (nose down at about 45 degrees), any yaw, solid 6; the nearest live headcrab is 300 to 4000 away (one at 81). No env_headcrabcanister in the six maps.
+- **How:** Map modules: 3 or 4 headcrabcannister01b props (prop_dynamic, DefaultAnim idle_open, pitch -45) in lc_ravenholm.vmf's lanes and yards. Gamemode: sv_livingcity_shelling.lua removes its wreckage at FLIGHT + 180 s; in the sealed quarter it could stay until cleaned up (ask).
+- **Checked by:** map_assets: the model is a dynamic prop
+- **Tags:** valve, props, infestation, ravenholm
 

@@ -1,0 +1,22 @@
+{
+ "title": "Valve's styleguide_hospital_exit (draft)",
+ "draft": true,
+ "about": "Valve's own styleguide_hospital_exit, measured by map_ingest.py on 2026-11-21 (play space only: hidden objects and the 3D skybox room left out) and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees drawn as trunk and canopy, poles thin). Reference only: the VMF is not in the repo. DRAFT: a reviewer fills in what each picture teaches, picks the lessons, and removes \"draft\".",
+ "numbers": [
+  "Things: 74 prop_static, 20 prop_physics, 0 prop_dynamic, 0 prop_door_rotating, 3 prop_ragdoll, 3 infodecal, 8 info_overlay, 0 keyframe_rope and 0 move_rope, 136 func_detail, 0 npc entities (makers included); left out: 3181 hidden objects and the 3D skybox room (13 props, scale 32).",
+  "Lights: 0 light (median brightness None), 0 light_spot (median None), 0 point_spotlight, 0 env_sprite; sun \"243 228 167 500\" at pitch -25, ambient \"182 164 143 200\"; fog \"36 29 13\" from 1 to 8000; sky sky_ep01_03.",
+  "Commonest models: lamppost03a_off 10, chimneytoppipe_cluster01c 8, oildrum001 8, gutter_512_002a 5, cinderblock01a 4, pipeset08d_corner128l_001a 4, pipeset08d_512_001a 4, exterior_fence002c 3, lampfixture01a 3, combineinnerwallcluster1024_003a 3, scaffolding01a 3, truck001a 2, van001a 2, trashdumpster01a 2, wood_pallet001a 2.",
+  "Commonest materials (faces): metaltruss022c 3231, metaltruss022a 2858, metaltruss016a 968, concretewall073b 627, brickwall037a 548, metalstair003a 384, courtyard_template001b 373, concretewall022a 320, concretewall071a 295, brickwall055a 224, concretewall022b 221, dev_measuregeneric01b 203, courtyard_template001c 195, concretewall073a 123, plasterwall034a 109, brickwall045f 106, courtyard_template002b 101, brickwall045a 91, concretewall071c 79, concretewall071b 79.",
+  "Stairs: 13 flights of 3 or more steps; steps (rise x tread) 8x12 80; median 8 steps a flight.",
+  "Spacing (nearest of the same model): lamppost03a_off 724 apart (n 10), exterior_fence002c 126 apart (n 3), lampfixture01a 88 apart (n 3).",
+  "Walls in bands: 54% of wall columns over 256 tall change material at least once; the first change most often 80 or 64 over the foot; pairs (below > above): concretewall055c > concretewall059b, concretewall071c > concretewall071b, dev_measuregeneric01b > concretewall072a.",
+  "Fronts: 10% of vertical wall area is painted building fronts (courtyard_template001b, courtyard_template002b, courtyard_template001c).",
+  "Slopes: 252 sloped faces over 2000 square units, most often 45, 40, 65 degrees; metaltruss022a, concretewall022b, concretewall072a.",
+  "Props: 89 in play; on exact 90s: static 67%, physics 10%; physics tilted 45% (lying most often cinder, barrel, vehicle); statics touching a wall 36%, physics within 16 of one 5%; None props per 100 by 100 of play (None physics).",
+  "Wiring: 814 output lines from 236 entities; commonest OnTrigger>SetSpeedReal 99, OnTrigger>BeginSequence 34, OnEndSequence>Kill 33; 57 relays (longest chain 3), 21 counters, 2 timers, 1 makers, 0 buttons working doors; 26 lines name nothing.",
+  "Craft: texture scale 0.25 on 72% of faces; lightmapscale 16 on 85% (near the nodes ?, far 85%); func_detail 73% of brushes; 187 trim strips (4x24 86, 8x16 37); 633 chamfers; 1 displacements.",
+  "Grime: 3 infodecal and 8 info_overlay; on walls ; wall decals median None over the floor."
+ ],
+ "pictures": [],
+ "pictures_folder": "valve_styleguide_hospital_exit"
+}

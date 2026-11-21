@@ -1,0 +1,17 @@
+{
+  "manifest_version": 3,
+  "name": "VDC Saver",
+  "version": "1.3",
+  "description": "Saves Valve Developer Community wiki pages as you visit them, or the whole wiki, into one zip.",
+  "permissions": ["storage", "unlimitedStorage"],
+  "host_permissions": ["https://developer.valvesoftware.com/*"],
+  "background": { "service_worker": "background.js" },
+  "content_scripts": [
+    {
+      "matches": ["https://developer.valvesoftware.com/*"],
+      "js": ["filter.js", "content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": { "default_popup": "popup.html", "default_title": "VDC Saver" }
+}

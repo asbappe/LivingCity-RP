@@ -1,0 +1,27 @@
+{
+ "title": "Valve's ep1_c17_06 (draft)",
+ "draft": true,
+ "about": "Valve's own ep1_c17_06, measured by map_ingest.py on 2026-11-21 (play space only: hidden objects and the 3D skybox room left out) and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees drawn as trunk and canopy, poles thin). Reference only: the VMF is not in the repo. DRAFT: a reviewer fills in what each picture teaches, picks the lessons, and removes \"draft\".",
+ "numbers": [
+  "Things: 249 prop_static, 115 prop_physics, 36 prop_dynamic, 1 prop_door_rotating, 0 prop_ragdoll, 0 infodecal, 64 info_overlay, 48 keyframe_rope and 12 move_rope, 117 func_detail, 30 npc entities (makers included); left out: 620 hidden objects and the 3D skybox room (18 props, scale 32).",
+  "Lights: 3 light (median brightness 8), 27 light_spot (median 1300), 20 point_spotlight, 4 env_sprite; sun \"219 191 148 500\" at pitch -35, ambient \"207 172 133 60\"; fog \"214 198 169\" from 200 to 13000; sky sky_ep01_04_hdr.",
+  "Sound: 2 env_soundscape (ep1.general_citadel_predetonation 1, d3_citadel.silence_and_dialog 1), median radius 387; 49 ambient_generic (explode_1, combine.sheild_touch, combine.sheild_loop, combine.door_lock).",
+  "Commonest models: tree_pine_card_cluster_02 35, light_industrialbell01_on 25, exterior_fence002e 22, wood_crate002a 13, oildrum001_explosive 13, wood_pallet001a 12, oildrum001 12, metal_panel01a_breakable 12, tree_pine_card_cluster_01 12, fence01b 12, wood_crate001a 11, cargo_container01 11, lockers001a 11, tree_deciduous_card_01 10, exterior_fence002d 9.",
+  "Commonest materials (faces): metaltruss022a 1080, citadel_metalwall077a 789, metaltruss022c 496, blendrockrock007a 480, metaltruss016a 442, concretewall071a 290, concretewall073b 251, woodfloor005a 211, brickwall037a 202, concretewall041c 200, concretewall041b 177, metalcrate002d 152, dev_measuregeneric01b 144, metalcrate002c 133, concretewall071b 127, metaltruss017a 124, metalwall030a 108, metalpipe002a 106, metalstair003a 102, metalcrate002b 72.",
+  "Ceilings: floor to ceiling indoors (cast up from 202 AI nodes) is most often 608 (39), then 480 (33) and 704 (24); 5% of the nodes are outdoors; corridors 122 wide under 320, rooms 328 by 1872 (medians, wall to wall).",
+  "Stairs: 4 flights of 3 or more steps; steps (rise x tread) 8x12 17; median 4.5 steps a flight.",
+  "Streets: no kerbed roadway in 10 cuts through outdoor AI nodes; wall to wall most often 640; walls median 96 tall (height over width 0.1).",
+  "Doors: door01_left 1; openings at them (wide x high): 56x112 1.",
+  "Cables: 48 rope spans, median 1286 long, slack 100, width 1.",
+  "Spacing (nearest of the same model): tree_pine_card_cluster_02 1143 apart (n 35), exterior_fence002e 396 apart (n 22), tree_pine_card_cluster_01 1094 apart (n 12), fence01b 72 apart (n 12), tree_deciduous_card_01 1822 apart (n 10), exterior_fence002d 226 apart (n 9).",
+  "Walls in bands: 20% of wall columns over 256 tall change material at least once; the first change most often 80 or 128 over the foot; pairs (below > above): concretewall071c > concretewall071b, dev_measuregeneric01b > concretewall071a, concretewall071c > concretewall071a.",
+  "Slopes: 74 sloped faces over 2000 square units, most often 45, 25, 65 degrees; metaltruss022a, metaltruss016a, metalcrate002d.",
+  "Props: 333 in play; on exact 90s: static 68%, physics 70%; physics tilted 30% (lying most often debris, barrel); statics touching a wall 36%, physics within 16 of one 47%; 0.319 props per 100 by 100 of play (0.126 physics).",
+  "Wiring: 843 output lines from 247 entities; commonest OnTrigger>SetSpeedReal 63, OnEndSequence>Kill 33, OnTrigger>Explode 23; 51 relays (longest chain 2), 4 counters, 5 timers, 2 makers, 1 buttons working doors; 62 lines name nothing.",
+  "Craft: texture scale 0.25 on 75% of faces; lightmapscale 16 on 94% (near the nodes 96%, far 88%); func_detail 66% of brushes; 134 trim strips (4x4 31, 16x32 25); 299 chamfers; 203 displacements.",
+  "Light by fixture: light_industrialbell01_on: light_spot 221 249 241 3000, cone 50/20, pitch -90; combine_light002a: light_spot 147 226 240 1300, cone 40/20, pitch -45; lightbulb01a: light 254 216 146 8; lightbulb01a: light_spot 254 216 146 250, cone 75/30, pitch -90.",
+  "Grime: 0 infodecal and 64 info_overlay; on walls ; wall decals median None over the floor."
+ ],
+ "pictures": [],
+ "pictures_folder": "valve_ep1_c17_06"
+}

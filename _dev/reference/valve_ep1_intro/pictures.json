@@ -1,0 +1,20 @@
+{
+ "title": "Valve's ep1_intro (draft)",
+ "draft": true,
+ "about": "Valve's own ep1_intro, measured by map_ingest.py on 2026-11-21 (play space only: hidden objects and the 3D skybox room left out) and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees drawn as trunk and canopy, poles thin). Reference only: the VMF is not in the repo. DRAFT: a reviewer fills in what each picture teaches, picks the lessons, and removes \"draft\".",
+ "numbers": [
+  "Things: 3 prop_static, 0 prop_physics, 16 prop_dynamic, 0 prop_door_rotating, 0 prop_ragdoll, 1 infodecal, 0 info_overlay, 0 keyframe_rope and 0 move_rope, 40 func_detail, 7 npc entities (makers included); left out: 5 hidden objects and no 3D skybox room.",
+  "Lights: 6 light (median brightness 1750), 10 light_spot (median 800), 0 point_spotlight, 21 env_sprite; sun \"237 228 209 400\" at pitch -10, ambient \"75 73 114 100\"; fog \"0 0 0\" from 2000.0 to 3000.0; sky sky_ep01_00_hdr.",
+  "Sound: 1 env_soundscape (automatic_dialog 1), median radius 128; 40 ambient_generic (k_lab.teleport_voices_1, ambient/levels/labs/teleport_mechanism_windup3.wav, k_lab.teleport_voices_2, k_lab.teleport_pre_suckin).",
+  "Commonest models: vortigaunt_blue 5, splodeglass 4, introtear 3, splode 2, splodearc 2, combine_generator01 2, breen 1, combine_intmonitor001 1, tprotato2 1, breen_arm 1, alyx 1, combinecrane002 1, vortigaunt 1, portalfunnel 1, combine_citadel001 1.",
+  "Commonest materials (faces): citadel_metalwall077a 912, citadel_metalwall101b 619, citadel_metalwall076a 450, metalcombine001 419, citadel_metalwall063a 150, citadel_metalwall072b 130, citadel_metalwall091a 93, citadel_metalwall101a 58, combineglass001a 43, metalwall082a 32, citadel_metalwall090a 20, metalwall030a 19, metalcombine002 16, plasmaember 12, metalcombinegrate001a 10, metalwall102a 9, citadel_metalwall072a 7, citadel_metalwall078a 7, sky_fake_white 5, cloud001c 5.",
+  "Walls in bands: 12% of wall columns over 256 tall change material at least once; the first change most often 768 or 3328 over the foot; pairs (below > above): citadel_metalwall072b > citadel_metalwall101a, citadel_metalwall101b > citadel_metalwall076a, citadel_metalwall063a > citadel_metalwall077a.",
+  "Slopes: 30 sloped faces over 2000 square units, most often 45, 35, 55 degrees; metalcombine001, metalcombine002, citadel_metalwall072b.",
+  "Props: 19 in play; on exact 90s: static 100%, physics ?; physics tilted ? (lying most often nothing); statics touching a wall 100%, physics within 16 of one ?; 0.102 props per 100 by 100 of play (0.0 physics).",
+  "Wiring: 322 output lines from 60 entities; commonest OnTrigger>PlaySound 20, OnTrigger>Trigger 15, OnTrigger>ForceSpawn 15; 30 relays (longest chain 7), 1 counters, 7 timers, 0 makers, 0 buttons working doors; 47 lines name nothing.",
+  "Craft: texture scale 0.25 on 54% of faces; lightmapscale 16 on 59% (near the nodes 48%, far 26%); func_detail 90% of brushes; 14 trim strips (4x8 3, 4x4 2); 16 chamfers; 0 displacements.",
+  "Grime: 1 infodecal and 0 info_overlay; on walls poster 1; wall decals median 51.9 over the floor."
+ ],
+ "pictures": [],
+ "pictures_folder": "valve_ep1_intro"
+}

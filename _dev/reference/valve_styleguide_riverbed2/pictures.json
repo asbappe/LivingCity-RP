@@ -1,0 +1,20 @@
+{
+ "title": "Valve's styleguide_riverbed2 (draft)",
+ "draft": true,
+ "about": "Valve's own styleguide_riverbed2, measured by map_ingest.py on 2026-11-21 (play space only: hidden objects and the 3D skybox room left out) and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees drawn as trunk and canopy, poles thin). Reference only: the VMF is not in the repo. DRAFT: a reviewer fills in what each picture teaches, picks the lessons, and removes \"draft\".",
+ "numbers": [
+  "Things: 113 prop_static, 0 prop_physics, 0 prop_dynamic, 0 prop_door_rotating, 0 prop_ragdoll, 0 infodecal, 0 info_overlay, 0 keyframe_rope and 0 move_rope, 8 func_detail, 0 npc entities (makers included); left out: 437 hidden objects and the 3D skybox room (0 props, scale 16).",
+  "Lights: 0 light (median brightness None), 0 light_spot (median None), 0 point_spotlight, 0 env_sprite; sun \"239 231 203 300\" at pitch -25, ambient \"188 200 204 100\"; fog \"181 192 200\" from 512 to 9000; sky sky_day02_04.",
+  "Commonest models: tree_pine_03 17, tree_pine_card_cluster_01 13, tree_pine_01 12, tree_pine_02 12, train003 8, tree_pine_tall_cluster_01 5, rock_riverbed02b 4, rock_riverbed02a 4, driftwood_clump_03a 4, tree_deciduous_02a 4, tree_deciduous_03a 4, bridge_low_res 2, train002 2, rock_riverbed01b 2, rock_riverbed01d 2.",
+  "Commonest materials (faces): blendrockrock007a 211, concretewall008a 30, concretewall074c 22, concretewall074b 18, grassfloor002a 16, rockwall006b 8, snowy_treeline001 8, water_riverbed01 6, treeline001a 6, woodtrack001a 2, rockfloor002a 1.",
+  "Channels (34 cuts across the shortest way, 34 at water: 22 open, 0 tunnels): open width 64 up most often 768, 128 up 832; rims (where a side opens out) 322; water 8 deep; ledges 34 wide at 292 up; tunnels most often None wide, roof None up.",
+  "Spacing (nearest of the same model): tree_pine_03 207 apart (n 17), tree_pine_card_cluster_01 1662 apart (n 13), tree_pine_01 272 apart (n 12), tree_pine_02 366 apart (n 12), tree_pine_tall_cluster_01 2350 apart (n 5), tree_deciduous_02a 2229 apart (n 4).",
+  "Walls in bands: 1% of wall columns over 256 tall change material at least once; the first change most often 104 or 640 over the foot; pairs (below > above): concretewall074c > concretewall074b.",
+  "Slopes: 16 sloped faces over 2000 square units, most often 25, 45, 30 degrees; rockwall006b, grassfloor002a.",
+  "Props: 99 in play; on exact 90s: static 22%, physics ?; physics tilted ? (lying most often nothing); statics touching a wall 41%, physics within 16 of one ?; None props per 100 by 100 of play (None physics).",
+  "Wiring: 4 output lines from 2 entities; commonest OnFullyOpen>Close 2, OnFullyClosed>Open 2; 0 relays (longest chain 0), 0 counters, 0 timers, 0 makers, 0 buttons working doors; 0 lines name nothing.",
+  "Craft: texture scale 0.4 on 65% of faces; lightmapscale 16 on 93% (near the nodes ?, far 93%); func_detail 37% of brushes; 0 trim strips (); 13 chamfers; 72 displacements."
+ ],
+ "pictures": [],
+ "pictures_folder": "valve_styleguide_riverbed2"
+}

@@ -1,0 +1,21 @@
+{
+ "title": "Valve's styleguide_radiotower_a (draft)",
+ "draft": true,
+ "about": "Valve's own styleguide_radiotower_a, measured by map_ingest.py on 2026-11-21 (play space only: hidden objects and the 3D skybox room left out) and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees drawn as trunk and canopy, poles thin). Reference only: the VMF is not in the repo. DRAFT: a reviewer fills in what each picture teaches, picks the lessons, and removes \"draft\".",
+ "numbers": [
+  "Things: 23 prop_static, 12 prop_physics, 12 prop_dynamic, 1 prop_door_rotating, 0 prop_ragdoll, 1 infodecal, 0 info_overlay, 0 keyframe_rope and 0 move_rope, 45 func_detail, 0 npc entities (makers included); left out: 0 hidden objects and no 3D skybox room.",
+  "Lights: 0 light (median brightness None), 0 light_spot (median None), 0 point_spotlight, 0 env_sprite; no light_environment; no fog controller; sky sky_day01_01.",
+  "Commonest models: exterior_fence002c 6, rebar001b_48 4, exterior_fence002b 4, radiator01a 2, electricalbox01 2, radio_metaldoor02 2, electricalbox02 2, light_outdoor 2, woodwall030b_window03a_bars 1, woodwall030b_window03a 1, sinkkitchen01a 1, roof_vent001 1, car_battery01 1, slidinggate001 1, radio_metaldoor01 1.",
+  "Commonest materials (faces): metalhull003a 3511, concretewall004a_c17 563, brickwall045a 278, metaltruss022a 188, forest_metal_04c 106, metaldoor001a 93, concretewall025a 68, brickwall037c 57, metaltruss023a 56, woodshelf002a 54, glasswindow005c 54, brickwall045d 52, concretetrim001a 44, concretewall004b 35, rubberroof002a 34, bunker_metalwall02a 34, tarpaperroof002a 29, concretefloor030a 26, metaldoor008a 21, metaltrack001a 19.",
+  "Doors: door01_left 1; openings at them (wide x high): 48x108 1.",
+  "Spacing (nearest of the same model): exterior_fence002c 150 apart (n 6), exterior_fence002b 202 apart (n 4).",
+  "Walls in bands: 97% of wall columns over 256 tall change material at least once; the first change most often 136 or 80 over the foot; pairs (below > above): brickwall045a > metaltruss022a, brickwall037c > bunker_metalwall02a.",
+  "Slopes: 22 sloped faces over 2000 square units, most often 25 degrees; forest_metal_04c, forest_metal01c, concretewall004a_c17.",
+  "Props: 48 in play; on exact 90s: static 91%, physics 83%; physics tilted 0% (lying most often nothing); statics touching a wall 54%, physics within 16 of one 75%; None props per 100 by 100 of play (None physics).",
+  "Wiring: 3 output lines from 2 entities; commonest OnBreak>SetBodyGroup 1, OnUser1>ForceSpawn 1, OnUser1>Kill 1; 0 relays (longest chain 0), 0 counters, 0 timers, 0 makers, 0 buttons working doors; 1 lines name nothing.",
+  "Craft: texture scale 0.25 on 96% of faces; lightmapscale 16 on 100% (near the nodes ?, far 100%); func_detail 80% of brushes; 123 trim strips (1x4 18, 2x4 16); 31 chamfers; 0 displacements.",
+  "Grime: 1 infodecal and 0 info_overlay; on walls ; wall decals median None over the floor."
+ ],
+ "pictures": [],
+ "pictures_folder": "valve_styleguide_radiotower_a"
+}

@@ -1,0 +1,24 @@
+{
+ "title": "Valve's ep2_outland_04 (draft)",
+ "draft": true,
+ "about": "Valve's own ep2_outland_04, measured by map_ingest.py on 2026-11-21 (play space only: hidden objects and the 3D skybox room left out) and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees drawn as trunk and canopy, poles thin). Reference only: the VMF is not in the repo. DRAFT: a reviewer fills in what each picture teaches, picks the lessons, and removes \"draft\".",
+ "numbers": [
+  "Things: 348 prop_static, 55 prop_physics, 67 prop_dynamic, 0 prop_door_rotating, 38 prop_ragdoll, 3 infodecal, 124 info_overlay, 27 keyframe_rope and 5 move_rope, 42 func_detail, 112 npc entities (makers included); left out: 2 hidden objects and no 3D skybox room.",
+  "Lights: 88 light (median brightness 30), 40 light_spot (median 120), 1 point_spotlight, 16 env_sprite; sun \"145 166 204 400\" at pitch -70, ambient \"77 114 183 300\"; fog \"18 23 35\" from 1 to 2800.0; sky sky_ep02_caves_hdr.",
+  "Sound: 44 env_soundscape (ep2_caves.quiet_tunnel_flies 11, ep2_caves.quiet_tunnel 10, ep2_caves.large_tunnel 8, ep2_mines.tunnel 4, ep2_mines.tunnel_dropoff 4, ep2_caves.dropoff 4), median radius 178; 91 ambient_generic (ep2_outland.antlion_web_break, ep2_outland.antlion_web_hit, npc_antlionguard.anger, npc_antlionguard.frustratedroar1).",
+  "Commonest models: nest_lrg_flat 78, nest_med_flat 30, stalactite_static03 21, struts_tunnel320_01 19, struts_tunnel192_01 18, pipeset02d_512_001a 17, websackhalf 16, caverocks_cluster01 15, grubtunnel_door 15, struts_single01 15, stalactite_static04 14, caverocks_cluster02 13, stalactite_static01 13, stalactite_static02 11, skeleton_whole 11.",
+  "Commonest materials (faces): blendrockslime02a 4790, concretewall_mine_002c 1365, antlion_web01a 668, woodfloor005a 560, blendrockdirt_tunnel03a 493, blendslimeslime01a 430, metalpipe_vent001b 400, woodwall_mine001a 388, metalwall062a 325, metaltruss009a 298, metalpipe002a 236, metalpipe_vent001c 170, woodshelf001a 157, woodwall048_floor 146, woodwall041a 127, rockwall_cave02a 100, woodfloor008a 72, metalwall074c 53, dirtfloor_mine001a 41, metaltruss017a 39.",
+  "Ceilings: floor to ceiling indoors (cast up from 358 AI nodes) is most often 192 (58), then 176 (29) and 184 (19); 0% of the nodes are outdoors; corridors 178 wide under 200, rooms 348 by 1554 (medians, wall to wall).",
+  "Cables: 23 rope spans, median 305 long, slack 100, width 2.",
+  "Spacing (nearest of the same model): light_cagelight02_on 739 apart (n 8), light_cagelight01_on 1265 apart (n 3).",
+  "Walls in bands: 11% of wall columns over 256 tall change material at least once; the first change most often 16 or 32 over the foot; pairs (below > above): blendrockdirt_tunnel03a > blendrockslime02a, antlion_web01a > blendrockslime02a, blendrockslime02a > blendrockdirt_tunnel03a.",
+  "Slopes: 286 sloped faces over 2000 square units, most often 45, 20, 70 degrees; concretewall_mine_002c, blendrockslime02a, antlion_web01a.",
+  "Props: 508 in play; on exact 90s: static 39%, physics 47%; physics tilted 55% (lying most often board, bucket, propane); statics touching a wall 26%, physics within 16 of one 43%; 0.314 props per 100 by 100 of play (0.049 physics).",
+  "Wiring: 907 output lines from 257 entities; commonest OnTakeDamage>SetAnimation 64, OnTrigger>PlaySound 57, OnTrigger>Kill 43; 42 relays (longest chain 2), 0 counters, 5 timers, 0 makers, 2 buttons working doors; 0 lines name nothing.",
+  "Craft: texture scale 0.25 on 51% of faces; lightmapscale 16 on 99% (near the nodes 100%, far 98%); func_detail 71% of brushes; 104 trim strips (8x8 27, 8x16 17); 51 chamfers; 1708 displacements.",
+  "Light by fixture: light_cagelight02_on: light_spot 255 226 174 500, cone 75/2, pitch -60; light_cagelight02_on: light 255 226 174 10; grubtunnel_door: light 255 245 157 40; light_cagelight01_on: light 185 11 11 40.",
+  "Grime: 3 infodecal and 124 info_overlay; on walls stain 2; wall decals median 75.1 over the floor."
+ ],
+ "pictures": [],
+ "pictures_folder": "valve_ep2_outland_04"
+}

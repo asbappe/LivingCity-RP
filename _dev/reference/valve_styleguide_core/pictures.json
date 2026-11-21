@@ -1,0 +1,19 @@
+{
+ "title": "Valve's styleguide_core (draft)",
+ "draft": true,
+ "about": "Valve's own styleguide_core, measured by map_ingest.py on 2026-11-21 (play space only: hidden objects and the 3D skybox room left out) and drawn by map_view.py (flat colours; props are boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; trees drawn as trunk and canopy, poles thin). Reference only: the VMF is not in the repo. DRAFT: a reviewer fills in what each picture teaches, picks the lessons, and removes \"draft\".",
+ "numbers": [
+  "Things: 6 prop_static, 0 prop_physics, 17 prop_dynamic, 0 prop_door_rotating, 0 prop_ragdoll, 0 infodecal, 0 info_overlay, 0 keyframe_rope and 0 move_rope, 14 func_detail, 0 npc entities (makers included); left out: 113 hidden objects and no 3D skybox room.",
+  "Lights: 1 light (median brightness 2200), 0 light_spot (median None), 0 point_spotlight, 7 env_sprite; no light_environment; fog \"146 231 245\" from 500 to 3000; sky sky_day01_01.",
+  "Commonest models: combine_teleport_2 4, combine_barricade_tall01b 4, portalball 3, combine_ballsocket 3, combine_gate_vehicle 3, pipes03_single01c 2, pipes03_single01b 2, pipes03_single01a 2.",
+  "Commonest materials (faces): metalwall_combinecore03a 784, citadel_metalwall077a 244, citadel_metalwall076a 82, citadel_metalwall101b 71, metalwall_combinecore01a 61, citadel_metalwall072b 18, concretewall075d 18, citadel_metalwall090a 9, citadel_metalwall091a 4.",
+  "Walls in bands: 17% of wall columns over 256 tall change material at least once; the first change most often 2048 or 1024 over the foot; pairs (below > above): metalwall_combinecore03a > citadel_metalwall077a, citadel_metalwall091a > citadel_metalwall072b, metalwall_combinecore03a > citadel_metalwall076a.",
+  "Slopes: 47 sloped faces over 2000 square units, most often 65, 70, 25 degrees; metalwall_combinecore03a, citadel_metalwall077a, citadel_metalwall101b.",
+  "Props: 24 in play; on exact 90s: static 100%, physics ?; physics tilted ? (lying most often nothing); statics touching a wall ?, physics within 16 of one ?; None props per 100 by 100 of play (None physics).",
+  "Wiring: 103 output lines from 12 entities; commonest OnTrigger>Enable 13, OnTrigger>Disable 9, OnTrigger>Kill 8; 3 relays (longest chain 1), 0 counters, 5 timers, 0 makers, 0 buttons working doors; 9 lines name nothing.",
+  "Craft: texture scale 1 on 57% of faces; lightmapscale 16 on 98% (near the nodes ?, far 98%); func_detail 41% of brushes; 6 trim strips (16x16 6); 81 chamfers; 0 displacements.",
+  "Light by fixture: : light 146 231 245 2200."
+ ],
+ "pictures": [],
+ "pictures_folder": "valve_styleguide_core"
+}
