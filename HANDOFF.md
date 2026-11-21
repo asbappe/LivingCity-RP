@@ -41,6 +41,8 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 - New in the game: the train station's Breencast screen (editor Street, kind screen_station, only the scanner picture of
   the Administrator or the Director of Propaganda) and the Combine mounted gun (editor Fixture, kind mounted_gun: anyone
   can man it, a third of Valve's damage). Playground module copied from Valve's station playground.
+- 21 November: VDC Saver, a Chrome extension (_dev/tools/vdc_saver/, docs/dev/map-ingestion.md "The tools") that saves
+  the Valve Developer Community wiki past its bot check, for the owner to zip and hand over.
 - Open questions for the owner: the gun's damage figure (Valve: 15 manned by a player, 5 against players; ours 26/3);
   an NPC manning the gun; lock gates crush (Valve's) or stop; outfalls on banks as pipes or notched holes; the ring
   and first canal to the new dressing; which NPC ideas from docs/dev/valve-npc-notes.md to build.

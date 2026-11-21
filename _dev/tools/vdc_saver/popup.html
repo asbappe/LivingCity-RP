@@ -1,0 +1,49 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  body { font: 13px/1.4 system-ui, sans-serif; width: 300px; margin: 10px; color: #222; }
+  h1 { font-size: 15px; margin: 0 0 8px; }
+  .row { margin: 6px 0; }
+  .status { background: #f3f0ea; padding: 6px; border-radius: 4px; min-height: 18px; }
+  button { margin: 2px 4px 2px 0; padding: 4px 8px; }
+  .big { font-weight: 600; }
+  details { margin: 6px 0; }
+  .note { color: #a33; }
+  input[type=number] { width: 4em; }
+</style>
+</head>
+<body>
+  <h1>VDC Saver</h1>
+  <div class="row"><label><input type="checkbox" id="saveVisits"> Save pages I visit</label></div>
+  <div class="row">Saved: <span id="count" class="big">0</span> files</div>
+
+  <div class="row"><b>Whole wiki</b></div>
+  <div class="row status" id="status">Not started.</div>
+  <div class="row">
+    <button id="start" class="big">Save the whole wiki</button>
+    <button id="pause">Pause</button>
+    <button id="restart">Start over</button>
+  </div>
+  <div class="row note" id="note"></div>
+
+  <details>
+    <summary>Options (used when it starts or starts over)</summary>
+    <div class="row"><label><input type="checkbox" id="englishOnly"> English only (skip translated copies)</label></div>
+    <div class="row">
+      <label><input type="checkbox" class="ns" value="0"> Articles</label>
+      <label><input type="checkbox" class="ns" value="10"> Templates</label>
+      <label><input type="checkbox" class="ns" value="14"> Categories</label>
+      <label><input type="checkbox" class="ns" value="12"> Help</label>
+    </div>
+    <div class="row"><label>Wait between requests <input type="number" id="delay" min="0.5" step="0.5"> s</label></div>
+  </details>
+
+  <div class="row">
+    <button id="download" class="big">Download zip</button>
+    <button id="clear">Delete everything</button>
+  </div>
+<script src="popup.js"></script>
+</body>
+</html>
