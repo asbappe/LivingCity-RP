@@ -563,7 +563,7 @@
    "rule": "A wall taller than about 256 is never one texture. Lay it in courses: a base (stonewall050c, floor to 96), the body (050a), a band course (050b, about 192 to 320), the body again, a top course (050e). Each course is its own brush, the base and the band 4 to 8 proud of the body, so the wall casts a line of shadow at each change.",
    "why": "Valve's d1_trainstation_01 does it on every big wall (counted 21 November from the owner's upload): one material over 400 units of wall reads as a placeholder, the courses give it scale and age.",
    "how": "Stack boxes by height with the materials above (Mod.box per course), or lift a banded piece of wall with map_prefab.py. City 18's own stone (stonewall050f) fits the same scheme.",
-   "check": "Not checked by a tool yet: look at the piece in map_view.py."
+   "check": "map_lint.py bare: a face of one material 384 long and 256 tall with nothing within 24 in front of it (printed by every build as LOOK: bare)."
   },
   {
    "id": "valve-column-rhythm",
@@ -576,7 +576,7 @@
    "rule": "Big halls and long walls are broken into bays by columns, pilasters or posts at one steady spacing (Valve: 368 along the platforms, 198 in narrower halls), with beams or trusses over them; benches, bins and fences are set out on the same rhythm.",
    "why": "Valve's station (pictures V5, V6, V10, V11): a long blank wall or open hall gives the eye nothing to measure; bays make the space read and give cover and corners.",
    "how": "In a hall module, place a column every 320 to 384 (a multiple of 64 that divides the length), a beam between their tops, and dress each bay the same way with small variations.",
-   "check": "Not checked by a tool yet: look at the plan in map_view.py."
+   "check": "map_lint.py bare: a face of one material 384 long and 256 tall with nothing within 24 in front of it (printed by every build as LOOK: bare)."
   },
   {
    "id": "valve-light-pools",

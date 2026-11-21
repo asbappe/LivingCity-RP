@@ -4,7 +4,7 @@ Living City: the owner's corrections, checked by machine (_dev/reference/lessons
 map_lint).
 
     python3 map_lint.py FILE.vmf [more.vmf ...]      every finding, one line each
-    python3 map_lint.py FILE.vmf --only overlap       one kind (overlap, door, offlamp, fire, mattress, view, water, rope)
+    python3 map_lint.py FILE.vmf --only overlap       one kind (overlap, door, offlamp, fire, mattress, view, water, rope, flush, bare, palette)
 
 Every build runs it on the file it writes and prints what it finds as LOOK lines (map_build.py), so
 map_modules_check.py shows them with the rest. A finding is a thing to look at, not always a fault: a model's box is
@@ -22,6 +22,9 @@ often bigger than the model. What each kind means:
   flush     two visible faces of different brushes lying in the same plane, facing the same way and overlapping:
             they flicker through each other in game (z-fighting; the owner, 21 November). Faces made of
             axis-aligned rectangles only; a face buried in another brush is not counted.
+  bare      a big plain wall: one face of one material at least 384 long and 256 tall with nothing on it or in front
+            of it (no ledge, trim, prop, decal or overlay within 24): lay it in courses, break it with pilasters,
+            dress it (lessons valve-wall-bands, valve-column-rhythm, facades). The six biggest, and how many.
 """
 import argparse
 import math
@@ -367,6 +370,51 @@ def check(path, views=None, only=None, air=None):
                             ma, mb, "xyz"[ax], c, w, h, p[0], p[1], p[2]))
         if seen > 12:
             say("flush", "... and %d more flush faces" % (seen - 12))
+    # bare: big plain walls with nothing on them
+    if not only or only == "bare":
+        import bisect
+        things = [bx for _, bx in solid_props]
+        for e in ents:
+            if e.get("classname") in ("infodecal", "info_overlay", "env_sprite") and "origin" in e:
+                o = origin(e)
+                things.append((o[0] - 8, o[1] - 8, o[2] - 8, o[0] + 8, o[1] + 8, o[2] + 8))
+        allb = list(SIDES.keys())
+        bare = []
+        for box, (sides, kind) in SIDES.items():
+            if kind.startswith(("trigger", "func_areaportal", "func_illusionary", "func_water")):
+                continue
+            for mat, pv in sides:
+                if mat.startswith(("tools/", "effects/", "nature/", "skybox")) or "glass" in mat or "fence" in mat:
+                    continue
+                for ax in (0, 1):
+                    vals = [q[ax] for q in pv]
+                    if max(vals) - min(vals) > 0.01:
+                        continue
+                    o = 1 - ax
+                    lo, hi = min(q[o] for q in pv), max(q[o] for q in pv)
+                    z1, z2 = min(q[2] for q in pv), max(q[2] for q in pv)
+                    if hi - lo < 384 or z2 - z1 < 256:
+                        break
+                    c = vals[0]
+                    out = 1 if (box[ax] + box[ax + 3]) / 2.0 < c else -1
+                    mid = [0.0, 0.0, 0.0]
+                    mid[ax], mid[o], mid[2] = c + out * 2, (lo + hi) / 2.0 + 0.37, (z1 + z2) / 2.0 + 0.29
+                    if air and air[0] is not None:
+                        cell = tuple(bisect.bisect_right(air[2][k], mid[k]) - 1 for k in range(3))
+                        if cell not in air[0]:
+                            break      # (it faces the void or solid: never seen)
+                    slab = [0.0] * 6
+                    slab[ax], slab[ax + 3] = (c, c + 24) if out > 0 else (c - 24, c)
+                    slab[o], slab[o + 3], slab[2], slab[5] = lo, hi, z1, z2
+                    if any(b2 != box and overlap(slab, b2) for b2 in allb) or any(overlap(slab, t) for t in things):
+                        break
+                    bare.append(((hi - lo) * (z2 - z1), mat, hi - lo, z2 - z1, mid))
+                    break
+        bare.sort(key=lambda t: -t[0])
+        for area, mat, w, h, mid in bare[:6]:
+            say("bare", "a plain wall of %s, %d long and %d tall, facing (%d %d %d) with nothing on it: courses, a pilaster, trim or dressing (map_lessons.py --tag valve)" % (mat, w, h, mid[0], mid[1], mid[2]))
+        if len(bare) > 6:
+            say("bare", "... and %d more plain walls" % (len(bare) - 6))
     # palette: materials City 18 never uses (one line, the commonest few)
     pal = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "reference", "city18", "palette.json")
     if os.path.exists(pal) and (not only or only == "palette"):

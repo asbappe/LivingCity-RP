@@ -532,7 +532,7 @@ A wall taller than about 256 is never one texture. Lay it in courses: a base (st
 
 - **Why:** Valve's d1_trainstation_01 does it on every big wall (counted 21 November from the owner's upload): one material over 400 units of wall reads as a placeholder, the courses give it scale and age.
 - **How:** Stack boxes by height with the materials above (Mod.box per course), or lift a banded piece of wall with map_prefab.py. City 18's own stone (stonewall050f) fits the same scheme.
-- **Checked by:** Not checked by a tool yet: look at the piece in map_view.py.
+- **Checked by:** map_lint.py bare: a face of one material 384 long and 256 tall with nothing within 24 in front of it (printed by every build as LOOK: bare).
 - **Tags:** facades, materials, valve
 
 - **See:** `valve_d1_trainstation_01/01_overview_sw.png`, `valve_d1_trainstation_01/02_overview_ne.png`, `valve_d1_trainstation_01/12_courtyard_plan.png`
@@ -543,7 +543,7 @@ Big halls and long walls are broken into bays by columns, pilasters or posts at 
 
 - **Why:** Valve's station (pictures V5, V6, V10, V11): a long blank wall or open hall gives the eye nothing to measure; bays make the space read and give cover and corners.
 - **How:** In a hall module, place a column every 320 to 384 (a multiple of 64 that divides the length), a beam between their tops, and dress each bay the same way with small variations.
-- **Checked by:** Not checked by a tool yet: look at the plan in map_view.py.
+- **Checked by:** map_lint.py bare: a face of one material 384 long and 256 tall with nothing within 24 in front of it (printed by every build as LOOK: bare).
 - **Tags:** geometry, interiors, valve
 
 - **See:** `valve_d1_trainstation_01/05_payphone.png`, `valve_d1_trainstation_01/06_trash.png`, `valve_d1_trainstation_01/08_platform.png`, `valve_d1_trainstation_01/10_hall_plan.png`, `valve_d1_trainstation_01/11_platform_plan.png`
