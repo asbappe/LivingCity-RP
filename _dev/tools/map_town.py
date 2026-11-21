@@ -496,7 +496,7 @@ def facade(b, fr, L, rnd, tag, first=0):
         lot_holes.append(low_holes + up_holes[0] + (up_holes[1] if len(rows) == 2 else []))
         for h1, h2, s, t in low_holes + up_holes[0] + (up_holes[1] if len(rows) == 2 else []):
             if s == 0:      # a doorway nobody uses: planked over and boards nailed across (never the city's door: that one opens)
-                m.det([(h1 - 5, 245, F, h1 + 1, 256, F + 108), (h2 - 1, 245, F, h2 + 5, 256, F + 108), (h1 - 5, 245, F + 108, h2 + 5, 256, F + 113)], R["frame"])
+                m.det([(h1 - 5, 245, F, h1 + 1, 256, F + 108), (h2 - 1, 245, F, h2 + 5, 256, F + 108), (h1 - 5, 245, F + 107, h2 + 5, 256, F + 113)], R["frame"])      # (the head 1 into the opening: never flush with the wall's face over it)
                 m.det([(h1, 253, F, h2, 256, F + 108)], R["frame"])
                 for z in (34, 74):
                     board(m, (h1 + h2) // 2 + rnd.randrange(-4, 5), 248, F + z + rnd.randrange(-5, 6), 270, 90 + rnd.randrange(-12, 13))
@@ -507,6 +507,10 @@ def facade(b, fr, L, rnd, tag, first=0):
             if s < 100 and h2 - h1 < 100 and rnd.random() < 0.2:                                   # a ground floor window boarded up
                 for z in (s + (t - s) // 3, s + 2 * (t - s) // 3):
                     board(m, (h1 + h2) // 2 + rnd.randrange(-6, 7), 248, F + z, 270, 90 + rnd.randrange(-7, 8))
+    def roofed(u, v):      # (is there a house's roof here? a module's own squares behind the front have none)
+        x, y = fr.pt(u, v)
+        spec = b.plan.cells.get((int(x) // CELL, int(y) // CELL))
+        return spec is None or spec[0] == "solid"
     for a, c, high, (ground, upper) in lots:               # on the roofs: chimneys, aerials, dishes, now and then a pitched roof
         roof = F + high
         kind = rnd.random()
@@ -524,10 +528,13 @@ def facade(b, fr, L, rnd, tag, first=0):
                 things.append(rnd.choice(AERIALS))
             if rnd.random() < 0.4:
                 things.append(VENT)
+            slots = [(u, v) for u, v in slots if roofed(u, v)]      # (never over a module's open yard behind the front: no roof there)
             for model, (u, v) in zip(things, slots):       # (one thing to a slot 128 by 140: they never stand in each other)
                 roof_prop(m, model, u + rnd.randrange(-16, 17), v + rnd.randrange(-16, 17), roof, rnd.randrange(0, 360, 90) if model != STACKS else 0)
             if rnd.random() < 0.3:
-                roof_prop(m, DISH, rnd.randrange(a + 40, c - 40), 300, roof + 24, 270)
+                du = rnd.randrange(a + 40, c - 40)
+                if roofed(du, 300):
+                    roof_prop(m, DISH, du, 300, roof, 270)      # (on the roof behind the parapet, not 24 over it)
     for (a, c, high, styles), holes in zip(lots, lot_holes):  # balconies on some upper floors, awnings over the shop windows
         if high >= 370 and rnd.random() < 0.35:
             row = [h for h in holes if 150 < h[2] < 260]
@@ -742,6 +749,10 @@ def build(lay, args):
         for u in range(128, L, 256):
             street.lane(u, 0, F - 4)
         x, y = Frame(x, y, rot, L).pt(L, 0)
+    # the street's far end: a pavement and its kerb across the road in front of the house that closes it, so that
+    # house stands on a pavement like the others instead of floating over the gutter and the cobbles
+    street.det([(L - 96, -160, F - 8, L, 160, F)], R["walk"])
+    street.det([(L - 104, -160, F - 8, L - 96, 160, F)], R["kerb"])
     # the houses' fronts, once every module is in; and the house that closes the street's far end
     fronts.append((Frame(*(Frame(x, y, rot, 0).pt(-256, 256) + ((rot - 1) % 4, 512)), dz=dz), 512, "the house at the street's end"))
     made = 0
