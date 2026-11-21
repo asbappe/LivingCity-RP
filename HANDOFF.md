@@ -31,8 +31,10 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 
 ## Where things stand
 
-- 21 November (evening). The owner sent every HL2/EP1/EP2 map source: 122 more maps measured (145 in all); pictures,
-  studies and lessons go batch by batch, saving every 5 or so maps: docs/dev/valve-ingest-progress.md (read it first).
+- 21 November (night). The owner sent every HL2/EP1/EP2 map source: 122 more maps measured (145 in all); batch by
+  batch, saving every 5 or so maps: docs/dev/valve-ingest-progress.md (read it first). Batch 1 (City 17) done: 36
+  pictures, 22 lessons; Ravenholm's studies merged (167 lessons), its pictures and Nova Prospekt running. Owner-approved
+  findings wait on TODO.md, built only after all ingestion.
 - Valve map ingestion so far: 127 lessons, 54 prefab pieces, studies docs/dev/valve-*.md, the tool
   _dev/tools/map_ingest.py, statistics _dev/reference/valve_stats.json. THE GUIDE: docs/dev/map-ingestion.md.
 - Canals: the owner's Valve table is built (dished floor, 1024-wide stretches, upright walls where there are ledges,
@@ -40,8 +42,7 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
   Valve's five rules (map_wiring.py; map_lint kind wire).
 - New in the game: the station's Breencast screen (editor Street, kind screen_station) and the Combine mounted gun
   (editor Fixture, kind mounted_gun: anyone can man it, a third of Valve's damage). Playground module from Valve's.
-- VDC Saver, a Chrome extension (_dev/tools/vdc_saver/, docs/dev/map-ingestion.md "The tools") that saves the Valve
-  Developer Community wiki past its bot check.
+- VDC Saver (_dev/tools/vdc_saver/, map-ingestion.md "The tools"): saves the Valve Developer Community wiki.
 - Open questions for the owner: the gun's damage (Valve: 15 manned by a player, 5 against players; ours 26/3); an
   NPC manning the gun; lock gates crush (Valve's) or stop; outfalls on banks as pipes or notched holes; the ring and
   first canal to the new dressing; which NPC ideas from docs/dev/valve-npc-notes.md to build.

@@ -6,6 +6,12 @@ plus Valve's 41 style guide and standards rooms** (not the dated drafts or the t
 (commit and push) **every 5 or so maps**, because usage limits will interrupt the work. How to ingest:
 `docs/dev/map-ingestion.md`. This page is only what is done and what is next. Update it with every save.
 
+## Where each batch's work goes
+
+Pictures and `pictures.json` in the batch's shared set (`_dev/reference/valve_c17/`, `valve_ravenholm/`, `valve_prison/`...);
+helpers' running notes and lesson proposals in its `wip/` while it runs; at the batch's end the proposals are merged
+(`merge-lessons`) and deleted, the notes kept in `notes/`, the set's `"draft"` taken out, and the batch pushed to `main`.
+
 ## Getting the maps again (a new chat or a wiped scratch folder)
 
 - The zip is `HL2Leak-VMFs-master.zip` (194 MB, 1.7 GB unpacked) on the owner's Google Drive: the link is in the chat
@@ -41,6 +47,10 @@ plus Valve's 41 style guide and standards rooms** (not the dated drafts or the t
   materials and light strips. Across the Citadel maps first, then every Combine structure in the 145 maps (the Nexus
   in d3_c17_10a, 10b, 11; Nova Prospekt's Combine parts; EP2). It ends in rules our map tools can follow to build
   such structures (a generator or module), shown to the owner before it changes anything they settled. Not done yet.
+  Numbers gathered on the way: City 17's Nexus (`valve_c17/pictures.json` U26, U27, U32: Combine metal as thin plates,
+  2 thick most often, longest side 64; 14% of its faces off right angles against 4% of the old plaster, tilted 45 to 70
+  and turned 25, 45 or 65; set inside the old rooms like a second skin and breaking out through the front), and the
+  "Combine architecture" section of Nova Prospekt's notes (`valve_prison/`).
 
 - **Approving findings (21 November):** at the end of each batch, put the findings most worth building to the owner
   to pick from; approved ones go on `TODO.md` under "Owner-approved Valve findings", and **nothing is built until
@@ -53,7 +63,7 @@ All 122 measured on 21 November (145 maps in `valve_stats.json` with the first 2
 
 | # | Batch | Maps | M | P | S |
 |---|---|---|---|---|---|
-| 1 | City 17's uprising, and Valve's standards | d3_c17_01, 02, 03, 04, 05, 06a, 06b, 07, 08, 09, 10a, 10b, 11, 12, 12b; testroom_standards, zoo_standards, testroom_measure_movement; styleguide_c17_rubble, styleguide_c17_rubble_2 | yes | 01 to 09 done (U1 to U23, `valve_c17/`), 10a to 12b and the rubble rooms next | yes: 22 new lessons, 22 extended (149 in all) |
+| 1 | City 17's uprising, and Valve's standards | d3_c17_01, 02, 03, 04, 05, 06a, 06b, 07, 08, 09, 10a, 10b, 11, 12, 12b; testroom_standards, zoo_standards, testroom_measure_movement; styleguide_c17_rubble, styleguide_c17_rubble_2 | yes | yes: 36 pictures U1 to U36 (`valve_c17/`) | yes: 22 new lessons, 22 extended; notes in `valve_c17/notes/` |
 | 2 | Ravenholm | d1_town_01, 01a, 02, 02a, 04, 05; styleguide_ravenholm_01, styleguide_mining | yes | running (`valve_ravenholm/`) | yes: 18 new lessons, 16 extended (167 in all) |
 | 3 | Nova Prospekt | d2_prison_01 to 08 | yes | | started: props and craft (`valve_prison/wip/`) |
 | 4 | Black Mesa East | d1_eli_01, 02 | yes | | |

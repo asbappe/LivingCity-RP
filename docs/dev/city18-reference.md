@@ -58,6 +58,98 @@ The pictures are drawn by `map_view.py` (flat colours; props as boxes of their t
 | 29 | `29_payphone.png` | the station's arched hall (eye 3145 -1856 820, looking north-west) | A barrel-vaulted hall with arched ribs, two-tone walls (brick below, plaster above), a row of windows high up, lamps on the walls at one height: an arched roof makes a hall. | true-curves, city18-interiors, city18-lighting |
 | 30 | `30_waiting.png` | a train platform (eye -2165 4233 683, looking south-west) | A platform under a deck on steel columns and beams, the track in a channel, brick walls behind, lights in a row along the far wall and under the deck: structure shown, light in rhythm. | city18-lighting, true-curves |
 
+## Valve's City 17 uprising (d3_c17_01 to 13) (`_dev/reference/valve_c17/`)
+
+Valve's own City 17 uprising maps (d3_c17_01 onwards; the map sources the owner uploaded, 21 November), measured from the VMFs by map_ingest.py (each map's numbers in valve_d3_c17_NN/measure.json) and drawn by map_view.py (flat colours; props as boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; a prop whose size is unknown is a small marker) or as true slices across a street (dark grey solid, white air, pale blue sky, a grid every 128 across and 64 up). Reference only, for shape and dressing: the VMFs are not in the repo, and the owner's own choices win where they differ (streets, stairs, rooms).
+
+- d3_c17_01: Kleiner's lab after the teleport, the rebels' hidden lab; all indoors: rooms 348 by 971 (medians) under 306 (most often 320 and 352), corridors 189 wide under 120, one door01_left in an opening 48 by 108.
+- d3_c17_01: the most crowded place measured so far: 1.31 props per 100 by 100 of play (the streets of d3_c17_02 to 05: 0.15 to 0.58), 71% of statics touching a wall; lab lights (lab_flourescentlight001a and b, 14), pipes, power boxes, crates and file cabinets.
+- Ours: rooms 120 to 128 high in City 18's two tones with a dado rail. Valve's lab is a hall about 306 high, its walls banded (brickwall052e below brickwall052d, the first change 64 or 128 over the foot): a lab or workshop hideout can stand taller than a flat.
+- d3_c17_02: from the lab through the old streets to the Combine wall; 52 street cuts, 30 with kerbs: road 256 (23 of 30, the rest 512), kerb 4 (all 60), crown 0 (all 30), pavements most often 192 (128 to 768: the yards are wide); walls median 544.
+- Ours: streets keep a crown, a kerb of 8 and pavements of 96. Valve's d3_c17_02 street by the checkpoint (x -5640) is about 676 between the fronts (647 at the barricades): pavements 256 and 164, a road of 252 laid in strips of 64, 128 and 60 (concretefloor033q_c17 at the edges, 033k_c17 in the middle), kerbs 4, flat; fronts 680 and 616 over it (height about the width).
+- d3_c17_02 checkpoint: four combine_barricade_med02c, 128 apart, straight across the street from wall to wall (x -5582, y -5956 to -5315), two each side of a gap of 128 that holds a combine_gate_citizen, with metalcombine001 blocks (48 wide, 88 high) in the line; a combine_light001a on the end barricade at 136 up; the street beyond is shut by the Combine wall (metalcombine001) 707 further east.
+- d3_c17_02 wires: utility poles (utilitypole02b) 843 to 1479 apart and wall mounts (utilitypolemount01a) 333 to 2299 (median 697) carry 16 rope spans, median 345 long, slack 100, width 2; 9 of 11 lights warm ('256 224 144' most often).
+- d3_c17_03: the square of the colonnade (trainstation_post001 13 and trainstation_column001 10, each 128 apart, 9 arches, awnings 16) and the streets round it; 387 cuts, 114 with kerbs: kerbs 4 (156 sides) and 8 (59); the road widths there are muddled by the square's steps (the commonest, 608 at 30 cuts, is the square's edge), so the street below was measured by hand.
+- Ours: streets keep a crown, a kerb of 8 and pavements of 96. Valve's street beside the square (x -2496 y -1544): steps down from the square (8 by 12), a pavement of 176, a road of 380 (stonefloor006a with edge strips of 006c and 006b, 64 and 60 wide), kerbs 4, flat; a pavement of 124, then a wall 32 high with a fence round a grass bed 248 wide.
+- d3_c17_03 note: the 'crown 14' measure.json gives at 40 cuts is the square's steps read as a crown; the roads measured by hand are flat. Trees: tree_deciduous_03b 10 (179 to 963 apart), poplars 6 (256 to 496); 27 rope spans, many long (median 751).
+- d3_c17_04: back courts behind the blocks, with headcrab canisters and striders: courtyard_template fronts, barred ground-floor windows (woodwall030b_window01a_bars 6, courtyard_template001c_bars 8); 82% of the nodes outdoors; walls in the cuts median 608 (448 to 704); the big court 1728 across (walls 1568 and 576).
+- d3_c17_04 flats: ceilings 128 (19 of 41 indoor nodes, 120 at 7), corridors 128 wide (19 of 32), rooms 176 by 409 (medians), nearly bare (a TV, a file cabinet, lightbulb01a 5). Roofs: antennaclusters01a 30 (the commonest model), big gutters (gutterlarge_512 and 640) 10; lampposts (lamppost03a_off) 480 to 768 apart; fence01a 11 at 96 to 136.
+- Ours: streets keep a crown, a kerb of 8 and pavements of 96. Valve's d3_c17_04 roads are 256 (38 of 64) or 384 (17), pavements most often 192 and 128, kerbs 4 (102 of 128), crowns 0 or 2.
+- d3_c17_05: a block of flats and shops the Combine have taken: control desks with monitors on three floors 128 apart, 32 metropolice, 6 floor turrets, 11 combine_lock01 on its doors; 616 nodes, 33% outdoors; 411 props (0.58 per 100 by 100).
+- Ours: streets keep a crown, a kerb of 8 and pavements of 96. Valve's d3_c17_05 street (x 1376 y -4992) is 576 wall to wall: a road of 252 in three strips (stonefloor006e_c17 edges of 64 and 60, 006d_c17 in the middle), pavements 128 and 192, kerbs 4, flat; across its 154 kerbed cuts: road 256 (103), pavements 128 (93), kerb 4 (270 of 308), crown 0 (128 of 154).
+- Ours: fronts with a 128 plinth. Valve's d3_c17_05 shop front: a shop storey 136 high (storefront_template001a, glass from 16 to 120) set 32 to 48 back, then a storey every 128 (a course of 32, building_template007f, standing 16 proud, and 96 of windows, 007d) up to 648; across the street, bands of 128 (building_template012f, then 012d) up to 392. At the d3_c17_02 checkpoint: a plinth of 64, a ground floor to 200, a course of 32, then 128 a storey.
+- Ours: rooms 120 to 128 high in City 18's two tones with a dado rail. Valve's d3_c17_05 flats: 120 at 294 of 415 indoor nodes, corridors 99.5 wide (64 to 155), rooms 178 by 380, doorways 48 by 108 (door01_left 5) and 56 to 59 wide for door02_double (6); walls banded plasterwall022c_c17 below 022a; radiators 7, sinks 6; 42 of 45 lights warm (37 of them '256 224 144').
+- d3_c17_06a: the road tunnel under the city (abandoned cars, zombies): 92% of the nodes indoors, ceilings 192 (130 of 357) and 224 (70); the tunnel at y -6319 is 768 wall to wall: a walk of 128 on a kerb of 4, two lanes of 232 (concretefloor033k with edge strips of 033p and 033q) either side of a row of pillars 64 wide, tiled walls (tilewall006c and d); light_cagelight02_on 350 to 1261 apart (median 611), prison_sprinkler001a 30.
+- d3_c17_06b: the citizens' block the Combine raid (40 soldiers, 22 citizens): ceilings 120 (263 of 419 indoor nodes), corridors 96 wide, rooms 218 by 534 (medians); the rebels' barricades are props: shelves (furniture_shelf01a 8) pushed up in pairs, boards over windows as physics props three to a window (wood_board05a, 07a, 05a), mattresses on the floor; destroyedceiling01a to d (27) where the Combine wall broke through.
+- d3_c17_07: the street war at the Combine wall; 131 street cuts, 123 with kerbs: road 256 (63), pavements 128 (75), 192 and 224 (27 each), kerb 4 (234 of 246), crown 0 (112 of 123); walls median 608 (544 to 704); lampposts (lamppost03a_off) 565 to 1431 apart (median 635), utility poles 954 to 1211, 25 rope spans (median 1010).
+- Ours: streets keep a crown, a kerb of 8 and pavements of 96. Valve's d3_c17_07 street at x 5648 y 2784 is 608 wall to wall: road 256, pavements 220 and 128, kerbs 4, flat; fronts 672 and 512 under pitched tile roofs (tileroof004a rising about 112 in 128); a shop storey of 128 (storefront_template001a), then building_template002 or 017 storeys; a hotel sign 256 tall standing 64 proud.
+- d3_c17_07 Combine places: a post in a square 1179 across (combine_booth_short01a facing out, a combine_interface001 beside it, combine_generator01 2, a metalcombine001 block, two combine_barricade_tall02b 384 apart on the pavements of the street beyond); and a block of flats the Combine hold (combine_lock01 8, combine_interface001 4, combine_intmonitor001 3, 2 floor turrets) among bathtubs, beds and radiators.
+- d3_c17_08: the pipe works (all indoors): 994 props, 1.49 per 100 by 100, most of them pipes (pipe01 to 03 straights and connectors over 500) and catwalk rails (handrail04 long 40, short 22, medium 19); statics touching a wall only 22%; ceilings 152 (28), 128 (25), up to 600 in the hall; 55 of 96 lights a dim blue fill ('32 64 80'), cage lights (light_cagelight02_on 20, median 394 apart); flooded tunnels 80 to 364 wide with water only 9 to 15 deep.
+- d3_c17_09: the shop streets under the Nexus (5 snipers): 238 cuts, 177 with kerbs: roads 320 (42), 256 (35), 640 (30) and 192 (26), pavements 160 (63), 128 (55) and 64 (42), kerb 4 (347 of 354), crown 0 (170 of 177); walls 640 most often, and the Nexus wall 1536 high along 169 cuts; ceilings 184 (138 of 277 indoor nodes) and 120 (62).
+- Ours: streets keep a crown, a kerb of 8 and pavements of 96. Valve's d3_c17_09 street at x 4944 y 4584 is 724 wall to wall: road 320 (stonefloor006d with 006f edges), pavements 144 and 256, kerbs 4, flat, fronts 608 and 512.
+- d3_c17_10a: the park and streets before the Nexus (d3_c17_11 and 12 come back to the same ground later, in the same coordinates); 335 street cuts, 84 with kerbs: roads 384 (54 of 84), pavements 128 (56 of 168) and 192 (17), kerbs 4 (128) or 8 (37), crown 0 (82 of 84); wall to wall most often 768; ceilings indoors 120 (43 of 165 nodes) and 312 (37).
+- d3_c17_10a park: a strip about 800 wide between low stone walls (stonewall040f, 28 thick, 128 high at the sides, 28 high round the beds): grass and gravel beds (blendgrassgravel001a) 270 to 340 wide, paths of concrete (concretefloor019a) 260 wide across it; poplars (tree_poplar_01) 512 apart, benches (bench_indoor001a) 226 apart, lampposts (lamppost03a_off) 605 apart, combine_fence01a and 01b in pairs 488 apart along it.
+- d3_c17_10a Combine vehicle gates: a combine_gate_vehicle with a combine_barricade_tall02b (141 by 133 by 261) either side, 384 apart (x -784 and -400, y 4474) and 380 apart (x -2278 and -1898, y 8502); a combine_light001a on a wall beside each, two combine_emitter01 64 apart by the north gate.
+- d3_c17_10a rubble: walldestroyed09g heaps (385 by 440 by 122) about 330 apart along the west side of the street at x -2032 (y 5276, 5592, 5928) on rubble ground 8 to 23 high; a broken front beside it shows its floor at 388 (264 over the street) with concrete_section128floor and wall pieces at the break and rebar clusters (rebar_cluster001a 7, 002b 4) poking out of each.
+- Ours: streets keep a crown, a kerb of 8 and pavements of 96. Valve's d3_c17_10a streets are flat (crown 0 in 82 of 84 cuts) with roads of 384 (stonefloor006d_c17) and pavements of 128 (concretefloor028c_c17), kerbs 4.
+- d3_c17_10b: inside the Overwatch Nexus, an old bank or government block the Combine have grown into (in the frame of d3_c17_10a, 11 and 12 it is the block east of the park, x 32 to 2304, y 4512 to 7884); 96% of the nodes indoors: ceilings 192 (145 of 350), 240 (54) and 256 (43); corridors 133 wide, rooms 226 by 768 (medians); 0.41 props per 100 by 100; walls banded in 93% of tall columns (tilefloor011a below plasterwall043c, 043c below 043b), the first change 16 or 64 over the foot.
+- d3_c17_10b Combine architecture: the Combine's part is brushwork, not props: metalcombine001 on 4639 faces (the most used material, area 668 x 10000 against the old plaster's 762), 921 brushes, most of them thin plates (2 thick 356 times, 8 thick 167, 1 thick 104; longest side median 64); 14% of their faces off the right angles (the old building's plaster 4%), leaning 45 to 70 degrees from flat and turned 25, 45 or 65 degrees in plan; it fills the middle of the block (x 3072 to 4352, y -1024 to 0, 128 to 768 up) and an upper floor (x 2560 to 3584, y -2304 to -1536, 512 to 944 up).
+- d3_c17_10b machines: combine_generator01 31, set in rows along walls 32 to 96 apart (x 2880, y -1280 to -1504; y 509, x 2629 to 2821); cell_01_pod 7 in rows of two and three 40 to 44 apart; consoles as a combine_interface001 or 002 with a combine_intmonitor001 or 003 on it (8 sets); turrets 8 on the ground and 6 on ceilings; prison_flourescentlight001a 39 and combine_light001a 11; a Breen bust in pairs (2, 372 apart); force fields (comshieldwall2) across the courtyard's ways, each between a combine_fence01a and a 01b post 256 apart (combine_fence01a and 01b 5 each).
+- Ours: rooms 120 to 128 high in City 18's two tones with a dado rail. Valve's Nexus keeps the old building's rooms (192 high, plaster banded over tile) and sets the Combine's metal inside them as a second skin of thin, tilted plates, so the Combine reads as grown in, not built from scratch.
+- d3_c17_11: out of the Nexus over its roof and down into the streets (the frame of d3_c17_10a); half the nodes outdoors, most of them on roofs: ceilings indoors 176 (35 of 120) and 128 (20); corridors 128 wide; no kerbed street cut at all (walls median 96 tall: parapets); fronts 64% of wall area (building_template017b, 029j, 029i).
+- d3_c17_11 Nexus roof: flat roofs at 960 with parapets, a Combine post on them: a health charger and a suit charger side by side (28 apart) on one wall, ammo crates (item_item_crate) stacked three, substation_transformer01b (5, 192 apart in a pair), vent_large ducts turning over the roof, combine_mine on the lower roof at 905; combine_bridge walkways (6) link the roofs 560 apart; CombineInnerwallCluster1024 props (12) ring the area as the far Combine wall.
+- d3_c17_11 checkpoint: nine combine_barricade_med01a 64 apart in one straight row from wall to wall across a street 576 wide (x 912, y 3744 to 4256), no gap left; d3_c17_12 has the same row as ten combine_barricade_med01b 63 apart (x 896).
+- d3_c17_12: back through the park before the Nexus after the battle (the same ground as d3_c17_10a): 126 displacements (68 floors, 36 walls, 22 ceilings; power 2 in 83%), 16% of floor area; shell craters about 250 across and up to 190 deep in the paved ways (x -2232 to -1984 at y 7072, floor at -64 under a street at 128); wrecked Combine APCs (combine_apc_wheelcollision 5); rebel barricades of barricade_short04a (12), often in pairs splayed like a V (yaws 120 and 240, 166 apart; 75 and 105, 208 apart), and concrete_debris256barricade001a (4).
+- d3_c17_12 rebel post: a shop on the park's west street blocked up from inside: dumpsters (trashdumpster02, two trashdumpster02b on it at 308), file cabinets stacked two high (filecabinet02 4, controlroom_filecabinet002a), wall001a_base boards over the broken windows (windowdestroyed01a, 01d), and behind them a table with a monitor, keyboard and hard drives: the rebels' radio desk.
+- Ours: streets keep a crown, a kerb of 8 and pavements of 96. Valve's d3_c17_12 park streets are flat with kerbs of 4 and the craters cut straight through road and pavement.
+- d3_c17_10a and 12, the Nexus from outside: an old civic block (about x -444 to 1700, y 4500 to 7900) facing the park; a portico 256 proud in the middle of its park front (columns, steps up 8 by 12 from the plaza), storeys in building_template029 (g, f, d, b, then a cornice of 029j stepping out 32 at 800), a metal mansard roof (metalroof008a) to 960 and a lower middle wing at 896. The Combine's mark outside is props: CombineInnerwall plates (001a 306 by 296 by 999, 001c 90 by 253 by 805, some leaning 5 degrees) set into the front from the ground to 1025, two more standing on the roof to 1441 and 1601; inside it is brushwork (d3_c17_10b).
+- d3_c17_12b: the last ruined block and the road under it (striders outside): 70% of the nodes indoors: ceilings 184 (96 of 275), 120 (59) and 384 (40); floors 192 apart (-320, -192, 0, 192, 384); 0.24 props per 100 by 100, physics tilted 50% (bins, tyres, trash), statics touching a wall 73%; walls banded in 70% of tall columns (tilewall006c below 006a, concretewall032a below plasterwall021a), the first change 128 or 120 over the foot.
+- d3_c17_12b broken block: its front blown off and the floors left open like a doll's house: building_brokenexterior002c (8) and 002a (2), each 40 by 257 by 128, stand along the open edge, concrete_section floor and wall pieces (64 and 128) at the breaks, rebar (rebar003c_64 9, rebar_cluster001a 6) out of them; strip lights (lights_florescent01a 10) and sprinkler pipes 512 long (prison_sprinkler001a 9) on the ceilings; the rebels hold it with barricade_short04a (8) and barricade_tall02a (6).
+- d3_c17_12b road tunnel: tiled walls in bands (tilewall006c below 006a, 006d), a floor of concretefloor013a, cage lights; dumpsters and garbage piles (trashdumpster01a, garbage256_composite002b) against the walls.
+- styleguide_c17_rubble: Valve's style room for City 17 in ruins (a sample, not a level): 30 props in play and no lamps lit (sun '213 152 85 500' at pitch -25, ambient '154 123 61', fog '181 146 121' from 100 to 5000: a warm dusty haze); the ruin is made of big models (collapsedbuilding01awall 4, collapsedbuilding02c 2, building_brokenexterior002a, b and c 6, concrete_debris256pile001a 2, parliament_dome_destroyed_exterior, project_destroyedbuildings01) on displacement ground (21 displacements, still in dev_blendmeasure on 414 faces); lampposts 801 apart along the road, a car, a tanker and a truck cab left on it.
+- styleguide_c17_rubble skeleton: a block stripped to floors every 128 (0 to 512) on posts 32 by 32 and 512 tall (8), with a broken-exterior model (40 by 257 by 128, one storey tall) hung on each open floor edge; d3_c17_12b uses the same models on floors 192 apart.
+- styleguide_c17_rubble_2: a ruined street corner (813 Hammer-hidden objects left out, among them 295 path nodes): 219 props in play, 46 physics (33% of them lying: boards, crates, chairs); wires on utility poles (utilitypole02b 11, 856 apart): 17 spans, median 816 long, slack 100, width 2; fronts 39% of wall area (courtyard_template003f, building_template017o, storefront_template001g); walls banded in 52% of tall columns, the first change 128 or 256 over the foot; 48 displacements; sun '219 191 148' at pitch -25, fog from 100 to 8000.
+- styleguide_c17_rubble_2 ruined shop: a corner shop open to the street (display_cooler01a 4, kitchen_fridge001a 3, propane canisters 3, chairs knocked over) under broken floors: concrete_section64floor001b and 001c pieces (24) along each break, rebar (rebar001c_64 6, rebar003c_64 4) out of them, walldestroyed09c (4) and debris piles (128 and 256 across) under the holes; bottles and cans (garbage_glassbottle 12, popcan01a 5) scattered as physics props.
+
+| # | File | Where | What it teaches | Lessons |
+|---|---|---|---|---|
+| U1 | `valve_c17/01_kleiner_lab_cut.png` | d3_c17_01, Kleiner's lab from the south-west, box x -7400 to -5600, y -2064 to -264, cut at 206 | The rebels' hidden lab: a hall about 350 wide and 970 long under 306, packed to the walls (1.31 props per 100 by 100, 71% of statics touching a wall): benches, pipes, power boxes, the teleporter in its own bay. | valve-furniture-on-walls, valve-busy-and-quiet, valve-wall-bands |
+| U2 | `valve_c17/02_checkpoint_iso.png` | d3_c17_02, the checkpoint from the south-west, box x -5950 to -5150, y -6100 to -5150, cut at 360, the Combine wall cluster props left out | A Combine checkpoint across a street 647 wide: four combine_barricade_med02c (128 each) from wall to wall, a gap of 128 in the middle for a combine_gate_citizen, a combine_light001a on the end one. The barricades and the gate draw as small markers (their size is not in asset_facts.json); the CombineInnerwallCluster props over the roofs are left out (they draw as solid boxes over 1000 across). | combine-kit |
+| U3 | `valve_c17/03_checkpoint_street_section.png` | d3_c17_02, a true cut across the street at x -5640 y -5635, by the checkpoint | About 676 between the fronts: pavements 256 and 164, a flat road of 252 in strips of 64, 128 and 60, kerbs 4; fronts 680 and 616 (a plinth of 64, a ground floor to 200, then 128 a storey). | valve-street-proportions, street-profile, valve-trim-strips |
+| U4 | `valve_c17/04_street_wires_eye.png` | d3_c17_02, eye level outdoors looking south-west (eye -6892 -5996 64, yaw 225) | Wires over the old street: utility poles 843 to 1479 apart and wall mounts about 700 apart, spans median 345 with a slack of 100; trees in the verges. | valve-overhead-cables |
+| U5 | `valve_c17/05_square_street_section.png` | d3_c17_03, a true cut across the street beside the square at x -2496 y -1544 | Steps down from the square (8 by 12), a pavement of 176, a flat road of 380 with edge strips 64 and 60 wide, kerbs 4, a pavement of 124, then a wall 32 high with a fence round a grass bed. | street-profile, valve-trim-strips |
+| U6 | `valve_c17/06_square_colonnade_cut.png` | d3_c17_03, the colonnade of the square from the south-west, box x -3832 to -2032, y -2852 to -1052, cut at 238 | A colonnade along the square: posts and columns every 128 (trainstation_post001 12 and trainstation_column001 10 in this part), benches between them (bench_indoor001a 4, 197 apart), a Combine monitor on the square. | valve-column-rhythm |
+| U7 | `valve_c17/07_tree_street_eye.png` | d3_c17_03, eye level outdoors looking east (eye -5344 -3776 64, yaw 0) | A side street with grass verges and trees (tree_deciduous_03b 179 to 963 apart), dumpsters on the pavement and a playground (playgroundtick-tack-toe_block01a 8): the old city kept some green. | valve-clutter |
+| U8 | `valve_c17/08_back_court_blocks_iso.png` | d3_c17_04, blocks round the back courts from the south-west, box x -2040 to -240, y -6036 to -4236 | Blocks 448 to 704 high round back courts, their roofs crowded with antenna clusters (antennaclusters01a 30, drawn as boxes of their size), big gutters down the walls, barred windows on the ground floor. | valve-template-fronts, skyline-corners |
+| U9 | `valve_c17/09_court_flats_cut.png` | d3_c17_04, flats by the back court from the south-west, box x -4300 to -3000, y -4000 to -2800, cut at 240 | Flats over the back court: ceilings 128, corridors 128 wide, rooms about 176 by 409, nearly bare (a TV, a file cabinet, a bulb). | valve-flat-interiors, room-to-move |
+| U10 | `valve_c17/10_shop_street_section.png` | d3_c17_05, a true cut across the shop street at x 1376 y -4992 | 576 wall to wall: a flat road of 252 in three strips, pavements 128 and 192, kerbs 4; fronts 648 (a shop storey of 136, then 128 a storey) and 392. | valve-street-proportions, street-profile, facades |
+| U11 | `valve_c17/11_combine_office_cut.png` | d3_c17_05, the block the Combine took, from the south-west, box x 1004 to 2804, y -4153 to -2353, cut at 391 | The Combine's office in a block of flats: rows of controlroom_desk001b with monitor02 and keyboards (11 each) on floors 128 apart, file cabinets (10), combine_lock01 on the doors, combineinnerwall001a panels; 19 metropolice and 4 floor turrets in this part. | combine-kit, valve-furniture-on-walls |
+| U12 | `valve_c17/12_shop_street_eye.png` | d3_c17_05, eye level outdoors looking south (eye 1166 -5280 178, yaw 270) | Shopfronts along a 576 street: a shop storey 136 high set 32 to 48 back, storeys of 128 over it (a course of 32 and 96 of windows), window props (building_tem002_window01 40, half with bars), door02_double at the doors. | facades, valve-template-fronts, valve-wall-bands |
+| U13 | `valve_c17/13_road_tunnel_eye.png` | d3_c17_06a, eye level in the road tunnel looking north (eye 3788 -6319 -196, yaw 90) | A road tunnel about 196 high: two lanes either side of a row of pillars, a raised walk along the tiled wall, cage lights about 600 apart, abandoned cars and oil drums. | valve-column-rhythm, valve-light-pools |
+| U14 | `valve_c17/14_road_tunnel_section.png` | d3_c17_06a, a true cut across the road tunnel at x 3904 y -6319 | 768 wall to wall and about 196 high: a walk of 128 on a kerb of 4, two lanes of 232, a row of pillars 64 wide between them with kerb strips of 32. | valve-column-rhythm |
+| U15 | `valve_c17/15_raided_flats_cut.png` | d3_c17_06b, the citizens' flats from the south-west, box x 3400 to 4700, y 450 to 1300, cut at 360, the Combine wall props left out | The flats the Combine raid, floor at 256: rooms about 218 by 534 under 120, corridors 96 wide, a kitchen (refrigerator, stove), shelves pushed up, boards over the corridor window. The CombineInnerwall001a props of the advancing wall are left out (they draw as solid boxes 300 by 300 by 1000). | valve-flat-interiors, valve-boarded-openings, valve-npc-raid |
+| U16 | `valve_c17/16_flat_room_eye.png` | d3_c17_06b, eye level in a flat looking east (eye 2980 1392 256, yaw 0) | One room of a citizen's flat, about 200 by 170 under 120 (floor 192), plaster walls, a barred window (courtyard_template002c_bars), shelves against the walls, bottles left about. | valve-flat-interiors, valve-furniture-on-walls |
+| U17 | `valve_c17/17_combine_held_flats_cut.png` | d3_c17_07, the block the Combine hold, from the south-west, box x 3977 to 5777, y 230 to 2030, cut at 246 | Flats the Combine took: the homes left as they were (bathtubs 7, beds 4, toilets 4, radiators 5, dome lights on and off), the Combine's kit put in (combine_lock01 8 on the doors, combine_interface001 4, combine_intmonitor001 3), 2 floor turrets and 8 soldiers. | combine-kit, valve-flat-interiors |
+| U18 | `valve_c17/18_combine_post_iso.png` | d3_c17_07, the Combine post in the square from the south-west, box x 6300 to 7500, y 1150 to 1950, cut at 300, the Combine wall props left out | A Combine post in a square 1179 across: a combine_booth_short01a facing out with a combine_interface001 beside it, generators and a metalcombine001 block behind; two combine_barricade_tall02b 384 apart on the pavements where the street leaves the square. | combine-kit |
+| U19 | `valve_c17/19_flats_corridor_eye.png` | d3_c17_07, eye level in a corridor of the held flats looking north (eye 4680 696 192, yaw 90) | A flats corridor: 113 wide under 120 (medians for the map), doors 48 by 108 (door01_left) with combine_lock01 on them, a dome light every few doors, one long view down it. | valve-flat-interiors, valve-sightlines |
+| U20 | `valve_c17/20_warehouse_hall_eye.png` | d3_c17_08, eye level in the pipe works hall looking north (eye 1414 -725 128, yaw 90) | An industrial hall: catwalks with handrail04 rails, pipe runs on stands (most props here are pipes, only 22% of statics touch a wall), cage lights in pools over a dim blue fill, oil drums on the floor. | valve-fixture-lights, valve-light-pools |
+| U21 | `valve_c17/21_flooded_tunnel_eye.png` | d3_c17_08, eye level in a flooded tunnel looking west (eye 922 -1611 -431, yaw 180) | A flooded tunnel under the works: 80 to 364 wide, the crown 133 to 356 up, water only 9 to 15 deep over an uneven bed, pipes along the wall and fences. | valve-water-depth |
+| U22 | `valve_c17/22_shop_window_street_eye.png` | d3_c17_09, eye level on a shop street looking east (eye 5470 6123 60, yaw 0) | A shop street: a glass shopfront with coolers (display_cooler01a) and fluorescent tubes seen inside, handrails at the shop's steps; the map's streets most often have a road of 320 or 256, pavements of 128 to 160 and kerbs of 4. | facades |
+| U23 | `valve_c17/23_shop_and_office_cut.png` | d3_c17_09, a shop and offices from the south-west, box x 5659 to 7459, y 5599 to 7399, cut at 340 | A corner shop and offices behind the fronts: coolers and fluorescent tubes in the shop, control desks and file cabinets in the office, rubble piles and pallets, zombies in the rooms. | valve-story-props, city18-interiors |
+| U24 | `valve_c17/24_nexus_park_eye.png` | d3_c17_10a, eye level in the park before the Nexus looking north (eye -1376 6532 186, yaw 90) | A park strip about 800 wide between low stone walls (stonewall040f 28 thick, 128 high at the sides), beds of grass and gravel 270 to 340 wide, paths of concrete 260 wide across; poplars 512 apart, benches 226 apart, lampposts 605 apart; fronts of building_template028j close the far end. A place for people to stand about under the Combine's eye. | valve-street-proportions, valve-column-rhythm, planting-spots |
+| U25 | `valve_c17/25_rubble_street_eye.png` | d3_c17_10a, eye level in the street at x -2032 looking north (eye -2032 4220 188, yaw 90) | A street after shelling: walldestroyed09g heaps (385 by 440 by 122, drawn as orange boxes) about 330 apart along one side on rubble ground 8 to 23 high, a flat road of stonefloor006d_c17 left clear down the middle; a broken front beside it with its floor at 388 (264 over the street), concrete_section pieces at the break and rebar clusters out of each. | valve-rubble-fitted, valve-broken-edges, valve-rubble-displacements |
+| U26 | `valve_c17/26_nexus_core_cut.png` | d3_c17_10b, the middle of the Nexus from the south-west, box x 2900 to 4500, y -1200 to 200, cut at 420, the CombineInnerwall and combine_bridge props left out | The Combine grown into an old block: plaster rooms 192 high on the ground floor (floor 256) with the Combine's metal (metalcombine001, blue-grey) set inside them as a second skin of thin plates, cold blue light, consoles (combine_interface with a monitor on it) and generators in rows on the walls; the old outer walls stay. | combine-kit, valve-combine-cold |
+| U27 | `valve_c17/27_nexus_combine_corridor_eye.png` | d3_c17_10b, eye level in a Combine corridor in the middle of the Nexus looking east (eye 3500 -456 320, yaw 0) | A Combine corridor 192 high: on one side the metal panels stand 48 to 72 from the middle of the walk, stepping in and out by 8 to 24 every 32 to 64; the other side opens into bays 88 to 408 deep; no two panels the same, nothing on a centre line. This is the Combine's odd, unsymmetrical look: plates of 1 to 8 thick, many tilted, rather than a plain metal box. | combine-kit, valve-combine-cold |
+| U28 | `valve_c17/28_nexus_courtyard_eye.png` | d3_c17_10b, eye level in the Nexus courtyard looking north-east (eye 2432 -608 320, yaw 45) | The courtyard inside the Nexus, open to the sky, floor at 256: old stone walls (stonewall050c) 352 to 608 away, steps up (8 by 12) to the next level, a low barricade of three pieces (barricade_short01a to 03a, the orange block) before them, and 420 east a force field (comshieldwall2, the cyan sheet) between two Combine fence posts (combine_fence01a and 01b, 192 tall) 256 apart; consoles, generators and combine_light001a lamps in the Combine metal beyond. A Combine door for Living City: two posts and a field, not a gate. | combine-kit |
+| U29 | `valve_c17/29_combine_barricade_row_cut.png` | d3_c17_11, a street closed by the Combine from the south-west, box x 300 to 1500, y 3300 to 4600, cut at 420, the CombineInnerwall props left out | A street 576 wide shut from wall to wall by nine combine_barricade_med01a (96 by 65 by 108) 64 apart in one straight row, no gap; the fronts either side keep their shop storeys. A Combine closure, not a checkpoint: nobody passes. | valve-combine-barricade-rows, combine-kit |
+| U30 | `valve_c17/30_nexus_roof_post_iso.png` | d3_c17_11, the roofs of the Nexus from the south-west, box x 600 to 2200, y 4800 to 7700, the CombineInnerwall and combine_bridge props left out | The Nexus roof at 960 as a Combine post: parapets round flat roofs, a health and a suit charger side by side, crates stacked three, substation transformers (orange boxes) and vent ducts on the roof, soldiers (green) at the edges; the combine_bridge walkways between roofs are left out (they draw as boxes 320 by 212 by 429). | combine-kit, raven-rooftop-refuge |
+| U31 | `valve_c17/31_cratered_park_eye.png` | d3_c17_12, eye level at the park's west side looking east after the battle (eye -2336 7072 194, yaw 0) | The park of U24 after the battle: shell craters (brown) about 250 across and up to 190 deep cut through the paving, rebel barricades (barricade_short04a, orange) across the ways, some in pairs splayed like a V, a colonnaded front at the end. The same place, two states: a map piece can swap its whole, clean dress for a broken one. | valve-swap-broken, valve-rebel-barricades, valve-rubble-displacements |
+| U32 | `valve_c17/32_nexus_outside_iso.png` | d3_c17_10a, the Overwatch Nexus from the south-west, box x -900 to 2500, y 4200 to 8200 (the CombineInnerwall plates drawn as orange boxes of their size) | The Nexus is an old civic block the Combine took, not a new building: a portico 256 proud in the middle of its park front, storeys in building_template029 to a cornice at 800, a metal mansard roof to 960, a rounded corner; the Combine's plates (the orange boxes, 306 by 296 by 999) stand in the front and over the roof to 1601, off the axis and not in pairs. For Living City: a Combine building can be one of the city's old fronts with a few Combine plates breaking through it, never symmetrical. | combine-kit, valve-template-fronts, skyline-corners |
+| U33 | `valve_c17/33_broken_block_iso.png` | d3_c17_12b, the ruined block from the south-west, box x -5899 to -4099, y -720 to 1080 (the busiest knot of props, 50 near -4998 179) | A block with its front blown off: floors 192 apart left open to the street like a doll's house, broken-edge models (building_brokenexterior002c, 40 by 257 by 128) along each open floor, concrete_section pieces and rebar at the breaks, rubble and barricades (orange) inside where the rebels hold it. | valve-broken-edges, valve-rubble-fitted, valve-rebel-barricades |
+| U34 | `valve_c17/34_rubble_skeleton_block_iso.png` | styleguide_c17_rubble, the ruined block from the south-west, box x -3981 to -2181, y 988 to 2788 | A block stripped to its frame: floor slabs every 128 (0 to 512) on posts 32 by 32 and 512 tall, and on each open floor edge one broken-exterior model (building_brokenexterior002a, b or c, 257 wide and 128 tall, one storey). A ruin is a kit: slabs, posts and edge models, not hand-cut broken brushes. | valve-broken-edges, valve-rubble-fitted |
+| U35 | `valve_c17/35_rubble_corner_shop_iso.png` | styleguide_c17_rubble_2, the ruined corner shop from the south-west, box x 315 to 2115, y 1078 to 2878 (the busiest knot of props, 57 near 1214 1977) | A corner shop under broken floors, still stocked: coolers, fridges and propane along the walls, chairs knocked over; concrete_section64floor pieces (24) along each break with rebar out of them, walldestroyed09c and debris piles of 128 and 256 under the holes, bottles and cans thrown about. A looted shop for a rebel or scavenger scene. | valve-rubble-fitted, valve-story-props, valve-tilt-and-topple |
+| U36 | `valve_c17/36_rubble_wired_street_eye.png` | styleguide_c17_rubble_2, eye level in the street looking north (eye 2636 -1422 2108, yaw 90; the room has no visible nodes, so the eyes were placed on floors round the props) | A ruined street that still has its wires: utility poles (utilitypole02b) 856 apart carrying spans median 816 long with a slack of 100, a debris pile (concrete_debris256pile001a, the orange box at the front) and a wrecked hatchback on the road, rubble ground of concretefloor020a and 007a. | valve-overhead-cables, valve-wrecked-cars, valve-rubble-fitted |
+
 ## Valve's Route Kanal (d1_canals_01 to 13) (`_dev/reference/valve_canals/`)
 
 Valve's own Route Kanal (d1_canals_01, 01a, 02, 03, 05 to 13; the Source SDK copies the owner uploaded, 21 November), measured from the VMFs and drawn by map_view.py (R7 to R20) or as true slices across the channel (R1 to R6: dark grey solid, white air, blue water, pale blue sky, a grid every 128). Valve's maps are reference only, for shape and dressing: their VMFs are not in the repo, and the owner's own canal stays dry.
@@ -641,7 +733,7 @@ Pavements 96 wide at the floor's height with a kerb of 8; gutters 8 down; cobble
 - **Checked by:** review
 - **Tags:** streets, owner, city18
 
-- **See:** `03_street.png`, `09_payphone.png`, `10_waiting.png`, `11_street_main.png`, `13_toilet.png`, `17_street.png`, `21_waiting.png`, `22_street_section.png`, `valve_d1_trainstation_03/03_street.png`, `valve_d3_c17_13/03_street.png`
+- **See:** `03_street.png`, `09_payphone.png`, `10_waiting.png`, `11_street_main.png`, `13_toilet.png`, `17_street.png`, `21_waiting.png`, `22_street_section.png`, `valve_c17/03_checkpoint_street_section.png`, `valve_c17/05_square_street_section.png`, `valve_c17/10_shop_street_section.png`, `valve_d1_trainstation_03/03_street.png`, `valve_d3_c17_13/03_street.png`
 
 ### Building fronts, not brick walls (`facades`)
 
@@ -652,7 +744,7 @@ Dress a building line as houses: lots of different heights, a plinth, a string c
 - **Checked by:** review
 - **Tags:** facades, owner, city18
 
-- **See:** `01_overview_sw.png`, `09_payphone.png`, `12_block_above.png`, `13_toilet.png`, `23_spot.png`, `27_square_above.png`, `28_covered_above.png`
+- **See:** `01_overview_sw.png`, `09_payphone.png`, `12_block_above.png`, `13_toilet.png`, `23_spot.png`, `27_square_above.png`, `28_covered_above.png`, `valve_c17/10_shop_street_section.png`, `valve_c17/12_shop_street_eye.png`, `valve_c17/22_shop_window_street_eye.png`
 
 ### Not every window the same glass (`glass-variety`)
 
@@ -672,7 +764,7 @@ Corner buildings get a cut (chamfered) corner, often with a doorway; rooflines g
 - **Checked by:** review
 - **Tags:** facades, city18
 
-- **See:** `01_overview_sw.png`, `02_overview_ne.png`, `03_street.png`, `08_combine.png`, `09_payphone.png`, `11_street_main.png`, `12_block_above.png`, `13_toilet.png`, `27_square_above.png`, `valve_d1_town_03/01_overview_sw.png`, `valve_d1_trainstation_01/01_overview_sw.png`, `valve_d1_trainstation_02/02_overview_ne.png`, `valve_d1_trainstation_03/02_overview_ne.png`, `valve_d1_trainstation_04/02_overview_ne.png`, `valve_d3_c17_13/06_block.png`
+- **See:** `01_overview_sw.png`, `02_overview_ne.png`, `03_street.png`, `08_combine.png`, `09_payphone.png`, `11_street_main.png`, `12_block_above.png`, `13_toilet.png`, `27_square_above.png`, `valve_c17/08_back_court_blocks_iso.png`, `valve_c17/32_nexus_outside_iso.png`, `valve_d1_town_03/01_overview_sw.png`, `valve_d1_trainstation_01/01_overview_sw.png`, `valve_d1_trainstation_02/02_overview_ne.png`, `valve_d1_trainstation_03/02_overview_ne.png`, `valve_d1_trainstation_04/02_overview_ne.png`, `valve_d3_c17_13/06_block.png`
 
 ### A town is not one straight line (`town-shape`)
 
@@ -701,7 +793,7 @@ Leave walking room: furniture against walls, a clear path through every room and
 - **Checked by:** map_lint.py overlap (a solid prop inside another), printed as LOOK lines by every build
 - **Tags:** interiors, owner
 
-- **See:** `14_flats_plan.png`, `valve_d1_trainstation_03/05_flat.png`, `valve_d1_trainstation_05/05_lab_cut.png`
+- **See:** `14_flats_plan.png`, `valve_c17/09_court_flats_cut.png`, `valve_d1_trainstation_03/05_flat.png`, `valve_d1_trainstation_05/05_lab_cut.png`
 
 ### Interiors in City 18's way (`city18-interiors`)
 
@@ -712,7 +804,7 @@ Plaster walls in two tones split by a dado rail, wooden floors, door casings pro
 - **Checked by:** review
 - **Tags:** interiors, city18
 
-- **See:** `04_station.png`, `05_flat.png`, `14_flats_plan.png`, `16_ladder.png`, `20_payphone.png`, `24_toilet.png`, `25_station_plan.png`, `29_payphone.png`
+- **See:** `04_station.png`, `05_flat.png`, `14_flats_plan.png`, `16_ladder.png`, `20_payphone.png`, `24_toilet.png`, `25_station_plan.png`, `29_payphone.png`, `valve_c17/23_shop_and_office_cut.png`
 
 ### The Combine's places in the Combine's kit (`combine-kit`)
 
@@ -723,7 +815,7 @@ Use the Combine's own props: booths (combine_booth_short01a/med01a), buttresses 
 - **Checked by:** review
 - **Tags:** combine, city18
 
-- **See:** `07_cells.png`, `08_combine.png`, `18_cells.png`, `19_combine.png`, `22_street_section.png`, `26_combine_plan.png`, `27_square_above.png`, `valve_d1_trainstation_01/07_interrogation.png`, `valve_d1_trainstation_02/04_plaza.png`, `valve_d2_coast_12/03_bunker_mouth.png`, `valve_d3_citadel_01/03_cliff_cut.png`
+- **See:** `07_cells.png`, `08_combine.png`, `18_cells.png`, `19_combine.png`, `22_street_section.png`, `26_combine_plan.png`, `27_square_above.png`, `valve_c17/02_checkpoint_iso.png`, `valve_c17/11_combine_office_cut.png`, `valve_c17/17_combine_held_flats_cut.png`, `valve_c17/18_combine_post_iso.png`, `valve_c17/26_nexus_core_cut.png`, `valve_c17/27_nexus_combine_corridor_eye.png`, `valve_c17/28_nexus_courtyard_eye.png`, `valve_c17/29_combine_barricade_row_cut.png`, `valve_c17/30_nexus_roof_post_iso.png`, `valve_c17/32_nexus_outside_iso.png`, `valve_d1_trainstation_01/07_interrogation.png`, `valve_d1_trainstation_02/04_plaza.png`, `valve_d2_coast_12/03_bunker_mouth.png`, `valve_d3_citadel_01/03_cliff_cut.png`
 
 ### Do not replace what the owner liked (`keep-what-works`)
 
@@ -751,6 +843,8 @@ Mark where the game can plant (melons, pumpkins): about 8 info_targets lc_garden
 - **How:** map_mods_b.m_garden. The game does not plant yet (TODO.md).
 - **Checked by:** review
 - **Tags:** gameplay, owner
+
+- **See:** `valve_c17/24_nexus_park_eye.png`
 
 ### Possible headquarters carry a pole marker (`flagpole-markers`)
 
@@ -875,7 +969,7 @@ A wall taller than about 256 is never one texture. Lay it in courses: a base (st
 - **Checked by:** map_lint.py bare: a face of one material 384 long and 256 tall with nothing within 24 in front of it (printed by every build as LOOK: bare).
 - **Tags:** facades, materials, valve
 
-- **See:** `valve_canals/04_battered_canal_section.png`, `valve_d1_trainstation_01/01_overview_sw.png`, `valve_d1_trainstation_01/02_overview_ne.png`, `valve_d1_trainstation_01/12_courtyard_plan.png`, `valve_d1_trainstation_02/01_overview_sw.png`, `valve_d1_trainstation_02/03_station_front.png`
+- **See:** `valve_c17/01_kleiner_lab_cut.png`, `valve_c17/12_shop_street_eye.png`, `valve_canals/04_battered_canal_section.png`, `valve_d1_trainstation_01/01_overview_sw.png`, `valve_d1_trainstation_01/02_overview_ne.png`, `valve_d1_trainstation_01/12_courtyard_plan.png`, `valve_d1_trainstation_02/01_overview_sw.png`, `valve_d1_trainstation_02/03_station_front.png`
 
 ### Columns on a rhythm (`valve-column-rhythm`)
 
@@ -886,7 +980,7 @@ Big halls and long walls are broken into bays by columns, pilasters or posts at 
 - **Checked by:** map_lint.py bare: a face of one material 384 long and 256 tall with nothing within 24 in front of it (printed by every build as LOOK: bare).
 - **Tags:** geometry, interiors, valve
 
-- **See:** `valve_d1_trainstation_01/05_payphone.png`, `valve_d1_trainstation_01/06_trash.png`, `valve_d1_trainstation_01/08_platform.png`, `valve_d1_trainstation_01/10_hall_plan.png`, `valve_d1_trainstation_01/11_platform_plan.png`, `valve_d1_trainstation_02/03_station_front.png`, `valve_d1_trainstation_02/06_station_hall_cut.png`
+- **See:** `valve_c17/06_square_colonnade_cut.png`, `valve_c17/13_road_tunnel_eye.png`, `valve_c17/14_road_tunnel_section.png`, `valve_c17/24_nexus_park_eye.png`, `valve_d1_trainstation_01/05_payphone.png`, `valve_d1_trainstation_01/06_trash.png`, `valve_d1_trainstation_01/08_platform.png`, `valve_d1_trainstation_01/10_hall_plan.png`, `valve_d1_trainstation_01/11_platform_plan.png`, `valve_d1_trainstation_02/03_station_front.png`, `valve_d1_trainstation_02/06_station_hall_cut.png`
 
 ### Light in pools, not floods (`valve-light-pools`)
 
@@ -897,7 +991,7 @@ Let places be dim and light them in pools: a fixture over each door, each way on
 - **Checked by:** map_lint.py offlamp checks that an off lamp has no light; pools are judged in the viewer.
 - **Tags:** lighting, valve
 
-- **See:** `valve_canals/10_city_canal_eye.png`, `valve_d1_trainstation_01/03_platform.png`, `valve_d1_trainstation_01/07_interrogation.png`, `valve_d1_trainstation_01/08_platform.png`, `valve_d1_trainstation_03/04_corridor.png`, `valve_d1_trainstation_05/04_teleport.png`, `valve_d3_citadel_01/04_pipe.png`
+- **See:** `valve_c17/13_road_tunnel_eye.png`, `valve_c17/20_warehouse_hall_eye.png`, `valve_canals/10_city_canal_eye.png`, `valve_d1_trainstation_01/03_platform.png`, `valve_d1_trainstation_01/07_interrogation.png`, `valve_d1_trainstation_01/08_platform.png`, `valve_d1_trainstation_03/04_corridor.png`, `valve_d1_trainstation_05/04_teleport.png`, `valve_d3_citadel_01/04_pipe.png`
 
 ### Clutter on the edges (`valve-clutter`)
 
@@ -908,7 +1002,7 @@ Dress floors with small loose things (bottles, cans, papers, boxes, suitcases, c
 - **Checked by:** map_lint.py overlap and map_floating.py catch clutter inside or above things; the clear lane is judged in the viewer.
 - **Tags:** props, valve
 
-- **See:** `valve_canals/08_city_canal_iso.png`, `valve_canals/16_shanty_camp_iso.png`, `valve_canals/19_gun_station_iso.png`, `valve_canals/20_boxcar_hideout_iso.png`, `valve_d1_trainstation_01/03_platform.png`, `valve_d1_trainstation_01/05_payphone.png`, `valve_d1_trainstation_01/11_platform_plan.png`, `valve_d1_trainstation_02/04_plaza.png`, `valve_d1_trainstation_04/03_alley.png`, `valve_d1_trainstation_05/03_lab.png`, `valve_d3_c17_13/02_overview_ne.png`, `valve_d3_c17_13/04_square.png`, `valve_d3_c17_13/05_barricade.png`
+- **See:** `valve_c17/07_tree_street_eye.png`, `valve_canals/08_city_canal_iso.png`, `valve_canals/16_shanty_camp_iso.png`, `valve_canals/19_gun_station_iso.png`, `valve_canals/20_boxcar_hideout_iso.png`, `valve_d1_trainstation_01/03_platform.png`, `valve_d1_trainstation_01/05_payphone.png`, `valve_d1_trainstation_01/11_platform_plan.png`, `valve_d1_trainstation_02/04_plaza.png`, `valve_d1_trainstation_04/03_alley.png`, `valve_d1_trainstation_05/03_lab.png`, `valve_d3_c17_13/02_overview_ne.png`, `valve_d3_c17_13/04_square.png`, `valve_d3_c17_13/05_barricade.png`
 
 ### Streets in Valve's proportions (`valve-street-proportions`)
 
@@ -919,7 +1013,7 @@ A City 17 street is about 640 to 768 wall to wall: a roadway of 256 (320 on the 
 - **Checked by:** review (the viewer from a pavement eye)
 - **Tags:** streets, valve
 
-- **See:** `valve_d1_trainstation_02/01_overview_sw.png`, `valve_d1_trainstation_03/03_street.png`, `valve_d1_trainstation_04/01_overview_sw.png`, `valve_d1_trainstation_04/04_street.png`, `valve_d3_c17_13/01_overview_sw.png`, `valve_d3_c17_13/03_street.png`
+- **See:** `valve_c17/03_checkpoint_street_section.png`, `valve_c17/10_shop_street_section.png`, `valve_c17/24_nexus_park_eye.png`, `valve_d1_trainstation_02/01_overview_sw.png`, `valve_d1_trainstation_03/03_street.png`, `valve_d1_trainstation_04/01_overview_sw.png`, `valve_d1_trainstation_04/04_street.png`, `valve_d3_c17_13/01_overview_sw.png`, `valve_d3_c17_13/03_street.png`
 
 ### Upper storeys and far blocks as painted fronts (`valve-template-fronts`)
 
@@ -930,7 +1024,7 @@ Where the player cannot reach, Valve's fronts are flat walls in building_templat
 - **Checked by:** map_assets.py (the materials exist); the look in the viewer
 - **Tags:** facades, valve
 
-- **See:** `valve_d1_trainstation_02/01_overview_sw.png`, `valve_d1_trainstation_02/05_courtyard.png`, `valve_d1_trainstation_02/07_apartment_block.png`, `valve_d1_trainstation_03/01_overview_sw.png`, `valve_d1_trainstation_04/01_overview_sw.png`, `valve_d1_trainstation_04/06_block.png`
+- **See:** `valve_c17/08_back_court_blocks_iso.png`, `valve_c17/12_shop_street_eye.png`, `valve_c17/32_nexus_outside_iso.png`, `valve_d1_trainstation_02/01_overview_sw.png`, `valve_d1_trainstation_02/05_courtyard.png`, `valve_d1_trainstation_02/07_apartment_block.png`, `valve_d1_trainstation_03/01_overview_sw.png`, `valve_d1_trainstation_04/01_overview_sw.png`, `valve_d1_trainstation_04/06_block.png`
 
 ### Flats at Valve's size (`valve-flat-interiors`)
 
@@ -941,7 +1035,7 @@ A City 17 flat: ceiling 120 over the floor (112 to 128), corridors 64 to 128 wid
 - **Checked by:** review
 - **Tags:** interiors, valve
 
-- **See:** `valve_d1_town_03/07_houses_cut.png`, `valve_d1_trainstation_03/04_corridor.png`, `valve_d1_trainstation_03/05_flat.png`, `valve_d1_trainstation_03/06_stairwell.png`, `valve_d1_trainstation_03/07_block_cut.png`
+- **See:** `valve_c17/09_court_flats_cut.png`, `valve_c17/15_raided_flats_cut.png`, `valve_c17/16_flat_room_eye.png`, `valve_c17/17_combine_held_flats_cut.png`, `valve_c17/19_flats_corridor_eye.png`, `valve_d1_town_03/07_houses_cut.png`, `valve_d1_trainstation_03/04_corridor.png`, `valve_d1_trainstation_03/05_flat.png`, `valve_d1_trainstation_03/06_stairwell.png`, `valve_d1_trainstation_03/07_block_cut.png`
 
 ### Boards nailed across, at Valve's size (`valve-boarded-openings`)
 
@@ -952,7 +1046,7 @@ Boarded doors and windows are plank brushes 4 thick, 8 wide and 112 long (or 16 
 - **Checked by:** review
 - **Tags:** interiors, facades, valve, infestation, ravenholm
 
-- **See:** `valve_d1_town_03/03_street.png`, `valve_d1_trainstation_04/05_attic.png`
+- **See:** `valve_c17/15_raided_flats_cut.png`, `valve_d1_town_03/03_street.png`, `valve_d1_trainstation_04/05_attic.png`
 
 ### Wires over the streets (`valve-overhead-cables`)
 
@@ -963,7 +1057,7 @@ Streets carry cables: spans of 700 to 900 between poles and wall mounts, slack 1
 - **Checked by:** no-floating-ropes check; review
 - **Tags:** streets, props, valve
 
-- **See:** `valve_d1_town_03/03_street.png`, `valve_d1_trainstation_02/04_plaza.png`, `valve_d1_trainstation_04/04_street.png`
+- **See:** `valve_c17/04_street_wires_eye.png`, `valve_c17/36_rubble_wired_street_eye.png`, `valve_d1_town_03/03_street.png`, `valve_d1_trainstation_02/04_plaza.png`, `valve_d1_trainstation_04/04_street.png`
 
 ### The Combine is one cold metal; the old city is banded and warm (`valve-combine-cold`)
 
@@ -974,7 +1068,7 @@ Combine places: one metal over whole walls, no courses, lit cold and bright (lig
 - **Checked by:** review
 - **Tags:** combine, lighting, valve
 
-- **See:** `valve_d1_trainstation_02/02_overview_ne.png`, `valve_d1_trainstation_04/02_overview_ne.png`, `valve_d2_coast_12/02_overview_ne.png`, `valve_d2_coast_12/03_bunker_mouth.png`, `valve_d3_c17_13/01_overview_sw.png`, `valve_d3_c17_13/03_street.png`, `valve_d3_citadel_01/01_overview_sw.png`, `valve_d3_citadel_01/02_overview_ne.png`, `valve_d3_citadel_01/03_cliff_cut.png`, `valve_d3_citadel_01/05_combine_inside.png`, `valve_d3_citadel_01/06_rock_and_metal.png`
+- **See:** `valve_c17/26_nexus_core_cut.png`, `valve_c17/27_nexus_combine_corridor_eye.png`, `valve_d1_trainstation_02/02_overview_ne.png`, `valve_d1_trainstation_04/02_overview_ne.png`, `valve_d2_coast_12/02_overview_ne.png`, `valve_d2_coast_12/03_bunker_mouth.png`, `valve_d3_c17_13/01_overview_sw.png`, `valve_d3_c17_13/03_street.png`, `valve_d3_citadel_01/01_overview_sw.png`, `valve_d3_citadel_01/02_overview_ne.png`, `valve_d3_citadel_01/03_cliff_cut.png`, `valve_d3_citadel_01/05_combine_inside.png`, `valve_d3_citadel_01/06_rock_and_metal.png`
 
 ### Ravenholm's dark: weak cold light and warm pools (`raven-dusk-light`)
 
@@ -1005,7 +1099,7 @@ Give an overrun quarter a second way through above the dead: low roofs joined by
 - **Checked by:** review; valid-viewpoints for spots on the roofs
 - **Tags:** layout, infestation, ravenholm, valve
 
-- **See:** `valve_d1_town_03/02_overview_ne.png`, `valve_d1_town_03/04_rooftops.png`, `valve_d1_town_03/06_corpse_alley.png`
+- **See:** `valve_c17/30_nexus_roof_post_iso.png`, `valve_d1_town_03/02_overview_ne.png`, `valve_d1_town_03/04_rooftops.png`, `valve_d1_town_03/06_corpse_alley.png`
 
 ### Traps lying ready, the dead from makers (`raven-traps-and-makers`)
 
@@ -1196,6 +1290,8 @@ A wall, door or floor that gets blown or breached is two named sets: the intact 
 - **Checked by:** review
 - **Tags:** logic, valve, props, recipe
 
+- **See:** `valve_c17/31_cratered_park_eye.png`
+
 ### A hazard that comes and goes is a timer, a relay and switched parts (`valve-hazard-cycle`)
 
 Steam or sparks that hurt on a rhythm: a logic_timer (random 3 to 5 s, off until players are near) triggers a relay that turns on the effect, Enables a trigger_hurt and a trigger_push and plays a one-shot sound, and turns all of them off 1.7 s later. Everything starts off.
@@ -1268,6 +1364,8 @@ Lay a share of loose things on their side or upside down, and let things on roug
 - **Checked by:** proposed: map_lint notes a module with 10 or more loose props and none tilted; map_floating.py still catches anything sunk or floating
 - **Tags:** props, valve
 
+- **See:** `valve_c17/35_rubble_corner_shop_iso.png`
+
 ### Loose props asleep, junk as debris, fixtures held still (`valve-physics-flags`)
 
 Set the physics flags as Valve does: start asleep (1) on barrels, crates and trash that wait for the player (26% of physics props); debris (4) on small junk so it never blocks a player (10%: trash 99, boards 38, cans 36, boxes 12); motion disabled (8) on things that must stay until hit (29%: nailed boards 207, dock planks 61, barrels 55, crates 37, radiators 24 of 25, shelves 21, tables 12, couches 11, signs 16), with 64 (free on a gravity-gun grab) on 76 of them. 256 (output on use) is Hammer's default and on most.
@@ -1331,6 +1429,8 @@ Concentrate props in one to three busy spots per place and keep the rest clear. 
 - **Checked by:** proposed: map_lint counts props per 256 square and physics per 512 square, and warns over 12/25 indoors or an indoor room with nothing in it
 - **Tags:** props, valve, performance
 
+- **See:** `valve_c17/01_kleiner_lab_cut.png`
+
 ### Furniture against the walls, chairs pulled out (`valve-furniture-on-walls`)
 
 Put furniture against the walls, square, facing into the room; let chairs stand free. Within 16 of a wall: shelves 76% (60% square, back to the wall), radiators 76% (all within 32), couches in flats 100%, payphones 88%, tables and desks 62%, TVs 60%, boxes 60%, trash 51%. Chairs only 22%: 33 to 58 from their table (median 42), turned to face it within 45 in 18 of 20, one to three a table. Loose barrels 32%, crates 38%, cans 12%.
@@ -1340,6 +1440,8 @@ Put furniture against the walls, square, facing into the room; let chairs stand 
 - **Checked by:** proposed: map_lint notes shelves, couches, radiators, desks and sinks more than 16 from any wall
 - **Tags:** props, valve, interiors
 
+- **See:** `valve_c17/01_kleiner_lab_cut.png`, `valve_c17/11_combine_office_cut.png`, `valve_c17/16_flat_room_eye.png`
+
 ### Tell what happened with a few props (`valve-story-props`)
 
 Let a small kit of props, decals and at most one sound tell the story, no text. Valve's recurring kits: a bunk room (one to three mattresses on the floor, a radio on a crate, a pallet, supplies, a rug overlay and graffiti); the dead with his weapon (a corpse, the gun 20 to 70 away, ammo, blood decals); a radio left playing beside its dead owner (the sound at the radio); a raided flat (fridge on its back with its doors off, drawers and couches tipped, boards and cinderblocks); a kitchen still in use (stove, two pots on it, cupboard, sink with bottles, the drips heard); travellers (a push cart, suitcases, one on its side, a box, by the benches). Two more from the uprising: a burned flat (burn decals on the walls, destroyedceiling models under the ceiling, a tiny fire loop, plaster dented by small displacements); a refuge being raided (couches, a fridge, bottles, a rug overlay, a crying loop, the residents and the soldiers).
@@ -1348,6 +1450,8 @@ Let a small kit of props, decals and at most one sound tell the story, no text. 
 - **How:** Story kits in map_mods (4 to 8 props, 1 to 3 decals, an optional ambient_generic at the prop): bunk, dead_with_gun, radio_left_on, raided_flat, kitchen, luggage. Corpses as prop_ragdoll spawnflags 4 (55 of Valve's 66).
 - **Checked by:** review
 - **Tags:** props, valve, story
+
+- **See:** `valve_c17/23_shop_and_office_cut.png`, `valve_c17/35_rubble_corner_shop_iso.png`
 
 ### A loop sits on the thing that makes it (`valve-sound-at-the-prop`)
 
@@ -1394,6 +1498,8 @@ Light a fixture as Valve does that model: a light_spot a few units under the mod
 - **Checked by:** map_lint.py offlamp (extend, proposed): a lit model from the table with no light_spot under it.
 - **Tags:** valve, lighting
 
+- **See:** `valve_c17/20_warehouse_hall_eye.png`
+
 ### Falloff chosen by the light's job (`valve-falloff-by-job`)
 
 A lamp lighting its own spot: plain quadratic. A flood or big Combine light that must light a whole yard evenly: a huge constant term (_constant_attn 500000, _quadratic_attn 1) at 2000 to 2500. A fill light with no model, to lift a dark end without a visible source: low (70 to 100) and soft (_constant_attn 500, _linear_attn 500, _quadratic_attn 0), cold 39 64 73 or warm 216 183 105.
@@ -1420,6 +1526,8 @@ Edge walls, doorways and floor changes with thin strips 8x16, 16x32, 8x8 or 4x8 
 - **How:** A trim helper in map_build: a strip along an edge, section 8 by 16 by default, func_detail, kept 1 unit off any flush face (no-flush-faces).
 - **Checked by:** map_lint.py bare counts a strip within 24 as dressing.
 - **Tags:** valve, facades, geometry
+
+- **See:** `valve_c17/03_checkpoint_street_section.png`, `valve_c17/05_square_street_section.png`
 
 ### Cut corners at 8 (`valve-chamfer-8`)
 
@@ -1466,6 +1574,8 @@ Corridors about 112 wide (64 to 176) under 120 ceilings; rooms about 270 across 
 - **Checked by:** review (the viewer from a node's eye)
 - **Tags:** valve, layout
 
+- **See:** `valve_c17/19_flats_corridor_eye.png`
+
 ### Broken walls: odd cuts and debris models (`valve-broken-edges`)
 
 Break a wall by cutting its brushes at odd angles (a box with one or two slanted faces, not a 15 or 45 degree step), then lay broken concrete and rebar models along the break (concrete_section64floor001a/b/c, concrete_section128wall001a, rebar_cluster001a/b, walldestroyed08a).
@@ -1475,6 +1585,8 @@ Break a wall by cutting its brushes at odd angles (a box with one or two slanted
 - **Checked by:** map_assets.py; review
 - **Tags:** valve, geometry, facades
 
+- **See:** `valve_c17/25_rubble_street_eye.png`, `valve_c17/33_broken_block_iso.png`, `valve_c17/34_rubble_skeleton_block_iso.png`
+
 ### Water 32 to 64 deep, with a cheap-water distance (`valve-water-depth`)
 
 Where a new piece has water: the water brush 32 to 64 tall, the bed 32 to 64 under the surface, and one water_lod_control per map (cheap water from 1000 to 1500 out to 2000 to 3000). The owner's sewers keep their own water (canal-water): ask before changing them.
@@ -1483,6 +1595,8 @@ Where a new piece has water: the water brush 32 to 64 tall, the bed 32 to 64 und
 - **How:** The water helper in map_mods: depth 48 by default; add water_lod_control when the map has none (check the owner's map first).
 - **Checked by:** map_lint.py water (proposed): water deeper than 128; water in a map with no water_lod_control.
 - **Tags:** valve, water, canal
+
+- **See:** `valve_c17/21_flooded_tunnel_eye.png`
 
 ### Detail the small and the angled; nodraw where nobody looks (`valve-detail-and-nodraw`)
 
@@ -1627,6 +1741,8 @@ Units enter a block flat by flat: two at the door, one kicks (adooridle, adoorki
 - **How:** Map modules: by each flat door a kick spot and a knock spot outside (lc_raid_kick_N, lc_raid_knock_N, facing the door) and one or two hiding spots inside (lc_hide_N: a corner, behind a bed or a counter). Gamemode: sv_livingcity_raids.lua and the citizens' Cower in sv_livingcity_streetlife.lua would use them. Changes how raids play: ask the owner.
 - **Checked by:** review
 - **Tags:** npc, valve, combine, doors, interiors
+
+- **See:** `valve_c17/15_raided_flats_cut.png`
 
 ### Soldiers pin a target in cover before they hit it (`valve-npc-suppression`)
 
@@ -1790,6 +1906,8 @@ Barricade a street the way City 17's rebels did: with Valve's ready-made junk ba
 - **Checked by:** proposed: map_lint notes a barricade model with no free lane of 96 beside it unless it sits in a doorway; map_assets.py for the models
 - **Tags:** valve, props, streets, layout
 
+- **See:** `valve_c17/31_cratered_park_eye.png`, `valve_c17/33_broken_block_iso.png`
+
 ### Combine barricades stand in straight rows at a fixed pitch (`valve-combine-barricade-rows`)
 
 The Combine closes a street with one barricade piece repeated in a straight row at a fixed pitch, all on one yaw, square to the grid, never tilted, sunk 1 to 5: combine_barricade_tall02b every 128 with its back to a building front, med01a or med01b every 64 in rows of 9 or 10 across a plaza, med02a/b/c and short01a to 03a in pairs 64 to 146 apart. A gap it guards gets combine_fence01a and 01b as two posts set into its sides, 124 to 488 apart, with a field 113 to 480 long between: a func_brush 1 thick and 192 high, effects/combineshield/comshieldwall2 on both faces, nodraw on the rest. For dressing maps only: the game's own barricades (lc_barricade, battle lines, checkpoints) keep how they behave unless the owner asks.
@@ -1798,6 +1916,8 @@ The Combine closes a street with one barricade piece repeated in a straight row 
 - **How:** A Combine roadblock helper: n copies of one model at its pitch (tall02b 128, med01 64) along a line, one yaw, z minus 2; a field helper: fence01a and 01b at the two sides of a gap, the field brush between (func_brush, comshieldwall2 both faces, 192 high, 1 thick). Fits combine-kit and valve-combine-cold.
 - **Checked by:** proposed: map_lint notes Combine barricade pieces in a row whose spacing varies by more than 4, or tilted; a combine_fence post with no field brush within its gap
 - **Tags:** valve, combine, props, streets
+
+- **See:** `valve_c17/29_combine_barricade_row_cut.png`
 
 ### Wrecked cars are turned, against the walls, a few burning (`valve-wrecked-cars`)
 
@@ -1808,6 +1928,8 @@ Leave cars the way a fight leaves them: turned off the street's axis (only 15% s
 - **Checked by:** proposed: map_lint notes a vehicle prop square to the grid within 64 of a street's middle; map_assets.py (physics models never static)
 - **Tags:** valve, props, streets
 
+- **See:** `valve_c17/36_rubble_wired_street_eye.png`
+
 ### Rubble models fit the break square; rebar and chunks are the loose part (`valve-rubble-fitted`)
 
 Dress a ruin in layers: concrete_section pieces square on the grid, touching the broken floor or wall edge they continue, at storey height; building_brokenexterior, walldestroyed and windowdestroyed pieces square in the wall hole; destroyedceiling pieces under the ceiling of a burned room; rebar sticking out of the sections, tilted; debris piles (concrete_debris128pile, 256pile) square, against the wall foot, sunk 3 to 10 into the floor; concrete_chunk physics props loose and tilted. Most stand alone or in pairs, section with rebar.
@@ -1816,6 +1938,8 @@ Dress a ruin in layers: concrete_section pieces square on the grid, touching the
 - **How:** With valve-broken-edges: after cutting a wall or floor, place sections along the cut edge (yaw on the grid, flush to the brush), one or two rebar at 30 to 90 degrees out of them, a pile at the wall's foot 4 into the floor, two or three chunks loose within 128; pile fademaxdist about 1600.
 - **Checked by:** map_floating.py (nothing floats); proposed: map_lint notes a concrete_section or brokenexterior model off the grid or more than 8 from any brush
 - **Tags:** valve, props, geometry, facades
+
+- **See:** `valve_c17/25_rubble_street_eye.png`, `valve_c17/33_broken_block_iso.png`, `valve_c17/34_rubble_skeleton_block_iso.png`, `valve_c17/35_rubble_corner_shop_iso.png`, `valve_c17/36_rubble_wired_street_eye.png`
 
 ### A fire: firesize 64, a steady orange light beside it, a scorch under it (`valve-fire-kit`)
 
@@ -1834,6 +1958,8 @@ Lay the ground of a ruined street as displacements of power 3 (not 2), 512 to 11
 - **How:** Where a module has a ruined yard or street, its ground displacement at power 3, lightmapscale 16 within 512 of play, 32 to 64 beyond (valve-lightmap-by-distance), edges into the brush (valve-terrain-into-brush).
 - **Checked by:** proposed: map_lint notes a power 2 displacement over 512 across on a rubble material near play
 - **Tags:** valve, geometry, materials
+
+- **See:** `valve_c17/25_rubble_street_eye.png`, `valve_c17/31_cratered_park_eye.png`
 
 ### The dead lie in set pieces, with their blood and their crows (`raven-dead-set-pieces`)
 

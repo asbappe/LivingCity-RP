@@ -48,6 +48,7 @@ batches, what is done and next, the owner's requests on the way, and how to get 
 | Lessons | `_dev/reference/lessons.json` (one entry each: id, tags, title, rule, why, how, check) |
 | The reference page | `docs/dev/city18-reference.md`, made by `python3 _dev/tools/map_lessons.py --md` (never by hand) |
 | Studies of one topic across maps | `docs/dev/valve-prop-notes.md`, `valve-logic-recipes.md`, `valve-craft-notes.md`, `valve-npc-notes.md` |
+| Each batch's study notes (from 21 November) | `_dev/reference/valve_SET/notes/` (City 17: `valve_c17/notes/`), listed in `docs/dev/valve-ingest-progress.md` |
 | Pieces lifted from a map | `_dev/reference/prefabs/valve_*.json`, listed in `docs/dev/prefabs.md` |
 | Work the lessons ask of our tools | lines at the end of `TODO.md` (appended with printf, never read whole) |
 
