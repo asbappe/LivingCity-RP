@@ -23,9 +23,9 @@ Checked offline over 40 simulated weeks (`python3 _dev/psyche/analyze_traits.py`
 **The minds act** (`sv_livingcity_mindsact.lua`; the owner, 10 November: "Let's get the minds fully operational"). `lc_minds_act` (1) turns it on; 0 puts the minds back to watching only.
 
 - **Ordinary choices bend** (asked by `ChooseCitizenTask`, for named citizens only): the hungry are 1.8 times as likely to join the ration line; the worn down (stress past 4, rising to the breaking point) sit more and work less; the timid among them sometimes go home and pick spots away from units; the lonely strike up a chat sooner.
-- **A break happens in the street.** Players within 600 units see a line of the scene ("** Olga Volkov screams in Unit 30's face."). Someone at home, or busy with something else, does the quiet version. The log gets a `DID` line after the `WOULD` line.
-  - **tantrum:** walks up to the nearest unit (within 1500) and screams at him; stopped for 30 seconds, and one time in four taken in.
-  - **despair:** sits down (or goes home), and for 15 minutes won't work and hardly queues.
+- **A break happens in the street, where a player can see it (21 November; the owner: build all of Valve's NPC ideas).** It waits, the person stopped where they stand, until a player within 1000 units has them in view for half a second to a second and a half, and after 15 seconds it happens anyway (Valve's own numbers: `LC.WhenSeen`, `sv_livingcity_idlelife.lua`). It is seen, not told: what they do and say shows it, with Valve's citizen gestures (a fist shaken, a pointing hand, a shake of the head, a ration handed over); the chat lines players near used to get ("** Olga Volkov screams in Unit 30's face.") are gone. Someone at home, or busy with something else, does the quiet version. The log gets a `DID` line after the `WOULD` line.
+  - **tantrum:** walks up to the nearest unit (within 1500) and screams at him, shaking a fist (he squares up to them); stopped for 30 seconds, and one time in four taken in. With no unit near, a fist and a shout at nobody.
+  - **despair:** stops and stares at nothing, shakes their head, sits down (a bench, a couch, a bed's edge) or goes home, and for 15 minutes won't work and hardly queues.
   - **defy:** becomes a Resistance sympathizer (never more than 40% of the roster's citizens), and paints over the nearest Combine poster within 1500.
   - **inform:** becomes an informant; with a grudge of -2 or worse against a player who is online, walks to a unit and names them: Civil Protection sees them outlined for 60 seconds ("A citizen names a troublemaker"). No crime is written on their record.
   - **seek:** walks to their closest friend who is out, and they talk.
@@ -33,10 +33,10 @@ Checked offline over 40 simulated weeks (`python3 _dev/psyche/analyze_traits.py`
   - **accuse:** says out loud that the citizen they like least talks to Civil Protection; the accused hears it, the people near pass it on.
   - **sabotage:** breaks the nearest working streetlight or loudspeaker within 1500 (which the city's crews, or a player, then fix).
   - **binge:** drinks in the street for two and a half minutes.
-  - **a unit, brutal:** beats the nearest citizen within 400 (12 damage at most, never to death); everyone near sees it and feels it.
+  - **a unit, brutal:** walks up to the nearest citizen within 400 (if he has nothing else on his hands) and beats them with the stick (12 damage at most, never to death); everyone near sees it and feels it.
   - **a unit, drink:** drinks on duty and stops nobody for five minutes.
   - **a unit, leak:** Freq 7 hears the name of a citizen informant who is out, or that the patrols are slack (no unit stops anyone for three minutes).
-  - **share:** their hungriest friend is fed from their ration. **shelter:** becomes a sympathizer, and Freq 7 hears they can be trusted. **steady:** the citizens near them lose 3 stress.
+  - **share:** their hungriest friend is fed from their ration (with the friend near, they walk over and hand it over). **shelter:** becomes a sympathizer, and Freq 7 hears they can be trusted. **steady:** the citizens near them lose 3 stress.
 - **Informants come from who people are.** A named citizen is an informant when they are among the most timid, loyal, greedy and cold of the roster: the same share as `lc_snitch_chance` (12%), and never a sympathizer. Unnamed citizens keep the old roll.
 - **Unrest reaches sociostability.** From `lc_minds_unrest` (0.4; 0: never) the city goes yellow, "the mood of the city", and stays so until unrest has fallen 0.08 below the line. In the offline city unrest ran from 0.04 on a calm first day to about 0.44 after a hard week.
 - A person the director moves (`director-and-free-talk.md`) goes through the same code.

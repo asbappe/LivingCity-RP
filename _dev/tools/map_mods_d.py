@@ -113,7 +113,7 @@ def m_substation(m, opt):
     m.side(256, -256, 832, -64)
     m.no_bank(56, -264, 840, -56)
     m.steps(64, -256, -192, F, top, "u", 1)
-    m.det([(64, -196, F, 256, -192, F + 8)], MAT["beam"])
+    m.det([(65, -196, F, 256, -193, F + 8)], MAT["beam"])      # (1 inside the steps: no face in their planes)
     m.blocked(56, -256, 256, -180)
     m.lane(48, -224, F)
     m.lane(280, -224, top)

@@ -5,7 +5,9 @@
     Mostly Overwatch soldiers, with a metrocop or two, spread through the zone:
     some standing post, some walking from one end of it to the other. They're
     on top of the city's own numbers, so the streets don't empty to fill the
-    nexus. One killed is replaced after a while, out of sight.
+    nexus. One killed is replaced after a while, out of sight. Its metrocops
+    guard the doors into it first, one a door (sv_livingcity_unitposts.lua,
+    which also keeps 1.75 posts for every unit for the rest to move between).
 
       lc_garrison           most units in one zone (0 = no garrison); a small
                             zone gets fewer (about one per 15x15 metres of floor)
@@ -147,13 +149,17 @@ function LC.GarrisonTick(now)
     for _, z in ipairs(LC.ZonesOfKind and LC.ZonesOfKind("combine") or {}) do
         local want = LC.GarrisonSize(z)
         local n, cops = Count(z)
+        -- a metrocop at each door into it (sv_livingcity_unitposts.lua): the zone's own, not extra
+        local doors = LC.CombineDoorPosts and want > 0 and LC.CombineDoorPosts(z, now) or {}
+        if #doors > 0 and LC.PostDoorGuards then LC.PostDoorGuards(z, doors) end
         if n < want and now >= (nextFill[z] or 0) then
             -- keep the mix: about three in ten metrocops, the rest soldiers
             local copsWant = math.floor(want * math.Clamp(cvCops:GetInt(), 0, 10) / 10 + 0.5)
             if cvCops:GetInt() > 0 and want >= 2 then copsWant = math.max(1, copsWant) end
+            copsWant = math.max(copsWant, math.min(#doors, want)) -- (enough of them for the doors)
             local soldiers, soldiersWant = n - cops, want - copsWant
             local role = "soldier"
-            if cops < copsWant and (soldiers >= soldiersWant or math.random() < 0.3) then role = "cop" end
+            if cops < copsWant and (soldiers >= soldiersWant or cops < math.min(#doors, want) or math.random() < 0.3) then role = "cop" end
             if LC.GarrisonOne(z, role) then
                 nextFill[z] = now + (n + 1 < want and 2 or 0) -- (filling up: one every couple of seconds)
             else

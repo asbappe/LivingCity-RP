@@ -148,6 +148,11 @@ class Build:
         self.vmf.point("info_node", (x, y, z + 40), {"nodeid": self.node_id}, self.vis + ": path nodes")
         self.node_id += 1
 
+    def air_node(self, x, y, z):
+        """A flying node for scanners and manhacks (info_node_air, Valve's keys), exactly at z."""
+        self.vmf.point("info_node_air", (x, y, z), {"nodeid": self.node_id, "nodeheight": "0"}, self.vis + ": flying nodes")
+        self.node_id += 1
+
 
 class Mod:
     """One module being built: everything in the module's own coordinates."""
@@ -2031,15 +2036,34 @@ def finish(b, seed, spawn, args):
     for (i, j), spec in plan.cells.items():      # (no path node where nobody can stand: a crawl duct)
         if spec[0] == "low" and spec[3] - spec[1] < 72:
             b.blocked.append((i * CELL, j * CELL, (i + 1) * CELL, (j + 1) * CELL))
-    ch.nodes(b.node, b.blocked)
-    for (i, j) in sorted(b.lifted):       # (what was lifted to the street: its own path nodes, as the canal's rooms get)
-        spec = plan.cells.get((i, j))
-        if spec and spec[0] != "solid" and i % 2 == 1 and j % 2 == 1 and (i + j) % 4 == 0:
-            nx, ny = i * CELL + 32, j * CELL + 32
-            if not any(k[0] <= nx < k[2] and k[1] <= ny < k[3] for k in b.blocked):
-                b.node(nx, ny, spec[1])
+    # path nodes where people walk, flying nodes for scanners and cover hints (Valve's, the owner, 21 November), as many
+    # as this piece's share allows (map_build.node_share: the engine's 4096 is for the whole merged map)
+    from map_build import node_share
+    from map_ring import NODE_LEVELS, air_points, lane_cells
+    hints = cover_hints(b, ch.dished)
+    share = node_share(b.name)
+
+    def lifted_floor(c):
+        spec = plan.cells.get(c)
+        if c not in b.lifted or not spec or spec[0] == "solid" or (spec[0] in ("low", "under") and len(spec) > 3 and spec[3] - spec[1] < 72):
+            return None
+        return spec[1]
+    for level in range(len(NODE_LEVELS)):
+        ground, flying = ch.lanes(b.blocked, level)
+        if b.lifted:          # (what was lifted to the street: its own, laid the same way)
+            g2, line = lane_cells(sorted(b.lifted), lifted_floor, lambda c: plan.cells.get(c, ("solid",))[0] in ("low", "under"), b.blocked,
+                                  open_every=NODE_LEVELS[level][0], tight_every=NODE_LEVELS[level][1])
+            ground = ground + g2
+            flying = flying + air_points(line, [bx for bx, _ in vmf.boxes] + list(getattr(vmf, "shape_boxes", [])), NODE_LEVELS[level][2])
+        if share is None or len(ground) + len(flying) + len(b.lanes) + hints <= share:
+            break
+    for (nx, ny, nz, roofed) in ground:
+        b.node(nx, ny, nz)
+    for (ax, ay, az) in flying:
+        b.air_node(ax, ay, az)
     for (nx, ny, nz) in b.lanes:
         b.node(nx, ny, nz)
+    link_gates(b)
     problems, air = check(vmf, seed, [])
     problems = b.problems + problems
     look_at_props(b)
@@ -2100,12 +2124,13 @@ def standing_things(b):
     return {"flat": flat, "loose": loose, "props": props}
 
 
-def dish_plan(b, ch, flat, bump=None):
+def dish_plan(b, ch, flat, bump=None, floor=DISH_FLOOR):
     """The canal's floor falls to its middle (the owner, 21 November: Valve's Route Kanal, the lesson valve-canal-dish):
     every square of plain canal floor that no bank stands on, nothing stands on and the mud covers has its concrete
     lowered to DISH_FLOOR, and the mud's skin over it sags with the distance from the dish's edge (the banks' feet, an
     upright wall's foot, a gate, anything standing): 24 at a 512 canal's middle, 42 at a 1024 canal's. The edges stay
-    at F, so modules still meet on the plain section. Sets ch.dished and ch.dish; lowers the squares in the plan."""
+    at F, so modules still meet on the plain section. Sets ch.dished and ch.dish; lowers the squares in the plan (to
+    `floor`: a piece whose bottom is higher than BASE takes a shallower one)."""
     cells = ch.cells
     plain = ("open", F, MAT["canal_floor"])
     banks = ch.made.get("bank_rects", [])
@@ -2137,10 +2162,34 @@ def dish_plan(b, ch, flat, bump=None):
                 k += 1
             sag[(x, y)] = round(DISH_DEEP * (1 - math.exp(-k * CELL / float(DISH_REACH))), 1)
     for c in low:
-        b.plan.cells[c] = cells[c] = ("open", DISH_FLOOR, MAT["canal_floor"])
-    ch.dished, ch.dish, ch.dish_floor = low, {pt: d for pt, d in sag.items() if d > 0}, DISH_FLOOR
+        b.plan.cells[c] = cells[c] = ("open", floor, MAT["canal_floor"])
+    ch.dished, ch.dish, ch.dish_floor = low, {pt: d for pt, d in sag.items() if d > 0}, floor
     if low:
         b.notes.append("the canal's floor is dished on %d squares: %d deep at most" % (len(low), max(sag.values()) if sag else 0))
+
+
+def dress_piece(vmf, plan, name, vis, taken, no_bank, mud_skip, mud_seed, pipes=(), rim=784):
+    """The canal modules' dressing for a piece built by itself, outside a chain (the ring, the first canal; the owner,
+    21 November: "yes please"): what stands on its floor first, then the banks, lip, ribs and Valve's outfalls (pipes:
+    [(axis, where along, wall, wall), ...] across it), the dished floor (its concrete lowered only to F - 48: these
+    pieces' bottoms are at F - 64), the plan built, the caged lamps and the outfalls' rings, the mud, and loose things
+    and floor stains brought down onto it. Coordinates are the map's (the plan's origin 0 0). Gives the Channel (for
+    its path nodes) and the stand-in for a module chain's Build that the dressing was given."""
+    import types
+    b = types.SimpleNamespace(vmf=vmf, name=name, vis=vis, taken=taken, no_mud=list(mud_skip), lifted=set(), notes=[], plan=plan,
+                              rim=rim, props=[], upright=[], no_bank=list(no_bank))
+    standing = standing_things(b)
+    plan.walls()
+    ch = Channel(vmf, plan, F, TRIM, vis)
+    for axis, at, a, z in pipes:
+        ch.pipes(axis, at, a, z, taken)
+    ch.dress(list(no_bank), taken, outfalls=True, avoid=standing["props"])
+    dish_plan(b, ch, standing["flat"], floor=F - 48)
+    plan.build(vmf)
+    dress_canal_walls(b, ch, standing["props"])
+    ch.mud(mud_seed, skip=list(mud_skip))
+    settle(b, ch, standing["loose"])
+    return ch, b
 
 
 def settle(b, ch, loose):
@@ -2234,19 +2283,111 @@ def dress_canal_walls(b, ch, avoid=()):
         if rnd.random() < 0.18:
             wx, wy = (at + 120, line) if axis == "x" else (line, at + 120)
             b.vmf.point("infodecal", (wx, wy, F + 200 + rnd.randrange(0, 120)), {"texture": rnd.choice(GRIME["graffiti"] + GRIME["stain"])}, b.vis + ": canal grime")
-    for (axis, line, side, at, z, out) in made.get("outfalls", []):
-        x, y = at_wall(axis, line, side, at, out + 7 if not out else out - 5)
+    for (axis, line, side, at, z, kind) in made.get("outfalls", []):
+        x, y = at_wall(axis, line, side, at, 7)      # (its back flush with the wall, as Valve's)
         b.vmf.point("prop_static", (x, y, z), {"model": "models/props_canal/canal_cap001.mdl", "angles": "0 %d 0" % yaw_of(axis, side), "solid": "6",
                                                "disableshadows": "1", "fademindist": "-1", "fadescale": "1"}, b.vis + ": canal outfalls")
-        if out:      # (the stain runs down the bank's slope under the pipe's mouth)
-            wx, wy = at_wall(axis, line, side, at, 96)
-            b.vmf.point("infodecal", (wx, wy, F + BANK - 96), {"texture": rnd.choice(GRIME["drain"])}, b.vis + ": canal grime")
-        else:
+        if kind == "bank":      # (the stain runs down the bank's slope from under the ring)
+            wx, wy = at_wall(axis, line, side, at, 24)
+            b.vmf.point("infodecal", (wx, wy, F + BANK - 24), {"texture": rnd.choice(GRIME["drain"])}, b.vis + ": canal grime")
+        else:                   # (on the wall between Valve's lip and the hole)
             wx, wy = at_wall(axis, line, side, at, 0)
-            b.vmf.point("infodecal", (wx, wy, F + 48), {"texture": rnd.choice(GRIME["drain"])}, b.vis + ": canal grime")
+            b.vmf.point("infodecal", (wx, wy, z - 72), {"texture": rnd.choice(GRIME["drain"])}, b.vis + ": canal grime")
     for (axis, line, side, at, z) in made.get("stubs", []):
         wx, wy = (at, line) if axis == "x" else (line, at)
         b.vmf.point("infodecal", (wx, wy, z - 44), {"texture": rnd.choice(GRIME["drain"])}, b.vis + ": canal grime")
+
+
+# Cover NPCs fight from (Valve, lesson valve-cover-hints): a cover hint behind each piece of low cover, on both sides of
+# it (the threat may come from either), facing across it; waist-high cover 101, chest-high 100; about 100 apart.
+COVER_MODELS = ("barricade", "barrier", "sandbag", "/car00", "jersey")
+
+
+def cover_hints(b, dished=(), step=96):
+    """Cover hints (info_node_hint 101 cover low, 100 cover medium, Valve's keys: nodeFOV 180, IgnoreFacing 2) behind the
+    modules' barriers, barricades, sandbags and car wrecks: one each side of a piece, 28 out from it, facing it, on the
+    floor it stands on, about `step` apart, in a group named for its place (lc_cover_<module>). Counted as path nodes."""
+    import re
+    import map_assets
+    cells, made = b.plan.cells, []
+    keep = [bx for bx, _ in b.vmf.boxes] + list(getattr(b.vmf, "shape_boxes", []))
+    for cls, model, (x, y, z), yaw, tag in b.props:
+        if not any(k in model.lower() for k in COVER_MODELS):
+            continue
+        bb = map_assets.size(model)
+        if not bb:
+            continue
+        high = bb[5] - bb[2]
+        kind = 101 if high <= 52 else 100 if high <= 84 else None
+        if kind is None:
+            continue
+        foot = z + bb[2]
+        long_x = (bb[3] - bb[0]) >= (bb[4] - bb[1])
+        a = math.radians(yaw + (90 if long_x else 0))       # (across the piece: the way its thin side faces)
+        half = ((bb[4] - bb[1]) if long_x else (bb[3] - bb[0])) / 2.0
+        cx = x + math.cos(math.radians(yaw)) * (bb[0] + bb[3]) / 2.0 - math.sin(math.radians(yaw)) * (bb[1] + bb[4]) / 2.0
+        cy = y + math.sin(math.radians(yaw)) * (bb[0] + bb[3]) / 2.0 + math.cos(math.radians(yaw)) * (bb[1] + bb[4]) / 2.0
+        for side in (1, -1):
+            hx, hy = int(round(cx + side * math.cos(a) * (half + 28))), int(round(cy + side * math.sin(a) * (half + 28)))
+            spec = cells.get((hx // CELL, hy // CELL))
+            if not spec or spec[0] == "solid":
+                continue
+            if abs((F if (hx // CELL, hy // CELL) in dished else spec[1]) - foot) > 18:
+                continue      # (no floor there at the cover's foot)
+            if any(bx[0] - 12 < hx < bx[3] + 12 and bx[1] - 12 < hy < bx[4] + 12 and bx[2] < foot + 36 < bx[5] for bx in keep):
+                continue
+            if any((hx - p[0]) ** 2 + (hy - p[1]) ** 2 < step * step for p in made):
+                continue
+            made.append((hx, hy))
+            face = int(round(math.degrees(math.atan2(cy - hy, cx - hx)))) % 360
+            group = "lc_cover_" + re.sub(r"[^a-z0-9]+", "_", tag.lower()).strip("_")
+            b.vmf.point("info_node_hint", (hx, hy, int(foot) + 1), {"nodeid": b.node_id, "hinttype": str(kind), "angles": "0 %d 0" % face,
+                                                                    "StartHintDisabled": "0", "TargetNode": "-1", "IgnoreFacing": "2", "MinimumState": "1",
+                                                                    "MaximumState": "3", "nodeFOV": "180", "Group": group}, b.vis + ": cover hints")
+            b.node_id += 1
+    return len(made)
+
+
+# Gates NPCs walk through (Valve, lesson valve-node-link): a thin box across the gap that turns the path links through it
+# off while the gate is shut, on when it is open: the gate's own OnFullyOpen turns it on, its OnClose turns it off.
+NOT_GATES = ("lift", "counterweight", "platform", "swing", "train", "hatch")
+
+
+def link_gates(b):
+    """An info_node_link_controller across every gate, door, shutter and set of bars a module moves (func_door,
+    func_door_rotating, func_movelinear), but lifts, hatches and turning bridges: 16 deep across the gap, as wide as the
+    gate, 72 high from its foot; on from the start if the gate starts open. The gate's text gains the two wires."""
+    import re
+    vmf = b.vmf
+    for k, text in enumerate(list(vmf.ents)):
+        cls = re.search(r'"classname" "(func_door|func_door_rotating|func_movelinear)"', text)
+        name = re.search(r'\t"targetname" "([^"]+)"', text)
+        if not cls or not name or any(w in name.group(1) for w in NOT_GATES):
+            continue
+        vs = [tuple(int(float(v)) for v in t.split()) for t in re.findall(r'"v" "([^"]+)"', text)]
+        if not vs:
+            continue
+        lo = [min(v[i] for v in vs) for i in range(3)]
+        hi = [max(v[i] for v in vs) for i in range(3)]
+        sx, sy, sz = hi[0] - lo[0], hi[1] - lo[1], hi[2] - lo[2]
+        if sz <= min(sx, sy):
+            continue      # (lying flat: a hatch in a floor)
+        cx, cy = (lo[0] + hi[0]) // 2, (lo[1] + hi[1]) // 2
+        hx, hy = (8, sy // 2) if sx <= sy else (sx // 2, 8)
+        sf = re.search(r'"spawnflags" "(\d+)"', text)
+        sp = re.search(r'"spawnpos" "(\d+)"', text)
+        starts_open = (cls.group(1) != "func_movelinear" and sf and int(sf.group(1)) & 1) or (sp and sp.group(1) == "1")
+        link = name.group(1) + "_link"
+        vmf.point("info_node_link_controller", (cx, cy, lo[2] + 36), {"targetname": link, "mins": "%d %d -36" % (-hx, -hy), "maxs": "%d %d 36" % (hx, hy),
+                                                                     "initialstate": "1" if starts_open else "0"}, b.vis + ": path links")
+        shut = "OnFullyClosed" if cls.group(1) == "func_movelinear" else "OnClose"
+        wires = '\t\t"OnFullyOpen" "%s\x1bTurnOn\x1b\x1b0\x1b-1"\n\t\t"%s" "%s\x1bTurnOff\x1b\x1b0\x1b-1"\n' % (link, shut, link)
+        if "\tconnections\n\t{\n" in text:
+            text = text.replace("\tconnections\n\t{\n", "\tconnections\n\t{\n" + wires, 1)
+        else:
+            i = text.rfind("\teditor\n")
+            text = text[:i] + "\tconnections\n\t{\n" + wires + "\t}\n" + text[i:]
+        vmf.ents[k] = text
 
 
 def look_at_props(b):

@@ -18,7 +18,6 @@ To add an item: `printf '%s\n' '- [ ] **Topic:** what to try. [needs a person: w
 
 - [ ] **Guns on rebel ground as a unit:** walk into rebel territory: no "LOWER YOUR WEAPON" prompt, and every gun fires, also after !build and after sleeping in their bed. [needs a person: no test yet, try it]
 - [ ] **Backup when you are down:** bleeding out with units of your squad near: does one kneel by you and get you up? Called over the radio from far off, do they come in from out of sight? [needs a person: the kneel and the arrival on the real map]
-- [ ] **The conditioning:** the Overwatch Candidate story on a Division Leader's board at 1200 XP: a soldier and a stalker wait, black screen, machines, and you are a Combine Prison Guard. [needs a person: the scene by eye]
 - [ ] **Interrogation:** F2 > Interrogate someone in a cell: three questions, baton, Done, the answers written underneath. Readable, and in the way of anything? [needs a person: the list on screen]
 - [ ] **Gas masks and the gas:** in chlorine gas the mask goes on by itself with the visor edge and breathing; people without one cover the mouth, cough and run out. How does the mask sit on a face (`lc_gasmask_fit`)? [needs a person: the mask and the hand over the mouth]
 
@@ -28,12 +27,9 @@ To add an item: `printf '%s\n' '- [ ] **Topic:** what to try. [needs a person: w
 - [ ] **A vortigaunt charging your vest:** E on a freed one: it turns, raises its hands, a green beam pulses to your chest for three seconds. Is there a charging animation? [needs a person: the animation and beam]
 - [ ] **The medic:** one in each rebel territory; E on him when hurt. Does he stay put and patch up hurt rebels near him? [needs a person: watching him]
 - [ ] **Operations:** as a Lieutenant, plan one straight from the F4 Operations board. Does the leader get the clipboard, how does it sit in the hand, do its boxes tick? [needs a person: the clipboard by eye]
-- [ ] **The interrogation chair:** the lamp hangs over it, dark until someone sits; with prisoners in the cage the cell takes them to the chair one at a time by itself. Are the number key lists readable? [needs a person: the lamp, how they sit, watching it run]
-- [ ] **Way marks:** Miscount Editor > "Mark: Resistance arrow" (left, right, up, down) and "Mark: FREEDOM THIS WAY" on a wall: the right way, the right size, the lambda's orange, still there after a map change? [needs a person: by eye]
 
 ## The city and its people
 
-- [ ] **The Cremator:** a greener flame with a glow; no burning sound left behind after it kills headcrabs; it comes for carcasses about 90 seconds on; at a barricade it gives up and goes elsewhere. [needs a person: the flame, the ear, its walking on the real map]
 
 ## The Administrator, the collapse and the ending
 
@@ -101,4 +97,8 @@ To add an item: `printf '%s\n' '- [ ] **Topic:** what to try. [needs a person: w
 - [ ] **IEDs:** make one at the lab; does the Detonator appear, does left click set it where you look, does right click blow it with a proper blast, does a unit's E take one apart; at the pole, does the prompt read well for a Fighter and for a Lieutenant. [needs a person: the weapon's model, the blast and the prompt have never been seen]
 - [ ] **The canal showrooms, redone (lc_showroom_1-4_test, lc_street_1-4_test):** do the props all show and stand right (facings, the stair handrails, the open ends of containers), the tram's wrecked car lie convincingly, the thumper thump, the lock and pump move. [needs a person: nothing compiled]
 - [ ] **The train station's Breencast screen:** place one (Miscount Editor > Street: Breencast screen, the train station's) and look at it from below while the Administrator or the Director of Propaganda is on air: does it read as Valve's curved screen, with their face filling it, not stretched? [needs a person: how it looks in the game]
-- [ ] **Combine mounted gun:** place one (Miscount Editor > Fixture: Combine barricade with mounted gun), stand behind it and press E: does it unfold, turn smoothly after your view, flash and sound like Half-Life 2's, and do E, a jump and dying let go? [needs a person: how it feels to man and aim]
+- [ ] **Combine mounted gun:** place one (Miscount Editor > Fixture: Combine barricade with mounted gun), stand behind it and press E: does it unfold, turn smoothly after your view, flash and sound like Half-Life 2's, and do E, a jump and dying let go? With a rebel in front of it and a metrocop near, does he run to it and man it convincingly? [needs a person: how it feels to man and aim, and how the officer looks on it]
+- [ ] **Valve's idle poses:** place a window, arms-crossed, drinker, couch and bed's-edge spot and a row of three bench seats; watch citizens use them, and the spots the city finds by itself (a couch, a chair, a bed, a window, a wall): do the poses sit on the furniture (no floating or sinking), face the right way, and do the bench sits alternate? [needs a person: how an animation sits on a real prop]
+- [ ] **Seen, not told; a quiet crowd:** near a unit, watch a citizen's break (a tantrum, a beating) start as you look at it with no chat line, and citizens near units glance at you instead of chatting. [needs a person: whether it reads without words]
+- [ ] **Units at the Combine doors:** as a citizen, walk up to a door into a Combine-only zone: three warnings in his voice (a scanner photographs you, he raises his hand, he shoves you), then slip past him: beaten down and you come to outside the door. [needs a person: whether it reads with no text, and his gestures face you]
+- [ ] **Valve's raid and poses:** lc_event raid and watch the knock and the kick (the door opening on the kick), residents running arms over their heads and cowering, the beating heard; a unit leaning at his post; two men frisked at a wall; the punch before an arrest. [needs a person: whether adoorkick, spreadwall and arrestpunch line up with the door and the other person, and the protected run shows]

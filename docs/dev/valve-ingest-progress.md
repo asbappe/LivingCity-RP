@@ -6,6 +6,12 @@ plus Valve's 41 style guide and standards rooms** (not the dated drafts or the t
 (commit and push) **every 5 or so maps**, because usage limits will interrupt the work. How to ingest:
 `docs/dev/map-ingestion.md`. This page is only what is done and what is next. Update it with every save.
 
+## Where each batch's work goes
+
+Pictures and `pictures.json` in the batch's shared set (`_dev/reference/valve_c17/`, `valve_ravenholm/`, `valve_prison/`...);
+helpers' running notes and lesson proposals in its `wip/` while it runs; at the batch's end the proposals are merged
+(`merge-lessons`) and deleted, the notes kept in `notes/`, the set's `"draft"` taken out, and the batch pushed to `main`.
+
 ## Getting the maps again (a new chat or a wiped scratch folder)
 
 - The zip is `HL2Leak-VMFs-master.zip` (194 MB, 1.7 GB unpacked) on the owner's Google Drive: the link is in the chat
@@ -41,6 +47,32 @@ plus Valve's 41 style guide and standards rooms** (not the dated drafts or the t
   materials and light strips. Across the Citadel maps first, then every Combine structure in the 145 maps (the Nexus
   in d3_c17_10a, 10b, 11; Nova Prospekt's Combine parts; EP2). It ends in rules our map tools can follow to build
   such structures (a generator or module), shown to the owner before it changes anything they settled. Not done yet.
+  Numbers gathered on the way: City 17's Nexus (`valve_c17/pictures.json` U26, U27, U32: Combine metal as thin plates,
+  2 thick most often, longest side 64; 14% of its faces off right angles against 4% of the old plaster, tilted 45 to 70
+  and turned 25, 45 or 65; set inside the old rooms like a second skin and breaking out through the front), and the
+  "Combine architecture" section of Nova Prospekt's notes (`valve_prison/notes/`) with its pictures P14 (depot: Combine
+  walls leaning against old concrete, 20% of its wall area at about 14 degrees), P16 (the lopsided pod shaft), P17.
+
+- **Black Mesa East pieces (the owner, 21 November: "all of them please lift for use in the future with the modules"):**
+  lift from d1_eli_01 and 02 as pieces (`map_prefab.py extract`, each with its wiring noted in `docs/dev/prefabs.md`):
+  the airlock (two blast doors about 270 apart, the guard's booth with its camera screen), the turrets that only
+  look alive (prop turrets and their six floor zones), the lift ride (the cage, the shaft, the three floors seen on
+  the way and their timed people), and the base at work (the work spots: cooks at the stove, vortigaunts at the
+  machine, the walking loop). Lessons `valve-base-airlock`, `valve-turrets-follow-by-cells`, `valve-lift-diorama`,
+  `valve-base-at-work`. The owner keeps `valve-look-and-answer`, `valve-raid-on-the-base` and `valve-play-teaches`
+  as references (not to build for now). Not done yet.
+- **Approving findings (21 November):** at the end of each batch, put the findings most worth building to the owner
+  to pick from; approved ones go on `TODO.md` under "Owner-approved Valve findings", and **nothing is built until
+  all ingestion is done** (the owner's choice). City 17's four approved: timed holds with faster waves, squads topped
+  up with a medic, supplies from roofs, tripwires and turrets.
+
+## If the work was cut off (21 November, at the usage limit)
+
+Running when the session neared its limit (Nova Prospekt, Black Mesa East and EP1 City 17's props finished since; now running: EP1 City 17's logic and its pictures): EP1 City 17's props and craft
+(`valve_ep1c17/wip/`). Whatever they saved is committed. To carry on: read what each saved, finish the missing
+maps with a new helper (same brief as before: `docs/dev/map-ingestion.md`, "Briefing a helper"), then merge and
+close the batch as batches 1 and 2 were (the `notes/` and draft steps above). Next to start: EP1 City 17's logic
+and NPCs, then its pictures; then batch 6 (the Citadel, with the owner's four pieces and the architecture study).
 
 ## The batches (M measured, P pictures reviewed, S studied and lessons merged)
 
@@ -48,11 +80,11 @@ All 122 measured on 21 November (145 maps in `valve_stats.json` with the first 2
 
 | # | Batch | Maps | M | P | S |
 |---|---|---|---|---|---|
-| 1 | City 17's uprising, and Valve's standards | d3_c17_01, 02, 03, 04, 05, 06a, 06b, 07, 08, 09, 10a, 10b, 11, 12, 12b; testroom_standards, zoo_standards, testroom_measure_movement; styleguide_c17_rubble, styleguide_c17_rubble_2 | yes | | |
-| 2 | Ravenholm | d1_town_01, 01a, 02, 02a, 04, 05; styleguide_ravenholm_01, styleguide_mining | yes | | |
-| 3 | Nova Prospekt | d2_prison_01 to 08 | yes | | |
-| 4 | Black Mesa East | d1_eli_01, 02 | yes | | |
-| 5 | EP1 City 17 | ep1_c17_00, 00a, 01, 01a, 02, 02a, 02b, 03, 05, 06; styleguide_hospital_exit, styleguide_garage, styleguide_garage_destroyed, styleguide_garage_antlionroom, styleguide_train_loadingdock, styleguide_train_repair, styleguide_antlion_tunnel, styleguide_antlionhole | yes | | |
+| 1 | City 17's uprising, and Valve's standards | d3_c17_01, 02, 03, 04, 05, 06a, 06b, 07, 08, 09, 10a, 10b, 11, 12, 12b; testroom_standards, zoo_standards, testroom_measure_movement; styleguide_c17_rubble, styleguide_c17_rubble_2 | yes | yes: 36 pictures U1 to U36 (`valve_c17/`) | yes: 22 new lessons, 22 extended; notes in `valve_c17/notes/` |
+| 2 | Ravenholm | d1_town_01, 01a, 02, 02a, 04, 05; styleguide_ravenholm_01, styleguide_mining | yes | yes: 19 pictures R101 to R119 (`valve_ravenholm/`) | yes: 18 new lessons, 18 extended; notes in `valve_ravenholm/notes/` |
+| 3 | Nova Prospekt | d2_prison_01 to 08 | yes | yes: 17 pictures P1 to P17 (`valve_prison/`) | yes: 23 new lessons, 16 extended; notes in `valve_prison/notes/` |
+| 4 | Black Mesa East | d1_eli_01, 02 | yes | yes: 8 pictures E1 to E8 (`valve_eli/`) | yes: 9 new lessons, 5 extended; notes in `valve_eli/notes/` |
+| 5 | EP1 City 17 | ep1_c17_00, 00a, 01, 01a, 02, 02a, 02b, 03, 05, 06; styleguide_hospital_exit, styleguide_garage, styleguide_garage_destroyed, styleguide_garage_antlionroom, styleguide_train_loadingdock, styleguide_train_repair, styleguide_antlion_tunnel, styleguide_antlionhole | yes | running (`valve_ep1c17/`) | props and craft merged (14 new, 5 extended; 213 in all); logic and NPCs running |
 | 6 | The Citadel, HL2 and EP1 | d3_citadel_01 (in before; studied again), 02, 03, 04, 05, d3_breen_01; ep1_intro, ep1_citadel_00, 01, 02, 02b, 03, 04; styleguide_core, styleguide_destroyed_citadel | yes | | |
 | 7 | EP2 | ep2_outland_01, 01a, 02, 03, 04, 05, 06, 06a, 07, 08, 09, 10, 10a, 11, 11a, 11b, 12, 12a; styleguide_01_antenna, 06_elev_tower, 11a, barn, barn_deterioration, bunkers, caves, farmhouse1, farmhouse2, farmyard, forest_01, inn, logging, radiotower, radiotower_a, radiotower_b, silo, silo_derilict, vista_01, riverbed, riverbed2; outland_building_large_01, medium_01, medium_02 | yes | | |
 | 8 | The rest of HL2 | d1_trainstation_06; d2_coast_01, 03, 04, 05, 07, 08, 09, 10, 11 | yes | | |

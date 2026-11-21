@@ -31,6 +31,7 @@ mouth, the other is capped where the forest will join), a low bay to hide in, tw
 
 import argparse
 import bisect
+import math
 import random
 import re
 
@@ -40,6 +41,61 @@ SEE_THROUGH = ("bar", "glass", "fence", "grate", "window", "cage", "chain", "mes
 import sys
 
 CELL = 64
+
+# The engine's path node limit is for a whole map, flying nodes and hints counted (the owner, 21 November: "mind the
+# engine's node limit"): City 18 already has about 1826 walking and 580 flying, and our pieces are merged into it, so
+# each piece has a share of what is left (1690), and its nodes are thinned to fit (map_ring.lane_cells, NODE_LEVELS).
+NODE_CAP, CITY18_NODES = 4096, 2406
+NODE_SHARES = {"canal": 150, "ring": 300, "forest_bunker": 150, "forest_cave": 260, "ravenholm": 150, "south": 300, "town": 330}
+NODE_SHARE_OTHER = 400      # (a layout not planned for the merge yet: kept to a piece's size all the same)
+NODE_CLASSES = ("info_node", "info_node_air", "info_node_hint", "info_node_air_hint", "info_node_climb")
+
+
+def standing_prop(model):
+    """The class and keys for a model that stands still: a prop_static only when the model was built to be one and is
+    no physics prop (the compiler deletes those: the owner, "tons of the static props you put in aren't showing in the
+    compiled map"; lesson physics-props-dynamic), a prop_dynamic_override for a physics model, a prop_dynamic else (as
+    the modules' m.static does, from map_assets' facts)."""
+    import map_assets
+    keys = {"skin": "0", "solid": "6", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1"}
+    if map_assets.is_static(model) is not False:
+        keys.update({"disableshadows": "0", "screenspacefade": "0"})
+        return "prop_static", keys
+    keys.update({"disableshadows": "1", "StartDisabled": "0", "renderamt": "255", "rendercolor": "255 255 255"})
+    return ("prop_dynamic_override" if map_assets.is_physics_prop(model) else "prop_dynamic"), keys
+
+
+def node_share(name):
+    """How many path nodes (walking, flying and hints) a piece may have: its share, or None for one module by itself."""
+    if name.startswith("mod_"):
+        return None
+    return NODE_SHARES.get(name, NODE_SHARE_OTHER)
+
+
+def node_report(vmf, name):
+    """Count a piece's path nodes and say what they would do to the merged map. Gives (the line to print, a LOOK line
+    or None): a LOOK when the piece is over its share, or when with City 18 and the other planned pieces' shares the
+    merged map would come within a tenth of the engine's limit."""
+    count = {}
+    for cls, _ in vmf.points:
+        if cls in NODE_CLASSES:
+            count[cls] = count.get(cls, 0) + 1
+    n = sum(count.values())
+    if not n:
+        return None, None
+    others = sum(v for k, v in NODE_SHARES.items() if k != name) if name in NODE_SHARES else 0
+    merged = CITY18_NODES + others + n
+    share = node_share(name)
+    line = "path nodes: %d (%d walking, %d flying, %d hints); its share %s; merged with City 18 (%d)%s: %d of the engine's %d" % (
+        n, count.get("info_node", 0), count.get("info_node_air", 0), count.get("info_node_hint", 0), share if share is not None else "none (one module)",
+        CITY18_NODES, " and the other pieces' shares" if others else "", merged, NODE_CAP)
+    look = None
+    if share is not None and n > share:
+        look = "nodes: %d path nodes, over this piece's share of %d (NODE_SHARES in map_build.py): thin them or give it a bigger share" % (n, share)
+    elif merged > (NODE_CAP if others else NODE_CAP * 0.9):      # (the planned pieces' shares are made to fill what City 18 leaves)
+        look = "nodes: with City 18%s the merged map would have %d path nodes, %s the engine's %d" % (
+            " and the other pieces" if others else "", merged, "over" if merged > NODE_CAP else "near", NODE_CAP)
+    return line, look
 GATE_WIDE, GATE_HIGH = 512, 256 # a gate: the culvert every piece ends in, so any two pieces join
 
 # what things are made of: all of these are already used in the owner's own VMF, so they exist
@@ -728,29 +784,38 @@ def canal(args):
     #  the concrete, "can we just make the canal walls a bit higher instead of using brickwork at the top", then of this
     #  canal: "yes please make the first canal match")
     wall_top = road_z + 128
-    plan = Plan((ox, oy), [(floor_z - 64, wall_top, MAT["canal_wall"]), (wall_top, sky + 16, MAT["sky"])], sky=sky)
-    plan.keep_out.append((-100000, -100000, 100000, 0))    # the city: everything south of the road's end is the owner's
-    plan.keep_out.append((4608, -100000, 100000, 100000))  # beyond the east gate: whatever is joined there
-    plan.keep_out.append((-100000, 3840, 100000, 100000))  # beyond the north gate
+    # (the squares in the map's own coordinates, as the ring's and the modules' are, so the canal modules' dressing can
+    #  dress this canal too: the owner, 21 November, "yes please". Everything below is written from the road's end, as
+    #  before: P, B and W move it to the map.)
+    plan = Plan((0, 0), [(floor_z - 64, wall_top, MAT["canal_wall"]), (wall_top, sky + 16, MAT["sky"])], sky=sky)
+
+    def P(r):
+        return (r[0] + ox, r[1] + oy, r[2] + ox, r[3] + oy)
+
+    def B(x1, y1, z1, x2, y2, z2):
+        return (x1 + ox, y1 + oy, z1, x2 + ox, y2 + oy, z2)
+
+    def W(x, y, z):
+        return (x + ox, y + oy, z)
+    plan.keep_out.append(P((-100000, -100000, 100000, 0)))    # the city: everything south of the road's end is the owner's
+    plan.keep_out.append(P((4608, -100000, 100000, 100000)))  # beyond the east gate: whatever is joined there
+    plan.keep_out.append(P((-100000, 3840, 100000, 100000)))  # beyond the north gate
     canal_floor = ("open", floor_z, MAT["canal_floor"])
     culvert = ("low", floor_z, MAT["canal_floor"], floor_z + GATE_HIGH)
     doorway = ("low", road_z, MAT["quay_floor"], road_z + 112)         # a way into the wall at the canal's top: where a footbridge lands
-    plan.paint((0, 0, 640, 256), ("open", road_z, MAT["quay_floor"]))  # the quay: the road carries on to the canal's edge
-    plan.paint((0, 256, 3072, 768), canal_floor)                       # A: east, away from the city
-    plan.paint((2560, 768, 3072, 2816), canal_floor)                   # B: the turn north
-    plan.paint((3072, 2304, 4352, 2816), canal_floor)                  # C: the fork's east arm
-    plan.paint((4352, 2304, 4608, 2816), culvert)                      #    its end: a culvert to the east gate (x 4608)
-    plan.paint((2560, 2816, 3072, 3584), canal_floor)                  # D: the fork's north arm
-    plan.paint((2560, 3584, 3072, 3840), culvert)                      #    its end: a culvert to the north gate (y 3840)
-    plan.paint((3072, 1280, 3328, 1664), ("low", floor_z, MAT["canal_floor"], floor_z + 192)) # a low bay off B: somewhere to hide
-    plan.paint((64, 768, 256, 896), doorway)                           # where the quay's footbridge lands, in the north wall
-    plan.paint((2432, 1792, 2560, 2048), doorway)                      # the second footbridge's two ends, either side of B
-    plan.paint((3072, 1792, 3200, 2048), doorway)                      # (wall on every side but the front: clear of the bay and of the east arm)
+    plan.paint(P((0, 0, 640, 256)), ("open", road_z, MAT["quay_floor"]))  # the quay: the road carries on to the canal's edge
+    plan.paint(P((0, 256, 3072, 768)), canal_floor)                       # A: east, away from the city
+    plan.paint(P((2560, 768, 3072, 2816)), canal_floor)                   # B: the turn north
+    plan.paint(P((3072, 2304, 4352, 2816)), canal_floor)                  # C: the fork's east arm
+    plan.paint(P((4352, 2304, 4608, 2816)), culvert)                      #    its end: a culvert to the east gate (x 4608)
+    plan.paint(P((2560, 2816, 3072, 3584)), canal_floor)                  # D: the fork's north arm
+    plan.paint(P((2560, 3584, 3072, 3840)), culvert)                      #    its end: a culvert to the north gate (y 3840)
+    plan.paint(P((3072, 1280, 3328, 1664)), ("low", floor_z, MAT["canal_floor"], floor_z + 192)) # a low bay off B: somewhere to hide
+    plan.paint(P((64, 768, 256, 896)), doorway)                           # where the quay's footbridge lands, in the north wall
+    plan.paint(P((2432, 1792, 2560, 2048)), doorway)                      # the second footbridge's two ends, either side of B
+    plan.paint(P((3072, 1792, 3200, 2048)), doorway)                      # (wall on every side but the front: clear of the bay and of the east arm)
 
     vmf = Vmf()
-    plan.build(vmf)
-    B = plan.box
-    W = plan.world
     cells = plan.cells
 
     # the sky the road sees above this piece's own (lower) sky: what the owner's brush 15074 did, from the lid up
@@ -781,70 +846,9 @@ def canal(args):
     # a low wall along the quay's edge (open where the footbridge starts) and round the landing
     vmf.detail([B(0, 240, road_z, 72, 256, road_z + 40), B(248, 240, road_z, 512, 256, road_z + 40), B(512, 368, road_z, 640, 384, road_z + 40), B(512, 256, road_z, 528, 368, road_z + 40)], MAT["canal_wall"])
 
-    # --- what is a wall to the canal's floor, square by square -------------------------------------------
-    def kind(c):
-        spec = cells.get(c)
-        if spec is None or spec[0] == "solid":
-            return "wall"
-        if spec[1] > floor_z:
-            return "wall"   # (the quay, a doorway: higher ground is a wall from down here)
-        return "floor" if spec[0] == "open" else "gap"   # (gap: a culvert or the bay, level with the floor: an opening, no bank)
-
-    no_bank = [(448, 192, 1088, 320), (3008, 1792, 3136, 1856)]   # the stairs; the ladder's slot (below)
-
-    def clear(x1, y1, x2, y2):
-        return not any(x1 < r[2] and x2 > r[0] and y1 < r[3] and y2 > r[1] for r in no_bank)
-    # every edge between a floor square and a wall, as (which way it runs, its line, from, to, which side the floor is)
-    runs = {}
-    for (i, j) in list(cells):
-        if kind((i, j)) != "floor":
-            continue
-        x, y = i * CELL, j * CELL
-        for (di, dj, key, a) in ((0, -1, ("x", y, 1), x), (0, 1, ("x", y + CELL, -1), x), (-1, 0, ("y", x, 1), y), (1, 0, ("y", x + CELL, -1), y)):
-            if kind((i + di, j + dj)) == "wall":
-                solid = cells.get((i + di, j + dj), ("solid",))[0] == "solid"
-                edge = (a, key[1] - 8, a + CELL, key[1] + 8) if key[0] == "x" else (key[1] - 8, a, key[1] + 8, a + CELL)
-                runs.setdefault(key, []).append((a, solid, clear(*edge)))
-    banks, trims, ribs, drains = [], [], [], []
-    BANK = 128
-    for (axis, line, side), parts in sorted(runs.items()):
-        parts.sort()
-        # joined into the longest stretches, apart for banks (not at the stairs or the ladder) and for trim (only on real wall)
-        for want, out in ((lambda p: p[2], banks), (lambda p: p[1] and p[2], trims)):
-            start = prev = None
-            for a, solid, free in parts + [(None, False, False)]:
-                ok = a is not None and want((a, solid, free))
-                if ok and start is not None and a == prev + CELL:
-                    prev = a
-                    continue
-                if start is not None:
-                    out.append((axis, line, side, start, prev + CELL))
-                start = prev = a if ok else None
-    shapes = []
-    for (axis, line, side, a, b) in banks:
-        # a concrete bank: 128 out from the wall's foot, 128 up it (45 degrees: the steepest that can still be walked)
-        ln, top = self_line(plan, axis, line), floor_z + BANK
-        prof = [(ln, floor_z), (ln + side * BANK, floor_z), (ln, top)]
-        shapes.append(prism(prof, axis, self_along(plan, axis, a), self_along(plan, axis, b), MAT["canal_wall"]))
-    # where a wall's corner sticks out into the canal, the two banks meet round it: a quarter of a pyramid fills the corner
-    for (i, j) in list(cells):
-        for (dx, dy) in ((1, 1), (1, -1), (-1, 1), (-1, -1)):
-            vx, vy = (i + (1 if dx > 0 else 0)) * CELL, (j + (1 if dy > 0 else 0)) * CELL   # the corner of this square in that direction
-            if kind((i, j)) == "wall" and kind((i + dx, j)) == "floor" and kind((i, j + dy)) == "floor" and kind((i + dx, j + dy)) == "floor":
-                if not (clear(vx - 8, vy - 8, vx + 8, vy + 8) and clear(vx + dx * 8, vy - 8, vx + dx * 72, vy + 8) and clear(vx - 8, vy + dy * 8, vx + 8, vy + dy * 72)):
-                    continue
-                v0, apex = W(vx, vy, floor_z), W(vx, vy, floor_z + BANK)
-                px, py, pd = W(vx + dx * BANK, vy, floor_z), W(vx, vy + dy * BANK, floor_z), W(vx + dx * BANK, vy + dy * BANK, floor_z)
-                m = MAT["canal_wall"]
-                shapes.append([([v0, px, pd, py], m), ([v0, px, apex], m), ([v0, py, apex], m), ([apex, px, pd], m), ([apex, py, pd], m)])
-    # pipes across the long run, where the beam was: a big one and a small one, on concrete saddles at each wall
-    pm = MAT["bars"]
-    shapes.append(prism([(ox + q[0], q[1]) for q in octagon(1600, 592, 40)], "y", oy + 256, oy + 768, pm, MAT["black"]))
-    shapes.append(prism([(ox + q[0], q[1]) for q in octagon(1688, 628, 16)], "y", oy + 256, oy + 768, pm, MAT["black"]))
-    saddles = [B(1544, 256, 528, 1720, 288, road_z), B(1544, 736, 528, 1720, 768, road_z)]
-    vmf.detail(saddles, MAT["beam"])
+    no_bank = [P((448, 192, 1088, 320)), P((3008, 1792, 3136, 1856))]   # the stairs; the ladder's slot (below)
     # what is already on the walls: nothing put on them after this may come within 24 units of any of it
-    taken = list(saddles) + [B(448, 256, floor_z, 1088, 384, road_z + 64),                    # the stairs and their landing
+    taken = [B(448, 256, floor_z, 1088, 384, road_z + 64),                                    # the stairs and their landing
                              B(64, 256, road_z - 16, 256, 768, road_z + 40),                 # the quay's footbridge
                              B(2560, 1856, road_z - 16, 3072, 1984, road_z + 40),            # the second footbridge
                              B(3008, 1792, floor_z, 3072, 1856, road_z + 128)]               # the ladder
@@ -854,8 +858,8 @@ def canal(args):
     set_blocked, lanes = [], []
 
     def static(model, x, y, yaw):
-        vmf.point("prop_static", W(x, y, floor_z), {"model": model, "angles": "0 %d 0" % yaw, "skin": "0", "solid": "6", "disableshadows": "0", "screenspacefade": "0",
-                                                    "fademindist": "-1", "fademaxdist": "0", "fadescale": "1"}, sv)
+        cls, keys = standing_prop(model)      # (a physics model as a prop_dynamic_override: the compiler deletes it as a prop_static)
+        vmf.point(cls, W(x, y, floor_z), dict(keys, model=model, angles="0 %d 0" % yaw), sv)
     # a container between the stairs and the pipes; cars pushed in beyond the pipes
     static("models/props_wasteland/cargo_container01.mdl", 1300, 590, 8)
     for model, x, y, yaw in (("models/props_vehicles/car002a_physics.mdl", 2080, 470, 25), ("models/props_vehicles/car005a_physics.mdl", 2260, 580, 190),
@@ -866,41 +870,10 @@ def canal(args):
     for model, x, y, yaw in (("models/props_debris/concrete_chunk01a.mdl", 2740, 2190, 40), ("models/props_debris/broken_pile001a.mdl", 2890, 2240, 200),
                              ("models/props_debris/concrete_chunk02a.mdl", 2700, 2300, 110)):
         static(model, x, y, yaw)
-    taken.append(road_bridge(vmf, plan, "x", 3520, 3776, 2304, 2816, floor_z, road_z, sv))
+    taken.append(road_bridge(vmf, plan, "x", ox + 3520, ox + 3776, oy + 2304, oy + 2816, floor_z, road_z, sv))
     static("models/props_debris/barricade_tall01a.mdl", 2740, 3160, 20)
     set_blocked += [(1080, 500, 1520, 680), (2000, 400, 2500, 660), (2700, 1000, 2900, 1240), (2650, 2130, 2960, 2360), (2640, 3060, 2860, 3260)]
     lanes += [(1300, 430), (2240, 400), (2940, 1120), (2990, 2240), (2940, 3160)]
-
-    def fits(box, gap=24):
-        return not any(box[0] < t[3] + gap and box[3] > t[0] - gap and box[1] < t[4] + gap and box[4] > t[1] - gap and box[2] < t[5] + gap and box[5] > t[2] - gap for t in taken)
-    # along the top of every real wall, a concrete lip; up the walls, a rib every 512; between the ribs, a drain pipe's stub
-    boxes = []
-    for (axis, line, side, a, b) in trims:
-        lo, hi = min(line, line + side * 16), max(line, line + side * 16)
-        boxes.append(B(a, lo, road_z, b, hi, road_z + 16) if axis == "x" else B(lo, a, road_z, hi, b, road_z + 16))
-        for at in range(a + 256, b - 128, 512):
-            lo, hi = min(line, line + side * 24), max(line, line + side * 24)
-            rib = B(at - 24, lo, floor_z + 96, at + 24, hi, road_z) if axis == "x" else B(lo, at - 24, floor_z + 96, hi, at + 24, road_z)
-            if fits(rib):
-                boxes.append(rib)
-                taken.append(rib)
-                ribs.append(at)
-    for (axis, line, side, a, b) in trims:
-        # (a stub half way between two ribs, on every other gap: the ribs are at 256, 768, 1280... along the wall)
-        for at in range(a + 512, b - 128, 1024):
-            lo, hi = min(line, line + side * 40), max(line, line + side * 40)
-            z = floor_z + 176
-            stub = B(at - 24, lo, z - 24, at + 24, hi, z + 24) if axis == "x" else B(lo, at - 24, z - 24, hi, at + 24, z + 24)
-            if not fits(stub):
-                continue
-            taken.append(stub)
-            ln = self_line(plan, axis, line)
-            prof = [((ox if axis == "x" else oy) + q[0], q[1]) for q in octagon(at, z, 24)]
-            # (pushed along the other way: out of the wall)
-            shapes.append(prism(prof, "y" if axis == "x" else "x", min(ln, ln + side * 40), max(ln, ln + side * 40), pm, MAT["black"]))
-            drains.append((axis, line, side, at))
-    vmf.detail_shapes(shapes, "LC canal: banks, pipes and trim")
-    vmf.detail(boxes, MAT["beam"], vis="LC canal: banks, pipes and trim")
 
     # --- two footbridges that go somewhere: each lands in a doorway in the wall, barred at its back ----------
     rail = MAT["canal_wall"]
@@ -921,41 +894,23 @@ def canal(args):
     for x, z in ((3000, floor_z + 1), (3112, road_z + 1)):
         vmf.point("info_ladder_dismount", W(x, 1824, z), {}, "LC canal: details")
 
-    # --- mud and silt on the bottom (the owner: "like some dirt/mud on the bottom of the canal?") ----------------
-    # A second, displaced skin over the floor: where it rises above the concrete there is mud, where it dips below there is
-    # bare concrete, so the mud has uneven edges; it piles a little at the banks' feet. Hung on thin slabs just over the floor.
-    def wall_near(x, y):
-        """How far a point of the floor is from the nearest wall (0 if it isn't floor)."""
-        best = 9999
-        for di in range(-3, 3):
-            for dj in range(-3, 3):
-                c = (x // CELL + di, y // CELL + dj)
-                if kind(c) != "floor" and cells.get(c, ("solid",))[0] != "low":
-                    cx1, cy1 = c[0] * CELL, c[1] * CELL
-                    best = min(best, max(cx1 - x, 0, x - (cx1 + CELL)) + max(cy1 - y, 0, y - (cy1 + CELL)))
-        return best
-    import map_forest
-    silt_n = 0
-    blocks = sorted(set((i // 4, j // 4) for (i, j) in cells if kind((i, j)) in ("floor", "gap")))
-    for (bi, bj) in blocks:
-        x0, y0 = bi * 256, bj * 256
-        grid = {}
-        shown = False
-        for i in range(5):
-            for j in range(5):
-                x, y = x0 + j * CELL, y0 + i * CELL
-                d = wall_near(x, y)
-                if d < BANK:
-                    h = -16.0
-                else:
-                    h = -7 + 17 * map_forest.noise(x / 170.0, y / 170.0, 71) + 9 * map_forest.noise(x / 60.0, y / 60.0, 72) + (9 if d == BANK else 0)
-                    shown = shown or h > 0
-                grid[(i, j)] = (floor_z + h, 128 + 127 * map_forest.noise(x / 110.0, y / 110.0, 73))
-        if not shown:
-            continue
-        vmf.world_box(B(x0, y0, floor_z, x0 + 256, y0 + 256, floor_z + 8), MAT["nodraw"], top=MAT["mud"], vis="LC canal: mud",
-                      disp={"top": (2, lambda i, j, g=grid, x0=x0, y0=y0: W(x0 + j * CELL, y0 + i * CELL, g[(i, j)][0]), lambda i, j, g=grid: g[(i, j)][1])})
-        silt_n += 1
+    # a little left lying about (few, and in a visgroup of their own: delete it and they're gone)
+    rnd = random.Random(18)
+    junk = (
+        ("models/props_c17/oildrum001.mdl", 1700, 560, 0), ("models/props_c17/oildrum001.mdl", 1750, 600, 0), ("models/props_junk/wood_pallet001a.mdl", 1620, 500, 8),
+        ("models/props_junk/wood_crate001a.mdl", 3200, 1340, 20), ("models/props_junk/wood_crate002a.mdl", 3250, 1420, 20), ("models/props_junk/wood_pallet001a.mdl", 3180, 1600, 8),
+        ("models/props_vehicles/tire001c_car.mdl", 2760, 2400, 12), ("models/props_canal/boat001a.mdl", 1830, 470, 24), ("models/props_canal/boat002b.mdl", 4000, 2620, 24),
+    )
+    import map_assets
+    for model, x, y, up in junk:      # (standing on the floor, by the model's own size: the dressing brings them down onto the mud)
+        bb = map_assets.size(model)
+        vmf.point("prop_physics", W(x, y, floor_z + 1 - (int(math.floor(bb[2])) if bb else -up)), {"model": model, "angles": "0 %d 0" % rnd.randrange(0, 360, 15),
+                                                                                                  "skin": "0", "spawnflags": "0"}, "LC canal: props")
+
+    # --- banks, lip, ribs, Valve's outfalls and caged lamps, the dished floor and its mud: the canal modules' dressing ----
+    # (the pipes across the long run where the beam was: a big one and a small one on saddles, as before)
+    import map_modules
+    ch, _ = map_modules.dress_piece(vmf, plan, "canal", "LC canal", taken, no_bank, [], 71, pipes=[("x", ox + 1600, oy + 256, oy + 768)], rim=wall_top)
 
     # --- where the city's people can walk: the flat of the floor, the quay, the stairs, the bridges ----------------
     blocked = [(512, 256, 1024, 384), (4480, 2304, 4608, 2816), (2560, 3712, 3072, 3840)] + set_blocked # (the stairs, behind each gate's bars, the set pieces)
@@ -968,15 +923,10 @@ def canal(args):
         node_id[0] += 1
         if W(x, y, 0)[1] < 4600 and all((x - a) ** 2 + (y - b) ** 2 >= 700 ** 2 for a, b, _ in dim):
             dim.append((x, y, z))
-    for (i, j), spec in sorted(cells.items()):
-        if spec[0] == "solid" or i % 2 != 1 or j % 2 != 1 or (i + j) % 4 != 0:
-            continue
-        x, y = i * CELL + 32, j * CELL + 32
-        if any(b[0] <= x < b[2] and b[1] <= y < b[3] for b in blocked):
-            continue
-        if kind((i, j)) == "floor" and wall_near(x, y) < BANK + 16:
-            continue   # (on a bank)
-        node(x, y, spec[1])
+    def air_node(x, y, z):      # (flying nodes for scanners over the canal: Valve's, the owner, 21 November)
+        vmf.point("info_node_air", (x, y, z), {"nodeid": node_id[0], "nodeheight": "0"}, "LC canal: flying nodes")
+        node_id[0] += 1
+    ch.nodes(lambda x, y, z: node(x - ox, y - oy, z), [P(r) for r in blocked], air=air_node, share=node_share("canal"), extra=len(lanes) + 11)
     for x, y in lanes:
         node(x, y, floor_z)
     fences = fence(vmf, plan, 96, "LC canal: fence along the walls' tops", top=wall_top)
@@ -991,16 +941,6 @@ def canal(args):
     for x, y, z in ((320, 128, road_z), (800, 512, floor_z), (2000, 512, floor_z), (2816, 1500, floor_z), (3200, 1472, floor_z), (2816, 2560, floor_z), (3900, 2560, floor_z), (2816, 3300, floor_z)):
         vmf.point("env_cubemap", W(x, y, z + 72), {"cubemapsize": "0"})
 
-    # a little left lying about (few, and in a visgroup of their own: delete it and they're gone)
-    rnd = random.Random(18)
-    junk = (
-        ("models/props_c17/oildrum001.mdl", 1700, 560, 0), ("models/props_c17/oildrum001.mdl", 1750, 600, 0), ("models/props_junk/wood_pallet001a.mdl", 1620, 500, 8),
-        ("models/props_junk/wood_crate001a.mdl", 3200, 1340, 20), ("models/props_junk/wood_crate002a.mdl", 3250, 1420, 20), ("models/props_junk/wood_pallet001a.mdl", 3180, 1600, 8),
-        ("models/props_vehicles/tire001c_car.mdl", 2760, 2400, 12), ("models/props_canal/boat001a.mdl", 2000, 470, 24), ("models/props_canal/boat002b.mdl", 4000, 2620, 24),
-    )
-    for model, x, y, up in junk:
-        vmf.point("prop_physics", W(x, y, floor_z + up + 24), {"model": model, "angles": "0 %d 0" % rnd.randrange(0, 360, 15), "skin": "0", "spawnflags": "0"}, "LC canal: props")
-
     # the checks: the opening onto the road is stopped up, then a flood from the air over the canal floor
     stopper = B(0, -64, road_z - 64, 640, 0, plan.top)
     problems, air = check(vmf, W(1280, 512, floor_z + 32), [] if args.test else [stopper])
@@ -1013,15 +953,16 @@ def canal(args):
                     continue
                 side = "west" if i < x1 // CELL else "east" if i >= x2 // CELL else "south" if j < y1 // CELL else "north"
                 ahead = {"south": j < y1 // CELL, "north": j >= y2 // CELL, "west": i < x1 // CELL, "east": i >= x2 // CELL}[front]
-                if cells.get((i, j), ("solid",))[0] != "solid" and not ahead:
+                if cells.get((i + ox // CELL, j + oy // CELL), ("solid",))[0] != "solid" and not ahead:
                     problems.append("the doorway at (%d %d) is open on its %s side at (%d %d): it should be wall" % (ox + x1, oy + y1, side, ox + i * CELL, oy + j * CELL))
     world_n = sum(1 for _, w in vmf.boxes if w)
     xs = [b[0] for b, _ in vmf.boxes] + [b[3] for b, _ in vmf.boxes]
     ys = [b[1] for b, _ in vmf.boxes] + [b[4] for b, _ in vmf.boxes]
+    st = ch.stats
     print("canal: %d sealing brushes, %d detail boxes, %d sloped or round shapes, %d mud patches, %d entities (%d path nodes, ids %d to %d)" % (
-        world_n, len(vmf.boxes) - world_n - silt_n, vmf.shapes, silt_n, len(vmf.ents), node_id[0] - args.first_node, args.first_node, node_id[0] - 1))
-    print("  details: %d banks, %d corner fills, %d lengths of wall trim with %d ribs, %d drain stubs, 2 pipes, 2 footbridges, 1 ladder, %d runs of fence" % (
-        len(banks), vmf.shapes - len(banks) - len(drains) - 2, len(trims), len(ribs), len(drains), fences))
+        world_n, len(vmf.boxes) - world_n - st["mud"], vmf.shapes, st["mud"], len(vmf.ents), node_id[0] - args.first_node, args.first_node, node_id[0] - 1))
+    print("  details: %d banks, %d corner fills, %d lengths of wall trim with %d ribs, %d outfalls, 2 pipes, 2 footbridges, 1 ladder, %d runs of fence" % (
+        st["banks"], st["fills"], len(ch.made.get("walls", [])), st["ribs"], st["stubs"], fences))
     print("  set pieces: a container, wrecked cars and a skip, a boat, rubble, a street carried over the east arm, a barricade; the walls' concrete ends at z %d" % wall_top)
     print("  it fills x %d to %d, y %d to %d, z %d to %d (the road's sky plug to %d)" % (min(xs), max(xs), min(ys), max(ys), plan.base, plan.top, args.road_sky))
     print("  gates (a culvert %d wide, %d high, floor z %d): east at x %d, y %d to %d; north at y %d, x %d to %d" % (
@@ -1113,6 +1054,11 @@ def main():
     with open(out, "w") as f:
         f.write(vmf.text())
     print("  written: " + out)
+    line, look = node_report(vmf, out[3:-4].replace("_test", "") if out.startswith("lc_") else out)
+    if line:
+        print("  " + line)
+    if look:
+        print("  LOOK: " + look)
     try:      # (the owner's corrections, checked by machine: _dev/reference/lessons.json, map_lint.py)
         import map_lint
         for line in map_lint.check(out, views=getattr(args, "view_list", None), air=getattr(vmf, "flooded", None)):

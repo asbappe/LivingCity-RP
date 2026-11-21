@@ -551,11 +551,18 @@ def main():
     print("  left out of the owner's: %d brushes%s; everything else of theirs: %d blocks, each one unchanged%s" % (
         len(wanted), " (%d brush entities went with their last brush)" % emptied if emptied else "", len(before),
         " but for %d line added (the sun's name)" % len(add_after) if add_after else ""))
+    # the engine's path node limit is for the whole map, flying nodes and hints counted (the owner, 21 November)
+    import map_build
+    if len(seen_nodes) > map_build.NODE_CAP:
+        problems.append("%d path nodes in the merged map, over the engine's %d (walking, flying and hints together): thin the pieces' (map_build.NODE_SHARES)" % (
+            len(seen_nodes), map_build.NODE_CAP))
+    elif len(seen_nodes) > map_build.NODE_CAP * 0.95:
+        print("  NOTE: %d path nodes in the merged map, near the engine's %d" % (len(seen_nodes), map_build.NODE_CAP))
     if problems:
         for p in problems:
             print("  PROBLEM: " + p)
         sys.exit(1)
-    print("  CHECKS passed: braces, ids, path node numbers, the owner's blocks unchanged, no shared names")
+    print("  CHECKS passed: braces, ids, path node numbers (%d of the engine's %d), the owner's blocks unchanged, no shared names" % (len(seen_nodes), map_build.NODE_CAP))
 
 
 if __name__ == "__main__":

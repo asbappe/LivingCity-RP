@@ -81,7 +81,7 @@ def scene(m):
                 polys += [(vs, (96, 72, 48), None) for vs in mv.box_faces((o[0] - 6, o[1] - 6, o[2], o[0] + 6, o[1] + 6, o[2] + h * 0.55))]
                 polys += [(vs, (78, 108, 58), None) for vs in mv.box_faces((o[0] - w, o[1] - w, o[2] + h * 0.45, o[0] + w, o[1] + w, o[2] + h * 0.9))]
             else:
-                polys += [(vs, col, None) for vs in mv.turned_box(pos, bb, e.angles[1])]
+                polys += [(vs, col, None) for vs in mv.prop_faces(pos, bb, e.angles[1], model=e.model)]
         else:
             small = cls in SMALL
             marks.append((pos, col, 5 if small else 14, 10 if small else 14 if cls == "prop_ragdoll" else 56))

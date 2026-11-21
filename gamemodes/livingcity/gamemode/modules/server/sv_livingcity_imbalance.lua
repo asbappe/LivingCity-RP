@@ -146,7 +146,7 @@ function LC.QRFSquad(heavy, room)
     return out
 end
 -- One of the squad, out at at, sent after target (a player) or to pos. kind: "elite" or "soldier".
-local function Deploy(at, i, pos, target, kind)
+local function Deploy(at, i, pos, target, kind, n)
     local spawn = LC.Spawners.soldier or LC.SpawnSoldier
     local npc, st = nil, nil
     if spawn then npc, st = spawn(at + Vector(math.cos(i) * 60, math.sin(i) * 60, 4), kind == "elite" and "elite" or nil) end
@@ -154,6 +154,7 @@ local function Deploy(at, i, pos, target, kind)
     st.unmanaged, st.armed, st.qrf = true, true, true
     LC.QRF[npc] = { untilT = CurTime() + LC.QRFStay }
     if IsValid(target) and target.IsPlayer and target:IsPlayer() and LC.MakeOneHostile then LC.MakeOneHostile(npc, st, target)
+    elseif LC.LaneOne then LC.LaneOne(npc, st, pos, at, i, n or i, { run = true }) -- (each his own lane, in bounds: sv_livingcity_unitmoves.lua)
     elseif npc.SetLastPosition and SCHED_FORCED_GO_RUN then npc:SetLastPosition(pos) npc:SetSchedule(SCHED_FORCED_GO_RUN) end
     return npc
 end
@@ -187,7 +188,7 @@ function LC.QRFDispatch(pos, target, why, extra)
                 for i = 1, want do -- (the Elite first out of the door, leading them)
                     timer.Simple(0.8 + (i - 1) * 1.2, function()
                         LC.QRFPending = math.max(0, LC.QRFPending - 1)
-                        Deploy(at, i, pos, target, squad[i])
+                        Deploy(at, i, pos, target, squad[i], want)
                     end)
                 end
             end,
@@ -205,7 +206,7 @@ function LC.QRFDispatch(pos, target, why, extra)
     local spot = LC.QRFSpot(pos)
     if not spot then return 0, "nowhere out of sight to come from" end
     local made = 0
-    for i = 1, want do if Deploy(spot, i, pos, target, squad[i]) then made = made + 1 end end
+    for i = 1, want do if Deploy(spot, i, pos, target, squad[i], want) then made = made + 1 end end
     if made > 0 then
         lastAt = now
         areas[#areas + 1] = { pos = pos, t = now }

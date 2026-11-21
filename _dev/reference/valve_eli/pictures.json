@@ -1,0 +1,166 @@
+{
+ "title": "Valve's Black Mesa East (d1_eli_01, d1_eli_02)",
+ "about": "Black Mesa East, the Resistance's base dug in under the dam: the way in, the airlock, the lift past the living quarters, the labs, the corridors, the second airlock and the scrapyard, measured from the VMFs by map_ingest.py (each map's numbers in valve_d1_eli_01/measure.json and valve_d1_eli_02/measure.json; the study in valve_eli/wip/notes.md) and drawn by map_view.py (flat colours; props as boxes of their true size). Views marked floor were drawn with nothing under that height (the base has floors over floors).",
+ "numbers": [
+  "d1_eli_01: 1754 entities, 2599 brushes, 607 props (437 static, 106 physics, 61 dynamic, 8 ragdoll mattresses); 31 choreographed scenes, 18 scripted sequences, 55 relays, 25 func_doors, 10 areaportals; 7 vortigaunts, 5 citizens, Eli, Alyx, Mossman. No text on screen.",
+  "d1_eli_01: one material does most of the work: concretewall002a on 4610 of 15794 faces, and in the lower lab 46% of the wall, 55% of the floor and 50% of the ceiling; the wall changes material first at 112 (422 walls) or 128 (565) of 2412.",
+  "d1_eli_01: the way down is a freight lift (func_tracktrain, speed 65) from z -1214 to -2672, 1458 in about 22 s, past three floors 288 apart (dormitory, kitchen, repairs) that have no AI nodes: seen, never walked.",
+  "d1_eli_01: the airlock is 208 wide, 173 high, 264 between its doors; a guard's booth beside it (115 by 192, ceiling 96) sees the outer door on a monitor; letting someone in takes about 31 s.",
+  "d1_eli_01: 147 pipe props, 70 chain-link fence props, 51 prison lamps and 14 keypads (51 to 54 up beside every door) dress the old concrete; the lower lab is lit pale green (169 205 188, 18 of 43 lights), median brightness 140.",
+  "d1_eli_02: 56 scenes (30 Alyx, 18 the dog), 102 relays, 12 npc_template_makers, 11 env_entity_makers; one env_hudhint is the only text; the attack comes 80 to 180 s into the scrapyard play."
+ ],
+ "pictures": [
+  {
+   "n": "E1",
+   "file": "01_eli01_overview.png",
+   "where": "d1_eli_01, the whole base from the south-west",
+   "teaches": "The base is a stack: the upper hall and the airlock at the top (z -1280), the brick lift shaft (the red tower) dropping 1458 past three small floors of quarters to the labs and corridors at z -2736; the green block is the ground over it. Ours: our Resistance sites lie flat or go down by stairs (the forest bunker: 15 steps to z 296, then 23 to the deep level at z 104); none is reached by a lift.",
+   "lessons": [
+    "valve-lift-diorama"
+   ],
+   "view": {
+    "iso": "SW"
+   }
+  },
+  {
+   "n": "E2",
+   "file": "02_eli01_airlock_cut.png",
+   "where": "d1_eli_01, the outer airlock from the south-west, cut at -1120, nothing under -1300 drawn (box -260 2540 260 2960)",
+   "teaches": "The airlock: an arched concrete tunnel 208 wide and 264 between its two blast doors (cyan, two leaves each), the scanner between them and the guard's booth on the right with its window onto the tunnel. Ours: the forest bunker's way in is one pair of sliding silo doors (256 by 192, 4.6 s) opened from inside, with no second door, booth or camera.",
+   "lessons": [
+    "valve-base-airlock",
+    "valve-turrets-follow-by-cells"
+   ],
+   "view": {
+    "iso": "SW",
+    "box": [
+     -260,
+     2540,
+     260,
+     2960
+    ],
+    "cut": -1120,
+    "floor": -1300
+   }
+  },
+  {
+   "n": "E3",
+   "file": "03_eli01_kitchen_floor.png",
+   "where": "d1_eli_01, the kitchen floor (z -1872), eye 480 2300 -1812 looking south toward the lift's gate (yaw 270)",
+   "teaches": "One of the floors the lift passes: counters and stoves (yellow and orange) along the walls, fridges, the middle clear, the lift's gate (cyan) at the far end where riders see in; two vortigaunt cooks work here only while the lift goes by. Ours: no base kitchen yet; the town's flats have kitchens lit by the owner's tube, the bunker and the cave office a bunk room each.",
+   "lessons": [
+    "valve-base-quarters",
+    "valve-base-at-work",
+    "valve-lift-diorama"
+   ],
+   "view": {
+    "eye": [
+     480,
+     2300,
+     -1812
+    ],
+    "yaw": 270,
+    "pitch": 8
+   }
+  },
+  {
+   "n": "E4",
+   "file": "04_eli01_lower_corridor.png",
+   "where": "d1_eli_01, the lower corridor toward the second airlock, eye -656 1192 -2624 looking north (yaw 90)",
+   "teaches": "An old vaulted concrete tunnel dressed with what was carried in: pipe props (orange) run along the curved wall and the ceiling, crates and pallets stand at the side, chain-link frames and cage lamps; the floor in the middle is clear. Ours: the bunker's rooms are plain-walled with silo doors and steady lights; no pipe runs or fence partitions yet.",
+   "lessons": [
+    "valve-base-concrete-and-salvage"
+   ],
+   "view": {
+    "eye": [
+     -656,
+     1192,
+     -2624
+    ],
+    "yaw": 90,
+    "pitch": 3
+   }
+  },
+  {
+   "n": "E5",
+   "file": "05_eli02_scrapyard_cut.png",
+   "where": "d1_eli_02, the scrapyard from the south-west, cut at -2300, nothing under -2760 drawn (box -2700 -1000 -300 1700)",
+   "teaches": "The scrapyard is an open pit about 1240 by 2200 under cliffs, its floor strewn with junk to throw (99 props, half physics: drums, crates, pallets, washers, a dryer, sinks, a tyre, a carousel), five light towers on stands, fence pieces and a gate to the airlock; a ledge 130 up by the gate is the first test. Ours: no yard of junk at our sites, and no job game teaches the gravity gun; the forest bunker's valley (4096 square inside a 440 ridge) is the nearest open ground behind a Resistance door.",
+   "lessons": [
+    "valve-play-teaches",
+    "valve-teach-then-give-up"
+   ],
+   "view": {
+    "iso": "SW",
+    "box": [
+     -2700,
+     -1000,
+     -300,
+     1700
+    ],
+    "cut": -2300,
+    "floor": -2760
+   }
+  },
+  {
+   "n": "E6",
+   "file": "06_eli02_scrapyard.png",
+   "where": "d1_eli_02, the scrapyard at eye level, eye -1901 -323 -2624 looking north (yaw 90)",
+   "teaches": "From the floor of the pit: the cliff all round, the light towers (16 spotlight beams, 159 237 215, median 450) standing over a floor kept mostly clear, crates and pallets in small heaps at the sides, the base's doors in the far wall. Ours: our camps are lit by the city's lamps and fires; no light towers.",
+   "lessons": [
+    "valve-play-teaches",
+    "valve-raid-on-the-base"
+   ],
+   "view": {
+    "eye": [
+     -1901,
+     -323,
+     -2624
+    ],
+    "yaw": 90,
+    "pitch": 3
+   }
+  },
+  {
+   "n": "E7",
+   "file": "07_eli02_airlock2_cut.png",
+   "where": "d1_eli_02, the second airlock and the gravity gun room from the south-west, cut at -2530, nothing under -2700 drawn (box -950 760 -300 1320)",
+   "teaches": "The way out to the scrapyard: the airlock (blast doors in cyan, 272 apart, 208 wide), its own guard's booth on the west side (x -720, monitors angled at the seat), and beyond it the room where the gravity gun waits in a lit glass case and junk (yellow) lies ready for the first lesson. The same airlock is where the attack shuts the doors behind the player and the monitor breaks to static. Ours: as E2, no airlock.",
+   "lessons": [
+    "valve-base-airlock",
+    "valve-raid-on-the-base",
+    "valve-prison-cctv"
+   ],
+   "view": {
+    "iso": "SW",
+    "box": [
+     -950,
+     760,
+     -300,
+     1320
+    ],
+    "cut": -2530,
+    "floor": -2700
+   }
+  },
+  {
+   "n": "E8",
+   "file": "08_eli02_raven_tunnel.png",
+   "where": "d1_eli_02, the tunnel west toward Ravenholm, eye -1812 1912 -2672 looking east back to the base (yaw 0)",
+   "teaches": "A long service tunnel (192 wide, 176 high, 1717 long) with a pipe run along it; drawn with the attack's red emergency lamps (255 55 45) lit, as they blink in the attack (on 1.2 s, off 0.7 s; the viewer draws lamps that start dark as lit, so in play they are off until then). Ours: the infestation quarter is reached through the city's own gate at its south end (map_raven.py), not from a base.",
+   "lessons": [
+    "valve-raid-on-the-base",
+    "valve-alarm"
+   ],
+   "view": {
+    "eye": [
+     -1812,
+     1912,
+     -2672
+    ],
+    "yaw": 0,
+    "pitch": 3
+   }
+  }
+ ]
+}
