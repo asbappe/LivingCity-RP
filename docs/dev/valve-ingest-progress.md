@@ -108,6 +108,12 @@ and NPCs, then its pictures; then batch 6 (the Citadel, with the owner's four pi
   `map_combine.py` (wall, gate, tower, skin; `test` and `check`), test map `_dev/tools/lc_combine_test.vmf` and its
   picture; waiting on the owner's look; what it lacks is on TODO.md.
 
+- **Silo joined to the bunker (the owner, 21 November: "connect the silo to the bunker so that the silo sits just
+  outside the existing map area (then seal it off obviously)"):** in progress (`BunkerForest`, `lc_forest_bunker.vmf`).
+- **The teleporter's power-up (the owner, 21 November):** the "below the floor" Combine laser and lightning effect
+  that powers up the teleporter in Entanglement (d2_prison_08, maybe 07), lifted as `valve_prison_teleport_charge`.
+  In progress.
+
 ## The batches (M measured, P pictures reviewed, S studied and lessons merged)
 
 All 122 measured on 21 November (145 maps in `valve_stats.json` with the first 23).
