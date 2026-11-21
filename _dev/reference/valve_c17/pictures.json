@@ -46,7 +46,11 @@
   "d3_c17_10a and 12, the Nexus from outside: an old civic block (about x -444 to 1700, y 4500 to 7900) facing the park; a portico 256 proud in the middle of its park front (columns, steps up 8 by 12 from the plaza), storeys in building_template029 (g, f, d, b, then a cornice of 029j stepping out 32 at 800), a metal mansard roof (metalroof008a) to 960 and a lower middle wing at 896. The Combine's mark outside is props: CombineInnerwall plates (001a 306 by 296 by 999, 001c 90 by 253 by 805, some leaning 5 degrees) set into the front from the ground to 1025, two more standing on the roof to 1441 and 1601; inside it is brushwork (d3_c17_10b).",
   "d3_c17_12b: the last ruined block and the road under it (striders outside): 70% of the nodes indoors: ceilings 184 (96 of 275), 120 (59) and 384 (40); floors 192 apart (-320, -192, 0, 192, 384); 0.24 props per 100 by 100, physics tilted 50% (bins, tyres, trash), statics touching a wall 73%; walls banded in 70% of tall columns (tilewall006c below 006a, concretewall032a below plasterwall021a), the first change 128 or 120 over the foot.",
   "d3_c17_12b broken block: its front blown off and the floors left open like a doll's house: building_brokenexterior002c (8) and 002a (2), each 40 by 257 by 128, stand along the open edge, concrete_section floor and wall pieces (64 and 128) at the breaks, rebar (rebar003c_64 9, rebar_cluster001a 6) out of them; strip lights (lights_florescent01a 10) and sprinkler pipes 512 long (prison_sprinkler001a 9) on the ceilings; the rebels hold it with barricade_short04a (8) and barricade_tall02a (6).",
-  "d3_c17_12b road tunnel: tiled walls in bands (tilewall006c below 006a, 006d), a floor of concretefloor013a, cage lights; dumpsters and garbage piles (trashdumpster01a, garbage256_composite002b) against the walls."
+  "d3_c17_12b road tunnel: tiled walls in bands (tilewall006c below 006a, 006d), a floor of concretefloor013a, cage lights; dumpsters and garbage piles (trashdumpster01a, garbage256_composite002b) against the walls.",
+  "styleguide_c17_rubble: Valve's style room for City 17 in ruins (a sample, not a level): 30 props in play and no lamps lit (sun '213 152 85 500' at pitch -25, ambient '154 123 61', fog '181 146 121' from 100 to 5000: a warm dusty haze); the ruin is made of big models (collapsedbuilding01awall 4, collapsedbuilding02c 2, building_brokenexterior002a, b and c 6, concrete_debris256pile001a 2, parliament_dome_destroyed_exterior, project_destroyedbuildings01) on displacement ground (21 displacements, still in dev_blendmeasure on 414 faces); lampposts 801 apart along the road, a car, a tanker and a truck cab left on it.",
+  "styleguide_c17_rubble skeleton: a block stripped to floors every 128 (0 to 512) on posts 32 by 32 and 512 tall (8), with a broken-exterior model (40 by 257 by 128, one storey tall) hung on each open floor edge; d3_c17_12b uses the same models on floors 192 apart.",
+  "styleguide_c17_rubble_2: a ruined street corner (813 Hammer-hidden objects left out, among them 295 path nodes): 219 props in play, 46 physics (33% of them lying: boards, crates, chairs); wires on utility poles (utilitypole02b 11, 856 apart): 17 spans, median 816 long, slack 100, width 2; fronts 39% of wall area (courtyard_template003f, building_template017o, storefront_template001g); walls banded in 52% of tall columns, the first change 128 or 256 over the foot; 48 displacements; sun '219 191 148' at pitch -25, fog from 100 to 8000.",
+  "styleguide_c17_rubble_2 ruined shop: a corner shop open to the street (display_cooler01a 4, kitchen_fridge001a 3, propane canisters 3, chairs knocked over) under broken floors: concrete_section64floor001b and 001c pieces (24) along each break, rebar (rebar001c_64 6, rebar003c_64 4) out of them, walldestroyed09c (4) and debris piles (128 and 256 across) under the holes; bottles and cans (garbage_glassbottle 12, popcan01a 5) scattered as physics props."
  ],
  "pictures": [
   {
@@ -714,6 +718,65 @@
      -4099,
      1080
     ]
+   }
+  },
+  {
+   "n": "U34",
+   "file": "34_rubble_skeleton_block_iso.png",
+   "where": "styleguide_c17_rubble, the ruined block from the south-west, box x -3981 to -2181, y 988 to 2788",
+   "teaches": "A block stripped to its frame: floor slabs every 128 (0 to 512) on posts 32 by 32 and 512 tall, and on each open floor edge one broken-exterior model (building_brokenexterior002a, b or c, 257 wide and 128 tall, one storey). A ruin is a kit: slabs, posts and edge models, not hand-cut broken brushes.",
+   "lessons": [
+    "valve-broken-edges",
+    "valve-rubble-fitted"
+   ],
+   "view": {
+    "iso": "SW",
+    "box": [
+     -3981,
+     988,
+     -2181,
+     2788
+    ]
+   }
+  },
+  {
+   "n": "U35",
+   "file": "35_rubble_corner_shop_iso.png",
+   "where": "styleguide_c17_rubble_2, the ruined corner shop from the south-west, box x 315 to 2115, y 1078 to 2878 (the busiest knot of props, 57 near 1214 1977)",
+   "teaches": "A corner shop under broken floors, still stocked: coolers, fridges and propane along the walls, chairs knocked over; concrete_section64floor pieces (24) along each break with rebar out of them, walldestroyed09c and debris piles of 128 and 256 under the holes, bottles and cans thrown about. A looted shop for a rebel or scavenger scene.",
+   "lessons": [
+    "valve-rubble-fitted",
+    "valve-story-props",
+    "valve-tilt-and-topple"
+   ],
+   "view": {
+    "iso": "SW",
+    "box": [
+     315,
+     1078,
+     2115,
+     2878
+    ]
+   }
+  },
+  {
+   "n": "U36",
+   "file": "36_rubble_wired_street_eye.png",
+   "where": "styleguide_c17_rubble_2, eye level in the street looking north (eye 2636 -1422 2108, yaw 90; the room has no visible nodes, so the eyes were placed on floors round the props)",
+   "teaches": "A ruined street that still has its wires: utility poles (utilitypole02b) 856 apart carrying spans median 816 long with a slack of 100, a debris pile (concrete_debris256pile001a, the orange box at the front) and a wrecked hatchback on the road, rubble ground of concretefloor020a and 007a.",
+   "lessons": [
+    "valve-overhead-cables",
+    "valve-wrecked-cars",
+    "valve-rubble-fitted"
+   ],
+   "view": {
+    "eye": [
+     2636,
+     -1422,
+     2108
+    ],
+    "yaw": 90,
+    "pitch": 3
    }
   }
  ]
