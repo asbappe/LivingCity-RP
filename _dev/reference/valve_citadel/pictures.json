@@ -1,0 +1,99 @@
+{
+ "title": "Valve's Citadel (d3_citadel_01 to 05, d3_breen_01, ep1_intro, ep1_citadel_00 to 04, and two style rooms)",
+ "draft": true,
+ "about": "The Combine's own stronghold, in Half-Life 2 and Episode One: the pod bays and their rings of pods, the shafts the pod rides cross, the confiscation field, the energy ball rooms, the walkway reactors, Breen's office and the dark-energy core, and the Citadel falling apart in Episode One; with Valve's style rooms for the core and the destroyed Citadel. Chosen for the Combine's odd, lopsided build (the owner's special interest), the pods' rails, the core and the walkways. Measured from the VMFs by map_ingest.py (each map's numbers in valve_NAME/measure.json; the logic and NPC study in valve_citadel/wip/logic_npc_notes.md; the architecture study in valve_citadel/wip/architecture_*) and drawn by map_view.py (flat colours; props as boxes of their true size, orange static, yellow physics, cyan dynamic; big hollow models and fences drawn as outlines). Many Citadel brushes reach thousands of units below the play floors, which shrinks a framed cut-away to a sliver; those views are drawn from a scratch copy of the VMF without the brushes reaching below a set height (said in each 'where'). d3_citadel_01's own set (C1 to C6) stays in valve_d3_citadel_01/.",
+ "numbers": [
+  "d3_citadel_01: 733 entities, 1859 brushes, 110 static props, 29 dynamic, 2 physics; 13 AI nodes only (the player rides); 22 func_tracktrain on 46 path_tracks: two rings of 7 prisoner pods (4749 and 4549 long) that stop together, a ring of 3 pods (6858 long, 46 s a lap) and three diggers started 1, 4 and 6 s apart. The map reaches from z -14336 to 3104. Ours: no Combine machine moves on its own anywhere in our map.",
+  "d3_citadel_02: 1120 entities, 3241 brushes, 387 static props; 25 AI nodes; the player's pod ride is 56 path_tracks and 24581 units, about 147 s at 100 to 250, with 13 stops that set something off (a thing to see about every 11 s); 3 container trains on one ring of 15206 (72 s a lap), 2 razor trains of 7488; 6 stalkers, 6 soldiers, 3 striders, 5 scanners, all seen from the pod.",
+  "d3_citadel_03: 1564 entities, 4877 brushes; 245 AI nodes (indoor ceilings 192 to 320 in half the rooms, up to 2815 in the shafts); 25 soldiers (5 elites), 17 of them in point_templates; 8 energy ball spawners, 7 shield walls, the confiscation field, 12 consoles that tear off the wall, 26 spark timers; materials 97% metal by area (citadel_metalwall063a and 077a)."
+ ],
+ "pictures": [
+  {
+   "n": "Z1",
+   "file": "01_c01_pod_bay_cut.png",
+   "where": "d3_citadel_01, the pod bay where the two rings of prisoner pods run, from the south-west, cut at -1350 (box 9000 3600 11500 6000; drawn from a copy without brushes reaching below -2600 or above 0)",
+   "teaches": "The pod bay is not a room but Combine machinery hung in a void: slabs and boxes at different heights, none mirrored, the pods' rails threaded between them on posts and stepped walkways, thin supports (orange) dropping far below. Two rings of 7 pods run here, 14 and 9 path_tracks long, each pod stopping at its own stop and the ring moving on 3 s after the last arrives. Ours: our Combine pieces are props set square on a street; nothing hangs or moves.",
+   "lessons": [
+    "valve-machines-on-a-beat",
+    "valve-combine-lean",
+    "valve-pod-racks"
+   ],
+   "view": {
+    "iso": "SW",
+    "box": [
+     9000,
+     3600,
+     11500,
+     6000
+    ],
+    "cut": -1350,
+    "clip_below": -2600,
+    "clip_above": 0
+   }
+  },
+  {
+   "n": "Z2",
+   "file": "02_c01_zapper_station_cut.png",
+   "where": "d3_citadel_01, the 'zapper' stop on the pod ring (the pod halts between two energy cores at z -1871 and -1567), from the south-west, cut at -1450 (box 10200 3700 11500 4800; drawn from the same copy)",
+   "teaches": "One station on the ring does a job: the rail runs out on a walkway cantilevered off a box, the box hangs over a drop on bundles of thin legs, and the pod stops in a beam between two energy cores for 6 s (warm-up at 2.5 s, discharge, beam and sparks at 4 s, all off 6 s later). Lopsided in plan and in section: the walkway leaves one face, the legs hang under another. Ours: no station of this kind; a Combine processing stop would be new.",
+   "lessons": [
+    "valve-machines-on-a-beat",
+    "valve-combine-lean"
+   ],
+   "view": {
+    "iso": "SW",
+    "box": [
+     10200,
+     3700,
+     11500,
+     4800
+    ],
+    "cut": -1450,
+    "clip_below": -2600,
+    "clip_above": 0
+   }
+  },
+  {
+   "n": "Z3",
+   "file": "03_c02_pod_ride_overview.png",
+   "where": "d3_citadel_02, the whole pod ride from the south-west (box -6600 3500 4000 13400; drawn from a copy without brushes reaching below 1000 or above 5200)",
+   "teaches": "The player's pod ride as a ribbon of rail laid over the tops of the Citadel's blocks: it doubles back on itself, climbs and drops (z 1754 to 4404), and the blocks under it are each a different height and depth, stepped and set off one another, never a mirrored pair. 24581 units in about 147 s with 13 stops that set something off. Ours: no ride; our Combine quarter is walked on streets.",
+   "lessons": [
+    "valve-lift-diorama",
+    "valve-combine-lean"
+   ],
+   "view": {
+    "iso": "SW",
+    "box": [
+     -6600,
+     3500,
+     4000,
+     13400
+    ],
+    "clip_below": 1000,
+    "clip_above": 5200
+   }
+  },
+  {
+   "n": "Z4",
+   "file": "04_c02_shaft_from_the_pod.png",
+   "where": "d3_citadel_02, eye in the pod's seat near the start of the ride (eye -2560 4200 3140, looking north-east, yaw 60, 8 degrees down); same copy",
+   "teaches": "What the rider sees: the rail runs off as a thin beam into the dark, the pod arrays (Citadel_pods and cell pods, cyan outlines, 4 and 28 in the map) hang across the shaft at angles of their own, and the far walls are lost in the dark. The scale and the lack of a floor are the point. Ours: nothing in our maps hangs over a void; a Combine shaft would be new.",
+   "lessons": [
+    "valve-pod-racks",
+    "valve-combine-lean"
+   ],
+   "view": {
+    "eye": [
+     -2560,
+     4200,
+     3140
+    ],
+    "yaw": 60,
+    "pitch": 8,
+    "clip_below": 1000,
+    "clip_above": 5200
+   }
+  }
+ ]
+}

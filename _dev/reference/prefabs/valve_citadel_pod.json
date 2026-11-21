@@ -1,6 +1,6 @@
 {
 "name": "valve_citadel_pod",
-"note": "draft",
+"note": "HL2 Citadel prisoner pod that carries a player (d3_citadel_01, the pod hall; the same set is in d3_citadel_05 and ep1_citadel_00): one pod set, all entities: the func_tracktrain (a tiny nodraw brush, 135 over the boarding catwalk), a func_door_rotating 'rotator' on it (turns the pod 90), the Inner_pod_arm prop on the train and the Inner_pod_rotator prop on the rotator, the prop_vehicle_prisoner_pod (prisoner_pod_inner) hung from the rotator by a phys_ragdollconstraint (swings -35 to 40), a trigger on the pod that seats whoever touches it while it is open. The line's logic (counter, ready relay, resume relay) and the route ('route': 13 path_tracks, relative to the anchor, with speeds, flags and outputs): a loop of seven stops 320 apart along +x (pod_bay_track1 at -987 to track4 at -47, the boarding stop where the pod opens), then a turn to +y up 64 (track6 to track9 at 404, 38 to 1278), back to track1; track9 can switch to the rider's branch player_track1 to 4 (405 1206 188 to 1797 1310 188), whose end removes the pod. Speed 100 throughout (path speeds 0 keep it). Anchor: the train's x and y on the boarding catwalk (z of the walkway under the pod); the train moves to track4 at spawn (47 west, 10 south). Wiring in 'wiring', route in 'route': read prefabs.md, 'Pieces with their wiring'.",
 "from": "d3_citadel_01.vmf",
 "box": [
 10200.0,
