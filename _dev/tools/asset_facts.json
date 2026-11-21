@@ -1,4 +1,22 @@
 {
+"models/airboat.mdl": {
+"bbox": [
+-85.0,
+-132.0,
+-40.0,
+85.0,
+104.0,
+110.0
+],
+"built_static": false,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": false,
+"v": 2
+},
 "models/antlion.mdl": {
 "bbox": [
 -35.4,
@@ -7025,6 +7043,24 @@
 "static": true,
 "v": 2
 },
+"models/props_debris/barricade_short03a.mdl": {
+"bbox": [
+-21.8,
+-61.5,
+-29.3,
+34.0,
+60.5,
+33.4
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
 "models/props_debris/barricade_short04a.mdl": {
 "bbox": [
 -8.2,
@@ -7213,6 +7249,24 @@
 19.7,
 128.1,
 64.3
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_debris/building_brokenexterior002b.mdl": {
+"bbox": [
+-8.5,
+-128.3,
+-64.3,
+21.0,
+128.3,
+64.4
 ],
 "built_static": true,
 "collides": true,
@@ -7613,6 +7667,24 @@
 8.3,
 64.2,
 64.3
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_debris/concrete_section128wall001c.mdl": {
+"bbox": [
+-8.5,
+-64.8,
+-64.7,
+9.0,
+65.2,
+66.7
 ],
 "built_static": true,
 "collides": true,
@@ -8909,6 +8981,24 @@
 "static": true,
 "v": 2
 },
+"models/props_docks/dock_bumper01b.mdl": {
+"bbox": [
+-14.1,
+-255.4,
+-257.2,
+14.1,
+255.4,
+257.2
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
 "models/props_docks/dock_bumper02a.mdl": {
 "bbox": [
 -20.1,
@@ -9277,6 +9367,24 @@
 43.7,
 60.2,
 136.6
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_foliage/tree_poplar_01.mdl": {
+"bbox": [
+-122.7,
+-147.6,
+-1.4,
+183.9,
+131.9,
+1119.4
 ],
 "built_static": true,
 "collides": true,
@@ -10041,6 +10149,24 @@
 "prop_data": true,
 "ragdoll": false,
 "static": false,
+"v": 2
+},
+"models/props_junk/garbage_carboard001a.mdl": {
+"bbox": [
+-18.2,
+-30.2,
+-1.0,
+18.7,
+29.9,
+0.7
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
 "v": 2
 },
 "models/props_junk/garbage_carboard002a.mdl": {
@@ -16981,6 +17107,24 @@
 "game": "hl2",
 "physics": true,
 "prop_data": true,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_wasteland/interior_fence004b.mdl": {
+"bbox": [
+-71.3,
+-64.5,
+-59.8,
+2.7,
+64.9,
+51.9
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
 "ragdoll": false,
 "static": true,
 "v": 2
