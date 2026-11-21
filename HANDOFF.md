@@ -31,16 +31,15 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 
 ## Where things stand
 
-- 21 November, saved at 98% usage. Everything is on the session branch claude/laughing-pasteur-659pff, NOT on main yet.
-- Done and committed: Resistance modules (map_mods_b, all 11 reworked; stash real ammo crate, clinic health charger),
-  prefab library (40 pieces, docs/dev/prefabs.md), Valve trainstation_01 reference set + 4 lessons, lint checks
-  flush and bare, town name boards and canal fence corners no longer flush.
-- Work in progress (committed part way, unchecked): canal modules (map_mods_a, map_mods_c, map_mods_d, map_modules m_*),
-  Valve reference sets in _dev/reference/valve_* (nine SDK maps), Route Kanal set (_dev/reference/valve_canals/),
-  canal prefabs valve_canal_*. Helpers may have left more edits: commit them.
-- Known failure: layout south.txt "NOT SEALED near (1856 -3776 1184)" (drain, ash, vort, shanty in map_modules.py).
-- Next: fix south.txt seal; run python3 _dev/tools/map_modules_check.py (must PASS); merge lesson proposals from
-  scratchpad/work/valve_lessons_proposed.json and canal_lessons_proposed.json into lessons.json, rerun map_lessons.py --md;
-  push to main; send livingcity.zip and livingcity_tools.zip.
-- Asked the owner: add lc_hq_setup_plaza marker by the plaza stage (pole always, flag spot if in rebel territory)?
-- Ravenholm (d1_town_03) is the reference for the infestation quarter (map_raven.py), not the Resistance town (TODO).
+- 21 November (late). All on main. Valve map ingestion: 23 maps in (trainstation 01-05, c17_13, town_03, citadel_01,
+  coast_12, vehicles, all of Route Kanal): 112 pictures, 111 lessons, 54 prefab pieces, studies in docs/dev/valve-*.md.
+  THE GUIDE for ingesting more (the owner will ingest every Valve map): docs/dev/map-ingestion.md (CLAUDE.md points at it).
+- Being built by helpers when this was written: _dev/tools/map_ingest.py + _dev/tools/ingest/ (the durable ingestion
+  tool), the canal changes the owner approved (dished floor, walk ledges, Valve's outfall and lamp spacing), the
+  playground module copied from Valve's d1_trainstation_02, the NPC scripting study (docs/dev/valve-npc-notes.md).
+  If any is missing from git, it was not finished: check TODO.md and the guide.
+- New in the game: the train station's Breencast screen (editor, Street section, kind screen_station): Valve's curved
+  screen, showing only the scanner picture of the Administrator or the Director of Propaganda. Stash ammo crate and
+  clinic health charger in the map modules; the aqueduct valve drains its trough; the town's flagpole is the plaza's.
+- Waiting on the owner: whether the pipes module's steam leak should scald players; Valve-style canal fence props.
+- Flaky test noted in TODO.md (a dream test, passes on rerun).
