@@ -18,7 +18,6 @@ To add an item: `printf '%s\n' '- [ ] **Topic:** what to try. [needs a person: w
 
 - [ ] **Guns on rebel ground as a unit:** walk into rebel territory: no "LOWER YOUR WEAPON" prompt, and every gun fires, also after !build and after sleeping in their bed. [needs a person: no test yet, try it]
 - [ ] **Backup when you are down:** bleeding out with units of your squad near: does one kneel by you and get you up? Called over the radio from far off, do they come in from out of sight? [needs a person: the kneel and the arrival on the real map]
-- [ ] **The conditioning:** the Overwatch Candidate story on a Division Leader's board at 1200 XP: a soldier and a stalker wait, black screen, machines, and you are a Combine Prison Guard. [needs a person: the scene by eye]
 - [ ] **Interrogation:** F2 > Interrogate someone in a cell: three questions, baton, Done, the answers written underneath. Readable, and in the way of anything? [needs a person: the list on screen]
 - [ ] **Gas masks and the gas:** in chlorine gas the mask goes on by itself with the visor edge and breathing; people without one cover the mouth, cough and run out. How does the mask sit on a face (`lc_gasmask_fit`)? [needs a person: the mask and the hand over the mouth]
 
@@ -28,12 +27,9 @@ To add an item: `printf '%s\n' '- [ ] **Topic:** what to try. [needs a person: w
 - [ ] **A vortigaunt charging your vest:** E on a freed one: it turns, raises its hands, a green beam pulses to your chest for three seconds. Is there a charging animation? [needs a person: the animation and beam]
 - [ ] **The medic:** one in each rebel territory; E on him when hurt. Does he stay put and patch up hurt rebels near him? [needs a person: watching him]
 - [ ] **Operations:** as a Lieutenant, plan one straight from the F4 Operations board. Does the leader get the clipboard, how does it sit in the hand, do its boxes tick? [needs a person: the clipboard by eye]
-- [ ] **The interrogation chair:** the lamp hangs over it, dark until someone sits; with prisoners in the cage the cell takes them to the chair one at a time by itself. Are the number key lists readable? [needs a person: the lamp, how they sit, watching it run]
-- [ ] **Way marks:** Miscount Editor > "Mark: Resistance arrow" (left, right, up, down) and "Mark: FREEDOM THIS WAY" on a wall: the right way, the right size, the lambda's orange, still there after a map change? [needs a person: by eye]
 
 ## The city and its people
 
-- [ ] **The Cremator:** a greener flame with a glow; no burning sound left behind after it kills headcrabs; it comes for carcasses about 90 seconds on; at a barricade it gives up and goes elsewhere. [needs a person: the flame, the ear, its walking on the real map]
 
 ## The Administrator, the collapse and the ending
 
