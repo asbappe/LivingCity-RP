@@ -21,6 +21,8 @@ class Piece:
         self.solids, self.old, self.lights = self.sink.solids, self.sink.old, self.sink.lights
         self.turns = []
         self.mids = {"u": set(), "v": set(), "z": set()}    # middles of mass faces: ribs and small plates keep off them
+        self.rows = set()                                   # (rows of small plates laid: never two on one line)
+        self.taken = {}                                     # face -> [(s0, s1, t0, t1)] carrying a stack, rib or bracket
         self.thick = sorted(r.sample((2, 16), 1) + r.sample((4, 8), r.choice((1, 2))))
         self.steps = [t for t in self.thick if t in (4, 8)]
         n = r.choice((1, 2, 2, 3))
@@ -84,6 +86,14 @@ class Piece:
         q = (s, pl + sg * d) if ax == "v" else (pl + sg * d, s)
         self.lights.append((self.w(q + (t,)), COLD + " 220"))
 
+    def take(self, face, s0, s1, t0, t1):
+        self.taken.setdefault(face, []).append((min(s0, s1), max(s0, s1), t0, t1))
+
+    def free(self, face, s0, s1, t0, t1, pad=8):
+        """Nothing laid on face within pad of this rectangle (so no side of a small plate lies in another's plane)."""
+        p = self.q(pad)
+        return not any(s0 - p < a1 and s1 + p > a0 and t0 - pad < b1 and t1 + pad > b0 for a0, a1, b0, b1 in self.taken.get(face, ()))
+
     def clear(self, face, x, w, t0=None, t1=None):
         """Whether a piece from x to x + w (and t0 to t1 up) on face leaves the middles of the mass faces under it showing
         (the study's face test hides a whole face whose middle is covered)."""
@@ -99,8 +109,8 @@ class Piece:
         end (the next layer's edges, so what it leaves bare is a face of its own)."""
         r, q, s, last, lit = self.r, self.q, s0, None, 0
         bands, t = [(t0, t0 + foot)] if foot else [], t0 + foot
-        while not slab and t1 - t > 256:
-            h = r.choice((128, 192))
+        while not slab and t1 - t > 384:
+            h = r.choice((192, 256))
             bands, t = bands + [(t, t + h)], t + h
         bands.append((t, t1))
         while s1 - s >= q(32):
@@ -135,6 +145,8 @@ class Piece:
             small = r.choice((0, q(4), q(8)))
             a, b = (big, small) if left else (small, big)
             s0, s1, t0, t1 = s0 + max(a, lit), s1 - b, t0 + foot + r.choice((0, 8, 16)), t1 - r.choice((0, 16, 32))
+        if lays:
+            self.take(face, lays[0][0], lays[0][1], lays[0][2], lays[0][3])
         for i, (a0, a1, b0, b1, e0, e1, sl, li, ft) in enumerate(lays):
             nxt = lays[i + 1][:2] if i + 1 < len(lays) else ()
             self.tiles(face, a0, a1, b0, b1, e0, e1, sl, li, ft, nxt)
@@ -146,21 +158,27 @@ class Piece:
             for x in rib_run(t0, t1, w, self.r, mode, pitch):
                 if not any(x <= m <= x + w for m in self.mids["z"]):
                     self.fbox(face, s0, s1, x, x + w, d0, d0 + d, mat)
+                    self.take(face, s0, s1, x, x + w)
         else:
             q = self.q
             for x in rib_run(s0, s1, q(w), self.r, mode, q(pitch), None if self.fr.L == 1 else (q(32), q(160))):
                 if self.clear(face, x, q(w)):
                     self.fbox(face, x, x + q(w), t0, t1, d0, d0 + q(d), mat)
+                    self.take(face, x, x + q(w), t0, t1)
 
     def tabs(self, face, s0, s1, t0, d0=0, h=32):
         """Small plates 32 by 32 straight on a big mass (Valve: one join in six is a piece against one 8 times its
         size), lifted off the middle of the course under them."""
         q = self.q
-        t0 = max(16, (t0 + 16) // 128 * 128 + 112) if t0 % 128 > 16 else max(16, t0 // 128 * 128 - 16)   # (across a course joint)
+        j = int(round(t0 / 128.0)) * 128
+        t0 = j - 16 if j >= 128 else 16                   # (across a course joint, so it stands on two courses)
+        while (face, t0) in self.rows:
+            t0 += 128
+        self.rows.add((face, t0))
         while any(t0 <= m <= t0 + h for m in self.mids["z"]):
             t0 += 8
         for x in rib_run(s0, s1, q(32), self.r, None, q(128), (q(32), q(96))):
-            if self.clear(face, x, q(32), t0, t0 + h):
+            if self.clear(face, x, q(32), t0, t0 + h) and self.free(face, x, x + q(32), t0, t0 + h):
                 self.fbox(face, x, x + q(32), t0, t0 + h, d0, d0 + max(1, q(self.thick[0])), self.plate)
 
     def wedge(self, face, s, t0, t1, turn, flip=False):

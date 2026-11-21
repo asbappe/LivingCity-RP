@@ -91,6 +91,7 @@ def scene_map(out, seed):
                      " ".join("%.2f" % s for s, lv, a in b["walls"] if lv >= 3) or "-", " ".join("%.2f" % m for m in b["passages"]) or "-")))
     print("chain     %d runs, turns %s; gate %d..%d" % (len(c["runs"]), " ".join("%d/%d" % d for _, d, _ in c["runs"]), *c["gate"]))
     print("intrusion turned %s, door at y %d..%d" % (i["turn"], i["door"][0], i["door"][1]))
+    print("draw %d of the scene kept (nearest Valve's numbers: %.2f off)" % (info["draw"], info["distance"]))
     print("sealed" if not problems else "\n".join("PROBLEM: " + p for p in problems))
     print("wrote %s" % out)
 

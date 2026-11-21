@@ -111,7 +111,8 @@ def layers(faces):
     return out, steps
 
 
-def check(path):
+def check(path, quiet=False):
+    """The study's numbers for the Combine in a VMF, printed (or, quiet, only returned): {name: value} for the score."""
     B, ents = AL.parse(path)
     sky = AL.skybox_ids(B, ents)
     B = [b for i, b in enumerate(B) if i not in sky]
@@ -155,6 +156,11 @@ def check(path):
 
     def share(xs, test):
         return pc(np.mean([test(x) for x in xs]) if len(xs) else 0)
+    nums = {"below06": float(np.mean([x < 0.6 for x in art])) if art else 0.0, "at09": float(np.mean([x >= 0.9 for x in art])) if art else 0.0,
+            "passages": float(np.median(pas)) if pas else 0.0, "smallbig": float(np.mean([x >= 8 for x in rat])) if rat else 0.0,
+            "steps": Counter(steps), "off": off / tot}
+    if quiet:
+        return nums
     print("Combine in %s: %d brushes, %.1f million square units seen (Valve's ranges in brackets)" % (os.path.basename(path), len(comb), tot / 1e6))
     for name, ours, valve in (
             ("off the axes", pc(off / tot), "18.1 over 15 maps; 4 to 15 a plain hall, 15 to 35 a showpiece; d3_citadel_02 3.8"),
@@ -173,6 +179,16 @@ def check(path):
             ("texture scale", top(scales, 3), "HL2 0.25 on 39 to 81, 1 on 21 to 55"),
             ("light panels", "%d; colours %s" % (sum(b["kind"] == "light" for b in B), top(cols, 3)), "11 to 74 a map; 147 226 240 leads")):
         print("  %-20s %s  [%s]" % (name, ours, valve))
+    return nums
+
+
+def distance(nums):
+    """How far a map's Combine is from Valve's: walls below 0.6 near 30%, at 0.9 or more under 43%, passages under
+    0.3, small against big near 16%, the leading steps 64, 48, 56, 4, 8."""
+    st = nums["steps"]
+    lead = sum(v for k, v in st.items() if k in (4, 8, 48, 56, 64)) / float(sum(st.values()) or 1)
+    return (abs(nums["below06"] - 0.30) * 2 + max(0.0, nums["at09"] - 0.43) * 2 + max(0.0, nums["passages"] - 0.3) * 2
+            + abs(nums["smallbig"] - 0.158) * 3 + max(0.0, 0.6 - lead))
 
 
 def score(solids, old=()):

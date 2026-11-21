@@ -77,15 +77,19 @@ def old_block(v, name, box, style, door=None, vis="LC combine scene: old street"
     if door is None:
         v.world_box((x1, y1, 0, x2, y2, 192), low, up, NODRAW, vis)
         v.world_box((x1, y1, 192, x2, y2, h), up, "concrete/concreteceiling004a", NODRAW, vis)
-    cx1, cx2 = max(X1, x1 - 8), min(X2, x2 + 8)
-    cy1 = max(Y1, y1 - 8)
-    for z, hh, mat in ((192, 16, BAND), (h - 24, 24, BAND)) + tuple((z, 12, BAND) for z in range(384, h - 120, 192)):
-        v.world_box((cx1, cy1, z, cx2, y2 + 8, z + hh), mat, mat, mat, vis)
+    for z, hh in ((192, 16), (h - 24, 40)) + tuple((z, 12) for z in range(384, h - 120, 192)):
+        strips = [(max(X1, x1 - 8), y2 - 8, min(X2, x2 + 8), y2 + 8)]
+        if y1 > Y1:
+            strips.append((max(X1, x1 - 8), y1 - 8, min(X2, x2 + 8), y1 + 8))
+        for xe in (x1, x2):
+            if X1 < xe < X2:
+                strips.append((xe - 8, max(Y1, y1 + 8), xe + 8, y2 - 8))
+        for a, b, c, d in strips:
+            v.world_box((a, b, z, c, d, z + hh), BAND, BAND, BAND, vis)
     out = -1 if street == x1 else 1
     sx0, sx1 = sorted((street, street + 8 * out))
-    gaps = [(door[0], door[1])] if door else []
-    y = max(Y1, y1 - 8)
-    for g0, g1 in gaps + [(y2 + 8, y2 + 8)]:
+    y = max(Y1, y1)
+    for g0, g1 in ([(door[0], door[1])] if door else []) + [(y2, y2)]:
         if g0 - y >= 16:
             v.world_box((sx0, y, 0, sx1, g0, 48), PLINTH, PLINTH, PLINTH, vis)
         y = g1
@@ -111,20 +115,38 @@ def props(v, chain, r, vis="LC combine scene: props"):
     """Valve's Combine dressing on the street side: tall barricades in a row at 128 with their backs to the gate, a row
     of medium ones at 64 across the plaza (one yaw, sunk 2), a booth by the way through."""
     g0, g1 = chain["gate"]
-    z = -2
+    keys = {"skin": "0", "solid": "6", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1"}
     for i in range(4):
-        x = (g0 - 136 - 128 * i) if r.random() < 0.5 else (g1 + 136 + 128 * i)
-        v.point("prop_static", (x, CHAIN_Y - 104, z), {"model": "models/props_combine/combine_barricade_tall02b.mdl", "angles": "0 270 0",
-                                                      "skin": "0", "solid": "6", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1"}, vis)
+        v.point("prop_static", (g0 - 136 - 128 * i, CHAIN_Y - 240, -2), dict(keys, model="models/props_combine/combine_barricade_tall02b.mdl", angles="0 270 0"), vis)
     for i in range(9):
-        v.point("prop_static", (640 + 64 * i, CHAIN_Y - 448, z), {"model": "models/props_combine/combine_barricade_med01a.mdl", "angles": "0 270 0",
-                                                                 "skin": "0", "solid": "6", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1"}, vis)
-    v.point("prop_static", (g0 - 88, CHAIN_Y - 200, 0), {"model": "models/props_combine/combine_booth_short01a.mdl", "angles": "0 0 0",
-                                                         "skin": "0", "solid": "6", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1"}, vis)
+        v.point("prop_static", (-1344 + 64 * i, CHAIN_Y - 512, -2), dict(keys, model="models/props_combine/combine_barricade_med01a.mdl", angles="0 270 0"), vis)
+    v.point("prop_static", (g1 + 96, CHAIN_Y - 200, 0), dict(keys, model="models/props_combine/combine_booth_short01a.mdl", angles="0 0 0"), vis)
 
 
-def scene(out, seed=1):
-    r = random.Random("scene %d" % seed)
+def scene(out, seed=1, tries=6):
+    """The scene, drawn up to tries times; the draw whose Combine is nearest Valve's numbers (measure.distance) is kept."""
+    import os
+    from .measure import check, distance
+    best = None
+    for n in range(tries):
+        tmp = "%s.draw%d" % (out, n)
+        info, problems = draw(tmp, seed, n)
+        nums = check(tmp, quiet=True)
+        dist = distance(nums)
+        if best is None or dist < best[0]:
+            if best:
+                os.remove(best[3])
+            best = (dist, info, problems, tmp, n, nums)
+        else:
+            os.remove(tmp)
+    dist, info, problems, tmp, n, nums = best
+    os.replace(tmp, out)
+    info["draw"], info["distance"] = n + 1, dist
+    return info, problems
+
+
+def draw(out, seed, n):
+    r = random.Random("scene %d %d" % (seed, n))
     v = Vmf()
     sk = "LC combine scene: ground and sky"
     # the ground: the road, the pavements and plaza, the Combine's yard
@@ -152,7 +174,7 @@ def scene(out, seed=1):
     ch = Sink()
     info["chain"] = wall_chain(ch, r, X1 + 576, X2 - 576, CHAIN_Y, GATE)
     put(v, ch, "LC combine scene: wall chain")
-    info["building"] = building((-1024, 1792, 0, 1024, 3200, 1536), seed)
+    info["building"] = building((-1024, 1792, 0, 1024, 3200, 1536), seed * 10 + n)
     put(v, info["building"]["sink"], "LC combine scene: building")
     props(v, info["chain"], r)
     test_extras(v, START, 90, sk)

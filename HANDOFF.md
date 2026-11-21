@@ -31,15 +31,17 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 
 ## Where things stand
 
-- 21 November (late). The forest cave, expanded from Valve's maps (the owner: "reference the Episode 2 antlion caves and
-  mineshafts, and the HL2 ravenholm caves/mines"; copying Valve's VMFs is allowed). Behind the emergency door: 1280 of
-  Ravenholm's mine tunnel lifted whole from d1_town_04 (rock, timber sets, clamp lamps, rails, flooded floor), the
-  breach into the hive, Episode Two's antlion alarm post (`lc_nest_mouth_1_*`, not wired). The hive dressed to EP2's
-  measures (grub groups with their lights, cold fills, sacks, web plugs, stalactites). docs/dev/map-building.md.
-- `map_prefab.py` now lifts displacements (caves); pieces in docs/dev/prefabs.md, "Cave and mine pieces"; next lifts
-  listed there and on TODO.md. Valve's VMF zip: on the owner's Drive, found by name with the Drive connector.
-- Not compiled yet: `lc_forest_cave.vmf` (mine and hive), `lc_forest_bunker.vmf` (bunker and silo).
-- Valve map ingestion is DONE (145 maps, 279 lessons): docs/dev/valve-ingest-progress.md, docs/dev/map-ingestion.md.
-- Lifted and joined earlier: the silo into the bunker; Citadel and Black Mesa East pieces as modules.
-- Open with the owner (TODO.md): whether the nest's mouth sounds before a wave; the bunker door's speed; the mounted
-  gun's damage; lock gates crush or stop; which NPC lessons to build (all say ask first).
+- 21 November (late night). Valve ingestion of the whole set is DONE (145 maps, 279 lessons, 289 pictures):
+  docs/dev/valve-ingest-progress.md, guide docs/dev/map-ingestion.md, digest docs/dev/valve-digest.md. The owner allows
+  copying Valve's rooms whole into our maps.
+- Forest bunker (`lc_forest_bunker.vmf`, `map_forest.py` + `map_silo.py`): White Forest's look and round blast door
+  (about 11 s to open: the owner decides); the silo joined outside the north wall, every floor playable, the leader's
+  office and bedroom, a secret escape tunnel to an EP2 cache cave on the north rim. The owner's 12 compile faults fixed;
+  the new silo work is not yet compiled. Another chat works on the forest cave (its 9 asset faults: TODO.md).
+- Gamemode: a tall HQ flagpole from a `_top` marker; maps can bring territories (`lc_zone_<kind>_r<radius>_h<height>_<label>`,
+  `zoneMarkers` in the layout, CORE.md). The silo is an HQ spot (one flag at a time still holds).
+- Combine generator `map_combine.py` + `combine/`: a test scene `lc_combine_scene.vmf` waits on the owner's look.
+- Pieces with wiring (docs/dev/prefabs.md): Black Mesa East, the Citadel, the silo, the teleporter's power-up.
+- After ingestion, owner-approved (TODO.md): faster waves, squads with a medic, supplies from roofs, tripwires and
+  turrets, the church base, pieces as modules. Ideas: Advisor screens, Resistance posts in the city.
+- Open for the owner: the bunker door's speed; the Combine scene's look; Valve-only effects untested in Garry's Mod.

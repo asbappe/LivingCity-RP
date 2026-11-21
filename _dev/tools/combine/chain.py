@@ -64,7 +64,7 @@ def run(p, k, H, r):
         if p.clear(("v", 0, 1), x, w):
             p.add(ext([(Le, 0), (Le + d, 0), (d, H), (0, H)], 0, x, x + w, TRIM))
     t = max(1, q(p.thick[0]))
-    for x in rib_run(ta, tb - q(32), q(32), r, None, q(128), (q(32), q(96))):
+    for x in rib_run(max(ta, q(144)), min(tb, k - q(144)) - q(32), q(32), r, None, q(128), (q(32), q(96))):
         a, b = Le - z0 // step, Le - z1 // step
         p.add(ext([(a, z0), (a + t, z0), (b + t, z1), (b, z1)], 0, x, x + q(32), p.plate))
     for i, (b0, b1, zl, zh, e0, e1, mat) in enumerate(lays):
@@ -77,8 +77,8 @@ def run(p, k, H, r):
     hm = k * r.choice((35, 45, 60)) // 100
     for h0, h1 in ((q(16), hm), (hm, k - q(16))):
         p.add(ext([(-T, H - 128), (-T, H), (-T - q(r.choice(LEANS)), H)], 0, h0, h1, mm))
-    p.tabs(("v", -T - Pl, -1), q(48), k - q(48), 40)
-    p.tabs(("v", -T - Pl, -1), q(48), k - q(48), 88)
+    p.tabs(("v", -T - Pl, -1), q(144), k - q(144), 40)
+    p.tabs(("v", -T - Pl, -1), q(144), k - q(144), 88)
     if s0 is not None:
         o0, o1 = (s1 + q(48), k - q(48)) if s0 < k // 2 else (q(48), s0 - q(48))
         p.stack(("v", -T, -1), s0, s1, 160, H - 128, r.randint(3, 4), light=False)

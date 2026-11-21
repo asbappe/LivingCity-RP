@@ -49,8 +49,9 @@ class Building(Piece):
         # crown: leaning over the front on one part (looks down), set back on the rest (looks up); a centred attic
         c = X * r.choice((5, 6, 10, 11)) // 16 // 64 * 64
         la, lb = r.choice(LEANS), r.choice(LEANS)
-        self.course([(-T, H), (0, H), (la, H + 128), (-T, H + 128)], 0, c)
-        self.course([(-T, H), (0, H), (-lb, H + 128), (-T, H + 128)], c, X)
+        kb = r.choice((32, 40))
+        self.course([(-T, H), (0, H), (la, H + 128), (-T + kb, H + 128)], 0, c)
+        self.course([(-T, H), (0, H), (-lb, H + 128), (-T + kb, H + 128)], c, X)
         self.add(ext([(0, H), (T, H), (T - r.choice((32, 40)), H + 128), (-r.choice(LEANS), H + 128)], 1, -Y, -T, self.mm))
         self.mass(rect(256, -Y + 256, X - 256, -256), H, H + 256)
         ca = (X - 640) * r.choice((5, 6, 7)) // 10 // 64 * 64
@@ -78,6 +79,7 @@ class Building(Piece):
         for z in range(fz0 + 64, fz1 - 63, r.choice((192, 256))):
             for x in (f0 + 56, f0 + fw - 96):
                 self.fbox(fr, x, x + 32, z, z + 32, 0, gap, self.mm)
+                self.take(fr, x, x + 32, z, z + 32)
         self.tabs(("v", gap + 16, 1), f0 + 16, f0 + fw - 16, (fz0 + fz1) // 2)
         self.tabs(fr, rb0 + 16, rb1 - 16, hb + 32, 8)
         self.tabs(fr, rb0 + 16, rb1 - 16, H - 128)
@@ -116,6 +118,7 @@ class Building(Piece):
         self.add(ext(rect(T, -Y + T, T + dw, -T), 2, zw - 16, zw, TILE))
         self.add(ext(rect(T + dw - 4, -Y + T + 160, T + dw, -T - 64), 2, zw, zw + 48, self.plate))
         self.add(ext([(T + dw, 8), (T + dw + 2 * (zw - 8), 8), (T + dw, zw)], 1, -Y + T, -Y + T + 160, mm))
+        self.tabs(("v", -Y + T + 160, 1), T + dw + 64, T + dw + 2 * (zw - 8) - 96, 24)
         for v in range(-T - 96, -Y + T + 200, -256):
             self.add(ext(rect(T, v - 32, T + 48, v), 2, zw - 80, zw - 16, mm))
         e0 = X - T - 160
