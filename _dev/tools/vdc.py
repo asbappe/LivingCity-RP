@@ -217,7 +217,7 @@ def import_zip(src, dst=ZIP):
                 zi = zipfile.ZipInfo(name, date_time=(2026, 11, 21, 0, 0, 0))
                 zi.compress_type = zipfile.ZIP_DEFLATED
                 z.writestr(zi, data, compresslevel=level)
-        if b'\xe2\x80\x94' not in buf.getvalue():
+        if EM.encode('utf-8') not in buf.getvalue():
             os.makedirs(os.path.dirname(dst), exist_ok=True)
             with open(dst, 'wb') as f:
                 f.write(buf.getvalue())

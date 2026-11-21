@@ -44,5 +44,5 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 - Built after ingestion, owner-approved (TODO.md): timed holds with faster waves, squads topped up, supplies from
   roofs, tripwires and turrets; the church as a forward Resistance base over the crypt (Grigori there, wall benches,
   no cells); the silo into the bunker; Citadel and Black Mesa East pieces as modules. Ideas: Advisor screens.
-- Canals built to Valve's table; the Breencast screen and the mounted gun are in the game; VDC Saver saves Valve's wiki.
+- Canals built to Valve's table; the Breencast screen and the mounted gun are in the game; Valve's wiki is saved (vdc.py --card), lessons checked against it: docs/dev/vdc-lessons-check.md.
 - Open questions: the mounted gun's damage; lock gates crush or stop; which NPC lessons to build (all say ask first).
