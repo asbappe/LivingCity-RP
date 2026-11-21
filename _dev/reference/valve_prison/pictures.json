@@ -1,6 +1,5 @@
 {
  "title": "Valve's Nova Prospekt (d2_prison_01 to 08)",
- "draft": true,
  "about": "Valve's own Nova Prospekt maps d2_prison_01 to 08, measured from the VMFs by map_ingest.py (each map's numbers in valve_NAME/measure.json; the props, craft and section study in valve_prison/wip/props_craft_notes.md, the logic and NPC study in valve_prison/wip/logic_npc_notes.md) and drawn by map_view.py (flat colours; props as boxes of their true size, orange static, yellow physics, cyan dynamic, red ragdolls; big hollow models and see-through fences as outlines; green NPC markers, left out where a view says leave_out_npcs, and the train cars left out where a view lists them under leave_out: a scratch script dropped them before drawing) or cut away from above. Reference only, for Living City's Combine prison and holding cells: the VMFs are not in the repo, and the owner's own choices win where they differ (City 18's two tones with a dado rail, our cells module as it is).",
  "numbers": [
   "d2_prison_01: the way in, outdoors (80% of the AI nodes): yards wall to wall 420 to 1632 (median 1104 in 217 cuts), walls median 256 tall, no kerbs; the ground a grass and gravel blend; 7 gun towers (bunker_gun01, each with a point_spotlight 147 226 240, 1024 long, parented to it) and 5 combine_light002a on the walls, each with its blue beam.",
@@ -30,7 +29,11 @@
   "d2_prison_07: the last cellblocks and the way to the pod lines, all indoors: 527 prop_static to 66 prop_physics; 44 prison_cagedlight001a (9 lit); ceilings most often 128 (121 nodes), then 120 (68) and 192 (36); corridors 128 wide under 128; 121 flights of 3 or more steps; 528 output lines, 51 relays (the longest chain 7), 11 timers.",
   "d2_prison_07: prisoner pods hang on racks: 18 cell_01_pod each on a cell_01_rigging, two high (193 apart) and 185 to 203 apart along a row, 12 in the row before the control post and 6 in a second rack; Combine fence pairs (combine_fence01a and 01b) 576 apart; a force field is comshieldwall3 on a func_brush 2 thick, 126 high and 192 wide across a way.",
   "d2_prison_07: the Combine bolts its metal onto the old prison rather than building: metalcombine001 panels 2 to 10 thick (func_detail) laid on plaster; in the control post 30 such brushes (2 or 4 thick) and consoles (combine_interface001 and 003) turned to free angles in a room of the old prison's own glazed walls.",
-  "Ours: the Combine bay from City 18 (c18_cell_a) is 188 by 237 by 216, one bay with a bunk; Valve keeps its prisoners in pods racked two high about 190 apart, watched from a glazed post over the row."
+  "Ours: the Combine bay from City 18 (c18_cell_a) is 188 by 237 by 216, one bay with a bunk; Valve keeps its prisoners in pods racked two high about 190 apart, watched from a glazed post over the row.",
+  "d2_prison_08: the teleport works, built by the Combine: its metal is 81% of the map's visible brush area; metalwall077a laid at texture scale 0.5 (so only 54% of faces are at 0.25, against 83 to 95% in the other prison maps); lightmapscale 16 on 46% of faces; 0 infodecal, 8 overlays: the Combine's halls are clean.",
+  "d2_prison_08: 163 prop_static, 43 prop_physics, 25 prop_dynamic; ceilings most often 128 (106 nodes), then 192 (45) and 256 (27); corridors 142 wide under 192; 945 output lines, 81 relays, 33 makers (the last fight is scripted); 11 cell_array_01 pod arrays in the shafts; canteen tables thrown on their sides as cover, two stacked.",
+  "d2_prison_08: the pod shaft (x 1680 to 2032, y 2816 to 4096, z -960 to 192): 256 wide at the foot, opening out by 32 a step (128 high, 1 in 4) to about 400, straight for about 600, then closing in by 40 a step (5 in 16) to 224 at the head; the two sides step at different heights, so the section is a lop-sided lozenge; 98% of its wall area is Combine metal and 16% of it leans, half at 14 degrees and half at 17.",
+  "Ours: our depot's walls are upright plate in a box section; Valve's Combine sections lean out and in by 1 in 4 and 5 in 16 and are never mirrored, a shape our pieces do not have yet (valve-combine-lean)."
  ],
  "pictures": [
   {
@@ -348,6 +351,49 @@
     ],
     "cut": -48,
     "leave_out_npcs": true
+   }
+  },
+  {
+   "n": "P16",
+   "file": "16_prison08_pod_shaft_cut.png",
+   "where": "d2_prison_08, the pod shaft from the south-east, box x 1500 to 2300, y 3000 to 3700, cut at 200 (just over its head at 192), NPC markers left out",
+   "teaches": "The Combine's odd section: a shaft 1152 tall built of metalwall077a plates in courses 128 high, each course stepping out (32, 1 in 4) up the lower part and in (40, 5 in 16) up the top, the two sides stepping at different heights, so the open end shows a lop-sided lozenge (256 wide at the foot, about 400 in the middle, 224 at the head) rather than a box; pod arrays (cell_array_01) stand at the shaft's two ends, outside this box, facing each other 182 apart across its foot. Dark: the shaft has no lights of its own in the drawing.",
+   "lessons": [
+    "valve-combine-lean",
+    "valve-pod-racks",
+    "valve-combine-cold"
+   ],
+   "view": {
+    "iso": "SE",
+    "box": [
+     1500,
+     3000,
+     2300,
+     3700
+    ],
+    "cut": 200,
+    "leave_out_npcs": true
+   }
+  },
+  {
+   "n": "P17",
+   "file": "17_prison08_teleport_hall.png",
+   "where": "d2_prison_08, the teleport hall, eye 496 32 1024 looking north-west (yaw 135)",
+   "teaches": "Inside a hall the Combine built for itself: 91% of the wall area is its metal (metalwall077a at scale 0.5), dark plates leaning at 14 and 27 degrees over a floor at about 1000, the teleport's platform and frame (cyan, prop_dynamic) in the middle, Combine fence pairs (combine_fence01a and 01b, about 130 apart) round its edge, three timers (combine_tptimer) 92 apart on a wall; cold and bare, nothing of the old prison in it.",
+   "lessons": [
+    "valve-combine-lean",
+    "valve-combine-cold",
+    "valve-forcefield",
+    "combine-kit"
+   ],
+   "view": {
+    "eye": [
+     496,
+     32,
+     1024
+    ],
+    "yaw": 135,
+    "pitch": 3
    }
   }
  ]

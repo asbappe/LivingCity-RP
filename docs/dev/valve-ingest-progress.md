@@ -50,7 +50,8 @@ helpers' running notes and lesson proposals in its `wip/` while it runs; at the 
   Numbers gathered on the way: City 17's Nexus (`valve_c17/pictures.json` U26, U27, U32: Combine metal as thin plates,
   2 thick most often, longest side 64; 14% of its faces off right angles against 4% of the old plaster, tilted 45 to 70
   and turned 25, 45 or 65; set inside the old rooms like a second skin and breaking out through the front), and the
-  "Combine architecture" section of Nova Prospekt's notes (`valve_prison/`).
+  "Combine architecture" section of Nova Prospekt's notes (`valve_prison/notes/`) with its pictures P14 (depot: Combine
+  walls leaning against old concrete, 20% of its wall area at about 14 degrees), P16 (the lopsided pod shaft), P17.
 
 - **Approving findings (21 November):** at the end of each batch, put the findings most worth building to the owner
   to pick from; approved ones go on `TODO.md` under "Owner-approved Valve findings", and **nothing is built until
@@ -59,7 +60,7 @@ helpers' running notes and lesson proposals in its `wip/` while it runs; at the 
 
 ## If the work was cut off (21 November, at the usage limit)
 
-Running when the session neared its limit: Nova Prospekt's pictures (`valve_prison/pictures.json`, draft), Black
+Running when the session neared its limit (Nova Prospekt finished since): Black
 Mesa East whole (`valve_eli/`: pictures, `wip/notes.md`, `wip/lessons.json`), EP1 City 17's props and craft
 (`valve_ep1c17/wip/`). Whatever they saved is committed. To carry on: read what each saved, finish the missing
 maps with a new helper (same brief as before: `docs/dev/map-ingestion.md`, "Briefing a helper"), then merge and
@@ -74,7 +75,7 @@ All 122 measured on 21 November (145 maps in `valve_stats.json` with the first 2
 |---|---|---|---|---|---|
 | 1 | City 17's uprising, and Valve's standards | d3_c17_01, 02, 03, 04, 05, 06a, 06b, 07, 08, 09, 10a, 10b, 11, 12, 12b; testroom_standards, zoo_standards, testroom_measure_movement; styleguide_c17_rubble, styleguide_c17_rubble_2 | yes | yes: 36 pictures U1 to U36 (`valve_c17/`) | yes: 22 new lessons, 22 extended; notes in `valve_c17/notes/` |
 | 2 | Ravenholm | d1_town_01, 01a, 02, 02a, 04, 05; styleguide_ravenholm_01, styleguide_mining | yes | yes: 19 pictures R101 to R119 (`valve_ravenholm/`) | yes: 18 new lessons, 18 extended; notes in `valve_ravenholm/notes/` |
-| 3 | Nova Prospekt | d2_prison_01 to 08 | yes | running (`valve_prison/`) | yes: 23 new lessons, 16 extended (190 in all) |
+| 3 | Nova Prospekt | d2_prison_01 to 08 | yes | yes: 17 pictures P1 to P17 (`valve_prison/`) | yes: 23 new lessons, 16 extended; notes in `valve_prison/notes/` |
 | 4 | Black Mesa East | d1_eli_01, 02 | yes | running (`valve_eli/`, one helper for all) | running |
 | 5 | EP1 City 17 | ep1_c17_00, 00a, 01, 01a, 02, 02a, 02b, 03, 05, 06; styleguide_hospital_exit, styleguide_garage, styleguide_garage_destroyed, styleguide_garage_antlionroom, styleguide_train_loadingdock, styleguide_train_repair, styleguide_antlion_tunnel, styleguide_antlionhole | yes | | started: props and craft (`valve_ep1c17/wip/`) |
 | 6 | The Citadel, HL2 and EP1 | d3_citadel_01 (in before; studied again), 02, 03, 04, 05, d3_breen_01; ep1_intro, ep1_citadel_00, 01, 02, 02b, 03, 04; styleguide_core, styleguide_destroyed_citadel | yes | | |

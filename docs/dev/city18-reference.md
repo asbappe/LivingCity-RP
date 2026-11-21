@@ -502,6 +502,63 @@ Valve's own d3_citadel_01 (the Citadel's flank) (the Source SDK copy the owner u
 | C5 | `valve_d3_citadel_01/05_combine_inside.png` | inside (eye 7012 4576 -1535) | Combine metal in leaning frames, all one material, lit cold. | valve-combine-cold |
 | C6 | `valve_d3_citadel_01/06_rock_and_metal.png` | old stone and cliff against a Combine pillar (eye 6180 4494 -514) | The pillar is plain and dark; the rock and brick round it carry the texture. | valve-combine-cold |
 
+## Valve's Nova Prospekt (d2_prison_01 to 08) (`_dev/reference/valve_prison/`)
+
+Valve's own Nova Prospekt maps d2_prison_01 to 08, measured from the VMFs by map_ingest.py (each map's numbers in valve_NAME/measure.json; the props, craft and section study in valve_prison/wip/props_craft_notes.md, the logic and NPC study in valve_prison/wip/logic_npc_notes.md) and drawn by map_view.py (flat colours; props as boxes of their true size, orange static, yellow physics, cyan dynamic, red ragdolls; big hollow models and see-through fences as outlines; green NPC markers, left out where a view says leave_out_npcs, and the train cars left out where a view lists them under leave_out: a scratch script dropped them before drawing) or cut away from above. Reference only, for Living City's Combine prison and holding cells: the VMFs are not in the repo, and the owner's own choices win where they differ (City 18's two tones with a dado rail, our cells module as it is).
+
+- d2_prison_01: the way in, outdoors (80% of the AI nodes): yards wall to wall 420 to 1632 (median 1104 in 217 cuts), walls median 256 tall, no kerbs; the ground a grass and gravel blend; 7 gun towers (bunker_gun01, each with a point_spotlight 147 226 240, 1024 long, parented to it) and 5 combine_light002a on the walls, each with its blue beam.
+- d2_prison_01: a gun tower is an octagon of concrete 160 across (corners cut, func_detail) on the wall top, its floor 8 thick at z 1784 to 1792, about 450 over the yard; posts 32 by 44 and 128 high with gaps between them, and a roof slab 176 across and 8 thick on the posts; the gun 40 over the floor and 58 off the parapet, facing out.
+- d2_prison_01: the old prison's front has 16 barred windows, each a pair of props (plasterwall029g_window01a with its bars as a prop_dynamic) 40 apart; breaking the glass sets the bars' bodygroup (OnBreak > SetBodyGroup, 28 lines); 92% of wall columns over 256 tall change material, most often at 128 or 64 over the foot.
+- Ours: Living City has no yard or gun tower yet; Valve's yard walls are about 256 tall, lower than our canal's 384, and its towers stand about 450 over the yard, so a tower on our canal's rim would see the whole canal floor.
+- d2_prison_02: the first cellblock and the showers, almost all indoors (8% of the AI nodes outdoors): 440 prop_static to 113 prop_physics; ceilings most often 120 (41 nodes), then 256 (17) and 512 (14); corridors 134 wide under 128; 104 flights of 3 or more steps, every step 8 by 12.
+- d2_prison_02: the cellblock hall (x -1280 to -1056) is 224 wall to wall with a row of cells on each side, floors at 256 and 384; cells 128 wide and 176 deep behind partitions 16 thick at a pitch of 144; 15 barred doors (prison_celldoor001a) and 14 solid ones (prison_heavydoor001a), each under a prison_doortrack001a; a cage lamp on each cell's front 86 over its floor, 144 apart, only 4 of the map's 40 lit.
+- d2_prison_02: the showers are three shower_system001a 320 apart, 40 off one wall of a tiled room, under hanging tubes; 66 infodecal (stains 23, blood 9, trash 8), wall decals median 56 over the floor.
+- Ours: the cells module's three cells are 128 by 160 by 128 off a corridor 128 wide and 128 high, one storey; Valve's cellblock is 128 by 176 cells two storeys high on both sides of a hall 224 wide, with the upper walks 80 wide and a gap of 64 between them.
+- d2_prison_03: cellblocks, washrooms and showers: 267 prop_static to 169 prop_physics, 15 prison_toilet01 and 14 prison_sink001b; ceilings most often 256 (94 nodes), then 192 (45) and 128 (34); corridors 152 wide under 160; 334 trim strips; walls change at 128 over the foot, tile under plaster in the washrooms (tilewall009b under plasterwall026a).
+- d2_prison_03: the cells are the same everywhere in Nova Prospekt (71 found in 16 rows): 128 wide, 176 deep, partitions 16 thick at a pitch of 144, floor slabs 8 so a storey is 128 and a cell 120 clear; 36 of the 71 are empty and only 3 have the full kit (bed, toilet, sink, heater): the cells a player walks into.
+- d2_prison_03: washrooms have toilets 64 apart in two rows facing each other and sinks 64 apart in facing rows; the showers are shower_system001a 40 off the wall, 320 apart, on both long walls of a tiled hall.
+- Ours: our cells are 160 deep and 128 high inside where Valve's are 176 deep and 120 clear; ours have a toilet, a bucket and a drain each, and a mattress or a bed frame, where Valve leaves most cells bare and kits out only the ones a player enters.
+- d2_prison_04: the tall cellblock, guard offices and the camera room: 190 prop_static to 78 prop_physics; ceilings most often 192 (43 nodes), then 120 (39) and 128 (38); corridors 136 wide under 192; 12 controlroom_desk001b with 8 file cabinets; 30 flights of 3 or more steps (8 by 12, median 10 steps).
+- d2_prison_04: the tall cellblock (x -1088 to -448) is a hall 448 wide and about 512 high with cells on one side only, three tiers at 128, 256 and 384 (partitions at a pitch of 144, 176 deep), walks 80 wide and 8 thick hung off the cell fronts at 256 and 384, a column 32 across rising the full height in the hall, interior_fence002c panels closing the walks' ends.
+- d2_prison_04: guard office: the desk 24 to 58 off a wall, the chair 44 from it, file cabinets on the walls 73 to 131 away, a monitor on the desk, a switch box by the door 97 up; the camera room's Combine screens (combine_intmonitor001) each carry a faint light 147 226 240 at 50 and a spot at 225, cone 60.
+- Ours: our cells corridor is 128 wide and 128 high; this cellblock's hall is 448 wide and about 512 high, three tiers of cells looking onto it, so a guard on the floor or a walk sees every door at once.
+- d2_prison_05: the prison's service rooms (laundry, kitchen, offices) and a cellblock brought down: 422 prop_static to 136 prop_physics; ceilings most often 176 (121 nodes), then 256 (79) and 128 (34); corridors 139 wide under 190; rubble as props (rebar002d_96 23, plaster_ceilingpile001b 23, concrete_debris256pile001a 20); the fallen hall's columns are concrete_column001a in three physics pieces, 256 apart in two rows 480 apart.
+- d2_prison_05: the laundry (x -600 to 92, y 293 to 1744): 12 laundry_dryer002 (static) in rows of 2 or 3, 76 to 92 apart, 8 of them turned 1 to 12 degrees off the grid; washers along the walls; laundry carts as physics props turned freely (7 laundry_cart001, 5 laundry_cart002).
+- d2_prison_05: the kitchen (x -2160 to -1695, y -896 to -615, about 465 by 281): kitchen_counter001d in an L, two kitchen_stove001a 217 apart on one wall, two small stoves as physics props (named, for a scripted moment), gas cans on the counters, a shelf.
+- Ours: Living City has no prison kitchen or laundry; our cells' guard room is 256 by 192, the size of Valve's small guard office, where the laundry is about 690 by 1450 and the kitchen about 465 by 281.
+- d2_prison_06: the interrogation room, the depot and the train yard, all indoors: 325 prop_static, 102 prop_physics, 110 prop_dynamic (the trains and their pods: 56 cell_01_pod); ceilings most often 208 (93 nodes), then 184 (36) and 128 (33); corridors 126 wide under 192; 620 output lines, 44 relays, 7 counters.
+- d2_prison_06: the Combine's own metal is 20% of the map's brush area (0 to 1% in the old prison maps): its walls stand square in plan but 14% of the map's wall area leans 14 to 17 degrees off upright (panels 128 high leaning 32, or 40); its brushes are 8 thick (140) or 2 (82), and where a plate lies on an old wall it touches it (gap 0 on 23 of 25).
+- d2_prison_06: the train trench at x 3000: Combine walls 192 thick at the foot, the track bed 256 wide at z -592, the way between 336 wide up to -464, 400 to -336, 464 above: out 32 a side every 112 to 128; train cars (combine_train02a/b) 632 apart on two lines, each car a prop_dynamic parented to its train, the pods parented with it.
+- Ours: our depot hall is 768 by 384 by 192 with upright clad walls; Valve's Combine halls lean 14 to 23 degrees and stand under 184 to 208 most often, and its interrogation room is one Combine model (introomarea) set into an old room rather than built of brushes.
+- d2_prison_07: the last cellblocks and the way to the pod lines, all indoors: 527 prop_static to 66 prop_physics; 44 prison_cagedlight001a (9 lit); ceilings most often 128 (121 nodes), then 120 (68) and 192 (36); corridors 128 wide under 128; 121 flights of 3 or more steps; 528 output lines, 51 relays (the longest chain 7), 11 timers.
+- d2_prison_07: prisoner pods hang on racks: 18 cell_01_pod each on a cell_01_rigging, two high (193 apart) and 185 to 203 apart along a row, 12 in the row before the control post and 6 in a second rack; Combine fence pairs (combine_fence01a and 01b) 576 apart; a force field is comshieldwall3 on a func_brush 2 thick, 126 high and 192 wide across a way.
+- d2_prison_07: the Combine bolts its metal onto the old prison rather than building: metalcombine001 panels 2 to 10 thick (func_detail) laid on plaster; in the control post 30 such brushes (2 or 4 thick) and consoles (combine_interface001 and 003) turned to free angles in a room of the old prison's own glazed walls.
+- Ours: the Combine bay from City 18 (c18_cell_a) is 188 by 237 by 216, one bay with a bunk; Valve keeps its prisoners in pods racked two high about 190 apart, watched from a glazed post over the row.
+- d2_prison_08: the teleport works, built by the Combine: its metal is 81% of the map's visible brush area; metalwall077a laid at texture scale 0.5 (so only 54% of faces are at 0.25, against 83 to 95% in the other prison maps); lightmapscale 16 on 46% of faces; 0 infodecal, 8 overlays: the Combine's halls are clean.
+- d2_prison_08: 163 prop_static, 43 prop_physics, 25 prop_dynamic; ceilings most often 128 (106 nodes), then 192 (45) and 256 (27); corridors 142 wide under 192; 945 output lines, 81 relays, 33 makers (the last fight is scripted); 11 cell_array_01 pod arrays in the shafts; canteen tables thrown on their sides as cover, two stacked.
+- d2_prison_08: the pod shaft (x 1680 to 2032, y 2816 to 4096, z -960 to 192): 256 wide at the foot, opening out by 32 a step (128 high, 1 in 4) to about 400, straight for about 600, then closing in by 40 a step (5 in 16) to 224 at the head; the two sides step at different heights, so the section is a lop-sided lozenge; 98% of its wall area is Combine metal and 16% of it leans, half at 14 degrees and half at 17.
+- Ours: our depot's walls are upright plate in a box section; Valve's Combine sections lean out and in by 1 in 4 and 5 in 16 and are never mirrored, a shape our pieces do not have yet (valve-combine-lean).
+
+| # | File | Where | What it teaches | Lessons |
+|---|---|---|---|---|
+| P1 | `valve_prison/01_prison01_gun_tower_cut.png` | d2_prison_01, the gun tower at the yard's south-west corner from the south-west, box x 950 to 1750, y -5150 to -4350, cut at 1915 (under its roof), NPC markers left out | A gun tower: an octagon 160 across with its corners cut, on the wall top about 450 over the yard; posts 32 by 44 and 128 high with gaps to shoot through, a floor and roof slab each 8 thick; the gun (bunker_gun01, cyan, a prop_dynamic) 40 over the floor and 58 off the parapet, facing out, with a point_spotlight 147 226 240 (1024 long, 64 wide) parented to it so the beam follows the gun; combine_light002a on the walls round it. | valve-guard-tower, valve-combine-light-beam, valve-chamfer-8 |
+| P2 | `valve_prison/02_prison01_yard.png` | d2_prison_01, the outer yard, eye 2852 -4773 1361 looking north-east (yaw 45) | The yard the player crosses: open grass and gravel about 1100 wall to wall (the map's median 1104), walls about 256 tall in two bands, a gun tower over the wall top beyond, trees 451 apart (8), chain-link fence props along the yard's edges; nothing in the middle to hide behind, so the towers see all of it. | valve-guard-tower, valve-wall-bands |
+| P3 | `valve_prison/03_prison01_barred_block.png` | d2_prison_01, the old prison's front from the inner yard, eye 3452 -1344 1514 looking south (yaw 270) | The old prison block as the Combine found it: plaster and concrete walls banded at 128 over the foot, a tiled roof, barred windows as props in a row 40 apart (orange: plasterwall029g_window01a and its bars, 16 of each), the bars a prop_dynamic whose bodygroup changes when the glass is broken; the Combine adds only lights and guns to it, not walls. | valve-wall-bands, combine-kit |
+| P4 | `valve_prison/04_prison02_cellblock_cut.png` | d2_prison_02, the first cellblock from the south-west, box x -1520 to -820, y 2560 to 3420, cut at 490 (over the upper tier's floor at 384), NPC markers left out | A two-tier cellblock in plan: cells 128 wide and 176 deep behind partitions 16 thick at a pitch of 144, in rows of 4 and 5 facing each other across a hall 224 wall to wall; the upper tier's walks 80 wide and 8 thick hung off the cell fronts with handrail04_long (128 long) along their edges, a gap of 64 between the two walks; on the upper west side no cells but the guard room, its corner cut at 45 and a window band onto the hall, the desk turned 45 to face it. | valve-prison-cell, valve-cellblock-tiers, valve-prison-rooms |
+| P5 | `valve_prison/05_prison02_hall_stair.png` | d2_prison_02, the cellblock hall from its south end, eye -1168 2580 320 looking north (yaw 90), 8 degrees up, NPC markers left out | The hall between two tiers of cells: cell fronts (orange doors) on both sides, the upper walks overhead, and the stair up between them in the well: 60 wide with open treads 2 thick, 15 steps of 8 by 12 from 256 to 376, so the stair takes no floor from the hall; hanging tubes and sprinklers under the roof. | valve-cellblock-tiers, valve-prison-fixtures |
+| P6 | `valve_prison/06_prison02_upper_walk.png` | d2_prison_02, on the cellblock's upper walk, eye -1234 2686 448 looking north (yaw 90) | A tier walk as a guard walks it: the cell doors in a row 144 apart along one side (heavy doors on prison_doortrack001a), a cage lamp beside each door 86 up, the walk 80 wide with a handrail along the open edge, the other row's walk across the gap; the light comes in pools from the few lamps that are lit (4 of 40), dark between. | valve-cellblock-tiers, valve-light-pools, valve-fixture-lights |
+| P7 | `valve_prison/07_prison03_cell_cut.png` | d2_prison_03, one cell with the full kit from the south-west, box x -3800 to -3540, y 3880 to 4160, cut at 112 (under its roof at 120), NPC markers left out | One cell, inside 128 wide by 176 deep by 120 clear, partitions 16 thick: a metal bed (prison_metalbed001a) along one side wall; the toilet, the sink and the heater in a line along the other side wall, 12 to 16 off it, at 29, 74 and 135 from the back wall; the door slides along the front's outside face under its track, a cage lamp on the front beside it 86 up; a ceiling panel light in the middle. Nothing else: no table, no shelf. | valve-prison-cell, valve-prison-rooms |
+| P8 | `valve_prison/08_prison03_row_cut.png` | d2_prison_03, a row of cells two tiers high from the south-west, box x -3900 to -3100, y 3700 to 4400, cut at 240 (over the upper tier's floor at 128), NPC markers left out | A row of cells two tiers high (floors at 0 and 128), partitions at a pitch of 144, the fronts facing north onto a hall; the upper tier's walk only 56 wide (func_detail 8 thick) with handrail04_long along its edge at 20 over the walk, a second rail 90 across the well; a door track and a cage lamp at 86 up on every cell's front, both tiers; most cells bare. | valve-prison-cell, valve-cellblock-tiers |
+| P9 | `valve_prison/09_prison04_tall_block.png` | d2_prison_04, the floor of the tall cellblock, eye -864 1888 192 looking north (yaw 90), NPC markers left out | The tall cellblock from its floor: a hall 448 wide and about 512 high, three tiers of cells stacked on the right, each tier's walk 80 wide hung off the cell fronts with a handrail along it, the round column 32 across going up the middle of the hall, hanging tubes high overhead (567 to 631) and drums and crates on the floor (oildrum001 is the map's third commonest model, 23). | valve-cellblock-tiers, valve-prison-cell |
+| P10 | `valve_prison/10_prison04_tiers_cut.png` | d2_prison_04, the tall cellblock from the south-west, box x -1150 to -380, y 1400 to 2500, cut at 500 (over the top tier's floor at 384), NPC markers left out | The tall cellblock in plan: the open hall 448 wide on the west, the top tier of cells (176 deep, a pitch of 144) along the east wall with its walk 80 wide in front, two guard desks (controlroom_desk001b) at the top tier's level south of the cells, the walks' ends closed by fence panels; the tiers are the cell storey's own slab carried out 80 as the walk, 128 a storey. | valve-cellblock-tiers, valve-prison-cell, valve-prison-rooms |
+| P11 | `valve_prison/11_prison05_laundry_cut.png` | d2_prison_05, the laundry from the south-west, box x -680 to 140, y 260 to 1790, cut at 540 (about 150 over its floor), NPC markers left out | The prison's laundry: big dryers (laundry_dryer002, orange) in rows of 2 or 3, 76 to 92 apart, most turned 1 to 12 degrees off square so the rows look set by hand; washers against the walls; carts (yellow, physics) loose and turned any way; hanging tubes overhead. A work room where prisoners did the Combine's chores, readable from its machines alone. | valve-prison-rooms, valve-turn-the-loose |
+| P12 | `valve_prison/12_prison05_kitchen_cut.png` | d2_prison_05, the kitchen from the south-west, box x -2220 to -1640, y -960 to -560, cut at 640 (128 over its floor at 512), NPC markers left out | A prison kitchen about 465 by 281: counters (kitchen_counter001d, physics props set square) in an L, two big stoves (kitchen_stove001a, static) 217 apart against the far wall, two small stoves loose beside them, gas cans on the counters turned any way (yellow, physics), tile wall pieces. | valve-prison-rooms, valve-physics-flags |
+| P13 | `valve_prison/13_prison06_interrogation.png` | d2_prison_06, the interrogation room from just inside its Combine door, eye 480 100 64 looking east (yaw 0), NPC markers left out | The interrogation room: an old room (hanging tubes, pipes, a shelf) with the Combine's room model (introomarea, drawn as outlines) set into it, and the pod arm (pod_extractor, cyan, a prop_dynamic) in the middle where the subject hangs; the door is a combine_door01 with a combine_lock01 on each side 54 up; two generators 182 apart, consoles at 225 and 270 degrees. Lit by narrow cold spots on the subject (155 220 255 at 500, cone 12, twice; 204 255 255 at 400 to 600, cone 21) and faint console glows (74 209 217 at 20); the rest dark. | valve-interrogation-light, valve-prisoner-in-beams, valve-combine-aimed, combine-kit |
+| P14 | `valve_prison/14_prison06_depot_lean_cut.png` | d2_prison_06, the depot under the interrogation room from the south-west, box x 400 to 1800, y -350 to 950, cut at -250, the train cars and NPC markers left out | Where the Combine built beside the old prison: its metal hall (dark grey plates of metalwall077a at scale 0.5) stands against the old concrete; in this box 42% of the wall area is the Combine's metal, a fifth of it leaning, 85% of the lean at 14 degrees (32 out for every 128 up), while the old walls stand upright (0.6% lean). The plates are 2 to 8 thick and laid flush on the old walls, never stood off them; the sections step out and in unevenly, not mirrored side to side. | valve-combine-lean, valve-combine-cold, combine-kit |
+| P15 | `valve_prison/15_prison07_post_and_pods_cut.png` | d2_prison_07, the control post and the pod rack beside it from the south-west, box x -820 to 950, y -4050 to -3150, cut at -48 (under the post's roof at -40), NPC markers left out | The Combine moved into the old prison with props and thin plate: the control post is the old prison's own room (floor at -168, walls 128 high, a band of glass windows from 32 to 94 over the floor in metalwall035a frames) with 30 metalcombine001 panels 2 or 4 thick laid on its plaster and the Combine's consoles set at free angles (yaw 356, 180, 90); outside the glass, a row of prisoner pods (cell_01_pod on cell_01_rigging) racked two high, 193 apart, about 190 apart along the row. | valve-pod-racks, valve-combine-aimed, combine-kit |
+| P16 | `valve_prison/16_prison08_pod_shaft_cut.png` | d2_prison_08, the pod shaft from the south-east, box x 1500 to 2300, y 3000 to 3700, cut at 200 (just over its head at 192), NPC markers left out | The Combine's odd section: a shaft 1152 tall built of metalwall077a plates in courses 128 high, each course stepping out (32, 1 in 4) up the lower part and in (40, 5 in 16) up the top, the two sides stepping at different heights, so the open end shows a lop-sided lozenge (256 wide at the foot, about 400 in the middle, 224 at the head) rather than a box; pod arrays (cell_array_01) stand at the shaft's two ends, outside this box, facing each other 182 apart across its foot. Dark: the shaft has no lights of its own in the drawing. | valve-combine-lean, valve-pod-racks, valve-combine-cold |
+| P17 | `valve_prison/17_prison08_teleport_hall.png` | d2_prison_08, the teleport hall, eye 496 32 1024 looking north-west (yaw 135) | Inside a hall the Combine built for itself: 91% of the wall area is its metal (metalwall077a at scale 0.5), dark plates leaning at 14 and 27 degrees over a floor at about 1000, the teleport's platform and frame (cyan, prop_dynamic) in the middle, Combine fence pairs (combine_fence01a and 01b, about 130 apart) round its edge, three timers (combine_tptimer) 92 apart on a wall; cold and bare, nothing of the old prison in it. | valve-combine-lean, valve-combine-cold, valve-forcefield, combine-kit |
+
 ## Valve's Ravenholm (d1_town_01, 01a, 02, 02a, 04, 05 and two style rooms) (`_dev/reference/valve_ravenholm/`)
 
 Valve's own Ravenholm maps after d1_town_03 (whose set is in valve_d1_town_03/), with the style rooms styleguide_ravenholm_01 and styleguide_mining, measured from the VMFs by map_ingest.py (each map's numbers in valve_NAME/measure.json; the props, craft and section study in valve_ravenholm/wip/props_craft_notes.md) and drawn by map_view.py (flat colours; props as boxes of their true size, orange static, yellow physics, cyan dynamic, red ragdolls; green NPC markers, left out where a view says leave_out_npcs: a scratch script dropped every npc_ entity before drawing) or cut away from above. Reference only, for the infestation quarter (map_raven.py): the VMFs are not in the repo, and the owner's own choices win where they differ (the quarter's main street keeps its crown, kerb 8 and pavements 96).
@@ -872,7 +929,7 @@ Use the Combine's own props: booths (combine_booth_short01a/med01a), buttresses 
 - **Checked by:** review
 - **Tags:** combine, city18
 
-- **See:** `07_cells.png`, `08_combine.png`, `18_cells.png`, `19_combine.png`, `22_street_section.png`, `26_combine_plan.png`, `27_square_above.png`, `valve_c17/02_checkpoint_iso.png`, `valve_c17/11_combine_office_cut.png`, `valve_c17/17_combine_held_flats_cut.png`, `valve_c17/18_combine_post_iso.png`, `valve_c17/26_nexus_core_cut.png`, `valve_c17/27_nexus_combine_corridor_eye.png`, `valve_c17/28_nexus_courtyard_eye.png`, `valve_c17/29_combine_barricade_row_cut.png`, `valve_c17/30_nexus_roof_post_iso.png`, `valve_c17/32_nexus_outside_iso.png`, `valve_d1_trainstation_01/07_interrogation.png`, `valve_d1_trainstation_02/04_plaza.png`, `valve_d2_coast_12/03_bunker_mouth.png`, `valve_d3_citadel_01/03_cliff_cut.png`
+- **See:** `07_cells.png`, `08_combine.png`, `18_cells.png`, `19_combine.png`, `22_street_section.png`, `26_combine_plan.png`, `27_square_above.png`, `valve_c17/02_checkpoint_iso.png`, `valve_c17/11_combine_office_cut.png`, `valve_c17/17_combine_held_flats_cut.png`, `valve_c17/18_combine_post_iso.png`, `valve_c17/26_nexus_core_cut.png`, `valve_c17/27_nexus_combine_corridor_eye.png`, `valve_c17/28_nexus_courtyard_eye.png`, `valve_c17/29_combine_barricade_row_cut.png`, `valve_c17/30_nexus_roof_post_iso.png`, `valve_c17/32_nexus_outside_iso.png`, `valve_d1_trainstation_01/07_interrogation.png`, `valve_d1_trainstation_02/04_plaza.png`, `valve_d2_coast_12/03_bunker_mouth.png`, `valve_d3_citadel_01/03_cliff_cut.png`, `valve_prison/03_prison01_barred_block.png`, `valve_prison/13_prison06_interrogation.png`, `valve_prison/14_prison06_depot_lean_cut.png`, `valve_prison/15_prison07_post_and_pods_cut.png`, `valve_prison/17_prison08_teleport_hall.png`
 
 ### Do not replace what the owner liked (`keep-what-works`)
 
@@ -1026,7 +1083,7 @@ A wall taller than about 256 is never one texture. Lay it in courses: a base (st
 - **Checked by:** map_lint.py bare: a face of one material 384 long and 256 tall with nothing within 24 in front of it (printed by every build as LOOK: bare).
 - **Tags:** facades, materials, valve
 
-- **See:** `valve_c17/01_kleiner_lab_cut.png`, `valve_c17/12_shop_street_eye.png`, `valve_canals/04_battered_canal_section.png`, `valve_d1_trainstation_01/01_overview_sw.png`, `valve_d1_trainstation_01/02_overview_ne.png`, `valve_d1_trainstation_01/12_courtyard_plan.png`, `valve_d1_trainstation_02/01_overview_sw.png`, `valve_d1_trainstation_02/03_station_front.png`
+- **See:** `valve_c17/01_kleiner_lab_cut.png`, `valve_c17/12_shop_street_eye.png`, `valve_canals/04_battered_canal_section.png`, `valve_d1_trainstation_01/01_overview_sw.png`, `valve_d1_trainstation_01/02_overview_ne.png`, `valve_d1_trainstation_01/12_courtyard_plan.png`, `valve_d1_trainstation_02/01_overview_sw.png`, `valve_d1_trainstation_02/03_station_front.png`, `valve_prison/02_prison01_yard.png`, `valve_prison/03_prison01_barred_block.png`
 
 ### Columns on a rhythm (`valve-column-rhythm`)
 
@@ -1048,7 +1105,7 @@ Let places be dim and light them in pools: a fixture over each door, each way on
 - **Checked by:** map_lint.py offlamp checks that an off lamp has no light; pools are judged in the viewer.
 - **Tags:** lighting, valve
 
-- **See:** `valve_c17/13_road_tunnel_eye.png`, `valve_c17/20_warehouse_hall_eye.png`, `valve_canals/10_city_canal_eye.png`, `valve_d1_trainstation_01/03_platform.png`, `valve_d1_trainstation_01/07_interrogation.png`, `valve_d1_trainstation_01/08_platform.png`, `valve_d1_trainstation_03/04_corridor.png`, `valve_d1_trainstation_05/04_teleport.png`, `valve_d3_citadel_01/04_pipe.png`, `valve_ravenholm/19_style_mining_timber_sets.png`
+- **See:** `valve_c17/13_road_tunnel_eye.png`, `valve_c17/20_warehouse_hall_eye.png`, `valve_canals/10_city_canal_eye.png`, `valve_d1_trainstation_01/03_platform.png`, `valve_d1_trainstation_01/07_interrogation.png`, `valve_d1_trainstation_01/08_platform.png`, `valve_d1_trainstation_03/04_corridor.png`, `valve_d1_trainstation_05/04_teleport.png`, `valve_d3_citadel_01/04_pipe.png`, `valve_prison/06_prison02_upper_walk.png`, `valve_ravenholm/19_style_mining_timber_sets.png`
 
 ### Clutter on the edges (`valve-clutter`)
 
@@ -1125,7 +1182,7 @@ Combine places: one metal over whole walls, no courses, lit cold and bright (lig
 - **Checked by:** review
 - **Tags:** combine, lighting, valve
 
-- **See:** `valve_c17/26_nexus_core_cut.png`, `valve_c17/27_nexus_combine_corridor_eye.png`, `valve_d1_trainstation_02/02_overview_ne.png`, `valve_d1_trainstation_04/02_overview_ne.png`, `valve_d2_coast_12/02_overview_ne.png`, `valve_d2_coast_12/03_bunker_mouth.png`, `valve_d3_c17_13/01_overview_sw.png`, `valve_d3_c17_13/03_street.png`, `valve_d3_citadel_01/01_overview_sw.png`, `valve_d3_citadel_01/02_overview_ne.png`, `valve_d3_citadel_01/03_cliff_cut.png`, `valve_d3_citadel_01/05_combine_inside.png`, `valve_d3_citadel_01/06_rock_and_metal.png`
+- **See:** `valve_c17/26_nexus_core_cut.png`, `valve_c17/27_nexus_combine_corridor_eye.png`, `valve_d1_trainstation_02/02_overview_ne.png`, `valve_d1_trainstation_04/02_overview_ne.png`, `valve_d2_coast_12/02_overview_ne.png`, `valve_d2_coast_12/03_bunker_mouth.png`, `valve_d3_c17_13/01_overview_sw.png`, `valve_d3_c17_13/03_street.png`, `valve_d3_citadel_01/01_overview_sw.png`, `valve_d3_citadel_01/02_overview_ne.png`, `valve_d3_citadel_01/03_cliff_cut.png`, `valve_d3_citadel_01/05_combine_inside.png`, `valve_d3_citadel_01/06_rock_and_metal.png`, `valve_prison/14_prison06_depot_lean_cut.png`, `valve_prison/16_prison08_pod_shaft_cut.png`, `valve_prison/17_prison08_teleport_hall.png`
 
 ### Ravenholm's dark: weak cold light and warm pools (`raven-dusk-light`)
 
@@ -1414,6 +1471,8 @@ Turn loose things off the grid and keep fixed things square. Of Valve's physics 
 - **Checked by:** proposed: map_lint warns when more than 60% of a module's prop_physics sit on exact 90s
 - **Tags:** props, valve
 
+- **See:** `valve_prison/11_prison05_laundry_cut.png`
+
 ### Some loose things lie down (`valve-tilt-and-topple`)
 
 Lay a share of loose things on their side or upside down, and let things on rough ground lean a little. Valve: 43% of physics props have pitch or roll, 23% lie on their side (75 to 105), 6% upside down, 7% lean under 15. By kind: trash 53% lying, cinderblocks 53% (16% upside down), suitcases 47%, pallets 39% lying and 13% upside down, barrels 28% (41% of barrel groups have one down), buckets 21%; crates 6%, boxes 6%, tables 5% stay upright. On displacement ground 54% of dressing props are tilted, 14% by a small slope (15 or less), against 26% and 3% on flat floors.
@@ -1433,6 +1492,8 @@ Set the physics flags as Valve does: start asleep (1) on barrels, crates and tra
 - **How:** Mod.loose(..., asleep=True) writing spawnflags 1 by default; 5 (asleep + debris) for trash, cans, bottles, papers, shoes; boards nailed over openings 8. Whether standing furniture should become prop_physics with flag 8 instead of prop_dynamic_override (physics-props-dynamic) is the owner's call: ask first.
 - **Checked by:** proposed: map_lint lists prop_physics with spawnflags 0 (none asleep) and small junk without the debris flag
 - **Tags:** props, valve, performance
+
+- **See:** `valve_prison/12_prison05_kitchen_cut.png`
 
 ### Small things fade out (`valve-fade-small`)
 
@@ -1557,7 +1618,7 @@ Light a fixture as Valve does that model: a light_spot a few units under the mod
 - **Checked by:** map_lint.py offlamp (extend, proposed): a lit model from the table with no light_spot under it.
 - **Tags:** valve, lighting
 
-- **See:** `valve_c17/20_warehouse_hall_eye.png`
+- **See:** `valve_c17/20_warehouse_hall_eye.png`, `valve_prison/06_prison02_upper_walk.png`
 
 ### Falloff chosen by the light's job (`valve-falloff-by-job`)
 
@@ -1596,6 +1657,8 @@ Where a corner should not be sharp (pillars, piers, kerb ends, the top edge of a
 - **How:** m.shapes prisms with the corner cut; a chamfer=8 option on map_build boxes (proposed). Nova Prospekt cuts its corners smaller than the city: chamfers 4 off (5.7 wide) and 3 off (4.2) are the commonest in d2_prison_02 to 07 (d2_prison_05: 108 and 53; d2_prison_03: 97 at 3 off), 2 off next.
 - **Checked by:** review
 - **Tags:** valve, geometry
+
+- **See:** `valve_prison/01_prison01_gun_tower_cut.png`
 
 ### Thin walls indoors, thick canal walls, glass set 4 back (`valve-wall-thickness`)
 
@@ -2211,6 +2274,8 @@ Build a cell as Nova Prospekt does: 128 wide and 176 deep inside, 120 clear unde
 - **Checked by:** review; map_modules_check: a cell's inside 128 by 160 to 176, its opening 48 to 56 by 108
 - **Tags:** valve, interiors, geometry, combine
 
+- **See:** `valve_prison/04_prison02_cellblock_cut.png`, `valve_prison/07_prison03_cell_cut.png`, `valve_prison/08_prison03_row_cut.png`, `valve_prison/09_prison04_tall_block.png`, `valve_prison/10_prison04_tiers_cut.png`
+
 ### Cellblock tiers: walks 56 to 80 wide off the cell fronts, a rail prop every 128, a lamp a cell (`valve-cellblock-tiers`)
 
 The walk along an upper tier is the cell storey's own slab carried out 56 to 80 past the cell fronts, 8 thick, with handrail04_long props end to end along its edge (128 long, the model's origin 20 over the walk) and an unseen clip 40 high behind them; interior_fence002c panels close a walk's end. Two rows facing each other stand 224 apart with a well 64 wide between their walks and an open stair in the well (60 wide, treads 2 thick, 8 by 12). A tall block puts three tiers on one side of a hall 448 wide and about 512 high. A prison_cagedlight001a on each cell front beside the door, 86 up, 128 to 144 apart, only one in five to ten lit. Keep the owner's stairs (16 by 24) where a stair is ours: ask the owner first before using Valve's.
@@ -2219,6 +2284,8 @@ The walk along an upper tier is the cell storey's own slab carried out 56 to 80 
 - **How:** With valve-prison-cell: a tier helper that runs the slab out 64 to 80, places handrail04_long every 128 along the edge with a clip brush 40 high, fence panels at the ends, the lamp row with one in six given its light (valve-fixture-lights). Hanging tubes (prison_flourescentlight001b) 192 to 256 apart down the hall, 32 to 73 under the roof.
 - **Checked by:** review
 - **Tags:** valve, interiors, geometry, stairs
+
+- **See:** `valve_prison/04_prison02_cellblock_cut.png`, `valve_prison/05_prison02_hall_stair.png`, `valve_prison/06_prison02_upper_walk.png`, `valve_prison/08_prison03_row_cut.png`, `valve_prison/09_prison04_tall_block.png`, `valve_prison/10_prison04_tiers_cut.png`
 
 ### A prison corridor: 192 wide, a full-width bar gate, sprinklers, heaters and pipes on a rhythm (`valve-prison-fixtures`)
 
@@ -2229,6 +2296,8 @@ Nova Prospekt's corridors are 192 wide under a 120 to 128 ceiling, or 128 wide u
 - **Checked by:** review
 - **Tags:** valve, props, interiors, combine
 
+- **See:** `valve_prison/05_prison02_hall_stair.png`
+
 ### The prison's rooms by their props: office, washroom, showers, laundry, kitchen, canteen (`valve-prison-rooms`)
 
 Dress each prison room with its own short kit, against the walls, the floor left clear. Guard office: controlroom_desk001b 24 to 58 off a wall, controlroom_chair001a 44 from it, file cabinets 73 to 131 away on the walls, a monitor on the desk, a switch box by the door, a ceiling panel; a guard room over a cellblock gets a corner cut at 45 with a band of glass and the desk turned to it. Washroom: toilets 64 apart in two facing rows, sinks 64 apart likewise, tile under plaster. Showers: shower_system001a 40 off the wall every 320 on both long walls. Laundry: dryers in twos and threes 76 to 92 apart, a few degrees off square; washers on the walls; carts loose. Kitchen: counters in a line, stoves on the wall 217 apart. Canteen: tables about 128 apart, benches 74 off, a third of them tipped on their sides. Pieces already built keep their look: ask the owner first before changing them.
@@ -2237,6 +2306,8 @@ Dress each prison room with its own short kit, against the walls, the floor left
 - **How:** Room kits for a Combine prison piece, keyed by room, with valve-furniture-on-walls; the tipped tables as cover where there was a fight.
 - **Checked by:** review
 - **Tags:** valve, props, interiors
+
+- **See:** `valve_prison/04_prison02_cellblock_cut.png`, `valve_prison/07_prison03_cell_cut.png`, `valve_prison/10_prison04_tiers_cut.png`, `valve_prison/11_prison05_laundry_cut.png`, `valve_prison/12_prison05_kitchen_cut.png`
 
 ### The Combine's walls stand square in plan but lean, and its sections are lop-sided lozenges (`valve-combine-lean`)
 
@@ -2247,6 +2318,8 @@ Where the Combine builds its own place, its walls run on the axes in plan but le
 - **Checked by:** review; map_view cut-away across the piece
 - **Tags:** valve, combine, geometry
 
+- **See:** `valve_prison/14_prison06_depot_lean_cut.png`, `valve_prison/16_prison08_pod_shaft_cut.png`, `valve_prison/17_prison08_teleport_hall.png`
+
 ### The Combine's lights and consoles are turned to aim; its racks, fences and locks stay square (`valve-combine-aimed`)
 
 Inside the old prison its own fixtures sit square (97% on exact 90s). The Combine's things are square on about three quarters: its wall lights are turned to aim at what they light (yaw by 15 or 45, a few pitched down 18), its consoles and small monitors set at free angles to the room; but pod racks, fences, locks, doors and generators stand square to the walls. Turn a Combine light or console off the grid on purpose; never a rack or a fence.
@@ -2255,6 +2328,8 @@ Inside the old prison its own fixtures sit square (97% on exact 90s). The Combin
 - **How:** Combine dressing in our pieces: the light helper aims each combine_light002a at its target and rounds the yaw to 15; consoles get a free yaw within 30 of facing the room; racks, fences and locks stay square (valve-turn-the-loose for loose things).
 - **Checked by:** review
 - **Tags:** valve, combine, props
+
+- **See:** `valve_prison/13_prison06_interrogation.png`, `valve_prison/15_prison07_post_and_pods_cut.png`
 
 ### A Combine wall light throws a visible blue beam (`valve-combine-light-beam`)
 
@@ -2265,6 +2340,8 @@ Light every combine_light002a with a light_spot 147 226 240 at 2000, cone 30 to 
 - **Checked by:** map_lint offlamp: a combine_light002a without a light_spot and a point_spotlight within 32
 - **Tags:** valve, combine, lighting, recipe
 
+- **See:** `valve_prison/01_prison01_gun_tower_cut.png`
+
 ### The Combine keeps prisoners in pods: racks two high, trains of pods, arrays in shafts (`valve-pod-racks`)
 
 The Combine's own prison is pods, not cells. Racks: cell_01_pod with cell_01_rigging on cell_01_supportsb, two high 193 apart, 185 to 203 apart along a row, square to the wall. On a train: pods on both sides of each car 64 apart, one side 32 lower than the other, about one slot in six left empty. In a shaft: cell_array_01 at the foot, pairs facing. For a Combine prison or the Nexus, a pod rack is the Combine's look; the old cells are the people's prison it took over.
@@ -2274,6 +2351,8 @@ The Combine's own prison is pods, not cells. Racks: cell_01_pod with cell_01_rig
 - **Checked by:** review
 - **Tags:** valve, combine, props
 
+- **See:** `valve_prison/15_prison07_post_and_pods_cut.png`, `valve_prison/16_prison08_pod_shaft_cut.png`
+
 ### The Combine's interrogation room: the subject in narrow cold beams, the room dark (`valve-interrogation-light`)
 
 Light the one being questioned with two or three narrow cold spots from above and the sides (155 220 255 or 204 255 255, 400 to 900, cone 12 to 21, pitched down 30 to 63) and leave the room round them dark but for faint console glows (light 74 209 217 at 20). The Combine's door into it carries a combine_lock01 each side, 54 up. Our Civil Protection chair has its lamp: ask the owner first before changing how it is lit.
@@ -2282,6 +2361,8 @@ Light the one being questioned with two or three narrow cold spots from above an
 - **How:** A Combine interrogation piece: the chair or pod in the middle, two light_spots at cone 12 from the front corners and one at cone 21 from above, consoles with their glow, no fill light.
 - **Checked by:** review
 - **Tags:** valve, combine, lighting
+
+- **See:** `valve_prison/13_prison06_interrogation.png`
 
 ### A Combine camera room: one screen, a button that steps through the cameras, and the sound of the room you watch (`valve-prison-cctv`)
 
@@ -2310,6 +2391,8 @@ Build a field from two parts: the shield you see (never solid) and a clip that d
 - **Checked by:** map_lint 'wire': a combineshield brush entity that is solid (Solidity not 1), or one with no clip twin in its box
 - **Tags:** valve, logic, combine, sound, doors
 
+- **See:** `valve_prison/17_prison08_teleport_hall.png`
+
 ### A door forced from outside is heard long before it gives: voices, blows, then beeps that quicken (`valve-breach-buildup`)
 
 When attackers break into a held room, the defenders hear them first: voices behind the door now and then, a heavy blow and a shake on a slow beat, the beat quickening once the defenders are ready, then a charge's beeps coming faster and faster for about 8 s before the door blows and the first attackers come straight through. Nothing on screen says it. Changes how our raids and breaches play: ask the owner first.
@@ -2327,6 +2410,8 @@ A tower gun has a man at it; its spotlight rides the gun and is lit only while s
 - **How:** Gamemode: the Overwatch's turrets and the barricade with a mounted gun (editor-placing.md) could keep a spotlight on only while manned, wait 1 to 1.5 s on a target before firing, and set off the checkpoint's alarm on their first shot. Map modules: m.guard_tower() with the gun's stand-here point, the spotlight and a squad of three spots.
 - **Checked by:** map_lint 'wire': a func_tank with a spotlight that no Got/LostController switches
 - **Tags:** valve, logic, combine, npc, lighting
+
+- **See:** `valve_prison/01_prison01_gun_tower_cut.png`, `valve_prison/02_prison01_yard.png`
 
 ### A held room under steady pressure: each attacker killed is replaced a second later, until the time is up (`valve-npc-steady-pressure`)
 
@@ -2354,6 +2439,8 @@ Valve's interrogation rig holds the prisoner inside a force field with beams fro
 - **How:** Map modules: an interrogation piece with two pole props, beam ends and a plug in the wall (lc_rig_*). Gamemode: Civil Protection's interrogation (city-administration.md) could hold the prisoner in the rig while questioned, and the Resistance's prison break could end with pulling the plug instead of a minigame step (or after it).
 - **Checked by:** review
 - **Tags:** valve, logic, combine, sound, gameplay
+
+- **See:** `valve_prison/13_prison06_interrogation.png`
 
 ### The prison's machines run on a beat of their own: pod lines halt and go, trains come through (`valve-machines-on-a-beat`)
 
