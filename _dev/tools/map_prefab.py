@@ -9,13 +9,22 @@ material and texture alignment exactly as theirs, and the props, lights and deca
 moved and turned (in quarter turns) with its textures kept right, and written as detail (it never seals: the piece's
 own plan does that), so a facade bay, a shopfront, a door surround or a stair of theirs can dress our walls.
 
-    python3 map_prefab.py extract c18_lc.vmf NAME X1 Y1 Z1 X2 Y2 Z2 [--anchor X Y Z] [--note "what it is"]
-            writes _dev/reference/prefabs/NAME.json (the anchor, default the box's bottom corner, becomes 0 0 0)
+A piece also keeps its logic: every other entity inside the box (relays, triggers with their brushes, doors, buttons,
+sounds, NPCs, scripted sequences) goes in `wiring` with its keys and outputs, a moving brush also in `solids` as a slab
+taken shut (`live`: its name, `wired`: its place in `wiring`), and what the piece's outputs and keys name that is not in
+it in `outside`, what outside fires into it in `fired_from_outside` (docs/dev/prefabs.md, 'Pieces with their wiring').
+
+    python3 map_prefab.py extract c18_lc.vmf NAME X1 Y1 Z1 X2 Y2 Z2 [--anchor X Y Z] [--note "what it is"] [--wire-box X1 Y1 Z1 X2 Y2 Z2]
+            writes _dev/reference/prefabs/NAME.json (the anchor, default the box's bottom corner, becomes 0 0 0;
+            --wire-box: a bigger box for the logic, for a piece whose relays and sounds stand round it)
     python3 map_prefab.py list                  the library, with each piece's size and what it is
-    python3 map_prefab.py show NAME [--out a.vmf]   a VMF with only that piece in it (map_view.py draws it)
+    python3 map_prefab.py show NAME [--out a.vmf] [--no-wiring]   a VMF with only that piece in it (map_view.py draws it)
+    python3 map_prefab.py check                 the self-check: lifts a small made-up map with logic and places it twice
 
 In a module: from map_prefab import place; place(m, "NAME", u, v, z, turn) puts the piece's anchor at (u, v, z) of
-the module's frame, turned by `turn` quarter turns anticlockwise (0 to 3) on top of the frame's own turning.
+the module's frame, turned by `turn` quarter turns anticlockwise (0 to 3) on top of the frame's own turning. Its
+wiring comes too, every name given the copy's own ending (in the outputs as in the keys); place(..., wiring=False)
+leaves the logic out and keeps the slabs of its moving brushes, as place() did before it kept logic.
 """
 import argparse
 import json
@@ -32,69 +41,208 @@ AXIS = re.compile(r"\[\s*(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s*\]\s*(\S+)")
 SEEN_TOOLS = ("tools/toolsblack",)      # (tool materials players see: the black behind a window)
 NAMED = ("targetname", "parentname", "slavename", "target", "spawnpos")      # (keys that name another thing of the piece)
 KEEP_POINTS = ("prop_static", "prop_dynamic", "prop_dynamic_override", "prop_physics", "light", "light_spot", "infodecal", "env_sprite", "prop_door_rotating")
+STATIC_BRUSHES = ("func_detail", "func_brush", "func_wall", "func_illusionary")
+# Kept out of the wiring: the map's own navigation and compile helpers, single-player level changes, things that hold
+# face ids of the source map (cubemaps, overlays), and what sets the whole map (sun, fog, tonemap, skybox camera).
+NOT_WIRED = ("worldspawn", "info_player_start", "info_landmark", "trigger_changelevel", "env_cubemap", "info_overlay", "info_overlay_transition",
+             "func_areaportal", "func_areaportalwindow", "func_viscluster", "func_occluder", "light_environment", "shadow_control",
+             "env_tonemap_controller", "env_fog_controller", "sky_camera", "water_lod_control", "info_no_dynamic_shadow", "info_hint")
+# Keys that name another entity (for `outside`, and dropped when what they name is not placed). Any key whose value is a
+# name of the piece is renamed with the copy, whatever it is called (a template's Template01, a beam's LightningStart).
+NAME_KEYS = ("parentname", "target", "altpath", "lightingorigin", "lightingoriginhack", "nextkey", "attach1", "attach2", "position0", "slavename",
+             "filtername", "damagefilter", "laddername", "lightningstart", "lightningend", "measuretarget", "sourceentityname", "m_iszentity",
+             "spawntarget", "landmark", "entitytemplate", "template", "controlpoint1", "point_template", "target_entity", "glowproxy")
+NOT_NAMES = ("classname", "model", "message", "texture", "origin", "id")
+SPOT_KEYS = ("point0", "point1", "springaxis", "hingeaxis", "slideaxis")      # (keys that hold a place in the source map, not a name: kept as there)
+TURN_AXES = {"func_door_rotating": (64, 128), "func_rot_button": (64, 128), "momentary_rot_button": (64, 128), "func_rotating": (4, 8)}
 
 
 def nums(text):
     return [float(t) for t in text.replace("(", " ").replace(")", " ").split()]
 
 
-def extract(path, name, box, anchor=None, note=""):
+def unwired(cls):
+    """Is this a class a piece's logic never holds (NOT_WIRED, or the source map's AI nodes)?"""
+    return cls in NOT_WIRED or cls.startswith("info_node")
+
+
+def split_output(rest):
+    """One output as kept ("target,input,value,delay,times", or with the escape character between): its five parts."""
+    p = rest.split("\x1b") if "\x1b" in rest else rest.split(",")
+    p += [""] * (5 - len(p))
+    try:
+        delay = float(p[-2] or 0)
+    except ValueError:
+        delay = 0.0
+    return p[0].strip(), p[1].strip(), ",".join(p[2:-2]).strip(), delay, p[-1].strip() or "-1"
+
+
+def connections_of(block):
+    """An entity's outputs, as [output, "target,input,value,delay,times"] (Valve's comma form, as the pieces keep them)."""
+    out = []
+    for c in block.kids:
+        if c.name == "connections":
+            for k, v in c.rows:
+                t, i, val, delay, times = split_output(v)
+                out.append([k, ",".join((t, i, val, fmt(delay), times))])
+    return out
+
+
+def name_refs(e):
+    """What an entity of a piece names: [(how, the name)], how being 'key K' or 'OUTPUT' with the output's line."""
+    refs = []
+    for k, v in e["keys"].items():
+        lk = k.lower()
+        if v and not v.startswith("!") and (lk in NAME_KEYS or re.match(r"template\d\d$", lk)):
+            refs.append(("key " + lk, v))
+    for o, rest in e.get("connections", []):
+        t = rest.split(",")[0].strip()
+        if t and not t.startswith("!"):
+            refs.append(("%s > %s" % (o, rest), t))
+    return refs
+
+
+def resolves(target, names):
+    """The piece's names (lower case) a target reaches: itself, or every one a trailing * matches."""
+    t = target.lower()
+    if t.endswith("*"):
+        return sorted(n for n in names if n.startswith(t[:-1]))
+    return [t] if t in names else []
+
+
+def extract(path, name, box, anchor=None, note="", wire_box=None, lib=None):
     import map_view as mv
     root = mv.read(path)
     x1, y1, z1, x2, y2, z2 = box
+    wb = wire_box or box
     ax = anchor or (x1, y1, z1)
-    solids, points = [], []
+    solids, points, wiring = [], [], []
 
-    def inside(p, pad=0.5):
-        return x1 - pad <= p[0] <= x2 + pad and y1 - pad <= p[1] <= y2 + pad and z1 - pad <= p[2] <= z2 + pad
+    def inside(p, pad=0.5, b=box):
+        return b[0] - pad <= p[0] <= b[3] + pad and b[1] - pad <= p[1] <= b[4] + pad and b[2] - pad <= p[2] <= b[5] + pad
+
+    def rel(p):
+        return [p[0] - ax[0], p[1] - ax[1], p[2] - ax[2]]
+
+    def brush(sol):
+        """A brush's sides (corners as in the source) and all its corners, or None if a plane cannot be read."""
+        sides, allv = [], []
+        side_blocks = [k for k in sol.kids if k.name == "side"]
+        worked = None
+        if side_blocks and not any(k.name == "vertices_plus" for sb in side_blocks for k in sb.kids):
+            worked = mv.from_planes(side_blocks)      # (an older Hammer's file: corners from the planes, for boxes and checks only)
+        for side in side_blocks:
+            vp = [k for k in side.kids if k.name == "vertices_plus"]
+            verts = [nums(v) for k, v in vp[0].rows if k == "v"] if vp else []
+            plane = nums(side.kv.get("plane", ""))
+            if len(plane) != 9:
+                return None
+            corners = verts or ([list(v) for v in worked[len(sides)]] if worked and len(sides) < len(worked) and worked[len(sides)] else [])
+            allv += corners or [plane[0:3], plane[3:6], plane[6:9]]
+            sides.append({"plane": [plane[0:3], plane[3:6], plane[6:9]], "verts": verts, "corners": corners, "material": side.kv.get("material", "TOOLS/TOOLSNODRAW"),
+                          "uaxis": side.kv.get("uaxis", "[1 0 0 0] 0.25"), "vaxis": side.kv.get("vaxis", "[0 -1 0 0] 0.25"),
+                          "lightmapscale": side.kv.get("lightmapscale", "16")})
+        return (sides, allv) if sides else None
+
+    def moved(sides):
+        """A brush's sides moved so the anchor is at 0 0 0 (a copy: the source's stay as they were)."""
+        out = []
+        for s in sides:
+            s = dict(s)
+            s["plane"] = [rel(p) for p in s["plane"]]
+            s["verts"] = [rel(p) for p in s["verts"]]
+            s["corners"] = [rel(p) for p in s["corners"]]
+            s["uaxis"] = shift_axis(s["uaxis"], ax)
+            s["vaxis"] = shift_axis(s["vaxis"], ax)
+            out.append(s)
+        return out
+
+    def all_tools(sides):
+        return all("tools/" in s["material"].lower() and not s["material"].lower().startswith(SEEN_TOOLS) for s in sides)
+
+    kept = set()      # (the source's entities the piece holds, by id())
+    places = {}       # (where each entity is in the source: its origin, or the middle of its brushes)
     for top in root.kids:
         if top.name not in ("world", "entity"):
             continue
         cls = top.kv.get("classname", "worldspawn")
-        if top.name == "entity" and cls not in ("func_detail", "func_brush", "func_wall", "func_illusionary"):
-            if cls in KEEP_POINTS and "origin" in top.kv:
-                o = nums(top.kv["origin"])
+        if top.name == "entity" and not any(k.name == "solid" for k in top.kids):
+            if "origin" not in top.kv:
+                continue
+            o = nums(top.kv["origin"])
+            places[id(top)] = o
+            conns = connections_of(top)
+            if cls in KEEP_POINTS:
                 if inside(o):
                     keys = dict((k, v) for k, v in top.rows if k not in ("id", "origin"))
-                    points.append({"classname": cls, "origin": [o[0] - ax[0], o[1] - ax[1], o[2] - ax[2]], "keys": keys})
+                    points.append({"classname": cls, "origin": rel(o), "keys": keys})
+                    if conns:
+                        points[-1]["connections"] = conns
+                    kept.add(id(top))
+            elif not unwired(cls) and inside(o, b=wb):
+                keys = dict((k, v) for k, v in top.rows if k not in ("id", "origin", "classname"))
+                wiring.append({"classname": cls, "origin": rel(o), "keys": keys, "connections": conns})
+                kept.add(id(top))
             continue
-        for sol in top.kids:
-            if sol.name != "solid":
-                continue
-            sides, allv = [], []
-            side_blocks = [k for k in sol.kids if k.name == "side"]
-            worked = None
-            if side_blocks and not any(k.name == "vertices_plus" for sb in side_blocks for k in sb.kids):
-                worked = mv.from_planes(side_blocks)      # (an older Hammer's file: corners from the planes, for boxes and checks only)
-            for side in sol.kids:
-                if side.name != "side":
+        brushes = [b for b in (brush(sol) for sol in top.kids if sol.name == "solid") if b]
+        allc = [p for b in brushes for p in b[1]]
+        if top.name == "entity" and allc:
+            places[id(top)] = nums(top.kv["origin"]) if "origin" in top.kv else [(min(p[k] for p in allc) + max(p[k] for p in allc)) / 2 for k in range(3)]
+        live, wired = None, None
+        if top.name == "entity":
+            conns = connections_of(top)
+            tname = top.kv.get("targetname", "")
+            if (cls not in STATIC_BRUSHES or tname or conns) and not unwired(cls) and brushes and all(inside(p, b=wb) for p in allc):
+                keys = dict((k, v) for k, v in top.rows if k not in ("id", "origin", "classname"))
+                e = {"classname": cls, "keys": keys, "connections": conns, "brushes": [moved(b[0]) for b in brushes]}
+                if "origin" in top.kv:
+                    e["origin"] = rel(nums(top.kv["origin"]))
+                wired = len(wiring)
+                wiring.append(e)
+                kept.add(id(top))
+                live = tname
+            if cls not in STATIC_BRUSHES:
+                if wired is None and unwired(cls):
                     continue
-                vp = [k for k in side.kids if k.name == "vertices_plus"]
-                verts = [nums(v) for k, v in vp[0].rows if k == "v"] if vp else []
-                plane = nums(side.kv.get("plane", ""))
-                if len(plane) != 9:
-                    break
-                corners = verts or ([list(v) for v in worked[len(sides)]] if worked and len(sides) < len(worked) and worked[len(sides)] else [])
-                allv += corners or [plane[0:3], plane[3:6], plane[6:9]]
-                sides.append({"plane": [plane[0:3], plane[3:6], plane[6:9]], "verts": verts, "corners": corners, "material": side.kv.get("material", "TOOLS/TOOLSNODRAW"),
-                              "uaxis": side.kv.get("uaxis", "[1 0 0 0] 0.25"), "vaxis": side.kv.get("vaxis", "[0 -1 0 0] 0.25"),
-                              "lightmapscale": side.kv.get("lightmapscale", "16")})
-            else:
-                if sides and all(inside(v) for v in allv):
-                    if all("tools/" in s["material"].lower() and not s["material"].lower().startswith(SEEN_TOOLS) for s in sides):
-                        continue      # (clips, triggers, skybox, hint: the piece does not need them; black panes are seen and kept)
-                    for s in sides:
-                        s["plane"] = [[p[0] - ax[0], p[1] - ax[1], p[2] - ax[2]] for p in s["plane"]]
-                        s["verts"] = [[p[0] - ax[0], p[1] - ax[1], p[2] - ax[2]] for p in s["verts"]]
-                        s["corners"] = [[p[0] - ax[0], p[1] - ax[1], p[2] - ax[2]] for p in s["corners"]]
-                        s["uaxis"] = shift_axis(s["uaxis"], ax)
-                        s["vaxis"] = shift_axis(s["vaxis"], ax)
-                    solids.append({"from": cls, "sides": sides})
-    size = [x2 - x1, y2 - y1, z2 - z1]
-    out = {"name": name, "note": note, "from": os.path.basename(path), "box": list(box), "anchor": list(ax), "size": size,
+                cls = "%s (taken shut, as a static slab)" % cls      # (a moving brush: its look, shut, for a piece placed without its logic)
+        for sides, allv in brushes:
+            if all(inside(v) for v in allv):
+                if all_tools(sides):
+                    continue      # (clips, triggers, skybox, hint: the piece does not need them; black panes are seen and kept)
+                s = {"from": cls, "sides": moved(sides)}
+                if wired is not None:
+                    s["live"], s["wired"] = live, wired
+                solids.append(s)
+    out = {"name": name, "note": note, "from": os.path.basename(path), "box": list(box), "anchor": list(ax), "size": [x2 - x1, y2 - y1, z2 - z1],
            "solids": solids, "points": points}
-    os.makedirs(LIB, exist_ok=True)
-    with open(os.path.join(LIB, name + ".json"), "w") as f:
+    # What the piece's logic names that it does not hold, and what outside it fires into it.
+    names = set(e["keys"].get("targetname", "").lower() for e in points + wiring) - {""}
+    found = {}
+    for top in root.kids:
+        n = top.kv.get("targetname", "").lower() if top.name == "entity" else ""
+        if n and id(top) in places:
+            found.setdefault(n, []).append({"classname": top.kv.get("classname", ""), "origin": [int(round(c)) for c in places[id(top)][:3]]})
+    outside = {}
+    for e in points + wiring:
+        who = e["keys"].get("targetname") or e["classname"]
+        for how, t in name_refs(e):
+            if not resolves(t, names):
+                o = outside.setdefault(t.lower(), {"name": t, "found": [f for k, fs in found.items() if k == t.lower() or (t.endswith("*") and k.startswith(t[:-1].lower())) for f in fs],
+                                                   "named_by": []})
+                o["named_by"].append("%s %s" % (who, how))
+    fired = []
+    for top in root.kids:
+        if top.name != "entity" or id(top) in kept:
+            continue
+        into = [c for c in connections_of(top) if resolves(c[1].split(",")[0].strip(), names)]
+        if into:
+            fired.append({"name": top.kv.get("targetname", ""), "classname": top.kv.get("classname", ""),
+                          "origin": [int(round(c)) for c in places.get(id(top), [0, 0, 0])[:3]], "outputs": into})
+    if wiring or outside or fired or any(p.get("connections") for p in points):
+        out.update({"wiring": wiring, "outside": list(outside.values()), "fired_from_outside": fired})
+    folder = lib or LIB
+    os.makedirs(folder, exist_ok=True)
+    with open(os.path.join(folder, name + ".json"), "w") as f:
         json.dump(out, f, indent=0)
     return out
 
@@ -141,11 +289,42 @@ def load(name):
 PLACED = [0]
 
 
-def place(m, name, u, v, z, turn=0, vis=None, props=True):
+def solid_text(vmf, sides, q, d, vis, t="\t"):
+    """One brush of a piece turned q quarter turns and moved by d: its text and its corners."""
+    text = '%ssolid\n%s{\n%s\t"id" "%d"\n' % (t, t, t, vmf.new_id())
+    allv = []
+    for s in sides:
+        pl = [[a + b for a, b in zip(rot(p, q), d)] for p in s["plane"]]
+        vs = [[a + b for a, b in zip(rot(p, q), d)] for p in s["verts"]]
+        allv += vs or [[a + b for a, b in zip(rot(p, q), d)] for p in s.get("corners", [])] or pl
+        text += '%s\tside\n%s\t{\n%s\t\t"id" "%d"\n%s\t\t"plane" "%s"\n' % (t, t, t, vmf.new_id(), t, " ".join("(%s %s %s)" % tuple(fmt(c) for c in p) for p in pl))
+        if vs:
+            text += '%s\t\tvertices_plus\n%s\t\t{\n%s%s\t\t}\n' % (t, t, "".join('%s\t\t\t"v" "%s %s %s"\n' % ((t,) + tuple(fmt(c) for c in p)) for p in vs), t)
+        text += '%s\t\t"material" "%s"\n%s\t\t"uaxis" "%s"\n%s\t\t"vaxis" "%s"\n%s\t\t"rotation" "0"\n%s\t\t"lightmapscale" "%s"\n%s\t\t"smoothing_groups" "0"\n%s\t}\n' % (
+            t, s["material"], t, turn_axis(s["uaxis"], q, d), t, turn_axis(s["vaxis"], q, d), t, t, s["lightmapscale"], t, t)
+    text += vmf.editor(vis, indent=t + "\t") + "%s}\n" % t
+    return text, allv
+
+
+def corner_box(allv):
+    return tuple(min(p[k] for p in allv) for k in range(3)) + tuple(max(p[k] for p in allv) for k in range(3))
+
+
+def place(m, name, u, v, z, turn=0, vis=None, props=True, wiring=True, keep_outside=False, keep=None):
     """Put the prefab's anchor at (u, v, z) in the module's frame, turned `turn` quarter turns (anticlockwise seen from
     above) on top of the frame's own turning. Its brushes go in as one func_detail; its props, lights and decals as they
-    were (moved and turned with it)."""
-    pf = load(name)
+    were (moved and turned with it). `name` may be a piece already loaded (a dict).
+
+    A piece with logic also brings its wiring (unless wiring=False or props=False): each entity with its outputs, its
+    moving brushes placed live instead of their slabs. Every name of the piece gets the copy's own ending, in keys and
+    outputs alike (an output to `name*` goes to each of the piece's names it matches), so two copies never answer each
+    other; the ending is returned in the piece's "placed_as". Areaportals, nodes and the like (NOT_WIRED) stay out: the
+    piece never seals, so they are the builder's to place. Outputs and keys naming what the piece does not hold are
+    dropped (Valve's story outside it), or kept as they are with keep_outside=True (to wire the copy to things of the
+    builder's own of those names). `!player` becomes `!activator` (one player of many is not 'the player'), and every
+    output may fire again, as Vmf.wires writes them. keep(e) says which wiring entities go in instead (e: the piece's own entry)."""
+    pf = name if isinstance(name, dict) else load(name)
+    name = pf["name"]
     fr = m.fr
     q = (turn + fr.rot) % 4
     if fr.flip:      # (a flipped frame mirrors; a mirrored brush would turn inside out: turn it the other way round instead)
@@ -154,30 +333,33 @@ def place(m, name, u, v, z, turn=0, vis=None, props=True):
     oz = z + fr.dz
     d = (ox, oy, oz)
     vmf = m.b.vmf
+    logic = props and wiring and bool(pf.get("wiring") or pf.get("route") or any(p.get("connections") for p in pf["points"]))
+    wires = [w for w in pf.get("wiring", []) if (keep(w) if keep else not unwired(w["classname"]))] if logic else []
+    live = set(w["keys"].get("targetname") for w in wires) - {None, ""}
+    placed = set(id(w) for w in wires)
+    full = pf.get("wiring", [])
     t = "\t"
     text = 'entity\n{\n\t"id" "%d"\n\t"classname" "func_detail"\n' % vmf.new_id()
+    written = 0
     for sol in pf["solids"]:
-        text += '%ssolid\n%s{\n%s\t"id" "%d"\n' % (t, t, t, vmf.new_id())
-        allv = []
-        for s in sol["sides"]:
-            pl = [[a + b for a, b in zip(rot(p, q), d)] for p in s["plane"]]
-            vs = [[a + b for a, b in zip(rot(p, q), d)] for p in s["verts"]]
-            allv += vs or [[a + b for a, b in zip(rot(p, q), d)] for p in s.get("corners", [])] or pl
-            text += '%s\tside\n%s\t{\n%s\t\t"id" "%d"\n%s\t\t"plane" "%s"\n' % (t, t, t, vmf.new_id(), t, " ".join("(%s %s %s)" % tuple(fmt(c) for c in p) for p in pl))
-            if vs:
-                text += '%s\t\tvertices_plus\n%s\t\t{\n%s%s\t\t}\n' % (t, t, "".join('%s\t\t\t"v" "%s %s %s"\n' % ((t,) + tuple(fmt(c) for c in p)) for p in vs), t)
-            text += '%s\t\t"material" "%s"\n%s\t\t"uaxis" "%s"\n%s\t\t"vaxis" "%s"\n%s\t\t"rotation" "0"\n%s\t\t"lightmapscale" "%s"\n%s\t\t"smoothing_groups" "0"\n%s\t}\n' % (
-                t, s["material"], t, turn_axis(s["uaxis"], q, d), t, turn_axis(s["vaxis"], q, d), t, t, s["lightmapscale"], t, t)
-        text += vmf.editor(vis or m.dv, indent=t + "\t") + "%s}\n" % t
+        if logic and ((sol.get("wired") is not None and sol["wired"] < len(full) and id(full[sol["wired"]]) in placed)
+                      or (sol.get("wired") is None and sol.get("live") in live)):
+            continue      # (its moving brush goes in live, with the wiring)
+        s_text, allv = solid_text(vmf, sol["sides"], q, d, vis or m.dv, t)
+        text += s_text
+        written += 1
         if allv:
-            vmf.boxes.append((tuple(min(p[k] for p in allv) for k in range(3)) + tuple(max(p[k] for p in allv) for k in range(3)), False))
+            vmf.boxes.append((corner_box(allv), False))
     text += vmf.editor(vis or m.dv, "0 180 0") + "}\n"
-    if pf["solids"]:
+    if written:
         vmf.ents.append(text)
-    if props:
+    if not props:
+        return pf
+    PLACED[0] += 1
+    tag = "_%s%d" % (name, PLACED[0])      # (each copy's names its own: two copies' doors never open together)
+    pf["placed_as"] = tag
+    if not logic:
         names = set(p["keys"].get("targetname") for p in pf["points"] if p["keys"].get("targetname"))
-        PLACED[0] += 1
-        tag = "_%s%d" % (name, PLACED[0])      # (each copy's names its own: two copies' doors never open together)
         for p in pf["points"]:
             keys = dict(p["keys"])
             for k in NAMED:
@@ -188,7 +370,172 @@ def place(m, name, u, v, z, turn=0, vis=None, props=True):
                 keys["angles"] = "%s %s %s" % (fmt(a[0]), fmt((a[1] + 90 * q) % 360), fmt(a[2]))
             pos = [a + b for a, b in zip(rot(p["origin"], q), d)]
             vmf.point(p["classname"], tuple(pos), keys, m.pv if p["classname"].startswith("prop") else m.lv)
+        return pf
+    place_logic(m, pf, list(pf["points"]) + wires, q, d, tag, keep_outside)
     return pf
+
+
+def place_logic(m, pf, ents, q, d, tag, keep_outside=False):
+    """A piece's props, lights and wiring (and its route of path points), turned, moved and renamed (see place())."""
+    from map_build import Vmf
+    vmf = m.b.vmf
+    lv = getattr(m, "gv", None) or (getattr(m.b, "vis", "LC") + ": logic")
+    for r in pf.get("route", []):
+        ents.append({"classname": "path_track", "origin": r["origin"], "connections": r.get("outputs", []),
+                     "keys": {"targetname": r["name"], "target": r.get("target", ""), "altpath": r.get("altpath", ""), "speed": r.get("speed", "0"),
+                              "spawnflags": r.get("spawnflags", "0"), "orientationtype": r.get("orientationtype", "1"), "angles": r.get("angles", "0 0 0")}})
+    names = {}
+    for e in ents:
+        n = e["keys"].get("targetname", "")
+        if n:
+            names.setdefault(n.lower(), n)
+
+    def ren(v):
+        return names[v.lower()] + tag if v.lower() in names else None
+    anchor = pf.get("anchor", [0, 0, 0])
+    for e in ents:
+        cls = e["classname"]
+        keys = {}
+        for k, val in e["keys"].items():
+            lk = k.lower()
+            if lk in NOT_NAMES:
+                continue
+            r = ren(val) if val and not val.startswith("!") else None
+            if r:
+                keys[k] = r
+            elif val and not val.startswith("!") and lk != "targetname" and (lk in NAME_KEYS or re.match(r"template\d\d$", lk)):
+                if keep_outside:
+                    keys[k] = val      # (it names something outside the piece)
+            elif lk in SPOT_KEYS and val:
+                p = nums(val)
+                keys[k] = " ".join(fmt(round(c, 2)) for c in [a + b for a, b in zip(rot([p[i] - anchor[i] for i in range(3)], q), d)])
+            else:
+                keys[k] = val
+        outs = []
+        for o, rest in e.get("connections", []):
+            tgt, inp, val, delay, _ = split_output(rest)
+            if tgt.startswith("!"):
+                outs.append((o, "!activator" if tgt.lower() == "!player" else tgt, inp, val, delay))
+                continue
+            hits = resolves(tgt, set(names))
+            if hits:
+                outs += [(o, names[h] + tag, inp, val, delay) for h in hits]
+            elif keep_outside:
+                outs.append((o, tgt, inp, val, delay))
+        brushes = e.get("brushes")
+        if brushes:
+            if keys.get("movedir"):
+                a = nums(keys["movedir"])
+                keys["movedir"] = "%s %s %s" % (fmt(a[0]), fmt((a[1] + 90 * q) % 360), fmt(a[2]))
+            if cls in TURN_AXES and q % 2:      # (a door that tilts about x or y: a quarter turn swaps the axis)
+                fx, fy = TURN_AXES[cls]
+                f = int(keys.get("spawnflags", "0") or 0)
+                for _ in range(q % 4):
+                    if f & fx:
+                        f = (f & ~fx) | fy
+                    elif f & fy:
+                        f = ((f & ~fy) | fx) ^ 2
+                keys["spawnflags"] = str(f)
+            s = 'entity\n{\n\t"id" "%d"\n\t"classname" "%s"\n' % (vmf.new_id(), cls)
+            for k, val in keys.items():
+                s += '\t"%s" "%s"\n' % (k, val)
+            if "origin" in e:
+                s += '\t"origin" "%s %s %s"\n' % tuple(fmt(round(c, 2)) for c in [a + b for a, b in zip(rot(e["origin"], q), d)])
+            s += Vmf.wires(outs)
+            for b in brushes:
+                b_text, allv = solid_text(vmf, b, q, d, lv)
+                s += b_text
+                if allv and not all("tools/" in x["material"].lower() for x in b):
+                    vmf.boxes.append((corner_box(allv), False))
+            s += vmf.editor(lv, "220 30 220") + "}\n"
+            vmf.ents.append(s)
+            continue
+        if "origin" not in e:
+            continue
+        if "angles" in keys:
+            a = nums(keys["angles"])
+            keys["angles"] = "%s %s %s" % (fmt(a[0]), fmt((a[1] + 90 * q) % 360), fmt(a[2]))
+        pos = [a + b for a, b in zip(rot(e["origin"], q), d)]
+        vmf.point(cls, tuple(pos), keys, m.pv if cls.startswith("prop") else m.lv if cls in KEEP_POINTS else lv, connections=outs)
+
+
+def check():
+    """Lift a small made-up map with logic, place it twice turned, and test what comes out. Prints CHECK PASS or the faults."""
+    import tempfile
+    from map_modules import Frame, Mod, Build
+
+    def box(x1, y1, z1, x2, y2, z2, mat):
+        s = "\tsolid\n\t{\n"
+        faces = [((x1, y2, z2), (x2, y2, z2), (x2, y1, z2)), ((x1, y1, z1), (x2, y1, z1), (x2, y2, z1)), ((x1, y2, z2), (x1, y1, z2), (x1, y1, z1)),
+                 ((x2, y2, z1), (x2, y1, z1), (x2, y1, z2)), ((x2, y2, z2), (x1, y2, z2), (x1, y2, z1)), ((x2, y1, z1), (x1, y1, z1), (x1, y1, z2))]
+        for f in faces:
+            s += '\t\tside\n\t\t{\n\t\t\t"plane" "%s"\n\t\t\t"material" "%s"\n\t\t\t"uaxis" "[1 0 0 0] 0.25"\n\t\t\t"vaxis" "[0 -1 0 0] 0.25"\n\t\t}\n' % (
+                " ".join("(%d %d %d)" % p for p in f), mat)
+        return s + "\t}\n"
+
+    def ent(cls, keys, outs=(), solid=""):
+        s = 'entity\n{\n\t"classname" "%s"\n' % cls
+        s += "".join('\t"%s" "%s"\n' % kv for kv in keys.items())
+        if outs:
+            s += "\tconnections\n\t{\n" + "".join('\t\t"%s" "%s"\n' % o for o in outs) + "\t}\n"
+        return s + solid + "}\n"
+    src = "world\n{\n" + box(0, 0, -16, 512, 512, 0, "CONCRETE/CONCRETEFLOOR001A") + "}\n"
+    src += ent("func_door", {"targetname": "gate", "movedir": "0 90 0", "speed": "100", "origin": "256 128 64"},
+               [("OnFullyOpen", "snd_gate\x1bPlaySound\x1b\x1b0\x1b-1"), ("OnFullyOpen", "story_relay\x1bTrigger\x1b\x1b2\x1b1")],
+               box(192, 120, 0, 320, 136, 128, "METAL/METALDOOR001A"))
+    src += ent("trigger_once", {"targetname": "trig_gate", "spawnflags": "1"}, [("OnStartTouch", "gate*\x1bOpen\x1b\x1b0\x1b1"), ("OnStartTouch", "!player\x1bSpeakResponseConcept\x1bhi\x1b0\x1b-1")],
+               box(200, 160, 0, 300, 260, 96, "TOOLS/TOOLSTRIGGER"))
+    src += ent("ambient_generic", {"targetname": "snd_gate", "message": "doors.move1", "origin": "256 140 64", "SourceEntityName": "gate"})
+    src += ent("prop_dynamic", {"targetname": "lamp_gate", "parentname": "gate", "model": "models/props_c17/light_cagelight01_on.mdl", "origin": "256 140 120", "angles": "0 0 0"},
+               [("OnUser1", "snd_gate,StopSound,,0,-1")])
+    src += ent("logic_relay", {"targetname": "far_relay", "origin": "2000 0 0"}, [("OnTrigger", "gate\x1bClose\x1b\x1b0\x1b-1")])
+    src += ent("info_node", {"origin": "100 100 0"})
+    src += ent("logic_relay", {"targetname": "story_relay", "origin": "3000 0 0"})
+    tmp = tempfile.mkdtemp(prefix="lc_prefab_check_")
+    path = os.path.join(tmp, "src.vmf")
+    with open(path, "w") as f:
+        f.write(src)
+    faults = []
+
+    def want(ok, what):
+        if not ok:
+            faults.append(what)
+    pf = extract(path, "check_gate", (0, 0, -16, 512, 512, 512), anchor=(256, 128, 0), lib=tmp)
+    w = dict((e["classname"], e) for e in pf.get("wiring", []))
+    want(set(w) == {"func_door", "trigger_once", "ambient_generic"}, "wiring holds the door, the trigger and the sound only: %s" % sorted(w))
+    want(w.get("func_door", {}).get("origin") == [0, 0, 64], "the door's origin is moved to the anchor: %s" % w.get("func_door", {}).get("origin"))
+    want(["OnFullyOpen", "story_relay,Trigger,,2,1"] in w.get("func_door", {}).get("connections", []), "outputs kept in the comma form with their times")
+    want(len(pf["points"]) == 1 and pf["points"][0].get("connections") == [["OnUser1", "snd_gate,StopSound,,0,-1"]], "a prop keeps its outputs")
+    slabs = [s for s in pf["solids"] if s.get("live") == "gate"]
+    want(len(slabs) == 1 and "taken shut" in slabs[0]["from"], "the door is also a slab taken shut")
+    want(not any("toolstrigger" in x["material"].lower() for s in pf["solids"] for x in s["sides"]), "the trigger is not a slab")
+    want([o["name"] for o in pf.get("outside", [])] == ["story_relay"] and pf["outside"][0]["found"] == [{"classname": "logic_relay", "origin": [3000, 0, 0]}],
+         "outside names story_relay where it is: %s" % pf.get("outside"))
+    want([f["name"] for f in pf.get("fired_from_outside", [])] == ["far_relay"], "far_relay fires into the piece: %s" % pf.get("fired_from_outside"))
+    b = Build("prefab_check", 784, 9000)
+    m = Mod(b, Frame(0, 0, 0, 64), "prefab")
+    a1 = place(m, pf, 0, 0, 0, 0)["placed_as"]
+    old = json.loads(json.dumps(pf))      # (an areaportal, as older pieces hold: never placed)
+    old["wiring"].append({"classname": "func_areaportal", "keys": {"targetname": "ap", "target": "gate"}, "connections": [], "brushes": [old["wiring"][0]["brushes"][0]]})
+    a2 = place(m, old, 1024, 0, 0, 1)["placed_as"]
+    text = b.vmf.text()
+    for tag in (a1, a2):
+        want(text.count('"targetname" "gate%s"' % tag) == 1, "copy %s has its own door" % tag)
+        want(text.count('"gate%s\x1bOpen' % tag) == 1 and text.count('"snd_gate%s\x1bPlaySound' % tag) == 1, "the trigger's gate* reaches its own door only, the door its own sound (%s)" % tag)
+        want('"parentname" "gate%s"' % tag in text and '"SourceEntityName" "gate%s"' % tag in text, "keys naming the door follow the copy (%s)" % tag)
+    want("story_relay" not in text and "!player" not in text and "!activator\x1bSpeakResponseConcept" in text, "outputs outside the piece dropped, !player made !activator")
+    want(text.count("METAL/METALDOOR001A") == 12 and text.count('"classname" "func_door"') == 2, "each door placed live once, its slab left out")
+    want('"movedir" "0 180 0"' in text, "a turned copy's door moves turned")
+    want(text.count('"classname" "info_node"') == 0 and "func_areaportal" not in text, "the map's nodes and areaportals stay out")
+    b2 = Build("prefab_check2", 784, 9000)
+    m2 = Mod(b2, Frame(0, 0, 0, 64), "prefab")
+    place(m2, json.loads(json.dumps(pf)), 0, 0, 0, 0, wiring=False)
+    t2 = b2.vmf.text()
+    want(t2.count("METAL/METALDOOR001A") == 6 and '"func_door"' not in t2 and "trigger_once" not in t2, "wiring=False places the slab and no logic")
+    for f in faults:
+        print("  FAULT: " + f)
+    print("CHECK %s" % ("PASS" if not faults else "FAIL (%d)" % len(faults)))
+    return not faults
 
 
 def main():
@@ -200,29 +547,35 @@ def main():
     e.add_argument("box", nargs=6, type=float)
     e.add_argument("--anchor", nargs=3, type=float)
     e.add_argument("--note", default="")
+    e.add_argument("--wire-box", nargs=6, type=float, help="a bigger box for the logic (default: the piece's box)")
     sub.add_parser("list")
     s = sub.add_parser("show")
     s.add_argument("name")
     s.add_argument("--out")
+    s.add_argument("--no-wiring", action="store_true", help="leave the logic out (moving brushes as slabs)")
+    sub.add_parser("check")
     a = ap.parse_args()
     if a.cmd == "extract":
-        pf = extract(a.vmf, a.name, a.box, a.anchor, a.note)
-        print("%s: %d brushes, %d props/lights/decals, %d by %d by %d" % (a.name, len(pf["solids"]), len(pf["points"]), pf["size"][0], pf["size"][1], pf["size"][2]))
+        pf = extract(a.vmf, a.name, a.box, a.anchor, a.note, a.wire_box)
+        print("%s: %d brushes, %d props/lights/decals, %d wired (%d names outside, %d firing in), %d by %d by %d" % (
+            a.name, len(pf["solids"]), len(pf["points"]), len(pf.get("wiring", [])), len(pf.get("outside", [])), len(pf.get("fired_from_outside", [])),
+            pf["size"][0], pf["size"][1], pf["size"][2]))
     elif a.cmd == "list":
         for f in sorted(os.listdir(LIB)) if os.path.isdir(LIB) else []:
             if f.endswith(".json"):
                 pf = load(f[:-5])
                 print("%-26s %4d brushes %3d things  %5d x %5d x %5d  %s" % (pf["name"], len(pf["solids"]), len(pf["points"]), pf["size"][0], pf["size"][1], pf["size"][2], pf["note"]))
     elif a.cmd == "show":
-        from map_build import Vmf
         from map_modules import Frame, Mod, Build
         b = Build("prefab_" + a.name, 784, 9000)
         m = Mod(b, Frame(0, 0, 0, 64), "prefab")
-        place(m, a.name, 0, 0, 0)
+        place(m, a.name, 0, 0, 0, wiring=not a.no_wiring)
         out = a.out or "lc_prefab_%s.vmf" % a.name
         with open(out, "w") as f:
             f.write(b.vmf.text())
         print("written: " + out)
+    elif a.cmd == "check":
+        sys.exit(0 if check() else 1)
     else:
         ap.print_help()
 
