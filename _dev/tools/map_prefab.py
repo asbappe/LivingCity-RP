@@ -179,6 +179,34 @@ def fmt(v):
     return ("%.4f" % v).rstrip("0").rstrip(".") if v != int(v) else "%d" % v
 
 
+def disp_side_text(disp, q, d, t):
+    """A displaced face of a piece (as extract() keeps it) turned q quarter turns and moved by d: its start moved, and
+    every vector of its grid (normals, offsets, offset normals) turned with it; distances, alphas and tags as they were."""
+    if "keys" in disp:      # (the form disp_read() keeps: one form for every piece since 21 November)
+        kv, rows = dict(disp["keys"]), dict((name, [v for _, v in r]) for name, r in disp["blocks"])
+    else:
+        kv, rows = disp["kv"], disp["rows"]
+    sp = nums(kv["startposition"].replace("[", " ").replace("]", " "))
+    x, y, z = rot(sp, q)
+    out = '%sdispinfo\n%s{\n' % (t, t)
+    for k in ("power", "flags", "elevation", "subdiv"):
+        if k in kv:
+            out += '%s\t"%s" "%s"\n' % (t, k, kv[k])
+    out += '%s\t"startposition" "[%s %s %s]"\n' % (t, fmt(x + d[0]), fmt(y + d[1]), fmt(z + d[2]))
+    for name in ("normals", "distances", "offsets", "offset_normals", "alphas", "triangle_tags", "allowed_verts"):
+        if name not in rows:
+            continue
+        out += '%s\t%s\n%s\t{\n' % (t, name, t)
+        for k, row in enumerate(rows[name]):
+            if name in ("normals", "offsets", "offset_normals"):
+                v = nums(row)
+                row = " ".join(" ".join(fmt(round(c, 6)) for c in rot(v[i:i + 3], q)) for i in range(0, len(v) - 2, 3))
+            key = ("%d" % 10) if name == "allowed_verts" else "row%d" % k
+            out += '%s\t\t"%s" "%s"\n' % (t, key, row)
+        out += '%s\t}\n' % t
+    return out + '%s}\n' % t
+
+
 def load(name):
     with open(os.path.join(LIB, name + ".json")) as f:
         return json.load(f)

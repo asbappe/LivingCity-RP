@@ -29705,6 +29705,10 @@
 "static": true,
 "v": 2
 },
+"models/props_silo/silo_workspace2.mdl": {
+"elsewhere": [],
+"game": null
+},
 "models/props_silo/tire1.mdl": {
 "bbox": [
 -23.3,

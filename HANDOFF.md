@@ -31,15 +31,17 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 
 ## Where things stand
 
-- 21 November (late). The forest cave, expanded from Valve's maps (the owner asked; copying Valve's VMFs is allowed).
-  Behind the emergency door: Ravenholm's mine tunnel (d1_town_04), a shaft head room (the breach into the hive and
-  Episode Two's antlion alarm: siren and three lamps on opening, antlions 11 s later, the owner's choice), Ravenholm's
-  big cave by a gallery west, and a lift (Episode Two's cage, our own wiring) down 1296 to the lower workings:
-  Episode Two's nest chambers (ep2_outland_04) and grub cavern (styleguide_caves). One shut box holds all of it.
-  docs/dev/map-building.md (forest_cave); the pieces in docs/dev/prefabs.md, "Cave and mine pieces".
-- `map_prefab.py` lifts displacements now, and with `--centroid`/`--force` caves not cut on a grid (then capped).
-  Valve's VMF zip: on the owner's Drive, found by name with the Drive connector.
-- Not compiled yet: `lc_forest_cave.vmf` (all the above), `lc_forest_bunker.vmf` (bunker and silo).
-- Valve map ingestion is DONE (145 maps, 279 lessons): docs/dev/valve-ingest-progress.md, docs/dev/map-ingestion.md.
-- Open with the owner (TODO.md): the lift's speed; the bunker door's speed; the mounted gun's damage; lock gates
-  crush or stop; which NPC lessons to build (all say ask first).
+- 21 November (late night). Valve ingestion of the whole set is DONE (145 maps, 279 lessons, 289 pictures):
+  docs/dev/valve-ingest-progress.md, docs/dev/map-ingestion.md, docs/dev/valve-digest.md. Copying Valve's rooms is allowed.
+- Forest cave (`lc_forest_cave.vmf`): behind the emergency door Ravenholm's mine tunnel, a shaft head (the breach into
+  the hive; Episode Two's antlion alarm: siren and three lamps on opening, antlions 11 s later, the owner's choice),
+  Ravenholm's big cave west, a lift (Episode Two's cage, our own wiring) down 1296 to Episode Two's nest chambers and
+  grub cavern; one shut box. docs/dev/map-building.md; pieces in prefabs.md, "Cave and mine pieces". `map_prefab.py`
+  lifts displacements, `--centroid`/`--force` for caves not cut on a grid. Valve's VMF zip: the owner's Drive, by name.
+- Forest bunker (`lc_forest_bunker.vmf`, `map_forest.py` + `map_silo.py`): White Forest's look and round blast door;
+  the silo playable, the leader's office and bedroom, a secret escape tunnel to an EP2 cache cave on the north rim.
+- Gamemode: a tall HQ flagpole from a `_top` marker; maps can bring territories (`lc_zone_<kind>_r<radius>_h<height>_<label>`,
+  CORE.md). Combine generator `map_combine.py` + `combine/`: test scene `lc_combine_scene.vmf` waits on the owner.
+- Not compiled yet: the cave's workings, the new silo work. Pieces with wiring: docs/dev/prefabs.md.
+- Open for the owner (TODO.md): the lift's speed; the bunker door's speed; the Combine scene's look; Valve-only effects
+  untested in Garry's Mod; which NPC lessons to build.

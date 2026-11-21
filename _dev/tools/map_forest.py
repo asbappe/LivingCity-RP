@@ -27,6 +27,7 @@ import math
 import random
 
 import map_prefab as PF
+import map_silo as MS
 from map_build import CELL, FACE_AXES, FACE_ORDER, GATE_HIGH, GATE_WIDE, MAT, Plan, Vmf, check, face_corners, flood, gate_cap, reaches, test_extras
 
 PATCH, STEP, WALL = 512, 64, 128
@@ -479,7 +480,12 @@ class Forest:
             if name == side:
                 pieces = [(a, g, toward[name][0]), (g + GATE_WIDE, b, toward[name][1])]
             elif name in self.cuts:
-                pieces = [(a, self.cuts[name][0], None), (self.cuts[name][1], b, None)]
+                cuts = self.cuts[name] if isinstance(self.cuts[name], list) else [self.cuts[name]]
+                pieces, a0 = [], a
+                for c1, c2 in sorted(cuts):
+                    pieces.append((a0, c1, None))
+                    a0 = c2
+                pieces.append((a0, b, None))
             for s1, s2, face in pieces:
                 x1, y1, x2, y2 = frames[name](s1, s2)
                 v.world_box(self.box(x1, y1, self.zb, x2, y2, self.lid), sky, vis=vis, faces={face: MAT["canal_wall"]} if face else None)
@@ -682,7 +688,7 @@ class Forest:
         quads = sum(m[3] for m in made)
         if folded:
             self.notes.append("%d of %d displaced quads face backwards from the brush face they hang on (a sharply curved skin does this; a few are harmless)" % (folded, quads))
-        skin = [m for m in made if m[0] != self.vis("ground")]
+        skin = [m for m in made if m[0] != self.vis("ground") and m[0] not in getattr(self, "skin_skip", ())]
         if skin:
             cells = {}
             for k, m in enumerate(skin):
@@ -695,7 +701,7 @@ class Forest:
                 self.problems.append("the cave's skin has %d loose edge points, expected %d" % (alone, self.free_edge_points()))
 
     def free_edge_points(self):
-        return 0
+        return getattr(self, "skin_free", 0)
 
     # --- a picture from above, to look at before the owner does ---------------
 
@@ -823,7 +829,8 @@ class BunkerForest(Forest):
         # the silo: its west tunnel (now turned to face south) meets the corridor's end at y 1600 of the bunker, its
         # gantry level is the corridor's floor; the forest's north wall is cut where the corridor and its walls pass
         self.silo_at = (origin[0] - 640, origin[1] + 1600 + 544, zg - 1408)
-        self.cuts["north"] = (self.B0[0] - 768, self.B0[0] - 512)
+        # (and where the leader's way out comes through it onto the rim, west of the silo: map_silo.py)
+        self.cuts["north"] = [(self.B0[0] - 768, self.B0[0] - 512), (MS.CUT[0] - self.ox, MS.CUT[1] - self.ox)]
         self.plan, self.deep = plan, deep
         self.buildings.append((plan, self.B0, zd - 110))
         self.rooms += [(plan, self.B0), (deep, self.B0)]
@@ -901,7 +908,8 @@ class BunkerForest(Forest):
             self.node(bx + u, by + w, z)
         # the bunker's rooms must be shut in on every side but the doorway (for the look of it, and for the door's areaportal):
         # with the doorway stopped up, air from inside must not reach the forest. The silo and the way to it are inside.
-        closed = flood(v, W(640, 160, zp + 64), [B(512, 0, zp, 768, 64, zp + 192)])
+        # (and with the leader's way out stopped where it comes through the forest's wall: map_silo.py)
+        closed = flood(v, W(640, 160, zp + 64), [B(512, 0, zp, 768, 64, zp + 192), (MS.CUT[0], self.oy + self.D, MS.F_EXIT - 17, MS.CUT[1], self.oy + self.D + WALL, MS.FACE_TOP)])
         if closed[0] is None or reaches(closed, self.w(self.W / 2, self.D / 2, self.lid - 100)):
             self.problems.append("the bunker's rooms are open to the hill somewhere other than the doorway")
         sx, sy, sz = self.silo_at
@@ -1182,7 +1190,10 @@ class BunkerForest(Forest):
     # piece): its path point, gate, call button and wiring are all made from this list.
     LIFT_STOPS = (320, 896, 1152)
     LIFT_XY = (-480, 0)          # the lift's track in the piece's frame: 480 from the shaft's axis, which stays clear
-    HQ_FOOT, HQ_TOP = 160 + 8, 1408 + 120      # the Resistance flag's markers on the shaft's axis: over the pit grate (160) and the gantry (1408)
+    HQ_FOOT, HQ_TOP = 322 + 8, 1408 + 120      # the Resistance flag's markers on the shaft's axis: over the pit's cover (322) and the gantry (1408)
+    # the rebel territory the gamemode reads from the map round the flag's pole: a box 1400 wide each way and 1800 high
+    # from the floor under the marker (the gamemode's reading), so the marker stands on the bottom floor beside the pole's foot
+    REBEL_ZONE = ("lc_zone_rebel_r700_h1800_silo", 322 + 8)
 
     def silo(self):
         """White Forest's rocket silo (the lifted piece valve_ep2_silo: docs/dev/prefabs.md) just outside the forest's north
@@ -1197,7 +1208,10 @@ class BunkerForest(Forest):
         the autosave, Uriah) and the piece's reserve (the hoisted machine) are left out; the soundscapes are Valve's silo
         ones without the rocket's ignition hisses. Invisible player clips stand in the empty shaft (where the rocket was)
         at the open levels and the gantry, so nobody walks off into a 1,250 drop. Two info_targets on the shaft's axis
-        mark the Resistance flag's pole: lc_hq_setup_silo over the pit grate, lc_hq_setup_silo_top 120 over the gantry."""
+        mark the Resistance flag's pole: lc_hq_setup_silo 8 over the bottom floor (the pit's cover), lc_hq_setup_silo_top
+        120 over the gantry; beside the foot the rebel territory's marker (REBEL_ZONE). map_silo.py makes it playable:
+        the pit covered, the bare floors finished and dressed, level B's doors, the hatch's rail, the leader's office
+        and bedroom, and his way out (the secret panel, the cave tunnel, the cache cave and the rock on the rim)."""
         v = self.vmf
         sv, wv = self.vis("silo (Valve's White Forest silo)"), self.vis("silo's wiring")
         pf = PF.load("valve_ep2_silo")
@@ -1205,7 +1219,10 @@ class BunkerForest(Forest):
         q, d = 1, (ax, ay, az)
         reserve = set(pf.get("reserve", {}).get("names", ()))
         live = set(w["keys"].get("targetname", "") for w in pf["wiring"]) - {""}
-        pf_solids(v, pf, q, d, sv, world=True, skip=lambda s: "taken shut" in s["from"] or s.get("live") in live)
+        finished = MS.finish(pf)        # (the nodraw faces players now see: map_silo.py)
+        for i in MS.SKIP:
+            pf["solids"][i]["skip"] = True
+        pf_solids(v, pf, q, d, sv, world=True, skip=lambda s: "taken shut" in s["from"] or s.get("live") in live or s.get("skip"))
         drop = {"steam_silo1_1", "tr_laddergate_1", "sound_ladder_steam_1", "sound_ladder_steamloop_1", "sound_ladder_lock_1", "door_silo_lab_outside_1_malfunction_timer",
                 # the ladder's hatch and the clip over it (the owner: "there is no way to open the gate ... can we just remove that grate?")
                 "door_hatch_ladder_1", "pclip_hatch_1",
@@ -1213,7 +1230,9 @@ class BunkerForest(Forest):
                 "door_silo_lab_outside_1_door_open_rl", "door_silo_lab_outside_1_open_wav", "door_silo_lab_outside_1_keybeep_wav_1", "door_silo_lab_outside_1_keybeep_wav_2",
                 "door_silo_lab_outside_1_keybeep_wav_3", "break_glass_1", "break_glass_1a", "exit_airlock_blastdoor_lever_rl",
                 # Valve's lift button, the trigger that locked it, its path: lift() makes them anew
-                "button_ele_2", "trigger_unlock_ele", "path_elevator_5", "path_elevator_6", "path_elevator_7", "path_elevator_8"}
+                "button_ele_2", "trigger_unlock_ele", "path_elevator_5", "path_elevator_6", "path_elevator_7", "path_elevator_8",
+                # level B's fake door at its north end (a working door now: map_silo.py)
+                "brush_fake_cit_door_1"}
         pads = [p for p in pf["points"] if "keypad" in p["keys"].get("model", "")]
         buttons = [w for w in pf["wiring"] if w["classname"] == "func_button" and any(c[1].startswith("keypad_1,") for c in w.get("connections", []))]
         pad_name, lab_pads = {}, set()
@@ -1225,7 +1244,7 @@ class BunkerForest(Forest):
 
         def keep(e):
             k = e["keys"]
-            if k.get("targetname", "") in drop or e["classname"] == "func_areaportal":
+            if k.get("targetname", "") in drop or e["classname"] == "func_areaportal" or MS.dropped_prop(e):
                 return False
             if k.get("targetname", "") in reserve or any(k.get(r, "") in reserve for r in ("parentname", "attach1", "attach2")):
                 return False        # (the hoist: kept in the piece's reserve, not placed)
@@ -1310,6 +1329,19 @@ class BunkerForest(Forest):
         # top floor"): its foot over the pit grate on the shaft's axis, its _top marker 120 over the gantry's floor
         v.point("info_target", (ax, ay, az + self.HQ_FOOT), {"targetname": "lc_hq_setup_silo", "spawnflags": "0"}, wv)
         v.point("info_target", (ax, ay, az + self.HQ_TOP), {"targetname": "lc_hq_setup_silo_top", "spawnflags": "0"}, wv)
+        v.point("info_target", (ax, ay, az + self.REBEL_ZONE[1]), {"targetname": self.REBEL_ZONE[0], "spawnflags": "0"}, wv)
+        # the playable silo (map_silo.py): the pit covered, a rail at the gantry's hatch, level B's doors, the ring halls
+        # dressed, the leader's office and bedroom, and his way out
+        ms = MS.Silo(self, d)
+        ms.pit_cover()
+        ms.hatch_rail()
+        ms.level_b_doors()
+        ms.ring_dress()
+        ms.office()
+        ms.bedroom()
+        ms.escape()
+        self.notes.append("the silo made playable: %d nodraw faces players now see finished; the pit covered at the bottom level; a rail round the gantry's hatch; "
+                          "level B's two doors; the leader's office and bedroom" % finished)
         for dz in (1408 + 64, 322 + 64):
             v.point("env_cubemap", (ax, ay + 200, az + dz), {"cubemapsize": "0"}, sv)
         # player clips in the empty shaft: over the solid ring's hole (159), the ring slab's grate's hole (114) and inside
@@ -1328,7 +1360,8 @@ class BunkerForest(Forest):
         roof = self.zd + 224
         v.world_box((x1 - T, y1 - T, z1 - T, x2 + T, y2 + T, z1), nd, top=cw, vis=hv)
         v.world_box((x1 - T, y1 - T, z2, x2 + T, y2 + T, roof), nd, bottom=cw, vis=hv)
-        v.world_box((x1 - T, y1, z1, x1, y2, z2), nd, faces={"east": cw}, vis=hv)
+        for b in MS.split_box((x1 - T, y1, z1, x1, y2, z2), MS.HULL_HOLE):     # (the leader's way out passes it: map_silo.py)
+            v.world_box(b, cw, vis=hv)
         v.world_box((x2, y1, z1, x2 + T, y2, z2), nd, faces={"west": cw}, vis=hv)
         v.world_box((x1 - T, y2, z1, x2 + T, y2 + T, z2), nd, faces={"south": cw}, vis=hv)
         cx1, cx2, cz = ax - 128, ax + 128, self.zg - 64      # (the corridor's end and its walls fill the south wall's middle)
@@ -1336,7 +1369,7 @@ class BunkerForest(Forest):
         v.world_box((cx2, y1 - T, z1, x2 + T, y1, z2), nd, faces={"north": cw}, vis=hv)
         v.world_box((cx1, y1 - T, z1, cx2, y1, cz), nd, faces={"north": cw}, vis=hv)
         # the forest's north wall where the corridor passes: sky over its roof as the wall's, sealed under its floor
-        lx1, lx2 = self.cuts["north"]
+        lx1, lx2 = self.cuts["north"][0]
         sky, shv = MAT["sky"], self.vis("shell (sky, walls, slab)")
         v.world_box(self.box(lx1, self.D, roof, lx2, self.D + WALL, self.lid), sky, sky, sky, vis=shv)
         v.world_box(self.box(lx1, self.D, self.zg - 80, lx2, self.D + WALL, self.zd - 64), nd, vis=shv)
