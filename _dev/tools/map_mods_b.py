@@ -470,6 +470,21 @@ def m_cells(m, opt):
     m.view(928, 60, F, 90, 0, "the concrete pipe")
 
 
+def ammo_crate(m, model, ammo, u, v, yaw, z):
+    """A real ammunition crate (item_ammo_crate: players open its lid and take rounds of type `ammo`: 0 pistol, 1 SMG,
+    2 pulse rifle, 4 shotgun, 6 .357), standing on z; `model` is the one the game shows for that type (for the checks)."""
+    zo = m.stand(model, z)
+    m.point("item_ammo_crate", u, v, zo, {"AmmoType": str(ammo), "angles": "0 %d 0" % m.fr.yaw(yaw)}, m.pv)
+    m.b.props.append(("item_ammo_crate", model, m.fr.at(u, v, zo), m.fr.yaw(yaw), m.tag))
+
+
+def wall_point(m, cls, model, u, v, yaw, z):
+    """A thing hung on a wall by its back (a health or suit charger): its origin on the wall's face at (u, v), its
+    middle at z, facing yaw."""
+    m.point(cls, u, v, z, {"angles": "0 %d 0" % m.fr.yaw(yaw)}, m.pv)
+    m.b.props.append((cls, model, m.fr.at(u, v, z), m.fr.yaw(yaw), m.tag))
+
+
 def line_walls(m, rooms, dado=56, low=TILE, high=PLASTER, roof=PLASTER, rail=None):
     """Line a vault's rooms as City 18 lines its own: a skin 2 thick on every wall of these rooms,
     [(u1, v1, u2, v2, ceiling[, floor]), ...] (floors at F unless given): `low` up to `dado` over the floor, `high`
@@ -525,7 +540,7 @@ BED_YAW = 90     # the way the clinic's bed frames are turned (their long side i
 def m_clinic(m, opt):
     """The clinic: a field hospital in a vault off the left wall, whitewashed over a tiled dado with a stone rail
     between (City 18's dado line), against the canal's concrete. A wide way in between two drawn curtains, light cloth hung from a rail and clear of the floor (a white
-    cross on the wall over it); a ward of four beds along its back wall under two fluorescent tubes, with cloth screens
+    cross on the wall over it); a working health charger on the ward's front wall; a ward of four beds along its back wall under two fluorescent tubes, with cloth screens
     between them (lc_clinic_bed_1 to _4: where a patient lies), a mattress and a bedside drawer each, a chart on two of
     the drawers, a drip stand by two beds and oxygen bottles by the others, a hospital cart, a stove with a pot
     steaming on it, a bench, the nurse's table; a dispensary nook behind a shop's display counter (walk round its left
@@ -589,6 +604,7 @@ def m_clinic(m, opt):
     m.static("models/props_c17/furnitureradiator001a.mdl", 136, 520, 0)
     m.static("models/props_trainstation/bench_indoor001a.mdl", 148, 644, 0)                  # a bench for whoever waits
     m.static("models/props_c17/furnituretable001a.mdl", 656, 500, 0)                         # the nurse's table
+    wall_point(m, "item_healthcharger", "models/props_combine/health_charger001.mdl", 600, 450, 90, F + 52)      # a working health charger on the ward's front wall (the owner, 21 November)
     m.static("models/props_c17/furniturechair001a.mdl", 656, 544, 270)
     m.static("models/props_c17/furniturestove001a.mdl", 352, 474, 90)
     put(m, [("props_c17/metalpot001a", 352, 470, 0)], F + 41)                                 # a pot boiling instruments, steaming
@@ -1093,7 +1109,8 @@ def m_stash(m, opt):
     launcher, a crowbar, pistols; a peg or two empty: those are out); a steel workbench against the wall toward the
     canal with a vice, tools, a parts bin and a crossbow on it, the canal map and a board of papers on the wall over
     it; a planning table with papers, a radio, a desk lamp, a revolver and a mug, its chair pushed back; two of the
-    Combine's ammunition crates and wooden crates along the far wall; boxes of rounds on a shelf.
+    Combine's ammunition crates and wooden crates along the far wall (the SMG one a real crate, opened for rounds);
+    boxes of rounds on a shelf.
     Left as brushes: the racks (Half-Life 2 has no gun rack: a board, rails and pegs), the valve's wheel (it turns).
     Unchecked: func_rot_button (the valve wheel) is from memory, with its turning axis set by spawnflag 64 or 128 (the
     map's x or y, whichever way the module is turned): if the wheel turns the wrong way round or not at all, the door
@@ -1185,7 +1202,7 @@ def m_stash(m, opt):
     tube(m, tu, tv, top, "215 228 235 60", along="u")
 
     # the stock along the far wall: the Combine's ammunition crates, wooden crates, boxes of rounds on a shelf
-    m.dynamic("models/items/ammocrate_smg1.mdl", R2 - 19, 410, 180, z=Z)
+    ammo_crate(m, "models/items/ammocrate_smg1.mdl", 1, R2 - 19, 410, 180, Z)      # (a real one: open it for SMG rounds, the owner, 21 November)
     m.dynamic("models/items/ammocrate_ar2.mdl", R2 - 19, 472, 180, z=Z)
     m.static("models/props_junk/wood_crate001a.mdl", R2 - 24, S1 + 24, 0, z=Z)
     m.static("models/props_junk/wood_crate001a.mdl", R2 - 24, S1 + 24, 10, z=Z + 40)

@@ -112,6 +112,8 @@ def nums(text):
 def read(path):
     """(entities: [{key: value, '_solids': [box...]}], brushes: [(box, materials)]) from a VMF, quickly."""
     text = open(path, errors="replace").read()
+    SHAPES.clear()      # (one file's brushes only: checking several files in one run must not mix them)
+    SIDES.clear()
     ents, brushes = [], []
     pos = 0
     n = len(text)
