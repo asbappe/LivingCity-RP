@@ -90,6 +90,15 @@ for kind, names in pairs(FALLBACK) do
     if LC.SITTABLE then LC.SITTABLE[kind] = true end -- (the citizens' sit, bench and lean spots: ChooseCitizenTask)
 end
 
+-- Citizens' poses only (the owner, 21 November: Civil Protection and the Overwatch never take them, placed or
+-- found): true if this NPC may not be sent to a spot of this kind. Asked by FreePoints and StartBusy.
+local POSE_ROLES = { citizen = true, rebel = true }
+function LC.IdleKindRefused(kind, who)
+    if not POSES[kind] or not IsValid(who) then return false end
+    local st = LC.NPCs and LC.NPCs[who]
+    return not (st and POSE_ROLES[st.role])
+end
+
 -- A name this model can play: an ACT_ activity or a sequence name (nil: it hasn't got it).
 local function Seq(npc, name)
     if not name or not IsValid(npc) then return nil end
@@ -485,6 +494,7 @@ end
 local function Fits(pos)
     if LC.NearestPoint and LC.NearestPoint(pos, AUTO_KEEP_OFF) then return false end
     if LC.CombineZoneAt and LC.CombineZoneAt(pos) then return false end
+    if LC.InfestZoneAt and LC.InfestZoneAt(pos) then return false end -- (the owner: no citizen lounging on a couch in the infestation)
     for _, z in ipairs(LC.Zones or {}) do
         if NOT_HERE[z.kind] and LCZ and LCZ.Contains and LCZ.Contains(z, pos) then return false end
     end

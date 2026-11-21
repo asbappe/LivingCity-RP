@@ -357,11 +357,13 @@ LC.IsPointFree = IsFree
 local function FreePoints(kinds, who, looseOnly)
     local out, now, by = {}, CurTime(), PointIndex()
     for kind in pairs(kinds) do
-        for _, p in ipairs(by[kind] or NONE) do
+        -- (the citizens' idle poses are never a unit's: sv_livingcity_idlelife.lua)
+        local refused = LC.IdleKindRefused and LC.IdleKindRefused(kind, who)
+        for _, p in ipairs(not refused and by[kind] or NONE) do
             if IsFree(p, who) and (not looseOnly or (p.group or 0) == 0) and (p.disabledUntil or 0) < now then out[#out + 1] = p end
         end
         -- and the spots the city found by itself (couches, chairs, beds, windows, walls: sv_livingcity_idlelife.lua)
-        local auto = LC.AutoSpots and LC.AutoSpots.byKind[kind]
+        local auto = not refused and LC.AutoSpots and LC.AutoSpots.byKind[kind]
         for _, p in ipairs(auto or NONE) do
             if IsFree(p, who) and (p.disabledUntil or 0) < now and LC.AutoSpotOK(p) then out[#out + 1] = p end
         end
@@ -799,6 +801,7 @@ LC.MakeSequence, LC.BusySeqName, LC.BUSY_ACTS = MakeSequence, SeqName, BUSY
 local function StartBusy(npc, st, p)
     local names = BUSY[p.kind]
     if not names then return false end
+    if LC.IdleKindRefused and LC.IdleKindRefused(p.kind, npc) then return false end -- (a citizen's idle pose: never a unit's)
     -- the spot's own pose, Valve's (a window watcher, bench sits in turn: sv_livingcity_idlelife.lua),
     -- else the game's own for the kind
     local entry, loop, exit

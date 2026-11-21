@@ -42773,6 +42773,9 @@ node(6150, 80) node(6350, 80)
 -- one of the map's own static props
 LC.StaticRest = { { kind = "couch", pos = A0 + Vector(7200, 0, 0), ang = Angle(0, 90, 0), model = "models/props_interiors/sofa01.mdl" } }
 node(7300, 0)
+-- a couch in the infestation (the owner: no citizen lounging on a couch in there)
+prop("models/props_c17/furniturecouch001a.mdl", 8400, 0, 0) node(8500, 0)
+local infest = LC.AddZone(A0 + Vector(8400, 0, 0), 300, "infest", 0)
 LC.NavGraph = { nodes = nodes, main = 1, links = 0 }
 LC.NavGraphReady()
 LC.AutoSpotsScan(true)
@@ -42802,6 +42805,7 @@ local kinds = {}
 for _, p in ipairs(crowd) do kinds[p.kind] = (kinds[p.kind] or 0) + 1 end
 ok(#crowd == 2 and kinds.couch == 1 and kinds.bedside == 1, "a room full of furniture: two spots at most, one of a kind (a room never fills with posers)", #crowd)
 ok(spotsNear(7200, 0, 60, "couch")[1] ~= nil, "the map's own static props count too")
+ok(infest ~= nil and LC.InfestZoneAt(A0 + Vector(8400, 0, 0)) ~= nil and #spotsNear(8400, 0, 100) == 0, "never in the infestation")
 -- citizens are offered them with the placed spots, and use Valve's poses there
 local offered = {}
 for _, p in ipairs(LC.FreePoints(LC.SITTABLE, nil)) do offered[p] = true end
@@ -42811,6 +42815,22 @@ cit.seqs, cit.sim, cst.test = { sitcouch1 = 1 }, false, nil
 ok(LC.StartBusy(cit, cst, cs) and cst.ss and cst.ss.kv.m_iszPostIdle == "sitcouch1", "and sit there in Valve's couch pose")
 LC.EndBusy(cit, cst, false)
 cit:Remove()
+-- never Civil Protection or the Overwatch: not these, not the placed ones (the owner, 21 November)
+local hand = LC.AddPoint(A0 + Vector(0, 300, 0), 0, "window", 0)
+made[#made + 1] = hand
+local cop, copst = LC.SpawnCop(A0 + Vector(100, 300, 0))
+copst = copst or LC.NPCs[cop]
+cop.seqs, cop.sim = { sitcouch1 = 1, d1_t03_Tenements_Look_Out_Window_Idle = 2 }, false
+local unitOffered = false
+for _, p in ipairs(LC.FreePoints(LC.SITTABLE, cop)) do if LC.IDLE_POSES[p.kind] or p.auto then unitOffered = true end end
+ok(not unitOffered and not LC.StartBusy(cop, copst, cs) and not LC.StartBusy(cop, copst, hand) and copst.state ~= "busy",
+    "a Civil Protection unit is never offered them, found or placed, nor sat down in one")
+local cit2, cst2 = LC.SpawnCitizen(A0 + Vector(-100, 300, 0))
+cst2.test = nil
+local citOffered = false
+for _, p in ipairs(LC.FreePoints(LC.SITTABLE, cit2)) do if p == hand then citOffered = true end end
+ok(citOffered, "(a citizen is)")
+cop:Remove() cit2:Remove()
 -- looked for again: the same spot (whoever sits there keeps it); a chair moved off is no seat until found again
 LC.AutoSpotsScan(true)
 ok(spotsNear(0, 0, 60, "couch")[1] == cs, "looked for again, a spot found again is the same one")
@@ -42830,6 +42850,7 @@ for _, list in pairs(LC.AutoSpots.byKind) do again = again + #list end
 ok(some < 12 and some == again, "with the real chances only some are spots, and the same ones every time", some)
 for _, e in ipairs(props) do e:Remove() end
 for _, p in ipairs(made) do LC.RemovePoint(p) end
+if infest then LC.RemoveZone(infest) end
 util.TraceLine, LC.CombineZoneAt, LC.StaticRest, _walls = traceWas, czWas, staticWas, savedWalls
 LC.NavGraph = graphWas
 LC.NavGraphReady()

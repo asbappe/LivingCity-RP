@@ -1,6 +1,8 @@
 --[[
-    Living City: how the Combine's units move and handle people (the owner, 21 November:
-    "build ALL of the ideas" read from Valve's own maps, docs/dev/valve-npc-notes.md, section 5)
+    Living City: how units move and handle people (squads in lanes, the frisk, the punch)
+
+    The owner, 21 November: "build ALL of the ideas" read from Valve's own maps
+    (docs/dev/valve-npc-notes.md, section 5).
 
       Lanes             a squad sent somewhere (a raid team to a block door, a sweep
                         team walking into rebel ground, a reaction squad sent to a
@@ -56,25 +58,27 @@ function LC.LaneSpots(to, from, n, gap)
     return out
 end
 
--- The stops on the way from `from` to `to`: points along the city's route every 450 to 1000, then `to`.
+-- The stops on the way from `from` to `to`: points along the city's route every 450 to 1000 (measured
+-- along it), then `to`; never a last bound much shorter than half the least.
 function LC.LaneBounds(from, to, role)
     local route = LC.BuildRoute and LC.BuildRoute(from, to, role)
-    local pts = {}
+    local pts = { from }
     if type(route) == "table" then for _, p in ipairs(route) do pts[#pts + 1] = p end end
-    if #pts == 0 or pts[#pts]:DistToSqr(to) > 16 then pts[#pts + 1] = to end
-    local out, walked, cur, nextAt = {}, 0, from, math.Rand(BOUND_MIN, BOUND_MAX)
-    for i, p in ipairs(pts) do
-        local seg = cur:Distance(p)
-        local along = 0
-        while seg > 0 and walked + (seg - along) >= nextAt do
-            local at = along + (nextAt - walked)
-            if i == #pts and seg - at < BOUND_MIN * 0.5 then break end -- (not a bound just short of the end)
-            along = at
-            out[#out + 1] = cur + (p - cur) * (along / seg)
-            walked, nextAt = 0, math.Rand(BOUND_MIN, BOUND_MAX)
-        end
-        walked = walked + (seg - along)
-        cur = p
+    if pts[#pts]:DistToSqr(to) > 16 then pts[#pts + 1] = to end
+    local cum = { 0 }
+    for i = 2, #pts do cum[i] = cum[i - 1] + pts[i - 1]:Distance(pts[i]) end
+    local total, cuts, last = cum[#pts], {}, 0
+    while total - last > BOUND_MAX do
+        local nxt = last + math.Rand(BOUND_MIN, BOUND_MAX)
+        if total - nxt < BOUND_MIN * 0.5 then nxt = last + (total - last) / 2 end
+        cuts[#cuts + 1] = nxt
+        last = nxt
+    end
+    local out, j = {}, 2
+    for _, c in ipairs(cuts) do
+        while j < #pts and cum[j] < c do j = j + 1 end
+        local a, b, len = pts[j - 1], pts[j], cum[j] - cum[j - 1]
+        out[#out + 1] = len > 0 and (a + (b - a) * ((c - cum[j - 1]) / len)) or b
     end
     out[#out + 1] = to
     return out

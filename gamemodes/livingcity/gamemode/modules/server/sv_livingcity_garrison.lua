@@ -5,7 +5,9 @@
     Mostly Overwatch soldiers, with a metrocop or two, spread through the zone:
     some standing post, some walking from one end of it to the other. They're
     on top of the city's own numbers, so the streets don't empty to fill the
-    nexus. One killed is replaced after a while, out of sight.
+    nexus. One killed is replaced after a while, out of sight. Its metrocops
+    guard the doors into it first, one a door (sv_livingcity_unitposts.lua,
+    which also keeps 1.75 posts for every unit for the rest to move between).
 
       lc_garrison           most units in one zone (0 = no garrison); a small
                             zone gets fewer (about one per 15x15 metres of floor)

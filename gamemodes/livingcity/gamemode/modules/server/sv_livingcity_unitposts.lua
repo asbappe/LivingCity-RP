@@ -1,6 +1,8 @@
 --[[
-    Living City: units at their posts (the owner, 21 November: "build ALL of the
-    ideas" read from Valve's own maps, docs/dev/valve-npc-notes.md, section 5)
+    Living City: units at their posts (a unit at each Combine door, guards at ease)
+
+    The owner, 21 November: "build ALL of the ideas" read from Valve's own maps
+    (docs/dev/valve-npc-notes.md, section 5).
 
       A unit at each Combine door   one of a Combine-only zone's garrison metrocops
                                     stands just outside each door into it (up to 3
