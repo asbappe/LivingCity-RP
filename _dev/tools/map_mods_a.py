@@ -149,6 +149,12 @@ def wall_stair(m, start, v1, v2, sign, rail_v):
     return end
 
 
+def drain_water(m, box):
+    """Water that the aqueduct's valve drains: it sinks 30 (into the concrete under it, out of sight) when told Open."""
+    m.b.vmf.brush_entity("func_water_analog", {"targetname": "lc_aqueduct_water", "movedir": "90 0 0", "speed": "6", "movedistance": "30",
+                                               "startposition": "0", "WaveHeight": "0"}, [m.fr.box(*box)], MAT["nodraw"], m.b.vis + ": water and sludge", top=MM["water"])
+
+
 def clip(m, box):
     """An unseen wall for players only (it seals nothing)."""
     m.world(box, MAT["clip"], vis=m.b.vis + ": player clips", seals=False)
@@ -2424,14 +2430,18 @@ def m_aqueduct(m, opt):
     trough is cracked (painted cracks): its water stains and greens its sides, falls in a thin stream onto the canal
     floor, and lies there in a shallow pool in a ring of mud, with a dripping sound. A sluice valve stands on the trough's
     rim by the left wall. It sounds of water (prison.watery_hallway).
-    Named for the game: lc_aqueduct_walk (an info_target on the walk at mid-span: a lookout's place).
+    The sluice valve (the owner, 21 November: "sure"): a button on the left wall beside the walk (lc_aqueduct_valve,
+    once a round) drains the trough and the culverts' water (lc_aqueduct_water sinks out of sight), stops the fall and
+    the drip, and lifts both culverts' bars into the wall (lc_aqueduct_bars, their clip lc_aqueduct_bars_clip turned
+    off): the dry trough is then a way across into either culvert.
+    Named for the game: lc_aqueduct_walk (an info_target on the walk at mid-span: a lookout's place), lc_aqueduct_valve,
+    lc_aqueduct_water, lc_aqueduct_fall, lc_aqueduct_drip, lc_aqueduct_bars, lc_aqueduct_bars_clip.
     Left as brushes: the trough, its piers, ribs, pilasters, coping and buttress, the culverts' frames, the grating and
     its brackets.
     Unchecked: which way canal_bars004 faces; the sound ambient/water/drip_loop1.wav (if it is not there, the place is
     silent); water standing in a trough of detail brushes; the pool, a sheet of water 5 deep lying on the floor; the
     ladder against a buttress; that a thin env_steam pointed down reads as falling water (Half-Life 2 has no falling
-    water material). Not done: the valve draining the trough to open a way along it (a route the game would have to
-    want)."""
+    water material); the culverts beyond the bars are short (192) and end dark: where they lead is still to come."""
     b = m.b
     top, bed = TRIM, TRIM - 32
     con = MAT["beam"]
@@ -2441,10 +2451,15 @@ def m_aqueduct(m, opt):
         c1, c2 = (256, 448) if s > 0 else (-448, -256)
         m.low(448, c1, 576, c2, bed + 112, floor=bed)                      # (as high as the canal's bars that shut it; on a way into the wall)
         m.side(448, c1, 576, c2)
-        m.static(M_ + "props_canal/canal_bars004.mdl", 512, 264 * s, 90, bed)
-        clip(m, (448, 272 if s > 0 else -274, bed, 576, 274 if s > 0 else -272, bed + 112))
+        lift = "lc_aqueduct_bars"                                           # (the valve lifts the bars into the wall: the owner, 21 November)
+        m.b.vmf.brush_entity("func_movelinear", {"targetname": lift, "movedir": "-90 0 0", "speed": "28", "movedistance": "116", "spawnflags": "8",
+                                                 "startposition": "0", "blockdamage": "0"}, [m.fr.box(508, 264 * s - 1, bed + 100, 516, 264 * s + 1, bed + 108)],
+                             "tools/toolsinvisible", m.dv)
+        m.prop("prop_dynamic", M_ + "props_canal/canal_bars004.mdl", 512, 264 * s, 90, bed, {"solid": "0", "parentname": lift, "disableshadows": "1"})
+        m.b.vmf.brush_entity("func_brush", {"targetname": "lc_aqueduct_bars_clip", "Solidity": "2", "StartDisabled": "0", "spawnflags": "2", "rendermode": "10"},
+                             [m.fr.box(448, 272 if s > 0 else -274, bed, 576, 274 if s > 0 else -272, bed + 112)], "tools/toolsinvisible", m.dv)
         m.det([(448, 444 if s > 0 else -448, bed, 576, 448 if s > 0 else -444, bed + 112)], MAT["black"])         # where it goes on, dark
-        m.water(448, 264 if s > 0 else -444, 576, 444 if s > 0 else -264, bed - 8, top - 8)
+        drain_water(m, (448, 264 if s > 0 else -444, 576, 444 if s > 0 else -264, bed - 8, top - 8))
         m.static(M_ + "props_c17/light_cagelight02_on.mdl", 512, 444 * s - 1 * s, 270 if s > 0 else 90, bed + 70)
         m.light(512, 420 * s, bed + 80, "200 220 210 30")
         m.grime("stain", 449, 380 * s, bed + 60, 3 + s)
@@ -2457,7 +2472,7 @@ def m_aqueduct(m, opt):
     for v in (96, -160):
         m.det([(464, v, F, 576, v + 64, bed - 32), (456, v - 8, bed - 32, 584, v + 72, bed - 16)], con)
         m.blocked(432, v - 16, 608, v + 80)
-    m.water(480, -256, 560, 256, bed, top - 8)
+    drain_water(m, (480, -256, 560, 256, bed, top - 8))
     # ribs under the trough, pilasters down its far side every 64, a coping of the city's trim stone along both rims
     m.det([(464, v, bed - 28, 576, v + 12, bed - 16) for v in (-250, -40, 28, 238)], con)
     m.det([(576, v, bed - 16, 580, v + 8, top - 1) for v in range(-228, 229, 64)], con)
@@ -2486,12 +2501,17 @@ def m_aqueduct(m, opt):
     for k, (u, v, z) in enumerate(((464, 4, bed - 4), (580, -4, bed - 8), (464, -30, bed + 8))):
         m.grime("stain", u, v, z, 10 + k)                                                  # the water's stain and the algae down its sides
     m.point("env_steam", 528, 0, bed - 20, {"InitialState": "1", "type": "0", "SpreadSpeed": "2", "Speed": "120", "StartSize": "3", "EndSize": "6", "Rate": "40",
-                                           "rendercolor": "200 215 225", "JetLength": "200", "renderamt": "120", "angles": "90 0 0"})      # a thin fall of water
+                                           "rendercolor": "200 215 225", "JetLength": "200", "renderamt": "120", "angles": "90 0 0", "targetname": "lc_aqueduct_fall"})      # a thin fall of water
     m.water(432, -64, 624, 64, F, F + 5)
     px, py = m.fr.pt(528, 0)
     m.b.bumps.append(lambda x, y: 16 * max(0.0, 1 - abs(math.hypot(x - px, y - py) - 120) / 56.0))
-    m.sound("ambient/water/drip_loop1.wav", 528, 0, F + 40, radius=700, volume=5)
+    m.sound("ambient/water/drip_loop1.wav", 528, 0, F + 40, radius=700, volume=5, name="lc_aqueduct_drip")
     m.soundscape(SCAPES["watery"], 528, 0, F, radius=560)
+    # the valve: on the left wall beside the walk; turned once, the trough drains, the fall and the drip stop and the
+    # culverts' bars lift, so the dry trough is a way across into either culvert (once a round: wait -1)
+    m.button("lc_aqueduct_valve", 420, 256, top + 16, 270, [("lc_aqueduct_water", "Open", "", 0), ("lc_aqueduct_fall", "TurnOff", "", 2),
+                                                          ("lc_aqueduct_drip", "StopSound", "", 4), ("lc_aqueduct_bars", "Open", "", 1),
+                                                          ("lc_aqueduct_bars_clip", "Disable", "", 4)], wait="-1")
     canal_grime(m, 16, 400, 6300)
     canal_grime(m, 650, 1010, 6400)
     m.static(M_ + "props_pipes/valve002.mdl", 568, 204, 90, top)                # a sluice valve on the trough's rim by the left wall

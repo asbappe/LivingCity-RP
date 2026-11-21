@@ -68,9 +68,8 @@ RED_ROOF = "metal/metalroof004a"
 def m_hq(m, opt):
     """The Resistance leader's office. A doorway in the left wall into a briefing room (a long table and benches, a
     cork board, a lamp), and behind a partition the leader's own office: a desk and chair, a filing cabinet, a steel
-    closet, a bed. The flagpole is the game's own: it stands it at lc_hq_setup, by the door.
-    Named for the game: lc_hq_setup (the doorstep: where the pole goes and the leader stands to set the headquarters
-    up), lc_hq_desk, lc_hq_table, lc_hq_map.
+    closet, a bed. The town's flagpole stands on the plaza, not here (lc_hq_setup_plaza: the owner, 21 November).
+    Named for the game: lc_hq_desk, lc_hq_table, lc_hq_map.
     Unchecked: which way the cork board, the closet and the bed face."""
     from map_modules import F, MM
     wood = MM["wood"]
@@ -104,7 +103,6 @@ def m_hq(m, opt):
     m.target("lc_hq_desk", 512, 880, F + 36, 270)
     m.lamp(512, 830, F + 134, "255 200 140 40", hang=18)
     m.blocked(440, 820, 590, 940)
-    m.target("lc_hq_setup", 500, 200, F + 8, 270)
     for u, v in ((384, 290), (240, 400), (560, 640), (512, 760)):
         m.lane(u, v)
     m.view(384, 60, F, 90, 0, "the door")
