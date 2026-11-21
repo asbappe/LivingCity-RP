@@ -17607,6 +17607,14 @@
 "static": true,
 "v": 2
 },
+"models/props_foliage/flower_barrel.mdl": {
+"elsewhere": [
+"dod",
+"left4dead",
+"left4dead2"
+],
+"game": null
+},
 "models/props_foliage/forestrock_cluster01.mdl": {
 "bbox": [
 -121.6,
@@ -18447,6 +18455,24 @@
 "static": true,
 "v": 2
 },
+"models/props_foliage/tree_pine_01.mdl": {
+"bbox": [
+-138.4,
+-147.1,
+-0.2,
+159.3,
+156.9,
+430.6
+],
+"built_static": true,
+"collides": true,
+"game": "episodic",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
 "models/props_foliage/tree_pine_02.mdl": {
 "bbox": [
 -146.0,
@@ -18455,6 +18481,24 @@
 133.6,
 150.4,
 387.9
+],
+"built_static": true,
+"collides": true,
+"game": "episodic",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_foliage/tree_pine_03.mdl": {
+"bbox": [
+-94.4,
+-98.2,
+-11.3,
+111.0,
+106.0,
+194.1
 ],
 "built_static": true,
 "collides": true,
@@ -18977,6 +19021,24 @@
 16.5,
 24.3,
 113.9
+],
+"built_static": true,
+"collides": true,
+"game": "ep2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_forest/furniture_shelf01a.mdl": {
+"bbox": [
+-9.6,
+-24.4,
+-43.6,
+9.3,
+24.4,
+43.7
 ],
 "built_static": true,
 "collides": true,
@@ -25925,6 +25987,24 @@
 "static": true,
 "v": 2
 },
+"models/props_outland/haybale.mdl": {
+"bbox": [
+-16.6,
+-33.9,
+-17.6,
+8.3,
+33.0,
+17.5
+],
+"built_static": true,
+"collides": true,
+"game": "ep2",
+"physics": true,
+"prop_data": true,
+"ragdoll": false,
+"static": false,
+"v": 2
+},
 "models/props_outland/pumpkin01.mdl": {
 "bbox": [
 -10.1,
@@ -28598,6 +28678,24 @@
 "prop_data": true,
 "ragdoll": false,
 "static": false,
+"v": 2
+},
+"models/props_silo/fan.mdl": {
+"bbox": [
+-28.3,
+-31.5,
+-60.1,
+28.3,
+31.5,
+4.1
+],
+"built_static": true,
+"collides": true,
+"game": "ep2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
 "v": 2
 },
 "models/props_silo/fanhousing.mdl": {

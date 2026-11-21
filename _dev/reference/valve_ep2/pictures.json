@@ -1,15 +1,18 @@
 {
  "title": "Valve's Episode Two (ep2_outland_01 to 12a, and nine EP2 style rooms)",
- "draft": true,
- "about": "The countryside of Episode Two: the mine and the antlion caves under it, the nest, the forests and roads of the outlands, the farm, the radio tower, and White Forest with its rocket silos; with Valve's style rooms for the forest, the caves, the bunkers, the silo, the farmhouse, the rotting barn, the inn, the radio tower and an outland building. Chosen for the owner's three asks: the forests (how trees stand, how a wood is bordered, what lies in it), the mines, antlion tunnels and nest (for our cave), and White Forest's base and missile silo (for our bunker). Measured from the VMFs by map_ingest.py (each map's numbers in valve_NAME/measure.json; the props and craft study in valve_ep2/wip/props_craft_notes.md, the logic and NPC study in valve_ep2/wip/logic_npc_notes.md) and drawn by map_view.py (flat colours; props as boxes of their true size, orange static, yellow physics, cyan dynamic; trees as trunk and crown; big hollow models and fences as outlines; NPC marks left out of the extra cut-aways). Cut-aways of caves and bases are drawn without what lies below a set height (said in each 'where' as clip_below) so the frame is not shrunk by deep rock; border views draw the invisible walls (toolsplayerclip) in magenta.",
+ "about": "The countryside of Episode Two: the mine and the antlion caves under it, the nest, the forests and roads of the outlands, the farm, the radio tower, and White Forest with its rocket silos; with Valve's style rooms for the forest, the caves, the bunkers, the silo, the farmhouse, the rotting barn, the inn, the radio tower and an outland building. Chosen for the owner's three asks: the forests (how trees stand, how a wood is bordered, what lies in it), the mines, antlion tunnels and nest (for our cave), and White Forest's base and missile silo (for our bunker). Measured from the VMFs by map_ingest.py (each map's numbers in valve_NAME/measure.json; the props and craft study in valve_ep2/notes/props_craft_notes.md, the logic and NPC study in valve_ep2/notes/logic_npc_notes.md) and drawn by map_view.py (flat colours; props as boxes of their true size, orange static, yellow physics, cyan dynamic; trees as trunk and crown; big hollow models and fences as outlines; NPC marks left out of the extra cut-aways). Cut-aways of caves and bases are drawn without what lies below a set height (said in each 'where' as clip_below) so the frame is not shrunk by deep rock; border views (the 'clips' key) draw the invisible walls (toolsplayerclip) hatched in magenta; 'leave_out' names models left out (the rocket).",
  "numbers": [
   "ep2_outland_01 (the mine's yard, the lift down): 3395 entities, 2955 brushes, 452 displacements; 180 trees in play, the nearest other tree median 154, 43% leaning over 2 degrees, 57% of the 512 squares with ground hold no tree, tree_pine05 69 and tree_pine06 31 the commonest. Ours: Forest.plant 132 apart, none leaning.",
   "ep2_outland_01 indoors: ceilings most often 192 (58 of 206 nodes), corridors 116 wide (medians); mine posts struts_single02 16, ibeam01a_cluster01 14; rail fence_border_256 15 chained 256 apart. Ours (raven-mine-sets): a timber set every 512.",
   "ep2_outland_01a (the antlion caves under the mine): all 424 nodes under a roof; natural passages narrowest median 298, height median 243; ceilings by the cast most often 192 then 176; 93 grubs, 40 stalactites (stalactite_static01 to 03), 12 mining cars. Ours: the cave on a 320 by 320 square, 19 grubs one at a time.",
-  "ep2_outland_02 (the mine arena holdout): 193 of 211 nodes under a roof; passages narrowest median 131, height 148; the arena 384 by 2681 wall to wall (medians); four tunnels into one room, each with a siren and three lamps (antlion_detector_lights_lamp 12) that show which tunnel opens next and how big the wave; seven waves. Ours: no defence that shows where the next wave comes from.",
+  "ep2_outland_01a light: 51 light (median brightness 40) and 18 light_spot, no sun; fog 18 23 35 from 1 to 2800, the same in every cave map; grubs in groups of two to four, each group with a small yellow light 30 to 43 from it. Ours: six lights (190 255 130) in the 2560 nest.",
+  "ep2_outland_02 (the mine arena holdout): 193 of 211 nodes under a roof; passages narrowest median 131, height 148; rooms 384 by 2681 wall to wall (medians); four tunnels into one room, each with a siren and three lamps (antlion_detector_lights_lamp 12) that show which tunnel opens next and how big the wave; seven waves. Ours: no defence that shows where the next wave comes from.",
   "ep2_outland_03 (the long caves): 757 of 814 nodes under a roof; 158 timber props (struts_tunnel192_01 31, struts_single02 29, struts_tunnel192_02 15, struts_tunnel320_01 15); light_cagelight02_on 26 lamps 687 apart; ceilings most often 192 (177 of 751 nodes); passages narrowest median 266; 143 grubs. Ours: a timber set every 512, 7 lights in the 3072 cave.",
+  "ep2_outland_03 light: 80 light (median 40), 46 light_spot (median 150), 12 point_spotlight; nodes median 165 to 185 from the nearest light in the cave maps, 90% within 430 to 600. Ours: 7 lights in the 3072 cave, one to about every 1160 by 1160.",
   "ep2_outland_04 (the nest): nest_lrg_flat 78, nest_med_flat 30, websackhalf 16, grubtunnel_door 15, stalactites 59 of four models; 96 grubs; corridors 178 wide under 200; the guardian's run 190 to 380 across at the narrowest, 1000 to 1740 long. Ours: the nest about 345 wide, 760 in its chambers, 6 lights.",
+  "ep2_outland_04: 286 sloped faces over 2000 square units (most often 45, 20, 70 degrees; blendrockslime02a, antlion_web01a), the most of any map; 88 light (median 30) and 40 light_spot. Ours: the nest 345 wide, 760 in its chambers.",
   "ep2_outland_05 (out of the caves into the woods and the sand): 155 trees, the nearest other tree median 148 (the closest of all), 61% leaning; 84% of nodes outdoors; three thumpers about 1420 and 1680 apart make safe islands. Ours: 132 apart, none leaning.",
+  "ep2_outland_05 sky: sun 240 238 217 at 650, pitch -30, fog 64 78 94 from 128 to 8000; tree fades 4200 to 7000. Ours: fades 2800 to 3400 under the city's one sun.",
   "ep2_outland_06 (the factory and its slime pits): 48% of nodes outdoors; indoor ceilings most often 128; fence01a 23 every 132; only 22 trees, tree_pine_card_cluster_01 cards 2991 apart round the edge.",
   "ep2_outland_06a (the radio tower in the woods): 446 trees (tree_pine06 119, tree_pine05 94, tree_pine04 83, tree_pine_large 26), the nearest other tree median 261, 59% of the 512 squares empty; rail fences fence_trail_256 25 and fence_border_128/256 48 chained about 254 apart; the mast held by three anchors 1051 to 1662 out. Ours: trees 132 apart, no fences in the woods.",
   "ep2_outland_07 (the farm): 313 trees, the nearest other tree median 294, 73% of the 512 squares empty (the most open of all); chain-link exterior_fence_notbarbed002e 58 every 512 round the yard, rail fence_border 59 in the woods; 28 stumps; fades 7000 on every tree. Ours: fades 2800 to 3400.",
@@ -17,19 +20,71 @@
   "ep2_outland_09 (the yard of the Combine cannon): 158 trees, the nearest other tree median 252, none leaning; 56 cargo containers, 25 pylons, 22 security lights; 19 tree card clusters round the edge.",
   "ep2_outland_10 (the forest road and the roadblock): 439 trees, the nearest other tree median 206, 48% of the 512 squares empty, 10% leaning; seven combine_barricade_tall01b 58 apart, each turned 15 from the last. Ours: 132 apart, a forest without a road through it.",
   "ep2_outland_10a (the river woods): 613 trees, the nearest other tree median 165, 44% of the 512 squares empty (the thickest wood); fern01 146 (0.23 a tree); fades 2200 on 164 small trees; 95% of nodes outdoors. Ours: about 14 trees per 1000 square over the valley, 0.74 undergrowth a tree.",
+  "ep2_outland_10a: only 2 light and 3 light_spot in the whole wood (forests have no lights of their own), fog 53 69 83 from 512 to 7000; terrain power 2 on 60 to 80% of floor displacements in the forest maps (a vertex every 128). Ours: 512 at power 3 (every 64).",
   "ep2_outland_11 (White Forest and the rocket silo): the silo block x 1280 to 2368, y -10480 to -9392, z -1792 to 64 (1088 by 1088 by 1856), 1765 brushes wholly inside; the shaft lining (538 brushes of concretewall010a and metalwall069a) from z -1414 to 64; a 24-sided shaft 254 from the axis at x 1824 y -9936, narrowed to 159 by solid rings at -1152 to -832 and -640 to -576. Ours: the bunker has no shaft.",
   "ep2_outland_11 base: all 167 nodes under a roof; ceilings most often 192 then 224; corridors 139 wide (medians); prison_flourescentlight001a 29, light_security 12. Ours: bunker doorway 256 by 192, inner doors 128 wide.",
   "ep2_outland_11a (Silo 2 and its halls): 474 of 489 nodes under a roof; ceilings most often 128, then 256 and 160; corridors 128 wide under 160; light_security 32; the second silo, same 24 sides at 254, shut by props_silo/missile_doors on two func_movelinear sliding 136 at speed 5. Ours: the bunker's sliding leaves.",
+  "ep2_outland_11a light: 91 light and 70 light_spot, 18 point_spotlight, 67 env_sprite; cold tubes 224 254 248 (61 of 161), warm 252 241 180 in work rooms, red light_security.",
   "ep2_outland_11b (the hangar and the snowy yard): 80 nodes, 15% outdoors; ceilings most often 192; magnusson_device 19, wood_crate001a 36, footlocker01_closed 14.",
   "ep2_outland_12 (the battle round the barns): 479 trees, the nearest other tree median 244, 47% of the 512 squares empty; no real tree beyond 512 from the walk, 42 tree cards past them; 37 stumps and 53 tree slices. Ours: a ridge 440 high planted thickest, the city's skybox behind.",
+  "ep2_outland_12 sky: sun 240 185 130 at 800, pitch -35 (late afternoon), fog 45 58 74 from 512 to 4000; 177 player clip brushes, median 54 to 570 from the walk in the forest maps, tall (median 336 to 896) and half off the axes. Ours: a ridge 440 high instead of clips.",
   "ep2_outland_12a (launch control and the last barn): sun at pitch -15, 240 184 130 (evening); 90 trees; ceilings most often 264; the rocket is rocket_low on a func_tracktrain in an open frame, not in a shaft.",
-  "styleguide_forest_01: Valve's forest sample, 69 trees on a strip about 2700 by 4900, 6 tree cards up to 1100 past the last trees; 10 nodes only.",
-  "styleguide_caves: Valve's cave sample: 100 grubs in groups of two to four, 63 of them in one 2048 square; 23 nodes, all under a roof."
+  "styleguide_forest_01: Valve's forest sample: 62 trees (cards and stumps apart) on a hillside strip about 2700 by 4900, nearest other tree median 237, 84% alone within 160; 7 stumps, 11 rock clusters, 8 ferns; 6 tree cards 689 to 1924 past the nearest real tree; 10 nodes only. Ours: Forest.plant 132 apart, 27% alone.",
+  "styleguide_caves: Valve's cave sample: 100 grubs, 63 of them in one 2048 square, 90 egg models, 6 antlion workers and a guard placed; 23 lights; all 23 nodes under rock; rockwall015a and blendrockdirt_tunnel02a walls, water_tunnels01 in the low floors. Ours: 19 grubs one at a time every 110 in our cave.",
+  "styleguide_bunkers: Valve's bunker sample: walls 32 thick (concretewall_bunker01a/b/c), piers 24 by 32, a blastdoor001a, the concrete running into the hill through blendbunk_conc01 displacements; 29 trees on the hill over it. Ours: lc_forest_bunker's doorway 256 by 192, inner doors 128 wide.",
+  "styleguide_silo: Valve's silo mock-up: a round shaft centred near x 10077 y -3213 through stacked floors from z -1024 to 32, faced mostly in dev textures (reflectivity_50 on 2345 faces), 38 light and 11 light_spot, 6 cage lamps, 5 ladders.",
+  "styleguide_farmhouse1: a bare farmhouse: 15 window frames with 13 _bars twins on the same spots; inside only 2 chairs, a kitchen sink, a pot, a bucket and a shovel.",
+  "styleguide_barn_deterioration: against the sound barn (620 wood brushes each): 59% of its timber off the axes against 45%, func_detail 75% against 20%, boards median 62 long against 111, 539 displacements against none (power 2 on 479). Ours: a rotting house would need its boards bent, not only holed.",
+  "styleguide_inn: the one furnished country building: chairs 13, tables 7, radiators 7, unlit dome lamps 4, boards over openings 15, a bath, sink and toilet; 139 displacements (power 2) bend its shingles and stone.",
+  "styleguide_radiotower: the radio station: 164 nodes; exterior_fence002d 21, substation_transformer01d 8, utilityconnecter006b/c 8, handrail04 pieces 28, prison_lamp001b 9; a control room of file cabinets, closets, a desk and a monitor.",
+  "outland_building_large_01: a timber house the Combine hold: combine_barricade_tall01a/b 12 and med01a 4 round it, a combinetower001, 7 soldiers; 20 nodes. Ours: map_forest.py places no Combine barricades."
  ],
  "pictures": [
   {
    "n": "W1",
-   "file": "01_o01a_cave_tunnels_cut.png",
+   "file": "01_o01_forest_from_above.png",
+   "where": "ep2_outland_01, the wood below the mine where the game opens, from the south-west (box -878 -2923 3218 1173; drawn without what lies below -800; invisible walls hatched in magenta)",
+   "teaches": "A wood from above: trees (tree_pine05 43, tree_pine06 24, dead trees 26, tree_pine04 7) standing mostly one by one with open ground between, thicker away from the way through, a cliff wall closing the far side. Ferns (fern01 29, ferns02 9) and rocks (rock_coast02c 11, 02h 7) under them; 5 tree cards and 32 player clips in the box. Map-wide: nearest other tree median 154, 57% of the 512 squares empty, 43% of trees leaning over 2 degrees. Ours: Forest.plant 132 apart, 27% alone, none leaning.",
+   "lessons": [
+    "valve-forest-layout",
+    "valve-tree-footing",
+    "valve-forest-border",
+    "valve-forest-floor"
+   ],
+   "view": {
+    "iso": "SW",
+    "box": [
+     -878,
+     -2923,
+     3218,
+     1173
+    ],
+    "clip_below": -800,
+    "clips": true
+   }
+  },
+  {
+   "n": "W2",
+   "file": "02_o01_forest_eye.png",
+   "where": "ep2_outland_01, eye level in the wood, looking east (eye 157 -1595 59, yaw 0)",
+   "teaches": "The same wood at eye level: trunks spaced so the eye sees between them to the next band, crowns meeting overhead only here and there, a stream on the ground and ferns along the path (fern01 10, ferns03 5 within about 600 ahead). Valve keeps the first 128 from the walk nearly clear (0.1 to 7 trees per 1000 square), thickest at 256 to 512 out (2.2 to 10.6). Ours: about 14 per 1000 square over the valley, 28 on the ridge.",
+   "lessons": [
+    "valve-forest-layout",
+    "valve-forest-floor"
+   ],
+   "view": {
+    "eye": [
+     157,
+     -1595,
+     59
+    ],
+    "yaw": 0,
+    "pitch": 3
+   }
+  },
+  {
+   "n": "W3",
+   "file": "03_o01a_cave_tunnels_cut.png",
    "where": "ep2_outland_01a, the antlion tunnels round x -3900 y -6000 (floors about -43), from the south-west, cut at 220 (box -5190 -7260 -2630 -4700; drawn without what lies below -500)",
    "teaches": "An antlion tunnel from above: one rough tube that winds, pinches and swells, with pockets off it, never a straight run. Its dressing (cyan): web sacks overhead and on the walls (websackceilingbig05 4, _01 3, _02 1; websackhalf 2, _b 4, _c 2), an antlionhill mound, 10 stalactites; 12 grubs and 7 small lights; 11 antlions placed. Map-wide the passages are narrowest median 298 and 243 high, and all 424 nodes are under rock. Ours: our cave is one square room; a tube like this, 250 to 300 wide and widening into pockets, is what the cave and nest pieces could follow.",
    "lessons": [
@@ -50,8 +105,8 @@
    }
   },
   {
-   "n": "W2",
-   "file": "02_o01a_watery_cavern_eye.png",
+   "n": "W4",
+   "file": "04_o01a_watery_cavern_eye.png",
    "where": "ep2_outland_01a, eye level in the watery grub cavern, looking west (eye -5331 -6760 9, yaw 180); soundscape ep2_caves.large_watery_cavern_grubs",
    "teaches": "A cavern at eye level: rock walls and roof of displacements with no flat face, a pool in the low part, stalactites hung from the roof (stalactite_static01 to 03, 16 in this part; the viewer draws them as orange boxes) and loose rocks and boards on the floor (rock_forest01 3, boat002b, shovel). Three barnacles hang in this part. Valve's caves keep a small light within about 170 of every node (90% within 430 to 600): grub yellow 255 245 157, cage lamps 255 226 174, a cold fill 132 158 202 at 25; fog 18 23 35 to 2800. Ours: 7 lights in the 3072 cave.",
    "lessons": [
@@ -69,8 +124,8 @@
    }
   },
   {
-   "n": "W3",
-   "file": "03_o02_arena_holdout_cut.png",
+   "n": "W5",
+   "file": "05_o02_arena_holdout_cut.png",
    "where": "ep2_outland_02, the mine arena where the rebels hold out, from the south-west, cut at -440 (box -4090 -11030 -1530 -8470; drawn without what lies below -1100)",
    "teaches": "The holdout is a built room at the foot of the mine (floor about -692), a round hall of concrete and steel with galleries and caves joining it: four tunnels lead in, and each has a looping siren (radius 1250) and three lamps marked easy, medium and hard that light 20 s before that tunnel's antlions come, so players read where the next wave comes from and how big it is from the room itself. Seven waves, growing by how many tunnels are open; 8 antlions in the room at once ends a wave. Ours: no defence in our map shows where the next attack comes from.",
    "lessons": [
@@ -91,8 +146,8 @@
    }
   },
   {
-   "n": "W4",
-   "file": "04_o02_gallery_into_cave_cut.png",
+   "n": "W6",
+   "file": "06_o02_gallery_into_cave_cut.png",
    "where": "ep2_outland_02, a straight mine gallery and the antlion tunnel that leaves it, from the south-west, cut at -330 (box -2040 -11540 520 -8980; drawn without what lies below -1100)",
    "teaches": "Where the built mine meets the antlions' own work: a square gallery runs straight (Valve's galleries 192 high, 294 to 365 wide, a timber set every 192 to 280) and from its end a rough tube winds off for about 2500, never straight for long, narrowest median 131 and 148 high in this map, wider in the other cave maps (219 to 298). Ours: our cave is one 320 by 320 square in plan; a tunnel that winds and changes width reads as dug by antlions, a straight one as dug by men.",
    "lessons": [
@@ -112,8 +167,8 @@
    }
   },
   {
-   "n": "W5",
-   "file": "05_o03_mine_galleries_cut.png",
+   "n": "W7",
+   "file": "07_o03_mine_galleries_cut.png",
    "where": "ep2_outland_03, the mine galleries round x 1400 y -5200 (floors about -960), from the south-west, cut at -780 (box 80 -6480 2640 -3920; drawn without what lies below -1300)",
    "teaches": "The miners' part of the caves: square galleries that run straight and meet at right angles, a winch among them (pulleywheels_large01, crank, diesel_generator). The orange blocks are the timber sets (struts_tunnel320_01 5, _04 3, struts01 3; the viewer draws them as solid boxes, they are hollow frames) with posts struts_single02 7 between, and cage lamps (light_cagelight02_on 5) hung along them. Across the whole map: 158 timber props, a set every 160 to 280 (median 192 to 280), galleries 192 high and 294 to 365 wide; lamps 687 apart. Ours: raven-mine-sets puts a set every 512, and our cave has no built gallery.",
    "lessons": [
@@ -133,8 +188,8 @@
    }
   },
   {
-   "n": "W6",
-   "file": "06_o03_antlion_chamber_cut.png",
+   "n": "W8",
+   "file": "08_o03_antlion_chamber_cut.png",
    "where": "ep2_outland_03, an antlion chamber and its tunnels round x -3300 y -4700 (floors about -865), from the south-west, cut at -600 (box -4560 -5970 -2000 -3410; drawn without what lies below -1300)",
    "teaches": "The antlions' own ground: a broad chamber of displacements with rough tubes leaving it at several heights, no timber anywhere. In the box: 18 grubs, 12 antlions, 14 small lights, web sacks on the walls (websackhalf 5, _b 2, _c 3; websackceiling03 3, the cyan boxes), 3 grubtunnel_door plugging side holes, 9 stalactites. Valve's caves: tunnels about 250 wide and 200 high (this map's narrowest median 266, height 243), 17 to 20% of the walk in chambers 512 or more, a chamber's long way 1500 to 1840. Ours: the cave is a 320 by 320 square, the nest 345 wide and 760 in its chambers.",
    "lessons": [
@@ -156,8 +211,8 @@
    }
   },
   {
-   "n": "W7",
-   "file": "07_o04_nest_chambers_cut.png",
+   "n": "W9",
+   "file": "09_o04_nest_chambers_cut.png",
    "where": "ep2_outland_04, the nest round x 2700 y -2700 (floors about -1453), from the south-west, cut at -1150 (box 1390 -4000 3950 -1440; drawn without what lies below -1900)",
    "teaches": "The nest from above: linked chambers round a central mass, a tunnel leaving to one side. Its floors are covered in flat nests (nest_lrg_flat 30, nest_med_flat 22, the orange slabs), web sacks on the walls (websackhalf 4, _c 3, _b 2), 10 stalactites; 6 light_spot and 5 light. Across the map: nest_lrg_flat 78, nest_med_flat 30, grubtunnel_door 15 plugging side holes, 96 grubs; the guardian's ground 190 to 380 across at the narrowest, 1000 to 1740 long, 230 to 290 high. Ours: the nest about 345 wide and 760 in its chambers, 6 lights.",
    "lessons": [
@@ -178,8 +233,8 @@
    }
   },
   {
-   "n": "W8",
-   "file": "08_o04_nest_tunnel_eye.png",
+   "n": "W10",
+   "file": "10_o04_nest_tunnel_eye.png",
    "where": "ep2_outland_04, eye level in a tunnel of the nest, looking north-west (eye 5295 -2797 -1224, yaw 135); soundscape ep2_caves.quiet_tunnel_flies",
    "teaches": "A nest tunnel at eye level: a round tube of displacements a little over head height, no flat floor, rock clusters (caverocks_cluster01 2) and a flat nest on the floor; 4 grubs and 4 small lights within 800. The map's corridors are 178 wide under 200 (medians by the cast), ceilings most often 192. Ours: the nest tube (NestTube) radius 150 to 330.",
    "lessons": [
@@ -195,6 +250,612 @@
     ],
     "yaw": 135,
     "pitch": 3
+   }
+  },
+  {
+   "n": "W11",
+   "file": "11_o05_wood_and_wall_from_above.png",
+   "where": "ep2_outland_05, the wood where the player leaves the caves, from the south-west (box -4832 -3872 -736 224; drawn without what lies below -400; invisible walls hatched in magenta)",
+   "teaches": "How the edge is held: the walk runs through trees (tree_pine05 16, _06 15, _04 12, dead and dry 10) and rocks (rockcluster02 9, rock_coast02g/h/c 25) under cliffs, and past them a sheet of player clip rises far above the ground (14 clip brushes in the box, median 512 by 352 by 1008 tall, the largest 4352 by 6656) so nobody climbs the slope, though it looks open. Map-wide the trees stand closest of all Valve's maps (nearest other tree median 148) and 61% lean. Ours: a ridge 440 high, planted thickest, stops the player instead.",
+   "lessons": [
+    "valve-forest-border",
+    "valve-forest-layout",
+    "valve-tree-footing"
+   ],
+   "view": {
+    "iso": "SW",
+    "box": [
+     -4832,
+     -3872,
+     -736,
+     224
+    ],
+    "clip_below": -400,
+    "clips": true
+   }
+  },
+  {
+   "n": "W12",
+   "file": "12_o05_forest_eye.png",
+   "where": "ep2_outland_05, eye level on the way through the wood, looking north-west (eye -1920 -1024 64, yaw 315)",
+   "teaches": "The way out of the caves at eye level: a gravel way between trees set back from it, rocks tilted at their feet (rock_coast02 boxes, orange), a rock wall behind. Valve's rocks: 17 to 174 a map, 41 to 76% tilted over 5 degrees, median 160 to 340 from a tree. Ours: 34 rocks and 12 logs a forest, none tilted.",
+   "lessons": [
+    "valve-forest-floor",
+    "valve-dirt-road"
+   ],
+   "view": {
+    "eye": [
+     -1920,
+     -1024,
+     64
+    ],
+    "yaw": 315,
+    "pitch": 3
+   }
+  },
+  {
+   "n": "W13",
+   "file": "13_o06a_forest_bowl_overview.png",
+   "where": "ep2_outland_06a, the whole wood round the radio tower from the south-west (box -8148 -11647 3980 2026)",
+   "teaches": "A whole forest level and its border: a bowl of rolling displaced ground filled with trees standing apart (tree_pine06 98, _05 78, _04 64, tree_pine_large 19, tree_deciduous_01a 22, dry 22 in this box), the road and trail winding through it, the radio station's yard cut into one side; round the rim the ground rises into slopes and cliffs, and the clip and tree cards (11 in the map, median 870 to 2340 from the walk) sit on those slopes. Map-wide: nearest other tree median 261, 59% of the 512 squares empty, 121 player clip brushes. Ours: a 4096 valley inside a ridge 440 high.",
+   "lessons": [
+    "valve-forest-layout",
+    "valve-forest-border",
+    "valve-radio-mast"
+   ],
+   "view": {
+    "iso": "SW",
+    "box": [
+     -8148,
+     -11647,
+     3980,
+     2026
+    ]
+   }
+  },
+  {
+   "n": "W14",
+   "file": "14_o06a_trail_fence_eye.png",
+   "where": "ep2_outland_06a, eye level on the trail near the radio station, looking north-east (eye -693 -8258 -1554, yaw 45)",
+   "teaches": "A trail through the wood at eye level, edged by a rail fence (fence_trail_128, _256, _512 chained end to end, the orange line) with a fallen tree beside it; trees stand back from the fence. Valve's rail fences: 271 pieces in six maps, nearest piece 130 to 264, 145 to 260 from the walk, 73 to 86% off the axes; chain-link only at yards and bases. Ours: no fences in the woods.",
+   "lessons": [
+    "valve-forest-fences",
+    "valve-forest-floor"
+   ],
+   "view": {
+    "eye": [
+     -693,
+     -8258,
+     -1554
+    ],
+    "yaw": 45,
+    "pitch": 3
+   }
+  },
+  {
+   "n": "W15",
+   "file": "15_o07_farm_in_woods_from_above.png",
+   "where": "ep2_outland_07, the farm and the woods round it, from the south-west (box -9933 -12538 -5837 -8442; drawn without what lies below -300; invisible walls hatched in magenta)",
+   "teaches": "A clearing held by woods: the farmhouse, barn and yard sit in open ground, the trees (tree_pine04 15, dead 8, deciduous 7, stumps 6 in the box) begin a little way off and thicken outwards, rail fences (fence_border_256 20, _128 15) chained along the lane; the player clips (44 brushes in the box, hatched) stand in the woods and on the slopes, not at the yard's edge, so the woods look open but are not. Map-wide 73% of the 512 squares hold no tree, the most open of the forest maps, and every tree fades at 7000. Ours: fades 2800 to 3400.",
+   "lessons": [
+    "valve-forest-border",
+    "valve-forest-fences",
+    "valve-forest-layout"
+   ],
+   "view": {
+    "iso": "SW",
+    "box": [
+     -9933,
+     -12538,
+     -5837,
+     -8442
+    ],
+    "clip_below": -300,
+    "clips": true
+   }
+  },
+  {
+   "n": "W16",
+   "file": "16_o07_farmyard_edge_eye.png",
+   "where": "ep2_outland_07, eye level in the farmyard, looking south-west (eye -8620 -9957 197, yaw 225); soundscape ep2_farm.barn",
+   "teaches": "The forest's edge seen from the clearing: the barn and the farmhouse in front, behind them a line of trees and beyond it the slope; past the last real trees the far wood is cards and painted hills (3 to 42 cards a map, 500 to 1200 beyond the last real tree), so the edge never shows where it stops. The farm's windows are a frame prop with its _bars twin on the same spot (woodwall030b_window01a 8 with 7 bars). Ours: the city's skybox behind the ridge.",
+   "lessons": [
+    "valve-forest-border",
+    "valve-haze-cards"
+   ],
+   "view": {
+    "eye": [
+     -8620,
+     -9957,
+     197
+    ],
+    "yaw": 225,
+    "pitch": 3
+   }
+  },
+  {
+   "n": "W17",
+   "file": "17_o08_wooded_slope_by_rail_from_above.png",
+   "where": "ep2_outland_08, the wooded slope beside the railway, from the south-west (box -6987 -8175 -2891 -4079; drawn without what lies below -300; invisible walls hatched in magenta)",
+   "teaches": "A wood used as a wall: trees (tree_pine05 12, _04 6, tree_pine_large 6, dead 6, deciduous 5) on a slope along the line, a chain-link fence (exterior_fence002e 11) between the yard and the trees, and about 14 player clips up the slope behind them; the trees go only as deep as the eye reaches from the track, then the slope rises. Map-wide: nearest other tree median 298, 23% leaning, 82 player clips, 15 cards. Ours: our forest's edge is the ridge itself.",
+   "lessons": [
+    "valve-forest-border",
+    "valve-forest-layout"
+   ],
+   "view": {
+    "iso": "SW",
+    "box": [
+     -6987,
+     -8175,
+     -2891,
+     -4079
+    ],
+    "clip_below": -300,
+    "clips": true
+   }
+  },
+  {
+   "n": "W18",
+   "file": "18_o09_woods_by_the_yard_from_above.png",
+   "where": "ep2_outland_09, the woods north-east of the industrial yard, from the south-west (box 2514 2124 6610 6220; drawn without what lies below -300; invisible walls hatched in magenta)",
+   "teaches": "Woods along a road out of the yard: trees (tree_pine06 22, _04 12, deciduous 8, tree_pine_large 6, dry and dead 17) in bands either side of the road, thinning into a clearing, with rocks (rockcluster02 5) and a few containers left at the yard's end; the player clips (hatched) run along the woods, a little way in from the road. Map-wide: nearest other tree median 252, no tree leaning, 138 player clips and 31 tree cards round the edge (19 tree_pine_card_cluster_01). Ours: no road through our forest.",
+   "lessons": [
+    "valve-forest-layout",
+    "valve-forest-border"
+   ],
+   "view": {
+    "iso": "SW",
+    "box": [
+     2514,
+     2124,
+     6610,
+     6220
+    ],
+    "clip_below": -300,
+    "clips": true
+   }
+  },
+  {
+   "n": "W19",
+   "file": "19_o10_forest_valley_overview.png",
+   "where": "ep2_outland_10, the whole forest road from the south-west (box 20 -9920 8898 8768)",
+   "teaches": "A long forest level as one valley: the road winds the length of it, trees (tree_pine04 101, _06 89, deciduous 66, dry 38, dead 62) fill the valley floor and lower slopes standing apart, and rock walls and steep displaced slopes close both sides, the pipeline (pipe02 pieces 104) running along it as a guide. Map-wide: nearest other tree median 206, 48% of the 512 squares empty, 10% leaning, 93 player clips and 19 cards on the slopes. Ours: a 4096 valley inside a ridge 440 high; Valve's valleys are long and narrow, ours square.",
+   "lessons": [
+    "valve-forest-layout",
+    "valve-forest-border",
+    "valve-dirt-road"
+   ],
+   "view": {
+    "iso": "SW",
+    "box": [
+     20,
+     -9920,
+     8898,
+     8768
+    ]
+   }
+  },
+  {
+   "n": "W20",
+   "file": "20_o10_forest_road_eye.png",
+   "where": "ep2_outland_10, eye level on the forest road, looking north-east (eye 6995 -773 -1353, yaw 45); soundscape Automatic",
+   "teaches": "The road at eye level: gravel ground about 300 wide, trees of mixed kinds (dry, dead, pine, deciduous) a little back from it with rocks and a fallen tree between, a trail fence piece where the ground drops. Valve's country roads: gravel blends on displacements with road_dirt rut overlays about 300 square chained every 215 to 290. Ours: no road in the forest.",
+   "lessons": [
+    "valve-dirt-road",
+    "valve-forest-floor",
+    "valve-forest-layout"
+   ],
+   "view": {
+    "eye": [
+     6995,
+     -773,
+     -1353
+    ],
+    "yaw": 45,
+    "pitch": 3
+   }
+  },
+  {
+   "n": "W21",
+   "file": "21_o10a_thick_wood_from_above.png",
+   "where": "ep2_outland_10a, the thickest square of Valve's woods, by the frog pond, from the south-west (box 747 -6528 4843 -2432; drawn without what lies below -2300; invisible walls hatched in magenta)",
+   "teaches": "Valve's thickest wood: 165 trees in this 4096 square (tree_pine06 54, _05 47, _04 24, dead 18, dry 9), 9.8 per 1000 square, nearest other tree median 134 and 27% alone within 160, clusters with gaps and a pond and stream left open, ferns (fern01 53) along the trail and a trail fence (fence_trail_512 5); the ground falls to the water and a cliff closes the side. Map-wide (613 trees) the nearest median is 165 and 44% of the 512 squares are empty. Ours: 132 apart and 27% alone, the same as this square, but at about 14 per 1000 square over the whole valley, with no open squares.",
+   "lessons": [
+    "valve-forest-layout",
+    "valve-forest-floor",
+    "valve-forest-fences"
+   ],
+   "view": {
+    "iso": "SW",
+    "box": [
+     747,
+     -6528,
+     4843,
+     -2432
+    ],
+    "clip_below": -2300,
+    "clips": true
+   }
+  },
+  {
+   "n": "W22",
+   "file": "22_o10a_thick_wood_eye.png",
+   "where": "ep2_outland_10a, eye level in the thick wood, looking south (eye 3652 -4296 -1842, yaw 270)",
+   "teaches": "Inside the thick wood: trunks at every distance (47 trees within 1500 in the view's cone; tree_pine05 12, _06 10 and dead and dry 8 in the nearest 1500), crowns closing overhead, ferns (fern01 13) on the floor, a fallen tree and a trail fence at the path. Even here the first 128 from the walk is kept nearly clear. Ours: about 14 trees per 1000 square, much like this wood, but planted evenly with no path kept clear.",
+   "lessons": [
+    "valve-forest-layout",
+    "valve-forest-floor"
+   ],
+   "view": {
+    "eye": [
+     3652,
+     -4296,
+     -1842
+    ],
+    "yaw": 270,
+    "pitch": 3
+   }
+  },
+  {
+   "n": "W23",
+   "file": "23_o11_silo_section.png",
+   "where": "ep2_outland_11, the White Forest rocket silo cut in half along its axis (x 1824): the east half of the block from the south-west, cut at 20 under the lid (box 1824 -10480 2420 -9392; drawn without what lies below -1800; the rocket and its parts left out)",
+   "teaches": "The silo as a stack: a 24-sided concrete shaft (concretewall010a lined with metalwall069a; flats 254 from the axis at x 1824 y -9936) with ring rooms round it reached through doors, floor above floor. From the bottom: the pit below -1414 (grate at -1568 over a floor at -1728); the bottom level -1406 to -1280; a solid concrete ring -1152 to -832 that narrows the shaft to 159 (the rocket passed through a hole 318 across); open levels -832 to -640 and -576 to -330 with doors to ring rooms 552 out, a ring slab between at -640 to -576; the gantry grate at -320; the collar at 381 from -252 to -96; a well 128 from the axis; the lid a slab z 32 to 64. Block x 1280 to 2368, y -10480 to -9392, z -1792 to 64: 1765 brushes wholly inside, four mouths (the lab north, two side passages, the lift from the surface west). Ours: the bunker has no shaft; this is the piece to lift.",
+   "lessons": [
+    "valve-white-forest-silo",
+    "valve-base-concrete-and-salvage"
+   ],
+   "view": {
+    "iso": "SW",
+    "box": [
+     1824,
+     -10480,
+     2420,
+     -9392
+    ],
+    "cut": 20,
+    "clip_below": -1800,
+    "leave_out": [
+     "rocket"
+    ]
+   }
+  },
+  {
+   "n": "W24",
+   "file": "24_o11_silo_shaft_eye.png",
+   "where": "ep2_outland_11, inside the silo shaft from the gantry, looking west across it and a little down (eye 2050 -9936 -256, yaw 180, pitch 18; the rocket left out)",
+   "teaches": "The shaft from the gantry: the far wall is 24 flat faces of plain concrete, about 508 across, ringed by the grating levels at -320 and below, with doors in the wall into the ring rooms and the solid ring further down; nothing stands in the middle once the rocket is gone, so it reads as an empty hall a player could cross on the gantry. Base light: cold tubes 224 254 248, warm 252 241 180 in work rooms, red light_security 12 to 32 a map. Ours: the bunker's rooms are square; a round shaft with a gantry ring would be a new kind of room.",
+   "lessons": [
+    "valve-white-forest-silo"
+   ],
+   "view": {
+    "eye": [
+     2050,
+     -9936,
+     -256
+    ],
+    "yaw": 180,
+    "pitch": 18,
+    "leave_out": [
+     "rocket"
+    ]
+   }
+  },
+  {
+   "n": "W25",
+   "file": "25_o11a_base_halls_cut.png",
+   "where": "ep2_outland_11a, the halls beside Silo 2 where the Combine attack the base, from the south-west, cut at -1150 (box -1570 -11210 480 -9160; drawn without what lies below -1700)",
+   "teaches": "A base dug into the ground: one plain concrete (concretewall010a 43 to 45% of brush area, walls banded low at 64 or 128) in long halls and side rooms, a water room at one end, catwalks (handrail_alley-upperdeck) over the lower floors. Dressing in the box: lab_flourescentlight001a 8, wall_light 7, powerbox01a 7, wall_wires2 6, electricalbox01 5, wall_console2 4, acunit02 4, light_security 4; 22 light and 13 light_spot. Map-wide ceilings most often 128, then 256 and 160; corridors 128 wide under 160 (narrowest median 181 to 248 in the base maps); doors props_silo/silo_door01 on a func_door 99 by 123, wide ones 80 by 160. Ours: bunker doorway 256 by 192, inner doors 128 wide.",
+   "lessons": [
+    "valve-base-concrete-and-salvage",
+    "valve-raid-on-the-base",
+    "valve-big-door-slow"
+   ],
+   "view": {
+    "iso": "SW",
+    "box": [
+     -1570,
+     -11210,
+     480,
+     -9160
+    ],
+    "cut": -1150,
+    "clip_below": -1700
+   }
+  },
+  {
+   "n": "W26",
+   "file": "26_o11a_silo2_section.png",
+   "where": "ep2_outland_11a, Silo 2 cut in half along its axis (x 1824): the east half from the south-west, cut at 150 (box 1824 -11810 2420 -10720; drawn without what lies below -1800)",
+   "teaches": "The second silo, built to the same design: 24 sides at 254 from the axis (x 1824, y -11264) from about -1354 to -200, the collar at 382 near z 182, flooded at its foot (water_silo_01 z -1344 to -1100), ladders (metalladder002 9) between the levels, and the top shut by props_silo/missile_doors (2) on two func_movelinear that slide 136 along y at speed 5; silo_door01 4 into the ring rooms, a bunker_gun01 by the rim. Ours: the bunker's sliding leaves; Valve's missile doors move slowly enough to watch.",
+   "lessons": [
+    "valve-white-forest-silo",
+    "valve-big-door-slow"
+   ],
+   "view": {
+    "iso": "SW",
+    "box": [
+     1824,
+     -11810,
+     2420,
+     -10720
+    ],
+    "cut": 150,
+    "clip_below": -1800
+   }
+  },
+  {
+   "n": "W27",
+   "file": "27_o11b_base_workrooms_cut.png",
+   "where": "ep2_outland_11b, White Forest's work rooms round Magnusson's lab and the hangar, from the south-west, cut at -120 (box -1110 -10280 940 -8230; drawn without what lies below -600)",
+   "teaches": "The base at work, from above: rooms off one corridor, each with its own job (Magnusson's lab with magnusson_teleporter 2 and 19 magnusson_device in the map, a crane room with crane_trolley 2 and pulleys, store rooms of footlockers and crates), behind keypad doors (keypad 9, silo_door01 5). Dressing: prison_switchbox001a 16, lab_flourescentlight001a 11, pipesystem02a 10, prodcables256 8 along the walls; 37 light_spot and 23 light; 17 choreographed scenes and 16 scripted sequences in the box: people shown at their work. Ours: the bunker's rooms are empty of work.",
+   "lessons": [
+    "valve-base-at-work",
+    "valve-base-concrete-and-salvage",
+    "valve-base-quarters"
+   ],
+   "view": {
+    "iso": "SW",
+    "box": [
+     -1110,
+     -10280,
+     940,
+     -8230
+    ],
+    "cut": -120,
+    "clip_below": -600
+   }
+  },
+  {
+   "n": "W28",
+   "file": "28_o12_battle_woods_overview.png",
+   "where": "ep2_outland_12, the whole ground of the battle for White Forest from the south-west (box -6732 -8768 7044 7810)",
+   "teaches": "A forest that is the whole map: trees cover the ground between clearings that hold the barns and the roads the striders walk, the edge a rim of slopes and rock. No real tree stands more than 510 from the nearest walking node (median 171, 90% within 266); the 42 tree cards stand past them, median 871 from the walk (nearest 268), so the wood looks deep but is one band thick, with 177 player clips on the slopes. Ours: our planting runs thickest on the ridge, far from where anyone walks.",
+   "lessons": [
+    "valve-forest-border",
+    "valve-forest-layout",
+    "valve-haze-cards"
+   ],
+   "view": {
+    "iso": "SW",
+    "box": [
+     -6732,
+     -8768,
+     7044,
+     7810
+    ]
+   }
+  },
+  {
+   "n": "W29",
+   "file": "29_o12_forest_edge_eye.png",
+   "where": "ep2_outland_12, eye level at the edge of the woods, looking east (eye 2185 6273 101, yaw 0); soundscape ep2_whiteforest",
+   "teaches": "The border at eye level: a band of trees (pine, dead and deciduous, 12 within 1500 ahead), cut logs and slices on the ground (tree_slice01/02, 37 stumps and 53 slices in the map), a trail fence, and close behind them the slope rising into rock; the cards past the slope finish the wood. Valve's trees sink into the ground, median 5 to 13 below the ground under them, 20 to 54 for the deepest tenth on slopes. Ours: 8 below, none leaning.",
+   "lessons": [
+    "valve-forest-border",
+    "valve-tree-footing",
+    "valve-forest-floor"
+   ],
+   "view": {
+    "eye": [
+     2185,
+     6273,
+     101
+    ],
+    "yaw": 0,
+    "pitch": 3
+   }
+  },
+  {
+   "n": "W30",
+   "file": "30_o12a_launch_control_cut.png",
+   "where": "ep2_outland_12a, the launch control rooms and their corridors, from the south-west, cut at -1366 (box -1339 -2764 461 -964)",
+   "teaches": "White Forest's last rooms from above: a run of concrete corridors and rooms round the launch control room, a freight lift (freightelevator, elevatordoor) and Magnusson's teleporter, keypad doors (silo_door01 3 working, 4 static). Pipes and cables run every wall: pipesystem02a 15, gutter_256/448_002a 18, prodcables256 8, prison_switchbox001a 9; lit by lab_flourescentlight001a 11, red light_red1 5, floodlight01 4 (13 light_spot, 12 light). 9 choreographed scenes and 8 scripted sequences in the box. Map-wide ceilings most often 264. Ours: the bunker's halls are bare concrete; Valve hangs services on every wall.",
+   "lessons": [
+    "valve-base-concrete-and-salvage",
+    "valve-base-at-work"
+   ],
+   "view": {
+    "iso": "SW",
+    "box": [
+     -1339,
+     -2764,
+     461,
+     -964
+    ],
+    "cut": -1366
+   }
+  },
+  {
+   "n": "W31",
+   "file": "31_o12a_base_corridor_eye.png",
+   "where": "ep2_outland_12a, eye level in a base corridor, looking south (eye -392 -1184 -1500, yaw 270); soundscape ep2_silo.concretehall",
+   "teaches": "A base corridor at eye level: pale concrete banded low, a straight run with doors off it, pipes and conduit along the ceiling and walls (pipesystem02a 13, gutter_256_002a 6, prodcables256 5, wall_wires1/2 5, prison_switchbox001a 5 within about 1200), fluorescent tubes (lab_flourescentlight001a 5). Valve's base corridors: narrowest median 181 to 248, ceilings median 178 to 192, walls banded in 59 to 63% of columns, first change at 64 or 128. Ours: bunker doorway 256 by 192, inner doors 128 wide.",
+   "lessons": [
+    "valve-base-concrete-and-salvage"
+   ],
+   "view": {
+    "eye": [
+     -392,
+     -1184,
+     -1500
+    ],
+    "yaw": 270,
+    "pitch": 3
+   }
+  },
+  {
+   "n": "W32",
+   "file": "32_sg_forest_room_overview.png",
+   "where": "styleguide_forest_01, Valve's forest sample, the whole room from the south-west (box -1718 -6202 1275 -1903)",
+   "teaches": "Valve's own sample of how a wood should look: a strip of hillside with 62 trees (tree_pine05 26, _06 20, _04 12), nearest other tree median 237, 84% alone within 160; stumps (7) and rocks (rockcluster01/02 11) between, ferns (fern01 8), a chain-link fence (exterior_fence002c/e 7) at one side, and 6 tree cards 689 to 1924 past the nearest real tree (the viewer draws a card as a huge crown: the big green slabs). Ours: Forest.plant 132 apart, 27% alone.",
+   "lessons": [
+    "valve-forest-layout",
+    "valve-forest-border",
+    "valve-forest-floor"
+   ],
+   "view": {
+    "iso": "SW",
+    "box": [
+     -1718,
+     -6202,
+     1275,
+     -1903
+    ]
+   }
+  },
+  {
+   "n": "W33",
+   "file": "33_sg_caves_tunnel_eye.png",
+   "where": "styleguide_caves, Valve's cave sample, eye level in its tunnel, looking north (eye 1532 -927 -184, yaw 90)",
+   "teaches": "Valve's sample antlion tunnel at eye level: a tube of rock displacements (rockwall015a, blendrockdirt_tunnel02a) about twice head height, rounded in section with no flat wall, water (water_tunnels01) in its low floor, and groups of grubs on the walls (100 grubs in the room, 63 of them in one 2048 square; 90 egg models) lit by 23 small lights. Ours: the cave is a square room; the nest tube radius 150 to 330.",
+   "lessons": [
+    "valve-cave-proportions",
+    "valve-grub-groups",
+    "valve-cave-light"
+   ],
+   "view": {
+    "eye": [
+     1532,
+     -927,
+     -184
+    ],
+    "yaw": 90,
+    "pitch": 3
+   }
+  },
+  {
+   "n": "W34",
+   "file": "34_sg_bunker_into_hill_cut.png",
+   "where": "styleguide_bunkers, Valve's bunker sample, from the south-west, cut at 396 (box 1659 -8144 3459 -6344)",
+   "teaches": "A bunker dug into a hill: concrete walls 32 thick (concretewall_bunker01a/b/c) with piers 24 by 32 and a blastdoor001a, the roof under the hill's own ground, and the concrete meeting the earth through a blendbunk_conc01 displacement rather than a seam; outside, handrails (handrail_alley-upperdeck 4), outdoor lamps and cables (prodcables128, wall_wires2), trees and stumps on the hill above (tree_pine04/05/06 17). Ours: lc_forest_bunker's doorway 256 by 192, inner doors 128 wide.",
+   "lessons": [
+    "valve-bunker-into-hill",
+    "valve-base-concrete-and-salvage"
+   ],
+   "view": {
+    "iso": "SW",
+    "box": [
+     1659,
+     -8144,
+     3459,
+     -6344
+    ],
+    "cut": 396
+   }
+  },
+  {
+   "n": "W35",
+   "file": "35_sg_silo_room_cut.png",
+   "where": "styleguide_silo, Valve's silo sample, from the south-west, cut at -66 (box 8840 -4303 10640 -2503)",
+   "teaches": "Valve's silo sample in grey: a round shaft (648 off-axis brushes, centred near x 10077 y -3213, brush centres median 303 out) through stacked square floors from z -1024 to 32, grates (metalgrate002a) and rails (metalrail012c) round its rim, ladders (metalladder002 5) between levels; mostly the dev texture reflectivity_50, a mock-up before the real silo of ep2_outland_11 (254 from the axis, 24 sides). Lit by 38 light and 11 light_spot, cage lamps (light_cagelight01_off 6). Ours: no shaft in the bunker.",
+   "lessons": [
+    "valve-white-forest-silo"
+   ],
+   "view": {
+    "iso": "SW",
+    "box": [
+     8840,
+     -4303,
+     10640,
+     -2503
+    ],
+    "cut": -66
+   }
+  },
+  {
+   "n": "W36",
+   "file": "36_sg_farmhouse_cut.png",
+   "where": "styleguide_farmhouse1, Valve's farmhouse sample, from the south-west, cut at 281 (box -513 -634 1287 1166)",
+   "teaches": "An outland farmhouse on its own plot: timber and plaster walls under a steep roof (Valve's farm roofs 45 and 34 degrees), windows each a frame prop with its _bars twin on the same spot (woodwall030b_window01a 9 with 8 bars; plasterwall029c/g 6 with 5), and rooms left nearly bare: two chairs, a kitchen sink, a pot, a bucket, a shovel. Farm timber: boards 2 by 4, planks 4 by 12, beams 10 by 18, nearly half turned off the axes. Ours: Ravenholm-style timber 4 by 8, roofs 20 to 35.",
+   "lessons": [
+    "valve-farm-timber"
+   ],
+   "view": {
+    "iso": "SW",
+    "box": [
+     -513,
+     -634,
+     1287,
+     1166
+    ],
+    "cut": 281
+   }
+  },
+  {
+   "n": "W37",
+   "file": "37_sg_rotting_barn_cut.png",
+   "where": "styleguide_barn_deterioration, Valve's rotting barn sample, from the south-west, cut at 433 (box -11036 -10348 -9236 -8548)",
+   "teaches": "How Valve rots a building: the same barn as the sound one (620 wood brushes each) but 59% of its timber off the axes against 45%, 75% func_detail against 20%, boards half as long (median 62 against 111), and 539 displacements against none (power 2 on 479) to bow the boards (woodfloor005a 212 strips 153 by 30 to 39), sag the roof tiles (tileroof003a 68) and buckle the tin (metalwall014a 50); the roof is open to the frame in places. Ours: a rotting house needs displacements on its boards, roof and tin, not only holes.",
+   "lessons": [
+    "valve-farm-timber"
+   ],
+   "view": {
+    "iso": "SW",
+    "box": [
+     -11036,
+     -10348,
+     -9236,
+     -8548
+    ],
+    "cut": 433
+   }
+  },
+  {
+   "n": "W38",
+   "file": "38_sg_inn_rooms_cut.png",
+   "where": "styleguide_inn, Valve's inn sample, from the south-west, cut at 84 (box -1362 -1292 438 508)",
+   "teaches": "The one furnished country building: rooms with chairs (furniture_chair01a 13), tables (7), radiators (7), dressers and drawers, a bath, sink and toilet, dome lamps unlit (light_domelight02_off 4), boards over the openings (wood_board03a/04a/06a 15); windows frame plus _bars twin (34 of 41 in the room). Valve bends the inn's shingles and stone with displacements (139, power 2). Ours: furnish the house people live in and leave the rest bare, as Valve does.",
+   "lessons": [
+    "valve-farm-timber",
+    "valve-rebel-hideout"
+   ],
+   "view": {
+    "iso": "SW",
+    "box": [
+     -1362,
+     -1292,
+     438,
+     508
+    ],
+    "cut": 84
+   }
+  },
+  {
+   "n": "W39",
+   "file": "39_sg_radio_station_overview.png",
+   "where": "styleguide_radiotower, Valve's radio station sample, the whole room from the south-west (box -7765 -7543 -944 -3710)",
+   "teaches": "A Resistance radio station: the mast standing over a fenced yard (exterior_fence002d 21) of transformers (substation_transformer01d 8) and cable posts (utilityconnecter006b/c 8), a hut with handrailed steps (handrail04 28), caged and prison lamps (prison_lamp001b 9), and inside a control room of file cabinets, closets, a desk and a monitor. In ep2_outland_06a the mast (radio_antenna01) is held by three anchors at yaw 60, 180 and 300, 1051 to 1662 out, each with three stays. Ours: map_forest.py has no mast.",
+   "lessons": [
+    "valve-radio-mast",
+    "valve-rebel-hideout"
+   ],
+   "view": {
+    "iso": "SW",
+    "box": [
+     -7765,
+     -7543,
+     -944,
+     -3710
+    ]
+   }
+  },
+  {
+   "n": "W40",
+   "file": "40_sg_fortified_farmhouse_overview.png",
+   "where": "outland_building_large_01, Valve's large outland building, the whole room from the south-west (box -1334 -1087 1140 1063)",
+   "teaches": "A country house the Combine have taken: the timber house with its windows (frame and _bars twins, woodwall030b_window01a 8 with 7 bars) ringed by Combine barricades (combine_barricade_tall01a/b 12, med01a 4, the cyan boxes) and a combinetower001 (the tall cyan block), 7 soldiers placed. Valve's Combine barricades stand in rows, each turned 15 from the last (the roadblock in ep2_outland_10: seven tall ones 58 apart). Ours: map_forest.py places no Combine barricades; map_town.py has them on the city side.",
+   "lessons": [
+    "valve-combine-barricade-rows"
+   ],
+   "view": {
+    "iso": "SW",
+    "box": [
+     -1334,
+     -1087,
+     1140,
+     1063
+    ]
    }
   }
  ]
