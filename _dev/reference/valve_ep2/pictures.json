@@ -1,0 +1,74 @@
+{
+ "title": "Valve's Episode Two (ep2_outland_01 to 12a, and nine EP2 style rooms)",
+ "draft": true,
+ "about": "The countryside of Episode Two: the mine and the antlion caves under it, the nest, the forests and roads of the outlands, the farm, the radio tower, and White Forest with its rocket silos; with Valve's style rooms for the forest, the caves, the bunkers, the silo, the farmhouse, the rotting barn, the inn, the radio tower and an outland building. Chosen for the owner's three asks: the forests (how trees stand, how a wood is bordered, what lies in it), the mines, antlion tunnels and nest (for our cave), and White Forest's base and missile silo (for our bunker). Measured from the VMFs by map_ingest.py (each map's numbers in valve_NAME/measure.json; the props and craft study in valve_ep2/wip/props_craft_notes.md, the logic and NPC study in valve_ep2/wip/logic_npc_notes.md) and drawn by map_view.py (flat colours; props as boxes of their true size, orange static, yellow physics, cyan dynamic; trees as trunk and crown; big hollow models and fences as outlines; NPC marks left out of the extra cut-aways). Cut-aways of caves and bases are drawn without what lies below a set height (said in each 'where' as clip_below) so the frame is not shrunk by deep rock; border views draw the invisible walls (toolsplayerclip) in magenta.",
+ "numbers": [
+  "ep2_outland_01 (the mine's yard, the lift down): 3395 entities, 2955 brushes, 452 displacements; 180 trees in play, the nearest other tree median 154, 43% leaning over 2 degrees, 57% of the 512 squares with ground hold no tree, tree_pine05 69 and tree_pine06 31 the commonest. Ours: Forest.plant 132 apart, none leaning.",
+  "ep2_outland_01 indoors: ceilings most often 192 (58 of 206 nodes), corridors 116 wide (medians); mine posts struts_single02 16, ibeam01a_cluster01 14; rail fence_border_256 15 chained 256 apart. Ours (raven-mine-sets): a timber set every 512.",
+  "ep2_outland_01a (the antlion caves under the mine): all 424 nodes under a roof; natural passages narrowest median 298, height median 243; ceilings by the cast most often 192 then 176; 93 grubs, 40 stalactites (stalactite_static01 to 03), 12 mining cars. Ours: the cave on a 320 by 320 square, 19 grubs one at a time.",
+  "ep2_outland_02 (the mine arena holdout): 193 of 211 nodes under a roof; passages narrowest median 131, height 148; the arena 384 by 2681 wall to wall (medians); four tunnels into one room, each with a siren and three lamps (antlion_detector_lights_lamp 12) that show which tunnel opens next and how big the wave; seven waves. Ours: no defence that shows where the next wave comes from.",
+  "ep2_outland_03 (the long caves): 757 of 814 nodes under a roof; 158 timber props (struts_tunnel192_01 31, struts_single02 29, struts_tunnel192_02 15, struts_tunnel320_01 15); light_cagelight02_on 26 lamps 687 apart; ceilings most often 192 (177 of 751 nodes); passages narrowest median 266; 143 grubs. Ours: a timber set every 512, 7 lights in the 3072 cave.",
+  "ep2_outland_04 (the nest): nest_lrg_flat 78, nest_med_flat 30, websackhalf 16, grubtunnel_door 15, stalactites 59 of four models; 96 grubs; corridors 178 wide under 200; the guardian's run 190 to 380 across at the narrowest, 1000 to 1740 long. Ours: the nest about 345 wide, 760 in its chambers, 6 lights.",
+  "ep2_outland_05 (out of the caves into the woods and the sand): 155 trees, the nearest other tree median 148 (the closest of all), 61% leaning; 84% of nodes outdoors; three thumpers about 1420 and 1680 apart make safe islands. Ours: 132 apart, none leaning.",
+  "ep2_outland_06 (the factory and its slime pits): 48% of nodes outdoors; indoor ceilings most often 128; fence01a 23 every 132; only 22 trees, tree_pine_card_cluster_01 cards 2991 apart round the edge.",
+  "ep2_outland_06a (the radio tower in the woods): 446 trees (tree_pine06 119, tree_pine05 94, tree_pine04 83, tree_pine_large 26), the nearest other tree median 261, 59% of the 512 squares empty; rail fences fence_trail_256 25 and fence_border_128/256 48 chained about 254 apart; the mast held by three anchors 1051 to 1662 out. Ours: trees 132 apart, no fences in the woods.",
+  "ep2_outland_07 (the farm): 313 trees, the nearest other tree median 294, 73% of the 512 squares empty (the most open of all); chain-link exterior_fence_notbarbed002e 58 every 512 round the yard, rail fence_border 59 in the woods; 28 stumps; fades 7000 on every tree. Ours: fades 2800 to 3400.",
+  "ep2_outland_08 (the rail yard and the helicopter): 173 trees, the nearest other tree median 298, 23% leaning; 30 train cars and 21 containers; 76% of nodes outdoors.",
+  "ep2_outland_09 (the yard of the Combine cannon): 158 trees, the nearest other tree median 252, none leaning; 56 cargo containers, 25 pylons, 22 security lights; 19 tree card clusters round the edge.",
+  "ep2_outland_10 (the forest road and the roadblock): 439 trees, the nearest other tree median 206, 48% of the 512 squares empty, 10% leaning; seven combine_barricade_tall01b 58 apart, each turned 15 from the last. Ours: 132 apart, a forest without a road through it.",
+  "ep2_outland_10a (the river woods): 613 trees, the nearest other tree median 165, 44% of the 512 squares empty (the thickest wood); fern01 146 (0.23 a tree); fades 2200 on 164 small trees; 95% of nodes outdoors. Ours: about 14 trees per 1000 square over the valley, 0.74 undergrowth a tree.",
+  "ep2_outland_11 (White Forest and the rocket silo): the silo block x 1280 to 2368, y -10480 to -9392, z -1792 to 64 (1088 by 1088 by 1856), 1765 brushes wholly inside; the shaft lining (538 brushes of concretewall010a and metalwall069a) from z -1414 to 64; a 24-sided shaft 254 from the axis at x 1824 y -9936, narrowed to 159 by solid rings at -1152 to -832 and -640 to -576. Ours: the bunker has no shaft.",
+  "ep2_outland_11 base: all 167 nodes under a roof; ceilings most often 192 then 224; corridors 139 wide (medians); prison_flourescentlight001a 29, light_security 12. Ours: bunker doorway 256 by 192, inner doors 128 wide.",
+  "ep2_outland_11a (Silo 2 and its halls): 474 of 489 nodes under a roof; ceilings most often 128, then 256 and 160; corridors 128 wide under 160; light_security 32; the second silo, same 24 sides at 254, shut by props_silo/missile_doors on two func_movelinear sliding 136 at speed 5. Ours: the bunker's sliding leaves.",
+  "ep2_outland_11b (the hangar and the snowy yard): 80 nodes, 15% outdoors; ceilings most often 192; magnusson_device 19, wood_crate001a 36, footlocker01_closed 14.",
+  "ep2_outland_12 (the battle round the barns): 479 trees, the nearest other tree median 244, 47% of the 512 squares empty; no real tree beyond 512 from the walk, 42 tree cards past them; 37 stumps and 53 tree slices. Ours: a ridge 440 high planted thickest, the city's skybox behind.",
+  "ep2_outland_12a (launch control and the last barn): sun at pitch -15, 240 184 130 (evening); 90 trees; ceilings most often 264; the rocket is rocket_low on a func_tracktrain in an open frame, not in a shaft.",
+  "styleguide_forest_01: Valve's forest sample, 69 trees on a strip about 2700 by 4900, 6 tree cards up to 1100 past the last trees; 10 nodes only.",
+  "styleguide_caves: Valve's cave sample: 100 grubs in groups of two to four, 63 of them in one 2048 square; 23 nodes, all under a roof."
+ ],
+ "pictures": [
+  {
+   "n": "W1",
+   "file": "01_o02_arena_holdout_cut.png",
+   "where": "ep2_outland_02, the mine arena where the rebels hold out, from the south-west, cut at -440 (box -4090 -11030 -1530 -8470; drawn without what lies below -1100)",
+   "teaches": "The holdout is a built room at the foot of the mine (floor about -692), a round hall of concrete and steel with galleries and caves joining it: four tunnels lead in, and each has a looping siren (radius 1250) and three lamps marked easy, medium and hard that light 20 s before that tunnel's antlions come, so players read where the next wave comes from and how big it is from the room itself. Seven waves, growing by how many tunnels are open; 8 antlions in the room at once ends a wave. Ours: no defence in our map shows where the next attack comes from.",
+   "lessons": [
+    "valve-wave-warning",
+    "valve-wave-pattern",
+    "valve-cave-proportions"
+   ],
+   "view": {
+    "iso": "SW",
+    "box": [
+     -4090,
+     -11030,
+     -1530,
+     -8470
+    ],
+    "cut": -440,
+    "clip_below": -1100
+   }
+  },
+  {
+   "n": "W2",
+   "file": "02_o02_gallery_into_cave_cut.png",
+   "where": "ep2_outland_02, a straight mine gallery and the antlion tunnel that leaves it, from the south-west, cut at -330 (box -2040 -11540 520 -8980; drawn without what lies below -1100)",
+   "teaches": "Where the built mine meets the antlions' own work: a square gallery runs straight (Valve's galleries 192 high, 294 to 365 wide, a timber set every 192 to 280) and from its end a rough tube winds off for about 2500, never straight for long, narrowest median 131 and 148 high in this map, wider in the other cave maps (219 to 298). Ours: our cave is one 320 by 320 square in plan; a tunnel that winds and changes width reads as dug by antlions, a straight one as dug by men.",
+   "lessons": [
+    "valve-cave-proportions",
+    "raven-mine-sets"
+   ],
+   "view": {
+    "iso": "SW",
+    "box": [
+     -2040,
+     -11540,
+     520,
+     -8980
+    ],
+    "cut": -330,
+    "clip_below": -1100
+   }
+  }
+ ]
+}
