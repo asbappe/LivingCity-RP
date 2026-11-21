@@ -27296,14 +27296,22 @@ function RetakeFieldTests()
         -- the counterattack
         local seen = LC.IsSeen
         LC.IsSeen = function() return false end
-        q.data.waveAt = CurTime()
+        q.data.waves.nextAt = CurTime()
         _run(1)
-        LC.IsSeen = seen
         local wave = 0
         for npc, wst in pairs(LC.NPCs) do
             if wst.wave and IsValid(npc) and wst.raid and wst.raid.target:Distance(G) < 300 then wave = wave + 1 end
         end
         ok(wave >= 3, "holding it, a wave of fighters comes to take it back", wave)
+        -- one clock (21 November): the wave wiped out, the next comes 6 s later, not at its own time
+        local w = q.data.waves
+        ok(w.i == 1 and w.nextAt - CurTime() >= 7, "the next wave is due on the clock", w.i, w.nextAt - CurTime())
+        for _, npc in ipairs(w.live) do if IsValid(npc) then npc:SetHealth(0) hook.Run("OnNPCKilled", npc, unit) end end
+        _run(7)
+        ok(w.i == 2 and #w.live >= 2, "wiped out, the next wave comes 6 seconds later", w.i, #w.live)
+        LC.IsSeen = seen
+        ok(LC.HoldWaveGap(w, 2) <= LC.HoldWaveGap(w, 1) and LC.HoldWaveGap({ secs = 285 }, 4) < LC.HoldWaveGap({ secs = 285 }, 2),
+            "each wave sooner than the last (Valve's 70, 50, 40, 25, 9 s, scaled)")
         _run(36)
         ok(q.done, "held for 30 seconds: the ground is retaken")
         ok(not LC.RebelQuietAt(G, 0) or (LC.RebelQuiet[#LC.RebelQuiet] or {}).untilT < CurTime() + 200, "and the quiet lifts a couple of minutes after")
@@ -43522,6 +43530,59 @@ function Nov21_RebelAftermathTests()
     LC.Running = runWas
 end
 Nov21_RebelAftermathTests()
+
+function Nov21_SquadTopUpTests()
+    section("21 November: a Resistance squad topped up at each stage of a fight, one a medic")
+    local runWas, seenWas = LC.Running, LC.IsSeen
+    LC.Running = true
+    LC.IsSeen = function() return false end
+    local manWas = GetConVar("lc_manpower") and GetConVar("lc_manpower"):GetString()
+    if manWas then _setcvar("lc_manpower", "0") end
+    local at = Vector(-48000, 46000, 0)
+    local camp = LC.AddZone(at, 600, "rebel", 0)
+    local lead = newPlayer("TopUpLead", "resistance", nil, 900)
+    lead:SetPos(at + Vector(1500, 0, 0))
+    local fighters = {}
+    for i = 1, 5 do
+        local npc, st = LC.SpawnRebel(at + Vector(i * 40, 0, 4), camp)
+        if npc then fighters[#fighters + 1] = npc st.life = nil end
+    end
+    local first, fst = fighters[1], LC.NPCs[fighters[1]]
+    LC.RebelRecruit(lead, first, fst)
+    ok(#LC.FollowersOf(lead) == 1, "the leader has one fighter with him")
+    local spotWas = LC.RebelBackupSpot
+    LC.RebelBackupSpot = function(ply) return ply:GetPos() + Vector(900, 0, 0) end
+    local limit = math.min(LC.SquadTopUpMost, (LC.SquadLimit(lead)))
+    hook.Run("LivingCityQuestAdvanced", { violent = true, members = { lead } })
+    local f = LC.FollowersOf(lead)
+    ok(#f == limit, "the next stage of a violent job: the squad topped up to its places", #f, limit)
+    local medics = 0
+    for _, n in ipairs(f) do if LC.NPCs[n] and LC.NPCs[n].squadMedic then medics = medics + 1 end end
+    ok(medics == 1, "one of them a medic", medics)
+    hook.Run("LivingCityQuestAdvanced", { violent = true, members = { lead } })
+    ok(#LC.FollowersOf(lead) == limit, "(full: nobody more comes)")
+    -- a job that isn't a fight, or no squad yet: nothing
+    local lone = newPlayer("TopUpLone", "resistance", nil, 900)
+    hook.Run("LivingCityQuestAdvanced", { violent = true, members = { lone } })
+    ok(#LC.FollowersOf(lone) == 0, "a leader with no squad gets none")
+    -- the medic patches up the leader
+    local medic
+    for _, n in ipairs(LC.FollowersOf(lead)) do if LC.NPCs[n].squadMedic then medic = n end end
+    lead:SetHealth(30)
+    if medic then medic:SetPos(lead:GetPos() + Vector(60, 0, 0)) LC.NPCs[medic].medicNext = 0 end
+    LC.SquadMedicTick(CurTime())
+    ok(lead:Health() == 30 + LC.SquadMedicHeal, "the medic patches up a badly hurt leader near him", lead:Health())
+    LC.SquadMedicTick(CurTime())
+    ok(lead:Health() == 30 + LC.SquadMedicHeal, "(and not again straight away)")
+    LC.RebelBackupSpot = spotWas
+    for _, n in ipairs(fighters) do if IsValid(n) then LC.NPCs[n] = nil n:Remove() end end
+    LC.RemoveZone(camp)
+    lead:Remove() lone:Remove()
+    if manWas then _setcvar("lc_manpower", manWas) end
+    LC.IsSeen = seenWas
+    LC.Running = runWas
+end
+Nov21_SquadTopUpTests()
 
 ----------------------------------------------------------------------
 section("Stop")

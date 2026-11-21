@@ -169,6 +169,7 @@ LC_MODULES = {
         "sv_livingcity_sidejobs",
         "sv_livingcity_crabhunt", -- (headcrab hunts: raw headcrabs from the infestation for the Resistance's supply crate)
         "sv_livingcity_garden", -- (the walled garden's planting spots, lc_garden_plot_N: melons and pumpkins from a seed packet)
+        "sv_livingcity_squadtopup", -- (a Resistance squad topped up at each stage of a fight, one of them a medic)
         "sv_livingcity_slots",
         "sv_livingcity_staff",
         "sv_livingcity_staticprops",

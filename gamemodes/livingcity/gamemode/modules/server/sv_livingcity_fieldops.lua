@@ -283,9 +283,9 @@ function LC.RebelsOnGround(center, r)
 end
 
 -- A wave of n fighters, out of sight (rebel ground nearby first, else the streets around),
--- coming at center and whoever of targets is nearest. Returns how many came.
+-- coming at center and whoever of targets is nearest. Returns how many came, and who.
 function LC.RebelWave(center, targets, n)
-    if not LC.SpawnRebel or not LC.Running or (n or 0) <= 0 then return 0 end
+    if not LC.SpawnRebel or not LC.Running or (n or 0) <= 0 then return 0, {} end
     local now = CurTime()
     local spots = {}
     for _, z in ipairs(LC.ZonesOfKind and LC.ZonesOfKind("rebel") or {}) do
@@ -303,8 +303,8 @@ function LC.RebelWave(center, targets, n)
         local p = LC.AlarmSquadSpot and LC.AlarmSquadSpot(center)
         if p then spots[#spots + 1] = { p, nil } end
     end
-    if #spots == 0 then return 0 end
-    local made = 0
+    if #spots == 0 then return 0, {} end
+    local made, who = 0, {}
     for i = 1, n do
         local s = spots[(i - 1) % #spots + 1]
         local npc, st = LC.SpawnRebel(s[1] + Vector(math.random(-40, 40), math.random(-40, 40), 4), s[2])
@@ -322,10 +322,11 @@ function LC.RebelWave(center, targets, n)
             end
             if best and LC.RebelSetFoe then LC.RebelSetFoe(npc, st, best, now) end
             made = made + 1
+            who[#who + 1] = npc
         end
     end
     LC.Log("info", string.format("Rebel counterattack: %d fighters toward %s", made, tostring(center)))
-    return made
+    return made, who
 end
 
 ------------------------------------------------------------------------
