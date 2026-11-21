@@ -893,7 +893,7 @@
    "title": "An areaportal in a doorway shuts with its door, never by a trigger",
    "rule": "A portal where a door hangs names the door in its target key (prop_door_rotating, func_door); for a gate that is a func_door_rotating or func_movelinear, the gate's OnOpen sends the portal Open and its OnFullyClosed sends Close. It starts closed (StartOpen 0) when the door starts shut. Never open or close a portal from a trigger in a map many people share: Valve's triggers open the way ahead and shut it behind one player, which would blind everyone behind him.",
    "why": "173 func_areaportal in 18 maps: 93 have no name and only cut what is drawn; 11 name their door in target (10 prop_door_rotating such as d1_trainstation_01 barney_door_1, 1 func_door, d1_trainstation_05 lab_door); 71 output lines open or close the rest, 62 of them from triggers (d1_trainstation_03 portal_courtyard_doorway1: two strips 60 apart, Open then Close). d1_canals_08: door_locke1_1 OnFullyClosed -> relay_locks_closegateportal -> portal_locks_1 Close.",
-   "how": "map_build.areaportal(box, vis, name=None, door=None) writes the target key, or the door's OnOpen / OnFullyClosed wires; today our portals never close.",
+   "how": "map_build.areaportal(box, vis, name=None, door=None) writes the target key, or the door's OnOpen / OnFullyClosed wires; today our portals never close. City 17 wires occluders the same way: d3_c17_10a bldg1_door2 and soldierscare_door OnOpen send their occluder Deactivate and OnFullyClosed Activate; d3_c17_05 barricade_1_gate_open_rl Deactivates backstreet_gate_occluder and the close relay Activates it 2 s later; 42 of 46 func_occluder start active.",
    "check": "review; proposed: a portal whose box meets a door's box with neither target nor door wiring; any trigger that sends a portal Open or Close."
   },
   {
@@ -931,7 +931,7 @@
    "title": "'When all of these have happened' is a math_counter",
    "rule": "Each event sends Add 1 to a math_counter whose max is how many; OnHitMax fires the result. An AND of two different things (a scene ended and an item taken) is a counter with max 2. A wave that comes again resets its own counter from OnHitMax (SetValue 0). Every counter needs at least max feeders.",
    "why": "55 math_counter in 16 maps, max 2 on 17 and 3 on 13; fed by NPC OnDeath (55 lines), prop OnBreak (16), path_track OnPass (11). d1_canals_01 traintrackcops_south_assault_counter: cop OnDeath Add; OnHitMax -> traintrackcops_south_makers_relay Enable and SetValue 0 on itself. d1_trainstation_05 get_suit_math_1 (max 2): lab03_lcs OnCompletion and item_suit OnPlayerTouch. d1_canals_01a sewerbarrels_counter (max 4): barrels OnBreak, then sewerbarrels_gate_intact Kill and sewerbarrels_gate_broken Enable. Valve shipped counters nothing adds to (d1_canals_01a train_boardbreak_counter1 and 2).",
-   "how": "m.counter(name, u, v, z, top, done_wires, again=False); our lc_nest_count and lc_armory_count already work this way.",
+   "how": "m.counter(name, u, v, z, top, done_wires, again=False); our lc_nest_count and lc_armory_count already work this way. d3_c17_10b switches_counter (max 3): each control room's relay (force field Kill, generator off, sparks, shake) Adds 1; OnHitMax fires one success relay that ends the whole stronghold's defences, the shape of our administrator's last stand (collapse.md).",
    "check": "review; proposed: a counter with fewer Add lines than its max."
   },
   {
@@ -943,7 +943,7 @@
    "title": "One relay per event, its steps timed by delays",
    "rule": "Each thing the gamemode or a player sets off is one logic_relay whose outputs are staggered (the sound first, the move 0.1 to 2 seconds later, the end a few seconds after); a second relay only for what also happens alone (stop, reset). Relays come in pairs (open and shut, start and stop) and the gamemode fires only relays, never the moving parts.",
    "why": "414 logic_relay, 2056 outputs (median 3, about 12 at the 90th percentile, most 42 in d1_trainstation_01 scene4_start); of 344 relays called from outside, 280 call no other relay; the longest delay in a relay is 0.2 s at the median and 2 s at the upper quarter. Pairs: d1_canals_07 logic_start_redlight / logic_stop_redlight; d1_canals_08 relay_locks_opengates / relay_locks_closegates (Unlock at 0, Open at 0.1, klaxon at 0, 1, 2 and 3). Relays drive doors more than anything else does (func_door: Open 11, Close 5; func_door_rotating: Open 9, Toggle 7, Close 6, Unlock 5).",
-   "how": "Keep map_raven's and map_forest's lc_X_open / _shut / _opened / _closed relays for every moving thing the game uses; m.relay as it is.",
+   "how": "Keep map_raven's and map_forest's lc_X_open / _shut / _opened / _closed relays for every moving thing the game uses; m.relay as it is. A relay whose steps are spread over time is stopped with CancelPending when its event ends early: 19 lines in City 17, 17 of them in d3_c17_07's waves (northfront_battle_reset CancelPending on wave relays 1 to 5) and d3_c17_03's nags; Kill is the commonest input in the 15 maps (532 of 5008 lines): what has done its job is removed.",
    "check": "review"
   },
   {
@@ -971,7 +971,7 @@
    "title": "Breaking a place swaps intact for broken in one go",
    "rule": "A wall, door or floor that gets blown or breached is two named sets: the intact props and brushes (Kill or Break) and the broken ones (prop_dynamic and func_brush with StartDisabled 1: TurnOn or Enable). One relay does it with a one-shot sound (48, radius 2000), env_shake (amplitude 12, radius 1000, 1 s, frequency 2.5), env_explosion (magnitude 100, flag 1 for no damage) and fire half a second later.",
    "why": "d3_c17_13 bigdestroy1_relay: bigdestroy1_props_intact (3 prop_dynamic) Kill, bigdestroy1_props_broken (8 prop_dynamic, StartDisabled 1) TurnOn, bigdestroy1_breakables_intact Break, bigdestroy1_explosion Explode, bigdestroy1_shake StartShake, bigdestroy1_wav (Streetwar.d3_C17_13_explode_2) PlaySound, bigdestroy1_fire StartFire at 0.5; bigdestroy3 also wakes a prop_physics beam and fires env_physexplosion at 0.5. d1_canals_01a: sewerbarrels_gate_intact Kill, _broken Enable.",
-   "how": "m.swap(name, intact, broken, boom=True) giving lc_NAME_break, the relay the gamemode fires (a Combine breach, a collapse). Recipe, as Valve wires it (the owner asked to keep it, 21 November): R12 Breaking things (lesson valve-swap-broken): env_explosion `iMagnitude` 100, `iRadiusOverride` 0, `fireballsprite` sprites/zerogxplode.spr, `rendermode` 5, flag 1 no damage (19 of 46). env_shake `amplitude` 12, `radius` 1000, `duration` 1, `frequency` 2.5 (commonest; 20 fired from path_track OnPass, 12 from relays). env_physexplosion `spawnflags` 1, `magnitude` 50, `radius` 0 (or 128 to 200 with a named target). env_spark `magnitude` 1 to 2, `traillength` 1 to 3, `spawnflags` 128 or 640; driven StartSpark / SparkOnce / StopSpark. env_fire: burning from the start `spawnflags` 15 or 47 (4 start on, 8 full), `health` 30 to 300, `firesize` 48 to 130. func_breakable boards: `material` 1 wood (243 of 349), `health` 1 to 10, `spawnflags` 256; func_physbox freed by relays (`EnableMotion` 154 lines, `Break` 62, `Wake` 24).",
+   "how": "m.swap(name, intact, broken, boom=True) giving lc_NAME_break, the relay the gamemode fires (a Combine breach, a collapse). Recipe, as Valve wires it (the owner asked to keep it, 21 November): R12 Breaking things (lesson valve-swap-broken): env_explosion `iMagnitude` 100, `iRadiusOverride` 0, `fireballsprite` sprites/zerogxplode.spr, `rendermode` 5, flag 1 no damage (19 of 46). env_shake `amplitude` 12, `radius` 1000, `duration` 1, `frequency` 2.5 (commonest; 20 fired from path_track OnPass, 12 from relays). env_physexplosion `spawnflags` 1, `magnitude` 50, `radius` 0 (or 128 to 200 with a named target). env_spark `magnitude` 1 to 2, `traillength` 1 to 3, `spawnflags` 128 or 640; driven StartSpark / SparkOnce / StopSpark. env_fire: burning from the start `spawnflags` 15 or 47 (4 start on, 8 full), `health` 30 to 300, `firesize` 48 to 130. func_breakable boards: `material` 1 wood (243 of 349), `health` 1 to 10, `spawnflags` 256; func_physbox freed by relays (`EnableMotion` 154 lines, `Break` 62, `Wake` 24). d3_c17_12 strider breach: a trigger_once sends each strider SetCannonTarget at a named npc_bullseye (health 20, damagefilter strider_only_filter); its OnDeath disables destroyed_wall_1_brush_1, turns on destroyed_wall_1_hole_1, explodes @0 and @0.5, shoots concrete from an env_shooter, shakes, ForceSpawns a debris template and turns on destroyed_wall_1_link (the hole becomes a path).",
    "check": "review"
   },
   {
@@ -1479,7 +1479,7 @@
    "title": "Start a staged moment where a player is looking",
    "rule": "Before a staged moment (a beating, an arrest, a break, an approach), wait until a player is near (128 to 1000) with the spot in a 25 to 60 degree cone and in sight for half a second to two; after a timeout do it anyway. Seen, it needs no text.",
    "why": "35 ai_script_conditions: playertargetfov 25 to 60 (true cone) with line of sight, proximity 128 to 1000, requiredtime 0.4 to 2.5 s, a 15 s timeout; ts01's luggage shove waits for the player within 500 with the citizen in a 50 degree cone (3 s at most); ts01's interrogation room shuts its door slot when the player is within 150.",
-   "how": "Gamemode: a helper beside LC.IsSeen that takes a spot, a distance and a cone, used before the breaks in sv_livingcity_mindsact.lua and the director's approaches; the act and the voice then carry it and the chat line can go (house rule 10). That changes those features: ask the owner. ai_script_conditions itself is single-player minded.",
+   "how": "Gamemode: a helper beside LC.IsSeen that takes a spot, a distance and a cone, used before the breaks in sv_livingcity_mindsact.lua and the director's approaches; the act and the voice then carry it and the chat line can go (house rule 10). That changes those features: ask the owner. ai_script_conditions itself is single-player minded. City 17 (15 maps) adds: 30 ai_script_conditions, 25 with the actor FOV left at 360 and 6 with a player proximity of 200 to 650; d3_c17_03's supply thrower waits for a 20 degree true cone with line of sight; 5 of the 30 send the same output from OnConditionsTimeout after 3 to 10 s (d3_c17_06a rubble_citizen_aisc_1, 8 s), so the moment happens even if no one looks.",
    "check": "review"
   },
   {
@@ -1493,7 +1493,7 @@
    "title": "An NPC appears unseen at a doorway, its job already given",
    "rule": "Spawn people out of sight at a doorway or exit and give each its job in the same moment (where to go, what to do, whom to hate); never spawn one in view or leave it standing. The ones that leave walk to an exit doorway first.",
    "why": "194 of 197 npc_template_maker start disabled and are fired by Spawn (164 inputs) more than Enable (66); 51 'not while seen' (flag 128), the rest hidden by placement; OnSpawnNPC: StartSchedule 46, ApplyRelationship 23, Activate or BeginAssault 19, BeginSequence 11, act busy 10, BeginRappel 6. ts02 spawns at info_npc_spawn_destination beside hint 903 exits (reusedelay 1); passers-by (2 alive) cross to another exit and vanish, the next 10 s later.",
-   "how": "Already our way for citizens (spawn and exit doorways, people who stay): keep it for units and anything new. Map modules: an exit doorway point (lc_exit_N) inside a door at each block or street end, out of sight lines.",
+   "how": "Already our way for citizens (spawn and exit doorways, people who stay): keep it for units and anything new. Map modules: an exit doorway point (lc_exit_N) inside a door at each block or street end, out of sight lines. City 17 (15 maps): 364 npc_template_maker in all 15 (d3_c17_06b alone 87), 365 of 367 start disabled, Radius 256 on 347, visibility left 'don't care' on 363 (hidden by placement); fired by trigger_once 264, relays 81, ai_ally_manager 47; OnSpawnNPC 309 lines (StartSchedule 131, SetRelationship 30, BeginSequence 20, FlyToSpecificTrackViaPath 15, BeginRappel 8 at 0.4 to 0.5 s); makers passed are Killed (39 lines).",
    "check": "review"
   },
   {
@@ -1507,7 +1507,7 @@
    "title": "A squad moves in lanes: each man his own rally spot and target",
    "rule": "When units go into a place (a raid, a landing, retaking ground), give each man his own rally spot where they gather and his own target spot inside, in separate lanes about 130 apart; start the move a moment after they gather; long moves go in bounds of 450 to 1000 with a pause of 0 to 3 s at each.",
    "why": "45 ai_goal_assault, 112 assault_rallypoint, 147 assault_assaultpoint: rally points by wildcard, 1 to 6 a goal, each with its own assault point; rally to assault median 467 (quartiles 24, 998); assaulttimeout 3 (74) or 0, assaulttolerance 36, clear on arrival (55); c01's track cops: six chains of 6 points 450 to 1000 apart, zigzagging 160 across the track, lanes about 130 apart; Activate at 0 to 0.2 s and BeginAssault at 0.2 to 0.5 s after the spawn.",
-   "how": "Map modules: lc_lane_<place>_rally_N and lc_lane_<place>_N info_targets where the Combine or the Resistance would go in. Gamemode: our GoTo per man, or a runtime ai_goal_assault (the unit then needs a state our think loop leaves alone until OnArrival). Changes raids and deployments: ask the owner.",
+   "how": "Map modules: lc_lane_<place>_rally_N and lc_lane_<place>_N info_targets where the Combine or the Resistance would go in. Gamemode: our GoTo per man, or a runtime ai_goal_assault (the unit then needs a state our think loop leaves alone until OnArrival). Changes raids and deployments: ask the owner. City 17 (15 maps): 41 ai_goal_assault, 109 rally and 111 assault points; rally to assault median 94 (quartiles 24, 465), 105 of 109 rally points lead to one assault point and stop (no chains, unlike Route Kanal), AssaultCue 1 on 36; BeginAssault from relays 0.2 to 2 s after Activate; d3_c17_11's dropship troops play 'cower' at their rally points until BeginAssault 10.5 s after landing.",
    "check": "review"
   },
   {
@@ -1521,7 +1521,7 @@
    "title": "Where fights happen, cover hints behind the cover",
    "rule": "Behind waist-high cover (sandbags, low walls, crates, car bonnets) put a cover-low hint (info_node_hint hinttype 101), behind chest-high cover a cover-medium (100), facing the threat, about 100 apart (56 to 135), in a named group per building, roof or barricade.",
    "why": "d3_c17_13: 82 cover-low hints, nearest other median 96 (quartiles 56, 128), almost half in groups (rooftop_hintgroup 19, bldg1_hintgroup 5); d2_coast_12: 67 cover-medium, 117 apart; nodefov 180 on all. No pinch, guard or enemy-disadvantage hints in any of the 23 maps. ai_changehintgroup moves a squad to another group 15 s after OnFoundPlayer (c07).",
-   "how": "Map modules: barricades, checkpoints and rebel camps add the hints with each piece of cover (a helper beside m.static for sandbags and barriers), the group named lc_cover_<place>. The engine's combat AI uses them by itself.",
+   "how": "Map modules: barricades, checkpoints and rebel camps add the hints with each piece of cover (a helper beside m.static for sandbags and barriers), the group named lc_cover_<place>. The engine's combat AI uses them by itself. City 17 (15 maps): 215 cover-low hints (101) in 11 maps, nearest other median 72 (quartiles 64, 95), d3_c17_06a 55 and d3_c17_07 38; cover-medium (100) only 7.",
    "check": "review; proposed: a barricade or sandbag prop in a module with no cover hint within 64."
   },
   {
@@ -1535,7 +1535,7 @@
    "title": "Path nodes about 96 apart, 64 to 72 indoors, one by each door",
    "rule": "Lay ground nodes about 96 apart in the open (no more than about 140), 64 to 72 apart in rooms, corridors and sewers, and one on each side of every door NPCs use, within about 64 of it.",
    "why": "4392 ground nodes in the 23 maps: nearest neighbour median 96 (quartiles 64, 141); tenement 68, lab 73, sewers c05 66, c07 72, c11 68; open coast 141, c12 132; about 2 per occupied 256 x 256 cell; nearest node to a prop_door_rotating median 65. Our canal Channel.nodes (map_ring.py) lays a diagonal lattice about 181 apart (64 cells, odd cells with i + j divisible by 4); the forest nest 160.",
-   "how": "map_ring.Channel.nodes: a node every 96 to 128 in the open and every 64 in rooms and ducts; the door helpers add a node each side. Count nodes per map against the engine's cap (4096, from memory: check).",
+   "how": "map_ring.Channel.nodes: a node every 96 to 128 in the open and every 64 in rooms and ducts; the door helpers add a node each side. Count nodes per map against the engine's cap (4096, from memory: check). City 17 (15 maps): 5271 ground nodes, nearest other median 84 (quartiles 61, 115); the flats and courtyards of d3_c17_05, 06b and 09 at 67 to 73; air nodes 442 in 9 maps, 140 to 215 apart (d3_c17_06a 131 nodes).",
    "check": "proposed map_lint: a module whose ground nodes' nearest-neighbour median is over 140, or a door with no node within 96."
   },
   {
@@ -1549,7 +1549,7 @@
    "title": "A gate NPCs walk through switches its node link",
    "rule": "Across every gate, shutter or breakable wall NPCs path through, put an info_node_link_controller: a thin box (16 deep, as wide and high as the gap) that starts off when the gate starts shut; the gate's own OnFullyOpen turns it on and OnClose turns it off. Turn a link off to keep units back during a scene.",
    "why": "9 controllers (d1_town_03 side_alley_gate, c01a, c03 grate, c05, d3_c17_13 5), mostly 16 deep, 96 to 208 wide, 32 to 84 high; 14 info_node_link; switched by func_door_rotating OnFullyOpen TurnOn and OnClose TurnOff (c01 backalley_gate), by scenes and counters; ts03 link_prevent_cop_movement is turned off to keep cops back.",
-   "how": "Map modules: the gate helpers add the controller and the two wires. Our navgraph (sv_livingcity_navgraph.lua) learns a closed way only after failures; the engine's own legs follow the switched link.",
+   "how": "Map modules: the gate helpers add the controller and the two wires. Our navgraph (sv_livingcity_navgraph.lua) learns a closed way only after failures; the engine's own legs follow the switched link. City 17 (15 maps): 55 info_node_link_controller in 11 maps, commonest box 16 by 64 by 72; prop_physics OnMotionEnabled sends TurnOn (10 lines: a barricade knocked loose opens the way), a strider-breached wall's bullseye OnDeath TurnOn (d3_c17_12), and d3_c17_10b's links and controllers with AllowUse npc_combine_s let soldiers path through force fields while they are up.",
    "check": "proposed map_lint: a func_door or func_door_rotating gate across a node line with no link controller."
   },
   {
@@ -1620,6 +1620,202 @@
    "rule": "In a fight with the Resistance, soldiers first fire at a spot beside a rebel's cover for 4 to 8 s, pause 0.5 to 3 s and fire again while he stays there; aimed fire comes after.",
    "why": "d2_coast_12 bunkers: bunker_soldier_* hate an npc_bullseye (health 35, parented to a func_tracktrain moving along the player's cover) through an ai_relationship applied by a zone trigger (3072 x 1408) and switched by two random timers (fire 4 to 8 s, pause 0.5 to 3 s); c01: cops hate a bullseye beside the player while he crosses a zone, reverted when he hurts one of them (missing on purpose).",
    "how": "Gamemode: ents.Create('npc_bullseye') beside the target's cover and npc:AddEntityRelationship(bullseye, D_HT, 99) for the burst, then remove it. Changes how fights go (war, rebel ground, Overwatch hunts): ask the owner.",
+   "check": "review"
+  },
+  {
+   "id": "valve-npc-timed-hold",
+   "tags": [
+    "npc",
+    "valve",
+    "combine",
+    "logic",
+    "gameplay"
+   ],
+   "title": "A timed hold runs on one clock, and each wave comes on faster",
+   "rule": "When players must hold a place against attacks for a set time (the owner's exception to house rule 9: holding ground against waves, a post, a zone taken), drive the whole fight from one clock: one start event whose delayed outputs bring the landings, the fronts, the music, the radio lines and the end. Each front is a small squad that walks forward through two or three lines and then storms; when the whole squad is dead it resets and the next, quicker wave comes about 6 s later. A few seconds before the end, cancel every pending wave and send one last assault from both sides; after it, keep spawning attackers until the players have left and shut the way behind them. Changing how our counterattacks run: ask the owner first.",
+   "why": "d3_c17_07 alyx_atwork_seq (about 285 s): OnBeginSequence sends dropship_maker Spawn @20, balcony_cop1_maker Enable @40, northfront_begin_relay @50, combatsong @55, dropship2 @60, southfront_begin_relay @80, comm tower doors @110, 210, 260, radio scenes @150, 210, 240, 260, 275, elite_soldier_makers @250, 4_seconds_togo_relay @266. Each front: point_template of 3 soldiers via env_entity_maker; wave relays move them battle line 1, 2, 3 then the assault at @0, 15, 40, 70 (wave 1), @0, 10, 30, 50 (wave 2), @0, 5, 20, 40, @0, 5, 15, 25, @0, 5, 7, 9 (wave 5). northfront_soldiers_respawn_counter (max 3, fed by OnDeath) fires northfront_battle_reset (CancelPending on all five wave relays, lines and goals Deactivate, counter SetValue 0) and ForceSpawn @6; a logic_case on the wave counter picks the next wave relay (OnDefault: the last). 4_seconds_togo_relay Kills and CancelPendings the waves, Activates finalassault_north and _south @0.5, BeginAssault @1, and Enables northfront_ and southfront_pressuresoldiers_maker @4 (stock 100, 2 alive, every 1.5 s, schedule 'set enemy and run'), Killed by gate_close_counter OnHitMax @3. 17 of the 19 CancelPending lines in the 15 City 17 maps are in this fight.",
+   "how": "Gamemode: a counterattack or held-zone event gets one table of timed steps (landing, fronts, voices, the end) and a wave loop per front: spawn 3, walk them to line 1, 2, 3 then at the defenders, the windows shrinking each wave (70, 50, 40, 25, 9 s to the assault), a wipe counted by deaths starts the next wave 6 s later; timers cancelled at the end. Map modules where holds are expected: three lc_line_<place>_N spots 380 to 480 apart toward the held place.",
+   "check": "review; robots.py can count a hold's waves and that pending timers stop at its end."
+  },
+  {
+   "id": "valve-npc-battle-lines",
+   "tags": [
+    "npc",
+    "valve",
+    "combine",
+    "logic"
+   ],
+   "title": "Attackers advance line by line, by time or when they have arrived",
+   "rule": "An attacking squad holds a line (where they stand and fight from cover) and moves to the next only when told: after a set time, or when all of them have reached the line. Lines are about 400 apart. Attackers on a line fight in short bursts and take cover on reload; defenders and posts stay at their cover. When the squad is wiped, one reset puts every counter, line and goal back as it started. Changes how our units attack: ask the owner first.",
+   "why": "22 ai_battle_line (Strict 1 on 15) and 22 ai_goal_standoff in 6 City 17 maps. By arrival: d3_c17_06b battleline1_trigger (trigger_multiple, NPCs only, flag 2, 512 by 288) adds to battleline1_counter (max 3); OnHitMax Deactivates line 1, Activates line 2 and Enables its trigger; lines 384 and 480 apart; sols_respawn_counter (max 3) fires battle_reset (11 lines: lines and goals off, counters 0). By time: d3_c17_07 lines 430 and 380 apart. Standoffs: Aggressiveness 2 (9) or 3 (8), PlayerBattleline 1 on 17, StayAtCover 1 for barricade and garrison cops, custom bursts 3 to 6 shots in 2 to 4 s, cover on reload, odds of cover 25.",
+   "how": "Gamemode: units sent to take a place get line spots and move on when 3 of them stand there or a timer runs out (our GoTo per unit). Map modules: lc_line_<place>_N info_targets 380 to 480 apart, facing the objective.",
+   "check": "review"
+  },
+  {
+   "id": "valve-npc-squad-topup",
+   "tags": [
+    "npc",
+    "valve",
+    "logic",
+    "gameplay"
+   ],
+   "title": "A squad is topped up at each stage, with one medic",
+   "rule": "Rebels who follow a leader are refilled when the squad reaches a stage (a barricade door, a gate, a roof, freed prisoners), not continuously: up to 4, one of them a medic, only for the places missing, the newcomers arriving unseen nearby. Our squads are capped at 3 (squads.md) and refilling would change them: ask the owner first.",
+   "why": "16 ai_ally_manager in 9 City 17 maps: maxallies 4 (2 to 5), maxmedics 1 (one 2, one 0). Replenish comes from a trigger_once at each checkpoint (d3_c17_05 barricade_1_door_trigger; d3_c17_11 the roof @0.2), a relay (d3_c17_10a first_turret_relay, d3_c17_10b barney_lead_exit_relay), map start, once a citizen's OnWake. SpawnAlly0 to 3 and SpawnMedicAlly go to makers: Spawn (1 stock, 1 alive) or SpawnNPCInRadius to a 400-stock maker (4 alive, flag 32). 21 medics among 109 placed citizens (1 to 5 a map); 12 top-up rebels carry ResponseContext reinforcement:1. d3_c17_05 support_cit2: spawned crouched at his own busy hint (Coverlow_L, teleport), held with StartScripting until a player is in sight, then StopScripting; OnJoinedPlayerSquad starts a greeting scene.",
+   "how": "Gamemode: a rebel squad leader reaching the base or a taken checkpoint could have the squad refilled to its cap with one medic among them, the newcomers walking in from an exit doorway (valve-npc-spawn-job). Map modules: a rebel reinforcement spot behind cover at bases and checkpoints.",
+   "check": "review"
+  },
+  {
+   "id": "valve-npc-supply-drop",
+   "tags": [
+    "npc",
+    "valve",
+    "logic",
+    "gameplay"
+   ],
+   "title": "Rebels resupply from a roof, and ammo comes in crates",
+   "rule": "Resistance supplies reach fighters as things in the world: a rebel on a roof calls down and throws crates (the crate in his hands becomes a real one at the moment of the throw), or a few health kits and crates tumble off a roof edge after his call. No rebel hands out ammo; it is in crates, and a resupply comes between waves. A new resupply event: ask the owner where it fits our economy.",
+   "why": "No placed citizen in the 15 City 17 maps has the ammo resupplier flag (524288, as the FGD is remembered); there are 138 item_item_crate and 39 item_dynamic_resupply (16 each in d3_c17_01 and 02). d3_c17_03 npc_tower_thrower: ai_script_conditions (player looks at him in a 20 degree true cone, line of sight) starts LCS_Heydownthere, then ss_thrower (d3_c17_03_throw_from_tower): OnScriptEvent01 pd_crate TurnOn (the crate in his hands), OnScriptEvent02 pd_crate TurnOff, eem_crate ForceSpawn (env_entity_maker) and mc_crates_to_throw Add 1, whose OnHitMax Kills the sequence. d3_c17_12: a trigger_once spawns resupply_citizen_1 (rpg; damagefilter keeps him alive until it is Killed 10 s later), starts cit_dropper01.vcd and ForceSpawns resupply_template_1 (3 item_healthkit, 2 item_item_crate: 357 ammo, 2 batteries) at the roof edge; a strider's death Enables the next resupply trigger.",
+   "how": "Gamemode: a Resistance resupply could be a rebel NPC at a roof edge who says one line and drops a crate per throw (prop shown in hand, then spawned and thrown at the animation's moment), or kits rolled off the edge. Map modules: a lc_drop_<place> spot at roof edges over rebel streets.",
+   "check": "review"
+  },
+  {
+   "id": "valve-npc-flyby",
+   "tags": [
+    "npc",
+    "valve",
+    "combine",
+    "logic",
+    "multiplayer"
+   ],
+   "title": "Combine aircraft cross the sky as scenery, on a loop",
+   "rule": "Over a quarter the Combine holds, a dropship or gunship now and then flies a fixed route high up, harmless (neutral to everyone), removed at the far end out of sight, the next one 20 to 30 s later; the loop stops when the place's story moves on. NPC aircraft are new to our city: ask the owner first.",
+   "why": "d3_c17_10a firstdropship_maker and firstgunship_maker (stock 2, 1 alive) send the ship FlyToSpecificTrackViaPath @0.2 on spawn; the far path_track (firstdropship_path5, firstgunship_path6) Kills the ship and sends the maker Spawn @20 or @30; firstgunship_relationship (disposition 4 to !player, npc_citizen and npc_barney) is applied @0.5 so it never attacks; a trigger_once Kills the makers. Path speeds 200 to 400, heights about 1100 to 1800. d3_c17_04, 05, 09 and 12b: a 'firstdropship' (no crate, or crate 2: a strider) crosses once.",
+   "how": "Gamemode: a flight path is a list of points (editor 'Point: flight path', or a map module's lc_flight_<place>_N); a timer spawns a neutral dropship that flies it and is removed at the end. Map modules: flight paths over Combine quarters, ending behind buildings.",
+   "check": "review"
+  },
+  {
+   "id": "valve-npc-dropship",
+   "tags": [
+    "npc",
+    "valve",
+    "combine",
+    "logic"
+   ],
+   "title": "A dropship lands, its troops go straight in, and it leaves another way",
+   "rule": "A dropship carrying troops is spawned unseen, flies its route, lands from a waypoint, and the moment it has dropped them their assault starts (gathered at once, the push about 10 s later, a gate opening for them with its path link); the ship leaves by a different route and is removed out of sight. Our Overwatch drops exist (city-administration.md): differences from them need the owner's yes.",
+   "why": "13 npc_combinedropship in 9 City 17 maps (crate 1 soldiers 7, none 4, strider 2), all from makers: d3_c17_11 dropship_maker (spawned 30 s after the gunship's OnDeath) sends FlyToSpecificTrackViaPath dropship_path8; dropship_path8 OnPass LandTakeCrate 4; dropship OnFinishedDropoff: FlyToSpecificTrackViaPath dropship9 @0 (dropship8 OnPass Kill), dropship_soldiers_assault Activate @0 and BeginAssault @10.5, roof_gate SetAnimation open @10, roof_gate_nodelink TurnOn @10.1, sounds @10 and @12. Its 4 rally points play rallysequence 'cower' while waiting. d3_c17_07 dropships land from path_track OnPass LandLeaveCrate.",
+   "how": "Gamemode: after an Overwatch drop, give the soldiers their target at once (each his own spot, valve-npc-assault-lanes) and send the ship off along another path. Map modules: a landing zone gets an arrival path, a departure path and the troops' rally spots.",
+   "check": "review"
+  },
+  {
+   "id": "valve-tripwire-turrets",
+   "tags": [
+    "logic",
+    "valve",
+    "combine",
+    "gameplay",
+    "recipe"
+   ],
+   "title": "Combine tripwires wake turrets, and re-arm when the room is clear",
+   "rule": "Inside a Combine stronghold, red laser tripwires cross the ways in; a trespasser who breaks one sets off an alarm, the lasers drop, turrets rise from the floor and start. Each turret sinks again when it sees no one; when all have sunk the lasers come back on. Destroying the turrets switches the room off for good, and the stronghold's switches turn every room off at once. A new security piece; turrets are the Overwatch's (civil-protection-tools.md): ask the owner how it fits.",
+   "why": "d3_c17_10b: 32 env_beam tripwires (rendercolor 170 0 0, BoltWidth 0.2, length 78 to 414, median 202, TouchType 1, filtername filter_combine_s with Negated 1 so soldiers pass) and a trigger_multiple per room fire atrium_turrets1_detected_relay: lasers TurnOff, alarm PlaySound and StopSound @1.5, atrium_turret_1a_lift and 1b_lift (func_door, movedir down, noise Streetwar.d3_c17_10b_doormove3) Open, turrets (npc_turret_ground parented to the lifts) Enable. Turret OnAreaClear > lift Close; lift OnClose > turret Disable; atrium_turrets1_allclear_counter (max 2: lift OnFullyOpen Subtract, OnFullyClosed Add @0.2) turns the lasers on and re-Enables the trigger; atrium_turrets1_deathcounter (max 2, turret OnDeath) turns lasers off, Kills the re-arm counter and trigger. switches_counter (max 3, one per control room) fires switches_success_relay: every laser and turret trigger Killed, turrets SetHealth 0, combinebeam_nodelinks TurnOn, shake, the last squad spawned @1.",
+   "how": "Map modules for Combine places: m.tripwire(name, a, b) (env_beam, filter so Combine NPCs pass) and m.turret_lift(name, ...) with the two counters, giving lc_NAME_alarm and lc_NAME_off relays for the gamemode (a rebel raid that cuts the power).",
+   "check": "review; proposed map_lint: a tripwire env_beam with no filter (Combine NPCs would set it off), a re-arm counter whose max differs from its lifts."
+  },
+  {
+   "id": "valve-ambient-gunfire",
+   "tags": [
+    "logic",
+    "valve",
+    "sound",
+    "combine"
+   ],
+   "title": "A fight nearby is heard and seen as tracers before it is reached",
+   "rule": "Around a district fight, unseen guns fire bursts of tracers along streets far from the players (pairs aimed across a street 800 to 2000 away), switched on as players near the fighting and off when they pass; walls hit by heavy fire throw out concrete chunks. The fight feels big without more NPCs. New atmosphere: ask the owner before adding it to fights.",
+   "why": "15 env_gunfire in d3_c17_07, 11 and 12b, all StartDisabled 1, Enabled by relays (13): bursts 2 to 7 shots (minburstsize 2, maxburstsize 7 on 12), 2 to 5 s between bursts, rateoffire 10 or 15, spread 5, tracertype AR2TRACER, shootsound Weapon_AR2.NPC_Single (9) or Weapon_SMG1.NPC_Single (6); d3_c17_11 ground_gunfire_1a and 1b to 6a in pairs, 768 to 1989 from their targets at ground level; d3_c17_07 gunfire_rooftop 607 above, 3100 to 3250 away. 50 env_shooter in 6 maps: props_debris concrete chunks, 1 to 4 a shot, velocity 400 to 800, life 4, fired by a bullseye's OnDeath, a sequence's script event or a relay.",
+   "how": "Gamemode: during a district fight, a few unseen 'gunfire' emitters between the front and the rear (sound plus tracer effect) on random bursts; map modules: lc_gunfire_<place>_a and _b pairs across main streets.",
+   "check": "review"
+  },
+  {
+   "id": "valve-npc-danger-sound",
+   "tags": [
+    "npc",
+    "valve",
+    "logic",
+    "sound"
+   ],
+   "title": "Before a blast, a danger sound tells NPCs to get clear",
+   "rule": "A few seconds before a planned explosion (a charge on rubble, a breach, a strike), put an AI danger sound at the spot so every NPC near it runs clear; the blast then hurts only those who stayed. A change to how our NPCs react: ask the owner first.",
+   "why": "13 ai_sound in 5 City 17 maps: soundtype 8 (danger) on 10, volume 120, duration 0.5, sent InsertSound by relays (5), triggers (3), sequences (2). d3_c17_06a citizen_rubble_demolition_rl: rebels' scenes @0, 25, 50, 70 while they set the charge, citizen_rubble_danger_sound InsertSound @72, barricade_explosion_rl_1 and barrier_clip Kill @75, the rebels regroup @75. d3_c17_09 combine_crusherwall4_ss sounds @0 and @4 round its explosion.",
+   "how": "Gamemode: IEDs (ieds.md), breaches and strikes could insert a danger sound (GMod sound.EmitHint with SOUND_DANGER, from memory: check in game) about 3 s before the blast.",
+   "check": "review"
+  },
+  {
+   "id": "valve-weapon-pile-limit",
+   "tags": [
+    "logic",
+    "valve",
+    "performance",
+    "multiplayer"
+   ],
+   "title": "In a long fight, only a few dropped guns stay on the ground",
+   "rule": "Where NPCs die again and again (waves, a held zone), keep only 2 to 4 dropped guns of each kind; older ones go. Fewer loose weapons, fewer physics objects. It changes what players can pick up: ask the owner first.",
+   "why": "6 game_weapon_manager in d3_c17_07 (the timed hold), 11 and 12 (long street fights): weaponname weapon_ar2 (3) or weapon_smg1 (2), maxpieces 3 (3), 2 (2) or 4, ammomod 1. One is misspelt 'waepon_ar2' in Valve's file and so does nothing.",
+   "how": "Gamemode: when an NPC's dropped weapon is made, count those of its class and remove the oldest beyond the limit (or never drop, as the owner prefers).",
+   "check": "review"
+  },
+  {
+   "id": "valve-teach-then-give-up",
+   "tags": [
+    "valve",
+    "gameplay",
+    "logic"
+   ],
+   "title": "A reminder stops the moment it is done, and the way opens anyway",
+   "rule": "When a player must learn to do something, a person says it (not text) a few times about 10 s apart; the moment the player does it, every pending reminder is cancelled; and after about 50 s the way on opens regardless, so no one is stuck. Text on screen is kept for the one key to press. Valve's 15 City 17 maps put text on screen only 7 times.",
+   "why": "d3_c17_03 command_send_nag_relay: command_send_nag_1 to 4 (squad_train01 to 04.vcd, spoken) @10, 20, 30, 40, the key hint (env_hudhint valve_hint_command_send) @0.5, 11, 21, 31, 41, plaza_exit_conditions Enable @50. Any citizen's OnStationOrder fires command_recall_hudhint_relay: command_send_nag_relay CancelPending @0 and Kill @0.1, the send hint Killed, the next hint @7, the exit @10. Text entities in the 15 maps: 2 env_hudhint (squad commands), 4 env_message (GAMEOVER_ALLY), 1 game_text ('You have failed.').",
+   "how": "Gamemode: tutorials and job steps that wait for an action: voice lines on a timer, all cancelled (timer.Remove) on success, and a timeout that moves on; one notice at most (house rule 10).",
+   "check": "review; house_rules.py already counts text on screen."
+  },
+  {
+   "id": "valve-npc-follow-wait-spots",
+   "tags": [
+    "npc",
+    "valve",
+    "geometry"
+   ],
+   "title": "Followers wait at marked spots, not on the leader's heels",
+   "rule": "Where squads follow a leader, mark spots for them to wait at when the leader stops (by doors, corners, behind cover), in small clusters about 60 apart, and in a base mark spots where people step aside to when someone pushes past. Whether our followers use them needs a check in game: ask the owner before changing how they follow.",
+   "why": "In the 15 City 17 maps (hint meanings as the FGD is remembered): 291 info_node_hint of type 900 (follower wait point) in 10 maps, nearest other median 59 (quartiles 43, 115), up to 68 a map (d3_c17_05); 91 of type 950 (ally move-away spot), 84 of them in the d3_c17_05 rebel base, 152 apart; 110 of type 902 (squad transition, about 262 from the map change); only 8 act busy hints, so rebels in the street war do not idle.",
+   "how": "Map modules: lc_wait spots (info_node_hint hinttype 900) in twos and threes by doors and corners of streets rebels use; 950 spots round the rebel base's rooms.",
+   "check": "review"
+  },
+  {
+   "id": "valve-npc-noisy-approach",
+   "tags": [
+    "npc",
+    "valve",
+    "combine",
+    "gameplay"
+   ],
+   "title": "A loud approach wakes a Combine post",
+   "rule": "A small Combine post (a guard room, an outpost) stays quiet until it hears gunfire or an explosion within about 300 of it, or sees an intruder; then its men come out and hold the room from cover, and when half are down the rest fall back to a second line. Changes how our garrisons react: ask the owner first.",
+   "why": "d3_c17_05 outpost_microphone (env_microphone, MaxRange 300, spawnflags 40 = bullet impacts and explosions, StartDisabled 1, Enabled by a trigger_once as the player nears): OnHeardSound Spawns outpost_room_1_cop_1_maker and _2_maker and starts their schedule. outpost_room_1_standoff and _2 (StayAtCover 1) Activate from a cop's OnFoundPlayer. garrison_3nd_floor: cops 3 and 4 OnDeath fire garrison_3nd_floor_cop_fallback_relay: a fallback battle line, a fallback standoff and a schedule to the fallback hint group (garrison_3nd_floor_cop_fallbacks). ai_changehintgroup (6) moves squads to their next hint group from OnAssaultClear (4).",
+   "how": "Gamemode: Combine posts and garrisons could listen (EntityFireBullets, explosions) within about 300 and wake their units; a fallback spot set per room. Map modules: lc_post_<room>_fallback_N spots.",
+   "check": "review"
+  },
+  {
+   "id": "valve-npc-snipers",
+   "tags": [
+    "npc",
+    "valve",
+    "combine"
+   ],
+   "title": "A sniper shows himself before he kills, and only while players are in his street",
+   "rule": "A Combine sniper sits in a high window (about 280 to 410 above the street), is switched on when players enter his street and removed when they leave it; his laser paints a target about a second before each shot, and crows on the street are shot first, telling players he is there. NPC snipers are new: ask the owner first.",
+   "why": "d3_c17_09: 5 npc_sniper, 281 to 409 above the nearest ground node; EnableSniper from trigger_onces (one from logic_auto @5), Kill from trigger_onces past the street; PaintInterval 1, PaintIntervalVariance 0.75, misses 0, shielddistance 64, shieldradius 48; 5 npc_crow below (ai_relationship snipers hate crows); a func_brush (sniper4_los) blocks one sniper's view until he dies; sniper4 OnDeath sends sniper2 SweepGroupRandomly sniper_sweeptarget; sniper_death_counter (max 2) ends the street.",
+   "how": "Gamemode: an Overwatch sniper for district fights (a window spot from the editor or a module's lc_sniper_<street>), on while players are in his street's box, with a visible laser lead before each shot.",
    "check": "review"
   }
  ]
