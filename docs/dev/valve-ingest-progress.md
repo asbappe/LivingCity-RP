@@ -82,6 +82,14 @@ maps with a new helper (same brief as before: `docs/dev/map-ingestion.md`, "Brie
 close the batch as batches 1 and 2 were (the `notes/` and draft steps above). Next to start: EP1 City 17's logic
 and NPCs, then its pictures; then batch 6 (the Citadel, with the owner's four pieces and the architecture study).
 
+- **More Citadel pieces, as possible modules (the owner, 21 November):** lift (1) the light bridge, without the
+  whirring wind vortex that pulls players off, and the vortex as a separate piece; (2) the energy balls powering
+  things (a ball held in a socket keeps a shield wall up; pull it and the wall drops; with a dispenser and a catcher
+  if they belong to it); (3) the weapon check room (`valve-confiscation-field`: held, Overwatch at 2 s, cores at 7,
+  weapons stripped at 11 and burned at 13, the exit opens). The owner's idea: the weapon check room could take
+  prisoners' weapons. The other Citadel concepts (spoken countdown, the Advisor on screens, defenders woken in a
+  chain, a place falling apart) stay as lessons for later. Not done yet: next free helper.
+
 - **EP2, special attention (the owner, 21 November):** the forest layouts (tree spacing and clusters, clearings,
   paths), how the forests are bordered (what stops the player at the edges and how it is hidden), prop layout and
   design in the woods; the mines and the antlion nests and tunnels, for our own cave and forest; the White Forest
