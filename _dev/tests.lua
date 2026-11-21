@@ -21413,6 +21413,8 @@ ok((LC.DreamsEndured and LC.DreamsEndured(su) or 0) == endured, "and it isn't co
 ok(LC.DreamTest(su, "nosuch") == false, "(no such dream)")
 
 -- the dream flight recorder (sv_livingcity_dreamrec.lua): an editor test is written down for the tester, nothing else ever is
+-- (the test above closes its recording when the tester has been put back, which can take a few seconds: wait for it)
+for _ = 1, 20 do if not LC.DreamRecording() then break end _run(0.5) end
 ok(not LC.DreamRecording(), "the recorder: nothing is recorded with no test under way")
 local startWas0, noticeWas0 = net.Start, LC.Notice
 local function RecSent()
@@ -21457,7 +21459,15 @@ recProp:Remove()
 hook.Run("EntityRemoved", recProp)
 if IsValid(recFar) then recFar:Remove() end
 ok(LC.DreamTestStop(su), "(the recorded test, stopped)")
-_run(1.5)
+-- (put back takes a few seconds in a busy city: wait until the tester is awake and the recording closed)
+local function WaitAwake()
+    _run(1.5)
+    for _ = 1, 20 do
+        if not LC.DreamRecording() and not LC.DreamActive and not su.lcDreaming and (su.lcDreamBack or 0) <= CurTime() then break end
+        _run(0.5)
+    end
+end
+WaitAwake()
 recText, recKinds = RecSent()
 ok(recKinds[#recKinds] == "end" and RecHas("gone prop_physics models/props_junk/watermelon01.mdl") and RecHas("woke (test)"), "the recorder: what went, the waking, and the end are sent")
 ok(not LC.DreamRecording() and net.Start == startWas0 and LC.Notice == noticeWas0 and not su.lcDreaming, "the recorder: over with the test, and nothing is left wrapped or hooked")
@@ -21466,7 +21476,7 @@ su.GetInfoNum = function(_, name, def) if name == "lc_dreamrec" then return 0 en
 net.sent = {}
 ok(LC.DreamTest(su, "melons") and not LC.DreamRecording() and net.Start == startWas0, "the recorder: with Record the test unticked, a test isn't recorded")
 LC.DreamTestStop(su)
-_run(1.5)
+WaitAwake()
 su.GetInfoNum = nil
 -- a test that can't start leaves nothing behind
 ok(LC.DreamTest(su, "nosuch") == false and not LC.DreamRecording(), "the recorder: a test that doesn't start records nothing")
@@ -43751,6 +43761,30 @@ end
 _groundFn = groundWas
 end
 MapZoneMarkerTests()
+
+function Nov21_BreakoutWithdrawTests()
+    section("21 November: a breakout job whose prisoner is out already is taken back, not paid without its share")
+    local runWas = LC.Running
+    LC.Running = true
+    local inmate = newPlayer("WithdrawInmate", "resistance", nil, 150)
+    local breaker = newPlayer("WithdrawBreaker", "resistance", nil, 400)
+    _run(3)
+    LC.Incarcerate(inmate, 600, "Test")
+    local t
+    for _, x in ipairs(LC.QuestTemplates) do if x.id == "res_breakout" then t = x end end
+    local spec = t and t.build(breaker)
+    if spec then spec.tmpl = t end
+    local q = spec and LC.GiveQuest(breaker, spec)
+    ok(q and not q.done, "the job is taken")
+    local xp0 = tonumber(breaker:GetPData("lcf_xp_resistance", 0))
+    LC.ReleasePrisoner(inmate)
+    _run(2)
+    ok(q and q.done and LC.QuestOf[breaker] == nil, "the prisoner let go: the job is gone")
+    ok(tonumber(breaker:GetPData("lcf_xp_resistance", 0)) == xp0, "nothing paid for it, and no mark against them")
+    inmate:Remove() breaker:Remove()
+    LC.Running = runWas
+end
+Nov21_BreakoutWithdrawTests()
 
 ----------------------------------------------------------------------
 section("Stop")
