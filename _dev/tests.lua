@@ -20441,7 +20441,10 @@ ok(frozen and frozen[1].e:GetPos():Distance(frozen[2]) < 1 and a:Health() == hpF
 _run(T.land)
 ok(gs.phase == "stop" and Said(gs, "saviour_stop") and gs.her:GetPos():Distance(gs.land) < 1, "she lands between them and the citizens: \"Stop!\"")
 _run(T.soldiers - T.land + 0.3)
-ok(gs.phase == "soldiers" and #gs.soldiers == 8 and Said(gs, "saviour_soldiers"), "\"Come, my soldiers. Protect them.\" Eight Combine soldiers swarm in", tostring(gs.phase) .. " " .. #gs.soldiers .. " " .. tostring(Said(gs, "saviour_soldiers")) .. " alive=" .. LC.SaviourAlive(gs))
+-- (with no monster left alive by then, which a busy shard can bring, the soldiers' phase passes straight to "safe")
+local monsLeft = 0
+for _, m in ipairs(gs.mons) do if m.alive then monsLeft = monsLeft + 1 end end
+ok((gs.phase == "soldiers" or (gs.phase == "safe" and monsLeft == 0)) and #gs.soldiers == 8 and Said(gs, "saviour_soldiers"), "\"Come, my soldiers. Protect them.\" Eight Combine soldiers swarm in", tostring(gs.phase) .. " " .. #gs.soldiers .. " " .. tostring(Said(gs, "saviour_soldiers")) .. " alive=" .. LC.SaviourAlive(gs))
 ok(Sent(a, "music", function(t) return t.song == "livingcity/dreams/saviour2.ogg" end), "(and the heroic music)")
 local hpC = c:Health()
 _run(25)
