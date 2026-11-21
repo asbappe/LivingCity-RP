@@ -502,6 +502,63 @@ Valve's own d3_citadel_01 (the Citadel's flank) (the Source SDK copy the owner u
 | C5 | `valve_d3_citadel_01/05_combine_inside.png` | inside (eye 7012 4576 -1535) | Combine metal in leaning frames, all one material, lit cold. | valve-combine-cold |
 | C6 | `valve_d3_citadel_01/06_rock_and_metal.png` | old stone and cliff against a Combine pillar (eye 6180 4494 -514) | The pillar is plain and dark; the rock and brick round it carry the texture. | valve-combine-cold |
 
+## Valve's Ravenholm (d1_town_01, 01a, 02, 02a, 04, 05 and two style rooms) (`_dev/reference/valve_ravenholm/`)
+
+Valve's own Ravenholm maps after d1_town_03 (whose set is in valve_d1_town_03/), with the style rooms styleguide_ravenholm_01 and styleguide_mining, measured from the VMFs by map_ingest.py (each map's numbers in valve_NAME/measure.json; the props, craft and section study in valve_ravenholm/wip/props_craft_notes.md) and drawn by map_view.py (flat colours; props as boxes of their true size, orange static, yellow physics, cyan dynamic, red ragdolls; green NPC markers, left out where a view says leave_out_npcs: a scratch script dropped every npc_ entity before drawing) or cut away from above. Reference only, for the infestation quarter (map_raven.py): the VMFs are not in the repo, and the owner's own choices win where they differ (the quarter's main street keeps its crown, kerb 8 and pavements 96).
+
+- d1_town_01: the town's first streets, Grigori's traps and the pyre: 166 prop_physics to 157 prop_static (the city maps: one physics prop to every 1 to 3 static), 36 prop_ragdoll, 281 infodecal (146 of them blood), 28 point_spotlight, 63 ambient_generic, 37 soundscapes (d1_town.Start 15, d1_town.WoodBuilding 12).
+- d1_town_01: no pavements: a kerb in 4 of 320 cross-sections; wall to wall median 620, the commonest narrow lane 192 (34 cuts) and gaps between houses 128 (10); street walls median 352 (height over width 0.4); the ground dirt blend 36%, cobbles (stonefloor006a/b/c) 31%, planks 8%.
+- d1_town_01: the dead lie in two set pieces of 9 and 7 bodies within 128 (the blade shack, the pyre yard), then a 4, three 2s and singles; 47% of the blood decals lie within 128 of a body; 13 meathook001a, each tied to a body by a phys_constraint.
+- d1_town_01: lit by clamp lamps on the walls: light_spotlight02_lamp 16, 638 apart, each with a light_spot '255 245 145' 600, cone 45/30, pitch -50; point_spotlight nearest neighbour median 294; the sun '175 230 239' at 50, ambient '43 45 57' at 5, no fog.
+- Ours: the quarter's alleys are 128 wide (Valve's narrowest gap between two houses, not its lanes of 192 to 620) and its south street 192; our walls rise to the sky lid at z 1408, about 750 over the road, where Valve's stop at about 352 under pitched roofs of 25 degrees with 16 of eave.
+- d1_town_01a: a short run of houses and a corridor: 40 prop_physics to 57 prop_static, 12 prop_ragdoll, 14 oildrum001_explosive (the commonest model), 72 infodecal (every blood decal within 107 of a body), 8 point_spotlight about 452 apart; 41% of the AI nodes outdoors.
+- d1_town_01a: the narrowest lanes in Ravenholm: no kerb in 50 cuts, wall to wall most often 384 (median 376), walls median 448 (most 384 to 512), so height over width 0.9: a lane here is as tall as it is wide.
+- d1_town_01a: indoors ceilings most often 120 (11 of 71 nodes), then 152 and 184; corridors 106 wide under 152; rooms 238 by 668 (medians); lightmapscale 64 on 36% of faces (city maps 12 to 13%); breakable plaster patches (func_breakable 1 by 40 by 84, health 1) to smash through.
+- Ours: the quarter's alleys (128) are a third of Valve's commonest lane here (384) under walls about 750 tall, so ours are deep slots (height over width near 6) where Valve's lanes are about square; our rooms are 144 high, Valve's 120 to 152.
+- d1_town_02: the town square, the yards and the tram up to the church: 286 prop_static, 84 prop_physics, 6 prop_ragdoll; 63% of the AI nodes outdoors; 21 point_spotlight about 368 apart; pipes chained along the walls (pipe02_straight01_long 56 with 27 connectors) and handrails along the roof walks (handrail04_long 17, handrail04_corner 11).
+- d1_town_02: the square is the only place in Ravenholm with kerbs (21 of 275 cuts, kerbs 4 to 15 high); wall to wall median 589, most often 320 and 448; walls median 288; cobbles 23% of the outdoor ground, grass and gravel 15%, flat roofs 13%; yards on displacements of power 3 cut to the plot (224 by 128, 352 by 304).
+- d1_town_02: indoors ceilings most often 120 (72 of 171 nodes), then 128 and 152; rooms 234 by 475, corridors 104 under 128 (medians); a laundry of 5 washing machines 40 to 87 apart beside 4 radiators and a boiler; one bedroom (a mattress on a bed frame, a radiator, a drawer, a bulb, a body).
+- Ours: the quarter's square and main street keep the owner's crown, kerb 8 and pavements 96, which is close to Valve's own square here (kerbs 4 to 15); the back ways get none, as Valve's lanes.
+- d1_town_02a: the graveyard and the church roof (Grigori's goodbye): 255 prop_static to 24 prop_physics, no bodies at all, 14 crows on the roofs and walls; 0.185 props per 100 by 100 of play (the trap streets 0.48), empty 256 cells 53%: the graveyard is the quiet after the town.
+- d1_town_02a: 26 grave pieces over about 1300 by 1300 of grass (one per 65,000 square units), all prop_static: gravestone004a 9, 002a 4, crosses 4, coffin lids 5, a statue; yaw square on 11, turned 3 to 20 on 9, free on 5; only the three against the west wall stand in a row (86 and 78 apart, one yaw).
+- d1_town_02a: the ground is 91% displacement (blendgrassgravel001a, blenddirtgrass008a); the walls round it stonewall036b, the west one up to about 600; the only fog in Ravenholm, black '0 0 0' from 1500 to 4000; 6 gas canisters (canister_propane01a) upright in twos and fours about 33 apart, held still, with 46 env_fire round them lit together; 5 saw blades lying out 150 to 1050 apart to be picked up.
+- Ours: the quarter has no churchyard yet; if it gets one, Valve's numbers say a walled patch of displaced grass about 1300 across with 15 to 30 pieces scattered and turned, never rows, and its own black fog.
+- d1_town_04: the mine: no sun at all (no light_environment), every AI node indoors, 0.088 props per 100 by 100 (the lightest of the town); light from 11 clamp lamps (light_spotlight02_lamp, cool '159 237 215' 800, cone 50/25, pitch -65) about 1311 apart and bare bulbs (lightbulb01a, '254 216 146', a spot 300 straight down).
+- d1_town_04: 327 displacements, power 2 on all but 3, 256 square on 290, lightmapscale 16 on every one, pushed out a median 60 (q75 128): a closed tube, walls 181, floors 76, roofs 70; rockwall015a on the walls, blendrockgravel001a under foot with its alpha painted.
+- d1_town_04: the long tunnel's timber sets (woodfloor005a, func_detail): two 16 by 16 posts 240 apart centre to centre (224 clear) under a 16 by 16 cap, about 128 clear over the floor, one set every 512 on the level (x -3600 to -2064) and every 768 down the slope; deeper, sets 256 apart with knee braces 12 by 80 by 80 and boards 4 by 64 by 92 behind the posts.
+- d1_town_04: ceilings over the nodes most often 248 (23 of 163), then 128 and 240; corridors 166 wide under 219; 30 flights of 8 by 12 steps, median 5 a flight; one propeller trap (trappropeller_engine 2) and 9 explosive drums.
+- Ours: the quarter's tunnel house is a brush corridor (tunnel 192 wide inside, x 1216 to 1408); Valve's mine is a tube of power-2 displacements about 166 to 224 wide with a timber set every 512, which is the look a mine or cellar tunnel under the quarter would want.
+- d1_town_05: the way out to the railway (Combine and rebels, not infested): the light comes back, sun '254 242 160' at 400 and ambient '172 196 204' at 80 (the town: '175 230 239' at 50, ambient 5), warm fog '254 242 160' from 1024 to 10000, a day sky (sky_day02_01); 6 point_spotlight only.
+- d1_town_05: yards and rail cuttings rather than lanes: wall to wall most often 384 (54 cuts) and 1920 (40), walls 256 (331 of 474); ground gravel 53%, red_grass 20%; chain-link fence props (exterior_fence002d 40), crates and pallets, 13 Combine soldiers placed.
+- Ours: the quarter's edge is the owner's street; Valve marks leaving the dead town by light alone (sun eight times as strong, ambient sixteen times), which our one-sun map can only hint at with lamps at the quarter's mouth.
+- styleguide_ravenholm_01: not the timber town but an early idea for it, a snowy industrial yard at dusk: sun '235 155 71' at 700, ambient '105 142 165' at 120, orange fog from 512 to 15000 (dusk_01hdr); 642 displacements (546 of them snow floors, power 2, 85% painted, and 56 drifts 128 by 32 along wall feet); 809 prop_static, pipes chained everywhere (pipe01 and pipe02 connectors 76 each).
+- styleguide_ravenholm_01: its houses still keep the town's numbers: roofs pitched 25 most (then 45 and 65) in tileroof003a_snow, slabs 4 to 12 thick, timber posts 2 by 8, eaves 16; walls change material first at 128 (70% of tall walls banded).
+- styleguide_mining: a mine head, not Ravenholm's mine: a round shaft with tunnels off it, all lit by day (sun '245 238 197' at 900, ambient 200, fog '43 51 57' 2000 to 9000) and lightmapscale 16 on every face; in the tunnel, timber sets of woodwall041a every 248: posts 16 by 16 and 128 tall, 368 apart, knee braces 72 by 72 carrying a cap 256 long at about 176 over the floor.
+- styleguide_mining: cage lamps (light_cagelight02) on the sets 117 over the floor, one lit in three (2 of 3 along the tunnel are the _off model), each lit one with a light_spot '255 245 145' 500 to 700, cone 70/30, pitch -70; pipe sets (pipeset 512) along the wall, 15 vol_light cones for the beams.
+- Ours: the quarter has no mine or cellar tunnel with timber; Valve's two mines agree on 16 by 16 timber, a set every 248 to 512, and a lamp on every second or third set, the rest dark.
+
+| # | File | Where | What it teaches | Lessons |
+|---|---|---|---|---|
+| R101 | `valve_ravenholm/01_town01_street.png` | d1_town_01, the first street from the south, eye 4299 -1989 -3758 looking north (yaw 90), NPC markers left out | A Ravenholm street: two-storey timber and plaster houses with pitched roofs standing straight on cobbles and dirt, no kerb and no pavement (a kerb in 4 of 320 cuts), about 620 wall to wall as the map's median; a headcrab canister (cyan) in the road with 13 crows round it tells what came down here. | raven-streets-and-houses, raven-timber-craft |
+| R102 | `valve_ravenholm/02_town01_pyre_cut.png` | d1_town_01, the pyre yard from the south-west, box x 820 to 1300, y -1480 to -1060, cut at -3540, NPC markers left out | The body set piece at the fire trap: 10 meathook001a held still in a space about 60 by 110, each with a body tied on by a phys_constraint, hung 60 to 165 over the ground, 4 more bodies lying and burned under them (red); 32 env_fire nodes over the pyre, lit together by the trap's gas wheel and spark pad (Firetrap_button01a); blood only round the bodies (6 decals) and one scorch. | raven-dead-set-pieces, raven-trap-kits, valve-fire-kit |
+| R103 | `valve_ravenholm/03_town01_blade_shack_cut.png` | d1_town_01, the blade shack from the south-west, box x 3500 to 4050, y -1600 to -900, cut at -3700 (its roof is about 190 over the floor), NPC markers left out | A trap store and a corpse room in one: 10 sawblade001a and 11 propane_tank001a (loose, the tanks lying down) with boards and paint cans round one table, 9 bodies (whole, legs, torsos) and 43 decals within 330 of its middle (37 of them blood); two bulbs (LightBulb01a) for light and a d1_town.CorpseRoom soundscape. | raven-trap-kits, raven-dead-set-pieces, raven-room-kits |
+| R104 | `valve_ravenholm/04_town01a_houses.png` | d1_town_01a, the houses round the work room from the south-west, box x -1306 to 494, y -484 to 1316, no cut, NPC markers left out | A short run of timber and plaster houses: every roof its own height and pitch (25 most, then 20 and 55 here), lanes 192 to 512 between them, walls 384 to 512 tall; the houses touch or nearly touch, so the lanes read as gaps rather than streets. | raven-streets-and-houses, raven-timber-craft |
+| R105 | `valve_ravenholm/05_town01a_lane.png` | d1_town_01a, a lane looking south, eye -222 868 -3520 (yaw 270), NPC markers left out | A narrow lane under tall walls (01a's median 376 wide, 448 tall), no kerb, house walls straight onto the ground; a trap lies in it: 4 oildrum001_explosive, cinderblocks and a physics car against the walls, 13 env_fire nodes waiting to be lit, gutters on the walls. | raven-streets-and-houses, raven-traps-and-makers, raven-held-till-grabbed |
+| R106 | `valve_ravenholm/06_town01a_work_room.png` | d1_town_01a, the work room looking east, eye -1036 844 -3216 (yaw 0), NPC markers left out | A stripped room under bare roof trusses: three cafeteria_table001a in a row about 110 apart, two meathooks, a saw blade, cinderblocks and a paint can, bodies on and round the tables (7 within 400), clamp lamps (light_spotlight02_lamp) each with its spot, and 7 health kits as the reward for getting here. | raven-room-kits, raven-trap-kits, raven-clamp-lamps |
+| R107 | `valve_ravenholm/07_town02_square_houses_cut.png` | d1_town_02, the houses on the square from the south-west, box x -2865 to -1065, y -345 to 1455, cut at -3228 | Inside the houses round the square: small rooms with doors (door01_left) between them, the laundry (5 washing machines, 4 radiators) and store rooms of cardboard boxes and paint cans, pipes run along the walls (19 pipe02 lengths, 10 connectors) and handrails on the roofs; 3 bodies (corpse1) among them. | raven-room-kits, valve-furniture-on-walls, raven-streets-and-houses |
+| R108 | `valve_ravenholm/08_town02_roof_walk.png` | d1_town_02, a roof walk looking south, eye -3582 1716 -3072 (yaw 270), about 440 over the street | The way over the roofs: a flat roof with handrails (handrail04, single and double rises for its steps) and pipe clusters, the other houses' pitched roofs (25 degrees most) and gables below at their own heights; the dead (a fast and a poison zombie from makers) come up here too. | raven-rooftop-refuge, raven-streets-and-houses |
+| R109 | `valve_ravenholm/09_town02_bedroom_cut.png` | d1_town_02, the bedroom from the south-west, box x -4050 to -3600, y -560 to -60, cut at -3460 (112 over its floor), NPC markers left out | A stripped bedroom: almost nothing left in it (a mattress on a prison_bedframe001a, a radiator, a drawer, a body, a rug decal), lit by bare bulbs (3 LightBulb01a, each with a light) rather than lamps; what is missing says the people are gone. | raven-room-kits |
+| R110 | `valve_ravenholm/10_town02a_graveyard_cut.png` | d1_town_02a, the graveyard from the south-west, box x -8400 to -6800, y -450 to 1300, cut at -3150, NPC markers left out | A walled graveyard about 1300 across on displaced grass: 26 grave pieces (orange) scattered and turned, not in rows, paths worn through, trees inside the wall, gas canisters and drums by the gate where the fight is; the stone wall (stonewall036b) rises to about 600 on the church side. | raven-graveyard, valve-terrain-into-brush |
+| R111 | `valve_ravenholm/11_town02a_graves.png` | d1_town_02a, across the graveyard looking south, eye -8080 768 -3344 (yaw 270), NPC markers left out | The stones from where a player stands: headstones and crosses at odd angles about 250 apart on rough grass, coffin lids lying 60 to 90 in front of a stone, explosive drums (4) and gas canisters (2) among them as the defence, the houses and trees closing the view. | raven-graveyard, raven-traps-and-makers |
+| R112 | `valve_ravenholm/12_town04_mine_overview.png` | d1_town_04, the whole mine from the north-east (overview, no box) | The mine's plan: one long tunnel of rock displacements falling about 650 over 2300 from the town to a big cave of timber stairs and walkways, a shaft going down beside it; a single way through, so the dead can be met one stretch at a time. | raven-mine-sets |
+| R113 | `valve_ravenholm/13_town04_timber_sets.png` | d1_town_04, the low tunnel looking east, eye 824 1216 -5757 (yaw 0), NPC markers left out | Timber sets in the rock: two 16 by 16 posts 240 apart with a cap across, knee braces 80 by 80 in the corners, boards behind the posts, a set every 256 here (512 in the long tunnel); a clamp lamp (cool, cone 50) on a set lights the next stretch. | raven-mine-sets, raven-clamp-lamps |
+| R114 | `valve_ravenholm/14_town04_cave_stairs.png` | d1_town_04, the headcrab cave looking south, eye 903 -426 -5056 (yaw 270), NPC markers left out | Timber in the big cave: stairs of 8 by 12 steps and landings on 16 by 16 posts up to 512 tall against the rock; explosive drums (3), litter and a body at the foot, one clamp lamp on the timbers. | raven-mine-sets, raven-traps-and-makers |
+| R115 | `valve_ravenholm/15_town05_way_out.png` | d1_town_05, the rail cutting looking east toward the tunnel, eye -9924 7191 960 (yaw 0), NPC markers left out | Leaving Ravenholm: a rail cutting about 384 wide between high walls, track markers and a signal light, a chain-link fence, a tunnel mouth ahead; the change is in the light (the sun back at 400 with warm fog) more than in the shapes. | raven-dusk-light |
+| R116 | `valve_ravenholm/16_style_ravenholm_overview.png` | styleguide_ravenholm_01, the whole style room from the south-west (overview, no box) | Valve's first idea for Ravenholm was an industrial yard in snow, not timber houses: brick and concrete blocks round a yard, a cliff, pipes on every wall; useful only where its numbers agree with the town (roof pitch 25, eaves 16). |  |
+| R117 | `valve_ravenholm/17_style_ravenholm_house_cut.png` | styleguide_ravenholm_01, the busiest block from the south-west, box x -100 to 800, y -4600 to -2900, cut at -900 | A house in the style room: snowy tile roofs (pitch 25 to 45, slabs 4 to 12) over brick and concrete, 26 breakable windows (func_breakable), pipes chained along the walls (48 pipe pieces within 650), crates and drums against the walls inside, two dome lights (light_domelight02_on). | raven-timber-craft, valve-clutter |
+| R118 | `valve_ravenholm/18_style_mining_overview.png` | styleguide_mining, the whole style room from the south-west (overview, no box) | A mine head as one piece: a round shaft with two tall static models standing over it (grainelevator01, orange, drawn as their boxes) and tunnels running off in a cross, timber sets, handrails (handrail04_long 15) and pipes in them. | raven-mine-sets |
+| R119 | `valve_ravenholm/19_style_mining_timber_sets.png` | styleguide_mining, the east tunnel looking east, eye 2620 -456 0 (yaw 0) | Timber sets down a mine tunnel: 16 by 16 posts with knee braces carrying the cap, a set every 248, warm pools from the one lit cage lamp in three, dark between them. | raven-mine-sets, raven-clamp-lamps, valve-light-pools |
+
 ## Valve's vehicles test map (`_dev/reference/valve_vehicles/`)
 
 Valve's own sdk_vehicles (a vehicle test map in the Source SDK copy the owner uploaded, 21 November), drawn by map_view.py. Reference only: the VMF is not in the repo.
@@ -991,7 +1048,7 @@ Let places be dim and light them in pools: a fixture over each door, each way on
 - **Checked by:** map_lint.py offlamp checks that an off lamp has no light; pools are judged in the viewer.
 - **Tags:** lighting, valve
 
-- **See:** `valve_c17/13_road_tunnel_eye.png`, `valve_c17/20_warehouse_hall_eye.png`, `valve_canals/10_city_canal_eye.png`, `valve_d1_trainstation_01/03_platform.png`, `valve_d1_trainstation_01/07_interrogation.png`, `valve_d1_trainstation_01/08_platform.png`, `valve_d1_trainstation_03/04_corridor.png`, `valve_d1_trainstation_05/04_teleport.png`, `valve_d3_citadel_01/04_pipe.png`
+- **See:** `valve_c17/13_road_tunnel_eye.png`, `valve_c17/20_warehouse_hall_eye.png`, `valve_canals/10_city_canal_eye.png`, `valve_d1_trainstation_01/03_platform.png`, `valve_d1_trainstation_01/07_interrogation.png`, `valve_d1_trainstation_01/08_platform.png`, `valve_d1_trainstation_03/04_corridor.png`, `valve_d1_trainstation_05/04_teleport.png`, `valve_d3_citadel_01/04_pipe.png`, `valve_ravenholm/19_style_mining_timber_sets.png`
 
 ### Clutter on the edges (`valve-clutter`)
 
@@ -1002,7 +1059,7 @@ Dress floors with small loose things (bottles, cans, papers, boxes, suitcases, c
 - **Checked by:** map_lint.py overlap and map_floating.py catch clutter inside or above things; the clear lane is judged in the viewer.
 - **Tags:** props, valve
 
-- **See:** `valve_c17/07_tree_street_eye.png`, `valve_canals/08_city_canal_iso.png`, `valve_canals/16_shanty_camp_iso.png`, `valve_canals/19_gun_station_iso.png`, `valve_canals/20_boxcar_hideout_iso.png`, `valve_d1_trainstation_01/03_platform.png`, `valve_d1_trainstation_01/05_payphone.png`, `valve_d1_trainstation_01/11_platform_plan.png`, `valve_d1_trainstation_02/04_plaza.png`, `valve_d1_trainstation_04/03_alley.png`, `valve_d1_trainstation_05/03_lab.png`, `valve_d3_c17_13/02_overview_ne.png`, `valve_d3_c17_13/04_square.png`, `valve_d3_c17_13/05_barricade.png`
+- **See:** `valve_c17/07_tree_street_eye.png`, `valve_canals/08_city_canal_iso.png`, `valve_canals/16_shanty_camp_iso.png`, `valve_canals/19_gun_station_iso.png`, `valve_canals/20_boxcar_hideout_iso.png`, `valve_d1_trainstation_01/03_platform.png`, `valve_d1_trainstation_01/05_payphone.png`, `valve_d1_trainstation_01/11_platform_plan.png`, `valve_d1_trainstation_02/04_plaza.png`, `valve_d1_trainstation_04/03_alley.png`, `valve_d1_trainstation_05/03_lab.png`, `valve_d3_c17_13/02_overview_ne.png`, `valve_d3_c17_13/04_square.png`, `valve_d3_c17_13/05_barricade.png`, `valve_ravenholm/17_style_ravenholm_house_cut.png`
 
 ### Streets in Valve's proportions (`valve-street-proportions`)
 
@@ -1079,16 +1136,18 @@ Valve darkens Ravenholm without fog: a weak cold sun and almost no ambient under
 - **Checked by:** review (a screenshot from the owner: the quarter's light is a first guess)
 - **Tags:** lighting, infestation, ravenholm, valve
 
+- **See:** `valve_ravenholm/15_town05_way_out.png`
+
 ### Ravenholm's lanes: house to house, timber and plaster (`raven-streets-and-houses`)
 
 Ravenholm's lanes have no kerb and no pavement: cobbles and uneven ground run house to house, 384 to 768 wall to wall; houses two or three storeys (walls 256 to 512 over the lane), timber and plaster on a concrete plinth (to 128, 48 or 16), roofs pitched 20 to 35 degrees in corrugated metal or tile, a steep mansard or spire for a landmark; boards on openings, wires overhead.
 
 - **Why:** d1_town_03: no kerb in 119 cross-sections; 36% of the floor is displacement; wall to wall most often 640; walls median 352 (height over width 0.42); woodfloor005a the commonest material (961 faces), plasterwall029a/c/d/g, brickwall048a/d/i, concretewall032d under plaster or metal (first change at 128, 48, 16); roof pitch 25 degrees (31 faces), 20, 35, steep faces 65 to 70; metalwall026a and 014a, tileroof003a and 004b. Pictures R1 to R3.
-- **How:** The quarter's main street keeps the owner's street recipe (they asked for it); use these numbers for the lanes, yards and back ways behind it and for the houses' looks. The other maps agree: kerbs in 4 of 320 cross-sections in d1_town_01 and 0 of 50 in 01a (the town square in 02 has kerbs 4 to 15 in 21 of 275); wall to wall median 620 (01), 376 (01a, walls 384 to 512: height over width 0.9), 589 (02); the lane floor is dirt and cobbles (01: blenddirtgrass008a 36%, stonefloor006a/b/c 31%, planks 8%). Ours: the quarter's main street keeps the owner's crown, kerb 8 and pavements 96; its back lanes and yards should have none.
+- **How:** The quarter's main street keeps the owner's street recipe (they asked for it); use these numbers for the lanes, yards and back ways behind it and for the houses' looks. The other maps agree: kerbs in 4 of 320 cross-sections in d1_town_01 and 0 of 50 in 01a (the town square in 02 has kerbs 4 to 15 in 21 of 275); wall to wall median 620 (01), 376 (01a, walls 384 to 512: height over width 0.9), 589 (02); the lane floor is dirt and cobbles (01: blenddirtgrass008a 36%, stonefloor006a/b/c 31%, planks 8%). Ours: the quarter's main street keeps the owner's crown, kerb 8 and pavements 96; its back lanes and yards should have none. Lane shape (d1_town_01a, R105): lanes median 376 wide between walls 448 tall, about as tall as wide (0.9). Ours: alleys 128 wide under walls up to about 750 (about 6 times as tall as wide): a change to the quarter's look, so ask the owner first.
 - **Checked by:** review
 - **Tags:** streets, facades, infestation, ravenholm, valve
 
-- **See:** `valve_d1_town_03/01_overview_sw.png`, `valve_d1_town_03/02_overview_ne.png`, `valve_d1_town_03/03_street.png`
+- **See:** `valve_d1_town_03/01_overview_sw.png`, `valve_d1_town_03/02_overview_ne.png`, `valve_d1_town_03/03_street.png`, `valve_ravenholm/01_town01_street.png`, `valve_ravenholm/04_town01a_houses.png`, `valve_ravenholm/05_town01a_lane.png`, `valve_ravenholm/07_town02_square_houses_cut.png`, `valve_ravenholm/08_town02_roof_walk.png`
 
 ### A way over the roofs (`raven-rooftop-refuge`)
 
@@ -1099,7 +1158,7 @@ Give an overrun quarter a second way through above the dead: low roofs joined by
 - **Checked by:** review; valid-viewpoints for spots on the roofs
 - **Tags:** layout, infestation, ravenholm, valve
 
-- **See:** `valve_c17/30_nexus_roof_post_iso.png`, `valve_d1_town_03/02_overview_ne.png`, `valve_d1_town_03/04_rooftops.png`, `valve_d1_town_03/06_corpse_alley.png`
+- **See:** `valve_c17/30_nexus_roof_post_iso.png`, `valve_d1_town_03/02_overview_ne.png`, `valve_d1_town_03/04_rooftops.png`, `valve_d1_town_03/06_corpse_alley.png`, `valve_ravenholm/08_town02_roof_walk.png`
 
 ### Traps lying ready, the dead from makers (`raven-traps-and-makers`)
 
@@ -1110,7 +1169,7 @@ Leave traps as loose physics props where the dead come: propane tanks in cluster
 - **Checked by:** map_lint (physics props); review
 - **Tags:** props, infestation, ravenholm, valve
 
-- **See:** `valve_d1_town_03/05_trap_passage.png`, `valve_d1_town_03/07_houses_cut.png`
+- **See:** `valve_d1_town_03/05_trap_passage.png`, `valve_d1_town_03/07_houses_cut.png`, `valve_ravenholm/05_town01a_lane.png`, `valve_ravenholm/11_town02a_graves.png`, `valve_ravenholm/14_town04_cave_stairs.png`
 
 ### Abandoned shows as litter, ivy and leaves; one corpse tells the rest (`raven-litter-not-gore`)
 
@@ -1440,7 +1499,7 @@ Put furniture against the walls, square, facing into the room; let chairs stand 
 - **Checked by:** proposed: map_lint notes shelves, couches, radiators, desks and sinks more than 16 from any wall
 - **Tags:** props, valve, interiors
 
-- **See:** `valve_c17/01_kleiner_lab_cut.png`, `valve_c17/11_combine_office_cut.png`, `valve_c17/16_flat_room_eye.png`
+- **See:** `valve_c17/01_kleiner_lab_cut.png`, `valve_c17/11_combine_office_cut.png`, `valve_c17/16_flat_room_eye.png`, `valve_ravenholm/07_town02_square_houses_cut.png`
 
 ### Tell what happened with a few props (`valve-story-props`)
 
@@ -1555,6 +1614,8 @@ A displacement that meets a path, kerb or wall goes past the edge: it dips under
 - **How:** map_build displacements: let the border rows overshoot the neighbouring brush by 4 to 16 (down under a path, up a wall) instead of ending at its edge; power 2 by default. Ravenholm's yards and hill (d1_town_02, 02a) differ from the city's: 85 floor displacements, power 3 on 53 (4 on 10), odd sizes cut to the plot (224x128, 352x304, 288x144, 576x512) rather than 512 or 1024, texture scale 0.25, lightmapscale 16 near play, alpha painted on 38; muddy patches in dirtfloor005b; the graveyard's ground 91% displacement.
 - **Checked by:** map_lint.py (proposed): a displacement edge lying on a brush edge at the same height; a blend material with no alpha.
 - **Tags:** valve, geometry, canal
+
+- **See:** `valve_ravenholm/10_town02a_graveyard_cut.png`
 
 ### Decals for small marks, overlays for big ones, in clusters (`valve-decal-or-overlay`)
 
@@ -1950,6 +2011,8 @@ A burning spot is an env_fire of firesize 64 (32 to 48 for a small one, 128 to 1
 - **Checked by:** proposed: map_lint notes an env_fire with no light within 128, or a light near a fire with a style
 - **Tags:** valve, lighting, props, sound
 
+- **See:** `valve_ravenholm/02_town01_pyre_cut.png`
+
 ### Rubble ground is power 3; small displacements dent burned walls (`valve-rubble-displacements`)
 
 Lay the ground of a ruined street as displacements of power 3 (not 2), 512 to 1100 across, lightmapscale 16 where people walk, in concretefloor007a, dirtfloor005b or a painted blend such as blendgrassgravel001a, and dent the walls and ceilings of a burned room with small displacements (64 to 128 by 8 to 45) on the plaster faces.
@@ -1970,6 +2033,8 @@ Put the infested quarter's dead in a few set pieces rather than one body per lan
 - **Checked by:** proposed: map_lint notes a blood decal more than 192 from any prop_ragdoll in a module tagged infestation; review
 - **Tags:** grime, props, infestation, ravenholm, valve
 
+- **See:** `valve_ravenholm/02_town01_pyre_cut.png`, `valve_ravenholm/03_town01_blade_shack_cut.png`
+
 ### In the trap streets loose props are half of all props, and many wait to be grabbed (`raven-held-till-grabbed`)
 
 Where the dead walk, make about half the props loose physics (blades, tanks, drums, boards, tables, drawers), and hold the ones that belong on a wall or table still until someone grabs them (motion disabled plus motion on grab): boards across windows, blades on the wall, tanks on a table, radiators. Standing furniture keeps the owner's prop_dynamic_override.
@@ -1978,6 +2043,8 @@ Where the dead walk, make about half the props loose physics (blades, tanks, dru
 - **How:** map_raven.py loose(): a held=True option writing spawnflags 72 (8 motion disabled + 64 on grab) for boards on windows, blades and tanks on tables or walls; aim for loose props at about half the quarter's dressing props, the cars, bins and barricades staying static. Ask the owner first: it changes what players can pick up there.
 - **Checked by:** proposed: map_lint reports the share of prop_physics among a module's dressing props when the module is tagged infestation (Valve's trap streets 0.4 to 0.5)
 - **Tags:** props, infestation, ravenholm, valve
+
+- **See:** `valve_ravenholm/05_town01a_lane.png`
 
 ### A trap is a kit of a few props, close together, with its own light and a reward (`raven-trap-kits`)
 
@@ -1988,6 +2055,8 @@ Build each trap as a small kit inside 30 to 100: a work table with the trap's lo
 - **Checked by:** review
 - **Tags:** props, infestation, ravenholm, valve
 
+- **See:** `valve_ravenholm/02_town01_pyre_cut.png`, `valve_ravenholm/03_town01_blade_shack_cut.png`, `valve_ravenholm/06_town01a_work_room.png`
+
 ### Timber and plaster: 4 by 8 timbers standing 4 proud, a third of them braces; thin roofs with a 16 eave (`raven-timber-craft`)
 
 Make a Ravenholm house front of plaster with timber strips on it: sections 4x8 (or 8x8, 4x16), standing 4 out of the plaster, posts a storey long, beams along each floor line, a third of the strips diagonal braces; walls 8 thick (16 for the outer shell); roofs pitched 25 degrees (35 or 45 for a landmark), slabs 3 to 4 thick for corrugated metal and 7 to 8 for tile, the eave 16 past the wall below. Pieces already built keep their look: ask the owner first before changing them.
@@ -1997,14 +2066,18 @@ Make a Ravenholm house front of plaster with timber strips on it: sections 4x8 (
 - **Checked by:** proposed: map_lint notes a sloped roof brush in a module tagged infestation thicker than 16 or with no eave past its wall
 - **Tags:** facades, geometry, infestation, ravenholm, valve
 
+- **See:** `valve_ravenholm/01_town01_street.png`, `valve_ravenholm/04_town01a_houses.png`, `valve_ravenholm/17_style_ravenholm_house_cut.png`
+
 ### A mine tunnel: a cave of small displacements, a timber set every 512 (`raven-mine-sets`)
 
 Make an old mine as a closed tube of displacements (walls, floor and roof all displaced, 256 square, power 2, pushed 30 to 130 off the brush, lightmapscale 16), and hold it up with timber sets: two 16x16 posts 224 apart inside, a 16x16 cap across their tops, 128 tall (256 where the floor drops), one set every 512 along the tunnel; a shaft gets a ring of 16x16 beams round a 192 square every 190 to 320 up; a walkway stands on 16x16 posts on an 84 grid under 4 thick planks.
 
 - **Why:** d1_town_04 (21 November): 327 displacements, power 2 on 324, 256x256 on 290, all lightmapscale 16, offsets median 60 (q75 128), walls 181, floors 76, ceilings 70; rockwall015a 251, blendrockgravel001a 73 (170 alpha painted). Timber all woodfloor005a func_detail: sets at x -3838, -3600, -3088, -2576, -2064 (posts at y 1024 and 1264, cap 16x224x16 on top); shaft cribbing 192 square at z -4304, -4048, -3856, -3536, -3336; walkway posts 64 tall 84 apart; planks 4x80 and 4x64. styleguide_mining: braces of woodwall041a 16x16 at an angle, concretewall_mine walls, cage lights.
-- **How:** For the quarter's tunnels or a mine module: a corridor of power-2 displacements with the sets placed by a helper (posts, cap, every 512), a cool clamp lamp every second or third set (raven-clamp-lamps).
+- **How:** For the quarter's tunnels or a mine module: a corridor of power-2 displacements with the sets placed by a helper (posts, cap, every 512), a cool clamp lamp every second or third set (raven-clamp-lamps). From the pictures (21 November): in d1_town_04's deep stretch the sets stand 256 apart with knee braces 12 by 80 by 80 under the cap; Valve's mining style room hangs cage lamps 117 up, one lit in three, '255 245 145' at 500 to 700, cone 70 inner 30 (R112, R113, R118, R119).
 - **Checked by:** proposed: map_lint notes a displacement in a cave module at power 3 or 4, or lightmapscale over 16 within 256 of a node
 - **Tags:** geometry, interiors, infestation, ravenholm, valve
+
+- **See:** `valve_ravenholm/12_town04_mine_overview.png`, `valve_ravenholm/13_town04_timber_sets.png`, `valve_ravenholm/14_town04_cave_stairs.png`, `valve_ravenholm/18_style_mining_overview.png`, `valve_ravenholm/19_style_mining_timber_sets.png`
 
 ### A graveyard is a few stones scattered and turned on rough grass, never rows (`raven-graveyard`)
 
@@ -2015,6 +2088,8 @@ Lay a graveyard as rough grass displacement with a grave piece every 250 or so: 
 - **Checked by:** proposed: map_lint notes 4 or more gravestones in one straight line at one yaw away from a wall
 - **Tags:** props, layout, infestation, ravenholm, valve
 
+- **See:** `valve_ravenholm/10_town02a_graveyard_cut.png`, `valve_ravenholm/11_town02a_graves.png`
+
 ### Inside an overrun town the homes are stripped: work rooms, corpse rooms and one barricaded flat (`raven-room-kits`)
 
 Dress the quarter's rooms as what survivors left, not as lived-in homes: a work room (tables, blades, tools, a clamp lamp), a corpse room (bodies, blood, flies, one bulb), a barricaded flat (couch, dressers and drawers against the walls and the door, a chair, the dead who got in), a bedroom with a mattress on a bed frame and one body; kitchens and living-room sets are almost absent. Drawers and dressers stand against walls, a few tipped over. Pieces already built keep their look: ask the owner first before changing them.
@@ -2024,6 +2099,8 @@ Dress the quarter's rooms as what survivors left, not as lived-in homes: a work 
 - **Checked by:** review
 - **Tags:** interiors, props, infestation, ravenholm, valve
 
+- **See:** `valve_ravenholm/03_town01_blade_shack_cut.png`, `valve_ravenholm/06_town01a_work_room.png`, `valve_ravenholm/07_town02_square_houses_cut.png`, `valve_ravenholm/09_town02_bedroom_cut.png`
+
 ### Ravenholm is lit by clamp lamps on the walls, each with its spot (`raven-clamp-lamps`)
 
 Light the overrun quarter with work lamps clamped to the walls (light_spotlight02_lamp, pitched down, turned freely), each with a light_spot about 5 from it (warm '255 245 145' 600 to 1000 on two in three, cool '159 237 215' up to 2000 on the rest), cone 30 to 50 (35 most), inner 20 to 30, pitch about -50 (-20 to -65), and a point_spotlight beam beside it; 300 apart in the streets, 450 to 550 round the square and graveyard, 700 to 800 in the mine; indoors a bare bulb (light '254 216 146 8' plus spot 300, cone 75).
@@ -2032,6 +2109,8 @@ Light the overrun quarter with work lamps clamped to the walls (light_spotlight0
 - **How:** map_raven.py: replace the lit lamp posts' role in the lanes with clamp lamps on house walls about every 300, alternating warm and cool, with the spot and a point_spotlight; with raven-dusk-light. Ask the owner first: the quarter's light is theirs to settle.
 - **Checked by:** map_lint offlamp (a lit lamp model without its light within 64)
 - **Tags:** lighting, props, infestation, ravenholm, valve
+
+- **See:** `valve_ravenholm/06_town01a_work_room.png`, `valve_ravenholm/13_town04_timber_sets.png`, `valve_ravenholm/19_style_mining_timber_sets.png`
 
 ### An endless stream of the dead follows the front, and stops when players stop (`raven-stream-follows-front`)
 

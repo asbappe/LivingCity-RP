@@ -111,11 +111,17 @@ def turned_box(pos, bb, yaw):
 FRAME_OVER = 384    # (a model this wide in two ways is a building, a Combine wall or a backdrop: hollow, so drawn as its frame)
 
 
-def prop_faces(pos, bb, yaw, t=4.0):
-    """A model's box: solid when small; when big in two ways, only its twelve edges as thin bars, so it hides nothing."""
+def see_through(model):
+    """A chain-link or wire fence: seen through, so drawn as its frame (wooden fences stay solid)."""
+    m = (model or "").lower()
+    return "fence" in m and "wood" not in m
+
+
+def prop_faces(pos, bb, yaw, t=4.0, model=""):
+    """A model's box: solid when small; when big in two ways, or a fence one sees through, only its twelve edges as thin bars."""
     x1, y1, z1, x2, y2, z2 = bb
     d = sorted((x2 - x1, y2 - y1, z2 - z1))
-    if d[1] < FRAME_OVER and not (d[2] >= 2 * FRAME_OVER and d[1] >= 256):   # (the Combine's creeping wall is 300 by 300 by 1000)
+    if d[1] < FRAME_OVER and not (d[2] >= 2 * FRAME_OVER and d[1] >= 256) and not see_through(model):   # (the Combine's creeping wall is 300 by 300 by 1000)
         return turned_box(pos, bb, yaw)
     h = t / 2
     out = []
@@ -197,7 +203,7 @@ def scene(path):
                     col = (235, 60, 235)
                 bb = (facts.get(top.kv.get("model", "").lower()) or {}).get("bbox")
                 if col and bb and cls != "prop_ragdoll":      # (a model whose size is known: its own box, turned as it is)
-                    for vs in prop_faces(pos, bb, nums(top.kv.get("angles", "0 0 0"))[1]):
+                    for vs in prop_faces(pos, bb, nums(top.kv.get("angles", "0 0 0"))[1], model=top.kv.get("model", "")):
                         polys.append((vs, col, None))
                 elif col:
                     marks.append((pos, col, 5 if small else 14, 10 if small else 14 if cls == "prop_ragdoll" else 56))

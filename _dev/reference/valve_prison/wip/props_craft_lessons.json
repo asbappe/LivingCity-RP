@@ -1,0 +1,89 @@
+[
+ {
+  "id": "valve-prison-cell",
+  "tags": ["valve", "interiors", "geometry", "combine"],
+  "title": "A prison cell is 128 by 176, in rows of five, two or three tiers high",
+  "rule": "Build a cell as Nova Prospekt does: 128 wide and 176 deep inside, 120 clear under an 8 slab (a storey of 128), partitions 16 thick at a pitch of 144, a front wall 16 thick with the opening 52 to 56 wide and 108 high in its middle (38 from each partition, a 20 lintel over it) and the door (prison_celldoor001a barred or prison_heavydoor001a solid) sliding along the outside face under prison_doortrack001a. Cells go in rows of five, two or three tiers high at 128. Furnish only the cells people go into; leave the rest bare. Our cells module is 128 by 160 by 128: ask the owner first before changing it.",
+  "why": "71 cells in 16 rows in d2_prison_02, 03, 04 and 07 (21 November): every one 128 by 176 inside at a pitch of 144 (d2_prison_02 -1040..-864 from y 2608; d2_prison_03 3968..4144 from x -4048; d2_prison_04 -624..-448 from y 1792, three tiers with cell floors at 128, 256 and 384). Openings 52 to 56 by 108, 23 lintels counted 16 by 52 to 56 by 20. 36 of the 71 are empty, 13 have a bed, only 3 the full kit (bed, toilet, sink, heater).",
+  "how": "A cell row helper for a Combine prison piece: n cells at 144, the opening centred, a sliding door model on a func_door riding the outside face, the track 53 over the door's middle; the full kit (d2_prison_03 -3628 3997 0): toilet on the back wall's middle 25 off it, sink on a side wall 45 from the back and 16 off, prison_heater002a on the same side nearer the door, prison_metalbed001a along the other side, prison_flourescentlight002b (skin 1) on the ceiling's middle, a cage lamp outside beside the door at 86. Empty cells keep their door and their dark.",
+  "check": "review; map_modules_check: a cell's inside 128 by 160 to 176, its opening 48 to 56 by 108"
+ },
+ {
+  "id": "valve-cellblock-tiers",
+  "tags": ["valve", "interiors", "geometry", "stairs"],
+  "title": "Cellblock tiers: walks 56 to 80 wide off the cell fronts, a rail prop every 128, a lamp a cell",
+  "rule": "The walk along an upper tier is the cell storey's own slab carried out 56 to 80 past the cell fronts, 8 thick, with handrail04_long props end to end along its edge (128 long, the model's origin 20 over the walk) and an unseen clip 40 high behind them; interior_fence002c panels close a walk's end. Two rows facing each other stand 224 apart with a well 64 wide between their walks and an open stair in the well (60 wide, treads 2 thick, 8 by 12). A tall block puts three tiers on one side of a hall 448 wide and about 512 high. A prison_cagedlight001a on each cell front beside the door, 86 up, 128 to 144 apart, only one in five to ten lit. Keep the owner's stairs (16 by 24) where a stair is ours: ask the owner first before using Valve's.",
+  "why": "d2_prison_02 (-1280..-1056, y 2512..3392): walks 80 wide at 376..384 on both sides, a well 64 wide, a stair of 15 steps 60 wide from 256 to 376. d2_prison_03: walk 56 wide (func_detail 896 by 56 by 8), clip 2 by 40. d2_prison_04 (x -1088..-448): hall 448 wide, tubes hanging at 567 to 631, walks 80 wide at 248..256 and 376..384, handrail04_long at x -719 every 128, 20 over the walk, a 32 column the full height. Cage lamps: 154, 94 of them at 86 over the floor, 2 off the wall; lit 4 of 40 in d2_prison_02, 9 of 44 in 07, 5 of 16 in 03.",
+  "how": "With valve-prison-cell: a tier helper that runs the slab out 64 to 80, places handrail04_long every 128 along the edge with a clip brush 40 high, fence panels at the ends, the lamp row with one in six given its light (valve-fixture-lights). Hanging tubes (prison_flourescentlight001b) 192 to 256 apart down the hall, 32 to 73 under the roof.",
+  "check": "review"
+ },
+ {
+  "id": "valve-prison-fixtures",
+  "tags": ["valve", "props", "interiors", "combine"],
+  "title": "A prison corridor: 192 wide, a full-width bar gate, sprinklers, heaters and pipes on a rhythm",
+  "rule": "Nova Prospekt's corridors are 192 wide under a 120 to 128 ceiling, or 128 wide under 192. A gate across one is prison_gate001c from wall to wall with its door (prison_slidingdoor001a) in it. Along the way: prison_sprinkler001a 21 under the ceiling every 256 to 512, prison_heater001a 27 up and 6 to 9 off the wall every 250 to 540, prison_switchbox001a 97 up beside each door, prison_pipes002a 8 under the ceiling and 8 off the wall, prison_conduit001a on the walls. All square to the walls.",
+  "why": "535 corridor nodes in d2_prison_01 to 08 (21 November): 245 are 192 wide, 75 are 128; at 192 the ceiling is most often 128 (55) or 120 (30), at 128 it is 192 (27). City 17's flats are 112 by 120. 32 prison_gate001c, 27 of them 96 from each wall and 62 up; prison_slidingdoor001a 60 up in them (26). Sprinklers 121 (median 302 apart, 21 under the ceiling on 77), heaters 51 (27 up on 38), switch boxes 27 (97 up on 10, 1 to 2 off the wall), pipes 57 (8 under on 18). prison_ models sit on exact 90s 880 of 903.",
+  "how": "Prison and Combine corridor pieces at 192 by 128 (ours are 128 by 128 in the cells module: Valve would make a prison corridor wider and keep it low); a gate helper: gate001c across, slidingdoor001a riding a func_door in it; a fixtures pass that spaces sprinklers and heaters along the run.",
+  "check": "review"
+ },
+ {
+  "id": "valve-prison-rooms",
+  "tags": ["valve", "props", "interiors"],
+  "title": "The prison's rooms by their props: office, washroom, showers, laundry, kitchen, canteen",
+  "rule": "Dress each prison room with its own short kit, against the walls, the floor left clear. Guard office: controlroom_desk001b 24 to 58 off a wall, controlroom_chair001a 44 from it, file cabinets 73 to 131 away on the walls, a monitor on the desk, a switch box by the door, a ceiling panel; a guard room over a cellblock gets a corner cut at 45 with a band of glass and the desk turned to it. Washroom: toilets 64 apart in two facing rows, sinks 64 apart likewise, tile under plaster. Showers: shower_system001a 40 off the wall every 320 on both long walls. Laundry: dryers in twos and threes 76 to 92 apart, a few degrees off square; washers on the walls; carts loose. Kitchen: counters in a line, stoves on the wall 217 apart. Canteen: tables about 128 apart, benches 74 off, a third of them tipped on their sides.",
+  "why": "d2_prison_01 to 08 (21 November): 40 desks (chair within 192 at 22, cabinets 27, monitor 7); d2_prison_02 guard room -1346 2820 404 (desk yaw 135 to a 45 window, glass in metalwall062a frames 60 high over a 32 sill); washroom d2_prison_03 -3700..-3270 by 2016..2272 (toilets at 64, sinks at y 2725 and 2779); showers d2_prison_03 x -4120 and -2856 at 2432, 2752, 3072; laundry d2_prison_05 (12 laundry_dryer002, 8 turned 1 to 12 off the grid); kitchen d2_prison_05 -2160..-1695; 7 of 19 cafeteria_table001a on their sides (pitch or roll 75 to 90), two stacked in d2_prison_08 -1116 1320.",
+  "how": "Room kits for a Combine prison piece, keyed by room, with valve-furniture-on-walls; the tipped tables as cover where there was a fight.",
+  "check": "review"
+ },
+ {
+  "id": "valve-combine-lean",
+  "tags": ["valve", "combine", "geometry"],
+  "title": "The Combine's walls stand square in plan but lean, and its sections are lop-sided lozenges",
+  "rule": "Where the Combine builds its own place, its walls run on the axes in plan but lean 14 to 23 degrees off upright: panels 128 high set back 32 (1 in 4) or 40 (5 in 16), or 104 high set back 44. The foot leans back and the head leans over, so a hall or shaft opens out low and closes in high, in steps that differ from one side to the other. A train runs in a trench of the metal 336 wide at the foot that steps out 32 a side every 112 to 128. The metal is metalwall077a at texture scale 0.5. New Combine pieces can be built so; ask the owner first before changing the checkpoint, depot or armoury, which stand upright.",
+  "why": "d2_prison_06 and 08 (21 November): wall area of the Combine's metal is 99% on the axes in plan, but 14% (06) and 7% (08) of it slopes: 137 leaning faces, 128 high set back 32 (41) or 40 (34), 104 high set back 44 (23); faces leaning back 14 degrees and leaning over 17 and 23. The pod shafts of d2_prison_08 (1680..2032 by 2816..4096, -960 to 192): 256 wide at the foot, out to about 400, straight for 600, in to 224 at the head, the two sides stepping at different heights. The train trench of d2_prison_06 at x 3000: 336, 400, 464 wide at -576, -448, -320. metalwall077a at 0.5 on 89% of its area in 08 and 60% in 06 (the old prison 0.25 on 94%).",
+  "how": "A Combine wall helper that stacks 128 courses each set in or out 32 or 40 (a lean of 1 in 4 or 5 in 16) with the faces cut as planes, not stepped boxes; one side of a hall stepping at 128 and the other at 104 or 112. Studied further later (the owner wants the Combine's own architecture).",
+  "check": "review; map_view cut-away across the piece"
+ },
+ {
+  "id": "valve-combine-aimed",
+  "tags": ["valve", "combine", "props"],
+  "title": "The Combine's lights and consoles are turned to aim; its racks, fences and locks stay square",
+  "rule": "Inside the old prison its own fixtures sit square (97% on exact 90s). The Combine's things are square on about three quarters: its wall lights are turned to aim at what they light (yaw by 15 or 45, a few pitched down 18), its consoles and small monitors set at free angles to the room; but pod racks, fences, locks, doors and generators stand square to the walls. Turn a Combine light or console off the grid on purpose; never a rack or a fence.",
+  "why": "d2_prison_01 to 08 (21 November): of 390 unparented Combine props, 284 on exact 90s, 46 on 15s, 21 on 45s, 39 free; combine_light002a 58 of 66 off the grid (37 on 15s, 16 on 45s; d2_prison_07 yaw 300 pitch -18 in a row of four); combine_interface003 yaw 24, 69, 204, 294, 356 (d2_prison_07 -1358 -1904); combine_smallmonitor001 5 of 5 free; combine_fence01a/b 40 of 40, cell_01_pod 20 of 20, combine_lock01 9 of 9 square. prison_ models 880 of 903 square.",
+  "how": "Combine dressing in our pieces: the light helper aims each combine_light002a at its target and rounds the yaw to 15; consoles get a free yaw within 30 of facing the room; racks, fences and locks stay square (valve-turn-the-loose for loose things).",
+  "check": "review"
+ },
+ {
+  "id": "valve-combine-light-beam",
+  "tags": ["valve", "combine", "lighting", "recipe"],
+  "title": "A Combine wall light throws a visible blue beam",
+  "rule": "Light every combine_light002a with a light_spot 147 226 240 at 2000, cone 30 to 35, inner 12, pitch -30, about 22 under the model, constant attenuation 500000, and a point_spotlight 147 226 240 at the lamp, length 768, width 96, aimed with it. A turret or searchlight on a wall sweeps a point_spotlight 1024 long and 64 wide, parented to it.",
+  "why": "d2_prison_01 to 08 (21 November): all 66 combine_light002a are lit; the light_spot is 147 226 240 2000 cone 30/12 pitch -30 22 under on 24 and cone 35/12 on 20; a point_spotlight 147 226 240 length 768 width 96 sits with 62 of the 66. The 7 bunker_gun01 on the walls of d2_prison_01 each carry a point_spotlight 147 226 240 1024 by 64 parented to the gun (turret_1 to 7), the guns 40 over the wall walk and 58 off the parapet.",
+  "how": "Add combine_light002a to the FIXTURE table (valve-fixture-lights) with the point_spotlight; the checkpoint's searchlight as a parented point_spotlight 1024 by 64.",
+  "check": "map_lint offlamp: a combine_light002a without a light_spot and a point_spotlight within 32"
+ },
+ {
+  "id": "valve-pod-racks",
+  "tags": ["valve", "combine", "props"],
+  "title": "The Combine keeps prisoners in pods: racks two high, trains of pods, arrays in shafts",
+  "rule": "The Combine's own prison is pods, not cells. Racks: cell_01_pod with cell_01_rigging on cell_01_supportsb, two high 193 apart, 185 to 203 apart along a row, square to the wall. On a train: pods on both sides of each car 64 apart, one side 32 lower than the other, about one slot in six left empty. In a shaft: cell_array_01 at the foot, pairs facing. For a Combine prison or the Nexus, a pod rack is the Combine's look; the old cells are the people's prison it took over.",
+  "why": "d2_prison_07 (21 November): racks at x 4450 (y -4707, -4522, -4319; z -500 and -307) and y -3917 (x -514, 72, 257, 450, 637, 832; z -248 and -55), each pod with its rigging and support. d2_prison_06: 56 pods parented to combine_train02a/b cars 632 apart, at 64 on y 131 and 23 (z -495 and -463), slots missing at random (2829, 2893, 2957, 3085 on one side). d2_prison_08: 11 cell_array_01 at the foot of the pod shafts (z -963), in facing pairs 182 apart.",
+  "how": "A pod rack prefab for the Combine prison and the Nexus quarter (map_prefab.py extract from d2_prison_07 4400 -4760 -560 4520 -4120 -200); prop_static, square.",
+  "check": "review"
+ },
+ {
+  "id": "valve-interrogation-light",
+  "tags": ["valve", "combine", "lighting"],
+  "title": "The Combine's interrogation room: the subject in narrow cold beams, the room dark",
+  "rule": "Light the one being questioned with two or three narrow cold spots from above and the sides (155 220 255 or 204 255 255, 400 to 900, cone 12 to 21, pitched down 30 to 63) and leave the room round them dark but for faint console glows (light 74 209 217 at 20). The Combine's door into it carries a combine_lock01 each side, 54 up. Our Civil Protection chair has its lamp: ask the owner first before changing how it is lit.",
+  "why": "d2_prison_06 interrogation room (introomarea 661 102 0, its pod arm pod_extractor at 760 104): light_spot 155 220 255 500 cone 12 pitch -30 at 431 143 190 and 430 50 190, 204 255 255 400 cone 21 pitch -63.5 at 638 108 138, 204 255 255 600 cone 21 at 896 112 320, 155 220 255 900 cone 50 at 792 104 209; light 74 209 217 20 at the consoles (616 250 58, 544 280 58); combine_door01 introom_door_1 with combine_lock01 at 405 200 54 and 416 129 54.",
+  "how": "A Combine interrogation piece: the chair or pod in the middle, two light_spots at cone 12 from the front corners and one at cone 21 from above, consoles with their glow, no fill light.",
+  "check": "review"
+ },
+ {"id": "valve-wall-bands", "extra": {"how": "Nova Prospekt's interiors (d2_prison_01 to 08, 21 November) are two-toned at 128: where two wall faces stack the material changes on 4506 and stays on 3248, and 2721 of the changes are 128 over the floor, the lower band the same plaster's darker partner (plasterwall034c under 034a or 034b 393, 018c/e under 018a/b 225, 035c/d under 035a/b 184, 032c under 032b 159, tilewall009b under plasterwall026a 300, concretewall022a under 004c 116), no rail between. Our rooms keep the owner's dado at 56: ask the owner first before a prison piece uses 128."}},
+ {"id": "valve-fixture-lights", "extra": {"how": "Nova Prospekt (21 November): prison_flourescentlight002b, the flat ceiling panel (96, skin 1 on 94), is lit every time: light_spot 159 237 215 600 (or 255 245 145 400 to 600), cone 70, inner 20 to 30, pitch -74, constant attenuation 500000, at the model; the hanging tubes are dressing (prison_flourescentlight001b lit 0 of 130, 001a 14 of 110); prison_cagedlight001a lit 61 of 154, with light_glow03 at scale 0.75, and in the cellblocks only one in five to ten."}},
+ {"id": "valve-sightlines", "extra": {"how": "Nova Prospekt's corridors are wider and taller than the city's (d2_prison_01 to 08, 21 November): 245 of 535 corridor nodes are 192 wide (under 120 to 128 mostly), 75 are 128 wide (under 192); halls 256 by 128 to 192 (256 nodes) and 384 by 128 to 256 (182)."}},
+ {"id": "combine-kit", "extra": {"how": "Nova Prospekt (21 November): the Combine's metal is 0 to 1% of brush area in the old prison (d2_prison_01 to 05, 07), 20% in its depot and train yard (06) and 81% in its teleport works (08). In the old buildings it comes as props (pods, consoles, lights, fences, turrets), field walls (comshieldwall3 func_brush 2 thick, 126 high), consoles built of 25 to 30 small metalcombine001 brushes with doorbutton002a buttons (d2_prison_07 -632 -3390 -168), and thin metalcombine001 panels 2 to 10 thick bolted on at angles (87% angled)."}},
+ {"id": "valve-texture-scale", "extra": {"how": "The Combine's metalwall077a is laid at 0.5 (89% of its area in d2_prison_08, 60% in 06) while the old prison round it stays at 0.25 (94%)."}},
+ {"id": "valve-lightmap-by-distance", "extra": {"how": "Nova Prospekt sets whole rooms to 8 (10 to 25% of faces in d2_prison_02 to 08 against 3 to 4% in the city), walls and floors alike and not only near lamps (33% of faces at 8 within 192 of a light, 39% at 16)."}}
+]
