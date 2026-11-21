@@ -25,7 +25,9 @@ often bigger than the model. What each kind means:
   wire      Valve's five wiring rules (docs/dev/map-modules.md, "Wiring the way Valve does"): outputs sent to
             things not in the map, !player (player 1 only on a shared server), triggers that name nobody, sounds
             played once without "not looped" (32) or loops that carry it, timers that only dress a place left
-            running, a door hanging in an areaportal that nothing closes, a valve that is a press button
+            running, a door hanging in an areaportal that nothing closes (or a portal naming a door not there, or a
+            trigger opening and shutting a portal), a valve that is a press button, a moving part (door, gate,
+            lift, train, turning thing) with no sound of its own and none in the wiring that moves it
   bare      a big plain wall: one face of one material at least 384 long and 256 tall with nothing on it or in front
             of it (no ledge, trim, prop, decal or overlay within 24): lay it in courses, break it with pilasters,
             dress it (lessons valve-wall-bands, valve-column-rhythm, facades). The six biggest, and how many.
@@ -491,13 +493,55 @@ def check(path, views=None, only=None, air=None):
                 for bx, mats in e.get("_solids", []):
                     if mats and not any(m.startswith("tools/") or any(w in m for w in map_build.SEE_THROUGH) for m in mats):
                         doors.append(bx)
+        portals = set()
         for e in ents:
-            if e.get("classname") == "func_areaportal" and not e.get("target"):
+            if e.get("classname") != "func_areaportal":
+                continue
+            if e.get("targetname"):
+                portals.add(e["targetname"].lower())
+            if e.get("target") and e["target"].lower() not in names:
+                bx = (e.get("_solids") or [((0, 0, 0, 0, 0, 0), None)])[0][0]
+                say("wire", "the areaportal at (%d %d %d) names the door %s, which is not in the map: it is never closed" % ((bx[0] + bx[3]) / 2, (bx[1] + bx[4]) / 2, bx[2], e["target"]))
+            elif not e.get("target"):
                 for bx, _ in e.get("_solids", []):
                     near = (bx[0] - 32, bx[1] - 32, bx[2] - 8, bx[3] + 32, bx[4] + 32, bx[5] + 8)
                     if any(overlap(near, d) > 0 for d in doors):
                         say("wire", "a door hangs in the areaportal at (%d %d %d) and nothing closes it: name the door in its target" % ((bx[0] + bx[3]) / 2, (bx[1] + bx[4]) / 2, bx[2]))
                         break
+        for e in ents:      # (Valve's single player trick: a portal shut as the player passes; on a shared server it hides a room from the others)
+            if e.get("classname", "").startswith("trigger_"):
+                for out, tgt, inp in e.get("_outputs", []):
+                    if tgt.lower() in portals and inp.lower() in ("open", "close", "toggle"):
+                        say("wire", "the trigger %s sends the areaportal %s %s: a door should work its portal, never a trigger (others are still in there)" % (e.get("targetname") or e["classname"], tgt, inp))
+                        break
+        # moving parts with no sound (Valve's rule): a door, gate, lift or turning thing with no sound of its own, none played
+        # by its own outputs, and none played by the wire that moves it
+        MOVE_SOUNDS = {"func_door": ("noise1", "noise2", "startclosesound", "closesound"), "func_door_rotating": ("noise1", "noise2", "startclosesound", "closesound"),
+                       "func_movelinear": ("startsound", "stopsound"), "func_tracktrain": ("movesound", "startsound", "stopsound", "movepingsound"),
+                       "func_rotating": ("message",), "func_water_analog": ("startsound", "stopsound")}
+        def own_sound(e):
+            return any((e.get(k) or "").strip() not in ("", "0") for k in MOVE_SOUNDS[e["classname"]]) or any(i.lower() == "playsound" for _, _, i in e.get("_outputs", []))
+        sounded = set((e.get("targetname") or "").lower() for e in ents if e.get("classname") in MOVE_SOUNDS and own_sound(e)) - {""}
+        fired_with_sound = set()       # (names moved by a wire that also plays a sound, or moves a part that has one: a counterweight with its lift)
+        for e in ents:
+            events = {}
+            for out, tgt, inp in e.get("_outputs", []):
+                events.setdefault(out.lower(), []).append((tgt.lower(), inp.lower()))
+            for wires in events.values():
+                if any(i == "playsound" or t in sounded for t, i in wires):
+                    fired_with_sound.update(t for t, i in wires if i != "playsound")
+        quiet = []
+        for e in ents:
+            if e.get("classname") not in MOVE_SOUNDS or own_sound(e) or (e.get("targetname") or "").lower() in fired_with_sound:
+                continue
+            bx = (e.get("_solids") or [((0, 0, 0, 0, 0, 0), None)])[0][0]
+            who = e.get("targetname") or "a %s at (%d %d %d)" % (e["classname"], (bx[0] + bx[3]) / 2, (bx[1] + bx[4]) / 2, bx[2])
+            if who not in quiet:      # (one name over several brushes is one moving part)
+                quiet.append(who)
+        for who in quiet[:6]:
+            say("wire", "%s moves without a sound of its own (Valve gives every moving part one: noise1 / startsound, or a PlaySound in its wiring)" % who)
+        if len(quiet) > 6:
+            say("wire", "... and %d more moving parts with no sound" % (len(quiet) - 6))
     # palette: materials City 18 never uses (one line, the commonest few)
     pal = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "reference", "city18", "palette.json")
     if os.path.exists(pal) and (not only or only == "palette"):

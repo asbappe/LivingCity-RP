@@ -134,13 +134,20 @@ build checks them (`map_lint.py`, kind `wire`). What does what:
   closes them, so a room behind a shut door is still drawn.
 - **One-shot sounds are flagged not looped** (`valve-sound-flags`): an `ambient_generic` the wiring plays has
   spawnflags 48 (starts silent, not looped); 16 for a loop that waits for PlaySound and StopSound; 0 only for a loop
-  that runs from the start. `m.sound` never sets 32.
+  that runs from the start. `m.sound` sets these itself (`map_wiring.sound_flags`); so do the forests', Ravenholm's,
+  the street's and the lock gate's own sound helpers.
 - **Timers sleep** (`valve-timer-asleep`): a `logic_timer` that only dresses a place starts disabled, with a random
   time, and is enabled while players are near (a `trigger_multiple`'s OnStartTouchAll and OnEndTouchAll). Ours run
   all day.
 - **Triggers name who touches them** (`valve-trigger-who`): set spawnflags on every trigger (1 players, 2 NPCs, 8
   physics, 64 everything); on our shared server use OnStartTouchAll / OnEndTouchAll and `!activator`, never
   `!player` (it means player 1). A `trigger_once` fires for the first player only.
+- **Every moving part has a sound** (Valve's rule, `docs/dev/valve-logic-recipes.md`, checks 9 and 10): a door, gate,
+  lift, train or turning thing has its own (`noise1` / `noise2` on a door, `startsound` / `stopsound` on a
+  `func_movelinear` or `func_water_analog`, `movesound` on a train, `message` on a `func_rotating`), or the wire that
+  moves it plays one, or moves a part that has one (a counterweight goes with its lift). `map_lint.py` (kind `wire`)
+  names any that move in silence, any areaportal naming a door not in the map, and any trigger that opens or shuts
+  a portal (Valve's single player trick: on our server it hides a room from whoever is still in it).
 - Also kept, as the owner asked: the **alarm**, the **switch that shows its state**, the **intact set swapped for a
   broken one** and the **door the map closes again when blocked** (`map_lessons.py --tag recipe`).
 
