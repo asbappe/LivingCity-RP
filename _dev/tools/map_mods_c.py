@@ -1396,11 +1396,17 @@ def m_armory(m, opt):
     wall at 20 a second, with a klaxon, a groan and a slam. Beside the corridor's first half is the guard booth, behind a wall of Combine metal with a doorway and
     a slit that looks down the corridor. The door answers only to TWO buttons pressed within two seconds of each other:
     one in the booth's far corner, one on the corridor wall by the door, 340 apart with the booth's wall between, so
-    it takes two people (a caged lamp over each glows green for the two seconds its press counts). Pressed together
-    again, they shut it. Inside the vault (384 by 256): gun lockers along one wall, ammunition crates along the other
-    with guns and boxes of rounds laid on them, more crates stacked by the door, and the Combine's weapon frame
+    it takes two people (the Combine's small light over each glows green for the two seconds its press counts). Pressed
+    together again, they shut it. A Combine camera watches the corridor from its entry. Booth and vault are the
+    Combine's inside, as the corridor is: walls clad in their plate (a base of metalcombine001, panels of
+    metalcombine002, the vault's a band of the Citadel's plate under its roof), the vault's floor steel; tubes light the
+    corridor and the booth, the Combine's wall lights the vault. In the booth a desk with the guard's log, a chair, a
+    monitor on its stand, a small screen on the wall over the slit, his stun baton, lockers. Inside the vault (384 by
+    256), behind two red laser beams across its doorway: gun lockers along one wall, the Combine's ammunition crates
+    along the other with guns and boxes of rounds laid on them, more stacked by the door, and the Combine's weapon frame
     (weaponstripper) against the far wall with three pulse rifles standing in front of it under a blue glow. A button
-    inside by the door opens it, so nobody is shut in. A red alarm lamp hangs in the corridor by the door.
+    inside by the door opens it, so nobody is shut in. A red alarm lamp hangs in the corridor by the door, and while the
+    door moves two red lights come on along the corridor.
 
     The door is a func_button used as a mover, as the bunker's, unseen, the door's model riding on it: the gamemode's
     door rules do not reach it, and it has no damage of its own (at 20 a second it stops against whoever stands in its
@@ -1417,16 +1423,21 @@ def m_armory(m, opt):
       lc_armory_vault       the middle of the vault's floor.
       lc_armory_lamp_a, _b, lc_armory_blip, lc_armory_alarm, lc_armory_move, lc_armory_slam, lc_armory_groan,
       lc_armory_light, lc_armory_shake   the buttons' lamps and blip, and the door's sounds, red light and shake.
+      lc_armory_red_1, lc_armory_red_2   the corridor's red lights while the door moves (TurnOn, TurnOff).
+      lc_armory_beam_1, lc_armory_beam_2   the laser beams across the vault's doorway (env_beam: TurnOn, TurnOff,
+                            Toggle; nothing is tied to them: the game may tie an alarm to them), between
+                            lc_armory_beam_1a and _1b, _2a and _2b (info_targets).
     Areaportals: one in the entry, one inside the vault door's thickness.
 
-    Left as brushes: the corridor, its Combine plates and ribs, the booth's wall with its slit, the door's jambs and
-    head, the plinth the rifles stand on.
+    Left as brushes: the corridor, its Combine plates and ribs, the booth's wall with its slit, the booth's and the
+    vault's cladding, the door's jambs and head, the plinth the rifles stand on.
 
     Unchecked: the wiring is the owner's nest door's (math_counter Add and Subtract, OnHitMax) and the sounds are the
     bunker's and the nest's, heard there. The rifles are prop_dynamics turned to stand on their butts ("angles" -90
     pitch), the guns on the crates turned on their sides (roll 90): which way a weapon model's barrel lies is from its
     size alone. The weapon and ammunition models pass the assets check as prop_dynamic; whether the gamemode lets
-    players pick such props up is its affair. How weaponstripper looks as a rack (its size is read)."""
+    players pick such props up is its affair. How weaponstripper looks as a rack (its size is read). env_beam's keys
+    (from memory: LightningStart, LightningEnd, texture sprites/laserbeam.vmt, life 0, spawnflags 1 starts it on)."""
     b = m.b
     L, CH, VH = 1024, F + 128, F + 160
     m.open(0, -256, L, 256)
@@ -1439,20 +1450,31 @@ def m_armory(m, opt):
     m.portal(448, 671, F, 576, 673, CH)
     m.taken(432, 224, F, 592, 256, CH + 24)
     # the entry's frame of Combine metal on the canal wall, and the corridor's armour: plates on its walls, ribs overhead
-    m.det([(440, 244, F, 448, 256, CH + 8), (576, 244, F, 584, 256, CH + 8), (440, 244, CH, 584, 256, CH + 16)], CMB)
+    m.det([(440, 244, F, 450, 256, CH), (574, 244, F, 584, 256, CH), (440, 244, CH, 584, 256, CH + 16)], CMB)     # (the banks' ends hide in its posts)
     m.det([(448, 320, F, 452, 652, CH), (572, 512, F, 576, 652, CH)], CMB)
     m.det([(448, v, CH - 6, 576, v + 12, CH) for v in range(340, 640, 60)], PIPE)
     # the booth's wall: Combine metal 16 thick, a doorway at the entry's end, a slit 24 high further on
     wu, zs = 576, F + 44
     m.det([(wu, 320, F, wu + 16, 332, CH), (wu, 388, F, wu + 16, 512, zs), (wu, 388, zs + 24, wu + 16, 512, CH), (wu, 388, zs, wu + 16, 412, zs + 24),
            (wu, 492, zs, wu + 16, 512, zs + 24), (wu, 332, F + 96, wu + 16, 388, CH)], CMB)
-    m.det([(wu - 2, 408, zs - 4, wu + 18, 496, zs), (wu - 2, 408, zs + 24, wu + 18, 496, zs + 28)], PIPE)
-    m.dynamic("models/props_combine/combine_intmonitor001.mdl", 756, 380, 180)
-    m.static("models/props_wasteland/controlroom_chair001a.mdl", 650, 452, 180)
-    m.static("models/props_c17/lockers001a.mdl", 720, 500, 270)
-    m.lamp(680, 416, CH - 8, "200 220 255 45")
-    m.lamp(512, 420, CH - 8, "200 220 255 45")
-    m.lamp(512, 560, CH - 8, "200 220 255 40")
+    m.det([(wu - 2, 408, zs - 4, wu + 18, 496, zs + 1), (wu - 2, 408, zs + 23, wu + 18, 496, zs + 28)], PIPE)   # (sill and head 1 into the slit)
+    # the booth: the Combine's cladding, the guard's desk and log, a chair, the monitor, a screen, his baton, lockers
+    for z1, z2, t, mat in ((F, F + 32, 6, "metal/metalcombine001"), (F + 32, CH, 4, CMB)):
+        m.det([(592, 320, z1, 768, 320 + t, z2), (592, 512 - t, z1, 768, 512, z2), (768 - t, 320 + t, z1, 768, 512 - t, z2)], mat)
+    m.det([(592, 320, F, 768, 512, F + 1)], "metal/metalfloor005a")
+    m.dynamic("models/props_combine/combine_intmonitor001.mdl", 752, 364, 180)
+    m.static("models/props_wasteland/controlroom_desk001b.mdl", 742, 430, 180, z=F + 1)
+    m.static("models/props_lab/binderblue.mdl", 744, 416, 180, z=F + 35)
+    m.static("models/props_wasteland/controlroom_chair001a.mdl", 704, 430, 0, z=F + 1)
+    m.static("models/props_combine/combine_smallmonitor001.mdl", 606, 450, 0, z=F + 74)
+    m.dynamic("models/weapons/w_stunbaton.mdl", 740, 400, 30, z=F + 35, solid=False)
+    m.static("models/props_c17/lockers001a.mdl", 680, 498, 270, z=F + 1)
+    tube(m, 680, 416, CH, "200 220 255 45", along="v")
+    tube(m, 512, 420, CH, "200 220 255 45", along="v")
+    tube(m, 512, 560, CH, "200 220 255 40", along="v")
+    m.static("models/props_combine/combinecamera001.mdl", 512, 334, 90, z=CH - 34)            # (watching the corridor from its entry)
+    for k, v in enumerate((400, 580)):                                                       # the corridor's red lights while the door moves
+        named_light(m, "lc_armory_red_%d" % (k + 1), 512, v, CH - 30, "255 40 30 60", on=False)
 
     # the vault door, drawn shut: Nova Prospekt's sliding door (114 wide, 120 high) on an unseen leaf, between jambs of
     # Combine metal under a head; it slides away from the booth's side into the wall
@@ -1473,46 +1495,62 @@ def m_armory(m, opt):
     m.point("env_shake", 512, 640, F + 60, {"targetname": "lc_armory_shake", "amplitude": "5", "radius": "700", "duration": "1.2", "frequency": "40", "spawnflags": "0"})
     m.point("math_counter", 512, 560, F + 90, {"targetname": "lc_armory_count", "startvalue": "0", "min": "0", "max": "2", "StartDisabled": "0"},
             connections=[("OnHitMax", "lc_armory_open", "Trigger", "", 0), ("OnHitMax", "lc_armory_shut", "Trigger", "", 0)])
-    for tag, u, v, out in (("a", 768, 484, 180), ("b", 452, 616, 0)):
-        du = -10 if out == 180 else 10
-        m.static("models/props_c17/light_cagelight02_off.mdl", u + (-2 if out == 180 else 2), v, out, z=F + 74)
-        sprite(m, "lc_armory_lamp_" + tag, u + du, v, F + 82, "120 255 120", 0.3, on=False)
+    for tag, u, v, out in (("a", 764, 484, 180), ("b", 452, 616, 0)):
+        du = -1 if out == 180 else 1
+        m.static("models/props_combine/combine_light002a.mdl", u + du * 10, v, (out + 180) % 360, z=F + 70)    # (the Combine's small light, its face out)
+        sprite(m, "lc_armory_lamp_" + tag, u + du * 22, v, F + 92, "120 255 120", 0.3, on=False)
         m.button("lc_armory_button_" + tag, u, v, F + 40, out,
                  [("lc_armory_count", "Add", "1", 0), ("lc_armory_count", "Subtract", "1", 2), ("lc_armory_lamp_" + tag, "ShowSprite", "", 0),
                   ("lc_armory_lamp_" + tag, "HideSprite", "", 2), ("lc_armory_blip", "PlaySound", "", 0)], wait="2.2")
     moving = [("lc_armory_alarm", "PlaySound", "", 0), ("lc_armory_alarm", "PlaySound", "", 1.7), ("lc_armory_light", "TurnOn", "", 0), ("lc_armory_groan", "PlaySound", "", 0.4),
               ("lc_armory_move", "PlaySound", "", 1), ("lc_armory_move", "StopSound", "", 7), ("lc_armory_slam", "PlaySound", "", 7), ("lc_armory_shake", "StartShake", "", 7),
-              ("lc_armory_light", "TurnOff", "", 9)]
+              ("lc_armory_light", "TurnOff", "", 9), ("lc_armory_red_*", "TurnOn", "", 0), ("lc_armory_red_*", "TurnOff", "", 9)]
     m.relay("lc_armory_open", 500, 580, F + 100, [("lc_armory_open", "Disable", "", 0), ("lc_armory_door", "PressIn", "", 1)] + moving + [("lc_armory_shut", "Enable", "", 9.5)], on=True)
     m.relay("lc_armory_shut", 524, 580, F + 100, [("lc_armory_shut", "Disable", "", 0), ("lc_armory_door", "PressOut", "", 1)] + moving + [("lc_armory_open", "Enable", "", 9.5)], on=False)
     m.button("lc_armory_button_exit", 620, 704, F + 40, 90, [("lc_armory_open", "Trigger", "", 0)], wait="10")
 
-    # the vault: gun lockers along the left wall; along the back wall ammunition crates, guns and rounds laid on them
+    # the vault: the Combine's cladding and a steel floor; two laser beams across its doorway
+    for z1, z2, t, mat in ((F, F + 40, 8, "metal/metalcombine001"), (F + 40, VH - 16, 4, CMB), (VH - 16, VH, 8, "metal/citadel_metalwall090a")):
+        m.det([(320, 960 - t, z1, 704, 960, z2), (320, 704, z1, 448, 704 + t, z2), (576, 704, z1, 704, 704 + t, z2),
+               (320, 712, z1, 320 + t, 952, z2), (704 - t, 712, z1, 704, 952, z2)], mat)
+    m.det([(328, 712, F, 696, 952, F + 1)], "metal/metalfloor005a")
+    for k, z in enumerate((F + 22, F + 54)):
+        k1 = k + 1
+        m.target("lc_armory_beam_%da" % k1, 450, 716, z)
+        m.target("lc_armory_beam_%db" % k1, 574, 716, z)
+        m.point("env_beam", 512, 716, z, {"targetname": "lc_armory_beam_%d" % k1, "LightningStart": "lc_armory_beam_%da" % k1, "LightningEnd": "lc_armory_beam_%db" % k1,
+                                          "texture": "sprites/laserbeam.vmt", "BoltWidth": "1", "NoiseAmplitude": "0", "life": "0", "renderamt": "160",
+                                          "rendercolor": "255 20 20", "Radius": "256", "TextureScroll": "35", "framerate": "0", "framestart": "0", "StrikeTime": "1",
+                                          "damage": "0", "HDRColorScale": "1.0", "ClipStyle": "0", "spawnflags": "1", "touchtype": "0"})
+    # gun lockers along the left wall; along the back wall ammunition crates, guns and rounds laid on them
     def gun(model, u, v, yaw, z, pitch=0, roll=0):
         m.point("prop_dynamic", u, v, z, {"model": model, "angles": "%d %d %d" % (pitch, m.fr.yaw(yaw), roll), "solid": "0", "skin": "0", "disableshadows": "1",
                                           "fademindist": "-1", "fademaxdist": "0", "fadescale": "1", "StartDisabled": "0", "renderamt": "255",
                                           "rendercolor": "255 255 255"}, m.pv)
     for v in (744, 792, 840, 888):
-        m.static("models/props_c17/lockers001a.mdl", 329, v, 0)
+        m.static("models/props_c17/lockers001a.mdl", 337, v, 0, z=F + 1)
     for k, u in enumerate((420, 500, 580)):
-        m.dynamic("models/items/ammocrate_%s.mdl" % ("smg1", "ar2", "smg1")[k], u, 943, 270)
-        gun("models/weapons/w_shotgun.mdl" if k != 1 else "models/weapons/w_smg1.mdl", u - 8, 940, 0, F + 37, roll=90)
-        m.dynamic("models/items/boxmrounds.mdl", u + 18, 948, 0, z=F + 34, solid=False)
+        m.dynamic("models/items/ammocrate_%s.mdl" % ("smg1", "ar2", "smg1")[k], u, 935, 270, z=F + 1)
+        gun("models/weapons/w_shotgun.mdl" if k != 1 else "models/weapons/w_smg1.mdl", u - 8, 932, 0, F + 38, roll=90)
+        m.dynamic("models/items/boxmrounds.mdl", u + 18, 940, 0, z=F + 35, solid=False)
     # the weapon frame on the far wall, three pulse rifles standing on their butts on a plinth in front of it
     fu = 704
-    m.static("models/props_combine/weaponstripper.mdl", fu - 17, 832, 180)
-    m.det([(fu - 54, 796, F, fu - 36, 868, F + 8)], CMB)
+    m.static("models/props_combine/weaponstripper.mdl", fu - 23, 832, 180, z=F + 1)
+    m.det([(fu - 60, 796, F, fu - 42, 868, F + 9)], CMB)
     for v in (806, 832, 858):
-        gun("models/weapons/w_irifle.mdl", fu - 45, v, 180, F + 27, pitch=-90)
+        gun("models/weapons/w_irifle.mdl", fu - 51, v, 180, F + 28, pitch=-90)
     m.glow(fu - 50, 832, F + 100, "120 200 255", 0.5)
     m.light(fu - 60, 832, F + 90, "120 200 255 30")
-    m.rope([(fu - 10, 790, F + 129), (fu - 10, 720, VH - 4)], slack=20)
+    m.rope([(fu - 16, 790, F + 129), (fu - 16, 720, VH - 4)], slack=20)
     # ammunition: crates stacked in the corner by the door, one under the frame's end, loose crates
     for u, v, yaw, z in ((372, 740, 0, 0), (372, 800, 0, 0), (372, 770, 10, 34), (430, 736, 90, 0), (640, 930, 90, 0), (660, 740, 0, 0)):
         m.dynamic("models/items/ammocrate_%s.mdl" % ("smg1", "ar2", "grenade")[(u + v) // 10 % 3], u, v, yaw, z=F + z)
     m.loose("models/items/item_item_crate.mdl", 470, 800, 20)
     m.loose("models/items/item_item_crate.mdl", 520, 860, 65)
-    m.lamp(512, 832, VH - 8, "255 236 200 70")
+    for u, v, out in ((320, 760, 0), (704, 760, 180), (512, 960, 270)):
+        combine_lamp(m, u, v, F + 90, out, "147 226 240 50")
+    tube(m, 512, 832, VH, "220 230 255 40", along="u")
+    m.soundscape(SCAPES["combine"], 512, 700, F, radius=420)
     m.target("lc_armory_vault", 512, 832, F + 8, 90)
     m.blocked(576, 320, 768, 512)
     m.lane(512, 288)
@@ -1535,15 +1573,19 @@ def m_armory(m, opt):
 def m_swingbridge(m, opt):
     """EXPERIMENTAL: a footbridge at the trim's height that turns on a round pier in the middle of the canal. As the
     map starts it lies across, from a landing in the left wall to one in the right; turned a quarter it lies along the
-    canal and joins nothing. Each landing is a roofed alcove with a street door (Nova Prospekt's heavy door, shut for
-    good), a green lamp that shows while the bridge is across, the city's handrail each side of the bridge's end, and
-    at its back wall the canal's winch with the button over it that turns the bridge (a press is Toggle). Each has its
-    own stairs from the canal floor: a covered flight in the wall, open to the canal on its side behind a concrete
-    parapet, running away from the bridge (the left one toward the module's exit, the right one toward its entry).
-    Whoever turns the bridge away strands the other bank at that height.
+    canal and joins nothing. Each landing is a roofed alcove with a street doorway that is never used (planked over,
+    boards nailed across), a green lamp that shows while the bridge is across and a red one while it is turned away
+    (and a railway signal head on the wall beside the landing), a striped barrier arm across the landing's edge that
+    drops while the bridge is away, the city's handrail each side of the bridge's end, and at its back wall the canal's
+    winch with the button over it that turns the bridge (a press rings a bell, and two seconds later is Toggle). Each
+    has its own stairs from the canal floor: a covered flight in the wall, open to the canal on its side behind a
+    concrete parapet, running away from the bridge (the left one toward the module's exit, the right one toward its
+    entry). Whoever turns the bridge away strands the other bank at that height.
 
-    The bridge is 456 long and 64 wide: a plank deck on two steel beams, one func_door_rotating, with the city's
-    handrail along both sides riding on it (prop_dynamics parented to it). Its corners sweep a circle 461 across;
+    The bridge is 456 long and 64 wide: a plank deck on two steel beams with a truss of posts and a bottom chord under
+    each and a counterweight under its right end, one func_door_rotating, with the city's handrail along both sides
+    riding on it (prop_dynamics parented to it). It turns on a drum: a wide cap on the round pier with a toothed ring
+    round it and a motor box driving a pinion. Its corners sweep a circle 461 across;
     the canal is 512 wide and the landings' lips stop 234 from the pier's middle, so it sweeps through nothing (ribs
     and drain stubs are kept off the walls there; the walls' trim line stands 240 out). A gap of 6 is left at each end.
     It has no damage of its own.
@@ -1553,15 +1595,21 @@ def m_swingbridge(m, opt):
       lc_swing_wheel_a   the button over the winch on the left landing.     lc_swing_wheel_b   the same on the right.
       lc_swing_lamp_a, lc_swing_lamp_b   the green lamps (env_sprites): lit while the bridge is across.
       lc_swing_move, lc_swing_stop       the turning sound (looping) and the clank as it comes to rest.
+      lc_swing_bell      the bell a press rings before the bridge moves.
+      lc_swing_red_a, lc_swing_red_b     the red lamps (env_sprites): lit while the bridge is turned away.
+      lc_swing_arm_a, lc_swing_arm_b     the barrier arms (func_door_rotating, no Use): Close drops one across the
+                         landing's edge, Open lifts it; the bridge works them (drawn down, the map lifts them as it starts).
 
     Unchecked: a func_door_rotating this big, turning about its middle with people on it: the engine carries riders
     round on a turning brush, but how well is only seen in the game. Spawnflags 32 (toggle) and no Use; outputs OnOpen,
     OnClose, OnFullyOpen, OnFullyClosed for the sound and lamps. With "wait" -1 a blocked door does not turn back: it
     waits, pushing. Sounds are the bunker door's (heard there). That handrails parented to the turning bridge turn
-    with it (props ride on doors so). Which way the winch faces.
+    with it (props ride on doors so). Which way the winch faces. Which way the arms swing (spawnflags 64 or 128: about
+    the canal's axis across the landing; if they swing down through the floor, add 2, Reverse). ambient/alarms/warningbell1.wav.
 
-    Left as brushes: the bridge's deck and beams (a bridge deck), the pier and its turntable, the landings, their lips
-    and corbels, the stairs and their parapets, the doors' jambs."""
+    Left as brushes: the bridge's deck, beams, truss and counterweight (a bridge deck), the pier, its drum, toothed ring,
+    motor box and turntable, the landings, their lips and corbels, the stairs and their parapets, the doorways' jambs
+    and planking, the barrier arms (dev_hazzardstripe01a)."""
     b = m.b
     L, cu, deck = 1024, 512, TRIM
     half, wide = 228, 32
@@ -1583,7 +1631,7 @@ def m_swingbridge(m, opt):
         m.blocked(min(cu - s * 64, cu + s * 448), w1, max(cu - s * 64, cu + s * 448), w2)
         m.steps(cu + s * 448, w1, w2, F, deck, "u", -s)
         # a concrete parapet down the flight's open side
-        r1, r2 = V(256, 262)
+        r1, r2 = V(254, 260)                                      # (2 proud of the flight's side and the wall's face)
         lo, hi = cu + s * 64, cu + s * 448
         m.shapes([prism([(hi, F), (hi, F + 36), (lo, deck + 36), (lo, deck)], "y", r1, r2, MAT["beam"])])
         # the landing: its lip out toward the bridge on a corbel, the handrail each side of the bridge's end, the street
@@ -1594,22 +1642,48 @@ def m_swingbridge(m, opt):
         handrail(m, (cu - 64, s * (lip + 4)), (cu - 32, s * (lip + 4)), deck)
         handrail(m, (cu + 32, s * (lip + 4)), (cu + 64, s * (lip + 4)), deck)
         f1, f2 = V(304, 320)
-        du = cu - s * 24                                          # the door's middle: on the landing's side away from the stairs
+        du = cu - s * 24                                          # the doorway's middle: on the landing's side away from the stairs
         m.det([(du - 39, f1, deck, du - 31, f2, deck + 112), (du + 31, f1, deck, du + 39, f2, deck + 112)], MAT["beam"])
-        m.static("models/props_wasteland/prison_heavydoor001a.mdl", du, s * 314, 270 if s > 0 else 90, z=deck)
-        m.lamp(cu, s * 290, deck + 104, "255 220 170 45")
+        m.det([(du - 31, V(316, 320)[0], deck, du + 31, V(316, 320)[1], deck + 112)], "wood/woodwall006a")     # (planked over, never used)
+        from map_town import board
+        for z, roll in ((deck + 34, 82), (deck + 72, 99)):
+            board(m, du, s * 312, z, 270 if s > 0 else 90, roll)
+        cage_lamp(m, cu + s * 40, s * 320, deck + 92, 270 if s > 0 else 90, "255 220 170 45")
+        m.static("models/props_trainstation/light_signal002a.mdl", cu - s * 112, s * 214, 270 if s > 0 else 90, z=deck + 10)    # the signal on the wall beside it
+        m.taken(cu - s * 112 - 50, V(200, 256)[0], deck, cu - s * 112 + 50, V(200, 256)[1], deck + 140)
         m.taken(cu - 260, V(228, 256)[0], deck - 60, cu + 260, V(228, 256)[1], deck + 120)
         # the winch at the back wall, the button over it that turns the bridge, and the green lamp over that
         tag = "a" if s > 0 else "b"
         wu = cu + s * 44                                          # (between the door's jamb and the stairs' head)
         m.static("models/props_canal/winch02.mdl", wu, s * 290, 0 if s > 0 else 180, z=deck)
-        m.button("lc_swing_wheel_" + tag, wu, s * 320, deck + 56, 270 if s > 0 else 90, [("lc_swing_bridge", "Toggle", "", 0)], wait="8")
+        m.button("lc_swing_wheel_" + tag, wu, s * 320, deck + 56, 270 if s > 0 else 90, [("lc_swing_bell", "PlaySound", "", 0), ("lc_swing_bridge", "Toggle", "", 2)], wait="10")
         sprite(m, "lc_swing_lamp_" + tag, wu, s * 314, deck + 96, "120 255 120", 0.3)
+        sprite(m, "lc_swing_red_" + tag, wu, s * 314, deck + 84, "255 50 30", 0.3, on=False)
+        sprite(m, "lc_swing_red_%s2" % tag, cu - s * 112, s * 168, deck + 90, "255 50 30", 0.35, on=False)
+        # the barrier arm across the landing's edge: drawn down, hinged at its end by the wall's corner
+        ay = s * (lip + 10)
+        brush(m, "func_door_rotating", {
+            "targetname": "lc_swing_arm_" + tag, "origin": "%d %d %d" % m.fr.at(cu - 58, ay, deck + 38), "distance": "85", "speed": "40", "wait": "-1", "lip": "0",
+            "dmg": "0", "forceclosed": "0", "solidbsp": "0", "spawnflags": str(32 + (64 if m.fr.ax("v") == "x" else 128)), "health": "0", "ignoredebris": "0",
+            "loopmovesound": "0", "noise1": "Doors.Move10", "noise2": "Doors.FullOpen4", "rendermode": "0", "renderamt": "255", "rendercolor": "255 255 255",
+            "renderfx": "0", "disableshadows": "1"}, [(cu - 60, ay - 2, deck + 35, cu + 50, ay + 2, deck + 41)], "dev/dev_hazzardstripe01a")
+        m.det([(cu - 64, ay - 4, deck, cu - 54, ay + 4, deck + 34)], STEEL)      # (its post)
         m.lane(cu, s * 290, deck)
         m.lane(cu + s * 256, s * 288, F + 128)
 
-    # the pier: a round concrete drum with a steel turntable on it
-    m.shapes([vprism(octagon(cu, 0, 40), F, deck - 40, MAT["beam"]), vprism(octagon(cu, 0, 52), F, F + 24, MAT["canal_wall"]), vprism(octagon(cu, 0, 48), deck - 40, deck - 32, STEEL)])
+    # the pier: a round concrete post, a wide drum on it with a toothed ring round it and a motor box driving a pinion,
+    # a steel turntable on the drum
+    m.shapes([vprism(octagon(cu, 0, 40), F, deck - 72, MAT["beam"]), vprism(octagon(cu, 0, 52), F, F + 24, MAT["canal_wall"]),
+              vprism(octagon(cu, 0, 60), deck - 72, deck - 41, MAT["beam"]), vprism(octagon(cu, 0, 48), deck - 41, deck - 32, STEEL),
+              vprism(octagon(cu + 70, 0, 7), deck - 70, deck - 46, STEEL)])
+    teeth = []
+    for k in range(20):
+        t = 2 * math.pi * k / 20
+        tu, tv = int(round(cu + 61 * math.cos(t))), int(round(61 * math.sin(t)))
+        teeth.append((tu - 3, tv - 3, deck - 66 + (k % 2), tu + 3, tv + 3, deck - 50 + (k % 2)))
+    m.det(teeth, PIPE)
+    m.det([(cu + 78, -14, deck - 96, cu + 102, 14, deck - 62)], "metal/metalhull010c")        # (the motor box, on a bracket off the post)
+    m.det([(cu + 36, -6, deck - 100, cu + 80, 6, deck - 96)], STEEL)
     m.blocked(cu - 64, -64, cu + 64, 64)
     # the bridge, drawn across: two steel beams, a plank deck, cross ties; the handrail each side rides on it
     wood = MM["wood"]
@@ -1622,11 +1696,21 @@ def m_swingbridge(m, opt):
             ride(m, "lc_swing_bridge", "models/props_c17/handrail04_%s.mdl" % kind, cu + s * (wide - 2), p + n // 2, 0, deck)
             p += n
     parts += [((cu - 28, v, deck - 30, cu + 28, v + 6, deck - 18), STEEL) for v in (-half + 4, -110, -3, 104, half - 10)]
+    for s in (1, -1):                                             # a truss under each beam: posts and a bottom chord
+        a, c = min(s * 22, s * 26), max(s * 22, s * 26)
+        parts.append(((cu + a, -half + 8, deck - 60, cu + c, half - 8, deck - 56), STEEL))
+        parts += [((cu + a, v, deck - 56, cu + c, v + 4, deck - 32), STEEL) for v in range(-half + 8, half - 8, 54)]
+    parts.append(((cu - 18, -half + 10, deck - 62, cu + 18, -half + 70, deck - 32), MAT["beam"]))     # the counterweight, under its right end
     swing_gate(m, "lc_swing_bridge", parts, (cu, 0, deck - 16), mat=STEEL, speed=12, flags="32", connections=[
         ("OnOpen", "lc_swing_move", "PlaySound", "", 0), ("OnClose", "lc_swing_move", "PlaySound", "", 0), ("OnOpen", "lc_swing_lamp_*", "HideSprite", "", 0),
         ("OnFullyOpen", "lc_swing_move", "StopSound", "", 0), ("OnFullyClosed", "lc_swing_move", "StopSound", "", 0), ("OnFullyOpen", "lc_swing_stop", "PlaySound", "", 0),
-        ("OnFullyClosed", "lc_swing_stop", "PlaySound", "", 0), ("OnFullyClosed", "lc_swing_lamp_*", "ShowSprite", "", 0)])
+        ("OnFullyClosed", "lc_swing_stop", "PlaySound", "", 0), ("OnFullyClosed", "lc_swing_lamp_*", "ShowSprite", "", 0),
+        ("OnOpen", "lc_swing_red_*", "ShowSprite", "", 0), ("OnOpen", "lc_swing_arm_*", "Close", "", 0), ("OnFullyClosed", "lc_swing_red_*", "HideSprite", "", 0),
+        ("OnFullyClosed", "lc_swing_arm_*", "Open", "", 0)])
     sound(m, "lc_swing_move", "Streetwar.d3_c17_11_garage_move1", cu, 0, deck, loops=True, radius=1600, volume=8)
+    sound(m, "lc_swing_bell", "ambient/alarms/warningbell1.wav", cu, 0, deck + 40, radius=1800, volume=9)
+    m.point("logic_auto", cu, 0, deck + 160, {"spawnflags": "1"}, connections=[("OnMapSpawn", "lc_swing_arm_*", "Open", "", 0.5)])
+    m.soundscape(SCAPES["metal"], cu, 0, F, radius=800)
     sound(m, "lc_swing_stop", "Streetwar.d3_c17_11_garage_stop1", cu, 0, deck, radius=1600, volume=8)
     m.lane(cu, 120, deck)
     m.lane(cu, -120, deck)
@@ -1653,13 +1737,18 @@ def m_floodroom(m, opt):
     up to it inside the chamber, a steel plate along their open side); from the gallery's far side a passage leads
     round the chamber and back to the canal through a second door (lc_flood_door_out, one of the city's doors: Use
     opens it), steps up from the canal's floor. In the chamber's middle the main (the city's 32 pipe) stands from floor
-    to roof with a big hand wheel round it; a button on it (lc_flood_valve_b) and one on the gallery's wall by a small
-    wheel (lc_flood_valve_a) flood the chamber: the steel door at the foot of the way in drops, then water rises 88 from
-    under the floor to just under the gallery, in about fifteen seconds. Pressed again, it drains and the door lifts.
-    Nobody is hurt: whoever is on the floor swims up to the gallery and walks out.
+    to roof with a valve wheel on it (props_pipes valvewheel001); a button on it (lc_flood_valve_b) and one on the
+    gallery's wall by a small wheel (lc_flood_valve_a) flood the chamber: a klaxon sounds, a red beacon under the roof
+    starts turning and sweeps its beam round the walls, the steel door at the foot of the way in drops, then water
+    rises 90 from under the floor to just under the gallery, in about fifteen seconds. Pressed again, it drains (the
+    pipes knock) and the door lifts. Nobody is hurt: whoever is on the floor swims up to the gallery and walks out. The
+    chamber looks like it floods: a tide line round its walls at the gallery's height, silt on its floor, a grate by
+    the main, a danger sign by the door and a lock wheel beside it; a lost case lies on the floor (under water when it
+    is flooded: a reason to flood it, or to dive).
 
     Named for the game:
-      lc_flood_water      the water: a func_water_analog under the chamber's floor (Open floods, Close drains; 6 a second).
+      lc_flood_water      the water: a func_water_analog, its top 2 under the chamber's floor (so the two never share a
+                          plane), rising 90 (Open floods, Close drains; 6 a second).
       lc_flood_valve_a    the button on the gallery.     lc_flood_valve_b    the button on the main, at the floor.
       lc_flood_fill, lc_flood_drain   relays: Trigger one to flood or drain with the door and the sound. A press of
                           either button triggers both; only the one that makes sense is live.
@@ -1670,14 +1759,20 @@ def m_floodroom(m, opt):
                           gamemode can lock it).
       lc_flood_rush       the rushing sound, playing while the water moves.
       lc_flood_chamber    the middle of the chamber's floor.
+      lc_flood_cache      the case on the chamber's floor (a place the game can fill).
+      lc_flood_klaxon, lc_flood_knock   the klaxon as it floods, the pipes knocking as it drains.
+      lc_flood_beacon     the beacon: a func_rotating under the roof (Start, Stop), carrying lc_flood_beacon_beam (a red
+                          point_spotlight: LightOn, LightOff); lc_flood_alarm, a red light (TurnOn, TurnOff). The fill
+                          relay starts all three, the water's OnFullyOpen stops them.
     Areaportals: one in the way in, one inside the second door's thickness: both dry, both well away from the water.
 
-    Unchecked: func_water_analog from memory ("movedir" up, "movedistance" 88, "speed" 6, "startposition" 0; inputs
+    Unchecked: func_water_analog from memory ("movedir" up, "movedistance" 90, "speed" 6, "startposition" 0; inputs
     Open and Close; outputs OnFullyOpen and OnFullyClosed). Its top is nature/water_canals_water_clear and its other
     faces nodraw; if moving water will not draw with that material, a cheap water material is needed there. Whether
     the engine lets a player surface cleanly 8 under the gallery. Sound from memory: ambient/water/water_flow_loop1.wav.
-    The main is pipeset32d stood on end (pitch 90) and the hand wheel wheel01 laid flat (roll 90): both are centred on
-    their origins, so they stand where they are put, but how they look so is not seen.
+    The main is pipeset32d stood on end (pitch 90), centred on its origin; the valve wheel is turned to face out of the
+    main's side (pitch -90): how it looks so is not seen. ambient/alarms/klaxon1.wav, ambient/materials/metal_stress4.wav,
+    a point_spotlight parented to a func_rotating (it turns with it in Half-Life 2's maps).
 
     Left as brushes: the chamber, its gallery's grating, the steel plate along the stairs, the door's jambs and head,
     the notch in the bank, the water."""
@@ -1721,7 +1816,8 @@ def m_floodroom(m, opt):
     for k in range(7):
         i1, o1 = ends.get(k, (inner[k], outer[k]))
         i2, o2 = ends.get(k + 1, (inner[k + 1], outer[k + 1]))
-        ring.append(vprism([P(*i1), P(*o1), P(*o2), P(*i2)], G - 8, G, PIPE, grate))
+        d = k % 2                                  # (every other piece 1 deeper and 1 taller: no two neighbours' tops in one plane)
+        ring.append(vprism([P(*i1), P(*o1), P(*o2), P(*i2)], G - 8 - d, G + d, PIPE, grate))
     m.shapes(ring)
 
     def rail(p, q, off):
@@ -1737,36 +1833,57 @@ def m_floodroom(m, opt):
     rail(ends[7][0], ends[7][1], (-3, 0))
     # the eight steps down from the way in, and the stairs up to the gallery
     m.steps(cv - 96, cu - 64, cu + 64, FL, F, "v", -1)
-    m.steps(cv - 104, cu + 56, cu + 96, FL, G, "v", 1)
-    m.det([(cu + 56, cv + 40, G - 8, cu + 140, cv + 88, G)], PIPE, top=grate)
-    handrail_line(m, (cu + 58, cv + 40), (cu + 58, cv + 88), G)
-    handrail_line(m, (cu + 56, cv + 86), (cu + 88, cv + 86), G)
-    m.shapes([prism([(cv - 104, FL), (cv - 104, FL + 36), (cv + 40, G + 36), (cv + 40, G)], "x", cu + 54, cu + 58, STEEL)])
+    m.steps(cv - 104, cu + 64, cu + 100, FL, G, "v", 1)
+    m.det([(cu + 64, cv + 40, G - 7, cu + 140, cv + 88, G + 2)], PIPE, top=grate)
+    handrail_line(m, (cu + 66, cv + 40), (cu + 66, cv + 88), G + 2)
+    handrail_line(m, (cu + 64, cv + 86), (cu + 96, cv + 86), G + 2)
+    m.shapes([prism([(cv - 104, FL), (cv - 104, FL + 36), (cv + 40, G + 36), (cv + 40, G)], "x", cu + 60, cu + 64, STEEL)])
 
     # the main in the middle, floor to roof (into both), the hand wheel round it; a small wheel on the gallery's wall
     def stood(model, u, v, zc, pitch=0, roll=0):
         m.point("prop_static", u, v, zc, {"model": model, "angles": "%d %d %d" % (pitch, m.fr.yaw(0), roll), "skin": "0", "solid": "6", "disableshadows": "0",
                                           "screenspacefade": "0", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1"}, m.pv)
     stood("models/props_pipes/pipeset32d_256_001a.mdl", cu, cv, FL + 112, pitch=90)
-    stood("models/props_wasteland/wheel01.mdl", cu, cv, FL + 52, roll=90)
+    m.point("prop_static", cu, cv - 17, FL + 50, {"model": "models/props_pipes/valvewheel001.mdl", "angles": "-90 %d 0" % m.fr.yaw(270), "skin": "0", "solid": "6",
+                                                  "disableshadows": "0", "screenspacefade": "0", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1"}, m.pv)
     m.static("models/props_borealis/door_wheel001a.mdl", cu - 189, cv + 30, 0, z=G + 44)
     wires = [("lc_flood_fill", "Trigger", "", 0), ("lc_flood_drain", "Trigger", "", 0)]
     m.button("lc_flood_valve_a", cu - 192, cv, G + 40, 0, wires, wait="18")
     m.button("lc_flood_valve_b", cu, cv - 19, FL + 18, 270, wires, wait="18")
 
     # the water: one slab under the whole chamber, its top the water's face
-    wbox = m.fr.box(cu - 192, cv - 192, FL - 88, cu + 192, cv + 192, FL)
-    b.vmf.brush_entity("func_water_analog", {"targetname": "lc_flood_water", "movedir": "-90 0 0", "movedistance": "88", "speed": "6", "startposition": "0",
+    wbox = m.fr.box(cu - 192, cv - 192, FL - 90, cu + 192, cv + 192, FL - 2)          # (its top 2 under the floor: never one plane with it)
+    b.vmf.brush_entity("func_water_analog", {"targetname": "lc_flood_water", "movedir": "-90 0 0", "movedistance": "90", "speed": "6", "startposition": "0",
                                              "WaveHeight": "3.0", "rendermode": "0", "renderamt": "255", "rendercolor": "255 255 255", "disableshadows": "1"},
                         [wbox], MAT["nodraw"], b.vis + ": water and sludge", top=MM["water"],
                         connections=[("OnFullyOpen", "lc_flood_rush", "StopSound", "", 0), ("OnFullyClosed", "lc_flood_rush", "StopSound", "", 0),
-                                     ("OnFullyClosed", "lc_flood_door", "PressIn", "", 0.5)])
+                                     ("OnFullyClosed", "lc_flood_door", "PressIn", "", 0.5), ("OnFullyOpen", "lc_flood_beacon", "Stop", "", 2),
+                                     ("OnFullyOpen", "lc_flood_beacon_beam", "LightOff", "", 2), ("OnFullyOpen", "lc_flood_alarm", "TurnOff", "", 2)])
     b.names.append(("lc_flood_water", "func_water_analog", m.tag))
     sound(m, "lc_flood_rush", "ambient/water/water_flow_loop1.wav", cu, cv, F, loops=True, radius=1500, volume=9)
+    sound(m, "lc_flood_klaxon", "ambient/alarms/klaxon1.wav", cu, cv, CH - 30, radius=1600, volume=8)
+    sound(m, "lc_flood_knock", "ambient/materials/metal_stress4.wav", cu, cv, F, radius=1200, volume=6)
     toggle(m, "lc_flood_fill", "lc_flood_drain", cu, cv, CH - 40,
-           [("lc_flood_door", "PressOut", "", 0), ("lc_flood_rush", "PlaySound", "", 1.5), ("lc_flood_water", "Open", "", 2.5)],
-           [("lc_flood_water", "Close", "", 0), ("lc_flood_rush", "PlaySound", "", 0)], 18)
+           [("lc_flood_door", "PressOut", "", 0), ("lc_flood_rush", "PlaySound", "", 1.5), ("lc_flood_water", "Open", "", 2.5), ("lc_flood_klaxon", "PlaySound", "", 0),
+            ("lc_flood_klaxon", "PlaySound", "", 2.5), ("lc_flood_klaxon", "PlaySound", "", 5), ("lc_flood_beacon", "Start", "", 0),
+            ("lc_flood_beacon_beam", "LightOn", "", 0), ("lc_flood_alarm", "TurnOn", "", 0)],
+           [("lc_flood_water", "Close", "", 0), ("lc_flood_rush", "PlaySound", "", 0), ("lc_flood_knock", "PlaySound", "", 2), ("lc_flood_knock", "PlaySound", "", 9)], 18)
+    # the beacon under the roof: a red lamp, a beam carried round on an unseen turning brush, a red light
+    m.static("models/props_wasteland/prison_lamp001c.mdl", cu + 120, cv + 120, 0, z=CH - 12)
+    brush_shapes(m, "func_rotating", {"targetname": "lc_flood_beacon", "origin": "%d %d %d" % m.fr.at(cu + 120, cv + 120, CH - 20), "spawnflags": str(64),
+                                      "maxspeed": "120", "fanfriction": "20", "volume": "0", "dmg": "0", "solidbsp": "0", "rendermode": "10", "renderamt": "0",
+                                      "rendercolor": "255 255 255", "disableshadows": "1"}, [], boxes=[(cu + 116, cv + 116, CH - 24, cu + 124, cv + 124, CH - 16)],
+                 mat=MAT["nodraw"], vis=b.vis + ": the beacon")
+    m.point("point_spotlight", cu + 120, cv + 120, CH - 22, {"targetname": "lc_flood_beacon_beam", "parentname": "lc_flood_beacon", "angles": "35 %d 0" % m.fr.yaw(0),
+                                                             "spawnflags": "0", "spotlightlength": "300", "spotlightwidth": "40", "rendercolor": "255 40 30",
+                                                             "renderamt": "200", "HDRColorScale": "1.0"}, m.lv)
+    named_light(m, "lc_flood_alarm", cu + 100, cv + 100, CH - 40, "255 40 30 80", on=False)
     m.target("lc_flood_chamber", cu, cv - 60, FL + 8, 90)
+    m.static("models/props_c17/suitcase001a.mdl", cu - 110, cv + 60, 40, z=FL)          # (lost: under water when it is flooded)
+    m.target("lc_flood_cache", cu - 110, cv + 60, FL + 8, 90)
+    for kind, u, v, z, sd in (("stain", cu - 192, cv, G - 16, 1), ("stain", cu + 192, cv + 30, G - 14, 2), ("stain", cu, cv + 192, G - 18, 3), ("stain", cu - 30, cv + 192, G - 60, 4),
+                              ("puddle", cu + 60, cv - 90, FL + 1, 5), ("stain", cu - 70, cv - 40, FL + 1, 6), ("grate", cu + 70, cv + 30, FL + 1, 7)):
+        m.grime(kind, u, v, z, sd)
 
     # the door at the foot of the way in: Nova Prospekt's sliding door (114 wide, 120 high) between steel jambs, on an
     # unseen leaf that drops from the lintel (drawn shut; the map lifts it as it starts)
@@ -1777,16 +1894,19 @@ def m_floodroom(m, opt):
           vis=b.vis + ": the flood door")
     ride(m, "lc_flood_door", "models/props_wasteland/prison_slidingdoor001a.mdl", cu, 372, 90, F)
     m.point("logic_auto", cu, 330, F + 110, {"spawnflags": "1"}, connections=[("OnMapSpawn", "lc_flood_door", "PressIn", "", 0.5)])
-    m.det([(cu - 72, 244, F, cu - 64, 256, F + 136), (cu + 64, 244, F, cu + 72, 256, F + 136), (cu - 72, 244, F + 128, cu + 72, 256, F + 144)], STEEL)
+    m.det([(cu - 72, 244, F, cu - 62, 256, F + 128), (cu + 62, 244, F, cu + 72, 256, F + 128), (cu - 72, 244, F + 128, cu + 72, 256, F + 144)], STEEL)   # (the banks' ends hide in its posts)
+    m.grime("danger", cu - 64, 300, F + 90, 8)                     # the warning by the door, and its lock wheel
+    m.static("models/props_borealis/door_wheel001a.mdl", cu + 63, 340, 180, z=F + 50)
 
     # the second door, at the canal: four steps up from the floor in a notch in the bank
     du = cu + 256
     m.steps(208, du, du + 64, F, G, "v", 1)
-    m.shapes([prism([(256, F), (120, F), (256, F + 136)], "x", u, u + 8, MAT["beam"]) for u in (du - 8, du + 64)])
+    m.shapes([prism([(256, F), (120, F), (256, F + 136)], "x", u, u + 8, MAT["beam"]) for u in (du - 6, du + 62)])     # (2 into the cut)
     m.blocked(du, 128, du + 64, 320)
     from map_town import door_hole
     door_hole(m, "u", du, 280, 296, G, PH, PIPE, name="lc_flood_door_out", yaw=270)
     # light
+    m.soundscape(SCAPES["watery"], cu, cv, FL, radius=420)
     m.lamp(cu + 70, cv - 130, CH - 32, "200 230 220 60", hang=24)
     m.lamp(cu - 70, cv + 130, CH - 32, "200 230 220 60", hang=24)
     m.lamp(cu, 320, F + 120, "255 220 170 40")

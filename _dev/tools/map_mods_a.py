@@ -1938,18 +1938,28 @@ def oblique(pts, shift, mat):
 def m_barge(m, opt):
     """The grounded barge. A river barge lies on the canal floor from u 320 to 960, askew (its stern 80 nearer the left
     bank than its bow: sheared in plan, never turned): a steel hull 640 long, 192 wide and 96 high, its sides flaring,
-    its bow and stern raked and tapered (no ship model fits a canal: the hull stays brushes). Forward a wooden pole of
-    the docks for a mast with a caged lamp on it, the canal's own winch, cleats; amidships the hold under four hatch
-    covers, the second slid back onto the third: a ladder goes down through the gap. The hold (336 by 128, 88 high)
-    is somebody's hideout: two beds forward, a stove with its pipe (the city's pipe pieces) up through the deck, a
-    table, a lamp, crates (lc_barge_hold). Aft a wheelhouse with windows all round, a doorway astern and a wooden
-    spoked wheel on its pedestal (lc_barge_wheel). A gangplank runs level from the left bank to the deck. The canal stays passable either side of
-    the hull: a strip of floor and the bank.
+    its bow and stern raked and tapered (no ship model fits a canal: the hull stays brushes). Its face is a vessel's: a
+    timber rub rail along the sheer, a band of a second plate at the old waterline, rust streaking down from the
+    scuppers, its name painted on the bow (the owner's own ship's sign decal), the anchor's chain run out ahead into the
+    mud, tyres hung down both sides for fenders, mud heaped against its sides where it grounded. Forward a wooden pole
+    of the docks for a mast with a caged lamp on it, the canal's own winch, cleats; amidships the hold under four hatch
+    covers, the second slid back onto the third: a ladder goes down through the gap. The hold (336 by 128, 88 high) is
+    somebody's hideout, its floor clear down the middle: two beds forward, a stove with its pipe (the city's pipe pieces)
+    up through the deck and a thin smoke from it, a table and chairs to one side, a lamp, a crate (lc_barge_hold). Aft a
+    wheelhouse with windows all round, a doorway astern, an instrument console with a radio under the front windows and
+    a wooden spoked wheel on its pedestal (lc_barge_wheel). A gangplank runs level from the left bank to the deck. The
+    canal stays passable either side of the hull: a strip of floor and the bank. Sounds: the hull's metal groaning
+    (coast.util_metalstress), the hold a wooden room's creak (d1_town.WoodBuilding).
     Named for the game: lc_barge_hold (an info_target in the hold), lc_barge_wheel (an info_target at the wheel).
-    Left as brushes: the hull, decks, bulwarks, hatch coaming and covers, the wheelhouse and its pedestal, the funnel,
-    the mast's yard, the gangplank (the vessel itself).
-    Unchecked: that props_wasteland/wheel01 (a cart's wheel) reads as a ship's; which way the winch faces; the ladder standing free in the hatch (the shared helper's models and dismount points); that walls
-    sheared in plan do not snag a player walking the side decks (40 wide)."""
+    Left as brushes: the hull, its rub rail and waterline band, decks, bulwarks, hatch coaming and covers, the
+    wheelhouse, its console and pedestal, the funnel, the mast's yard, the gangplank (the vessel itself), the mud heaped
+    against it.
+    Unchecked: that props_wasteland/wheel01 (a cart's wheel: Half-Life 2 has no ship's wheel) reads as a ship's; which
+    way the winch and the radio face; the ladder standing free in the hatch (the shared helper's models and dismount
+    points); that walls sheared in plan do not snag a player walking the side decks (40 wide); the colour of the
+    waterline band (metal/metalwall030a, one of the owner's commonest metals, chosen unseen); that the hung tyres lie
+    flat to the flaring sides. Not done: a list to one side (a roll sheared into every brush would not keep their faces
+    on the grid)."""
     b = m.b
     steel, wood, tin = HULL, MM["wood"], MM["tin"]
     U0, V0, dk = 320, -136, F + 96
@@ -1965,9 +1975,20 @@ def m_barge(m, opt):
         return para((u, v, z1), (a2 - a1, (a2 - a1) // 8, 0), (0, c2 - c1, 0), (0, 0, z2 - z1), mat, top)
     sh = []
     # --- the hull: flaring sides, a bottom plate, a raked bow and stern, bulkheads ---
-    for (c, lean) in ((24, -24), (160, 24)):
+    for (c, lean) in ((24, -22), (160, 22)):
         u, v = P(96, c)
-        sh.append(para((u, v, F), (480, 60, 0), (0, lean, 96), (0, 8, 0), steel))
+        sh.append(para((u, v, F), (480, 60, 0), (0, lean, 88), (0, 8, 0), steel))          # (to the deck's underside)
+    # a hull's face: a rub rail along the sheer, a band of a second plate at the old waterline, mud heaped against it
+    # where it grounded
+    sh += [sk(100, -6, dk - 16, 572, 6, dk - 6, WOODTRIM), sk(100, 186, dk - 16, 572, 198, dk - 6, WOODTRIM)]
+    band = "metal/metalwall030a"
+    for (c, lean) in ((19, -6), (169, 6)):
+        u, v = P(100, c)
+        sh.append(para((u, v, F + 20), (472, 59, 0), (0, lean, 24), (0, 4, 0), band))
+    mud = DIRT
+    for (c_in, c_mid, c_out) in ((24, 17, -40), (168, 175, 232)):
+        tri = [P(100, c_in) + (F,), P(100, c_mid) + (F + 30,), P(100, c_out) + (F,)]
+        sh.append(oblique(tri, (472, 59, 0), mud))
     sh.append(sk(96, 24, F, 576, 168, F + 8, steel, wood))
     sh.append(frustum([P(24, 78), P(24, 114), P(96, 168), P(96, 24)], [P(0, 72), P(0, 120), P(96, 192), P(96, 0)], F, dk, steel))
     sh.append(frustum([P(576, 24), P(576, 168), P(624, 150), P(624, 42)], [P(576, 0), P(576, 192), P(640, 168), P(640, 24)], F, dk, steel))
@@ -1984,7 +2005,7 @@ def m_barge(m, opt):
     for c in (40, 146):
         sh += [sk(456, c, wz, 552, c + 6, wz + 40, wood), sk(456, c, wz + 80, 552, c + 6, wz + 96, wood), sk(456, c, wz + 40, 464, c + 6, wz + 80, wood),
                sk(544, c, wz + 40, 552, c + 6, wz + 80, wood), sk(496, c, wz + 40, 504, c + 6, wz + 80, wood)]
-    sh += [sk(456, 46, wz, 464, 146, wz + 40, wood), sk(456, 46, wz + 80, 464, 146, wz + 96, wood), sk(456, 92, wz + 40, 464, 100, wz + 80, wood),
+    sh += [sk(456, 46, wz, 464, 146, wz + 41, wood), sk(456, 46, wz + 79, 464, 146, wz + 96, wood), sk(456, 92, wz + 41, 464, 100, wz + 79, wood),
            sk(544, 46, wz, 552, 76, wz + 96, wood), sk(544, 116, wz, 552, 146, wz + 96, wood), sk(544, 76, wz + 84, 552, 116, wz + 96, wood),
            sk(448, 32, wz + 96, 560, 160, wz + 102, tin)]
     # the wheel on its pedestal, a bench, the funnel behind the house
@@ -1995,6 +2016,9 @@ def m_barge(m, opt):
     sh.append(vprism([(fu + x, fv + y) for x, y in ring(15)], dk, dk + 150, steel))
     sh.append(vprism([(fu + x, fv + y) for x, y in ring(20)], dk + 120, dk + 132, MAT["black"]))
     m.target("lc_barge_wheel", wu + 22, wv, wz + 8, 180)
+    sh.append(sk(458, 54, wz, 468, 138, wz + 34, steel, MM["wood"]))                       # the instrument console under the front windows
+    ru, rv = P(462, 120)
+    m.static(M_ + "props_lab/citizenradio.mdl", ru, rv, 7, wz + 34)
     # --- forward: bitts, a winch, the mast and its stay ---
     for (a, c) in ((40, 84), (40, 104), (600, 60), (600, 128)):
         u, v = P(a, c)
@@ -2027,15 +2051,15 @@ def m_barge(m, opt):
     for k, z in enumerate((F + 74, F + 123, F + 155)):                      # its pipe: three lengths up through the deck, a collar on top
         tilted(m, "prop_static", M_ + "props_pipes/pipe02_straight01_%s.mdl" % ("short" if k == 2 else "long"), su, sv + 8, z, 0, 0, 90)
     tilted(m, "prop_static", M_ + "props_pipes/pipe02_connector01.mdl", su, sv + 4, F + 172, 0, 90, 0)
-    tu, tv = P(320, 118)
+    tu, tv = P(320, 134)
     put(m, M_ + "props_c17/furnituretable001a.mdl", tu, tv, 7, z=F + 8)
-    m.loose(M_ + "props_c17/furniturechair001a.mdl", tu - 40, tv - 6, 7, z=F + 8)
-    m.loose(M_ + "props_c17/furniturechair001a.mdl", tu + 6, tv - 40, 97, z=F + 8)
+    m.loose(M_ + "props_c17/furniturechair001a.mdl", tu - 40, tv - 4, 7, z=F + 8)
+    m.loose(M_ + "props_c17/furniturechair001a.mdl", tu + 40, tv - 2, 187, z=F + 8)
     lu2, lv2 = P(320, 166)
     m.lamp(lu2, lv2, dk - 16, "255 190 120 26")                            # (under the side deck: the hatch covers are higher)
     cu, cv = P(420, 130)
     m.loose(M_ + "props_junk/wood_crate001a.mdl", cu, cv, 10, z=F + 8)
-    m.loose(M_ + "props_junk/wood_crate001a.mdl", cu - 4, cv - 44, 30, z=F + 8)
+    m.smoke(su, sv + 4, F + 182, size=10, length=160, rate=8)                              # the stove is lit: a thin smoke from its pipe
     put(m, M_ + "props_junk/metalbucket01a.mdl", su - 40, sv, 0, z=F + 8)
     hu, hv = P(280, 80)
     m.target("lc_barge_hold", hu, hv, F + 16, 0)
@@ -2045,12 +2069,30 @@ def m_barge(m, opt):
     put(m, M_ + "props_c17/oildrum001.mdl", 1030, -40, 0)
     m.loose(M_ + "props_junk/wood_pallet001a.mdl", 270, 90, 30)
     du, dv = P(540, 20)
+    nu, nv = P(120, 6)
+    m.decal("decals/decalshipsign005d", nu, nv, F + 72)                                     # its name on the bow
+    for k, (a, c, z) in enumerate(((200, 6, F + 72), (360, 3, F + 84), (480, 9, F + 60), (240, 186, F + 72), (400, 189, F + 84))):
+        su_, sv_ = P(a, c)
+        m.grime("stain", su_, sv_, z, k + 1)                                                 # rust down from the scuppers
+    bu_, bv_ = P(8, 96)
+    m.rope([(bu_, bv_, dk + 2), (bu_ - 96, bv_ - 20, F + 2)], slack=20, width=4)            # the anchor's chain, run out into the mud
+    m.b.vmf.ents[-1] = m.b.vmf.ents[-1].replace("cable/cable.vmt", "cable/chain.vmt")
+    m.b.vmf.ents[-2] = m.b.vmf.ents[-2].replace("cable/cable.vmt", "cable/chain.vmt")
+    for (a, c, out) in ((200, 4, 2), (380, 4, 2), (220, 188, 190), (420, 188, 190)):
+        tu_, tv_ = P(a, c)
+        ru_, rv_ = P(a, out)
+        tilted(m, "prop_dynamic_override", M_ + "props_vehicles/tire001c_car.mdl", tu_, tv_, F + 60, 97, 0, 0)
+        m.rope([(ru_, rv_, dk + 12), (tu_, tv_, F + 74)], slack=6)
+    for kind, u, v, z, seed in (("puddle", 260, 160, F + 1, 1), ("trash", 1020, -120, F + 1, 2), ("stain", 900, 60, F + 1, 3)):
+        m.grime(kind, u, v, z, seed)
+    m.soundscape(SCAPES["metal"], 640, 0, F, radius=560)
+    m.soundscape(SCAPES["house"], P(300, 96)[0], P(300, 96)[1], F + 8, radius=150)
     m.view(120, 40, F, 355, -8, "the barge, bow on")
     m.view(gu, 232, dk, 262, 12, "from the gangplank")
     m.view(P(110, 150)[0], P(110, 150)[1], dk, 5, 6, "along the deck: the hatch, the wheelhouse")
     m.view(P(230, 96)[0], P(230, 96)[1], F + 8, 0, 4, "in the hold, looking aft")
     m.view(P(420, 96)[0], P(420, 96)[1], F + 8, 180, 4, "in the hold, looking forward: the ladder, the bunks")
-    m.view(P(536, 110)[0], P(536, 110)[1], dk, 185, 6, "in the wheelhouse")
+    m.view(P(536, 62)[0], P(536, 62)[1], dk, 165, 6, "in the wheelhouse")
     b.notes.append("%s: the deck is at z %d, the hold's floor z %d; the hull lies from u 320 to 960, its stern 80 to the left of its bow" % (m.tag, dk, F + 8))
 
 
@@ -2059,9 +2101,12 @@ def m_barge(m, opt):
 # ---------------------------------------------------------------------------
 
 class BusBody:
-    """A bus's body of brushes (no bus model exists in any of the games), lying along v between two u's: a floor, a
-    roof, sides with window posts, open ends. Its floor rises num/den for every unit of v from (v0, z0): sheared, never
-    turned. high: the clear height inside. What is in it (seats, wheels, an axle) is the game's own models."""
+    """A city bus's body of brushes (no bus model exists in any of the games), lying along v between two u's, sheared
+    (its floor rises num/den for every unit of v from (v0, z0)), never turned. It is built as a bus is: a skirt of
+    panels to the window line in one colour with an arch over each wheel, a belt strip, window posts and a header in a
+    second colour, a roof with rounded edges, a front with its windscreen frame, a grille and the destination board, a
+    back with the engine's grille. high: the clear height inside. What is in it (seats, wheels, an axle) is the game's
+    own models. (Each layer of a side stands in its own plane, a unit off the next, so no two faces share one.)"""
 
     def __init__(self, u1, u2, v0, z0, num, den, high, post):
         self.u1, self.u2, self.v0, self.z0, self.num, self.den, self.high, self.post = u1, u2, v0, z0, num, den, high, post
@@ -2076,44 +2121,94 @@ class BusBody:
     def piece(self, ua, ub, va, vb, lo, hi, mat):
         self.out.append(prism([(va, self.zf(va) + lo), (vb, self.zf(vb) + lo), (vb, self.zf(vb) + hi), (va, self.zf(va) + hi)], "x", ua, ub, mat))
 
-    def build(self, m, vs, doors=(), body=None):
-        """vs: where the window posts stand along v. doors: (side 0 or 1, segment) with no panel under the window."""
+    def poly(self, ua, ub, pts, mat):
+        self.out.append(prism([(v, self.zf(v) + d) for v, d in pts], "x", ua, ub, mat))
+
+    def side(self, s, a, b):
+        """The u's of a layer from a to b out of the side's outer line (side 0 at u1, side 1 at u2)."""
+        return (self.u1 + a, self.u1 + b) if s == 0 else (self.u2 - b, self.u2 - a)
+
+    def build(self, m, vs, doors=(), wheels=(), lower=None, upper=None):
+        """vs: where the window posts stand along v (the first and last are the bus's ends). doors: (side 0 or 1,
+        segment) open from the floor. wheels: where along v each axle is (an arch 60 long over it)."""
         u1, u2, high, post = self.u1, self.u2, self.high, self.post
-        body = body or HULL
+        lower, upper = lower or "metal/metalwall030a", upper or HULL
         a, b = vs[0], vs[-1]
-        self.piece(u1, u2, a, b, -8, 0, MM["wood"])
-        self.piece(u1 - 2, u2 + 2, a, b, high, high + 8, MM["tin"])
-        for side, (ua, ub) in enumerate(((u1, u1 + 4), (u2 - 4, u2))):
-            for k in range(len(vs) - 1):
-                va, vb = vs[k], vs[k + 1]
-                door = (side, k) in doors
-                if not door:
-                    self.piece(ua, ub, va, vb, 0, 36, body)
-                self.piece(ua, ub, va, vb, high - 14, high, body)
-                self.piece(ua, ub, va, va + post, 0 if door else 36, high - 14, body)
-                if door and k + 1 < len(vs) - 1:
-                    self.piece(ua, ub, vb - post, vb, 0, high - 14, body)
-            self.piece(ua, ub, b - post, b, 0, high - 14, body)
+        grille, trim = "metal/metalgrate016a", MAT["bars"]
+        self.piece(u1 + 4, u2 - 4, a + 5, b - 5, -8, 0, MM["wood"])                                  # the floor
+        for s in (0, 1):
+            gaps = [(vs[k], vs[k + 1]) for (sd, k) in doors if sd == s]
+            arches = [(c - 30, c + 30) for c in wheels]
+            cuts = sorted(gaps + arches)
+            at = a
+            for (g1, g2) in cuts + [(b, b)]:                                                       # the skirt, to the window line
+                if g1 > at:
+                    self.piece(*self.side(s, 0, 4), at, g1, -24, 40, lower)
+                at = max(at, g2)
+            for (c1, c2) in arches:                                                                 # ...arched over the wheels
+                self.piece(*self.side(s, 0, 4), c1, c2, 8, 40, lower)
+                self.poly(*self.side(s, -1, 3), [(c1, -24), (c1, 8), (c1 + 10, 8)], lower)
+                self.poly(*self.side(s, -1, 3), [(c2, -24), (c2 - 10, 8), (c2, 8)], lower)
+            at = a + 5
+            for (g1, g2) in sorted(gaps) + [(b - 5, b - 5)]:                                        # the belt strip, on the skirt's top
+                if g1 > at:
+                    self.piece(*self.side(s, -2, 2), at, g1, 40, 46, trim)
+                at = max(at, g2)
+            self.piece(*self.side(s, 1, 5), a, b, high - 14, high, upper)                          # the header over the windows
+            for k, v in enumerate(vs[:-1]):                                                        # the window posts (one closing a door stands inside it)
+                closing = (s, k - 1) in doors
+                door = (s, k) in doors or closing
+                v1_ = v - post if closing else v
+                self.piece(*self.side(s, -1, 3), v1_, v1_ + post, 0 if door else 46, high - 14, upper)
+            last_door = (s, len(vs) - 2) in doors
+            self.piece(*self.side(s, -1, 3), b - post, b, 0 if last_door else 46, high - 14, upper)
+        # the roof, its edges rounded down to the sides
+        self.piece(u1 + 12, u2 - 12, a, b, high, high + 8, MM["tin"])
+        run = (0, b - a, self.zf(b) - self.zf(a))
+        z = self.zf(a)
+        self.out += [oblique([(u1 - 2, a, z + high), (u1 + 12, a, z + high), (u1 + 12, a, z + high + 8)], run, MM["tin"]),
+                     oblique([(u2 + 2, a, z + high), (u2 - 12, a, z + high), (u2 - 12, a, z + high + 8)], run, MM["tin"])]
+        # the front: a grille crushed into the floor, the windscreen's frame (its glass gone), the destination board
+        f1, f2 = a, a + 5
+        self.piece(u1 + 5, u2 - 5, f1, f2, -24, -4, grille)
+        self.piece(u1 + 6, u1 + 16, f1, f2, -4, high - 24, upper)
+        self.piece(u2 - 16, u2 - 6, f1, f2, -4, high - 24, upper)
+        self.piece(u1 + 5, u2 - 5, f1, f2, high - 24, high, upper)
+        self.piece(u1 + 26, u2 - 26, f1 - 5, f1, high - 20, high - 6, MAT["black"])      # (v steps of 5 keep the shear on the grid)
+        # the back: the engine's grille low down, the rear window's frame over it
+        r1, r2 = b - 5, b
+        self.piece(u1 + 5, u2 - 5, r1, r2, -24, 16, grille)
+        self.piece(u1 + 6, u1 + 16, r1, r2, 16, high - 14, upper)
+        self.piece(u2 - 16, u2 - 6, r1, r2, 16, high - 14, upper)
+        self.piece(u1 + 5, u2 - 5, r1, r2, high - 14, high, upper)
         m.shapes(self.out)
 
 
 def m_busbridge(m, opt):
     """The bus. A city bus has gone through the left street's parapet and hangs nose-down from the wall's lip to the
-    canal floor: a long hollow body (brushes: no bus model exists in any of the games), sheared (its floor climbs 248
-    over a run of 310, about 39 degrees), its windows open, the old train's bench seats along its sides tilted with
-    its floor, the driver's chair at its foot, its windscreen end open on the floor at v -54, truck tyres for wheels,
-    its back axle caught on the lip. Climbing through it is a way UP: its back end comes out on a short stretch of
-    pavement recessed into the wall at the trim's height (256 by 128, open to the sky, the fence gone, what is left of
-    the parapet either side, one of the city's street lamps knocked askew and dark, a bus stop's sign on its pole),
-    with a street doorway behind closed by a cap of the world in its own visgroup ("the bus's street end (delete to
-    join a street)"). The canal stays passable under the bus's high end by the left bank and round its nose on the
-    right.
+    canal floor: a hollow body of brushes (no bus model exists in any of the games; the trailers are closed boxes),
+    sheared (its floor climbs 248 over a run of 310, about 39 degrees), built as a bus is (BusBody): skirt panels in one
+    colour to the window line with an arch over each wheel and the truck tyres half hidden in them, a belt strip, window
+    posts and a header in a second colour, a roof with rounded edges, a front door and a middle door, its front with the
+    windscreen's frame (the glass gone), a grille crushed into the floor and the destination board, its back with the
+    engine's grille and the rear window's frame. Inside, the old train's bench seats along its sides tilted with its
+    floor, the driver's chair at its foot; its windscreen end is open on the floor at v -54, its luggage spilled out
+    there; its back axle is caught on the lip. Climbing through it is a way UP: its back end comes out on a short
+    stretch of pavement recessed into the wall at the trim's height (256 by 128, open to the sky, the fence gone, what is
+    left of the parapet either side with its rail broken off over the gap, one of the city's street lamps knocked askew
+    and dark, a bus stop's sign on its pole and a shelter over its bench, the timetable on the wall), with a street
+    doorway behind closed by a cap of the world in its own visgroup ("the bus's street end (delete to join a street)").
+    The scrape where it slid is cracked down the wall under the lip. The canal stays passable under the bus's high end by
+    the left bank and round its nose on the right. Sounds: metal groaning (coast.util_metalstress), the quiet courtyard
+    up on the pavement.
     Named for the game: lc_bus_top (an info_target on the pavement where the bus comes out), lc_bus_street (an
     info_target in the street doorway, facing the canal).
-    Left as brushes: the bus's body (no model of one), the pavement, the parapet's stubs, the doorway's frame, the
-    slabs on the floor.
+    Left as brushes: the bus's body (no model of one), the pavement, the parapet's stubs, the shelter, the doorway's
+    frame, the slabs on the floor.
     Unchecked: that the sheared floor walks well and the tilted seats do not snag a climber; which way
-    traincar_seats001 faces; that players fit under the high end (72 clear from v 66 to the bank)."""
+    traincar_seats001 faces; that players fit under the high end (72 clear from v 66 to the bank); the two colours
+    (metal/metalwall030a below, metal/metalhull010c above: the owner's own metals, chosen unseen). Each layer of the
+    bus's sides stands a unit off the next (so no two faces share a plane): too small to see."""
     b = m.b
     m.open(0, -256, 1024, 256)
     m.open(384, 256, 640, 384, floor=TRIM, mat=MAT["quay_floor"])
@@ -2128,15 +2223,14 @@ def m_busbridge(m, opt):
     # --- the bus ---
     bus = BusBody(460, 564, -54, F + 8, 4, 5, 104, 5)
     vs = [-54, -4, 46, 96, 146, 196, 246, 256]
-    bus.build(m, vs, doors=((0, 0), (0, 4)), body=DUCT)
-    m.det([(460, -54, F, 564, -44, F + 8)], MAT["bars"])
+    bus.build(m, vs, doors=((0, 0), (0, 3)), wheels=(26, 196))
     slope = math.degrees(math.atan2(4, 5))
     for (u, c, yaw) in ((482, 51, 0), (542, 11, 180), (542, 121, 180)):      # bench seats along its sides, tilted with its floor (none by the doors)
         tilted(m, "prop_static", M_ + "props_trainstation/traincar_seats001.mdl", u, c, bus.zf(c), yaw, 0, round(slope if yaw == 0 else -slope, 1))
     tilted(m, "prop_dynamic_override", M_ + "props_wasteland/controlroom_chair001a.mdl", 548, -43, F + 43, 270, round(slope, 1), 0)    # the driver's
-    for c in (26, 196):                                                       # its wheels, and the back axle caught on the lip
-        for u in (459, 565):
-            tilted(m, "prop_dynamic_override", M_ + "props_vehicles/tire001b_truck.mdl", u, c, bus.zf(c) - 22, 0)
+    for c in (26, 196):                                                       # its wheels in their arches, and the back axle caught on the lip
+        for u in (464, 560):
+            tilted(m, "prop_dynamic_override", M_ + "props_vehicles/tire001b_truck.mdl", u, c, bus.zf(c) - 26, 0)
     tilted(m, "prop_dynamic_override", M_ + "props_vehicles/carparts_axel01a.mdl", 512, 252, TRIM - 8, 90)
     for c in (-4, 96, 196):
         m.lane(512, c, bus.zf(c))
@@ -2145,7 +2239,7 @@ def m_busbridge(m, opt):
     m.blocked(432, -96, 592, 256)
     # --- the pavement: the kerb, what is left of the parapet, the lamp knocked askew, the stop's sign, the doorway's frame ---
     m.det([(384, 256, TRIM, 452, 268, TRIM + 40), (572, 256, TRIM, 640, 268, TRIM + 30), (384, 254, TRIM + 40, 440, 270, TRIM + 44)], MAT["canal_wall"])
-    m.shapes([para((452, 256, TRIM), (0, 12, 0), (-14, 0, 34), (6, 0, 0), MAT["canal_wall"]), para((572, 256, TRIM), (0, 12, 0), (10, 0, 26), (-6, 0, 0), MAT["canal_wall"]),
+    m.shapes([para((452, 257, TRIM), (0, 10, 0), (-14, 0, 34), (6, 0, 0), MAT["canal_wall"]), para((572, 257, TRIM), (0, 10, 0), (10, 0, 26), (-6, 0, 0), MAT["canal_wall"]),
               para((330, -30, F), (90, 20, 0), (-10, 50, 0), (0, 0, 12), MAT["canal_wall"]), para((600, 30, F), (60, -24, 0), (12, 44, 30), (0, 0, 12), MAT["canal_wall"])])
     tilted(m, "prop_static", M_ + "props_c17/lamppost03a_off.mdl", 610, 282, TRIM - 2, 0, -17, 5)       # dark, leaning 18 toward where the bus went over
     m.dynamic(M_ + "props_c17/signpole001.mdl", 398, 352, 0, TRIM)
@@ -2158,9 +2252,24 @@ def m_busbridge(m, opt):
     m.loose(M_ + "props_debris/concrete_chunk02a.mdl", 380, 60, 60)
     m.loose(M_ + "props_vehicles/tire001c_car.mdl", 640, 110, 0)
     m.light(512, 100, bus.zf(96) + 80, "200 210 230 12")
+    # what came down with it: the parapet's rail broken off, the scrape down the wall where it slid, the luggage spilled
+    # from its low end; at the top a shelter over the stop's bench, the timetable on the wall
+    m.static(M_ + "props_c17/handrail04_brokenlong.mdl", 570, 262, 90, TRIM + 30)
+    for kind, u, v, z, seed in (("crack", 470, 255, F + 210, 1), ("stain", 540, 255, F + 180, 2), ("crack", 500, 255, F + 150, 3), ("debris", 520, -90, F + 1, 4),
+                                ("poster", 412, 383, TRIM + 64, 5), ("trash", 600, 330, TRIM + 1, 6), ("stain", 430, 290, TRIM + 1, 7)):
+        m.grime(kind, u, v, z, seed)
+    m.loose(M_ + "props_c17/suitcase001a.mdl", 470, -96, 20)
+    m.loose(M_ + "props_c17/suitcase001a.mdl", 556, -110, 75)
+    m.loose(M_ + "props_c17/briefcase001a.mdl", 520, -130, 140)
+    m.det([(386, 272, TRIM, 390, 276, TRIM + 96), (386, 330, TRIM, 390, 334, TRIM + 96), (436, 272, TRIM, 440, 276, TRIM + 96), (436, 330, TRIM, 440, 334, TRIM + 96)], MAT["bars"])
+    m.det([(384, 268, TRIM + 96, 444, 338, TRIM + 100)], MM["tin"])
+    m.soundscape(SCAPES["metal"], 512, 80, F, radius=420)
+    m.soundscape(SCAPES["courtyard"], 512, 320, TRIM, radius=260)
+    canal_grime(m, 16, 400, 6000)
+    canal_grime(m, 700, 1010, 6100)
     m.view(250, -110, F, 30, -12, "the bus from the canal")
     m.view(512, -50, F + 8, 90, -32, "up through it")
-    m.view(512, 262, TRIM, 90, 4, "out at the top: the pavement, the street doorway")
+    m.view(512, 292, TRIM, 90, 4, "out at the top: the pavement, the street doorway")
     m.view(420, 340, TRIM, 300, 16, "from the pavement, down")
     m.view(800, 60, F, 165, -14, "from the far side")
     b.notes.append("%s: the street end is at (%d %d), floor z %d, 128 wide and 128 high: bring a street to it, then delete its cap; the bus's floor climbs from z %d at v -54 to z %d at v 256" % (
@@ -2174,19 +2283,28 @@ def m_busbridge(m, opt):
 def m_shell(m, opt):
     """The shell. A headcrab canister has come down in the canal: the game's own (headcrabcannister01b, shown
     opened, as the game leaves one that has landed) stands out of the right bank where it struck, nose buried, leaning
-    back the way it came at about 55 degrees, in a crater: a ring of mud raised on the floor and rocks thrown up on the
-    bank. The wall above it is cracked from the bank to the trim. Round it the beginnings
-    of an infestation: seven low fleshy mounds (one func_brush tinted dark red, lc_shell_growth, so the game can take
-    them away), three bodies lying where they fell, a thread of smoke from the crater, and a faint sick-green light
-    that does not flicker. No creatures: the game brings its own (the four patches).
+    back the way it came at about 55 degrees, in a crater: a ring of mud raised on the floor, rocks thrown up on the
+    bank, the bank scorched and littered round it. Steam vents from its open end, it spits a spark now and then, a small
+    fire burns on the bank, a thread of smoke rises from the crater and the trail it came down on drifts off in the sky
+    the way it came. The wall above it is cracked from the bank to the trim (painted cracks, the owner's own plaster
+    decals) and a piece of its face lies on the bank. Round it the beginnings of an infestation: seven low fleshy mounds
+    (one func_brush tinted dark red, lc_shell_growth, so the game can take them away), torn flesh on them and a sick
+    yellow glow that swells slowly over three (a sprite, no light), a faint sick-green light that does not flicker. What
+    came out of it lies dead: two headcrabs, a zombie's torso, and the people it got (three bodies, blood). The Combine
+    came, lost a Civil Protection officer (lying by the far end), and shut the canal: two of their short barricades and
+    a police line across it at the far end, a danger sign on the wall. It sounds of slime (canals_slime_tunnel). No
+    living creatures: the game brings its own (the four patches).
     Named for the game: lc_shell_canister (an info_target at the shell's open end), lc_shell_patch_1 to _4
     (info_targets on the floor round it, where the game may put infestation patches and headcrabs), lc_shell_growth
     (a func_brush: the mounds; Disable removes them).
     Left as brushes: the growth mounds (no model of flesh exists in the games; the game takes them away by name), the
-    crack in the wall, the piece of the wall's face on the bank.
+    piece of the wall's face on the bank.
     Unchecked: that the canister shows opened with DefaultAnim idle_open and which end is its nose (taken to be +x,
-    where its trail is not); that a func_brush takes the dark red tint (rendercolor) on plaster; models/humans/corpse1.mdl as a
-    ragdoll lying where put; how high the mud ring comes out (it is the mud's displaced skin, raised up to 34)."""
+    where its trail is not); that a func_brush takes the dark red tint (rendercolor) on plaster and the flesh decals on
+    it; models/humans/corpse1, headcrabclassic, zombie/classic_torso and police as ragdolls lying where put; how high
+    the mud ring comes out (it is the mud's displaced skin, raised up to 34); the env_steam and the drifting
+    env_smokestack's keys (Half-Life 2's own entities, not read from the owner's map); that the slow pulse of the
+    growth's glow (renderfx 1) is not taken for a flicker."""
     b = m.b
     cmb = "metal/metalcombine002"
     m.open(0, -256, 1024, 256)
@@ -2220,11 +2338,22 @@ def m_shell(m, opt):
         z = F + max(0, -128 - v)                                             # (the bank's face there: each rock sunk into it, deeper on the slope)
         m.static(M_ + "props_wasteland/rockgranite03%s.mdl" % "ab"[k % 2], u, v, yaw, z - (12 if z > F + 8 else 5))
     m.smoke(cu + 16, cv + 30, F + 70, colour="70 80 60", size=14, length=160, rate=8)
+    # the shell as the game shows one that has landed: steam from its open end, sparks now and then, a fire on the bank,
+    # the trail it left drifting off the way it came
+    m.point("env_steam", eu, ev, top + 6, {"InitialState": "1", "type": "0", "SpreadSpeed": "12", "Speed": "90", "StartSize": "8", "EndSize": "28", "Rate": "24",
+                                           "rendercolor": "235 240 235", "JetLength": "70", "renderamt": "200", "angles": "-60 %d 0" % m.fr.yaw(45)})
+    m.spark(eu - 6, ev - 6, top)
+    from map_mods_b import fire
+    fire(m, 420, -170, F + 42, 16, "255 150 70 60")
+    m.point("env_smokestack", cu + 60, cv + 60, top + 40, {"InitialState": "1", "BaseSpread": "10", "SpreadSpeed": "6", "Speed": "40", "StartSize": "20", "EndSize": "70",
+                                                           "Rate": "6", "JetLength": "420", "WindAngle": "0 %d 0" % m.fr.yaw(45), "WindSpeed": "30",
+                                                           "SmokeMaterial": "particle/SmokeStack.vmt", "twist": "2", "roll": "2", "rendercolor": "90 90 90",
+                                                           "renderamt": "90", "angles": "0 0 0"})
     # --- the wall above it, cracked ---
-    crack = [para((cu - 10, -256, F + 128), (0, 1, 0), (26, 0, 60), (5, 0, 0), MAT["black"]), para((cu + 16, -256, F + 188), (0, 1, 0), (-30, 0, 44), (4, 0, 0), MAT["black"]),
-             para((cu - 14, -256, F + 232), (0, 1, 0), (18, 0, 24), (3, 0, 0), MAT["black"]), para((cu + 16, -256, F + 188), (0, 1, 0), (44, 0, 20), (3, 0, 0), MAT["black"]),
-             para((cu - 10, -256, F + 128), (0, 1, 0), (-36, 0, 30), (3, 0, 0), MAT["black"]), para((cu + 60, -256, F + 208), (0, 1, 0), (20, 0, 40), (2, 0, 0), MAT["black"])]
-    m.shapes(crack)
+    for k, (du, z) in enumerate(((-6, F + 140), (8, F + 176), (-2, F + 212), (20, F + 240), (44, F + 200), (-30, F + 160))):
+        m.decal("decals/plaster%03da" % (13, 16, 13, 16, 13, 16)[k], cu + du, -256, z)
+    for k, (u, v) in enumerate(((420, -180), (540, -200), (600, -160), (470, -150))):
+        m.grime("burn" if k % 2 == 0 else "debris", u, v, F + (-128 - v), k + 1)            # scorched and littered round the impact (on the bank's slope)
     m.shapes([para((cu + 40, -250, F + 124), (50, 0, 6), (0, 20, -14), (0, 0, 10), MAT["canal_wall"])])                 # a piece of the wall's face, down on the bank
     # --- the growth: low mounds in three tiers, one tinted func_brush ---
     mounds = []
@@ -2238,6 +2367,23 @@ def m_shell(m, opt):
         m.target("lc_shell_patch_%d" % (k + 1), u, v, F + 8, 90 * k)
     for (u, v, yaw) in ((650, 40, 30), (380, 20, 200), (540, -110, 120)):
         m.body(M_ + "humans/corpse1.mdl", u, v, yaw)
+    for k, (u, v, r) in enumerate(((560, -60, 34), (430, -40, 28), (500, 30, 22))):
+        z = F + max(0, -128 - v)
+        m.decal("decals/alienflesh/shot%d" % (k + 1), u, v, z + 18)
+        m.point("env_sprite", u, v, z + 24, {"model": "sprites/light_glow03.vmt", "rendermode": "9", "renderamt": "120", "rendercolor": "190 220 60", "scale": "0.18",
+                                             "framerate": "10.0", "GlowProxySize": "2.0", "HDRColorScale": "1.0", "renderfx": "1", "spawnflags": "1"}, m.lv)
+    m.body(M_ + "headcrabclassic.mdl", 470, 120, 40)                                  # what came out of it, and what it did
+    m.body(M_ + "headcrabclassic.mdl", 760, -60, 200)
+    m.body(M_ + "zombie/classic_torso.mdl", 300, -40, 300)
+    m.body(M_ + "police.mdl", 880, 70, 160)                                          # the Combine came, and lost one; then they shut the canal
+    for v in (-70, 70):
+        m.static(M_ + "props_combine/combine_barricade_short01a.mdl", 900, v, 0, F)
+    m.grime("police", 900, 0, F + 1, 1)
+    m.grime("danger", 900, -256, F + 170, 2)
+    for k, (u, v) in enumerate(((440, 100), (380, 60), (780, -40))):
+        m.decal("decals/blood%d" % (k + 1), u, v, F + 1)
+    m.soundscape(SCAPES["slime"], 520, -60, F, radius=520)
+    canal_grime(m, 16, 300, 6200)
     m.light(cu + 60, cv + 110, F + 90, "150 220 110 45")
     m.light(eu, ev, top + 30, "150 220 110 18")
     put(m, M_ + "props_debris/concrete_chunk01a.mdl", 640, -180, 40, z=F + 52)

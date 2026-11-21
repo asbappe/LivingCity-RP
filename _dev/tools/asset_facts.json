@@ -375,6 +375,24 @@
 "static": false,
 "v": 2
 },
+"models/headcrabclassic.mdl": {
+"bbox": [
+-14.4,
+-9.1,
+-0.5,
+14.1,
+8.8,
+16.1
+],
+"built_static": false,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": true,
+"static": false,
+"v": 2
+},
 "models/healthvial.mdl": {
 "bbox": [
 -2.3,
@@ -945,6 +963,24 @@
 9.8,
 17.5,
 19.6
+],
+"built_static": false,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": true,
+"static": false,
+"v": 2
+},
+"models/police.mdl": {
+"bbox": [
+-13.0,
+-13.0,
+0.0,
+13.0,
+13.0,
+72.0
 ],
 "built_static": false,
 "collides": true,

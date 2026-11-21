@@ -6,7 +6,7 @@ Run them through map_build.py; how a module is written: docs/dev/map-modules.md.
 """
 
 from map_build import CELL, GATE_HIGH, MAT, octagon, prism
-from map_modules import F, TRIM, MM, chain_link
+from map_modules import F, TRIM, MM, SCAPES, chain_link
 
 CMB = "metal/metalcombine002"
 DIRT = "nature/dirtfloor005c"
@@ -16,16 +16,23 @@ def m_execwall(m, opt):
     """The firing wall: where the Combine shoots people. A recess in the left wall under the open sky, its floor a
     slab 8 high: a row of concrete barriers along the back wall, the wall above them pocked with bullet holes and
     stained, three timber posts (the docks' poles) with a rope's end on each, a grating down the middle to the canal, a
-    barrier at each front corner, one hard Combine floodlight in the back corner throwing its beam along the posts. The
-    squad stands in the canal, behind a low kerb. Sober, not gory.
+    barrier at each front corner, one hard Combine floodlight in the back corner throwing its beam along the posts, two
+    of the Combine's wall lights over the barriers. The Combine's marks: a loudspeaker high on the back wall to read the
+    sentence, a camera over the recess, Breen's poster on the side wall facing the posts, a number stencilled on the
+    wall. What is left behind, still sober: a dark stain at the grating, a shoe, a dropped ration bag, a candle someone
+    lit at night. The squad stands in the canal, behind a yellow line painted on its floor. Silent but for the
+    floodlight's hum and the wind (the soundscape "Nothing", as the owner's map uses it).
     Named for the game: lc_execwall_post_1 to _3 (at the posts, facing out), lc_execwall_line (where the squad stands,
     facing the wall), lc_execwall_lamp (the lamp's beam: LightOff, LightOn).
-    Left as brushes: the slab, the grating, the kerb (the ground).
-    Unchecked: the rope ends (move_rope), point_spotlight and light_spot keys; which way combine_light001b faces (its
-    beam is the light_spot's, whichever way the model looks)."""
+    Left as brushes: the slab, the grating, the painted line (dev_hazzardstripe01a, 1 high, as the owner's map paints
+    its edges), the candle (no model of one).
+    Unchecked: the rope ends (move_rope), point_spotlight and light_spot keys; which way combine_light001b,
+    speakercluster01a and combinecamera001 face (their fronts taken as the models' +x); ambient/machines/
+    combine_terminal_loop1.wav for the floodlight's hum."""
     m.open(0, -256, 768, 256)
     m.open(128, 256, 576, 448)
     m.no_bank(120, 248, 584, 456)
+    m.side(128, 256, 576, 448)                                                    # (no mud on the slab)
     z = F + 8
     m.det([(128, 256, F, 576, 448, z)], MAT["beam"], top=MAT["quay_floor"])
     m.det([(128, 240, F, 576, 256, F + 4)], MAT["beam"])
@@ -42,7 +49,8 @@ def m_execwall(m, opt):
         m.target("lc_execwall_post_%d" % (k + 1), u, 400, z + 8, 270)
     # the grating to the canal, the kerb the squad stands behind
     m.det([(340, 250, z, 364, 412, z + 1)] + [(340, 256 + 20 * k, z + 1, 364, 258 + 20 * k, z + 2) for k in range(8)], MAT["bars"])
-    m.det([(208, 28, F, 496, 36, F + 6)], MAT["beam"])
+    m.det([(208, 28, F, 496, 36, F + 1)], "dev/dev_hazzardstripe01a")             # (a line painted on the floor, not a kerb to trip on)
+    m.side(208, 0, 496, 64)
     m.target("lc_execwall_line", 352, 0, F + 8, 90)
     m.static("models/props_c17/concrete_barrier001a.mdl", 200, 290, 90, z=z)
     m.static("models/props_c17/concrete_barrier001a.mdl", 504, 290, 90, z=z)
@@ -51,6 +59,22 @@ def m_execwall(m, opt):
     m.spot(172, 396, z + 66, "235 240 255 500", 0, pitch=10, cone=60, name="lc_execwall_lamp")
     m.decal("decals/decalstain002a", 352, 330, z + 1)
     m.decal("decals/decalstain002a", 268, 380, z + 1)
+    m.decal("decals/decalstain002a", 352, 262, z + 1)                             # (dark at the grating's mouth)
+    # the Combine's marks: the loudspeaker, the camera, two wall lights, Breen's poster facing the posts, a number
+    from map_mods_c import combine_lamp
+    m.static("models/props_wasteland/speakercluster01a.mdl", 352, 432, 270, z=z + 196)
+    m.static("models/props_combine/combinecamera001.mdl", 560, 440, 225, z=z + 230)
+    for u in (296, 408):
+        combine_lamp(m, u, 448, z + 110, 270, "147 226 240 40")
+    m.decal("decals/decal_posterbreen", 576, 360, z + 96)
+    m.grime("number", 128, 400, z + 150, 1)
+    # what is left behind: a shoe, a dropped ration bag, a candle someone lit at night
+    m.loose("models/props_junk/shoe001a.mdl", 300, 340, 40, z=z)
+    m.loose("models/weapons/w_package.mdl", 420, 320, 110, z=z)
+    from map_mods_b import candle
+    candle(m, 240, 400, z, high=5)
+    m.sound("ambient/machines/combine_terminal_loop1.wav", 166, 396, z + 60, radius=500, volume=3)
+    m.soundscape("Nothing", 352, 300, z, radius=500)
     m.taken(120, 232, F, 584, 256, F + 16)
     m.blocked(184, 400, 520, 448)
     for u, v in ((352, 300), (208, 340), (508, 340), (352, 100)):
@@ -62,20 +86,24 @@ def m_execwall(m, opt):
 
 def m_substation(m, opt):
     """The substation: what powers the Combine's things in the canals. A concrete quay against the RIGHT wall, 128 high
-    with steps up its upstream end, inside a fence of Nova Prospekt's chain link panels with a sliding gate (a panel
-    of the same) players open by hand. On it three of the city's own substation transformers
-    (substation_transformer01c), cables from them up to an arm on the wall and across the canal to an insulator on the
-    far wall's top, a steel switch cabinet (controlroom_storagecloset001a) with the fuse panel on its front, a caged
-    warning lamp on the wall over it, and a steady hum.
-    The cabinet's panel is a func_breakable (40 health): breaking it fires the relay lc_substation_cut, which stops
-    the hum, puts out the lamp and throws sparks: the game can hang more on it (dropping a checkpoint's force field).
+    with steps up its upstream end; along its front, set back from the edge, the Combine's own fence (combine_fence01b
+    and 01a posts, the owner's field between them), and at the steps' head a sliding gate (a chain link panel in a
+    short run of Nova Prospekt's fence) players open by hand. Inside, a yard: three of the city's own substation
+    transformers (substation_transformer01c) back against the wall, a danger sign over each, cables from them up to an
+    arm on the wall and across the canal to an insulator on the far wall's top, a steel switch cabinet
+    (controlroom_storagecloset001a) with the fuse panel on its front and the Combine's meter box beside it, a caged
+    warning lamp on the wall over it, two of the Combine's lights on the wall, danger signs on the quay's face, a steady
+    hum. The cabinet's panel is a func_breakable (40 health): breaking it fires the relay lc_substation_cut, which stops
+    the hum, puts out the lamps (the warning lamp and the Combine's lights), throws sparks from the panel and from each
+    transformer's top and lets a wisp of smoke rise: the game can hang more on it (dropping a checkpoint's force field).
     Named for the game: lc_substation_fuse (the panel), lc_substation_cut (the relay: Trigger; give it more wires),
     lc_substation_hum, lc_substation_lamp and lc_substation_glow, lc_substation_spark, lc_substation_gate (a func_door,
-    unseen, the gate's panel riding on it).
+    unseen, the gate's panel riding on it), lc_substation_spark_t1 to _t3 (the transformers' sparks), lc_substation_smoke
+    (TurnOn), lc_substation_light_1 and _2 (the Combine's lights: TurnOff).
     Left as brushes: the quay and its steps, the steel arm on the wall that carries the cables, the fuse panel (a
     func_breakable: the game needs a thing that breaks, and a model riding on it would outlive it).
     Unchecked: ambient/energy/electric_loop.wav, func_breakable's keys, the cables (move_rope); where on the
-    transformers' tops their insulators are (the cables start at the middle of each top)."""
+    transformers' tops their insulators are (the cables start at the middle of each top); combine_shield_loop3.wav."""
     b = m.b
     top, steel = F + 128, MM["steel"]
     m.open(0, -256, 1024, 256)
@@ -89,9 +117,10 @@ def m_substation(m, opt):
     m.lane(280, -224, top)
     # the fence round the quay (Nova Prospekt's panels), and its gate at the head of the steps: a panel that slides
     # along behind the fence's first panel
-    from map_mods_c import panel_fence, ride
-    panel_fence(m, (256, -66), (832, -66), top)
-    panel_fence(m, (830, -256), (830, -64), top)
+    from map_mods_c import combine_field, combine_lamp, named_light, panel_fence, ride
+    combine_field(m, (272, -80), (548, -80), top)
+    combine_field(m, (556, -80), (824, -80), top, hum=False)
+    combine_field(m, (812, -96), (812, -248), top, hum=False)
     panel_fence(m, (258, -192), (258, -64), top)
     b.vmf.brush_entity("func_door", {"targetname": "lc_substation_gate", "movedir": "0 %d 0" % m.fr.yaw(90), "speed": "60", "lip": "4", "wait": "-1", "spawnflags": "288",
                                      "spawnpos": "0", "dmg": "0", "forceclosed": "0", "health": "0", "ignoredebris": "0", "loopmovesound": "0",
@@ -101,16 +130,19 @@ def m_substation(m, opt):
     ride(m, "lc_substation_gate", "models/props_wasteland/interior_fence002b.mdl", 254, -224, 0, top)
     # three transformers (the city's own), a cable from each up to the arm on the wall
     arm_z = b.rim - 48
-    m.det([(380, -256, arm_z, 780, -248, arm_z + 8)] + [(u, -256, arm_z - 40, u + 8, -200, arm_z) for u in (380, 772)] + [(380, -208, arm_z - 8, 780, -200, arm_z)], MAT["bars"])
-    for k, u in enumerate((440, 580, 720)):
-        m.static("models/props_c17/substation_transformer01c.mdl", u, -190, 0, z=top)
-        m.rope([(u, -190, top + 154), (u, -204, arm_z - 4)], slack=10, width=1)
-        m.blocked(u - 56, -232, u + 56, -148)
+    m.det([(380, -256, arm_z, 780, -248, arm_z + 8)] + [(u, -256, arm_z - 40, u + 8, -201, arm_z - 1) for u in (380, 772)] + [(382, -208, arm_z - 8, 778, -200, arm_z)], MAT["bars"])
+    for k, u in enumerate((460, 600, 740)):
+        m.static("models/props_c17/substation_transformer01c.mdl", u, -218, 0, z=top)
+        m.rope([(u, -218, top + 154), (u, -206, arm_z - 4)], slack=10, width=1)
+        m.blocked(u - 56, -256, u + 56, -176)
+        m.grime("danger", u, -256, top + 176, k)
+        m.spark(u, -218, top + 156, name="lc_substation_spark_t%d" % (k + 1))
     m.rope([(400, -204, arm_z - 4), (780, -204, arm_z - 4)], slack=12, width=1)
     m.rope([(580, -204, arm_z), (600, 250, b.rim - 16)], slack=70, width=1)                 # the feed, across the canal
     m.static("models/props_c17/utilityconnecter006.mdl", 600, 254, 90, z=b.rim - 20)        # (an insulator on the far wall, under its top)
     # the switch cabinet, its panel, the lamp
     m.static("models/props_wasteland/controlroom_storagecloset001a.mdl", 320, -238, 90, z=top)
+    m.static("models/props_combine/combine_interface002.mdl", 372, -228, 90, z=top)
     b.vmf.brush_entity("func_breakable", {"targetname": "lc_substation_fuse", "health": "40", "material": "2", "spawnflags": "0", "explosion": "0", "gibdir": "0 0 0",
                                           "nodamageforces": "0", "pressuredelay": "0", "spawnobject": "0", "explodemagnitude": "0", "physdamagescale": "1.0",
                                           "PerformanceMode": "0", "propdata": "0", "minhealthdmg": "0", "disablereceiveshadows": "0", "renderamt": "255",
@@ -119,7 +151,18 @@ def m_substation(m, opt):
     b.names.append(("lc_substation_fuse", "func_breakable", m.tag))
     m.relay("lc_substation_cut", 320, -238, top + 110, [("lc_substation_hum", "StopSound", "", 0), ("lc_substation_lamp", "TurnOff", "", 0),
                                                          ("lc_substation_glow", "HideSprite", "", 0), ("lc_substation_spark", "StartSpark", "", 0),
-                                                         ("lc_substation_spark", "StopSpark", "", 6)])
+                                                         ("lc_substation_spark", "StopSpark", "", 6), ("lc_substation_spark_t*", "StartSpark", "", 0.3),
+                                                         ("lc_substation_spark_t*", "StopSpark", "", 5), ("lc_substation_smoke", "TurnOn", "", 0.5),
+                                                         ("lc_substation_light_*", "TurnOff", "", 0.2)])
+    m.point("env_smokestack", 600, -218, top + 160, {"targetname": "lc_substation_smoke", "InitialState": "0", "BaseSpread": "10", "SpreadSpeed": "8", "Speed": "20",
+                                                     "StartSize": "12", "EndSize": "40", "Rate": "8", "JetLength": "160", "WindAngle": "0", "WindSpeed": "0",
+                                                     "SmokeMaterial": "particle/SmokeStack.vmt", "twist": "4", "roll": "4", "rendercolor": "70 70 70", "renderamt": "120",
+                                                     "angles": "0 0 0"})
+    for k, u in enumerate((530, 670)):
+        m.static("models/props_combine/combine_light002a.mdl", u, -246, 90, z=top + 120)
+        named_light(m, "lc_substation_light_%d" % (k + 1), u, -228, top + 140, "147 226 240 50")
+    for k, u in enumerate((400, 620)):
+        m.grime("danger", u, -64, F + 70, 10 + k)
     m.spark(320, -220, top + 60, name="lc_substation_spark")
     m.sound("ambient/energy/electric_loop.wav", 580, -190, top + 60, radius=800, volume=6, name="lc_substation_hum")
     m.static("models/props_c17/light_cagelight02_on.mdl", 303, -255, 90, z=top + 136)
@@ -129,12 +172,13 @@ def m_substation(m, opt):
                                                  "rendercolor": "255 150 40", "scale": "0.3", "framerate": "10.0", "GlowProxySize": "2.0", "HDRColorScale": "1.0",
                                                  "renderfx": "0", "spawnflags": "1"}, m.lv)
     m.test_button((352, -236, top + 100, 360, -228, top + 116), [("OnIn", "lc_substation_cut", "Trigger")])
-    m.static("models/props_c17/oildrum001.mdl", 790, -100, 0, z=top)
+    m.static("models/props_c17/oildrum001.mdl", 780, -120, 0, z=top)
+    m.soundscape(SCAPES["combine"], 560, -160, top, radius=420)
     m.taken(256, -256, F, 832, -64, b.rim)
     for u, v in ((330, -120), (520, -110), (760, -150)):
         m.lane(u, v, top)
     m.view(120, 60, F, 325, -12, "from the canal")
-    m.view(300, -110, top, 350, 0, "inside the fence")
+    m.view(300, -140, top, 355, 0, "inside the fence: the yard")
     m.view(900, 120, F, 205, -10, "from downstream")
 
 
