@@ -154,6 +154,17 @@ class Build:
         self.node_id += 1
 
 
+# How Valve lights each lamp fixture (docs/dev/valve-craft-notes.md, "Per fixture": the light within 48 of the model):
+# kind: (spot cone, inner cone, exponent, falloff, spot this far under the bulb, faint light this far under, the spot's
+# brightness and the faint light's as shares of the brightness asked for). Valve's dome light: a spot 200 (60/30, -90,
+# exponent 1, falloff 500/0/1) 11 under, a point 8 27 under; the bell lamp: a spot 60/30, exponent 2. The shares keep a
+# room about as lit as one point light of the asked brightness did, more on the floor under the lamp, less on the walls.
+LAMP_RECIPES = {
+    "dome": (60, 30, 1, "lamp", 9, 25, 2.0, 1 / 6.0),
+    "bell": (60, 30, 2, "lamp", 6, 16, 2.0, 1 / 6.0),
+}
+
+
 class Mod:
     """One module being built: everything in the module's own coordinates."""
 
@@ -311,8 +322,12 @@ class Mod:
     def body(self, model, u, v, yaw=0, z=F):
         self.point("prop_ragdoll", u, v, z + 16, {"model": model, "angles": "0 %d 0" % self.fr.yaw(yaw), "spawnflags": "4"}, self.b.vis + ": bodies")
 
-    def light(self, u, v, z, colour):
-        self.point("light", u, v, z, {"_light": colour, "_lightHDR": "-1 -1 -1 1", "_quadratic_attn": "1", "style": "0"}, self.lv)
+    def light(self, u, v, z, colour, falloff="fill"):
+        """A point light; falloff: one of map_build.FALLOFF (fill, the plain quadratic one, unless told)."""
+        import map_build
+        k = {"_light": colour, "_lightHDR": "-1 -1 -1 1", "style": "0"}
+        k.update(map_build.falloff(falloff))
+        self.point("light", u, v, z, k, self.lv)
 
     def glow(self, u, v, z, colour="255 220 170", scale=0.3):
         """A soft glow in the air (a lamp seen from afar). No light of its own."""
@@ -321,17 +336,31 @@ class Mod:
 
     def lamp(self, u, v, z, colour, hang=0):
         """A lamp to be seen, a real fixture of the city's (the owner's map has 151 of the dome light): a dome light flat
-        on the ceiling at z + 8, or with hang a bell lamp on a rod this long from above. A glow, and its light under it."""
-        rgb = " ".join(colour.split()[:3])
+        on the ceiling at z + 8, or with hang a bell lamp on a rod this long from above. Lit as Valve lights each
+        fixture (LAMP_RECIPES, docs/dev/valve-craft-notes.md): a glow at the bulb, a spot under it shining down, and a
+        faint point light that shows the fixture and the ceiling round it. colour "R G B brightness": the brightness a
+        plain point light of ours would have had (40 to 70 lights a room); the spot and the faint light are made from it."""
         if hang:
             self.det([(u - 1, v - 1, z + 8, u + 1, v + 1, z + 8 + hang)], MM["steel"])
             self.static("models/props_c17/light_industrialbell01_on.mdl", u, v, 0, z - 15)
-            self.glow(u, v, z - 18, rgb, 0.75)      # (Valve's sprite at a lamp: light_glow03 at scale 0.75)
-            self.light(u, v, z - 24, colour)
+            self.fixture_light("bell", u, v, z - 18, colour)
             return
         self.static("models/props_c17/light_domelight02_on.mdl", u, v, 0, z + 1)
-        self.glow(u, v, z - 2, rgb, 0.75)
-        self.light(u, v, z - 10, colour)
+        self.fixture_light("dome", u, v, z - 2, colour)
+
+    def fixture_light(self, kind, u, v, bulb, colour):
+        """The light of a lamp fixture by Valve's recipe for its kind (LAMP_RECIPES): its glow at the bulb (z bulb),
+        the spot shining down from under it and the faint point light below that."""
+        import map_build
+        cone, inner, exponent, fall, spot_under, faint_under, spot_k, faint_k = LAMP_RECIPES[kind]
+        parts = colour.split()
+        rgb, b = " ".join(parts[:3]), float(parts[3]) if len(parts) > 3 else 60.0
+        self.glow(u, v, bulb, rgb, 0.75)      # (Valve's sprite at a lamp: light_glow03 at scale 0.75)
+        keys = {"_light": "%s %d" % (rgb, max(1, round(b * spot_k))), "_lightHDR": "-1 -1 -1 1", "_cone": str(cone), "_inner_cone": str(inner),
+                "_exponent": str(exponent), "angles": "-90 0 0", "pitch": "-90", "style": "0"}
+        keys.update(map_build.falloff(fall))
+        self.point("light_spot", u, v, bulb - spot_under, keys, self.lv)
+        self.light(u, v, bulb - faint_under, "%s %d" % (rgb, max(2, round(b * faint_k))))
 
     def soundscape(self, name, u, v, z, radius=768):
         """What the place sounds like: an env_soundscape (the owner's map has 155; a loop alone is not a place). Use the
@@ -352,11 +381,14 @@ class Mod:
         za, zb = (z_low, z_high) if sign > 0 else (z_high, z_low)
         self.shapes([prism([(a, z_low), (b, z_low), (b, zb + high), (a, za + high)], "y", v1, v2, mat or MAT["beam"])])
 
-    def spot(self, u, v, z, colour, yaw, pitch=60, cone=40, name=None):
-        """A beam: a light that only shines one way (pitch: degrees down), and the beam drawn in the air."""
+    def spot(self, u, v, z, colour, yaw, pitch=60, cone=40, name=None, falloff="fill"):
+        """A beam: a light that only shines one way (pitch: degrees down), and the beam drawn in the air. falloff: one of
+        map_build.FALLOFF ("flood" for a floodlight that reaches far, as Valve's)."""
+        import map_build
         wy = self.fr.yaw(yaw)
-        self.point("light_spot", u, v, z, {"_light": colour, "_lightHDR": "-1 -1 -1 1", "_inner_cone": str(cone // 2), "_cone": str(cone), "_quadratic_attn": "1",
-                                           "angles": "0 %d 0" % wy, "pitch": str(-pitch), "style": "0"}, self.lv)
+        k = {"_light": colour, "_lightHDR": "-1 -1 -1 1", "_inner_cone": str(cone // 2), "_cone": str(cone), "angles": "0 %d 0" % wy, "pitch": str(-pitch), "style": "0"}
+        k.update(map_build.falloff(falloff))
+        self.point("light_spot", u, v, z, k, self.lv)
         keys = {"angles": "%d %d 0" % (pitch, wy), "spawnflags": "1", "spotlightlength": "500", "spotlightwidth": "50",
                 "rendercolor": " ".join(colour.split()[:3]), "renderamt": "160", "HDRColorScale": "1.0"}
         if name:

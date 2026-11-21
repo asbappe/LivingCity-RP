@@ -4,7 +4,7 @@ Living City: the owner's corrections, checked by machine (_dev/reference/lessons
 map_lint).
 
     python3 map_lint.py FILE.vmf [more.vmf ...]      every finding, one line each
-    python3 map_lint.py FILE.vmf --only overlap       one kind (overlap, door, offlamp, fire, mattress, view, water, rope, flush, bare, wire, props, palette)
+    python3 map_lint.py FILE.vmf --only overlap       one kind (overlap, door, offlamp, fire, mattress, view, water, rope, flush, bare, wire, props, lightmap, scale, seam, palette)
 
 Every build runs it on the file it writes and prints what it finds as LOOK lines (map_build.py), so
 map_modules_check.py shows them with the rest. A finding is a thing to look at, not always a fault: a model's box is
@@ -20,6 +20,10 @@ often bigger than the model. What each kind means:
   rope      a rope or cable end tied to nothing; a span over 128 with slack under 25 (Valve's have 100)
   props     as Valve dresses props (docs/dev/valve-prop-notes.md): most loose props square on the 90s and flat,
             8 or more small props that never fade, a thing standing in a door's way (48 in front or behind)
+  lightmap  Valve's lightmap scales (docs/dev/valve-craft-notes.md): big faces far from every path node at 16 or finer,
+            displacements far from play under 32, big faces at 8 (8 is for stairs, rails and trims)
+  scale     rock, dirt and blends at texture scale 0.25, canal concrete walls at 0.25, upright faces over 1024 at 0.25
+  seam      fewer than 40% of walls start their texture on a 128 seam at their foot (Valve 54 to 56%)
   palette   materials the owner's City 18 map never uses (listed once, the commonest first): use theirs where one fits
   flush     two visible faces of different brushes lying in the same plane, facing the same way and overlapping:
             they flicker through each other in game (z-fighting; the owner, 21 November). Faces made of
@@ -601,6 +605,79 @@ def check(path, views=None, only=None, air=None):
             say("wire", "%s moves without a sound of its own (Valve gives every moving part one: noise1 / startsound, or a PlaySound in its wiring)" % who)
         if len(quiet) > 6:
             say("wire", "... and %d more moving parts with no sound" % (len(quiet) - 6))
+    # lightmap, scale, seam: Valve's building craft (docs/dev/valve-craft-notes.md; map_build.craft does it to our faces)
+    if not only or only in ("lightmap", "scale", "seam"):
+        import map_build
+        text = open(path, errors="replace").read()
+        nodes = [origin(e) for e in ents if e.get("classname") == "info_node"]
+        side_re = re.compile(r'vertices_plus\s*\{\s*((?:"v" "[^"]+"\s*)+)\}\s*"material" "([^"]+)"\s*"uaxis" "([^"]+)"\s*"vaxis" "([^"]+)"\s*'
+                             r'"rotation" "[^"]*"\s*"lightmapscale" "(\d+)"\s*"smoothing_groups" "[^"]*"\s*(dispinfo)?')
+        cell, grid = 256, {}
+        for q in nodes:
+            grid.setdefault((int(q[0] // cell), int(q[1] // cell)), []).append(q)
+
+        def far(lo, hi, limit):
+            for i in range(int((lo[0] - limit) // cell), int((hi[0] + limit) // cell) + 1):
+                for j in range(int((lo[1] - limit) // cell), int((hi[1] + limit) // cell) + 1):
+                    for q in grid.get((i, j), ()):
+                        if math.sqrt(sum(max(lo[k] - q[k], 0, q[k] - hi[k]) ** 2 for k in range(3))) <= limit:
+                            return False
+            return True
+        grid_b = {}
+        for b, _ in brushes:
+            for i in range(int(b[0] // 256), int(b[3] // 256) + 1):
+                for j in range(int(b[1] // 256), int(b[4] // 256) + 1):
+                    grid_b.setdefault((i, j), []).append(b)
+        big_near, disp_fine, fine_big, terrain, tall_canal, long_fine, walls, on_seam = 0, 0, 0, 0, 0, 0, 0, 0
+        for m in side_re.finditer(text):
+            mat = m.group(2).lower()
+            if mat.startswith(("tools/", "dev/")):
+                continue
+            vs = [nums(v) for v in re.findall(r'"v" "([^"]+)"', m.group(1))]
+            if len(vs) < 3:
+                continue
+            lo = [min(v[k] for v in vs) for k in range(3)]
+            hi = [max(v[k] for v in vs) for k in range(3)]
+            a = [vs[1][k] - vs[0][k] for k in range(3)]
+            b = [vs[2][k] - vs[0][k] for k in range(3)]
+            n = (a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0])
+            ln = math.sqrt(sum(c * c for c in n)) or 1.0
+            n = [c / ln for c in n]
+            ext = sorted((hi[k] - lo[k] for k in range(3)), reverse=True)
+            area, lms, disp = ext[0] * ext[1], int(m.group(5)), bool(m.group(6))
+            (ua, us, usc), (va, vsh, vsc) = map_build._axis(m.group(3)), map_build._axis(m.group(4))
+            if nodes and disp and lms < 32 and far(lo, hi, 256):
+                disp_fine += 1
+            elif nodes and not disp and area > 65536 and lms <= 16 and far(lo, hi, 1024):
+                big_near += 1
+            if lms <= 8 and area > 128 * 256:
+                fine_big += 1
+            if usc == 0.25 and any(w in mat for w in ("rock", "cliff", "blend", "dirt", "grass", "sand", "mud")):
+                terrain += 1
+            upright = abs(n[2]) < 0.01
+            if upright and usc == 0.25 and mat in map_build.SCALE_HALF and hi[2] - lo[2] > 256:
+                tall_canal += 1
+            if upright and usc == 0.25 and max(hi[0] - lo[0], hi[1] - lo[1]) > 1024:
+                long_fine += 1
+            if upright and not disp and va == [0.0, 0.0, -1.0] and hi[2] - lo[2] >= 64:
+                walls += 1
+                foot = map_build.foot_of(lo + hi, n, [], grid_b)
+                if abs((-foot / vsc + vsh) % 128) < 0.5 or abs((-foot / vsc + vsh) % 128 - 128) < 0.5:
+                    on_seam += 1
+        if big_near:
+            say("lightmap", "%d big faces more than 1024 from every path node are lit at lightmapscale 16 or finer: 64 there (Valve: 54%% at 64 far from play)" % big_near)
+        if disp_fine:
+            say("lightmap", "%d displacements more than 256 from every path node at lightmapscale under 32: 64 (Valve's ground: 64 on 70%%)" % disp_fine)
+        if fine_big:
+            say("lightmap", "%d faces bigger than 128 by 256 at lightmapscale 8 or finer: 8 is for stairs, rails and trims (Valve: 3 to 4%% of faces)" % fine_big)
+        if terrain:
+            say("scale", "%d rock, dirt or blend faces at texture scale 0.25: Valve lays rock at 2 and blends at 0.5 to 1" % terrain)
+        if tall_canal:
+            say("scale", "%d canal concrete walls taller than 256 at texture scale 0.25: Valve's canal concrete is 0.5 (map_build.craft does it)" % tall_canal)
+        if long_fine:
+            say("scale", "%d upright faces longer than 1024 at texture scale 0.25: the pattern repeats a great many times; 0.5 or more (Valve's far walls)" % long_fine)
+        if walls >= 20 and on_seam < 0.4 * walls:
+            say("seam", "%d of %d walls start their texture on a seam at their foot (Valve: 54 to 56%% on a 128 seam): shift them to start at the floor (map_build.craft)" % (on_seam, walls))
     # palette: materials City 18 never uses (one line, the commonest few)
     pal = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "reference", "city18", "palette.json")
     if os.path.exists(pal) and (not only or only == "palette"):
