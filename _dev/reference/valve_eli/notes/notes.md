@@ -156,3 +156,27 @@ citizens, Eli, Alyx, Mossman. eli_02 56 scenes (30 Alyx, 18 dog), 32 sequences, 
 - Inside: metrocops from one maker against vortigaunts from another; cops set to ignore Eli. The cave-in: lights
   blow out with sparks, a cable breaks, two physboxes drop, rock showers break, dust @0.5 and @3, a ceiling slab
   (`func_door` speed 450) seals the lab. The lab is later dressed as rubble.
+
+## 3. Pictures (valve_eli/pictures.json, draft, E1 to E8)
+
+E1 the base as a stack (overview), E2 the outer airlock (cut), E3 the kitchen floor seen toward the lift's gate,
+E4 the lower corridor's pipes and fences, E5 the scrapyard (cut), E6 the scrapyard at eye level, E7 the second
+airlock and the gravity gun room (cut), E8 the tunnel toward Ravenholm with the alarm lamps drawn lit. Looked at once
+on one sheet a map; drawn and not chosen: the lab cut-aways (both maps), the dormitory eye view, the airlock eye
+view, the auto overviews from the north-east and the scrapyard's other eye views. Cut-aways of upper floors were
+drawn with faces under a floor height left out (a script round `views.Painter`); `map_ingest.py draw` cannot.
+
+## 4. Check ideas
+- map_lint: an airlock piece whose doors are under 192 apart, or any door with no keypad or button within 64.
+- map_lint: each areaportal a lift (path_track OnPass) opens is shut again by a later stop.
+- map_modules_check: a Resistance interior with no material change between 96 and 136 over its floor.
+- house rules: a base's teaching or raid adds no notice; count env_hudhint and game_text in a piece (Black Mesa
+  East: one in two maps).
+
+## 5. What did not work
+- The .vcd scenes and the nag scripts are not in the sources: what Eli, Mossman and Alyx say is known from names.
+- Brush-box rays pass through func_doors and catch odd brushes: the dormitory read 864 by 160 at one spot; room
+  sizes are rough, the vignette floors' especially.
+- Eye views from the lift into the floors failed (the gate props draw as solid boxes); views from inside each floor
+  looking back at the gate worked.
+- d1_eli_02's lab after the cave-in did not read as rubble in the viewer; no picture of it was kept.
