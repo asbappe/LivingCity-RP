@@ -7,74 +7,46 @@ To add an item: `printf '%s\n' '- [ ] **Topic:** what to try. [needs a person: w
 ## A new character's first hour
 
 - [ ] **A new face:** forty seconds of black screen, whirring and wet sounds, a clang, a ding. Too long, too short, too gross? [needs a person: feel]
-- [ ] **The pamphlets:** the Civil Orientation pamphlet opens as a folded leaflet, the Resistance one is in a sloppy hand. Any text off the paper, hard to read, or wrong? [needs a person: reading them]
 
 ## Jobs
 
 - [ ] **Housing block inspection:** the trail goes to a door of the block, the door stays shut until you set the charge or kick it in, the furniture stands on the floor inside. [needs a person: the real map's doors and rooms]
-- [ ] **Company on a patrol:** on the night shift or a patrol job, a loiterer or somebody following you turns up within a few minutes. Too often, too rare, too easy to lose? [needs a person: feel]
 - [ ] **Job board:** place "Fixture: job board" in the city, on rebel ground and on Combine ground. Do the lists show on it, and does E open your jobs? [needs a person: the lists on its glass]
 - [ ] **Job steps that replaced standing about:** Address the citizens, The secret mass (do the three gather?), Leak the schedule, Dead drop, letters at the door; the needle game on Break them out and on a vortigaunt's jobs (is its wording odd for a vortigaunt?). [needs a person: watching them happen, and the wording]
-- [ ] **Ambush the landing, and any kill counter:** if nobody comes out of the dropship, do soldiers appear within half a minute? Short of targets for 10 seconds brings more; nothing for 45 seconds pays you for what you did. [needs a person: no test yet, take the job]
 
 ## Civil Protection
 
 - [ ] **Guns on rebel ground as a unit:** walk into rebel territory: no "LOWER YOUR WEAPON" prompt, and every gun fires, also after !build and after sleeping in their bed. [needs a person: no test yet, try it]
 - [ ] **Backup when you are down:** bleeding out with units of your squad near: does one kneel by you and get you up? Called over the radio from far off, do they come in from out of sight? [needs a person: the kneel and the arrival on the real map]
-- [ ] **Health vial at full health:** E on a vial on the ground puts it in your pockets; Load on an ammo box with full ammo is refused and the box kept. [needs a person: the vial pickup has no test]
 - [ ] **The conditioning:** the Overwatch Candidate story on a Division Leader's board at 1200 XP: a soldier and a stalker wait, black screen, machines, and you are a Combine Prison Guard. [needs a person: the scene by eye]
-- [ ] **Commissary screen:** no more shimmering lines? [needs a person: by eye]
-- [ ] **Evidence locker:** place "Fixture: evidence locker". Does it stand right? As a unit E lists what was confiscated; as a citizen can you pick or pry it and take your things back? [needs a person: how it stands]
 - [ ] **Interrogation:** F2 > Interrogate someone in a cell: three questions, baton, Done, the answers written underneath. Readable, and in the way of anything? [needs a person: the list on screen]
 - [ ] **Gas masks and the gas:** in chlorine gas the mask goes on by itself with the visor edge and breathing; people without one cover the mouth, cough and run out. How does the mask sit on a face (`lc_gasmask_fit`)? [needs a person: the mask and the hand over the mouth]
 
 ## The Resistance
 
-- [ ] **Firebomb:** the fire is 30% smaller. Better? [needs a person: feel]
-- [ ] **Headcrab hunt:** take the meat to a different camp's supply crate: does it take it? [needs a person: no test yet, try it]
 - [ ] **The lab scientist:** start something and walk off: does he keep at it, tell you when it is done, and hand it only to you? After a raid, no blood left on him or the bench? [needs a person: blood left behind, by eye]
 - [ ] **A vortigaunt charging your vest:** E on a freed one: it turns, raises its hands, a green beam pulses to your chest for three seconds. Is there a charging animation? [needs a person: the animation and beam]
 - [ ] **The medic:** one in each rebel territory; E on him when hurt. Does he stay put and patch up hurt rebels near him? [needs a person: watching him]
 - [ ] **Operations:** as a Lieutenant, plan one straight from the F4 Operations board. Does the leader get the clipboard, how does it sit in the hand, do its boxes tick? [needs a person: the clipboard by eye]
 - [ ] **The interrogation chair:** the lamp hangs over it, dark until someone sits; with prisoners in the cage the cell takes them to the chair one at a time by itself. Are the number key lists readable? [needs a person: the lamp, how they sit, watching it run]
-- [ ] **The carved rat:** scar a burned informant: a crude red rat on the right cheek that moves with the head (`lc_ratscar_pos` moves it). [needs a person: where it sits on the face]
 - [ ] **Way marks:** Miscount Editor > "Mark: Resistance arrow" (left, right, up, down) and "Mark: FREEDOM THIS WAY" on a wall: the right way, the right size, the lambda's orange, still there after a map change? [needs a person: by eye]
-- [ ] **Cuffs, felt:** cuffed, F1 > Work at the cuffs (or Pick the cuffs with a lockpick): clicks and creaks, small jolts, the line changing. Clear enough without a bar? [needs a person: feel]
 
 ## The city and its people
 
 - [ ] **The Cremator:** a greener flame with a glow; no burning sound left behind after it kills headcrabs; it comes for carcasses about 90 seconds on; at a barricade it gives up and goes elsewhere. [needs a person: the flame, the ear, its walking on the real map]
-- [ ] **The infestation's edge:** zombies scattered round it, most near the middle; the warning sign, lamp and barrel beside the way in, none in a wall or floating. [needs a person: the real map]
-- [ ] **Stalkers:** a body they drag hangs on a rope from the hand. [needs a person: the rope by eye]
-- [ ] **Overwatch PA over an hour:** no two routine lines within 90 seconds of each other; "ration stores running low" at most once in 20 minutes. [needs a person: ear, over an hour]
-- [ ] **The two boards:** place "Fixture: Civil Protection incident feed" and "Fixture: Resistance notice board": are the words on the glass and on the board's face, the right way up and readable? [needs a person: by eye]
-
-## Fights
-
-- [ ] **Rebels' damage:** 20% more against players. A threat now? Do the 1 in 10 with a crossbow really shoot it? [needs a person: feel]
-- [ ] **Tougher Combine:** editor > "Desperate Combine: test it" at 100%: soldiers come from out of sight and throw frags, gas and flashbangs; an Elite fires energy balls; metrocops carry SMGs. Compare 20%. [needs a person: watching the squads]
 
 ## The Administrator, the collapse and the ending
 
 - [ ] **Speeches:** with a speech crowd point placed, Give a speech: do the NPCs stand in rows facing the stand, does the podium look right? With nobody as Administrator she speaks at midday herself: are the pauses right, and does Colonel Cubbage answer at the camp? [needs a person: the crowd, the podium, the pacing]
-- [ ] **Poster roll:** in your hands you see a sheet of paper; if it sits wrong try `lc_posters_view "20 0 -9"` and send numbers that look right. [needs a person: the sheet in your view]
 - [ ] **The collapse to BLACK:** editor > The collapse > "collapse to BLACK now": the G-Man in front of you (nobody else sees him), then the curfew; as a rebel under open sky a ring on the ground, the whistle, the blast, one at a time. [needs a person: the scene and the shelling, by eye and ear]
 - [ ] **Her last stand:** the purple bubble, the beam from each transformer, sparks, smoke and blasts as it breaks; manhacks, turrets, mines; the shield panels you can carry; the hums, zaps and clanks. [needs a person: watching the fight]
-- [ ] **The harpies:** being carried off, turned, and the finale (killed, then rising as a mingebag as they run off). Does a slaughter seem to be coming, or is it too slow? [needs a person: feel]
 
 ## Dreams
 
 - [ ] **The dreams' grounds:** after uploading `livingcity_content.zip` and a FastDL sync, test a few dreams from the editor (Freeze, Citizen; Dance Marathon; The Midnight Rally; Ravenholm): is each picture the right size underfoot, not stretched or tiny, and does the mood still fit? [needs a person: how it looks]
-- [ ] **Start and finish of a dream:** a fade to black with a line about the day, the dream's name between black bars, "You made it through" at a win. [needs a person: by eye]
-- [ ] **Dreams, less text:** no status cards, hints or sociostability pill in a dream; the goal line goes after 15 seconds (Tab shows it); one short wake line. [needs a person: what is on screen]
-- [ ] **Dressed dreams:** the ring of props below the edge of each playable dream: does it look right, and is it out of the way? [needs a person: by eye]
-- [ ] **Strange dreams:** warped sounds, music that lurches slow or fast, floating nonsense and faces: too much or not enough, and does the dream stay smooth? [needs a person: ear, and the frame rate]
-- [ ] **Stand-ins:** with few players asleep, do the city's people in the dream keep near you, cower, cheer, wave and kneel, with no arm or head bent the wrong way? [needs a person: the poses]
-- [ ] **A recorded dream test:** editor > Dreams: test one with "Record the test" ticked: play it, then zip the folder in `garrysmod/data/livingcity/dreamrec/` on your PC and send it. Does recording make the dream choppier? [needs the real server: a folder from your own PC]
 
 ## Staff tools
 
-- [ ] **Performance debugger:** C > Help > Performance debugger (or the editor panel's last button): on for a few minutes on a busy server nothing breaks, the "What stands out" lines make sense, Copy report pastes both reports. [needs the real server: a busy server with other admin mods]
 - [ ] **Save with the gamemode:** Q > Tools > Miscount > Save with the gamemode: left click a spawned prop, change map: is it back? Saved props glow green only while the tool is out. [needs a person: a real map change]
 
 ## Needs the real server
@@ -129,3 +101,4 @@ To add an item: `printf '%s\n' '- [ ] **Topic:** what to try. [needs a person: w
 - [ ] **IEDs:** make one at the lab; does the Detonator appear, does left click set it where you look, does right click blow it with a proper blast, does a unit's E take one apart; at the pole, does the prompt read well for a Fighter and for a Lieutenant. [needs a person: the weapon's model, the blast and the prompt have never been seen]
 - [ ] **The canal showrooms, redone (lc_showroom_1-4_test, lc_street_1-4_test):** do the props all show and stand right (facings, the stair handrails, the open ends of containers), the tram's wrecked car lie convincingly, the thumper thump, the lock and pump move. [needs a person: nothing compiled]
 - [ ] **The train station's Breencast screen:** place one (Miscount Editor > Street: Breencast screen, the train station's) and look at it from below while the Administrator or the Director of Propaganda is on air: does it read as Valve's curved screen, with their face filling it, not stretched? [needs a person: how it looks in the game]
+- [ ] **Combine mounted gun:** place one (Miscount Editor > Fixture: Combine barricade with mounted gun), stand behind it and press E: does it unfold, turn smoothly after your view, flash and sound like Half-Life 2's, and do E, a jump and dying let go? [needs a person: how it feels to man and aim]

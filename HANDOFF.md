@@ -31,15 +31,16 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 
 ## Where things stand
 
-- 21 November (late). All on main. Valve map ingestion: 23 maps in (trainstation 01-05, c17_13, town_03, citadel_01,
-  coast_12, vehicles, all of Route Kanal): 112 pictures, 111 lessons, 54 prefab pieces, studies in docs/dev/valve-*.md.
+- 21 November (late). Valve map ingestion: 23 maps in, 127 lessons, 54 prefab pieces, studies docs/dev/valve-*.md, and
+  the durable tool _dev/tools/map_ingest.py (one command a map; statistics across maps in _dev/reference/valve_stats.json).
   THE GUIDE for ingesting more (the owner will ingest every Valve map): docs/dev/map-ingestion.md (CLAUDE.md points at it).
-- Being built by helpers when this was written: _dev/tools/map_ingest.py + _dev/tools/ingest/ (the durable ingestion
-  tool), the canal changes the owner approved (dished floor, walk ledges, Valve's outfall and lamp spacing), the
-  playground module copied from Valve's d1_trainstation_02, the NPC scripting study (docs/dev/valve-npc-notes.md).
-  If any is missing from git, it was not finished: check TODO.md and the guide.
-- New in the game: the train station's Breencast screen (editor, Street section, kind screen_station): Valve's curved
-  screen, showing only the scanner picture of the Administrator or the Director of Propaganda. Stash ammo crate and
-  clinic health charger in the map modules; the aqueduct valve drains its trough; the town's flagpole is the plaza's.
-- Waiting on the owner: whether the pipes module's steam leak should scald players; Valve-style canal fence props.
-- Flaky test noted in TODO.md (a dream test, passes on rerun).
+- Canals: the owner's Valve table is built (dished floor, 1024-wide stretches with widen/narrow/basin, upright walls
+  where there are walk ledges, Valve's outfalls and lamps), and `lockgate` (Valve's d1_canals_08 lock gates in the wide
+  canal, a switch booth, a way round on foot; map_layouts/wide.txt). Wiring follows Valve's five rules (map_wiring.py;
+  map_lint kind wire): valves are wheels, areaportals linked to solid doors, sleeping timers, sound flags.
+- New in the game: the train station's Breencast screen (editor Street, kind screen_station, only the scanner picture of
+  the Administrator or the Director of Propaganda) and the Combine mounted gun (editor Fixture, kind mounted_gun: anyone
+  can man it, a third of Valve's damage). Playground module copied from Valve's station playground.
+- Open questions for the owner: the gun's damage figure (Valve: 15 manned by a player, 5 against players; ours 26/3);
+  an NPC manning the gun; lock gates crush (Valve's) or stop; outfalls on banks as pipes or notched holes; the ring
+  and first canal to the new dressing; which NPC ideas from docs/dev/valve-npc-notes.md to build.

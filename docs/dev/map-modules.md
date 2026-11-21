@@ -47,7 +47,7 @@ MODULES = {"example": (1024, m_example, "what it is")}
 - `F` 400: the canal's floor. `TRIM` 656: the trim line on the walls, and the height of streets carried over. `m.b.rim` (784 by default): where the walls' concrete ends, with a fence on it. `m.b.sky`: the sky's lid (rim + 384). `BASE` 224: the bottom of everything; `SEWER` 288: the city's sewers.
 - A player is 32 wide, 72 high standing, 36 crouched, steps up 18, jumps about 56, walks slopes up to 45 degrees. Eyes are 64 over the floor.
 - A module's length and everything painted must be multiples of 64. A module must start and end with the full canal: `m.open(0, -256, L, 256)` or the same in pieces, so the cross-section at `u` 0 and `u` L is the plain canal at floor `F`.
-- **The wide canal** (Valve's airboat canals, `map_mods_e.py`): `widen` takes the canal from 512 to 1024 in two steps, `narrow` brings it back, and between them only wide modules (`v` -512 to 512 at both ends: `wide`, `widetee`; a turn there is 1024 square). A chain whose widths do not meet, or that ends wide, is a PROBLEM; a wide module built alone (`module --name wide`) gets a widen and a narrow round it by itself (`alone()`). `basin` widens and narrows within itself, so it goes anywhere. `map_layouts/wide.txt` uses them all.
+- **The wide canal** (Valve's airboat canals, `map_mods_e.py`): `widen` takes the canal from 512 to 1024 in two steps, `narrow` brings it back, and between them only wide modules (`v` -512 to 512 at both ends: `wide`, `widetee`, `lockgate`; a turn there is 1024 square). A chain whose widths do not meet, or that ends wide, is a PROBLEM; a wide module built alone (`module --name wide`) gets a widen and a narrow round it by itself (`alone()`). `basin` widens and narrows within itself, so it goes anywhere. `map_layouts/wide.txt` uses them all.
 - **Never write `m.fr.pt(u, v) + (z,)`: write `m.fr.at(u, v, z)`.** A module can be built lifted to the street (`NAME up` in a layout: `map_corridor.py`), which moves everything in it 768 out and 256 up through the frame; a height added by hand is not lifted. `m.fr.box(...)` and every `m.` helper are safe.
 - Stay inside `u` 0 to L. Side rooms go out in `v`: `+v` by habit, so `flip` in a layout can put them on the other bank.
 
@@ -147,6 +147,8 @@ build checks them (`map_lint.py`, kind `wire`). What does what:
 ## Areaportals (what keeps one place from being drawn while standing in another)
 
 `m.portal(u1, v1, z1, u2, v2, z2)`: a sheet 2 thick across a doorway or tunnel into a side room. It must fill the opening from wall to wall and floor to roof, with open air on both faces and solid past all four edges (the check fails it otherwise), so it goes a little way INSIDE a tunnel, never at its mouth, never under the open sky, and never through water. A door that shuts an opening needs the portal inside its own thickness. Every roofed side room should have one in its way in.
+
+A gate across the open canal (`lockgate`, Valve's lock gates): the portal stands in the leaves' own thickness, between quoins (world brushes the leaves' models overlap), under a sky brush that closes the gate line over the leaves (it looks like the sky it replaces), and is named for the wiring: the leaf sends it `Close` on OnFullyClosed and `Open` on OnOpen. Any other way past the gates (its passage round) needs a portal of its own, always open, or the two sides are one area and the gate's portal does nothing.
 
 ## Pictures
 

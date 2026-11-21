@@ -54,6 +54,7 @@ What a module is and how to lay them out: `docs/dev/map-building.md` ("Canal mod
 | `breach` | 1024 | the breach: the floor fallen into an old cellar, slabs for ramps, an undercut | `lc_breach_bottom`, `lc_breach_stash` | `map_mods_d.py` |
 | `wreck` | 1024 | the wreck: a Combine carrier's container down in the canal, hollow, to race for | `lc_wreck_beacon`, `lc_wreck_cache`, `lc_wreck_spark` | `map_mods_d.py` |
 | `morgue` | 1024 | the morgue: a cold room of drawers and tables behind a sliding door (left) | `lc_morgue_chute`, `lc_morgue_door`, `lc_morgue_ledger`, `lc_morgue_table_1`, `lc_morgue_table_2`, `lc_morgue_table_3` | `map_mods_d.py` |
+| `lockgate` | 2048 | Valve's lock gates across the wide canal: toggled open and shut, a klaxon, a control booth, a passage round | `lc_lockgate_beacon`, `lc_lockgate_close`, `lc_lockgate_closed`, `lc_lockgate_klaxon`, `lc_lockgate_leaf_a`, `lc_lockgate_leaf_b`, `lc_lockgate_open`, `lc_lockgate_opened`, `lc_lockgate_portal`, `lc_lockgate_state`, `lc_lockgate_switch`, `lc_lockgate_switch_light`, `lc_lockgate_switch_model`, `lc_lockgate_toggle` | `map_mods_e.py` |
 | `hq` | 768 | the Resistance leader's office: a briefing room and an office behind it (the game puts the flagpole at its door) | `lc_hq_desk`, `lc_hq_map`, `lc_hq_table` | `map_town.py` |
 | `flats` | 768 | a house to live in: a front door that opens, a hall, and two flats of a kitchen and a bedroom each (stove, sink, fridge, table, bed) | `lc_flat_1`, `lc_flat_2`, `lc_flat_door` | `map_town.py` |
 | `straight` | 1024 | plain canal ("straight 1536", "straight 1024 bridge") | none | `map_modules.py` |
@@ -1371,6 +1372,36 @@ into the wall: Half-Life 2 has no morgue drawers), the chute's hatch and frame a
 Unchecked: models/humans/corpse1.mdl as a ragdoll laid on a table with its motion disabled (spawnflags 16388:
 debris and motion disabled, so it stays where it is laid), func_dustcloud's keys for the mist; which way the
 surgery table's head is (it is the same both ways in its size).
+
+### `lockgate`
+
+The lock gates: Valve's pair of lock gates from d1_canals_08 across the wide canal (the owner, 21 November: "the
+massive dual water hazard gates that shut and force the player to navigate around them ... a great toggle able gate
+to block the canal"). Two leaves 384 long and 480 high turn 80 degrees on hinges 768 apart, each carrying Valve's
+model (locks_large_b and locks_large, 572 high), wired as Valve's: speed 15, a klaxon four times a second apart as
+they start, Floodgate_Move_Short while they swing and Floodgate_Stop as they stop. Open, they lie in recesses in
+the walls downstream; shut, they close the canal from wall to wall (piers either side of them) and an areaportal in
+their thickness closes behind them, so the far canal is not drawn (Valve's rules: the portal shuts on
+OnFullyClosed and opens on OnOpen; over the leaves the gate line is sky, which it looks like anyway).
+On the left bank, upstream of the gates, a control booth in the wall 192 up (stairs up to it along the wall, the
+city's stair rail, a landing, the city's handrail along its open front, a lamp): on its back wall the switch,
+Valve's CombineButton with a light beside it that shows the gates' state, green open and red shut (Valve's switch
+recipe, the state set by the gates themselves, so it is right whoever moved them); over its front a red beacon
+that turns while the gates move (the alarm recipe: a func_rotating with two red spotlights in a cage lamp).
+For people on foot, the way round: in the right wall a doorway upstream of the gates, a passage 128 wide inside the
+wall, lit, past the gates, and a doorway back into the canal beyond the recesses (its own areaportal, always open).
+The gates start open: they swing open as the map starts ("lockgate shut" leaves them shut). Path nodes go round by
+the passage, never through the gate line. The canal is 1024 wide at both ends (between "widen" and "narrow").
+Named for the game: lc_lockgate_open, lc_lockgate_close and lc_lockgate_toggle (logic_relays the gamemode fires:
+the klaxon, the beacon and the leaves), lc_lockgate_opened and lc_lockgate_closed (logic_relays fired when the
+leaves have finished moving), lc_lockgate_switch (the button in the booth: it fires lc_lockgate_toggle),
+lc_lockgate_state (a logic_branch, 1 while open), lc_lockgate_leaf_a and lc_lockgate_leaf_b (the
+func_door_rotating leaves), lc_lockgate_portal (the areaportal), lc_lockgate_klaxon, lc_lockgate_beacon.
+Left as brushes: the piers, the quoins and the sky over the gate line, the stairs and landing, the booth.
+Unchecked: Valve's sound scripts d1_canals.Floodgate_Klaxon, d1_canals.Floodgate_Move_Short and
+d1_canals.Floodgate_Stop (Half-Life 2's canal sounds); that locks_large and locks_large_b hide the areaportal
+with no gaps (Valve kept theirs far behind the gates); which way CombineButton faces (turned out of the wall and
+tipped back 30, as Valve's); that a closing leaf crushes whoever stands in its way (Valve's damage 10000).
 
 ### `hq`
 

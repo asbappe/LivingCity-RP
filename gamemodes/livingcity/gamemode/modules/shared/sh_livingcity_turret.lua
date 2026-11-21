@@ -266,10 +266,11 @@ if SERVER then
             local to = hit:WorldSpaceCenter() - src
             if to:LengthSqr() > 1 then dir = to:GetNormalized() end
         end
-        gun:FireBullets({
+        local bullet = {
             Attacker = ply, Inflictor = gun, Damage = T.DAMAGE, Num = 1, Src = src, Dir = dir,
             Spread = Vector(T.SPREAD, T.SPREAD, 0), Tracer = 1, TracerName = "AR2Tracer", AmmoType = "AR2", IgnoreEntity = ply,
-        })
+        }
+        gun:FireBullets(bullet)
         -- Valve's AR2 handling: the Combine muzzle flash at the muzzle, and the func_tank's shot
         local fx = EffectData()
         fx:SetEntity(gun)
@@ -280,9 +281,11 @@ if SERVER then
         gun:MuzzleFlash()
         gun:EmitSound("Weapon_functank.Single")
         LC.TurretAnim(gun, "fire", "idle")
-        -- a shot of theirs, as from their own gun: armed and fighting (sv_livingcity_law.lua), in a fight (the music)
+        -- a shot of theirs, as from their own gun, for what watches who fires: armed and fighting (sv_livingcity_law.lua),
+        -- the fight music (sv_livingcity_pacing.lua), a close call at the Administrator's address (sv_livingcity_adminsecurity.lua)
         ply.lcFiredAt = CurTime()
         if LC.NoteFight then LC.NoteFight(ply) end
+        if LC.AdminBulletCheck then LC.Try(LC.AdminBulletCheck, ply, bullet) end
     end
 
     -- One tick of a manned gun: still theirs, the barrel turned toward their crosshair, and the rounds due.
@@ -295,7 +298,10 @@ if SERVER then
         end
         if not IsValid(ply) or ply.lcTurret ~= gun then T.Gunners[gun] = nil gun:SetNW2Entity("lc_turret_gunner", NULL) return end
         if Unfit(ply) then LC.TurretRelease(ply, ply:Alive() and "unfit" or "died") return end
-        if not ply.lcTurretAt or ply:GetPos():DistToSqr(ply.lcTurretAt) > T.SLIP * T.SLIP then LC.TurretRelease(ply, "left") return end
+        if not ply.lcTurretAt or ply:GetPos():DistToSqr(ply.lcTurretAt) > T.SLIP * T.SLIP or not LC.TurretBehind(ply, gun) then
+            LC.TurretRelease(ply, "left") -- (knocked off it, or the gun moved)
+            return
+        end
         local wy, wp = T.AimFrom(gun, ply:EyePos(), ply:GetAimVector(), T.Ignore(gun, ply))
         gun.lcYaw = T.Approach(gun.lcYaw or 0, wy, T.YAW_RATE, dt)
         gun.lcPitch = T.Approach(gun.lcPitch or 0, wp, T.PITCH_RATE, dt)

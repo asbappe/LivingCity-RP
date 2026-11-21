@@ -4,9 +4,9 @@ Made by `python3 _dev/player_text.py` from the code itself, so it can be made ag
 
 **How to correct it:** change the words inside the quotes, then send the whole file back. Leave everything outside the quotes as it is (that's how each line is found in the code again). Keep any {name} or %d / %s parts: the game fills those in. A line you don't touch stays as it is. To drop a line altogether, write DELETE inside its quotes. A note for me about a line can go after it on the same line, starting with NOTE:.
 
-Made from version eac33bb. Admin-only console messages and log lines are left out.
+Made from version 174add4. Admin-only console messages and log lines are left out.
 
-13426 lines, from 381 files.
+13427 lines, from 382 files.
 
 ## Contents
 
@@ -60,6 +60,7 @@ Made from version eac33bb. Admin-only console messages and log lines are left ou
 - [lc_supply.lua](#lcsupplylua-lcsupplylua) (1)
 - [lc_suppressor.lua](#lcsuppressorlua-lcsuppressorlua) (1)
 - [lc_terminal.lua](#lcterminallua-lcterminallua) (3)
+- [lc_turret.lua](#lcturretlua-lcturretlua) (1)
 - [lc_utilitybox.lua](#lcutilityboxlua-lcutilityboxlua) (1)
 - [lc_vending.lua](#lcvendinglua-lcvendinglua) (3)
 - [lc_workbench.lua](#lcworkbenchlua-lcworkbenchlua) (1)
@@ -792,6 +793,12 @@ Made from version eac33bb. Admin-only console messages and log lines are left ou
 > Note for you (not shown in game): its sign, the Civil Intake terminals' style (cl_livingcity_intake.lua; the owner, 7 November: the Commissaries "just look like static map props")
 
 - "Goods for citizens, by Civil Standing. Press E"  (text, line 46)
+
+## lc_turret.lua (lc_turret.lua)
+
+`gamemodes/livingcity/entities/entities/lc_turret.lua`
+
+- "Combine mounted gun"  (name, line 11)
 
 ## lc_utilitybox.lua (lc_utilitybox.lua)
 
@@ -8954,49 +8961,49 @@ Made from version eac33bb. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): part of: restore backup
 
-- "No such backup. lc_backups lists them."  (text, line 188)
-- "That backup can't be read."  (text, line 190)
+- "No such backup. lc_backups lists them."  (text, line 189)
+- "That backup can't be read."  (text, line 191)
 
 > Note for you (not shown in game): Takes the jogging routes out of LC.Points (unless lc_jog is 1). The first stop of each route becomes an exercise yard where there is none within 400 units. How many stops were taken out.
 
-- "before the jogging routes were removed"  (text, line 248)
+- "before the jogging routes were removed"  (text, line 249)
 
 > Note for you (not shown in game): The morning jog is archived (lc_jog 0: sv_livingcity_exercise.lua): its routes come out of the layout, and each route's start stays as an exercise yard (unless a yard is already there), so the morning drill gathers where the jog used to. A backup of the layout is kept first.
 
-- "The morning jog is archived: %d jogging route stops taken out of the layout (a backup was kept: lc_backups)."  (message, line 323)
+- "The morning jog is archived: %d jogging route stops taken out of the layout (a backup was kept: lc_backups)."  (message, line 324)
 
 > Note for you (not shown in game): the console command lc_reload
 
-- "[Miscount] Reloaded layout: %d points, %d path nodes, %d zones, %d tagged doors."  (message, line 549)
+- "[Miscount] Reloaded layout: %d points, %d path nodes, %d zones, %d tagged doors."  (message, line 550)
 
 > Note for you (not shown in game): the console command lc_backup
 
-- "[Miscount] Backed up the layout as {name}."  (text, line 559)
-- "[Miscount] Nothing to back up yet."  (text, line 559)
+- "[Miscount] Backed up the layout as {name}."  (text, line 560)
+- "[Miscount] Nothing to back up yet."  (text, line 560)
 
 > Note for you (not shown in game): the console command lc_backups
 
-- "[Miscount] Layout: data/%s. %d backups in data/%s/:"  (message, line 565)
-- "Restore one with lc_restore <number>. What's there now is backed up first."  (text, line 567)
+- "[Miscount] Layout: data/%s. %d backups in data/%s/:"  (message, line 566)
+- "Restore one with lc_restore <number>. What's there now is backed up first."  (text, line 568)
 
 > Note for you (not shown in game): the console command lc_restore
 
-- "[Miscount] Restored {what}."  (text, line 573)
-- "[Miscount] {what}"  (text, line 573)
+- "[Miscount] Restored {what}."  (text, line 574)
+- "[Miscount] {what}"  (text, line 574)
 
 > Note for you (not shown in game): the console command lc_autolink
 
-- "[Miscount] Made %d new links.%s"  (message, line 588)
-- "%d nodes still have no links (shown in red)."  (message, line 589)
+- "[Miscount] Made %d new links.%s"  (message, line 589)
+- "%d nodes still have no links (shown in red)."  (message, line 590)
 
 > Note for you (not shown in game): the console command lc_goto_layout
 
-- "[Miscount] None of those on this map."  (chat message, line 623)
-- "[Miscount] %s %d of %d. (You're in noclip; it's easy to land inside things.)"  (message, line 628)
+- "[Miscount] None of those on this map."  (chat message, line 624)
+- "[Miscount] %s %d of %d. (You're in noclip; it's easy to land inside things.)"  (message, line 629)
 
 > Note for you (not shown in game): the game answering something done in a window (lc_setting)
 
-- "%s set %s to %s"  (message, line 665)
+- "%s set %s to %s"  (message, line 666)
 
 ## the map's own lights, by the hour and by the dream (sv_livingcity_daylight.lua)
 
@@ -24230,87 +24237,87 @@ Made from version eac33bb. Admin-only console messages and log lines are left ou
 
 > Note for you (not shown in game): the game's physgun drop moment
 
-- "[Miscount] Moved: the {kind} is saved where you put it."  (chat message, line 1175)
+- "[Miscount] Moved: the {kind} is saved where you put it."  (chat message, line 1176)
 
 > Note for you (not shown in game): part of: use vending
 
-- "[Vending] Insert {price} credits."  (text, line 1191)
-- "[Vending] Insert {price} credits."  (chat message, line 1191)
+- "[Vending] Insert {price} credits."  (text, line 1192)
+- "[Vending] Insert {price} credits."  (chat message, line 1192)
 
 > Note for you (not shown in game): part of: use static vending
 
-- "[Vending] Insert {price} credits."  (text, line 1238)
-- "[Vending] Insert {price} credits."  (chat message, line 1238)
+- "[Vending] Insert {price} credits."  (text, line 1239)
+- "[Vending] Insert {price} credits."  (chat message, line 1239)
 
 > Note for you (not shown in game): part of: use fixture
 
-- "[Stove] Cook from your pockets (F3). Your stash is open there too, while you stand by the stove."  (chat message, line 1259)
-- "[Stove] Cook from your pockets (F3)."  (chat message, line 1259)
-- "[Sink] Fill bottles and cans from your pockets (F3). Boil them before you drink."  (chat message, line 1263)
+- "[Stove] Cook from your pockets (F3). Your stash is open there too, while you stand by the stove."  (chat message, line 1260)
+- "[Stove] Cook from your pockets (F3)."  (chat message, line 1260)
+- "[Sink] Fill bottles and cans from your pockets (F3). Boil them before you drink."  (chat message, line 1264)
 
 > Note for you (not shown in game): part of: dispense
 
-- "[Rations] The clerk at the counter hands you a ration packet."  (chat message, line 1332)
-- "[Rations] The clerk hands you a short ration: a third less than the full one. Good standing (Trusted) earns the full packet."  (chat message, line 1333)
+- "[Rations] The clerk at the counter hands you a ration packet."  (chat message, line 1333)
+- "[Rations] The clerk hands you a short ration: a third less than the full one. Good standing (Trusted) earns the full packet."  (chat message, line 1334)
 
 > Note for you (not shown in game): Hacking them (the multitool): a vending machine spits out its water, a ration dispenser its packets (5 to 8 of them), no credits and no coupon. Ten seconds, keep still; a unit who sees you at it makes you wanted. Then it's empty for lc_machine_hack_cooldown minutes (10).
 
-- "the vending machine"  (text, line 1344)
-- "the ration dispenser"  (text, line 1344)
-- "Aim at a vending machine or a ration dispenser."  (text, line 1347)
-- "You need a multitool to get into it."  (text, line 1348)
-- "You're busy."  (text, line 1349)
-- "It's dead: no power. Nothing to get out of it."  (text, line 1350)
+- "the vending machine"  (text, line 1345)
+- "the ration dispenser"  (text, line 1345)
+- "Aim at a vending machine or a ration dispenser."  (text, line 1348)
+- "You need a multitool to get into it."  (text, line 1349)
+- "You're busy."  (text, line 1350)
+- "It's dead: no power. Nothing to get out of it."  (text, line 1351)
 
 > Note for you (not shown in game): part of: hack machine
 
-- "Someone's already emptied it. It'll be restocked in about %d minutes."  (message, line 1353)
-- "Hacking {name}... keep still"  (progress bar, line 1357)
-- "You leave it."  (text, line 1358)
+- "Someone's already emptied it. It'll be restocked in about %d minutes."  (message, line 1354)
+- "Hacking {name}... keep still"  (progress bar, line 1358)
+- "You leave it."  (text, line 1359)
 
 > Note for you (not shown in game): part of: done
 
-- "[Resistance] The dispenser chokes, and spits out %d ration packets. No coupon, no record."  (message, line 1379)
-- "[Resistance] The machine shudders and drops %d cans. Free water, for once."  (message, line 1380)
-- "Tampering with Union property"  (text, line 1382)
-- "[Civil Protection] A Civil Protection unit saw you at it."  (chat message, line 1383)
+- "[Resistance] The dispenser chokes, and spits out %d ration packets. No coupon, no record."  (message, line 1380)
+- "[Resistance] The machine shudders and drops %d cans. Free water, for once."  (message, line 1381)
+- "Tampering with Union property"  (text, line 1383)
+- "[Civil Protection] A Civil Protection unit saw you at it."  (chat message, line 1384)
 
 > Note for you (not shown in game): a unit's ration voucher (their duty allocation, sv_livingcity_cp.lua): a packet, no card and no wait
 
-- "[Rations] Voucher accepted."  (chat message, line 1398)
+- "[Rations] Voucher accepted."  (chat message, line 1399)
 
 > Note for you (not shown in game): part of: use dispenser
 
-- "[Rations] You aren't registered, so you can't have a ration card. Register at Civil Intake, then work a Union shift to earn one."  (text, line 1406)
-- "[Rations] No ration card. You earn one for each Union shift you finish (your board, F4), and each ration takes one card."  (text, line 1408)
-- "[Rations] Your ration privileges have been suspended."  (text, line 1410)
-- "[Rations] Next allocation in %d seconds."  (message, line 1412)
+- "[Rations] You aren't registered, so you can't have a ration card. Register at Civil Intake, then work a Union shift to earn one."  (text, line 1407)
+- "[Rations] No ration card. You earn one for each Union shift you finish (your board, F4), and each ration takes one card."  (text, line 1409)
+- "[Rations] Your ration privileges have been suspended."  (text, line 1411)
+- "[Rations] Next allocation in %d seconds."  (message, line 1413)
 
 > Note for you (not shown in game): a reprimand (skipping morning exercise: sv_livingcity_exercise.lua): this one allocation
 
-- "[Rations] Allocation withheld: {why}. Your next allocation is as normal."  (text, line 1418)
+- "[Rations] Allocation withheld: {why}. Your next allocation is as normal."  (text, line 1419)
 
 > Note for you (not shown in game): the PA said it: tolerating noncompliance costs this allocation (sv_livingcity_rations.lua). (A new life's first ration is docked like any other: the owner, 7 November, said no to skipping it.)
 
-- "[Rations] Allocation withheld: five ration units deducted for tolerating noncompliance{why}. Your next allocation is as normal."  (text, line 1426)
+- "[Rations] Allocation withheld: five ration units deducted for tolerating noncompliance{why}. Your next allocation is as normal."  (text, line 1427)
 
 > Note for you (not shown in game): the city's stores (sv_livingcity_stockpile.lua): empty, nothing; low, sometimes nothing
 
-- "[Rations] Distribution suspended: the city's stores are empty."  (text, line 1433)
-- "[Rations] Supply shortfall. The dispenser whirs and gives nothing. Try again in a minute (the stores are low: kitchen and factory shifts, trains and supply drops fill them)."  (text, line 1436)
+- "[Rations] Distribution suspended: the city's stores are empty."  (text, line 1434)
+- "[Rations] Supply shortfall. The dispenser whirs and gives nothing. Try again in a minute (the stores are low: kitchen and factory shifts, trains and supply drops fill them)."  (text, line 1437)
 
 > Note for you (not shown in game): a forged card: no questions, usually
 
-- "[Rations] Card invalid. This incident has been logged."  (chat message, line 1445)
-- "Ration fraud"  (text, line 1446)
+- "[Rations] Card invalid. This incident has been logged."  (chat message, line 1446)
+- "Ration fraud"  (text, line 1447)
 
 > Note for you (not shown in game): part of: use dispenser
 
-- "[Rations] Card accepted."  (chat message, line 1449)
+- "[Rations] Card accepted."  (chat message, line 1450)
 
 > Note for you (not shown in game): part of: serve players at line
 
-- "[Rations] Wait at the counter."  (chat message, line 1494)
+- "[Rations] Wait at the counter."  (chat message, line 1495)
 
 ## Realistic or Relaxed survival, chosen per character (sv_livingcity_survivalmode.lua)
 

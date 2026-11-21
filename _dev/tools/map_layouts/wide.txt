@@ -1,11 +1,12 @@
 # The wide canal (the owner, 21 November: Valve's airboat canals are 1024 wide): the city canal widens, runs wide
-# with a walk along its wall, a side gate and a turn, narrows again, then a basin that widens and narrows in one.
+# with a walk along its wall, lock gates, a side gate and a turn, narrows again, then a basin that widens and narrows in one.
 # Built by map_modules_check.py with the other layouts; a showroom of the wide modules, not fitted to the map.
 #   python3 map_build.py chain --layout map_layouts/wide.txt --test
 #
-#   widen / narrow   from 512 to 1024 and back (every module between them must be a wide one: wide, widetee, a turn)
+#   widen / narrow   from 512 to 1024 and back (every module between them must be a wide one: wide, widetee, lockgate, a turn)
 #   wide 2048        the wide canal that long (a walk along its left wall from 2048; "flip" for the right)
 #   basin 2560       512 at both ends, 1024 in the middle: goes anywhere a plain stretch does
+#   lockgate         Valve's lock gates across the wide canal, a control booth, a passage round ("lockgate shut")
 
 start 0 -9216
 heading E
@@ -14,6 +15,7 @@ rim 784
 straight 1536
 widen
 wide 2304
+lockgate
 widetee
 right
 wide 1536 bridge
