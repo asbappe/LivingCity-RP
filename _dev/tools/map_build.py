@@ -637,14 +637,16 @@ def fence(vmf, plan, high, vis, top=None):
                 continue
             if start is not None:
                 b = prev + CELL
-                sheets[axis].append(along(axis, start, b, min(line, line + 2 * side), max(line, line + 2 * side), at, at + high))
+                t = 1 if axis == "y" else 2       # (a run along y: its sheet 1 thick and its posts 3 either side, so at a corner
+                sheets[axis].append(along(axis, start, b, min(line, line + t * side), max(line, line + t * side), at, at + high))      # no post's face lies in a sheet's plane)
                 lo, hi = min(line, line + 4 * side), max(line, line + 4 * side)
                 dz = 1 if axis == "y" else 0      # (a run along y sits 1 lower and 1 thinner: where two runs meet at a corner
                 if axis == "y":                    # their rails never share a face, which would flicker: the owner, 21 November)
                     lo, hi = (lo, hi - 1) if side > 0 else (lo + 1, hi)
                 bars.append(along(axis, start, b, lo, hi, at + high - 4 - dz, at + high - dz))
+                w = 3 if axis == "y" else 2
                 for p in range(start, b + 1, 256):
-                    bars.append(along(axis, max(start, p - 2), min(b, p + 2), lo, hi, at, at + high - 4 - dz))
+                    bars.append(along(axis, max(start, p - w), min(b, p + w), lo, hi, at + dz, at + high - 4 - dz))      # (and 1 higher at the foot)
             start = prev = a
     nd = MAT["nodraw"]
     if sheets["x"]:
