@@ -23,4 +23,6 @@ The owner, 12 November: the rebels "would likely imprison, interrogate, then eit
 - **An exchange,** offered to the Resistance (above), when they hold someone and the Combine hold one of theirs.
 The city's own picks a reprisal when it can and authority is 45 or more, else a raid, else (half the time) an exchange, else the high ground. One answer at a time, ten minutes apart at least.
 
+**What follows her answer** (21 November; `LC.RebelAftermathFor`). A reprisal angers the cell and puts **Answer the reprisal** on the Resistance's board (F4) for a quarter of an hour: kill two Civil Protection units (45 XP; done, the anger is spent). A raid brings a **counter-raid**: the checkpoint sabotage job is posted (with no checkpoint on the map, Answer the reprisal instead), and the cell grows both warier and angrier. The high ground makes the cell **harder**: angrier, so the atmosphere turns vengeful sooner. An exchange sets nothing more going. Tests `Nov21_RebelAftermathTests`.
+
 Setting: `lc_rebel_answer` (1). Tests: `Nov19_RebelAnswerTests`.

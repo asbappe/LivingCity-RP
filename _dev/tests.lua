@@ -43485,6 +43485,44 @@ function Nov21_DreamBreakoutTests()
 end
 Nov21_DreamBreakoutTests()
 
+function Nov21_RebelAftermathTests()
+    section("21 November: her answer is a start: revenge after a reprisal, a counter-raid after a raid, a harder cell")
+    local runWas = LC.Running
+    LC.Running = true
+    local fighter = newPlayer("AftermathRebel", "resistance", nil, 900)
+    local function posted(id)
+        for _, p in ipairs(LC.Postings.resistance or {}) do if p.tmpl and p.tmpl.id == id and not p.dead and not p.q then return p end end
+    end
+    local function clear(id)
+        for _, p in ipairs(LC.Postings.resistance or {}) do if p.tmpl and p.tmpl.id == id then p.dead = true end end
+    end
+    clear("res_revenge") clear("res_sabotage")
+    local anger0 = LC.RebelMood.anger
+    ok(LC.RebelAftermathFor("reprisal") == "revenge", "a reprisal sets revenge going")
+    local job = posted("res_revenge")
+    ok(job and job.title == "Answer the reprisal" and job.violent, "\"Answer the reprisal\" is on the Resistance's board", job and job.title)
+    ok(LC.RebelMood.anger >= math.min(20, anger0 + 4), "and the cell is angry", LC.RebelMood.anger)
+    clear("res_revenge")
+    LC.RebelAftermath.revengeUntil = 0
+    ok(#LC.PostDirective("res_revenge") == 0, "(it is only ever up after a reprisal)")
+    -- a raid: a checkpoint to blow up, if the city has one
+    local cps = LC.PointsOfKind("checkpoint")
+    local made
+    if #cps == 0 then made = LC.AddPoint(Vector(48000, 48000, 0), 0, "checkpoint", 0) end
+    ok(LC.RebelAftermathFor("raid") == "counterraid" and posted("res_sabotage") ~= nil, "a raid brings a counter-raid: a checkpoint to blow up")
+    clear("res_sabotage")
+    if made then LC.RemovePoint(made) end
+    local a1 = LC.RebelMood.anger
+    LC.RebelMood.anger = math.min(a1, 10)
+    local a2 = LC.RebelMood.anger
+    ok(LC.RebelAftermathFor("high") == "harder" and LC.RebelMood.anger == a2 + 4, "the high ground makes the cell harder")
+    ok(LC.RebelAftermathFor("exchange") == nil, "an exchange sets nothing more going")
+    LC.RebelMood.anger = anger0
+    fighter:Remove()
+    LC.Running = runWas
+end
+Nov21_RebelAftermathTests()
+
 ----------------------------------------------------------------------
 section("Stop")
 LC.Stop(admin)

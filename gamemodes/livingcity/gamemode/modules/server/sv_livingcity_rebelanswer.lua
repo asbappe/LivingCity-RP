@@ -46,6 +46,12 @@
         rebel ground, the nearest to what they have learned), the high ground
         (an amnesty, or extra rations), or an exchange offered to the Resistance.
 
+    What follows her answer
+        A reprisal angers the cell and puts "Answer the reprisal" on the
+        Resistance's board for a quarter of an hour (kill two units); a raid
+        brings a counter-raid (a checkpoint to blow up, or the same two units);
+        the high ground makes the cell harder (angrier).
+
     lc_rebel_answer 1/0
 ]]
 
@@ -530,6 +536,65 @@ function LC.RebelAnswerTick(now)
         end
     end
 end
+
+------------------------------------------------------------------------
+-- A start, not an end (TODO, 12 November: "a reprisal invites revenge jobs, a raid a counter-raid, an
+-- amnesty a harder cell")
+------------------------------------------------------------------------
+
+LC.RebelAftermath = LC.RebelAftermath or {}
+local AM = LC.RebelAftermath
+AM.REVENGE_SECS = 900   -- how long the Resistance's answer to a reprisal stays up for the taking
+
+-- The Resistance's answer to a reprisal: two of the units who stand for it, killed where the city can see.
+do
+    local Q = LC.QB
+    if Q and LC.QuestTemplates then
+        LC.QuestTemplates[#LC.QuestTemplates + 1] = {
+            id = "res_revenge", brings = false, factions = { resistance = true }, violent = true, squad = 4,
+            available = function() return LC.Running and CurTime() < (AM.revengeUntil or 0) end,
+            build = function()
+                local kill = Q.Spawns(Q.Count("killed", 2, "Kill 2 Civil Protection units", function(_, _, npc)
+                    local st = LC.NPCs[npc]
+                    return st ~= nil and LC.IsSecurity and LC.IsSecurity(st)
+                end), { role = "cop", pos = function(q) return IsValid(q.owner) and q.owner:GetPos() or nil end })
+                return {
+                    title = "Answer the reprisal", reward = 45, limit = 600,
+                    desc = "They shot ours against a wall. Kill two Civil Protection units so the city knows it was answered.",
+                    stages = { kill },
+                    onFinish = function(_, success)
+                        if success and LC.RebelMoodPush then LC.RebelMoodPush(0, -3) end -- (answered: the anger spent)
+                    end,
+                }
+            end,
+        }
+    end
+end
+
+-- What follows her answer. -> what was set going ("revenge", "counterraid", "harder"), or nil.
+function LC.RebelAftermathFor(what)
+    if what == "reprisal" then
+        if LC.RebelMoodPush then LC.RebelMoodPush(0, 4) end
+        AM.revengeUntil = CurTime() + AM.REVENGE_SECS
+        if LC.PostDirective then LC.PostDirective("res_revenge") end
+        return "revenge"
+    elseif what == "raid" then
+        -- they hit back where the Combine stand: a checkpoint, or else two of their units
+        if LC.RebelMoodPush then LC.RebelMoodPush(2, 2) end
+        local made = LC.PostDirective and LC.PostDirective("res_sabotage") or {}
+        if #made == 0 then
+            AM.revengeUntil = CurTime() + AM.REVENGE_SECS
+            if LC.PostDirective then LC.PostDirective("res_revenge") end
+        end
+        return "counterraid"
+    elseif what == "high" then
+        -- mercy from the Combine makes the cell's hardliners louder
+        if LC.RebelMoodPush then LC.RebelMoodPush(0, 4) end
+        return "harder"
+    end
+    return nil
+end
+hook.Add("LivingCityRebelAnswered", "LivingCityRebelAftermath", function(what) LC.Try(LC.RebelAftermathFor, what) end)
 
 net.Receive("lc_rk_do", function(_, ply)
     local what = net.ReadString()
