@@ -57,6 +57,15 @@ helpers' running notes and lesson proposals in its `wip/` while it runs; at the 
   all ingestion is done** (the owner's choice). City 17's four approved: timed holds with faster waves, squads topped
   up with a medic, supplies from roofs, tripwires and turrets.
 
+## If the work was cut off (21 November, at the usage limit)
+
+Running when the session neared its limit: Nova Prospekt's pictures (`valve_prison/pictures.json`, draft), Black
+Mesa East whole (`valve_eli/`: pictures, `wip/notes.md`, `wip/lessons.json`), EP1 City 17's props and craft
+(`valve_ep1c17/wip/`). Whatever they saved is committed. To carry on: read what each saved, finish the missing
+maps with a new helper (same brief as before: `docs/dev/map-ingestion.md`, "Briefing a helper"), then merge and
+close the batch as batches 1 and 2 were (the `notes/` and draft steps above). Next to start: EP1 City 17's logic
+and NPCs, then its pictures; then batch 6 (the Citadel, with the owner's four pieces and the architecture study).
+
 ## The batches (M measured, P pictures reviewed, S studied and lessons merged)
 
 All 122 measured on 21 November (145 maps in `valve_stats.json` with the first 23).
