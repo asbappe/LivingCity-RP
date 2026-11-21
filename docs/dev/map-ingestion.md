@@ -8,7 +8,7 @@ read the files it points at only by the part you need.
 
 So far 23 maps are in: d1_trainstation_01 to 05, d3_c17_13, d1_town_03 (Ravenholm), d3_citadel_01, d2_coast_12,
 the vehicles test map, and all of Route Kanal (d1_canals_01, 01a, 02, 03, 05 to 13). They gave 112 reference
-pictures, 65 lessons (of 111 in all; tag `valve`), 26 prefab pieces (`valve_*`) and four studies (props, entity
+pictures, 81 lessons (of 127 in all; tag `valve`), 26 prefab pieces (`valve_*`) and four studies (props, entity
 logic, building craft, NPCs).
 
 ## The rules, every time
@@ -174,7 +174,13 @@ nodes); **sections** (cross-sections at many places, compared with ours as sente
   on a concrete plinth, roofs 20 to 35 degrees; no blood decals (litter, ivy, one pinned corpse with crows); traps
   are loose physics props; zombies come from makers walked in by scripted schedules; rooftops joined by planks; a
   weak cold sun and warm spotlight pairs about 500 apart, no fog.
-- **NPCs** (tag `npc`, `valve-npc-notes.md`): see the study.
+- **NPCs** (tag `npc`, `valve-npc-notes.md`): a unit guards each Combine door within 32 to 128 of his spot, warns
+  three times and shoves (24 posts in the station maps); 75 idle spots each name one pose (window watcher, drinker,
+  arms crossed, couch, bed; bench seats 48 apart); scenes start where a player is looking (128 to 1000 away, 25 to
+  60 degrees, after 0.4 to 2.5 s in sight); squads move in lanes with their own rally and target points 450 to 1000
+  apart; walking nodes 96 apart (64 to 72 indoors; ours are 181 in the canal pieces), cover spots behind low cover
+  about 100 apart, flying nodes about 150 apart and 120 up; gates switch their path links when they open and shut;
+  the station's crowd is kept quiet. Most of these change how our NPCs behave: the owner chooses.
 
 ## What to ingest next (for Living City, in this order)
 

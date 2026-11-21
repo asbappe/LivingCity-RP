@@ -1399,6 +1399,228 @@
    "why": "City maps: 47% of brushes func_detail but only 19% of visible area (canals 73% and 27%); of the detail 46% are angled and 25% strips. Only 22% (canals 28%) of fully covered faces are nodraw, while 18 to 20% of uncovered faces are (backs facing out), and 29 to 34% of the faces of brushes more than 1024 from play.",
    "how": "Mod.det for trims, chamfered and angled pieces; nodraw on the outer faces of a module's shell.",
    "check": "review"
+  },
+  {
+   "id": "valve-npc-busy-poses",
+   "tags": [
+    "npc",
+    "valve",
+    "streets",
+    "interiors"
+   ],
+   "title": "Every idle spot has its own pose",
+   "rule": "Where people idle (a bench, a wall, a window, a doorway, a couch, a bed, a stool), mark one spot per person and name its pose: an entry, a loop and an exit. Seats on one bench in pairs about 48 apart, benches 170 to 225 apart, two sit poses alternating along a row.",
+   "why": "Valve: 75 act busy hints (info_node_hint hinttype 12) in 6 maps, each naming one pose: ACT_BUSY_QUEUE 27, ACT_BUSY_STAND 10, and one sequence per person: d1_t02_Plaza_Sit01_Idle and Sit02 alternating on the ts02 benches, watching the clock, arms crossed, hands in pockets, looking out of a window or door (d1_t03_LookOutWindow), a seated drinker (drinker_sit_idle), lying on a couch (laycouch1), sitting on a bed (d1_t03_Sit_Bed). ai_goal_actbusy (31) sends each person to theirs with ForceNPCToActBusy 'npc hint [teleport] [$move]'.",
+   "how": "Gamemode: the BUSY table in sv_livingcity.lua (sit, sitchair, lean) can take named sequences with entry, loop and exit, played by MakeSequence as now (SeqName skips names a model lacks); new editor point kinds for the new poses. Map modules: lc_busy_<pose>_N info_targets facing the way the person faces (the game would read them; info_node_hint never reaches the .ain). Changing the poses on existing sit, bench and lean points changes what players see: ask the owner.",
+   "check": "review; proposed: a bench or couch prop in a module with no busy spot within 48."
+  },
+  {
+   "id": "valve-npc-posts",
+   "tags": [
+    "npc",
+    "valve",
+    "combine"
+   ],
+   "title": "Units get more posts than men, in a set of their own",
+   "rule": "Give each place units guard 1.5 to 2 stand posts per unit (a plaza with 2 units: 4 posts), so they shift between them, and keep each set for its own units. A post faces what it watches.",
+   "why": "ts02: 4 ACT_BUSY_STAND posts (hintgroup_plaza_cops) for 2 plaza cops, 3 at the terminal; ts01: 3 on the catwalk. 29 cops carry a hintgroup and 19 hintlimiting 1, so they keep to their own set.",
+   "how": "Editor checkpoint and garrison points (LC.GuardPostSpot): 3 or 4 for every 2 units. Map modules: lc_post_<place>_N info_targets facing out. Changing how the garrison picks posts: ask the owner.",
+   "check": "review"
+  },
+  {
+   "id": "valve-npc-queue",
+   "tags": [
+    "npc",
+    "valve",
+    "streets",
+    "gameplay"
+   ],
+   "title": "A queue: slots 50 apart, a front pose, a player can hold it",
+   "rule": "Ration line slots about 50 apart (46 to 60), snaking where room is short, each slot turned toward the next one forward; the front slot has its own pose, the others a queue idle. A player standing in a slot holds the people behind him. The one served walks well clear (90 to 430) before the next steps up.",
+   "why": "ts01 customs and ts02 food queues (ai_goal_actbusy_queue): 14 slots each, median 50 apart, front slot food_queue_front, the rest ACT_BUSY_QUEUE; one small trigger per slot sends PlayerStartedBlocking(N) and PlayerStoppedBlocking(N); the front one waits 30 to 60 s, MoveQueueUp 20 s after one leaves; the dispenser animates as the front one leaves; exits 92 and 427 from the front; a hidden maker at an exit refills (1 alive, every 4 s).",
+   "how": "Editor ration line slots (front first): place them 48 to 52 apart, turned along the line. LineThink in sv_livingcity.lua already walks the front one to the dispenser; the player hold and the queue idle would change the line's behaviour: ask the owner.",
+   "check": "review; proposed: line slots closer than 40 or further than 64 apart."
+  },
+  {
+   "id": "valve-npc-police-post",
+   "tags": [
+    "npc",
+    "valve",
+    "combine",
+    "doors",
+    "gameplay"
+   ],
+   "title": "A guarded door is a unit on a police post, not a line of text",
+   "rule": "Keep people out of a Combine place with a unit standing at its door on a police post: radius about 60 (32 to 128), never leaving it; he warns three times and shoves; a beating only past a line behind him (a box beyond the door); then he resets. His warnings set the world going (a scanner photographs, he raises his hand at the door).",
+   "why": "ts01 to ts04: 24 ai_goal_police (policeradius 32 to 128, median about 60, flag 4 'do not leave post' on 15), given by SetPoliceGoal (20 lines); outputs OnFirstWarning, OnSecondWarning, OnLastWarning, OnKnockOut; EnableKnockOut only while the player is in a box 80 x 128 to 304 x 348 behind the cop (OnStartTouch, and DisableKnockOut on OnEndTouch); first warning: a scanner InspectTargetPhoto; second: Plazahalt at the door. The beating never kills (ts04 sets the player's health back to 100).",
+   "how": "Map modules: a facing info_target (lc_police_post_<door>) 32 to 64 in front of every door into a Combine-only place. Gamemode: ents.Create('ai_goal_police') and npc:Fire('SetPoliceGoal', name) on the unit posted there; policetarget must be the trespasser's own targetname (!player is player 1 in multiplayer, from memory). This changes trespass as it works today (the chat countdown in sv_livingcity_security.lua): ask the owner.",
+   "check": "review; check in game that a named player works as policetarget."
+  },
+  {
+   "id": "valve-npc-guards-relax",
+   "tags": [
+    "npc",
+    "valve",
+    "combine"
+   ],
+   "title": "Guards idle at their post until they hear trouble",
+   "rule": "A unit on post plays a calm idle (crouched, leaning on the wall, baton at rest) and drops it the moment he hears gunfire, is hurt, or a door near him opens.",
+   "why": "c07, c08: cops on act busy hints with Crouch_idle_smg1_A, Crouch_idle_pistol_A, Idle_harrassidle_A (search range 64 to 300, visibleonly 1), Deactivated by OnHearPlayer, OnDamaged, a prop_door_rotating OnOpen (2.5 s later) or a trigger. ts02 cops lean on walls (Plazalean as play and post idle).",
+   "how": "Gamemode: units at checkpoint and garrison posts play one of these through MakeSequence (loop in post idle) and CancelSequence on danger, as citizens' busy spots already do. It changes how posts look: ask the owner.",
+   "check": "review"
+  },
+  {
+   "id": "valve-npc-in-view",
+   "tags": [
+    "npc",
+    "valve",
+    "gameplay"
+   ],
+   "title": "Start a staged moment where a player is looking",
+   "rule": "Before a staged moment (a beating, an arrest, a break, an approach), wait until a player is near (128 to 1000) with the spot in a 25 to 60 degree cone and in sight for half a second to two; after a timeout do it anyway. Seen, it needs no text.",
+   "why": "35 ai_script_conditions: playertargetfov 25 to 60 (true cone) with line of sight, proximity 128 to 1000, requiredtime 0.4 to 2.5 s, a 15 s timeout; ts01's luggage shove waits for the player within 500 with the citizen in a 50 degree cone (3 s at most); ts01's interrogation room shuts its door slot when the player is within 150.",
+   "how": "Gamemode: a helper beside LC.IsSeen that takes a spot, a distance and a cone, used before the breaks in sv_livingcity_mindsact.lua and the director's approaches; the act and the voice then carry it and the chat line can go (house rule 10). That changes those features: ask the owner. ai_script_conditions itself is single-player minded.",
+   "check": "review"
+  },
+  {
+   "id": "valve-npc-spawn-job",
+   "tags": [
+    "npc",
+    "valve",
+    "logic",
+    "multiplayer"
+   ],
+   "title": "An NPC appears unseen at a doorway, its job already given",
+   "rule": "Spawn people out of sight at a doorway or exit and give each its job in the same moment (where to go, what to do, whom to hate); never spawn one in view or leave it standing. The ones that leave walk to an exit doorway first.",
+   "why": "194 of 197 npc_template_maker start disabled and are fired by Spawn (164 inputs) more than Enable (66); 51 'not while seen' (flag 128), the rest hidden by placement; OnSpawnNPC: StartSchedule 46, ApplyRelationship 23, Activate or BeginAssault 19, BeginSequence 11, act busy 10, BeginRappel 6. ts02 spawns at info_npc_spawn_destination beside hint 903 exits (reusedelay 1); passers-by (2 alive) cross to another exit and vanish, the next 10 s later.",
+   "how": "Already our way for citizens (spawn and exit doorways, people who stay): keep it for units and anything new. Map modules: an exit doorway point (lc_exit_N) inside a door at each block or street end, out of sight lines.",
+   "check": "review"
+  },
+  {
+   "id": "valve-npc-assault-lanes",
+   "tags": [
+    "npc",
+    "valve",
+    "combine",
+    "logic"
+   ],
+   "title": "A squad moves in lanes: each man his own rally spot and target",
+   "rule": "When units go into a place (a raid, a landing, retaking ground), give each man his own rally spot where they gather and his own target spot inside, in separate lanes about 130 apart; start the move a moment after they gather; long moves go in bounds of 450 to 1000 with a pause of 0 to 3 s at each.",
+   "why": "45 ai_goal_assault, 112 assault_rallypoint, 147 assault_assaultpoint: rally points by wildcard, 1 to 6 a goal, each with its own assault point; rally to assault median 467 (quartiles 24, 998); assaulttimeout 3 (74) or 0, assaulttolerance 36, clear on arrival (55); c01's track cops: six chains of 6 points 450 to 1000 apart, zigzagging 160 across the track, lanes about 130 apart; Activate at 0 to 0.2 s and BeginAssault at 0.2 to 0.5 s after the spawn.",
+   "how": "Map modules: lc_lane_<place>_rally_N and lc_lane_<place>_N info_targets where the Combine or the Resistance would go in. Gamemode: our GoTo per man, or a runtime ai_goal_assault (the unit then needs a state our think loop leaves alone until OnArrival). Changes raids and deployments: ask the owner.",
+   "check": "review"
+  },
+  {
+   "id": "valve-npc-cover-hints",
+   "tags": [
+    "npc",
+    "valve",
+    "combine",
+    "props"
+   ],
+   "title": "Where fights happen, cover hints behind the cover",
+   "rule": "Behind waist-high cover (sandbags, low walls, crates, car bonnets) put a cover-low hint (info_node_hint hinttype 101), behind chest-high cover a cover-medium (100), facing the threat, about 100 apart (56 to 135), in a named group per building, roof or barricade.",
+   "why": "d3_c17_13: 82 cover-low hints, nearest other median 96 (quartiles 56, 128), almost half in groups (rooftop_hintgroup 19, bldg1_hintgroup 5); d2_coast_12: 67 cover-medium, 117 apart; nodefov 180 on all. No pinch, guard or enemy-disadvantage hints in any of the 23 maps. ai_changehintgroup moves a squad to another group 15 s after OnFoundPlayer (c07).",
+   "how": "Map modules: barricades, checkpoints and rebel camps add the hints with each piece of cover (a helper beside m.static for sandbags and barriers), the group named lc_cover_<place>. The engine's combat AI uses them by itself.",
+   "check": "review; proposed: a barricade or sandbag prop in a module with no cover hint within 64."
+  },
+  {
+   "id": "valve-npc-node-spacing",
+   "tags": [
+    "npc",
+    "valve",
+    "geometry",
+    "doors"
+   ],
+   "title": "Path nodes about 96 apart, 64 to 72 indoors, one by each door",
+   "rule": "Lay ground nodes about 96 apart in the open (no more than about 140), 64 to 72 apart in rooms, corridors and sewers, and one on each side of every door NPCs use, within about 64 of it.",
+   "why": "4392 ground nodes in the 23 maps: nearest neighbour median 96 (quartiles 64, 141); tenement 68, lab 73, sewers c05 66, c07 72, c11 68; open coast 141, c12 132; about 2 per occupied 256 x 256 cell; nearest node to a prop_door_rotating median 65. Our canal Channel.nodes (map_ring.py) lays a diagonal lattice about 181 apart (64 cells, odd cells with i + j divisible by 4); the forest nest 160.",
+   "how": "map_ring.Channel.nodes: a node every 96 to 128 in the open and every 64 in rooms and ducts; the door helpers add a node each side. Count nodes per map against the engine's cap (4096, from memory: check).",
+   "check": "proposed map_lint: a module whose ground nodes' nearest-neighbour median is over 140, or a door with no node within 96."
+  },
+  {
+   "id": "valve-npc-gate-links",
+   "tags": [
+    "npc",
+    "valve",
+    "doors",
+    "logic"
+   ],
+   "title": "A gate NPCs walk through switches its node link",
+   "rule": "Across every gate, shutter or breakable wall NPCs path through, put an info_node_link_controller: a thin box (16 deep, as wide and high as the gap) that starts off when the gate starts shut; the gate's own OnFullyOpen turns it on and OnClose turns it off. Turn a link off to keep units back during a scene.",
+   "why": "9 controllers (d1_town_03 side_alley_gate, c01a, c03 grate, c05, d3_c17_13 5), mostly 16 deep, 96 to 208 wide, 32 to 84 high; 14 info_node_link; switched by func_door_rotating OnFullyOpen TurnOn and OnClose TurnOff (c01 backalley_gate), by scenes and counters; ts03 link_prevent_cop_movement is turned off to keep cops back.",
+   "how": "Map modules: the gate helpers add the controller and the two wires. Our navgraph (sv_livingcity_navgraph.lua) learns a closed way only after failures; the engine's own legs follow the switched link.",
+   "check": "proposed map_lint: a func_door or func_door_rotating gate across a node line with no link controller."
+  },
+  {
+   "id": "valve-npc-air-nodes",
+   "tags": [
+    "npc",
+    "valve",
+    "geometry"
+   ],
+   "title": "Where scanners and manhacks fly, air nodes",
+   "rule": "Over streets, canals and yards where scanners, manhacks or crows fly, lay info_node_air about 150 apart (97 to 256), about 120 above the ground nodes below them (62 to 239), and through the openings they use.",
+   "why": "1015 air nodes (+79 air hints) in the 23 maps: nearest neighbour median 149 (quartiles 97, 256), height over the ground node below median 120 (quartiles 62, 239); c07 184, c03 165, c13 104, ts02 78; maps with no flyers have none (ts03, c10, c11). Crow fly-to and perch hints 41; strider air hints 61 (d3_c17_13).",
+   "how": "Map modules over open sky: an air node grid laid with the ground nodes (map_ring.Channel and the street modules). Our scanners fly by the engine (SetFollowTarget).",
+   "check": "review"
+  },
+  {
+   "id": "valve-npc-heard-not-seen",
+   "tags": [
+    "npc",
+    "valve",
+    "sound",
+    "gameplay"
+   ],
+   "title": "Violence out of sight is heard and felt, not told",
+   "rule": "What happens behind a wall (a beating, a search, a fight) reaches players as sound and moving things: a one-shot sound fired on short random timers for a few seconds, furniture knocked about, then what is left (a person cowering, a broken chair). No text line.",
+   "why": "ts03 relay_beating_start: the citizen_beating sound (one-shot, flags 48, radius 508) on two logic_timers (random 0.4 to 1.5 s) for 6 and 8 s; physics explosions at 2.1, 3, 4.1, 5.6 and 7.1 s throw chairs, a table and an armoire spawned from templates; the victim is left in a cower post idle. House rule 10: prefer the world to text.",
+   "how": "Gamemode: raids (sv_livingcity_raids.lua) and unit brutality (sv_livingcity_mindsact.lua) in a closed room: EmitSound on a short random timer and a few physics pushes on the room's props, instead of a chat line. Changes those features: ask the owner. Map modules: interiors keep a few loose physics props a search can knock over (valve-busy-and-quiet).",
+   "check": "review"
+  },
+  {
+   "id": "valve-npc-quiet-crowd",
+   "tags": [
+    "npc",
+    "valve",
+    "sound",
+    "gameplay"
+   ],
+   "title": "Under the Combine, citizens look more than they talk",
+   "rule": "In the Combine's city, citizens do not greet and seldom chatter; they turn to a player who comes close, to units near them, to a screen or loudspeaker that speaks; a press of E gets one short line.",
+   "why": "ts01 to ts04 each have an ai_speechfilter on citizens with neversayhello 1 and idlemodifier 0; trigger_multiples round citizens start LookAtPlayer.vcd (paused on its first event, restarted by OnCompletion), cit_lookatcops.vcd, lookatbreencast.vcd; OnPlayerUse (19) starts a one-line scene or a nag relay.",
+   "how": "Gamemode: TryChat (every 25 to 60 s) and the brush-past barks in sv_livingcity.lua could give way to a glance (face the player a moment) and less chat near units. Changes what citizens do: ask the owner. NPC:PlayScene with Valve's LookAtPlayer.vcd may fail in multiplayer (!player).",
+   "check": "review"
+  },
+  {
+   "id": "valve-npc-raid",
+   "tags": [
+    "npc",
+    "valve",
+    "combine",
+    "doors",
+    "interiors"
+   ],
+   "title": "A raid goes in through the door, and the residents hide",
+   "rule": "Units enter a block flat by flat: two at the door, one kicks (adooridle, adoorkick) with the door unlocked and opened at the kick's own animation event, the other knocks and goes in (adoorknock, adoorenter); others hold the stairs. Residents stop what they were doing, run with their arms over their heads (run_protected_all) to a hiding spot in the flat and cower there (cower_Idle, or Fear_Reaction then Fear_Reaction_Idle).",
+   "why": "ts03: relay_breakin_startseq begins SS_Kickin (OnScriptEvent01 Unlock and Open, with a fallback 0.95 s after OnBeginSequence) and SS_Kickin_Runin together, turns a node link off and puts a cop on police posts at the stairs; residents' act busy goals are Deactivated by triggers and they are sent ForceNPCToActBusy to cower and fear hints with $run_protected_all.",
+   "how": "Map modules: by each flat door a kick spot and a knock spot outside (lc_raid_kick_N, lc_raid_knock_N, facing the door) and one or two hiding spots inside (lc_hide_N: a corner, behind a bed or a counter). Gamemode: sv_livingcity_raids.lua and the citizens' Cower in sv_livingcity_streetlife.lua would use them. Changes how raids play: ask the owner.",
+   "check": "review"
+  },
+  {
+   "id": "valve-npc-suppression",
+   "tags": [
+    "npc",
+    "valve",
+    "combine",
+    "gameplay"
+   ],
+   "title": "Soldiers pin a target in cover before they hit it",
+   "rule": "In a fight with the Resistance, soldiers first fire at a spot beside a rebel's cover for 4 to 8 s, pause 0.5 to 3 s and fire again while he stays there; aimed fire comes after.",
+   "why": "d2_coast_12 bunkers: bunker_soldier_* hate an npc_bullseye (health 35, parented to a func_tracktrain moving along the player's cover) through an ai_relationship applied by a zone trigger (3072 x 1408) and switched by two random timers (fire 4 to 8 s, pause 0.5 to 3 s); c01: cops hate a bullseye beside the player while he crosses a zone, reverted when he hurts one of them (missing on purpose).",
+   "how": "Gamemode: ents.Create('npc_bullseye') beside the target's cover and npc:AddEntityRelationship(bullseye, D_HT, 99) for the burst, then remove it. Changes how fights go (war, rebel ground, Overwatch hunts): ask the owner.",
+   "check": "review"
   }
  ]
 }
