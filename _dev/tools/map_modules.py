@@ -1864,7 +1864,8 @@ def build_chain(lay, args):
 
 def finish(b, seed, spawn, args):
     vmf, plan = b.vmf, b.plan
-    plan.build(vmf)
+    standing = standing_things(b)          # (what the modules stood on the canal's floor, before the dressing adds its own)
+    plan.walls()
     if args.test:
         test_extras(vmf, spawn[0], spawn[1], b.vis + ": for testing alone (never in the real map)")
     canal, walled = plan, plan
@@ -1874,10 +1875,13 @@ def finish(b, seed, spawn, args):
     ch = Channel(vmf, canal, F, TRIM, b.vis)
     for axis, at, lo, hi in b.pipes:
         ch.pipes(axis, at, lo, hi, b.taken)
-    ch.dress(b.no_bank, b.taken)
-    dress_canal_walls(b, ch)
+    ch.dress(b.no_bank, b.taken, outfalls=True, upright=b.upright, avoid=standing["props"])
     bump = (lambda x, y: sum(f(x, y) for f in b.bumps)) if b.bumps else None
+    dish_plan(b, ch, standing["flat"], bump)
+    plan.build(vmf)
+    dress_canal_walls(b, ch, standing["props"])
     ch.mud(47, skip=b.no_mud, bump=bump)
+    settle(b, ch, standing["loose"])
     fences = fence(vmf, walled, 96, b.vis + ": fence along the walls' tops", top=b.rim)
     for (i, j), spec in plan.cells.items():      # (no path node where nobody can stand: a crawl duct)
         if spec[0] == "low" and spec[3] - spec[1] < 72:
