@@ -96,7 +96,16 @@ return function(T)
     -- What lies loose within reach is picked up, as a player would.
     local function gather(p, r)
         for _, e in ipairs(ents.FindInSphere(p:GetPos(), r or 200)) do
-            if IsValid(e) and e:GetClass() == "lc_item" then p.lookingAt = e hook.Run("PlayerUse", p, e) end
+            if IsValid(e) and e:GetClass() == "lc_item" then
+                p.lookingAt = e
+                -- (E on it: the hook first, as in the game, then what the item's own Use does (lc_item.lua),
+                -- which the fake game does not call)
+                if hook.Run("PlayerUse", p, e) ~= false and IsValid(e) and not e.lcTaken
+                    and LC.GiveItem(p, e:GetNW2String("lc_item", ""), 1, e.lcBornAt) then
+                    e.lcTaken = true
+                    e:Remove()
+                end
+            end
         end
     end
 
@@ -261,6 +270,26 @@ return function(T)
             -- (E on it: the hook first, as in the game, then the barrel's own Use, which the fake game does not call)
             if use(p, barrel) ~= false and LC.UseHazardBarrel then LC.UseHazardBarrel(p, barrel) end
         elseif k == "count" and st.event == "crab_meat" then
+            -- the meat drops a moment after each kill, so the last piece is still lying where the crab died:
+            -- short of meat, pick up what lies loose first, then hunt the headcrabs that crawl out for it
+            local CH = LC.CrabHunt or {}
+            local held = CH.MeatHeld and CH.MeatHeld(p) or 0
+            if held + (st.got or 0) < st.need then
+                local meat = {}
+                for _, id in ipairs(CH.MEAT or {}) do meat[id] = true end
+                local best, bd
+                for _, e in ipairs(ents.FindByClass("lc_item")) do
+                    local d = IsValid(e) and meat[e:GetNW2String("lc_item", "")] and e:GetPos():DistToSqr(p:GetPos())
+                    if d and (not bd or d < bd) then best, bd = e, d end
+                end
+                if best then stand(p, best:GetPos(), Vector(30, 0, 0)) gather(p) return end
+                if now < (mem.killAt or 0) then return end
+                mem.killAt = now + 1
+                for npc in pairs(LC.NPCs) do
+                    if IsValid(npc) and npc:Health() > 0 and (CH.CRABS or {})[npc:GetClass()] then kill(p, npc) return end
+                end
+                return
+            end
             if st.pos then stand(p, st.pos) end -- (by the crate, with the meat picked up on the way)
         elseif k == "count" and st.poll and st.event ~= "served" then
             -- a step the job watches for itself (meat in the crate, a wound patched): each needs its own doing
