@@ -424,7 +424,7 @@ Valve's own Route Kanal (d1_canals_01, 01a, 02, 03, 05 to 13; the Source SDK cop
 
 ## The lessons
 
-Tags: `props`, `owner`, `compiler`, `check`, `performance`, `doors`, `stairs`, `geometry`, `bug`, `entities`, `lighting`, `city18`, `grime`, `sound`, `streets`, `facades`, `layout`, `interiors`, `combine`, `process`, `gameplay`, `canal`, `viewer`, `materials`, `valve`, `infestation`, `ravenholm`, `logic`, `multiplayer`
+Tags: `props`, `owner`, `compiler`, `check`, `performance`, `doors`, `stairs`, `geometry`, `bug`, `entities`, `lighting`, `city18`, `grime`, `sound`, `streets`, `facades`, `layout`, `interiors`, `combine`, `process`, `gameplay`, `canal`, `viewer`, `materials`, `valve`, `infestation`, `ravenholm`, `logic`, `multiplayer`, `story`
 
 ### A thing is a prop, never brushes (`props-not-brushes`)
 
@@ -460,7 +460,7 @@ A model with prop_data (tables, chairs, shelves, lockers, boards, pots, crates, 
 Every prop_dynamic(_override), prop_physics and prop_door_rotating is an entity the server networks (the game has about 8,000 for everything). About 60 a module at most; clutter that does not need to move should be a model built static.
 
 - **Why:** Follows from physics-props-dynamic: the town went to about 300 such entities.
-- **How:** grep -c the classnames in the built VMF.
+- **How:** grep -c the classnames in the built VMF. Valve's maps hold a median of about 105 prop_physics each (22 to 199; 2 in d3_citadel_01), and 421 prop_dynamic in 22 maps (45% parented to moving things such as trains and lifts, 35% named for the game, 20% unnamed train seats, racks and locks) and only 15 with a DefaultAnim (bunker guns); wheels, windmills and rings turn as func_rotating.
 - **Checked by:** review (counts in the build)
 - **Tags:** props, performance
 
@@ -561,7 +561,7 @@ env_fire falls to the ground under it unless spawnflag 16 (Don't drop) is set: s
 Turn furnituremattress001a over (roll 180) when placing it.
 
 - **Why:** "The mattresses in the clinic are all rotated 180 degrees on their side" (20 November).
-- **How:** map_mods_b.mattress().
+- **How:** map_mods_b.mattress(). Valve places furnituremattress001a as a prop_ragdoll (17 of 18 in 22 maps), angles 0 yaw 0, spawnflags 4, on the floor of bunk rooms and hideouts (c01a, c03, c05, c06, c10, c12, ts03, ts04), never as a static.
 - **Checked by:** map_lint.py mattress
 - **Tags:** props, owner
 
@@ -597,7 +597,7 @@ lamppost03a's arm runs along the model's +y (90 degrees left of its yaw): turn i
 Where a light shines, the fixture is its _on model (light_cagelight02_on, not _off with a light under it); a dead lamp has no light.
 
 - **Why:** Review, 20 November: overflow, thumper, railbridge and armoury.
-- **How:** m.lamp uses real fixtures.
+- **How:** m.lamp uses real fixtures. Valve's lit lamp models carry an env_sprite at the bulb (114 of 149, distance 0): materials/sprites/light_glow03.vmt, scale .75, rendermode 9 (world space glow), renderamt 255; 147 of 149 have a light entity within reach (all lamps: light_spot 475, point_spotlight 202, light 111). Our m.lamp glows at scale 0.25.
 - **Checked by:** map_lint.py offlamp (an _off fixture with a light at it)
 - **Tags:** lighting
 
@@ -617,7 +617,7 @@ Light a room with two or three fixtures, not one; point some (light_spot, point_
 Every place gets overlays and decals: water stains down walls and under drains, cracks, trash in corners, posters where people are, the lambda where the Resistance is, danger signs on hazards, numbers on machines.
 
 - **Why:** The owner's map: 249 info_overlays and 267 infodecals (decalstain002a 26 times, trashdecal04a, plaster cracks, Breen posters, danger signs, metal grates, speaker grilles, graffiti 059a, the lambda spray). The modules had almost none.
-- **How:** m.grime(kind, u, v, z) with GRIME's kinds (stain, drain, trash, crack, poster, danger, graffiti, number, lambda, burn, puddle, grate, debris, police: all checked in Valve's lists); every canal stretch now gets drain stains and some graffiti by itself (map_modules.dress_canal_walls). Valve's 13 canal maps: 613 infodecal and 75 info_overlay; the commonest are ivy (ivy01 to ivy03: 187), trash (trashdecal01a and 02a: 121), decalstain002a 17, decalconcretedrain002a 17 (and 11 overlays), lambdaspray_2a 14 (1 to 5 a map: the Resistance's way marks), graffiti001b/c/d 31. GRIME has no ivy: add a kind "ivy" (decals/ivy01, ivy02, ivy03) for canal walls.
+- **How:** m.grime(kind, u, v, z) with GRIME's kinds (stain, drain, trash, crack, poster, danger, graffiti, number, lambda, burn, puddle, grate, debris, police: all checked in Valve's lists); every canal stretch now gets drain stains and some graffiti by itself (map_modules.dress_canal_walls). Valve's 13 canal maps: 613 infodecal and 75 info_overlay; the commonest are ivy (ivy01 to ivy03: 187), trash (trashdecal01a and 02a: 121), decalstain002a 17, decalconcretedrain002a 17 (and 11 overlays), lambdaspray_2a 14 (1 to 5 a map: the Resistance's way marks), graffiti001b/c/d 31. GRIME has no ivy: add a kind "ivy" (decals/ivy01, ivy02, ivy03) for canal walls. Decals go with props in Valve's maps: loose trash has a trash decal (trashdecal01a, 02a) within 48 in 57% of cases, bins 42%, benches 45% (decalstain014a, debris_concrete001a), shelves 43%, chairs 40% (decalstain002a, bloodstain_001), corpses 25% (blood, scorch1), barrels and crates only 11%.
 - **Checked by:** review
 - **Tags:** grime, city18
 
@@ -904,7 +904,7 @@ Let places be dim and light them in pools: a fixture over each door, each way on
 Dress floors with small loose things (bottles, cans, papers, boxes, suitcases, crates, push carts) along walls, at column feet and in corners, never in the walking line, plus decals and overlays (Valve: 178 physics props, 116 decals and 29 overlays in one station).
 
 - **Why:** Picture V3: the crates and the cabinet hug one wall and leave the way clear; clutter in the walking line only blocks people, clutter on the edges makes a place lived in.
-- **How:** Mod.grime for decals; small physics props through m.dynamic (never prop_static, vbsp deletes them: physics-props-dynamic). Keep a clear lane 96 wide through every room and door. Route Kanal: within 224 of the canal's middle about 4 fixed and 4 loose props per 1024 of city canal, about 1 in the wide canals (the boat's lane clear); commonest oildrum001 264 (and 141 explosive), shrub_01a 190, driftwood 238, ivy_01 110, wood crates 184, rebar 97, cargo containers 93, concrete debris piles 74. Ours scatters about 2.4 per 1024 in a plain stretch.
+- **How:** Mod.grime for decals; small physics props through m.dynamic (never prop_static, vbsp deletes them: physics-props-dynamic). Keep a clear lane 96 wide through every room and door. Route Kanal: within 224 of the canal's middle about 4 fixed and 4 loose props per 1024 of city canal, about 1 in the wide canals (the boat's lane clear); commonest oildrum001 264 (and 141 explosive), shrub_01a 190, driftwood 238, ivy_01 110, wood crates 184, rebar 97, cargo containers 93, concrete debris piles 74. Ours scatters about 2.4 per 1024 in a plain stretch. Measured wall gaps (21 November): 45% of statics and 16% of physics props touch a wall, another 4% and 22% within 16; 31% of statics and 25% of physics stand more than 128 from any wall (yard and canal clutter in groups).
 - **Checked by:** map_lint.py overlap and map_floating.py catch clutter inside or above things; the clear lane is judged in the viewer.
 - **Tags:** props, valve
 
@@ -959,7 +959,7 @@ Boarded doors and windows are plank brushes 4 thick, 8 wide and 112 long (or 16 
 Streets carry cables: spans of 700 to 900 between poles and wall mounts, slack 100, width 1 to 2; poles 700 to 1400 apart, or utilitypolemount01a on the walls.
 
 - **Why:** Rope spans median 734 (d1_trainstation_02, 25 spans), 736 (04, 46), 914 (Ravenholm, 32 spans from 41 rope entities), slack 100 in all; utilitypole02b 693 and 1411 apart, utilitypole01b 887 in Ravenholm; utilitypolemount01a 8 in d1_trainstation_04. Pictures R3, T2.4, T4.4.
-- **How:** keyframe_rope and move_rope from pole to pole and pole to wall mount, never ending in the air (no-floating-ropes).
+- **How:** keyframe_rope and move_rope from pole to pole and pole to wall mount, never ending in the air (no-floating-ropes). Rope settings in all 22 maps (781 rope entities): RopeMaterial cable/cable 98% (cable/rope 17), Subdiv 2 (67%) or 5; spans under 128 slack 50 and width 1 (wires between substation boxes, connectors, swings, pulleys), 128 to 1024 slack 100 and width 1 to 2, over 1024 (power towers) slack 120 and width 3; ends pole to pole 276, box to box 24, box to pole 18. Our m.rope defaults to slack 40 and our scratch town had slack 0 to 2.
 - **Checked by:** no-floating-ropes check; review
 - **Tags:** streets, props, valve
 
@@ -1249,4 +1249,112 @@ Outdoors, give small clutter a fade, the start about 80 percent of the end: shru
 - **How:** m.static(..., fade=(2000, 2500)) for clutter in open modules.
 - **Checked by:** review
 - **Tags:** logic, valve, performance, props, multiplayer
+
+### Loose things turned, fixed things square (`valve-turn-the-loose`)
+
+Turn loose things off the grid and keep fixed things square. Of Valve's physics props only 41% sit on exact 0/90/180/270; 34% are turned 1 to 20 degrees and 21% at any angle. Crates are square only 19% of the time, trash 27%, push carts 14%, couches 15%, chairs 32%, barrels 57%. Fixed things are square: radiators and payphones 100%, benches 89%, fences 88%, prop_dynamic 89%, prop_static 69%.
+
+- **Why:** Measured on 8,951 props in 22 maps: d1_trainstation_01 to 05, d3_c17_13, d1_town_03, d3_citadel_01, d2_coast_12 and 13 Route Kanal maps (21 November): 2,193 prop_physics, 6,154 prop_static. Our scratch town build had 93% of all props on exact 90s and 26 of its 42 physics props square.
+- **How:** In Mod.loose (and any scatter): yaw = the square yaw plus a turn drawn from -20..20 for crates, boxes, barrels, trash, carts, chairs and suitcases, and one in five at a free angle; keep wall furniture, benches, radiators, phones and fences on the grid. Crates in a group are never all square (6% of Valve's crate groups are).
+- **Checked by:** proposed: map_lint warns when more than 60% of a module's prop_physics sit on exact 90s
+- **Tags:** props, valve
+
+### Some loose things lie down (`valve-tilt-and-topple`)
+
+Lay a share of loose things on their side or upside down, and let things on rough ground lean a little. Valve: 43% of physics props have pitch or roll, 23% lie on their side (75 to 105), 6% upside down, 7% lean under 15. By kind: trash 53% lying, cinderblocks 53% (16% upside down), suitcases 47%, pallets 39% lying and 13% upside down, barrels 28% (41% of barrel groups have one down), buckets 21%; crates 6%, boxes 6%, tables 5% stay upright. On displacement ground 54% of dressing props are tilted, 14% by a small slope (15 or less), against 26% and 3% on flat floors.
+
+- **Why:** Measured in 22 maps: d1_trainstation_01 to 05, d3_c17_13, d1_town_03, d3_citadel_01, d2_coast_12 and 13 Route Kanal maps (21 November). Our helper Mod.prop writes angles '0 yaw 0' only, so nothing we place can lean or lie.
+- **How:** Let Mod.prop take pitch and roll. For loose clutter: one barrel in three on its side (roll 90, raise z to the drum's radius), half the bottles, cans and cartons on their side, pallets on edge against a wall (pitch 70 to 85) or flat, cinderblocks on any face. On a displacement, tilt the prop by the ground's slope (2 to 15). The mattress keeps its own lesson (mattress-turned).
+- **Checked by:** proposed: map_lint notes a module with 10 or more loose props and none tilted; map_floating.py still catches anything sunk or floating
+- **Tags:** props, valve
+
+### Loose props asleep, junk as debris, fixtures held still (`valve-physics-flags`)
+
+Set the physics flags as Valve does: start asleep (1) on barrels, crates and trash that wait for the player (26% of physics props); debris (4) on small junk so it never blocks a player (10%: trash 99, boards 38, cans 36, boxes 12); motion disabled (8) on things that must stay until hit (29%: nailed boards 207, dock planks 61, barrels 55, crates 37, radiators 24 of 25, shelves 21, tables 12, couches 11, signs 16), with 64 (free on a gravity-gun grab) on 76 of them. 256 (output on use) is Hammer's default and on most.
+
+- **Why:** prop_physics spawnflags across 22 maps: d1_trainstation_01 to 05, d3_c17_13, d1_town_03, d3_citadel_01, d2_coast_12 and 13 Route Kanal maps (21 November): bits 0:571, 2:219, 3:637, 6:76, 7:254 (rotor wash, canals), 8:694. Valve placed only 3 prop_dynamic_override, 9 prop_physics_override and no prop_physics_multiplayer in 22 maps; standing physics furniture is prop_physics with flag 8. Our Mod.loose writes spawnflags 0 on everything.
+- **How:** Mod.loose(..., asleep=True) writing spawnflags 1 by default; 5 (asleep + debris) for trash, cans, bottles, papers, shoes; boards nailed over openings 8. Whether standing furniture should become prop_physics with flag 8 instead of prop_dynamic_override (physics-props-dynamic) is the owner's call: ask first.
+- **Checked by:** proposed: map_lint lists prop_physics with spawnflags 0 (none asleep) and small junk without the debris flag
+- **Tags:** props, valve, performance
+
+### Small things fade out (`valve-fade-small`)
+
+Give small props a fade distance: about a third of Valve's props have one (statics 35 to 41% of medium and large models, physics 26 to 42%), rarely dynamics (8%). Typical min/max: small loose junk, chairs and corpses 1000/1200 to 1024/1500; boards and cinderblocks 1200/1600; crates 1900/2500; barrels 2000/3000; debris 1800/2000; fences 2750/3200; large statics 2500/3000; huge 4000/5000; props seen across open water 10000/12000. fadescale 1 (97%).
+
+- **Why:** fademindist and fademaxdist on 8,951 props in 22 maps: d1_trainstation_01 to 05, d3_c17_13, d1_town_03, d3_citadel_01, d2_coast_12 and 13 Route Kanal maps (21 November); commonest pairs 10000/12000 (217), 3000/3200 (214), 10000/11000 (184), 2000/2500 (167), 4000/5000 (145), 1000/1200 (143). Our Mod.static, loose and dynamic write fademaxdist 0 on everything.
+- **How:** A size table in Mod.prop: under 24 tall 1000/1500, under 64 1500/2000, crates and barrels 2000/2500 to 3000, fences 2750/3200; leave big architecture props and anything seen from far without a fade.
+- **Checked by:** proposed: map_lint counts loose props under 64 with no fade in an outdoor module
+- **Tags:** props, valve, performance
+
+### No shadow from flat things, no collision on what nobody touches (`valve-shadows-and-solid`)
+
+Switch shadows off on flat and wall-mounted props and collisions off on soft or unreachable ones. Valve's disableshadows 1: lamps 52%, wall boxes and machines 49%, ladders 55%, fences 45%, nailed boards 45%, trash 43%, prop_dynamic 67%, all statics 26%. Non-solid statics (solid 0) are 22%: shrubs and ivy (55% of plants), flat garbage piles (86% of static trash), canal caps, pipe brackets, pole connectors, power towers, lampposts out of reach (66%) and signs (64%).
+
+- **Why:** Counted on 22 maps: d1_trainstation_01 to 05, d3_c17_13, d1_town_03, d3_citadel_01, d2_coast_12 and 13 Route Kanal maps (21 November): 1,335 of 6,154 statics solid 0 (shrub_01a 190, ivy_01 110, cattails 62, garbage256_composite002a/b 98); 1,609 statics, 369 physics, 282 dynamics disableshadows 1. Our scratch town: 1 non-solid static in 390.
+- **How:** Mod.static(..., solid=False) for foliage, garbage piles and anything above head height or behind bars; disableshadows 1 for lamps, wall boxes, signs, ladders, fences and boards.
+- **Checked by:** review; proposed: map_lint notes shrubs, ivy and garbage piles placed solid
+- **Tags:** props, valve, performance
+
+### Use the skins a model has (`valve-skin-variety`)
+
+Draw skins at random on models that have them, and never tint props. 9% of Valve's props carry a skin other than 0, all on models built with skins: oildrum001 45% (skins 1 and 2), cargo_container01 69% (0, 1, 2 about evenly), wood_crate001a 33%, plasticcrate01a 60%, door01_left 91% (7 the commonest), lights_florescent01a 88% skin 1 (lit), light_spotlight01_base 94% skin 1. In barrel groups of plain drums, 51% mix skins. rendercolor is never changed on a static or physics prop (4 dark dynamics only); no modelscale anywhere.
+
+- **Why:** skin, rendercolor and modelscale keys on 22 maps: d1_trainstation_01 to 05, d3_c17_13, d1_town_03, d3_citadel_01, d2_coast_12 and 13 Route Kanal maps (21 November). Our scratch town: 15 of 693 props with a skin other than 0.
+- **How:** Mod.prop(..., skin=None) drawing from the model's skins (map_assets can read $texturegroup from the QC) for drums, containers, crates, plastic crates and doors; skin 1 on fluorescent tubes and spotlight bases that are lit.
+- **Checked by:** proposed: map_lint notes 4 or more of one multi-skin model all on skin 0
+- **Tags:** props, valve
+
+### Clutter in small groups of one kind, with an odd one (`valve-prop-groups`)
+
+Place clutter as groups of 2 or 3 of one kind, sometimes with one partner thing, not as single scattered props. Within 96: barrels have another barrel 65% of the time, crates 66%, boxes 67%, cans 76%, boards 87%, shelves 75%. Barrel groups: 156 alone, 72 pairs, 19 threes, 18 of four or five, nearest neighbour 31 to 58 (median 39, about touching). Crate groups: 98 alone, 36 pairs, 24 threes, 8 fours. Commonest mixed groups: barrel+crate (24 clusters in 10 maps), crate+trash (16 in 9), crate+pallet (14 in 11), chair+table (14 in 10), bench+trash (14), bin+trash (13), corpse+crate (11 in 9), barrel+pallet (11 in 8).
+
+- **Why:** Single-link clusters at 96 across 3,307 dressing props in 22 maps: d1_trainstation_01 to 05, d3_c17_13, d1_town_03, d3_citadel_01, d2_coast_12 and 13 Route Kanal maps (21 November); 540 clusters, sizes 2 (median) to 7 (90th percentile). A lamppost is not part of a group: 34 of 38 lampposts (lamppost03a_off) have no dressing prop within 192; benches come in rows instead (2 to 6, 96 to 112 apart, 83% the same way, 62% against a wall) with trash within 70 (45%), a payphone (20%) or a bin (18%).
+- **How:** A Mod.group(kind, n, partner=None) helper: n of 2 or 3, spaced 34 to 44 for drums, touching or stacked for crates, each turned (valve-turn-the-loose), then maybe one partner (barrel: crate or pallet; crate: pallet or trash; dumpster: trash bags; bench: trash; table: one to three chairs).
+- **Checked by:** review (the groups show in the viewer); proposed: map_lint notes a module whose loose props are all more than 96 from each other
+- **Tags:** props, valve
+
+### Stacks are never neat columns (`valve-stacks`)
+
+Stack things the way people drop them. 17% of Valve's crates stand on another crate, the top one turned (median 7 degrees, a quarter over 30) and shifted (median 8, a quarter over 20) from the one under it; tyres lie flat (76%) in columns of 2 to 6 (44% stacked); physics props stand on another prop 14% of the time, statics 4%. Small things stand on furniture: TVs on shelves (9), papers and binders on desks, pots on the stove (7 to 12 up, 13 to 21 from its middle).
+
+- **Why:** Prop-on-prop contacts (bottom within 4 of another prop's top, 30% footprint overlap) in 22 maps: d1_trainstation_01 to 05, d3_c17_13, d1_town_03, d3_citadel_01, d2_coast_12 and 13 Route Kanal maps (21 November): crate on crate 49, tyre on tyre 36, board on board 28, barrel on barrel 15.
+- **How:** When stacking: z on the lower prop's top (map_assets.size), yaw plus -30..30, shift 2 to 20 inside the lower top; tyre stacks of 2 to 4 lying flat, each turned freely.
+- **Checked by:** map_floating.py (nothing floats); proposed: map_lint notes stacked props with exactly the same place and yaw
+- **Tags:** props, valve
+
+### A few busy spots, much clear floor (`valve-busy-and-quiet`)
+
+Concentrate props in one to three busy spots per place and keep the rest clear. In 256 x 256 squares of walkable floor most hold nothing (indoor city 47%, outdoor 74%, canals 65 to 79%) and the busiest tenth hold 46 to 69% of all props; an occupied square holds 2 (median) to 10 (90th percentile) indoors, 5 outdoors. Physics props per 512 x 512: indoors median 1, 90th percentile 12, most 25; outdoors median 0 to 1, 90th percentile 4 to 5. Doorways stay clear: 1 floor item within 48 of the middle of 69 doors.
+
+- **Why:** Floor rasterised at 32 (brush tops and displacements with 64 of headroom, near AI nodes) in 18 of the 22 maps (21 November). Within 192 of a room's key furniture: kitchens 10 props (9 physics), living rooms 12 (7), hideouts 8 (5), offices 8 (5), Combine rooms 2 (0).
+- **How:** Dress a module by spots, not evenly: choose 1 to 3 spots on its edges (a corner, a column foot, beside a door, never in it) and give each 6 to 12 props; leave walking lines 96 wide (valve-clutter). Keep physics at 12 or fewer per 512 square indoors and 5 outdoors (networked-budget).
+- **Checked by:** proposed: map_lint counts props per 256 square and physics per 512 square, and warns over 12/25 indoors or an indoor room with nothing in it
+- **Tags:** props, valve, performance
+
+### Furniture against the walls, chairs pulled out (`valve-furniture-on-walls`)
+
+Put furniture against the walls, square, facing into the room; let chairs stand free. Within 16 of a wall: shelves 76% (60% square, back to the wall), radiators 76% (all within 32), couches in flats 100%, payphones 88%, tables and desks 62%, TVs 60%, boxes 60%, trash 51%. Chairs only 22%: 33 to 58 from their table (median 42), turned to face it within 45 in 18 of 20, one to three a table. Loose barrels 32%, crates 38%, cans 12%.
+
+- **Why:** Wall gaps (prop box to the nearest axis-aligned brush at its height) in 22 maps: d1_trainstation_01 to 05, d3_c17_13, d1_town_03, d3_citadel_01, d2_coast_12 and 13 Route Kanal maps (21 November).
+- **How:** Furniture placer: shelves, couches, beds, desks, stoves, sinks, bathtubs and radiators 0 to 4 from a wall with their back to it; chairs 40 out from the table, facing it plus -30..30, one in ten knocked over in a hideout or raided room.
+- **Checked by:** proposed: map_lint notes shelves, couches, radiators, desks and sinks more than 16 from any wall
+- **Tags:** props, valve, interiors
+
+### Tell what happened with a few props (`valve-story-props`)
+
+Let a small kit of props, decals and at most one sound tell the story, no text. Valve's recurring kits: a bunk room (one to three mattresses on the floor, a radio on a crate, a pallet, supplies, a rug overlay and graffiti); the dead with his weapon (a corpse, the gun 20 to 70 away, ammo, blood decals); a radio left playing beside its dead owner (the sound at the radio); a raided flat (fridge on its back with its doors off, drawers and couches tipped, boards and cinderblocks); a kitchen still in use (stove, two pots on it, cupboard, sink with bottles, the drips heard); travellers (a push cart, suitcases, one on its side, a box, by the benches).
+
+- **Why:** Places in Valve's maps (21 November): c01a 2400 6240 -155, c12 476 10948 507, c10 11152 39 -375 (bunk rooms); c03 -801 -328 -905 and c12 687 6445 425 (dead with weapon); c05 7161 1635 -387 and c06 4000 5812 -151 (radio, coast.radio_dead); d1_trainstation_03 -4254 -4712 274 and -4320 -4634 440 (raided flats); -4658 -4691 276 (kitchen); d1_trainstation_01 -3958 -1711 2 (luggage). Fits the owner's 'keep text minimal' rule.
+- **How:** Story kits in map_mods (4 to 8 props, 1 to 3 decals, an optional ambient_generic at the prop): bunk, dead_with_gun, radio_left_on, raided_flat, kitchen, luggage. Corpses as prop_ragdoll spawnflags 4 (55 of Valve's 66).
+- **Checked by:** review
+- **Tags:** props, valve, story
+
+### A loop sits on the thing that makes it (`valve-sound-at-the-prop`)
+
+Put a looping ambient_generic on the prop that makes the sound, a few units off it: sink drips 6 to 10 from each sink, a dead radio's static 24 to 28 from the radio, a diesel generator's hum at its pipes, printers and servers at their machines, fire loops at the burning pile. Triggered one-shots (spawnflags 48, start silent and not looped) are the commonest ambient_generic (129); always-on loops (0) are the few placed at props.
+
+- **Why:** ambient_generic within 96 of a prop in 22 maps: d1_trainstation_01 to 05, d3_c17_13, d1_town_03, d3_citadel_01, d2_coast_12 and 13 Route Kanal maps (21 November): d1_trainstation_03 sinkdrips (3, at sinkkitchen01a and furnituresink001a), d1_canals_05 and 06 coast.radio_dead at citizenradio, d1_canals_11 diesel_generator, d1_trainstation_05 k_lab.printer and tech1 at servers, d3_c17_13 fire at debris piles.
+- **How:** m.sound(message, u, v, z) at the prop for radios, sinks, generators, TVs and fires; radius 500 to 1250, as Valve.
+- **Checked by:** review
+- **Tags:** props, valve, sound
 
