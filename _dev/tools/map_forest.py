@@ -22,9 +22,11 @@ static prop) against lists of Half-Life 2's, Episode One's and Episode Two's fil
 has checked is how any of it LOOKS: this was made without seeing it. docs/dev/map-building.md.
 """
 
+import copy
 import math
 import random
 
+import map_prefab as PF
 from map_build import CELL, GATE_HIGH, GATE_WIDE, MAT, Plan, Vmf, check, flood, gate_cap, reaches, test_extras
 
 PATCH, STEP, WALL = 512, 64, 128
@@ -45,6 +47,15 @@ FMAT = {
     "timber": "wood/woodbeam001a",                # hl2: a squared beam
     "nest_rock": "nature/blendrockdirt_tunnel03a",  # ep2: the antlion tunnels' rock (two rocks blended)
     "nest_hive": "nature/rockwall_antlion01a",      # ep2: the hive's own crusted wall
+    # White Forest's base (the owner, 21 November: "match the EP2 whiteforest bunker aesthetic"), counted in its rooms
+    # (ep2_outland_12a's launch control and 11b's work rooms): walls concretewall_bunker05b over a band of 05a 64 high,
+    # floors concretefloor_bunker02a, ceilings concreteceiling_bunker01a; the silo's own concrete for the hull round it
+    "wf_wall": "concrete/concretewall_bunker05b",
+    "wf_band": "concrete/concretewall_bunker05a",
+    "wf_floor": "concrete/concretefloor_bunker02a",
+    "wf_ceiling": "concrete/concreteceiling_bunker01a",
+    "wf_trim": "metal/metalwall061f",
+    "silo_wall": "concrete/concretewall010a",
 }
 
 PINES = (("models/props_foliage/tree_pine04.mdl", 3), ("models/props_foliage/tree_pine05.mdl", 3), ("models/props_foliage/tree_pine06.mdl", 3),
@@ -88,6 +99,159 @@ def crusher(vmf, door, box, vis, name):
                                       "damagetype": "1", "damagemodel": "0", "nodmgforce": "0"}, [box], MAT["trigger"], vis)
     vmf.brush_entity("trigger_multiple", {"targetname": name, "parentname": door, "StartDisabled": "1", "spawnflags": "1032", "wait": "0.1"}, [box], MAT["trigger"], vis,
                      connections=[("OnStartTouch", "!activator", "Kill", "", 0)])
+
+
+# ---------------------------------------------------------------------------
+# Pieces lifted from Valve's maps (map_prefab.py), placed with their wiring
+# ---------------------------------------------------------------------------
+
+def pf_point(p, q, d):
+    x, y, z = PF.rot(list(p), q)
+    return [x + d[0], y + d[1], z + d[2]]
+
+
+def pf_solid(vmf, sides, q, d, vis):
+    """One brush of a lifted piece turned q quarter turns (anticlockwise from above) and moved by d, as place() does:
+    its text and its box."""
+    t = "\t"
+    text = '%ssolid\n%s{\n%s\t"id" "%d"\n' % (t, t, t, vmf.new_id())
+    allv = []
+    for s in sides:
+        pl = [pf_point(p, q, d) for p in s["plane"]]
+        vs = [pf_point(p, q, d) for p in s["verts"]]
+        allv += vs or [pf_point(p, q, d) for p in s.get("corners", [])] or pl
+        text += '%s\tside\n%s\t{\n%s\t\t"id" "%d"\n%s\t\t"plane" "%s"\n' % (t, t, t, vmf.new_id(), t, " ".join("(%s %s %s)" % tuple(PF.fmt(c) for c in p) for p in pl))
+        if vs:
+            text += '%s\t\tvertices_plus\n%s\t\t{\n%s%s\t\t}\n' % (t, t, "".join('%s\t\t\t"v" "%s %s %s"\n' % ((t,) + tuple(PF.fmt(c) for c in p)) for p in vs), t)
+        text += '%s\t\t"material" "%s"\n%s\t\t"uaxis" "%s"\n%s\t\t"vaxis" "%s"\n%s\t\t"rotation" "0"\n%s\t\t"lightmapscale" "%s"\n%s\t\t"smoothing_groups" "0"\n%s\t}\n' % (
+            t, s["material"], t, PF.turn_axis(s["uaxis"], q, d), t, PF.turn_axis(s["vaxis"], q, d), t, t, s["lightmapscale"], t, t)
+    text += vmf.editor(vis, indent=t + "\t") + "%s}\n" % t
+    return text, tuple(min(p[k] for p in allv) for k in range(3)) + tuple(max(p[k] for p in allv) for k in range(3))
+
+
+def pf_solids(vmf, pf, q, d, vis, world=False, skip=None):
+    """A lifted piece's brushes: with `world`, those that were Valve's world brushes go into the world (they cut up the
+    map for visibility, as in Valve's own) and the rest into one func_detail. Their boxes are returned, not handed to
+    the build's checks: Valve's corners are off our grid, and what seals is a hull of our own round the piece."""
+    det, boxes = "", []
+    for s in pf["solids"]:
+        if skip and skip(s):
+            continue
+        text, box = pf_solid(vmf, s["sides"], q, d, vis)
+        boxes.append(box)
+        if world and s["from"] == "worldspawn":
+            vmf.world.append(text)
+        else:
+            det += text
+    if det:
+        vmf.ents.append('entity\n{\n\t"id" "%d"\n\t"classname" "func_detail"\n' % vmf.new_id() + det + vmf.editor(vis, "0 180 0") + "}\n")
+    return boxes
+
+
+def pf_brush_entity(vmf, cls, keys, brushes, q, d, vis, connections=None, origin=None):
+    """A brush entity of a lifted piece (a door, a button, a trigger), its brushes turned and moved as the piece's."""
+    s = 'entity\n{\n\t"id" "%d"\n\t"classname" "%s"\n' % (vmf.new_id(), cls)
+    for k, v in keys.items():
+        s += '\t"%s" "%s"\n' % (k, v)
+    if origin is not None:
+        s += '\t"origin" "%s %s %s"\n' % tuple(PF.fmt(round(c, 2)) for c in origin)
+    s += Vmf.wires(connections)
+    for b in brushes:
+        s += pf_solid(vmf, b, q, d, vis)[0]
+    s += vmf.editor(vis, "220 30 220") + "}\n"
+    vmf.ents.append(s)
+
+
+PF_NAME_KEYS = ("targetname", "parentname", "target", "lightingorigin", "nextkey", "attach1", "attach2", "spawnpos", "position0", "slavename",
+                "filtername", "damagefilter", "laddername")
+PF_SPOT_KEYS = ("point0", "point1", "springaxis")      # (keys that hold a place in Valve's own map, not a name)
+PF_AXES = {"func_door_rotating": (64, 128), "func_rot_button": (64, 128), "momentary_rot_button": (64, 128), "func_rotating": (4, 8)}
+
+
+def pf_outputs(conns):
+    """Valve's outputs as kept in a piece ([output, "target,input,value,delay,times"]) as (output, target, input, value, delay)."""
+    out = []
+    for o, rest in conns:
+        p = rest.split(",")
+        if len(p) < 5:
+            continue
+        out.append((o, p[0], p[1], ",".join(p[2:-2]), float(p[-2] or 0)))
+    return out
+
+
+def pf_entities(vmf, pf, q, d, prefix, vis_props, vis_logic, keep=None, edit=None, extra=(), valve_anchor=None):
+    """A lifted piece's props, lights and wiring (its path points too), turned and moved as its brushes. Every name the
+    piece gives is prefixed (two pieces never answer each other), an output to anything the piece does not have is
+    dropped (Valve's story, outside the piece), and every output may fire again (Valve's once-only buttons become
+    reusable). keep(e) says what to place; edit(e) may change an entity first (each is a copy, its outputs already
+    as (output, target, input, value, delay) in e["out"]); extra: entities of our own in the piece's frame, named as
+    the piece's. A turned piece's tilting doors and spinners change axis with it. Returns the names placed."""
+    ents = []
+    for e in list(pf["points"]) + list(pf.get("wiring", [])) + list(extra):
+        e = copy.deepcopy(e)
+        e["out"] = e.get("out") or pf_outputs(e.get("connections", []))
+        ents.append(e)
+    for r in pf.get("route", []):
+        keys = {"targetname": r["name"], "target": r["target"], "altpath": r["altpath"], "speed": r["speed"], "spawnflags": r["spawnflags"],
+                "orientationtype": r["orientationtype"], "angles": r["angles"]}
+        ents.append({"classname": "path_track", "origin": r["origin"], "keys": keys, "out": pf_outputs(r["outputs"])})
+    ents = [e for e in ents if not keep or keep(e)]
+    for e in ents:
+        if edit:
+            edit(e)
+    ents = [e for e in ents if not e.get("drop")]
+    names = set(e["keys"].get("targetname", "").lower() for e in ents) - {""}
+
+    def ren(v):
+        lv = v.lower()
+        if lv in names:
+            return prefix + v
+        if lv.endswith("*") and any(n.startswith(lv[:-1]) for n in names):
+            return prefix + v
+        return None
+    for e in ents:
+        cls = e["classname"]
+        keys = dict((k, v) for k, v in e["keys"].items() if k not in ("classname", "origin", "id"))
+        for k in list(keys):
+            if k.lower() in PF_NAME_KEYS and keys[k]:
+                r = ren(keys[k])
+                if r:
+                    keys[k] = r
+                elif k.lower() != "targetname":
+                    del keys[k]          # (it names something outside the piece)
+            if k.lower() in PF_SPOT_KEYS and valve_anchor:
+                p = [float(c) for c in keys[k].split()]
+                keys[k] = " ".join(PF.fmt(round(c, 2)) for c in pf_point([p[i] - valve_anchor[i] for i in range(3)], q, d))
+        brushes = e.get("brushes")
+        if brushes:
+            if keys.get("movedir"):
+                a = [float(c) for c in keys["movedir"].split()]
+                keys["movedir"] = "%s %s %s" % (PF.fmt(a[0]), PF.fmt((a[1] + 90 * q) % 360), PF.fmt(a[2]))
+            if cls in PF_AXES and q % 2:
+                ax, ay = PF_AXES[cls]
+                f = int(keys.get("spawnflags", "0") or 0)
+                for _ in range(q % 4):
+                    if f & ax:
+                        f = (f & ~ax) | ay
+                    elif f & ay:
+                        f = ((f & ~ay) | ax) ^ 2
+                keys["spawnflags"] = str(f)
+        elif "angles" in keys:
+            a = [float(c) for c in keys["angles"].split()]
+            keys["angles"] = "%s %s %s" % (PF.fmt(a[0]), PF.fmt((a[1] + 90 * q) % 360), PF.fmt(a[2]))
+        outs = []
+        for o, tgt, inp, val, delay in e["out"]:
+            if tgt.startswith("!"):
+                outs.append((o, "!activator" if tgt.lower() == "!player" else tgt, inp, val, delay))
+                continue
+            r = ren(tgt)
+            if r:
+                outs.append((o, r, inp, val, delay))
+        if brushes:
+            pf_brush_entity(vmf, cls, keys, brushes, q, d, vis_logic, outs, pf_point(e["origin"], q, d) if "origin" in e else None)
+        else:
+            vmf.point(cls, tuple(pf_point(e["origin"], q, d)), keys, vis_props if cls.startswith("prop") else vis_logic, connections=outs)
+    return names
 
 
 def smooth(t):
@@ -577,11 +741,14 @@ class BunkerForest(Forest):
         self.trails.append(curve([(0, 3328), (500, 3328), (1100, 2900), (1560, 2180), (2300, 2520), (3008, 2760), (3008, 3060)]))
         self.clearings += [(self.POND[0], self.POND[1], 760), (3008, 2880, 260)]
         self.waters.append((704, 768, 2304, 2048, self.level, self.level - (self.zb + 16), FMAT["pond"]))
-        zp, zl, zd, fm = self.zp, self.zl, self.zd, FMAT["bunker_floor"]
+        zp, zl, zd, fm = self.zp, self.zl, self.zd, FMAT["wf_floor"]
+        self.zg = zg = zd - 256          # the silo's gantry level: down 256 from the deep level (the silo piece's advice)
         origin = (self.ox + self.B0[0], self.oy + self.B0[1])
-        look = dict(floor_side=FMAT["bunker_wall"], ceiling=FMAT["bunker_ceiling"], vis=self.vis("structures"))
-        # the part under the mound: its roof is level with the mound's top, and the ground dives under it
-        plan = Plan(origin, [(zd - 64, zp + 272, FMAT["bunker_wall"])], roof=FMAT["bunker_floor"], **look)
+        hi, lo = FMAT["wf_wall"], FMAT["wf_band"]
+        look = dict(floor_side=hi, ceiling=FMAT["wf_ceiling"], vis=self.vis("structures"))
+        # the part under the mound: its roof is level with the mound's top, and the ground dives under it. Walls in White
+        # Forest's two concretes: a band 64 high over the first level's floor (the door's room, a level up, is plain)
+        plan = Plan(origin, [(zd - 64, zl, hi), (zl, zl + 64, lo), (zl + 64, zp + 272, hi)], roof=FMAT["bunker_floor"], **look)
         plan.keep_out += [(-100000, -100000, 100000, 0), (-100000, 576, -320, 832)]   # in front of the door; where the deep level joins
         plan.paint((512, 0, 768, 64), ("low", zp, fm, zp + 192))      # the doorway: 256 wide, 192 high
         plan.paint((448, 64, 832, 256), ("low", zp, fm, zp + 208))    # the room inside the door (its front wall is what the door's leaves slide into)
@@ -596,8 +763,8 @@ class BunkerForest(Forest):
         plan.paint((-320, 640, 0, 768), ("low", zd, fm, zl + 160))    # ...and the second stairs, down and west
         plan.walls()
         # the deep level: wholly under the ground (its top is 72 under the gate's floor), so nothing of it shows outside
-        deep = Plan(origin, [(zd - 64, zd + 224, FMAT["bunker_wall"])], **look)
-        deep.keep_out.append((-320, 576, 100000, 832))
+        deep = Plan(origin, [(zd - 64, zd, hi), (zd, zd + 64, lo), (zd + 64, zd + 224, hi)], **look)
+        deep.keep_out += [(-320, 576, 100000, 832), (-100000, 1152, 100000, 100000)]
         room = ("low", zd, fm, zd + 160)
         door = ("low", zd, fm, zd + 128)
         deep.paint((-448, 384, -320, 768), room)       # the foot of the stairs
@@ -612,7 +779,22 @@ class BunkerForest(Forest):
         deep.paint((-1152, 64, -896, 320), room)       # south: the stores
         deep.paint((-1280, 384, -1216, 512), door)
         deep.paint((-1600, 256, -1280, 576), room)     # the far end: the plant room
+        # the way to the silo (the owner, 21 November: "connect the silo to the bunker so that the silo sits just outside
+        # the existing map area"): a door in the radio room's north wall, a corridor north under the ridge and out through
+        # the forest's north wall (cut there only), then 15 steps of 16 by 24 down to the silo's gantry level
+        deep.paint((-704, 832, -576, 896), door)
+        deep.paint((-704, 896, -576, 1152), room)
         deep.walls()
+        low = Plan(origin, [(zg - 64, zg, hi), (zg, zg + 64, lo), (zg + 64, zd + 224, hi)], **look)
+        low.keep_out += [(-100000, -100000, 100000, 1152), (-100000, 1600, 100000, 100000)]
+        low.paint((-704, 1152, -576, 1536), ("low", zg, fm, zd + 160))      # the stairs (their steps are detail)
+        low.paint((-704, 1536, -576, 1600), ("low", zg, fm, zg + 160))      # the last of the corridor, as high as the silo's tunnel
+        low.walls()
+        self.low = low
+        # the silo: its west tunnel (now turned to face south) meets the corridor's end at y 1600 of the bunker, its
+        # gantry level is the corridor's floor; the forest's north wall is cut where the corridor and its walls pass
+        self.silo_at = (origin[0] - 640, origin[1] + 1600 + 544, zg - 1408)
+        self.cuts["north"] = (self.B0[0] - 768, self.B0[0] - 512)
         self.plan, self.deep = plan, deep
         self.buildings.append((plan, self.B0, zd - 110))
         self.rooms += [(plan, self.B0), (deep, self.B0)]
@@ -664,174 +846,242 @@ class BunkerForest(Forest):
         return 255 * (1 - smooth(rect_dist(x, y, (bx + 448, by - 300, bx + 832, by)) / 150.0))
 
     def bunker(self):
-        v, plan, deep, zp, zl, zd = self.vmf, self.plan, self.deep, self.zp, self.zl, self.zd
+        v, plan, deep, low, zp, zl, zd, zg = self.vmf, self.plan, self.deep, self.low, self.zp, self.zl, self.zd, self.zg
         plan.build(v)
         deep.build(v)
+        low.build(v)
         B, W, bx, by = plan.box, plan.world, self.B0[0], self.B0[1]
-        vis, wall = self.vis("structures"), FMAT["bunker_wall"]
+        vis, wall = self.vis("structures"), FMAT["wf_wall"]
         # where the two parts meet: the stairwell is higher than the deep level's top, so a wall stands on that top
         v.world_box(B(-384, 576, zd + 224, -320, 832, zp + 272), wall, vis=vis)
-        # both stairs: 15 steps north down to the first level, 23 steps west down to the deep one
+        # the stairs: 15 steps north down to the first level, 23 west down to the deep one (as the owner walked them), and
+        # the silo's 15 steps of 16 by 24 north and down to its gantry level (lesson stairs-16-24), wall to wall
         v.detail([B(576, 256 + 12 * k, zl, 704, 268 + 12 * k, zp - 8 * (k + 1)) for k in range(15)], wall, vis=vis, top=MAT["stairs"])
         v.detail([B(-12 * (k + 1), 640, zd, -12 * k, 768, zl - 8 * (k + 1)) for k in range(23)], wall, vis=vis, top=MAT["stairs"])
+        v.detail([B(-704, 1152 + 24 * k, zg, -576, 1176 + 24 * k, zd - 16 * (k + 1)) for k in range(15)], wall, vis=vis, top=MAT["stairs"])
         self.door()
         self.room_doors()
-        # light: enough to find the way; the bunks and two of the deep rooms are left dark. All steady: none flickers or
-        # flashes (the owner: "get rid of the flickering lights in the bunker ... going to give me or someone a seizure")
-        lights = ((640, 160, zp + 184, "255 225 190 90", "0"), (640, 672, zl + 136, "255 205 150 140", "0"), (1088, 704, zl + 136, "190 255 215 90", "0"),
-                  (-160, 704, zl + 120, "255 215 170 60", "0"), (-384, 576, zd + 136, "255 200 150 90", "0"), (-832, 448, zd + 136, "255 190 140 70", "0"),
-                  (-640, 704, zd + 136, "170 210 255 110", "0"), (-1440, 416, zd + 136, "255 90 60 120", "0"), (-640, 192, zd + 136, "235 255 235 80", "0"))
-        for (u, w, z, colour, style) in lights:
-            v.point("light", W(u, w, z), {"_light": colour, "_lightHDR": "-1 -1 -1 1", "_quadratic_attn": "1", "style": style}, self.vis("lights"))
-        for (u, w, z) in ((640, 672, zl + 72), (-832, 448, zd + 72), (-1440, 416, zd + 72), (640, 160, zp + 72)):
-            v.point("env_cubemap", W(u, w, z), {"cubemapsize": "0"}, vis)
-        # what was left behind (every one compiled as a static prop; in the structures' visgroup)
-        first = (
-            ("models/props_forest/bunkbed.mdl", 130, 790, 90), ("models/props_forest/bunkbed.mdl", 250, 790, 90), ("models/props_forest/footlocker01_closed.mdl", 130, 612, 0),
-            ("models/props_c17/lockers001a.mdl", 250, 606, 0), ("models/props_wasteland/controlroom_desk001a.mdl", 640, 790, 180),
-            ("models/props_wasteland/controlroom_filecabinet002a.mdl", 850, 800, 180), ("models/props_c17/oildrum001.mdl", 430, 560, 15),
-            ("models/props_junk/wood_crate001a.mdl", 440, 780, 20), ("models/props_junk/wood_crate001a.mdl", 500, 800, 65),
-            ("models/props_outland/generator_static01a.mdl", 1090, 770, 90), ("models/props_forest/shelves.mdl", 1180, 760, 270),
-            ("models/props_silo/barrelwarning.mdl", 1010, 620, 30), ("models/props_silo/barrelwarning.mdl", 1060, 612, 200),
-        )
-        below = (
-            ("models/props_silo/desk_console1.mdl", -620, 796, 180), ("models/props_silo/silo_server_a.mdl", -735, 690, 90), ("models/props_silo/silo_server_b.mdl", -735, 770, 90),
-            ("models/props_wasteland/controlroom_chair001a.mdl", -620, 730, 0), ("models/props_wasteland/controlroom_filecabinet001a.mdl", -545, 800, 180),
-            ("models/props_c17/lockers001a.mdl", -1120, 680, 90), ("models/props_c17/lockers001a.mdl", -1120, 760, 90), ("models/props_lab/lockers.mdl", -990, 806, 180),
-            ("models/props_junk/wood_crate002a.mdl", -940, 770, 30), ("models/props_junk/wood_crate001a.mdl", -945, 660, 75),
-            ("models/props_wasteland/prison_bedframe001b.mdl", -730, 130, 90), ("models/props_wasteland/prison_bedframe001b.mdl", -560, 130, 90),
-            ("models/props_c17/furnituretable002a.mdl", -560, 250, 0), ("models/props_wasteland/controlroom_storagecloset001a.mdl", -740, 250, 90),
-            ("models/props_forest/shelves_wood.mdl", -1120, 120, 90), ("models/props_forest/shelves_wood.mdl", -1120, 230, 90), ("models/props_wasteland/kitchen_shelf002a.mdl", -930, 100, 270),
-            ("models/props_silo/barrelwarning.mdl", -940, 270, 10), ("models/props_c17/oildrum001.mdl", -990, 100, 60), ("models/props_c17/canister01a.mdl", -940, 190, 0),
-            ("models/props_outland/generator_static01a.mdl", -1500, 500, 0), ("models/props_silo/fuel_cask.mdl", -1540, 320, 0), ("models/props_silo/fuel_cask.mdl", -1440, 310, 40),
-            ("models/props_silo/electricalbox01.mdl", -1340, 546, 180),
-        )
-        for rows, z in ((first, zl), (below, zd)):
-            for model, u, w, yaw in rows:
-                self.static(model, bx + u, by + w, z, yaw, "structures", fade=(-1, 0))
+        self.silo()
+        self.dress()
         for model, x, y, yaw in (("models/props_c17/concrete_barrier001a.mdl", bx + 380, by - 110, 80), ("models/props_c17/concrete_barrier001a.mdl", bx + 920, by - 130, 100),
                                  ("models/props_vehicles/truck001a.mdl", bx + 300, by - 360, 35)):
             self.static(model, x, y, self.natural(x, y), yaw, "structures")
         self.plan_nodes(plan, self.B0, skip=[(576, 256, 704, 448), (-320, 640, 0, 768)])
-        self.plan_nodes(deep, self.B0)
+        self.plan_nodes(deep, self.B0, skip=[(-704, 832, -576, 896)])
         for (u, w, z) in ((640, 296, zp - 32), (640, 364, zp - 72), (640, 420, zp - 116), (-60, 704, zl - 40), (-150, 704, zl - 100), (-240, 704, zl - 160), (-300, 704, zd)):
             self.node(bx + u, by + w, z)
         # the bunker's rooms must be shut in on every side but the doorway (for the look of it, and for the door's areaportal):
-        # with the doorway stopped up, air from inside must not reach the forest
+        # with the doorway stopped up, air from inside must not reach the forest. The silo and the way to it are inside.
         closed = flood(v, W(640, 160, zp + 64), [B(512, 0, zp, 768, 64, zp + 192)])
         if closed[0] is None or reaches(closed, self.w(self.W / 2, self.D / 2, self.lid - 100)):
             self.problems.append("the bunker's rooms are open to the hill somewhere other than the doorway")
-        for u, w, z, what in ((640, 672, zl + 64, "main room"), (-384, 576, zd + 64, "foot of the second stairs"), (-1440, 416, zd + 64, "plant room"), (-640, 192, zd + 64, "sick bay")):
+        sx, sy, sz = self.silo_at
+        for u, w, z, what in ((640, 672, zl + 64, "main room"), (-384, 576, zd + 64, "foot of the second stairs"), (-1440, 416, zd + 64, "plant room"), (-640, 192, zd + 64, "sick bay"),
+                              (-640, 1000, zd + 64, "corridor to the silo"), (-640, 1568, zg + 64, "corridor's end at the silo")):
             if not reaches(closed, W(u, w, z)):
                 self.problems.append("the bunker's %s can't be reached from its door" % what)
-        # the deep level must stay under the ground
+        for dz, what in ((1408 + 64, "gantry level"), (322 + 64, "bottom level")):
+            if not reaches(closed, (sx, sy, sz + dz)):
+                self.problems.append("the silo's %s can't be reached from the bunker's door" % what)
+        # the deep level and the corridor must stay under the ground
         cover = min(self.natural(bx + (i + 0.5) * CELL, by + (j + 0.5) * CELL) for (i, j) in deep.cells) - (zd + 224)
         if cover < 16:
             self.problems.append("the bunker's deep level comes within %d of the ground's surface" % cover)
         self.notes.append("the bunker: its door at (%d %d), floor z %d; 15 steps down to the first level (z %d: main room, bunks, generator room), 23 more down to the deep level "
-                          "(z %d: a passage, radio room, armoury, sick bay, stores, plant room), which is at least %d under the ground; 9 lights" % (
+                          "(z %d: a passage, radio room, armoury, sick bay, stores, plant room), which is at least %d under the ground; 12 lights" % (
                               self.ox + bx + 640, self.oy + by, zp, zl, zd, cover))
+        self.notes.append("the silo: its shaft's axis at (%d %d), from z %d to %d, in a sealed hull just north of the forest's wall; reached from the radio room's north door "
+                          "by a corridor (z %d) and 15 steps of 16 by 24 down to its gantry level (z %d)" % (sx, sy, sz - 64, sz + 1792, zd, zg))
 
-    # the doors between rooms: (which level, the doorway's squares, the way through it, which side the room it opens into
-    # is on (+1: east or north), which end of the leaf its hinge is at (-1: south or west)). The hinge ends are chosen
-    # to swing clear of what stands in the rooms.
-    ROOM_DOORS = ((0, (320, 640, 384, 768), "x", -1, -1), (0, (896, 640, 960, 768), "x", 1, -1), (0, (0, 640, 64, 768), "x", 1, -1),
+    def dress(self):
+        """Light and dressing in White Forest's way (ep2_outland_11, 11a, 11b and 12a, counted 21 November): a fluorescent
+        fixture (props_lab/lab_flourescentlight001a, 33 under the ceiling as Valve hangs it) over each lit room, in Valve's
+        colours: cold 224 254 248 and 193 249 255 in halls and corridors, warm 253 230 159 and 252 241 180 where people
+        work, red in the plant room; tube lamps (props_silo/wall_light) and cable runs (prodcables256) on the corridors'
+        walls, red caged lamps inside the outer door; and each room's kit as Valve's rooms have it: consoles on a desk,
+        servers and a wall console in the radio room and the main room, lockers and footlockers in the armoury, wall
+        beds and a sink in the sick bay, shelves and stores, the generator, air plant and switch panels in the plant
+        room, bunks and lockers in the bunk room. The same rooms as before are lit and the same left dark. All steady:
+        none flickers or flashes (the owner: "get rid of the flickering lights in the bunker ... going to give me or
+        someone a seizure"). Furniture whose model is a physics prop is a prop_dynamic_override (a prop_static of one is
+        deleted by the compiler, as the bunker's first dressing was), standing solid where it is put."""
+        v, W, bx, by = self.vmf, self.plan.world, self.B0[0], self.B0[1]
+        zp, zl, zd, zg = self.zp, self.zl, self.zd, self.zg
+        vis = self.vis("structures")
+        cold, cold2, warm, warm2, red = "224 254 248", "193 249 255", "253 230 159", "252 241 180", "255 64 64"
+        lights = ((640, 160, zp + 184, cold, 90), (640, 672, zl + 136, warm, 140), (1088, 704, zl + 136, cold2, 90), (-160, 704, zl + 120, cold, 60),
+                  (-384, 576, zd + 136, cold, 90), (-832, 448, zd + 136, cold, 70), (-640, 704, zd + 136, warm2, 110), (-1440, 416, zd + 136, red, 120),
+                  (-640, 192, zd + 136, cold, 80), (-640, 1000, zd + 136, cold, 70), (-640, 1340, zd + 40, cold, 80), (-640, 1568, zg + 136, cold, 70))
+        for (u, w, z, colour, power) in lights:
+            v.point("light", W(u, w, z), {"_light": "%s %d" % (colour, power), "_lightHDR": "-1 -1 -1 1", "_quadratic_attn": "1", "style": "0"}, self.vis("lights"))
+        for (u, w, z) in ((640, 672, zl + 72), (-832, 448, zd + 72), (-1440, 416, zd + 72), (640, 160, zp + 72), (-640, 1000, zd + 72)):
+            v.point("env_cubemap", W(u, w, z), {"cubemapsize": "0"}, vis)
+
+        def put(model, u, w, z, yaw, kind="s"):
+            m = "models/%s.mdl" % model
+            if kind == "s":
+                self.static(m, bx + u, by + w, z, yaw, "structures", fade=(-1, 0))
+                return
+            keys = {"model": m, "angles": "0 %d 0" % yaw, "solid": "6", "skin": "0", "disableshadows": "1" if kind == "f" else "0", "fademindist": "-1", "fademaxdist": "0",
+                    "fadescale": "1", "screenspacefade": "0"}
+            if kind == "f":         # (a lamp: it must not shade the light hung in it)
+                v.point("prop_static", W(u, w, z), dict(keys, solid="0"), vis)
+                return
+            keys.update({"StartDisabled": "0", "spawnflags": "0", "renderamt": "255", "rendercolor": "255 255 255", "modelscale": "1.0", "MinAnimTime": "5", "MaxAnimTime": "10",
+                         "RandomAnimation": "0", "SetBodyGroup": "0", "PerformanceMode": "0", "pressuredelay": "0", "ExplodeDamage": "0", "ExplodeRadius": "0"})
+            v.point("prop_dynamic_override", W(u, w, z), keys, vis)
+        for (u, w, ceil) in ((640, 160, zp + 208), (544, 672, zl + 160), (736, 672, zl + 160), (1088, 704, zl + 160), (-384, 576, zd + 160), (-832, 448, zd + 160),
+                             (-640, 704, zd + 160), (-640, 192, zd + 160)):
+            put("props_lab/lab_flourescentlight001a", u, w, ceil - 33, 0, "f")
+        for (u, w, z, yaw) in ((-703, 1000, zd + 120, 0), (-577, 1340, zd + 16, 180), (-703, 1568, zg + 120, 0), (-832, 511, zd + 124, 270), (-832, 385, zd + 124, 90),
+                               (-160, 767, zl + 40, 270)):
+            put("props_silo/wall_light", u, w, z, yaw, "f")
+        for (u, w, z, yaw) in ((480, 65, zp + 150, 90), (800, 65, zp + 150, 90), (-1440, 575, zd + 140, 270)):
+            put("props_c17/light_cagelight01_on", u, w, z, yaw, "f")
+        for (u, w, z, yaw) in ((-832, 511, zd + 146, 270), (-832, 385, zd + 146, 90), (-577, 1024, zd + 146, 180)):
+            put("props_silo/prodcables256", u, w, z, yaw)
+        kit = (
+            # the room inside the door
+            ("props_silo/wall_wires2", 831, 160, zp, 180, "s"), ("props_silo/acunit02", 458, 200, zp + 120, 0, "s"),
+            # the main room: a desk of consoles, servers, a wall console, crates
+            ("props_wasteland/controlroom_desk001a", 640, 811, zl + 17, 270, "d"), ("props_silo/desk_console3", 610, 811, zl + 34, 270, "s"),
+            ("props_silo/desk_console1", 670, 811, zl + 34, 270, "s"), ("props_wasteland/controlroom_chair001a", 640, 768, zl + 20, 90, "d"),
+            ("props_silo/silo_server_a", 800, 818, zl, 270, "s"), ("props_silo/silo_server_b", 838, 815, zl, 270, "s"), ("props_silo/wall_console2", 392, 576, zl, 0, "s"),
+            ("props_junk/wood_crate001a", 425, 548, zl + 20, 10, "d"), ("props_junk/wood_crate002a", 480, 795, zl + 20, 0, "d"),
+            # the bunks
+            ("props_forest/bunkbed", 130, 805, zl, 270, "s"), ("props_forest/bunkbed", 250, 805, zl, 270, "s"), ("props_forest/bunkbed2", 150, 600, zl, 90, "s"),
+            ("props_lab/lockers", 250, 589, zl, 90, "s"), ("props_forest/footlocker01_closed", 130, 755, zl + 12, 270, "s"), ("props_wasteland/prison_sink001a", 78, 610, zl + 28, 0, "s"),
+            # the generator room
+            ("props_outland/generator_static01a", 1090, 771, zl, 270, "s"), ("props_forest/shelves_wood", 1198, 660, zl, 180, "s"),
+            ("props_silo/electricalbox02", 1088, 577, zl, 90, "s"), ("props_silo/tirestack2", 1150, 790, zl, 30, "s"), ("props_silo/tirestack3", 1150, 620, zl, 0, "s"),
+            ("props_silo/barrelwarning", 1000, 800, zl, 20, "d"),
+            # the radio room: the base's control room, as White Forest's
+            ("props_wasteland/controlroom_desk001a", -534, 704, zd + 17, 180, "d"), ("props_silo/desk_console1", -534, 674, zd + 34, 180, "s"),
+            ("props_silo/desk_console3", -534, 734, zd + 34, 180, "s"), ("props_wasteland/controlroom_chair001a", -585, 704, zd + 20, 0, "d"),
+            ("props_silo/silo_server_a", -754, 640, zd, 0, "s"), ("props_silo/silo_server_b", -750, 678, zd, 0, "s"), ("props_silo/wall_console1", -760, 770, zd, 0, "s"),
+            ("props_lab/reciever_cart", -555, 600, zd + 36, 180, "d"),
+            # the armoury
+            ("props_lab/lockers", -1140, 640, zd, 0, "s"), ("props_lab/lockers", -1140, 690, zd, 0, "s"), ("props_lab/lockers", -1140, 740, zd, 0, "s"),
+            ("props_forest/footlocker01_closed", -1000, 817, zd + 12, 270, "s"), ("props_forest/footlocker01_closed", -950, 817, zd + 12, 270, "s"),
+            ("props_forest/shelves", -897, 704, zd + 80, 90, "s"), ("props_junk/wood_crate002a", -925, 640, zd + 20, 0, "d"), ("props_junk/wood_crate001a", -925, 710, zd + 20, 25, "d"),
+            # the sick bay
+            ("props_wasteland/prison_metalbed001a", -720, 75, zd + 20, 90, "s"), ("props_wasteland/prison_metalbed001a", -600, 75, zd + 20, 90, "s"),
+            ("props_wasteland/prison_sink001a", -755, 250, zd + 28, 0, "s"), ("props_c17/furnituretable002a", -640, 200, zd + 19, 0, "d"),
+            ("props_wasteland/controlroom_storagecloset001a", -530, 250, zd + 44, 180, "d"),
+            # the stores
+            ("props_forest/shelves_wood", -1135, 160, zd, 0, "s"), ("props_wasteland/kitchen_shelf002a", -1135, 280, zd, 0, "d"), ("props_silo/barrelwarning", -940, 82, zd, 0, "d"),
+            ("props_c17/canister01a", -980, 80, zd + 30, 0, "d"), ("props_junk/wood_crate002a", -1050, 100, zd + 20, 90, "d"), ("props_silo/tirestack3", -925, 230, zd, 0, "s"),
+            # the plant room
+            ("props_outland/generator_static01a", -1500, 515, zd, 270, "s"), ("props_silo/acunit01", -1566, 400, zd + 64, 0, "s"),
+            ("props_silo/electricalbox01", -1430, 262, zd, 90, "s"), ("props_silo/tirestack2", -1340, 545, zd, 0, "s"), ("props_lab/powerbox01a", -1295, 300, zd + 60, 180, "s"),
+        )
+        for model, u, w, z, yaw, kind in kit:
+            put(model, u, w, z, yaw, kind)
+
+    # the doors between rooms: (which level, the doorway's squares, the way through it, the side its keypad is NOT on (+1:
+    # east or north; the keypad goes on a face with wall beside the doorway), which way the leaf slides into the wall (-1:
+    # south or west)). The last is the radio room's north door, to the silo.
+    ROOM_DOORS = ((0, (320, 640, 384, 768), "x", -1, -1), (0, (896, 640, 960, 768), "x", 1, -1), (0, (0, 640, 64, 768), "x", -1, -1),
                   (1, (-704, 512, -576, 576), "y", 1, 1), (1, (-1088, 512, -960, 576), "y", 1, -1), (1, (-704, 320, -576, 384), "y", -1, -1),
-                  (1, (-1088, 320, -960, 384), "y", -1, -1), (1, (-1280, 384, -1216, 512), "x", -1, -1))
+                  (1, (-1088, 320, -960, 384), "y", -1, -1), (1, (-1280, 384, -1216, 512), "x", 1, -1), (1, (-704, 832, -576, 896), "y", 1, -1))
 
     def room_doors(self):
-        """A door in each doorway between the bunker's rooms (the owner: "can we please also add doors to the bunker rooms?",
-        then: "are you able to use models/props_silo/silo_door01.mdl? ... they opened in EP2 so there must be a way"). There
-        is: the model has no swing of its own (its animations only work the locking wheel), so in Episode Two it rides on an
-        unseen hinged door brush. Here that is a func_door_rotating, 96 wide and 124 high like the leaf, standing proud of
-        the wall on the side of the room it opens into; it swings 90 into that room, one way only. Use opens and shuts it;
-        it starts shut; the wheel unlocks as it opens and locks when it is shut again. To the gamemode these ARE doors (its
-        door rules apply to func_door_rotating), unlike the bunker's outer door. The move and stop sounds are the ones most
-        of the owner's own doors use."""
+        """A door in each doorway between the bunker's rooms, as White Forest's are (the owner, 21 November: "the bunker/silo
+        doors for whiteforest from EP2"): Episode Two's silo door (props_silo/silo_door01) carried by an unseen func_door 96
+        wide and 124 high, 4 thick in the middle of the doorway, that slides 64 sideways into the wall at 60 a second, as
+        Valve's slide 67 (until then the same model swung on a hinge). Use opens and shuts it; it starts shut; the wheel
+        unlocks as it opens and locks when it is shut again. To the gamemode these ARE doors (its door rules apply to
+        func_door). A keypad beside each, 52 up as Valve's: a model only (the door opens by Use, and a keypad that opened
+        it would get round the gamemode's locks). The move and stop sounds are the ones most of the owner's own doors use."""
         v, vis = self.vmf, self.vis("bunker room doors")
         frames = []
-        for k, (level, (u1, v1, u2, v2), way, room, hinge) in enumerate(self.ROOM_DOORS):
+        for k, (level, (u1, v1, u2, v2), way, room, slide) in enumerate(self.ROOM_DOORS):
             plan = (self.plan, self.deep)[level]
             z = (self.zl, self.zd)[level]
             B, W = plan.box, plan.world
-            if way == "x":      # the way through runs east-west: the leaf stands across it, north to south
-                a, b = v1 + 16, v2 - 16
-                face = u2 if room > 0 else u1
-                p1, p2 = (face + 1, face + 9) if room > 0 else (face - 9, face - 1)
+            if way == "x":      # the way through runs east-west: the leaf stands across it, north to south, and slides along y
+                a, b, m = v1 + 16, v2 - 16, (u1 + u2) // 2
                 frames += [B(u1, v1, z, u2, a, z + 128), B(u1, b, z, u2, v2, z + 128), B(u1, a, z + 124, u2, b, z + 128)]
-                leaf, at, yaw = B(p1, a, z, p2, b, z + 124), W(p1 + 4, (a + b) // 2, z), 90
-                pivot, along, into = W(p1 + 4, a if hinge < 0 else b, z + 62), (0, -hinge), (room, 0)
-            else:               # the way through runs north-south: the leaf stands across it, east to west
-                a, b = u1 + 16, u2 - 16
-                face = v2 if room > 0 else v1
-                p1, p2 = (face + 1, face + 9) if room > 0 else (face - 9, face - 1)
+                leaf, at, yaw, movedir = B(m - 2, a, z, m + 2, b, z + 124), W(m, (a + b) // 2, z), 90, 90 if slide > 0 else 270
+                pad = (W(u1 - 1, v1 - 12 if slide > 0 else v2 + 12, z + 52), 180) if room > 0 else (W(u2 + 1, v1 - 12 if slide > 0 else v2 + 12, z + 52), 0)
+            else:               # the way through runs north-south: the leaf stands across it, east to west, and slides along x
+                a, b, m = u1 + 16, u2 - 16, (v1 + v2) // 2
                 frames += [B(u1, v1, z, a, v2, z + 128), B(b, v1, z, u2, v2, z + 128), B(a, v1, z + 124, b, v2, z + 128)]
-                leaf, at, yaw = B(a, p1, z, b, p2, z + 124), W((a + b) // 2, p1 + 4, z), 0
-                pivot, along, into = W(a if hinge < 0 else b, p1 + 4, z + 62), (-hinge, 0), (0, room)
-            # (a func_door_rotating turns anticlockwise seen from above unless told to go backwards: the leaf, which runs
-            #  `along` from its hinge, must end up pointing `into` the room)
-            backwards = (-along[1], along[0]) != into
+                leaf, at, yaw, movedir = B(a, m - 2, z, b, m + 2, z + 124), W((a + b) // 2, m, z), 0, 0 if slide > 0 else 180
+                pad = (W(u1 - 12 if slide > 0 else u2 + 12, v1 - 1, z + 52), 270) if room > 0 else (W(u1 - 12 if slide > 0 else u2 + 12, v2 + 1, z + 52), 90)
             name = "lc_bunker_room_door_%d" % (k + 1)
-            v.brush_entity("func_door_rotating", {
-                "targetname": name, "origin": "%d %d %d" % pivot, "distance": "90", "speed": "70", "wait": "-1", "lip": "0", "dmg": "0", "forceclosed": "0", "solidbsp": "0",
-                "spawnflags": str(16 + 32 + 256 + (2 if backwards else 0)), "noise1": "doors/doormove1.wav", "noise2": "doors/doormove2.wav", "health": "0",
-                "ignoredebris": "0", "loopmovesound": "0", "locked_sentence": "0", "unlocked_sentence": "0", "rendermode": "0", "renderamt": "255",
-                "rendercolor": "255 255 255", "renderfx": "0", "disableshadows": "1", "disablereceiveshadows": "0"}, [leaf], MAT["nodraw"], vis,
+            v.brush_entity("func_door", {
+                "targetname": name, "movedir": "0 %d 0" % movedir, "speed": "60", "lip": "32", "wait": "-1", "spawnflags": "288", "noise1": "doors/doormove1.wav",
+                "noise2": "doors/doormove2.wav", "forceclosed": "0", "ignoredebris": "1", "loopmovesound": "0", "dmg": "0", "health": "0", "locked_sentence": "0",
+                "unlocked_sentence": "0", "rendermode": "0", "renderamt": "255", "rendercolor": "255 255 255", "renderfx": "0", "disableshadows": "1",
+                "disablereceiveshadows": "0"}, [leaf], MAT["nodraw"], vis,
                 connections=[("OnOpen", name + "_model", "SetAnimation", "unlock", 0), ("OnFullyClosed", name + "_model", "SetAnimation", "lock", 0)])
-            v.point("prop_dynamic", at, {
+            v.point("prop_dynamic_override", at, {
                 "targetname": name + "_model", "model": "models/props_silo/silo_door01.mdl", "angles": "0 %d 0" % yaw, "parentname": name, "skin": "0", "solid": "0",
                 "DefaultAnim": "idle", "disableshadows": "1", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1", "StartDisabled": "0", "renderamt": "255",
                 "rendercolor": "255 255 255", "modelscale": "1.0", "MinAnimTime": "5", "MaxAnimTime": "10", "RandomAnimation": "0", "SetBodyGroup": "0",
                 "PerformanceMode": "0", "pressuredelay": "0", "ExplodeDamage": "0", "ExplodeRadius": "0"}, vis)
-        v.detail(frames, MAT["beam"], vis=vis)
-        self.notes.append("the bunker's rooms: %d of Episode Two's silo doors (Use swings each 90 into its room; they start shut)" % len(self.ROOM_DOORS))
+            v.point("prop_dynamic", pad[0], {"model": "models/props_lab/keypad.mdl", "angles": "0 %d 0" % pad[1], "solid": "0", "skin": "0", "disableshadows": "1",
+                                             "fademindist": "-1", "fademaxdist": "0", "fadescale": "1", "StartDisabled": "0", "spawnflags": "0"}, vis)
+        v.detail(frames, FMAT["wf_trim"], vis=vis)
+        self.notes.append("the bunker's rooms: %d of Episode Two's silo doors, sliding as White Forest's (Use slides each 64 into the wall; they start shut)" % len(self.ROOM_DOORS))
+
+    DOOR_SPEED = 6      # the main door's leaves, degrees a second: Valve's own (60 degrees in 10 s)
 
     def door(self):
-        """The bunker's door: two steel leaves that slide out of the wall on either side and meet in the middle, as a missile
-        silo's do (the owner: "why not just have 2 sliding bunker doors like a missile silo, that slide until they meet
-        together?"). They stand open, drawn back into the wall with only their edges showing. A button inside shuts them
-        (a klaxon, a steady red light, about five seconds of travel, a slam) and opens them again; nothing outside does.
-        Each leaf is a func_button used as a mover (PressIn draws it back into the wall, PressOut slides it shut; read from
-        the engine's own buttons.cpp: its travel is its width less its lip, and neither Use, touch nor a shot moves it): not a door to the
-        gamemode, whose door rules (kicks, lockpicks, NPCs opening doors) apply to func_door, func_door_rotating,
-        func_movelinear and prop_door_rotating, so only this wiring moves it. Nothing can use, touch or shoot a leaf to move it.
-        If the bunker is left shut with nobody inside, it opens itself after twenty seconds."""
+        """The bunker's door: White Forest's round blast door (the owner, 21 November: "the bunker/silo doors for whiteforest
+        from EP2"), lifted from ep2_outland_11 as the piece valve_ep2_bunker_door: the doors that shut the silo's west
+        tunnel in Valve's map. A drum of concrete and steel 224 wide: its lower 160 is two leaves hinged at the inside that
+        swing 60 degrees outward at Valve's 6 a second (10 s), with a lock bar in the floor that drops first and rises again
+        once they are shut, and Valve's start, loop and end sounds; its top 32 is the drum's fixed head. They stand open.
+        A button inside shuts them (a klaxon, a steady red light, the swing, a boom, a shake) and opens them again; nothing
+        outside does (the owner, 19 November: "only be opened from the inside"). Each leaf is a func_rot_button used as a
+        mover (PressIn swings it open, PressOut shut; with no flags neither Use, touch nor a shot moves it) and the bar a
+        func_button, so none of it is a door to the gamemode, whose door rules (kicks, lockpicks, NPCs opening doors) apply
+        to func_door, func_door_rotating, func_movelinear and prop_door_rotating: only this wiring moves it. Nothing stops
+        it (crusher). If the bunker is left shut with nobody inside, it opens itself after twenty seconds."""
         v, plan, zp = self.vmf, self.plan, self.zp
         B, W = plan.box, plan.world
         vis, dv = self.vis("structures"), self.vis("bunker door (the leaves, the button, the wiring)")
         u1, u2 = self.DOOR
         mid, top = (u1 + u2) // 2, zp + 192
-        half, lip = (u2 - u1) // 2, 8
-        steel, rib = FMAT["door"], MAT["bars"]
-        # a frame round the doorway outside, standing proud of the wall
-        v.detail([B(u1 - 16, -8, zp, u1, 0, top), B(u2, -8, zp, u2 + 16, 0, top), B(u1 - 16, -8, top, u2 + 16, 0, top + 32)], MAT["beam"], vis=vis)
-        # the two leaves, drawn as they stand when shut (so the light on them is worked out there, not inside the wall).
-        # Pressed in, each is back in the wall on its own side with 8 of it still showing; the map presses them in as it starts.
-        for side, name in ((-1, "west"), (1, "east")):
-            a = u1 if side < 0 else mid                           # the leaf's west edge when shut
-            edge = mid - lip if side < 0 else mid                 # its meeting edge: a thicker bar, all that is seen of it when open
-            parts = [(B(a, 20, zp, a + half, 44, top), steel), (B(edge, 14, zp, edge + lip, 50, top), rib)]
-            for z in (24, 92, 160):
-                parts.append((B(a, 16, zp + z, a + half, 20, zp + z + 8), rib))
-                parts.append((B(a, 44, zp + z, a + half, 48, zp + z + 8), rib))
-            v.brush_entity("func_button", {
-                "targetname": "lc_bunker_door_" + name, "movedir": "0 180 0" if side < 0 else "0 0 0", "speed": "26", "lip": lip, "wait": "-1", "spawnflags": "0",
-                "sounds": "0", "health": "0", "locked_sound": "0", "unlocked_sound": "0", "locked_sentence": "0", "unlocked_sentence": "0", "min_use_angle": "0.8",
-                "rendermode": "0", "renderamt": "255", "rendercolor": "255 255 255", "disablereceiveshadows": "0"}, parts, steel, dv)
-            crusher(v, "lc_bunker_door_" + name, B(mid - 2, 16, zp, mid + 14, 48, top) if side < 0 else B(mid - 14, 16, zp, mid + 2, 48, top), dv, "lc_bunker_crush")
-            # (open, a leaf must be inside the wall but for its edge: if the wall there is not solid it would show)
-            lo, hi = (u1 - (half - lip), u1) if side < 0 else (u2, u2 + half - lip)
-            for u in range(lo // CELL * CELL, hi, CELL):
-                if plan.cells.get((u // CELL, 0), ("",))[0] != "solid":
-                    self.problems.append("the bunker door's %s leaf has no wall to slide into at %d" % (name, u))
-        v.point("logic_auto", W(mid, 200, zp + 150), {"spawnflags": "1"}, dv, connections=[("OnMapSpawn", "lc_bunker_door_*", "PressIn", "", 0.5)])
+        pf = PF.load("valve_ep2_bunker_door")
+        q, d = 1, W(mid, 32, zp)         # Valve's outside (west) to ours (south); the drum's face on the front wall's face
+        half = int(pf["size"][1]) // 2
+        pf_solids(v, pf, q, d, vis)      # the drum's head, its jambs and hinge posts (detail)
+        for a, b in ((u1, mid - half), (mid + half, u2)):      # the doorway filled to the drum each side (world: the areaportal's edges)
+            v.world_box(B(a, 0, zp, b, 64, top), FMAT["wf_wall"], vis=vis)
+        travel = 60.0 / self.DOOR_SPEED
+        for w in pf["wiring"]:
+            if w["classname"] != "func_door_rotating":
+                continue
+            south = w["origin"][1] < 0
+            name = "lc_bunker_door_" + ("east" if south else "west")      # (turned, Valve's south leaf is our east one)
+            pf_brush_entity(v, "func_rot_button", {
+                "targetname": name, "angles": "0 0 0", "distance": "60", "speed": str(self.DOOR_SPEED), "wait": "-1", "lip": "0",
+                "spawnflags": str(int(w["keys"]["spawnflags"]) & 2), "sounds": "0", "health": "0", "locked_sound": "0", "unlocked_sound": "0", "locked_sentence": "0",
+                "unlocked_sentence": "0", "rendermode": "0", "renderamt": "255", "rendercolor": "255 255 255", "disablereceiveshadows": "0", "disableshadows": "0"},
+                w["brushes"], q, d, dv, origin=pf_point(w["origin"], q, d))
+            # (nothing stops it: the crusher rides the leaf over its own swing and the drum's inside, from its face to 16 past its hinge)
+            c = [pf_point(p, q, d) for p in ((-32, -80 if south else 0, 0), (44, 0 if south else 80, 160))]
+            crusher(v, name, tuple(int(min(c[0][k], c[1][k])) for k in range(3)) + tuple(int(max(c[0][k], c[1][k])) for k in range(3)), dv, "lc_bunker_crush")
+            if south:
+                lock = [x for x in pf["wiring"] if x["keys"].get("targetname") == "doorlock_biground_1"][0]
+                dl = (d[0], d[1], d[2] - 1)      # (sunk 1 into the floor: only its pins show, and no face lies in the floor's plane)
+                pf_brush_entity(v, "func_button", {
+                    "targetname": "lc_bunker_lock", "movedir": "90 0 0", "speed": "100", "lip": "0", "wait": "-1", "spawnflags": "0", "sounds": "0", "health": "0",
+                    "locked_sound": "0", "unlocked_sound": "0", "locked_sentence": "0", "unlocked_sentence": "0", "rendermode": "0", "renderamt": "255",
+                    "rendercolor": "255 255 255", "disablereceiveshadows": "0"}, lock["brushes"], q, dl, dv, origin=pf_point(lock["origin"], q, dl))
+        v.point("logic_auto", W(mid, 200, zp + 150), {"spawnflags": "1"}, dv,
+                connections=[("OnMapSpawn", "lc_bunker_lock", "PressIn", "", 0.4), ("OnMapSpawn", "lc_bunker_door_*", "PressIn", "", 0.5)])
         # an areaportal across the doorway, shut with the leaves, so the bunker is not drawn from outside nor the forest from
-        # inside. It stands INSIDE the leaves' own thickness: a shut door is only drawn from both sides if it is on both sides
-        # of its areaportal (the owner, of the first try, which had it behind them: "when they close they become invisible").
-        self.vmf.portals.append(B(u1, 31, zp, u2, 33, top))
-        v.brush_entity("func_areaportal", {"targetname": "lc_bunker_portal", "StartOpen": "1", "PortalVersion": "1"}, [B(u1, 31, zp, u2, 33, top)], MAT["portal"], dv)
+        # inside. It stands across the leaves' own swing: a shut door is only drawn from both sides if it is on both sides
+        # of its areaportal (the owner, of the first sliding door, which had it behind them: "when they close they become invisible").
+        portal = B(mid - half, 31, zp, mid + half, 33, top)
+        self.vmf.portals.append(portal)
+        v.brush_entity("func_areaportal", {"targetname": "lc_bunker_portal", "StartOpen": "1", "PortalVersion": "1"}, [portal], MAT["portal"], dv)
 
-        # sounds, the red light, the shake
+        # sounds (Valve's blast door's own, and the klaxon and groan the owner heard), the red light, the shake
         def sound(name, message, at, loops=False):
             # (spawnflags: 16 starts silent, 32 says "not looped". A sound that loops must NOT have 32: with it the entity
             #  never counts the sound as playing, so StopSound does nothing. The owner: "the closing sound NEVER STOPS".)
@@ -841,39 +1091,165 @@ class BunkerForest(Forest):
                                             "preset": "0", "spindown": "0", "spinup": "0", "volstart": "0"}, dv)
         at = W(mid, 32, zp + 96)
         sound("lc_bunker_alarm", "ambient/alarms/klaxon1.wav", W(mid, 100, zp + 170))
-        sound("lc_bunker_move", "Streetwar.d3_c17_11_garage_move1", at, loops=True)
-        sound("lc_bunker_slam", "Streetwar.d3_c17_11_garage_stop1", at)
+        sound("lc_bunker_start", "ep2_outland_11.blastdoors_open_start", at)
+        sound("lc_bunker_move", "ep2_outland_11.blastdoors_open_loop", at, loops=True)
+        sound("lc_bunker_stop", "ep2_outland_11.blastdoors_open_end", at)
+        sound("lc_bunker_slam", "ep2_outland_11.blastdoors_close_end", at)
         sound("lc_bunker_groan", "ambient/materials/metal_stress4.wav", at)
         for pos in (W(mid, -28, zp + 240), W(mid, 150, zp + 190)):
             v.point("light", pos, {"targetname": "lc_bunker_light", "_light": "255 50 30 300", "_lightHDR": "-1 -1 -1 1", "_quadratic_attn": "1", "spawnflags": "1",
                                    "style": "0"}, dv)
         v.point("env_shake", at, {"targetname": "lc_bunker_shake", "amplitude": "7", "radius": "900", "duration": "1.6", "frequency": "40", "spawnflags": "0"}, dv)
-        # the wiring. Shutting: klaxon and light at once, the leaves start a second later and take about 4.6 s, then the slam.
-        shut = [("OnTrigger", "lc_bunker_close", "Disable", "", 0), ("OnTrigger", "lc_bunker_alarm", "PlaySound", "", 0), ("OnTrigger", "lc_bunker_alarm", "PlaySound", "", 1.7),
-                ("OnTrigger", "lc_bunker_alarm", "PlaySound", "", 3.4), ("OnTrigger", "lc_bunker_light", "TurnOn", "", 0),
-                ("OnTrigger", "lc_bunker_door_*", "PressOut", "", 1), ("OnTrigger", "lc_bunker_move", "PlaySound", "", 1),
-                ("OnTrigger", "lc_bunker_crush", "Enable", "", 1), ("OnTrigger", "lc_bunker_crush", "Disable", "", 5.9),
-                ("OnTrigger", "lc_bunker_move", "StopSound", "", 5.6), ("OnTrigger", "lc_bunker_slam", "PlaySound", "", 5.6), ("OnTrigger", "lc_bunker_groan", "PlaySound", "", 5.7),
-                ("OnTrigger", "lc_bunker_shake", "StartShake", "", 5.6), ("OnTrigger", "lc_bunker_portal", "Close", "", 5.8),
-                ("OnTrigger", "lc_bunker_light", "TurnOff", "", 8.5), ("OnTrigger", "lc_bunker_open", "Enable", "", 8)]
+        # the wiring. Shutting: klaxon and light at once, the leaves start a second later and swing for `travel` seconds,
+        # then the boom, the groan, the shake, the bar rises and the areaportal shuts.
+        end = 1 + travel
+        shut = [("OnTrigger", "lc_bunker_close", "Disable", "", 0), ("OnTrigger", "lc_bunker_light", "TurnOn", "", 0)]
+        shut += [("OnTrigger", "lc_bunker_alarm", "PlaySound", "", round(1.7 * k, 1)) for k in range(int(end / 1.7) + 1)]
+        shut += [("OnTrigger", "lc_bunker_door_*", "PressOut", "", 1), ("OnTrigger", "lc_bunker_move", "PlaySound", "", 1),
+                 ("OnTrigger", "lc_bunker_crush", "Enable", "", 1), ("OnTrigger", "lc_bunker_crush", "Disable", "", end + 0.3),
+                 ("OnTrigger", "lc_bunker_move", "StopSound", "", end), ("OnTrigger", "lc_bunker_slam", "PlaySound", "", end), ("OnTrigger", "lc_bunker_groan", "PlaySound", "", end + 0.1),
+                 ("OnTrigger", "lc_bunker_shake", "StartShake", "", end), ("OnTrigger", "lc_bunker_lock", "PressOut", "", end), ("OnTrigger", "lc_bunker_portal", "Close", "", end + 0.2),
+                 ("OnTrigger", "lc_bunker_light", "TurnOff", "", end + 2.5), ("OnTrigger", "lc_bunker_open", "Enable", "", end + 2)]
+        # Opening: the bar drops first (Valve's), the start sound, the leaves a second later, the end sound as they stop.
         unshut = [("OnTrigger", "lc_bunker_open", "Disable", "", 0), ("OnTrigger", "lc_bunker_light", "TurnOn", "", 0), ("OnTrigger", "lc_bunker_groan", "PlaySound", "", 0),
+                  ("OnTrigger", "lc_bunker_lock", "PressIn", "", 0), ("OnTrigger", "lc_bunker_start", "PlaySound", "", 0),
                   ("OnTrigger", "lc_bunker_portal", "Open", "", 0.9), ("OnTrigger", "lc_bunker_door_*", "PressIn", "", 1), ("OnTrigger", "lc_bunker_move", "PlaySound", "", 1),
-                  ("OnTrigger", "lc_bunker_move", "StopSound", "", 5.6), ("OnTrigger", "lc_bunker_slam", "PlaySound", "", 5.6), ("OnTrigger", "lc_bunker_light", "TurnOff", "", 7),
-                  ("OnTrigger", "lc_bunker_close", "Enable", "", 8)]
+                  ("OnTrigger", "lc_bunker_move", "StopSound", "", end), ("OnTrigger", "lc_bunker_stop", "PlaySound", "", end), ("OnTrigger", "lc_bunker_light", "TurnOff", "", end + 1),
+                  ("OnTrigger", "lc_bunker_close", "Enable", "", end + 2)]
         relay = W(mid, 200, zp + 120)
         v.point("logic_relay", relay, {"targetname": "lc_bunker_close", "StartDisabled": "0", "spawnflags": "0"}, dv, connections=shut)
         v.point("logic_relay", (relay[0] + 16, relay[1], relay[2]), {"targetname": "lc_bunker_open", "StartDisabled": "1", "spawnflags": "0"}, dv, connections=unshut)
         # the button: on the wall inside, west of the stairs; one press works whichever relay is live
         wall_button(v, W(512, 256, zp + 40), 270, "lc_bunker_button", B(506, 246, zp + 36, 526, 256, zp + 64), dv,
                     [("OnPressed", "lc_bunker_close", "Trigger", "", 0), ("OnPressed", "lc_bunker_open", "Trigger", "", 0)], "9")
-        # nobody left inside and the door shut: it opens again (the unshutting relay is only live while it is shut)
+        # nobody left inside and the door shut: it opens again (the unshutting relay is only live while it is shut). The
+        # corridor to the silo and the silo itself count as inside.
         inside = []
-        for p, skip in ((self.plan, (u1, 0, u2, 64)), (self.deep, None)):
+        for p, skip in ((self.plan, (u1, 0, u2, 64)), (self.deep, None), (self.low, None)):
             for x1, y1, x2, y2, spec in p.rectangles():
                 if spec[0] != "solid" and not (skip and x1 >= skip[0] and x2 <= skip[2] and y1 >= skip[1] and y2 <= skip[3]):
                     inside.append(B(x1, y1, spec[1], x2, y2, spec[3]))
+        sx, sy, sz = self.silo_at
+        inside.append((sx - 540, sy - 540, sz + 160, sx + 540, sy + 540, sz + 1760))
         v.brush_entity("trigger_multiple", {"targetname": "lc_bunker_inside", "spawnflags": "1", "wait": "1", "StartDisabled": "0"}, inside, MAT["trigger"],
                        self.vis("bunker door's failsafe (delete to let it stay shut when empty)"), connections=[("OnEndTouchAll", "lc_bunker_open", "Trigger", "", 20)])
+
+    def silo(self):
+        """White Forest's rocket silo (the lifted piece valve_ep2_silo: docs/dev/prefabs.md) just outside the forest's north
+        wall, turned a quarter so that its west tunnel faces the corridor from the radio room, its gantry level the
+        corridor's floor (zg), its lid 192 under the bunker's door. Its world brushes go into the world (they cut up the
+        map for visibility as in Valve's own), the rest as detail; sealed in a hull of our own 64 thick (nodraw outside,
+        the silo's own concrete inside, so each mouth of the piece Valve's rooms ran on through ends at a plain wall), with
+        one opening: where the corridor comes in. Its wiring: the lift goes down and comes back up (its button in the car;
+        the bottom level has no other way up), the ladder hatch on the gantry opens by Use, the lab door's two keypads open
+        it, the keypads have names of their own, the steam gate, the areaportals and Valve's story (scenes, NPC makers, the
+        autosave, Uriah) are left out. Invisible player clips stand in the empty shaft (where the rocket was) at the open
+        levels and the gantry, so nobody walks off into a 1,250 drop."""
+        v = self.vmf
+        sv, wv = self.vis("silo (Valve's White Forest silo)"), self.vis("silo's wiring")
+        pf = PF.load("valve_ep2_silo")
+        ax, ay, az = self.silo_at
+        q, d = 1, (ax, ay, az)
+        live = set(w["keys"].get("targetname", "") for w in pf["wiring"]) - {""}
+        pf_solids(v, pf, q, d, sv, world=True, skip=lambda s: "taken shut" in s["from"] or s.get("live") in live)
+        drop = {"steam_silo1_1", "tr_laddergate_1", "sound_ladder_steam_1", "sound_ladder_steamloop_1", "sound_ladder_lock_1", "door_silo_lab_outside_1_malfunction_timer"}
+
+        def keep(e):
+            if e["keys"].get("targetname", "") in drop or e["classname"] == "func_areaportal":
+                return False
+            return not (e["classname"] == "trigger_multiple" and any(c[1].startswith("!activator,Kill") for c in e.get("connections", [])))
+        pads = [p for p in pf["points"] if "keypad" in p["keys"].get("model", "")]
+        buttons = [w for w in pf["wiring"] if w["classname"] == "func_button" and any(c[1].startswith("keypad_1,") for c in w.get("connections", []))]
+        pad_name, lab_pads = {}, set()
+        for k, b in enumerate(buttons):
+            p = min(pads, key=lambda p: sum((p["origin"][i] - b["origin"][i]) ** 2 for i in range(3)))
+            pad_name[tuple(p["origin"])] = pad_name[tuple(b["origin"])] = "keypad_%d" % (k + 1)
+            if abs(b["origin"][2] - 373) < 20:
+                lab_pads.add(tuple(b["origin"]))
+
+        def edit(e):
+            cls, k = e["classname"], e["keys"]
+            tn, o = k.get("targetname", ""), tuple(e.get("origin", ()))
+            if o in pad_name:
+                if cls.startswith("prop"):
+                    k["targetname"] = pad_name[o]
+                else:
+                    e["out"] = [(a, pad_name[o] if t == "keypad_1" else t, i, val, dl) for a, t, i, val, dl in e["out"]]
+                    if o in lab_pads:
+                        e["out"].append(("OnPressed", "door_silo_lab_outside_1_door_open_rl", "Trigger", "", 0))
+            if cls == "ambient_generic":
+                k["spawnflags"] = str(int(k.get("spawnflags", "0") or 0) & ~1)
+            if cls == "prop_dynamic" and "silo_door01" in k.get("model", ""):
+                e["classname"] = "prop_dynamic_override"      # (the model has physics data: map_assets.py)
+            if cls == "path_track" and tn.startswith("path_elevator_"):
+                k["speed"] = "40"      # (a train going backward misbehaves on path points whose speed is 0)
+                e["out"] = {"path_elevator_5": [("OnPass", "lift_at_bottom", "Trigger", "", 0)], "path_elevator_6": [("OnPass", "lift_at_top", "Trigger", "", 0)]}.get(tn, [])
+            if tn == "button_ele_2":
+                k["spawnflags"] = "1025"
+                e["out"] = [("OnPressed", "lift_go_down", "Trigger", "", 0), ("OnPressed", "lift_go_up", "Trigger", "", 0)]
+            if tn == "brush_pclip_lift_2":
+                k["StartDisabled"] = "1"
+            if tn == "lift_door_2_b":      # (a mover only the wiring moves, not a door to the gamemode)
+                e["classname"] = "func_button"
+                k.update({"spawnflags": "0", "wait": "-1", "sounds": "0", "health": "0"})
+            if tn == "door_hatch_ladder_1":
+                k["spawnflags"] = str(int(k["spawnflags"]) | 256)
+                e["out"] = [x for x in e["out"] if x[1] not in ("prop_eledoor_4", "lift_door_2_b")]
+            if tn == "door_silo_lab_outside_1":
+                k["spawnflags"], k["wait"] = str(int(k["spawnflags"]) & ~32), "8"
+                e["out"].append(("OnFullyClosed", "prop_door_silo_lab_outside_1", "SetAnimation", "lock", 0))
+
+        def relay(name, outs, off, at):
+            return {"classname": "logic_relay", "origin": at, "keys": {"targetname": name, "StartDisabled": "1" if off else "0", "spawnflags": "0"}, "out": outs}
+
+        def go(me, way, arrive):
+            return [("OnTrigger", me, "Disable", "", 0), ("OnTrigger", "button_ele_2", "Lock", "", 0), ("OnTrigger", "prop_eledoor_4", "SetAnimation", "close", 0),
+                    ("OnTrigger", "lift_door_2_b", "PressOut", "", 0), ("OnTrigger", "brush_pclip_lift_2", "Enable", "", 0), ("OnTrigger", "sprite_ele_2", "Color", "255 10 10", 0),
+                    ("OnTrigger", "sound_elevator_startup_1", "PlaySound", "", 0), ("OnTrigger", "sound_elevator_startup_1", "StopSound", "", 2.2),
+                    ("OnTrigger", "lift_2", way, "", 2), ("OnTrigger", "lift_2", "SetSpeedReal", "40", 2.1), ("OnTrigger", arrive, "Enable", "", 3)]
+
+        def arrive(me, then):
+            return [("OnTrigger", me, "Disable", "", 0), ("OnTrigger", "lift_2", "Stop", "", 0), ("OnTrigger", "lift_door_2_b", "PressIn", "", 1),
+                    ("OnTrigger", "prop_eledoor_4", "SetAnimation", "open", 1), ("OnTrigger", "brush_pclip_lift_2", "Disable", "", 1),
+                    ("OnTrigger", "sprite_ele_2", "Color", "255 170 43", 1), ("OnTrigger", "button_ele_2", "Unlock", "", 2), ("OnTrigger", then, "Enable", "", 2)]
+        # the lift: each arrival is answered only after the car has set off that way (a path point can fire as the car leaves it)
+        extra = [relay("lift_go_down", go("lift_go_down", "StartForward", "lift_at_bottom"), False, [-500, 40, 1240]),
+                 relay("lift_at_bottom", arrive("lift_at_bottom", "lift_go_up") + [("OnTrigger", "physexp_hook_crash_1", "Explode", "", 0)], True, [-500, 40, 1224]),
+                 relay("lift_go_up", go("lift_go_up", "StartBackward", "lift_at_top"), True, [-500, 40, 1208]),
+                 relay("lift_at_top", arrive("lift_at_top", "lift_go_down"), True, [-500, 40, 1192]),
+                 {"classname": "logic_auto", "origin": [-500, 60, 1240], "keys": {"spawnflags": "1"},
+                  "out": [("OnMapSpawn", "lift_door_2_b", "PressIn", "", 1), ("OnMapSpawn", "prop_eledoor_4", "SetAnimation", "open", 1)]}]
+        pf_entities(v, pf, q, d, "lc_silo_", sv, wv, keep=keep, edit=edit, extra=extra, valve_anchor=pf["anchor"])
+        for dz in (1408 + 64, 322 + 64):
+            v.point("env_cubemap", (ax, ay + 200, az + dz), {"cubemapsize": "0"}, sv)
+        # player clips in the empty shaft: over the solid ring's hole (159), the ring slab's grate's hole (114) and inside
+        # the gantry's grates (112 to 159), each a 12-sided column round the axis
+        cv, clip = self.vis("silo's player clips (the empty shaft)"), "tools/toolsplayerclip"
+        for r, z1, z2 in ((160, 896, 1088), (112, 1152, 1408), (140, 1408, 1760)):
+            pts = [(ax + int(round(r * math.cos(math.radians(15 + 30 * k)))), ay + int(round(r * math.sin(math.radians(15 + 30 * k))))) for k in range(12)]
+            faces = [([(x, y, az + z2) for x, y in pts], clip), ([(x, y, az + z1) for x, y in reversed(pts)], clip)]
+            for k in range(12):
+                (xa, ya), (xb, yb) = pts[k], pts[(k + 1) % 12]
+                faces.append(([(xa, ya, az + z1), (xb, yb, az + z1), (xb, yb, az + z2), (xa, ya, az + z2)], clip))
+            v.world.append(v.convex_text(faces, cv))
+        # the hull: the piece's box (1088 square, 1856 high) walled in, 64 thick; its lid as high as the corridor's roof
+        T, nd, cw, hv = 64, MAT["nodraw"], FMAT["silo_wall"], self.vis("silo's hull (sealed)")
+        x1, y1, z1, x2, y2, z2 = ax - 544, ay - 544, az - 64, ax + 544, ay + 544, az + 1792
+        roof = self.zd + 224
+        v.world_box((x1 - T, y1 - T, z1 - T, x2 + T, y2 + T, z1), nd, top=cw, vis=hv)
+        v.world_box((x1 - T, y1 - T, z2, x2 + T, y2 + T, roof), nd, bottom=cw, vis=hv)
+        v.world_box((x1 - T, y1, z1, x1, y2, z2), nd, faces={"east": cw}, vis=hv)
+        v.world_box((x2, y1, z1, x2 + T, y2, z2), nd, faces={"west": cw}, vis=hv)
+        v.world_box((x1 - T, y2, z1, x2 + T, y2 + T, z2), nd, faces={"south": cw}, vis=hv)
+        cx1, cx2, cz = ax - 128, ax + 128, self.zg - 64      # (the corridor's end and its walls fill the south wall's middle)
+        v.world_box((x1 - T, y1 - T, z1, cx1, y1, z2), nd, faces={"north": cw}, vis=hv)
+        v.world_box((cx2, y1 - T, z1, x2 + T, y1, z2), nd, faces={"north": cw}, vis=hv)
+        v.world_box((cx1, y1 - T, z1, cx2, y1, cz), nd, faces={"north": cw}, vis=hv)
+        # the forest's north wall where the corridor passes: sky over its roof as the wall's, sealed under its floor
+        lx1, lx2 = self.cuts["north"]
+        sky, shv = MAT["sky"], self.vis("shell (sky, walls, slab)")
+        v.world_box(self.box(lx1, self.D, roof, lx2, self.D + WALL, self.lid), sky, sky, sky, vis=shv)
+        v.world_box(self.box(lx1, self.D, self.zg - 80, lx2, self.D + WALL, self.zd - 64), nd, vis=shv)
 
     def preview_extra(self, dr, P):
         # the deep level, which is under the ground: drawn faintly, so the picture shows how far the bunker goes
