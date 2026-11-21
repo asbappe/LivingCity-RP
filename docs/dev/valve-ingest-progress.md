@@ -53,6 +53,14 @@ helpers' running notes and lesson proposals in its `wip/` while it runs; at the 
   "Combine architecture" section of Nova Prospekt's notes (`valve_prison/notes/`) with its pictures P14 (depot: Combine
   walls leaning against old concrete, 20% of its wall area at about 14 degrees), P16 (the lopsided pod shaft), P17.
 
+- **Black Mesa East pieces (the owner, 21 November: "all of them please lift for use in the future with the modules"):**
+  lift from d1_eli_01 and 02 as pieces (`map_prefab.py extract`, each with its wiring noted in `docs/dev/prefabs.md`):
+  the airlock (two blast doors about 270 apart, the guard's booth with its camera screen), the turrets that only
+  look alive (prop turrets and their six floor zones), the lift ride (the cage, the shaft, the three floors seen on
+  the way and their timed people), and the base at work (the work spots: cooks at the stove, vortigaunts at the
+  machine, the walking loop). Lessons `valve-base-airlock`, `valve-turrets-follow-by-cells`, `valve-lift-diorama`,
+  `valve-base-at-work`. The owner keeps `valve-look-and-answer`, `valve-raid-on-the-base` and `valve-play-teaches`
+  as references (not to build for now). Not done yet.
 - **Approving findings (21 November):** at the end of each batch, put the findings most worth building to the owner
   to pick from; approved ones go on `TODO.md` under "Owner-approved Valve findings", and **nothing is built until
   all ingestion is done** (the owner's choice). City 17's four approved: timed holds with faster waves, squads topped
