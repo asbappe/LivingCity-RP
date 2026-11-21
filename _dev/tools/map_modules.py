@@ -701,7 +701,7 @@ def m_overflow(m, opt):
     between the winches, caged red lamps either side, danger signs and rust stains on the wall; a lever on the wall
     by it, padlocked like the winches until the game unlocks it. Driftwood (the coast's own), a pallet and two bodies
     lie against the plate. Behind the plate a ribbed channel runs on to a cap ("delete to join Ravenholm"), a shallow
-    strip of water down its middle, and it says Ravenholm the moment the plate lifts: Half-Life 2's own Ravenholm sign
+    strip of water down its middle (where the channel is long enough), and it says Ravenholm the moment the plate lifts: Half-Life 2's own Ravenholm sign
     on its wall, blood on the walls and the floor, a headcrab canister come through its roof, a zombie's torso and a
     burnt body under it, a wheelbarrow on its side, rags; one oil lamp still burning low, one caged lamp dead.
     "overflow 1280": how far the channel reaches from the canal's middle (default 1024).
@@ -720,7 +720,9 @@ def m_overflow(m, opt):
     m.open(0, -256, 1024, 256)
     m.low(320, 256, 704, 640, F + 192)
     m.low(384, 640, 640, reach, F + 192)
-    m.low(448, 704, 576, reach - 128, F + 192, floor=F - 16)        # the strip the overflow still runs in
+    wet = reach - 128 >= 832                                          # (a strip of water down the channel, where it is long enough for one)
+    if wet:
+        m.low(448, 704, 576, reach - 128, F + 192, floor=F - 16)    # the strip the overflow still runs in
     m.side(320, 256, 704, reach)
     m.det([(320, 256, F, 704, 272, F + 16), (320, 208, F, 704, 256, F + 12), (320, 160, F, 704, 208, F + 6)], MAT["beam"])      # the weir's sill and apron
     m.door("lc_overflow_sluice", [(320, 288, F + 16, 704, 304, F + 192), (440, 293, F + 192, 446, 299, F + 280), (578, 293, F + 192, 584, 299, F + 280)],
@@ -747,31 +749,44 @@ def m_overflow(m, opt):
     for kind, u, z, seed in (("danger", 264, F + 150, 1), ("danger", 760, F + 190, 2), ("stain", 380, F + 236, 3), ("stain", 650, F + 236, 4), ("number", 512, F + 290, 5)):
         m.grime(kind, u, 256, z, seed)
     # behind the plate: Ravenholm's threshold
-    m.water(448, 704, 576, reach - 128, F - 16, F - 4)
+    if wet:
+        m.water(448, 704, 576, reach - 128, F - 16, F - 4)
     for v in range(704, reach - 64, 128):                    # the channel's ribs
         m.det([(384, v, F + 176, 640, v + 16, F + 192), (384, v, F, 392, v + 16, F + 176), (632, v, F, 640, v + 16, F + 176)], MAT["beam"])
     m.world((384, reach - 64, F, 640, reach, F + 192), MAT["black"], vis="%s: the overflow's far end (delete to join Ravenholm)" % m.b.vis)
     m.b.plan.keep_out.append(m.fr.rect(320, reach, 704, reach + 64))
     m.blocked(384, reach - 128, 640, reach)
     m.blocked(320, 144, 704, 320)
-    m.static("models/props_junk/ravenholmsign.mdl", 395, reach - 220, 0, z=F + 96)             # (nailed to the left wall, facing across)
-    cu, cv = 560, reach - 330                                                                  # the canister, nose down through the roof
+    back = reach - 64                                                                          # (the cap's face; with a short reach the things stand in the room behind the plate)
+
+    def V(d):
+        return max(330, back - d)
+
+    def wall(v, left=True):
+        return (320 if left else 704) if v < 640 else (384 if left else 640)
+    sv = V(220)
+    m.static("models/props_junk/ravenholmsign.mdl", wall(sv) + 11, sv, 0, z=F + 96)            # (nailed to the left wall, facing across)
+    cu, cv = 560, V(330)                                                                       # the canister, nose down through the roof
     m.point("prop_static", cu, cv, F + 176, {"model": "models/props_combine/headcrabcannister01a.mdl", "angles": "55 %d 0" % m.fr.yaw(250), "skin": "0", "solid": "6",
                                              "disableshadows": "0", "screenspacefade": "0", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1"}, m.pv)
     m.static("models/props_debris/concrete_chunk01a.mdl", 590, cv - 40, 30, z=F)
     m.static("models/props_debris/broken_pile001a.mdl", 576, cv + 50, 120, z=F)
     m.body("models/zombie/classic_torso.mdl", 470, cv - 20, 200, z=F)
-    m.body("models/humans/charple02.mdl", 430, reach - 450, 80, z=F)
-    m.prop("prop_physics", "models/props_junk/wheebarrow01a.mdl", 606, reach - 520, 0, F + 24, {"spawnflags": "0", "angles": "0 %d 85" % m.fr.yaw(100)})
-    for k, (u, v, z) in enumerate(((384, reach - 380, F + 60), (640, reach - 300, F + 40), (512, reach - 400, F + 1), (420, cv - 20, F + 1), (640, 760, F + 70))):
+    m.body("models/humans/charple02.mdl", 430, V(450), 80, z=F)
+    m.prop("prop_physics", "models/props_junk/wheebarrow01a.mdl", 606, V(520), 0, F + 24, {"spawnflags": "0", "angles": "0 %d 85" % m.fr.yaw(100)})
+    for k, (left, d, z) in enumerate(((True, 380, F + 60), (False, 300, F + 40), (None, 400, F + 1), (None, 350, F + 1), (False, 200, F + 70))):
+        v = V(d)
+        u = 512 if left is None else wall(v, left)
         m.decal("decals/bloodstain_%s" % ("001", "002", "003", "101", "201")[k], u, v, z)
-    m.static("models/props_c17/lamp001a.mdl", 410, reach - 260, 30, z=F)                      # the one lamp still burning, low
-    m.glow(410, reach - 260, F + 14, "255 190 110", 0.12)
-    m.light(410, reach - 260, F + 24, "255 170 90 14")
-    cage_lamp(m, 640, 900, F + 140, 180, lit=False)                                          # (a dead one on the wall)
+    lv = V(260)
+    m.static("models/props_c17/lamp001a.mdl", wall(lv) + 26, lv, 30, z=F)                     # the one lamp still burning, low
+    m.glow(wall(lv) + 26, lv, F + 14, "255 190 110", 0.12)
+    m.light(wall(lv) + 26, lv, F + 24, "255 170 90 14")
+    dv = V(60)
+    cage_lamp(m, wall(dv, False), dv, F + 140, 180, lit=False)                                # (a dead one on the wall)
     m.sound("ambient/creatures/town_zombie_call1.wav", 512, reach - 96, F + 60, radius=1400, volume=8, name="lc_overflow_moan", on=False)
     m.target("lc_overflow_far", 512, reach - 80, F + 8, 270)
-    m.soundscape("d1_town.HeadcrabCave", 512, reach - 300, F, radius=420)                     # (Ravenholm's own: the owner's map uses it)
+    m.soundscape("d1_town.HeadcrabCave", 512, V(300), F, radius=420)                     # (Ravenholm's own: the owner's map uses it)
     m.soundscape(SCAPES["courtyard"], 512, -60, F, radius=600)
     # what the flood left against the plate
     m.static("models/props_debris/concrete_chunk01a.mdl", 250, 96, 40, z=F + 4)
