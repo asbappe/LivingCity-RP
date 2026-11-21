@@ -4,7 +4,7 @@ Living City: the owner's corrections, checked by machine (_dev/reference/lessons
 map_lint).
 
     python3 map_lint.py FILE.vmf [more.vmf ...]      every finding, one line each
-    python3 map_lint.py FILE.vmf --only overlap       one kind (overlap, door, offlamp, fire, mattress, view, water, rope, flush, bare, palette)
+    python3 map_lint.py FILE.vmf --only overlap       one kind (overlap, door, offlamp, fire, mattress, view, water, rope, flush, bare, wire, palette)
 
 Every build runs it on the file it writes and prints what it finds as LOOK lines (map_build.py), so
 map_modules_check.py shows them with the rest. A finding is a thing to look at, not always a fault: a model's box is
@@ -22,6 +22,10 @@ often bigger than the model. What each kind means:
   flush     two visible faces of different brushes lying in the same plane, facing the same way and overlapping:
             they flicker through each other in game (z-fighting; the owner, 21 November). Faces made of
             axis-aligned rectangles only; a face buried in another brush is not counted.
+  wire      Valve's five wiring rules (docs/dev/map-modules.md, "Wiring the way Valve does"): outputs sent to
+            things not in the map, !player (player 1 only on a shared server), triggers that name nobody, sounds
+            played once without "not looped" (32) or loops that carry it, timers that only dress a place left
+            running, a door hanging in an areaportal that nothing closes, a valve that is a press button
   bare      a big plain wall: one face of one material at least 384 long and 256 tall with nothing on it or in front
             of it (no ledge, trim, prop, decal or overlay within 24): lay it in courses, break it with pilasters,
             dress it (lessons valve-wall-bands, valve-column-rhythm, facades). The six biggest, and how many.
@@ -132,6 +136,13 @@ def read(path):
         keys = {}
         for km in re.finditer(r'^\t"([^"]+)" "([^"]*)"', body, re.M):
             keys.setdefault(km.group(1).lower(), km.group(2))
+        outs = []
+        cm = re.search(r"^\tconnections\s*\n\t\{(.*?)^\t\}", body, re.M | re.S)
+        if cm:
+            for out, val in re.findall(r'"([^"]+)" "([^"]*)"', cm.group(1)):
+                parts = val.split("\x1b") if "\x1b" in val else val.split(",")      # (ours hold the parts apart with the escape character, Valve's with commas)
+                outs.append((out, (parts + ["", "", "", ""])[0], (parts + ["", ""])[1]))
+        keys["_outputs"] = outs
         boxes = []
         kind_of = "world" if m.group(1) == "world" else keys.get("classname", "")
         for sm in re.finditer(r"^\tsolid\s*\n\t\{(.*?)^\t\}", body, re.M | re.S):
@@ -421,6 +432,70 @@ def check(path, views=None, only=None, air=None):
             say("bare", "a plain wall of %s, %d long and %d tall, facing (%d %d %d) with nothing on it: courses, a pilaster, trim or dressing (map_lessons.py --tag valve)" % (mat, w, h, mid[0], mid[1], mid[2]))
         if len(bare) > 6:
             say("bare", "... and %d more plain walls" % (len(bare) - 6))
+    # wire: Valve's five wiring rules
+    if not only or only == "wire":
+        import map_wiring
+        names = set(e.get("targetname", "").lower() for e in ents if e.get("targetname"))
+        classes = set(e.get("classname", "").lower() for e in ents)
+        played, missing, player = set(), [], 0
+        for e in ents:
+            who = e.get("targetname") or e.get("classname", "?")
+            for out, tgt, inp in e.get("_outputs", []):
+                t = tgt.lower()
+                if inp.lower() == "playsound":
+                    played.add(t)
+                if t == "!player":
+                    player += 1
+                elif t.startswith("!") or not t:
+                    continue
+                elif t.endswith("*"):
+                    if not any(n.startswith(t[:-1]) for n in names):
+                        missing.append((who, tgt))
+                elif t not in names and t not in classes:
+                    missing.append((who, tgt))
+        for who, tgt in missing[:6]:
+            say("wire", "%s sends to %s, which is not in the map" % (who, tgt))
+        if len(missing) > 6:
+            say("wire", "... and %d more outputs to things not in the map" % (len(missing) - 6))
+        if player:
+            say("wire", "%d outputs name !player: on our shared server that is player 1 only; use !activator" % player)
+        DRESS = ("playsound", "sparkonce", "startspark", "spawndust", "startshake", "emitblood", "puff")
+        doors = []
+        for e in ents:
+            cls, who = e.get("classname", ""), e.get("targetname") or e.get("classname", "?")
+            try:
+                flags = int(float(e.get("spawnflags", "0") or 0))
+            except ValueError:
+                flags = 0
+            if cls.startswith("trigger_") and not flags and cls not in ("trigger_autosave", "trigger_changelevel", "trigger_transition", "trigger_soundscape"):
+                say("wire", "the %s %s names nobody who touches it: set spawnflags (1 players, 2 NPCs, 8 physics)" % (cls, who))
+            elif cls == "ambient_generic":
+                msg, looped = e.get("message", ""), map_wiring.is_looped(e.get("message", ""))
+                if not msg.lower().endswith((".wav", ".mp3")):
+                    continue      # (a sound script name: whether it loops is in the script, not its name)
+                if looped and flags & 32:
+                    say("wire", "%s loops %s but says 'not looped' (32): StopSound will do nothing" % (who, msg))
+                elif not looped and not flags & 32 and e.get("targetname", "").lower() in played:
+                    say("wire", "%s plays %s once without 'not looped' (32): a second PlaySound does nothing (48)" % (who, msg))
+            elif cls == "logic_timer" and e.get("startdisabled", "0") in ("0", ""):
+                ins = [i.lower() for _, _, i in e.get("_outputs", [])]
+                if ins and all(i in DRESS for i in ins):
+                    say("wire", "the timer %s only dresses the place and runs all day: let it sleep until players are near (map_wiring.sleepy_timer)" % who)
+            elif cls == "func_button" and any(w in who.lower() for w in ("valve", "wheel")):
+                say("wire", "%s is a valve pressed like a button: make it a wheel that turns (map_wiring.wheel)" % who)
+            if cls in ("prop_door_rotating", "func_door", "func_door_rotating", "func_movelinear") :
+                if "origin" in e and cls == "prop_door_rotating":
+                    o = origin(e)
+                    doors.append((o[0] - 4, o[1] - 4, o[2] - 4, o[0] + 4, o[1] + 4, o[2] + 4))
+                for bx, _ in e.get("_solids", []):
+                    doors.append(bx)
+        for e in ents:
+            if e.get("classname") == "func_areaportal" and not e.get("target"):
+                for bx, _ in e.get("_solids", []):
+                    near = (bx[0] - 32, bx[1] - 32, bx[2] - 8, bx[3] + 32, bx[4] + 32, bx[5] + 8)
+                    if any(overlap(near, d) > 0 for d in doors):
+                        say("wire", "a door hangs in the areaportal at (%d %d %d) and nothing closes it: name the door in its target" % ((bx[0] + bx[3]) / 2, (bx[1] + bx[4]) / 2, bx[2]))
+                        break
     # palette: materials City 18 never uses (one line, the commonest few)
     pal = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "reference", "city18", "palette.json")
     if os.path.exists(pal) and (not only or only == "palette"):
