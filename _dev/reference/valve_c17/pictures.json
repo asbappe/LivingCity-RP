@@ -1,0 +1,262 @@
+{
+ "title": "Valve's City 17 uprising (d3_c17_01 to 13)",
+ "draft": true,
+ "about": "Valve's own City 17 uprising maps (d3_c17_01 onwards; the Source SDK copies the owner uploaded, 21 November), measured from the VMFs by map_ingest.py (each map's numbers in valve_d3_c17_NN/measure.json) and drawn by map_view.py (flat colours; props as boxes of their true size, orange static, yellow physics, cyan dynamic, green NPCs; a prop whose size is unknown is a small marker) or as true slices across a street (dark grey solid, white air, pale blue sky, a grid every 128 across and 64 up). Reference only, for shape and dressing: the VMFs are not in the repo, and the owner's own choices win where they differ (streets, stairs, rooms).",
+ "numbers": [
+  "d3_c17_01: Kleiner's lab after the teleport, the rebels' hidden lab; all indoors: rooms 348 by 971 (medians) under 306 (most often 320 and 352), corridors 189 wide under 120, one door01_left in an opening 48 by 108.",
+  "d3_c17_01: the most crowded place measured so far: 1.31 props per 100 by 100 of play (the streets of d3_c17_02 to 05: 0.15 to 0.58), 71% of statics touching a wall; lab lights (lab_flourescentlight001a and b, 14), pipes, power boxes, crates and file cabinets.",
+  "Ours: rooms 120 to 128 high in City 18's two tones with a dado rail. Valve's lab is a hall about 306 high, its walls banded (brickwall052e below brickwall052d, the first change 64 or 128 over the foot): a lab or workshop hideout can stand taller than a flat.",
+  "d3_c17_02: from the lab through the old streets to the Combine wall; 52 street cuts, 30 with kerbs: road 256 (23 of 30, the rest 512), kerb 4 (all 60), crown 0 (all 30), pavements most often 192 (128 to 768: the yards are wide); walls median 544.",
+  "Ours: streets keep a crown, a kerb of 8 and pavements of 96. Valve's d3_c17_02 street at the checkpoint (x -5700) is 647 wall to wall: pavements 196 and 180, a road of 256 laid in strips of 64, 128 and 64 (concretefloor033q_c17 at the edges, 033k_c17 in the middle), kerbs 4, flat; fronts 616 and 680 over it (height about the width).",
+  "d3_c17_02 checkpoint: four combine_barricade_med02c, 128 apart, straight across the street from wall to wall (x -5582, y -5956 to -5315), two each side of a gap of 128 that holds a combine_gate_citizen; a combine_light001a on the end barricade at 136 up; the street beyond is shut by the Combine wall (metalcombine001) 707 further east.",
+  "d3_c17_02 wires: utility poles (utilitypole02b) 843 to 1479 apart and wall mounts (utilitypolemount01a) 333 to 2299 (median 697) carry 16 rope spans, median 345 long, slack 100, width 2; 9 of 11 lights warm ('256 224 144' most often).",
+  "d3_c17_03: the square of the colonnade (trainstation_post001 13 and trainstation_column001 10, each 128 apart, 9 arches, awnings 16) and the streets round it; 387 cuts, 114 with kerbs: kerbs 4 (156 sides) and 8 (59); the road widths there are muddled by the square's steps (the commonest, 608 at 30 cuts, is the square's edge), so the street below was measured by hand.",
+  "Ours: streets keep a crown, a kerb of 8 and pavements of 96. Valve's street beside the square (x -2496 y -1544): steps down from the square (8 by 12), a pavement of 176, a road of 380 (stonefloor006a with edge strips of 006c and 006b, 64 and 60 wide), kerbs 4, flat; a pavement of 124, then a wall 32 high with a fence round a grass bed 248 wide.",
+  "d3_c17_03 note: the 'crown 14' measure.json gives at 40 cuts is the square's steps read as a crown; the roads measured by hand are flat. Trees: tree_deciduous_03b 10 (179 to 963 apart), poplars 6 (256 to 496); 27 rope spans, many long (median 751).",
+  "d3_c17_04: back courts behind the blocks, with headcrab canisters and striders: courtyard_template fronts, barred ground-floor windows (woodwall030b_window01a_bars 6, courtyard_template001c_bars 8); 82% of the nodes outdoors; walls in the cuts median 608 (448 to 704); the big court 1728 across (walls 1568 and 576).",
+  "d3_c17_04 flats: ceilings 128 (19 of 41 indoor nodes, 120 at 7), corridors 128 wide (19 of 32), rooms 176 by 409 (medians), nearly bare (a TV, a file cabinet, lightbulb01a 5). Roofs: antennaclusters01a 30 (the commonest model), big gutters (gutterlarge_512 and 640) 10; lampposts (lamppost03a_off) 480 to 768 apart; fence01a 11 at 96 to 136.",
+  "Ours: streets keep a crown, a kerb of 8 and pavements of 96. Valve's d3_c17_04 roads are 256 (38 of 64) or 384 (17), pavements most often 192 and 128, kerbs 4 (102 of 128), crowns 0 or 2.",
+  "d3_c17_05: a block of flats and shops the Combine have taken: control desks with monitors on three floors 128 apart, 32 metropolice, 6 floor turrets, 11 combine_lock01 on its doors; 616 nodes, 33% outdoors; 411 props (0.58 per 100 by 100).",
+  "Ours: streets keep a crown, a kerb of 8 and pavements of 96. Valve's d3_c17_05 street (x 1376 y -4992) is 576 wall to wall: a road of 252 in three strips (stonefloor006e_c17 edges of 64 and 60, 006d_c17 in the middle), pavements 128 and 192, kerbs 4, flat; across its 154 kerbed cuts: road 256 (103), pavements 128 (93), kerb 4 (270 of 308), crown 0 (128 of 154).",
+  "Ours: fronts with a 128 plinth. Valve's d3_c17_05 shop front: a shop storey 136 high (storefront_template001a, glass from 16 to 120) set 32 to 48 back, then a storey every 128 (a course of 32, building_template007f, standing 16 proud, and 96 of windows, 007d) up to 648; across the street, bands of 128 (building_template012f, then 012d) up to 392. At the d3_c17_02 checkpoint: a plinth of 64, a ground floor to 200, a course of 32, then 128 a storey.",
+  "Ours: rooms 120 to 128 high in City 18's two tones with a dado rail. Valve's d3_c17_05 flats: 120 at 294 of 415 indoor nodes, corridors 99.5 wide (64 to 155), rooms 178 by 380, doorways 48 by 108 (door01_left 5) and 56 to 59 wide for door02_double (6); walls banded plasterwall022c_c17 below 022a; radiators 7, sinks 6; 42 of 45 lights warm (37 of them '256 224 144')."
+ ],
+ "pictures": [
+  {
+   "n": "U1",
+   "file": "01_kleiner_lab_cut.png",
+   "where": "d3_c17_01, Kleiner's lab from the south-west, box x -7400 to -5600, y -2064 to -264, cut at 206",
+   "teaches": "The rebels' hidden lab: a hall about 350 wide and 970 long under 306, packed to the walls (1.31 props per 100 by 100, 71% of statics touching a wall): benches, pipes, power boxes, the teleporter in its own bay.",
+   "lessons": [
+    "valve-furniture-on-walls",
+    "valve-busy-and-quiet",
+    "valve-wall-bands"
+   ],
+   "view": {
+    "iso": "SW",
+    "box": [
+     -7400,
+     -2064,
+     -5600,
+     -264
+    ],
+    "cut": 206
+   }
+  },
+  {
+   "n": "U2",
+   "file": "02_checkpoint_iso.png",
+   "where": "d3_c17_02, the checkpoint from the south-west, box x -5950 to -5150, y -6100 to -5150, cut at 360",
+   "teaches": "A Combine checkpoint across a street 647 wide: four combine_barricade_med02c (128 each) from wall to wall, a gap of 128 in the middle for a combine_gate_citizen, a combine_light001a on the end one. The barricades and the gate draw as small markers (their size is not in asset_facts.json).",
+   "lessons": [
+    "combine-kit"
+   ],
+   "view": {
+    "iso": "SW",
+    "box": [
+     -5950,
+     -6100,
+     -5150,
+     -5150
+    ],
+    "cut": 360
+   }
+  },
+  {
+   "n": "U3",
+   "file": "03_checkpoint_street_section.png",
+   "where": "d3_c17_02, a true cut across the street at x -5700 y -5635, by the checkpoint",
+   "teaches": "647 wall to wall: pavements 196 and 180, a flat road of 256 in strips of 64, 128 and 64, kerbs 4; fronts 616 and 680 (a plinth of 64, a ground floor to 200, then 128 a storey).",
+   "lessons": [
+    "valve-street-proportions",
+    "street-profile",
+    "valve-trim-strips"
+   ],
+   "view": {
+    "cut": [
+     -5700,
+     -5635,
+     0,
+     0
+    ],
+    "smax": 384,
+    "up": 768
+   }
+  },
+  {
+   "n": "U4",
+   "file": "04_street_wires_eye.png",
+   "where": "d3_c17_02, eye level outdoors looking south-west (eye -6892 -5996 64, yaw 225)",
+   "teaches": "Wires over the old street: utility poles 843 to 1479 apart and wall mounts about 700 apart, spans median 345 with a slack of 100; trees in the verges.",
+   "lessons": [
+    "valve-overhead-cables"
+   ],
+   "view": {
+    "eye": [
+     -6892,
+     -5996,
+     64
+    ],
+    "yaw": 225,
+    "pitch": 3
+   }
+  },
+  {
+   "n": "U5",
+   "file": "05_square_street_section.png",
+   "where": "d3_c17_03, a true cut across the street beside the square at x -2496 y -1544",
+   "teaches": "Steps down from the square (8 by 12), a pavement of 176, a flat road of 380 with edge strips 64 and 60 wide, kerbs 4, a pavement of 124, then a wall 32 high with a fence round a grass bed.",
+   "lessons": [
+    "street-profile",
+    "valve-trim-strips"
+   ],
+   "view": {
+    "cut": [
+     -2496,
+     -1544,
+     90,
+     -4
+    ],
+    "smax": 512,
+    "up": 320
+   }
+  },
+  {
+   "n": "U6",
+   "file": "06_square_colonnade_cut.png",
+   "where": "d3_c17_03, the colonnade of the square from the south-west, box x -3832 to -2032, y -2852 to -1052, cut at 238",
+   "teaches": "A colonnade along the square: posts and columns every 128 (trainstation_post001 12 and trainstation_column001 10 in this part), benches between them (bench_indoor001a 4, 197 apart), a Combine monitor on the square.",
+   "lessons": [
+    "valve-column-rhythm"
+   ],
+   "view": {
+    "iso": "SW",
+    "box": [
+     -3832,
+     -2852,
+     -2032,
+     -1052
+    ],
+    "cut": 238
+   }
+  },
+  {
+   "n": "U7",
+   "file": "07_tree_street_eye.png",
+   "where": "d3_c17_03, eye level outdoors looking east (eye -5344 -3776 64, yaw 0)",
+   "teaches": "A side street with grass verges and trees (tree_deciduous_03b 179 to 963 apart), dumpsters on the pavement and a playground (playgroundtick-tack-toe_block01a 8): the old city kept some green.",
+   "lessons": [
+    "valve-clutter"
+   ],
+   "view": {
+    "eye": [
+     -5344,
+     -3776,
+     64
+    ],
+    "yaw": 0,
+    "pitch": 3
+   }
+  },
+  {
+   "n": "U8",
+   "file": "08_back_court_blocks_iso.png",
+   "where": "d3_c17_04, blocks round the back courts from the south-west, box x -2040 to -240, y -6036 to -4236",
+   "teaches": "Blocks 448 to 704 high round back courts, their roofs crowded with antenna clusters (antennaclusters01a 30, drawn as boxes of their size), big gutters down the walls, barred windows on the ground floor.",
+   "lessons": [
+    "valve-template-fronts",
+    "skyline-corners"
+   ],
+   "view": {
+    "iso": "SW",
+    "box": [
+     -2040,
+     -6036,
+     -240,
+     -4236
+    ]
+   }
+  },
+  {
+   "n": "U9",
+   "file": "09_court_flats_cut.png",
+   "where": "d3_c17_04, flats by the back court from the south-west, box x -4300 to -3000, y -4000 to -2800, cut at 240",
+   "teaches": "Flats over the back court: ceilings 128, corridors 128 wide, rooms about 176 by 409, nearly bare (a TV, a file cabinet, a bulb).",
+   "lessons": [
+    "valve-flat-interiors",
+    "room-to-move"
+   ],
+   "view": {
+    "iso": "SW",
+    "box": [
+     -4300,
+     -4000,
+     -3000,
+     -2800
+    ],
+    "cut": 240
+   }
+  },
+  {
+   "n": "U10",
+   "file": "10_shop_street_section.png",
+   "where": "d3_c17_05, a true cut across the shop street at x 1376 y -4992",
+   "teaches": "576 wall to wall: a flat road of 252 in three strips, pavements 128 and 192, kerbs 4; fronts 648 (a shop storey of 136, then 128 a storey) and 392.",
+   "lessons": [
+    "valve-street-proportions",
+    "street-profile",
+    "facades"
+   ],
+   "view": {
+    "cut": [
+     1376,
+     -4992,
+     90,
+     124
+    ],
+    "smax": 384,
+    "up": 768
+   }
+  },
+  {
+   "n": "U11",
+   "file": "11_combine_office_cut.png",
+   "where": "d3_c17_05, the block the Combine took, from the south-west, box x 1004 to 2804, y -4153 to -2353, cut at 391",
+   "teaches": "The Combine's office in a block of flats: rows of controlroom_desk001b with monitor02 and keyboards (11 each) on floors 128 apart, file cabinets (10), combine_lock01 on the doors, combineinnerwall001a panels; 19 metropolice and 4 floor turrets in this part.",
+   "lessons": [
+    "combine-kit",
+    "valve-furniture-on-walls"
+   ],
+   "view": {
+    "iso": "SW",
+    "box": [
+     1004,
+     -4153,
+     2804,
+     -2353
+    ],
+    "cut": 391
+   }
+  },
+  {
+   "n": "U12",
+   "file": "12_shop_street_eye.png",
+   "where": "d3_c17_05, eye level outdoors looking south (eye 1166 -5280 178, yaw 270)",
+   "teaches": "Shopfronts along a 576 street: a shop storey 136 high set 32 to 48 back, storeys of 128 over it (a course of 32 and 96 of windows), window props (building_tem002_window01 40, half with bars), door02_double at the doors.",
+   "lessons": [
+    "facades",
+    "valve-template-fronts",
+    "valve-wall-bands"
+   ],
+   "view": {
+    "eye": [
+     1166,
+     -5280,
+     178
+    ],
+    "yaw": 270,
+    "pitch": 3
+   }
+  }
+ ]
+}
