@@ -31,17 +31,16 @@ Read `CLAUDE.md` (house rules) and `CORE.md` (what must not change) first, then 
 
 ## Where things stand
 
-- 21 November (night). The owner sent every HL2/EP1/EP2 map source: 122 more maps measured (145 in all); another chat
-  ingests them batch by batch: docs/dev/valve-ingest-progress.md (read it first). Batch 1 (City 17) done; Ravenholm
-  merged (167 lessons); Nova Prospekt running. Owner-approved findings wait on TODO.md, built after all ingestion.
-- Ingestion tools: _dev/tools/map_ingest.py, valve_stats.json; THE GUIDE: docs/dev/map-ingestion.md. Valve's wiki is
-  saved (9,984 pages): `vdc.py --card func_door` joins it with Valve's map use and the lessons; docs/dev/vdc-topics.md.
-- Canals: the Valve table built, `lockgate` (crushes anything, open on map load, booth switch for anyone), the ring
-  and first canal on the new dressing, NPC nodes with a share of the 4096 limit each; wiring follows Valve's five
-  rules (map_wiring.py; map_lint kind wire).
-- Gamemode, from Valve's NPC study (the owner said build all): door guards at Combine zones (the trespass chat lines
-  gone), Valve's raid breach, frisks, the arrest punch, the can, guards at ease, squads in lanes; citizens' idle poses
-  (editor points and spots found by the city; never Combine or the infestation), moments that wait to be seen, a
-  quieter crowd. The mounted gun (5 damage; an officer mans it for an enemy in front), the station's Breencast screen.
-- Tests: full parallel run passes but for a few that come and go (TODO.md); robots pass. Not seen in game yet: the new
-  poses and gestures, the gunner's stance, the lock gates hiding their portal.
+- 21 November (night). Valve map ingestion of the whole set is DONE: 145 maps measured, 279 lessons, 289 pictures in
+  `_dev/reference/valve_*`, each batch's notes in its `notes/`. What was done and the owner's requests:
+  docs/dev/valve-ingest-progress.md. Guide: docs/dev/map-ingestion.md; digest: docs/dev/valve-digest.md.
+- Pieces lifted at the owner's asking (docs/dev/prefabs.md, "Pieces with their wiring"): Black Mesa East (airlock,
+  turrets, lift, work spots), the Citadel (big doors, core, walkway reactor, pod; light bridge, vortex, ball socket,
+  weapon check room in progress), White Forest's silo (for the bunker: where it goes is the owner's call).
+- New tool: `_dev/tools/map_combine.py` (Combine structures from the architecture study); its test map
+  `lc_combine_test.vmf` waits on the owner's look before any module uses it.
+- Built after ingestion, owner-approved (TODO.md): timed holds with faster waves, squads topped up, supplies from
+  roofs, tripwires and turrets; the church as a forward Resistance base over the crypt (Grigori there, wall benches,
+  no cells); the silo into the bunker; Citadel and Black Mesa East pieces as modules. Ideas: Advisor screens.
+- Canals built to Valve's table; the Breencast screen and the mounted gun are in the game; VDC Saver saves Valve's wiki.
+- Open questions: the mounted gun's damage; lock gates crush or stop; which NPC lessons to build (all say ask first).

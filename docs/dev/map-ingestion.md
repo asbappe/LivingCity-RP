@@ -11,7 +11,7 @@ the vehicles test map, and all of Route Kanal (d1_canals_01, 01a, 02, 03, 05 to 
 pictures, 81 lessons (of 127 in all; tag `valve`), 26 prefab pieces (`valve_*`) and four studies (props, entity
 logic, building craft, NPCs).
 
-**The whole set (from 21 November):** the owner sent every HL2, EP1 and EP2 map source. What was chosen, the
+**The whole set (21 November, done):** the owner sent every HL2, EP1 and EP2 map source; all chosen maps are in. What was chosen, the
 batches, what is done and next, the owner's requests on the way, and how to get the maps again:
 `docs/dev/valve-ingest-progress.md` (read it first when carrying on). Save every 5 or so maps (the owner's asking).
 
@@ -92,7 +92,7 @@ batches, what is done and next, the owner's requests on the way, and how to get 
 7. **Across maps.** After each batch: `python3 -I _dev/tools/map_ingest.py aggregate` (every measure.json into
    `valve_stats.json`, and the headline numbers printed: street widths, kerbs, ceilings, stairs, light spacing, props on
    the square...); when a headline number moves,
-   update the digest below.
+   update the digest (`docs/dev/valve-digest.md`).
 8. **Save.** Commit and push (plain words, the session's attribution lines). `_dev/` changed, so send
    `livingcity_tools.zip` (`CLAUDE.md`, house rule 6). Update "Where things stand" in `HANDOFF.md`.
 9. **Use it.** A lesson only helps when the tools follow it: put the helper changes it asks for on `TODO.md`; build
@@ -147,75 +147,22 @@ nodes); **sections** (cross-sections at many places, compared with ours as sente
   message once the limit resets. Their files left untracked or changed set off the stop hook: commit their work in
   progress to the branch (never to main) and say so.
 
-## What we have learned (a digest; the numbers and maps are in each lesson)
+## What we have learned
 
-- **Streets** (`valve-street-proportions`, `street-profile`): about 640 wall to wall, a roadway of 256 to 320,
-  pavements 128 to 192, fronts 576 to 672 tall. Day streets use unlit lampposts 818 to 962 apart. Overhead cables
-  span 700 to 900 and sag 100.
-- **Fronts** (`valve-wall-bands`, `valve-template-fronts`, `valve-trim-strips`, `valve-chamfer-8`): a wall changes
-  material first at 128 over its foot (then 64), like the owner's plinth; tall walls in five courses; 35 to 46% of
-  City 17's wall area is painted building texture with built detail only at street level; trim strips 16x32, 8x32,
-  8x16; ledges 8 out at about 319 up; 45 degree corners cut at 8; columns every 368 in big halls.
-- **Inside** (`valve-flat-interiors`, `valve-wall-thickness`, `valve-sightlines`): ceilings 120 to 128; corridors
-  median 112 wide, rooms 271 (160 to 232 by 224 to 376); doorways 48 by 108 with 8 deep jambs; partitions 8 or 16;
-  half of all views end within 512.
-- **Light** (`valve-light-pools`, `valve-fixture-lights`, `valve-falloff-by-job`, `valve-light-colour-by-place`):
-  dim, lit in pools (a whole station: 23 lights, 40 spots, 19 spotlights); each lamp model has its recipe (a spot
-  straight down, cone 60 to 80, plus a faint point glow); floods use a huge constant falloff, fills are soft and
-  model-less; cool on streets, warm in homes and canals.
-- **Props** (`valve-turn-the-loose`, `valve-tilt-and-topple`, `valve-physics-flags`, `valve-prop-groups`,
-  `valve-busy-and-quiet`, `valve-furniture-on-walls`, `valve-story-props`): only 41% of loose props sit square and
-  43% lie tilted; fixed things stay square; groups of two or three of a kind; a few busy spots and much clear floor
-  (47 to 79% of 256 squares empty); shelves and radiators on walls, chairs free about 42 from their table; stacks
-  turned about 7 degrees; fades by size; skins varied, never tints; glow sprites 0.75.
-- **Logic** (tag `logic`, recipes in `valve-logic-recipes.md`, the four the owner kept: `map_lessons.py --tag
-  recipe`; the five rules for our own wiring are in `docs/dev/map-modules.md`, "Wiring the way Valve does"): a wheel moving a gate as far as it turns; areaportals opened and closed by their doors; one-shot sounds
-  flagged not looped; timers asleep until needed; counters; one relay per event; switches showing their state; an
-  intact set swapped for a broken one; alarms; doors that close again when blocked; triggers that name who touches
-  them.
-- **Craft** (`valve-lightmap-by-distance`, `valve-texture-scale`, `valve-wall-foot-seam`, `valve-decal-or-overlay`,
-  `valve-terrain-into-brush`): lightmapscale 16 near, 8 on stairs and rails, 64 far; texture scale 0.25 in the
-  city, 0.5 on big canal concrete, 1 to 2 on rock; wall textures shifted to start at the floor; decals outnumber
-  overlays 4.5 to 1; displacements power 2, their edges run into brushes.
-- **Canals** (tag `canal`, `valve_canals/pictures.json`; the owner asked for all of it to be built, 21 November):
+The digest (streets, fronts, inside, light, props, logic, craft, canals, Ravenholm, NPCs) is in
+`docs/dev/valve-digest.md`; every lesson in full: `python3 _dev/tools/map_lessons.py`. The batches of 21 November
+added 152 lessons (City 17, Ravenholm, Nova Prospekt, Black Mesa East, EP1 City 17, the Citadel and the Combine's
+architecture, Episode Two, the coast): their notes are in each set's `notes/` folder.
 
-  | | Valve | Ours before |
-  |---|---|---|
-  | Width | 512 in the city canal, 1024 in the airboat canals | 512 everywhere |
-  | Floor | dips toward the middle, about 8 to 10 degrees | flat, with mud |
-  | Wall height | median 384 in the city canal | 384 |
-  | Banks | mostly upright walls; 45 degree banks in one map | 45 degree banks on every wall |
-  | Walk ledges | 72 wide at 212 up in most city stretches (102 at 316 in the wide ones) | none |
-  | Pipe outfalls | 128 across in a ring, about 384 apart, about 140 up | 48 across, one every 1024 |
-  | Cage lamps | about 800 apart at about 300 up | 1536 apart at 260 |
+## What to ingest next
 
-  Built (21 November): a dished floor, wide stretches with their widening and narrowing, upright walls where there are ledges and
-  in the wide stretches (the owner's 45 degree banks kept on the plain city stretches: they asked for sloped sides),
-  ledges, Valve's outfalls and lamp spacing (`docs/dev/map-modules.md`, the shared dressing). Steps are 8 by 12.
-- **Ravenholm, for the infestation quarter** (tag `infestation`): no kerbs or pavements; timber and plaster houses
-  on a concrete plinth, roofs 20 to 35 degrees; no blood decals (litter, ivy, one pinned corpse with crows); traps
-  are loose physics props; zombies come from makers walked in by scripted schedules; rooftops joined by planks; a
-  weak cold sun and warm spotlight pairs about 500 apart, no fog.
-- **NPCs** (tag `npc`, `valve-npc-notes.md`): a unit guards each Combine door within 32 to 128 of his spot, warns
-  three times and shoves (24 posts in the station maps); 75 idle spots each name one pose (window watcher, drinker,
-  arms crossed, couch, bed; bench seats 48 apart); scenes start where a player is looking (128 to 1000 away, 25 to
-  60 degrees, after 0.4 to 2.5 s in sight); squads move in lanes with their own rally and target points 450 to 1000
-  apart; walking nodes 96 apart (64 to 72 indoors; ours are 181 in the canal pieces), cover spots behind low cover
-  about 100 apart, flying nodes about 150 apart and 120 up; gates switch their path links when they open and shut;
-  the station's crowd is kept quiet. Most of these change how our NPCs behave: the owner chooses.
-
-## What to ingest next (for Living City, in this order)
-
-1. **d3_c17_01 to 13**: City 17's uprising (streets, flats, rebel hideouts, Combine barricades): the town, streets,
-   Resistance rooms and Combine places.
-2. **d1_town_01 to 05**: the rest of Ravenholm (the church, the mines): the infestation quarter.
-3. **d2_prison_01 to 08**: Nova Prospekt (cells, guard posts, interrogation): the Combine prison.
-4. **d1_eli_01, 02**: Black Mesa East (a Resistance base dug into the ground, labs, a garage).
-5. **ep1_c17_00 to 06**: City 17 in ruins, the hospital, the evacuation (the clinic, broken streets).
-6. **ep2_outland_01, 02** (the antlion caves) and **11, 12** (White Forest): the owner's forest, nest and bunker.
-7. **d1_trainstation_06, d2_coast_01 to 11, d3_citadel_02 to 05, d3_breen_01, ep1_citadel_00 to 04**, the rest
-   of Episode Two: completeness, and the Combine's own architecture.
-
+Everything the owner chose is in (21 November): the 81 game maps of HL2, Episode One and Episode Two and Valve's 41
+style and standards rooms, on top of the first 23; 145 maps measured, 279 lessons, 289 reference pictures in ten
+sets (`valve_c17`, `valve_ravenholm`, `valve_prison`, `valve_eli`, `valve_ep1c17`, `valve_citadel`, `valve_ep2`,
+`valve_coast`, with Route Kanal's and the first maps' sets), and pieces lifted at the owner's asking (Black Mesa
+East, the Citadel, White Forest's silo). What each batch did, and the owner's requests: `docs/dev/valve-ingest-progress.md`.
+Left in the zip on purpose: the dated drafts and the test, demo and trailer maps. What comes next is using it: the
+owner-approved list on `TODO.md` ("Owner-approved Valve findings" and the lines after it), built after ingestion.
 ## The tools
 
 - `map_ingest.py` (+ `_dev/tools/ingest/`, 16 files, each under 20 KB: one VMF reader for old and new files, then
