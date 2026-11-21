@@ -3,8 +3,7 @@
 Read 21 November from d2_prison_01 to 08 (p1 to p8 below). Entity lists parsed as text into
 `<scratchpad>/work/prisonlogic/ents/*.json`; scripts beside them (parse.py, lib.py, flow.py, w.py, census.py,
 npcstats.py). Outputs are written `Output > target.Input(value) @delay`. Lesson proposals:
-`logic_npc_lessons.json` beside this file. Valve left 58 comments in these maps (p7 38, p6 13, p4 6): quoted where
-they say why.
+`logic_npc_lessons.json` beside this file. Valve left 58 comments (p7 38, p6 13, p4 6): quoted where they say why.
 
 What each map is: p1 the outer wall and its guard towers (antlions set on the towers with bugbait, two gunships);
 p2 the first cell block and a camera room; p3 the showers, the vortigaunt held in beams, a second camera room, a gate
@@ -22,16 +21,12 @@ hold, the pod extractor and the lights-out ambush.
 | ambient_generic / env_soundscape | 12/21 | 7/41 | 30/27 | 7/13 | 41/23 | 45/27 | 24/23 | 58/11 | 224/186 |
 | npc_combine_s (placed and templates) | 24 | 2 | 33 | 26 | 34 | 17 | 13 | 21 | 170 |
 | npc_template_maker / antlion maker | 2/5 | 0/2 | 6/10 | 1/3 | 1/5 | 3/0 | 18/0 | 33/0 | 64/25 |
-| point_template | 12 | 6 | 16 | 15 | 18 | 13 | 3 | 3 | 86 |
 | npc_turret_floor / func_tank | 0/7 | 7/0 | 5/0 | 3/2 | 10/0 | 5/1 | 5/0 | 3/2 | 38/12 |
 | point_camera / func_monitor | 0/0 | 4/1 | 4/1 | 4/1 | 4/1 | 15/6 | 8/2 | 15/4 | 54/16 |
 | env_beam (tripmines, torture, teleport) | . | . | 9 | 6 | 7 | 1 | 5 | 61 | 89 |
 | logic_choreographed_scene | . | . | 1 | 1 | . | 38 | 23 | 29 | 92 |
 | math_counter / logic_case / logic_timer | 4/0/0 | 3/1/1 | 4/1/0 | 2/1/1 | 5/1/0 | 7/1/2 | 9/10/11 | 6/4/1 | 40/19/16 |
-| ai_goal_assault / rally / assault point | . | . | 1/1/1 | 1/1/1 | 1/7/9 | 2/6/16 | 3/13/21 | 5/24/16 | 13/52/64 |
-| ai_changehintgroup / ai_goal_actbusy | 0/4 | 0/1 | 5/4 | 5/1 | 0/1 | 0/1 | . | 2/0 | 12/12 |
 | point_bugbait / npc_bullseye | 5/8 | 0/1 | 7/3 | 2/6 | 5/8 | . | . | . | 19/26 |
-| env_microphone / env_speaker | 2/0 | 4/0 | 1/0 | 1/0 | 4/0 | 2/2 | 3/1 | 1/0 | 18/3 |
 
 None in the eight: env_hudhint, ai_script_conditions outside p7 (2), func_viscluster. Text: 4 game_text and 5
 point_message, all leftovers of a cut vortigaunt and two turret hints (p3, p6), and 2 GAMEOVER_ALLY messages.
@@ -40,30 +35,25 @@ Outputs 3537 (x1 716; !activator 29; dangling 27, 0.8%); Kill is the commonest s
 
 ## 1. How the prison runs
 
-**Guard towers (p1).** Seven func_tank guns (`bunker_gun01.mdl`, firerate 15, bullet_damage 26 but 5 against a
-player, maxRange 1400 to 1700, `playerlocktimebeforefire` 1 to 1.5 s, `ignoregraceupto` 768) each manned by a
-soldier at `npc_man_point` (an info_target `turret_N_standhere`); a point_spotlight (length 1024, width 64) rides the
-gun and lights only while it is manned (GotController LightOn, LostController LightOff); the model plays activate,
-fire, retract. Each tower has a squad of 3 (smg1 on the near towers, ar2 further in). A tower holds fire at range
-until one of its men is hurt by a player: `OnDamagedByPlayer > tower_N_under_attack`: relationship hate, SetMaxRange
-3000, aim at the attacker @0.1. The gun's first shot fires the tower's alarm relay @1: the tower's glow sprite on and
-two sirens (coast.bunker_siren1 and 2, radius 10000, looped) for the whole yard; one stop relay ends them.
-Barred windows: 28 func_breakable panes, each `OnBreak > bars.SetBodyGroup(1)` (the bars model shows broken).
+**Guard towers (p1).** Seven manned func_tank guns (bunker_gun01, damage 26 but 5 to a player, range 1400 to 1700,
+lock 1 to 1.5 s before firing, the gunner at `npc_man_point`); a spotlight (1024 by 64) rides each, lit only while
+manned (Got/LostController). Squads of 3 a tower. A soldier hurt by a player opens the tower's range to 3000 and aims
+it at him; the gun's first shot fires the alarm @1: the tower's glow and two sirens (radius 10000) for the yard.
 
 **Camera rooms (p2, p3, p4, p5): watch the block from a console.** One func_monitor, 3 or 4 point_cameras (FOV 20 to
-75, 60 on 9 of 15, pitched down 0 to 60 degrees, 10 to 32 on most, fog 2048 to 4096), one func_button (flags 1025, wait 0.3). A press: counter Add 1
+75, 60 on 9 of 15, pitched 10 to 32 down on most), one func_button (1025, wait 0.3). A press: counter Add 1
 (max 3 or 4, back to 0 at max) > `OutValue > logic_case.InValue` > that channel's relay: monitor SetCamera, a click
 (k_lab.monitorbutton, 48), one of four small glow sprites lit (scale .05) and the rest hidden, the button's own
 sprite red then green @0.3. Each camera has an env_microphone beside it (MaxRange 512 to 1024, flags 31 all sounds,
 `SpeakerName` the monitor, DSP 58 or 59) switched on with its channel: you hear the room you watch. The monitor is
 on only while someone stands in the room (trigger StartTouch Enable, EndTouch Disable, microphones off too).
-Choosing a camera starts a short live scene there: two soldiers spawn and walk a path out of view where they are
+Choosing a camera starts a short live scene there (p8: the squad at the blast door seen gathering,
+signal_group @0.2, signal_advance @1.4, moving up @2.6, screen off @5, the on-screen men Killed @6): two soldiers spawn and walk a path out of view where they are
 Killed (p5 laundry, kitchen, cafe), soldiers fight an antlion in the showers (p2), an antlion guard breaks in
 (p3); a trigger_look on the screen starts the first one by itself (p3, p5). The picture breaks up as it switches:
 a static brush toggled at 0, 0.1, 0.2, 0.5, 0.6, 0.7, 1.1, 1.2 (p5) or once for 0.1 to 1 s (p6 to p8).
-Scripted monitors (p6 to p8): a search montage cuts cameras @0, 4.5, 5, 6, 7, 8 then the pods @13.3 (p6
-logic_secstation_switch_cam_1); a func_tank with no bullets carries a camera and SetTargetEntity turns it to follow
-a soldier or a pod (p6, p8 functank_room3_camera).
+Scripted monitors (p6 to p8) cut cameras @0, 4.5, 5, 6, 7, 8 as a search; a func_tank with no bullets carries a camera
+and SetTargetEntity turns it to follow a soldier or a pod (functank_room3_camera).
 
 **Combine doors open in steps.** p6 combine_door_rl_1: areaportal Open @0, the lock's glow sprite (light_glow03,
 scale .08) on @0, unlock beep (d1_trainstation_01.combinelock_unlock) @0.1, the door model (combine_door01.mdl)
@@ -85,12 +75,9 @@ Off: hum and buzz Volume(.1) or (0) @0.5, Killed @1, sparks, a shutdown sound @0
 switching four fields ON across the gateways @3 while the gates open and the node links turn on @5: players are
 shut in, soldiers come through.
 
-**The vortigaunt in beams (p3).** Two pairs of env_beam (BoltWidth .75, laserbeam, Radius 256) from poles to the
-prisoner, glow sprites and two thin spotlights (2048 long, 12 and 16 wide) at the ends, three loops (k_lab
-power generators, teleport malfunction, mini teleport warmup, radius 400) started by a trigger as the player comes.
-A plug (func_physbox held by a small breakable: force 5 or damage 1, use or gravity gun) ends it: beams off @0 and
-0.25, end sprites off @0.6, shutdown sounds @0, 0.3, 0.5 (apc_engine_stop, electrical_zap_1, explode_7), the field
-Killed, the poles Skin(1), sparks.
+**The vortigaunt in beams (p3).** Four env_beam from two poles, end glows and two thin spotlights, three machine
+loops (radius 400) started as the player comes. Pulling a plug (func_physbox held by a breakable) ends it: beams off
+@0 and 0.25, end glows @0.6, three shutdown sounds @0, 0.3, 0.5, the field Killed, the poles Skin(1), sparks.
 
 **The interrogation room (p6 'introom').** A pod extractor (prop_dynamic arm) brings the prisoner's pod in by
 animation (introom_approach, extract, depart) with the pod's move sound and its stop at 13.4 s; the prisoner is
@@ -104,10 +91,8 @@ is seen on monitors. The pod lines run on two looping relays: the lower line hal
 3 s every 18 s (Toggle @0 and @2 or @3, the relay calling itself @22 or @18); pods are func_tracktrains (start speed
 100, novaprospekt.pods_track_move_1 and stop_1).
 
-**Depot trains (p4, p6).** A train pulls in and out on its own: doors Toggle, horn @4 (razortrain_horn, radius
-6000), StartForward @5, speed 500 (75 pulling away); passing, a shake (radius 700, frequency 5) steps its amplitude
-2 @2, 3 @6, 2 @9, 1 @12 and stops @18; steam vents turn off as it passes; at the track's end KillHierarchy. The
-through-train relay calls itself again 35 s after it is over.
+**Depot trains (p4, p6).** Doors Toggle, horn @4 (radius 6000), StartForward @5, speed 500 (75 pulling away); a
+shake (radius 700) steps 2 @2, 3 @6, 2 @9, 1 @12, off @18; KillHierarchy at the track's end; the next 35 s after.
 
 **The PA and the radio.** 13 Overwatch lines (`prison.overwatch_*`: antlions inside prison 1 and 2, contact block
 B2, Freeman spotted, kill prisoners A7, mission failure punish, alyx reprograms turret, freeman in block D8,
@@ -126,6 +111,15 @@ Radius 128 (79) or -1 (57).
 (Buttons.snd4) and light 3 @2, light 4 @2.5, a clunk and light 5 @6, light 6 @6.5. The ambush in p8 runs it
 backwards (below).
 
+**A hold's clock is a machine you can watch (p8).** The teleporter charges for 184 s: a lift (func_tracktrain,
+SetSpeed .06) sinks past 12 path_tracks about 38 apart; at each the hum (teleport_active_loop) steps up in pitch 60,
+65, 70 ... 100, 110, 120, 140 and 165 at the end; every second track starts one of six dials (combine_tptimer.mdl,
+animation '30sec') whose beam and lamp come on at 28 s; Alyx says halfway, taking forever, almost there, just
+seconds. No timer on screen.
+
+**Lockdown (p8 logic_trap_mossman_1).** Both Combine door models SetAnimation close, two security doors Close, a
+sound, a warning light for 10 s (SetPattern aaaazzzz: a blink, not for us).
+
 ## 2. Guards: posts, not patrols
 
 - No soldier walks a patrol route in eight maps (StartPatrol only for the two gunships, 19 path_corners all for
@@ -142,7 +136,8 @@ backwards (below).
 - A manned gun in a cell block (p4): a maker spawns the gunner, `FindNPCToManTank` @0.1; an npc_enemyfinder (search
   100 to 2048) aims the gun (FoundEnemy > SetTargetEntity); antlions ignore the gunner for his first 7 s (relationship
   applied @0.1, reverted @7) so he reaches the gun; a player on the gun gets damage 15 instead of 26 and a blue glow.
-- Turrets carried in (p3): a counterattack soldier spawns with a turret prop in his left hand (SetParent,
+- Combine floor turrets (30) come in pairs: nearest other turret 87 to 328 (median 111), a soldier within 323 for
+  half; p5 spawns each with its soldier from one point_template as the player arrives. Turrets carried in (p3): a counterattack soldier spawns with a turret prop in his left hand (SetParent,
   carry_pose); his sequence's OnScriptEvent01 Kills the prop and ForceSpawns the real floor turret where he sets it.
 - Tripmines (p3 to p6, 12 in p5): a red env_beam (BoltWidth .5, TextureScroll 35) with TouchedByEntity, a backup
   trigger_once along the beam for players, NPCs and physics (flags 11), a 1-health breakable over the mine and an
@@ -188,61 +183,53 @@ booth light off with a clunk (Doors.FullClose9, radius 2500) @0, lights 1, 2, 3 
 each with its own clunk and its sprite hidden; fog to black; a soldier's flare call @1; flares launched @4.5, 4.9,
 5.8 (Launch 800 to 1100) each lighting 0.5 s later; soldiers Wake @6.1 and assault @6.2.
 
+**Traps and the dead (p5, p7).** Four crushing walls close @0, 15, 30, 45 (scripted sequences whose script events
+play the scrape, the impact, the shake and smoke; a hurt trigger on at the end); slumped zombies rise as in Ravenholm.
+
 **Counterattack after a gate (p3).** The gate's OnOpen spawns the counterattack (template) whose schedule starts on
 FullyOpen; 4 soldiers dead (counter) > second wave @5: the gate alarm @4, the assault template @4, the next gate
 Toggle @5.
 
 ## 4. How players are guided
 
-No hud hints. Alyx's voice: lines on stage triggers, nags from env_speaker (10 to 18 s, 16 to 24 s in p7) turned on
-10 to 12 s after a scene and off the moment the player does it or leaves the trigger; the turret nags every 20 s
-until learned. Lit gates (green sprite), the console's sprites, a hum and buzz at every field, the PA naming the
-block. Valve's 5 point_message and 4 game_text are leftovers of a cut vortigaunt and two turret hints.
+No hud hints. Alyx's voice on stage triggers; env_speaker nags every 10 to 18 s (16 to 24 in p7), on 10 to 12 s
+after a scene, off the moment the player acts; turret nags every 20 s until learned. Lit gates, the console's
+sprites, a hum at every field, the PA naming the block.
 
-## 5. For Living City ([game] gamemode, [map] map pieces, [owner] changes a feature: ask first, [new] new)
+## 5. For Living City ([game] gamemode, [map] map pieces, [owner] ask first, [new] new)
 
-1. **CCTV at the Combine console** (city-events.md, 'Flying a scanner'): a monitor that cycles 3 or 4 fixed cameras
-   in the prison and nexus on E, the sound of the room you watch, static for 0.1 to 1 s as it switches, on only while
-   someone is at it [game][owner]; camera spots in prison modules [map][new].
-2. **Prison doors that open in steps** (Combine doors, keycards, hacks): lock light, beep @0.1, model @0.5, door
-   @1.25 [game][owner]; multi-leaf blast doors staggered over 2.5 s with only some leaves sounding [map][new].
-3. **Force fields as Valve builds them** (checkpoint forcefields, Combine-only zones): see-through shield never solid
-   plus a clip that lets Combine through; poles' skin off; hum 500 and buzz while touching; off with a fade @0.5 to 1
-   [game][owner].
-4. **The breach build-up for raids** (CP's 'Retake the block', the Resistance's bypass charge, the prison break):
-   voices behind the door, crashes every 16 s, then quickening beeps and the door blows at 10 s [game][owner].
-5. **Guard towers that hold fire until attacked** (checkpoints, the wall): manned gun with a spotlight on while
-   manned, 1 to 1.5 s lock before firing, little damage to players at range, the first shot sounds the alarm
-   [game][owner]; tower spots [map][new].
-6. **Holding ground with a steady pressure** (the owner's rule 9 exception: a counterattack on a taken zone): keep N
-   attackers alive, each death replaced 1 s later at a random spawn, +1 for each of the first 4 deaths, stop when the
-   time is up and end when none are left; an NPC trigger and a 180 s failsafe for a stuck attacker [game][owner].
-7. **The PA names the block** (custom-announcements.md, the prison): lettered and numbered blocks, Overwatch lines
-   at stage changes and when 5 guards are down [game][owner].
-8. **Interrogation with Valve's room** (Civil Protection's interrogation; the chair): the prisoner brought in a pod
-   by the extractor arm, or held in beams with a plug that frees them (the Resistance's rescue) [game][owner];
-   a beam rig and plug in the interrogation module [map][new].
-9. **Prisoners on show** (the prison, the depot): pods on conveyors halting 2 to 3 s every 18 to 22 s; trains whose
-   shake steps 2, 3, 2, 1 over 18 s and horn 1 s before they move [game][owner].
-10. **Guards hold, lean and fall back** (prison guards, garrisons): busy poses lean and crouch at posts, a hint group
-    per room, the survivors pulled back a group when one dies [game][owner].
-11. **Power back bank by bank** (blackouts, transformers): lamps back at 0, 2, 2.5, 6, 6.5 s with a clunk each
-    [game][owner]; the Combine kill the lights one by one before they strike [game][owner].
-12. **Soundscapes by combat level** (prison, districts): the same room in quiet, light and heavy combat, chosen by how
-    close the fighting is [game][owner].
+1. CCTV at the Combine console (city-events.md): 3 or 4 fixed cameras stepped on E, the watched room's sound,
+   static 0.1 to 1 s per switch, drawn only while used [game][owner]; camera points in prison pieces [map][new].
+2. Combine doors in steps (keycards, hacks): light, beep @0.1, model @0.5, open @1.25 [game][owner]; blast doors of
+   staggered leaves, some silent [map][new].
+3. Force fields as Valve builds them (checkpoints, Combine-only zones): shield never solid, a clip the Combine pass,
+   poles dark when off, hum 500 and buzz on touch, fade @0.5 to 1 [game][owner].
+4. Breach build-up for raids and bypass charges: voices behind the door, a blow every 16 s, quickening beeps, open
+   at 10 s [game][owner].
+5. Guard towers that hold fire until attacked: spotlight while manned, 1 to 1.5 s lock, first shot sounds the alarm
+   [game][owner]; tower pieces [map][new].
+6. Steady pressure for held zones (rule 9's exception): cap N, a replacement 1 s after each death, +1 for the first
+   4, stop at time, end at none left, an NPC trigger and a 180 s failsafe [game][owner].
+7. The PA names the block, one line per change of state [game][owner].
+8. Interrogation rig: the prisoner in beams, freed by pulling the plug (prison break) [game][owner]; rig piece
+   [map][new].
+9. Machines on a beat: pod lines halting 2 to 3 s every 18 to 22 s; the train's horn 1 s before it moves and a shake
+   2, 3, 2, 1 over 18 s [game][owner].
+10. Guards hold, lean and fall back: lean and crouch poses at posts, a hint group per room, pulled back a group per
+    death [game][owner].
+11. Power back bank by bank (0, 2, 2.5, 6 s, a clunk each); lights killed one by one before a Combine strike
+    [game][owner].
+12. Soundscapes in combat levels, heavier while a fight runs nearby [game][owner].
 
 ## Check ideas
 
-- map_lint 'wire': a func_monitor whose cameras' microphones are not all Disabled when the room empties; a camera
-  channel counter whose max differs from its case count; a force field brush that blocks with no clip twin (or a clip
-  with no excludednpc and no playerclip); a func_tank whose spotlight is not switched by Got/LostController.
-- A test: a hold's living count never passes its cap; the hold ends when time is up and the count reaches 0; a stuck
-  attacker cannot keep it open past the failsafe.
-- Robots: a raid on a held block where the attackers never get out of their spawn still finishes (failsafe).
+- map_lint 'wire': camera microphones left on when the room empties; a channel counter whose max differs from its
+  case count; a combineshield brush that is solid or has no clip twin; a func_tank spotlight no controller switches.
+- Tests: a hold's living count never passes its cap; it ends at time up and none left, or at the failsafe.
+- Robots: a raid on a held block whose attackers cannot path still finishes.
 
 ## What did not work
 
-- The .vcd scenes and nag rule scripts are not in the sources: what Alyx and Overwatch say is known only from names.
-- npc_template_maker and func_door flag bits (16, 32, 272, 544, 4096) and env_microphone 31 are the FGD's as
-  remembered; the field brush materials were read from the VMF to settle who passes.
-- Brush sizes from three plane points are approximate (door leaves, field brushes).
+- The .vcd scenes and nag rule scripts are not in the sources: what Alyx and Overwatch say is known from names only.
+- Flag bits (maker 16, 272; func_door 544, 4096; microphone 31; turret 32, 64, 128) are the FGD's as remembered; who
+  passes a field was settled from its brush materials. Brush sizes from three plane points are approximate.
