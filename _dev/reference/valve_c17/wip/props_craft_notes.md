@@ -70,8 +70,8 @@ barricade 126x262x50. Only 19 of 73 stand within 160 of another (pairs of 2, one
   (20 of 24 that touch a wall have their back on it), ends on walls.
 - med01a/med01b in long rows of 9 and 10 at 63 to 64 apart (spans 512 and 567) across the plaza (c11, c12),
   one yaw for the whole row; med02a/b/c in pairs 128 apart; short01a-03a in pairs 63 to 146 apart.
-- combine_fence01a and 01b (27x61x192) as a pair of posts with the field between: posts 113 to 488 apart (488
-  three times in c10a), 35 of 38 posts touch a wall (set into the sides of a gap). The field is a func_brush or
+- combine_fence01a and 01b (27x61x192) as a pair of posts with the field between: posts 124 to 488 apart (488
+  twice in c10a), fields 113 to 480 long, 35 of 38 posts touch a wall (set into the sides of a gap). The field is a func_brush or
   func_illusionary 1 thick and 192 tall, effects/combineshield/comshieldwall2 on both faces and nodraw round it
   (c10b cuts one into nine 32-wide pieces).
 
@@ -184,3 +184,39 @@ The sun sinks across the chapter: pitch -25 to -40 and brightness 600 to 700 in 
 end. Fog warm grey 224 224 201 from 3000 to 9000 (c02 to c05), 234 236 236 3000 to 6500 (c06b, c07),
 214 207 189 1024 to 16285 (c11, c12). Lights warm in homes (c05 42 warm of 45, c06b 42 of 46), cool in
 industry and the Nexus (c08 65 cool of 96, c10b 16 of 20). Fires carry their own steady orange light (above).
+
+## 5. Standards compared with what we have
+
+- Storey 128 with an 8 slab gives the 120 ceilings of every flat (digest: 120 to 128). Doorway 48x108 agrees
+  (valve-flat-interiors); new: the 4-wide frame and 4-deep head, the 2-thick door, the knob at 43.
+- Hall 64 is Valve's narrowest; measured corridors are a median 112 (valve-sightlines): keep ours wider.
+- Stairs 8x12 (digest, and 4,410 steps here) against the owner's 16x24: a stairwell lesson must ask first.
+- Ladders: the standard is 24 wide (metalladder001/002 are 24.6 in pieces of 128), dismounts 36 out; the
+  uprising has 8 func_useableladder with 43 info_ladder_dismount (about 5 each).
+- Rails 40 high (handrail04, origin 18 to 20 over the floor on 57 of 92); the dev rail brushes are 32 on a landing
+  and 64 along a flight (the texture's marks, not a rail height).
+- Cover: low 40 to 63 (crates, barrels, short barricades) hides a crouching player (36); tall 108 to 132 hides a
+  standing one (72); combine_barricade_tall02b (261) is a wall, not cover.
+- Furniture heights (counter 40, desk 30, seat 16 to 18, switches 40 to 52, chargers 40 to 72) were in no lesson.
+
+## 6. Check ideas
+
+1. map_lint standards: counter or table tops outside 28 to 42; a hall under 64; a func_ladder not 24 wide or with
+   no dismount; switches or chargers outside 36 to 72 up.
+2. Barricades: a props_debris barricade model with no free lane of 96 beside it, unless in a doorway.
+3. Combine rows: spacing in a row varying by more than 4, or a tilted piece; a fence post without a field brush.
+4. Cars: a vehicle prop square to the grid within 64 of a street's middle (map_town.py places car00Xa_physics with
+   street.static there: check physics-props-dynamic).
+5. Ruins: a concrete_section or brokenexterior off the grid or more than 8 from any brush; piles not sunk.
+6. Fires: an env_fire with no light within 128; any light style near a fire.
+7. Displacements: power 2 over 512 across on a rubble material near play.
+
+## 7. What did not work
+
+- First odd-cut count took 3:2 stair stringers as odd (21%); simple ratios removed it gives 8%.
+- The ray test first returned 0 on axis-aligned rays (a slab bug); fixed, then rays only use axis brushes, so a
+  barricade beside an angled wall or a car reads as open.
+- Indoor or outdoor is the first brush overhead: bridges and overpasses read as indoors (c06a's cars).
+- Flats by furniture clusters found few true homes: c05 and c10 interiors are Combine offices and labs; only
+  c06b (burned block, refuge) and c07 (rebel flats) are homes.
+- No pictures were looked at: every finding here is from numbers.

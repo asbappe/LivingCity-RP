@@ -1,0 +1,175 @@
+[
+ {
+  "id": "valve-standard-sizes",
+  "tags": [
+   "valve",
+   "interiors",
+   "geometry",
+   "props",
+   "doors"
+  ],
+  "title": "Valve's own standard sizes for people's things",
+  "rule": "Size what people use to Valve's standards room: a storey every 128 (8 of floor, 120 clear), walls 8 thick, the narrowest hall 64 wide; a doorway 48 by 108 framed by 4 wide jambs and a 4 deep head (a rough hole 56 by 112), the door 2 thick, its knob 43 up; a counter 40 high and 32 deep; a desk top 30 high, 64 by 32, a monitor 24 wide and 20 high on it; a chair seat 16 to 18 high with its back to 42; light switches 40 to 52 up; wall chargers 40 to 72 up; a ladder 24 wide with dismounts 36 out at each side of its top and 36 out at its foot; crates of 32, 40 and 64; barrels 32 across and 48 high; hanging fluorescent panels 32 by 16 at 168 under a 256 ceiling. Rails stand 40 high (handrail04 props from 0 to 40); cover is low at 40 to 63 (crates 40, barrels 48, concrete_barrier001a and combine_barricade_short 48, rebel short barricades 56 to 63: a crouching player, 36, hides) or tall at 108 to 132 (rebel tall barricades, combine_barricade_med: a standing player, 72, hides).",
+  "why": "testroom_standards and zoo_standards (Valve's style folder, read 21 November) build every size in its own dev_measure texture: dev_measurehall01 floors 64 wide between walls 8 thick, dev_measuredoor01 jambs 4x8x112 round a 48 by 108 door brush 2 thick, dev_measurecounter 64x32x40 (items on it at 41 to 42), dev_measuredesk top at 28 to 30, dev_measureswitch01 to 03 plates 8x12 at 40 to 52, dev_measureladder01 24x256 on a func_ladder with info_ladder_dismount 36 out, func_healthcharger and func_recharge 16x4x32 at 40 to 72, dev_measurecrate01 to 03 and dev_measurebarrel boxes; two Alyx figures stand in the zoo for scale. Our digest already has ceilings 120 to 128 and doorways 48 by 108; the 128 storey with an 8 slab is why the flats measure 120. Rails and cover from d3_c17_01 to 12b: handrail04_long/short/medium are 40.6 high with their origin 18 to 20 over the floor (57 of 92 measured); metalladder001/002 are 24.6 wide in pieces of 128; barricade heights as listed in valve-rebel-barricades and valve-combine-barricade-rows.",
+  "how": "map_modules: counters and shop tables at 40, desks at 30, benches and seats at 16 to 18, switches and terminals 40 to 52 up, chargers 40 to 72; m.ladder 24 wide with its dismount points 36 out; halls never under 64 (our corridors stay wider: valve-sightlines); keep the owner's stairs (stairs-16-24).",
+  "check": "proposed: map_lint standards: a counter or table brush top outside 28 to 42, a hall under 64 between walls, a func_ladder not 24 wide or without dismounts, a light switch or charger outside 36 to 72 up"
+ },
+ {
+  "id": "valve-stairwell",
+  "tags": [
+   "valve",
+   "stairs",
+   "interiors",
+   "geometry"
+  ],
+  "title": "A stairwell turns once a storey in a shaft 128 wide",
+  "rule": "A stair between storeys 128 apart goes in a shaft 128 wide by 256 long: two flights side by side, each 60 wide, climbing 64 to a landing 80 to 92 deep, open treads 2 thick, a rail 64 high along each flight and handrail04_singlerise props on both sides about 62 apart. Valve's steps are 8 by 12 (8 a flight); with the owner's 16 by 24 steps a half flight is 4 steps and 96 of run: ask the owner first before building one with Valve's steps.",
+  "why": "testroom_standards (21 November): the stairwell at 640..768 by 320..576 has treads 60x12x2 rising 8, landings 128x92 and 128x80 at 56 to 64 and 120 to 128, rail brushes dev_measurerails02 2 thick and 64 high stepping 32 every 48, and eight Handrail04_SingleRise props at x 705 and 767; dev_measurestairs01a is 8 by 12 by 64 wide, eight steps to 64. Every one of 4,410 steps in d3_c17_01 to 12b rises 8 and runs 12 except 42 of 16 by 24 in d3_c17_03.",
+  "how": "A stairwell module for map_town's blocks: shaft 128 by 256 (by 288 with 16 by 24 steps), two flights of the owner's steps, landings 80 to 96 deep, a handrail04_singlerise each side of each flight; the shaft's walls 8 thick (valve-standard-sizes).",
+  "check": "review; map_modules_check valid-viewpoints on each landing"
+ },
+ {
+  "id": "valve-rebel-barricades",
+  "tags": [
+   "valve",
+   "props",
+   "streets",
+   "layout"
+  ],
+  "title": "Rebel barricades are junk models against a wall, a way left past",
+  "rule": "Barricade a street the way City 17's rebels did: with Valve's ready-made junk barricade models (props_debris/barricade_short01a to 04a, barricade_tall02a to 04a, concrete_debris256barricade001a), mostly one alone with an end or its back on a wall and the rest of the street left open (more than 128 free beside it), square to the grid or turned a little, set 0 to 5 into the ground. Only a doorway gets sealed (one tall02a fills a 96 doorway; a short02a with a short01a on its side on top). Furniture stays in the rooms, not piled in the street.",
+  "why": "d3_c17_01 to 12b (21 November): 73 such models, 72 prop_static (barricade_short04a 34, tall02a 16, tall03a 6, rubble barricade 7); 54 stand alone (no other within 160), 8 pairs and one three; 39 touch a wall (26 by an end, 13 by the back); rays along each one's long side find more than 128 left open for 66 of 73 (median 957 to the next wall); 7 sit in gaps under 256 (d3_c17_07 5137 1616: a 96 doorway); 45 square, 11 tilted up to 30; bottoms 0 (median) to 5 under the floor. Couches, drawers and beds (33) are all inside flats. Sizes: short04a 94x183x58, tall02a 78x108x124, tall03a 80x134x116.",
+  "how": "A barricade helper in map_mods: pick one model (short04a most), put an end or its back to a wall, yaw on the street axis plus 0 to 20, z 2 into the floor, keep a lane of 128 or more beside it; optional extras within 200: a sawhorse, an oildrum, a corpse with his gun (valve-story-props). For a sealed doorway: tall02a in a 96 opening, or short02a with short01a laid on it.",
+  "check": "proposed: map_lint notes a barricade model with no free lane of 96 beside it unless it sits in a doorway; map_assets.py for the models"
+ },
+ {
+  "id": "valve-combine-barricade-rows",
+  "tags": [
+   "valve",
+   "combine",
+   "props",
+   "streets"
+  ],
+  "title": "Combine barricades stand in straight rows at a fixed pitch",
+  "rule": "The Combine closes a street with one barricade piece repeated in a straight row at a fixed pitch, all on one yaw, square to the grid, never tilted, sunk 1 to 5: combine_barricade_tall02b every 128 with its back to a building front, med01a or med01b every 64 in rows of 9 or 10 across a plaza, med02a/b/c and short01a to 03a in pairs 64 to 146 apart. A gap it guards gets combine_fence01a and 01b as two posts set into its sides, 124 to 488 apart, with a field 113 to 480 long between: a func_brush 1 thick and 192 high, effects/combineshield/comshieldwall2 on both faces, nodraw on the rest.",
+  "why": "d3_c17_01 to 12b (21 November): 78 Combine barricade pieces, all prop_static, 74 on exact 90s; rows of four tall02b at 128 (d3_c17_04 -1042 -3840, d3_c17_05 559 -3864), 20 of the 24 that touch a wall have the back on it; med01a 9 in a row at 64 (d3_c17_11 912 4000) and med01b 10 at 63 (d3_c17_12 896 4004). 38 combine_fence posts, 35 touching a wall; fields 480 long three times in d3_c17_10a (-1787 7056), 113 to 240 in d3_c17_10b, where one is cut into nine pieces 32 wide.",
+  "how": "A Combine roadblock helper: n copies of one model at its pitch (tall02b 128, med01 64) along a line, one yaw, z minus 2; a field helper: fence01a and 01b at the two sides of a gap, the field brush between (func_brush, comshieldwall2 both faces, 192 high, 1 thick). Fits combine-kit and valve-combine-cold.",
+  "check": "proposed: map_lint notes Combine barricade pieces in a row whose spacing varies by more than 4, or tilted; a combine_fence post with no field brush within its gap"
+ },
+ {
+  "id": "valve-wrecked-cars",
+  "tags": [
+   "valve",
+   "props",
+   "streets"
+  ],
+  "title": "Wrecked cars are turned, against the walls, a few burning",
+  "rule": "Leave cars the way a fight leaves them: turned off the street's axis (only 15% square), half of them against a wall or kerb, 40% tilted (mostly 10 to 35 degrees, a few on the side or roof), skins varied, a few with a fire or smoke and a scorch overlay under them, trash decals beside. Static for the big ones (trucks, vans, the burnt hatchback); physics only for the small physics car models. Never one square in the middle of the road.",
+  "why": "d3_c17_01 to 12b (21 November): 47 cars, vans and trucks: yaw free 25, turned 3 to 20 15, square 7; tilted over 5 degrees 19 (on the roof 2, on the side 3); 22 touch a wall (25 within 16); skin not 0 on 28; env_fire or env_smokestack within 200 of 12, scorch1 within 200 of 7; static 33, physics 11 (car002b, 003b, 004a, 005a/b, van001a_physics), crushed cars as prop_ragdoll (car001a_phy 3). Ours (map_town.py): one car00Xa_physics within 40 of the middle of the street, yaw in steps of 15.",
+  "how": "map_town street dressing: place the car within 16 of a kerb or wall, yaw = street axis plus 15 to 60 (or free), tilt 0 to 30 on a third, skin random; one in five with a small fire (valve-fire-kit) and a scorch overlay 250 across under it. Physics car models go through m.dynamic, never static (physics-props-dynamic). Ask the owner first if it changes cars in streets they have walked.",
+  "check": "proposed: map_lint notes a vehicle prop square to the grid within 64 of a street's middle; map_assets.py (physics models never static)"
+ },
+ {
+  "id": "valve-rubble-fitted",
+  "tags": [
+   "valve",
+   "props",
+   "geometry",
+   "facades"
+  ],
+  "title": "Rubble models fit the break square; rebar and chunks are the loose part",
+  "rule": "Dress a ruin in layers: concrete_section pieces square on the grid, touching the broken floor or wall edge they continue, at storey height; building_brokenexterior, walldestroyed and windowdestroyed pieces square in the wall hole; destroyedceiling pieces under the ceiling of a burned room; rebar sticking out of the sections, tilted; debris piles (concrete_debris128pile, 256pile) square, against the wall foot, sunk 3 to 10 into the floor; concrete_chunk physics props loose and tilted. Most stand alone or in pairs, section with rebar.",
+  "why": "d3_c17_01 to 12b (21 November): concrete_section 128 (127 on exact 90s, 106 touching a wall, bottoms a median 104 and up to 192 over the floor below); rebar 124 (108 tilted over 5, 17 prop_dynamic); piles 106 (83 square, 69 touching a wall, bottom a median 3 under the floor, p10 10; fade 1100 to 1660 on 38); broken fronts 98 (84 square, 58 of 90 touching); destroyedceiling01a-d 37 (all square, all touching, 80 to 200 up; 23 in the burned block of d3_c17_06b); concrete_chunk 23 physics, 13 tilted. Groups at 128: 220 alone, 53 pairs; section with rebar the commonest mix. styleguide_c17_rubble_2: sections 24, piles 15, rebar 10, walldestroyed09 10.",
+  "how": "With valve-broken-edges: after cutting a wall or floor, place sections along the cut edge (yaw on the grid, flush to the brush), one or two rebar at 30 to 90 degrees out of them, a pile at the wall's foot 4 into the floor, two or three chunks loose within 128; pile fademaxdist about 1600.",
+  "check": "map_floating.py (nothing floats); proposed: map_lint notes a concrete_section or brokenexterior model off the grid or more than 8 from any brush"
+ },
+ {
+  "id": "valve-fire-kit",
+  "tags": [
+   "valve",
+   "lighting",
+   "props",
+   "sound"
+  ],
+  "title": "A fire: firesize 64, a steady orange light beside it, a scorch under it",
+  "rule": "A burning spot is an env_fire of firesize 64 (32 to 48 for a small one, 128 to 150 for a big one), burning from the start and forever, on the rubble or floor rather than inside a prop, with a steady orange light about 30 from it ('254 150 35' at 300 to 900, never a flicker style), a scorch overlay about 250 across under a third of them, and a fire loop within 256. Fires in a burning street come in short rows, not one per prop.",
+  "why": "d3_c17_01 to 12b (21 November): 137 env_fire; firesize 64 on 41, 128 to 150 on 35, 48 on 13, 32 on 10; spawnflags 47 (infinite, smokeless, start on, start full, no glow) 39, 3 (lit by the map) 31, 45 (with smoke) 22; 111 with no prop within 64; 88 with a light within 128 (median 33, '254 150 35' 300 to 900 and '254 174 10 500'), no light styles; scorch1 under 42; a fire sound within 256 of 86; groups at 96: 57 alone, 18 of 2 to 4, one street chain of 29 (d3_c17_04). Ours (map_mods_b.py fire): firesize 24 to 30 with a light '255 150 70 110' 40 over it.",
+  "how": "map_mods_b fire(): default size 48 to 64 outdoors, light brightness 300 to 500 at 20 to 40 from the fire, an optional scorch overlay and ambient fire loop; keep drop=False for drums (fire-in-drums). Ask the owner first before changing fires already in their modules.",
+  "check": "proposed: map_lint notes an env_fire with no light within 128, or a light near a fire with a style"
+ },
+ {
+  "id": "valve-rubble-displacements",
+  "tags": [
+   "valve",
+   "geometry",
+   "materials"
+  ],
+  "title": "Rubble ground is power 3; small displacements dent burned walls",
+  "rule": "Lay the ground of a ruined street as displacements of power 3 (not 2), 512 to 1100 across, lightmapscale 16 where people walk, in concretefloor007a, dirtfloor005b or a painted blend such as blendgrassgravel001a, and dent the walls and ceilings of a burned room with small displacements (64 to 128 by 8 to 45) on the plaster faces.",
+  "why": "d3_c17_01 to 12b (21 November): outdoor rubble displacements power 3 on 56% in d3_c17_02, 59% (plus 41% power 4) in 03, 100% in 09, 89% in 10a, 100% in 11 and 12b, lightmapscale 16 near play; styleguide_c17_rubble_2: power 3 on 43 of 48, 16 on 31. Burned rooms: d3_c17_06b 107 displacements (128x45, 64x45, 96x8 on plasterwall009d and 037f; 43 walls, 21 ceilings), d3_c17_12 126 (rockwall003a_c17). The 22-map digest had power 2 on 86% of city displacements.",
+  "how": "Where a module has a ruined yard or street, its ground displacement at power 3, lightmapscale 16 within 512 of play, 32 to 64 beyond (valve-lightmap-by-distance), edges into the brush (valve-terrain-into-brush).",
+  "check": "proposed: map_lint notes a power 2 displacement over 512 across on a rubble material near play"
+ },
+ {
+  "id": "valve-broken-edges",
+  "extra": {
+   "why": "Across the uprising (d3_c17_01 to 12b, 21 November) 8.1% of 20,584 old-material brushes have a face at an odd angle (3% in d3_c17_04 to 16% in 08; faces at simple ratios such as stair pitches not counted), 913 of 1661 of them six-sided boxes with one or two odd faces, thickness 8 (205) or 4 (139); 1869 of 2143 odd faces are textured; Valve's own rubble style room styleguide_c17_rubble_2 cuts 27%.",
+   "how": "Aim at about 8% of a ruined front's brushes cut (up to 25% for a full ruin like the style room), most as one or two upright cuts through an 8 thick wall box, the cut face textured; then valve-rubble-fitted for the models."
+  }
+ },
+ {
+  "id": "valve-physics-flags",
+  "extra": {
+   "why": "In the uprising's battle maps (d3_c17_01 to 12b, 748 physics props) loose things are mostly left awake: asleep 9%, motion disabled 21% (shelves, boards, rubble, radiators, fences, cars), debris 4% (trash), flags 0 on 119; physdamagescale 0.1 kept on 744."
+  }
+ },
+ {
+  "id": "valve-turn-the-loose",
+  "extra": {
+   "why": "d3_c17_01 to 12b (21 November): physics props on exact 90s 54%, turned 3 to 20 23%, free 20%; tilted 28% (lying 13%); statics on 90s 81%; cars only 15% square."
+  }
+ },
+ {
+  "id": "valve-decal-or-overlay",
+  "extra": {
+   "why": "d3_c17_01 to 12b (21 November): 1,299 decals to 74 overlays (17 to 1); the overlays are mostly scorch1 and burn floor patches 248 to 287 across under fires and cars; a burned block (d3_c17_06b) carries 46 burn01a/02a wall decals."
+  }
+ },
+ {
+  "id": "valve-story-props",
+  "extra": {
+   "rule": "Two more from the uprising: a burned flat (burn decals on the walls, destroyedceiling models under the ceiling, a tiny fire loop, plaster dented by small displacements); a refuge being raided (couches, a fridge, bottles, a rug overlay, a crying loop, the residents and the soldiers).",
+   "why": "d3_c17_06b (21 November): burn01a 30, burn02a 16, scorch1 7, destroyedceiling01a-d 23, streetwar.fire_tiny loops, 107 small displacements; the refuge at 3176 877 169: couches 3, fridge 2, bottles 5, decalrug002a 2, d1_trainstation.crying, four citizens and three soldiers."
+  }
+ },
+ {
+  "id": "combine-kit",
+  "extra": {
+   "how": "Valve's uprising (d3_c17_05 to 10a, 21 November): combine_lock01 on the wall beside 21 of 22 Combine func_doors, centred 52 up (44 to 58); the creeping wall (combineinnerwall001a, combineinnerwallcluster1024) high in the skyline in runs of 2 to 4 pieces 150 to 250 apart, each turned 15 degrees from the last; roadblocks in valve-combine-barricade-rows."
+  }
+ },
+ {
+  "id": "valve-flat-interiors",
+  "extra": {
+   "why": "The uprising agrees (21 November): ceilings 120 at 294 nodes in d3_c17_05, 263 in 06b, 124 in 07; doorways 48x108 (24), 96x108 (10), 56 and 59 by 108 (6); Valve's standards room explains the 120: a storey of 128 with an 8 floor (valve-standard-sizes)."
+  }
+ },
+ {
+  "id": "valve-fade-small",
+  "extra": {
+   "why": "d3_c17_01 to 12b set fades on fewer props (physics 12%, statics 16%): rubble 1200, lamps 1200, Combine pieces 1100, fences 2400, barricades 2600, bins 2250, crates 2200, bottles 1100."
+  }
+ },
+ {
+  "id": "valve-texture-scale",
+  "extra": {
+   "why": "The uprising (d3_c17_01 to 12b, 112,670 faces) keeps 0.25 on 91% of faces and 87% of area, ruins included."
+  }
+ },
+ {
+  "id": "valve-lightmap-by-distance",
+  "extra": {
+   "why": "The uprising coarsens less: lightmapscale 16 on 83% of faces, still 68% of faces more than 1024 from any node (64 on 16%, 32 on 13% there)."
+  }
+ }
+]

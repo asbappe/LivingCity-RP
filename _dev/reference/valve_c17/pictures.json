@@ -19,7 +19,15 @@
   "d3_c17_05: a block of flats and shops the Combine have taken: control desks with monitors on three floors 128 apart, 32 metropolice, 6 floor turrets, 11 combine_lock01 on its doors; 616 nodes, 33% outdoors; 411 props (0.58 per 100 by 100).",
   "Ours: streets keep a crown, a kerb of 8 and pavements of 96. Valve's d3_c17_05 street (x 1376 y -4992) is 576 wall to wall: a road of 252 in three strips (stonefloor006e_c17 edges of 64 and 60, 006d_c17 in the middle), pavements 128 and 192, kerbs 4, flat; across its 154 kerbed cuts: road 256 (103), pavements 128 (93), kerb 4 (270 of 308), crown 0 (128 of 154).",
   "Ours: fronts with a 128 plinth. Valve's d3_c17_05 shop front: a shop storey 136 high (storefront_template001a, glass from 16 to 120) set 32 to 48 back, then a storey every 128 (a course of 32, building_template007f, standing 16 proud, and 96 of windows, 007d) up to 648; across the street, bands of 128 (building_template012f, then 012d) up to 392. At the d3_c17_02 checkpoint: a plinth of 64, a ground floor to 200, a course of 32, then 128 a storey.",
-  "Ours: rooms 120 to 128 high in City 18's two tones with a dado rail. Valve's d3_c17_05 flats: 120 at 294 of 415 indoor nodes, corridors 99.5 wide (64 to 155), rooms 178 by 380, doorways 48 by 108 (door01_left 5) and 56 to 59 wide for door02_double (6); walls banded plasterwall022c_c17 below 022a; radiators 7, sinks 6; 42 of 45 lights warm (37 of them '256 224 144')."
+  "Ours: rooms 120 to 128 high in City 18's two tones with a dado rail. Valve's d3_c17_05 flats: 120 at 294 of 415 indoor nodes, corridors 99.5 wide (64 to 155), rooms 178 by 380, doorways 48 by 108 (door01_left 5) and 56 to 59 wide for door02_double (6); walls banded plasterwall022c_c17 below 022a; radiators 7, sinks 6; 42 of 45 lights warm (37 of them '256 224 144').",
+  "d3_c17_06a: the road tunnel under the city (abandoned cars, zombies): 92% of the nodes indoors, ceilings 192 (130 of 357) and 224 (70); the tunnel at y -6319 is 768 wall to wall: a walk of 128 on a kerb of 4, two lanes of 232 (concretefloor033k with edge strips of 033p and 033q) either side of a row of pillars 64 wide, tiled walls (tilewall006c and d); light_cagelight02_on 350 to 1261 apart (median 611), prison_sprinkler001a 30.",
+  "d3_c17_06b: the citizens' block the Combine raid (40 soldiers, 22 citizens): ceilings 120 (263 of 419 indoor nodes), corridors 96 wide, rooms 218 by 534 (medians); the rebels' barricades are props: shelves (furniture_shelf01a 8) pushed up in pairs, boards over windows as physics props three to a window (wood_board05a, 07a, 05a), mattresses on the floor; destroyedceiling01a to d (27) where the Combine wall broke through.",
+  "d3_c17_07: the street war at the Combine wall; 131 street cuts, 123 with kerbs: road 256 (63), pavements 128 (75), 192 and 224 (27 each), kerb 4 (234 of 246), crown 0 (112 of 123); walls median 608 (544 to 704); lampposts (lamppost03a_off) 565 to 1431 apart (median 635), utility poles 954 to 1211, 25 rope spans (median 1010).",
+  "Ours: streets keep a crown, a kerb of 8 and pavements of 96. Valve's d3_c17_07 street at x 5648 y 2784 is 608 wall to wall: road 256, pavements 220 and 128, kerbs 4, flat; fronts 672 and 512 under pitched tile roofs (tileroof004a rising about 112 in 128); a shop storey of 128 (storefront_template001a), then building_template002 or 017 storeys; a hotel sign 256 tall standing 64 proud.",
+  "d3_c17_07 Combine places: a post in a square 1179 across (combine_booth_short01a facing out, a combine_interface001 beside it, combine_generator01 2, a metalcombine001 block, two combine_barricade_tall02b 384 apart on the pavements of the street beyond); and a block of flats the Combine hold (combine_lock01 8, combine_interface001 4, combine_intmonitor001 3, 2 floor turrets) among bathtubs, beds and radiators.",
+  "d3_c17_08: the pipe works (all indoors): 994 props, 1.49 per 100 by 100, most of them pipes (pipe01 to 03 straights and connectors over 500) and catwalk rails (handrail04 long 40, short 22, medium 19); statics touching a wall only 22%; ceilings 152 (28), 128 (25), up to 600 in the hall; 55 of 96 lights a dim blue fill ('32 64 80'), cage lights (light_cagelight02_on 20, median 394 apart); flooded tunnels 80 to 364 wide with water only 9 to 15 deep.",
+  "d3_c17_09: the shop streets under the Nexus (5 snipers): 238 cuts, 177 with kerbs: roads 320 (42), 256 (35), 640 (30) and 192 (26), pavements 160 (63), 128 (55) and 64 (42), kerb 4 (347 of 354), crown 0 (170 of 177); walls 640 most often, and the Nexus wall 1536 high along 169 cuts; ceilings 184 (138 of 277 indoor nodes) and 120 (62).",
+  "Ours: streets keep a crown, a kerb of 8 and pavements of 96. Valve's d3_c17_09 street at x 4944 y 4584 is 724 wall to wall: road 320 (stonefloor006d with 006f edges), pavements 144 and 256, kerbs 4, flat, fronts 608 and 512."
  ],
  "pictures": [
   {
@@ -259,6 +267,223 @@
     ],
     "yaw": 270,
     "pitch": 3
+   }
+  },
+  {
+   "n": "U13",
+   "file": "13_road_tunnel_eye.png",
+   "where": "d3_c17_06a, eye level in the road tunnel looking north (eye 3788 -6319 -196, yaw 90)",
+   "teaches": "A road tunnel about 196 high: two lanes either side of a row of pillars, a raised walk along the tiled wall, cage lights about 600 apart, abandoned cars and oil drums.",
+   "lessons": [
+    "valve-column-rhythm",
+    "valve-light-pools"
+   ],
+   "view": {
+    "eye": [
+     3788,
+     -6319,
+     -196
+    ],
+    "yaw": 90,
+    "pitch": 3
+   }
+  },
+  {
+   "n": "U14",
+   "file": "14_road_tunnel_section.png",
+   "where": "d3_c17_06a, a true cut across the road tunnel at x 3904 y -6319",
+   "teaches": "768 wall to wall and about 196 high: a walk of 128 on a kerb of 4, two lanes of 232, a row of pillars 64 wide between them with kerb strips of 32.",
+   "lessons": [
+    "valve-column-rhythm"
+   ],
+   "view": {
+    "cut": [
+     3904,
+     -6319,
+     90,
+     -260
+    ],
+    "smax": 448,
+    "up": 320
+   }
+  },
+  {
+   "n": "U15",
+   "file": "15_raided_flats_cut.png",
+   "where": "d3_c17_06b, the citizens' flats from the south-west, box x 3400 to 4700, y 450 to 1300, cut at 360, the Combine wall props left out",
+   "teaches": "The flats the Combine raid, floor at 256: rooms about 218 by 534 under 120, corridors 96 wide, a kitchen (refrigerator, stove), shelves pushed up, boards over the corridor window. The CombineInnerwall001a props of the advancing wall are left out (they draw as solid boxes 300 by 300 by 1000).",
+   "lessons": [
+    "valve-flat-interiors",
+    "valve-boarded-openings",
+    "valve-npc-raid"
+   ],
+   "view": {
+    "iso": "SW",
+    "box": [
+     3400,
+     450,
+     4700,
+     1300
+    ],
+    "cut": 360,
+    "leave_out": [
+     "combineinnerwall"
+    ]
+   }
+  },
+  {
+   "n": "U16",
+   "file": "16_flat_room_eye.png",
+   "where": "d3_c17_06b, eye level in a flat looking east (eye 2980 1392 256, yaw 0)",
+   "teaches": "One room of a citizen's flat, about 200 by 170 under 120 (floor 192), plaster walls, a barred window (courtyard_template002c_bars), shelves against the walls, bottles left about.",
+   "lessons": [
+    "valve-flat-interiors",
+    "valve-furniture-on-walls"
+   ],
+   "view": {
+    "eye": [
+     2980,
+     1392,
+     256
+    ],
+    "yaw": 0,
+    "pitch": 3
+   }
+  },
+  {
+   "n": "U17",
+   "file": "17_combine_held_flats_cut.png",
+   "where": "d3_c17_07, the block the Combine hold, from the south-west, box x 3977 to 5777, y 230 to 2030, cut at 246",
+   "teaches": "Flats the Combine took: the homes left as they were (bathtubs 7, beds 4, toilets 4, radiators 5, dome lights on and off), the Combine's kit put in (combine_lock01 8 on the doors, combine_interface001 4, combine_intmonitor001 3), 2 floor turrets and 8 soldiers.",
+   "lessons": [
+    "combine-kit",
+    "valve-flat-interiors"
+   ],
+   "view": {
+    "iso": "SW",
+    "box": [
+     3977,
+     230,
+     5777,
+     2030
+    ],
+    "cut": 246
+   }
+  },
+  {
+   "n": "U18",
+   "file": "18_combine_post_iso.png",
+   "where": "d3_c17_07, the Combine post in the square from the south-west, box x 6300 to 7500, y 1150 to 1950, cut at 300, the Combine wall props left out",
+   "teaches": "A Combine post in a square 1179 across: a combine_booth_short01a facing out with a combine_interface001 beside it, generators and a metalcombine001 block behind; two combine_barricade_tall02b 384 apart on the pavements where the street leaves the square.",
+   "lessons": [
+    "combine-kit"
+   ],
+   "view": {
+    "iso": "SW",
+    "box": [
+     6300,
+     1150,
+     7500,
+     1950
+    ],
+    "cut": 300,
+    "leave_out": [
+     "combineinnerwall"
+    ]
+   }
+  },
+  {
+   "n": "U19",
+   "file": "19_flats_corridor_eye.png",
+   "where": "d3_c17_07, eye level in a corridor of the held flats looking north (eye 4680 696 192, yaw 90)",
+   "teaches": "A flats corridor: 113 wide under 120 (medians for the map), doors 48 by 108 (door01_left) with combine_lock01 on them, a dome light every few doors, one long view down it.",
+   "lessons": [
+    "valve-flat-interiors",
+    "valve-sightlines"
+   ],
+   "view": {
+    "eye": [
+     4680,
+     696,
+     192
+    ],
+    "yaw": 90,
+    "pitch": 3
+   }
+  },
+  {
+   "n": "U20",
+   "file": "20_warehouse_hall_eye.png",
+   "where": "d3_c17_08, eye level in the pipe works hall looking north (eye 1414 -725 128, yaw 90)",
+   "teaches": "An industrial hall: catwalks with handrail04 rails, pipe runs on stands (most props here are pipes, only 22% of statics touch a wall), cage lights in pools over a dim blue fill, oil drums on the floor.",
+   "lessons": [
+    "valve-fixture-lights",
+    "valve-light-pools"
+   ],
+   "view": {
+    "eye": [
+     1414,
+     -725,
+     128
+    ],
+    "yaw": 90,
+    "pitch": 3
+   }
+  },
+  {
+   "n": "U21",
+   "file": "21_flooded_tunnel_eye.png",
+   "where": "d3_c17_08, eye level in a flooded tunnel looking west (eye 922 -1611 -431, yaw 180)",
+   "teaches": "A flooded tunnel under the works: 80 to 364 wide, the crown 133 to 356 up, water only 9 to 15 deep over an uneven bed, pipes along the wall and fences.",
+   "lessons": [
+    "valve-water-depth"
+   ],
+   "view": {
+    "eye": [
+     922,
+     -1611,
+     -431
+    ],
+    "yaw": 180,
+    "pitch": 3
+   }
+  },
+  {
+   "n": "U22",
+   "file": "22_shop_window_street_eye.png",
+   "where": "d3_c17_09, eye level on a shop street looking east (eye 5470 6123 60, yaw 0)",
+   "teaches": "A shop street: a glass shopfront with coolers (display_cooler01a) and fluorescent tubes seen inside, handrails at the shop's steps; the map's streets most often have a road of 320 or 256, pavements of 128 to 160 and kerbs of 4.",
+   "lessons": [
+    "facades"
+   ],
+   "view": {
+    "eye": [
+     5470,
+     6123,
+     60
+    ],
+    "yaw": 0,
+    "pitch": 3
+   }
+  },
+  {
+   "n": "U23",
+   "file": "23_shop_and_office_cut.png",
+   "where": "d3_c17_09, a shop and offices from the south-west, box x 5659 to 7459, y 5599 to 7399, cut at 340",
+   "teaches": "A corner shop and offices behind the fronts: coolers and fluorescent tubes in the shop, control desks and file cabinets in the office, rubble piles and pallets, zombies in the rooms.",
+   "lessons": [
+    "valve-story-props",
+    "city18-interiors"
+   ],
+   "view": {
+    "iso": "SW",
+    "box": [
+     5659,
+     5599,
+     7459,
+     7399
+    ],
+    "cut": 340
    }
   }
  ]

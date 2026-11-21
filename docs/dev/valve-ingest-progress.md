@@ -42,6 +42,11 @@ plus Valve's 41 style guide and standards rooms** (not the dated drafts or the t
   in d3_c17_10a, 10b, 11; Nova Prospekt's Combine parts; EP2). It ends in rules our map tools can follow to build
   such structures (a generator or module), shown to the owner before it changes anything they settled. Not done yet.
 
+- **Approving findings (21 November):** at the end of each batch, put the findings most worth building to the owner
+  to pick from; approved ones go on `TODO.md` under "Owner-approved Valve findings", and **nothing is built until
+  all ingestion is done** (the owner's choice). City 17's four approved: timed holds with faster waves, squads topped
+  up with a medic, supplies from roofs, tripwires and turrets.
+
 ## The batches (M measured, P pictures reviewed, S studied and lessons merged)
 
 All 122 measured on 21 November (145 maps in `valve_stats.json` with the first 23).
