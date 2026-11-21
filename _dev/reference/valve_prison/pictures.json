@@ -26,7 +26,11 @@
   "d2_prison_06: the interrogation room, the depot and the train yard, all indoors: 325 prop_static, 102 prop_physics, 110 prop_dynamic (the trains and their pods: 56 cell_01_pod); ceilings most often 208 (93 nodes), then 184 (36) and 128 (33); corridors 126 wide under 192; 620 output lines, 44 relays, 7 counters.",
   "d2_prison_06: the Combine's own metal is 20% of the map's brush area (0 to 1% in the old prison maps): its walls stand square in plan but 14% of the map's wall area leans 14 to 17 degrees off upright (panels 128 high leaning 32, or 40); its brushes are 8 thick (140) or 2 (82), and where a plate lies on an old wall it touches it (gap 0 on 23 of 25).",
   "d2_prison_06: the train trench at x 3000: Combine walls 192 thick at the foot, the track bed 256 wide at z -592, the way between 336 wide up to -464, 400 to -336, 464 above: out 32 a side every 112 to 128; train cars (combine_train02a/b) 632 apart on two lines, each car a prop_dynamic parented to its train, the pods parented with it.",
-  "Ours: our depot hall is 768 by 384 by 192 with upright clad walls; Valve's Combine halls lean 14 to 23 degrees and stand under 184 to 208 most often, and its interrogation room is one Combine model (introomarea) set into an old room rather than built of brushes."
+  "Ours: our depot hall is 768 by 384 by 192 with upright clad walls; Valve's Combine halls lean 14 to 23 degrees and stand under 184 to 208 most often, and its interrogation room is one Combine model (introomarea) set into an old room rather than built of brushes.",
+  "d2_prison_07: the last cellblocks and the way to the pod lines, all indoors: 527 prop_static to 66 prop_physics; 44 prison_cagedlight001a (9 lit); ceilings most often 128 (121 nodes), then 120 (68) and 192 (36); corridors 128 wide under 128; 121 flights of 3 or more steps; 528 output lines, 51 relays (the longest chain 7), 11 timers.",
+  "d2_prison_07: prisoner pods hang on racks: 18 cell_01_pod each on a cell_01_rigging, two high (193 apart) and 185 to 203 apart along a row, 12 in the row before the control post and 6 in a second rack; Combine fence pairs (combine_fence01a and 01b) 576 apart; a force field is comshieldwall3 on a func_brush 2 thick, 126 high and 192 wide across a way.",
+  "d2_prison_07: the Combine bolts its metal onto the old prison rather than building: metalcombine001 panels 2 to 10 thick (func_detail) laid on plaster; in the control post 30 such brushes (2 or 4 thick) and consoles (combine_interface001 and 003) turned to free angles in a room of the old prison's own glazed walls.",
+  "Ours: the Combine bay from City 18 (c18_cell_a) is 188 by 237 by 216, one bay with a bunk; Valve keeps its prisoners in pods racked two high about 190 apart, watched from a glazed post over the row."
  ],
  "pictures": [
   {
@@ -322,6 +326,28 @@
     "leave_out": [
      "combine_train"
     ]
+   }
+  },
+  {
+   "n": "P15",
+   "file": "15_prison07_post_and_pods_cut.png",
+   "where": "d2_prison_07, the control post and the pod rack beside it from the south-west, box x -820 to 950, y -4050 to -3150, cut at -48 (under the post's roof at -40), NPC markers left out",
+   "teaches": "The Combine moved into the old prison with props and thin plate: the control post is the old prison's own room (floor at -168, walls 128 high, a band of glass windows from 32 to 94 over the floor in metalwall035a frames) with 30 metalcombine001 panels 2 or 4 thick laid on its plaster and the Combine's consoles set at free angles (yaw 356, 180, 90); outside the glass, a row of prisoner pods (cell_01_pod on cell_01_rigging) racked two high, 193 apart, about 190 apart along the row.",
+   "lessons": [
+    "valve-pod-racks",
+    "valve-combine-aimed",
+    "combine-kit"
+   ],
+   "view": {
+    "iso": "SW",
+    "box": [
+     -820,
+     -4050,
+     950,
+     -3150
+    ],
+    "cut": -48,
+    "leave_out_npcs": true
    }
   }
  ]
