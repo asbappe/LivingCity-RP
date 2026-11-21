@@ -79,11 +79,17 @@ def extract(path, name, box, anchor=None, note=""):
                 sides.append({"plane": [plane[0:3], plane[3:6], plane[6:9]], "verts": verts, "corners": corners, "material": side.kv.get("material", "TOOLS/TOOLSNODRAW"),
                               "uaxis": side.kv.get("uaxis", "[1 0 0 0] 0.25"), "vaxis": side.kv.get("vaxis", "[0 -1 0 0] 0.25"),
                               "lightmapscale": side.kv.get("lightmapscale", "16")})
+                di = [k for k in side.kids if k.name == "dispinfo"]
+                if di:      # (a displaced face: kept whole, its start moved with the anchor below; place_disp() writes it)
+                    sides[-1]["disp"] = {"kv": dict(di[0].kv), "rows": dict((k.name, [v for _, v in k.rows]) for k in di[0].kids)}
             else:
                 if sides and all(inside(v) for v in allv):
                     if all("tools/" in s["material"].lower() and not s["material"].lower().startswith(SEEN_TOOLS) for s in sides):
                         continue      # (clips, triggers, skybox, hint: the piece does not need them; black panes are seen and kept)
                     for s in sides:
+                        if s.get("disp"):
+                            sp = nums(s["disp"]["kv"]["startposition"].replace("[", " ").replace("]", " "))
+                            s["disp"]["kv"]["startposition"] = "[%s %s %s]" % (fmt(sp[0] - ax[0]), fmt(sp[1] - ax[1]), fmt(sp[2] - ax[2]))
                         s["plane"] = [[p[0] - ax[0], p[1] - ax[1], p[2] - ax[2]] for p in s["plane"]]
                         s["verts"] = [[p[0] - ax[0], p[1] - ax[1], p[2] - ax[2]] for p in s["verts"]]
                         s["corners"] = [[p[0] - ax[0], p[1] - ax[1], p[2] - ax[2]] for p in s["corners"]]
@@ -131,6 +137,31 @@ def rot(p, turn):
 
 def fmt(v):
     return ("%.4f" % v).rstrip("0").rstrip(".") if v != int(v) else "%d" % v
+
+
+def disp_side_text(disp, q, d, t):
+    """A displaced face of a piece (as extract() keeps it) turned q quarter turns and moved by d: its start moved, and
+    every vector of its grid (normals, offsets, offset normals) turned with it; distances, alphas and tags as they were."""
+    kv, rows = disp["kv"], disp["rows"]
+    sp = nums(kv["startposition"].replace("[", " ").replace("]", " "))
+    x, y, z = rot(sp, q)
+    out = '%sdispinfo\n%s{\n' % (t, t)
+    for k in ("power", "flags", "elevation", "subdiv"):
+        if k in kv:
+            out += '%s\t"%s" "%s"\n' % (t, k, kv[k])
+    out += '%s\t"startposition" "[%s %s %s]"\n' % (t, fmt(x + d[0]), fmt(y + d[1]), fmt(z + d[2]))
+    for name in ("normals", "distances", "offsets", "offset_normals", "alphas", "triangle_tags", "allowed_verts"):
+        if name not in rows:
+            continue
+        out += '%s\t%s\n%s\t{\n' % (t, name, t)
+        for k, row in enumerate(rows[name]):
+            if name in ("normals", "offsets", "offset_normals"):
+                v = nums(row)
+                row = " ".join(" ".join(fmt(round(c, 6)) for c in rot(v[i:i + 3], q)) for i in range(0, len(v) - 2, 3))
+            key = ("%d" % 10) if name == "allowed_verts" else "row%d" % k
+            out += '%s\t\t"%s" "%s"\n' % (t, key, row)
+        out += '%s\t}\n' % t
+    return out + '%s}\n' % t
 
 
 def load(name):
