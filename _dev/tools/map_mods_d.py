@@ -72,7 +72,7 @@ def m_execwall(m, opt):
     m.grime("number", 128, 400, z + 150, 1)
     # what is left behind: a shoe, a dropped ration bag, a candle someone lit at night
     m.loose("models/props_junk/shoe001a.mdl", 300, 340, 40, z=z)
-    m.loose("models/weapons/w_package.mdl", 420, 320, 110, z=z)
+    m.dynamic("models/weapons/w_package.mdl", 420, 320, 110, z=z, solid=False)
     from map_mods_b import candle
     candle(m, 240, 400, z, high=5)
     m.sound("ambient/machines/combine_terminal_loop1.wav", 166, 396, z + 60, radius=500, volume=3)

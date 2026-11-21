@@ -1317,8 +1317,8 @@ def m_sludge(m, opt):
     m.prop("prop_dynamic_override", "models/props_vehicles/car002a_physics.mdl", 1660, 1430, 270, F + 40, {"angles": "-38 %d 4" % m.fr.yaw(90), "solid": "6",
            "disableshadows": "1", "fademindist": "-1", "fademaxdist": "0", "fadescale": "1", "StartDisabled": "0", "renderamt": "255", "rendercolor": "255 255 255"})
     m.blocked(1560, 1300, 1770, 1536)                        # (gone over the edge: nose down, its tail against the wall)
-    m.static("models/props_combine/combinecamera001.mdl", 1406, 1100, 180, z=F + 300)        # (on the corner, watching the loop)
-    combine_lamp(m, 1408, 1180, F + 260, 180)
+    m.static("models/props_combine/combinecamera001.mdl", 1425, 940, 0, z=F + 300)           # (on the block's corner, watching the loop)
+    combine_lamp(m, 1408, 860, F + 260, 0)
     m.scatter(270, 400, 500, 900, 4, 31)                  # (on the floor between the banks)
     m.scatter(1550, 400, 1780, 900, 4, 32)
     for kind, u, v, z, sd in (("graffiti", 128, 900, F + 160, 6), ("trash", 384, 1000, F + 1, 7), ("puddle", 1664, 600, F + 1, 8), ("graffiti", 1024, 1536, F + 180, 9)):

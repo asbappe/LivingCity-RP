@@ -1,4 +1,22 @@
 {
+"models/antlion.mdl": {
+"bbox": [
+-35.4,
+-41.9,
+-1.2,
+44.6,
+41.6,
+63.3
+],
+"built_static": false,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": true,
+"static": false,
+"v": 2
+},
 "models/barneyhelmet.mdl": {
 "bbox": [
 -6.3,
