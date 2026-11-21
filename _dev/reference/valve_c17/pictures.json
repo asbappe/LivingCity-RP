@@ -27,7 +27,26 @@
   "d3_c17_07 Combine places: a post in a square 1179 across (combine_booth_short01a facing out, a combine_interface001 beside it, combine_generator01 2, a metalcombine001 block, two combine_barricade_tall02b 384 apart on the pavements of the street beyond); and a block of flats the Combine hold (combine_lock01 8, combine_interface001 4, combine_intmonitor001 3, 2 floor turrets) among bathtubs, beds and radiators.",
   "d3_c17_08: the pipe works (all indoors): 994 props, 1.49 per 100 by 100, most of them pipes (pipe01 to 03 straights and connectors over 500) and catwalk rails (handrail04 long 40, short 22, medium 19); statics touching a wall only 22%; ceilings 152 (28), 128 (25), up to 600 in the hall; 55 of 96 lights a dim blue fill ('32 64 80'), cage lights (light_cagelight02_on 20, median 394 apart); flooded tunnels 80 to 364 wide with water only 9 to 15 deep.",
   "d3_c17_09: the shop streets under the Nexus (5 snipers): 238 cuts, 177 with kerbs: roads 320 (42), 256 (35), 640 (30) and 192 (26), pavements 160 (63), 128 (55) and 64 (42), kerb 4 (347 of 354), crown 0 (170 of 177); walls 640 most often, and the Nexus wall 1536 high along 169 cuts; ceilings 184 (138 of 277 indoor nodes) and 120 (62).",
-  "Ours: streets keep a crown, a kerb of 8 and pavements of 96. Valve's d3_c17_09 street at x 4944 y 4584 is 724 wall to wall: road 320 (stonefloor006d with 006f edges), pavements 144 and 256, kerbs 4, flat, fronts 608 and 512."
+  "Ours: streets keep a crown, a kerb of 8 and pavements of 96. Valve's d3_c17_09 street at x 4944 y 4584 is 724 wall to wall: road 320 (stonefloor006d with 006f edges), pavements 144 and 256, kerbs 4, flat, fronts 608 and 512.",
+  "d3_c17_10a: the park and streets before the Nexus (d3_c17_11 and 12 come back to the same ground later, in the same coordinates); 335 street cuts, 84 with kerbs: roads 384 (54 of 84), pavements 128 (56 of 168) and 192 (17), kerbs 4 (128) or 8 (37), crown 0 (82 of 84); wall to wall most often 768; ceilings indoors 120 (43 of 165 nodes) and 312 (37).",
+  "d3_c17_10a park: a strip about 800 wide between low stone walls (stonewall040f, 28 thick, 128 high at the sides, 28 high round the beds): grass and gravel beds (blendgrassgravel001a) 270 to 340 wide, paths of concrete (concretefloor019a) 260 wide across it; poplars (tree_poplar_01) 512 apart, benches (bench_indoor001a) 226 apart, lampposts (lamppost03a_off) 605 apart, combine_fence01a and 01b in pairs 488 apart along it.",
+  "d3_c17_10a Combine vehicle gates: a combine_gate_vehicle with a combine_barricade_tall02b (141 by 133 by 261) either side, 384 apart (x -784 and -400, y 4474) and 380 apart (x -2278 and -1898, y 8502); a combine_light001a on a wall beside each, two combine_emitter01 64 apart by the north gate.",
+  "d3_c17_10a rubble: walldestroyed09g heaps (385 by 440 by 122) about 330 apart along the west side of the street at x -2032 (y 5276, 5592, 5928) on rubble ground 8 to 23 high; a broken front beside it shows its floor at 388 (264 over the street) with concrete_section128floor and wall pieces at the break and rebar clusters (rebar_cluster001a 7, 002b 4) poking out of each.",
+  "Ours: streets keep a crown, a kerb of 8 and pavements of 96. Valve's d3_c17_10a streets are flat (crown 0 in 82 of 84 cuts) with roads of 384 (stonefloor006d_c17) and pavements of 128 (concretefloor028c_c17), kerbs 4.",
+  "d3_c17_10b: inside the Overwatch Nexus, an old bank or government block the Combine have grown into (in the frame of d3_c17_10a, 11 and 12 it is the block east of the park, x 32 to 2304, y 4512 to 7884); 96% of the nodes indoors: ceilings 192 (145 of 350), 240 (54) and 256 (43); corridors 133 wide, rooms 226 by 768 (medians); 0.41 props per 100 by 100; walls banded in 93% of tall columns (tilefloor011a below plasterwall043c, 043c below 043b), the first change 16 or 64 over the foot.",
+  "d3_c17_10b Combine architecture: the Combine's part is brushwork, not props: metalcombine001 on 4639 faces (the most used material, area 668 x 10000 against the old plaster's 762), 921 brushes, most of them thin plates (2 thick 356 times, 8 thick 167, 1 thick 104; longest side median 64); 14% of their faces off the right angles (the old building's plaster 4%), leaning 45 to 70 degrees from flat and turned 25, 45 or 65 degrees in plan; it fills the middle of the block (x 3072 to 4352, y -1024 to 0, 128 to 768 up) and an upper floor (x 2560 to 3584, y -2304 to -1536, 512 to 944 up).",
+  "d3_c17_10b machines: combine_generator01 31, set in rows along walls 32 to 96 apart (x 2880, y -1280 to -1504; y 509, x 2629 to 2821); cell_01_pod 7 in rows of two and three 40 to 44 apart; consoles as a combine_interface001 or 002 with a combine_intmonitor001 or 003 on it (8 sets); turrets 8 on the ground and 6 on ceilings; prison_flourescentlight001a 39 and combine_light001a 11; a Breen bust in pairs (2, 372 apart); force fields (comshieldwall2) across the courtyard's ways.",
+  "Ours: rooms 120 to 128 high in City 18's two tones with a dado rail. Valve's Nexus keeps the old building's rooms (192 high, plaster banded over tile) and sets the Combine's metal inside them as a second skin of thin, tilted plates, so the Combine reads as grown in, not built from scratch.",
+  "d3_c17_11: out of the Nexus over its roof and down into the streets (the frame of d3_c17_10a); half the nodes outdoors, most of them on roofs: ceilings indoors 176 (35 of 120) and 128 (20); corridors 128 wide; no kerbed street cut at all (walls median 96 tall: parapets); fronts 64% of wall area (building_template017b, 029j, 029i).",
+  "d3_c17_11 Nexus roof: flat roofs at 960 with parapets, a Combine post on them: a health charger and a suit charger side by side (28 apart) on one wall, ammo crates (item_item_crate) stacked three, substation_transformer01b (5, 192 apart in a pair), vent_large ducts turning over the roof, combine_mine on the lower roof at 905; combine_bridge walkways (6) link the roofs 560 apart; CombineInnerwallCluster1024 props (12) ring the area as the far Combine wall.",
+  "d3_c17_11 checkpoint: nine combine_barricade_med01a 64 apart in one straight row from wall to wall across a street 576 wide (x 912, y 3744 to 4256), no gap left; d3_c17_12 has the same row as ten combine_barricade_med01b 63 apart (x 896).",
+  "d3_c17_12: back through the park before the Nexus after the battle (the same ground as d3_c17_10a): 126 displacements (68 floors, 36 walls, 22 ceilings; power 2 in 83%), 16% of floor area; shell craters about 250 across and up to 190 deep in the paved ways (x -2232 to -1984 at y 7072, floor at -64 under a street at 128); wrecked Combine APCs (combine_apc_wheelcollision 5); rebel barricades of barricade_short04a (12), often in pairs splayed like a V (yaws 120 and 240, 166 apart; 75 and 105, 208 apart), and concrete_debris256barricade001a (4).",
+  "d3_c17_12 rebel post: a shop on the park's west street blocked up from inside: dumpsters (trashdumpster02, two trashdumpster02b on it at 308), file cabinets stacked two high (filecabinet02 4, controlroom_filecabinet002a), wall001a_base boards over the broken windows (windowdestroyed01a, 01d), and behind them a table with a monitor, keyboard and hard drives: the rebels' radio desk.",
+  "Ours: streets keep a crown, a kerb of 8 and pavements of 96. Valve's d3_c17_12 park streets are flat with kerbs of 4 and the craters cut straight through road and pavement.",
+  "d3_c17_10a and 12, the Nexus from outside: an old civic block (about x -444 to 1700, y 4500 to 7900) facing the park; a portico 256 proud in the middle of its park front (columns, steps up 8 by 12 from the plaza), storeys in building_template029 (g, f, d, b, then a cornice of 029j stepping out 32 at 800), a metal mansard roof (metalroof008a) to 960 and a lower middle wing at 896. The Combine's mark outside is props: CombineInnerwall plates (001a 306 by 296 by 999, 001c 90 by 253 by 805, some leaning 5 degrees) set into the front from the ground to 1025, two more standing on the roof to 1441 and 1601; inside it is brushwork (d3_c17_10b).",
+  "d3_c17_12b: the last ruined block and the road under it (striders outside): 70% of the nodes indoors: ceilings 184 (96 of 275), 120 (59) and 384 (40); floors 192 apart (-320, -192, 0, 192, 384); 0.24 props per 100 by 100, physics tilted 50% (bins, tyres, trash), statics touching a wall 73%; walls banded in 70% of tall columns (tilewall006c below 006a, concretewall032a below plasterwall021a), the first change 128 or 120 over the foot.",
+  "d3_c17_12b broken block: its front blown off and the floors left open like a doll's house: building_brokenexterior002c (8) and 002a (2), each 40 by 257 by 128, stand along the open edge, concrete_section floor and wall pieces (64 and 128) at the breaks, rebar (rebar003c_64 9, rebar_cluster001a 6) out of them; strip lights (lights_florescent01a 10) and sprinkler pipes 512 long (prison_sprinkler001a 9) on the ceilings; the rebels hold it with barricade_short04a (8) and barricade_tall02a (6).",
+  "d3_c17_12b road tunnel: tiled walls in bands (tilewall006c below 006a, 006d), a floor of concretefloor013a, cage lights; dumpsters and garbage piles (trashdumpster01a, garbage256_composite002b) against the walls."
  ],
  "pictures": [
   {
@@ -484,6 +503,217 @@
      7399
     ],
     "cut": 340
+   }
+  },
+  {
+   "n": "U24",
+   "file": "24_nexus_park_eye.png",
+   "where": "d3_c17_10a, eye level in the park before the Nexus looking north (eye -1376 6532 186, yaw 90)",
+   "teaches": "A park strip about 800 wide between low stone walls (stonewall040f 28 thick, 128 high at the sides), beds of grass and gravel 270 to 340 wide, paths of concrete 260 wide across; poplars 512 apart, benches 226 apart, lampposts 605 apart; fronts of building_template028j close the far end. A place for people to stand about under the Combine's eye.",
+   "lessons": [
+    "valve-street-proportions",
+    "valve-column-rhythm",
+    "planting-spots"
+   ],
+   "view": {
+    "eye": [
+     -1376,
+     6532,
+     186
+    ],
+    "yaw": 90,
+    "pitch": 3
+   }
+  },
+  {
+   "n": "U25",
+   "file": "25_rubble_street_eye.png",
+   "where": "d3_c17_10a, eye level in the street at x -2032 looking north (eye -2032 4220 188, yaw 90)",
+   "teaches": "A street after shelling: walldestroyed09g heaps (385 by 440 by 122, drawn as orange boxes) about 330 apart along one side on rubble ground 8 to 23 high, a flat road of stonefloor006d_c17 left clear down the middle; a broken front beside it with its floor at 388 (264 over the street), concrete_section pieces at the break and rebar clusters out of each.",
+   "lessons": [
+    "valve-rubble-fitted",
+    "valve-broken-edges",
+    "valve-rubble-displacements"
+   ],
+   "view": {
+    "eye": [
+     -2032,
+     4220,
+     188
+    ],
+    "yaw": 90,
+    "pitch": 3
+   }
+  },
+  {
+   "n": "U26",
+   "file": "26_nexus_core_cut.png",
+   "where": "d3_c17_10b, the middle of the Nexus from the south-west, box x 2900 to 4500, y -1200 to 200, cut at 420, the CombineInnerwall and combine_bridge props left out",
+   "teaches": "The Combine grown into an old block: plaster rooms 192 high on the ground floor (floor 256) with the Combine's metal (metalcombine001, blue-grey) set inside them as a second skin of thin plates, cold blue light, consoles (combine_interface with a monitor on it) and generators in rows on the walls; the old outer walls stay.",
+   "lessons": [
+    "combine-kit",
+    "valve-combine-cold"
+   ],
+   "view": {
+    "iso": "SW",
+    "box": [
+     2900,
+     -1200,
+     4500,
+     200
+    ],
+    "cut": 420,
+    "leave_out": [
+     "combineinnerwall",
+     "combine_bridge"
+    ]
+   }
+  },
+  {
+   "n": "U27",
+   "file": "27_nexus_combine_corridor_eye.png",
+   "where": "d3_c17_10b, eye level in a Combine corridor in the middle of the Nexus looking east (eye 3500 -456 320, yaw 0)",
+   "teaches": "A Combine corridor 192 high: on one side the metal panels stand 48 to 72 from the middle of the walk, stepping in and out by 8 to 24 every 32 to 64; the other side opens into bays 88 to 408 deep; no two panels the same, nothing on a centre line. This is the Combine's odd, unsymmetrical look: plates of 1 to 8 thick, many tilted, rather than a plain metal box.",
+   "lessons": [
+    "combine-kit",
+    "valve-combine-cold"
+   ],
+   "view": {
+    "eye": [
+     3500,
+     -456,
+     320
+    ],
+    "yaw": 0,
+    "pitch": 3,
+    "leave_out": [
+     "combineinnerwall",
+     "combine_bridge"
+    ]
+   }
+  },
+  {
+   "n": "U28",
+   "file": "28_nexus_courtyard_eye.png",
+   "where": "d3_c17_10b, eye level in the Nexus courtyard looking north-east (eye 2432 -608 320, yaw 45)",
+   "teaches": "The courtyard inside the Nexus, open to the sky, floor at 256: old stone walls (stonewall050c) 352 to 608 away, steps up (8 by 12) to the next level, a force field (comshieldwall2, the cyan sheet) 420 east closing the way, Combine metal round the doors and a combine_generator01 by them.",
+   "lessons": [
+    "combine-kit"
+   ],
+   "view": {
+    "eye": [
+     2432,
+     -608,
+     320
+    ],
+    "yaw": 45,
+    "pitch": 3
+   }
+  },
+  {
+   "n": "U29",
+   "file": "29_combine_barricade_row_cut.png",
+   "where": "d3_c17_11, a street closed by the Combine from the south-west, box x 300 to 1500, y 3300 to 4600, cut at 420, the CombineInnerwall props left out",
+   "teaches": "A street 576 wide shut from wall to wall by nine combine_barricade_med01a (96 by 65 by 108) 64 apart in one straight row, no gap; the fronts either side keep their shop storeys. A Combine closure, not a checkpoint: nobody passes.",
+   "lessons": [
+    "valve-combine-barricade-rows",
+    "combine-kit"
+   ],
+   "view": {
+    "iso": "SW",
+    "box": [
+     300,
+     3300,
+     1500,
+     4600
+    ],
+    "cut": 420,
+    "leave_out": [
+     "combineinnerwall"
+    ]
+   }
+  },
+  {
+   "n": "U30",
+   "file": "30_nexus_roof_post_iso.png",
+   "where": "d3_c17_11, the roofs of the Nexus from the south-west, box x 600 to 2200, y 4800 to 7700, the CombineInnerwall and combine_bridge props left out",
+   "teaches": "The Nexus roof at 960 as a Combine post: parapets round flat roofs, a health and a suit charger side by side, crates stacked three, substation transformers (orange boxes) and vent ducts on the roof, soldiers (green) at the edges; the combine_bridge walkways between roofs are left out (they draw as boxes 320 by 212 by 429).",
+   "lessons": [
+    "combine-kit",
+    "raven-rooftop-refuge"
+   ],
+   "view": {
+    "iso": "SW",
+    "box": [
+     600,
+     4800,
+     2200,
+     7700
+    ],
+    "leave_out": [
+     "combineinnerwall",
+     "combine_bridge"
+    ]
+   }
+  },
+  {
+   "n": "U31",
+   "file": "31_cratered_park_eye.png",
+   "where": "d3_c17_12, eye level at the park's west side looking east after the battle (eye -2336 7072 194, yaw 0)",
+   "teaches": "The park of U24 after the battle: shell craters (brown) about 250 across and up to 190 deep cut through the paving, rebel barricades (barricade_short04a, orange) across the ways, some in pairs splayed like a V, a colonnaded front at the end. The same place, two states: a map piece can swap its whole, clean dress for a broken one.",
+   "lessons": [
+    "valve-swap-broken",
+    "valve-rebel-barricades",
+    "valve-rubble-displacements"
+   ],
+   "view": {
+    "eye": [
+     -2336,
+     7072,
+     194
+    ],
+    "yaw": 0,
+    "pitch": 3
+   }
+  },
+  {
+   "n": "U32",
+   "file": "32_nexus_outside_iso.png",
+   "where": "d3_c17_10a, the Overwatch Nexus from the south-west, box x -900 to 2500, y 4200 to 8200 (the CombineInnerwall plates drawn as orange boxes of their size)",
+   "teaches": "The Nexus is an old civic block the Combine took, not a new building: a portico 256 proud in the middle of its park front, storeys in building_template029 to a cornice at 800, a metal mansard roof to 960, a rounded corner; the Combine's plates (the orange boxes, 306 by 296 by 999) stand in the front and over the roof to 1601, off the axis and not in pairs. For Living City: a Combine building can be one of the city's old fronts with a few Combine plates breaking through it, never symmetrical.",
+   "lessons": [
+    "combine-kit",
+    "valve-template-fronts",
+    "skyline-corners"
+   ],
+   "view": {
+    "iso": "SW",
+    "box": [
+     -900,
+     4200,
+     2500,
+     8200
+    ]
+   }
+  },
+  {
+   "n": "U33",
+   "file": "33_broken_block_iso.png",
+   "where": "d3_c17_12b, the ruined block from the south-west, box x -5899 to -4099, y -720 to 1080 (the busiest knot of props, 50 near -4998 179)",
+   "teaches": "A block with its front blown off: floors 192 apart left open to the street like a doll's house, broken-edge models (building_brokenexterior002c, 40 by 257 by 128) along each open floor, concrete_section pieces and rebar at the breaks, rubble and barricades (orange) inside where the rebels hold it.",
+   "lessons": [
+    "valve-broken-edges",
+    "valve-rubble-fitted",
+    "valve-rebel-barricades"
+   ],
+   "view": {
+    "iso": "SW",
+    "box": [
+     -5899,
+     -720,
+     -4099,
+     1080
+    ]
    }
   }
  ]

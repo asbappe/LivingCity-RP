@@ -948,7 +948,7 @@ A City 17 flat: ceiling 120 over the floor (112 to 128), corridors 64 to 128 wid
 Boarded doors and windows are plank brushes 4 thick, 8 wide and 112 long (or 16 wide and 64 to 112 long), a few across the opening at slightly different angles, in a door or floor wood (wooddoor045b, wooddoor048a, wooddoor015a, woodfloor005a).
 
 - **Why:** Plank brushes counted (21 November): 172 in d1_trainstation_03 (78 of them 4 by 8 by 112), 39 in Ravenholm (4x8x112, 4x16x64), 30 in d3_c17_13 (4x16x112, wooddoor015a), 35 in d1_trainstation_04. Pictures R3, T4.5.
-- **How:** A board helper: 3 to 5 planks of 4 by 8 by 112 across a 48 by 108 doorway or a window, func_detail, each turned a few degrees; for the infestation quarter's houses and the town's boarded doorways.
+- **How:** A board helper: 3 to 5 planks of 4 by 8 by 112 across a 48 by 108 doorway or a window, func_detail, each turned a few degrees; for the infestation quarter's houses and the town's boarded doorways. Three more Ravenholm maps agree: plank brushes 119 in d1_town_01, 71 in 02, 49 in 01a (woodfloor005a most, then wooddoor004a, 015a, 032a; func_detail 176 of 239), and two in three are turned off the axes (78 of 119 in 01); 22 more boards are physics props held still, 14 of them freed when grabbed, 73% touching a wall.
 - **Checked by:** review
 - **Tags:** interiors, facades, valve, infestation, ravenholm
 
@@ -981,7 +981,7 @@ Combine places: one metal over whole walls, no courses, lit cold and bright (lig
 Valve darkens Ravenholm without fog: a weak cold sun and almost no ambient under a dusk sky, then pools of warm light from spotlights on the houses (a point_spotlight with a light_spot at the same spot, '255 245 145', 400 to 1000) about 500 apart, dim fills of 8 under them, and the orange glow of a fire.
 
 - **Why:** d1_town_03: light_environment '175 230 239' at 50, ambient '43 45 57' at 5 (the City 17 maps: '237 218 143' at 800, ambient 100); sky_day01_09; no env_fog_controller; 11 point_spotlight each paired with a light_spot, nearest 506 apart; 8 light at 8; an env_fire with '254 174 10' at 300; 22 of its 26 lights warm. Pictures R3, R4.
-- **How:** One map has one sun, so map_raven.py's sheet of toolsblocklight under the quarter's sky is the right stand-in for Valve's weak sun; what Valve adds is the pools: a light_spotlight01_lamp on a house wall every 500 or so with a point_spotlight and a light_spot, a fire in a drum, against the gloom lights (now four at 7, cold grey). Ask the owner before changing the quarter's light.
+- **How:** One map has one sun, so map_raven.py's sheet of toolsblocklight under the quarter's sky is the right stand-in for Valve's weak sun; what Valve adds is the pools: a light_spotlight01_lamp on a house wall every 500 or so with a point_spotlight and a light_spot, a fire in a drum, against the gloom lights (now four at 7, cold grey). Ask the owner before changing the quarter's light. d1_town_01, 01a, 02 and 02a share the sun '175 230 239 50' and ambient '43 45 57 5' under sky_day01_09; only the graveyard (02a) adds fog, black '0 0 0' from 1500 to 4000; the mine (04) has no sun; the way out (05) brightens to '254 242 160 400' with warm fog 1024 to 10000. Spotlight spacing by map: 294 (01), 368 (02), 452 (01a), 540 (02a), 780 (04).
 - **Checked by:** review (a screenshot from the owner: the quarter's light is a first guess)
 - **Tags:** lighting, infestation, ravenholm, valve
 
@@ -990,7 +990,7 @@ Valve darkens Ravenholm without fog: a weak cold sun and almost no ambient under
 Ravenholm's lanes have no kerb and no pavement: cobbles and uneven ground run house to house, 384 to 768 wall to wall; houses two or three storeys (walls 256 to 512 over the lane), timber and plaster on a concrete plinth (to 128, 48 or 16), roofs pitched 20 to 35 degrees in corrugated metal or tile, a steep mansard or spire for a landmark; boards on openings, wires overhead.
 
 - **Why:** d1_town_03: no kerb in 119 cross-sections; 36% of the floor is displacement; wall to wall most often 640; walls median 352 (height over width 0.42); woodfloor005a the commonest material (961 faces), plasterwall029a/c/d/g, brickwall048a/d/i, concretewall032d under plaster or metal (first change at 128, 48, 16); roof pitch 25 degrees (31 faces), 20, 35, steep faces 65 to 70; metalwall026a and 014a, tileroof003a and 004b. Pictures R1 to R3.
-- **How:** The quarter's main street keeps the owner's street recipe (they asked for it); use these numbers for the lanes, yards and back ways behind it and for the houses' looks.
+- **How:** The quarter's main street keeps the owner's street recipe (they asked for it); use these numbers for the lanes, yards and back ways behind it and for the houses' looks. The other maps agree: kerbs in 4 of 320 cross-sections in d1_town_01 and 0 of 50 in 01a (the town square in 02 has kerbs 4 to 15 in 21 of 275); wall to wall median 620 (01), 376 (01a, walls 384 to 512: height over width 0.9), 589 (02); the lane floor is dirt and cobbles (01: blenddirtgrass008a 36%, stonefloor006a/b/c 31%, planks 8%). Ours: the quarter's main street keeps the owner's crown, kerb 8 and pavements 96; its back lanes and yards should have none.
 - **Checked by:** review
 - **Tags:** streets, facades, infestation, ravenholm, valve
 
@@ -1012,7 +1012,7 @@ Give an overrun quarter a second way through above the dead: low roofs joined by
 Leave traps as loose physics props where the dead come: propane tanks in clusters of 2 to 6, explosive barrels in twos and threes, saw blades to throw, one rigged machine trap at a choke point; bring the dead with npc_maker and npc_template_maker and walk them in with aiscripted_schedule; health kits as rewards.
 
 - **Why:** d1_town_03: 13 propane_tank001a, 10 oildrum001_explosive, 4 sawblade001a, a propeller trap (engine, blade, lever, func_rotating); 15 npc_zombie and 2 npc_fastzombie, 10 npc_maker, 7 npc_template_maker, 14 aiscripted_schedule; 18 item_healthkit. The same machinery map_raven.py uses. Pictures R5, R7.
-- **How:** map_raven.py: clusters of tanks and barrels along the makers' walk and one trap at a choke; keep them physics (physics-props-dynamic).
+- **How:** map_raven.py: clusters of tanks and barrels along the makers' walk and one trap at a choke; keep them physics (physics-props-dynamic). Across d1_town_01 to 05: 28 of 31 propane tanks lie on their side, 5 on a table, 58% within 16 of a wall, about 36 apart; explosive barrels stand (65 of 67), spread (nearest other explosive median 128, q25 57) among plain oildrum001 (91), skins not 0 on 28%; graveyard canisters stand in twos and fours 33 apart. Ours: three single blades, three explosive drums and a pallet, all upright, spawnflags 0.
 - **Checked by:** map_lint (physics props); review
 - **Tags:** props, infestation, ravenholm, valve
 
@@ -1023,7 +1023,7 @@ Leave traps as loose physics props where the dead come: propane tanks in cluster
 Dress an overrun quarter with trash, ivy and dead-leaf decals and a few scorch marks rather than blood (Valve's Ravenholm has none); a corpse is a single set piece (a pinned ragdoll with crows round it), not scattered.
 
 - **Why:** d1_town_03: 82 infodecal, 0 of them blood: trashdecal01a 26, ivy03 19, leaves_ground02 17, plaster020a 5, graffiti; 2 info_overlay, both scorch1; 1 prop_ragdoll (corpse1) with 5 npc_crow. Picture R6.
-- **How:** Mod.grime with trash, ivy and leaves in the quarter; at most one corpse scene a yard (the zombies bring their own blood in game).
+- **How:** Mod.grime with trash, ivy and leaves in the quarter; at most one corpse scene a yard (the zombies bring their own blood in game). Only d1_town_03 is without blood: the rest of Ravenholm has 189 blood decals (146 in d1_town_01), half of them within 128 of a body; keep the lanes to litter, ivy and leaves and put blood only at a body scene (raven-dead-set-pieces).
 - **Checked by:** review
 - **Tags:** grime, infestation, ravenholm, valve
 
@@ -1363,7 +1363,7 @@ Put a looping ambient_generic on the prop that makes the sound, a few units off 
 Never one lightmapscale for everything. 16 on what players walk past; 8 on small detailed pieces at eye level (stairs, rails, pipes, trims, a floor under a lamp); 32 to 64 on faces more than about 1000 from anywhere players walk (far walls, roof tops, backdrops, the upper part of a tall canal wall); 64 on terrain displacements, 128 on far terrain.
 
 - **Why:** Faces within 256 of an AI node: 16 on 86% in the city maps (d1_trainstation_01 to 05, d3_c17_13, d1_town_03, d3_citadel_01, d2_coast_12), 8 or 4 on 5% (canals 11%); faces over 3000 away: 64 on 54%, 16 on only 34%. Displacements: 64 on 70 to 78% in d1_canals_01 to 13, 128 on 16% of the far ones; only near ones keep 16. 8 goes on stonefloor006a, stonewall050b/c, plasterwall, metalstair004a, metalpipe009a/b, metalrail013b, metaltrack001a. Our builder writes 16 on every face and 32 on displacements. The uprising coarsens less: lightmapscale 16 on 83% of faces, still 68% of faces more than 1024 from any node (64 on 16%, 32 on 13% there).
-- **How:** map_build: a lightmapscale per box (default 16); 8 from the stair, rail, pipe and trim helpers; 64 for displacements and for pieces a module marks as backdrop or out of reach.
+- **How:** map_build: a lightmapscale per box (default 16); 8 from the stair, rail, pipe and trim helpers; 64 for displacements and for pieces a module marks as backdrop or out of reach. Dark maps use more 64: Ravenholm puts lightmapscale 64 on 26% of faces in d1_town_01 and 36% in 01a (roofs, trusses, upper plaster, some floors), against 12 to 13% in the city; the caves keep 16 on every displacement.
 - **Checked by:** map_lint.py lightmap (proposed): a face over 64k square units at 16 with no viewpoint or spawn within 1024; a displacement at 16 or 32.
 - **Tags:** valve, lighting, materials, performance, check
 
@@ -1444,7 +1444,7 @@ Partitions in flats and houses 8 thick (16 at most); a door jamb 8 deep; canal a
 A displacement that meets a path, kerb or wall goes past the edge: it dips under the brush floor in places and rises over it in others, and climbs about 30 up a wall, so no seam line shows. Power 2 (3 where players walk on it), squares of 512 or 1024 sewn to their neighbours; a blend material is always painted.
 
 - **Why:** Canal floor displacements beside a brush floor (2872 edges): 47% cross it (part above, part below), 28% lie over it, 25% under, 0.6% flush; at a wall the edge climbs a median 34 (472 edges). Power 2 on 66% (canals) and 86% (city), 3 on 33% of the canals, 4 on 1%; 1363 of 2600 canal displacements are 1024 square; 65 to 72% of floor edges are sewn to another displacement; 95% of displacements in a blend material have alpha painted (blenddirtgrass008b 808).
-- **How:** map_build displacements: let the border rows overshoot the neighbouring brush by 4 to 16 (down under a path, up a wall) instead of ending at its edge; power 2 by default.
+- **How:** map_build displacements: let the border rows overshoot the neighbouring brush by 4 to 16 (down under a path, up a wall) instead of ending at its edge; power 2 by default. Ravenholm's yards and hill (d1_town_02, 02a) differ from the city's: 85 floor displacements, power 3 on 53 (4 on 10), odd sizes cut to the plot (224x128, 352x304, 288x144, 576x512) rather than 512 or 1024, texture scale 0.25, lightmapscale 16 near play, alpha painted on 38; muddy patches in dirtfloor005b; the graveyard's ground 91% displacement.
 - **Checked by:** map_lint.py (proposed): a displacement edge lying on a brush edge at the same height; a blend material with no alpha.
 - **Tags:** valve, geometry, canal
 
@@ -1822,7 +1822,7 @@ Dress a ruin in layers: concrete_section pieces square on the grid, touching the
 A burning spot is an env_fire of firesize 64 (32 to 48 for a small one, 128 to 150 for a big one), burning from the start and forever, on the rubble or floor rather than inside a prop, with a steady orange light about 30 from it ('254 150 35' at 300 to 900, never a flicker style), a scorch overlay about 250 across under a third of them, and a fire loop within 256. Fires in a burning street come in short rows, not one per prop.
 
 - **Why:** d3_c17_01 to 12b (21 November): 137 env_fire; firesize 64 on 41, 128 to 150 on 35, 48 on 13, 32 on 10; spawnflags 47 (infinite, smokeless, start on, start full, no glow) 39, 3 (lit by the map) 31, 45 (with smoke) 22; 111 with no prop within 64; 88 with a light within 128 (median 33, '254 150 35' 300 to 900 and '254 174 10 500'), no light styles; scorch1 under 42; a fire sound within 256 of 86; groups at 96: 57 alone, 18 of 2 to 4, one street chain of 29 (d3_c17_04). Ours (map_mods_b.py fire): firesize 24 to 30 with a light '255 150 70 110' 40 over it.
-- **How:** map_mods_b fire(): default size 48 to 64 outdoors, light brightness 300 to 500 at 20 to 40 from the fire, an optional scorch overlay and ambient fire loop; keep drop=False for drums (fire-in-drums). Ask the owner first before changing fires already in their modules.
+- **How:** map_mods_b fire(): default size 48 to 64 outdoors, light brightness 300 to 500 at 20 to 40 from the fire, an optional scorch overlay and ambient fire loop; keep drop=False for drums (fire-in-drums). Ask the owner first before changing fires already in their modules. A trap's fire is different: a grid of 8 to 46 env_fire 10 to 30 apart over up to 240 by 288, sizes mixed 25 to 130, all one name, not lit at the start (spawnflags 3, or 34 smokeless with no glow) and lit together by the trap (d1_town_01: 29, 11 and 8; 01a: 23; 02a: 46 and 13 round the propane canisters).
 - **Checked by:** proposed: map_lint notes an env_fire with no light within 128, or a light near a fire with a style
 - **Tags:** valve, lighting, props, sound
 
@@ -1834,4 +1834,76 @@ Lay the ground of a ruined street as displacements of power 3 (not 2), 512 to 11
 - **How:** Where a module has a ruined yard or street, its ground displacement at power 3, lightmapscale 16 within 512 of play, 32 to 64 beyond (valve-lightmap-by-distance), edges into the brush (valve-terrain-into-brush).
 - **Checked by:** proposed: map_lint notes a power 2 displacement over 512 across on a rubble material near play
 - **Tags:** valve, geometry, materials
+
+### The dead lie in set pieces, with their blood and their crows (`raven-dead-set-pieces`)
+
+Put the infested quarter's dead in a few set pieces rather than one body per lane: a yard or room of 4 to 9 bodies (whole, cut in half, burned, a few hung on hooks), blood decals only round them (4 to 26 a scene, none alone in a lane), crows standing on the ground in fours to sixes by the bodies, flies heard there; elsewhere single bodies behind cover. Bodies are ragdolls players pass through.
+
+- **Why:** d1_town_01, 01a, 02, 02a, 04, 05 (21 November): 66 prop_ragdoll (t01 36: classic_legs 10, classic 9, fast 4, classic_torso 4, corpse1 4, charple 3), spawnflags 4 (debris) on 58; in t01 groups at 128 of 9 (the pyre yard) and 7 (the blade store), a 4, three pairs, singles. 189 blood decals (t01 146: bloodstain_101 46, 002 42, 001 19, 003 12), 47% of t01's within 128 of a body, all 10 of t01a's within 107. 15 meathook001a (prop_physics held still, a phys_constraint to each body, hung 70 to 165 up, 15 to 60 apart). 43 npc_crow: t01's 19 stand on the ground (9 up) in groups of 6, 4, 2, 2, 13 within 256 of a body; in the graveyard singly on the grass. d1_town.CorpseRoom soundscapes and d1_town.Flies at the scenes. d1_town_03 alone had no blood (raven-litter-not-gore).
+- **How:** map_raven.py: one or two corpse scenes in the quarter (a back yard, a room off the tunnel house): 4 to 9 prop_ragdoll (spawnflags 4) with 6 to 20 bloodstain decals within 128, two or three meathooks with bodies where there is a beam, a group of 4 to 6 npc_crow on the ground beside them, an ambient d1_town.Flies; no blood anywhere else. Bodies and blood are what players see: ask the owner first.
+- **Checked by:** proposed: map_lint notes a blood decal more than 192 from any prop_ragdoll in a module tagged infestation; review
+- **Tags:** grime, props, infestation, ravenholm, valve
+
+### In the trap streets loose props are half of all props, and many wait to be grabbed (`raven-held-till-grabbed`)
+
+Where the dead walk, make about half the props loose physics (blades, tanks, drums, boards, tables, drawers), and hold the ones that belong on a wall or table still until someone grabs them (motion disabled plus motion on grab): boards across windows, blades on the wall, tanks on a table, radiators. Standing furniture keeps the owner's prop_dynamic_override.
+
+- **Why:** d1_town_01: 166 prop_physics to 157 prop_static (t01a 40 to 57; the city maps about 1 to 3). Ravenholm's six maps: 462 prop_physics, 109 held still (flag 8), 51 of them freed on grab (8+64; t01 38 of 166, 23%; flag 64 is on 3.5% of physics props in the other 22 maps): sawblade001a 9, propane_tank001a 9, furnitureradiator001a 6, wood_board 14, trappropeller_blade 3, cafeteria_table001a 3. Held still only: meathooks 10, metal panels 12, graveyard canisters 6. Ours (map_raven.py): about 8 loose props (spawnflags 0) to over 20 statics.
+- **How:** map_raven.py loose(): a held=True option writing spawnflags 72 (8 motion disabled + 64 on grab) for boards on windows, blades and tanks on tables or walls; aim for loose props at about half the quarter's dressing props, the cars, bins and barricades staying static. Ask the owner first: it changes what players can pick up there.
+- **Checked by:** proposed: map_lint reports the share of prop_physics among a module's dressing props when the module is tagged infestation (Valve's trap streets 0.4 to 0.5)
+- **Tags:** props, infestation, ravenholm, valve
+
+### A trap is a kit of a few props, close together, with its own light and a reward (`raven-trap-kits`)
+
+Build each trap as a small kit inside 30 to 100: a work table with the trap's loose parts (blades, a wrench, pliers, paint cans, a stool) under a clamp lamp; a blade store (a room of blades and tanks, the dead in it); a spinning blade (engine fixed, blade loose on a hinge 30 over it, a lever beside); a fire trap (a gas canister, a valve wheel for the gas, a pad button for the spark, a hose model to the pyre, a grid of fires lit together); each with a health kit and the sound of the machine.
+
+- **Why:** d1_town_01 (21 November): the workbench at 2149 -1026: cafeteria_table001a, 3 sawblade001a, 2 tools_wrench01a, 2 metal_paintcan001a, tools_pliers01a, chair_stool01a, metal panels, a light_spotlight02_lamp with a spot '255 245 145 1000', 2 item_healthkit. The blade store at 3700 -1150: 10 propane_tank001a, 8 sawblades, paint cans, three bodies cut in half, about 26 blood decals, a bulb (light '254 216 146 8' and spot 300), d1_town.Flies. Five propeller traps: TrapPropeller_Engine static, TrapPropeller_Blade prop_physics (flag 0) on phys_hinge and phys_motor, lever (func_button and func_rot_button) all within 30, a logic_timer for the sputter, spinup, spin loop, spindown sounds. The fire trap at 911 -1459: Firetrap_PropaneCanister01a, valvewheel002 on a func_door_rotating (opens the gas), Firetrap_button01a on a pad (sparks), Firetrap_gashose to the pyre, 29 env_fire 10 to 16 apart, env_firesensor enabling a trigger_hurt, env_steam heat haze, light '254 174 10 1250', a health kit and spawn point about 70 from the controls.
+- **How:** map_raven.py, at one or two chokes along the makers' walk: a workbench kit and one machine trap from these parts (the wiring after valve-logic-recipes.md); the gamemode's own jobs decide whether players may use it: ask the owner first before a working trap goes in.
+- **Checked by:** review
+- **Tags:** props, infestation, ravenholm, valve
+
+### Timber and plaster: 4 by 8 timbers standing 4 proud, a third of them braces; thin roofs with a 16 eave (`raven-timber-craft`)
+
+Make a Ravenholm house front of plaster with timber strips on it: sections 4x8 (or 8x8, 4x16), standing 4 out of the plaster, posts a storey long, beams along each floor line, a third of the strips diagonal braces; walls 8 thick (16 for the outer shell); roofs pitched 25 degrees (35 or 45 for a landmark), slabs 3 to 4 thick for corrugated metal and 7 to 8 for tile, the eave 16 past the wall below. Pieces already built keep their look: ask the owner first before changing them.
+
+- **Why:** d1_town_01, 01a, 02 (21 November): 196 wood strips touch plaster brushes: 4x8 72, 8x8 26, 4x16 19, 2x16 15; 85 of 154 stand 4 proud (then 8 and 2); 80 diagonal, 54 posts (median 124 to 146 long), 62 beams; woodfloor005a the timber material. 285 sloped roof brushes (t01, t01a, t02, t02a): pitch 25 on 131, 35 on 43, 45 on 38, 20 on 28; thickness 3 to 4 (metalwall026a, 014a) or 7 to 8 (tileroof004b, 003a); eave past the wall median 16 (q25 0, q75 16, porches 48 to 96). Wall slabs: 8 thick 492, 16 thick 118 (t01, t02, t02a). styleguide_ravenholm_01: posts 2x8, roofs 25, eaves 16.
+- **How:** A timber() helper for map_raven.py and the house modules: given a plaster wall, lay posts at the corners and beside each opening, a beam at each floor line and under the eave, one or two braces per bay, all func_detail woodfloor005a 4x8 standing 4 out; a roof() helper: 25 degree slabs 4 thick, 16 past the walls. The quarter's main street keeps the owner's facade recipe; this is for the lanes and back houses.
+- **Checked by:** proposed: map_lint notes a sloped roof brush in a module tagged infestation thicker than 16 or with no eave past its wall
+- **Tags:** facades, geometry, infestation, ravenholm, valve
+
+### A mine tunnel: a cave of small displacements, a timber set every 512 (`raven-mine-sets`)
+
+Make an old mine as a closed tube of displacements (walls, floor and roof all displaced, 256 square, power 2, pushed 30 to 130 off the brush, lightmapscale 16), and hold it up with timber sets: two 16x16 posts 224 apart inside, a 16x16 cap across their tops, 128 tall (256 where the floor drops), one set every 512 along the tunnel; a shaft gets a ring of 16x16 beams round a 192 square every 190 to 320 up; a walkway stands on 16x16 posts on an 84 grid under 4 thick planks.
+
+- **Why:** d1_town_04 (21 November): 327 displacements, power 2 on 324, 256x256 on 290, all lightmapscale 16, offsets median 60 (q75 128), walls 181, floors 76, ceilings 70; rockwall015a 251, blendrockgravel001a 73 (170 alpha painted). Timber all woodfloor005a func_detail: sets at x -3838, -3600, -3088, -2576, -2064 (posts at y 1024 and 1264, cap 16x224x16 on top); shaft cribbing 192 square at z -4304, -4048, -3856, -3536, -3336; walkway posts 64 tall 84 apart; planks 4x80 and 4x64. styleguide_mining: braces of woodwall041a 16x16 at an angle, concretewall_mine walls, cage lights.
+- **How:** For the quarter's tunnels or a mine module: a corridor of power-2 displacements with the sets placed by a helper (posts, cap, every 512), a cool clamp lamp every second or third set (raven-clamp-lamps).
+- **Checked by:** proposed: map_lint notes a displacement in a cave module at power 3 or 4, or lightmapscale over 16 within 256 of a node
+- **Tags:** geometry, interiors, infestation, ravenholm, valve
+
+### A graveyard is a few stones scattered and turned on rough grass, never rows (`raven-graveyard`)
+
+Lay a graveyard as rough grass displacement with a grave piece every 250 or so: headstones and crosses each turned a little (about half square, the rest 3 to 30 off), a coffin lid lying 60 to 90 in front of some, a statue; only the stones along a wall stand in a row. The church over it: stone walls to about 600 tall, a shingle or metal roof at 45 to 55, panes 64x96.
+
+- **Why:** d1_town_02a (21 November): 26 grave pieces (gravestone004a 9, 002a 4, crosses 4, coffin lids 5, 001a 2, 003a, a statue) over about 1300 by 1300, all prop_static; yaw on the grid 11, turned 3 to 20 9, free 5; nearest stone q25 82, median 369; the three by the wall 86 and 78 apart at the same yaw. Ground: 91% displacement, blenddirtgrass008a 77% and blendgrassgravel001a 21% of the outdoor ground. Church: stonewall036b to 592 tall, woodshingles002a and metalroof005a, glasswindow010b 64x96. Also there: 6 upright canister_propane01a in twos and fours 33 apart, held still, that light a field of 46 fires; 5 sawblades lying alone 150 to 1050 apart; 14 crows on the grass.
+- **How:** If the quarter gets a churchyard: a gravestones() helper scattering 15 to 30 pieces over a displaced lawn, yaw square on half and 3 to 30 off on the rest, a coffin lid in front of one in three. Ask the owner first: a graveyard is a new place in their quarter.
+- **Checked by:** proposed: map_lint notes 4 or more gravestones in one straight line at one yaw away from a wall
+- **Tags:** props, layout, infestation, ravenholm, valve
+
+### Inside an overrun town the homes are stripped: work rooms, corpse rooms and one barricaded flat (`raven-room-kits`)
+
+Dress the quarter's rooms as what survivors left, not as lived-in homes: a work room (tables, blades, tools, a clamp lamp), a corpse room (bodies, blood, flies, one bulb), a barricaded flat (couch, dressers and drawers against the walls and the door, a chair, the dead who got in), a bedroom with a mattress on a bed frame and one body; kitchens and living-room sets are almost absent. Drawers and dressers stand against walls, a few tipped over. Pieces already built keep their look: ask the owner first before changing them.
+
+- **Why:** d1_town_01 to 05 (21 November), indoor props: 26 clamp lamps (light_spotlight02_lamp), 13 bulbs, 9 cafeteria tables, 12 drawers and 6 dressers (all 18 within 16 of a wall, 4 tipped), 6 radiators (held still), 5 washing machines by a boiler, 2 couches, 4 mattresses, no stove or fridge. The barricaded flat (t01 351 -896): furniturecouch001a, 2 furnituredresser001a, furnituredrawer001a and 003a, a chair, a door, 4 dead zombies, 6 blood stains, one warm spot '239 210 156 300'. The bedroom (t02 -3800 -180): furnituremattress001a on prison_bedframe001a, a radiator, a drawer, lightbulb01a (light 8 plus spot 300), corpse1, decalrug002a, 2 health kits. Each scene has a d1_town.CorpseRoom soundscape (radius 128) or a sound.
+- **How:** map_raven.py's four buildings: the shop's back room as a work room, the tenement's upper room as the barricaded flat (dressers to the walls by its door), one corpse room off the tunnel house; reuse the room recipes in valve-prop-notes.md only where people still live.
+- **Checked by:** review
+- **Tags:** interiors, props, infestation, ravenholm, valve
+
+### Ravenholm is lit by clamp lamps on the walls, each with its spot (`raven-clamp-lamps`)
+
+Light the overrun quarter with work lamps clamped to the walls (light_spotlight02_lamp, pitched down, turned freely), each with a light_spot about 5 from it (warm '255 245 145' 600 to 1000 on two in three, cool '159 237 215' up to 2000 on the rest), cone 30 to 50 (35 most), inner 20 to 30, pitch about -50 (-20 to -65), and a point_spotlight beam beside it; 300 apart in the streets, 450 to 550 round the square and graveyard, 700 to 800 in the mine; indoors a bare bulb (light '254 216 146 8' plus spot 300, cone 75).
+
+- **Why:** d1_town_01 to 05 (21 November): 41 light_spotlight02_lamp, all prop_static, 80% touching a wall, 38 pitched down, yaw free on 22; every one of the 41 has a light_spot and a point_spotlight within 48 (the spot a median 5 away): warm 26, cool 15, brightness median 600 (q75 1000, q90 2000), cone 35 on 14, 45 and 50 on 8 each, 30 on 6, inner 20 on 15, 30 on 13, 25 on 9, pitch median -50 (q10 -65, q90 -20); point_spotlight nearest neighbour median 294 (t01), 452 (t01a), 368 (t02), 540 (t02a), 780 (t04); lightbulb01a with light '254 216 146 8' on 13 and spot 300 75/30 -90 on 8. Same sun in t01 to t02a ('175 230 239 50', ambient '43 45 57 5'); fog only in the graveyard ('0 0 0', 1500 to 4000).
+- **How:** map_raven.py: replace the lit lamp posts' role in the lanes with clamp lamps on house walls about every 300, alternating warm and cool, with the spot and a point_spotlight; with raven-dusk-light. Ask the owner first: the quarter's light is theirs to settle.
+- **Checked by:** map_lint offlamp (a lit lamp model without its light within 64)
+- **Tags:** lighting, props, infestation, ravenholm, valve
 
