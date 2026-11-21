@@ -43451,6 +43451,37 @@ function Nov21_PeopleNextTests()
 end
 Nov21_PeopleNextTests()
 
+function Nov21_DreamBreakoutTests()
+    section("21 November: broken out while dreaming in a cell, they wake out of it")
+    local inmate = newPlayer("DreamInmate", "resistance", nil, 150)
+    local rescuer = newPlayer("DreamRescuer", "resistance", nil, 400)
+    _run(3)
+    LC.Incarcerate(inmate, 600, "Test")
+    local cellPos = inmate:GetPos()
+    rescuer:SetPos(cellPos + Vector(900, 0, 0))
+    inmate.lcDreaming = {} -- (asleep and in a dream: sv_livingcity_dreams.lua)
+    inmate.chat = {}
+    ok(LC.BreakOut(inmate, rescuer) and LC.Prisoners[inmate] == nil, "a breakout frees a dreaming prisoner all the same")
+    ok(not has(inmate.chat, "slams open"), "(nothing said into the dream)")
+    -- they wake: the dream puts them back where they lay, then the breakout takes them out
+    inmate.lcDreaming = nil
+    inmate:SetPos(cellPos)
+    hook.Run("LivingCityDreamWoke", inmate, true, "ended", nil)
+    ok(inmate:GetPos():Distance(rescuer:GetPos()) < 200 and inmate:GetPos():Distance(cellPos) > 600,
+        "they wake beside whoever let them out, not in the cell", inmate:GetPos():Distance(rescuer:GetPos()))
+    ok(has(inmate.chat, "shakes you awake"), "and are told as they wake")
+    -- awake in the cell: as before, out where they stand
+    LC.ClearWanted(inmate)
+    LC.Incarcerate(inmate, 600, "Test")
+    local here = inmate:GetPos()
+    LC.BreakOut(inmate, rescuer)
+    hook.Run("LivingCityDreamWoke", inmate, true, "ended", nil)
+    ok(inmate:GetPos() == here, "a prisoner broken out awake isn't moved")
+    LC.ClearWanted(inmate)
+    inmate:Remove() rescuer:Remove()
+end
+Nov21_DreamBreakoutTests()
+
 ----------------------------------------------------------------------
 section("Stop")
 LC.Stop(admin)

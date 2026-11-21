@@ -166,13 +166,33 @@ end
 
 function LC.BreakOut(prisoner, by)
     if not IsValid(prisoner) or not (LC.Prisoners and LC.Prisoners[prisoner]) then return false end
-    prisoner:ChatPrint("[Resistance] The cell door slams open. \"Move. Now.\" You're out, and wanted.")
+    -- asleep in the cell and dreaming (sv_livingcity_dreams.lua): out all the same, but waking would put them
+    -- back where they lay, in the cell. They wake out of it, beside whoever let them out (LivingCityDreamWoke below).
+    if prisoner.lcDreaming ~= nil or (prisoner.lcDreamBack or 0) > CurTime() then
+        prisoner.lcWakeFree = { pos = IsValid(by) and by:GetPos() or nil }
+    else
+        prisoner:ChatPrint("[Resistance] The cell door slams open. \"Move. Now.\" You're out, and wanted.")
+    end
     if LC.EscapePrisoner then LC.EscapePrisoner(prisoner) end
     Radio("resistance", prisoner:Nick() .. " is out. Get them home.")
     if IsValid(by) and by:IsPlayer() and LC.AddXP then LC.AddXP(by, 50, "prison break") end
     hook.Run("LivingCityBreakout", prisoner, by)
     return true
 end
+
+hook.Add("LivingCityDreamWoke", "LivingCityBreakOut", function(p)
+    local free = IsValid(p) and p.lcWakeFree
+    if not free then return end
+    p.lcWakeFree = nil
+    if LC.Prisoners and LC.Prisoners[p] then return end -- (caught and put back meanwhile)
+    local at = free.pos
+    if not at then
+        local rel = LC.PointsOfKind and LC.PointsOfKind("release") or {}
+        at = #rel > 0 and LC.Pick(rel).pos or nil
+    end
+    if at and p:Alive() then p:SetPos(LC.ReleaseSpot and LC.ReleaseSpot(at, p) or at) end
+    p:ChatPrint("[Resistance] Someone shakes you awake. The cell door's open. \"Move. Now.\" You're out, and wanted.")
+end)
 
 function LC.PrisonBreakAlarm(pos)
     TellUnits("[CP net] PRISON BREAK " .. Where(pos) .. ". Anticitizens are at the cells. All Civil Protection units respond.")
