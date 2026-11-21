@@ -339,6 +339,24 @@
 "static": false,
 "v": 2
 },
+"models/gibs/hgibs_scapula.mdl": {
+"bbox": [
+-2.7,
+-2.3,
+-3.7,
+2.5,
+4.0,
+5.1
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": true,
+"prop_data": true,
+"ragdoll": false,
+"static": false,
+"v": 2
+},
 "models/gibs/hgibs_spine.mdl": {
 "bbox": [
 -1.2,
@@ -3917,6 +3935,24 @@
 "prop_data": true,
 "ragdoll": false,
 "static": false,
+"v": 2
+},
+"models/props_c17/substation_circuitbreaker01a.mdl": {
+"bbox": [
+-60.3,
+-102.0,
+-156.3,
+60.3,
+102.0,
+158.3
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
 "v": 2
 },
 "models/props_c17/substation_stripebox01a.mdl": {
@@ -10429,6 +10465,10 @@
 "static": false,
 "v": 2
 },
+"models/props_junk/trashcan001a.mdl": {
+"elsewhere": [],
+"game": null
+},
 "models/props_junk/trashcluster01a.mdl": {
 "bbox": [
 -29.3,
@@ -10527,6 +10567,60 @@
 20.2,
 20.2,
 20.0
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": true,
+"prop_data": true,
+"ragdoll": false,
+"static": false,
+"v": 2
+},
+"models/props_junk/wood_crate001a_chunk01.mdl": {
+"bbox": [
+-18.7,
+-19.4,
+-1.4,
+19.0,
+19.7,
+1.4
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": true,
+"prop_data": true,
+"ragdoll": false,
+"static": false,
+"v": 2
+},
+"models/props_junk/wood_crate001a_chunk02.mdl": {
+"bbox": [
+-17.1,
+-6.0,
+-15.6,
+17.1,
+6.2,
+15.4
+],
+"built_static": true,
+"collides": true,
+"game": "hl2",
+"physics": true,
+"prop_data": true,
+"ragdoll": false,
+"static": false,
+"v": 2
+},
+"models/props_junk/wood_crate001a_chunk03.mdl": {
+"bbox": [
+-14.8,
+-1.2,
+-15.0,
+14.8,
+1.2,
+15.3
 ],
 "built_static": true,
 "collides": true,
@@ -15331,6 +15425,10 @@
 "elsewhere": [],
 "game": null
 },
+"models/props_vehicles/truck002a.mdl": {
+"elsewhere": [],
+"game": null
+},
 "models/props_vehicles/truck002a_cab.mdl": {
 "bbox": [
 -138.6,
@@ -15379,6 +15477,24 @@
 "built_static": true,
 "collides": true,
 "game": "hl2",
+"physics": false,
+"prop_data": false,
+"ragdoll": false,
+"static": true,
+"v": 2
+},
+"models/props_vehicles/van001a_nodoor.mdl": {
+"bbox": [
+-126.7,
+-65.2,
+-34.7,
+98.7,
+49.7,
+49.0
+],
+"built_static": true,
+"collides": true,
+"game": "ep2",
 "physics": false,
 "prop_data": false,
 "ragdoll": false,

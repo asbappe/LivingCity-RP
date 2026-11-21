@@ -192,6 +192,20 @@ def put(m, things, z, u0=0, v0=0):
         m.static("models/%s.mdl" % name, u0 + du, v0 + dv, yaw, z=z)
 
 
+def in_town(m):
+    """Built into the town (map_town.py), whose house fronts stand proud of the left wall and dress it."""
+    return bool(m.fr.dz) and hasattr(m.b.plan, "fill")
+
+
+def front_face(m, z):
+    """Where the face of the left wall is at height z over the floor, for a thing hung on it: at v 256, but in the town
+    the house fronts stand out from it (map_town.facade: a plinth 9 out to 24, the walls 6 out, a trim 10 out from 136
+    to 152), and a lamp or a sign goes on their face, not inside them."""
+    if not in_town(m):
+        return 256
+    return 247 if z < 24 else 246 if 136 <= z < 152 else 250
+
+
 def cheeks(m, u1, u2, top=136, out=132, thick=12):
     """Where the left wall's bank is cut for a way in (u1 to u2), a retaining wall on each side of the cut, its top
     sloping with the bank it holds back. Nothing on a street (a lifted module): there is no bank there."""
@@ -332,9 +346,10 @@ def m_cells(m, opt):
     cheeks(m, 128, 192)
     swing_door(m, "lc_cells_entry", [(129, 284, F + 1, 191, 290, F + 111)], STEEL, (129, 287, F + 56), unseen=True)
     rider(m, "lc_cells_entry", "models/props_wasteland/prison_heavydoor001a.mdl", 160, 287, 90, F)
-    m.det([(124, 250, F + 112, 196, 256, F + 120)], MAT["beam"])
-    cage(m, 160, 256, F + 136, 270, "255 200 140 90")
-    m.grime("number", 160, 256, F + 170, 1)                                 # (a number painted over the door, as on the city's service doors)
+    if not in_town(m):                                                      # (in the town the house front frames the door)
+        m.det([(124, 250, F + 112, 196, 256, F + 120)], MAT["beam"])
+    cage(m, 160, front_face(m, 136), F + 136, 270, "255 200 140 90")
+    m.grime("number", 160, front_face(m, 170), F + 170, 1)                  # (a number painted over the door, as on the city's service doors)
     m.lane(160, 288)
 
     # the guard room: the brightest place here
@@ -507,8 +522,9 @@ def m_clinic(m, opt):
                    (768, 448, 960, 768, F + 176), (832, 320, 960, 448, F + 128)])
 
     # the way in: a white cross on the wall, a caged lamp, two light curtains drawn aside under a valance, clear of the floor
-    m.det([(474, 254, F + 168, 486, 256, F + 212), (458, 252, F + 184, 502, 256, F + 196)], PLASTER)
-    cage(m, 480, 256, F + 150, 270, "235 240 225 80")
+    cf = front_face(m, 168)
+    m.det([(474, cf - 2, F + 168, 486, cf, F + 212), (458, cf - 4, F + 184, 502, cf, F + 196)], PLASTER)
+    cage(m, 480, front_face(m, 150), F + 150, 270, "235 240 225 80")
     cloth = []
     for k in range(7):
         dv = 2 if k % 2 else 0
@@ -607,7 +623,8 @@ def m_clinic(m, opt):
 # ---------------------------------------------------------------------------
 
 def m_memorial(m, opt):
-    """The wall of the dead: a shallow recess in the left wall, open to the sky, its floor one step above the canal's.
+    """The wall of the dead: a shallow recess in the left wall, open to the sky, its floor one step above the canal's
+    (on a street, level with the pavement).
     A stone wall stands against its back, covered in rows of small plaques of dark metal on pale stone backs, no two
     quite the same size (the upper rows half empty: room for more), with a ledge at its foot where candle stubs burn
     steadily among framed photographs turned this way and that, bottles, tins, pots, a child's doll and a shoe; a
@@ -618,15 +635,16 @@ def m_memorial(m, opt):
     Left as brushes: the stone wall, its plaques and the candle stubs (Half-Life 2 has no plaque and no candle).
     Unchecked: the sound ambient/levels/canals/windmill_wind_loop1.wav (a low wind); which way the picture frames
     face; the candlesticks are Lost Coast's (lostcoast/props_monastery/candlestick). No flowers: there is no model."""
-    L, Z = 768, F + 16
+    L, Z = 768, (F if m.fr.dz else F + 16)        # (on a street level with the pavement: the owner, of the playground)
     m.open(0, -256, L, 256)
     m.open(192, 256, 576, 384, floor=Z, mat=STONE_FLOOR)
     m.side(192, 256, 576, 384)
     m.no_bank(192, 240, 576, 272)
     m.taken(168, 100, F, 600, 256, F + 150)
     cheeks(m, 192, 576)
-    m.det([(192, 232, F, 576, 256, F + 9)], STONE, top=STONE_FLOOR)                      # the step up (1 over the mud the dressing lays: never flush with it)
-    m.det([(192, 252, F + 9, 576, 256, Z)], STONE, top=STONE_FLOOR)
+    if Z > F:
+        m.det([(192, 232, F, 576, 256, F + 9)], STONE, top=STONE_FLOOR)                  # the step up (1 over the mud the dressing lays: never flush with it)
+        m.det([(192, 252, F + 9, 576, 256, Z)], STONE, top=STONE_FLOOR)
 
     # the stone wall: a plinth whose top is the ledge, the face, a coping
     m.det([(232, 380, Z + 24, 536, 384, Z + 200)], STONE)
@@ -1186,7 +1204,8 @@ def m_market(m, opt):
         m.taken(au - 24, 110, F, au + 152, 256, F + 170)
         # the arch: a chamfer in each top corner, a keystone
         m.shapes([prism([(au, A - 44), (au + 36, A), (au, A)], "y", 256, 320, MAT["beam"]), prism([(au + 128, A - 44), (au + 92, A), (au + 128, A)], "y", 256, 320, MAT["beam"])])
-        m.det([(au + 54, 250, A - 6, au + 74, 256, A + 18)], MAT["beam"])
+        if not in_town(m):                                         # (in the town the house front dresses the arch)
+            m.det([(au + 54, 250, A - 6, au + 74, 256, A + 18)], MAT["beam"])
         m.lane(au + 64, 288)
         m.lane(au + 64, 400)
     stalls = (192, 384, 576, 768, 960)
@@ -1471,12 +1490,13 @@ def m_still(m, opt):
 
 def bowl(cu, v1, vb, w, r):
     """The ground round half an eight-sided hollow of radius r whose middle is (cu, vb) on the back wall, out to a
-    rectangle (cu - w .. cu + w, v1 .. vb): four outlines for vprism, every corner a whole number."""
+    rectangle (cu - w .. cu + w, v1 .. vb): four convex outlines for vprism, every corner a whole number, split along
+    u = cu +- a so that no two of them overlap even in their bounding boxes (the flush check reads those)."""
     a = int(round(r * 0.7071))
     out = []
     for s in (-1, 1):
-        out.append([(cu + s * w, vb), (cu + s * r, vb), (cu + s * a, vb - a), (cu + s * w, v1)])
-        out.append([(cu + s * w, v1), (cu + s * a, vb - a), (cu, vb - r), (cu, v1)])
+        out.append([(cu + s * w, vb), (cu + s * r, vb), (cu + s * a, vb - a), (cu + s * a, v1), (cu + s * w, v1)])
+        out.append([(cu + s * a, v1), (cu + s * a, vb - a), (cu, vb - r), (cu, v1)])
     return out
 
 
@@ -1484,14 +1504,18 @@ def m_plaza(m, opt):
     """The plaza: where people gather to listen. The canal (or the street) opens on its left, 1152 wide, onto a
     terrace at its own height, and from the terrace five concrete rows of seats step DOWN and away, each 16 high and
     48 deep (walked down anywhere, sat on anywhere), round half an eight-sided floor 512 across and 80 below the
-    street. At the back wall, facing the rows and the street beyond them, a timber rostrum three steps up with a
-    lectern (lc_plaza_rostrum: where the speaker stands, facing the street), between two street lamps that carry a
-    wire for a banner; a cluster of loudspeakers on one (speakercluster01a), turned to the street; a fire drum on
-    each side of the floor. lc_plaza_crowd is the middle of the third row, facing the rostrum.
+    street. At the back wall, facing the rows and the street beyond them, a timber stage 256 wide and 48 up, two steps
+    up at its front, a lectern at its edge (lc_plaza_rostrum: where the speaker stands, facing the street); behind the
+    speaker a cloth banner with the lambda hangs on the wall, a tin canopy on two posts over the stage, and above the
+    canopy the cluster of loudspeakers on the wall (speakercluster01a, the owner's choice: on the wall, turned to the
+    street); a caged lamp on the wall each side. Two spotlights on the side walls throw their beams on the speaker; the
+    rows stay in half light. A fire drum burns on each side of the floor; crates people sit on along the terrace, cans
+    left on the rows. lc_plaza_crowd is the middle of the third row, facing the stage.
     (Turned round on 21 November at the owner's word: the top row used to be at the back.)
-    Left as brushes: the rows, the rostrum's deck and steps (timber staging), its lectern (no model of one).
-    Unchecked: env_fire's look in the drums; which way the loudspeakers and the lamps' arms point (the arms are along
-    the model's y, turned here toward the rows); no sound here."""
+    Left as brushes: the rows, the stage, its steps and canopy (timber staging), its lectern (no model of one), the
+    banner (cloth: no model).
+    Unchecked: env_fire's look in the drums; which way the loudspeakers face (turned to the street); the spotlights'
+    aim (yaw 15 and pitch 13 from the side walls toward the lectern)."""
     L, cu, v1, vb, w = 1536, 768, 256, 768, 576
     low = F - 80
     m.open(0, -256, L, 256)
@@ -1510,34 +1534,51 @@ def m_plaza(m, opt):
     m.shapes(rows)
     m.target("lc_plaza_crowd", cu, vb - 376, low + 56, 90)
 
-    # the rostrum at the back wall: a timber deck three steps up, a lectern at its front
-    r1, r2, rv1, rv2, top = cu - 48, cu + 48, vb - 66, vb, low + 24
-    m.det([(r1, rv1, top - 4, r2, rv2, top)], WOOD)
-    m.det([(u, v, low, u + 6, v + 6, top - 4) for u in (r1, cu - 3, r2 - 6) for v in (rv1, rv2 - 6)]
-          + [(r1, rv1, top - 10, r2, rv1 + 4, top - 4), (r1, rv2 - 4, top - 10, r2, rv2, top - 4)], BEAM)
-    m.det([(r1 - 12 * (3 - k), rv1 + 8, low, r1 - 12 * (2 - k), rv2 - 8, low + 8 * (k + 1)) for k in range(3)], BEAM, top=WOOD)
-    m.det([(cu - 14, rv1 + 4, top, cu + 14, rv1 + 14, top + 38)], WOOD)
-    m.shapes([prism([(rv1 + 2, top + 38), (rv1 + 16, top + 38), (rv1 + 16, top + 40), (rv1 + 2, top + 46)], "x", cu - 16, cu + 16, BEAM)])
-    m.target("lc_plaza_rostrum", cu, vb - 30, top + 8, 270)
-    # the loudspeakers on the back wall over the rostrum, turned to the street; a caged lamp on the wall each side
-    m.static("models/props_wasteland/speakercluster01a.mdl", cu, vb - 17, 270, z=low + 160)
-    for u in (r1 - 40, r2 + 40):
-        m.static("models/props_c17/light_cagelight02_on.mdl", u, vb - 1, 270, z=low + 130)
-        m.light(u, vb - 40, low + 130, "255 220 170 260")
+    def ground(u, v):        # (the height of the rows at a place: how many of the octagons' edges it is beyond)
+        x, y = abs(u - cu), abs(v - vb)
+        d = max(0.924 * x + 0.383 * y, 0.383 * x + 0.924 * y) / 0.924
+        return low + 16 * sum(1 for k in range(5) if 256 + 48 * k <= d)
+
+    # the stage at the back wall: a timber platform, two steps up at its front, a lectern at its edge
+    s1, s2, sv, top = cu - 128, cu + 128, vb - 96, low + 48
+    m.det([(s1, sv, low, s2, vb, top)], TIMBER, top=DECK)
+    m.det([(cu - 96, sv - 48 + 24 * k, low, cu + 96, sv - 24 + 24 * k, low + 16 * (k + 1)) for k in range(2)], TIMBER, top=DECK)
+    m.det([(cu - 14, sv + 4, top, cu + 14, sv + 14, top + 38)], TIMBER)
+    m.shapes([prism([(sv + 2, top + 38), (sv + 16, top + 38), (sv + 16, top + 40), (sv + 2, top + 46)], "x", cu - 16, cu + 16, DECK)])
+    m.target("lc_plaza_rostrum", cu, sv + 30, top + 8, 270)
+    # behind the speaker: the banner on the wall, the canopy on its posts, the loudspeakers over it, a lamp each side
+    m.det([(cu - 112, vb - 1, low + 60, cu + 112, vb, low + 196)], CLOTH)
+    m.det([(cu - 118, vb - 4, low + 196, cu + 118, vb - 2, low + 198)], BARS)
+    m.grime("lambda", cu, vb - 1, low + 128, 1)
+    m.shapes([prism([(vb, low + 206), (vb, low + 210), (vb - 112, low + 190), (vb - 112, low + 186)], "x", s1 - 8, s2 + 8, "metal/metalroof008a")])
+    m.det([(u, vb - 110, top, u + 6, vb - 104, low + 190) for u in (s1 + 2, s2 - 8)], TIMBER)
+    m.static("models/props_wasteland/speakercluster01a.mdl", cu, vb - 17, 270, z=low + 222)
+    for u in (cu - 168, cu + 168):
+        cage(m, u, vb, low + 150, 270, "255 220 170 200")
+    # the spotlights on the side walls, their beams on the lectern
+    for u, yaw in ((cu - w, 15), (cu + w, 165)):
+        m.static("models/props_c17/light_cagelight02_on.mdl", u, vb - 200, 0 if yaw < 90 else 180, z=F + 150)
+        m.spot(u + (12 if yaw < 90 else -12), vb - 200, F + 150, "255 240 215 600", yaw, pitch=13, cone=24)
 
     # a fire drum on each side of the floor
     for u in (cu - 190, cu + 190):
         m.static("models/props_c17/oildrum001.mdl", u, vb - 40, 0, z=low)
         fire(m, u, vb - 40, low + 46, size=18, light="255 150 70 140", drop=False)
-    for u, v in ((cu, vb - 120), (cu - 120, vb - 100), (cu + 120, vb - 100), (cu, vb - 200)):
+    # what people bring and leave: crates to sit on along the terrace, cans on the rows
+    for u, v, yaw in ((cu - 470, vb - 330, 20), (cu + 430, vb - 420, 70), (cu + 60, vb - 470, 5)):
+        m.static("models/props_junk/wood_crate001a.mdl", u, v, yaw, z=ground(u, v))
+    for name, u, v in (("popcan01a", cu - 200, vb - 300), ("garbage_metalcan001a", cu + 330, vb - 270), ("popcan01a", cu - 60, vb - 410)):
+        m.static("models/props_junk/%s.mdl" % name, u, v, 0, z=ground(u, v))
+    for u, v in ((cu, vb - 180), (cu - 120, vb - 150), (cu + 120, vb - 150), (cu, vb - 230)):
         m.lane(u, v, low)
     for u in (cu - 420, cu - 140, cu + 140, cu + 420):
         m.lane(u, v1 + 28)
+    sounds(m, L, "courtyard", cu, vb - 200, low, 640)
 
     m.view(cu, 60, F, 90, 6, "from across the canal: looking down the rows")
-    m.view(cu, vb - 30, top, 270, -4, "from the rostrum")
+    m.view(cu, sv + 40, top, 270, -4, "from the stage")
     m.view(cu, v1 + 30, F, 90, 12, "from the terrace")
-    m.view(cu - 300, vb - 60, low, 20, 0, "the rostrum from the floor")
+    m.view(cu - 300, vb - 60, low, 20, 0, "the stage from the floor")
 
 
 # ---------------------------------------------------------------------------
@@ -1546,18 +1587,26 @@ def m_plaza(m, opt):
 
 def m_playground(m, opt):
     """The playground: a relic of before. A yard on the left, open to the sky: in a canal a terrace 128 above its floor
-    (the bank is the way up), on a street level with the pavement. In it, City 17's own playground models: a swing set
-    whose two seats swing on their chains (lc_playground_swing_1 and _2, each on a phys_hinge under the bar); a slide;
-    a roundabout that turns (lc_playground_roundabout on a phys_hinge); and, built here, a sandpit edged with timber; a bench with its back to the wall, facing it all (lc_playground_bench: on the bench). Nothing else, and
-    no lamp.
-    Left as brushes: the sandpit (timber and sand in the ground).
+    (the bank is the way up), on a street level with the pavement. Its ground is earth, worn to mud under the swings
+    and at the slide's foot, the city's handrail along its front with a gap in the middle to come in by. In it, City
+    17's own playground models: a swing set whose two seats swing on their chains (lc_playground_swing_1 and _2, each
+    on a phys_hinge under the bar); a slide; a roundabout that turns (lc_playground_roundabout on a phys_hinge); and,
+    built here, a sandpit edged with timber, a doll left on its edge; a bench with its back to the wall, facing it all
+    (lc_playground_bench: on the bench); a bin overflowing in the corner. Chalk on the ground, rust down the walls, a
+    Combine notice. No lamp.
+    Left as brushes: the sandpit (timber and sand in the ground), the worn patches.
     Unchecked: the sound ambient/levels/canals/windmill_wind_loop1.wav (one faint wind); which end of the slide is
     its ladder and which way the bench faces; how high the swing set's bar is (its box says 144: the seats hang
     from 138); how freely the hinges turn."""
     L, T = 1024, (F if m.fr.dz else F + 128)    # (on a street level with the pavement: the owner, 20 November)
     m.open(0, -256, L, 256)
-    m.open(192, 256, 832, 640, floor=T, mat=CRACKED)
+    m.open(192, 256, 832, 640, floor=T, mat=DIRT)
     m.side(192, 256, 832, 640)
+    # the front: the city's handrail along it, a gap in the middle (in a canal it stands on the terrace's edge)
+    rail_run(m, 200, 432, 262, "u", T)
+    rail_run(m, 528, 824, 262, "u", T)
+    # the ground worn to mud under the swings and at the slide's foot
+    m.det([(282, 476, T, 318, 524, T + 1), (358, 476, T, 394, 524, T + 1), (720, 312, T, 776, 368, T + 1)], "nature/mudfloor004a")
 
     # the swings: each seat hangs from the bar on a hinge and two chains, and swings (as Half-Life 2's do)
     sv = 500
@@ -1579,6 +1628,7 @@ def m_playground(m, opt):
     g1, g2, h1, h2 = 520, 680, 430, 580
     m.det([(g1, h1, T, g2, h1 + 6, T + 10), (g1, h2 - 6, T, g2, h2, T + 10), (g1, h1 + 6, T, g1 + 6, h2 - 6, T + 10), (g2 - 6, h1 + 6, T, g2, h2 - 6, T + 10)], BEAM)
     m.det([(g1 + 6, h1 + 6, T, g2 - 6, h2 - 6, T + 5)], SAND)
+    put(m, [("props_c17/doll01", g1 + 30, h1 + 3, 200)], T + 10)                        # left on the sandpit's edge
     m.shapes([prism([(470, T + 5), (506, T + 5), (490, T + 12)], "x", 590, 634, SAND)])
     m.blocked(g1, h1, g2, h2)
 
@@ -1586,10 +1636,19 @@ def m_playground(m, opt):
     m.static("models/props_c17/bench01a.mdl", 640, 624, 270, z=T)
     m.target("lc_playground_bench", 640, 618, T + 20, 270)
     m.sound("ambient/levels/canals/windmill_wind_loop1.wav", 512, 440, T + 120, radius=700, volume=2)
+    # a bin overflowing in the corner, chalk on the ground, rust down the walls, a Combine notice
+    m.static("models/props_trainstation/trashcan_indoor001b.mdl", 222, 612, 0, z=T)
+    put(m, [("props_junk/garbage_bag001a", 252, 618, 30), ("props_junk/garbage_bag001a", 226, 582, 110)], T)
+    m.grime("trash", 270, 600, T, 1)
+    m.grime("graffiti", 470, 380, T, 2)
+    m.grime("stain", 192, 500, T + 120, 3)
+    m.grime("stain", 760, 640, T + 110, 4)
+    m.grime("poster", 832, 450, T + 80, 5)
+    sounds(m, L, "courtyard", 512, 450, T, 520)
     for u, v in ((480, 300), (480, 400), (760, 480), (220, 600)):
         m.lane(u, v, T)
 
-    m.view(512, 40, F, 90, -6, "from the canal")
+    m.view(620, -220, F + 92, 100, 6, "from the canal's far bank")
     m.view(220, 290, T, 30, 4, "up on the terrace")
     m.view(640, 600, T, 250, 6, "from the bench")
     m.view(780, 420, T, 190, 6, "the slide and the swings")

@@ -741,7 +741,12 @@ def m_railbridge(m, opt):
     tunnel, crosses, and is gone into the right one. The bridge shakes as it passes. Under the bridge the canal carries
     on between two concrete piers; a crate or two has fallen off. Nobody can get onto the bridge: its bed is 240 over
     the canal's floor, there are no stairs, and both tunnels are dead ends (black at the back) 1024 deep, long enough
-    to hide the whole train. The signal lamps are caged lamps on the mouths' pilasters, a red glow in front of each.
+    to hide the whole train. Each mouth has a face: concrete pilasters, the abutment, a number and a danger sign, and
+    beside it on the wall one of Half-Life 2's railway signal heads (light_signal002a) that shows red while a train
+    comes. The track is seen whole: ballast on the bed, sleepers, rails running into both tunnels, and an overhead wire
+    on three posts from tunnel to tunnel. When the train crosses, dust and grit fall from under the bridge. Under it,
+    caged lamps on the piers (one dead), graffiti, crates fallen off the last train and broken, and the body of someone
+    who stood on the line.
 
     The rails' bed is at the walls' top less 144 (z 640 with the usual walls), not higher: the canal walls' concrete
     ends at the rim with the fence along it and sky above, so a tunnel mouth must end at the rim.
@@ -766,17 +771,19 @@ def m_railbridge(m, opt):
       lc_rail_timer    a logic_timer, RefireTime 150, that triggers lc_rail_run. Disable it to stop the trains.
       lc_rail_horn, lc_rail_shake, lc_rail_signal_1, lc_rail_signal_2   the horn, the env_shake (3.5 seconds, radius
                        1000 round the bridge's middle) and the two red lamps (env_sprites: ShowSprite, HideSprite).
+      lc_rail_dust_1 .. _3   the dust off the bridge's underside (env_dustpuff: SpawnDust), sent by lc_rail_p2.
     In a --test file a red button on the left pier's canal face triggers lc_rail_run.
     An areaportal stands 64 inside each tunnel, walled all round; the train passes through both.
 
-    Left as brushes: the tunnels, the bridge (girders, bed, cross girders, abutments, piers) and the track: the only
-    track models (traintrack001c, 006b, 006c) are 288 wide and more, too wide for the 128 bed.
+    Left as brushes: the tunnels, the bridge (girders, bed, cross girders, abutments, piers), the overhead wire's posts
+    and the track: the only track models (traintrack001c, 006b, 006c) are 288 wide and more, too wide for the 128 bed.
 
     Unchecked: everything above about func_tracktrain and path_track is from memory of Hammer's entity list (the
     keys "startspeed", "speed", "orientationtype", "height", "wheels", "bank", "dmg", "MoveSound", "volume"; the
     spawnflags; that a path_track with spawnflag 16 is teleported to; the inputs StartForward and Stop; the output
     OnPass). The sounds are from memory: ambient/alarms/train_horn2.wav, ambient/machines/razor_train_wheels_loop1.wav.
     If the train comes out sideways, the fixed orientation did not take: tell me. If it never moves, try "speed" 0.
+    env_dustpuff's keys; which way the signal heads face (taken as the model's +x).
     That train005 is a flat car (its size is read: 118 wide, 460 long, 54 high; its look is not), and which of its
     ends is its front (it is the same both ways round in its size)."""
     b = m.b
@@ -784,6 +791,7 @@ def m_railbridge(m, opt):
     D = rim - 144                                   # the rails' bed
     wide = 96                                       # half a tunnel's width
     m.open(0, -256, L, 256)
+    from map_mods_c import cage_lamp
     for s in (1, -1):
         lo, hi = (256, far) if s > 0 else (-far, -256)
         m.low(c - wide, lo, c + wide, hi, rim, floor=D, mat="nature/dirtfloor005c")
@@ -794,12 +802,12 @@ def m_railbridge(m, opt):
         ribs = []
         for v in (448, 704, 960, 1216):
             v1, v2 = min(s * v, s * (v + 16)), max(s * v, s * (v + 16))
-            ribs += [(c - wide, v1, D, c - wide + 8, v2, rim), (c + wide - 8, v1, D, c + wide, v2, rim), (c - wide, v1, rim - 8, c + wide, v2, rim)]
+            ribs += [(c - wide, v1, D, c - wide + 8, v2, rim - 8), (c + wide - 8, v1, D, c + wide, v2, rim - 8), (c - wide, v1, rim - 8, c + wide, v2, rim)]
         m.det(ribs, MAT["beam"])
         # the mouth: a pilaster each side from the bank to the rim, and the abutment the girders rest on
         a1, a2 = min(s * 232, s * 256), max(s * 232, s * 256)
-        p1, p2 = min(s * 240, s * 256), max(s * 240, s * 256)
-        m.det([(c - wide - 16, p1, F, c - wide, p2, rim), (c + wide, p1, F, c + wide + 16, p2, rim)], MAT["beam"])
+        p1, p2 = min(s * 238, s * 256), max(s * 238, s * 256)                       # (2 proud of the wall and 2 into the mouth: the trim's ends hide in them)
+        m.det([(c - wide - 16, p1, F, c - wide + 2, p2, rim), (c + wide - 2, p1, F, c + wide + 16, p2, rim)], MAT["beam"])
         m.det([(c - 88, a1, D - 104, c + 88, a2, D - 16)], MAT["beam"])
         m.taken(c - wide - 24, a1, F, c + wide + 24, a2, rim)
         # a pier at the bank's foot
@@ -807,9 +815,14 @@ def m_railbridge(m, opt):
         m.det([(c - 56, q1, F, c + 56, q2, D - 72)], MAT["canal_wall"])
         m.det([(c - 88, q1 - 12, D - 72, c + 88, q2 + 12, D - 56)], MAT["beam"])
         m.blocked(c - 96, q1 - 32, c + 96, q2 + 32)
-        # the signal lamp on the mouth's pilaster: a caged lamp, its red glow in front of it
-        m.static("models/props_c17/light_cagelight02_off.mdl", c - wide - 8, s * 238, 270 if s > 0 else 90, z=D + 62)
-        sprite(m, "lc_rail_signal_%d" % (1 if s > 0 else 2), c - wide - 8, s * 228, D + 70, "255 50 30", 0.4, on=False)
+        # the signal beside the mouth on the wall: a railway signal head, its red glow in front of it; the mouth's marks
+        m.static("models/props_trainstation/light_signal002a.mdl", c - wide - 80, s * 214, 270 if s > 0 else 90, z=D - 20)
+        sprite(m, "lc_rail_signal_%d" % (1 if s > 0 else 2), c - wide - 80, s * 168, D + 60, "255 50 30", 0.4, on=False)
+        m.taken(c - wide - 130, a1, D - 30, c - wide - 30, a2, D + 110)
+        m.grime("number", c + wide + 60, s * 256, D + 60, 1 if s > 0 else 2)
+        m.grime("danger", c + wide + 60, s * 256, D - 40, 3 if s > 0 else 4)
+        m.grime("graffiti", c, s * 128, F + 100, 5 if s > 0 else 6)                     # (on the pier's face)
+        cage_lamp(m, c, s * 128, F + 160, 270 if s > 0 else 90, "255 214 160 50", lit=s > 0)
     # the bridge: two plate girders with the bed between them, cross girders under it
     girders, stiff = [], []
     for s in (1, -1):
@@ -823,8 +836,15 @@ def m_railbridge(m, opt):
     m.det([(c - 64, -256, D - 16, c + 64, 256, D)], STEEL)
     m.det([(c - 64, v, D - 40, c + 64, v + 12, D - 16) for v in range(-200, 201, 100)], PIPE)
     m.taken(c - 90, -256, D - 64, c + 90, 256, D + 40)
-    # the track: ties on the bridge and a little way in, rails the whole way (broken where the areaportals stand)
-    m.det([(c - 40, v, D, c + 40, v + 12, D + 2) for v in range(-312, 304, 48) if not (-322 < v < -306 or 306 < v + 12 < 322)], MM["beam_wood"])
+    # the track: ballast on the bed, ties on the bridge and a little way in, rails the whole way (broken where the
+    # areaportals stand), an overhead wire on three posts from tunnel to tunnel
+    m.det([(c - 52, -256, D, c + 52, 256, D + 1)], MM["gravel"])
+    m.det([(c - 40, v, D, c + 40, v + 12, D + 2) for v in range(-312, 304, 48) if not (-322 < v < -306 or 306 < v + 12 < 322)], "wood/woodfloor006b")
+    posts = []
+    for v in (-176, 0, 176):
+        posts += [(c + 70, v - 2, D + 36, c + 74, v + 2, D + 134), (c + 2, v - 2, D + 130, c + 70, v + 2, D + 134)]
+    m.det(posts, PIPE)
+    m.rope([(c, -460, D + 126), (c, -176, D + 128), (c, 0, D + 128), (c, 176, D + 128), (c, 460, D + 126)], slack=6, width=1)
     rails = []
     for a, e in ((-far + 8, -320), (-318, 318), (320, far - 8)):
         rails += [(c - 30, a, D, c - 26, e, D + 6), (c + 26, a, D, c + 30, e, D + 6)]
@@ -846,7 +866,10 @@ def m_railbridge(m, opt):
         ride(m, "lc_rail_train", "models/props_junk/ibeam01a_cluster01.mdl", c + du, tv - 238, 90, base + 54)
     for du, dv, model in ((-24, 180, "wood_crate002a"), (22, 250, "wood_crate002a"), (-14, 330, "wood_crate001a")):
         ride(m, "lc_rail_train", "models/props_junk/%s.mdl" % model, c + du, tv + dv, 90, base + 54)
-    stops = (("lc_rail_p1", tv, "lc_rail_p2", "16", None), ("lc_rail_p2", tv - 128, "lc_rail_p3", "0", [("OnPass", "lc_rail_shake", "StartShake", "", 0)]),
+    for k, v in enumerate((-150, 0, 150)):                    # dust and grit off the bridge's underside as it passes
+        m.point("env_dustpuff", c + (k - 1) * 30, v, D - 62, {"targetname": "lc_rail_dust_%d" % (k + 1), "scale": "14", "speed": "8", "color": "110 104 96", "angles": "90 0 0"})
+    dust = [("OnPass", "lc_rail_dust_*", "SpawnDust", "", t) for t in (1.2, 1.7, 2.2, 2.8)]
+    stops = (("lc_rail_p1", tv, "lc_rail_p2", "16", None), ("lc_rail_p2", tv - 128, "lc_rail_p3", "0", [("OnPass", "lc_rail_shake", "StartShake", "", 0)] + dust),
              ("lc_rail_p3", -(tv - 128), "lc_rail_p4", "0", None), ("lc_rail_p4", -tv, "lc_rail_p1", "0", [("OnPass", "lc_rail_train", "Stop", "", 0)]))
     for name, v, nxt, flags, wires in stops:
         m.point("path_track", c, v, base, {"targetname": name, "target": nxt, "spawnflags": flags, "orientationtype": "0", "speed": "0", "radius": "0"},
@@ -859,15 +882,19 @@ def m_railbridge(m, opt):
             connections=[("OnTimer", "lc_rail_run", "Trigger", "", 0)])
     m.test_button((c - 8, 120, F + 40, c + 8, 128, F + 56), [("OnIn", "lc_rail_run", "Trigger")])
 
-    # under the bridge: a lamp, and what fell off the last train
-    m.lamp(c, 6, D - 48, "255 214 160 60")         # (its dome against the cross girder over the middle)
-    m.loose("models/props_junk/wood_crate001a.mdl", c + 70, -60, 25)
+    # under the bridge: what fell off the last train, broken; who stood on the line
+    m.loose("models/props_junk/wood_crate001a_damaged.mdl", c + 70, -60, 25)
     m.loose("models/props_junk/wood_crate002a.mdl", c - 90, 40, 70)
     m.loose("models/items/item_item_crate.mdl", c + 20, 70, 10)
+    for k, (du, dv) in enumerate(((60, -20), (90, -100), (40, -90))):
+        m.loose("models/props_junk/wood_crate001a_chunk0%d.mdl" % (k + 1), c + du, dv, 50 * k)
     m.static("models/props_debris/concrete_chunk01a.mdl", c + 130, 96, 40)
+    m.body("models/humans/corpse1.mdl", c - 40, -30, 100)
+    m.decal("decals/bloodstain_002", c - 30, -20, F + 1)
+    m.soundscape(SCAPES["courtyard"], c, 0, F, radius=800)
     m.lane(c, 0)
     m.view(180, -40, F, 8, -14, "the bridge from the canal")
-    m.view(c + 360, -170, F, 138, -16, "the left tunnel's mouth and the bridge")
+    m.view(c + 360, -100, F, 138, -16, "the left tunnel's mouth and the bridge")
     m.view(c - 56, 300, D, 86, 2, "in the left tunnel: the train where it waits")
     m.view(c + 60, 40, F, 200, -30, "under the bridge")
     b.notes.append("%s: the rails are at z %d (the walls' top less 144); the train waits at (%d %d) and stops at (%d %d)" % (
@@ -875,11 +902,16 @@ def m_railbridge(m, opt):
 
 
 def m_pumphouse(m, opt):
-    """The pumping station: off the left wall, through a wide doorway, a machine hall 704 by 512 and 320 high. Facing
-    the door a big iron wheel (Half-Life 2's wheel02b, 132 across) turns slowly (lc_pump_wheel) on the shaft of the
-    pump, a long horizontal tank on the floor behind it (horizontalcoolingtank04); two risers climb from it to a
-    header pipe under the roof, capped at both ends. Behind it a turbine pit (192 square, 96 deep, ankle deep in water,
-    steps down into it, the city's handrail round it, the turbine's casing standing in it). The main leaves through the
+    """The pumping station: off the left wall, through a wide doorway, a machine hall 704 by 512 and 320 high, its walls
+    laid in courses as City 18 and Valve lay a big wall (a concrete base, brick, a stone band course, concrete to the
+    roof). The doorway opens onto floor, the turbine pit straight ahead; in the hall's right half a big iron wheel
+    (Half-Life 2's wheel02b, 132 across) turns slowly (lc_pump_wheel) on the shaft of the pump, a long horizontal tank
+    on the floor behind it (horizontalcoolingtank04) running back to the far wall, hazard stripes round the wheel's
+    guard; two risers climb from the tank to a header pipe under the roof, which runs on into the front wall as the
+    main; a travelling crane's beam crosses the roof with its hoist hanging; switch boxes on the wall by the stairs, a
+    cable to them from the turbine. Behind the doorway's line a turbine pit (192 square, 96 deep, ankle
+    deep in water, steps down into it, the city's handrail round it, hazard stripes round its edge, the turbine's
+    casing standing in it), numbers on the walls by the machines. The main leaves through the
     front wall, runs along the canal wall and crosses the canal overhead on a pipe bridge nobody can reach. A steel
     gallery runs round the hall 144 up behind the handrail (stairs in the corner left of the door, a steel plate along
     their open side); on it, over the door, the control desk: a monitor, a lamp, and the button that stops and starts
@@ -898,8 +930,9 @@ def m_pumphouse(m, opt):
       lc_pump_hall      the hall's floor, inside the door.
     An areaportal stands in the doorway's thickness (well clear of the pit's water).
 
-    Left as brushes: the hall, the doorway's frame, the gallery (its grating and posts), the steel plate along the
-    stairs, the wheel's bearing pedestal, the pipe bridge's girders and the plates where pipes meet the walls.
+    Left as brushes: the hall and its courses, the doorway's frame, the gallery (its grating and posts), the steel plate
+    along the stairs, the wheel's bearing pedestal, the crane's beam, the hazard stripes (dev_hazzardstripe01a, as the
+    owner's map paints its edges), the pipe bridge's girders and the plates where pipes meet the walls.
 
     Unchecked: func_rotating's keys from memory ("maxspeed" 40 degrees a second, "fanfriction", spawnflags 1 start on +
     16 run up and down + 64 not solid, and 4 or 8 for the axle: if the wheel tumbles instead of turning, those two are
@@ -907,7 +940,8 @@ def m_pumphouse(m, opt):
     ambient/machines/pump_loop_1.wav, ambient/machines/thumper_shutdown1.wav, ambient/machines/thumper_startup1.wav.
     Material metal/metalgrate013a passes the assets check; how it looks as a floor is not known. How the models look
     (their sizes are read): wheel02b as a flywheel, the cooling tank as a pump, substation_transformer01c as the
-    turbine's casing, slidinggate001 as the door."""
+    turbine's casing, slidinggate001 as the door, pulleyhook01 hung from the crane's beam (its top taken as 142 over its
+    origin)."""
     b = m.b
     L, H, G, cx = 1280, F + 320, F + 144, 672
     grate, floor = "metal/metalgrate013a", "concrete/concretefloor016a"
@@ -922,9 +956,24 @@ def m_pumphouse(m, opt):
     m.blocked(448, 420, 896, 640)
     m.blocked(320, 320, 384, 544)
     # the doorway's steel frame on the canal side, and the door itself (a sliding gate) slid open along the wall inside
-    m.det([(568, 248, F, 576, 256, F + 152), (768, 248, F, 776, 256, F + 152), (568, 248, F + 144, 776, 256, F + 160)], STEEL)
+    m.det([(568, 248, F, 578, 256, F + 144), (766, 248, F, 776, 256, F + 144), (568, 248, F + 144, 776, 256, F + 160)], STEEL)   # (the banks' ends hide in its posts)
     m.taken(560, 232, F, 784, 256, F + 168)
-    m.static("models/props_c17/slidinggate001.mdl", 852, 323, 90, z=F)
+    m.static("models/props_c17/slidinggate001.mdl", 852, 334, 90, z=F)
+    # the hall's walls in courses: a concrete base, brick, a stone band course, concrete to the roof (the base and band
+    # 8 proud, the rest 4; the side walls' courses stop at the front and back walls' so no two tops lie in one plane)
+    courses = ((F, F + 96, 8, "concrete/concretewall059c"), (F + 96, F + 256, 4, "brick/brickwall014l"), (F + 256, F + 272, 8, "stone/stonewall050f"),
+               (F + 272, H, 4, "concrete/concretewall008a"))
+    for z1, z2, t, mat in courses:
+        boxes = [(320, 320, z1, 576, 320 + t, z2), (768, 320, z1, 1024, 320 + t, z2), (320, 832 - t, z1, 576, 832, z2), (768, 832 - t, z1, 1024, 832, z2),
+                 (320, 536, z1, 320 + t, 824, z2), (1024 - t, 328, z1, 1024, 824, z2)]
+        if z2 > F + 160:
+            boxes.append((320, 328, max(z1, F + 160), 320 + t, 536, z2))          # (over the stairs along the left wall)
+        if z2 > F + 144:
+            boxes.append((576, 320, max(z1, F + 144), 768, 320 + t, z2))          # (over the doorway)
+        if z2 > F + 96:
+            boxes.append((576, 832 - t, max(z1, F + 96), 768, 832, z2))           # (over the pit's back wall)
+        m.det(boxes, mat)
+    m.det([(576, 828, F - 96, 768, 832, F + 96)], "concrete/concretewall059c")        # (the pit's back wall, under the base course)
 
     # the gallery: steel grating on posts, the city's handrail on its open edge, stairs up in the corner left of the door
     m.det([(320, 768, G - 8, 1024, 832, G), (320, 536, G - 8, 384, 768, G), (960, 320, G - 8, 1024, 768, G), (384, 320, G - 8, 960, 384, G)], PIPE, top=grate)
@@ -945,34 +994,47 @@ def m_pumphouse(m, opt):
     handrail(m, (770, 640), (770, 832), F)
     m.static("models/props_c17/substation_transformer01c.mdl", cx, 736, 0, z=F - 96)
     m.light(cx, 680, F - 30, "120 200 190 35")
+    stripe = "dev/dev_hazzardstripe01a"
+    m.det([(576, 628, F, 768, 636, F + 1), (566, 640, F, 574, 832, F + 1), (770, 640, F, 778, 832, F + 1)], stripe)
+    m.grime("number", 576, 700, F - 40, 1)
+    m.grime("number", 1024 - 8, 552, F + 180, 2)
 
-    # the machines: the wheel on its pedestal, its shaft into the pump, two risers to the header
-    wz = F + 80
+    # the machines: the wheel on its pedestal (to the right of the doorway's line: the way in opens onto floor), its
+    # shaft into the pump, two risers to the header
+    wz, wu, wv = F + 80, cx + 208, 410
     brush_shapes(m, "func_rotating", {
-        "targetname": "lc_pump_wheel", "origin": "%d %d %d" % (m.fr.at(cx, 448, wz)), "spawnflags": str(1 + 16 + 64 + (4 if m.fr.ax("v") == "x" else 8)),
+        "targetname": "lc_pump_wheel", "origin": "%d %d %d" % (m.fr.at(wu, wv, wz)), "spawnflags": str(1 + 16 + 64 + (4 if m.fr.ax("v") == "x" else 8)),
         "maxspeed": "40", "fanfriction": "20", "volume": "0", "dmg": "0", "solidbsp": "0", "rendermode": "10", "renderamt": "0", "rendercolor": "255 255 255",
-        "disableshadows": "1"}, [], boxes=[(cx - 8, 440, wz - 8, cx + 8, 456, wz + 8)], mat=MAT["nodraw"], vis=b.vis + ": the wheel")
-    ride(m, "lc_pump_wheel", "models/props_wasteland/wheel02b.mdl", cx, 448, 0, wz - 66)
-    m.world((cx - 72, 420, F, cx + 72, 476, wz + 72), MAT["clip"], seals=False)
-    m.det([(cx - 14, 476, F, cx + 14, 492, wz + 10)], MAT["beam"])
-    m.static("models/props_pipes/pipe03_straight01_short.mdl", cx, 488, 0, z=wz - 8)
-    m.static("models/props_wasteland/horizontalcoolingtank04.mdl", cx, 552, 0, z=F)
+        "disableshadows": "1"}, [], boxes=[(wu - 8, wv - 8, wz - 8, wu + 8, wv + 8, wz + 8)], mat=MAT["nodraw"], vis=b.vis + ": the wheel")
+    ride(m, "lc_pump_wheel", "models/props_wasteland/wheel02b.mdl", wu, wv, 0, wz - 66)
+    m.world((wu - 72, wv - 28, F, wu + 72, wv + 28, wz + 72), MAT["clip"], seals=False)
+    m.det([(wu - 14, wv + 28, F, wu + 14, wv + 44, wz + 10)], MAT["beam"])
+    m.det([(wu - 80, wv - 40, F, wu + 80, wv - 34, F + 1), (wu - 80, wv + 50, F, wu + 80, wv + 56, F + 1), (wu - 80, wv - 34, F, wu - 74, wv + 50, F + 1),
+           (wu + 74, wv - 34, F, wu + 80, wv + 50, F + 1)], "dev/dev_hazzardstripe01a")     # (the guard painted round it)
+    m.static("models/props_pipes/pipe03_straight01_short.mdl", wu, wv + 40, 0, z=wz - 8)
+    tv = 640                                                      # the tank, along the hall from behind the wheel to the far wall
+    m.static("models/props_wasteland/horizontalcoolingtank04.mdl", wu, tv, 90, z=F)
     hz = F + 264
     for s in (1, -1):
-        centred(m, "models/props_pipes/pipecluster08d_extender128.mdl", cx + s * 140, 552, 0, F + 184)
-        m.static("models/props_c17/pipe_cap005.mdl", cx + s * 192, 552, 0 if s > 0 else 180, z=hz - 19)
-    pipe_run(m, (cx - 192, 552), (cx + 192, 552), hz, "32d")
-    pipe_run(m, (cx, 296), (cx, 552), hz, "32d")
+        centred(m, "models/props_pipes/pipecluster08d_extender128.mdl", wu, tv + s * 140, 0, F + 184)
+    pipe_run(m, (wu, 320), (wu, 832), hz, "32d")                  # the header, from the front wall (where it leaves as the main) to the back
+    # the travelling crane's beam across the roof, its hoist; switch boxes by the pump, a cable to them from the turbine
+    m.det([(328, 640, H - 24, 1016, 656, H)], "metal/metaltruss017a")
+    m.static("models/props_c17/pulleywheels_large01.mdl", 480, 648, 0, z=H - 70)
+    m.static("models/props_c17/pulleyhook01.mdl", 480, 648, 0, z=H - 214)
+    m.static("models/props_lab/powerbox01a.mdl", 342, 600, 0, z=F + 50)
+    m.static("models/props_lab/powerbox02b.mdl", 336, 640, 0, z=F + 70)
+    m.rope([(342, 600, F + 104), (630, 736, F + 40)], slack=60, width=2)
 
     # outside: the main along the canal wall, then across on the pipe bridge (its middle at pu)
     pu = cx + 384
-    m.det([(cx - 32, 240, hz - 32, cx + 32, 256, hz + 32), (pu - 32, -256, hz - 32, pu + 32, -240, hz + 32)], STEEL)
-    pipe_run(m, (cx, 220), (pu, 220), hz, "32d")              # (clear of the trim line on the wall: it rests on it)
-    m.static("models/props_c17/pipe_cap005.mdl", cx, 220, 180, z=hz - 19)    # (its start, at the plate where it leaves the hall, capped)
+    m.det([(wu - 32, 239, hz - 32, wu + 32, 256, hz + 32), (pu - 32, -256, hz - 32, pu + 32, -239, hz + 32)], STEEL)     # (1 proud of the trim)
+    pipe_run(m, (wu, 220), (pu, 220), hz, "32d")              # (clear of the trim line on the wall: it rests on it)
+    m.static("models/props_c17/pipe_cap005.mdl", wu, 220, 180, z=hz - 19)    # (its start, at the plate where it leaves the hall, capped)
     pipe_run(m, (pu, -256), (pu, 256), hz, "32d")
     m.det([(pu - 40, -256, hz - 48, pu - 32, 256, hz - 32), (pu + 32, -256, hz - 48, pu + 40, 256, hz - 32)], STEEL)
     m.det([(pu - 40, v, hz - 32, pu + 40, v + 6, hz - 26) for v in range(-232, 240, 96)], PIPE)
-    m.taken(cx - 40, 200, hz - 56, pu + 48, 256, hz + 40)
+    m.taken(wu - 40, 200, hz - 56, pu + 48, 256, hz + 40)
     m.taken(pu - 48, -256, hz - 56, pu + 48, -200, hz + 40)
 
     # the control desk on the gallery over the door: a monitor, the lamp, the button on its top
@@ -989,24 +1051,26 @@ def m_pumphouse(m, opt):
            [("lc_pump_wheel", "Start", "", 0), ("lc_pump_up", "PlaySound", "", 0), ("lc_pump_sound", "PlaySound", "", 1), ("lc_pump_glow", "ShowSprite", "", 0)], 3)
 
     # light and odds and ends
-    for u, v in ((480, 470), (864, 470), (480, 690), (864, 690)):
+    for u, v in ((480, 470), (800, 470), (480, 690), (800, 760)):
         m.lamp(u, v, H - 48, "255 226 180 65", hang=40)
-    m.static("models/props_c17/lockers001a.mdl", 1012, 470, 180)
-    m.static("models/props_c17/lockers001a.mdl", 1012, 522, 180)
+    m.static("models/props_c17/lockers001a.mdl", 1006, 410, 180)
+    m.static("models/props_c17/lockers001a.mdl", 1006, 462, 180)
+    m.soundscape(SCAPES["pump"], cx, 560, F, radius=520)
     m.static("models/props_c17/shelfunit01a.mdl", 880, 820, 180)
     m.static("models/props_c17/oildrum001.mdl", 346, 700, 0)
     m.static("models/props_c17/oildrum001.mdl", 352, 738, 40)
     m.loose("models/props_junk/wood_crate001a.mdl", 430, 780, 15)
-    m.loose("models/props_junk/metalbucket01a.mdl", 900, 610, 0)
+    m.loose("models/props_junk/metalbucket01a.mdl", 790, 452, 0)
     m.target("lc_pump_hall", cx, 400, F + 8, 90)
     m.lane(cx, 288)
+    m.blocked(wu - 80, wv - 40, wu + 80, 800)
     m.lane(cx, 392)
     m.lane(352, 650, G)
     m.lane(cx, 800, G)
     m.lane(992, 550, G)
     m.lane(cx - 80, 344, G)
     m.view(cx, 120, F, 90, 0, "the way in")
-    m.view(cx, 340, F, 90, 0, "the hall from the door: the wheel")
+    m.view(cx, 340, F, 75, 0, "the hall from the door: the pit ahead, the wheel to the right")
     m.view(cx - 80, 344, G, 62, 16, "from the control desk")
     m.view(440, 690, F, 345, 8, "the pit and the pump")
     m.view(1180, -100, F, 190, -24, "the pipe bridge")
@@ -1019,11 +1083,14 @@ def m_pumphouse(m, opt):
 
 def m_thumper(m, opt):
     """EXPERIMENTAL: a Combine thumper. The canal widens to the right into a concrete terrace 512 long and 384 deep,
-    128 over the floor (the bank is its ramp). On it, behind a fence of Nova Prospekt's chain link panels with a gate
-    players open, Half-Life 2's own thumper (prop_thumper, the coast's CombineThumper002, 338 high) on a concrete
-    plinth: it lifts and drops its hammer by itself, shakes the ground, thuds and keeps antlions away, for ever. Each
-    time it lands dust jumps from the plinth. Against the terrace's near wall a Combine console, a lamp over it and the
-    button that stops and starts it.
+    128 over the floor (the bank is its ramp). On it, behind the Combine's own fence (combine_fence01b and 01a posts, the
+    owner's field between them) with a gate players open (Nova Prospekt's gate in its frame, between two of the posts),
+    Half-Life 2's own thumper (prop_thumper, the coast's CombineThumper002, 338 high) on a concrete plinth, fed by a fat
+    cable from a Combine generator: it lifts and drops its hammer by itself, shakes the ground, thuds and keeps antlions
+    away, for ever. Each time it lands dust jumps from the plinth. Against the terrace's near wall a Combine console,
+    the Combine's lamp over it and a small screen beside it, and the button that stops and starts it; Combine lamps and
+    a camera on the terrace's back wall, danger signs. Why it is here is shown downstream: sand drifted over the canal's
+    floor toward the exit, a burrow broken through the left wall's foot with sand spilling from it, two dead antlions.
 
     Named for the game:
       lc_thumper_head    the thumper itself (prop_thumper): Disable stops it, Enable starts it; its output OnThumped
@@ -1040,13 +1107,16 @@ def m_thumper(m, opt):
                          a thud and a clank the game may play (the thumper makes its own sounds, so nothing plays
                          them), the shake and the dust at each landing, the blue glow on the lamp over the console
                          (lit while it runs), the run-down sound.
+      lc_thumper_lamp    the console lamp's light (TurnOff, TurnOn: the relays switch it with the glow).
+      lc_thumper_burrow  the burrow's mouth in the left wall (where the game may bring antlions out).
 
-    Left as brushes: the terrace and the thumper's plinth (the ground it stands on).
+    Left as brushes: the terrace and the thumper's plinth (the ground it stands on), the burrow's back.
 
     Unchecked: prop_thumper's keys and its input and output from memory of Half-Life 2's coast ("dustscale",
     "EffectRadius", Enable, Disable, OnThumped); that it starts running by itself; which way the model faces (it is
     placed so its box is centred on the plinth). env_smokestack's TurnOn and TurnOff for the dust. Sounds from memory:
-    ambient/machines/thumper_hit.wav, ambient/machines/thumper_top.wav, ambient/machines/thumper_shutdown1.wav."""
+    ambient/machines/thumper_hit.wav, ambient/machines/thumper_top.wav, ambient/machines/thumper_shutdown1.wav.
+    models/antlion.mdl as a ragdoll; nature/blendsandmud001a (which of its two shows at alpha 0); combine_shield_loop3.wav."""
     b = m.b
     L, P = 1024, F + 128
     cu, cv = 512, -448
@@ -1055,10 +1125,10 @@ def m_thumper(m, opt):
     m.side(256, -640, 768, -256)
     m.taken(256, -264, F, 768, -256, P + 100)
     m.blocked(256, -640, 768, -256)
-    # the fence across the terrace, 48 back from its edge, with the gate in its frame
+    # the Combine's fence across the terrace, 48 back from its edge: posts and fields, the gate in its frame between
     fv = -304
-    panel_fence(m, (256, fv), (576, fv), P)
-    panel_fence(m, (640, fv), (768, fv), P)
+    combine_field(m, (264, fv), (568, fv), P)
+    combine_field(m, (648, fv), (760, fv), P, hum=False)
     fence_gate(m, "lc_thumper_gate", 608, fv, P, "u")
     # the plinth, and the thumper on it (its box centred on the plinth: the model's middle is off its origin)
     m.shapes([vprism(octagon(cu, cv, 76), P, P + 16, MAT["beam"])])
@@ -1077,23 +1147,59 @@ def m_thumper(m, opt):
     m.target("lc_thumper_pad", cu, cv, P + 24)
     # the console against the terrace's near wall, the lamp over it, the button beside it
     m.static("models/props_combine/combine_interface001.mdl", 282, -404, 0, z=P)
-    m.static("models/props_c17/light_cagelight02_off.mdl", 258, -404, 0, z=P + 96)
-    sprite(m, "lc_thumper_glow", 268, -404, P + 104, "120 220 255", 0.35)
-    m.light(276, -404, P + 104, "120 200 255 40")
+    combine_lamp(m, 256, -404, P + 90, 0, "120 200 255 40", name="lc_thumper_lamp")
+    sprite(m, "lc_thumper_glow", 276, -404, P + 110, "120 220 255", 0.35)
+    m.static("models/props_combine/combine_smallmonitor001.mdl", 270, -456, 0, z=P + 60)
     m.button("lc_thumper_button", 256, -340, P + 36, 0, [("lc_thumper_stop", "Trigger", "", 0), ("lc_thumper_start", "Trigger", "", 0)], wait="2.5")
     toggle(m, "lc_thumper_stop", "lc_thumper_start", 270, -404, P + 160,
-           [("lc_thumper_head", "Disable", "", 0), ("lc_thumper_timer", "Disable", "", 0), ("lc_thumper_glow", "HideSprite", "", 0), ("lc_thumper_down", "PlaySound", "", 0)],
-           [("lc_thumper_timer", "Enable", "", 0), ("lc_thumper_head", "Enable", "", 0), ("lc_thumper_glow", "ShowSprite", "", 0)], 2)
+           [("lc_thumper_head", "Disable", "", 0), ("lc_thumper_timer", "Disable", "", 0), ("lc_thumper_glow", "HideSprite", "", 0), ("lc_thumper_down", "PlaySound", "", 0),
+            ("lc_thumper_lamp", "TurnOff", "", 0)],
+           [("lc_thumper_timer", "Enable", "", 0), ("lc_thumper_head", "Enable", "", 0), ("lc_thumper_glow", "ShowSprite", "", 0), ("lc_thumper_lamp", "TurnOn", "", 0)], 2)
+    # its power: a Combine generator in the terrace's far corner, a fat cable over the ground to the plinth
+    m.static("models/props_combine/combine_generator01.mdl", 716, -592, 180, z=P)
+    m.rope([(690, -560, P + 6), (600, -500, P + 4), (cu + 74, cv - 10, P + 8)], slack=20, width=6)
+    # the Combine's eyes and lamps on the terrace's back wall, its warnings
+    m.static("models/props_combine/combinecamera001.mdl", 512, -622, 90, z=P + 230)
+    for u in (360, 640):
+        combine_lamp(m, u, -640, P + 190, 90)
+    for kind, u, v, z, sd in (("danger", 450, -640, P + 120, 1), ("danger", 256, -520, P + 140, 2), ("number", 600, -640, P + 150, 3)):
+        m.grime(kind, u, v, z, sd)
     # outside the fence: two Combine barricades at the ramp's head; inside: what the crew left
     m.dynamic("models/props_combine/combine_barricade_short01a.mdl", 330, -280, 90, z=P)
     m.dynamic("models/props_combine/combine_barricade_short01a.mdl", 720, -280, 90, z=P)
-    m.static("models/props_c17/oildrum001.mdl", 720, -600, 0, z=P)
-    m.loose("models/props_junk/wood_crate001a.mdl", 690, -560, 20, z=P)
+    m.loose("models/props_junk/wood_crate001a.mdl", 330, -600, 20, z=P)
+    # downstream, why it is here: sand drifted over the floor, a burrow through the left wall's foot, dead antlions
+    m.low(832, 256, 896, 320, F + 64)
+    m.side(832, 256, 896, 320)
+    m.blocked(832, 256, 896, 320)
+    m.no_bank(824, 248, 904, 264)
+    m.det([(832, 312, F, 896, 320, F + 64)], MAT["black"])
+    m.taken(820, 240, F, 908, 256, F + 90)
+    m.target("lc_thumper_burrow", 864, 280, F + 8, 270)
+    for model, u, v, yaw in (("rockgranite03a", 820, 236, 30), ("rockgranite03b", 930, 238, 200), ("rockgranite02a", 900, 166, 100)):
+        m.static("models/props_wasteland/%s.mdl" % model, u, v, yaw, z=F)
+    sx, sy = m.fr.pt(864, 240)
+
+    def drift(x, y):
+        return 30 * max(0.0, 1 - math.hypot(x - sx, y - sy) / 260.0) ** 1.2
+    m.side(768, -256, 1024, 256)
+    r = m.fr.rect(768, -256, 1024, 256)
+    for x0 in range(r[0], r[2], 256):
+        for y0 in range(r[1], r[3], 256):
+            zf = F + m.fr.dz
+            b.vmf.world_box((x0, y0, zf, x0 + 256, y0 + 256, zf + 8), MAT["nodraw"], top="nature/blendsandmud001a", vis=b.vis + ": the sand drift",
+                            disp={"top": (3, lambda i, j, x0=x0, y0=y0: (x0 + j * 32, y0 + i * 32, zf + drift(x0 + j * 32, y0 + i * 32) - 6),
+                                          lambda i, j, x0=x0, y0=y0: 255 * min(1.0, drift(x0 + j * 32, y0 + i * 32) / 12.0))})
+    m.body("models/antlion.mdl", 830, 120, 60, z=F + 20)
+    m.body("models/antlion.mdl", 940, -60, 200, z=F + 4)
+    m.soundscape(SCAPES["combine"], 512, -448, P, radius=520)
+    m.soundscape(SCAPES["courtyard"], 880, 0, F, radius=500)
     m.lane(608, -280, P)
     m.lane(608, -350, P)
     m.lane(360, -400, P)
-    m.view(512, 150, F, 270, -16, "the thumper from the canal")
-    m.view(700, -280, P, 205, -10, "at the fence, by the gate")
+    m.view(512, 60, F, 270, -16, "the thumper from the canal")
+    m.view(700, -60, F, 70, -6, "downstream: the sand, the burrow")
+    m.view(430, -276, P, 0, -6, "at the fence, toward the gate")
     m.view(330, -560, P, 40, -20, "inside, by the console")
     b.notes.append("%s: the terrace is z %d; the thumper stands at (%d %d), its top z %d (%d over the walls)" % (
         (m.tag, P) + m.fr.pt(cu, cv) + (top, top - b.rim)))
@@ -1106,14 +1212,18 @@ def m_thumper(m, opt):
 def m_depot(m, opt):
     """The Combine's ration depot: a place to raid. In the left wall the Combine's own big door (combine_door01, 192
     wide and high: lc_depot_door, shut) opens straight off the canal's floor into a loading bay with a truck backed up
-    to a dock 40 high, tyres hung on its edge. The dock runs along the back (pallets of crates) and fills the far half of
-    the hall: three cages of Nova Prospekt's chain link panels against the back wall, a shelf unit, cartons and crates
-    in each, each with its own gate in its frame (lc_depot_cage_1 to _3: Use opens them, the gamemode can lock them),
+    to a dock 40 high, tyres hung on its edge, hazard stripes along it. The hall is the Combine's inside: its walls
+    clad in their plate (a base of metalcombine001, panels of metalcombine002, a band of the Citadel's plate under the
+    roof), lit by the Combine's wall lights and two tubes, a camera over the cages, a small screen by the big door. The
+    dock runs along the back (pallets of the Combine's own supply crates) and fills the far half of the hall: three
+    cages of Nova Prospekt's chain link panels against the back wall, a shelf unit with ration packages on it, cases of
+    Breen's water and the Combine's crates in each, each with its own gate in its frame and a Combine lock on it
+    (lc_depot_cage_1 to _3: Use opens them, the gamemode can lock them),
     the dispatch desk with a Combine console (lc_depot_desk), and a roller conveyor that carries crates out through a
     low hatch in the wall and down a chute to the canal (the hatch is 26 high over the rollers: nobody gets in that
     way). At the far end a staff door (lc_depot_side, one of the city's doors) up the steps from the canal: no Use
     opens it, only the button beside it inside, and it shuts by itself after four seconds. A caged lamp on the wall
-    over each door.
+    over each door; beside the big door inside, an alarm lamp the game can light.
 
     Named for the game:
       lc_depot_door         the big door: a func_door that lifts (Open, Close, Toggle), unseen, the Combine door's model
@@ -1125,16 +1235,18 @@ def m_depot(m, opt):
       lc_depot_button_side  the button inside beside the staff door: Open.
       lc_depot_cage_1, _2, _3   the cages' gates (func_door_rotating, Use: unseen, Nova Prospekt's gate riding on each).
       lc_depot_desk         the Combine console at the dispatch desk (a prop_dynamic).
+      lc_depot_alarm, lc_depot_alarm_light   the alarm lamp's red glow and light beside the big door inside (off: ShowSprite
+                            and TurnOn light them, HideSprite and TurnOff put them out).
     In a --test file a red button in the roller door's mouth opens and shuts it from outside, as the game will.
     Areaportals: one inside the thickness of each door, one in the hatch.
 
-    Left as brushes: the hall, the dock and its steel edge, the steps, the doors' frames, the cages' mesh roof (no
+    Left as brushes: the hall and its cladding, the dock, its steel edge and stripes, the steps, the doors' frames, the cages' mesh roof (no
     model lies flat), the roller conveyor and its chute (Half-Life 2 has no conveyor), the hatch's shutter and the
     concrete cheeks in the bank.
 
     Unchecked: prop_door_rotating's spawnflag 32768 (ignore Use) and "returndelay" 4; that combine_door01 stands shut
     as a prop_dynamic (it has its own animation) and which of its faces is its front. All models pass the assets check;
-    the truck's, the console's and the shelf unit's facing are guesses."""
+    the truck's, the console's and the shelf unit's facing are guesses; where combine_lock01 sits on a gate's frame."""
     b = m.b
     L, HC, DK = 1280, F + 192, F + 40
     floor, wood = "concrete/concretefloor016a", MM["wood"]
@@ -1153,20 +1265,28 @@ def m_depot(m, opt):
     m.portal(896, 287, DK, 960, 289, DK + 112)
     m.taken(368, 224, F, 592, 256, F + 216)
     m.taken(744, 224, F, 1008, 256, F + 170)
-
+    # the Combine's cladding on the hall's walls: a base, panels, a band under the roof (the side walls' between the
+    # front and back walls', so no two tops lie in one plane); the front wall cut for the three ways in
+    for z1, z2, t, mat in ((F, DK + 24, 8, "metal/metalcombine001"), (DK + 24, HC - 24, 4, "metal/metalcombine002"), (HC - 24, HC, 8, "metal/citadel_metalwall090a")):
+        boxes = [(256, 704 - t, z1, 1024, 704, z2), (256, 328, z1, 256 + t, 696, z2), (1024 - t, 328, z1, 1024, 696, z2)]
+        for u1, u2, top in ((256, 384, None), (576, 768, None), (832, 896, None), (960, 1024, None), (768, 832, DK + 64), (896, 960, DK + 112)):
+            lo = max(z1, top) if top else z1
+            if lo < z2:
+                boxes.append((u1, 320, lo, u2, 320 + t, z2))
+        m.det(boxes, mat)
     # the big door: the Combine's door (its box centred in the mouth) riding on an unseen door that lifts it into the
     # wall; a steel frame round the mouth, a caged lamp over it
     from map_mods_b import slide_door
     slide_door(m, "lc_depot_door", [((384, 272, F, 576, 304, F + 192), STEEL)], "-90 0 0", speed=40, lip=8, unseen=True)
     ride(m, "lc_depot_door", "models/props_combine/combine_door01.mdl", 468, 276, 0, F)
-    m.det([(376, 248, F, 384, 256, F + 200), (576, 248, F, 584, 256, F + 200), (376, 248, F + 192, 584, 256, F + 208)], PIPE)
-    m.static("models/props_c17/light_cagelight02_on.mdl", 480, 255, 270, z=F + 214)
-    m.light(480, 240, F + 220, "255 214 160 80")
+    m.det([(376, 248, F, 386, 256, F + 192), (574, 248, F, 584, 256, F + 192), (376, 248, F + 192, 584, 256, F + 208)], PIPE)   # (the banks' ends hide in its posts)
+    cage_lamp(m, 480, 256, F + 214, 270, "255 214 160 80")
     m.button("lc_depot_button_door", 364, 320, F + 44, 90, [("lc_depot_door", "Toggle", "", 0)], wait="2")
     m.test_button((568, 262, F + 48, 576, 274, F + 64), [("OnIn", "lc_depot_door", "Open"), ("OnOut", "lc_depot_door", "Close")])
 
-    # the dock: a steel edge and old tyres hung on it toward the bay, steps up beside the door
-    m.det([(636, 320, DK - 6, 640, 576, DK), (256, 572, DK - 6, 640, 576, DK)], PIPE)
+    # the dock: a steel edge and old tyres hung on it toward the bay, hazard stripes along it, steps up beside the door
+    m.det([(636, 384, DK - 6, 640, 576, DK), (256, 572, DK - 6, 636, 576, DK)], PIPE)
+    m.det([(630, 384, DK, 640, 576, DK + 1), (264, 566, DK, 630, 576, DK + 1)], "dev/dev_hazzardstripe01a")
     for u in (420, 540):
         m.static("models/props_vehicles/tire001c_car.mdl", u, 572, 270, z=DK - 34)
     for v in (432, 512):
@@ -1175,12 +1295,12 @@ def m_depot(m, opt):
     m.blocked(576, 320, 640, 384)
     m.static("models/props_vehicles/truck001a.mdl", 468, 448, 270)
     m.blocked(400, 320, 544, 576)
-    # the back of the dock: pallets of crates waiting to go
-    for k, (u, v, n) in enumerate(((312, 648, 2), (410, 652, 1), (520, 644, 2))):
+    # the back of the dock: pallets of the Combine's supply crates waiting to go
+    for k, (u, v, n) in enumerate(((312, 648, 3), (410, 652, 2), (520, 644, 3))):
         m.static("models/props_junk/wood_pallet001a.mdl", u, v, 90 if k % 2 else 0, z=DK)
         for j in range(n):
-            m.loose("models/props_junk/wood_crate001a.mdl", u, v, 8 * k + 20 * j, z=DK + 9 + 40 * j)
-    m.loose("models/items/item_item_crate.mdl", 590, 600, 30, z=DK)
+            m.static("models/items/item_item_crate.mdl", u + (j % 2) * 4 - 2, v - 4 + 8 * (j // 2), 8 * k + 20 * j, z=DK + 9 + 24 * j)
+    m.static("models/props_lab/clipboard.mdl", 590, 600, 30, z=DK)
 
     # the cages: Nova Prospekt's panels (129 high) with a mesh roof, two partitions, a gate in its frame each; in each
     # a shelf unit against the back wall, cartons stacked on the floor, a crate
@@ -1191,12 +1311,15 @@ def m_depot(m, opt):
         panel_fence(m, (a + 96, fv), (a + 128, fv), cz)
         fence_gate(m, "lc_depot_cage_%d" % (k + 1), a + 64, fv, cz, "u")
         panel_fence(m, (a, fv), (a, 704), cz)
-        m.static("models/props_c17/shelfunit01a.mdl", a + 64, 694, 180, z=cz)
+        m.static("models/props_c17/shelfunit01a.mdl", a + 64, 688, 180, z=cz)
+        for j in range(2):                                       # ration packages on its shelves
+            m.static("models/weapons/w_package.mdl", a + 52 + 22 * j, 688, 90, z=cz + 40)
         cu = a + (26 if k % 2 else 102)
-        m.static("models/props_junk/cardboard_box001a.mdl", cu, 664, 0, z=cz)
-        m.static("models/props_junk/cardboard_box002a.mdl", cu, 664, 10, z=cz + 24)
-        m.static("models/props_junk/cardboard_box001a.mdl", cu, 628, 90, z=cz)
-        m.loose("models/items/item_item_crate.mdl", a + (96 if k % 2 else 34), 640, 10 + 30 * k, z=cz)
+        m.static("models/props_junk/cardboard_box001a.mdl", cu, 664, 0, z=cz)          # Breen's water, by the case
+        m.static("models/props_junk/popcan01a.mdl", cu - 6, 664, 30, z=cz + 24)
+        m.static("models/items/item_item_crate.mdl", cu, 628, 90, z=cz)
+        m.static("models/items/item_item_crate.mdl", a + (96 if k % 2 else 34), 640, 10 + 30 * k, z=cz)
+        m.static("models/props_combine/combine_lock01.mdl", a + 92, fv - 6, 270, z=cz + 40)     # (a Combine lock on its gate's frame)
     m.det([(640, fv, cz + 129, 1024, 704, cz + 130)], MAT["fence"])
     m.blocked(640, 592, 1024, 704)
 
@@ -1214,7 +1337,7 @@ def m_depot(m, opt):
     m.blocked(768, 128, 832, 448)
     # the notches in the bank at the hatch and the staff door: concrete cheeks, and the door's steps
     cheek = [(256, F), (120, F), (256, F + 136)]
-    m.shapes([prism(cheek, "x", u, u + 8, MAT["beam"]) for u in (760, 832, 888, 960)])
+    m.shapes([prism(cheek, "x", u, u + 8, MAT["beam"]) for u in (762, 830, 890, 958)])     # (each 2 into the cut: the banks' ends hide in them)
     m.steps(196, 896, 960, F, DK, "v", 1)
     m.blocked(896, 128, 960, 320)
 
@@ -1227,17 +1350,26 @@ def m_depot(m, opt):
         "rendercolor": "255 255 255", "fademindist": "-1", "fadescale": "1"}, m.pv)
     m.b.names.append(("lc_depot_side", "prop_door_rotating", m.tag))
     m.button("lc_depot_button_side", 984, 320, DK + 44, 90, [("lc_depot_side", "Open", "", 0)], wait="5")
-    m.static("models/props_c17/light_cagelight02_on.mdl", 928, 255, 270, z=DK + 126)
-    m.light(928, 240, DK + 132, "255 60 40 25")
+    cage_lamp(m, 928, 256, DK + 126, 270, "255 60 40 25")
 
     # the dispatch desk: the console against the end wall, a counter, a chair, a cabinet
     m.dynamic("models/props_combine/combine_interface001.mdl", 996, 500, 180, z=DK, name="lc_depot_desk")
     m.static("models/props_wasteland/controlroom_desk001b.mdl", 900, 504, 0, z=DK)
     m.static("models/props_wasteland/controlroom_chair001a.mdl", 946, 500, 0, z=DK)
     m.static("models/props_wasteland/controlroom_filecabinet002a.mdl", 1006, 400, 180, z=DK)
-    m.loose("models/props_junk/cardboard_box002a.mdl", 900, 480, 20, z=DK + 34)
-    for u, v in ((448, 448), (832, 480), (420, 640), (840, 656)):
-        m.lamp(u, v, HC - 8, "255 226 180 55")
+    m.static("models/props_lab/clipboard.mdl", 896, 486, 20, z=DK + 34)
+    m.static("models/props_combine/combine_intmonitor001.mdl", 1010, 560, 180, z=DK)
+    # the Combine's light: their wall lights, two tubes; their eye over the cages; a screen by the big door; the alarm
+    for u, v, z, out in ((256, 448, F + 120, 0), (1024, 420, DK + 100, 180), (720, 704, DK + 96, 270), (960, 704, DK + 96, 270), (360, 704, DK + 96, 270)):
+        combine_lamp(m, u, v, z, out)
+    tube(m, 448, 448, HC, along="v")
+    tube(m, 832, 480, HC, along="u")
+    m.static("models/props_combine/combinecamera001.mdl", 832, 682, 270, z=HC - 30)
+    m.static("models/props_combine/combine_smallmonitor001.mdl", 640, 342, 90, z=F + 70)
+    m.static("models/props_combine/combine_light001a.mdl", 330, 336, 90, z=F + 120)             # (the alarm, beside the big door)
+    sprite(m, "lc_depot_alarm", 330, 350, F + 150, "255 40 30", 0.4, on=False)
+    named_light(m, "lc_depot_alarm_light", 330, 366, F + 150, "255 40 30 80", on=False)
+    m.soundscape(SCAPES["combine"], 640, 512, F, radius=520)
     m.lane(480, 288)
     m.lane(340, 448)
     m.lane(700, 480, DK)
